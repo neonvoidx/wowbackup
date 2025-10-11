@@ -1,0 +1,24 @@
+VER 3 0100000000000002 " " "134400"
+#showtooltip
+/cast [@cursor] Infernal Strike
+END
+VER 3 0100000000000003 " " "134400"
+#showtooltip
+/cast [@cursor] Sigil of Misery
+END
+VER 3 0100000000000005 " " "134400"
+#showtooltip 16
+/run SocketInventoryItem(16)
+END
+VER 3 0100000000000006 " " "134400"
+#showtooltip
+/cast [@cursor] Sigil of Spite
+END
+VER 3 0100000000000001 " " "134400"
+#showtooltip
+/cast [@cursor] Sigil of Flame
+END
+VER 3 0100000000000004 " " "134400"
+#showtooltip
+/cast [@cursor] Metamorphosis
+END

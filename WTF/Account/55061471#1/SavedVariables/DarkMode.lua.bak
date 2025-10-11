@@ -1,0 +1,74 @@
+
+DMTAB = {
+["PROFILES"] = {
+["DEFAULT"] = {
+["FRAMES"] = {
+["POINTS"] = {
+},
+["SIZES"] = {
+},
+},
+["MMICON"] = {
+},
+["ELES"] = {
+["POINTS"] = {
+["DMSettings"] = {
+["AN"] = "CENTER",
+["PY"] = 116.6666030883789,
+["PX"] = -175.8336791992188,
+["RE"] = "CENTER",
+},
+},
+["SIZES"] = {
+},
+["OPTIONS"] = {
+["SHOWMINIMAPBUTTON"] = {
+["ENABLED"] = false,
+},
+["SETTINGS"] = {
+["ENABLED"] = false,
+},
+["MMBTN"] = {
+["ENABLED"] = false,
+},
+["MASKBUFFSANDDEBUFFS"] = {
+["ENABLED"] = true,
+},
+["MASKMINIMAPBUTTONS"] = {
+["ENABLED"] = true,
+},
+["MASKACTIONBUTTONS"] = {
+["ENABLED"] = true,
+},
+["THINBORDERS"] = {
+["ENABLED"] = false,
+},
+["MASKBUFFSANDEBUFFS"] = {
+["ENABLED"] = true,
+},
+["GRYPHONS"] = {
+["ENABLED"] = true,
+},
+["ACTIONBARS"] = {
+},
+},
+},
+},
+},
+["CURRENTPROFILE"] = "DEFAULT",
+["CUSTOMABC_g"] = 0,
+["CUSTOMABC_r"] = 1,
+["CUSTOMABC_a"] = 1,
+["MMBTN"] = false,
+["VALUES"] = {
+["COLORMODE"] = 5,
+["COLORMODEF"] = 5,
+["COLORMODEBAD"] = 5,
+["COLORMODEAB"] = 5,
+["COLORMODEUF"] = 5,
+["COLORMODETT"] = 5,
+["COLORMODENP"] = 5,
+["COLORMODEG"] = 5,
+},
+["CUSTOMABC_b"] = 0,
+}

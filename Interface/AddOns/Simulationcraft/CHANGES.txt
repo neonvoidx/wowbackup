@@ -1,0 +1,10 @@
+lightweight tag a0ea176f951651f6b9c33acb93a61833c1dcec89 12.0.0-02
+Author:	Dave Hendler <sollaires@gmail.com>
+Date:	Wed Oct 8 14:49:46 2025 -0500
+
+commit a0ea176f951651f6b9c33acb93a61833c1dcec89
+Author: Dave Hendler <sollaires@gmail.com>
+Date:   Wed Oct 8 14:49:46 2025 -0500
+
+    Add Starlight Matrix to currency export
+

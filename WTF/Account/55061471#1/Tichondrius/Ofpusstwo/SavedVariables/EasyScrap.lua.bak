@@ -1,0 +1,22 @@
+
+EasyScrap_IgnoreList = {
+["addonVersion"] = 40,
+[246197] = {
+["isAzeriteArmor"] = false,
+[594] = {
+["Woe-Bearer's Band"] = {
+{
+"12651",
+"13524",
+"13557",
+"10034",
+"5859",
+"1",
+"28",
+"2905",
+"",
+},
+},
+},
+},
+}

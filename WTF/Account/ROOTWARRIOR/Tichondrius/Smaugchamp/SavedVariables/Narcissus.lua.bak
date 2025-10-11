@@ -1,0 +1,10 @@
+
+NarcissusDB_PC = {
+["UseAlias"] = false,
+["PlayerAlias"] = "Smaugchamp",
+["EquipmentSetDB"] = {
+},
+["ClassSetAcquired_Karesh"] = true,
+}
+NarciStatisticsDB_PC = {
+}

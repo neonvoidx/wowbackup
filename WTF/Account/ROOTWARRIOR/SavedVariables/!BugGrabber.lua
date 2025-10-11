@@ -1,0 +1,55 @@
+
+BugGrabberDB = {
+["lastSanitation"] = 3,
+["session"] = 4503,
+["errors"] = {
+{
+["message"] = "Interface/AddOns/GladiatorlosSA/GladiatorlosSA.lua:398: attempt to call global 'GetSpellInfo' (a nil value)",
+["time"] = "2025/09/30 11:52:31",
+["locals"] = "",
+["stack"] = "",
+["session"] = 4480,
+["counter"] = 1,
+},
+{
+["message"] = "Interface/AddOns/GladiatorlosSA2/GladiatorlosSA2.lua:1: Usage: NewAddon([object,] name, [lib, lib, lib, ...]): 'name' - Addon 'GladiatorlosSA' already exists.",
+["time"] = "2025/09/30 11:52:31",
+["locals"] = "self = <table> {\n initializequeue = <table> {\n }\n statuses = <table> {\n }\n embeds = <table> {\n }\n frame = AceAddon30Frame {\n }\n addons = <table> {\n }\n enablequeue = <table> {\n }\n}\nobjectorname = \"GladiatorlosSA\"\nobject = nil\nname = \"GladiatorlosSA\"\ni = 1\n",
+["stack"] = "[Interface/AddOns/Masque/Libs/AceAddon-3.0-13/AceAddon-3.0.lua]:115: in function 'NewAddon'\n[Interface/AddOns/GladiatorlosSA2/GladiatorlosSA2.lua]:1: in main chunk",
+["session"] = 4480,
+["counter"] = 1,
+},
+{
+["message"] = "Interface/AddOns/GladiatorlosSA/GladiatorlosSA.lua:192: Usage: RegisterEvent(\"eventname\", \"methodname\"): 'methodname' - method 'UNIT_AURA' not found on self.",
+["time"] = "2025/09/30 11:52:33",
+["locals"] = "self = ExpansionLandingPage {\n overlay = <table> {\n }\n Overlay = Frame {\n }\n}\nnewestOverlay = <table> {\n}\n",
+["stack"] = "[Interface/AddOns/Blizzard_ExpansionLandingPage/Blizzard_ExpansionLandingPage.lua]:82: in function 'RefreshExpansionOverlay'\n[Interface/AddOns/Blizzard_ExpansionLandingPage/Blizzard_ExpansionLandingPage.lua]:37: in function <...pansionLandingPage/Blizzard_ExpansionLandingPage.lua:35>",
+["session"] = 4480,
+["counter"] = 1,
+},
+{
+["message"] = "...terface/AddOns/Details_Streamer/Details_Streamer.lua:2543: table index is nil",
+["time"] = "2025/10/01 17:01:54",
+["locals"] = "self = <table> {\n __options = 1\n CurrentVersion = \"v1.2\"\n __enabled = true\n Enabled = true\n squares = <table> {\n }\n battle_lines = <table> {\n }\n battle_content = <table> {\n }\n Frame = Details_Streamer {\n }\n}\n_ = Details_Streamer {\n __parent = <table> {\n }\n}\nevent = \"PLAYER_LOGOUT\"\npname = \"Cullnvoid - Tichondrius\"\n(*temporary) = <table> {\n Hellavator - Mal'Ganis = <table> {\n }\n}\n(*temporary) = nil\n(*temporary) = nil\n(*temporary) = nil\n(*temporary) = nil\n(*temporary) = nil\n(*temporary) = nil\n(*temporary) = nil\n(*temporary) = nil\n(*temporary) = nil\n(*temporary) = nil\n(*temporary) = nil\n(*temporary) = nil\n(*temporary) = nil\n(*temporary) = nil\n(*temporary) = \"table index is nil\"\nplayerName = nil\nStreamOverlay = <table> {\n __options = 1\n CurrentVersion = \"v1.2\"\n __enabled = true\n Enabled = true\n squares = <table> {\n }\n battle_lines = <table> {\n }\n battle_content = <table> {\n }\n Frame = Details_Streamer {\n }\n}\nSOF = Details_Streamer {\n __parent = <table> {\n }\n}\n",
+["stack"] = "[Interface/AddOns/Details_Streamer/Details_Streamer.lua]:2543: in function <...terface/AddOns/Details_Streamer/Details_Streamer.lua:2362>\n[tail call]: ?",
+["session"] = 4488,
+["counter"] = 1,
+},
+{
+["message"] = "Interface/AddOns/LiteMount/UI/Profiles.lua:179: attempt to index field 'db' (a nil value)",
+["time"] = "2025/10/02 14:38:37",
+["locals"] = "self = LiteMountProfilesPanel {\n NewProfile = Button {\n }\n RevertButton = Button {\n }\n ExportProfile = Button {\n }\n CurrentProfile = FontString {\n }\n category = <table> {\n }\n name = \"Profiles\"\n ImportProfile = Button {\n }\n CurrentProfileLabel = FontString {\n }\n hideDefaultsButton = true\n DeleteProfile = Button {\n }\n ResetProfile = Button {\n }\n DefaultsButton = Button {\n }\n hideRevertButton = true\n Title = FontString {\n }\n DropDown = LiteMountProfilesPanelDropDown {\n }\n ChangeProfile = Button {\n }\n ExplainText = FontString {\n }\n Disable = Frame {\n }\n}\n(*temporary) = nil\n(*temporary) = nil\n(*temporary) = nil\n(*temporary) = nil\n(*temporary) = \"attempt to index field 'db' (a nil value)\"\nLM = <table> {\n C_Spell = <table> {\n }\n TravelForm = <table> {\n }\n Mount = <table> {\n }\n Drive = <table> {\n }\n FLAG = <table> {\n }\n MountRegistry = Frame {\n }\n MountList = <table> {\n }\n UIFilter = <table> {\n }\n ActionButton = <table> {\n }\n Actions = <table> {\n }\n RuleSet = <table> {\n }\n Rule = <table> {\n }\n Journal = <table> {\n }\n Options = <table> {\n }\n RuleArguments = <table> {\n }\n Vars = <table> {\n }\n Conditions = <table> {\n }\n Nagrand = <table> {\n }\n RunningWild = <table> {\n }\n SPELL = <table> {\n }\n MOUNT_TYPE_NAMES = <table> {\n }\n Soar = <table> {\n }\n GhostWolf = <table> {\n }\n Spell = <table> {\n }\n SecureAction = <table> {\n }\n RuleContext = <table> {\n }\n RuleBoolean = <table> {\n }\n Environment = Frame {\n }\n MOUNTFAMILY_BY_SPELL_ID = <table> {\n }\n MOUNTFAMILY = <table> {\n }\n C_MountJournal = <table> {\n }\n ITEM = <table> {\n }\n MOUNT_TYPE_INFO = <table> {\n }\n Localize = <table> {\n }\n ItemSummoned = <table> {\n }\n}\n",
+["stack"] = "[Interface/AddOns/LiteMount/UI/Profiles.lua]:179: in function 'OnRefresh'\n[Interface/AddOns/Blizzard_Settings_Shared/Blizzard_SettingsPanel.lua]:9: in function <.../Blizzard_Settings_Shared/Blizzard_SettingsPanel.lua:7>\n[Interface/AddOns/Blizzard_Settings_Shared/Blizzard_SettingsPanel.lua]:533: in function <.../Blizzard_Settings_Shared/Blizzard_SettingsPanel.lua:532>\n[C]: in function 'xpcall'\n[Interface/AddOns/Blizzard_Settings_Shared/Blizzard_SettingsPanel.lua]:496: in function <.../Blizzard_Settings_Shared/Blizzard_SettingsPanel.lua:493>\n[C]: in function 'secureexecuterange'\n[Interface/AddOns/Blizzard_Settings_Shared/Blizzard_SettingsPanel.lua]:500: in function <.../Blizzard_Settings_Shared/Blizzard_SettingsPanel.lua:493>\n[C]: in function 'secureexecuterange'\n[Interface/AddOns/Blizzard_Settings_Shared/Blizzard_SettingsPanel.lua]:504: in function 'ForEachCanvas'\n[Interface/AddOns/Blizzard_Settings_Shared/Blizzard_SettingsPanel.lua]:532: in function 'CallRefreshOnCanvases'\n[Interface/AddOns/Blizzard_Settings_Shared/Blizzard_SettingsPanel.lua]:169: in function <.../Blizzard_Settings_Shared/Blizzard_SettingsPanel.lua:135>\n[C]: ?\n...[Interface/AddOns/Blizzard_UIParentPanelManager/Mainline/UIParentPanelManager.lua]:174: in function <...ParentPanelManager/Mainline/UIParentPanelManager.lua:169>\n[C]: in function 'SetAttribute'\n[Interface/AddOns/Blizzard_UIParentPanelManager/Mainline/UIParentPanelManager.lua]:894: in function 'ShowUIPanel'\n[Interface/AddOns/Blizzard_Settings_Shared/Blizzard_SettingsPanel.lua]:266: in function 'Open'\n[Interface/AddOns/Blizzard_Settings_Shared/Blizzard_SettingsPanel.lua]:273: in function 'OpenToCategory'\n[Interface/AddOns/Blizzard_Settings_Shared/Blizzard_SettingsInbound.lua]:170: in function <...lizzard_Settings_Shared/Blizzard_SettingsInbound.lua:167>\n[C]: in function 'SetAttribute'\n[Interface/AddOns/Blizzard_Settings_Shared/Blizzard_SettingsInbound.lua]:63: in function <...lizzard_Settings_Shared/Blizzard_SettingsInbound.lua:62>\n[tail call]: ?\n[Interface/AddOns/BetterBlizzFrames/retail/BetterBlizzFrames.lua]:3943: in function <...ddOns/BetterBlizzFrames/retail/BetterBlizzFrames.lua:3841>",
+["session"] = 4502,
+["counter"] = 1,
+},
+{
+["message"] = "Interface/AddOns/LiteMount/Options.lua:659: attempt to index field 'db' (a nil value)",
+["time"] = "2025/10/02 14:38:37",
+["locals"] = "self = <table> {\n DEFAULT_PRIORITY = 1\n MIN_PRIORITY = 0\n ALWAYS_PRIORITY = 4\n DISABLED_PRIORITY = 0\n MAX_PRIORITY = 4\n}\nname = \"uiDebugEnabled\"\n(for state) = <table> {\n 1 = \"char\"\n 2 = \"profile\"\n 3 = \"global\"\n}\n(for control) = 1\n_ = 1\nk = \"char\"\n(*temporary) = nil\n(*temporary) = \"attempt to index field 'db' (a nil value)\"\ndefaults = <table> {\n profile = <table> {\n }\n global = <table> {\n }\n char = <table> {\n }\n}\nLM = <table> {\n C_Spell = <table> {\n }\n TravelForm = <table> {\n }\n Mount = <table> {\n }\n Drive = <table> {\n }\n FLAG = <table> {\n }\n MountRegistry = Frame {\n }\n MountList = <table> {\n }\n UIFilter = <table> {\n }\n ActionButton = <table> {\n }\n Actions = <table> {\n }\n RuleSet = <table> {\n }\n Rule = <table> {\n }\n Journal = <table> {\n }\n Options = <table> {\n }\n RuleArguments = <table> {\n }\n Vars = <table> {\n }\n Conditions = <table> {\n }\n Nagrand = <table> {\n }\n RunningWild = <table> {\n }\n SPELL = <table> {\n }\n MOUNT_TYPE_NAMES = <table> {\n }\n Soar = <table> {\n }\n GhostWolf = <table> {\n }\n Spell = <table> {\n }\n SecureAction = <table> {\n }\n RuleContext = <table> {\n }\n RuleBoolean = <table> {\n }\n Environment = Frame {\n }\n MOUNTFAMILY_BY_SPELL_ID = <table> {\n }\n MOUNTFAMILY = <table> {\n }\n C_MountJournal = <table> {\n }\n ITEM = <table> {\n }\n MOUNT_TYPE_INFO = <table> {\n }\n Localize = <table> {\n }\n ItemSummoned = <table> {\n }\n}\n",
+["stack"] = "[Interface/AddOns/LiteMount/Options.lua]:659: in function 'GetOption'\n[Interface/AddOns/LiteMount/Print.lua]:80: in function 'UIDebug'\n[Interface/AddOns/LiteMount/UI/PanelTemplate.lua]:128: in function 'OnRefresh'\n[Interface/AddOns/Blizzard_Settings_Shared/Blizzard_SettingsPanel.lua]:9: in function <.../Blizzard_Settings_Shared/Blizzard_SettingsPanel.lua:7>\n[Interface/AddOns/Blizzard_Settings_Shared/Blizzard_SettingsPanel.lua]:533: in function <.../Blizzard_Settings_Shared/Blizzard_SettingsPanel.lua:532>\n[C]: in function 'xpcall'\n[Interface/AddOns/Blizzard_Settings_Shared/Blizzard_SettingsPanel.lua]:496: in function <.../Blizzard_Settings_Shared/Blizzard_SettingsPanel.lua:493>\n[C]: in function 'secureexecuterange'\n[Interface/AddOns/Blizzard_Settings_Shared/Blizzard_SettingsPanel.lua]:504: in function 'ForEachCanvas'\n[Interface/AddOns/Blizzard_Settings_Shared/Blizzard_SettingsPanel.lua]:532: in function 'CallRefreshOnCanvases'\n[Interface/AddOns/Blizzard_Settings_Shared/Blizzard_SettingsPanel.lua]:169: in function <.../Blizzard_Settings_Shared/Blizzard_SettingsPanel.lua:135>\n[C]: ?\n...[Interface/AddOns/Blizzard_UIParentPanelManager/Mainline/UIParentPanelManager.lua]:174: in function <...ParentPanelManager/Mainline/UIParentPanelManager.lua:169>\n[C]: in function 'SetAttribute'\n[Interface/AddOns/Blizzard_UIParentPanelManager/Mainline/UIParentPanelManager.lua]:894: in function 'ShowUIPanel'\n[Interface/AddOns/Blizzard_Settings_Shared/Blizzard_SettingsPanel.lua]:266: in function 'Open'\n[Interface/AddOns/Blizzard_Settings_Shared/Blizzard_SettingsPanel.lua]:273: in function 'OpenToCategory'\n[Interface/AddOns/Blizzard_Settings_Shared/Blizzard_SettingsInbound.lua]:170: in function <...lizzard_Settings_Shared/Blizzard_SettingsInbound.lua:167>\n[C]: in function 'SetAttribute'\n[Interface/AddOns/Blizzard_Settings_Shared/Blizzard_SettingsInbound.lua]:63: in function <...lizzard_Settings_Shared/Blizzard_SettingsInbound.lua:62>\n[tail call]: ?\n[Interface/AddOns/BetterBlizzFrames/retail/BetterBlizzFrames.lua]:3943: in function <...ddOns/BetterBlizzFrames/retail/BetterBlizzFrames.lua:3841>",
+["session"] = 4502,
+["counter"] = 9,
+},
+},
+}

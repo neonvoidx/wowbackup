@@ -1,0 +1,68 @@
+
+DevToolDatabase = {
+["profileKeys"] = {
+["Månyfaced - Mal'Ganis"] = "Månyfaced - Mal'Ganis",
+["Kumire - Mal'Ganis"] = "Kumire - Mal'Ganis",
+["Dernarplan - Mal'Ganis"] = "Dernarplan - Mal'Ganis",
+["Auteist - Mal'Ganis"] = "Auteist - Mal'Ganis",
+["Ofpuss - Mal'Ganis"] = "Ofpuss - Mal'Ganis",
+["Smaugchamp - Mal'Ganis"] = "Smaugchamp - Mal'Ganis",
+["Choppiez - Mal'Ganis"] = "Choppiez - Mal'Ganis",
+["Gehyo - Mal'Ganis"] = "Gehyo - Mal'Ganis",
+["Kitedbro - Mal'Ganis"] = "Kitedbro - Mal'Ganis",
+["Neonvoid - Mal'Ganis"] = "Neonvoid - Mal'Ganis",
+["Charizhard - Mal'Ganis"] = "Charizhard - Mal'Ganis",
+["Reedingo - Mal'Ganis"] = "Reedingo - Mal'Ganis",
+["Stormclout - Mal'Ganis"] = "Stormclout - Mal'Ganis",
+["Hellavator - Mal'Ganis"] = "Hellavator - Mal'Ganis",
+["Vansthalysia - Mal'Ganis"] = "Vansthalysia - Mal'Ganis",
+["Praisesun - Mal'Ganis"] = "Praisesun - Mal'Ganis",
+["Lutreteil - Mal'Ganis"] = "Lutreteil - Mal'Ganis",
+["Tampacks - Mal'Ganis"] = "Tampacks - Mal'Ganis",
+},
+["profiles"] = {
+["Månyfaced - Mal'Ganis"] = {
+},
+["Kumire - Mal'Ganis"] = {
+},
+["Dernarplan - Mal'Ganis"] = {
+},
+["Auteist - Mal'Ganis"] = {
+["sideBarTabSelected"] = "events",
+["collResizeWidth"] = 250.00048828125,
+},
+["Ofpuss - Mal'Ganis"] = {
+},
+["Smaugchamp - Mal'Ganis"] = {
+},
+["Choppiez - Mal'Ganis"] = {
+},
+["Gehyo - Mal'Ganis"] = {
+},
+["Kitedbro - Mal'Ganis"] = {
+},
+["Neonvoid - Mal'Ganis"] = {
+},
+["Charizhard - Mal'Ganis"] = {
+},
+["Reedingo - Mal'Ganis"] = {
+},
+["Stormclout - Mal'Ganis"] = {
+["tArgs"] = {
+"CellDB",
+},
+["sideBarTabSelected"] = "events",
+["collResizeWidth"] = 249.9998779296875,
+},
+["Hellavator - Mal'Ganis"] = {
+},
+["Vansthalysia - Mal'Ganis"] = {
+},
+["Praisesun - Mal'Ganis"] = {
+},
+["Lutreteil - Mal'Ganis"] = {
+},
+["Tampacks - Mal'Ganis"] = {
+},
+},
+}

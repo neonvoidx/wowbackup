@@ -1,0 +1,356 @@
+VER 3 000000000000009C " " "INV_MISC_QUESTIONMARK"
+#showtooltip [known:137639]  Storm, Earth, and Fire; [known:152173] Serenity
+/use 13
+/cast [known:137639]  Storm, Earth, and Fire
+/cast [known:152173] Serenity
+END
+VER 3 000000000000009D " " "INV_MISC_QUESTIONMARK"
+#showtooltip
+/use 14
+END
+VER 3 00000000000000A0 " " "INV_MISC_QUESTIONMARK"
+#showtooltip 
+/cast [nomod] Invoke Xuen, the White Tiger
+/cast [mod:shift] Expel Harm
+END
+VER 3 00000000000000F7 " " "134029"
+#showtooltip
+/use Conjured Mana Bun
+END
+VER 3 00000000000000D2 " " "INV_MISC_QUESTIONMARK"
+#showtooltip 13
+/use 13
+END
+VER 3 00000000000000D8 " " "INV_MISC_QUESTIONMARK"
+#showtooltip
+/cast [@mouseover, exists, harm][] Touch of Death
+END
+VER 3 00000000000000D9 " " "INV_MISC_QUESTIONMARK"
+#showtooltip Summon Jade Serpent Statue
+/cast [@cursor] Summon Jade Serpent Statue
+END
+VER 3 00000000000000E8 " " "136172"
+#showtolltip
+/cast Grimoire: Felguard
+END
+VER 3 0000000000000102 " " "INV_MISC_QUESTIONMARK"
+#showtooltip
+/cast roll
+/cast Prismatic Bauble
+END
+VER 3 000000000000010D " " "INV_MISC_QUESTIONMARK"
+/cast !spinning crane kick
+END
+VER 3 000000000000010C " " "INV_MISC_QUESTIONMARK"
+#showtooltip
+/cast Thunder Focus Tea
+/use Fire-Eater's Vial
+END
+VER 3 0000000000000114 " " "INV_MISC_QUESTIONMARK"
+#showtooltip 
+/cast [mod:shift, @focus,exists][] Grimoire: felguard
+END
+VER 3 0000000000000115 " " "INV_MISC_QUESTIONMARK"
+#showtooltip
+/cast Felstorm
+END
+VER 3 0000000000000116 " " "INV_MISC_QUESTIONMARK"
+#showtooltip
+/petattack
+/cast Demon Bolt
+END
+VER 3 0000000000000133 " " "INV_MISC_QUESTIONMARK"
+#showtooltip
+/cast [@mouseover, exists][]Devour Magic
+END
+VER 3 000000000000012A " " "INV_MISC_QUESTIONMARK"
+#showtooltip
+/cast [@player] Fel Obelisk
+END
+VER 3 000000000000012B " " "134400"
+#showtooltip
+/cast Demonic Circle
+/use [nomod] Prismatic Bauble
+END
+VER 3 0000000000000131 " " "INV_MISC_QUESTIONMARK"
+#showtooltip
+/cast [@mouseover, exists, harm][] Agony
+END
+VER 3 0000000000000134 " " "237563"
+#showtooltip Dispersion
+/cast Desperate Prayer
+/cast Dispersion
+END
+VER 3 000000000000013F " " "INV_MISC_QUESTIONMARK"
+#showtooltip
+/cast [@cursor, exists, harm][] Conflagrate
+END
+VER 3 0000000000000140 " " "INV_MISC_QUESTIONMARK"
+#showtooltip
+/cast [@cursor] Cataclysm
+END
+VER 3 0000000000000141 " " "INV_MISC_QUESTIONMARK"
+#showtooltip
+/cast [@mouseover,exists, harm][] Drain Life
+END
+VER 3 0000000000000142 " " "INV_MISC_QUESTIONMARK"
+#showtooltip
+/cast [talent:6/2] Haunt
+/cast [talent:6/3] Grimoire of Sacrifice
+END
+VER 3 000000000000014C " " "INV_MISC_QUESTIONMARK"
+#showtooltip
+/cast [mod:none]Purify Disease;[mod:shift,@party1]Purify Disease;[mod:ctrl,@party2]Purify Disease;[mod:alt, @party3]Purify Disease;[@player] Purify Disease;
+END
+VER 3 0000000000000154 " " "INV_MISC_QUESTIONMARK"
+#showtooltip backstab
+/cast [nomod,nocombat] !stealth
+/cast [nomod] backstab
+END
+VER 3 000000000000015C " " "INV_MISC_QUESTIONMARK"
+#showtooltip
+/cast Sprint
+/use [nostealth] Prismatic Bauble
+END
+VER 3 000000000000015D " " "INV_MISC_QUESTIONMARK"
+#showtooltip
+/cast [@cursor] Grappling Hook
+END
+VER 3 0000000000000162 " " "INV_MISC_QUESTIONMARK"
+#showtooltip
+/cast [nomod, @target] Blind; [mod:shift, @focus] Blind
+END
+VER 3 0000000000000164 " " "INV_MISC_QUESTIONMARK"
+#showtooltip
+/cast [mod:shift,@focus][] Kidney Shot
+END
+VER 3 0000000000000136 " " "INV_MISC_QUESTIONMARK"
+#showtooltip
+/cast Fear
+/use Fire-Eater's Vial
+END
+VER 3 000000000000016A " " "INV_MISC_QUESTIONMARK"
+#showtooltip
+/cast [@mouseover,noharm,exists][@player] Power Word: Shield
+END
+VER 3 0000000000000169 " " "INV_MISC_QUESTIONMARK"
+#showtooltip
+/cast [@cursor] Mass Dispel
+END
+VER 3 0000000000000168 " " "INV_MISC_QUESTIONMARK"
+#showtooltip
+/cast [@mouseover,harm,exists][] Shadow Word: Death
+END
+VER 3 0000000000000167 " " "INV_MISC_QUESTIONMARK"
+#showtooltip
+/cast [@mouseover,noharm,exists][@player] Purify Disease
+END
+VER 3 0000000000000166 " " "INV_MISC_QUESTIONMARK"
+#showtooltip
+/cast [@mouseover,harm,exists][] Dispel Magic
+END
+VER 3 0000000000000165 " " "INV_MISC_QUESTIONMARK"
+#showtooltip
+/cast [mod:shift,@focus][] Thoughtsteal
+END
+VER 3 000000000000016B " " "INV_MISC_QUESTIONMARK"
+#showtooltip
+/cast [@mouseover,noharm,exists][@player] Shadow Mend
+END
+VER 3 000000000000016D " " "INV_MISC_QUESTIONMARK"
+#showtooltip [mod:shift] Summon Observer; [nomod] Fel Domination
+/use Seafarer's Slidewhistle
+/cast [mod:shift] Summon Observer
+/cast [nomod]fel domination
+/cast [nomod] Summon Observer
+/cast fel domination
+/cast Summon Observer
+END
+VER 3 0000000000000171 " " "INV_MISC_QUESTIONMARK"
+#showtooltip
+/cast [@mouseover,exists,help][] Circle of Healing
+END
+VER 3 0000000000000170 " " "INV_MISC_QUESTIONMARK"
+#showtooltip shadowmeld
+/stopattack
+/cast [combat] shadowmeld
+/cast [nocombat,nostealth] Stealth
+END
+VER 3 0000000000000172 " " "INV_MISC_QUESTIONMARK"
+#showtooltip
+/cast [@mouseover,harm,exists][] Shackle undead
+END
+VER 3 0000000000000175 " " "INV_MISC_QUESTIONMARK"
+#showtooltip
+/cast [@mouseover, exists, noharm] Reawaken
+/cast Resuscitate
+END
+VER 3 000000000000017F " " "134400"
+#showtooltip
+/cast [known: Summon White Tiger Statue, @cursor] Summon White Tiger Statue
+END
+VER 3 0000000000000181 " " "134400"
+#showtooltip
+/cast [known:322118] Invoke Yu'lon, the Jade Serpent
+/cast [known:325197] Invoke Chi-ji, the Red Crane
+END
+VER 3 0000000000000182 " " "134400"
+#showtooltip
+/cast [known:Revival] Revival
+/cast [known:Restoral] Restoral
+END
+VER 3 0000000000000183 " " "134400"
+#showtooltip
+/cast [known:Chi Burst] Chi Burst
+/cast [known:Chi Wave] Chi Wave
+END
+VER 3 0000000000000184 " " "134400"
+#showtooltip
+/cast [@mouseover,help,exists][] Zen Pulse
+END
+VER 3 0000000000000189 " " "134400"
+#showtooltip
+/cast [known: 264119] Summon Vilefiend
+/cast [known: 264057] Soul Strike
+END
+VER 3 000000000000018A " " "236292"
+#showtooltip
+/cast [known: 267171] Demonic Strength
+/cast [known: 267211] Bilescourge Bombers
+END
+VER 3 000000000000018B " " "134400"
+#showtooltip
+/cast [nomod] Transcendence: Transfer
+/cast [mod:shift] Transcendence
+END
+VER 3 000000000000018C " " "134400"
+#showtooltip
+/cast flying serpent kick
+/cast Perpetual Purple Firework
+END
+VER 3 000000000000018D " " "134400"
+#showtooltip
+/cast [nomod] Spear Hand Strike
+/cast [mod:shift] Disable
+/cast [mod:ctrl, @player] Detox
+END
+VER 3 000000000000018E " " "134400"
+#showtooltip Secret Technique
+/cast Cold Blood
+/cast Secret Technique
+END
+VER 3 000000000000018F " " "INV_MISC_QUESTIONMARK"
+#showtooltip item:182773
+#macro version 1
+/run if not InCombatLockdown() then RHT.b:SetAttribute("item","Necrolord Hearthstone") end
+/click RHTB LeftButton
+END
+VER 3 00000000000000B6 "  " "INV_MISC_QUESTIONMARK"
+#showtooltip 
+/cast [ @mouseover,exists,harm, nodead][] Shadow Word: Death
+END
+VER 3 000000000000015E " A1" "INV_MISC_QUESTIONMARK"
+#showtooltip
+/cast [@arena1] Sap
+END
+VER 3 00000000000000DB " A1" "INV_MISC_QUESTIONMARK"
+#showtooltip
+/cast [@arena1] Paralysis
+END
+VER 3 00000000000000F1 " A1" "INV_MISC_QUESTIONMARK"
+/cast [@arena1] Counterspell
+END
+VER 3 0000000000000158 " A1" "INV_MISC_QUESTIONMARK"
+#showtooltip
+/cast [@arena1] Kidney Shot
+END
+VER 3 0000000000000156 " A2" "INV_MISC_QUESTIONMARK"
+#showtooltip
+/cast [mod:shift, @target] Shadowstep;[@arena2] Shadowstep
+END
+VER 3 0000000000000128 " Demo" "INV_MISC_QUESTIONMARK"
+#showtooltip [mod:shift] Summon Wrathguard; [nomod] Fel Domination
+/use Seafarer's Slidewhistle
+/cast [mod:shift] Summon Wrathguard
+/cast [nomod]fel domination
+/cast [nomod] Summon Wrathguard
+/cast fel domination
+/cast Summon Wrathguard
+END
+VER 3 0000000000000173 " Grapple" "INV_MISC_QUESTIONMARK"
+#showtooltip
+/cast [mod:shift,@focus,exists,harm][] Grapple Weapon
+END
+VER 3 00000000000000C8 " HS" "INV_MISC_QUESTIONMARK"
+#showtooltip Healthstone
+/use Healthstone
+END
+VER 3 00000000000000F0 " KLEPTO CANCEL" "136229"
+/cancelaura Lifebloom
+/cancelaura Regrowth
+/cancelaura Rejuvenation
+/cancelaura Wild Growth
+/cancelaura Cultivation
+/cancelaura Blazing Barrier
+/cancelaura Prismatic Barrier
+END
+VER 3 0000000000000124 " nut" "INV_MISC_QUESTIONMARK"
+#showtooltip Dark Soul: Misery
+/use 13
+/cast Dark Soul: Misery
+/cast Summon Darkglare
+/cast Rapid Contagion
+/cast Blood Fury
+/use Blazing Wings
+END
+VER 3 0000000000000177 " PassiveFollow" "571320"
+/petfollow
+/petpassive
+END
+VER 3 00000000000000D0 " PVP AUDIT" "135340"
+/pvpaudit
+END
+VER 3 00000000000000BC " RaidMark" "INV_MISC_QUESTIONMARK"
+/run local m=8; if UnitExists("mouseover") and GetRaidTargetIndex("mouseover")~=m then SetRaidTarget("mouseover",m) elseif UnitExists("target") and GetRaidTargetIndex("target")~=m then SetRaidTarget("target",m) end
+END
+VER 3 0000000000000174 " VS" "INV_MISC_QUESTIONMARK"
+#showtooltip
+/cast [@mouseover,exists,help][] Void Shift
+END
+VER 3 00000000000000D1 " Wargames" "Ability_DeathKnight_DeathChain."
+/wg
+END
+VER 3 00000000000000B1 "Altered Time" "INV_MISC_QUESTIONMARK"
+END
+VER 3 00000000000000AA "Decursive" "INV_MISC_QUESTIONMARK"
+/script DecursiveRootTable.Dcr:Println('No spell available')
+END
+VER 3 0000000000000185 "DrinkOnlyMP" "INV_Misc_QuestionMark"
+#showtooltip
+/cast item:6948
+END
+VER 3 0000000000000188 "Focus" "134400"
+#showtooltip
+/cast [@focus, exists, harm][] Command Demon
+END
+VER 3 0000000000000187 "Focus" "134400"
+#showtooltip
+/cast [@focus,exists,harm][] Fear
+/use Fire-Eater's Vial
+END
+VER 3 0000000000000179 "HP POT" "INV_MISC_QUESTIONMARK"
+END
+VER 3 000000000000016C "HS" "INV_MISC_QUESTIONMARK"
+#showtooltip
+/use healthstone
+END
+VER 3 0000000000000100 "lol" "236550"
+/lol
+END
+VER 3 0000000000000153 "Meld/Stealth" "INV_MISC_QUESTIONMARK"
+#showtooltip shadowmeld
+/stopattack
+/cancelaura [nocombat] shadowmeld
+/cancelaura [nocombat] shadow dance
+/castsequence reset=2 shadowmeld, !stealth
+END

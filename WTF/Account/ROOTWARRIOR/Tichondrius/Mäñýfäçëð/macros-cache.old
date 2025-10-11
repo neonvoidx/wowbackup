@@ -1,0 +1,112 @@
+VER 3 010000000000002B " " "INV_MISC_QUESTIONMARK"
+#showtooltip [combat] Vanish; Stealth
+/cast [combat] Vanish; [nostealth] Stealth
+END
+VER 3 0100000000000014 " " "INV_MISC_QUESTIONMARK"
+#showtooltip Cheap Shot
+/cast [nostealth, nocombat] !stealth
+/cast [nostealth, combat] Shadow Dance
+/cast [nomod] Cheap shot
+/cast [mod:shift,@focus] Cheap shot
+END
+VER 3 0100000000000016 " " "INV_MISC_QUESTIONMARK"
+#showtooltip
+/cast [mod:shift, @focus,exists,harm,nodead][] Kick
+END
+VER 3 0100000000000024 " " "INV_MISC_QUESTIONMARK"
+/stopattack
+/cast Shadowmeld
+/cast !Stealth 
+END
+VER 3 010000000000002C " " "INV_MISC_QUESTIONMARK"
+#showtooltip Shadow Dance
+/cast shadow dance
+/cast shadow blades
+/cast thistle tea
+/cast symbols of death
+/use 14
+END
+VER 3 0100000000000011 " " "INV_MISC_QUESTIONMARK"
+#showtooltip 
+/cast [@mouseover,exists,nodead][] Shadowstep
+END
+VER 3 0100000000000013 " " "136175"
+#showtooltip
+/cast [mod:shift,@focus,exists][] Blind
+END
+VER 3 0100000000000037 " " "134400"
+#showtooltip
+/cast [bonusbar:1] Shadowstrike; Backstab
+END
+VER 3 0100000000000039 " " "134400"
+#showtooltip Symbols of Death
+/castsequence reset=2 Symbols of Death,null 
+/cqs
+END
+VER 3 010000000000003A " " "134400"
+#showtooltip Secret Technique
+/cast Cold Blood
+/cast Secret Technique
+END
+VER 3 010000000000003D " " "134400"
+#showtooltip
+/cast [mod:shift] Black Powder; [] Shuriken Storm
+END
+VER 3 010000000000003E " " "134400"
+#showtooltip
+/cast Sprint
+/use [nostealth] Goblin Weather Machine - Prototype 01-B
+/use [nostealth] Prismatic Bauble
+END
+VER 3 0100000000000040 " " "134400"
+#showtooltip Adrenaline Rush
+/use 13
+/cast Ancestral Call
+/cast Adrenaline Rush
+END
+VER 3 0100000000000041 " " "134400"
+#showtooltip
+/cast [mod:shift] Crimson Tempest
+/cast [nomod] Fan of knives
+END
+VER 3 0100000000000038 "  " "134400"
+#showtooltip Shadow Blades
+/cast Shadow Blades
+END
+VER 3 0100000000000044 " FOCUS" "134400"
+#showtooltip Sap
+/cast [target=focus] Sap
+END
+VER 3 0100000000000046 " FOCUS" "134400"
+#showtooltip 
+/cast [stealth, target=focus] Cheap Shot
+END
+VER 3 0100000000000043 " Focus KickStep" "134400"
+#showtooltip
+/cast [target=focus] Shadowstep
+/cast [target=focus] Kick
+END
+VER 3 0100000000000042 " PVP Poison" "134400"
+#showtooltip Wound Poison
+/use [nostealth] Goblin Weather Machine - Prototype 01-B
+/castsequence reset=2 Crippling Poison, Wound Poison
+END
+VER 3 0100000000000047 " STEALTH" "134400"
+#showtooltip Sap
+/cleartarget
+/targetenemyplayer
+/cast [stance:1/3, harm, nodead] Sap
+END
+VER 3 0100000000000045 "FOCUS " "134400"
+#showtooltip Kidney Shot
+/cast [target=focus] Kidney Shot
+END
+VER 3 010000000000001C "Poisons" "458736"
+#showtooltip Deadly Poison
+/use [nostealth] Goblin Weather Machine - Prototype 01-B
+/castsequence reset=2 Wound Poison, Crippling Poison
+END
+VER 3 010000000000003F "VanishBTE" "134400"
+#showtooltip between the eyes
+/castsequence reset=3 vanish, between the eyes
+END

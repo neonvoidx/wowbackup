@@ -1,0 +1,10 @@
+
+PetWalkerPerCharDB = {
+["charFavs"] = {
+["BattlePet-0-0000227F0680"] = true,
+["BattlePet-0-000018AA8069"] = true,
+},
+["charFavsEnabled"] = true,
+["currentPet"] = "BattlePet-0-000018AA8069",
+["previousPet"] = "BattlePet-0-0000227F0680",
+}

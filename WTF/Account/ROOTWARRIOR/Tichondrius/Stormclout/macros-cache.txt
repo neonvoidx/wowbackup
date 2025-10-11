@@ -1,0 +1,167 @@
+VER 3 0100000000000020 " " "INV_MISC_QUESTIONMARK"
+#showtooltip Rising Sun Kick
+/stopmacro [channeling:Fists of Fury]
+/stopmacro [channeling:Crackling Jade Lightning]
+/stopmacro [channeling:Spinning Crane Kick]
+/stopmacro [channeling:Celestial Conduit]
+/cast Rising Sun Kick
+END
+VER 3 0100000000000017 " " "INV_MISC_QUESTIONMARK"
+#showtooltip
+/cancelaura Flying Serpent Kick
+/cancelaura Roll
+/cancelaura Chi Torpedo
+/cast Leg Sweep
+END
+VER 3 010000000000001E " " "INV_MISC_QUESTIONMARK"
+#showtooltip Tiger Palm
+/stopmacro [channeling:Fists of Fury]
+/stopmacro [channeling:Crackling Jade Lightning]
+/stopmacro [channeling:Spinning Crane Kick]
+/stopmacro [channeling:Celestial Conduit]
+/cast Tiger Palm
+END
+VER 3 0100000000000028 " " "134400"
+#showtooltip
+/cast [@mouseover,help,exists][] Life Cocoon
+END
+VER 3 0100000000000018 " " "134400"
+#showtooltip
+/cast [@mouseover,help,exists] Tiger's Lust; [@player] Tiger's Lust;
+/use Perpetual Purple Firework
+END
+VER 3 0100000000000015 " " "629534"
+#showtooltip Paralysis
+/cast [mod:shift,@focus,exists,harm,nodead][] Paralysis
+END
+VER 3 010000000000002E " " "134400"
+#showtooltip
+/cast  [@focus,exists,mod:shift,harm,nodead][] Spear Hand Strike
+/use Goblin Weather Machine - Prototype 01-B
+END
+VER 3 0100000000000031 " " "134400"
+#showtooltip
+/cast [@mouseover, exists,help][] Enveloping Mist
+END
+VER 3 0100000000000030 " " "134400"
+#showtooltip
+/cast [@mouseover, exists,help][] Vivify
+END
+VER 3 010000000000002F " " "134400"
+#showtooltip
+/cast [@mouseover, exists,help][] Renewing Mist
+END
+VER 3 0100000000000033 " " "134400"
+#showtooltip
+/cast [@mouseover, exists,help][] Soothing Mist
+END
+VER 3 0100000000000034 " " "134400"
+#showtooltip
+/cast Breath of fire
+/use Fire-eater's Vial
+END
+VER 3 0100000000000036 " " "134400"
+#showtooltip
+/cast Invoke Niuzao, the black ox
+END
+VER 3 0100000000000037 " " "134400"
+#showtooltip Blackout Kick
+/stopmacro [channeling:Fists of Fury]
+/stopmacro [channeling:Crackling Jade Lightning]
+/stopmacro [channeling:Spinning Crane Kick]
+/stopmacro [channeling:Celestial Conduit]
+/cast Blackout Kick
+END
+VER 3 0100000000000038 " " "134400"
+#showtooltip
+/cast [@mouseover,help,exists,nodead][] Sheilun's Gift
+END
+VER 3 0100000000000039 " " "134400"
+#showtooltip Invoke Xuen, the white tiger
+/use 13
+/use Tempered Potion
+/cast Berserking
+/cast Invoke Xuen, the white tiger
+END
+VER 3 010000000000003A " " "135734"
+#showtooltip [known:Chi burst] Chi Burst;[known: chi wave] Chi wave;
+/cast [known:Chi Burst] Chi burst;
+/cast [known:Chi Wave] Chi wave
+/use Goblin Weather Machine - Prototype 01-B
+END
+VER 3 010000000000003B " " "134400"
+#showtooltip
+/cast [@cursor] Summon Jade Serpent Statue
+END
+VER 3 010000000000003C " " "134400"
+#showtooltip
+/cast [@mouseover, exists][] Grapple Weapon
+END
+VER 3 0100000000000046 " " "134400"
+#showtooltip
+/cast [@player] Exploding Keg
+END
+VER 3 010000000000004B " " "134400"
+#showtooltip
+/cast [@mouseover,exists,help,nodead][] Detox
+END
+VER 3 010000000000004C " " "INV_Misc_QuestionMark"
+#showtooltip Strike of the Windlord
+/stopmacro [channeling:Fists of Fury]
+/stopmacro [channeling:Crackling Jade Lightning]
+/stopmacro [channeling:Spinning Crane Kick]
+/stopmacro [channeling:Celestial Conduit]
+/cast Strike of the Windlord
+END
+VER 3 010000000000004D " " "INV_Misc_QuestionMark"
+#showtooltip Whirling Dragon Punch
+/stopmacro [channeling:Fists of Fury]
+/stopmacro [channeling:Crackling Jade Lightning]
+/stopmacro [channeling:Spinning Crane Kick]
+/stopmacro [channeling:Celes
+/cast Whirling Dragon Punch
+END
+VER 3 010000000000004E " " "134400"
+#showtooltip
+/stopmacro [channeling:Fists of Fury]
+/stopmacro [channeling:Crackling Jade Lightning]
+/stopmacro [channeling:Spinning Crane Kick]
+/stopmacro [channeling:Celestial Conduit]
+/cast spinning crane kick
+/use Fire-eater's Vial
+END
+VER 3 010000000000004F " " "134400"
+#showtooltip
+/cast [@cursor] Summon Black Ox Statue
+END
+VER 3 0100000000000053 " " "134400"
+#showtooltip Celestial Conduit
+/stopmacro [channeling:Fists of Fury]
+/stopmacro [channeling:Crackling Jade Lightning]
+/stopmacro [channeling:Spinning Crane Kick]
+/cast Celestial Conduit
+END
+VER 3 0100000000000050 " " "134400"
+#showtooltip [nomod]  Provoke; [mod:shift] Summon Black Ox Statue
+/cast [nomod] Provoke
+/targetexact [mod:shift] Black Ox Statue
+/cast [mod:shift] Provoke
+/targetlasttarget [mod:shift,exists]
+END
+VER 3 0100000000000054 " " "134400"
+#showtooltip
+/cast [known:breath of fire] breath of fire
+/cast [known:rushing jade wind] rushing jade wind
+END
+VER 3 0100000000000055 " " "134400"
+#showtooltip
+/cast [known: celestial infusion] celestial infusion
+/cast [known: celestial brew] celestial brew
+END
+VER 3 0100000000000051 "Dismiss" "627605"
+/run if not UnitAffectingCombat("player")then for i=1,4 do n="t"..i CreateFrame("Button",n,UIParent,"SecureUnitButtonTemplate")_G[n]:SetAttribute("type", "destroytotem")_G[n]:SetAttribute("totem-slot",i)end end
+/click t1
+/click t2
+/click t3
+/click t4
+END

@@ -1,0 +1,8 @@
+
+AutoStopwatchDB = {
+["PvPEnable"] = true,
+["PartyEnable"] = true,
+["RaidEnable"] = true,
+["ArenaEnable"] = true,
+["NoneEnable"] = true,
+}

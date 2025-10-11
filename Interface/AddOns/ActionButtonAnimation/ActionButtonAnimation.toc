@@ -1,0 +1,8 @@
+## Interface: 110100 
+## Title: Action Button Animation
+## Notes: Adds an animation to action buttons when abilities are pressed.
+## Author: rnxm
+## Version: 1.0
+## LoadOnDemand: 0
+
+ActionButtonAnimation.lua

@@ -1,0 +1,49 @@
+
+HandyNotes_TravelGuideDB = {
+["profileKeys"] = {
+["Månyfaced - Mal'Ganis"] = "Default",
+["Heilsatan - Tichondrius"] = "Default",
+["Mäñýfäçëð - Tichondrius"] = "Default",
+["Hellowalls - Mal'Ganis"] = "Default",
+["Praisesun - Tichondrius"] = "Default",
+["Smaugchamp - Tichondrius"] = "Default",
+["Starstypeshi - Tichondrius"] = "Default",
+["Auteist - Mal'Ganis"] = "Auteist - Mal'Ganis",
+["Ofpuss - Mal'Ganis"] = "Ofpuss - Mal'Ganis",
+["Gehyo - Mal'Ganis"] = "Gehyo - Mal'Ganis",
+["Smaugchamp - Mal'Ganis"] = "Default",
+["Choppiez - Mal'Ganis"] = "Default",
+["Edaroseld - Illidan"] = "Default",
+["Thickshape - Mal'Ganis"] = "Default",
+["Ofpusstwo - Tichondrius"] = "Default",
+["Corsic - Mal'Ganis"] = "Default",
+["Mäñýfäçëð - Mal'Ganis"] = "Default",
+["Hellavator - Mal'Ganis"] = "Default",
+["Charizhard - Mal'Ganis"] = "Default",
+["Hellavator - Tichondrius"] = "Default",
+["Auteist - Tichondrius"] = "Default",
+["Cullnvoid - Tichondrius"] = "Default",
+["Stormclout - Tichondrius"] = "Default",
+["Reedingo - Mal'Ganis"] = "Default",
+["Stormclout - Mal'Ganis"] = "Stormclout - Mal'Ganis",
+["Rakeist - Mal'Ganis"] = "Default",
+["Neonvoid - Mal'Ganis"] = "Default",
+["Tampacks - Mal'Ganis"] = "Default",
+["Ofpuss - Tichondrius"] = "Default",
+["Praisesun - Mal'Ganis"] = "Default",
+["Choppiez - Tichondrius"] = "Default",
+["Thingreyline - Tichondrius"] = "Default",
+},
+["profiles"] = {
+["Stormclout - Mal'Ganis"] = {
+},
+["Default"] = {
+},
+["Gehyo - Mal'Ganis"] = {
+},
+["Ofpuss - Mal'Ganis"] = {
+},
+["Auteist - Mal'Ganis"] = {
+},
+},
+}

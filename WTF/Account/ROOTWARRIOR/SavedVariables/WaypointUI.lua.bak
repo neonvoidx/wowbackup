@@ -1,0 +1,61 @@
+
+WaypointDB_Global = {
+["profileKeys"] = {
+["Hellowalls - Mal'Ganis"] = "Default",
+["Auteist - Mal'Ganis"] = "Default",
+["Ofpuss - Mal'Ganis"] = "Default",
+["Smaugchamp - Mal'Ganis"] = "Default",
+["Choppiez - Mal'Ganis"] = "Default",
+["Starstypeshi - Tichondrius"] = "Default",
+["Mäñýfäçëð - Mal'Ganis"] = "Default",
+["Auteist - Tichondrius"] = "Default",
+["Praisesun - Tichondrius"] = "Default",
+["Stormclout - Tichondrius"] = "Default",
+["Reedingo - Mal'Ganis"] = "Default",
+["Stormclout - Mal'Ganis"] = "Default",
+["Rakeist - Mal'Ganis"] = "Default",
+["Hellavator - Mal'Ganis"] = "Default",
+["Mäñýfäçëð - Tichondrius"] = "Default",
+["Ofpuss - Tichondrius"] = "Default",
+["Praisesun - Mal'Ganis"] = "Default",
+["Choppiez - Tichondrius"] = "Default",
+["Thingreyline - Tichondrius"] = "Default",
+},
+["profiles"] = {
+["Default"] = {
+["APP_WAYPOINT_SCALE"] = 0.800000011920929,
+["C_FONT_CUSTOM"] = {
+["CONTENT_DEFAULT"] = {
+["path"] = "Fonts\\FRIZQT__.TTF",
+["name"] = "Default",
+["sizeModifier"] = 1,
+},
+},
+["WS_DISTANCE_HIDE"] = 20,
+["WS_PINPOINT_INFO_EXTENDED"] = true,
+},
+},
+}
+WaypointDB_Global_Persistent = {
+["profileKeys"] = {
+["Hellowalls - Mal'Ganis"] = "Default",
+["Auteist - Mal'Ganis"] = "Default",
+["Ofpuss - Mal'Ganis"] = "Default",
+["Smaugchamp - Mal'Ganis"] = "Default",
+["Choppiez - Mal'Ganis"] = "Default",
+["Starstypeshi - Tichondrius"] = "Default",
+["Mäñýfäçëð - Mal'Ganis"] = "Default",
+["Auteist - Tichondrius"] = "Default",
+["Praisesun - Tichondrius"] = "Default",
+["Stormclout - Tichondrius"] = "Default",
+["Reedingo - Mal'Ganis"] = "Default",
+["Stormclout - Mal'Ganis"] = "Default",
+["Rakeist - Mal'Ganis"] = "Default",
+["Hellavator - Mal'Ganis"] = "Default",
+["Mäñýfäçëð - Tichondrius"] = "Default",
+["Ofpuss - Tichondrius"] = "Default",
+["Praisesun - Mal'Ganis"] = "Default",
+["Choppiez - Tichondrius"] = "Default",
+["Thingreyline - Tichondrius"] = "Default",
+},
+}

@@ -1,0 +1,22 @@
+lightweight tag dd8fa16e7b393c874294c0542ea1e7af2879a5f5 2.5.3
+Author:	GitHub <noreply@github.com>
+Date:	Wed Mar 26 18:47:34 2025 +0100
+
+commit c80b76380628103e9513b288caa8393c04f459ee
+Author: unverz06 <>
+Date:   Tue Sep 10 19:48:38 2024 +0200
+
+    chore(): version
+
+commit c80b76380628103e9513b288caa8393c04f459ee
+Author: unverz06 <>
+Date:   Tue Sep 10 19:48:38 2024 +0200
+
+    chore(): version
+
+commit b33f278bd574ace90c401b013ddd36ebed3cb358
+Author: unverz06 <>
+Date:   Tue Sep 10 19:48:15 2024 +0200
+
+    feat(): new locale
+

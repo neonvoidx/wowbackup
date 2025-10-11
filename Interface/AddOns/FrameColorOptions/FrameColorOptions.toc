@@ -1,0 +1,28 @@
+## Interface: 110200
+## Version: 4.2.1
+## Title: FrameColor Options
+## Author: Slothpala
+## LoadOnDemand: 1
+## Dependencies: FrameColor
+## OptionalDeps: Ace3, LibDeflate
+## IconTexture: Interface\AddOns\FrameColor\Assets\SecondaryIcon.tga
+
+embeds.xml
+
+Utils\ProfileSharing.lua
+
+Templates\FrameColorOptions_CategoryListTemplate.xml
+Templates\FrameColorOptions_ModuleButtonTemplate.xml
+Templates\FrameColorOptions_ColorButtonTemplate.xml
+Templates\FrameColorOptions_ModuleColorButtonTemplate.xml
+Templates\FrameColorOptions_ToggleButtonTemplate.xml
+
+OptionsFrames\SearchBox.lua
+OptionsFrames\LeftInsetFrame.lua
+OptionsFrames\RightInset\RightInsetFrame.lua
+OptionsFrames\RightInset\ModuleListLoader.lua
+OptionsFrames\RightInset\ColorManager.lua
+OptionsFrames\MainFrame.lua
+
+FrameColorOptions.lua
+

@@ -1,0 +1,7 @@
+
+EnchantMeAddonConfig = {
+["flagColor"] = "ffff0000",
+["ignoreSockets"] = true,
+["version"] = 3,
+["indicatorPos"] = "TOPLEFT",
+}

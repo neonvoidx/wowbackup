@@ -1,0 +1,18 @@
+
+NarcissusDB_PC = {
+["UseAlias"] = false,
+["PlayerAlias"] = "",
+["EquipmentSetDB"] = {
+},
+["ClassSetAcquired_Karesh"] = true,
+}
+NarciStatisticsDB_PC = {
+["Barbershop"] = {
+["Locations"] = {
+[2339] = {
+["visit"] = 8,
+["time"] = 360,
+},
+},
+},
+}

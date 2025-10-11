@@ -1,0 +1,15 @@
+<Ui xmlns="http://www.blizzard.com/wow/ui/">
+  <Script file="_Minimap.lua"/>
+  <Script file="_Tooltips.lua"/>
+  <Script file="_MenuStyle1Mixin.lua"/>
+  <Script file="_ObjectiveTracker.lua"/>
+  <Script file="_PopUpDialogs.lua"/>
+  <Script file="_MirrorTimerContainer.lua"/>
+  <Script file="_SpellFlyout.lua"/>
+  <Script file="_CompactRaidFrameManager.lua"/>
+  <Script file="_MainStatusTrackingBarContainer.lua"/>
+  <Script file="_SecondaryStatusTrackingBarContainer.lua"/>
+  <Script file="_ChatFrame.lua"/>
+  <Script file="_BuffFrame.lua"/>
+  <Script file="_CooldownViewer.lua"/>
+</Ui>

@@ -1,0 +1,92 @@
+VER 3 0100000000000013 " " "134400"
+#showtooltip
+/cast [@mouseover,exists,help][] Blessing of Freedom
+END
+VER 3 0100000000000014 " " "134400"
+#showtooltip
+/cast [@mouseover,exists,help][] Blessing of Protection
+END
+VER 3 0100000000000015 " " "134400"
+#showtooltip
+/cast [@mouseover,exists,help][] Blessing of Sacrifice
+/use Fire-Eater's Vial
+END
+VER 3 0100000000000016 " " "134400"
+#showtooltip
+/cast [known: Blinding Light] Blinding Light
+/cast  [known: Repentance,@focus,exists,harm][]Repentance
+END
+VER 3 0100000000000017 " " "134400"
+#showtooltip
+/cast [@mouseover,exists,help][] Flash of Light
+END
+VER 3 0100000000000018 " " "134400"
+#showtooltip
+/cast [mod:shift,@focus,exists][] Hammer of Justice
+END
+VER 3 0100000000000019 " " "134400"
+#showtooltip
+/cast [@mouseover,exists,help,dead][] Redemption
+END
+VER 3 010000000000001A " " "134400"
+#showtooltip
+/cast [@mouseover,exists,help][] Word of Glory
+END
+VER 3 010000000000001B " " "134400"
+#showtooltip
+/cast [@mouseover,exists,help][] Lay on Hands
+END
+VER 3 010000000000001C " " "134400"
+#showtooltip
+/cast [@mouseover,exists,help,nodead][] Cleanse
+END
+VER 3 010000000000001D " " "134400"
+#showtooltip
+/cast [@mouseover,exists,help][] Blessing of Summer
+END
+VER 3 010000000000001E " " "134400"
+#showtooltip
+/cast [@mouseover,exists,help][] Beacon of Faith
+END
+VER 3 010000000000001F " " "134400"
+#showtooltip
+/cast [@mouseover,exists,help][] Beacon of Light
+END
+VER 3 0100000000000020 " " "134400"
+#showtooltip
+/cast [@mouseover,exists,help][] Bestow Faith
+END
+VER 3 0100000000000021 " " "134400"
+#showtooltip
+/cast [@mouseover,exists,help,nodead][] Holy shock
+END
+VER 3 0100000000000022 " " "134400"
+#showtooltip
+/cast Avenging Wrath
+/use Blazing Wings
+END
+VER 3 0100000000000023 " " "134400"
+#showtooltip
+/cast [@mouseover,help,exists][@target] Intercession
+END
+VER 3 0100000000000028 " " "134400"
+#showtooltip
+/cast [@mouseover,exists,help][] Holy Prism
+END
+VER 3 0100000000000025 " " "134400"
+#showtooltip
+/cast [@mouseover,exists,help][] Holy Light
+END
+VER 3 0100000000000027 " " "134400"
+#showtooltip
+/cast [@mouseover,exists,help][] Blessing of freedom
+END
+VER 3 0100000000000026 "  " "134400"
+#showtooltip Blessing of spellwarding
+/cast [@mouseover,exists,help][] Blessing of Spellwarding
+END
+VER 3 0100000000000024 " PVP" "134400"
+#showtooltip
+/cast [known: Barrier of Faith,@mouseover,exists,help][known: Barrier of Faith] Barrier of Faith
+/cast [known: Holy Prism, @mouseover,exists,help][known:Holy Prism] Holy Prism
+END

@@ -1,0 +1,28 @@
+
+TSV_DB = {
+["profileKeys"] = {
+["Hellowalls - Mal'Ganis"] = "Hellowalls - Mal'Ganis",
+["Auteist - Mal'Ganis"] = "Auteist - Mal'Ganis",
+["Ofpuss - Mal'Ganis"] = "Ofpuss - Mal'Ganis",
+["Smaugchamp - Mal'Ganis"] = "Smaugchamp - Mal'Ganis",
+["Choppiez - Mal'Ganis"] = "Choppiez - Mal'Ganis",
+["Starstypeshi - Tichondrius"] = "Starstypeshi - Tichondrius",
+["Gehyo - Mal'Ganis"] = "Gehyo - Mal'Ganis",
+["Mäñýfäçëð - Mal'Ganis"] = "Mäñýfäçëð - Mal'Ganis",
+["Auteist - Tichondrius"] = "Auteist - Tichondrius",
+["Choppiez - Tichondrius"] = "Choppiez - Tichondrius",
+["Hellavator - Tichondrius"] = "Hellavator - Tichondrius",
+["Praisesun - Tichondrius"] = "Praisesun - Tichondrius",
+["Cullnvoid - Tichondrius"] = "Cullnvoid - Tichondrius",
+["Stormclout - Tichondrius"] = "Stormclout - Tichondrius",
+["Reedingo - Mal'Ganis"] = "Reedingo - Mal'Ganis",
+["Stormclout - Mal'Ganis"] = "Stormclout - Mal'Ganis",
+["Rakeist - Mal'Ganis"] = "Rakeist - Mal'Ganis",
+["Hellavator - Mal'Ganis"] = "Hellavator - Mal'Ganis",
+["Mäñýfäçëð - Tichondrius"] = "Mäñýfäçëð - Tichondrius",
+["Ofpuss - Tichondrius"] = "Ofpuss - Tichondrius",
+["Praisesun - Mal'Ganis"] = "Praisesun - Mal'Ganis",
+["Smaugchamp - Tichondrius"] = "Smaugchamp - Tichondrius",
+["Thingreyline - Tichondrius"] = "Thingreyline - Tichondrius",
+},
+}

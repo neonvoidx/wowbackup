@@ -1,0 +1,11 @@
+<Ui xmlns="http://www.blizzard.com/wow/ui/">
+  <Script file="_AceGUI-3.0.lua"/>
+  <Script file="_LibDBIcon.lua"/>
+  <Include file="Bartender4\Skins_Bartender4.xml"/>
+  <Include file="Dominos\Skins_Dominos.xml"/>
+  <Script file="_WeakAurasOptions.lua"/>
+  <Script file="_Krowi_ExtendedVendorUI.lua"/>
+  <Script file="_Krowi_ExtendedVendorUI.lua"/>
+  <Include file="Baganator\_Skins_Baganator.xml"/>
+  <Script file="_WorldQuestTab.lua"/>
+</Ui>

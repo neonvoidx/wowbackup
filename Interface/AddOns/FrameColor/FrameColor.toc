@@ -1,0 +1,32 @@
+## X-Curse-Project-ID: 693720
+## Interface: 110200
+## Version: 4.2.1
+## SavedVariables: FrameColor4DB
+## Title: FrameColor
+## Author: Slothpala
+## AddonCompartmentFunc: FrameColor_OpenSettings
+## IconTexture: Interface\AddOns\FrameColor\Assets\Icon.tga
+
+embeds.xml
+
+Locales\locales.xml
+
+Init.lua
+
+Utils\Printer.lua
+
+Mixins\EventRegistryMixin.lua
+Mixins\HookRegistryMixin.lua
+Mixins\SkinUtilMixin.lua
+
+DataBase\Defaults.lua
+DataBase\AceDataBase.lua
+
+Classes\Skin.lua
+
+Skins\Skins.xml
+
+FrameColor_API.lua
+
+FrameColor.lua
+

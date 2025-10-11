@@ -1,0 +1,56 @@
+## Interface: 110205
+## Title: PetWalker
+## Version: 2.5.14
+## IconTexture: Interface/AddOns/PetWalker/icon.png
+## Notes: Automatically re-summons your lost companion pet, or auto-summons a random or favorite one.
+## Category: Collections
+## Category-enUS: Collections
+## Category-deDE: Kriegsmeutesammlungen
+## Category-esES: Colecciones de banda guerrera
+## Category-esMX: Colecciones de tropa
+## Category-frFR: Collections du bataillon
+## Category-itIT: Collezioni della Brigata
+## Category-koKR: 전투부대 수집품
+## Category-ptBR: Coleções do Bando de Guerra
+## Category-ruRU: Коллекции отряда
+## Category-zhCN: 战团藏品
+## Category-zhTW: 戰隊收藏
+## Author: Mot (@6mot, @tflo)
+## AllowAddOnTableAccess: 1
+## X-Wago-ID: qv63aZGb
+## X-Curse-Project-ID: 784734
+## X-Flavor: Mainline
+## SPDX-License-Identifier: GPL-3.0-or-later
+## LoadSavedVariablesFirst: 1
+## SavedVariables: PetWalkerDB
+## SavedVariablesPerCharacter: PetWalkerPerCharDB
+
+main.lua
+ui.lua
+utilities.lua
+events.lua
+
+
+
+
+
+
+
+
+# License ======================================================================
+#
+# Copyright © 2022–2025 Thomas Floeren
+#
+# This program is free software: you can redistribute it and/or modify it under
+# the terms of the GNU General Public License as published by the Free Software
+# Foundation, either version 3 of the License, or (at your option) any later
+# version.
+#
+# This program is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License along with
+# this program. If not, see <https://www.gnu.org/licenses/>.
+#
+# ==============================================================================

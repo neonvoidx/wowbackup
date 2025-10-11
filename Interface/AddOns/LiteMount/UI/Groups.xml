@@ -1,0 +1,245 @@
+<Ui xmlns="http://www.blizzard.com/wow/ui/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.blizzard.com/wow/ui/ ..\..\FrameXML\UI.xsd">
+
+<!-- Copyright 2011 Mike Battersby -->
+
+<Script file="Groups.lua" />
+
+<Frame name="LiteMountGroupsPanelBlankTemplate" virtual="true" mixin="LiteMountGroupsPanelBlankMixin">
+    <Size y="24" />
+</Frame>
+
+<Button name="LiteMountGroupsPanelGroupTemplate" virtual="true" mixin="LiteMountGroupsPanelGroupMixin">
+    <Scripts>
+        <OnClick method="OnClick" />
+    </Scripts>
+
+    <Size y="24" />
+
+    <NormalTexture atlas="auctionhouse-nav-button" useAtlasSize="false" />
+    <HighlightTexture atlas="auctionhouse-nav-button-highlight" useAtlasSize="false" />
+
+    <Layers>
+        <Layer level="ARTWORK">
+            <FontString parentKey="Text" inherits="GameFontHighlight" justifyH="LEFT">
+                <Anchors>
+                    <Anchor point="LEFT" x="6" />
+                    <Anchor point="RIGHT" x="-6" />
+                </Anchors>
+            </FontString>
+            <Texture parentKey="SelectedTexture" atlas="auctionhouse-nav-button-select" alphaMode="ADD" useAtlasSize="false" hidden="true">
+                <Anchors>
+                    <Anchor point="TOPLEFT" />
+                    <Anchor point="BOTTOMRIGHT" />
+                </Anchors>
+            </Texture>
+        </Layer>
+        <Layer level="OVERLAY">
+            <Texture parentKey="SelectedArrow" file="Interface\ChatFrame\ChatFrameExpandArrow" hidden="true">
+                <Size x="18" y="18" />
+                <Anchors><Anchor point="RIGHT" x="-4" /></Anchors>
+            </Texture>
+        </Layer>
+    </Layers>
+</Button>
+
+<Button name="LiteMountGroupsPanelMountTemplate" inherits="LiteMountListButtonStyleTemplate" virtual="true" mixin="LiteMountGroupsPanelMountMixin">
+    <Scripts>
+        <OnClick method="OnClick" />
+        <OnEnter method="OnEnter" />
+        <OnLeave method="OnLeave" />
+    </Scripts>
+
+    <Size y="22" />
+
+    <HighlightTexture alphaMode="ADD">
+        <Color r="0.3" g="0.5" b="1" a="0.3" />
+    </HighlightTexture>
+
+    <Layers>
+        <Layer level="ARTWORK">
+            <Texture parentKey="CheckBox" file="Interface\Buttons\UI-CheckBox-Up">
+                <Size x="22" y="22" />
+                <Anchors>
+                    <Anchor point="LEFT" x="4" />
+                </Anchors>
+            </Texture>
+        </Layer>
+        <Layer level="OVERLAY">
+            <Texture parentKey="Checked" hidden="true" file="Interface\Buttons\UI-CheckBox-Check">
+                <Size x="22" y="22" />
+                <Anchors>
+                    <Anchor point="CENTER" relativeKey="$parent.CheckBox" />
+                </Anchors>
+            </Texture>
+            <FontString parentKey="Name" inherits="GameFontNormal" justifyH="LEFT" wordwrap="false">
+                <Anchors>
+                    <Anchor point="LEFT" relativePoint="RIGHT" relativeKey="$parent.Checked" x="4" />
+                    <Anchor point="RIGHT" x="-4" />
+                </Anchors>
+            </FontString>
+        </Layer>
+    </Layers>
+</Button>
+
+<Button name="LiteMountGroupsPanelButtonTemplate" mixin="LiteMountGroupsPanelButtonMixin" virtual="true">
+    <Size y="22" />
+    <Frames>
+        <Button parentKey="mount1" inherits="LiteMountGroupsPanelMountTemplate">
+            <Anchors>
+                <Anchor point="LEFT" x="4" />
+                <Anchor point="RIGHT" relativePoint="CENTER" x="-4" />
+            </Anchors>
+        </Button>
+        <Button parentKey="mount2" inherits="LiteMountGroupsPanelMountTemplate">
+            <Anchors>
+                <Anchor point="LEFT" relativePoint="CENTER" x="4" />
+                <Anchor point="RIGHT" x="-4" />
+            </Anchors>
+        </Button>
+    </Frames>
+</Button>
+
+<Frame name="LiteMountGroupsPanel" hidden="true" inherits="LiteMountOptionsPanelTemplate" mixin="LiteMountGroupsPanelMixin">
+    <KeyValues>
+        <KeyValue key="name" value="LM_GROUPS" type="string" />
+    </KeyValues>
+
+    <Scripts>
+        <OnLoad method="OnLoad" />
+        <OnShow method="OnShow" />
+        <OnHide method="OnHide" />
+    </Scripts>
+
+    <Layers>
+        <Layer level="ARTWORK">
+            <FontString inherits="GameFontNormal" justifyV="TOP" justifyH="LEFT" text="LM_GROUPS_EXP">
+                <Anchors>
+                    <Anchor point="TOP" y="-60" />
+                    <Anchor point="LEFT" x="24" />
+                    <Anchor point="RIGHT" x="-24" />
+                </Anchors>
+            </FontString>
+        </Layer>
+    </Layers>
+
+    <Frames>
+        <Frame parentKey="GroupsContainer" inherits="LiteMountContainerStyleTemplate" frameStrata="LOW">
+            <Size x="150" />
+            <Anchors>
+                <Anchor point="TOPLEFT" x="16" y="-132" />
+                <Anchor point="BOTTOM" y="40" />
+            </Anchors>
+        </Frame>
+        <Frame parentKey="MountsContainer" inherits="LiteMountContainerStyleTemplate" frameStrata="LOW">
+            <Anchors>
+                <Anchor point="TOP" relativeKey="$parent.GroupsContainer" />
+                <Anchor point="LEFT" relativeKey="$parent.GroupsContainer" relativePoint="RIGHT" x="4"/>
+                <Anchor point="BOTTOM" relativeKey="$parent.GroupsContainer" />
+                <Anchor point="RIGHT" x="-16" />
+            </Anchors>
+        </Frame>
+        <ScrollFrame parentKey="GroupScrollBox" inherits="WoWScrollBoxList" mixin="LiteMountGroupsPanelGroupScrollBoxMixin">
+            <Anchors>
+                <Anchor point="TOPLEFT" relativeKey="$parent.GroupsContainer" x="8" y="-8" />
+                <Anchor point="BOTTOMRIGHT" relativeKey="$parent.GroupsContainer" x="-8" y="8" />
+            </Anchors>
+            <Frames>
+                <Button parentKey="AddGroupButton" inherits="UIPanelButtonTemplate" text="ADD" hidden="true">
+                    <Size x="96" y="22" />
+                    <Scripts>
+                        <OnClick>
+                            StaticPopup_Show("LM_OPTIONS_NEW_GROUP")
+                        </OnClick>
+                    </Scripts>
+                </Button>
+            </Frames>
+        </ScrollFrame>
+        <EventFrame parentKey="GroupScrollBar" inherits="MinimalScrollBar" frameStrata="HIGH">
+            <KeyValues>
+                <KeyValue key="hideIfUnscrollable" value="true" type="boolean" />
+            </KeyValues>
+            <Anchors>
+                <Anchor point="TOPLEFT" relativeKey="$parent.GroupScrollBox" relativePoint="TOPRIGHT" x="4" y="0"/>
+                <Anchor point="BOTTOMLEFT" relativeKey="$parent.GroupScrollBox" relativePoint="BOTTOMRIGHT" x="4" y="0"/>
+            </Anchors>
+        </EventFrame>
+        <ScrollFrame parentKey="MountScrollBox" inherits="WoWScrollBoxList" mixin="LiteMountGroupsPanelMountScrollBoxMixin">
+            <Anchors>
+                <Anchor point="TOPLEFT" relativeKey="$parent.MountsContainer" x="8" y="-8" />
+                <Anchor point="BOTTOMRIGHT" relativeKey="$parent.MountsContainer" x="-22" y="8" />
+            </Anchors>
+        </ScrollFrame>
+        <EventFrame parentKey="MountScrollBar" inherits="MinimalScrollBar" frameStrata="HIGH">
+            <KeyValues>
+                <KeyValue key="hideIfUnscrollable" value="true" type="boolean" />
+            </KeyValues>
+            <Anchors>
+                <Anchor point="TOPLEFT" relativeKey="$parent.MountScrollBox" relativePoint="TOPRIGHT" x="4" y="0"/>
+                <Anchor point="BOTTOMLEFT" relativeKey="$parent.MountScrollBox" relativePoint="BOTTOMRIGHT" x="4" y="0"/>
+            </Anchors>
+        </EventFrame>
+        <CheckButton parentKey="ShowAll">
+            <Size x="22" y="22" />
+            <Anchors>
+                <Anchor point="BOTTOMRIGHT" relativeKey="$parent.MountsContainer" relativePoint="TOPRIGHT" x="-4" y="8" />
+            </Anchors>
+            <Scripts>
+                <OnClick>
+                    local parent = self:GetParent()
+                    parent.showAll = self:GetChecked() or nil
+                    parent:OnRefresh()
+                </OnClick>
+            </Scripts>
+            <NormalTexture file="Interface\Buttons\UI-CheckBox-Up"/>
+            <PushedTexture file="Interface\Buttons\UI-CheckBox-Down"/>
+            <HighlightTexture file="Interface\Buttons\UI-CheckBox-Highlight" alphaMode="ADD"/>
+            <CheckedTexture file="Interface\Buttons\UI-CheckBox-Check"/>
+            <Layers>
+                <Layer level="OVERLAY">
+                    <FontString parentKey="Text" inherits="GameFontHighlight" text="LM_SHOW_ALL_MOUNTS">
+                        <Anchors>
+                            <Anchor point="RIGHT" relativePoint="LEFT" x="-4" />
+                        </Anchors>
+                    </FontString>
+                </Layer>
+            </Layers>
+        </CheckButton>
+        <Button parentKey="DeleteButton" inherits="UIPanelButtonTemplate" text="DELETE">
+            <Scripts>
+                <OnClick>
+                    local f = LiteMountGroupsPanel.GroupScrollBox.selectedGroup
+                    if f then StaticPopup_Show("LM_OPTIONS_DELETE_GROUP", f, nil, f) end
+                </OnClick>
+            </Scripts>
+            <Size x="96" y="22" />
+            <Anchors>
+                <Anchor point="TOPLEFT" relativeKey="$parent.GroupsContainer" relativePoint="BOTTOMLEFT" x="4" y="-8" />
+            </Anchors>
+        </Button>
+        <Button parentKey="RenameButton" inherits="UIPanelButtonTemplate" text="PET_RENAME">
+            <Scripts>
+                <OnClick>
+                    local f = LiteMountGroupsPanel.GroupScrollBox.selectedGroup
+                    if f then StaticPopup_Show("LM_OPTIONS_RENAME_GROUP", f, nil, f) end
+                </OnClick>
+            </Scripts>
+            <Size x="96" y="22" />
+            <Anchors>
+                <Anchor point="LEFT" relativeKey="$parent.DeleteButton" relativePoint="RIGHT" x="4" />
+            </Anchors>
+        </Button>
+    </Frames>
+
+    <Layers>
+        <Layer level="ARTWORK">
+            <FontString inherits="GameFontNormalMed2" text="GROUP">
+                <Anchors>
+                    <Anchor point="BOTTOM" relativePoint="TOP" relativeKey="$parent.GroupsContainer" y="4" />
+                </Anchors>
+            </FontString>
+        </Layer>
+    </Layers>
+
+</Frame>
+
+</Ui>

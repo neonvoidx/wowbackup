@@ -1,0 +1,12 @@
+<Ui xmlns="http://www.blizzard.com/wow/ui/">
+  <Script file="_PlayerFrame.lua"/>
+  <Script file="_TargetFrame.lua"/>
+  <Script file="_TargetFrameToT.lua"/>
+  <Script file="_FocusFrame.lua"/>
+  <Script file="_FocusFrameToT.lua"/>
+  <Script file="_PetFrame.lua"/>
+  <Script file="_PartyFrame.lua"/>
+  <Script file="_CompactPartyFrame.lua"/>
+  <Script file="_CompactRaidGroup.lua"/>
+  <Script file="_BossFrames.lua"/>
+</Ui>

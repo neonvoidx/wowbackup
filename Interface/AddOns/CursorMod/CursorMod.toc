@@ -1,0 +1,24 @@
+## Interface: 110205
+## Title: CursorMod
+## Author: sfmict
+## Version: v11.2.1
+## IconTexture: Interface\AddOns\CursorMod\texture\point
+## Notes: Makes mouse pointer remain on screen while mouselook/steering
+## Category-enUS: User Interface
+## Category-deDE: Benutzerinterface
+## Category-esES: Interfaz de usuario
+## Category-esMX: Interfaz de usuario
+## Category-frFR: Interface utilisateur
+## Category-itIT: Interfaccia utente
+## Category-koKR: 사용자 인터페이스
+## Category-ptBR: Interface do usuário
+## Category-ruRU: Интерфейс пользователя
+## Category-zhCN: 用户界面
+## Category-zhTW: 使用者介面
+## SavedVariables: CursorModDB
+## SavedVariablesPerCharacter: CursorModDBChar
+embeds.xml
+locales.xml
+templates.xml
+Config.lua
+CursorMod.lua

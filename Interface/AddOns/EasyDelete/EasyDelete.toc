@@ -1,0 +1,21 @@
+## Interface: 110205, 110107, 120000 
+## X-Min-Interface: 110000
+## Title: Easy Delete
+## Title-deDE: Einfaches Löschen
+## Title-esES: Borrado Fácil
+## Title-esMX: Borrado Fácil
+## Title-frFR: Suppression Facile
+## Title-itIT: Eliminazione Facile
+## Title-koKR: 쉬운 삭제
+## Title-ptBR: Exclusão Fácil
+## Title-ruRU: Легкое Удаление
+## Title-zhCN: 简单删除
+## Title-zhTW: ลบง่าย 
+## Notes: This AddOn makes it easy to delete valueable items
+## X-Category: Interface Enhancements, Utility, Miscellaneous
+## X-Website: https://www.curseforge.com/wow/addons/easy-delete
+## X-Curse-Project-ID: 96313
+## Author: Xibate, Zynx
+## Version: 3
+## DefaultState: enabled
+EasyDelete.lua

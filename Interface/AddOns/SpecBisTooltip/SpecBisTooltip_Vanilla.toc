@@ -1,0 +1,46 @@
+## Interface: 11507
+## Version: 0.13.12
+## Title: S|cff3FC7EBpec|rB|cff3FC7EBis|rT|cff3FC7EBooltip|r |T136031:16:16:0:0|t by |cff3FC7EBD4KiR |T132115:16:16:0:0|t
+## Notes: Shows a list of the best specializations for specific dungeons/raids.
+## Notes-deDE: zeigt eine Liste der besten Spezialisierungen für bestimmte Dungeons/Raids anzeigt.
+## Notes-ruRU: Аддон, который показывает список лучших специализаций для тех или иных подземелий/рейдов
+## Author: D|cff3FC7EB4KiR |T132115:16:16:0:0|t
+## Category: D|cff3FC7EB4KiR |T132115:16:16:0:0|t
+## X-Category: D|cff3FC7EB4KiR |T132115:16:16:0:0|t
+## DefaultState: enabled
+## SavedVariables: SBTTAB
+## SavedVariablesPerCharacter: SBTTABPC
+## X-Curse-Project-ID: 827800 
+## X-Wago-ID: 56n9g2N9 
+## IconTexture: 136031
+
+libs\D4Lib\D4Lib.xml
+
+locale\enUS.lua
+locale\deDE.lua
+locale\esES.lua
+locale\frFR.lua
+locale\itIT.lua
+locale\koKR.lua
+locale\ptBR.lua
+locale\ruRU.lua
+locale\zhCN.lua
+locale\zhTW.lua
+
+data.lua
+data\datasources-retail.lua
+data\datasources-mists.lua
+data\datasources-cata.lua
+data\datasources-classic.lua
+data\datasources.lua
+
+data\datasod.lua
+
+data\datawowhead-retail.lua
+data\datawowhead-mists.lua
+data\datawowhead-cata.lua
+data\datawowhead-wrath.lua
+data\datawowhead-classic.lua
+data\datawowhead.lua
+
+core.lua

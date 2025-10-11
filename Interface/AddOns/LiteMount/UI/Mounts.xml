@@ -1,0 +1,84 @@
+<Ui xmlns="http://www.blizzard.com/wow/ui/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.blizzard.com/wow/ui/ ..\..\FrameXML\UI.xsd">
+
+<!-- Copyright 2011 Mike Battersby -->
+
+<Script file="Mounts.lua" />
+
+<Frame name="LiteMountMountsPanel" hidden="true" inherits="LiteMountOptionsPanelTemplate" mixin="LiteMountMountsPanelMixin">
+
+    <Frames>
+        <ScrollFrame parentKey="ScrollBox" inherits="WoWScrollBoxList" mixin="LiteMountMountScrollBoxMixin" frameStrata="HIGH">
+            <Anchors>
+                <Anchor point="TOPLEFT" x="16" y="-115" />
+                <Anchor point="BOTTOMRIGHT" x="-32" y="46" />
+            </Anchors>
+        </ScrollFrame>
+        <EventFrame parentKey="ScrollBar" inherits="MinimalScrollBar" frameStrata="HIGH">
+            <Anchors>
+                <Anchor point="TOPLEFT" relativeKey="$parent.ScrollBox" relativePoint="TOPRIGHT" x="8" y="0"/>
+                <Anchor point="BOTTOMLEFT" relativeKey="$parent.ScrollBox" relativePoint="BOTTOMRIGHT" x="8" y="0"/>
+            </Anchors>
+        </EventFrame>
+        <!-- PanelTabButtonTemplate adds to parent.Tabs automatically. Classic requires name. -->
+        <Button name="$parentTab1" inherits="PanelTabButtonTemplate" id="1" />
+        <Button name="$parentTab2" inherits="PanelTabButtonTemplate" id="2" />
+    </Frames>
+
+    <Layers>
+        <Layer level="ARTWORK">
+            <FontString parentKey="BitLabel4" inherits="GameFontWhiteSmall" justifyH="CENTER">
+                <Size x="50" y="26" />
+                <Anchors>
+                    <Anchor point="CENTER" relativeKey="$parent.ScrollBox" relativePoint="TOPRIGHT" x="-35" y="22" />
+                </Anchors>
+            </FontString>
+            <FontString parentKey="BitLabel3" inherits="GameFontWhiteSmall" justifyH="CENTER">
+                <Size x="50" y="26" />
+                <Anchors> <Anchor point="CENTER" relativeKey="$parent.BitLabel4" x="-53" /> </Anchors>
+            </FontString>
+            <FontString parentKey="BitLabel2" inherits="GameFontWhiteSmall" justifyH="CENTER">
+                <Size x="50" y="26" />
+                <Anchors> <Anchor point="CENTER" relativeKey="$parent.BitLabel3" x="-53" /> </Anchors>
+            </FontString>
+            <FontString parentKey="BitLabel1" inherits="GameFontWhiteSmall" justifyH="CENTER">
+                <Size x="50" y="26" />
+                <Anchors> <Anchor point="CENTER" relativeKey="$parent.BitLabel2" x="-53" /> </Anchors>
+            </FontString>
+        </Layer>
+    </Layers>
+
+    <Frames>
+        <Frame parentKey="AllPriority" inherits="LiteMountPriorityTemplate" mixin="LiteMountAllPriorityMixin">
+            <Anchors>
+                <Anchor point="CENTER" relativeKey="$parent.ScrollBox" relativePoint="TOPRIGHT" x="-276" y="22" />
+            </Anchors>
+        </Frame>
+
+    </Frames>
+
+    <Layers>
+        <Layer level="ARTWORK">
+            <FontString parentKey="PriorityLabel" inherits="GameFontWhiteSmall" justifyH="CENTER" text="LM_PRIORITY">
+                <Anchors>
+                    <Anchor point="BOTTOM" relativePoint="TOP" relativeKey="$parent.AllPriority" y="8" />
+                </Anchors>
+            </FontString>
+        </Layer>
+        <Layer level="OVERLAY">
+            <FontString parentKey="Counts" inherits="GameFontNormal">
+                <Anchors>
+                    <Anchor point="TOPRIGHT" relativePOint="BOTTOMRIGHT" relativeKEy="$parent.ScrollBox" y="-12" />
+                </Anchors>
+            </FontString>
+        </Layer>
+    </Layers>
+
+    <Scripts>
+        <OnLoad method="OnLoad" />
+        <OnShow method="OnShow" />
+        <OnHide method="OnHide" />
+    </Scripts>
+
+</Frame>
+
+</Ui>

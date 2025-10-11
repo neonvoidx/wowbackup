@@ -1,0 +1,91 @@
+
+OmniCCDB = {
+["profileKeys"] = {
+["Månyfaced - Mal'Ganis"] = "Default",
+["Hellowalls - Mal'Ganis"] = "Default",
+["Edaroseld - Illidan"] = "Default",
+["Heilsatan - Tichondrius"] = "Default",
+["Choppiez - Tichondrius"] = "Default",
+["Praisesun - Tichondrius"] = "Default",
+["Gehyo - Mal'Ganis"] = "Default",
+["Auteist - Mal'Ganis"] = "Default",
+["Ofpuss - Mal'Ganis"] = "Default",
+["Hellavator - Mal'Ganis"] = "Default",
+["Smaugchamp - Mal'Ganis"] = "Default",
+["Choppiez - Mal'Ganis"] = "Default",
+["Smaugchamp - Tichondrius"] = "Default",
+["Tampacks - Mal'Ganis"] = "Default",
+["Hellavator - Tichondrius"] = "Default",
+["Corsic - Mal'Ganis"] = "Default",
+["Mäñýfäçëð - Mal'Ganis"] = "Default",
+["Neonvoid - Mal'Ganis"] = "Default",
+["Charizhard - Mal'Ganis"] = "Default",
+["Ofpusstwo - Tichondrius"] = "Default",
+["Auteist - Tichondrius"] = "Default",
+["Cullnvoid - Tichondrius"] = "Default",
+["Stormclout - Tichondrius"] = "Default",
+["Reedingo - Mal'Ganis"] = "Default",
+["Stormclout - Mal'Ganis"] = "Default",
+["Rakeist - Mal'Ganis"] = "Default",
+["Thickshape - Mal'Ganis"] = "Default",
+["Starstypeshi - Tichondrius"] = "Default",
+["Ofpuss - Tichondrius"] = "Default",
+["Praisesun - Mal'Ganis"] = "Default",
+["Mäñýfäçëð - Tichondrius"] = "Default",
+["Thingreyline - Tichondrius"] = "Default",
+},
+["global"] = {
+["dbVersion"] = 6,
+["addonVersion"] = "11.2.7",
+},
+["profiles"] = {
+["Default"] = {
+["rules"] = {
+{
+["enabled"] = false,
+["patterns"] = {
+"Aura",
+"Buff",
+"Debuff",
+},
+["name"] = "Auras",
+["id"] = "auras",
+},
+{
+["enabled"] = false,
+["patterns"] = {
+"Plate",
+},
+["name"] = "Unit Nameplates",
+["id"] = "plates",
+},
+{
+["enabled"] = false,
+["patterns"] = {
+"ActionButton",
+"MultiBar",
+},
+["name"] = "Action Bars",
+["id"] = "actions",
+},
+},
+["themes"] = {
+["Default"] = {
+["textStyles"] = {
+["soon"] = {
+},
+["minutes"] = {
+},
+["seconds"] = {
+},
+},
+["fontFace"] = "Interface\\Addons\\SharedMedia_MyMedia\\font\\1.ttf",
+["minSize"] = 0.25,
+["minEffectDuration"] = 5,
+["fontSize"] = 24,
+},
+},
+},
+},
+}
+OmniCC4Config = nil

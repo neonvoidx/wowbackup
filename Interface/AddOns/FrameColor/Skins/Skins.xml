@@ -1,0 +1,8 @@
+<Ui xmlns="http://www.blizzard.com/wow/ui/">
+  <Include file="Addons\Skins_AddonSkins.xml"/>
+  <Include file="UnitFrames\Skins_UnitFrames.xml"/>
+  <Include file="ActionBars\Skins_ActionBars.xml"/>
+  <Include file="Windows\Skins_Windows.xml"/>
+  <Include file="HUD\Skins_HUD.xml"/>
+  <Include file="MicroMenu\Skins_MicroMenu.xml"/>
+</Ui>

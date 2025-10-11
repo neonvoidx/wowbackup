@@ -1,0 +1,26 @@
+
+ItemUpgradeTipDB = {
+["profileKeys"] = {
+["Månyfaced - Mal'Ganis"] = "Default",
+["Kumire - Mal'Ganis"] = "Default",
+["Auteist - Mal'Ganis"] = "Default",
+["Ofpuss - Mal'Ganis"] = "Default",
+["Smaugchamp - Mal'Ganis"] = "Default",
+["Choppiez - Mal'Ganis"] = "Default",
+["Thickshape - Mal'Ganis"] = "Default",
+["Kitedbro - Mal'Ganis"] = "Default",
+["Hellavator - Mal'Ganis"] = "Default",
+["Charizhard - Mal'Ganis"] = "Default",
+["Reedingo - Mal'Ganis"] = "Default",
+["Stormclout - Mal'Ganis"] = "Default",
+["Neonvoid - Mal'Ganis"] = "Default",
+["Vansthalysia - Mal'Ganis"] = "Default",
+["Praisesun - Mal'Ganis"] = "Default",
+["Gehyo - Mal'Ganis"] = "Default",
+["Tampacks - Mal'Ganis"] = "Default",
+},
+["profiles"] = {
+["Default"] = {
+},
+},
+}

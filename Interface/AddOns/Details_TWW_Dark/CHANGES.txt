@@ -1,0 +1,14 @@
+Changes since tag release
+
+commit 8536105c08e2839e1dde3883ac4778a9dace5a16
+Author: Jacob Reed <jacob.russell.reed@gmail.com>
+Date:   Tue Aug 19 09:55:53 2025 -0400
+
+    Update Details_TWW_Dark.toc
+
+commit 7942ca3dcb5c5ad42f5f93154bbc3729f2d9a618
+Author: Jacob Reed <jacob.russell.reed@gmail.com>
+Date:   Wed Feb 26 08:04:46 2025 -0500
+
+    Update Details_TWW_Dark.toc
+

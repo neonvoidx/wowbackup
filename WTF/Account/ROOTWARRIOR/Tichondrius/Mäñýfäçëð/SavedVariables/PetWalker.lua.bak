@@ -1,0 +1,6 @@
+
+PetWalkerPerCharDB = {
+["charFavsEnabled"] = false,
+["charFavs"] = {
+},
+}

@@ -1,0 +1,176 @@
+
+TalentTreeTweaksDB = {
+["modules"] = {
+["InspectDiff"] = true,
+["MiniTreeInTooltip"] = true,
+},
+["moduleDb"] = {
+["InspectDiff"] = {
+["colorYellow"] = {
+["a"] = 0.75,
+["r"] = 1,
+["g"] = 0.67,
+["b"] = 0,
+},
+["colorGreen"] = {
+["a"] = 0.58,
+["r"] = 0,
+["g"] = 1,
+["b"] = 0.3,
+},
+["colorRed"] = {
+["a"] = 0.5,
+["r"] = 1,
+["g"] = 0,
+["b"] = 0,
+},
+["enableTalentTreeViewerDiff"] = true,
+},
+["ClickableExportStringsInChat"] = {
+["disableDetectionFromStrings"] = true,
+},
+["SearchForIds"] = {
+},
+["UnlockRestrictions"] = {
+["unlockInCombatSpending"] = true,
+["unlockShareButton"] = true,
+},
+["MiniTreeInTooltip"] = {
+["inactiveSubTreeAlpha"] = 0.5,
+["displayStyle"] = "simple-default-diff",
+["upgradedDisplayStyle"] = 1,
+["diffRed"] = {
+["r"] = 1,
+["g"] = 0,
+["b"] = 0,
+},
+["scale"] = 1,
+["diffGreen"] = {
+["r"] = 0,
+["g"] = 1,
+["b"] = 0,
+},
+["diffYellow"] = {
+["r"] = 1,
+["g"] = 1,
+["b"] = 1,
+},
+["diffOrange"] = {
+["r"] = 1,
+["g"] = 1,
+["b"] = 0,
+},
+},
+["ReduceTaint"] = {
+["disableMultiActionBarShowHide"] = true,
+},
+["ExportInspectedBuild"] = {
+["showLinkInChatButton"] = true,
+["inspectTalentsMenuItem"] = true,
+["exportOnDropdownRightClick"] = true,
+},
+["TooltipIds"] = {
+["professionTooltip"] = {
+["enabled"] = true,
+["nodeId"] = true,
+["spellId"] = true,
+["definitionId"] = false,
+["entryId"] = true,
+},
+["talentTooltip"] = {
+["enabled"] = true,
+["nodeId"] = true,
+["spellId"] = true,
+["definitionId"] = false,
+["entryId"] = true,
+["rowColInfo"] = false,
+},
+},
+["AlwaysShowGates"] = {
+["shiftHeroTrees"] = false,
+},
+["ReduceSpam"] = {
+},
+["ChangeBackground"] = {
+["showAlphaInSpellbookUI"] = true,
+["showAlphaInViewerUI"] = true,
+["spellbookAlpha"] = 1,
+["showAlphaInUI"] = true,
+["alpha"] = 1,
+},
+["CopyTalentButtonInfo"] = {
+},
+["HeroTalents"] = {
+},
+["Drive Auto Purchaser"] = {
+["node-103882"] = 128290,
+["node-103881"] = 128288,
+["reportPurchases"] = false,
+["node-104094"] = 128608,
+["node-103879"] = 128281,
+["node-103880"] = 128283,
+},
+["Skyriding Auto Purchaser"] = {
+["reshiiWrapsEnabled"] = true,
+["rideAlongCache"] = {
+["Månyfaced-Mal'Ganis"] = 1,
+["Edaroseld-Illidan"] = 1,
+["Praisesun-Mal'Ganis"] = 1,
+["Thickshape-Mal'Ganis"] = 1,
+["Ofpuss-Mal'Ganis"] = 1,
+["Gehyo-Mal'Ganis"] = 1,
+["Tampacks-Mal'Ganis"] = 1,
+["Choppiez-Mal'Ganis"] = 1,
+["Reedingo-Mal'Ganis"] = 1,
+["Charizhard-Mal'Ganis"] = 1,
+},
+["horrificVisionsEnabled"] = true,
+["overchargedTitanConsoleEnabled"] = true,
+["rideAlong"] = 1,
+["surge"] = 1,
+["skyridingEnabled"] = true,
+["reportPurchases"] = true,
+["surgeCache"] = {
+["Månyfaced-Mal'Ganis"] = 1,
+["Edaroseld-Illidan"] = 1,
+["Praisesun-Mal'Ganis"] = 1,
+["Thickshape-Mal'Ganis"] = 1,
+["Ofpuss-Mal'Ganis"] = 1,
+["Gehyo-Mal'Ganis"] = 1,
+["Tampacks-Mal'Ganis"] = 1,
+["Choppiez-Mal'Ganis"] = 1,
+["Reedingo-Mal'Ganis"] = 1,
+["Charizhard-Mal'Ganis"] = 1,
+},
+["lemixLimitsUnboundEnabled"] = true,
+},
+["HighlightCascadeRepurchable"] = {
+["color"] = {
+["a"] = 0.5,
+["r"] = 0,
+["g"] = 0,
+["b"] = 1,
+},
+},
+["DebugNodeInfo"] = {
+["addButtonToTable"] = true,
+["luaBrowser"] = true,
+["slashDump"] = false,
+["viragDevTool"] = true,
+["tinspect"] = true,
+},
+["RespecButtons"] = {
+["inverseHighlight"] = false,
+},
+["ScaleTalentFrame"] = {
+},
+["MiscFixes"] = {
+["dropdownUpdateOnLoadConfigFix"] = true,
+["linkChoiceNodeInChatFix"] = true,
+},
+["ImportIntoCurrentLoadout"] = {
+["defaultCheckboxState"] = true,
+["unlockImportButton"] = true,
+},
+},
+}

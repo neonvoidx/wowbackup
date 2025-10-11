@@ -1,0 +1,54 @@
+## Interface: 110200,110205,120000
+## Title: Talent Tree Tweaks
+## Author: Numy
+## IconTexture: Interface\Addons\TalentTreeTweaks\media\icon
+## Notes: Various improvements and addition to the Dragonflight talent tree UI
+## Version: v1.12.58
+## X-Curse-Project-ID: 678792
+## X-Wago-ID: qKQxm86x
+## SavedVariables: TalentTreeTweaksDB
+## OptionalDeps: TalentTreeViewer_Loader, Chattynator
+## Category-enUS: Combat
+## Category-deDE: Kampf
+## Category-esES: Combate
+## Category-esMX: Combate
+## Category-frFR: Combat
+## Category-itIT: Combattimento
+## Category-koKR: 전투
+## Category-ptBR: Combate
+## Category-ruRU: Бой
+## Category-zhCN: 战斗
+## Category-zhTW: 戰鬥
+
+libs\embeds.xml
+
+locale\locale.xml
+
+core.lua
+ImportExportUtilV2.lua
+SharedUtil.lua
+
+modules\reduceTaint.lua
+modules\dropdownReplacement.xml
+
+modules\tooltipIds.lua
+modules\exportInspectedBuild.lua
+modules\debugNodeInfo.lua
+modules\searchForIds.lua
+modules\scaleTalentFrame.lua
+modules\respecButtonsInTreeUI.lua
+modules\highlightCascadeRepurchable.lua
+modules\clickableExportStringsInChat.lua
+modules\inspectDiff.lua
+modules\alwaysShowGates.lua
+modules\importIntoCurrentLoadout.lua
+modules\unlockRestrictions.lua
+modules\changeBackground.lua
+modules\miscFixes.lua
+modules\copyTalentButtonInfo.lua
+modules\reduceSpam.lua
+modules\miniTreeInTooltip.lua
+modules\heroTalents.lua
+
+modules\autoPurchaseGenericTalents.lua
+modules\autoPurchaseDriveTalents.lua
