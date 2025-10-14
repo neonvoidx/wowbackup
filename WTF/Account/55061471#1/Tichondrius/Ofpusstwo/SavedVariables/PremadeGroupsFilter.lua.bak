@@ -3,8 +3,34 @@ PremadeGroupsFilterState = {
 ["c114f4"] = {
 ["enabled"] = true,
 },
-["c4f8"] = {
+["c9f8"] = {
 ["enabled"] = true,
+},
+["c3f1"] = {
+["enabled"] = true,
+["role"] = {
+["heals"] = {
+["max"] = "",
+["min"] = "",
+["act"] = false,
+},
+["tanks"] = {
+["max"] = "",
+["min"] = "",
+["act"] = false,
+},
+["dps"] = {
+["max"] = "",
+["min"] = "",
+["act"] = false,
+},
+["members"] = {
+["max"] = "",
+["min"] = "",
+["act"] = false,
+},
+["expression"] = "",
+},
 },
 ["c2f4"] = {
 ["enabled"] = true,
@@ -96,7 +122,7 @@ PremadeGroupsFilterState = {
 ["expression"] = "",
 },
 },
-["c9f8"] = {
+["c114f5"] = {
 ["enabled"] = true,
 },
 ["c3f6"] = {
@@ -149,36 +175,23 @@ PremadeGroupsFilterState = {
 ["c114f6"] = {
 ["enabled"] = true,
 },
-["c114f5"] = {
-["enabled"] = true,
+["c2f0"] = {
+["role"] = {
+["heals"] = {
+},
+["tanks"] = {
+},
+["dps"] = {
+},
+["members"] = {
+},
+["expression"] = "",
+},
 },
 ["c121f4"] = {
 ["enabled"] = true,
 },
-["c3f1"] = {
+["c4f8"] = {
 ["enabled"] = true,
-["role"] = {
-["heals"] = {
-["max"] = "",
-["min"] = "",
-["act"] = false,
-},
-["tanks"] = {
-["max"] = "",
-["min"] = "",
-["act"] = false,
-},
-["dps"] = {
-["max"] = "",
-["min"] = "",
-["act"] = false,
-},
-["members"] = {
-["max"] = "",
-["min"] = "",
-["act"] = false,
-},
-["expression"] = "",
-},
 },
 }

@@ -825,8 +825,8 @@ BlizzMoveDB = {
 {
 ["anchorPoint"] = "TOPLEFT",
 ["relativeFrame"] = "UIParent",
-["offY"] = -101.82470703125,
-["offX"] = 459.3333435058594,
+["offY"] = -108.490966796875,
+["offX"] = 460.1666564941406,
 ["relativePoint"] = "TOPLEFT",
 },
 },
@@ -1326,7 +1326,7 @@ BlizzMoveDB = {
 {
 ["anchorPoint"] = "TOP",
 ["relativeFrame"] = "UIParent",
-["offY"] = -120.9957719323793,
+["offY"] = -120.9956132409643,
 ["offX"] = 181.9483768361279,
 ["relativePoint"] = "TOP",
 },

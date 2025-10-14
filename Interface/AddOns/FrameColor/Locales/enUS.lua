@@ -153,6 +153,7 @@ L["_StopwatchFrame"] = "Stopwatch"
 L["_TradeFrame"] = "Trade"
 L["_WorldMapFrame"] = "Maps & Quest Log"
 L["_GuildBankFrame"] = "Guild Bank"
+L["_CooldownViewerSettings"] = "Cooldown Settings"
 
 -- [[ Addon Skins ]] --
 L["_LibDBIcon"] = "Minimap Icons (LibDBIcon)"

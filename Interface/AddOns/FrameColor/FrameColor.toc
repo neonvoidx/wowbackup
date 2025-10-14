@@ -1,6 +1,6 @@
 ## X-Curse-Project-ID: 693720
-## Interface: 110200
-## Version: 4.2.1
+## Interface: 110205
+## Version: 4.3.0
 ## SavedVariables: FrameColor4DB
 ## Title: FrameColor
 ## Author: Slothpala

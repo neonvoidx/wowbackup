@@ -1,6 +1,4 @@
 <Ui xmlns="http://www.blizzard.com/wow/ui/">
-
-
   <Script file="_AchievementFrame.lua"/>
   <Script file="_AddonList.lua"/>
   <Script file="_AlliedRacesFrame.lua"/>
@@ -49,4 +47,5 @@
   <Script file="_TradeFrame.lua"/>
   <Script file="_WorldMapFrame.lua"/>
   <Script file="_GuildBankFrame.lua"/>
+  <Script file="_CooldownViewerSettings.lua"/>
 </Ui>

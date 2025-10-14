@@ -10,13 +10,17 @@ NarcissusDB_PC = {
 NarciStatisticsDB_PC = {
 ["Barbershop"] = {
 ["Locations"] = {
-[2339] = {
-["visit"] = 7,
-["time"] = 102,
+[619] = {
+["visit"] = 1,
+["time"] = 24,
 },
 [84] = {
 ["visit"] = 3,
 ["time"] = 314,
+},
+[2339] = {
+["visit"] = 7,
+["time"] = 102,
 },
 },
 },

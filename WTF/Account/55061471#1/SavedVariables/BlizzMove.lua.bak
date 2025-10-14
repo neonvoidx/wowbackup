@@ -825,9 +825,9 @@ BlizzMoveDB = {
 {
 ["anchorPoint"] = "TOPLEFT",
 ["relativeFrame"] = "UIParent",
-["offY"] = -101.82470703125,
+["offY"] = -108.490966796875,
 ["relativePoint"] = "TOPLEFT",
-["offX"] = 459.3333435058594,
+["offX"] = 460.1666564941406,
 },
 },
 },
@@ -992,9 +992,9 @@ BlizzMoveDB = {
 {
 ["anchorPoint"] = "TOPLEFT",
 ["relativeFrame"] = "UIParent",
-["offY"] = -115.16621665821,
+["offY"] = -113.4988581935177,
 ["relativePoint"] = "TOPLEFT",
-["offX"] = 15.99999796549469,
+["offX"] = 16.00000940958694,
 },
 },
 },
@@ -1274,7 +1274,7 @@ BlizzMoveDB = {
 {
 ["anchorPoint"] = "TOP",
 ["relativeFrame"] = "UIParent",
-["offY"] = -120.9957719323793,
+["offY"] = -120.9956132409643,
 ["relativePoint"] = "TOP",
 ["offX"] = 181.9483768361279,
 },

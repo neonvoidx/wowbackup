@@ -1,7 +1,7 @@
 
 BugGrabberDB = {
 ["lastSanitation"] = 3,
-["session"] = 4545,
+["session"] = 4557,
 ["errors"] = {
 {
 ["message"] = "[ADDON_ACTION_BLOCKED] AddOn 'LargerMacroIconSelection' tried to call the protected function 'Button:SetPassThroughButtons()'.",

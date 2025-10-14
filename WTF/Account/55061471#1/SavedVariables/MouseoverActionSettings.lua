@@ -9,14 +9,14 @@ MouseoverActionSettingsDB = {
 ["Månyfaced - Mal'Ganis"] = "Default",
 ["Hellowalls - Mal'Ganis"] = "Default",
 ["Heilsatan - Tichondrius"] = "Default",
-["Starstypeshi - Tichondrius"] = "Default",
-["Choppiez - Tichondrius"] = "Default",
+["Smaugchamp - Tichondrius"] = "Default",
+["Praisesun - Tichondrius"] = "Default",
 ["Auteist - Mal'Ganis"] = "Default",
 ["Ofpuss - Mal'Ganis"] = "Default",
-["Praisesun - Tichondrius"] = "Default",
+["Choppiez - Tichondrius"] = "Default",
 ["Smaugchamp - Mal'Ganis"] = "Default",
 ["Choppiez - Mal'Ganis"] = "Default",
-["Smaugchamp - Tichondrius"] = "Default",
+["Starstypeshi - Tichondrius"] = "Default",
 ["Gehyo - Mal'Ganis"] = "Default",
 ["Neonvoid - Mal'Ganis"] = "Default",
 ["Corsic - Mal'Ganis"] = "Default",
@@ -141,8 +141,22 @@ MouseoverActionSettingsDB = {
 },
 ["minAlpha"] = 0.2,
 },
-["MultiBar7"] = {
-["enabled"] = false,
+["MainMenuBar"] = {
+["ARENA_UPDATE"] = true,
+["TARGET_ATTACKABLE_UPDATE"] = true,
+["TARGET_UPDATE"] = true,
+["DUNGEON_UPDATE"] = true,
+["minAlpha"] = 0.3,
+["PLAYER_MOVING_UPDATE"] = false,
+["BATTLEGROUND_UPDATE"] = true,
+["PLAYER_HEALTH_UPDATE"] = false,
+["RAID_UPDATE"] = true,
+["links"] = {
+["MultiBarBottomLeft"] = true,
+["MultiBar5"] = true,
+},
+["RAID_GROUP_UPDATE"] = false,
+["PARTY_GROUP_UPDATE"] = false,
 },
 ["BuffFrame"] = {
 ["enabled"] = false,
@@ -161,9 +175,6 @@ MouseoverActionSettingsDB = {
 ["OPEN_WORLD_UPDATE"] = false,
 ["COMBAT_UPDATE"] = false,
 },
-["PartyFrame"] = {
-["enabled"] = false,
-},
 ["MultiBar6"] = {
 ["enabled"] = false,
 ["links"] = {
@@ -175,6 +186,9 @@ MouseoverActionSettingsDB = {
 ["delay"] = 0,
 ["COMBAT_UPDATE"] = true,
 },
+["MultiBarLeft"] = {
+["enabled"] = false,
+},
 ["MultiBarBottomRight"] = {
 ["links"] = {
 ["MultiBar6"] = true,
@@ -184,24 +198,10 @@ MouseoverActionSettingsDB = {
 ["delay"] = 0,
 ["COMBAT_UPDATE"] = false,
 },
-["MainMenuBar"] = {
-["ARENA_UPDATE"] = true,
-["TARGET_ATTACKABLE_UPDATE"] = true,
-["TARGET_UPDATE"] = true,
-["DUNGEON_UPDATE"] = true,
-["minAlpha"] = 0.3,
-["PLAYER_MOVING_UPDATE"] = false,
-["BATTLEGROUND_UPDATE"] = true,
-["PLAYER_HEALTH_UPDATE"] = false,
-["RAID_UPDATE"] = true,
-["links"] = {
-["MultiBarBottomLeft"] = true,
-["MultiBar5"] = true,
+["MultiBar7"] = {
+["enabled"] = false,
 },
-["RAID_GROUP_UPDATE"] = false,
-["PARTY_GROUP_UPDATE"] = false,
-},
-["MultiBarLeft"] = {
+["PartyFrame"] = {
 ["enabled"] = false,
 },
 },

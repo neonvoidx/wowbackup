@@ -122,8 +122,12 @@ L["Mini Tree in Tooltips"] = "툴팁의 미니 트리"
 L["Misc Fixes"] = "기타 수정 사항"
 L["Modules"] = "모듈"
 L["Mute chat spam while switching loadouts or specs."] = "빌드나 전문화를 전환하는 동안 채팅 스팸을 음소거합니다."
+--[[Translation missing --]]
+L["Open Artifact Traits UI"] = "Open Artifact Traits UI"
 L["Open in Talent Tree Viewer"] = "특성 트리 뷰어에서 열기"
 L["Open loadout in default Inspect UI"] = "기본 검사 UI에서 빌드 열기"
+--[[Translation missing --]]
+L["Open the Legion Remix Artifact traits UI to view and adjust talents."] = "Open the Legion Remix Artifact traits UI to view and adjust talents."
 L["Opens Blizzard's table inspect window."] = "Blizzard의 테이블 검사 창을 엽니다."
 L["Path NodeId"] = "NodeId 경로"
 L["Perk NodeId"] = "NodeId 특전"

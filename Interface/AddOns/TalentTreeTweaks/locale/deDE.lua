@@ -171,8 +171,12 @@ L["Modules"] = "Module"
 --[[Translation missing --]]
 L["Mute chat spam while switching loadouts or specs."] = "Mute chat spam while switching loadouts or specs."
 --[[Translation missing --]]
+L["Open Artifact Traits UI"] = "Open Artifact Traits UI"
+--[[Translation missing --]]
 L["Open in Talent Tree Viewer"] = "Open in Talent Tree Viewer"
 L["Open loadout in default Inspect UI"] = "Konfiguration im Talent UI öffnen"
+--[[Translation missing --]]
+L["Open the Legion Remix Artifact traits UI to view and adjust talents."] = "Open the Legion Remix Artifact traits UI to view and adjust talents."
 --[[Translation missing --]]
 L["Opens Blizzard's table inspect window."] = "Opens Blizzard's table inspect window."
 L["Path NodeId"] = "Path NodeId"

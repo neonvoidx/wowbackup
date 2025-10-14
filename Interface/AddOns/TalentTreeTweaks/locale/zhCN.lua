@@ -111,8 +111,12 @@ L["Mini Tree in Tooltips"] = "迷你天赋树"
 L["Misc Fixes"] = "问题修复"
 L["Modules"] = "模块"
 L["Mute chat spam while switching loadouts or specs."] = "过滤切换专精和天赋时，聊天框出现的学习和遗忘提示。"
+--[[Translation missing --]]
+L["Open Artifact Traits UI"] = "Open Artifact Traits UI"
 L["Open in Talent Tree Viewer"] = "以 Talent Tree Viewer（天赋模拟器）开启"
 L["Open loadout in default Inspect UI"] = "以暴雪原生天赋界面开启此配置"
+--[[Translation missing --]]
+L["Open the Legion Remix Artifact traits UI to view and adjust talents."] = "Open the Legion Remix Artifact traits UI to view and adjust talents."
 L["Opens Blizzard's table inspect window."] = "打开暴雪的表检查窗口。"
 L["Path NodeId"] = "路径节点ID"
 L["Perk NodeId"] = "双重节点ID"

@@ -145,6 +145,7 @@ function skin:Apply(mainColor, backgroundColor, bordersColor, controlsColor, tab
   -- Controls.
   for _, scrollFrame in pairs({
     ProfessionsFrame.CraftingPage.RecipeList,
+    ProfessionsFrame.CraftingPage.CraftingOutputLog,
     ProfessionsFrame.OrdersPage.BrowseFrame.RecipeList,
     ProfessionsFrame.OrdersPage.BrowseFrame.OrderList,
   }) do

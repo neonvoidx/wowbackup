@@ -71,7 +71,12 @@ function skin:Apply(mainColor, backgroundColor, bordersColor, controlsColor, des
   self:SkinNineSliced(EventTraceInset, bordersColor, desaturation)
 
   -- Controls
-  self:SkinScrollBarOf(EventTrace.Log.Events, controlsColor, desaturation)
+  for _, scrollBar in pairs({
+    EventTrace.Log.Events,
+    EventTrace.Log.Search,
+  }) do
+    self:SkinScrollBarOf(scrollBar, controlsColor, desaturation)
+  end
 
   self:SkinBox(EventTrace.Log.Bar.SearchBox, controlsColor, desaturation)
 
