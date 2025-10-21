@@ -11,31 +11,26 @@ HealthBarColorDB = {
 ["Starstypeshi - Tichondrius"] = "Default",
 ["Gehyo - Mal'Ganis"] = "Default",
 ["Heilsatan - Tichondrius"] = "Default",
-["Choppiez - Tichondrius"] = "Default",
+["Praisesun - Tichondrius"] = "Default",
 ["Auteist - Tichondrius"] = "Default",
-["Ofpusstwo - Tichondrius"] = "Default",
 ["Hellavator - Tichondrius"] = "Default",
+["Ofpusstwo - Tichondrius"] = "Default",
 ["Smaugchamp - Tichondrius"] = "Default",
 ["Cullnvoid - Tichondrius"] = "Default",
 ["Stormclout - Tichondrius"] = "Default",
 ["Reedingo - Mal'Ganis"] = "Default",
 ["Stormclout - Mal'Ganis"] = "Default",
 ["Rakeist - Mal'Ganis"] = "Default",
-["Hellowalls - Mal'Ganis"] = "Default",
 ["Hellavator - Mal'Ganis"] = "Default",
+["Hellowalls - Mal'Ganis"] = "Default",
 ["Ofpuss - Tichondrius"] = "Default",
 ["Praisesun - Mal'Ganis"] = "Default",
-["Praisesun - Tichondrius"] = "Default",
+["Choppiez - Tichondrius"] = "Default",
 ["Thingreyline - Tichondrius"] = "Default",
 },
 ["profiles"] = {
 ["Default"] = {
-["BackgroundTextures"] = {
-["color"] = {
-["a"] = 0.9405550956726074,
-},
-["texture"] = "Wglass (GladiusEx)",
-["enabled"] = true,
+["HealthBarColor_boss3"] = {
 },
 ["HealthBarColor_pet"] = {
 },
@@ -51,10 +46,8 @@ HealthBarColorDB = {
 },
 ["HealthBarColor_boss5"] = {
 },
-["Font_targettarget"] = {
-["healthFont"] = "1",
-["nameFont"] = "1",
-["powerFont"] = "1",
+["DebuffColor"] = {
+["enabled"] = true,
 },
 ["Font_boss2"] = {
 ["healthFont"] = "1",
@@ -70,20 +63,23 @@ HealthBarColorDB = {
 },
 ["HealthBarColor_focus"] = {
 },
-["Font_focus"] = {
-["healthFont"] = "1",
-["nameFont"] = "1",
-["powerFont"] = "1",
+["HealthBarColor_boss4"] = {
 },
 ["Font_boss5"] = {
 ["healthFont"] = "1",
 ["nameFont"] = "1",
 ["powerFont"] = "1",
 },
-["HealthBarColor_target"] = {
+["Font_player"] = {
+["healthFont"] = "1",
+["nameFont"] = "1",
+["nameFontSize"] = 9,
+["powerFont"] = "1",
 },
-["BiggerHealthBar"] = {
-["enabled"] = true,
+["Font_focustarget"] = {
+["healthFont"] = "1",
+["nameFont"] = "1",
+["powerFont"] = "1",
 },
 ["Textures"] = {
 ["powerBarTexture"] = "Wglass",
@@ -95,20 +91,26 @@ HealthBarColorDB = {
 ["nameFont"] = "1",
 ["powerFont"] = "1",
 },
-["HealthBarColor_boss3"] = {
+["BackgroundTextures"] = {
+["color"] = {
+["a"] = 0.9405550956726074,
 },
-["HealthBarColor_boss4"] = {
-},
-["Font_player"] = {
-["healthFont"] = "1",
-["nameFont"] = "1",
-["nameFontSize"] = 9,
-["powerFont"] = "1",
-},
-["DebuffColor"] = {
+["texture"] = "Wglass (GladiusEx)",
 ["enabled"] = true,
 },
-["Font_focustarget"] = {
+["Font_focus"] = {
+["healthFont"] = "1",
+["nameFont"] = "1",
+["powerFont"] = "1",
+},
+["HealthBarColor_target"] = {
+},
+["Font_targettarget"] = {
+["healthFont"] = "1",
+["nameFont"] = "1",
+["powerFont"] = "1",
+},
+["Font_boss3"] = {
 ["healthFont"] = "1",
 ["nameFont"] = "1",
 ["powerFont"] = "1",
@@ -117,10 +119,8 @@ HealthBarColorDB = {
 ["minimapPos"] = 69.587679475945,
 ["enabled"] = false,
 },
-["Font_boss3"] = {
-["healthFont"] = "1",
-["nameFont"] = "1",
-["powerFont"] = "1",
+["BiggerHealthBar"] = {
+["enabled"] = true,
 },
 },
 },

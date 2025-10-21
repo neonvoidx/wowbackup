@@ -19,6 +19,7 @@ L.NEW_VERSION_AVAILABLE =				"Доступна новая версия " .. app.
 L.BINDTEXT_WUE =						"WuE"
 L.BINDTEXT_BOP =						"BoP"
 L.BINDTEXT_BOE =						"BoE"
+L.BINDTEXT_BOA =						"BoA"
 L.RECIPE_UNCACHED =						"Пожалуйста, откройте эту профессию, чтобы обновить статус коллекции рецепта."
 
 -- Loot tracker
@@ -135,10 +136,10 @@ L.SETTINGS_SLASH_TOGGLE =				"Переключить окно отслежива
 L.SETTINGS_SLASH_RESETPOS =				"Сбросить позицию окна отслеживания."
 L.SETTINGS_SLASH_WHISPER_DEFAULT =		"Установить сообщение шепотом по умолчанию."
 
-L.SETTINGS_HEADER_TWEAKS =				"Твики"
+L.SETTINGS_HEADER_TWEAKS =				"Хитрости"
 L.SETTINGS_CATALYST =					"Мгновенная катализация"
 L.SETTINGS_CATALYST_DESC =				"Удерживайте Shift, чтобы мгновенно катализировать предмет, пропуская 5-секундный таймер."
-L.SETTINGS_VAULT =						"Мгновенный Великий Хранилище"
+L.SETTINGS_VAULT =						"Мгновенное Великое Хранилище"
 L.SETTINGS_VAULT_DESC =					"Удерживайте Shift, чтобы мгновенно получить награду из Великого Хранилища, пропуская 5-секундный таймер."
 L.SETTINGS_INSTANT_TOOLTIP =			"Показывать подсказку"
 L.SETTINGS_INSTANT_TOOLTIP_DESC =		"Показывать подсказку, объясняющую, как работает эта функция. Текст кнопки все равно меняется, если это отключено."

@@ -28,7 +28,7 @@ end)
 ------------------
 
 -- Create and set our icon and text overlay
-function app.ItemOverlay(overlay, itemLink, itemLocation, containerInfo)
+function app.ItemOverlay(overlay, itemLink, itemLocation, containerInfo, bagAddon)
 	-- Create our overlay
 	local function createOverlay()
 		-- Text
@@ -114,8 +114,13 @@ function app.ItemOverlay(overlay, itemLink, itemLocation, containerInfo)
 
 	-- Process our overlay
 	local function processOverlay(itemID)
+		local hasItemLocation = false
+		if itemLocation or bagAddon then
+			hasItemLocation = true
+		end
+
 		-- Cache our info, if we haven't yet.
-		if not app.OverlayCache[itemLink] then
+		if not app.OverlayCache[itemLink] or hasItemLocation and app.OverlayCache[itemLink].hasItemLocation == false then
 			-- Grab our item info, which is enough for appearances
 			local _, _, itemQuality, _, _, _, _, _, itemEquipLoc, _, _, classID, subclassID, bindType, _, _, _ = C_Item.GetItemInfo(itemLink)
 
@@ -123,10 +128,10 @@ function app.ItemOverlay(overlay, itemLink, itemLocation, containerInfo)
 			if containerInfo and containerInfo.hasLoot then
 				itemEquipLoc = "Container"
 			-- Mounts
-			elseif classID == 15 and subclassID == 5 then
+			elseif classID == Enum.ItemClass.Miscellaneous and subclassID == Enum.ItemMiscellaneousSubclass.Mount then
 				itemEquipLoc = "Mount"
 			-- Recipes
-			elseif classID == 9 and subclassID ~= 0 then
+			elseif classID == Enum.ItemClass.Recipe and subclassID ~= Enum.ItemRecipeSubclass.Book then
 				itemEquipLoc = "Recipe"
 			-- Toys
 			elseif app.GetTooltipText(itemLink, ITEM_TOY_ONUSE) then
@@ -134,8 +139,8 @@ function app.ItemOverlay(overlay, itemLink, itemLocation, containerInfo)
 			-- Pets
 			elseif C_PetJournal.GetPetInfoByItemID(itemID) then
 				itemEquipLoc = "Pet"
-			-- Illusions & Ensembles
-			elseif classID == 0 and subclassID == 8 then
+			-- Illusions, Ensembles, and Arsenals
+			elseif classID == Enum.ItemClass.Consumable and subclassID == Enum.ItemConsumableSubclass.Other then
 				local itemName = C_Item.GetItemInfo(itemLink)
 
 				-- Check if it's an illusion
@@ -249,7 +254,7 @@ function app.ItemOverlay(overlay, itemLink, itemLocation, containerInfo)
 			end
 
 			-- Cache this info, so we don't need to check it again
-			app.OverlayCache[itemLink] = { itemEquipLoc = itemEquipLoc, bindType = bindType, itemQuality = itemQuality }
+			app.OverlayCache[itemLink] = { itemEquipLoc = itemEquipLoc, bindType = bindType, itemQuality = itemQuality, hasItemLocation = hasItemLocation }
 		end
 
 		local itemEquipLoc = app.OverlayCache[itemLink].itemEquipLoc
@@ -531,7 +536,7 @@ function app.ItemOverlay(overlay, itemLink, itemLocation, containerInfo)
 			elseif itemLocation and C_Item.IsBound(itemLocation) then
 				-- BoA (ITEM_ACCOUNTBOUND and ITEM_BNETACCOUNTBOUND is the actual text, but it always returns the other two anyway)
 				if app.GetTooltipText(itemLink, ITEM_BIND_TO_ACCOUNT) or app.GetTooltipText(itemLink, ITEM_BIND_TO_BNETACCOUNT) then
-					overlay.text:SetText("|cff00CCFF" .. L.BINDTEXT_BOP .. "|r")
+					overlay.text:SetText("|cff00CCFF" .. L.BINDTEXT_BOA .. "|r")
 				-- Soulbound
 				else
 					overlay.text:SetText("")
@@ -547,6 +552,9 @@ function app.ItemOverlay(overlay, itemLink, itemLocation, containerInfo)
 		end
 	end
 
+	local ignore = {
+		[37011] = true,	-- Magic Broom
+	}
 	local itemID = C_Item.GetItemInfoInstant(itemLink)
 	-- Caged pets don't return this info, except this one magical pet cage
 	if not itemID or itemID == 82800 then
@@ -561,7 +569,8 @@ function app.ItemOverlay(overlay, itemLink, itemLocation, containerInfo)
 		else
 			return
 		end
-	-- But everything else does (that I know of so far)
+	elseif ignore[itemID] then
+		return
 	else
 		-- Cache the item by asking the server to give us the info
 		C_Item.RequestLoadItemDataByID(itemID)

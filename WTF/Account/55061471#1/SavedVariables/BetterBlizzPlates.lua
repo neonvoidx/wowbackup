@@ -37,9 +37,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 26125,
 ["entryColors"] = {
 ["text"] = {
-["b"] = 0,
-["g"] = 1,
 ["r"] = 1,
+["g"] = 1,
+["b"] = 0,
 },
 },
 ["name"] = "DK pet",
@@ -49,9 +49,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 163366,
 ["entryColors"] = {
 ["text"] = {
-["b"] = 0,
-["g"] = 1,
 ["r"] = 1,
+["g"] = 1,
+["b"] = 0,
 },
 },
 ["name"] = "Magus(Army of the Dead)",
@@ -61,9 +61,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 24207,
 ["entryColors"] = {
 ["text"] = {
-["b"] = 0,
-["g"] = 1,
 ["r"] = 1,
+["g"] = 1,
+["b"] = 0,
 },
 },
 ["name"] = "Army of the Dead",
@@ -73,9 +73,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 29264,
 ["entryColors"] = {
 ["text"] = {
-["b"] = 0,
-["g"] = 1,
 ["r"] = 1,
+["g"] = 1,
+["b"] = 0,
 },
 },
 ["name"] = "Spirit Wolves (Enha Shaman)",
@@ -85,9 +85,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 95072,
 ["entryColors"] = {
 ["text"] = {
-["b"] = 0,
-["g"] = 1,
 ["r"] = 1,
+["g"] = 1,
+["b"] = 0,
 },
 },
 ["name"] = "Earth Elemental (Shaman)",
@@ -97,9 +97,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 31216,
 ["entryColors"] = {
 ["text"] = {
-["b"] = 0,
-["g"] = 1,
 ["r"] = 1,
+["g"] = 1,
+["b"] = 0,
 },
 },
 ["name"] = "Mirror Images (Mage)",
@@ -109,9 +109,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 62005,
 ["entryColors"] = {
 ["text"] = {
-["b"] = 0,
-["g"] = 1,
 ["r"] = 1,
+["g"] = 1,
+["b"] = 0,
 },
 },
 ["name"] = "Beast (Hunter)",
@@ -121,9 +121,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 105419,
 ["entryColors"] = {
 ["text"] = {
-["b"] = 0,
-["g"] = 1,
 ["r"] = 1,
+["g"] = 1,
+["b"] = 0,
 },
 },
 ["name"] = "Dire Basilisk (Hunter)",
@@ -133,9 +133,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 192337,
 ["entryColors"] = {
 ["text"] = {
-["b"] = 0,
-["g"] = 1,
 ["r"] = 1,
+["g"] = 1,
+["b"] = 0,
 },
 },
 ["name"] = "Void Tendril (Spriest)",
@@ -145,9 +145,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 136398,
 ["entryColors"] = {
 ["text"] = {
-["b"] = 0,
-["g"] = 1,
 ["r"] = 1,
+["g"] = 1,
+["b"] = 0,
 },
 },
 ["name"] = "Illidari Satyr",
@@ -157,9 +157,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 136408,
 ["entryColors"] = {
 ["text"] = {
-["b"] = 0,
-["g"] = 1,
 ["r"] = 1,
+["g"] = 1,
+["b"] = 0,
 },
 },
 ["name"] = "Darkhound",
@@ -169,9 +169,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 136403,
 ["entryColors"] = {
 ["text"] = {
-["b"] = 0,
-["g"] = 1,
 ["r"] = 1,
+["g"] = 1,
+["b"] = 0,
 },
 },
 ["name"] = "Void Terror",
@@ -181,9 +181,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 54983,
 ["entryColors"] = {
 ["text"] = {
-["b"] = 0,
-["g"] = 1,
 ["r"] = 1,
+["g"] = 1,
+["b"] = 0,
 },
 },
 ["name"] = "Treant",
@@ -275,9 +275,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 61245,
 ["entryColors"] = {
 ["text"] = {
-["b"] = 0,
-["g"] = 1,
 ["r"] = 1,
+["g"] = 1,
+["b"] = 0,
 },
 },
 ["name"] = "Capacitor Totem",
@@ -290,9 +290,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 105451,
 ["entryColors"] = {
 ["text"] = {
-["b"] = 0,
-["g"] = 1,
 ["r"] = 1,
+["g"] = 1,
+["b"] = 0,
 },
 },
 ["name"] = "Counterstrike Totem",
@@ -305,9 +305,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 100943,
 ["entryColors"] = {
 ["text"] = {
-["b"] = 0,
-["g"] = 1,
 ["r"] = 1,
+["g"] = 1,
+["b"] = 0,
 },
 },
 ["name"] = "Earthen Wall Totem",
@@ -320,9 +320,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 60561,
 ["entryColors"] = {
 ["text"] = {
-["b"] = 0,
-["g"] = 1,
 ["r"] = 1,
+["g"] = 1,
+["b"] = 0,
 },
 },
 ["name"] = "Earthgrab Totem",
@@ -335,9 +335,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 179193,
 ["entryColors"] = {
 ["text"] = {
-["b"] = 0,
-["g"] = 1,
 ["r"] = 1,
+["g"] = 1,
+["b"] = 0,
 },
 },
 ["name"] = "Fel Obelisk (Warlock)",
@@ -350,9 +350,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 17252,
 ["entryColors"] = {
 ["text"] = {
-["b"] = 0,
-["g"] = 1,
 ["r"] = 1,
+["g"] = 1,
+["b"] = 0,
 },
 },
 ["name"] = "Felguard (Demo Pet)",
@@ -365,9 +365,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 417,
 ["entryColors"] = {
 ["text"] = {
-["b"] = 0,
-["g"] = 1,
 ["r"] = 1,
+["g"] = 1,
+["b"] = 0,
 },
 },
 ["name"] = "Felhunter (Warlock)",
@@ -380,9 +380,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 5925,
 ["entryColors"] = {
 ["text"] = {
-["b"] = 0,
-["g"] = 1,
 ["r"] = 1,
+["g"] = 1,
+["b"] = 0,
 },
 },
 ["name"] = "Grounding Totem",
@@ -395,9 +395,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 114565,
 ["entryColors"] = {
 ["text"] = {
-["b"] = 0,
-["g"] = 1,
 ["r"] = 1,
+["g"] = 1,
+["b"] = 0,
 },
 },
 ["name"] = "Guardian Queen (prot pala)",
@@ -410,9 +410,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 59764,
 ["entryColors"] = {
 ["text"] = {
-["b"] = 0,
-["g"] = 1,
 ["r"] = 1,
+["g"] = 1,
+["b"] = 0,
 },
 },
 ["name"] = "Healing Tide Totem",
@@ -425,9 +425,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 165189,
 ["entryColors"] = {
 ["text"] = {
-["b"] = 0,
-["g"] = 1,
 ["r"] = 1,
+["g"] = 1,
+["b"] = 0,
 },
 },
 ["name"] = "Hunter pet (they all have same ID)",
@@ -440,9 +440,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 69792,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 1,
 ["b"] = 0,
+["g"] = 1,
+["r"] = 0,
 },
 },
 ["name"] = "Monk Image (Green)",
@@ -455,9 +455,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 69791,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 1,
 ["b"] = 0,
+["g"] = 1,
+["r"] = 0,
 },
 },
 ["name"] = "Monk Image (Red)",
@@ -470,9 +470,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 107100,
 ["entryColors"] = {
 ["text"] = {
-["b"] = 0,
-["g"] = 1,
 ["r"] = 1,
+["g"] = 1,
+["b"] = 0,
 },
 },
 ["name"] = "Observer (Warlock)",
@@ -485,9 +485,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 185800,
 ["entryColors"] = {
 ["text"] = {
-["b"] = 0,
-["g"] = 1,
 ["r"] = 0,
+["g"] = 1,
+["b"] = 0,
 },
 },
 ["name"] = "Past Self (Evoker)",
@@ -500,9 +500,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 101398,
 ["entryColors"] = {
 ["text"] = {
-["b"] = 0,
-["g"] = 1,
 ["r"] = 1,
+["g"] = 1,
+["b"] = 0,
 },
 },
 ["name"] = "Psyfiend (Spriest)",
@@ -515,9 +515,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 225672,
 ["entryColors"] = {
 ["text"] = {
-["b"] = 0,
-["g"] = 1,
 ["r"] = 0,
+["g"] = 1,
+["b"] = 0,
 },
 },
 ["name"] = "Shadow (Priest Re-Fear)",
@@ -530,9 +530,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 19668,
 ["entryColors"] = {
 ["text"] = {
-["b"] = 0,
-["g"] = 1,
 ["r"] = 0,
+["g"] = 1,
+["b"] = 0,
 },
 },
 ["name"] = "Shadowfiend",
@@ -545,9 +545,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 53006,
 ["entryColors"] = {
 ["text"] = {
-["b"] = 0,
-["g"] = 1,
 ["r"] = 1,
+["g"] = 1,
+["b"] = 0,
 },
 },
 ["name"] = "Spirit Link Totem",
@@ -560,9 +560,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 59712,
 ["entryColors"] = {
 ["text"] = {
-["b"] = 0,
-["g"] = 1,
 ["r"] = 0,
+["g"] = 1,
+["b"] = 0,
 },
 },
 ["name"] = "Stone Bulwark Totem",
@@ -575,9 +575,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 1863,
 ["entryColors"] = {
 ["text"] = {
-["b"] = 0,
-["g"] = 1,
 ["r"] = 1,
+["g"] = 1,
+["b"] = 0,
 },
 },
 ["name"] = "Succubus (Warlock)",
@@ -590,9 +590,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 225409,
 ["entryColors"] = {
 ["text"] = {
-["b"] = 0,
-["g"] = 1,
 ["r"] = 0,
+["g"] = 1,
+["b"] = 0,
 },
 },
 ["name"] = "Surging Totem",
@@ -605,9 +605,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 5913,
 ["entryColors"] = {
 ["text"] = {
-["b"] = 0,
-["g"] = 1,
 ["r"] = 1,
+["g"] = 1,
+["b"] = 0,
 },
 },
 ["name"] = "Tremor Totem",
@@ -620,9 +620,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 135002,
 ["entryColors"] = {
 ["text"] = {
-["b"] = 0,
-["g"] = 1,
 ["r"] = 1,
+["g"] = 1,
+["b"] = 0,
 },
 },
 ["name"] = "Tyrant (Warlock)",
@@ -635,9 +635,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 224466,
 ["entryColors"] = {
 ["text"] = {
-["b"] = 0,
-["g"] = 1,
 ["r"] = 0,
+["g"] = 1,
+["b"] = 0,
 },
 },
 ["name"] = "Voidwrath (Priest)",
@@ -650,9 +650,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 119052,
 ["entryColors"] = {
 ["text"] = {
-["b"] = 0,
-["g"] = 1,
 ["r"] = 1,
+["g"] = 1,
+["b"] = 0,
 },
 },
 ["name"] = "War Banner",
@@ -715,14 +715,14 @@ BetterBlizzPlatesDB = {
 ["auraBlacklist"] = {
 {
 ["flags"] = {
-["important"] = false,
 ["pandemic"] = false,
+["important"] = false,
 },
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 1,
 ["b"] = 0,
+["g"] = 1,
+["r"] = 0,
 },
 },
 ["name"] = "Blood Plague",
@@ -730,14 +730,14 @@ BetterBlizzPlatesDB = {
 },
 {
 ["flags"] = {
-["important"] = false,
 ["pandemic"] = false,
+["important"] = false,
 },
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 1,
 ["b"] = 0,
+["g"] = 1,
+["r"] = 0,
 },
 },
 ["name"] = "Chaotic Imprint - Arcane",
@@ -745,14 +745,14 @@ BetterBlizzPlatesDB = {
 },
 {
 ["flags"] = {
-["important"] = false,
 ["pandemic"] = false,
+["important"] = false,
 },
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 1,
 ["b"] = 0,
+["g"] = 1,
+["r"] = 0,
 },
 },
 ["name"] = "Chaotic Imprint - Fire",
@@ -760,14 +760,14 @@ BetterBlizzPlatesDB = {
 },
 {
 ["flags"] = {
-["important"] = false,
 ["pandemic"] = false,
+["important"] = false,
 },
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 1,
 ["b"] = 0,
+["g"] = 1,
+["r"] = 0,
 },
 },
 ["name"] = "Chaotic Imprint - Frost",
@@ -775,14 +775,14 @@ BetterBlizzPlatesDB = {
 },
 {
 ["flags"] = {
-["important"] = false,
 ["pandemic"] = false,
+["important"] = false,
 },
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 1,
 ["b"] = 0,
+["g"] = 1,
+["r"] = 0,
 },
 },
 ["name"] = "Chaotic Imprint - Nature",
@@ -790,14 +790,14 @@ BetterBlizzPlatesDB = {
 },
 {
 ["flags"] = {
-["important"] = false,
 ["pandemic"] = false,
+["important"] = false,
 },
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 1,
 ["b"] = 0,
+["g"] = 1,
+["r"] = 0,
 },
 },
 ["name"] = "Chaotic Imprint - Shadow",
@@ -805,14 +805,14 @@ BetterBlizzPlatesDB = {
 },
 {
 ["flags"] = {
-["important"] = false,
 ["pandemic"] = false,
+["important"] = false,
 },
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 1,
 ["b"] = 0,
+["g"] = 1,
+["r"] = 0,
 },
 },
 ["name"] = "Frost Fever",
@@ -820,14 +820,14 @@ BetterBlizzPlatesDB = {
 },
 {
 ["flags"] = {
-["important"] = false,
 ["pandemic"] = false,
+["important"] = false,
 },
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 1,
 ["b"] = 0,
+["g"] = 1,
+["r"] = 0,
 },
 },
 ["name"] = "Serrated Glaive",
@@ -835,14 +835,14 @@ BetterBlizzPlatesDB = {
 },
 {
 ["flags"] = {
-["important"] = false,
 ["pandemic"] = false,
+["important"] = false,
 },
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 1,
 ["b"] = 0,
+["g"] = 1,
+["r"] = 0,
 },
 },
 ["name"] = "Suffocating Darkness",
@@ -922,94 +922,94 @@ BetterBlizzPlatesDB = {
 ["hideNPCsList"] = {
 {
 ["flags"] = {
-["important"] = false,
 ["pandemic"] = false,
+["important"] = false,
 },
 ["name"] = "",
 ["id"] = 24207,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 1,
 ["b"] = 0,
+["g"] = 1,
+["r"] = 0,
 },
 },
 ["comment"] = "Army",
 },
 {
 ["flags"] = {
-["important"] = false,
 ["pandemic"] = false,
+["important"] = false,
 },
 ["name"] = "",
 ["id"] = 98035,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 1,
 ["b"] = 0,
+["g"] = 1,
+["r"] = 0,
 },
 },
 ["comment"] = "",
 },
 {
 ["flags"] = {
-["important"] = false,
 ["pandemic"] = false,
+["important"] = false,
 },
 ["name"] = "",
 ["id"] = 135816,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 1,
 ["b"] = 0,
+["g"] = 1,
+["r"] = 0,
 },
 },
 ["comment"] = "",
 },
 {
 ["flags"] = {
-["important"] = false,
 ["pandemic"] = false,
+["important"] = false,
 },
 ["name"] = "",
 ["id"] = 165189,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 1,
 ["b"] = 0,
+["g"] = 1,
+["r"] = 0,
 },
 },
 ["comment"] = "",
 },
 {
 ["flags"] = {
-["important"] = false,
 ["pandemic"] = false,
+["important"] = false,
 },
 ["name"] = "",
 ["id"] = 210910,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 1,
 ["b"] = 0,
+["g"] = 1,
+["r"] = 0,
 },
 },
 ["comment"] = "",
 },
 {
 ["flags"] = {
-["important"] = false,
 ["pandemic"] = false,
+["important"] = false,
 },
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 1,
 ["b"] = 0,
+["g"] = 1,
+["r"] = 0,
 },
 },
 ["name"] = "Beast",
@@ -1017,14 +1017,14 @@ BetterBlizzPlatesDB = {
 },
 {
 ["flags"] = {
-["important"] = false,
 ["pandemic"] = false,
+["important"] = false,
 },
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 1,
 ["b"] = 0,
+["g"] = 1,
+["r"] = 0,
 },
 },
 ["name"] = "Denizen of the Dream",
@@ -1038,23 +1038,23 @@ BetterBlizzPlatesDB = {
 ["id"] = 31216,
 ["entryColors"] = {
 ["text"] = {
-["b"] = 0,
-["g"] = 1,
 ["r"] = 1,
+["g"] = 1,
+["b"] = 0,
 },
 },
 ["name"] = "Mirror Images (Mage)",
 },
 {
 ["flags"] = {
-["pandemic"] = false,
 ["important"] = false,
+["pandemic"] = false,
 },
 ["entryColors"] = {
 ["text"] = {
-["b"] = 0,
-["g"] = 1,
 ["r"] = 0,
+["g"] = 1,
+["b"] = 0,
 },
 },
 ["name"] = "Spirit Wolf",
@@ -1062,14 +1062,14 @@ BetterBlizzPlatesDB = {
 },
 {
 ["flags"] = {
-["important"] = false,
 ["pandemic"] = false,
+["important"] = false,
 },
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 1,
 ["b"] = 0,
+["g"] = 1,
+["r"] = 0,
 },
 },
 ["name"] = "Void Lasher",
@@ -1083,9 +1083,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 55659,
 ["entryColors"] = {
 ["text"] = {
-["b"] = 0,
-["g"] = 1,
 ["r"] = 1,
+["g"] = 1,
+["b"] = 0,
 },
 },
 ["name"] = "Wild Imp (Warlock)",
@@ -1105,7 +1105,7 @@ BetterBlizzPlatesDB = {
 ["sortCompactedAurasFirst"] = false,
 ["totemIndicatorNpcList"] = {
 [105427] = {
-["important"] = true,
+["duration"] = 15,
 ["name"] = "Totem of Wrath",
 ["hideIcon"] = false,
 ["color"] = {
@@ -1113,7 +1113,7 @@ BetterBlizzPlatesDB = {
 0.27,
 0.59,
 },
-["duration"] = 15,
+["important"] = true,
 ["icon"] = 1385914,
 ["size"] = 24,
 },
@@ -1124,8 +1124,8 @@ BetterBlizzPlatesDB = {
 0.08,
 },
 ["important"] = true,
-["name"] = "Tremor Totem",
 ["hpWidth"] = -28,
+["name"] = "Tremor Totem",
 ["hideIcon"] = false,
 ["widthOn"] = false,
 ["duration"] = 13,
@@ -1139,8 +1139,8 @@ BetterBlizzPlatesDB = {
 0.59,
 },
 ["important"] = true,
-["name"] = "Counterstrike Totem",
 ["hpWidth"] = 20,
+["name"] = "Counterstrike Totem",
 ["hideIcon"] = false,
 ["widthOn"] = true,
 ["duration"] = 15,
@@ -1148,7 +1148,7 @@ BetterBlizzPlatesDB = {
 ["size"] = 30,
 },
 [59764] = {
-["important"] = true,
+["duration"] = 10,
 ["name"] = "Healing Tide Totem",
 ["hideIcon"] = false,
 ["color"] = {
@@ -1156,13 +1156,13 @@ BetterBlizzPlatesDB = {
 1,
 0.39,
 },
-["duration"] = 10,
+["important"] = true,
 ["icon"] = 538569,
 ["size"] = 30,
 },
 [97285] = {
-["important"] = false,
-["hideHp"] = true,
+["duration"] = 18,
+["icon"] = 538576,
 ["name"] = "Wind Rush Totem",
 ["hideIcon"] = false,
 ["color"] = {
@@ -1170,12 +1170,12 @@ BetterBlizzPlatesDB = {
 0.82,
 0.78,
 },
-["duration"] = 18,
-["icon"] = 538576,
+["important"] = false,
+["hideHp"] = true,
 ["size"] = 24,
 },
 [179867] = {
-["important"] = true,
+["duration"] = 6,
 ["name"] = "Static Field Totem",
 ["hideIcon"] = false,
 ["color"] = {
@@ -1183,12 +1183,12 @@ BetterBlizzPlatesDB = {
 1,
 0.78,
 },
-["duration"] = 6,
+["important"] = true,
 ["icon"] = 1020304,
 ["size"] = 24,
 },
 [225409] = {
-["important"] = false,
+["duration"] = 24,
 ["name"] = "Surging Totem",
 ["hideIcon"] = false,
 ["color"] = {
@@ -1196,13 +1196,13 @@ BetterBlizzPlatesDB = {
 0.36,
 0,
 },
-["duration"] = 24,
+["important"] = false,
 ["icon"] = 5927655,
 ["size"] = 24,
 },
 [104818] = {
-["important"] = true,
-["icon"] = 136080,
+["duration"] = 33,
+["hideHp"] = true,
 ["name"] = "Ancestral Protection Totem",
 ["hideIcon"] = false,
 ["color"] = {
@@ -1210,13 +1210,13 @@ BetterBlizzPlatesDB = {
 1,
 0.78,
 },
-["duration"] = 33,
-["hideHp"] = true,
+["important"] = true,
+["icon"] = 136080,
 ["size"] = 30,
 },
 [61245] = {
-["important"] = true,
-["icon"] = 136013,
+["duration"] = 2,
+["hideHp"] = false,
 ["name"] = "Capacitor Totem",
 ["hideIcon"] = false,
 ["color"] = {
@@ -1224,12 +1224,12 @@ BetterBlizzPlatesDB = {
 0.69,
 0,
 },
-["duration"] = 2,
-["hideHp"] = false,
+["important"] = true,
+["icon"] = 136013,
 ["size"] = 30,
 },
 [3527] = {
-["important"] = true,
+["duration"] = 18,
 ["name"] = "Healing Stream Totem",
 ["hideIcon"] = false,
 ["color"] = {
@@ -1237,12 +1237,12 @@ BetterBlizzPlatesDB = {
 1,
 0.78,
 },
-["duration"] = 18,
+["important"] = true,
 ["icon"] = 135127,
 ["size"] = 24,
 },
 [53006] = {
-["important"] = true,
+["duration"] = 6,
 ["name"] = "Spirit Link Totem",
 ["hideIcon"] = false,
 ["color"] = {
@@ -1250,12 +1250,12 @@ BetterBlizzPlatesDB = {
 1,
 0.78,
 },
-["duration"] = 6,
+["important"] = true,
 ["icon"] = 237586,
 ["size"] = 30,
 },
 [97369] = {
-["important"] = false,
+["duration"] = 6,
 ["name"] = "Liquid Magma Totem",
 ["hideIcon"] = false,
 ["color"] = {
@@ -1263,12 +1263,12 @@ BetterBlizzPlatesDB = {
 0.69,
 0,
 },
-["duration"] = 6,
+["important"] = false,
 ["icon"] = 971079,
 ["size"] = 24,
 },
 [2630] = {
-["important"] = false,
+["duration"] = 30,
 ["name"] = "Earthbind Totem",
 ["hideIcon"] = false,
 ["color"] = {
@@ -1276,13 +1276,13 @@ BetterBlizzPlatesDB = {
 0.51,
 0.39,
 },
-["duration"] = 30,
+["important"] = false,
 ["icon"] = 136102,
 ["size"] = 24,
 },
 [224466] = {
-["important"] = false,
-["hideHp"] = true,
+["duration"] = 15,
+["icon"] = 615099,
 ["name"] = "Voidwraith",
 ["hideIcon"] = false,
 ["color"] = {
@@ -1290,8 +1290,8 @@ BetterBlizzPlatesDB = {
 0.69,
 0,
 },
-["duration"] = 15,
-["icon"] = 615099,
+["important"] = false,
+["hideHp"] = true,
 ["size"] = 24,
 },
 [107024] = {
@@ -1301,16 +1301,16 @@ BetterBlizzPlatesDB = {
 0,
 },
 ["important"] = true,
-["name"] = "Fel Lord",
 ["hpWidth"] = 0,
+["name"] = "Fel Lord",
 ["hideIcon"] = false,
-["icon"] = 1113433,
-["duration"] = 15,
 ["hideHp"] = true,
+["duration"] = 15,
+["icon"] = 1113433,
 ["size"] = 30,
 },
 [185800] = {
-["important"] = false,
+["duration"] = 8,
 ["name"] = "Past Self",
 ["hideIcon"] = false,
 ["color"] = {
@@ -1318,13 +1318,13 @@ BetterBlizzPlatesDB = {
 0,
 0,
 },
-["duration"] = 8,
+["important"] = false,
 ["icon"] = 4622470,
 ["size"] = 24,
 },
 [78001] = {
-["important"] = false,
-["hideHp"] = true,
+["duration"] = 15,
+["icon"] = 971076,
 ["name"] = "Cloudburst Totem",
 ["hideIcon"] = false,
 ["color"] = {
@@ -1332,12 +1332,12 @@ BetterBlizzPlatesDB = {
 1,
 0.39,
 },
-["duration"] = 15,
-["icon"] = 971076,
+["important"] = false,
+["hideHp"] = true,
 ["size"] = 24,
 },
 [62982] = {
-["important"] = false,
+["duration"] = 15,
 ["name"] = "Mindbender",
 ["hideIcon"] = false,
 ["color"] = {
@@ -1345,12 +1345,12 @@ BetterBlizzPlatesDB = {
 0.69,
 0,
 },
-["duration"] = 15,
+["important"] = false,
 ["icon"] = 136214,
 ["size"] = 24,
 },
 [5923] = {
-["important"] = false,
+["duration"] = 9,
 ["name"] = "Poison Cleansing Totem",
 ["hideIcon"] = false,
 ["color"] = {
@@ -1358,13 +1358,13 @@ BetterBlizzPlatesDB = {
 0.9,
 0.08,
 },
-["duration"] = 9,
+["important"] = false,
 ["icon"] = 136070,
 ["size"] = 24,
 },
 [225672] = {
-["important"] = true,
-["hideHp"] = true,
+["duration"] = 4,
+["icon"] = 136184,
 ["name"] = "Shadow",
 ["hideIcon"] = false,
 ["color"] = {
@@ -1372,12 +1372,12 @@ BetterBlizzPlatesDB = {
 0.48,
 1,
 },
-["duration"] = 4,
-["icon"] = 136184,
+["important"] = true,
+["hideHp"] = true,
 ["size"] = 35,
 },
 [59712] = {
-["important"] = true,
+["duration"] = 30,
 ["name"] = "Stone Bulwark Totem",
 ["hideIcon"] = false,
 ["color"] = {
@@ -1385,12 +1385,12 @@ BetterBlizzPlatesDB = {
 0.75,
 0.17,
 },
-["duration"] = 30,
+["important"] = true,
 ["icon"] = 538572,
 ["size"] = 30,
 },
 [101398] = {
-["important"] = true,
+["duration"] = 12,
 ["name"] = "Psyfiend",
 ["hideIcon"] = false,
 ["color"] = {
@@ -1398,22 +1398,22 @@ BetterBlizzPlatesDB = {
 0,
 1,
 },
-["duration"] = 12,
+["important"] = true,
 ["icon"] = 537021,
 ["size"] = 35,
 },
-[194117] = {
-["important"] = false,
-["name"] = "Stoneskin Totem",
+[135002] = {
+["duration"] = 15,
+["name"] = "Tyrant",
 ["hideIcon"] = false,
 ["color"] = {
-0.78,
-0.49,
-0.35,
+1,
+0.69,
+0,
 },
-["duration"] = 15,
-["icon"] = 4667425,
-["size"] = 24,
+["important"] = true,
+["icon"] = 2065628,
+["size"] = 30,
 },
 [114565] = {
 ["color"] = {
@@ -1422,8 +1422,8 @@ BetterBlizzPlatesDB = {
 1,
 },
 ["important"] = true,
-["name"] = "Guardian of the Forgotten Queen",
 ["hpWidth"] = 20,
+["name"] = "Guardian of the Forgotten Queen",
 ["hideIcon"] = false,
 ["widthOn"] = true,
 ["duration"] = 10,
@@ -1437,8 +1437,8 @@ BetterBlizzPlatesDB = {
 1,
 },
 ["important"] = true,
-["name"] = "Grounding Totem",
 ["hpWidth"] = 20,
+["name"] = "Grounding Totem",
 ["hideIcon"] = false,
 ["widthOn"] = true,
 ["duration"] = 3,
@@ -1446,8 +1446,8 @@ BetterBlizzPlatesDB = {
 ["size"] = 30,
 },
 [100943] = {
-["important"] = true,
-["icon"] = 136098,
+["duration"] = 18,
+["hideHp"] = true,
 ["name"] = "Earthen Wall Totem",
 ["hideIcon"] = false,
 ["color"] = {
@@ -1455,13 +1455,13 @@ BetterBlizzPlatesDB = {
 0.49,
 0.35,
 },
-["duration"] = 18,
-["hideHp"] = true,
+["important"] = true,
+["icon"] = 136098,
 ["size"] = 30,
 },
 [194118] = {
-["important"] = false,
-["hideHp"] = true,
+["duration"] = 20,
+["icon"] = 538575,
 ["name"] = "Tranquil Air Totem",
 ["hideIcon"] = false,
 ["color"] = {
@@ -1469,25 +1469,39 @@ BetterBlizzPlatesDB = {
 1,
 0.78,
 },
-["duration"] = 20,
-["icon"] = 538575,
+["important"] = false,
+["hideHp"] = true,
 ["size"] = 24,
 },
-[14466] = {
+[65282] = {
+["duration"] = 6,
+["icon"] = 537022,
+["name"] = "Void Tendril",
+["hideIcon"] = false,
+["color"] = {
+0.33,
+0.35,
+1,
+},
+["important"] = false,
 ["hideHp"] = true,
-["name"] = "Horde Battle Standard",
+["size"] = 24,
+},
+[196111] = {
+["duration"] = 10,
+["name"] = "Pit Lord",
 ["hideIcon"] = false,
 ["color"] = {
 1,
-0,
+0.69,
 0,
 },
-["important"] = true,
-["icon"] = 132485,
+["important"] = false,
+["icon"] = 236423,
 ["size"] = 24,
 },
 [89] = {
-["important"] = false,
+["duration"] = 30,
 ["name"] = "Infernal",
 ["hideIcon"] = false,
 ["color"] = {
@@ -1495,12 +1509,12 @@ BetterBlizzPlatesDB = {
 0.69,
 0,
 },
-["duration"] = 30,
+["important"] = false,
 ["icon"] = 136219,
 ["size"] = 24,
 },
 [14465] = {
-["icon"] = 132486,
+["hideHp"] = true,
 ["name"] = "Alliance Battle Standard",
 ["hideIcon"] = false,
 ["color"] = {
@@ -1509,39 +1523,25 @@ BetterBlizzPlatesDB = {
 1,
 },
 ["important"] = true,
-["hideHp"] = true,
+["icon"] = 132486,
 ["size"] = 24,
 },
-[196111] = {
-["important"] = false,
-["name"] = "Pit Lord",
+[14466] = {
+["icon"] = 132485,
+["name"] = "Horde Battle Standard",
 ["hideIcon"] = false,
 ["color"] = {
 1,
-0.69,
+0,
 0,
 },
-["duration"] = 10,
-["icon"] = 236423,
-["size"] = 24,
-},
-[65282] = {
-["important"] = false,
+["important"] = true,
 ["hideHp"] = true,
-["name"] = "Void Tendril",
-["hideIcon"] = false,
-["color"] = {
-0.33,
-0.35,
-1,
-},
-["duration"] = 6,
-["icon"] = 537022,
 ["size"] = 24,
 },
 [19668] = {
-["important"] = false,
-["hideHp"] = true,
+["duration"] = 15,
+["icon"] = 136199,
 ["name"] = "Shadowfiend",
 ["hideIcon"] = false,
 ["color"] = {
@@ -1549,12 +1549,12 @@ BetterBlizzPlatesDB = {
 0.69,
 0,
 },
-["duration"] = 15,
-["icon"] = 136199,
+["important"] = false,
+["hideHp"] = true,
 ["size"] = 24,
 },
 [60561] = {
-["important"] = false,
+["duration"] = 30,
 ["name"] = "Earthgrab Totem",
 ["hideIcon"] = false,
 ["color"] = {
@@ -1562,22 +1562,22 @@ BetterBlizzPlatesDB = {
 0.31,
 0.1,
 },
-["duration"] = 30,
+["important"] = false,
 ["icon"] = 136100,
 ["size"] = 24,
 },
-[135002] = {
-["important"] = true,
-["name"] = "Tyrant",
+[194117] = {
+["duration"] = 15,
+["name"] = "Stoneskin Totem",
 ["hideIcon"] = false,
 ["color"] = {
-1,
-0.69,
-0,
+0.78,
+0.49,
+0.35,
 },
-["duration"] = 15,
-["icon"] = 2065628,
-["size"] = 30,
+["important"] = false,
+["icon"] = 4667425,
+["size"] = 24,
 },
 },
 ["classIconColorBorder"] = false,
@@ -1627,47 +1627,46 @@ BetterBlizzPlatesDB = {
 ["arenaIndicatorModeTwo"] = false,
 ["nameplateEnemyWidthScale"] = 120,
 ["castBarEmphasisHeight"] = false,
-["hpHeightSelfScale"] = 4.7,
+["enlargeAllCC"] = true,
 ["bgIndicatorTestMode"] = false,
 ["hpHeightEnemyScale"] = 12,
 ["fixedFriendlyHealthbarHide"] = true,
-["nameplateDefaultLargeFriendlyHeight"] = 64.125,
+["castBarInterruptHighlighterEndPercentageHeight"] = 85,
 ["otherNpBuffFilterAll"] = false,
 ["castBarIconYPos"] = 0,
-["combatIndicatorEnemyOnly"] = true,
+["friendlyNameplatesEnabledOnExport"] = false,
 ["targetIndicatorXPosXPos"] = 0,
-["nameplateShowFriendlyGuardians"] = "0",
-["npBorderEnemyColorRGB"] = {
+["castBarDelayedInterruptColor"] = {
+0,
 1,
-0,
-0,
+0.7843137979507446,
 1,
 },
+["old_defaultFontSize"] = 9,
 ["nameplateResourceOnTarget"] = "0",
-["nameplateAurasXPos"] = 0,
+["arenaIndicatorModeOne"] = false,
 ["nameplateNonTargetAlpha"] = 0.68,
 ["fakeNameAnchor"] = "BOTTOM",
 ["castBarShieldScale"] = 1,
-["nameplatePlayerLargerScale"] = "1.8",
+["nameplatePersonalBorderSize"] = 1,
 ["classIconBgOnly"] = true,
 ["classIconEnemyHealIcon"] = true,
-["importantBuffsDefensives"] = true,
+["arenaIdAnchorRaiseStrata"] = true,
 ["hideDefaultPersonalNameplateAuras"] = true,
-["enableNpNonFocusAlpha"] = true,
-["castBarPixelBorder"] = false,
+["castBarIconXPosXPos"] = -9,
+["classIndicatorXPos"] = 0,
 ["npcTitleColor"] = true,
-["castBarIconAnchor"] = "LEFT",
+["executeIndicator"] = true,
 ["partyPointerTestMode"] = false,
-["castBarEmphasisIconScale"] = 1.5,
+["cleanedScaleScale"] = true,
 ["enableNpVerticalPos"] = false,
-["overShields"] = true,
+["bgIndicator"] = true,
 ["maxAurasOnNameplateScale"] = 17,
 ["totemIndicatorEnemyOnly"] = true,
-["castBarEmphasisTextScale"] = 0.78,
+["nameplateAuraRowFriendlyAmount"] = 5,
 ["friendlyNpBuffFilterOnlyMe"] = false,
 ["personalNpBuffFilterLessMinite"] = false,
-["ghostAuras"] = {
-},
+["druidOverstacks"] = false,
 ["nameplateKeyAurasHorizontalGap"] = 5,
 ["nameplateAurasYPosYPos"] = -10,
 ["nameplateResourceYPos"] = 0,
@@ -1681,11 +1680,7 @@ BetterBlizzPlatesDB = {
 },
 ["friendlyNameplatesOnlyInRaids"] = false,
 ["nameplateAuraSelfScale"] = 0.8,
-["focusTargetIndicatorColorNameplateRGB"] = {
-1,
-0.6431372761726379,
-0.2470588386058807,
-},
+["nameplateGlobalScale"] = 1,
 ["nameplateAurasPersonalXPos"] = 0,
 ["friendlyHealthBarColorPlayer"] = true,
 ["petIndicatorColorHealthbarRGB"] = {
@@ -1698,7 +1693,7 @@ BetterBlizzPlatesDB = {
 0,
 0.01568627543747425,
 },
-["partyPointerTexture"] = 1,
+["absorbIndicatorAnchor"] = "RIGHT",
 ["guildNameScale"] = 1,
 ["friendlyNameplateTogglesUpdated"] = true,
 ["partyPointerShowOthersPets"] = false,
@@ -1708,20 +1703,20 @@ BetterBlizzPlatesDB = {
 0,
 },
 ["castBarInterruptHighlighterStartPercentageHeight"] = 15,
-["nameplateAurasPersonalCenteredAnchor"] = true,
+["hideCastbarBorderShield"] = true,
 ["classIndicatorHealer"] = true,
-["classIndicatorShowPet"] = true,
+["personalNpBuffFilterBlizzard"] = true,
 ["hideNPCWhitelistOn"] = false,
-["showNameplateShadow"] = true,
-["nameplateDefaultEnemyWidth"] = 110,
+["healthNumbersCombined"] = false,
+["partyPointerHighlightScale"] = 1,
 ["nameplateAuraTaller"] = false,
 ["classIndicatorOnlyFriends"] = false,
 ["nameplateAuraPlayersOnly"] = false,
-["classIndicatorPinMode"] = false,
+["petIndicatorYPos"] = 0,
 ["changeResourceStrata"] = true,
 ["showCircleOnArenaID"] = false,
 ["defaultLargeNamePlateFont"] = "Fonts\\FRIZQT__.TTF",
-["nameplateKeyAurasYPos"] = 0,
+["removeRealmNames"] = true,
 ["targetIndicatorYPosYPos"] = -1,
 ["nameplateVerticalPosition"] = 11,
 ["castBarHeightHeight"] = 12,
@@ -1743,7 +1738,11 @@ BetterBlizzPlatesDB = {
 0,
 0,
 },
-["classIndicatorBackgroundSize"] = 1,
+["npcTitleColorRGB"] = {
+0.7176470756530762,
+0.1019607931375504,
+1,
+},
 ["totemIndicatorColorName"] = true,
 ["focusTargetIndicatorXPosXPos"] = 0,
 ["classIndicatorYPosYPos"] = 0,
@@ -1751,7 +1750,7 @@ BetterBlizzPlatesDB = {
 ["customFontSizeEnabled"] = true,
 ["partyPointerHideRaidmarker"] = true,
 ["hidePersonalManaFX"] = false,
-["petIndicatorShowMurloc"] = true,
+["healerIndicatorEnemyXPos"] = 0,
 ["friendlyNpBuffFilterBlacklist"] = true,
 ["npBorderNonTargetColorRGB"] = {
 0,
@@ -1761,30 +1760,865 @@ BetterBlizzPlatesDB = {
 },
 ["castBarInterruptHighlighter"] = false,
 ["importantCCSilenceGlow"] = true,
-["totemIndicatorHideHealthBar"] = false,
-["fadeOutNPCsAlphaAlpha"] = 0.8,
 ["totemIndicatorUseNicknames"] = false,
+["fadeOutNPCsAlphaAlpha"] = 0.8,
+["totemIndicatorHideHealthBar"] = false,
 ["fakeNameScaleWithParent"] = false,
-["classIndicatorHideName"] = false,
+["castBarEmphasisSpark"] = true,
 ["targetIndicatorColorNameplate"] = false,
-["exportVersion"] = "BBP: 1.8.4h WoW: 11.2.0",
+["fadeOutNPCsList"] = {
+{
+["id"] = 24207,
+["entryColors"] = {
+["text"] = {
+["r"] = 1,
+["g"] = 1,
+["b"] = 0,
+},
+},
+["name"] = "Army of the Dead",
+["comment"] = "",
+},
+{
+["id"] = 62005,
+["entryColors"] = {
+["text"] = {
+["r"] = 1,
+["g"] = 1,
+["b"] = 0,
+},
+},
+["name"] = "Beast (Hunter)",
+["comment"] = "",
+},
+{
+["id"] = 226269,
+["entryColors"] = {
+["text"] = {
+["b"] = 0,
+["g"] = 1,
+["r"] = 0,
+},
+},
+["name"] = "Charhound (Warlock)",
+["comment"] = "",
+},
+{
+["id"] = 136408,
+["entryColors"] = {
+["text"] = {
+["r"] = 1,
+["g"] = 1,
+["b"] = 0,
+},
+},
+["name"] = "Darkhound",
+["comment"] = "",
+},
+{
+["id"] = 105419,
+["entryColors"] = {
+["text"] = {
+["r"] = 1,
+["g"] = 1,
+["b"] = 0,
+},
+},
+["name"] = "Dire Basilisk (Hunter)",
+["comment"] = "",
+},
+{
+["id"] = 26125,
+["entryColors"] = {
+["text"] = {
+["r"] = 1,
+["g"] = 1,
+["b"] = 0,
+},
+},
+["name"] = "DK pet",
+["comment"] = "",
+},
+{
+["id"] = 95072,
+["entryColors"] = {
+["text"] = {
+["r"] = 1,
+["g"] = 1,
+["b"] = 0,
+},
+},
+["name"] = "Earth Elemental (Shaman)",
+["comment"] = "",
+},
+{
+["id"] = 228224,
+["entryColors"] = {
+["text"] = {
+["b"] = 0,
+["g"] = 1,
+["r"] = 0,
+},
+},
+["name"] = "Fenryr (Hunter)",
+["comment"] = "",
+},
+{
+["id"] = 226268,
+["entryColors"] = {
+["text"] = {
+["b"] = 0,
+["g"] = 1,
+["r"] = 0,
+},
+},
+["name"] = "Gloomhound (Warlock)",
+["comment"] = "",
+},
+{
+["id"] = 228226,
+["entryColors"] = {
+["text"] = {
+["b"] = 0,
+["g"] = 1,
+["r"] = 0,
+},
+},
+["name"] = "Hati (Hunter)",
+["comment"] = "",
+},
+{
+["id"] = 136398,
+["entryColors"] = {
+["text"] = {
+["r"] = 1,
+["g"] = 1,
+["b"] = 0,
+},
+},
+["name"] = "Illidari Satyr",
+["comment"] = "",
+},
+{
+["flags"] = {
+["important"] = false,
+["pandemic"] = false,
+},
+["entryColors"] = {
+["text"] = {
+["r"] = 0,
+["g"] = 1,
+["b"] = 0,
+},
+},
+["name"] = "Infernal",
+["comment"] = "",
+},
+{
+["id"] = 163366,
+["entryColors"] = {
+["text"] = {
+["r"] = 1,
+["g"] = 1,
+["b"] = 0,
+},
+},
+["name"] = "Magus(Army of the Dead)",
+["comment"] = "",
+},
+{
+["flags"] = {
+["important"] = false,
+["pandemic"] = false,
+},
+["entryColors"] = {
+["text"] = {
+["r"] = 0,
+["g"] = 1,
+["b"] = 0,
+},
+},
+["name"] = "Mindbender",
+["comment"] = "",
+},
+{
+["id"] = 31216,
+["entryColors"] = {
+["text"] = {
+["r"] = 1,
+["g"] = 1,
+["b"] = 0,
+},
+},
+["name"] = "Mirror Images (Mage)",
+["comment"] = "",
+},
+{
+["id"] = 221632,
+["entryColors"] = {
+["text"] = {
+["b"] = 0,
+["g"] = 1,
+["r"] = 0,
+},
+},
+["name"] = "Mograine (DK)",
+["comment"] = "",
+},
+{
+["id"] = 69792,
+["entryColors"] = {
+["text"] = {
+["b"] = 0,
+["g"] = 1,
+["r"] = 0,
+},
+},
+["name"] = "Monk SEF Image (Green)",
+["comment"] = "",
+},
+{
+["id"] = 69791,
+["entryColors"] = {
+["text"] = {
+["b"] = 0,
+["g"] = 1,
+["r"] = 0,
+},
+},
+["name"] = "Monk SEF Image (Red)",
+["comment"] = "",
+},
+{
+["id"] = 221634,
+["entryColors"] = {
+["text"] = {
+["b"] = 0,
+["g"] = 1,
+["r"] = 0,
+},
+},
+["name"] = "Nazgrim (DK)",
+["comment"] = "",
+},
+{
+["flags"] = {
+["important"] = false,
+["pandemic"] = false,
+},
+["entryColors"] = {
+["text"] = {
+["r"] = 0,
+["g"] = 1,
+["b"] = 0,
+},
+},
+["name"] = "Shadowfiend",
+["comment"] = "",
+},
+{
+["id"] = 29264,
+["entryColors"] = {
+["text"] = {
+["r"] = 1,
+["g"] = 1,
+["b"] = 0,
+},
+},
+["name"] = "Spirit Wolves (Enha Shaman)",
+["comment"] = "",
+},
+{
+["id"] = 54983,
+["entryColors"] = {
+["text"] = {
+["r"] = 1,
+["g"] = 1,
+["b"] = 0,
+},
+},
+["name"] = "Treant",
+["comment"] = "",
+},
+{
+["id"] = 103822,
+["entryColors"] = {
+["text"] = {
+["b"] = 0,
+["g"] = 1,
+["r"] = 0,
+},
+},
+["name"] = "Treant",
+["comment"] = "",
+},
+{
+["id"] = 221635,
+["entryColors"] = {
+["text"] = {
+["b"] = 0,
+["g"] = 1,
+["r"] = 0,
+},
+},
+["name"] = "Trollbane (DK)",
+["comment"] = "",
+},
+{
+["id"] = 135816,
+["entryColors"] = {
+["text"] = {
+["b"] = 0,
+["g"] = 1,
+["r"] = 0,
+},
+},
+["name"] = "Vilefiend (Warlock)",
+["comment"] = "",
+},
+{
+["id"] = 192337,
+["entryColors"] = {
+["text"] = {
+["r"] = 1,
+["g"] = 1,
+["b"] = 0,
+},
+},
+["name"] = "Void Tendril (Spriest)",
+["comment"] = "",
+},
+{
+["id"] = 136403,
+["entryColors"] = {
+["text"] = {
+["r"] = 1,
+["g"] = 1,
+["b"] = 0,
+},
+},
+["name"] = "Void Terror",
+["comment"] = "",
+},
+{
+["id"] = 208441,
+["entryColors"] = {
+["text"] = {
+["b"] = 0,
+["g"] = 1,
+["r"] = 0,
+},
+},
+["name"] = "Water Elemental (Mage)",
+["comment"] = "",
+},
+{
+["id"] = 221633,
+["entryColors"] = {
+["text"] = {
+["b"] = 0,
+["g"] = 1,
+["r"] = 0,
+},
+},
+["name"] = "Whitemane (DK)",
+["comment"] = "",
+},
+},
 ["updates"] = "1.8.5d",
 ["disableEnlargedAurasOnSelf"] = false,
 ["npBorderClassColor"] = false,
 ["classIndicatorFriendlyAnchor"] = "TOP",
 ["personalNpdeBuffEnable"] = false,
 ["nameplateAurasNoNameYPos"] = 9,
-["nameplateAuraBuffScale"] = 1,
+["npColorAuraBorder"] = false,
 ["hideNpcMurlocYPos"] = 0,
-["nameplateKeyAurasAnchor"] = "LEFT",
+["auraWhitelistAlphaUpdated"] = true,
 ["nameplateDefaultEnemyHeight"] = 45,
 ["useCustomCastbarTexture"] = true,
-["hpHeightSelfManaScale"] = 8.1,
 ["otherNpBuffFilterWatchList"] = true,
-["doNotHideFriendlyHealthbarInPve"] = false,
-["executeIndicatorTestMode"] = false,
+["hpHeightSelfManaScale"] = 8.1,
+["nameplateLargerScale"] = "1.2",
+["fadeOutNPCsWhitelist"] = {
+{
+["id"] = 104818,
+["entryColors"] = {
+["text"] = {
+["r"] = 0,
+["g"] = 1,
+["b"] = 0,
+},
+},
+["name"] = "Ancestral Protection Totem",
+["comment"] = "",
+},
+{
+["id"] = 61245,
+["entryColors"] = {
+["text"] = {
+["r"] = 0,
+["g"] = 1,
+["b"] = 0,
+},
+},
+["name"] = "Capacitor Totem",
+["comment"] = "",
+},
+{
+["id"] = 78001,
+["entryColors"] = {
+["text"] = {
+["r"] = 0,
+["g"] = 1,
+["b"] = 0,
+},
+},
+["name"] = "Cloudburst Totem",
+["comment"] = "",
+},
+{
+["id"] = 105451,
+["entryColors"] = {
+["text"] = {
+["r"] = 0,
+["g"] = 1,
+["b"] = 0,
+},
+},
+["name"] = "Counterstrike Totem",
+["comment"] = "",
+},
+{
+["id"] = 2630,
+["entryColors"] = {
+["text"] = {
+["r"] = 0,
+["g"] = 1,
+["b"] = 0,
+},
+},
+["name"] = "Earthbind Totem",
+["comment"] = "",
+},
+{
+["id"] = 100943,
+["entryColors"] = {
+["text"] = {
+["r"] = 0,
+["g"] = 1,
+["b"] = 0,
+},
+},
+["name"] = "Earthen Wall Totem",
+["comment"] = "",
+},
+{
+["id"] = 60561,
+["entryColors"] = {
+["text"] = {
+["r"] = 0,
+["g"] = 1,
+["b"] = 0,
+},
+},
+["name"] = "Earthgrab Totem",
+["comment"] = "",
+},
+{
+["id"] = 17252,
+["entryColors"] = {
+["text"] = {
+["r"] = 0,
+["g"] = 1,
+["b"] = 0,
+},
+},
+["name"] = "Felguard (Demo Pet)",
+["comment"] = "",
+},
+{
+["id"] = 417,
+["entryColors"] = {
+["text"] = {
+["r"] = 0,
+["g"] = 1,
+["b"] = 0,
+},
+},
+["name"] = "Felhunter (Warlock)",
+["comment"] = "",
+},
+{
+["id"] = 5925,
+["entryColors"] = {
+["text"] = {
+["r"] = 0,
+["g"] = 1,
+["b"] = 0,
+},
+},
+["name"] = "Grounding Totem",
+["comment"] = "",
+},
+{
+["id"] = 114565,
+["entryColors"] = {
+["text"] = {
+["r"] = 0,
+["g"] = 1,
+["b"] = 0,
+},
+},
+["name"] = "Guardian Queen (prot pala)",
+["comment"] = "",
+},
+{
+["id"] = 3527,
+["entryColors"] = {
+["text"] = {
+["r"] = 0,
+["g"] = 1,
+["b"] = 0,
+},
+},
+["name"] = "Healing Stream Totem",
+["comment"] = "",
+},
+{
+["id"] = 59764,
+["entryColors"] = {
+["text"] = {
+["r"] = 0,
+["g"] = 1,
+["b"] = 0,
+},
+},
+["name"] = "Healing Tide Totem",
+["comment"] = "",
+},
+{
+["id"] = 165189,
+["entryColors"] = {
+["text"] = {
+["r"] = 0,
+["g"] = 1,
+["b"] = 0,
+},
+},
+["name"] = "Hunter Pet (they all have same ID)",
+["comment"] = "",
+},
+{
+["id"] = 89,
+["entryColors"] = {
+["text"] = {
+["r"] = 0,
+["g"] = 1,
+["b"] = 0,
+},
+},
+["name"] = "Infernal (Warlock)",
+["comment"] = "",
+},
+{
+["id"] = 97369,
+["entryColors"] = {
+["text"] = {
+["r"] = 0,
+["g"] = 1,
+["b"] = 0,
+},
+},
+["name"] = "Liquid Magma Totem",
+["comment"] = "",
+},
+{
+["id"] = 10467,
+["entryColors"] = {
+["text"] = {
+["r"] = 0,
+["g"] = 1,
+["b"] = 0,
+},
+},
+["name"] = "Mana Tide Totem",
+["comment"] = "",
+},
+{
+["id"] = 62982,
+["entryColors"] = {
+["text"] = {
+["r"] = 0,
+["g"] = 1,
+["b"] = 0,
+},
+},
+["name"] = "Mindbender",
+["comment"] = "",
+},
+{
+["flags"] = {
+["murloc"] = false,
+},
+["comment"] = "",
+["id"] = 69792,
+["entryColors"] = {
+["text"] = {
+["b"] = 0,
+["g"] = 1,
+["r"] = 0,
+},
+},
+["name"] = "Monk Image (Green)",
+},
+{
+["flags"] = {
+["murloc"] = false,
+},
+["comment"] = "",
+["id"] = 69791,
+["entryColors"] = {
+["text"] = {
+["b"] = 0,
+["g"] = 1,
+["r"] = 0,
+},
+},
+["name"] = "Monk Image (Red)",
+},
+{
+["id"] = 107100,
+["entryColors"] = {
+["text"] = {
+["r"] = 0,
+["g"] = 1,
+["b"] = 0,
+},
+},
+["name"] = "Observer (Warlock)",
+["comment"] = "",
+},
+{
+["id"] = 5923,
+["entryColors"] = {
+["text"] = {
+["r"] = 0,
+["g"] = 1,
+["b"] = 0,
+},
+},
+["name"] = "Poison Cleansing Totem",
+["comment"] = "",
+},
+{
+["id"] = 101398,
+["entryColors"] = {
+["text"] = {
+["r"] = 0,
+["g"] = 1,
+["b"] = 0,
+},
+},
+["name"] = "Psyfiend (Spriest)",
+["comment"] = "",
+},
+{
+["id"] = 225672,
+["entryColors"] = {
+["text"] = {
+["r"] = 0,
+["g"] = 1,
+["b"] = 0,
+},
+},
+["name"] = "Shadow (Priest Re-Fear)",
+["comment"] = "",
+},
+{
+["flags"] = {
+["murloc"] = false,
+},
+["comment"] = "",
+["id"] = 19668,
+["entryColors"] = {
+["text"] = {
+["r"] = 0,
+["g"] = 1,
+["b"] = 0,
+},
+},
+["name"] = "Shadowfiend",
+},
+{
+["id"] = 53006,
+["entryColors"] = {
+["text"] = {
+["r"] = 0,
+["g"] = 1,
+["b"] = 0,
+},
+},
+["name"] = "Spirit Link Totem",
+["comment"] = "",
+},
+{
+["id"] = 179867,
+["entryColors"] = {
+["text"] = {
+["r"] = 0,
+["g"] = 1,
+["b"] = 0,
+},
+},
+["name"] = "Static Field Totem",
+["comment"] = "",
+},
+{
+["id"] = 59712,
+["entryColors"] = {
+["text"] = {
+["r"] = 0,
+["g"] = 1,
+["b"] = 0,
+},
+},
+["name"] = "Stone Bulwark Totem",
+["comment"] = "",
+},
+{
+["id"] = 194117,
+["entryColors"] = {
+["text"] = {
+["r"] = 0,
+["g"] = 1,
+["b"] = 0,
+},
+},
+["name"] = "Stoneskin Totem",
+["comment"] = "",
+},
+{
+["id"] = 1863,
+["entryColors"] = {
+["text"] = {
+["r"] = 0,
+["g"] = 1,
+["b"] = 0,
+},
+},
+["name"] = "Succubus (Warlock)",
+["comment"] = "",
+},
+{
+["flags"] = {
+["murloc"] = false,
+},
+["comment"] = "",
+["id"] = 225409,
+["entryColors"] = {
+["text"] = {
+["r"] = 0,
+["g"] = 1,
+["b"] = 0,
+},
+},
+["name"] = "Surging Totem",
+},
+{
+["id"] = 105427,
+["entryColors"] = {
+["text"] = {
+["r"] = 0,
+["g"] = 1,
+["b"] = 0,
+},
+},
+["name"] = "Totem of Wrath",
+["comment"] = "",
+},
+{
+["id"] = 194118,
+["entryColors"] = {
+["text"] = {
+["r"] = 0,
+["g"] = 1,
+["b"] = 0,
+},
+},
+["name"] = "Tranquil Air Totem",
+["comment"] = "",
+},
+{
+["id"] = 5913,
+["entryColors"] = {
+["text"] = {
+["r"] = 0,
+["g"] = 1,
+["b"] = 0,
+},
+},
+["name"] = "Tremor Totem",
+["comment"] = "",
+},
+{
+["id"] = 135002,
+["entryColors"] = {
+["text"] = {
+["r"] = 0,
+["g"] = 1,
+["b"] = 0,
+},
+},
+["name"] = "Tyrant (Warlock)",
+["comment"] = "",
+},
+{
+["flags"] = {
+["murloc"] = false,
+},
+["comment"] = "",
+["id"] = 224466,
+["entryColors"] = {
+["text"] = {
+["r"] = 0,
+["g"] = 1,
+["b"] = 0,
+},
+},
+["name"] = "Voidwrath (Priest)",
+},
+{
+["id"] = 119052,
+["entryColors"] = {
+["text"] = {
+["r"] = 0,
+["g"] = 1,
+["b"] = 0,
+},
+},
+["name"] = "War Banner",
+["comment"] = "",
+},
+{
+["id"] = 97285,
+["entryColors"] = {
+["text"] = {
+["r"] = 0,
+["g"] = 1,
+["b"] = 0,
+},
+},
+["name"] = "Wind Rush Totem",
+["comment"] = "",
+},
+},
 ["nameplateShowEnemyTotems"] = "1",
-["changeNpHpBgColor"] = true,
+["tankOffTankAggroColorRGB"] = {
+0.01568627543747425,
+0.4941176772117615,
+0.8980392813682556,
+1,
+},
 ["nameplateShadowRGB"] = {
 0,
 0,
@@ -1797,56 +2631,46 @@ BetterBlizzPlatesDB = {
 ["partyPointerShowPet"] = true,
 ["arenaSpecYPosYPos"] = 3,
 ["partyIndicatorModeOff"] = false,
-["importantBuffsMobilityGlowRGB"] = {
-["a"] = 1,
-["b"] = 0,
-["g"] = 1,
-["r"] = 0.9254902601242065,
-},
+["castBarIconPixelBorder"] = false,
 ["otherNpdeBuffPandemicGlow"] = false,
 ["useCustomTextureForSelf"] = true,
-["enemyHealthBarColorNpcOnly"] = true,
+["focusTargetIndicator"] = true,
 ["useCustomTextureForFriendly"] = true,
 ["castBarShieldAnchor"] = "LEFT",
 ["showNameplateShadowOnlyTarget"] = true,
-["arenaIDScale"] = 1,
+["nameplateShowFriendlyPets"] = "0",
 ["enableNpNonTargetAlpha"] = true,
-["levelFrameFontSize"] = 12,
-["nameplateAuraTestMode"] = false,
-["partyPointerHighlightRGB"] = {
-0.9098039865493774,
-0.9098039865493774,
-0.9098039865493774,
-0.5294442772865295,
-},
-["targetIndicatorHideIcon"] = false,
+["castBarEmphasisTextScaleHeight"] = 2.099999904632568,
 ["classIndicatorBackgroundRGB"] = {
 0,
 0,
 0,
 1,
 },
+["partyPointerHighlightRGB"] = {
+0.9098039865493774,
+0.9098039865493774,
+0.9098039865493774,
+0.5294442772865295,
+},
+["partyPointerUpdated2"] = true,
+["nameplateAuraTestMode"] = false,
 ["nameplateMinAlpha"] = 0.6,
-["classIndicatorUpdated"] = true,
-["targetNameplateAuraScale"] = 1,
+["hasSaved"] = true,
+["targetIndicatorHideIcon"] = false,
 ["showDefaultCooldownNumbersOnNpAuras"] = false,
 ["nameplateMaxAlphaScale"] = 1,
 ["reopenOptions"] = false,
-["hasSaved"] = true,
+["classIndicatorUpdated"] = true,
 ["nameplateAuraWidthGap"] = 1.5,
-["npBorderFocusColorRGB"] = {
-1,
-0.4627451300621033,
-0,
-1,
-},
+["nameplateAuraDebuffSelfScale"] = 1,
 ["otherNpdeBuffFilterBlizzard"] = false,
-["friendlyNpBuffFilterAll"] = false,
+["hidePersonalBarExtraFrame"] = false,
 ["friendIndicator"] = false,
-["hideCastbarFriendly"] = false,
+["raidmarkIndicatorXPosXPos"] = 0,
 ["defaultLargeFontSize"] = 12,
-["nameplateOverlapV"] = 0.85,
-["disableImportantAurasOnSelf"] = false,
+["nameplateMotionSpeedScale"] = 0.03,
+["friendlyNpdeBuffFilterBlacklist"] = true,
 ["keyAurasImportantBuffsEnabled"] = true,
 ["useFakeNameAnchorBottom"] = false,
 ["arenaIdXPosXPos"] = 0,
@@ -1857,9 +2681,9 @@ BetterBlizzPlatesDB = {
 ["hpHeightFriendlyScale"] = 12,
 ["importantCCRootGlowRGB"] = {
 ["a"] = 1,
-["b"] = 0,
-["g"] = 0.874,
 ["r"] = 1,
+["g"] = 0.874,
+["b"] = 0,
 },
 ["auraWhitelist"] = {
 {
@@ -1870,9 +2694,9 @@ BetterBlizzPlatesDB = {
 },
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 1,
 ["b"] = 0,
+["g"] = 1,
+["r"] = 0,
 },
 },
 ["name"] = "Acclamation",
@@ -1888,9 +2712,9 @@ BetterBlizzPlatesDB = {
 },
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 1,
 ["b"] = 0,
+["g"] = 1,
+["r"] = 0,
 },
 },
 ["name"] = "Agony",
@@ -1906,9 +2730,9 @@ BetterBlizzPlatesDB = {
 },
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 1,
 ["b"] = 0,
+["g"] = 1,
+["r"] = 0,
 },
 },
 ["name"] = "aspect of harmony",
@@ -1922,9 +2746,9 @@ BetterBlizzPlatesDB = {
 },
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 1,
 ["b"] = 0,
+["g"] = 1,
+["r"] = 0,
 },
 },
 ["name"] = "Blizzard",
@@ -1940,9 +2764,9 @@ BetterBlizzPlatesDB = {
 },
 ["entryColors"] = {
 ["text"] = {
-["b"] = 0,
-["g"] = 1,
 ["r"] = 0,
+["g"] = 1,
+["b"] = 0,
 },
 },
 ["name"] = "Blood plague",
@@ -1958,9 +2782,9 @@ BetterBlizzPlatesDB = {
 },
 ["entryColors"] = {
 ["text"] = {
-["b"] = 0,
-["g"] = 1,
 ["r"] = 0,
+["g"] = 1,
+["b"] = 0,
 },
 },
 ["name"] = "Breath of fire",
@@ -1976,9 +2800,9 @@ BetterBlizzPlatesDB = {
 },
 ["entryColors"] = {
 ["text"] = {
-["b"] = 0,
-["g"] = 1,
 ["r"] = 0,
+["g"] = 1,
+["b"] = 0,
 },
 },
 ["name"] = "Burning Wound",
@@ -1994,9 +2818,9 @@ BetterBlizzPlatesDB = {
 },
 ["entryColors"] = {
 ["text"] = {
-["b"] = 0,
-["g"] = 1,
 ["r"] = 0,
+["g"] = 1,
+["b"] = 0,
 },
 },
 ["name"] = "Controlled Destruction",
@@ -2012,9 +2836,9 @@ BetterBlizzPlatesDB = {
 },
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 1,
 ["b"] = 0,
+["g"] = 1,
+["r"] = 0,
 },
 },
 ["name"] = "Corruption",
@@ -2030,9 +2854,9 @@ BetterBlizzPlatesDB = {
 },
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 1,
 ["b"] = 0,
+["g"] = 1,
+["r"] = 0,
 },
 },
 ["name"] = "Curse of exhaustion",
@@ -2048,9 +2872,9 @@ BetterBlizzPlatesDB = {
 },
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 1,
 ["b"] = 0,
+["g"] = 1,
+["r"] = 0,
 },
 },
 ["name"] = "curse of tongues",
@@ -2066,9 +2890,9 @@ BetterBlizzPlatesDB = {
 },
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 1,
 ["b"] = 0,
+["g"] = 1,
+["r"] = 0,
 },
 },
 ["name"] = "Curse of weakness",
@@ -2084,9 +2908,9 @@ BetterBlizzPlatesDB = {
 },
 ["entryColors"] = {
 ["text"] = {
-["b"] = 0,
-["g"] = 1,
 ["r"] = 0,
+["g"] = 1,
+["b"] = 0,
 },
 },
 ["name"] = "Deathstalker's mark",
@@ -2102,9 +2926,9 @@ BetterBlizzPlatesDB = {
 },
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 1,
 ["b"] = 0,
+["g"] = 1,
+["r"] = 0,
 },
 },
 ["name"] = "Deep Wounds",
@@ -2120,9 +2944,9 @@ BetterBlizzPlatesDB = {
 },
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 1,
 ["b"] = 0,
+["g"] = 1,
+["r"] = 0,
 },
 },
 ["name"] = "Devouring Plague",
@@ -2138,9 +2962,9 @@ BetterBlizzPlatesDB = {
 },
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 1,
 ["b"] = 0,
+["g"] = 1,
+["r"] = 0,
 },
 },
 ["name"] = "Disable",
@@ -2156,9 +2980,9 @@ BetterBlizzPlatesDB = {
 },
 ["entryColors"] = {
 ["text"] = {
-["b"] = 0,
-["g"] = 1,
 ["r"] = 0,
+["g"] = 1,
+["b"] = 0,
 },
 },
 ["name"] = "Exploding keg",
@@ -2174,9 +2998,9 @@ BetterBlizzPlatesDB = {
 },
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 1,
 ["b"] = 0,
+["g"] = 1,
+["r"] = 0,
 },
 },
 ["name"] = "Fazed",
@@ -2192,9 +3016,9 @@ BetterBlizzPlatesDB = {
 },
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 1,
 ["b"] = 0,
+["g"] = 1,
+["r"] = 0,
 },
 },
 ["name"] = "Festering Wound",
@@ -2210,9 +3034,9 @@ BetterBlizzPlatesDB = {
 },
 ["entryColors"] = {
 ["text"] = {
-["b"] = 0,
-["g"] = 1,
 ["r"] = 0,
+["g"] = 1,
+["b"] = 0,
 },
 },
 ["name"] = "Fiery Brand",
@@ -2228,9 +3052,9 @@ BetterBlizzPlatesDB = {
 },
 ["entryColors"] = {
 ["text"] = {
-["b"] = 0,
-["g"] = 1,
 ["r"] = 0,
+["g"] = 1,
+["b"] = 0,
 },
 },
 ["name"] = "Find weakness",
@@ -2246,9 +3070,9 @@ BetterBlizzPlatesDB = {
 },
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 1,
 ["b"] = 0,
+["g"] = 1,
+["r"] = 0,
 },
 },
 ["name"] = "Frailty",
@@ -2264,9 +3088,9 @@ BetterBlizzPlatesDB = {
 },
 ["entryColors"] = {
 ["text"] = {
-["b"] = 0,
-["g"] = 1,
 ["r"] = 0,
+["g"] = 1,
+["b"] = 0,
 },
 },
 ["name"] = "Frost Bomb",
@@ -2282,9 +3106,9 @@ BetterBlizzPlatesDB = {
 },
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 1,
 ["b"] = 0,
+["g"] = 1,
+["r"] = 0,
 },
 },
 ["name"] = "Gale Force",
@@ -2300,9 +3124,9 @@ BetterBlizzPlatesDB = {
 },
 ["entryColors"] = {
 ["text"] = {
-["b"] = 0,
-["g"] = 1,
 ["r"] = 0,
+["g"] = 1,
+["b"] = 0,
 },
 },
 ["name"] = "Garrote",
@@ -2318,9 +3142,9 @@ BetterBlizzPlatesDB = {
 },
 ["entryColors"] = {
 ["text"] = {
-["b"] = 0,
-["g"] = 1,
 ["r"] = 0,
+["g"] = 1,
+["b"] = 0,
 },
 },
 ["name"] = "hamstring",
@@ -2336,9 +3160,9 @@ BetterBlizzPlatesDB = {
 },
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 1,
 ["b"] = 0,
+["g"] = 1,
+["r"] = 0,
 },
 },
 ["name"] = "Haunt",
@@ -2354,9 +3178,9 @@ BetterBlizzPlatesDB = {
 },
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 1,
 ["b"] = 0,
+["g"] = 1,
+["r"] = 0,
 },
 },
 ["name"] = "Havoc",
@@ -2372,9 +3196,9 @@ BetterBlizzPlatesDB = {
 },
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 1,
 ["b"] = 0,
+["g"] = 1,
+["r"] = 0,
 },
 },
 ["name"] = "Ignite",
@@ -2390,9 +3214,9 @@ BetterBlizzPlatesDB = {
 },
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 1,
 ["b"] = 0,
+["g"] = 1,
+["r"] = 0,
 },
 },
 ["name"] = "Immolation",
@@ -2408,9 +3232,9 @@ BetterBlizzPlatesDB = {
 },
 ["entryColors"] = {
 ["text"] = {
-["b"] = 0,
-["g"] = 1,
 ["r"] = 0,
+["g"] = 1,
+["b"] = 0,
 },
 },
 ["name"] = "Keg Smash",
@@ -2424,9 +3248,9 @@ BetterBlizzPlatesDB = {
 },
 ["entryColors"] = {
 ["text"] = {
-["b"] = 0,
-["g"] = 1,
 ["r"] = 0,
+["g"] = 1,
+["b"] = 0,
 },
 },
 ["name"] = "mark of the crane",
@@ -2442,9 +3266,9 @@ BetterBlizzPlatesDB = {
 },
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 1,
 ["b"] = 0,
+["g"] = 1,
+["r"] = 0,
 },
 },
 ["name"] = "marked for execution",
@@ -2460,9 +3284,9 @@ BetterBlizzPlatesDB = {
 },
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 1,
 ["b"] = 0,
+["g"] = 1,
+["r"] = 0,
 },
 },
 ["name"] = "Moonfire",
@@ -2478,9 +3302,9 @@ BetterBlizzPlatesDB = {
 },
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 1,
 ["b"] = 0,
+["g"] = 1,
+["r"] = 0,
 },
 },
 ["name"] = "Mortal Wounds",
@@ -2494,9 +3318,9 @@ BetterBlizzPlatesDB = {
 },
 ["entryColors"] = {
 ["text"] = {
-["b"] = 0,
-["g"] = 1,
 ["r"] = 0,
+["g"] = 1,
+["b"] = 0,
 },
 },
 ["name"] = "mystic touch",
@@ -2512,9 +3336,9 @@ BetterBlizzPlatesDB = {
 },
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 1,
 ["b"] = 0,
+["g"] = 1,
+["r"] = 0,
 },
 },
 ["name"] = "Overwhelmed",
@@ -2530,9 +3354,9 @@ BetterBlizzPlatesDB = {
 },
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 1,
 ["b"] = 0,
+["g"] = 1,
+["r"] = 0,
 },
 },
 ["name"] = "Phantom Singularity",
@@ -2549,9 +3373,9 @@ BetterBlizzPlatesDB = {
 ["entryColors"] = {
 ["text"] = {
 ["a"] = 1,
-["b"] = 0,
-["g"] = 0.03529411926865578,
 ["r"] = 1,
+["g"] = 0.03529411926865578,
+["b"] = 0,
 },
 },
 ["name"] = "Provoke",
@@ -2567,9 +3391,9 @@ BetterBlizzPlatesDB = {
 },
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 1,
 ["b"] = 0,
+["g"] = 1,
+["r"] = 0,
 },
 },
 ["name"] = "Psyflay",
@@ -2585,9 +3409,9 @@ BetterBlizzPlatesDB = {
 },
 ["entryColors"] = {
 ["text"] = {
-["b"] = 0,
-["g"] = 1,
 ["r"] = 0,
+["g"] = 1,
+["b"] = 0,
 },
 },
 ["name"] = "Reaver's Mark",
@@ -2603,9 +3427,9 @@ BetterBlizzPlatesDB = {
 },
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 1,
 ["b"] = 0,
+["g"] = 1,
+["r"] = 0,
 },
 },
 ["name"] = "Rend",
@@ -2621,9 +3445,9 @@ BetterBlizzPlatesDB = {
 },
 ["entryColors"] = {
 ["text"] = {
-["b"] = 0,
-["g"] = 1,
 ["r"] = 0,
+["g"] = 1,
+["b"] = 0,
 },
 },
 ["name"] = "Rupture",
@@ -2639,9 +3463,9 @@ BetterBlizzPlatesDB = {
 },
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 1,
 ["b"] = 0,
+["g"] = 1,
+["r"] = 0,
 },
 },
 ["name"] = "Shadow Word: Pain",
@@ -2659,9 +3483,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 204598,
 ["entryColors"] = {
 ["text"] = {
-["b"] = 0,
-["g"] = 1,
 ["r"] = 0,
+["g"] = 1,
+["b"] = 0,
 },
 },
 ["name"] = "Sigil of Flame",
@@ -2674,9 +3498,9 @@ BetterBlizzPlatesDB = {
 },
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 1,
 ["b"] = 0,
+["g"] = 1,
+["r"] = 0,
 },
 },
 ["name"] = "Slow",
@@ -2692,9 +3516,9 @@ BetterBlizzPlatesDB = {
 },
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 1,
 ["b"] = 0,
+["g"] = 1,
+["r"] = 0,
 },
 },
 ["name"] = "Soul Rot",
@@ -2710,9 +3534,9 @@ BetterBlizzPlatesDB = {
 },
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 1,
 ["b"] = 0,
+["g"] = 1,
+["r"] = 0,
 },
 },
 ["name"] = "Sunfire",
@@ -2728,9 +3552,9 @@ BetterBlizzPlatesDB = {
 },
 ["entryColors"] = {
 ["text"] = {
-["b"] = 0,
-["g"] = 1,
 ["r"] = 0,
+["g"] = 1,
+["b"] = 0,
 },
 },
 ["name"] = "the hunt",
@@ -2746,9 +3570,9 @@ BetterBlizzPlatesDB = {
 },
 ["entryColors"] = {
 ["text"] = {
-["b"] = 0,
-["g"] = 1,
 ["r"] = 0,
+["g"] = 1,
+["b"] = 0,
 },
 },
 ["name"] = "Thrash",
@@ -2764,9 +3588,9 @@ BetterBlizzPlatesDB = {
 },
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 1,
 ["b"] = 0,
+["g"] = 1,
+["r"] = 0,
 },
 },
 ["name"] = "Touch of the Magi",
@@ -2782,9 +3606,9 @@ BetterBlizzPlatesDB = {
 },
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 1,
 ["b"] = 0,
+["g"] = 1,
+["r"] = 0,
 },
 },
 ["name"] = "Unstable Affliction",
@@ -2800,9 +3624,9 @@ BetterBlizzPlatesDB = {
 },
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 1,
 ["b"] = 0,
+["g"] = 1,
+["r"] = 0,
 },
 },
 ["name"] = "Vampiric Touch",
@@ -2818,9 +3642,9 @@ BetterBlizzPlatesDB = {
 },
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 1,
 ["b"] = 0,
+["g"] = 1,
+["r"] = 0,
 },
 },
 ["name"] = "Virulent plague",
@@ -2836,9 +3660,9 @@ BetterBlizzPlatesDB = {
 },
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 1,
 ["b"] = 0,
+["g"] = 1,
+["r"] = 0,
 },
 },
 ["name"] = "Warbreaker",
@@ -2855,9 +3679,9 @@ BetterBlizzPlatesDB = {
 ["entryColors"] = {
 ["text"] = {
 ["a"] = 0.6683330535888672,
-["r"] = 0,
-["g"] = 1,
 ["b"] = 0,
+["g"] = 1,
+["r"] = 0,
 },
 },
 ["name"] = "Weapons of Order",
@@ -2873,9 +3697,9 @@ BetterBlizzPlatesDB = {
 },
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 1,
 ["b"] = 0,
+["g"] = 1,
+["r"] = 0,
 },
 },
 ["name"] = "Winter's Chill",
@@ -2891,26 +3715,18 @@ BetterBlizzPlatesDB = {
 },
 ["entryColors"] = {
 ["text"] = {
-["b"] = 0,
-["g"] = 1,
 ["r"] = 0,
+["g"] = 1,
+["b"] = 0,
 },
 },
 ["name"] = "Wither",
 ["comment"] = "",
 },
 },
-["npAuraBuffsRGB"] = {
-0,
-0.67,
-1,
-},
-["guildNameColorRGB"] = {
-0,
-1,
-0,
-},
-["petIndicatorTestMode"] = false,
+["healthNumbersPlayers"] = true,
+["raidmarkIndicator"] = true,
+["nameplateResourceXPosXPos"] = 0,
 ["nameplateShadowHighlightRGB"] = {
 1,
 1,
@@ -2918,46 +3734,42 @@ BetterBlizzPlatesDB = {
 1,
 },
 ["totemListUpdateTWW4"] = true,
-["healthNumbersJustify"] = "CENTER",
+["bgIndicatorAnchor"] = "BOTTOM",
 ["importantBuffsOffensives"] = true,
 ["bgIndicatorYPos"] = 0,
 ["nameplateMotion"] = "1",
 ["classIndicatorFriendlyXPos"] = 0,
-["hpHeightSelf"] = 4.7,
-["partyIndicatorModeTwo"] = false,
-["friendlyNameScale"] = 0.78,
+["classIndicatorSpecIcon"] = true,
+["questIndicatorScale"] = 1,
+["absorbIndicatorTestMode"] = false,
 ["absorbIndicatorScale"] = 0.81,
-["toggleNamesOffDuringPVE"] = false,
+["totemListUpdateTWW5"] = true,
 ["personalNpTRP3Color"] = false,
 ["nameplateAuraSquare"] = true,
 ["enableCastbarCustomization"] = true,
 ["onlyShowHighlightedNpShadow"] = false,
 ["nameplateResourceDoNotRaiseAuras"] = true,
 ["auraColorPvEOnly"] = false,
-["healthNumbersHideSelf"] = false,
+["healthNumbersPercentage"] = false,
 ["enemyColorThreatCombatOnly"] = false,
-["enemyColorNameRGB"] = {
-1,
-0,
-0,
-},
+["classIconSquareBorder"] = false,
 ["totemListUpdateTWW3"] = true,
 ["castBarEmphasisHealthbarColor"] = false,
 ["personalBarPosition"] = 0.54,
 ["healthNumbersOnlyInCombat"] = false,
 ["totemListUpdateTWW2"] = true,
-["threatColorAlwaysOn"] = false,
-["nameplateMinAlphaDistance"] = 0.1,
+["classIconAlwaysShowHealer"] = false,
+["personalNpBuffFilterWatchList"] = true,
 ["customTextureSelfMana"] = "Wglass",
 ["customFontSize"] = 10,
 ["hideEliteDragon"] = false,
-["arenaSpecXPosXPos"] = 0,
-["friendlyNpdeBuffFilterCC"] = true,
-["old_defaultNamePlateFont"] = "Fonts\\FRIZQT__.TTF",
-["personalBarPositionScale"] = 0.54,
-["executeIndicatorXPosXPos"] = -25,
+["totemListUpdateTWW1"] = true,
+["bgIndicatorShowFlags"] = true,
+["totemIndicatorXPos"] = 0,
 ["nameplateMinAlphaScale"] = 0.6,
-["focusTargetIndicatorColorNameplate"] = false,
+["executeIndicatorXPosXPos"] = -25,
+["personalBarPositionScale"] = 0.54,
+["healerIndicatorEnemyYPos"] = -6,
 ["dpsOrHealTargetAggroColorRGB"] = {
 0.8705883026123047,
 1,
@@ -2965,8 +3777,8 @@ BetterBlizzPlatesDB = {
 1,
 },
 ["classIndicatorCCAuras"] = true,
-["changeNameplateBorderSize"] = true,
-["castBarEmphasisSparkHeight"] = 35,
+["fadeOutNPCOnlyFadeSecondaryPets"] = true,
+["alwaysShowPurgeTexture"] = false,
 ["healerIndicatorEnemyYPosYPos"] = -6,
 ["healthNumbersScale"] = 0.65,
 ["castBarShieldYPos"] = 0,
@@ -2974,13 +3786,13 @@ BetterBlizzPlatesDB = {
 ["showCastBarIconWhenNoninterruptible"] = true,
 ["nameplateDefaultLargeEnemyHeight"] = 64.125,
 ["keepNpShadowTargetHighlighted"] = false,
-["hideNPCHideOthersPets"] = true,
-["absorbIndicatorYPos"] = 0,
+["nameplateDefaultLargeEnemyWidth"] = 154,
+["arenaIndicatorModeFour"] = false,
 ["raidmarkIndicatorRaiseStrata"] = true,
-["nameplateSelfTopInset"] = 0.3999999999999999,
+["friendlyNameplatesOnlyInDungeons"] = false,
 ["hideCastbarWhitelistOn"] = false,
 ["importantBuffsMobilityGlow"] = false,
-["nameplateResourceXPos"] = 0,
+["nameplateMaxScale"] = 0.5,
 ["tankNoAggroColorRGB"] = {
 0.4666666984558106,
 0.9568628072738647,
@@ -2990,219 +3802,49 @@ BetterBlizzPlatesDB = {
 ["castBarIconScale"] = 1,
 ["hideTempHpLoss"] = false,
 ["customFontOutline"] = "THINOUTLINE",
-["personalBarTweaks"] = false,
+["classIndicatorTank"] = true,
 ["classIndicatorHighlightColor"] = true,
 ["classIndicatorBackground"] = false,
-["npAuraCurseRGB"] = {
-0.47,
-0,
-0.78,
-},
+["hideNpAuraSwipe"] = false,
 ["enemyColorThreatHideSolo"] = true,
 ["useCustomTextureForBars"] = true,
 ["hideNameDuringCast"] = false,
-["personalNpdeBuffFilterCC"] = false,
+["healthNumbersNpcs"] = true,
 ["enemyColorThreat"] = true,
-["npBorderFriendlyColorRGB"] = {
-0,
-1,
-0,
-1,
-},
+["useCustomTextureForExtraBars"] = false,
 ["showNameplateCastbarTimer"] = true,
 ["personalNpdeBuffFilterLessMinite"] = false,
 ["executeIndicatorUseTexture"] = false,
 ["blizzardDefaultFilterOnlyMine"] = false,
 ["partyIDScale"] = 1,
-["castEmphasisList"] = {
-{
-["name"] = "Cyclone",
-["entryColors"] = {
-["text"] = {
-["b"] = 0,
-["g"] = 1,
-["r"] = 0,
-},
-},
-},
-{
-["name"] = "Fear",
-["entryColors"] = {
-["text"] = {
-["b"] = 0,
-["g"] = 1,
-["r"] = 0,
-},
-},
-},
-{
-["name"] = "Haymaker",
-["entryColors"] = {
-["text"] = {
-["b"] = 0,
-["g"] = 1,
-["r"] = 0,
-},
-},
-},
-{
-["name"] = "Hex",
-["entryColors"] = {
-["text"] = {
-["b"] = 0,
-["g"] = 1,
-["r"] = 0,
-},
-},
-},
-{
-["name"] = "Hibernate",
-["entryColors"] = {
-["text"] = {
-["b"] = 0,
-["g"] = 1,
-["r"] = 0,
-},
-},
-},
-{
-["name"] = "Lightning Lasso",
-["entryColors"] = {
-["text"] = {
-["b"] = 0,
-["g"] = 1,
-["r"] = 0,
-},
-},
-},
-{
-["name"] = "Mass Polymorph",
-["entryColors"] = {
-["text"] = {
-["b"] = 0,
-["g"] = 1,
-["r"] = 0,
-},
-},
-},
-{
-["name"] = "Mind Control",
-["entryColors"] = {
-["text"] = {
-["b"] = 0,
-["g"] = 1,
-["r"] = 0,
-},
-},
-},
-{
-["name"] = "Polymorph",
-["entryColors"] = {
-["text"] = {
-["b"] = 0,
-["g"] = 1,
-["r"] = 0,
-},
-},
-},
-{
-["name"] = "Repentance",
-["entryColors"] = {
-["text"] = {
-["b"] = 0,
-["g"] = 1,
-["r"] = 0,
-},
-},
-},
-{
-["name"] = "Ring of Fire",
-["entryColors"] = {
-["text"] = {
-["b"] = 0,
-["g"] = 1,
-["r"] = 0,
-},
-},
-},
-{
-["name"] = "Ring of Frost",
-["entryColors"] = {
-["text"] = {
-["b"] = 0,
-["g"] = 1,
-["r"] = 0,
-},
-},
-},
-{
-["name"] = "Scare Beast",
-["entryColors"] = {
-["text"] = {
-["b"] = 0,
-["g"] = 1,
-["r"] = 0,
-},
-},
-},
-{
-["name"] = "Shadowfury",
-["entryColors"] = {
-["text"] = {
-["b"] = 0,
-["g"] = 1,
-["r"] = 0,
-},
-},
-},
-{
-["name"] = "Sleep Walk",
-["entryColors"] = {
-["text"] = {
-["b"] = 0,
-["g"] = 1,
-["r"] = 0,
-},
-},
-},
-{
-["name"] = "Song of Chi-Ji",
-["entryColors"] = {
-["text"] = {
-["b"] = 0,
-["g"] = 1,
-["r"] = 0,
-},
-},
-},
-},
-["castBarDragonflightShield"] = true,
-["nameplateOverlapVScale"] = 1.1,
+["changeHealthbarHeight"] = true,
+["bgIndicatorXPos"] = 0,
+["sortDurationAuras"] = false,
 ["nameplateSelfAlpha"] = "0.75",
 ["petIndicator"] = true,
 ["enemyNameplateHealthbarHeight"] = 10.8,
-["totemIndicatorYPosYPos"] = 6,
+["fakeNameAnchorRelative"] = "TOP",
 ["customFont"] = "1",
 ["nameplateSelfHeight"] = 45.0000114440918,
 ["ShowClassColorInNameplate"] = "1",
-["fakeNameAnchorRelative"] = "TOP",
+["totemIndicatorYPosYPos"] = 6,
 ["otherNpBuffFilterPurgeableHasPurge"] = true,
 ["importantCCFullGlowRGB"] = {
 ["a"] = 1,
-["b"] = 0,
-["g"] = 0.874,
 ["r"] = 1,
+["g"] = 0.874,
+["b"] = 0,
 },
 ["showNameplateTargetText"] = true,
 ["nameplateBorderSize"] = 1.75,
 ["personalNpBuffEnable"] = false,
 ["totemIndicatorScale"] = 1,
-["enableCustomFontOutline"] = true,
+["friendlyNpBuffPurgeGlow"] = false,
 ["hideNPCPetsOnly"] = false,
 ["petIndicatorColorHealthbar"] = true,
 ["old_defaultNamePlateFontFlags"] = "",
 ["executeIndicatorInRangeColor"] = false,
-["totemIndicatorDefaultCooldownTextSizeScale"] = 1,
+["fadeOutNPCWhitelistOn"] = false,
 ["totemIndicatorAnchor"] = "TOP",
 ["partyPointerHealerReplace"] = true,
 ["totemIndicatorYPos"] = 6,
@@ -3214,7 +3856,7 @@ BetterBlizzPlatesDB = {
 0,
 1,
 },
-["classIndicatorEnemy"] = true,
+["healthNumbersTestMode"] = false,
 ["bgIndicatorScale"] = 1,
 ["defaultNamePlateFontFlags"] = "",
 ["fadeOutNPCsAlpha"] = 0.8,
@@ -3224,35 +3866,35 @@ BetterBlizzPlatesDB = {
 ["otherNpBuffFilterBlacklist"] = true,
 ["combatIndicator"] = true,
 ["castBarIconYPosYPos"] = 0,
-["hideNameplateAuraTooltip"] = true,
+["executeIndicatorAnchor"] = "LEFT",
 ["npAuraOtherRGB"] = {
 0,
 0,
 0,
 },
-["raidmarkerPvPOnly"] = false,
+["nameplateOccludedAlphaMult"] = 1,
 ["totemIndicatorNoAnimation"] = false,
-["hideResourceFrame"] = false,
+["recolorTempHpLoss"] = false,
 ["healthNumbersFriendly"] = false,
 ["classIndicatorFriendlyYPos"] = 0,
 ["friendlyColorName"] = false,
-["focusTargetIndicatorScale"] = 0.91,
+["nameplateCenterAllRows"] = true,
 ["classIndicatorHideFriendlyHealthbar"] = false,
-["healerIndicatorArenaOnly"] = true,
+["nameplateCastbarTestMode"] = false,
 ["partyIndicatorModeThree"] = true,
 ["nameplateResourceYPosYPos"] = 0,
-["useCustomTextureForSelfMana"] = true,
+["healthNumbersCurrentFull"] = false,
 ["customTextureSelf"] = "Wglass",
-["hideNpcCastbar"] = false,
+["petIndicatorScale"] = 1.1,
 ["defaultFontSize"] = 9,
 ["combatIndicatorAnchor"] = "CENTER",
 ["nameplateAuraHeightGap"] = 2,
-["smallPetsInPvP"] = true,
+["questIndicatorYPos"] = 0,
 ["hideNPC"] = true,
-["nameplateShowFriendlyTotems"] = "0",
+["nameplateResourceUnderCastbar"] = true,
 ["executeIndicatorPercentSymbol"] = true,
-["executeIndicatorTargetOnly"] = false,
-["otherNpBuffEnable"] = true,
+["hideNPCSecondaryShowMurloc"] = true,
+["classIndicator"] = true,
 ["enableNameplateAuraCustomisation"] = true,
 ["npBorderTargetColorRGB"] = {
 0,
@@ -3263,31 +3905,26 @@ BetterBlizzPlatesDB = {
 ["enableNpNonTargetAlphaFullAlphaCasting"] = true,
 ["normalCastbarForEmpoweredCasts"] = true,
 ["executeIndicatorFriendly"] = false,
-["wasOnLoadingScreen"] = false,
+["combatIndicatorSap"] = true,
 ["targetHighlightFix"] = true,
-["partyPointerYPos"] = 0,
+["castBarRecolor"] = true,
 ["showInterruptsOnNameplateAuras"] = true,
 ["combatIndicatorPlayersOnly"] = true,
 ["highlightNpShadowOnMouseover"] = true,
 ["friendlyNameColor"] = false,
-["classIndicatorXPosXPos"] = 0,
+["nameplateEnemyHeight"] = 64.125,
 ["nameplateMinAlphaDistanceScale"] = 0.1,
-["totemIndicatorDefaultCooldownTextSize"] = 1,
+["nameplateAuraPlayersOnlyShowTarget"] = false,
 ["arenaModeSettingKey"] = "3: Replace name with spec",
 ["nameplateAuraCompactedScale"] = 1,
-["castBarChanneledColor"] = {
-0.4862745404243469,
-1,
-0.294117659330368,
-1,
-},
-["healerIndicatorBgOnly"] = true,
-["bgIndicatorEnemyOnly"] = true,
+["friendlyNpBuffEmphasisedBorder"] = false,
+["raidmarkIndicatorAnchor"] = "CENTER",
+["healthNumbersSwapped"] = false,
 ["combatIndicatorArenaOnly"] = true,
-["nameplateOverlapH"] = 0.8,
-["enemyNameScale"] = 0.7,
+["bgIndicatorEnemyOnly"] = true,
+["nameplateSelfBottomInset"] = 0.54,
 ["focusTargetIndicatorYPos"] = -8,
-["healerIndicatorXPos"] = 0,
+["partyPointerHealerScale"] = 1.5,
 ["executeIndicatorInRangeColorRGB"] = {
 0,
 1,
@@ -3297,22 +3934,22 @@ BetterBlizzPlatesDB = {
 ["healerIndicatorEnemyScale"] = 1.29,
 ["classIndicatorOnlyParty"] = false,
 ["useCustomCastbarBGTexture"] = true,
-["otherNpdeBuffFilterAll"] = false,
-["customTexture"] = "Wglass",
+["nameplateMotionSpeed"] = 0.025,
+["personalNpdeBuffFilterBlacklist"] = true,
 ["nameplateSelfWidthScale"] = 77,
 ["nameplateNonTargetAlphaScale"] = 0.68,
 ["castBarFullTextWidth"] = true,
 ["fakeNameYPos"] = 0,
 ["personalNpdeBuffFilterAll"] = false,
-["executeIndicatorAlwaysOn"] = false,
-["focusTargetIndicatorColorName"] = true,
+["totemIndicatorTestMode"] = false,
+["partyPointerHighlight"] = true,
 ["importantBuffsOffensivesGlowRGB"] = {
 ["a"] = 1,
-["b"] = 0,
-["g"] = 0,
 ["r"] = 1,
+["g"] = 0,
+["b"] = 0,
 },
-["partyPointerHighlight"] = true,
+["focusTargetIndicatorColorName"] = true,
 ["totemIndicatorGlowOff"] = false,
 ["importantBuffsDefensivesGlow"] = true,
 ["friendlyNpBuffBlueBorder"] = false,
@@ -3323,51 +3960,51 @@ BetterBlizzPlatesDB = {
 0,
 1,
 },
+["importantBuffsOffensivesGlow"] = true,
+["targetIndicatorXPos"] = 0,
+["nameplateResourcePositionFix"] = true,
 ["enemyHealthBarColorRGB"] = {
 1,
 0,
 0,
 },
-["targetIndicatorXPos"] = 0,
-["nameplateResourcePositionFix"] = true,
-["fakeNameXPos"] = 0,
 ["nameplateFriendlyHeight"] = 64.125,
 ["keyAurasImportantGlowOn"] = true,
-["npTargetTextSize"] = 8,
+["enlargeAllImportantBuffs"] = true,
 ["hideFriendlyNameText"] = false,
-["friendlyNpdeBuffFilterAll"] = false,
+["nameplateMaxAlphaDistanceScale"] = 60,
 ["nameplateKeyAurasXPos"] = 0,
 ["combatIndicatorScale"] = 1,
 ["personalNpBuffFilterAll"] = false,
 ["castbarQuickHide"] = true,
 ["healerIndicatorYPosYPos"] = -6,
+["hideTargetHighlight"] = false,
 ["castBarInterruptHighlighterDontInterruptRGB"] = {
 0,
 1,
 0.8784314393997192,
 1,
 },
-["guildNameColor"] = false,
 ["nameplateAuraEnlargedSquare"] = true,
 ["onlyShowInterruptableCasts"] = false,
-["classIconHealerIconType"] = 2,
+["focusTargetIndicatorXPos"] = 0,
 ["npAuraPoisonRGB"] = {
 0,
 0.52,
 0.031,
 },
-["focusTargetIndicatorXPos"] = 0,
+["classIconHealerIconType"] = 2,
 ["absorbIndicatorXPos"] = -25,
-["partyIndicatorModeFour"] = false,
 ["ShowClassColorInFriendlyNameplate"] = "1",
+["partyIndicatorModeFour"] = false,
 ["colorNpcList"] = {
 {
 ["id"] = 237514,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0.78,
-["g"] = 0.61,
 ["b"] = 0.43,
+["g"] = 0.61,
+["r"] = 0.78,
 },
 },
 ["comment"] = "",
@@ -3377,9 +4014,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 115765,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0,
 ["b"] = 1,
+["g"] = 0,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -3389,9 +4026,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 176555,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0.78,
-["g"] = 0.61,
 ["b"] = 0.43,
+["g"] = 0.61,
+["r"] = 0.78,
 },
 },
 ["comment"] = "",
@@ -3401,9 +4038,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 84990,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.74902,
 ["b"] = 1,
+["g"] = 0.74902,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -3413,9 +4050,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 130435,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0,
 ["b"] = 1,
+["g"] = 0,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -3425,9 +4062,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 180429,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0,
 ["b"] = 1,
+["g"] = 0,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -3437,9 +4074,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 167533,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0,
 ["b"] = 1,
+["g"] = 0,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -3449,9 +4086,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 150396,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.44,
 ["b"] = 0.87,
+["g"] = 0.44,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -3461,9 +4098,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 197406,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0.67,
-["g"] = 0.83,
 ["b"] = 0.45,
+["g"] = 0.83,
+["r"] = 0.67,
 },
 },
 ["comment"] = "",
@@ -3473,9 +4110,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 176556,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0.78,
-["g"] = 0.61,
 ["b"] = 0.43,
+["g"] = 0.61,
+["r"] = 0.78,
 },
 },
 ["comment"] = "",
@@ -3485,9 +4122,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 196200,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.44,
 ["b"] = 0.87,
+["g"] = 0.44,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -3497,9 +4134,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 206352,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.44,
 ["b"] = 0.87,
+["g"] = 0.44,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -3509,9 +4146,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 206351,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.74902,
 ["b"] = 1,
+["g"] = 0.74902,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -3521,9 +4158,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 208165,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.74902,
 ["b"] = 1,
+["g"] = 0.74902,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -3533,9 +4170,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 192333,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0.67,
-["g"] = 0.83,
 ["b"] = 0.45,
+["g"] = 0.83,
+["r"] = 0.67,
 },
 },
 ["comment"] = "",
@@ -3545,9 +4182,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 163157,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.44,
 ["b"] = 0.87,
+["g"] = 0.44,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -3557,9 +4194,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 196548,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.74902,
 ["b"] = 1,
+["g"] = 0.74902,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -3569,9 +4206,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 164506,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.74902,
 ["b"] = 1,
+["g"] = 0.74902,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -3581,9 +4218,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 180091,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.74902,
 ["b"] = 1,
+["g"] = 0.74902,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -3593,9 +4230,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 224616,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.74902,
 ["b"] = 1,
+["g"] = 0.74902,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -3605,9 +4242,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 155090,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.74902,
 ["b"] = 1,
+["g"] = 0.74902,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -3617,9 +4254,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 151613,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.44,
 ["b"] = 0.87,
+["g"] = 0.44,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -3629,9 +4266,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 211089,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0.78,
-["g"] = 0.61,
 ["b"] = 0.43,
+["g"] = 0.61,
+["r"] = 0.78,
 },
 },
 ["comment"] = "",
@@ -3641,9 +4278,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 215405,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0.78,
-["g"] = 0.61,
 ["b"] = 0.43,
+["g"] = 0.61,
+["r"] = 0.78,
 },
 },
 ["comment"] = "",
@@ -3653,9 +4290,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 193291,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0,
 ["b"] = 1,
+["g"] = 0,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -3665,9 +4302,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 206696,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0,
 ["b"] = 1,
+["g"] = 0,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -3677,9 +4314,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 186741,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.74902,
 ["b"] = 1,
+["g"] = 0.74902,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -3689,9 +4326,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 105704,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0.67,
-["g"] = 0.83,
 ["b"] = 0.45,
+["g"] = 0.83,
+["r"] = 0.67,
 },
 },
 ["comment"] = "",
@@ -3701,9 +4338,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 196671,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0,
 ["b"] = 1,
+["g"] = 0,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -3713,9 +4350,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 191164,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0,
 ["b"] = 1,
+["g"] = 0,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -3725,9 +4362,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 196115,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0,
 ["b"] = 1,
+["g"] = 0,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -3737,9 +4374,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 114624,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0,
 ["b"] = 1,
+["g"] = 0,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -3749,9 +4386,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 206704,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0.96,
-["g"] = 0.55,
 ["b"] = 0.73,
+["g"] = 0.55,
+["r"] = 0.96,
 },
 },
 ["comment"] = "",
@@ -3761,9 +4398,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 45915,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0,
 ["b"] = 1,
+["g"] = 0,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -3773,9 +4410,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 177808,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0,
 ["b"] = 1,
+["g"] = 0,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -3785,9 +4422,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 211261,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0.96,
-["g"] = 0.55,
 ["b"] = 0.73,
+["g"] = 0.55,
+["r"] = 0.96,
 },
 },
 ["comment"] = "",
@@ -3797,9 +4434,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 136549,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0,
 ["b"] = 1,
+["g"] = 0,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -3809,9 +4446,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 138465,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0,
 ["b"] = 1,
+["g"] = 0,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -3821,9 +4458,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 128969,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0,
 ["b"] = 1,
+["g"] = 0,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -3833,9 +4470,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 135263,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0.49,
 ["b"] = 0.04,
+["g"] = 0.49,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -3845,9 +4482,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 138255,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0.49,
 ["b"] = 0.04,
+["g"] = 0.49,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -3857,9 +4494,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 217533,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0,
 ["b"] = 1,
+["g"] = 0,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -3869,9 +4506,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 213179,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0.78,
-["g"] = 0.61,
 ["b"] = 0.43,
+["g"] = 0.61,
+["r"] = 0.78,
 },
 },
 ["comment"] = "",
@@ -3881,9 +4518,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 136643,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0,
 ["b"] = 1,
+["g"] = 0,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -3893,9 +4530,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 129227,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.44,
 ["b"] = 0.87,
+["g"] = 0.44,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -3905,9 +4542,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 234893,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0.78,
-["g"] = 0.61,
 ["b"] = 0.43,
+["g"] = 0.61,
+["r"] = 0.78,
 },
 },
 ["comment"] = "",
@@ -3917,9 +4554,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 104274,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.74902,
 ["b"] = 1,
+["g"] = 0.74902,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -3929,9 +4566,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 116549,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.74902,
 ["b"] = 1,
+["g"] = 0.74902,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -3941,9 +4578,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 131586,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0,
 ["b"] = 1,
+["g"] = 0,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -3953,9 +4590,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 207939,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0.78,
-["g"] = 0.61,
 ["b"] = 0.43,
+["g"] = 0.61,
+["r"] = 0.78,
 },
 },
 ["comment"] = "",
@@ -3965,9 +4602,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 193462,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.74902,
 ["b"] = 1,
+["g"] = 0.74902,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -3977,9 +4614,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 174197,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.74902,
 ["b"] = 1,
+["g"] = 0.74902,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -3989,9 +4626,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 246285,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0,
 ["b"] = 1,
+["g"] = 0,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -4001,9 +4638,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 178388,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0.133333,
-["g"] = 0.545098,
 ["b"] = 0.133333,
+["g"] = 0.545098,
+["r"] = 0.133333,
 },
 },
 ["comment"] = "",
@@ -4013,9 +4650,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 210264,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.44,
 ["b"] = 0.87,
+["g"] = 0.44,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -4025,9 +4662,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 133685,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.74902,
 ["b"] = 1,
+["g"] = 0.74902,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -4037,9 +4674,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 174842,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0,
 ["b"] = 1,
+["g"] = 0,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -4049,9 +4686,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 218002,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.44,
 ["b"] = 0.87,
+["g"] = 0.44,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -4061,9 +4698,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 131587,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.74902,
 ["b"] = 1,
+["g"] = 0.74902,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -4073,9 +4710,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 226398,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0.78,
-["g"] = 0.61,
 ["b"] = 0.43,
+["g"] = 0.61,
+["r"] = 0.78,
 },
 },
 ["comment"] = "",
@@ -4085,9 +4722,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 227300,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0,
 ["b"] = 1,
+["g"] = 0,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -4097,9 +4734,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 129600,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.74902,
 ["b"] = 1,
+["g"] = 0.74902,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -4109,9 +4746,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 129366,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0.49,
 ["b"] = 0.04,
+["g"] = 0.49,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -4121,9 +4758,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 135245,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0,
 ["b"] = 1,
+["g"] = 0,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -4133,9 +4770,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 135241,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.44,
 ["b"] = 0.87,
+["g"] = 0.44,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -4145,9 +4782,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 129367,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.74902,
 ["b"] = 1,
+["g"] = 0.74902,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -4157,9 +4794,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 244302,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0.96,
-["g"] = 0.55,
 ["b"] = 0.73,
+["g"] = 0.55,
+["r"] = 0.96,
 },
 },
 ["comment"] = "",
@@ -4169,9 +4806,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 115401,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0,
 ["b"] = 1,
+["g"] = 0,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -4181,9 +4818,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 115402,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0,
 ["b"] = 1,
+["g"] = 0,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -4193,9 +4830,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 215968,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.44,
 ["b"] = 0.87,
+["g"] = 0.44,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -4205,9 +4842,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 216856,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.44,
 ["b"] = 0.87,
+["g"] = 0.44,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -4217,9 +4854,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 129372,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0.49,
 ["b"] = 0.04,
+["g"] = 0.49,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -4229,9 +4866,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 129548,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0.49,
 ["b"] = 0.04,
+["g"] = 0.49,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -4241,9 +4878,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 129529,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0.67,
-["g"] = 0.83,
 ["b"] = 0.45,
+["g"] = 0.83,
+["r"] = 0.67,
 },
 },
 ["comment"] = "",
@@ -4253,9 +4890,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 190034,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0,
 ["b"] = 1,
+["g"] = 0,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -4265,9 +4902,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 208743,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.44,
 ["b"] = 0.87,
+["g"] = 0.44,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -4277,9 +4914,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 211228,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.74902,
 ["b"] = 1,
+["g"] = 0.74902,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -4289,9 +4926,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 220815,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.74902,
 ["b"] = 1,
+["g"] = 0.74902,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -4301,9 +4938,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 223770,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.74902,
 ["b"] = 1,
+["g"] = 0.74902,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -4313,9 +4950,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 223772,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.74902,
 ["b"] = 1,
+["g"] = 0.74902,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -4325,9 +4962,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 223773,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.74902,
 ["b"] = 1,
+["g"] = 0.74902,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -4337,9 +4974,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 223774,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.74902,
 ["b"] = 1,
+["g"] = 0.74902,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -4349,9 +4986,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 223775,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.74902,
 ["b"] = 1,
+["g"] = 0.74902,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -4361,9 +4998,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 223776,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.74902,
 ["b"] = 1,
+["g"] = 0.74902,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -4373,9 +5010,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 223777,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.74902,
 ["b"] = 1,
+["g"] = 0.74902,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -4385,9 +5022,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 162691,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.44,
 ["b"] = 0.87,
+["g"] = 0.44,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -4397,9 +5034,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 174210,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.74902,
 ["b"] = 1,
+["g"] = 0.74902,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -4409,9 +5046,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 90998,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.74902,
 ["b"] = 1,
+["g"] = 0.74902,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -4421,9 +5058,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 216364,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.74902,
 ["b"] = 1,
+["g"] = 0.74902,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -4433,9 +5070,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 216333,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0.49,
 ["b"] = 0.04,
+["g"] = 0.49,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -4445,9 +5082,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 220599,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.74902,
 ["b"] = 1,
+["g"] = 0.74902,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -4457,9 +5094,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 223253,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.74902,
 ["b"] = 1,
+["g"] = 0.74902,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -4469,9 +5106,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 133912,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.74902,
 ["b"] = 1,
+["g"] = 0.74902,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -4481,9 +5118,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 151657,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.74902,
 ["b"] = 1,
+["g"] = 0.74902,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -4493,9 +5130,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 231497,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0.49,
 ["b"] = 0.04,
+["g"] = 0.49,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -4505,9 +5142,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 170882,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0.49,
 ["b"] = 0.04,
+["g"] = 0.49,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -4517,9 +5154,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 185529,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0,
 ["b"] = 1,
+["g"] = 0,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -4529,9 +5166,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 195135,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0,
 ["b"] = 1,
+["g"] = 0,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -4541,9 +5178,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 186220,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.44,
 ["b"] = 0.87,
+["g"] = 0.44,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -4553,9 +5190,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 219301,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.44,
 ["b"] = 0.87,
+["g"] = 0.44,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -4565,9 +5202,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 210271,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.44,
 ["b"] = 0.87,
+["g"] = 0.44,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -4577,9 +5214,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 184018,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.545098,
 ["b"] = 0.545098,
+["g"] = 0.545098,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -4589,9 +5226,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 226402,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0.78,
-["g"] = 0.61,
 ["b"] = 0.43,
+["g"] = 0.61,
+["r"] = 0.78,
 },
 },
 ["comment"] = "",
@@ -4601,9 +5238,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 214506,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.44,
 ["b"] = 0.87,
+["g"] = 0.44,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -4613,9 +5250,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 231197,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0,
 ["b"] = 1,
+["g"] = 0,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -4625,9 +5262,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 180015,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0.67,
-["g"] = 0.83,
 ["b"] = 0.45,
+["g"] = 0.83,
+["r"] = 0.67,
 },
 },
 ["comment"] = "",
@@ -4637,9 +5274,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 207796,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0,
 ["b"] = 1,
+["g"] = 0,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -4649,9 +5286,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 207946,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0.78,
-["g"] = 0.61,
 ["b"] = 0.43,
+["g"] = 0.61,
+["r"] = 0.78,
 },
 },
 ["comment"] = "",
@@ -4661,9 +5298,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 223423,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0,
 ["b"] = 1,
+["g"] = 0,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -4673,9 +5310,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 180348,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0,
 ["b"] = 1,
+["g"] = 0,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -4685,9 +5322,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 179893,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0.49,
 ["b"] = 0.04,
+["g"] = 0.49,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -4697,9 +5334,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 180336,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.74902,
 ["b"] = 1,
+["g"] = 0.74902,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -4709,9 +5346,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 184301,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.74902,
 ["b"] = 1,
+["g"] = 0.74902,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -4721,9 +5358,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 81603,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0,
 ["b"] = 1,
+["g"] = 0,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -4733,9 +5370,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 214697,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0,
 ["b"] = 1,
+["g"] = 0,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -4745,9 +5382,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 128650,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.44,
 ["b"] = 0.87,
+["g"] = 0.44,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -4757,9 +5394,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 131436,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0,
 ["b"] = 1,
+["g"] = 0,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -4769,9 +5406,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 206070,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.74902,
 ["b"] = 1,
+["g"] = 0.74902,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -4781,9 +5418,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 185508,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.44,
 ["b"] = 0.87,
+["g"] = 0.44,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -4793,9 +5430,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 45917,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0,
 ["b"] = 1,
+["g"] = 0,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -4805,9 +5442,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 206064,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.74902,
 ["b"] = 1,
+["g"] = 0.74902,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -4817,9 +5454,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 206140,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0,
 ["b"] = 1,
+["g"] = 0,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -4829,9 +5466,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 214421,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0,
 ["b"] = 1,
+["g"] = 0,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -4841,9 +5478,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 178165,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0,
 ["b"] = 1,
+["g"] = 0,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -4853,9 +5490,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 129214,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.44,
 ["b"] = 0.87,
+["g"] = 0.44,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -4865,9 +5502,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 219045,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0,
 ["b"] = 1,
+["g"] = 0,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -4877,9 +5514,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 98706,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0,
 ["b"] = 1,
+["g"] = 0,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -4889,9 +5526,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 179821,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0,
 ["b"] = 1,
+["g"] = 0,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -4901,9 +5538,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 179842,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0,
 ["b"] = 1,
+["g"] = 0,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -4913,9 +5550,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 196102,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.74902,
 ["b"] = 1,
+["g"] = 0.74902,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -4925,9 +5562,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 212739,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0,
 ["b"] = 1,
+["g"] = 0,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -4937,9 +5574,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 190342,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.44,
 ["b"] = 0.87,
+["g"] = 0.44,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -4949,9 +5586,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 173016,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.74902,
 ["b"] = 1,
+["g"] = 0.74902,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -4961,9 +5598,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 166302,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.74902,
 ["b"] = 1,
+["g"] = 0.74902,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -4973,9 +5610,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 210539,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0,
 ["b"] = 1,
+["g"] = 0,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -4985,9 +5622,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 56511,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0,
 ["b"] = 1,
+["g"] = 0,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -4997,9 +5634,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 59873,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0,
 ["b"] = 1,
+["g"] = 0,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -5009,9 +5646,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 196045,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.44,
 ["b"] = 0.87,
+["g"] = 0.44,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -5021,9 +5658,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 196798,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.44,
 ["b"] = 0.87,
+["g"] = 0.44,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -5033,9 +5670,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 214439,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.74902,
 ["b"] = 1,
+["g"] = 0.74902,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -5045,9 +5682,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 131819,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.44,
 ["b"] = 0.87,
+["g"] = 0.44,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -5057,9 +5694,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 131666,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.74902,
 ["b"] = 1,
+["g"] = 0.74902,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -5069,9 +5706,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 223844,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.74902,
 ["b"] = 1,
+["g"] = 0.74902,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -5081,9 +5718,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 224732,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.74902,
 ["b"] = 1,
+["g"] = 0.74902,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -5093,9 +5730,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 133482,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.44,
 ["b"] = 0.87,
+["g"] = 0.44,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -5105,9 +5742,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 235631,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.44,
 ["b"] = 0.87,
+["g"] = 0.44,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -5117,9 +5754,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 95766,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0,
 ["b"] = 1,
+["g"] = 0,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -5129,9 +5766,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 187160,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0.49,
 ["b"] = 0.04,
+["g"] = 0.49,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -5141,9 +5778,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 196116,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0.49,
 ["b"] = 0.04,
+["g"] = 0.49,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -5153,9 +5790,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 214443,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0.67,
-["g"] = 0.83,
 ["b"] = 0.45,
+["g"] = 0.83,
+["r"] = 0.67,
 },
 },
 ["comment"] = "",
@@ -5165,9 +5802,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 187139,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0,
 ["b"] = 1,
+["g"] = 0,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -5177,9 +5814,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 196117,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0,
 ["b"] = 1,
+["g"] = 0,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -5189,9 +5826,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 207199,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0.67,
-["g"] = 0.83,
 ["b"] = 0.45,
+["g"] = 0.83,
+["r"] = 0.67,
 },
 },
 ["comment"] = "",
@@ -5201,9 +5838,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 207198,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.74902,
 ["b"] = 1,
+["g"] = 0.74902,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -5213,9 +5850,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 224962,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.44,
 ["b"] = 0.87,
+["g"] = 0.44,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -5225,9 +5862,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 214066,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.74902,
 ["b"] = 1,
+["g"] = 0.74902,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -5237,9 +5874,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 212389,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0.49,
 ["b"] = 0.04,
+["g"] = 0.49,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -5249,9 +5886,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 212403,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0.49,
 ["b"] = 0.04,
+["g"] = 0.49,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -5261,9 +5898,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 129601,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.44,
 ["b"] = 0.87,
+["g"] = 0.44,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -5273,9 +5910,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 230748,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0,
 ["b"] = 1,
+["g"] = 0,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -5285,9 +5922,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 229212,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0.133333,
-["g"] = 0.545098,
 ["b"] = 0.133333,
+["g"] = 0.545098,
+["r"] = 0.133333,
 },
 },
 ["comment"] = "",
@@ -5297,9 +5934,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 229252,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0.67,
-["g"] = 0.83,
 ["b"] = 0.45,
+["g"] = 0.83,
+["r"] = 0.67,
 },
 },
 ["comment"] = "",
@@ -5309,9 +5946,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 231325,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0,
 ["b"] = 1,
+["g"] = 0,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -5321,9 +5958,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 228424,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.74902,
 ["b"] = 1,
+["g"] = 0.74902,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -5333,9 +5970,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 228144,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0.49,
 ["b"] = 0.04,
+["g"] = 0.49,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -5345,9 +5982,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 236982,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0.49,
 ["b"] = 0.04,
+["g"] = 0.49,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -5357,9 +5994,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 231977,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.74902,
 ["b"] = 1,
+["g"] = 0.74902,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -5369,9 +6006,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 231939,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0.67,
-["g"] = 0.83,
 ["b"] = 0.45,
+["g"] = 0.83,
+["r"] = 0.67,
 },
 },
 ["comment"] = "",
@@ -5381,9 +6018,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 122972,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.74902,
 ["b"] = 1,
+["g"] = 0.74902,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -5393,9 +6030,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 122984,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0,
 ["b"] = 1,
+["g"] = 0,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -5405,9 +6042,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 122973,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.74902,
 ["b"] = 1,
+["g"] = 0.74902,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -5417,9 +6054,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 127799,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0.49,
 ["b"] = 0.04,
+["g"] = 0.49,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -5429,9 +6066,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 190362,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.74902,
 ["b"] = 1,
+["g"] = 0.74902,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -5441,9 +6078,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 211263,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0.96,
-["g"] = 0.55,
 ["b"] = 0.73,
+["g"] = 0.55,
+["r"] = 0.96,
 },
 },
 ["comment"] = "",
@@ -5453,9 +6090,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 135552,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.44,
 ["b"] = 0.87,
+["g"] = 0.44,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -5465,9 +6102,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 186191,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.74902,
 ["b"] = 1,
+["g"] = 0.74902,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -5477,9 +6114,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 190426,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0.67,
-["g"] = 0.83,
 ["b"] = 0.45,
+["g"] = 0.83,
+["r"] = 0.67,
 },
 },
 ["comment"] = "",
@@ -5489,9 +6126,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 189531,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.74902,
 ["b"] = 1,
+["g"] = 0.74902,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -5501,9 +6138,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 176396,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0.133333,
-["g"] = 0.545098,
 ["b"] = 0.133333,
+["g"] = 0.545098,
+["r"] = 0.133333,
 },
 },
 ["comment"] = "",
@@ -5513,9 +6150,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 151649,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0.49,
 ["b"] = 0.04,
+["g"] = 0.49,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -5525,9 +6162,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 144298,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0,
 ["b"] = 1,
+["g"] = 0,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -5537,9 +6174,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 187897,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0,
 ["b"] = 1,
+["g"] = 0,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -5549,9 +6186,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 165529,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.44,
 ["b"] = 0.87,
+["g"] = 0.44,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -5561,9 +6198,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 165515,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0.49,
 ["b"] = 0.04,
+["g"] = 0.49,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -5573,9 +6210,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 167615,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0.49,
 ["b"] = 0.04,
+["g"] = 0.49,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -5585,9 +6222,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 164562,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0.133333,
-["g"] = 0.545098,
 ["b"] = 0.133333,
+["g"] = 0.545098,
+["r"] = 0.133333,
 },
 },
 ["comment"] = "",
@@ -5597,9 +6234,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 200137,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.44,
 ["b"] = 0.87,
+["g"] = 0.44,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -5609,9 +6246,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 165414,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.74902,
 ["b"] = 1,
+["g"] = 0.74902,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -5621,9 +6258,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 195876,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.74902,
 ["b"] = 1,
+["g"] = 0.74902,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -5633,9 +6270,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 164451,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.44,
 ["b"] = 0.87,
+["g"] = 0.44,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -5645,9 +6282,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 180432,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0.49,
 ["b"] = 0.04,
+["g"] = 0.49,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -5657,9 +6294,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 131492,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.74902,
 ["b"] = 1,
+["g"] = 0.74902,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -5669,9 +6306,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 206697,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.74902,
 ["b"] = 1,
+["g"] = 0.74902,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -5681,9 +6318,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 129553,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0,
 ["b"] = 1,
+["g"] = 0,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -5693,9 +6330,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 170690,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.44,
 ["b"] = 0.87,
+["g"] = 0.44,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -5705,9 +6342,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 133870,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.74902,
 ["b"] = 1,
+["g"] = 0.74902,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -5717,9 +6354,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 176565,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.74902,
 ["b"] = 1,
+["g"] = 0.74902,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -5729,9 +6366,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 231223,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.74902,
 ["b"] = 1,
+["g"] = 0.74902,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -5741,9 +6378,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 167538,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0,
 ["b"] = 1,
+["g"] = 0,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -5753,9 +6390,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 191230,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.44,
 ["b"] = 0.87,
+["g"] = 0.44,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -5765,9 +6402,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 40319,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.44,
 ["b"] = 0.87,
+["g"] = 0.44,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -5777,9 +6414,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 187240,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0,
 ["b"] = 1,
+["g"] = 0,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -5789,9 +6426,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 191232,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.74902,
 ["b"] = 1,
+["g"] = 0.74902,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -5801,9 +6438,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 100527,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.44,
 ["b"] = 0.87,
+["g"] = 0.44,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -5813,9 +6450,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 95771,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.74902,
 ["b"] = 1,
+["g"] = 0.74902,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -5825,9 +6462,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 135049,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.44,
 ["b"] = 0.87,
+["g"] = 0.44,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -5837,9 +6474,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 164804,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.44,
 ["b"] = 0.87,
+["g"] = 0.44,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -5849,9 +6486,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 164926,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0,
 ["b"] = 1,
+["g"] = 0,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -5861,9 +6498,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 164921,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.74902,
 ["b"] = 1,
+["g"] = 0.74902,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -5873,9 +6510,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 164920,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0.49,
 ["b"] = 0.04,
+["g"] = 0.49,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -5885,9 +6522,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 104247,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.74902,
 ["b"] = 1,
+["g"] = 0.74902,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -5897,9 +6534,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 104246,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.44,
 ["b"] = 0.87,
+["g"] = 0.44,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -5909,9 +6546,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 111563,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.44,
 ["b"] = 0.87,
+["g"] = 0.44,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -5921,9 +6558,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 104251,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.74902,
 ["b"] = 1,
+["g"] = 0.74902,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -5933,9 +6570,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 210108,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.44,
 ["b"] = 0.87,
+["g"] = 0.44,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -5945,9 +6582,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 214287,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0.67,
-["g"] = 0.83,
 ["b"] = 0.45,
+["g"] = 0.83,
+["r"] = 0.67,
 },
 },
 ["comment"] = "",
@@ -5957,9 +6594,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 210109,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0,
 ["b"] = 1,
+["g"] = 0,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -5969,9 +6606,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 184131,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0,
 ["b"] = 1,
+["g"] = 0,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -5981,9 +6618,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 184132,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.74902,
 ["b"] = 1,
+["g"] = 0.74902,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -5993,9 +6630,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 186420,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.44,
 ["b"] = 0.87,
+["g"] = 0.44,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -6005,9 +6642,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 184300,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0,
 ["b"] = 1,
+["g"] = 0,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -6017,9 +6654,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 164185,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0.78,
-["g"] = 0.61,
 ["b"] = 0.43,
+["g"] = 0.61,
+["r"] = 0.78,
 },
 },
 ["comment"] = "",
@@ -6029,9 +6666,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 211290,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0.96,
-["g"] = 0.55,
 ["b"] = 0.73,
+["g"] = 0.55,
+["r"] = 0.96,
 },
 },
 ["comment"] = "",
@@ -6041,9 +6678,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 221102,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0,
 ["b"] = 1,
+["g"] = 0,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -6053,9 +6690,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 102287,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0.67,
-["g"] = 0.83,
 ["b"] = 0.45,
+["g"] = 0.83,
+["r"] = 0.67,
 },
 },
 ["comment"] = "",
@@ -6065,9 +6702,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 102295,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0.67,
-["g"] = 0.83,
 ["b"] = 0.45,
+["g"] = 0.83,
+["r"] = 0.67,
 },
 },
 ["comment"] = "",
@@ -6077,9 +6714,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 113536,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0.67,
-["g"] = 0.83,
 ["b"] = 0.45,
+["g"] = 0.83,
+["r"] = 0.67,
 },
 },
 ["comment"] = "",
@@ -6089,9 +6726,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 113537,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0.67,
-["g"] = 0.83,
 ["b"] = 0.45,
+["g"] = 0.83,
+["r"] = 0.67,
 },
 },
 ["comment"] = "",
@@ -6101,9 +6738,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 202969,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0,
 ["b"] = 1,
+["g"] = 0,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -6113,9 +6750,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 45922,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.74902,
 ["b"] = 1,
+["g"] = 0.74902,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -6125,9 +6762,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 214840,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0.49,
 ["b"] = 0.04,
+["g"] = 0.49,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -6137,9 +6774,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 180495,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0,
 ["b"] = 1,
+["g"] = 0,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -6149,9 +6786,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 131585,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0.49,
 ["b"] = 0.04,
+["g"] = 0.49,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -6161,9 +6798,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 205435,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0,
 ["b"] = 1,
+["g"] = 0,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -6173,9 +6810,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 40484,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.44,
 ["b"] = 0.87,
+["g"] = 0.44,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -6185,9 +6822,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 81985,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.545098,
 ["b"] = 0.545098,
+["g"] = 0.545098,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -6197,9 +6834,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 81820,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0.67,
-["g"] = 0.83,
 ["b"] = 0.45,
+["g"] = 0.83,
+["r"] = 0.67,
 },
 },
 ["comment"] = "",
@@ -6209,9 +6846,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 81819,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.74902,
 ["b"] = 1,
+["g"] = 0.74902,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -6221,9 +6858,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 240952,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0.96,
-["g"] = 0.55,
 ["b"] = 0.73,
+["g"] = 0.55,
+["r"] = 0.96,
 },
 },
 ["comment"] = "",
@@ -6233,9 +6870,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 45928,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.74902,
 ["b"] = 1,
+["g"] = 0.74902,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -6245,9 +6882,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 133593,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.74902,
 ["b"] = 1,
+["g"] = 0.74902,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -6257,9 +6894,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 219983,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0,
 ["b"] = 1,
+["g"] = 0,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -6269,9 +6906,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 39392,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0,
 ["b"] = 1,
+["g"] = 0,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -6281,9 +6918,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 138281,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0,
 ["b"] = 1,
+["g"] = 0,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -6293,9 +6930,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 212775,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.74902,
 ["b"] = 1,
+["g"] = 0.74902,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -6305,9 +6942,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 40936,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0,
 ["b"] = 1,
+["g"] = 0,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -6317,9 +6954,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 220368,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0.49,
 ["b"] = 0.04,
+["g"] = 0.49,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -6329,9 +6966,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 134284,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.44,
 ["b"] = 0.87,
+["g"] = 0.44,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -6341,9 +6978,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 200126,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.74902,
 ["b"] = 1,
+["g"] = 0.74902,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -6353,9 +6990,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 206698,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.44,
 ["b"] = 0.87,
+["g"] = 0.44,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -6365,9 +7002,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 128434,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.74902,
 ["b"] = 1,
+["g"] = 0.74902,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -6377,9 +7014,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 133345,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.44,
 ["b"] = 0.87,
+["g"] = 0.44,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -6389,9 +7026,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 102788,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.74902,
 ["b"] = 1,
+["g"] = 0.74902,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -6401,9 +7038,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 133835,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.44,
 ["b"] = 0.87,
+["g"] = 0.44,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -6413,9 +7050,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 95779,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0,
 ["b"] = 1,
+["g"] = 0,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -6425,9 +7062,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 130909,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.44,
 ["b"] = 0.87,
+["g"] = 0.44,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -6437,9 +7074,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 186226,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0,
 ["b"] = 1,
+["g"] = 0,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -6449,9 +7086,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 185656,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.74902,
 ["b"] = 1,
+["g"] = 0.74902,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -6461,9 +7098,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 197985,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0.49,
 ["b"] = 0.04,
+["g"] = 0.49,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -6473,9 +7110,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 190368,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.74902,
 ["b"] = 1,
+["g"] = 0.74902,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -6485,9 +7122,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 197697,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0,
 ["b"] = 1,
+["g"] = 0,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -6497,9 +7134,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 199549,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0,
 ["b"] = 1,
+["g"] = 0,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -6509,9 +7146,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 188067,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.74902,
 ["b"] = 1,
+["g"] = 0.74902,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -6521,9 +7158,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 187969,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.44,
 ["b"] = 0.87,
+["g"] = 0.44,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -6533,9 +7170,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 214673,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.44,
 ["b"] = 0.87,
+["g"] = 0.44,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -6545,9 +7182,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 222964,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.44,
 ["b"] = 0.87,
+["g"] = 0.44,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -6557,9 +7194,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 165872,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.44,
 ["b"] = 0.87,
+["g"] = 0.44,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -6569,9 +7206,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 186246,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.74902,
 ["b"] = 1,
+["g"] = 0.74902,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -6581,9 +7218,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 180431,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.74902,
 ["b"] = 1,
+["g"] = 0.74902,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -6593,9 +7230,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 213343,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0,
 ["b"] = 1,
+["g"] = 0,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -6605,9 +7242,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 212831,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0.96,
-["g"] = 0.55,
 ["b"] = 0.73,
+["g"] = 0.55,
+["r"] = 0.96,
 },
 },
 ["comment"] = "",
@@ -6617,9 +7254,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 213338,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.74902,
 ["b"] = 1,
+["g"] = 0.74902,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -6629,9 +7266,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 40177,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.44,
 ["b"] = 0.87,
+["g"] = 0.44,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -6641,9 +7278,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 194816,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0,
 ["b"] = 1,
+["g"] = 0,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -6653,9 +7290,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 114626,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.74902,
 ["b"] = 1,
+["g"] = 0.74902,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -6665,9 +7302,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 95772,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0.49,
 ["b"] = 0.04,
+["g"] = 0.49,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -6677,9 +7314,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 180567,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0.49,
 ["b"] = 0.04,
+["g"] = 0.49,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -6689,9 +7326,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 199547,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0,
 ["b"] = 1,
+["g"] = 0,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -6701,9 +7338,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 178392,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0,
 ["b"] = 1,
+["g"] = 0,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -6713,9 +7350,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 226404,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0.78,
-["g"] = 0.61,
 ["b"] = 0.43,
+["g"] = 0.61,
+["r"] = 0.78,
 },
 },
 ["comment"] = "",
@@ -6725,9 +7362,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 39625,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.44,
 ["b"] = 0.87,
+["g"] = 0.44,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -6737,9 +7374,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 212453,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.74902,
 ["b"] = 1,
+["g"] = 0.74902,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -6749,9 +7386,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 98370,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.74902,
 ["b"] = 1,
+["g"] = 0.74902,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -6761,9 +7398,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 114542,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.44,
 ["b"] = 0.87,
+["g"] = 0.44,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -6773,9 +7410,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 98368,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.44,
 ["b"] = 0.87,
+["g"] = 0.44,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -6785,9 +7422,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 114526,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.74902,
 ["b"] = 1,
+["g"] = 0.74902,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -6797,9 +7434,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 237192,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.74902,
 ["b"] = 1,
+["g"] = 0.74902,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -6809,9 +7446,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 132126,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.44,
 ["b"] = 0.87,
+["g"] = 0.44,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -6821,9 +7458,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 40943,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.74902,
 ["b"] = 1,
+["g"] = 0.74902,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -6833,9 +7470,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 190403,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0,
 ["b"] = 1,
+["g"] = 0,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -6845,9 +7482,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 81984,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0,
 ["b"] = 1,
+["g"] = 0,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -6857,9 +7494,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 145185,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.44,
 ["b"] = 0.87,
+["g"] = 0.44,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -6869,9 +7506,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 214661,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.44,
 ["b"] = 0.87,
+["g"] = 0.44,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -6881,9 +7518,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 131864,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.74902,
 ["b"] = 1,
+["g"] = 0.74902,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -6893,9 +7530,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 162317,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.44,
 ["b"] = 0.87,
+["g"] = 0.44,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -6905,9 +7542,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 163621,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0,
 ["b"] = 1,
+["g"] = 0,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -6917,9 +7554,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 81212,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0,
 ["b"] = 1,
+["g"] = 0,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -6929,9 +7566,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 81236,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.74902,
 ["b"] = 1,
+["g"] = 0.74902,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -6941,9 +7578,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 83025,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0,
 ["b"] = 1,
+["g"] = 0,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -6953,9 +7590,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 79720,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0,
 ["b"] = 1,
+["g"] = 0,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -6965,9 +7602,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 82597,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0,
 ["b"] = 1,
+["g"] = 0,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -6977,9 +7614,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 88163,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.44,
 ["b"] = 0.87,
+["g"] = 0.44,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -6989,9 +7626,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 82579,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.74902,
 ["b"] = 1,
+["g"] = 0.74902,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -7001,9 +7638,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 81283,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.44,
 ["b"] = 0.87,
+["g"] = 0.44,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -7013,9 +7650,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 83765,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.44,
 ["b"] = 0.87,
+["g"] = 0.44,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -7025,9 +7662,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 77483,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.44,
 ["b"] = 0.87,
+["g"] = 0.44,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -7037,9 +7674,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 80938,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0.67,
-["g"] = 0.83,
 ["b"] = 0.45,
+["g"] = 0.83,
+["r"] = 0.67,
 },
 },
 ["comment"] = "",
@@ -7049,9 +7686,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 138187,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.74902,
 ["b"] = 1,
+["g"] = 0.74902,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -7061,9 +7698,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 212826,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0.96,
-["g"] = 0.55,
 ["b"] = 0.73,
+["g"] = 0.55,
+["r"] = 0.96,
 },
 },
 ["comment"] = "",
@@ -7073,9 +7710,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 104270,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0,
 ["b"] = 1,
+["g"] = 0,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -7085,9 +7722,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 192680,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0,
 ["b"] = 1,
+["g"] = 0,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -7097,9 +7734,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 165408,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0.78,
-["g"] = 0.61,
 ["b"] = 0.43,
+["g"] = 0.61,
+["r"] = 0.78,
 },
 },
 ["comment"] = "",
@@ -7109,9 +7746,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 212981,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0.49,
 ["b"] = 0.04,
+["g"] = 0.49,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -7121,9 +7758,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 199368,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0,
 ["b"] = 1,
+["g"] = 0,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -7133,9 +7770,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 167536,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0,
 ["b"] = 1,
+["g"] = 0,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -7145,9 +7782,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 59555,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.74902,
 ["b"] = 1,
+["g"] = 0.74902,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -7157,9 +7794,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 144248,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.44,
 ["b"] = 0.87,
+["g"] = 0.44,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -7169,9 +7806,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 131677,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0,
 ["b"] = 1,
+["g"] = 0,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -7181,9 +7818,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 131812,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0,
 ["b"] = 1,
+["g"] = 0,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -7193,9 +7830,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 167532,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0,
 ["b"] = 1,
+["g"] = 0,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -7205,9 +7842,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 150276,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.74902,
 ["b"] = 1,
+["g"] = 0.74902,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -7217,9 +7854,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 220196,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0,
 ["b"] = 1,
+["g"] = 0,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -7229,9 +7866,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 165410,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0.78,
-["g"] = 0.61,
 ["b"] = 0.43,
+["g"] = 0.61,
+["r"] = 0.78,
 },
 },
 ["comment"] = "",
@@ -7241,9 +7878,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 197535,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.74902,
 ["b"] = 1,
+["g"] = 0.74902,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -7253,9 +7890,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 212827,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0.96,
-["g"] = 0.55,
 ["b"] = 0.73,
+["g"] = 0.55,
+["r"] = 0.96,
 },
 },
 ["comment"] = "",
@@ -7265,9 +7902,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 134232,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.44,
 ["b"] = 0.87,
+["g"] = 0.44,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -7277,9 +7914,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 210269,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0,
 ["b"] = 1,
+["g"] = 0,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -7289,9 +7926,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 203799,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.44,
 ["b"] = 0.87,
+["g"] = 0.44,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -7301,9 +7938,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 203857,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.74902,
 ["b"] = 1,
+["g"] = 0.74902,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -7313,9 +7950,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 179388,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.74902,
 ["b"] = 1,
+["g"] = 0.74902,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -7325,9 +7962,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 184020,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0,
 ["b"] = 1,
+["g"] = 0,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -7337,9 +7974,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 216338,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0,
 ["b"] = 1,
+["g"] = 0,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -7349,9 +7986,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 228015,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0,
 ["b"] = 1,
+["g"] = 0,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -7361,9 +7998,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 221103,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0,
 ["b"] = 1,
+["g"] = 0,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -7373,9 +8010,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 175663,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0.78,
-["g"] = 0.61,
 ["b"] = 0.43,
+["g"] = 0.61,
+["r"] = 0.78,
 },
 },
 ["comment"] = "",
@@ -7385,9 +8022,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 210267,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.44,
 ["b"] = 0.87,
+["g"] = 0.44,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -7397,9 +8034,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 165251,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.44,
 ["b"] = 0.87,
+["g"] = 0.44,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -7409,9 +8046,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 84989,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.74902,
 ["b"] = 1,
+["g"] = 0.74902,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -7421,9 +8058,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 184335,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.74902,
 ["b"] = 1,
+["g"] = 0.74902,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -7433,9 +8070,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 205384,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.74902,
 ["b"] = 1,
+["g"] = 0.74902,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -7445,9 +8082,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 208698,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.74902,
 ["b"] = 1,
+["g"] = 0.74902,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -7457,9 +8094,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 205337,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0,
 ["b"] = 1,
+["g"] = 0,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -7469,9 +8106,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 184331,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.74902,
 ["b"] = 1,
+["g"] = 0.74902,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -7481,9 +8118,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 201223,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.74902,
 ["b"] = 1,
+["g"] = 0.74902,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -7493,9 +8130,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 207177,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0,
 ["b"] = 1,
+["g"] = 0,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -7505,9 +8142,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 190405,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0,
 ["b"] = 1,
+["g"] = 0,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -7517,9 +8154,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 164567,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.74902,
 ["b"] = 1,
+["g"] = 0.74902,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -7529,9 +8166,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 167876,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0,
 ["b"] = 1,
+["g"] = 0,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -7541,9 +8178,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 177816,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0.54902,
 ["b"] = 0,
+["g"] = 0.54902,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -7553,9 +8190,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 179733,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0.96,
-["g"] = 0.55,
 ["b"] = 0.73,
+["g"] = 0.55,
+["r"] = 0.96,
 },
 },
 ["comment"] = "",
@@ -7565,9 +8202,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 129788,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.74902,
 ["b"] = 1,
+["g"] = 0.74902,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -7577,9 +8214,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 129879,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.44,
 ["b"] = 0.87,
+["g"] = 0.44,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -7589,9 +8226,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 130400,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0,
 ["b"] = 1,
+["g"] = 0,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -7601,9 +8238,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 129602,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0,
 ["b"] = 1,
+["g"] = 0,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -7613,9 +8250,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 127111,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0,
 ["b"] = 1,
+["g"] = 0,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -7625,9 +8262,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 129369,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0,
 ["b"] = 1,
+["g"] = 0,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -7637,9 +8274,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 126919,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.74902,
 ["b"] = 1,
+["g"] = 0.74902,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -7649,9 +8286,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 129370,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.74902,
 ["b"] = 1,
+["g"] = 0.74902,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -7661,9 +8298,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 144071,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.74902,
 ["b"] = 1,
+["g"] = 0.74902,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -7673,9 +8310,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 189466,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0,
 ["b"] = 1,
+["g"] = 0,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -7685,9 +8322,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 83389,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0,
 ["b"] = 1,
+["g"] = 0,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -7697,9 +8334,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 217531,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0,
 ["b"] = 1,
+["g"] = 0,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -7709,9 +8346,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 211262,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0.96,
-["g"] = 0.55,
 ["b"] = 0.73,
+["g"] = 0.55,
+["r"] = 0.96,
 },
 },
 ["comment"] = "",
@@ -7721,9 +8358,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 216658,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.44,
 ["b"] = 0.87,
+["g"] = 0.44,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -7733,9 +8370,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 59547,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0,
 ["b"] = 1,
+["g"] = 0,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -7745,9 +8382,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 151773,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.44,
 ["b"] = 0.87,
+["g"] = 0.44,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -7757,9 +8394,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 191222,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0,
 ["b"] = 1,
+["g"] = 0,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -7769,9 +8406,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 235151,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.44,
 ["b"] = 0.87,
+["g"] = 0.44,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -7781,9 +8418,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 144246,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.44,
 ["b"] = 0.87,
+["g"] = 0.44,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -7793,9 +8430,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 226403,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0.78,
-["g"] = 0.61,
 ["b"] = 0.43,
+["g"] = 0.61,
+["r"] = 0.78,
 },
 },
 ["comment"] = "",
@@ -7805,9 +8442,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 215407,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0.78,
-["g"] = 0.61,
 ["b"] = 0.43,
+["g"] = 0.61,
+["r"] = 0.78,
 },
 },
 ["comment"] = "",
@@ -7817,9 +8454,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 213913,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.74902,
 ["b"] = 1,
+["g"] = 0.74902,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -7829,9 +8466,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 162309,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.44,
 ["b"] = 0.87,
+["g"] = 0.44,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -7841,9 +8478,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 172981,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0,
 ["b"] = 1,
+["g"] = 0,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -7853,9 +8490,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 209230,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.44,
 ["b"] = 0.87,
+["g"] = 0.44,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -7865,9 +8502,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 98538,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0,
 ["b"] = 1,
+["g"] = 0,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -7877,9 +8514,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 189470,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.74902,
 ["b"] = 1,
+["g"] = 0.74902,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -7889,9 +8526,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 205152,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0,
 ["b"] = 1,
+["g"] = 0,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -7901,9 +8538,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 206710,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0,
 ["b"] = 1,
+["g"] = 0,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -7913,9 +8550,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 164218,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0.78,
-["g"] = 0.61,
 ["b"] = 0.43,
+["g"] = 0.61,
+["r"] = 0.78,
 },
 },
 ["comment"] = "",
@@ -7925,9 +8562,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 98521,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0,
 ["b"] = 1,
+["g"] = 0,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -7937,9 +8574,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 210818,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.44,
 ["b"] = 0.87,
+["g"] = 0.44,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -7949,9 +8586,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 165911,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0,
 ["b"] = 1,
+["g"] = 0,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -7961,9 +8598,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 152009,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.545098,
 ["b"] = 0.545098,
+["g"] = 0.545098,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -7973,9 +8610,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 114338,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0,
 ["b"] = 1,
+["g"] = 0,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -7985,9 +8622,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 105699,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0.67,
-["g"] = 0.83,
 ["b"] = 0.45,
+["g"] = 0.83,
+["r"] = 0.67,
 },
 },
 ["comment"] = "",
@@ -7997,9 +8634,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 160495,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.74902,
 ["b"] = 1,
+["g"] = 0.74902,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -8009,9 +8646,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 211341,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0,
 ["b"] = 1,
+["g"] = 0,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -8021,9 +8658,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 135365,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0,
 ["b"] = 1,
+["g"] = 0,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -8033,9 +8670,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 135329,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0,
 ["b"] = 1,
+["g"] = 0,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -8045,9 +8682,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 130488,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0,
 ["b"] = 1,
+["g"] = 0,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -8057,9 +8694,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 229069,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.74902,
 ["b"] = 1,
+["g"] = 0.74902,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -8069,9 +8706,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 150292,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0,
 ["b"] = 1,
+["g"] = 0,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -8081,9 +8718,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 144295,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0.67,
-["g"] = 0.83,
 ["b"] = 0.45,
+["g"] = 0.83,
+["r"] = 0.67,
 },
 },
 ["comment"] = "",
@@ -8093,9 +8730,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 150297,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.74902,
 ["b"] = 1,
+["g"] = 0.74902,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -8105,9 +8742,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 144294,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.74902,
 ["b"] = 1,
+["g"] = 0.74902,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -8117,9 +8754,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 130485,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0,
 ["b"] = 1,
+["g"] = 0,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -8129,9 +8766,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 136139,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0,
 ["b"] = 1,
+["g"] = 0,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -8141,9 +8778,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 86372,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.44,
 ["b"] = 0.87,
+["g"] = 0.44,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -8153,9 +8790,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 236033,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0.49,
 ["b"] = 0.04,
+["g"] = 0.49,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -8165,9 +8802,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 90997,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0,
 ["b"] = 1,
+["g"] = 0,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -8177,9 +8814,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 92612,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0,
 ["b"] = 1,
+["g"] = 0,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -8189,9 +8826,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 113998,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0,
 ["b"] = 1,
+["g"] = 0,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -8201,9 +8838,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 95769,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.44,
 ["b"] = 0.87,
+["g"] = 0.44,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -8213,9 +8850,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 57109,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0.49,
 ["b"] = 0.04,
+["g"] = 0.49,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -8225,9 +8862,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 65362,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0.49,
 ["b"] = 0.04,
+["g"] = 0.49,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -8237,9 +8874,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 212778,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.44,
 ["b"] = 0.87,
+["g"] = 0.44,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -8249,9 +8886,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 45930,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.74902,
 ["b"] = 1,
+["g"] = 0.74902,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -8261,9 +8898,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 164501,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.44,
 ["b"] = 0.87,
+["g"] = 0.44,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -8273,9 +8910,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 173720,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0,
 ["b"] = 1,
+["g"] = 0,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -8285,9 +8922,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 166276,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0,
 ["b"] = 1,
+["g"] = 0,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -8297,9 +8934,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 166275,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.44,
 ["b"] = 0.87,
+["g"] = 0.44,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -8309,9 +8946,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 166299,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.74902,
 ["b"] = 1,
+["g"] = 0.74902,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -8321,9 +8958,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 129232,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.44,
 ["b"] = 0.87,
+["g"] = 0.44,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -8333,9 +8970,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 40166,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0,
 ["b"] = 1,
+["g"] = 0,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -8345,9 +8982,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 76104,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.74902,
 ["b"] = 1,
+["g"] = 0.74902,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -8357,9 +8994,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 186227,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0,
 ["b"] = 1,
+["g"] = 0,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -8369,9 +9006,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 183671,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0,
 ["b"] = 1,
+["g"] = 0,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -8381,9 +9018,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 165946,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.44,
 ["b"] = 0.87,
+["g"] = 0.44,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -8393,9 +9030,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 178142,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.74902,
 ["b"] = 1,
+["g"] = 0.74902,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -8405,9 +9042,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 178141,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0.133333,
-["g"] = 0.545098,
 ["b"] = 0.133333,
+["g"] = 0.545098,
+["r"] = 0.133333,
 },
 },
 ["comment"] = "",
@@ -8417,9 +9054,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 178139,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0.67,
-["g"] = 0.83,
 ["b"] = 0.45,
+["g"] = 0.83,
+["r"] = 0.67,
 },
 },
 ["comment"] = "",
@@ -8429,9 +9066,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 218324,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0,
 ["b"] = 1,
+["g"] = 0,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -8441,9 +9078,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 162693,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.44,
 ["b"] = 0.87,
+["g"] = 0.44,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -8453,9 +9090,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 165824,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0,
 ["b"] = 1,
+["g"] = 0,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -8465,9 +9102,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 44404,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.74902,
 ["b"] = 1,
+["g"] = 0.74902,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -8477,9 +9114,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 40633,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0,
 ["b"] = 1,
+["g"] = 0,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -8489,9 +9126,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 41096,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.74902,
 ["b"] = 1,
+["g"] = 0.74902,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -8501,9 +9138,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 212673,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0,
 ["b"] = 1,
+["g"] = 0,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -8513,9 +9150,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 40577,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0,
 ["b"] = 1,
+["g"] = 0,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -8525,9 +9162,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 40634,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0.67,
-["g"] = 0.83,
 ["b"] = 0.45,
+["g"] = 0.83,
+["r"] = 0.67,
 },
 },
 ["comment"] = "",
@@ -8537,9 +9174,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 169893,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0,
 ["b"] = 1,
+["g"] = 0,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -8549,9 +9186,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 162744,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0,
 ["b"] = 1,
+["g"] = 0,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -8561,9 +9198,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 217039,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0,
 ["b"] = 1,
+["g"] = 0,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -8573,9 +9210,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 214762,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0.96,
-["g"] = 0.55,
 ["b"] = 0.73,
+["g"] = 0.55,
+["r"] = 0.96,
 },
 },
 ["comment"] = "",
@@ -8585,9 +9222,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 213894,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0.67,
-["g"] = 0.83,
 ["b"] = 0.45,
+["g"] = 0.83,
+["r"] = 0.67,
 },
 },
 ["comment"] = "",
@@ -8597,9 +9234,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 223995,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0.67,
-["g"] = 0.83,
 ["b"] = 0.45,
+["g"] = 0.83,
+["r"] = 0.67,
 },
 },
 ["comment"] = "",
@@ -8609,9 +9246,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 228538,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0.67,
-["g"] = 0.83,
 ["b"] = 0.45,
+["g"] = 0.83,
+["r"] = 0.67,
 },
 },
 ["comment"] = "",
@@ -8621,9 +9258,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 213885,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0,
 ["b"] = 1,
+["g"] = 0,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -8633,9 +9270,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 213893,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.44,
 ["b"] = 0.87,
+["g"] = 0.44,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -8645,9 +9282,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 225605,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.44,
 ["b"] = 0.87,
+["g"] = 0.44,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -8657,9 +9294,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 228539,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.44,
 ["b"] = 0.87,
+["g"] = 0.44,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -8669,9 +9306,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 214761,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0,
 ["b"] = 1,
+["g"] = 0,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -8681,9 +9318,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 213895,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0.49,
 ["b"] = 0.04,
+["g"] = 0.49,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -8693,9 +9330,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 225606,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0.49,
 ["b"] = 0.04,
+["g"] = 0.49,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -8705,9 +9342,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 228537,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0.49,
 ["b"] = 0.04,
+["g"] = 0.49,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -8717,9 +9354,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 213892,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.74902,
 ["b"] = 1,
+["g"] = 0.74902,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -8729,9 +9366,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 223994,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.74902,
 ["b"] = 1,
+["g"] = 0.74902,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -8741,9 +9378,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 228540,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.74902,
 ["b"] = 1,
+["g"] = 0.74902,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -8753,9 +9390,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 213934,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0.67,
-["g"] = 0.83,
 ["b"] = 0.45,
+["g"] = 0.83,
+["r"] = 0.67,
 },
 },
 ["comment"] = "",
@@ -8765,9 +9402,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 101991,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.74902,
 ["b"] = 1,
+["g"] = 0.74902,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -8777,9 +9414,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 192796,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0.67,
-["g"] = 0.83,
 ["b"] = 0.45,
+["g"] = 0.83,
+["r"] = 0.67,
 },
 },
 ["comment"] = "",
@@ -8789,9 +9426,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 192800,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.74902,
 ["b"] = 1,
+["g"] = 0.74902,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -8801,9 +9438,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 196263,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.74902,
 ["b"] = 1,
+["g"] = 0.74902,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -8813,9 +9450,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 191847,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.74902,
 ["b"] = 1,
+["g"] = 0.74902,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -8825,9 +9462,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 193373,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.74902,
 ["b"] = 1,
+["g"] = 0.74902,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -8837,9 +9474,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 192791,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.44,
 ["b"] = 0.87,
+["g"] = 0.44,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -8849,9 +9486,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 187246,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.44,
 ["b"] = 0.87,
+["g"] = 0.44,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -8861,9 +9498,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 216648,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.44,
 ["b"] = 0.87,
+["g"] = 0.44,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -8873,9 +9510,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 179269,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0,
 ["b"] = 1,
+["g"] = 0,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -8885,9 +9522,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 130436,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0.49,
 ["b"] = 0.04,
+["g"] = 0.49,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -8897,9 +9534,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 135975,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0.49,
 ["b"] = 0.04,
+["g"] = 0.49,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -8909,9 +9546,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 210153,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.44,
 ["b"] = 0.87,
+["g"] = 0.44,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -8921,9 +9558,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 184580,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.74902,
 ["b"] = 1,
+["g"] = 0.74902,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -8933,9 +9570,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 144249,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.44,
 ["b"] = 0.87,
+["g"] = 0.44,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -8945,9 +9582,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 228458,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.44,
 ["b"] = 0.87,
+["g"] = 0.44,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -8957,9 +9594,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 216619,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.44,
 ["b"] = 0.87,
+["g"] = 0.44,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -8969,9 +9606,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 242631,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0,
 ["b"] = 1,
+["g"] = 0,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -8981,9 +9618,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 242209,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.74902,
 ["b"] = 1,
+["g"] = 0.74902,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -8993,9 +9630,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 196482,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0,
 ["b"] = 1,
+["g"] = 0,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -9005,9 +9642,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 176395,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.74902,
 ["b"] = 1,
+["g"] = 0.74902,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -9017,9 +9654,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 189235,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0,
 ["b"] = 1,
+["g"] = 0,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -9029,9 +9666,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 175646,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0.78,
-["g"] = 0.61,
 ["b"] = 0.43,
+["g"] = 0.61,
+["r"] = 0.78,
 },
 },
 ["comment"] = "",
@@ -9041,9 +9678,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 176394,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0.49,
 ["b"] = 0.04,
+["g"] = 0.49,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -9053,9 +9690,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 164463,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.44,
 ["b"] = 0.87,
+["g"] = 0.44,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -9065,9 +9702,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 211977,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0.67,
-["g"] = 0.83,
 ["b"] = 0.45,
+["g"] = 0.83,
+["r"] = 0.67,
 },
 },
 ["comment"] = "",
@@ -9077,9 +9714,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 137830,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0.49,
 ["b"] = 0.04,
+["g"] = 0.49,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -9089,9 +9726,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 206074,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.74902,
 ["b"] = 1,
+["g"] = 0.74902,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -9101,9 +9738,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 150250,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.44,
 ["b"] = 0.87,
+["g"] = 0.44,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -9113,9 +9750,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 150251,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.44,
 ["b"] = 0.87,
+["g"] = 0.44,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -9125,9 +9762,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 84520,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0,
 ["b"] = 1,
+["g"] = 0,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -9137,9 +9774,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 75459,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.44,
 ["b"] = 0.87,
+["g"] = 0.44,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -9149,9 +9786,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 167998,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0,
 ["b"] = 1,
+["g"] = 0,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -9161,9 +9798,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 179334,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0,
 ["b"] = 1,
+["g"] = 0,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -9173,9 +9810,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 188244,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0,
 ["b"] = 1,
+["g"] = 0,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -9185,9 +9822,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 190207,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.74902,
 ["b"] = 1,
+["g"] = 0.74902,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -9197,9 +9834,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 190206,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.44,
 ["b"] = 0.87,
+["g"] = 0.44,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -9209,9 +9846,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 190377,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.74902,
 ["b"] = 1,
+["g"] = 0.74902,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -9221,9 +9858,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 191206,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.74902,
 ["b"] = 1,
+["g"] = 0.74902,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -9233,9 +9870,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 190348,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0.49,
 ["b"] = 0.04,
+["g"] = 0.49,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -9245,9 +9882,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 199037,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.74902,
 ["b"] = 1,
+["g"] = 0.74902,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -9257,9 +9894,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 194894,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.74902,
 ["b"] = 1,
+["g"] = 0.74902,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -9269,9 +9906,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 195696,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0,
 ["b"] = 1,
+["g"] = 0,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -9281,9 +9918,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 207940,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0.78,
-["g"] = 0.61,
 ["b"] = 0.43,
+["g"] = 0.61,
+["r"] = 0.78,
 },
 },
 ["comment"] = "",
@@ -9293,9 +9930,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 169927,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0.49,
 ["b"] = 0.04,
+["g"] = 0.49,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -9305,9 +9942,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 84957,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.74902,
 ["b"] = 1,
+["g"] = 0.74902,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -9317,9 +9954,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 189471,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0,
 ["b"] = 1,
+["g"] = 0,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -9329,9 +9966,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 189467,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0.49,
 ["b"] = 0.04,
+["g"] = 0.49,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -9341,9 +9978,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 189265,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.74902,
 ["b"] = 1,
+["g"] = 0.74902,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -9353,9 +9990,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 189227,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0.49,
 ["b"] = 0.04,
+["g"] = 0.49,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -9365,9 +10002,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 189464,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.44,
 ["b"] = 0.87,
+["g"] = 0.44,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -9377,9 +10014,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 193944,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.74902,
 ["b"] = 1,
+["g"] = 0.74902,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -9389,9 +10026,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 192787,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0.49,
 ["b"] = 0.04,
+["g"] = 0.49,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -9401,9 +10038,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 192788,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.74902,
 ["b"] = 1,
+["g"] = 0.74902,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -9413,9 +10050,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 193293,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0,
 ["b"] = 1,
+["g"] = 0,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -9425,9 +10062,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 186696,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.44,
 ["b"] = 0.87,
+["g"] = 0.44,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -9437,9 +10074,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 209801,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0,
 ["b"] = 1,
+["g"] = 0,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -9449,9 +10086,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 170850,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0.67,
-["g"] = 0.83,
 ["b"] = 0.45,
+["g"] = 0.83,
+["r"] = 0.67,
 },
 },
 ["comment"] = "",
@@ -9461,9 +10098,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 83392,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0.67,
-["g"] = 0.83,
 ["b"] = 0.45,
+["g"] = 0.83,
+["r"] = 0.67,
 },
 },
 ["comment"] = "",
@@ -9473,9 +10110,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 163086,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0,
 ["b"] = 1,
+["g"] = 0,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -9485,9 +10122,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 211121,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0,
 ["b"] = 1,
+["g"] = 0,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -9497,9 +10134,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 213937,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0.78,
-["g"] = 0.61,
 ["b"] = 0.43,
+["g"] = 0.61,
+["r"] = 0.78,
 },
 },
 ["comment"] = "",
@@ -9509,9 +10146,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 115417,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0,
 ["b"] = 1,
+["g"] = 0,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -9521,9 +10158,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 234912,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0.67,
-["g"] = 0.83,
 ["b"] = 0.45,
+["g"] = 0.83,
+["r"] = 0.67,
 },
 },
 ["comment"] = "",
@@ -9533,9 +10170,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 245411,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0.67,
-["g"] = 0.83,
 ["b"] = 0.45,
+["g"] = 0.83,
+["r"] = 0.67,
 },
 },
 ["comment"] = "",
@@ -9545,9 +10182,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 218016,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0.49,
 ["b"] = 0.04,
+["g"] = 0.49,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -9557,9 +10194,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 236995,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0,
 ["b"] = 1,
+["g"] = 0,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -9569,9 +10206,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 127315,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0,
 ["b"] = 1,
+["g"] = 0,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -9581,9 +10218,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 232599,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.74902,
 ["b"] = 1,
+["g"] = 0.74902,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -9593,9 +10230,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 114783,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.74902,
 ["b"] = 1,
+["g"] = 0.74902,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -9605,9 +10242,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 136470,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.74902,
 ["b"] = 1,
+["g"] = 0.74902,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -9617,9 +10254,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 184319,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.44,
 ["b"] = 0.87,
+["g"] = 0.44,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -9629,9 +10266,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 190340,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.74902,
 ["b"] = 1,
+["g"] = 0.74902,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -9641,9 +10278,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 167534,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0,
 ["b"] = 1,
+["g"] = 0,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -9653,9 +10290,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 220423,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0,
 ["b"] = 1,
+["g"] = 0,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -9665,9 +10302,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 98280,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.74902,
 ["b"] = 1,
+["g"] = 0.74902,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -9677,9 +10314,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 205804,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0.67,
-["g"] = 0.83,
 ["b"] = 0.45,
+["g"] = 0.83,
+["r"] = 0.67,
 },
 },
 ["comment"] = "",
@@ -9689,9 +10326,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 102095,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.44,
 ["b"] = 0.87,
+["g"] = 0.44,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -9701,9 +10338,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 221760,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.44,
 ["b"] = 0.87,
+["g"] = 0.44,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -9713,9 +10350,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 195877,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0.67,
-["g"] = 0.83,
 ["b"] = 0.45,
+["g"] = 0.83,
+["r"] = 0.67,
 },
 },
 ["comment"] = "",
@@ -9725,9 +10362,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 98691,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.44,
 ["b"] = 0.87,
+["g"] = 0.44,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -9737,9 +10374,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 195855,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0.49,
 ["b"] = 0.04,
+["g"] = 0.49,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -9749,9 +10386,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 129231,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.44,
 ["b"] = 0.87,
+["g"] = 0.44,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -9761,9 +10398,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 213954,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0,
 ["b"] = 1,
+["g"] = 0,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -9773,9 +10410,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 91006,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.74902,
 ["b"] = 1,
+["g"] = 0.74902,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -9785,9 +10422,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 102232,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.74902,
 ["b"] = 1,
+["g"] = 0.74902,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -9797,9 +10434,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 82039,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0.49,
 ["b"] = 0.04,
+["g"] = 0.49,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -9809,9 +10446,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 98681,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0,
 ["b"] = 1,
+["g"] = 0,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -9821,9 +10458,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 186208,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0,
 ["b"] = 1,
+["g"] = 0,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -9833,9 +10470,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 99358,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0.49,
 ["b"] = 0.04,
+["g"] = 0.49,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -9845,9 +10482,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 99359,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.44,
 ["b"] = 0.87,
+["g"] = 0.44,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -9857,9 +10494,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 163620,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0,
 ["b"] = 1,
+["g"] = 0,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -9869,9 +10506,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 220141,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.74902,
 ["b"] = 1,
+["g"] = 0.74902,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -9881,9 +10518,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 220197,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0,
 ["b"] = 1,
+["g"] = 0,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -9893,9 +10530,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 220730,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0,
 ["b"] = 1,
+["g"] = 0,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -9905,9 +10542,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 210812,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.74902,
 ["b"] = 1,
+["g"] = 0.74902,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -9917,9 +10554,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 187155,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.44,
 ["b"] = 0.87,
+["g"] = 0.44,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -9929,9 +10566,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 131685,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0.67,
-["g"] = 0.83,
 ["b"] = 0.45,
+["g"] = 0.83,
+["r"] = 0.67,
 },
 },
 ["comment"] = "",
@@ -9941,9 +10578,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 184107,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0,
 ["b"] = 1,
+["g"] = 0,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -9953,9 +10590,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 164461,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.74902,
 ["b"] = 1,
+["g"] = 0.74902,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -9965,9 +10602,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 191739,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0,
 ["b"] = 1,
+["g"] = 0,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -9977,9 +10614,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 150160,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0.67,
-["g"] = 0.83,
 ["b"] = 0.45,
+["g"] = 0.83,
+["r"] = 0.67,
 },
 },
 ["comment"] = "",
@@ -9989,9 +10626,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 150143,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0.67,
-["g"] = 0.83,
 ["b"] = 0.45,
+["g"] = 0.83,
+["r"] = 0.67,
 },
 },
 ["comment"] = "",
@@ -10001,9 +10638,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 150146,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.74902,
 ["b"] = 1,
+["g"] = 0.74902,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -10013,9 +10650,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 231839,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.74902,
 ["b"] = 1,
+["g"] = 0.74902,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -10025,9 +10662,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 129374,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0,
 ["b"] = 1,
+["g"] = 0,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -10037,9 +10674,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 216340,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0.133333,
-["g"] = 0.545098,
 ["b"] = 0.133333,
+["g"] = 0.545098,
+["r"] = 0.133333,
 },
 },
 ["comment"] = "",
@@ -10049,9 +10686,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 211291,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0.96,
-["g"] = 0.55,
 ["b"] = 0.73,
+["g"] = 0.55,
+["r"] = 0.96,
 },
 },
 ["comment"] = "",
@@ -10061,9 +10698,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 239836,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0.96,
-["g"] = 0.55,
 ["b"] = 0.73,
+["g"] = 0.55,
+["r"] = 0.96,
 },
 },
 ["comment"] = "",
@@ -10073,9 +10710,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 200131,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0.49,
 ["b"] = 0.04,
+["g"] = 0.49,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -10085,9 +10722,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 169875,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.44,
 ["b"] = 0.87,
+["g"] = 0.44,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -10097,9 +10734,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 75713,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.74902,
 ["b"] = 1,
+["g"] = 0.74902,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -10109,9 +10746,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 77700,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.74902,
 ["b"] = 1,
+["g"] = 0.74902,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -10121,9 +10758,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 164510,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.44,
 ["b"] = 0.87,
+["g"] = 0.44,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -10133,9 +10770,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 200387,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0,
 ["b"] = 1,
+["g"] = 0,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -10145,9 +10782,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 164557,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0,
 ["b"] = 1,
+["g"] = 0,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -10157,9 +10794,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 127879,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.44,
 ["b"] = 0.87,
+["g"] = 0.44,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -10169,9 +10806,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 230740,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0,
 ["b"] = 1,
+["g"] = 0,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -10181,9 +10818,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 208456,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.74902,
 ["b"] = 1,
+["g"] = 0.74902,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -10193,9 +10830,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 83026,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0,
 ["b"] = 1,
+["g"] = 0,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -10205,9 +10842,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 84028,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0,
 ["b"] = 1,
+["g"] = 0,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -10217,9 +10854,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 217658,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0.96,
-["g"] = 0.55,
 ["b"] = 0.73,
+["g"] = 0.55,
+["r"] = 0.96,
 },
 },
 ["comment"] = "",
@@ -10229,9 +10866,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 210156,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.44,
 ["b"] = 0.87,
+["g"] = 0.44,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -10241,9 +10878,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 165919,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0,
 ["b"] = 1,
+["g"] = 0,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -10253,9 +10890,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 165197,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0,
 ["b"] = 1,
+["g"] = 0,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -10265,9 +10902,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 114544,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0,
 ["b"] = 1,
+["g"] = 0,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -10277,9 +10914,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 150165,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.44,
 ["b"] = 0.87,
+["g"] = 0.44,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -10289,9 +10926,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 177716,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.74902,
 ["b"] = 1,
+["g"] = 0.74902,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -10301,9 +10938,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 175806,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0.78,
-["g"] = 0.61,
 ["b"] = 0.43,
+["g"] = 0.61,
+["r"] = 0.78,
 },
 },
 ["comment"] = "",
@@ -10313,9 +10950,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 177269,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0.78,
-["g"] = 0.61,
 ["b"] = 0.43,
+["g"] = 0.61,
+["r"] = 0.78,
 },
 },
 ["comment"] = "",
@@ -10325,9 +10962,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 212412,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0.49,
 ["b"] = 0.04,
+["g"] = 0.49,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -10337,9 +10974,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 135240,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.74902,
 ["b"] = 1,
+["g"] = 0.74902,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -10349,9 +10986,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 234935,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0.78,
-["g"] = 0.61,
 ["b"] = 0.43,
+["g"] = 0.61,
+["r"] = 0.78,
 },
 },
 ["comment"] = "",
@@ -10361,9 +10998,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 98243,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0,
 ["b"] = 1,
+["g"] = 0,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -10373,9 +11010,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 162763,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0,
 ["b"] = 1,
+["g"] = 0,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -10385,9 +11022,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 195928,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0,
 ["b"] = 1,
+["g"] = 0,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -10397,9 +11034,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 195927,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0,
 ["b"] = 1,
+["g"] = 0,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -10409,9 +11046,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 195930,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0,
 ["b"] = 1,
+["g"] = 0,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -10421,9 +11058,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 195929,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0,
 ["b"] = 1,
+["g"] = 0,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -10433,9 +11070,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 213217,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.74902,
 ["b"] = 1,
+["g"] = 0.74902,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -10445,9 +11082,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 213216,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.44,
 ["b"] = 0.87,
+["g"] = 0.44,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -10457,9 +11094,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 211087,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0.78,
-["g"] = 0.61,
 ["b"] = 0.43,
+["g"] = 0.61,
+["r"] = 0.78,
 },
 },
 ["comment"] = "",
@@ -10469,9 +11106,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 114804,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.74902,
 ["b"] = 1,
+["g"] = 0.74902,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -10481,9 +11118,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 196202,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.74902,
 ["b"] = 1,
+["g"] = 0.74902,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -10493,9 +11130,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 114633,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.74902,
 ["b"] = 1,
+["g"] = 0.74902,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -10505,9 +11142,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 196577,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0.49,
 ["b"] = 0.04,
+["g"] = 0.49,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -10517,9 +11154,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 197904,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0.49,
 ["b"] = 0.04,
+["g"] = 0.49,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -10529,9 +11166,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 196576,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0.67,
-["g"] = 0.83,
 ["b"] = 0.45,
+["g"] = 0.83,
+["r"] = 0.67,
 },
 },
 ["comment"] = "",
@@ -10541,9 +11178,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 197905,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0.67,
-["g"] = 0.83,
 ["b"] = 0.45,
+["g"] = 0.83,
+["r"] = 0.67,
 },
 },
 ["comment"] = "",
@@ -10553,9 +11190,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 144296,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0,
 ["b"] = 1,
+["g"] = 0,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -10565,9 +11202,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 167116,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0.49,
 ["b"] = 0.04,
+["g"] = 0.49,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -10577,9 +11214,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 167111,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.74902,
 ["b"] = 1,
+["g"] = 0.74902,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -10589,9 +11226,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 213806,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.74902,
 ["b"] = 1,
+["g"] = 0.74902,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -10601,9 +11238,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 205158,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0,
 ["b"] = 1,
+["g"] = 0,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -10613,9 +11250,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 190370,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0,
 ["b"] = 1,
+["g"] = 0,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -10625,9 +11262,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 187033,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0,
 ["b"] = 1,
+["g"] = 0,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -10637,9 +11274,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 163121,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0.67,
-["g"] = 0.83,
 ["b"] = 0.45,
+["g"] = 0.83,
+["r"] = 0.67,
 },
 },
 ["comment"] = "",
@@ -10649,9 +11286,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 173044,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.74902,
 ["b"] = 1,
+["g"] = 0.74902,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -10661,9 +11298,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 230322,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.44,
 ["b"] = 0.87,
+["g"] = 0.44,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -10673,9 +11310,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 167612,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0,
 ["b"] = 1,
+["g"] = 0,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -10685,9 +11322,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 167607,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0.96,
-["g"] = 0.55,
 ["b"] = 0.73,
+["g"] = 0.55,
+["r"] = 0.96,
 },
 },
 ["comment"] = "",
@@ -10697,9 +11334,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 130635,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.74902,
 ["b"] = 1,
+["g"] = 0.74902,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -10709,9 +11346,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 184022,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.74902,
 ["b"] = 1,
+["g"] = 0.74902,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -10721,9 +11358,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 186658,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.74902,
 ["b"] = 1,
+["g"] = 0.74902,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -10733,9 +11370,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 97068,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0,
 ["b"] = 1,
+["g"] = 0,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -10745,9 +11382,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 97788,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0,
 ["b"] = 1,
+["g"] = 0,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -10757,9 +11394,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 99891,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0,
 ["b"] = 1,
+["g"] = 0,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -10769,9 +11406,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 195265,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0,
 ["b"] = 1,
+["g"] = 0,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -10781,9 +11418,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 194317,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0,
 ["b"] = 1,
+["g"] = 0,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -10793,9 +11430,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 194315,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0,
 ["b"] = 1,
+["g"] = 0,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -10805,9 +11442,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 194316,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0,
 ["b"] = 1,
+["g"] = 0,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -10817,9 +11454,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 178171,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0,
 ["b"] = 1,
+["g"] = 0,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -10829,9 +11466,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 96574,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0,
 ["b"] = 1,
+["g"] = 0,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -10841,9 +11478,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 207205,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.44,
 ["b"] = 0.87,
+["g"] = 0.44,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -10853,9 +11490,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 194990,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.74902,
 ["b"] = 1,
+["g"] = 0.74902,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -10865,9 +11502,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 194897,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.44,
 ["b"] = 0.87,
+["g"] = 0.44,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -10877,9 +11514,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 151658,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.44,
 ["b"] = 0.87,
+["g"] = 0.44,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -10889,9 +11526,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 177817,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.74902,
 ["b"] = 1,
+["g"] = 0.74902,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -10901,9 +11538,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 213932,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0,
 ["b"] = 1,
+["g"] = 0,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -10913,9 +11550,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 220195,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.74902,
 ["b"] = 1,
+["g"] = 0.74902,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -10925,9 +11562,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 216339,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.74902,
 ["b"] = 1,
+["g"] = 0.74902,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -10937,9 +11574,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 210966,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.44,
 ["b"] = 0.87,
+["g"] = 0.44,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -10949,9 +11586,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 225479,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.44,
 ["b"] = 0.87,
+["g"] = 0.44,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -10961,9 +11598,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 162689,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.44,
 ["b"] = 0.87,
+["g"] = 0.44,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -10973,9 +11610,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 226396,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0.78,
-["g"] = 0.61,
 ["b"] = 0.43,
+["g"] = 0.61,
+["r"] = 0.78,
 },
 },
 ["comment"] = "",
@@ -10985,9 +11622,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 234933,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0.78,
-["g"] = 0.61,
 ["b"] = 0.43,
+["g"] = 0.61,
+["r"] = 0.78,
 },
 },
 ["comment"] = "",
@@ -10997,9 +11634,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 211289,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0.96,
-["g"] = 0.55,
 ["b"] = 0.73,
+["g"] = 0.55,
+["r"] = 0.96,
 },
 },
 ["comment"] = "",
@@ -11009,9 +11646,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 239834,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0.96,
-["g"] = 0.55,
 ["b"] = 0.73,
+["g"] = 0.55,
+["r"] = 0.96,
 },
 },
 ["comment"] = "",
@@ -11021,9 +11658,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 40925,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0,
 ["b"] = 1,
+["g"] = 0,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -11033,9 +11670,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 99366,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.74902,
 ["b"] = 1,
+["g"] = 0.74902,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -11045,9 +11682,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 91001,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.44,
 ["b"] = 0.87,
+["g"] = 0.44,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -11057,9 +11694,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 134012,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0,
 ["b"] = 1,
+["g"] = 0,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -11069,9 +11706,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 220060,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.74902,
 ["b"] = 1,
+["g"] = 0.74902,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -11081,9 +11718,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 198047,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.74902,
 ["b"] = 1,
+["g"] = 0.74902,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -11093,9 +11730,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 45935,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.74902,
 ["b"] = 1,
+["g"] = 0.74902,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -11105,9 +11742,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 231531,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0.49,
 ["b"] = 0.04,
+["g"] = 0.49,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -11117,9 +11754,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 208745,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.74902,
 ["b"] = 1,
+["g"] = 0.74902,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -11129,9 +11766,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 216320,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.44,
 ["b"] = 0.87,
+["g"] = 0.44,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -11141,9 +11778,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 59552,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0.67,
-["g"] = 0.83,
 ["b"] = 0.45,
+["g"] = 0.83,
+["r"] = 0.67,
 },
 },
 ["comment"] = "",
@@ -11153,9 +11790,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 208747,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.44,
 ["b"] = 0.87,
+["g"] = 0.44,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -11165,9 +11802,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 59545,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0.49,
 ["b"] = 0.04,
+["g"] = 0.49,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -11177,9 +11814,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 59544,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.74902,
 ["b"] = 1,
+["g"] = 0.74902,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -11189,9 +11826,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 144244,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.44,
 ["b"] = 0.87,
+["g"] = 0.44,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -11201,9 +11838,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 59553,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0,
 ["b"] = 1,
+["g"] = 0,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -11213,9 +11850,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 59546,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.74902,
 ["b"] = 1,
+["g"] = 0.74902,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -11225,9 +11862,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 135474,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.74902,
 ["b"] = 1,
+["g"] = 0.74902,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -11237,9 +11874,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 197698,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0,
 ["b"] = 1,
+["g"] = 0,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -11249,9 +11886,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 205723,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.44,
 ["b"] = 0.87,
+["g"] = 0.44,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -11261,9 +11898,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 205363,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.74902,
 ["b"] = 1,
+["g"] = 0.74902,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -11273,9 +11910,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 175546,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0.78,
-["g"] = 0.61,
 ["b"] = 0.43,
+["g"] = 0.61,
+["r"] = 0.78,
 },
 },
 ["comment"] = "",
@@ -11285,9 +11922,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 199748,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.74902,
 ["b"] = 1,
+["g"] = 0.74902,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -11297,9 +11934,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 199749,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0,
 ["b"] = 1,
+["g"] = 0,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -11309,9 +11946,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 206066,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.44,
 ["b"] = 0.87,
+["g"] = 0.44,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -11321,9 +11958,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 164929,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0,
 ["b"] = 1,
+["g"] = 0,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -11333,9 +11970,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 212411,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0,
 ["b"] = 1,
+["g"] = 0,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -11345,9 +11982,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 100526,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0.49,
 ["b"] = 0.04,
+["g"] = 0.49,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -11357,9 +11994,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 150169,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.74902,
 ["b"] = 1,
+["g"] = 0.74902,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -11369,9 +12006,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 150168,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0,
 ["b"] = 1,
+["g"] = 0,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -11381,9 +12018,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 154744,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0,
 ["b"] = 1,
+["g"] = 0,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -11393,9 +12030,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 154758,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0,
 ["b"] = 1,
+["g"] = 0,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -11405,9 +12042,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 179837,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0,
 ["b"] = 1,
+["g"] = 0,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -11417,9 +12054,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 225984,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0.67,
-["g"] = 0.83,
 ["b"] = 0.45,
+["g"] = 0.83,
+["r"] = 0.67,
 },
 },
 ["comment"] = "",
@@ -11429,9 +12066,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 164517,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.44,
 ["b"] = 0.87,
+["g"] = 0.44,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -11441,9 +12078,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 185528,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.74902,
 ["b"] = 1,
+["g"] = 0.74902,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -11453,9 +12090,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 186125,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.74902,
 ["b"] = 1,
+["g"] = 0.74902,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -11465,9 +12102,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 216293,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.74902,
 ["b"] = 1,
+["g"] = 0.74902,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -11477,9 +12114,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 45924,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.44,
 ["b"] = 0.87,
+["g"] = 0.44,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -11489,9 +12126,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 214350,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.44,
 ["b"] = 0.87,
+["g"] = 0.44,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -11501,9 +12138,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 40167,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.74902,
 ["b"] = 1,
+["g"] = 0.74902,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -11513,9 +12150,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 224609,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0,
 ["b"] = 1,
+["g"] = 0,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -11525,9 +12162,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 224219,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.74902,
 ["b"] = 1,
+["g"] = 0.74902,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -11537,9 +12174,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 224276,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0.67,
-["g"] = 0.83,
 ["b"] = 0.45,
+["g"] = 0.83,
+["r"] = 0.67,
 },
 },
 ["comment"] = "",
@@ -11549,9 +12186,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 224249,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0,
 ["b"] = 1,
+["g"] = 0,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -11561,9 +12198,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 224221,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0,
 ["b"] = 1,
+["g"] = 0,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -11573,9 +12210,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 224271,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.44,
 ["b"] = 0.87,
+["g"] = 0.44,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -11585,9 +12222,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 84767,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0,
 ["b"] = 1,
+["g"] = 0,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -11597,9 +12234,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 195878,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0,
 ["b"] = 1,
+["g"] = 0,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -11609,9 +12246,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 195842,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.44,
 ["b"] = 0.87,
+["g"] = 0.44,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -11621,9 +12258,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 231380,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.44,
 ["b"] = 0.87,
+["g"] = 0.44,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -11633,9 +12270,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 102253,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.44,
 ["b"] = 0.87,
+["g"] = 0.44,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -11645,9 +12282,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 92350,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0.49,
 ["b"] = 0.04,
+["g"] = 0.49,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -11657,9 +12294,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 105636,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0.49,
 ["b"] = 0.04,
+["g"] = 0.49,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -11669,9 +12306,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 105720,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0.49,
 ["b"] = 0.04,
+["g"] = 0.49,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -11681,9 +12318,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 113197,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0.49,
 ["b"] = 0.04,
+["g"] = 0.49,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -11693,9 +12330,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 92610,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.44,
 ["b"] = 0.87,
+["g"] = 0.44,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -11705,9 +12342,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 114634,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.74902,
 ["b"] = 1,
+["g"] = 0.74902,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -11717,9 +12354,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 164363,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.44,
 ["b"] = 0.87,
+["g"] = 0.44,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -11729,9 +12366,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 207186,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.44,
 ["b"] = 0.87,
+["g"] = 0.44,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -11741,9 +12378,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 196044,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.74902,
 ["b"] = 1,
+["g"] = 0.74902,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -11753,9 +12390,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 231788,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.44,
 ["b"] = 0.87,
+["g"] = 0.44,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -11765,9 +12402,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 187154,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0,
 ["b"] = 1,
+["g"] = 0,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -11777,9 +12414,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 213905,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.74902,
 ["b"] = 1,
+["g"] = 0.74902,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -11789,9 +12426,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 216328,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0,
 ["b"] = 1,
+["g"] = 0,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -11801,9 +12438,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 101637,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0,
 ["b"] = 1,
+["g"] = 0,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -11813,9 +12450,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 95834,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.74902,
 ["b"] = 1,
+["g"] = 0.74902,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -11825,9 +12462,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 97197,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.74902,
 ["b"] = 1,
+["g"] = 0.74902,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -11837,9 +12474,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 96664,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.44,
 ["b"] = 0.87,
+["g"] = 0.44,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -11849,9 +12486,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 95842,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.74902,
 ["b"] = 1,
+["g"] = 0.74902,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -11861,9 +12498,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 40320,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.44,
 ["b"] = 0.87,
+["g"] = 0.44,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -11873,9 +12510,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 201222,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0,
 ["b"] = 1,
+["g"] = 0,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -11885,9 +12522,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 176551,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.74902,
 ["b"] = 1,
+["g"] = 0.74902,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -11897,9 +12534,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 133432,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.74902,
 ["b"] = 1,
+["g"] = 0.74902,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -11909,9 +12546,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 229251,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0,
 ["b"] = 1,
+["g"] = 0,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -11921,9 +12558,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 231496,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.44,
 ["b"] = 0.87,
+["g"] = 0.44,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -11933,9 +12570,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 130661,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.74902,
 ["b"] = 1,
+["g"] = 0.74902,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -11945,9 +12582,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 231312,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.74902,
 ["b"] = 1,
+["g"] = 0.74902,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -11957,9 +12594,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 220946,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0,
 ["b"] = 1,
+["g"] = 0,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -11969,9 +12606,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 133430,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0,
 ["b"] = 1,
+["g"] = 0,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -11981,9 +12618,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 218671,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0.49,
 ["b"] = 0.04,
+["g"] = 0.49,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -11993,9 +12630,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 229686,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.74902,
 ["b"] = 1,
+["g"] = 0.74902,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -12005,9 +12642,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 133463,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0,
 ["b"] = 1,
+["g"] = 0,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -12017,9 +12654,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 176705,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0.78,
-["g"] = 0.61,
 ["b"] = 0.43,
+["g"] = 0.61,
+["r"] = 0.78,
 },
 },
 ["comment"] = "",
@@ -12029,9 +12666,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 179841,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.74902,
 ["b"] = 1,
+["g"] = 0.74902,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -12041,9 +12678,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 184023,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.44,
 ["b"] = 0.87,
+["g"] = 0.44,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -12053,9 +12690,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 164563,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0.67,
-["g"] = 0.83,
 ["b"] = 0.45,
+["g"] = 0.83,
+["r"] = 0.67,
 },
 },
 ["comment"] = "",
@@ -12065,9 +12702,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 212681,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0.49,
 ["b"] = 0.04,
+["g"] = 0.49,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -12077,9 +12714,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 197219,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0,
 ["b"] = 1,
+["g"] = 0,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -12089,9 +12726,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 91000,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0,
 ["b"] = 1,
+["g"] = 0,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -12101,9 +12738,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 114792,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.44,
 ["b"] = 0.87,
+["g"] = 0.44,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -12113,9 +12750,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 212793,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.74902,
 ["b"] = 1,
+["g"] = 0.74902,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -12125,9 +12762,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 212765,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0,
 ["b"] = 1,
+["g"] = 0,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -12137,9 +12774,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 221979,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.74902,
 ["b"] = 1,
+["g"] = 0.74902,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -12149,9 +12786,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 207202,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.74902,
 ["b"] = 1,
+["g"] = 0.74902,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -12161,9 +12798,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 75652,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0,
 ["b"] = 1,
+["g"] = 0,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -12173,9 +12810,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 213119,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.44,
 ["b"] = 0.87,
+["g"] = 0.44,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -12185,9 +12822,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 212400,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0,
 ["b"] = 1,
+["g"] = 0,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -12197,9 +12834,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 214419,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.44,
 ["b"] = 0.87,
+["g"] = 0.44,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -12209,9 +12846,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 212786,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0,
 ["b"] = 1,
+["g"] = 0,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -12221,9 +12858,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 207207,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.44,
 ["b"] = 0.87,
+["g"] = 0.44,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -12233,9 +12870,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 219046,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.74902,
 ["b"] = 1,
+["g"] = 0.74902,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -12245,9 +12882,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 216649,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.44,
 ["b"] = 0.87,
+["g"] = 0.44,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -12257,9 +12894,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 208450,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0,
 ["b"] = 1,
+["g"] = 0,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -12269,9 +12906,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 233152,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0,
 ["b"] = 1,
+["g"] = 0,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -12281,9 +12918,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 180433,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0.96,
-["g"] = 0.55,
 ["b"] = 0.73,
+["g"] = 0.55,
+["r"] = 0.96,
 },
 },
 ["comment"] = "",
@@ -12293,9 +12930,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 130653,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.44,
 ["b"] = 0.87,
+["g"] = 0.44,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -12305,9 +12942,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 206699,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0.49,
 ["b"] = 0.04,
+["g"] = 0.49,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -12317,9 +12954,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 144293,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0,
 ["b"] = 1,
+["g"] = 0,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -12329,9 +12966,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 234962,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.44,
 ["b"] = 0.87,
+["g"] = 0.44,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -12341,9 +12978,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 234955,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0,
 ["b"] = 1,
+["g"] = 0,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -12353,9 +12990,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 234957,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.74902,
 ["b"] = 1,
+["g"] = 0.74902,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -12365,9 +13002,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 234918,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0.49,
 ["b"] = 0.04,
+["g"] = 0.49,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -12377,9 +13014,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 105715,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.44,
 ["b"] = 0.87,
+["g"] = 0.44,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -12389,9 +13026,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 227145,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0.49,
 ["b"] = 0.04,
+["g"] = 0.49,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -12401,9 +13038,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 223182,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0,
 ["b"] = 1,
+["g"] = 0,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -12413,9 +13050,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 224731,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0,
 ["b"] = 1,
+["g"] = 0,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -12425,9 +13062,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 183425,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0,
 ["b"] = 1,
+["g"] = 0,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -12437,9 +13074,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 114796,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0,
 ["b"] = 1,
+["g"] = 0,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -12449,9 +13086,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 45912,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.74902,
 ["b"] = 1,
+["g"] = 0.74902,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -12461,9 +13098,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 186229,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0,
 ["b"] = 1,
+["g"] = 0,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -12473,9 +13110,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 210265,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0.49,
 ["b"] = 0.04,
+["g"] = 0.49,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -12485,9 +13122,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 223497,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0.49,
 ["b"] = 0.04,
+["g"] = 0.49,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -12497,9 +13134,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 98810,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0.49,
 ["b"] = 0.04,
+["g"] = 0.49,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -12509,9 +13146,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 98792,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.44,
 ["b"] = 0.87,
+["g"] = 0.44,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -12521,9 +13158,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 162329,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.44,
 ["b"] = 0.87,
+["g"] = 0.44,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -12533,9 +13170,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 219984,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0,
 ["b"] = 1,
+["g"] = 0,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -12545,9 +13182,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 65317,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0,
 ["b"] = 1,
+["g"] = 0,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -12557,9 +13194,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 45919,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0,
 ["b"] = 1,
+["g"] = 0,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -12569,9 +13206,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 122969,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.74902,
 ["b"] = 1,
+["g"] = 0.74902,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -12581,9 +13218,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 207949,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0.67,
-["g"] = 0.83,
 ["b"] = 0.45,
+["g"] = 0.83,
+["r"] = 0.67,
 },
 },
 ["comment"] = "",
@@ -12593,9 +13230,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 176563,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0.78,
-["g"] = 0.61,
 ["b"] = 0.43,
+["g"] = 0.61,
+["r"] = 0.78,
 },
 },
 ["comment"] = "",
@@ -12605,9 +13242,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 175616,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0.78,
-["g"] = 0.61,
 ["b"] = 0.43,
+["g"] = 0.61,
+["r"] = 0.78,
 },
 },
 ["comment"] = "",
@@ -12617,9 +13254,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 163619,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0.49,
 ["b"] = 0.04,
+["g"] = 0.49,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -12629,9 +13266,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 165222,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.44,
 ["b"] = 0.87,
+["g"] = 0.44,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -12641,9 +13278,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 165137,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 1,
-["g"] = 0,
 ["b"] = 1,
+["g"] = 0,
+["r"] = 1,
 },
 },
 ["comment"] = "",
@@ -12653,9 +13290,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 163618,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.74902,
 ["b"] = 1,
+["g"] = 0.74902,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -12665,9 +13302,9 @@ BetterBlizzPlatesDB = {
 ["id"] = 164815,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.74902,
 ["b"] = 1,
+["g"] = 0.74902,
+["r"] = 0,
 },
 },
 ["comment"] = "",
@@ -12677,44 +13314,44 @@ BetterBlizzPlatesDB = {
 ["id"] = 163128,
 ["entryColors"] = {
 ["text"] = {
-["r"] = 0,
-["g"] = 0.74902,
 ["b"] = 1,
+["g"] = 0.74902,
+["r"] = 0,
 },
 },
 ["comment"] = "",
 ["name"] = "Zolramus Sorcerer",
 },
 },
-["combatIndicatorYPos"] = 0,
+["arenaIndicatorModeFive"] = false,
 ["friendlyNpdeBuffEnable"] = true,
 ["partyPointerTargetIndicator"] = false,
 ["npcTitleScale"] = 1,
-["partyPointerOnlyParty"] = false,
-["castBarInterruptHighlighterStartTime"] = 15,
+["combatIndicatorYPos"] = 0,
+["castBarInterruptHighlighterEndTime"] = 80,
 ["enableCastbarEmphasis"] = true,
 ["healerIndicator"] = true,
 ["partyPointerHealer"] = true,
 ["useFakeName"] = false,
 ["totemIndicatorXPosXPos"] = 0,
 ["classIndicatorFriendlyYPosYPos"] = 0,
-["friendlyHideHealthBarNpc"] = true,
+["setCVarAcrossAllCharacters"] = true,
 ["importantCCRoot"] = true,
-["combatIndicatorXPosXPos"] = 0,
+["absorbIndicatorEnemyOnly"] = true,
 ["friendlyNameplateClickthrough"] = false,
 ["petIndicatorXPosXPos"] = 0,
 ["healthNumbersTargetOnly"] = true,
 ["healthNumbersPercentSymbol"] = true,
-["healthNumbersClassColor"] = false,
+["healthNumbersAnchor"] = "CENTER",
 ["totemIndicatorColorHealthBar"] = true,
 ["arenaIndicatorTestMode"] = false,
-["hideNPCAllNeutral"] = false,
-["personalNpdeBuffFilterWatchList"] = true,
-["healthNumbersAnchor"] = "CENTER",
+["castBarShieldXPos"] = 0,
+["nameplateAuraRowAmountScale"] = 7,
+["healthNumbersClassColor"] = false,
 ["nameplateDefaultLargeFriendlyWidth"] = 154,
 ["importantBuffsMobility"] = true,
-["nameplateAuraRowAmountScale"] = 7,
-["raidmarkIndicatorScale"] = 0.68,
+["personalNpdeBuffFilterWatchList"] = true,
+["classIndicatorUpdated2"] = true,
 ["fakeNameFriendlyYPos"] = 0,
 ["castbarEventsOn"] = true,
 ["npAuraMagicRGB"] = {
@@ -12722,68 +13359,73 @@ BetterBlizzPlatesDB = {
 0.44,
 1,
 },
-["classIndicatorUpdated2"] = true,
+["raidmarkIndicatorScale"] = 0.68,
 ["classIndicatorAlpha"] = 1,
-["castBarShieldXPos"] = 0,
+["hideNPCAllNeutral"] = false,
 ["largeNameplates"] = true,
-["absorbIndicatorEnemyOnly"] = true,
-["setCVarAcrossAllCharacters"] = true,
-["castBarInterruptHighlighterEndTime"] = 80,
-["arenaIndicatorModeFive"] = false,
+["combatIndicatorXPosXPos"] = 0,
+["friendlyHideHealthBarNpc"] = true,
+["castBarInterruptHighlighterStartTime"] = 15,
+["partyPointerOnlyParty"] = false,
 ["healthNumbers"] = true,
 ["showLastNameNpc"] = true,
 ["onlyPandemicAuraMine"] = true,
 ["nameplateShowEnemyMinions"] = "1",
-["hideTargetHighlight"] = false,
+["guildNameColor"] = false,
 ["raidmarkIndicatorFullAlpha"] = true,
-["nameplateMaxAlphaDistanceScale"] = 60,
+["friendlyNpdeBuffFilterAll"] = false,
 ["petIndicatorAnchor"] = "CENTER",
-["enlargeAllImportantBuffs"] = true,
+["npTargetTextSize"] = 8,
 ["importantCCFull"] = true,
-["importantBuffsOffensivesGlow"] = true,
+["fakeNameXPos"] = 0,
 ["classIconSquareBorderFriendly"] = false,
 ["importantBuffsDefensivesGlowRGB"] = {
 ["a"] = 1,
-["b"] = 0,
-["g"] = 0.7254902124404907,
 ["r"] = 0.9921569228172302,
+["g"] = 0.7254902124404907,
+["b"] = 0,
 },
-["totemIndicatorTestMode"] = false,
+["executeIndicatorAlwaysOn"] = false,
 ["testAllEnabledFeatures"] = false,
-["personalNpdeBuffFilterBlacklist"] = true,
-["nameplateMotionSpeed"] = 0.025,
-["partyPointerHealerScale"] = 1.5,
-["nameplateSelfBottomInset"] = 0.54,
-["healthNumbersSwapped"] = false,
-["raidmarkIndicatorAnchor"] = "CENTER",
-["friendlyNpBuffEmphasisedBorder"] = false,
+["customTexture"] = "Wglass",
+["otherNpdeBuffFilterAll"] = false,
+["healerIndicatorXPos"] = 0,
+["enemyNameScale"] = 0.7,
+["nameplateOverlapH"] = 0.8,
+["healerIndicatorBgOnly"] = true,
+["castBarChanneledColor"] = {
+0.4862745404243469,
+1,
+0.294117659330368,
+1,
+},
 ["changeNpHpBgColorSolid"] = false,
-["nameplateAuraPlayersOnlyShowTarget"] = false,
-["nameplateEnemyHeight"] = 64.125,
-["castBarRecolor"] = true,
+["totemIndicatorDefaultCooldownTextSize"] = 1,
+["classIndicatorXPosXPos"] = 0,
+["partyPointerYPos"] = 0,
 ["nameplateAuraCountScale"] = 0.95,
-["combatIndicatorSap"] = true,
+["wasOnLoadingScreen"] = false,
 ["executeIndicatorNotOnFullHp"] = false,
 ["focusTargetIndicatorAnchor"] = "CENTER",
-["classIndicator"] = true,
-["hideNPCSecondaryShowMurloc"] = true,
+["otherNpBuffEnable"] = true,
+["executeIndicatorTargetOnly"] = false,
 ["enableNpNonTargetAlphaTargetOnly"] = true,
-["nameplateResourceUnderCastbar"] = true,
-["questIndicatorYPos"] = 0,
-["petIndicatorScale"] = 1.1,
-["healthNumbersCurrentFull"] = false,
+["nameplateShowFriendlyTotems"] = "0",
+["smallPetsInPvP"] = true,
+["hideNpcCastbar"] = false,
+["useCustomTextureForSelfMana"] = true,
 ["friendlyNpBuffFilterImportantBuffs"] = true,
 ["nameplateDefaultFriendlyWidth"] = 110,
-["nameplateCastbarTestMode"] = false,
-["nameplateCenterAllRows"] = true,
+["healerIndicatorArenaOnly"] = true,
+["focusTargetIndicatorScale"] = 0.91,
 ["healerIndicatorTestMode"] = false,
-["recolorTempHpLoss"] = false,
-["nameplateOccludedAlphaMult"] = 1,
-["executeIndicatorAnchor"] = "LEFT",
-["healthNumbersTestMode"] = false,
-["fadeOutNPCWhitelistOn"] = false,
+["hideResourceFrame"] = false,
+["raidmarkerPvPOnly"] = false,
+["hideNameplateAuraTooltip"] = true,
+["classIndicatorEnemy"] = true,
+["totemIndicatorDefaultCooldownTextSizeScale"] = 1,
 ["totemIndicator"] = true,
-["friendlyNpBuffPurgeGlow"] = false,
+["enableCustomFontOutline"] = true,
 ["customCastbarNonInterruptibleTexture"] = "Wglass",
 ["castBarCastColor"] = {
 0.4862745404243469,
@@ -12793,960 +13435,318 @@ BetterBlizzPlatesDB = {
 },
 ["personalNpBuffFilterBlacklist"] = true,
 ["classIndicatorAlwaysShowPet"] = false,
-["sortDurationAuras"] = false,
-["bgIndicatorXPos"] = 0,
-["changeHealthbarHeight"] = true,
+["nameplateOverlapVScale"] = 1.1,
+["castBarDragonflightShield"] = true,
+["castEmphasisList"] = {
+{
+["name"] = "Cyclone",
+["entryColors"] = {
+["text"] = {
+["r"] = 0,
+["g"] = 1,
+["b"] = 0,
+},
+},
+},
+{
+["name"] = "Fear",
+["entryColors"] = {
+["text"] = {
+["r"] = 0,
+["g"] = 1,
+["b"] = 0,
+},
+},
+},
+{
+["name"] = "Haymaker",
+["entryColors"] = {
+["text"] = {
+["r"] = 0,
+["g"] = 1,
+["b"] = 0,
+},
+},
+},
+{
+["name"] = "Hex",
+["entryColors"] = {
+["text"] = {
+["r"] = 0,
+["g"] = 1,
+["b"] = 0,
+},
+},
+},
+{
+["name"] = "Hibernate",
+["entryColors"] = {
+["text"] = {
+["r"] = 0,
+["g"] = 1,
+["b"] = 0,
+},
+},
+},
+{
+["name"] = "Lightning Lasso",
+["entryColors"] = {
+["text"] = {
+["r"] = 0,
+["g"] = 1,
+["b"] = 0,
+},
+},
+},
+{
+["name"] = "Mass Polymorph",
+["entryColors"] = {
+["text"] = {
+["r"] = 0,
+["g"] = 1,
+["b"] = 0,
+},
+},
+},
+{
+["name"] = "Mind Control",
+["entryColors"] = {
+["text"] = {
+["r"] = 0,
+["g"] = 1,
+["b"] = 0,
+},
+},
+},
+{
+["name"] = "Polymorph",
+["entryColors"] = {
+["text"] = {
+["r"] = 0,
+["g"] = 1,
+["b"] = 0,
+},
+},
+},
+{
+["name"] = "Repentance",
+["entryColors"] = {
+["text"] = {
+["r"] = 0,
+["g"] = 1,
+["b"] = 0,
+},
+},
+},
+{
+["name"] = "Ring of Fire",
+["entryColors"] = {
+["text"] = {
+["r"] = 0,
+["g"] = 1,
+["b"] = 0,
+},
+},
+},
+{
+["name"] = "Ring of Frost",
+["entryColors"] = {
+["text"] = {
+["r"] = 0,
+["g"] = 1,
+["b"] = 0,
+},
+},
+},
+{
+["name"] = "Scare Beast",
+["entryColors"] = {
+["text"] = {
+["r"] = 0,
+["g"] = 1,
+["b"] = 0,
+},
+},
+},
+{
+["name"] = "Shadowfury",
+["entryColors"] = {
+["text"] = {
+["r"] = 0,
+["g"] = 1,
+["b"] = 0,
+},
+},
+},
+{
+["name"] = "Sleep Walk",
+["entryColors"] = {
+["text"] = {
+["r"] = 0,
+["g"] = 1,
+["b"] = 0,
+},
+},
+},
+{
+["name"] = "Song of Chi-Ji",
+["entryColors"] = {
+["text"] = {
+["r"] = 0,
+["g"] = 1,
+["b"] = 0,
+},
+},
+},
+},
 ["raidmarkIndicatorYPos"] = -21,
-["useCustomTextureForExtraBars"] = false,
-["healthNumbersNpcs"] = true,
-["hideNpAuraSwipe"] = false,
-["classIndicatorTank"] = true,
+["npBorderFriendlyColorRGB"] = {
+0,
+1,
+0,
+1,
+},
+["personalNpdeBuffFilterCC"] = false,
+["npAuraCurseRGB"] = {
+0.47,
+0,
+0.78,
+},
+["personalBarTweaks"] = false,
 ["showTotemIndicatorCooldownSwipe"] = true,
-["nameplateMaxScale"] = 0.5,
-["friendlyNameplatesOnlyInDungeons"] = false,
-["arenaIndicatorModeFour"] = false,
-["nameplateDefaultLargeEnemyWidth"] = 154,
+["nameplateResourceXPos"] = 0,
+["nameplateSelfTopInset"] = 0.3999999999999999,
+["absorbIndicatorYPos"] = 0,
+["hideNPCHideOthersPets"] = true,
 ["partyPointerAnchor"] = "TOP",
-["alwaysShowPurgeTexture"] = false,
-["fadeOutNPCOnlyFadeSecondaryPets"] = true,
+["castBarEmphasisSparkHeight"] = 35,
+["changeNameplateBorderSize"] = true,
 ["enemyClassColorName"] = true,
-["healerIndicatorEnemyYPos"] = -6,
+["focusTargetIndicatorColorNameplate"] = false,
 ["fakeNameFriendlyXPos"] = 0,
-["totemIndicatorXPos"] = 0,
-["bgIndicatorShowFlags"] = true,
-["totemListUpdateTWW1"] = true,
-["personalNpBuffFilterWatchList"] = true,
-["classIconAlwaysShowHealer"] = false,
-["classIconSquareBorder"] = false,
+["old_defaultNamePlateFont"] = "Fonts\\FRIZQT__.TTF",
+["friendlyNpdeBuffFilterCC"] = true,
+["arenaSpecXPosXPos"] = 0,
+["nameplateMinAlphaDistance"] = 0.1,
+["threatColorAlwaysOn"] = false,
+["enemyColorNameRGB"] = {
+1,
+0,
+0,
+},
 ["hideCastbarEnemy"] = false,
-["healthNumbersPercentage"] = false,
+["healthNumbersHideSelf"] = false,
 ["friendlyHealthBarColor"] = false,
 ["importantCCSilenceGlowRGB"] = {
 ["a"] = 1,
-["b"] = 0,
-["g"] = 0.874,
 ["r"] = 1,
+["g"] = 0.874,
+["b"] = 0,
 },
 ["partyPointerBgOnly"] = false,
-["totemListUpdateTWW5"] = true,
-["absorbIndicatorTestMode"] = false,
-["questIndicatorScale"] = 1,
-["classIndicatorSpecIcon"] = true,
-["bgIndicatorAnchor"] = "BOTTOM",
-["nameplateResourceXPosXPos"] = 0,
-["raidmarkIndicator"] = true,
-["healthNumbersPlayers"] = true,
-["friendlyNpdeBuffFilterBlacklist"] = true,
-["nameplateMotionSpeedScale"] = 0.03,
-["raidmarkIndicatorXPosXPos"] = 0,
-["hidePersonalBarExtraFrame"] = false,
-["nameplateAuraDebuffSelfScale"] = 1,
-["defaultNpAuraCdSizeScale"] = 0.4999999701976776,
-["partyPointerUpdated2"] = true,
-["combatIndicatorYPosYPos"] = 0,
-["castBarEmphasisTextScaleHeight"] = 2.099999904632568,
-["nameplateShowFriendlyPets"] = "0",
-["focusTargetIndicator"] = true,
-["castBarIconPixelBorder"] = false,
-["tankOffTankAggroColorRGB"] = {
-0.01568627543747425,
-0.4941176772117615,
-0.8980392813682556,
+["toggleNamesOffDuringPVE"] = false,
+["friendlyNameScale"] = 0.78,
+["partyIndicatorModeTwo"] = false,
+["hpHeightSelf"] = 4.7,
+["healthNumbersJustify"] = "CENTER",
+["petIndicatorTestMode"] = false,
+["guildNameColorRGB"] = {
+0,
+1,
+0,
+},
+["npAuraBuffsRGB"] = {
+0,
+0.67,
 1,
 },
-["fadeOutNPCsWhitelist"] = {
-{
-["id"] = 104818,
-["entryColors"] = {
-["text"] = {
-["b"] = 0,
-["g"] = 1,
-["r"] = 0,
+["disableImportantAurasOnSelf"] = false,
+["nameplateOverlapV"] = 0.85,
+["hideCastbarFriendly"] = false,
+["friendlyNpBuffFilterAll"] = false,
+["npBorderFocusColorRGB"] = {
+1,
+0.4627451300621033,
+0,
+1,
 },
-},
-["name"] = "Ancestral Protection Totem",
-["comment"] = "",
-},
-{
-["id"] = 61245,
-["entryColors"] = {
-["text"] = {
-["b"] = 0,
-["g"] = 1,
-["r"] = 0,
-},
-},
-["name"] = "Capacitor Totem",
-["comment"] = "",
-},
-{
-["id"] = 78001,
-["entryColors"] = {
-["text"] = {
-["b"] = 0,
-["g"] = 1,
-["r"] = 0,
-},
-},
-["name"] = "Cloudburst Totem",
-["comment"] = "",
-},
-{
-["id"] = 105451,
-["entryColors"] = {
-["text"] = {
-["b"] = 0,
-["g"] = 1,
-["r"] = 0,
-},
-},
-["name"] = "Counterstrike Totem",
-["comment"] = "",
-},
-{
-["id"] = 2630,
-["entryColors"] = {
-["text"] = {
-["b"] = 0,
-["g"] = 1,
-["r"] = 0,
-},
-},
-["name"] = "Earthbind Totem",
-["comment"] = "",
-},
-{
-["id"] = 100943,
-["entryColors"] = {
-["text"] = {
-["b"] = 0,
-["g"] = 1,
-["r"] = 0,
-},
-},
-["name"] = "Earthen Wall Totem",
-["comment"] = "",
-},
-{
-["id"] = 60561,
-["entryColors"] = {
-["text"] = {
-["b"] = 0,
-["g"] = 1,
-["r"] = 0,
-},
-},
-["name"] = "Earthgrab Totem",
-["comment"] = "",
-},
-{
-["id"] = 17252,
-["entryColors"] = {
-["text"] = {
-["b"] = 0,
-["g"] = 1,
-["r"] = 0,
-},
-},
-["name"] = "Felguard (Demo Pet)",
-["comment"] = "",
-},
-{
-["id"] = 417,
-["entryColors"] = {
-["text"] = {
-["b"] = 0,
-["g"] = 1,
-["r"] = 0,
-},
-},
-["name"] = "Felhunter (Warlock)",
-["comment"] = "",
-},
-{
-["id"] = 5925,
-["entryColors"] = {
-["text"] = {
-["b"] = 0,
-["g"] = 1,
-["r"] = 0,
-},
-},
-["name"] = "Grounding Totem",
-["comment"] = "",
-},
-{
-["id"] = 114565,
-["entryColors"] = {
-["text"] = {
-["b"] = 0,
-["g"] = 1,
-["r"] = 0,
-},
-},
-["name"] = "Guardian Queen (prot pala)",
-["comment"] = "",
-},
-{
-["id"] = 3527,
-["entryColors"] = {
-["text"] = {
-["b"] = 0,
-["g"] = 1,
-["r"] = 0,
-},
-},
-["name"] = "Healing Stream Totem",
-["comment"] = "",
-},
-{
-["id"] = 59764,
-["entryColors"] = {
-["text"] = {
-["b"] = 0,
-["g"] = 1,
-["r"] = 0,
-},
-},
-["name"] = "Healing Tide Totem",
-["comment"] = "",
-},
-{
-["id"] = 165189,
-["entryColors"] = {
-["text"] = {
-["b"] = 0,
-["g"] = 1,
-["r"] = 0,
-},
-},
-["name"] = "Hunter Pet (they all have same ID)",
-["comment"] = "",
-},
-{
-["id"] = 89,
-["entryColors"] = {
-["text"] = {
-["b"] = 0,
-["g"] = 1,
-["r"] = 0,
-},
-},
-["name"] = "Infernal (Warlock)",
-["comment"] = "",
-},
-{
-["id"] = 97369,
-["entryColors"] = {
-["text"] = {
-["b"] = 0,
-["g"] = 1,
-["r"] = 0,
-},
-},
-["name"] = "Liquid Magma Totem",
-["comment"] = "",
-},
-{
-["id"] = 10467,
-["entryColors"] = {
-["text"] = {
-["b"] = 0,
-["g"] = 1,
-["r"] = 0,
-},
-},
-["name"] = "Mana Tide Totem",
-["comment"] = "",
-},
-{
-["id"] = 62982,
-["entryColors"] = {
-["text"] = {
-["b"] = 0,
-["g"] = 1,
-["r"] = 0,
-},
-},
-["name"] = "Mindbender",
-["comment"] = "",
-},
-{
-["flags"] = {
-["murloc"] = false,
-},
-["comment"] = "",
-["id"] = 69792,
-["entryColors"] = {
-["text"] = {
-["r"] = 0,
+["defaultNpAuraCdSizeScale"] = 0.4999999701976776,
+["targetNameplateAuraScale"] = 1,
+["combatIndicatorYPosYPos"] = 0,
+["levelFrameFontSize"] = 12,
+["arenaIDScale"] = 1,
+["enemyHealthBarColorNpcOnly"] = true,
+["importantBuffsMobilityGlowRGB"] = {
+["a"] = 1,
+["r"] = 0.9254902601242065,
 ["g"] = 1,
 ["b"] = 0,
 },
-},
-["name"] = "Monk Image (Green)",
-},
-{
-["flags"] = {
-["murloc"] = false,
-},
-["comment"] = "",
-["id"] = 69791,
-["entryColors"] = {
-["text"] = {
-["r"] = 0,
-["g"] = 1,
-["b"] = 0,
-},
-},
-["name"] = "Monk Image (Red)",
-},
-{
-["id"] = 107100,
-["entryColors"] = {
-["text"] = {
-["b"] = 0,
-["g"] = 1,
-["r"] = 0,
-},
-},
-["name"] = "Observer (Warlock)",
-["comment"] = "",
-},
-{
-["id"] = 5923,
-["entryColors"] = {
-["text"] = {
-["b"] = 0,
-["g"] = 1,
-["r"] = 0,
-},
-},
-["name"] = "Poison Cleansing Totem",
-["comment"] = "",
-},
-{
-["id"] = 101398,
-["entryColors"] = {
-["text"] = {
-["b"] = 0,
-["g"] = 1,
-["r"] = 0,
-},
-},
-["name"] = "Psyfiend (Spriest)",
-["comment"] = "",
-},
-{
-["id"] = 225672,
-["entryColors"] = {
-["text"] = {
-["b"] = 0,
-["g"] = 1,
-["r"] = 0,
-},
-},
-["name"] = "Shadow (Priest Re-Fear)",
-["comment"] = "",
-},
-{
-["flags"] = {
-["murloc"] = false,
-},
-["comment"] = "",
-["id"] = 19668,
-["entryColors"] = {
-["text"] = {
-["b"] = 0,
-["g"] = 1,
-["r"] = 0,
-},
-},
-["name"] = "Shadowfiend",
-},
-{
-["id"] = 53006,
-["entryColors"] = {
-["text"] = {
-["b"] = 0,
-["g"] = 1,
-["r"] = 0,
-},
-},
-["name"] = "Spirit Link Totem",
-["comment"] = "",
-},
-{
-["id"] = 179867,
-["entryColors"] = {
-["text"] = {
-["b"] = 0,
-["g"] = 1,
-["r"] = 0,
-},
-},
-["name"] = "Static Field Totem",
-["comment"] = "",
-},
-{
-["id"] = 59712,
-["entryColors"] = {
-["text"] = {
-["b"] = 0,
-["g"] = 1,
-["r"] = 0,
-},
-},
-["name"] = "Stone Bulwark Totem",
-["comment"] = "",
-},
-{
-["id"] = 194117,
-["entryColors"] = {
-["text"] = {
-["b"] = 0,
-["g"] = 1,
-["r"] = 0,
-},
-},
-["name"] = "Stoneskin Totem",
-["comment"] = "",
-},
-{
-["id"] = 1863,
-["entryColors"] = {
-["text"] = {
-["b"] = 0,
-["g"] = 1,
-["r"] = 0,
-},
-},
-["name"] = "Succubus (Warlock)",
-["comment"] = "",
-},
-{
-["flags"] = {
-["murloc"] = false,
-},
-["comment"] = "",
-["id"] = 225409,
-["entryColors"] = {
-["text"] = {
-["b"] = 0,
-["g"] = 1,
-["r"] = 0,
-},
-},
-["name"] = "Surging Totem",
-},
-{
-["id"] = 105427,
-["entryColors"] = {
-["text"] = {
-["b"] = 0,
-["g"] = 1,
-["r"] = 0,
-},
-},
-["name"] = "Totem of Wrath",
-["comment"] = "",
-},
-{
-["id"] = 194118,
-["entryColors"] = {
-["text"] = {
-["b"] = 0,
-["g"] = 1,
-["r"] = 0,
-},
-},
-["name"] = "Tranquil Air Totem",
-["comment"] = "",
-},
-{
-["id"] = 5913,
-["entryColors"] = {
-["text"] = {
-["b"] = 0,
-["g"] = 1,
-["r"] = 0,
-},
-},
-["name"] = "Tremor Totem",
-["comment"] = "",
-},
-{
-["id"] = 135002,
-["entryColors"] = {
-["text"] = {
-["b"] = 0,
-["g"] = 1,
-["r"] = 0,
-},
-},
-["name"] = "Tyrant (Warlock)",
-["comment"] = "",
-},
-{
-["flags"] = {
-["murloc"] = false,
-},
-["comment"] = "",
-["id"] = 224466,
-["entryColors"] = {
-["text"] = {
-["b"] = 0,
-["g"] = 1,
-["r"] = 0,
-},
-},
-["name"] = "Voidwrath (Priest)",
-},
-{
-["id"] = 119052,
-["entryColors"] = {
-["text"] = {
-["b"] = 0,
-["g"] = 1,
-["r"] = 0,
-},
-},
-["name"] = "War Banner",
-["comment"] = "",
-},
-{
-["id"] = 97285,
-["entryColors"] = {
-["text"] = {
-["b"] = 0,
-["g"] = 1,
-["r"] = 0,
-},
-},
-["name"] = "Wind Rush Totem",
-["comment"] = "",
-},
-},
-["nameplateLargerScale"] = "1.2",
+["changeNpHpBgColor"] = true,
+["executeIndicatorTestMode"] = false,
+["doNotHideFriendlyHealthbarInPve"] = false,
 ["friendlyNpdeBuffFilterOnlyMe"] = false,
-["auraWhitelistAlphaUpdated"] = true,
-["npColorAuraBorder"] = false,
+["nameplateKeyAurasAnchor"] = "LEFT",
+["nameplateAuraBuffScale"] = 1,
 ["importantCCDisarmGlowRGB"] = {
 ["a"] = 1,
-["b"] = 0,
-["g"] = 0.874,
 ["r"] = 1,
+["g"] = 0.874,
+["b"] = 0,
 },
 ["partyPointerScale"] = 1,
 ["arenaSpecYPos"] = 3,
-["fadeOutNPCsList"] = {
-{
-["id"] = 24207,
-["entryColors"] = {
-["text"] = {
-["b"] = 0,
-["g"] = 1,
-["r"] = 1,
-},
-},
-["name"] = "Army of the Dead",
-["comment"] = "",
-},
-{
-["id"] = 62005,
-["entryColors"] = {
-["text"] = {
-["b"] = 0,
-["g"] = 1,
-["r"] = 1,
-},
-},
-["name"] = "Beast (Hunter)",
-["comment"] = "",
-},
-{
-["id"] = 226269,
-["entryColors"] = {
-["text"] = {
-["r"] = 0,
-["g"] = 1,
-["b"] = 0,
-},
-},
-["name"] = "Charhound (Warlock)",
-["comment"] = "",
-},
-{
-["id"] = 136408,
-["entryColors"] = {
-["text"] = {
-["b"] = 0,
-["g"] = 1,
-["r"] = 1,
-},
-},
-["name"] = "Darkhound",
-["comment"] = "",
-},
-{
-["id"] = 105419,
-["entryColors"] = {
-["text"] = {
-["b"] = 0,
-["g"] = 1,
-["r"] = 1,
-},
-},
-["name"] = "Dire Basilisk (Hunter)",
-["comment"] = "",
-},
-{
-["id"] = 26125,
-["entryColors"] = {
-["text"] = {
-["b"] = 0,
-["g"] = 1,
-["r"] = 1,
-},
-},
-["name"] = "DK pet",
-["comment"] = "",
-},
-{
-["id"] = 95072,
-["entryColors"] = {
-["text"] = {
-["b"] = 0,
-["g"] = 1,
-["r"] = 1,
-},
-},
-["name"] = "Earth Elemental (Shaman)",
-["comment"] = "",
-},
-{
-["id"] = 228224,
-["entryColors"] = {
-["text"] = {
-["r"] = 0,
-["g"] = 1,
-["b"] = 0,
-},
-},
-["name"] = "Fenryr (Hunter)",
-["comment"] = "",
-},
-{
-["id"] = 226268,
-["entryColors"] = {
-["text"] = {
-["r"] = 0,
-["g"] = 1,
-["b"] = 0,
-},
-},
-["name"] = "Gloomhound (Warlock)",
-["comment"] = "",
-},
-{
-["id"] = 228226,
-["entryColors"] = {
-["text"] = {
-["r"] = 0,
-["g"] = 1,
-["b"] = 0,
-},
-},
-["name"] = "Hati (Hunter)",
-["comment"] = "",
-},
-{
-["id"] = 136398,
-["entryColors"] = {
-["text"] = {
-["b"] = 0,
-["g"] = 1,
-["r"] = 1,
-},
-},
-["name"] = "Illidari Satyr",
-["comment"] = "",
-},
-{
-["flags"] = {
-["pandemic"] = false,
-["important"] = false,
-},
-["entryColors"] = {
-["text"] = {
-["b"] = 0,
-["g"] = 1,
-["r"] = 0,
-},
-},
-["name"] = "Infernal",
-["comment"] = "",
-},
-{
-["id"] = 163366,
-["entryColors"] = {
-["text"] = {
-["b"] = 0,
-["g"] = 1,
-["r"] = 1,
-},
-},
-["name"] = "Magus(Army of the Dead)",
-["comment"] = "",
-},
-{
-["flags"] = {
-["pandemic"] = false,
-["important"] = false,
-},
-["entryColors"] = {
-["text"] = {
-["b"] = 0,
-["g"] = 1,
-["r"] = 0,
-},
-},
-["name"] = "Mindbender",
-["comment"] = "",
-},
-{
-["id"] = 31216,
-["entryColors"] = {
-["text"] = {
-["b"] = 0,
-["g"] = 1,
-["r"] = 1,
-},
-},
-["name"] = "Mirror Images (Mage)",
-["comment"] = "",
-},
-{
-["id"] = 221632,
-["entryColors"] = {
-["text"] = {
-["r"] = 0,
-["g"] = 1,
-["b"] = 0,
-},
-},
-["name"] = "Mograine (DK)",
-["comment"] = "",
-},
-{
-["id"] = 69792,
-["entryColors"] = {
-["text"] = {
-["r"] = 0,
-["g"] = 1,
-["b"] = 0,
-},
-},
-["name"] = "Monk SEF Image (Green)",
-["comment"] = "",
-},
-{
-["id"] = 69791,
-["entryColors"] = {
-["text"] = {
-["r"] = 0,
-["g"] = 1,
-["b"] = 0,
-},
-},
-["name"] = "Monk SEF Image (Red)",
-["comment"] = "",
-},
-{
-["id"] = 221634,
-["entryColors"] = {
-["text"] = {
-["r"] = 0,
-["g"] = 1,
-["b"] = 0,
-},
-},
-["name"] = "Nazgrim (DK)",
-["comment"] = "",
-},
-{
-["flags"] = {
-["pandemic"] = false,
-["important"] = false,
-},
-["entryColors"] = {
-["text"] = {
-["b"] = 0,
-["g"] = 1,
-["r"] = 0,
-},
-},
-["name"] = "Shadowfiend",
-["comment"] = "",
-},
-{
-["id"] = 29264,
-["entryColors"] = {
-["text"] = {
-["b"] = 0,
-["g"] = 1,
-["r"] = 1,
-},
-},
-["name"] = "Spirit Wolves (Enha Shaman)",
-["comment"] = "",
-},
-{
-["id"] = 54983,
-["entryColors"] = {
-["text"] = {
-["b"] = 0,
-["g"] = 1,
-["r"] = 1,
-},
-},
-["name"] = "Treant",
-["comment"] = "",
-},
-{
-["id"] = 103822,
-["entryColors"] = {
-["text"] = {
-["r"] = 0,
-["g"] = 1,
-["b"] = 0,
-},
-},
-["name"] = "Treant",
-["comment"] = "",
-},
-{
-["id"] = 221635,
-["entryColors"] = {
-["text"] = {
-["r"] = 0,
-["g"] = 1,
-["b"] = 0,
-},
-},
-["name"] = "Trollbane (DK)",
-["comment"] = "",
-},
-{
-["id"] = 135816,
-["entryColors"] = {
-["text"] = {
-["r"] = 0,
-["g"] = 1,
-["b"] = 0,
-},
-},
-["name"] = "Vilefiend (Warlock)",
-["comment"] = "",
-},
-{
-["id"] = 192337,
-["entryColors"] = {
-["text"] = {
-["b"] = 0,
-["g"] = 1,
-["r"] = 1,
-},
-},
-["name"] = "Void Tendril (Spriest)",
-["comment"] = "",
-},
-{
-["id"] = 136403,
-["entryColors"] = {
-["text"] = {
-["b"] = 0,
-["g"] = 1,
-["r"] = 1,
-},
-},
-["name"] = "Void Terror",
-["comment"] = "",
-},
-{
-["id"] = 208441,
-["entryColors"] = {
-["text"] = {
-["r"] = 0,
-["g"] = 1,
-["b"] = 0,
-},
-},
-["name"] = "Water Elemental (Mage)",
-["comment"] = "",
-},
-{
-["id"] = 221633,
-["entryColors"] = {
-["text"] = {
-["r"] = 0,
-["g"] = 1,
-["b"] = 0,
-},
-},
-["name"] = "Whitemane (DK)",
-["comment"] = "",
-},
-},
-["castBarEmphasisSpark"] = true,
+["exportVersion"] = "BBP: 1.8.4h WoW: 11.2.0",
+["classIndicatorHideName"] = false,
 ["otherNpBuffPurgeGlow"] = true,
 ["friendlyNpBuffEnable"] = false,
 ["version"] = "1.00",
-["healerIndicatorEnemyXPos"] = 0,
+["petIndicatorShowMurloc"] = true,
 ["hideCastbar"] = false,
 ["petIndicatorXPos"] = 0,
-["npcTitleColorRGB"] = {
-0.7176470756530762,
-0.1019607931375504,
-1,
-},
-["removeRealmNames"] = true,
-["petIndicatorYPos"] = 0,
-["partyPointerHighlightScale"] = 1,
-["healthNumbersCombined"] = false,
-["personalNpBuffFilterBlizzard"] = true,
-["hideCastbarBorderShield"] = true,
-["absorbIndicatorAnchor"] = "RIGHT",
+["classIndicatorBackgroundSize"] = 1,
+["nameplateKeyAurasYPos"] = 0,
+["classIndicatorPinMode"] = false,
+["nameplateDefaultEnemyWidth"] = 110,
+["showNameplateShadow"] = true,
+["classIndicatorShowPet"] = true,
+["nameplateAurasPersonalCenteredAnchor"] = true,
+["partyPointerTexture"] = 1,
 ["friendlyHealthBarColorNpc"] = false,
 ["defaultNpAuraCdSize"] = 0.4999999701976776,
-["nameplateGlobalScale"] = 1,
+["focusTargetIndicatorColorNameplateRGB"] = {
+1,
+0.6431372761726379,
+0.2470588386058807,
+},
 ["nameplateAuraAnchor"] = "BOTTOMLEFT",
 ["customCastbarTexture"] = "Wglass",
-["druidOverstacks"] = false,
-["nameplateAuraRowFriendlyAmount"] = 5,
+["ghostAuras"] = {
+},
+["castBarEmphasisTextScale"] = 0.78,
 ["nameplateMaxAlphaDistance"] = 60,
-["bgIndicator"] = true,
+["overShields"] = true,
 ["partyPointerClassColor"] = true,
-["cleanedScaleScale"] = true,
-["executeIndicator"] = true,
-["classIndicatorXPos"] = 0,
-["castBarIconXPosXPos"] = -9,
-["arenaIdAnchorRaiseStrata"] = true,
-["nameplatePersonalBorderSize"] = 1,
+["castBarEmphasisIconScale"] = 1.5,
+["castBarIconAnchor"] = "LEFT",
+["castBarPixelBorder"] = false,
+["enableNpNonFocusAlpha"] = true,
+["importantBuffsDefensives"] = true,
+["nameplatePlayerLargerScale"] = "1.8",
 ["friendlyNpdeBuffFilterBlizzard"] = false,
-["arenaIndicatorModeOne"] = false,
-["old_defaultFontSize"] = 9,
-["castBarDelayedInterruptColor"] = {
+["nameplateAurasXPos"] = 0,
+["npBorderEnemyColorRGB"] = {
+1,
+0,
 0,
 1,
-0.7843137979507446,
-1,
 },
-["friendlyNameplatesEnabledOnExport"] = false,
-["castBarInterruptHighlighterEndPercentageHeight"] = 85,
+["nameplateShowFriendlyGuardians"] = "0",
+["combatIndicatorEnemyOnly"] = true,
+["nameplateDefaultLargeFriendlyHeight"] = 64.125,
 ["maxAurasOnNameplate"] = 17,
 ["friendlyNameplatesOnlyInArena"] = true,
 ["firstSaveComplete"] = true,
-["enlargeAllCC"] = true,
+["hpHeightSelfScale"] = 4.7,
 }
 BBPCVarBackupsDB = nil

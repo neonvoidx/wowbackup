@@ -12,13 +12,14 @@ DevToolDatabase = {
 ["Kitedbro - Mal'Ganis"] = "Kitedbro - Mal'Ganis",
 ["Neonvoid - Mal'Ganis"] = "Neonvoid - Mal'Ganis",
 ["Charizhard - Mal'Ganis"] = "Charizhard - Mal'Ganis",
+["Ofpusstwo - Tichondrius"] = "Ofpusstwo - Tichondrius",
 ["Reedingo - Mal'Ganis"] = "Reedingo - Mal'Ganis",
 ["Stormclout - Mal'Ganis"] = "Stormclout - Mal'Ganis",
-["Tampacks - Mal'Ganis"] = "Tampacks - Mal'Ganis",
+["Hellavator - Mal'Ganis"] = "Hellavator - Mal'Ganis",
 ["Vansthalysia - Mal'Ganis"] = "Vansthalysia - Mal'Ganis",
 ["Praisesun - Mal'Ganis"] = "Praisesun - Mal'Ganis",
 ["Lutreteil - Mal'Ganis"] = "Lutreteil - Mal'Ganis",
-["Hellavator - Mal'Ganis"] = "Hellavator - Mal'Ganis",
+["Tampacks - Mal'Ganis"] = "Tampacks - Mal'Ganis",
 },
 ["profiles"] = {
 ["Månyfaced - Mal'Ganis"] = {
@@ -45,6 +46,8 @@ DevToolDatabase = {
 },
 ["Charizhard - Mal'Ganis"] = {
 },
+["Ofpusstwo - Tichondrius"] = {
+},
 ["Reedingo - Mal'Ganis"] = {
 },
 ["Stormclout - Mal'Ganis"] = {
@@ -54,7 +57,7 @@ DevToolDatabase = {
 ["sideBarTabSelected"] = "events",
 ["collResizeWidth"] = 249.9998779296875,
 },
-["Tampacks - Mal'Ganis"] = {
+["Hellavator - Mal'Ganis"] = {
 },
 ["Vansthalysia - Mal'Ganis"] = {
 },
@@ -62,7 +65,7 @@ DevToolDatabase = {
 },
 ["Lutreteil - Mal'Ganis"] = {
 },
-["Hellavator - Mal'Ganis"] = {
+["Tampacks - Mal'Ganis"] = {
 },
 },
 }

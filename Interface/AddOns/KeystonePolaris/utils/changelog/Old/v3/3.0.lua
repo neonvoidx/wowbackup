@@ -9,7 +9,7 @@ KeystonePolaris.Changelog[3000] = {
         ["enUS"] = {
             "|cff40e0d0A NEW NAME FOR A BIGGER VISION|r\n\n"
             .. "[Keystone Percentage Helper] becomes [Keystone Polaris] — a bold step that reflects the Mythic+ Swiss-army-knife DNA I imagined and built with the community. \n\n"
-            .. "Your settings are migrated automatically (no action needed), if you happen to loose your settings, please report it and copy the [KeystonePercentageHelper.lua] in your [WTF/Account/YourAccountName/SavedVariables] folder to a new [KeystonePolaris.lua] file to get your settings back (close the game before doing that). \n\n"
+            .. "Your settings are migrated automatically (no action needed), if you happen to lose your settings, please report it and copy the [KeystonePercentageHelper.lua] in your [WTF/Account/YourAccountName/SavedVariables] folder to a new [KeystonePolaris.lua] file to get your settings back (close the game before doing that). \n\n"
             .. "New name. Same speed. Bigger ambitions. Follow the star — Polaris. [#68]",
             "TOC updated for patch [11.2.5].",
         },
@@ -21,7 +21,13 @@ KeystonePolaris.Changelog[3000] = {
             "Mise à jour du TOC pour le patch [11.2.5].",
         },
         ["koKR"] = {},
-        ["ruRU"] = {},
+        ["ruRU"] = {
+            "|cff40e0d0НОВОЕ ИМЯ ДЛЯ БОЛЬШЕГО ВИДЕНИЯ|r\n\n"
+            .. "[Keystone Percentage Helper] становится [Keystone Polaris] - смелый шаг, отражающий ДНК швейцарского армейского ножа M+, которую я придумал и воплотил вместе с сообществом. \n\n"
+            .. "Ваши настройки переносятся автоматически (никаких действий не требуется). Если Вы случайно потеряли свои настройки, сообщите об этом и скопируйте файл [KeystonePercentageHelper.lua] из папки [WTF/Account/ВашеИмяАккаунта/SavedVariables] в новый файл [KeystonePolaris.lua], чтобы вернуть настройки (перед этим закройте игру). \n\n"
+            .. "Новое имя. Та же скорость. Большие амбиции. Следуй за звездой - Полярис. [#68]",
+            "Обновление файла TOC для патча [11.2.5].",
+        },
         ["deDE"] = {},
         ["esES"] = {},
         ["esMX"] = {},
@@ -42,7 +48,11 @@ KeystonePolaris.Changelog[3000] = {
             "Introduction d’une fonctionnalité de [Traduction du changelog] qui permet de traduire le changelog dans votre langue en copiant le changelog dans une fenêtre popup et en le collant dans votre outil de traduction."
         },
         ["koKR"] = {},
-        ["ruRU"] = {},
+        ["ruRU"] = {
+            "Представляем унифицированный дисплей с дополнительными параметрами [Всего требуется для части подземелья], [Текущий процент] и [Процент пулла] (требуется MDT), прогнозируемыми значениями (в скобках) в бою для 'Требуемый'/'Текущий', суффиксами на строку, настраиваемым макетом (однострочный или многострочный) и переключением между режимами [процентный] и [на основе количества]. [#40, #69]",
+            "Представляем [Тестовый режим] - новую функцию, которая позволяет моделировать несколько ситуаций в М+ (прогресс части подземелья вне боя, прогресс пулла в текущей части подземелья, процент прогресса части подземелья и т.д.) [#71].",
+            "Представляем [Перевод журнала изменений] - новую функцию, которая позволяет Вам переводить журнал изменений на Ваш язык, копируя его из всплывающего окна и вставляя в инструмент переводчика."
+        },
         ["deDE"] = {},
         ["esES"] = {},
         ["esMX"] = {},
@@ -72,7 +82,9 @@ KeystonePolaris.Changelog[3000] = {
             "Traduction russe mise à jour, merci à [Hollicsh]."
         },
         ["koKR"] = {},
-        ["ruRU"] = {},
+        ["ruRU"] = {
+            "Русский перевод обновлен, спасибо [Hollicsh]."
+        },
         ["deDE"] = {},
         ["esES"] = {},
         ["esMX"] = {},

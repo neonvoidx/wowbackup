@@ -5,7 +5,7 @@
 ## AddonCompartmentFunc: TransmogLootHelper_Click
 ## AddonCompartmentFuncOnEnter: TransmogLootHelper_Enter
 ## AddonCompartmentFuncOnLeave: TransmogLootHelper_Leave
-## Version: v11.2.5-001
+## Version: v11.2.5-002
 ## X-Curse-Project-ID: 1033752
 ## X-Wago-ID: EGPXOkG1
 

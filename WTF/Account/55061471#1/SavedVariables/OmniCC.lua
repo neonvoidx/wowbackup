@@ -1,42 +1,42 @@
 
 OmniCCDB = {
-["global"] = {
-["dbVersion"] = 6,
-["addonVersion"] = "11.2.7",
-},
 ["profileKeys"] = {
 ["Månyfaced - Mal'Ganis"] = "Default",
-["Heilsatan - Tichondrius"] = "Default",
 ["Mäñýfäçëð - Tichondrius"] = "Default",
-["Hellowalls - Mal'Ganis"] = "Default",
-["Starstypeshi - Tichondrius"] = "Default",
-["Praisesun - Tichondrius"] = "Default",
 ["Edaroseld - Illidan"] = "Default",
+["Heilsatan - Tichondrius"] = "Default",
+["Choppiez - Tichondrius"] = "Default",
+["Praisesun - Tichondrius"] = "Default",
+["Tampacks - Mal'Ganis"] = "Default",
 ["Auteist - Mal'Ganis"] = "Default",
 ["Ofpuss - Mal'Ganis"] = "Default",
-["Thickshape - Mal'Ganis"] = "Default",
+["Neonvoid - Mal'Ganis"] = "Default",
 ["Smaugchamp - Mal'Ganis"] = "Default",
 ["Choppiez - Mal'Ganis"] = "Default",
-["Choppiez - Tichondrius"] = "Default",
-["Gehyo - Mal'Ganis"] = "Default",
-["Ofpusstwo - Tichondrius"] = "Default",
+["Smaugchamp - Tichondrius"] = "Default",
+["Thickshape - Mal'Ganis"] = "Default",
+["Hellavator - Tichondrius"] = "Default",
 ["Corsic - Mal'Ganis"] = "Default",
 ["Mäñýfäçëð - Mal'Ganis"] = "Default",
 ["Hellavator - Mal'Ganis"] = "Default",
 ["Charizhard - Mal'Ganis"] = "Default",
-["Hellavator - Tichondrius"] = "Default",
+["Ofpusstwo - Tichondrius"] = "Default",
 ["Auteist - Tichondrius"] = "Default",
 ["Cullnvoid - Tichondrius"] = "Default",
 ["Stormclout - Tichondrius"] = "Default",
 ["Reedingo - Mal'Ganis"] = "Default",
 ["Stormclout - Mal'Ganis"] = "Default",
 ["Rakeist - Mal'Ganis"] = "Default",
-["Neonvoid - Mal'Ganis"] = "Default",
-["Tampacks - Mal'Ganis"] = "Default",
+["Gehyo - Mal'Ganis"] = "Default",
+["Starstypeshi - Tichondrius"] = "Default",
 ["Ofpuss - Tichondrius"] = "Default",
 ["Praisesun - Mal'Ganis"] = "Default",
-["Smaugchamp - Tichondrius"] = "Default",
+["Hellowalls - Mal'Ganis"] = "Default",
 ["Thingreyline - Tichondrius"] = "Default",
+},
+["global"] = {
+["dbVersion"] = 6,
+["addonVersion"] = "11.2.7",
 },
 ["profiles"] = {
 ["Default"] = {
@@ -72,9 +72,9 @@ OmniCCDB = {
 ["themes"] = {
 ["Default"] = {
 ["textStyles"] = {
-["minutes"] = {
-},
 ["soon"] = {
+},
+["minutes"] = {
 },
 ["seconds"] = {
 },
