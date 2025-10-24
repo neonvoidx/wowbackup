@@ -1,7 +1,13 @@
-Logs
-UTILS
 Cache
-.flavor.info
+GPUCache
+Interface/ICONS
+Interface/INV_OrderHall_ArmamentupgradeBlue.tga
+Interface/INV_OrderHall_ArmamentupgradeGreen.tga
+Interface/INV_OrderHall_ArmamentupgradePurple.tga
+Interface/INV_OrderHall_ArmamentupgradeYellow.tga
+Logs
+Screenshots
+Utils
 BlizzardError.exe
 GFSDK_Aftermath_Lib.x64.dll
 Wow.exe
@@ -11,5 +17,5 @@ libxell.dll
 llvm_7_0_1.dll
 vkd3d-proton.cache
 vkd3d-proton.cache.write
-wow
 wow_loader.dll
+.flavor.info

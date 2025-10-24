@@ -62,6 +62,9 @@ HandyNotesDB = {
 ["Vansthalysia - Mal'Ganis"] = {
 },
 ["Ofpusstwo - Tichondrius"] = {
+["enabledPlugins"] = {
+["ZamestoTV_Remix"] = false,
+},
 },
 ["Cullnvoid - Tichondrius"] = {
 },

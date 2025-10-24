@@ -414,6 +414,7 @@ local defaultSettings = {
     nameplateAuraBuffScale = 1,
     nameplateAuraDebuffScale = 1,
     sortEnlargedAurasFirst = true,
+    nameplateAuraTypeGap = 0,
 
     personalNpBuffEnable = false,
     personalNpBuffFilterAll = false,
@@ -1462,6 +1463,16 @@ local function SendUpdateMessage()
             --     -- DEFAULT_CHAT_FRAME:AddMessage("|A:Professions-Crafting-Orders-Icon:16:16|a Bugfixes/Tweaks:")
             --     -- DEFAULT_CHAT_FRAME:AddMessage("   - Read curseforge changelog for bugfix list.")
             -- end)
+            if BetterBlizzPlatesDB.enableNameplateAuraCustomisation and BetterBlizzPlatesDB.separateAuraBuffRow then
+                StaticPopupDialogs["BBP_ROW_UPDATE"] = {
+                    text =
+                    "|A:gmchat-icon-blizz:16:16|a Better|cff00c0ffBlizz|rPlates: \n\nFixed an issue causing Nameplate Buffs with separate buff row enabled to move upwards on higher scale settings.\n\nThis will likely have shifted the position of them for many setups.\n\nAlso introduced a new\n\"Gap between Buffs & Debuffs\"\nslider to adjust the space to your liking.\n|cff808080Also accepts negative values if you want to have them below (rows will still stack upwards tho)|r",
+                    button1 = "Ok",
+                    timeout = 0,
+                    whileDead = true,
+                }
+                StaticPopup_Show("BBP_ROW_UPDATE")
+            end
         else
             BetterBlizzPlatesDB.scStart = nil
         end
@@ -2211,7 +2222,9 @@ function BBP.TargetNameplateAuraSize(frame)
         if nameplateAurasFriendlyCenteredAnchor or nameplateAurasEnemyCenteredAnchor then
             frame.BuffFrame:SetPoint("BOTTOM", frame, "TOP", 0, -10+BetterBlizzPlatesDB.nameplateAurasYPos)
         else
-            frame.BuffFrame:SetPoint("BOTTOMLEFT", frame, "TOPLEFT", 0, -10+BetterBlizzPlatesDB.nameplateAurasYPos)
+            local yPos = 10 + BetterBlizzPlatesDB.nameplateAurasYPos
+            frame.BuffFrame:SetPoint("BOTTOMLEFT", frame.healthBar, "TOPLEFT", -1, yPos)
+            frame.BuffFrame:SetPoint("BOTTOMRIGHT", frame.healthBar, "TOPRIGHT", -1, yPos)
         end
     else
         frame.BuffFrame:SetPoint("BOTTOM", frame, "TOP", 0, -10+BetterBlizzPlatesDB.nameplateAurasYPos)

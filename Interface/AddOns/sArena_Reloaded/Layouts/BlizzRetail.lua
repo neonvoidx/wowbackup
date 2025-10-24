@@ -26,6 +26,12 @@ layout.defaultSettings = {
         scale = 1,
         fontSize = 15,
     },
+    dispel = {
+        posX = 192.5,
+        posY = -6,
+        scale = 1,
+        fontSize = 15,
+    },
     castBar = {
         posX = -141,
         posY = -10,
@@ -64,6 +70,7 @@ layout.defaultSettings = {
 
     textSettings = {
         specNameSize = 0.85,
+        powerAnchor = "RIGHT",
     },
 }
 
@@ -124,6 +131,7 @@ function layout:Initialize(frame)
         frame.parent:UpdateSpecIconSettings(self.db.specIcon)
         frame.parent:UpdateTrinketSettings(self.db.trinket)
         frame.parent:UpdateRacialSettings(self.db.racial)
+        frame.parent:UpdateDispelSettings(self.db.dispel)
     end
 
     frame:SetSize(195, 67)
@@ -141,8 +149,8 @@ function layout:Initialize(frame)
     healthText:SetDrawLayer("OVERLAY", 4)
 
     local powerText = frame.PowerText
-    powerText:SetJustifyH("CENTER")
-    powerText:SetPoint("CENTER", healthBar, "CENTER", -1, -16.5)
+    -- powerText:SetJustifyH("CENTER")
+    -- powerText:SetPoint("CENTER", healthBar, "CENTER", -1, -16.5)
     --powerText:SetShadowOffset(0, 0)
     powerText:SetDrawLayer("OVERLAY", 4)
 
@@ -159,7 +167,6 @@ function layout:Initialize(frame)
     frame.ClassIcon:Show()
     frame.ClassIcon:SetTexCoord(0.05, 0.95, 0.1, 0.9)
     frame.ClassIcon:AddMaskTexture(frame.ClassIconMask)
-    frame.ClassIconMask:SetAllPoints(frame.ClassIcon)
     frame.ClassIconMask:ClearAllPoints()
     frame.ClassIconMask:SetPoint("CENTER", frame.ClassIcon, 0,1)
     frame.ClassIconMask:SetSize(60, 57)
@@ -252,6 +259,50 @@ function layout:Initialize(frame)
         racial.RacialBorderHook = true
     end
 
+    -- dispel
+    local dispel = frame.Dispel
+    if not dispel.Border then
+        dispel.Border = frame:CreateTexture(nil, "ARTWORK", nil, 3)
+    end
+    local dispelBorder = dispel.Border
+    if not dispel.Mask then
+        dispel.Mask = dispel:CreateMaskTexture()
+    end
+    dispel.Mask:SetTexture("Interface\\AddOns\\sArena_Reloaded\\Textures\\talentsmasknodechoiceflyout", "CLAMPTOBLACKADDITIVE", "CLAMPTOBLACKADDITIVE")
+    dispel.Mask:SetAllPoints(dispel.Texture)
+
+    -- Apply the mask
+    dispel.Texture:AddMaskTexture(dispel.Mask)
+
+    dispel.Cooldown:SetSwipeTexture("Interface\\AddOns\\sArena_Reloaded\\Textures\\talentsmasknodechoiceflyout")
+    dispel:SetSize(35, 35)
+    if not dispel.BorderParent then
+        dispel.BorderParent = CreateFrame("Frame", nil, dispel)
+        dispel.BorderParent:SetFrameStrata("HIGH")
+    end
+    dispelBorder:SetParent(dispel.BorderParent)
+    dispelBorder:SetAtlas("plunderstorm-actionbar-slot-border")
+    dispelBorder:SetPoint("TOPLEFT", dispel, "TOPLEFT", -6, 6)
+    dispelBorder:SetPoint("BOTTOMRIGHT", dispel, "BOTTOMRIGHT", 6, -6)
+    dispelBorder:SetDrawLayer("OVERLAY", 3)
+    dispelBorder:Show()
+    dispel.Border = dispelBorder
+
+    if not dispel.DispelBorderHook then
+        hooksecurefunc(dispel.Texture, "SetTexture", function(self, t)
+            if t == nil or t == "" or t == 0 or t == "nil" or frame.parent.db.profile.currentLayout ~= layoutName then
+                dispelBorder:Hide()
+            else
+                dispelBorder:Hide()
+                dispelBorder:Show()
+            end
+        end)
+        hooksecurefunc(dispel, "Hide", function()
+            dispelBorder:Hide()
+        end)
+        dispel.DispelBorderHook = true
+    end
+
     -- spec icon
     if not frame.SpecIcon.Border then
         frame.SpecIcon.Border = frame.SpecIcon:CreateTexture(nil, "ARTWORK", nil, 3)
@@ -270,13 +321,7 @@ function layout:Initialize(frame)
     --specBorder:Hide()
 
     frame.SpecNameText:SetTextColor(1,1,1)
-    --frame.SpecNameText:SetScale(0.85)
-    frame.PowerText:SetAlpha(0)
-
-    f = frame.CastBar
-    -- f:SetHeight(8)
-    -- f.Text:ClearAllPoints()
-    -- f.Text:SetPoint("BOTTOM", f, 0, -14)
+    frame.PowerText:SetAlpha(frame.parent.db.profile.hidePowerText and 0 or 1)
 
     f = frame.DeathIcon
     f:ClearAllPoints()
@@ -331,6 +376,7 @@ function layout:UpdateOrientation(frame)
     local name = frame.Name
     local specName = frame.SpecNameText
     local healthText = frame.HealthText
+    local powerText = frame.PowerText
     local castbarText = frame.CastBar.Text
 
     name:ClearAllPoints()
@@ -343,10 +389,11 @@ function layout:UpdateOrientation(frame)
         local txt = self.db.textSettings
         local modernCastbar = self.db.castBar.useModernCastbars
 
-        name:SetScale(txt.nameSize or 1.0)
-        healthText:SetScale(txt.healthSize or 1.0)
-        specName:SetScale(txt.specNameSize or 1.0)
-        castbarText:SetScale(txt.castbarSize or 1.0)
+        name:SetScale(txt.nameSize or 1)
+        healthText:SetScale(txt.healthSize or 1)
+        specName:SetScale(txt.specNameSize or 1)
+        castbarText:SetScale(txt.castbarSize or 1)
+        powerText:SetScale(txt.powerSize or 1)
 
         -- Name
         name:ClearAllPoints()
@@ -368,6 +415,16 @@ function layout:UpdateOrientation(frame)
             healthText:SetPoint("CENTER", healthBar, "CENTER", -1 + (txt.healthOffsetX or 0), (txt.healthOffsetY or 0))
         end
 
+        -- Power Text
+        powerText:ClearAllPoints()
+        if (txt.powerAnchor or "CENTER") == "LEFT" then
+            powerText:SetPoint("LEFT", frame.PowerBar, "LEFT", 0 + (txt.powerOffsetX or 0), (txt.powerOffsetY or 0))
+        elseif (txt.powerAnchor or "CENTER") == "RIGHT" then
+            powerText:SetPoint("RIGHT", frame.PowerBar, "RIGHT", 0 + (txt.powerOffsetX or 0), (txt.powerOffsetY or 0))
+        else
+            powerText:SetPoint("CENTER", frame.PowerBar, "CENTER", (txt.powerOffsetX or 0), (txt.powerOffsetY or 0))
+        end
+
         -- Spec Text
         specName:ClearAllPoints()
         if (txt.specNameAnchor or "CENTER") == "LEFT" then
@@ -380,12 +437,13 @@ function layout:UpdateOrientation(frame)
 
         -- Castbar Text
         castbarText:ClearAllPoints()
+        local simpleCastbar = self.db.castBar.simpleCastbar and modernCastbar
         if (txt.castbarAnchor or "CENTER") == "LEFT" then
-            castbarText:SetPoint("LEFT", frame.CastBar, "LEFT", 3 + (txt.castbarOffsetX or 0), (modernCastbar and -11 or 0) + (txt.castbarOffsetY or 0))
+            castbarText:SetPoint("LEFT", frame.CastBar, "LEFT", 3 + (txt.castbarOffsetX or 0), (modernCastbar and (simpleCastbar and 0 or -11) or 0) + (txt.castbarOffsetY or 0))
         elseif (txt.castbarAnchor or "CENTER") == "RIGHT" then
-            castbarText:SetPoint("RIGHT", frame.CastBar, "RIGHT", -3 + (txt.castbarOffsetX or 0), (modernCastbar and -11 or 0) + (txt.castbarOffsetY or 0))
+            castbarText:SetPoint("RIGHT", frame.CastBar, "RIGHT", -3 + (txt.castbarOffsetX or 0), (modernCastbar and (simpleCastbar and 0 or -11) or 0) + (txt.castbarOffsetY or 0))
         else
-            castbarText:SetPoint("CENTER", frame.CastBar, "CENTER", (txt.castbarOffsetX or 0), (modernCastbar and -11 or 0) + (txt.castbarOffsetY or 0))
+            castbarText:SetPoint("CENTER", frame.CastBar, "CENTER", (txt.castbarOffsetX or 0), (modernCastbar and (simpleCastbar and 0 or -11) or 0) + (txt.castbarOffsetY or 0))
         end
     end
 

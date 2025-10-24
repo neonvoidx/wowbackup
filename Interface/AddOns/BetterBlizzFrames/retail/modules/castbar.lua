@@ -1282,9 +1282,17 @@ local function PlayerCastingBarFrameMiscAdjustments()
     PlayerCastingBarFrame:SetHeight(BetterBlizzFramesDB.playerCastBarHeight)
     PlayerCastingBarFrame.Text:ClearAllPoints()
     if BetterBlizzFramesDB.playerCastBarNoTextBorder or PlayerCastingBarFrame.attachedToPlayerFrame then
-        PlayerCastingBarFrame.TextBorderHidden = PlayerCastingBarFrame.TextBorder:GetParent()
+        if not PlayerCastingBarFrame.TextBorderHidden then
+            PlayerCastingBarFrame.TextBorderHidden = PlayerCastingBarFrame.TextBorder:GetParent()
+        end
         PlayerCastingBarFrame.TextBorder:SetParent(BBF.hiddenFrame)
-        PlayerCastingBarFrame.Text:SetPoint("BOTTOM", PlayerCastingBarFrame, "BOTTOM", 0, -2.5)
+        PlayerCastingBarFrame.Text:SetPoint("CENTER", PlayerCastingBarFrame, "CENTER", 0, 0)
+        if not PlayerCastingBarFrame.ogText then
+            local font, size, flags = PlayerCastingBarFrame.Text:GetFont()
+            PlayerCastingBarFrame.ogText = {font, size, flags}
+            PlayerCastingBarFrame.Text:SetFont(font, size, "OUTLINE")
+        end
+
         if PlayerCastingBarFrame.attachedToPlayerFrame then
             maskRatio = 256 / 150
             w = BetterBlizzFramesDB.playerCastBarWidth - 58
@@ -1293,6 +1301,10 @@ local function PlayerCastingBarFrameMiscAdjustments()
         if PlayerCastingBarFrame.TextBorderHidden then
             PlayerCastingBarFrame.TextBorder:SetParent(PlayerCastingBarFrame.TextBorderHidden)
             PlayerCastingBarFrame.TextBorderHidden = nil
+        end
+        if PlayerCastingBarFrame.ogText then
+            PlayerCastingBarFrame.Text:SetFont(unpack(PlayerCastingBarFrame.ogText))
+            PlayerCastingBarFrame.ogText = nil
         end
         PlayerCastingBarFrame.Text:SetPoint("BOTTOM", PlayerCastingBarFrame, "BOTTOM", 0, -14)
     end

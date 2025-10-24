@@ -1,4 +1,5 @@
 local isRetail = sArenaMixin.isRetail
+local LSM = LibStub("LibSharedMedia-3.0")
 
 local CastStopEvents = {
     UNIT_SPELLCAST_STOP                = true,
@@ -55,7 +56,7 @@ if isRetail then
         bar:Hide()
     end
 
-    local function EnableCastBar(bar, unit, style)
+    local function EnableCastBar(bar, unit, style, simpleCastbar)
         if not bar then return end
 
         bar:SetUnit(unit, true, false)
@@ -64,12 +65,24 @@ if isRetail then
         if bar.UpdateDisplayType then bar:UpdateDisplayType() end
 
         if style == "modern" then
-            -- bar.Text:ClearAllPoints()
-            -- bar.Text:SetPoint("BOTTOM", bar, 0, -14)
+            -- Handle simple castbar styling
+            if simpleCastbar then
+                bar.Text:ClearAllPoints()
+                bar.Text:SetPoint("CENTER", bar, "CENTER", 0, 0)
+                if bar.TextBorder then
+                    bar.TextBorder:Hide()
+                end
+            else
+                bar.Text:ClearAllPoints()
+                bar.Text:SetPoint("BOTTOM", bar, 0, -14)
+                if bar.TextBorder then
+                    bar.TextBorder:Show()
+                end
+            end
             bar:SetHeight(9)
         else
-            -- bar.Text:ClearAllPoints()
-            -- bar.Text:SetPoint("CENTER", bar, "CENTER", 0, 0)
+            bar.Text:ClearAllPoints()
+            bar.Text:SetPoint("CENTER", bar, "CENTER", 0, 0)
             bar:SetHeight(16)
         end
 
@@ -118,27 +131,32 @@ if isRetail then
 
         local newBar = CreateFrame("StatusBar", nil, parent, template)
 
-
         if newBar.OnLoad then
             newBar:OnLoad(nil, true, false)
         end
 
         if not newBar.empoweredFix then
             newBar:HookScript("OnEvent", function(self)
-                if self:IsForbidden() then return end
                 if self.barType == "uninterruptable" then
                     if self.ChargeTier1 then
-                        self:SetStatusBarTexture("UI-CastingBar-Uninterruptable")
+                        if sArenaMixin.keepDefaultModernTextures then
+                            self:SetStatusBarTexture("UI-CastingBar-Uninterruptable")
+                        elseif sArenaMixin.castTexture then
+                            self:SetStatusBarTexture(sArenaMixin.castTexture)
+                        end
                         HideChargeTiers(self)
                     end
                 elseif self.barType == "empowered" then
-                    self:SetStatusBarTexture("ui-castingbar-filling-standard")
+                    if sArenaMixin.keepDefaultModernTextures then
+                        self:SetStatusBarTexture("ui-castingbar-filling-standard")
+                    elseif sArenaMixin.castTexture then
+                        self:SetStatusBarTexture(sArenaMixin.castTexture)
+                    end
                     HideChargeTiers(self)
                 end
             end)
 
             newBar:HookScript("OnUpdate", function(self)
-                if self:IsForbidden() then return end
                 if self.barType == "uninterruptable" then
                     if self.ChargeTier1 then
                         self.Spark:SetAtlas("UI-CastingBar-Pip")
@@ -154,6 +172,28 @@ if isRetail then
 
             newBar.empoweredFix = true
         end
+
+        if not newBar.customTextureFix then
+            newBar:HookScript("OnEvent", function(self, event)
+                if not sArenaMixin.keepDefaultModernTextures and sArenaMixin.castTexture then
+                    self:SetStatusBarTexture(sArenaMixin.castTexture)
+                end
+            end)
+            newBar.customTextureFix = true
+        end
+
+        if not newBar.MaskTexture then
+            newBar.MaskTexture = newBar:CreateMaskTexture()
+        end
+        newBar:SetStatusBarTexture(sArenaMixin.castTexture or "Interface\\RaidFrame\\Raid-Bar-Hp-Fill")
+        local castTexture = newBar:GetStatusBarTexture()
+        newBar.MaskTexture:SetTexture("Interface\\AddOns\\sArena_Reloaded\\Textures\\RetailCastMask.tga",
+            "CLAMPTOBLACKADDITIVE", "CLAMPTOBLACKADDITIVE")
+        newBar.MaskTexture:SetPoint("TOPLEFT", newBar, "TOPLEFT", -1, 0)
+        newBar.MaskTexture:SetPoint("BOTTOMRIGHT", newBar, "BOTTOMRIGHT", 1, 0)
+        newBar.MaskTexture:Show()
+        castTexture:AddMaskTexture(newBar.MaskTexture)
+
         if not newBar.quickHide then
             newBar:HookScript("OnEvent", function(self, event)
                 if CastStopEvents[event] then
@@ -179,6 +219,8 @@ if isRetail then
         newBar:SetFrameLevel(old:GetFrameLevel())
         newBar:Hide()
         newBar.Spark:SetSize(3, 16)
+        newBar.Border:SetPoint("TOPLEFT", newBar, "TOPLEFT", -1.4, 1.6)
+        newBar.Border:SetPoint("BOTTOMRIGHT", newBar, "BOTTOMRIGHT", 1.4, -1.6)
 
         frame.modernCastBar = newBar
         return newBar
@@ -188,10 +230,11 @@ if isRetail then
     -- Style switching (single frame)
     ----------------------------------------
 
-    function sArenaMixin:ApplyCastbarStyle(frame, unit, modern)
+    function sArenaMixin:ApplyCastbarStyle(frame, unit, modern, simpleCastbar)
         if InCombatLockdown and InCombatLockdown() then
             -- mark for later
             frame.__pendingCastbarStyle = modern and "modern" or "classic"
+            frame.__pendingSimpleCastbar = simpleCastbar
             return
         end
 
@@ -201,16 +244,17 @@ if isRetail then
         if modern then
             -- turn off classic, turn on modern
             DisableCastBar(classic)
-            EnableCastBar(modernBar, unit or classic.unit, "modern")
+            EnableCastBar(modernBar, unit or classic.unit, "modern", simpleCastbar)
             frame.CastBar = modernBar
         else
             -- turn off modern, turn on classic
             DisableCastBar(modernBar)
-            EnableCastBar(classic, unit or modernBar.unit or classic.unit, "classic")
+            EnableCastBar(classic, unit or modernBar.unit or classic.unit, "classic", simpleCastbar)
             frame.CastBar = classic
         end
 
         frame.__pendingCastbarStyle = nil
+        frame.__pendingSimpleCastbar = nil
     end
 else
     -- Mists of Pandaria
@@ -230,7 +274,7 @@ else
         bar.Border     = bar.Border or bar:CreateTexture(nil, "OVERLAY", nil, 7)
     end
 
-    local function ApplyModern(bar)
+    local function ApplyModern(bar, simpleCastbar, frame)
         EnsureModernPieces(bar)
 
         bar.TextBorder:SetTexture(MOD_TEXTBOX_TEX)
@@ -270,10 +314,19 @@ else
         bar.Border:SetPoint("BOTTOMRIGHT", bar, "BOTTOMRIGHT", 1, -1)
         bar.Border:Show()
 
-        bar.TextBorder:ClearAllPoints()
-        bar.TextBorder:SetPoint("TOPLEFT", bar, "TOPLEFT", 1, 1)
-        bar.TextBorder:SetPoint("BOTTOMRIGHT", bar, "BOTTOMRIGHT", -1, -13.5)
-        bar.TextBorder:Show()
+        -- Handle simple castbar styling
+        if simpleCastbar then
+            bar.TextBorder:Hide()
+            bar.Text:ClearAllPoints()
+            bar.Text:SetPoint("CENTER", bar, "CENTER", 0, 0)
+        else
+            bar.TextBorder:ClearAllPoints()
+            bar.TextBorder:SetPoint("TOPLEFT", bar, "TOPLEFT", 1, 1)
+            bar.TextBorder:SetPoint("BOTTOMRIGHT", bar, "BOTTOMRIGHT", -1, -13.5)
+            bar.TextBorder:Show()
+            bar.Text:ClearAllPoints()
+            bar.Text:SetPoint("BOTTOM", bar, 0, -10.5)
+        end
 
         local ogBg = select(1, bar:GetRegions())
         if ogBg then
@@ -290,8 +343,6 @@ else
         bar.MaskTexture:Show()
         castTexture:AddMaskTexture(bar.MaskTexture)
 
-        -- bar.Text:ClearAllPoints()
-        -- bar.Text:SetPoint("BOTTOM", bar, 0, -10.5)
         bar:SetHeight(12)
         if bar.Icon then bar.Icon:SetSize(21, 21) end
 
@@ -301,12 +352,21 @@ else
             -- This just bruteforces correct texture in non-interrupt scenarios
             bar:HookScript("OnUpdate", function(self)
                 if not self.__modernActive then return end
-                if self.notInterruptible and self.__tex ~= MOD_NONINT_TEX then
-                    self:SetStatusBarTexture(MOD_NONINT_TEX); self.__tex = MOD_NONINT_TEX
-                elseif self.channeling and self.__tex ~= MOD_CHANNEL_TEX then
-                    self:SetStatusBarTexture(MOD_CHANNEL_TEX); self.__tex = MOD_CHANNEL_TEX
-                elseif self.casting and self.__tex ~= MOD_CAST_TEX then
-                    self:SetStatusBarTexture(MOD_CAST_TEX); self.__tex = MOD_CAST_TEX
+
+                if sArenaMixin.keepDefaultModernTextures then
+                    -- Use default modern textures
+                    if self.notInterruptible and self.__tex ~= MOD_NONINT_TEX then
+                        self:SetStatusBarTexture(MOD_NONINT_TEX); self.__tex = MOD_NONINT_TEX
+                    elseif self.channeling and self.__tex ~= MOD_CHANNEL_TEX then
+                        self:SetStatusBarTexture(MOD_CHANNEL_TEX); self.__tex = MOD_CHANNEL_TEX
+                    elseif self.casting and self.__tex ~= MOD_CAST_TEX then
+                        self:SetStatusBarTexture(MOD_CAST_TEX); self.__tex = MOD_CAST_TEX
+                    end
+                else
+                    -- Use custom texture for all cast types when not using default textures
+                    if sArenaMixin.castTexture and (self.notInterruptible or self.channeling or self.casting) and self.__tex ~= sArenaMixin.castTexture then
+                        self:SetStatusBarTexture(sArenaMixin.castTexture); self.__tex = sArenaMixin.castTexture
+                    end
                 end
             end)
             bar:HookScript("OnEvent", function(self, event)
@@ -358,21 +418,23 @@ else
         bar:Show()
     end
 
-    local function EnableCastBarClassicMode(bar, modern)
+    local function EnableCastBarClassicMode(bar, modern, simpleCastbar, frame)
         if not bar then return end
         if modern then
-            ApplyModern(bar)
+            ApplyModern(bar, simpleCastbar, frame)
         else
             RestoreClassic(bar)
         end
     end
 
-    function sArenaMixin:ApplyCastbarStyle(frame, unit, modern)
+    function sArenaMixin:ApplyCastbarStyle(frame, unit, modern, simpleCastbar)
         if InCombatLockdown and InCombatLockdown() then
             frame.__pendingCastbarStyle = modern and "modern" or "classic"
+            frame.__pendingSimpleCastbar = simpleCastbar
             return
         end
-        EnableCastBarClassicMode(frame.CastBar, modern)
+        EnableCastBarClassicMode(frame.CastBar, modern, simpleCastbar, frame)
         frame.__pendingCastbarStyle = nil
+        frame.__pendingSimpleCastbar = nil
     end
 end

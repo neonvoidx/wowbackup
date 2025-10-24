@@ -4,6 +4,8 @@ WaypointDB_Local = {
 ["Ofpuss - Mal'Ganis"] = "Default",
 ["Ofpuss - Tichondrius"] = "Default",
 },
+["slashWayCache"] = {
+},
 }
 WaypointDB_Local_Persistent = {
 ["profileKeys"] = {

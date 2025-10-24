@@ -1,6 +1,6 @@
-## Interface: 110100 
+## Interface: 110205
 ## Title: Action Button Animation
-## Notes: Adds an animation to action buttons when abilities are pressed.
+## Notes: Adds an animation to action buttons when abilities are pressed or clicked
 ## Author: rnxm
 ## Version: 1.0
 ## LoadOnDemand: 0

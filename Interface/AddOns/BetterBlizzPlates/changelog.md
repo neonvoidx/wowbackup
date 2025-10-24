@@ -1,3 +1,46 @@
+# BetterBlizzPlates 1.8.7b
+## All versions
+### New
+- Nameplate Auras: Reverse Aura Direction setting, stacks right to left instead (also works together with Centered auras to change Enlarged sorting etc).
+### Tweak
+- Tweak couple of Pandemic Aura windows and logic.
+## Classic versions
+### Tweak
+- Tweak Nameplate Auras' Container position to fix new Reverse Aura Direction setting working properly. I don't think this will cause any issues but if anything changes let me know.
+
+
+# BetterBlizzPlates 1.8.7
+## All versions
+### New
+- Nameplate Auras: Add new Ctrl+Alt+Rightclick option for important color that colors ALL whitelist auras at once. This is irreversible so only do this if you are planning and wanting to easily change the color on every single aura at once.
+- Temporary Midnight section explaining plans.
+## Retail
+### Tweak
+- Class Indicator/Party Pointer Pet Detection tweaked again: Previous workaround had issues BM hunter pets. This new workaround should solve that and the other issue so hopefully good now.
+- Change Health Number billions to only show two decimals instead of three
+## Mists of Pandaria
+### Tweak
+- Add Hunter Silence Shot for Castbar Interrupt Color. Thanks to Snackqt @ CurseForge.
+
+
+# BetterBlizzPlates 1.8.6b
+## Retail
+### Tweak
+- Add another tweak to Pet detection on Class Indicator etc to avoid others pets triggering this new check.
+
+# BetterBlizzPlates 1.8.6
+## All versions
+### New
+Nameplate Auras: Center Auras on Enemy now has a right-click option to only center buffs and not debuffs. Allows you to keep the debuffs where youre used to and have buffs centered above/under.
+Nameplate Auras: "Gap between Buffs and Debuffs" slider setting.
+### Tweak
+- Fixed an issue with separate buff row setting and buff scale setting causing the scale to also adjust the gap size (introduced new gap setting if ur setup changed)
+## Retail
+### Tweak
+- Fixed an issue with Class Indicator & Party Pointers pet detection while in Arena. When summoning a Pet the nameplate update would not register it as a pet unit. Use a different detection method that gets the pet update immediately cuz Blizz API poopoo.
+
+
+
 # BetterBlizzPlates 1.8.5d
 ## All versions
 ### Bugfix

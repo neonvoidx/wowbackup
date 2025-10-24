@@ -855,7 +855,7 @@ NarciAchievementOptions = {
 NarciStatisticsDB = {
 ["ScreenshotsTakenInNarcissus"] = 25,
 ["InstalledDate"] = 1722004177,
-["TimeSpentInNarcissus"] = 108694,
+["TimeSpentInNarcissus"] = 108968,
 ["QuestItems"] = {
 },
 ["AddOnActionForbidden"] = {
@@ -905,13 +905,6 @@ NarciStatisticsDB = {
 ["timeLastError"] = 1727359623,
 },
 ["LegionRemixHelper"] = {
-["errorTime"] = {
-1760033709,
-1760033714,
-1760033715,
-1760033715,
-1760033716,
-},
 ["count"] = 5,
 ["timeLastError"] = 1760033716,
 },
@@ -2193,7 +2186,7 @@ NarciCharacterProfiles = {
 ["name"] = "Ofpusstwo",
 ["birth"] = 1759950823,
 ["serverID"] = "11",
-["lastVisit"] = 1760500879,
+["lastVisit"] = 1761268669,
 ["outfits"] = {
 {
 ["s"] = "291679,291681,298795,291676,0,0,291682,291678,291683,291680,291677,89282:-1:8549,89282:0:8549",

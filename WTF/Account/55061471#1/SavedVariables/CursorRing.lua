@@ -15,3 +15,8 @@ CursorRingDB = {
 ["useClassColor"] = false,
 ["useHighVis"] = false,
 }
+CursorRingCharDB = {
+["gcdEnabled"] = true,
+["gcdStyle"] = "simple",
+["gcdDimMultiplier"] = 0.35,
+}

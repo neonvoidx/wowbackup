@@ -7,13 +7,13 @@ MouseoverActionSettingsDB = {
 ["Hellowalls - Mal'Ganis"] = "Default",
 ["Heilsatan - Tichondrius"] = "Default",
 ["Mäñýfäçëð - Tichondrius"] = "Default",
-["Choppiez - Tichondrius"] = "Default",
+["Praisesun - Tichondrius"] = "Default",
 ["Auteist - Mal'Ganis"] = "Default",
 ["Ofpuss - Mal'Ganis"] = "Default",
-["Starstypeshi - Tichondrius"] = "Default",
+["Smaugchamp - Tichondrius"] = "Default",
 ["Smaugchamp - Mal'Ganis"] = "Default",
 ["Choppiez - Mal'Ganis"] = "Default",
-["Smaugchamp - Tichondrius"] = "Default",
+["Starstypeshi - Tichondrius"] = "Default",
 ["Gehyo - Mal'Ganis"] = "Default",
 ["Hellavator - Mal'Ganis"] = "Default",
 ["Corsic - Mal'Ganis"] = "Default",
@@ -31,7 +31,7 @@ MouseoverActionSettingsDB = {
 ["Auteist - Tichondrius"] = "Default",
 ["Ofpuss - Tichondrius"] = "Default",
 ["Praisesun - Mal'Ganis"] = "Default",
-["Praisesun - Tichondrius"] = "Default",
+["Choppiez - Tichondrius"] = "Default",
 ["Thingreyline - Tichondrius"] = "Default",
 },
 ["global"] = {
@@ -148,41 +148,8 @@ MouseoverActionSettingsDB = {
 ["BuffFrame"] = {
 ["enabled"] = false,
 },
-["PartyFrame"] = {
-["enabled"] = false,
-},
-["MultiBar7"] = {
-["enabled"] = false,
-},
-["ObjectiveTracker"] = {
-["MOUNT_UPDATE"] = false,
-["NPC_UPDATE"] = true,
-["minAlpha"] = 1,
-["OPEN_WORLD_UPDATE"] = false,
-["COMBAT_UPDATE"] = false,
-},
-["MultiBar6"] = {
-["enabled"] = false,
-["links"] = {
-["MultiBarRight"] = true,
-["MultiBarBottomRight"] = true,
-},
-["useCustomDelay"] = true,
-["minAlpha"] = 0.3,
-["delay"] = 0,
-["COMBAT_UPDATE"] = true,
-},
 ["MultiBarLeft"] = {
 ["enabled"] = false,
-},
-["MultiBarBottomRight"] = {
-["links"] = {
-["MultiBar6"] = true,
-["MultiBarRight"] = true,
-},
-["minAlpha"] = 0.2,
-["delay"] = 0,
-["COMBAT_UPDATE"] = false,
 },
 ["MainMenuBar"] = {
 ["ARENA_UPDATE"] = true,
@@ -200,6 +167,39 @@ MouseoverActionSettingsDB = {
 },
 ["RAID_GROUP_UPDATE"] = false,
 ["TARGET_UPDATE"] = true,
+},
+["ObjectiveTracker"] = {
+["MOUNT_UPDATE"] = false,
+["NPC_UPDATE"] = true,
+["minAlpha"] = 1,
+["OPEN_WORLD_UPDATE"] = false,
+["COMBAT_UPDATE"] = false,
+},
+["PartyFrame"] = {
+["enabled"] = false,
+},
+["MultiBar6"] = {
+["enabled"] = false,
+["links"] = {
+["MultiBarRight"] = true,
+["MultiBarBottomRight"] = true,
+},
+["useCustomDelay"] = true,
+["minAlpha"] = 0.3,
+["delay"] = 0,
+["COMBAT_UPDATE"] = true,
+},
+["MultiBarBottomRight"] = {
+["links"] = {
+["MultiBar6"] = true,
+["MultiBarRight"] = true,
+},
+["minAlpha"] = 0.2,
+["delay"] = 0,
+["COMBAT_UPDATE"] = false,
+},
+["MultiBar7"] = {
+["enabled"] = false,
 },
 ["PlayerFrame"] = {
 ["enabled"] = false,

@@ -17,7 +17,6 @@ local GetItemCount = C_Item.GetItemCount;
 local GetCursorPosition = GetCursorPosition;
 local IsDressableItemByID = C_Item.IsDressableItemByID or API.Nop;
 local QualityColorGetter = API.GetItemQualityColor;
-local IsInteractingWithNpcOfType = C_PlayerInteractionManager.IsInteractingWithNpcOfType;
 
 
 -- User Settings
@@ -549,6 +548,7 @@ do  --UI ItemButton
     end
 
     function ItemFrameMixin:SetItem(data)
+        self.singleItemID = data.id;
         self:SetNameByQuality(data.name, data.quality);
         self:SetIcon(data.icon, data);
         self:SetCount(data);
@@ -748,6 +748,7 @@ do  --UI ItemButton
     function ItemFrameMixin:OnRemoved()
         self.data = nil;
         self.items = nil;
+        self.singleItemID = nil;
         self:StopAnimating();
         self:ResetHoverVisual(true);
         self.hasGlowFX = nil;
@@ -839,7 +840,7 @@ do  --UI ItemButton
         if button == "LeftButton" then
             if IsModifiedClick("DRESSUP") and not InCombatLockdown() then
                 local itemID = self.data.slotType == Defination.SLOT_TYPE_ITEM and self.data.id;
-                if itemID and IsDressableItemByID(itemID) then
+                if itemID and DressUpVisual and IsDressableItemByID(itemID) then
                     DressUpVisual(self.data.link);
                     return
                 end
@@ -1622,6 +1623,16 @@ do  --UI Basic
         self:SetBackgroundSize(backgroundWidth * scale, (frameHeight + Formatter.ICON_BUTTON_HEIGHT) * scale);
     end
 
+    function MainFrame:GetFocusedItemFrame()
+        if self.activeFrames then
+            for i, itemFrame in ipairs(self.activeFrames) do
+                if itemFrame:IsMouseOver() then
+                    return itemFrame
+                end
+            end
+        end
+    end
+
     function MainFrame:EnableHeaderWidgets(state)
         for _, widget in ipairs(self.HeaderWidgets) do
             widget:SetEnabled(state);
@@ -1778,6 +1789,20 @@ do  --UI Basic
         end
     end
 
+    function MainFrame:UpdateItemCount()
+        if SHOW_ITEM_COUNT and self.activeFrames then
+            local numOwned;
+            for i, itemFrame in ipairs(self.activeFrames) do
+                if itemFrame.singleItemID then
+                    numOwned = GetItemCount(itemFrame.singleItemID);
+                    if numOwned > 0 then
+                        itemFrame.IconFrame.Count:SetText(numOwned);
+                    end
+                end
+            end
+        end
+    end
+
     function MainFrame:ReleaseAll()
         if self.activeFrames then
             self.activeFrames = nil;
@@ -1791,15 +1816,9 @@ do  --UI Basic
     end
 
     function MainFrame:OnShow()
-        if IsInteractingWithNpcOfType(40) then
-            --Lower frame strata when using Scrapping Machine
-            self:SetFrameStrata("LOW");
-        else
-            if self.inEditMode then
-                self:SetFrameStrata("HIGH");
-            else
-                self:SetFrameStrata("DIALOG");
-            end
+        self:UpdateFrameStrata();
+        if SHOW_ITEM_COUNT then
+            self:RegisterEvent("BAG_UPDATE_DELAYED");
         end
     end
     MainFrame:SetScript("OnShow", MainFrame.OnShow);
@@ -1814,16 +1833,26 @@ do  --UI Basic
         self.manualMode = nil;
         self:StopQueue();
         self:UnregisterEvent("GLOBAL_MOUSE_UP");
+        self:UnregisterEvent("BAG_UPDATE_DELAYED");
     end
     MainFrame:SetScript("OnHide", MainFrame.OnHide);
 
     function MainFrame:OnEvent(event, ...)
         if event == "GLOBAL_MOUSE_UP" then
-            local button = ...
-            if button == "RightButton" and self:IsMouseOver() then
-                CloseLoot();
-                self:TryHide(true);
+            if self:IsMouseOver() then
+                local button = ...
+                if button == "RightButton" then
+                    CloseLoot();
+                    self:TryHide(true);
+                elseif (not (self.manualMode or self.inEditMode)) and button == "LeftButton" and not InCombatLockdown() then
+                    local itemFrame = self:GetFocusedItemFrame();
+                    if itemFrame then
+                        itemFrame:OnClick("LeftButton");
+                    end
+                end
             end
+        elseif event == "BAG_UPDATE_DELAYED" then
+            self:UpdateItemCount();
         end
     end
     MainFrame:SetScript("OnEvent", MainFrame.OnEvent);

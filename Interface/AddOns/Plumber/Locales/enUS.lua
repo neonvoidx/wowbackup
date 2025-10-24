@@ -376,14 +376,17 @@ L["SoftTargetName ShowNPC Tooltip"] = "If disabled, the name will only appear on
 --LegionRemix
 L["ModuleName LegionRemix"] = "Legion Remix";
 L["ModuleDescription LegionRemix"] = "- Automatically learn traits.\n\n- Add a widget to the Paper Doll that provides various types of info. You can click this widget to open a new Artifact UI.";
+L["ModuleName LegionRemix_HideWorldTier"] = "Hide World Tier Icon";
+L["ModuleDescription LegionRemix_HideWorldTier"] = "Hide the Heroic World Tier icon below the minimap.";
 L["Artifact Weapon"] = "Artifact Weapon";
 L["Artifact Ability"] = "Artifact Ability";
+L["Artifact Traits"] = "Artifact Traits";
 L["Earn X To Upgrade Y Format"] = "Earn another |cffffffff%s|r %s to upgrade %s"; --Example: Earn another 100 Infinite Power to upgrade Artifact Weapon
 L["Until Next Upgrade Format"] = "%s until next upgrade";
 L["New Trait Available"] = "New trait available.";
 L["Rank Format"] = "Rank %s";
 L["Rank Increased"] = "Rank Increased";
-L["Infinite Knowledge Tooltip"] = "You can obtain Inifite Knowledge by earning certain Legion Remix achievements.";
+L["Infinite Knowledge Tooltip"] = "You can obtain Infinite Knowledge by earning certain Legion Remix achievements.";
 L["Stat Bonuses"] = "Stat Bonuses";
 L["Bonus Traits"] = "Bonus Traits:";
 L["Instruction Open Artifact UI"] = "Left click to toggle Artifact UI\nRight click to show settings";
@@ -396,13 +399,32 @@ L["Error Drag Spell In Combat"] = "You cannot drag a spell while in combat.";
 L["Error Change Trait In Combat"] = "You cannot change traits in combat.";
 L["Amount Required To Unlock Format"] = "%s to unlock";   --Earn another x amount to unlock (something)
 L["Soon To Unlock"] = "Soon to unlock";
+L["You Can Unlock Title"] = "You can unlock";
 L["Artifact Ability Auto Unlock Tooltip"] = "This trait will be automatically unlocked once you have enough Infinite Power.";
 L["Require More Bag Slot Alert"] = "You need to free up bag space before performing this action";
+L["Spell Not Known"] = SPELL_FAILED_NOT_KNOWN or "Spell not learned";
+L["Fully Upgraded"] = AZERITE_EMPOWERED_ITEM_FULLY_UPGRADED or "Fully Upgraded";
+L["Unlock Level Requirement Format"] = "Reach level %d to unlock";
+L["Auto Learn Traits"] = "Auto Learn Traits";
+L["Auto Learn Traits Tooltip"] = "Automatically upgrade artifact traits when you have enough Infinite Power";
+L["Infinite Power Yield Format"] = "Grant |cffffffff%s|r Power at your current Knowledge level.";
+L["Infinite Knowledge Bonus Format"] = "Current Bonus: |cffffffff%s|r";
+L["Infinite Knowledge Bonus Next Format"] = "Next Rank: %s";
 
 
 --ItemUpgradeUI
 L["ModuleName ItemUpgradeUI"] = "Item Upgrades: Show Character Pane";
 L["ModuleDescription ItemUpgradeUI"] = "Automatically open Character Pane when you interact with an Item Upgrades NPC.";
+
+
+--HolidayDungeon
+L["ModuleName HolidayDungeon"] = "Auto Select Holiday Dungeon";
+L["ModuleDescription HolidayDungeon"] = "Automatically select holiday and timewalking dungeons when you open Dungeon Finder for the first time.";
+
+
+--PlayerPing
+L["ModuleName PlayerPing"] = "Map Pin: Player Ping";
+L["ModuleDescription PlayerPing"] = "Highlight the player's location with a ping effect when you:\n\n- Open World Map.\n\n- Press the ALT key.\n\n- Click the Maximize button.\n\n|cffd4641cBy default, WoW only shows the player ping when you change maps.|r";
 
 
 --Loot UI
@@ -443,6 +465,8 @@ L["LootUI Option Grow Direction Tooltip 2"] = "When disabled: the top left of th
 L["Junk Items"] = "Junk Items";
 L["LootUI Option Combine Items"] = "Combine Similar Items";
 L["LootUI Option Combine Items Tooltip"] = "Display similar items on a single row. Supported Categories:\n\n- Junk Items\n- Epoch Mementos (Legion Remix)";
+L["LootUI Option Low Frame Strata"] = "Send to Back";
+L["LootUI Option Low Frame Strata Tooltip"] = "While in Loot Notification Mode, place the loot window behind other UI.\n\nThis option doesn't affect Manual Loot Mode.";
 
 
 --Quick Slot For Third-party Dev
@@ -545,6 +569,12 @@ L["Weekly Coffer Key Shards Tooltip"] = "The first four weekly caches you earn e
 L["Weekly Cap"] = "Weekly Cap";
 L["Weekly Cap Reached"] = "Weekly cap reached.";
 L["Instruction Right Click To Use"] = "<Right Click to Use>";
+L["Join Queue"] = WOW_LABS_JOIN_QUEUE or "Join Queue";
+L["In Queue"] = BATTLEFIELD_QUEUE_STATUS or "In Queue";
+L["Click To Switch"] = "Click to switch to |cffffffff%s|r";
+L["Click To Queue"] = "Click to queue for |cffffffff%s|r";
+L["Click to Open Format"] = "Click to open %s";
+L["List Is Empty"] = "The list is empty.";
 
 
 --Generic
@@ -570,6 +600,16 @@ L["New Feature Auto Enabled Format"] = "New Module %s has been enabled.";
 L["Click To See Details"] = "Click to see details";
 
 
+--WIP Merchant UI
+L["ItemType Consumables"] = AUCTION_CATEGORY_CONSUMABLES or "Consumables";
+L["ItemType Weapons"] = AUCTION_CATEGORY_WEAPONS or "Weapons";
+L["ItemType Gems"] = AUCTION_CATEGORY_GEMS or "Gems";
+L["ItemType Armor Generic"] = AUCTION_SUBCATEGORY_PROFESSION_ACCESSORIES or "Accessories";  --Trinkets, Rings, Necks
+L["ItemType Mounts"] = MOUNTS or "Mounts";
+L["ItemType Pets"] = PETS or "Pets";
+L["ItemType Toys"] = "Toys";
+L["ItemType TransmogSet"] = PERKS_VENDOR_CATEGORY_TRANSMOG_SET or "Transmog Set";
+L["ItemType Transmog"] = "Transmog";
 
 
 -- !! Do NOT translate the following entries

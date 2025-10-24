@@ -1527,7 +1527,7 @@ BAGANATOR_CONFIG = {
 "Praisesun-Tichondrius",
 },
 ["debug_keywords"] = false,
-["auto_sort_on_open"] = true,
+["auto_sort_on_open"] = false,
 ["sort_ignore_slots_at_end"] = false,
 ["sort_ignore_slots_count_2"] = {
 ["Ofpuss-Mal'Ganis"] = 0,

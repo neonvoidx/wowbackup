@@ -220,15 +220,26 @@ function app.ItemOverlay(overlay, itemLink, itemLocation, containerInfo, bagAddo
 				local localeOtherContainers = {
 					ITEM_OPENABLE,	-- <Right Click to Open>
 					"Use: Collect",
+					"Use: Open the container",
 					"Benutzen: Sammelt",
+					"Benutzen: Öffnet den Behälter",
 					"Uso: Recoges",
+					"Uso: Abre el contenedor",
 					"Uso: Recolecta",
+					"Uso: Abrir el contenedor",
 					"Utilise: Récupère",
+					"Utilise: Ouvre le conteneur",
 					"Usa: Fornisce",
+					"Usa: Apri il contenitore",
 					"Uso: Coleta",
+					"Uso: Abre o recipiente",
 					"Использование: Получить",
+					"Использование: Открыть контейнер",
 					"사용 효과:",
+					"사용 효과: 상자를 엽니다",
 					"使用: 收集",
+					"使用: 打开箱子",
+					"使用: 開啟容器",
 				}
 				for k, v in pairs(localeOtherContainers) do
 					-- Exception for the Korean string, as it contains two parts that aren't directly concatenated
@@ -432,7 +443,7 @@ function app.ItemOverlay(overlay, itemLink, itemLocation, containerInfo, bagAddo
 				overlay.animation:Stop()
 			-- Toys
 			elseif TransmogLootHelper_Settings["iconNewToy"] and itemEquipLoc == "Toy" then
-				if app.GetTooltipText(itemLink, ITEM_SPELL_KNOWN) then
+				if PlayerHasToy(itemID) then
 					if TransmogLootHelper_Settings["iconLearned"] then
 						showOverlay("green")
 					else

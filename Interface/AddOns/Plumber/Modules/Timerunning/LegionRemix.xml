@@ -4,6 +4,7 @@
 	<Script file="LegionRemix_Test.lua"/>
 	<Script file="LegionRemix_Macro.lua"/>
 	<Script file="LegionRemix_UI.lua"/>
+	<Script file="LegionRemix_HideWorldTier.lua"/>
 
 
 	<Frame name="PlumberRemixArtifactUITemplate" hidden="true" virtual="true">
@@ -250,6 +251,32 @@
 				</Texture>
 			</Layer>
 		</Layers>
+		<Frames>
+			<Frame parentKey="QuestIcon">
+				<Size x="24" y="24"/>
+				<Anchors>
+					<Anchor point="TOPLEFT" relativeKey="$parent" relativePoint="TOPLEFT" x="4" y="-4"/>
+				</Anchors>
+				<Layers>
+					<Layer level="ARTWORK">
+						<Texture parentKey="Texture" alpha="0.8">
+							<Size x="24" y="24"/>
+							<Anchors>
+								<Anchor point="CENTER"/>
+							</Anchors>
+						</Texture>
+					</Layer>
+					<Layer level="HIGHLIGHT">
+						<Texture parentKey="HighlightTexture" alpha="0.4">
+							<Size x="24" y="24"/>
+							<Anchors>
+								<Anchor point="CENTER"/>
+							</Anchors>
+						</Texture>
+					</Layer>
+				</Layers>
+			</Frame>
+		</Frames>
 		<Animations>
 			<AnimationGroup parentKey="AnimEdge" looping="REPEAT">
 				<Rotation degrees="360" duration="30" order="1" childKey="EdgeGlow1"/>

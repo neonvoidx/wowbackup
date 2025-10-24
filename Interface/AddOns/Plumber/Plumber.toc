@@ -1,7 +1,7 @@
 ## X-Flavor: retail
 ## X-Expansion: TWW
-## Interface: 110200, 110205
-## Version: 1.7.6
+## Interface: 110205
+## Version: 1.7.8
 
 ## Title: Plumber
 
@@ -29,6 +29,7 @@ Modules\ScenarioTracker.lua
 #Modules\SuperTrack.xml
 
 #Modules\DevTool.lua
+#Modules\DevTool_HyperlinkEditor.lua
 
 ControlCenter.lua
 
@@ -74,6 +75,9 @@ Modules\ProfessionsBook.lua
 Modules\ExpansionLandingPage\ExpansionLandingPage_TWW.xml
 Modules\BlizzFix_ModelLoading.lua
 Modules\Timerunning\LegionRemix.xml
+Modules\HolidayDungeon.lua
+
+#Modules\MerchantUI\MerchantUI.xml
 
 #Modules\DruidModelFix.lua
 #Modules\MovieSubtitle.lua

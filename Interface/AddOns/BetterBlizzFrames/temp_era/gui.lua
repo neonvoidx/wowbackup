@@ -144,6 +144,33 @@ function BBF.ImportProfile(encodedString, expectedDataType)
     return importTable.data, nil
 end
 
+local function RecolorEntireAuraWhitelist(r, g, b, a)
+    if type(BetterBlizzFramesDB) ~= "table" then return false end
+    local wl = BetterBlizzFramesDB.auraWhitelist
+    if type(wl) ~= "table" then return false end
+
+    for _, entry in pairs(wl) do
+        if type(entry) == "table" then
+            local c = entry.color
+            if type(c) == "table" then
+                if c[1] or c.r then
+                    c[1], c[2], c[3], c[4] = r, g, b, a
+                    c.r, c.g, c.b, c.a = nil, nil, nil, nil
+                else
+                    entry.color = { r, g, b, a }
+                end
+            else
+                entry.color = { r, g, b, a }
+            end
+        end
+    end
+
+    if BBF and BBF["auraWhitelistRefresh"] then
+        BBF["auraWhitelistRefresh"]()
+    end
+
+    return true
+end
 
 local function deepMergeTables(destination, source)
     for k, v in pairs(source) do
@@ -914,9 +941,28 @@ local function CreateTooltipTwo(widget, title, mainText, subText, anchor, cvarNa
         --GameTooltip:AddLine(" ") -- Adding an empty line as a separator
         -- Set the main text
         GameTooltip:AddLine(mainText, 1, 1, 1, true) -- true for wrap text
-        
+
         -- Add specific tooltip conditions
-        
+        if title == "Class Color Healthbars" then
+            local green = "|cff32f795"
+            local babyBlue = "|cff7fc6ff"
+            local reset = "|r"
+            local check = " |A:ParagonReputation_Checkmark:15:15|a"
+
+            local tooltipText = "\n"
+            tooltipText = tooltipText .. green .. "Right-Click to keep PlayerFrame green." .. reset
+            if BetterBlizzFramesDB.classColorFramesSkipPlayer then
+                tooltipText = tooltipText .. check
+            end
+
+            tooltipText = tooltipText .. "\n\n" .. babyBlue .. "Shift+Right-Click to keep Friendly units green." .. reset
+            if BetterBlizzFramesDB.classColorFramesSkipFriendly then
+                tooltipText = tooltipText .. check
+            end
+
+            GameTooltip:AddLine(tooltipText, 1, 1, 1, true)
+        end
+
         -- Set the subtext
         if subText then
             GameTooltip:AddLine("____________________________", 0.8, 0.8, 0.8, true)
@@ -1602,63 +1648,100 @@ local function CreateList(subPanel, listName, listData, refreshFunc, extraBoxes,
                 checkBoxI.texture:SetDesaturated(true)
                 checkBoxI.texture:SetPoint("CENTER", checkBoxI, "CENTER", -0.5, 0.5)
                 button.checkBoxI = checkBoxI
-                CreateTooltipTwo(checkBoxI, "Important Glow |T" .. BBF.ImportantIcon .. ":22:22|t", "Check for a glow on the aura to highlight it.\n|cff32f795Right-click to change color.|r", "Also check which frame(s) you want this on down below in settings.", "ANCHOR_TOPRIGHT")
+                CreateTooltipTwo(checkBoxI, "Important Glow |T" .. BBF.ImportantIcon .. ":22:22|t", "Check for a glow on the aura to highlight it.\n|cff32f795Right-click to change color.|r", "Ctrl+Alt+Right-click to change the color of ALL auras in the whitelist.\n\nAlso check which frame(s) you want this on down below in settings.", "ANCHOR_TOPRIGHT")
             end
             button.checkBoxI:SetChecked(button.npcData.important)
     
             -- Color picker logic
-            local function OpenColorPicker()
-                local colorData = entryColors or {0, 1, 0, 1}
-                local r, g, b = colorData[1] or 1, colorData[2] or 1, colorData[3] or 1
-                local a = colorData[4] or 1 -- Default alpha to 1 if not present
+            local function OpenColorPicker(isAll)
+                BBF.needsUpdate = true
 
-                local function updateColors(newR, newG, newB, newA)
-                    -- Assign RGB values directly, and set alpha to 1 if not provided
-                    entryColors[1] = newR
-                    entryColors[2] = newG
-                    entryColors[3] = newB
-                    entryColors[4] = newA or 1  -- Default alpha value to 1 if not provided
+                -- one-time hook for OK/Cancel to run bulk recolor
+                if isAll and not BBF._allColorHook then
+                    BBF._allColorHook = true
+                    local okBtn     = ColorPickerOkayButton or ColorPickerFrame.Footer and ColorPickerFrame.Footer.OkayButton
+                    local cancelBtn = ColorPickerCancelButton or ColorPickerFrame.Footer and ColorPickerFrame.Footer.CancelButton
+                    if okBtn then
+                        okBtn:HookScript("OnClick", function()
+                            if BBF._allColorActive and BBF._allColorPending then
+                                local p = BBF._allColorPending
+                                RecolorEntireAuraWhitelist(p.r, p.g, p.b, p.a)
+                            end
+                            BBF._allColorActive  = false
+                            BBF._allColorPending = nil
+                        end)
+                    end
+                    if cancelBtn then
+                        cancelBtn:HookScript("OnClick", function()
+                            BBF._allColorActive  = false
+                            BBF._allColorPending = nil
+                        end)
+                    end
+                end
 
-                    -- Update text and box colors
-                    SetTextColor(newR, newG, newB, newA or 1)  -- Update text color with default alpha if needed
-                    SetImportantBoxColor(newR, newG, newB, newA or 1)  -- Update important box color with default alpha if needed
-                    -- Refresh frames or elements that depend on these colors
+                BBF._allColorActive  = isAll or false
+                BBF._allColorPending = nil
+
+                -- set OK button label
+                local okBtn = ColorPickerOkayButton or ColorPickerFrame.Footer and ColorPickerFrame.Footer.OkayButton
+                if okBtn then
+                    if not BBF._colorPickerOkText then
+                        BBF._colorPickerOkText = okBtn:GetText()
+                    end
+                    okBtn:SetText(isAll and "Color ALL Auras" or BBF._colorPickerOkText)
+                end
+
+                -- entryColors is the per-row array table (entry.color). Ensure table exists.
+                entryColors = entryColors or {}
+                if type(entryColors) ~= "table" then entryColors = {} end
+                local r = entryColors[1] or 1
+                local g = entryColors[2] or 1
+                local b = entryColors[3] or 1
+                local a = entryColors[4] or 1
+                local backup = { r = r, g = g, b = b, a = a }
+
+                local function updateRowPreview()
+                    entryColors[1], entryColors[2], entryColors[3], entryColors[4] = r, g, b, a
+                    SetTextColor(r, g, b, a)
+                    SetImportantBoxColor(r, g, b, a)
                     BBF.RefreshAllAuraFrames()
+                    if ColorPickerFrame.Content and ColorPickerFrame.Content.ColorSwatchCurrent then
+                        ColorPickerFrame.Content.ColorSwatchCurrent:SetAlpha(a)
+                    end
+                    BBF.auraListNeedsUpdate = true
+                    if isAll then BBF._allColorPending = { r = r, g = g, b = b, a = a } end
                 end
 
                 local function swatchFunc()
                     r, g, b = ColorPickerFrame:GetColorRGB()
-                    updateColors(r, g, b, a)  -- Pass current color values to updateColors
+                    updateRowPreview()
                 end
 
                 local function opacityFunc()
                     a = ColorPickerFrame:GetColorAlpha()
-                    updateColors(r, g, b, a)  -- Pass current color values to updateColors including the alpha value
+                    updateRowPreview()
                 end
 
-                local function cancelFunc(previousValues)
-                    -- Revert to previous values if the selection is cancelled
-                    if previousValues then
-                        r, g, b, a = previousValues.r, previousValues.g, previousValues.b, previousValues.a
-                        updateColors(r, g, b, a)  -- Reapply the previous colors
-                    end
+                local function cancelFunc()
+                    r, g, b, a = backup.r, backup.g, backup.b, backup.a
+                    updateRowPreview()
+                    BBF._allColorActive  = false
+                    BBF._allColorPending = nil
                 end
 
-                -- Store the initial values before showing the color picker
                 ColorPickerFrame.previousValues = { r = r, g = g, b = b, a = a }
-
-                -- Setup and show the color picker with the necessary callbacks and initial values
                 ColorPickerFrame:SetupColorPickerAndShow({
                     r = r, g = g, b = b, opacity = a, hasOpacity = true,
                     swatchFunc = swatchFunc, opacityFunc = opacityFunc, cancelFunc = cancelFunc
                 })
+
+                updateRowPreview()
             end
-    
-            -- Right-click to open color picker
+
             button.checkBoxI:SetScript("OnMouseDown", function(self, button)
-                if button == "RightButton" then
-                    OpenColorPicker()
-                end
+                if button ~= "RightButton" then return end
+                local isAll = IsControlKeyDown() and IsAltKeyDown()
+                OpenColorPicker(isAll)
             end)
     
             -- CheckBox for Compacted
@@ -3381,17 +3464,38 @@ local function guiGeneralTab()
     allFrameIcon3:SetDesaturated(1)
     allFrameIcon3:SetVertexColor(1, 0, 0)
 
-    local classColorFrames = CreateCheckbox("classColorFrames", "Class Color Frames", BetterBlizzFrames)
+    local classColorFrames = CreateCheckbox("classColorFrames", "Class Color Health", BetterBlizzFrames)
     classColorFrames:SetPoint("TOPLEFT", allFrameText, "BOTTOMLEFT", -4, pixelsOnFirstBox)
 
-    local classColorFramesSkipPlayer = CreateCheckbox("classColorFramesSkipPlayer", "Skip Self", BetterBlizzFrames)
-    classColorFramesSkipPlayer:SetPoint("LEFT", classColorFrames.Text, "RIGHT", 0, 0)
-    CreateTooltipTwo(classColorFramesSkipPlayer, "Skip Self", "Skip PlayerFrame healthbar coloring and leave it default green.")
-    classColorFramesSkipPlayer:HookScript("OnClick", function(self)
-        if self:GetChecked() then
-            PlayerFrameHealthBar:SetStatusBarColor(0,1,0)
-        else
-            BBF.updateFrameColorToggleVer(PlayerFrameHealthBar, "player")
+    classColorFrames:HookScript("OnMouseDown", function(self, button)
+        if button == "RightButton" then
+            if IsShiftKeyDown() then
+                if not BetterBlizzFramesDB.classColorFramesSkipFriendly then
+                    BetterBlizzFramesDB.classColorFramesSkipFriendly = true
+                else
+                    BetterBlizzFramesDB.classColorFramesSkipFriendly = nil
+                end
+            else
+                if not BetterBlizzFramesDB.classColorFramesSkipPlayer then
+                    BetterBlizzFramesDB.classColorFramesSkipPlayer = true
+                else
+                    BetterBlizzFramesDB.classColorFramesSkipPlayer = nil
+                end
+            end
+            if BetterBlizzFramesDB.classColorFramesSkipPlayer then
+                if PlayerFrame and PlayerFrame.healthbar then
+                    PlayerFrame.healthbar:SetStatusBarDesaturated(true)
+                    PlayerFrame.healthbar:SetStatusBarColor(0, 1, 0)
+                end
+            else
+                if PlayerFrame and PlayerFrame.healthbar then
+                    BBF.updateFrameColorToggleVer(PlayerFrame.healthbar, "player")
+                end
+            end
+            if GameTooltip:IsShown() and GameTooltip:GetOwner() == self then
+                self:GetScript("OnEnter")(self)
+            end
+            BBF.UpdateFrames()
         end
     end)
 
@@ -3409,17 +3513,8 @@ local function guiGeneralTab()
         end
         UpdateCVar()
         BBF.UpdateFrames()
-        if self:GetChecked() then
-            classColorFramesSkipPlayer:Show()
-        else
-            classColorFramesSkipPlayer:Hide()
-        end
     end)
     CreateTooltipTwo(classColorFrames, "Class Color Healthbars", "Class color Player, Target, Focus & Party frames.", "If you want a more I recommend the addon HealthBarColor instead of this setting.")
-
-    if not BetterBlizzFramesDB.classColorFrames then
-        classColorFramesSkipPlayer:Hide()
-    end
 
     local biggerHealthbars = CreateCheckbox("biggerHealthbars", "Bigger Healthbars", BetterBlizzFrames, nil, BBF.HookBiggerHealthbars)
     biggerHealthbars:SetPoint("TOPLEFT", classColorFrames, "BOTTOMLEFT", 0, pixelsBetweenBoxes)
@@ -6850,6 +6945,39 @@ local function guiSupport()
     boxTwoTex:SetSize(58, 58)
     boxTwoTex:SetPoint("BOTTOM", boxTwo, "TOP", 0, 1)
 end
+
+local function guiMidnight()
+    local guiMidnight = CreateFrame("Frame")
+    guiMidnight.name = "|T136221:12:12|t |cffcc66ffWoW: Midnight|r"
+    guiMidnight.parent = BetterBlizzFrames.name
+    --InterfaceOptions_AddCategory(guiMidnight)
+    local guiMidnightCategory = Settings.RegisterCanvasLayoutSubcategory(BBF.category, guiMidnight, guiMidnight.name, guiMidnight.name)
+    guiMidnightCategory.ID = guiMidnight.name;
+    BBF.guiMidnight = guiMidnight.name
+    BBF.category.guiMidnightCategory = guiMidnightCategory.ID
+    CreateTitle(guiMidnight)
+
+    local titleText = guiMidnight:CreateFontString(nil, "OVERLAY", "GameFontNormalHuge")
+    titleText:SetPoint("TOPLEFT", guiMidnight, "TOPLEFT", 20, -10)
+    titleText:SetText("|cffcc66ffWorld of Warcraft: Midnight Plans|r")
+    local titleIcon = guiMidnight:CreateTexture(nil, "ARTWORK")
+    titleIcon:SetTexture(136221)
+    titleIcon:SetSize(23, 23)
+    titleIcon:SetPoint("RIGHT", titleText, "LEFT", -3, 0.5)
+
+    local midnightInfo = guiMidnight:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    midnightInfo:SetPoint("TOPLEFT", titleIcon, "BOTTOMLEFT", 2, -5)
+    midnightInfo:SetText("|cffffffffI'm planning to continue developing all my addons for Midnight as well.\n\nSome features will need to be adjusted or removed but the addons should stick around.\nMidnight is still in early Alpha and I haven't started preparing yet (14th Oct), but I will soon.\n\nPlans might change, but I'm confident |A:gmchat-icon-blizz:16:16|aBetter|cff00c0ffBlizz|rFrames and my other addons\n|A:gmchat-icon-blizz:16:16|aBetter|cff00c0ffBlizz|rPlates & |cffffffffsArena |cffff8000Reloaded|r |T135884:13:13|t will stick around for Midnight (with changes/removals).\n\nI have a lot of work ahead of me and any support is greatly appreciated |A:GarrisonTroops-Health:10:10|a (|cff00c0ff@bodify|r)\nI'll update this section with more detailed information as I know more in some weeks/months.")
+    midnightInfo:SetTextColor(1,1,1,1)
+    midnightInfo:SetJustifyH("LEFT")
+
+    local bgImg = guiMidnight:CreateTexture(nil, "BACKGROUND")
+    bgImg:SetAtlas("professions-recipe-background")
+    bgImg:SetPoint("CENTER", guiMidnight, "CENTER", -8, 4)
+    bgImg:SetSize(680, 610)
+    bgImg:SetAlpha(0.4)
+    bgImg:SetVertexColor(0,0,0)
+end
 ------------------------------------------------------------
 -- GUI Setup
 ------------------------------------------------------------
@@ -6915,6 +7043,7 @@ function BBF.LoadGUI()
     --guiChatFrame()
     guiCustomCode()
     guiSupport()
+    guiMidnight()
     BetterBlizzFrames.guiLoaded = true
 
     Settings.OpenToCategory(BBF.category.ID)

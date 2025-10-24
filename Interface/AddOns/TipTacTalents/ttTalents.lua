@@ -1,372 +1,218 @@
------------------------------------------------------------------------
--- TipTacTalents
---
--- Show player talents/specialization including role and talent/specialization icon and the average item level in the tooltip.
---
+local gtt = GameTooltip;
 
--- create addon
-local MOD_NAME = ...;
-local PARENT_MOD_NAME = "TipTac";
-local ttt = CreateFrame("Frame", MOD_NAME, nil, BackdropTemplateMixin and "BackdropTemplate");
+-- Addon
+local modName = ...;
+local ttt = CreateFrame("Frame",modName);
 ttt:Hide();
 
--- get libs
-local LibFroznFunctions = LibStub:GetLibrary("LibFroznFunctions-1.0");
+-- String Constants
+local TALENTS_PREFIX = TALENTS..":|cffffffff ";	-- MoP: Could be changed from TALENTS to SPECIALIZATION
+local TALENTS_NA = NOT_APPLICABLE:lower();
+local TALENTS_NONE = NO.." "..TALENTS;
+local TALENTS_LOADING = SEARCH_LOADING_TEXT;
 
--- register with TipTac core addon if available
-local TipTac = _G[PARENT_MOD_NAME];
+-- Default Config -- NOTE: Only used when addon is stand-alone, together with TipTac, these are NOT used
+local TTT_DefConfig = {
+	showTalents = true,			-- "Main Switch", addon does nothing if false
+	talentOnlyInParty = false,	-- Only show talents for party/raid members
+	--talentFormat = 1,			-- (obsolete setting)
+	talentCacheSize = 25,		-- Change cache size here (Default 25)
 
-if (TipTac) then
-	LibFroznFunctions:RegisterForGroupEvents(PARENT_MOD_NAME, ttt, PARENT_MOD_NAME .. " - Talents Module");
+	inspectDelay = 0.2,			-- The time delay for the scheduled inspection (default = 0.2)
+	inspectFreq = 2,			-- How soon after an inspection are we allowed to inspect again? (default = 2)
+}
+
+-- Variables
+local cache = {};
+local current = {};
+
+-- Allow these to be accessed externally from other addons
+ttt.cache = cache;
+ttt.current = current;
+
+-- Time of the last inspect reuqest. Init this to zero, just to make sure.
+-- This is a global variable, so other addons can use this as well.
+lastInspectRequest = 0;
+
+-- Helper function to determine if an "Inspect Frame" is open. Native Inspect as well as Examiner is supported.
+local function IsInspectFrameOpen() return (InspectFrame and InspectFrame:IsShown()) or (Examiner and Examiner:IsShown()); end
+
+--------------------------------------------------------------------------------------------------------
+--                                           Main Functions                                           --
+--------------------------------------------------------------------------------------------------------
+
+-- Perform the tasks needed, after we have valid inspect data available
+function ttt:InspectDataAvailable(record)
+	self:QuerySpecialization(record)
+	self:UpdateTooltip(record);
+	self:CacheUnit(record);
 end
 
-----------------------------------------------------------------------------------------------------
---                                             Config                                             --
-----------------------------------------------------------------------------------------------------
+-- Queries the talent spec of the inspected unit, or player unit (MoP Code)
+function ttt:QuerySpecialization(record)
+	local spec = not record.isSelf and GetInspectSpecialization(record.unit) or GetSpecialization();
+	if (not spec or spec == 0) then
+		record.format = TALENTS_NONE;
+	elseif (not record.isSelf) then
+		local _, specName = GetSpecializationInfoByID(spec);
+		--local _, specName = GetSpecializationInfoForClassID(spec,record.classID);
+		record.format = specName or TALENTS_NA;
+	else
+		-- MoP Note: Is it no longer possible to query the different talent spec groups anymore?
+--		local group = GetActiveSpecGroup(isInspect) or 1;	-- Az: replaced with GetActiveSpecGroup(), but that does not support inspect?
+		local _, specName = GetSpecializationInfo(spec);
+		record.format = specName or TALENTS_NA;
+	end
+end
 
--- config
-local cfg;
-local TT_ExtendedConfig;
-local TT_CacheForFrames;
+-- Update tooltip with the record format, but only if tooltip is still showing the unit of our record
+function ttt:UpdateTooltip(record)
+	local _, unit = gtt:GetUnit();
+	if (not unit) or (UnitGUID(unit) ~= record.guid) then
+		return;
+	elseif (self.tipLineIndex) then
+		_G["GameTooltipTextLeft"..self.tipLineIndex]:SetFormattedText("%s%s",TALENTS_PREFIX,record.format);
+	else
+		gtt:AddLine(TALENTS_PREFIX..record.format);
+		self.tipLineIndex = gtt:NumLines();
+	end
 
--- default config
-local TTT_DefaultConfig = {
-	t_enable = true,                      -- "main switch", addon does nothing if false
-	t_showTalents = true,                 -- show talents
-	t_talentOnlyInParty = false,          -- only show talents/AIL for party/raid members
-	t_talentDontShowOutOfRange = false,   -- don't show talents/AIL for players out of range
-	
-	t_showRoleIcon = true,                -- show role icon
-	t_showTalentIcon = true,              -- show talent icon
-	
-	t_showTalentText = true,              -- show talent text
-	t_colorTalentTextByClass = true,      -- color specialization text by class color
-	t_talentFormat = 1,                   -- talent Format
-	
-	t_showAverageItemLevel = true,        -- show average item level (AIL)
-	t_showGearScore = false,              -- show GearScore
-	t_gearScoreAlgorithm =                -- GearScore algorithm
-		LibFroznFunctions.hasWoWFlavor.defaultGearScoreAlgorithm,
-	t_colorAILAndGSTextByQuality = true   -- color average item level and GearScore text by average quality
-};
+	-- If GTT is visible and not fading out, call Show() to force the tooltip to resize.
+	-- We can only detect a fading out tooltip with TipTac, as that sets the .fadeOut field.
+	-- This means, when TipTacTalents is used on its own, it may bug out the size of the tooltip here.
+	if (gtt:IsVisible()) and (not gtt.fadeOut) then
+		gtt:Show();
+	end
+end
 
-----------------------------------------------------------------------------------------------------
---                                           Variables                                            --
-----------------------------------------------------------------------------------------------------
+-- caches the given unit record
+function ttt:CacheUnit(record)
+	local cfg = TipTac_Config or TTT_DefConfig;
+	local cacheSize = cfg.talentCacheSize;
+	-- remove previous entries of this unit
+	for i = #cache, 1, -1 do
+		if (record.guid == cache[i].guid) then
+			tremove(cache,i);
+			break;
+		end
+	end
+	-- remove oldest entry if we are at the cache size limit
+	if (#cache > cacheSize) then
+		tremove(cache,1);
+	end
+	-- Cache the new entry
+	if (cacheSize > 0) then
+		cache[#cache + 1] = CopyTable(record);
+	end
+end
 
--- text constants
-local TTT_TEXT = {
-	talentsPrefix = ((LibFroznFunctions.hasWoWFlavor.specializationAvailable) and SPECIALIZATION or TALENTS), -- MoP: Could be changed from TALENTS (Talents) to SPECIALIZATION (Specialization)
-	ailAndGSPrefix = STAT_AVERAGE_ITEM_LEVEL, -- Item Level
-	onlyGSPrefix = "GearScore",
-	loading = SEARCH_LOADING_TEXT, -- Loading...
-	outOfRange = ERR_SPELL_OUT_OF_RANGE:sub(1, -2), -- Out of range.
-	none = NONE_KEY, -- None
-	-- na = NOT_APPLICABLE:lower() -- N/A
-};
+-- starts an inspection request
+function ttt:InitiateInspectRequest(unit,record)
+	-- Wipe Current Record
+	wipe(record);
+	record.unit = unit;
+	record.name = UnitName(unit);
+	record.guid = UnitGUID(unit)
 
--- colors
-local TTT_COLOR = {
-	text = {
-		default = HIGHLIGHT_FONT_COLOR, -- white
-		spec = HIGHLIGHT_FONT_COLOR, -- white
-		pointsSpent = LIGHTYELLOW_FONT_COLOR,
-		ail = HIGHLIGHT_FONT_COLOR, -- white
-		inlineGSPrefix = LIGHTYELLOW_FONT_COLOR
-	}
-};
+	-- invalidate lineindex
+	self.tipLineIndex = nil;
 
-----------------------------------------------------------------------------------------------------
---                                          Setup Addon                                           --
-----------------------------------------------------------------------------------------------------
-
--- EVENT: addon loaded (one-time-event)
-function ttt:ADDON_LOADED(event, addOnName, containsBindings)
-	-- not this addon
-	if (addOnName ~= MOD_NAME) then
+	-- No need for inspection on the player
+	if (UnitIsUnit(unit,"player")) then
+		record.isSelf = true;
+		self:InspectDataAvailable(record);
 		return;
 	end
-	
-	-- setup config
-	self:SetupConfig();
-	
-	-- apply hooks for inspecting
-	self:ApplyHooksForInspecting();
-	
-	-- remove this event handler as it's not needed anymore
-	self:UnregisterEvent(event);
-	self[event] = nil;
+
+	-- Search cached record for this guid, and get the format from cache
+	for _, entry in ipairs(cache) do
+		if (record.guid == entry.guid) then
+			record.format = entry.format;
+			break;
+		end
+	end
+
+	-- Queue a delayed inspect request
+	if (CanInspect(unit)) and (not IsInspectFrameOpen()) then
+		local cfg = TipTac_Config or TTT_DefConfig;
+		local freq = (cfg.inspectFreq or TTT_DefConfig.inspectFreq);	-- Az: remove this extra fallback once a new main TipTac is released
+		local delay = (cfg.inspectDelay or TTT_DefConfig.inspectDelay);	-- Az: remove this extra fallback once a new main TipTac is released
+
+		local lastInspectTime = (GetTime() - lastInspectRequest);
+		self.nextUpdate = (lastInspectTime > freq) and delay or (freq - lastInspectTime + delay);
+		self:Show();
+
+		if (not record.format) then
+			record.format = TALENTS_LOADING;
+		end
+	end
+
+	-- if we have something to show already, cached format or loading text, update the tip
+	if (record.format) then
+		self:UpdateTooltip(record);
+	end
 end
 
--- register events
-ttt:SetScript("OnEvent", function(self, event, ...)
-	self[event](self, event, ...);
+--------------------------------------------------------------------------------------------------------
+--                                           Event Handling                                           --
+--------------------------------------------------------------------------------------------------------
+
+-- OnEvent [INSPECT_READY] -- Inspect data ready
+ttt:SetScript("OnEvent",function(self,event,guid,...)
+	self:UnregisterEvent(event);
+	if (guid == current.guid) then
+		ttt:InspectDataAvailable(current);
+	end
 end);
 
-ttt:RegisterEvent("ADDON_LOADED");
-
--- setup config
-function ttt:SetupConfig()
-	-- Use TipTac config if installed
-	cfg = select(2, LibFroznFunctions:CreateDbWithLibAceDB("TipTac_Config", TTT_DefaultConfig));
-end
-
-----------------------------------------------------------------------------------------------------
---                                         Element Events                                         --
-----------------------------------------------------------------------------------------------------
-
-function ttt:OnApplyConfig(_TT_CacheForFrames, _cfg, _TT_ExtendedConfig)
-	TT_CacheForFrames = _TT_CacheForFrames;
-	TT_ExtendedConfig = _TT_ExtendedConfig;
-end
-
-----------------------------------------------------------------------------------------------------
---                                           Inspecting                                           --
-----------------------------------------------------------------------------------------------------
-
--- HOOK: GameTooltip's OnTooltipSetUnit -- will schedule a delayed inspect request
-local tttTipLineIndexTalents, tttTipLineIndexAILAndGS;
-
-local function GTT_OnTooltipSetUnit(self, ...)
-	-- exit if "main switch" isn't enabled
-	if (not cfg.t_enable) then
-		return;
-	end
-	
-	-- get the unit id -- check the UnitFrame unit if this tip is from a concated unit, such as "targettarget".
-	local _, unitID = LibFroznFunctions:GetUnitFromTooltip(self);
-	
-	if (not unitID) then
-		local mouseFocus = LibFroznFunctions:GetMouseFocus();
-		if (mouseFocus) and (mouseFocus.unit) then
-			unitID = mouseFocus.unit;
+-- OnUpdate -- Sends the inspect request after a delay
+ttt:SetScript("OnUpdate",function(self,elapsed)
+	self.nextUpdate = (self.nextUpdate - elapsed);
+	if (self.nextUpdate <= 0) then
+		self:Hide();
+		-- Make sure the mouseover unit is still our unit
+		-- Check IsInspectFrameOpen() again: Since if the user right-clicks a unit frame, and clicks inspect,
+		-- it could cause TTT to schedule an inspect, while the inspection window is open
+		if (UnitGUID("mouseover") == current.guid) and (not IsInspectFrameOpen()) then
+			lastInspectRequest = GetTime();
+			self:RegisterEvent("INSPECT_READY");
+			NotifyInspect(current.unit);
 		end
 	end
-	
-	-- no unit id
-	if (not unitID) then
+end);
+
+-- HOOK: OnTooltipSetUnit -- Will schedule a delayed inspect request
+gtt:HookScript("OnTooltipSetUnit",function(self,...)
+	local cfg = TipTac_Config or TTT_DefConfig;
+	if not (cfg.showTalents) then
 		return;
 	end
-	
-	-- check if only talents/AIL for people in your party/raid should be shown
-	if (cfg.t_talentOnlyInParty) and (not UnitInParty(unitID)) and (not UnitInRaid(unitID)) then
-		return;
-	end
-	
-	-- invalidate line indexes
-	tttTipLineIndexTalents = nil;
-	tttTipLineIndexAILAndGS = nil;
-	
-	-- inspect unit
-	local unitCacheRecord = LibFroznFunctions:InspectUnit(unitID, TTT_UpdateTooltip, true);
-	
-	if (unitCacheRecord) then
-		TTT_UpdateTooltip(unitCacheRecord);
-	end
-end
 
--- apply hooks for inspecting during event ADDON_LOADED (one-time-function)
-function ttt:ApplyHooksForInspecting()
-	-- hooks needs to be applied as late as possible during load, as we want to try and be the
-	-- last addon to hook GameTooltip's OnTooltipSetUnit so we always have a "completed" tip to work on.
-	
-	-- HOOK: GameTooltip's OnTooltipSetUnit -- will schedule a delayed inspect request
-	LibFroznFunctions:HookScriptOnTooltipSetUnit(GameTooltip, GTT_OnTooltipSetUnit);
-	
-	-- remove this function as it's not needed anymore
-	self.ApplyHooksForInspecting = nil;
-end
+	-- Abort any delayed inspect in progress
+	ttt:Hide();
 
-----------------------------------------------------------------------------------------------------
---                                         Main Functions                                         --
-----------------------------------------------------------------------------------------------------
-
--- update tooltip with the unit cache record
-function TTT_UpdateTooltip(unitCacheRecord)
-	-- exit if "main switch" isn't enabled
-	if (not cfg.t_enable) then
-		return;
-	end
-	
-	-- exit if unit from unit cache record doesn't match the current displaying unit
-	local _, unitID = LibFroznFunctions:GetUnitFromTooltip(GameTooltip);
-	
-	if (not unitID) then
-		return;
-	end
-	
-	local unitGUID = UnitGUID(unitID);
-	
-	if (unitGUID ~= unitCacheRecord.guid) then
-		return;
-	end
-	
-	-- update tooltip with the unit cache record
-	
-	-- talents
-	if (cfg.t_showTalents) and (unitCacheRecord.talents) then
-		local specText = LibFroznFunctions:CreatePushArray();
-		
-		-- talents available but no inspect data
-		if (unitCacheRecord.talents == LFF_TALENTS.available) then
-			if (unitCacheRecord.canInspect) then
-				specText:Push(TTT_TEXT.loading);
-			else
-				-- check if talents/AIL for people out of range shouldn't be shown
-				if (not cfg.t_talentDontShowOutOfRange) then
-					specText:Push(TTT_TEXT.outOfRange);
-				end
-			end
-		
-		-- no talents available
-		elseif (unitCacheRecord.talents == LFF_TALENTS.na) then
-			specText:Clear();
-		
-		-- no talents found
-		elseif (unitCacheRecord.talents == LFF_TALENTS.none) then
-			specText:Push(TTT_TEXT.none);
-		
-		-- talents found
-		else
-			local spacer, color;
-			local talentFormat = (cfg.t_talentFormat or 1);
-			local specNameAdded = false;
-			
-			if (cfg.t_showRoleIcon) and (unitCacheRecord.talents.role) then
-				specText:Push(LibFroznFunctions:CreateMarkupForRoleIcon(unitCacheRecord.talents.role));
-			end
-			
-			if (cfg.t_showTalentIcon) and (unitCacheRecord.talents.iconFileID) then
-				spacer = (specText:GetCount() > 0) and " " or "";
-
-				specText:Push(spacer .. LibFroznFunctions:CreateMarkupForClassIcon(unitCacheRecord.talents.iconFileID));
-			end
-			
-			if (cfg.t_showTalentText) and ((talentFormat == 1) or (talentFormat == 2)) and (unitCacheRecord.talents.name) then
-				spacer = (specText:GetCount() > 0) and " " or "";
-
-				if (cfg.t_colorTalentTextByClass) then
-					local classColor = LibFroznFunctions:GetClassColor(unitCacheRecord.classID, 5, cfg.enableCustomClassColors and TT_ExtendedConfig.customClassColors or nil);
-					specText:Push(spacer .. classColor:WrapTextInColorCode(unitCacheRecord.talents.name));
-				else
-					specText:Push(spacer .. unitCacheRecord.talents.name);
-				end
-				
-				specNameAdded = true;
-			end
-			
-			if (cfg.t_showTalentText) and ((talentFormat == 1) or (talentFormat == 3)) and (unitCacheRecord.talents.pointsSpent) then
-				spacer = (specText:GetCount() > 0) and " " or "";
-				
-				if (specNameAdded) then
-					specText:Push(spacer .. TTT_COLOR.text.pointsSpent:WrapTextInColorCode("(" .. table.concat(unitCacheRecord.talents.pointsSpent, "/") .. ")"));
-				else
-					specText:Push(spacer .. TTT_COLOR.text.pointsSpent:WrapTextInColorCode(table.concat(unitCacheRecord.talents.pointsSpent, "/")));
-				end
-			end
-		end
-		
-		-- show spec text
-		if (specText:GetCount() > 0) then
-			local tipLineTextTalents = LibFroznFunctions:FormatText("{prefix}: {specText}", {
-				prefix = TTT_TEXT.talentsPrefix,
-				specText = TTT_COLOR.text.spec:WrapTextInColorCode(specText:Concat())
-			});
-			
-			if (tttTipLineIndexTalents) then
-				_G["GameTooltipTextLeft" .. tttTipLineIndexTalents]:SetText(tipLineTextTalents);
-			else
-				GameTooltip:AddLine(tipLineTextTalents);
-				tttTipLineIndexTalents = GameTooltip:NumLines();
-			end
+	-- Get the unit -- Check the UnitFrame unit if this tip is from a concated unit, such as "targettarget".
+	local _, unit = self:GetUnit();
+	if (not unit) then
+		local mFocus = GetMouseFocus();
+		if (mFocus) and (mFocus.unit) then
+			unit = mFocus.unit;
 		end
 	end
-	
-	-- average item level and GearScore
-	if ((cfg.t_showAverageItemLevel) or (cfg.t_showGearScore)) and (unitCacheRecord.averageItemLevel) then
-		local ailAndGSText = LibFroznFunctions:CreatePushArray();
-		local useOnlyGSPrefix = false;
-		
-		-- average item level available or no item data
-		if (unitCacheRecord.averageItemLevel == LFF_AVERAGE_ITEM_LEVEL.available) then
-			if (unitCacheRecord.canInspect) then
-				ailAndGSText:Push(TTT_TEXT.loading);
-			else
-				-- check if talents/AIL for people out of range shouldn't be shown
-				if (not cfg.t_talentDontShowOutOfRange) then
-					ailAndGSText:Push(TTT_TEXT.outOfRange);
-				end
-			end
-		
-		-- no average item level available
-		elseif (unitCacheRecord.averageItemLevel == LFF_AVERAGE_ITEM_LEVEL.na) then
-			ailAndGSText:Clear();
-		
-		-- no average item level found
-		elseif (unitCacheRecord.averageItemLevel == LFF_AVERAGE_ITEM_LEVEL.none) then
-			ailAndGSText:Push(TTT_TEXT.none);
-		
-		-- average item level found
-		elseif (unitCacheRecord.averageItemLevel) then
-			local spacer;
-			
-			-- average item level
-			if (cfg.t_showAverageItemLevel) then
-				local averageItemLevel = (unitCacheRecord.averageItemLevel.value > 0) and unitCacheRecord.averageItemLevel.value or "-";
-				
-				if (cfg.t_colorAILAndGSTextByQuality) then
-					ailAndGSText:Push(unitCacheRecord.averageItemLevel.qualityColor:WrapTextInColorCode(averageItemLevel));
-				else
-					ailAndGSText:Push(averageItemLevel);
-				end
-			end
-			
-			-- GearScore
-			if (cfg.t_showGearScore) then
-				spacer = (ailAndGSText:GetCount() > 0) and ("  " .. TTT_COLOR.text.inlineGSPrefix:WrapTextInColorCode("GS: ")) or "";
-				
-				if (ailAndGSText:GetCount() == 0) then
-					useOnlyGSPrefix = true;
-				end
-				
-				local gearScore;
-				
-				if (cfg.t_gearScoreAlgorithm == LFF_GEAR_SCORE_ALGORITHM.TacoTip) then -- TacoTip's GearScore algorithm
-					gearScore = (unitCacheRecord.averageItemLevel.TacoTipGearScore > 0) and unitCacheRecord.averageItemLevel.TacoTipGearScore or "-";
-					
-					if (cfg.t_colorAILAndGSTextByQuality) then
-						ailAndGSText:Push(spacer .. unitCacheRecord.averageItemLevel.TacoTipGearScoreQualityColor:WrapTextInColorCode(gearScore));
-					else
-						ailAndGSText:Push(spacer .. gearScore);
-					end
-				else -- TipTac's GearScore algorithm
-					gearScore = (unitCacheRecord.averageItemLevel.TipTacGearScore > 0) and unitCacheRecord.averageItemLevel.TipTacGearScore or "-";
-					
-					if (cfg.t_colorAILAndGSTextByQuality) then
-						ailAndGSText:Push(spacer .. unitCacheRecord.averageItemLevel.TipTacGearScoreQualityColor:WrapTextInColorCode(gearScore));
-					else
-						ailAndGSText:Push(spacer .. gearScore);
-					end
-				end
-			end
-		end
-		
-		-- show ail and GS text
-		if (ailAndGSText:GetCount() > 0) then
-			local tipLineTextAverageItemLevel = LibFroznFunctions:FormatText("{prefix}: {averageItemLevelAndGearScore}", {
-				prefix = useOnlyGSPrefix and TTT_TEXT.onlyGSPrefix or TTT_TEXT.ailAndGSPrefix,
-				averageItemLevelAndGearScore = TTT_COLOR.text.ail:WrapTextInColorCode(ailAndGSText:Concat())
-			});
-			
-			if (tttTipLineIndexAILAndGS) then
-				_G["GameTooltipTextLeft" .. tttTipLineIndexAILAndGS]:SetText(tipLineTextAverageItemLevel);
-			else
-				GameTooltip:AddLine(tipLineTextAverageItemLevel);
-				tttTipLineIndexAILAndGS = GameTooltip:NumLines();
-			end
-		end
+
+	-- No Unit or not a Player
+	if (not unit) or (not UnitIsPlayer(unit)) then
+		return;
 	end
-	
-	-- recalculate size of tip to ensure that it has the correct dimensions
-	LibFroznFunctions:RecalculateSizeOfGameTooltip(GameTooltip);
-end
+
+	-- Show only talents for people in your party/raid
+	if (cfg.talentOnlyInParty and not UnitInParty(unit) and not UnitInRaid(unit)) then
+		return;
+	end
+
+	-- No need to inspect players who has not yet gotten a specialization
+	local level = UnitLevel(unit);
+	if (level >= 10 or level == -1) then
+		ttt:InitiateInspectRequest(unit,current);
+	end
+end);

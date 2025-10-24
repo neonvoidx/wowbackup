@@ -26,6 +26,12 @@ layout.defaultSettings = {
         scale = 1,
         fontSize = 12,
     },
+    dispel = {
+        posX = -114,
+        posY = -1,
+        scale = 1,
+        fontSize = 12,
+    },
     castBar = {
         posX = -148,
         posY = 0,
@@ -59,6 +65,9 @@ layout.defaultSettings = {
     textSettings = {
         nameAnchor = "LEFT",
     },
+
+    -- BlizzArena specific settings
+    trinketCircleBorder = false,
 }
 
 local function getSetting(info)
@@ -87,6 +96,15 @@ local function setupOptionsTable(self)
         set = setSetting,
     }
 
+    layout.optionsTable.arenaFrames.args.other.args.trinketCircleBorder = {
+        order = 3,
+        name = "Trinket Circle Border",
+        desc = "Enable circular border for trinket icons",
+        type = "toggle",
+        get = getSetting,
+        set = setSetting,
+    }
+
 end
 
 function layout:Initialize(frame)
@@ -103,6 +121,7 @@ function layout:Initialize(frame)
         frame.parent:UpdateSpecIconSettings(self.db.specIcon)
         frame.parent:UpdateTrinketSettings(self.db.trinket)
         frame.parent:UpdateRacialSettings(self.db.racial)
+        frame.parent:UpdateDispelSettings(self.db.dispel)
     end
 
     frame.ClassIconCooldown:SetSwipeTexture("Interface\\CharacterFrame\\TempPortraitAlphaMask")
@@ -113,6 +132,7 @@ function layout:Initialize(frame)
     frame.SpecIcon.Texture:AddMaskTexture(frame.SpecIcon.Mask)
     frame.Trinket:SetSize(22, 22)
     frame.Racial:SetSize(22, 22)
+    frame.Dispel:SetSize(22, 22)
 
     local healthBar = frame.HealthBar
     healthBar:SetSize(69, 7)
@@ -128,6 +148,54 @@ function layout:Initialize(frame)
     f:Show()
     f:AddMaskTexture(frame.ClassIconMask)
     frame.ClassIconMask:SetAllPoints(f)
+
+    local trinket = frame.Trinket
+
+
+    if self.db.trinketCircleBorder then
+        if not trinket.Mask then
+            trinket.Mask = trinket:CreateMaskTexture()
+        end
+        trinket.Mask:SetTexture("Interface\\CharacterFrame\\TempPortraitAlphaMask", "CLAMPTOBLACKADDITIVE", "CLAMPTOBLACKADDITIVE")
+        trinket.Mask:SetAllPoints(trinket.Texture)
+        trinket.Texture:AddMaskTexture(trinket.Mask)
+
+        trinket.Cooldown:SetSwipeTexture("Interface\\CharacterFrame\\TempPortraitAlphaMask")
+        trinket.Cooldown:SetUseCircularEdge(true)
+
+        if not trinket.CircleBorder then
+            trinket.CircleBorder = trinket:CreateTexture(nil, "ARTWORK", nil, 3)
+        end
+
+        local trinketCircleBorder = trinket.CircleBorder
+        trinketCircleBorder:ClearAllPoints()
+        trinketCircleBorder:SetTexture("Interface\\CHARACTERFRAME\\TotemBorder")
+        trinketCircleBorder:SetPoint("TOPLEFT", trinket, "TOPLEFT", -8, 8)
+        trinketCircleBorder:SetPoint("BOTTOMRIGHT", trinket, "BOTTOMRIGHT", 8, -8)
+        trinketCircleBorder:SetDrawLayer("OVERLAY", 7)
+        trinketCircleBorder:Show()
+
+        if not trinket.TrinketCircleBorderHook then
+            hooksecurefunc(trinket.Texture, "SetTexture", function(self, t)
+                if t == nil or t == "" or t == 0 or t == "nil" or frame.parent.db.profile.currentLayout ~= layoutName then
+                    trinketCircleBorder:Hide()
+                else
+                    trinketCircleBorder:Hide()
+                    trinketCircleBorder:Show()
+                end
+            end)
+            trinket.TrinketCircleBorderHook = true
+        end
+    else
+        if trinket.Mask then
+            trinket.Texture:RemoveMaskTexture(trinket.Mask)
+        end
+        if trinket.CircleBorder then
+            trinket.CircleBorder:Hide()
+        end
+
+        trinket.Cooldown:SetUseCircularEdge(false)
+    end
 
 
     -- Spec icon border
@@ -157,12 +225,11 @@ function layout:Initialize(frame)
     f:SetPoint("CENTER", frame.HealthBar, "CENTER")
     f:SetSize(26, 26)
 
-    frame.HealthText:SetPoint("CENTER", frame.HealthBar)
-    --frame.HealthText:SetShadowOffset(0, 0)
-
-    frame.PowerText:SetPoint("CENTER", frame.PowerBar)
-    --frame.PowerText:SetShadowOffset(0, 0)
-    frame.PowerText:SetAlpha(0)
+    local fn, fs, fstyle = frame.HealthText:GetFont()
+    frame.HealthText:SetFont(fn, 10, "OUTLINE")
+    local fn, fs, fstyle = frame.HealthText:GetFont()
+    frame.PowerText:SetFont(fn, 10, "OUTLINE")
+    frame.PowerText:SetAlpha(frame.parent.db.profile.hidePowerText and 0 or 1)
 
     frame.AuraStacks:SetPoint("BOTTOMLEFT", frame.ClassIcon, "BOTTOMLEFT", 1, -4)
     frame.AuraStacks:SetFont("Interface\\AddOns\\sArena_Reloaded\\Textures\\arialn.ttf", 11, "THICKOUTLINE")
@@ -206,16 +273,18 @@ function layout:UpdateOrientation(frame)
     local name = frame.Name
     local specName = frame.SpecNameText
     local healthText = frame.HealthText
+    local powerText = frame.PowerText
     local castbarText = frame.CastBar.Text
 
     if self.db.textSettings then
         local txt = self.db.textSettings
         local modernCastbar = self.db.castBar.useModernCastbars
 
-        name:SetScale(txt.nameSize or 1.0)
-        healthText:SetScale(txt.healthSize or 1.0)
-        specName:SetScale(txt.specNameSize or 1.0)
-        castbarText:SetScale(txt.castbarSize or 1.0)
+        name:SetScale(txt.nameSize or 1)
+        healthText:SetScale(txt.healthSize or 1)
+        specName:SetScale(txt.specNameSize or 1)
+        castbarText:SetScale(txt.castbarSize or 1)
+        powerText:SetScale(txt.powerSize or 1)
 
         -- Name
         name:ClearAllPoints()
@@ -234,7 +303,17 @@ function layout:UpdateOrientation(frame)
         elseif (txt.healthAnchor or "CENTER") == "RIGHT" then
             healthText:SetPoint("RIGHT", healthBar, "RIGHT", (txt.healthOffsetX or 0), (txt.healthOffsetY or 0))
         else
-            healthText:SetPoint("CENTER", healthBar, "CENTER", (txt.healthOffsetX or 0), (txt.healthOffsetY or 0))
+            healthText:SetPoint("CENTER", healthBar, "CENTER", (txt.healthOffsetX or 0) + 1, (txt.healthOffsetY or 0))
+        end
+
+        -- Power Text
+        powerText:ClearAllPoints()
+        if (txt.powerAnchor or "CENTER") == "LEFT" then
+            powerText:SetPoint("LEFT", frame.PowerBar, "LEFT", 0 + (txt.powerOffsetX or 0), (txt.powerOffsetY or 0))
+        elseif (txt.powerAnchor or "CENTER") == "RIGHT" then
+            powerText:SetPoint("RIGHT", frame.PowerBar, "RIGHT", 0 + (txt.powerOffsetX or 0), (txt.powerOffsetY or 0))
+        else
+            powerText:SetPoint("CENTER", frame.PowerBar, "CENTER", (txt.powerOffsetX or 0) + 1, (txt.powerOffsetY or 0))
         end
 
         -- Spec Text
@@ -249,12 +328,13 @@ function layout:UpdateOrientation(frame)
 
         -- Castbar Text
         castbarText:ClearAllPoints()
+        local simpleCastbar = self.db.castBar.simpleCastbar and modernCastbar
         if (txt.castbarAnchor or "CENTER") == "LEFT" then
-            castbarText:SetPoint("LEFT", frame.CastBar, "LEFT", 3 + (txt.castbarOffsetX or 0), (modernCastbar and -11 or 0) + (txt.castbarOffsetY or 0))
+            castbarText:SetPoint("LEFT", frame.CastBar, "LEFT", 3 + (txt.castbarOffsetX or 0), (modernCastbar and (simpleCastbar and 0 or -11) or 0) + (txt.castbarOffsetY or 0))
         elseif (txt.castbarAnchor or "CENTER") == "RIGHT" then
-            castbarText:SetPoint("RIGHT", frame.CastBar, "RIGHT", -3 + (txt.castbarOffsetX or 0), (modernCastbar and -11 or 0) + (txt.castbarOffsetY or 0))
+            castbarText:SetPoint("RIGHT", frame.CastBar, "RIGHT", -3 + (txt.castbarOffsetX or 0), (modernCastbar and (simpleCastbar and 0 or -11) or 0) + (txt.castbarOffsetY or 0))
         else
-            castbarText:SetPoint("CENTER", frame.CastBar, "CENTER", (txt.castbarOffsetX or 0), (modernCastbar and -11 or 0) + (txt.castbarOffsetY or 0))
+            castbarText:SetPoint("CENTER", frame.CastBar, "CENTER", (txt.castbarOffsetX or 0), (modernCastbar and (simpleCastbar and 0 or -11) or 0) + (txt.castbarOffsetY or 0))
         end
     end
 

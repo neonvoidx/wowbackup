@@ -8,6 +8,7 @@ local healthbarsHooked = nil
 local classColorsOn
 local colorPetAfterOwner
 local skipPlayer
+local skipFriendly
 local retexturedBars
 local rpNames
 
@@ -110,7 +111,12 @@ local function getUnitColor(unit)
         else
             local color = RAID_CLASS_COLORS[select(2, UnitClass(unit))]
             if color then
-                return {r = color.r, g = color.g, b = color.b}, false
+                if skipFriendly then
+                    local reaction = getUnitReaction(unit)
+                    return {r = color.r, g = color.g, b = color.b}, ((unit == "player" and skipPlayer) or (skipFriendly and reaction == "FRIENDLY" and unit ~= "player"))
+                else
+                    return {r = color.r, g = color.g, b = color.b}, false
+                end
             end
         end
     elseif colorPetAfterOwner and UnitIsUnit(unit, "pet") then
@@ -178,7 +184,7 @@ local function updateFrameColorToggleVer(frame, unit)
     if classColorsOn then
         local color, isFriendly = getUnitColor(unit)
         if color then
-            if isFriendly and not frame.bbfChangedTexture then
+            if isFriendly and (not frame.bbfChangedTexture or skipFriendly) then
                 frame:SetStatusBarDesaturated(false)
                 frame:SetStatusBarColor(1, 1, 1)
             else
@@ -224,7 +230,7 @@ local function UpdateHealthColor(frame, unit)
     end
     local color, isFriendly = getUnitColor(unit)
     if color then
-        if isFriendly and not frame.bbfChangedTexture then
+        if isFriendly and (not frame.bbfChangedTexture or skipFriendly) then
             frame:SetStatusBarDesaturated(false)
             frame:SetStatusBarColor(1, 1, 1)
         else
@@ -252,6 +258,7 @@ function BBF.UpdateFrames()
     retexturedBars = BetterBlizzFramesDB.changeUnitFrameHealthbarTexture
     colorPetAfterOwner = BetterBlizzFramesDB.colorPetAfterOwner
     skipPlayer = BetterBlizzFramesDB.classColorFramesSkipPlayer
+    skipFriendly = BetterBlizzFramesDB.classColorFramesSkipFriendly
     rpNames = BetterBlizzFramesDB.rpNamesHealthbarColor
     if classColorsOn then
         BBF.HookHealthbarColors()
@@ -636,37 +643,37 @@ function BBF.HookFrameTextureColor()
     end
 
 
-    local function SetupFrame(frame, unit)
+    local function SetupFrame(frame, unit, colorUnit)
         if not frame then return end
+        colorUnit = colorUnit or unit
 
-        -- Assign unit and get texture
-        local texture = frame.TargetFrameContainer and frame.TargetFrameContainer.FrameTexture
-        or frame.PlayerFrameContainer and frame.PlayerFrameContainer.FrameTexture
-        or frame.FrameTexture
-        local altTexture = frame.TargetFrameContainer and frame.TargetFrameContainer.AlternatePowerFrameTexture
-        or frame.PlayerFrameContainer and frame.PlayerFrameContainer.AlternatePowerFrameTexture
-        or frame.AlternatePowerFrameTexture
+        local texture = (frame.TargetFrameContainer and frame.TargetFrameContainer.FrameTexture)
+            or (frame.PlayerFrameContainer and frame.PlayerFrameContainer.FrameTexture)
+            or frame.FrameTexture or (unit == "pet" and PetFrameTexture)
+        local altTexture = (frame.TargetFrameContainer and frame.TargetFrameContainer.AlternatePowerFrameTexture)
+            or (frame.PlayerFrameContainer and frame.PlayerFrameContainer.AlternatePowerFrameTexture)
+            or frame.AlternatePowerFrameTexture
+        if not texture then return end
 
         -- Hook SetVertexColor
         if not texture.bbfColorHook then
             hooksecurefunc(texture, "SetVertexColor", function(self)
                 if self.changing then return end
-                DesaturateAndColorTexture(self, unit)
+                DesaturateAndColorTexture(self, colorUnit)
             end)
             texture.bbfColorHook = true
         end
-
         if altTexture and not altTexture.bbfColorHook then
             hooksecurefunc(altTexture, "SetVertexColor", function(self)
                 if self.changing then return end
-                DesaturateAndColorTexture(self, unit)
+                DesaturateAndColorTexture(self, colorUnit)
             end)
             altTexture.bbfColorHook = true
         end
 
-        DesaturateAndColorTexture(texture, unit)
+        DesaturateAndColorTexture(texture, colorUnit)
         if altTexture then
-            DesaturateAndColorTexture(altTexture, unit)
+            DesaturateAndColorTexture(altTexture, colorUnit)
         end
     end
 
@@ -676,9 +683,11 @@ function BBF.HookFrameTextureColor()
     SetupFrame(FocusFrame, "focus")
     SetupFrame(TargetFrameToT, "targettarget")
     SetupFrame(FocusFrameToT, "focustarget")
+    SetupFrame(PetFrame, "pet", "player")
 
     C_Timer.After(1, function()
         SetupFrame(PlayerFrame, "player")
+        SetupFrame(PetFrame, "pet", "player")
     end)
 
     -- Event frame to watch for target/focus changes

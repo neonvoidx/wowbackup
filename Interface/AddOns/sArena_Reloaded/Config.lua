@@ -1,4 +1,40 @@
 local LSM = LibStub("LibSharedMedia-3.0")
+local isRetail = sArenaMixin.isRetail
+
+local function GetSpellInfoCompat(spellID)
+    if not spellID then
+        return nil
+    end
+
+    if GetSpellInfo then
+        return GetSpellInfo(spellID)
+    end
+
+    if C_Spell and C_Spell.GetSpellInfo then
+        local spellInfo = C_Spell.GetSpellInfo(spellID)
+        if spellInfo then
+            return spellInfo.name, nil, spellInfo.iconID, spellInfo.castTime, spellInfo.minRange, spellInfo.maxRange, spellInfo.spellID, spellInfo.originalIconID
+        end
+    end
+
+    return nil
+end
+
+local function GetSpellDescriptionCompat(spellID)
+    if not spellID then
+        return ""
+    end
+
+    if GetSpellDescription then
+        return GetSpellDescription(spellID) or ""
+    end
+
+    if C_Spell and C_Spell.GetSpellDescription then
+        return C_Spell.GetSpellDescription(spellID) or ""
+    end
+
+    return ""
+end
 
 local function getLayoutTable()
     local t = {}
@@ -19,10 +55,9 @@ local function validateCombat()
 end
 
 local growthValues = { "Down", "Up", "Right", "Left" }
-local isRetail = sArenaMixin.isRetail
-
 local drCategories
 local racialCategories
+local dispelCategories
 local drIcons
 local drCategorieslist
 
@@ -42,6 +77,13 @@ if isRetail then
             racialCategories[raceKey] = name
         end
     end
+
+    -- Load dispel categories from dispelData
+    dispelCategories = {}
+    for spellID, data in pairs(sArenaMixin.dispelData or {}) do
+        dispelCategories[spellID] = "|T" .. data.texture .. ":16|t " .. data.name .. " (" .. data.classes .. ")"
+    end
+
     drIcons = {
         ["Stun"] = 132298,
         ["Incapacitate"] = 136071,
@@ -95,6 +137,12 @@ else
         else
             racialCategories[raceKey] = name
         end
+    end
+
+    -- Load dispel categories from dispelData  
+    dispelCategories = {}
+    for spellID, data in pairs(sArenaMixin.dispelData or {}) do
+        dispelCategories[spellID] = "|T" .. (data.texture or "134400") .. ":16|t " .. data.name .. " (" .. data.classes .. ")"
     end
 
     drIcons = {
@@ -359,10 +407,10 @@ function sArenaMixin:GetLayoutOptionsTable(layoutName)
                             order = 1,
                             name = "Horizontal",
                             type = "range",
-                            min = -500,
-                            max = 500,
-                            softMin = -200,
-                            softMax = 200,
+                            min = -700,
+                            max = 700,
+                            softMin = -350,
+                            softMax = 350,
                             step = 0.1,
                             bigStep = 1,
                         },
@@ -370,10 +418,10 @@ function sArenaMixin:GetLayoutOptionsTable(layoutName)
                             order = 2,
                             name = "Vertical",
                             type = "range",
-                            min = -500,
-                            max = 500,
-                            softMin = -200,
-                            softMax = 200,
+                            min = -700,
+                            max = 700,
+                            softMin = -350,
+                            softMax = 350,
                             step = 0.1,
                             bigStep = 1,
                         },
@@ -421,10 +469,10 @@ function sArenaMixin:GetLayoutOptionsTable(layoutName)
                             order = 1,
                             name = "Horizontal",
                             type = "range",
-                            min = -500,
-                            max = 500,
-                            softMin = -200,
-                            softMax = 200,
+                            min = -700,
+                            max = 700,
+                            softMin = -350,
+                            softMax = 350,
                             step = 0.1,
                             bigStep = 1,
                         },
@@ -432,10 +480,10 @@ function sArenaMixin:GetLayoutOptionsTable(layoutName)
                             order = 2,
                             name = "Vertical",
                             type = "range",
-                            min = -500,
-                            max = 500,
-                            softMin = -200,
-                            softMax = 200,
+                            min = -700,
+                            max = 700,
+                            softMin = -350,
+                            softMax = 350,
                             step = 0.1,
                             bigStep = 1,
                         },
@@ -494,10 +542,10 @@ function sArenaMixin:GetLayoutOptionsTable(layoutName)
                             order = 1,
                             name = "Horizontal",
                             type = "range",
-                            min = -500,
-                            max = 500,
-                            softMin = -200,
-                            softMax = 200,
+                            min = -700,
+                            max = 700,
+                            softMin = -350,
+                            softMax = 350,
                             step = 0.1,
                             bigStep = 1,
                         },
@@ -505,10 +553,83 @@ function sArenaMixin:GetLayoutOptionsTable(layoutName)
                             order = 2,
                             name = "Vertical",
                             type = "range",
-                            min = -500,
-                            max = 500,
-                            softMin = -200,
-                            softMax = 200,
+                            min = -700,
+                            max = 700,
+                            softMin = -350,
+                            softMax = 350,
+                            step = 0.1,
+                            bigStep = 1,
+                        },
+                    },
+                },
+                sizing = {
+                    order = 2,
+                    name = "Sizing",
+                    type = "group",
+                    inline = true,
+                    args = {
+                        scale = {
+                            order = 1,
+                            name = "Scale",
+                            type = "range",
+                            min = 0.1,
+                            max = 5.0,
+                            softMin = 0.5,
+                            softMax = 3.0,
+                            step = 0.001,
+                            bigStep = 0.1,
+                            isPercent = true,
+                        },
+                        fontSize = {
+                            order = 3,
+                            name = "Font Size",
+                            desc = "Only works with Blizzard cooldown count (not OmniCC)",
+                            type = "range",
+                            min = 2,
+                            max = 48,
+                            softMin = 4,
+                            softMax = 32,
+                            step = 1,
+                        },
+                    },
+                },
+            },
+        },
+        dispel = {
+            order = 4.5,
+            name = "Dispels",
+            type = "group",
+            get = function(info) return info.handler.db.profile.layoutSettings[layoutName].dispel[info[#info]] end,
+            set = function(info, val)
+                self:UpdateDispelSettings(
+                    info.handler.db.profile.layoutSettings[layoutName].dispel, info, val)
+            end,
+            args = {
+                positioning = {
+                    order = 1,
+                    name = "Positioning",
+                    type = "group",
+                    inline = true,
+                    args = {
+                        posX = {
+                            order = 1,
+                            name = "Horizontal",
+                            type = "range",
+                            min = -700,
+                            max = 700,
+                            softMin = -350,
+                            softMax = 350,
+                            step = 0.1,
+                            bigStep = 1,
+                        },
+                        posY = {
+                            order = 2,
+                            name = "Vertical",
+                            type = "range",
+                            min = -700,
+                            max = 700,
+                            softMin = -350,
+                            softMax = 350,
                             step = 0.1,
                             bigStep = 1,
                         },
@@ -594,6 +715,25 @@ function sArenaMixin:GetLayoutOptionsTable(layoutName)
                             end,
                         },
 
+                        simpleCastbar = {
+                            order    = 2.3,
+                            type     = "toggle",
+                            name     = "Simple Castbar",
+                            width    = "75%",
+                            desc     = "Hides the castbar text background and moves the castbar text inside the castbar.",
+                            disabled = function(info)
+                                return not info.handler.db.profile.layoutSettings[layoutName].castBar.useModernCastbars
+                            end,
+                            get      = function(info)
+                                return info.handler.db.profile.layoutSettings[layoutName].castBar.simpleCastbar
+                            end,
+                            set      = function(info, val)
+                                local castDB = info.handler.db.profile.layoutSettings[layoutName].castBar
+                                castDB.simpleCastbar = val
+                                info.handler:RefreshConfig()
+                            end,
+                        },
+
                         spacerOne = {
                             order = 2.4,
                             type  = "description",
@@ -675,10 +815,10 @@ function sArenaMixin:GetLayoutOptionsTable(layoutName)
                             order = 1,
                             name = "Horizontal",
                             type = "range",
-                            min = -500,
-                            max = 500,
-                            softMin = -200,
-                            softMax = 200,
+                            min = -700,
+                            max = 700,
+                            softMin = -350,
+                            softMax = 350,
                             step = 0.1,
                             bigStep = 1,
                         },
@@ -686,10 +826,10 @@ function sArenaMixin:GetLayoutOptionsTable(layoutName)
                             order = 2,
                             name = "Vertical",
                             type = "range",
-                            min = -500,
-                            max = 500,
-                            softMin = -200,
-                            softMax = 200,
+                            min = -700,
+                            max = 700,
+                            softMin = -350,
+                            softMax = 350,
                             step = 0.1,
                             bigStep = 1,
                         },
@@ -826,10 +966,10 @@ function sArenaMixin:GetLayoutOptionsTable(layoutName)
                             order = 1,
                             name = "Horizontal",
                             type = "range",
-                            min = -500,
-                            max = 500,
-                            softMin = -200,
-                            softMax = 200,
+                            min = -700,
+                            max = 700,
+                            softMin = -350,
+                            softMax = 350,
                             step = 0.1,
                             bigStep = 1,
                         },
@@ -837,10 +977,10 @@ function sArenaMixin:GetLayoutOptionsTable(layoutName)
                             order = 2,
                             name = "Vertical",
                             type = "range",
-                            min = -500,
-                            max = 500,
-                            softMin = -200,
-                            softMax = 200,
+                            min = -700,
+                            max = 700,
+                            softMin = -350,
+                            softMax = 350,
                             step = 0.1,
                             bigStep = 1,
                         },
@@ -1237,6 +1377,116 @@ function sArenaMixin:GetLayoutOptionsTable(layoutName)
                     },
                 },
             },
+            powerText = {
+                order = 2.5,
+                name = "Mana Text",
+                type = "group",
+                inline = true,
+                args = {
+                    powerAnchor = {
+                        order = 1,
+                        name = "Anchor Point",
+                        type = "select",
+                        style = "dropdown",
+                        width = 0.5,
+                        values = {
+                            ["LEFT"] = "Left",
+                            ["CENTER"] = "Center",
+                            ["RIGHT"] = "Right",
+                        },
+                        get = function(info)
+                            local layout = info.handler.db.profile.layoutSettings[layoutName]
+                            layout.textSettings = layout.textSettings or {}
+                            return layout.textSettings.powerAnchor or "CENTER"
+                        end,
+                        set = function(info, val)
+                            local layout = info.handler.db.profile.layoutSettings[layoutName]
+                            layout.textSettings = layout.textSettings or {}
+                            layout.textSettings.powerAnchor = val
+                            sArenaMixin:UpdateTextPositions(layout.textSettings, info, val)
+                        end,
+                    },
+                    powerSize = {
+                        order = 2,
+                        name = "Size",
+                        type = "range",
+                        min = 0.05,
+                        max = 5,
+                        step = 0.01,
+                        width = 0.8,
+                        isPercent = true,
+                        get = function(info)
+                            local layout = info.handler.db.profile.layoutSettings[layoutName]
+                            layout.textSettings = layout.textSettings or {}
+                            return layout.textSettings.powerSize or 1.0
+                        end,
+                        set = function(info, val)
+                            local layout = info.handler.db.profile.layoutSettings[layoutName]
+                            layout.textSettings = layout.textSettings or {}
+                            layout.textSettings.powerSize = val
+                            sArenaMixin:UpdateTextPositions(layout.textSettings, info, val)
+                        end,
+                    },
+                    powerOffsetX = {
+                        order = 3,
+                        name = "Horizontal",
+                        type = "range",
+                        softMin = -200,
+                        softMax = 200,
+                        step = 0.5,
+                        width = 0.8,
+                        get = function(info)
+                            local layout = info.handler.db.profile.layoutSettings[layoutName]
+                            layout.textSettings = layout.textSettings or {}
+                            return layout.textSettings.powerOffsetX or 0
+                        end,
+                        set = function(info, val)
+                            local layout = info.handler.db.profile.layoutSettings[layoutName]
+                            layout.textSettings = layout.textSettings or {}
+                            layout.textSettings.powerOffsetX = val
+                            sArenaMixin:UpdateTextPositions(layout.textSettings, info, val)
+                        end,
+                    },
+                    powerOffsetY = {
+                        order = 4,
+                        name = "Vertical",
+                        type = "range",
+                        softMin = -200,
+                        softMax = 200,
+                        step = 0.5,
+                        width = 0.8,
+                        get = function(info)
+                            local layout = info.handler.db.profile.layoutSettings[layoutName]
+                            layout.textSettings = layout.textSettings or {}
+                            return layout.textSettings.powerOffsetY or 0
+                        end,
+                        set = function(info, val)
+                            local layout = info.handler.db.profile.layoutSettings[layoutName]
+                            layout.textSettings = layout.textSettings or {}
+                            layout.textSettings.powerOffsetY = val
+                            sArenaMixin:UpdateTextPositions(layout.textSettings, info, val)
+                        end,
+                    },
+                    resetPowerText = {
+                        order = 5,
+                        name = "Reset",
+                        width = 0.4,
+                        type = "execute",
+                        func = function(info)
+                            local layout = info.handler.db.profile.layoutSettings[layoutName]
+                            local currentLayout = info.handler.layouts[layoutName]
+                            local defaults = currentLayout.defaultSettings.textSettings
+                            layout.textSettings = layout.textSettings or {}
+                            layout.textSettings.powerAnchor = defaults.powerAnchor
+                            layout.textSettings.powerSize = defaults.powerSize
+                            layout.textSettings.powerOffsetX = defaults.powerOffsetX
+                            layout.textSettings.powerOffsetY = defaults.powerOffsetY
+                            sArenaMixin:UpdateTextPositions(layout.textSettings, info, nil)
+                            LibStub("AceConfigRegistry-3.0"):NotifyChange("sArena")
+                        end,
+                    },
+                },
+            },
             specNameText = {
                 order = 3,
                 name = "Spec Name Text",
@@ -1567,6 +1817,8 @@ function sArenaMixin:UpdateDRSettings(db, info, val)
 
     local categorySizeOffsets = db.drCategorySizeOffsets or {}
 
+    sArenaMixin.drBaseSize = db.size
+
     for i = 1, sArenaMixin.maxArenaOpponents do
         local frame = self["arena" .. i]
         frame:UpdateDRPositions()
@@ -1644,10 +1896,6 @@ function sArenaMixin:UpdateDRSettings(db, info, val)
             end
 
         end
-    end
-
-    if self.db.profile.currentLayout == "Pixelated" then
-        self:AddPixelBorder()
     end
 
     self:UpdateGlobalDRSettings()
@@ -1742,8 +1990,31 @@ function sArenaMixin:UpdateRacialSettings(db, info, val)
     end
 end
 
+function sArenaMixin:UpdateDispelSettings(db, info, val)
+    if (val ~= nil) then
+        db[info[#info]] = val
+    end
+
+    for i = 1, sArenaMixin.maxArenaOpponents do
+        local frame = self["arena" .. i]
+
+        frame.Dispel:ClearAllPoints()
+        frame.Dispel:SetPoint("CENTER", frame, "CENTER", db.posX, db.posY)
+        frame.Dispel:SetScale(db.scale)
+
+        local text = self["arena" .. i].Dispel.Cooldown.Text
+        local layoutCF = (self.layoutdb and self.layoutdb.changeFont)
+        local fontToUse = text.fontFile
+        if layoutCF then
+            fontToUse = LSM:Fetch(LSM.MediaType.FONT, self.layoutdb.cdFont)
+        end
+        text:SetFont(fontToUse, db.fontSize, "OUTLINE")
+
+        frame.Dispel:SetShown(self.db.profile.showDispels)
+    end
+end
+
 function sArenaMixin:UpdateTextPositions(db, info, val)
-    -- Refresh all arena frames with the current layout
     for i = 1, sArenaMixin.maxArenaOpponents do
         local frame = info.handler["arena" .. i]
         local layout = info.handler.layouts[info.handler.db.profile.currentLayout]
@@ -1771,7 +2042,6 @@ function sArenaFrameMixin:UpdateClassIconSwipeSettings()
     local disableSwipe = self.parent.db.profile.disableClassIconSwipe
     local disableSwipeEdge = self.parent.db.profile.disableSwipeEdge
 
-    -- Update Class Icon swipe settings
     if self.ClassIconCooldown then
         if disableSwipe then
             self.ClassIconCooldown:SetDrawSwipe(false)
@@ -1787,7 +2057,6 @@ function sArenaFrameMixin:UpdateTrinketRacialSwipeSettings()
     local disableSwipe = self.parent.db.profile.disableTrinketRacialSwipe
     local disableSwipeEdge = self.parent.db.profile.disableSwipeEdge
 
-    -- Update Trinket swipe settings
     if self.Trinket and self.Trinket.Cooldown then
         if disableSwipe then
             self.Trinket.Cooldown:SetDrawSwipe(false)
@@ -1798,7 +2067,6 @@ function sArenaFrameMixin:UpdateTrinketRacialSwipeSettings()
         end
     end
 
-    -- Update Racial swipe settings
     if self.Racial and self.Racial.Cooldown then
         if disableSwipe then
             self.Racial.Cooldown:SetDrawSwipe(false)
@@ -2032,7 +2300,7 @@ if sArenaMixin:CompatibilityIssueExists() then
                         order = 3,
                         type = "execute",
                         name = "|cffffffffUse sArena |cffff8000Reloaded|r |T135884:13:13|t: Import other settings",
-                        desc = "This will copy your existing settings from the other sArena, disable the other sArena for compatibility, and reload your UI so you can start using sArena |cffff8000Reloaded|r |T135884:13:13|t",
+                        desc = "This will copy your current profile and existing settings from the other sArena, disable the other sArena for compatibility, and reload your UI so you can start using sArena |cffff8000Reloaded|r |T135884:13:13|t",
                         func = function()
                             if sArenaMixin.ImportOtherForkSettings then
                                 sArenaMixin:ImportOtherForkSettings()
@@ -2040,7 +2308,7 @@ if sArenaMixin:CompatibilityIssueExists() then
                         end,
                         width = "full",
                         confirm = true,
-                        confirmText = "This will copy your existing settings from the other sArena, disable the other sArena for compatibility, and reload your UI so you can start using sArena |cffff8000Reloaded|r |T135884:13:13|t\n\nContinue?",
+                        confirmText = "This will copy your current profile and existing settings from the other sArena, disable the other sArena for compatibility, and reload your UI so you can start using sArena |cffff8000Reloaded|r |T135884:13:13|t\n\nContinue?",
                     },
                     option3 = {
                         order = 4,
@@ -2181,6 +2449,19 @@ else
                                             local _, instanceType = IsInInstance()
                                             if (instanceType ~= "arena" and info.handler.arena1:IsShown()) then
                                                 info.handler:Test()
+                                            end
+                                        end,
+                                    },
+                                    hidePowerText = {
+                                        order = 4,
+                                        name = "Hide Power Text",
+                                        desc = "Hide mana/rage/energy text",
+                                        type = "toggle",
+                                        get = function(info) return info.handler.db.profile.hidePowerText end,
+                                        set = function(info, val)
+                                            info.handler.db.profile.hidePowerText = val
+                                            for i = 1, sArenaMixin.maxArenaOpponents do
+                                                info.handler["arena" .. i]:UpdateStatusTextVisible()
                                             end
                                         end,
                                     },
@@ -2389,6 +2670,7 @@ else
                                                     end
                                                 end
                                             end
+                                            info.handler:Test()
                                         end,
                                     },
                                     colorTrinket = {
@@ -2601,6 +2883,28 @@ else
                                             else
                                                 sArenaMixin.noTrinketTexture = 638661
                                             end
+                                        end
+                                    },
+                                    desaturateTrinketCD = {
+                                        order = 2.1,
+                                        name = "Desaturate Trinket CD",
+                                        desc = "Desaturate the Trinket icon when it is on cooldown.",
+                                        type = "toggle",
+                                        width = "full",
+                                        get = function(info) return info.handler.db.profile.desaturateTrinketCD end,
+                                        set = function(info, val)
+                                            info.handler.db.profile.desaturateTrinketCD = val
+                                        end
+                                    },
+                                    desaturateDispelCD = {
+                                        order = 2.2,
+                                        name = "Desaturate Dispel CD",
+                                        desc = "Desaturate the Dispel icon when it is on cooldown.",
+                                        type = "toggle",
+                                        width = "full",
+                                        get = function(info) return info.handler.db.profile.desaturateDispelCD end,
+                                        set = function(info, val)
+                                            info.handler.db.profile.desaturateDispelCD = val
                                         end
                                     },
                                 },
@@ -2923,8 +3227,6 @@ else
                                     values = racialCategories,
                                 },
                             }
-
-                            -- Add racialOptions for both retail and non-retail
                             args.racialOptions = {
                                 order = 2,
                                 type = "group",
@@ -2933,8 +3235,8 @@ else
                                 args = {
                                     swapRacialTrinket = {
                                         order = 1,
-                                        name = "Swap Trinket with Racial",
-                                        desc = isRetail and "Swap the Trinket texture with the Racial ability if they don't have a Trinket equipped." or "Swap the Trinket texture with Racial for all races and hide the original Racial Icon.",
+                                        name = "Swap missing Trinket with Racial",
+                                        desc = "If the enemy doesn't have a Trinket equipped, remove the gap and show their Racial ability in the spot of the Trinket instead.",
                                         type = "toggle",
                                         width = "full",
                                         get = function(info) return info.handler.db.profile.swapRacialTrinket end,
@@ -2942,7 +3244,214 @@ else
                                             info.handler.db.profile.swapRacialTrinket = val
                                         end,
                                     },
+                                    forceShowTrinketOnHuman = {
+                                        order = 2,
+                                        name = "Force Show Trinket on Human (Beta)",
+                                        desc = "Always show the Alliance trinket texture on Human players, even if they don't have a trinket equipped.",
+                                        type = "toggle",
+                                        width = "full",
+                                        hidden = function() return isRetail end,
+                                        get = function(info) return info.handler.db.profile.forceShowTrinketOnHuman end,
+                                        set = function(info, val)
+                                            info.handler.db.profile.forceShowTrinketOnHuman = val
+                                            if val then
+                                                info.handler.db.profile.replaceHumanRacialWithTrinket = false
+                                            end
+                                        end,
+                                    },
+                                    replaceHumanRacialWithTrinket = {
+                                        order = 3,
+                                        name = "Replace Human Racial with Trinket (Beta)",
+                                        desc = "Replace the Human racial ability with the Alliance trinket texture in the racial slot.",
+                                        type = "toggle",
+                                        width = "full",
+                                        hidden = function() return isRetail end,
+                                        get = function(info) return info.handler.db.profile.replaceHumanRacialWithTrinket end,
+                                        set = function(info, val)
+                                            info.handler.db.profile.replaceHumanRacialWithTrinket = val
+                                            if val then
+                                                info.handler.db.profile.forceShowTrinketOnHuman = false
+                                            end
+                                        end,
+                                    },
                                 }
+                            }
+
+                            return args
+                        end)(),
+                    },
+                    dispelGroup = {
+                        order = 4,
+                        name = "Dispels (BETA)",
+                        type = "group",
+                        args = (function()
+                            local args = {
+                                showDispels = {
+                                    order = 0,
+                                    name = "Show Dispels (BETA)",
+                                    desc = "Enable to show Dispel Cooldown on Arena Frames.",
+                                    type = "toggle",
+                                    width = "full",
+                                    get = function(info) return info.handler.db.profile.showDispels end,
+                                    set = function(info, val)
+                                        info.handler.db.profile.showDispels = val
+                                        info.handler:Test()
+                                    end,
+                                },
+                                spacer0 = {
+                                    order = 0.5,
+                                    type = "description",
+                                    name = "",
+                                    width = "full",
+                                },
+                            }
+
+                            local healerDispels = {}
+                            local dpsDispels = {}
+
+                            for spellID, data in pairs(sArenaMixin.dispelData or {}) do
+                                if data.healer or data.sharedSpecSpellID then
+                                    healerDispels[spellID] = data
+                                end
+                                if not data.healer or data.sharedSpecSpellID then
+                                    dpsDispels[spellID] = data
+                                end
+                            end
+
+                            local order = 1
+
+                            if next(healerDispels) then
+                                args["healer_dispels"] = {
+                                    order = order,
+                                    name = "Healer Dispels",
+                                    type = "group",
+                                    inline = true,
+                                    disabled = function(info) return not info.handler.db.profile.showDispels end,
+                                    args = {}
+                                }
+                                order = order + 1
+
+                                local healerOrder = 1
+                                for spellID, data in pairs(healerDispels) do
+                                    -- For MoP shared spells, use separate setting key
+                                    local settingKey = spellID
+                                    if not isRetail and data.sharedSpecSpellID then
+                                        settingKey = spellID .. "_healer"
+                                    end
+
+                                    args["healer_dispels"].args["spell_" .. spellID] = {
+                                        order = healerOrder,
+                                        name = "|T" .. data.texture .. ":16|t " .. data.name,
+                                        type = "toggle",
+                                        disabled = function(info) return not info.handler.db.profile.showDispels end,
+                                        get = function(info) return info.handler.db.profile.dispelCategories[settingKey] end,
+                                        set = function(info, val)
+                                            info.handler.db.profile.dispelCategories[settingKey] = val
+                                            for i = 1, 3 do
+                                                local frame = info.handler["arena" .. i]
+                                                if frame then
+                                                    frame:UpdateDispel()
+                                                end
+                                            end
+                                        end,
+                                        desc = function()
+                                            local spellName = GetSpellInfoCompat(spellID)
+                                            local spellDesc = GetSpellDescriptionCompat(spellID)
+
+                                            spellName = spellName or data.name or "Unknown Spell"
+                                            local cooldownText = data.cooldown and ("Cooldown: " .. data.cooldown .. " seconds") or ""
+
+                                            local tooltipLines = {}
+                                            table.insert(tooltipLines, "|cFFFFD700" .. spellName .. "|r")
+                                            table.insert(tooltipLines, "|cFF87CEEB" .. data.classes .. "|r")
+                                            if spellDesc and spellDesc ~= "" then
+                                                table.insert(tooltipLines, spellDesc)
+                                            end
+                                            if cooldownText ~= "" then
+                                                table.insert(tooltipLines, "|cFF00FF00" .. cooldownText .. "|r")
+                                            end
+                                            table.insert(tooltipLines, "|cFF808080Spell ID: " .. spellID .. "|r")
+
+                                            return table.concat(tooltipLines, "\n\n")
+                                        end,
+                                    }
+                                    healerOrder = healerOrder + 1
+                                end
+                            end
+
+                            if next(dpsDispels) then
+                                args["dps_dispels"] = {
+                                    order = order,
+                                    name = "DPS Dispels",
+                                    type = "group",
+                                    inline = true,
+                                    disabled = function(info) return not info.handler.db.profile.showDispels end,
+                                    args = {
+                                        description = {
+                                            order = 1,
+                                            type = "description",
+                                            name = "|cFFFFFF00Note:|r DPS dispels only appear after having been used once.",
+                                            fontSize = "medium",
+                                        }
+                                    }
+                                }
+                                order = order + 1
+
+                                local dpsOrder = 2
+                                for spellID, data in pairs(dpsDispels) do
+
+                                    local settingKey = spellID
+                                    if not sArenaMixin.isRetail and data.sharedSpecSpellID then
+                                        settingKey = spellID .. "_dps"
+                                    end
+
+                                    args["dps_dispels"].args["spell_" .. spellID] = {
+                                        order = dpsOrder,
+                                        name = "|T" .. (data.texture or "134400") .. ":16|t " .. data.name,
+                                        type = "toggle",
+                                        disabled = function(info) return not info.handler.db.profile.showDispels end,
+                                        get = function(info) return info.handler.db.profile.dispelCategories[settingKey] end,
+                                        set = function(info, val)
+                                            info.handler.db.profile.dispelCategories[settingKey] = val
+                                            for i = 1, 3 do
+                                                local frame = info.handler["arena" .. i]
+                                                if frame then
+                                                    frame:UpdateDispel()
+                                                end
+                                            end
+                                        end,
+                                        desc = function()
+                                            local spellName = GetSpellInfoCompat(spellID)
+                                            local spellDesc = GetSpellDescriptionCompat(spellID)
+
+                                            spellName = spellName or data.name or "Unknown Spell"
+                                            local cooldownText = data.cooldown and ("Cooldown: " .. data.cooldown .. " seconds") or ""
+
+                                            local tooltipLines = {}
+                                            table.insert(tooltipLines, "|cFFFFD700" .. spellName .. "|r")
+                                            table.insert(tooltipLines, "|cFF87CEEB" .. data.classes .. "|r")
+                                            if spellDesc and spellDesc ~= "" then
+                                                table.insert(tooltipLines, spellDesc)
+                                            end
+                                            if cooldownText ~= "" then
+                                                table.insert(tooltipLines, "|cFF00FF00" .. cooldownText .. "|r")
+                                            end
+                                            table.insert(tooltipLines, "|cFF808080Spell ID: " .. spellID .. "|r")
+                                            table.insert(tooltipLines, "|cFFFFA500Only shows after having been used once|r")
+
+                                            return table.concat(tooltipLines, "\n\n")
+                                        end,
+                                    }
+                                    dpsOrder = dpsOrder + 1
+                                end
+                            end
+
+                            args["betaNotice"] = {
+                                order = 999,
+                                type = "description",
+                                name = "\n|cFF808080Dispels are in BETA.\nStill need to confirm some spell ids, especially in Mists of Pandaria.\nThings still need more testing (waiting for PTR) and things may see changes along the way.\nIf you want to contribute info/feedback/spell ids please do!|r",
+                                fontSize = "medium",
+                                width = "full",
                             }
 
                             return args
@@ -2953,7 +3462,7 @@ else
             ImportOtherForkSettings = {
                 order = 7,
                 name = "Other sArena",
-                desc = "Converter for other sArena",
+                desc = "Import settings from another sArena",
                 type = "group",
                 args = {
                     description = {
@@ -2980,8 +3489,23 @@ else
                     },
                 },
             },
-            shareProfile = {
+            midnightExpansion = {
                 order = 8,
+                name = "|cffcc66ffMidnight|r |T136221:16:16|t",
+                desc = "World of Warcraft: Midnight plans",
+                type = "group",
+                args = {
+                    description = {
+                        order = 1,
+                        type = "description",
+                        name = "I'm planning to continue developing |cffffffffsArena |cffff8000Reloaded|r |T135884:13:13|t for Midnight as well.\n\nSome features will need to be adjusted or removed but the addon should stick around.\nMidnight is still in early Alpha and I haven't started preparing yet (14th Oct), but I will soon.\n\nPlans might change, but I'm confident |cffffffffsArena |cffff8000Reloaded|r |T135884:13:13|t and my other addons\n|A:gmchat-icon-blizz:16:16|aBetter|cff00c0ffBlizz|rFrames & |A:gmchat-icon-blizz:16:16|aBetter|cff00c0ffBlizz|rPlates will stick around for Midnight (with changes/removals).\n\nI have a lot of work ahead of me, and any support is greatly appreciated. (|cff00c0ff@bodify|r)\nI'll update this section with more detailed information as I know more in some weeks/months.",
+                        fontSize = "medium",
+                        width = "full",
+                    },
+                },
+            },
+            shareProfile = {
+                order = 9,
                 name = "Share Profile",
                 desc = "Export or import a sArena profile",
                 type = "group",

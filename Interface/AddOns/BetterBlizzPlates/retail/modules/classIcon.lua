@@ -126,7 +126,7 @@ local petSpellIcons = {
 local playerClass = select(2, UnitClass("player"))
 local currentPetIcon = nil
 
-if playerClass == "HUNTER" then
+if playerClass == "HUNTER" or playerClass == "WARLOCK" or playerClass == "DEATHKNIGHT" or playerClass == "MAGE" then
     local f = CreateFrame("Frame")
     f:RegisterEvent("UNIT_PET")
 
@@ -143,12 +143,27 @@ if playerClass == "HUNTER" then
     end
 
     f:SetScript("OnEvent", function(self, event, arg1)
-        if (event == "UNIT_PET" and arg1 == "player") and BetterBlizzPlatesDB.classIndicatorShowPet then
-            UpdateCurrentPetIcon()
-            local _, frame = BBP.GetSafeNameplate("pet")
-            if frame then
-                BBP.ClassIndicator(frame)
-                return
+        if arg1 == "player" then
+            local pp = BetterBlizzPlatesDB.partyPointer and BetterBlizzPlatesDB.partyPointerShowPet
+            local ci = BetterBlizzPlatesDB.classIndicator and BetterBlizzPlatesDB.classIndicatorShowPet
+            if ci then
+                if playerClass == "HUNTER" then
+                    UpdateCurrentPetIcon()
+                end
+                C_Timer.After(0.5, function()
+                    local _, frame = BBP.GetSafeNameplate("pet")
+                    if frame then
+                        BBP.ClassIndicator(frame)
+                    end
+                end)
+            end
+            if pp then
+                C_Timer.After(0.5, function()
+                    local _, frame = BBP.GetSafeNameplate("pet")
+                    if frame then
+                        BBP.PartyPointer(frame)
+                    end
+                end)
             end
         end
     end)
@@ -250,10 +265,12 @@ function BBP.ClassIndicator(frame, foundID)
     frame.classIndicatorHideNumbers = nil
 
     local isOthersPet = config.classIndicatorShowOthersPets and UnitIsOtherPlayersPet(frame.unit) and BBP.isInArena and info.isFriend
+    local isPetGUID
 
     local class = info.class
     if not class then
-        if (UnitIsUnit(frame.unit, "pet") and config.classIndicatorShowPet) or isOthersPet then
+        isPetGUID = UnitIsUnit(frame.unit, "pet")
+        if (isPetGUID and config.classIndicatorShowPet) or isOthersPet then
             if isOthersPet then
                 for i = 1, 2 do
                     local partyPet = "partypet"..i
@@ -414,7 +431,7 @@ function BBP.ClassIndicator(frame, foundID)
     end
 
     local isTank = config.classIndicatorTank and TankSpecs[specID]
-    local isPet = UnitIsUnit(frame.unit, "pet") and config.classIndicatorShowPet
+    local isPet = isPetGUID and config.classIndicatorShowPet
     local isPetAndAlwaysShow = config.classIndicatorAlwaysShowPet and isPet
     local alwaysShowTank = config.classIconAlwaysShowTank and TankSpecs[specID]
     local alwaysShowHealer = config.classIconAlwaysShowHealer and HealerSpecs[specID]
@@ -680,7 +697,7 @@ function BBP.ClassIndicator(frame, foundID)
             frame.classIndicator.icon:SetTexCoord(0.637, 0.742, 0.259, 0.365)
         end
     else
-        if UnitIsUnit(frame.unit, "pet") and config.classIndicatorShowPet then
+        if isPet then
             local npcID = BBP.GetNPCIDFromGUID(info.unitGUID)
             local petIcon = currentPetIcon or petIcons[npcID]
             if petIcon then
@@ -818,7 +835,7 @@ function BBP.ToggleClassIndicatorPinMode(enable)
             classIndicatorHideFriendlyHealthbar = db.classIndicatorHideFriendlyHealthbar,
             classIndicatorYPos = db.classIndicatorYPos,
             classIconColorBorder = db.classIconColorBorder,
-            classIndicatorHighlightColor = dbclassIndicatorHighlightColor,
+            classIndicatorHighlightColor = db.classIndicatorHighlightColor,
         }
 
         -- Apply new values for pin mode--classIndicatorHideName

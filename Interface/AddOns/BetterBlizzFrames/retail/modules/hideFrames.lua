@@ -25,7 +25,21 @@ local function applyAlpha(frame, alpha)
     end
 end
 
-local function HideQualityIconFromBars(alpha)
+local function hideElementByParent(element)
+    if element and not element.bbfOriginalParent then
+        element.bbfOriginalParent = element:GetParent()
+        element:SetParent(BBF.hiddenFrame)
+    end
+end
+
+local function restoreElementParent(element)
+    if element and element.bbfOriginalParent then
+        element:SetParent(element.bbfOriginalParent)
+        element.bbfOriginalParent = nil
+    end
+end
+
+local function HideQualityIconFromBars(hide)
     for i = 1, 12 do
         local buttons = {
             _G["ActionButton" .. i],
@@ -40,7 +54,11 @@ local function HideQualityIconFromBars(alpha)
 
         for _, button in ipairs(buttons) do
             if button and button.ProfessionQualityOverlayFrame then
-                button.ProfessionQualityOverlayFrame:SetAlpha(alpha)
+                if hide then
+                    hideElementByParent(button.ProfessionQualityOverlayFrame)
+                else
+                    restoreElementParent(button.ProfessionQualityOverlayFrame)
+                end
             end
         end
     end
@@ -64,10 +82,10 @@ function BBF.HideFrames()
         -- PlayerFrameGroupIndicatorRight:SetAlpha(groupIndicatorAlpha)
 
         if db.hideActionBarQualityIcon then
-            HideQualityIconFromBars(0)
+            HideQualityIconFromBars(true)
             changes.hideActionBarQualityIcon = true
         elseif changes.hideActionBarQualityIcon then
-            HideQualityIconFromBars(1)
+            HideQualityIconFromBars(false)
         end
 
         -- Hide target leader icon
@@ -103,6 +121,7 @@ function BBF.HideFrames()
             if not bossFrameHooked then
                 hiddenFrame:RegisterEvent("ENCOUNTER_START")
                 hiddenFrame:RegisterEvent("ENCOUNTER_END")
+                hiddenFrame:RegisterEvent("PLAYER_ENTERING_WORLD")
                 hiddenFrame:RegisterEvent("GROUP_ROSTER_UPDATE")
                 hiddenFrame:SetScript("OnEvent", function()
                     if InCombatLockdown then return end
@@ -110,12 +129,53 @@ function BBF.HideFrames()
 
                     if BetterBlizzFramesDB.hideBossFramesParty and inInstance and instanceType == "party" then
                         BossTargetFrameContainer:SetParent(hiddenFrame)
+                        BossTargetFrameContainer:SetAlpha(0)
+                        for i = 1, 5 do
+                            local bossFrame = _G["Boss" .. i .. "TargetFrame"]
+                            if bossFrame then
+                                bossFrame:SetParent(hiddenFrame)
+                                bossFrame:SetAlpha(0)
+                            end
+                        end
                     elseif BetterBlizzFramesDB.hideBossFramesRaid and inInstance and instanceType == "raid" then
                         BossTargetFrameContainer:SetParent(hiddenFrame)
+                        BossTargetFrameContainer:SetAlpha(0)
+                        for i = 1, 5 do
+                            local bossFrame = _G["Boss" .. i .. "TargetFrame"]
+                            if bossFrame then
+                                bossFrame:SetParent(hiddenFrame)
+                                bossFrame:SetAlpha(0)
+                            end
+                        end
                     else
                         BossTargetFrameContainer:SetParent(originalBossFrameParent)
                     end
                 end)
+
+                local inInstance, instanceType = IsInInstance()
+                if BetterBlizzFramesDB.hideBossFramesParty and inInstance and instanceType == "party" then
+                    BossTargetFrameContainer:SetParent(hiddenFrame)
+                    BossTargetFrameContainer:SetAlpha(0)
+                    for i = 1, 5 do
+                        local bossFrame = _G["Boss" .. i .. "TargetFrame"]
+                        if bossFrame then
+                            bossFrame:SetParent(hiddenFrame)
+                            bossFrame:SetAlpha(0)
+                        end
+                    end
+                elseif BetterBlizzFramesDB.hideBossFramesRaid and inInstance and instanceType == "raid" then
+                    BossTargetFrameContainer:SetParent(hiddenFrame)
+                    BossTargetFrameContainer:SetAlpha(0)
+                    for i = 1, 5 do
+                        local bossFrame = _G["Boss" .. i .. "TargetFrame"]
+                        if bossFrame then
+                            bossFrame:SetParent(hiddenFrame)
+                            bossFrame:SetAlpha(0)
+                        end
+                    end
+                else
+                    BossTargetFrameContainer:SetParent(originalBossFrameParent)
+                end
 
                 bossFrameHooked = true
             end
@@ -796,9 +856,6 @@ function BBF.HideFrames()
         LossOfControlFrame.RedLineBottom:SetAlpha(LossOfControlFrameAlphaLines)
 
         -- action bar macro name hotkey hide
-        local hotKeyAlpha = BetterBlizzFramesDB.hideActionBarHotKey and 0 or 1
-        local macroNameAlpha = BetterBlizzFramesDB.hideActionBarMacroName and 0 or 1
-
         if BetterBlizzFramesDB.hideActionBarHotKey or BetterBlizzFramesDB.hideActionBarMacroName or keybindAlphaChanged then
             -- Blizzard buttons
             local blizzPrefixes = {
@@ -809,8 +866,20 @@ function BBF.HideFrames()
 
             for _, prefix in ipairs(blizzPrefixes) do
                 for i = 1, 12 do
-                    applyAlpha(_G[prefix .. i .. "HotKey"], hotKeyAlpha)
-                    applyAlpha(_G[prefix .. i .. "Name"], macroNameAlpha)
+                    local hotKey = _G[prefix .. i .. "HotKey"]
+                    local macroName = _G[prefix .. i .. "Name"]
+
+                    if BetterBlizzFramesDB.hideActionBarHotKey then
+                        hideElementByParent(hotKey)
+                    else
+                        restoreElementParent(hotKey)
+                    end
+
+                    if BetterBlizzFramesDB.hideActionBarMacroName then
+                        hideElementByParent(macroName)
+                    else
+                        restoreElementParent(macroName)
+                    end
                 end
             end
 
@@ -832,8 +901,20 @@ function BBF.HideFrames()
 
             for _, bar in ipairs(dominosBars) do
                 for i = 1, bar.count do
-                    applyAlpha(_G[bar.name .. i .. "HotKey"], hotKeyAlpha)
-                    applyAlpha(_G[bar.name .. i .. "Name"], macroNameAlpha)
+                    local hotKey = _G[bar.name .. i .. "HotKey"]
+                    local macroName = _G[bar.name .. i .. "Name"]
+
+                    if BetterBlizzFramesDB.hideActionBarHotKey then
+                        hideElementByParent(hotKey)
+                    else
+                        restoreElementParent(hotKey)
+                    end
+
+                    if BetterBlizzFramesDB.hideActionBarMacroName then
+                        hideElementByParent(macroName)
+                    else
+                        restoreElementParent(macroName)
+                    end
                 end
             end
 

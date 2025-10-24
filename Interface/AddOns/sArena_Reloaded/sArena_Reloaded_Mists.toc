@@ -4,7 +4,7 @@
 ## Notes: Enhanced Arena Frames
 ## Author: Stako, "reloaded" by Bodify
 ## OptionalDeps: sArena, sArena_Updated2_by_sammers
-## Version: 2.0.9
+## Version: 2.1.6
 ## X-Category: PvP/Arena
 ## X-Credits: Tekkub, Starship, Kouri, Kollektiv, Lyn, haste, evl, Zork, jturel, wardz, A3st (delayy), sammers21, Aeded, Xaryu, Mageiden, Probably more...
 ## SavedVariables: sArena_ReloadedDB

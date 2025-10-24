@@ -212,6 +212,35 @@ do	--DataProvider
 		return nodeID, entryID
 	end
 
+	function DataProvider:UpdateConfigInfo()
+		--traitTreeID is always 1161
+		--configID is different for each artifact weawpon
+
+		local traitTreeID = C_RemixArtifactUI.GetCurrTraitTreeID() or 1161;
+		local configID = traitTreeID and GetConfigIDByTreeID(traitTreeID);
+		if not configID then return end;
+
+		self.configID = configID;
+
+		local configInfo = GetConfigInfo(configID);
+		local treeID = configInfo.treeIDs[1] or 1161;
+		self.treeID = treeID;
+	end
+
+	function DataProvider:GetCurrentConfigID()
+		if not self.configID then
+			self:UpdateConfigInfo();
+		end
+		return self.configID
+	end
+
+	function DataProvider:GetCurrentTreeID()
+		if not self.treeID then
+			self:UpdateConfigInfo();
+		end
+		return self.treeID
+	end
+
 	function DataProvider:GetNodeInfo(nodeID)
 		local configID = self:GetCurrentConfigID();
 		if configID then
@@ -312,6 +341,8 @@ do	--DataProvider
 	end
 
 	function DataProvider:IsForbiddenSelectionNodeOnTracks(activeTrackIndex, newTrackIndex)
+		if true then return false end;	--Debug Maybe no longer an issue in live?
+
 		local tbl;
 		if (not activeTrackIndex) or (activeTrackIndex == newTrackIndex) then
 			tbl = {newTrackIndex};
@@ -543,35 +574,6 @@ do	--DataProvider
 		end
 	end
 
-	function DataProvider:UpdateConfigInfo()
-		--traitTreeID is always 1161
-		--configID is different for each artifact weawpon
-
-		local traitTreeID = C_RemixArtifactUI.GetCurrTraitTreeID() or 1161;
-		local configID = traitTreeID and GetConfigIDByTreeID(traitTreeID);
-		if not configID then return end;
-
-		self.configID = configID;
-
-		local configInfo = GetConfigInfo(configID);
-		local treeID = configInfo.treeIDs[1] or 1161;
-		self.treeID = treeID;
-	end
-
-	function DataProvider:GetCurrentConfigID()
-		if not self.configID then
-			self:UpdateConfigInfo();
-		end
-		return self.configID
-	end
-
-	function DataProvider:GetCurrentTreeID()
-		if not self.treeID then
-			self:UpdateConfigInfo();
-		end
-		return self.treeID
-	end
-
 	function DataProvider:GetNumUnspentPower()
 		--local treeID = 1161;	--1162
 		local configID = self:GetCurrentConfigID();
@@ -616,6 +618,8 @@ do	--DataProvider
 	end
 
 	function DataProvider:GetTraitSpell(entryID)
+		if not entryID then return end;
+
 		if self.traitSpellCache[entryID] then
 			return self.traitSpellCache[entryID]
 		end
@@ -734,15 +738,22 @@ do	--DataProvider
 		local tbl;
 		local traitInfo = self:GetNextTraitForUpgrade();
 		if traitInfo and traitInfo.cost >= 0 then
-			local line1, line2, nextSpellID, nextEntryID, nextRank;
+			local line1, line2, nextSpellID, nextEntryID, nextRank, traitName;
 			tbl = {};
 			local numUnspent = self:GetNumUnspentPower();
-			local diff = traitInfo.cost - numUnspent;
+			local threshold = traitInfo.cost;
+			local current = numUnspent;
+			local diff = threshold - numUnspent;
 			if diff <= 0 then
 				--Diff becomes negative when player receives lots of power at once to upgrade more than 1 trait
 				--We will automatically upgrade the second trait after CURRENCY_DISPLAY_UPDATE
 				diff = 0;
-				line1 = L["Soon To Unlock"];
+				current = threshold;
+				if CommitUtil.enableAutoUpgrade then
+					line1 = L["Soon To Unlock"];
+				else
+					line1 = L["You Can Unlock Title"];
+				end
 			else
 				line1 = L["Amount Required To Unlock Format"]:format(BreakUpLargeNumbers(diff));
 			end
@@ -756,19 +767,22 @@ do	--DataProvider
 					if line2 then
 						line2 = string.gsub(line2, "[%.。]%s*$", "");
 					end
+					traitName = line2;
 				else
-					local nodeInfo = DataProvider:GetNodeInfo(traitInfo.nodeID);
+					local nodeInfo = self:GetNodeInfo(traitInfo.nodeID);
 					local maxRanks = entryInfo.maxRanks;
 					if maxRanks > 1 then
 						nextRank = (nodeInfo and nodeInfo.ranksPurchased or 0) + 1;
 					end
 				end
 			end
-			if not line2 then
-				line2 = self:GetTraitName(traitInfo.entryID);
+
+			if not traitName then
+				traitName = self:GetTraitName(traitInfo.entryID);
 			end
-			if nextRank and line2 then
-				line2 = string.format("|cffb6b6b6%s|r  %s", L["Rank Format"]:format(nextRank), line2);
+
+			if nextRank and traitName then
+				line2 = string.format("|cffb6b6b6%s|r  %s", L["Rank Format"]:format(nextRank), traitName);
 			end
 
 			tbl = {
@@ -777,7 +791,37 @@ do	--DataProvider
 				nextSpellID = nextSpellID,
 				nextEntryID = nextEntryID,
 				nextRank = nextRank,
-			}
+
+				traitName = traitName,
+				threshold = threshold,
+				current = current,
+			};
+		else
+			if self:IsArtifactMaxed() then
+				tbl = {
+					line1 = L["Artifact Traits"],
+					line2 = L["Fully Upgraded"],
+
+					traitName = L["Fully Upgraded"],
+					threshold = 100,
+					current = 100,
+				};
+			elseif self:DoesNextUpgradeRequireMaxPlayerLevel() then
+				local nextEntryID = 134246;	--node:108700
+				local nextSpellID = self:GetTraitSpell(nextEntryID);
+				tbl = {
+					line1 = L["Unlock Level Requirement Format"]:format(80),
+					line2 = self:GetTraitName(nextEntryID),
+					nextSpellID = nextSpellID,
+					nextEntryID = nextEntryID,
+					nextRank = 1,
+
+					traitName = self:GetTraitName(nextEntryID),
+					threshold = 100,
+					current = 0,
+					isLocked = true,
+				};
+			end
 		end
 		return tbl
 	end
@@ -839,24 +883,43 @@ do	--DataProvider
 		self.playerDB.lastSelectedEntryBySpec[specIndex][nodeID] = entryID;
 	end
 
+	function DataProvider:IsArtifactMaxed()
+		local nodeInfo = self:GetNodeInfo(108700);
+		if nodeInfo and nodeInfo.currentRank >= 999 then
+			return true
+		end
+	end
 
+	function DataProvider:DoesNextUpgradeRequireMaxPlayerLevel()
+		local playerLevel = UnitLevel("player");
+		if playerLevel >= 80 then return end;
 
+		local nodeInfo;
+		for _, v in ipairs(self.ArtifactTracks) do
+			nodeInfo = self:GetNodeInfo(v[5]);
+			if nodeInfo and (nodeInfo.activeRank > 0 or #nodeInfo.entryIDsWithCommittedRanks > 0) then
+				return true
+			end
+		end
+	end
 
-	--Saved Variables
-	CallbackRegistry:Register("TimerunningSeason", function(seasonID)
-		--This happens after PLAYER_ENTERING_WORLD
+	function DataProvider:OnLoad()
 		if PlumberDB_PC then
 			if not PlumberDB_PC.LegionRemix then
 				PlumberDB_PC.LegionRemix = {};
 			end
-			DataProvider.playerDB = PlumberDB_PC.LegionRemix;
+			self.playerDB = PlumberDB_PC.LegionRemix;
 		else
-			DataProvider.playerDB = {};
+			self.playerDB = {};
 		end
-		DataProvider:UpdateConfigInfo();
-		DataProvider:UpdateClassSpecInfo();
-	end);
+		self:UpdateConfigInfo();
+		self:UpdateClassSpecInfo();
+	end
 
+
+
+
+	--Saved Variables
 	function DataProvider:GetLastArtifactTrackIndexForCurrentSpec()
 		if not self.playerDB then return end;
 
@@ -904,6 +967,14 @@ do
 			--self:RegisterEvent("TRAIT_TREE_CURRENCY_INFO_UPDATED");
 			API.RegisterFrameForEvents(self, self.dynamicEvents);
 			self:SetScript("OnEvent", self.OnEvent);
+
+			if not self.methodHooked then
+				self.methodHooked = true;
+				hooksecurefunc(C_RemixArtifactUI, "ClearRemixArtifactItem", function()
+					DataProvider:UpdateConfigInfo();
+					CommitUtil:ClearPendingChanges();
+				end);
+			end
 		else
 			API.UnregisterFrameForEvents(self, self.dynamicEvents);
 			self:UnregisterEvent("BAG_UPDATE_DELAYED");
@@ -919,7 +990,9 @@ do
 				self.specDirty = nil;
 				DataProvider:UpdateClassSpecInfo();
 				DataProvider:UpdateConfigInfo();
-				CommitUtil:TryPurchaseAllTraits();
+				if CommitUtil.enableAutoUpgrade then
+					CommitUtil:TryPurchaseAllTraits();
+				end
 			end
 		end
 
@@ -942,10 +1015,12 @@ do
 					end
 
 					--print("You can upgrade: "..traitName);
-					if InCombatLockdown() then
-						CommitUtil:TryPurchaseUpgradeAfterCombat();
-					else
-						CommitUtil:TryPurchaseToNode(traitInfo.nodeID, true);
+					if CommitUtil.enableAutoUpgrade then
+						if InCombatLockdown() then
+							CommitUtil:TryPurchaseUpgradeAfterCombat();
+						else
+							CommitUtil:TryPurchaseToNode(traitInfo.nodeID, true);
+						end
 					end
 				end
 			end
@@ -1016,11 +1091,13 @@ do	--CommitUtil
 	function CommitUtil:Enable(state)
 		if state then
 			self:SetScript("OnEvent", self.OnEvent);
+			self.enableAutoUpgrade = addon.GetDBBool("LegionRemix_AutoUpgrade");
 		else
 			self:UnregisterEvent("TRAIT_CONFIG_UPDATED");
 			self:UnregisterEvent("CONFIG_COMMIT_FAILED");
 			self:UnregisterEvent("PLAYER_REGEN_ENABLED");
 			self:UnregisterEvent("BAG_UPDATE_DELAYED");
+			self.enableAutoUpgrade = false;
 		end
 	end
 
@@ -1195,7 +1272,7 @@ do	--CommitUtil
 			if autoPurchase then
 				local nodeInfo = DataProvider:GetNodeInfo(nodeID);
 				local entryID = nodeInfo and nodeInfo.activeEntry and nodeInfo.activeEntry.entryID;
-				self:SendRankUpgradeToLootUI(entryID)
+				self:AnnounceAutoLearnedTrait(entryID);
 			end
 		end
 	end
@@ -1437,20 +1514,23 @@ do	--CommitUtil
                 end
             end
 			if canChangeEntry then
-				local configID = DataProvider:GetCurrentConfigID();
-				if C_Traits.ConfigHasStagedChanges(configID) then
-					if not C_Traits.RollbackConfig(configID) then
-						return
-					end
-				end
+				self:ClearPendingChanges();
 				--local success = configID and C_Traits.RefundAllRanks(configID, nodeID);
 				--According to wiki: You should not use the C_Traits.PurchaseRank or C_Traits.RefundRank APIs on selection nodes.
 				--https://warcraft.wiki.gg/wiki/API_C_Traits.SetSelection
-				if C_Traits.SetSelection(configID, nodeID, entryID) then
+				local configID = DataProvider:GetCurrentConfigID();
+				if configID and C_Traits.SetSelection(configID, nodeID, entryID) then
 					self:SetCommitStarted(configID);
 					return true
 				end
 			end
+		end
+	end
+
+	function CommitUtil:ClearPendingChanges()
+		local configID = DataProvider:GetCurrentConfigID();
+		if configID and C_Traits.ConfigHasStagedChanges(configID) then
+			return C_Traits.RollbackConfig(configID)
 		end
 	end
 
@@ -1459,8 +1539,8 @@ do	--CommitUtil
 		self.processAfterCombat = true;
 	end
 
-	function CommitUtil:SendRankUpgradeToLootUI(entryID)
-		if not (entryID and addon.GetDBBool("LootUI")) then return end;
+	function CommitUtil:AnnounceAutoLearnedTrait(entryID)
+		if not entryID then return end;
 
 		local spellID;
 		local entryInfo = DataProvider:GetEntryInfo(entryID);
@@ -1474,18 +1554,23 @@ do	--CommitUtil
 		local icon = C_Spell.GetSpellTexture(spellID);
 		local name = C_Spell.GetSpellName(spellID);
 
-		if name then
-			name = string.format("%s\n|cff19ff19%s|r", name, L["Rank Increased"]);
-		else
+		if not name then
 			return
 		end
 
-		local data = {
-			spellID = spellID,
-			icon = icon,
-			name = name,
-		};
-		addon.LootWindow:QueueDisplaySpell(data);
+		if addon.GetDBBool("LootUI") then
+			local data = {
+				spellID = spellID,
+				icon = icon,
+				name = string.format("%s\n|cff19ff19%s|r", name, L["Rank Increased"]),
+			};
+			addon.LootWindow:QueueDisplaySpell(data);
+		end
+
+		--local spellLink = string.format("|Hspell:%d:0|h[%s]|h", spellID, name);
+		local spellLink = C_Spell.GetSpellLink(spellID);
+		local msg = string.format("|cffffd100%s:|r %s", L["Rank Increased"], spellLink);
+		API.PrintMessage(msg);
 	end
 
 
@@ -1542,69 +1627,156 @@ do	--Debug
 end
 
 
-local CurrencyTooltipModule = {};
-do	--GameTooltip Infinite Power
+local ExtraTooltipModule = {};
+do	--GameTooltip Infinite Power, Knowledge, Epoch Challenges
 	local GameTooltipCurrencyManager = addon.GameTooltipManager:GetCurrencyManager();
+	local GameTooltipItemManager = addon.GameTooltipManager:GetItemManager();
 
+	local function GetPowerGainedMultiplierByRank(rank)
+		if rank <= 20 then
+			return (1 + 0.05 * rank)
+		else
+			return (2 + 0.03125 * (rank - 20))
+		end
+	end
 
-	function CurrencyTooltipModule:ProcessData(tooltip, currencyID)
-		if self.enabled then
-			if currencyID == CURRENCY_ID_IP then
-				local diff = DataProvider:GetRequiredAmountBeforeNextUpgrade();
-				if diff then
-					tooltip:AddLine(" ");
-					if diff > 0 then
-						diff = BreakUpLargeNumbers(diff);
-						tooltip:AddLine(string.format(L["Earn X To Upgrade Y Format"], diff, API.GetCurrencyName(CURRENCY_ID_IP), L["Artifact Weapon"]), 1, 0.82, 0, true);
-					else
-						tooltip:AddLine(L["New Trait Available"], 0.098, 1.000, 0.098, true);
+	local function GetPowerGainedMultiplier()
+		local currencyInfo = C_CurrencyInfo.GetCurrencyInfo(3292);    --Infinite Knowledge
+		local rank = currencyInfo and currencyInfo.quantity or 0;
+		local currentValue = GetPowerGainedMultiplierByRank(rank);
+		local nextValue;
+		if rank < 36 then
+			nextValue = GetPowerGainedMultiplierByRank(rank + 1);
+		end
+		return currentValue, nextValue
+	end
+
+	local CurrencyTooltipModule = {};
+	do
+		function CurrencyTooltipModule:ProcessData(tooltip, currencyID)
+			if self.enabled then
+				if currencyID == CURRENCY_ID_IP then
+					local diff = DataProvider:GetRequiredAmountBeforeNextUpgrade();
+					if diff then
+						tooltip:AddLine(" ");
+						if diff > 0 then
+							diff = BreakUpLargeNumbers(diff);
+							tooltip:AddLine(string.format(L["Earn X To Upgrade Y Format"], diff, API.GetCurrencyName(CURRENCY_ID_IP), L["Artifact Weapon"]), 1, 0.82, 0, true);
+						else
+							tooltip:AddLine(L["New Trait Available"], 0.098, 1.000, 0.098, true);
+						end
+
+						return true
 					end
-
+				elseif currencyID == 3292 then
+					tooltip:AddLine(" ");
+					local multiplier, nextMultiplier = GetPowerGainedMultiplier();
+					if multiplier >= 1 then
+						local percentage = math.floor((multiplier - 1) * 100).."%";
+						tooltip:AddLine(L["Infinite Knowledge Bonus Format"]:format(percentage), 1, 0.82, 0, true);
+						if nextMultiplier then
+							percentage = math.floor((nextMultiplier - 1) * 100).."%";
+							tooltip:AddLine(L["Infinite Knowledge Bonus Next Format"]:format(percentage), 0.5, 0.5, 0.5, true);
+						end
+					else
+						tooltip:AddLine(L["Infinite Knowledge Tooltip"], 0.400, 0.733, 1.00, true);	--BRIGHTBLUE_FONT_COLOR
+					end
 					return true
 				end
-			elseif currencyID == 3292 then
-				tooltip:AddLine(" ");
-				tooltip:AddLine(L["Infinite Knowledge Tooltip"], 0.400, 0.733, 1.00, true);	--BRIGHTBLUE_FONT_COLOR
-				return true
+			end
+			return false
+		end
+
+		function CurrencyTooltipModule:GetDBKey()
+			return "LegionRemix"
+		end
+
+		function CurrencyTooltipModule:SetEnabled(enabled)
+			self.enabled = enabled == true;
+			GameTooltipCurrencyManager:RequestUpdate();
+		end
+
+		function CurrencyTooltipModule:IsEnabled()
+			return self.enabled == true
+		end
+
+		GameTooltipCurrencyManager:AddSubModule(CurrencyTooltipModule);
+	end
+
+
+	local ItemTooltipModule = {};
+	do
+		function ItemTooltipModule:ProcessData(tooltip, itemID)
+			if self.enabled then
+				if itemID == 254267 then	--Fragmented Memento of Epoch Challenges
+					local yield = 50000 * GetPowerGainedMultiplier();
+					tooltip:AddLine(" ");
+					tooltip:AddLine(L["Infinite Power Yield Format"]:format(BreakUpLargeNumbers(yield)), 1, 0.82, 0, true);
+					return true
+				end
+			end
+			return false
+		end
+
+		function ItemTooltipModule:GetDBKey()
+			return "LegionRemix"
+		end
+
+		function ItemTooltipModule:SetEnabled(enabled)
+			self.enabled = enabled == true;
+			GameTooltipItemManager:RequestUpdate();
+		end
+
+		function ItemTooltipModule:IsEnabled()
+			return self.enabled == true
+		end
+
+		GameTooltipItemManager:AddSubModule(ItemTooltipModule);
+	end
+
+
+	function ExtraTooltipModule:SetEnabled(enabled)
+		CurrencyTooltipModule:SetEnabled(enabled)
+		ItemTooltipModule:SetEnabled(enabled)
+	end
+end
+
+
+--For other modules
+do
+	RemixAPI.GetActiveArtifactTrackIndex = function()
+		--return DataProvider:GetActiveArtifactTrackIndex()
+		local IsSpellKnown = API.IsSpellKnown;
+		for index, spellID in ipairs(DataProvider.ArtifactAbilitySpells) do
+			if IsSpellKnown(spellID) then
+				return index
 			end
 		end
-		return false
 	end
 
-	function CurrencyTooltipModule:GetDBKey()
-		return "LegionRemix"
+	RemixAPI.GetNextTraitForUpgrade = function()
+		return DataProvider:GetNextUpgradeInfoForUI()
 	end
 
-	function CurrencyTooltipModule:SetEnabled(enabled)
-		self.enabled = enabled == true
-		GameTooltipCurrencyManager:RequestUpdate();
-	end
-
-	function CurrencyTooltipModule:IsEnabled()
-		return self.enabled == true
-	end
-
-	GameTooltipCurrencyManager:AddSubModule(CurrencyTooltipModule);
-
-
-	local function ExtraTooltipLineGetter()
-		local diff = DataProvider:GetRequiredAmountBeforeNextUpgrade();
-		if diff then
-			if diff > 0 then
-				--return "|cffcccccc"..L["Until Next Upgrade Format"]:format(diff).."|r"
-			else
-				--return "|cff19ff19"..L["New Trait Available"].."|r"
-			end
+	RemixAPI.ActivateArtifactTrack = function(index)
+		if not CommitUtil:IsCommitingInProcess() then
+			C_RemixArtifactUI.ClearRemixArtifactItem();
+			DataProvider:UpdateConfigInfo();
+			CommitUtil:TryPurchaseArtifactTrack(index)
 		end
 	end
-	API.SetExtraTooltipForCurrency(CURRENCY_ID_IP, ExtraTooltipLineGetter);
+
+	RemixAPI.GetArtifactTrackName = function(index)
+		local spellID = DataProvider.ArtifactAbilitySpells[index];
+		return spellID and C_Spell.GetSpellName(spellID) or L["Artifact Ability"]
+	end
 end
 
 
 do	--Module Registry
 	local function EnableModule(state)
 		if state and not MASTER_ENABLED then
-			DataProvider:UpdateConfigInfo();
+			DataProvider:OnLoad();
 			--UIParent:UnregisterEvent("REMIX_ARTIFACT_UPDATE");
 		elseif not state and MASTER_ENABLED then
 			--UIParent:RegisterEvent("REMIX_ARTIFACT_UPDATE");
@@ -1614,10 +1786,16 @@ do	--Module Registry
 
 		MASTER_ENABLED = state;
 		EventListener:Enable(state);
-		CurrencyTooltipModule:SetEnabled(state);
+		ExtraTooltipModule:SetEnabled(state);
 		CommitUtil:Enable(state);
 		CallbackRegistry:Trigger("LegionRemix.EnableModule", state);
 	end
+
+	local function LoadSettings()
+		CommitUtil.enableAutoUpgrade = addon.GetDBBool("LegionRemix_AutoUpgrade");
+	end
+
+	CallbackRegistry:RegisterSettingCallback("LegionRemix_AutoUpgrade", LoadSettings);
 
     local moduleData = {
         name = L["ModuleName LegionRemix"],
@@ -1628,6 +1806,15 @@ do	--Module Registry
         uiOrder = 0,
         moduleAddedTime = 1759900000,
 		timerunningSeason = 2,
+
+        subOptions = {
+            {
+                dbKey = "LegionRemix_AutoUpgrade",
+                name = L["Auto Learn Traits"],
+                description = L["Auto Learn Traits Tooltip"],
+                toggleFunc = LoadSettings,
+            },
+        };
     };
 
     addon.ControlCenter:AddModule(moduleData);

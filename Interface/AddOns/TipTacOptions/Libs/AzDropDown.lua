@@ -1,48 +1,35 @@
 --[[
 	Changelog
-	â€”â€”â€” Rev 04 â€”â€”â€”
+	——— Rev 04 ———
 	- Dropdowns can now overwrite the label in their init and selectvalue funcs.
 	- Empty menus now show "No items".
-	â€”â€”â€” Rev 05 â€”â€”â€”
+	——— Rev 05 ———
 	- A menu entry now supports a .tip key, and will show a tooltip if it's a string.
 	- The SelectValueFunc() now has a third parameter, the menu item index that was clicked.
 	- The checkmark texture is now the green one used for readychecks in the raid tab.
 	- Will now obey the .checked key if set, not only when it's true.
 	- The autoselect feature of the last selected value, will not just select everything when nil.
 	- The InitSelectedItem() function will not ignore an initialisation with nil anymore.
-	â€”â€”â€” Rev 06 â€”â€”â€”
+	——— Rev 06 ———
 	- The "menu.list" table now has a meta table which will automatically create a table or take one from storage.
 	- If tables are creates through the new metatable index method, it will recycle old tables from storage.
-	â€”â€”â€” Rev 07 â€”â€”â€”
+	——— Rev 07 ———
 	- The menu will now hide itself, if any of it's parents was hidden.
-	â€”â€”â€” Rev 09 â€”â€”â€”
+	——— Rev 09 ———
 	- DropDown Text Object can no longer be wider than the width of the DropDown itself.
-	â€”â€”â€” Rev 10 â€”â€”â€” 7.0.3/Legion â€”â€”â€”
+	——— Rev 10 ——— 7.0.3/Legion ———
 	- Fixed issue related to frame level, making the dropdown appear behind other frames. Thanks vincentSDSH.
-	â€”â€”â€” Rev 11 â€”â€”â€” 7.3 â€”â€”â€”
+	——— Rev 11 ——— 7.3 ———
 	- Fixed the PlaySound() issue
-	â€”â€”â€” Rev 12 â€”â€”â€” 8.0/BfA â€”â€”â€”
+	——— Rev 12 ——— 8.0/BfA ———
 	- Disabled wordwrap for the labels
 	- Rewrote some parts of the code
 	- Added some documentation
 	- The dropdown menu will now copy the backdrop from the parent frame
-	â€”â€”â€” Rev 13 â€”â€”â€” 8.0 â€”â€”â€”
+	——— Rev 13 ——— 8.0 ———
 	- QueryItems() now returns the table of the queried items
-	â€”â€”â€” 20.10.31 â€”â€”â€” Rev 14 â€”â€”â€” 9.0.1/Shadowlands â€”â€”â€”
+	——— 20.10.31 ——— Rev 14 ——— 9.0.1/Shadowlands ———
 	- CreateFrame() now uses the "BackdropTemplate"
-	â€”â€”â€” 22.01.03 â€”â€”â€” Rev 15 â€”â€”â€” 9.1.5/Shadowlands â€”â€”â€” #frozn45
-	- parent of menu set to UIParent and comment out corresponding SetParent() to fix cut off dropdown menus by scroll frames. "menu.parent" stays at dropdown frame.
-	â€”â€”â€” 22.02.09 â€”â€”â€” Rev 16 â€”â€”â€” 9.1.5/Shadowlands â€”â€”â€” #frozn45
-	- fix for rev 15: fixed hiding the menu if parent is hidden
-	â€”â€”â€” 23.10.15 â€”â€”â€” Rev 17 â€”â€”â€” 10.1.7/Dragonflight â€”â€”â€” #frozn45
-	- anchored tooltip of menu items to the top
-	â€”â€”â€” 23.11.06 â€”â€”â€” Rev 18 â€”â€”â€” 10.1.7/Dragonflight â€”â€”â€” #frozn45
-	- since df 10.1.5 READY_CHECK_READY_TEXTURE switched from texture to atlas
-	â€”â€”â€” 24.07.25 â€”â€”â€” Rev 19 â€”â€”â€” 11.0.0/Dragonflight â€”â€”â€” #frozn45
-	- adjusted hit rect insets for Dropdown Menu Item Button
-	- enabled mouse events for DropDown Menu to prevent firing OnEnter/OnLeave events for underlying frames
-	â€”â€”â€” 24.08.13 â€”â€”â€” Rev 20 â€”â€”â€” 11.2.0/The War Within â€”â€”â€” #frozn45
-	- don't initially select header item
 
 	Keys set in the parent frame table
 	----------------------------------
@@ -62,7 +49,7 @@
 	tip			Tooltip will be shown when mouse is over item
 --]]
 
-local REVISION = 20; -- bump on changes
+local REVISION = 14;
 if (type(AzDropDown) == "table") and (AzDropDown.vers >= REVISION) then
 	return;
 end
@@ -101,7 +88,6 @@ local backdropBorderColor = CreateColor(0,0,0);
 -- Constants
 local MENU_ITEM_HEIGHT = 14;
 local DEF_MAX_MENU_ITEMS = 16;
-AzDropDown.selectValueText = "|cff00ff00Select Value...";
 
 --------------------------------------------------------------------------------------------------------
 --                                         Helper Functions                                           --
@@ -195,11 +181,7 @@ function DropDownMenuMixin:Initialize(parent,point,parentPoint)
 
 	-- Set DropDown Parent
 	self.parent = parent;
-	-- self:SetParent(parent);
-	
-	-- Hides the menu if parent is hidden
-	local menu = self;
-	menu.parent:SetScript("OnHide",function(self) if (menu:IsShown()) then menu:Hide(); end end);
+	self:SetParent(parent);
 
 	-- Anchor to Parent
 	self:ClearAllPoints();
@@ -250,7 +232,7 @@ end
 local function MenuItem_OnEnter(self)
 	local entry = menu.list[self.index];
 	if (type(entry.tip) == "string") then
-		GameTooltip:SetOwner(self,"ANCHOR_TOP", 0, 5);
+		GameTooltip_SetDefaultAnchor(GameTooltip,self);
 		GameTooltip:AddLine(entry.text,1,1,1);
 		GameTooltip:AddLine(entry.tip,nil,nil,nil,1);
 		GameTooltip:Show();
@@ -266,7 +248,7 @@ end
 local function CreateMenuItem()
 	local item = CreateFrame("Button",nil,menu);
 	item:SetHeight(MENU_ITEM_HEIGHT);
-	item:SetHitRectInsets(-18,-14,0,0);
+	item:SetHitRectInsets(-12,-10,0,0);
 	item:SetHighlightTexture("Interface\\QuestFrame\\UI-QuestTitleHighlight");
 	item:SetScript("OnClick",MenuItem_OnClick);
 	item:SetScript("OnEnter",MenuItem_OnEnter);
@@ -276,11 +258,7 @@ local function CreateMenuItem()
 	item.text:SetPoint("LEFT",2,0);
 
 	item.check = item:CreateTexture(nil,"ARTWORK");
-	if (READY_CHECK_READY_TEXTURE:match("^Interface\\.*")) then -- since df 10.1.5 READY_CHECK_READY_TEXTURE switched from texture to atlas
-		item.check:SetTexture(READY_CHECK_READY_TEXTURE);
-	else
-		item.check:SetAtlas(READY_CHECK_READY_TEXTURE);
-	end
+	item.check:SetTexture(READY_CHECK_READY_TEXTURE);
 	item.check:SetSize(14,14);
 	item.check:SetPoint("RIGHT",item,"LEFT");
 	item.check:Hide();
@@ -329,12 +307,12 @@ end
 
 -- Creates the DropDown menu with item buttons and scrollbar
 local function CreateDropDownMenu()
-	menu = CreateFrame("Frame",nil,UIParent,BackdropTemplateMixin and "BackdropTemplate");	-- 9.0.1: Using BackdropTemplate
+	menu = CreateFrame("Frame",nil,nil,BackdropTemplateMixin and "BackdropTemplate");	-- 9.0.1: Using BackdropTemplate
 
-	menu:EnableMouse(true); -- to prevent firing OnEnter/OnLeave events for underlying frames
 	menu:SetToplevel(true);
 	menu:SetClampedToScreen(true);
 	menu:SetFrameStrata("FULLSCREEN_DIALOG");
+	menu:SetScript("OnHide",function(self) if (self:IsShown()) then self:Hide(); end end);	-- hides the menu if parent is hidden
 	menu:Hide();
 
 	menu.scroll = CreateFrame("ScrollFrame","AzDropDownScroll"..REVISION,menu,"FauxScrollFrameTemplate");
@@ -397,12 +375,12 @@ function DropDownFrameMixin:InitSelectedItem(selectedValue)
 		CreateDropDownMenu();
 	end
 
-	self:SetText(AzDropDown.selectValueText);	-- set before calling QueryItems() as that may override it
+	self:SetText("|cff00ff00Select Value...");	-- set before calling QueryItems() as that may override it
 	self.selectedValue = selectedValue;
 
 	local list = menu:QueryItems(self);
 	for _, entry in ipairs(list) do
-		if (not entry.header) and (entry.value == selectedValue) then
+		if (entry.value == selectedValue) then
 			self:SetText(entry.text);
 			return;
 		end

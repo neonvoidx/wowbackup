@@ -82,10 +82,10 @@ do  --Controller
         --adjustment for serveral addons/WA
         local WidgetContainer = Controller.WidgetContainer;
 
-        if CharacterStatsPaneilvl then
+        if CSPilvl then
             --Chonky Character Sheet    wago.io/bRl2gJIgz
             WidgetContainer:ClearAllPoints();
-            WidgetContainer:SetPoint("CENTER", CharacterStatsPaneilvl, "RIGHT", 22, 0);     --anchor changed after swapping items, IDK why
+            WidgetContainer:SetPoint("CENTER", CSPilvl, "RIGHT", 22, 0);     --anchor changed after swapping items, IDK why
         elseif C_AddOns.IsAddOnLoaded("DejaCharacterStats") then
             WidgetContainer:ClearAllPoints();
             WidgetContainer:SetPoint("CENTER", PaperDollFrame, "TOPRIGHT", -1, -84);
@@ -516,6 +516,7 @@ do
         objects = {
             {type = "Title", name = L["LegionRemix Widget Title"]},
             {type = "Divider"},
+
             {type = "Title", name = L["Trait Icon Mode"]},
             {type = "Radio", response = "Refresh",
                 IsSelected = function(index)
@@ -523,7 +524,7 @@ do
                 end,
 
                 SetSelected = function(index)
-                    addon.SetDBValue("LegionRemix_TraitSubIconStyle", index);
+                    addon.SetDBValue("LegionRemix_TraitSubIconStyle", index, true);
                     IconPoolUtil:LoadSettings();
                 end,
 
@@ -532,6 +533,17 @@ do
                     L["Trait Icon Mode Mini"],
                     L["Trait Icon Mode Replace"],
                 },
+            },
+
+            {type = "Divider"},
+            {type = "Checkbox", name = L["Auto Learn Traits"], tooltip = L["Auto Learn Traits Tooltip"],
+                IsSelected = function()
+                    return addon.GetDBBool("LegionRemix_AutoUpgrade");
+                end,
+
+                ToggleSelected = function()
+                    return addon.FlipDBBool("LegionRemix_AutoUpgrade");
+                end,
             },
         };
     };

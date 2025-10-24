@@ -1,3 +1,40 @@
+# BetterBlizzFrames 1.7.6c
+## All versions
+### Bugfix
+- Fix Dark Mode changing action bar colors regardless if actionbar setting was enabled or not. This change only matters for when other addons were trying to do things with actionbar colors and clashing with the BBF setting that shouldnt have been active.
+
+# BetterBlizzFrames 1.7.6b
+## All versions
+### New
+- Class Color Health: New "Keep friendly units green" setting. Shift+RightClick "Class Color Health" setting to enable.
+
+# BetterBlizzFrames 1.7.6
+## All versions
+### New
+- Buffs & Debuffs: Add new Ctrl+Alt+Rightclick option for important color that colors ALL whitelist auras at once. This is irreversible so only do this if you are planning and wanting to easily change the color on every single aura at once.
+## Retail
+### Tweak
+- Desaturate Classic Frames textures when using Class Color FrameTexture.
+- Class Color FrameTexture: Also color PetFrame after Player class.
+- Change method of hiding Action Bar Quality Icon to avoid resets where it pops back up.
+## Mists of Pandaria
+- Add Hunter Silence Shot for Interrupt Icon and Castbar Interrupt Color. Thanks to Snackqt @ CurseForge.
+
+
+# BetterBlizzFrames 1.7.5e
+## Retail
+### Tweak
+- Potential fix for Hiding Boss Frames. (This still got kinda messed up in 11.1.7 cuz Blizzard changes and im not sure if this will work, report pls)
+- Minor Dark Mode Color tweaks, most for while Classic Frames is enabled.
+- Add missing spanish spec names to spec detection. Thanks to Dardo7 @ Discord
+- Minor tweaks to OCD setting and its gray lines behind PlayerFrame. They were sticking out slightly. (meant to hide gaps between frametexture and healthbar etc)
+- Changed method of hiding action bar hotkeys and macro names. Hopefully text wont pop back up now, if it does please report it.
+- Player Castbar setting "Simple Castbar" now puts an outline on castbar text to make it easier to read.
+## Classics
+### Bugfix
+- Fix issue with castbar texture layering after introducing texture settings.
+
+
 # BetterBlizzFrames 1.7.5d
 ## Retail
 ### Bugfix

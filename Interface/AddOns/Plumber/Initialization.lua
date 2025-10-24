@@ -1,5 +1,5 @@
-local VERSION_TEXT = "v1.7.6";
-local VERSION_DATE = 1759900000;
+local VERSION_TEXT = "v1.7.8";
+local VERSION_DATE = 1761200000;
 
 
 local addonName, addon = ...
@@ -190,6 +190,7 @@ local DefaultValues = {
     AppearanceTab = false,              --Adjust Appearance Tab models to reduce GPU usage spike
         AppearanceTab_ModelCount = 1,
     ItemUpgradeUI = true,
+    HolidayDungeon = true,              --Auto select holiday dungeons once
 
 
     --Tooltip
@@ -231,6 +232,7 @@ local DefaultValues = {
         LootUI_ReplaceDefaultAlert = false,
         LootUI_UseStockUI = false,
         LootUI_CombineItems = false,
+        LootUI_LowFrameStrata = false,
 
 
     --Unified Map Pin System
@@ -238,6 +240,7 @@ local DefaultValues = {
         WorldMapPin_Size = 1,           --1: Default
         WorldMapPin_TWW_Delve = true,   --Show Bountiful Delves on continent map
         WorldMapPin_TWW_Quest = true,   --Show Special Assignment on continent map
+        WorldMapPin_PlayerPing = true,
 
 
     --Modify default interface behavior:
@@ -274,7 +277,9 @@ local DefaultValues = {
     --LegionRemix
     LegionRemix = true,
         LegionRemix_TraitSubIconStyle = 3,  --1:OFF, 2:Mini Icon, 3:Replace Icon
+        LegionRemix_AutoUpgrade = true,
         LegionRemix_PaperDollTraitDetail = false,
+    LegionRemix_HideWorldTier = true,
 
 
     EnableNewByDefault = false,             --Always enable newly added features
@@ -347,11 +352,9 @@ EL:SetScript("OnEvent", function(self, event, ...)
         end
     elseif event == "PLAYER_ENTERING_WORLD" then
         self:UnregisterEvent(event);
-        if PlayerGetTimerunningSeasonID then
-            local seasonID = PlayerGetTimerunningSeasonID();
-            if seasonID and seasonID > 0 then
-                CallbackRegistry:Trigger("TimerunningSeason", seasonID);
-            end
+        local seasonID = API.GetTimerunningSeason();
+        if seasonID and seasonID > 0 then
+            CallbackRegistry:Trigger("TimerunningSeason", seasonID);
         end
     end
 end);

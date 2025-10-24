@@ -78,7 +78,7 @@ function BBP.PartyPointer(frame)
         normalTexture = BetterBlizzPlatesDB.partyPointerCustomTexture
     end
 
-    local isPet = UnitIsUnit(frame.unit, "pet") and config.partyPointerShowPet
+    local isPet = config.partyPointerShowPet and UnitIsUnit(frame.unit, "pet")
     local isPetAndAlwaysShow = config.partyPointerAlwaysShowPet and isPet
     local isOthersPet = config.partyPointerShowOthersPets and UnitIsOtherPlayersPet(frame.unit) and BBP.isInArena and info.isFriend
 

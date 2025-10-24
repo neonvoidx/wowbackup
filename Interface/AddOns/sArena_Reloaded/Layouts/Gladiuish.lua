@@ -26,6 +26,12 @@ layout.defaultSettings = {
         scale = 0.8,
         fontSize = 14,
     },
+    dispel = {
+        posX = 225,
+        posY = 0,
+        scale = 0.8,
+        fontSize = 14,
+    },
     castBar = {
         posX = 8,
         posY = -23.5,
@@ -71,6 +77,7 @@ layout.defaultSettings = {
     textSettings = {
         nameAnchor = "LEFT",
         healthAnchor = "RIGHT",
+        powerAnchor = "RIGHT",
         specNameAnchor = "LEFT",
     },
 }
@@ -170,11 +177,13 @@ function layout:Initialize(frame)
         frame.parent:UpdateSpecIconSettings(self.db.specIcon)
         frame.parent:UpdateTrinketSettings(self.db.trinket)
         frame.parent:UpdateRacialSettings(self.db.racial)
+        frame.parent:UpdateDispelSettings(self.db.dispel)
     end
 
     frame:SetSize(self.db.width, self.db.height)
     frame.SpecIcon:SetSize(22, 22)
     frame.Trinket:SetSize(41, 41)
+    frame.Dispel:SetSize(41, 41)
     frame.Racial:SetSize(41, 41)
     frame.Name:SetTextColor(1,1,1)
     frame.SpecNameText:SetTextColor(1,1,1)
@@ -182,6 +191,8 @@ function layout:Initialize(frame)
     frame.Trinket.Cooldown:SetSwipeTexture(1)
     frame.Trinket.Cooldown:SetSwipeColor(0, 0, 0, 0.6)
 
+    frame.Dispel.Cooldown:SetSwipeTexture(1)
+    frame.Dispel.Cooldown:SetSwipeColor(0, 0, 0, 0.6)
 
     frame.PowerBar:SetHeight(self.db.powerBarHeight)
 
@@ -190,7 +201,6 @@ function layout:Initialize(frame)
 
     local f = frame.Name
     f:SetJustifyH("LEFT")
-    f:SetFontObject("Game10Font_o1")
     f:SetPoint("LEFT", frame.HealthBar, "LEFT", 3, -1)
     f:SetHeight(12)
 
@@ -199,11 +209,7 @@ function layout:Initialize(frame)
     f:SetPoint("CENTER", frame.HealthBar, "CENTER", 0, -1)
     f:SetSize(self.db.height * 0.8, self.db.height * 0.8)
 
-    --frame.HealthText:SetShadowOffset(0, 0)
-
-    frame.PowerText:SetPoint("CENTER", frame.PowerBar)
-    --frame.PowerText:SetShadowOffset(0, 0)
-    frame.PowerText:SetAlpha(0)
+    frame.PowerText:SetAlpha(frame.parent.db.profile.hidePowerText and 0 or 1)
 
     -- Health bar underlay
     if not frame.hpUnderlay then
@@ -233,6 +239,7 @@ function layout:UpdateOrientation(frame)
     local name = frame.Name
     local specName = frame.SpecNameText
     local healthText = frame.HealthText
+    local powerText = frame.PowerText
     local castbarText = frame.CastBar.Text
 
     healthBar:ClearAllPoints()
@@ -244,10 +251,11 @@ function layout:UpdateOrientation(frame)
         local txt = self.db.textSettings
         local modernCastbar = self.db.castBar.useModernCastbars
 
-        name:SetScale(txt.nameSize or 1.0)
-        healthText:SetScale(txt.healthSize or 1.0)
-        specName:SetScale(txt.specNameSize or 1.0)
-        castbarText:SetScale(txt.castbarSize or 1.0)
+        name:SetScale(txt.nameSize or 1)
+        healthText:SetScale(txt.healthSize or 1)
+        specName:SetScale(txt.specNameSize or 1)
+        castbarText:SetScale(txt.castbarSize or 1)
+        powerText:SetScale(txt.powerSize or 1)
 
         -- Name
         name:ClearAllPoints()
@@ -269,6 +277,16 @@ function layout:UpdateOrientation(frame)
             healthText:SetPoint("CENTER", healthBar, "CENTER", (txt.healthOffsetX or 0), -1 + (txt.healthOffsetY or 0))
         end
 
+        -- Power Text
+        powerText:ClearAllPoints()
+        if (txt.powerAnchor or "CENTER") == "LEFT" then
+            powerText:SetPoint("LEFT", frame.PowerBar, "LEFT", 0 + (txt.powerOffsetX or 0), (txt.powerOffsetY or 0))
+        elseif (txt.powerAnchor or "CENTER") == "RIGHT" then
+            powerText:SetPoint("RIGHT", frame.PowerBar, "RIGHT", 0 + (txt.powerOffsetX or 0), (txt.powerOffsetY or 0))
+        else
+            powerText:SetPoint("CENTER", frame.PowerBar, "CENTER", (txt.powerOffsetX or 0), (txt.powerOffsetY or 0))
+        end
+
         -- Spec Text
         specName:ClearAllPoints()
         if (txt.specNameAnchor or "CENTER") == "LEFT" then
@@ -281,12 +299,13 @@ function layout:UpdateOrientation(frame)
 
         -- Castbar Text
         castbarText:ClearAllPoints()
+        local simpleCastbar = self.db.castBar.simpleCastbar and modernCastbar
         if (txt.castbarAnchor or "CENTER") == "LEFT" then
-            castbarText:SetPoint("LEFT", frame.CastBar, "LEFT", 3 + (txt.castbarOffsetX or 0), (modernCastbar and -11 or 0) + (txt.castbarOffsetY or 0))
+            castbarText:SetPoint("LEFT", frame.CastBar, "LEFT", 3 + (txt.castbarOffsetX or 0), (modernCastbar and (simpleCastbar and 0 or -11) or 0) + (txt.castbarOffsetY or 0))
         elseif (txt.castbarAnchor or "CENTER") == "RIGHT" then
-            castbarText:SetPoint("RIGHT", frame.CastBar, "RIGHT", -3 + (txt.castbarOffsetX or 0), (modernCastbar and -11 or 0) + (txt.castbarOffsetY or 0))
+            castbarText:SetPoint("RIGHT", frame.CastBar, "RIGHT", -3 + (txt.castbarOffsetX or 0), (modernCastbar and (simpleCastbar and 0 or -11) or 0) + (txt.castbarOffsetY or 0))
         else
-            castbarText:SetPoint("CENTER", frame.CastBar, "CENTER", (txt.castbarOffsetX or 0), (modernCastbar and -11 or 0) + (txt.castbarOffsetY or 0))
+            castbarText:SetPoint("CENTER", frame.CastBar, "CENTER", (txt.castbarOffsetX or 0), (modernCastbar and (simpleCastbar and 0 or -11) or 0) + (txt.castbarOffsetY or 0))
         end
     end
 

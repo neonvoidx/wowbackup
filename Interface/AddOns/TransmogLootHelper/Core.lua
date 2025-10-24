@@ -268,7 +268,7 @@ app.Event:Register("CHAT_MSG_ADDON", function(prefix, text, channel, sender, tar
 		-- Version
 		local version = text:match("version:(.+)")
 		if version then
-			if version ~= "v11.2.5-002" then
+			if version ~= "v11.2.5-003" then
 				local expansion, major, minor, iteration = version:match("v(%d+)%.(%d+)%.(%d+)%-(%d%d%d)")
 				expansion = string.format("%02d", expansion)
 				major = string.format("%02d", major)
@@ -277,7 +277,7 @@ app.Event:Register("CHAT_MSG_ADDON", function(prefix, text, channel, sender, tar
 				local otherAddonVersion = tonumber(iteration)
 
 				local localVersion = C_AddOns.GetAddOnMetadata("TransmogLootHelper", "Version")
-				if localVersion ~= "v11.2.5-002" then
+				if localVersion ~= "v11.2.5-003" then
 					expansion, major, minor, iteration = localVersion:match("v(%d+)%.(%d+)%.(%d+)%-(%d%d%d)")
 					expansion = string.format("%02d", expansion)
 					major = string.format("%02d", major)

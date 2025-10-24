@@ -31,6 +31,9 @@ if isRetail then
 
     sArenaMixin.auraList = {
         -- Spell ID = Priority
+        -- Immunity
+        [378441] = 9.1, -- Time Stop
+        [1221107] = 9.1, -- Overpowered Prismatic Barrier Immunity (Mage)
         -- CCs
         [33786] = 9,  -- Cyclone (Disorient)
         [5211] = 9,   -- Mighty Bash (Stun)
@@ -156,7 +159,6 @@ if isRetail then
         -- Immunities
         [456499] = 8, -- Absolute Serenity
         [473909] = 8, -- Ancient of Lore
-        [378441] = 8, -- Time Stop
         [354610] = 8, -- Demon Hunter: Glimpse
         [642] = 8,    -- Divine Shield
         [186265] = 8, -- Aspect of the Turtle
@@ -318,6 +320,7 @@ if isRetail then
         -- [260402] = 3, -- Hunter: Double Tap
         [365362] = 3, -- Mage: Arcane Surge
         [190319] = 3, -- Mage: Combustion
+        [205025] = 3, -- Mage: Presence of Mind
         [324220] = 3, -- Mage: Deathborne
         [198144] = 3, -- Mage: Ice Form
         [12472] = 3,  -- Mage: Icy Veins
@@ -346,7 +349,7 @@ if isRetail then
         [113858] = 3, -- Warlock: Dark Soul: Instability
         [113860] = 3, -- Warlock: Dark Soul: Misery
         [399680] = 3, -- Soul Swap
-        [442726] = 3, -- Malevolence
+        [442726] = 2.4, -- Malevolence (Not more important than defensives)
         [328774] = 3, -- Amp Curse
         [107574] = 3, -- Warrior: Avatar
         -- [260708] = 3, -- Warrior: Sweeping Strikes
@@ -386,6 +389,7 @@ if isRetail then
         [198111] = 2.5, -- Mage: Temporal Shield
         [342246] = 2.5, -- Mage: Alter Time (Arcane)
         [110909] = 2.5, -- Mage: Alter Time (Fire, Frost)
+        [1221106] = 2.4, -- Mage: Overpowered Prismatic Barrier (Use Blink to activate full dmg immunity)
 
         [125174] = 2.5, -- Monk: Touch of Karma
         [209584] = 2.5, -- Zen Focus Tea
@@ -563,7 +567,7 @@ else
 
     -- Auras we want tooltip info from to display as stacks
     tooltipInfoAuras = {
-        [115867] = true, -- Mana Tea
+        --[115867] = true, -- Mana Tea
         [1247275] = true, -- Tigereye Brew
     }
 
@@ -804,6 +808,7 @@ else
         [48792]  = 4.5, -- Icebound Fortitude
         [122783] = 4.5, -- Diffuse Magic
         [122470] = 4.5, -- Touch of Karma
+        [110909] = 4.5, -- Alter Time
         --[378081] = 4.5, -- Natures's Swiftness --not mop
 
         -- Roots
@@ -844,6 +849,8 @@ else
         [91807]  = 4, -- Shambling Rush
         [135373] = 4, -- Entrapment
         [45334]  = 4, -- Immobilized
+
+        [22734]  = 3.6, -- Drink
 
         -- Defensive Buffs
         [115610] = 3.5, -- Temporal Shield
@@ -900,10 +907,10 @@ else
         [114908] = 2.8, -- Spirit Shell (Absorb Shield)
         [64901]  = 2.8, -- Hymn of Hope
         [98007]  = 2.8, -- Spirit Link Totem
-        [114214] = 2, -- Angelic Bulwark
-        [114893] = 2, -- Stone Bulwark Totem
-        [145629] = 2, -- Anti-Magic Zone
-        [117679] = 2, -- Incarnation: Tree of Life
+        [114214] = 2.5, -- Angelic Bulwark
+        [114893] = 2.5, -- Stone Bulwark Totem
+        [145629] = 2.5, -- Anti-Magic Zone
+        [117679] = 2.5, -- Incarnation: Tree of Life
 
         -- Offensive Buffs
         [13750]  = 2, -- Adrenaline Rush
@@ -945,13 +952,20 @@ else
         [84747]  = 1.9, -- Deep Insight (Red Buff Rogue)
         [1247275] = 1.9, -- Tigereye Brew (Monk)
 
-
         [76577] = 1.8, -- Smoke Bomb
         [88611] = 1.8, -- Smoke Bomb
+
+        [6346]   = 1.7, -- Fear Ward
+        [110717] = 1.7, -- Fear Ward (Symbiosis)
+        [126084] = 1.6, -- Fingers of Frost
+        [44544]  = 1.6, -- Fingers of Frost
+        [77616]  = 1.6, -- Dark Simulacrum (Buff, has spell)
 
         -- Freedoms
         [96268] = 1.4, -- Deaths Advance
         [62305] = 1.4, -- Master's Call
+        [114896] = 1.4, -- Windwalk Totem
+        [116841] = 1.4, -- Tiger's Lust (70% speed)
 
         -- Lesser defensives
         [1966]  = 1.3, -- Feint
@@ -966,12 +980,8 @@ else
         [11426]  = 0.8, -- Ice Barrier
         [113656] = 0.8, -- Fists of Fury
         [83853]  = 0.8, -- Combustion (Debuff)
-        [77616]  = 0.7, -- Dark Simulacrum (Buff, has spell)
-        [44544]  = 0.6, -- Fingers of Frost
-        [41635]  = 0.5, -- Prayer of Mending
+        --[41635]  = 0.5, -- Prayer of Mending
         [64844]  = 0.5, -- Divine Hymn
-        [116841] = 0.5, -- Tiger's Lust (70% speed)
-        [114896] = 0.5, -- Windwalk Totem
         [114206] = 0.5, -- Skull Banner
 
         -- Forms
@@ -987,11 +997,12 @@ else
         [120]    = 0.4, -- Cone of Cold (70%)
         [60947]  = 0.4, -- Nightmare (30%)
         [1715]   = 0.4, -- Hamstring (50%)
+        [116095] = 0.4, -- Disable (50%)
 
         -- Miscellaneous
         [25771]  = 0.3, -- Forbearance (debuff)
-        [22734]  = 0.2, -- Drink
         [115867] = 0.1, -- Mana Tea
+        [125195] = 0.1, -- Tigereye Brew (Stacking)
         --[28612]  = 0.2, -- Cojured Food --not mop
         --[33717]  = 0.2, -- Cojured Food --not mop
         [108366] = 0.1, -- Soul Leech
@@ -1006,8 +1017,6 @@ else
         [114018] = 0, -- Shroud of Concealment
         [110960] = 0, -- Greater Invisibility (Invis)
         [66]     = 0, -- Invisibility
-        [6346]   = 0, -- Fear Ward
-        [110717] = 0, -- Fear Ward (Symbiosis)
         [2457]   = 0, -- Battle Stance
         [2458]   = 0, -- Berserker Stance
         [71]     = 0, -- Defensive Stance
@@ -1231,6 +1240,7 @@ function sArenaFrameMixin:UpdateAuraStacks()
     -- Show percentage for percentage-based auras, stacks >= 2 for others
     if tooltipInfoAuras[self.currentAuraSpellID] then
         self.AuraStacks:SetText(self.currentAuraApplications)
+        self.AuraStacks:SetScale(0.9)
     elseif self.currentAuraApplications >= 2 then
         self.AuraStacks:SetText(self.currentAuraApplications)
         self.AuraStacks:SetScale(1)

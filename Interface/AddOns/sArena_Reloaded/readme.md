@@ -2,18 +2,19 @@
 
 New and updated sArena Frames with tons of new great features. Fork of sArena addon made by Stako, and maintained by many in the PvP community.
 
-This is a further improvement of my sArena MoP Classic addon and it also brings it to Retail. This version will work on both Retail and MoP. This version will let you import settings from both sArena MoP and sArena Updated 2 by sammers.
+This is a further improvement of my sArena MoP Classic addon and it also brings it to Retail. This version will work on both Retail and MoP. This version will let you import settings from both sArena MoP and any other sArena version, see below.
 
 This version comes packed with many new features such as:
 
 *   Three new layouts and one updated one.
 *   Import/Export feature for Profile Sharing.
 *   A smarter aura priority system
+*   Dispel Icon (for Healer dispels by default but also things like Remove Curse & Mending Bandage)
 *   Many new customisation options such as Texture, Font, Dark Mode, Icon Crop, Modern Castbars, Masque support, Text Positions, etc.
 *   Put a unique texture on Healers specifically, or only when there is Class Stacking.
 *   Show shields and overshields on healthbars.
 *   Hunter's Feign Death does not show up as dead but instead gets faded out a little bit.
-*   Frames are now class colored by default in starting room.
+*   Frames are now class colored by default in starting room (with optional setting to keep default gray).
 *   Castbars immediately hide for easier interrupts and only lingers if an interrupt lands and it will also say who interrupted it on the castbar for a short while.
 *   Shows duration on auras that don't have durations implemented by default from Blizzard (Smoke Bomb, Earthen Wall, Barrier, etc)
 
@@ -40,7 +41,7 @@ Ctrl+Shift+Click to drag stuff
 
 ### Import from other sArena versions
 
-You can easily import your other sArena versions just by launching both addons at the same time and typing `/sarena` will open open a "Import Settings" window. From there you can chose which option you want to go with. There will be some lua errors popping up when you launch both addons at the same time due to both addons trying to do things with the "sArena" name, these are expected and safe to ignore. When you chose "Import Settings" it will also disable the other addon.
+You can easily import your other sArena versions just by launching both addons at the same time and typing `/sarena` will open open a "Import Settings" window. From there you can chose which option you want to go with. When you chose "Import Settings" it will also disable the other addon for compatibility and save you some clicks.
 
 ## New layouts:
 

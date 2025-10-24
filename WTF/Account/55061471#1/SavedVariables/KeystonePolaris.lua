@@ -274,7 +274,7 @@ KeystonePolarisDB = {
 ["fontSize"] = 24,
 ["xOffset"] = -0.8297519087791443,
 ["yOffset"] = -60.83279037475586,
-["lastVersionCheck"] = "3.0-fix2",
+["lastVersionCheck"] = "3.0.1",
 ["position"] = "TOP",
 },
 ["text"] = {

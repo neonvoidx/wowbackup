@@ -1,72 +1,17 @@
 --[[
-	è¦§è¦§è¦§è¦§è¦§è¦§è¦§è¦§ Rev 09 è¦§ãƒ»	- Fixed GetChecked() now returning a boolean instead of nil/1
-	è¦§ãƒ»16.07.23 è¦§ãƒ»Rev 10 è¦§ãƒ»7.0.3/Legion è¦§ãƒ»
+	———————————————— Rev 09 ———
+	- Fixed GetChecked() now returning a boolean instead of nil/1
+	——— 16.07.23 ——— Rev 10 ——— 7.0.3/Legion ———
 	- Changed SetTexture(r,g,b,a) -> SetColorTexture(r,g,b,a)
-	è¦§ãƒ»18.08.12 è¦§ãƒ»Rev 11 è¦§ãƒ»8.0/BfA è¦§ãƒ»
+	——— 18.08.12 ——— Rev 11 ——— 8.0/BfA ———
 	- Added native LSM support to the dropdown
 	- The building of the options page is now done internally, instead of in the client addon.
 	- Some code restructure.
-	è¦§ãƒ»20.10.31 è¦§ãƒ»Rev 12 è¦§ãƒ»9.0.1/Shadowlands è¦§ãƒ»
+	——— 20.10.31 ——— Rev 12 ——— 9.0.1/Shadowlands ———
 	- CreateFrame() now uses the "BackdropTemplate"
-	21.12.22 Rev 13 9.1.5/Shadowlands #frozn45
-	- fixed selecting of "None" for backdrop/border texture and saving this settings.
-	22.01.03 Rev 14 9.1.5/Shadowlands #frozn45
-	- added a scroll frame to show a scroll bar if needed
-	- minor adjustments of some elements
-	22.03.30 Rev 15 9.2.0/Shadowlands #frozn45
-	- added a header element
-	22.10.30 Rev 16 10.0.0/Dragonflight #frozn45
-	- replaced inheritsFrame "OptionsSliderTemplate" with "UISliderTemplateWithLabels" for slider
-	22.11.20 Rev 17 10.0.2/Dragonflight #frozn45
-	- left align text of check button and dropdown
-	23.01.23 Rev 18 10.0.2/Dragonflight #frozn45
-	- added library LibFroznFunctions-1.0
-	- removed extended funtion SetFromHexColorMarkup() from color object
-	- adjusted x offsets of Slider, CheckButton, ColorButton, DropDown and TextEdit
-	- added a TextOnly element
-	23.03.07 Rev 19 10.0.5/Dragonflight #frozn45
-	- put option in new line also if last x offset has been lower than the current x offset
-	23.08.28 Rev 20 10.1.5/Dragonflight #frozn45
-	- added a tooltip for Slider
-	23.10.15 Rev 21 10.1.7/Dragonflight #frozn45
-	- added a tooltip for DropDown and menu items
-	24.01.22 Rev 22 10.2.5/Dragonflight #frozn45
-	- considered that the color picker frame has been reworked with df 10.2.5
-	- switched using LibFroznFunctions.isWoWFlavor.* to LibFroznFunctions.hasWoWFlavor.*
-	24.02.14 Rev 23 10.2.5/Dragonflight #frozn45
-	- improved positioning and size of all elements
-	24.04.27 Rev 24 10.2.6/Dragonflight #frozn45
-	- don't change value of slider on mouse wheel
-	24.05.07 Rev 25 10.2.6/Dragonflight #frozn45
-	- added an "enabled" property for all objects
-	- added a tooltip for TextEdit and TextOnly
-	24.05.20 Rev 26 10.2.7/Dragonflight #frozn45
-	- made shure that evaluating the "enabled" property always returns a boolean value
-	- considered empty options for BuildOptionsPage()
-	24.05.26 Rev 27 10.2.7/Dragonflight #frozn45
-	- only set config value by TextEdit if text has changed
-	24.07.25 Rev 28 11.0.0/Dragonflight #frozn45
-	- fixed processing of OnEnter/OnLeave events for dropdown and slider
-	- aligned text of slider, color picker, TextEdit horizontally to left
-	- no build category page on OnTextChanged of TextEdit
-	24.08.18 Rev 29 11.0.2/The War Within #frozn45
-	- added an "hidden" property for all objects
-	24.10.01 Rev 30 11.0.2/The War Within #frozn45
-	- classic era: added a workaround for blizzard bug in classic era 1.15.4: the UISliderTemplateWithLabels template defined in "SliderTemplates.xml" is missing.
-	24.10.29 Rev 31 11.0.2/The War Within #frozn45
-	- classic era: removed the workaround for blizzard bug in classic era 1.15.4: the UISliderTemplateWithLabels template defined in "SliderTemplates.xml" is missing. fixed with WoW build 1.15.4.56857.
-	25.05.18 Rev 32 11.1.5/The War Within #frozn45
-	- replaced newlines in header of tooltip with a space for all option types
-	25.08.13 Rev 33 11.1.5/The War Within #frozn45
-	- added attributes "get" and "set" for any element to pass an individual getter/setter instead of "var".
-	- consider different text color on drop down for "Select value..." text.
-	- added a button for the TextEdit element to save the changes
-	- added the possibility to set the TextOnly element by var or getter
-	- added a Button element
 --]]
 
--- create new library
-local REVISION = 33; -- bump on changes
+local REVISION = 12;
 if (type(AzOptionsFactory) == "table") and (AzOptionsFactory.vers >= REVISION) then
 	return;
 end
@@ -81,16 +26,22 @@ azof.__index = azof;
 
 azof.objects = {};
 
-local PARENT_MOD_NAME = "TipTac";
-
--- get libs
-local LibFroznFunctions = LibStub:GetLibrary("LibFroznFunctions-1.0");
+local ReturnZeroMeta = { __index = function() return 0; end };
 
 --------------------------------------------------------------------------------------------------------
 --                                          Helper Functions                                          --
 --------------------------------------------------------------------------------------------------------
 
-local ReturnZeroMeta = { __index = function() return 0; end };
+-- Converts hex string colors to RGBA
+local function SetFromHexColorMarkup(self,string)
+	local ha, hr, hg, hb = string:match("^|c(..)(..)(..)(..)");
+	self:SetRGBA(
+		format("%d","0x"..hr) / 255,
+		format("%d","0x"..hg) / 255,
+		format("%d","0x"..hb) / 255,
+		format("%d","0x"..ha) / 255
+	);
+end
 
 -- Generate Unique Object Name
 local function GenerateObjectName(type)
@@ -103,8 +54,7 @@ function azof:GetObject(type)
 	-- verify the object type is valid
 	local obj = self.objects[type];
 	if (not obj) then
-		local TipTac = _G[PARENT_MOD_NAME];
-		TipTac:AddMessageToChatFrame("{caption:" .. PARENT_MOD_NAME .. "}: {error:Invalid factory object type {highlight:[%s]}!}");
+		AzMsg("|2<ERROR>|r Invalid factory object type!");
 		return;
 	end
 
@@ -144,21 +94,8 @@ function azof:New(owner,GetConfigValue,SetConfigValue)
 		owner = owner,
 		instances = {},
 		objectUse = setmetatable({},ReturnZeroMeta),
-		GetConfigValue = function(self, var)
-			local optionByVar = self:GetOptionByVar(var);
-			if (optionByVar) and (optionByVar.get) then
-				return optionByVar.get(self, var);
-			end
-			return GetConfigValue(self, var);
-		end,
-		SetConfigValue = function(self, var, value, noBuildCategoryPage)
-			local optionByVar = self:GetOptionByVar(var);
-			if (optionByVar) and (optionByVar.get) then
-				optionByVar.set(self, var, value, noBuildCategoryPage);
-				return;
-			end
-			SetConfigValue(self, var, value, noBuildCategoryPage);
-		end
+		GetConfigValue = GetConfigValue,
+		SetConfigValue = SetConfigValue,
 	};
 	return setmetatable(instance,azof);
 end
@@ -169,56 +106,40 @@ function azof:BuildOptionsPage(options,anchor,left,top,restrictToken)
 	self:ResetObjectUse();
 	AzDropDown:HideMenu();
 
-	local lastXOffset = 0;
-	local lastTop = 0;
-	local firstOption = true;
+	local lastHeight = 0;
 
-	for index, option in ipairs(options or {}) do
+	for index, option in ipairs(options) do
 		local restrictType = type(option.restrict);
 		local allowCreation = (
 			(restrictType == "nil")
 			or (restrictType == "string" and restrictToken == option.restrict)
 			or (restrictType == "table" and tIndexOf(option.restrict,restrictToken))
 		);
-		local hidden = (not not option.hidden) and (not not option.hidden(self, option));
 
-		if (option.type) and (allowCreation) and (not hidden) then
+		if (option.type) and (allowCreation) then
 			local obj = self:GetObject(option.type);
 
 			obj.option = option;
 			obj.text:SetText(option.label);
-			
-			if (obj.class.Init) then
-				obj.class.Init(obj,option,self:GetConfigValue(option.var));
-			end
+			obj.class.Init(obj,option,self:GetConfigValue(option.var));
 
 			-- Anchor the frame
 			obj:ClearAllPoints();
 
 			local xOffset = (option.x or 0);
-			local yOffset = (option.y or 0);
-
-			if (xOffset > lastXOffset) then
-				top = lastTop;
+			if (xOffset == 0) then
+				top = (top + lastHeight);
 			end
+
+			local yOffset = (option.y or 0);
+			top = (top + yOffset);
 
 			local xFinal = left + self.objects[option.type].xOffset + xOffset;
-			local yFinal = top + self.objects[option.type].yOffset + yOffset;
-			
-			if (firstOption) then
-				yFinal = yFinal - self.objects[option.type].extraPaddingTop;
-				firstOption = false;
-			end
+			local yFinal = top;
 
 			obj:SetPoint("TOPLEFT",anchor,"TOPLEFT",xFinal,-yFinal);
 
-			top = yFinal + self.objects[option.type].height;
-
-			lastXOffset = xOffset;
-
-			if (xOffset <= lastXOffset) then
-				lastTop = yFinal - self.objects[option.type].yOffset;
-			end
+			lastHeight = (obj:GetHeight() + self.objects[option.type].yOffset);
 
 			-- Show
 			obj:Show();
@@ -228,63 +149,9 @@ function azof:BuildOptionsPage(options,anchor,left,top,restrictToken)
 	self.isBuildingOptions = nil;
 end
 
--- Gets an option by var
-function azof:GetOptionByVar(var)
-	for type, instancesOfType in next, self.instances do
-		local maxIndexPerType = self.objectUse[type];
-		
-		for index, inst in ipairs(instancesOfType) do
-			if (index > maxIndexPerType) then
-				break;
-			end
-			
-			local option = inst.option;
-			
-			if (option.var == var) then
-				return option;
-			end
-		end
-	end
-end
-
 --------------------------------------------------------------------------------------------------------
 --                                            Slider Frame                                            --
 --------------------------------------------------------------------------------------------------------
-
--- tooltip
-local function SliderEdit_OnEnter(self)
-	local cfgValue = self.factory:GetConfigValue(self.option.var);
-	local enabled = (not self.option.enabled) or (not not self.option.enabled(self.factory, self, option, cfgValue));
-	if (not enabled) then
-		return;
-	end
-	self.text:SetTextColor(1,1,1);
-	if (self.option.tip) then
-		GameTooltip:SetOwner(self,"ANCHOR_TOP");
-		GameTooltip:AddLine(self.option.label:gsub("\n"," "),1,1,1);
-		GameTooltip:AddLine(self.option.tip,nil,nil,nil,1);
-		GameTooltip:Show();
-	end
-end
-
-local function SliderEdit_OnLeave(self)
-	local frames = { self, self:GetChildren() };
-	local frameWithMouseFocus = LibFroznFunctions:GetMouseFocus();
-	
-	for _, frame in ipairs(frames) do
-		if (frame == frameWithMouseFocus) then
-			return;
-		end
-	end
-	
-	local cfgValue = self.factory:GetConfigValue(self.option.var);
-	local enabled = (not self.option.enabled) or (not not self.option.enabled(self.factory, self, option, cfgValue));
-	if (not enabled) then
-		return;
-	end
-	self.text:SetTextColor(1,0.82,0);
-	GameTooltip:Hide();
-end
 
 -- EditBox Enter Pressed
 local function SliderEdit_OnEnterPressed(self)
@@ -295,7 +162,7 @@ end
 local function Slider_OnValueChanged(self)
 	local parent = self:GetParent();
 	parent.edit:SetNumber(self:GetValue());
-	parent.factory:SetConfigValue(parent.option.var,self:GetValue(), true);
+	parent.factory:SetConfigValue(parent.option.var,self:GetValue());
 end
 
 -- OnMouseWheel
@@ -303,12 +170,10 @@ local function Slider_OnMouseWheel(self,delta)
 	self:SetValue(self:GetValue() + self:GetParent().option.step * delta);
 end
 
--- New Slider (dimensions: 301x32, visible dimension: 301x29, visible padding: 3/0/0/0)
+-- create slider
 azof.objects.Slider = {
-	xOffset = 10, -- 10px final visible xOffset - 0px visible padding left = 10px
-	yOffset = 2, -- 5px final visible yOffset + 0px extra padding top - 3px visible padding top = 2px
-	height = 32, -- 29px visible dimension height + 3px visible padding top + 0px extra padding bottom = 32px
-	extraPaddingTop = 5, -- 5px final visible yOffset + 0px extra padding top = 5px
+	xOffset = 18,
+	yOffset = 4,
 	Init = function(self,option,cfgValue)
 		self.slider:SetMinMaxValues(option.min,option.max);
 		self.slider:SetValueStep(option.step);
@@ -317,151 +182,36 @@ azof.objects.Slider = {
 		self.edit:SetNumber(cfgValue);
 		self.low:SetText(option.min);
 		self.high:SetText(option.max);
-		local enabled = (not option.enabled) or (not not option.enabled(self.factory, self, option, cfgValue));
-		self.edit:SetEnabled(enabled);
-		self.slider:SetEnabled(enabled);
-		if (enabled) then
-			self.edit:SetTextColor(1, 1, 1);
-			self.text:SetTextColor(1, 0.82, 0);
-			self.low:SetTextColor(1, 1, 1);
-			self.high:SetTextColor(1, 1, 1);
-		else
-			self.edit:SetTextColor(0.5, 0.5, 0.5);
-			self.text:SetTextColor(0.5, 0.5, 0.5);
-			self.low:SetTextColor(0.5, 0.5, 0.5);
-			self.high:SetTextColor(0.5, 0.5, 0.5);
-		end
 	end,
 	CreateNew = function(self)
 		local f = CreateFrame("Frame",nil,self.owner);
-		f:SetSize(301,32);
-		f:SetHitRectInsets(-2, -2, -2, -2);
-		
-		f:SetScript("OnEnter", SliderEdit_OnEnter);
-		f:SetScript("OnLeave", SliderEdit_OnLeave);
+		f:SetSize(292,32);
 
 		f.edit = CreateFrame("EditBox",GenerateObjectName("EditBox"),f,"InputBoxTemplate");
 		f.edit:SetSize(45,21);
-		f.edit:SetPoint("BOTTOMLEFT", 5, 0);
+		f.edit:SetPoint("BOTTOMLEFT");
 		f.edit:SetScript("OnEnterPressed",SliderEdit_OnEnterPressed);
 		f.edit:SetAutoFocus(false);
 		f.edit:SetMaxLetters(5);
 		f.edit:SetFontObject("GameFontHighlight");
-		
-		f.edit:SetScript("OnEnter", function(self, ...)
-			SliderEdit_OnEnter(self:GetParent(), ...);
-		end);
-		f.edit:SetScript("OnLeave", function(self, ...)
-			SliderEdit_OnLeave(self:GetParent(), ...);
-		end);
 
 		local sliderName = GenerateObjectName("Slider");
-
-		f.slider = CreateFrame("Slider", sliderName, f, LibFroznFunctions.hasWoWFlavor.optionsSliderTemplate);
-		if ((LibFroznFunctions.hasWoWFlavor.optionsSliderTemplate == "UISliderTemplateWithLabels") and BackdropTemplateMixin and "BackdropTemplate") then
-			Mixin(f.slider, BackdropTemplateMixin);
-			f.slider.backdropInfo = BACKDROP_SLIDER_8_8;
-			f.slider:ApplyBackdrop();
-		end
+		f.slider = CreateFrame("Slider",sliderName,f,"OptionsSliderTemplate");
 		f.slider:SetPoint("TOPLEFT",f.edit,"TOPRIGHT",5,-3);
 		f.slider:SetPoint("BOTTOMRIGHT",0,-2);
 		f.slider:SetScript("OnValueChanged",Slider_OnValueChanged);
-		-- f.slider:SetScript("OnMouseWheel",Slider_OnMouseWheel);
+		f.slider:SetScript("OnMouseWheel",Slider_OnMouseWheel);
 		f.slider:EnableMouseWheel(true);
 		f.slider:SetObeyStepOnDrag(true);
-		
-		f.slider:SetHitRectInsets(0, 0, 0, 0);
-		f.slider:SetScript("OnEnter", function(self, ...)
-			SliderEdit_OnEnter(self:GetParent(), ...);
-		end);
-		f.slider:SetScript("OnLeave", function(self, ...)
-			SliderEdit_OnLeave(self:GetParent(), ...);
-		end);
 
 		f.text = _G[sliderName.."Text"];
 		f.text:SetTextColor(1.0,0.82,0);
-		f.text:SetJustifyH("LEFT");
 		f.low = _G[sliderName.."Low"];
 		f.low:ClearAllPoints();
 		f.low:SetPoint("BOTTOMLEFT",f.slider,"TOPLEFT",0,0);
 		f.high = _G[sliderName.."High"];
 		f.high:ClearAllPoints();
 		f.high:SetPoint("BOTTOMRIGHT",f.slider,"TOPRIGHT",0,0);
-
-		return f;
-	end,
-};
-
---------------------------------------------------------------------------------------------------------
---                                               Header                                               --
---------------------------------------------------------------------------------------------------------
-
--- tooltip
-local function Header_OnEnter(self)
-	local cfgValue = self.factory:GetConfigValue(self.option.var);
-	local enabled = (not self.option.enabled) or (not not self.option.enabled(self.factory, self, option, cfgValue));
-	if (not enabled) then
-		return;
-	end
-	if (self.option.tip) then
-		self.text:SetTextColor(1, 1, 1);
-		
-		GameTooltip:SetOwner(self, "ANCHOR_TOP");
-		GameTooltip:AddLine(self.option.label:gsub("\n"," "), 1, 1, 1);
-		GameTooltip:AddLine(self.option.tip, nil, nil, nil, 1);
-		GameTooltip:Show();
-	end
-end
-
-local function Header_OnLeave(self)
-	local cfgValue = self.factory:GetConfigValue(self.option.var);
-	local enabled = (not self.option.enabled) or (not not self.option.enabled(self.factory, self, option, cfgValue));
-	if (not enabled) then
-		return;
-	end
-	self.text:SetTextColor(1, 0.82, 0);
-	GameTooltip:Hide();
-end
-
--- New Header (dimensions: 301x18, visible dimension: 301x7, visible padding: 6/3/5/3)
-azof.objects.Header = {
-	xOffset = 10, -- 10px final visible xOffset - 0px visible padding left = 10px
-	yOffset = 12, -- 5px final visible yOffset + 10px extra padding top - 3px visible padding top = 12px
-	height = 18, -- 7px visible dimension height + 6px visible padding top + 5px extra padding bottom = 18px
-	extraPaddingTop = 15, -- 5px final visible yOffset + 10px extra padding top = 15px
-	Init = function(self, option, cfgValue)
-		local enabled = (not option.enabled) or (not not option.enabled(self.factory, self, option, cfgValue));
-		if (enabled) then
-			self.text:SetTextColor(1, 0.82, 0);
-		else
-			self.text:SetTextColor(0.5, 0.5, 0.5);
-		end
-	end,
-	CreateNew = function(self)
-		local f = CreateFrame("Frame", nil, self.owner);
-		f:SetSize(301, 18);
-		
-		f.text = f:CreateFontString("ARTWORK", nil, "GameFontNormalSmall");
-		f.text:SetPoint("TOP"); -- vertically centered to Header (without text shadow and near to bottom in case of odd number of pixels)
-		f.text:SetPoint("BOTTOM");
-		f.text:SetJustifyH("CENTER");
-
-		f.leftH = f:CreateTexture(nil, "BACKGROUND");
-		f.leftH:SetHeight(8);
-		f.leftH:SetPoint("RIGHT", f.text, "LEFT", -5, 0);
-		f.leftH:SetPoint("LEFT", 3, 0);
-		f.leftH:SetTexture(137057); -- Interface\\Tooltips\\UI-Tooltip-Border
-		f.leftH:SetTexCoord(0.81, 0.94, 0.5, 1);
-
-		f.rightH = f:CreateTexture(nil, "BACKGROUND");
-		f.rightH:SetHeight(8);
-		f.rightH:SetPoint("RIGHT", -3, 0);
-		f.rightH:SetPoint("LEFT", f.text, "RIGHT", 5, 0);
-		f.rightH:SetTexture(137057); -- Interface\\Tooltips\\UI-Tooltip-Border
-		f.rightH:SetTexCoord(0.81, 0.94, 0.5, 1);
-		
-		f:SetScript("OnEnter", Header_OnEnter);
-		f:SetScript("OnLeave", Header_OnLeave);
 
 		return f;
 	end,
@@ -475,7 +225,7 @@ local function CheckButton_OnEnter(self)
 	self.text:SetTextColor(1,1,1);
 	if (self.option.tip) then
 		GameTooltip:SetOwner(self,"ANCHOR_RIGHT");
-		GameTooltip:AddLine(self.option.label:gsub("\n"," "),1,1,1);
+		GameTooltip:AddLine(self.option.label,1,1,1);
 		GameTooltip:AddLine(self.option.tip,nil,nil,nil,1);
 		GameTooltip:Show();
 	end
@@ -490,22 +240,13 @@ local function CheckButton_OnClick(self)
 	self.factory:SetConfigValue(self.option.var,self:GetChecked() and true or false);	-- WoD patch made GetChecked() return bool instead of 1/nil
 end
 
--- New CheckButton (dimensions: 26x26, visible dimension: 20x17, visible padding: 4/3/5/3, visible padding right for text: 4)
+-- New CheckButton
 azof.objects.Check = {
-	xOffset = 7, -- 10px final visible xOffset - 3px visible padding left = 7px
-	yOffset = 1, -- 5px final visible yOffset + 0px extra padding top - 4px visible padding top = 1px
-	height = 21, -- 17px visible dimension height + 4px visible padding top + 0px extra padding bottom = 21px
-	extraPaddingTop = 5, -- 5px final visible yOffset + 0px extra padding top = 5px
-	Init = function(self, option, cfgValue)
-		self:SetHitRectInsets(0, self.text:GetWidth() * -1, 0, 0);
+	xOffset = 10,
+	yOffset = -4,
+	Init = function(self,option,cfgValue)
+		self:SetHitRectInsets(0,self.text:GetWidth() * -1,0,0);
 		self:SetChecked(cfgValue);
-		local enabled = (not option.enabled) or (not not option.enabled(self.factory, self, option, cfgValue));
-		self:SetEnabled(enabled);
-		if (enabled) then
-			self.text:SetTextColor(1, 0.82, 0);
-		else
-			self.text:SetTextColor(0.5, 0.5, 0.5);
-		end
 	end,
 	CreateNew = function(self)
 		local f = CreateFrame("CheckButton",nil,self.owner);
@@ -521,8 +262,7 @@ azof.objects.Check = {
 		f:SetCheckedTexture("Interface\\Buttons\\UI-CheckBox-Check");
 
 		f.text = f:CreateFontString("ARTWORK",nil,"GameFontNormalSmall");
-		f.text:SetPoint("LEFT",f,"RIGHT",0,1); -- vertically centered to CheckButton (without text shadow and near to bottom in case of odd number of pixels) and 5px final visible padding to CheckButton - 4px visible padding right for text = 1px
-		f.text:SetJustifyH("LEFT");
+		f.text:SetPoint("LEFT",f,"RIGHT",0,1);
 
 		return f;
 	end,
@@ -545,7 +285,7 @@ local function ColorButton_ColorPickerFunc(prevVal)
 		r, g, b, a  = prevVal:GetRGBA();
 	else
 		r, g, b = CPF:GetColorRGB();
-		a = LibFroznFunctions:GetColorAlphaFromColorPicker();
+		a = (1 - OpacitySliderFrame:GetValue());
 	end
 
 	-- Update frame only if its still showing this option. This can fail if the category page was changed.
@@ -556,8 +296,6 @@ local function ColorButton_ColorPickerFunc(prevVal)
 	end
 
 	-- Update color setting
-	cpfState.isSettingConfigValue = true;
-	
 	if (cpfState.option.subType == 2) then
 		local hexColorMarkup = format("|c%.2x%.2x%.2x%.2x",a * 255,r * 255,g * 255,b * 255);
 		cpfState.factory:SetConfigValue(cpfState.option.var,hexColorMarkup);		-- color:GenerateHexColorMarkup()
@@ -568,8 +306,6 @@ local function ColorButton_ColorPickerFunc(prevVal)
 		cpfState.newColor[4] = a;
 		cpfState.factory:SetConfigValue(cpfState.option.var,cpfState.newColor);
 	end
-	
-	cpfState.isSettingConfigValue = false;
 end
 
 -- OnClick
@@ -588,7 +324,15 @@ local function ColorButton_OnClick(self,button)
 		cpfState.newColor = {};
 	end
 
-	local opacity = (a or 1);
+	local opacity = (1 - (a or 1));
+
+	-- these are fields the CPF uses
+	CPF.func = ColorButton_ColorPickerFunc;
+	CPF.cancelFunc = ColorButton_ColorPickerFunc;
+	CPF.opacityFunc = ColorButton_ColorPickerFunc;
+	CPF.hasOpacity = true;
+	CPF.opacity = opacity;
+	CPF.previousValues = cpfState.prevColor;
 
 	-- keep a state of the active references needed for this color pick
 	cpfState.frame = self;
@@ -596,18 +340,9 @@ local function ColorButton_OnClick(self,button)
 	cpfState.factory = self.factory;
 
 	-- init and display the color picker
-	LibFroznFunctions:SetupColorPickerAndShow({
-		swatchFunc = ColorButton_ColorPickerFunc,
-		hasOpacity = true,
-		opacityFunc = ColorButton_ColorPickerFunc,
-		opacity = opacity,
-		r = r,
-		g = g,
-		b = b,
-		cancelFunc = ColorButton_ColorPickerFunc
-	});
-	
-	CPF.previousValues = cpfState.prevColor;
+	OpacitySliderFrame:SetValue(opacity);
+	CPF:SetColorRGB(r,g,b);
+	CPF:Show();
 end
 
 -- OnEnter
@@ -616,7 +351,7 @@ local function ColorButton_OnEnter(self)
 	self.border:SetVertexColor(1,1,0);
 	if (self.option.tip) then
 		GameTooltip:SetOwner(self,"ANCHOR_RIGHT");
-		GameTooltip:AddLine(self.option.label:gsub("\n"," "),1,1,1);
+		GameTooltip:AddLine(self.option.label,1,1,1);
 		GameTooltip:AddLine(self.option.tip,nil,nil,nil,1);
 		GameTooltip:Show();
 	end
@@ -629,45 +364,22 @@ local function ColorButton_OnLeave(self)
 	GameTooltip:Hide();
 end
 
--- New ColorButton (dimensions: 19x19, visible dimension: 19x19, visible padding: 0/0/0/0, visible padding right for text: 0)
+-- New ColorButton
 azof.objects.Color = {
-	xOffset = 10, -- 10px final visible xOffset - 0px visible padding left = 10px
-	yOffset = 5, -- 5px final visible yOffset + 0px extra padding top - 0px visible padding top = 5px
-	height = 19, -- 19px visible dimension height + 0px visible padding top + 0px extra padding bottom = 19px
-	extraPaddingTop = 5, -- 5px final visible yOffset + 0px extra padding top = 5px
+	xOffset = 14,
+	yOffset = 6,
 	Init = function(self,option,cfgValue)
-		self:SetHitRectInsets(-2,self.text:GetWidth() * -1 - 2, -2, -2);
-		-- if color picker is open, cancel and hide it
-		if (CPF:IsShown()) and (type(CPF.cancelFunc) == "function") and (not cpfState.isSettingConfigValue) then
-			CPF.cancelFunc(CPF.previousValues);
-			CPF:Hide();
-		end
+		self:SetHitRectInsets(0,self.text:GetWidth() * -1,0,0);
 		if (option.subType == 2) then
-			local ha, hr, hg, hb = cfgValue:match("^|c(..)(..)(..)(..)");
-			self.color:SetRGBA(
-				format("%d","0x"..hr) / 255,
-				format("%d","0x"..hg) / 255,
-				format("%d","0x"..hb) / 255,
-				format("%d","0x"..ha) / 255
-			);
+			self.color:SetFromHexColorMarkup(cfgValue);
 		else
 			self.color:SetRGBA(unpack(cfgValue));
 		end
-		local enabled = (not option.enabled) or (not not option.enabled(self.factory, self, option, cfgValue));
-		self:SetEnabled(enabled);
-		if (enabled) then
-			self.texture:SetVertexColor(self.color:GetRGBA());
-			self.text:SetTextColor(1, 0.82, 0);
-		else
-			local r, g, b = self.color:GetRGB();
-			local grayscale = r * 0.3 + g * 0.6 + b * 0.1;
-			self.texture:SetVertexColor(grayscale, grayscale, grayscale, 1);
-			self.text:SetTextColor(0.5, 0.5, 0.5);
-		end
+		self.texture:SetVertexColor(self.color:GetRGBA());
 	end,
 	CreateNew = function(self)
 		local f = CreateFrame("Button",nil,self.owner);
-		f:SetSize(19,19);
+		f:SetSize(18,18);
 		f:SetScript("OnEnter",ColorButton_OnEnter);
 		f:SetScript("OnLeave",ColorButton_OnLeave)
 		f:SetScript("OnClick",ColorButton_OnClick);
@@ -684,10 +396,10 @@ azof.objects.Color = {
 		f.border:SetColorTexture(1,1,1,1);
 
 		f.text = f:CreateFontString(nil,"ARTWORK","GameFontNormalSmall");
-		f.text:SetPoint("LEFT",f,"RIGHT",5,0); -- vertically centered to ColorButton (without text shadow and near to bottom in case of odd number of pixels) and 5px final visible padding to ColorButton - 0px visible padding right for text = 5px
-		f.text:SetJustifyH("LEFT");
-		
+		f.text:SetPoint("LEFT",f,"RIGHT",4,1);
+
 		f.color = CreateColor();
+		f.color.SetFromHexColorMarkup = SetFromHexColorMarkup;	-- extended the color object
 
 		return f;
 	end,
@@ -697,42 +409,6 @@ azof.objects.Color = {
 --                                           DropDown Frame                                           --
 --------------------------------------------------------------------------------------------------------
 
--- tooltip
-local function DropDown_OnEnter(self)
-	local cfgValue = self.factory:GetConfigValue(self.option.var);
-	local enabled = (not self.option.enabled) or (not not self.option.enabled(self.factory, self, option, cfgValue));
-	if (not enabled) then
-		return;
-	end
-	self.text:SetTextColor(1,1,1);
-	if (self.option.tip) then
-		GameTooltip:SetOwner(self,"ANCHOR_TOP");
-		GameTooltip:AddLine(self.option.label:gsub("\n"," "),1,1,1);
-		GameTooltip:AddLine(self.option.tip,nil,nil,nil,1);
-		GameTooltip:Show();
-	end
-end
-
-local function DropDown_OnLeave(self)
-	local frames = { self, self:GetChildren() };
-	local frameWithMouseFocus = LibFroznFunctions:GetMouseFocus();
-	
-	for _, frame in ipairs(frames) do
-		if (frame == frameWithMouseFocus) then
-			return;
-		end
-	end
-	
-	local cfgValue = self.factory:GetConfigValue(self.option.var);
-	local enabled = (not self.option.enabled) or (not not self.option.enabled(self.factory, self, option, cfgValue));
-	if (not enabled) then
-		return;
-	end
-	self.text:SetTextColor(1,0.82,0);
-	GameTooltip:Hide();
-end
-
--- default init
 local function Default_SelectValue(dropDown,entry,index)
 	dropDown.factory:SetConfigValue(dropDown.option.var,entry.value);
 end
@@ -741,18 +417,12 @@ local function Default_Init(dropDown,list)
 	dropDown.selectValueFunc = Default_SelectValue;
 	for text, option in next, dropDown.option.list do
 		local tbl = list[#list + 1]
-		tbl.text = text;
-		if (type(option) == "table") then
-			tbl.value = option.value;
-			tbl.tip = option.tip;
-		else
-			tbl.value = option;
-		end
+		tbl.text = text; tbl.value = option;
 	end
 end
 
 -- Lib Shared Media
-local LSM = LibStub and LibStub:GetLibrary("LibSharedMedia-3.0",1);
+local LSM = LibStub and LibStub("LibSharedMedia-3.0",1);
 
 azof.LibSharedMediaSubstitute = {
 	font = {
@@ -828,72 +498,32 @@ local function SharedMediaLib_Init(dropDown,list)
 		for _, name in next, LSM:List(query) do
 			local tbl = list[#list + 1];
 			tbl.text = name;
-			local value = LSM:Fetch(query,name);
-			local tip = value;
-			if ((query == "background" or query == "border") and value == nil) then
-				value = "nil";
-				tip = "";
-			end
-			tbl.value = value;
-			tbl.tip = tip;
+			tbl.value = LSM:Fetch(query,name);
+			tbl.tip = tbl.value;
 		end
 	else
 		for name, value in next, azof.LibSharedMediaSubstitute[query] do
 			local tbl = list[#list + 1];
 			tbl.text = name;
-			local tip = value;
-			if ((query == "background" or query == "border") and value == nil) then
-				value = "nil";
-				tip = "";
-			end
 			tbl.value = value;
-			tbl.tip = tip;
+			tbl.tip = value;
 		end
 	end
 	table.sort(list,function(a,b) return a.text < b.text end);
 end
 
--- New DropDown (dimensions: 301x24, visible dimension: 301x24, visible padding: 0/0/0/0)
+-- New DropDown
 azof.objects.DropDown = {
-	xOffset = 131, -- 10px final visible xOffset + (301px max visible dimension - 180px DropDown box) = 131px
-	yOffset = 5, -- 5px final visible yOffset + 0px extra padding top - 0px visible padding top = 5px
-	height = 24, -- 24px visible dimension height + 0px visible padding top + 0px extra padding bottom = 24px
-	extraPaddingTop = 5, -- 5px final visible yOffset + 0px extra padding top = 5px
+	xOffset = 136,
+	yOffset = 2,
 	Init = function(self,option,cfgValue)
 		self.initFunc = (option.init or option.media and SharedMediaLib_Init or Default_Init);
-		local enabled = (not option.enabled) or (not not option.enabled(self.factory, self, option, cfgValue));
-		self.button:SetEnabled(enabled);
 		self:InitSelectedItem(cfgValue);
-		if (enabled) then
-			if (self.label:GetText() == AzDropDown.selectValueText) then
-				self.label:SetTextColor(0, 1, 0);
-			else
-				self.label:SetTextColor(1, 1, 1);
-			end
-			self.text:SetTextColor(1, 0.82, 0);
-		else
-			self.label:SetTextColor(0.5, 0.5, 0.5);
-			self.text:SetTextColor(0.5, 0.5, 0.5);
-		end
 	end,
 	CreateNew = function(self)
 		local f = AzDropDown:CreateDropDown(self.owner,180,nil,nil,true);
 		f.text = f:CreateFontString(nil,"ARTWORK","GameFontNormalSmall");
-		f.text:SetPoint("LEFT",-301 + f:GetWidth(),0); -- vertically centered to DropDown (without text shadow and near to bottom in case of odd number of pixels)
-		f.text:SetJustifyH("LEFT");
-		
-		f:SetHitRectInsets(-301 + f:GetWidth(),0,0,0);
-		
-		f:SetScript("OnEnter", DropDown_OnEnter);
-		f:SetScript("OnLeave", DropDown_OnLeave);
-		
-		f.button:SetScript("OnEnter", function(self, ...)
-			DropDown_OnEnter(self:GetParent(), ...);
-		end);
-		f.button:SetScript("OnLeave", function(self, ...)
-			DropDown_OnLeave(self:GetParent(), ...);
-		end);
-		
+		f.text:SetPoint("LEFT",-302 + f:GetWidth(),0);
 		return f;
 	end,
 };
@@ -902,65 +532,15 @@ azof.objects.DropDown = {
 --                                             Text Edit                                              --
 --------------------------------------------------------------------------------------------------------
 
-local function TextEdit_OnEnter(self)
-	local cfgValue = self.factory:GetConfigValue(self.option.var);
-	local enabled = (not self.option.enabled) or (not not self.option.enabled(self.factory, self, option, cfgValue));
-	if (not enabled) then
-		return;
-	end
-	self.text:SetTextColor(1,1,1);
-	if (self.option.tip) then
-		GameTooltip:SetOwner(self,"ANCHOR_RIGHT");
-		GameTooltip:AddLine(self.option.label:gsub("\n"," "),1,1,1);
-		GameTooltip:AddLine(self.option.tip,nil,nil,nil,1);
-		GameTooltip:Show();
-	end
-end
-
-local function TextEdit_OnLeave(self)
-	local cfgValue = self.factory:GetConfigValue(self.option.var);
-	local enabled = (not self.option.enabled) or (not not self.option.enabled(self.factory, self, option, cfgValue));
-	if (not enabled) then
-		return;
-	end
-	self.text:SetTextColor(1,0.82,0);
-	GameTooltip:Hide();
-end
-
 -- OnTextChange
 local function TextEdit_OnTextChanged(self)
-	local oldText = self.factory:GetConfigValue(self.option.var);
-	local newText = self:GetText():gsub("||","|");
-	
-	if (oldText == newText) then
-		self.button:Hide();
-	else
-		self.button:Show();
-	end
+	self.factory:SetConfigValue(self.option.var,self:GetText():gsub("||","|"));
 end
 
--- Button OnClick
-local function TextEdit_Button_OnClick(self)
-	local parent = self:GetParent();
-	
-	parent:ClearFocus();
-	
-	local oldText = parent.factory:GetConfigValue(parent.option.var);
-	local newText = parent:GetText():gsub("||","|");
-	
-	if (oldText ~= newText) then
-		parent.factory:SetConfigValue(parent.option.var, newText);
-	end
-	
-	self:Hide();
-end
-
--- New TextEdit (dimensions: 301x24, visible dimension: 301x24, visible padding: 0/0/0/0)
+-- New Text Edit
 azof.objects.Text = {
-	xOffset = 131, -- 10px final visible xOffset + (301px max visible dimension - 180px TextEdit box) = 131px
-	yOffset = 5, -- 5px final visible yOffset + 0px extra padding top - 0px visible padding top = 5px
-	height = 24, -- 24px visible dimension height + 0px visible padding top + 0px extra padding bottom = 24px
-	extraPaddingTop = 5, -- 5px final visible yOffset + 0px extra padding top = 5px
+	xOffset = 136,
+	yOffset = 0,
 	backdrop = {
 		bgFile = "Interface\\Buttons\\WHITE8X8",
 		edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
@@ -969,32 +549,13 @@ azof.objects.Text = {
 	},
 	Init = function(self,option,cfgValue)
 		self:SetText(cfgValue:gsub("|","||"));
-		local enabled = (not option.enabled) or (not not option.enabled(self.factory, self, option, cfgValue));
-		self:SetEnabled(enabled);
-		if (enabled) then
-			self:SetTextColor(1, 1, 1);
-			self.text:SetTextColor(1, 0.82, 0);
-		else
-			self:SetTextColor(0.5, 0.5, 0.5);
-			self.text:SetTextColor(0.5, 0.5, 0.5);
-		end
 	end,
 	CreateNew = function(self)
 		local f = CreateFrame("EditBox",nil,self.owner,BackdropTemplateMixin and "BackdropTemplate");	-- 9.0.1: Using BackdropTemplate
 		f:SetSize(180,24);
-		f:SetScript("OnTextChanged", TextEdit_OnTextChanged);
-		f:SetScript("OnEnterPressed", function(self)
-			TextEdit_Button_OnClick(self.button);
-		end);
-		f:SetScript("OnEscapePressed", function(self)
-			local oldText = self.factory:GetConfigValue(self.option.var);
-			local newText = oldText:gsub("||","|");
-			self:SetText(newText);
-			self.button:Hide();
-			self:ClearFocus();
-		end);
-		f:SetScript("OnEnter", TextEdit_OnEnter);
-		f:SetScript("OnLeave", TextEdit_OnLeave);
+		f:SetScript("OnTextChanged",TextEdit_OnTextChanged);
+		f:SetScript("OnEnterPressed",f.ClearFocus);
+		f:SetScript("OnEscapePressed",f.ClearFocus);
 		f:SetAutoFocus(false);
 		f:SetFontObject("GameFontHighlight");
 
@@ -1002,133 +563,9 @@ azof.objects.Text = {
 		f:SetBackdropColor(0.1,0.1,0.1,1);
 		f:SetBackdropBorderColor(0.4,0.4,0.4,1);
 		f:SetTextInsets(6,0,0,0);
-		f:SetHitRectInsets(-301 + f:GetWidth(),0,0,0);
-
-		f.button = CreateFrame("Button", nil, f, "UIPanelButtonTemplate");
-		f.button:SetSize(40, 20);
-		f.button:SetPoint("RIGHT", -1, 0);
-		f.button:SetText(OKAY);
-		f.button:SetScript("OnClick", TextEdit_Button_OnClick);
-		f.button:Hide();
 
 		f.text = f:CreateFontString(nil,"ARTWORK","GameFontNormalSmall");
-		f.text:SetPoint("LEFT",-121,0); -- vertically centered to TextEdit (without text shadow and near to bottom in case of odd number of pixels)
-		f.text:SetJustifyH("LEFT");
-		
-		return f;
-	end,
-};
-
---------------------------------------------------------------------------------------------------------
---                                             Text Only                                              --
---------------------------------------------------------------------------------------------------------
-
-local function TextOnly_OnEnter(self)
-	local cfgValue = self.factory:GetConfigValue(self.option.var);
-	local enabled = (not self.option.enabled) or (not not self.option.enabled(self.factory, self, option, cfgValue));
-	if (not enabled) then
-		return;
-	end
-	if (self.option.tip) then
-		self.text:SetTextColor(1,1,1);
-		
-		GameTooltip:SetOwner(self,"ANCHOR_RIGHT");
-		GameTooltip:AddLine(self.option.label:gsub("\n"," "),1,1,1);
-		GameTooltip:AddLine(self.option.tip,nil,nil,nil,1);
-		GameTooltip:Show();
-	end
-end
-
-local function TextOnly_OnLeave(self)
-	local cfgValue = self.factory:GetConfigValue(self.option.var);
-	local enabled = (not self.option.enabled) or (not not self.option.enabled(self.factory, self, option, cfgValue));
-	if (not enabled) then
-		return;
-	end
-	self.text:SetTextColor(1,0.82,0);
-	GameTooltip:Hide();
-end
-
--- New TextOnly (dimensions: 301x18, visible dimension: 301x7, visible padding: 6/0/5/0)
-azof.objects.TextOnly = {
-	xOffset = 10, -- 10px final visible xOffset - 0px visible padding left = 10px
-	yOffset = -1, -- 5px final visible yOffset + 0px extra padding top - 6px visible padding top = -1px
-	height = 13, -- 7px visible dimension height + 6px visible padding top + 0px extra padding bottom = 13px
-	extraPaddingTop = 5, -- 5px final visible yOffset + 0px extra padding top = 5px
-	Init = function(self, option, cfgValue)
-		if (cfgValue) then
-			self.text:SetText(cfgValue);
-		end
-		local enabled = (not option.enabled) or (not not option.enabled(self.factory, self, option, cfgValue));
-		if (enabled) then
-			self.text:SetTextColor(1, 0.82, 0);
-		else
-			self.text:SetTextColor(0.5, 0.5, 0.5);
-		end
-	end,
-	CreateNew = function(self)
-		local f = CreateFrame("Frame", nil, self.owner);
-		f:SetSize(301, 18);
-		f:SetScript("OnEnter", TextOnly_OnEnter);
-		f:SetScript("OnLeave", TextOnly_OnLeave);
-
-		f.text = f:CreateFontString("ARTWORK", nil, "GameFontNormalSmall");
-		f.text:SetPoint("LEFT"); -- vertically centered to TextOnly (without text shadow and near to bottom in case of odd number of pixels)
-		f.text:SetPoint("RIGHT");
-		f.text:SetJustifyH("LEFT");
-
-		return f;
-	end,
-};
-
---------------------------------------------------------------------------------------------------------
---                                               Button                                               --
---------------------------------------------------------------------------------------------------------
-
-local function Button_OnEnter(self)
-	local cfgValue = self.factory:GetConfigValue(self.option.var);
-	local enabled = (not self.option.enabled) or (not not self.option.enabled(self.factory, self, option, cfgValue));
-	if (not enabled) then
-		return;
-	end
-	if (self.option.tip) then
-		GameTooltip:SetOwner(self,"ANCHOR_RIGHT");
-		GameTooltip:AddLine(self.option.label:gsub("\n"," "),1,1,1);
-		GameTooltip:AddLine(self.option.tip,nil,nil,nil,1);
-		GameTooltip:Show();
-	end
-end
-
-local function Button_OnLeave(self)
-	local cfgValue = self.factory:GetConfigValue(self.option.var);
-	local enabled = (not self.option.enabled) or (not not self.option.enabled(self.factory, self, option, cfgValue));
-	if (not enabled) then
-		return;
-	end
-	GameTooltip:Hide();
-end
-
-local function Button_OnClick(self)
-	self.option.click(self, option);
-end
-
--- New Button (dimensions: <width>x20, visible dimension: <width-2>x18, visible padding: 1/1/1/1)
-azof.objects.Button = {
-	xOffset = 9, -- 10px final visible xOffset - 1px visible padding left = 9px
-	yOffset = 4, -- 5px final visible yOffset + 0px extra padding top - 1px visible padding top = 4px
-	height = 19, -- 18px visible dimension height + 1px visible padding top + 0px extra padding bottom = 19px
-	extraPaddingTop = 5, -- 5px final visible yOffset + 0px extra padding top = 5px
-	Init = function(self, option, cfgValue)
-		self:SetSize(option.width, self:GetHeight());
-		local enabled = (not option.enabled) or (not not option.enabled(self.factory, self, option, cfgValue));
-		self:SetEnabled(enabled);
-	end,
-	CreateNew = function(self)
-		local f = CreateFrame("Button", nil, self.owner, "UIPanelButtonTemplate");
-		f:SetScript("OnEnter", Button_OnEnter);
-		f:SetScript("OnLeave", Button_OnLeave);
-		f:SetScript("OnClick", Button_OnClick);
-		f.text = f;
+		f.text:SetPoint("LEFT",-120,1);
 
 		return f;
 	end,

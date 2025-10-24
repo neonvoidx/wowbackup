@@ -1,9 +1,9 @@
-## Interface: 50500
+## Interface: 50501
 ## Title: Mount Journal Enhanced
 ## Notes: Extends the default Mount Journal
 ## IconTexture: Interface\Addons\MountJournalEnhanced\UI\icons\mje.png
 ## Author: eXochron
-## Version: 2.51.2
+## Version: 2.51.3
 ## SavedVariablesPerCharacter: MJEPersonalSettings
 ## SavedVariables: MJEGlobalSettings, MJETrackingData
 ## X-Curse-Project-ID: 86372

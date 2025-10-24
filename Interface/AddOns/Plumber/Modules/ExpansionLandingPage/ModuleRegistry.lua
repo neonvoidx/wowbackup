@@ -79,11 +79,13 @@ EL:SetScript("OnEvent", function(self, event, ...)
         if factionID then
             API.TriggerExpansionMinimapButtonAlert(L["Paragon Reward Available"]);
             CallbackRegistry:Trigger("ParagonRewardReady", factionID);
+            CallbackRegistry:Trigger("LandingPage.UpdateNotification");
         end
     elseif event == "QUEST_TURNED_IN" then
         local questID = ...
         if FactionUtil:IsParagonRewardQuest(questID) then
             CallbackRegistry:Trigger("ParagonRewardQuestTurnedIn", questID);
+            CallbackRegistry:Trigger("LandingPage.UpdateNotification");
         end
     end
 end);
@@ -116,7 +118,7 @@ do
         description = L["ModuleDescription NewExpansionLandingPage"],
         toggleFunc = EL.EnableModule,
         categoryID = 1,
-        uiOrder = 0,
+        uiOrder = -10,
         moduleAddedTime = 1750160000,
     };
 

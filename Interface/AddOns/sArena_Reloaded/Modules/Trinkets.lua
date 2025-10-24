@@ -15,6 +15,11 @@ function sArenaFrameMixin:GetFactionTrinketIcon()
     end
 end
 
+-- Helper function to check if we should force trinket display for humans in MoP
+function sArenaFrameMixin:ShouldForceHumanTrinket()
+    return not isRetail and self.race == "Human" and self.parent.db.profile.forceShowTrinketOnHuman
+end
+
 function sArenaFrameMixin:UpdateTrinketIcon(available)
     if available then
         if self.parent.db.profile.colorTrinket then
@@ -24,13 +29,17 @@ function sArenaFrameMixin:UpdateTrinketIcon(available)
         end
     else
         if self.parent.db.profile.colorTrinket then
-            self.Trinket.Texture:SetColorTexture(1,0,0)
+            if not self.Trinket.spellID then
+                self.Trinket.Texture:SetTexture(nil)
+            else
+                self.Trinket.Texture:SetColorTexture(1,0,0)
+            end
         else
             local desaturate
             if self.updateRacialOnTrinketSlot then
                 desaturate = false
             else
-                desaturate = true
+                desaturate = self.parent.db.profile.desaturateTrinketCD
             end
             self.Trinket.Texture:SetDesaturated(desaturate)
         end
@@ -72,7 +81,12 @@ function sArenaFrameMixin:UpdateTrinket()
                     trinketTexture = self:GetFactionTrinketIcon()
                 end
             else
-                trinketTexture = sArenaMixin.noTrinketTexture     -- Surrender flag if no trinket
+                -- Handle MoP-specific Human trinket logic
+                if not isRetail and self.race == "Human" and self.parent.db.profile.forceShowTrinketOnHuman then
+                    trinketTexture = self:GetFactionTrinketIcon()  -- Show Alliance trinket even if not equipped
+                else
+                    trinketTexture = sArenaMixin.noTrinketTexture     -- Surrender flag if no trinket
+                end
             end
 
             -- Handle racial updates based on trinket state
@@ -99,8 +113,7 @@ function sArenaFrameMixin:UpdateTrinket()
             self:UpdateTrinketIcon(true)
         end
         if (startTime ~= 0 and duration ~= 0 and self.Trinket.spellID) then
-            local currentTexture = self.Trinket.Texture:GetTexture()
-            if currentTexture and currentTexture ~= sArenaMixin.noTrinketTexture then
+            if self.Trinket.spellID and (self.Trinket.Texture:GetTexture() ~= sArenaMixin.noTrinketTexture)then
                 if self.updateRacialOnTrinketSlot then
                     local racialDuration = self:GetRacialDuration()
                     self.Trinket.Cooldown:SetCooldown(startTime / 1000.0, racialDuration)
@@ -112,7 +125,7 @@ function sArenaFrameMixin:UpdateTrinket()
                 self.Trinket.Texture:SetColorTexture(1,0,0)
             else
                 if not self.updateRacialOnTrinketSlot then
-                    self.Trinket.Texture:SetDesaturated(true)
+                    self.Trinket.Texture:SetDesaturated(self.parent.db.profile.desaturateTrinketCD)
                 end
             end
         else

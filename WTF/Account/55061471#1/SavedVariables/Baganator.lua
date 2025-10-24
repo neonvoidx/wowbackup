@@ -2246,7 +2246,7 @@ BAGANATOR_CONFIG = {
 "Choppiez-Tichondrius",
 "Praisesun-Tichondrius",
 },
-["auto_sort_on_open"] = true,
+["auto_sort_on_open"] = false,
 ["currencies_tracked_imported"] = {
 },
 ["bag_view_width"] = 14,

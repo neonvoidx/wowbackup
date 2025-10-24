@@ -1,3 +1,46 @@
+2.1.6
+- Fix GUI not updating position settings immediately after dragging things around.
+- Fix DR Categories not respecting per spec & per class settings due to falling back to global settings like how Static Icons work, oops.
+
+2.1.5
+- Priest's Purify now displays a stack number on it if double dispel. At 0 stacks it gets desaturated. At 1 or more stacks it stays colored.
+- Add options to disable desaturation on Trinket & Dispel CD (Global -> Arena Frames -> Misc).
+- Re-enable manabar text and add settings to show/hide it and position settings etc. Disabled by default.
+- Tweak layouts a little: Removed font outline on spec name text for Retail layout. Add font outline to the old Arena & Xaryu layout's health & mana text (as it used to be, this got unintentionally removed with new font settings).
+- Fix racials not updating properly between shuffle rounds.
+
+2.1.4
+- New "Simple Castbar" setting for Modern Castbars. Removes text background and puts text inside of the castbar.
+- Tweak to make sure "Swap Trinket with Human Racial" setting works even when Human racial is turned off.
+- Fix unique DR sizes causing first DR icon to not be positioned correctly if it was increased/decreased in size.
+- Retail: Reduce Warlock's Malevolence prio below Dark Pact and Unending Resolve.
+
+2.1.3
+- Added a new temporary section for Midnight info.
+- Fix Font Shadow offset & color. Visible with Outline off.
+- Fix Pixelated's layout showing Dispel's Pixel Border when there was no Dispel or Dispel module turned off.
+- MoP: Fixed "Force Show Trinket on Human" setting to also display cooldown on Human Racial usage.
+- MoP: Tweak some aura priorities
+- MoP: Change Mana Tea to show stack count instead of percent.
+
+2.1.2
+- Fix test title not going away when hiding test mode.
+
+2.1.1
+- Minor tweaks and bugfixes
+
+2.1.0
+- Add Dispels module (Beta, needs more testing and verifying spell ids etc. Please report any issues)
+- Add "Trinket Circle Border" setting for Blizz Arena layout.
+- Add two new MoP settings: Replace Human Texture with Trinket texture & Always show Trinket texture for Humans
+- Fix Class Stacking Only Texture Change setting (but for real this time! oopsiewoopsie)
+- Fix Masque setting causing lua errors and messing things up.
+- Fix color trinket setting not showing Cooldown.
+- Tweak BlizzArena layout's class icon crop so it doesnt show texture borders inside of circle.
+- Fix BlizzTarget layout's name background not being positioned correctly when "Big Healthbar" was disabled.
+- Tweak BlizzTarget layout's FrameTexture to use a higher quality version of the no level texture.
+- Color Trinket setting now completely hides Trinket spot when they don't have a Trinket instead of showing a red color (to emphasize they dont have a trinket, instead of it "being on cd").
+
 2.0.9
 - New setting: Class Color FrameTexture. Class color the border on frames.
 - Dark Mode Color Value is now adjustable and also has a Desaturate toggle. (if BetterBlizzFrames is enabled it still gets its value from there to be consistent)

@@ -394,6 +394,35 @@ do  --TabUtil
         table.sort(Tabs, SortFunc_Tab);
     end
 
+    function LandingPageUtil.DeleteTab(tabKey)
+        for i, tabInfo in ipairs(Tabs) do
+            if tabInfo.key == tabKey then
+                table.remove(Tabs, i);
+                break
+            end
+        end
+    end
+
+    function LandingPageUtil.ReplaceTab(newTabInfo)
+        --If found the same key, replace
+        --Otherwise add this tab
+        local found;
+
+        for i, tabInfo in ipairs(Tabs) do
+            if tabInfo.key == newTabInfo.key then
+                Tabs[i] = newTabInfo;
+                found = true;
+                break
+            end
+        end
+
+        if found then
+            table.sort(Tabs, SortFunc_Tab);
+        else
+            LandingPageUtil.AddTab(newTabInfo)
+        end
+    end
+
     function LandingPageUtil.AcquireTabFrame(tabContainer, index)
         local tabInfo = Tabs[index];
         if not tabInfo.frame then
@@ -1142,8 +1171,8 @@ do  --Red Button
         self.ButtonText:SetText(text);
     end
 
-    function RedButtonMixin:UpdateVisual()
-        local isFocused = self:IsMouseMotionFocus();
+    function RedButtonMixin:UpdateVisual(forceFocus)
+        local isFocused = self:IsMouseMotionFocus() or forceFocus;
         local top;
         if self.buttonState == 1 then
             if isFocused then

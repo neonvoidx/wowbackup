@@ -26,6 +26,12 @@ layout.defaultSettings = {
         scale = 1.5,
         fontSize = 12,
     },
+    dispel = {
+        posX = 128,
+        posY = 0,
+        scale = 1.5,
+        fontSize = 12,
+    },
     castBar = {
         posX = -15,
         posY = -29,
@@ -109,6 +115,7 @@ function layout:Initialize(frame)
         frame.parent:UpdateSpecIconSettings(self.db.specIcon)
         frame.parent:UpdateTrinketSettings(self.db.trinket)
         frame.parent:UpdateRacialSettings(self.db.racial)
+        frame.parent:UpdateDispelSettings(self.db.dispel)
     end
 
     frame.ClassIconCooldown:SetSwipeTexture("Interface\\CharacterFrame\\TempPortraitAlphaMask")
@@ -119,6 +126,7 @@ function layout:Initialize(frame)
     frame.SpecIcon.Texture:AddMaskTexture(frame.SpecIcon.Mask)
     frame.Trinket:SetSize(22, 22)
     frame.Racial:SetSize(22, 22)
+    frame.Dispel:SetSize(22, 22)
 
     frame.AuraStacks:SetPoint("BOTTOMLEFT", frame.ClassIcon, "BOTTOMLEFT", 6, -1)
     frame.AuraStacks:SetFont("Interface\\AddOns\\sArena_Reloaded\\Textures\\arialn.ttf", 18, "THICKOUTLINE")
@@ -126,8 +134,8 @@ function layout:Initialize(frame)
     if not frame.NameBackground then
         local bg = frame:CreateTexture(nil, "BACKGROUND", nil, 2)
         bg:SetTexture(137017)
-        bg:SetPoint("TOPLEFT", frame.Name, "TOPLEFT", -2, 2)
-        bg:SetPoint("BOTTOMRIGHT", frame.Name, "BOTTOMRIGHT", 2, -2)
+        bg:SetPoint("TOPLEFT", frame.HealthBar, "TOPLEFT", -1, 18.5)
+        bg:SetPoint("BOTTOMRIGHT", frame.HealthBar, "TOPRIGHT", 2, 2)
         bg:SetVertexColor(0,0,0, 0.6)
         frame.NameBackground = bg
     end
@@ -174,12 +182,7 @@ function layout:Initialize(frame)
     f:SetPoint("CENTER", frame.HealthBar, "TOP")
     f:SetSize(48, 48)
 
-    --frame.HealthText:SetPoint("CENTER", frame.HealthBar)
-    --frame.HealthText:SetShadowOffset(0, 0)
-
-    frame.PowerText:SetPoint("CENTER", frame.PowerBar)
-    --frame.PowerText:SetShadowOffset(0, 0)
-    frame.PowerText:SetAlpha(0)
+    frame.PowerText:SetAlpha(frame.parent.db.profile.hidePowerText and 0 or 1)
 
     -- Health bar underlay
     if not frame.hpUnderlay then
@@ -216,7 +219,7 @@ function layout:Initialize(frame)
         frameTexture:SetTexture("Interface\\AddOns\\sArena_Reloaded\\Textures\\UI-TargetingFrame-NoLevel-Large")
     else
         healthBar:SetSize(118, 9)
-        frameTexture:SetTexture("Interface\\TARGETINGFRAME\\UI-TargetingFrame-NoLevel")
+        frameTexture:SetTexture("Interface\\TargetingFrame\\UI-FocusFrame-Large")
         frame.NameBackground:Show()
     end
 
@@ -231,16 +234,18 @@ function layout:UpdateOrientation(frame)
     local name = frame.Name
     local specName = frame.SpecNameText
     local healthText = frame.HealthText
+    local powerText = frame.PowerText
     local castbarText = frame.CastBar.Text
 
     if self.db.textSettings then
         local txt = self.db.textSettings
         local modernCastbar = self.db.castBar.useModernCastbars
 
-        name:SetScale(txt.nameSize or 1.0)
-        healthText:SetScale(txt.healthSize or 1.0)
-        specName:SetScale(txt.specNameSize or 1.0)
-        castbarText:SetScale(txt.castbarSize or 1.0)
+        name:SetScale(txt.nameSize or 1)
+        healthText:SetScale(txt.healthSize or 1)
+        specName:SetScale(txt.specNameSize or 1)
+        castbarText:SetScale(txt.castbarSize or 1)
+        powerText:SetScale(txt.powerSize or 1)
 
         -- Name
         name:ClearAllPoints()
@@ -262,6 +267,16 @@ function layout:UpdateOrientation(frame)
             healthText:SetPoint("CENTER", healthBar, "CENTER", (txt.healthOffsetX or 0), (txt.healthOffsetY or 0))
         end
 
+        -- Power Text
+        powerText:ClearAllPoints()
+        if (txt.powerAnchor or "CENTER") == "LEFT" then
+            powerText:SetPoint("LEFT", frame.PowerBar, "LEFT", 0 + (txt.powerOffsetX or 0), (txt.powerOffsetY or 0))
+        elseif (txt.powerAnchor or "CENTER") == "RIGHT" then
+            powerText:SetPoint("RIGHT", frame.PowerBar, "RIGHT", 0 + (txt.powerOffsetX or 0), (txt.powerOffsetY or 0))
+        else
+            powerText:SetPoint("CENTER", frame.PowerBar, "CENTER", (txt.powerOffsetX or 0), (txt.powerOffsetY or 0))
+        end
+
         -- Spec Text
         specName:ClearAllPoints()
         if (txt.specNameAnchor or "CENTER") == "LEFT" then
@@ -274,12 +289,13 @@ function layout:UpdateOrientation(frame)
 
         -- Castbar Text
         castbarText:ClearAllPoints()
+        local simpleCastbar = self.db.castBar.simpleCastbar and modernCastbar
         if (txt.castbarAnchor or "CENTER") == "LEFT" then
-            castbarText:SetPoint("LEFT", frame.CastBar, "LEFT", 3 + (txt.castbarOffsetX or 0), (modernCastbar and -11 or 0) + (txt.castbarOffsetY or 0))
+            castbarText:SetPoint("LEFT", frame.CastBar, "LEFT", 3 + (txt.castbarOffsetX or 0), (modernCastbar and (simpleCastbar and 0 or -11) or 0) + (txt.castbarOffsetY or 0))
         elseif (txt.castbarAnchor or "CENTER") == "RIGHT" then
-            castbarText:SetPoint("RIGHT", frame.CastBar, "RIGHT", -3 + (txt.castbarOffsetX or 0), (modernCastbar and -11 or 0) + (txt.castbarOffsetY or 0))
+            castbarText:SetPoint("RIGHT", frame.CastBar, "RIGHT", -3 + (txt.castbarOffsetX or 0), (modernCastbar and (simpleCastbar and 0 or -11) or 0) + (txt.castbarOffsetY or 0))
         else
-            castbarText:SetPoint("CENTER", frame.CastBar, "CENTER", (txt.castbarOffsetX or 0), (modernCastbar and -11 or 0) + (txt.castbarOffsetY or 0))
+            castbarText:SetPoint("CENTER", frame.CastBar, "CENTER", (txt.castbarOffsetX or 0), (modernCastbar and (simpleCastbar and 0 or -11) or 0) + (txt.castbarOffsetY or 0))
         end
     end
 

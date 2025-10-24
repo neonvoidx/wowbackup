@@ -1,5 +1,5 @@
-## Interface: 11507
-## Version: 0.13.12
+## Interface: 11508
+## Version: 0.13.13
 ## Title: S|cff3FC7EBpec|rB|cff3FC7EBis|rT|cff3FC7EBooltip|r |T136031:16:16:0:0|t by |cff3FC7EBD4KiR |T132115:16:16:0:0|t
 ## Notes: Shows a list of the best specializations for specific dungeons/raids.
 ## Notes-deDE: zeigt eine Liste der besten Spezialisierungen für bestimmte Dungeons/Raids anzeigt.
