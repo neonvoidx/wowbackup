@@ -5,7 +5,7 @@
 ## AddonCompartmentFunc: TransmogLootHelper_Click
 ## AddonCompartmentFuncOnEnter: TransmogLootHelper_Enter
 ## AddonCompartmentFuncOnLeave: TransmogLootHelper_Leave
-## Version: v11.2.5-006
+## Version: v11.2.5-008
 ## X-Curse-Project-ID: 1033752
 ## X-Wago-ID: EGPXOkG1
 
@@ -30,9 +30,10 @@ libs\ChatThrottleLib\ChatThrottleLib.xml
 Core.lua
 Database.lua
 Settings.lua
-SettingsTemplates.xml
+FrameTemplates.xml
 modules\ItemOverlay.lua
 modules\LootTracker.lua
+modules\Remix.lua
 modules\Tweaks.lua
 integrations\ArkInventory.lua
 integrations\Baganator.lua

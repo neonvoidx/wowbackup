@@ -2,11 +2,11 @@
 SilentShuffleDB = {
 ["profileKeys"] = {
 ["Clevagirl - Mal'Ganis"] = "Default",
-["Ofpusstwo - Tichondrius"] = "Default",
 ["Crillessana - Mal'Ganis"] = "Default",
-["Gehyo - Tichondrius"] = "Default",
-["Heilsatan - Tichondrius"] = "Default",
+["Ofpusstwo - Tichondrius"] = "Default",
 ["Ofpuss - Tichondrius"] = "Default",
+["Heilsatan - Tichondrius"] = "Default",
+["Gehyo - Tichondrius"] = "Default",
 ["Reedingo - Mal'Ganis"] = "Default",
 },
 ["profiles"] = {

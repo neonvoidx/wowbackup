@@ -1,6 +1,7 @@
 # LiteMount
 
-## [11.2.5-14](https://github.com/xod-wow/LiteMount/tree/11.2.5-14) (2025-11-16)
-[Full Changelog](https://github.com/xod-wow/LiteMount/compare/11.2.5-13...11.2.5-14) [Previous Releases](https://github.com/xod-wow/LiteMount/releases)
+## [11.2.5-15](https://github.com/xod-wow/LiteMount/tree/11.2.5-15) (2025-11-20)
+[Full Changelog](https://github.com/xod-wow/LiteMount/compare/11.2.5-14...11.2.5-15) [Previous Releases](https://github.com/xod-wow/LiteMount/releases)
 
-- Show enabled state in macro panel class list #390  
+- Flag Azuremyst Isle as non-flying for remix. Ugh!  
+    Fixes #391  

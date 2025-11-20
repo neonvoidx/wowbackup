@@ -3,48 +3,42 @@ MJEPersonalSettings = {
 ["notes"] = {
 },
 ["trackUsageStats"] = false,
-["hiddenMounts"] = {
-},
+["searchInFamilyName"] = false,
 ["personalFilter"] = false,
-["filterProfile"] = {
-{
-["sort"] = {
+["ui"] = {
+["showMountspecialButton"] = true,
+["enableCursorKeys"] = true,
+["slotPosition"] = "top",
+["syncTarget"] = false,
+["displayBackground"] = "original",
+["showAchievementPoints"] = true,
+["windowSize"] = {
+0,
+0,
 },
-["search"] = "",
-["filter"] = {
+["colorizeNameByRarity"] = true,
+["displayAnimation"] = "stand",
+["showResizeEdge"] = true,
+["showPersonalCount"] = true,
+["compactMountList"] = true,
+["previewButton"] = true,
+["autoRotateModel"] = false,
+["displayStatistics"] = {
+["UsedCount"] = true,
+["TravelDistance"] = true,
+["TravelTime"] = true,
+["Rarity"] = true,
+["Family"] = true,
+["CustomizationCount"] = true,
+["Wowhead"] = true,
+["LearnedDate"] = true,
 },
-},
-{
-["sort"] = {
-},
-["search"] = "",
-["filter"] = {
-},
-},
-{
-["sort"] = {
-},
-["search"] = "",
-["filter"] = {
-},
-},
-{
-["sort"] = {
-},
-["search"] = "",
-["filter"] = {
-},
-},
-{
-["sort"] = {
-},
-["search"] = "",
-["filter"] = {
-},
-},
+["unlockDisplayCamera"] = true,
+["showFilterProfilesInMenu"] = true,
 },
 ["summonPreviousPetAgain"] = false,
-["searchInFamilyName"] = false,
+["hiddenMounts"] = {
+},
 ["personalUi"] = false,
 ["pets"] = {
 ["assignments"] = {
@@ -106,8 +100,7 @@ true,
 true,
 true,
 },
-["color"] = {
-},
+["hiddenIngame"] = false,
 ["hidden"] = false,
 ["notCollected"] = true,
 ["mountType"] = {
@@ -226,8 +219,8 @@ true,
 ["Rockets"] = true,
 ["Spider Tanks"] = true,
 ["Motorcycles"] = true,
-["Carpets"] = true,
 ["Mechanical Animals"] = true,
+["Carpets"] = true,
 ["Gyrocopters"] = true,
 ["Hovercraft"] = true,
 ["Airplanes"] = true,
@@ -359,7 +352,8 @@ true,
 },
 ["collected"] = true,
 ["onlyRecent"] = false,
-["hiddenIngame"] = false,
+["color"] = {
+},
 },
 ["sort"] = {
 ["unownedOnBottom"] = true,
@@ -384,36 +378,42 @@ true,
 },
 ["personalHiddenMounts"] = false,
 ["searchInNotes"] = false,
-["ui"] = {
-["showMountspecialButton"] = true,
-["enableCursorKeys"] = true,
-["slotPosition"] = "top",
-["syncTarget"] = false,
-["displayBackground"] = "original",
-["showAchievementPoints"] = true,
-["windowSize"] = {
-0,
-0,
+["filterProfile"] = {
+{
+["sort"] = {
 },
-["colorizeNameByRarity"] = true,
-["displayAnimation"] = "stand",
-["showResizeEdge"] = true,
-["showPersonalCount"] = true,
-["compactMountList"] = true,
-["previewButton"] = true,
-["autoRotateModel"] = false,
-["displayStatistics"] = {
-["TravelDistance"] = true,
-["UsedCount"] = true,
-["LearnedDate"] = true,
-["Rarity"] = true,
-["Family"] = true,
-["CustomizationCount"] = true,
-["Wowhead"] = true,
-["TravelTime"] = true,
+["search"] = "",
+["filter"] = {
 },
-["unlockDisplayCamera"] = true,
-["showFilterProfilesInMenu"] = true,
+},
+{
+["sort"] = {
+},
+["search"] = "",
+["filter"] = {
+},
+},
+{
+["sort"] = {
+},
+["search"] = "",
+["filter"] = {
+},
+},
+{
+["sort"] = {
+},
+["search"] = "",
+["filter"] = {
+},
+},
+{
+["sort"] = {
+},
+["search"] = "",
+["filter"] = {
+},
+},
 },
 ["searchInDescription"] = false,
 }

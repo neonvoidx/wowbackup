@@ -10,7 +10,7 @@ TalentTreeTweaksDB = {
 ["ExportInspectedBuild"] = true,
 ["TooltipIds"] = true,
 ["ImportIntoCurrentLoadout"] = true,
-["ReduceSpam"] = true,
+["AlwaysShowGates"] = true,
 ["ChangeBackground"] = true,
 ["CopyTalentButtonInfo"] = true,
 ["HeroTalents"] = true,
@@ -21,7 +21,7 @@ TalentTreeTweaksDB = {
 ["RespecButtons"] = true,
 ["ScaleTalentFrame"] = true,
 ["MiscFixes"] = true,
-["AlwaysShowGates"] = true,
+["ReduceSpam"] = true,
 },
 ["moduleDb"] = {
 ["InspectDiff"] = {
@@ -55,30 +55,30 @@ TalentTreeTweaksDB = {
 ["unlockShareButton"] = true,
 },
 ["MiniTreeInTooltip"] = {
-["diffGreen"] = {
-["r"] = 0,
-["g"] = 1,
-["b"] = 0,
-},
+["inactiveSubTreeAlpha"] = 0.5,
 ["displayStyle"] = "simple-default-diff",
-["diffOrange"] = {
-["r"] = 1,
-["g"] = 1,
-["b"] = 0,
-},
+["upgradedDisplayStyle"] = 1,
 ["diffRed"] = {
 ["r"] = 1,
 ["g"] = 0,
 ["b"] = 0,
 },
 ["scale"] = 1,
-["inactiveSubTreeAlpha"] = 0.5,
+["diffGreen"] = {
+["r"] = 0,
+["g"] = 1,
+["b"] = 0,
+},
 ["diffYellow"] = {
 ["r"] = 1,
 ["g"] = 1,
 ["b"] = 1,
 },
-["upgradedDisplayStyle"] = 1,
+["diffOrange"] = {
+["r"] = 1,
+["g"] = 1,
+["b"] = 0,
+},
 },
 ["ReduceTaint"] = {
 ["alwaysReplaceShareButton"] = false,
@@ -106,10 +106,10 @@ TalentTreeTweaksDB = {
 ["rowColInfo"] = false,
 },
 },
-["ReduceSpam"] = {
-},
 ["AlwaysShowGates"] = {
 ["shiftHeroTrees"] = false,
+},
+["ReduceSpam"] = {
 },
 ["ChangeBackground"] = {
 ["showAlphaInSpellbookUI"] = true,

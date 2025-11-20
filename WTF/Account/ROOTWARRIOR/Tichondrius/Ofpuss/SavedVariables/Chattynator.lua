@@ -1,12 +1,6 @@
 
 CHATTYNATOR_CURRENT_PROFILE = "DEFAULT"
 CHATTYNATOR_COMMAND_HISTORY = {
-"/s who we going?",
-"/s LOL",
-"/s did you actually mean to not be outlaw?",
-"/s lol",
-"/s thats so unfortunate",
-"/s bruh",
 "/i bruh",
 "/i rogue",
 "/i im so sick of losing my games to get to 1800 because of idiots lol",
@@ -202,4 +196,11 @@ CHATTYNATOR_COMMAND_HISTORY = {
 "/cw Höpeless-Tichondrius xd",
 "/s /bbf",
 "/s /rl",
+"/s /bbf",
+"/s /rl",
+"/s /bbf",
+"/s /rl",
+"/s /cmt",
+"/s /rl",
+"/s /bbf",
 }

@@ -53,7 +53,7 @@ HandyNotes_DornogalDB = {
 ["Auteist - Mal'Ganis"] = {
 ["show_vendor"] = false,
 },
-["Ofpuss - Mal'Ganis"] = {
+["Stormclout - Mal'Ganis"] = {
 },
 ["Tampacks - Mal'Ganis"] = {
 },
@@ -67,7 +67,7 @@ HandyNotes_DornogalDB = {
 },
 ["Kitedbro - Mal'Ganis"] = {
 },
-["Stormclout - Mal'Ganis"] = {
+["Ofpuss - Mal'Ganis"] = {
 },
 },
 }

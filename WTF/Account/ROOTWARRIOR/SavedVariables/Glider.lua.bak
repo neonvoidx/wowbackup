@@ -26,12 +26,13 @@ GliderAddOnDB = {
 ["textPosition"] = "Bottom",
 },
 ["GliderGlobalSettings"] = {
-["y"] = 267.6670837402344,
-["x"] = -307.833740234375,
-["point"] = "BOTTOM",
+["y"] = -165.1667327880859,
+["x"] = -1.5,
+["point"] = "CENTER",
 ["scale"] = 1,
 ["textPosition"] = "Bottom",
 ["style"] = "Class",
+["mutedSoundsBitfield"] = 0,
 },
 ["DEFAULT MOD"] = {
 ["y"] = 15.00013446807861,

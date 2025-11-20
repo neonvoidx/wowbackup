@@ -727,8 +727,6 @@ BlizzMoveDB = {
 },
 ["GuildRenameFrame"] = {
 },
-["ProfessionsCustomerOrdersFrame.Form"] = {
-},
 ["WardrobeFrame"] = {
 ["startPoints"] = {
 {
@@ -748,6 +746,8 @@ BlizzMoveDB = {
 ["offX"] = 189.3365138083482,
 },
 },
+},
+["ProfessionsCustomerOrdersFrame.Form"] = {
 },
 ["SplashFrame"] = {
 ["startPoints"] = {
@@ -888,7 +888,25 @@ BlizzMoveDB = {
 },
 ["AlliedRacesFrame"] = {
 },
-["Baganator_SingleViewBankViewFrame"] = {
+["PVPMatchScoreboard"] = {
+["startPoints"] = {
+{
+["offX"] = 921.3334350585938,
+["offY"] = -241,
+["anchorPoint"] = "TOPLEFT",
+["relativePoint"] = "TOPLEFT",
+},
+},
+["dragged"] = true,
+["dragPoints"] = {
+{
+["anchorPoint"] = "TOP",
+["relativeFrame"] = "UIParent",
+["offY"] = -160.16455078125,
+["relativePoint"] = "TOP",
+["offX"] = 155.8328247070313,
+},
+},
 },
 ["Baganator_CategoryViewBackpackViewFramedark"] = {
 },
@@ -912,25 +930,7 @@ BlizzMoveDB = {
 },
 },
 },
-["PVPMatchScoreboard"] = {
-["startPoints"] = {
-{
-["offX"] = 921.3334350585938,
-["offY"] = -241,
-["anchorPoint"] = "TOPLEFT",
-["relativePoint"] = "TOPLEFT",
-},
-},
-["dragged"] = true,
-["dragPoints"] = {
-{
-["anchorPoint"] = "TOP",
-["relativeFrame"] = "UIParent",
-["offY"] = -160.16455078125,
-["relativePoint"] = "TOP",
-["offX"] = 155.8328247070313,
-},
-},
+["Baganator_SingleViewBankViewFrame"] = {
 },
 ["Baganator_CategoryViewBackpackViewFrameblizzard"] = {
 },
@@ -1108,32 +1108,15 @@ BlizzMoveDB = {
 },
 },
 },
-["ChatConfigFrame"] = {
+["GenericTraitFrame.ButtonsParent"] = {
+},
+["ScrappingMachineFrame"] = {
 ["startPoints"] = {
 {
-["offX"] = 1060.833129882813,
-["offY"] = -116.0000457763672,
 ["anchorPoint"] = "TOPLEFT",
-["relativePoint"] = "TOPLEFT",
-},
-},
-["dragged"] = true,
-["dragPoints"] = {
-{
-["anchorPoint"] = "LEFT",
 ["relativeFrame"] = "UIParent",
-["offY"] = 115.6670989990234,
-["offX"] = 393.3344421386719,
-["relativePoint"] = "LEFT",
-},
-},
-},
-["BlackMarketFrame"] = {
-["startPoints"] = {
-{
+["offY"] = -116,
 ["offX"] = 15.99999904632568,
-["offY"] = -116.0000457763672,
-["anchorPoint"] = "TOPLEFT",
 ["relativePoint"] = "TOPLEFT",
 },
 },
@@ -1142,9 +1125,9 @@ BlizzMoveDB = {
 {
 ["anchorPoint"] = "TOPLEFT",
 ["relativeFrame"] = "UIParent",
-["offY"] = -115.1666259765625,
+["offY"] = -116,
 ["relativePoint"] = "TOPLEFT",
-["offX"] = 15.99999904632568,
+["offX"] = 16.83333969116211,
 },
 },
 },
@@ -1194,15 +1177,14 @@ BlizzMoveDB = {
 },
 ["GarrisonCapacitiveDisplayFrame"] = {
 },
-["Baganator_SingleViewBankViewFrameblizzard"] = {
+["TabardFrame"] = {
 },
-["ScrappingMachineFrame"] = {
+["BlackMarketFrame"] = {
 ["startPoints"] = {
 {
-["anchorPoint"] = "TOPLEFT",
-["relativeFrame"] = "UIParent",
-["offY"] = -116,
 ["offX"] = 15.99999904632568,
+["offY"] = -116.0000457763672,
+["anchorPoint"] = "TOPLEFT",
 ["relativePoint"] = "TOPLEFT",
 },
 },
@@ -1211,13 +1193,15 @@ BlizzMoveDB = {
 {
 ["anchorPoint"] = "TOPLEFT",
 ["relativeFrame"] = "UIParent",
-["offY"] = -116,
+["offY"] = -115.1666259765625,
 ["relativePoint"] = "TOPLEFT",
-["offX"] = 16.83333969116211,
+["offX"] = 15.99999904632568,
 },
 },
 },
 ["GarrisonRecruitSelectFrame"] = {
+},
+["RemixArtifactFrame.ButtonsParent"] = {
 },
 ["ArtifactFrame"] = {
 ["startPoints"] = {
@@ -1238,8 +1222,6 @@ BlizzMoveDB = {
 ["relativePoint"] = "TOPLEFT",
 },
 },
-},
-["RemixArtifactFrame.ButtonsParent"] = {
 },
 ["ReputationFrame.ReputationDetailFrame"] = {
 },
@@ -1404,9 +1386,27 @@ BlizzMoveDB = {
 },
 ["ModelPreviewFrame"] = {
 },
-["TabardFrame"] = {
+["Baganator_SingleViewBankViewFrameblizzard"] = {
 },
-["GenericTraitFrame.ButtonsParent"] = {
+["ChatConfigFrame"] = {
+["startPoints"] = {
+{
+["offX"] = 1060.833129882813,
+["offY"] = -116.0000457763672,
+["anchorPoint"] = "TOPLEFT",
+["relativePoint"] = "TOPLEFT",
+},
+},
+["dragged"] = true,
+["dragPoints"] = {
+{
+["anchorPoint"] = "LEFT",
+["relativeFrame"] = "UIParent",
+["offY"] = 115.6670989990234,
+["offX"] = 393.3344421386719,
+["relativePoint"] = "LEFT",
+},
+},
 },
 ["GarrisonMissionFrame"] = {
 },
@@ -1423,11 +1423,11 @@ BlizzMoveDB = {
 ["dragged"] = true,
 ["dragPoints"] = {
 {
-["anchorPoint"] = "TOPLEFT",
+["anchorPoint"] = "TOP",
 ["relativeFrame"] = "UIParent",
-["offY"] = -94.3333740234375,
-["relativePoint"] = "TOPLEFT",
-["offX"] = 465.9998474121094,
+["offY"] = -77.6666259765625,
+["offX"] = -92.00018310546875,
+["relativePoint"] = "TOP",
 },
 },
 },

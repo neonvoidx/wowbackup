@@ -23,24 +23,31 @@ TransmogLootHelper_Settings = {
 ["left"] = 1295,
 ["width"] = 200,
 },
-["vendorAll"] = true,
+["remixWindowPosition"] = {
+["height"] = 200,
+["bottom"] = 836,
+["left"] = 1295,
+["width"] = 200,
+},
+["autoOpen"] = false,
+["iconNewMog"] = true,
 ["iconNewIllusion"] = true,
 ["hide"] = true,
 ["collectMode"] = 1,
-["autoOpen"] = false,
+["windowLocked"] = false,
 ["simpleIcon"] = false,
-["hideGroupRolls"] = false,
-["iconNewMog"] = true,
+["iconContainer"] = true,
+["instantVault"] = true,
 ["windowSort"] = 1,
 ["iconNewUpgrade"] = true,
-["overlay"] = true,
+["iconUsable"] = true,
 ["instantCatalyst"] = true,
 ["iconNewPet"] = true,
-["iconUsable"] = true,
+["overlay"] = true,
 ["iconNewToy"] = true,
-["windowLocked"] = false,
-["instantVault"] = true,
-["iconContainer"] = true,
+["remixWindowLocked"] = false,
+["hideGroupRolls"] = false,
+["vendorAll"] = true,
 ["iconNewSource"] = false,
 }
 TransmogLootHelper_Cache = {
@@ -110,13 +117,1014 @@ TransmogLootHelper_Cache = {
 [303788] = true,
 [382385] = true,
 [382392] = true,
-[272061] = true,
-[259435] = true,
 [278411] = true,
+[259435] = true,
+[272061] = true,
 [382393] = true,
 [382396] = true,
 [382330] = true,
 [382346] = true,
 [382402] = true,
+},
+["Lemix"] = {
+[247567] = {
+["characters"] = {
+},
+["converted"] = false,
+},
+[247599] = {
+["characters"] = {
+},
+["converted"] = false,
+},
+[247631] = {
+["characters"] = {
+},
+["converted"] = false,
+},
+[247440] = {
+["characters"] = {
+},
+["converted"] = false,
+},
+[247472] = {
+["characters"] = {
+},
+["converted"] = false,
+},
+[247504] = {
+["characters"] = {
+},
+["converted"] = false,
+},
+[247536] = {
+["characters"] = {
+},
+["converted"] = false,
+},
+[247568] = {
+["characters"] = {
+},
+["converted"] = false,
+},
+[247600] = {
+["characters"] = {
+},
+["converted"] = false,
+},
+[247632] = {
+["characters"] = {
+},
+["converted"] = false,
+},
+[247441] = {
+["characters"] = {
+},
+["converted"] = false,
+},
+[247473] = {
+["characters"] = {
+},
+["converted"] = false,
+},
+[247505] = {
+["characters"] = {
+},
+["converted"] = false,
+},
+[247537] = {
+["characters"] = {
+},
+["converted"] = false,
+},
+[247569] = {
+["characters"] = {
+},
+["converted"] = false,
+},
+[247601] = {
+["characters"] = {
+},
+["converted"] = false,
+},
+[247633] = {
+["characters"] = {
+},
+["converted"] = false,
+},
+[247506] = {
+["characters"] = {
+},
+["converted"] = false,
+},
+[247538] = {
+["characters"] = {
+},
+["converted"] = false,
+},
+[247570] = {
+["characters"] = {
+},
+["converted"] = false,
+},
+[247602] = {
+["characters"] = {
+},
+["converted"] = false,
+},
+[247634] = {
+["characters"] = {
+},
+["converted"] = false,
+},
+[247475] = {
+["characters"] = {
+},
+["converted"] = false,
+},
+[247507] = {
+["characters"] = {
+},
+["converted"] = false,
+},
+[247571] = {
+["characters"] = {
+},
+["converted"] = false,
+},
+[247603] = {
+["characters"] = {
+},
+["converted"] = false,
+},
+[247635] = {
+["characters"] = {
+},
+["converted"] = false,
+},
+[247508] = {
+["characters"] = {
+},
+["converted"] = false,
+},
+[247540] = {
+["characters"] = {
+},
+["converted"] = false,
+},
+[247572] = {
+["characters"] = {
+},
+["converted"] = false,
+},
+[247604] = {
+["characters"] = {
+},
+["converted"] = false,
+},
+[247636] = {
+["characters"] = {
+},
+["converted"] = false,
+},
+[247477] = {
+["characters"] = {
+},
+["converted"] = false,
+},
+[247509] = {
+["characters"] = {
+},
+["converted"] = false,
+},
+[247541] = {
+["characters"] = {
+},
+["converted"] = false,
+},
+[247573] = {
+["characters"] = {
+},
+["converted"] = false,
+},
+[247605] = {
+["characters"] = {
+},
+["converted"] = false,
+},
+[247637] = {
+["characters"] = {
+},
+["converted"] = false,
+},
+[247510] = {
+["characters"] = {
+},
+["converted"] = false,
+},
+[247542] = {
+["characters"] = {
+},
+["converted"] = false,
+},
+[247574] = {
+["characters"] = {
+},
+["converted"] = false,
+},
+[247606] = {
+["characters"] = {
+},
+["converted"] = false,
+},
+[249678] = {
+["characters"] = {
+},
+["converted"] = false,
+},
+[247447] = {
+["characters"] = {
+},
+["converted"] = false,
+},
+[247511] = {
+["characters"] = {
+},
+["converted"] = false,
+},
+[247543] = {
+["characters"] = {
+},
+["converted"] = false,
+},
+[247575] = {
+["characters"] = {
+},
+["converted"] = false,
+},
+[247607] = {
+["characters"] = {
+},
+["converted"] = false,
+},
+[249679] = {
+["characters"] = {
+},
+["converted"] = false,
+},
+[247448] = {
+["characters"] = {
+},
+["converted"] = false,
+},
+[247512] = {
+["characters"] = {
+},
+["converted"] = false,
+},
+[247544] = {
+["characters"] = {
+},
+["converted"] = false,
+},
+[247576] = {
+["characters"] = {
+},
+["converted"] = false,
+},
+[247608] = {
+["characters"] = {
+},
+["converted"] = false,
+},
+[249680] = {
+["characters"] = {
+},
+["converted"] = false,
+},
+[247481] = {
+["characters"] = {
+},
+["converted"] = false,
+},
+[247513] = {
+["characters"] = {
+},
+["converted"] = false,
+},
+[247545] = {
+["characters"] = {
+},
+["converted"] = false,
+},
+[247577] = {
+["characters"] = {
+},
+["converted"] = false,
+},
+[247609] = {
+["characters"] = {
+},
+["converted"] = false,
+},
+[249681] = {
+["characters"] = {
+},
+["converted"] = false,
+},
+[247482] = {
+["characters"] = {
+},
+["converted"] = false,
+},
+[247514] = {
+["characters"] = {
+},
+["converted"] = false,
+},
+[247546] = {
+["characters"] = {
+},
+["converted"] = false,
+},
+[247578] = {
+["characters"] = {
+},
+["converted"] = false,
+},
+[247610] = {
+["characters"] = {
+},
+["converted"] = false,
+},
+[249682] = {
+["characters"] = {
+},
+["converted"] = false,
+},
+[247515] = {
+["characters"] = {
+},
+["converted"] = false,
+},
+[247547] = {
+["characters"] = {
+},
+["converted"] = false,
+},
+[247579] = {
+["characters"] = {
+},
+["converted"] = false,
+},
+[247611] = {
+["characters"] = {
+},
+["converted"] = false,
+},
+[249683] = {
+["characters"] = {
+},
+["converted"] = false,
+},
+[247484] = {
+["characters"] = {
+},
+["converted"] = false,
+},
+[247516] = {
+["characters"] = {
+},
+["converted"] = false,
+},
+[247548] = {
+["characters"] = {
+},
+["converted"] = false,
+},
+[247580] = {
+["characters"] = {
+},
+["converted"] = false,
+},
+[247612] = {
+["characters"] = {
+},
+["converted"] = false,
+},
+[249684] = {
+["characters"] = {
+},
+["converted"] = false,
+},
+[247453] = {
+["characters"] = {
+},
+["converted"] = false,
+},
+[247517] = {
+["characters"] = {
+},
+["converted"] = false,
+},
+[247549] = {
+["characters"] = {
+},
+["converted"] = false,
+},
+[247581] = {
+["characters"] = {
+},
+["converted"] = false,
+},
+[247613] = {
+["characters"] = {
+},
+["converted"] = false,
+},
+[249685] = {
+["characters"] = {
+},
+["converted"] = false,
+},
+[247454] = {
+["characters"] = {
+},
+["converted"] = false,
+},
+[247486] = {
+["characters"] = {
+},
+["converted"] = false,
+},
+[247518] = {
+["characters"] = {
+},
+["converted"] = false,
+},
+[247550] = {
+["characters"] = {
+},
+["converted"] = false,
+},
+[247582] = {
+["characters"] = {
+},
+["converted"] = false,
+},
+[247614] = {
+["characters"] = {
+},
+["converted"] = false,
+},
+[247646] = {
+["characters"] = {
+},
+["converted"] = false,
+},
+[247519] = {
+["characters"] = {
+},
+["converted"] = false,
+},
+[247551] = {
+["characters"] = {
+},
+["converted"] = false,
+},
+[247583] = {
+["characters"] = {
+},
+["converted"] = false,
+},
+[247615] = {
+["characters"] = {
+},
+["converted"] = false,
+},
+[247647] = {
+["characters"] = {
+},
+["converted"] = false,
+},
+[247456] = {
+["characters"] = {
+},
+["converted"] = false,
+},
+[247488] = {
+["characters"] = {
+},
+["converted"] = false,
+},
+[247520] = {
+["characters"] = {
+},
+["converted"] = false,
+},
+[247552] = {
+["characters"] = {
+},
+["converted"] = false,
+},
+[247584] = {
+["characters"] = {
+},
+["converted"] = false,
+},
+[247616] = {
+["characters"] = {
+},
+["converted"] = false,
+},
+[247648] = {
+["characters"] = {
+},
+["converted"] = false,
+},
+[247489] = {
+["characters"] = {
+},
+["converted"] = false,
+},
+[247521] = {
+["characters"] = {
+},
+["converted"] = false,
+},
+[247553] = {
+["characters"] = {
+},
+["converted"] = false,
+},
+[247585] = {
+["characters"] = {
+},
+["converted"] = false,
+},
+[247617] = {
+["characters"] = {
+},
+["converted"] = false,
+},
+[247649] = {
+["characters"] = {
+},
+["converted"] = false,
+},
+[247458] = {
+["characters"] = {
+},
+["converted"] = false,
+},
+[247490] = {
+["characters"] = {
+},
+["converted"] = false,
+},
+[247522] = {
+["characters"] = {
+},
+["converted"] = false,
+},
+[247554] = {
+["characters"] = {
+},
+["converted"] = false,
+},
+[247586] = {
+["characters"] = {
+},
+["converted"] = false,
+},
+[247618] = {
+["characters"] = {
+},
+["converted"] = false,
+},
+[247650] = {
+["characters"] = {
+},
+["converted"] = false,
+},
+[247491] = {
+["characters"] = {
+},
+["converted"] = false,
+},
+[247523] = {
+["characters"] = {
+},
+["converted"] = false,
+},
+[247555] = {
+["characters"] = {
+},
+["converted"] = false,
+},
+[247587] = {
+["characters"] = {
+},
+["converted"] = false,
+},
+[247619] = {
+["characters"] = {
+},
+["converted"] = false,
+},
+[247651] = {
+["characters"] = {
+},
+["converted"] = false,
+},
+[247460] = {
+["characters"] = {
+},
+["converted"] = false,
+},
+[247492] = {
+["characters"] = {
+},
+["converted"] = false,
+},
+[247524] = {
+["characters"] = {
+},
+["converted"] = false,
+},
+[247556] = {
+["characters"] = {
+},
+["converted"] = false,
+},
+[247588] = {
+["characters"] = {
+},
+["converted"] = false,
+},
+[247620] = {
+["characters"] = {
+},
+["converted"] = false,
+},
+[247652] = {
+["characters"] = {
+},
+["converted"] = false,
+},
+[247493] = {
+["characters"] = {
+},
+["converted"] = false,
+},
+[247525] = {
+["characters"] = {
+},
+["converted"] = false,
+},
+[247557] = {
+["characters"] = {
+},
+["converted"] = false,
+},
+[247589] = {
+["characters"] = {
+},
+["converted"] = false,
+},
+[247621] = {
+["characters"] = {
+},
+["converted"] = false,
+},
+[247653] = {
+["characters"] = {
+},
+["converted"] = false,
+},
+[247430] = {
+["characters"] = {
+},
+["converted"] = false,
+},
+[247494] = {
+["characters"] = {
+},
+["converted"] = false,
+},
+[247526] = {
+["characters"] = {
+},
+["converted"] = false,
+},
+[247558] = {
+["characters"] = {
+},
+["converted"] = false,
+},
+[247590] = {
+["characters"] = {
+},
+["converted"] = false,
+},
+[247622] = {
+["characters"] = {
+},
+["converted"] = false,
+},
+[247654] = {
+["characters"] = {
+},
+["converted"] = false,
+},
+[247431] = {
+["characters"] = {
+},
+["converted"] = false,
+},
+[247495] = {
+["characters"] = {
+},
+["converted"] = false,
+},
+[247527] = {
+["characters"] = {
+},
+["converted"] = false,
+},
+[247559] = {
+["characters"] = {
+},
+["converted"] = false,
+},
+[247591] = {
+["characters"] = {
+},
+["converted"] = false,
+},
+[247623] = {
+["characters"] = {
+},
+["converted"] = false,
+},
+[247655] = {
+["characters"] = {
+},
+["converted"] = false,
+},
+[247464] = {
+["characters"] = {
+},
+["converted"] = false,
+},
+[247496] = {
+["characters"] = {
+},
+["converted"] = false,
+},
+[247528] = {
+["characters"] = {
+},
+["converted"] = false,
+},
+[247560] = {
+["characters"] = {
+},
+["converted"] = false,
+},
+[247592] = {
+["characters"] = {
+},
+["converted"] = false,
+},
+[247624] = {
+["characters"] = {
+},
+["converted"] = false,
+},
+[247656] = {
+["characters"] = {
+},
+["converted"] = false,
+},
+[247465] = {
+["characters"] = {
+},
+["converted"] = false,
+},
+[247529] = {
+["characters"] = {
+},
+["converted"] = false,
+},
+[247561] = {
+["characters"] = {
+},
+["converted"] = false,
+},
+[247625] = {
+["characters"] = {
+},
+["converted"] = false,
+},
+[247466] = {
+["characters"] = {
+},
+["converted"] = false,
+},
+[247530] = {
+["characters"] = {
+},
+["converted"] = false,
+},
+[247562] = {
+["characters"] = {
+},
+["converted"] = false,
+},
+[247594] = {
+["characters"] = {
+},
+["converted"] = false,
+},
+[247626] = {
+["characters"] = {
+},
+["converted"] = false,
+},
+[247435] = {
+["characters"] = {
+},
+["converted"] = false,
+},
+[247467] = {
+["characters"] = {
+},
+["converted"] = false,
+},
+[247531] = {
+["characters"] = {
+},
+["converted"] = false,
+},
+[247595] = {
+["characters"] = {
+},
+["converted"] = false,
+},
+[247627] = {
+["characters"] = {
+},
+["converted"] = false,
+},
+[247436] = {
+["characters"] = {
+},
+["converted"] = false,
+},
+[247036] = {
+["characters"] = {
+},
+["converted"] = false,
+},
+[247645] = {
+["characters"] = {
+},
+["converted"] = false,
+},
+[247532] = {
+["characters"] = {
+},
+["converted"] = false,
+},
+[247564] = {
+["characters"] = {
+},
+["converted"] = false,
+},
+[247596] = {
+["characters"] = {
+},
+["converted"] = false,
+},
+[247628] = {
+["characters"] = {
+},
+["converted"] = false,
+},
+[247638] = {
+["characters"] = {
+},
+["converted"] = false,
+},
+[247437] = {
+["characters"] = {
+},
+["converted"] = false,
+},
+[247469] = {
+["characters"] = {
+},
+["converted"] = false,
+},
+[247643] = {
+["characters"] = {
+},
+["converted"] = false,
+},
+[247533] = {
+["characters"] = {
+},
+["converted"] = false,
+},
+[247565] = {
+["characters"] = {
+},
+["converted"] = false,
+},
+[247597] = {
+["characters"] = {
+},
+["converted"] = false,
+},
+[247629] = {
+["characters"] = {
+},
+["converted"] = false,
+},
+[247640] = {
+["characters"] = {
+},
+["converted"] = false,
+},
+[247438] = {
+["characters"] = {
+},
+["converted"] = false,
+},
+[247470] = {
+["characters"] = {
+},
+["converted"] = false,
+},
+[247639] = {
+["characters"] = {
+},
+["converted"] = false,
+},
+[247534] = {
+["characters"] = {
+},
+["converted"] = false,
+},
+[247566] = {
+["characters"] = {
+},
+["converted"] = false,
+},
+[247598] = {
+["characters"] = {
+},
+["converted"] = false,
+},
+[247630] = {
+["characters"] = {
+},
+["converted"] = false,
+},
+[247641] = {
+["characters"] = {
+},
+["converted"] = false,
+},
+[247439] = {
+["characters"] = {
+},
+["converted"] = false,
+},
+[247471] = {
+["characters"] = {
+},
+["converted"] = false,
+},
+[247642] = {
+["characters"] = {
+},
+["converted"] = false,
+},
+[247535] = {
+["characters"] = {
+},
+["converted"] = false,
+},
+[247644] = {
+["characters"] = {
+},
+["converted"] = false,
+},
+},
+["LemixCharacters"] = {
+["FirstLemixLoad"] = true,
+["Ofpuss-Tichondrius"] = "ffa330c9",
 },
 }

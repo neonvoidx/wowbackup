@@ -353,12 +353,12 @@ nil,
 },
 {
 ["color"] = "fffb3e",
-[15] = {
-4,
-3,
-},
 [17] = {
 2,
+3,
+},
+[15] = {
+4,
 3,
 },
 [18] = {
@@ -508,10 +508,6 @@ nil,
 ["difficulty"] = 10,
 ["uid"] = "i8o4G59N2zg",
 ["addonVersion"] = 554,
-["colorPaletteInfo"] = {
-["autoColoring"] = true,
-["colorPaletteIdx"] = 4,
-},
 ["value"] = {
 ["pulls"] = {
 {
@@ -877,6 +873,10 @@ nil,
 {
 },
 },
+},
+["colorPaletteInfo"] = {
+["autoColoring"] = true,
+["colorPaletteIdx"] = 4,
 },
 ["text"] = "Halls || Simple",
 ["objects"] = {
@@ -1280,6 +1280,10 @@ nil,
 },
 ["uid"] = "gN6Nv)StbSh",
 ["addonVersion"] = 550,
+["colorPaletteInfo"] = {
+["autoColoring"] = true,
+["colorPaletteIdx"] = 4,
+},
 ["value"] = {
 ["pulls"] = {
 {
@@ -1518,10 +1522,6 @@ nil,
 },
 },
 },
-["colorPaletteInfo"] = {
-["autoColoring"] = true,
-["colorPaletteIdx"] = 4,
-},
 ["text"] = "Streets || Simple",
 ["difficulty"] = 10,
 ["week"] = 1,
@@ -1559,6 +1559,10 @@ nil,
 },
 ["uid"] = "0)m5sk60lH)",
 ["addonVersion"] = 550,
+["colorPaletteInfo"] = {
+["autoColoring"] = true,
+["colorPaletteIdx"] = 4,
+},
 ["value"] = {
 ["pulls"] = {
 {
@@ -1782,12 +1786,12 @@ nil,
 [18] = {
 1,
 },
+[12] = {
+1,
+},
 [20] = {
 1,
 2,
-},
-[12] = {
-1,
 },
 },
 {
@@ -1875,10 +1879,6 @@ nil,
 },
 },
 },
-["colorPaletteInfo"] = {
-["autoColoring"] = true,
-["colorPaletteIdx"] = 4,
-},
 ["text"] = "Gambit || Simple",
 ["difficulty"] = 10,
 ["week"] = 1,
@@ -1939,10 +1939,6 @@ nil,
 ["difficulty"] = 20,
 ["uid"] = "00Zt0fk1b9Z",
 ["addonVersion"] = 550,
-["colorPaletteInfo"] = {
-["autoColoring"] = true,
-["colorPaletteIdx"] = 4,
-},
 ["value"] = {
 ["selection"] = {
 10,
@@ -2168,6 +2164,10 @@ nil,
 },
 },
 },
+["colorPaletteInfo"] = {
+["autoColoring"] = true,
+["colorPaletteIdx"] = 4,
+},
 ["text"] = "Dawnbreaker || Simple",
 ["objects"] = {
 },
@@ -2229,10 +2229,6 @@ nil,
 ["difficulty"] = 10,
 ["uid"] = "EKGsA5cA8dl",
 ["addonVersion"] = 550,
-["colorPaletteInfo"] = {
-["autoColoring"] = true,
-["colorPaletteIdx"] = 4,
-},
 ["value"] = {
 ["selection"] = {
 1,
@@ -2588,6 +2584,10 @@ nil,
 },
 },
 },
+["colorPaletteInfo"] = {
+["autoColoring"] = true,
+["colorPaletteIdx"] = 4,
+},
 ["text"] = "Ara'kara, City of Echoes || Simple",
 ["objects"] = {
 },
@@ -2831,6 +2831,11 @@ true,
 ["freeholdJoined"] = false,
 ["beguiling"] = 1,
 },
+["colorPaletteInfo"] = {
+["autoColoring"] = true,
+["colorPaletteIdx"] = 4,
+},
+["text"] = "TWW S1 City of Threads",
 ["value"] = {
 ["currentPull"] = 1,
 ["currentSublevel"] = 1,
@@ -3080,11 +3085,11 @@ true,
 7,
 8,
 },
-[15] = {
-3,
-},
 [17] = {
 1,
+},
+[15] = {
+3,
 },
 ["color"] = "ff3e9e",
 },
@@ -3108,11 +3113,6 @@ true,
 ["color"] = "ff9b3e",
 },
 },
-},
-["text"] = "TWW S1 City of Threads",
-["colorPaletteInfo"] = {
-["autoColoring"] = true,
-["colorPaletteIdx"] = 4,
 },
 ["uid"] = "2)joMBoG5)z",
 },
@@ -3148,10 +3148,6 @@ true,
 ["difficulty"] = 20,
 ["uid"] = "NJMxWsWo1uG",
 ["addonVersion"] = 550,
-["colorPaletteInfo"] = {
-["autoColoring"] = true,
-["colorPaletteIdx"] = 4,
-},
 ["value"] = {
 ["selection"] = {
 10,
@@ -3307,6 +3303,10 @@ true,
 2,
 },
 ["color"] = "a1ff3e",
+[20] = {
+2,
+1,
+},
 [4] = {
 4,
 6,
@@ -3316,10 +3316,6 @@ true,
 1,
 5,
 7,
-},
-[20] = {
-2,
-1,
 },
 },
 {
@@ -3481,6 +3477,10 @@ true,
 },
 },
 },
+["colorPaletteInfo"] = {
+["autoColoring"] = true,
+["colorPaletteIdx"] = 4,
+},
 ["text"] = "Priory of the Sacred Flame || Simple",
 ["objects"] = {
 },
@@ -3490,10 +3490,6 @@ true,
 ["difficulty"] = 20,
 ["uid"] = "xhDZJSWi6jA",
 ["addonVersion"] = 550,
-["colorPaletteInfo"] = {
-["autoColoring"] = true,
-["colorPaletteIdx"] = 4,
-},
 ["value"] = {
 ["selection"] = {
 19,
@@ -3628,6 +3624,10 @@ true,
 2,
 },
 ["color"] = "ff9b3e",
+[20] = {
+2,
+1,
+},
 [4] = {
 5,
 6,
@@ -3637,10 +3637,6 @@ true,
 1,
 4,
 7,
-},
-[20] = {
-2,
-1,
 },
 },
 {
@@ -3803,6 +3799,10 @@ true,
 },
 },
 },
+["colorPaletteInfo"] = {
+["autoColoring"] = true,
+["colorPaletteIdx"] = 4,
+},
 ["text"] = "Priory || Simple Left",
 ["objects"] = {
 },
@@ -3864,10 +3864,6 @@ true,
 ["difficulty"] = 10,
 ["uid"] = "Mh1leZ32YFM",
 ["addonVersion"] = 550,
-["colorPaletteInfo"] = {
-["autoColoring"] = true,
-["colorPaletteIdx"] = 4,
-},
 ["value"] = {
 ["selection"] = {
 6,
@@ -3920,17 +3916,14 @@ true,
 ["color"] = "3eff9e",
 },
 {
+[25] = {
+4,
+},
 [10] = {
 6,
 5,
 },
-[25] = {
-4,
-},
-[12] = {
-8,
-12,
-},
+["color"] = "ff3e3e",
 [14] = {
 6,
 },
@@ -3938,7 +3931,10 @@ true,
 24,
 23,
 },
-["color"] = "ff3e3e",
+[12] = {
+8,
+12,
+},
 },
 {
 {
@@ -4161,12 +4157,12 @@ true,
 1,
 },
 ["color"] = "3effff",
-[12] = {
-},
 [26] = {
 1,
 2,
 3,
+},
+[12] = {
 },
 },
 },
@@ -4177,6 +4173,10 @@ true,
 {
 },
 },
+},
+["colorPaletteInfo"] = {
+["autoColoring"] = true,
+["colorPaletteIdx"] = 4,
 },
 ["text"] = "Floodgate || Simple",
 ["objects"] = {
@@ -4254,6 +4254,10 @@ false,
 },
 ["uid"] = "grVA8DFual4",
 ["addonVersion"] = 550,
+["colorPaletteInfo"] = {
+["autoColoring"] = true,
+["colorPaletteIdx"] = 4,
+},
 ["value"] = {
 ["selection"] = {
 4,
@@ -4565,10 +4569,6 @@ false,
 },
 },
 },
-["colorPaletteInfo"] = {
-["autoColoring"] = true,
-["colorPaletteIdx"] = 4,
-},
 ["text"] = "Eco-Dome || Simple",
 ["difficulty"] = 10,
 ["week"] = 1,
@@ -4579,18 +4579,14 @@ false,
 },
 },
 },
-["maximized"] = false,
-["toolbarExpanded"] = false,
-["nonFullscreenScale"] = 0.4729828705658784,
-["currentDungeonIdx"] = 113,
-["version"] = 564,
-["xoffset"] = -204.2173156738281,
 ["minimap"] = {
 ["minimapPos"] = 137.8717401374864,
 ["lock"] = true,
 ["showInCompartment"] = true,
 ["hide"] = true,
 },
+["toolbarExpanded"] = false,
+["maximized"] = false,
 ["colorPaletteInfo"] = {
 ["colorPaletteIdx"] = 1,
 ["customPaletteValues"] = {
@@ -4656,6 +4652,10 @@ false,
 },
 },
 },
+["version"] = 573,
+["xoffset"] = -204.2173156738281,
+["currentDungeonIdx"] = 113,
+["nonFullscreenScale"] = 0.4729828705658784,
 ["yoffset"] = -227.9413299560547,
 },
 }

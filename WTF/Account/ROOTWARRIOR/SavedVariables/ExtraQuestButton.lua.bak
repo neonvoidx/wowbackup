@@ -15,6 +15,20 @@ ExtraQuestButtonDB3 = {
 ["zoneOnly"] = false,
 ["scale"] = 1,
 },
+["DefaultMidnight"] = {
+["artworkAlpha"] = 1,
+["noCooldownText"] = false,
+["trackingOnly"] = false,
+["position"] = {
+["y"] = 204.8324584960938,
+["x"] = -497.5005493164063,
+["point"] = "BOTTOM",
+},
+["artworkStyle"] = "Default",
+["zoneOnly"] = false,
+["distanceYd"] = 1000,
+["scale"] = 1,
+},
 ["Default"] = {
 ["artworkAlpha"] = 1,
 ["noCooldownText"] = false,

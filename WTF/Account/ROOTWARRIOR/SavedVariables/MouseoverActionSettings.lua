@@ -63,8 +63,9 @@ MouseoverActionSettingsDB = {
 ["DRAGONRIDING_UPDATE"] = false,
 ["RAID_GROUP_UPDATE"] = false,
 },
-["Minimap"] = {
-["enabled"] = false,
+["NameFontSettings"] = {
+["font"] = "1",
+["height"] = 10,
 },
 ["ChatFrame"] = {
 ["enabled"] = false,
@@ -144,48 +145,11 @@ MouseoverActionSettingsDB = {
 ["font"] = "1",
 ["height"] = 13,
 },
-["NameFontSettings"] = {
-["font"] = "1",
-["height"] = 10,
+["Minimap"] = {
+["enabled"] = false,
 },
 ["BuffFrame"] = {
 ["enabled"] = false,
-},
-["PartyFrame"] = {
-["enabled"] = false,
-},
-["MultiBar7"] = {
-["enabled"] = false,
-},
-["ObjectiveTracker"] = {
-["MOUNT_UPDATE"] = false,
-["NPC_UPDATE"] = true,
-["minAlpha"] = 1,
-["OPEN_WORLD_UPDATE"] = false,
-["COMBAT_UPDATE"] = false,
-},
-["MultiBar6"] = {
-["enabled"] = false,
-["links"] = {
-["MultiBarRight"] = true,
-["MultiBarBottomRight"] = true,
-},
-["useCustomDelay"] = true,
-["minAlpha"] = 0.3,
-["delay"] = 0,
-["COMBAT_UPDATE"] = true,
-},
-["MultiBarLeft"] = {
-["enabled"] = false,
-},
-["MultiBarBottomRight"] = {
-["links"] = {
-["MultiBar6"] = true,
-["MultiBarRight"] = true,
-},
-["minAlpha"] = 0.2,
-["delay"] = 0,
-["COMBAT_UPDATE"] = false,
 },
 ["MainMenuBar"] = {
 ["ARENA_UPDATE"] = true,
@@ -203,6 +167,42 @@ MouseoverActionSettingsDB = {
 },
 ["RAID_GROUP_UPDATE"] = false,
 ["TARGET_UPDATE"] = true,
+},
+["MultiBar6"] = {
+["enabled"] = false,
+["links"] = {
+["MultiBarRight"] = true,
+["MultiBarBottomRight"] = true,
+},
+["useCustomDelay"] = true,
+["minAlpha"] = 0.3,
+["delay"] = 0,
+["COMBAT_UPDATE"] = true,
+},
+["ObjectiveTracker"] = {
+["MOUNT_UPDATE"] = false,
+["NPC_UPDATE"] = true,
+["minAlpha"] = 1,
+["OPEN_WORLD_UPDATE"] = false,
+["COMBAT_UPDATE"] = false,
+},
+["PartyFrame"] = {
+["enabled"] = false,
+},
+["MultiBar7"] = {
+["enabled"] = false,
+},
+["MultiBarBottomRight"] = {
+["links"] = {
+["MultiBar6"] = true,
+["MultiBarRight"] = true,
+},
+["minAlpha"] = 0.2,
+["delay"] = 0,
+["COMBAT_UPDATE"] = false,
+},
+["MultiBarLeft"] = {
+["enabled"] = false,
 },
 ["PlayerFrame"] = {
 ["enabled"] = false,

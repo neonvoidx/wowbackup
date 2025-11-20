@@ -1191,7 +1191,7 @@ OPie_SavedData = {
 ["dropTokens"] = {
 ["OPCLSw"] = 1,
 ["OPCLSe"] = 1,
-["OPCLSa"] = 30,
+["OPCLSa"] = 36,
 ["OPCLSd"] = 1,
 ["OPCLSi"] = 1,
 },
