@@ -88,6 +88,10 @@ do  --Object Pool
         end
     end
 
+    function ObjectPoolMixin:EnumerateActive()
+        return ipairs(self.activeObjects)
+    end
+
     function ObjectPoolMixin:ProcessActiveObjects(processFunc)
         for _, object in ipairs(self.activeObjects) do
             if processFunc(object) then
@@ -1034,7 +1038,7 @@ do  --Dropdown Button
         if textTruncated or self.tooltip then
             local tooltip = GameTooltip;
             tooltip:SetOwner(self, "ANCHOR_RIGHT");
-            tooltip:SetText(self.Text:GetText(), 1, 1, 1, true);
+            tooltip:SetText(self.Text:GetText(), 1, 1, 1, 1, true);
             if self.tooltip then
                 tooltip:AddLine(self.tooltip, 1, 0.82, 0, true);
             end

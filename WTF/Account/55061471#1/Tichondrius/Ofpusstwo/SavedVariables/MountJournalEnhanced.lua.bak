@@ -3,42 +3,49 @@ MJEPersonalSettings = {
 ["notes"] = {
 },
 ["trackUsageStats"] = false,
-["searchInFamilyName"] = false,
-["personalFilter"] = false,
-["ui"] = {
-["displayAnimation"] = "stand",
-["showAchievementPoints"] = true,
-["compactMountList"] = true,
-["enableCursorKeys"] = true,
-["displayStatistics"] = {
-["UsedCount"] = true,
-["TravelDistance"] = true,
-["TravelTime"] = true,
-["Rarity"] = true,
-["Family"] = true,
-["CustomizationCount"] = true,
-["Wowhead"] = true,
-["LearnedDate"] = true,
-},
-["slotPosition"] = "top",
-["windowSize"] = {
-0,
-0,
-},
-["colorizeNameByRarity"] = true,
-["showResizeEdge"] = true,
-["showPersonalCount"] = true,
-["displayBackground"] = "original",
-["previewButton"] = true,
-["autoRotateModel"] = false,
-["showMountspecialButton"] = true,
-["unlockDisplayCamera"] = true,
-["showFilterProfilesInMenu"] = true,
-},
-["personalUi"] = false,
 ["hiddenMounts"] = {
 },
+["personalFilter"] = false,
+["filterProfile"] = {
+{
+["sort"] = {
+},
+["search"] = "",
+["filter"] = {
+},
+},
+{
+["sort"] = {
+},
+["search"] = "",
+["filter"] = {
+},
+},
+{
+["sort"] = {
+},
+["search"] = "",
+["filter"] = {
+},
+},
+{
+["sort"] = {
+},
+["search"] = "",
+["filter"] = {
+},
+},
+{
+["sort"] = {
+},
+["search"] = "",
+["filter"] = {
+},
+},
+},
 ["searchInNotes"] = false,
+["searchInFamilyName"] = false,
+["summonPreviousPetAgain"] = false,
 ["pets"] = {
 ["assignments"] = {
 },
@@ -99,12 +106,18 @@ true,
 true,
 true,
 },
-["hiddenIngame"] = false,
+["color"] = {
+},
 ["hidden"] = false,
 ["notCollected"] = true,
-["onlyUsable"] = false,
+["faction"] = {
+["horde"] = true,
+["alliance"] = true,
+["noFaction"] = true,
+},
 ["onlyTradable"] = false,
 ["onlyFavorites"] = false,
+["onlyUsable"] = false,
 ["mountType"] = {
 ["repair"] = true,
 ["flying"] = true,
@@ -113,11 +126,6 @@ true,
 ["passenger"] = true,
 ["ground"] = true,
 ["rideAlong"] = true,
-},
-["faction"] = {
-["horde"] = true,
-["alliance"] = true,
-["noFaction"] = true,
 },
 ["family"] = {
 ["Drakes"] = {
@@ -218,8 +226,8 @@ true,
 ["Rockets"] = true,
 ["Spider Tanks"] = true,
 ["Motorcycles"] = true,
-["Mechanical Animals"] = true,
 ["Carpets"] = true,
+["Mechanical Animals"] = true,
 ["Gyrocopters"] = true,
 ["Hovercraft"] = true,
 ["Airplanes"] = true,
@@ -252,19 +260,19 @@ true,
 },
 ["Mole"] = true,
 ["Rays"] = {
-["Nether Rays"] = true,
 ["Stingrays"] = true,
-["Mana Rays"] = true,
 ["Fathom Rays"] = true,
+["Mana Rays"] = true,
+["Nether Rays"] = true,
 },
 ["Bovids"] = {
 ["Tauralus"] = true,
 ["Yaks"] = true,
 ["Talbuks"] = true,
 ["Rams"] = true,
-["Clefthooves"] = true,
 ["Ruinstriders"] = true,
 ["Slateback"] = true,
+["Clefthooves"] = true,
 ["Goats"] = true,
 },
 ["Worm"] = true,
@@ -351,8 +359,7 @@ true,
 },
 ["collected"] = true,
 ["onlyRecent"] = false,
-["color"] = {
-},
+["hiddenIngame"] = false,
 },
 ["sort"] = {
 ["unownedOnBottom"] = true,
@@ -376,43 +383,37 @@ true,
 },
 },
 ["personalHiddenMounts"] = false,
-["summonPreviousPetAgain"] = false,
-["filterProfile"] = {
-{
-["sort"] = {
+["personalUi"] = false,
+["ui"] = {
+["showMountspecialButton"] = true,
+["enableCursorKeys"] = true,
+["slotPosition"] = "top",
+["syncTarget"] = false,
+["displayBackground"] = "original",
+["showAchievementPoints"] = true,
+["windowSize"] = {
+0,
+0,
 },
-["search"] = "",
-["filter"] = {
+["colorizeNameByRarity"] = true,
+["displayAnimation"] = "stand",
+["showResizeEdge"] = true,
+["showPersonalCount"] = true,
+["compactMountList"] = true,
+["previewButton"] = true,
+["displayStatistics"] = {
+["TravelDistance"] = true,
+["UsedCount"] = true,
+["LearnedDate"] = true,
+["Rarity"] = true,
+["Family"] = true,
+["CustomizationCount"] = true,
+["Wowhead"] = true,
+["TravelTime"] = true,
 },
-},
-{
-["sort"] = {
-},
-["search"] = "",
-["filter"] = {
-},
-},
-{
-["sort"] = {
-},
-["search"] = "",
-["filter"] = {
-},
-},
-{
-["sort"] = {
-},
-["search"] = "",
-["filter"] = {
-},
-},
-{
-["sort"] = {
-},
-["search"] = "",
-["filter"] = {
-},
-},
+["autoRotateModel"] = false,
+["unlockDisplayCamera"] = true,
+["showFilterProfilesInMenu"] = true,
 },
 ["searchInDescription"] = false,
 }

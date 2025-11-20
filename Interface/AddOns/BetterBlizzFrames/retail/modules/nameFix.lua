@@ -1,3 +1,4 @@
+if BBF.isMidnight then return end
 local specIDToName = {
     -- Death Knight
     [250] = "Blood", [251] = "Frost", [252] = "Unholy",
@@ -79,7 +80,7 @@ local hidePetName
 local isAddonLoaded = C_AddOns.IsAddOnLoaded
 local changeUnitFrameFont
 local targetAndFocusArenaNamePartyOverride
-local classicFramesMode
+local forceCenterNameSetting
 local rpNames
 local rpNamesFirst
 local rpNamesLast
@@ -131,8 +132,8 @@ function BBF.UpdateUserTargetSettings()
     hideTargetToTName = BetterBlizzFramesDB.hideTargetToTName
     hideFocusToTName = BetterBlizzFramesDB.hideFocusToTName
     classColorLevelText = BetterBlizzFramesDB.classColorTargetNames and BetterBlizzFramesDB.classColorLevelText
-    centerNames = BetterBlizzFramesDB.centerNames or BetterBlizzFramesDB.classicFrames
-    classicFramesMode = BetterBlizzFramesDB.classicFrames
+    centerNames = BetterBlizzFramesDB.centerNames or BetterBlizzFramesDB.classicFrames or BetterBlizzFramesDB.noPortraitModes
+    forceCenterNameSetting = BetterBlizzFramesDB.classicFrames or BetterBlizzFramesDB.noPortraitModes
     playerFrameOCD = BetterBlizzFramesDB.playerFrameOCD and not BetterBlizzFramesDB.playerFrameOCDTextureBypass
     playerFrameOCDTextureBypass = BetterBlizzFramesDB.playerFrameOCDTextureBypass
     hidePlayerName = BetterBlizzFramesDB.hidePlayerName
@@ -152,23 +153,32 @@ local function CenterPlayerName()
     name:SetJustifyH("CENTER")
     name:SetJustifyV(PlayerName:GetJustifyV())
     name:ClearAllPoints()
-    if playerFrameOCD and not classicFramesMode then
+    if playerFrameOCD and not forceCenterNameSetting then
         name:SetPoint("TOP", healthBar, "TOP", 0, 14.5)
     else
-        local xPos = classicFramesMode and 1.5 or true and -2 or 0
-        local yPos = classicFramesMode and 7.5 or BetterBlizzFramesDB.symmetricPlayerFrame and 15 or 14.5
+        local xPos = forceCenterNameSetting and 1.5 or BetterBlizzFramesDB.noPortraitModes and 0 or true and -2 or 0
+        local yPos = BetterBlizzFramesDB.noPortraitModes and 14 or forceCenterNameSetting and 7.5 or BetterBlizzFramesDB.symmetricPlayerFrame and 15 or 14.5
         name:SetPoint("TOP", healthBar, "TOP", xPos, yPos)
     end
 end
 
 local function CenterXName(fontObject, healthBar, ToT, pet)
     fontObject:ClearAllPoints()
-    if not (classicFramesMode and ToT) then
+    if not (forceCenterNameSetting and ToT) then
         fontObject:SetJustifyH("CENTER")
     end
-    local xPos = ToT and (classicFramesMode and 8 or -2) or (classicFramesMode and 0) or 2
-    local yPos = ((pet and classicFramesMode) and 2 or pet and 2) or ToT and (classicFramesMode and -18 or 12) or (classicFramesMode and 6.3 or 14)
-    fontObject:SetPoint(pet and "BOTTOM" or "TOP", healthBar, "TOP", xPos, yPos)
+    local xPos = (pet and BetterBlizzFramesDB.noPortraitModes and 16) or (ToT and BetterBlizzFramesDB.noPortraitModes and 0) or (ToT and (forceCenterNameSetting and 8 or -2)) or (forceCenterNameSetting and 0) or BetterBlizzFramesDB.noPortraitModes and -1 or 2
+    local yPos = (BetterBlizzFramesDB.noPortraitModes and ((pet and 2) or 13)) or ((pet and forceCenterNameSetting) and 2 or pet and 2) or ToT and (forceCenterNameSetting and -18 or 12) or (forceCenterNameSetting and 6.3 or 14)
+    if ToT and BetterBlizzFramesDB.noPortraitModes then
+        fontObject:SetJustifyH("CENTER")
+        xPos = xPos -1
+    end
+    if pet and BetterBlizzFramesDB.noPortraitModes then
+        fontObject:SetJustifyH("CENTER")
+        fontObject:SetPoint("CENTER", PetFrameTexture, "CENTER", 1.5, 22)
+    else
+        fontObject:SetPoint(pet and "BOTTOM" or "TOP", healthBar, "TOP", xPos, yPos)
+    end
 end
 
 
@@ -667,6 +677,9 @@ local function InitializeFontString(frame)
     -- Set initial text from the original FontString
     frame.bbfName:SetText(name:GetText())
     hooksecurefunc(name, "SetText", function()
+        if centerNames or forceCenterNameSetting then
+            frame.bbfName:SetJustifyH("CENTER")
+        end
         frame.bbfName:SetSize(name:GetSize())
     end)
 
@@ -808,9 +821,12 @@ local function SetPartyFont(font, size, outline, size2)
         if hbc.TextString then
             hbc.TextString:SetFont(font, size2, outline)
         end
+        if hbc.CenterText then
+            hbc.CenterText:SetFont(font, size2, outline)
+        end
         if mb.LeftText then
             mb.LeftText:SetFont(font, size2, outline)
-        end 
+        end
         if mb.RightText then
             mb.RightText:SetFont(font, size2, outline)
         end
@@ -962,7 +978,7 @@ end
 
 
 
-local function SetActionBarFonts(font, size, kbSize, outline, kbOutline)
+local function SetActionBarFonts(font, size, kbSize, outline, kbOutline, chargeSize)
     -- Blizzard action bars
     local blizzButtons = {
         "ActionButton", "MultiBarBottomLeftButton", "MultiBarBottomRightButton",
@@ -976,7 +992,7 @@ local function SetActionBarFonts(font, size, kbSize, outline, kbOutline)
             if hotKeyText then
                 local ogFont, ogSize, ogOutline = hotKeyText:GetFont()
                 local finalOutline = kbOutline or (ogOutline ~= "NONE" and ogOutline) or nil
-                hotKeyText:SetFont(font or ogFont, kbSize or ogSize, finalOutline)
+                hotKeyText:SetFont((hotKeyText:GetText() == "●" and ogFont) or font or ogFont, kbSize or ogSize, finalOutline)
             end
 
             local macroText = _G[buttonPrefix .. i .. "Name"]
@@ -984,6 +1000,13 @@ local function SetActionBarFonts(font, size, kbSize, outline, kbOutline)
                 local ogFont, ogSize, ogOutline = macroText:GetFont()
                 local finalOutline = outline or (ogOutline ~= "NONE" and ogOutline) or nil
                 macroText:SetFont(font or ogFont, size or ogSize, finalOutline)
+            end
+
+            local chargeText = _G[buttonPrefix .. i .. "Count"]
+            if chargeText and BetterBlizzFramesDB.actionBarChangeCharge then
+                local ogFont, ogSize, ogOutline = chargeText:GetFont()
+                local finalOutline = kbOutline or (ogOutline ~= "NONE" and ogOutline) or nil
+                chargeText:SetFont(font or ogFont, chargeSize or ogSize, finalOutline)
             end
         end
     end
@@ -1010,7 +1033,7 @@ local function SetActionBarFonts(font, size, kbSize, outline, kbOutline)
             if hotKeyText then
                 local ogFont, ogSize, ogOutline = hotKeyText:GetFont()
                 local finalOutline = kbOutline or (ogOutline ~= "NONE" and ogOutline) or nil
-                hotKeyText:SetFont(font or ogFont, kbSize or ogSize, finalOutline)
+                hotKeyText:SetFont((hotKeyText:GetText() == "●" and ogFont) or font or ogFont, kbSize or ogSize, finalOutline)
             end
 
             local macroText = _G[bar.name .. i .. "Name"]
@@ -1018,6 +1041,13 @@ local function SetActionBarFonts(font, size, kbSize, outline, kbOutline)
                 local ogFont, ogSize, ogOutline = macroText:GetFont()
                 local finalOutline = outline or (ogOutline ~= "NONE" and ogOutline) or nil
                 macroText:SetFont(font or ogFont, size or ogSize, finalOutline)
+            end
+
+            local chargeText = _G[bar.name .. i .. "Count"]
+            if chargeText and BetterBlizzFramesDB.actionBarChangeCharge then
+                local ogFont, ogSize, ogOutline = chargeText:GetFont()
+                local finalOutline = kbOutline or (ogOutline ~= "NONE" and ogOutline) or nil
+                chargeText:SetFont(font or ogFont, chargeSize or ogSize, finalOutline)
             end
         end
     end
@@ -1176,6 +1206,45 @@ function BBF.SetCustomFonts()
                 local _, size, style = frame.bbfName:GetFont()
                 frame.bbfName:SetFont(fontPath, size, style)
             end
+
+            -- Override action bar hotkey font for "●" symbol
+            local blizzButtons = {
+                "ActionButton", "MultiBarBottomLeftButton", "MultiBarBottomRightButton",
+                "MultiBarRightButton", "MultiBarLeftButton", "MultiBar5Button",
+                "MultiBar6Button", "MultiBar7Button", "PetActionButton"
+            }
+
+            for _, buttonPrefix in ipairs(blizzButtons) do
+                for i = 1, 12 do
+                    local hotKeyText = _G[buttonPrefix .. i .. "HotKey"]
+                    if hotKeyText and hotKeyText:GetText() == "●" then
+                        hotKeyText:SetFont("Fonts\\ARIALN.TTF", 12, "OUTLINE")
+                    end
+                end
+            end
+            local NUM_ACTIONBAR_BUTTONS = NUM_ACTIONBAR_BUTTONS or 12
+            local DOMINOS_NUM_MAX_BUTTONS = 14 * NUM_ACTIONBAR_BUTTONS
+            local dominosBars = {
+                {name = "DominosActionButton", count = DOMINOS_NUM_MAX_BUTTONS},
+                {name = "MultiBar5ActionButton", count = 12},
+                {name = "MultiBar6ActionButton", count = 12},
+                {name = "MultiBar7ActionButton", count = 12},
+                {name = "MultiBarRightActionButton", count = 12},
+                {name = "MultiBarLeftActionButton", count = 12},
+                {name = "MultiBarBottomRightActionButton", count = 12},
+                {name = "MultiBarBottomLeftActionButton", count = 12},
+                {name = "DominosPetActionButton", count = 12},
+                {name = "DominosStanceButton", count = 12},
+            }
+
+            for _, bar in ipairs(dominosBars) do
+                for i = 1, bar.count do
+                    local hotKeyText = _G[bar.name .. i .. "HotKey"]
+                    if hotKeyText and hotKeyText:GetText() == "●" then
+                        hotKeyText:SetFont("Fonts\\ARIALN.TTF", 12, "OUTLINE")
+                    end
+                end
+            end
         end
 
         SetAllFonts()
@@ -1236,8 +1305,8 @@ function BBF.SetCustomFonts()
         local kbSize = db.actionBarKeyFontSize or 10
         local outline = db.actionBarFontOutline or "THINOUTLINE"
         local kbOutline = db.actionBarKeyFontOutline or "THINOUTLINE"
-
-        SetActionBarFonts(fontPath, fontSize, kbSize, outline, kbOutline)
+        local chargeSize = db.actionBarChargeFontSize or 14
+        SetActionBarFonts(fontPath, fontSize, kbSize, outline, kbOutline, chargeSize)
     end
 
     if db.changeUnitFrameValueFont then
@@ -1247,6 +1316,16 @@ function BBF.SetCustomFonts()
         local outline = db.unitFrameValueFontOutline or "THINOUTLINE"
 
         SetUnitFramesValuesFont(fontPath, fontSize, outline)
+    end
+
+    if BetterBlizzFramesDB.noPortraitModes then
+        BBF.UpdateNoPortraitText(TargetFrame, "target")
+        BBF.UpdateNoPortraitText(FocusFrame, "focus")
+        BBF.UpdateNoPortraitText(PlayerFrame, "player")
+        BBF.UpdateNoPortraitText(TargetFrame, "tot")
+        BBF.UpdateNoPortraitText(FocusFrame, "tot")
+        BBF.UpdateNoPortraitText(PetFrame, "pet")
+        BBF.UpdateNoPortraitText(nil, "party")
     end
 end
 

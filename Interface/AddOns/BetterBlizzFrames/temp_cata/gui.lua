@@ -3176,8 +3176,12 @@ local function guiGeneralTab()
     petFrameIcon:SetSize(21, 21)
     petFrameIcon:SetPoint("RIGHT", petFrameText, "LEFT", -2, 0)
 
+    local hidePetFrame = CreateCheckbox("hidePetFrame", "Hide Pet Frame", BetterBlizzFrames, nil, BBF.HideFrames)
+    hidePetFrame:SetPoint("TOPLEFT", petFrameText, "BOTTOMLEFT", -24, pixelsOnFirstBox)
+    CreateTooltipTwo(hidePetFrame, "Hide Pet Frame", "Hide the Pet Frame.")
+
     local petCastbar = CreateCheckbox("petCastbar", "Pet Castbar", BetterBlizzFrames, nil, BBF.UpdatePetCastbar)
-    petCastbar:SetPoint("TOPLEFT", petFrameText, "BOTTOMLEFT", -24, pixelsOnFirstBox)
+    petCastbar:SetPoint("TOPLEFT", hidePetFrame, "BOTTOMLEFT", 0, pixelsBetweenBoxes)
     CreateTooltip(petCastbar, "Show pet castbar.\n\nMore settings in the \"Castbars\" tab")
 
     local hidePetName = CreateCheckbox("hidePetName", "Hide Name", BetterBlizzFrames)
@@ -5654,6 +5658,10 @@ local function guiFrameLook()
         end
     end)
 
+    local actionBarChangeCharge = CreateCheckbox("actionBarChangeCharge", "Charges", guiFrameLook)
+    actionBarChangeCharge:SetPoint("LEFT", actionBarFontColor.Text, "RIGHT", 0, 0)
+    CreateTooltipTwo(actionBarChangeCharge, "Action Bar Charges","Also change font for charges.")
+
     local actionBarFont = CreateFontDropdown(
         "actionBarFont",
         guiFrameLook,
@@ -5691,7 +5699,10 @@ local function guiFrameLook()
     end, { anchorFrame = actionBarFontSize, x = 77.5, y = 25 }, 77.5)
     CreateTooltipTwo(actionBarKeyFontSize, "Keybinding Text Size")
 
-
+    local actionBarChargeFontSize = CreateSimpleDropdown("FontSizeDropdown", guiFrameLook, "", "actionBarChargeFontSize", fontSizeOptions, function(selectedSize)
+        BBF.SetCustomFonts()
+    end, { anchorFrame = actionBarFontSize, x = 77.5, y = 0 }, 77.5)
+    CreateTooltipTwo(actionBarChargeFontSize, "Charge Text Size")
 
     local function ToggleDropdowns(enable)
         for _, dd in ipairs({
@@ -5703,6 +5714,7 @@ local function guiFrameLook()
         }) do
             dd:SetEnabled(enable)
         end
+        actionBarChargeFontSize:SetEnabled(enable and actionBarChangeCharge:GetChecked())
     end
 
     changeActionBarFont:HookScript("OnClick", function(self)
@@ -5711,6 +5723,11 @@ local function guiFrameLook()
             StaticPopup_Show("BBF_CONFIRM_RELOAD")
         end
         ToggleDropdowns(self:GetChecked())
+    end)
+
+    actionBarChangeCharge:HookScript("OnClick", function(self)
+        BBF.FontColors()
+        actionBarChargeFontSize:SetEnabled(changeActionBarFont:GetChecked() and self:GetChecked())
     end)
 
     ToggleDropdowns(changeActionBarFont:GetChecked())
@@ -7614,7 +7631,7 @@ local function guiMidnight()
 
     local midnightInfo = nf:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     midnightInfo:SetPoint("TOPLEFT", titleIcon, "BOTTOMLEFT", 2, -5)
-    midnightInfo:SetText("|cffffffffI'm planning to continue developing all my addons for Midnight as well.\n\nSome features will need to be adjusted or removed but the addons should stick around.\nMidnight is still in early Alpha and I haven't started preparing yet (14th Oct), but I will soon.\n\nPlans might change, but I'm confident |A:gmchat-icon-blizz:16:16|aBetter|cff00c0ffBlizz|rFrames and my other addons\n|A:gmchat-icon-blizz:16:16|aBetter|cff00c0ffBlizz|rPlates & |cffffffffsArena |cffff8000Reloaded|r |T135884:13:13|t will stick around for Midnight (with changes/removals).\n\nI have a lot of work ahead of me and any support is greatly appreciated |A:GarrisonTroops-Health:10:10|a (|cff00c0ff@bodify|r)\nI'll update this section with more detailed information as I know more in some weeks/months.")
+    midnightInfo:SetText("|cff00ff00UPDATE: All now available on Midnight.|r |cffffffffEarly versions and work in progress.\n\nI'm planning to continue developing all my addons for Midnight as well.\n\nSome features will need to be adjusted or removed but the addons should stick around.\nMidnight is still in early Alpha and I haven't started preparing yet (14th Oct), but I will soon.\n\nPlans might change, but I'm confident |A:gmchat-icon-blizz:16:16|aBetter|cff00c0ffBlizz|rFrames and my other addons\n|A:gmchat-icon-blizz:16:16|aBetter|cff00c0ffBlizz|rPlates & |cffffffffsArena |cffff8000Reloaded|r |T135884:13:13|t will stick around for Midnight (with changes/removals).\n\nI have a lot of work ahead of me and any support is greatly appreciated |A:GarrisonTroops-Health:10:10|a (|cff00c0ff@bodify|r)\nI'll update this section with more detailed information as I know more in some weeks/months.")
     midnightInfo:SetTextColor(1,1,1,1)
     midnightInfo:SetJustifyH("LEFT")
 

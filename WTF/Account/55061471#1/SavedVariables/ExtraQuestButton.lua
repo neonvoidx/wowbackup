@@ -20,8 +20,8 @@ ExtraQuestButtonDB3 = {
 ["scale"] = 1,
 ["trackingOnly"] = false,
 ["position"] = {
-["y"] = -256.6663055419922,
-["x"] = 272.5018310546875,
+["y"] = -154.1663360595703,
+["x"] = -307.498779296875,
 ["point"] = "CENTER",
 },
 ["noCooldownText"] = false,
@@ -41,6 +41,20 @@ ExtraQuestButtonDB3 = {
 ["artworkStyle"] = "Default",
 ["distanceYd"] = 1000,
 ["zoneOnly"] = false,
+["scale"] = 1,
+},
+["Classic"] = {
+["artworkAlpha"] = 1,
+["noCooldownText"] = false,
+["trackingOnly"] = false,
+["position"] = {
+["y"] = 0,
+["x"] = 0,
+["point"] = "CENTER",
+},
+["artworkStyle"] = "Default",
+["zoneOnly"] = false,
+["distanceYd"] = 1000,
 ["scale"] = 1,
 },
 ["MidScreen"] = {

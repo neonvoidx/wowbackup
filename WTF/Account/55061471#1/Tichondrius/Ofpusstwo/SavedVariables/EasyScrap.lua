@@ -2,6 +2,21 @@
 EasyScrap_IgnoreList = {
 [246206] = {
 ["isAzeriteArmor"] = false,
+[646] = {
+["Aethas's Orbs of Warding"] = {
+{
+"12651",
+"13524",
+"13557",
+"10034",
+"5911",
+"1",
+"28",
+"2905",
+"",
+},
+},
+},
 [630] = {
 ["Aethas's Orbs of Warding"] = {
 {
@@ -39,6 +54,21 @@ EasyScrap_IgnoreList = {
 },
 [246197] = {
 ["isAzeriteArmor"] = false,
+[623] = {
+["Woe-Bearer's Band"] = {
+{
+"12651",
+"13524",
+"13557",
+"10034",
+"5888",
+"1",
+"28",
+"2905",
+"",
+},
+},
+},
 [594] = {
 ["Woe-Bearer's Band"] = {
 {
@@ -54,14 +84,32 @@ EasyScrap_IgnoreList = {
 },
 },
 },
-[623] = {
+[656] = {
 ["Woe-Bearer's Band"] = {
 {
 "12651",
 "13524",
 "13557",
 "10034",
-"5888",
+"5921",
+"1",
+"28",
+"2905",
+"",
+},
+},
+},
+},
+[246204] = {
+["isAzeriteArmor"] = false,
+[646] = {
+["Arcane Medal of Protection"] = {
+{
+"12623",
+"13524",
+"13557",
+"10034",
+"5911",
 "1",
 "28",
 "2905",
@@ -89,7 +137,6 @@ EasyScrap_IgnoreList = {
 },
 },
 [245998] = {
-["isAzeriteArmor"] = false,
 [607] = {
 ["Ring of Mind Shielding"] = {
 {
@@ -128,6 +175,22 @@ EasyScrap_IgnoreList = {
 "13557",
 "10034",
 "5882",
+"1",
+"28",
+"2905",
+"",
+},
+},
+},
+["isAzeriteArmor"] = false,
+[649] = {
+["Ring of Mind Shielding"] = {
+{
+"12623",
+"13524",
+"13557",
+"10034",
+"5914",
 "1",
 "28",
 "2905",

@@ -39,6 +39,7 @@ layout.defaultSettings = {
         width = 90,
         iconScale = 1,
         keepDefaultModernTextures = true,
+        recolorCastbar = false,
     },
     dr = {
         posX = -79,
@@ -49,11 +50,34 @@ layout.defaultSettings = {
         spacing = 6,
         growthDirection = 4,
     },
+    widgets = {
+        combatIndicator = {
+            posX = 0,
+            posY = 0,
+            scale = 0.8,
+        },
+        targetIndicator = {
+            posX = 0,
+            posY = 0,
+            scale = 1,
+        },
+        focusIndicator = {
+            posX = 0,
+            posY = 0,
+            scale = 1,
+        },
+        partyTargetIndicators = {
+            posX = 0,
+            posY = 0,
+            scale = 1,
+        },
+    },
 
     textures          = {
         generalStatusBarTexture       = "sArena Default",
         healStatusBarTexture          = "sArena Stripes",
         castbarStatusBarTexture       = "sArena Default",
+        castbarUninterruptibleTexture = "sArena Default",
     },
     retextureHealerClassStackOnly = true,
 
@@ -79,6 +103,30 @@ local function setSetting(info, val)
         local frame = info.handler["arena" .. i]
         layout:UpdateOrientation(frame)
     end
+
+    if info[#info] == "mirrored" then
+        local expectedSpecIconPosX = val and (layout.defaultSettings.specIcon.posX - 47) or layout.defaultSettings.specIcon.posX
+        local expectedTrinketPosX = val and (layout.defaultSettings.trinket.posX - 84) or layout.defaultSettings.trinket.posX
+
+        if layout.db.specIcon.posX == expectedSpecIconPosX then
+            if val then
+                layout.db.specIcon.posX = layout.db.specIcon.posX + 47
+            else
+                layout.db.specIcon.posX = layout.db.specIcon.posX - 47
+            end
+            info.handler:UpdateSpecIconSettings(layout.db.specIcon)
+        end
+
+        if layout.db.trinket.posX == expectedTrinketPosX then
+            if val then
+                layout.db.trinket.posX = layout.db.trinket.posX + 84
+            else
+                layout.db.trinket.posX = layout.db.trinket.posX - 84
+            end
+            info.handler:UpdateTrinketSettings(layout.db.trinket)
+        end
+    end
+
     sArenaMixin:RefreshConfig()
 end
 
@@ -111,6 +159,7 @@ function layout:Initialize(frame)
         frame.parent:UpdateTrinketSettings(self.db.trinket)
         frame.parent:UpdateRacialSettings(self.db.racial)
         frame.parent:UpdateDispelSettings(self.db.dispel)
+        frame.parent:UpdateWidgetSettings(self.db.widgets)
     end
 
     frame.ClassIconCooldown:SetSwipeTexture("Interface\\CharacterFrame\\TempPortraitAlphaMask")
@@ -171,10 +220,6 @@ function layout:Initialize(frame)
     underlay:SetPoint("BOTTOMRIGHT", pp, "BOTTOMRIGHT")
     underlay:Show()
 
-    -- Full-frame texture (owned by the frame)
-    if not frame.frameTexture then
-        frame.frameTexture = frame:CreateTexture(nil, "ARTWORK", nil, 2)
-    end
 
     local frameTexture = frame.frameTexture
     frameTexture:ClearAllPoints()
@@ -222,6 +267,51 @@ function layout:UpdateOrientation(frame)
     classIcon:ClearAllPoints()
     classIconMask:ClearAllPoints()
     name:ClearAllPoints()
+
+    if self.db.widgets then
+        local w = self.db.widgets
+
+        -- Combat Indicator
+        if w.combatIndicator then
+            frame.WidgetOverlay.combatIndicator:ClearAllPoints()
+            frame.WidgetOverlay.combatIndicator:SetSize(18, 18)
+            frame.WidgetOverlay.combatIndicator:SetScale(w.combatIndicator.scale or 1)
+            frame.WidgetOverlay.combatIndicator:SetPoint("CENTER", frame.HealthBar, "CENTER",
+                (w.combatIndicator.posX or 0), (w.combatIndicator.posY or 0) - 20)
+        end
+
+        -- Target Indicator
+        if w.targetIndicator then
+            frame.WidgetOverlay.targetIndicator:ClearAllPoints()
+            frame.WidgetOverlay.targetIndicator:SetSize(34, 34)
+            frame.WidgetOverlay.targetIndicator:SetScale(w.targetIndicator.scale or 1)
+            frame.WidgetOverlay.targetIndicator:SetPoint("CENTER", frame.ClassIcon, "CENTER",
+                (w.targetIndicator.posX or 0) - 10, (w.targetIndicator.posY or 0) - 17)
+        end
+
+        -- Focus Indicator
+        if w.focusIndicator then
+            frame.WidgetOverlay.focusIndicator:ClearAllPoints()
+            frame.WidgetOverlay.focusIndicator:SetSize(20, 20)
+            frame.WidgetOverlay.focusIndicator:SetScale(w.focusIndicator.scale or 1)
+            frame.WidgetOverlay.focusIndicator:SetPoint("BOTTOMRIGHT", frame.ClassIcon, "BOTTOMRIGHT",
+                (w.focusIndicator.posX or 0) - 25, (w.focusIndicator.posY or 0) - 3)
+        end
+
+        -- Party Target Indicators
+        if w.partyTargetIndicators then
+            frame.WidgetOverlay.partyTarget1:ClearAllPoints()
+            frame.WidgetOverlay.partyTarget1:SetSize(15, 15)
+            frame.WidgetOverlay.partyTarget1:SetScale(w.partyTargetIndicators.scale or 1)
+            frame.WidgetOverlay.partyTarget1:SetPoint("TOPLEFT", frame.HealthBar, "TOPRIGHT",
+                (w.partyTargetIndicators.posX or 0) - 27, (w.partyTargetIndicators.posY or 0) + 33)
+
+            frame.WidgetOverlay.partyTarget2:ClearAllPoints()
+            frame.WidgetOverlay.partyTarget2:SetSize(15, 15)
+            frame.WidgetOverlay.partyTarget2:SetScale(w.partyTargetIndicators.scale or 1)
+            frame.WidgetOverlay.partyTarget2:SetPoint("RIGHT", frame.WidgetOverlay.partyTarget1, "LEFT", 3, 0)
+        end
+    end
 
     if self.db.textSettings then
         local txt = self.db.textSettings

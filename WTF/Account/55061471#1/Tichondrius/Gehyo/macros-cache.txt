@@ -1,0 +1,18 @@
+VER 3 0100000000000003 " " "INV_MISC_QUESTIONMARK"
+#showtooltip
+/cast [@cursor] Freezing Trap
+END
+VER 3 0100000000000004 " " "INV_MISC_QUESTIONMARK"
+#showtooltip
+/cast [@cursor] Tar Trap
+END
+VER 3 0100000000000007 " " "134400"
+#showtooltip
+/cast [@cursor] Binding Shot
+END
+VER 3 0100000000000008 " " "134400"
+#showtooltip Bestial Wrath
+/use 13
+/cast Bag of tricks
+/cast Bestial Wrath
+END

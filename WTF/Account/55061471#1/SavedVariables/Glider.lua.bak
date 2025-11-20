@@ -26,8 +26,8 @@ GliderAddOnDB = {
 ["textPosition"] = "Bottom",
 },
 ["GliderGlobalSettings"] = {
-["y"] = -120.6666564941406,
-["x"] = 1.83245849609375,
+["y"] = -246.8329772949219,
+["x"] = -304.6666870117188,
 ["point"] = "CENTER",
 ["scale"] = 1,
 ["textPosition"] = "Bottom",

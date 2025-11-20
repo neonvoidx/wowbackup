@@ -9,6 +9,11 @@ layout.defaultSettings = {
     classIconFontSize = 14,
     spacing = 35,
     growthDirection = 1,
+    classIcon = {
+        posX = 0,
+        posY = 0,
+        scale = 1,
+    },
     specIcon = {
         posX = -21,
         posY = -2,
@@ -40,6 +45,7 @@ layout.defaultSettings = {
         iconScale = 1,
         iconPosX = 4,
         keepDefaultModernTextures = true,
+        recolorCastbar = false,
     },
     dr = {
         posX = -110,
@@ -49,6 +55,30 @@ layout.defaultSettings = {
         fontSize = 12,
         spacing = 7,
         growthDirection = 4,
+        thickPixelBorder = true,
+    },
+    widgets = {
+        combatIndicator = {
+            posX = 0,
+            posY = 0,
+            scale = 1,
+        },
+        targetIndicator = {
+            enabled = true,
+            posX = 0,
+            posY = 0,
+            scale = 1,
+        },
+        focusIndicator = {
+            posX = 0,
+            posY = 0,
+            scale = 1,
+        },
+        partyTargetIndicators = {
+            posX = 0,
+            posY = 0,
+            scale = 1,
+        },
     },
     statusText = {
         usePercentage = true,
@@ -59,6 +89,7 @@ layout.defaultSettings = {
         generalStatusBarTexture       = "sArena Default",
         healStatusBarTexture          = "sArena Stripes",
         castbarStatusBarTexture       = "sArena Default",
+        castbarUninterruptibleTexture = "sArena Default",
     },
     retextureHealerClassStackOnly = true,
 
@@ -96,7 +127,7 @@ local function CreatePixelTextureBorder(parent, target, key, size, offset)
 
         local edges = {}
         for i = 1, 4 do
-            local tex = holder:CreateTexture(nil, "BORDER", nil, 7)
+            local tex = holder:CreateTexture(nil, key == "classIcon" and "OVERLAY" or "BORDER", nil, 7)
             tex:SetColorTexture(0,0,0,1)
             tex:SetIgnoreParentScale(true)
             edges[i] = tex
@@ -187,34 +218,6 @@ function sArenaFrameMixin:AddPixelBorderToFrame()
     CreatePixelTextureBorder(self.CastBar, self.CastBar.Icon, "castBarIcon", size, offset)
     self:SetTextureCrop(self.CastBar.Icon, true)
 
-    for n = 1, #self.parent.drCategories do
-        local drFrame = self[self.parent.drCategories[n]]
-        if drFrame then
-            if not self.parent.db.profile.layoutSettings[layoutName].dr.brightDRBorder then
-                drFrame.Border:Hide()
-                CreatePixelTextureBorder(drFrame, drFrame, "PixelBorder", drSize, offset)
-
-                local blackDRBorder = self.parent.db.profile.layoutSettings[layoutName].dr and self.parent.db.profile.layoutSettings[layoutName].dr.blackDRBorder
-                if blackDRBorder then
-                    drFrame.PixelBorder:SetVertexColor(0, 0, 0, 1)
-                else
-                    if self:GetID() == 1 then
-                        drFrame.PixelBorder:SetVertexColor(1, 0, 0, 1)
-                    else
-                        drFrame.PixelBorder:SetVertexColor(0, 1, 0, 1)
-                    end
-                end
-            else
-                if drFrame.PixelBorder then
-                    drFrame.PixelBorder:Hide()
-                end
-                if drFrame.Border then
-                    drFrame.Border:Show()
-                end
-            end
-        end
-    end
-
     borders:Show()
 end
 
@@ -250,21 +253,34 @@ function sArenaMixin:RemovePixelBorders()
         hideBorder(frame.CastBar, "castBar")
         hideBorder(frame.CastBar, "castBarIcon")
 
+        -- Reset ClassIcon to default draw layer and scale
+        frame.ClassIcon:SetDrawLayer("BORDER", 1)
+        frame.ClassIcon:SetScale(1)
+        frame.ClassIconCooldown:SetFrameStrata("HIGH")
+        frame.ClassIconCooldown:SetUseCircularEdge(false)
+        frame.ClassIconCooldown:SetSwipeTexture(1)
+
         -- Reset cast bar icon position
         frame.CastBar.Icon:ClearAllPoints()
         frame.CastBar.Icon:SetPoint("RIGHT", frame.CastBar, "LEFT", -5, 0)
+        local newLayout = self.db and self.db.profile and self.db.profile.currentLayout
+        local newLayoutSettings = self.db and self.db.profile and self.db.profile.layoutSettings and self.db.profile.layoutSettings[newLayout]
+        local newCropIcons = newLayoutSettings and newLayoutSettings.cropIcons or false
+        frame:SetTextureCrop(frame.CastBar.Icon, newCropIcons)
 
-        -- Reset DR borders and restore original border texture if needed
         for n = 1, #self.drCategories do
             local drFrame = frame[self.drCategories[n]]
             if drFrame and drFrame.PixelBorder then
                 drFrame.PixelBorder:Hide()
-                -- Always restore the original border when removing pixel borders
                 if drFrame.Border then
                     drFrame.Border:Show()
                 end
             end
         end
+    end
+
+    if self.UpdateCastBarPixelBorders then
+        self:UpdateCastBarPixelBorders()
     end
 end
 
@@ -279,11 +295,15 @@ local function setSetting(info, val)
     for i = 1, sArenaMixin.maxArenaOpponents do
         local frame = info.handler["arena" .. i]
         frame:SetSize(layout.db.width, layout.db.height)
-        frame.ClassIcon:SetSize(layout.db.height, layout.db.height)
+        local baseSize = layout.db.height - 4
+        frame.ClassIcon:SetSize(baseSize, baseSize)
+        local classIconScale = layout.db.classIcon and layout.db.classIcon.scale or 1
+        frame.ClassIcon:SetScale(classIconScale)
         frame.DeathIcon:SetSize(layout.db.height * 0.8, layout.db.height * 0.8)
         frame.PowerBar:SetHeight(layout.db.powerBarHeight)
         layout:UpdateOrientation(frame)
     end
+    
     sArenaMixin:RefreshConfig()
 end
 
@@ -376,6 +396,77 @@ local function setupOptionsTable(self)
         get = getSetting,
         set = setSetting,
     }
+
+    -- Add classIcon settings specific to Pixelated layout
+    layout.optionsTable.classIcon = {
+        order = 1.5,
+        name = "Class Icon",
+        type = "group",
+        get = function(info) 
+            return layout.db.classIcon[info[#info]] 
+        end,
+        set = function(info, val)
+            layout.db.classIcon[info[#info]] = val
+            
+            for i = 1, sArenaMixin.maxArenaOpponents do
+                local frame = info.handler["arena" .. i]
+                layout:UpdateOrientation(frame)
+            end
+            
+            --sArenaMixin:RefreshConfig()
+        end,
+        args = {
+            positioning = {
+                order = 1,
+                name = "Positioning",
+                type = "group",
+                inline = true,
+                args = {
+                    posX = {
+                        order = 1,
+                        name = "Horizontal",
+                        type = "range",
+                        min = -700,
+                        max = 700,
+                        softMin = -350,
+                        softMax = 350,
+                        step = 0.1,
+                        bigStep = 1,
+                    },
+                    posY = {
+                        order = 2,
+                        name = "Vertical",
+                        type = "range",
+                        min = -700,
+                        max = 700,
+                        softMin = -350,
+                        softMax = 350,
+                        step = 0.1,
+                        bigStep = 1,
+                    },
+                },
+            },
+            sizing = {
+                order = 2,
+                name = "Sizing",
+                type = "group",
+                inline = true,
+                args = {
+                    scale = {
+                        order = 1,
+                        name = "Scale",
+                        type = "range",
+                        min = 0.1,
+                        max = 5.0,
+                        softMin = 0.5,
+                        softMax = 2.0,
+                        step = 0.01,
+                        isPercent = true,
+                    },
+                },
+            },
+        },
+    }
 end
 
 function layout:Initialize(frame)
@@ -396,6 +487,7 @@ function layout:Initialize(frame)
         frame.parent:UpdateTrinketSettings(self.db.trinket)
         frame.parent:UpdateRacialSettings(self.db.racial)
         frame.parent:UpdateDispelSettings(self.db.dispel)
+        frame.parent:UpdateWidgetSettings(self.db.widgets)
 
         for n = 1, #sArenaMixin.drCategories do
             local drFrame = frame[sArenaMixin.drCategories[n]]
@@ -427,7 +519,7 @@ function layout:Initialize(frame)
 
     if not frame.Trinket.TrinketPixelBorderHook then
         hooksecurefunc(frame.Trinket.Texture, "SetTexture", function(self, t)
-            if frame.parent.db.profile.currentLayout ~= layoutName then
+            if not sArenaMixin.showPixelBorder then
                 frame.PixelBorders.trinket:Hide()
                 return
             end
@@ -448,7 +540,7 @@ function layout:Initialize(frame)
         end)
 
         hooksecurefunc(frame.Trinket.Texture, "SetColorTexture", function(self, r, g, b, a)
-            if frame.parent.db.profile.currentLayout ~= layoutName then
+            if not sArenaMixin.showPixelBorder then
                 frame.PixelBorders.trinket:Hide()
                 return
             end
@@ -473,7 +565,7 @@ function layout:Initialize(frame)
 
     if not frame.Racial.RacialPixelBorderHook then
         hooksecurefunc(frame.Racial.Texture, "SetTexture", function(self, t)
-            if t == nil or t == "" or t == 0 or t == "nil" or frame.parent.db.profile.currentLayout ~= layoutName then
+            if t == nil or t == "" or t == 0 or t == "nil" or not sArenaMixin.showPixelBorder then
                 frame.PixelBorders.racial:Hide()
             else
                 frame.PixelBorders.racial:Show()
@@ -484,7 +576,7 @@ function layout:Initialize(frame)
 
     if not frame.Dispel.DispelPixelBorderHook then
         hooksecurefunc(frame.Dispel.Texture, "SetTexture", function(self, t)
-            if not frame.parent.db.profile.showDispels or t == nil or t == "" or t == 0 or t == "nil" or frame.parent.db.profile.currentLayout ~= layoutName then
+            if not frame.parent.db.profile.showDispels or t == nil or t == "" or t == 0 or t == "nil" or not sArenaMixin.showPixelBorder then
                 frame.PixelBorders.dispel:Hide()
             else
                 frame.PixelBorders.dispel:Show()
@@ -500,10 +592,27 @@ function layout:Initialize(frame)
         frame.PixelBorders.dispel:Hide()
     end
 
+    if not frame.ClassIcon.ClassIconPixelBorderHook then
+        hooksecurefunc(frame.ClassIcon, "SetTexture", function(self, t)
+            if t == nil or t == "" or t == 0 or t == "nil" or not sArenaMixin.showPixelBorder then
+                frame.PixelBorders.classIcon:Hide()
+            else
+                frame.PixelBorders.classIcon:Show()
+            end
+        end)
+        frame.ClassIcon.ClassIconPixelBorderHook = true
+    end
+
     frame.PowerBar:SetHeight(self.db.powerBarHeight)
 
-    frame.ClassIcon:SetSize(self.db.height-4, self.db.height-4)
+    local baseSize = self.db.height - 4
+    frame.ClassIcon:SetSize(baseSize, baseSize)
+    local classIconScale = self.db.classIcon and self.db.classIcon.scale or 1
+    frame.ClassIcon:SetScale(classIconScale)
     frame.ClassIcon:Show()
+    
+    -- Raise ClassIcon above healthbar for overlaying
+    frame.ClassIcon:SetDrawLayer("OVERLAY", 1)
 
     local f = frame.Name
     f:SetJustifyH("LEFT")
@@ -551,6 +660,51 @@ function layout:UpdateOrientation(frame)
     local healthText = frame.HealthText
     local powerText = frame.PowerText
     local castbarText = frame.CastBar.Text
+
+    if self.db.widgets then
+        local w = self.db.widgets
+
+        -- Combat Indicator
+        if w.combatIndicator then
+            frame.WidgetOverlay.combatIndicator:ClearAllPoints()
+            frame.WidgetOverlay.combatIndicator:SetSize(18, 18)
+            frame.WidgetOverlay.combatIndicator:SetScale(w.combatIndicator.scale or 1)
+            frame.WidgetOverlay.combatIndicator:SetPoint("CENTER", frame.HealthBar, "CENTER",
+                (w.combatIndicator.posX or 0), (w.combatIndicator.posY or 0))
+        end
+
+        -- Target Indicator
+        if w.targetIndicator then
+            frame.WidgetOverlay.targetIndicator:ClearAllPoints()
+            frame.WidgetOverlay.targetIndicator:SetSize(34, 34)
+            frame.WidgetOverlay.targetIndicator:SetScale(w.targetIndicator.scale or 1)
+            frame.WidgetOverlay.targetIndicator:SetPoint("TOPLEFT", frame.ClassIcon, "BOTTOMRIGHT",
+                -16 + (w.targetIndicator.posX or 0), 15 + (w.targetIndicator.posY or 0))
+        end
+
+        -- Focus Indicator
+        if w.focusIndicator then
+            frame.WidgetOverlay.focusIndicator:ClearAllPoints()
+            frame.WidgetOverlay.focusIndicator:SetSize(20, 20)
+            frame.WidgetOverlay.focusIndicator:SetScale(w.focusIndicator.scale or 1)
+            frame.WidgetOverlay.focusIndicator:SetPoint("BOTTOMRIGHT", frame.ClassIcon, "BOTTOMRIGHT",
+                4 + (w.focusIndicator.posX or 0), -5 + (w.focusIndicator.posY or 0))
+        end
+
+        -- Party Target Indicators
+        if w.partyTargetIndicators then
+            frame.WidgetOverlay.partyTarget1:ClearAllPoints()
+            frame.WidgetOverlay.partyTarget1:SetSize(15, 15)
+            frame.WidgetOverlay.partyTarget1:SetScale(w.partyTargetIndicators.scale or 1)
+            frame.WidgetOverlay.partyTarget1:SetPoint("BOTTOMRIGHT", frame.HealthBar, "TOPRIGHT",
+                2 + (w.partyTargetIndicators.posX or 0), (w.partyTargetIndicators.posY or 0) - 4)
+
+            frame.WidgetOverlay.partyTarget2:ClearAllPoints()
+            frame.WidgetOverlay.partyTarget2:SetSize(15, 15)
+            frame.WidgetOverlay.partyTarget2:SetScale(w.partyTargetIndicators.scale or 1)
+            frame.WidgetOverlay.partyTarget2:SetPoint("RIGHT", frame.WidgetOverlay.partyTarget1, "LEFT", 3, 0)
+        end
+    end
 
     if self.db.textSettings then
         local txt = self.db.textSettings
@@ -617,23 +771,28 @@ function layout:UpdateOrientation(frame)
     healthBar:ClearAllPoints()
     powerBar:ClearAllPoints()
     classIcon:ClearAllPoints()
-    frame.ClassIcon:SetSize(self.db.height-4, self.db.height-4)
+    
+    -- Apply classIcon settings
+    local classIconSettings = self.db.classIcon or { posX = 0, posY = 0, scale = 1 }
+    local baseSize = self.db.height - 4
+    frame.ClassIcon:SetSize(baseSize, baseSize)
+    frame.ClassIcon:SetScale(classIconSettings.scale or 1)
 
     if (self.db.mirrored) then
         healthBar:SetPoint("TOPRIGHT", frame, "TOPRIGHT", 0, -2)
         healthBar:SetPoint("BOTTOMLEFT", powerBar, "TOPLEFT")
         powerBar:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", 0, 2)
-        powerBar:SetPoint("LEFT", classIcon, "RIGHT", 0, 0)
+        powerBar:SetPoint("LEFT", frame, "LEFT", baseSize, 0)
 
-        classIcon:SetPoint("TOPLEFT", frame, "TOPLEFT", 0, -2)
+        classIcon:SetPoint("TOPLEFT", frame, "TOPLEFT", (classIconSettings.posX or 0), -2 + (classIconSettings.posY or 0))
     else
         healthBar:SetPoint("TOPLEFT", frame, "TOPLEFT", 0, -2)
         healthBar:SetPoint("BOTTOMRIGHT", powerBar, "TOPRIGHT")
 
         powerBar:SetPoint("BOTTOMLEFT", frame, "BOTTOMLEFT", 0, 2)
-        powerBar:SetPoint("RIGHT", classIcon, "LEFT", 0, 0)
+        powerBar:SetPoint("RIGHT", frame, "RIGHT", -baseSize, 0)
 
-        classIcon:SetPoint("TOPRIGHT", frame, "TOPRIGHT", 0, -2)
+        classIcon:SetPoint("TOPRIGHT", frame, "TOPRIGHT", (classIconSettings.posX or 0), -2 + (classIconSettings.posY or 0))
     end
 end
 

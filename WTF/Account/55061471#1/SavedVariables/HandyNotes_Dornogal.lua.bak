@@ -25,15 +25,18 @@ HandyNotes_DornogalDB = {
 ["Hellavator - Mal'Ganis"] = "Hellavator - Mal'Ganis",
 ["Charizhard - Mal'Ganis"] = "Charizhard - Mal'Ganis",
 ["Hellavator - Tichondrius"] = "Default",
+["Gehyo - Tichondrius"] = "Default",
+["Heilsatan - Tichondrius"] = "Default",
 ["Stormclout - Tichondrius"] = "Default",
 ["Reedingo - Mal'Ganis"] = "Default",
-["Heilsatan - Tichondrius"] = "Default",
 ["Edaroseld - Illidan"] = "Default",
 ["Starstypeshi - Tichondrius"] = "Default",
 ["Choppiez - Tichondrius"] = "Default",
 ["Tampacks - Mal'Ganis"] = "Tampacks - Mal'Ganis",
 ["Gehyo - Mal'Ganis"] = "Default",
 ["Neonvoid - Mal'Ganis"] = "Neonvoid - Mal'Ganis",
+["Crillessana - Mal'Ganis"] = "Default",
+["Clevagirl - Mal'Ganis"] = "Default",
 },
 ["profiles"] = {
 ["Månyfaced - Mal'Ganis"] = {
@@ -42,12 +45,12 @@ HandyNotes_DornogalDB = {
 },
 ["Charizhard - Mal'Ganis"] = {
 },
-["Ofpuss - Mal'Ganis"] = {
+["Stormclout - Mal'Ganis"] = {
 },
 ["Auteist - Mal'Ganis"] = {
 ["show_vendor"] = false,
 },
-["Stormclout - Mal'Ganis"] = {
+["Ofpuss - Mal'Ganis"] = {
 },
 ["Praisesun - Mal'Ganis"] = {
 },

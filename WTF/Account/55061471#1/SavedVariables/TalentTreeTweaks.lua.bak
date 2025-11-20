@@ -2,7 +2,26 @@
 TalentTreeTweaksDB = {
 ["modules"] = {
 ["InspectDiff"] = true,
+["ClickableExportStringsInChat"] = true,
+["SearchForIds"] = true,
+["UnlockRestrictions"] = true,
 ["MiniTreeInTooltip"] = true,
+["ReduceTaint"] = true,
+["ExportInspectedBuild"] = true,
+["TooltipIds"] = true,
+["AlwaysShowGates"] = true,
+["ReduceSpam"] = true,
+["ChangeBackground"] = true,
+["CopyTalentButtonInfo"] = true,
+["MiscFixes"] = true,
+["Drive Auto Purchaser"] = true,
+["Skyriding Auto Purchaser"] = true,
+["HighlightCascadeRepurchable"] = true,
+["DebugNodeInfo"] = true,
+["RespecButtons"] = true,
+["ScaleTalentFrame"] = true,
+["HeroTalents"] = true,
+["ImportIntoCurrentLoadout"] = true,
 },
 ["moduleDb"] = {
 ["InspectDiff"] = {
@@ -36,33 +55,34 @@ TalentTreeTweaksDB = {
 ["unlockInCombatSpending"] = true,
 },
 ["MiniTreeInTooltip"] = {
+["upgradedDisplayStyle"] = 1,
+["displayStyle"] = "simple-default-diff",
 ["diffOrange"] = {
 ["b"] = 0,
 ["g"] = 1,
 ["r"] = 1,
 },
-["displayStyle"] = "simple-default-diff",
-["upgradedDisplayStyle"] = 1,
 ["diffRed"] = {
 ["b"] = 0,
 ["g"] = 0,
 ["r"] = 1,
 },
 ["scale"] = 1,
-["inactiveSubTreeAlpha"] = 0.5,
-["diffYellow"] = {
-["b"] = 1,
-["g"] = 1,
-["r"] = 1,
-},
 ["diffGreen"] = {
 ["b"] = 0,
 ["g"] = 1,
 ["r"] = 0,
 },
+["diffYellow"] = {
+["b"] = 1,
+["g"] = 1,
+["r"] = 1,
+},
+["inactiveSubTreeAlpha"] = 0.5,
 },
 ["ReduceTaint"] = {
 ["disableMultiActionBarShowHide"] = true,
+["alwaysReplaceShareButton"] = false,
 },
 ["ExportInspectedBuild"] = {
 ["exportOnDropdownRightClick"] = true,
@@ -90,8 +110,7 @@ TalentTreeTweaksDB = {
 ["defaultCheckboxState"] = true,
 ["unlockImportButton"] = true,
 },
-["AlwaysShowGates"] = {
-["shiftHeroTrees"] = false,
+["ReduceSpam"] = {
 },
 ["ChangeBackground"] = {
 ["showAlphaInSpellbookUI"] = true,
@@ -167,10 +186,12 @@ TalentTreeTweaksDB = {
 ["inverseHighlight"] = false,
 },
 ["ScaleTalentFrame"] = {
+["scale"] = 1,
 },
 ["HeroTalents"] = {
 },
-["ReduceSpam"] = {
+["AlwaysShowGates"] = {
+["shiftHeroTrees"] = false,
 },
 },
 }

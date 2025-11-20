@@ -1,30 +1,26 @@
 -- SPDX-License-Identifier: GPL-3.0-or-later
 -- Copyright (c) 2022-2025 Thomas Floeren
 
-local addon_name, ns = ...
--- _G[addon_name] = ns -- Debug
-local db_version = 1
+local _, ns = ...
 
 --[[===========================================================================
-	API references
+	API
 ===========================================================================]]--
 
-local _
+local C_PetJournal_PetIsFavorite = _G.C_PetJournal.PetIsFavorite
+local C_PetJournal_SetFavorite = _G.C_PetJournal.SetFavorite
+local C_PetJournal_GetPetInfoByIndex = _G.C_PetJournal.GetPetInfoByIndex
 
-local C_PetJournalPetIsFavorite = _G.C_PetJournal.PetIsFavorite
-local C_PetJournalSetFavorite = _G.C_PetJournal.SetFavorite
-local C_PetJournalGetPetInfoByIndex = _G.C_PetJournal.GetPetInfoByIndex
-
-local C_PetJournalSummonPetByGUID  = _G.C_PetJournal.SummonPetByGUID
-local C_PetJournalGetSummonedPetGUID = _G.C_PetJournal.GetSummonedPetGUID
-local C_PetJournalGetPetInfoByPetID = _G.C_PetJournal.GetPetInfoByPetID
-local C_PetJournalGetPetInfoBySpeciesID = _G.C_PetJournal.GetPetInfoBySpeciesID
-local C_PetJournalFindPetIDByName = _G.C_PetJournal.FindPetIDByName
-local C_PetJournalGetBattlePetLink = _G.C_PetJournal.GetBattlePetLink
-local C_PetJournalGetOwnedBattlePetString = _G.C_PetJournal.GetOwnedBattlePetString
-local C_PetJournalGetPetSummonInfo = _G.C_PetJournal.GetPetSummonInfo
-local C_MapGetBestMapForUnit = _G.C_Map.GetBestMapForUnit
-local C_UnitAurasGetPlayerAuraBySpellID = _G.C_UnitAuras.GetPlayerAuraBySpellID
+local C_PetJournal_SummonPetByGUID  = _G.C_PetJournal.SummonPetByGUID
+local C_PetJournal_GetSummonedPetGUID = _G.C_PetJournal.GetSummonedPetGUID
+local C_PetJournal_GetPetInfoByPetID = _G.C_PetJournal.GetPetInfoByPetID
+local C_PetJournal_GetPetInfoBySpeciesID = _G.C_PetJournal.GetPetInfoBySpeciesID
+local C_PetJournal_FindPetIDByName = _G.C_PetJournal.FindPetIDByName
+local C_PetJournal_GetBattlePetLink = _G.C_PetJournal.GetBattlePetLink
+local C_PetJournal_GetOwnedBattlePetString = _G.C_PetJournal.GetOwnedBattlePetString
+local C_PetJournal_GetPetSummonInfo = _G.C_PetJournal.GetPetSummonInfo
+local C_Map_GetBestMapForUnit = _G.C_Map.GetBestMapForUnit
+local C_UnitAuras_GetPlayerAuraBySpellID = _G.C_UnitAuras.GetPlayerAuraBySpellID
 local InCombatLockdown = _G.InCombatLockdown
 local IsFlying = _G.IsFlying
 local IsFalling = _G.IsFalling
@@ -39,8 +35,10 @@ local IsInInstance = _G.IsInInstance
 local IsStealthed = _G.IsStealthed
 -- local UnitIsControlling = _G.UnitIsControlling
 local UnitChannelInfo = _G.UnitChannelInfo
+local C_PlayerInfo_GetGlidingInfo = C_PlayerInfo.GetGlidingInfo
 local time = _G.time
-local C_PlayerInfoGetGlidingInfo = C_PlayerInfo.GetGlidingInfo
+local tostring = _G.tostring
+local format = _G.format
 
 --[[===========================================================================
 	Some Variables/Constants
@@ -58,7 +56,7 @@ from being saved.
 ns.pet_verified = false
 -- ns.skipNextSave = false
 ns.in_battlesleep = false
---[[ Last time AutoRestore() was called. ]]
+-- Last time AutoRestore() was called.
 local time_restore_pet = 0
 -- local time_save_pet = 0 -- What did we use this for? Debugging?
 local time_pool_msg = 0
@@ -108,7 +106,7 @@ end
 
 -- Other possibility: UnitPowerBarID('player') == 631
 local function is_skyride_mounted()
-	return select(2, C_PlayerInfoGetGlidingInfo())
+	return select(2, C_PlayerInfo_GetGlidingInfo())
 end
 
 
@@ -125,24 +123,16 @@ end
 -- To test against if pet-on-back aura is found (AFAIK, only Daisy)
 local function saved_pet_is_backpet()
 	local backpet = 2780 -- Daisy
-	if ns.dbc.charFavsEnabled and ns.db.favsOnly then
-		return ns.id_to_species(ns.dbc.currentPet) == backpet
-	else
-		return ns.id_to_species(ns.db.currentPet) == backpet
-	end
+	local db = ns.dbc.charFavsEnabled and ns.db.favsOnly and ns.dbc or ns.db
+	return ns.id_to_species(db.recentPets[1]) == backpet
 end
 
 -- To test against if pet-on-shoulder aura is found
 local function saved_pet_is_shoulderpet()
 	local shoulderpets = { 2526, 1997, 2185 } -- Feathers, Crackers, Cap'n Crackers
-	if ns.dbc.charFavsEnabled and ns.db.favsOnly then
-		for _, species in ipairs(shoulderpets) do
-			if ns.id_to_species(ns.dbc.currentPet) == species then return true end
-		end
-	else
-		for _, species in ipairs(shoulderpets) do
-			if ns.id_to_species(ns.db.currentPet) == species then return true end
-		end
+	local db = ns.dbc.charFavsEnabled and ns.db.favsOnly and ns.dbc or ns.db
+	for _, species in ipairs(shoulderpets) do
+		if ns.id_to_species(db.recentPets[1]) == species then return true end
 	end
 end
 
@@ -171,10 +161,10 @@ local function stop_auto_summon(t)
 	elseif InCombatLockdown()
 		or not ns.db.drSummoning and is_skyride_mounted()
 		or IsStealthed() -- Includes Hunter Camouflage
-		or C_UnitAurasGetPlayerAuraBySpellID(32612) -- Mage: Invisibility
-		or C_UnitAurasGetPlayerAuraBySpellID(110960) -- Mage: Greater Invisibility
-		or C_UnitAurasGetPlayerAuraBySpellID(131347) -- DH: Gliding -- Prolly not needed, should be caught by IsFlying() (?)
--- 		or C_UnitAurasGetPlayerAuraBySpellID(5384) -- Hunter: Feign Death (only useful if we use a different event than PLAYER_STARTED_MOVING)
+		or C_UnitAuras_GetPlayerAuraBySpellID(32612) -- Mage: Invisibility
+		or C_UnitAuras_GetPlayerAuraBySpellID(110960) -- Mage: Greater Invisibility
+		or C_UnitAuras_GetPlayerAuraBySpellID(131347) -- DH: Gliding -- Prolly not needed, should be caught by IsFlying() (?)
+-- 		or C_UnitAuras_GetPlayerAuraBySpellID(5384) -- Hunter: Feign Death (only useful if we use a different event than PLAYER_STARTED_MOVING)
 		-- *Any* channeling. Also prevents interrupting a Fishing channel that was started while still mounted.
 		or UnitChannelInfo 'player' -- Cata/Classic: `ChannelInfo()`
 	then
@@ -205,16 +195,16 @@ local function stop_auto_summon(t)
 		-- Note: The action bar modification by Skyriding is a so called Bonus Bar.
 
 		-- Daisy pet as backpack (/beckon). Disappears when Daisy is summoned.
-		or C_UnitAurasGetPlayerAuraBySpellID(311796) and saved_pet_is_backpet() -- Daisy
+		or C_UnitAuras_GetPlayerAuraBySpellID(311796) and saved_pet_is_backpet() -- Daisy
 		-- Pets on shoulder (/whistle). Disappears when any of the "shoulder pets" is summoned.
-		or C_UnitAurasGetPlayerAuraBySpellID(302954) and saved_pet_is_shoulderpet() -- Feathers
-		or C_UnitAurasGetPlayerAuraBySpellID(232871) and saved_pet_is_shoulderpet() -- Crackers
-		or C_UnitAurasGetPlayerAuraBySpellID(286268) and saved_pet_is_shoulderpet() -- Cap'n Crackers
+		or C_UnitAuras_GetPlayerAuraBySpellID(302954) and saved_pet_is_shoulderpet() -- Feathers
+		or C_UnitAuras_GetPlayerAuraBySpellID(232871) and saved_pet_is_shoulderpet() -- Crackers
+		or C_UnitAuras_GetPlayerAuraBySpellID(286268) and saved_pet_is_shoulderpet() -- Cap'n Crackers
 
 		-- Game events
-		or C_UnitAurasGetPlayerAuraBySpellID(312993) -- Carrying Forbidden Tomes (Scrivener Lenua event, Revendreth)
-		or C_UnitAurasGetPlayerAuraBySpellID(43880) -- Ramstein's Swift Work Ram (Brewfest daily; important bc the quest cannot be restarted if messed up)
-		or C_UnitAurasGetPlayerAuraBySpellID(43883) -- Rental Racing Ram (Brewfest daily)
+		or C_UnitAuras_GetPlayerAuraBySpellID(312993) -- Carrying Forbidden Tomes (Scrivener Lenua event, Revendreth)
+		or C_UnitAuras_GetPlayerAuraBySpellID(43880) -- Ramstein's Swift Work Ram (Brewfest daily; important bc the quest cannot be restarted if messed up)
+		or C_UnitAuras_GetPlayerAuraBySpellID(43883) -- Rental Racing Ram (Brewfest daily)
 	then
 		throttle = 40
 	elseif forbidden_instance() then
@@ -276,7 +266,7 @@ local function is_pet_summonable(guid)
 	if unsummonable_species[species_id] then
 		is_summonable, error_num, error_text = false, EnumPetJournalError.InvalidFaction, ERROR_TEXT_WRONG_PET_FACTION
 	else
-		is_summonable, error_num, error_text = C_PetJournalGetPetSummonInfo(guid)
+		is_summonable, error_num, error_text = C_PetJournal_GetPetSummonInfo(guid)
 	end
 	if not is_summonable then
 		return false, error_num, error_text
@@ -290,17 +280,17 @@ function ns.saved_pet_summonability_check() --- After login
 	if ns.dbc.charFavsEnabled then
 		perchar = true
 		priorities = {
-			ns.dbc.currentPet,
-			ns.dbc.previousPet,
-			ns.db.currentPet,
-			ns.db.previousPet
+			ns.dbc.recentPets[1],
+			ns.dbc.recentPets[2],
+			ns.db.recentPets[1],
+			ns.db.recentPets[2]
 		}
 	else
 		priorities = {
-			ns.db.currentPet,
-			ns.db.previousPet,
-			ns.dbc.currentPet,
-			ns.dbc.previousPet
+			ns.db.recentPets[1],
+			ns.db.recentPets[2],
+			ns.dbc.recentPets[1],
+			ns.dbc.recentPets[2],
 		}
 	end
 
@@ -313,9 +303,9 @@ function ns.saved_pet_summonability_check() --- After login
 			else
 				if is_summonable then
 					if perchar then
-						ns.dbc.currentPet = guid
+						ns.dbc.recentPets[1] = guid
 					else
-						ns.db.currentPet = guid
+						ns.db.recentPets[1] = guid
 					end
 					return
 				end
@@ -347,7 +337,7 @@ end
 
 --[[ To be used only in func new_pet and save_pet ]]
 local function is_excluded_by_id(id)
-	local species_id = C_PetJournalGetPetInfoByPetID(id)
+	local species_id = C_PetJournal_GetPetInfoByPetID(id)
 	return is_excluded_by_species(species_id)
 end
 
@@ -373,7 +363,7 @@ function ns.autoaction()
 		ns.transitioncheck(true)
 		return
 	end
-	local actpet = C_PetJournalGetSummonedPetGUID()
+	local actpet = C_PetJournal_GetSummonedPetGUID()
 	if not actpet then
 		ns.debugprint_pet '`autoaction` --> `restore_pet`'
 		ns:restore_pet()
@@ -391,16 +381,13 @@ end
 function ns:restore_pet()
 	local now = time()
 	local savedpet
-	if ns.dbc.charFavsEnabled and ns.db.favsOnly then
-		savedpet = ns.dbc.currentPet
-	else
-		savedpet = ns.db.currentPet
-	end
+	local db = ns.dbc.charFavsEnabled and ns.db.favsOnly and ns.dbc or ns.db
+	savedpet = db.recentPets[1]
 	time_restore_pet = now
 	if savedpet then
 		ns.debugprint '`restore_pet` is restoring saved pet'
 		ns.set_sum_msg_to_restore_pet(savedpet)
-		pet_restored = true
+		ns.pet_restored = true
 		ns:summon_pet(savedpet, false)
 	else
 		ns.debugprint '`restore_pet` could not find saved pet --> summoning new pet via Blizz SummonRandomPet'
@@ -425,7 +412,7 @@ function ns:new_pet(the_time, manually_called)
 	end
 	local now = the_time or time()
 	if now - ns.time_newpet_success < 1.5 then return end
-	local actpet = C_PetJournalGetSummonedPetGUID()
+	local actpet = C_PetJournal_GetSummonedPetGUID()
 	if actpet and is_excluded_by_id(actpet) then
 		ns.debugprint '`new_pet`: `actpet` is excluded'
 		return
@@ -471,17 +458,16 @@ end
 	Summon previous
 ---------------------------------------------------------------------------]]--
 
+-- NewRecents
 function ns.previous_pet()
 	if stop_manual_summon() then return end
-	local prevpet
-	if ns.dbc.charFavsEnabled then
-		prevpet = ns.dbc.previousPet
-	else
-		prevpet = ns.db.previousPet
-	end
-	if prevpet then
-		ns.set_sum_msg_to_previouspet(prevpet)
-		ns:summon_pet(prevpet, true)
+	local db = ns.dbc.charFavsEnabled and ns.db.favsOnly and ns.dbc or ns.db
+	if #db.recentPets > 1 then
+		-- Rotate: move current (1) to end
+		local current = table.remove(db.recentPets, 1)
+		table.insert(db.recentPets, current)
+		ns.set_sum_msg_to_previouspet(db.recentPets[1])
+		ns:summon_pet(db.recentPets[1], true)
 	else
 		ns.msg_no_previous_pet()
 	end
@@ -499,11 +485,11 @@ function ns.summon_targetpet()
 	end
 
 	local target_species_id = UnitBattlePetSpeciesID 'target'
-	local target_pet_name = C_PetJournalGetPetInfoBySpeciesID(target_species_id) or ''
-	local _, tarpet = C_PetJournalFindPetIDByName(target_pet_name)
-	local target_pet_link = tarpet and C_PetJournalGetBattlePetLink(tarpet) or '[link: UNKNOWN]'
+	local target_pet_name = C_PetJournal_GetPetInfoBySpeciesID(target_species_id) or ''
+	local _, tarpet = C_PetJournal_FindPetIDByName(target_pet_name)
+	local target_pet_link = tarpet and C_PetJournal_GetBattlePetLink(tarpet) or '[link: UNKNOWN]'
 
-	if not C_PetJournalGetOwnedBattlePetString(target_species_id) then
+	if not C_PetJournal_GetOwnedBattlePetString(target_species_id) then
 		if not UnitIsBattlePetCompanion 'target' then
 			ns.msg_target_is_not_companion_battlepet(target_pet_name)
 		else
@@ -512,9 +498,9 @@ function ns.summon_targetpet()
 		return
 	end
 
-	local current_pet = C_PetJournalGetSummonedPetGUID()
+	local current_pet = C_PetJournal_GetSummonedPetGUID()
 
-	if not current_pet or C_PetJournalGetPetInfoByPetID(current_pet) ~= target_species_id then
+	if not current_pet or C_PetJournal_GetPetInfoByPetID(current_pet) ~= target_species_id then
 		ns:summon_pet(tarpet, true)
 		ns.msg_target_summoned(target_pet_link)
 	else
@@ -524,13 +510,13 @@ function ns.summon_targetpet()
 end
 
 
---[[--------------------------------------------------------------------------------------------------------------------
+--[[----------------------------------------------------------------------------
 	Transition check
 	One time action, after big transitions, like login, portals, entering instance, etc. Basically a standalone
 	restore_pet func; in addition, it not only checks for presence of a pet, but also against the saved pet. This makes
 	sure that a newly logged toon gets the same pet as the previous toon had at logout. We need more checks here than
 	in restore_pet, bc restore_pet is "prefiltered" by autoaction, and here we are not.
---------------------------------------------------------------------------------------------------------------------]]--
+----------------------------------------------------------------------------]]--
 
 function ns.transitioncheck(checks_done)
 -- 	Can be called via the entering-world events, or via `autoaction`, so we
@@ -552,18 +538,15 @@ function ns.transitioncheck(checks_done)
 		ns.debugprint('`transitioncheck` aborted bc less than 6s since `restore_pet`')
 		return
 	end
-	ns.current_zone = C_MapGetBestMapForUnit 'player'
+	ns.current_zone = C_Map_GetBestMapForUnit 'player'
 	local savedpet
 	ns:cfavs_update()
-	local actpet = C_PetJournalGetSummonedPetGUID()
-	if ns.dbc.charFavsEnabled and ns.db.favsOnly then
-		if not actpet or actpet ~= ns.dbc.currentPet then savedpet = ns.dbc.currentPet end
-	elseif not actpet or actpet ~= ns.db.currentPet then
-		savedpet = ns.db.currentPet
-	end
+	local actpet = C_PetJournal_GetSummonedPetGUID()
+	local db = ns.dbc.charFavsEnabled and ns.db.favsOnly and ns.dbc or ns.db
+	if not actpet or actpet ~= db.recentPets[1] then savedpet = db.recentPets[1] end
 	if ns.current_zone == 1970 then -- Pocopoc issue
 		if ns.id_to_species(savedpet) == 3247 or ns.id_to_species(actpet) == 3247 then
-			savedpet = ns.db.previousPet
+			savedpet = db.recentPets[2]
 		end
 	end
 	if savedpet and savedpet_is_summonable then
@@ -602,22 +585,20 @@ function ns.save_pet()
 		ns.debugprint '`save_pet` FAILURE, bc not `pet_verified`'
 		return
 	end
-	local actpet = C_PetJournalGetSummonedPetGUID()
-	if
-		not actpet
-		or is_excluded_by_id(actpet)
-	then
+	local actpet = C_PetJournal_GetSummonedPetGUID()
+	if not actpet or is_excluded_by_id(actpet) then
 		ns.debugprint '`save_pet` FAILURE: No `actpet` or `actpet` is excluded'
 		return
 	end
-	if ns.dbc.charFavsEnabled and ns.db.favsOnly then
-		if ns.dbc.currentPet == actpet then return end
-		ns.dbc.previousPet = ns.dbc.currentPet
-		ns.dbc.currentPet = actpet
-	else
-		if ns.db.currentPet == actpet then return end
-		ns.db.previousPet = ns.db.currentPet
-		ns.db.currentPet = actpet
+	-- NewRecents
+	local db = ns.dbc.charFavsEnabled and ns.db.favsOnly and ns.dbc or ns.db
+	if db.recentPets[1] == actpet then return end
+	for i = #db.recentPets, 1, -1 do
+		if db.recentPets[i] == actpet then table.remove(db.recentPets, i) end
+	end
+	table.insert(db.recentPets, 1, actpet)
+	while #db.recentPets > ns.db.numRecents do
+		table.remove(db.recentPets)
 	end
 	ns.debugprint_pet '`save_pet` completed'
 end
@@ -635,7 +616,7 @@ function ns:summon_pet(pet, resettimer)
 		return
 	end
 	if ns.db.debugMode then
-		local is_summonable, error_num, error_text = C_PetJournalGetPetSummonInfo(pet)
+		local is_summonable, error_num, error_text = C_PetJournal_GetPetSummonInfo(pet)
 		if not is_summonable then
 			ns.debugprint('`summon_pet`: Something is wrong with our summonability check: pet cannot be summoned, `GetPetSummonInfo` returned', is_summonable, error_num, error_text)
 			return
@@ -645,7 +626,7 @@ function ns:summon_pet(pet, resettimer)
 	ns.pet_verified = true
 	if resettimer then ns.time_newpet_success = now end
 	ns.msg_pet_summon_success()
-	C_PetJournalSummonPetByGUID(pet)
+	C_PetJournal_SummonPetByGUID(pet)
 end
 
 
@@ -663,7 +644,7 @@ end
 local function clean_charfavs()
 	local count, link = 0, nil
 	for id, _ in pairs(ns.dbc.charFavs) do
-		link = C_PetJournalGetBattlePetLink(id)
+		link = C_PetJournal_GetBattlePetLink(id)
 		if not link then
 			ns.dbc.charFavs[id] = nil
 			count = count + 1
@@ -678,7 +659,7 @@ function ns.initialize_pool()
 	clean_charfavs()
 	local index = 1
 	while true do
-		local pet_id, species_id, _, _, _, favorite = C_PetJournalGetPetInfoByIndex(index)
+		local pet_id, species_id, _, _, _, favorite = C_PetJournal_GetPetInfoByIndex(index)
 		if not pet_id then break end
 		if not is_excluded_by_species(species_id) and is_pet_summonable(pet_id) then
 			if ns.db.favsOnly then
@@ -702,17 +683,17 @@ end
 	Char Favs
 ===========================================================================]]--
 
-local C_PetJournalPetIsFavorite1, C_PetJournalSetFavorite1, C_PetJournalGetPetInfoByIndex1
+local C_PetJournal_PetIsFavorite1, C_PetJournal_SetFavorite1, C_PetJournal_GetPetInfoByIndex1
 
 -- Largely unaltered code from NugMiniPet
 function ns.cfavs_update()
 	ns.debugprint 'Running `cfavs_update`'
 	if ns.dbc.charFavsEnabled then
-		C_PetJournalPetIsFavorite1 = C_PetJournalPetIsFavorite1 or C_PetJournalPetIsFavorite
-		C_PetJournalSetFavorite1 = C_PetJournalSetFavorite1 or C_PetJournalSetFavorite
-		C_PetJournalGetPetInfoByIndex1 = C_PetJournalGetPetInfoByIndex1 or C_PetJournalGetPetInfoByIndex
-		C_PetJournalPetIsFavorite = function(petGUID) return ns.dbc.charFavs[petGUID] or false end
-		C_PetJournalSetFavorite = function(petGUID, new)
+		C_PetJournal_PetIsFavorite1 = C_PetJournal_PetIsFavorite1 or C_PetJournal_PetIsFavorite
+		C_PetJournal_SetFavorite1 = C_PetJournal_SetFavorite1 or C_PetJournal_SetFavorite
+		C_PetJournal_GetPetInfoByIndex1 = C_PetJournal_GetPetInfoByIndex1 or C_PetJournal_GetPetInfoByIndex
+		C_PetJournal_PetIsFavorite = function(petGUID) return ns.dbc.charFavs[petGUID] or false end
+		C_PetJournal_SetFavorite = function(petGUID, new)
 			if new == 1 then
 				ns.dbc.charFavs[petGUID] = true
 			else
@@ -721,20 +702,20 @@ function ns.cfavs_update()
 			if PetJournal then PetJournal_OnEvent(PetJournal, 'PET_JOURNAL_LIST_UPDATE') end
 			ns:PET_JOURNAL_LIST_UPDATE() -- Do not remove this
 		end
-		local gpi = C_PetJournalGetPetInfoByIndex1
-		C_PetJournalGetPetInfoByIndex = function(...)
+		local gpi = C_PetJournal_GetPetInfoByIndex1
+		C_PetJournal_GetPetInfoByIndex = function(...)
 			local petGUID, speciesID, isOwned, customName, level, favorite, isRevoked, name, icon, petType, creatureID, sourceText, description, isWildPet, canBattle, arg1, arg2, arg3 = gpi(...)
-			local customFavorite = C_PetJournalPetIsFavorite(petGUID)
+			local customFavorite = C_PetJournal_PetIsFavorite(petGUID)
 			return petGUID, speciesID, isOwned, customName, level, customFavorite, isRevoked, name, icon, petType, creatureID, sourceText, description, isWildPet, canBattle, arg1, arg2, arg3
 		end
 	else
-		if C_PetJournalPetIsFavorite1 then C_PetJournalPetIsFavorite = C_PetJournalPetIsFavorite1 end
-		if C_PetJournalSetFavorite1 then C_PetJournalSetFavorite = C_PetJournalSetFavorite1 end
-		if C_PetJournalGetPetInfoByIndex1 then C_PetJournalGetPetInfoByIndex = C_PetJournalGetPetInfoByIndex1 end
+		if C_PetJournal_PetIsFavorite1 then C_PetJournal_PetIsFavorite = C_PetJournal_PetIsFavorite1 end
+		if C_PetJournal_SetFavorite1 then C_PetJournal_SetFavorite = C_PetJournal_SetFavorite1 end
+		if C_PetJournal_GetPetInfoByIndex1 then C_PetJournal_GetPetInfoByIndex = C_PetJournal_GetPetInfoByIndex1 end
 	end
-	_G.C_PetJournal.PetIsFavorite = C_PetJournalPetIsFavorite
-	_G.C_PetJournal.SetFavorite = C_PetJournalSetFavorite
-	_G.C_PetJournal.GetPetInfoByIndex = C_PetJournalGetPetInfoByIndex
+	_G.C_PetJournal.PetIsFavorite = C_PetJournal_PetIsFavorite
+	_G.C_PetJournal.SetFavorite = C_PetJournal_SetFavorite
+	_G.C_PetJournal.GetPetInfoByIndex = C_PetJournal_GetPetInfoByIndex
 	if PetJournal then PetJournal_OnEvent(PetJournal, 'PET_JOURNAL_LIST_UPDATE') end
 	ns:PET_JOURNAL_LIST_UPDATE() -- Do not remove this
 end

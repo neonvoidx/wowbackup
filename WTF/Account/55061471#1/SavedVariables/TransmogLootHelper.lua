@@ -29,7 +29,7 @@ TransmogLootHelper_Settings = {
 ["collectMode"] = 1,
 ["autoOpen"] = false,
 ["simpleIcon"] = false,
-["hideGroupRolls"] = false,
+["iconContainer"] = true,
 ["iconNewMog"] = true,
 ["windowSort"] = 1,
 ["iconNewUpgrade"] = true,
@@ -40,12 +40,13 @@ TransmogLootHelper_Settings = {
 ["iconNewToy"] = true,
 ["windowLocked"] = false,
 ["instantVault"] = true,
-["iconContainer"] = true,
+["hideGroupRolls"] = false,
 ["iconNewSource"] = false,
 }
 TransmogLootHelper_Cache = {
 ["Recipes"] = {
 [54197] = true,
 [115913] = true,
+[19801] = true,
 },
 }

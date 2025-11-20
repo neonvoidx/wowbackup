@@ -1,30 +1,27 @@
 -- SPDX-License-Identifier: GPL-3.0-or-later
 -- Copyright (c) 2022-2025 Thomas Floeren
 
-local addon_name, ns = ...
-local _
+local ADDON_NAME, ns = ...
 
--- API references
-local C_PetJournalGetSummonedPetGUID = _G.C_PetJournal.GetSummonedPetGUID
-local C_PetJournalGetBattlePetLink = _G.C_PetJournal.GetBattlePetLink
-local UnitName = _G.UnitName
-local GetAddOnMetadata = _G.C_AddOns.GetAddOnMetadata
+-- API
+local C_PetJournal_GetSummonedPetGUID = _G.C_PetJournal.GetSummonedPetGUID
+local C_PetJournal_GetBattlePetLink = _G.C_PetJournal.GetBattlePetLink
+local tostring = _G.tostring
+local format = _G.format
+local print = _G.print
 
-
-
-
-local this_char = UnitName 'player'
-
+local CHAR_NAME = UnitName 'player'
+local MAX_NUM_RECENTS = 20
 
 local function get_link_actpet()
-	local p = C_PetJournalGetSummonedPetGUID()
-	p = p and C_PetJournalGetBattlePetLink(p)
+	local p = C_PetJournal_GetSummonedPetGUID()
+	p = p and C_PetJournal_GetBattlePetLink(p)
 	return p
 end
 
 local function get_link_savedpet()
-	local p = ns.dbc.charFavsEnabled and ns.dbc.currentPet or ns.db.currentPet
-	p = p and C_PetJournalGetBattlePetLink(p)
+	local p = ns.dbc.charFavsEnabled and ns.dbc.recentPets[1] or ns.db.recentPets[1]
+	p = p and C_PetJournal_GetBattlePetLink(p)
 	return p
 end
 
@@ -68,22 +65,15 @@ local CO = set_colors(colscheme_green)
 Messages
 ===========================================================================]]--
 
-local sep = '-- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --'
+local BLOCK_SEP = strrep('+', 42)
 
 local function chat_user_notification(msg)
-	print(CO.an .. addon_name .. ":", msg)
+	print(CO.an .. ADDON_NAME .. ":", msg)
 end
 
 -- local function chat_user_notification_block(msg)
--- 	print('\n' .. CO.an .. sep .. '\n' .. addon_name .. ':', msg, '\n' .. CO.an .. sep , '\n ')
+-- 	print('\n' .. CO.an .. BLOCK_SEP .. '\n' .. ADDON_NAME .. ':', msg, '\n' .. CO.an .. BLOCK_SEP , '\n ')
 -- end
-
-local function chat_user_notification_large(first, second, third, last)
-	print('\n' .. CO.an .. sep .. '\n' .. addon_name .. ':', first)
-	if second then print(second) end
-	if third then print(third) end
-	print(last, '\n' .. CO.an .. sep)
-end
 
 -- Login msg
 function ns.msg_login()
@@ -107,12 +97,12 @@ end
 
 function ns.msg_no_saved_pet()
 	if ns.db.verbosityLevel < 0 then return end
-	chat_user_notification(CO.bw .. 'Cannot restore pet because no Current Pet has been saved yet' .. (ns.dbc.charFavsEnabled and ' for ' .. CO.e .. this_char or '') .. CO.bw .. '. This can happen when switching to char-specific favorites for the first time on a toon. - Summoned a random pet instead.')
+	chat_user_notification(CO.bw .. 'Cannot restore pet because no Current Pet has been saved yet' .. (ns.dbc.charFavsEnabled and ' for ' .. CO.e .. CHAR_NAME or '') .. CO.bw .. '. This can happen when switching to char-specific favorites for the first time on a toon. - Summoned a random pet instead.')
 end
 
 function ns.msg_no_previous_pet()
 	if ns.db.verbosityLevel < 0 then return end
-	chat_user_notification(CO.bw .. 'No Previous Pet has been saved yet' .. (ns.dbc.charFavsEnabled and ' for ' .. CO.e .. this_char or '') .. CO.bw .. '.')
+	chat_user_notification(CO.bw .. 'No Previous Pet has been saved yet' .. (ns.dbc.charFavsEnabled and ' for ' .. CO.e .. CHAR_NAME or '') .. CO.bw .. '.')
 end
 
 function ns.msg_onlyfavisactive(ap)
@@ -222,25 +212,36 @@ end
 Three big messages: Status, Low Pet Pool, and Help
 ---------------------------------------------------------------------------]]--
 
-function ns.help_display()
-
+function ns.help_display(print_bottomspace)
 	local header = {
-		CO.bn .. 'Help: ',
+		CO.bn .. ' Help: ',
 		CO.c .. '\n/pw ', 'or ', CO.c .. '/petwalker ', 'supports these commands: ',
 	}
 
 	local body = {
-		CO.c .. '\nd', ': ', CO.k .. 'Dismiss ', 'current pet and ', CO.k .. 'disable auto-summoning ', '(new pet / restore).',
-		CO.c .. '\na', ': ', 'Toggle ', CO.k .. 'auto-summoning ', '(new pet / restore).',
-		CO.c .. '\nsr', ': ', 'Toggle ', CO.k .. 'auto-summoning ', 'also ', CO.k .. 'while mounted for Skyriding: ', CO.s .. 'allowed / not allowed', '.',
-		CO.c .. '\nn', ': ', 'Summon ', CO.k .. 'new pet ', 'from pool.',
-		CO.c .. '\nf', ': ', 'Toggle ', CO.k .. 'pet pool: ', CO.s .. 'Favorites Only', ', or ', CO.s .. 'All Pets', '.',
-		CO.c .. '\nc', ': ', 'Toggle ', CO.k .. 'favorites: ', CO.s .. 'Per-character', ', or ', CO.s .. 'Global Favorites', '.',
-		CO.c .. '\n<number>', ': ', 'Set ', CO.k .. 'Summon Timer ', 'in minutes (', CO.c .. '1 ', 'to ', CO.c .. '1440', '; ', CO.c .. '0 ', 'to ', CO.k .. 'disable', ').',
-		CO.c .. '\np', ': ', 'Summon ', CO.k .. 'previous pet ', '.',
-		CO.c .. '\nv', ': ', CO.k .. 'Verbosity: ', CO.s .. 'silent ', '(only failures and warnings are printed to chat); ', CO.c .. 'vv ', 'for ', CO.s .. 'medium ', CO.k .. 'verbosity ', '(new summons); ', CO.c .. 'vvv ', 'for ', CO.s .. 'full ', CO.k .. 'verbosity ', '(also restored pets).',
-		CO.c .. '\ns', ': ', 'Display current ', CO.k .. 'status/settings.',
-		CO.c .. '\nh', ': ', 'This help text.',
+		{CO.c .. 'd', ' : ', CO.k .. 'Dismiss ', 'current pet and ', CO.k .. 'disable auto-summoning ', '(new pet / restore).'},
+
+		{CO.c .. 'a', ' : ', 'Toggle ', CO.k .. 'auto-summoning ', '(new pet / restore).'},
+
+		{CO.c .. 'sr', ' : ', 'Toggle ', CO.k .. 'auto-summoning ', 'also ', CO.k .. 'while mounted for Skyriding: ', CO.s .. 'allowed / not allowed', '.'},
+
+		{CO.c .. 'n', ' : ', 'Summon ', CO.k .. 'new pet ', 'from pool.'},
+
+		{CO.c .. 'f', ' : ', 'Toggle ', CO.k .. 'pet pool: ', CO.s .. 'Favorites Only', ', or ', CO.s .. 'All Pets', '.'},
+
+		{CO.c .. 'c', ' : ', 'Toggle ', CO.k .. 'favorites: ', CO.s .. 'Per-character', ', or ', CO.s .. 'Global Favorites', '.'},
+
+		{CO.c .. '<number>', ' : ', 'Set ', CO.k .. 'Summon Timer ', 'in minutes (', CO.c .. '1 ', 'to ', CO.c .. '1440', '; ', CO.c .. '0 ', 'to ', CO.k .. 'disable', ').'},
+
+		{CO.c .. 'p', ' : ', 'Cycle through ', CO.k .. 'Previous (recently summoned) Pets', '.'},
+
+		{CO.c .. 'p <number>', ' : ', 'Set ', CO.k .. 'number of recorded Previous Pets ', '(', CO.c .. '1 ', 'to ', CO.c .. MAX_NUM_RECENTS, ').'},
+
+		{CO.c .. 'v', ' : ', CO.k .. 'Verbosity: ', CO.s .. 'silent ', '(only failures and warnings are printed to chat); ', CO.c .. 'vv ', 'for ', CO.s .. 'medium ', CO.k .. 'verbosity ', '(new summons); ', CO.c .. 'vvv ', 'for ', CO.s .. 'full ', CO.k .. 'verbosity ', '(also restored pets).'},
+
+		{CO.c .. 's', ' : ', 'Display current ', CO.k .. 'status/settings.'},
+
+		{CO.c .. 'h', ' : ', 'This help text.'},
 	}
 
 	local footer = {
@@ -249,25 +250,35 @@ function ns.help_display()
 	}
 
 	local header_text = table.concat(header, CO.bn)
-	local body_text = table.concat(body, CO.bn)
 	local footer_text = table.concat(footer, CO.bn)
 
-	chat_user_notification_large(header_text, body_text, nil, footer_text)
+	print('\n' .. CO.an .. BLOCK_SEP .. '\n' .. ADDON_NAME .. header_text .. '\n')
+	for _, v in ipairs(body) do
+		print(table.concat(v, CO.bn))
+	end
+	print(footer_text .. '\n' .. CO.an .. BLOCK_SEP .. (print_bottomspace and '\n ' or ''))
 end
 
 
-function ns.status_display()
+function ns.status_display(print_topsep, print_bottomsep)
 	if not ns.pool_initialized then ns.initialize_pool() end
 	local header = {
-		CO.bn .. '[v', GetAddOnMetadata(addon_name, 'Version'), '] Status & Settings:',
+		CO.bn .. ' [v', C_AddOns.GetAddOnMetadata(ADDON_NAME, 'Version'), '] Status & Settings:',
 	}
 	local body = {
-		CO.k ..'\nAutomatic Random-summoning / Restore ', 'is ', CO.s .. (ns.db.autoEnabled and 'enabled' or CO.bw .. 'disabled'), '.',
-		CO.k .. '\nSummon Timer ', 'is ', CO.s .. (ns.db.newPetTimer > 0 and (ns.db.newPetTimer/60) .. CO.bn .. ' minutes' or 'disabled'), '. Next random pet in ', CO.e .. ns.remaining_timer_for_display(), '.',
-		CO.k ..'\nAutomatic summoning while mounted for Skyriding ', 'is ', CO.s .. (ns.db.drSummoning and 'allowed' or 'not allowed'), '.',
-		CO.k .. '\nVerbosity ', 'level of messages: ', CO.s .. ns.db.verbosityLevel, ' (of 3).',
-		CO.k .. '\nPet Pool ', 'is set to ', CO.s .. (ns.db.favsOnly and 'Favorites Only' or 'All Pets'), '. Eligible pets: ', CO.e .. #ns.pet_pool, '.',
-		CO.k .. '\nPer-character Favorites ', 'are ', CO.s .. (ns.dbc.charFavsEnabled and 'enabled' or 'disabled'), ' for ', CO.e .. this_char, '.',
+		{CO.k ..'Automatic Random-summoning / Restore ', 'is ', CO.s .. (ns.db.autoEnabled and 'enabled' or CO.bw .. 'disabled'), '.'},
+
+		{CO.k .. 'Summon Timer ', 'is ', CO.s .. (ns.db.newPetTimer > 0 and (ns.db.newPetTimer/60) .. CO.bn .. ' minutes' or 'disabled'), '. Next random pet in ', CO.e .. ns.remaining_timer_for_display(), '.'},
+
+		{CO.k ..'Automatic summoning while mounted for Skyriding ', 'is ', CO.s .. (ns.db.drSummoning and 'allowed' or 'not allowed'), '.'},
+
+		{CO.k .. 'History ', 'of Previous Pets: ', CO.s .. ns.db.numRecents - 1, ' (1 to ' .. MAX_NUM_RECENTS .. ').'},
+
+		{CO.k .. 'Verbosity ', 'level of messages: ', CO.s .. ns.db.verbosityLevel, ' (of 3).'},
+
+		{CO.k .. 'Pet Pool ', 'is set to ', CO.s .. (ns.db.favsOnly and 'Favorites Only' or 'All Pets'), '. Eligible pets: ', CO.e .. #ns.pet_pool, '.'},
+
+		{CO.k .. 'Per-character Favorites ', 'are ', CO.s .. (ns.dbc.charFavsEnabled and 'enabled' or 'disabled'), ' for ', CO.e .. CHAR_NAME, '.'},
 	}
 	-- Separating this bc it might be a longish list
 	local charfavlist = {
@@ -275,11 +286,16 @@ function ns.status_display()
 	}
 
 	local header_text = table.concat(header, CO.bn)
-	local body_text = table.concat(body, CO.bn)
 	local charfavlist_text = table.concat(charfavlist, CO.bn)
 	local extra_settings = (ns.db.eventAlt and table.concat({CO.k ..'\nAlternative Events ', 'are ', CO.s .. 'enabled ', 'for all chars.'}, CO.bn) or nil)
 
-	chat_user_notification_large(header_text, body_text, extra_settings, charfavlist_text)
+	print((print_topsep and '\n' .. CO.an .. BLOCK_SEP .. '\n' or CO.an) .. ADDON_NAME .. header_text .. '\n')
+	for _, v in ipairs(body) do
+		print(table.concat(v, CO.bn))
+	end
+	if extra_settings then print(extra_settings) end
+	print(charfavlist_text)
+	if print_bottomsep then print(CO.an .. BLOCK_SEP .. '\n ') end
 end
 
 
@@ -294,7 +310,7 @@ function ns.msg_low_petpool(nPool)
 		'\nSome pets are ', CO.k .. 'faction-restricted ', 'and cannot be summoned on the other faction, so they may not be eligible on your current toon.',
 		'\nPlease note that certain pets are intentionally ', CO.k .. 'excluded ', 'from random summoning, to not break their usability (for example ',
 		CO.q .. 'Guild Herald', '). ',
-		((ns.dbc.charFavsEnabled and ns.db.favsOnly) and '\nYou have set ' .. CO.e .. this_char ..R.. ' to use ' .. CO.s .. 'char-specific favorite ' ..R.. 'pets. Maybe switching to ' .. CO.s .. 'global favorites ' ..R.. '(' .. CO.c .. '/pw c' ..R.. ') will help.' or ''),
+		((ns.dbc.charFavsEnabled and ns.db.favsOnly) and '\nYou have set ' .. CO.e .. CHAR_NAME ..R.. ' to use ' .. CO.s .. 'char-specific favorite ' ..R.. 'pets. Maybe switching to ' .. CO.s .. 'global favorites ' ..R.. '(' .. CO.c .. '/pw c' ..R.. ') will help.' or ''),
 	}
 	local content = table.concat(content, R)
 	chat_user_notification(content)
@@ -306,46 +322,52 @@ end
 ===========================================================================]]--
 
 SLASH_PetWalker1, SLASH_PetWalker2 = '/pw', '/petwalker'
-function SlashCmdList.PetWalker(cmd)
-	if cmd == 'd' or cmd == 'dis' then
+function SlashCmdList.PetWalker(msg)
+	local args = {}
+	for arg in msg:gmatch('[^ ]+') do
+		tinsert(args, arg)
+	end
+	if args[1] == 'd' or args[1] == 'dis' then
 		ns:dismiss_and_disable()
-	elseif cmd == 'dd' or cmd == 'debd' then
+	elseif args[1] == 'dd' or args[1] == 'debd' then
 		ns:debug_display()
-	elseif cmd == 'dm' or cmd == 'debug' then
+	elseif args[1] == 'dm' or args[1] == 'debug' then
 		ns.debugmode_toggle()
-	elseif cmd == 'vvv' then
+	elseif args[1] == 'vvv' then
 		ns.verbosity_full()
-	elseif cmd == 'vv' then
+	elseif args[1] == 'vv' then
 		ns.verbosity_medium()
-	elseif cmd == 'v' then
+	elseif args[1] == 'v' then
 		ns.verbosity_silent()
-	elseif cmd == 'v0' then
+	elseif args[1] == 'v0' then
 		ns.verbosity_mute()
-	elseif cmd == 'a' or cmd == 'auto' then
+	elseif args[1] == 'a' or args[1] == 'auto' then
 		ns:auto_toggle()
-	elseif cmd == 'n' or cmd == 'new' then
+	elseif args[1] == 'n' or args[1] == 'new' then
 		ns:new_pet(nil, true)
-	elseif cmd == 'f' or cmd == 'fav' then
+	elseif args[1] == 'f' or args[1] == 'fav' then
 		ns:favs_toggle()
-	elseif cmd == 'aev' or cmd == 'altevents' then -- Probably better to leave this undocumented
+	elseif args[1] == 'aev' or args[1] == 'altevents' then -- Probably better to leave this undocumented
 		ns:event_toggle()
-	elseif cmd == 'c' or cmd == 'char' then
+	elseif args[1] == 'c' or args[1] == 'char' then
 		ns.charfavs_slash_toggle()
-	elseif cmd == 'p' or cmd == 'prev' then
+	elseif (args[1] == 'p' or args[1] == 'prev') and tonumber(args[2]) then
+		ns.set_num_recents(args[2])
+	elseif args[1] == 'p' or args[1] == 'prev' then
 		ns.previous_pet()
-	elseif cmd == 's' or cmd == 'status' then
-		ns.status_display()
-	elseif tonumber(cmd) then
-		ns:timer_slash_cmd(cmd)
-	elseif cmd == 'sr' then
+	elseif args[1] == 's' or args[1] == 'status' then
+		ns.status_display(true, true)
+	elseif tonumber(args[1]) then
+		ns:timer_slash_cmd(args[1])
+	elseif args[1] == 'sr' then
 		ns.dr_summoning_toggle()
-	elseif cmd == 't' or cmd == 'target' then
+	elseif args[1] == 't' or args[1] == 'target' then
 		ns.summon_targetpet()
-	elseif cmd == 'h' or cmd == 'help' then
-		ns.help_display()
-	elseif cmd == '' then
-		ns.help_display()
-		ns.status_display()
+	elseif args[1] == 'h' or args[1] == 'help' then
+		ns.help_display(true)
+	elseif args[1] == nil then
+		ns.help_display(false)
+		ns.status_display(false, true)
 	else
 		chat_user_notification(format('%sInvalid command or arguments. Enter %s/pw help %sfor a list of commands.', CO.bw, CO.c, CO.bw))
 	end
@@ -356,7 +378,7 @@ Toggles, Commands
 ---------------------------------------------------------------------------]]--
 
 function ns:dismiss_and_disable()
-	local actpet = C_PetJournalGetSummonedPetGUID()
+	local actpet = C_PetJournal_GetSummonedPetGUID()
 	if actpet then
 		C_PetJournal.SummonPetByGUID(actpet)
 	end
@@ -424,7 +446,7 @@ function ns.charfavs_slash_toggle() -- for slash command only
 		ns:cfavs_update()
 	end
 	if PetWalkerCharFavsCheckbox then PetWalkerCharFavsCheckbox:SetChecked(ns.dbc.charFavsEnabled) end
-	chat_user_notification(format('%sCharacter-specific favorites %s for %s%s.', CO.bn, ns.dbc.charFavsEnabled and 'enabled' or 'disabled', CO.e, this_char))
+	chat_user_notification(format('%sCharacter-specific favorites %s for %s%s.', CO.bn, ns.dbc.charFavsEnabled and 'enabled' or 'disabled', CO.e, CHAR_NAME))
 end
 
 function ns.dr_summoning_toggle()
@@ -451,16 +473,29 @@ function ns:timer_slash_cmd(value)
 	end
 end
 
+function ns.set_num_recents(num)
+	num = max(min(floor(num), MAX_NUM_RECENTS), 1)
+	ns.db.numRecents = num + 1 -- "current" is idx 1
+	for _, v in ipairs({ ns.db.recentPets, ns.dbc.recentPets }) do
+		while #v > ns.db.numRecents do
+			table.remove(v)
+		end
+	end
+	chat_user_notification(
+		format('%sPrevious Pets history set to %s.', CO.bn, ns.db.numRecents - 1)
+	)
+end
+
 -- Used for info print
 function ns:list_charfavs()
 	local favlinks, count, name = {}, 0, nil
 	for id, _ in pairs(ns.dbc.charFavs) do
 		count = count + 1
-		name = C_PetJournalGetBattlePetLink(id)
+		name = C_PetJournal_GetBattlePetLink(id)
 		table.insert(favlinks, name)
 	end
 	local favlinks_text = table.concat(favlinks, ' ')
-	return CO.e .. this_char .. CO.bn .. ' has ' .. CO.e .. count .. CO.bn ..
+	return CO.e .. CHAR_NAME .. CO.bn .. ' has ' .. CO.e .. count .. CO.bn ..
 	' character-specific favorite pet' .. (count > 1 and 's:\n' or count > 0 and ':\n' or 's.') .. favlinks_text
 end
 
@@ -472,7 +507,7 @@ end
 -- BINDING_HEADER_PETWALKER = "PetWalker  "
 BINDING_NAME_PETWALKER_TOGGLE_AUTO = 'Toggle Auto-Summoning'
 BINDING_NAME_PETWALKER_NEW_PET = 'Summon New Pet'
-BINDING_NAME_PETWALKER_PREVIOUS_PET = 'Summon Previous Pet'
+BINDING_NAME_PETWALKER_PREVIOUS_PET = 'Summon Previous Pet(s)'
 BINDING_NAME_PETWALKER_TARGET_PET = 'Summon Same Pet as Target'
 BINDING_NAME_PETWALKER_DISMISS_PET = 'Dismiss Pet & Disable Auto-Summoning'
 

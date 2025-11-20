@@ -3,7 +3,7 @@ OneRing_Config = nil
 OPie_SavedData = {
 ["CharProfiles"] = {
 },
-["_OPieVersion"] = "Ånd 7.4 (4.136)",
+["_OPieVersion"] = "Ånd 7.5 (4.136)",
 ["_StoreVersion"] = 122,
 ["_GameLocale"] = "enUS",
 ["_StoreVersion2"] = 122,
@@ -742,6 +742,11 @@ OPie_SavedData = {
 ["vm"] = 2,
 },
 {
+["id"] = "/cast [nomod] {{spell:48018}}; {{spell:48020}}",
+["sliceToken"] = "OPCLSt",
+["vm"] = 2,
+},
+{
 ["id"] = 698,
 ["sliceToken"] = "ABueQE3OmCe",
 },
@@ -760,16 +765,16 @@ OPie_SavedData = {
 ["dropTokens"] = {
 ["OPCLSw"] = 1,
 ["OPCLSe"] = 1,
-["OPCLSa"] = 1,
-["OPCLSi"] = 1,
+["OPCLSa"] = 25,
 ["OPCLSd"] = 1,
+["OPCLSi"] = 1,
 },
 ["limit"] = "WARLOCK",
 ["name"] = "Utility",
 ["hotkey"] = "BUTTON4",
 ["save"] = true,
 ["vm"] = 127,
-["v"] = 4,
+["v"] = 5,
 },
 ["nsWarlords"] = {
 {

@@ -1,4 +1,4 @@
-
+if BBF.isMidnight then return end
 local function FormatText(value)
     if value >= 1e9 then
         return string.format("%.2f B", value / 1e9)

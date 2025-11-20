@@ -4,31 +4,41 @@ HealthBarColorDB = {
 },
 ["profileKeys"] = {
 ["Mäñýfäçëð - Tichondrius"] = "Default",
+["Thingreyline - Tichondrius"] = "Default",
 ["Auteist - Mal'Ganis"] = "Default",
 ["Ofpuss - Mal'Ganis"] = "Default",
+["Crillessana - Mal'Ganis"] = "Default",
 ["Smaugchamp - Mal'Ganis"] = "Default",
 ["Choppiez - Mal'Ganis"] = "Default",
 ["Starstypeshi - Tichondrius"] = "Default",
 ["Gehyo - Mal'Ganis"] = "Default",
-["Auteist - Tichondrius"] = "Default",
+["Heilsatan - Tichondrius"] = "Default",
 ["Choppiez - Tichondrius"] = "Default",
+["Hellowalls - Mal'Ganis"] = "Default",
+["Auteist - Tichondrius"] = "Default",
+["Ofpusstwo - Tichondrius"] = "Default",
 ["Hellavator - Tichondrius"] = "Default",
-["Praisesun - Tichondrius"] = "Default",
+["Hellavator - Mal'Ganis"] = "Default",
 ["Cullnvoid - Tichondrius"] = "Default",
 ["Stormclout - Tichondrius"] = "Default",
 ["Reedingo - Mal'Ganis"] = "Default",
 ["Stormclout - Mal'Ganis"] = "Default",
 ["Rakeist - Mal'Ganis"] = "Default",
-["Hellowalls - Mal'Ganis"] = "Default",
-["Hellavator - Mal'Ganis"] = "Default",
+["Smaugchamp - Tichondrius"] = "Default",
+["Praisesun - Tichondrius"] = "Default",
 ["Ofpuss - Tichondrius"] = "Default",
 ["Praisesun - Mal'Ganis"] = "Default",
-["Smaugchamp - Tichondrius"] = "Default",
-["Thingreyline - Tichondrius"] = "Default",
+["Gehyo - Tichondrius"] = "Default",
+["Clevagirl - Mal'Ganis"] = "Default",
 },
 ["profiles"] = {
 ["Default"] = {
-["HealthBarColor_boss3"] = {
+["BackgroundTextures"] = {
+["color"] = {
+["a"] = 0.9405550956726074,
+},
+["texture"] = "Wglass (GladiusEx)",
+["enabled"] = true,
 },
 ["HealthBarColor_pet"] = {
 },
@@ -61,20 +71,19 @@ HealthBarColorDB = {
 },
 ["HealthBarColor_focus"] = {
 },
-["HealthBarColor_boss4"] = {
+["Font_focus"] = {
+["healthFont"] = "1",
+["nameFont"] = "1",
+["powerFont"] = "1",
 },
 ["Font_boss5"] = {
 ["healthFont"] = "1",
 ["nameFont"] = "1",
 ["powerFont"] = "1",
 },
-["Font_player"] = {
-["healthFont"] = "1",
-["nameFont"] = "1",
-["nameFontSize"] = 9,
-["powerFont"] = "1",
+["HealthBarColor_target"] = {
 },
-["Font_boss3"] = {
+["Font_focustarget"] = {
 ["healthFont"] = "1",
 ["nameFont"] = "1",
 ["powerFont"] = "1",
@@ -84,38 +93,31 @@ HealthBarColorDB = {
 ["enabled"] = true,
 ["healthBarTexture"] = "Wglass",
 },
+["Font_player"] = {
+["healthFont"] = "1",
+["nameFont"] = "1",
+["nameFontSize"] = 9,
+["powerFont"] = "1",
+},
+["HealthBarColor_boss3"] = {
+},
+["HealthBarColor_boss4"] = {
+},
 ["Font_boss1"] = {
 ["healthFont"] = "1",
 ["nameFont"] = "1",
 ["powerFont"] = "1",
-},
-["BackgroundTextures"] = {
-["color"] = {
-["a"] = 0.9405550956726074,
-},
-["texture"] = "Wglass (GladiusEx)",
-["enabled"] = true,
-},
-["Font_focus"] = {
-["healthFont"] = "1",
-["nameFont"] = "1",
-["powerFont"] = "1",
-},
-["HealthBarColor_target"] = {
 },
 ["Font_targettarget"] = {
 ["healthFont"] = "1",
 ["nameFont"] = "1",
 ["powerFont"] = "1",
 },
-["BiggerHealthBar"] = {
-["enabled"] = true,
-},
 ["MinimapButton"] = {
 ["minimapPos"] = 69.587679475945,
 ["enabled"] = false,
 },
-["Font_focustarget"] = {
+["Font_boss3"] = {
 ["healthFont"] = "1",
 ["nameFont"] = "1",
 ["powerFont"] = "1",

@@ -1,0 +1,809 @@
+local _, db = ...
+local HORDE_ICON_TEXTURE = "Interface\\AddOns\\HomeBound\\Assets\\horde"
+local ALLIANCE_ICON_TEXTURE = "Interface\\AddOns\\HomeBound\\Assets\\alliance"
+
+hb_settings = hb_settings or { scale = 1.0, hideCompleted = false, completedAchievs = {}, completedQuests = {}, showMinimapButton = true, filters = { achievement = true, quest = true, neutral = true, alliance = true, horde = true } }
+dbHB = {minimap = {hide = false}}
+local activeWidgets = {}
+local collapsedHeaders = {}
+local LibDBIcon = LibStub("LibDBIcon-1.0", true)
+local minimapButton
+local questTitleCache = {}
+
+
+--Check if achievement is complete
+local function IsAchievementComplete(achievementID)
+  if not achievementID then return false end
+
+  if type(achievementID) == "table" then
+    for _, id in ipairs(achievementID) do
+      if IsAchievementComplete(id) then return true end
+    end
+    return false
+  end
+
+  if hb_settings.completedAchievs[achievementID] then
+    return true
+  end
+
+  local _, _, _, completed = GetAchievementInfo(achievementID)
+  if completed then
+    hb_settings.completedAchievs[achievementID] = true
+  end
+  return completed or false
+end
+
+--Check if quest is complete
+local function IsQuestComplete(questID)
+    if not questID then return false end
+    if hb_settings.completedQuests[questID] then return true end
+
+    local completed = C_QuestLog.IsQuestFlaggedCompletedOnAccount(questID)
+    if completed then
+        hb_settings.completedQuests[questID] = true
+    end
+    return completed
+end
+
+--Generic completion check
+local function IsRewardComplete(reward)
+    if reward.type == "quest" then
+        return IsQuestComplete(reward.id)
+    else --Default to achievement
+        return IsAchievementComplete(reward.id)
+    end
+end
+
+--Get faction
+local function GetRewardFaction(reward)
+    if not reward.icon then
+        return "neutral"
+    elseif reward.icon == ALLIANCE_ICON_TEXTURE then
+        return "alliance"
+    elseif reward.icon == HORDE_ICON_TEXTURE then
+        return "horde"
+    else
+        return "neutral"
+    end
+end
+
+local function GetFullTexturePath(texturePath)
+  if texturePath and not string.match(texturePath, "[\\/]") then
+    return "Interface\\AddOns\\HomeBound\\Assets\\" .. texturePath
+  end
+  return texturePath
+end
+
+local frame = CreateFrame("Frame", "HB_MainFrame", UIParent, "BackdropTemplate")
+frame:SetSize(650, 500)
+frame:SetPoint("CENTER")
+frame:SetBackdrop({
+  bgFile = "Interface\\Buttons\\WHITE8x8",
+  edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
+  tile = false,
+  edgeSize = 16,
+  insets = { left = 4, right = 4, top = 4, bottom = 4 }
+})
+frame:SetBackdropColor(0.02, 0.02, 0.02, 0.95)
+frame:SetBackdropBorderColor(0.3, 0.3, 0.3, 1)
+frame:SetMovable(true)
+frame:EnableMouse(true)
+frame:Hide()
+
+frame:SetScript("OnMouseDown", function(self, button)
+  if button == "LeftButton" then
+    self:StartMoving()
+  end
+end)
+frame:SetScript("OnMouseUp", function(self, button)
+  if button == "LeftButton" then
+    self:StopMovingOrSizing()
+  end
+end)
+
+--Create reusable frame for the texture
+local previewFrame = CreateFrame("Frame", "HB_RewardFrame", UIParent, "BackdropTemplate")
+previewFrame:SetSize(300, 330)
+previewFrame:SetFrameStrata("TOOLTIP")
+previewFrame:SetBackdrop({
+  bgFile = "Interface\\Buttons\\WHITE8x8",
+  edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
+  tile = false, edgeSize = 16,
+  insets = { left = 4, right = 4, top = 4, bottom = 4 }
+})
+previewFrame:SetBackdropColor(0.05, 0.05, 0.05, 0.98)
+previewFrame:SetBackdropBorderColor(0.5, 0.5, 0.5, 1)
+previewFrame:Hide()
+
+local previewTitle = previewFrame:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
+previewTitle:SetFont(STANDARD_TEXT_FONT, 15)
+previewTitle:SetPoint("TOP", 0, -12)
+previewTitle:SetText("Decor Reward")
+previewTitle:SetWidth(280)
+previewTitle:SetTextColor(1, 0.82, 0)
+
+previewFrame.currentReward = nil
+previewFrame.currentRewardIndex = 1
+previewFrame.totalRewards = 0
+
+--Legacy 2D Texture
+local previewTexture = previewFrame:CreateTexture(nil, "ARTWORK")
+previewTexture:SetSize(288, 288)
+previewTexture:SetPoint("BOTTOM", 0, 6)
+previewTexture:SetTexCoord(0.08, 0.92, 0.08, 0.92)
+previewFrame.texture = previewTexture
+
+--3D Model Frame
+local previewModel = CreateFrame("PlayerModel", nil, previewFrame)
+previewModel:SetSize(288, 288)
+previewModel:SetPoint("BOTTOM", 0, 6)
+
+previewModel:SetScript("OnModelLoaded", function(self)
+  self:MakeCurrentCameraCustom()
+  
+  local modelID = self:GetModelFileID()
+  local posData = db.modelPositions[modelID]
+  
+  if posData then
+    self:SetPosition(posData.model_x, 0, posData.model_z)
+    self:SetCameraPosition(0, 0, posData.camera_y)
+    self:SetCameraDistance(posData.zoom)
+  else --Default
+    self:SetPosition(0, 0, 0)
+    self:SetCameraPosition(0, 0, 4)
+    self:SetCameraDistance(10)
+  end
+end)
+previewFrame.model = previewModel
+previewModel:Hide()
+
+local rotation = 0
+local rotationSpeed = 0.5
+
+previewFrame:SetScript("OnUpdate", function(self, elapsed)
+  if self:IsShown() and self.model:IsShown() then
+    rotation = rotation + (rotationSpeed * elapsed)
+    if rotation >= (math.pi * 2) then
+      rotation = rotation - (math.pi * 2)
+    end
+    self.model:SetFacing(rotation)
+  end
+end)
+
+local wowheadPopup = CreateFrame("Frame", "HB_WowheadLinkFrame", UIParent, "BackdropTemplate")
+wowheadPopup:SetSize(350, 90)
+wowheadPopup:SetFrameStrata("DIALOG")
+wowheadPopup:SetBackdrop({
+  bgFile = "Interface\\DialogFrame\\UI-DialogBox-Background",
+  edgeFile = "Interface\\DialogFrame\\UI-DialogBox-Border",
+  tile = true, tileSize = 32, edgeSize = 32,
+  insets = { left = 8, right = 8, top = 8, bottom = 8 }
+})
+
+wowheadPopup:SetBackdropColor(0.1, 0.1, 0.1, 1)
+wowheadPopup:SetPoint("CENTER")
+wowheadPopup:EnableMouse(true)
+wowheadPopup:SetMovable(true)
+wowheadPopup:RegisterForDrag("LeftButton")
+wowheadPopup:SetScript("OnDragStart", wowheadPopup.StartMoving)
+wowheadPopup:SetScript("OnDragStop", wowheadPopup.StopMovingOrSizing)
+wowheadPopup:Hide()
+
+local wowheadPopupTitle = wowheadPopup:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
+wowheadPopupTitle:SetPoint("TOP", 0, -14)
+wowheadPopupTitle:SetText("Ctrl + C to copy")
+wowheadPopupTitle:SetTextColor(1, 0.82, 0)
+
+local wowheadPopupEditBox = CreateFrame("EditBox", nil, wowheadPopup, "InputBoxTemplate")
+wowheadPopupEditBox:SetSize(300, 20)
+wowheadPopupEditBox:SetPoint("CENTER", 0, -5)
+wowheadPopupEditBox:SetAutoFocus(false)
+wowheadPopupEditBox:SetScript("OnEscapePressed", function() wowheadPopup:Hide() end)
+
+local wowheadPopupCloseBtn = CreateFrame("Button", nil, wowheadPopup, "UIPanelCloseButton")
+wowheadPopupCloseBtn:SetPoint("TOPRIGHT", 2, 2)
+wowheadPopupCloseBtn:SetSize(30, 30)
+wowheadPopupCloseBtn:SetScript("OnClick", function() wowheadPopup:Hide() end)
+
+local function ShowWowheadLinkPopup(id, rewardType)
+  local url
+  if rewardType == "quest" then
+      url = "https://www.wowhead.com/quest=" .. tostring(id)
+  else
+      url = "https://www.wowhead.com/achievement=" .. tostring(id)
+  end
+  wowheadPopupEditBox:SetText(url)
+  wowheadPopup:SetPoint("CENTER", UIParent, "CENTER")
+  wowheadPopup:Show()
+  wowheadPopupEditBox:SetFocus()
+  wowheadPopupEditBox:HighlightText()
+end
+
+local supportFrame = CreateFrame("Frame", "HB_SupportFrame", UIParent, "BackdropTemplate")
+supportFrame:SetSize(450, 184)
+supportFrame:SetPoint("CENTER")
+supportFrame:SetBackdrop({
+  bgFile = "Interface\\Buttons\\WHITE8x8",
+  edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
+  tile = false,
+  edgeSize = 16,
+  insets = { left = 4, right = 4, top = 4, bottom = 4 }
+})
+supportFrame:SetBackdropColor(0.02, 0.02, 0.02, 0.95)
+supportFrame:SetBackdropBorderColor(0.3, 0.3, 0.3, 1)
+supportFrame:SetFrameStrata("DIALOG")
+supportFrame:SetMovable(true)
+supportFrame:EnableMouse(true)
+supportFrame:RegisterForDrag("LeftButton")
+supportFrame:SetScript("OnDragStart", supportFrame.StartMoving)
+supportFrame:SetScript("OnDragStop", supportFrame.StopMovingOrSizing)
+supportFrame:Hide()
+
+local supportTitleBg = supportFrame:CreateTexture(nil, "BACKGROUND")
+supportTitleBg:SetTexture("Interface\\Buttons\\WHITE8x8")
+supportTitleBg:SetPoint("TOPLEFT", 4, -4)
+supportTitleBg:SetPoint("TOPRIGHT", -4, -4)
+supportTitleBg:SetHeight(40)
+supportTitleBg:SetGradient("VERTICAL", CreateColor(0.15, 0.15, 0.15, 1), CreateColor(0.08, 0.08, 0.08, 1))
+
+local supportTitle = supportFrame:CreateFontString(nil, "OVERLAY")
+supportTitle:SetFont(STANDARD_TEXT_FONT, 16, "OUTLINE")
+supportTitle:SetPoint("TOP", 0, -16)
+supportTitle:SetText("Community & Support")
+supportTitle:SetTextColor(1, 0.85, 0, 1)
+
+local supportCloseBtn = CreateFrame("Button", nil, supportFrame, "UIPanelCloseButton")
+supportCloseBtn:SetPoint("TOPRIGHT", -2, -2)
+supportCloseBtn:SetSize(28, 28)
+
+local shareText = supportFrame:CreateFontString(nil, "OVERLAY")
+shareText:SetFont(STANDARD_TEXT_FONT, 13)
+shareText:SetPoint("TOPLEFT", 20, -60)
+shareText:SetText("Share this addon with your friends!")
+shareText:SetTextColor(0.9, 0.9, 0.9, 1)
+
+local shareEditBox = CreateFrame("EditBox", nil, supportFrame, "InputBoxTemplate")
+shareEditBox:SetSize(408, 20)
+shareEditBox:SetPoint("TOPLEFT", 22, -80)
+shareEditBox:SetAutoFocus(false)
+shareEditBox:SetText("https://www.curseforge.com/wow/addons/home-bound")
+shareEditBox:SetScript("OnEscapePressed", function(self) self:ClearFocus() end)
+shareEditBox:SetScript("OnEnterPressed", function(self) self:ClearFocus() end)
+
+local tipText = supportFrame:CreateFontString(nil, "OVERLAY")
+tipText:SetFont(STANDARD_TEXT_FONT, 13)
+tipText:SetPoint("TOPLEFT", 20, -120)
+tipText:SetText("You can leave a tip if you like")
+tipText:SetTextColor(0.9, 0.9, 0.9, 1)
+
+local tipEditBox = CreateFrame("EditBox", nil, supportFrame, "InputBoxTemplate")
+tipEditBox:SetSize(408, 20)
+tipEditBox:SetPoint("TOPLEFT", 22, -140)
+tipEditBox:SetAutoFocus(false)
+tipEditBox:SetText("https://buymeacoffee.com/bettiold")
+tipEditBox:SetScript("OnEscapePressed", function(self) self:ClearFocus() end)
+tipEditBox:SetScript("OnEnterPressed", function(self) self:ClearFocus() end)
+
+frame:SetScript("OnHide", function()
+    if wowheadPopup and wowheadPopup:IsShown() then
+        wowheadPopup:Hide()
+    end
+    if supportFrame and supportFrame:IsShown() then
+        supportFrame:Hide()
+    end
+end)
+
+local titleBg = frame:CreateTexture(nil, "BACKGROUND")
+titleBg:SetTexture("Interface\\Buttons\\WHITE8x8")
+titleBg:SetPoint("TOPLEFT", 4, -4)
+titleBg:SetPoint("TOPRIGHT", -4, -4)
+titleBg:SetHeight(50)
+titleBg:SetGradient("VERTICAL", CreateColor(0.15, 0.15, 0.15, 1), CreateColor(0.08, 0.08, 0.08, 1))
+
+local title = frame:CreateFontString(nil, "OVERLAY")
+title:SetFont(STANDARD_TEXT_FONT, 16, "OUTLINE")
+title:SetPoint("TOP", 0, -14)
+title:SetText("Home Bound")
+title:SetTextColor(1, 0.85, 0, 1)
+
+local subtitle = frame:CreateFontString(nil, "OVERLAY")
+subtitle:SetFont(STANDARD_TEXT_FONT, 11)
+subtitle:SetPoint("TOP", title, "BOTTOM", 0, -2)
+subtitle:SetText("Track your Player Housing rewards")
+subtitle:SetTextColor(0.7, 0.7, 0.7, 1)
+
+--Info Icon
+local infoIcon = CreateFrame("Button", nil, frame)
+infoIcon:SetSize(24, 24)
+infoIcon:SetPoint("TOPLEFT", 8, -8)
+local iconTexture = infoIcon:CreateTexture(nil, "ARTWORK")
+iconTexture:SetTexture("Interface\\BUTTONS\\UI-GuildButton-PublicNote-Up")
+iconTexture:SetAllPoints(infoIcon)
+infoIcon:SetHighlightTexture("Interface\\Minimap\\UI-Minimap-ZoomButton-Highlight", "ADD")
+
+infoIcon:SetScript("OnEnter", function(self)
+  GameTooltip:SetOwner(self, "ANCHOR_BOTTOMLEFT")
+  GameTooltip:AddLine("Home Bound Tips", 1, 0.82, 0)
+  GameTooltip:AddLine("\nYou can right-click to get a Wowhead link.", 1, 1, 1, true)
+  GameTooltip:AddLine("Left-click an achievement to open it in the achievement panel.", 1, 1, 1, true)
+  GameTooltip:AddLine("\nFor accurate achievement completion data, log in to at least one Alliance and one Horde character.", 1, 1, 1, true)
+  GameTooltip:Show()
+end)
+
+infoIcon:SetScript("OnLeave", function(self)
+  GameTooltip:Hide()
+end)
+
+--Support Icon
+local supportIcon = CreateFrame("Button", nil, frame)
+supportIcon:SetSize(24, 24)
+supportIcon:SetPoint("LEFT", infoIcon, "RIGHT", 6, 0)
+local supportIconTexture = supportIcon:CreateTexture(nil, "ARTWORK")
+supportIconTexture:SetTexture("Interface\\FriendsFrame\\Battlenet-Portrait")
+supportIconTexture:SetAllPoints(supportIcon)
+supportIcon:SetHighlightTexture("Interface\\Minimap\\UI-Minimap-ZoomButton-Highlight", "ADD")
+
+supportIcon:SetScript("OnEnter", function(self)
+  GameTooltip:SetOwner(self, "ANCHOR_BOTTOMLEFT")
+  GameTooltip:AddLine("Community & Support", 1, 0.82, 0)
+  GameTooltip:AddLine("\nClick to share the addon!", 1, 1, 1, true)
+  GameTooltip:Show()
+end)
+
+supportIcon:SetScript("OnLeave", function(self)
+  GameTooltip:Hide()
+end)
+
+supportIcon:SetScript("OnClick", function()
+  supportFrame:Show()
+end)
+
+local closeBtn = CreateFrame("Button", nil, frame, "UIPanelCloseButton")
+closeBtn:SetPoint("TOPRIGHT", -2, -2)
+closeBtn:SetSize(28, 28)
+
+--Filters dropdown
+local filterButton = CreateFrame("DropdownButton", "HB_FilterButton", frame, "WowStyle1FilterDropdownTemplate")
+filterButton:SetSize(120, 24)
+filterButton:SetPoint("TOPLEFT", 10, -60)
+filterButton:SetText("Filters")
+filterButton.Text:ClearAllPoints()
+filterButton.Text:SetPoint("CENTER")
+
+filterButton:SetupMenu(function(dropdown, rootDescription)
+    rootDescription:CreateCheckbox("Hide Completed", function() return hb_settings.hideCompleted end, function() hb_settings.hideCompleted = not hb_settings.hideCompleted; BuildUI() end)
+    rootDescription:CreateDivider()
+    rootDescription:CreateCheckbox("Achievements", function() return hb_settings.filters.achievement end, function() hb_settings.filters.achievement = not hb_settings.filters.achievement; BuildUI() end)
+    rootDescription:CreateCheckbox("Quests", function() return hb_settings.filters.quest end, function() hb_settings.filters.quest = not hb_settings.filters.quest; BuildUI() end)
+    rootDescription:CreateDivider()
+    
+    --Faction filter
+    local factionMenu = rootDescription:CreateButton("Faction")
+    factionMenu:CreateCheckbox("Neutral", function() return hb_settings.filters.neutral end, function() hb_settings.filters.neutral = not hb_settings.filters.neutral; BuildUI() end)
+    factionMenu:CreateCheckbox("Alliance", function() return hb_settings.filters.alliance end, function() hb_settings.filters.alliance = not hb_settings.filters.alliance; BuildUI() end)
+    factionMenu:CreateCheckbox("Horde", function() return hb_settings.filters.horde end, function() hb_settings.filters.horde = not hb_settings.filters.horde; BuildUI() end)
+    
+    rootDescription:CreateDivider()
+    rootDescription:CreateButton("Reset Filters", function() hb_settings.filters.achievement = true; hb_settings.filters.quest = true; hb_settings.filters.neutral = true; hb_settings.filters.alliance = true; hb_settings.filters.horde = true; BuildUI() end)
+end)
+
+local minimapCheckbox = CreateFrame("CheckButton", "HB_MinimapCheckbox", frame, "UICheckButtonTemplate")
+minimapCheckbox:SetPoint("TOPLEFT", filterButton, "TOPRIGHT", 10, 0)
+minimapCheckbox:SetSize(26, 26)
+local minimapCheckboxText = minimapCheckbox:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+minimapCheckboxText:SetPoint("LEFT", minimapCheckbox, "RIGHT", 2, 0)
+minimapCheckboxText:SetText("Minimap Button")
+
+minimapCheckbox:SetScript("OnClick", function(self)
+  if LibDBIcon then
+    if hb_settings.showMinimapButton then
+      LibDBIcon:Hide("HomeBound")
+      hb_settings.showMinimapButton = false
+    else
+      LibDBIcon:Show("HomeBound")
+      hb_settings.showMinimapButton = true
+    end
+  end
+end)
+
+local scaleSlider = CreateFrame("Slider", "HB_ScaleSlider", frame, "UISliderTemplate")
+scaleSlider:SetPropagateMouseMotion(true)
+scaleSlider:SetWidth(150)
+scaleSlider:SetHeight(22)
+scaleSlider:SetMinMaxValues(0.5, 1.5)
+scaleSlider:SetValueStep(0.05)
+scaleSlider:SetPoint("TOPRIGHT", -120, -60)
+scaleSlider:SetValue(hb_settings.scale or 1.0)
+
+local scaleValueText = frame:CreateFontString(nil, "ARTWORK", "GameFontNormal")
+scaleValueText:SetFont(STANDARD_TEXT_FONT, 14)
+scaleValueText:SetPoint("TOPLEFT", scaleSlider, "TOPRIGHT", 8, -3)
+
+scaleSlider:SetScript("OnValueChanged", function(_, value)
+  local roundedValue = tonumber(string.format("%.2f", value))
+  scaleValueText:SetText(string.format("UI Scale: %.2f", roundedValue))
+end)
+
+scaleSlider:SetScript("OnMouseUp", function(self)
+  local value = self:GetValue()
+  local roundedValue = tonumber(string.format("%.2f", value))
+  hb_settings.scale = roundedValue
+  frame:SetScale(roundedValue)
+  supportFrame:SetScale(roundedValue)
+end)
+
+scaleValueText:SetText(string.format("UI Scale: %.2f", hb_settings.scale or 1.0))
+local scrollFrame = CreateFrame("ScrollFrame", nil, frame, "ScrollFrameTemplate")
+scrollFrame:SetPoint("TOPLEFT", 12, -90)
+scrollFrame:SetPoint("BOTTOMRIGHT", -32, 12)
+
+local scrollChild = CreateFrame("Frame", nil, scrollFrame)
+scrollChild:SetSize(620, 1)
+scrollFrame:SetScrollChild(scrollChild)
+scrollFrame.ScrollBar:ClearAllPoints()
+scrollFrame.ScrollBar:SetPoint("TOPRIGHT", scrollFrame, "TOPRIGHT", 15, -8)
+scrollFrame.ScrollBar:SetHeight(385)
+
+local function ClearWidgets()
+  for _, widget in ipairs(activeWidgets) do
+    widget:Hide()
+  end
+  wipe(activeWidgets)
+end
+
+local function CreateHeader(parent, group, visibleRewards, y)
+  local total, completed = 0, 0
+  for _, reward in ipairs(visibleRewards) do
+    total = total + 1
+    if IsRewardComplete(reward) then
+      completed = completed + 1
+    end
+  end
+
+  if collapsedHeaders[group.name] == nil then
+    collapsedHeaders[group.name] = true
+  end
+
+  local collapsed = collapsedHeaders[group.name]
+  local percent = total > 0 and math.floor((completed / total) * 100) or 0
+
+  local header = CreateFrame("Button", nil, parent)
+  header:SetPoint("TOPLEFT", 0, y)
+  header:SetSize(600, 32)
+
+  local bg = header:CreateTexture(nil, "BACKGROUND")
+  bg:SetAllPoints()
+  bg:SetTexture("Interface\\Buttons\\WHITE8x8")
+  bg:SetGradient("HORIZONTAL", CreateColor(0.12, 0.12, 0.12, 0.8), CreateColor(0.08, 0.08, 0.08, 0.8))
+
+  local icon = header:CreateFontString(nil, "OVERLAY")
+  icon:SetFont(STANDARD_TEXT_FONT, 14, "OUTLINE")
+  icon:SetPoint("LEFT", 8, 0)
+  icon:SetText(collapsed and "+" or "−")
+  icon:SetTextColor(0.8, 0.8, 0.8, 1)
+
+  local text = header:CreateFontString(nil, "OVERLAY")
+  text:SetFont(STANDARD_TEXT_FONT, 13, "OUTLINE")
+  text:SetPoint("LEFT", 28, 0)
+  text:SetText(group.name)
+  text:SetTextColor(1, 1, 1, 1)
+
+  local progress = header:CreateFontString(nil, "OVERLAY")
+  progress:SetFont(STANDARD_TEXT_FONT, 11)
+  progress:SetPoint("RIGHT", -8, 0)
+
+  local color
+  if percent == 100 then
+    color = CreateColor(0.2, 1, 0.2, 1)
+  elseif percent >= 50 then
+    color = CreateColor(1, 0.82, 0, 1)
+  else
+    color = CreateColor(0.9, 0.9, 0.9, 1)
+  end
+
+  progress:SetText(string.format("%d/%d (%d%%)", completed, total, percent))
+  progress:SetTextColor(color:GetRGBA())
+
+  header:SetScript("OnClick", function()
+    collapsedHeaders[group.name] = not collapsed
+    BuildUI()
+  end)
+
+  header:SetScript("OnEnter", function(self)
+    bg:SetGradient("HORIZONTAL", CreateColor(0.18, 0.18, 0.18, 1), CreateColor(0.12, 0.12, 0.12, 1))
+  end)
+
+  header:SetScript("OnLeave", function(self)
+    bg:SetGradient("HORIZONTAL", CreateColor(0.12, 0.12, 0.12, 0.8), CreateColor(0.08, 0.08, 0.08, 0.8))
+  end)
+
+  table.insert(activeWidgets, header)
+
+  return header, collapsed, y - 36, (completed == total)
+end
+
+local function UpdatePreviewDisplay()
+    if not previewFrame.currentReward or not previewFrame:IsShown() then return end
+
+    local reward = previewFrame.currentReward
+    local index = previewFrame.currentRewardIndex
+
+    --Update Title
+    local titleText = (type(reward.title) == "table") and reward.title[index] or reward.title or "Decor Reward"
+    previewTitle:SetText(titleText)
+
+    --Update Model or Texture
+    local hasPreview = false
+    if reward.model3D then
+        local modelId = (type(reward.model3D) == "table") and reward.model3D[index] or reward.model3D
+        if modelId then
+            previewFrame.model:Show(); previewFrame.texture:Hide()
+            previewFrame.model:SetModel(modelId)
+            rotation = 0; hasPreview = true
+        end
+    elseif reward.texture then
+        local textureId = (type(reward.texture) == "table") and reward.texture[index] or reward.texture
+        if textureId and textureId ~= "" then
+            previewFrame.model:Hide(); previewFrame.texture:Show()
+            local fullTexturePath = GetFullTexturePath(tostring(textureId))
+            if fullTexturePath then
+                previewFrame.texture:SetTexture(fullTexturePath)
+                hasPreview = true
+            end
+        end
+    end
+    if not hasPreview then previewFrame:Hide() end
+end
+
+--Cycle through multiple rewards
+local function CycleReward(direction) --direction is 1 for next, -1 for prev
+    if not previewFrame:IsShown() or previewFrame.totalRewards <= 1 then return end
+
+    local newIndex = previewFrame.currentRewardIndex + direction
+    if newIndex > previewFrame.totalRewards then newIndex = 1 end
+    if newIndex < 1 then newIndex = previewFrame.totalRewards end
+
+    previewFrame.currentRewardIndex = newIndex
+    UpdatePreviewDisplay()
+end
+
+--Create reward line
+local function CreateRewardLine(parent, reward, y)
+  local primaryID = type(reward.id) == "table" and reward.id[1] or reward.id
+  local displayName
+  local isQuestLoading = false
+  
+  if reward.type == "quest" then
+      displayName = questTitleCache[primaryID] or C_QuestLog.GetTitleForQuestID(primaryID)
+      if displayName then questTitleCache[primaryID] = displayName else displayName = "Loading Quest..."; isQuestLoading = true end
+  else
+      local _, name = GetAchievementInfo(primaryID)
+      displayName = name or "Unknown Achievement"
+  end
+
+  local isComplete = IsRewardComplete(reward)
+  if hb_settings.hideCompleted and isComplete then return y end
+
+  local line = CreateFrame("Button", nil, parent)
+  line:SetPoint("TOPLEFT", 10, y)
+  line:SetSize(590, 22)
+  line:RegisterForClicks("AnyUp")
+
+  local collectedDot = line:CreateTexture(nil, "OVERLAY")
+  collectedDot:SetSize(32, 32); collectedDot:SetScale(0.3); collectedDot:SetPoint("LEFT", 0, 0)
+  
+  local text = line:CreateFontString(nil, "OVERLAY")
+  text:SetFont(STANDARD_TEXT_FONT, 12); text:SetPoint("LEFT", 20, 0); text:SetJustifyH("LEFT"); text:SetText(displayName)
+
+  if isQuestLoading then
+      QuestEventListener:AddCallback(primaryID, function()
+          local newName = C_QuestLog.GetTitleForQuestID(primaryID)
+          if newName and text:IsVisible() then text:SetText(newName); questTitleCache[primaryID] = newName
+          elseif text:IsVisible() then text:SetText("Unknown Quest") end
+      end)
+  end
+
+  if isComplete then
+    text:SetTextColor(0.5, 0.5, 0.5, 1); collectedDot:SetTexture("Interface\\AddOns\\HomeBound\\Assets\\collected")
+  else
+    text:SetTextColor(0.9, 0.9, 0.9, 1); collectedDot:SetTexture("Interface\\AddOns\\HomeBound\\Assets\\progress")
+  end
+  
+  --Special icon
+  if reward.icon then
+    local specialIcon = line:CreateTexture(nil, "OVERLAY")
+    specialIcon:SetSize(22, 22)
+    specialIcon:SetPoint("LEFT", text, "RIGHT", 16, 0)
+    specialIcon:SetTexture(reward.icon)
+  end
+
+  local typeText = line:CreateFontString(nil, "OVERLAY")
+  typeText:SetFont(STANDARD_TEXT_FONT, 11); typeText:SetPoint("RIGHT", -10, 0)
+  local rewardTypeString = reward.type and (reward.type:sub(1,1):upper() .. reward.type:sub(2)) or "Achievement"
+  typeText:SetText(rewardTypeString); typeText:SetTextColor(0.7, 0.7, 0.7)
+
+  line:SetHighlightTexture("Interface\\QuestFrame\\UI-QuestTitleHighlight")
+
+  --Clickable /Next/ button for multiple rewards
+  local nextButton = CreateFrame("Button", nil, line)
+  nextButton:SetPoint("RIGHT", typeText, "LEFT", -8, 0)
+  nextButton:SetSize(48, 22)
+  nextButton:Hide()
+
+  local nextButtonText = nextButton:CreateFontString(nil, "ARTWORK", "GameFontNormal")
+  nextButtonText:SetAllPoints()
+  nextButtonText:SetFont(STANDARD_TEXT_FONT, 12)
+  nextButtonText:SetText("(Next)")
+  nextButton:SetPropagateMouseMotion(true)
+  local defaultNextColor = {1, 0.82, 0}
+  nextButtonText:SetTextColor(unpack(defaultNextColor))
+
+  nextButton:SetScript("OnEnter", function() nextButtonText:SetTextColor(1, 1, 1) end)
+  nextButton:SetScript("OnLeave", function() nextButtonText:SetTextColor(unpack(defaultNextColor)) end)
+  nextButton:SetScript("OnClick", function() CycleReward(1) end)
+
+  line:SetScript("OnClick", function(self, button)
+    if button == "LeftButton" then
+      if reward.type ~= "quest" then
+        if not AchievementFrame then AchievementFrame_LoadUI() end
+        if not AchievementFrame:IsShown() then AchievementFrame_ToggleAchievementFrame() end
+        AchievementFrame_SelectAchievement(primaryID)
+      end
+    elseif button == "RightButton" then
+      ShowWowheadLinkPopup(primaryID, reward.type)
+    end
+  end)
+
+  line:SetScript("OnEnter", function(self)
+    if not isComplete then text:SetTextColor(1, 0.82, 0, 1) end
+    GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+    if reward.type == "quest" then GameTooltip:SetHyperlink("quest:" .. primaryID) else GameTooltip:SetHyperlink(GetAchievementLink(primaryID)) end
+    GameTooltip:Show()
+
+    previewFrame.currentReward = reward
+    previewFrame.currentRewardIndex = 1
+    
+    local rewardsTable = reward.model3D or reward.texture
+    if type(rewardsTable) == "table" then
+        previewFrame.totalRewards = #rewardsTable
+    else
+        previewFrame.totalRewards = (rewardsTable ~= nil and rewardsTable ~= "") and 1 or 0
+    end
+
+    if previewFrame.totalRewards > 1 then
+        nextButton:Show()
+    end
+    
+    if previewFrame.totalRewards > 0 then
+        previewFrame:ClearAllPoints()
+        local tooltipBottomY = GameTooltip:GetBottom()
+        local previewScaledHeight = previewFrame:GetHeight() * previewFrame:GetEffectiveScale()
+        if tooltipBottomY and (tooltipBottomY - previewScaledHeight - 30 < 0) then
+            previewFrame:SetPoint("BOTTOMLEFT", GameTooltip, "TOPLEFT", 0, 5)
+        else
+            previewFrame:SetPoint("TOPLEFT", GameTooltip, "BOTTOMLEFT", 0, -5)
+        end
+        previewFrame:Show()
+        UpdatePreviewDisplay()
+    end
+  end)
+
+  line:SetScript("OnLeave", function(self)
+    if isComplete then text:SetTextColor(0.5, 0.5, 0.5, 1) else text:SetTextColor(0.9, 0.9, 0.9, 1) end
+    GameTooltip:Hide()
+    previewFrame:Hide()
+    previewFrame.model:Hide()
+    previewFrame.texture:Hide()
+    previewFrame.currentReward = nil
+    nextButton:Hide()
+  end)
+
+  table.insert(activeWidgets, line)
+  return y - 24
+end
+
+--Create UI
+function BuildUI()
+  ClearWidgets()
+  local y = 0
+  local hasContent = false
+  for _, group in ipairs(db.collections) do
+      local visibleRewards = {}
+      for _, reward in ipairs(group.achievements) do
+          local rewardType = reward.type or "achievement"
+          local rewardFaction = GetRewardFaction(reward)
+          
+          --Filter type
+          local typeMatch = (rewardType == "quest" and hb_settings.filters.quest) or (rewardType == "achievement" and hb_settings.filters.achievement)
+          
+          --Filter faction
+          local factionMatch = (rewardFaction == "neutral" and hb_settings.filters.neutral) or 
+                              (rewardFaction == "alliance" and hb_settings.filters.alliance) or 
+                              (rewardFaction == "horde" and hb_settings.filters.horde)
+          
+          if typeMatch and factionMatch then
+              table.insert(visibleRewards, reward)
+          end
+      end
+      
+      if #visibleRewards > 0 then
+          local allInCategoryComplete = true
+          if hb_settings.hideCompleted then
+              for _, reward in ipairs(visibleRewards) do
+                  if not IsRewardComplete(reward) then allInCategoryComplete = false; break end
+              end
+          else allInCategoryComplete = false end
+
+          if not allInCategoryComplete then
+              hasContent = true
+              local header, collapsed, newY = CreateHeader(scrollChild, group, visibleRewards, y)
+              y = newY
+              if not collapsed then
+                  local original_y = y
+                  for _, reward in ipairs(visibleRewards) do y = CreateRewardLine(scrollChild, reward, y) end
+                  if y < original_y then y = y - 10 end
+              end
+          end
+      end
+  end
+  if not hasContent then
+    local msg = scrollChild:CreateFontString(nil, "OVERLAY")
+    msg:SetFont(STANDARD_TEXT_FONT, 14); msg:SetPoint("TOP", 0, -50)
+    msg:SetText("You've collected everything!\nTry changing your filters.")
+    msg:SetTextColor(0.9, 0.9, 0.9, 1); table.insert(activeWidgets, msg)
+  end
+  scrollChild:SetHeight(math.abs(y) + 20)
+end
+
+--Initialize
+local init = CreateFrame("Frame")
+init:RegisterEvent("ADDON_LOADED")
+init:RegisterEvent("PLAYER_ENTERING_WORLD")
+init:RegisterEvent("ACHIEVEMENT_EARNED")
+init:RegisterEvent("QUEST_TURNED_IN")
+
+init:SetScript("OnEvent", function(self, event, addon)
+  if event == "ADDON_LOADED" and addon == "HomeBound" then
+    hb_settings.completedAchievs = hb_settings.completedAchievs or {}
+    hb_settings.completedQuests = hb_settings.completedQuests or {}
+    hb_settings.showMinimapButton = hb_settings.showMinimapButton == nil and true or hb_settings.showMinimapButton
+    hb_settings.filters = hb_settings.filters or { achievement = true, quest = true, neutral = true, alliance = true, horde = true }
+
+    if hb_settings.filters.neutral == nil then hb_settings.filters.neutral = true end
+    if hb_settings.filters.alliance == nil then hb_settings.filters.alliance = true end
+    if hb_settings.filters.horde == nil then hb_settings.filters.horde = true end
+    
+    minimapCheckbox:SetChecked(hb_settings.showMinimapButton)
+    if not AchievementFrame then AchievementFrame_LoadUI() end
+    local ldb = LibStub:GetLibrary("LibDataBroker-1.1", true)
+    if ldb then
+      local dataobj = ldb:NewDataObject("HomeBound", { type = "launcher", icon = 7252953, label = "HomeBound", text = "HomeBound", name = "HomeBound",
+        OnClick = function(_, button)
+          if button == "LeftButton" then
+            if not frame:IsShown() then BuildUI() end
+            frame:SetShown(not frame:IsShown())
+          end
+        end
+      })
+      function dataobj:OnTooltipShow() self:AddLine("|cffffffffHome Bound|r"); self:AddLine("|cff00ff00<Left Click to toggle>"); self:SetScale(GameTooltip:GetScale()) end
+      LibDBIcon:Register("HomeBound", dataobj, dbHB.minimap)
+    end
+  elseif event == "PLAYER_ENTERING_WORLD" then
+    local scale = hb_settings.scale or 1.0
+    frame:SetScale(scale); supportFrame:SetScale(scale); scaleSlider:SetValue(scale)
+    scaleValueText:SetText(string.format("UI Scale: %.2f", scale))
+    BuildUI()
+    if not hb_settings.showMinimapButton then LibDBIcon:Hide("HomeBound") end
+    self:UnregisterEvent("PLAYER_ENTERING_WORLD")
+  elseif event == "ACHIEVEMENT_EARNED" or event == "QUEST_TURNED_IN" then
+    C_Timer.After(0.5, BuildUI)
+  end
+end)
+
+--Slash commands
+SLASH_HB1 = "/hb"
+SLASH_HB2 = "/homebound"
+SlashCmdList["HB"] = function()
+  if not frame:IsShown() then BuildUI() end
+  frame:SetShown(not frame:IsShown())
+end

@@ -39,6 +39,7 @@ layout.defaultSettings = {
         width = 84,
         iconScale = 1,
         keepDefaultModernTextures = true,
+        recolorCastbar = false,
     },
     dr = {
         posX = -74,
@@ -49,11 +50,34 @@ layout.defaultSettings = {
         spacing = 6,
         growthDirection = 4,
     },
+    widgets = {
+        combatIndicator = {
+            posX = 0,
+            posY = 0,
+            scale = 0.6,
+        },
+        targetIndicator = {
+            posX = 0,
+            posY = 0,
+            scale = 0.9,
+        },
+        focusIndicator = {
+            posX = 0,
+            posY = 0,
+            scale = 0.85,
+        },
+        partyTargetIndicators = {
+            posX = 0,
+            posY = 0,
+            scale = 0.7,
+        },
+    },
 
     textures          = {
         generalStatusBarTexture       = "sArena Default",
         healStatusBarTexture          = "sArena Stripes",
         castbarStatusBarTexture       = "sArena Default",
+        castbarUninterruptibleTexture = "sArena Default",
     },
     retextureHealerClassStackOnly = true,
 
@@ -122,6 +146,7 @@ function layout:Initialize(frame)
         frame.parent:UpdateTrinketSettings(self.db.trinket)
         frame.parent:UpdateRacialSettings(self.db.racial)
         frame.parent:UpdateDispelSettings(self.db.dispel)
+        frame.parent:UpdateWidgetSettings(self.db.widgets)
     end
 
     frame.ClassIconCooldown:SetSwipeTexture("Interface\\CharacterFrame\\TempPortraitAlphaMask")
@@ -253,10 +278,6 @@ function layout:Initialize(frame)
     end
 
     -- Frame background texture
-    if not frame.frameTexture then
-        frame.frameTexture = frame:CreateTexture(nil, "ARTWORK", nil, 2)
-    end
-
     local frameTexture = frame.frameTexture
     frameTexture:ClearAllPoints()
     frameTexture:SetAllPoints(frame)
@@ -275,6 +296,51 @@ function layout:UpdateOrientation(frame)
     local healthText = frame.HealthText
     local powerText = frame.PowerText
     local castbarText = frame.CastBar.Text
+
+    if self.db.widgets then
+        local w = self.db.widgets
+
+        -- Combat Indicator
+        if w.combatIndicator then
+            frame.WidgetOverlay.combatIndicator:ClearAllPoints()
+            frame.WidgetOverlay.combatIndicator:SetSize(18, 18)
+            frame.WidgetOverlay.combatIndicator:SetScale(w.combatIndicator.scale or 1)
+            frame.WidgetOverlay.combatIndicator:SetPoint("CENTER", frame.HealthBar, "CENTER",
+                (w.combatIndicator.posX or 0), (w.combatIndicator.posY or 0) - 13)
+        end
+
+        -- Target Indicator
+        if w.targetIndicator then
+            frame.WidgetOverlay.targetIndicator:ClearAllPoints()
+            frame.WidgetOverlay.targetIndicator:SetSize(34, 34)
+            frame.WidgetOverlay.targetIndicator:SetScale(w.targetIndicator.scale or 1)
+            frame.WidgetOverlay.targetIndicator:SetPoint("CENTER", frame.ClassIcon, "CENTER",
+                (w.targetIndicator.posX or 0) - 6, (w.targetIndicator.posY or 0) + 2)
+        end
+
+        -- Focus Indicator
+        if w.focusIndicator then
+            frame.WidgetOverlay.focusIndicator:ClearAllPoints()
+            frame.WidgetOverlay.focusIndicator:SetSize(20, 20)
+            frame.WidgetOverlay.focusIndicator:SetScale(w.focusIndicator.scale or 1)
+            frame.WidgetOverlay.focusIndicator:SetPoint("BOTTOMRIGHT", frame.ClassIcon, "BOTTOMRIGHT",
+                (w.focusIndicator.posX or 0) - 19, (w.focusIndicator.posY or 0) + 13.5)
+        end
+
+        -- Party Target Indicators
+        if w.partyTargetIndicators then
+            frame.WidgetOverlay.partyTarget1:ClearAllPoints()
+            frame.WidgetOverlay.partyTarget1:SetSize(15, 15)
+            frame.WidgetOverlay.partyTarget1:SetScale(w.partyTargetIndicators.scale or 1)
+            frame.WidgetOverlay.partyTarget1:SetPoint("TOPLEFT", frame.HealthBar, "TOPRIGHT",
+                (w.partyTargetIndicators.posX or 0) - 11, (w.partyTargetIndicators.posY or 0) - 17)
+
+            frame.WidgetOverlay.partyTarget2:ClearAllPoints()
+            frame.WidgetOverlay.partyTarget2:SetSize(15, 15)
+            frame.WidgetOverlay.partyTarget2:SetScale(w.partyTargetIndicators.scale or 1)
+            frame.WidgetOverlay.partyTarget2:SetPoint("RIGHT", frame.WidgetOverlay.partyTarget1, "LEFT", 3, 0)
+        end
+    end
 
     if self.db.textSettings then
         local txt = self.db.textSettings

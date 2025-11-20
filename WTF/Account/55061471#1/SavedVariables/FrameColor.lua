@@ -1,22 +1,25 @@
 
 FrameColor4DB = {
 ["profileKeys"] = {
-["Hellowalls - Mal'Ganis"] = "Default",
+["Clevagirl - Mal'Ganis"] = "Default",
 ["Heilsatan - Tichondrius"] = "Default",
-["Smaugchamp - Tichondrius"] = "Default",
+["Hellowalls - Mal'Ganis"] = "Default",
+["Mäñýfäçëð - Tichondrius"] = "Default",
+["Gehyo - Tichondrius"] = "Default",
+["Starstypeshi - Tichondrius"] = "Default",
 ["Auteist - Mal'Ganis"] = "Default",
 ["Ofpuss - Mal'Ganis"] = "Default",
-["Starstypeshi - Tichondrius"] = "Default",
+["Choppiez - Tichondrius"] = "Default",
 ["Smaugchamp - Mal'Ganis"] = "Default",
 ["Choppiez - Mal'Ganis"] = "Default",
 ["Praisesun - Tichondrius"] = "Default",
 ["Tampacks - Mal'Ganis"] = "Default",
-["Hellavator - Mal'Ganis"] = "Default",
+["Neonvoid - Mal'Ganis"] = "Default",
 ["Corsic - Mal'Ganis"] = "Default",
 ["Mäñýfäçëð - Mal'Ganis"] = "Default",
-["Neonvoid - Mal'Ganis"] = "Default",
-["Choppiez - Tichondrius"] = "Default",
+["Hellavator - Mal'Ganis"] = "Default",
 ["Hellavator - Tichondrius"] = "Default",
+["Ofpusstwo - Tichondrius"] = "Default",
 ["Auteist - Tichondrius"] = "Default",
 ["Cullnvoid - Tichondrius"] = "Default",
 ["Stormclout - Tichondrius"] = "Default",
@@ -24,10 +27,10 @@ FrameColor4DB = {
 ["Stormclout - Mal'Ganis"] = "Default",
 ["Rakeist - Mal'Ganis"] = "Default",
 ["Gehyo - Mal'Ganis"] = "Default",
-["Ofpusstwo - Tichondrius"] = "Default",
+["Smaugchamp - Tichondrius"] = "Default",
 ["Ofpuss - Tichondrius"] = "Default",
 ["Praisesun - Mal'Ganis"] = "Default",
-["Mäñýfäçëð - Tichondrius"] = "Default",
+["Crillessana - Mal'Ganis"] = "Default",
 ["Thingreyline - Tichondrius"] = "Default",
 },
 ["profiles"] = {
@@ -128,18 +131,11 @@ FrameColor4DB = {
 },
 ["HUD"] = {
 ["colors"] = {
-["main"] = {
+["tabs"] = {
 ["rgbaValues"] = {
-0.2784313857555389,
-0.2784313857555389,
-0.2784313857555389,
-},
-},
-["fallback"] = {
-["rgbaValues"] = {
-0.2196078598499298,
-0.2196078598499298,
-0.2196078598499298,
+0.1803921610116959,
+0.1803921610116959,
+0.1803921610116959,
 },
 },
 ["borders"] = {
@@ -149,11 +145,18 @@ FrameColor4DB = {
 0.2000000178813934,
 },
 },
-["tabs"] = {
+["fallback"] = {
 ["rgbaValues"] = {
-0.1803921610116959,
-0.1803921610116959,
-0.1803921610116959,
+0.2196078598499298,
+0.2196078598499298,
+0.2196078598499298,
+},
+},
+["main"] = {
+["rgbaValues"] = {
+0.2784313857555389,
+0.2784313857555389,
+0.2784313857555389,
 },
 },
 },

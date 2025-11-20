@@ -26,9 +26,10 @@ GliderAddOnDB = {
 ["textPosition"] = "Bottom",
 },
 ["GliderGlobalSettings"] = {
-["y"] = -153.6666564941406,
-["x"] = 0.5001220703125,
-["point"] = "CENTER",
+["y"] = 267.6670837402344,
+["x"] = -307.833740234375,
+["point"] = "BOTTOM",
+["scale"] = 1,
 ["textPosition"] = "Bottom",
 ["style"] = "Class",
 },
@@ -68,26 +69,13 @@ GliderAddOnDB = {
 ["point"] = "CENTER",
 ["textPosition"] = "Bottom",
 },
-["Default MidScreen"] = {
-["y"] = -236.6664123535156,
-["x"] = 6.103515625e-05,
+["Default Bot"] = {
+["y"] = 170,
+["x"] = 0,
 ["point"] = "CENTER",
 ["textPosition"] = "Bottom",
-["style"] = "Class",
 },
 ["TESTING"] = {
-["y"] = 170,
-["x"] = 0,
-["point"] = "CENTER",
-["textPosition"] = "Bottom",
-},
-["Default Minimal"] = {
-["y"] = 170,
-["x"] = 0,
-["point"] = "CENTER",
-["textPosition"] = "Bottom",
-},
-["Classic"] = {
 ["y"] = 170,
 ["x"] = 0,
 ["point"] = "CENTER",
@@ -99,9 +87,21 @@ GliderAddOnDB = {
 ["point"] = "CENTER",
 ["textPosition"] = "Bottom",
 },
-["Default Old"] = {
-["y"] = -144.1665191650391,
-["x"] = -0.832763671875,
+["Classic"] = {
+["y"] = 170,
+["x"] = 0,
+["point"] = "CENTER",
+["textPosition"] = "Bottom",
+},
+["Default Minimal"] = {
+["y"] = 170,
+["x"] = 0,
+["point"] = "CENTER",
+["textPosition"] = "Bottom",
+},
+["Default DPS"] = {
+["y"] = 170,
+["x"] = 0,
 ["point"] = "CENTER",
 ["textPosition"] = "Bottom",
 },
@@ -112,7 +112,7 @@ GliderAddOnDB = {
 ["scale"] = 1.019999980926514,
 ["textPosition"] = "Bottom",
 },
-["Modern"] = {
+["123"] = {
 ["y"] = 170,
 ["x"] = 0,
 ["point"] = "CENTER",
@@ -130,18 +130,18 @@ GliderAddOnDB = {
 ["point"] = "BOTTOM",
 ["scale"] = 1,
 ["textPosition"] = "Bottom",
-["style"] = "Class",
 ["insideCircle"] = false,
+["style"] = "Class",
 },
-["123"] = {
+["Modern"] = {
 ["y"] = 170,
 ["x"] = 0,
 ["point"] = "CENTER",
 ["textPosition"] = "Bottom",
 },
-["Default DPS"] = {
-["y"] = 170,
-["x"] = 0,
+["Default Old"] = {
+["y"] = -144.1665191650391,
+["x"] = -0.832763671875,
 ["point"] = "CENTER",
 ["textPosition"] = "Bottom",
 },
@@ -157,11 +157,12 @@ GliderAddOnDB = {
 ["point"] = "BOTTOM",
 ["textPosition"] = "Bottom",
 },
-["Default Bot"] = {
-["y"] = 170,
-["x"] = 0,
+["Default MidScreen"] = {
+["y"] = -236.6664123535156,
+["x"] = 6.103515625e-05,
 ["point"] = "CENTER",
 ["textPosition"] = "Bottom",
+["style"] = "Class",
 },
 },
 ["globalSettingsEnabled"] = true,

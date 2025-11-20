@@ -16,6 +16,8 @@ L["%s Switch to %s"] = "%s Switch to %s"
 L["(was %s)"] = "(was %s)"
 --[[Translation missing --]]
 L["A workaround for one of the ways that Talent Tree taint can block action buttons from working."] = "A workaround for one of the ways that Talent Tree taint can block action buttons from working."
+--[[Translation missing --]]
+L["Addon development takes a large amount of time and effort. If you enjoy using Talent Tree Tweaks, please consider supporting its development by donating. Your support helps ensure the continued improvement and maintenance of the addon. Thank you for your generosity!"] = "Addon development takes a large amount of time and effort. If you enjoy using Talent Tree Tweaks, please consider supporting its development by donating. Your support helps ensure the continued improvement and maintenance of the addon. Thank you for your generosity!"
 L["Adds a button to link the currently shown build in chat."] = "Fügt einen Button hinzu, um die momentane Konfiguration im Chat zu teilen."
 L["Adds a few fixes for minor issues."] = "Fügt ein paar Fehlerbehebungen für kleinere Probleme hinzu."
 L["Adds a mini tree in various tooltips for Talent Tree Builds"] = "Fügt einen Minibaum in verschiedenen Tooltips für Talentbaumkonfigurationen hinzu."
@@ -58,8 +60,6 @@ L["Automatically purchase %s talents when you have enough currency."] = "Automat
 --[[Translation missing --]]
 L["Automatically purchase Horrific Visions talents when you have enough currency."] = "Automatically purchase Horrific Visions talents when you have enough currency."
 --[[Translation missing --]]
-L["Automatically purchase Skyriding talents when you have enough currency."] = "Automatically purchase Skyriding talents when you have enough currency."
---[[Translation missing --]]
 L["Automatically purchases Skyriding and other generic talents when you have enough currency."] = "Automatically purchases Skyriding and other generic talents when you have enough currency."
 --[[Translation missing --]]
 L["Automatically selects the DRIVE upgrades you want for all of your alts."] = "Automatically selects the DRIVE upgrades you want for all of your alts."
@@ -68,11 +68,13 @@ L["Automatically set"] = "Automatically set"
 --[[Translation missing --]]
 L["Automatically upgrade the final Limits Unbound talent when you have enough currency."] = "Automatically upgrade the final Limits Unbound talent when you have enough currency."
 L["Background Transparency"] = "Hintergrundtransparenz"
+--[[Translation missing --]]
+L["Basic Modules"] = "Basic Modules"
 L["blocked in combat"] = "im Kampf blockiert"
 L["Change Background"] = "Hintergrund ändern"
 L["Change Scale"] = "Größe ändern"
 --[[Translation missing --]]
-L["Choose how the mini tree is displayed. 'with diff' means that the mini tree will show the difference between your current build and the build in the tooltip."] = "Choose how the mini tree is displayed. 'with diff' means that the mini tree will show the difference between your current build and the build in the tooltip."
+L["Choose how the mini tree is displayed."] = "Choose how the mini tree is displayed."
 L["Click to respec to this specialization."] = "Klicke, um zu dieser Spezialisierung zu wechseln."
 L["Click:"] = "Klick:"
 L["Color of the highlight"] = "Farbe der Hervorhebung"
@@ -100,18 +102,16 @@ L["Display Style"] = "Display Style"
 --[[Translation missing --]]
 L["Do Nothing"] = "Do Nothing"
 --[[Translation missing --]]
+L["Donate"] = "Donate"
+--[[Translation missing --]]
 L["DRIVE Auto Selector:"] = "DRIVE Auto Selector:"
 --[[Translation missing --]]
 L["DRIVE Auto Upgrades"] = "DRIVE Auto Upgrades"
 L["Dump the nodeInfo table to chat."] = "Geb den nodeInfo table im Chat aus."
 --[[Translation missing --]]
-L["Enable"] = "Enable"
---[[Translation missing --]]
 L["Enable Ride Along"] = "Enable Ride Along"
 L["Enable Talent Tree Viewer Diff"] = "Aktiviere Unterschiede im Talent Tree Viewer"
 L["Enable this module"] = "Aktiviert dieses Modul"
---[[Translation missing --]]
-L["Enabled"] = "Enabled"
 --[[Translation missing --]]
 L["Error opening in TalentTreeViewer. Showing default Blizzard inspect UI instead."] = "Error opening in TalentTreeViewer. Showing default Blizzard inspect UI instead."
 --[[Translation missing --]]
@@ -142,6 +142,8 @@ L["Highlight Cascade Repurchable"] = "Highlight Cascade Repurchable"
 --[[Translation missing --]]
 L["Horrific Visions"] = "Horrific Visions"
 L["If checked, the imported build will be imported into the currently selected loadout."] = "Wenn aktiviert, wird die zu importierende Konfiguration in die aktuell ausgewählte Konfiguration importiert."
+--[[Translation missing --]]
+L["If you enjoy using Talent Tree Tweaks, consider supporting its development with a donation."] = "If you enjoy using Talent Tree Tweaks, consider supporting its development with a donation."
 L["Implements various workarounds around taint."] = "Implementiert verschiedene Workarounds, um Taint zu vermeiden."
 L["Import into current loadout"] = "In die aktuelle Konfiguration importieren"
 L["Import into current loadout (click \"%s\" afterwards)"] = "In die aktuelle Konfiguration importieren (Klicke \"%s\" danach)"
@@ -167,7 +169,6 @@ L["Loading..."] = "Loading..."
 L["Macros and certain addons that change loadouts, cause the dropdown to not update properly in some situations. This fixes that."] = "Macros and certain addons that change loadouts, cause the dropdown to not update properly in some situations. This fixes that."
 L["Mini Tree in Tooltips"] = "Minibaum in Tooltips"
 L["Misc Fixes"] = "Sonstige Fehlerbehebungen"
-L["Modules"] = "Module"
 --[[Translation missing --]]
 L["Mute chat spam while switching loadouts or specs."] = "Mute chat spam while switching loadouts or specs."
 --[[Translation missing --]]
@@ -201,6 +202,8 @@ L["Replace the Share Loadout button, to open a copy/paste popup instead of autom
 --[[Translation missing --]]
 L["Report On Selections"] = "Report On Selections"
 L["Report Purchases"] = "Erlernen mitteilen"
+--[[Translation missing --]]
+L["Requires the Talent Tree Viewer addon to be installed and enabled."] = "Requires the Talent Tree Viewer addon to be installed and enabled."
 --[[Translation missing --]]
 L["Reset Ride Along Cache"] = "Reset Ride Along Cache"
 --[[Translation missing --]]
@@ -246,6 +249,8 @@ L["Show Example link in chat"] = "Zeige Beispiellink im Chat"
 --[[Translation missing --]]
 L["Show the difference between your talent choices, and the talent build in Talent Tree Viewer."] = "Show the difference between your talent choices, and the talent build in Talent Tree Viewer."
 L["Shows an example of a clickable link in chat."] = "Zeigt einen Beispiellink im Chat an."
+--[[Translation missing --]]
+L["Shows the difference between your current build and the build in the tooltip"] = "Shows the difference between your current build and the build in the tooltip"
 L["Shows the difference between your talent choices, and the inspected player's talent choices."] = "Zeigt den Unterschied zwischen deiner Talentauswahl und der des betrachteten Spielers an."
 --[[Translation missing --]]
 L["Simple dots"] = "Simple dots"
@@ -253,8 +258,6 @@ L["Simple dots"] = "Simple dots"
 L["Simple dots with custom diff colors"] = "Simple dots with custom diff colors"
 --[[Translation missing --]]
 L["Simple dots with default diff colors"] = "Simple dots with default diff colors"
---[[Translation missing --]]
-L["Skyriding"] = "Skyriding"
 --[[Translation missing --]]
 L["Specify the upgrade you want to select on login."] = "Specify the upgrade you want to select on login."
 --[[Translation missing --]]
@@ -274,28 +277,19 @@ L["TalentTreeTweaks Diff Viewer"] = "TalentTreeTweaks Diff Viewer"
 --[[Translation missing --]]
 L["Temporarily |cffff0000disabled|r until next reload, because you refunded a talent."] = "Temporarily |cffff0000disabled|r until next reload, because you refunded a talent."
 L["They have a talent you don't"] = "Ein Talent, das du nicht hast"
-L["This addon consists of a number of modules, each of which can be enabled or disabled, to fine-tune your experience."] = "Dieses AddOn besteht aus einer Reihe von Modulen, von denen jedes einzelne aktiviert oder deaktiviert werden kann, um dein Nutzererlebnis zu optimieren."
 --[[Translation missing --]]
 L["This loadout includes leveling information."] = "This loadout includes leveling information."
 L["This module is incompatible with BlizzMove, and has been disabled."] = "Dieses Modul ist inkompatibel mit BlizzMove und wurde deaktiviert."
 --[[Translation missing --]]
 L["This module is only available for characters that have unlocked to the DRIVE system."] = "This module is only available for characters that have unlocked to the DRIVE system."
 --[[Translation missing --]]
-L["Toggle %s UI"] = "Toggle %s UI"
---[[Translation missing --]]
 L["Toggle D.R.I.V.E. UI"] = "Toggle D.R.I.V.E. UI"
---[[Translation missing --]]
-L["Toggle Horrific Visions UI"] = "Toggle Horrific Visions UI"
---[[Translation missing --]]
-L["Toggle Skyriding UI"] = "Toggle Skyriding UI"
 --[[Translation missing --]]
 L["Toggle the %s UI to view and adjust talents."] = "Toggle the %s UI to view and adjust talents."
 --[[Translation missing --]]
 L["Toggle the DRIVE UI to view and adjust upgrades."] = "Toggle the DRIVE UI to view and adjust upgrades."
 --[[Translation missing --]]
-L["Toggle the Horrific Visions UI to view and adjust talents."] = "Toggle the Horrific Visions UI to view and adjust talents."
---[[Translation missing --]]
-L["Toggle the Skyriding UI to view and adjust talents."] = "Toggle the Skyriding UI to view and adjust talents."
+L["Toggle UI"] = "Toggle UI"
 L["Toggles for the Professions Tooltips."] = "Berufe Tooltips ein- und ausschalten."
 L["Toggles for the Talent Tooltips."] = "Talent Tooltips ein- und ausschalten."
 L["Tooltip IDs"] = "Tooltip IDs"
@@ -309,8 +303,8 @@ L["Unlocks the share button, so you can share your build without spending all po
 L["Unlocks the talent buttons, so you can reallocate points while in combat."] = "Schaltet die Talente frei, so dass während des Kampfes Punkte neu zugewiesen werden können."
 L["Use (Virag-)DevTool to inspect the nodeInfo table."] = "Verwende das ViragDevTool AddOn, um den nodeInfo table zu inspizieren."
 L["Use LuaBrowser to inspect the nodeInfo table."] = "Verwende das Lua Browser AddOn, um den nodeInfo table zu inspizieren."
-L["Various tweaks and improvements to the talent tree UI"] = "Verschiedene Optimierungen und Verbesserungen am Talentbaum UI"
-L["Version: %s"] = "Version: %s"
+--[[Translation missing --]]
+L["Version:"] = "Version:"
 --[[Translation missing --]]
 L["Warning: Custom colors may look weird, this cannot be fixed."] = "Warning: Custom colors may look weird, this cannot be fixed."
 L["When enabled, the \"Import into current loadout\" checkbox will be checked by default."] = "Wenn aktiviert, wird das Häkchen bei \"In die aktuelle Konfiguration importieren\" standardmäßig gesetzt."

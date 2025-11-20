@@ -1506,14 +1506,11 @@ L["FAVORITE_ACCOUNT_PROFILE"] = "Compte"
 L["FAVORITE_PROFILE"] = "Profil"
 L["FILTER_ONLY"] = "uniquement"
 L["FILTER_ONLY_LATEST"] = "Uniquement les dernières ajoutées"
---[[Translation missing --]]
---[[ L["FILTER_PROFILE"] = "Profile"--]] 
---[[Translation missing --]]
---[[ L["FILTER_PROFILE_TOOLTIP_REMIX_LEGION"] = "You can use this prepared profile for Legion: Remix."--]] 
---[[Translation missing --]]
---[[ L["FILTER_PROFILE_TOOLTIP_TEXT"] = "Quickly load your predefined filter and search settings.|n|cffeda55fLeft-Click|r to load filter profile.|n|cffeda55fRight-Click|r to save filter profile."--]] 
---[[Translation missing --]]
---[[ L["FILTER_PROFILE_TOOLTIP_TITLE"] = "Filter Profiles"--]] 
+L["FILTER_PROFILE"] = "Profils"
+L["FILTER_PROFILE_TOOLTIP_REMIX_LEGION"] = "Vous pouvez utiliser ce profil préparé pour Legion: Remix."
+L["FILTER_PROFILE_TOOLTIP_TEXT"] = "Chargez rapidement vos paramètres de filtre et de recherche prédéfinis.|n|cffeda55fClic gauche|r pour charger le profil de filtre.|n|cffeda55fClic droit|r pour enregistrer le profil de filtre."
+L["FILTER_PROFILE_TOOLTIP_TITLE"] = [=[Profils de filtre
+]=]
 L["FILTER_RETIRED"] = "Indisponible"
 L["FILTER_SECRET"] = "Cachées par le jeu"
 L["Hidden"] = "Cachées"
@@ -1584,8 +1581,7 @@ L["SETTING_SEARCH_FAMILY_NAME"] = "Rechercher également avec le nom des famille
 L["SETTING_SEARCH_MORE"] = "Rechercher également dans le texte de la description"
 L["SETTING_SEARCH_NOTES"] = "Rechercher également dans vos propres notes"
 L["SETTING_SHOW_DATA"] = "Afficher les données des montures dans le journal"
---[[Translation missing --]]
---[[ L["SETTING_SHOW_FILTER_PROFILES_IN_MENU"] = "Show filter profiles in filter menu."--]] 
+L["SETTING_SHOW_FILTER_PROFILES_IN_MENU"] = "Afficher les profils de filtre dans le menu de filtre."
 L["SETTING_SHOW_RESIZE_EDGE"] = "Activer la marge dans le coin inférieur pour redimensionner la fenêtre"
 L["SETTING_SUMMONPREVIOUSPET"] = "Invoquer à nouveau la mascotte active précédemment lorsque vous descendez de monture."
 L["SETTING_TRACK_USAGE"] = "Suivre le comportement d’utilisation des montures sur tous les personnages"
@@ -1756,8 +1752,7 @@ L["Tauralus"] = "Tauralus"
 L["Thunder Lizard"] = "Lézard-tonnerre"
 L["Tigers"] = "Tigres"
 L["Toads"] = "Crapauds"
---[[Translation missing --]]
---[[ L["Turkey"] = "Turkey"--]] 
+L["Turkey"] = "Dinde"
 L["Turtles"] = "Tortues"
 L["Undead Drakes"] = "Drakes morts-vivants"
 L["Undead Steeds"] = "Palefrois morts-vivants"
@@ -1784,32 +1779,18 @@ L["Yetis"] = "Yétis"
 
 
 elseif locale == "itIT" then
-    --[[Translation missing --]]
---[[ L["ANIMATION_FLY"] = "Fly"--]] 
---[[Translation missing --]]
---[[ L["ANIMATION_FLY_IDLE"] = "Fly Idle"--]] 
---[[Translation missing --]]
---[[ L["ANIMATION_RUN"] = "Run"--]] 
---[[Translation missing --]]
---[[ L["ANIMATION_STAND"] = "Stand"--]] 
---[[Translation missing --]]
---[[ L["ANIMATION_WALK"] = "ANIMATION_WALK"--]] 
---[[Translation missing --]]
---[[ L["ANIMATION_WALK_BACK"] = "Walk Backwards"--]] 
---[[Translation missing --]]
---[[ L["ASK_FAVORITE_PROFILE_NAME"] = "Enter Profile Name:"--]] 
---[[Translation missing --]]
---[[ L["AUTO_ROTATE"] = "Rotate automatically"--]] 
---[[Translation missing --]]
---[[ L["Black Market"] = "Black Market"--]] 
---[[Translation missing --]]
---[[ L["CLICK_TO_SHOW_LINK"] = "Click to Show Link"--]] 
---[[Translation missing --]]
---[[ L["COMPARTMENT_TOOLTIP"] = [=[|cffeda55fLeft-Click|r to toggle showing the mount collection.
-|cffeda55fRight-Click|r to open addon options.]=]--]] 
---[[Translation missing --]]
---[[ L["CONFIRM_FAVORITE_PROFILE_DELETION"] = [=[Are you sure you want to delete the profile "%s"?
-All current character assignments will be reset to the default profile "%s".]=]--]] 
+    L["ANIMATION_FLY"] = "Volare"
+L["ANIMATION_FLY_IDLE"] = "Volare inattivo"
+L["ANIMATION_RUN"] = "Correre"
+L["ANIMATION_STAND"] = "In piedi"
+L["ANIMATION_WALK"] = "ANIMATION_WALK"
+L["ANIMATION_WALK_BACK"] = "Camminare all'indietro"
+L["ASK_FAVORITE_PROFILE_NAME"] = "Inserisci il nome del profilo:"
+L["AUTO_ROTATE"] = "Ruota automaticamente"
+L["Black Market"] = "Mercato nero"
+L["CLICK_TO_SHOW_LINK"] = "Clicca per mostrare il collegamento"
+L["COMPARTMENT_TOOLTIP"] = "|cffeda55fClic sinistro|r per attivare/disattivare la visualizzazione della raccolta di mount. |cffeda55fClic destro|r per aprire le opzioni del componente aggiuntivo."
+L["CONFIRM_FAVORITE_PROFILE_DELETION"] = "Vuoi davvero eliminare il profilo \"%s\"? Tutte le assegnazioni dei personaggi attuali verranno ripristinate al profilo predefinito \"%s\"."
 --[[Translation missing --]]
 --[[ L["DRESSUP_LABEL"] = "Journal"--]] 
 --[[Translation missing --]]
@@ -1827,14 +1808,10 @@ L["FAVORITE_PROFILE"] = "Profilo"
 L["FILTER_ONLY"] = "soltanto"
 --[[Translation missing --]]
 --[[ L["FILTER_ONLY_LATEST"] = "Only latest additions"--]] 
---[[Translation missing --]]
---[[ L["FILTER_PROFILE"] = "Profile"--]] 
---[[Translation missing --]]
---[[ L["FILTER_PROFILE_TOOLTIP_REMIX_LEGION"] = "You can use this prepared profile for Legion: Remix."--]] 
---[[Translation missing --]]
---[[ L["FILTER_PROFILE_TOOLTIP_TEXT"] = "Quickly load your predefined filter and search settings.|n|cffeda55fLeft-Click|r to load filter profile.|n|cffeda55fRight-Click|r to save filter profile."--]] 
---[[Translation missing --]]
---[[ L["FILTER_PROFILE_TOOLTIP_TITLE"] = "Filter Profiles"--]] 
+L["FILTER_PROFILE"] = "Profili"
+L["FILTER_PROFILE_TOOLTIP_REMIX_LEGION"] = "Puoi usare questo profilo preparato per Legion: Remix."
+L["FILTER_PROFILE_TOOLTIP_TEXT"] = "Carica rapidamente le impostazioni predefinite di filtro e ricerca.|n|cffeda55fFai clic con il tasto sinistro|r per caricare il profilo del filtro.|n|cffeda55fFai clic con il tasto destro|r per salvare il profilo del filtro."
+L["FILTER_PROFILE_TOOLTIP_TITLE"] = "Profili filtro"
 L["FILTER_RETIRED"] = "Non più disponibile"
 L["FILTER_SECRET"] = "Nascosto dal gioco"
 --[[Translation missing --]]
@@ -1848,16 +1825,12 @@ L["Mite"] = "Acaro"
 --[[ L["Only tradable"] = "Only tradable"--]] 
 --[[Translation missing --]]
 --[[ L["Passenger"] = "Passenger"--]] 
---[[Translation missing --]]
---[[ L["PET_ASSIGNMENT_INFO"] = "You can assign a pet to this mount. It's going to be summoned as well, when you mount up.|n|nAll assignments are shared with all your characters.|n|nYou can use right-click on a pet entry to summon it manually.|n|nPlease be aware that most ground pets won't fly with you and just disappear when you take off. Also, flying pets are usually slower than you. So they might need some time to catch up to you.|n|nAuto summoning pets is only active in world content."--]] 
+L["PET_ASSIGNMENT_INFO"] = "Puoi assegnare un animale domestico a questa cavalcatura. Verrà evocato anche lui quando salirai in sella.|n|nTutti gli incarichi sono condivisi con tutti i tuoi personaggi.|n|nPuoi usare il tasto destro del mouse sulla voce di un animale domestico per evocarlo manualmente.|n|nTieni presente che la maggior parte degli animali domestici terrestri non volerà con te e scomparirà quando decollerai. Inoltre, gli animali domestici volanti sono solitamente più lenti di te. Quindi potrebbero aver bisogno di un po' di tempo per raggiungerti.|n|nL'evocazione automatica degli animali domestici è attiva solo nei contenuti del mondo."
 L["PET_ASSIGNMENT_NONE"] = "Nessun animale domestico"
 L["PET_ASSIGNMENT_TITLE"] = "Assegna l'animale domestico alla cavalcatura"
---[[Translation missing --]]
---[[ L["PET_ASSIGNMENT_TOOLTIP_CURRENT"] = "Current assigned Pet:"--]] 
---[[Translation missing --]]
---[[ L["PET_ASSIGNMENT_TOOLTIP_LEFT"] = "|cffeda55fLeft click|r to open pet assignment."--]] 
---[[Translation missing --]]
---[[ L["PET_ASSIGNMENT_TOOLTIP_RIGHT"] = "|cffeda55fRight click|r to assign active pet to mount."--]] 
+L["PET_ASSIGNMENT_TOOLTIP_CURRENT"] = "Animale domestico attualmente assegnato:"
+L["PET_ASSIGNMENT_TOOLTIP_LEFT"] = "|cffeda55fFai clic con il tasto sinistro|r per aprire l'assegnazione dell'animale domestico."
+L["PET_ASSIGNMENT_TOOLTIP_RIGHT"] = "|cffeda55fFai clic con il tasto destro|r per assegnare l'animale domestico attivo alla cavalcatura."
 --[[Translation missing --]]
 --[[ L["Reset filters"] = "Reset filters"--]] 
 --[[Translation missing --]]
@@ -1906,18 +1879,15 @@ L["PET_ASSIGNMENT_TITLE"] = "Assegna l'animale domestico alla cavalcatura"
 --[[ L["STATS_TIP_USAGE_COUNT_HEAD"] = "Usage count"--]] 
 --[[Translation missing --]]
 --[[ L["SYNC_TARGET_TIP_FLAVOR"] = "Get ready for a mount off!"--]] 
---[[Translation missing --]]
---[[ L["SYNC_TARGET_TIP_TEXT"] = "Automatically select the mount of your current target."--]] 
---[[Translation missing --]]
---[[ L["SYNC_TARGET_TIP_TITLE"] = "Sync Journal with Target"--]] 
+L["SYNC_TARGET_TIP_TEXT"] = "Seleziona automaticamente la cavalcatura del tuo bersaglio attuale."
+L["SYNC_TARGET_TIP_TITLE"] = "Sincronizza il diario con la destinazione"
 --[[Translation missing --]]
 --[[ L["TOGGLE_COLOR"] = "Show next color variation"--]] 
 --[[Translation missing --]]
 --[[ L["Transform"] = "Transform"--]] 
 
     -- Settings
---[[Translation missing --]]
---[[ L["DISPLAY_ALL_SETTINGS"] = "Display all settings"--]] 
+L["DISPLAY_ALL_SETTINGS"] = "Visualizza tutte le impostazioni"
 --[[Translation missing --]]
 --[[ L[ [=[RESET_WINDOW_SIZE
 ]=] ] = "Reset journal size"--]] 
@@ -1963,89 +1933,56 @@ L["PET_ASSIGNMENT_TITLE"] = "Assegna l'animale domestico alla cavalcatura"
 --[[ L["SETTING_SEARCH_NOTES"] = "Search also in own notes"--]] 
 --[[Translation missing --]]
 --[[ L["SETTING_SHOW_DATA"] = "Show mount data in display"--]] 
---[[Translation missing --]]
---[[ L["SETTING_SHOW_FILTER_PROFILES_IN_MENU"] = "Show filter profiles in filter menu."--]] 
+L["SETTING_SHOW_FILTER_PROFILES_IN_MENU"] = "Mostra i profili dei filtri nel menu dei filtri."
 --[[Translation missing --]]
 --[[ L["SETTING_SHOW_RESIZE_EDGE"] = "Activate edge in bottom corner to resize window"--]] 
---[[Translation missing --]]
---[[ L["SETTING_SUMMONPREVIOUSPET"] = "Summon previous active pet again when dismounting."--]] 
+L["SETTING_SUMMONPREVIOUSPET"] = "Evoca nuovamente l'animale domestico attivo precedente quando scendi."
 --[[Translation missing --]]
 --[[ L["SETTING_TRACK_USAGE"] = "Track mount usage behavior on all characters"--]] 
 --[[Translation missing --]]
 --[[ L["SETTING_YCAMERA"] = "Unlock Y rotation with mouse in display"--]] 
 
     -- Families
---[[Translation missing --]]
---[[ L["Airplanes"] = "Airplanes"--]] 
---[[Translation missing --]]
---[[ L["Airships"] = "Airships"--]] 
---[[Translation missing --]]
---[[ L["Alpacas"] = "Alpacas"--]] 
---[[Translation missing --]]
---[[ L["Amphibian"] = "Amphibian"--]] 
+L["Airplanes"] = "Aerei"
+L["Airships"] = "Dirigibili"
+L["Alpacas"] = "Alpacas"
+L["Amphibian"] = "Anfibia"
 L["Animite"] = "Acaro dell'Animum"
---[[Translation missing --]]
---[[ L["Aqir Flyers"] = "Aqir Flyers"--]] 
---[[Translation missing --]]
---[[ L["Arachnids"] = "Arachnids"--]] 
+L["Aqir Flyers"] = "Aqir Volantini"
+L["Arachnids"] = "Aracnidi"
 L["Armoredon"] = "Coraceronte"
---[[Translation missing --]]
---[[ L["Assault Wagons"] = "Assault Wagons"--]] 
---[[Translation missing --]]
---[[ L["Basilisks"] = "Basilisks"--]] 
---[[Translation missing --]]
---[[ L["Bats"] = "Bats"--]] 
---[[Translation missing --]]
---[[ L["Bears"] = "Bears"--]] 
+L["Assault Wagons"] = "Carri d'assalto"
+L["Basilisks"] = "Basilischi"
+L["Bats"] = "Pipistrelli"
+L["Bears"] = "Orso"
 L["Beetle"] = "Scarabeo"
 L["Bipedal Cat"] = "Sognartigli"
---[[Translation missing --]]
---[[ L["Birds"] = "Birds"--]] 
---[[Translation missing --]]
---[[ L["Boars"] = "Boars"--]] 
---[[Translation missing --]]
---[[ L["Book"] = "Book"--]] 
---[[Translation missing --]]
---[[ L["Bovids"] = "Bovids"--]] 
---[[Translation missing --]]
---[[ L["Broom"] = "Broom"--]] 
---[[Translation missing --]]
---[[ L["Brutosaurs"] = "Brutosaurs"--]] 
---[[Translation missing --]]
---[[ L["Camels"] = "Camels"--]] 
---[[Translation missing --]]
---[[ L["Carnivorans"] = "Carnivorans"--]] 
---[[Translation missing --]]
---[[ L["Carpets"] = "Carpets"--]] 
---[[Translation missing --]]
---[[ L["Cats"] = "Cats"--]] 
---[[Translation missing --]]
---[[ L["Cervid"] = "Cervid"--]] 
+L["Birds"] = "Uccelli"
+L["Boars"] = "Cinghiali"
+L["Book"] = "Libro"
+L["Bovids"] = "Bovidi"
+L["Broom"] = "Scopa"
+L["Brutosaurs"] = "Brutosauri"
+L["Camels"] = "Cammelli"
+L["Carnivorans"] = "Carnivori"
+L["Carpets"] = "Tappeti"
+L["Cats"] = "Gattini"
+L["Cervid"] = "Cervide"
 --[[Translation missing --]]
 --[[ L["Chargers"] = "Chargers"--]] 
---[[Translation missing --]]
---[[ L["Chickens"] = "Chickens"--]] 
---[[Translation missing --]]
---[[ L["Clefthooves"] = "Clefthooves"--]] 
---[[Translation missing --]]
---[[ L["Cloud Serpents"] = "Cloud Serpents"--]] 
---[[Translation missing --]]
---[[ L["Core Hounds"] = "Core Hounds"--]] 
---[[Translation missing --]]
---[[ L["Crabs"] = "Crabs"--]] 
+L["Chickens"] = "Polli"
+L["Clefthooves"] = "Mammuceronte"
+L["Cloud Serpents"] = "Serpenti delle nuvole"
+L["Core Hounds"] = "Segugi del nucleo"
+L["Crabs"] = "Granchi"
 --[[Translation missing --]]
 --[[ L["Cranes"] = "Cranes"--]] 
---[[Translation missing --]]
---[[ L["Crawgs"] = "Crawgs"--]] 
+L["Crawgs"] = "Crawgs"
 L["Crocolisks"] = "Crocolisco"
---[[Translation missing --]]
---[[ L["Crows"] = "Crows"--]] 
---[[Translation missing --]]
---[[ L["Demonic Hounds"] = "Demonic Hounds"--]] 
---[[Translation missing --]]
---[[ L["Demonic Steeds"] = "Demonic Steeds"--]] 
---[[Translation missing --]]
---[[ L["Demons"] = "Demons"--]] 
+L["Crows"] = "Corvi"
+L["Demonic Hounds"] = "Segugi demoniaci"
+L["Demonic Steeds"] = "Destrieri demoniaci"
+L["Demons"] = "Demoni"
 --[[Translation missing --]]
 --[[ L["Devourer"] = "Devourer"--]] 
 --[[Translation missing --]]
@@ -2054,8 +1991,7 @@ L["Crocolisks"] = "Crocolisco"
 --[[ L["Dire Wolves"] = "Dire Wolves"--]] 
 --[[Translation missing --]]
 --[[ L["Direhorns"] = "Direhorns"--]] 
---[[Translation missing --]]
---[[ L["Discs"] = "Discs"--]] 
+L["Discs"] = "Disco"
 --[[Translation missing --]]
 --[[ L["Dragonhawks"] = "Dragonhawks"--]] 
 --[[Translation missing --]]
@@ -2284,10 +2220,8 @@ L["Stag"] = "Cervo"
 --[[ L["Tigers"] = "Tigers"--]] 
 --[[Translation missing --]]
 --[[ L["Toads"] = "Toads"--]] 
---[[Translation missing --]]
---[[ L["Turkey"] = "Turkey"--]] 
---[[Translation missing --]]
---[[ L["Turtles"] = "Turtles"--]] 
+L["Turkey"] = "Tacchino"
+L["Turtles"] = "Tartarughe"
 --[[Translation missing --]]
 --[[ L["Undead Drakes"] = "Undead Drakes"--]] 
 --[[Translation missing --]]
@@ -2306,8 +2240,7 @@ L["Void Flyer"] = "Volatile del Vuoto"
 --[[ L["Vombata"] = "Vombata"--]] 
 --[[Translation missing --]]
 --[[ L["Vulpin"] = "Vulpin"--]] 
---[[Translation missing --]]
---[[ L["Vultures"] = "Vultures"--]] 
+L["Vultures"] = "Avvoltoi"
 --[[Translation missing --]]
 --[[ L["War Wolves"] = "War Wolves"--]] 
 --[[Translation missing --]]
@@ -2332,53 +2265,33 @@ L["Worm"] = "Verme"
 
 
 elseif locale == "koKR" then
-    --[[Translation missing --]]
---[[ L["ANIMATION_FLY"] = "Fly"--]] 
---[[Translation missing --]]
---[[ L["ANIMATION_FLY_IDLE"] = "Fly Idle"--]] 
---[[Translation missing --]]
---[[ L["ANIMATION_RUN"] = "Run"--]] 
---[[Translation missing --]]
---[[ L["ANIMATION_STAND"] = "Stand"--]] 
---[[Translation missing --]]
---[[ L["ANIMATION_WALK"] = "ANIMATION_WALK"--]] 
---[[Translation missing --]]
---[[ L["ANIMATION_WALK_BACK"] = "Walk Backwards"--]] 
---[[Translation missing --]]
---[[ L["ASK_FAVORITE_PROFILE_NAME"] = "Enter Profile Name:"--]] 
---[[Translation missing --]]
---[[ L["AUTO_ROTATE"] = "Rotate automatically"--]] 
+    L["ANIMATION_FLY"] = "파리"
+L["ANIMATION_FLY_IDLE"] = "제자리에서 비행하다"
+L["ANIMATION_RUN"] = "달리다"
+L["ANIMATION_STAND"] = "서다"
+L["ANIMATION_WALK"] = "가다"
+L["ANIMATION_WALK_BACK"] = "뒤로 물러나다"
+L["ASK_FAVORITE_PROFILE_NAME"] = "프로필 이름을 입력하세요:"
+L["AUTO_ROTATE"] = "자동으로 회전"
 L["Black Market"] = "암시장"
---[[Translation missing --]]
---[[ L["CLICK_TO_SHOW_LINK"] = "Click to Show Link"--]] 
---[[Translation missing --]]
---[[ L["COMPARTMENT_TOOLTIP"] = [=[|cffeda55fLeft-Click|r to toggle showing the mount collection.
-|cffeda55fRight-Click|r to open addon options.]=]--]] 
---[[Translation missing --]]
---[[ L["CONFIRM_FAVORITE_PROFILE_DELETION"] = [=[Are you sure you want to delete the profile "%s"?
-All current character assignments will be reset to the default profile "%s".]=]--]] 
+L["CLICK_TO_SHOW_LINK"] = "링크를 표시하려면 클릭하세요"
+L["COMPARTMENT_TOOLTIP"] = "|cffeda55f마운트 컬렉션을 표시하려면 왼쪽 클릭|r을 누르세요. |cffeda55f마우스 오른쪽 클릭|r을 눌러 애드온 옵션을 여세요."
+L["CONFIRM_FAVORITE_PROFILE_DELETION"] = "\"%s\" 프로필을 삭제하시겠습니까? 현재 모든 캐릭터 할당이 기본 프로필 \"%s\"로 재설정됩니다."
 L["DRESSUP_LABEL"] = "도감"
---[[Translation missing --]]
---[[ L["EVENT_PLUNDERSTORM"] = "Plunderstorm"--]] 
+L["EVENT_PLUNDERSTORM"] = "약탈폭풍"
 L["EVENT_SCARAB"] = "스카라베의 부름"
 L["EVENT_SECRETS"] = "아제로스의 비밀"
 L["Family"] = "종류"
---[[Translation missing --]]
---[[ L["FAVOR_AUTO"] = "Add new mounts automatically"--]] 
+L["FAVOR_AUTO"] = "새로운 마운트를 자동으로 추가합니다"
 L["FAVOR_DISPLAYED"] = "모두 표시"
 L["FAVORITE_ACCOUNT_PROFILE"] = "계정"
 L["FAVORITE_PROFILE"] = "윤곽"
 L["FILTER_ONLY"] = "오직"
---[[Translation missing --]]
---[[ L["FILTER_ONLY_LATEST"] = "Only latest additions"--]] 
---[[Translation missing --]]
---[[ L["FILTER_PROFILE"] = "Profile"--]] 
---[[Translation missing --]]
---[[ L["FILTER_PROFILE_TOOLTIP_REMIX_LEGION"] = "You can use this prepared profile for Legion: Remix."--]] 
---[[Translation missing --]]
---[[ L["FILTER_PROFILE_TOOLTIP_TEXT"] = "Quickly load your predefined filter and search settings.|n|cffeda55fLeft-Click|r to load filter profile.|n|cffeda55fRight-Click|r to save filter profile."--]] 
---[[Translation missing --]]
---[[ L["FILTER_PROFILE_TOOLTIP_TITLE"] = "Filter Profiles"--]] 
+L["FILTER_ONLY_LATEST"] = "최신 추가 사항만"
+L["FILTER_PROFILE"] = "프로필"
+L["FILTER_PROFILE_TOOLTIP_REMIX_LEGION"] = "준비된 프로필을 Legion: Remix에 사용할 수 있습니다."
+L["FILTER_PROFILE_TOOLTIP_TEXT"] = "미리 정의된 필터와 검색 설정을 빠르게 불러옵니다.|n|cffeda55f필터 프로필을 불러오려면 왼쪽 클릭|r을 클릭하세요.|n|cffeda55f필터 프로필을 저장하려면 오른쪽 클릭|r을 클릭하세요."
+L["FILTER_PROFILE_TOOLTIP_TITLE"] = "필터 프로필."
 L["FILTER_RETIRED"] = "더 이상 사용할 수 없습니다"
 L["FILTER_SECRET"] = "게임에 의해 숨겨짐"
 L["Hidden"] = "숨김"
@@ -2389,103 +2302,70 @@ L["LINK_WOWHEAD"] = "링크로 Wowhead"
 L["Mite"] = "매우 조그만 것"
 L["Only tradable"] = "교환가능"
 L["Passenger"] = "승객"
---[[Translation missing --]]
---[[ L["PET_ASSIGNMENT_INFO"] = "You can assign a pet to this mount. It's going to be summoned as well, when you mount up.|n|nAll assignments are shared with all your characters.|n|nYou can use right-click on a pet entry to summon it manually.|n|nPlease be aware that most ground pets won't fly with you and just disappear when you take off. Also, flying pets are usually slower than you. So they might need some time to catch up to you.|n|nAuto summoning pets is only active in world content."--]] 
+L["PET_ASSIGNMENT_INFO"] = "이 탈것에 애완동물을 배정할 수 있습니다. 탑승 시 애완동물도 소환됩니다.|n|n모든 배정은 모든 캐릭터와 공유됩니다.|n|n펫 항목을 마우스 오른쪽 버튼으로 클릭하여 수동으로 소환할 수 있습니다.|n|n대부분의 지상 애완동물은 플레이어와 함께 날지 않고, 플레이어가 이륙하면 사라집니다. 또한, 비행 애완동물은 일반적으로 플레이어보다 느리기 때문에 플레이어를 따라잡는 데 시간이 걸릴 수 있습니다.|n|n펫 자동 소환은 월드 콘텐츠에서만 활성화됩니다."
 L["PET_ASSIGNMENT_NONE"] = "애완동물이 없는"
 L["PET_ASSIGNMENT_TITLE"] = "애완동물을 마운트에 할당하세요"
---[[Translation missing --]]
---[[ L["PET_ASSIGNMENT_TOOLTIP_CURRENT"] = "Current assigned Pet:"--]] 
---[[Translation missing --]]
---[[ L["PET_ASSIGNMENT_TOOLTIP_LEFT"] = "|cffeda55fLeft click|r to open pet assignment."--]] 
---[[Translation missing --]]
---[[ L["PET_ASSIGNMENT_TOOLTIP_RIGHT"] = "|cffeda55fRight click|r to assign active pet to mount."--]] 
+L["PET_ASSIGNMENT_TOOLTIP_CURRENT"] = "현재 배정된 반려동물:"
+L["PET_ASSIGNMENT_TOOLTIP_LEFT"] = "|cffeda55f반려동물 과제를 열려면 왼쪽 클릭|r을 클릭하세요."
+L["PET_ASSIGNMENT_TOOLTIP_RIGHT"] = "|cffeda55f마우스 오른쪽 버튼 클릭|r을 눌러 활성화된 애완동물을 탈것에 할당하세요."
 L["Reset filters"] = "필터 초기화"
 L["ROTATE_DOWN"] = "아래로 회전"
 L["ROTATE_UP"] = "위로 회전"
 L["SORT_BY_FAMILY"] = "종류"
 L["SORT_BY_LAST_USAGE"] = "마지막 사용"
---[[Translation missing --]]
---[[ L["SORT_BY_LEARNED_DATE"] = "Date of receipt"--]] 
+L["SORT_BY_LEARNED_DATE"] = "수령일"
 L["SORT_BY_TRAVEL_DISTANCE"] = "이동 거리"
 L["SORT_BY_TRAVEL_DURATION"] = "이동 시간"
 L["SORT_BY_USAGE_COUNT"] = "사용 횟수"
 L["SORT_FAVORITES_FIRST"] = "즐겨찾기 먼저"
 L["SORT_REVERSE"] = "역순 정렬"
---[[Translation missing --]]
---[[ L["SORT_UNOWNED_BOTTOM"] = "Unowned at Bottom"--]] 
---[[Translation missing --]]
---[[ L["SORT_UNUSABLE_BOTTOM"] = "Unusable after Usable"--]] 
---[[Translation missing --]]
---[[ L["SPECIAL_TIP"] = "Starts the special animation of your mount in game."--]] 
---[[Translation missing --]]
---[[ L["STATS_TIP_CUSTOMIZATION_COUNT_HEAD"] = "Count of collected customization options"--]] 
+L["SORT_UNOWNED_BOTTOM"] = "아래에서 수신되지 않음"
+L["SORT_UNUSABLE_BOTTOM"] = "사용 가능 후 사용 불가능"
+L["SPECIAL_TIP"] = "게임에서 탈것의 특별 애니메이션을 시작합니다."
+L["STATS_TIP_CUSTOMIZATION_COUNT_HEAD"] = "수집된 사용자 정의 옵션 수"
 L["STATS_TIP_LEARNED_DATE_HEAD"] = "보유일"
---[[Translation missing --]]
---[[ L["STATS_TIP_RARITY_DESCRIPTION"] = "% of characters who own this mount"--]] 
+L["STATS_TIP_RARITY_DESCRIPTION"] = "이 마운트를 소유한 캐릭터의 %"
 L["STATS_TIP_RARITY_HEAD"] = "품질"
 L["STATS_TIP_TRAVEL_DISTANCE_HEAD"] = "이동 거리"
---[[Translation missing --]]
---[[ L["STATS_TIP_TRAVEL_TIME_DAYS"] = "in days"--]] 
+L["STATS_TIP_TRAVEL_TIME_DAYS"] = "일 단위로 "
 L["STATS_TIP_TRAVEL_TIME_HEAD"] = "이동 시간"
 L["STATS_TIP_TRAVEL_TIME_TEXT"] = "시간:분:초"
 L["STATS_TIP_USAGE_COUNT_HEAD"] = "사용 횟수"
---[[Translation missing --]]
---[[ L["SYNC_TARGET_TIP_FLAVOR"] = "Get ready for a mount off!"--]] 
---[[Translation missing --]]
---[[ L["SYNC_TARGET_TIP_TEXT"] = "Automatically select the mount of your current target."--]] 
---[[Translation missing --]]
---[[ L["SYNC_TARGET_TIP_TITLE"] = "Sync Journal with Target"--]] 
---[[Translation missing --]]
---[[ L["TOGGLE_COLOR"] = "Show next color variation"--]] 
+L["SYNC_TARGET_TIP_FLAVOR"] = "여러분의 마운트를 자랑할 준비를 하세요!"
+L["SYNC_TARGET_TIP_TEXT"] = "현재 대상의 마운트를 자동으로 선택합니다."
+L["SYNC_TARGET_TIP_TITLE"] = "대상과 저널 동기화"
+L["TOGGLE_COLOR"] = "다음 색상 변형 표시"
 L["Transform"] = "변환"
 
     -- Settings
 L["DISPLAY_ALL_SETTINGS"] = "모든 설정 표시"
---[[Translation missing --]]
---[[ L[ [=[RESET_WINDOW_SIZE
-]=] ] = "Reset journal size"--]] 
---[[Translation missing --]]
---[[ L["SETTING_ABOUT_AUTHOR"] = "Author"--]] 
+L[ [=[RESET_WINDOW_SIZE
+]=] ] = "저널 크기 재설정"
+L["SETTING_ABOUT_AUTHOR"] = "작가"
 L["SETTING_ACHIEVEMENT_POINTS"] = "업적 점수 표시"
---[[Translation missing --]]
---[[ L["SETTING_COLOR_NAMES"] = "Colorize names in list based on rarity"--]] 
+L["SETTING_COLOR_NAMES"] = "희귀도에 따라 목록의 이름에 색상 지정"
 L["SETTING_COMPACT_LIST"] = "간소한 목록"
 L["SETTING_CURSOR_KEYS"] = "위 아래 화살표 키로 목록 탐색하기"
---[[Translation missing --]]
---[[ L["SETTING_DISPLAY_BACKGROUND"] = "Change background color in display"--]] 
+L["SETTING_DISPLAY_BACKGROUND"] = "디스플레이의 배경색 변경"
 L["SETTING_HEAD_ABOUT"] = "정보"
---[[Translation missing --]]
---[[ L["SETTING_HEAD_BEHAVIOUR"] = "Behavior"--]] 
+L["SETTING_HEAD_BEHAVIOUR"] = "행동"
 L["SETTING_MOUNT_COUNT"] = "개인 탈것 수 표시"
---[[Translation missing --]]
---[[ L["SETTING_MOUNTSPECIAL_BUTTON"] = "Show /mountspecial button"--]] 
---[[Translation missing --]]
---[[ L["SETTING_MOVE_EQUIPMENT_SLOT"] = "Move equipment slot"--]] 
---[[Translation missing --]]
---[[ L["SETTING_MOVE_EQUIPMENT_SLOT_OPTION_DISPLAY"] = "inside display"--]] 
---[[Translation missing --]]
---[[ L["SETTING_MOVE_EQUIPMENT_SLOT_OPTION_TOP"] = "within top bar"--]] 
+L["SETTING_MOUNTSPECIAL_BUTTON"] = "/mountspecial 버튼 표시"
+L["SETTING_MOVE_EQUIPMENT_SLOT"] = "장비 이동 슬롯"
+L["SETTING_MOVE_EQUIPMENT_SLOT_OPTION_DISPLAY"] = "내부 디스플레이"
+L["SETTING_MOVE_EQUIPMENT_SLOT_OPTION_TOP"] = "상단 바 내부"
 L["SETTING_PERSONAL_FILTER"] = "이 캐릭터에만 필터 적용"
---[[Translation missing --]]
---[[ L["SETTING_PERSONAL_HIDDEN_MOUNTS"] = "Apply hidden mounts only to this character"--]] 
+L["SETTING_PERSONAL_HIDDEN_MOUNTS"] = "숨겨진 마운트를 이 캐릭터에만 적용합니다."
 L["SETTING_PERSONAL_UI"] = "이 캐릭터에게만 인터페이스 설정 적용"
 L["SETTING_PREVIEW_LINK"] = "탈것 미리보기에 수집품 버튼 표시"
---[[Translation missing --]]
---[[ L["SETTING_SEARCH_FAMILY_NAME"] = "Search also by family name"--]] 
---[[Translation missing --]]
---[[ L["SETTING_SEARCH_MORE"] = "Search also in description text"--]] 
---[[Translation missing --]]
---[[ L["SETTING_SEARCH_NOTES"] = "Search also in own notes"--]] 
---[[Translation missing --]]
---[[ L["SETTING_SHOW_DATA"] = "Show mount data in display"--]] 
---[[Translation missing --]]
---[[ L["SETTING_SHOW_FILTER_PROFILES_IN_MENU"] = "Show filter profiles in filter menu."--]] 
---[[Translation missing --]]
---[[ L["SETTING_SHOW_RESIZE_EDGE"] = "Activate edge in bottom corner to resize window"--]] 
---[[Translation missing --]]
---[[ L["SETTING_SUMMONPREVIOUSPET"] = "Summon previous active pet again when dismounting."--]] 
---[[Translation missing --]]
---[[ L["SETTING_TRACK_USAGE"] = "Track mount usage behavior on all characters"--]] 
+L["SETTING_SEARCH_FAMILY_NAME"] = "가족으로도 검색하세요"
+L["SETTING_SEARCH_MORE"] = "설명 텍스트에서도 검색"
+L["SETTING_SEARCH_NOTES"] = "자신의 노트에서도 검색"
+L["SETTING_SHOW_DATA"] = "디스플레이에 마운트 데이터 표시"
+L["SETTING_SHOW_FILTER_PROFILES_IN_MENU"] = "필터 메뉴에서 필터 프로필을 표시합니다."
+L["SETTING_SHOW_RESIZE_EDGE"] = "창 크기를 조정하려면 하단 모서리의 가장자리를 활성화하세요."
+L["SETTING_SUMMONPREVIOUSPET"] = "내릴 때 이전에 활성화되어 있던 애완동물을 다시 소환합니다."
+L["SETTING_TRACK_USAGE"] = "모든 캐릭터의 마운트 사용 동작 추적"
 L["SETTING_YCAMERA"] = "표시 화면에서 마우스로 Y 축 회전 잠금 해제"
 
     -- Families
@@ -2603,8 +2483,7 @@ L["Others"] = "기타"
 L["Ottuk"] = "오투크"
 L["Owl"] = "올빼미"
 L["Owlbear"] = "올빼미곰의"
---[[Translation missing --]]
---[[ L["Ox"] = "Ox"--]] 
+L["Ox"] = "황소"
 L["Pandaren Phoenixes"] = "판다렌 불사조"
 L["Parrots"] = "앵무새"
 L["Peafowl"] = "공작새"
@@ -2632,8 +2511,7 @@ L["Sabers"] = "표범"
 L["Scorpions"] = "전갈"
 L["Sea Serpents"] = "바다뱀"
 L["Seahorses"] = "해마"
---[[Translation missing --]]
---[[ L["Seat"] = "Seat"--]] 
+L["Seat"] = "앉아"
 L["Silithids"] = "실리시드"
 L["Skyrazor"] = "하늘발톱"
 L["Slateback"] = "점판등"
@@ -2652,12 +2530,10 @@ L["Talbuks"] = "탈부크"
 L["Tallstriders"] = "타조"
 L["Talonbirds"] = "탈론 버드"
 L["Tauralus"] = "타우랄러스"
---[[Translation missing --]]
---[[ L["Thunder Lizard"] = "Thunder Lizard"--]] 
+L["Thunder Lizard"] = "천둥도마뱀"
 L["Tigers"] = "호랑이"
 L["Toads"] = "두꺼비"
---[[Translation missing --]]
---[[ L["Turkey"] = "Turkey"--]] 
+L["Turkey"] = "칠면조"
 L["Turtles"] = "거북이"
 L["Undead Drakes"] = "언데드 비룡"
 L["Undead Steeds"] = "언데드 군마"
@@ -2707,14 +2583,10 @@ L["FAVORITE_ACCOUNT_PROFILE"] = "Conta"
 L["FAVORITE_PROFILE"] = "Perfil"
 L["FILTER_ONLY"] = "só esse"
 L["FILTER_ONLY_LATEST"] = "Apenas adições mais recentes"
---[[Translation missing --]]
---[[ L["FILTER_PROFILE"] = "Profile"--]] 
---[[Translation missing --]]
---[[ L["FILTER_PROFILE_TOOLTIP_REMIX_LEGION"] = "You can use this prepared profile for Legion: Remix."--]] 
---[[Translation missing --]]
---[[ L["FILTER_PROFILE_TOOLTIP_TEXT"] = "Quickly load your predefined filter and search settings.|n|cffeda55fLeft-Click|r to load filter profile.|n|cffeda55fRight-Click|r to save filter profile."--]] 
---[[Translation missing --]]
---[[ L["FILTER_PROFILE_TOOLTIP_TITLE"] = "Filter Profiles"--]] 
+L["FILTER_PROFILE"] = "Perfis"
+L["FILTER_PROFILE_TOOLTIP_REMIX_LEGION"] = "Você pode usar este perfil preparado para Legion: Remix."
+L["FILTER_PROFILE_TOOLTIP_TEXT"] = "Carregue rapidamente seu filtro predefinido e configurações de pesquisa.|n|cffeda55fClique com o botão esquerdo|r para carregar o perfil do filtro.|n|cffeda55fClique com o botão direito|r para salvar o perfil do filtro."
+L["FILTER_PROFILE_TOOLTIP_TITLE"] = "Perfis de filtro"
 L["FILTER_RETIRED"] = "Indisponível"
 L["FILTER_SECRET"] = "Oculto pelo jogo"
 L["Hidden"] = "Oculto"
@@ -2785,8 +2657,8 @@ L["SETTING_SEARCH_FAMILY_NAME"] = "Pesquisar também por família"
 L["SETTING_SEARCH_MORE"] = "Pesquisar também no texto de descrição"
 L["SETTING_SEARCH_NOTES"] = "Pesquisar também nas próprias notas"
 L["SETTING_SHOW_DATA"] = "Exibir dados da montaria"
---[[Translation missing --]]
---[[ L["SETTING_SHOW_FILTER_PROFILES_IN_MENU"] = "Show filter profiles in filter menu."--]] 
+L["SETTING_SHOW_FILTER_PROFILES_IN_MENU"] = [=[Mostrar perfis de filtro no menu de filtros.
+]=]
 L["SETTING_SHOW_RESIZE_EDGE"] = "Ativar a borda no canto inferior para redimensionar a janela"
 L["SETTING_SUMMONPREVIOUSPET"] = "Invoca o mascote ativo anterior novamente ao desmontar."
 L["SETTING_TRACK_USAGE"] = "Rastreie o comportamento de uso da montaria em todos os personagens"
@@ -2957,8 +2829,7 @@ L["Tauralus"] = "Tauralus"
 L["Thunder Lizard"] = "Lagartos Trovejantes"
 L["Tigers"] = "Tigres"
 L["Toads"] = "Sapos"
---[[Translation missing --]]
---[[ L["Turkey"] = "Turkey"--]] 
+L["Turkey"] = "Peru"
 L["Turtles"] = "Tartarugas"
 L["Undead Drakes"] = "Dracos Mortos-vivos"
 L["Undead Steeds"] = "Corcéis Mortos-vivos"
@@ -2989,7 +2860,7 @@ elseif locale == "ruRU" then
 L["ANIMATION_FLY_IDLE"] = "Полет на месте"
 L["ANIMATION_RUN"] = "Бег"
 L["ANIMATION_STAND"] = "Стойка"
-L["ANIMATION_WALK"] = "Ходьба"
+L["ANIMATION_WALK"] = "ANIMATION_WALK"
 L["ANIMATION_WALK_BACK"] = "Ходьба назад"
 L["ASK_FAVORITE_PROFILE_NAME"] = "Введите имя профиля:"
 L["AUTO_ROTATE"] = "Вращать автоматически"
@@ -3008,14 +2879,10 @@ L["FAVORITE_ACCOUNT_PROFILE"] = "Аккаунт"
 L["FAVORITE_PROFILE"] = "Профиль"
 L["FILTER_ONLY"] = "только"
 L["FILTER_ONLY_LATEST"] = "Только последний патч"
---[[Translation missing --]]
---[[ L["FILTER_PROFILE"] = "Profile"--]] 
---[[Translation missing --]]
---[[ L["FILTER_PROFILE_TOOLTIP_REMIX_LEGION"] = "You can use this prepared profile for Legion: Remix."--]] 
---[[Translation missing --]]
---[[ L["FILTER_PROFILE_TOOLTIP_TEXT"] = "Quickly load your predefined filter and search settings.|n|cffeda55fLeft-Click|r to load filter profile.|n|cffeda55fRight-Click|r to save filter profile."--]] 
---[[Translation missing --]]
---[[ L["FILTER_PROFILE_TOOLTIP_TITLE"] = "Filter Profiles"--]] 
+L["FILTER_PROFILE"] = "Профиль"
+L["FILTER_PROFILE_TOOLTIP_REMIX_LEGION"] = "Вы можете использовать этот профиль подготовленный для Legion: Remix."
+L["FILTER_PROFILE_TOOLTIP_TEXT"] = "Быстрая загрузка предопределенных фильтров и настроек поиска.|n|cffeda55fЩелкните левой кнопкой мыши|r, чтобы загрузить профиль фильтра.|n|cffeda55fЩелкните правой кнопкой мыши|r, чтобы сохранить профиль фильтра."
+L["FILTER_PROFILE_TOOLTIP_TITLE"] = "Фильтрация Профилей"
 L["FILTER_RETIRED"] = "Более не доступно"
 L["FILTER_SECRET"] = "Скрытые игрой"
 L["Hidden"] = "Скрытые"
@@ -3026,16 +2893,12 @@ L["LINK_WOWHEAD"] = "Ссылка на Wowhead"
 L["Mite"] = "Клещи"
 L["Only tradable"] = "Только передающиеся"
 L["Passenger"] = "Пассажирские"
---[[Translation missing --]]
---[[ L["PET_ASSIGNMENT_INFO"] = "You can assign a pet to this mount. It's going to be summoned as well, when you mount up.|n|nAll assignments are shared with all your characters.|n|nYou can use right-click on a pet entry to summon it manually.|n|nPlease be aware that most ground pets won't fly with you and just disappear when you take off. Also, flying pets are usually slower than you. So they might need some time to catch up to you.|n|nAuto summoning pets is only active in world content."--]] 
+L["PET_ASSIGNMENT_INFO"] = "Вы можете назначить питомца для этого средства передвижения. Он также будет призван, когда вы призовете средство передвижения.|n|nВсе назначения общие для всех ваших персонажей.|n|nВы можете щёлкнуть правой кнопкой мыши по названию питомца, чтобы призвать его вручную.|n|nОбратите внимание, что большинство наземных питомцев не будут летать вместе с вами и просто исчезнут, когда вы взлетите. Кроме того, летающие питомцы обычно медленнее вас. Поэтому им может потребоваться некоторое время, чтобы догнать вас.|n|nАвтоматический призыв питомцев активен только в мировом контенте."
 L["PET_ASSIGNMENT_NONE"] = "Без питомца"
 L["PET_ASSIGNMENT_TITLE"] = "Назначить питомца для средства передвижения"
---[[Translation missing --]]
---[[ L["PET_ASSIGNMENT_TOOLTIP_CURRENT"] = "Current assigned Pet:"--]] 
---[[Translation missing --]]
---[[ L["PET_ASSIGNMENT_TOOLTIP_LEFT"] = "|cffeda55fLeft click|r to open pet assignment."--]] 
---[[Translation missing --]]
---[[ L["PET_ASSIGNMENT_TOOLTIP_RIGHT"] = "|cffeda55fRight click|r to assign active pet to mount."--]] 
+L["PET_ASSIGNMENT_TOOLTIP_CURRENT"] = "Текущий назначенный питомец:"
+L["PET_ASSIGNMENT_TOOLTIP_LEFT"] = "|cffeda55fЩелкните левой кнопкой мыши|r, чтобы открыть назначение питомца."
+L["PET_ASSIGNMENT_TOOLTIP_RIGHT"] = "|cffeda55fЩелкните правой кнопкой мыши|r, чтобы назначить активного питомца для средства передвижения."
 L["Reset filters"] = "Сбросить фильтры"
 L["ROTATE_DOWN"] = "Вращение вниз"
 L["ROTATE_UP"] = "Вращение вверх"
@@ -3055,17 +2918,13 @@ L["STATS_TIP_LEARNED_DATE_HEAD"] = "Дата получения"
 L["STATS_TIP_RARITY_DESCRIPTION"] = "% персонажей у которых есть это средство передвижения"
 L["STATS_TIP_RARITY_HEAD"] = "Редкость"
 L["STATS_TIP_TRAVEL_DISTANCE_HEAD"] = "Преодоленное расстояние"
---[[Translation missing --]]
---[[ L["STATS_TIP_TRAVEL_TIME_DAYS"] = "in days"--]] 
+L["STATS_TIP_TRAVEL_TIME_DAYS"] = "в днях"
 L["STATS_TIP_TRAVEL_TIME_HEAD"] = "Продолжительность поездки"
 L["STATS_TIP_TRAVEL_TIME_TEXT"] = "В часах:минутах:секундах"
 L["STATS_TIP_USAGE_COUNT_HEAD"] = "Количество использований"
---[[Translation missing --]]
---[[ L["SYNC_TARGET_TIP_FLAVOR"] = "Get ready for a mount off!"--]] 
---[[Translation missing --]]
---[[ L["SYNC_TARGET_TIP_TEXT"] = "Automatically select the mount of your current target."--]] 
---[[Translation missing --]]
---[[ L["SYNC_TARGET_TIP_TITLE"] = "Sync Journal with Target"--]] 
+L["SYNC_TARGET_TIP_FLAVOR"] = "Приготовься к демонстрации средств передвижения!"
+L["SYNC_TARGET_TIP_TEXT"] = "Автоматически выбирать средство передвижения как у вашей текущей цели."
+L["SYNC_TARGET_TIP_TITLE"] = "Синхронизировать журнал с целью"
 L["TOGGLE_COLOR"] = "Показать следующую вариацию цвета"
 L["Transform"] = "Трансформация"
 
@@ -3090,17 +2949,13 @@ L["SETTING_PERSONAL_FILTER"] = "Применить фильтры только �
 L["SETTING_PERSONAL_HIDDEN_MOUNTS"] = "Применить скрытый транспорт только для этого персонажа"
 L["SETTING_PERSONAL_UI"] = "Применить настройки интерфейса только для этого персонажа"
 L["SETTING_PREVIEW_LINK"] = "Показать кнопку коллекции на экрана обзора транспорта"
---[[Translation missing --]]
---[[ L["SETTING_SEARCH_FAMILY_NAME"] = "Search also by family name"--]] 
+L["SETTING_SEARCH_FAMILY_NAME"] = "Искать так же по названию семейства"
 L["SETTING_SEARCH_MORE"] = "Искать также в описании транспорта"
 L["SETTING_SEARCH_NOTES"] = "Искать также в собственных заметках"
---[[Translation missing --]]
---[[ L["SETTING_SHOW_DATA"] = "Show mount data in display"--]] 
---[[Translation missing --]]
---[[ L["SETTING_SHOW_FILTER_PROFILES_IN_MENU"] = "Show filter profiles in filter menu."--]] 
+L["SETTING_SHOW_DATA"] = "Показывать информацию о средстве передвижения на экране"
+L["SETTING_SHOW_FILTER_PROFILES_IN_MENU"] = "Показывать фильтрацию профилей в меню фильтров."
 L["SETTING_SHOW_RESIZE_EDGE"] = "Активация края в нижнем углу, чтобы изменять размер окна"
---[[Translation missing --]]
---[[ L["SETTING_SUMMONPREVIOUSPET"] = "Summon previous active pet again when dismounting."--]] 
+L["SETTING_SUMMONPREVIOUSPET"] = "Призывать при спешивании предыдущего активного питомца."
 L["SETTING_TRACK_USAGE"] = "Отслеживание использования транспорта для всех персонажей"
 L["SETTING_YCAMERA"] = "Разблокировать вертикальное вращение транспорта с помощью мыши"
 
@@ -3269,8 +3124,7 @@ L["Tauralus"] = "Тауралы"
 L["Thunder Lizard"] = "Громоспины"
 L["Tigers"] = "Тигры"
 L["Toads"] = "Жабы"
---[[Translation missing --]]
---[[ L["Turkey"] = "Turkey"--]] 
+L["Turkey"] = "Индейка"
 L["Turtles"] = "Черепахи"
 L["Undead Drakes"] = "Драконы Нежить"
 L["Undead Steeds"] = "Скакуны Нежить"

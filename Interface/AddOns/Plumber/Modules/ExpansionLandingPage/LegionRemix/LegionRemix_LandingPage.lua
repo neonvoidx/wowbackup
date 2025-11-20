@@ -107,10 +107,11 @@ local WorldBosses = {
     [42269] = {uiMapID = 634, achievementID = 42610},   --The Soultakers, Stormheim
     [42270] = {uiMapID = 634, achievementID = 42536},   --Nithogg, Scourge of the Skies, Stormheim
 
-    [46947] = {uiMapID = 646, achievementID = 42643},   --Brutallus, Broken Shore
-    [46948] = {uiMapID = 646, achievementID = 42629},   --Malificus, Broken Shore
-    [46945] = {uiMapID = 646, achievementID = 42530},   --Si'vash, Broken Shore
-    [47061] = {uiMapID = 646, achievementID = 42662},   --Apocron, Broken Shore
+    --Broken Shore bosses use new questIDs
+    [91790] = {uiMapID = 646, achievementID = 42643},   --Brutallus, Broken Shore
+    [91791] = {uiMapID = 646, achievementID = 42629},   --Malificus, Broken Shore
+    [91792] = {uiMapID = 646, achievementID = 42530},   --Si'vash, Broken Shore
+    [91789] = {uiMapID = 646, achievementID = 42662},   --Apocron, Broken Shore
 };
 
 local IgnoredQuests = {
@@ -153,25 +154,23 @@ do  --LeftFrame: NextTraitFrame
 
 
         self.Title:ClearAllPoints();
-        self.RankText:ClearAllPoints();
         self.UnlockText:ClearAllPoints();
 
-        if nextUpgradeInfo.nextRank then
+        if nextUpgradeInfo.traitName then
             --From top to bottom: X to unlock, Rank 1, Artifact Trait
             self.Title:SetText(nextUpgradeInfo.traitName);
-            self.RankText:SetText(L["Rank Format"]:format(nextUpgradeInfo.nextRank));
             self.UnlockText:SetText(nextUpgradeInfo.line1);
             if nextUpgradeInfo.isLocked then    --Requires Lv.80
 
             end
             self.UnlockText:SetPoint("TOP", self.ProgressDisplay, "BOTTOM", 0, -24);
-            --self.RankText:SetPoint("TOP", self.UnlockText, "BOTTOM", 0, -6);
-            --self.Title:SetPoint("TOP", self.RankText, "BOTTOM", 0, -6);
             self.Title:SetPoint("TOP", self.UnlockText, "BOTTOM", 0, -6);
             self.Title:SetText(nextUpgradeInfo.line2);
+            if nextUpgradeInfo.line2 == "" then
+                self:RequestUpdate();
+            end
         else
             self.Title:SetText(L["Fully Upgraded"]);
-            self.RankText:SetText("");
             self.UnlockText:SetText("");
             self.Title:SetPoint("TOP", self.ProgressDisplay, "BOTTOM", 0, -24);
         end
@@ -284,7 +283,7 @@ do  --LeftFrame: NextTraitFrame
         local fs, r, g, b;
         local fontStrings = {};
 
-        for i = 1, 3 do
+        for i = 1, 2 do
             fs = f:CreateFontString(nil, "OVERLAY", "GameFontNormal");
             fontStrings[i] = fs;
             fs:SetWidth(textWidth);
@@ -312,8 +311,7 @@ do  --LeftFrame: NextTraitFrame
         end
 
         f.Title = fontStrings[1];
-        f.RankText = fontStrings[2];
-        f.UnlockText = fontStrings[3];
+        f.UnlockText = fontStrings[2];
 
         local frameHeight = paddingV + 1.25 * ProgressDisplay:GetHeight() + firstTextToProgressBar + 14 + 6 + 12 + paddingV + 8;
         f:SetSize(256, frameHeight);
@@ -1109,6 +1107,13 @@ do
 
                 C_QuestLine.GetQuestLineQuests(QUESTLINE_ID);
                 CallbackRegistry:Trigger("LandingPage.SetEncounterTabInfo", EncounterTabInfo);
+
+
+                --Set EncounterJournal epansion to Legion
+                hooksecurefunc(C_EncounterJournal, "InitalizeSelectedTier", function()
+                    --This API reset selected tier to Current Season, see EncounterJournal_OnShow
+                    EJ_SelectTier(7)
+                end);
             end
         end
     end);

@@ -179,7 +179,12 @@ CONDITIONS["class"] = {
     menu = function ()
         local out = { }
         for _, v in ipairs(CLASS_SORT_ORDER) do
-            table.insert(out, { val = "class:" .. v})
+            local name = LOCALIZED_CLASS_NAMES_FEMALE[v]
+            local atlas = GetClassAtlas(v)
+            if atlas then
+                name = string.format("|A:%s:18:18|a %s", atlas, name)
+            end
+            table.insert(out, { val = "class:" .. v, text=name, sortKey=v })
         end
         return out
     end,
@@ -294,14 +299,13 @@ CONDITIONS["cursor"] = {
 
 --- Note that this diverges from the macro [dead] defaults to "target".
 CONDITIONS["dead"] = {
-    -- name = DEAD,
     handler =
         function (cond, context)
             return UnitIsDead(context.rule.unit or "player")
         end
 }
 
--- https://wow.gamepedia.com/DifficultyID
+-- https://warcraft.wiki.gg/wiki/DifficultyID
 CONDITIONS["difficulty"] = {
     name = LFG_LIST_DIFFICULTY,
     toDisplay =
@@ -432,6 +436,14 @@ CONDITIONS["encounter"] = {
 }
 
 CONDITIONS["equipped"] = {
+    name = L.LM_ITEM_EQUIPPED,
+    textentry = true,
+    toDisplay =
+        function (v)
+            if v then
+                return C_Item.GetItemName(v) or v
+            end
+        end,
     handler =
         function (cond, context, v)
             if not v then
@@ -465,6 +477,19 @@ CONDITIONS["exists"] = {
 
 -- Check for an extraactionbutton, optionally with a specific spell id
 CONDITIONS["extra"] = {
+    name = BINDING_NAME_EXTRAACTIONBUTTON1,
+    textentry = true,
+    toDisplay =
+        function (v)
+            if v then
+                local name = C_Spell.GetSpellName(v)
+                if name then
+                    return string.format("%s (%d)", name, v)
+                else
+                    return v
+                end
+            end
+        end,
     handler =
         function (cond, context, v)
             if HasExtraActionBar and HasExtraActionBar() then
@@ -494,8 +519,8 @@ CONDITIONS["faction"] = {
     menu =
         function ()
             return {
-                { val = "faction:" .. PLAYER_FACTION_GROUP[0] },
-                { val = "faction:" .. PLAYER_FACTION_GROUP[1] },
+                { val = "faction:" .. PLAYER_FACTION_GROUP[0], text=string.format("|T%s:18:18|t %s", FACTION_LOGO_TEXTURES[0], PLAYER_FACTION_GROUP[0]) },
+                { val = "faction:" .. PLAYER_FACTION_GROUP[1], text=string.format("|T%s:18:18|t %s", FACTION_LOGO_TEXTURES[1], PLAYER_FACTION_GROUP[1]) },
             }
         end,
     handler =
@@ -571,6 +596,7 @@ CONDITIONS["flying"] = {
         end
 }
 
+-- You would think this would be easy to add a menu to. It is not.
 CONDITIONS["form"] = {
     handler =
         function (cond, context, v)
@@ -612,7 +638,12 @@ CONDITIONS["friend"] = {
                 local info = C_BattleNet.GetFriendAccountInfo(i)
                 local name = BATTLENET_FONT_COLOR:WrapTextInColorCode(info.accountName)
                 local text = string.format('%s (%s)', name, info.battleTag)
-                table.insert(out, { val='friend:'..info.battleTag, text=text })
+                table.insert(out,
+                    {
+                        val = 'friend:'..info.battleTag,
+                        text = text,
+                        tooltip = info.note ~= "" and ( NOTE_COLON .. ' ' .. info.note)
+                    })
             end
             return out
         end,
@@ -807,7 +838,54 @@ CONDITIONS["keybind"] = {
         end
 }
 
+CONDITIONS["keystone"] = {
+    name = WEEKLY_REWARDS_MYTHIC_KEYSTONE,
+    disabled = C_ChallengeMode.GetActiveKeystoneInfo == nil,
+    args = true,
+    toDisplay =
+        function (minLevel, maxLevel)
+            if not minLevel then
+                return ANY_TEXT
+            elseif not maxLevel then
+                return string.format(MYTHIC_PLUS_POWER_LEVEL, minLevel) .. '+'
+            elseif minLevel == maxLevel then
+                return string.format(MYTHIC_PLUS_POWER_LEVEL, minLevel)
+            else
+                return string.format(MEETINGSTONE_LEVEL, minLevel, maxLevel)
+            end
+        end,
+    menu =
+        function ()
+            local out = {
+                nosort = true,
+                { val = "keystone" },
+                { val = "keystone:2/5" },
+                { val = "keystone:6/9" },
+                { val = "keystone:10/11" },
+            }
+            for i = 12, 25 do
+                table.insert(out, { val = "keystone:"..i })
+            end
+            return out
+        end,
+    handler =
+        function (cond, context, minLevel, maxLevel)
+            minLevel = tonumber(minLevel) or 0
+            maxLevel = tonumber(maxLevel) or math.huge
+            local keyLevel = C_ChallengeMode.GetActiveKeystoneInfo()
+            return (keyLevel >= minLevel) and (keyLevel <= maxLevel)
+        end
+}
+
 CONDITIONS["known"] = {
+    name = L.LM_SPELL_KNOWN,
+    textentry = true,
+    toDisplay =
+        function (v)
+            if v then
+                return C_Spell.GetSpellName(v) or v
+            end
+        end,
     handler =
         function (cond, context, v)
             if v then
@@ -866,7 +944,7 @@ CONDITIONS["loadout"] = {
         function ()
             local loadoutMenu = {}
             local loadoutNames = {}
-            local _, _, classIndex = UnitClass('player')
+            local _, classIndex = UnitClassBase('player')
             for specIndex = 1, 4 do
                 local specID = GetSpecializationInfoForClassID(classIndex, specIndex)
                 if not specID then break end
@@ -1045,6 +1123,7 @@ CONDITIONS["mod"] = {
 }
 
 CONDITIONS["mounted"] = {
+    name = L.LM_MOUNTED,
     handler =
         function (cond, context, v)
             if not v then
@@ -1063,6 +1142,7 @@ CONDITIONS["mounted"] = {
 }
 
 CONDITIONS["moving"] = {
+    -- name = L.LM_MOVING_OR_FALLING,
     handler =
         function (cond, context)
             return LM.Environment:IsMovingOrFalling()
@@ -1070,6 +1150,8 @@ CONDITIONS["moving"] = {
 }
 
 CONDITIONS["name"] = {
+    name = CHARACTER_NAME_PROMPT,
+    textentry = true,
     handler =
         function (cond, context, v)
             if v then
@@ -1129,6 +1211,7 @@ CONDITIONS["party"] = {
 }
 
 CONDITIONS["pet"] = {
+    -- name = L.LM_HAS_PET,
     handler =
         function (cond, context, v)
             local petunit
@@ -1490,8 +1573,46 @@ CONDITIONS["timerunning"] = {
         end
 }
 
+CONDITIONS["title"] = {
+    name = HONOR_REWARD_TITLE_TOOLTIP,
+    toDisplay =
+        function (v)
+            return GetTitleName(v)
+        end,
+    menu =
+        function ()
+            local out = {}
+            for i = 1, GetNumTitles() do
+                local name, isPlayerTitle = GetTitleName(i)
+                if isPlayerTitle then
+                    table.insert(out, { val="title:"..i, text=name })
+                end
+            end
+            return out
+        end,
+    handler =
+        function (cond, context, v)
+            return GetCurrentTitle() == tonumber(v)
+        end
+}
+
 CONDITIONS["tracking"] = {
+    name = TRACKING,
     disabled = not ( C_Minimap and C_Minimap.GetNumTrackingTypes ),
+    toDisplay =
+        function (v)
+            local info = C_Minimap.GetTrackingInfo(v)
+            if info then return info.name end
+        end,
+    menu =
+        function ()
+            local out = { }
+            for i = 1, C_Minimap.GetNumTrackingTypes() do
+                local info = C_Minimap.GetTrackingInfo(i)
+                table.insert(out, { val="tracking:"..i, text=string.format("|T%d:18:18|t %s", info.texture, info.name), sortKey=info.name })
+            end
+            return out
+        end,
     handler =
         function (cond, context, v)
             local name, active, _
@@ -1738,7 +1859,7 @@ local function FillMenuTextsRecursive(t)
         FillMenuTextsRecursive(item)
     end
     if not t.nosort then
-        table.sort(t, function (a,b) return a.text < b.text end)
+        table.sort(t, function (a,b) return (a.sortKey or a.text) < (b.sortKey or b.text) end)
     end
     return t
 end
@@ -1784,7 +1905,7 @@ function LM.Conditions:ToDisplay(text)
     end
 
     if not c.toDisplay then
-        return c.name, nil
+        return c.name, c.textentry and valuestr or nil
     end
 
     local values

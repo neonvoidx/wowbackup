@@ -1,3 +1,4 @@
+if BBF.isMidnight then return end
 local UnitIsFriend = UnitIsFriend
 local UnitIsEnemy = UnitIsEnemy
 local UnitIsPlayer = UnitIsPlayer
@@ -615,7 +616,7 @@ function BBF.HookFrameTextureColor()
         local desaturate = darkmode and true or false
         local colored = false
 
-        if UnitIsPlayer(unit) then
+        if UnitIsPlayer(unit) or C_LFGInfo.IsInLFGFollowerDungeon() then
             if TRP3_API and rpColor then
                 local rpR, rpG, rpB = GetRPNameColor(unit)
                 if rpR then
@@ -685,6 +686,11 @@ function BBF.HookFrameTextureColor()
     SetupFrame(FocusFrameToT, "focustarget")
     SetupFrame(PetFrame, "pet", "player")
 
+    for frame in PartyFrame.PartyMemberFramePool:EnumerateActive() do
+        local unit = frame.unit or ("party" .. frame:GetID())
+        SetupFrame(frame, unit)
+    end
+
     C_Timer.After(1, function()
         SetupFrame(PlayerFrame, "player")
         SetupFrame(PetFrame, "pet", "player")
@@ -695,7 +701,16 @@ function BBF.HookFrameTextureColor()
     f:RegisterEvent("PLAYER_TARGET_CHANGED")
     f:RegisterEvent("PLAYER_FOCUS_CHANGED")
     f:RegisterUnitEvent("UNIT_TARGET", "target", "focus")
+    f:RegisterEvent("GROUP_ROSTER_UPDATE")
+    f:RegisterEvent("PLAYER_ENTERING_WORLD")
     f:SetScript("OnEvent", function(self, event)
+        if event == "PLAYER_ENTERING_WORLD" or event == "GROUP_ROSTER_UPDATE" then
+            for frame in PartyFrame.PartyMemberFramePool:EnumerateActive() do
+                local unit = frame.unit or ("party" .. frame:GetID())
+                DesaturateAndColorTexture(frame.Texture, unit)
+            end
+            return
+        end
         if event == "PLAYER_TARGET_CHANGED" then
             DesaturateAndColorTexture(TargetFrame.TargetFrameContainer.FrameTexture, "target")
         elseif event == "PLAYER_FOCUS_CHANGED" then

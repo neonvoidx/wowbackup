@@ -2,38 +2,43 @@
 MouseoverActionSettingsDB = {
 ["namespaces"] = {
 },
+["global"] = {
+["TinkerZone"] = true,
+},
 ["profileKeys"] = {
 ["Månyfaced - Mal'Ganis"] = "Default",
 ["Hellowalls - Mal'Ganis"] = "Default",
-["Starstypeshi - Tichondrius"] = "Default",
-["Auteist - Mal'Ganis"] = "Default",
-["Ofpuss - Mal'Ganis"] = "Default",
-["Choppiez - Tichondrius"] = "Default",
-["Smaugchamp - Mal'Ganis"] = "Default",
-["Choppiez - Mal'Ganis"] = "Default",
-["Smaugchamp - Tichondrius"] = "Default",
-["Gehyo - Mal'Ganis"] = "Default",
-["Auteist - Tichondrius"] = "Default",
-["Corsic - Mal'Ganis"] = "Default",
-["Mäñýfäçëð - Mal'Ganis"] = "Default",
-["Neonvoid - Mal'Ganis"] = "Default",
 ["Praisesun - Tichondrius"] = "Default",
-["Hellavator - Tichondrius"] = "Default",
-["Mäñýfäçëð - Tichondrius"] = "Default",
+["Corsic - Mal'Ganis"] = "Default",
+["Neonvoid - Mal'Ganis"] = "Default",
+["Ofpusstwo - Tichondrius"] = "Default",
 ["Cullnvoid - Tichondrius"] = "Default",
-["Stormclout - Tichondrius"] = "Default",
-["Reedingo - Mal'Ganis"] = "Default",
 ["Stormclout - Mal'Ganis"] = "Default",
 ["Rakeist - Mal'Ganis"] = "Default",
-["Tampacks - Mal'Ganis"] = "Default",
-["Thickshape - Mal'Ganis"] = "Default",
 ["Ofpuss - Tichondrius"] = "Default",
 ["Praisesun - Mal'Ganis"] = "Default",
-["Hellavator - Mal'Ganis"] = "Default",
 ["Thingreyline - Tichondrius"] = "Default",
-},
-["global"] = {
-["TinkerZone"] = true,
+["Mäñýfäçëð - Tichondrius"] = "Default",
+["Auteist - Mal'Ganis"] = "Default",
+["Ofpuss - Mal'Ganis"] = "Default",
+["Smaugchamp - Mal'Ganis"] = "Default",
+["Choppiez - Mal'Ganis"] = "Default",
+["Starstypeshi - Tichondrius"] = "Default",
+["Thickshape - Mal'Ganis"] = "Default",
+["Mäñýfäçëð - Mal'Ganis"] = "Default",
+["Hellavator - Mal'Ganis"] = "Default",
+["Hellavator - Tichondrius"] = "Default",
+["Gehyo - Tichondrius"] = "Default",
+["Stormclout - Tichondrius"] = "Default",
+["Reedingo - Mal'Ganis"] = "Default",
+["Gehyo - Mal'Ganis"] = "Default",
+["Choppiez - Tichondrius"] = "Default",
+["Auteist - Tichondrius"] = "Default",
+["Smaugchamp - Tichondrius"] = "Default",
+["Crillessana - Mal'Ganis"] = "Default",
+["Heilsatan - Tichondrius"] = "Default",
+["Tampacks - Mal'Ganis"] = "Default",
+["Clevagirl - Mal'Ganis"] = "Default",
 },
 ["profiles"] = {
 ["Default"] = {
@@ -68,30 +73,17 @@ MouseoverActionSettingsDB = {
 ["FocusFrame"] = {
 ["enabled"] = false,
 },
-["MainMenuBar"] = {
-["ARENA_UPDATE"] = true,
-["TARGET_ATTACKABLE_UPDATE"] = true,
-["TARGET_UPDATE"] = true,
-["DUNGEON_UPDATE"] = true,
-["minAlpha"] = 0.3,
-["PLAYER_MOVING_UPDATE"] = false,
-["BATTLEGROUND_UPDATE"] = true,
-["PLAYER_HEALTH_UPDATE"] = false,
-["RAID_UPDATE"] = true,
-["links"] = {
-["MultiBarBottomLeft"] = true,
-["MultiBar5"] = true,
-},
-["RAID_GROUP_UPDATE"] = false,
-["PARTY_GROUP_UPDATE"] = false,
+["PetFrame"] = {
+["enabled"] = false,
 },
 ["ActionBarConfig"] = {
-["Action"] = true,
-["MultiBarBottomLeft"] = true,
 ["MultiBar5"] = true,
+["MultiBarBottomLeft"] = true,
+["Action"] = true,
 },
-["PlayerFrame"] = {
+["MicroMenu"] = {
 ["enabled"] = false,
+["maxAlpha"] = 0,
 },
 ["MiniMapButton"] = {
 ["enabled"] = false,
@@ -128,9 +120,9 @@ MouseoverActionSettingsDB = {
 ["MainMenuBar"] = true,
 },
 ["TARGET_UPDATE"] = true,
-["RAID_GROUP_UPDATE"] = false,
-["NPC_UPDATE"] = false,
 ["DRAGONRIDING_UPDATE"] = false,
+["NPC_UPDATE"] = false,
+["RAID_GROUP_UPDATE"] = false,
 },
 ["TrackingBarContainer"] = {
 ["enabled"] = false,
@@ -146,14 +138,28 @@ MouseoverActionSettingsDB = {
 ["font"] = "1",
 },
 ["MultiBarRight"] = {
-["minAlpha"] = 0.2,
 ["links"] = {
 ["MultiBarBottomRight"] = true,
 ["MultiBar6"] = true,
 },
+["minAlpha"] = 0.2,
 },
-["MultiBarLeft"] = {
-["enabled"] = false,
+["MainMenuBar"] = {
+["ARENA_UPDATE"] = true,
+["TARGET_ATTACKABLE_UPDATE"] = true,
+["TARGET_UPDATE"] = true,
+["DUNGEON_UPDATE"] = true,
+["minAlpha"] = 0.3,
+["PLAYER_MOVING_UPDATE"] = false,
+["BATTLEGROUND_UPDATE"] = true,
+["PLAYER_HEALTH_UPDATE"] = false,
+["RAID_UPDATE"] = true,
+["links"] = {
+["MultiBarBottomLeft"] = true,
+["MultiBar5"] = true,
+},
+["RAID_GROUP_UPDATE"] = false,
+["PARTY_GROUP_UPDATE"] = false,
 },
 ["BuffFrame"] = {
 ["enabled"] = false,
@@ -162,14 +168,13 @@ MouseoverActionSettingsDB = {
 ["font"] = "1",
 ["height"] = 10,
 },
-["MicroMenu"] = {
+["PlayerFrame"] = {
 ["enabled"] = false,
-["maxAlpha"] = 0,
 },
 ["ObjectiveTracker"] = {
 ["MOUNT_UPDATE"] = false,
 ["NPC_UPDATE"] = true,
-["minAlpha"] = 0.3,
+["minAlpha"] = 1,
 ["OPEN_WORLD_UPDATE"] = false,
 ["COMBAT_UPDATE"] = false,
 },
@@ -184,7 +189,7 @@ MouseoverActionSettingsDB = {
 ["delay"] = 0,
 ["COMBAT_UPDATE"] = true,
 },
-["PetFrame"] = {
+["MultiBarLeft"] = {
 ["enabled"] = false,
 },
 ["MultiBarBottomRight"] = {
@@ -196,10 +201,10 @@ MouseoverActionSettingsDB = {
 ["delay"] = 0,
 ["COMBAT_UPDATE"] = false,
 },
-["PartyFrame"] = {
+["MultiBar7"] = {
 ["enabled"] = false,
 },
-["MultiBar7"] = {
+["PartyFrame"] = {
 ["enabled"] = false,
 },
 },

@@ -1,3 +1,4 @@
+if BBF.isMidnight then return end
 local hiddenFrame = CreateFrame("Frame")
 hiddenFrame:Hide()
 BBF.hiddenFrame = hiddenFrame
@@ -197,8 +198,15 @@ function BBF.HideFrames()
         FocusFrame.TargetFrameContent.TargetFrameContentContextual.PrestigeBadge:SetAlpha(prestigeBadgeAlpha)
         FocusFrame.TargetFrameContent.TargetFrameContentContextual.PrestigePortrait:SetAlpha(prestigeBadgeAlpha)
 
+        -- Hide Pet Frame
+        if BetterBlizzFramesDB.hidePetFrame then
+            hideElementByParent(PetFrame)
+        else
+            restoreElementParent(PetFrame)
+        end
+
         -- Hide reputation color on target frame (color tint behind name)
-        if BetterBlizzFramesDB.hideTargetReputationColor then
+        if BetterBlizzFramesDB.hideTargetReputationColor or BetterBlizzFramesDB.noPortraitModes then
             changes.hideTargetReputationColor = true
             TargetFrame.TargetFrameContent.TargetFrameContentMain.ReputationColor:Hide()
             if classicFrames and not TargetFrame.TargetFrameContent.TargetFrameContentMain.ReputationColor.bbfHooked then
@@ -215,7 +223,7 @@ function BBF.HideFrames()
             TargetFrame.TargetFrameContent.TargetFrameContentMain.ReputationColor:Show()
         end
 
-        if BetterBlizzFramesDB.hideFocusReputationColor then
+        if BetterBlizzFramesDB.hideFocusReputationColor or BetterBlizzFramesDB.noPortraitModes then
             changes.hideFocusReputationColor = true
             FocusFrame.TargetFrameContent.TargetFrameContentMain.ReputationColor:Hide()
             if classicFrames and not FocusFrame.TargetFrameContent.TargetFrameContentMain.ReputationColor.bbfCF then
@@ -1077,10 +1085,7 @@ function BBF.HideFrames()
         for i = 1, 5 do
             local aggroHighlight = _G["CompactPartyFrameMember" .. i .. "AggroHighlight"]
             if aggroHighlight then
-                -- Only adjust alpha if it differs from the desired state
-                if aggroHighlight:GetAlpha() ~= aggroAlpha then
-                    aggroHighlight:SetAlpha(aggroAlpha)
-                end
+                aggroHighlight:SetAlpha(aggroAlpha)
             end
         end
 

@@ -1,15 +1,15 @@
 
 BugGrabberDB = {
-["session"] = 4666,
+["session"] = 4696,
 ["lastSanitation"] = 3,
 ["errors"] = {
 {
-["message"] = "...ce/AddOns/LegionRemixHelper/Utils/ScrappingUtils.lua:231: attempt to index field 'scrappingMachine' (a nil value)",
-["time"] = "2025/10/23 22:18:39",
-["locals"] = "self = <table> {\n cachedMappedPendingItems = <table> {\n }\n ui = <table> {\n }\n}\n(*temporary) = nil\n(*temporary) = nil\n(*temporary) = \"attempt to index field 'scrappingMachine' (a nil value)\"\n",
-["stack"] = "[Interface/AddOns/LegionRemixHelper/Utils/ScrappingUtils.lua]:231: in function 'AutoScrap'\n[Interface/AddOns/LegionRemixHelper/Utils/ScrappingUtils.lua]:38: in function 'func'\n[Interface/AddOns/LegionRemixHelper/Libs/RasuLibs/RasuAddonBase.lua]:300: in function 'OnEvent'\n[Interface/AddOns/LegionRemixHelper/Libs/RasuLibs/RasuAddonBase.lua]:83: in function <...ns/LegionRemixHelper/Libs/RasuLibs/RasuAddonBase.lua:82>\n[C]: ?\n[C]: in function 'UseContainerItem'\n[Interface/AddOns/EasyScrap/EasyScrap_Functions.lua]:91: in function 'addQueueItems'\n[Interface/AddOns/EasyScrap/EasyScrap_ItemDisplay.lua]:411: in function 'queueAllItems'\n[Interface/AddOns/EasyScrap/Frames/EasyScrapMainFrame.lua]:128: in function <...rface/AddOns/EasyScrap/Frames/EasyScrapMainFrame.lua:127>",
-["session"] = 4666,
-["counter"] = 8,
+["message"] = "[ADDON_ACTION_BLOCKED] AddOn 'BetterBlizzFrames' tried to call the protected function 'StatusBar:SetSize()'.",
+["time"] = "2025/11/19 12:34:03",
+["locals"] = "self = <table> {\n}\nevent = \"ADDON_ACTION_BLOCKED\"\naddonName = \"BetterBlizzFrames\"\naddonFunc = \"StatusBar:SetSize()\"\nname = \"BetterBlizzFrames\"\nbadAddons = <table> {\n BetterBlizzFrames = true\n}\nL = <table> {\n ADDON_CALL_PROTECTED_MATCH = \"^%[(.*)%] (AddOn '.*' tried to call the protected function '.*'.)$\"\n NO_DISPLAY_2 = \"|cffffff00The standard display is called BugSack, and can probably be found on the same site where you found !BugGrabber.|r\"\n ERROR_DETECTED = \"%s |cffffff00captured, click the link for more information.|r\"\n USAGE = \"|cffffff00Usage: /buggrabber <1-%d>.|r\"\n BUGGRABBER_STOPPED = \"|cffffff00There are too many errors in your UI. As a result, your game experience may be degraded. Disable or update the failing addons if you don't want to see this message again.|r\"\n STOP_NAG = \"|cffffff00!BugGrabber will not nag about missing a display addon again until next patch.|r\"\n ADDON_DISABLED = \"|cffffff00!BugGrabber and %s cannot coexist; %s has been forcefully disabled. If you want to, you may log out, disable !BugGrabber, and enable %s.|r\"\n NO_DISPLAY_STOP = \"|cffffff00If you don't want to be reminded about this again, run /stopnag.|r\"\n NO_DISPLAY_1 = \"|cffffff00You seem to be running !BugGrabber with no display addon to go along with it. Although a slash command is provided for accessing error reports, a display can help you manage these errors in a more convenient way.|r\"\n ERROR_UNABLE = \"|cffffff00!BugGrabber is unable to retrieve errors from other players by itself. Please install BugSack or a similar display addon that might give you this functionality.|r\"\n ADDON_CALL_PROTECTED = \"[%s] AddOn '%s' tried to call the protected function '%s'.\"\n}\n",
+["stack"] = "[Interface/AddOns/!BugGrabber/BugGrabber.lua]:583: in function '?'\n[Interface/AddOns/!BugGrabber/BugGrabber.lua]:507: in function <Interface/AddOns/!BugGrabber/BugGrabber.lua:507>\n[C]: in function 'SetSize'\n[Interface/AddOns/BetterBlizzFrames/retail/modules/noPortrait.lua]:2182: in function <...dOns/BetterBlizzFrames/retail/modules/noPortrait.lua:2145>\n[Interface/AddOns/BetterBlizzFrames/retail/modules/noPortrait.lua]:2201: in function <...dOns/BetterBlizzFrames/retail/modules/noPortrait.lua:2198>\n[C]: in function 'ToPlayerArt'\n[Interface/AddOns/Blizzard_UnitFrame/PartyMemberFrame.lua]:160: in function 'UpdateArt'\n[Interface/AddOns/Blizzard_UnitFrame/PartyMemberFrame.lua]:620: in function 'OnEvent'\n[Interface/AddOns/Blizzard_UnitFrame/UnitFrame.lua]:1033: in function <Interface/AddOns/Blizzard_UnitFrame/UnitFrame.lua:1031>",
+["session"] = 4696,
+["counter"] = 1,
 },
 },
 }

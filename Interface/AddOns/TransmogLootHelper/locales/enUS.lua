@@ -54,6 +54,19 @@ L.INSTANT_BUTTON =						"Get it now!"
 L.INSTANT_TOOLTIP =						"Hold Shift to instantly receive your item and skip the 5 second timer."
 
 -- Settings
+L.SETTINGS_SUPPORT_TEXTLONG =			"Developing this addon takes a significant amount of time and effort.\nPlease consider financially supporting the developer."
+L.SETTINGS_SUPPORT_TEXT =				"Support"
+L.SETTINGS_SUPPORT_BUTTON =				"Buy Me a Coffee"	-- Brand name, if there isn't a localised version, keep it the way it is
+L.SETTINGS_SUPPORT_DESC =				"Thank you!"
+L.SETTINGS_HELP_TEXT =					"Feedback & Help"
+L.SETTINGS_HELP_BUTTON =				"Discord"	-- Brand name, if there isn't a localised version, keep it the way it is
+L.SETTINGS_HELP_DESC =					"Join the Discord server."
+L.SETTINGS_ISSUES_TEXT =				"Issue Tracker"
+L.SETTINGS_ISSUES_BUTTON =				"GitHub"	-- Brand name, if there isn't a localised version, keep it the way it is
+L.SETTINGS_ISSUES_DESC =				"View the issue tracker on GitHub."
+L.SETTINGS_URL_COPY =					"Ctrl+C to copy:"
+L.SETTINGS_URL_COPIED =					"Link copied to clipboard"
+
 L.SETTINGS_TOOLTIP =					app.IconLMB .. "|cffFFFFFF: Toggle the window\n" ..
 										app.IconRMB .. ": " .. L.WINDOW_BUTTON_SETTINGS
 L.SETTINGS_BAGANATOR =					"For Baganator users this is managed by Baganator's own settings."

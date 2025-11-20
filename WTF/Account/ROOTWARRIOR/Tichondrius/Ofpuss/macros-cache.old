@@ -46,7 +46,7 @@ VER 3 0100000000000027 " " "134400"
 END
 VER 3 010000000000001B " " "1380368"
 #showtooltip
-/cast [mod:shift,@mouseover,harm,nodead][] Imprison
+/cast [mod:shift,@focus,exists,harm,nodead][] Imprison
 END
 VER 3 010000000000002C " " "134400"
 #showtooltip

@@ -125,25 +125,25 @@ VER 3 0000000000000232 " " "134400"
 /cast [@mouseover,exists,help,nodead][] Symbiotic Relationship
 END
 VER 3 0000000000000233 " " "INV_MISC_QUESTIONMARK"
-#showtooltip item:182773
+#showtooltip item:93672
 #macro version 1
-/run if not InCombatLockdown() then RHT.b:SetAttribute("item","Necrolord Hearthstone") end
+/run if not InCombatLockdown() then RHT.b:SetAttribute("item","Dark Portal") end
 /click RHTB LeftButton
 END
 VER 3 00000000000000C8 " HS" "517112"
 #showtooltip Healthstone
 /use Healthstone
 END
-VER 3 000000000000020D " MOUNT" "4635197"
-#showtooltip
-/cast [nomounted] !Zen Flight
-/click [flyable] MountJournalSummonRandomFavoriteButton
-END
 VER 3 0000000000000190 " MOUNT" "134156"
 #showtooltip
 /click [nomod] MountJournalSummonRandomFavoriteButton
 /cast [mod:shift] Eternal Gladiator's Soul Eater
 /cast [mod:ctrl] Grand Expedition Yak
+END
+VER 3 000000000000020D " MOUNT" "4635197"
+#showtooltip
+/cast [nomounted] !Zen Flight
+/click [flyable] MountJournalSummonRandomFavoriteButton
 END
 VER 3 0000000000000177 " PassiveFollow" "571320"
 /petfollow

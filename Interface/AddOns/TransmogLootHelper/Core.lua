@@ -76,7 +76,7 @@ function app.Popup(show, text)
 	end)
 
 	-- Text
-	local string = frame:CreateFontString("ARTWORK", nil, "GameFontNormal")
+	local string = frame:CreateFontString(nil, "ARTWORK", "GameFontNormal")
 	string:SetPoint("CENTER", frame, "CENTER", 0, 0)
 	string:SetPoint("TOP", frame, "TOP", 0, -25)
 	string:SetJustifyH("CENTER")
@@ -124,6 +124,56 @@ function app.GetTooltipText(itemLinkie, searchString)
 		for k, v in ipairs(tooltip["lines"]) do
 			if v["leftText"] and v["leftText"]:find(searchString) then
 				return true
+			end
+		end
+	end
+	return false
+end
+
+function app.IsToy(itemLinkie)
+	local tooltip = app.Tooltip[itemLinkie] or C_TooltipInfo.GetHyperlink(itemLinkie)
+	app.Tooltip[itemLinkie] = tooltip
+
+	if tooltip and tooltip.lines then
+		for _, line in ipairs(tooltip.lines) do
+			if line.type == Enum.TooltipDataLineType.None then
+				if line.leftText and line.leftText:find(ITEM_TOY_ONUSE) then
+					return true
+				end
+			end
+		end
+	end
+	return false
+end
+
+function app.IsLearned(itemLinkie)
+	local tooltip = C_TooltipInfo.GetHyperlink(itemLinkie)
+
+	if tooltip and tooltip.lines then
+		for _, line in ipairs(tooltip.lines) do
+			if line.type == Enum.TooltipDataLineType.RestrictedSpellKnown then
+				return true
+			end
+		end
+	end
+	return false
+end
+
+function app.GetBonding(itemLinkie)
+	local tooltip = C_TooltipInfo.GetHyperlink(itemLinkie)
+
+	if tooltip and tooltip.lines then
+		for _, line in ipairs(tooltip.lines) do
+			if line.bonding then
+				if line.bonding == 1 or line.bonding == 2 or line.bonding == 4 or line.bonding == 5 then
+					return "BoA"
+				elseif line.bonding == 3 or line.bonding == 6 then
+					return "BoP"
+				elseif line.bonding == 7 or line.bonding == 8 then
+					return "BoE"
+				elseif line.bonding == 9 or line.bonding == 10 then
+					return "WuE"
+				end
 			end
 		end
 	end
@@ -268,7 +318,7 @@ app.Event:Register("CHAT_MSG_ADDON", function(prefix, text, channel, sender, tar
 		-- Version
 		local version = text:match("version:(.+)")
 		if version then
-			if version ~= "v11.2.5-003" then
+			if version ~= "v11.2.5-006" then
 				local expansion, major, minor, iteration = version:match("v(%d+)%.(%d+)%.(%d+)%-(%d%d%d)")
 				expansion = string.format("%02d", expansion)
 				major = string.format("%02d", major)
@@ -277,7 +327,7 @@ app.Event:Register("CHAT_MSG_ADDON", function(prefix, text, channel, sender, tar
 				local otherAddonVersion = tonumber(iteration)
 
 				local localVersion = C_AddOns.GetAddOnMetadata("TransmogLootHelper", "Version")
-				if localVersion ~= "v11.2.5-003" then
+				if localVersion ~= "v11.2.5-006" then
 					expansion, major, minor, iteration = localVersion:match("v(%d+)%.(%d+)%.(%d+)%-(%d%d%d)")
 					expansion = string.format("%02d", expansion)
 					major = string.format("%02d", major)

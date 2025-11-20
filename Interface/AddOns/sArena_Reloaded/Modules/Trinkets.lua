@@ -1,4 +1,5 @@
 local isRetail = sArenaMixin.isRetail
+local isMidnight = sArenaMixin.isMidnight
 local GetSpellTexture = GetSpellTexture or C_Spell.GetSpellTexture
 
 function sArenaFrameMixin:FindTrinket()
@@ -112,28 +113,55 @@ function sArenaFrameMixin:UpdateTrinket()
 
             self:UpdateTrinketIcon(true)
         end
-        if (startTime ~= 0 and duration ~= 0 and self.Trinket.spellID) then
-            if self.Trinket.spellID and (self.Trinket.Texture:GetTexture() ~= sArenaMixin.noTrinketTexture)then
-                if self.updateRacialOnTrinketSlot then
-                    local racialDuration = self:GetRacialDuration()
-                    self.Trinket.Cooldown:SetCooldown(startTime / 1000.0, racialDuration)
-                else
-                    self.Trinket.Cooldown:SetCooldown(startTime / 1000.0, duration / 1000.0)
-                end
-            end
-            if self.parent.db.profile.colorTrinket then
-                self.Trinket.Texture:SetColorTexture(1,0,0)
-            else
-                if not self.updateRacialOnTrinketSlot then
-                    self.Trinket.Texture:SetDesaturated(self.parent.db.profile.desaturateTrinketCD)
-                end
-            end
+        if isMidnight then
+            -- if (self.Trinket.spellID) and not self.Trinket.Cooldown:IsShown() then
+            --     if self.Trinket.spellID and (self.Trinket.Texture:GetTexture() ~= sArenaMixin.noTrinketTexture)then
+            --         if self.updateRacialOnTrinketSlot then
+            --             local racialDuration = self:GetRacialDuration()
+            --             self.Trinket.Cooldown:SetCooldown(startTime, racialDuration * 1000)
+            --         else
+            --             self.Trinket.Cooldown:SetCooldown(startTime, duration)
+            --         end
+            --     end
+            --     if self.parent.db.profile.colorTrinket then
+            --         self.Trinket.Texture:SetColorTexture(1,0,0)
+            --     else
+            --         if not self.updateRacialOnTrinketSlot then
+            --             self.Trinket.Texture:SetDesaturated(self.parent.db.profile.desaturateTrinketCD)
+            --         end
+            --     end
+            -- else
+            --     self.Trinket.Cooldown:Clear()
+            --     if self.parent.db.profile.colorTrinket then
+            --         self.Trinket.Texture:SetColorTexture(0,1,0)
+            --     else
+            --         self.Trinket.Texture:SetDesaturated(false)
+            --     end
+            -- end
         else
-            self.Trinket.Cooldown:Clear()
-            if self.parent.db.profile.colorTrinket then
-                self.Trinket.Texture:SetColorTexture(0,1,0)
+            if (startTime ~= 0 and duration ~= 0 and self.Trinket.spellID) then
+                if self.Trinket.spellID and (self.Trinket.Texture:GetTexture() ~= sArenaMixin.noTrinketTexture)then
+                    if self.updateRacialOnTrinketSlot then
+                        local racialDuration = self:GetRacialDuration()
+                        self.Trinket.Cooldown:SetCooldown(startTime / 1000.0, racialDuration)
+                    else
+                        self.Trinket.Cooldown:SetCooldown(startTime / 1000.0, duration / 1000.0)
+                    end
+                end
+                if self.parent.db.profile.colorTrinket then
+                    self.Trinket.Texture:SetColorTexture(1,0,0)
+                else
+                    if not self.updateRacialOnTrinketSlot then
+                        self.Trinket.Texture:SetDesaturated(self.parent.db.profile.desaturateTrinketCD)
+                    end
+                end
             else
-                self.Trinket.Texture:SetDesaturated(false)
+                self.Trinket.Cooldown:Clear()
+                if self.parent.db.profile.colorTrinket then
+                    self.Trinket.Texture:SetColorTexture(0,1,0)
+                else
+                    self.Trinket.Texture:SetDesaturated(false)
+                end
             end
         end
     end

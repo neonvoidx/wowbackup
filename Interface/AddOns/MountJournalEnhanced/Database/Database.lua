@@ -1465,6 +1465,7 @@ ADDON.DB.Source = {
 
         ["Hallow's End"] = {
             [48025] = true, -- Headless Horseman's Mount
+            [1245198] = true, -- The Headless Horseman's Ghoulish Charger
         },
 
         ["Feast of Winter Veil"] = {
@@ -1854,6 +1855,7 @@ ADDON.DB.Type = {
         [1039] = true, -- Mighty Caravan Brutosaur
         [1287] = true, -- Explorer's Jungle Hopper
         [1288] = true, -- Explorer's Dunetrekker
+        [1698] = true, -- Rocket Shredder 9001
     },
     rideAlong = {
         typeIDs = { 402, 445},
@@ -1900,5 +1902,6 @@ ADDON.DB.Ignored = {
         [2115] = true, -- Soar
         [2301] = true, -- Unstable Rocket
         [2302] = true, -- Unstable Rocket
+        [2716] = true, -- (PH) Legion Remix Mount
     },
 }

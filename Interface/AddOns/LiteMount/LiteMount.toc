@@ -1,6 +1,6 @@
-## Interface: 110205, 50501
+## Interface: 110205, 50502
 ## Title: LiteMount
-## Version: 11.2.5-8
+## Version: 11.2.5-14
 ## Author: Xodiv-Nagrand
 ## Email: mib@post.com
 ## IconTexture: 132247
@@ -39,6 +39,7 @@ Environment.lua
 Options.lua
 SecureAction.lua
 Mount.lua
+Macro.lua
 LM_Journal.lua
 LM_Spell.lua
 LM_Drive.lua

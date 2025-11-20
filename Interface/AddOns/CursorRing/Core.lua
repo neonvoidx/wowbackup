@@ -1,13 +1,23 @@
--- Cursor Ring - Core (finalized with emphasis semantics)
-local _, ns = ...
-local UIParent, CreateFrame = UIParent, CreateFrame
-local GetScaledCursorPosition, UnitClass = GetScaledCursorPosition, UnitClass
-local CopyTable, strlower, strupper, tostring, type = CopyTable, strlower, strupper, tostring, type
+-- Cursor Ring - Core (Retail 11.2.x + Midnight 12.0-safe)
+-- Anchors a ring to the mouse cursor and (optionally) shows a GCD swipe using Blizzard's Cooldown widget.
+
+local addonName, ns = ...
+
+-- Locals
+local UIParent = UIParent
+local CreateFrame = CreateFrame
+local GetScaledCursorPosition = GetScaledCursorPosition
+local UnitClass = UnitClass
+local CopyTable = CopyTable
+local strlower = string.lower
+local strupper = string.upper
+local tostring = tostring
+local type = type
 local InCombatLockdown = InCombatLockdown
 local C_ClassColor = C_ClassColor
-local lastInCombat = nil
+local math = math
 
--- Debug flag (set false to hide /cr gcdtest and logs)
+-- Debug flag (chat spam only when true)
 ns.DEBUG_GCD = false
 
 -- Normalize a texture name to a known key
@@ -18,9 +28,8 @@ function ns.NormalizeTextureKey(name)
     if name == "thin" then return "Thin" end
     if name == "thick" then return "Thick" end
     if name == "solid" then return "Solid" end
-    return name:gsub("^%l", string.upper)
+    return string.upper(string.sub(name, 1, 1)) .. string.sub(name, 2)
 end
-ns.NormalizeTextureKey = ns.NormalizeTextureKey
 
 -- Texture files
 ns.textures = {
@@ -30,84 +39,91 @@ ns.textures = {
     Solid   = "Interface\\AddOns\\CursorRing\\media\\Solid.png",
 }
 
--- Defaults (account-wide)
+-- Account-wide defaults
 ns.defaults = {
-    ringRadius       = 28,
-    textureKey       = "Default",
-    inCombatAlpha    = 0.70,
-    outCombatAlpha   = 0.30,
-    useClassColor    = true,
-    useHighVis       = false,
-    colorMode        = "class",
-    customColor      = { r = 1, g = 1, b = 1 },
-    visible          = true,
-    hideOnRightClick = true,
+    ringRadius          = 28,
+    textureKey          = "Default",
+    inCombatAlpha       = 0.70,
+    outCombatAlpha      = 0.30,
+
+    -- Color selection
+    -- colorMode:
+    --   "class"    = player class
+    --   "highvis"  = bright green
+    --   "custom"   = customColor
+    --   "gradient" = gradientColor1/2 + gradientAngle
+    --   <class id> = forced specific class color (for swipe / solid ring)
+    useClassColor       = true,       -- legacy, migrated on login
+    useHighVis          = false,      -- legacy, migrated on login
+    colorMode           = "class",
+    customColor         = { r = 1, g = 1, b = 1 },
+
+    visible             = true,
+    hideOnRightClick    = true,
+
+    -- Help message behavior
+    helpMessageShownOnce = false,
+    showHelpOnLogin      = false,
+
+    -- Offsets relative to cursor
+    offsetX             = 0,
+    offsetY             = 0,
+
+    -- Gradient config (used when colorMode == "gradient")
+    -- gradientEnabled is legacy and ignored now
+    gradientAngle       = 0,           -- degrees, 0..360
+    gradientColor1      = { r = 1, g = 1, b = 1 },
+    gradientColor2      = { r = 1, g = 1, b = 1 },
 }
 
 -- Per-character defaults
 ns.charDefaults = {
     gcdEnabled        = true,          -- GCD swipe ON by default
     gcdStyle          = "simple",      -- "simple" or "blizzard"
-    gcdDimMultiplier  = 0.35,          -- emphasis E: 0=no dim, 1=max dim (runtime uses 1 - E)
+    gcdDimMultiplier  = 0.35,          -- Emphasis for hiding the ring under the GCD swipe
+    gcdReverse        = false,         -- when true, swipe fills the ring instead of emptying
 }
 
--- Ring frame
+-- Primary frames
 local ring = CreateFrame("Frame", nil, UIParent)
 ring:SetFrameStrata("TOOLTIP")
-ring:SetSize(ns.defaults.ringRadius * 2, ns.defaults.ringRadius * 2)
 
--- Ring texture
 local tex = ring:CreateTexture(nil, "ARTWORK")
 tex:SetAllPoints()
 
--- GCD Cooldown overlay (self-animating, no polling)
+-- GCD Cooldown overlay (Blizzard template animates; we do not compute times)
 local gcd = CreateFrame("Cooldown", nil, ring, "CooldownFrameTemplate")
 gcd:SetAllPoints()
 gcd:EnableMouse(false)
 gcd:SetDrawSwipe(true)
-gcd:SetDrawEdge(true)                 -- spark edge (toggled by style)
+gcd:SetDrawEdge(true)
 gcd:SetHideCountdownNumbers(true)
 if gcd.SetUseCircularEdge then gcd:SetUseCircularEdge(true) end
-gcd:SetFrameStrata("TOOLTIP")                 -- match parent strata
-gcd:SetFrameLevel(ring:GetFrameLevel() + 3)   -- ensure above ring texture
+gcd:SetFrameStrata("TOOLTIP")
+gcd:SetFrameLevel(ring:GetFrameLevel() + 3)
 
--- Helpers defined BEFORE any hooks use them
+-- State
+local lastInCombat = nil
+
 local function GetRingBaseAlpha()
     local db = CursorRingDB
     if not db then return 1 end
-    return (InCombatLockdown() and db.inCombatAlpha) or db.outCombatAlpha or 1
+    local inAlpha = db.inCombatAlpha or 0.70
+    local outAlpha = db.outCombatAlpha or 0.30
+    if InCombatLockdown() then
+        return inAlpha
+    else
+        return outAlpha
+    end
 end
 
--- Saved value is "emphasis" E in [0..1]; actual dim multiplier M = 1 - E
-local function GetGCDDimMultiplier()
-    local e = CursorRingCharDB and CursorRingCharDB.gcdDimMultiplier or 0.35
-    if e < 0 then e = 0 elseif e > 1 then e = 1 end
-    return 1 - e
+local function Clamp01(v)
+    if v < 0 then return 0 end
+    if v > 1 then return 1 end
+    return v
 end
 
--- Dim/restore the base ring while GCD swipe is visible
-gcd:HookScript("OnShow", function()
-    tex:SetAlpha(GetRingBaseAlpha() * GetGCDDimMultiplier())
-end)
-gcd:HookScript("OnHide", function()
-    tex:SetAlpha(GetRingBaseAlpha())
-end)
-
--- Right-click temporary hide
-WorldFrame:HookScript("OnMouseDown", function(_, button)
-    if button == "RightButton" and CursorRingDB.hideOnRightClick then
-        tex:Hide()
-        if CursorRingCharDB.gcdEnabled then gcd:Hide() end
-    end
-end)
-WorldFrame:HookScript("OnMouseUp", function(_, button)
-    if button == "RightButton" and CursorRingDB.hideOnRightClick then
-        tex:Show()
-        if CursorRingCharDB.gcdEnabled then gcd:Show() end
-    end
-end)
-
--- Color aliases (slash convenience)
+-- Color aliases for slash convenience
 ns.colorAlias = {
     red         = "deathknight",
     magenta     = "demonhunter",
@@ -124,170 +140,295 @@ ns.colorAlias = {
     tan         = "warrior",
 }
 
--- Helper: compute ring color (r,g,b)
+-- This is used for the GCD swipe color (overlay) and for solid ring mode.
+-- It does NOT color the ring when colorMode == "gradient"; the ring is handled in UpdateAppearance.
 local function GetColor()
     local db = CursorRingDB
-    if db.useHighVis then
+    if not db then
+        return 1, 1, 1
+    end
+
+    local mode = db.colorMode or "class"
+
+    -- Gradient mode: solid color for the swipe is the average of the two gradient colors.
+    if mode == "gradient" then
+        local c1 = db.gradientColor1 or {}
+        local c2 = db.gradientColor2 or {}
+
+        local r1 = c1.r or 1
+        local g1 = c1.g or 1
+        local b1 = c1.b or 1
+
+        local r2 = c2.r or r1
+        local g2 = c2.g or g1
+        local b2 = c2.b or b1
+
+        return (r1 + r2) / 2, (g1 + g2) / 2, (b1 + b2) / 2
+    end
+
+    if mode == "highvis" then
         return 0, 1, 0
     end
-    if db.useClassColor then
+
+    if mode == "custom" then
+        local c = db.customColor or { r = 1, g = 1, b = 1 }
+        return c.r or 1, c.g or 1, c.b or 1
+    end
+
+    -- "class" mode: player class color
+    if mode == "class" then
         local _, classFile = UnitClass("player")
         local color = C_ClassColor.GetClassColor(classFile)
         if color then
             return color.r, color.g, color.b
+        else
+            return 1, 1, 1
         end
-        return 1, 1, 1
     end
-    if db.colorMode == "highvis" then
-        return 0, 1, 0
+
+    -- Specific class token
+    local classFile = ns.colorAlias[mode] or mode
+    local color2 = C_ClassColor.GetClassColor(strupper(classFile or ""))
+    if color2 then
+        return color2.r, color2.g, color2.b
     end
-    if db.colorMode == "custom" then
-        local c = db.customColor
-        return c.r, c.g, c.b
-    end
-    local classFile = ns.colorAlias[db.colorMode] or db.colorMode
-    local color = C_ClassColor.GetClassColor(strupper(classFile))
-    if color then
-        return color.r, color.g, color.b
-    end
+
     return 1, 1, 1
 end
 
--- Keep GCD overlay styled to match current ring and chosen style
-local function UpdateGCDStyle()
-    if not CursorRingCharDB.gcdEnabled then gcd:Hide() return end
-
-    -- match ring color; no overrides
-    local r, g, b = GetColor()
-    local style = (CursorRingCharDB.gcdStyle or "simple")
-    local swipeA = (CursorRingDB and CursorRingDB.inCombatAlpha) or 0.70
-
-    if style == "simple" then
-        -- Simple: ring mask, no spark
-        local texPath = ns.textures[CursorRingDB.textureKey] or ns.textures.Default
-        if gcd.SetSwipeTexture then gcd:SetSwipeTexture(texPath) end
-        gcd:SetDrawEdge(false)  -- no spark
-        if gcd.SetDrawBling then gcd:SetDrawBling(false) end
-        if gcd.SetUseCircularEdge then gcd:SetUseCircularEdge(true) end
-        gcd:SetSwipeColor(r, g, b, swipeA)
-        gcd:SetReverse(false)
-
-    elseif style == "blizzard" then
-        local texPath = ns.textures[CursorRingDB.textureKey] or ns.textures.Default
-        if gcd.SetSwipeTexture then gcd:SetSwipeTexture(texPath) end
-        gcd:SetDrawEdge(true)   -- spark
-        if gcd.SetDrawBling then gcd:SetDrawBling(false) end
-        if gcd.SetUseCircularEdge then gcd:SetUseCircularEdge(true) end
-        gcd:SetSwipeColor(r, g, b, swipeA)
-        gcd:SetReverse(false)
-
-    else
-        -- Blizzard: default circular swipe texture + spark
-        if gcd.SetSwipeTexture then gcd:SetSwipeTexture("Interface\Cooldown\star4") end
-        gcd:SetDrawEdge(true)   -- spark
-        if gcd.SetDrawBling then gcd:SetDrawBling(false) end
-        if gcd.SetUseCircularEdge then gcd:SetUseCircularEdge(true) end
-        gcd:SetSwipeColor(r, g, b, swipeA)
-        gcd:SetReverse(false)
+-----------------------------------------------------------------------
+-- Right-click hide: hide/show the entire ring frame
+-----------------------------------------------------------------------
+WorldFrame:HookScript("OnMouseDown", function(_, button)
+    if button == "RightButton" and CursorRingDB and CursorRingDB.hideOnRightClick then
+        ring:Hide()
     end
+end)
 
-    gcd:Show()
+WorldFrame:HookScript("OnMouseUp", function(_, button)
+    if button == "RightButton" and CursorRingDB and CursorRingDB.hideOnRightClick then
+        ring:Show()
+    end
+end)
+
+-----------------------------------------------------------------------
+-- GCD swipe alpha helper (separate from ring emphasis)
+-----------------------------------------------------------------------
+local function GetSwipeAlpha()
+    -- Swipe follows the base in/out-of-combat alpha, but is clamped to 0..1
+    return Clamp01(GetRingBaseAlpha())
 end
 
--- Appearance update
+-----------------------------------------------------------------------
+-- GCD style / swipe
+-----------------------------------------------------------------------
+local function UpdateGCDStyle()
+    if not (CursorRingCharDB and CursorRingCharDB.gcdEnabled) then
+        gcd:Hide()
+        return
+    end
+
+    local r, g, b = GetColor()
+    local key = "Default"
+    if CursorRingDB and CursorRingDB.textureKey then
+        key = CursorRingDB.textureKey
+    end
+    local texPath = ns.textures[key] or ns.textures.Default
+    if gcd.SetSwipeTexture then
+        gcd:SetSwipeTexture(texPath)
+    end
+
+    local style = "simple"
+    if CursorRingCharDB and CursorRingCharDB.gcdStyle then
+        style = CursorRingCharDB.gcdStyle
+    end
+
+    local swipeA = GetSwipeAlpha()
+
+    if style == "simple" then
+        gcd:SetDrawEdge(false)
+        if gcd.SetDrawBling then gcd:SetDrawBling(false) end
+        gcd:SetSwipeColor(r, g, b, swipeA)
+    else
+        gcd:SetDrawEdge(true)
+        if gcd.SetDrawBling then gcd:SetDrawBling(false) end
+        gcd:SetSwipeColor(r, g, b, swipeA)
+    end
+
+    local reverse = CursorRingCharDB and CursorRingCharDB.gcdReverse
+    if gcd.SetReverse then
+        gcd:SetReverse(not not reverse)
+    end
+
+    -- Do NOT decide whether GCD is active here; that is handled by cooldown logic.
+end
+
+-----------------------------------------------------------------------
+-- Ring appearance (color + alpha) – single source of truth
+-----------------------------------------------------------------------
 local function UpdateAppearance()
-    local db      = CursorRingDB
+    local db = CursorRingDB or ns.defaults
     local texture = ns.textures[db.textureKey] or ns.textures.Default
-    local radius  = db.ringRadius
-    local baseAlpha = GetRingBaseAlpha()
+    local radius  = db.ringRadius or 28
+    local mode    = db.colorMode or "class"
 
     tex:SetTexture(texture)
-    tex:SetVertexColor(GetColor())
 
-    -- If GCD is currently visible, apply dim factor; otherwise use base alpha
-    if gcd:IsShown() then
-        tex:SetAlpha(baseAlpha * GetGCDDimMultiplier())
+    -- Base alpha from in-combat / out-of-combat
+    local baseAlpha = GetRingBaseAlpha()
+
+    -- Decide ring alpha:
+    --   - If no GCD swipe is actually visible/active, use baseAlpha.
+    --   - If GCD swipe is visible and enabled, fade between baseAlpha and 0
+    --     based on gcdDimMultiplier:
+    --         E = 0 -> ringAlpha = baseAlpha
+    --         E = 1 -> ringAlpha = 0
+    local ringAlpha
+    if gcd:IsShown() and CursorRingCharDB and CursorRingCharDB.gcdEnabled then
+        local e = CursorRingCharDB.gcdDimMultiplier or 0
+        e = Clamp01(e)
+        ringAlpha = baseAlpha * (1 - e)
     else
-        tex:SetAlpha(baseAlpha)
+        ringAlpha = baseAlpha
+    end
+
+    -- Reset rotation & clear any previous gradient
+    if tex.SetRotation then
+        tex:SetRotation(0)
+    end
+    if tex.SetGradient then
+        if CreateColor then
+            tex:SetGradient("HORIZONTAL", CreateColor(1, 1, 1, 1), CreateColor(1, 1, 1, 1))
+        else
+            tex:SetGradient("HORIZONTAL", 1, 1, 1, 1, 1, 1, 1, 1)
+        end
+    end
+
+    if mode == "gradient" and tex.SetGradient then
+        -- Gradient ring path: this is the ONLY place that colors the ring when in gradient mode.
+        local c1 = db.gradientColor1 or {}
+        local c2 = db.gradientColor2 or {}
+
+        local r1 = c1.r or 1
+        local g1 = c1.g or 1
+        local b1 = c1.b or 1
+
+        local r2 = c2.r or r1
+        local g2 = c2.g or g1
+        local b2 = c2.b or b1
+
+        tex:SetVertexColor(1, 1, 1) -- neutral base
+
+        -- RGB gradient only; alpha is controlled purely by tex:SetAlpha(ringAlpha)
+        if CreateColor then
+            tex:SetGradient("HORIZONTAL",
+                CreateColor(r1, g1, b1, 1),
+                CreateColor(r2, g2, b2, 1)
+            )
+        else
+            tex:SetGradient("HORIZONTAL",
+                r1, g1, b1, 1,
+                r2, g2, b2, 1
+            )
+        end
+
+        local angle = db.gradientAngle or 0
+        angle = angle % 360
+        if tex.SetRotation then
+            tex:SetRotation(angle * math.pi / 180)
+        end
+
+        tex:SetAlpha(ringAlpha)
+    else
+        -- Solid color path (class/highvis/custom/forced class)
+        local cr, cg, cb = GetColor()
+        tex:SetVertexColor(cr, cg, cb)
+        tex:SetAlpha(ringAlpha)
     end
 
     ring:SetSize(radius * 2, radius * 2)
-
     UpdateGCDStyle()
 end
 ns.UpdateAppearance = UpdateAppearance
 
--- Robust cooldown reader: handles tuple or table returns
+-----------------------------------------------------------------------
+-- Cooldown handling (no secret fields)
+-----------------------------------------------------------------------
 local function ReadSpellCooldown(spellID)
-    if not C_Spell or not C_Spell.GetSpellCooldown then return end
-    local a, b, c, d = C_Spell.GetSpellCooldown(spellID)
-    if type(a) == "table" then
-        local t = a
-        local start = t.startTime or t.start or 0
-        local duration = t.duration or 0
-        local enable = (t.isEnabled == true or t.enabled == 1) and 1 or 0
-        local modRate = t.modRate
-        return start, duration, enable, modRate
-    else
-        return a, b, c, d
+    if C_Spell and C_Spell.GetSpellCooldown then
+        local a, b, c, d = C_Spell.GetSpellCooldown(spellID)
+        if type(a) == "table" then
+            local t = a
+            local start = t.startTime or t.start
+            local duration = t.duration
+            local modRate = t.modRate
+            return start, duration, modRate
+        else
+            -- 11.x tuple: start, duration, enable, modRate
+            local start2, duration2, _enable, modRate2 = a, b, c, d
+            return start2, duration2, modRate2
+        end
+    end
+    if GetSpellCooldown then
+        local s, d = GetSpellCooldown(spellID)
+        return s, d, nil
     end
 end
 
--- Helper to start the swipe if args look like a GCD
-local function TryStartGCD(start, duration, modRate)
-    if not CursorRingCharDB.gcdEnabled then return end
-    if not start or not duration or duration <= 0 then return end
-    -- Most GCDs live up to ~2.5s with single-button-assist; treat <= 3s as GCD
-    if duration <= 3.0 then
+local GCD_SPELL_ID = 61304
+
+local function IsCooldownActive(start, duration)
+    if not start or not duration then return false end
+    if duration <= 0 then return false end
+    if start <= 0 then return false end
+    return true
+end
+
+local function UpdateGCDCooldown()
+    if not (CursorRingCharDB and CursorRingCharDB.gcdEnabled) then
+        gcd:Hide()
+        ns.UpdateAppearance()
+        return
+    end
+
+    local start, duration, modRate = ReadSpellCooldown(GCD_SPELL_ID)
+    if IsCooldownActive(start, duration) then
         gcd:Show()
         if modRate then
             gcd:SetCooldown(start, duration, modRate)
         else
             gcd:SetCooldown(start, duration)
         end
-    end
-end
-
--- Start or clear the GCD cooldown swipe
-local GCD_SPELL_ID = 61304  -- standard GCD token
-local function UpdateGCDCooldown()
-    if not CursorRingCharDB.gcdEnabled then return end
-    local start, duration, enable, modRate = ReadSpellCooldown(GCD_SPELL_ID)
-    if (enable == 1 or enable == true) and duration and duration > 0 then
-        TryStartGCD(start, duration, modRate)
-        tex:SetAlpha(GetRingBaseAlpha() * GetGCDDimMultiplier())
+        ns.UpdateAppearance()
     else
         gcd:Hide()
-        tex:SetAlpha(GetRingBaseAlpha())
+        ns.UpdateAppearance()
     end
 end
 
--- Debug helpers (only if enabled)
-local function Print(msg) if ns.DEBUG_GCD then DEFAULT_CHAT_FRAME:AddMessage("|cff00ff00CursorRing:|r "..tostring(msg)) end end
-local function DumpGCDState(header)
-    if not ns.DEBUG_GCD then return end
-    Print("=== "..tostring(header).." ===")
-    local ringStrata = ring:GetFrameStrata() or "nil"
-    local ringLevel  = ring:GetFrameLevel() or 0
-    local gcdStrata  = gcd:GetFrameStrata() or "nil"
-    local gcdLevel   = gcd:GetFrameLevel() or 0
-    local layer, sublayer = tex:GetDrawLayer()
-    local texPath = tex:GetTexture()
-    local shown   = ring:IsShown()
-    local gcdShown= gcd:IsShown()
-    local r,g,b,a = 0,0,0,0
-    if gcd.GetSwipeColor then r,g,b,a = gcd:GetSwipeColor() end
-
-    Print(("Ring strata=%s level=%d size=%dx%d shown=%s"):format(ringStrata, ringLevel, ring:GetWidth(), ring:GetHeight(), tostring(shown)))
-    Print(("GCD  strata=%s level=%d shown=%s drawSwipe=%s drawEdge=%s"):format(gcdStrata, gcdLevel, tostring(gcdShown), tostring(gcd:GetDrawSwipe()), tostring(gcd:GetDrawEdge())))
-    Print(("Tex drawLayer=%s sub=%s path=%s"):format(tostring(layer), tostring(sublayer), tostring(texPath)))
-    Print(("SwipeColor=%s,%s,%s,%s"):format(tostring(r), tostring(g), tostring(b), tostring(a)))
-
-    local s,d,e,m = ReadSpellCooldown(61304)
-    Print(("GCD cd -> start=%s dur=%s enable=%s modRate=%s"):format(tostring(s), tostring(d), tostring(e), tostring(m)))
+-----------------------------------------------------------------------
+-- Debug helpers
+-----------------------------------------------------------------------
+local function Say(msg)
+    DEFAULT_CHAT_FRAME:AddMessage("|cff00ff00CursorRing:|r " .. tostring(msg))
 end
 
+local function PrintDebug(msg)
+    if ns.DEBUG_GCD then
+        Say(msg)
+    end
+end
+
+local function DumpGCDState(header)
+    if not ns.DEBUG_GCD then return end
+    PrintDebug("=== " .. tostring(header) .. " ===")
+    local s, d, m = ReadSpellCooldown(GCD_SPELL_ID)
+    PrintDebug("Cooldown types -> start=" .. tostring(type(s)) .. ", duration=" .. tostring(type(d)) .. ", modRate=" .. tostring(type(m)))
+end
+
+-----------------------------------------------------------------------
 -- Events
+-----------------------------------------------------------------------
 local f = CreateFrame("Frame")
 f:RegisterEvent("PLAYER_LOGIN")
 f:RegisterEvent("PLAYER_ENTERING_WORLD")
@@ -296,32 +437,83 @@ f:RegisterEvent("PLAYER_REGEN_ENABLED")
 f:RegisterEvent("SPELL_UPDATE_COOLDOWN")
 f:RegisterEvent("ACTIONBAR_UPDATE_COOLDOWN")
 f:RegisterUnitEvent("UNIT_SPELLCAST_SUCCEEDED", "player")
-f:SetScript("OnEvent", function(_, event, unit, lineID, spellID)
-    if event == "PLAYER_LOGIN" then
-        CursorRingDB      = CursorRingDB      or CopyTable(ns.defaults)
-        CursorRingCharDB  = CursorRingCharDB  or CopyTable(ns.charDefaults)
 
-        ring:SetShown(CursorRingDB.visible)
+f:SetScript("OnEvent", function(self, event, unit, arg3, spellID)
+    if event == "PLAYER_LOGIN" then
+        CursorRingDB     = CursorRingDB     or CopyTable(ns.defaults)
+        CursorRingCharDB = CursorRingCharDB or CopyTable(ns.charDefaults)
+
+        local db = CursorRingDB
+
+        -- Help flags
+        if db.helpMessageShownOnce == nil then
+            db.helpMessageShownOnce = false
+        end
+        if db.showHelpOnLogin == nil then
+            db.showHelpOnLogin = false
+        end
+
+        -- Offsets
+        if db.offsetX == nil then db.offsetX = 0 end
+        if db.offsetY == nil then db.offsetY = 0 end
+
+        -- Gradient fields (legacy gradientEnabled is ignored)
+        db.gradientEnabled = nil
+        if db.gradientAngle == nil then
+            db.gradientAngle = 0
+        end
+        if not db.gradientColor1 then
+            db.gradientColor1 = { r = 1, g = 1, b = 1 }
+        end
+        if not db.gradientColor2 then
+            db.gradientColor2 = { r = 1, g = 1, b = 1 }
+        end
+
+        -- Color mode migration (one-time from old useClassColor/useHighVis)
+        if db.colorMode == nil then
+            if db.useHighVis then
+                db.colorMode = "highvis"
+            elseif db.useClassColor == false then
+                db.colorMode = "custom"
+            else
+                db.colorMode = "class"
+            end
+        end
+
+        ring:SetShown(db.visible)
         lastInCombat = InCombatLockdown()
-        UpdateAppearance()
+        ns.UpdateAppearance()
         UpdateGCDCooldown()
 
+        -- Cursor follow
         ring:SetScript("OnUpdate", function()
             local x, y = GetScaledCursorPosition()
+            local db2 = CursorRingDB or ns.defaults
+            local ox = db2.offsetX or 0
+            local oy = db2.offsetY or 0
+
             ring:ClearAllPoints()
-            ring:SetPoint("CENTER", UIParent, "BOTTOMLEFT", x, y)
+            ring:SetPoint("CENTER", UIParent, "BOTTOMLEFT", x + ox, y + oy)
 
             local nowInCombat = InCombatLockdown()
             if nowInCombat ~= lastInCombat then
                 lastInCombat = nowInCombat
-                UpdateAppearance()
+                ns.UpdateAppearance()
             end
         end)
 
+        -- One-time / optional help message
+        local shouldShowHelp = false
+        if not db.helpMessageShownOnce then
+            shouldShowHelp = true
+            db.helpMessageShownOnce = true
+        else
+            shouldShowHelp = (db.showHelpOnLogin == true)
+        end
+
         C_Timer.After(3, function()
-            if not ns._greeted then
-                ns._greeted = true
-                DEFAULT_CHAT_FRAME:AddMessage("|cff00ff00CursorRing:|r type |cffffd100/cr|r or open |cff00ff00Esc -> Options -> AddOns -> Cursor Ring|r.")
+            if shouldShowHelp then
+                Say("Type /cr or open Esc -> Options -> AddOns -> Cursor Ring.")
             end
         end)
 
@@ -330,172 +522,224 @@ f:SetScript("OnEvent", function(_, event, unit, lineID, spellID)
         UpdateGCDCooldown()
 
     elseif event == "PLAYER_REGEN_DISABLED" or event == "PLAYER_REGEN_ENABLED" then
-        UpdateAppearance()
+        ns.UpdateAppearance()
 
     elseif event == "SPELL_UPDATE_COOLDOWN" or event == "ACTIONBAR_UPDATE_COOLDOWN" then
         UpdateGCDCooldown()
 
     elseif event == "UNIT_SPELLCAST_SUCCEEDED" and unit == "player" and spellID then
-        local start, duration, enable, modRate = ReadSpellCooldown(spellID)
-        if enable == 1 or enable == true then
-            TryStartGCD(start, duration, modRate)
-            tex:SetAlpha(GetRingBaseAlpha() * GetGCDDimMultiplier())
+        if not (CursorRingCharDB and CursorRingCharDB.gcdEnabled) then
+            gcd:Hide()
+            ns.UpdateAppearance()
+            return
+        end
+
+        -- Check the cooldown of the spell we just cast; only show swipe if it has a real cooldown.
+        local start, duration, modRate = ReadSpellCooldown(spellID)
+        if IsCooldownActive(start, duration) then
+            gcd:Show()
+            if modRate then
+                gcd:SetCooldown(start, duration, modRate)
+            else
+                gcd:SetCooldown(start, duration)
+            end
+            ns.UpdateAppearance()
+        else
+            -- Fall back to the general GCD spell for safety.
+            UpdateGCDCooldown()
         end
     end
 end)
 
--- Public refresh used by options/slash
+-----------------------------------------------------------------------
+-- Public refresh
+-----------------------------------------------------------------------
 function ns.Refresh()
     ring:SetShown(CursorRingDB.visible)
-    UpdateAppearance()
+    ns.UpdateAppearance()
     UpdateGCDCooldown()
-    if not CursorRingDB.visible then gcd:Hide() end
+    if not CursorRingDB.visible then
+        gcd:Hide()
+    end
 end
 
+-----------------------------------------------------------------------
 -- Slash commands
-SLASH_CURSORRING1 = "/cr"
-SlashCmdList["CURSORRING"] = function(msg)
-    local args = {}
-    for token in string.gmatch(msg or "", "%S+") do
-        table.insert(args, strlower(token))
-    end
-    local cmd, arg1, arg2 = args[1], args[2], args[3]
-    local db = CursorRingDB
+-----------------------------------------------------------------------
+do
+    SLASH_CURSORRING1 = "/cr"
+    SlashCmdList.CURSORRING = function(msg)
+        local args = {}
+        for token in string.gmatch(msg or "", "%S+") do
+            table.insert(args, strlower(token))
+        end
+        local cmd = args[1]
+        local arg1 = args[2]
+        local arg2 = args[3]
+        local db = CursorRingDB or ns.defaults
 
-    local function PrintCmd(s) DEFAULT_CHAT_FRAME:AddMessage("|cff00ff00CursorRing:|r "..s) end
+        if cmd == "show" then
+            db.visible = true
+            ns.Refresh()
+            Say("Shown")
 
-    if cmd == "show" then
-        db.visible = true
-        ns.Refresh()
-        PrintCmd("Shown")
+        elseif cmd == "hide" then
+            db.visible = false
+            ns.Refresh()
+            Say("Hidden")
 
-    elseif cmd == "hide" then
-        db.visible = false
-        ns.Refresh()
-        PrintCmd("Hidden")
+        elseif cmd == "toggle" then
+            db.visible = not db.visible
+            ns.Refresh()
+            Say("Toggled to " .. (db.visible and "shown" or "hidden"))
 
-    elseif cmd == "toggle" then
-        db.visible = not db.visible
-        ns.Refresh()
-        PrintCmd("Toggled to "..(db.visible and "shown" or "hidden"))
+        elseif cmd == "reset" then
+            CursorRingDB = CopyTable(ns.defaults)
+            ns.Refresh()
+            Say("Reset to defaults")
 
-    elseif cmd == "reset" then
-        CursorRingDB = CopyTable(ns.defaults)
-        ns.Refresh()
-        PrintCmd("Reset to defaults")
+        elseif cmd == "gcd" then
+            CursorRingCharDB.gcdEnabled = not CursorRingCharDB.gcdEnabled
+            if CursorRingCharDB.gcdEnabled then
+                UpdateGCDStyle()
+                UpdateGCDCooldown()
+                Say("GCD swipe: enabled")
+            else
+                gcd:Hide()
+                ns.UpdateAppearance()
+                Say("GCD swipe: disabled")
+            end
 
-    elseif cmd == "gcd" then
-        CursorRingCharDB.gcdEnabled = not CursorRingCharDB.gcdEnabled
-        if CursorRingCharDB.gcdEnabled then
+        elseif cmd == "gcdstyle" and arg1 then
+            local v = strlower(arg1)
+            if v == "blizzard" or v == "simple" then
+                CursorRingCharDB.gcdStyle = v
+                ns.Refresh()
+                Say("GCD style set to " .. v)
+            else
+                Say("Usage: /cr gcdstyle blizzard|simple")
+            end
+
+        elseif cmd == "gcdtest" and ns.DEBUG_GCD then
+            CursorRingCharDB.gcdEnabled = true
             UpdateGCDStyle()
-            UpdateGCDCooldown()
-            PrintCmd("GCD swipe: |cff00ff00enabled|r")
-        else
-            gcd:Hide()
-            tex:SetAlpha(GetRingBaseAlpha())
-            PrintCmd("GCD swipe: |cffff0000disabled|r")
-        end
+            local now = GetTime()
+            gcd:Show()
+            gcd:SetCooldown(now, 1.5)
+            Say("Test swipe 1.5s")
+            DumpGCDState("GCDTEST")
 
-    elseif cmd == "gcdstyle" and arg1 then
-        local v = string.lower(arg1)
-        if v == "square" or v == "simple" or v == "blizzard" then
-            CursorRingCharDB.gcdStyle = v
-            ns.Refresh()
-            -- If a GCD is in progress, reapply to update visuals immediately
-            local s,d,e,m = ReadSpellCooldown(61304)
-            if (e == 1 or e == true) and d and d > 0 then
-                TryStartGCD(s, d, m)
+        elseif cmd == "color" and arg1 then
+            if arg1 == "rouge" then
+                Say("It's spelled R-O-G-U-E, not rouge!")
+                return
             end
-            PrintCmd("GCD style set to "..v)
-        else
-            PrintCmd("Usage: /cr gcdstyle square | blizzard | simple")
-        end
 
-    elseif cmd == "gcdtest" and ns.DEBUG_GCD then
-        CursorRingCharDB.gcdEnabled = true
-        UpdateGCDStyle()
-        local now = GetTime()
-        gcd:Show()
-        gcd:SetCooldown(now, 1.5)
-        PrintCmd("Invoked test swipe for 1.5s. Dumping state...")
-        DumpGCDState("GCDTEST SNAPSHOT")
-        C_Timer.After(0.10, function() DumpGCDState("GCDTEST +0.10s") end)
-        C_Timer.After(0.50, function() DumpGCDState("GCDTEST +0.50s") end)
+            if arg1 == "gradient" then
+                db.colorMode = "gradient"
+                ns.Refresh()
+                Say("Color mode set to gradient")
+                return
+            end
 
-    elseif cmd == "color" and arg1 then
-        if arg1 == "rouge" then
-            PrintCmd("|cffFF0000It's spelled |cffffd100R-O-G-U-E|r|cffFF0000, not rouge!|r")
-            return
-        end
-        local classFile = ns.colorAlias[arg1] or arg1
-        local color = C_ClassColor.GetClassColor(strupper(classFile))
-        if color or arg1 == "default" or arg1 == "highvis" then
-            db.useClassColor = (arg1 == "default")
-            db.useHighVis    = (arg1 == "highvis")
-            if arg1 ~= "default" and arg1 ~= "highvis" then
+            if arg1 == "default" then
+                db.colorMode = "class"
+                ns.Refresh()
+                Say("Color mode set to class color")
+                return
+            end
+
+            if arg1 == "highvis" then
+                db.colorMode = "highvis"
+                ns.Refresh()
+                Say("Color mode set to high-visibility")
+                return
+            end
+
+            if arg1 == "custom" then
+                db.colorMode = "custom"
+                ns.Refresh()
+                Say("Color mode set to custom")
+                return
+            end
+
+            local classFile = ns.colorAlias[arg1] or arg1
+            local color = C_ClassColor.GetClassColor(strupper(classFile or ""))
+            if color then
                 db.colorMode = classFile
+                ns.Refresh()
+                Say("Color set to " .. classFile)
+            else
+                Say("Unknown color: " .. arg1)
+            end
+
+        elseif cmd == "alpha" and arg1 and arg2 then
+            local val = tonumber(arg2)
+            if not val or val < 0 or val > 1 then
+                Say("Alpha must be 0-1")
+                return
+            end
+            if arg1 == "in" then
+                db.inCombatAlpha = val
+            elseif arg1 == "out" then
+                db.outCombatAlpha = val
+            else
+                Say("Usage: /cr alpha in|out 0-1")
+                return
             end
             ns.Refresh()
-            PrintCmd("Color set to "..arg1)
-        elseif arg1 == "custom" then
-            db.useClassColor = false
-            db.useHighVis    = false
-            db.colorMode     = "custom"
+            Say("Alpha " .. arg1 .. " = " .. val)
+
+        elseif cmd == "size" and arg1 then
+            local v = tonumber(arg1)
+            if not v then
+                Say("Size must be a number")
+                return
+            end
+            if v < 10 or v > 100 then
+                Say("Size must be 10-100")
+                return
+            end
+            db.ringRadius = math.floor(v)
             ns.Refresh()
-            PrintCmd("Color set to custom")
+            Say("Size set to " .. db.ringRadius)
+
+        elseif cmd == "texture" and arg1 then
+            db.textureKey = ns.NormalizeTextureKey(arg1)
+            ns.Refresh()
+            Say("Texture set to " .. db.textureKey)
+
+        elseif cmd == "right-click" and arg1 then
+            if arg1 == "enable" then
+                db.hideOnRightClick = true
+            elseif arg1 == "disable" then
+                db.hideOnRightClick = false
+            elseif arg1 == "toggle" then
+                db.hideOnRightClick = not db.hideOnRightClick
+            else
+                Say("Usage: /cr right-click enable|disable|toggle")
+                return
+            end
+            ns.Refresh()
+            Say("Hide on right-click: " .. (db.hideOnRightClick and "enabled" or "disabled"))
+
         else
-            PrintCmd("Unknown color: "..arg1)
+            Say("Commands:")
+            Say("/cr show, /cr hide, /cr toggle, /cr reset")
+            Say("/cr gcd               - toggle GCD swipe")
+            Say("/cr gcdstyle <style>  - blizzard | simple")
+            if ns.DEBUG_GCD then
+                Say("/cr gcdtest          - test swipe for 1.5s")
+            end
+            Say("/cr color <default|highvis|custom|gradient|class/alias>")
+            Say("/cr alpha in|out <n>  - 0..1")
+            Say("/cr texture <name>")
+            Say("/cr size <n>          - 10..100")
+            Say("/cr right-click enable|disable|toggle")
         end
-
-    elseif cmd == "alpha" and arg1 and arg2 then
-        local val = tonumber(arg2)
-        if not val or val < 0 or val > 1 then PrintCmd("Alpha must be 0–1"); return end
-        if arg1 == "in" then
-            db.inCombatAlpha = val
-        elseif arg1 == "out" then
-            db.outCombatAlpha = val
-        else
-            PrintCmd("Usage: /cr alpha in|out 0-1"); return
-        end
-        ns.Refresh()
-        PrintCmd("Alpha "..arg1.." = "..val)
-
-    elseif cmd == "size" and arg1 then
-        local v = tonumber(arg1)
-        if not v then PrintCmd("Size must be a number"); return end
-        if v < 10 or v > 100 then PrintCmd("Size must be 10–100"); return end
-        db.ringRadius = math.floor(v)
-        ns.Refresh()
-        PrintCmd("Size set to "..db.ringRadius)
-
-    elseif cmd == "texture" and arg1 then
-        db.textureKey = ns.NormalizeTextureKey(arg1)
-        ns.Refresh()
-        PrintCmd("Texture set to "..db.textureKey)
-
-    elseif cmd == "right-click" and arg1 then
-        if arg1 == "enable" then
-            db.hideOnRightClick = true
-        elseif arg1 == "disable" then
-            db.hideOnRightClick = false
-        elseif arg1 == "toggle" then
-            db.hideOnRightClick = not db.hideOnRightClick
-        else
-            PrintCmd("Usage: /cr right-click enable|disable|toggle"); return
-        end
-        ns.Refresh()
-        PrintCmd("Hide on right-click: "..(db.hideOnRightClick and "enabled" or "disabled"))
-
-    else
-        PrintCmd("|cffaaaaaaCommands:|r")
-        PrintCmd("|cff00ff00/cr show|r, |cff00ff00/cr hide|r, |cff00ff00/cr toggle|r, |cff00ff00/cr reset|r")
-        PrintCmd("|cff00ff00/cr gcd|r – toggle GCD swipe")
-        PrintCmd("|cff00ff00/cr gcdstyle blizzard|simple|r – pick the GCD visual")
-        if ns.DEBUG_GCD then
-            PrintCmd("|cff00ff00/cr gcdtest|r – force a 1.5s test swipe and print debug info")
-        end
-        PrintCmd("|cff00ff00/cr color <name>|r – default | highvis | custom | class or alias")
-        PrintCmd("|cff00ff00/cr alpha in|out 0-1|r, |cff00ff00/cr texture <name>|r, |cff00ff00/cr size 10-100|r")
-        PrintCmd("|cff00ff00/cr right-click enable | disable | toggle|r")
     end
 end
+
+-- Initial size
+local initialRadius = (ns.defaults and ns.defaults.ringRadius) or 28
+ring:SetSize(initialRadius * 2, initialRadius * 2)

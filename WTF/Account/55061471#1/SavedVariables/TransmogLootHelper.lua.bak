@@ -27,9 +27,9 @@ TransmogLootHelper_Settings = {
 ["iconNewIllusion"] = true,
 ["hide"] = true,
 ["collectMode"] = 1,
-["hideGroupRolls"] = false,
-["simpleIcon"] = false,
 ["iconContainer"] = true,
+["simpleIcon"] = false,
+["hideGroupRolls"] = false,
 ["instantVault"] = true,
 ["windowSort"] = 1,
 ["iconNewUpgrade"] = true,
@@ -47,5 +47,6 @@ TransmogLootHelper_Cache = {
 ["Recipes"] = {
 [54197] = true,
 [115913] = true,
+[19801] = true,
 },
 }

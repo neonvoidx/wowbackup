@@ -1,7 +1,7 @@
-## Interface: 110205
+## Interface: 120000, 110207, 110205
 ## Title: CursorMod
 ## Author: sfmict
-## Version: v11.2.1
+## Version: v11.2.2
 ## IconTexture: Interface\AddOns\CursorMod\texture\point
 ## Notes: Makes mouse pointer remain on screen while mouselook/steering
 ## Category-enUS: User Interface

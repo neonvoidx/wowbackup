@@ -70,16 +70,16 @@ true,
 ["UseAddonCompartment"] = true,
 ["DressingRoom"] = false,
 ["UseBustShot"] = false,
+["DressingRoomItemSetListHideDupes"] = true,
 ["EnableDoubleTap"] = true,
 ["PaperDollWidget_ClassSet"] = true,
 ["TranslateName"] = false,
 ["TalentTreeUseClassBackground"] = true,
-["AutoFilterGem"] = false,
 ["FontHeightItemName"] = 11,
 ["AnchorToMinimap"] = true,
 ["UseEscapeButton"] = true,
+["DressingRoomShowSlot"] = true,
 ["installTime"] = 1722004162,
-["PandariaGemManagerDefaultMode"] = 1,
 ["Tutorials"] = {
 ["ExitConfirmation"] = false,
 ["Movement"] = false,
@@ -88,20 +88,16 @@ true,
 ["WeaponBrowser"] = false,
 ["NPCBrowser"] = true,
 },
+["IndependentMinimapButton"] = true,
 ["AutoPlayAnimation"] = false,
 ["AFKScreen"] = true,
-["IndependentMinimapButton"] = true,
-["AKFScreenDelay"] = false,
 ["OnlyShowOwnedUpgradeItem"] = true,
-["UseEntranceVisual"] = true,
+["AKFScreenDelay"] = false,
+["SpeedyScreenshotAlert"] = true,
 ["GlobalScale"] = 0.8999999999999999,
-["PandariaRemixLoadout"] = {
-[10] = {
-},
-},
-["TalentTreeForEquipmentManager"] = false,
+["HideTextsWithUI"] = true,
 ["TalentTreeForPaperDoll"] = false,
-["NamePlateNameOffset"] = 0,
+["TalentTreeForEquipmentManager"] = false,
 ["PerksProgramDB"] = {
 ["MonthNames"] = {
 {
@@ -184,35 +180,13 @@ true,
 ["m"] = 34,
 ["n"] = "October: Fel Festivities",
 },
+{
+["y"] = 2025,
+["m"] = 35,
+["n"] = "November: Bountiful Gifts",
+},
 },
 ["CurrentMonthData"] = {
-["items"] = {
-1188,
-1195,
-1177,
-1185,
-1178,
-825,
-1187,
-803,
-1179,
-1175,
-1180,
-1176,
-1182,
-1193,
-1184,
-1186,
-828,
-827,
-1181,
-1194,
-1174,
-1183,
-1196,
-1192,
-},
-["month"] = 34,
 },
 ["VendorItems"] = {
 [1019] = "::description::These light-weight wraps provide excellent muscle support.::price::20::transmogSetID::0::quality::1::perksVendorCategoryID::1::invType::INVTYPE_FEET::mountID::0::itemModifiedAppearanceID::230787::speciesID::0::name::Banded Azure War Wraps::itemID::233153::addedDate::2025/29::",
@@ -698,8 +672,8 @@ true,
 [957] = "::description::A prowler's preferred cape. A shoulder may be discarded to leave an arm free for pilfering.::price::75::transmogSetID::0::perksVendorCategoryID::1::mountID::0::itemModifiedAppearanceID::227806::speciesID::0::name::Prowler's Deep Shoulder Cape::itemID::230038::addedDate::2025/27::",
 [479] = "::description::The cult isn't unnamed, the name just cannot be represented in our language.::price::450::transmogSetID::3083::perksVendorCategoryID::8::mountID::0::itemModifiedAppearanceID::0::name::Silks of the Unnamed Cult::speciesID::0::itemID::208400::addedDate::2024/23::",
 [60] = "::description::A well-placed arrow can prove a practical solution for even the magically inclined Azurewing.::price::125::transmogSetID::0::perksVendorCategoryID::1::mountID::0::itemModifiedAppearanceID::168224::speciesID::0::name::Azure Scalesworn Longbow::originalPrice::200::itemID::190071::addedDate::2025/26::",
-[240] = "::description::Go ahead. Make my day.::price::125::transmogSetID::0::perksVendorCategoryID::1::mountID::0::itemModifiedAppearanceID::168548::speciesID::0::name::Black Iron Blunderbuss::originalPrice::200::itemID::190441::addedDate::2025/26::",
 [959] = "::description::Click your treads together, but don't shatter them.::price::40::transmogSetID::0::perksVendorCategoryID::1::mountID::0::itemModifiedAppearanceID::267041::speciesID::0::name::Ruby Scale Treads::itemID::235623::addedDate::2025/27::",
+[240] = "::description::Go ahead. Make my day.::price::125::transmogSetID::0::perksVendorCategoryID::1::mountID::0::itemModifiedAppearanceID::168548::speciesID::0::name::Black Iron Blunderbuss::originalPrice::200::itemID::190441::addedDate::2025/26::",
 [480] = "::description::Blood Onyx assassins are known for their efficiency, not their subtlety.::price::450::transmogSetID::3084::perksVendorCategoryID::8::mountID::0::itemModifiedAppearanceID::0::name::Blood Onyx Uniform::speciesID::0::itemID::208405::addedDate::2024/23::",
 [960] = "::description::Ideal for protecting your identity from authority.::price::50::transmogSetID::0::perksVendorCategoryID::1::mountID::0::itemModifiedAppearanceID::249349::speciesID::0::name::Vigilante's Deep Mask::itemID::235024::addedDate::2025/27::",
 [891] = "::description::Challenge the moon to a beauty contest, and win!::price::225::transmogSetID::0::perksVendorCategoryID::1::mountID::0::itemModifiedAppearanceID::229223::name::Wings of the Sapphire Monarch::speciesID::0::itemID::230940::addedDate::2024/24::",
@@ -758,12 +732,12 @@ true,
 [987] = "::description::Battle-tested to allow for maximum maneuverability and muscle support.::price::50::transmogSetID::0::perksVendorCategoryID::1::mountID::0::itemModifiedAppearanceID::230775::speciesID::0::name::Long Camo War Skirt and Leg Wraps::itemID::233141::addedDate::2025/28::",
 [494] = "::description::This aerodynamic design will help chase down any demon.::price::500::transmogSetID::3102::perksVendorCategoryID::8::mountID::0::itemModifiedAppearanceID::0::name::Nathreza Blasphemer's Glaives::speciesID::0::itemID::208668::addedDate::2024/23::",
 [988] = "::description::Battle-tested to allow for maximum maneuverability and muscle support.::price::50::transmogSetID::0::perksVendorCategoryID::1::mountID::0::itemModifiedAppearanceID::230781::speciesID::0::name::Long Plum War Skirt and Leg Wraps::itemID::233147::addedDate::2025/28::",
-[248] = "::description::\"What're you buyin'?\"::price::40::transmogSetID::0::perksVendorCategoryID::1::mountID::0::itemModifiedAppearanceID::168540::speciesID::0::name::Shifty Merchant's Tunic::originalPrice::50::itemID::190433::addedDate::2025/26::",
+[991] = "::description::These light-weight wraps provide excellent ankle support.::price::20::transmogSetID::0::perksVendorCategoryID::1::mountID::0::itemModifiedAppearanceID::230809::speciesID::0::name::Banded Camo War Slippers::itemID::233175::addedDate::2025/28::",
 [989] = "::description::These light-weight wraps provide excellent muscle support.::price::20::transmogSetID::0::perksVendorCategoryID::1::mountID::0::itemModifiedAppearanceID::230792::speciesID::0::name::Banded Camo War Wraps::itemID::233158::addedDate::2025/28::",
 [495] = "::description::Sharp enough to cut through nerubian silk.::price::500::transmogSetID::3110::perksVendorCategoryID::8::mountID::0::itemModifiedAppearanceID::0::name::Webbed Saronite Weaponry::speciesID::0::itemID::208666::addedDate::2024/23::",
 [990] = "::description::These light-weight wraps provide excellent muscle support.::price::20::transmogSetID::0::perksVendorCategoryID::1::mountID::0::itemModifiedAppearanceID::230798::speciesID::0::name::Banded Plum War Wraps::itemID::233164::addedDate::2025/28::",
 [124] = "::description::For the glory of G'huun!::price::800::transmogSetID::2339::perksVendorCategoryID::8::mountID::0::itemModifiedAppearanceID::0::speciesID::0::name::Ensemble: Bones of the Bloodhunter::itemID::190797::addedDate::2025/26::",
-[991] = "::description::These light-weight wraps provide excellent ankle support.::price::20::transmogSetID::0::perksVendorCategoryID::1::mountID::0::itemModifiedAppearanceID::230809::speciesID::0::name::Banded Camo War Slippers::itemID::233175::addedDate::2025/28::",
+[248] = "::description::\"What're you buyin'?\"::price::40::transmogSetID::0::perksVendorCategoryID::1::mountID::0::itemModifiedAppearanceID::168540::speciesID::0::name::Shifty Merchant's Tunic::originalPrice::50::itemID::190433::addedDate::2025/26::",
 [496] = "::description::Strike fear into any demon's heart with your flame's controlled chaos.::price::450::transmogSetID::3101::perksVendorCategoryID::8::mountID::0::itemModifiedAppearanceID::0::name::Nathreza Blasphemer's Flames::speciesID::0::itemID::208667::addedDate::2024/23::",
 [992] = "::description::These light-weight wraps provide excellent ankle support.::price::20::transmogSetID::0::perksVendorCategoryID::1::mountID::0::itemModifiedAppearanceID::230815::speciesID::0::name::Banded Plum War Slippers::itemID::233181::addedDate::2025/28::",
 [522] = "::description::Armaments forged from the primal fabric of the cosmos. Who assembled this collection and why remains a mystery. Wielding them will draw the eye of those who covet such power.::price::700::transmogSetID::3122::perksVendorCategoryID::8::mountID::0::itemModifiedAppearanceID::0::speciesID::0::name::Arsenal: Cosmic Weapons Cache::itemID::208943::addedDate::2025/26::",
@@ -824,22 +798,27 @@ true,
 ["hidePlayerArmorSetting"] = true,
 },
 ["AutoDisplayQuestItem"] = false,
+["NamePlateNameOffset"] = 0,
+["Version"] = 10000,
 ["MinimapIconStyle"] = 2,
 ["GemManager"] = true,
 ["ModelPanelScale"] = 1,
 ["TooltipTheme"] = "Bright",
-["Version"] = 10000,
 ["TalentTreeAnchor"] = 1,
+["PandariaRemixLoadout"] = {
+[10] = {
+},
+},
 ["TalentTreeForInspection"] = true,
-["HideTextsWithUI"] = true,
+["UseEntranceVisual"] = true,
 ["libdbicon"] = {
 ["minimapPos"] = 178.7545576493706,
 },
-["SpeedyScreenshotAlert"] = true,
 ["SoloQueueLFRDetails"] = false,
+["PandariaGemManagerDefaultMode"] = 1,
 ["CameraOrbit"] = true,
 ["TradingPostChangePost"] = true,
-["DressingRoomShowSlot"] = true,
+["AutoFilterGem"] = false,
 ["SearchSuggestEnable"] = false,
 ["ConduitTooltip"] = false,
 ["DressingRoomUseTargetModel"] = true,
@@ -1280,6 +1259,16 @@ NarciCharacterProfiles = {
 },
 },
 ["class"] = 4,
+},
+["0E1566A8"] = {
+["race"] = 32,
+["name"] = "Crillessana",
+["birth"] = 1763388985,
+["serverID"] = "3684",
+["lastVisit"] = 1763388985,
+["outfits"] = {
+},
+["class"] = 11,
 },
 ["0E6EE965"] = {
 ["race"] = 29,
@@ -2159,6 +2148,24 @@ NarciCharacterProfiles = {
 },
 ["class"] = 8,
 },
+["0EA9BBFD"] = {
+["race"] = 35,
+["name"] = "Gehyo",
+["birth"] = 1763389072,
+["serverID"] = "11",
+["lastVisit"] = 1763499492,
+["outfits"] = {
+{
+["s"] = "86901,220771,220773,220766,0,0,220774,220768,220772,220770,220767,91086:-1,0",
+["n"] = "Sruv",
+},
+{
+["s"] = "116830,77343,77345,229618,80190,0,193873,198778,84223,2635,2636,221165:-1,0",
+["n"] = "Black",
+},
+},
+["class"] = 3,
+},
 ["0EA29728"] = {
 ["race"] = 4,
 ["name"] = "Starstypeshi",
@@ -2180,6 +2187,20 @@ NarciCharacterProfiles = {
 },
 },
 ["class"] = 11,
+},
+["0EA49B09"] = {
+["race"] = 4,
+["name"] = "Ofpusstwo",
+["birth"] = 1759950823,
+["serverID"] = "11",
+["lastVisit"] = 1763570318,
+["outfits"] = {
+{
+["s"] = "227837,292017,298811,292030,0,0,288304,292026,292046,292021,292042,229025:-1:6174,229025:0:6174",
+["n"] = "void",
+},
+},
+["class"] = 12,
 },
 ["0EBB3F42"] = {
 ["race"] = 31,
@@ -2317,168 +2338,6 @@ NarciCharacterProfiles = {
 },
 ["class"] = 13,
 },
-["0EA2971A"] = {
-["race"] = 1,
-["name"] = "Praisesun",
-["birth"] = 1757222854,
-["serverID"] = "11",
-["lastVisit"] = 1759416309,
-["outfits"] = {
-{
-["s"] = "220114,220116,220118,220111,83202,9374,220119,220113,220117,220115,220112,220195:-1:7521,220196",
-["n"] = "20th Anniv",
-},
-},
-["class"] = 2,
-},
-["0EAABA4A"] = {
-["race"] = 36,
-["name"] = "Mäñýfäçëð",
-["birth"] = 1743211852,
-["serverID"] = "3684",
-["lastVisit"] = 1756135065,
-["outfits"] = {
-{
-["s"] = "24189,77343,77345,6905,1706,83203,6975,6971,6974,6973,104603,168165:-1:6258,168165:0:6258",
-["n"] = "Bloodfang",
-},
-{
-["s"] = "37721,37719,48672,37723,1706,83203,37725,37722,37728,37720,37727,14984:0:5868,14984:0:5868",
-["n"] = "Cata Glad",
-},
-{
-["s"] = "68097,93948,77345,6905,1706,9374,104604,94331,105814,6907,115983,7496:0:5868,7488",
-["n"] = "Nightslayer",
-},
-{
-["s"] = "21960,21750,77345,21927,1706,83203,37725,22079,21939,22087,21682,36658:0:6162,36658:0:6162",
-["n"] = "Garonas Guise",
-},
-{
-["s"] = "22249,22251,77345,22247,1706,66537,37725,22248,6974,46886,6970,36658,36658",
-["n"] = "Garonas Red",
-},
-{
-["s"] = "225875,198620,198621,198628,103317,218284,198624,198623,198625,198622,198626,77442:0:6158,77442",
-["n"] = "Pirate",
-},
-{
-["s"] = "3814,69807,115884,69702,1706,9374,104604,89985,84223,69790,69723,14984:-1:5868,168165:0:6258",
-["n"] = "Felblade",
-},
-{
-["s"] = "220715,220717,77345,220712,19964,224733,220720,220714,220718,220716,220713,39516:-1:7521,39517:0:7521",
-["n"] = "20th Ann",
-},
-{
-["s"] = "105957,77343,77345,105958,1706,83203,37725,105954,84223,105956,105955,7496,7488:0:73539",
-["n"] = "Wendingo",
-},
-{
-["s"] = "102199,101785,105152,102236,1706,83203,37725,103335,84223,101834,101830,7496,7488:0:80738",
-["n"] = "Dazarazalor",
-},
-{
-["s"] = "81183,69807,102770,69702,19960,224733,104604,94069,69819,69790,69723,14984:-1:5391,14984:0:5391",
-["n"] = "Felblade Red",
-},
-{
-["s"] = "113236,14945,114927,74660,195322,184088,6975,6971,6974,6973,6970,21042:-1:7521,95479:0:7521",
-["n"] = "Venthyr",
-},
-{
-["s"] = "3814,77343,77345,89261,103317,20962,31321,94331,84223,42171,26161,168165:-1:5391,168165:0:5391",
-["n"] = "Thug Zug",
-},
-{
-["s"] = "168062,77343,77345,104602,1707,83203,104604,94331,84223,89433,30772,80727:-1:7640,183886:0:7640",
-["n"] = "Pirate life",
-},
-{
-["s"] = "68100,69807:69807,77345,69702,83202,7975,104604,94331,69819,69790,69723,168941:-1:5868,168941:0:5868",
-["n"] = "The Defiler",
-},
-{
-["s"] = "249350,77343,77345,104602,195317,222850,193873,195299,109317,230775,230792,39516:-1:7521,39517:0:7521",
-["n"] = "Naked Zoro",
-},
-{
-["s"] = "7890,96983:86316,77345,1513,195317,195300,96989,96985,96986,96987,96988,80724:0:6158,39517",
-["n"] = "Maghar",
-},
-{
-["s"] = "68097,220717,77345,220712,19964,224733,220720,220714,220718,220716,220713,39516:-1:7521,39517:0:7521",
-["n"] = "20thWMask",
-},
-},
-["class"] = 4,
-},
-["0EA2971C"] = {
-["race"] = 5,
-["name"] = "Hellavator",
-["birth"] = 1757965487,
-["serverID"] = "11",
-["lastVisit"] = 1758476730,
-["outfits"] = {
-{
-["s"] = "69091,69191,38873,69211,1706,14349,19029,6992,69671,12853,12631,0,0",
-["n"] = "Dread",
-},
-{
-["s"] = "13630,13633,77345,13632,1706,83203,19029,14668,83468,14121,98458,80385,80389",
-["n"] = "Corrupter",
-},
-{
-["s"] = "189246,189224,115442,189273,22037,7975,67220,188812,52114,79794,104603,74604:-1:6378,0",
-["n"] = "FEL PLAGUE",
-},
-{
-["s"] = "24637,24640,27742,24639,1706,22004,19029,24636,52114,24638,13967,0,0",
-["n"] = "Dark Coven Blue",
-},
-{
-["s"] = "14119,14122,38874,14120,1706,14349,19029,83463,52114,14121,13967,14984:0:5864,0",
-["n"] = "Wings",
-},
-{
-["s"] = "78494,78497,81665,78496,1706,83203,78499,78493,78498,78495,78492,14984:0:5864,0",
-["n"] = "T19",
-},
-{
-["s"] = "84829,84835,114927,84833,1706,9374,19029,84827,84837,84831,84825,80385,0",
-["n"] = "T20",
-},
-{
-["s"] = "60274,67218,77345,67230,83202,83203,19029,81149,67219,12853,12631,74604:-1:6676,0",
-["n"] = "Guldaniel",
-},
-{
-["s"] = "165903,165906,165956,165905,168248,146210,165908,165902,165907,165904,104603,74610:0:6258,0",
-["n"] = "Diabolic",
-},
-{
-["s"] = "189971,189972,116019,183593,168248,195164,105847,106582,183617,79794,104603,80377:0:5864,0",
-["n"] = "Trading Post",
-},
-{
-["s"] = "189246,189224,115442,165920,2249,7975,165908,165902,165907,165904,165901,80368:0:6258,0",
-["n"] = "Diabolic green/red",
-},
-{
-["s"] = "184300,189766,189776,189767,22037,190178,189771,189772,189768,189769,189770,80384:0:5864,0",
-["n"] = "Forsaken",
-},
-{
-["s"] = "5410,8883,115442,8880,51873,7975,193873,8885,8886,8881,8884,76828:0:6262,0",
-["n"] = "Plagueheart",
-},
-{
-["s"] = "116830,77343,77345,229618,80190,83203,193873,230325,105846,3670,2636,76828:0:6262,0",
-["n"] = "matrix",
-},
-},
-["class"] = 9,
-},
 ["0EA380B9"] = {
 ["race"] = 4,
 ["name"] = "Mäñýfäçëð",
@@ -2561,6 +2420,168 @@ NarciCharacterProfiles = {
 {
 ["s"] = "68100,69807:69807,77345,69702,83202,7975,104604,94331,69819,69790,69723,168941:-1:5868,168941:0:5868",
 ["n"] = "The Defiler",
+},
+},
+["class"] = 4,
+},
+["0EA2971A"] = {
+["race"] = 1,
+["name"] = "Praisesun",
+["birth"] = 1757222854,
+["serverID"] = "11",
+["lastVisit"] = 1759416309,
+["outfits"] = {
+{
+["s"] = "220114,220116,220118,220111,83202,9374,220119,220113,220117,220115,220112,220195:-1:7521,220196",
+["n"] = "20th Anniv",
+},
+},
+["class"] = 2,
+},
+["0EA2971C"] = {
+["race"] = 5,
+["name"] = "Hellavator",
+["birth"] = 1757965487,
+["serverID"] = "11",
+["lastVisit"] = 1758476730,
+["outfits"] = {
+{
+["s"] = "69091,69191,38873,69211,1706,14349,19029,6992,69671,12853,12631,0,0",
+["n"] = "Dread",
+},
+{
+["s"] = "13630,13633,77345,13632,1706,83203,19029,14668,83468,14121,98458,80385,80389",
+["n"] = "Corrupter",
+},
+{
+["s"] = "189246,189224,115442,189273,22037,7975,67220,188812,52114,79794,104603,74604:-1:6378,0",
+["n"] = "FEL PLAGUE",
+},
+{
+["s"] = "24637,24640,27742,24639,1706,22004,19029,24636,52114,24638,13967,0,0",
+["n"] = "Dark Coven Blue",
+},
+{
+["s"] = "14119,14122,38874,14120,1706,14349,19029,83463,52114,14121,13967,14984:0:5864,0",
+["n"] = "Wings",
+},
+{
+["s"] = "78494,78497,81665,78496,1706,83203,78499,78493,78498,78495,78492,14984:0:5864,0",
+["n"] = "T19",
+},
+{
+["s"] = "84829,84835,114927,84833,1706,9374,19029,84827,84837,84831,84825,80385,0",
+["n"] = "T20",
+},
+{
+["s"] = "60274,67218,77345,67230,83202,83203,19029,81149,67219,12853,12631,74604:-1:6676,0",
+["n"] = "Guldaniel",
+},
+{
+["s"] = "165903,165906,165956,165905,168248,146210,165908,165902,165907,165904,104603,74610:0:6258,0",
+["n"] = "Diabolic",
+},
+{
+["s"] = "189971,189972,116019,183593,168248,195164,105847,106582,183617,79794,104603,80377:0:5864,0",
+["n"] = "Trading Post",
+},
+{
+["s"] = "189246,189224,115442,165920,2249,7975,165908,165902,165907,165904,165901,80368:0:6258,0",
+["n"] = "Diabolic green/red",
+},
+{
+["s"] = "184300,189766,189776,189767,22037,190178,189771,189772,189768,189769,189770,80384:0:5864,0",
+["n"] = "Forsaken",
+},
+{
+["s"] = "5410,8883,115442,8880,51873,7975,193873,8885,8886,8881,8884,76828:0:6262,0",
+["n"] = "Plagueheart",
+},
+{
+["s"] = "116830,77343,77345,229618,80190,83203,193873,230325,105846,3670,2636,76828:0:6262,0",
+["n"] = "matrix",
+},
+},
+["class"] = 9,
+},
+["0EAABA4A"] = {
+["race"] = 36,
+["name"] = "Mäñýfäçëð",
+["birth"] = 1743211852,
+["serverID"] = "3684",
+["lastVisit"] = 1756135065,
+["outfits"] = {
+{
+["s"] = "24189,77343,77345,6905,1706,83203,6975,6971,6974,6973,104603,168165:-1:6258,168165:0:6258",
+["n"] = "Bloodfang",
+},
+{
+["s"] = "37721,37719,48672,37723,1706,83203,37725,37722,37728,37720,37727,14984:0:5868,14984:0:5868",
+["n"] = "Cata Glad",
+},
+{
+["s"] = "68097,93948,77345,6905,1706,9374,104604,94331,105814,6907,115983,7496:0:5868,7488",
+["n"] = "Nightslayer",
+},
+{
+["s"] = "21960,21750,77345,21927,1706,83203,37725,22079,21939,22087,21682,36658:0:6162,36658:0:6162",
+["n"] = "Garonas Guise",
+},
+{
+["s"] = "22249,22251,77345,22247,1706,66537,37725,22248,6974,46886,6970,36658,36658",
+["n"] = "Garonas Red",
+},
+{
+["s"] = "225875,198620,198621,198628,103317,218284,198624,198623,198625,198622,198626,77442:0:6158,77442",
+["n"] = "Pirate",
+},
+{
+["s"] = "3814,69807,115884,69702,1706,9374,104604,89985,84223,69790,69723,14984:-1:5868,168165:0:6258",
+["n"] = "Felblade",
+},
+{
+["s"] = "220715,220717,77345,220712,19964,224733,220720,220714,220718,220716,220713,39516:-1:7521,39517:0:7521",
+["n"] = "20th Ann",
+},
+{
+["s"] = "105957,77343,77345,105958,1706,83203,37725,105954,84223,105956,105955,7496,7488:0:73539",
+["n"] = "Wendingo",
+},
+{
+["s"] = "102199,101785,105152,102236,1706,83203,37725,103335,84223,101834,101830,7496,7488:0:80738",
+["n"] = "Dazarazalor",
+},
+{
+["s"] = "81183,69807,102770,69702,19960,224733,104604,94069,69819,69790,69723,14984:-1:5391,14984:0:5391",
+["n"] = "Felblade Red",
+},
+{
+["s"] = "113236,14945,114927,74660,195322,184088,6975,6971,6974,6973,6970,21042:-1:7521,95479:0:7521",
+["n"] = "Venthyr",
+},
+{
+["s"] = "3814,77343,77345,89261,103317,20962,31321,94331,84223,42171,26161,168165:-1:5391,168165:0:5391",
+["n"] = "Thug Zug",
+},
+{
+["s"] = "168062,77343,77345,104602,1707,83203,104604,94331,84223,89433,30772,80727:-1:7640,183886:0:7640",
+["n"] = "Pirate life",
+},
+{
+["s"] = "68100,69807:69807,77345,69702,83202,7975,104604,94331,69819,69790,69723,168941:-1:5868,168941:0:5868",
+["n"] = "The Defiler",
+},
+{
+["s"] = "249350,77343,77345,104602,195317,222850,193873,195299,109317,230775,230792,39516:-1:7521,39517:0:7521",
+["n"] = "Naked Zoro",
+},
+{
+["s"] = "7890,96983:86316,77345,1513,195317,195300,96989,96985,96986,96987,96988,80724:0:6158,39517",
+["n"] = "Maghar",
+},
+{
+["s"] = "68097,220717,77345,220712,19964,224733,220720,220714,220718,220716,220713,39516:-1:7521,39517:0:7521",
+["n"] = "20thWMask",
 },
 },
 ["class"] = 4,
@@ -3093,19 +3114,19 @@ NarciCharacterProfiles = {
 },
 ["class"] = 10,
 },
-["0EA49B09"] = {
-["race"] = 4,
-["name"] = "Ofpusstwo",
-["birth"] = 1759950823,
-["serverID"] = "11",
-["lastVisit"] = 1761269412,
+["0DDBF0B9"] = {
+["race"] = 1,
+["name"] = "Clevagirl",
+["birth"] = 1763388863,
+["serverID"] = "3684",
+["lastVisit"] = 1763388863,
 ["outfits"] = {
 {
-["s"] = "291679,291681,298795,291676,0,0,291682,291678,291683,291680,291677,89282:-1:8549,89282:0:8549",
-["n"] = "void",
+["s"] = "75964,24563,77345,24564,0,0,104604,24560,84223,24562,104603,90755:-1:6158,0",
+["n"] = "Clever",
 },
 },
-["class"] = 12,
+["class"] = 3,
 },
 }
 NarciPhotoModeDB = {

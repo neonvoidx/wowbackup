@@ -1,3 +1,4 @@
+if BBF.isMidnight then return end
 local function AdjustFramePoint(frame, xOffset, yOffset)
     if not frame._storedPoint then
         local point, relativeTo, relativePoint, xOfs, yOfs = frame:GetPoint()

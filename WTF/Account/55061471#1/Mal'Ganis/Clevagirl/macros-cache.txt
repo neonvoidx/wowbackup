@@ -1,0 +1,65 @@
+VER 3 0100000000000002 " " "INV_MISC_QUESTIONMARK"
+#showtooltip
+/cast [@mouseover,harm,exists][] Scare Beast
+END
+VER 3 0100000000000003 " " "INV_MISC_QUESTIONMARK"
+#showtooltip
+/cast [@mouseover,harm,exists][] Tranquilizing Shot
+END
+VER 3 0100000000000008 " " "132152"
+/petassist
+/petattack
+END
+VER 3 010000000000000A " " "INV_MISC_QUESTIONMARK"
+#showtooltip
+/cast [@cursor][] Freezing Trap
+END
+VER 3 0100000000000009 " " "INV_MISC_QUESTIONMARK"
+#showtooltip
+/cast [@cursor][] Steel Trap
+END
+VER 3 010000000000000B " " "INV_MISC_QUESTIONMARK"
+#showtooltip
+/cast [@cursor][] Tar Trap
+END
+VER 3 010000000000000E " " "INV_MISC_QUESTIONMARK"
+#showtooltip 
+/cast Camouflage
+/use Goblin Weather Machine - Prototype 01-B
+END
+VER 3 010000000000000F " " "INV_MISC_QUESTIONMARK"
+#showtooltip
+/cast Aspect of the Cheetah
+/use Prismatic bauble
+END
+VER 3 010000000000000D " " "INV_MISC_QUESTIONMARK"
+#showtooltip
+/cast Harpoon
+/use Prismatic bauble
+END
+VER 3 010000000000000C " " "INV_MISC_QUESTIONMARK"
+#showtooltip
+/stopcasting [nochanneling:feign death]
+/cast Feign Death
+/petpassive
+END
+VER 3 0100000000000010 " " "INV_MISC_QUESTIONMARK"
+#showtooltip
+/cast [@mouseover, help, exists, nodead] [@player] Command Pet
+END
+VER 3 0100000000000005 " A1" "INV_MISC_QUESTIONMARK"
+#showtooltip
+/cast [mod:shift, @target]Intimidation;[nomod,@arena1] Intimidation;
+END
+VER 3 0100000000000001 " Sac" "INV_MISC_QUESTIONMARK"
+#showtooltip
+/cast [@mouseover,help,exists][@player] Roar of Sacrifice
+END
+VER 3 0100000000000006 "A2" "INV_MISC_QUESTIONMARK"
+#showtooltip
+/cast [mod:shift, @target]Intimidation;[nomod,@arena2] Intimidation
+END
+VER 3 0100000000000007 "A3" "INV_MISC_QUESTIONMARK"
+#showtooltip
+/cast [mod:shift, @target]Intimidation;[nomod,@arena3] Intimidation
+END

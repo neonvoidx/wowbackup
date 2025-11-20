@@ -1,6 +1,7 @@
 # Syndicator
 
-## [245](https://github.com/TheMouseNest/Syndicator/tree/245) (2025-10-21)
-[Full Changelog](https://github.com/TheMouseNest/Syndicator/compare/244...245) 
+## [247](https://github.com/TheMouseNest/Syndicator/tree/247) (2025-11-07)
+[Full Changelog](https://github.com/TheMouseNest/Syndicator/compare/246...247) 
 
-- Vanilla: Update toc for 1.15.8  
+- Fix a few typos  
+- Tag as support 12.0  

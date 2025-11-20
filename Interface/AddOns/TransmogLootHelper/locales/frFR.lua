@@ -2,7 +2,7 @@
 -- Equip Recommended Gear: frFR.lua --
 --------------------------------------
 -- French (France) localisation
--- Translator(s):
+-- Translator(s): Klep-Ysondre
 
 -- Initialisation
 if GetLocale() ~= "frFR" then return end
@@ -54,6 +54,19 @@ local L = app.locales
 -- L.INSTANT_TOOLTIP =						"Hold Shift to instantly receive your item and skip the 5 second timer."
 
 -- Settings
+L.SETTINGS_SUPPORT_TEXTLONG =			"Le développement de cette extension demande beaucoup de temps et d’efforts.\nVeuillez envisager de soutenir financièrement le développeur."
+L.SETTINGS_SUPPORT_TEXT =				"Soutien"
+-- L.SETTINGS_SUPPORT_BUTTON =				"Buy Me a Coffee"	-- Brand name, if there isn't a localised version, keep it the way it is
+L.SETTINGS_SUPPORT_DESC =				"Merci !"
+-- L.SETTINGS_HELP_TEXT =					"Feedback & Help"
+-- L.SETTINGS_HELP_BUTTON =				"Discord"	-- Brand name, if there isn't a localised version, keep it the way it is
+-- L.SETTINGS_HELP_DESC =					"Join the Discord server."
+-- L.SETTINGS_ISSUES_TEXT =				"Issue Tracker"
+-- L.SETTINGS_ISSUES_BUTTON =				"GitHub"	-- Brand name, if there isn't a localised version, keep it the way it is
+-- L.SETTINGS_ISSUES_DESC =				"View the issue tracker on GitHub."
+L.SETTINGS_URL_COPY =					"Ctrl+C pour copier :"
+L.SETTINGS_URL_COPIED =					"Lien copié dans le presse-papiers"
+
 -- L.SETTINGS_TOOLTIP =					app.IconLMB .. "|cffFFFFFF: Toggle the window\n" ..
 -- 										app.IconRMB .. ": " .. L.WINDOW_BUTTON_SETTINGS
 -- L.SETTINGS_BAGANATOR =					"For Baganator users this is managed by Baganator's own settings."

@@ -477,7 +477,7 @@ local function GetTooltipInfoLink(details)
   if C_TooltipInfo then
     details.tooltipInfoLink = C_TooltipInfo.GetHyperlink(details.itemLink) or {lines={}}
   elseif details.itemID == Syndicator.Constants.BattlePetCageID then
-    info.tooltipInfoLink = {lines = {}}
+    details.tooltipInfoLink = {lines = {}}
   else
     details.tooltipInfoLink = Syndicator.Utilities.DumpClassicTooltip(function(tooltip) tooltip:SetHyperlink(details.itemLink) end)
   end
@@ -2336,7 +2336,7 @@ function Syndicator.Search.InitializeSearchEngine()
   if C_Item.GetItemClassInfo(20) then -- Housing
     local decorToCheck = {
       [0] = "decor",
-      [1] = "dye",
+      [1] = "housing dye",
       [2] = "room",
       [3] = "room customization",
       [4] = "exterior customization",

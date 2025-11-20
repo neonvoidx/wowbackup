@@ -4,29 +4,32 @@ HealthBarColorDB = {
 },
 ["profileKeys"] = {
 ["Mäñýfäçëð - Tichondrius"] = "Default",
+["Thingreyline - Tichondrius"] = "Default",
 ["Auteist - Mal'Ganis"] = "Default",
 ["Ofpuss - Mal'Ganis"] = "Default",
+["Crillessana - Mal'Ganis"] = "Default",
 ["Smaugchamp - Mal'Ganis"] = "Default",
 ["Choppiez - Mal'Ganis"] = "Default",
-["Starstypeshi - Tichondrius"] = "Default",
+["Gehyo - Tichondrius"] = "Default",
 ["Gehyo - Mal'Ganis"] = "Default",
 ["Heilsatan - Tichondrius"] = "Default",
 ["Choppiez - Tichondrius"] = "Default",
+["Hellowalls - Mal'Ganis"] = "Default",
 ["Auteist - Tichondrius"] = "Default",
-["Ofpusstwo - Tichondrius"] = "Default",
 ["Hellavator - Tichondrius"] = "Default",
-["Smaugchamp - Tichondrius"] = "Default",
+["Ofpusstwo - Tichondrius"] = "Default",
+["Hellavator - Mal'Ganis"] = "Default",
 ["Cullnvoid - Tichondrius"] = "Default",
 ["Stormclout - Tichondrius"] = "Default",
 ["Reedingo - Mal'Ganis"] = "Default",
 ["Stormclout - Mal'Ganis"] = "Default",
 ["Rakeist - Mal'Ganis"] = "Default",
-["Hellowalls - Mal'Ganis"] = "Default",
-["Hellavator - Mal'Ganis"] = "Default",
+["Smaugchamp - Tichondrius"] = "Default",
+["Praisesun - Tichondrius"] = "Default",
 ["Ofpuss - Tichondrius"] = "Default",
 ["Praisesun - Mal'Ganis"] = "Default",
-["Praisesun - Tichondrius"] = "Default",
-["Thingreyline - Tichondrius"] = "Default",
+["Starstypeshi - Tichondrius"] = "Default",
+["Clevagirl - Mal'Ganis"] = "Default",
 },
 ["profiles"] = {
 ["Default"] = {
@@ -82,8 +85,10 @@ HealthBarColorDB = {
 },
 ["HealthBarColor_target"] = {
 },
-["BiggerHealthBar"] = {
-["enabled"] = true,
+["Font_boss3"] = {
+["healthFont"] = "1",
+["nameFont"] = "1",
+["powerFont"] = "1",
 },
 ["Textures"] = {
 ["powerBarTexture"] = "Wglass",
@@ -108,16 +113,14 @@ HealthBarColorDB = {
 ["DebuffColor"] = {
 ["enabled"] = true,
 },
-["Font_focustarget"] = {
-["healthFont"] = "1",
-["nameFont"] = "1",
-["powerFont"] = "1",
+["BiggerHealthBar"] = {
+["enabled"] = true,
 },
 ["MinimapButton"] = {
 ["minimapPos"] = 69.587679475945,
 ["enabled"] = false,
 },
-["Font_boss3"] = {
+["Font_focustarget"] = {
 ["healthFont"] = "1",
 ["nameFont"] = "1",
 ["powerFont"] = "1",

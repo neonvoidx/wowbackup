@@ -1,3 +1,96 @@
+2.2.4
+- Midnight: Some more tweaks to try ensure DR frame does not bug out. However since the DR Frames is from Blizzard now any taint in the game has a high potential of just breaking them. It's awesome stuff really.
+
+2.2.3c
+- Retail & MoP: Fix Feign Death sometimes resetting all DRs on the Hunter. In some cases the Feign Death aura does not get registered, causing DRs to reset before this version. Cool stuff.
+
+2.2.3b
+- Midnight: Fix DR Frames not showing after leaving smth in the wrong state after testing.
+
+2.2.3
+- Fix Target & Focus & Party Target Widgets not working after an efficiency change a while ago and forgetting to change the function call.
+- Midnight: Also fixed the targeting Widgets on Midnight.
+
+2.2.2f
+- Midnight: Hide the DR Frames sticking out in when in Edit Mode.
+
+2.2.2e
+- Midnight: Force reload on first arena as well. (Waiting for Blizzard to fix DRs & Edit Mode)
+
+2.2.2d
+- Few more fixes for Midnight.
+- Root cause for DR frames failing on Midnight found: Edit Mode. Welcome back Dragonflight. I've added a *strongly encouraged* reload button that pops up when you enter Arena. This is good practice during a Beta anyway.
+
+2.2.2c
+- Few more fixes for Midnight.
+
+2.2.2b
+- Midnight fixes and workarounds.
+
+2.2.2 Midnight
+- Midnight should now work. More details at end of notes.
+- New streamer profiles import page in the "Share Profiles" tab. Aeghis, Nahj & Pmake available atm, thank you all <3
+- New layout: BlizzRaid
+- New Castbar color settings.
+- New Castbar "No interrupt ready" color setting. (BBF version is better, this one is currently made with Midnight in mind but might see tweaks in the future. If using BBF just keep using that.)
+- New Castbar un-interruptible texture setting.
+- New "Reverse Bars Fill" setting that reverses health and power fill direction.
+- Target Indicator is now enabled by default on the newer Layouts.It may have turned on for you and if you don't want it turn it off in the Layout settings -> Widgets.
+- Revert the hiding of dark mode & frame color settings on layouts where it makes less sense, since they can still be used to color the castbar.
+
+
+Does NOT work:
+- Most auras except for whatever CC Blizzard wants us to see.
+- Absorb overlay (potential tweaks for that inc later, or just an absorb number)
+- Diminishing Returns settings are wonky and theres a few issues. They will see more work moving forward, heres the current (and maybe permanent) issues:
+1. DR: I cannot control each individual DR icons position. You will still be able to move them around and resize them though but more on that in the next three points.
+2. DR: Grow up and grow down settings no longer work. Grow left and right does. Up and down will just default to grow left instead for now until I clean things up later down the road towards Midnight release.
+3. DR: Gap setting no longer works.
+- Maybe other things I've forgot to mention.
+
+
+2.2.1
+- Add option to disable all auras from Class/Spec icon.
+- Retail: Add missing Surge of Power root from aura list (existed as DR). Ty Jaime.
+- Midnight support should be around the corner but I need to wait for skirmishes to actually test it and make sure first and probably make some tweaks.
+
+2.2.0
+- Separate Dark Mode color from BetterBlizzFrames' dark mode so you can change it to a different value than the rest of your UI. Your dark mode value might need re-adjusting because of this if you were using BBF dark mode plus sArena dark mode.
+- Add two new options to Class Color FrameTexture: Only color icon borders & Color healer green. This will only show up on layouts supporting it (that have borders on class icon specifically)
+- Class Color FrameTexture now also works on Pixelated layout.
+- Hide some settings in the Global section for layouts where they dont apply (for example dark mode for Xaryu layout, since there are no borders to dark mode)
+- Fix castbar texture change not sticking during arenas on the default castbars.
+- Temporary tweak to MoP's BlizzCompact layout with its cooldown edge texture: use circle edge instead to avoid the edge sticking out on the corners. Not sure how to fix this properly yet on MoP.
+
+2.1.9
+- Fix potential castbar coloring issues with Modern Castbar + Custom texture instead of the default ones.
+- Potential fix for some MoP+Human racial settings. Unable to test cuz no test environment. No PTR, no lvl 90, no skirmishes, gg.
+
+2.1.8
+- Add new DR settings and tweak them a bit.
+- New DR Thin Pixel Border setting.
+- New DR Hide Glow setting.
+- Pixelated layout's DR look can now have different looks. Thick Pixel Border is its default but it can now also have Bright DR Border etc.
+- Other layouts than Pixelated can now have the Thick Pixel DR Border / Thin Pixel DR Border setting.
+- Tweak a few aura priorities.
+- Remove Upheaval from Knock DR's.
+- Focus Indicator no longer enabled by default for Blizz Compact layout.
+- Due to an oversight after combining Retail & MoP version into one version I've had to reset DR Reset Time back to their default value (18.5 on Retail and 20 on MoP). Also fix DR Reset Time description on MoP. It had the Retail description and was inaccurate.
+
+2.1.7
+- One new layout: Blizz Compact
+- Four new features in layout settings in new Widgets section:
+1. Target Indicator: Show icon on your current target
+2. Focus Indicator: Show icon on your current focus
+3. Party Target Indicator: Show class colored player icons on arena frames indicating who your party members are targeting.
+4. Combat Indicator: Show food icon on out of combat arena frames.
+- New Hide Castbar Icon setting.
+- Dark mode is no longer enabled by default if BetterBlizzFrames' DarkMode or FrameColor is detected.
+- DR Text setting moved from global to layout settings next to other similar settings.
+- Fix issues with dispel tracker being updated multiple times per one dispell.
+- MoP: Potential fix for Human Racial/Trinket issue on MoP.
+- Misc minor tweaks in gui and layouts.
+
 2.1.6
 - Fix GUI not updating position settings immediately after dragging things around.
 - Fix DR Categories not respecting per spec & per class settings due to falling back to global settings like how Static Icons work, oops.

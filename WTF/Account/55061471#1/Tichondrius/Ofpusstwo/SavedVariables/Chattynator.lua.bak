@@ -1,8 +1,6 @@
 
 CHATTYNATOR_CURRENT_PROFILE = "DEFAULT"
 CHATTYNATOR_COMMAND_HISTORY = {
-"/i lol",
-"/s oo",
 "/s outlaw eh",
 "/s who we going?",
 "/s LOL",
@@ -201,6 +199,8 @@ CHATTYNATOR_COMMAND_HISTORY = {
 "/s /rl",
 "/s /cr",
 "/s /zorr",
+"/s /rl",
+"/s /bbp",
 "/s /rl",
 "/s /bbp",
 "/s /rl",

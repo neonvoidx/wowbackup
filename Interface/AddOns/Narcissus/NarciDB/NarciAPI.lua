@@ -94,17 +94,17 @@ local function NarciAPI_GetSlotVisualID(slotID)
             end
             modification = 1;       --Enum.TransmogModification : 0 ~ Main, 1 ~ Secondary
         end
-        transmogLocation:Set(slotID, transmogType, modification);
-        local baseSourceID, baseVisualID, appliedSourceID, appliedVisualID, pendingSourceID, pendingVisualID, hasPendingUndo, isHideVisual, itemSubclass = C_Transmog.GetSlotVisualInfo(transmogLocation);
+        TransitionAPI.SetTransmogLocationData(transmogLocation, slotID, transmogType, modification);
+        local baseSourceID, baseVisualID, appliedSourceID, appliedVisualID = TransitionAPI.GetSlotVisualInfo(transmogLocation);
         if ( appliedSourceID == 0 ) then
             appliedSourceID = baseSourceID;
             appliedVisualID = baseVisualID;
         end
         return appliedSourceID, appliedVisualID, hasSecondaryAppearance;
     else
-        transmogLocation:Set(slotID, transmogType, modification);
+        TransitionAPI.SetTransmogLocationData(transmogLocation, slotID, transmogType, modification);
 
-        local baseSourceID, baseVisualID, appliedSourceID, appliedVisualID, pendingSourceID, pendingVisualID, hasPendingUndo, isHideVisual, itemSubclass = C_Transmog.GetSlotVisualInfo(transmogLocation);
+        local baseSourceID, baseVisualID, appliedSourceID, appliedVisualID = TransitionAPI.GetSlotVisualInfo(transmogLocation);
         if ( appliedSourceID == 0 ) then
             appliedSourceID = baseSourceID;
             appliedVisualID = baseVisualID;
@@ -3169,9 +3169,9 @@ do  --Show GameTooltip After Delay
                 tooltip:SetPoint(point, relativeTo, relativePoint, offsetX, offsetY);
 
                 if info.title then
-                    tooltip:SetText(info.title, info.titleR or 1, info.titleG or 1, info.titleB or 1, true);
+                    tooltip:SetText(info.title, info.titleR or 1, info.titleG or 1, info.titleB or 1, 1, true);
                 elseif info.tooltip then
-                    tooltip:SetText(info.tooltip, info.r or 1, info.g or 1, info.b or 1, true);
+                    tooltip:SetText(info.tooltip, info.r or 1, info.g or 1, info.b or 1, 1, true);
                     descAdded = true;
                 end
 
@@ -3223,6 +3223,32 @@ do  --Scripts
         for _, name in ipairs(ValidScripts) do
             if scripts[name] then
                 object:SetScript(name, scripts[name]);
+            end
+        end
+    end
+end
+
+do  --System
+    function NarciAPI.AddToUISpecialFrames(frame, state)
+        if state == nil then state = true; end;
+
+        local name = frame:GetName();
+        if not name then return end;
+
+        if state then
+            for _, v in ipairs(UISpecialFrames) do
+                if v == name then
+                    return
+                end
+            end
+
+            table.insert(UISpecialFrames, name);
+        else
+            for i, v in ipairs(UISpecialFrames) do
+                if v == name then
+                    table.remove(UISpecialFrames, i);
+                    return
+                end
             end
         end
     end

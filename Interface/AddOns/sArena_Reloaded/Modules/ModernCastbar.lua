@@ -1,5 +1,6 @@
+if sArenaMixin.isMidnight then return end
+
 local isRetail = sArenaMixin.isRetail
-local LSM = LibStub("LibSharedMedia-3.0")
 
 local CastStopEvents = {
     UNIT_SPELLCAST_STOP                = true,
@@ -35,8 +36,37 @@ if isRetail then
 
     function sArenaCastingBarExtensionMixin:GetTypeInfo(barType)
         barType = barType or "standard";
-        self:SetStatusBarColor(unpack(actionColors[barType]));
-        return self.typeInfo
+
+        -- Use custom colors if enabled and available, otherwise fall back to actionColors
+        local colorToUse = actionColors[barType]
+        local castbarColors = sArenaMixin.castbarColors
+
+        if castbarColors and castbarColors.enabled then
+            if barType == "standard" or barType == "filling" or barType == "empowered" then
+                colorToUse = castbarColors.standard or colorToUse
+            elseif barType == "channel" or barType == "full" then
+                colorToUse = castbarColors.channel or colorToUse
+            elseif barType == "uninterruptable" then
+                colorToUse = castbarColors.uninterruptable or colorToUse
+            end
+        end
+
+        -- Handle desaturation for modern castbars with default textures
+        if sArenaMixin.keepDefaultModernTextures and castbarColors and castbarColors.enabled then
+            local castTexture = self:GetStatusBarTexture()
+            if castTexture then
+                castTexture:SetDesaturated(true)
+            end
+        end
+
+        self:SetStatusBarColor(unpack(colorToUse));
+
+        local currentTexture = sArenaMixin.castTexture or self.typeInfo.filling
+        return {
+            filling = currentTexture,
+            full = currentTexture,
+            glow = currentTexture
+        }
     end
 
     ----------------------------------------
@@ -60,6 +90,7 @@ if isRetail then
         if not bar then return end
 
         bar:SetUnit(unit, true, false)
+        bar.empoweredFix = true
         if bar.UpdateInterruptibleState then bar:UpdateInterruptibleState() end
         if bar.UpdateDisplayedVisuals then bar:UpdateDisplayedVisuals() end
         if bar.UpdateDisplayType then bar:UpdateDisplayType() end
@@ -101,25 +132,6 @@ if isRetail then
         return frame.classicCastBar
     end
 
-    local function UpdateSparkPosition(castBar)
-        local val = castBar:GetValue()
-        local minVal, maxVal = castBar:GetMinMaxValues()
-        if maxVal == 0 then return end
-        local progressPercent = val / maxVal
-        local newX = castBar:GetWidth() * progressPercent
-        castBar.Spark:ClearAllPoints()
-        castBar.Spark:SetPoint("CENTER", castBar, "LEFT", newX, 0)
-    end
-
-    local function HideChargeTiers(castBar)
-        castBar.ChargeTier1:Hide()
-        castBar.ChargeTier2:Hide()
-        castBar.ChargeTier3:Hide()
-        if castBar.ChargeTier4 then
-            castBar.ChargeTier4:Hide()
-        end
-    end
-
     local function EnsureModernBar(frame, unit, templateName)
         if frame.modernCastBar and frame.modernCastBar:IsObjectType("StatusBar") then
             return frame.modernCastBar
@@ -130,55 +142,14 @@ if isRetail then
         local template = templateName or "SmallCastingBarFrameTemplate"
 
         local newBar = CreateFrame("StatusBar", nil, parent, template)
+        newBar:SetMovable(true)
 
         if newBar.OnLoad then
             newBar:OnLoad(nil, true, false)
         end
 
-        if not newBar.empoweredFix then
-            newBar:HookScript("OnEvent", function(self)
-                if self.barType == "uninterruptable" then
-                    if self.ChargeTier1 then
-                        if sArenaMixin.keepDefaultModernTextures then
-                            self:SetStatusBarTexture("UI-CastingBar-Uninterruptable")
-                        elseif sArenaMixin.castTexture then
-                            self:SetStatusBarTexture(sArenaMixin.castTexture)
-                        end
-                        HideChargeTiers(self)
-                    end
-                elseif self.barType == "empowered" then
-                    if sArenaMixin.keepDefaultModernTextures then
-                        self:SetStatusBarTexture("ui-castingbar-filling-standard")
-                    elseif sArenaMixin.castTexture then
-                        self:SetStatusBarTexture(sArenaMixin.castTexture)
-                    end
-                    HideChargeTiers(self)
-                end
-            end)
-
-            newBar:HookScript("OnUpdate", function(self)
-                if self.barType == "uninterruptable" then
-                    if self.ChargeTier1 then
-                        self.Spark:SetAtlas("UI-CastingBar-Pip")
-                        self.Spark:SetSize(6, 16)
-                        UpdateSparkPosition(newBar)
-                    end
-                elseif self.barType == "empowered" then
-                    self.Spark:SetAtlas("UI-CastingBar-Pip")
-                    self.Spark:SetSize(6, 16)
-                    UpdateSparkPosition(newBar)
-                end
-            end)
-
-            newBar.empoweredFix = true
-        end
-
         if not newBar.customTextureFix then
-            newBar:HookScript("OnEvent", function(self, event)
-                if not sArenaMixin.keepDefaultModernTextures and sArenaMixin.castTexture then
-                    self:SetStatusBarTexture(sArenaMixin.castTexture)
-                end
-            end)
+            newBar.isClassicStyle = true
             newBar.customTextureFix = true
         end
 
@@ -194,14 +165,26 @@ if isRetail then
         newBar.MaskTexture:Show()
         castTexture:AddMaskTexture(newBar.MaskTexture)
 
-        if not newBar.quickHide then
-            newBar:HookScript("OnEvent", function(self, event)
-                if CastStopEvents[event] then
-                    self:Hide()
+        newBar:HookScript("OnEvent", function(castBar, event, eventUnit)
+            if CastStopEvents[event] and eventUnit == unit then
+                if castBar.interruptedBy then
+                    castBar:Show()
+                else
+                    local cast = UnitCastingInfo(unit) or UnitChannelInfo(unit)
+                    if not cast then
+                        castBar:Hide()
+                        return
+                    end
                 end
-            end)
-            newBar.quickHide= true
-        end
+            end
+            sArenaMixin:CastbarOnEvent(newBar)
+        end)
+
+        hooksecurefunc(newBar, "PlayFinishAnim", function(self)
+            if sArenaMixin.keepDefaultModernTextures then return end
+            self:SetStatusBarTexture(sArenaMixin.castTexture)
+        end)
+
         newBar.__modernHooked = true
 
         if sArenaMixin:DarkMode() then
@@ -274,7 +257,7 @@ else
         bar.Border     = bar.Border or bar:CreateTexture(nil, "OVERLAY", nil, 7)
     end
 
-    local function ApplyModern(bar, simpleCastbar, frame)
+    local function ApplyModern(bar, simpleCastbar, frame, unit)
         EnsureModernPieces(bar)
 
         bar.TextBorder:SetTexture(MOD_TEXTBOX_TEX)
@@ -301,17 +284,35 @@ else
             bar.__origColorsSaved = true
         end
 
-        bar.failedCastColor       = CreateColor(1, 1, 1, 1)
-        bar.finishedCastColor     = CreateColor(1, 1, 1, 1)
-        bar.nonInterruptibleColor = CreateColor(1, 1, 1, 1)
-        bar.startCastColor        = CreateColor(1, 1, 1, 1)
-        bar.startChannelColor     = CreateColor(1, 1, 1, 1)
+        -- Let the event system handle coloring instead of hardcoding colors
+        -- Use default cast color for finished casts (not a separate color)
+        local castbarColors = sArenaMixin.castbarColors
+        if castbarColors and castbarColors.enabled then
+            -- Use custom colors from config
+            local standardColor = castbarColors.standard or { 1.0, 0.7, 0.0, 1 }
+            local channelColor = castbarColors.channel or { 0.0, 1.0, 0.0, 1 }
+            local unintColor = castbarColors.uninterruptable or { 0.7, 0.7, 0.7, 1 }
+            local interruptedColor = { 1.0, 0.0, 0.0, 1 }
+
+            bar.failedCastColor       = CreateColor(interruptedColor[1], interruptedColor[2], interruptedColor[3], interruptedColor[4])
+            bar.finishedCastColor     = CreateColor(standardColor[1], standardColor[2], standardColor[3], standardColor[4])
+            bar.nonInterruptibleColor = CreateColor(unintColor[1], unintColor[2], unintColor[3], unintColor[4])
+            bar.startCastColor        = CreateColor(standardColor[1], standardColor[2], standardColor[3], standardColor[4])
+            bar.startChannelColor     = CreateColor(channelColor[1], channelColor[2], channelColor[3], channelColor[4])
+        else
+            -- Use default colors
+            bar.failedCastColor       = CreateColor(1.0, 0.0, 0.0, 1)
+            bar.finishedCastColor     = CreateColor(1.0, 0.7, 0.0, 1)
+            bar.nonInterruptibleColor = CreateColor(0.7, 0.7, 0.7, 1)
+            bar.startCastColor        = CreateColor(1.0, 0.7, 0.0, 1)
+            bar.startChannelColor     = CreateColor(0.0, 1.0, 0.0, 1)
+        end
 
         bar.Background:SetAllPoints(bar)
         bar.Background:Show()
         bar.Border:ClearAllPoints()
-        bar.Border:SetPoint("TOPLEFT", bar, "TOPLEFT", -1, 1)
-        bar.Border:SetPoint("BOTTOMRIGHT", bar, "BOTTOMRIGHT", 1, -1)
+        bar.Border:SetPoint("TOPLEFT", bar, "TOPLEFT", -1, 1.5)
+        bar.Border:SetPoint("BOTTOMRIGHT", bar, "BOTTOMRIGHT", 1, -1.5)
         bar.Border:Show()
 
         -- Handle simple castbar styling
@@ -344,35 +345,25 @@ else
         castTexture:AddMaskTexture(bar.MaskTexture)
 
         bar:SetHeight(12)
-        if bar.Icon then bar.Icon:SetSize(21, 21) end
+        if bar.Icon then
+            bar.Icon:SetSize(21, 21)
+            bar.Icon:SetDrawLayer("OVERLAY", 7)
+        end
 
         if not bar.__modernHooked then
-            -- TODO: Figure out better method for this.
-            -- It's this way because OnEvent doesn't fire for aura updates like aura mastery etc
-            -- This just bruteforces correct texture in non-interrupt scenarios
-            bar:HookScript("OnUpdate", function(self)
-                if not self.__modernActive then return end
-
-                if sArenaMixin.keepDefaultModernTextures then
-                    -- Use default modern textures
-                    if self.notInterruptible and self.__tex ~= MOD_NONINT_TEX then
-                        self:SetStatusBarTexture(MOD_NONINT_TEX); self.__tex = MOD_NONINT_TEX
-                    elseif self.channeling and self.__tex ~= MOD_CHANNEL_TEX then
-                        self:SetStatusBarTexture(MOD_CHANNEL_TEX); self.__tex = MOD_CHANNEL_TEX
-                    elseif self.casting and self.__tex ~= MOD_CAST_TEX then
-                        self:SetStatusBarTexture(MOD_CAST_TEX); self.__tex = MOD_CAST_TEX
-                    end
-                else
-                    -- Use custom texture for all cast types when not using default textures
-                    if sArenaMixin.castTexture and (self.notInterruptible or self.channeling or self.casting) and self.__tex ~= sArenaMixin.castTexture then
-                        self:SetStatusBarTexture(sArenaMixin.castTexture); self.__tex = sArenaMixin.castTexture
+            bar:HookScript("OnEvent", function(castBar, event, eventUnit)
+                if CastStopEvents[event] and eventUnit == unit then
+                    if castBar.interruptedBy then
+                        castBar:Show()
+                    else
+                        local cast = UnitCastingInfo(unit) or UnitChannelInfo(unit)
+                        if not cast then
+                            castBar:Hide()
+                            -- no return cuz sometimes castbar still fades idk and we need the color
+                        end
                     end
                 end
-            end)
-            bar:HookScript("OnEvent", function(self, event)
-                if CastStopEvents[event] then
-                    self:Hide()
-                end
+                sArenaMixin:CastbarOnEvent(bar)
             end)
             bar.__modernHooked = true
         end
@@ -391,14 +382,31 @@ else
         if bar.Background then bar.Background:Hide() end
         if bar.Border then bar.Border:Hide() end
 
-        local o = bar.__origColors
-        if o then
-            if o.failed then bar.failedCastColor = CreateColor(o.failed.r, o.failed.g, o.failed.b, o.failed.a) end
-            if o.finished then bar.finishedCastColor = CreateColor(o.finished.r, o.finished.g, o.finished.b, o.finished
-                .a) end
-            if o.nonint then bar.nonInterruptibleColor = CreateColor(o.nonint.r, o.nonint.g, o.nonint.b, o.nonint.a) end
-            if o.start then bar.startCastColor = CreateColor(o.start.r, o.start.g, o.start.b, o.start.a) end
-            if o.channel then bar.startChannelColor = CreateColor(o.channel.r, o.channel.g, o.channel.b, o.channel.a) end
+        -- Apply custom colors to classic castbars as well
+        local castbarColors = sArenaMixin.castbarColors
+        if castbarColors and castbarColors.enabled then
+            -- Use custom colors from config
+            local standardColor = castbarColors.standard or { 1.0, 0.7, 0.0, 1 }
+            local channelColor = castbarColors.channel or { 0.0, 1.0, 0.0, 1 }
+            local unintColor = castbarColors.uninterruptable or { 0.7, 0.7, 0.7, 1 }
+            local interruptedColor = { 1.0, 0.0, 0.0, 1 }
+
+            bar.failedCastColor       = CreateColor(interruptedColor[1], interruptedColor[2], interruptedColor[3], interruptedColor[4])
+            bar.finishedCastColor     = CreateColor(standardColor[1], standardColor[2], standardColor[3], standardColor[4])
+            bar.nonInterruptibleColor = CreateColor(unintColor[1], unintColor[2], unintColor[3], unintColor[4])
+            bar.startCastColor        = CreateColor(standardColor[1], standardColor[2], standardColor[3], standardColor[4])
+            bar.startChannelColor     = CreateColor(channelColor[1], channelColor[2], channelColor[3], channelColor[4])
+        else
+            -- Restore original colors
+            local o = bar.__origColors
+            if o then
+                if o.failed then bar.failedCastColor = CreateColor(o.failed.r, o.failed.g, o.failed.b, o.failed.a) end
+                if o.finished then bar.finishedCastColor = CreateColor(o.finished.r, o.finished.g, o.finished.b, o.finished
+                    .a) end
+                if o.nonint then bar.nonInterruptibleColor = CreateColor(o.nonint.r, o.nonint.g, o.nonint.b, o.nonint.a) end
+                if o.start then bar.startCastColor = CreateColor(o.start.r, o.start.g, o.start.b, o.start.a) end
+                if o.channel then bar.startChannelColor = CreateColor(o.channel.r, o.channel.g, o.channel.b, o.channel.a) end
+            end
         end
 
         local ogBg = select(1, bar:GetRegions())
@@ -418,12 +426,52 @@ else
         bar:Show()
     end
 
-    local function EnableCastBarClassicMode(bar, modern, simpleCastbar, frame)
+    local function EnableCastBarClassicMode(bar, modern, simpleCastbar, frame, unit)
         if not bar then return end
         if modern then
-            ApplyModern(bar, simpleCastbar, frame)
+            ApplyModern(bar, simpleCastbar, frame, unit)
         else
             RestoreClassic(bar)
+        end
+    end
+
+    -- Helper function to update castbar colors for both modern and classic bars
+    local function UpdateCastbarColorsMoP(bar)
+        if not bar then return end
+        
+        local castbarColors = sArenaMixin.castbarColors
+        if castbarColors and castbarColors.enabled then
+            -- Use custom colors from config
+            local standardColor = castbarColors.standard or { 1.0, 0.7, 0.0, 1 }
+            local channelColor = castbarColors.channel or { 0.0, 1.0, 0.0, 1 }
+            local unintColor = castbarColors.uninterruptable or { 0.7, 0.7, 0.7, 1 }
+            local interruptedColor = { 1.0, 0.0, 0.0, 1 }
+
+            bar.failedCastColor       = CreateColor(interruptedColor[1], interruptedColor[2], interruptedColor[3], interruptedColor[4])
+            bar.finishedCastColor     = CreateColor(standardColor[1], standardColor[2], standardColor[3], standardColor[4])
+            bar.nonInterruptibleColor = CreateColor(unintColor[1], unintColor[2], unintColor[3], unintColor[4])
+            bar.startCastColor        = CreateColor(standardColor[1], standardColor[2], standardColor[3], standardColor[4])
+            bar.startChannelColor     = CreateColor(channelColor[1], channelColor[2], channelColor[3], channelColor[4])
+        else
+            -- Restore original colors if available
+            local o = bar.__origColors
+            if o then
+                if o.failed then bar.failedCastColor = CreateColor(o.failed.r, o.failed.g, o.failed.b, o.failed.a) end
+                if o.finished then bar.finishedCastColor = CreateColor(o.finished.r, o.finished.g, o.finished.b, o.finished.a) end
+                if o.nonint then bar.nonInterruptibleColor = CreateColor(o.nonint.r, o.nonint.g, o.nonint.b, o.nonint.a) end
+                if o.start then bar.startCastColor = CreateColor(o.start.r, o.start.g, o.start.b, o.start.a) end
+                if o.channel then bar.startChannelColor = CreateColor(o.channel.r, o.channel.g, o.channel.b, o.channel.a) end
+            end
+        end
+    end
+
+    -- Export function to update all arena castbar colors
+    function sArenaMixin:UpdateMoPCastbarColors()
+        for i = 1, self.maxArenaOpponents do
+            local frame = self["arena" .. i]
+            if frame and frame.CastBar then
+                UpdateCastbarColorsMoP(frame.CastBar)
+            end
         end
     end
 
@@ -433,7 +481,7 @@ else
             frame.__pendingSimpleCastbar = simpleCastbar
             return
         end
-        EnableCastBarClassicMode(frame.CastBar, modern, simpleCastbar, frame)
+        EnableCastBarClassicMode(frame.CastBar, modern, simpleCastbar, frame, unit)
         frame.__pendingCastbarStyle = nil
         frame.__pendingSimpleCastbar = nil
     end

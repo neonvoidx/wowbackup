@@ -11,17 +11,23 @@
     <Script file="Ace3\Libs\LibDeflate\LibDeflate.lua"/>
     <Script file="Ace3\Libs\LibSerialize\LibSerialize.lua"/>
 
+    <Script file="sArena_Init.lua"/>
     <Script file="sArena.lua"/>
+    <Script file="Modules\Interrupt.lua"/>
     <Script file="Modules\Racials.lua"/>
     <Script file="Modules\Dispels.lua"/>
+    <Script file="Data\DrList_MoP.lua"/>
     <Script file="Modules\DiminishingReturns.lua"/>
+    <Script file="Data\Profiles.lua"/>
     <Script file="Config.lua"/>
+    <Script file="Data\AuraList_MoP.lua"/>
     <Script file="Modules\Auras.lua"/>
     <Script file="Modules\Trinkets.lua"/>
     <Script file="Modules\ModernCastbar.lua"/>
     <Script file="Modules\ImportExport.lua"/>
     <Script file="Layouts\BlizzArena.lua"/>
     <Script file="Layouts\BlizzRetail.lua"/>
+    <Script file="Layouts\BlizzCompact.lua"/>
     <Script file="Layouts\BlizzTourney.lua"/>
     <Script file="Layouts\BlizzTarget.lua"/>
     <Script file="Layouts\Gladiuish.lua"/>
@@ -165,6 +171,14 @@
         </Frames>
     </Frame>
 
+    <Frame name="sArenaWidgetFrameTemplate" enablemouse="true" movable="true" virtual="true" hidden="true">
+        <Layers>
+            <Layer level="OVERLAY">
+                <Texture parentKey="Texture" setAllPoints="true"/>
+            </Layer>
+        </Layers>
+    </Frame>
+
     <Button name="sArenaEnemyUnitFrameTemplate" frameStrata="MEDIUM" frameLevel="3" mixin="sArenaFrameMixin" hidden="true" virtual="true" inherits="SecureActionButtonTemplate">
         <Layers>
             <Layer level="BORDER" textureSubLevel="1">
@@ -184,6 +198,9 @@
                 <Texture parentKey="healAbsorbBar" inherits="HealAbsorbBarTemplate"/>
             </Layer>
 
+            <Layer level="ARTWORK" textureSubLevel="2">
+                <Texture parentKey="frameTexture" hidden="true"/>
+            </Layer>
 
             <Layer level="ARTWORK" textureSubLevel="3">
                 <FontString parentKey="Name" inherits="GameFontNormalSmall"/>
@@ -224,7 +241,7 @@
                     </OnLoad>
                 </Scripts>
             </Cooldown>
-            <Frame parentKey="SpecIcon" enablemouse="true" movable="true">
+            <Frame parentKey="SpecIcon" frameLevel="8" enablemouse="true" movable="true">
                 <Layers>
                     <Layer level="ARTWORK" textureSubLevel="2">
                         <Texture parentKey="Texture" setAllPoints="true"/>
@@ -232,6 +249,39 @@
                     </Layer>
                 </Layers>
             </Frame>
+
+            <Frame parentKey="WidgetOverlay" frameLevel="10" setAllPoints="true">
+                <Frames>
+                    <Frame parentKey="targetIndicator" inherits="sArenaWidgetFrameTemplate">
+                        <KeyValues>
+                            <KeyValue key="atlas" value="TargetCrosshairs" type="string"/>
+                        </KeyValues>
+                    </Frame>
+                    <Frame parentKey="focusIndicator" inherits="sArenaWidgetFrameTemplate">
+                        <KeyValues>
+                            <KeyValue key="atlas" value="Waypoint-MapPin-Untracked" type="string"/>
+                        </KeyValues>
+                    </Frame>
+                    <Frame parentKey="combatIndicator" inherits="sArenaWidgetFrameTemplate">
+                        <KeyValues>
+                            <KeyValue key="atlas" value="Food" type="string"/>
+                        </KeyValues>
+                    </Frame>
+                    <Frame parentKey="partyTarget1" inherits="sArenaWidgetFrameTemplate">
+                        <KeyValues>
+                            <KeyValue key="atlas" value="GM-icon-headCount" type="string"/>
+                            <KeyValue key="desaturated" value="true" type="boolean"/>
+                        </KeyValues>
+                    </Frame>
+                    <Frame parentKey="partyTarget2" inherits="sArenaWidgetFrameTemplate">
+                        <KeyValues>
+                            <KeyValue key="atlas" value="GM-icon-headCount" type="string"/>
+                            <KeyValue key="desaturated" value="true" type="boolean"/>
+                        </KeyValues>
+                    </Frame>
+                </Frames>
+            </Frame>
+
             <Frame parentKey="Trinket" inherits="sArenaIconFrameTemplate"/>
             <Frame parentKey="Racial" inherits="sArenaIconFrameTemplate"/>
             <Frame parentKey="Dispel" inherits="sArenaIconFrameTemplate"/>

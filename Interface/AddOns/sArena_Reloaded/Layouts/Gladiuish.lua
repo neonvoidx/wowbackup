@@ -40,6 +40,7 @@ layout.defaultSettings = {
         iconScale = 1,
         iconPosX = 5,
         keepDefaultModernTextures = true,
+        recolorCastbar = false,
     },
     dr = {
         posX = -101,
@@ -50,6 +51,29 @@ layout.defaultSettings = {
         spacing = 6,
         growthDirection = 4,
     },
+    widgets = {
+        combatIndicator = {
+            posX = 0,
+            posY = 0,
+            scale = 1,
+        },
+        targetIndicator = {
+            enabled = true,
+            posX = 0,
+            posY = 0,
+            scale = 1,
+        },
+        focusIndicator = {
+            posX = 0,
+            posY = 0,
+            scale = 1,
+        },
+        partyTargetIndicators = {
+            posX = 0,
+            posY = 0,
+            scale = 1,
+        },
+    },
     statusText = {
         usePercentage = true,
         alwaysShow = true,
@@ -59,6 +83,7 @@ layout.defaultSettings = {
         generalStatusBarTexture       = "sArena Default",
         healStatusBarTexture          = "sArena Stripes",
         castbarStatusBarTexture       = "sArena Default",
+        castbarUninterruptibleTexture = "sArena Default",
     },
     retextureHealerClassStackOnly = true,
 
@@ -178,6 +203,7 @@ function layout:Initialize(frame)
         frame.parent:UpdateTrinketSettings(self.db.trinket)
         frame.parent:UpdateRacialSettings(self.db.racial)
         frame.parent:UpdateDispelSettings(self.db.dispel)
+        frame.parent:UpdateWidgetSettings(self.db.widgets)
     end
 
     frame:SetSize(self.db.width, self.db.height)
@@ -246,6 +272,51 @@ function layout:UpdateOrientation(frame)
     powerBar:ClearAllPoints()
     classIcon:ClearAllPoints()
     frame.ClassIcon:SetSize(self.db.height-4, self.db.height-4)
+
+    if self.db.widgets then
+        local w = self.db.widgets
+
+        -- Combat Indicator
+        if w.combatIndicator then
+            frame.WidgetOverlay.combatIndicator:ClearAllPoints()
+            frame.WidgetOverlay.combatIndicator:SetSize(18, 18)
+            frame.WidgetOverlay.combatIndicator:SetScale(w.combatIndicator.scale or 1)
+            frame.WidgetOverlay.combatIndicator:SetPoint("CENTER", frame.HealthBar, "CENTER",
+                (w.combatIndicator.posX or 0), (w.combatIndicator.posY or 0))
+        end
+
+        -- Target Indicator
+        if w.targetIndicator then
+            frame.WidgetOverlay.targetIndicator:ClearAllPoints()
+            frame.WidgetOverlay.targetIndicator:SetSize(34, 34)
+            frame.WidgetOverlay.targetIndicator:SetScale(w.targetIndicator.scale or 1)
+            frame.WidgetOverlay.targetIndicator:SetPoint("TOPLEFT", frame.ClassIcon, "BOTTOMRIGHT",
+                -16 + (w.targetIndicator.posX or 0), 15 + (w.targetIndicator.posY or 0))
+        end
+
+        -- Focus Indicator
+        if w.focusIndicator then
+            frame.WidgetOverlay.focusIndicator:ClearAllPoints()
+            frame.WidgetOverlay.focusIndicator:SetSize(20, 20)
+            frame.WidgetOverlay.focusIndicator:SetScale(w.focusIndicator.scale or 1)
+            frame.WidgetOverlay.focusIndicator:SetPoint("BOTTOMRIGHT", frame.ClassIcon, "BOTTOMRIGHT",
+                4 + (w.focusIndicator.posX or 0), -5 + (w.focusIndicator.posY or 0))
+        end
+
+        -- Party Target Indicators
+        if w.partyTargetIndicators then
+            frame.WidgetOverlay.partyTarget1:ClearAllPoints()
+            frame.WidgetOverlay.partyTarget1:SetSize(15, 15)
+            frame.WidgetOverlay.partyTarget1:SetScale(w.partyTargetIndicators.scale or 1)
+            frame.WidgetOverlay.partyTarget1:SetPoint("BOTTOMRIGHT", frame.HealthBar, "TOPRIGHT",
+                2 + (w.partyTargetIndicators.posX or 0), (w.partyTargetIndicators.posY or 0) - 4)
+
+            frame.WidgetOverlay.partyTarget2:ClearAllPoints()
+            frame.WidgetOverlay.partyTarget2:SetSize(15, 15)
+            frame.WidgetOverlay.partyTarget2:SetScale(w.partyTargetIndicators.scale or 1)
+            frame.WidgetOverlay.partyTarget2:SetPoint("RIGHT", frame.WidgetOverlay.partyTarget1, "LEFT", 3, 0)
+        end
+    end
 
     if self.db.textSettings then
         local txt = self.db.textSettings

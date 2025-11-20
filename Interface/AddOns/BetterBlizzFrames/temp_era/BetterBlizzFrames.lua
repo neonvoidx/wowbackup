@@ -283,6 +283,10 @@ local defaultSettings = {
     castBarInterruptIconShowActiveOnly = false,
     castBarInterruptIconDisplayCD = true,
     interruptIconBorder = true,
+    unitFrameFontColorRGB = {1,1,1,1},
+    partyFrameFontColorRGB = {1,1,1,1},
+    unitFrameValueFontColorRGB = {1,1,1,1},
+    actionBarFontColorRGB = {1,1,1,1},
 
     auraWhitelist = {
         ["example aura :3 (delete me)"] = {name = "Example Aura :3 (delete me)"}
@@ -364,6 +368,10 @@ StaticPopupDialogs["CONFIRM_RESET_BETTERBLIZZFRAMESDB"] = {
 local function SendUpdateMessage()
     if sendUpdate then
         if not BetterBlizzFramesDB.scStart then
+            if BetterBlizzFramesDB.skipUpdateMsg then
+                BetterBlizzFramesDB.skipUpdateMsg = nil
+                return
+            end
             C_Timer.After(7, function()
                 --StaticPopup_Show("BBF_NEW_VERSION")
 
@@ -766,8 +774,14 @@ end
 local LSM = LibStub("LibSharedMedia-3.0")
 BBF.LSM = LSM
 BBF.allLocales = LSM.LOCALE_BIT_western+LSM.LOCALE_BIT_ruRU+LSM.LOCALE_BIT_zhCN+LSM.LOCALE_BIT_zhTW+LSM.LOCALE_BIT_koKR
+LSM:Register("statusbar", "Blizzard DF", [[Interface\TargetingFrame\UI-TargetingFrame-BarFill]])
+LSM:Register("statusbar", "Blizzard CF", [[Interface\AddOns\BetterBlizzFrames\media\ui-statusbar-cf]])
+LSM:Register("statusbar", "Blizzard Retail Bar", [[Interface\AddOns\BetterBlizzFrames\media\blizzTex\BlizzardRetailBar]])
+LSM:Register("statusbar", "Blizzard Retail Bar Crop", [[Interface\AddOns\BetterBlizzFrames\media\blizzTex\BlizzardRetailBarCrop]])
+LSM:Register("statusbar", "Blizzard Retail Bar Crop 2", [[Interface\AddOns\BetterBlizzFrames\media\blizzTex\BlizzardRetailBarCrop2]])
+LSM:Register("statusbar", "Smooth", [[Interface\Addons\BetterBlizzFrames\media\smooth]])
 local texture = "Interface\\Addons\\BetterBlizzPlates\\media\\DragonflightTextureHD"
-local manaTexture = "Interface\\Addons\\BetterBlizzPlates\\media\\DragonflightTextureHD"
+local manaTexture = "Interface\\Addons\\BetterBlizzPlates\\media\\blizzTex\\BlizzardRetailBarCrop2"
 local raidHpTexture = "Interface\\Addons\\BetterBlizzPlates\\media\\DragonflightTextureHD"
 local raidManaTexture = "Interface\\Addons\\BetterBlizzPlates\\media\\DragonflightTextureHD"
 local castbarTexture = 137012
@@ -1624,6 +1638,30 @@ SlashCmdList["BBF"] = function(msg)
     end
 end
 
+local function MoveableSettingsPanel(talents)
+    if C_AddOns.IsAddOnLoaded("BlizzMove") then return end
+    if BetterBlizzFramesDB.dontMoveSettingsPanel then return end
+    if not talents then
+        local frame = SettingsPanel
+        if frame and not frame:GetScript("OnDragStart") then
+            frame:RegisterForDrag("LeftButton")
+            frame:SetScript("OnDragStart", frame.StartMoving)
+            frame:SetScript("OnDragStop", frame.StopMovingOrSizing)
+            frame:SetUserPlaced(false)
+            frame:ClearAllPoints()
+            frame:SetPoint("CENTER", UIParent, "CENTER", 0, 0)
+        end
+    else
+        local talentFrame = PlayerTalentFrame
+        if talentFrame and not talentFrame:GetScript("OnDragStart") then
+            talentFrame:SetMovable(true)
+            talentFrame:RegisterForDrag("LeftButton")
+            talentFrame:SetScript("OnDragStart", talentFrame.StartMoving)
+            talentFrame:SetScript("OnDragStop", talentFrame.StopMovingOrSizing)
+        end
+    end
+end
+
 -- Event registration for PLAYER_LOGIN
 local First = CreateFrame("Frame")
 First:RegisterEvent("ADDON_LOADED")
@@ -1636,6 +1674,11 @@ First:SetScript("OnEvent", function(_, event, addonName)
             FetchAndSaveValuesOnFirstLogin()
             TurnTestModesOff()
             --TurnOnEnabledFeaturesOnLogin()
+
+            C_Timer.After(1, function()
+                BBF.FontColors()
+                MoveableSettingsPanel()
+            end)
 
             if BetterBlizzFramesDB.partyCastbarHideBorder then
                 BetterBlizzFramesDB.partyCastbarShowBorder = false
@@ -1693,6 +1736,8 @@ First:SetScript("OnEvent", function(_, event, addonName)
             end
 
             BBF.InitializeOptions()
+        elseif addonName == "Blizzard_TalentUI" and _G.PlayerTalentFrame then
+            MoveableSettingsPanel(true)
         end
     end
 end)

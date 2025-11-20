@@ -20,6 +20,7 @@ app.Event:Register("ADDON_LOADED", function(addOnName, containsBindings)
 		if TransmogLootHelper_Settings["windowSort"] == nil then TransmogLootHelper_Settings["windowSort"] = 1 end
 
 		app.CreateMessagePopup()
+		app.CreateLinkCopiedFrame()
 		app.Settings()
 	end
 end)
@@ -92,6 +93,67 @@ function app.Settings()
 	local category, layout = Settings.RegisterVerticalLayoutCategory(app.Name)
 	Settings.RegisterAddOnCategory(category)
 	app.Category = category
+
+	TransmogLootHelper_SettingsTextMixin = {}
+	function TransmogLootHelper_SettingsTextMixin:Init(initializer)
+		local data = initializer:GetData()
+		self.Text:SetTextToFit(data.text)
+	end
+
+	local data = {text = L.SETTINGS_SUPPORT_TEXTLONG}
+	local text = layout:AddInitializer(Settings.CreateElementInitializer("TransmogLootHelper_SettingsText", data))
+	function text:GetExtent()
+		return 28 + select(2, string.gsub(data.text, "\n", "")) * 12
+	end
+
+	StaticPopupDialogs["TRANSMOGLOOTHELPER_URL"] = {
+		text = L.SETTINGS_URL_COPY,
+		button1 = CLOSE,
+		whileDead = true,
+		hasEditBox = true,
+		editBoxWidth = 240,
+		OnShow = function(dialog, data)
+			dialog:ClearAllPoints()
+			dialog:SetPoint("CENTER", UIParent)
+
+			local editBox = dialog.GetEditBox and dialog:GetEditBox() or dialog.editBox
+			editBox:SetText(data)
+			editBox:SetAutoFocus(true)
+			editBox:HighlightText()
+			editBox:SetScript("OnEditFocusLost", function()
+				editBox:SetFocus()
+			end)
+			editBox:SetScript("OnEscapePressed", function()
+				dialog:Hide()
+			end)
+			editBox:SetScript("OnTextChanged", function()
+				editBox:SetText(data)
+				editBox:HighlightText()
+			end)
+			editBox:SetScript("OnKeyUp", function(self, key)
+				if (IsControlKeyDown() and (key == "C" or key == "X")) then
+					dialog:Hide()
+					app.LinkCopiedFrame:Show()
+					app.LinkCopiedFrame:SetAlpha(1)
+					app.LinkCopiedFrame.animation:Play()
+				end
+			end)
+		end,
+	}
+	local function onSupportButtonClick()
+		StaticPopup_Show("TRANSMOGLOOTHELPER_URL", nil, nil, "https://buymeacoffee.com/slackluster")
+	end
+	layout:AddInitializer(CreateSettingsButtonInitializer(L.SETTINGS_SUPPORT_TEXT, L.SETTINGS_SUPPORT_BUTTON, onSupportButtonClick, L.SETTINGS_SUPPORT_DESC, true))
+
+	local function onHelpButtonClick()
+		StaticPopup_Show("TRANSMOGLOOTHELPER_URL", nil, nil, "https://discord.gg/hGvF59hstx")
+	end
+	layout:AddInitializer(CreateSettingsButtonInitializer(L.SETTINGS_HELP_TEXT, L.SETTINGS_HELP_BUTTON, onHelpButtonClick, L.SETTINGS_HELP_DESC, true))
+
+	local function onIssuesButtonClick()
+		StaticPopup_Show("TRANSMOGLOOTHELPER_URL", nil, nil, "https://github.com/slackluster/TransmogLootHelper/issues")
+	end
+	layout:AddInitializer(CreateSettingsButtonInitializer(L.SETTINGS_ISSUES_TEXT, L.SETTINGS_ISSUES_BUTTON, onIssuesButtonClick, L.SETTINGS_ISSUES_DESC, true))
 
 	layout:AddInitializer(CreateSettingsListSectionHeaderInitializer(C_AddOns.GetAddOnMetadata(appName, "Version")))
 
@@ -284,11 +346,10 @@ function app.Settings()
 	local setting = Settings.RegisterAddOnSetting(category, appName.."_"..variable, variable, TransmogLootHelper_Settings, Settings.VarType.Number, name, 3)
 	Settings.CreateDropdown(category, setting, GetOptions, tooltip)
 
-	local function onButtonClick()
+	local function onRenameButtonClick()
 		app.RenamePopup:Show()
 	end
-	local initializer = CreateSettingsButtonInitializer(L.SETTINGS_WHISPER, L.SETTINGS_WHISPER_CUSTOMIZE, onButtonClick, L.SETTINGS_WHISPER_CUSTOMIZE_DESC, true)
-	layout:AddInitializer(initializer)
+	layout:AddInitializer(CreateSettingsButtonInitializer(L.SETTINGS_WHISPER, L.SETTINGS_WHISPER_CUSTOMIZE, onRenameButtonClick, L.SETTINGS_WHISPER_CUSTOMIZE_DESC, true))
 
 	layout:AddInitializer(CreateSettingsListSectionHeaderInitializer(L.SETTINGS_HEADER_INFORMATION))
 
@@ -362,7 +423,7 @@ function app.CreateMessagePopup()
 	end)
 
 	-- Text
-	local string1 = frame:CreateFontString("ARTWORK", nil, "GameFontNormal")
+	local string1 = frame:CreateFontString(nil, "ARTWORK", "GameFontNormal")
 	string1:SetPoint("CENTER", frame, "CENTER", 0, 0)
 	string1:SetPoint("TOP", frame, "TOP", 0, -10)
 	string1:SetJustifyH("CENTER")
@@ -390,7 +451,7 @@ function app.CreateMessagePopup()
 	border:SetBackdropBorderColor(0.776, 0.608, 0.427)
 
 	-- Text 2
-	local string2 = frame:CreateFontString("ARTWORK", nil, "GameFontNormal")
+	local string2 = frame:CreateFontString(nil, "ARTWORK", "GameFontNormal")
 	string2:SetPoint("CENTER", frame, "CENTER", 0, 0)
 	string2:SetPoint("TOP", frame, "TOP", 0, -60)
 	string2:SetJustifyH("CENTER")
@@ -447,6 +508,33 @@ function app.CreateMessagePopup()
 	end)
 
 	app.RenamePopup = frame
+end
+
+function app.CreateLinkCopiedFrame()
+	app.LinkCopiedFrame= CreateFrame("Frame", nil, UIParent, "BackdropTemplate")
+	app.LinkCopiedFrame:SetPoint("CENTER")
+	app.LinkCopiedFrame:SetFrameStrata("TOOLTIP")
+	app.LinkCopiedFrame:SetHeight(1)
+	app.LinkCopiedFrame:SetWidth(1)
+	app.LinkCopiedFrame:Hide()
+
+	local string = app.LinkCopiedFrame:CreateFontString(nil, "ARTWORK", "GameFontNormal")
+	string:SetPoint("CENTER", app.LinkCopiedFrame, "CENTER", 0, 0)
+	string:SetPoint("TOP", app.LinkCopiedFrame, "TOP", 0, 0)
+	string:SetJustifyH("CENTER")
+	string:SetText(L.SETTINGS_URL_COPIED)
+
+	app.LinkCopiedFrame.animation = app.LinkCopiedFrame:CreateAnimationGroup()
+	local fadeOut = app.LinkCopiedFrame.animation:CreateAnimation("Alpha")
+	fadeOut:SetFromAlpha(1)
+	fadeOut:SetToAlpha(0)
+	fadeOut:SetDuration(1)
+	fadeOut:SetStartDelay(1)
+	fadeOut:SetSmoothing("IN_OUT")
+	app.LinkCopiedFrame.animation:SetToFinalAlpha(true)
+	app.LinkCopiedFrame.animation:SetScript("OnFinished", function()
+		app.LinkCopiedFrame:Hide()
+	end)
 end
 
 function app.SettingsChanged()

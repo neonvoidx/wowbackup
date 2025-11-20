@@ -106,7 +106,7 @@ SharedMedia_MyMedia: enabled
 TalentTreeTweaks: enabled
 DarkMode: enabled
 CursorTrail: disabled
-HealthBarColor: enabled
+HealthBarColor: disabled
 jaxSurrender: enabled
 Masque: enabled
 Masque_CleanUI: enabled

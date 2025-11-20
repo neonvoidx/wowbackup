@@ -87,6 +87,7 @@ VER 3 010000000000003A " " "135734"
 #showtooltip [known:Chi burst] Chi Burst;[known: chi wave] Chi wave;
 /cast [known:Chi Burst] Chi burst;
 /cast [known:Chi Wave] Chi wave
+/use Goblin Weather Machine - Prototype 01-B
 END
 VER 3 010000000000003B " " "134400"
 #showtooltip

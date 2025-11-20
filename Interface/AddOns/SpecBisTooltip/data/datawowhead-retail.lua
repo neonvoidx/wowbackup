@@ -7,7 +7,7 @@ if SpecBisTooltip:GetWoWBuild() == "RETAIL" then
     end
 end
 
--- DATA FROM: 08.10.2025
+-- DATA FROM: 29.10.2025
 if SpecBisTooltip:GetWoWBuild() == "RETAIL" then
     BIS["RETAIL"] = {}
     BIS["RETAIL"]["DEATHKNIGHT"] = {}
@@ -126,9 +126,9 @@ if SpecBisTooltip:GetWoWBuild() == "RETAIL" then
             },
         },
         ["TRINKETS"] = {
-            [242402] = {"npc;drop=247989", "S"},
             [242396] = {"npc;drop=237861", "S"},
             [219309] = {"npc;drop=207939", "S"},
+            [242402] = {"npc;drop=247989", "A"},
             [242394] = {"npc;drop=233814", "A"},
             [242401] = {"npc;drop=237661", "A"},
             [190958] = {"npc;drop=177269", "A"},
@@ -1132,7 +1132,7 @@ if SpecBisTooltip:GetWoWBuild() == "RETAIL" then
                 [237649] = {"catalyst/unknown", "INVTYPE_CHEST"},
                 [219342] = {"spell;created=441066", "INVTYPE_WRIST"},
                 [237647] = {"catalyst/unknown", "INVTYPE_HAND"},
-                [245965] = {"quest;reward=91009", "INVTYPE_WAIST"},
+                [234501] = {"npc;drop=226404", "INVTYPE_WAIST"},
                 [219340] = {"spell;created=441063", "INVTYPE_LEGS"},
                 [243308] = {"npc;drop=237661", "INVTYPE_FEET"},
                 [242405] = {"npc;drop=233824", "INVTYPE_FINGER"},
@@ -1149,7 +1149,7 @@ if SpecBisTooltip:GetWoWBuild() == "RETAIL" then
                 [237649] = {"catalyst/unknown", "INVTYPE_CHEST"},
                 [219342] = {"spell;created=441066", "INVTYPE_WRIST"},
                 [219341] = {"spell;created=441061", "INVTYPE_HAND"},
-                [245965] = {"quest;reward=91009", "INVTYPE_WAIST"},
+                [234501] = {"npc;drop=226404", "INVTYPE_WAIST"},
                 [237645] = {"catalyst/unknown", "INVTYPE_LEGS"},
                 [243308] = {"npc;drop=237661", "INVTYPE_FEET"},
                 [242405] = {"npc;drop=233824", "INVTYPE_FINGER"},
@@ -1211,7 +1211,7 @@ if SpecBisTooltip:GetWoWBuild() == "RETAIL" then
                 [246281] = {"npc;drop=176556", "INVTYPE_FINGER"},
                 [232541] = {"npc;drop=226403", "INVTYPE_TRINKET"},
                 [219314] = {"npc;drop=213179", "INVTYPE_TRINKET"},
-                [234492] = {"npc;drop=226403", "INVTYPE_RANGED"},
+                [185783] = {"npc;drop=176563", "INVTYPE_RANGED"},
             },
             [43] = {
                 [237646] = {"catalyst/unknown", "INVTYPE_HEAD"},
@@ -1228,7 +1228,7 @@ if SpecBisTooltip:GetWoWBuild() == "RETAIL" then
                 [246281] = {"npc;drop=176556", "INVTYPE_FINGER"},
                 [232541] = {"npc;drop=226403", "INVTYPE_TRINKET"},
                 [219314] = {"npc;drop=213179", "INVTYPE_TRINKET"},
-                [234492] = {"npc;drop=226403", "INVTYPE_RANGED"},
+                [185783] = {"npc;drop=176563", "INVTYPE_RANGED"},
             },
         },
         ["TRINKETS"] = {
@@ -2374,7 +2374,7 @@ if SpecBisTooltip:GetWoWBuild() == "RETAIL" then
             [178831] = {"npc;drop=164218", "INVTYPE_FEET"},
             [242491] = {"npc;drop=247283", "INVTYPE_FINGER"},
             [178824] = {"npc;drop=164218", "INVTYPE_FINGER"},
-            [219312] = {"npc;drop=211089", "INVTYPE_TRINKET"},
+            [242497] = {"npc;drop=234893", "INVTYPE_TRINKET"},
             [242494] = {"npc;drop=247283", "INVTYPE_TRINKET"},
             [185821] = {"npc;drop=176705", "INVTYPE_WEAPON"},
             [246284] = {"npc;drop=165410", "INVTYPE_HOLDABLE"},
@@ -3064,8 +3064,8 @@ if SpecBisTooltip:GetWoWBuild() == "RETAIL" then
             [242405] = {"npc;drop=233824", "INVTYPE_FINGER"},
             [237567] = {"npc;drop=233814", "INVTYPE_FINGER"},
             [242392] = {"npc;drop=237861", "INVTYPE_TRINKET"},
-            [242402] = {"npc;drop=247989", "INVTYPE_TRINKET"},
-            [237735] = {"npc;drop=237763", "INVTYPE_WEAPON"},
+            [242395] = {"npc;drop=233815", "INVTYPE_TRINKET"},
+            [237728] = {"npc;drop=237861", "INVTYPE_WEAPON"},
             [222566] = {"spell;created=444197", "INVTYPE_HOLDABLE"},
         },
         ["BISR"] = {
@@ -3082,8 +3082,8 @@ if SpecBisTooltip:GetWoWBuild() == "RETAIL" then
             [242405] = {"npc;drop=233824", "INVTYPE_FINGER"},
             [237567] = {"npc;drop=233814", "INVTYPE_FINGER"},
             [242392] = {"npc;drop=237861", "INVTYPE_TRINKET"},
-            [242402] = {"npc;drop=247989", "INVTYPE_TRINKET"},
-            [237735] = {"npc;drop=237763", "INVTYPE_WEAPON"},
+            [242395] = {"npc;drop=233815", "INVTYPE_TRINKET"},
+            [237728] = {"npc;drop=237861", "INVTYPE_WEAPON"},
             [222566] = {"spell;created=444197", "INVTYPE_HOLDABLE"},
         },
         ["BISM"] = {

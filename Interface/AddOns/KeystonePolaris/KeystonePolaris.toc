@@ -1,7 +1,7 @@
 ## Interface: 110205, 110207, 120000
 ## Title: Keystone Polaris
 ## Author: ZelionGG
-## Version: 3.0.1
+## Version: 3.0.2
 ## IconTexture: Interface\Addons\KeystonePolaris\icon.png
 ## AddonCompartmentFunc: KeystonePolaris_OnAddonCompartmentClick
 

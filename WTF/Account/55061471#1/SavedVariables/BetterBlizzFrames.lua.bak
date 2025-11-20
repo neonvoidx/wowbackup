@@ -3,97 +3,118 @@ BetterBlizzFramesDB = {
 ["rpNamesFirst"] = true,
 ["customCode"] = "-- Darkmode Target & Focus Auras\nlocal function styleAuras(self)\n    for frame, _ in self.auraPools:EnumerateActive() do\n        if not frame.darkMode then\n            local icon = frame.Icon\n            frame.darkMode = true\n            \n            if not frame.border then\n                local border = CreateFrame(\"Frame\", nil, frame, \"BackdropTemplate\")\n                border:SetBackdrop({\n                        edgeFile = \"Interface/Tooltips/UI-Tooltip-Border\",\n                        tileEdge = true,\n                        edgeSize = 8.5,\n                })\n                \n                icon:SetTexCoord(0.08, 0.92, 0.08, 0.92)\n                border:SetPoint(\"TOPLEFT\", icon, \"TOPLEFT\", -1.5, 1.5)\n                border:SetPoint(\"BOTTOMRIGHT\", icon, \"BOTTOMRIGHT\", 1.5, -2)\n                frame.border = border\n                \n                border:SetBackdropBorderColor(0,0,0)\n            end\n        end\n        \n        -- Show darkmode border on Buffs & Hide on Debuffs\n        if frame.Border then\n            frame.border:Hide()\n        else\n            frame.border:Show()\n        end\n    end\nend\n\n\n\nPlayerFrame.PlayerFrameContainer.PlayerElite:SetVertexColor(.1,.1,.1)\n\nhooksecurefunc(TargetFrame, \"UpdateAuras\", styleAuras)\nhooksecurefunc(FocusFrame, \"UpdateAuras\", styleAuras)",
 ["queueTimerWarningTime"] = 6,
-["targetEnlargeAuraFriendly"] = true,
-["hideHitIndicator"] = true,
+["targetCastBarIconScaleScale"] = 1,
+["targetEnlargeAuraEnemy"] = true,
+["hideUnitFramePlayerSecondResource"] = false,
 ["moveResourceToTargetWarlock"] = true,
 ["petCastBarWidth"] = 103,
 ["targetCompactAura"] = true,
-["increaseAuraStrata"] = true,
+["gladWinTracker"] = true,
 ["enableMasque"] = false,
 ["hideFocusLeaderIcon"] = false,
 ["playerAuraSpacingYYPos"] = 0,
-["focusdeBuffFilterBlizzard"] = true,
-["playerAbsorbXPosXPos"] = 38,
+["targetToTYPos"] = 13,
+["targetdeBuffFilterBlizzard"] = true,
 ["petCastBarScale"] = 1,
-["castBarRecolorInterrupt"] = true,
-["hideFocusCombatGlow"] = false,
-["targetAbsorbAnchor"] = "TOP",
-["classColorTargetNames"] = true,
+["playerAuraGlows"] = true,
+["focusCastbarIconYPos"] = 0,
+["playerAbsorbAnchor"] = "LEFT",
+["focusEnlargeAuraFriendly"] = true,
 ["castBarInterruptHighlighter"] = false,
 ["queueTimerWarning"] = true,
-["targetCastBarXPosXPos"] = 0,
+["playerAuraSpacingXXPos"] = 5,
 ["hideTargetReputationColor"] = true,
 ["targetDetachCastbar"] = false,
 ["focusAuraGlows"] = true,
 ["focusCastBarIconScale"] = 1,
 ["colorPetAfterOwner"] = true,
 ["moveResourceToTargetMage"] = true,
-["playerCastBarTimerCenter"] = false,
-["playerCastBarTimer"] = true,
+["racialIndicatorYPos"] = 1,
+["focusStaticCastbar"] = true,
 ["printAuraSpellIds"] = false,
-["hideBagsBar"] = true,
-["queueTimerID"] = 567458,
-["partyFrameStatusFontSize"] = "24",
-["playerCastBarWidthScale"] = 250,
-["enablePlayerBuffFiltering"] = false,
-["playerdeBuffFilterBlacklist"] = true,
+["maxBuffFrameBuffs"] = 32,
+["hidePartyAggroHighlight"] = false,
+["hideActionBarBigProcGlow"] = false,
+["targetBuffFilterBlacklist"] = true,
+["targetImportantAuraGlow"] = true,
+["opBarriersOn"] = true,
 ["focusToTScale"] = 1,
 ["targetAndFocusHorizontalGap"] = 3,
 ["changeUnitFrameFont"] = true,
 ["combatIndicatorShowSap"] = true,
 ["queueTimer"] = true,
-["changeRaidFrameManabarTexture"] = true,
+["unitFrameFontSize"] = "9",
 ["castBarInterruptIconTarget"] = true,
 ["unitFrameFont"] = "1",
+["partyFrameFontSize"] = "11",
+["hideMinimapAutoQueueEye"] = false,
 ["playerCastBarScaleScale"] = 1,
 ["focusToTAdjustmentOffsetY"] = 0,
 ["combatIndicatorXPos"] = 0,
 ["targetAndFocusSmallAuraScale"] = 1,
+["partyFrameFontColorRGB"] = {
+1,
+1,
+1,
+1,
+},
 ["auraWhitelistColorsUpdated"] = true,
+["focusCastbarIconXPos"] = 0,
 ["hideTargetToTName"] = false,
+["targetAbsorbXPos"] = 0,
 ["playerCastBarWidth"] = 250,
 ["auraTypeGap"] = 4,
 ["targetToTAdjustmentOffsetY"] = 0,
+["partyCastBarTestMode"] = false,
 ["moveResourceToTargetMonk"] = true,
 ["hasSaved"] = true,
+["targetdeBuffFilterAll"] = false,
 ["hideMinimapButtons"] = false,
 ["targetCastbarEdgeHighlight"] = true,
-["unitFrameFontOutline"] = "THINOUTLINE",
-["darkModeGameTooltip"] = true,
+["hasCheckedUi"] = true,
+["castBarInterruptHighlighterColorDontInterrupt"] = true,
+["hideTargetName"] = false,
 ["targetCombatIndicator"] = true,
-["hidePartyRoles"] = false,
+["actionBarFontColorRGB"] = {
+1,
+1,
+1,
+1,
+},
+["onlyPandemicAuraMine"] = true,
 ["hideFocusReputationColor"] = true,
 ["petCastBarHeight"] = 10,
 ["racialIndicatorScale"] = 1,
-["hidePlayerGuideIcon"] = false,
-["playerCastBarScale"] = 1,
+["hideFocusToT"] = true,
+["showHiddenAurasIcon"] = false,
+["racialIndicatorYPosYPos"] = 1,
 ["raidFrameHealthbarTexture"] = "Wglass",
-["changeAllFontsIngame"] = true,
-["normalizeGameMenu"] = true,
+["classColorTargetNames"] = true,
+["allIngameFont"] = "1",
 ["auraWhitelist"] = {
-[1218128] = {
-["name"] = "Bloodstone",
-["enlarged"] = true,
-["id"] = 1218128,
-["important"] = true,
-["color"] = {
-1,
-0.501960813999176,
-0,
-1,
-},
-},
-[473909] = {
-["name"] = "Ancient of Lore",
+[104773] = {
+["name"] = "Unending Resolve",
 ["enlarged"] = true,
 ["color"] = {
-0,
 1,
-0,
+0.6627451181411743,
+0.9450981020927429,
 1,
 },
 ["important"] = true,
-["id"] = 473909,
+["id"] = 104773,
+},
+["frailty"] = {
+["onlyMine"] = true,
+["name"] = "Frailty",
+["enlarged"] = true,
+["color"] = {
+0,
+1,
+0,
+1,
+},
+["pandemic"] = true,
 },
 [408558] = {
 ["name"] = "Phase Shift",
@@ -107,16 +128,17 @@ BetterBlizzFramesDB = {
 1,
 },
 },
-["devouring plague"] = {
+[147833] = {
+["name"] = "Intervene",
+["enlarged"] = true,
+["id"] = 147833,
+["important"] = true,
 ["color"] = {
 0,
 1,
 0,
 1,
 },
-["enlarged"] = true,
-["name"] = "Devouring Plague",
-["pandemic"] = true,
 },
 [871] = {
 ["name"] = "Shield Wall",
@@ -130,17 +152,17 @@ BetterBlizzFramesDB = {
 1,
 },
 },
-[6940] = {
-["name"] = "Blessing of Sacrifice",
+[51271] = {
+["name"] = "Pillar of Frost",
 ["enlarged"] = true,
 ["color"] = {
 1,
-0.6627451181411743,
-0.9450981020927429,
+0.501960813999176,
+0,
 1,
 },
 ["important"] = true,
-["id"] = 6940,
+["id"] = 51271,
 },
 ["fiery brand"] = {
 ["color"] = {
@@ -153,27 +175,27 @@ BetterBlizzFramesDB = {
 ["name"] = "Fiery Brand",
 ["enlarged"] = true,
 },
-[48792] = {
-["name"] = "Icebound Fortitude",
+[190319] = {
+["name"] = "Combustion",
 ["enlarged"] = true,
-["id"] = 48792,
+["color"] = {
+1,
+0.501960813999176,
+0,
+1,
+},
+["important"] = true,
+["id"] = 190319,
+},
+[370889] = {
+["name"] = "Twin Guardian",
+["enlarged"] = true,
+["id"] = 370889,
 ["important"] = true,
 ["color"] = {
 1,
 0.6627451181411743,
 0.9450981020927429,
-1,
-},
-},
-[45438] = {
-["name"] = "Ice Block",
-["enlarged"] = true,
-["id"] = 45438,
-["important"] = true,
-["color"] = {
-0,
-1,
-0,
 1,
 },
 },
@@ -189,22 +211,22 @@ BetterBlizzFramesDB = {
 ["important"] = true,
 ["id"] = 1221107,
 },
-[395296] = {
-["name"] = "Ebon Might",
+[442726] = {
+["name"] = "Malevolence",
 ["enlarged"] = true,
-["id"] = 395296,
-["important"] = true,
 ["color"] = {
 1,
 0.501960813999176,
 0,
 1,
 },
+["important"] = true,
+["id"] = 442726,
 },
-[375087] = {
-["name"] = "Dragonrage",
+[2825] = {
+["name"] = "Bloodlust",
 ["enlarged"] = true,
-["id"] = 375087,
+["id"] = 2825,
 ["important"] = true,
 ["color"] = {
 1,
@@ -225,55 +247,22 @@ BetterBlizzFramesDB = {
 ["important"] = true,
 ["id"] = 216331,
 },
-[384100] = {
-["name"] = "Berserker Shout",
+[433874] = {
+["name"] = "Deep Breath",
 ["enlarged"] = true,
-["color"] = {
-0.9372549653053284,
-1,
-0.2000000178813934,
-1,
-},
-["important"] = true,
-["id"] = 384100,
-},
-[383648] = {
-["color"] = {
-1,
-0.6627451181411743,
-0.9450981020927429,
-1,
-},
-["important"] = true,
-["name"] = "Earth Shield",
-["id"] = 383648,
-},
-[122783] = {
-["name"] = "Diffuse Magic",
-["enlarged"] = true,
-["id"] = 122783,
+["id"] = 433874,
 ["important"] = true,
 ["color"] = {
 1,
-0.6627451181411743,
-0.9450981020927429,
-1,
-},
-},
-["mark of the crane"] = {
-["color"] = {
-0,
-1,
+0.501960813999176,
 0,
 1,
 },
-["onlyMine"] = true,
-["name"] = "mark of the crane",
 },
-[370960] = {
-["name"] = "Emerald Communion",
+[232559] = {
+["name"] = "Thorns",
 ["enlarged"] = true,
-["id"] = 370960,
+["id"] = 232559,
 ["important"] = true,
 ["color"] = {
 1,
@@ -282,10 +271,43 @@ BetterBlizzFramesDB = {
 1,
 },
 },
-["frailty"] = {
-["onlyMine"] = true,
-["name"] = "Frailty",
+[121176] = {
+["name"] = "Orb of Power",
 ["enlarged"] = true,
+["id"] = 121176,
+["important"] = true,
+["color"] = {
+0.5333333611488342,
+1,
+0.1607843190431595,
+1,
+},
+},
+[466772] = {
+["name"] = "Doom Winds",
+["enlarged"] = true,
+["color"] = {
+1,
+0.501960813999176,
+0,
+1,
+},
+["important"] = true,
+["id"] = 466772,
+},
+[15286] = {
+["name"] = "Vampiric Embrace",
+["enlarged"] = true,
+["color"] = {
+1,
+0.6627451181411743,
+0.9450981020927429,
+1,
+},
+["important"] = true,
+["id"] = 15286,
+},
+["devouring plague"] = {
 ["color"] = {
 0,
 1,
@@ -293,6 +315,8 @@ BetterBlizzFramesDB = {
 1,
 },
 ["pandemic"] = true,
+["name"] = "Devouring Plague",
+["enlarged"] = true,
 },
 [375986] = {
 ["name"] = "Primordial Wave",
@@ -306,27 +330,26 @@ BetterBlizzFramesDB = {
 1,
 },
 },
-[8178] = {
-["name"] = "Grounding Totem",
-["enlarged"] = true,
-["id"] = 8178,
-["important"] = true,
+[188501] = {
 ["color"] = {
+0,
 1,
-0.6627451181411743,
-0.9450981020927429,
+0,
 1,
 },
-},
-[145629] = {
-["name"] = "Anti-Magic Zone",
+["id"] = 188501,
+["name"] = "Spectral Sight",
 ["enlarged"] = true,
-["id"] = 145629,
+},
+[378464] = {
+["name"] = "Nullifying Shroud",
+["enlarged"] = true,
+["id"] = 378464,
 ["important"] = true,
 ["color"] = {
+0,
 1,
-0.6627451181411743,
-0.9450981020927429,
+0,
 1,
 },
 },
@@ -343,10 +366,10 @@ BetterBlizzFramesDB = {
 ["important"] = true,
 ["pandemic"] = true,
 },
-[147833] = {
-["name"] = "Intervene",
+[45438] = {
+["name"] = "Ice Block",
 ["enlarged"] = true,
-["id"] = 147833,
+["id"] = 45438,
 ["important"] = true,
 ["color"] = {
 0,
@@ -355,17 +378,17 @@ BetterBlizzFramesDB = {
 1,
 },
 },
-[33206] = {
-["name"] = "Pain Suppression",
+[6940] = {
+["name"] = "Blessing of Sacrifice",
 ["enlarged"] = true,
-["id"] = 33206,
-["important"] = true,
 ["color"] = {
 1,
 0.6627451181411743,
 0.9450981020927429,
 1,
 },
+["important"] = true,
+["id"] = 6940,
 },
 [29166] = {
 ["color"] = {
@@ -401,17 +424,16 @@ BetterBlizzFramesDB = {
 1,
 },
 },
-[231895] = {
-["name"] = "Crusade",
-["enlarged"] = true,
+[974] = {
+["id"] = 974,
+["important"] = true,
+["name"] = "Earth Shield",
 ["color"] = {
 1,
-0.501960813999176,
-0,
+0.6627451181411743,
+0.9450981020927429,
 1,
 },
-["important"] = true,
-["id"] = 231895,
 },
 ["curse of tongues"] = {
 ["color"] = {
@@ -420,33 +442,33 @@ BetterBlizzFramesDB = {
 0,
 1,
 },
-["enlarged"] = true,
-["name"] = "curse of tongues",
 ["pandemic"] = true,
-},
-[360952] = {
-["name"] = "Coordinated Assault",
+["name"] = "curse of tongues",
 ["enlarged"] = true,
-["id"] = 360952,
-["important"] = true,
+},
+[185422] = {
+["name"] = "Shadow Dance",
+["enlarged"] = true,
 ["color"] = {
 1,
 0.501960813999176,
 0,
 1,
 },
-},
-[370889] = {
-["name"] = "Twin Guardian",
-["enlarged"] = true,
-["id"] = 370889,
 ["important"] = true,
+["id"] = 185422,
+},
+[473909] = {
+["name"] = "Ancient of Lore",
+["enlarged"] = true,
 ["color"] = {
+0,
 1,
-0.6627451181411743,
-0.9450981020927429,
+0,
 1,
 },
+["important"] = true,
+["id"] = 473909,
 },
 ["touch of oblivion"] = {
 ["color"] = {
@@ -483,16 +505,17 @@ BetterBlizzFramesDB = {
 ["important"] = true,
 ["id"] = 61336,
 },
-["touch of the magi"] = {
+[31884] = {
+["name"] = "Avenging Wrath",
+["enlarged"] = true,
 ["color"] = {
-0,
 1,
+0.501960813999176,
 0,
 1,
 },
 ["important"] = true,
-["name"] = "Touch of the Magi",
-["enlarged"] = true,
+["id"] = 31884,
 },
 [102558] = {
 ["name"] = "Incarnation: Guardian of Ursoc",
@@ -506,17 +529,16 @@ BetterBlizzFramesDB = {
 ["important"] = true,
 ["id"] = 102558,
 },
-[212800] = {
-["name"] = "Blur",
-["enlarged"] = true,
-["id"] = 212800,
-["important"] = true,
+["unstable affliction"] = {
 ["color"] = {
+0,
 1,
-0.6627451181411743,
-0.9450981020927429,
+0,
 1,
 },
+["pandemic"] = true,
+["name"] = "Unstable Affliction",
+["enlarged"] = true,
 },
 ["immolate"] = {
 ["color"] = {
@@ -525,9 +547,9 @@ BetterBlizzFramesDB = {
 0,
 1,
 },
-["enlarged"] = true,
-["name"] = "Immolate",
 ["pandemic"] = true,
+["name"] = "Immolate",
+["enlarged"] = true,
 },
 ["exploding keg"] = {
 ["color"] = {
@@ -540,22 +562,22 @@ BetterBlizzFramesDB = {
 ["name"] = "Exploding keg",
 ["enlarged"] = true,
 },
-[137639] = {
-["name"] = "Storm, Earth, and Fire",
+[121175] = {
+["name"] = "Orb of Power",
 ["enlarged"] = true,
-["id"] = 137639,
+["id"] = 121175,
 ["important"] = true,
 ["color"] = {
+0.9058824181556702,
+0.1215686351060867,
 1,
-0.501960813999176,
-0,
 1,
 },
 },
-[232559] = {
-["name"] = "Thorns",
+[122783] = {
+["name"] = "Diffuse Magic",
 ["enlarged"] = true,
-["id"] = 232559,
+["id"] = 122783,
 ["important"] = true,
 ["color"] = {
 1,
@@ -583,9 +605,9 @@ BetterBlizzFramesDB = {
 0,
 1,
 },
-["enlarged"] = true,
-["name"] = "Doom",
 ["pandemic"] = true,
+["name"] = "Doom",
+["enlarged"] = true,
 },
 ["haunt"] = {
 ["color"] = {
@@ -594,9 +616,9 @@ BetterBlizzFramesDB = {
 0,
 1,
 },
-["enlarged"] = true,
-["name"] = "Haunt",
 ["pandemic"] = true,
+["name"] = "Haunt",
+["enlarged"] = true,
 },
 [383005] = {
 ["name"] = "Chrono Loop",
@@ -610,17 +632,16 @@ BetterBlizzFramesDB = {
 1,
 },
 },
-[391109] = {
-["name"] = "Dark Ascension",
-["enlarged"] = true,
+[319454] = {
+["id"] = 319454,
 ["color"] = {
+0,
 1,
-0.501960813999176,
 0,
 1,
 },
-["important"] = true,
-["id"] = 391109,
+["name"] = "Heart of the Wild",
+["enlarged"] = true,
 },
 [125174] = {
 ["name"] = "Touch of Karma",
@@ -634,38 +655,39 @@ BetterBlizzFramesDB = {
 1,
 },
 },
-[252071] = {
-["name"] = "Incarnation: Avatar of Ashamane",
+[372048] = {
+["name"] = "Oppressing Roar",
 ["enlarged"] = true,
-["id"] = 252071,
+["id"] = 372048,
 ["important"] = true,
 ["color"] = {
-1,
-0.501960813999176,
-0,
-1,
-},
-},
-["vampiric touch"] = {
-["color"] = {
 0,
 1,
 0,
 1,
 },
+},
+[202748] = {
+["name"] = "Survival Tactics",
 ["enlarged"] = true,
-["name"] = "Vampiric Touch",
-["pandemic"] = true,
-},
-[117679] = {
-["name"] = "Incarnation",
-["enlarged"] = true,
-["id"] = 117679,
+["id"] = 202748,
 ["important"] = true,
 ["color"] = {
 1,
 0.6627451181411743,
 0.9450981020927429,
+1,
+},
+},
+[363608] = {
+["name"] = "Divine Steed",
+["enlarged"] = true,
+["id"] = 363608,
+["important"] = true,
+["color"] = {
+0,
+1,
+1,
 1,
 },
 },
@@ -681,16 +703,17 @@ BetterBlizzFramesDB = {
 1,
 },
 },
-["shadow word: pain"] = {
+[221886] = {
+["name"] = "Divine Steed",
+["enlarged"] = true,
+["id"] = 221886,
+["important"] = true,
 ["color"] = {
 0,
 1,
-0,
+1,
 1,
 },
-["enlarged"] = true,
-["name"] = "Shadow Word: Pain",
-["pandemic"] = true,
 },
 [114050] = {
 ["name"] = "Ascendance",
@@ -716,40 +739,41 @@ BetterBlizzFramesDB = {
 ["important"] = true,
 ["id"] = 34976,
 },
-[454351] = {
-["name"] = "Avenging Wrath",
+[231895] = {
+["name"] = "Crusade",
 ["enlarged"] = true,
-["id"] = 454351,
-["important"] = true,
 ["color"] = {
 1,
 0.501960813999176,
 0,
 1,
 },
-},
-[22842] = {
-["name"] = "Frenzied Regeneration",
-["enlarged"] = true,
-["id"] = 22842,
 ["important"] = true,
-["color"] = {
-1,
-0.6627451181411743,
-0.9450981020927429,
-1,
+["id"] = 231895,
 },
-},
-["shadow embrace"] = {
-["color"] = {
-0,
-1,
-0,
-1,
-},
+["fazed"] = {
+["onlyMine"] = true,
+["name"] = "fazed",
 ["enlarged"] = true,
-["name"] = "Shadow Embrace",
-["pandemic"] = true,
+["color"] = {
+0,
+1,
+0,
+1,
+},
+["important"] = true,
+},
+[317929] = {
+["name"] = "Aura Mastery",
+["enlarged"] = true,
+["color"] = {
+0,
+1,
+0,
+1,
+},
+["important"] = true,
+["id"] = 317929,
 },
 [221883] = {
 ["name"] = "Divine Steed",
@@ -763,22 +787,22 @@ BetterBlizzFramesDB = {
 1,
 },
 },
-[378078] = {
-["name"] = "Spiritwalker's Aegis",
-["enlarged"] = true,
-["id"] = 378078,
-["important"] = true,
+["garrote"] = {
+["onlyMine"] = true,
+["name"] = "Garrote",
+["pandemic"] = true,
 ["color"] = {
 0,
 1,
 0,
 1,
 },
-},
-[199507] = {
-["name"] = "Spreading The Word: Protection",
 ["enlarged"] = true,
-["id"] = 199507,
+},
+[370960] = {
+["name"] = "Emerald Communion",
+["enlarged"] = true,
+["id"] = 370960,
 ["important"] = true,
 ["color"] = {
 1,
@@ -811,33 +835,10 @@ BetterBlizzFramesDB = {
 1,
 },
 },
-[974] = {
-["id"] = 974,
-["important"] = true,
-["name"] = "Earth Shield",
-["color"] = {
-1,
-0.6627451181411743,
-0.9450981020927429,
-1,
-},
-},
-[221887] = {
-["name"] = "Divine Steed",
+[360952] = {
+["name"] = "Coordinated Assault",
 ["enlarged"] = true,
-["color"] = {
-0,
-1,
-1,
-1,
-},
-["important"] = true,
-["id"] = 221887,
-},
-[446035] = {
-["name"] = "Bladestorm",
-["enlarged"] = true,
-["id"] = 446035,
+["id"] = 360952,
 ["important"] = true,
 ["color"] = {
 1,
@@ -845,6 +846,29 @@ BetterBlizzFramesDB = {
 0,
 1,
 },
+},
+["touch of the magi"] = {
+["color"] = {
+0,
+1,
+0,
+1,
+},
+["important"] = true,
+["name"] = "Touch of the Magi",
+["enlarged"] = true,
+},
+[212182] = {
+["name"] = "Smoke Bomb",
+["enlarged"] = true,
+["color"] = {
+1,
+1,
+1,
+1,
+},
+["important"] = true,
+["id"] = 212182,
 },
 [212704] = {
 ["name"] = "The Beast Within",
@@ -858,17 +882,16 @@ BetterBlizzFramesDB = {
 1,
 },
 },
-[31884] = {
-["name"] = "Avenging Wrath",
-["enlarged"] = true,
+[383648] = {
 ["color"] = {
 1,
-0.501960813999176,
-0,
+0.6627451181411743,
+0.9450981020927429,
 1,
 },
 ["important"] = true,
-["id"] = 31884,
+["name"] = "Earth Shield",
+["id"] = 383648,
 },
 [102560] = {
 ["name"] = "Incarnation: Chosen of Elune",
@@ -882,22 +905,10 @@ BetterBlizzFramesDB = {
 1,
 },
 },
-[114051] = {
-["name"] = "Ascendance",
+[212800] = {
+["name"] = "Blur",
 ["enlarged"] = true,
-["color"] = {
-1,
-0.501960813999176,
-0,
-1,
-},
-["important"] = true,
-["id"] = 114051,
-},
-[305497] = {
-["name"] = "Thorns",
-["enlarged"] = true,
-["id"] = 305497,
+["id"] = 212800,
 ["important"] = true,
 ["color"] = {
 1,
@@ -906,17 +917,29 @@ BetterBlizzFramesDB = {
 1,
 },
 },
-[194249] = {
-["name"] = "Voidform",
+[454863] = {
+["name"] = "Lesser Anti-Magic Shell",
 ["enlarged"] = true,
+["id"] = 454863,
+["important"] = true,
+["color"] = {
+0,
+1,
+0,
+1,
+},
+},
+[137639] = {
+["name"] = "Storm, Earth, and Fire",
+["enlarged"] = true,
+["id"] = 137639,
+["important"] = true,
 ["color"] = {
 1,
 0.501960813999176,
 0,
 1,
 },
-["important"] = true,
-["id"] = 194249,
 },
 [53480] = {
 ["name"] = "Roar of Sacrifice",
@@ -930,17 +953,15 @@ BetterBlizzFramesDB = {
 1,
 },
 },
-[498] = {
-["name"] = "Divine Protection",
-["enlarged"] = true,
-["id"] = 498,
-["important"] = true,
+["acclamation"] = {
 ["color"] = {
+0,
 1,
-0.6627451181411743,
-0.9450981020927429,
+0,
 1,
 },
+["onlyMine"] = true,
+["name"] = "Acclamation",
 },
 [221885] = {
 ["name"] = "Divine Steed",
@@ -954,37 +975,38 @@ BetterBlizzFramesDB = {
 1,
 },
 },
-[213871] = {
-["name"] = "Bodyguard",
+[107574] = {
+["name"] = "Avatar",
+["enlarged"] = true,
+["id"] = 107574,
+["important"] = true,
+["color"] = {
+1,
+0.501960813999176,
+0,
+1,
+},
+},
+[391109] = {
+["name"] = "Dark Ascension",
 ["enlarged"] = true,
 ["color"] = {
 1,
-0.6627451181411743,
-0.9450981020927429,
+0.501960813999176,
+0,
 1,
 },
 ["important"] = true,
-["id"] = 213871,
+["id"] = 391109,
 },
-[319454] = {
-["id"] = 319454,
-["color"] = {
-0,
-1,
-0,
-1,
-},
-["name"] = "Heart of the Wild",
+[252071] = {
+["name"] = "Incarnation: Avatar of Ashamane",
 ["enlarged"] = true,
-},
-[372048] = {
-["name"] = "Oppressing Roar",
-["enlarged"] = true,
-["id"] = 372048,
+["id"] = 252071,
 ["important"] = true,
 ["color"] = {
-0,
 1,
+0.501960813999176,
 0,
 1,
 },
@@ -1001,29 +1023,28 @@ BetterBlizzFramesDB = {
 1,
 },
 },
-[248519] = {
-["name"] = "Interlope",
+[359844] = {
+["name"] = "Call of the Wild",
 ["enlarged"] = true,
+["color"] = {
+1,
+0.501960813999176,
+0,
+1,
+},
+["important"] = true,
+["id"] = 359844,
+},
+["wither"] = {
 ["color"] = {
 0,
 1,
 0,
 1,
 },
-["important"] = true,
-["id"] = 248519,
-},
-[289655] = {
-["name"] = "Sanctified Ground",
+["pandemic"] = true,
+["name"] = "Wither",
 ["enlarged"] = true,
-["id"] = 289655,
-["important"] = true,
-["color"] = {
-0,
-1,
-0,
-1,
-},
 },
 [383269] = {
 ["name"] = "Abomination Limb",
@@ -1049,27 +1070,26 @@ BetterBlizzFramesDB = {
 ["important"] = true,
 ["id"] = 335903,
 },
-[132158] = {
-["name"] = "Nature's Swiftness",
-["enlarged"] = true,
-["id"] = 132158,
-["important"] = true,
+["shadow word: pain"] = {
 ["color"] = {
 0,
 1,
 0,
 1,
 },
-},
-[121176] = {
-["name"] = "Orb of Power",
+["pandemic"] = true,
+["name"] = "Shadow Word: Pain",
 ["enlarged"] = true,
-["id"] = 121176,
+},
+[454351] = {
+["name"] = "Avenging Wrath",
+["enlarged"] = true,
+["id"] = 454351,
 ["important"] = true,
 ["color"] = {
-0.5333333611488342,
 1,
-0.1607843190431595,
+0.501960813999176,
+0,
 1,
 },
 },
@@ -1085,15 +1105,15 @@ BetterBlizzFramesDB = {
 1,
 },
 },
-[22812] = {
-["name"] = "Barkskin",
+[209584] = {
+["name"] = "Zen Focus Tea",
 ["enlarged"] = true,
-["id"] = 22812,
+["id"] = 209584,
 ["important"] = true,
 ["color"] = {
+0,
 1,
-0.6627451181411743,
-0.9450981020927429,
+0,
 1,
 },
 },
@@ -1109,15 +1129,15 @@ BetterBlizzFramesDB = {
 },
 ["enlarged"] = true,
 },
-[199448] = {
-["name"] = "Blessing of Sacrifice",
+[374349] = {
+["name"] = "Renewing Blaze",
 ["enlarged"] = true,
-["id"] = 199448,
+["id"] = 374349,
 ["important"] = true,
 ["color"] = {
 1,
-0,
-0.0941176563501358,
+0.6627451181411743,
+0.9450981020927429,
 1,
 },
 },
@@ -1133,27 +1153,27 @@ BetterBlizzFramesDB = {
 ["important"] = true,
 ["id"] = 205025,
 },
-[185422] = {
-["name"] = "Shadow Dance",
+[221887] = {
+["name"] = "Divine Steed",
 ["enlarged"] = true,
 ["color"] = {
-1,
-0.501960813999176,
 0,
+1,
+1,
 1,
 },
 ["important"] = true,
-["id"] = 185422,
+["id"] = 221887,
 },
-[200851] = {
-["name"] = "Rage of the Sleeper",
+[120954] = {
+["name"] = "Fortifying Brew",
 ["enlarged"] = true,
-["id"] = 200851,
+["id"] = 120954,
 ["important"] = true,
 ["color"] = {
 1,
-0.501960813999176,
-0,
+0.6627451181411743,
+0.9450981020927429,
 1,
 },
 },
@@ -1167,23 +1187,10 @@ BetterBlizzFramesDB = {
 ["name"] = "Soul Rot",
 ["enlarged"] = true,
 },
-["sunfire"] = {
-["onlyMine"] = true,
-["name"] = "sunfire",
+[305497] = {
+["name"] = "Thorns",
 ["enlarged"] = true,
-["color"] = {
-0,
-1,
-0,
-1,
-},
-["important"] = true,
-["pandemic"] = true,
-},
-[47536] = {
-["name"] = "Rapture",
-["enlarged"] = true,
-["id"] = 47536,
+["id"] = 305497,
 ["important"] = true,
 ["color"] = {
 1,
@@ -1192,29 +1199,41 @@ BetterBlizzFramesDB = {
 1,
 },
 },
-[276112] = {
-["name"] = "Divine Steed",
+[22812] = {
+["name"] = "Barkskin",
 ["enlarged"] = true,
-["id"] = 276112,
+["id"] = 22812,
+["important"] = true,
+["color"] = {
+1,
+0.6627451181411743,
+0.9450981020927429,
+1,
+},
+},
+[212295] = {
+["name"] = "Nether Ward",
+["enlarged"] = true,
+["id"] = 212295,
 ["important"] = true,
 ["color"] = {
 0,
 1,
-1,
-1,
-},
-},
-[317929] = {
-["name"] = "Aura Mastery",
-["enlarged"] = true,
-["color"] = {
 0,
 1,
+},
+},
+[207289] = {
+["name"] = "Unholy Assault",
+["enlarged"] = true,
+["color"] = {
+1,
+0.501960813999176,
 0,
 1,
 },
 ["important"] = true,
-["id"] = 317929,
+["id"] = 207289,
 },
 [374348] = {
 ["name"] = "Renewing Blaze",
@@ -1228,29 +1247,28 @@ BetterBlizzFramesDB = {
 1,
 },
 },
-[47568] = {
-["name"] = "Empower Rune Weapon",
+[199448] = {
+["name"] = "Blessing of Sacrifice",
 ["enlarged"] = true,
+["id"] = 199448,
+["important"] = true,
 ["color"] = {
 1,
-0.501960813999176,
 0,
+0.0941176563501358,
 1,
 },
-["important"] = true,
-["id"] = 47568,
 },
-[359816] = {
-["name"] = "Dream Flight",
-["enlarged"] = true,
+["weapons of order"] = {
 ["color"] = {
 0,
 1,
 0,
 1,
 },
-["important"] = true,
-["id"] = 359816,
+["onlyMine"] = true,
+["name"] = "Weapons of order",
+["enlarged"] = true,
 },
 [121177] = {
 ["name"] = "Orb of Power",
@@ -1276,15 +1294,15 @@ BetterBlizzFramesDB = {
 1,
 },
 },
-[120954] = {
-["name"] = "Fortifying Brew",
+[200851] = {
+["name"] = "Rage of the Sleeper",
 ["enlarged"] = true,
-["id"] = 120954,
+["id"] = 200851,
 ["important"] = true,
 ["color"] = {
 1,
-0.6627451181411743,
-0.9450981020927429,
+0.501960813999176,
+0,
 1,
 },
 },
@@ -1307,9 +1325,9 @@ BetterBlizzFramesDB = {
 0,
 1,
 },
-["enlarged"] = true,
-["name"] = "Agony",
 ["pandemic"] = true,
+["name"] = "Agony",
+["enlarged"] = true,
 },
 [113862] = {
 ["name"] = "Greater Invisibility",
@@ -1347,39 +1365,37 @@ BetterBlizzFramesDB = {
 1,
 },
 },
-[365362] = {
-["name"] = "Arcane Surge",
+[276112] = {
+["name"] = "Divine Steed",
 ["enlarged"] = true,
-["id"] = 365362,
-["important"] = true,
-["color"] = {
-1,
-0.501960813999176,
-0,
-1,
-},
-},
-[212295] = {
-["name"] = "Nether Ward",
-["enlarged"] = true,
-["id"] = 212295,
+["id"] = 276112,
 ["important"] = true,
 ["color"] = {
 0,
 1,
+1,
+1,
+},
+},
+[199545] = {
+["name"] = "Steed of Glory",
+["enlarged"] = true,
+["color"] = {
 0,
 1,
-},
-},
-[210256] = {
-["name"] = "Blessing of Sanctuary",
-["enlarged"] = true,
-["id"] = 210256,
-["important"] = true,
-["color"] = {
 1,
-0.6627451181411743,
-0.9450981020927429,
+1,
+},
+["important"] = true,
+["id"] = 199545,
+},
+[458503] = {
+["id"] = 458503,
+["name"] = "Ascendance (Haste)",
+["color"] = {
+0,
+1,
+0,
 1,
 },
 },
@@ -1395,10 +1411,10 @@ BetterBlizzFramesDB = {
 1,
 },
 },
-[232708] = {
-["name"] = "Ray of Hope",
+[48743] = {
+["name"] = "Death Pact",
 ["enlarged"] = true,
-["id"] = 232708,
+["id"] = 48743,
 ["important"] = true,
 ["color"] = {
 1,
@@ -1453,37 +1469,39 @@ BetterBlizzFramesDB = {
 1,
 },
 },
-[458503] = {
-["id"] = 458503,
-["name"] = "Ascendance (Haste)",
-["color"] = {
-0,
-1,
-0,
-1,
-},
-},
-[642] = {
-["name"] = "Divine Shield",
+[210256] = {
+["name"] = "Blessing of Sanctuary",
 ["enlarged"] = true,
+["id"] = 210256,
+["important"] = true,
 ["color"] = {
 1,
 0.6627451181411743,
 0.9450981020927429,
 1,
 },
-["important"] = true,
-["id"] = 642,
 },
-[162264] = {
-["name"] = "Metamorphosis",
+[116849] = {
+["name"] = "Life Cocoon",
 ["enlarged"] = true,
-["id"] = 162264,
+["id"] = 116849,
 ["important"] = true,
 ["color"] = {
 1,
-0.501960813999176,
-0,
+0.6627451181411743,
+0.9450981020927429,
+1,
+},
+},
+[443609] = {
+["name"] = "Death Pact",
+["enlarged"] = true,
+["id"] = 443609,
+["important"] = true,
+["color"] = {
+1,
+0.6627451181411743,
+0.9450981020927429,
 1,
 },
 },
@@ -1523,16 +1541,17 @@ BetterBlizzFramesDB = {
 ["important"] = true,
 ["id"] = 359053,
 },
-["winter's chill"] = {
+[276111] = {
+["name"] = "Divine Steed",
+["enlarged"] = true,
+["id"] = 276111,
+["important"] = true,
 ["color"] = {
 0,
 1,
-0,
+1,
 1,
 },
-["important"] = true,
-["name"] = "Winter's Chill",
-["enlarged"] = true,
 },
 ["thrash"] = {
 ["onlyMine"] = true,
@@ -1558,27 +1577,26 @@ BetterBlizzFramesDB = {
 1,
 },
 },
-[184662] = {
-["name"] = "Shield of Vengeance",
-["enlarged"] = true,
+[115192] = {
+["id"] = 115192,
 ["color"] = {
 1,
-0.6627451181411743,
-0.9450981020927429,
+0.501960813999176,
+0,
+1,
+},
+["name"] = "Subterfuge",
+["enlarged"] = true,
+},
+["winter's chill"] = {
+["color"] = {
+0,
+1,
+0,
 1,
 },
 ["important"] = true,
-["id"] = 184662,
-},
-["disable"] = {
-["color"] = {
-0,
-1,
-0,
-1,
-},
-["onlyMine"] = true,
-["name"] = "Disable",
+["name"] = "Winter's Chill",
 ["enlarged"] = true,
 },
 [132578] = {
@@ -1593,8 +1611,8 @@ BetterBlizzFramesDB = {
 ["important"] = true,
 ["id"] = 132578,
 },
-[204361] = {
-["name"] = "Bloodlust",
+[288613] = {
+["name"] = "Trueshot",
 ["enlarged"] = true,
 ["color"] = {
 1,
@@ -1603,19 +1621,19 @@ BetterBlizzFramesDB = {
 1,
 },
 ["important"] = true,
-["id"] = 204361,
+["id"] = 288613,
 },
-[424655] = {
-["name"] = "Safeguard",
+[184662] = {
+["name"] = "Shield of Vengeance",
 ["enlarged"] = true,
-["id"] = 424655,
-["important"] = true,
 ["color"] = {
 1,
 0.6627451181411743,
 0.9450981020927429,
 1,
 },
+["important"] = true,
+["id"] = 184662,
 },
 [353319] = {
 ["name"] = "Peaceweaver",
@@ -1629,17 +1647,17 @@ BetterBlizzFramesDB = {
 1,
 },
 },
-[288613] = {
-["name"] = "Trueshot",
+[47585] = {
+["name"] = "Dispersion",
 ["enlarged"] = true,
+["id"] = 47585,
+["important"] = true,
 ["color"] = {
 1,
-0.501960813999176,
-0,
+0.6627451181411743,
+0.9450981020927429,
 1,
 },
-["important"] = true,
-["id"] = 288613,
 },
 ["burning wound"] = {
 ["onlyMine"] = true,
@@ -1653,20 +1671,34 @@ BetterBlizzFramesDB = {
 },
 ["enlarged"] = true,
 },
-[458525] = {
+[187827] = {
+["name"] = "Metamorphosis",
+["enlarged"] = true,
+["id"] = 187827,
+["important"] = true,
 ["color"] = {
 1,
-0.988235354423523,
+0.501960813999176,
 0,
 1,
 },
-["name"] = "Ascension (Mastery)",
-["id"] = 458525,
 },
 [202162] = {
 ["name"] = "Avert Harm",
 ["enlarged"] = true,
 ["id"] = 202162,
+["important"] = true,
+["color"] = {
+1,
+0.6627451181411743,
+0.9450981020927429,
+1,
+},
+},
+[409293] = {
+["name"] = "Burrow",
+["enlarged"] = true,
+["id"] = 409293,
 ["important"] = true,
 ["color"] = {
 1,
@@ -1687,10 +1719,22 @@ BetterBlizzFramesDB = {
 1,
 },
 },
-[409293] = {
-["name"] = "Burrow",
+[232707] = {
+["name"] = "Ray of Hope",
 ["enlarged"] = true,
-["id"] = 409293,
+["id"] = 232707,
+["important"] = true,
+["color"] = {
+1,
+0.6627451181411743,
+0.9450981020927429,
+1,
+},
+},
+[81782] = {
+["name"] = "Power Word: Barrier",
+["enlarged"] = true,
+["id"] = 81782,
 ["important"] = true,
 ["color"] = {
 1,
@@ -1708,29 +1752,6 @@ BetterBlizzFramesDB = {
 1,
 0.501960813999176,
 0,
-1,
-},
-},
-[432180] = {
-["color"] = {
-0,
-1,
-0,
-1,
-},
-["id"] = 432180,
-["name"] = "Dance of the Wind",
-["enlarged"] = true,
-},
-[81782] = {
-["name"] = "Power Word: Barrier",
-["enlarged"] = true,
-["id"] = 81782,
-["important"] = true,
-["color"] = {
-1,
-0.6627451181411743,
-0.9450981020927429,
 1,
 },
 },
@@ -1782,15 +1803,15 @@ BetterBlizzFramesDB = {
 1,
 },
 },
-[378441] = {
-["name"] = "Time Stop",
+[421453] = {
+["name"] = "Ultimate Penitence",
 ["enlarged"] = true,
-["id"] = 378441,
+["id"] = 421453,
 ["important"] = true,
 ["color"] = {
-0,
 1,
-0,
+0.6627451181411743,
+0.9450981020927429,
 1,
 },
 },
@@ -1801,9 +1822,9 @@ BetterBlizzFramesDB = {
 0,
 1,
 },
-["enlarged"] = true,
-["name"] = "curse of exhaustion",
 ["pandemic"] = true,
+["name"] = "curse of exhaustion",
+["enlarged"] = true,
 },
 [121164] = {
 ["name"] = "Orb of Power",
@@ -1814,29 +1835,6 @@ BetterBlizzFramesDB = {
 0,
 1,
 0.9450981020927429,
-1,
-},
-},
-["sigil of flame"] = {
-["color"] = {
-0,
-1,
-0,
-1,
-},
-["onlyMine"] = true,
-["name"] = "Sigil of Flame",
-["enlarged"] = true,
-},
-[444741] = {
-["name"] = "Anti-Magic Shell",
-["enlarged"] = true,
-["id"] = 444741,
-["important"] = true,
-["color"] = {
-0,
-1,
-0,
 1,
 },
 },
@@ -1851,6 +1849,29 @@ BetterBlizzFramesDB = {
 0.9450981020927429,
 1,
 },
+},
+[378441] = {
+["name"] = "Time Stop",
+["enlarged"] = true,
+["id"] = 378441,
+["important"] = true,
+["color"] = {
+0,
+1,
+0,
+1,
+},
+},
+["sigil of flame"] = {
+["color"] = {
+0,
+1,
+0,
+1,
+},
+["onlyMine"] = true,
+["name"] = "Sigil of Flame",
+["enlarged"] = true,
 },
 [1219209] = {
 ["name"] = "Berserker Roar",
@@ -1876,15 +1897,17 @@ BetterBlizzFramesDB = {
 1,
 },
 },
-[389714] = {
-["id"] = 389714,
-["name"] = "Displacement Beacon",
+[184364] = {
+["name"] = "Enraged Regeneration",
+["enlarged"] = true,
 ["color"] = {
-0,
 1,
-0,
+0.6627451181411743,
+0.9450981020927429,
 1,
 },
+["important"] = true,
+["id"] = 184364,
 },
 [385391] = {
 ["id"] = 385391,
@@ -1909,15 +1932,15 @@ BetterBlizzFramesDB = {
 ["important"] = true,
 ["id"] = 48707,
 },
-[196555] = {
-["name"] = "Netherwalk",
+[254472] = {
+["name"] = "Divine Steed",
 ["enlarged"] = true,
-["id"] = 196555,
+["id"] = 254472,
 ["important"] = true,
 ["color"] = {
 0,
 1,
-0,
+1,
 1,
 },
 },
@@ -1944,16 +1967,17 @@ BetterBlizzFramesDB = {
 ["name"] = "Gale Force",
 ["enlarged"] = true,
 },
-["phantom singularity"] = {
+[196555] = {
+["name"] = "Netherwalk",
+["enlarged"] = true,
+["id"] = 196555,
+["important"] = true,
 ["color"] = {
 0,
 1,
 0,
 1,
 },
-["enlarged"] = true,
-["name"] = "phantom singularity",
-["pandemic"] = true,
 },
 ["corruption"] = {
 ["color"] = {
@@ -1962,9 +1986,9 @@ BetterBlizzFramesDB = {
 0,
 1,
 },
-["enlarged"] = true,
-["name"] = "Corruption",
 ["pandemic"] = true,
+["name"] = "Corruption",
+["enlarged"] = true,
 },
 [97463] = {
 ["name"] = "Rallying Cry",
@@ -1978,22 +2002,10 @@ BetterBlizzFramesDB = {
 1,
 },
 },
-[108271] = {
-["name"] = "Astral Shift",
+[122278] = {
+["name"] = "Dampen Harm",
 ["enlarged"] = true,
-["id"] = 108271,
-["important"] = true,
-["color"] = {
-1,
-0.6627451181411743,
-0.9450981020927429,
-1,
-},
-},
-[345231] = {
-["name"] = "Gladiator's Emblem",
-["enlarged"] = true,
-["id"] = 345231,
+["id"] = 122278,
 ["important"] = true,
 ["color"] = {
 1,
@@ -2014,15 +2026,15 @@ BetterBlizzFramesDB = {
 1,
 },
 },
-[210294] = {
-["name"] = "Divine Favor",
+[345231] = {
+["name"] = "Gladiator's Emblem",
 ["enlarged"] = true,
-["id"] = 210294,
+["id"] = 345231,
 ["important"] = true,
 ["color"] = {
-0,
 1,
-0,
+0.6627451181411743,
+0.9450981020927429,
 1,
 },
 },
@@ -2038,15 +2050,27 @@ BetterBlizzFramesDB = {
 1,
 },
 },
-[363534] = {
-["name"] = "Rewind",
+[210294] = {
+["name"] = "Divine Favor",
 ["enlarged"] = true,
-["id"] = 363534,
+["id"] = 210294,
 ["important"] = true,
 ["color"] = {
+0,
 1,
-0.6627451181411743,
-0.9450981020927429,
+0,
+1,
+},
+},
+[453804] = {
+["name"] = "Divine Steed",
+["enlarged"] = true,
+["id"] = 453804,
+["important"] = true,
+["color"] = {
+0,
+1,
+1,
 1,
 },
 },
@@ -2062,17 +2086,17 @@ BetterBlizzFramesDB = {
 1,
 },
 },
-[50334] = {
-["name"] = "Berserk",
+[5277] = {
+["name"] = "Evasion",
 ["enlarged"] = true,
-["id"] = 50334,
-["important"] = true,
 ["color"] = {
 1,
-0.501960813999176,
-0,
+0.6627451181411743,
+0.9450981020927429,
 1,
 },
+["important"] = true,
+["id"] = 5277,
 },
 [10060] = {
 ["name"] = "Power Infusion",
@@ -2098,30 +2122,6 @@ BetterBlizzFramesDB = {
 ["important"] = true,
 ["id"] = 389794,
 },
-[213610] = {
-["name"] = "Holy Ward",
-["enlarged"] = true,
-["id"] = 213610,
-["important"] = true,
-["color"] = {
-0,
-1,
-0,
-1,
-},
-},
-[228050] = {
-["name"] = "Divine Shield",
-["enlarged"] = true,
-["id"] = 228050,
-["important"] = true,
-["color"] = {
-1,
-0.6627451181411743,
-0.9450981020927429,
-1,
-},
-},
 [384631] = {
 ["name"] = "Flagellation",
 ["enlarged"] = true,
@@ -2134,17 +2134,41 @@ BetterBlizzFramesDB = {
 1,
 },
 },
-["purge the wicked"] = {
-["onlyMine"] = true,
-["name"] = "Purge the Wicked",
+[19574] = {
+["name"] = "Bestial Wrath",
 ["enlarged"] = true,
+["id"] = 19574,
+["important"] = true,
+["color"] = {
+1,
+0.501960813999176,
+0,
+1,
+},
+},
+[213610] = {
+["name"] = "Holy Ward",
+["enlarged"] = true,
+["id"] = 213610,
+["important"] = true,
 ["color"] = {
 0,
 1,
 0,
 1,
 },
-["pandemic"] = true,
+},
+[108416] = {
+["name"] = "Dark Pact",
+["enlarged"] = true,
+["id"] = 108416,
+["important"] = true,
+["color"] = {
+1,
+0.6627451181411743,
+0.9450981020927429,
+1,
+},
 },
 [254474] = {
 ["name"] = "Divine Steed",
@@ -2182,10 +2206,10 @@ BetterBlizzFramesDB = {
 ["important"] = true,
 ["id"] = 156618,
 },
-[108416] = {
-["name"] = "Dark Pact",
+[228050] = {
+["name"] = "Divine Shield",
 ["enlarged"] = true,
-["id"] = 108416,
+["id"] = 228050,
 ["important"] = true,
 ["color"] = {
 1,
@@ -2205,15 +2229,27 @@ BetterBlizzFramesDB = {
 1,
 },
 },
-[227847] = {
-["name"] = "Bladestorm",
+[254473] = {
+["name"] = "Divine Steed",
 ["enlarged"] = true,
-["id"] = 227847,
+["id"] = 254473,
+["important"] = true,
+["color"] = {
+0,
+1,
+1,
+1,
+},
+},
+[31230] = {
+["name"] = "Cheat Death",
+["enlarged"] = true,
+["id"] = 31230,
 ["important"] = true,
 ["color"] = {
 1,
-0.501960813999176,
-0,
+0.6627451181411743,
+0.9450981020927429,
 1,
 },
 },
@@ -2241,27 +2277,15 @@ BetterBlizzFramesDB = {
 1,
 },
 },
-[31230] = {
-["name"] = "Cheat Death",
+[227847] = {
+["name"] = "Bladestorm",
 ["enlarged"] = true,
-["id"] = 31230,
+["id"] = 227847,
 ["important"] = true,
 ["color"] = {
 1,
-0.6627451181411743,
-0.9450981020927429,
-1,
-},
-},
-[254473] = {
-["name"] = "Divine Steed",
-["enlarged"] = true,
-["id"] = 254473,
-["important"] = true,
-["color"] = {
+0.501960813999176,
 0,
-1,
-1,
 1,
 },
 },
@@ -2289,17 +2313,17 @@ BetterBlizzFramesDB = {
 1,
 },
 },
-[19574] = {
-["name"] = "Bestial Wrath",
+["purge the wicked"] = {
+["onlyMine"] = true,
+["name"] = "Purge the Wicked",
 ["enlarged"] = true,
-["id"] = 19574,
-["important"] = true,
 ["color"] = {
+0,
 1,
-0.501960813999176,
 0,
 1,
 },
+["pandemic"] = true,
 },
 [363916] = {
 ["name"] = "Obsidian Scales",
@@ -2313,27 +2337,27 @@ BetterBlizzFramesDB = {
 1,
 },
 },
-[5277] = {
-["name"] = "Evasion",
+[50334] = {
+["name"] = "Berserk",
 ["enlarged"] = true,
+["id"] = 50334,
+["important"] = true,
+["color"] = {
+1,
+0.501960813999176,
+0,
+1,
+},
+},
+[363534] = {
+["name"] = "Rewind",
+["enlarged"] = true,
+["id"] = 363534,
+["important"] = true,
 ["color"] = {
 1,
 0.6627451181411743,
 0.9450981020927429,
-1,
-},
-["important"] = true,
-["id"] = 5277,
-},
-[453804] = {
-["name"] = "Divine Steed",
-["enlarged"] = true,
-["id"] = 453804,
-["important"] = true,
-["color"] = {
-0,
-1,
-1,
 1,
 },
 },
@@ -2361,10 +2385,10 @@ BetterBlizzFramesDB = {
 1,
 },
 },
-[122278] = {
-["name"] = "Dampen Harm",
+[108271] = {
+["name"] = "Astral Shift",
 ["enlarged"] = true,
-["id"] = 122278,
+["id"] = 108271,
 ["important"] = true,
 ["color"] = {
 1,
@@ -2385,17 +2409,16 @@ BetterBlizzFramesDB = {
 1,
 },
 },
-[254472] = {
-["name"] = "Divine Steed",
-["enlarged"] = true,
-["id"] = 254472,
-["important"] = true,
+["phantom singularity"] = {
 ["color"] = {
 0,
 1,
-1,
+0,
 1,
 },
+["pandemic"] = true,
+["name"] = "phantom singularity",
+["enlarged"] = true,
 },
 [387633] = {
 ["name"] = "Soulburn: Demonic Circle",
@@ -2409,17 +2432,15 @@ BetterBlizzFramesDB = {
 1,
 },
 },
-[184364] = {
-["name"] = "Enraged Regeneration",
-["enlarged"] = true,
+[389714] = {
+["id"] = 389714,
+["name"] = "Displacement Beacon",
 ["color"] = {
+0,
 1,
-0.6627451181411743,
-0.9450981020927429,
+0,
 1,
 },
-["important"] = true,
-["id"] = 184364,
 },
 [106951] = {
 ["name"] = "Berserk",
@@ -2433,15 +2454,15 @@ BetterBlizzFramesDB = {
 1,
 },
 },
-[421453] = {
-["name"] = "Ultimate Penitence",
+[444741] = {
+["name"] = "Anti-Magic Shell",
 ["enlarged"] = true,
-["id"] = 421453,
+["id"] = 444741,
 ["important"] = true,
 ["color"] = {
+0,
 1,
-0.6627451181411743,
-0.9450981020927429,
+0,
 1,
 },
 },
@@ -2467,17 +2488,16 @@ BetterBlizzFramesDB = {
 ["important"] = true,
 ["id"] = 156621,
 },
-[232707] = {
-["name"] = "Ray of Hope",
-["enlarged"] = true,
-["id"] = 232707,
-["important"] = true,
+[432180] = {
 ["color"] = {
+0,
 1,
-0.6627451181411743,
-0.9450981020927429,
+0,
 1,
 },
+["id"] = 432180,
+["name"] = "Dance of the Wind",
+["enlarged"] = true,
 },
 [186265] = {
 ["name"] = "Aspect of the Turtle",
@@ -2491,22 +2511,32 @@ BetterBlizzFramesDB = {
 1,
 },
 },
-[187827] = {
-["name"] = "Metamorphosis",
+[458525] = {
+["color"] = {
+1,
+0.988235354423523,
+0,
+1,
+},
+["name"] = "Ascension (Mastery)",
+["id"] = 458525,
+},
+[204361] = {
+["name"] = "Bloodlust",
 ["enlarged"] = true,
-["id"] = 187827,
-["important"] = true,
 ["color"] = {
 1,
 0.501960813999176,
 0,
 1,
 },
+["important"] = true,
+["id"] = 204361,
 },
-[47585] = {
-["name"] = "Dispersion",
+[424655] = {
+["name"] = "Safeguard",
 ["enlarged"] = true,
-["id"] = 47585,
+["id"] = 424655,
 ["important"] = true,
 ["color"] = {
 1,
@@ -2515,28 +2545,16 @@ BetterBlizzFramesDB = {
 1,
 },
 },
-[115192] = {
-["id"] = 115192,
-["color"] = {
-1,
-0.501960813999176,
-0,
-1,
-},
-["name"] = "Subterfuge",
-["enlarged"] = true,
-},
-[276111] = {
-["name"] = "Divine Steed",
-["enlarged"] = true,
-["id"] = 276111,
-["important"] = true,
+["disable"] = {
 ["color"] = {
 0,
 1,
-1,
+0,
 1,
 },
+["onlyMine"] = true,
+["name"] = "Disable",
+["enlarged"] = true,
 },
 [342246] = {
 ["name"] = "Alter Time",
@@ -2557,38 +2575,38 @@ BetterBlizzFramesDB = {
 0,
 1,
 },
-["enlarged"] = true,
-["name"] = "curse of weakness",
 ["pandemic"] = true,
-},
-[443609] = {
-["name"] = "Death Pact",
+["name"] = "curse of weakness",
 ["enlarged"] = true,
-["id"] = 443609,
+},
+[162264] = {
+["name"] = "Metamorphosis",
+["enlarged"] = true,
+["id"] = 162264,
 ["important"] = true,
+["color"] = {
+1,
+0.501960813999176,
+0,
+1,
+},
+},
+[642] = {
+["name"] = "Divine Shield",
+["enlarged"] = true,
 ["color"] = {
 1,
 0.6627451181411743,
 0.9450981020927429,
 1,
 },
-},
-[116849] = {
-["name"] = "Life Cocoon",
-["enlarged"] = true,
-["id"] = 116849,
 ["important"] = true,
-["color"] = {
-1,
-0.6627451181411743,
-0.9450981020927429,
-1,
+["id"] = 642,
 },
-},
-[48743] = {
-["name"] = "Death Pact",
+[232708] = {
+["name"] = "Ray of Hope",
 ["enlarged"] = true,
-["id"] = 48743,
+["id"] = 232708,
 ["important"] = true,
 ["color"] = {
 1,
@@ -2609,28 +2627,29 @@ BetterBlizzFramesDB = {
 ["important"] = true,
 ["id"] = 121471,
 },
-["weapons of order"] = {
-["color"] = {
-0,
-1,
-0,
-1,
-},
-["onlyMine"] = true,
-["name"] = "Weapons of order",
-["enlarged"] = true,
-},
-[199545] = {
-["name"] = "Steed of Glory",
+[359816] = {
+["name"] = "Dream Flight",
 ["enlarged"] = true,
 ["color"] = {
 0,
 1,
-1,
+0,
 1,
 },
 ["important"] = true,
-["id"] = 199545,
+["id"] = 359816,
+},
+[365362] = {
+["name"] = "Arcane Surge",
+["enlarged"] = true,
+["id"] = 365362,
+["important"] = true,
+["color"] = {
+1,
+0.501960813999176,
+0,
+1,
+},
 },
 [48265] = {
 ["name"] = "Death's Advance",
@@ -2644,10 +2663,22 @@ BetterBlizzFramesDB = {
 1,
 },
 },
-[374349] = {
-["name"] = "Renewing Blaze",
+[47568] = {
+["name"] = "Empower Rune Weapon",
 ["enlarged"] = true,
-["id"] = 374349,
+["color"] = {
+1,
+0.501960813999176,
+0,
+1,
+},
+["important"] = true,
+["id"] = 47568,
+},
+[47536] = {
+["name"] = "Rapture",
+["enlarged"] = true,
+["id"] = 47536,
 ["important"] = true,
 ["color"] = {
 1,
@@ -2656,45 +2687,71 @@ BetterBlizzFramesDB = {
 1,
 },
 },
-[207289] = {
-["name"] = "Unholy Assault",
+[289655] = {
+["name"] = "Sanctified Ground",
+["enlarged"] = true,
+["id"] = 289655,
+["important"] = true,
+["color"] = {
+0,
+1,
+0,
+1,
+},
+},
+[248519] = {
+["name"] = "Interlope",
 ["enlarged"] = true,
 ["color"] = {
+0,
 1,
-0.501960813999176,
 0,
 1,
 },
 ["important"] = true,
-["id"] = 207289,
+["id"] = 248519,
 },
-["wither"] = {
+[213871] = {
+["name"] = "Bodyguard",
+["enlarged"] = true,
+["color"] = {
+1,
+0.6627451181411743,
+0.9450981020927429,
+1,
+},
+["important"] = true,
+["id"] = 213871,
+},
+[498] = {
+["name"] = "Divine Protection",
+["enlarged"] = true,
+["id"] = 498,
+["important"] = true,
+["color"] = {
+1,
+0.6627451181411743,
+0.9450981020927429,
+1,
+},
+},
+["sunfire"] = {
+["onlyMine"] = true,
+["name"] = "sunfire",
+["enlarged"] = true,
 ["color"] = {
 0,
 1,
 0,
 1,
 },
-["enlarged"] = true,
-["name"] = "Wither",
+["important"] = true,
 ["pandemic"] = true,
 },
-[359844] = {
-["name"] = "Call of the Wild",
+[446035] = {
+["name"] = "Bladestorm",
 ["enlarged"] = true,
-["color"] = {
-1,
-0.501960813999176,
-0,
-1,
-},
-["important"] = true,
-["id"] = 359844,
-},
-[107574] = {
-["name"] = "Avatar",
-["enlarged"] = true,
-["id"] = 107574,
+["id"] = 446035,
 ["important"] = true,
 ["color"] = {
 1,
@@ -2702,40 +2759,6 @@ BetterBlizzFramesDB = {
 0,
 1,
 },
-},
-["acclamation"] = {
-["color"] = {
-0,
-1,
-0,
-1,
-},
-["onlyMine"] = true,
-["name"] = "Acclamation",
-},
-[454863] = {
-["name"] = "Lesser Anti-Magic Shell",
-["enlarged"] = true,
-["id"] = 454863,
-["important"] = true,
-["color"] = {
-0,
-1,
-0,
-1,
-},
-},
-[212182] = {
-["name"] = "Smoke Bomb",
-["enlarged"] = true,
-["color"] = {
-1,
-1,
-1,
-1,
-},
-["important"] = true,
-["id"] = 212182,
 },
 ["find weakness"] = {
 ["onlyMine"] = true,
@@ -2749,41 +2772,40 @@ BetterBlizzFramesDB = {
 },
 ["pandemic"] = true,
 },
-["garrote"] = {
-["onlyMine"] = true,
-["name"] = "Garrote",
+[378078] = {
+["name"] = "Spiritwalker's Aegis",
+["enlarged"] = true,
+["id"] = 378078,
+["important"] = true,
+["color"] = {
+0,
+1,
+0,
+1,
+},
+},
+["shadow embrace"] = {
+["color"] = {
+0,
+1,
+0,
+1,
+},
 ["pandemic"] = true,
-["color"] = {
-0,
-1,
-0,
-1,
-},
+["name"] = "Shadow Embrace",
 ["enlarged"] = true,
 },
-[209584] = {
-["name"] = "Zen Focus Tea",
+[22842] = {
+["name"] = "Frenzied Regeneration",
 ["enlarged"] = true,
-["id"] = 209584,
+["id"] = 22842,
 ["important"] = true,
 ["color"] = {
-0,
 1,
-0,
-1,
-},
-},
-["fazed"] = {
-["onlyMine"] = true,
-["name"] = "fazed",
-["enlarged"] = true,
-["color"] = {
-0,
-1,
-0,
+0.6627451181411743,
+0.9450981020927429,
 1,
 },
-["important"] = true,
 },
 [13750] = {
 ["id"] = 13750,
@@ -2796,34 +2818,22 @@ BetterBlizzFramesDB = {
 1,
 },
 },
-[221886] = {
-["name"] = "Divine Steed",
+[132158] = {
+["name"] = "Nature's Swiftness",
 ["enlarged"] = true,
-["id"] = 221886,
+["id"] = 132158,
 ["important"] = true,
 ["color"] = {
 0,
 1,
-1,
-1,
-},
-},
-[363608] = {
-["name"] = "Divine Steed",
-["enlarged"] = true,
-["id"] = 363608,
-["important"] = true,
-["color"] = {
 0,
 1,
-1,
-1,
 },
 },
-[202748] = {
-["name"] = "Survival Tactics",
+[117679] = {
+["name"] = "Incarnation",
 ["enlarged"] = true,
-["id"] = 202748,
+["id"] = 117679,
 ["important"] = true,
 ["color"] = {
 1,
@@ -2831,6 +2841,17 @@ BetterBlizzFramesDB = {
 0.9450981020927429,
 1,
 },
+},
+["vampiric touch"] = {
+["color"] = {
+0,
+1,
+0,
+1,
+},
+["pandemic"] = true,
+["name"] = "Vampiric Touch",
+["enlarged"] = true,
 },
 [79206] = {
 ["name"] = "Spiritwalker's Grace",
@@ -2856,28 +2877,29 @@ BetterBlizzFramesDB = {
 1,
 },
 },
-[121175] = {
-["name"] = "Orb of Power",
+[194249] = {
+["name"] = "Voidform",
 ["enlarged"] = true,
-["id"] = 121175,
+["color"] = {
+1,
+0.501960813999176,
+0,
+1,
+},
 ["important"] = true,
-["color"] = {
-0.9058824181556702,
-0.1215686351060867,
-1,
-1,
+["id"] = 194249,
 },
-},
-["unstable affliction"] = {
-["color"] = {
-0,
-1,
-0,
-1,
-},
+[114051] = {
+["name"] = "Ascendance",
 ["enlarged"] = true,
-["name"] = "Unstable Affliction",
-["pandemic"] = true,
+["color"] = {
+1,
+0.501960813999176,
+0,
+1,
+},
+["important"] = true,
+["id"] = 114051,
 },
 [201633] = {
 ["name"] = "Earthen Wall",
@@ -2912,52 +2934,51 @@ BetterBlizzFramesDB = {
 },
 ["name"] = "mystic touch",
 },
-[378464] = {
-["name"] = "Nullifying Shroud",
+[145629] = {
+["name"] = "Anti-Magic Zone",
 ["enlarged"] = true,
-["id"] = 378464,
+["id"] = 145629,
 ["important"] = true,
-["color"] = {
-0,
-1,
-0,
-1,
-},
-},
-[188501] = {
-["color"] = {
-0,
-1,
-0,
-1,
-},
-["id"] = 188501,
-["name"] = "Spectral Sight",
-["enlarged"] = true,
-},
-[15286] = {
-["name"] = "Vampiric Embrace",
-["enlarged"] = true,
 ["color"] = {
 1,
 0.6627451181411743,
 0.9450981020927429,
 1,
 },
-["important"] = true,
-["id"] = 15286,
 },
-[466772] = {
-["name"] = "Doom Winds",
+[8178] = {
+["name"] = "Grounding Totem",
 ["enlarged"] = true,
+["id"] = 8178,
+["important"] = true,
 ["color"] = {
 1,
-0.501960813999176,
+0.6627451181411743,
+0.9450981020927429,
+1,
+},
+},
+[199507] = {
+["name"] = "Spreading The Word: Protection",
+["enlarged"] = true,
+["id"] = 199507,
+["important"] = true,
+["color"] = {
+1,
+0.6627451181411743,
+0.9450981020927429,
+1,
+},
+},
+["mark of the crane"] = {
+["color"] = {
+0,
+1,
 0,
 1,
 },
-["important"] = true,
-["id"] = 466772,
+["onlyMine"] = true,
+["name"] = "mark of the crane",
 },
 [264735] = {
 ["name"] = "Survival of the Fittest",
@@ -2983,10 +3004,22 @@ BetterBlizzFramesDB = {
 1,
 },
 },
-[433874] = {
-["name"] = "Deep Breath",
+[384100] = {
+["name"] = "Berserker Shout",
 ["enlarged"] = true,
-["id"] = 433874,
+["color"] = {
+0.9372549653053284,
+1,
+0.2000000178813934,
+1,
+},
+["important"] = true,
+["id"] = 384100,
+},
+[375087] = {
+["name"] = "Dragonrage",
+["enlarged"] = true,
+["id"] = 375087,
 ["important"] = true,
 ["color"] = {
 1,
@@ -2995,10 +3028,10 @@ BetterBlizzFramesDB = {
 1,
 },
 },
-[2825] = {
-["name"] = "Bloodlust",
+[395296] = {
+["name"] = "Ebon Might",
 ["enlarged"] = true,
-["id"] = 2825,
+["id"] = 395296,
 ["important"] = true,
 ["color"] = {
 1,
@@ -3006,18 +3039,6 @@ BetterBlizzFramesDB = {
 0,
 1,
 },
-},
-[442726] = {
-["name"] = "Malevolence",
-["enlarged"] = true,
-["color"] = {
-1,
-0.501960813999176,
-0,
-1,
-},
-["important"] = true,
-["id"] = 442726,
 },
 [49039] = {
 ["id"] = 49039,
@@ -3030,29 +3051,29 @@ BetterBlizzFramesDB = {
 1,
 },
 },
-[190319] = {
-["name"] = "Combustion",
+[48792] = {
+["name"] = "Icebound Fortitude",
 ["enlarged"] = true,
+["id"] = 48792,
+["important"] = true,
 ["color"] = {
 1,
-0.501960813999176,
-0,
+0.6627451181411743,
+0.9450981020927429,
 1,
 },
-["important"] = true,
-["id"] = 190319,
 },
-[51271] = {
-["name"] = "Pillar of Frost",
+[33206] = {
+["name"] = "Pain Suppression",
 ["enlarged"] = true,
+["id"] = 33206,
+["important"] = true,
 ["color"] = {
 1,
-0.501960813999176,
-0,
+0.6627451181411743,
+0.9450981020927429,
 1,
 },
-["important"] = true,
-["id"] = 51271,
 },
 [47788] = {
 ["name"] = "Guardian Spirit",
@@ -3076,157 +3097,152 @@ BetterBlizzFramesDB = {
 1,
 },
 },
-[104773] = {
-["name"] = "Unending Resolve",
+[1218128] = {
+["name"] = "Bloodstone",
 ["enlarged"] = true,
+["id"] = 1218128,
+["important"] = true,
 ["color"] = {
 1,
-0.6627451181411743,
-0.9450981020927429,
+0.501960813999176,
+0,
 1,
 },
-["important"] = true,
-["id"] = 104773,
 },
 },
-["targetCastBarScale"] = 1,
-["targetBuffEnable"] = true,
+["targetCastBarXPosXPos"] = 0,
+["playerEliteFrameDarkmode"] = true,
 ["hidePlayerRestGlow"] = true,
 ["hidePlayerName"] = true,
-["focusdeBuffPandemicGlow"] = true,
-["reopenOptions"] = false,
+["updates"] = "1.8.1",
+["targetToTScale"] = 1,
 ["changeUnitFrameHealthbarTexture"] = true,
 ["allowLargeAuraFirst"] = true,
 ["absorbIndicator"] = true,
 ["queueTimerAudio"] = true,
-["stealthIndicatorPlayer"] = true,
+["hideCombatIcon"] = false,
 ["maxDebuffFrameDebuffs"] = 16,
-["hideMinimapAuto"] = false,
+["showPartyCastBarIcon"] = true,
 ["absorbIndicatorScale"] = 0.6,
-["gladWinTracker"] = true,
-["fadeMicroMenuExceptQueue"] = true,
-["lossOfControlScale"] = 1.120000004768372,
-["targetToTYPos"] = 13,
-["playerCastBarHeightScale"] = 13,
-["castBarNoInterruptColor"] = {
+["hidePlayerHealthLossAnim"] = false,
+["castbarCastColor"] = {
 1,
+0.7,
 0,
-0.01568627543747425,
 },
+["cdManagerCenterIcons"] = false,
+["focusRacialIndicator"] = true,
+["playerCastBarHeightScale"] = 13,
+["purgeableBuffSortingFirst"] = true,
 ["partyCastBarIconScale"] = 1,
 ["hideObjectiveTracker"] = true,
-["focusCastbarIconYPos"] = 0,
+["moveableFPSCounter"] = false,
 ["frameAuraRowAmount"] = 0,
-["focusEnlargeAuraFriendly"] = true,
+["queueTimerID"] = 567458,
 ["playerCastBarIconScaleScale"] = 1,
-["maxBuffFrameBuffs"] = 32,
-["playerAuraSpacingXXPos"] = 5,
+["targetdeBuffFilterBlacklist"] = true,
+["playerCastBarWidthScale"] = 250,
 ["targetdeBuffEnable"] = true,
 ["partyCastBarTimer"] = false,
-["purgeTextureColorRGB"] = {
-0,
-0.92,
-1,
-0.85,
-},
-["updates"] = "1.7.5d",
-["hidePartyAggroHighlight"] = false,
+["targetAbsorbAmount"] = true,
+["hideGroupIndicator"] = true,
+["petCastBarTestMode"] = false,
 ["overShieldsUnitFrames"] = true,
-["racialIndicatorYPos"] = 0,
+["targetCastBarXPos"] = 0,
 ["enlargedAuraSize"] = 1.2,
 ["focusCombatIndicator"] = true,
 ["focusCastBarScale"] = 1,
-["partyCastBarYPos"] = 0,
-["focusStaticCastbar"] = true,
+["hideActionBarMacroName"] = false,
+["classicCastbarsPlayerBorder"] = true,
 ["targetdeBuffFilterLessMinite"] = false,
 ["partyCastBarHeight"] = 12,
-["focusPrestigeBadgeAlpha"] = true,
+["focusBuffPurgeGlow"] = true,
 ["focusdeBuffFilterBlacklist"] = true,
-["hideTargetName"] = false,
+["classicCastbarsPlayer"] = false,
 ["hidePlayerRoleIcon"] = false,
-["unitFrameFontColor"] = false,
-["optimizedAuraLists"] = true,
+["playerBuffFilterBlacklist"] = true,
+["targetAbsorbYPos"] = 0,
 ["quickHideCastbars"] = false,
-["frameAurasYPos"] = 0,
+["showArenaID"] = true,
 ["playerAbsorbYPos"] = 29,
-["playerAbsorbAnchor"] = "LEFT",
+["enablePlayerDebuffFiltering"] = false,
 ["targetRacialIndicator"] = true,
 ["playerEliteFrame"] = true,
-["targetCastBarIconScaleScale"] = 1,
-["targetImportantAuraGlow"] = true,
-["opBarriersOn"] = true,
+["hideTargetLeaderIcon"] = false,
+["reopenOptions"] = false,
+["playerAbsorbIcon"] = true,
 ["absorbIndicatorFlipIconText"] = true,
 ["targetBuffFilterAll"] = true,
-["absorbIndicatorScaleScale"] = 0.6000000238418579,
+["focusBuffFilterAll"] = true,
 ["partyCastbarIconXPos"] = 0,
-["focusCastBarScaleScale"] = 1,
+["targetAndFocusVerticalGapYPos"] = 0,
 ["druidAlwaysShowCombos"] = true,
-["targetToTScale"] = 1,
-["unitFrameFontSize"] = "9",
-["unitFrameValueFontOutline"] = "THINOUTLINE",
-["classColorFrames"] = true,
+["hideUnitFramePlayerMana"] = false,
+["targetToTAnchor"] = "BOTTOMRIGHT",
+["focusdeBuffFilterOnlyMe"] = false,
+["targetAndFocusArenaNamePartyOverride"] = true,
 ["focusCastBarTimer"] = true,
 ["hideArenaFrames"] = true,
 ["classColorLevelText"] = false,
-["filterGladiusSpam"] = true,
-["darkModeActionBars"] = false,
+["darkModeColorScale"] = 0.08999999612569809,
+["focusCompactAura"] = true,
 ["focusCastbarEdgeHighlight"] = true,
-["hideMinimap"] = false,
-["hasCheckedUi"] = true,
-["actionBarFontColorRGB"] = {
+["classicCastbarsParty"] = false,
+["normalizeGameMenu"] = true,
+["playerAuraSpacingX"] = 5,
+["stealthIndicatorPlayer"] = false,
+["maxAurasOnFrame"] = 0,
+["fadeMicroMenuExceptQueue"] = true,
+["focusToTCastbarAdjustment"] = false,
+["targetBuffFilterLessMinite"] = false,
+["changeRaidFrameHealthbarTexture"] = true,
+["enlargedAuraSizeScale"] = 1.200000047683716,
+["focusdeBuffFilterAll"] = false,
+["moveResourceToTargetEvoker"] = true,
+["focusCastBarHeight"] = 10,
+["hideActionBarHotKey"] = false,
+["noPortraitModes"] = true,
+["centerNames"] = true,
+["targetCastBarYPosYPos"] = 130,
+["darkModeMinimap"] = true,
+["rpNames"] = true,
+["classicFrames"] = false,
+["unitFrameValueFontColorRGB"] = {
 1,
 1,
 1,
 1,
 },
-["PlayerAuraFramedeBuffEnable"] = true,
-["classicCastbarsParty"] = false,
-["addUnitFrameBgTexture"] = true,
-["focusToTCastbarAdjustment"] = false,
-["cooldownViewerEnabled"] = true,
-["changeRaidFrameHealthbarTexture"] = true,
-["moveResourceToTargetPaladinBG"] = true,
-["version"] = "1.00",
-["moveResourceToTargetEvoker"] = true,
-["moveResourceToTarget"] = false,
-["hideActionBarHotKey"] = false,
-["targetCastBarHeight"] = 10,
-["playerEliteFrameMode"] = 1,
-["changeUnitFrameValueFont"] = true,
-["darkModeMinimap"] = true,
-["focusImportantAuraGlow"] = true,
-["castBarInterruptHighlighterEndTime"] = 0.6,
-["playerAbsorbAmount"] = true,
 ["playerReputationClassColor"] = true,
 ["classColorTargetReputationTexture"] = false,
 ["targetdeBuffFilterWatchList"] = true,
-["targetAbsorbYPos"] = 0,
-["playerBuffFilterBlacklist"] = true,
-["castBarInterruptIconYPos"] = 0,
-["combatIndicatorShowSwords"] = true,
+["partyFrameScale"] = 1,
+["partyCastBarYPos"] = 0,
+["partyCastBarXPos"] = 0,
+["focusToTYPos"] = 0,
 ["raiseTargetCastbarStrata"] = true,
 ["healerIndicatorYPos"] = 0,
-["castBarInterruptIconAnchor"] = "RIGHT",
 ["singleValueStatusBarText"] = false,
-["targetToTYPosYPos"] = 13,
-["hideStanceBar"] = true,
+["focusPrestigeBadgeAlpha"] = true,
+["castBarInterruptIconEnabled"] = false,
+["optimizedAuraLists"] = true,
 ["moveResourceToTargetRogue"] = true,
+["focusEnlargeAura"] = true,
+["petCastBarXPos"] = 0,
+["displayDispelGlowAlways"] = false,
 ["buffsOnTopReverseCastbarMovement"] = true,
-["targetCastBarWidthScale"] = 142,
-["legacyBlueComboPoints"] = true,
-["playerCastbarIconXPos"] = 0,
 ["focusBuffFilterLessMinite"] = false,
 ["PlayerAuraFrameBuffFilterLessMinite"] = false,
-["combatIndicator"] = true,
+["partyCastBarWidth"] = 100,
 ["petCastBarYPos"] = 0,
-["actionBarFontOutline"] = "THINOUTLINE",
-["partyArenaNames"] = true,
-["unitFrameValueFont"] = "1",
+["targetPrestigeBadgeAlpha"] = true,
+["legacyComboScale"] = 0.85,
+["darkModeCastbars"] = true,
 ["focusCastBarXPosXPos"] = 0,
 ["racialIndicatorDarkIronDwarf"] = true,
-["legacyComboYPos"] = -25,
-["playerReputationColor"] = false,
-["filterTalentSpam"] = true,
+["partyArenaNames"] = true,
+["healerIndicatorPortrait"] = true,
+["filterGladiusSpam"] = true,
 ["queueStatusButtonPosition"] = {
 "TOPRIGHT",
 nil,
@@ -3236,18 +3252,16 @@ nil,
 },
 ["hideLevelText"] = true,
 ["partyCastbarIconYPos"] = 0,
-["toggleIconPosition"] = {
-"TOPRIGHT",
-nil,
-"TOPRIGHT",
--220.6944885253906,
--7.916633129119873,
-},
+["hideMinimap"] = false,
 ["focusToTXPosXPos"] = 0,
 ["reduceEditModeSelectionAlpha"] = true,
-["changeUnitFrameManabarTexture"] = true,
-["focusBuffEnable"] = true,
-["frameAuraHeightGap"] = 0,
+["castBarInterruptHighlighterInterruptRGB"] = {
+0,
+1,
+0,
+},
+["filterNpcArenaSpam"] = true,
+["hideDragonFlying"] = true,
 ["auraBlacklist"] = {
 [369299] = {
 ["id"] = 369299,
@@ -4417,12 +4431,14 @@ nil,
 ["name"] = "Arathi Healer",
 ["showMine"] = true,
 },
-["sign of the scourge"] = {
-["name"] = "Sign of the Scourge",
+[390371] = {
+["id"] = 390371,
+["name"] = "Ashen Catalyst",
+["showMine"] = true,
 },
-[459834] = {
-["id"] = 459834,
-["name"] = "Sulfur-Lined Pockets",
+[431190] = {
+["id"] = 431190,
+["name"] = "Severe Temperatures",
 ["showMine"] = true,
 },
 [32727] = {
@@ -4443,36 +4459,38 @@ nil,
 ["name"] = "Unfurling Darkness",
 ["showMine"] = true,
 },
-[131493] = {
-["id"] = 131493,
-["name"] = "B.F.F.",
+[292363] = {
+["id"] = 292363,
+["name"] = "Embrace of Kimbul",
+["showMine"] = true,
 },
 [97341] = {
 ["id"] = 97341,
 ["name"] = "Guild Champion",
 },
-[85739] = {
-["id"] = 85739,
-["name"] = "Whirlwind",
+[458043] = {
+["id"] = 458043,
+["name"] = "Malign Omen",
 ["showMine"] = true,
 },
-[384455] = {
-["id"] = 384455,
-["name"] = "Arcane Harmony",
+[417492] = {
+["id"] = 417492,
+["name"] = "Cryopathy",
 ["showMine"] = true,
 },
-[114255] = {
-["id"] = 114255,
-["name"] = "Surge of Light",
-["showMine"] = true,
+[93795] = {
+["id"] = 93795,
+["name"] = "Stormwind Champion",
 },
 [393968] = {
 ["id"] = 393968,
 ["name"] = "Juggernaut",
 ["showMine"] = true,
 },
-["suffocating darkness"] = {
-["name"] = "Suffocating Darkness",
+[385747] = {
+["id"] = 385747,
+["name"] = "Indiscriminate Carnage",
+["showMine"] = true,
 },
 [177931] = {
 ["id"] = 177931,
@@ -4507,9 +4525,9 @@ nil,
 ["name"] = "Whirling Steel",
 ["showMine"] = true,
 },
-[401521] = {
-["id"] = 401521,
-["name"] = "Emerald Resonance",
+[386176] = {
+["id"] = 386176,
+["name"] = "Annihilan Training",
 ["showMine"] = true,
 },
 [335148] = {
@@ -4535,23 +4553,22 @@ nil,
 ["id"] = 335149,
 ["name"] = "Sign of the Scourge",
 },
-[383696] = {
-["id"] = 383696,
-["name"] = "Hit Scheme",
-["showMine"] = true,
+[203850] = {
+["id"] = 203850,
+["name"] = "Elite Pennant",
 },
 [200183] = {
 ["id"] = 200183,
 ["name"] = "Apotheosis",
 ["showMine"] = true,
 },
-[384129] = {
-["id"] = 384129,
-["name"] = "Neural Silencer Mk3",
+[93347] = {
+["id"] = 93347,
+["name"] = "Champion of Therazane",
 },
-[394934] = {
-["id"] = 394934,
-["name"] = "Seething Chaos",
+[394215] = {
+["id"] = 394215,
+["name"] = "Cruel Inspiration",
 ["showMine"] = true,
 },
 [126434] = {
@@ -4568,9 +4585,9 @@ nil,
 ["name"] = "Stormbringer",
 ["showMine"] = true,
 },
-[457273] = {
-["id"] = 457273,
-["name"] = "Lingering Darkness",
+[431698] = {
+["id"] = 431698,
+["name"] = "Temporal Burst",
 ["showMine"] = true,
 },
 [431991] = {
@@ -4592,19 +4609,20 @@ nil,
 ["name"] = "Hot Hand",
 ["showMine"] = true,
 },
-[459830] = {
-["id"] = 459830,
-["name"] = "Sulfur-Lined Pockets",
+[441416] = {
+["id"] = 441416,
+["name"] = "Exterminate",
 ["showMine"] = true,
 },
-[392375] = {
-["id"] = 392375,
-["name"] = "Earthen Weapon",
+[456120] = {
+["id"] = 456120,
+["name"] = "Opportunist",
 ["showMine"] = true,
 },
-[452416] = {
-["id"] = 452416,
-["name"] = "Demonsurge",
+[455097] = {
+["id"] = 455097,
+["name"] = "Arc Discharge",
+["showMine"] = true,
 },
 [260286] = {
 ["id"] = 260286,
@@ -4643,9 +4661,9 @@ nil,
 ["id"] = 93827,
 ["name"] = "Darkspear Champion",
 },
-[23693] = {
-["id"] = 23693,
-["name"] = "Stormpike's Salvation",
+[451248] = {
+["id"] = 451248,
+["name"] = "Shadowy Accretion",
 ["showMine"] = true,
 },
 [383492] = {
@@ -4672,19 +4690,18 @@ nil,
 ["name"] = "Oppressive Orator's Influence",
 ["showMine"] = true,
 },
-[200654] = {
-["id"] = 200654,
-["name"] = "Tyr's Deliverance",
-["showMine"] = true,
+[245686] = {
+["id"] = 245686,
+["name"] = "Fashionable!",
 },
 [458411] = {
 ["id"] = 458411,
 ["name"] = "Spellfrost Teachings",
 ["showMine"] = true,
 },
-[354847] = {
-["id"] = 354847,
-["name"] = "Enduring Brawler",
+[381957] = {
+["id"] = 381957,
+["name"] = "Spoils of Neltharus",
 ["showMine"] = true,
 },
 [461242] = {
@@ -4720,10 +4737,9 @@ nil,
 ["id"] = 93828,
 ["name"] = "Silvermoon Champion",
 },
-[382079] = {
-["id"] = 382079,
-["name"] = "Incarnate's Mark of Frost",
-["showMine"] = true,
+[311492] = {
+["id"] = 311492,
+["name"] = "Ace of the Indomitable",
 },
 [458175] = {
 ["id"] = 458175,
@@ -4759,18 +4775,19 @@ nil,
 ["name"] = "Monster Rising",
 ["showMine"] = true,
 },
-[455020] = {
-["id"] = 455020,
-["name"] = "WoW's Anniversary",
+[208963] = {
+["id"] = 208963,
+["name"] = "Totem of Wrath",
+["showMine"] = true,
 },
 [191877] = {
 ["id"] = 191877,
 ["name"] = "Power of the Maelstrom",
 ["showMine"] = true,
 },
-[450962] = {
-["id"] = 450962,
-["name"] = "Void Pactstone",
+[390148] = {
+["id"] = 390148,
+["name"] = "Flow State",
 ["showMine"] = true,
 },
 [457666] = {
@@ -4778,9 +4795,9 @@ nil,
 ["name"] = "Dawnthread Lining",
 ["showMine"] = true,
 },
-[440645] = {
-["id"] = 440645,
-["name"] = "Fire Flies",
+[264689] = {
+["id"] = 264689,
+["name"] = "Fatigued",
 ["showMine"] = true,
 },
 [426341] = {
@@ -4788,14 +4805,14 @@ nil,
 ["name"] = "Tindral's Fowl Fantasia",
 ["showMine"] = true,
 },
+[387336] = {
+["id"] = 387336,
+["name"] = "Zone of Focus",
+["showMine"] = true,
+},
 [381965] = {
 ["id"] = 381965,
 ["name"] = "Static Electricity",
-["showMine"] = true,
-},
-[313424] = {
-["id"] = 313424,
-["name"] = "Combat Analysis",
 ["showMine"] = true,
 },
 [384267] = {
@@ -4813,14 +4830,14 @@ nil,
 ["name"] = "Serrated Bone Spike",
 ["showMine"] = true,
 },
-[386730] = {
-["id"] = 386730,
-["name"] = "Divine Resonance",
+[443574] = {
+["id"] = 443574,
+["name"] = "Ox Stance",
 ["showMine"] = true,
 },
-[450380] = {
-["id"] = 450380,
-["name"] = "Chi Wave",
+[382146] = {
+["id"] = 382146,
+["name"] = "Well Fed",
 ["showMine"] = true,
 },
 [427490] = {
@@ -4832,18 +4849,19 @@ nil,
 ["name"] = "Forceful Winds",
 ["showMine"] = true,
 },
-[195321] = {
-["id"] = 195321,
-["name"] = "Transfer the Power",
+[257946] = {
+["id"] = 257946,
+["name"] = "Thrill of the Hunt",
 ["showMine"] = true,
 },
-[441786] = {
-["id"] = 441786,
-["name"] = "Escalating Blade",
+[451433] = {
+["id"] = 451433,
+["name"] = "Acclamation",
+["showMine"] = true,
 },
-[403127] = {
-["id"] = 403127,
-["name"] = "Clan Banner",
+[381623] = {
+["id"] = 381623,
+["name"] = "Thistle Tea",
 ["showMine"] = true,
 },
 [400126] = {
@@ -4856,9 +4874,9 @@ nil,
 ["name"] = "Withering Fire",
 ["showMine"] = true,
 },
-[455369] = {
-["id"] = 455369,
-["name"] = "Well Fed",
+[375981] = {
+["id"] = 375981,
+["name"] = "Shadowy Insight",
 ["showMine"] = true,
 },
 [451021] = {
@@ -4866,9 +4884,9 @@ nil,
 ["name"] = "Flurry Charge",
 ["showMine"] = true,
 },
-[176151] = {
-["id"] = 176151,
-["name"] = "Whispers of Insanity",
+[455369] = {
+["id"] = 455369,
+["name"] = "Well Fed",
 ["showMine"] = true,
 },
 [93830] = {
@@ -4885,14 +4903,14 @@ nil,
 ["name"] = "Deathstalker's Mark",
 ["showMine"] = true,
 },
-[442688] = {
-["id"] = 442688,
-["name"] = "Thrill of the Fight",
+[400745] = {
+["id"] = 400745,
+["name"] = "Afterimage",
 ["showMine"] = true,
 },
-[383395] = {
-["id"] = 383395,
-["name"] = "Feel the Burn",
+[397827] = {
+["id"] = 397827,
+["name"] = "Oversized Bobbers",
 ["showMine"] = true,
 },
 [389387] = {
@@ -4905,14 +4923,14 @@ nil,
 ["name"] = "Exterminate",
 ["showMine"] = true,
 },
-[391688] = {
-["id"] = 391688,
-["name"] = "Dancing Blades",
+[461943] = {
+["id"] = 461943,
+["name"] = "Well Fed",
 ["showMine"] = true,
 },
-[461959] = {
-["id"] = 461959,
-["name"] = "Well Fed",
+[274156] = {
+["id"] = 274156,
+["name"] = "Consumption",
 ["showMine"] = true,
 },
 [410871] = {
@@ -4930,19 +4948,18 @@ nil,
 ["name"] = "Well Fed",
 ["showMine"] = true,
 },
-[442503] = {
-["id"] = 442503,
-["name"] = "Warblade's Hunger",
+[399502] = {
+["id"] = 399502,
+["name"] = "Atomically Recalibrated",
+},
+[396752] = {
+["id"] = 396752,
+["name"] = "Crushing Blow",
 ["showMine"] = true,
 },
-[383169] = {
-["id"] = 383169,
-["name"] = "Lucky Horseshoe",
-["showMine"] = true,
-},
-[455820] = {
-["id"] = 455820,
-["name"] = "Uncommon Treasure",
+[208628] = {
+["id"] = 208628,
+["name"] = "Momentum",
 ["showMine"] = true,
 },
 [21172] = {
@@ -4978,9 +4995,9 @@ nil,
 ["name"] = "Ancient Concordance",
 ["showMine"] = true,
 },
-[417488] = {
-["id"] = 417488,
-["name"] = "Frigid Empowerment",
+[382889] = {
+["id"] = 382889,
+["name"] = "Flurry",
 ["showMine"] = true,
 },
 [460490] = {
@@ -4988,9 +5005,9 @@ nil,
 ["name"] = "Chi Burst",
 ["showMine"] = true,
 },
-[72221] = {
-["id"] = 72221,
-["name"] = "Luck of the Draw",
+[457167] = {
+["id"] = 457167,
+["name"] = "Symbolic Victory",
 ["showMine"] = true,
 },
 [101568] = {
@@ -5007,9 +5024,9 @@ nil,
 ["id"] = 452307,
 ["name"] = "Sign of the Past",
 },
-[431944] = {
-["id"] = 431944,
-["name"] = "Diabolic Ritual: Overlord",
+[8679] = {
+["id"] = 8679,
+["name"] = "Wound Poison",
 ["showMine"] = true,
 },
 [382232] = {
@@ -5017,9 +5034,9 @@ nil,
 ["name"] = "Well Fed",
 ["showMine"] = true,
 },
-[457167] = {
-["id"] = 457167,
-["name"] = "Symbolic Victory",
+[72221] = {
+["id"] = 72221,
+["name"] = "Luck of the Draw",
 ["showMine"] = true,
 },
 [375583] = {
@@ -5027,14 +5044,14 @@ nil,
 ["name"] = "Ancient Flame",
 ["showMine"] = true,
 },
-[374271] = {
-["id"] = 374271,
-["name"] = "Unholy Ground",
+[48018] = {
+["id"] = 48018,
+["name"] = "Demonic Circle",
 ["showMine"] = true,
 },
-[457284] = {
-["id"] = 457284,
-["name"] = "Well Fed",
+[442983] = {
+["id"] = 442983,
+["name"] = "Vizier's Savvy",
 ["showMine"] = true,
 },
 [455122] = {
@@ -5042,9 +5059,9 @@ nil,
 ["name"] = "Permafrost Lances",
 ["showMine"] = true,
 },
-[440989] = {
-["id"] = 440989,
-["name"] = "Colossal Might",
+[385951] = {
+["id"] = 385951,
+["name"] = "Finality: Rupture",
 ["showMine"] = true,
 },
 [440289] = {
@@ -5052,9 +5069,9 @@ nil,
 ["name"] = "Rune Carved Plates",
 ["showMine"] = true,
 },
-[433584] = {
-["id"] = 433584,
-["name"] = "Rite of Adjuration",
+[456323] = {
+["id"] = 456323,
+["name"] = "Abyssal Dominion",
 ["showMine"] = true,
 },
 [325202] = {
@@ -5062,9 +5079,9 @@ nil,
 ["name"] = "Dance of Chi-Ji",
 ["showMine"] = true,
 },
-[450521] = {
-["id"] = 450521,
-["name"] = "Aspect of Harmony",
+[440290] = {
+["id"] = 440290,
+["name"] = "Rune Carved Plates",
 ["showMine"] = true,
 },
 [182422] = {
@@ -5082,14 +5099,14 @@ nil,
 ["name"] = "Rising Sunlight",
 ["showMine"] = true,
 },
-[281215] = {
-["id"] = 281215,
-["name"] = "Glorious Pennant",
+[408067] = {
+["id"] = 408067,
+["name"] = "B.B.F. Fist",
 ["showMine"] = true,
 },
-[458705] = {
-["id"] = 458705,
-["name"] = "Vantus Rune: Nexus-Princess Ky'veza",
+[450521] = {
+["id"] = 450521,
+["name"] = "Aspect of Harmony",
 ["showMine"] = true,
 },
 [443616] = {
@@ -5097,28 +5114,28 @@ nil,
 ["name"] = "Heart of the Jade Serpent",
 ["showMine"] = true,
 },
-[408067] = {
-["id"] = 408067,
-["name"] = "B.B.F. Fist",
+[281215] = {
+["id"] = 281215,
+["name"] = "Glorious Pennant",
 ["showMine"] = true,
 },
 [394001] = {
 ["id"] = 394001,
 ["name"] = "Sculpting Leather Finery",
 },
-[428524] = {
-["id"] = 428524,
-["name"] = "Demonic Art: Overlord",
+[456652] = {
+["id"] = 456652,
+["name"] = "Voltaic Stormsurge",
+["showMine"] = true,
+},
+[417138] = {
+["id"] = 417138,
+["name"] = "Rage of Fyr'alath",
 ["showMine"] = true,
 },
 [281216] = {
 ["id"] = 281216,
 ["name"] = "Glorious Pennant",
-},
-[390677] = {
-["id"] = 390677,
-["name"] = "Inspiration",
-["showMine"] = true,
 },
 [390933] = {
 ["id"] = 390933,
@@ -5144,9 +5161,9 @@ nil,
 ["name"] = "Spark of Madness",
 ["showMine"] = true,
 },
-[382148] = {
-["id"] = 382148,
-["name"] = "Slick Ice",
+[8220] = {
+["id"] = 8220,
+["name"] = "Flip Out",
 ["showMine"] = true,
 },
 [8212] = {
@@ -5164,19 +5181,14 @@ nil,
 ["name"] = "Arcane Phoenix",
 ["showMine"] = true,
 },
-[388011] = {
-["id"] = 388011,
-["name"] = "Blessing of Winter",
+[462210] = {
+["id"] = 462210,
+["name"] = "Hearty Well Fed",
 ["showMine"] = true,
 },
-[401516] = {
-["id"] = 401516,
-["name"] = "Ruby Resonance",
-["showMine"] = true,
-},
-[327510] = {
-["id"] = 327510,
-["name"] = "Shining Light",
+[359618] = {
+["id"] = 359618,
+["name"] = "Essence Burst",
 ["showMine"] = true,
 },
 [148538] = {
@@ -5184,18 +5196,22 @@ nil,
 ["name"] = "Blackflame Daggers",
 ["showMine"] = true,
 },
+[394005] = {
+["id"] = 394005,
+["name"] = "A Cultivator's Colors",
+},
 [418813] = {
 ["id"] = 418813,
 ["name"] = "Self Sufficient",
 },
-[394670] = {
-["id"] = 394670,
-["name"] = "Elemental Mastery",
+[315584] = {
+["id"] = 315584,
+["name"] = "Instant Poison",
 ["showMine"] = true,
 },
-[403296] = {
-["id"] = 403296,
-["name"] = "Bronze Attunement",
+[449331] = {
+["id"] = 449331,
+["name"] = "Merely a Setback",
 ["showMine"] = true,
 },
 [394006] = {
@@ -5212,9 +5228,9 @@ nil,
 ["name"] = "Azure Resonance",
 ["showMine"] = true,
 },
-[457178] = {
-["id"] = 457178,
-["name"] = "Clear the Witnesses",
+[450884] = {
+["id"] = 450884,
+["name"] = "Lunar Storm",
 ["showMine"] = true,
 },
 [212988] = {
@@ -5226,12 +5242,14 @@ nil,
 ["name"] = "Summon Fenryr",
 ["showMine"] = true,
 },
-["spellfire sphere"] = {
-["name"] = "Spellfire Sphere",
+[451462] = {
+["id"] = 451462,
+["name"] = "Ordered Elements",
+["showMine"] = true,
 },
-[459224] = {
-["id"] = 459224,
-["name"] = "Building Momentum",
+[457178] = {
+["id"] = 457178,
+["name"] = "Clear the Witnesses",
 ["showMine"] = true,
 },
 [394008] = {
@@ -5239,9 +5257,9 @@ nil,
 ["name"] = "A Looker's Charm",
 ["showMine"] = true,
 },
-[57723] = {
-["id"] = 57723,
-["name"] = "Exhaustion",
+[372015] = {
+["id"] = 372015,
+["name"] = "Vicious Cycle",
 ["showMine"] = true,
 },
 [372014] = {
@@ -5259,14 +5277,12 @@ nil,
 ["name"] = "Fishing For Attention",
 ["showMine"] = true,
 },
-[462806] = {
-["id"] = 462806,
-["name"] = "Vizier's Supremacy",
-["showMine"] = true,
+["spellfire sphere"] = {
+["name"] = "Spellfire Sphere",
 },
-[372015] = {
-["id"] = 372015,
-["name"] = "Vicious Cycle",
+[57723] = {
+["id"] = 57723,
+["name"] = "Exhaustion",
 ["showMine"] = true,
 },
 [347600] = {
@@ -5274,28 +5290,29 @@ nil,
 ["name"] = "Infused Ruby Tracking",
 ["showMine"] = true,
 },
+[388600] = {
+["id"] = 388600,
+["name"] = "Ride Along",
+["showMine"] = true,
+},
 [450531] = {
 ["id"] = 450531,
 ["name"] = "Aspect of Harmony",
 ["showMine"] = true,
 },
-[57819] = {
-["id"] = 57819,
-["name"] = "Argent Champion",
-},
-[418563] = {
-["id"] = 418563,
-["name"] = "WoW's 19th Anniversary",
+[410762] = {
+["id"] = 410762,
+["name"] = "The Silent Star",
+["showMine"] = true,
 },
 [432629] = {
 ["id"] = 432629,
 ["name"] = "Undisputed Ruling",
 ["showMine"] = true,
 },
-[394011] = {
-["id"] = 394011,
-["name"] = "Dressed To Kill",
-["showMine"] = true,
+[418563] = {
+["id"] = 418563,
+["name"] = "WoW's 19th Anniversary",
 },
 [453601] = {
 ["id"] = 453601,
@@ -5307,9 +5324,9 @@ nil,
 ["name"] = "Well Fed",
 ["showMine"] = true,
 },
-[372019] = {
-["id"] = 372019,
-["name"] = "Vicious Cycle",
+[411661] = {
+["id"] = 411661,
+["name"] = "Domineering Arrogance",
 ["showMine"] = true,
 },
 [405265] = {
@@ -5322,9 +5339,9 @@ nil,
 ["name"] = "Flawless Form",
 ["showMine"] = true,
 },
-[385391] = {
-["id"] = 385391,
-["name"] = "Spell Reflection",
+[372092] = {
+["id"] = 372092,
+["name"] = "Star Flinger",
 ["showMine"] = true,
 },
 [361021] = {
@@ -5342,14 +5359,14 @@ nil,
 ["name"] = "Weaver's Prodigy",
 ["showMine"] = true,
 },
-[334168] = {
-["id"] = 334168,
-["name"] = "Lashing Flames",
+[372019] = {
+["id"] = 372019,
+["name"] = "Vicious Cycle",
 ["showMine"] = true,
 },
-[454015] = {
-["id"] = 454015,
-["name"] = "Tempest",
+[387109] = {
+["id"] = 387109,
+["name"] = "Conflagration of Chaos",
 ["showMine"] = true,
 },
 [454371] = {
@@ -5357,19 +5374,19 @@ nil,
 ["name"] = "Death's Chill",
 ["showMine"] = true,
 },
-[411661] = {
-["id"] = 411661,
-["name"] = "Domineering Arrogance",
+[390178] = {
+["id"] = 390178,
+["name"] = "Plaguebringer",
+["showMine"] = true,
+},
+[394015] = {
+["id"] = 394015,
+["name"] = "An Eye For Shine",
 ["showMine"] = true,
 },
 [414219] = {
 ["id"] = 414219,
 ["name"] = "Shadowrooted Grippers",
-["showMine"] = true,
-},
-[447978] = {
-["id"] = 447978,
-["name"] = "Stance - Surekian Decimation",
 ["showMine"] = true,
 },
 [270232] = {
@@ -5387,17 +5404,17 @@ nil,
 ["name"] = "Icy Talons",
 ["showMine"] = true,
 },
-[427487] = {
-["id"] = 427487,
-["name"] = "Ride Along",
+[394016] = {
+["id"] = 394016,
+["name"] = "Artist's Duds",
 ["showMine"] = true,
 },
 ["shadowy insight"] = {
 ["name"] = "Shadowy Insight",
 },
-[390692] = {
-["id"] = 390692,
-["name"] = "Borrowed Time",
+[451049] = {
+["id"] = 451049,
+["name"] = "Burden of Power",
 ["showMine"] = true,
 },
 [391459] = {
@@ -5405,9 +5422,9 @@ nil,
 ["name"] = "Sanguine Ground",
 ["showMine"] = true,
 },
-[451049] = {
-["id"] = 451049,
-["name"] = "Burden of Power",
+[390692] = {
+["id"] = 390692,
+["name"] = "Borrowed Time",
 ["showMine"] = true,
 },
 [417275] = {
@@ -5424,21 +5441,22 @@ nil,
 ["name"] = "Sated",
 ["showMine"] = true,
 },
+[57820] = {
+["id"] = 57820,
+["name"] = "Ebon Champion",
+},
+[44521] = {
+["id"] = 44521,
+["name"] = "Preparation",
+},
 [257622] = {
 ["id"] = 257622,
 ["name"] = "Trick Shots",
 ["showMine"] = true,
 },
-[57820] = {
-["id"] = 57820,
-["name"] = "Ebon Champion",
-},
-["honorless target"] = {
-["name"] = "Honorless Target",
-},
-[428866] = {
-["id"] = 428866,
-["name"] = "Power of Nature",
+[455464] = {
+["id"] = 455464,
+["name"] = "Kaheti Shadeweaver's Dark Ritual",
 ["showMine"] = true,
 },
 [393763] = {
@@ -5456,9 +5474,9 @@ nil,
 ["name"] = "Voidform",
 ["showMine"] = true,
 },
-[253595] = {
-["id"] = 253595,
-["name"] = "Inexorable Assault",
+[424454] = {
+["id"] = 424454,
+["name"] = "Blackout Reinforcement",
 ["showMine"] = true,
 },
 [455144] = {
@@ -5466,24 +5484,23 @@ nil,
 ["name"] = "Acrobatic Strikes",
 ["showMine"] = true,
 },
-[373276] = {
-["id"] = 373276,
-["name"] = "Idol of Yogg-Saron",
-["showMine"] = true,
+[93816] = {
+["id"] = 93816,
+["name"] = "Gilneas Champion",
 },
 [455656] = {
 ["id"] = 455656,
 ["name"] = "Dark Embrace",
 ["showMine"] = true,
 },
-[429474] = {
-["id"] = 429474,
-["name"] = "Blooming Infusion",
+[459878] = {
+["id"] = 459878,
+["name"] = "Golden Opportunity",
 ["showMine"] = true,
 },
-[459238] = {
-["id"] = 459238,
-["name"] = "Festering Scythe",
+[403976] = {
+["id"] = 403976,
+["name"] = "Inquisitor's Ire",
 ["showMine"] = true,
 },
 [321388] = {
@@ -5491,19 +5508,19 @@ nil,
 ["name"] = "Enlightened",
 ["showMine"] = true,
 },
-[203533] = {
-["id"] = 203533,
-["name"] = "Black Icey Bling",
+[452688] = {
+["id"] = 452688,
+["name"] = "Wisdom of the Wall",
 ["showMine"] = true,
 },
-[129914] = {
-["id"] = 129914,
-["name"] = "Combat Wisdom",
+[461856] = {
+["id"] = 461856,
+["name"] = "Well Fed",
 ["showMine"] = true,
 },
-[5761] = {
-["id"] = 5761,
-["name"] = "Numbing Poison",
+[459238] = {
+["id"] = 459238,
+["name"] = "Festering Scythe",
 ["showMine"] = true,
 },
 [374585] = {
@@ -5511,9 +5528,9 @@ nil,
 ["name"] = "Rune Mastery",
 ["showMine"] = true,
 },
-[377143] = {
-["id"] = 377143,
-["name"] = "Horizon Strider's Swiftness",
+[426676] = {
+["id"] = 426676,
+["name"] = "Best Friends with Aerwynn",
 ["showMine"] = true,
 },
 [444661] = {
@@ -5531,9 +5548,9 @@ nil,
 ["name"] = "Enlightened",
 ["showMine"] = true,
 },
-[211805] = {
-["id"] = 211805,
-["name"] = "Gathering Storm",
+[435615] = {
+["id"] = 435615,
+["name"] = "Thunder Blast",
 ["showMine"] = true,
 },
 [3408] = {
@@ -5555,9 +5572,9 @@ nil,
 ["id"] = 388602,
 ["name"] = "Ride Along",
 },
-[8221] = {
-["id"] = 8221,
-["name"] = "Yaaarrrr",
+[462183] = {
+["id"] = 462183,
+["name"] = "Hearty Well Fed",
 ["showMine"] = true,
 },
 [447988] = {
@@ -5570,14 +5587,14 @@ nil,
 ["name"] = "Sparkbug Jar",
 ["showMine"] = true,
 },
+[462185] = {
+["id"] = 462185,
+["name"] = "Hearty Well Fed",
+["showMine"] = true,
+},
 [389422] = {
 ["id"] = 389422,
 ["name"] = "Yu'lon's Blessing",
-["showMine"] = true,
-},
-[386353] = {
-["id"] = 386353,
-["name"] = "Iridescence: Red",
 ["showMine"] = true,
 },
 [461288] = {
@@ -5585,18 +5602,18 @@ nil,
 ["name"] = "Bloodbath",
 ["showMine"] = true,
 },
-[461854] = {
-["id"] = 461854,
-["name"] = "Well Fed",
+[460831] = {
+["id"] = 460831,
+["name"] = "Delver's Bounty",
 ["showMine"] = true,
 },
 [57821] = {
 ["id"] = 57821,
 ["name"] = "Champion of the Kirin Tor",
 },
-[394080] = {
-["id"] = 394080,
-["name"] = "Scent of Blood",
+[449322] = {
+["id"] = 449322,
+["name"] = "Mana Cascade",
 ["showMine"] = true,
 },
 [280398] = {
@@ -5609,13 +5626,13 @@ nil,
 ["name"] = "Elemental Resistance",
 ["showMine"] = true,
 },
-[388658] = {
-["id"] = 388658,
-["name"] = "Suited For Smithing",
+[377234] = {
+["id"] = 377234,
+["name"] = "Thrill of the Skies",
 },
-[391215] = {
-["id"] = 391215,
-["name"] = "Initiative",
+[390192] = {
+["id"] = 390192,
+["name"] = "Ragefire",
 ["showMine"] = true,
 },
 [471521] = {
@@ -5627,15 +5644,14 @@ nil,
 ["name"] = "Essence of the Blood Queen",
 ["showMine"] = true,
 },
-[390192] = {
-["id"] = 390192,
-["name"] = "Ragefire",
+[391215] = {
+["id"] = 391215,
+["name"] = "Initiative",
 ["showMine"] = true,
 },
-[148039] = {
-["id"] = 148039,
-["name"] = "Barrier of Faith",
-["showMine"] = true,
+[225787] = {
+["id"] = 225787,
+["name"] = "Sign of the Warrior",
 },
 [451061] = {
 ["id"] = 451061,
@@ -5651,35 +5667,36 @@ nil,
 ["name"] = "Starlord",
 ["showMine"] = true,
 },
-["personalized weather"] = {
-["name"] = "Personalized Weather",
+[224125] = {
+["id"] = 224125,
+["name"] = "Molten Weapon",
+["showMine"] = true,
 },
 [433671] = {
 ["id"] = 433671,
 ["name"] = "Sanctification",
 ["showMine"] = true,
 },
-[225787] = {
-["id"] = 225787,
-["name"] = "Sign of the Warrior",
+[148039] = {
+["id"] = 148039,
+["name"] = "Barrier of Faith",
+["showMine"] = true,
 },
 [241260] = {
 ["id"] = 241260,
 ["name"] = "Enlistment Bonus",
 },
-[460829] = {
-["id"] = 460829,
-["name"] = "Delver's Bounty",
+[2823] = {
+["id"] = 2823,
+["name"] = "Deadly Poison",
 ["showMine"] = true,
 },
-[224125] = {
-["id"] = 224125,
-["name"] = "Molten Weapon",
-["showMine"] = true,
+["personalized weather"] = {
+["name"] = "Personalized Weather",
 },
-[434034] = {
-["id"] = 434034,
-["name"] = "Blood-Soaked Ground",
+[381956] = {
+["id"] = 381956,
+["name"] = "Spoils of Neltharus",
 ["showMine"] = true,
 },
 [390195] = {
@@ -5687,23 +5704,23 @@ nil,
 ["name"] = "Chaos Theory",
 ["showMine"] = true,
 },
-[196741] = {
-["id"] = 196741,
-["name"] = "Hit Combo",
+[32645] = {
+["id"] = 32645,
+["name"] = "Envenom",
 ["showMine"] = true,
 },
-[281036] = {
-["id"] = 281036,
-["name"] = "Dire Beast",
+[196911] = {
+["id"] = 196911,
+["name"] = "Shadow Techniques",
 ["showMine"] = true,
 },
 [225788] = {
 ["id"] = 225788,
 ["name"] = "Sign of the Emissary",
 },
-[385126] = {
-["id"] = 385126,
-["name"] = "Blessing of Dusk",
+[459805] = {
+["id"] = 459805,
+["name"] = "Wailing Arrow",
 ["showMine"] = true,
 },
 [51460] = {
@@ -5735,9 +5752,9 @@ nil,
 ["name"] = "Essence of Yu'lon",
 ["showMine"] = true,
 },
-[433674] = {
-["id"] = 433674,
-["name"] = "Light's Deliverance",
+[297871] = {
+["id"] = 297871,
+["name"] = "Anglers' Water Striders",
 ["showMine"] = true,
 },
 [57822] = {
@@ -5773,19 +5790,19 @@ nil,
 ["name"] = "Fortitude of Niuzao",
 ["showMine"] = true,
 },
-[66157] = {
-["id"] = 66157,
-["name"] = "Honorable Defender",
+[402221] = {
+["id"] = 402221,
+["name"] = "Obsidian Resonance",
 ["showMine"] = true,
 },
-[455456] = {
-["id"] = 455456,
-["name"] = "Unstable Power Suit Core",
+[458525] = {
+["id"] = 458525,
+["name"] = "Ascension (Mastery)",
 ["showMine"] = true,
 },
-[449792] = {
-["id"] = 449792,
-["name"] = "Crystalline Coalescense",
+[391481] = {
+["id"] = 391481,
+["name"] = "Coagulopathy",
 ["showMine"] = true,
 },
 [440839] = {
@@ -5793,9 +5810,9 @@ nil,
 ["name"] = "Kindness of Chi-Ji",
 ["showMine"] = true,
 },
-[402221] = {
-["id"] = 402221,
-["name"] = "Obsidian Resonance",
+[454394] = {
+["id"] = 454394,
+["name"] = "Unlimited Power",
 ["showMine"] = true,
 },
 [404523] = {
@@ -5808,9 +5825,9 @@ nil,
 ["name"] = "Larodar's Fiery Reverie",
 ["showMine"] = true,
 },
-[449793] = {
-["id"] = 449793,
-["name"] = "Succulent Soul",
+[409896] = {
+["id"] = 409896,
+["name"] = "Essence Gathering",
 ["showMine"] = true,
 },
 [386877] = {
@@ -5818,19 +5835,19 @@ nil,
 ["name"] = "Unerring Vision",
 ["showMine"] = true,
 },
-[388193] = {
-["id"] = 388193,
-["name"] = "Jadefire Stomp",
+[460826] = {
+["id"] = 460826,
+["name"] = "Delver's Bounty",
 ["showMine"] = true,
 },
-[391481] = {
-["id"] = 391481,
-["name"] = "Coagulopathy",
+[449792] = {
+["id"] = 449792,
+["name"] = "Crystalline Coalescense",
 ["showMine"] = true,
 },
-[455455] = {
-["id"] = 455455,
-["name"] = "Unstable Power Suit Core",
+[453409] = {
+["id"] = 453409,
+["name"] = "Whirling Air",
 ["showMine"] = true,
 },
 [186406] = {
@@ -5842,15 +5859,13 @@ nil,
 ["name"] = "Call of Ysera",
 ["showMine"] = true,
 },
-[409896] = {
-["id"] = 409896,
-["name"] = "Essence Gathering",
+[449793] = {
+["id"] = 449793,
+["name"] = "Succulent Soul",
 ["showMine"] = true,
 },
-[388220] = {
-["id"] = 388220,
-["name"] = "Calming Coalescence",
-["showMine"] = true,
+["sophic devotion"] = {
+["name"] = "Sophic Devotion",
 },
 [455420] = {
 ["id"] = 455420,
@@ -5862,9 +5877,9 @@ nil,
 ["name"] = "Ossified Vitriol",
 ["showMine"] = true,
 },
-[455966] = {
-["id"] = 455966,
-["name"] = "Shadowed Essence",
+[377195] = {
+["id"] = 377195,
+["name"] = "Enduring Strength",
 ["showMine"] = true,
 },
 [451073] = {
@@ -5877,23 +5892,14 @@ nil,
 ["name"] = "Fevered Incantation",
 ["showMine"] = true,
 },
-[394007] = {
-["id"] = 394007,
-["name"] = "A Production-Grade Display",
+[462182] = {
+["id"] = 462182,
+["name"] = "Hearty Well Fed",
+["showMine"] = true,
 },
 [334196] = {
 ["id"] = 334196,
 ["name"] = "Hailstorm",
-["showMine"] = true,
-},
-[198300] = {
-["id"] = 198300,
-["name"] = "Converging Storms",
-["showMine"] = true,
-},
-[393019] = {
-["id"] = 393019,
-["name"] = "Inspiring Vanguard",
 ["showMine"] = true,
 },
 [376907] = {
@@ -5901,14 +5907,24 @@ nil,
 ["name"] = "Unleashed Frenzy",
 ["showMine"] = true,
 },
+[393019] = {
+["id"] = 393019,
+["name"] = "Inspiring Vanguard",
+["showMine"] = true,
+},
+[198300] = {
+["id"] = 198300,
+["name"] = "Converging Storms",
+["showMine"] = true,
+},
 [405807] = {
 ["id"] = 405807,
 ["name"] = "Shaohao's Lesson - Anger",
 ["showMine"] = true,
 },
-[341770] = {
-["id"] = 341770,
-["name"] = "Accursed",
+[387393] = {
+["id"] = 387393,
+["name"] = "Dread Calling",
 ["showMine"] = true,
 },
 [184362] = {
@@ -5921,53 +5937,33 @@ nil,
 ["name"] = "Blessing of Dawn",
 ["showMine"] = true,
 },
-[460824] = {
-["id"] = 460824,
-["name"] = "Delver's Bounty",
+[280776] = {
+["id"] = 280776,
+["name"] = "Sudden Death",
 ["showMine"] = true,
 },
-[203814] = {
-["id"] = 203814,
-["name"] = "Honorable Pennant",
+[453407] = {
+["id"] = 453407,
+["name"] = "Whirling Water",
+["showMine"] = true,
 },
 [288675] = {
 ["id"] = 288675,
 ["name"] = "High Tide",
 ["showMine"] = true,
 },
-[405810] = {
-["id"] = 405810,
-["name"] = "Shaohao's Lesson - Despair",
-["showMine"] = true,
+[455426] = {
+["id"] = 455426,
+["name"] = "Illusive Kobyss Lure",
 },
 [405809] = {
 ["id"] = 405809,
 ["name"] = "Shaohao's Lesson - Fear",
 ["showMine"] = true,
 },
-[264663] = {
-["id"] = 264663,
-["name"] = "Predator's Thirst",
-["showMine"] = true,
-},
-[396092] = {
-["id"] = 396092,
-["name"] = "Well Fed",
-["showMine"] = true,
-},
-[453406] = {
-["id"] = 453406,
-["name"] = "Whirling Earth",
-["showMine"] = true,
-},
-[392511] = {
-["id"] = 392511,
-["name"] = "Deathspeaker",
-["showMine"] = true,
-},
-[460285] = {
-["id"] = 460285,
-["name"] = "Delver's Bounty",
+[454941] = {
+["id"] = 454941,
+["name"] = "Contract: The Severed Threads",
 ["showMine"] = true,
 },
 [408368] = {
@@ -5975,19 +5971,39 @@ nil,
 ["name"] = "Wrath of the Frostwyrm",
 ["showMine"] = true,
 },
-[454405] = {
-["id"] = 454405,
+[443176] = {
+["id"] = 443176,
+["name"] = "Lifespark",
+["showMine"] = true,
+},
+[405810] = {
+["id"] = 405810,
+["name"] = "Shaohao's Lesson - Despair",
+["showMine"] = true,
+},
+[460285] = {
+["id"] = 460285,
+["name"] = "Delver's Bounty",
+["showMine"] = true,
+},
+[396092] = {
+["id"] = 396092,
+["name"] = "Well Fed",
+["showMine"] = true,
+},
+[454404] = {
+["id"] = 454404,
 ["name"] = "Cursed Pickaxe",
 ["showMine"] = true,
 },
-[386399] = {
-["id"] = 386399,
-["name"] = "Iridescence: Blue",
+[377192] = {
+["id"] = 377192,
+["name"] = "Enduring Strength",
 ["showMine"] = true,
 },
-[460822] = {
-["id"] = 460822,
-["name"] = "Divine Guidance",
+[311464] = {
+["id"] = 311464,
+["name"] = "Ace of Putrescence",
 ["showMine"] = true,
 },
 [390978] = {
@@ -5995,10 +6011,9 @@ nil,
 ["name"] = "Twist of Fate",
 ["showMine"] = true,
 },
-[447244] = {
-["id"] = 447244,
-["name"] = "Call of the Ancestors",
-["showMine"] = true,
+[296863] = {
+["id"] = 296863,
+["name"] = "Inflatable Mount Shoes",
 },
 [290213] = {
 ["id"] = 290213,
@@ -6010,9 +6025,10 @@ nil,
 ["name"] = "Giggle Goggles",
 ["showMine"] = true,
 },
-[296863] = {
-["id"] = 296863,
-["name"] = "Inflatable Mount Shoes",
+[454405] = {
+["id"] = 454405,
+["name"] = "Cursed Pickaxe",
+["showMine"] = true,
 },
 [382028] = {
 ["id"] = 382028,
@@ -6058,10 +6074,9 @@ nil,
 ["name"] = "Maelstrom Weapon",
 ["showMine"] = true,
 },
-[443532] = {
-["id"] = 443532,
-["name"] = "Bind in Darkness",
-["showMine"] = true,
+[425024] = {
+["id"] = 425024,
+["name"] = "Restored Dreamleaf",
 },
 ["vizier's supremacy"] = {
 ["name"] = "Vizier's supremacy",
@@ -6076,9 +6091,9 @@ nil,
 ["name"] = "Flow of Chi",
 ["showMine"] = true,
 },
-[264662] = {
-["id"] = 264662,
-["name"] = "Endurance Training",
+[454976] = {
+["id"] = 454976,
+["name"] = "Vivacity of Nature",
 ["showMine"] = true,
 },
 [372313] = {
@@ -6086,9 +6101,10 @@ nil,
 ["name"] = "Resonant Words",
 ["showMine"] = true,
 },
-[454938] = {
-["id"] = 454938,
-["name"] = "Contract: Hallowfall Arathi",
+[388443] = {
+["id"] = 388443,
+["name"] = "Iskaara Soup",
+["showMine"] = true,
 },
 [219788] = {
 ["id"] = 219788,
@@ -6114,14 +6130,14 @@ nil,
 ["name"] = "Flow of Chi",
 ["showMine"] = true,
 },
-[454940] = {
-["id"] = 454940,
-["name"] = "Contract: The Severed Threads",
+[379017] = {
+["id"] = 379017,
+["name"] = "Faith's Armor",
 ["showMine"] = true,
 },
-[203812] = {
-["id"] = 203812,
-["name"] = "Honorable Pennant",
+[385885] = {
+["id"] = 385885,
+["name"] = "Gyroscopic Kaleidoscope",
 ["showMine"] = true,
 },
 [458503] = {
@@ -6134,58 +6150,37 @@ nil,
 ["name"] = "Irradiated Undercoat",
 ["showMine"] = true,
 },
-[451085] = {
-["id"] = 451085,
-["name"] = "Veteran's Eye",
+[381761] = {
+["id"] = 381761,
+["name"] = "Primordial Bond",
 ["showMine"] = true,
 },
 [242551] = {
 ["id"] = 242551,
 ["name"] = "Fel Focus",
 },
+[458524] = {
+["id"] = 458524,
+["name"] = "Ascendance (Vers)",
+["showMine"] = true,
+},
+[166646] = {
+["id"] = 166646,
+["name"] = "Windwalking",
+["showMine"] = true,
+},
 [450832] = {
 ["id"] = 450832,
 ["name"] = "Fatal Touch",
 ["showMine"] = true,
 },
-[432430] = {
-["id"] = 432430,
-["name"] = "Vicious Flask of Honor",
-["showMine"] = true,
+[347462] = {
+["id"] = 347462,
+["name"] = "Unbound Chaos",
 },
-[427303] = {
-["id"] = 427303,
-["name"] = "Spriggan Vision",
-["showMine"] = true,
-},
-[5302] = {
-["id"] = 5302,
-["name"] = "Revenge!",
-["showMine"] = true,
-},
-[454936] = {
-["id"] = 454936,
-["name"] = "Contract: Assembly of the Deeps",
-["showMine"] = true,
-},
-[433187] = {
-["id"] = 433187,
-["name"] = "Potion Spillover",
-["showMine"] = true,
-},
-[308637] = {
-["id"] = 308637,
+[216343] = {
+["id"] = 216343,
 ["name"] = "Well Fed",
-["showMine"] = true,
-},
-[392778] = {
-["id"] = 392778,
-["name"] = "Wild Strikes",
-["showMine"] = true,
-},
-[403264] = {
-["id"] = 403264,
-["name"] = "Black Attunement",
 ["showMine"] = true,
 },
 [410681] = {
@@ -6198,14 +6193,48 @@ nil,
 ["name"] = "Bloodtotem War Harness",
 ["showMine"] = true,
 },
-[440861] = {
-["id"] = 440861,
-["name"] = "A Feast of Souls",
+[392778] = {
+["id"] = 392778,
+["name"] = "Wild Strikes",
+["showMine"] = true,
+},
+[5302] = {
+["id"] = 5302,
+["name"] = "Revenge!",
+["showMine"] = true,
+},
+[433187] = {
+["id"] = 433187,
+["name"] = "Potion Spillover",
+["showMine"] = true,
+},
+[308637] = {
+["id"] = 308637,
+["name"] = "Well Fed",
+["showMine"] = true,
+},
+[193065] = {
+["id"] = 193065,
+["name"] = "Protective Light",
 ["showMine"] = true,
 },
 [390989] = {
 ["id"] = 390989,
 ["name"] = "Pontifex",
+["showMine"] = true,
+},
+[282559] = {
+["id"] = 282559,
+["name"] = "Enlisted",
+},
+[387154] = {
+["id"] = 387154,
+["name"] = "Burn to Ashes",
+["showMine"] = true,
+},
+[440861] = {
+["id"] = 440861,
+["name"] = "A Feast of Souls",
 ["showMine"] = true,
 },
 [431917] = {
@@ -6217,23 +6246,10 @@ nil,
 ["name"] = "Overpower",
 ["showMine"] = true,
 },
-[431654] = {
-["id"] = 431654,
-["name"] = "Primacy",
+[458388] = {
+["id"] = 458388,
+["name"] = "Aether Attunement",
 ["showMine"] = true,
-},
-[447262] = {
-["id"] = 447262,
-["name"] = "Frenzied Tear",
-},
-[387154] = {
-["id"] = 387154,
-["name"] = "Burn to Ashes",
-["showMine"] = true,
-},
-[93339] = {
-["id"] = 93339,
-["name"] = "Champion of the Earthen Ring",
 },
 [458502] = {
 ["id"] = 458502,
@@ -6245,23 +6261,24 @@ nil,
 ["name"] = "Sense Undead",
 ["showMine"] = true,
 },
-[455441] = {
-["id"] = 455441,
-["name"] = "Unstable Power Suit Core",
-["showMine"] = true,
-},
-[454931] = {
-["id"] = 454931,
-["name"] = "Contract: Council of Dornogal",
-["showMine"] = true,
-},
-[93337] = {
-["id"] = 93337,
-["name"] = "Champion of Ramkahen",
-},
 [393038] = {
 ["id"] = 393038,
 ["name"] = "Strength in Adversity",
+["showMine"] = true,
+},
+[210714] = {
+["id"] = 210714,
+["name"] = "Icefury",
+["showMine"] = true,
+},
+[387158] = {
+["id"] = 387158,
+["name"] = "Impending Ruin",
+["showMine"] = true,
+},
+[185394] = {
+["id"] = 185394,
+["name"] = "Inky Blackness",
 ["showMine"] = true,
 },
 [199844] = {
@@ -6289,9 +6306,18 @@ nil,
 ["name"] = "Echoes of Great Sundering",
 ["showMine"] = true,
 },
-[210714] = {
-["id"] = 210714,
-["name"] = "Icefury",
+[454931] = {
+["id"] = 454931,
+["name"] = "Contract: Council of Dornogal",
+["showMine"] = true,
+},
+[93337] = {
+["id"] = 93337,
+["name"] = "Champion of Ramkahen",
+},
+[454932] = {
+["id"] = 454932,
+["name"] = "Contract: Council of Dornogal",
 ["showMine"] = true,
 },
 [382043] = {
@@ -6302,16 +6328,6 @@ nil,
 [426288] = {
 ["id"] = 426288,
 ["name"] = "Smolderon's Delusions of Grandeur",
-["showMine"] = true,
-},
-[387158] = {
-["id"] = 387158,
-["name"] = "Impending Ruin",
-["showMine"] = true,
-},
-[454932] = {
-["id"] = 454932,
-["name"] = "Contract: Council of Dornogal",
 ["showMine"] = true,
 },
 [279997] = {
@@ -6338,9 +6354,9 @@ nil,
 ["name"] = "Press the Advantage",
 ["showMine"] = true,
 },
-[185394] = {
-["id"] = 185394,
-["name"] = "Inky Blackness",
+[455441] = {
+["id"] = 455441,
+["name"] = "Unstable Power Suit Core",
 ["showMine"] = true,
 },
 [333964] = {
@@ -6353,14 +6369,13 @@ nil,
 ["name"] = "Contract: Assembly of the Deeps",
 ["showMine"] = true,
 },
-[458388] = {
-["id"] = 458388,
-["name"] = "Aether Attunement",
-["showMine"] = true,
+[93339] = {
+["id"] = 93339,
+["name"] = "Champion of the Earthen Ring",
 },
-[282559] = {
-["id"] = 282559,
-["name"] = "Enlisted",
+[447262] = {
+["id"] = 447262,
+["name"] = "Frenzied Tear",
 },
 [205473] = {
 ["id"] = 205473,
@@ -6372,9 +6387,9 @@ nil,
 ["name"] = "Contract: Assembly of the Deeps",
 ["showMine"] = true,
 },
-[193065] = {
-["id"] = 193065,
-["name"] = "Protective Light",
+[431654] = {
+["id"] = 431654,
+["name"] = "Primacy",
 ["showMine"] = true,
 },
 [195627] = {
@@ -6387,28 +6402,29 @@ nil,
 ["name"] = "Premeditation",
 ["showMine"] = true,
 },
-[216343] = {
-["id"] = 216343,
-["name"] = "Well Fed",
+[432430] = {
+["id"] = 432430,
+["name"] = "Vicious Flask of Honor",
 ["showMine"] = true,
 },
-[347462] = {
-["id"] = 347462,
-["name"] = "Unbound Chaos",
-},
-[166646] = {
-["id"] = 166646,
-["name"] = "Windwalking",
+[403264] = {
+["id"] = 403264,
+["name"] = "Black Attunement",
 ["showMine"] = true,
 },
-[458524] = {
-["id"] = 458524,
-["name"] = "Ascendance (Vers)",
+[454936] = {
+["id"] = 454936,
+["name"] = "Contract: Assembly of the Deeps",
 ["showMine"] = true,
 },
-[381761] = {
-["id"] = 381761,
-["name"] = "Primordial Bond",
+[427303] = {
+["id"] = 427303,
+["name"] = "Spriggan Vision",
+["showMine"] = true,
+},
+[451085] = {
+["id"] = 451085,
+["name"] = "Veteran's Eye",
 ["showMine"] = true,
 },
 [386652] = {
@@ -6416,29 +6432,29 @@ nil,
 ["name"] = "Bulwark of Righteous Fury",
 ["showMine"] = true,
 },
-[385885] = {
-["id"] = 385885,
-["name"] = "Gyroscopic Kaleidoscope",
+[203812] = {
+["id"] = 203812,
+["name"] = "Honorable Pennant",
 ["showMine"] = true,
 },
-[379017] = {
-["id"] = 379017,
-["name"] = "Faith's Armor",
+[454940] = {
+["id"] = 454940,
+["name"] = "Contract: The Severed Threads",
 ["showMine"] = true,
 },
-[388443] = {
-["id"] = 388443,
-["name"] = "Iskaara Soup",
+[454938] = {
+["id"] = 454938,
+["name"] = "Contract: Hallowfall Arathi",
+},
+[264662] = {
+["id"] = 264662,
+["name"] = "Endurance Training",
 ["showMine"] = true,
 },
-[454976] = {
-["id"] = 454976,
-["name"] = "Vivacity of Nature",
+[443532] = {
+["id"] = 443532,
+["name"] = "Bind in Darkness",
 ["showMine"] = true,
-},
-[425024] = {
-["id"] = 425024,
-["name"] = "Restored Dreamleaf",
 },
 [262359] = {
 ["id"] = 262359,
@@ -6460,24 +6476,24 @@ nil,
 ["name"] = "Whirling Fire",
 ["showMine"] = true,
 },
-[311464] = {
-["id"] = 311464,
-["name"] = "Ace of Putrescence",
+[460822] = {
+["id"] = 460822,
+["name"] = "Divine Guidance",
 ["showMine"] = true,
 },
-[377192] = {
-["id"] = 377192,
-["name"] = "Enduring Strength",
+[386399] = {
+["id"] = 386399,
+["name"] = "Iridescence: Blue",
 ["showMine"] = true,
 },
-[454404] = {
-["id"] = 454404,
-["name"] = "Cursed Pickaxe",
+[447244] = {
+["id"] = 447244,
+["name"] = "Call of the Ancestors",
 ["showMine"] = true,
 },
-[443176] = {
-["id"] = 443176,
-["name"] = "Lifespark",
+[453406] = {
+["id"] = 453406,
+["name"] = "Whirling Earth",
 ["showMine"] = true,
 },
 [460823] = {
@@ -6485,23 +6501,23 @@ nil,
 ["name"] = "Delver's Bounty",
 ["showMine"] = true,
 },
-[454941] = {
-["id"] = 454941,
-["name"] = "Contract: The Severed Threads",
+[264663] = {
+["id"] = 264663,
+["name"] = "Predator's Thirst",
 ["showMine"] = true,
 },
-[455426] = {
-["id"] = 455426,
-["name"] = "Illusive Kobyss Lure",
-},
-[453407] = {
-["id"] = 453407,
-["name"] = "Whirling Water",
+[392511] = {
+["id"] = 392511,
+["name"] = "Deathspeaker",
 ["showMine"] = true,
 },
-[280776] = {
-["id"] = 280776,
-["name"] = "Sudden Death",
+[203814] = {
+["id"] = 203814,
+["name"] = "Honorable Pennant",
+},
+[460824] = {
+["id"] = 460824,
+["name"] = "Delver's Bounty",
 ["showMine"] = true,
 },
 [454942] = {
@@ -6509,9 +6525,9 @@ nil,
 ["name"] = "Contract: The Severed Threads",
 ["showMine"] = true,
 },
-[387393] = {
-["id"] = 387393,
-["name"] = "Dread Calling",
+[341770] = {
+["id"] = 341770,
+["name"] = "Accursed",
 ["showMine"] = true,
 },
 [455454] = {
@@ -6519,27 +6535,28 @@ nil,
 ["name"] = "Unstable Power Suit Core",
 ["showMine"] = true,
 },
-[462182] = {
-["id"] = 462182,
-["name"] = "Hearty Well Fed",
+[394007] = {
+["id"] = 394007,
+["name"] = "A Production-Grade Display",
+},
+[455966] = {
+["id"] = 455966,
+["name"] = "Shadowed Essence",
 ["showMine"] = true,
 },
-[377195] = {
-["id"] = 377195,
-["name"] = "Enduring Strength",
+[388220] = {
+["id"] = 388220,
+["name"] = "Calming Coalescence",
 ["showMine"] = true,
 },
-["sophic devotion"] = {
-["name"] = "Sophic Devotion",
-},
-[453409] = {
-["id"] = 453409,
-["name"] = "Whirling Air",
+[455455] = {
+["id"] = 455455,
+["name"] = "Unstable Power Suit Core",
 ["showMine"] = true,
 },
-[460826] = {
-["id"] = 460826,
-["name"] = "Delver's Bounty",
+[388193] = {
+["id"] = 388193,
+["name"] = "Jadefire Stomp",
 ["showMine"] = true,
 },
 [384357] = {
@@ -6552,14 +6569,14 @@ nil,
 ["name"] = "Totemic Rebound",
 ["showMine"] = true,
 },
-[458525] = {
-["id"] = 458525,
-["name"] = "Ascension (Mastery)",
+[455456] = {
+["id"] = 455456,
+["name"] = "Unstable Power Suit Core",
 ["showMine"] = true,
 },
-[454394] = {
-["id"] = 454394,
-["name"] = "Unlimited Power",
+[66157] = {
+["id"] = 66157,
+["name"] = "Honorable Defender",
 ["showMine"] = true,
 },
 [393565] = {
@@ -6572,34 +6589,34 @@ nil,
 ["name"] = "What's Cookin', Good Lookin'?",
 ["showMine"] = true,
 },
-[297871] = {
-["id"] = 297871,
-["name"] = "Anglers' Water Striders",
+[433674] = {
+["id"] = 433674,
+["name"] = "Light's Deliverance",
 ["showMine"] = true,
 },
-[459805] = {
-["id"] = 459805,
-["name"] = "Wailing Arrow",
+[385126] = {
+["id"] = 385126,
+["name"] = "Blessing of Dusk",
 ["showMine"] = true,
 },
-[196911] = {
-["id"] = 196911,
-["name"] = "Shadow Techniques",
+[281036] = {
+["id"] = 281036,
+["name"] = "Dire Beast",
 ["showMine"] = true,
 },
-[32645] = {
-["id"] = 32645,
-["name"] = "Envenom",
+[196741] = {
+["id"] = 196741,
+["name"] = "Hit Combo",
 ["showMine"] = true,
 },
-[381956] = {
-["id"] = 381956,
-["name"] = "Spoils of Neltharus",
+[434034] = {
+["id"] = 434034,
+["name"] = "Blood-Soaked Ground",
 ["showMine"] = true,
 },
-[2823] = {
-["id"] = 2823,
-["name"] = "Deadly Poison",
+[460829] = {
+["id"] = 460829,
+["name"] = "Delver's Bounty",
 ["showMine"] = true,
 },
 [362877] = {
@@ -6611,42 +6628,42 @@ nil,
 ["id"] = 6673,
 ["name"] = "Battle Shout",
 },
-[265898] = {
-["id"] = 265898,
-["name"] = "Terms of Engagement",
-["showMine"] = true,
+[388658] = {
+["id"] = 388658,
+["name"] = "Suited For Smithing",
 },
 [93341] = {
 ["id"] = 93341,
 ["name"] = "Champion of the Guardians of Hyjal",
 },
-[377234] = {
-["id"] = 377234,
-["name"] = "Thrill of the Skies",
+[265898] = {
+["id"] = 265898,
+["name"] = "Terms of Engagement",
+["showMine"] = true,
 },
 [256374] = {
 ["id"] = 256374,
 ["name"] = "Entropic Embrace",
 ["showMine"] = true,
 },
-[449322] = {
-["id"] = 449322,
-["name"] = "Mana Cascade",
+[394080] = {
+["id"] = 394080,
+["name"] = "Scent of Blood",
 ["showMine"] = true,
 },
-[460831] = {
-["id"] = 460831,
-["name"] = "Delver's Bounty",
+[461854] = {
+["id"] = 461854,
+["name"] = "Well Fed",
 ["showMine"] = true,
 },
-[462185] = {
-["id"] = 462185,
-["name"] = "Hearty Well Fed",
+[386353] = {
+["id"] = 386353,
+["name"] = "Iridescence: Red",
 ["showMine"] = true,
 },
-[462183] = {
-["id"] = 462183,
-["name"] = "Hearty Well Fed",
+[8221] = {
+["id"] = 8221,
+["name"] = "Yaaarrrr",
 ["showMine"] = true,
 },
 [450346] = {
@@ -6659,9 +6676,9 @@ nil,
 ["name"] = "Well Fed",
 ["showMine"] = true,
 },
-[435615] = {
-["id"] = 435615,
-["name"] = "Thunder Blast",
+[211805] = {
+["id"] = 211805,
+["name"] = "Gathering Storm",
 ["showMine"] = true,
 },
 [444976] = {
@@ -6669,38 +6686,39 @@ nil,
 ["name"] = "Unerring Proficiency",
 ["showMine"] = true,
 },
-[426676] = {
-["id"] = 426676,
-["name"] = "Best Friends with Aerwynn",
+[377143] = {
+["id"] = 377143,
+["name"] = "Horizon Strider's Swiftness",
 ["showMine"] = true,
 },
-[461856] = {
-["id"] = 461856,
-["name"] = "Well Fed",
+[129914] = {
+["id"] = 129914,
+["name"] = "Combat Wisdom",
 ["showMine"] = true,
 },
-[452688] = {
-["id"] = 452688,
-["name"] = "Wisdom of the Wall",
+[203533] = {
+["id"] = 203533,
+["name"] = "Black Icey Bling",
 ["showMine"] = true,
 },
-[403976] = {
-["id"] = 403976,
-["name"] = "Inquisitor's Ire",
+[5761] = {
+["id"] = 5761,
+["name"] = "Numbing Poison",
 ["showMine"] = true,
 },
-[459878] = {
-["id"] = 459878,
-["name"] = "Golden Opportunity",
+[429474] = {
+["id"] = 429474,
+["name"] = "Blooming Infusion",
 ["showMine"] = true,
 },
-[93816] = {
-["id"] = 93816,
-["name"] = "Gilneas Champion",
+[373276] = {
+["id"] = 373276,
+["name"] = "Idol of Yogg-Saron",
+["showMine"] = true,
 },
-[424454] = {
-["id"] = 424454,
-["name"] = "Blackout Reinforcement",
+[253595] = {
+["id"] = 253595,
+["name"] = "Inexorable Assault",
 ["showMine"] = true,
 },
 [22888] = {
@@ -6708,14 +6726,13 @@ nil,
 ["name"] = "Rallying Cry of the Dragonslayer",
 ["showMine"] = true,
 },
-[455464] = {
-["id"] = 455464,
-["name"] = "Kaheti Shadeweaver's Dark Ritual",
+[428866] = {
+["id"] = 428866,
+["name"] = "Power of Nature",
 ["showMine"] = true,
 },
-[44521] = {
-["id"] = 44521,
-["name"] = "Preparation",
+["honorless target"] = {
+["name"] = "Honorless Target",
 },
 [400734] = {
 ["id"] = 400734,
@@ -6735,9 +6752,9 @@ nil,
 ["id"] = 264420,
 ["name"] = "Soldier of the Alliance",
 },
-[394016] = {
-["id"] = 394016,
-["name"] = "Artist's Duds",
+[427487] = {
+["id"] = 427487,
+["name"] = "Ride Along",
 ["showMine"] = true,
 },
 [385646] = {
@@ -6745,24 +6762,24 @@ nil,
 ["name"] = "Quick Load",
 ["showMine"] = true,
 },
-[394015] = {
-["id"] = 394015,
-["name"] = "An Eye For Shine",
+[447978] = {
+["id"] = 447978,
+["name"] = "Stance - Surekian Decimation",
 ["showMine"] = true,
 },
-[390178] = {
-["id"] = 390178,
-["name"] = "Plaguebringer",
+[454015] = {
+["id"] = 454015,
+["name"] = "Tempest",
 ["showMine"] = true,
 },
-[372092] = {
-["id"] = 372092,
-["name"] = "Star Flinger",
+[385391] = {
+["id"] = 385391,
+["name"] = "Spell Reflection",
 ["showMine"] = true,
 },
-[387109] = {
-["id"] = 387109,
-["name"] = "Conflagration of Chaos",
+[334168] = {
+["id"] = 334168,
+["name"] = "Lashing Flames",
 ["showMine"] = true,
 },
 [395110] = {
@@ -6770,15 +6787,14 @@ nil,
 ["name"] = "Parting Skies",
 ["showMine"] = true,
 },
-[410762] = {
-["id"] = 410762,
-["name"] = "The Silent Star",
+[394011] = {
+["id"] = 394011,
+["name"] = "Dressed To Kill",
 ["showMine"] = true,
 },
-[388600] = {
-["id"] = 388600,
-["name"] = "Ride Along",
-["showMine"] = true,
+[57819] = {
+["id"] = 57819,
+["name"] = "Argent Champion",
 },
 [127230] = {
 ["id"] = 127230,
@@ -6789,14 +6805,14 @@ nil,
 ["name"] = "Black Attunement",
 ["showMine"] = true,
 },
-[451462] = {
-["id"] = 451462,
-["name"] = "Ordered Elements",
+[462806] = {
+["id"] = 462806,
+["name"] = "Vizier's Supremacy",
 ["showMine"] = true,
 },
-[450884] = {
-["id"] = 450884,
-["name"] = "Lunar Storm",
+[459224] = {
+["id"] = 459224,
+["name"] = "Building Momentum",
 ["showMine"] = true,
 },
 [281303] = {
@@ -6804,28 +6820,29 @@ nil,
 ["name"] = "Skeletal Monkey Mask",
 ["showMine"] = true,
 },
-[449331] = {
-["id"] = 449331,
-["name"] = "Merely a Setback",
+[403296] = {
+["id"] = 403296,
+["name"] = "Bronze Attunement",
 ["showMine"] = true,
 },
-[315584] = {
-["id"] = 315584,
-["name"] = "Instant Poison",
+[394670] = {
+["id"] = 394670,
+["name"] = "Elemental Mastery",
 ["showMine"] = true,
 },
-[394005] = {
-["id"] = 394005,
-["name"] = "A Cultivator's Colors",
-},
-[359618] = {
-["id"] = 359618,
-["name"] = "Essence Burst",
+[327510] = {
+["id"] = 327510,
+["name"] = "Shining Light",
 ["showMine"] = true,
 },
-[462210] = {
-["id"] = 462210,
-["name"] = "Hearty Well Fed",
+[401516] = {
+["id"] = 401516,
+["name"] = "Ruby Resonance",
+["showMine"] = true,
+},
+[388011] = {
+["id"] = 388011,
+["name"] = "Blessing of Winter",
 ["showMine"] = true,
 },
 [311483] = {
@@ -6838,19 +6855,19 @@ nil,
 ["name"] = "Ragefire",
 ["showMine"] = true,
 },
-[8220] = {
-["id"] = 8220,
-["name"] = "Flip Out",
+[382148] = {
+["id"] = 382148,
+["name"] = "Slick Ice",
 ["showMine"] = true,
 },
-[417138] = {
-["id"] = 417138,
-["name"] = "Rage of Fyr'alath",
+[390677] = {
+["id"] = 390677,
+["name"] = "Inspiration",
 ["showMine"] = true,
 },
-[456652] = {
-["id"] = 456652,
-["name"] = "Voltaic Stormsurge",
+[428524] = {
+["id"] = 428524,
+["name"] = "Demonic Art: Overlord",
 ["showMine"] = true,
 },
 [46736] = {
@@ -6858,34 +6875,34 @@ nil,
 ["name"] = "Personalized Weather",
 ["showMine"] = true,
 },
-[440290] = {
-["id"] = 440290,
-["name"] = "Rune Carved Plates",
+[458705] = {
+["id"] = 458705,
+["name"] = "Vantus Rune: Nexus-Princess Ky'veza",
 ["showMine"] = true,
 },
-[456323] = {
-["id"] = 456323,
-["name"] = "Abyssal Dominion",
+[433584] = {
+["id"] = 433584,
+["name"] = "Rite of Adjuration",
 ["showMine"] = true,
 },
-[385951] = {
-["id"] = 385951,
-["name"] = "Finality: Rupture",
+[440989] = {
+["id"] = 440989,
+["name"] = "Colossal Might",
 ["showMine"] = true,
 },
-[442983] = {
-["id"] = 442983,
-["name"] = "Vizier's Savvy",
+[457284] = {
+["id"] = 457284,
+["name"] = "Well Fed",
 ["showMine"] = true,
 },
-[48018] = {
-["id"] = 48018,
-["name"] = "Demonic Circle",
+[374271] = {
+["id"] = 374271,
+["name"] = "Unholy Ground",
 ["showMine"] = true,
 },
-[8679] = {
-["id"] = 8679,
-["name"] = "Wound Poison",
+[431944] = {
+["id"] = 431944,
+["name"] = "Diabolic Ritual: Overlord",
 ["showMine"] = true,
 },
 [431177] = {
@@ -6893,48 +6910,49 @@ nil,
 ["name"] = "Frostfire Empowerment",
 ["showMine"] = true,
 },
-[382889] = {
-["id"] = 382889,
-["name"] = "Flurry",
+[417488] = {
+["id"] = 417488,
+["name"] = "Frigid Empowerment",
 ["showMine"] = true,
 },
-[208628] = {
-["id"] = 208628,
-["name"] = "Momentum",
+[455820] = {
+["id"] = 455820,
+["name"] = "Uncommon Treasure",
 ["showMine"] = true,
 },
-[396752] = {
-["id"] = 396752,
-["name"] = "Crushing Blow",
+[383169] = {
+["id"] = 383169,
+["name"] = "Lucky Horseshoe",
 ["showMine"] = true,
 },
-[399502] = {
-["id"] = 399502,
-["name"] = "Atomically Recalibrated",
+[442503] = {
+["id"] = 442503,
+["name"] = "Warblade's Hunger",
+["showMine"] = true,
 },
 [452917] = {
 ["id"] = 452917,
 ["name"] = "Fatebound Coin Tails",
 ["showMine"] = true,
 },
-[274156] = {
-["id"] = 274156,
-["name"] = "Consumption",
-["showMine"] = true,
-},
-[461943] = {
-["id"] = 461943,
+[461959] = {
+["id"] = 461959,
 ["name"] = "Well Fed",
 ["showMine"] = true,
 },
-[397827] = {
-["id"] = 397827,
-["name"] = "Oversized Bobbers",
+[391688] = {
+["id"] = 391688,
+["name"] = "Dancing Blades",
 ["showMine"] = true,
 },
-[400745] = {
-["id"] = 400745,
-["name"] = "Afterimage",
+[383395] = {
+["id"] = 383395,
+["name"] = "Feel the Burn",
+["showMine"] = true,
+},
+[442688] = {
+["id"] = 442688,
+["name"] = "Thrill of the Fight",
 ["showMine"] = true,
 },
 [246152] = {
@@ -6942,24 +6960,23 @@ nil,
 ["name"] = "Barbed Shot",
 ["showMine"] = true,
 },
-[375981] = {
-["id"] = 375981,
-["name"] = "Shadowy Insight",
+[176151] = {
+["id"] = 176151,
+["name"] = "Whispers of Insanity",
 ["showMine"] = true,
 },
-[381623] = {
-["id"] = 381623,
-["name"] = "Thistle Tea",
+[403127] = {
+["id"] = 403127,
+["name"] = "Clan Banner",
 ["showMine"] = true,
 },
-[451433] = {
-["id"] = 451433,
-["name"] = "Acclamation",
-["showMine"] = true,
+[441786] = {
+["id"] = 441786,
+["name"] = "Escalating Blade",
 },
-[257946] = {
-["id"] = 257946,
-["name"] = "Thrill of the Hunt",
+[195321] = {
+["id"] = 195321,
+["name"] = "Transfer the Power",
 ["showMine"] = true,
 },
 [370568] = {
@@ -6967,14 +6984,14 @@ nil,
 ["name"] = "Earpieces of Tranquil Focus",
 ["showMine"] = true,
 },
-[382146] = {
-["id"] = 382146,
-["name"] = "Well Fed",
+[450380] = {
+["id"] = 450380,
+["name"] = "Chi Wave",
 ["showMine"] = true,
 },
-[443574] = {
-["id"] = 443574,
-["name"] = "Ox Stance",
+[386730] = {
+["id"] = 386730,
+["name"] = "Divine Resonance",
 ["showMine"] = true,
 },
 [426578] = {
@@ -6982,9 +6999,9 @@ nil,
 ["name"] = "Molten Charge",
 ["showMine"] = true,
 },
-[387336] = {
-["id"] = 387336,
-["name"] = "Zone of Focus",
+[313424] = {
+["id"] = 313424,
+["name"] = "Combat Analysis",
 ["showMine"] = true,
 },
 [442435] = {
@@ -6992,33 +7009,33 @@ nil,
 ["name"] = "Glaive Flurry",
 ["showMine"] = true,
 },
-[264689] = {
-["id"] = 264689,
-["name"] = "Fatigued",
+[440645] = {
+["id"] = 440645,
+["name"] = "Fire Flies",
 ["showMine"] = true,
 },
-[390148] = {
-["id"] = 390148,
-["name"] = "Flow State",
+[450962] = {
+["id"] = 450962,
+["name"] = "Void Pactstone",
 ["showMine"] = true,
 },
-[208963] = {
-["id"] = 208963,
-["name"] = "Totem of Wrath",
-["showMine"] = true,
+[455020] = {
+["id"] = 455020,
+["name"] = "WoW's Anniversary",
 },
-[311492] = {
-["id"] = 311492,
-["name"] = "Ace of the Indomitable",
+[382079] = {
+["id"] = 382079,
+["name"] = "Incarnate's Mark of Frost",
+["showMine"] = true,
 },
 [406887] = {
 ["id"] = 406887,
 ["name"] = "Roused Shadowflame",
 ["showMine"] = true,
 },
-[381957] = {
-["id"] = 381957,
-["name"] = "Spoils of Neltharus",
+[354847] = {
+["id"] = 354847,
+["name"] = "Enduring Brawler",
 ["showMine"] = true,
 },
 [372617] = {
@@ -7026,9 +7043,10 @@ nil,
 ["name"] = "Empyreal Blaze",
 ["showMine"] = true,
 },
-[245686] = {
-["id"] = 245686,
-["name"] = "Fashionable!",
+[200654] = {
+["id"] = 200654,
+["name"] = "Tyr's Deliverance",
+["showMine"] = true,
 },
 [452923] = {
 ["id"] = 452923,
@@ -7040,9 +7058,9 @@ nil,
 ["name"] = "Phial of Elemental Chaos",
 ["showMine"] = true,
 },
-[451248] = {
-["id"] = 451248,
-["name"] = "Shadowy Accretion",
+[23693] = {
+["id"] = 23693,
+["name"] = "Stormpike's Salvation",
 ["showMine"] = true,
 },
 [401518] = {
@@ -7055,19 +7073,18 @@ nil,
 ["name"] = "Awakening Storms",
 ["showMine"] = true,
 },
-[455097] = {
-["id"] = 455097,
-["name"] = "Arc Discharge",
+[452416] = {
+["id"] = 452416,
+["name"] = "Demonsurge",
+},
+[392375] = {
+["id"] = 392375,
+["name"] = "Earthen Weapon",
 ["showMine"] = true,
 },
-[456120] = {
-["id"] = 456120,
-["name"] = "Opportunist",
-["showMine"] = true,
-},
-[441416] = {
-["id"] = 441416,
-["name"] = "Exterminate",
+[459830] = {
+["id"] = 459830,
+["name"] = "Sulfur-Lined Pockets",
 ["showMine"] = true,
 },
 [442695] = {
@@ -7075,23 +7092,24 @@ nil,
 ["name"] = "Thrill of the Fight",
 ["showMine"] = true,
 },
-[431698] = {
-["id"] = 431698,
-["name"] = "Temporal Burst",
+[457273] = {
+["id"] = 457273,
+["name"] = "Lingering Darkness",
 ["showMine"] = true,
 },
-[394215] = {
-["id"] = 394215,
-["name"] = "Cruel Inspiration",
+[394934] = {
+["id"] = 394934,
+["name"] = "Seething Chaos",
 ["showMine"] = true,
 },
-[93347] = {
-["id"] = 93347,
-["name"] = "Champion of Therazane",
+[384129] = {
+["id"] = 384129,
+["name"] = "Neural Silencer Mk3",
 },
-[203850] = {
-["id"] = 203850,
-["name"] = "Elite Pennant",
+[383696] = {
+["id"] = 383696,
+["name"] = "Hit Scheme",
+["showMine"] = true,
 },
 [156132] = {
 ["id"] = 156132,
@@ -7102,9 +7120,9 @@ nil,
 ["id"] = 418656,
 ["name"] = "Dreamsurge Magpies",
 },
-[386176] = {
-["id"] = 386176,
-["name"] = "Annihilan Training",
+[401521] = {
+["id"] = 401521,
+["name"] = "Emerald Resonance",
 ["showMine"] = true,
 },
 [425306] = {
@@ -7112,786 +7130,250 @@ nil,
 ["name"] = "Contract: Dream Wardens",
 ["showMine"] = true,
 },
-[385747] = {
-["id"] = 385747,
-["name"] = "Indiscriminate Carnage",
+["suffocating darkness"] = {
+["name"] = "Suffocating Darkness",
+},
+[114255] = {
+["id"] = 114255,
+["name"] = "Surge of Light",
 ["showMine"] = true,
 },
-[93795] = {
-["id"] = 93795,
-["name"] = "Stormwind Champion",
-},
-[417492] = {
-["id"] = 417492,
-["name"] = "Cryopathy",
+[384455] = {
+["id"] = 384455,
+["name"] = "Arcane Harmony",
 ["showMine"] = true,
 },
-[458043] = {
-["id"] = 458043,
-["name"] = "Malign Omen",
+[85739] = {
+["id"] = 85739,
+["name"] = "Whirlwind",
 ["showMine"] = true,
 },
-[292363] = {
-["id"] = 292363,
-["name"] = "Embrace of Kimbul",
-["showMine"] = true,
+[131493] = {
+["id"] = 131493,
+["name"] = "B.F.F.",
 },
 [407405] = {
 ["id"] = 407405,
 ["name"] = "In the Rhythm",
 ["showMine"] = true,
 },
-[431190] = {
-["id"] = 431190,
-["name"] = "Severe Temperatures",
+[459834] = {
+["id"] = 459834,
+["name"] = "Sulfur-Lined Pockets",
 ["showMine"] = true,
 },
-[390371] = {
-["id"] = 390371,
-["name"] = "Ashen Catalyst",
-["showMine"] = true,
+["sign of the scourge"] = {
+["name"] = "Sign of the Scourge",
 },
 },
-["combatIndicatorAnchor"] = "RIGHT",
+["legacyComboXPos"] = -28,
 ["targetAndFocusAuraScaleScale"] = 1,
 ["castBarInterruptIconDisplayCD"] = true,
-["legacyComboXPos"] = -28,
-["enlargedAuraSizeScale"] = 1.200000047683716,
-["cdManagerSorting"] = false,
-["targetBuffFilterLessMinite"] = false,
-["playerBuffFilterMount"] = false,
-["legacyComboScale"] = 0.85,
-["rpNames"] = true,
+["focusdeBuffFilterBlizzard"] = true,
+["cooldownViewerEnabled"] = true,
+["castBarInterruptHighlighterStartTime"] = 0.8,
+["playerAuraFiltering"] = true,
+["focusCastBarScaleScale"] = 1,
+["editModeSelectionAlpha"] = 0.35,
+["playerAbsorbYPosYPos"] = 29,
 ["moveResourceToTargetDruid"] = true,
 ["normalCastbarForEmpoweredCasts"] = true,
-["hideCombatIcon"] = false,
-["combatIndicatorPlayersOnly"] = true,
+["focusBuffFilterWatchList"] = true,
+["useMiniPlayerFrame"] = false,
 ["petCastBarIconScale"] = 1,
-["auraBackups"] = {
-["whitelist"] = {
-{
-["flags"] = {
-["onlyMine"] = true,
-["pandemic"] = true,
-["important"] = false,
-["enlarged"] = true,
-["compacted"] = false,
-},
-["entryColors"] = {
-["text"] = {
-["r"] = 0,
-["g"] = 1,
-["b"] = 0,
-},
-},
-["name"] = "Vampiric Touch",
-["comment"] = "",
-},
-{
-["flags"] = {
-["onlyMine"] = true,
-["pandemic"] = true,
-["important"] = false,
-["enlarged"] = true,
-["compacted"] = false,
-},
-["entryColors"] = {
-["text"] = {
-["r"] = 0,
-["g"] = 1,
-["b"] = 0,
-},
-},
-["name"] = "Shadow Word: Pain",
-["comment"] = "",
-},
-{
-["flags"] = {
-["onlyMine"] = true,
-["pandemic"] = true,
-["important"] = false,
-["enlarged"] = true,
-["compacted"] = false,
-},
-["entryColors"] = {
-["text"] = {
-["r"] = 0,
-["g"] = 1,
-["b"] = 0,
-},
-},
-["name"] = "Devouring Plague",
-["comment"] = "",
-},
-{
-["flags"] = {
-["onlyMine"] = true,
-["pandemic"] = true,
-["important"] = false,
-["enlarged"] = true,
-["compacted"] = false,
-},
-["entryColors"] = {
-["text"] = {
-["b"] = 0,
-["g"] = 1,
-["r"] = 0,
-},
-},
-["name"] = "Unstable Affliction",
-["comment"] = "",
-},
-{
-["flags"] = {
-["onlyMine"] = true,
-["pandemic"] = true,
-["important"] = false,
-["enlarged"] = true,
-["compacted"] = false,
-},
-["entryColors"] = {
-["text"] = {
-["b"] = 0,
-["g"] = 1,
-["r"] = 0,
-},
-},
-["name"] = "Agony",
-["comment"] = "",
-},
-{
-["flags"] = {
-["onlyMine"] = true,
-["pandemic"] = true,
-["important"] = false,
-["enlarged"] = true,
-["compacted"] = false,
-},
-["entryColors"] = {
-["text"] = {
-["b"] = 0,
-["g"] = 1,
-["r"] = 0,
-},
-},
-["name"] = "Corruption",
-["comment"] = "",
-},
-{
-["flags"] = {
-["onlyMine"] = true,
-["pandemic"] = false,
-["important"] = false,
-["enlarged"] = true,
-["compacted"] = false,
-},
-["entryColors"] = {
-["text"] = {
-["b"] = 0,
-["g"] = 1,
-["r"] = 0,
-},
-},
-["name"] = "Soul Rot",
-["comment"] = "",
-},
-{
-["flags"] = {
-["onlyMine"] = true,
-["pandemic"] = true,
-["important"] = false,
-["enlarged"] = true,
-["compacted"] = false,
-},
-["entryColors"] = {
-["text"] = {
-["b"] = 0,
-["g"] = 1,
-["r"] = 0,
-},
-},
-["name"] = "Haunt",
-["comment"] = "",
-},
-{
-["flags"] = {
-["onlyMine"] = true,
-["pandemic"] = true,
-["important"] = false,
-["enlarged"] = true,
-["compacted"] = false,
-},
-["entryColors"] = {
-["text"] = {
-["b"] = 0,
-["g"] = 1,
-["r"] = 0,
-},
-},
-["name"] = "Immolate",
-["comment"] = "",
-},
-{
-["flags"] = {
-["onlyMine"] = true,
-["pandemic"] = false,
-["important"] = true,
-["enlarged"] = true,
-["compacted"] = false,
-},
-["entryColors"] = {
-["text"] = {
-["b"] = 0,
-["g"] = 1,
-["r"] = 0,
-},
-},
-["name"] = "Havoc",
-["comment"] = "",
-},
-{
-["flags"] = {
-["onlyMine"] = true,
-["pandemic"] = true,
-["important"] = false,
-["enlarged"] = true,
-["compacted"] = false,
-},
-["entryColors"] = {
-["text"] = {
-["b"] = 0,
-["g"] = 1,
-["r"] = 0,
-},
-},
-["name"] = "curse of exhaustion",
-["comment"] = "",
-},
-{
-["flags"] = {
-["onlyMine"] = true,
-["pandemic"] = true,
-["important"] = false,
-["enlarged"] = true,
-["compacted"] = false,
-},
-["entryColors"] = {
-["text"] = {
-["b"] = 0,
-["g"] = 1,
-["r"] = 0,
-},
-},
-["name"] = "curse of weakness",
-["comment"] = "",
-},
-{
-["flags"] = {
-["onlyMine"] = true,
-["pandemic"] = true,
-["important"] = false,
-["enlarged"] = true,
-["compacted"] = false,
-},
-["entryColors"] = {
-["text"] = {
-["b"] = 0,
-["g"] = 1,
-["r"] = 0,
-},
-},
-["name"] = "curse of tongues",
-["comment"] = "",
-},
-{
-["flags"] = {
-["onlyMine"] = true,
-["pandemic"] = true,
-["important"] = false,
-["enlarged"] = true,
-["compacted"] = false,
-},
-["entryColors"] = {
-["text"] = {
-["b"] = 0,
-["g"] = 1,
-["r"] = 0,
-},
-},
-["name"] = "Doom",
-["comment"] = "",
-},
-{
-["flags"] = {
-["onlyMine"] = true,
-["pandemic"] = false,
-["important"] = true,
-["enlarged"] = true,
-["compacted"] = false,
-},
-["entryColors"] = {
-["text"] = {
-["r"] = 0,
-["g"] = 1,
-["b"] = 0,
-},
-},
-["name"] = "Touch of the Magi",
-["comment"] = "",
-},
-{
-["flags"] = {
-["onlyMine"] = true,
-["pandemic"] = false,
-["important"] = true,
-["enlarged"] = true,
-["compacted"] = false,
-},
-["entryColors"] = {
-["text"] = {
-["b"] = 0,
-["g"] = 1,
-["r"] = 0,
-},
-},
-["name"] = "Winter's Chill",
-["comment"] = "",
-},
-{
-["flags"] = {
-["onlyMine"] = true,
-["pandemic"] = true,
-["important"] = false,
-["enlarged"] = true,
-["compacted"] = false,
-},
-["entryColors"] = {
-["text"] = {
-["b"] = 0,
-["g"] = 1,
-["r"] = 0,
-},
-},
-["name"] = "Wither",
-["comment"] = "",
-},
-{
-["flags"] = {
-["onlyMine"] = true,
-["pandemic"] = true,
-["important"] = false,
-["enlarged"] = true,
-["compacted"] = false,
-},
-["entryColors"] = {
-["text"] = {
-["b"] = 0,
-["g"] = 1,
-["r"] = 0,
-},
-},
-["name"] = "Shadow Embrace",
-["comment"] = "",
-},
-{
-["flags"] = {
-["onlyMine"] = true,
-["pandemic"] = true,
-["important"] = false,
-["enlarged"] = true,
-["compacted"] = false,
-},
-["entryColors"] = {
-["text"] = {
-["b"] = 0,
-["g"] = 1,
-["r"] = 0,
-},
-},
-["name"] = "phantom singularity",
-["comment"] = "",
-},
-},
-["blacklist"] = {
-{
-["name"] = "Sign of the Skirmisher",
-["entryColors"] = {
-["text"] = {
-["r"] = 0,
-["g"] = 1,
-["b"] = 0,
-},
-},
-},
-{
-["name"] = "Sign of the Scourge",
-["entryColors"] = {
-["text"] = {
-["r"] = 0,
-["g"] = 1,
-["b"] = 0,
-},
-},
-},
-{
-["name"] = "Stormwind Champion",
-["entryColors"] = {
-["text"] = {
-["r"] = 0,
-["g"] = 1,
-["b"] = 0,
-},
-},
-},
-{
-["name"] = "Honorless Target",
-["entryColors"] = {
-["text"] = {
-["r"] = 0,
-["g"] = 1,
-["b"] = 0,
-},
-},
-},
-{
-["name"] = "Guild Champion",
-["entryColors"] = {
-["text"] = {
-["r"] = 0,
-["g"] = 1,
-["b"] = 0,
-},
-},
-},
-{
-["name"] = "Sign of Iron",
-["entryColors"] = {
-["text"] = {
-["r"] = 0,
-["g"] = 1,
-["b"] = 0,
-},
-},
-},
-{
-["id"] = 397734,
-["entryColors"] = {
-["text"] = {
-["r"] = 0,
-["g"] = 1,
-["b"] = 0,
-},
-},
-["name"] = "Word of a Worthy Ally",
-},
-{
-["id"] = 186403,
-["entryColors"] = {
-["text"] = {
-["r"] = 0,
-["g"] = 1,
-["b"] = 0,
-},
-},
-["name"] = "Sign of Battle",
-},
-{
-["id"] = 282559,
-["entryColors"] = {
-["text"] = {
-["r"] = 0,
-["g"] = 1,
-["b"] = 0,
-},
-},
-["name"] = "Enlisted",
-},
-{
-["id"] = 32727,
-["entryColors"] = {
-["text"] = {
-["r"] = 0,
-["g"] = 1,
-["b"] = 0,
-},
-},
-["name"] = "Arena Preparation",
-},
-{
-["id"] = 418563,
-["entryColors"] = {
-["text"] = {
-["r"] = 0,
-["g"] = 1,
-["b"] = 0,
-},
-},
-["name"] = "WoW's 19th Anniversary",
-},
-{
-["id"] = 93805,
-["entryColors"] = {
-["text"] = {
-["r"] = 0,
-["g"] = 1,
-["b"] = 0,
-},
-},
-["name"] = "Ironforge Champion",
-},
-{
-["id"] = 335148,
-["entryColors"] = {
-["text"] = {
-["r"] = 0,
-["g"] = 1,
-["b"] = 0,
-},
-},
-["name"] = "Sign of the Twisting Nether",
-},
-{
-["id"] = 269083,
-["entryColors"] = {
-["text"] = {
-["r"] = 0,
-["g"] = 1,
-["b"] = 0,
-},
-},
-["name"] = "Enlisted",
-},
-{
-["id"] = 394005,
-["entryColors"] = {
-["text"] = {
-["r"] = 0,
-["g"] = 1,
-["b"] = 0,
-},
-},
-["name"] = "A Cultivator's Colors",
-},
-{
-["flags"] = {
-["pandemic"] = false,
-["important"] = false,
-},
-["entryColors"] = {
-["text"] = {
-["b"] = 0,
-["g"] = 1,
-["r"] = 0,
-},
-},
-["name"] = "Sophic Devotion",
-["comment"] = "",
-},
-{
-["flags"] = {
-["pandemic"] = false,
-["important"] = false,
-},
-["entryColors"] = {
-["text"] = {
-["b"] = 0,
-["g"] = 1,
-["r"] = 0,
-},
-},
-["name"] = "Shadowy Insight",
-["comment"] = "",
-},
-},
-},
-["castBarInterruptHighlighterStartTime"] = 0.8,
-["targetAbsorbIcon"] = true,
-["focusdeBuffFilterAll"] = false,
-["overShieldsCompact"] = true,
+["focusImportantAuraGlow"] = true,
+["hideRareDragonTexture"] = false,
+["targetAndFocusAuraOffsetY"] = 4,
+["targetAbsorbAnchor"] = "TOP",
+["combatIndicatorShowSwords"] = true,
 ["frameAurasXPos"] = 0,
-["fixActionBarCDs"] = true,
-["focusCompactAura"] = true,
+["hidePrestigeBadge"] = true,
+["targetCastBarWidthScale"] = 142,
 ["healerIndicatorIcon"] = true,
-["racialIndicatorXPos"] = 0,
+["racialIndicatorXPos"] = -6,
 ["racialIndicatorOrc"] = true,
 ["hidePlayerLeaderIcon"] = false,
 ["targetCastBarWidth"] = 142,
 ["combatIndicatorArenaOnly"] = true,
-["filterMiscInfo"] = false,
-["partyCastBarYPosYPos"] = 0,
+["removeAddonListCategoriesHideDependancies"] = true,
+["compactedAuraSize"] = 0.7,
 ["darkModeUi"] = false,
 ["targetAndFocusAuraScale"] = 1,
 ["unitFrameValueFontSize"] = "9",
-["removeAddonListCategoriesHideDependancies"] = true,
-["targetAuraGlows"] = true,
-["partyFrameFont"] = "1",
+["castBarInterruptIconXPos"] = 0,
+["playerCombatIndicator"] = true,
+["unitFrameValueFont"] = "1",
 ["hiddenIconDirection"] = "RIGHT",
-["maxTargetDebuffs"] = 16,
-["skipGUI"] = true,
-["targetCastBarXPos"] = 0,
-["focusdeBuffFilterWatchList"] = true,
-["focusBuffPurgeGlow"] = true,
-["hidePlayerCornerIcon"] = true,
-["targetAndFocusAuraOffsetY"] = 0,
-["unitFrameHealthbarTexture"] = "Wglass",
+["partyFrameFont"] = "1",
 ["racialIndicatorDwarf"] = true,
-["racialIndicatorHuman"] = true,
+["legacyComboYPos"] = -25,
+["focusdeBuffFilterWatchList"] = true,
+["targetBuffPurgeGlow"] = true,
+["hidePlayerCornerIcon"] = true,
+["useMiniFocusFrame"] = false,
+["partyCastBarScale"] = 1,
+["focusToTAnchor"] = "BOTTOMRIGHT",
+["targetCastBarIconScale"] = 1,
 ["unitFrameManabarTexture"] = "Wglass",
-["purgeableBuffSortingFirst"] = true,
-["changePartyFrameFont"] = true,
-["focusRacialIndicator"] = true,
+["toggleIconPosition"] = {
+"TOPRIGHT",
+nil,
+"TOPRIGHT",
+-220.6944885253906,
+-7.916633129119873,
+},
+["combatIndicatorYPos"] = 0,
+["combatIndicator"] = true,
 ["hideChatButtons"] = false,
-["focusCastBarXPos"] = 0,
+["changePartyFrameFont"] = true,
 ["playerAuraImportantGlow"] = true,
 ["playerCastBarIconScale"] = 1,
-["targetBuffPurgeGlow"] = true,
-["uiWidgetPowerBarScale"] = 1,
-["fpsFramePos"] = {
-["yOfs"] = -21.1702823638916,
-["xOfs"] = -2.645307302474976,
-["point"] = "TOPRIGHT",
-["relativePoint"] = "TOPRIGHT",
-},
-["playerEliteFrameDarkmode"] = true,
-["minimizeObjectiveTracker"] = true,
-["hideManaFeedback"] = false,
-["focusdeBuffFilterLessMinite"] = false,
-["combatIndicatorScale"] = 1,
-["castBarInterruptHighlighterDontInterruptRGB"] = {
-1,
-0,
-0,
-},
-["castBarInterruptIconScale"] = 1,
-["partyCastBarScale"] = 1,
-["compactedAuraSize"] = 0.7,
-["healerIndicatorScale"] = 1,
-["playerAuraSpacingY"] = 0,
-["combatIndicatorYPos"] = 0,
-["hideTargetToT"] = false,
 ["castBarDelayedInterruptColor"] = {
 1,
 0.4784314036369324,
 0.9568628072738647,
 },
-["targetdeBuffFilterBlacklist"] = true,
-["useMiniFocusFrame"] = false,
+["combatIndicatorAnchor"] = "RIGHT",
+["targetToTXPos"] = 25,
+["cdManagerSorting"] = false,
+["minimizeObjectiveTracker"] = true,
+["hideManaFeedback"] = false,
+["focusdeBuffFilterLessMinite"] = false,
+["uiWidgetPowerBarScale"] = 1,
+["targetStaticCastbar"] = true,
+["PlayerAuraFramedeBuffEnable"] = true,
+["auraStackSize"] = 1,
+["unitFrameFontColor"] = false,
+["healerIndicatorScale"] = 1,
+["playerAuraSpacingY"] = 0,
+["moveResourceToTargetCustom"] = true,
+["hideTargetToT"] = false,
+["purgeableBuffSorting"] = true,
+["castbarChannelColor"] = {
+0,
+1,
+0,
+},
+["hideThreatOnFrame"] = true,
 ["cdManagerPriorityList"] = {
 },
-["targetEnlargeAura"] = true,
-["targetAbsorbAmount"] = true,
-["focusDetachCastbar"] = false,
-["focusdeBuffFilterOnlyMe"] = false,
+["changeRaidFrameManabarTexture"] = true,
+["racialIndicatorXPosXPos"] = -6,
+["partyCastBarYPosYPos"] = 0,
+["castBarInterruptHighlighterDontInterruptRGB"] = {
+1,
+0,
+0,
+},
 ["targetCastbarIconYPos"] = 0,
-["racialIndicator"] = true,
-["actionBarKeyFontOutline"] = "THINOUTLINE",
-["purgeableBuffSorting"] = true,
+["frameAuraHeightGap"] = 0,
+["castBarInterruptIconScale"] = 1,
+["legacyBlueComboPoints"] = true,
+["hideLossOfControlFrameLines"] = false,
+["darkModeEliteTexture"] = true,
+["focusCastBarYPos"] = 129,
+["shortArenaSpecName"] = true,
+["racialIndicatorRaceIcons"] = true,
+["darkModeNameplateResource"] = true,
+["maxTargetDebuffs"] = 16,
+["filterMiscInfo"] = false,
+["targetAndFocusArenaNames"] = true,
+["targetEnlargeAura"] = true,
+["targetAndFocusVerticalGap"] = 0,
+["targetdeBuffPandemicGlow"] = true,
+["frameAuraWidthGap"] = 0,
+["focusCastBarYPosYPos"] = 129,
+["targetBuffFilterPurgeable"] = true,
+["playerAbsorbXPosXPos"] = 38,
+["removeAddonListCategories"] = true,
 ["unitFrameBgTextureColor"] = {
 0,
 0,
 0,
 0.5,
 },
-["focusToTAnchor"] = "BOTTOMRIGHT",
-["focusCastBarYPos"] = 129,
-["shortArenaSpecName"] = true,
-["racialIndicatorRaceIcons"] = true,
-["darkModeNameplateResource"] = true,
-["cdManagerBlacklist"] = {
-[115203] = false,
-[59752] = false,
-[205523] = false,
-},
-["playerAuraFiltering"] = false,
-["targetAndFocusArenaNames"] = true,
-["hideTargetLeaderIcon"] = false,
-["hidePrestigeBadge"] = true,
-["castBarInterruptIconShowActiveOnly"] = true,
-["frameAuraWidthGap"] = 0,
-["focusCastBarYPosYPos"] = 129,
-["targetBuffFilterPurgeable"] = true,
-["focusToTYPos"] = 0,
-["darkModeUiAura"] = true,
-["focusBuffFilterWatchList"] = true,
-["recolorTempHpLoss"] = true,
-["displayDispelGlowAlways"] = false,
-["targetCastBarIconScale"] = 1,
-["playerAbsorbYPosYPos"] = 29,
+["focusBuffEnable"] = true,
+["targetCastBarScaleScale"] = 1,
+["darkModeVigor"] = true,
+["hideLevelTextAlways"] = true,
 ["showPetCastBarTimer"] = false,
 ["playerFrameOCDTextureBypass"] = false,
-["playerCastbarIconYPos"] = 0,
+["combatIndicatorScale"] = 1,
 ["unitFrameFontColorRGB"] = {
 1,
 1,
 1,
 1,
 },
-["hideRareDragonTexture"] = false,
-["filterNpcArenaSpam"] = true,
-["moveResourceToTargetCustom"] = true,
-["targetPrestigeBadgeAlpha"] = true,
+["castBarInterruptIconShowActiveOnly"] = true,
+["racialIndicator"] = true,
+["skipGUI"] = true,
+["darkModeUiAura"] = true,
 ["healerIndicatorAnchor"] = "CENTER",
 ["classResourceMONKScale"] = 1,
 ["targetBuffFilterOnlyMe"] = false,
 ["hideRaidFrameManager"] = true,
-["targetCastBarScaleScale"] = 1,
+["hidePetHitIndicator"] = true,
 ["darkModeColor"] = 0.08999999612569809,
-["onlyPandemicAuraMine"] = true,
+["targetBuffFilterWatchList"] = true,
 ["racialIndicatorUndead"] = true,
 ["cleanedAuraBlacklist"] = true,
 ["playerStaticCastbar"] = false,
 ["targetCastBarTimer"] = true,
-["targetToTCastbarAdjustment"] = false,
+["healerIndicatorXPos"] = 0,
 ["raidFrameManabarTexture"] = "Wglass",
 ["focusBuffFilterBlacklist"] = true,
-["darkModeVigor"] = true,
-["focusEnlargeAura"] = true,
+["hideTargetToTDebuffs"] = true,
+["formatStatusBarText"] = true,
 ["targetCastbarIconXPos"] = 0,
 ["petCastBarTimer"] = true,
 ["removeRealmNames"] = true,
-["playerCastBarNoTextBorder"] = false,
+["targetCastBarHeight"] = 10,
+["focusToTXPos"] = 0,
 ["playerCastBarShowIcon"] = true,
-["healerIndicatorXPos"] = 0,
 ["moveQueueStatusEye"] = true,
 ["focusBuffFilterOnlyMe"] = false,
-["playerAuraSpacingX"] = 5,
+["playerCastBarTimerCentered"] = false,
 ["petCastbar"] = false,
-["petCastBarXPos"] = 0,
+["overShieldsCompact"] = true,
 ["filterSystemMessages"] = false,
-["hideUnitFrameShadow"] = false,
+["focusCastBarXPos"] = 0,
 ["customImportantAuraSorting"] = true,
-["centerNames"] = true,
-["wasOnLoadingScreen"] = true,
-["hidePvpIcon"] = true,
-["hideActionBarMacroName"] = false,
-["hideTargetToTDebuffs"] = true,
-["unitFrameValueFontColorRGB"] = {
-1,
-1,
-1,
-1,
+["castbarUninterruptableColor"] = {
+0.7,
+0.7,
+0.7,
 },
+["wasOnLoadingScreen"] = false,
+["hidePvpIcon"] = true,
+["hideMinimapAuto"] = false,
+["hideUnitFrameShadow"] = true,
+["hideLossOfControlFrameBg"] = false,
 ["auraImportantDispelIcon"] = true,
-["focusToTXPos"] = 0,
 ["auraToggleIconTexture"] = 4914675,
+["playerCastBarNoTextBorder"] = false,
 ["targetBuffFilterMount"] = true,
-["castBarInterruptIconXPos"] = 0,
-["removeAddonListCategories"] = true,
+["classColorFrames"] = true,
+["targetToTCastbarAdjustment"] = false,
 ["overShields"] = true,
-["targetdeBuffPandemicGlow"] = true,
+["playerCastbarIconYPos"] = 0,
 ["targetdeBuffFilterOnlyMe"] = true,
 ["focusCastBarWidth"] = 150,
-["hideLossOfControlFrameLines"] = false,
-["hidePetHitIndicator"] = true,
+["cdManagerBlacklist"] = {
+[115203] = false,
+[59752] = false,
+[205523] = false,
+},
+["recolorTempHpLoss"] = true,
 ["targetToTXPosXPos"] = 25,
-["hideLevelTextAlways"] = true,
-["targetBuffFilterWatchList"] = true,
+["frameAurasYPos"] = 0,
+["targetCastBarHeightScale"] = 10,
 ["changeActionBarFont"] = true,
 ["hidePlayerRestAnimation"] = true,
 ["actionBarFont"] = "1",
-["useMiniPlayerFrame"] = false,
-["targetAndFocusVerticalGap"] = 0,
-["auraStackSize"] = 1,
+["actionBarKeyFontOutline"] = "THINOUTLINE",
+["focusToTAdjustmentOffsetYYPos"] = 0,
+["focusDetachCastbar"] = false,
 ["focusAbsorbIcon"] = true,
 ["targetAndFocusAuraOffsetX"] = 0,
 ["instantComboPoints"] = true,
@@ -7910,109 +7392,650 @@ nil,
 },
 },
 ["castBarInterruptIconFocus"] = true,
-["darkModeEliteTexture"] = true,
-["targetToTAnchor"] = "BOTTOMRIGHT",
+["combatIndicatorPlayersOnly"] = true,
+["changeUnitFrameManabarTexture"] = true,
 ["surrenderArena"] = true,
-["showArenaID"] = true,
-["targetToTXPos"] = 25,
+["playerReputationColor"] = false,
 ["moveResource"] = false,
-["formatStatusBarText"] = true,
+["hideBagsBar"] = true,
+["fpsFramePos"] = {
+["yOfs"] = -21.1702823638916,
+["xOfs"] = -2.645307302474976,
+["point"] = "TOPRIGHT",
+["relativePoint"] = "TOPRIGHT",
+},
 ["darkModeObjectiveFrame"] = true,
 ["focusAbsorbAmount"] = true,
 ["PlayerAuraFrameBuffEnable"] = true,
 ["hideUiErrorFrame"] = false,
-["playerCastBarTimerCentered"] = false,
+["showPetCastBarIcon"] = true,
 ["PlayerAuraFramedeBuffFilterWatchList"] = false,
-["focusdeBuffEnable"] = true,
+["racialIndicatorHuman"] = true,
 ["maxTargetBuffs"] = 32,
-["hideLossOfControlFrameBg"] = false,
+["castBarInterruptIconAnchor"] = "RIGHT",
 ["racialIndicatorNelf"] = true,
 ["PlayerAuraFrameBuffFilterWatchList"] = false,
-["targetCastBarHeightScale"] = 10,
-["enablePlayerDebuffFiltering"] = false,
-["hideFocusToT"] = true,
-["partyCastBarWidth"] = 100,
-["darkModeCastbars"] = true,
-["editModeSelectionAlpha"] = 0.35,
-["targetStaticCastbar"] = true,
-["playerCombatIndicator"] = true,
+["focusEnlargeAuraEnemy"] = true,
+["targetAuraGlows"] = true,
+["castBarInterruptHighlighterEndTime"] = 0.6,
+["changeUnitFrameValueFont"] = true,
+["targetAbsorbIcon"] = true,
+["fixActionBarCDs"] = true,
+["hidePartyRoles"] = false,
+["moveResourceToTargetPaladinBG"] = true,
 ["absorbIndicatorTestMode"] = false,
 ["createAltManaBarDruid"] = true,
 ["classResourceMONKScaleScale"] = 1,
-["focusEnlargeAuraEnemy"] = true,
+["purgeTextureColorRGB"] = {
+0,
+0.92,
+1,
+0.85,
+},
 ["focusBuffFilterPurgeable"] = false,
 ["hidePvpTimerText"] = true,
-["healerIndicatorPortrait"] = true,
-["targetCastBarYPosYPos"] = 130,
-["darkModeColorScale"] = 0.08999999612569809,
+["playerBuffFilterMount"] = false,
+["lossOfControlScale"] = 1.120000004768372,
+["hideTotemFrame"] = false,
 ["classColorFramesSkipPlayer"] = false,
-["hideDragonFlying"] = true,
-["castBarInterruptHighlighterInterruptRGB"] = {
-0,
-1,
-0,
-},
-["fadeMicroMenu"] = true,
-["castBarInterruptIconEnabled"] = false,
-["hideCombatGlow"] = true,
+["focusdeBuffEnable"] = true,
 ["playerFrameOCD"] = true,
-["partyCastBarXPos"] = 0,
+["fadeMicroMenu"] = true,
+["filterTalentSpam"] = true,
+["hideCombatGlow"] = true,
+["playerCastbarIconXPos"] = 0,
+["actionBarFontOutline"] = "THINOUTLINE",
 ["showSpecName"] = true,
-["partyFrameScale"] = 1,
-["targetAndFocusVerticalGapYPos"] = 0,
-["hidePlayerHealthLossAnim"] = false,
-["focusCastBarHeight"] = 10,
+["hideStanceBar"] = true,
+["playerAbsorbAmount"] = true,
+["targetAndFocusAuraOffsetYYPos"] = 4,
+["targetToTYPosYPos"] = 13,
 ["playerCastBarHeight"] = 13,
 ["auraWhitelistAlphaUpdated"] = true,
-["maxAurasOnFrame"] = 0,
+["castBarInterruptIconYPos"] = 0,
 ["showPartyCastbar"] = false,
-["showPetCastBarIcon"] = true,
+["lossOfControlScaleScale"] = 1.120000004768372,
 ["partyFrameFontOutline"] = "THINOUTLINE",
 ["exportVersion"] = "BBF: 1.7.2d WoW: 11.1.7",
 ["targetAndFocusAurasPerRow"] = 6,
-["castBarInterruptHighlighterColorDontInterrupt"] = true,
-["lossOfControlScaleScale"] = 1.120000004768372,
-["focusBuffFilterAll"] = true,
-["playerAbsorbIcon"] = true,
-["targetAndFocusArenaNamePartyOverride"] = true,
+["targetCastBarYPos"] = 130,
+["darkModeGameTooltip"] = true,
+["version"] = "1.00",
+["addUnitFrameBgTexture"] = true,
+["unitFrameFontOutline"] = "THINOUTLINE",
 ["hideFocusName"] = false,
-["hideTotemFrame"] = false,
-["focusToTAdjustmentOffsetYYPos"] = 0,
-["cdManagerCenterIcons"] = false,
-["classicCastbarsPlayer"] = false,
-["classicCastbarsPlayerBorder"] = true,
-["showPartyCastBarIcon"] = true,
-["petCastBarTestMode"] = false,
-["hideGroupIndicator"] = true,
-["focusCastbarIconXPos"] = 0,
-["targetEnlargeAuraEnemy"] = true,
+["playerEliteFrameMode"] = 1,
+["auraBackups"] = {
+["whitelist"] = {
+{
+["flags"] = {
+["onlyMine"] = true,
+["pandemic"] = true,
+["important"] = false,
+["enlarged"] = true,
+["compacted"] = false,
+},
+["entryColors"] = {
+["text"] = {
+["b"] = 0,
+["g"] = 1,
+["r"] = 0,
+},
+},
+["name"] = "Vampiric Touch",
+["comment"] = "",
+},
+{
+["flags"] = {
+["onlyMine"] = true,
+["pandemic"] = true,
+["important"] = false,
+["enlarged"] = true,
+["compacted"] = false,
+},
+["entryColors"] = {
+["text"] = {
+["b"] = 0,
+["g"] = 1,
+["r"] = 0,
+},
+},
+["name"] = "Shadow Word: Pain",
+["comment"] = "",
+},
+{
+["flags"] = {
+["onlyMine"] = true,
+["pandemic"] = true,
+["important"] = false,
+["enlarged"] = true,
+["compacted"] = false,
+},
+["entryColors"] = {
+["text"] = {
+["b"] = 0,
+["g"] = 1,
+["r"] = 0,
+},
+},
+["name"] = "Devouring Plague",
+["comment"] = "",
+},
+{
+["flags"] = {
+["onlyMine"] = true,
+["pandemic"] = true,
+["important"] = false,
+["enlarged"] = true,
+["compacted"] = false,
+},
+["entryColors"] = {
+["text"] = {
+["r"] = 0,
+["g"] = 1,
+["b"] = 0,
+},
+},
+["name"] = "Unstable Affliction",
+["comment"] = "",
+},
+{
+["flags"] = {
+["onlyMine"] = true,
+["pandemic"] = true,
+["important"] = false,
+["enlarged"] = true,
+["compacted"] = false,
+},
+["entryColors"] = {
+["text"] = {
+["r"] = 0,
+["g"] = 1,
+["b"] = 0,
+},
+},
+["name"] = "Agony",
+["comment"] = "",
+},
+{
+["flags"] = {
+["onlyMine"] = true,
+["pandemic"] = true,
+["important"] = false,
+["enlarged"] = true,
+["compacted"] = false,
+},
+["entryColors"] = {
+["text"] = {
+["r"] = 0,
+["g"] = 1,
+["b"] = 0,
+},
+},
+["name"] = "Corruption",
+["comment"] = "",
+},
+{
+["flags"] = {
+["onlyMine"] = true,
+["pandemic"] = false,
+["important"] = false,
+["enlarged"] = true,
+["compacted"] = false,
+},
+["entryColors"] = {
+["text"] = {
+["r"] = 0,
+["g"] = 1,
+["b"] = 0,
+},
+},
+["name"] = "Soul Rot",
+["comment"] = "",
+},
+{
+["flags"] = {
+["onlyMine"] = true,
+["pandemic"] = true,
+["important"] = false,
+["enlarged"] = true,
+["compacted"] = false,
+},
+["entryColors"] = {
+["text"] = {
+["r"] = 0,
+["g"] = 1,
+["b"] = 0,
+},
+},
+["name"] = "Haunt",
+["comment"] = "",
+},
+{
+["flags"] = {
+["onlyMine"] = true,
+["pandemic"] = true,
+["important"] = false,
+["enlarged"] = true,
+["compacted"] = false,
+},
+["entryColors"] = {
+["text"] = {
+["r"] = 0,
+["g"] = 1,
+["b"] = 0,
+},
+},
+["name"] = "Immolate",
+["comment"] = "",
+},
+{
+["flags"] = {
+["onlyMine"] = true,
+["pandemic"] = false,
+["important"] = true,
+["enlarged"] = true,
+["compacted"] = false,
+},
+["entryColors"] = {
+["text"] = {
+["r"] = 0,
+["g"] = 1,
+["b"] = 0,
+},
+},
+["name"] = "Havoc",
+["comment"] = "",
+},
+{
+["flags"] = {
+["onlyMine"] = true,
+["pandemic"] = true,
+["important"] = false,
+["enlarged"] = true,
+["compacted"] = false,
+},
+["entryColors"] = {
+["text"] = {
+["r"] = 0,
+["g"] = 1,
+["b"] = 0,
+},
+},
+["name"] = "curse of exhaustion",
+["comment"] = "",
+},
+{
+["flags"] = {
+["onlyMine"] = true,
+["pandemic"] = true,
+["important"] = false,
+["enlarged"] = true,
+["compacted"] = false,
+},
+["entryColors"] = {
+["text"] = {
+["r"] = 0,
+["g"] = 1,
+["b"] = 0,
+},
+},
+["name"] = "curse of weakness",
+["comment"] = "",
+},
+{
+["flags"] = {
+["onlyMine"] = true,
+["pandemic"] = true,
+["important"] = false,
+["enlarged"] = true,
+["compacted"] = false,
+},
+["entryColors"] = {
+["text"] = {
+["r"] = 0,
+["g"] = 1,
+["b"] = 0,
+},
+},
+["name"] = "curse of tongues",
+["comment"] = "",
+},
+{
+["flags"] = {
+["onlyMine"] = true,
+["pandemic"] = true,
+["important"] = false,
+["enlarged"] = true,
+["compacted"] = false,
+},
+["entryColors"] = {
+["text"] = {
+["r"] = 0,
+["g"] = 1,
+["b"] = 0,
+},
+},
+["name"] = "Doom",
+["comment"] = "",
+},
+{
+["flags"] = {
+["onlyMine"] = true,
+["pandemic"] = false,
+["important"] = true,
+["enlarged"] = true,
+["compacted"] = false,
+},
+["entryColors"] = {
+["text"] = {
+["b"] = 0,
+["g"] = 1,
+["r"] = 0,
+},
+},
+["name"] = "Touch of the Magi",
+["comment"] = "",
+},
+{
+["flags"] = {
+["onlyMine"] = true,
+["pandemic"] = false,
+["important"] = true,
+["enlarged"] = true,
+["compacted"] = false,
+},
+["entryColors"] = {
+["text"] = {
+["r"] = 0,
+["g"] = 1,
+["b"] = 0,
+},
+},
+["name"] = "Winter's Chill",
+["comment"] = "",
+},
+{
+["flags"] = {
+["onlyMine"] = true,
+["pandemic"] = true,
+["important"] = false,
+["enlarged"] = true,
+["compacted"] = false,
+},
+["entryColors"] = {
+["text"] = {
+["r"] = 0,
+["g"] = 1,
+["b"] = 0,
+},
+},
+["name"] = "Wither",
+["comment"] = "",
+},
+{
+["flags"] = {
+["onlyMine"] = true,
+["pandemic"] = true,
+["important"] = false,
+["enlarged"] = true,
+["compacted"] = false,
+},
+["entryColors"] = {
+["text"] = {
+["r"] = 0,
+["g"] = 1,
+["b"] = 0,
+},
+},
+["name"] = "Shadow Embrace",
+["comment"] = "",
+},
+{
+["flags"] = {
+["onlyMine"] = true,
+["pandemic"] = true,
+["important"] = false,
+["enlarged"] = true,
+["compacted"] = false,
+},
+["entryColors"] = {
+["text"] = {
+["r"] = 0,
+["g"] = 1,
+["b"] = 0,
+},
+},
+["name"] = "phantom singularity",
+["comment"] = "",
+},
+},
+["blacklist"] = {
+{
+["name"] = "Sign of the Skirmisher",
+["entryColors"] = {
+["text"] = {
+["b"] = 0,
+["g"] = 1,
+["r"] = 0,
+},
+},
+},
+{
+["name"] = "Sign of the Scourge",
+["entryColors"] = {
+["text"] = {
+["b"] = 0,
+["g"] = 1,
+["r"] = 0,
+},
+},
+},
+{
+["name"] = "Stormwind Champion",
+["entryColors"] = {
+["text"] = {
+["b"] = 0,
+["g"] = 1,
+["r"] = 0,
+},
+},
+},
+{
+["name"] = "Honorless Target",
+["entryColors"] = {
+["text"] = {
+["b"] = 0,
+["g"] = 1,
+["r"] = 0,
+},
+},
+},
+{
+["name"] = "Guild Champion",
+["entryColors"] = {
+["text"] = {
+["b"] = 0,
+["g"] = 1,
+["r"] = 0,
+},
+},
+},
+{
+["name"] = "Sign of Iron",
+["entryColors"] = {
+["text"] = {
+["b"] = 0,
+["g"] = 1,
+["r"] = 0,
+},
+},
+},
+{
+["id"] = 397734,
+["entryColors"] = {
+["text"] = {
+["b"] = 0,
+["g"] = 1,
+["r"] = 0,
+},
+},
+["name"] = "Word of a Worthy Ally",
+},
+{
+["id"] = 186403,
+["entryColors"] = {
+["text"] = {
+["b"] = 0,
+["g"] = 1,
+["r"] = 0,
+},
+},
+["name"] = "Sign of Battle",
+},
+{
+["id"] = 282559,
+["entryColors"] = {
+["text"] = {
+["b"] = 0,
+["g"] = 1,
+["r"] = 0,
+},
+},
+["name"] = "Enlisted",
+},
+{
+["id"] = 32727,
+["entryColors"] = {
+["text"] = {
+["b"] = 0,
+["g"] = 1,
+["r"] = 0,
+},
+},
+["name"] = "Arena Preparation",
+},
+{
+["id"] = 418563,
+["entryColors"] = {
+["text"] = {
+["b"] = 0,
+["g"] = 1,
+["r"] = 0,
+},
+},
+["name"] = "WoW's 19th Anniversary",
+},
+{
+["id"] = 93805,
+["entryColors"] = {
+["text"] = {
+["b"] = 0,
+["g"] = 1,
+["r"] = 0,
+},
+},
+["name"] = "Ironforge Champion",
+},
+{
+["id"] = 335148,
+["entryColors"] = {
+["text"] = {
+["b"] = 0,
+["g"] = 1,
+["r"] = 0,
+},
+},
+["name"] = "Sign of the Twisting Nether",
+},
+{
+["id"] = 269083,
+["entryColors"] = {
+["text"] = {
+["b"] = 0,
+["g"] = 1,
+["r"] = 0,
+},
+},
+["name"] = "Enlisted",
+},
+{
+["id"] = 394005,
+["entryColors"] = {
+["text"] = {
+["b"] = 0,
+["g"] = 1,
+["r"] = 0,
+},
+},
+["name"] = "A Cultivator's Colors",
+},
+{
+["flags"] = {
+["important"] = false,
+["pandemic"] = false,
+},
+["entryColors"] = {
+["text"] = {
+["r"] = 0,
+["g"] = 1,
+["b"] = 0,
+},
+},
+["name"] = "Sophic Devotion",
+["comment"] = "",
+},
+{
+["flags"] = {
+["important"] = false,
+["pandemic"] = false,
+},
+["entryColors"] = {
+["text"] = {
+["r"] = 0,
+["g"] = 1,
+["b"] = 0,
+},
+},
+["name"] = "Shadowy Insight",
+["comment"] = "",
+},
+},
+},
+["playerCastBarScale"] = 1,
+["darkModeActionBars"] = false,
+["unitFrameValueFontOutline"] = "THINOUTLINE",
+["moveResourceToTarget"] = false,
+["unitFrameHealthbarTexture"] = "Wglass",
+["absorbIndicatorScaleScale"] = 0.6000000238418579,
+["playerdeBuffFilterBlacklist"] = true,
+["enablePlayerBuffFiltering"] = false,
 ["playerAbsorbXPos"] = 38,
-["targetBuffFilterBlacklist"] = true,
+["partyFrameStatusFontSize"] = "24",
 ["focusBuffFilterMount"] = true,
 ["druidOverstacks"] = true,
-["hideThreatOnFrame"] = true,
-["hideActionBarBigProcGlow"] = false,
+["increaseAuraStrata"] = true,
+["playerCastBarTimer"] = true,
 ["unitFrameFontColorLvl"] = false,
-["moveableFPSCounter"] = false,
+["playerCastBarTimerCenter"] = false,
 ["overShieldsCompactUnitFrames"] = true,
-["allIngameFont"] = "1",
+["noPortraitPixelBorder"] = false,
 ["frameAuraScale"] = 0,
 ["customLargeSmallAuraSorting"] = false,
 ["hidePlayerPower"] = true,
-["showHiddenAurasIcon"] = false,
-["playerAuraGlows"] = true,
-["targetCastBarYPos"] = 130,
-["hidePartyFrameTitle"] = true,
-["targetdeBuffFilterAll"] = false,
-["partyCastBarTestMode"] = false,
-["targetAbsorbXPos"] = 0,
-["targetdeBuffFilterBlizzard"] = true,
-["hideMinimapAutoQueueEye"] = false,
-["partyFrameFontColorRGB"] = {
+["castBarNoInterruptColor"] = {
 1,
-1,
-1,
-1,
+0,
+0.01568627543747425,
 },
-["partyFrameFontSize"] = "11",
+["hideFocusCombatGlow"] = false,
+["castBarRecolorInterrupt"] = true,
+["hidePartyFrameTitle"] = true,
+["focusdeBuffPandemicGlow"] = true,
+["targetBuffEnable"] = true,
+["targetCastBarScale"] = 1,
+["hideHitIndicator"] = true,
+["changeAllFontsIngame"] = true,
+["targetEnlargeAuraFriendly"] = true,
+["hidePlayerGuideIcon"] = false,
 }

@@ -1,13 +1,6 @@
 
 CHATTYNATOR_CURRENT_PROFILE = "DEFAULT"
 CHATTYNATOR_COMMAND_HISTORY = {
-"/i lol",
-"/i idiots",
-"/i actual idiots on that team",
-"/i k",
-"/i lol",
-"/s oo",
-"/s outlaw eh",
 "/s who we going?",
 "/s LOL",
 "/s did you actually mean to not be outlaw?",
@@ -202,4 +195,11 @@ CHATTYNATOR_COMMAND_HISTORY = {
 "/s |cffffff00|Hworldmap:2214:50:30|h[|A:Waypoint-MapPin-ChatIcon:13:13:0:0|a Map Pin Location]|h|r",
 "/s /way #2214 50.89 30.23 Uisgaz",
 "/s /bbf",
+"/cw Höpeless-Tichondrius ya lol, they mythic raid nonstop every tier since inception of raiding",
+"/cw Höpeless-Tichondrius not my vibe",
+"/cw Höpeless-Tichondrius but the mount was a big need",
+"/cw Höpeless-Tichondrius ya you only have to catch up on 20+ years of learning",
+"/cw Höpeless-Tichondrius xd",
+"/s /bbf",
+"/s /rl",
 }

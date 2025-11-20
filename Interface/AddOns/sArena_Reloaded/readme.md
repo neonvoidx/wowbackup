@@ -6,8 +6,9 @@ This is a further improvement of my sArena MoP Classic addon and it also brings 
 
 This version comes packed with many new features such as:
 
-*   Three new layouts and one updated one.
+*   Four new layouts and one updated one.
 *   Import/Export feature for Profile Sharing.
+*   Target/Focus/Combat/PartyTargets Indicators.
 *   A smarter aura priority system
 *   Dispel Icon (for Healer dispels by default but also things like Remove Curse & Mending Bandage)
 *   Many new customisation options such as Texture, Font, Dark Mode, Icon Crop, Modern Castbars, Masque support, Text Positions, etc.
@@ -46,6 +47,7 @@ You can easily import your other sArena versions just by launching both addons a
 ## New layouts:
 
 ![sArenaNew](https://github.com/user-attachments/assets/3e9b03f0-de58-4862-b866-5b8f2c246164)
+![sArenaCompactLayout](https://github.com/user-attachments/assets/01f58f76-048b-4ed2-87a6-c23f2a03fd1c)
 
 ## Old layouts:
 
@@ -53,7 +55,7 @@ You can easily import your other sArena versions just by launching both addons a
 
 ### Settings:
 
-![sArenaSettings](https://github.com/user-attachments/assets/2f0e6716-ee7e-4a2f-a638-921ba344b0a2)
+![sArenaSettings](https://github.com/user-attachments/assets/21d9651f-e8f9-4081-a8ee-e55ea852f91d)
 
 ### Healer Texture when Class Stacking (optional)
 

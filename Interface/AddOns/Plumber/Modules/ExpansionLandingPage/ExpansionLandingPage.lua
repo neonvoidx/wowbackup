@@ -34,7 +34,7 @@ do  --TabButtonMixin
                 tooltip:SetOwner(self, "ANCHOR_RIGHT", -8, -4);
                 for i, line in ipairs(tooltipLines) do
                     if i == 1 then
-                        tooltip:SetText(line, 1, 1, 1, true);
+                        tooltip:SetText(line, 1, 1, 1, 1, true);
                     else
                         tooltip:AddLine(line, 1, 0.82, 0, true);
                     end
@@ -161,11 +161,6 @@ do
         CallbackRegistry:Register("LandingPage.UpdateNotification", self.UpdateNotification, self);
     end
 
-    addon.CallbackRegistry:Register("DBLoaded", function(db)
-        local tabKey = addon.GetDBValue("LandingPage_DefaultTab");
-        LandingPageUtil.SelectTab(tabKey);
-    end);
-
     addon.CallbackRegistry:Register("TimerunningSeason", function(seasonID)
         if seasonID == 2 then
             MainFrame.isLegionRemix = true;
@@ -180,7 +175,12 @@ do
 
         if self.InitTabButtons then
             self:InitTabButtons();
-            LandingPageUtil.SelectTabByIndex(1);
+        end
+
+        if not self.loaded then
+            self.loaded = true;
+            local tabKey = addon.GetDBValue("LandingPage_DefaultTab");
+            LandingPageUtil.SelectTab(tabKey);
         end
 
         self:UpdateTabs();    --The selected tab will be created here

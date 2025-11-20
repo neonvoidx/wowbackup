@@ -1,7 +1,7 @@
 -- SPDX-License-Identifier: GPL-3.0-or-later
 -- Copyright (c) 2022-2025 Thomas Floeren
 
-local addon_name, ns = ...
+local ADDON_NAME, ns = ...
 
 
 local C_AddOnsIsAddOnLoaded = _G.C_AddOns.IsAddOnLoaded
@@ -19,7 +19,7 @@ local delay_login_msg = 22
 local delay_after_battle = 15 -- Post-petbattle sleep
 local instasummon_after_battlesleep = true -- Summon without waiting for trigger event
 
-local eventthrottle_companionupdate, pet_restored
+local eventthrottle_companionupdate
 
 -- BEGIN PMDC finetuning (usable as temporary user settings):
 -- Once experimental, this is now standard.
@@ -41,45 +41,24 @@ local use_delay_PMDC = true -- true/false
 ===========================================================================]]--
 
 local monitored_addons = {
-	[addon_name] = true,
+	[ADDON_NAME] = true,
 	['Blizzard_Collections'] = true,
 }
 -- dtd(monitored_addons)
 
 local function ADDON_LOADED(addon)
 	if not monitored_addons[addon] then return end
-	if addon == addon_name then
-		PetWalkerDB = PetWalkerDB or {}
-		PetWalkerPerCharDB = PetWalkerPerCharDB or {}
-		ns.db, ns.dbc = PetWalkerDB, PetWalkerPerCharDB
-		ns.db.dbVersion, ns.dbc.dbVersion = db_version, db_version
-		ns.db.autoEnabled = ns.db.autoEnabled == nil and true or ns.db.autoEnabled
-		ns.db.newPetTimer = ns.db.newPetTimer or 720
-		ns.db.remainingTimer = ns.db.remainingTimer or 360
-		ns.db.favsOnly = ns.db.favsOnly == nil and true or ns.db.favsOnly
-		ns.dbc.charFavsEnabled = ns.dbc.charFavsEnabled or false
-		ns.dbc.charFavs = ns.dbc.charFavs or {}
-		ns.db.eventAlt = ns.db.eventAlt or false
-		ns.db.debugMode = ns.db.debugMode or false
-		ns.db.verbosityLevel = ns.db.verbosityLevel or 3
-		ns.db.drSummoning = ns.db.drSummoning == nil and true or ns.db.drSummoning
-		--[[
-		if not ns.db.dbVersion or ns.db.dbVersion ~= db_version then table.wipe(ns.db) end
-		if not ns.dbc.dbVersion or ns.dbc.dbVersion ~= db_version then
-			local tmpCharFavs = ns.dbc.charFavs -- charFavs
-			table.wipe(ns.dbc)
-			ns.dbc.charFavs = tmpCharFavs
-		end
-		]]
+	if addon == ADDON_NAME then
 		ns.debugprint 'Addon "PetWalker" loaded.'
 		ns.time_newpet_success = time() - (ns.db.newPetTimer - ns.db.remainingTimer)
-		-- *Not* with PLAYER_ENTERING_WORLD so that it is not affected when all events get unregistered via /pw a
+		-- *Not* with PLAYER_ENTERING_WORLD so that it is not affected
+		-- when all events get unregistered via /pw a
 		C_TimerAfter(delay_login_msg, ns.msg_login)
 
 		-- The summon events are now registered with transitioncheck or delayed after PLAYER_ENTERING_WORLD
 		if ns.db.autoEnabled then ns.events:register_meta_events() end
 
-		-- This would raise an error if not loaded yet, so OK here.
+		-- This raises an error if PJ is not loaded yet, so OK doing it here.
 		hooksecurefunc(C_PetJournal, 'SetPetLoadOutInfo', function()
 			-- Note that SetPetLoadOutInfo summons the slot #1 pet, but it does so _not_ via SummonPetByGUID
 			ns.debugprint 'Hook: `SetPetLoadOutInfo` --> Setting `pet_verified` to false'
@@ -116,18 +95,6 @@ local function ADDON_LOADED(addon)
 	end
 end
 
--- For transition check
---[[ Two suitable events here:
-1) PLAYER_ENTERING_WORLD and 2) ZONE_CHANGED_NEW_AREA
-Still not sure which one is better:
-1) needs a significant delay (min 8s timer), due to unpredictable rest
-load time at login (after the event).
-2) fires later (which is good), but also fires when we do not really
-need it, and it does _not_ fire in all cases where 1) is fired (bad). 2
-or 3s timer is OK.
-In any case, we should make sure to be completely out of the loading process,
-otherwise we might unsummon our - not yet spawned - pet.
-]]
 local function PLAYER_ENTERING_WORLD(is_login, is_reload)
 	local delay
 	-- We do not want summon events before transitioncheck has finished
@@ -170,7 +137,6 @@ local function ZONE_CHANGED_INDOORS()
 end
 local function PLAYER_MOUNT_DISPLAY_CHANGED()
 	ns.debugprint 'Event: PLAYER_MOUNT_DISPLAY_CHANGED --> `autoaction`, flight throttle canceled'
--- 			if throttle_reason == 'inair' then throttle = 0 end  -- WTF?!
 	-- This can lead to a summoning conflict *if* the game itself re-summons the pet after dismounting
 	-- Let's try it with a little delay
 	if use_delay_PMDC then
@@ -181,42 +147,44 @@ local function PLAYER_MOUNT_DISPLAY_CHANGED()
 end
 
 local function COMPANION_UPDATE(what)
-	-- This event fires always 2 times, so let's just listen to the first one
+	-- This event fires always 2 times, so let's listen to the last one.
 	if what ~= 'CRITTER' or eventthrottle_companionupdate then return end
 	eventthrottle_companionupdate = true
-	if not pet_restored then
-		ns.save_pet()
-		if ns.db.debugMode then
-			ns.debugprint(
-				'Event: COMPANION_UPDATE (`actpet`: '
-					.. ns.id_to_name(C_PetJournalGetSummonedPetGUID())
-					.. ') --> `save_pet`'
-			)
-		end
-	else
-		pet_restored = nil
-		if ns.db.debugMode then
-			ns.debugprint(
-				'Event: COMPANION_UPDATE (`actpet`: '
-					.. ns.id_to_name(C_PetJournalGetSummonedPetGUID())
-					.. '): not saving bc `pet_restored`'
-			)
-		end
-	end
-	-- It *seems* the pet is already summoned when the event fires the 1st time, so no need to delay the saving itself
-	C_TimerAfter(0.5, function()
+	C_TimerAfter(0.7, function()
 		eventthrottle_companionupdate = nil
+		if not ns.pet_restored then
+			ns.save_pet()
+			if ns.db.debugMode then
+				ns.debugprint(
+					'Event: COMPANION_UPDATE (`actpet`: '
+						.. ns.id_to_name(C_PetJournalGetSummonedPetGUID())
+						.. ') --> `save_pet`'
+				)
+			end
+		else
+			ns.pet_restored = nil
+			if ns.db.debugMode then
+				ns.debugprint(
+					'Event: COMPANION_UPDATE (`actpet`: '
+						.. ns.id_to_name(C_PetJournalGetSummonedPetGUID())
+						.. '): not saving bc `pet_restored`'
+				)
+			end
+		end
 	end)
 end
+
+-- See bottom of file for complete pet battle event chain
 
 local function PET_BATTLE_OPENING_START()
 	ns.debugprint 'Event: PET_BATTLE_OPENING_START'
 	ns.events:unregister_pw_events()
-	ns.events:RegisterEvent 'PET_BATTLE_OVER' -- Alternative: PET_BATTLE_CLOSE (fires twice)
+	ns.events:RegisterEvent 'PET_BATTLE_OVER'
 	ns.in_battlesleep = true
-	-- In theory, this is redundant here. However I noticed that since the change of the save-pet logic (2.3.0),
-	-- the correct pet isn't always restored after a battle (maybe 5–10%, possibly in conjunction with a second
-	-- battle or with entering combat while in battlesleep).
+	-- In theory, this is redundant here. However I noticed that since the
+	-- change of the save-pet logic (2.3.0), the correct pet isn't always
+	-- restored after a battle (maybe 5–10%, possibly in conjunction with a
+	-- second battle or with entering combat while in battlesleep).
 	-- TODO: Observe if this improves the behavior.
 	ns.pet_verified = false
 end
@@ -238,12 +206,6 @@ local function PET_BATTLE_OVER()
 	end)
 end
 
---[[ This thing fires very often
-Let's do a test:
-Unset the 'pool_initialized' var with that event, and initialize only when
-needed, that is before selecting a random pet.
---> This seems to work, so far!
-]]
 local function PET_JOURNAL_LIST_UPDATE()
 	ns.debugprint 'Event: PET_JOURNAL_LIST_UPDATE --> Setting `pool_initialized` to false'
 	ns.pool_initialized = false
@@ -279,10 +241,6 @@ ns.events:SetScript('OnEvent', function(_, event, ...)
 	local handler = event_handlers[event] -- or ns[event]
 	if handler then handler(...) end
 end)
-
--- ns.events:SetScript('OnEvent', function(self, event, ...)
--- 	if ns[event] then ns[event](self, ...) end
--- end)
 
 ns.events:RegisterEvent 'ADDON_LOADED'
 
@@ -347,3 +305,27 @@ function ns.events:unregister_pw_events()
 	ns.debugprint 'Unregistering PW events (`UnregisterAllEvents`).'
 	self:UnregisterAllEvents()
 end
+
+
+--[[ Typical pet battle event chain: ]]--[[
+
+[player interacts with tamer --> Rematch loads team]
+COMPANION_UPDATE "CRITTER"
+[0ms]
+COMPANION_UPDATE "CRITTER"
+[player initiates pet pattle]
+PET_BATTLE_OPENING_START
+[2000ms]
+PET_BATTLE_OPENING_DONE
+[pet battling now…]
+PET_BATTLE_OVER
+[200ms]
+PET_BATTLE_CLOSE
+[1200ms]
+PET_BATTLE_CLOSE
+[0ms]
+UPDATE_SUMMONPETS_ACTION
+[0ms]
+UPDATE_SUMMONPETS_ACTION
+
+]]

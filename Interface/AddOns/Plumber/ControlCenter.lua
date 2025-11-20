@@ -5,8 +5,13 @@ local GetDBBool = addon.GetDBBool;
 local tinsert = table.insert;
 local CreateFrame = CreateFrame;
 
-local RATIO = 0.75; --h/w
-local FRAME_WIDTH = 600;
+local DEV_MODE = false;
+
+local RATIO = 0.85; --h/w
+local FRAME_WIDTH = 680;
+local HEADER_HEIGHT = 18;
+local BUTTON_OFFSET_H = 16;
+local SCROLL_FRAME_SHRINK = 4;
 local PADDING = 16;
 local BUTTON_HEIGHT = 24;
 local OPTION_GAP_Y = 8;
@@ -15,6 +20,8 @@ local LEFT_SECTOR_WIDTH = math.floor(0.618*FRAME_WIDTH + 0.5);
 
 local CATEGORY_ORDER = {
     --Must match the keys in the localization
+    [-2] = "Beta",
+
     [-1] = "Timerunning",
 
     [0] = "Unknown",    --Used during development
@@ -46,13 +53,17 @@ ControlCenter.newDBKeys = {};
 ControlCenter:Hide();
 
 local ScrollFrame = CreateFrame("Frame", nil, ControlCenter);
-ScrollFrame:SetPoint("TOPLEFT", ControlCenter, "TOPLEFT", 0, 0);
-ScrollFrame:SetPoint("BOTTOMLEFT", ControlCenter, "BOTTOMLEFT", 0, 0);
+ScrollFrame:SetPoint("TOPLEFT", ControlCenter, "TOPLEFT", SCROLL_FRAME_SHRINK, -HEADER_HEIGHT - SCROLL_FRAME_SHRINK);
+ScrollFrame:SetPoint("BOTTOMLEFT", ControlCenter, "BOTTOMLEFT", SCROLL_FRAME_SHRINK, SCROLL_FRAME_SHRINK);
 ScrollFrame:SetWidth(LEFT_SECTOR_WIDTH);
 ControlCenter.ScrollFrame = ScrollFrame;
 
 
-do
+local BlizzardPanel = CreateFrame("Frame", nil, UIParent);
+BlizzardPanel:Hide();
+
+
+do  --MainFrame Scroll
     local OFFSET_PER_SCROLL = (BUTTON_HEIGHT + OPTION_GAP_Y) * 2;
 
     local function ScrollFrame_OnMouseWheel(self, delta)
@@ -143,118 +154,128 @@ local function CreateNewFeatureMark(button)
     local newTag = button:CreateTexture(nil, "OVERLAY")
     newTag:SetTexture("Interface/AddOns/Plumber/Art/ControlCenter/NewFeatureMark");
     newTag:SetSize(16, 16);
-    newTag:SetPoint("RIGHT", button, "LEFT", -8, 0);
+    newTag:SetPoint("RIGHT", button, "LEFT", -2, 0);
     newTag:Show();
+end
+
+local function GetCategoryName(categoryID)
+    local categoryKey = CATEGORY_ORDER[categoryID];
+    if categoryKey then
+        return L["Module Category "..categoryKey]
+    else
+        return "Unknown Category"
+    end
 end
 
 
 local CategoryButtonMixin = {};
+do
+    function CategoryButtonMixin:SetCategory(categoryID)
+        self.categoryID = categoryID;
+        self.categoryKey = CATEGORY_ORDER[categoryID];
 
-function CategoryButtonMixin:SetCategory(categoryID)
-    self.categoryID = categoryID;
-    self.categoryKey = CATEGORY_ORDER[categoryID];
-
-    if self.categoryKey then
-        self.Label:SetText(L["Module Category ".. self.categoryKey]);
-    else
-        self.Label:SetText("Unknown Category");
-        self.categoryKey = "Unknown";
-    end
-end
-
-function CategoryButtonMixin:OnLoad()
-    self.collapsed = false;
-    self.childOptions = {};
-    self:UpdateArrow();
-end
-
-function CategoryButtonMixin:UpdateArrow()
-    if self.collapsed then
-        self.Arrow:SetTexCoord(0, 0.5, 0, 1);
-    else
-        self.Arrow:SetTexCoord(0.5, 1, 0, 1);
-    end
-end
-
-function CategoryButtonMixin:Expand()
-    if self.collapsed then
-        self.collapsed = false;
-        self.Drawer:SetHeight(self.drawerHeight);
-        self.Drawer:Show();
-        self:UpdateArrow();
-        ControlCenter:UpdateScrollRange();
-    end
-end
-
-function CategoryButtonMixin:Collapse()
-    if not self.collapsed then
-        self.collapsed = true;
-        self.Drawer:SetHeight(DIFFERENT_CATEGORY_OFFSET);
-        self.Drawer:Hide();
-        self:UpdateArrow();
-        ControlCenter:UpdateScrollRange();
-    end
-end
-
-function CategoryButtonMixin:ToggleCollapse()
-    if self.collapsed then
-        self:Expand();
-    else
-        self:Collapse();
-    end
-end
-
-function CategoryButtonMixin:OnClick()
-    self:ToggleCollapse();
-end
-
-function CategoryButtonMixin:OnEnter()
-    --ControlCenter.Preview:SetTexture("Interface/AddOns/Plumber/Art/ControlCenter/CategoryPreview_"..self.categoryKey);
-end
-
-function CategoryButtonMixin:InitializeDrawer()
-    self.drawerHeight = self.numOptions * (OPTION_GAP_Y + BUTTON_HEIGHT) + OPTION_GAP_Y + DIFFERENT_CATEGORY_OFFSET;
-    self.Drawer:SetHeight(self.drawerHeight);
-end
-
-function CategoryButtonMixin:UpdateModuleCount()
-    if self.childOptions then
-        local total = #self.childOptions;
-        local numEnabled = 0;
-        for i, checkbox in ipairs(self.childOptions) do
-            if checkbox:GetChecked() then
-                numEnabled = numEnabled + 1;
-            end
+        if self.categoryKey then
+            self.Label:SetText(L["Module Category ".. self.categoryKey]);
+        else
+            self.Label:SetText("Unknown Category");
+            self.categoryKey = "Unknown";
         end
-        self.Count:SetText(string.format("%d/%d", numEnabled, total));
-    else
-        self.Count:SetText(nil);
     end
-end
 
-function CategoryButtonMixin:AddChildOption(checkbox)
-    if not self.numOptions then
-        self.numOptions = 0;
+    function CategoryButtonMixin:OnLoad()
+        self.collapsed = false;
+        self.childOptions = {};
+        self:UpdateArrow();
     end
-    self.numOptions = self.numOptions + 1;
-    if not checkbox.parentDBKey then
-        tinsert(self.childOptions, checkbox);
-    end
-end
 
-function CategoryButtonMixin:UpdateNineSlice(offset)
-    --Texture Slice don't follow its parent scale
-    --This texture has 4px gap in each direction
-    --Unused
-    self.Background:SetPoint("TOPLEFT", self, "TOPLEFT", -offset, offset);
-    self.Background:SetPoint("BOTTOMRIGHT", self, "BOTTOMRIGHT", offset, -offset);
+    function CategoryButtonMixin:UpdateArrow()
+        if self.collapsed then
+            self.Arrow:SetTexCoord(0, 0.5, 0, 1);
+        else
+            self.Arrow:SetTexCoord(0.5, 1, 0, 1);
+        end
+    end
+
+    function CategoryButtonMixin:Expand()
+        if self.collapsed then
+            self.collapsed = false;
+            self.Drawer:SetHeight(self.drawerHeight);
+            self.Drawer:Show();
+            self:UpdateArrow();
+            ControlCenter:UpdateScrollRange();
+        end
+    end
+
+    function CategoryButtonMixin:Collapse()
+        if not self.collapsed then
+            self.collapsed = true;
+            self.Drawer:SetHeight(DIFFERENT_CATEGORY_OFFSET);
+            self.Drawer:Hide();
+            self:UpdateArrow();
+            ControlCenter:UpdateScrollRange();
+        end
+    end
+
+    function CategoryButtonMixin:ToggleCollapse()
+        if self.collapsed then
+            self:Expand();
+        else
+            self:Collapse();
+        end
+    end
+
+    function CategoryButtonMixin:OnClick()
+        self:ToggleCollapse();
+    end
+
+    function CategoryButtonMixin:OnEnter()
+        --ControlCenter.Preview:SetTexture("Interface/AddOns/Plumber/Art/ControlCenter/CategoryPreview_"..self.categoryKey);
+    end
+
+    function CategoryButtonMixin:InitializeDrawer()
+        self.drawerHeight = self.numOptions * (OPTION_GAP_Y + BUTTON_HEIGHT) + OPTION_GAP_Y + DIFFERENT_CATEGORY_OFFSET;
+        self.Drawer:SetHeight(self.drawerHeight);
+    end
+
+    function CategoryButtonMixin:UpdateModuleCount()
+        if self.childOptions then
+            local total = #self.childOptions;
+            local numEnabled = 0;
+            for i, checkbox in ipairs(self.childOptions) do
+                if checkbox:GetChecked() then
+                    numEnabled = numEnabled + 1;
+                end
+            end
+            self.Count:SetText(string.format("%d/%d", numEnabled, total));
+        else
+            self.Count:SetText(nil);
+        end
+    end
+
+    function CategoryButtonMixin:AddChildOption(checkbox)
+        if not self.numOptions then
+            self.numOptions = 0;
+        end
+        self.numOptions = self.numOptions + 1;
+        if not checkbox.parentDBKey then
+            tinsert(self.childOptions, checkbox);
+        end
+    end
+
+    function CategoryButtonMixin:UpdateNineSlice(offset)
+        --Texture Slice don't follow its parent scale
+        --This texture has 4px gap in each direction
+        --Unused
+        self.Background:SetPoint("TOPLEFT", self, "TOPLEFT", -offset, offset);
+        self.Background:SetPoint("BOTTOMRIGHT", self, "BOTTOMRIGHT", offset, -offset);
+    end
 end
 
 
 local function CreateCategoryButton(parent)
     local b = CreateFrame("Button", nil, parent);
 
-    b:SetSize(LEFT_SECTOR_WIDTH - PADDING, BUTTON_HEIGHT);
+    b:SetSize(LEFT_SECTOR_WIDTH - 2*PADDING, BUTTON_HEIGHT);
 
     b.Background = b:CreateTexture(nil, "BACKGROUND");
     b.Background:SetTexture("Interface/AddOns/Plumber/Art/ControlCenter/CategoryButton-NineSlice");
@@ -262,9 +283,7 @@ local function CreateCategoryButton(parent)
     b.Background:SetTextureSliceMode(0);
     b.Background:SetPoint("TOPLEFT", b, "TOPLEFT", 0, 0);
     b.Background:SetPoint("BOTTOMRIGHT", b, "BOTTOMRIGHT", 0, 0);
-    --API.DisableSharpening(b.Background);
 
-    local arrowOffsetX = 8;
 
     b.Arrow = b:CreateTexture(nil, "OVERLAY");
     b.Arrow:SetSize(14, 14);
@@ -315,12 +334,12 @@ local function CreateOptionToggle(checkbox, onClickFunc)
     if not checkbox.OptionToggle then
         local b = CreateFrame("Button", nil, checkbox);
         checkbox.OptionToggle = b;
-        b:SetSize(24, 24);
+        b:SetSize(48, 24);
         b:SetPoint("RIGHT", checkbox, "RIGHT", 0, 0);
         b.Texture = b:CreateTexture(nil, "OVERLAY");
         b.Texture:SetTexture("Interface/AddOns/Plumber/Art/Button/OptionToggle");
         b.Texture:SetSize(16, 16);
-        b.Texture:SetPoint("CENTER", b, "CENTER", 0, 0);
+        b.Texture:SetPoint("RIGHT", b, "RIGHT", -4, 0);
         b.Texture:SetVertexColor(0.6, 0.6, 0.6);
         API.DisableSharpening(b.Texture);
         b:SetScript("OnClick", onClickFunc);
@@ -332,16 +351,28 @@ local function CreateOptionToggle(checkbox, onClickFunc)
 end
 
 local function CreateUI()
-    local CHECKBOX_WIDTH = LEFT_SECTOR_WIDTH - 2*PADDING;
+    local CHECKBOX_WIDTH = LEFT_SECTOR_WIDTH - 2*PADDING - BUTTON_OFFSET_H;
 
     local db = PlumberDB;
     DB = db;
-    local settingsOpenTime = db.settingsOpenTime or 0;
+
+    local settingsOpenTime = db.settingsOpenTime;
+    local isFirstMet;
+    if not settingsOpenTime then
+        settingsOpenTime = 0;
+        isFirstMet = true;
+    end
+    settingsOpenTime = settingsOpenTime - 7 * 86400;    --NewFeatureMark gone after 7 days
 
     local parent = ControlCenter;
     local showCloseButton = true;
     local f = addon.CreateHeaderFrame(parent, showCloseButton);
-    parent.Frame = f;
+    parent.BackgroundFrame = f;
+    f:SetUsingParentLevel(true);
+
+    f.CloseUI = function()
+        ControlCenter:Hide();
+    end
 
 
     local ScrollChild = CreateFrame("Frame", nil, ScrollFrame);
@@ -355,8 +386,8 @@ local function CreateUI()
     f:SetPoint("BOTTOMRIGHT", parent, "BOTTOMRIGHT", 0, 0);
     f:SetTitle(L["Module Control"]);
 
-    local headerHeight = f:GetHeaderHeight();
-    local previewSize = FRAME_WIDTH - LEFT_SECTOR_WIDTH - 2*PADDING + 4;
+    local headerHeight = HEADER_HEIGHT;
+    local previewSize = FRAME_WIDTH - LEFT_SECTOR_WIDTH - 2*PADDING;
 
     local preview = container:CreateTexture(nil, "OVERLAY");
     parent.Preview = preview;
@@ -377,22 +408,28 @@ local function CreateUI()
     description:SetJustifyV("TOP");
     description:SetSpacing(2);
     local visualOffset = 4;
-    description:SetPoint("TOPLEFT", preview, "BOTTOMLEFT", visualOffset + 4, -PADDING);
+    description:SetPoint("TOPLEFT", preview, "BOTTOMLEFT", visualOffset, -PADDING);
     description:SetPoint("BOTTOMRIGHT", container, "BOTTOMRIGHT", -PADDING - visualOffset, PADDING);
     description:SetShadowColor(0, 0, 0);
     description:SetShadowOffset(1, -1);
 
-    local dividerTop = container:CreateTexture(nil, "OVERLAY");
+    local DividerFrame = CreateFrame("Frame", nil, container);
+    parent.DividerFrame = DividerFrame;
+    local dividerHeight = container:GetHeight() - headerHeight;
+    DividerFrame:SetSize(4, dividerHeight);
+    DividerFrame:SetPoint("TOP", container, "TOPLEFT", LEFT_SECTOR_WIDTH, -headerHeight);
+
+    local dividerTop = DividerFrame:CreateTexture(nil, "OVERLAY");
     dividerTop:SetSize(16, 16);
-    dividerTop:SetPoint("TOPRIGHT", container, "TOPLEFT", LEFT_SECTOR_WIDTH, -headerHeight);
+    dividerTop:SetPoint("TOPRIGHT", DividerFrame, "TOP", 2, 0);
     dividerTop:SetTexCoord(0, 1, 0, 0.25);
 
-    local dividerBottom = container:CreateTexture(nil, "OVERLAY");
+    local dividerBottom = DividerFrame:CreateTexture(nil, "OVERLAY");
     dividerBottom:SetSize(16, 16);
-    dividerBottom:SetPoint("BOTTOMRIGHT", container, "BOTTOMLEFT", LEFT_SECTOR_WIDTH, 0);
+    dividerBottom:SetPoint("BOTTOMRIGHT", DividerFrame, "BOTTOM", 2, 0);
     dividerBottom:SetTexCoord(0, 1, 0.75, 1);
 
-    local dividerMiddle = container:CreateTexture(nil, "OVERLAY");
+    local dividerMiddle = DividerFrame:CreateTexture(nil, "OVERLAY");
     dividerMiddle:SetPoint("TOPLEFT", dividerTop, "BOTTOMLEFT", 0, 0);
     dividerMiddle:SetPoint("BOTTOMRIGHT", dividerBottom, "TOPRIGHT", 0, 0);
     dividerMiddle:SetTexCoord(0, 1, 0.25, 0.75);
@@ -418,7 +455,7 @@ local function CreateUI()
     SelectionTexture:Hide();
 
 
-    local fromOffsetY = PADDING; -- +headerHeight
+    local fromOffsetY = PADDING - SCROLL_FRAME_SHRINK; -- +headerHeight
     local numButton = 0;
 
     parent.Checkboxs = {};
@@ -447,6 +484,10 @@ local function CreateUI()
         SelectionTexture:Show();
         if self.OptionToggle then
             OptionToggle_SetFocused(self.OptionToggle, true);
+        end
+
+        if DEV_MODE then
+            print(self.data.uiOrder);
         end
     end
 
@@ -481,11 +522,16 @@ local function CreateUI()
     local function OptionToggle_OnEnter(self)
         Checkbox_OnEnter(self:GetParent());
         self.Texture:SetVertexColor(1, 1, 1);
+        local tooltip = GameTooltip;
+        tooltip:SetOwner(self, "ANCHOR_RIGHT");
+        tooltip:SetText(SETTINGS, 1, 1, 1, 1);
+        tooltip:Show();
     end
 
     local function OptionToggle_OnLeave(self)
         Checkbox_OnLeave(self:GetParent());
         self.Texture:SetVertexColor(0.6, 0.6, 0.6);
+        GameTooltip:Hide();
     end
 
     local newCategoryPosition = {};
@@ -549,7 +595,7 @@ local function CreateUI()
             tinsert(parent.CategoryButtons, categoryButton);
 
             if i == 1 then
-                categoryButton:SetPoint("TOPLEFT", ScrollChild, "TOPLEFT", PADDING, -fromOffsetY);
+                categoryButton:SetPoint("TOPLEFT", ScrollChild, "TOPLEFT", PADDING - SCROLL_FRAME_SHRINK, -fromOffsetY);
             else
                 categoryButton:SetPoint("TOPLEFT", lastCategoryButton.Drawer, "BOTTOMLEFT", 0, 0);
             end
@@ -558,6 +604,14 @@ local function CreateUI()
 
             lastCategoryButton = categoryButton;
             positionInCategory = 0;
+
+
+            if DEV_MODE then
+                if parent.modules[i - 1] then
+                    print("uiOrder:", parent.modules[i - 1].uiOrder);
+                end
+                print("category:", data.categoryID, GetCategoryName(data.categoryID));
+            end
         end
 
         numButton = numButton + 1;
@@ -567,7 +621,7 @@ local function CreateUI()
         checkbox:SetFixedWidth(CHECKBOX_WIDTH);
         SetupCheckboxFromData(checkbox, data);
 
-        if data.moduleAddedTime and data.moduleAddedTime > settingsOpenTime then
+        if (not isFirstMet) and data.moduleAddedTime and data.moduleAddedTime > settingsOpenTime then
             CreateNewFeatureMark(checkbox);
         end
 
@@ -624,9 +678,9 @@ local function CreateUI()
 
 
     local ScrollBar = CreateFrame("EventFrame", nil, container, "MinimalScrollBar");
-    ScrollBar:SetPoint("TOP", dividerTop, "TOP", 0, 0)
-    ScrollBar:SetPoint("BOTTOM", dividerBottom, "BOTTOM", 0, 0);
-    ControlCenter.ScrollBar = ScrollBar
+    ScrollBar:SetPoint("TOP", DividerFrame, "TOP", 0, -8)
+    ScrollBar:SetPoint("BOTTOM", DividerFrame, "BOTTOM", 0, 8);
+    ControlCenter.ScrollBar = ScrollBar;
 
     function ScrollBar:SetScrollPercentage(scrollPercentage, fromMouseWheel)
         ScrollControllerMixin.SetScrollPercentage(ScrollBar, scrollPercentage);
@@ -646,10 +700,10 @@ local function CreateUI()
 
         local leftSectorWidth = math.floor(0.618*frameWidth + 0.5);
 
-        dividerTop:SetPoint("TOPRIGHT", container, "TOPLEFT", leftSectorWidth, -headerHeight);
-        dividerBottom:SetPoint("BOTTOMRIGHT", container, "BOTTOMLEFT", leftSectorWidth, 0);
+        self.DividerFrame:SetPoint("TOP", self, "TOPLEFT", leftSectorWidth, -headerHeight);
+        self.DividerFrame:SetHeight(self:GetHeight() - HEADER_HEIGHT);
 
-        previewSize = frameWidth - leftSectorWidth - 2*PADDING + 4;
+        previewSize = frameWidth - leftSectorWidth - 2*PADDING;
         preview:SetSize(previewSize, previewSize);
 
         ScrollFrame:SetWidth(leftSectorWidth);
@@ -671,14 +725,17 @@ local function CreateUI()
     end
 end
 
-function ControlCenter:ShowUI(onBlizzardOptionsUI)
+function ControlCenter:ShowUI(mode)
     if CreateUI then
         CreateUI();
         CreateUI = nil;
     end
 
+    mode = mode or "standalone";
+    self.mode = mode;
+
     self:Show();
-    self.Frame:SetShown(not onBlizzardOptionsUI);
+    self.BackgroundFrame:SetShown(mode == "standalone");
     self:UpdateLayout();
     self:UpdateButtonStates();
     self:UpdateScrollRange();
@@ -784,18 +841,28 @@ ControlCenter:SetScript("OnEvent", function(self, event, ...)
     ControlCenter:InitializeModules();
 end);
 
-ControlCenter:SetScript("OnShow", function(self)
-    local hideBackground = SettingsPanel and SettingsPanel:IsShown();
-    self:ShowUI(hideBackground);
-end);
-
-
-
 
 if Settings then
-    local panel = ControlCenter;
-    local category = Settings.RegisterCanvasLayoutCategory(panel, "Plumber");
+    local category = Settings.RegisterCanvasLayoutCategory(BlizzardPanel, "Plumber");
     Settings.RegisterAddOnCategory(category);
+
+    BlizzardPanel:SetScript("OnShow", function(self)
+        ControlCenter:Hide();
+        ControlCenter:SetParent(BlizzardPanel);
+        ControlCenter:ClearAllPoints();
+        ControlCenter:SetPoint("TOPLEFT", self, "TOPLEFT", -12, 25);
+        ControlCenter:SetPoint("BOTTOMRIGHT", self, "BOTTOMRIGHT", 0, 0);
+        ControlCenter:ShowUI("blizzard");
+    end);
+
+    BlizzardPanel:SetScript("OnHide", function(self)
+        self:Hide();
+        ControlCenter:Hide();
+    end);
+
+    --local bg = BlizzardPanel:CreateTexture(nil, "BACKGROUND");
+    --bg:SetAllPoints(true);
+    --bg:SetColorTexture(1, 0, 0, 0.5);
 end
 
 
@@ -831,4 +898,64 @@ do
     };
 
     ControlCenter:AddModule(moduleData);
+end
+
+
+do  --Press Escape to close
+    local CloseDummy = CreateFrame("Frame", "PlumberSharedUISpecialFrame", UIParent);
+    CloseDummy:Hide();
+    table.insert(UISpecialFrames, CloseDummy:GetName());
+
+    CloseDummy:SetScript("OnHide", function()
+        ControlCenter:Hide();
+    end);
+
+    ControlCenter:HookScript("OnShow", function()
+        if ControlCenter.mode == "standalone" then
+            CloseDummy:Show();
+        end
+    end);
+
+    ControlCenter:HookScript("OnHide", function()
+        CloseDummy:Hide();
+    end);
+end
+
+
+do  --Globals, AddOn Compartment
+    local function Plumber_ToggleSettings()
+        if BlizzardPanel:IsShown() then return end;
+
+        if ControlCenter:IsShown() then
+            ControlCenter:Hide();
+        else
+            ControlCenter:ClearAllPoints();
+            ControlCenter:SetParent(UIParent);
+            ControlCenter:SetPoint("CENTER", UIParent, "CENTER", 0, 0);
+            ControlCenter:ShowUI();
+        end
+    end
+    _G.Plumber_ToggleSettings = Plumber_ToggleSettings;
+
+
+    local IDENTIFIER = "PlumberSettings";
+
+    local function AddonCompartment_OnClick()
+        Plumber_ToggleSettings();
+    end
+
+    local function AddonCompartment_OnEnter(menuButton)
+        local tooltip = GameTooltip;
+        tooltip:SetOwner(menuButton, "ANCHOR_NONE");
+        tooltip:SetPoint("TOPRIGHT", menuButton, "TOPLEFT", -12, 0);
+        tooltip:SetText(L["Module Category Plumber"], 1, 1, 1);
+        tooltip:AddLine(L["Click To Show Settings"], 1, 0.82, 0, true);
+        tooltip:Show();
+    end
+
+    local function AddonCompartment_OnLeave(menuButton)
+        GameTooltip:Hide();
+    end
+
+    API.AddButtonToAddonCompartment(IDENTIFIER, L["Module Category Plumber"], "Interface/AddOns/Plumber/Art/Logo/PlumberLogo64", AddonCompartment_OnClick, AddonCompartment_OnEnter, AddonCompartment_OnLeave);
 end

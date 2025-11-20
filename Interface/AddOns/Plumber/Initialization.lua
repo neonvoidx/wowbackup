@@ -1,5 +1,5 @@
-local VERSION_TEXT = "v1.7.8";
-local VERSION_DATE = 1761200000;
+local VERSION_TEXT = "v1.8.0";
+local VERSION_DATE = 1763400000;
 
 
 local addonName, addon = ...
@@ -191,6 +191,12 @@ local DefaultValues = {
         AppearanceTab_ModelCount = 1,
     ItemUpgradeUI = true,
     HolidayDungeon = true,              --Auto select holiday dungeons once
+    StaticPopup_Confirm = true,         --Add a brief delay to purchase non-refundable items / Reduce item conversion confirm delay
+    QueueStatus = false,                --Add a progress bar to LFG Eye
+        QueueStatus_ShowTime = false,   --Relative Queue Time
+        QueueStatus_TextPosition = 1,   --0:Center, 1-4:Clockwise
+    InstanceDifficulty = false,         --Instance Difficulty Selector
+    TransmogChatCommand = false,        --Adjust /outfit command behavior
 
 
     --Tooltip
@@ -200,6 +206,9 @@ local DefaultValues = {
     TooltipItemReagents = false,        --For items with "use to combine": show the reagent count
     TooltipProfessionKnowledge = true,  --Show unspent points on GameTooltip
     TooltipDelvesItem = true,           --Show weekly Coffer Key cap on chest tooltip
+    TooltipItemQuest = true,            --Show the quest of quest starting items in bags
+    TooltipTransmogEnsemble = true,     --A Raid Ensemble now unlocks outfits (tints) from 4 difficulties, but the default UI only gives one
+    TooltipHousing = true,              --TEMP Midnight BETA PTR
 
 
     --Reduction
@@ -231,6 +240,7 @@ local DefaultValues = {
         LootUI_HotkeyName = "E",
         LootUI_ReplaceDefaultAlert = false,
         LootUI_UseStockUI = false,
+        LootUI_WindowHide = false,
         LootUI_CombineItems = false,
         LootUI_LowFrameStrata = false,
 
@@ -280,9 +290,15 @@ local DefaultValues = {
         LegionRemix_AutoUpgrade = true,
         LegionRemix_PaperDollTraitDetail = false,
     LegionRemix_HideWorldTier = true,
+    LegionRemix_LFGSpam = true,
 
 
     EnableNewByDefault = false,             --Always enable newly added features
+
+
+    --Test Server
+    Test_ModuleScaleRef = true,
+        Test_ModuleScaleRef_ShowBanana = false,
 
 
     --Declared elsewhere:
@@ -368,6 +384,8 @@ do
         return tocVersion >= targetVersion
     end
     addon.IsToCVersionEqualOrNewerThan = IsToCVersionEqualOrNewerThan;
+
+    addon.IS_MIDNIGHT = IsToCVersionEqualOrNewerThan(120000);
 
     addon.IS_CLASSIC = C_AddOns.GetAddOnMetadata(addonName, "X-Flavor") ~= "retail";
 

@@ -2,38 +2,43 @@
 MouseoverActionSettingsDB = {
 ["namespaces"] = {
 },
-["global"] = {
-["TinkerZone"] = true,
-},
 ["profileKeys"] = {
 ["Månyfaced - Mal'Ganis"] = "Default",
 ["Hellowalls - Mal'Ganis"] = "Default",
-["Choppiez - Tichondrius"] = "Default",
+["Praisesun - Tichondrius"] = "Default",
+["Corsic - Mal'Ganis"] = "Default",
+["Neonvoid - Mal'Ganis"] = "Default",
+["Ofpusstwo - Tichondrius"] = "Default",
+["Cullnvoid - Tichondrius"] = "Default",
+["Stormclout - Mal'Ganis"] = "Default",
+["Rakeist - Mal'Ganis"] = "Default",
+["Ofpuss - Tichondrius"] = "Default",
+["Praisesun - Mal'Ganis"] = "Default",
+["Thingreyline - Tichondrius"] = "Default",
+["Mäñýfäçëð - Tichondrius"] = "Default",
 ["Auteist - Mal'Ganis"] = "Default",
 ["Ofpuss - Mal'Ganis"] = "Default",
-["Hellavator - Mal'Ganis"] = "Default",
 ["Smaugchamp - Mal'Ganis"] = "Default",
 ["Choppiez - Mal'Ganis"] = "Default",
 ["Starstypeshi - Tichondrius"] = "Default",
-["Gehyo - Mal'Ganis"] = "Default",
-["Neonvoid - Mal'Ganis"] = "Default",
-["Corsic - Mal'Ganis"] = "Default",
-["Mäñýfäçëð - Mal'Ganis"] = "Default",
-["Auteist - Tichondrius"] = "Default",
-["Praisesun - Tichondrius"] = "Default",
-["Hellavator - Tichondrius"] = "Default",
 ["Thickshape - Mal'Ganis"] = "Default",
-["Cullnvoid - Tichondrius"] = "Default",
+["Mäñýfäçëð - Mal'Ganis"] = "Default",
+["Hellavator - Mal'Ganis"] = "Default",
+["Hellavator - Tichondrius"] = "Default",
+["Gehyo - Tichondrius"] = "Default",
 ["Stormclout - Tichondrius"] = "Default",
 ["Reedingo - Mal'Ganis"] = "Default",
-["Stormclout - Mal'Ganis"] = "Default",
-["Rakeist - Mal'Ganis"] = "Default",
 ["Tampacks - Mal'Ganis"] = "Default",
-["Mäñýfäçëð - Tichondrius"] = "Default",
-["Ofpuss - Tichondrius"] = "Default",
-["Praisesun - Mal'Ganis"] = "Default",
+["Heilsatan - Tichondrius"] = "Default",
+["Crillessana - Mal'Ganis"] = "Default",
 ["Smaugchamp - Tichondrius"] = "Default",
-["Thingreyline - Tichondrius"] = "Default",
+["Auteist - Tichondrius"] = "Default",
+["Choppiez - Tichondrius"] = "Default",
+["Gehyo - Mal'Ganis"] = "Default",
+["Clevagirl - Mal'Ganis"] = "Default",
+},
+["global"] = {
+["TinkerZone"] = true,
 },
 ["profiles"] = {
 ["Default"] = {
@@ -68,30 +73,17 @@ MouseoverActionSettingsDB = {
 ["FocusFrame"] = {
 ["enabled"] = false,
 },
-["MainMenuBar"] = {
-["ARENA_UPDATE"] = true,
-["TARGET_ATTACKABLE_UPDATE"] = true,
-["PARTY_GROUP_UPDATE"] = false,
-["DUNGEON_UPDATE"] = true,
-["minAlpha"] = 0.3,
-["PLAYER_MOVING_UPDATE"] = false,
-["BATTLEGROUND_UPDATE"] = true,
-["PLAYER_HEALTH_UPDATE"] = false,
-["RAID_UPDATE"] = true,
-["links"] = {
-["MultiBarBottomLeft"] = true,
-["MultiBar5"] = true,
-},
-["RAID_GROUP_UPDATE"] = false,
-["TARGET_UPDATE"] = true,
+["PetFrame"] = {
+["enabled"] = false,
 },
 ["ActionBarConfig"] = {
-["Action"] = true,
-["MultiBarBottomLeft"] = true,
 ["MultiBar5"] = true,
+["MultiBarBottomLeft"] = true,
+["Action"] = true,
 },
-["PlayerFrame"] = {
+["MicroMenu"] = {
 ["enabled"] = false,
+["maxAlpha"] = 0,
 },
 ["MiniMapButton"] = {
 ["minimapPos"] = 122.2449592174659,
@@ -109,11 +101,11 @@ MouseoverActionSettingsDB = {
 ["enabled"] = false,
 },
 ["MultiBarRight"] = {
-["minAlpha"] = 0.2,
 ["links"] = {
 ["MultiBarBottomRight"] = true,
 ["MultiBar6"] = true,
 },
+["minAlpha"] = 0.2,
 },
 ["MultiBar5"] = {
 ["ARENA_UPDATE"] = true,
@@ -130,9 +122,9 @@ MouseoverActionSettingsDB = {
 ["MainMenuBar"] = true,
 },
 ["PARTY_GROUP_UPDATE"] = false,
-["RAID_GROUP_UPDATE"] = false,
-["TARGET_ATTACKABLE_UPDATE"] = true,
 ["DRAGONRIDING_UPDATE"] = false,
+["TARGET_ATTACKABLE_UPDATE"] = true,
+["RAID_GROUP_UPDATE"] = false,
 },
 ["TrackingBarContainer"] = {
 ["enabled"] = false,
@@ -159,16 +151,16 @@ MouseoverActionSettingsDB = {
 ["BuffFrame"] = {
 ["enabled"] = false,
 },
-["MultiBar7"] = {
+["PartyFrame"] = {
 ["enabled"] = false,
 },
-["PartyFrame"] = {
+["MultiBar7"] = {
 ["enabled"] = false,
 },
 ["ObjectiveTracker"] = {
 ["MOUNT_UPDATE"] = false,
 ["NPC_UPDATE"] = true,
-["minAlpha"] = 0.3,
+["minAlpha"] = 1,
 ["OPEN_WORLD_UPDATE"] = false,
 ["COMBAT_UPDATE"] = false,
 },
@@ -183,7 +175,7 @@ MouseoverActionSettingsDB = {
 ["delay"] = 0,
 ["COMBAT_UPDATE"] = true,
 },
-["PetFrame"] = {
+["MultiBarLeft"] = {
 ["enabled"] = false,
 },
 ["MultiBarBottomRight"] = {
@@ -195,12 +187,25 @@ MouseoverActionSettingsDB = {
 ["delay"] = 0,
 ["COMBAT_UPDATE"] = false,
 },
-["MultiBarLeft"] = {
-["enabled"] = false,
+["MainMenuBar"] = {
+["ARENA_UPDATE"] = true,
+["TARGET_ATTACKABLE_UPDATE"] = true,
+["PARTY_GROUP_UPDATE"] = false,
+["DUNGEON_UPDATE"] = true,
+["minAlpha"] = 0.3,
+["PLAYER_MOVING_UPDATE"] = false,
+["BATTLEGROUND_UPDATE"] = true,
+["PLAYER_HEALTH_UPDATE"] = false,
+["RAID_UPDATE"] = true,
+["links"] = {
+["MultiBarBottomLeft"] = true,
+["MultiBar5"] = true,
 },
-["MicroMenu"] = {
+["RAID_GROUP_UPDATE"] = false,
+["TARGET_UPDATE"] = true,
+},
+["PlayerFrame"] = {
 ["enabled"] = false,
-["maxAlpha"] = 0,
 },
 },
 },

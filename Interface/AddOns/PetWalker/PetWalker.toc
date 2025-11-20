@@ -1,6 +1,6 @@
-## Interface: 110205
+## Interface: 110205, 110207
 ## Title: PetWalker
-## Version: 2.5.14
+## Version: 2.6.2
 ## IconTexture: Interface/AddOns/PetWalker/icon.png
 ## Notes: Automatically re-summons your lost companion pet, or auto-summons a random or favorite one.
 ## Category: Collections
@@ -25,9 +25,10 @@
 ## SavedVariables: PetWalkerDB
 ## SavedVariablesPerCharacter: PetWalkerPerCharDB
 
+init.lua
+utilities.lua
 main.lua
 ui.lua
-utilities.lua
 events.lua
 
 

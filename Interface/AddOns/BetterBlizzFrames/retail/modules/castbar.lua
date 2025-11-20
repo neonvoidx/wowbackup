@@ -1,3 +1,4 @@
+if BBF.isMidnight then return end
 local spellBars = {}
 local castBarsCreated = false
 local petCastbarCreated = false
@@ -8,6 +9,33 @@ local classicCastbarTexture = 137012
 function BBF.UpdateClassicCastbarTexture(texture)
     classicCastbarTexture = BetterBlizzFramesDB.changeUnitFrameCastbarTexture and texture or 137012
 end
+
+local targetSpellBarTexture = TargetFrameSpellBar:GetStatusBarTexture()
+local focusSpellBarTexture = FocusFrameSpellBar:GetStatusBarTexture()
+local highlightStartTime = BetterBlizzFramesDB.castBarInterruptHighlighterStartTime
+local highlightEndTime = BetterBlizzFramesDB.castBarInterruptHighlighterEndTime
+local edgeColor = BetterBlizzFramesDB.castBarInterruptHighlighterInterruptRGB
+local middleColor = BetterBlizzFramesDB.castBarInterruptHighlighterDontInterruptRGB
+local colorMiddle = BetterBlizzFramesDB.castBarInterruptHighlighterColorDontInterrupt
+local castBarNoInterruptColor = BetterBlizzFramesDB.castBarNoInterruptColor
+local castBarDelayedInterruptColor = BetterBlizzFramesDB.castBarDelayedInterruptColor
+local castBarRecolorInterrupt = BetterBlizzFramesDB.castBarRecolorInterrupt
+local castBarInterruptHighlighter = BetterBlizzFramesDB.castBarInterruptHighlighter
+local targetCastbarEdgeHighlight = BetterBlizzFramesDB.targetCastbarEdgeHighlight
+local focusCastbarEdgeHighlight = BetterBlizzFramesDB.focusCastbarEdgeHighlight
+local recolorCastbars = BetterBlizzFramesDB.recolorCastbars
+local castbarColors = {
+    standard        = BetterBlizzFramesDB.castbarCastColor,
+    interrupted     = { 1, 0, 0 },
+    channeled       = BetterBlizzFramesDB.castbarChannelColor,
+    uninterruptable = BetterBlizzFramesDB.castbarUninterruptableColor,
+}
+local defaultCastbarColors = {
+    standard        = { 1, 0.7, 0 },
+    interrupted     = { 1, 0, 0 },
+    channeled       = { 0, 1, 0 },
+    uninterruptable = { 0.7, 0.7, 0.7 },
+}
 
 local function UpdateCastTimer(self)
     local remainingTime
@@ -209,11 +237,6 @@ function BBF.ClassicCastbar(castBar, unitType)
     if not castBar.isClassicStyle then
         castBar:HookScript("OnEvent", function(self)
             self:SetStatusBarTexture(classicCastbarTexture)
-            if self.barType ~= "interrupted" and not self.casting then
-                self:SetStatusBarColor(0, 1, 0, 1)
-            else
-                self:SetStatusBarColor(1, 0.7, 0, 1)
-            end
             castBar.TextBorder:SetAlpha(0)
             if castBar == PlayerCastingBarFrame then
                 castBar.Text:ClearAllPoints()
@@ -249,14 +272,9 @@ function BBF.ClassicCastbar(castBar, unitType)
                 if castBar ~= PlayerCastingBarFrame then
                     HideChargeTiers(self)
                 end
-            elseif self.barType == "channeled" then
-                self:SetStatusBarColor(0, 1, 0, 1)
-            elseif self.barType == "interrupted" then
-                self:SetStatusBarColor(1, 0, 0, 1)
             end
 
             if self.barType == "uninterruptable" then
-                self:SetStatusBarColor(0.7, 0.7, 0.7, 1)
                 if isTargets then
                     castBar.Text:ClearAllPoints()
                     castBar.Text:SetPoint("CENTER", castBar, "CENTER", 0, 1)
@@ -264,6 +282,19 @@ function BBF.ClassicCastbar(castBar, unitType)
                 -- self.BorderShield:Show()
                 -- self.Border:SetAlpha(0)
                 -- AdjustBorderShieldSize(self)
+            end
+            if recolorCastbars then
+                local c = castbarColors[self.barType] or castbarColors.standard
+                local r, g, b = c[1], c[2], c[3]
+
+                self:SetStatusBarColor(r, g, b)
+                --self.Spark:SetVertexColor(r, g, b)
+            else
+                local c = defaultCastbarColors[self.barType] or defaultCastbarColors.standard
+                local r, g, b = c[1], c[2], c[3]
+
+                self:SetStatusBarColor(r, g, b)
+                --self.Spark:SetVertexColor(r, g, b)
             end
         end)
 
@@ -273,7 +304,7 @@ function BBF.ClassicCastbar(castBar, unitType)
 
         hooksecurefunc(castBar, "PlayFinishAnim", function(self)
             self:SetStatusBarTexture(classicCastbarTexture)
-            self:SetStatusBarColor(0, 1, 0, 1)
+            --self:SetStatusBarColor(0, 1, 0, 1)
             if castBar == PlayerCastingBarFrame then
                 AdjustFlash(castBar)
             else
@@ -366,9 +397,37 @@ function BBF.UpdateCastbars()
 
                         if BetterBlizzFramesDB.partyCastBarTestMode then
                             spellbar:SetStatusBarTexture(137012)
-                            spellbar:SetStatusBarColor(1, 0.7, 0, 1)
+                            if recolorCastbars then
+                                spellbar:SetStatusBarColor(castbarColors.standard[1], castbarColors.standard[2], castbarColors.standard[3], 1)
+                            else
+                                spellbar:SetStatusBarColor(1, 0.7, 0, 1)
+                            end
                             spellbar.Background:SetTexture("Interface\\RaidFrame\\Raid-Bar-Hp-Fill")
                             spellbar.Background:SetVertexColor(0, 0, 0, 0.6)
+                        end
+                    else
+                        spellbar.Text:ClearAllPoints()
+                        if BetterBlizzFramesDB.unitframeCastBarNoTextBorder then
+                            if not spellbar.TextBorderHidden then
+                                spellbar.TextBorderHidden = spellbar.TextBorder:GetParent()
+                            end
+                            spellbar.TextBorder:SetParent(BBF.hiddenFrame)
+                            spellbar.Text:SetPoint("CENTER", spellbar, "CENTER", 0, 0)
+                            if not spellbar.ogText then
+                                local font, size, flags = spellbar.Text:GetFont()
+                                spellbar.ogText = {font, size, flags}
+                                spellbar.Text:SetFont(font, size, "OUTLINE")
+                            end
+                        else
+                            if spellbar.TextBorderHidden then
+                                spellbar.TextBorder:SetParent(spellbar.TextBorderHidden)
+                                spellbar.TextBorderHidden = nil
+                            end
+                            if spellbar.ogText then
+                                spellbar.Text:SetFont(unpack(spellbar.ogText))
+                                spellbar.ogText = nil
+                            end
+                            spellbar.Text:SetPoint("CENTER", spellbar, "BOTTOM", 0, -5.5)
                         end
                     end
 
@@ -456,6 +515,29 @@ function BBF.UpdatePetCastbar()
         petSpellBar:SetScale(castbarScale)
         petSpellBar:SetWidth(width)
         petSpellBar:SetHeight(height)
+        petSpellBar.Text:ClearAllPoints()
+        if BetterBlizzFramesDB.unitframeCastBarNoTextBorder then
+            if not petSpellBar.TextBorderHidden then
+                petSpellBar.TextBorderHidden = petSpellBar.TextBorder:GetParent()
+            end
+            petSpellBar.TextBorder:SetParent(BBF.hiddenFrame)
+            petSpellBar.Text:SetPoint("CENTER", petSpellBar, "CENTER", 0, 0)
+            if not petSpellBar.ogText then
+                local font, size, flags = petSpellBar.Text:GetFont()
+                petSpellBar.ogText = {font, size, flags}
+                petSpellBar.Text:SetFont(font, size, "OUTLINE")
+            end
+        else
+            if petSpellBar.TextBorderHidden then
+                petSpellBar.TextBorder:SetParent(petSpellBar.TextBorderHidden)
+                petSpellBar.TextBorderHidden = nil
+            end
+            if petSpellBar.ogText then
+                petSpellBar.Text:SetFont(unpack(petSpellBar.ogText))
+                petSpellBar.ogText = nil
+            end
+            petSpellBar.Text:SetPoint("CENTER", petSpellBar, "BOTTOM", 0, -5.5)
+        end
 
         local petFrame = PetFrame
         if petFrame then
@@ -497,6 +579,13 @@ function BBF.CreateCastbars()
                 spellbar.BorderShield:SetPoint("RIGHT", spellbar, "LEFT", -1, -7)
                 spellbar.BorderShield:SetSize(29,33)
                 spellbar.BorderShield:SetScale(BetterBlizzFramesDB.partyCastBarIconScale)
+                if BetterBlizzFramesDB.unitframeCastBarNoTextBorder then
+                    spellbar.Text:ClearAllPoints()
+                    spellbar.Text:SetPoint("CENTER", spellbar, "CENTER", 0, 0)
+                    spellbar.TextBorder:SetParent(BBF.hiddenFrame)
+                    local font, size, flags = spellbar.Text:GetFont()
+                    spellbar.Text:SetFont(font, size, "OUTLINE")
+                end
             else
                 spellbar.TextBorder:SetAlpha(0)
             end
@@ -528,9 +617,10 @@ function BBF.CreateCastbars()
             spellBars[i] = spellbar
         end
         BBF.UpdateCastbars()
+        BBF.DarkModeCastbars()
         castBarsCreated = true
     end
-    if not petCastbarCreated and (BetterBlizzFramesDB.petCastbar or BetterBlizzFramesDB.petCastbarTestmode) then
+    if not petCastbarCreated and (BetterBlizzFramesDB.petCastbar or BetterBlizzFramesDB.petCastBarTestMode) then
         local petSpellBar = CreateFrame("StatusBar", "PetSpellBar", UIParent, "SmallCastingBarFrameTemplate")
         petSpellBar:SetScale(1)
 
@@ -549,6 +639,16 @@ function BBF.CreateCastbars()
         petSpellBar:SetScale(BetterBlizzFramesDB.petCastBarScale)
         petSpellBar:SetWidth(BetterBlizzFramesDB.petCastBarWidth)
         petSpellBar:SetHeight(BetterBlizzFramesDB.petCastBarHeight)
+
+        -- Handle unitframeCastBarNoTextBorder setting for pet castbar
+        if BetterBlizzFramesDB.unitframeCastBarNoTextBorder then
+            petSpellBar.Text:ClearAllPoints()
+            petSpellBar.Text:SetPoint("CENTER", petSpellBar, "CENTER", 0, 0)
+            petSpellBar.TextBorder:SetParent(BBF.hiddenFrame)
+            local font, size, flags = petSpellBar.Text:GetFont()
+            petSpellBar.Text:SetFont(font, size, "OUTLINE")
+        end
+
         Mixin(petSpellBar, SmoothStatusBarMixin)
         petSpellBar:SetMinMaxSmoothedValue(0, 100)
 
@@ -573,6 +673,7 @@ function BBF.CreateCastbars()
         spellBars["pet"] = petSpellBar
         petCastbarCreated = true
         BBF.UpdatePetCastbar()
+        BBF.DarkModeCastbars()
     end
 end
 
@@ -676,7 +777,7 @@ function BBF.petCastBarTestMode()
         end
     else
         -- Stop the timer when exiting test mode
-        if spellBars["pet"] then
+        if spellBars and spellBars["pet"] then
             if spellBars["pet"].tickTimer then
                 spellBars["pet"].tickTimer:Cancel()
                 spellBars["pet"].tickTimer = nil
@@ -778,23 +879,6 @@ function BBF.CastBarTimerCaller()
 end
 
 
-local targetSpellBarTexture = TargetFrameSpellBar:GetStatusBarTexture()
-local focusSpellBarTexture = FocusFrameSpellBar:GetStatusBarTexture()
-local targetCastbarEdgeHooked
-local focusCastbarEdgeHooked
-
-local highlightStartTime = BetterBlizzFramesDB.castBarInterruptHighlighterStartTime
-local highlightEndTime = BetterBlizzFramesDB.castBarInterruptHighlighterEndTime
-local edgeColor = BetterBlizzFramesDB.castBarInterruptHighlighterInterruptRGB
-local middleColor = BetterBlizzFramesDB.castBarInterruptHighlighterDontInterruptRGB
-local colorMiddle = BetterBlizzFramesDB.castBarInterruptHighlighterColorDontInterrupt
-local castBarNoInterruptColor = BetterBlizzFramesDB.castBarNoInterruptColor
-local castBarDelayedInterruptColor = BetterBlizzFramesDB.castBarDelayedInterruptColor
-local castBarRecolorInterrupt = BetterBlizzFramesDB.castBarRecolorInterrupt
-local castBarInterruptHighlighter = BetterBlizzFramesDB.castBarInterruptHighlighter
-local targetCastbarEdgeHighlight = BetterBlizzFramesDB.targetCastbarEdgeHighlight
-local focusCastbarEdgeHighlight = BetterBlizzFramesDB.focusCastbarEdgeHighlight
-
 local interruptSpells = {
     1766,  -- Kick (Rogue)
     2139,  -- Counterspell (Mage)
@@ -884,10 +968,9 @@ local function ColorOldCastbar(castBar)
     end
 end
 
-local val = 0
+
 function BBF.CastbarRecolorWidgets()
-    local classicFrames = C_AddOns.IsAddOnLoaded("ClassicFrames")
-    if BetterBlizzFramesDB.castBarInterruptHighlighter or BetterBlizzFramesDB.castBarDelayedInterruptColor then
+    local classicFrames = C_AddOns.IsAddOnLoaded("ClassicFrames")    if BetterBlizzFramesDB.castBarInterruptHighlighter or BetterBlizzFramesDB.castBarDelayedInterruptColor or BetterBlizzFramesDB.recolorCastbars then
         highlightStartTime = BetterBlizzFramesDB.castBarInterruptHighlighterStartTime
         highlightEndTime = BetterBlizzFramesDB.castBarInterruptHighlighterEndTime
         edgeColor = BetterBlizzFramesDB.castBarInterruptHighlighterInterruptRGB
@@ -899,15 +982,31 @@ function BBF.CastbarRecolorWidgets()
         castBarInterruptHighlighter = BetterBlizzFramesDB.castBarInterruptHighlighter
         targetCastbarEdgeHighlight = BetterBlizzFramesDB.targetCastbarEdgeHighlight and castBarInterruptHighlighter
         focusCastbarEdgeHighlight = BetterBlizzFramesDB.focusCastbarEdgeHighlight and castBarInterruptHighlighter
+        recolorCastbars = BetterBlizzFramesDB.recolorCastbars
+        castbarColors = {
+            standard        = BetterBlizzFramesDB.castbarCastColor,
+            interrupted     = { 1, 0, 0 },
+            channeled       = BetterBlizzFramesDB.castbarChannelColor,
+            uninterruptable = BetterBlizzFramesDB.castbarUninterruptableColor,
+        }
 
         local function NormalOnUpdate(self, unit, texture, shouldHighlightEdges)
             if not UnitCanAttack(unit, "player") then
-                texture:SetDesaturated(false)
-                if not classicFrames and not self.isClassicStyle then
-                    self:SetStatusBarColor(1, 1, 1)
+                if recolorCastbars then
+                    texture:SetDesaturated(true)
+
+                    local c = castbarColors[self.barType] or castbarColors.standard
+                    local r, g, b = c[1], c[2], c[3]
+
+                    self:SetStatusBarColor(r, g, b)
+                    self.Spark:SetVertexColor(r, g, b)
+                else
+                    texture:SetDesaturated(false)
+                    if not classicFrames and not self.isClassicStyle then
+                        self:SetStatusBarColor(1, 1, 1)
+                    end
+                    self.Spark:SetVertexColor(1, 1, 1)
                 end
-                self.Spark:SetVertexColor(1, 1, 1)
-                return
             end
 
             local name, _, _, startTime, endTime, _, _, notInterruptible, spellId = UnitCastingInfo(unit)
@@ -922,19 +1021,35 @@ function BBF.CastbarRecolorWidgets()
             if not name then
                 texture:SetDesaturated(false)
                 if not classicFrames and not self.isClassicStyle then
-                    self:SetStatusBarColor(1, 1, 1)
+                    if recolorCastbars then
+                        if self.barType == "interrupted" then
+                            texture:SetDesaturated(false)
+                            self:SetStatusBarColor(1, 1, 1)
+                        else
+                            local c = castbarColors[self.barType] or castbarColors.standard
+                            local r, g, b = c[1], c[2], c[3]
+
+                            self:SetStatusBarColor(r, g, b)
+                            --self.Spark:SetVertexColor(r, g, b)
+                        end
+                    else
+                        local c = defaultCastbarColors[self.barType] or defaultCastbarColors.standard
+                        local r, g, b = c[1], c[2], c[3]
+
+                        self:SetStatusBarColor(r, g, b)
+                    end
                 end
                 self.Spark:SetVertexColor(1, 1, 1)
                 return
             end
 
-            if castBarRecolorInterrupt then
+            if castBarRecolorInterrupt and not notInterruptible then
                 local colored
                 --for _, interruptSpellID in ipairs(interruptSpellIDs) do
                 if not knownInterruptSpellID then
                     GetInterruptSpell()
                 end
-                if knownInterruptSpellID  and not notInterruptible then
+                if knownInterruptSpellID then
                     local start, duration = BBF.TWWGetSpellCooldown(knownInterruptSpellID)
                     local cooldownRemaining = start + duration - GetTime()
                     local castRemaining = (endTime / 1000) - GetTime()
@@ -975,7 +1090,21 @@ function BBF.CastbarRecolorWidgets()
                             C_Timer.After(cooldownRemaining, function()
                                 if self then
                                     if not classicFrames and not self.isClassicStyle then
-                                        self:SetStatusBarColor(1, 1, 1)
+                                        if recolorCastbars then
+                                            if self.barType == "interrupted" then
+                                                texture:SetDesaturated(false)
+                                                self:SetStatusBarColor(1, 1, 1)
+                                            else
+                                                local c = castbarColors[self.barType] or castbarColors.standard
+                                                local r, g, b = c[1], c[2], c[3]
+
+                                                self:SetStatusBarColor(r, g, b)
+                                                --self.Spark:SetVertexColor(r, g, b)
+                                            end
+                                        else
+                                            texture:SetDesaturated(false)
+                                            self:SetStatusBarColor(1, 1, 1)
+                                        end
                                     end
                                     if self.interruptSark then
                                         self.interruptSark:Hide()
@@ -991,7 +1120,7 @@ function BBF.CastbarRecolorWidgets()
                 if colored then return end
             end
 
-            if shouldHighlightEdges then
+            if shouldHighlightEdges and not notInterruptible then
                 local currentTime = GetTime()
                 local startTimeSeconds = startTime / 1000
                 local endTimeSeconds = endTime / 1000
@@ -1009,17 +1138,41 @@ function BBF.CastbarRecolorWidgets()
                     else
                         texture:SetDesaturated(false)
                         if not classicFrames and not self.isClassicStyle then
-                            self:SetStatusBarColor(1, 1, 1)
+                            if recolorCastbars then
+                                texture:SetDesaturated(true)
+
+                                local c = castbarColors[self.barType] or castbarColors.standard
+                                local r, g, b = c[1], c[2], c[3]
+
+                                self:SetStatusBarColor(r, g, b)
+                                self.Spark:SetVertexColor(r, g, b)
+                            else
+                                texture:SetDesaturated(false)
+                                if not classicFrames and not self.isClassicStyle then
+                                    self:SetStatusBarColor(1, 1, 1)
+                                end
+                                self.Spark:SetVertexColor(1, 1, 1)
+                            end
                         end
                     end
                     self.Spark:SetVertexColor(1, 1, 1)
                 end
             else
-                texture:SetDesaturated(false)
-                if not classicFrames and not self.isClassicStyle then
-                    self:SetStatusBarColor(1, 1, 1)
+                if recolorCastbars then
+                    texture:SetDesaturated(true)
+
+                    local c = castbarColors[self.barType] or castbarColors.standard
+                    local r, g, b = c[1], c[2], c[3]
+
+                    self:SetStatusBarColor(r, g, b)
+                    self.Spark:SetVertexColor(r, g, b)
+                else
+                    texture:SetDesaturated(false)
+                    if not classicFrames and not self.isClassicStyle then
+                        self:SetStatusBarColor(1, 1, 1)
+                    end
+                    self.Spark:SetVertexColor(1, 1, 1)
                 end
-                self.Spark:SetVertexColor(1, 1, 1)
             end
         end
 
@@ -1114,12 +1267,33 @@ function BBF.CastbarRecolorWidgets()
 
 
         GetInterruptSpell()
-        if targetCastbarEdgeHighlight or castBarRecolorInterrupt then
+        if targetCastbarEdgeHighlight or castBarRecolorInterrupt or recolorCastbars then
             BBF.HookCastbarInterruptHighlight(TargetFrameSpellBar, "target", targetSpellBarTexture, targetCastbarEdgeHighlight)
         end
 
-        if focusCastbarEdgeHighlight or castBarRecolorInterrupt then
+        if focusCastbarEdgeHighlight or castBarRecolorInterrupt or recolorCastbars then
             BBF.HookCastbarInterruptHighlight(FocusFrameSpellBar, "focus", focusSpellBarTexture, focusCastbarEdgeHighlight)
+        end
+
+        if recolorCastbars and not BetterBlizzFramesDB.classicCastbarsPlayer and not BBF.RecolorCastbarHooked then
+            BBF.RecolorCastbarHooked = true
+            local playerCastBarTexture = PlayerCastingBarFrame:GetStatusBarTexture()
+            PlayerCastingBarFrame:HookScript("OnEvent", function(self)
+                if recolorCastbars then
+                    if self.barType == "interrupted" and not self.isClassicStyle then
+                        playerCastBarTexture:SetDesaturated(false)
+                        self:SetStatusBarColor(1, 1, 1)
+                    else
+                        local c = castbarColors[self.barType] or castbarColors.standard
+                        local r, g, b = c[1], c[2], c[3]
+                        playerCastBarTexture:SetDesaturated(true)
+                        self:SetStatusBarColor(r, g, b)
+                    end
+                else
+                    playerCastBarTexture:SetDesaturated(false)
+                    self:SetStatusBarColor(1, 1, 1)
+                end
+            end)
         end
 
         if BetterBlizzFramesDB.castBarRecolorInterrupt and BetterBlizzFramesDB.castBarRecolorInterruptArenaFrames then
@@ -1368,7 +1542,28 @@ function BBF.ChangeCastbarSizes()
         TargetFrameSpellBar.BorderShield:SetPoint("CENTER", TargetFrameSpellBar.Icon, "CENTER", 0, 0)
         TargetFrameSpellBar.BorderShield:SetScale(BetterBlizzFramesDB.targetCastBarIconScale)
         TargetFrameSpellBar.Text:ClearAllPoints()
-        TargetFrameSpellBar.Text:SetPoint("BOTTOM", TargetFrameSpellBar, "BOTTOM", 0, -14)
+        if BetterBlizzFramesDB.unitframeCastBarNoTextBorder then
+            if not TargetFrameSpellBar.TextBorderHidden then
+                TargetFrameSpellBar.TextBorderHidden = TargetFrameSpellBar.TextBorder:GetParent()
+            end
+            TargetFrameSpellBar.TextBorder:SetParent(BBF.hiddenFrame)
+            TargetFrameSpellBar.Text:SetPoint("CENTER", TargetFrameSpellBar, "CENTER", 0, 0)
+            if not TargetFrameSpellBar.ogText then
+                local font, size, flags = TargetFrameSpellBar.Text:GetFont()
+                TargetFrameSpellBar.ogText = {font, size, flags}
+                TargetFrameSpellBar.Text:SetFont(font, size, "OUTLINE")
+            end
+        else
+            if TargetFrameSpellBar.TextBorderHidden then
+                TargetFrameSpellBar.TextBorder:SetParent(TargetFrameSpellBar.TextBorderHidden)
+                TargetFrameSpellBar.TextBorderHidden = nil
+            end
+            if TargetFrameSpellBar.ogText then
+                TargetFrameSpellBar.Text:SetFont(unpack(TargetFrameSpellBar.ogText))
+                TargetFrameSpellBar.ogText = nil
+            end
+            TargetFrameSpellBar.Text:SetPoint("BOTTOM", TargetFrameSpellBar, "BOTTOM", 0, -14)
+        end
     end
     TargetFrameSpellBar.Text:SetWidth(BetterBlizzFramesDB.targetCastBarWidth)
 
@@ -1386,7 +1581,28 @@ function BBF.ChangeCastbarSizes()
         FocusFrameSpellBar.BorderShield:SetPoint("CENTER", FocusFrameSpellBar.Icon, "CENTER", 0, 0)
         FocusFrameSpellBar.BorderShield:SetScale(BetterBlizzFramesDB.focusCastBarIconScale)
         FocusFrameSpellBar.Text:ClearAllPoints()
-        FocusFrameSpellBar.Text:SetPoint("BOTTOM", FocusFrameSpellBar, "BOTTOM", 0, -14)
+        if BetterBlizzFramesDB.unitframeCastBarNoTextBorder then
+            if not FocusFrameSpellBar.TextBorderHidden then
+                FocusFrameSpellBar.TextBorderHidden = FocusFrameSpellBar.TextBorder:GetParent()
+            end
+            FocusFrameSpellBar.TextBorder:SetParent(BBF.hiddenFrame)
+            FocusFrameSpellBar.Text:SetPoint("CENTER", FocusFrameSpellBar, "CENTER", 0, 0)
+            if not FocusFrameSpellBar.ogText then
+                local font, size, flags = FocusFrameSpellBar.Text:GetFont()
+                FocusFrameSpellBar.ogText = {font, size, flags}
+                FocusFrameSpellBar.Text:SetFont(font, size, "OUTLINE")
+            end
+        else
+            if FocusFrameSpellBar.TextBorderHidden then
+                FocusFrameSpellBar.TextBorder:SetParent(FocusFrameSpellBar.TextBorderHidden)
+                FocusFrameSpellBar.TextBorderHidden = nil
+            end
+            if FocusFrameSpellBar.ogText then
+                FocusFrameSpellBar.Text:SetFont(unpack(FocusFrameSpellBar.ogText))
+                FocusFrameSpellBar.ogText = nil
+            end
+            FocusFrameSpellBar.Text:SetPoint("BOTTOM", FocusFrameSpellBar, "BOTTOM", 0, -14)
+        end
     end
     FocusFrameSpellBar.Text:SetWidth(BetterBlizzFramesDB.focusCastBarWidth)
 
@@ -1449,8 +1665,18 @@ function BBF.HookCastbarsForEvoker()
                 if self.barType == "uninterruptable" then
                     if self.ChargeTier1 then
                         if self.isSArena then
-                            self:SetStatusBarTexture("Interface\\RaidFrame\\Raid-Bar-Hp-Fill")
-                            self:SetStatusBarColor(0.7, 0.7, 0.7, 1)
+                            self.SetStatusBarTexture((sArenaMixin and sArenaMixin.castTexture) or "Interface\\RaidFrame\\Raid-Bar-Hp-Fill")
+                            if recolorCastbars then
+                                local c = castbarColors[self.barType] or castbarColors.standard
+                                local r, g, b = c[1], c[2], c[3]
+
+                                self:SetStatusBarColor(r, g, b)
+                            else
+                                local c = defaultCastbarColors[self.barType] or defaultCastbarColors.standard
+                                local r, g, b = c[1], c[2], c[3]
+
+                                self:SetStatusBarColor(r, g, b)
+                            end
                         else
                             self:SetStatusBarTexture("UI-CastingBar-Uninterruptable")
                         end
@@ -1458,8 +1684,16 @@ function BBF.HookCastbarsForEvoker()
                     end
                 elseif self.barType == "empowered" then
                     if self.isSArena then
-                        self:SetStatusBarTexture("Interface\\RaidFrame\\Raid-Bar-Hp-Fill")
-                        self:SetStatusBarColor(1, 0.7, 0, 1)
+                        self.SetStatusBarTexture((sArenaMixin and sArenaMixin.castTexture) or "Interface\\RaidFrame\\Raid-Bar-Hp-Fill")
+                        if recolorCastbars then
+                            local c = castbarColors[self.barType] or castbarColors.standard
+                            local r, g, b = c[1], c[2], c[3]
+                            self:SetStatusBarColor(r, g, b)
+                        else
+                            local c = defaultCastbarColors[self.barType] or defaultCastbarColors.standard
+                            local r, g, b = c[1], c[2], c[3]
+                            self:SetStatusBarColor(r, g, b)
+                        end
                     else
                         self:SetStatusBarTexture("ui-castingbar-filling-standard")
                     end

@@ -22,6 +22,17 @@ local function Nop(...)
 end
 API.Nop = Nop;
 
+
+--Midnight
+local issecretvalue = issecretvalue or function(_) return false end;
+local canaccessvalue = canaccessvalue or function(_) return true end;
+API.Secret_IsSecret = issecretvalue;
+
+function API.Secret_CanAccess(v)
+    return canaccessvalue(v) and v
+end
+
+
 do  -- Table
     local function Mixin(object, ...)
         for i = 1, select("#", ...) do
@@ -124,7 +135,7 @@ do  -- String
 
     local function GetUnitIDGeneral(unit)
         local guid = UnitGUID(unit);
-        if guid then
+        if API.Secret_CanAccess(guid) then
             local unitType, id = match(guid, "(%a+)%-0%-%d*%-%d*%-%d*%-(%d*)");
             if id and unitType and ValidUnitTypes[unitType] then
                 return tonumber(id)
@@ -165,6 +176,15 @@ do  -- String
             if text ~= "" then
                 return text
             end
+        end
+    end
+
+    local UnitName = UnitName;
+
+    function API.Secret_GetUnitName(unit)
+        local name = UnitName(unit);
+        if canaccessvalue(name) and name and name ~= "" then
+            return name
         end
     end
 end
@@ -2261,6 +2281,27 @@ do  -- System
 
         TopBannerManager_BannerFinished();
     end
+
+    function API.AddFrameToUISpecialFrames(frame, state)
+        local frameName = frame:GetName();
+        if not frameName then return end;
+
+        if state then
+            for i, name in ipairs(UISpecialFrames) do
+                if name == frameName then
+                    return
+                end
+            end
+            table.insert(UISpecialFrames, frameName);
+        else
+            for i, name in ipairs(UISpecialFrames) do
+                if name == frameName then
+                    table.remove(UISpecialFrames, i);
+                    return
+                end
+            end
+        end
+    end
 end
 
 do  -- Player
@@ -2398,6 +2439,10 @@ do  -- ObjectPool
         return self.activeObjects
     end
 
+    function ObjectPoolMixin:EnumerateActive()
+        return ipairs(self.activeObjects)
+    end
+
     local function CreateObjectPool(createObjectFunc, onRemovedFunc, onAcquiredFunc)
         local pool = {};
         API.Mixin(pool, ObjectPoolMixin);
@@ -2421,20 +2466,55 @@ do  -- ObjectPool
 end
 
 do  -- Transmog
-    local GetItemInfo = C_TransmogCollection.GetItemInfo;
-    local PlayerKnowsSource = C_TransmogCollection.PlayerHasTransmogItemModifiedAppearance;
+    if addon.IsToCVersionEqualOrNewerThan(40000) then
+        local GetSourceInfo = C_TransmogCollection.GetSourceInfo;
+        local GetAllAppearanceSources = C_TransmogCollection.GetAllAppearanceSources;
+        local GetItemInfo = C_TransmogCollection.GetItemInfo;
+        local PlayerKnowsSource = C_TransmogCollection.PlayerHasTransmogItemModifiedAppearance;
 
-    local function IsUncollectedTransmogByItemInfo(itemInfo)
-        --C_TransmogCollection.PlayerHasTransmogByItemInfo isn't reliable
-        local visualID, sourceID =GetItemInfo(itemInfo);
-        if sourceID and sourceID ~= 0 and (not PlayerKnowsSource(sourceID)) then
-            return true
+
+        function API.IsUncollectedTransmogByItemInfo(itemInfo)
+            --C_TransmogCollection.PlayerHasTransmogByItemInfo isn't reliable
+            local visualID, sourceID = GetItemInfo(itemInfo);
+            if sourceID and sourceID ~= 0 and (not PlayerKnowsSource(sourceID)) then
+                return true
+            end
         end
-    end
-    API.IsUncollectedTransmogByItemInfo = IsUncollectedTransmogByItemInfo
 
-    if not addon.IsToCVersionEqualOrNewerThan(40000) then
+
+        function API.IsAppearanceCollected(appearanceID)
+            local sources = GetAllAppearanceSources(appearanceID);
+            if sources then
+                for _, itemModifiedAppearanceID in ipairs(sources) do
+                    local sourceInfo = GetSourceInfo(itemModifiedAppearanceID);
+                    if sourceInfo and sourceInfo.isCollected then
+                        return true
+                    end
+                end
+            end
+            return false
+        end
+
+        function API.GetNumCollectedAppearanceSources(appearanceID)
+            local sources = GetAllAppearanceSources(appearanceID);
+            local numCollected = 0;
+            local numTotal = 0;
+            if sources then
+                for _, itemModifiedAppearanceID in ipairs(sources) do
+                    local sourceInfo = GetSourceInfo(itemModifiedAppearanceID);
+                    if sourceInfo then
+                        if sourceInfo.isCollected then
+                            numCollected = numCollected + 1;
+                        end
+                        numTotal = numTotal;
+                    end
+                end
+            end
+            return numCollected, numTotal
+        end
+    else
         API.IsUncollectedTransmogByItemInfo = Nop;
+        API.IsAppearanceCollected = Nop;
     end
 end
 
@@ -4144,6 +4224,7 @@ do  --Delves
         EL:RegisterEvent("PLAYER_ENTERING_WORLD");
 
         function EL:UpdateInDelveStatus()
+            --print("IsInDelves", IsInDelves());
             if IsInDelves() then
                 self:RegisterEvent("PLAYER_MAP_CHANGED");
                 self:RegisterEvent("PLAYER_ENTERING_WORLD");
@@ -4165,8 +4246,13 @@ do  --Delves
         end
 
         function EL:OnUpdate(elapsed)
-            self:SetScript("OnUpdate", nil);
-            self:UpdateInDelveStatus();
+            self.t = self.t + elapsed;
+            if self.t > 0.5 then
+                --Mandatory delay because IsPartyWalkIn still returns true the moment you leave a delve
+                self.t = 0;
+                self:SetScript("OnUpdate", nil);
+                self:UpdateInDelveStatus();
+            end
         end
 
         function EL:OnEvent(event, ...)
@@ -4197,8 +4283,8 @@ do  --FocusSolver (Run something when being hovered long enough)
     end
 
     function FocusSolverMixin:Stop()
-        self.t = 0;
-        self:SetScript("OnUpdate", self.OnUpdate);
+        self.t = nil;
+        self:SetScript("OnUpdate", nil);
         self:UnregisterEvent("MODIFIER_STATE_CHANGED");
     end
 

@@ -4,6 +4,38 @@ To see all commits, including all alpha changes, [***go here***](https://github.
 
 ## Releases
 
+#### 2.6.2 (2025-11-10)
+
+- Change timer logic of the COMPANION_UPDATE func (pick last) and add 0.2s
+    - Possibly this helps bulletproofing the correct pet restore after SetPetLoadOutInfo summonings by effectively creating more room between SetPetLoadOutInfo and save_pet.
+
+#### 2.6.1 (2025-11-05)
+
+- Mitigate the broken scroll behavior of Blizz’s chat addon by splitting also the body parts of status and help display into single-line prints.
+- Fix `/pw` without args not displaying anything (should display help and status again).
+- Some cosmetic changes to the msg displays.
+
+#### 2.6.0 (2025-11-05)
+
+- **New: Multiple “previous pets” instead of just one.** See it as history of your recently summoned pets:
+    - The existing “previous pet” command (`/pw p` or your keybind) now cycles through the recent pets (and the “current” one), instead of just swapping previous/current back and forth. 
+    - Default is 3. But you can change the number of recorded recent pets with `/pw p <number>` between 1 and 20 (global setting).
+        - To replicate the old behavior, just set it to 1.
+    - The history is independent of any favorites or auto-summoning, i.e., it remembers also your manually summoned pets.
+    - This involves a significant change to the save-pet mechanics. Bugs might still be alive; please report them to the [GitHub Issues](https://github.com/tflo/PetWalker/issues) page of the addon.
+- Better database handling, cleanup; migrate obsolete entries.
+    - You might loose some data from your existing SV file. I hope not, but it might happen.
+- Updated ReadMe/description.
+
+#### 2.5.16 (2025-11-04)
+
+- Improved icon 64x64.
+
+#### 2.5.15 (2025-11-04)
+
+- Seems we messed up the scope of `pet_restored` in ba20a32.
+- toc: add 110207.
+
 #### 2.5.14 (2025-10-07)
 
 - toc bumped to 110205, no changes.

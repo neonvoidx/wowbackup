@@ -1,3 +1,4 @@
+if BBF.isMidnight then return end
 function BBF.DruidBlueComboPoints()
     if not BetterBlizzFramesDB.druidOverstacks and not BetterBlizzFramesDB.legacyBlueComboPoints then return end
     if BBF.druidBlueCombos then return end

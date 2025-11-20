@@ -8,6 +8,7 @@ SimulationCraftDB = {
 ["Corsic - Mal'Ganis"] = "Corsic - Mal'Ganis",
 ["Auteist - Tichondrius"] = "Auteist - Tichondrius",
 ["Vansthalysia - Mal'Ganis"] = "Vansthalysia - Mal'Ganis",
+["Ofpusstwo - Tichondrius"] = "Ofpusstwo - Tichondrius",
 ["Cullnvoid - Tichondrius"] = "Cullnvoid - Tichondrius",
 ["Stormclout - Mal'Ganis"] = "Stormclout - Mal'Ganis",
 ["Rakeist - Mal'Ganis"] = "Rakeist - Mal'Ganis",
@@ -19,25 +20,29 @@ SimulationCraftDB = {
 ["Mäñýfäçëð - Tichondrius"] = "Mäñýfäçëð - Tichondrius",
 ["Auteist - Mal'Ganis"] = "Auteist - Mal'Ganis",
 ["Ofpuss - Mal'Ganis"] = "Ofpuss - Mal'Ganis",
+["Gehyo - Tichondrius"] = "Gehyo - Tichondrius",
 ["Smaugchamp - Mal'Ganis"] = "Smaugchamp - Mal'Ganis",
 ["Choppiez - Mal'Ganis"] = "Choppiez - Mal'Ganis",
 ["Starstypeshi - Tichondrius"] = "Starstypeshi - Tichondrius",
 ["Tampacks - Mal'Ganis"] = "Tampacks - Mal'Ganis",
 ["Kitedbro - Mal'Ganis"] = "Kitedbro - Mal'Ganis",
+["Crillessana - Mal'Ganis"] = "Crillessana - Mal'Ganis",
 ["Mäñýfäçëð - Mal'Ganis"] = "Mäñýfäçëð - Mal'Ganis",
 ["Hellavator - Mal'Ganis"] = "Hellavator - Mal'Ganis",
 ["Charizhard - Mal'Ganis"] = "Charizhard - Mal'Ganis",
 ["Hellavator - Tichondrius"] = "Hellavator - Tichondrius",
+["Praisesun - Tichondrius"] = "Praisesun - Tichondrius",
+["Smaugchamp - Tichondrius"] = "Smaugchamp - Tichondrius",
 ["Stormclout - Tichondrius"] = "Stormclout - Tichondrius",
 ["Reedingo - Mal'Ganis"] = "Reedingo - Mal'Ganis",
-["Smaugchamp - Tichondrius"] = "Smaugchamp - Tichondrius",
 ["Choppiez - Tichondrius"] = "Choppiez - Tichondrius",
 ["Thickshape - Mal'Ganis"] = "Thickshape - Mal'Ganis",
-["Reedmonchan - Mal'Ganis"] = "Reedmonchan - Mal'Ganis",
 ["Gehyo - Mal'Ganis"] = "Gehyo - Mal'Ganis",
-["Smashkeys - Mal'Ganis"] = "Smashkeys - Mal'Ganis",
+["Reedmonchan - Mal'Ganis"] = "Reedmonchan - Mal'Ganis",
 ["Neonvoid - Mal'Ganis"] = "Neonvoid - Mal'Ganis",
-["Praisesun - Tichondrius"] = "Praisesun - Tichondrius",
+["Smashkeys - Mal'Ganis"] = "Smashkeys - Mal'Ganis",
+["Heilsatan - Tichondrius"] = "Heilsatan - Tichondrius",
+["Clevagirl - Mal'Ganis"] = "Clevagirl - Mal'Ganis",
 },
 ["profiles"] = {
 ["Månyfaced - Mal'Ganis"] = {
@@ -63,14 +68,20 @@ SimulationCraftDB = {
 },
 ["Vansthalysia - Mal'Ganis"] = {
 },
+["Ofpusstwo - Tichondrius"] = {
+["minimap"] = {
+["minimapPos"] = 189.174892982798,
+["hide"] = true,
+},
+},
 ["Cullnvoid - Tichondrius"] = {
 },
 ["Stormclout - Mal'Ganis"] = {
-["minimap"] = {
-["hide"] = true,
-},
 ["frame"] = {
 ["ofsy"] = -0.833363950252533,
+},
+["minimap"] = {
+["hide"] = true,
 },
 },
 ["Rakeist - Mal'Ganis"] = {
@@ -103,17 +114,19 @@ SimulationCraftDB = {
 },
 },
 ["Auteist - Mal'Ganis"] = {
-["minimap"] = {
-["hide"] = true,
-},
 ["frame"] = {
 ["ofsy"] = 0.833363950252533,
+},
+["minimap"] = {
+["hide"] = true,
 },
 },
 ["Ofpuss - Mal'Ganis"] = {
 ["minimap"] = {
 ["hide"] = true,
 },
+},
+["Gehyo - Tichondrius"] = {
 },
 ["Smaugchamp - Mal'Ganis"] = {
 ["minimap"] = {
@@ -138,6 +151,8 @@ SimulationCraftDB = {
 },
 ["Kitedbro - Mal'Ganis"] = {
 },
+["Crillessana - Mal'Ganis"] = {
+},
 ["Mäñýfäçëð - Mal'Ganis"] = {
 ["minimap"] = {
 ["hide"] = true,
@@ -155,17 +170,22 @@ SimulationCraftDB = {
 ["hide"] = true,
 },
 },
+["Praisesun - Tichondrius"] = {
+["minimap"] = {
+["hide"] = true,
+},
+},
+["Smaugchamp - Tichondrius"] = {
+["minimap"] = {
+["hide"] = true,
+},
+},
 ["Stormclout - Tichondrius"] = {
 ["minimap"] = {
 ["hide"] = true,
 },
 },
 ["Reedingo - Mal'Ganis"] = {
-["minimap"] = {
-["hide"] = true,
-},
-},
-["Smaugchamp - Tichondrius"] = {
 ["minimap"] = {
 ["hide"] = true,
 },
@@ -180,17 +200,15 @@ SimulationCraftDB = {
 ["hide"] = true,
 },
 },
-["Reedmonchan - Mal'Ganis"] = {
-["minimap"] = {
-["hide"] = true,
-},
-},
 ["Gehyo - Mal'Ganis"] = {
 ["minimap"] = {
 ["hide"] = true,
 },
 },
-["Smashkeys - Mal'Ganis"] = {
+["Reedmonchan - Mal'Ganis"] = {
+["minimap"] = {
+["hide"] = true,
+},
 },
 ["Neonvoid - Mal'Ganis"] = {
 ["minimap"] = {
@@ -198,10 +216,11 @@ SimulationCraftDB = {
 ["hide"] = true,
 },
 },
-["Praisesun - Tichondrius"] = {
-["minimap"] = {
-["hide"] = true,
+["Smashkeys - Mal'Ganis"] = {
 },
+["Heilsatan - Tichondrius"] = {
+},
+["Clevagirl - Mal'Ganis"] = {
 },
 },
 }

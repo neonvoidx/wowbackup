@@ -1,3 +1,4 @@
+if BBF.isMidnight then return end
 -- I did not know what a variable was when I started. I know a little bit more now and I am so sorry.
 
 local addonVersion = "1.00" --too afraid to to touch for now
@@ -223,6 +224,9 @@ local defaultSettings = {
     purgeTextureColorRGB = {0, 0.92, 1, 0.85},
     hiddenIconDirection = "BOTTOM",
     increaseAuraStrata = true,
+    castbarCastColor  = {1, 0.7, 0},
+    castbarChannelColor = {0, 1, 0},
+    castbarUninterruptableColor = {0.7, 0.7, 0.7},
 
     frameAurasXPos = 0,
     frameAurasYPos = 0,
@@ -410,6 +414,10 @@ StaticPopupDialogs["CONFIRM_RESET_BETTERBLIZZFRAMESDB"] = {
 local function SendUpdateMessage()
     if sendUpdate then
         if not BetterBlizzFramesDB.scStart then
+            if BetterBlizzFramesDB.skipUpdateMsg then
+                BetterBlizzFramesDB.skipUpdateMsg = nil
+                return
+            end
             C_Timer.After(7, function()
                 --StaticPopup_Show("BBF_NEW_VERSION")
                 if BetterBlizzFramesDB.enableLegacyComboPoints and not BetterBlizzFramesDB.classicFrames then
@@ -2029,8 +2037,25 @@ function BBF.GenericLegacyComboSupport()
     local function UpdateGenericLegacyCombo()
         local powerType = legacyComboPowerTypes[class]
         if not powerType then return end
-        local comboPoints = UnitPower("player", powerType)
-        local maxComboPoints = UnitPowerMax("player", powerType)
+
+        local comboPoints, maxComboPoints
+
+        -- Special handling for Death Knight runes
+        if class == "DEATHKNIGHT" then
+            comboPoints = 0
+            maxComboPoints = 6
+            -- Count available runes
+            for i = 1, maxComboPoints do
+                local start, duration, runeReady = GetRuneCooldown(i)
+                if runeReady or (start == 0 and duration == 0) then
+                    comboPoints = comboPoints + 1
+                end
+            end
+        else
+            comboPoints = UnitPower("player", powerType)
+            maxComboPoints = UnitPowerMax("player", powerType)
+        end
+
         local frame = ComboFrame
         local comboIndex = GetLegacyComboStartIndex()
         if not comboIndex then return end
@@ -2082,6 +2107,16 @@ function BBF.GenericLegacyComboSupport()
     end
 
     hooksecurefunc("ComboFrame_Update", UpdateGenericLegacyCombo)
+
+    -- Special handling for Death Knight rune updates
+    if class == "DEATHKNIGHT" then
+        local runeUpdateFrame = CreateFrame("Frame")
+        runeUpdateFrame:RegisterEvent("RUNE_POWER_UPDATE")
+        runeUpdateFrame:RegisterEvent("RUNE_TYPE_UPDATE")
+        runeUpdateFrame:SetScript("OnEvent", function(self, event, runeIndex)
+            UpdateGenericLegacyCombo()
+        end)
+    end
 end
 
 
@@ -2101,7 +2136,7 @@ function BBF.UpdateLegacyComboPosition()
 end
 
 function BBF.FixLegacyComboPointsLocation()
-    if BetterBlizzFramesDB.legacyCombosTurnedOff then
+    if BetterBlizzFramesDB.legacyCombosTurnedOff and not BetterBlizzFramesDB.enableLegacyComboPoints then
         C_CVar.SetCVar("comboPointLocation", "2")
         return
     end
@@ -2751,10 +2786,13 @@ BBF.LSM = LSM
 BBF.allLocales = LSM.LOCALE_BIT_western+LSM.LOCALE_BIT_ruRU+LSM.LOCALE_BIT_zhCN+LSM.LOCALE_BIT_zhTW+LSM.LOCALE_BIT_koKR
 LSM:Register("statusbar", "Blizzard DF", [[Interface\TargetingFrame\UI-TargetingFrame-BarFill]])
 LSM:Register("statusbar", "Blizzard CF", [[Interface\AddOns\BetterBlizzFrames\media\ui-statusbar-cf]])
-
+LSM:Register("statusbar", "Blizzard Retail Bar", [[Interface\AddOns\BetterBlizzFrames\media\blizzTex\BlizzardRetailBar]])
+LSM:Register("statusbar", "Blizzard Retail Bar Crop", [[Interface\AddOns\BetterBlizzFrames\media\blizzTex\BlizzardRetailBarCrop]])
+LSM:Register("statusbar", "Blizzard Retail Bar Crop 2", [[Interface\AddOns\BetterBlizzFrames\media\blizzTex\BlizzardRetailBarCrop2]])
+LSM:Register("statusbar", "Smooth", [[Interface\Addons\BetterBlizzFrames\media\smooth]])
 
 local texture = "Interface\\Addons\\BetterBlizzPlates\\media\\DragonflightTextureHD"
-local manaTexture = "Interface\\Addons\\BetterBlizzPlates\\media\\DragonflightTextureHD"
+local manaTexture = "Interface\\Addons\\BetterBlizzPlates\\media\\blizzTex\\BlizzardRetailBarCrop2"
 BBF.manaTexture = manaTexture
 local raidHpTexture = "Interface\\Addons\\BetterBlizzPlates\\media\\DragonflightTextureHD"
 local raidManaTexture = "Interface\\Addons\\BetterBlizzPlates\\media\\DragonflightTextureHD"
@@ -2990,6 +3028,84 @@ function BBF.HookUnitFrameTextures()
 
         BBF.UpdateClassicCastbarTexture(castbarTexture)
 
+        if db.changeUnitFrameCastbarTexture and not BBF.castbarTexturesHooked then
+            local function ApplyCastbarTexture(statusBar)
+                local originalTexture = statusBar:GetStatusBarTexture()
+                local originalLayer = originalTexture:GetDrawLayer()
+                statusBar:SetStatusBarTexture(castbarTexture)
+                originalTexture:SetDrawLayer(originalLayer)
+
+                local castTexture = statusBar:GetStatusBarTexture()
+                statusBar.MaskTexture = statusBar:CreateMaskTexture()
+                statusBar.MaskTexture:SetTexture("Interface\\AddOns\\BetterBlizzFrames\\media\\blizzTex\\RetailCastMask.tga",
+                    "CLAMPTOBLACKADDITIVE", "CLAMPTOBLACKADDITIVE")
+                statusBar.MaskTexture:SetPoint("TOPLEFT", statusBar, "TOPLEFT", -1, 0)
+                statusBar.MaskTexture:SetPoint("BOTTOMRIGHT", statusBar, "BOTTOMRIGHT", 1, 0)
+                statusBar.MaskTexture:Show()
+                castTexture:AddMaskTexture(statusBar.MaskTexture)
+
+                local bg = statusBar.Background
+                bg:ClearAllPoints()
+                bg:SetPoint("TOPLEFT", bg:GetParent(), "TOPLEFT", -1, 1)
+                bg:SetPoint("BOTTOMRIGHT", bg:GetParent(), "BOTTOMRIGHT", 1, -1)
+
+                if not BBF.RecolorCastbarHooked then
+                    statusBar:HookScript("OnEvent", function(self)
+                        self:SetStatusBarTexture(castbarTexture)
+                        if self.barType == "uninterruptable" then
+                            self:SetStatusBarColor(0.7, 0.7, 0.7)
+                        elseif self.barType == "channel" then
+                            self:SetStatusBarColor(0, 1, 0)
+                        elseif self.barType == "interrupted" then
+                            self:SetStatusBarColor(1, 0, 0)
+                        else
+                            self:SetStatusBarColor(1, 0.7, 0)
+                        end
+                    end)
+                else
+                    statusBar:HookScript("OnEvent", function(self)
+                        self:SetStatusBarTexture(castbarTexture)
+                    end)
+                end
+
+                hooksecurefunc(statusBar, "PlayFinishAnim", function(self)
+                    self:SetStatusBarTexture(castbarTexture)
+                end)
+
+                statusBar.isClassicStyle = true
+            end
+
+            if not db.classicCastbarsPlayer then
+                ApplyCastbarTexture(PlayerCastingBarFrame)
+            end
+            if not db.classicCastbars then
+                ApplyCastbarTexture(TargetFrameSpellBar)
+                ApplyCastbarTexture(FocusFrameSpellBar)
+            end
+
+            if db.showPartyCastbar and not db.classicCastbarsParty then
+                C_Timer.After(1, function()
+                    for i = 1, 5 do
+                        local partyCastbar = _G["Party"..i.."SpellBar"]
+                        if partyCastbar then
+                            ApplyCastbarTexture(partyCastbar)
+                        end
+                    end
+                end)
+            end
+
+            if db.petCastbar then
+                C_Timer.After(1, function()
+                    local petCastBar = _G["PetSpellBar"]
+                    if petCastBar then
+                        ApplyCastbarTexture(petCastBar)
+                    end
+                end)
+            end
+
+            BBF.castbarTexturesHooked = true
+        end
+
         -- Apply green color on white texture if class color is not enabled
         if not db.classColorFrames then
             local healthbars = {
@@ -3127,9 +3243,9 @@ function BBF.HookTextures()
 
 end
 
-
 function BBF.SymmetricPlayerFrame()
     if not BetterBlizzFramesDB.symmetricPlayerFrame then return end
+    if BetterBlizzFramesDB.noPortraitModes or BetterBlizzFramesDB.noPortraitPixelBorder then return end
     if BetterBlizzFramesDB.classicFrames then
         print("BBF: Symmetric Player Frame not available with Classic Frames setting.")
         return
@@ -3444,11 +3560,27 @@ function BBF.AddBackgroundTextureToUnitFrames(frame, tot)
     end
 
     local color = BetterBlizzFramesDB.unitFrameBgTextureColor
+    local noPortrait = BetterBlizzFramesDB.noPortraitModes
+    local noPortraitBg = noPortrait and frame.noPortraitMode and frame.noPortraitMode.Background
+
     if frame.bbfBgTexture then
         frame.bbfBgTexture:Show()
         frame.bbfBgTexture:SetColorTexture(unpack(color))
         return
     end
+
+    if noPortraitBg then
+        noPortraitBg:SetAlpha(0)
+
+        local bgTex = frame:CreateTexture(nil, "BACKGROUND", nil, -1)
+        bgTex:SetColorTexture(unpack(color))
+        bgTex:SetPoint("TOPLEFT", noPortraitBg, "TOPLEFT", -1, 1)
+        bgTex:SetPoint("BOTTOMRIGHT", noPortraitBg, "BOTTOMRIGHT", 1, -1)
+
+        frame.bbfBgTexture = bgTex
+        return
+    end
+
     local EF = C_AddOns.IsAddOnLoaded("EasyFrames")
     local parent
     if EF then
@@ -3606,7 +3738,7 @@ end
 
 function BBF.FixStupidBlizzPTRShit()
     if InCombatLockdown() then return end
-    if isAddonLoaded("ClassicFrames") or isAddonLoaded("EasyFrames") or BetterBlizzFramesDB.classicFrames then return end
+    if isAddonLoaded("ClassicFrames") or isAddonLoaded("EasyFrames") or BetterBlizzFramesDB.classicFrames or BetterBlizzFramesDB.noPortraitModes then return end
     if BBF.ocdFixActive then return end
     -- For god knows what reason PTR has a gap between Portrait and PlayerFrame. This fixes it + other gaps.
     --PlayerFrame.PlayerFrameContainer.PlayerPortrait:SetScale(1.02)
@@ -3626,6 +3758,22 @@ function BBF.FixStupidBlizzPTRShit()
     TargetFrame.totFrame.Portrait:SetSize(36,36)
     FocusFrame.totFrame.Portrait:SetSize(36,36)
     PlayerFrame.PlayerFrameContainer.PlayerPortraitMask:SetSize(61,60)
+    TargetFrame.TargetFrameContainer.PortraitMask:ClearAllPoints()
+    TargetFrame.TargetFrameContainer.PortraitMask:SetPoint("CENTER", TargetFrame.TargetFrameContainer.Portrait, "CENTER", 0, 0)
+    TargetFrame.TargetFrameContainer.PortraitMask:SetSize(56,56)
+    FocusFrame.TargetFrameContainer.PortraitMask:ClearAllPoints()
+    FocusFrame.TargetFrameContainer.PortraitMask:SetPoint("CENTER", FocusFrame.TargetFrameContainer.Portrait, "CENTER", 0, 0)
+    FocusFrame.TargetFrameContainer.PortraitMask:SetSize(56,56)
+
+    local function FixCastbarBackground(bg)
+        bg:ClearAllPoints()
+        bg:SetPoint("TOPLEFT", bg:GetParent(), "TOPLEFT", -1, 1)
+        bg:SetPoint("BOTTOMRIGHT", bg:GetParent(), "BOTTOMRIGHT", 1, -1)
+    end
+
+    FixCastbarBackground(TargetFrameSpellBar.Background)
+    FixCastbarBackground(FocusFrameSpellBar.Background)
+    FixCastbarBackground(PlayerCastingBarFrame.Background)
 
     for i = 1, 4 do
         local memberFrame = PartyFrame["MemberFrame" .. i]
@@ -4164,6 +4312,7 @@ First:SetScript("OnEvent", function(_, event, addonName)
             BBF.UpdateCustomTextures()
         end)
         BBF.ClassicFrames()
+        BBF.noPortraitModes()
         BBF.PlayerElite(BetterBlizzFramesDB.playerEliteFrameMode)
         BBF.ReduceEditModeAlpha()
         BBF.SymmetricPlayerFrame()
@@ -4187,6 +4336,7 @@ First:SetScript("OnEvent", function(_, event, addonName)
         BBF.GladTracker()
         C_Timer.After(0.5, function()
             BBF.UnitFrameBackgroundTexture()
+            BBF.DarkModeUnitframeBorders()
         end)
 
         BBF.ClassColorReputationCaller()
@@ -4307,6 +4457,10 @@ First:SetScript("OnEvent", function(_, event, addonName)
         BBF.InitializeOptions()
     elseif addonName == "Blizzard_PlayerSpells" and _G.HeroTalentsSelectionDialog and _G.PlayerSpellsFrame then
         MoveableSettingsPanel(true)
+    elseif addonName == "Clique" then
+        if BetterBlizzFramesDB.noPortraitModes or BetterBlizzFramesDB.noPortraitPixelBorder then
+
+        end
     end
 end)
 

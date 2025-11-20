@@ -3,7 +3,7 @@
 ## Notes: Extends the default Mount Journal
 ## IconTexture: Interface\Addons\MountJournalEnhanced\UI\icons\mje.png
 ## Author: eXochron
-## Version: 2.51.3
+## Version: 2.51.4
 ## SavedVariablesPerCharacter: MJEPersonalSettings
 ## SavedVariables: MJEGlobalSettings, MJETrackingData
 ## X-Curse-Project-ID: 86372

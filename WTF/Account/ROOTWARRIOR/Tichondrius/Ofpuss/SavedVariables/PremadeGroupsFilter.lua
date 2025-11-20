@@ -11,18 +11,18 @@ PremadeGroupsFilterState = {
 ["dungeon"] = {
 ["dungeon7"] = false,
 ["partyfit"] = true,
-["mprating"] = {
-["max"] = "",
-["min"] = "",
-["act"] = false,
-},
-["dungeon6"] = false,
-["tanks"] = {
+["heals"] = {
 ["max"] = "",
 ["min"] = "1",
 ["act"] = false,
 },
+["dungeon6"] = false,
 ["dungeon2"] = false,
+["dps"] = {
+["max"] = "2",
+["min"] = "0",
+["act"] = false,
+},
 ["members"] = {
 ["max"] = "",
 ["min"] = "",
@@ -32,18 +32,18 @@ PremadeGroupsFilterState = {
 ["difficulty"] = {
 },
 ["dungeon1"] = false,
-["dungeon3"] = false,
+["dungeon4"] = false,
 ["dungeon5"] = true,
 ["dungeon8"] = false,
-["dungeon4"] = false,
-["dps"] = {
-["max"] = "2",
-["min"] = "0",
-["act"] = false,
-},
-["heals"] = {
+["dungeon3"] = false,
+["tanks"] = {
 ["max"] = "",
 ["min"] = "1",
+["act"] = false,
+},
+["mprating"] = {
+["max"] = "",
+["min"] = "",
 ["act"] = false,
 },
 },
@@ -76,7 +76,7 @@ PremadeGroupsFilterState = {
 ["min"] = "",
 ["act"] = false,
 },
-["members"] = {
+["defeated"] = {
 ["max"] = "",
 ["min"] = "",
 ["act"] = false,
@@ -86,7 +86,7 @@ PremadeGroupsFilterState = {
 ["min"] = "",
 ["act"] = false,
 },
-["defeated"] = {
+["members"] = {
 ["max"] = "",
 ["min"] = "",
 ["act"] = false,
@@ -95,24 +95,12 @@ PremadeGroupsFilterState = {
 },
 },
 ["version"] = 8,
-["c121f4"] = {
-["enabled"] = true,
-},
-["c114f6"] = {
-["enabled"] = true,
-},
-["c114f5"] = {
-["enabled"] = true,
-},
-["c9f8"] = {
-["enabled"] = true,
-},
 ["c3f5"] = {
 ["enabled"] = true,
 ["raid"] = {
 ["difficulty"] = {
-["act"] = false,
 ["val"] = 2,
+["act"] = false,
 },
 ["heals"] = {
 ["max"] = "",
@@ -124,7 +112,7 @@ PremadeGroupsFilterState = {
 ["min"] = "",
 ["act"] = false,
 },
-["defeated"] = {
+["members"] = {
 ["max"] = "",
 ["min"] = "",
 ["act"] = false,
@@ -134,12 +122,24 @@ PremadeGroupsFilterState = {
 ["min"] = "",
 ["act"] = false,
 },
-["members"] = {
+["defeated"] = {
 ["max"] = "",
 ["min"] = "",
 ["act"] = false,
 },
 ["expression"] = "",
 },
+},
+["c114f6"] = {
+["enabled"] = true,
+},
+["c114f5"] = {
+["enabled"] = true,
+},
+["c9f8"] = {
+["enabled"] = true,
+},
+["c121f4"] = {
+["enabled"] = true,
 },
 }

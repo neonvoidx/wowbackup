@@ -383,6 +383,10 @@ StaticPopupDialogs["CONFIRM_RESET_BETTERBLIZZFRAMESDB"] = {
 local function SendUpdateMessage()
     if sendUpdate then
         if not BetterBlizzFramesDB.scStart then
+            if BetterBlizzFramesDB.skipUpdateMsg then
+                BetterBlizzFramesDB.skipUpdateMsg = nil
+                return
+            end
             C_Timer.After(7, function()
                 --StaticPopup_Show("BBF_NEW_VERSION")
 
@@ -1348,7 +1352,7 @@ function BBF.UpdateLegacyComboPosition()
 end
 
 function BBF.FixLegacyComboPointsLocation()
-    if BetterBlizzFramesDB.legacyCombosTurnedOff then
+    if BetterBlizzFramesDB.legacyCombosTurnedOff and not BetterBlizzFramesDB.enableLegacyComboPoints then
         C_CVar.SetCVar("comboPointLocation", "2")
         return
     end
@@ -1829,8 +1833,14 @@ end
 local LSM = LibStub("LibSharedMedia-3.0")
 BBF.LSM = LSM
 BBF.allLocales = LSM.LOCALE_BIT_western+LSM.LOCALE_BIT_ruRU+LSM.LOCALE_BIT_zhCN+LSM.LOCALE_BIT_zhTW+LSM.LOCALE_BIT_koKR
+LSM:Register("statusbar", "Blizzard DF", [[Interface\TargetingFrame\UI-TargetingFrame-BarFill]])
+LSM:Register("statusbar", "Blizzard CF", [[Interface\AddOns\BetterBlizzFrames\media\ui-statusbar-cf]])
+LSM:Register("statusbar", "Blizzard Retail Bar", [[Interface\AddOns\BetterBlizzFrames\media\blizzTex\BlizzardRetailBar]])
+LSM:Register("statusbar", "Blizzard Retail Bar Crop", [[Interface\AddOns\BetterBlizzFrames\media\blizzTex\BlizzardRetailBarCrop]])
+LSM:Register("statusbar", "Blizzard Retail Bar Crop 2", [[Interface\AddOns\BetterBlizzFrames\media\blizzTex\BlizzardRetailBarCrop2]])
+LSM:Register("statusbar", "Smooth", [[Interface\Addons\BetterBlizzFrames\media\smooth]])
 local texture = "Interface\\Addons\\BetterBlizzPlates\\media\\DragonflightTextureHD"
-local manaTexture = "Interface\\Addons\\BetterBlizzPlates\\media\\DragonflightTextureHD"
+local manaTexture = "Interface\\Addons\\BetterBlizzPlates\\media\\blizzTex\\BlizzardRetailBarCrop2"
 local raidHpTexture = "Interface\\Addons\\BetterBlizzPlates\\media\\DragonflightTextureHD"
 local raidManaTexture = "Interface\\Addons\\BetterBlizzPlates\\media\\DragonflightTextureHD"
 local castbarTexture = 137012

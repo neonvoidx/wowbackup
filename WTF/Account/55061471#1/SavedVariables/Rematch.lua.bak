@@ -222,10 +222,10 @@ Rematch5SavedTeams = {
 "ZL",
 },
 ["teamID"] = "team:13",
+["groupID"] = "group:none",
 ["targets"] = {
 73626,
 },
-["groupID"] = "group:none",
 ["preferences"] = {
 ["minHP"] = 443,
 ["minXP"] = 5,
@@ -382,10 +382,10 @@ Rematch5SavedTeams = {
 ["minHP"] = 601,
 ["minXP"] = 10,
 },
-["groupID"] = "group:none",
 ["targets"] = {
 237701,
 },
+["groupID"] = "group:none",
 },
 ["team:20"] = {
 ["pets"] = {
@@ -404,10 +404,10 @@ Rematch5SavedTeams = {
 ["preferences"] = {
 ["minXP"] = 25,
 },
-["groupID"] = "group:none",
 ["targets"] = {
 223407,
 },
+["groupID"] = "group:none",
 },
 ["team:24"] = {
 ["pets"] = {
@@ -426,10 +426,10 @@ Rematch5SavedTeams = {
 ["preferences"] = {
 ["minXP"] = 5,
 },
+["groupID"] = "group:none",
 ["targets"] = {
 66557,
 },
-["groupID"] = "group:none",
 },
 ["team:22"] = {
 ["pets"] = {
@@ -486,10 +486,10 @@ Rematch5SavedTeams = {
 ["minHP"] = 541,
 ["minXP"] = 10,
 },
-["groupID"] = "group:none",
 ["targets"] = {
 71930,
 },
+["groupID"] = "group:none",
 },
 ["team:26"] = {
 ["pets"] = {
@@ -565,11 +565,11 @@ Rematch5SavedTeams = {
 ["preferences"] = {
 ["minXP"] = 15,
 },
-["groupID"] = "group:none",
 ["targets"] = {
 91015,
 91362,
 },
+["groupID"] = "group:none",
 },
 ["team:37"] = {
 ["pets"] = {
@@ -623,10 +623,10 @@ Rematch5SavedTeams = {
 "ZR0",
 },
 ["teamID"] = "team:38",
-["groupID"] = "group:none",
 ["targets"] = {
 223409,
 },
+["groupID"] = "group:none",
 ["preferences"] = {
 ["minXP"] = 25,
 },
@@ -820,10 +820,10 @@ Rematch5SavedTeams = {
 ["preferences"] = {
 ["minXP"] = 25,
 },
-["groupID"] = "group:none",
 ["targets"] = {
 223406,
 },
+["groupID"] = "group:none",
 },
 ["team:2"] = {
 ["pets"] = {
@@ -842,10 +842,10 @@ Rematch5SavedTeams = {
 ["preferences"] = {
 ["minHP"] = 62,
 },
+["groupID"] = "group:none",
 ["targets"] = {
 87110,
 },
-["groupID"] = "group:none",
 },
 ["team:23"] = {
 ["pets"] = {
@@ -861,10 +861,10 @@ Rematch5SavedTeams = {
 "12201LP",
 },
 ["teamID"] = "team:23",
+["groupID"] = "group:none",
 ["targets"] = {
 85659,
 },
-["groupID"] = "group:none",
 ["preferences"] = {
 ["minXP"] = 4,
 },
@@ -886,10 +886,10 @@ Rematch5SavedTeams = {
 ["preferences"] = {
 ["minXP"] = 25,
 },
-["groupID"] = "group:none",
 ["targets"] = {
 85685,
 },
+["groupID"] = "group:none",
 },
 ["team:1"] = {
 ["pets"] = {

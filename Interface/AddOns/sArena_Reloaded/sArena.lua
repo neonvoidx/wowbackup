@@ -1,21 +1,18 @@
-sArenaMixin = {}
-sArenaFrameMixin = {}
-
-local isRetail = (WOW_PROJECT_ID == WOW_PROJECT_MAINLINE)
-sArenaMixin.isRetail = isRetail
+local isRetail = sArenaMixin.isRetail
+local isMidnight = sArenaMixin.isMidnight
 
 sArenaMixin.layouts = {}
 sArenaMixin.defaultSettings = {
     profile = {
         currentLayout = "Gladiuish",
         classColors = true,
-        classColorFrameTexture = (BetterBlizzFramesDB and BetterBlizzFramesDB.classColorFrameTexture) or nil,
+        --classColorFrameTexture = (BetterBlizzFramesDB and BetterBlizzFramesDB.classColorFrameTexture) or nil,
         showNames = true,
         hidePowerText = true,
         showDecimalsDR = true,
         showDecimalsClassIcon = true,
         decimalThreshold = 6,
-        darkMode = (BetterBlizzFramesDB and BetterBlizzFramesDB.darkModeUi) or C_AddOns.IsAddOnLoaded("FrameColor") or nil,
+        --darkMode = (BetterBlizzFramesDB and BetterBlizzFramesDB.darkModeUi) or C_AddOns.IsAddOnLoaded("FrameColor") or nil,
         forceShowTrinketOnHuman = not isRetail and true or nil,
         darkModeValue = 0.2,
         desaturateTrinketCD = true,
@@ -24,6 +21,12 @@ sArenaMixin.defaultSettings = {
         statusText = {
             alwaysShow = true,
             formatNumbers = true,
+        },
+        castBarColors = {
+            standard = { 1.0, 0.7, 0.0, 1 },
+            channel = { 0.0, 1.0, 0.0, 1 },
+            uninterruptable = { 0.7, 0.7, 0.7, 1 },
+            interruptNotReady = { 1.0, 0.0, 0.0, 1 },
         },
         layoutSettings = {},
         invertClassIconCooldown = true,
@@ -35,6 +38,8 @@ sArenaMixin.maxArenaOpponents = (isRetail and 3) or 5
 sArenaMixin.noTrinketTexture = 638661
 sArenaMixin.trinketTexture = (isRetail and 1322720) or 133453
 sArenaMixin.trinketID = (isRetail and 336126) or 42292
+sArenaMixin.showPixelBorder = false
+sArenaMixin.interruptReady = true
 sArenaMixin.pFont = "Interface\\AddOns\\sArena_Reloaded\\Textures\\Prototype.ttf"
 C_AddOns.EnableAddOn("sArena_Reloaded")
 local LSM = LibStub("LibSharedMedia-3.0")
@@ -43,9 +48,11 @@ LSM:Register("statusbar", "Blizzard RetailBar", [[Interface\AddOns\sArena_Reload
 LSM:Register("statusbar", "sArena Default", [[Interface\AddOns\sArena_Reloaded\Textures\sArenaDefault]])
 LSM:Register("statusbar", "sArena Stripes", [[Interface\AddOns\sArena_Reloaded\Textures\sArenaHealer]])
 LSM:Register("statusbar", "sArena Stripes 2", [[Interface\AddOns\sArena_Reloaded\Textures\sArenaRetailHealer]])
-LSM:Register("font", "Prototype", [[Interface\AddOns\sArena_Reloaded\Textures\Prototype.ttf]])
+LSM:Register("font", "Prototype", "Interface\\Addons\\sArena_Reloaded\\Textures\\Prototype.ttf", LSM.LOCALE_BIT_western + LSM.LOCALE_BIT_ruRU)
+LSM:Register("font", "PT Sans Narrow Bold", "Interface\\Addons\\sArena_Reloaded\\Textures\\PTSansNarrow-Bold.ttf", LSM.LOCALE_BIT_western + LSM.LOCALE_BIT_ruRU)
 local GetSpellTexture = GetSpellTexture or C_Spell.GetSpellTexture
 local stealthAlpha = 0.4
+sArenaMixin.beenInArena = false
 
 local healerSpecNames = {
     ["Discipline"] = true,
@@ -175,7 +182,21 @@ local TestTitle
 local feignDeathID = 5384
 local FEIGN_DEATH = GetSpellName(feignDeathID) -- Localized name for Feign Death
 
+local BlizzardUnitIsUnit = UnitIsUnit
 
+local function MidnightUnitIsUnit(unit1, unit2)
+    local p1 = C_NamePlate.GetNamePlateForUnit(unit1, issecure())
+    local p2 = C_NamePlate.GetNamePlateForUnit(unit2, issecure())
+    return p1 and p2 and p1 == p2
+end
+
+local function UnitIsUnit(unit1, unit2)
+    if isMidnight then
+        return MidnightUnitIsUnit(unit1, unit2)
+    else
+        return BlizzardUnitIsUnit(unit1, unit2)
+    end
+end
 
 --[[
     ImportOtherForkSettings: Migrates settings from other sArena versions to sArena Reloaded
@@ -423,11 +444,23 @@ function sArenaMixin:UpdateFonts()
         outline = "OUTLINE"
     end
 
-    local function setFont(fs, path)
+    -- Check if modern + simple castbar is enabled
+    local modernCastbars = fontCfg.castBar and fontCfg.castBar.useModernCastbars
+    local simpleCastbar = fontCfg.castBar and fontCfg.castBar.simpleCastbar
+    local forceOutlineOnCastbar = modernCastbars and simpleCastbar
+
+    local function setFont(fs, path, isCastbarText)
         if fs and path and fs.SetFont then
             local _, s = fs:GetFont()
-            fs:SetFont(path, size, outline)
-            if outline ~= "OUTLINE" and outline ~= "THICKOUTLINE" then
+            local outlineToUse = outline
+
+            -- Force outline on castbar text if modern + simple castbar is enabled
+            if isCastbarText and forceOutlineOnCastbar and (outline == "" or outline == nil) then
+                outlineToUse = "OUTLINE"
+            end
+
+            fs:SetFont(path, size, outlineToUse)
+            if outlineToUse ~= "OUTLINE" and outlineToUse ~= "THICKOUTLINE" then
                 fs:SetShadowOffset(1, -1)
             else
                 fs:SetShadowOffset(0, 0)
@@ -453,7 +486,7 @@ function sArenaMixin:UpdateFonts()
             setFont(frame.HealthText, frameFontPath)
             setFont(frame.SpecNameText, frameFontPath)
             setFont(frame.PowerText,  frameFontPath)
-            setFont(frame.CastBar.Text,   frameFontPath)
+            setFont(frame.CastBar.Text, frameFontPath, true)
         end
     end
 end
@@ -466,18 +499,34 @@ function sArenaMixin:UpdateTextures()
         generalStatusBarTexture   = "sArena Default",
         healStatusBarTexture      = "sArena Stripes",
         castbarStatusBarTexture   = "sArena Default",
+        castbarUninterruptibleTexture = "sArena Default",
     }
 
     local castTexture = LSM:Fetch(LSM.MediaType.STATUSBAR, texKeys.castbarStatusBarTexture)
+    local castUninterruptibleTexture = LSM:Fetch(LSM.MediaType.STATUSBAR, texKeys.castbarUninterruptibleTexture or texKeys.castbarStatusBarTexture)
     local dpsTexture     = LSM:Fetch(LSM.MediaType.STATUSBAR, texKeys.generalStatusBarTexture)
     local healerTexture = LSM:Fetch(LSM.MediaType.STATUSBAR, texKeys.healStatusBarTexture)
     local modernCastbars            = layout.castBar.useModernCastbars
     local keepDefaultModernTextures = layout.castBar.keepDefaultModernTextures
+    local interruptStatusColorOn     = layout.castBar.interruptStatusColorOn
     local classStacking = self:CheckClassStacking()
+    local reverseBarsFill = db.profile.reverseBarsFill or false
 
-    -- Store castTexture and keepDefaultTextures for use in ModernCastbar hooks
-    self.castTexture = castTexture
-    self.keepDefaultModernTextures = keepDefaultModernTextures
+    sArenaMixin.castTexture = castTexture
+    sArenaMixin.castUninterruptibleTexture = castUninterruptibleTexture
+    sArenaMixin.keepDefaultModernTextures = keepDefaultModernTextures
+    sArenaMixin.modernCastbars = modernCastbars
+    sArenaMixin.interruptStatusColorOn = interruptStatusColorOn
+    if sArenaCastingBarExtensionMixin then
+        sArenaCastingBarExtensionMixin.typeInfo = {
+            filling = castTexture,
+            full = castTexture,
+            glow = castTexture
+        }
+    end
+
+    -- Update castbar colors
+    self:UpdateCastbarColors()
 
     for i = 1, self.maxArenaOpponents do
         local frame = _G["sArenaEnemyFrame" .. i]
@@ -496,6 +545,9 @@ function sArenaMixin:UpdateTextures()
         frame.HealthBar:SetStatusBarTexture(textureToUse)
         frame.PowerBar:SetStatusBarTexture(dpsTexture)
 
+        frame.HealthBar:SetReverseFill(reverseBarsFill)
+        frame.PowerBar:SetReverseFill(reverseBarsFill)
+
         if modernCastbars then
             if not keepDefaultModernTextures then
                 frame.CastBar:SetStatusBarTexture(castTexture)
@@ -508,10 +560,84 @@ function sArenaMixin:UpdateTextures()
             frame.PowerBar:GetStatusBarTexture():SetDrawLayer("BACKGROUND", 2)
         end
     end
+
+    -- Refresh test mode castbars if test mode is active
+    self:RefreshTestModeCastbars()
+end
+
+function sArenaFrameMixin:UpdateCombatStatus(unit)
+    local widgetSettings = db and db.profile.layoutSettings[db.profile.currentLayout].widgets
+    if not widgetSettings or not widgetSettings.combatIndicator or not widgetSettings.combatIndicator.enabled then
+        self.WidgetOverlay.combatIndicator:Hide()
+        return
+    end
+    self.WidgetOverlay.combatIndicator:SetShown((unit and not UnitAffectingCombat(unit) and not self.DeathIcon:IsShown()))
+end
+
+function sArenaFrameMixin:UpdateTarget(unit)
+    local widgetSettings = db and db.profile.layoutSettings[db.profile.currentLayout].widgets
+    if not widgetSettings or not widgetSettings.targetIndicator or not widgetSettings.targetIndicator.enabled then
+        self.WidgetOverlay.targetIndicator:Hide()
+        return
+    end
+    self.WidgetOverlay.targetIndicator:SetShown((unit and UnitIsUnit(unit, "target")))
+end
+
+function sArenaFrameMixin:UpdateFocus(unit)
+    local widgetSettings = db and db.profile.layoutSettings[db.profile.currentLayout].widgets
+    if not widgetSettings or not widgetSettings.focusIndicator or not widgetSettings.focusIndicator.enabled then
+        self.WidgetOverlay.focusIndicator:Hide()
+        return
+    end
+    self.WidgetOverlay.focusIndicator:SetShown((unit and UnitIsUnit(unit, "focus")))
+end
+
+function sArenaFrameMixin:UpdatePartyTargets(unit)
+    local widgetSettings = db and db.profile.layoutSettings[db.profile.currentLayout].widgets
+    if not widgetSettings or not widgetSettings.partyTargetIndicators or not widgetSettings.partyTargetIndicators.enabled then
+        self.WidgetOverlay.partyTarget1:Hide()
+        self.WidgetOverlay.partyTarget2:Hide()
+        return
+    end
+
+    if not unit or not UnitExists(unit) then return end
+
+    -- Check which party members are targeting this arena enemy
+    local targets = {}
+    if UnitIsUnit("party1target", unit) then
+        table.insert(targets, "party1")
+    end
+    if UnitIsUnit("party2target", unit) then
+        table.insert(targets, "party2")
+    end
+
+    -- Update Icons Based on Targets Found
+    if #targets >= 1 then
+        local class1 = select(2, UnitClass(targets[1]))
+        if class1 then
+            local color = RAID_CLASS_COLORS[class1]
+            self.WidgetOverlay.partyTarget1.Texture:SetVertexColor(color.r, color.g, color.b)
+        end
+        self.WidgetOverlay.partyTarget1:Show()
+    else
+        self.WidgetOverlay.partyTarget1:Hide()
+    end
+
+    if #targets >= 2 then
+        local class2 = select(2, UnitClass(targets[2]))
+        if class2 then
+            local color = RAID_CLASS_COLORS[class2]
+            self.WidgetOverlay.partyTarget2.Texture:SetVertexColor(color.r, color.g, color.b)
+        end
+        self.WidgetOverlay.partyTarget2:Show()
+    else
+        self.WidgetOverlay.partyTarget2:Hide()
+    end
 end
 
 local MAX_INCOMING_HEAL_OVERFLOW = 1.0;
 function sArenaFrameMixin:UpdateHealPrediction()
+    if isMidnight then return end
 	if ( not self.myHealPredictionBar and not self.otherHealPredictionBar and not self.healAbsorbBar and not self.totalAbsorbBar ) then
 		return;
 	end
@@ -631,22 +757,22 @@ end
 local ABSORB_GLOW_ALPHA = 0.6
 local ABSORB_GLOW_OFFSET = -5
 function sArenaFrameMixin:UpdateAbsorb()
-    local healthBar = self.healthbar or self.HealthBar
-    if not healthBar or healthBar:IsForbidden() then return end
-
-    local absorbBar = self.totalAbsorbBar
-    local absorbOverlay = absorbBar and absorbBar.TiledFillOverlay or self.totalAbsorbBarOverlay
-    local glow = self.overAbsorbGlow
-    if not absorbBar or not absorbOverlay or absorbBar:IsForbidden() or absorbOverlay:IsForbidden() then return end
-
+    if isMidnight then return end
+    local healthBar = self.HealthBar
     local _, maxHealth = healthBar:GetMinMaxValues()
     local currentHealth = healthBar:GetValue()
+
     if maxHealth <= 0 then return end
+
+    local absorbBar = self.totalAbsorbBar
+    local absorbOverlay = self.totalAbsorbBarOverlay
+    local glow = self.overAbsorbGlow
 
     local totalAbsorb = UnitGetTotalAbsorbs(self.unit) or 0
     if totalAbsorb > maxHealth then totalAbsorb = maxHealth end
 
     local isOverAbsorb = currentHealth + totalAbsorb > maxHealth
+    local isReversed = db and db.profile.reverseBarsFill or false
 
     local healthWidth = healthBar:GetWidth()
     local healthHeight = healthBar:GetHeight()
@@ -658,7 +784,11 @@ function sArenaFrameMixin:UpdateAbsorb()
     -- Show absorb bar only for missing health
     if absorbBarWidth > 0 then
         absorbBar:ClearAllPoints()
-        absorbBar:SetPoint("TOPLEFT", healthBar, "TOPLEFT", currentHealth / maxHealth * healthWidth, 0)
+        if isReversed then
+            absorbBar:SetPoint("TOPRIGHT", healthBar, "TOPLEFT", missingHealthWidth, 0)
+        else
+            absorbBar:SetPoint("TOPLEFT", healthBar, "TOPLEFT", currentHealth / maxHealth * healthWidth, 0)
+        end
         absorbBar:SetWidth(absorbBarWidth)
         absorbBar:SetHeight(healthHeight)
         absorbBar:Show()
@@ -670,18 +800,32 @@ function sArenaFrameMixin:UpdateAbsorb()
     if absorbWidth > 0 then
         absorbOverlay:SetParent(healthBar)
         absorbOverlay:ClearAllPoints()
-        if isOverAbsorb then
-            absorbOverlay:SetPoint("TOPRIGHT", healthBar, "TOPRIGHT", 0, 0)
-            absorbOverlay:SetPoint("BOTTOMRIGHT", healthBar, "BOTTOMRIGHT", 0, 0)
+        if isReversed then
+            if isOverAbsorb then
+                absorbOverlay:SetPoint("TOPLEFT", healthBar, "TOPLEFT", 0, 0)
+                absorbOverlay:SetPoint("BOTTOMLEFT", healthBar, "BOTTOMLEFT", 0, 0)
+            else
+                absorbOverlay:SetPoint("TOPLEFT", absorbBar, "TOPLEFT", 0, 0)
+                absorbOverlay:SetPoint("BOTTOMLEFT", absorbBar, "BOTTOMLEFT", 0, 0)
+            end
         else
-            absorbOverlay:SetPoint("TOPRIGHT", absorbBar, "TOPRIGHT", 0, 0)
-            absorbOverlay:SetPoint("BOTTOMRIGHT", absorbBar, "BOTTOMRIGHT", 0, 0)
+            if isOverAbsorb then
+                absorbOverlay:SetPoint("TOPRIGHT", healthBar, "TOPRIGHT", 0, 0)
+                absorbOverlay:SetPoint("BOTTOMRIGHT", healthBar, "BOTTOMRIGHT", 0, 0)
+            else
+                absorbOverlay:SetPoint("TOPRIGHT", absorbBar, "TOPRIGHT", 0, 0)
+                absorbOverlay:SetPoint("BOTTOMRIGHT", absorbBar, "BOTTOMRIGHT", 0, 0)
+            end
         end
         absorbOverlay:SetWidth(absorbWidth)
         absorbOverlay:SetHeight(healthHeight)
 
         if absorbOverlay.tileSize then
-            absorbOverlay:SetTexCoord(1 - (absorbWidth / absorbOverlay.tileSize), 1, 0, healthHeight / absorbOverlay.tileSize)
+            if isReversed then
+                absorbOverlay:SetTexCoord(0, absorbWidth / absorbOverlay.tileSize, 0, healthHeight / absorbOverlay.tileSize)
+            else
+                absorbOverlay:SetTexCoord(1 - (absorbWidth / absorbOverlay.tileSize), 1, 0, healthHeight / absorbOverlay.tileSize)
+            end
         end
 
         absorbOverlay:Show()
@@ -692,8 +836,13 @@ function sArenaFrameMixin:UpdateAbsorb()
     -- Glow if over-absorb occurs
     glow:ClearAllPoints()
     if isOverAbsorb then
-        glow:SetPoint("TOPLEFT", absorbOverlay, "TOPLEFT", ABSORB_GLOW_OFFSET, 0)
-        glow:SetPoint("BOTTOMLEFT", absorbOverlay, "BOTTOMLEFT", ABSORB_GLOW_OFFSET, 0)
+        if isReversed then
+            glow:SetPoint("TOPRIGHT", absorbOverlay, "TOPRIGHT", -ABSORB_GLOW_OFFSET, 0)
+            glow:SetPoint("BOTTOMRIGHT", absorbOverlay, "BOTTOMRIGHT", -ABSORB_GLOW_OFFSET, 0)
+        else
+            glow:SetPoint("TOPLEFT", absorbOverlay, "TOPLEFT", ABSORB_GLOW_OFFSET, 0)
+            glow:SetPoint("BOTTOMLEFT", absorbOverlay, "BOTTOMLEFT", ABSORB_GLOW_OFFSET, 0)
+        end
         glow:SetAlpha(ABSORB_GLOW_ALPHA)
         glow:Show()
     else
@@ -735,12 +884,130 @@ local function IsMatchStartedMessage(msg)
     return matchStartedMessages[msg]
 end
 
+local function EnsureArenaFramesEnabled()
+    local accountSettings = EditModeManagerFrame
+        and EditModeManagerFrame.AccountSettings
+    if not accountSettings then return end
+
+    if EditModeManagerFrame
+        and EditModeManagerFrame.EnableAdvancedOptionsCheckButton
+        and EditModeManagerFrame.EnableAdvancedOptionsCheckButton.Button
+        and not EditModeManagerFrame.EnableAdvancedOptionsCheckButton.Button:GetChecked()
+    then
+        EditModeManagerFrame.EnableAdvancedOptionsCheckButton.Button:Click()
+    end
+
+    local framesContainer = accountSettings.SettingsContainer
+        and accountSettings.SettingsContainer.ScrollChild
+        and accountSettings.SettingsContainer.ScrollChild.AdvancedOptionsContainer
+        and accountSettings.SettingsContainer.ScrollChild.AdvancedOptionsContainer.FramesContainer
+
+    if not framesContainer then return end
+
+    local children = { framesContainer:GetChildren() }
+
+    for _, child in ipairs(children) do
+        local label = child.Label
+        if label and label.GetText then
+            local text = label:GetText()
+            if text == "Arena Frames" then
+                local button = child.Button
+                if button and not button:GetChecked() then
+                    button:Click()
+                end
+                return
+            end
+        end
+    end
+
+    local arenaFramesButton
+    local bestX, bestY
+
+    for _, child in ipairs(children) do
+        local label = child.Label
+        if label and label.GetPoint then
+            local _, _, _, x, y = child:GetPoint()
+            if x and y then
+                if not arenaFramesButton
+                    or x > bestX
+                    or (x == bestX and y < bestY)
+                then
+                    arenaFramesButton = child
+                    bestX, bestY = x, y
+                end
+            end
+        end
+    end
+
+    if arenaFramesButton and arenaFramesButton.Button and not arenaFramesButton.Button:GetChecked() then
+        arenaFramesButton.Button:Click()
+    end
+end
+
+function sArenaMixin:ShowMidnightDRWarning()
+    if self.midnightWarningFrame then
+        self.midnightWarningFrame:Show()
+        return
+    end
+
+    local frame = CreateFrame("Frame", "sArenaMidnightWarningFrame", UIParent, "BackdropTemplate")
+    frame:SetSize(400, 200)
+    frame:SetPoint("CENTER", UIParent, "CENTER", 0, 70)
+    frame:SetFrameStrata("DIALOG")
+    frame:SetBackdrop({
+        bgFile = "Interface\\DialogFrame\\UI-DialogBox-Background",
+        edgeFile = "Interface\\DialogFrame\\UI-DialogBox-Border",
+        tile = true,
+        tileSize = 32,
+        edgeSize = 32,
+        insets = { left = 11, right = 12, top = 12, bottom = 11 }
+    })
+
+    frame:SetBackdropColor(0, 0, 0, 1)
+    frame:EnableMouse(true)
+    frame:SetMovable(true)
+    frame:RegisterForDrag("LeftButton")
+    frame:SetScript("OnDragStart", frame.StartMoving)
+    frame:SetScript("OnDragStop", frame.StopMovingOrSizing)
+
+    local title = frame:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
+    title:SetPoint("TOP", frame, "TOP", 0, -20)
+    title:SetText("|cffa020f0Midnight Beta Warning|r")
+
+    local text = frame:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+    text:SetPoint("TOP", title, "BOTTOM", 0, -15)
+    text:SetWidth(400)
+    text:SetJustifyH("CENTER")
+    text:SetText("Midnight is in Beta and Edit Mode is causing\nthe new DR's to error.\n\n|cffFFFF00Reload UI to fix.|r\n\nThis warning will be removed as soon as\nBlizzard fixes Edit Mode and DR's.")
+
+    local reloadButton = CreateFrame("Button", nil, frame, "UIPanelButtonTemplate")
+    reloadButton:SetSize(150, 30)
+    reloadButton:SetPoint("BOTTOM", frame, "BOTTOM", 0, 20)
+    reloadButton:SetText("Reload UI")
+    reloadButton:SetScript("OnClick", function()
+        EnsureArenaFramesEnabled()
+        ReloadUI()
+    end)
+
+    local closeButton = CreateFrame("Button", nil, frame, "UIPanelCloseButton")
+    closeButton:SetPoint("TOPRIGHT", frame, "TOPRIGHT", -5, -5)
+    closeButton:SetScript("OnClick", function()
+        frame:Hide()
+    end)
+    closeButton:SetSize(10,10)
+
+    self.midnightWarningFrame = frame
+    frame:Show()
+end
+
 -- Parent Frame
 function sArenaMixin:OnLoad()
     self:RegisterEvent("PLAYER_LOGIN")
     self:RegisterEvent("PLAYER_ENTERING_WORLD")
     self:RegisterEvent("PLAYER_SPECIALIZATION_CHANGED")
-    self:RegisterEvent("ARENA_PREP_OPPONENT_SPECIALIZATIONS")
+    if not isMidnight then
+        self:RegisterEvent("ARENA_PREP_OPPONENT_SPECIALIZATIONS")
+    end
 end
 
 local combatEvents = {
@@ -796,12 +1063,9 @@ function sArenaMixin:OnEvent(event, ...)
                     local arenaGUID = UnitGUID("arena" .. i)
                     local petGUID = UnitGUID("arena" .. i .. "pet")
 
-                    --print("3: Checking dispel for", ArenaFrame.unit, "sourceGUID:", sourceGUID, "arenaGUID:", arenaGUID, "petGUID:", petGUID)
-
                     -- Check if dispel was cast by arena player or their pet
                     if sourceGUID == arenaGUID or (sourceGUID == petGUID and spellID == 119905) then
                         ArenaFrame:FindDispel(spellID)
-                        --print("4: Dispel registered for", ArenaFrame.unit, "spellID:", spellID)
                         break
                     end
                 end
@@ -853,15 +1117,40 @@ function sArenaMixin:OnEvent(event, ...)
             end
         end
 
+    elseif (event == "PLAYER_TARGET_CHANGED") then
+        for i = 1, sArenaMixin.maxArenaOpponents do
+            local frame = self["arena" .. i]
+            frame:UpdateTarget(frame.unit)
+        end
+
+    elseif (event == "PLAYER_FOCUS_CHANGED") then
+        for i = 1, sArenaMixin.maxArenaOpponents do
+            local frame = self["arena" .. i]
+            frame:UpdateFocus(frame.unit)
+        end
+
+    elseif (event == "UNIT_TARGET") then
+        for i = 1, sArenaMixin.maxArenaOpponents do
+            local frame = self["arena" .. i]
+            frame:UpdatePartyTargets(frame.unit)
+        end
+
     elseif (event == "PLAYER_LOGIN") then
+        local _, instanceType = IsInInstance()
+        if instanceType ~= "arena" then
+            C_Timer.After(3, function()
+                sArenaMixin.beenInArena = true
+            end)
+        end
+        if isMidnight then
+            C_CVar.SetCVar("spellDiminishPVPEnemiesEnabled", "1")
+        end
         self:Initialize()
         if sArenaMixin:CompatibilityIssueExists() then return end
         self:UpdatePlayerSpec()
-        self:SetupCastColor()
         self:SetupGrayTrinket()
         self:AddMasqueSupport()
         self:SetupCustomCD()
-        self:SetDRBorderShownStatus()
         if sArena_ReloadedDB.reOpenOptions then
             sArena_ReloadedDB.reOpenOptions = nil
             C_Timer.After(0.5, function()
@@ -874,9 +1163,27 @@ function sArenaMixin:OnEvent(event, ...)
         UpdateBlizzVisibility(instanceType)
         self:SetMouseState(true)
 
+        if isMidnight and not self.midnightDRFrames then
+            self.midnightDRFrames = true
+            self:InitializeDRFrames()
+        end
+
         if (instanceType == "arena") then
+            if not isMidnight then
+                self:ResetDetectedDispels()
+                self:RegisterEvent("COMBAT_LOG_EVENT_UNFILTERED")
+                self:RegisterEvent("CHAT_MSG_BG_SYSTEM_NEUTRAL")
+            else
+                self:InitializeDRFrames()
+
+                if not sArenaMixin.beenInArena then
+                    sArenaMixin.beenInArena = true
+                else
+                    self:ShowMidnightDRWarning()
+                end
+            end
+            self:RegisterWidgetEvents()
             self:UpdatePlayerSpec()
-            self:ResetDetectedDispels()
             if TestTitle then
                 TestTitle:Hide()
                 for i = 1, sArenaMixin.maxArenaOpponents do
@@ -886,13 +1193,23 @@ function sArenaMixin:OnEvent(event, ...)
                     frame.tempClass = nil
                     frame.tempSpecIcon = nil
                     frame.isHealer = nil
+
+                    if frame.fakeDRFrames then
+                        for n = 1, 4 do
+                            local fakeDRFrame = frame.fakeDRFrames[n]
+                            if fakeDRFrame then
+                                fakeDRFrame:Hide()
+                            end
+                        end
+                    end
                 end
             end
-            self:RegisterEvent("COMBAT_LOG_EVENT_UNFILTERED")
-            self:RegisterEvent("CHAT_MSG_BG_SYSTEM_NEUTRAL")
         else
-            self:UnregisterEvent("COMBAT_LOG_EVENT_UNFILTERED")
-            self:UnregisterEvent("CHAT_MSG_BG_SYSTEM_NEUTRAL")
+            if not isMidnight then
+                self:UnregisterEvent("COMBAT_LOG_EVENT_UNFILTERED")
+                self:UnregisterEvent("CHAT_MSG_BG_SYSTEM_NEUTRAL")
+            end
+            self:UnregisterWidgetEvents()
         end
     elseif event == "CHAT_MSG_BG_SYSTEM_NEUTRAL" then
         local msg = ...
@@ -931,6 +1248,63 @@ function sArenaMixin:UpdateCleanups(db)
     if db.profile.swapHumanTrinket ~= nil and db.profile.swapRacialTrinket == nil then
         db.profile.swapRacialTrinket = db.profile.swapHumanTrinket
         db.profile.swapHumanTrinket = nil
+    end
+
+    -- Migrate old global DR settings
+    if db.profile.drSwipeOff ~= nil then
+        -- Migrate drSwipeOff to disableDRSwipe
+        if db.profile.disableDRSwipe == nil then
+            db.profile.disableDRSwipe = db.profile.drSwipeOff
+        end
+        db.profile.drSwipeOff = nil
+    end
+
+    if db.profile.drTextOn ~= nil then
+        local drTextOn = db.profile.drTextOn
+
+        -- Apply drTextOn to all layouts as showDRText
+        if db.profile.layoutSettings then
+            for layoutName, layoutSettings in pairs(db.profile.layoutSettings) do
+                if layoutSettings.dr then
+                    -- Only set if the old setting was true (enabled)
+                    if drTextOn == true and layoutSettings.dr.showDRText == nil then
+                        layoutSettings.dr.showDRText = true
+                    end
+                end
+            end
+        end
+
+        -- Remove old global setting
+        db.profile.drTextOn = nil
+    end
+
+    -- Migrate old global disableDRBorder setting
+    if db.profile.disableDRBorder ~= nil then
+        local disableDRBorder = db.profile.disableDRBorder
+
+        -- Apply disableDRBorder to all layouts as disableDRBorder
+        if db.profile.layoutSettings then
+            for layoutName, layoutSettings in pairs(db.profile.layoutSettings) do
+                if layoutSettings.dr then
+                    -- Only set if the old setting was true (enabled) and new setting doesn't exist
+                    if disableDRBorder == true and layoutSettings.dr.disableDRBorder == nil then
+                        layoutSettings.dr.disableDRBorder = true
+                    end
+                end
+            end
+        end
+
+        -- Remove old global setting
+        db.profile.disableDRBorder = nil
+    end
+
+    -- Migrate Pixelated layout to use thickPixelBorder setting
+    if db.profile.layoutSettings and db.profile.layoutSettings.Pixelated then
+        local pixelatedDR = db.profile.layoutSettings.Pixelated.dr
+        if pixelatedDR and pixelatedDR.thickPixelBorder == nil then
+            -- Enable thickPixelBorder for existing Pixelated layout users
+            pixelatedDR.thickPixelBorder = true
+        end
     end
 end
 
@@ -971,7 +1345,9 @@ function sArenaMixin:Initialize()
     LibStub("AceConsole-3.0"):RegisterChatCommand("sarena", ChatCommand)
     if not compatIssue then
         self:UpdateCleanups(db)
-        self:UpdateDRTimeSetting()
+        if not isMidnight then
+            self:UpdateDRTimeSetting()
+        end
         self:UpdateDecimalThreshold()
         LibStub("AceConfigDialog-3.0"):AddToBlizOptions("sArena", "sArena |cffff8000Reloaded|r |T135884:13:13|t")
         self:SetLayout(_, db.profile.currentLayout)
@@ -1028,18 +1404,6 @@ function sArenaMixin:ApplyPrototypeFont(frame)
     updateFont(frame.CastBar and frame.CastBar.Text)
 end
 
-function sArenaMixin:SetupCastColor()
-    for i = 1, sArenaMixin.maxArenaOpponents do
-        local frame = self["arena" .. i]
-        local castBar = frame.CastBar
-        castBar:HookScript("OnEvent", function(self)
-            if self.BorderShield:IsShown() then
-                self:SetStatusBarColor(0.7, 0.7, 0.7, 1)
-            end
-        end)
-    end
-end
-
 function sArenaFrameMixin:SetTextureCrop(texture, crop, type)
     if not texture then return end
     if type == "aura" then
@@ -1050,7 +1414,7 @@ function sArenaFrameMixin:SetTextureCrop(texture, crop, type)
         if crop then
             texture:SetTexCoord(0.08, 0.92, 0.08, 0.92)
         else
-            if type == "class" and ((db and db.profile.currentLayout == "BlizzRetail") or (db and db.profile.currentLayout == "BlizzArena")) then -- TODO: Fix this mess
+            if type == "class" and db and ((db.profile.currentLayout == "BlizzRetail") or (db.profile.currentLayout == "BlizzArena")) then -- TODO: Fix this mess
                 texture:SetTexCoord(0.05, 0.95, 0.1, 0.9)
             else
                 texture:SetTexCoord(0, 1, 0, 1)
@@ -1068,7 +1432,9 @@ function sArenaMixin:SetupGrayTrinket()
         end)
         local dispelCooldown = frame.Dispel.Cooldown
         dispelCooldown:HookScript("OnCooldownDone", function()
-            frame.Dispel.Texture:SetDesaturated(false)
+            if (frame.Dispel.spellID or 1) ~= 527 then
+                frame.Dispel.Texture:SetDesaturated(false)
+            end
         end)
     end
 end
@@ -1143,41 +1509,13 @@ function sArenaMixin:SetupCustomCD()
     end
 end
 
-function sArenaMixin:SetDRBorderShownStatus()
-    for i = 1, sArenaMixin.maxArenaOpponents do
-        local frame = self["arena" .. i]
-        -- DR frames
-        for _, category in ipairs(self.drCategories) do
-            local drFrame = frame[category]
-            if drFrame then
-                if self.db.profile.disableDRBorder then
-                    drFrame.Border:Hide()
-                    drFrame.Border.hidden = true
-                elseif drFrame.Border.hidden then
-                    drFrame.Border:Show()
-                    drFrame.Border.hidden = nil
-                end
-            end
-        end
-    end
-end
 
 function sArenaMixin:DarkMode()
-    if db.profile.darkMode == false then
-        return false
-    end
-
-    if (BetterBlizzFramesDB and BetterBlizzFramesDB.darkModeUi) or C_AddOns.IsAddOnLoaded("FrameColor") or db.profile.darkMode then
-        return true
-    end
+    return db.profile.darkMode
 end
 
 function sArenaMixin:DarkModeColor()
-    if BetterBlizzFramesDB and BetterBlizzFramesDB.darkModeUi then
-        return BetterBlizzFramesDB.darkModeColor
-    elseif db.profile.darkMode then
-        return db.profile.darkModeValue
-    end
+    return db.profile.darkModeValue
 end
 
 function sArenaFrameMixin:DarkModeFrame()
@@ -1186,6 +1524,7 @@ function sArenaFrameMixin:DarkModeFrame()
     local darkModeColor = sArenaMixin:DarkModeColor()
     local lighter = darkModeColor + 0.1
     local shouldDesaturate = db.profile.darkModeDesaturate
+    local skipClassIcon = db.profile.classColorFrameTexture
 
     local frameTexture = self.frameTexture
     local specBorder = self.SpecIcon.Border
@@ -1194,7 +1533,8 @@ function sArenaFrameMixin:DarkModeFrame()
     local racialBorder = self.Racial.Border
     local dispelBorder = self.Dispel.Border
     local castBorder = self.CastBar.Border
-
+    local classIconBorder = self.ClassIcon.Border
+    local castBackground = self.CastBar.Background
 
     if frameTexture then
         frameTexture:SetDesaturated(shouldDesaturate)
@@ -1203,10 +1543,24 @@ function sArenaFrameMixin:DarkModeFrame()
     if specBorder then
         specBorder:SetDesaturated(shouldDesaturate)
         specBorder:SetVertexColor(darkModeColor, darkModeColor, darkModeColor)
+        if db.profile.currentLayout == "BlizzCompact" then
+            local darkerCol = darkModeColor - 0.25
+            specBorder:SetVertexColor(darkerCol, darkerCol, darkerCol)
+        else
+            specBorder:SetVertexColor(darkModeColor, darkModeColor, darkModeColor)
+        end
+    end
+    if classIconBorder and not skipClassIcon then
+        classIconBorder:SetDesaturated(shouldDesaturate)
+        classIconBorder:SetVertexColor(darkModeColor, darkModeColor, darkModeColor)
     end
     if castBorder then
         castBorder:SetDesaturated(shouldDesaturate)
         castBorder:SetVertexColor(darkModeColor, darkModeColor, darkModeColor)
+    end
+    if castBackground then
+        castBackground:SetDesaturated(shouldDesaturate)
+        castBackground:SetVertexColor(darkModeColor, darkModeColor, darkModeColor)
     end
     if trinketBorder then
         trinketBorder:SetDesaturated(shouldDesaturate)
@@ -1230,11 +1584,19 @@ end
 function sArenaFrameMixin:ClassColorFrameTexture()
     if not db.profile.classColorFrameTexture then return end
 
-    -- Check for real class first, then fallback to tempClass
     local class = self.class or self.tempClass
     local color = RAID_CLASS_COLORS[class]
 
     if not color then return end
+
+    local onlyClassIcon = db.profile.classColorFrameTextureOnlyClassIcon and db.profile.currentLayout == "BlizzCompact"
+    local healerGreen = db.profile.classColorFrameTextureHealerGreen
+    local isHealerGreen = healerGreen and self.isHealer
+
+    local finalColor = color
+    if isHealerGreen then
+        finalColor = { r = 0, g = 1, b = 0 }
+    end
 
     local frameTexture = self.frameTexture
     local specBorder = self.SpecIcon.Border
@@ -1242,39 +1604,146 @@ function sArenaFrameMixin:ClassColorFrameTexture()
     local racialBorder = self.Racial.Border
     local dispelBorder = self.Dispel.Border
     local castBorder = self.CastBar.Border
+    local classIconBorder = self.ClassIcon.Border
 
-    if frameTexture then
-        frameTexture:SetDesaturated(true)
-        frameTexture:SetVertexColor(color.r, color.g, color.b)
+    if classIconBorder then
+        classIconBorder:SetDesaturated(true)
+        classIconBorder:SetVertexColor(finalColor.r, finalColor.g, finalColor.b)
     end
-    if specBorder then
-        specBorder:SetDesaturated(true)
-        specBorder:SetVertexColor(color.r, color.g, color.b)
+
+    if onlyClassIcon then
+        if sArenaMixin:DarkMode() then
+            local darkModeColor = sArenaMixin:DarkModeColor()
+            local lighter = darkModeColor + 0.1
+            local shouldDesaturate = db.profile.darkModeDesaturate
+
+            if frameTexture then
+                frameTexture:SetDesaturated(shouldDesaturate)
+                frameTexture:SetVertexColor(darkModeColor, darkModeColor, darkModeColor)
+            end
+            if specBorder then
+                specBorder:SetDesaturated(shouldDesaturate)
+                if db.profile.currentLayout == "BlizzCompact" then
+                    local darkerCol = darkModeColor - 0.25
+                    specBorder:SetVertexColor(darkerCol, darkerCol, darkerCol)
+                else
+                    specBorder:SetVertexColor(darkModeColor, darkModeColor, darkModeColor)
+                end
+            end
+            if castBorder then
+                castBorder:SetDesaturated(shouldDesaturate)
+                castBorder:SetVertexColor(darkModeColor, darkModeColor, darkModeColor)
+            end
+            if trinketBorder then
+                trinketBorder:SetDesaturated(shouldDesaturate)
+                trinketBorder:SetVertexColor(lighter, lighter, lighter)
+            end
+            if racialBorder then
+                racialBorder:SetDesaturated(shouldDesaturate)
+                racialBorder:SetVertexColor(lighter, lighter, lighter)
+            end
+            if dispelBorder then
+                dispelBorder:SetDesaturated(shouldDesaturate)
+                dispelBorder:SetVertexColor(lighter, lighter, lighter)
+            end
+        end
+    else
+        if frameTexture then
+            frameTexture:SetDesaturated(true)
+            frameTexture:SetVertexColor(finalColor.r, finalColor.g, finalColor.b)
+        end
+        if specBorder then
+            specBorder:SetDesaturated(true)
+            specBorder:SetVertexColor(finalColor.r, finalColor.g, finalColor.b)
+        end
+        if castBorder then
+            castBorder:SetDesaturated(true)
+            castBorder:SetVertexColor(finalColor.r, finalColor.g, finalColor.b)
+        end
+        if trinketBorder then
+            trinketBorder:SetDesaturated(true)
+            local lighter_r = math.min(1, finalColor.r + 0.2)
+            local lighter_g = math.min(1, finalColor.g + 0.2)
+            local lighter_b = math.min(1, finalColor.b + 0.2)
+            trinketBorder:SetVertexColor(lighter_r, lighter_g, lighter_b)
+        end
+        if racialBorder then
+            racialBorder:SetDesaturated(true)
+            local lighter_r = math.min(1, finalColor.r + 0.2)
+            local lighter_g = math.min(1, finalColor.g + 0.2)
+            local lighter_b = math.min(1, finalColor.b + 0.2)
+            racialBorder:SetVertexColor(lighter_r, lighter_g, lighter_b)
+        end
+        if dispelBorder then
+            dispelBorder:SetDesaturated(true)
+            local lighter_r = math.min(1, finalColor.r + 0.2)
+            local lighter_g = math.min(1, finalColor.g + 0.2)
+            local lighter_b = math.min(1, finalColor.b + 0.2)
+            dispelBorder:SetVertexColor(lighter_r, lighter_g, lighter_b)
+        end
     end
-    if castBorder then
-        castBorder:SetDesaturated(true)
-        castBorder:SetVertexColor(color.r, color.g, color.b)
+
+    if self.PixelBorders and sArenaMixin.showPixelBorder then
+        local pixelBorders = self.PixelBorders
+        if pixelBorders.main then
+            pixelBorders.main:SetVertexColor(finalColor.r, finalColor.g, finalColor.b)
+        end
+        if pixelBorders.classIcon then
+            pixelBorders.classIcon:SetVertexColor(finalColor.r, finalColor.g, finalColor.b)
+        end
+        if pixelBorders.trinket then
+            pixelBorders.trinket:SetVertexColor(finalColor.r, finalColor.g, finalColor.b)
+        end
+        if pixelBorders.racial then
+            pixelBorders.racial:SetVertexColor(finalColor.r, finalColor.g, finalColor.b)
+        end
+        if pixelBorders.dispel then
+            pixelBorders.dispel:SetVertexColor(finalColor.r, finalColor.g, finalColor.b)
+        end
+        if self.SpecIcon and self.SpecIcon.specIcon then
+            self.SpecIcon.specIcon:SetVertexColor(finalColor.r, finalColor.g, finalColor.b)
+        end
+        if self.CastBar then
+            if self.CastBar.castBar then
+                self.CastBar.castBar:SetVertexColor(finalColor.r, finalColor.g, finalColor.b)
+            end
+            if self.CastBar.castBarIcon then
+                self.CastBar.castBarIcon:SetVertexColor(finalColor.r, finalColor.g, finalColor.b)
+            end
+        end
     end
-    if trinketBorder then
-        trinketBorder:SetDesaturated(true)
-        local lighter_r = math.min(1, color.r + 0.2)
-        local lighter_g = math.min(1, color.g + 0.2)
-        local lighter_b = math.min(1, color.b + 0.2)
-        trinketBorder:SetVertexColor(lighter_r, lighter_g, lighter_b)
-    end
-    if racialBorder then
-        racialBorder:SetDesaturated(true)
-        local lighter_r = math.min(1, color.r + 0.2)
-        local lighter_g = math.min(1, color.g + 0.2)
-        local lighter_b = math.min(1, color.b + 0.2)
-        racialBorder:SetVertexColor(lighter_r, lighter_g, lighter_b)
-    end
-    if dispelBorder then
-        dispelBorder:SetDesaturated(true)
-        local lighter_r = math.min(1, color.r + 0.2)
-        local lighter_g = math.min(1, color.g + 0.2)
-        local lighter_b = math.min(1, color.b + 0.2)
-        dispelBorder:SetVertexColor(lighter_r, lighter_g, lighter_b)
+end
+
+function sArenaFrameMixin:ResetPixelBorders()
+    if self.PixelBorders and sArenaMixin.showPixelBorder then
+        local pixelBorders = self.PixelBorders
+
+        if pixelBorders.main then
+            pixelBorders.main:SetVertexColor(0, 0, 0)
+        end
+        if pixelBorders.classIcon then
+            pixelBorders.classIcon:SetVertexColor(0, 0, 0)
+        end
+        if pixelBorders.trinket then
+            pixelBorders.trinket:SetVertexColor(0, 0, 0)
+        end
+        if pixelBorders.racial then
+            pixelBorders.racial:SetVertexColor(0, 0, 0)
+        end
+        if pixelBorders.dispel then
+            pixelBorders.dispel:SetVertexColor(0, 0, 0)
+        end
+        if self.SpecIcon and self.SpecIcon.specIcon then
+            self.SpecIcon.specIcon:SetVertexColor(0, 0, 0)
+        end
+        if self.CastBar then
+            if self.CastBar.castBar then
+                self.CastBar.castBar:SetVertexColor(0, 0, 0)
+            end
+            if self.CastBar.castBarIcon then
+                self.CastBar.castBarIcon:SetVertexColor(0, 0, 0)
+            end
+        end
     end
 end
 
@@ -1283,14 +1752,24 @@ function sArenaFrameMixin:UpdateFrameColors()
         self:ClassColorFrameTexture()
     elseif sArenaMixin:DarkMode() then
         self:DarkModeFrame()
+        self:ResetPixelBorders()
     else
         if self.frameTexture then
             self.frameTexture:SetDesaturated(false)
             self.frameTexture:SetVertexColor(1, 1, 1)
         end
         if self.SpecIcon.Border then
-            self.SpecIcon.Border:SetDesaturated(false)
-            self.SpecIcon.Border:SetVertexColor(1, 1, 1)
+            if db.profile.currentLayout == "BlizzCompact" then
+                self.SpecIcon.Border:SetDesaturated(true)
+                self.SpecIcon.Border:SetVertexColor(0, 0, 0)
+            else
+                self.SpecIcon.Border:SetDesaturated(false)
+                self.SpecIcon.Border:SetVertexColor(1, 1, 1)
+            end
+        end
+        if self.ClassIcon.Border then
+            self.ClassIcon.Border:SetDesaturated(false)
+            self.ClassIcon.Border:SetVertexColor(1, 1, 1)
         end
         if self.CastBar.Border then
             self.CastBar.Border:SetDesaturated(false)
@@ -1304,6 +1783,7 @@ function sArenaFrameMixin:UpdateFrameColors()
             self.Racial.Border:SetDesaturated(false)
             self.Racial.Border:SetVertexColor(1, 1, 1)
         end
+        self:ResetPixelBorders()
     end
 end
 
@@ -1322,6 +1802,35 @@ function sArenaMixin:SetLayout(_, layout)
 
     layout = sArenaMixin.layouts[layout] and layout or "Gladiuish"
 
+    -- Detect if this is a user-initiated layout change (not from addon load)
+    local oldLayout = db.profile.currentLayout
+    local isUserChange = oldLayout ~= nil and oldLayout ~= layout
+
+    -- Handle BlizzRaid layout hideClassIcon setting
+    if isUserChange then
+        if layout == "BlizzRaid" then
+            -- Store the previous hideClassIcon value before changing to BlizzRaid
+            if not db.profile.hideClassIconBeforeBlizzRaid then
+                db.profile.hideClassIconBeforeBlizzRaid = db.profile.hideClassIcon
+            end
+            db.profile.hideClassIcon = true
+        elseif oldLayout == "BlizzRaid" then
+            -- Restore the previous hideClassIcon value when leaving BlizzRaid
+            if db.profile.hideClassIconBeforeBlizzRaid ~= nil then
+                db.profile.hideClassIcon = db.profile.hideClassIconBeforeBlizzRaid
+                db.profile.hideClassIconBeforeBlizzRaid = nil
+            else
+                db.profile.hideClassIcon = false
+            end
+        end
+    end
+
+    if layout == "BlizzRaid" or layout == "Pixelated" then
+        sArenaMixin.showPixelBorder = true
+    else
+        sArenaMixin.showPixelBorder = false
+    end
+
     db.profile.currentLayout = layout
     self.layoutdb = self.db.profile.layoutSettings[layout]
 
@@ -1335,7 +1844,6 @@ function sArenaMixin:SetLayout(_, layout)
         self.layouts[layout]:Initialize(frame)
         frame:UpdatePlayer()
         sArenaMixin:ApplyPrototypeFont(frame)
-        frame:UpdateDRCooldownReverse()
         frame:UpdateClassIconCooldownReverse()
         frame:UpdateTrinketRacialCooldownReverse()
         frame:UpdateClassIconSwipeSettings()
@@ -1346,6 +1854,7 @@ function sArenaMixin:SetLayout(_, layout)
 
     self:ModernOrClassicCastbar()
     self:UpdateFonts()
+    self:UpdateCastBarSettings(self.layoutdb.castBar)
 
     self.optionsTable.args.layoutSettingsGroup.args = self.layouts[layout].optionsTable and self.layouts[layout].optionsTable or emptyLayoutOptionsTable
     LibStub("AceConfigRegistry-3.0"):NotifyChange("sArena")
@@ -1356,11 +1865,15 @@ function sArenaMixin:SetLayout(_, layout)
     end
 end
 
-function sArenaMixin:SetupDrag(frameToClick, frameToMove, settingsTable, updateMethod)
+function sArenaMixin:SetupDrag(frameToClick, frameToMove, settingsTable, updateMethod, isWidget)
+    if frameToClick.dragSetup then return end
     frameToClick:HookScript("OnMouseDown", function()
         if (InCombatLockdown()) then return end
 
         if (IsShiftKeyDown() and IsControlKeyDown() and not frameToMove.isMoving) then
+            if isWidget then
+                frameToMove.dragStartX, frameToMove.dragStartY = frameToMove:GetCenter()
+            end
             frameToMove:StartMoving()
             frameToMove.isMoving = true
         end
@@ -1373,40 +1886,86 @@ function sArenaMixin:SetupDrag(frameToClick, frameToMove, settingsTable, updateM
             frameToMove:StopMovingOrSizing()
             frameToMove.isMoving = false
 
-            local settings = db.profile.layoutSettings[db.profile.currentLayout]
+            local settings
 
-            if (settingsTable) then
+            if isWidget then
+                settings = db.profile.layoutSettings[db.profile.currentLayout].widgets
+                if not settings then return end
+                if not settings[settingsTable] then
+                    settings[settingsTable] = {}
+                end
                 settings = settings[settingsTable]
+            else
+                settings = db.profile.layoutSettings[db.profile.currentLayout]
+                if (settingsTable) then
+                    settings = settings[settingsTable]
+                end
             end
 
-            local parentX, parentY = frameToMove:GetParent():GetCenter()
-            local frameX, frameY = frameToMove:GetCenter()
-            local scale = frameToMove:GetScale()
+            if isWidget then
+                local newX, newY = frameToMove:GetCenter()
+                local scale = frameToMove:GetScale()
+                local deltaX = ((newX - frameToMove.dragStartX) * scale) / scale
+                local deltaY = ((newY - frameToMove.dragStartY) * scale) / scale
 
-            frameX = ((frameX * scale) - parentX) / scale
-            frameY = ((frameY * scale) - parentY) / scale
+                local currentX = settings.posX or 0
+                local currentY = settings.posY or 0
 
-            -- Round to 1 decimal place
-            frameX = floor(frameX * 10 + 0.5) / 10
-            frameY = floor(frameY * 10 + 0.5) / 10
+                settings.posX = floor((currentX + deltaX) * 10 + 0.5) / 10
+                settings.posY = floor((currentY + deltaY) * 10 + 0.5) / 10
 
-            settings.posX, settings.posY = frameX, frameY
-            self[updateMethod](self, settings)
+                frameToMove.dragStartX = nil
+                frameToMove.dragStartY = nil
+
+                local widgetsSettings = db.profile.layoutSettings[db.profile.currentLayout].widgets
+                self:UpdateWidgetSettings(widgetsSettings)
+            else
+                local frameX, frameY = frameToMove:GetCenter()
+                local parentX, parentY = frameToMove:GetParent():GetCenter()
+                local scale = frameToMove:GetScale()
+
+                frameX = ((frameX * scale) - parentX) / scale
+                frameY = ((frameY * scale) - parentY) / scale
+
+                frameX = floor(frameX * 10 + 0.5) / 10
+                frameY = floor(frameY * 10 + 0.5) / 10
+
+                settings.posX, settings.posY = frameX, frameY
+                self[updateMethod](self, settings)
+            end
+
             LibStub("AceConfigRegistry-3.0"):NotifyChange("sArena")
         end
     end)
+    frameToClick.dragSetup = true
 end
 
 function sArenaMixin:SetMouseState(state)
     for i = 1, sArenaMixin.maxArenaOpponents do
         local frame = self["arena" .. i]
         frame.CastBar:EnableMouse(state)
-        for i = 1, #self.drCategories do
-            frame[self.drCategories[i]]:EnableMouse(state)
+
+        if isMidnight and frame.drTray then
+            frame.drTray:EnableMouse(false)
+            frame.drTray:SetMouseClickEnabled(false)
+            if frame.drFrames then
+                for _, drFrame in ipairs(frame.drFrames) do
+                    if drFrame then
+                        drFrame:EnableMouse(false)
+                        drFrame:SetMouseClickEnabled(false)
+                    end
+                end
+            end
         end
+
         frame.SpecIcon:EnableMouse(state)
         frame.Trinket:EnableMouse(state)
         frame.Racial:EnableMouse(state)
+        frame.Dispel:EnableMouse(state)
+
+        for _, child in pairs({frame.WidgetOverlay:GetChildren()}) do
+            child:EnableMouse(state)
+        end
     end
 end
 
@@ -1427,10 +1986,133 @@ local function ResetTexture(texturePool, t)
     t:Hide()
 end
 
+function sArenaMixin:RegisterWidgetEvents()
+    local widgetSettings = db and db.profile.layoutSettings[db.profile.currentLayout].widgets
+
+    self:UnregisterWidgetEvents()
+
+    if widgetSettings then
+        if widgetSettings.targetIndicator and widgetSettings.targetIndicator.enabled then
+            self:RegisterEvent("PLAYER_TARGET_CHANGED")
+        end
+
+        if widgetSettings.focusIndicator and widgetSettings.focusIndicator.enabled then
+            self:RegisterEvent("PLAYER_FOCUS_CHANGED")
+        end
+
+        if widgetSettings.partyTargetIndicators and widgetSettings.partyTargetIndicators.enabled then
+            self:RegisterEvent("UNIT_TARGET")
+        end
+
+        if widgetSettings.combatIndicator and widgetSettings.combatIndicator.enabled then
+            for i = 1, sArenaMixin.maxArenaOpponents do
+                local frame = self["arena" .. i]
+                local unit = frame.unit
+                self:RegisterUnitEvent("UNIT_FLAGS", unit)
+            end
+        end
+    end
+end
+
+function sArenaMixin:UnregisterWidgetEvents()
+    self:UnregisterEvent("PLAYER_TARGET_CHANGED")
+    self:UnregisterEvent("PLAYER_FOCUS_CHANGED")
+    self:UnregisterEvent("UNIT_TARGET")
+    for i = 1, sArenaMixin.maxArenaOpponents do
+        local frame = self["arena" .. i]
+        local unit = frame.unit
+        self:UnregisterEvent("UNIT_FLAGS", unit)
+    end
+end
+
+function sArenaFrameMixin:CreateCastBar()
+    self.CastBar = CreateFrame("StatusBar", nil, self, "sArenaCastBarFrameTemplate")
+end
+
+function sArenaFrameMixin:CreateDRFrames()
+    for _, category in ipairs(sArenaMixin.drCategories) do
+        local drFrame = CreateFrame("Frame", nil, self, "sArenaDRFrameTemplate")
+        self[category] = drFrame
+    end
+end
+
+local function HideChargeTiers(castBar)
+    castBar.ChargeTier1:Hide()
+    castBar.ChargeTier2:Hide()
+    castBar.ChargeTier3:Hide()
+    if castBar.ChargeTier4 then
+        castBar.ChargeTier4:Hide()
+    end
+end
+
 function sArenaFrameMixin:OnLoad()
     if sArenaMixin:CompatibilityIssueExists() then return end
     local unit = "arena" .. self:GetID()
     self.parent = self:GetParent()
+
+    if not isMidnight then
+        self:CreateCastBar()
+        self:CreateDRFrames()
+        self:RegisterUnitEvent("UNIT_AURA", unit)
+        self:RegisterUnitEvent("UNIT_ABSORB_AMOUNT_CHANGED", unit)
+        self:RegisterUnitEvent("UNIT_HEAL_ABSORB_AMOUNT_CHANGED", unit)
+        if isRetail then
+            self.CastBar.empoweredFix = true
+            self.CastBar:SetUnit(unit, false, true)
+        else
+            CastingBarFrame_SetUnit(self.CastBar, unit, false, true)
+        end
+    else
+        local blizzArenaFrame = _G["CompactArenaFrameMember" .. self:GetID()]
+        self.CastBar = blizzArenaFrame.CastingBarFrame
+        self.CastBar:SetFrameStrata("HIGH")
+        self.totalAbsorbBar:Hide()
+        self.overAbsorbGlow:Hide()
+        self.overHealAbsorbGlow:Hide()
+        self.otherHealPredictionBar:Hide()
+        self.totalAbsorbBarOverlay:Hide()
+        self.myHealPredictionBar:Hide()
+        local healthBar = self.HealthBar
+
+        local debuffFrame = blizzArenaFrame.DebuffFrame
+        if debuffFrame then
+            hooksecurefunc(debuffFrame.Icon, "SetTexture", function(_, tex)
+                if tex == "INTERFACE\\ICONS\\INV_MISC_QUESTIONMARK.BLP" or (db and db.profile.disableAurasOnClassIcon) then
+                    self:UpdateClassIcon(true)
+                else
+                    self.ClassIcon:SetTexture(tex)
+                end
+            end)
+            hooksecurefunc(debuffFrame.Cooldown, "SetCooldown", function(_, start, duration)
+                if (db and db.profile.disableAurasOnClassIcon) then return end
+                self.ClassIconCooldown:SetCooldown(start, duration)
+            end)
+        end
+        local trinketFrame = blizzArenaFrame.CcRemoverFrame
+        if trinketFrame then
+            trinketFrame:SetParent(self)
+            trinketFrame:SetAlpha(0)
+            hooksecurefunc(trinketFrame.Cooldown, "SetCooldown", function(_, start, duration)
+                self.Trinket.Cooldown:SetCooldown(start, duration)
+                self.Trinket.Texture:SetDesaturated(db and db.profile.desaturateTrinketCD)
+            end)
+        end
+
+        local ogOverabsorb = blizzArenaFrame.overAbsorbGlow
+        ogOverabsorb:ClearAllPoints()
+        ogOverabsorb:SetPoint("TOP", healthBar, "TOPRIGHT", 0, 0)
+        ogOverabsorb:SetPoint("BOTTOM", healthBar, "BOTTOMRIGHT", 0, 0)
+        ogOverabsorb:SetParent(healthBar)
+        ogOverabsorb:Hide()
+        hooksecurefunc(ogOverabsorb, "SetPoint", function(self)
+            if self.changing then return end
+            self.changing = true
+            self:ClearAllPoints()
+            self:SetPoint("TOP", healthBar, "TOPRIGHT", 0, 0)
+            self:SetPoint("BOTTOM", healthBar, "BOTTOMRIGHT", 0, 0)
+            self.changing = false
+        end)
+    end
 
     self:RegisterEvent("PLAYER_LOGIN")
     self:RegisterEvent("PLAYER_ENTERING_WORLD")
@@ -1444,21 +2126,11 @@ function sArenaFrameMixin:OnLoad()
     self:RegisterUnitEvent("UNIT_POWER_UPDATE", unit)
     self:RegisterUnitEvent("UNIT_MAXPOWER", unit)
     self:RegisterUnitEvent("UNIT_DISPLAYPOWER", unit)
-    self:RegisterUnitEvent("UNIT_AURA", unit)
-    self:RegisterUnitEvent("UNIT_ABSORB_AMOUNT_CHANGED", unit)
-    self:RegisterUnitEvent("UNIT_HEAL_ABSORB_AMOUNT_CHANGED", unit)
-
     self:RegisterForClicks("AnyDown", "AnyUp")
     self:SetAttribute("*type1", "target")
     self:SetAttribute("*type2", "focus")
     self:SetAttribute("unit", unit)
     self.unit = unit
-
-    if isRetail then
-        self.CastBar:SetUnit(unit, false, true)
-    else
-        CastingBarFrame_SetUnit(self.CastBar, unit, false, true)
-    end
 
     local CastStopEvents  = {
         UNIT_SPELLCAST_STOP                = true,
@@ -1472,11 +2144,16 @@ function sArenaFrameMixin:OnLoad()
             if castBar.interruptedBy then
                 castBar:Show()
             else
-                if not UnitCastingInfo(unit) and not UnitChannelInfo(unit) then
+                local cast = UnitCastingInfo(unit) or UnitChannelInfo(unit)
+                if not cast then
                     castBar:Hide()
+                    if isRetail then
+                        return
+                    end
                 end
             end
         end
+        sArenaMixin:CastbarOnEvent(self.CastBar)
     end)
 
     self.healthbar = self.HealthBar
@@ -1512,6 +2189,16 @@ function sArenaFrameMixin:OnLoad()
         self.Dispel.Overlay:SetFrameStrata("MEDIUM")
         self.Dispel.Overlay:SetFrameLevel(10)
     end
+
+    self.WidgetOverlay.targetIndicator.Texture:SetAtlas("TargetCrosshairs")
+    self.WidgetOverlay.focusIndicator.Texture:SetTexture("Interface\\AddOns\\sArena_Reloaded\\Textures\\Waypoint-MapPin-Untracked.tga")
+    self.WidgetOverlay.combatIndicator.Texture:SetAtlas("Food")
+    self.WidgetOverlay.partyTarget1.Texture:SetTexture("Interface\\AddOns\\sArena_Reloaded\\Textures\\GM-icon-headCount.tga")
+    self.WidgetOverlay.partyTarget1.Texture:SetDesaturated(true)
+    self.WidgetOverlay.partyTarget2.Texture:SetTexture("Interface\\AddOns\\sArena_Reloaded\\Textures\\GM-icon-headCount.tga")
+    self.WidgetOverlay.partyTarget2.Texture:SetDesaturated(true)
+    self.WidgetOverlay.targetIndicator:SetFrameLevel(15)
+    self.Trinket:SetFrameLevel(7)
 
     self.DispelStacks:SetParent(self.Dispel.Overlay)
 
@@ -1594,7 +2281,7 @@ function sArenaFrameMixin:OnEvent(event, eventUnit, arg1)
                     if shouldPutRacialOnTrinket then
                         self.updateRacialOnTrinketSlot = true
                         self:UpdateRacial()
-                        return
+                        if isRetail then return end -- Need to test MoP more...
                     else
                         self.updateRacialOnTrinketSlot = nil
                         -- Ensure racial shows in racial slot if it was on trinket before
@@ -1606,29 +2293,46 @@ function sArenaFrameMixin:OnEvent(event, eventUnit, arg1)
                         self.Trinket.Texture:SetTexture(self:GetFactionTrinketIcon())
                         self:UpdateTrinketIcon(true)
                     else
-                        self.Trinket.Texture:SetTexture(sArenaMixin.noTrinketTexture)
-                        self:UpdateTrinketIcon(false)
+                        if db.profile.swapRacialTrinket then
+                            self:UpdateRacial()
+                        else
+                            self.Trinket.Texture:SetTexture(sArenaMixin.noTrinketTexture)
+                            self:UpdateTrinketIcon(false)
+                        end
                     end
                 end
             end
         elseif (event == "UNIT_AURA") then
             self:FindAura()
         elseif (event == "UNIT_HEALTH") then
-            local currentHealth = UnitHealth(unit)
-            if currentHealth ~= 0 then
-                self:SetStatusText()
-                self.HealthBar:SetValue(currentHealth)
-                self:UpdateHealPrediction()
-                self:UpdateAbsorb()
-                self.DeathIcon:SetShown(false)
-                self.hideStatusText = false
-                self.currentHealth = currentHealth
-                if self.isFeigningDeath then
-                    self.HealthBar:SetAlpha(1)
-                    self.isFeigningDeath = nil
+            if isMidnight then
+                local isDead = UnitIsDeadOrGhost(unit)
+                self.hideStatusText = isDead
+                self.HealthBar:SetValue(UnitHealth(unit))
+                if (isDead) then
+                    --self.HealthBar:SetValue(0)
+                    self.SpecNameText:SetText("")
+                    self.WidgetOverlay:Hide()
                 end
+                self.DeathIcon:SetShown(isDead)
+                self:SetStatusText()
             else
-                self:SetLifeState()
+                local currentHealth = UnitHealth(unit)
+                if currentHealth ~= 0 then
+                    self:SetStatusText()
+                    self.HealthBar:SetValue(currentHealth)
+                    self:UpdateHealPrediction()
+                    self:UpdateAbsorb()
+                    self.DeathIcon:SetShown(false)
+                    self.hideStatusText = false
+                    self.currentHealth = currentHealth
+                    if self.isFeigningDeath then
+                        self.HealthBar:SetAlpha(1)
+                        self.isFeigningDeath = nil
+                    end
+                else
+                    self:SetLifeState()
+                end
             end
         elseif (event == "UNIT_MAXHEALTH") then
             self.HealthBar:SetMinMaxValues(0, UnitHealthMax(unit))
@@ -1652,7 +2356,10 @@ function sArenaFrameMixin:OnEvent(event, eventUnit, arg1)
         elseif (event == "UNIT_HEAL_ABSORB_AMOUNT_CHANGED") then
             self:UpdateHealPrediction()
             self:UpdateAbsorb()
+        elseif (event == "UNIT_FLAGS") then
+            self:UpdateCombatStatus(unit)
         end
+
     elseif (event == "PLAYER_LOGIN") then
         self:UnregisterEvent("PLAYER_LOGIN")
 
@@ -1662,6 +2369,10 @@ function sArenaFrameMixin:OnEvent(event, eventUnit, arg1)
 
         self:Initialize()
     elseif (event == "PLAYER_ENTERING_WORLD") or (event == "ARENA_PREP_OPPONENT_SPECIALIZATIONS") then
+        if self.drTray then
+            local _, instanceType = IsInInstance()
+            self.drTray:SetAlpha(instanceType == "arena" and 1 or 0)
+        end
         self.Name:SetText("")
         self.CastBar:Hide()
         self.specTexture = nil
@@ -1672,8 +2383,10 @@ function sArenaFrameMixin:OnEvent(event, eventUnit, arg1)
         self:UpdateVisible()
         self:ResetTrinket()
         self:ResetRacial()
-        self:ResetDispel()
-        self:ResetDR()
+        if not isMidnight then
+            self:ResetDispel()
+            self:ResetDR()
+        end
         self:UpdateHealPrediction()
         self:UpdateAbsorb()
         if UnitExists(self.unit) then
@@ -1696,15 +2409,35 @@ function sArenaFrameMixin:Initialize()
     self:SetMysteryPlayer()
     self.parent:SetupDrag(self, self.parent, nil, "UpdateFrameSettings")
     self.parent:SetupDrag(self.CastBar, self.CastBar, "castBar", "UpdateCastBarSettings")
-    self.parent:SetupDrag(self[sArenaMixin.drCategories[1]], self[sArenaMixin.drCategories[1]], "dr", "UpdateDRSettings")
+
+    -- Setup DR dragging based on system
+    if isMidnight then
+        local blizzArenaFrame = _G["CompactArenaFrameMember" .. self:GetID()]
+        if blizzArenaFrame and blizzArenaFrame.SpellDiminishStatusTray then
+            self.drTray = blizzArenaFrame.SpellDiminishStatusTray
+            blizzArenaFrame.SpellDiminishStatusTray:SetMovable(true)
+            self.parent:SetupDrag(blizzArenaFrame.SpellDiminishStatusTray, blizzArenaFrame.SpellDiminishStatusTray, "dr", "UpdateDRSettings")
+        end
+    else
+        self.parent:SetupDrag(self[sArenaMixin.drCategories[1]], self[sArenaMixin.drCategories[1]], "dr", "UpdateDRSettings")
+    end
+
     self.parent:SetupDrag(self.SpecIcon, self.SpecIcon, "specIcon", "UpdateSpecIconSettings")
     self.parent:SetupDrag(self.Trinket, self.Trinket, "trinket", "UpdateTrinketSettings")
     self.parent:SetupDrag(self.Racial, self.Racial, "racial", "UpdateRacialSettings")
     self.parent:SetupDrag(self.Dispel, self.Dispel, "dispel", "UpdateDispelSettings")
+
+    self.parent:SetupDrag(self.WidgetOverlay.combatIndicator, self.WidgetOverlay.combatIndicator, "combatIndicator", nil, true)
+    self.parent:SetupDrag(self.WidgetOverlay.targetIndicator, self.WidgetOverlay.targetIndicator, "targetIndicator", nil, true)
+    self.parent:SetupDrag(self.WidgetOverlay.focusIndicator, self.WidgetOverlay.focusIndicator, "focusIndicator", nil, true)
+    self.parent:SetupDrag(self.WidgetOverlay.partyTarget1, self.WidgetOverlay.partyTarget1, "partyTargetIndicators", nil, true)
+    self.parent:SetupDrag(self.WidgetOverlay.partyTarget2, self.WidgetOverlay.partyTarget1, "partyTargetIndicators", nil, true)
 end
 
 function sArenaFrameMixin:OnEnter()
-    UnitFrame_OnEnter(self)
+    if not isMidnight then
+        UnitFrame_OnEnter(self)
+    end
 
     self.HealthText:Show()
     self.PowerText:Show()
@@ -1928,7 +2661,11 @@ function sArenaFrameMixin:UpdatePlayer(unitEvent)
     local unit = self.unit
 
     self:GetClass()
-    self:FindAura()
+    if isMidnight then
+        self:UpdateClassIcon()
+    else
+        self:FindAura()
+    end
 
     if (unitEvent and unitEvent ~= "seen") or (UnitGUID(self.unit) == nil) then
         self:SetMysteryPlayer()
@@ -1938,7 +2675,14 @@ function sArenaFrameMixin:UpdatePlayer(unitEvent)
     C_PvP.RequestCrowdControlSpell(unit)
 
     self:UpdateRacial()
-    self:UpdateDispel()
+    if not isMidnight then
+        self:UpdateDispel()
+    end
+    self.WidgetOverlay:Show()
+    self:UpdateCombatStatus(unit)
+    self:UpdatePartyTargets(unit)
+    self:UpdateTarget(unit)
+    self:UpdateFocus(unit)
 
     -- Prevent castbar and other frames from intercepting mouse clicks during a match
     if (unitEvent == "seen") then
@@ -1965,7 +2709,9 @@ function sArenaFrameMixin:UpdatePlayer(unitEvent)
     self:OnEvent("UNIT_MAXPOWER", unit)
     self:OnEvent("UNIT_POWER_UPDATE", unit)
     self:OnEvent("UNIT_DISPLAYPOWER", unit)
-    self:OnEvent("UNIT_ABSORB_AMOUNT_CHANGED", unit)
+    if not isMidnight then
+        self:OnEvent("UNIT_ABSORB_AMOUNT_CHANGED", unit)
+    end
 
     local color = RAID_CLASS_COLORS[select(2, UnitClass(unit))]
 
@@ -2033,6 +2779,7 @@ function sArenaFrameMixin:SetMysteryPlayer()
 
     self.hideStatusText = true
     self:SetStatusText()
+    self.WidgetOverlay:Hide()
 
     self.DeathIcon:Hide()
 end
@@ -2077,7 +2824,7 @@ function sArenaFrameMixin:GetClass()
 end
 
 
-function sArenaFrameMixin:UpdateClassIcon()
+function sArenaFrameMixin:UpdateClassIcon(continue)
 	if (self.currentAuraSpellID and self.currentAuraDuration > 0 and self.currentClassIconStartTime ~= self.currentAuraStartTime) then
 		self.ClassIconCooldown:SetCooldown(self.currentAuraStartTime, self.currentAuraDuration)
 		self.currentClassIconStartTime = self.currentAuraStartTime
@@ -2088,7 +2835,7 @@ function sArenaFrameMixin:UpdateClassIcon()
 
 	local texture = self.currentAuraSpellID and self.currentAuraTexture or self.class and "class" or 134400
 
-	if (self.currentClassIconTexture == texture) then return end
+	if (self.currentClassIconTexture == texture) and not continue then return end
 
 	self.currentClassIconTexture = texture
 
@@ -2105,24 +2852,15 @@ function sArenaFrameMixin:UpdateClassIcon()
             if self.ClassIconMsq then
                 self.ClassIconMsq:Hide()
             end
-            if self.PixelBorders and self.PixelBorders.classIcon then
-                self.PixelBorders.classIcon:Hide()
-            end
         elseif db.profile.layoutSettings[db.profile.currentLayout].replaceClassIcon and self.specTexture then
             texture = self.specTexture
             if self.ClassIconMsq then
                 self.ClassIconMsq:Show()
             end
-            if self.PixelBorders and self.PixelBorders.classIcon then
-                self.PixelBorders.classIcon:Show()
-            end
         else
             texture = sArenaMixin.classIcons[self.class]
             if self.ClassIconMsq then
                 self.ClassIconMsq:Show()
-            end
-            if self.PixelBorders and self.PixelBorders.classIcon then
-                self.PixelBorders.classIcon:Show()
             end
         end
 
@@ -2134,16 +2872,12 @@ function sArenaFrameMixin:UpdateClassIcon()
 
         local cropType = useHealerTexture and "healer" or "class"
         self:SetTextureCrop(self.ClassIcon, db.profile.layoutSettings[db.profile.currentLayout].cropIcons, cropType)
-
 		return
 	end
 	self:SetTextureCrop(self.ClassIcon, db and db.profile.layoutSettings[db.profile.currentLayout].cropIcons, "class")
 	self.ClassIcon:SetTexture(texture)
     if self.ClassIconMsq then
         self.ClassIconMsq:Show()
-    end
-    if self.PixelBorders and self.PixelBorders.classIcon then
-        self.PixelBorders.classIcon:Show()
     end
 end
 
@@ -2155,16 +2889,10 @@ function sArenaFrameMixin:UpdateSpecIcon()
         if self.SpecIconMsq then
             self.SpecIconMsq:Show()
         end
-        if self.PixelBorders and self.PixelBorders.classIcon then
-            self.PixelBorders.classIcon:Show()
-        end
     else
         self.SpecIcon:Hide()
         if self.SpecIconMsq then
             self.SpecIconMsq:Hide()
-        end
-        if self.PixelBorders and self.PixelBorders.specIcon then
-            self.PixelBorders.specIcon:Hide()
         end
     end
 end
@@ -2172,6 +2900,7 @@ end
 local function ResetStatusBar(f)
     f:ClearAllPoints()
     f:SetSize(0, 0)
+    f:SetStatusBarColor(1, 1, 1, 1)
     f:SetScale(1)
 end
 
@@ -2213,8 +2942,10 @@ function sArenaFrameMixin:ResetLayout()
     self.DispelStacks:SetPoint("BOTTOMLEFT", self.Dispel.Texture, "BOTTOMLEFT", 2, 0)
     self.DispelStacks:SetFont("Interface\\AddOns\\sArena_Reloaded\\Textures\\arialn.ttf", 15, "THICKOUTLINE")
 
+    self.ClassIconMask:SetTexture("Interface\\CharacterFrame\\TempPortraitAlphaMask")
     self.ClassIcon:RemoveMaskTexture(self.ClassIconMask)
     self.ClassIcon:SetDrawLayer("BORDER", 1)
+    self.ClassIcon:SetScale(1)
     if self.frameTexture then
         self.frameTexture:SetDrawLayer("ARTWORK", 2)
         self.frameTexture:SetDesaturated(false)
@@ -2241,6 +2972,11 @@ function sArenaFrameMixin:ResetLayout()
         self.Dispel.Border:SetVertexColor(1, 1, 1)
     end
 
+    self.ClassIcon.useModernBorder = nil
+    self.Trinket.useModernBorder = nil
+    self.Racial.useModernBorder = nil
+    self.Dispel.useModernBorder = nil
+
     if self.SpecIcon.Border then
         self.SpecIcon.Border:SetDesaturated(false)
         self.SpecIcon.Border:SetVertexColor(1, 1, 1)
@@ -2261,6 +2997,7 @@ function sArenaFrameMixin:ResetLayout()
     local f = self.Trinket
     f:ClearAllPoints()
     f:SetSize(0, 0)
+    f.Cooldown:SetUseCircularEdge(false)
     if f.Mask then
         f.Texture:RemoveMaskTexture(f.Mask)
         f.Cooldown:SetSwipeTexture(1)
@@ -2270,6 +3007,7 @@ function sArenaFrameMixin:ResetLayout()
     local f = self.Dispel
     f:ClearAllPoints()
     f:SetSize(0, 0)
+    f.Cooldown:SetUseCircularEdge(false)
     if f.Mask then
         f.Texture:RemoveMaskTexture(f.Mask)
         f.Cooldown:SetSwipeTexture(1)
@@ -2282,6 +3020,7 @@ function sArenaFrameMixin:ResetLayout()
     f = self.Racial
     f:ClearAllPoints()
     f:SetSize(0, 0)
+    f.Cooldown:SetUseCircularEdge(false)
     if f.Mask then
         f.Texture:RemoveMaskTexture(f.Mask)
         f.Cooldown:SetSwipeTexture(1)
@@ -2355,7 +3094,7 @@ function sArenaFrameMixin:SetLifeState()
         self:UpdateAbsorb()
         self.currentHealth = 0
         self.SpecNameText:SetText("")
-        self:ResetDR()
+        self.WidgetOverlay:Hide()
     elseif isFeigningDeath then
         self.HealthBar:SetAlpha(0.55)
         self.isFeigningDeath = true
@@ -2364,8 +3103,8 @@ end
 
 local function FormatLargeNumbers(value)
     if value >= 1000000 then
-        -- For millions, show 2 decimal places (e.g., 1.80M)
-        return string.format("%.2f M", value / 1000000)
+        -- For millions, show 1 decimal place (e.g., 1.8M)
+        return string.format("%.1f M", value / 1000000)
     elseif value >= 1000 then
         -- For thousands, show no decimals (e.g., 392K)
         return string.format("%d K", value / 1000)
@@ -2402,12 +3141,19 @@ function sArenaFrameMixin:SetStatusText(unit)
         self.PowerText:SetText(ppPercent .. "%")
     else
         if db.profile.statusText.formatNumbers then
-            self.HealthText:SetText(FormatLargeNumbers(hp))
-            self.PowerText:SetText(FormatLargeNumbers(pp))
+            if isMidnight then
+                self.HealthText:SetText(AbbreviateNumbers(hp))
+                self.PowerText:SetText(AbbreviateNumbers(pp))
+            else
+                self.HealthText:SetText(FormatLargeNumbers(hp))
+                self.PowerText:SetText(FormatLargeNumbers(pp))
+            end
         else
             self.HealthText:SetText(AbbreviateLargeNumbers(hp))
             self.PowerText:SetText(AbbreviateLargeNumbers(pp))
         end
+        self.HealthText:SetText(hp)
+        self.PowerText:SetText(pp)
     end
 end
 
@@ -2750,6 +3496,11 @@ function sArenaMixin:Test()
     local colorTrinket = db.profile.colorTrinket
     local modernCastbars = db.profile.layoutSettings[db.profile.currentLayout].castBar.useModernCastbars
     local keepDefaultModernTextures = db.profile.layoutSettings[db.profile.currentLayout].castBar.keepDefaultModernTextures
+    local widgetSettings = db.profile.layoutSettings[db.profile.currentLayout].widgets
+    local partyTargetIndicatorsOn = widgetSettings.partyTargetIndicators.enabled
+    local targetIndicatorOn = widgetSettings.targetIndicator.enabled
+    local focusIndicatorOn = widgetSettings.focusIndicator.enabled
+    local combatIndicatorOn = widgetSettings.combatIndicator.enabled
 
     local topFrame
     local numUnits = math.min(sArenaMixin.testUnits or sArenaMixin.maxArenaOpponents, sArenaMixin.maxArenaOpponents)
@@ -2788,27 +3539,58 @@ function sArenaMixin:Test()
         frame:Show()
         frame:SetAlpha(1)
         frame.HealthBar:SetAlpha(1)
+        frame.WidgetOverlay:Show()
 
         frame.HealthBar:SetMinMaxValues(0, 100)
         frame.HealthBar:SetValue(100)
 
-        if i == 2 then
+        if i == 1 then
+            frame.WidgetOverlay.focusIndicator:SetShown(focusIndicatorOn)
+        elseif i == 2 then
             frame.HealthBar:SetValue(75)
+
+            frame.WidgetOverlay.targetIndicator:SetShown(targetIndicatorOn)
         elseif i == 3 then
             frame.HealthBar:SetValue(45)
+
+            local classColors = {}
+            for classToken, color in pairs(RAID_CLASS_COLORS) do
+                table.insert(classColors, color)
+            end
+
+            local color1 = classColors[math.random(#classColors)]
+            local color2 = classColors[math.random(#classColors)]
+
+            frame.WidgetOverlay.partyTarget1.Texture:SetVertexColor(color1.r, color1.g, color1.b)
+            frame.WidgetOverlay.partyTarget2.Texture:SetVertexColor(color2.r, color2.g, color2.b)
+
+            frame.WidgetOverlay.partyTarget1:SetShown(partyTargetIndicatorsOn)
+            frame.WidgetOverlay.partyTarget2:SetShown(partyTargetIndicatorsOn)
         end
+
+        frame.WidgetOverlay.combatIndicator:SetShown(combatIndicatorOn)
 
         frame.PowerBar:SetMinMaxValues(0, 100)
         frame.PowerBar:SetValue(100)
 
         -- Class Icon and Spec Icon + Spec Name
         if hideClassIcon then
-            frame.ClassIcon:SetTexture(nil)
+            local ccSpells = {408, 2139, 33786, 118, 122}
+            local ccIndex = ((i - 1) % #ccSpells) + 1
+            local spellTexture = GetSpellTexture(ccSpells[ccIndex])
+            frame.ClassIcon:SetTexture(spellTexture)
             if frame.ClassIconMsq then
                 frame.ClassIconMsq:Hide()
             end
             if frame.SpecIconMsq then
                 frame.SpecIconMsq:Hide()
+            end
+            if not replaceClassIcon then
+                frame.SpecIcon:Show()
+                frame.SpecIcon.Texture:SetTexture(data.specIcon)
+                if frame.SpecIconMsq then
+                    frame.SpecIconMsq:Show()
+                end
             end
         else
             if replaceClassIcon then
@@ -2943,59 +3725,195 @@ function sArenaMixin:Test()
 
         frame:UpdateFrameColors()
 
+
         -- DR Frames
-        local drsEnabled = #self.drCategories
-        if drsEnabled > 0 then
-            local drCategoryOrder = {
-                "Incapacitate",
-                "Stun",
-                "Root",
-                "Disorient",
-                "Silence",
-            }
-            local drCategoryTextures = {
-                [1] = 136071,  -- Incap (Poly)
-                [2] = 132298,  -- Stun (Kidney)
-                [3] = 135848,  -- Root (Frost Nova)
-                [4] = 136184,  -- Fear (Psychic Scream)
-                [5] = 458230,  -- Silence
-            }
+        if isMidnight then
+            local blizzArenaFrame = _G["CompactArenaFrameMember" .. i]
+            local arenaFrame = self["arena" .. i]
+            local drTray = blizzArenaFrame.SpellDiminishStatusTray
+            --drTray:SetParent(arenaFrame)
+            --drTray:Show()
+            drTray:EnableMouse(false)  -- Make sure the tray is clickthrough
+            arenaFrame.drTray = drTray
+            drTray:ClearAllPoints()
+            local layoutdb = db.profile.layoutSettings[db.profile.currentLayout]
+            local offset = ((sArenaMixin.drBaseSize or 28) / 2) + (sArenaMixin.launchedDuringArena and 16 or 0)
+            drTray:SetPoint("RIGHT", arenaFrame, "CENTER", layoutdb.dr.posX + offset, layoutdb.dr.posY)
+            local drsEnabled = #self.drCategories
+            if drsEnabled > 0 then
+                if not frame.fakeDRFrames then
+                    frame.fakeDRFrames = {}
 
-            for n = 1, 4 do
-                local drFrame = frame[drCategoryOrder[n]]
-                local textureID = drCategoryTextures[n]
-                drFrame.Icon:SetTexture(textureID)
-                drFrame:Show()
-                drFrame.Cooldown:SetCooldown(currTime, math.random(12, 25))
+                    -- Get DR settings from saved config
+                    local layout = self.db.profile.layoutSettings[self.db.profile.currentLayout]
+                    local drSettings = layout.dr or {}
+                    local drSize = drSettings.size or 28
 
-                local layout = self.db.profile.layoutSettings[self.db.profile.currentLayout]
-                local blackDRBorder = layout.dr and layout.dr.blackDRBorder
+                    local drCategoryTextures = {
+                        [1] = 136071,     -- Incap (Poly)
+                        [2] = 135860,     -- Stun (Whirl)
+                        [3] = 136100,     -- Root (Entangling Roots)
+                        [4] = 237563,     -- Fear (Dispersion)
+                    }
 
-                if (n == 1) then
-                    local borderColor = blackDRBorder and {0, 0, 0, 1} or {1, 0, 0, 1}
-                    local pixelBorderColor = blackDRBorder and {0, 0, 0, 1} or {1, 0, 0, 1}
-                    drFrame.Border:SetVertexColor(unpack(borderColor))
-                    if frame.PixelBorder then
-                        frame.PixelBorder:SetVertexColor(unpack(pixelBorderColor))
+                    for drIndex = 1, 4 do
+                        local fakeDRFrame = CreateFrame("Frame", "sArenaFakeDR" .. i .. "_" .. drIndex, arenaFrame)
+                        fakeDRFrame:SetSize(drSize, drSize)
+                        fakeDRFrame:SetFrameStrata("HIGH")
+                        fakeDRFrame:SetFrameLevel(11)
+                        fakeDRFrame:EnableMouse(false)
+
+                        -- Create Icon texture (identical to real DR frames)
+                        fakeDRFrame.Icon = fakeDRFrame:CreateTexture(nil, "ARTWORK")
+                        fakeDRFrame.Icon:SetAllPoints(fakeDRFrame)
+                        fakeDRFrame.Icon:SetTexCoord(0.08, 0.92, 0.08, 0.92)
+                        fakeDRFrame.Icon:SetTexture(drCategoryTextures[drIndex])
+                        fakeDRFrame.Icon:Show()
+
+                        -- Create Cooldown frame (identical to real DR frames)
+                        fakeDRFrame.Cooldown = CreateFrame("Cooldown", nil, fakeDRFrame, "CooldownFrameTemplate")
+                        fakeDRFrame.Cooldown:SetAllPoints(fakeDRFrame)
+                        fakeDRFrame.Cooldown:SetDrawBling(false)
+                        fakeDRFrame.Cooldown:SetHideCountdownNumbers(false)
+
+                        -- Create Border texture (identical to real DR frames)
+                        fakeDRFrame.Border = fakeDRFrame:CreateTexture(nil, "OVERLAY", nil, 6)
+                        fakeDRFrame.Border:SetTexture("Interface\\Buttons\\UI-Quickslot-Depress")
+                        fakeDRFrame.Border:SetAllPoints(fakeDRFrame)
+                        if drIndex == 1 then
+                            fakeDRFrame.Border:SetVertexColor(1, 0, 0)
+                        else
+                            fakeDRFrame.Border:SetVertexColor(0, 1, 0)
+                        end
+                        fakeDRFrame.Border:Show()
+
+                        -- Create Boverlay frame (identical to real DR frames)
+                        fakeDRFrame.Boverlay = CreateFrame("Frame", nil, fakeDRFrame)
+                        fakeDRFrame.Boverlay:SetFrameStrata("DIALOG")
+                        fakeDRFrame.Boverlay:SetFrameLevel(26)
+                        fakeDRFrame.Boverlay:SetAllPoints(fakeDRFrame)
+                        fakeDRFrame.Boverlay:Show()
+                        fakeDRFrame.Border:SetParent(fakeDRFrame.Boverlay)
+
+
+                        fakeDRFrame.DRTextFrame = CreateFrame("Frame", nil, fakeDRFrame)
+                        fakeDRFrame.DRTextFrame:SetAllPoints(fakeDRFrame)
+                        fakeDRFrame.DRTextFrame:SetFrameStrata("DIALOG")
+                        fakeDRFrame.DRTextFrame:SetFrameLevel(27)
+
+                        fakeDRFrame.DRText = fakeDRFrame.DRTextFrame:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
+                        fakeDRFrame.DRText:SetPoint("BOTTOMRIGHT", 4, -4)
+                        fakeDRFrame.DRText:SetFont("Interface\\AddOns\\sArena_MoP\\Textures\\arialn.ttf", 14, "OUTLINE")
+                        if drIndex == 1 then
+                            fakeDRFrame.DRText:SetTextColor(1, 0, 0)
+                            fakeDRFrame.DRText:SetText("%")
+                        else
+                            fakeDRFrame.DRText:SetTextColor(0, 1, 0)
+                            fakeDRFrame.DRText:SetText("½")
+                        end
+
+                        if drIndex == 1 then
+                            fakeDRFrame:SetPoint("RIGHT", drTray, "RIGHT", 0, 0)
+                        else
+                            fakeDRFrame:SetPoint("RIGHT", frame.fakeDRFrames[drIndex - 1], "LEFT", -2, 0)
+                        end
+
+                        fakeDRFrame:Show()
+                        fakeDRFrame:SetAlpha(1)
+                        frame.fakeDRFrames[drIndex] = fakeDRFrame
+                        fakeDRFrame.Cooldown:SetCooldown(currTime, math.random(12, 25))
                     end
-                    drFrame.DRTextFrame.DRText:SetText("%")
-                    drFrame.DRTextFrame.DRText:SetTextColor(1, 0, 0)
-                    if drFrame.__MSQ_New_Normal then
-                        drFrame.__MSQ_New_Normal:SetDesaturated(true)
-                        drFrame.__MSQ_New_Normal:SetVertexColor(1, 0, 0, 1)
+
+                    -- Apply DR settings to newly created fake frames
+                    self:UpdateDRSettings(drSettings)
+                end
+
+                -- Show and update all FAKE DR frames (for every test call)
+                if frame.fakeDRFrames then
+                    for n = 1, 4 do
+                        local fakeDRFrame = frame.fakeDRFrames[n]
+                        if fakeDRFrame then
+                            fakeDRFrame:Show()
+                            if fakeDRFrame.Cooldown then
+                                fakeDRFrame.Cooldown:SetCooldown(currTime, math.random(12, 35))
+                            end
+                        end
                     end
-                else
-                    local borderColor = blackDRBorder and {0, 0, 0, 1} or {0, 1, 0, 1}
-                    local pixelBorderColor = blackDRBorder and {0, 0, 0, 1} or {0, 1, 0, 1}
-                    drFrame.Border:SetVertexColor(unpack(borderColor))
-                    if frame.PixelBorder then
-                        frame.PixelBorder:SetVertexColor(unpack(pixelBorderColor))
+                end
+            end
+        else
+            local drsEnabled = #self.drCategories
+            if drsEnabled > 0 then
+                local drCategoryOrder = {
+                    "Incapacitate",
+                    "Stun",
+                    "Root",
+                    "Disorient",
+                    "Silence",
+                }
+                local drCategoryTextures = {
+                    [1] = 136071, -- Incap (Poly)
+                    [2] = 132298, -- Stun (Kidney)
+                    [3] = 135848, -- Root (Frost Nova)
+                    [4] = 136184, -- Fear (Psychic Scream)
+                    [5] = 458230, -- Silence
+                }
+
+                for n = 1, 4 do
+                    local drFrame = frame[drCategoryOrder[n]]
+                    local textureID = drCategoryTextures[n]
+                    drFrame.Icon:SetTexture(textureID)
+                    drFrame:Show()
+                    drFrame.Cooldown:SetCooldown(currTime, math.random(12, 25))
+
+                    local layout = self.db.profile.layoutSettings[self.db.profile.currentLayout]
+                    local db = layout.dr or {}
+                    local blackDRBorder = db.blackDRBorder
+
+                    if db.disableDRBorder then
+                        drFrame.Border:Hide()
+                        if drFrame.PixelBorder then
+                            drFrame.PixelBorder:Hide()
+                        end
+                    elseif db.thickPixelBorder then
+                        drFrame.Border:Hide()
+                        if drFrame.PixelBorder then
+                            drFrame.PixelBorder:Show()
+                        end
+                    else
+                        -- Show only normal border (for thinPixelBorder, brightDRBorder, drBorderGlowOff, or default)
+                        drFrame.Border:Show()
+                        if drFrame.PixelBorder then
+                            drFrame.PixelBorder:Hide()
+                        end
                     end
-                    drFrame.DRTextFrame.DRText:SetText("½")
-                    drFrame.DRTextFrame.DRText:SetTextColor(0, 1, 0)
-                    if drFrame.__MSQ_New_Normal then
-                        drFrame.__MSQ_New_Normal:SetDesaturated(true)
-                        drFrame.__MSQ_New_Normal:SetVertexColor(0, 1, 0, 1)
+
+                    if (n == 1) then
+                        local borderColor = blackDRBorder and { 0, 0, 0, 1 } or { 1, 0, 0, 1 }
+                        local pixelBorderColor = blackDRBorder and { 0, 0, 0, 1 } or { 1, 0, 0, 1 }
+                        drFrame.Border:SetVertexColor(unpack(borderColor))
+                        if drFrame.PixelBorder then
+                            drFrame.PixelBorder:SetVertexColor(unpack(pixelBorderColor))
+                        end
+                        drFrame.DRTextFrame.DRText:SetText("%")
+                        drFrame.DRTextFrame.DRText:SetTextColor(1, 0, 0)
+                        if drFrame.__MSQ_New_Normal then
+                            drFrame.__MSQ_New_Normal:SetDesaturated(true)
+                            drFrame.__MSQ_New_Normal:SetVertexColor(1, 0, 0, 1)
+                        end
+                    else
+                        local borderColor = blackDRBorder and { 0, 0, 0, 1 } or { 0, 1, 0, 1 }
+                        local pixelBorderColor = blackDRBorder and { 0, 0, 0, 1 } or { 0, 1, 0, 1 }
+                        drFrame.Border:SetVertexColor(unpack(borderColor))
+                        if drFrame.PixelBorder then
+                            drFrame.PixelBorder:SetVertexColor(unpack(pixelBorderColor))
+                        end
+                        drFrame.DRTextFrame.DRText:SetText("½")
+                        drFrame.DRTextFrame.DRText:SetTextColor(0, 1, 0)
+                        if drFrame.__MSQ_New_Normal then
+                            drFrame.__MSQ_New_Normal:SetDesaturated(true)
+                            drFrame.__MSQ_New_Normal:SetVertexColor(0, 1, 0, 1)
+                        end
                     end
                 end
             end
@@ -3008,7 +3926,17 @@ function sArenaMixin:Test()
                 generalStatusBarTexture = "sArena Default",
                 healStatusBarTexture    = "sArena Default",
                 castbarStatusBarTexture = "sArena Default",
+                castbarUninterruptibleTexture = "sArena Default",
             }
+
+            -- Get custom colors if enabled
+            local colors = db.profile.castBarColors
+            local useCustomColors = layout.castBar and layout.castBar.recolorCastbar
+
+            frame.tempCast = true
+            frame.tempChannel = data.channel or false
+            frame.tempUninterruptible = data.unint or false
+
             frame.CastBar.fadeOut = nil
             frame.CastBar:Show()
             frame.CastBar:SetAlpha(1)
@@ -3017,30 +3945,63 @@ function sArenaMixin:Test()
 
             if data.unint then
                 frame.CastBar.BorderShield:Show()
-                frame.CastBar:SetStatusBarColor(0.7, 0.7, 0.7, 1)
+                if useCustomColors then
+                    frame.CastBar:SetStatusBarColor(unpack(colors.uninterruptable))
+                else
+                    frame.CastBar:SetStatusBarColor(0.7, 0.7, 0.7, 1)
+                end
             else
                 frame.CastBar.BorderShield:Hide()
                 if data.channel then
-                    frame.CastBar:SetStatusBarColor(0, 1, 0, 1)
+                    if useCustomColors then
+                        frame.CastBar:SetStatusBarColor(unpack(colors.channel))
+                    else
+                        frame.CastBar:SetStatusBarColor(0, 1, 0, 1)
+                    end
                 else
-                    frame.CastBar:SetStatusBarColor(1, 0.7, 0, 1)
+                    if useCustomColors then
+                        frame.CastBar:SetStatusBarColor(unpack(colors.standard))
+                    else
+                        frame.CastBar:SetStatusBarColor(1, 0.7, 0, 1)
+                    end
                 end
             end
 
             if modernCastbars then
                 if keepDefaultModernTextures then
-                    frame.CastBar:SetStatusBarColor(1,1,1,1)
                     if isRetail then
                         frame.CastBar:SetStatusBarTexture(data.unint and "UI-CastingBar-Uninterruptable" or data.channel and "UI-CastingBar-Filling-Channel" or "ui-castingbar-filling-standard")
                     else
                         frame.CastBar:SetStatusBarTexture(data.unint and "Interface\\AddOns\\sArena_Reloaded\\Textures\\UI-CastingBar-Uninterruptable" or data.channel and "Interface\\AddOns\\sArena_Reloaded\\Textures\\UI-CastingBar-Filling-Channel" or "Interface\\AddOns\\sArena_Reloaded\\Textures\\UI-CastingBar-Filling-Standard")
                     end
+                    -- Handle desaturation for modern castbars with default textures
+                    local castTexture = frame.CastBar:GetStatusBarTexture()
+                    if useCustomColors then
+                        if castTexture then
+                            castTexture:SetDesaturated(true)
+                        end
+                    else
+                        if castTexture then
+                            castTexture:SetDesaturated(false)
+                        end
+                        frame.CastBar:SetStatusBarColor(1,1,1,1)
+                    end
                 else
-                    local castPath = LSM:Fetch(LSM.MediaType.STATUSBAR, texKeys.castbarStatusBarTexture)
+                    local castPath
+                    if data.unint then
+                        castPath = LSM:Fetch(LSM.MediaType.STATUSBAR, texKeys.castbarUninterruptibleTexture or texKeys.castbarStatusBarTexture)
+                    else
+                        castPath = LSM:Fetch(LSM.MediaType.STATUSBAR, texKeys.castbarStatusBarTexture)
+                    end
                     frame.CastBar:SetStatusBarTexture(castPath)
                 end
             else
-                local castPath = LSM:Fetch(LSM.MediaType.STATUSBAR, texKeys.castbarStatusBarTexture)
+                local castPath
+                if data.unint then
+                    castPath = LSM:Fetch(LSM.MediaType.STATUSBAR, texKeys.castbarUninterruptibleTexture or texKeys.castbarStatusBarTexture)
+                else
+                    castPath = LSM:Fetch(LSM.MediaType.STATUSBAR, texKeys.castbarStatusBarTexture)
+                end
                 frame.CastBar:SetStatusBarTexture(castPath)
             end
         else
@@ -3068,8 +4029,8 @@ function sArenaMixin:Test()
             frame.PowerText:SetText("100%")
         else
             if db.profile.statusText.formatNumbers then
-                frame.HealthText:SetText(FormatLargeNumbers(testHp))
-                frame.PowerText:SetText(FormatLargeNumbers(playerPpMax))
+                frame.HealthText:SetText(AbbreviateNumbers(testHp))
+                frame.PowerText:SetText(AbbreviateNumbers(playerPpMax))
             else
                 frame.HealthText:SetText(AbbreviateLargeNumbers(testHp))
                 frame.PowerText:SetText(AbbreviateLargeNumbers(playerPpMax))
@@ -3151,35 +4112,238 @@ function sArenaMixin:Test()
     end
 end
 
+function sArenaMixin:CastbarOnEvent(castBar)
+    local colors = sArenaMixin.castbarColors
+    if sArenaMixin.modernCastbars then
+        if not sArenaMixin.keepDefaultModernTextures then
+            local textureToUse = sArenaMixin.castTexture
+            if castBar.barType == "uninterruptable" and sArenaMixin.castUninterruptibleTexture then
+                textureToUse = sArenaMixin.castUninterruptibleTexture
+            end
+            if textureToUse then
+                castBar:SetStatusBarTexture(textureToUse)
+            end
+            if colors.enabled then
+                if castBar.barType == "uninterruptable" then
+                    castBar:SetStatusBarColor(unpack(colors.uninterruptable or { 0.7, 0.7, 0.7, 1 }))
+                elseif sArenaMixin.interruptStatusColorOn and not sArenaMixin.interruptReady then
+                    castBar:SetStatusBarColor(unpack(colors.interruptNotReady or { 0.7, 0.7, 0.7, 1 }))
+                elseif castBar.barType == "channel" then
+                    castBar:SetStatusBarColor(unpack(colors.channel or { 0.0, 1.0, 0.0, 1 }))
+                elseif castBar.barType == "interrupted" then
+                    castBar:SetStatusBarColor(1, 0, 0)
+                else
+                    castBar:SetStatusBarColor(unpack(colors.standard or { 1.0, 0.7, 0.0, 1 }))
+                end
+            else
+                if castBar.barType == "uninterruptable" then
+                    castBar:SetStatusBarColor(0.7, 0.7, 0.7)
+                elseif sArenaMixin.interruptStatusColorOn and not sArenaMixin.interruptReady then
+                    castBar:SetStatusBarColor(unpack(colors.interruptNotReady or { 0.7, 0.7, 0.7, 1 }))
+                elseif castBar.barType == "channel" then
+                    castBar:SetStatusBarColor(0, 1, 0)
+                elseif castBar.barType == "interrupted" then
+                    castBar:SetStatusBarColor(1, 0, 0)
+                else
+                    castBar:SetStatusBarColor(1, 0.7, 0)
+                end
+            end
+            castBar.changedBarColor = true
+        elseif colors.enabled then
+            if sArenaMixin.isMoP then
+                castBar:SetStatusBarTexture(castBar.barType == "uninterruptable" and "Interface\\AddOns\\sArena_Reloaded\\Textures\\UI-CastingBar-Uninterruptable" or castBar.barType == "channel" and "Interface\\AddOns\\sArena_Reloaded\\Textures\\UI-CastingBar-Filling-Channel" or "Interface\\AddOns\\sArena_Reloaded\\Textures\\UI-CastingBar-Filling-Standard")
+            end
+            local castTexture = castBar:GetStatusBarTexture()
+            if castTexture then
+                castTexture:SetDesaturated(true)
+            end
+            if castBar.barType == "uninterruptable" then
+                castBar:SetStatusBarColor(unpack(colors.uninterruptable or { 0.7, 0.7, 0.7, 1 }))
+            elseif sArenaMixin.interruptStatusColorOn and not sArenaMixin.interruptReady then
+                castBar:SetStatusBarColor(unpack(colors.interruptNotReady or { 0.7, 0.7, 0.7, 1 }))
+            elseif castBar.barType == "channel" then
+                castBar:SetStatusBarColor(unpack(colors.channel or { 0.0, 1.0, 0.0, 1 }))
+            elseif castBar.barType == "interrupted" then
+                castBar:SetStatusBarColor(1, 0, 0)
+            else
+                castBar:SetStatusBarColor(unpack(colors.standard or { 1.0, 0.7, 0.0, 1 }))
+            end
+            castBar.changedBarColor = true
+        elseif sArenaMixin.interruptStatusColorOn and not sArenaMixin.interruptReady and castBar.barType ~= "uninterruptable" then
+            local castTexture = castBar:GetStatusBarTexture()
+            if castTexture then
+                castTexture:SetDesaturated(true)
+            end
+            castBar:SetStatusBarColor(unpack(colors.interruptNotReady or { 0.7, 0.7, 0.7, 1 }))
+            castBar.changedBarColor = true
+        elseif castBar.changedBarColor or sArenaMixin.keepDefaultModernTextures then
+            local castTexture = castBar:GetStatusBarTexture()
+            if castTexture then
+                castTexture:SetDesaturated(false)
+            end
+            castBar:SetStatusBarColor(1, 1, 1)
+            if isRetail then
+                castBar:SetStatusBarTexture(castBar.barType == "uninterruptable" and "UI-CastingBar-Uninterruptable" or castBar.barType == "channel" and "UI-CastingBar-Filling-Channel" or "ui-castingbar-filling-standard")
+            else
+                castBar:SetStatusBarTexture(castBar.barType == "uninterruptable" and "Interface\\AddOns\\sArena_Reloaded\\Textures\\UI-CastingBar-Uninterruptable" or castBar.barType == "channel" and "Interface\\AddOns\\sArena_Reloaded\\Textures\\UI-CastingBar-Filling-Channel" or "Interface\\AddOns\\sArena_Reloaded\\Textures\\UI-CastingBar-Filling-Standard")
+            end
+            castBar.changedBarColor = nil
+        end
+    else
+        local textureToUse = sArenaMixin.castTexture
+        if castBar.barType == "uninterruptable" and sArenaMixin.castUninterruptibleTexture then
+            textureToUse = sArenaMixin.castUninterruptibleTexture
+        end
+        castBar:SetStatusBarTexture(textureToUse or "Interface\\RaidFrame\\Raid-Bar-Hp-Fill")
+        if colors.enabled then
+            if castBar.barType == "uninterruptable" then
+                castBar:SetStatusBarColor(unpack(colors.uninterruptable or { 0.7, 0.7, 0.7, 1 }))
+            elseif sArenaMixin.interruptStatusColorOn and not sArenaMixin.interruptReady then
+                castBar:SetStatusBarColor(unpack(colors.interruptNotReady or { 0.7, 0.7, 0.7, 1 }))
+            elseif castBar.barType == "channel" then
+                castBar:SetStatusBarColor(unpack(colors.channel or { 0.0, 1.0, 0.0, 1 }))
+            elseif castBar.barType == "interrupted" then
+                castBar:SetStatusBarColor(1, 0, 0)
+            else
+                castBar:SetStatusBarColor(unpack(colors.standard or { 1.0, 0.7, 0.0, 1 }))
+            end
+        else
+            if castBar.barType == "uninterruptable" then
+                castBar:SetStatusBarColor(0.7, 0.7, 0.7)
+            elseif sArenaMixin.interruptStatusColorOn and not sArenaMixin.interruptReady then
+                castBar:SetStatusBarColor(unpack(colors.interruptNotReady or { 0.7, 0.7, 0.7, 1 }))
+            elseif castBar.barType == "channel" then
+                castBar:SetStatusBarColor(0, 1, 0)
+            elseif castBar.barType == "interrupted" then
+                castBar:SetStatusBarColor(1, 0, 0)
+            else
+                castBar:SetStatusBarColor(1, 0.7, 0)
+            end
+        end
+    end
+    if not isMidnight and isRetail then
+        if self.barType == "uninterruptable" then
+            if self.ChargeTier1 then
+                HideChargeTiers(self)
+            end
+        elseif self.barType == "empowered" then
+            HideChargeTiers(self)
+        end
+    end
+end
+
 function sArenaMixin:ModernOrClassicCastbar()
     local layoutSettings = db.profile.layoutSettings[db.profile.currentLayout]
     local useModern = layoutSettings.castBar.useModernCastbars
     local simpleCastbar = layoutSettings.castBar.simpleCastbar
     local castbarSettings = layoutSettings.castBar
 
-    for i = 1, sArenaMixin.maxArenaOpponents do
-        local frame = _G["sArenaEnemyFrame" .. i]
-        if (frame and useModern) or frame.CastBar.__modernHooked then
-            local unit = "arena"..i
-            self:ApplyCastbarStyle(frame, unit, useModern, simpleCastbar)
+    if isMidnight then
+        for i = 1, sArenaMixin.maxArenaOpponents do
+            local frame = _G["sArenaEnemyFrame" .. i]
+
+            local unit = "arena" .. i
+            local newBar = frame.CastBar
+
+            if useModern then
+                local castTexture = newBar:GetStatusBarTexture()
+                if not newBar.MaskTexture then
+                    newBar.MaskTexture = newBar:CreateMaskTexture()
+                end
+                newBar.MaskTexture:SetTexture("Interface\\AddOns\\sArena_Reloaded\\Textures\\RetailCastMask.tga",
+                    "CLAMPTOBLACKADDITIVE", "CLAMPTOBLACKADDITIVE")
+                newBar.MaskTexture:SetPoint("TOPLEFT", newBar, "TOPLEFT", -1, 0)
+                newBar.MaskTexture:SetPoint("BOTTOMRIGHT", newBar, "BOTTOMRIGHT", 1, 0)
+                newBar.MaskTexture:Show()
+                castTexture:AddMaskTexture(newBar.MaskTexture)
+
+                newBar.__modernHooked = true
+
+                if sArenaMixin:DarkMode() then
+                    local darkModeColor = sArenaMixin:DarkModeColor()
+                    newBar.TextBorder:SetDesaturated(true)
+                    newBar.TextBorder:SetVertexColor(darkModeColor, darkModeColor, darkModeColor)
+                    newBar.Border:SetDesaturated(true)
+                    newBar.Border:SetVertexColor(darkModeColor, darkModeColor, darkModeColor)
+                end
+
+                -- newBar.Border:SetPoint("TOPLEFT", newBar, "TOPLEFT", -1.4, 1.6)
+                -- newBar.Border:SetPoint("BOTTOMRIGHT", newBar, "BOTTOMRIGHT", 1.4, -1.6)
+
+
+                -- Handle simple castbar styling
+                newBar.Border:SetAlpha(1)
+                if simpleCastbar then
+                    newBar.Text:ClearAllPoints()
+                    newBar.Text:SetPoint("CENTER", newBar, "CENTER", 0, 0)
+                    newBar.TextBorder:SetAlpha(0)
+                else
+                    newBar.Text:ClearAllPoints()
+                    newBar.Text:SetPoint("BOTTOM", newBar, 0, -14)
+                    newBar.TextBorder:SetAlpha(1)
+                end
+                newBar:SetHeight(9)
+                newBar.Icon:SetSize(20,20)
+            else
+                newBar.Text:ClearAllPoints()
+                newBar.Text:SetPoint("CENTER", newBar, "CENTER", 0, 0)
+                newBar:SetHeight(16)
+                newBar.TextBorder:SetAlpha(0)
+                newBar.Border:SetAlpha(0)
+                newBar.Icon:SetSize(16,16)
+                if newBar.MaskTexture then
+                    newBar.MaskTexture:Hide()
+                end
+            end
+
+            newBar:SetParent(frame)
+
             if i == sArenaMixin.maxArenaOpponents then
                 frame.parent:UpdateCastBarSettings(castbarSettings)
                 sArenaMixin:UpdateFonts()
             end
             local fontName, s = frame.CastBar.Text:GetFont()
             frame.CastBar.Text:SetFont(fontName, s, "THINOUTLINE")
+            self:SetupDrag(frame.CastBar, frame.CastBar, "castBar", "UpdateCastBarSettings")
+            frame.CastBar:SetFrameLevel(7)
         end
-    end
 
-    -- Update text positioning after castbar changes
-    local currentLayout = self.layouts[db.profile.currentLayout]
-    if currentLayout and currentLayout.UpdateOrientation then
+        -- Update text positioning after castbar changes
+        local currentLayout = self.layouts[db.profile.currentLayout]
+        if currentLayout and currentLayout.UpdateOrientation then
+            for i = 1, sArenaMixin.maxArenaOpponents do
+                local frame = _G["sArenaEnemyFrame" .. i]
+                if frame then
+                    currentLayout:UpdateOrientation(frame)
+                end
+            end
+        end
+    else
         for i = 1, sArenaMixin.maxArenaOpponents do
             local frame = _G["sArenaEnemyFrame" .. i]
-            if frame then
-                currentLayout:UpdateOrientation(frame)
+            if (frame and useModern) or frame.CastBar.__modernHooked then
+                local unit = "arena"..i
+                self:ApplyCastbarStyle(frame, unit, useModern, simpleCastbar)
+                if i == sArenaMixin.maxArenaOpponents then
+                    frame.parent:UpdateCastBarSettings(castbarSettings)
+                    sArenaMixin:UpdateFonts()
+                end
+                local fontName, s = frame.CastBar.Text:GetFont()
+                frame.CastBar.Text:SetFont(fontName, s, "THINOUTLINE")
+                self:SetupDrag(frame.CastBar, frame.CastBar, "castBar", "UpdateCastBarSettings")
+                frame.CastBar:SetFrameLevel(7)
+            end
+        end
+
+        -- Update text positioning after castbar changes
+        local currentLayout = self.layouts[db.profile.currentLayout]
+        if currentLayout and currentLayout.UpdateOrientation then
+            for i = 1, sArenaMixin.maxArenaOpponents do
+                local frame = _G["sArenaEnemyFrame" .. i]
+                if frame then
+                    currentLayout:UpdateOrientation(frame)
+                end
             end
         end
     end
-
 end

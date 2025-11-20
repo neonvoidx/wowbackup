@@ -11,6 +11,8 @@ L[ [=[%d points spent past the gate.
 L["%s Switch to %s"] = "%s 전환 %s"
 L["(was %s)"] = "(이전 %s)"
 L["A workaround for one of the ways that Talent Tree taint can block action buttons from working."] = "특성 트리 오류로 인해 작업 버튼이 작동하지 않는 경우의 해결 방법 중 하나입니다."
+--[[Translation missing --]]
+L["Addon development takes a large amount of time and effort. If you enjoy using Talent Tree Tweaks, please consider supporting its development by donating. Your support helps ensure the continued improvement and maintenance of the addon. Thank you for your generosity!"] = "Addon development takes a large amount of time and effort. If you enjoy using Talent Tree Tweaks, please consider supporting its development by donating. Your support helps ensure the continued improvement and maintenance of the addon. Thank you for your generosity!"
 L["Adds a button to link the currently shown build in chat."] = "현재 채팅에 표시된 빌드를 링크하는 버튼 추가"
 L["Adds a few fixes for minor issues."] = "사소한 문제에 대한 몇 가지 수정 사항 추가"
 L["Adds a mini tree in various tooltips for Talent Tree Builds"] = "특성 트리 빌드의 다양한 툴팁에 미니 트리 추가"
@@ -46,18 +48,19 @@ L["Automatically purchase %s talents when you have enough currency."] = "Automat
 --[[Translation missing --]]
 L["Automatically purchase Horrific Visions talents when you have enough currency."] = "Automatically purchase Horrific Visions talents when you have enough currency."
 --[[Translation missing --]]
-L["Automatically purchase Skyriding talents when you have enough currency."] = "Automatically purchase Skyriding talents when you have enough currency."
---[[Translation missing --]]
 L["Automatically purchases Skyriding and other generic talents when you have enough currency."] = "Automatically purchases Skyriding and other generic talents when you have enough currency."
 L["Automatically selects the DRIVE upgrades you want for all of your alts."] = "모든 대체 차량에 대해 원하는 고.속.주.행 업그레이드를 자동으로 선택합니다."
 L["Automatically set"] = "자동 설정"
 --[[Translation missing --]]
 L["Automatically upgrade the final Limits Unbound talent when you have enough currency."] = "Automatically upgrade the final Limits Unbound talent when you have enough currency."
 L["Background Transparency"] = "배경 투명도"
+--[[Translation missing --]]
+L["Basic Modules"] = "Basic Modules"
 L["blocked in combat"] = "전투 중 차단됨"
 L["Change Background"] = "배경 변경"
 L["Change Scale"] = "스케일 변경"
-L["Choose how the mini tree is displayed. 'with diff' means that the mini tree will show the difference between your current build and the build in the tooltip."] = "미니 트리가 표시되는 방식을 선택합니다. 'with diff'는 미니 트리에 현재 빌드와 툴팁에 있는 빌드의 차이점을 표시합니다."
+--[[Translation missing --]]
+L["Choose how the mini tree is displayed."] = "Choose how the mini tree is displayed."
 L["Click to respec to this specialization."] = "이 전문화를 다시 지정하려면 클릭하세요."
 L["Click:"] = "클릭:"
 L["Color of the highlight"] = "강조 표시 색상"
@@ -76,15 +79,14 @@ L["Disables the module from scanning your chat for any loadout string that was s
 L["Disables the MultiActionBar_ShowAllGrids function, which can cause action buttons to break."] = "동작 버튼이 깨질 수 있는 MultiActionBar_ShowAllGrids 함수를 비활성화합니다."
 L["Display Style"] = "디스플레이 스타일"
 L["Do Nothing"] = "아무것도 하지 않음"
+--[[Translation missing --]]
+L["Donate"] = "Donate"
 L["DRIVE Auto Selector:"] = "고.속.주.행 자동 선택기:"
 L["DRIVE Auto Upgrades"] = "고.속.주.행 자동 업그레이드"
 L["Dump the nodeInfo table to chat."] = "채팅할 nodeInfo 테이블을 덤프합니다."
---[[Translation missing --]]
-L["Enable"] = "Enable"
 L["Enable Ride Along"] = "같이 타기 활성화"
 L["Enable Talent Tree Viewer Diff"] = "특성 트리 뷰어 차이점 활성화"
 L["Enable this module"] = "이 모듈 활성화"
-L["Enabled"] = "활성화됨"
 L["Error opening in TalentTreeViewer. Showing default Blizzard inspect UI instead."] = "TalentTreeViewer에서 여는 중 오류가 발생했습니다. 대신 기본 Blizzard 검사 UI를 표시합니다."
 L["Example of a loadout link"] = "빌드 링크의 예"
 L["Example of a regular string"] = "일반 문자열의 예"
@@ -102,6 +104,8 @@ L["Highlight Cascade Repurchable"] = "재투자 가능 강조"
 --[[Translation missing --]]
 L["Horrific Visions"] = "Horrific Visions"
 L["If checked, the imported build will be imported into the currently selected loadout."] = "체크하면, 가져온 빌드를 현재 선택된 빌드로 가져옵니다."
+--[[Translation missing --]]
+L["If you enjoy using Talent Tree Tweaks, consider supporting its development with a donation."] = "If you enjoy using Talent Tree Tweaks, consider supporting its development with a donation."
 L["Implements various workarounds around taint."] = "오류과 관련된 다양한 해결 방법을 구현합니다."
 L["Import into current loadout"] = "현재 빌드로 가져오기"
 L["Import into current loadout (click \"%s\" afterwards)"] = "현재 빌드로 가져오기(이후 \"%s\" 클릭)"
@@ -120,7 +124,6 @@ L["Loading..."] = "로딩중..."
 L["Macros and certain addons that change loadouts, cause the dropdown to not update properly in some situations. This fixes that."] = "빌드를 변경하는 매크로와 특정 애드온은 일부 상황에서 드롭다운이 제대로 업데이트되지 않게 합니다. 이를 수정합니다."
 L["Mini Tree in Tooltips"] = "툴팁의 미니 트리"
 L["Misc Fixes"] = "기타 수정 사항"
-L["Modules"] = "모듈"
 L["Mute chat spam while switching loadouts or specs."] = "빌드나 전문화를 전환하는 동안 채팅 스팸을 음소거합니다."
 --[[Translation missing --]]
 L["Open Artifact Traits UI"] = "Open Artifact Traits UI"
@@ -144,6 +147,8 @@ L["Replace the Share Loadout button, to open a copy/paste popup instead of autom
 L["Replace the Share Loadout button, to open a copy/paste popup instead of automatically copying to clipboard when possible."] = "가능한 경우 자동으로 클립보드에 복사하는 대신 복사/붙여넣기 팝업을 열도록 Share Loadout 버튼을 교체합니다."
 L["Report On Selections"] = "선택 항목에 대한 보고서"
 L["Report Purchases"] = "투자 보고"
+--[[Translation missing --]]
+L["Requires the Talent Tree Viewer addon to be installed and enabled."] = "Requires the Talent Tree Viewer addon to be installed and enabled."
 L["Reset Ride Along Cache"] = "같이 타기 캐시 초기화"
 L["Reset Surge Cache"] = "쇄도 캐시 초기화"
 L["Reset the color to default"] = "기본값으로 색상 재설정"
@@ -173,12 +178,12 @@ L["Show Example"] = "예시 보기"
 L["Show Example link in chat"] = "채팅에 예시 링크 표시"
 L["Show the difference between your talent choices, and the talent build in Talent Tree Viewer."] = "특성 트리 뷰어에서 내가 선택한 특성과 특성 구성의 차이를 보여줍니다."
 L["Shows an example of a clickable link in chat."] = "채팅에서 클릭 가능한 링크의 예를 표시합니다."
+--[[Translation missing --]]
+L["Shows the difference between your current build and the build in the tooltip"] = "Shows the difference between your current build and the build in the tooltip"
 L["Shows the difference between your talent choices, and the inspected player's talent choices."] = "내 특성 선택과 검사한 플레이어의 특성 선택의 차이를 표시합니다."
 L["Simple dots"] = "단순한 점"
 L["Simple dots with custom diff colors"] = "사용자 지정 색상이 있는 단순한 점"
 L["Simple dots with default diff colors"] = "기본 색상이 다른 단순한 점"
---[[Translation missing --]]
-L["Skyriding"] = "Skyriding"
 L["Specify the upgrade you want to select on login."] = "로그인 시 선택할 업그레이드를 지정하세요."
 L["Spell Icon"] = "주문 아이콘"
 L["Spell ID"] = "주문 ID"
@@ -191,22 +196,15 @@ L["Talent Tooltip"] = "특성 툴팁"
 L["TalentTreeTweaks Diff Viewer"] = "TalentTreeTweaks Diff 뷰어"
 L["Temporarily |cffff0000disabled|r until next reload, because you refunded a talent."] = "특성을 환불했기 때문에 다음 리로드까지 일시적으로 |cffff0000비활성|r 상태가 됩니다."
 L["They have a talent you don't"] = "상대방이 없는 특성"
-L["This addon consists of a number of modules, each of which can be enabled or disabled, to fine-tune your experience."] = "이 애드온은 여러 모듈로 구성되어 있으며, 각 모듈을 활성화 또는 비활성화하여 사용 환경을 미세 조정할 수 있습니다."
 L["This loadout includes leveling information."] = "이 빌드에는 레벨업 정보가 포함되어 있습니다."
 L["This module is incompatible with BlizzMove, and has been disabled."] = "이 모듈은 BlizzMove와 호환되지 않으므로 비활성화되었습니다."
 L["This module is only available for characters that have unlocked to the DRIVE system."] = "이 모듈은 고.속.주.행 시스템이 잠금 해제된 캐릭터만 사용할 수 있습니다."
---[[Translation missing --]]
-L["Toggle %s UI"] = "Toggle %s UI"
 L["Toggle D.R.I.V.E. UI"] = "고.속.주.행 UI 전환"
---[[Translation missing --]]
-L["Toggle Horrific Visions UI"] = "Toggle Horrific Visions UI"
-L["Toggle Skyriding UI"] = "하늘비행 UI 전환"
 --[[Translation missing --]]
 L["Toggle the %s UI to view and adjust talents."] = "Toggle the %s UI to view and adjust talents."
 L["Toggle the DRIVE UI to view and adjust upgrades."] = "업그레이드를 보고 조정하려면 고.속.주.행 UI를 전환하세요."
 --[[Translation missing --]]
-L["Toggle the Horrific Visions UI to view and adjust talents."] = "Toggle the Horrific Visions UI to view and adjust talents."
-L["Toggle the Skyriding UI to view and adjust talents."] = "하늘비행 UI를 전환하여 특성을 확인하고 조정합니다."
+L["Toggle UI"] = "Toggle UI"
 L["Toggles for the Professions Tooltips."] = "직업 툴팁을 전환합니다."
 L["Toggles for the Talent Tooltips."] = "특성 툴팁을 전환합니다."
 L["Tooltip IDs"] = "툴팁 ID"
@@ -220,8 +218,8 @@ L["Unlocks the share button, so you can share your build without spending all po
 L["Unlocks the talent buttons, so you can reallocate points while in combat."] = "특성 버튼을 잠금 해제하여 전투 중에도 포인트를 재분배할 수 있습니다."
 L["Use (Virag-)DevTool to inspect the nodeInfo table."] = "(Virag-)DevTool을 사용하여 nodeInfo 테이블을 검사합니다."
 L["Use LuaBrowser to inspect the nodeInfo table."] = "LuaBrowser를 사용하여 nodeInfo 테이블을 검사합니다."
-L["Various tweaks and improvements to the talent tree UI"] = "특성 트리 UI의 다양한 조정 및 개선 사항"
-L["Version: %s"] = "버전: %s"
+--[[Translation missing --]]
+L["Version:"] = "Version:"
 L["Warning: Custom colors may look weird, this cannot be fixed."] = "경고: 사용자 지정 색상이 이상하게 보일 수 있으며 이는 수정할 수 없습니다."
 L["When enabled, the \"Import into current loadout\" checkbox will be checked by default."] = "활성화하면, \"현재 빌드로 가져오기\" 체크박스가 기본적으로 선택됩니다."
 L["When enabled, the import button will be unlocked even if you have reached the maximum number of loadouts. Since you can still import into your current loadout"] = "활성화하면 최대 빌드 수에 도달하더라도 가져오기 버튼이 잠금 해제됩니다. 현재 빌드로 여전히 가져올 수 있기 때문입니다."

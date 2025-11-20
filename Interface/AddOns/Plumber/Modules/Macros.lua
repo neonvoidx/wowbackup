@@ -5,12 +5,15 @@
 -- 2. plumber:drive         Added to your regular mount macro. Summon G-99 Breakneck in Undermine. Change the icon.
 
 
+local _, addon = ...
+--if addon.IS_MIDNIGHT then return end;     --DEBUG Functioning again in 64228, praise the Absolute!
+
+
 -- User Settings
 local HIDE_UNUSABLE = false;        --Hide unusable spells
 local UPDATE_FREQUENTLY = false;    --Update drawers when BAG_UPDATE_DELAYED, SPELLS_CHANGED
 ------------------
 
-local _, addon = ...
 local L = addon.L;
 local API = addon.API;
 local CallbackRegistry = addon.CallbackRegistry;

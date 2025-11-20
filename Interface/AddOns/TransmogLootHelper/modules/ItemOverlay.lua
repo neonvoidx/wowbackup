@@ -33,7 +33,7 @@ function app.ItemOverlay(overlay, itemLink, itemLocation, containerInfo, bagAddo
 	local function createOverlay()
 		-- Text
 		if not overlay.text then
-			overlay.text = overlay:CreateFontString("OVERLAY", nil, "GameFontNormalOutline")
+			overlay.text = overlay:CreateFontString(nil, "OVERLAY", "GameFontNormalOutline")
 			overlay.text:SetPoint("CENTER", overlay, 2, 1)
 			overlay.text:SetScale(0.85)
 		end
@@ -134,7 +134,7 @@ function app.ItemOverlay(overlay, itemLink, itemLocation, containerInfo, bagAddo
 			elseif classID == Enum.ItemClass.Recipe and subclassID ~= Enum.ItemRecipeSubclass.Book then
 				itemEquipLoc = "Recipe"
 			-- Toys
-			elseif app.GetTooltipText(itemLink, ITEM_TOY_ONUSE) then
+			elseif app.IsToy(itemLink) then
 				itemEquipLoc = "Toy"
 			-- Pets
 			elseif C_PetJournal.GetPetInfoByItemID(itemID) then
@@ -330,6 +330,15 @@ function app.ItemOverlay(overlay, itemLink, itemLocation, containerInfo, bagAddo
 		if app.Icon[itemEquipLoc] then
 			-- Appearances
 			if TransmogLootHelper_Settings["iconNewMog"] and itemEquipLoc:find("INVTYPE") then
+				local attInfo
+				if C_AddOns.IsAddOnLoaded("AllTheThings") then
+					attInfo = AllTheThings.GetLinkReference(itemLink)
+				end
+				local tumInfo
+				if C_AddOns.IsAddOnLoaded("TransmogUpgradeMaster") then
+					tumInfo = TransmogUpgradeMaster_API.GetAppearanceMissingData(itemLink)
+				end
+
 				-- Legendaries and Artifacts can be a little weird
 				if (app.OverlayCache[itemLink].itemQuality == 5 or app.OverlayCache[itemLink].itemQuality == 6) and bindType == 1 then
 					if TransmogLootHelper_Settings["iconLearned"] then
@@ -344,17 +353,17 @@ function app.ItemOverlay(overlay, itemLink, itemLocation, containerInfo, bagAddo
 				elseif TransmogLootHelper_Settings["iconNewSource"] and not api.IsSourceCollected(itemLink) then
 					showOverlay("yellow")
 				-- Catalyst mog
-				elseif TransmogLootHelper_Settings["iconNewCatalyst"] and C_AddOns.IsAddOnLoaded("TransmogUpgradeMaster") and TransmogUpgradeMaster_API.GetAppearanceMissingData(itemLink).catalystAppearanceMissing then
+				elseif TransmogLootHelper_Settings["iconNewCatalyst"] and tumInfo and tumInfo.catalystAppearanceMissing then
 					overlay.texture:SetAtlas("CreationCatalyst-32x32")
 					showOverlay("yellow")
-				elseif TransmogLootHelper_Settings["iconNewCatalyst"] and C_AddOns.IsAddOnLoaded("AllTheThings") and AllTheThings.GetLinkReference and AllTheThings.GetLinkReference(itemLink) and AllTheThings.GetLinkReference(itemLink).filledCatalyst then
+				elseif TransmogLootHelper_Settings["iconNewCatalyst"] and attInfo and attInfo.filledCatalyst then
 					overlay.texture:SetTexture("Interface\\AddOns\\AllTheThings\\assets\\Interface_Catalyst")
 					showOverlay("yellow")
 				-- Upgrade mog
-				elseif TransmogLootHelper_Settings["iconNewUpgrade"] and C_AddOns.IsAddOnLoaded("TransmogUpgradeMaster") and (TransmogUpgradeMaster_API.GetAppearanceMissingData(itemLink).upgradeAppearanceMissing or TransmogUpgradeMaster_API.GetAppearanceMissingData(itemLink).catalystUpgradeAppearanceMissing) then
+				elseif TransmogLootHelper_Settings["iconNewUpgrade"] and tumInfo and tumInfo.catalystUpgradeAppearanceMissing then
 					overlay.texture:SetAtlas("CovenantSanctum-Upgrade-Icon-Available")
 					showOverlay("yellow")
-				elseif TransmogLootHelper_Settings["iconNewUpgrade"] and C_AddOns.IsAddOnLoaded("AllTheThings") and AllTheThings.GetLinkReference and AllTheThings.GetLinkReference(itemLink) and AllTheThings.GetLinkReference(itemLink).filledUpgrade then
+				elseif TransmogLootHelper_Settings["iconNewUpgrade"] and attInfo and attInfo.filledUpgrade then
 					overlay.texture:SetTexture("Interface\\AddOns\\AllTheThings\\assets\\Interface_Upgrade")
 					showOverlay("yellow")
 				-- Learned
@@ -366,7 +375,7 @@ function app.ItemOverlay(overlay, itemLink, itemLocation, containerInfo, bagAddo
 			-- Ensembles & Arsenals
 			elseif TransmogLootHelper_Settings["iconNewMog"] and (itemEquipLoc == "Ensemble" or itemEquipLoc == "Arsenal") then
 				-- Learned
-				if app.GetTooltipText(itemLink, ITEM_SPELL_KNOWN) then
+				if app.IsLearned(itemLink) then
 					if TransmogLootHelper_Settings["iconLearned"] then
 						showOverlay("green")
 					else
@@ -382,7 +391,7 @@ function app.ItemOverlay(overlay, itemLink, itemLocation, containerInfo, bagAddo
 			-- Illusions
 			elseif TransmogLootHelper_Settings["iconNewIllusion"] and itemEquipLoc == "Illusion" then
 				-- Learned
-				if app.GetTooltipText(itemLink, ITEM_SPELL_KNOWN) then
+				if app.IsLearned(itemLink) then
 					if TransmogLootHelper_Settings["iconLearned"] then
 						showOverlay("green")
 					else
@@ -398,7 +407,7 @@ function app.ItemOverlay(overlay, itemLink, itemLocation, containerInfo, bagAddo
 			-- Mounts
 			elseif TransmogLootHelper_Settings["iconNewMount"] and itemEquipLoc == "Mount" then
 				-- Learned
-				if app.GetTooltipText(itemLink, ITEM_SPELL_KNOWN) then
+				if app.IsLearned(itemLink) then
 					if TransmogLootHelper_Settings["iconLearned"] then
 						showOverlay("green")
 					else
@@ -419,11 +428,9 @@ function app.ItemOverlay(overlay, itemLink, itemLocation, containerInfo, bagAddo
 				end
 
 				-- Account for a Blizz API bug that is apparently present, this is why we can't have nice things
+				local numPets, maxAllowed = 0, 0
 				if app.OverlayCache[itemLink].speciesID then
 					numPets, maxAllowed = C_PetJournal.GetNumCollectedInfo(app.OverlayCache[itemLink].speciesID)
-				else
-					numPets = 0
-					maxAllowed = 0
 				end
 
 				if (maxAllowed == numPets and numPets ~= 0) or (not TransmogLootHelper_Settings["iconNewPetMax"] and numPets >= 1) then
@@ -500,7 +507,7 @@ function app.ItemOverlay(overlay, itemLink, itemLocation, containerInfo, bagAddo
 			-- Customisations (includes spellbooks)
 			elseif TransmogLootHelper_Settings["iconUsable"] and itemEquipLoc == "Customisation" then
 				-- Learned
-				if TransmogLootHelper_Cache.Recipes[app.SpellItem[itemID]] or (app.QuestItem[itemID] and C_QuestLog.IsQuestFlaggedCompleted(app.QuestItem[itemID])) or app.GetTooltipText(itemLink, ITEM_SPELL_KNOWN) then
+				if TransmogLootHelper_Cache.Recipes[app.SpellItem[itemID]] or (app.QuestItem[itemID] and C_QuestLog.IsQuestFlaggedCompleted(app.QuestItem[itemID])) or app.IsLearned(itemLink) then
 					if TransmogLootHelper_Settings["iconLearned"] then
 						showOverlay("green")
 					else
@@ -541,12 +548,11 @@ function app.ItemOverlay(overlay, itemLink, itemLocation, containerInfo, bagAddo
 					overlay.text:SetText("|cff00CCFF" .. L.BINDTEXT_WUE .. "|r")
 				end
 			-- WuE on vendor
-			elseif not itemLocation and app.GetTooltipText(itemLink, ITEM_BIND_TO_ACCOUNT_UNTIL_EQUIP) then
+			elseif not itemLocation and app.GetBonding(itemLink) == "WuE" then
 				overlay.text:SetText("|cff00CCFF" .. L.BINDTEXT_WUE .. "|r")
 			-- Soulbound + BoA
 			elseif itemLocation and C_Item.IsBound(itemLocation) then
-				-- BoA (ITEM_ACCOUNTBOUND and ITEM_BNETACCOUNTBOUND is the actual text, but it always returns the other two anyway)
-				if app.GetTooltipText(itemLink, ITEM_BIND_TO_ACCOUNT) or app.GetTooltipText(itemLink, ITEM_BIND_TO_BNETACCOUNT) then
+				if app.GetBonding(itemLink) == "BoA" then
 					overlay.text:SetText("|cff00CCFF" .. L.BINDTEXT_BOA .. "|r")
 				-- Soulbound
 				else
@@ -853,7 +859,7 @@ function app.ItemOverlayHooks()
 						if v.objectType == "currency" then
 							itemButton.TLHOverlay:Hide()
 						elseif itemLink then
-							table.insert(sellPrice, { price = select(11, GetItemInfo(itemLink)), itemButton = itemButton})
+							table.insert(sellPrice, { price = select(11, C_Item.GetItemInfo(itemLink)), itemButton = itemButton})
 							app.ItemOverlay(itemButton.TLHOverlay, itemLink)
 							itemButton.TLHOverlay:SetAllPoints(itemButton.IconBorder)
 						else
@@ -1081,7 +1087,7 @@ function app.ItemOverlayHooks()
 		local function cacheSpells()
 			C_Timer.After(0.9, function()
 				for k, v in pairs(app.SpellItem) do
-					if IsSpellKnown(v) or IsPlayerSpell(v) then
+					if C_SpellBook.IsSpellKnown(v) or C_SpellBook.IsSpellInSpellBook(v) then
 						TransmogLootHelper_Cache.Recipes[v] = true
 					end
 				end
@@ -1108,7 +1114,7 @@ function app.TooltipInfo()
 	local function OnTooltipSetItem(tooltip)
 		-- Only run any of this is the relevant setting is enabled
 		if TransmogLootHelper_Settings["iconNewRecipe"] then
-			local itemLink, itemID
+			local itemLink, itemID, secondaryItemLink, secondaryItemID
 			local _, primaryItemLink, primaryItemID = TooltipUtil.GetDisplayedItem(GameTooltip)
 			if tooltip.GetItem then _, secondaryItemLink, secondaryItemID = tooltip:GetItem() end
 

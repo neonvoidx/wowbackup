@@ -286,6 +286,7 @@ function BBF.CreateCastbars()
             spellBars[i] = spellbar
         end
         BBF.UpdateCastbars()
+        BBF.DarkModeCastbars()
         castBarsCreated = true
     end
     if not petCastbarCreated and (BetterBlizzFramesDB.petCastbar or BetterBlizzFramesDB.petCastBarTestMode) then
@@ -328,6 +329,7 @@ function BBF.CreateCastbars()
         spellBars["pet"] = petSpellBar
         petCastbarCreated = true
         BBF.UpdatePetCastbar()
+        BBF.DarkModeCastbars()
     end
 end
 
@@ -432,7 +434,7 @@ function BBF.petCastBarTestMode()
         end
     else
         -- Stop the timer when exiting test mode
-        if spellBars["pet"] then
+        if spellBars and spellBars["pet"] then
             if spellBars["pet"].tickTimer then
                 spellBars["pet"].tickTimer:Cancel()
                 spellBars["pet"].tickTimer = nil

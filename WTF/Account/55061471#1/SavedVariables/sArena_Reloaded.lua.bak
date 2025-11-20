@@ -2,31 +2,22 @@
 sArena_ReloadedDB = {
 ["profileKeys"] = {
 ["Heilsatan - Tichondrius"] = "Default",
+["Crillessana - Mal'Ganis"] = "Default",
+["Ofpusstwo - Tichondrius"] = "Default",
 ["Stormclout - Tichondrius"] = "Default",
 ["Reedingo - Mal'Ganis"] = "Default",
-["Ofpusstwo - Tichondrius"] = "Default",
-["Starstypeshi - Tichondrius"] = "Default",
-["Ofpuss - Tichondrius"] = "Default",
 ["Smaugchamp - Tichondrius"] = "Default",
-["Gehyo - Mal'Ganis"] = "Default",
+["Ofpuss - Tichondrius"] = "Default",
+["Starstypeshi - Tichondrius"] = "Default",
 ["Praisesun - Tichondrius"] = "Default",
+["Gehyo - Tichondrius"] = "Default",
+["Gehyo - Mal'Ganis"] = "Default",
 ["Mäñýfäçëð - Tichondrius"] = "Default",
+["Clevagirl - Mal'Ganis"] = "Default",
 },
 ["profiles"] = {
 ["Default"] = {
 ["layoutSettings"] = {
-["BlizzRetail"] = {
-["dr"] = {
-["drCategorySizeOffsets"] = {
-},
-},
-},
-["Xaryu"] = {
-["dr"] = {
-["drCategorySizeOffsets"] = {
-},
-},
-},
 ["Gladiuish"] = {
 ["cdFont"] = "1",
 ["retextureHealerClassStackOnly"] = false,
@@ -41,6 +32,7 @@ sArena_ReloadedDB = {
 ["healStatusBarTexture"] = "Wglass",
 },
 ["posY"] = 123,
+["classIconFontSize"] = 15,
 ["dr"] = {
 ["blackDRBorder"] = false,
 ["brightDRBorder"] = true,
@@ -53,8 +45,25 @@ sArena_ReloadedDB = {
 ["posX"] = -104,
 ["size"] = 37,
 },
-["classIconFontSize"] = 15,
 ["posX"] = 387.6,
+},
+["BlizzTourney"] = {
+["dr"] = {
+["drCategorySizeOffsets"] = {
+},
+},
+},
+["Xaryu"] = {
+["dr"] = {
+["drCategorySizeOffsets"] = {
+},
+},
+},
+["BlizzRetail"] = {
+["dr"] = {
+["drCategorySizeOffsets"] = {
+},
+},
 },
 ["BlizzTarget"] = {
 ["cdFont"] = "1",
@@ -83,12 +92,6 @@ sArena_ReloadedDB = {
 ["changeFont"] = true,
 ["posX"] = 557.3,
 },
-["BlizzTourney"] = {
-["dr"] = {
-["drCategorySizeOffsets"] = {
-},
-},
-},
 ["Pixelated"] = {
 ["dr"] = {
 ["drCategorySizeOffsets"] = {
@@ -99,8 +102,8 @@ sArena_ReloadedDB = {
 ["classColorNames"] = false,
 ["replaceHealerIcon"] = false,
 ["showDecimalsClassIcon"] = false,
+["drResetTimeFix"] = true,
 ["invertDRCooldown"] = false,
-["drStaticIconsPerClass"] = true,
 ["currentLayout"] = "BlizzTarget",
 ["colorTrinket"] = false,
 ["statusText"] = {
@@ -109,7 +112,7 @@ sArena_ReloadedDB = {
 ["enableMasque"] = false,
 ["drStaticIcons"] = true,
 ["invertTrinketRacialCooldown"] = false,
-["drResetTimeDEL"] = true,
+["drStaticIconsPerClass"] = true,
 ["drResetTime"] = 18.5,
 ["hideClassIcon"] = false,
 ["colorMysteryGray"] = false,
