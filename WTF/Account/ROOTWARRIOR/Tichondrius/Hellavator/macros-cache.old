@@ -56,9 +56,10 @@ VER 3 0100000000000050 " " "134400"
 /cast [@cursor] Shadowfury
 END
 VER 3 010000000000004F " " "134400"
-#showtooltip Mortal Coil
+#showtooltip [known:howl of terror] howl of terror; [known: mortal coil] Mortal Coil
 /use Fire-Eater's Vial
-/cast  [mod:shift,@focus,exists][] Mortal Coil
+/cast  [known: mortal coil,mod:shift,@focus,exists][known:mortal coil] Mortal Coil
+/cast [known:howl of terror] howl of terror
 END
 VER 3 0100000000000052 " " "134400"
 #showtooltip Demonic Gateway

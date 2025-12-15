@@ -3,42 +3,48 @@ MJEPersonalSettings = {
 ["notes"] = {
 },
 ["trackUsageStats"] = false,
-["searchInFamilyName"] = false,
-["personalFilter"] = false,
-["ui"] = {
-["showMountspecialButton"] = true,
-["enableCursorKeys"] = true,
-["slotPosition"] = "top",
-["syncTarget"] = false,
-["displayBackground"] = "original",
-["showAchievementPoints"] = true,
-["windowSize"] = {
-0,
-0,
-},
-["colorizeNameByRarity"] = true,
-["displayAnimation"] = "stand",
-["showResizeEdge"] = true,
-["showPersonalCount"] = true,
-["compactMountList"] = true,
-["previewButton"] = true,
-["autoRotateModel"] = false,
-["displayStatistics"] = {
-["UsedCount"] = true,
-["TravelDistance"] = true,
-["TravelTime"] = true,
-["Rarity"] = true,
-["Family"] = true,
-["CustomizationCount"] = true,
-["Wowhead"] = true,
-["LearnedDate"] = true,
-},
-["unlockDisplayCamera"] = true,
-["showFilterProfilesInMenu"] = true,
-},
-["summonPreviousPetAgain"] = false,
 ["hiddenMounts"] = {
 },
+["personalFilter"] = false,
+["filterProfile"] = {
+{
+["sort"] = {
+},
+["search"] = "",
+["filter"] = {
+},
+},
+{
+["sort"] = {
+},
+["search"] = "",
+["filter"] = {
+},
+},
+{
+["sort"] = {
+},
+["search"] = "",
+["filter"] = {
+},
+},
+{
+["sort"] = {
+},
+["search"] = "",
+["filter"] = {
+},
+},
+{
+["sort"] = {
+},
+["search"] = "",
+["filter"] = {
+},
+},
+},
+["summonPreviousPetAgain"] = false,
+["searchInFamilyName"] = false,
 ["personalUi"] = false,
 ["pets"] = {
 ["assignments"] = {
@@ -100,7 +106,8 @@ true,
 true,
 true,
 },
-["hiddenIngame"] = false,
+["color"] = {
+},
 ["hidden"] = false,
 ["notCollected"] = true,
 ["mountType"] = {
@@ -210,18 +217,19 @@ true,
 ["Airships"] = true,
 ["Discs"] = true,
 ["Broom"] = true,
+["Other"] = true,
 ["Mecha-suits"] = true,
 ["Kites"] = true,
 ["Seat"] = true,
-["Hover Board"] = true,
 ["Hands"] = true,
-["Book"] = true,
 ["Rockets"] = true,
+["Book"] = true,
+["Carpets"] = true,
 ["Spider Tanks"] = true,
 ["Motorcycles"] = true,
 ["Mechanical Animals"] = true,
-["Carpets"] = true,
 ["Gyrocopters"] = true,
+["Hover Board"] = true,
 ["Hovercraft"] = true,
 ["Airplanes"] = true,
 },
@@ -352,8 +360,7 @@ true,
 },
 ["collected"] = true,
 ["onlyRecent"] = false,
-["color"] = {
-},
+["hiddenIngame"] = false,
 },
 ["sort"] = {
 ["unownedOnBottom"] = true,
@@ -378,42 +385,46 @@ true,
 },
 ["personalHiddenMounts"] = false,
 ["searchInNotes"] = false,
-["filterProfile"] = {
-{
-["sort"] = {
+["ui"] = {
+["showMountspecialButton"] = true,
+["enableCursorKeys"] = true,
+["syncTarget"] = false,
+["toolbarButtons"] = {
+["ToggleDynamicFlight"] = true,
+["SyncTarget"] = true,
+["Drive"] = true,
+["Equiment"] = true,
+["RandomFavorite"] = true,
+["PetSlot"] = true,
+["Skills"] = true,
+["ToggleWhirlingSurge"] = true,
+["ToggleRideAlong"] = true,
 },
-["search"] = "",
-["filter"] = {
+["displayBackground"] = "original",
+["showAchievementPoints"] = true,
+["windowSize"] = {
+0,
+0,
 },
+["colorizeNameByRarity"] = true,
+["displayAnimation"] = "stand",
+["showResizeEdge"] = true,
+["showPersonalCount"] = true,
+["compactMountList"] = true,
+["previewButton"] = true,
+["autoRotateModel"] = false,
+["displayStatistics"] = {
+["TravelDistance"] = true,
+["UsedCount"] = true,
+["LearnedDate"] = true,
+["Rarity"] = true,
+["Family"] = true,
+["CustomizationCount"] = true,
+["Wowhead"] = true,
+["TravelTime"] = true,
 },
-{
-["sort"] = {
-},
-["search"] = "",
-["filter"] = {
-},
-},
-{
-["sort"] = {
-},
-["search"] = "",
-["filter"] = {
-},
-},
-{
-["sort"] = {
-},
-["search"] = "",
-["filter"] = {
-},
-},
-{
-["sort"] = {
-},
-["search"] = "",
-["filter"] = {
-},
-},
+["unlockDisplayCamera"] = true,
+["showFilterProfilesInMenu"] = true,
 },
 ["searchInDescription"] = false,
 }

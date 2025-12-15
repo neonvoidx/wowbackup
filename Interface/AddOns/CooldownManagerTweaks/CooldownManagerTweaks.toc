@@ -1,9 +1,12 @@
 ## Interface: 120000
 ## Title: Cooldown Manager Tweaks
-## Notes: Custom grid layouts and bar spacing with per-tracker settings, Reverse, cached Blizzard baseline, and combat-safe reapply. Now includes Buff Tracker support!
+## Notes: Custom layouts for Blizzard's Cooldown Manager with Items tracker, Persistent Buff Display, per-tracker settings, and optional Masque skin support. Zero dependencies!
 ## Author: Josh Thompson
-## Version: 3.0.3
+## Version: 4.6.2
 ## DefaultState: Enabled
 ## SavedVariables: CMT_DB
+## SavedVariablesPerCharacter: CMT_CharDB
+## OptionalDeps: LibStub, LibEditMode, Masque
 
+# Main addon file
 CooldownManagerTweaks.lua

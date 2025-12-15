@@ -1,16 +1,9 @@
 local _, addonTable = ...
 
-local LEM = addonTable.LEM or LibStub("LibEditMode")
+local LEM = addonTable.LEM or LibStub("LibEQOLEditMode-1.0")
 
 local TertiaryResourceBarMixin = Mixin({}, addonTable.PowerBarMixin)
-
-function TertiaryResourceBarMixin:GetResourceNumberColor()
-    return addonTable:GetOverrideTextColor(addonTable.RegistereredBar.TertiaryResourceBar.frameName, addonTable.TextId.ResourceNumber) or { r = 1, b = 1, g = 1}
-end
-
-function TertiaryResourceBarMixin:GetResourceChargeTimerColor()
-    return addonTable:GetOverrideTextColor(addonTable.RegistereredBar.TertiaryResourceBar.frameName, addonTable.TextId.ResourceChargerTimer) or { r = 1, b = 1, g = 1}
-end
+local buildVersion = select(4, GetBuildInfo())
 
 function TertiaryResourceBarMixin:GetResource()
     local playerClass = select(2, UnitClass("player"))
@@ -49,16 +42,22 @@ function TertiaryResourceBarMixin:GetResource()
 end
 
 function TertiaryResourceBarMixin:GetResourceValue(resource)
-    if not resource then return nil, nil, nil, nil end
+    if not resource then return nil, nil, nil, nil, nil end
+    local data = self:GetData()
+    if not data then return nil, nil, nil, nil, nil end
 
     if resource == "EBON_MIGHT" then
         -- The hack needs the PlayerFrame
-        if not PlayerFrame:IsShown() then return nil, nil, nil, nil end
+        if not PlayerFrame:IsShown() then return nil, nil, nil, nil, nil end
 
         local current = EvokerEbonMightBar:GetValue() 
         local max = select(2, EvokerEbonMightBar:GetMinMaxValues()) -- Secret values
 
-        return max, current, current, "timer", 0
+        if data.textFormat == "Percent" or data.textFormat == "Percent%" then
+            return max, max, current, string.format("%.0f", current), "custom"
+        else
+            return max, max, current, current, "number"
+        end
     end
 
     -- Regular secondary resource types
@@ -66,7 +65,16 @@ function TertiaryResourceBarMixin:GetResourceValue(resource)
     local max = UnitPowerMax("player", resource)
     if max <= 0 then return nil, nil, nil, nil end
 
-    return max, current, current, "number"
+    if data.textFormat == "Percent" or data.textFormat == "Percent%" then
+        -- UnitPowerPercent does not exist prior to Midnight
+        if (buildVersion or 0) < 120000 then
+            return max, max, current, math.floor((current / max) * 100 + 0.5), "percent"
+        else
+            return max, max, current, UnitPowerPercent("player", resource, false, CurveConstants.ScaleTo100), "percent"
+        end
+    else
+        return max, max, current, current, "number"
+    end
 end
 
 addonTable.TertiaryResourceBarMixin = TertiaryResourceBarMixin
@@ -98,7 +106,8 @@ addonTable.RegistereredBar.TertiaryResourceBar = {
 
         return {
             {
-                order = 63,
+                parentId = "Bar Style",
+                order = 603,
                 name = "Use Resource Foreground And Color",
                 kind = LEM.SettingType.Checkbox,
                 default = defaults.useResourceAtlas,

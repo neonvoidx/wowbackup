@@ -1,12 +1,11 @@
 local _, addonTable = ...
 
-function addonTable:GetOverrideTextColor(frameName, textId)
-    local color = { r = 1, b = 1, g = 1}
+function addonTable:GetOverrideHealthBarColor()
+    local color = self:GetHealthBarColor()
 
     local settings = SenseiClassResourceBarDB and SenseiClassResourceBarDB["_Settings"]
-    local categorySettings = settings and settings[frameName]
-    local textColors = categorySettings and settings[frameName]["TextColors"]
-    local overrideColor = textColors and textColors[textId]
+    local powerColors = settings and settings["HealthColors"]
+    local overrideColor = powerColors and powerColors["HEALTH"]
 
     if overrideColor then
         if overrideColor.r then color.r = overrideColor.r end
@@ -18,8 +17,12 @@ function addonTable:GetOverrideTextColor(frameName, textId)
     return color
 end
 
+function addonTable:GetHealthBarColor()
+    return { r = 0, g = 1, b = 0 }
+end
+
 function addonTable:GetOverrideResourceColor(resource)
-    local color, settingKey = addonTable:GetResourceColor(resource)
+    local color, settingKey = self:GetResourceColor(resource)
 
     local settings = SenseiClassResourceBarDB and SenseiClassResourceBarDB["_Settings"]
     local powerColors = settings and settings["PowerColors"]
@@ -48,13 +51,36 @@ function addonTable:GetResourceColor(resource)
         end
     end
 
-    if resource == "STAGGER" then
-        color = GetPowerBarColor("STAGGER").green
-    elseif resource == "SOUL_FRAGMENTS" then
+    if resource == "STAGGER" or resource == "STAGGER_LOW" or resource == "STAGGER_MEDIUM" or resource == "STAGGER_HEAVY" then
+        local staggerColors = {
+            ["STAGGER_LOW"] = GetPowerBarColor("STAGGER").green,
+            ["STAGGER_MEDIUM"] = GetPowerBarColor("STAGGER").yellow,
+            ["STAGGER_HEAVY"] = GetPowerBarColor("STAGGER").red,
+        }
+
+        if resource == "STAGGER" then
+            local stagger = UnitStagger("player") or 0
+            local maxHealth = UnitHealthMax("player") or 1
+
+            local staggerPercent = (stagger / maxHealth) * 100
+
+            if staggerPercent < 30 then
+                resource = "STAGGER_LOW"
+            elseif staggerPercent < 60 then
+                resource = "STAGGER_MEDIUM"
+            else
+                resource = "STAGGER_HEAVY"
+            end
+        end
+
+        color = staggerColors[resource]
+        settingKey = resource
+    elseif resource == "SOUL_FRAGMENTS" or resource == "SOUL_FRAGMENTS_VOID_META" then
         -- Different color during Void Metamorphosis
-        if DemonHunterSoulFragmentsBar and DemonHunterSoulFragmentsBar.CollapsingStarBackground:IsShown() then
+        if resource == "SOUL_FRAGMENTS_VOID_META" or (DemonHunterSoulFragmentsBar and DemonHunterSoulFragmentsBar.CollapsingStarBackground:IsShown()) then
+            settingKey = "SOUL_FRAGMENTS_VOID_META"
             color = { r = 0.037, g = 0.220, b = 0.566, atlas = "UF-DDH-CollapsingStar-Bar-Ready" }
-        else 
+        else
             color = { r = 0.278, g = 0.125, b = 0.796, atlas = "UF-DDH-VoidMeta-Bar-Ready" }
         end
     elseif resource == Enum.PowerType.Runes or resource == Enum.PowerType.RuneBlood or resource == Enum.PowerType.RuneUnholy or resource == Enum.PowerType.RuneFrost then
@@ -82,6 +108,8 @@ function addonTable:GetResourceColor(resource)
         color = GetPowerBarColor("FUEL")
     elseif resource == Enum.PowerType.ComboPoints then
         color = { r = 0.878, g = 0.176, b = 0.180 }
+    elseif resource == "OVERCHARGED_COMBO_POINTS" then
+        color = { r = 0.169, g = 0.733, b = 0.992 }
     elseif resource == Enum.PowerType.Chi then
         color = { r = 0.024, g = 0.741, b = 0.784 }
     end

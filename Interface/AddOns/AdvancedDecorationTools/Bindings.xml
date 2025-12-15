@@ -1,0 +1,17 @@
+<Bindings>
+    <Binding name="ADT_TOGGLE_HISTORY" header="ADT">
+        ADT_ToggleHistory();
+    </Binding>
+    <Binding name="ADT_TEMP_STORE">
+        ADT_Temp_StoreSelected();
+    </Binding>
+    <Binding name="ADT_TEMP_RECALL">
+        ADT_Temp_RecallTop();
+    </Binding>
+    <Binding name="ADT_ROTATE_CCW_90">
+        ADT_Rotate_CCW_90();
+    </Binding>
+    <Binding name="ADT_ROTATE_CW_90">
+        ADT_Rotate_CW_90();
+    </Binding>
+</Bindings>

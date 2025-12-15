@@ -847,7 +847,39 @@ function KeystonePolaris:GetAdvancedOptions()
                                    '|r' or '|cffff0000' .. L["NO"] .. '|r')
                 bossNum = bossNum + 1
             end
-            text = text .. "\n"
+
+            -- Show logical boss order if available
+            local bossOrder = defaults.bossOrder
+            if type(bossOrder) == "table" and next(bossOrder) ~= nil then
+                -- Extra blank line between last boss percentage and order header
+                text = text .. "\n"
+                -- Collect boss names in logical section order
+                local names = {}
+                local numSections = #bossOrder
+                for section = 1, numSections do
+                    local idx = bossOrder[section]
+                    if type(idx) == "number" then
+                        local bossName = L[dungeonKey .. "_BOSS" .. idx] or ("Boss " .. idx)
+                        table.insert(names, bossName)
+                    end
+                end
+
+                if #names > 0 then
+                    -- Orange title and numbered list (1) BossName, 2) BossName, ...)
+                    local orderTitle = "|cffffa500" .. L["BOSS_ORDER"] .. "|r"
+                    text = text .. "  " .. orderTitle .. ":\n"
+
+                    for i, bossName in ipairs(names) do
+                        text = text .. string.format("    %d) %s\n", i, bossName)
+                    end
+
+                    text = text .. "\n"
+                else
+                    text = text .. "\n"
+                end
+            else
+                text = text .. "\n"
+            end
         end
         return text
     end
@@ -1216,7 +1248,11 @@ function KeystonePolaris:CreateDungeonOptions(dungeonKey, order)
                 local defaults = self[expansion.id .. "_DEFAULTS"][dungeonKey]
                 if defaults then
                     for key, value in pairs(defaults) do
-                        self.db.profile.advanced[dungeonKey][key] = value
+                        if type(value) == "table" then
+                            self.db.profile.advanced[dungeonKey][key] = CloneTable(value)
+                        else
+                            self.db.profile.advanced[dungeonKey][key] = value
+                        end
                     end
                 end
                 break
@@ -1267,6 +1303,8 @@ function KeystonePolaris:CreateDungeonOptions(dungeonKey, order)
                         -- Reset all boss percentages and inform group settings for this dungeon to defaults
                         if not self.db.profile.advanced[dungeonKey] then
                             self.db.profile.advanced[dungeonKey] = {}
+                        else
+                            wipe(self.db.profile.advanced[dungeonKey])
                         end
 
                         -- Get the appropriate defaults
@@ -1281,15 +1319,22 @@ function KeystonePolaris:CreateDungeonOptions(dungeonKey, order)
 
                         if defaults then
                             for key, value in pairs(defaults) do
-                                self.db.profile.advanced[dungeonKey][key] =
-                                    value
+                                if type(value) == "table" then
+                                    self.db.profile.advanced[dungeonKey][key] = CloneTable(value)
+                                else
+                                    self.db.profile.advanced[dungeonKey][key] = value
+                                end
                             end
                         end
 
                         -- Update the display
                         self:UpdateDungeonData()
+                        if self.currentDungeonID and self.BuildSectionOrder then
+                            self:BuildSectionOrder(self.currentDungeonID)
+                        end
                         LibStub("AceConfigRegistry-3.0"):NotifyChange(
                             "KeystonePolaris")
+                        if self.UpdatePercentageText then self:UpdatePercentageText() end
                     end
                 end,
                 confirm = true,
@@ -1377,6 +1422,54 @@ function KeystonePolaris:CreateDungeonOptions(dungeonKey, order)
             header = {order = 4, type = "header", name = L["TANK_GROUP_HEADER"]}
         }
     }
+
+    -- Build choices for boss order selector (indexed by boss index in DUNGEONS)
+    local bossChoices = {}
+    for i = 1, numBosses do
+        local bossName = L[dungeonKey .. "_BOSS" .. i] or ("Boss " .. i)
+        bossChoices[i] = bossName
+    end
+
+    -- Group to control logical section order (bossOrder)
+    options.args.bossOrder = {
+        type = "group",
+        name = L["BOSS_ORDER"],
+        inline = true,
+        order = 4.5,
+        args = {}
+    }
+
+    for section = 1, numBosses do
+        options.args.bossOrder.args["section" .. section] = {
+            type = "select",
+            name = format(L["BOSS"] .. " %d", section),
+            order = section,
+            values = bossChoices,
+            get = function()
+                local adv = self.db.profile.advanced[dungeonKey]
+                local orderTable = adv and adv.bossOrder
+                local idx = orderTable and orderTable[section]
+                if type(idx) ~= "number" or idx < 1 or idx > numBosses then
+                    return section
+                end
+                return idx
+            end,
+            set = function(_, value)
+                if not self.db.profile.advanced[dungeonKey].bossOrder then
+                    self.db.profile.advanced[dungeonKey].bossOrder = {}
+                end
+                self.db.profile.advanced[dungeonKey].bossOrder[section] = value
+                local dungeonId = self:GetDungeonIdByKey(dungeonKey)
+                if dungeonId then
+                    if self.BuildSectionOrder then
+                        self:BuildSectionOrder(dungeonId)
+                    end
+                    self:UpdateDungeonData()
+                    if self.UpdatePercentageText then self:UpdatePercentageText() end
+                end
+            end
+        }
+    end
 
     for i = 1, numBosses do
         local bossNumStr = self:GetBossNumberString(i)
@@ -1852,9 +1945,15 @@ function KeystonePolaris:ResetAllDungeons()
                 if defaults then
                     if not self.db.profile.advanced[dungeonKey] then
                         self.db.profile.advanced[dungeonKey] = {}
+                    else
+                        wipe(self.db.profile.advanced[dungeonKey])
                     end
                     for key, value in pairs(defaults) do
-                        self.db.profile.advanced[dungeonKey][key] = value
+                        if type(value) == "table" then
+                            self.db.profile.advanced[dungeonKey][key] = CloneTable(value)
+                        else
+                            self.db.profile.advanced[dungeonKey][key] = value
+                        end
                     end
                 end
             end
@@ -1863,7 +1962,11 @@ function KeystonePolaris:ResetAllDungeons()
 
     -- Update the display
     self:UpdateDungeonData()
+    if self.currentDungeonID and self.BuildSectionOrder then
+        self:BuildSectionOrder(self.currentDungeonID)
+    end
     LibStub("AceConfigRegistry-3.0"):NotifyChange("KeystonePolaris")
+    if self.UpdatePercentageText then self:UpdatePercentageText() end
 end
 
 function KeystonePolaris:ResetCurrentSeasonDungeons(specificDungeons)
@@ -1911,10 +2014,15 @@ function KeystonePolaris:ResetCurrentSeasonDungeons(specificDungeons)
                         if defaults then
                             if not self.db.profile.advanced[dungeonKey] then
                                 self.db.profile.advanced[dungeonKey] = {}
+                            else
+                                wipe(self.db.profile.advanced[dungeonKey])
                             end
                             for key, value in pairs(defaults) do
-                                self.db.profile.advanced[dungeonKey][key] =
-                                    value
+                                if type(value) == "table" then
+                                    self.db.profile.advanced[dungeonKey][key] = CloneTable(value)
+                                else
+                                    self.db.profile.advanced[dungeonKey][key] = value
+                                end
                             end
                         end
                     end
@@ -1925,7 +2033,11 @@ function KeystonePolaris:ResetCurrentSeasonDungeons(specificDungeons)
 
     -- Update the display
     self:UpdateDungeonData()
+    if self.currentDungeonID and self.BuildSectionOrder then
+        self:BuildSectionOrder(self.currentDungeonID)
+    end
     LibStub("AceConfigRegistry-3.0"):NotifyChange("KeystonePolaris")
+    if self.UpdatePercentageText then self:UpdatePercentageText() end
 end
 
 function KeystonePolaris:CheckForNewSeason()
@@ -2195,7 +2307,11 @@ function KeystonePolaris:ImportDungeonSettings(importString,
                         addon.db.profile.advanced[dungeonKey] = {}
                     end
                     for k, v in pairs(dungeonData) do
-                        addon.db.profile.advanced[dungeonKey][k] = v
+                        if type(v) == "table" then
+                            addon.db.profile.advanced[dungeonKey][k] = CloneTable(v)
+                        else
+                            addon.db.profile.advanced[dungeonKey][k] = v
+                        end
                     end
                     importCount = importCount + 1
                 end
@@ -2211,7 +2327,11 @@ function KeystonePolaris:ImportDungeonSettings(importString,
                         addon.db.profile.advanced[dungeonKey] = {}
                     end
                     for k, v in pairs(dungeonData) do
-                        addon.db.profile.advanced[dungeonKey][k] = v
+                        if type(v) == "table" then
+                            addon.db.profile.advanced[dungeonKey][k] = CloneTable(v)
+                        else
+                            addon.db.profile.advanced[dungeonKey][k] = v
+                        end
                     end
                     importCount = importCount + 1
                 end
@@ -2227,11 +2347,19 @@ function KeystonePolaris:ImportDungeonSettings(importString,
                     addon.db.profile.advanced[dungeonKey] = {}
                 end
                 for k, v in pairs(importData.data) do
-                    addon.db.profile.advanced[dungeonKey][k] = v
+                    if type(v) == "table" then
+                        addon.db.profile.advanced[dungeonKey][k] = CloneTable(v)
+                    else
+                        addon.db.profile.advanced[dungeonKey][k] = v
+                    end
                 end
                 addon:UpdateDungeonData()
+                if addon.currentDungeonID and addon.BuildSectionOrder then
+                    addon:BuildSectionOrder(addon.currentDungeonID)
+                end
                 LibStub("AceConfigRegistry-3.0"):NotifyChange(
                     "KeystonePolaris")
+                if addon.UpdatePercentageText then addon:UpdatePercentageText() end
                 print("|cffdb6233Keystone Polaris:|r " ..
                           L["IMPORT_SUCCESS"]:format(
                               addon:GetDungeonDisplayName(dungeonKey)))
@@ -2248,7 +2376,11 @@ function KeystonePolaris:ImportDungeonSettings(importString,
     -- Update data and notify of changes
     if importCount > 0 then
         addon:UpdateDungeonData()
+        if addon.currentDungeonID and addon.BuildSectionOrder then
+            addon:BuildSectionOrder(addon.currentDungeonID)
+        end
         LibStub("AceConfigRegistry-3.0"):NotifyChange("KeystonePolaris")
+        if addon.UpdatePercentageText then addon:UpdatePercentageText() end
 
         -- Determine success message based on import type
         if importData.type == "all_dungeons" then
@@ -2321,11 +2453,37 @@ function KeystonePolaris:GenerateExpansionTables(expansionId,
 
         -- Generate DEFAULTS table
         local defaults = {}
+        local numBosses = #dungeonData.bosses
+        local bossOrder = {}
         for i, bossData in ipairs(dungeonData.bosses) do
             local bossNumber = "Boss" .. self:GetBossNumberString(i)
             defaults[bossNumber] = bossData[2]
             defaults[bossNumber .. "Inform"] = bossData[3]
+
+            -- Optional 4th field in bossData defines the logical section order (rank)
+            local rank = bossData[4]
+            if type(rank) == "number" then
+                rank = math.floor(rank)
+                if rank >= 1 and rank <= numBosses then
+                    bossOrder[rank] = i
+                end
+            end
         end
+
+        -- Only store bossOrder if it forms a complete permutation of 1..numBosses
+        local hasOrder = next(bossOrder) ~= nil
+        if hasOrder then
+            for idx = 1, numBosses do
+                if not bossOrder[idx] then
+                    hasOrder = false
+                    break
+                end
+            end
+        end
+        if hasOrder then
+            defaults.bossOrder = bossOrder
+        end
+
         self[expansionId .. "_DEFAULTS"][shortName] = defaults
 
         -- Generate DUNGEON_IDS table

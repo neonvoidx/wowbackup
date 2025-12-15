@@ -7,7 +7,7 @@ if SpecBisTooltip:GetWoWBuild() == "MISTS" then
     end
 end
 
--- DATA FROM: 08.10.2025
+-- DATA FROM: 02.12.2025
 if SpecBisTooltip:GetWoWBuild() == "MISTS" then
     BIS["MISTS"] = {}
     BIS["MISTS"]["DEATHKNIGHT"] = {}
@@ -495,7 +495,7 @@ if SpecBisTooltip:GetWoWBuild() == "MISTS" then
         [87130] = {"BIS,PVE,P1", "npc;sold=64606", "INVTYPE_HAND"},
         [86982] = {"BIS,PVE,P1", "npc;drop=62511", "INVTYPE_FINGER"},
         [90511] = {"BIS,PVE,P1", "npc;drop=60583", "INVTYPE_FINGER"},
-        [79330] = {"BIS,PVE,P1", "quest;reward=30449", "INVTYPE_TRINKET"},
+        [79331] = {"BIS,PVE,P1", "quest;reward=30451", "INVTYPE_TRINKET"},
         [87163] = {"BIS,PVE,P1", "npc;drop=62442", "INVTYPE_TRINKET"},
         [90512] = {"BIS,PVE,P1", "npc;drop=60583", "INVTYPE_CLOAK"},
         [86990] = {"BIS,PVE,P1", "npc;drop=62837", "INVTYPE_WEAPON"},

@@ -178,6 +178,7 @@ sArenaMixin.auraList = {
     [236321] = 8,       -- War Banner
     [215769] = 8,       -- Spirit of Redemption
     [227847] = 8,       -- Warrior: Bladestorm (Arms)
+    [446035] = 8,       -- Warrior: Bladestorm (Fury?)
     [118038] = 8,       -- Warrior: Die by the Sword
     [357210] = 8,       -- Deep Breath
     [359816] = 8,       -- Dream Flight

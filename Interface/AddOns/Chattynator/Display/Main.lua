@@ -19,19 +19,22 @@ function addonTable.Display.ChatFrameMixin:OnLoad()
     self:SaveSize()
   end)
 
-  self.ScrollingMessages = CreateFrame("Frame", nil, self)
+  self.ScrollingMessagesWrapper = CreateFrame("Frame", nil, self)
+  self.ScrollingMessagesWrapper:SetHyperlinkPropagateToParent(true)
+  self.ScrollingMessages = CreateFrame("ScrollingMessageFrame", nil, self.ScrollingMessagesWrapper)
+  self.ScrollingMessages:SetPoint("TOPLEFT")
+  self.ScrollingMessages:SetPoint("BOTTOMRIGHT", -5, 0)
   Mixin(self.ScrollingMessages, addonTable.Display.ScrollingMessagesMixin)
-  self.ScrollingMessages:OnLoad()
+  self.ScrollingMessages:MyOnLoad()
 
-  self.ScrollingMessages:SetPoint("TOPLEFT", 34, -27)
-  self.ScrollingMessages:SetPoint("BOTTOMRIGHT", 0, 38)
+  self.ScrollingMessagesWrapper:SetPoint("TOPLEFT", 34, -27)
+  self.ScrollingMessagesWrapper:SetPoint("BOTTOMRIGHT", 0, 38)
 
   self.resizeWidget = CreateFrame("Button", nil, self)
   self.resizeWidget:SetSize(20, 22)
   self.resizeWidget:SetPoint("TOPRIGHT", self.ScrollingMessages, -5,  0)
   self.resizeWidget:RegisterForDrag("LeftButton")
   self.resizeWidget:SetScript("OnDragStart", function()
-    self.ScrollingMessages:ScrollToEnd()
     self:StartSizing("TOPRIGHT")
   end)
   self.resizeWidget:SetScript("OnDragStop", function()
@@ -67,9 +70,9 @@ function addonTable.Display.ChatFrameMixin:OnLoad()
       self.ScrollingMessages:Render()
     end
     if refreshState[addonTable.Constants.RefreshReason.MessageWidget] then
-      if self:GetID() ~= 0 then
+      --[[if self:GetID() ~= 0 then
         self.ScrollingMessages:Render()
-      end
+      end]]
     end
     if refreshState[addonTable.Constants.RefreshReason.Locked] then
       self.resizeWidget:SetShown(not addonTable.Config.Get(addonTable.Config.Options.LOCKED))
@@ -138,7 +141,6 @@ function addonTable.Display.ChatFrameMixin:Reset()
   self:AdjustMessageAnchors()
   self:ApplyButtonPositionAnchors()
   self:ApplyTabsShowing()
-  self.ScrollingMessages:Reset()
 
   self.TabsBar:RefreshTabs()
 end
@@ -168,7 +170,7 @@ function addonTable.Display.ChatFrameMixin:AdjustMessageAnchors()
   if self:GetID() == 1 then
     return
   end
-  self.ScrollingMessages:SetPoint("BOTTOMRIGHT", 0, 5)
+  self.ScrollingMessagesWrapper:SetPoint("BOTTOMRIGHT", 0, 5)
 end
 
 function addonTable.Display.ChatFrameMixin:ApplyButtonPositionAnchors()
@@ -183,9 +185,9 @@ end
 function addonTable.Display.ChatFrameMixin:ApplyTabsShowing()
   local position = addonTable.Config.Get(addonTable.Config.Options.BUTTON_POSITION)
   if addonTable.Config.Get(addonTable.Config.Options.SHOW_TABS) ~= "never" then
-    self.ScrollingMessages:SetPoint("TOPLEFT", position == "outside_left" and 34 or 2, -27)
+    self.ScrollingMessagesWrapper:SetPoint("TOPLEFT", position == "outside_left" and 34 or 2, -27)
   else
-    self.ScrollingMessages:SetPoint("TOPLEFT", position == "outside_left" and 34 or 2, -5)
+    self.ScrollingMessagesWrapper:SetPoint("TOPLEFT", position == "outside_left" and 34 or 2, -5)
   end
 end
 
@@ -200,11 +202,11 @@ function addonTable.Display.ChatFrameMixin:UpdateEditBox()
 
   if position == "bottom" then
     local _, _, _, clampBottom = self:GetClampRectInsets()
-    self.ScrollingMessages:SetPoint("BOTTOMRIGHT", 0, 6 + ChatFrame1EditBox:GetHeight() * ChatFrame1EditBox:GetScale() - clampBottom)
+    self.ScrollingMessagesWrapper:SetPoint("BOTTOMRIGHT", 0, 6 + ChatFrame1EditBox:GetHeight() * ChatFrame1EditBox:GetScale() - clampBottom)
     ChatFrame1EditBox:SetPoint("TOPLEFT", self, "BOTTOMLEFT", 0, ChatFrame1EditBox:GetHeight() - clampBottom * ChatFrame1EditBox:GetScale())
     ChatFrame1EditBox:SetPoint("TOPRIGHT", self, "BOTTOMRIGHT", 0, ChatFrame1EditBox:GetHeight() - clampBottom * ChatFrame1EditBox:GetScale())
   elseif position == "top" then
-    self.ScrollingMessages:SetPoint("BOTTOMRIGHT", 0, 5)
+    self.ScrollingMessagesWrapper:SetPoint("BOTTOMRIGHT", 0, 5)
     ChatFrame1EditBox:SetPoint("TOPLEFT", self, "TOPLEFT", 0, 0)
     ChatFrame1EditBox:SetPoint("TOPRIGHT", self, "TOPRIGHT", 0, 0)
   end
@@ -255,6 +257,4 @@ function addonTable.Display.ChatFrameMixin:SetTabSelectedAndFilter(index, func)
   self.tabIndex = index
 
   self:SetFilter(func)
-
-  self.ScrollingMessages:Reset()
 end

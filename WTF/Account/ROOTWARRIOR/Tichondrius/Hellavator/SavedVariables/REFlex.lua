@@ -8,10 +8,6 @@ REFlexSettings = {
 ["ShowServerName"] = false,
 ["CurrentTab"] = 6,
 ["LDBMode"] = 3,
-["LDBSide"] = "A",
-["ArenaStatsLimit"] = 3,
-["ConfigVersion"] = 3320,
-["FirstTime"] = false,
 ["Filters"] = {
 ["Map"] = 1,
 ["Bracket"] = 1,
@@ -23,6 +19,10 @@ REFlexSettings = {
 ["Season"] = 0,
 ["DateMode"] = 1,
 },
+["ArenaStatsLimit"] = 3,
+["FirstTime"] = false,
+["ConfigVersion"] = 3320,
+["LDBSide"] = "A",
 }
 REFlexDatabase = {
 {
@@ -70,8 +70,8 @@ REFlexDatabase = {
 },
 },
 ["Hidden"] = false,
-["Time"] = 1758129861,
-["isArena"] = false,
+["Map"] = 2106,
+["PlayerNum"] = 1,
 ["Version"] = 3320,
 ["isRated"] = false,
 ["BGPlace"] = {
@@ -91,8 +91,8 @@ REFlexDatabase = {
 },
 },
 ["Winner"] = 0,
-["PlayerNum"] = 1,
-["Map"] = 2106,
+["isArena"] = false,
+["Time"] = 1758129861,
 },
 {
 ["PlayerStats"] = {
@@ -138,8 +138,8 @@ REFlexDatabase = {
 },
 },
 ["Hidden"] = false,
-["Time"] = 1758144292,
-["isArena"] = false,
+["Map"] = 1191,
+["PlayerNum"] = 1,
 ["Version"] = 3320,
 ["isRated"] = false,
 ["BGPlace"] = {
@@ -159,8 +159,8 @@ REFlexDatabase = {
 },
 },
 ["Winner"] = 1,
-["PlayerNum"] = 1,
-["Map"] = 1191,
+["isArena"] = false,
+["Time"] = 1758144292,
 },
 {
 ["PlayerStats"] = {
@@ -210,8 +210,8 @@ REFlexDatabase = {
 },
 },
 ["Hidden"] = false,
-["Time"] = 1758145028,
-["isArena"] = false,
+["Map"] = 30,
+["PlayerNum"] = 1,
 ["Version"] = 3320,
 ["isRated"] = false,
 ["BGPlace"] = {
@@ -231,8 +231,8 @@ REFlexDatabase = {
 },
 },
 ["Winner"] = 1,
-["PlayerNum"] = 1,
-["Map"] = 30,
+["isArena"] = false,
+["Time"] = 1758145028,
 },
 {
 ["PlayerStats"] = {
@@ -279,8 +279,8 @@ REFlexDatabase = {
 },
 },
 ["Hidden"] = false,
-["Time"] = 1758146325,
-["isArena"] = false,
+["Map"] = 628,
+["PlayerNum"] = 1,
 ["Version"] = 3320,
 ["isRated"] = false,
 ["BGPlace"] = {
@@ -300,8 +300,8 @@ REFlexDatabase = {
 },
 },
 ["Winner"] = 0,
-["PlayerNum"] = 1,
-["Map"] = 628,
+["isArena"] = false,
+["Time"] = 1758146325,
 },
 {
 ["PlayerStats"] = {
@@ -431,12 +431,12 @@ REFlexDatabase = {
 },
 ["Hidden"] = false,
 ["Map"] = 1505,
-["isArena"] = true,
+["PlayerSide"] = 1,
 ["Version"] = 3320,
 ["isRated"] = true,
 ["PlayerNum"] = 6,
 ["Winner"] = 1,
-["PlayerSide"] = 1,
+["isArena"] = true,
 ["TeamData"] = {
 {
 "",
@@ -582,12 +582,12 @@ REFlexDatabase = {
 },
 ["Hidden"] = false,
 ["Map"] = 1504,
-["isArena"] = true,
+["PlayerSide"] = 0,
 ["Version"] = 3320,
 ["isRated"] = true,
 ["PlayerNum"] = 6,
 ["Winner"] = 1,
-["PlayerSide"] = 0,
+["isArena"] = true,
 ["TeamData"] = {
 {
 "",
@@ -733,12 +733,12 @@ REFlexDatabase = {
 },
 ["Hidden"] = false,
 ["Map"] = 2759,
-["PlayerSide"] = 0,
+["isArena"] = true,
 ["Version"] = 3320,
 ["isRated"] = true,
 ["PlayerNum"] = 3,
 ["Winner"] = 4294967295,
-["isArena"] = true,
+["PlayerSide"] = 0,
 ["TeamData"] = {
 {
 "",
@@ -884,12 +884,12 @@ REFlexDatabase = {
 },
 ["Hidden"] = false,
 ["Map"] = 572,
-["PlayerSide"] = 1,
+["isArena"] = true,
 ["Version"] = 3320,
 ["isRated"] = true,
 ["PlayerNum"] = 6,
 ["Winner"] = 1,
-["isArena"] = true,
+["PlayerSide"] = 1,
 ["TeamData"] = {
 {
 "",
@@ -1035,12 +1035,12 @@ REFlexDatabase = {
 },
 ["Hidden"] = false,
 ["Map"] = 2563,
-["PlayerSide"] = 0,
+["isArena"] = true,
 ["Version"] = 3320,
 ["isRated"] = true,
 ["PlayerNum"] = 6,
 ["Winner"] = 1,
-["isArena"] = true,
+["PlayerSide"] = 0,
 ["TeamData"] = {
 {
 "",
@@ -1186,12 +1186,12 @@ REFlexDatabase = {
 },
 ["Hidden"] = false,
 ["Map"] = 1134,
-["PlayerSide"] = 0,
+["isArena"] = true,
 ["Version"] = 3320,
 ["isRated"] = true,
 ["PlayerNum"] = 6,
 ["Winner"] = 0,
-["isArena"] = true,
+["PlayerSide"] = 0,
 ["TeamData"] = {
 {
 "",
@@ -1211,19 +1211,6 @@ REFlexDatabase = {
 },
 {
 ["Map"] = 2167,
-["PlayerNum"] = 3,
-["Season"] = 40,
-["PlayersNum"] = 4,
-["Duration"] = 37,
-["Hidden"] = false,
-["isSoloShuffle"] = false,
-["Time"] = 1758218976,
-["isArena"] = true,
-["PlayerSide"] = 1,
-["isRated"] = false,
-["Version"] = 3320,
-["Winner"] = 0,
-["isBrawl"] = false,
 ["Players"] = {
 {
 "Zomvie",
@@ -1302,12 +1289,38 @@ REFlexDatabase = {
 237,
 },
 },
+["isBrawl"] = false,
+["PlayersNum"] = 4,
+["Duration"] = 37,
+["PlayerNum"] = 3,
+["Winner"] = 0,
+["Version"] = 3320,
+["isArena"] = true,
+["Time"] = 1758218976,
+["isRated"] = false,
+["PlayerSide"] = 1,
+["isSoloShuffle"] = false,
+["Hidden"] = false,
+["Season"] = 40,
 },
 {
 ["Map"] = 1911,
 ["PlayerStats"] = {
 0,
 },
+["PlayerNum"] = 1,
+["Season"] = 40,
+["PlayersNum"] = 6,
+["Duration"] = 97,
+["Hidden"] = false,
+["isSoloShuffle"] = false,
+["Time"] = 1758219361,
+["isArena"] = true,
+["PlayerSide"] = 0,
+["isRated"] = false,
+["Version"] = 3320,
+["Winner"] = 0,
+["isBrawl"] = false,
 ["Players"] = {
 {
 "Hellavator",
@@ -1424,19 +1437,6 @@ REFlexDatabase = {
 214,
 },
 },
-["isArena"] = true,
-["PlayersNum"] = 6,
-["Duration"] = 97,
-["Hidden"] = false,
-["Winner"] = 0,
-["PlayerSide"] = 0,
-["isBrawl"] = false,
-["Version"] = 3320,
-["isRated"] = false,
-["Time"] = 1758219361,
-["isSoloShuffle"] = false,
-["Season"] = 40,
-["PlayerNum"] = 1,
 },
 {
 ["PlayerStats"] = {
@@ -1566,12 +1566,12 @@ REFlexDatabase = {
 },
 ["Hidden"] = false,
 ["Map"] = 1134,
-["isArena"] = true,
+["PlayerSide"] = 0,
 ["Version"] = 3320,
 ["isRated"] = true,
 ["PlayerNum"] = 3,
 ["Winner"] = 0,
-["PlayerSide"] = 0,
+["isArena"] = true,
 ["TeamData"] = {
 {
 "",
@@ -1717,12 +1717,12 @@ REFlexDatabase = {
 },
 ["Hidden"] = false,
 ["Map"] = 572,
-["isArena"] = true,
+["PlayerSide"] = 0,
 ["Version"] = 3320,
 ["isRated"] = true,
 ["PlayerNum"] = 2,
 ["Winner"] = 1,
-["PlayerSide"] = 0,
+["isArena"] = true,
 ["TeamData"] = {
 {
 "",
@@ -1868,12 +1868,12 @@ REFlexDatabase = {
 },
 ["Hidden"] = false,
 ["Map"] = 980,
-["PlayerSide"] = 1,
+["isArena"] = true,
 ["Version"] = 3320,
 ["isRated"] = true,
 ["PlayerNum"] = 3,
 ["Winner"] = 0,
-["isArena"] = true,
+["PlayerSide"] = 1,
 ["TeamData"] = {
 {
 "",
@@ -2019,12 +2019,12 @@ REFlexDatabase = {
 },
 ["Hidden"] = false,
 ["Map"] = 2759,
-["PlayerSide"] = 1,
+["isArena"] = true,
 ["Version"] = 3320,
 ["isRated"] = true,
 ["PlayerNum"] = 1,
 ["Winner"] = 1,
-["isArena"] = true,
+["PlayerSide"] = 1,
 ["TeamData"] = {
 {
 "",
@@ -2170,12 +2170,12 @@ REFlexDatabase = {
 },
 ["Hidden"] = false,
 ["Map"] = 980,
-["isArena"] = true,
+["PlayerSide"] = 0,
 ["Version"] = 3320,
 ["isRated"] = true,
 ["PlayerNum"] = 4,
 ["Winner"] = 1,
-["PlayerSide"] = 0,
+["isArena"] = true,
 ["TeamData"] = {
 {
 "",
@@ -2321,12 +2321,12 @@ REFlexDatabase = {
 },
 ["Hidden"] = false,
 ["Map"] = 2547,
-["isArena"] = true,
+["PlayerSide"] = 0,
 ["Version"] = 3320,
 ["isRated"] = true,
 ["PlayerNum"] = 1,
 ["Winner"] = 1,
-["PlayerSide"] = 0,
+["isArena"] = true,
 ["TeamData"] = {
 {
 "",
@@ -2472,12 +2472,12 @@ REFlexDatabase = {
 },
 ["Hidden"] = false,
 ["Map"] = 1911,
-["isArena"] = true,
+["PlayerSide"] = 1,
 ["Version"] = 3320,
 ["isRated"] = true,
 ["PlayerNum"] = 2,
 ["Winner"] = 0,
-["PlayerSide"] = 1,
+["isArena"] = true,
 ["TeamData"] = {
 {
 "",
@@ -2623,12 +2623,12 @@ REFlexDatabase = {
 },
 ["Hidden"] = false,
 ["Map"] = 1504,
-["PlayerSide"] = 0,
+["isArena"] = true,
 ["Version"] = 3320,
 ["isRated"] = true,
 ["PlayerNum"] = 2,
 ["Winner"] = 1,
-["isArena"] = true,
+["PlayerSide"] = 0,
 ["TeamData"] = {
 {
 "",
@@ -2774,12 +2774,12 @@ REFlexDatabase = {
 },
 ["Hidden"] = false,
 ["Map"] = 1504,
-["PlayerSide"] = 0,
+["isArena"] = true,
 ["Version"] = 3320,
 ["isRated"] = true,
 ["PlayerNum"] = 4,
 ["Winner"] = 1,
-["isArena"] = true,
+["PlayerSide"] = 0,
 ["TeamData"] = {
 {
 "",
@@ -2925,12 +2925,12 @@ REFlexDatabase = {
 },
 ["Hidden"] = false,
 ["Map"] = 1134,
-["isArena"] = true,
+["PlayerSide"] = 1,
 ["Version"] = 3320,
 ["isRated"] = true,
 ["PlayerNum"] = 1,
 ["Winner"] = 1,
-["PlayerSide"] = 1,
+["isArena"] = true,
 ["TeamData"] = {
 {
 "",
@@ -3076,12 +3076,12 @@ REFlexDatabase = {
 },
 ["Hidden"] = false,
 ["Map"] = 2759,
-["isArena"] = true,
+["PlayerSide"] = 0,
 ["Version"] = 3320,
 ["isRated"] = true,
 ["PlayerNum"] = 2,
 ["Winner"] = 1,
-["PlayerSide"] = 0,
+["isArena"] = true,
 ["TeamData"] = {
 {
 "",
@@ -3227,12 +3227,12 @@ REFlexDatabase = {
 },
 ["Hidden"] = false,
 ["Map"] = 980,
-["PlayerSide"] = 0,
+["isArena"] = true,
 ["Version"] = 3320,
 ["isRated"] = true,
 ["PlayerNum"] = 3,
 ["Winner"] = 4294967295,
-["isArena"] = true,
+["PlayerSide"] = 0,
 ["TeamData"] = {
 {
 "",
@@ -3378,12 +3378,12 @@ REFlexDatabase = {
 },
 ["Hidden"] = false,
 ["Map"] = 2547,
-["PlayerSide"] = 0,
+["isArena"] = true,
 ["Version"] = 3320,
 ["isRated"] = true,
 ["PlayerNum"] = 1,
 ["Winner"] = 1,
-["isArena"] = true,
+["PlayerSide"] = 0,
 ["TeamData"] = {
 {
 "",
@@ -3529,12 +3529,12 @@ REFlexDatabase = {
 },
 ["Hidden"] = false,
 ["Map"] = 2547,
-["PlayerSide"] = 0,
+["isArena"] = true,
 ["Version"] = 3320,
 ["isRated"] = true,
 ["PlayerNum"] = 3,
 ["Winner"] = 4294967295,
-["isArena"] = true,
+["PlayerSide"] = 0,
 ["TeamData"] = {
 {
 "",
@@ -3680,12 +3680,12 @@ REFlexDatabase = {
 },
 ["Hidden"] = false,
 ["Map"] = 1505,
-["PlayerSide"] = 1,
+["isArena"] = true,
 ["Version"] = 3320,
 ["isRated"] = true,
 ["PlayerNum"] = 3,
 ["Winner"] = 0,
-["isArena"] = true,
+["PlayerSide"] = 1,
 ["TeamData"] = {
 {
 "",
@@ -3831,12 +3831,12 @@ REFlexDatabase = {
 },
 ["Hidden"] = false,
 ["Map"] = 1134,
-["isArena"] = true,
+["PlayerSide"] = 1,
 ["Version"] = 3320,
 ["isRated"] = true,
 ["PlayerNum"] = 1,
 ["Winner"] = 1,
-["PlayerSide"] = 1,
+["isArena"] = true,
 ["TeamData"] = {
 {
 "",
@@ -3982,12 +3982,12 @@ REFlexDatabase = {
 },
 ["Hidden"] = false,
 ["Map"] = 2547,
-["isArena"] = true,
+["PlayerSide"] = 1,
 ["Version"] = 3320,
 ["isRated"] = true,
 ["PlayerNum"] = 1,
 ["Winner"] = 0,
-["PlayerSide"] = 1,
+["isArena"] = true,
 ["TeamData"] = {
 {
 "",
@@ -4133,12 +4133,12 @@ REFlexDatabase = {
 },
 ["Hidden"] = false,
 ["Map"] = 2563,
-["isArena"] = true,
+["PlayerSide"] = 1,
 ["Version"] = 3320,
 ["isRated"] = true,
 ["PlayerNum"] = 4,
 ["Winner"] = 4294967295,
-["PlayerSide"] = 1,
+["isArena"] = true,
 ["TeamData"] = {
 {
 "",
@@ -4284,12 +4284,12 @@ REFlexDatabase = {
 },
 ["Hidden"] = false,
 ["Map"] = 2759,
-["isArena"] = true,
+["PlayerSide"] = 0,
 ["Version"] = 3320,
 ["isRated"] = true,
 ["PlayerNum"] = 2,
 ["Winner"] = 1,
-["PlayerSide"] = 0,
+["isArena"] = true,
 ["TeamData"] = {
 {
 "",
@@ -4435,12 +4435,12 @@ REFlexDatabase = {
 },
 ["Hidden"] = false,
 ["Map"] = 2563,
-["isArena"] = true,
+["PlayerSide"] = 0,
 ["Version"] = 3320,
 ["isRated"] = true,
 ["PlayerNum"] = 1,
 ["Winner"] = 1,
-["PlayerSide"] = 0,
+["isArena"] = true,
 ["TeamData"] = {
 {
 "",
@@ -4586,12 +4586,12 @@ REFlexDatabase = {
 },
 ["Hidden"] = false,
 ["Map"] = 1134,
-["isArena"] = true,
+["PlayerSide"] = 0,
 ["Version"] = 3320,
 ["isRated"] = true,
 ["PlayerNum"] = 1,
 ["Winner"] = 1,
-["PlayerSide"] = 0,
+["isArena"] = true,
 ["TeamData"] = {
 {
 "",
@@ -4737,12 +4737,12 @@ REFlexDatabase = {
 },
 ["Hidden"] = false,
 ["Map"] = 2563,
-["isArena"] = true,
+["PlayerSide"] = 0,
 ["Version"] = 3320,
 ["isRated"] = true,
 ["PlayerNum"] = 2,
 ["Winner"] = 0,
-["PlayerSide"] = 0,
+["isArena"] = true,
 ["TeamData"] = {
 {
 "",
@@ -4888,12 +4888,12 @@ REFlexDatabase = {
 },
 ["Hidden"] = false,
 ["Map"] = 1505,
-["PlayerSide"] = 1,
+["isArena"] = true,
 ["Version"] = 3320,
 ["isRated"] = true,
 ["PlayerNum"] = 3,
 ["Winner"] = 4294967295,
-["isArena"] = true,
+["PlayerSide"] = 1,
 ["TeamData"] = {
 {
 "",
@@ -5039,12 +5039,12 @@ REFlexDatabase = {
 },
 ["Hidden"] = false,
 ["Map"] = 572,
-["PlayerSide"] = 0,
+["isArena"] = true,
 ["Version"] = 3320,
 ["isRated"] = true,
 ["PlayerNum"] = 5,
 ["Winner"] = 0,
-["isArena"] = true,
+["PlayerSide"] = 0,
 ["TeamData"] = {
 {
 "",
@@ -5190,12 +5190,12 @@ REFlexDatabase = {
 },
 ["Hidden"] = false,
 ["Map"] = 1134,
-["PlayerSide"] = 1,
+["isArena"] = true,
 ["Version"] = 3320,
 ["isRated"] = true,
 ["PlayerNum"] = 1,
 ["Winner"] = 0,
-["isArena"] = true,
+["PlayerSide"] = 1,
 ["TeamData"] = {
 {
 "",
@@ -5341,12 +5341,12 @@ REFlexDatabase = {
 },
 ["Hidden"] = false,
 ["Map"] = 572,
-["PlayerSide"] = 1,
+["isArena"] = true,
 ["Version"] = 3320,
 ["isRated"] = true,
 ["PlayerNum"] = 5,
 ["Winner"] = 0,
-["isArena"] = true,
+["PlayerSide"] = 1,
 ["TeamData"] = {
 {
 "",
@@ -5492,12 +5492,12 @@ REFlexDatabase = {
 },
 ["Hidden"] = false,
 ["Map"] = 1505,
-["PlayerSide"] = 0,
+["isArena"] = true,
 ["Version"] = 3320,
 ["isRated"] = true,
 ["PlayerNum"] = 5,
 ["Winner"] = 0,
-["isArena"] = true,
+["PlayerSide"] = 0,
 ["TeamData"] = {
 {
 "",
@@ -5643,12 +5643,12 @@ REFlexDatabase = {
 },
 ["Hidden"] = false,
 ["Map"] = 980,
-["PlayerSide"] = 1,
+["isArena"] = true,
 ["Version"] = 3320,
 ["isRated"] = true,
 ["PlayerNum"] = 1,
 ["Winner"] = 1,
-["isArena"] = true,
+["PlayerSide"] = 1,
 ["TeamData"] = {
 {
 "",
@@ -5794,12 +5794,12 @@ REFlexDatabase = {
 },
 ["Hidden"] = false,
 ["Map"] = 1134,
-["PlayerSide"] = 1,
+["isArena"] = true,
 ["Version"] = 3320,
 ["isRated"] = true,
 ["PlayerNum"] = 3,
 ["Winner"] = 4294967295,
-["isArena"] = true,
+["PlayerSide"] = 1,
 ["TeamData"] = {
 {
 "",
@@ -5945,12 +5945,12 @@ REFlexDatabase = {
 },
 ["Hidden"] = false,
 ["Map"] = 980,
-["PlayerSide"] = 0,
+["isArena"] = true,
 ["Version"] = 3320,
 ["isRated"] = true,
 ["PlayerNum"] = 6,
 ["Winner"] = 0,
-["isArena"] = true,
+["PlayerSide"] = 0,
 ["TeamData"] = {
 {
 "",
@@ -6096,12 +6096,12 @@ REFlexDatabase = {
 },
 ["Hidden"] = false,
 ["Map"] = 572,
-["isArena"] = true,
+["PlayerSide"] = 0,
 ["Version"] = 3320,
 ["isRated"] = true,
 ["PlayerNum"] = 4,
 ["Winner"] = 1,
-["PlayerSide"] = 0,
+["isArena"] = true,
 ["TeamData"] = {
 {
 "",
@@ -6247,12 +6247,12 @@ REFlexDatabase = {
 },
 ["Hidden"] = false,
 ["Map"] = 980,
-["isArena"] = true,
+["PlayerSide"] = 0,
 ["Version"] = 3320,
 ["isRated"] = true,
 ["PlayerNum"] = 6,
 ["Winner"] = 0,
-["PlayerSide"] = 0,
+["isArena"] = true,
 ["TeamData"] = {
 {
 "",
@@ -6398,12 +6398,12 @@ REFlexDatabase = {
 },
 ["Hidden"] = false,
 ["Map"] = 2563,
-["isArena"] = true,
+["PlayerSide"] = 1,
 ["Version"] = 3320,
 ["isRated"] = true,
 ["PlayerNum"] = 6,
 ["Winner"] = 1,
-["PlayerSide"] = 1,
+["isArena"] = true,
 ["TeamData"] = {
 {
 "",

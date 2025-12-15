@@ -25,9 +25,9 @@ LegionRemixHelperCharDB = {
 },
 ["Finger"] = {
 ["246197"] = true,
-["246198"] = true,
-["245998"] = true,
 ["246201"] = true,
+["245998"] = true,
+["246198"] = true,
 ["246200"] = true,
 ["246202"] = true,
 ["246199"] = true,

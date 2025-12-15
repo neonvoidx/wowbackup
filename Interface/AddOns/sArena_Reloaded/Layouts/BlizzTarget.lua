@@ -78,6 +78,8 @@ layout.defaultSettings = {
         healStatusBarTexture          = "sArena Stripes",
         castbarStatusBarTexture       = "sArena Default",
         castbarUninterruptibleTexture = "sArena Default",
+        bgTexture = "Solid",
+        bgColor = {0, 0, 0, 0.6},
     },
     retextureHealerClassStackOnly = true,
 
@@ -87,7 +89,8 @@ layout.defaultSettings = {
     mirrored = false,
     bigHealthbar = true,
 
-    textSettings = {},
+    textSettings = {
+    },
 }
 
 local function getSetting(info)
@@ -167,8 +170,8 @@ function layout:Initialize(frame)
         frame.parent:UpdateWidgetSettings(self.db.widgets)
     end
 
-    frame.ClassIconCooldown:SetSwipeTexture("Interface\\CharacterFrame\\TempPortraitAlphaMask")
-    frame.ClassIconCooldown:SetUseCircularEdge(true)
+    frame.ClassIcon.Cooldown:SetSwipeTexture("Interface\\CharacterFrame\\TempPortraitAlphaMask")
+    frame.ClassIcon.Cooldown:SetUseCircularEdge(true)
 
     frame:SetSize(192, 76.8)
     frame.SpecIcon:SetSize(22, 22)
@@ -200,9 +203,9 @@ function layout:Initialize(frame)
     local f = frame.ClassIcon
     f:SetSize(64, 64)
     f:Show()
-    f:AddMaskTexture(frame.ClassIconMask)
+    f.Texture:AddMaskTexture(f.Mask)
 
-    frame.ClassIconMask:SetSize(64, 64)
+    f.Mask:SetSize(64, 64)
 
     -- SpecIcon border (owned by SpecIcon)
     if not frame.SpecIcon.Border then
@@ -233,25 +236,6 @@ function layout:Initialize(frame)
 
     frame.PowerText:SetAlpha(frame.parent.db.profile.hidePowerText and 0 or 1)
 
-    -- Health bar underlay
-    if not frame.hpUnderlay then
-        frame.hpUnderlay = frame:CreateTexture(nil, "BACKGROUND", nil, 1)
-        frame.hpUnderlay:SetPoint("TOPLEFT", frame.HealthBar, "TOPLEFT")
-        frame.hpUnderlay:SetPoint("BOTTOMRIGHT", frame.HealthBar, "BOTTOMRIGHT")
-        frame.hpUnderlay:SetColorTexture(0, 0, 0, 0.65)
-        frame.hpUnderlay:Show()
-    end
-
-    -- Power bar underlay
-    if not frame.ppUnderlay then
-        frame.ppUnderlay = frame:CreateTexture(nil, "BACKGROUND", nil, 1)
-        frame.ppUnderlay:SetPoint("TOPLEFT", frame.PowerBar, "TOPLEFT")
-        frame.ppUnderlay:SetPoint("BOTTOMRIGHT", frame.PowerBar, "BOTTOMRIGHT")
-        frame.ppUnderlay:SetColorTexture(0, 0, 0, 0.65)
-        frame.ppUnderlay:Show()
-    end
-
-
     local frameTexture = frame.frameTexture
     frameTexture:ClearAllPoints()
     frameTexture:SetAllPoints(frame)
@@ -275,7 +259,7 @@ function layout:UpdateOrientation(frame)
     local frameTexture = frame.frameTexture
     local healthBar = frame.HealthBar
     local classIcon = frame.ClassIcon
-    local classIconMask = frame.ClassIconMask
+    local classIconMask = frame.ClassIcon.Mask
     local name = frame.Name
     local specName = frame.SpecNameText
     local healthText = frame.HealthText
@@ -390,18 +374,18 @@ function layout:UpdateOrientation(frame)
     end
 
     healthBar:ClearAllPoints()
-    classIcon:ClearAllPoints()
+    frame.ClassIcon:ClearAllPoints()
     classIconMask:ClearAllPoints()
 
     if (self.db.mirrored) then
         frameTexture:SetTexCoord(0.85, 0.1, 0.05, 0.65)
         healthBar:SetPoint("RIGHT", -5, self.db.bigHealthbar and 7 or -2)
-        classIcon:SetPoint("LEFT", 5, 0)
+        frame.ClassIcon:SetPoint("LEFT", 5, 0)
         classIconMask:SetPoint("LEFT", 5, 0)
     else
         frameTexture:SetTexCoord(0.1, 0.85, 0.05, 0.65)
         healthBar:SetPoint("LEFT", 5, self.db.bigHealthbar and 7 or -2)
-        classIcon:SetPoint("RIGHT", -5, 0)
+        frame.ClassIcon:SetPoint("RIGHT", -5, 0)
         classIconMask:SetPoint("RIGHT", -5, 0)
     end
 end

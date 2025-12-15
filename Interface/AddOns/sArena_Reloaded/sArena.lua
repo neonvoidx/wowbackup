@@ -1,5 +1,6 @@
 local isRetail = sArenaMixin.isRetail
 local isMidnight = sArenaMixin.isMidnight
+local isTBC = sArenaMixin.isTBC
 
 sArenaMixin.layouts = {}
 sArenaMixin.defaultSettings = {
@@ -54,7 +55,12 @@ local GetSpellTexture = GetSpellTexture or C_Spell.GetSpellTexture
 local stealthAlpha = 0.4
 sArenaMixin.beenInArena = false
 
-local healerSpecNames = {
+-- TBC: Track which arena units we've seen (to work around UnitExists returning false for stealthed units)
+if isTBC then
+    sArenaMixin.seenArenaUnits = {}
+end
+
+sArenaMixin.healerSpecNames = {
     ["Discipline"] = true,
     ["Restoration"] = true,
     ["Mistweaver"] = true,
@@ -184,6 +190,11 @@ local FEIGN_DEATH = GetSpellName(feignDeathID) -- Localized name for Feign Death
 
 local BlizzardUnitIsUnit = UnitIsUnit
 
+local nonSecretUnits = {
+    ["target"] = true,
+    ["focus"] = true,
+}
+
 local function MidnightUnitIsUnit(unit1, unit2)
     local p1 = C_NamePlate.GetNamePlateForUnit(unit1, issecure())
     local p2 = C_NamePlate.GetNamePlateForUnit(unit2, issecure())
@@ -192,6 +203,9 @@ end
 
 local function UnitIsUnit(unit1, unit2)
     if isMidnight then
+        if nonSecretUnits[unit1] or nonSecretUnits[unit2] then
+            return BlizzardUnitIsUnit(unit1, unit2)
+        end
         return MidnightUnitIsUnit(unit1, unit2)
     else
         return BlizzardUnitIsUnit(unit1, unit2)
@@ -207,8 +221,7 @@ end
 ]]
 function sArenaMixin:ImportOtherForkSettings()
     -- Try to find the saved variables database from other sArena versions
-    -- Priority order: sArena3DB -> sArena2DB -> sArenaDB (oldest to newest naming conventions)
-    local oldDB = sArena3DB or sArena2DB or sArenaDB
+    local oldDB = sArena3DB or sArena2DB or sArenaDB or sArena_MoPDB
 
     -- Validate that we found a valid database with the required structure
     -- Both profileKeys and profiles are essential for AceDB addon profiles
@@ -262,6 +275,7 @@ function sArenaMixin:CompatibilityEnsurer()
     local otherSArenaVersions = {
         "sArena", -- Original
         "sArena Updated",
+        "sArena_MoP",
         "sArena_Pinaclonada",
         "sArena_Updated2_by_sammers",
     }
@@ -284,7 +298,7 @@ local emptyLayoutOptionsTable = {
 local blizzFrame
 local changedParent
 local UpdateBlizzVisibility
-if isRetail then
+if isRetail and not isTBC then
     UpdateBlizzVisibility = function()
         -- Hide Blizzard Arena Frames while in Arena
         if CompactArenaFrame.isHidden then return end
@@ -500,12 +514,16 @@ function sArenaMixin:UpdateTextures()
         healStatusBarTexture      = "sArena Stripes",
         castbarStatusBarTexture   = "sArena Default",
         castbarUninterruptibleTexture = "sArena Default",
+        bgTexture = "Solid",
+        bgColor = {0, 0, 0, 0.6},
     }
 
     local castTexture = LSM:Fetch(LSM.MediaType.STATUSBAR, texKeys.castbarStatusBarTexture)
     local castUninterruptibleTexture = LSM:Fetch(LSM.MediaType.STATUSBAR, texKeys.castbarUninterruptibleTexture or texKeys.castbarStatusBarTexture)
     local dpsTexture     = LSM:Fetch(LSM.MediaType.STATUSBAR, texKeys.generalStatusBarTexture)
     local healerTexture = LSM:Fetch(LSM.MediaType.STATUSBAR, texKeys.healStatusBarTexture)
+    local bgTexture = LSM:Fetch(LSM.MediaType.STATUSBAR, texKeys.bgTexture or "Solid")
+    local bgColor = texKeys.bgColor or {0, 0, 0, 0.6}
     local modernCastbars            = layout.castBar.useModernCastbars
     local keepDefaultModernTextures = layout.castBar.keepDefaultModernTextures
     local interruptStatusColorOn     = layout.castBar.interruptStatusColorOn
@@ -544,6 +562,16 @@ function sArenaMixin:UpdateTextures()
 
         frame.HealthBar:SetStatusBarTexture(textureToUse)
         frame.PowerBar:SetStatusBarTexture(dpsTexture)
+
+        -- Set background texture and color
+        if frame.HealthBar.hpUnderlay then
+            frame.HealthBar.hpUnderlay:SetTexture(bgTexture)
+            frame.HealthBar.hpUnderlay:SetVertexColor(bgColor[1], bgColor[2], bgColor[3], bgColor[4])
+        end
+        if frame.PowerBar.ppUnderlay then
+            frame.PowerBar.ppUnderlay:SetTexture(bgTexture)
+            frame.PowerBar.ppUnderlay:SetVertexColor(bgColor[1], bgColor[2], bgColor[3], bgColor[4])
+        end
 
         frame.HealthBar:SetReverseFill(reverseBarsFill)
         frame.PowerBar:SetReverseFill(reverseBarsFill)
@@ -758,95 +786,154 @@ local ABSORB_GLOW_ALPHA = 0.6
 local ABSORB_GLOW_OFFSET = -5
 function sArenaFrameMixin:UpdateAbsorb()
     if isMidnight then return end
-    local healthBar = self.HealthBar
-    local _, maxHealth = healthBar:GetMinMaxValues()
-    local currentHealth = healthBar:GetValue()
 
-    if maxHealth <= 0 then return end
-
-    local absorbBar = self.totalAbsorbBar
+    local unit     = self.unit
+    local healthBar     = self.HealthBar
+    local absorbBar     = self.totalAbsorbBar
     local absorbOverlay = self.totalAbsorbBarOverlay
-    local glow = self.overAbsorbGlow
+    local glow          = self.overAbsorbGlow
 
-    local totalAbsorb = UnitGetTotalAbsorbs(self.unit) or 0
-    if totalAbsorb > maxHealth then totalAbsorb = maxHealth end
+    local maxHealth = UnitHealthMax(unit)
+    local totalAbsorb   = UnitGetTotalAbsorbs(unit) or 0
 
-    local isOverAbsorb = currentHealth + totalAbsorb > maxHealth
-    local isReversed = db and db.profile.reverseBarsFill or false
-
-    local healthWidth = healthBar:GetWidth()
-    local healthHeight = healthBar:GetHeight()
-
-    local absorbWidth = totalAbsorb / maxHealth * healthWidth
-    local missingHealthWidth = (maxHealth - currentHealth) / maxHealth * healthWidth
-    local absorbBarWidth = math.min(absorbWidth, missingHealthWidth)
-
-    -- Show absorb bar only for missing health
-    if absorbBarWidth > 0 then
-        absorbBar:ClearAllPoints()
-        if isReversed then
-            absorbBar:SetPoint("TOPRIGHT", healthBar, "TOPLEFT", missingHealthWidth, 0)
-        else
-            absorbBar:SetPoint("TOPLEFT", healthBar, "TOPLEFT", currentHealth / maxHealth * healthWidth, 0)
-        end
-        absorbBar:SetWidth(absorbBarWidth)
-        absorbBar:SetHeight(healthHeight)
-        absorbBar:Show()
-    else
+    if maxHealth <= 0 or totalAbsorb <= 0 then
         absorbBar:Hide()
+        absorbOverlay:Hide()
+        glow:Hide()
+        return
     end
 
-    -- Show striped overlay for full absorb width (wraps onto filled health if needed)
-    if absorbWidth > 0 then
-        absorbOverlay:SetParent(healthBar)
-        absorbOverlay:ClearAllPoints()
-        if isReversed then
-            if isOverAbsorb then
-                absorbOverlay:SetPoint("TOPLEFT", healthBar, "TOPLEFT", 0, 0)
-                absorbOverlay:SetPoint("BOTTOMLEFT", healthBar, "BOTTOMLEFT", 0, 0)
-            else
-                absorbOverlay:SetPoint("TOPLEFT", absorbBar, "TOPLEFT", 0, 0)
-                absorbOverlay:SetPoint("BOTTOMLEFT", absorbBar, "BOTTOMLEFT", 0, 0)
-            end
+    local currentHealth = UnitHealth(unit)
+    local healthWidth  = healthBar:GetWidth()
+    local healthHeight = healthBar:GetHeight()
+    local isReversed   = self.parent.db.profile.reverseBarsFill or false
+
+    -- Default, no Overshields.
+    if self.parent.db.profile.disableOvershields then
+        local isOverAbsorb = (currentHealth + totalAbsorb >= maxHealth)
+
+        -- Clamp absorbs to actual missing health
+        local missingHealth = maxHealth - currentHealth
+        totalAbsorb = math.min(totalAbsorb, missingHealth)
+
+        if isOverAbsorb then
+            glow:Show()
         else
-            if isOverAbsorb then
-                absorbOverlay:SetPoint("TOPRIGHT", healthBar, "TOPRIGHT", 0, 0)
-                absorbOverlay:SetPoint("BOTTOMRIGHT", healthBar, "BOTTOMRIGHT", 0, 0)
-            else
+            glow:Hide()
+        end
+
+        if totalAbsorb > 0 then
+            local absorbWidth        = healthWidth * (totalAbsorb / maxHealth)
+            local missingHealthWidth = (maxHealth - currentHealth) / maxHealth * healthWidth
+            local absorbBarWidth     = math.min(absorbWidth, missingHealthWidth)
+
+            absorbBar:ClearAllPoints()
+            absorbOverlay:ClearAllPoints()
+            if isReversed then
+                absorbBar:SetPoint("TOPRIGHT", healthBar, "TOPLEFT", missingHealthWidth, 0)
                 absorbOverlay:SetPoint("TOPRIGHT", absorbBar, "TOPRIGHT", 0, 0)
                 absorbOverlay:SetPoint("BOTTOMRIGHT", absorbBar, "BOTTOMRIGHT", 0, 0)
-            end
-        end
-        absorbOverlay:SetWidth(absorbWidth)
-        absorbOverlay:SetHeight(healthHeight)
-
-        if absorbOverlay.tileSize then
-            if isReversed then
-                absorbOverlay:SetTexCoord(0, absorbWidth / absorbOverlay.tileSize, 0, healthHeight / absorbOverlay.tileSize)
+                if absorbOverlay.tileSize then
+                    absorbOverlay:SetTexCoord(0, absorbBarWidth / absorbOverlay.tileSize, 0, healthHeight / absorbOverlay.tileSize)
+                end
             else
-                absorbOverlay:SetTexCoord(1 - (absorbWidth / absorbOverlay.tileSize), 1, 0, healthHeight / absorbOverlay.tileSize)
+                absorbBar:SetPoint("TOPLEFT", healthBar, "TOPLEFT", currentHealth / maxHealth * healthWidth, 0)
+                absorbOverlay:SetPoint("TOPLEFT", absorbBar, "TOPLEFT", 0, 0)
+                absorbOverlay:SetPoint("BOTTOMLEFT", absorbBar, "BOTTOMLEFT", 0, 0)
+                if absorbOverlay.tileSize then
+                    absorbOverlay:SetTexCoord(1 - (absorbBarWidth / absorbOverlay.tileSize), 1, 0, healthHeight / absorbOverlay.tileSize)
+                end
             end
-        end
 
-        absorbOverlay:Show()
-    else
-        absorbOverlay:Hide()
-    end
-
-    -- Glow if over-absorb occurs
-    glow:ClearAllPoints()
-    if isOverAbsorb then
-        if isReversed then
-            glow:SetPoint("TOPRIGHT", absorbOverlay, "TOPRIGHT", -ABSORB_GLOW_OFFSET, 0)
-            glow:SetPoint("BOTTOMRIGHT", absorbOverlay, "BOTTOMRIGHT", -ABSORB_GLOW_OFFSET, 0)
+            absorbBar:SetSize(absorbBarWidth, healthHeight)
+            absorbBar:Show()
+            absorbOverlay:SetSize(absorbBarWidth, healthHeight)
+            absorbOverlay:Show()
         else
-            glow:SetPoint("TOPLEFT", absorbOverlay, "TOPLEFT", ABSORB_GLOW_OFFSET, 0)
-            glow:SetPoint("BOTTOMLEFT", absorbOverlay, "BOTTOMLEFT", ABSORB_GLOW_OFFSET, 0)
+            absorbBar:Hide()
+            absorbOverlay:Hide()
         end
-        glow:SetAlpha(ABSORB_GLOW_ALPHA)
-        glow:Show()
     else
-        glow:Hide()
+        -- Overshields: wrapping overlay + overshield glow
+        local isOverAbsorb = false
+
+        if totalAbsorb > maxHealth then
+            isOverAbsorb = true
+            totalAbsorb = maxHealth
+        else
+            isOverAbsorb = (currentHealth + totalAbsorb > maxHealth)
+        end
+
+        local absorbWidth        = totalAbsorb / maxHealth * healthWidth
+        local missingHealthWidth = (maxHealth - currentHealth) / maxHealth * healthWidth
+        local absorbBarWidth     = math.min(absorbWidth, missingHealthWidth)
+
+        -- Show absorb bar only for missing health
+        if absorbBarWidth > 0 then
+            absorbBar:ClearAllPoints()
+            if isReversed then
+                absorbBar:SetPoint("TOPRIGHT", healthBar, "TOPLEFT", missingHealthWidth, 0)
+            else
+                absorbBar:SetPoint("TOPLEFT", healthBar, "TOPLEFT", currentHealth / maxHealth * healthWidth, 0)
+            end
+            absorbBar:SetSize(absorbBarWidth, healthHeight)
+            absorbBar:Show()
+        else
+            absorbBar:Hide()
+        end
+
+        -- Show striped overlay for full absorb width (wraps onto filled health if needed)
+        if absorbWidth > 0 then
+            absorbOverlay:SetParent(healthBar)
+            absorbOverlay:ClearAllPoints()
+            if isReversed then
+                if isOverAbsorb then
+                    absorbOverlay:SetPoint("TOPLEFT", healthBar, "TOPLEFT", 0, 0)
+                    absorbOverlay:SetPoint("BOTTOMLEFT", healthBar, "BOTTOMLEFT", 0, 0)
+                else
+                    absorbOverlay:SetPoint("TOPLEFT", absorbBar, "TOPLEFT", 0, 0)
+                    absorbOverlay:SetPoint("BOTTOMLEFT", absorbBar, "BOTTOMLEFT", 0, 0)
+                end
+            else
+                if isOverAbsorb then
+                    absorbOverlay:SetPoint("TOPRIGHT", healthBar, "TOPRIGHT", 0, 0)
+                    absorbOverlay:SetPoint("BOTTOMRIGHT", healthBar, "BOTTOMRIGHT", 0, 0)
+                else
+                    absorbOverlay:SetPoint("TOPRIGHT", absorbBar, "TOPRIGHT", 0, 0)
+                    absorbOverlay:SetPoint("BOTTOMRIGHT", absorbBar, "BOTTOMRIGHT", 0, 0)
+                end
+            end
+
+            absorbOverlay:SetSize(absorbWidth, healthHeight)
+
+            if absorbOverlay.tileSize then
+                if isReversed then
+                    absorbOverlay:SetTexCoord(0, absorbWidth / absorbOverlay.tileSize, 0, healthHeight / absorbOverlay.tileSize)
+                else
+                    absorbOverlay:SetTexCoord(1 - (absorbWidth / absorbOverlay.tileSize), 1, 0, healthHeight / absorbOverlay.tileSize)
+                end
+            end
+
+            absorbOverlay:Show()
+        else
+            absorbOverlay:Hide()
+        end
+
+        -- Glow if over-absorb occurs
+        glow:ClearAllPoints()
+        if isOverAbsorb then
+            if isReversed then
+                glow:SetPoint("TOPRIGHT", absorbOverlay, "TOPRIGHT", -ABSORB_GLOW_OFFSET, 0)
+                glow:SetPoint("BOTTOMRIGHT", absorbOverlay, "BOTTOMRIGHT", -ABSORB_GLOW_OFFSET, 0)
+            else
+                glow:SetPoint("TOPLEFT", absorbOverlay, "TOPLEFT", ABSORB_GLOW_OFFSET, 0)
+                glow:SetPoint("BOTTOMLEFT", absorbOverlay, "BOTTOMLEFT", ABSORB_GLOW_OFFSET, 0)
+            end
+            glow:SetAlpha(ABSORB_GLOW_ALPHA)
+            glow:Show()
+        else
+            glow:Hide()
+        end
     end
 end
 
@@ -855,6 +942,9 @@ function sArenaMixin:HandleArenaStart()
         local frame = self["arena" .. i]
         if frame:IsShown() then break end
         if UnitExists("arena"..i) then
+            if isTBC then
+                sArenaMixin.seenArenaUnits[i] = true
+            end
             frame:UpdateVisible()
             frame:UpdatePlayer("seen")
         end
@@ -965,10 +1055,6 @@ function sArenaMixin:ShowMidnightDRWarning()
 
     frame:SetBackdropColor(0, 0, 0, 1)
     frame:EnableMouse(true)
-    frame:SetMovable(true)
-    frame:RegisterForDrag("LeftButton")
-    frame:SetScript("OnDragStart", frame.StartMoving)
-    frame:SetScript("OnDragStop", frame.StopMovingOrSizing)
 
     local title = frame:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
     title:SetPoint("TOP", frame, "TOP", 0, -20)
@@ -1026,6 +1112,18 @@ function sArenaMixin:OnEvent(event, ...)
         if not combatEvents[combatEvent] then return end
 
         if combatEvent == "SPELL_CAST_SUCCESS" or combatEvent == "SPELL_AURA_APPLIED" then
+
+            -- TBC Spec Detection
+            if isTBC and (sArenaMixin.tbcSpecSpells[spellID] or sArenaMixin.tbcSpecBuffs[spellID]) then
+                for i = 1, sArenaMixin.maxArenaOpponents do
+                    if (sourceGUID == UnitGUID("arena" .. i)) then
+                        local ArenaFrame = self["arena" .. i]
+                        if ArenaFrame:CheckForSpecSpell(spellID) then
+                            break
+                        end
+                    end
+                end
+            end
 
             -- Non-duration auras
             if castToAuraMap[spellID] and combatEvent == "SPELL_CAST_SUCCESS" then
@@ -1161,7 +1259,19 @@ function sArenaMixin:OnEvent(event, ...)
     elseif (event == "PLAYER_ENTERING_WORLD") then
         local _, instanceType = IsInInstance()
         UpdateBlizzVisibility(instanceType)
-        self:SetMouseState(true)
+        self:SetMouseState(instanceType ~= "arena")
+
+        if isTBC then
+            sArenaMixin.seenArenaUnits = {}
+            if instanceType == "arena" then
+                sArenaMixin.justEnteredArena = true
+                C_Timer.After(6, function()
+                    sArenaMixin.justEnteredArena = nil
+                end)
+            else
+                sArenaMixin.justEnteredArena = nil
+            end
+        end
 
         if isMidnight and not self.midnightDRFrames then
             self.midnightDRFrames = true
@@ -1327,6 +1437,14 @@ function sArenaMixin:UpdatePlayerSpec()
     end
 end
 
+function sArenaMixin:UpdateNoTrinketTexture()
+    if self.db.profile.removeUnequippedTrinketTexture then
+        sArenaMixin.noTrinketTexture = nil
+    else
+        sArenaMixin.noTrinketTexture = 638661
+    end
+end
+
 function sArenaMixin:Initialize()
     if (db) then return end
 
@@ -1349,6 +1467,7 @@ function sArenaMixin:Initialize()
             self:UpdateDRTimeSetting()
         end
         self:UpdateDecimalThreshold()
+        self:UpdateNoTrinketTexture()
         LibStub("AceConfigDialog-3.0"):AddToBlizOptions("sArena", "sArena |cffff8000Reloaded|r |T135884:13:13|t")
         self:SetLayout(_, db.profile.currentLayout)
     else
@@ -1461,9 +1580,15 @@ function sArenaMixin:CreateCustomCooldown(cooldown, showDecimals)
         text:SetJustifyV("MIDDLE")
     end
 
-    cooldown:SetHideCountdownNumbers(showDecimals)
+    local hideNumbers
+    if isMidnight then
+        hideNumbers = false
+    else
+        hideNumbers = showDecimals
+    end
+    cooldown:SetHideCountdownNumbers(hideNumbers)
 
-    if showDecimals then
+    if showDecimals and not isMidnight then
         cooldown:SetScript("OnUpdate", function()
             local start, duration = cooldown:GetCooldownTimes()
             start, duration = start / 1000, duration / 1000
@@ -1497,7 +1622,7 @@ function sArenaMixin:SetupCustomCD()
         local frame = self["arena" .. i]
 
         -- Class icon cooldown
-        self:CreateCustomCooldown(frame.ClassIconCooldown, self.db.profile.showDecimalsClassIcon)
+        self:CreateCustomCooldown(frame.ClassIcon.Cooldown, self.db.profile.showDecimalsClassIcon)
 
         -- DR frames
         for _, category in ipairs(self.drCategories) do
@@ -1533,7 +1658,7 @@ function sArenaFrameMixin:DarkModeFrame()
     local racialBorder = self.Racial.Border
     local dispelBorder = self.Dispel.Border
     local castBorder = self.CastBar.Border
-    local classIconBorder = self.ClassIcon.Border
+    local classIconBorder = self.ClassIcon.Texture.Border
     local castBackground = self.CastBar.Background
 
     if frameTexture then
@@ -1604,7 +1729,7 @@ function sArenaFrameMixin:ClassColorFrameTexture()
     local racialBorder = self.Racial.Border
     local dispelBorder = self.Dispel.Border
     local castBorder = self.CastBar.Border
-    local classIconBorder = self.ClassIcon.Border
+    local classIconBorder = self.ClassIcon.Texture.Border
 
     if classIconBorder then
         classIconBorder:SetDesaturated(true)
@@ -1767,9 +1892,9 @@ function sArenaFrameMixin:UpdateFrameColors()
                 self.SpecIcon.Border:SetVertexColor(1, 1, 1)
             end
         end
-        if self.ClassIcon.Border then
-            self.ClassIcon.Border:SetDesaturated(false)
-            self.ClassIcon.Border:SetVertexColor(1, 1, 1)
+        if self.ClassIcon.Texture.Border then
+            self.ClassIcon.Texture.Border:SetDesaturated(false)
+            self.ClassIcon.Texture.Border:SetVertexColor(1, 1, 1)
         end
         if self.CastBar.Border then
             self.CastBar.Border:SetDesaturated(false)
@@ -1799,6 +1924,8 @@ function sArenaMixin:SetLayout(_, layout)
             self["arena" .. i] = _G[globalName]
         end
     end
+
+    sArenaMixin.showTrinketCircleBorder = nil
 
     layout = sArenaMixin.layouts[layout] and layout or "Gladiuish"
 
@@ -1958,18 +2085,41 @@ function sArenaMixin:SetMouseState(state)
             end
         end
 
+        if not isMidnight and sArenaMixin.drCategories then
+            for _, category in ipairs(sArenaMixin.drCategories) do
+                local drFrame = frame[category]
+                if drFrame then
+                    drFrame:EnableMouse(state)
+                end
+            end
+        end
+
         frame.SpecIcon:EnableMouse(state)
         frame.Trinket:EnableMouse(state)
         frame.Racial:EnableMouse(state)
         frame.Dispel:EnableMouse(state)
+        frame.ClassIcon:EnableMouse(state)
 
         for _, child in pairs({frame.WidgetOverlay:GetChildren()}) do
             child:EnableMouse(state)
         end
+
+        if isTBC and not InCombatLockdown() then
+            local shouldEnableMouse
+            if state then
+                -- Outside arena: always clickable
+                shouldEnableMouse = true
+            else
+                -- Inside arena: only clickable up to party size
+                local partySize = GetNumGroupMembers() or 2
+                shouldEnableMouse = (i <= partySize)
+            end
+
+            frame:EnableMouse(shouldEnableMouse)
+        end
     end
 end
 
--- Arena Frames
 
 local function ResetTexture(texturePool, t)
     if (texturePool) then
@@ -2030,8 +2180,10 @@ function sArenaFrameMixin:CreateCastBar()
 end
 
 function sArenaFrameMixin:CreateDRFrames()
+    local id = self:GetID()
     for _, category in ipairs(sArenaMixin.drCategories) do
-        local drFrame = CreateFrame("Frame", nil, self, "sArenaDRFrameTemplate")
+        local name = "sArenaDRFrame" .. id .. category
+        local drFrame = CreateFrame("Frame", name, self, "sArenaDRFrameTemplate")
         self[category] = drFrame
     end
 end
@@ -2050,13 +2202,57 @@ function sArenaFrameMixin:OnLoad()
     local unit = "arena" .. self:GetID()
     self.parent = self:GetParent()
 
+    if isTBC then
+        self.ogSetShown = self.SetShown
+        self.SetShown = function(self, show)
+            local _, instanceType = IsInInstance()
+            self.shouldBeShown = show
+            if show then
+                self:SetAlpha(1)
+            else
+                self:SetAlpha(0)
+            end
+            if not InCombatLockdown() and instanceType ~= "arena" then
+                self.ogSetShown(self, show)
+            end
+        end
+        self.ogShow = self.Show
+        self.Show = function(self)
+            local _, instanceType = IsInInstance()
+            self.shouldBeShown = true
+            self:SetAlpha(1)
+            if not InCombatLockdown() and instanceType ~= "arena" then
+                self.ogShow(self)
+            end
+        end
+
+        self.ogHide = self.Hide
+        self.Hide = function(self)
+            local _, instanceType = IsInInstance()
+            self.shouldBeShown = false
+            self:SetAlpha(0)
+            if not InCombatLockdown() and instanceType ~= "arena" then
+                self.ogHide(self)
+            end
+        end
+
+        self.ogSetAlpha = self.SetAlpha
+        self.SetAlpha = function(self, alpha)
+            if self.shouldBeShown == false then
+                self.ogSetAlpha(self, 0)
+            else
+                self.ogSetAlpha(self, alpha)
+            end
+        end
+    end
+
     if not isMidnight then
         self:CreateCastBar()
         self:CreateDRFrames()
         self:RegisterUnitEvent("UNIT_AURA", unit)
         self:RegisterUnitEvent("UNIT_ABSORB_AMOUNT_CHANGED", unit)
         self:RegisterUnitEvent("UNIT_HEAL_ABSORB_AMOUNT_CHANGED", unit)
-        if isRetail then
+        if isRetail or isTBC then
             self.CastBar.empoweredFix = true
             self.CastBar:SetUnit(unit, false, true)
         else
@@ -2080,12 +2276,12 @@ function sArenaFrameMixin:OnLoad()
                 if tex == "INTERFACE\\ICONS\\INV_MISC_QUESTIONMARK.BLP" or (db and db.profile.disableAurasOnClassIcon) then
                     self:UpdateClassIcon(true)
                 else
-                    self.ClassIcon:SetTexture(tex)
+                    self.ClassIcon.Texture:SetTexture(tex)
                 end
             end)
             hooksecurefunc(debuffFrame.Cooldown, "SetCooldown", function(_, start, duration)
                 if (db and db.profile.disableAurasOnClassIcon) then return end
-                self.ClassIconCooldown:SetCooldown(start, duration)
+                self.ClassIcon.Cooldown:SetCooldown(start, duration)
             end)
         end
         local trinketFrame = blizzArenaFrame.CcRemoverFrame
@@ -2098,20 +2294,20 @@ function sArenaFrameMixin:OnLoad()
             end)
         end
 
-        local ogOverabsorb = blizzArenaFrame.overAbsorbGlow
-        ogOverabsorb:ClearAllPoints()
-        ogOverabsorb:SetPoint("TOP", healthBar, "TOPRIGHT", 0, 0)
-        ogOverabsorb:SetPoint("BOTTOM", healthBar, "BOTTOMRIGHT", 0, 0)
-        ogOverabsorb:SetParent(healthBar)
-        ogOverabsorb:Hide()
-        hooksecurefunc(ogOverabsorb, "SetPoint", function(self)
-            if self.changing then return end
-            self.changing = true
-            self:ClearAllPoints()
-            self:SetPoint("TOP", healthBar, "TOPRIGHT", 0, 0)
-            self:SetPoint("BOTTOM", healthBar, "BOTTOMRIGHT", 0, 0)
-            self.changing = false
-        end)
+        -- local ogOverabsorb = blizzArenaFrame.overAbsorbGlow
+        -- ogOverabsorb:ClearAllPoints()
+        -- ogOverabsorb:SetPoint("TOP", healthBar, "TOPRIGHT", 0, 0)
+        -- ogOverabsorb:SetPoint("BOTTOM", healthBar, "BOTTOMRIGHT", 0, 0)
+        -- ogOverabsorb:SetParent(healthBar)
+        -- ogOverabsorb:Hide()
+        -- hooksecurefunc(ogOverabsorb, "SetPoint", function(self)
+        --     if self.changing then return end
+        --     self.changing = true
+        --     self:ClearAllPoints()
+        --     self:SetPoint("TOP", healthBar, "TOPRIGHT", 0, 0)
+        --     self:SetPoint("BOTTOM", healthBar, "BOTTOMRIGHT", 0, 0)
+        --     self.changing = false
+        -- end)
     end
 
     self:RegisterEvent("PLAYER_LOGIN")
@@ -2369,10 +2565,16 @@ function sArenaFrameMixin:OnEvent(event, eventUnit, arg1)
 
         self:Initialize()
     elseif (event == "PLAYER_ENTERING_WORLD") or (event == "ARENA_PREP_OPPONENT_SPECIALIZATIONS") then
+        local _, instanceType = IsInInstance()
         if self.drTray then
-            local _, instanceType = IsInInstance()
             self.drTray:SetAlpha(instanceType == "arena" and 1 or 0)
         end
+
+        if isTBC and instanceType == "arena" and self.ogShow then
+            self.ogShow(self)
+            self:SetAlpha(0)
+        end
+
         self.Name:SetText("")
         self.CastBar:Hide()
         self.specTexture = nil
@@ -2394,7 +2596,7 @@ function sArenaFrameMixin:OnEvent(event, eventUnit, arg1)
         else
             self:UpdatePlayer()
         end
-        self:SetAlpha(1)
+        self:SetAlpha((isTBC and (UnitExists(self.unit) and 1 or stealthAlpha)) or 1)
         self.HealthBar:SetAlpha(1)
         if TestTitle then
             TestTitle:Hide()
@@ -2452,10 +2654,19 @@ end
 local function GetNumArenaOpponentsFallback()
     local count = 0
     for i = 1, sArenaMixin.maxArenaOpponents do
-        if UnitExists("arena" .. i) then
+        if UnitExists("arena" .. i) or (isTBC and sArenaMixin.seenArenaUnits[i]) then
             count = count + 1
         end
     end
+
+    -- TBC: Use party size as fallback, but only after the match has started or we're not in the starting room
+    if isTBC and count < GetNumGroupMembers() then
+        local inPreparation = C_UnitAuras.GetPlayerAuraBySpellID(32727)
+        if not inPreparation and not sArenaMixin.justEnteredArena and sArenaMixin.arenaMatchStarted then
+            count = GetNumGroupMembers() or count
+        end
+    end
+
     return count
 end
 
@@ -2475,7 +2686,7 @@ function sArenaFrameMixin:UpdateVisible()
     local numSpecs = GetNumArenaOpponentSpecs()
     local numOpponents = (numSpecs == 0) and GetNumArenaOpponentsFallback() or numSpecs
 
-    if numOpponents >= id then
+    if numOpponents >= id or (isTBC and sArenaMixin.seenArenaUnits[id]) then
         self:Show()
     else
         self:Hide()
@@ -2578,7 +2789,7 @@ function sArenaMixin:AddMasqueSupport()
         -- Add MasqueBorderHook for Trinket
         if not frame.Trinket.MasqueBorderHook then
             hooksecurefunc(frame.Trinket.Texture, "SetTexture", function(self, t)
-                if t == nil or t == "" or t == 0 or t == "nil" then
+                if not t then
                     if frame.TrinketMsq then
                         frame.TrinketMsq:Hide()
                     end
@@ -2595,7 +2806,7 @@ function sArenaMixin:AddMasqueSupport()
         -- Add MasqueBorderHook for Racial
         if not frame.Racial.MasqueBorderHook then
             hooksecurefunc(frame.Racial.Texture, "SetTexture", function(self, t)
-                if t == nil or t == "" or t == 0 or t == "nil" then
+                if not t then
                     if frame.RacialMsq then
                         frame.RacialMsq:Hide()
                     end
@@ -2612,7 +2823,7 @@ function sArenaMixin:AddMasqueSupport()
         -- Add MasqueBorderHook for Dispel
         if not frame.Dispel.MasqueBorderHook then
             hooksecurefunc(frame.Dispel.Texture, "SetTexture", function(self, t)
-                if t == nil or t == "" or t == 0 or t == "nil" then
+                if not t then
                     if frame.DispelMsq then
                         frame.DispelMsq:Hide()
                     end
@@ -2660,6 +2871,10 @@ end
 function sArenaFrameMixin:UpdatePlayer(unitEvent)
     local unit = self.unit
 
+    if isTBC and UnitExists(unit) then
+        sArenaMixin.seenArenaUnits[self:GetID()] = true
+    end
+
     self:GetClass()
     if isMidnight then
         self:UpdateClassIcon()
@@ -2700,6 +2915,7 @@ function sArenaFrameMixin:UpdatePlayer(unitEvent)
         self:UpdateNameColor()
         self.Name:SetShown(true)
     end
+    self.SpecNameText:SetText(self.specName or "")
 
     self:UpdateStatusTextVisible()
     self:SetStatusText()
@@ -2721,7 +2937,17 @@ function sArenaFrameMixin:UpdatePlayer(unitEvent)
         self.HealthBar:SetStatusBarColor(0, 1.0, 0, 1.0)
     end
 
-    self:SetAlpha(1)
+    if isTBC and not UnitExists(unit) then
+        self:SetAlpha(stealthAlpha)
+    else
+        self:SetAlpha(1)
+    end
+
+    -- Workaround to show frames in TBC in combat.
+    -- Does not actualy call Show() but SetAlpha() on TBC.
+    if isTBC then
+        self:Show()
+    end
 end
 
 function sArenaFrameMixin:SetMysteryPlayer()
@@ -2798,26 +3024,29 @@ function sArenaFrameMixin:GetClass()
         self.SpecNameText:SetText("")
     elseif (not self.class) then
         local id = self:GetID()
-        if (GetNumArenaOpponentSpecs() >= id) then
-            local specID = GetArenaOpponentSpec(id) or 0
-            if (specID > 0) then
-                local _, specName, _, specTexture, _, class, classLocal = GetSpecializationInfoByID(specID)
-                self.class = class
-                self.classLocal = classLocal
-                self.specID = specID
-                self.specName = specName
-                self.isHealer = sArenaMixin.healerSpecIDs[specID] or false
-                self.SpecNameText:SetText(specName)
-                self.SpecNameText:SetShown(db.profile.layoutSettings[db.profile.currentLayout].showSpecManaText)
-                self.specTexture = specTexture
-                self.class = class
-                self:UpdateSpecIcon()
-                self:UpdateFrameColors()
-                sArenaMixin:UpdateTextures()
+
+        if not isTBC then
+            if (GetNumArenaOpponentSpecs() >= id) then
+                local specID = GetArenaOpponentSpec(id) or 0
+                if (specID > 0) then
+                    local _, specName, _, specTexture, _, class, classLocal = GetSpecializationInfoByID(specID)
+                    self.class = class
+                    self.classLocal = classLocal
+                    self.specID = specID
+                    self.specName = specName
+                    self.isHealer = sArenaMixin.healerSpecIDs[specID] or false
+                    self.SpecNameText:SetText(specName)
+                    self.SpecNameText:SetShown(db.profile.layoutSettings[db.profile.currentLayout].showSpecManaText)
+                    self.specTexture = specTexture
+                    self.class = class
+                    self:UpdateSpecIcon()
+                    self:UpdateFrameColors()
+                    sArenaMixin:UpdateTextures()
+                end
             end
         end
 
-        if (not self.class and UnitExists(self.unit)) then
+        if (not self.class and (isTBC or UnitExists(self.unit))) then
             self.classLocal, self.class = UnitClass(self.unit)
         end
     end
@@ -2826,10 +3055,10 @@ end
 
 function sArenaFrameMixin:UpdateClassIcon(continue)
 	if (self.currentAuraSpellID and self.currentAuraDuration > 0 and self.currentClassIconStartTime ~= self.currentAuraStartTime) then
-		self.ClassIconCooldown:SetCooldown(self.currentAuraStartTime, self.currentAuraDuration)
+		self.ClassIcon.Cooldown:SetCooldown(self.currentAuraStartTime, self.currentAuraDuration)
 		self.currentClassIconStartTime = self.currentAuraStartTime
 	elseif (self.currentAuraDuration == 0) then
-		self.ClassIconCooldown:Clear()
+		self.ClassIcon.Cooldown:Clear()
 		self.currentClassIconStartTime = 0
 	end
 
@@ -2865,17 +3094,17 @@ function sArenaFrameMixin:UpdateClassIcon(continue)
         end
 
         if useHealerTexture then
-            self.ClassIcon:SetAtlas("UI-LFG-RoleIcon-Healer")
+            self.ClassIcon.Texture:SetAtlas("UI-LFG-RoleIcon-Healer")
         else
-            self.ClassIcon:SetTexture(texture)
+            self.ClassIcon.Texture:SetTexture(texture)
         end
 
         local cropType = useHealerTexture and "healer" or "class"
-        self:SetTextureCrop(self.ClassIcon, db.profile.layoutSettings[db.profile.currentLayout].cropIcons, cropType)
+        self:SetTextureCrop(self.ClassIcon.Texture, db.profile.layoutSettings[db.profile.currentLayout].cropIcons, cropType)
 		return
 	end
-	self:SetTextureCrop(self.ClassIcon, db and db.profile.layoutSettings[db.profile.currentLayout].cropIcons, "class")
-	self.ClassIcon:SetTexture(texture)
+	self:SetTextureCrop(self.ClassIcon.Texture, db and db.profile.layoutSettings[db.profile.currentLayout].cropIcons, "class")
+	self.ClassIcon.Texture:SetTexture(texture)
     if self.ClassIconMsq then
         self.ClassIconMsq:Show()
     end
@@ -2920,7 +3149,7 @@ function sArenaFrameMixin:ResetLayout()
     self.currentClassIconStartTime = 0
     self.oldNameColor = nil
 
-    ResetTexture(nil, self.ClassIcon)
+    ResetTexture(nil, self.ClassIcon.Texture)
     ResetStatusBar(self.HealthBar)
     ResetStatusBar(self.PowerBar)
     ResetStatusBar(self.CastBar)
@@ -2935,27 +3164,24 @@ function sArenaFrameMixin:ResetLayout()
         self.CastBar.BorderShield:SetTexture(330124)
     end
 
-    self.ClassIconCooldown:SetUseCircularEdge(false)
-    self.ClassIconCooldown:SetSwipeTexture(1)
-    self.AuraStacks:SetPoint("BOTTOMLEFT", self.ClassIcon, "BOTTOMLEFT", 2, 0)
+    self.ClassIcon.Cooldown:SetUseCircularEdge(false)
+    self.ClassIcon.Cooldown:SetSwipeTexture(1)
+    self.AuraStacks:SetPoint("BOTTOMLEFT", self.ClassIcon.Texture, "BOTTOMLEFT", 2, 0)
     self.AuraStacks:SetFont("Interface\\AddOns\\sArena_Reloaded\\Textures\\arialn.ttf", 13, "THICKOUTLINE")
     self.DispelStacks:SetPoint("BOTTOMLEFT", self.Dispel.Texture, "BOTTOMLEFT", 2, 0)
     self.DispelStacks:SetFont("Interface\\AddOns\\sArena_Reloaded\\Textures\\arialn.ttf", 15, "THICKOUTLINE")
 
-    self.ClassIconMask:SetTexture("Interface\\CharacterFrame\\TempPortraitAlphaMask")
-    self.ClassIcon:RemoveMaskTexture(self.ClassIconMask)
-    self.ClassIcon:SetDrawLayer("BORDER", 1)
+    self.ClassIcon.Mask:SetTexture("Interface\\CharacterFrame\\TempPortraitAlphaMask")
+    self.ClassIcon.Texture:RemoveMaskTexture(self.ClassIcon.Mask)
+    self.ClassIcon.Texture:SetDrawLayer("BORDER", 1)
+    self.ClassIcon.Texture:SetAllPoints(self.ClassIcon)
+    self.ClassIcon.Texture:Show()
     self.ClassIcon:SetScale(1)
     if self.frameTexture then
         self.frameTexture:SetDrawLayer("ARTWORK", 2)
         self.frameTexture:SetDesaturated(false)
         self.frameTexture:SetVertexColor(1, 1, 1)
         self.frameTexture:Hide()
-    end
-
-    if self.ppUnderlay then
-        self.hpUnderlay:SetColorTexture(0, 0, 0, 0.65)
-        self.ppUnderlay:SetColorTexture(0, 0, 0, 0.65)
     end
 
     if self.CastBar.Border then
@@ -2972,7 +3198,7 @@ function sArenaFrameMixin:ResetLayout()
         self.Dispel.Border:SetVertexColor(1, 1, 1)
     end
 
-    self.ClassIcon.useModernBorder = nil
+    self.ClassIcon.Texture.useModernBorder = nil
     self.Trinket.useModernBorder = nil
     self.Racial.useModernBorder = nil
     self.Dispel.useModernBorder = nil
@@ -3014,7 +3240,7 @@ function sArenaFrameMixin:ResetLayout()
     end
     self:SetTextureCrop(f.Texture, cropIcons)
 
-    f = self.ClassIcon
+    f = self.ClassIcon.Texture
     self:SetTextureCrop(f, cropIcons)
 
     f = self.Racial
@@ -3134,26 +3360,29 @@ function sArenaFrameMixin:SetStatusText(unit)
     local ppMax = UnitPowerMax(unit)
 
     if (db.profile.statusText.usePercentage) then
-        local hpPercent = (hpMax > 0) and ceil((hp / hpMax) * 100) or 0
-        local ppPercent = (ppMax > 0) and ceil((pp / ppMax) * 100) or 0
+        if isMidnight then
+            self.HealthText:SetFormattedText("%0.f%%", UnitHealthPercent(unit, nil, CurveConstants.ScaleTo100))
+            self.PowerText:SetFormattedText("%0.f%%", UnitPowerPercent(unit, nil, CurveConstants.ScaleTo100))
+        else
+            local hpPercent = (hpMax > 0) and ceil((hp / hpMax) * 100) or 0
+            local ppPercent = (ppMax > 0) and ceil((pp / ppMax) * 100) or 0
 
-        self.HealthText:SetText(hpPercent .. "%")
-        self.PowerText:SetText(ppPercent .. "%")
+            self.HealthText:SetText(hpPercent .. "%")
+            self.PowerText:SetText(ppPercent .. "%")
+        end
     else
         if db.profile.statusText.formatNumbers then
             if isMidnight then
-                self.HealthText:SetText(AbbreviateNumbers(hp))
-                self.PowerText:SetText(AbbreviateNumbers(pp))
+                self.HealthText:SetText(AbbreviateLargeNumbers(hp))
+                self.PowerText:SetText(AbbreviateLargeNumbers(pp))
             else
                 self.HealthText:SetText(FormatLargeNumbers(hp))
                 self.PowerText:SetText(FormatLargeNumbers(pp))
             end
         else
-            self.HealthText:SetText(AbbreviateLargeNumbers(hp))
-            self.PowerText:SetText(AbbreviateLargeNumbers(pp))
+            self.HealthText:SetText(hp)
+            self.PowerText:SetText(pp)
         end
-        self.HealthText:SetText(hp)
-        self.PowerText:SetText(pp)
     end
 end
 
@@ -3166,9 +3395,9 @@ end
 local specTemplates = {
     BM_HUNTER = {
         class = "HUNTER",
-        specIcon = 461112,
+        specIcon = isTBC and 132164 or 461112,
         castName = "Cobra Shot",
-        castIcon = 461114,
+        castIcon = isTBC and 132211 or 461114,
         racial = 132089,
         race = "Orc",
         specName = "Beast Mastery",
@@ -3176,7 +3405,7 @@ local specTemplates = {
     },
     MM_HUNTER = {
         class = "HUNTER",
-        specIcon = 461113,
+        specIcon = isTBC and 132222 or 461113,
         castName = "Aimed Shot",
         castIcon = 132222,
         racial = 136225,
@@ -3186,7 +3415,7 @@ local specTemplates = {
     },
     SURV_HUNTER = {
         class = "HUNTER",
-        specIcon = 461113,
+        specIcon = isTBC and 132215 or 461113,
         castName = "Mending Bandage",
         castIcon = isRetail and 1014022 or 133690,
         racial = 136225,
@@ -3205,7 +3434,7 @@ local specTemplates = {
     },
     ENH_SHAMAN = {
         class = "SHAMAN",
-        specIcon = 237581,
+        specIcon = isTBC and 136051 or 237581,
         castName = "Stormstrike",
         castIcon = 132314,
         racial = 135923,
@@ -3281,7 +3510,7 @@ local specTemplates = {
         class = "DRUID",
         specIcon = 132115,
         castName = "Cyclone",
-        castIcon = 132469,
+        castIcon = isTBC and 136022 or 132469,
         racial = 132089,
         race = "NightElf",
         specName = "Feral",
@@ -3324,12 +3553,12 @@ local specTemplates = {
     },
     UNHOLY_DK = {
         class = "DEATHKNIGHT",
-        specIcon = 135775,
+        specIcon = isTBC and 136212 or 135775,
         racial = 135726,
         race = "Scourge",
         specName = "Unholy",
         castName = "Army of the Dead",
-        castIcon = 237511,
+        castIcon = isTBC and 136212 or 237511,
         channel = true,
     },
     SUB_ROGUE = {
@@ -3346,6 +3575,7 @@ local specTemplates = {
 
 local testPlayers = {
     { template = "BM_HUNTER", name = "Despytimes" },
+    { template = "BM_HUNTER", name = "Littlejimmy", racial = 132309, race = "Gnome" },
     { template = "MM_HUNTER", name = "Jellybeans" },
     { template = "SURV_HUNTER", name = "Bicmex" },
     { template = "ELE_SHAMAN", name = "Bluecheese" },
@@ -3357,6 +3587,7 @@ local testPlayers = {
     { template = "ELE_SHAMAN", name = "Whaazzlasso", castName = "Feet Up", castIcon = 133029 },
     { template = "RESTO_DRUID", name = "Metaphors" },
     { template = "RESTO_DRUID", name = "Flop" },
+    { template = "RESTO_DRUID", name = "Rennar" },
     { template = "FERAL_DRUID", name = "Sodapoopin" },
     { template = "FERAL_DRUID", name = "Bean" },
     { template = "FERAL_DRUID", name = "Snupy" },
@@ -3380,7 +3611,7 @@ local testPlayers = {
     { template = "UNHOLY_DK", name = "Darthchan" },
     { template = "UNHOLY_DK", name = "Mes" },
     { template = "SUB_ROGUE", name = "Nahj" },
-    { template = "SUB_ROGUE", name = "Invisbull", racial = 132368, race = "Human" },
+    { template = "SUB_ROGUE", name = "Invisbull", racial = 132368, race = "Tauren" },
     { template = "SUB_ROGUE", name = "Cshero" },
     { template = "SUB_ROGUE", name = "Pshero" },
     { template = "SUB_ROGUE", name = "Whaazz" },
@@ -3534,7 +3765,7 @@ function sArenaMixin:Test()
         frame.class = data.class
         frame.tempSpecIcon = data.specIcon
         frame.replaceClassIcon = replaceClassIcon
-        frame.isHealer = healerSpecNames[data.specName] or false
+        frame.isHealer = sArenaMixin.healerSpecNames[data.specName] or false
 
         frame:Show()
         frame:SetAlpha(1)
@@ -3578,7 +3809,7 @@ function sArenaMixin:Test()
             local ccSpells = {408, 2139, 33786, 118, 122}
             local ccIndex = ((i - 1) % #ccSpells) + 1
             local spellTexture = GetSpellTexture(ccSpells[ccIndex])
-            frame.ClassIcon:SetTexture(spellTexture)
+            frame.ClassIcon.Texture:SetTexture(spellTexture)
             if frame.ClassIconMsq then
                 frame.ClassIconMsq:Hide()
             end
@@ -3599,14 +3830,14 @@ function sArenaMixin:Test()
                 if frame.SpecIconMsq then
                     frame.SpecIconMsq:Hide()
                 end
-                frame.ClassIcon:SetTexture(data.specIcon, true)
+                frame.ClassIcon.Texture:SetTexture(data.specIcon, true)
             else
                 frame.SpecIcon:Show()
                 frame.SpecIcon.Texture:SetTexture(data.specIcon)
                 if frame.SpecIconMsq then
                     frame.SpecIconMsq:Show()
                 end
-                frame.ClassIcon:SetTexture(self.classIcons[data.class])
+                frame.ClassIcon.Texture:SetTexture(self.classIcons[data.class])
             end
             if frame.ClassIconMsq then
                 frame.ClassIconMsq:Show()
@@ -3615,18 +3846,18 @@ function sArenaMixin:Test()
 
         local cropType
         if db.profile.replaceHealerIcon and frame.isHealer then
-            frame.ClassIcon:SetAtlas("UI-LFG-RoleIcon-Healer")
+            frame.ClassIcon.Texture:SetAtlas("UI-LFG-RoleIcon-Healer")
             cropType = "healer"
         else
             cropType = "class"
         end
 
-        frame:SetTextureCrop(frame.ClassIcon, cropIcons, cropType)
+        frame:SetTextureCrop(frame.ClassIcon.Texture, cropIcons, cropType)
 
         frame.SpecNameText:SetText(data.specName)
         frame.SpecNameText:SetShown(db.profile.layoutSettings[db.profile.currentLayout].showSpecManaText)
 
-        frame.ClassIconCooldown:SetCooldown(currTime, math.random(5, 35))
+        frame.ClassIcon.Cooldown:SetCooldown(currTime, math.random(5, 35))
 
         frame.Name:SetText((db.profile.showArenaNumber and "arena" .. i) or data.name)
         frame.Name:SetShown(db.profile.showNames or db.profile.showArenaNumber)
@@ -3748,6 +3979,11 @@ function sArenaMixin:Test()
                     local layout = self.db.profile.layoutSettings[self.db.profile.currentLayout]
                     local drSettings = layout.dr or {}
                     local drSize = drSettings.size or 28
+                    local textSettings = layout.textSettings or {}
+                    local drTextAnchor = textSettings.drTextAnchor or "BOTTOMRIGHT"
+                    local drTextSize = textSettings.drTextSize or 1.0
+                    local drTextOffsetX = textSettings.drTextOffsetX or 4
+                    local drTextOffsetY = textSettings.drTextOffsetY or -4
 
                     local drCategoryTextures = {
                         [1] = 136071,     -- Incap (Poly)
@@ -3759,7 +3995,7 @@ function sArenaMixin:Test()
                     for drIndex = 1, 4 do
                         local fakeDRFrame = CreateFrame("Frame", "sArenaFakeDR" .. i .. "_" .. drIndex, arenaFrame)
                         fakeDRFrame:SetSize(drSize, drSize)
-                        fakeDRFrame:SetFrameStrata("HIGH")
+                        fakeDRFrame:SetFrameStrata("MEDIUM")
                         fakeDRFrame:SetFrameLevel(11)
                         fakeDRFrame:EnableMouse(false)
 
@@ -3802,8 +4038,9 @@ function sArenaMixin:Test()
                         fakeDRFrame.DRTextFrame:SetFrameLevel(27)
 
                         fakeDRFrame.DRText = fakeDRFrame.DRTextFrame:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
-                        fakeDRFrame.DRText:SetPoint("BOTTOMRIGHT", 4, -4)
+                        fakeDRFrame.DRText:SetPoint(drTextAnchor, drTextOffsetX, drTextOffsetY)
                         fakeDRFrame.DRText:SetFont("Interface\\AddOns\\sArena_MoP\\Textures\\arialn.ttf", 14, "OUTLINE")
+                        fakeDRFrame.DRText:SetScale(drTextSize)
                         if drIndex == 1 then
                             fakeDRFrame.DRText:SetTextColor(1, 0, 0)
                             fakeDRFrame.DRText:SetText("%")
@@ -4008,6 +4245,10 @@ function sArenaMixin:Test()
             frame.CastBar.fadeOut = nil
             frame.CastBar:Hide()
             frame.CastBar:SetAlpha(0)
+        end
+
+        if isTBC then
+            frame.CastBar.Spark:Hide()
         end
 
         frame.hideStatusText = false

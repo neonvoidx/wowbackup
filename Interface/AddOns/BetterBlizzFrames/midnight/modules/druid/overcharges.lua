@@ -52,7 +52,7 @@ function BBF.DruidAlwaysShowCombos()
         local form = GetShapeshiftFormID()
         if form == 1 then return end
 
-        local comboPoints = 0--UnitPower("player", self.powerType)
+        local comboPoints = UnitPower("player", self.powerType)
 
         if comboPoints > 0 then
             self:Show()
@@ -73,7 +73,7 @@ function BBF.DruidAlwaysShowCombos()
     frame:HookScript("OnHide", function(self)
         TagCombos(frame)
         if not self.ComboPoint1 then return end
-        local comboPoints = 0--UnitPower("player", DruidComboPointBarFrame.powerType)
+        local comboPoints = UnitPower("player", DruidComboPointBarFrame.powerType)
         if comboPoints > 0 then
             self:Show()
         end
@@ -173,6 +173,7 @@ end
 function BBF.CreateAltManaBar()
     if PlayerFrame.AltManaBarBBF then return end -- already created
     if not BetterBlizzFramesDB.createAltManaBarDruid then return end
+    if (BetterBlizzFramesDB.noPortraitPixelBorder or BetterBlizzFramesDB.noPortraitModes) and (BetterBlizzFramesDB.hideUnitFramePlayerMana or BetterBlizzFramesDB.hideUnitFramePlayerSecondResource) then return end
     local db = BetterBlizzFramesDB
     if db.useMiniPlayerFrame then return end
     local cf = db.classicFrames

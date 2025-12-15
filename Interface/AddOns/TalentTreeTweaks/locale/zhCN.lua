@@ -1,4 +1,4 @@
--- Please use the Localization App on CurseForge to Update this
+-- Please use the Localization App on CurseForge to update this file
 -- https://legacy.curseforge.com/wow/addons/talent-tree-tweaks/localization
 local name, _ = ...
 
@@ -12,7 +12,7 @@ L["%s Switch to %s"] = "%s 切换为 %s"
 L["(was %s)"] = "（之前为 %s）"
 L["A workaround for one of the ways that Talent Tree taint can block action buttons from working."] = "尝试修复天赋树界面引发的污染会使动作条被禁用的问题。"
 --[[Translation missing --]]
-L["Addon development takes a large amount of time and effort. If you enjoy using Talent Tree Tweaks, please consider supporting its development by donating. Your support helps ensure the continued improvement and maintenance of the addon. Thank you for your generosity!"] = "Addon development takes a large amount of time and effort. If you enjoy using Talent Tree Tweaks, please consider supporting its development by donating. Your support helps ensure the continued improvement and maintenance of the addon. Thank you for your generosity!"
+L["Addon development takes a large amount of time and effort. If you enjoy using %s, please consider supporting its development by donating. Your support helps ensure the continued improvement and maintenance of the addon. Thank you for your generosity!"] = "Addon development takes a large amount of time and effort. If you enjoy using %s, please consider supporting its development by donating. Your support helps ensure the continued improvement and maintenance of the addon. Thank you for your generosity!"
 L["Adds a button to link the currently shown build in chat."] = "在下拉菜单旁边添加一个按钮，点击即可将目前启用的配置发送至聊天。"
 L["Adds a few fixes for minor issues."] = "修正一些小问题。"
 L["Adds a mini tree in various tooltips for Talent Tree Builds"] = "在天赋相关的鼠标提示附加一个天赋树方案的剪影，例如天赋配置下拉菜单、观察目标界面右下的天赋按钮、玩家在聊天中发送的天赋配置等等。"
@@ -60,6 +60,8 @@ L["Color of the highlight"] = "高亮颜色"
 L["Copy Loadout"] = "复制配置"
 L["Copy SpellID on hover"] = "复制法术 ID"
 L["CTRL + Click:"] = "CTRL + 点击："
+--[[Translation missing --]]
+L["CTRL-C to copy"] = "CTRL-C to copy"
 L["CTRL-C to copy %s"] = "CTRL-C 复制 %s"
 L["CTRL-C to copy spellID"] = "CTRL-C 复制法术 ID"
 L["CTRL-D to debug nodeInfo"] = "CTRL-D 调试节点信息"
@@ -78,7 +80,8 @@ L["DRIVE Auto Upgrades"] = "DRIVE自动升级"
 L["Dump the nodeInfo table to chat."] = "将 nodeInfo 的节点信息表转储至聊天。"
 L["Enable Ride Along"] = "启用自动前进"
 L["Enable Talent Tree Viewer Diff"] = "启用Talent Tree Viewer （天赋模拟器）比对"
-L["Enable this module"] = "启用此模组"
+--[[Translation missing --]]
+L["Enable this module"] = "Enable this module"
 L["Error opening in TalentTreeViewer. Showing default Blizzard inspect UI instead."] = "开启  TalentTreeViewer（天赋模拟器）时遇到错误，改以暴雪原生天赋界面开启。"
 L["Example of a loadout link"] = "配置链接示例"
 L["Example of a regular string"] = "常规字符串示例"
@@ -96,7 +99,7 @@ L["Highlight Cascade Repurchable"] = "高亮批量点击"
 L["Horrific Visions"] = "惊魂幻象"
 L["If checked, the imported build will be imported into the currently selected loadout."] = "若勾选，将会使新配置直接导入至目前启用的配置当中。"
 --[[Translation missing --]]
-L["If you enjoy using Talent Tree Tweaks, consider supporting its development with a donation."] = "If you enjoy using Talent Tree Tweaks, consider supporting its development with a donation."
+L["If you enjoy using %s, consider supporting its development with a donation."] = "If you enjoy using %s, consider supporting its development with a donation."
 L["Implements various workarounds around taint."] = "尝试修复各种会引起污染的问题。"
 L["Import into current loadout"] = "导入至当前"
 L["Import into current loadout (click \"%s\" afterwards)"] = "导入至当前配置（记得点击“%s”以应用）"

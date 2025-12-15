@@ -1,7 +1,6 @@
 # Syndicator
 
-## [247](https://github.com/TheMouseNest/Syndicator/tree/247) (2025-11-07)
-[Full Changelog](https://github.com/TheMouseNest/Syndicator/compare/246...247) 
+## [252](https://github.com/TheMouseNest/Syndicator/tree/252) (2025-12-08)
+[Full Changelog](https://github.com/TheMouseNest/Syndicator/compare/251...252) 
 
-- Fix a few typos  
-- Tag as support 12.0  
+- [Fixes #583] Classic: Fix stat changing English translations in China's Titan  

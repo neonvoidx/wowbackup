@@ -1,4 +1,4 @@
--- Please use the Localization App on CurseForge to Update this
+-- Please use the Localization App on CurseForge to update this file
 -- https://legacy.curseforge.com/wow/addons/talent-tree-tweaks/localization
 local name, _ = ...
 
@@ -17,7 +17,7 @@ L["(was %s)"] = "(was %s)"
 --[[Translation missing --]]
 L["A workaround for one of the ways that Talent Tree taint can block action buttons from working."] = "A workaround for one of the ways that Talent Tree taint can block action buttons from working."
 --[[Translation missing --]]
-L["Addon development takes a large amount of time and effort. If you enjoy using Talent Tree Tweaks, please consider supporting its development by donating. Your support helps ensure the continued improvement and maintenance of the addon. Thank you for your generosity!"] = "Addon development takes a large amount of time and effort. If you enjoy using Talent Tree Tweaks, please consider supporting its development by donating. Your support helps ensure the continued improvement and maintenance of the addon. Thank you for your generosity!"
+L["Addon development takes a large amount of time and effort. If you enjoy using %s, please consider supporting its development by donating. Your support helps ensure the continued improvement and maintenance of the addon. Thank you for your generosity!"] = "Addon development takes a large amount of time and effort. If you enjoy using %s, please consider supporting its development by donating. Your support helps ensure the continued improvement and maintenance of the addon. Thank you for your generosity!"
 L["Adds a button to link the currently shown build in chat."] = "Fügt einen Button hinzu, um die momentane Konfiguration im Chat zu teilen."
 L["Adds a few fixes for minor issues."] = "Fügt ein paar Fehlerbehebungen für kleinere Probleme hinzu."
 L["Adds a mini tree in various tooltips for Talent Tree Builds"] = "Fügt einen Minibaum in verschiedenen Tooltips für Talentbaumkonfigurationen hinzu."
@@ -82,6 +82,8 @@ L["Color of the highlight"] = "Farbe der Hervorhebung"
 L["Copy Loadout"] = "Copy Loadout"
 L["Copy SpellID on hover"] = "SpellID bei Hover kopieren"
 L["CTRL + Click:"] = "STRG + Klick:"
+--[[Translation missing --]]
+L["CTRL-C to copy"] = "CTRL-C to copy"
 L["CTRL-C to copy %s"] = "STRG + C, um %s zu kopieren"
 L["CTRL-C to copy spellID"] = "STRG + C, um die spellID zu kopieren"
 --[[Translation missing --]]
@@ -111,7 +113,8 @@ L["Dump the nodeInfo table to chat."] = "Geb den nodeInfo table im Chat aus."
 --[[Translation missing --]]
 L["Enable Ride Along"] = "Enable Ride Along"
 L["Enable Talent Tree Viewer Diff"] = "Aktiviere Unterschiede im Talent Tree Viewer"
-L["Enable this module"] = "Aktiviert dieses Modul"
+--[[Translation missing --]]
+L["Enable this module"] = "Enable this module"
 --[[Translation missing --]]
 L["Error opening in TalentTreeViewer. Showing default Blizzard inspect UI instead."] = "Error opening in TalentTreeViewer. Showing default Blizzard inspect UI instead."
 --[[Translation missing --]]
@@ -143,7 +146,7 @@ L["Highlight Cascade Repurchable"] = "Highlight Cascade Repurchable"
 L["Horrific Visions"] = "Horrific Visions"
 L["If checked, the imported build will be imported into the currently selected loadout."] = "Wenn aktiviert, wird die zu importierende Konfiguration in die aktuell ausgewählte Konfiguration importiert."
 --[[Translation missing --]]
-L["If you enjoy using Talent Tree Tweaks, consider supporting its development with a donation."] = "If you enjoy using Talent Tree Tweaks, consider supporting its development with a donation."
+L["If you enjoy using %s, consider supporting its development with a donation."] = "If you enjoy using %s, consider supporting its development with a donation."
 L["Implements various workarounds around taint."] = "Implementiert verschiedene Workarounds, um Taint zu vermeiden."
 L["Import into current loadout"] = "In die aktuelle Konfiguration importieren"
 L["Import into current loadout (click \"%s\" afterwards)"] = "In die aktuelle Konfiguration importieren (Klicke \"%s\" danach)"

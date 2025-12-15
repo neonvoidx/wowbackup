@@ -62,7 +62,7 @@ if isRetail then
 		[260364] = 180, -- Arcane Pulse
 		[274738] = 120, -- Ancestral Call
 		[265221] = 120, -- Fireblood
-		[273104] = 120, -- FIreblood (Aura)
+		[273104] = 120, -- Fireblood (Aura)
 		[291944] = 160, -- Regeneratin'
 		[256948] = 180, -- Spatial Rift
 		[287712] = 160, -- Haymaker

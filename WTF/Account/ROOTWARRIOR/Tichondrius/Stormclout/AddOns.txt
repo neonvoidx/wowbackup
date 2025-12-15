@@ -391,3 +391,16 @@ Details_MythicPlus: enabled
 GladiatorlosSA2: enabled
 BuffOverlay: enabled
 sArena_Reloaded: enabled
+ActionButtonAnimation: enabled
+CooldownManagerTweaks: enabled
+Dejunk: enabled
+EasyScrap: enabled
+SilentShuffle: enabled
+EasyDelete: enabled
+CursorRing: enabled
+CursorMod: enabled
+DecorVendor: enabled
+HomeBound: enabled
+KeystonePolaris: enabled
+SenseiClassResourceBar: enabled
+TransmogLootHelper: enabled

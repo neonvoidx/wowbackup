@@ -195,14 +195,14 @@ local function MakeClassicFrame(frame)
 
         local hideToTDebuffs = (frame.unit == "target" and db.hideTargetToTDebuffs) or (frame.unit == "focus" and db.hideFocusToTDebuffs)
         if not hideToTDebuffs then
-            totFrame.lastUpdate = 0
-            totFrame:HookScript("OnUpdate", function(self, elapsed)
-                self.lastUpdate = self.lastUpdate + elapsed
-                if self.lastUpdate >= 0.2 then
-                    self.lastUpdate = 0
-                    RefreshDebuffs(self, self.unit, nil, nil, true)
-                end
-            end)
+            -- totFrame.lastUpdate = 0
+            -- totFrame:HookScript("OnUpdate", function(self, elapsed)
+            --     self.lastUpdate = self.lastUpdate + elapsed
+            --     if self.lastUpdate >= 0.2 then
+            --         self.lastUpdate = 0
+            --         RefreshDebuffs(self, self.unit, nil, nil, true)
+            --     end
+            -- end)
             local debuffFrameName = totFrame:GetName().."Debuff"
             for i = 1, 4 do
                 local debuffFrame = _G[debuffFrameName..i]
@@ -247,14 +247,18 @@ local function MakeClassicFrame(frame)
             end
         end
 
-        local function ToggleNoLevelFrame(noLvl)
+        local function ToggleNoLevelFrame(noLvl, skipTexture)
             if noLvl then
-                frame.ClassicFrame.Texture:SetTexture(noLvlTex)
+                if not skipTexture then
+                    frame.ClassicFrame.Texture:SetTexture(noLvlTex)
+                end
                 frameContainer.Flash:SetTexture(flashNoLvl)
                 frameContainer.Flash:SetTexCoord(0, 0.9553125, -0.01,0.733)
                 contentMain.LevelText:SetAlpha(0)
             else
-                frame.ClassicFrame.Texture:SetTexture(defaultTex)
+                if not skipTexture then
+                    frame.ClassicFrame.Texture:SetTexture(defaultTex)
+                end
                 frameContainer.Flash:SetTexture(flashTex)
                 frameContainer.Flash:SetTexCoord(0, 0.9453125, 0, 0.181640625)
                 contentMain.LevelText:SetAlpha(1)
@@ -287,29 +291,35 @@ local function MakeClassicFrame(frame)
             if ( classification == "rareelite" ) then
                 FrameAdjustments(frameContainer)
                 if hideDragon and alwaysHideLvl then
-                    frame.ClassicFrame.Texture:SetTexture(noLvlTex)
+                    ToggleNoLevelFrame(true)
                 elseif hideDragon then
                     frame.ClassicFrame.Texture:SetTexture(defaultTex)
+                    ToggleNoLevelFrame(false, true)
                 else
                     frame.ClassicFrame.Texture:SetTexture("Interface\\TargetingFrame\\UI-TargetingFrame-Rare-Elite")
+                    ToggleNoLevelFrame(false, true)
                 end
             elseif ( classification == "worldboss" or classification == "elite" ) then
                 FrameAdjustments(frameContainer)
                 if hideDragon and alwaysHideLvl then
-                    frame.ClassicFrame.Texture:SetTexture(noLvlTex)
+                    ToggleNoLevelFrame(true)
                 elseif hideDragon then
                     frame.ClassicFrame.Texture:SetTexture(defaultTex)
+                    ToggleNoLevelFrame(false, true)
                 else
                     frame.ClassicFrame.Texture:SetTexture("Interface\\TargetingFrame\\UI-TargetingFrame-Elite")
+                    ToggleNoLevelFrame(false, true)
                 end
             elseif ( classification == "rare" ) then
                 FrameAdjustments(frameContainer)
                 if hideDragon and alwaysHideLvl then
-                    frame.ClassicFrame.Texture:SetTexture(noLvlTex)
+                    ToggleNoLevelFrame(true)
                 elseif hideDragon then
                     frame.ClassicFrame.Texture:SetTexture(defaultTex)
+                    ToggleNoLevelFrame(false, true)
                 else
                     frame.ClassicFrame.Texture:SetTexture("Interface\\TargetingFrame\\UI-TargetingFrame-Rare")
+                    ToggleNoLevelFrame(false, true)
                 end
             elseif ( classification == "minus" ) then
                 FrameAdjustments(frameContainer, true)
@@ -961,14 +971,28 @@ local function AdjustAlternateBars()
     AlternatePowerBar.RightBorder:SetTexCoord(0.125, 0, 1, 0)
     AlternatePowerBar.RightBorder:SetPoint("LEFT", AlternatePowerBar.Border, "RIGHT")
 
+    local customPowerColor = BetterBlizzFramesDB.customHealthbarColors and BetterBlizzFramesDB.customPowerColors and BetterBlizzFramesDB.customColorsUnitFrames
+
     if BetterBlizzFramesDB.changeUnitFrameManabarTexture then
-        hooksecurefunc(AlternatePowerBar, "EvaluateUnit", function(self)
-            self:SetStatusBarTexture(BBF.manaTexture)
-            self:SetStatusBarColor(0, 0, 1)
-            if self.PowerBarMask then
-                self.PowerBarMask:Hide()
-            end
-        end)
+        -- hooksecurefunc(AlternatePowerBar, "EvaluateUnit", function(self)
+        --     local r, g, b = 0, 0, 1
+
+        --     if customPowerColor then
+        --         local powerToken = self.powerToken or self.powerName
+        --         if powerToken and BBF.GetCustomPowerColor then
+        --             local customR, customG, customB = BBF.GetCustomPowerColor(powerToken)
+        --             if customR then
+        --                 r, g, b = customR, customG, customB
+        --             end
+        --         end
+        --     end
+            
+        --     self:SetStatusBarTexture(BBF.manaTexture)
+        --     self:SetStatusBarColor(r, g, b)
+        --     if self.PowerBarMask then
+        --         self.PowerBarMask:Hide()
+        --     end
+        -- end)
     else
         AdjustFramePoint(AlternatePowerBar.PowerBarMask, nil, -1)
     end
@@ -996,10 +1020,22 @@ local function AdjustAlternateBars()
         MonkStaggerBar.Border:SetTexCoord(0, 1, 0, 0.5)
         MonkStaggerBar.Border:SetPoint("TOPLEFT", -17, 0)
 
-        hooksecurefunc(MonkStaggerBar, "EvaluateUnit", function(self)
-            self:SetStatusBarTexture("Interface\\TargetingFrame\\UI-StatusBar")
-            self:SetStatusBarColor(0, 0, 1)
-        end)
+        -- hooksecurefunc(MonkStaggerBar, "EvaluateUnit", function(self)
+        --     local r, g, b = 0, 0, 1
+            
+        --     if customPowerColor then
+        --         local powerToken = self.powerToken or self.powerName or "STAGGER"
+        --         if powerToken and BBF.GetCustomPowerColor then
+        --             local customR, customG, customB = BBF.GetCustomPowerColor(powerToken)
+        --             if customR then
+        --                 r, g, b = customR, customG, customB
+        --             end
+        --         end
+        --     end
+            
+        --     self:SetStatusBarTexture("Interface\\TargetingFrame\\UI-StatusBar")
+        --     self:SetStatusBarColor(r, g, b)
+        -- end)
     end
 
     -- if class == "DRUID" then
@@ -1041,14 +1077,26 @@ local function AdjustAlternateBars()
         EvokerEbonMightBar.RightBorder:SetTexCoord(0.125, 0, 1, 0)
         EvokerEbonMightBar.RightBorder:SetPoint("LEFT", EvokerEbonMightBar.Border, "RIGHT")
 
-        hooksecurefunc(EvokerEbonMightBar, "EvaluateUnit", function(self)
-            self:SetStatusBarTexture("Interface\\TargetingFrame\\UI-StatusBar")
-            self:SetStatusBarColor(1, 0.5, 0.25)
+        -- hooksecurefunc(EvokerEbonMightBar, "EvaluateUnit", function(self)
+        --     local r, g, b = 1, 0.5, 0.25
+            
+        --     if customPowerColor then
+        --         local powerToken = self.powerToken or self.powerName
+        --         if powerToken and BBF.GetCustomPowerColor then
+        --             local customR, customG, customB = BBF.GetCustomPowerColor(powerToken)
+        --             if customR then
+        --                 r, g, b = customR, customG, customB
+        --             end
+        --         end
+        --     end
+            
+        --     self:SetStatusBarTexture("Interface\\TargetingFrame\\UI-StatusBar")
+        --     self:SetStatusBarColor(r, g, b)
 
-            if self.PowerBarMask then
-                self.PowerBarMask:Hide()
-            end
-        end)
+        --     if self.PowerBarMask then
+        --         self.PowerBarMask:Hide()
+        --     end
+        -- end)
     end
 
     local classicFrameColorTargets = {

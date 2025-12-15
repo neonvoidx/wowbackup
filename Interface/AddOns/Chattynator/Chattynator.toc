@@ -1,6 +1,6 @@
-## Interface: 110205, 50502, 40402, 11508
+## Interface: 120000, 110207, 110205, 50502, 40402, 11508
 ## Title: Chattynator
-## Version: 152
+## Version: 171
 ## Author: plusmouse
 ## IconTexture: Interface\AddOns\Chattynator\Assets\Logo.png
 ## SavedVariables: CHATTYNATOR_CONFIG, CHATTYNATOR_MESSAGE_LOG
@@ -17,6 +17,10 @@
 ## Category-ruRU: Чат
 ## Category-zhCN: 聊天
 ## Category-zhTW: 對話
+
+Libs\LibStub\LibStub.lua
+Libs\CallbackHandler-1.0\CallbackHandler-1.0.lua
+Libs\LibSharedMedia-3.0\lib.xml
 
 Locales.lua
 
@@ -41,7 +45,6 @@ Display/Main.lua
 Display/Tabs.lua
 Display/Buttons.lua
 Display/ScrollingMessages.lua
-Display/MessageRow.lua
 Display/CopyChat.lua
 
 Modifiers/ShortenChannels.lua

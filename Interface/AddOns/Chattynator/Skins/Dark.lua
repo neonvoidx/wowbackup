@@ -152,9 +152,9 @@ local skinners = {
     local alpha = 1 - addonTable.Config.Get("skins.dark.chat_transparency")
     table.insert(chatFrames, frame)
     frame.background = frame:CreateTexture(nil, "BACKGROUND")
-    frame.background:SetPoint("TOP", frame.ScrollingMessages, 0, 5)
+    frame.background:SetPoint("TOP", frame.ScrollingMessagesWrapper, 0, 5)
     frame.background:SetPoint("LEFT")
-    frame.background:SetPoint("BOTTOMRIGHT", frame.ScrollingMessages, 0, -5)
+    frame.background:SetPoint("BOTTOMRIGHT", frame.ScrollingMessagesWrapper, 0, -5)
 
     hooksecurefunc(frame, "SetBackgroundColor", function(_, r, g, b)
       if not enableHooks then
@@ -428,7 +428,7 @@ local function LoadSkin()
     end
   end)
 
-  local function UpdateHeader(editBox)
+  --[[local function UpdateHeader(editBox)
     if tIndexOf(editBoxes, editBox) ~= nil then
       local promptWidth = editBox.header:GetWidth() + (editBox.headerSuffix:IsShown() and editBox.headerSuffix:GetWidth() or 0) + (editBox.languageHeader and editBox.languageHeader:IsShown() and editBox.languageHeader:GetWidth() or 0)
       local wantedOffset = addonTable.Messages.inset
@@ -445,7 +445,7 @@ local function LoadSkin()
     hooksecurefunc(ChatFrame1EditBox, "UpdateHeader", UpdateHeader)
   else
     hooksecurefunc("ChatEdit_UpdateHeader", UpdateHeader)
-  end
+  end]]
 end
 
 addonTable.Skins.RegisterSkin(addonTable.Locales.DARK, "dark", LoadSkin, SkinFrame, SetConstants, {

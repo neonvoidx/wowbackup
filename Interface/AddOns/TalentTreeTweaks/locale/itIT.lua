@@ -1,4 +1,4 @@
--- Please use the Localization App on CurseForge to Update this
+-- Please use the Localization App on CurseForge to update this file
 -- https://legacy.curseforge.com/wow/addons/talent-tree-tweaks/localization
 local name, _ = ...
 
@@ -17,7 +17,7 @@ L["(was %s)"] = "(was %s)"
 --[[Translation missing --]]
 L["A workaround for one of the ways that Talent Tree taint can block action buttons from working."] = "A workaround for one of the ways that Talent Tree taint can block action buttons from working."
 --[[Translation missing --]]
-L["Addon development takes a large amount of time and effort. If you enjoy using Talent Tree Tweaks, please consider supporting its development by donating. Your support helps ensure the continued improvement and maintenance of the addon. Thank you for your generosity!"] = "Addon development takes a large amount of time and effort. If you enjoy using Talent Tree Tweaks, please consider supporting its development by donating. Your support helps ensure the continued improvement and maintenance of the addon. Thank you for your generosity!"
+L["Addon development takes a large amount of time and effort. If you enjoy using %s, please consider supporting its development by donating. Your support helps ensure the continued improvement and maintenance of the addon. Thank you for your generosity!"] = "Addon development takes a large amount of time and effort. If you enjoy using %s, please consider supporting its development by donating. Your support helps ensure the continued improvement and maintenance of the addon. Thank you for your generosity!"
 --[[Translation missing --]]
 L["Adds a button to link the currently shown build in chat."] = "Adds a button to link the currently shown build in chat."
 --[[Translation missing --]]
@@ -107,6 +107,8 @@ L["Copy SpellID on hover"] = "Copy SpellID on hover"
 --[[Translation missing --]]
 L["CTRL + Click:"] = "CTRL + Click:"
 --[[Translation missing --]]
+L["CTRL-C to copy"] = "CTRL-C to copy"
+--[[Translation missing --]]
 L["CTRL-C to copy %s"] = "CTRL-C to copy %s"
 --[[Translation missing --]]
 L["CTRL-C to copy spellID"] = "CTRL-C to copy spellID"
@@ -175,7 +177,7 @@ L["Horrific Visions"] = "Horrific Visions"
 --[[Translation missing --]]
 L["If checked, the imported build will be imported into the currently selected loadout."] = "If checked, the imported build will be imported into the currently selected loadout."
 --[[Translation missing --]]
-L["If you enjoy using Talent Tree Tweaks, consider supporting its development with a donation."] = "If you enjoy using Talent Tree Tweaks, consider supporting its development with a donation."
+L["If you enjoy using %s, consider supporting its development with a donation."] = "If you enjoy using %s, consider supporting its development with a donation."
 --[[Translation missing --]]
 L["Implements various workarounds around taint."] = "Implements various workarounds around taint."
 --[[Translation missing --]]

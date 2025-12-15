@@ -77,6 +77,8 @@ layout.defaultSettings = {
         healStatusBarTexture          = "sArena Stripes",
         castbarStatusBarTexture       = "sArena Default",
         castbarUninterruptibleTexture = "sArena Default",
+        bgTexture = "Solid",
+        bgColor = {0, 0, 0, 0.6},
     },
     retextureHealerClassStackOnly = true,
 
@@ -218,24 +220,6 @@ function layout:Initialize(frame)
     frame.PowerText:SetShadowOffset(0, 0)
     frame.HealthText:SetShadowOffset(0, 0)
 
-    -- Health bar underlay
-    if not frame.hpUnderlay then
-        frame.hpUnderlay = frame:CreateTexture(nil, "BACKGROUND", nil, 1)
-        frame.hpUnderlay:SetPoint("TOPLEFT", frame.HealthBar, "TOPLEFT")
-        frame.hpUnderlay:SetPoint("BOTTOMRIGHT", frame.HealthBar, "BOTTOMRIGHT")
-        frame.hpUnderlay:SetColorTexture(0, 0, 0, 0.65)
-        frame.hpUnderlay:Show()
-    end
-
-    -- Power bar underlay
-    if not frame.ppUnderlay then
-        frame.ppUnderlay = frame:CreateTexture(nil, "BACKGROUND", nil, 1)
-        frame.ppUnderlay:SetPoint("TOPLEFT", frame.PowerBar, "TOPLEFT")
-        frame.ppUnderlay:SetPoint("BOTTOMRIGHT", frame.PowerBar, "BOTTOMRIGHT")
-        frame.ppUnderlay:SetColorTexture(0, 0, 0, 0.65)
-        frame.ppUnderlay:Show()
-    end
-
     self:UpdateOrientation(frame)
 end
 
@@ -358,7 +342,7 @@ function layout:UpdateOrientation(frame)
 
     healthBar:ClearAllPoints()
     powerBar:ClearAllPoints()
-    classIcon:ClearAllPoints()
+    frame.ClassIcon:ClearAllPoints()
 
     if (self.db.mirrored) then
         healthBar:SetPoint("TOPRIGHT", frame, "TOPRIGHT", 0, -2)
@@ -367,7 +351,7 @@ function layout:UpdateOrientation(frame)
         powerBar:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", 0, 2)
         powerBar:SetPoint("LEFT", classIcon, "RIGHT", 2, 0)
 
-        classIcon:SetPoint("TOPLEFT", frame, "TOPLEFT", 0, 0)
+        frame.ClassIcon:SetPoint("TOPLEFT", frame, "TOPLEFT", 0, 0)
     else
         healthBar:SetPoint("TOPLEFT", frame, "TOPLEFT", 0, -2)
         healthBar:SetPoint("BOTTOMRIGHT", powerBar, "TOPRIGHT")
@@ -375,7 +359,7 @@ function layout:UpdateOrientation(frame)
         powerBar:SetPoint("BOTTOMLEFT", frame, "BOTTOMLEFT", 0, 2)
         powerBar:SetPoint("RIGHT", classIcon, "LEFT", -2, 0)
 
-        classIcon:SetPoint("TOPRIGHT", frame, "TOPRIGHT", 0, 0)
+        frame.ClassIcon:SetPoint("TOPRIGHT", frame, "TOPRIGHT", 0, 0)
     end
 end
 

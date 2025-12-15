@@ -12,6 +12,9 @@ function PowerBarMixin:OnLoad()
     self.Frame:RegisterEvent("PLAYER_REGEN_ENABLED")
     self.Frame:RegisterEvent("PLAYER_REGEN_DISABLED")
     self.Frame:RegisterEvent("PLAYER_TARGET_CHANGED")
+    self.Frame:RegisterUnitEvent("UNIT_ENTERED_VEHICLE", "player")
+    self.Frame:RegisterUnitEvent("UNIT_EXITED_VEHICLE", "player")
+    self.Frame:RegisterEvent("PLAYER_MOUNT_DISPLAY_CHANGED")
     self.Frame:RegisterUnitEvent("UNIT_MAXPOWER", "player")
 
     local playerClass = select(2, UnitClass("player"))
@@ -29,11 +32,12 @@ function PowerBarMixin:OnEvent(event, ...)
         or (event == "PLAYER_SPECIALIZATION_CHANGED" and unit == "player") then
 
         self:ApplyVisibilitySettings()
-        self:ApplyLayout()
+        self:ApplyLayout(nil, true)
 
-    elseif event == "PLAYER_REGEN_ENABLED" or event == "PLAYER_REGEN_DISABLED" or event == "PLAYER_TARGET_CHANGED" then
+    elseif event == "PLAYER_REGEN_ENABLED" or event == "PLAYER_REGEN_DISABLED" or event == "PLAYER_TARGET_CHANGED" or event == "UNIT_ENTERED_VEHICLE" or event == "UNIT_EXITED_VEHICLE" or event == "PLAYER_MOUNT_DISPLAY_CHANGED" then
 
         self:ApplyVisibilitySettings(nil, event == "PLAYER_REGEN_DISABLED")
+        self:UpdateDisplay()
 
     elseif event == "UNIT_MAXPOWER" and unit == "player" then
         self:UpdateTicksLayout()

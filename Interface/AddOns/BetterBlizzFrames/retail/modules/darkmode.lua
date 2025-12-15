@@ -395,6 +395,12 @@ function BBF.DarkmodeFrames(bypass)
     applySettings(TargetFrame.totFrame.FrameTexture, desaturationValue, vertexColor)
     applySettings(PetFrameTexture, desaturationValue, vertexColor)
     applySettings(FocusFrameToT.FrameTexture, desaturationValue, vertexColor)
+    for i = 1, 5 do
+        local frame = _G["Boss"..i.."TargetFrame"]
+        if frame then
+            applySettings(frame.TargetFrameContainer.FrameTexture, desaturationValue, vertexColor)
+        end
+    end
 
     for i = 1, Minimap:GetNumChildren() do
         local child = select(i, Minimap:GetChildren())
@@ -405,6 +411,20 @@ function BBF.DarkmodeFrames(bypass)
                 local texturePath = region:GetTexture()
                 if texturePath and string.find(texturePath, "136430") then
                     applySettings(region, minimapSat, minimapColor)
+                end
+            end
+        end
+        for k = 1, child:GetNumChildren() do
+            local nestedChild = select(k, child:GetChildren())
+            if nestedChild then
+                for l = 1, nestedChild:GetNumRegions() do
+                    local nestedRegion = select(l, nestedChild:GetRegions())
+                    if nestedRegion:IsObjectType("Texture") then
+                        local texturePath = nestedRegion:GetTexture()
+                        if texturePath and string.find(texturePath, "136430") then
+                            applySettings(nestedRegion, minimapSat, minimapColor)
+                        end
+                    end
                 end
             end
         end
@@ -804,7 +824,7 @@ function BBF.DarkmodeFrames(bypass)
 
     -- Actionbars
     if BetterBlizzFramesDB.darkModeActionBars or BBF.actionBarColorEnabled then
-        local actionbarsplits = _G.MainMenuBar
+        local actionbarsplits = _G.MainActionBar
         if actionbarsplits then
             for _, v in pairs({actionbarsplits:GetChildren()}) do
                 applySettings(v.TopEdge, desaturationValue, actionBarColor)
@@ -829,7 +849,7 @@ function BBF.DarkmodeFrames(bypass)
         applySettings(StatusTrackingBarManager.SecondaryStatusTrackingBarContainer.BarFrameTexture, desaturationValue, actionBarColor)
 
         for _, v in pairs({
-            MainMenuBar.BorderArt,
+            MainActionBar.BorderArt,
             ActionButton1.RightDivider,
             ActionButton2.RightDivider,
             ActionButton3.RightDivider,
@@ -846,8 +866,8 @@ function BBF.DarkmodeFrames(bypass)
         end
 
         for _, v in pairs({
-            MainMenuBar.EndCaps.LeftEndCap,
-            MainMenuBar.EndCaps.RightEndCap,
+            MainActionBar.EndCaps.LeftEndCap,
+            MainActionBar.EndCaps.RightEndCap,
         }) do
             applySettings(v, desaturationValue, birdColor, true)
         end
@@ -1050,6 +1070,14 @@ function BBF.DarkModeCastbars()
         applySettings(PlayerCastingBarFrame.Border, desaturationValue, color)
         --applySettings(PlayerCastingBarFrame.BorderShield, desaturationValue, vertexColor)
 
+        for i = 1, 5 do
+            local frame = _G["Boss"..i.."TargetFrame"]
+            if frame then
+                applySettings(frame.spellbar.Border, desaturationValue, color)
+                applySettings(frame.spellbar.Background, desaturationValue, lighterColor)
+            end
+        end
+
         if BetterBlizzFramesDB.showPartyCastbar then
             for i = 1, 5 do
                 local partyCastbar = _G["Party"..i.."SpellBar"]
@@ -1094,6 +1122,13 @@ function BBF.DarkModeCastbars()
             applySettings(petCastbar.Border, false, 1)
             --applySettings(petCastbar.BorderShield, desaturationValue, vertexColor)
             applySettings(petCastbar.Background, false, 1)
+        end
+        for i = 1, 5 do
+            local frame = _G["Boss"..i.."TargetFrame"]
+            if frame then
+                applySettings(frame.spellbar.Border, false, 1)
+                applySettings(frame.spellbar.Background, false, 1)
+            end
         end
         BBF.darkModeCastbars = nil
     end

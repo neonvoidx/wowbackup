@@ -1,4 +1,4 @@
--- Please use the Localization App on CurseForge to Update this
+-- Please use the Localization App on CurseForge to update this file
 -- https://legacy.curseforge.com/wow/addons/talent-tree-tweaks/localization
 local name, _ = ...
 
@@ -11,7 +11,7 @@ L[ [=[%d points spent past the gate.
 L["%s Switch to %s"] = "%s 切換為 %s"
 L["(was %s)"] = "(之前為 %s)"
 L["A workaround for one of the ways that Talent Tree taint can block action buttons from working."] = "嘗試修復天賦樹介面引發的污染會使快捷鍵被禁用的問題。"
-L["Addon development takes a large amount of time and effort. If you enjoy using Talent Tree Tweaks, please consider supporting its development by donating. Your support helps ensure the continued improvement and maintenance of the addon. Thank you for your generosity!"] = "插件開發需要大量的時間和精力。如果您喜歡使用Talent Tree Tweaks，請考慮透過捐贈來支持其發展。您的支持有助於確保插件的持續改進和維護。謝謝你們的慷慨解囊！"
+L["Addon development takes a large amount of time and effort. If you enjoy using %s, please consider supporting its development by donating. Your support helps ensure the continued improvement and maintenance of the addon. Thank you for your generosity!"] = "插件開發需要大量時間和精力。如果你喜歡使用 %s，請考慮透過捐款支持其開發。您的支持有助於確保插件的持續改進與維護。感謝您的慷慨！"
 L["Adds a button to link the currently shown build in chat."] = "在下拉選單旁邊添加一個按鈕，點擊即可將目前啟用的配置發送至聊天。"
 L["Adds a few fixes for minor issues."] = "修正一些小問題。"
 L["Adds a mini tree in various tooltips for Talent Tree Builds"] = "在天賦相關的滑鼠提示附加一個天賦樹方案的剪影，例如天賦配置下拉選單、觀察目標介面右下的天賦按鈕、玩家在聊天中發送的天賦配置等等。"
@@ -56,6 +56,7 @@ L["Color of the highlight"] = "高亮顏色"
 L["Copy Loadout"] = "複製配置"
 L["Copy SpellID on hover"] = "複製法術 ID"
 L["CTRL + Click:"] = "CTRL + 點擊："
+L["CTRL-C to copy"] = "CTRL-C 來複製"
 L["CTRL-C to copy %s"] = "CTRL-C 複製 %s"
 L["CTRL-C to copy spellID"] = "CTRL-C 複製法術 ID"
 L["CTRL-D to debug nodeInfo"] = "CTRL-D 以偵錯節點資訊"
@@ -90,7 +91,7 @@ L["Hero Talents"] = "英雄天賦"
 L["Highlight Cascade Repurchable"] = "高亮批量點擊"
 L["Horrific Visions"] = "恐怖幻象"
 L["If checked, the imported build will be imported into the currently selected loadout."] = "若勾選，將會使新的配置直接匯入至目前啟用的配置。"
-L["If you enjoy using Talent Tree Tweaks, consider supporting its development with a donation."] = "如果您喜歡使用Talent Tree Tweaks，請考慮透過捐款來支持其開發。"
+L["If you enjoy using %s, consider supporting its development with a donation."] = "如果你喜歡使用%s，可以考慮捐款支持其開發。"
 L["Implements various workarounds around taint."] = "修復各種會引起污染的問題。"
 L["Import into current loadout"] = "匯入至目前"
 L["Import into current loadout (click \"%s\" afterwards)"] = "匯入至目前配置（記得點擊「%s」）"

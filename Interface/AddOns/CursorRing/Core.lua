@@ -291,6 +291,7 @@ local function UpdateAppearance()
     else
         ringAlpha = baseAlpha
     end
+    local gradientAlpha = Clamp01(ringAlpha)
 
     -- Reset rotation & clear any previous gradient
     if tex.SetRotation then
@@ -319,16 +320,16 @@ local function UpdateAppearance()
 
         tex:SetVertexColor(1, 1, 1) -- neutral base
 
-        -- RGB gradient only; alpha is controlled purely by tex:SetAlpha(ringAlpha)
+        -- RGB gradient only; alpha is applied to the gradient stops so slider/combat updates still affect the ring.
         if CreateColor then
             tex:SetGradient("HORIZONTAL",
-                CreateColor(r1, g1, b1, 1),
-                CreateColor(r2, g2, b2, 1)
+                CreateColor(r1, g1, b1, gradientAlpha),
+                CreateColor(r2, g2, b2, gradientAlpha)
             )
         else
             tex:SetGradient("HORIZONTAL",
-                r1, g1, b1, 1,
-                r2, g2, b2, 1
+                r1, g1, b1, gradientAlpha,
+                r2, g2, b2, gradientAlpha
             )
         end
 
@@ -338,7 +339,7 @@ local function UpdateAppearance()
             tex:SetRotation(angle * math.pi / 180)
         end
 
-        tex:SetAlpha(ringAlpha)
+        tex:SetAlpha(1)
     else
         -- Solid color path (class/highvis/custom/forced class)
         local cr, cg, cb = GetColor()
@@ -377,11 +378,33 @@ end
 
 local GCD_SPELL_ID = 61304
 
+-- SAFE against 12.0 "secret" cooldown values.
 local function IsCooldownActive(start, duration)
+    -- If either value is nil, there's clearly no cooldown.
     if not start or not duration then return false end
-    if duration <= 0 then return false end
-    if start <= 0 then return false end
-    return true
+
+    -- We cannot safely do *any* arithmetic or comparisons on secret cooldown values,
+    -- because the client throws if you touch them. So we wrap the checks in pcall:
+    --   - If the comparison works, we use the result.
+    --   - If it errors (secret values), we treat that as "cooldown is active".
+    local ok, result = pcall(function()
+        -- Normal numeric path (works for pre-12.0 and non-secret values):
+        -- idle GCD:  start == 0, duration == 0  -> inactive
+        -- active GCD: duration > 0              -> active
+        if duration == 0 or start == 0 then
+            return false
+        else
+            return true
+        end
+    end)
+
+    if not ok then
+        -- Comparison exploded, so we hit a secret value.
+        -- That only happens when a cooldown is actually running, so treat it as active.
+        return true
+    end
+
+    return result and true or false
 end
 
 local function UpdateGCDCooldown()
@@ -573,10 +596,11 @@ do
         for token in string.gmatch(msg or "", "%S+") do
             table.insert(args, strlower(token))
         end
-        local cmd = args[1]
+
+        local cmd  = args[1]
         local arg1 = args[2]
         local arg2 = args[3]
-        local db = CursorRingDB or ns.defaults
+        local db   = CursorRingDB or ns.defaults
 
         if cmd == "show" then
             db.visible = true
@@ -626,83 +650,78 @@ do
             local now = GetTime()
             gcd:Show()
             gcd:SetCooldown(now, 1.5)
-            Say("Test swipe 1.5s")
+            Say("Test 1.5s GCD swipe")
             DumpGCDState("GCDTEST")
 
         elseif cmd == "color" and arg1 then
             if arg1 == "rouge" then
-                Say("It's spelled R-O-G-U-E, not rouge!")
+                Say("It's spelled R-O-G-U-E.")
                 return
             end
 
             if arg1 == "gradient" then
                 db.colorMode = "gradient"
                 ns.Refresh()
-                Say("Color mode set to gradient")
+                Say("Color mode: gradient")
                 return
-            end
-
-            if arg1 == "default" then
+            elseif arg1 == "default" then
                 db.colorMode = "class"
                 ns.Refresh()
-                Say("Color mode set to class color")
+                Say("Color mode: class")
                 return
-            end
-
-            if arg1 == "highvis" then
+            elseif arg1 == "highvis" then
                 db.colorMode = "highvis"
                 ns.Refresh()
-                Say("Color mode set to high-visibility")
+                Say("Color mode: high visibility")
                 return
-            end
-
-            if arg1 == "custom" then
+            elseif arg1 == "custom" then
                 db.colorMode = "custom"
                 ns.Refresh()
-                Say("Color mode set to custom")
+                Say("Color mode: custom")
                 return
             end
 
             local classFile = ns.colorAlias[arg1] or arg1
-            local color = C_ClassColor.GetClassColor(strupper(classFile or ""))
-            if color then
+            local c = C_ClassColor.GetClassColor(strupper(classFile or ""))
+            if c then
                 db.colorMode = classFile
                 ns.Refresh()
                 Say("Color set to " .. classFile)
             else
-                Say("Unknown color: " .. arg1)
+                Say("Unknown color profile: " .. arg1)
             end
 
         elseif cmd == "alpha" and arg1 and arg2 then
             local val = tonumber(arg2)
             if not val or val < 0 or val > 1 then
-                Say("Alpha must be 0-1")
+                Say("Alpha must be 0–1.")
                 return
             end
+
             if arg1 == "in" then
                 db.inCombatAlpha = val
             elseif arg1 == "out" then
                 db.outCombatAlpha = val
             else
-                Say("Usage: /cr alpha in|out 0-1")
+                Say("Usage: /cr alpha in|out <0–1>")
                 return
             end
             ns.Refresh()
-            Say("Alpha " .. arg1 .. " = " .. val)
+            Say("Alpha (" .. arg1 .. ") = " .. val)
 
         elseif cmd == "size" and arg1 then
             local v = tonumber(arg1)
             if not v then
-                Say("Size must be a number")
+                Say("Size must be numeric.")
                 return
             end
             if v < 10 or v > 100 then
-                Say("Size must be 10-100")
+                Say("Size must be between 10–100.")
                 return
             end
             db.ringRadius = math.floor(v)
             ns.Refresh()
-            Say("Size set to " .. db.ringRadius)
+            Say("Ring size set to " .. db.ringRadius)
 
         elseif cmd == "texture" and arg1 then
             db.textureKey = ns.NormalizeTextureKey(arg1)
@@ -721,21 +740,18 @@ do
                 return
             end
             ns.Refresh()
-            Say("Hide on right-click: " .. (db.hideOnRightClick and "enabled" or "disabled"))
+            Say("Right-click hide: " .. (db.hideOnRightClick and "enabled" or "disabled"))
 
         else
             Say("Commands:")
-            Say("/cr show, /cr hide, /cr toggle, /cr reset")
-            Say("/cr gcd               - toggle GCD swipe")
-            Say("/cr gcdstyle <style>  - blizzard | simple")
-            if ns.DEBUG_GCD then
-                Say("/cr gcdtest          - test swipe for 1.5s")
-            end
-            Say("/cr color <default|highvis|custom|gradient|class/alias>")
-            Say("/cr alpha in|out <n>  - 0..1")
+            Say("/cr show/hide/toggle/reset")
+            Say("/cr gcd       – toggle GCD swipe")
+            Say("/cr gcdstyle   – simple | blizzard")
+            Say("/cr color      – default, highvis, custom, gradient, <class>")
+            Say("/cr alpha      – in|out <0–1>")
+            Say("/cr size <n>   – 10–100")
             Say("/cr texture <name>")
-            Say("/cr size <n>          - 10..100")
-            Say("/cr right-click enable|disable|toggle")
+            Say("/cr right-click enable|disable/toggle")
         end
     end
 end

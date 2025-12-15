@@ -1,4 +1,4 @@
--- Please use the Localization App on CurseForge to Update this
+-- Please use the Localization App on CurseForge to update this file
 -- https://legacy.curseforge.com/wow/addons/talent-tree-tweaks/localization
 local name, _ = ...
 
@@ -11,8 +11,7 @@ L[ [=[%d points spent past the gate.
 L["%s Switch to %s"] = "%s 전환 %s"
 L["(was %s)"] = "(이전 %s)"
 L["A workaround for one of the ways that Talent Tree taint can block action buttons from working."] = "특성 트리 오류로 인해 작업 버튼이 작동하지 않는 경우의 해결 방법 중 하나입니다."
---[[Translation missing --]]
-L["Addon development takes a large amount of time and effort. If you enjoy using Talent Tree Tweaks, please consider supporting its development by donating. Your support helps ensure the continued improvement and maintenance of the addon. Thank you for your generosity!"] = "Addon development takes a large amount of time and effort. If you enjoy using Talent Tree Tweaks, please consider supporting its development by donating. Your support helps ensure the continued improvement and maintenance of the addon. Thank you for your generosity!"
+L["Addon development takes a large amount of time and effort. If you enjoy using %s, please consider supporting its development by donating. Your support helps ensure the continued improvement and maintenance of the addon. Thank you for your generosity!"] = "애드온 개발에는 많은 시간과 노력이 필요합니다. %s를 즐겨 사용하신다면, 기부로 개발을 지원해 주시길 부탁드립니다. 여러분의 지원은 애드온의 지속적인 개선과 유지 관리를 보장하는 데 도움이 됩니다. 아낌없는 후원에 감사드립니다!"
 L["Adds a button to link the currently shown build in chat."] = "현재 채팅에 표시된 빌드를 링크하는 버튼 추가"
 L["Adds a few fixes for minor issues."] = "사소한 문제에 대한 몇 가지 수정 사항 추가"
 L["Adds a mini tree in various tooltips for Talent Tree Builds"] = "특성 트리 빌드의 다양한 툴팁에 미니 트리 추가"
@@ -24,8 +23,7 @@ L["Adds respec buttons to the talent tree UI."] = "특성 트리 UI에 재지정
 L["Adds spell id and more to the various talent tree tooltips."] = "다양한 특성 트리 툴팁에 주문 ID 등 추가"
 L["Allows you to import talent loadouts into the currently selected loadout."] = "현재 선택된 빌드로 특성 빌드를 가져올 수 있습니다."
 L["Allows you to press CTRL-C to copy the spellID of a talent, while hovering over it."] = "특성에 마우스를 가져간 상태에서 CTRL-C를 눌러 특성의 spellID를 복사할 수 있습니다."
---[[Translation missing --]]
-L["Allows you to press CTRL-D to open a table inspector of your choice, with the nodeInfo associated with the node."] = "Allows you to press CTRL-D to open a table inspector of your choice, with the nodeInfo associated with the node."
+L["Allows you to press CTRL-D to open a table inspector of your choice, with the nodeInfo associated with the node."] = "CTRL-D를 눌러 선택한 테이블 검사기를 열고, 해당 노드와 연관된 nodeInfo를 표시합니다."
 L["Allows you to right-click the Hero Talent button to quickly switch hero specs."] = "영웅 특성 버튼을 마우스 오른쪽 버튼으로 클릭하여 영웅 사양을 빠르게 전환할 수 있습니다."
 L["Allows you to scale the talent tree with CTRL+Scrolling with the mousewheel."] = "CTRL+마우스 휠로 특성 트리의 크기를 조정할 수 있습니다."
 L["Allows you to search for talents by their spellID, nodeID, entryID, and definitionID."] = "spellID, nodeID, entryID, definitionID로 특성을 검색할 수 있습니다."
@@ -54,8 +52,7 @@ L["Automatically set"] = "자동 설정"
 --[[Translation missing --]]
 L["Automatically upgrade the final Limits Unbound talent when you have enough currency."] = "Automatically upgrade the final Limits Unbound talent when you have enough currency."
 L["Background Transparency"] = "배경 투명도"
---[[Translation missing --]]
-L["Basic Modules"] = "Basic Modules"
+L["Basic Modules"] = "기본 모듈"
 L["blocked in combat"] = "전투 중 차단됨"
 L["Change Background"] = "배경 변경"
 L["Change Scale"] = "스케일 변경"
@@ -67,6 +64,8 @@ L["Color of the highlight"] = "강조 표시 색상"
 L["Copy Loadout"] = "빌드 복사"
 L["Copy SpellID on hover"] = "마우스오버 시 SpellID 복사"
 L["CTRL + Click:"] = "CTRL + 클릭:"
+--[[Translation missing --]]
+L["CTRL-C to copy"] = "CTRL-C to copy"
 L["CTRL-C to copy %s"] = "CTRL-C로 %s 복사"
 L["CTRL-C to copy spellID"] = "CTRL-C로 spellID 복사"
 --[[Translation missing --]]
@@ -86,7 +85,8 @@ L["DRIVE Auto Upgrades"] = "고.속.주.행 자동 업그레이드"
 L["Dump the nodeInfo table to chat."] = "채팅할 nodeInfo 테이블을 덤프합니다."
 L["Enable Ride Along"] = "같이 타기 활성화"
 L["Enable Talent Tree Viewer Diff"] = "특성 트리 뷰어 차이점 활성화"
-L["Enable this module"] = "이 모듈 활성화"
+--[[Translation missing --]]
+L["Enable this module"] = "Enable this module"
 L["Error opening in TalentTreeViewer. Showing default Blizzard inspect UI instead."] = "TalentTreeViewer에서 여는 중 오류가 발생했습니다. 대신 기본 Blizzard 검사 UI를 표시합니다."
 L["Example of a loadout link"] = "빌드 링크의 예"
 L["Example of a regular string"] = "일반 문자열의 예"
@@ -105,7 +105,7 @@ L["Highlight Cascade Repurchable"] = "재투자 가능 강조"
 L["Horrific Visions"] = "Horrific Visions"
 L["If checked, the imported build will be imported into the currently selected loadout."] = "체크하면, 가져온 빌드를 현재 선택된 빌드로 가져옵니다."
 --[[Translation missing --]]
-L["If you enjoy using Talent Tree Tweaks, consider supporting its development with a donation."] = "If you enjoy using Talent Tree Tweaks, consider supporting its development with a donation."
+L["If you enjoy using %s, consider supporting its development with a donation."] = "If you enjoy using %s, consider supporting its development with a donation."
 L["Implements various workarounds around taint."] = "오류과 관련된 다양한 해결 방법을 구현합니다."
 L["Import into current loadout"] = "현재 빌드로 가져오기"
 L["Import into current loadout (click \"%s\" afterwards)"] = "현재 빌드로 가져오기(이후 \"%s\" 클릭)"
@@ -203,8 +203,7 @@ L["Toggle D.R.I.V.E. UI"] = "고.속.주.행 UI 전환"
 --[[Translation missing --]]
 L["Toggle the %s UI to view and adjust talents."] = "Toggle the %s UI to view and adjust talents."
 L["Toggle the DRIVE UI to view and adjust upgrades."] = "업그레이드를 보고 조정하려면 고.속.주.행 UI를 전환하세요."
---[[Translation missing --]]
-L["Toggle UI"] = "Toggle UI"
+L["Toggle UI"] = "UI 전환"
 L["Toggles for the Professions Tooltips."] = "직업 툴팁을 전환합니다."
 L["Toggles for the Talent Tooltips."] = "특성 툴팁을 전환합니다."
 L["Tooltip IDs"] = "툴팁 ID"

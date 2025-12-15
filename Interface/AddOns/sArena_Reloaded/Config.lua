@@ -63,133 +63,27 @@ local function validateCombat()
 end
 
 local growthValues = { "Down", "Up", "Right", "Left" }
-local drCategories
-local racialCategories
-local dispelCategories
-local drIcons
-local drCategorieslist
+local drIcons = sArenaMixin.defaultSettings.profile.drIcons or {}
 
-if isRetail then
-
-    racialCategories = {}
-    for raceKey, data in pairs(sArenaMixin.racialData or {}) do
-        local name = raceKey
-        local texture = data and data.texture
-        if texture then
-            if type(texture) == "string" then
-                racialCategories[raceKey] = "|T" .. texture .. ":16|t " .. name
-            else
-                racialCategories[raceKey] = "|T" .. tostring(texture) .. ":16|t " .. name
-            end
-        else
-            racialCategories[raceKey] = name
-        end
-    end
-
-    -- Load dispel categories from dispelData
-    dispelCategories = {}
-    for spellID, data in pairs(sArenaMixin.dispelData or {}) do
-        dispelCategories[spellID] = "|T" .. data.texture .. ":16|t " .. data.name .. " (" .. data.classes .. ")"
-    end
-
-    drIcons = {
-        ["Stun"] = 132298,
-        ["Incapacitate"] = 136071,
-        ["Disorient"] = 136183,
-        ["Silence"] = 458230,
-        ["Root"] = 136100,
-        ["Knock"] = 237589,
-        ["Disarm"] = 132343,
-    }
-
-    drCategories = {}
-    for category, tex in pairs(drIcons) do
-        drCategories[category] = "|T" .. tostring(tex) .. ":16|t " .. category
-    end
-    drCategorieslist = {
-        "Incapacitate",
-        "Stun",
-        "Root",
-        "Disarm",
-        "Disorient",
-        "Silence",
-        "Knock",
-    }
-else
-    drCategories = {
-        ["Incapacitate"] = "Incapacitate",
-        ["Stun"] = "Stun",
-        ["Root"] = "Root",
-        ["Fear"] = "Fear",
-        ["Silence"] = "Silence",
-        ["Disarm"] = "Disarm",
-        ["Disorient"] = "Disorient",
-        ["Horror"] = "Horror",
-        ["Cyclone"] = "Cyclone",
-        ["MindControl"] = "MindControl",
-        ["RandomStun"] = "RandomStun",
-        ["RandomRoot"] = "RandomRoot",
-        ["Charge"] = "Charge",
-    }
-
-    racialCategories = {}
-    for raceKey, data in pairs(sArenaMixin.racialData or {}) do
-        local name = raceKey
-        local texture = data and data.texture
-        if texture then
-            if type(texture) == "string" then
-                racialCategories[raceKey] = "|T" .. texture .. ":16|t " .. name
-            else
-                racialCategories[raceKey] = "|T" .. tostring(texture) .. ":16|t " .. name
-            end
-        else
-            racialCategories[raceKey] = name
-        end
-    end
-
-    -- Load dispel categories from dispelData  
-    dispelCategories = {}
-    for spellID, data in pairs(sArenaMixin.dispelData or {}) do
-        dispelCategories[spellID] = "|T" .. (data.texture or "134400") .. ":16|t " .. data.name .. " (" .. data.classes .. ")"
-    end
-
-    drIcons = {
-        ["Incapacitate"] = 136071,
-        ["Stun"] = 132298,
-        ["RandomStun"] = 133477,
-        ["RandomRoot"] = 135852,
-        ["Root"] = 135848,
-        ["Disarm"] = 132343,
-        ["Fear"] = 136183,
-        ["Disorient"] = 134153,
-        ["Silence"] = 458230,
-        ["Horror"] = 237568,
-        ["MindControl"] = 136206,
-        ["Cyclone"] = 136022,
-        ["Charge"] = 132337,
-    }
-
-    drCategories = {}
-    for category, tex in pairs(drIcons) do
-        drCategories[category] = "|T" .. tostring(tex) .. ":16|t " .. category
-    end
-    drCategorieslist = {
-        "Incapacitate",
-        "Stun",
-        "RandomStun",
-        "RandomRoot",
-        "Root",
-        "Disarm",
-        "Fear",
-        "Disorient",
-        "Silence",
-        "Horror",
-        "MindControl",
-        "Cyclone",
-        "Charge",
-    }
+local drCategoryDisplay = {}
+for category, tex in pairs(drIcons) do
+    drCategoryDisplay[category] = "|T" .. tostring(tex) .. ":16|t " .. category
 end
 
+local racialCategories = {}
+for raceKey, data in pairs(sArenaMixin.racialData or {}) do
+    local name = raceKey
+    local texture = data and data.texture
+    if texture then
+        if type(texture) == "string" then
+            racialCategories[raceKey] = "|T" .. texture .. ":16|t " .. name
+        else
+            racialCategories[raceKey] = "|T" .. tostring(texture) .. ":16|t " .. name
+        end
+    else
+        racialCategories[raceKey] = name
+    end
+end
 
 local function StatusbarValues()
     local t, keys = {}, {}
@@ -304,6 +198,59 @@ function sArenaMixin:GetLayoutOptionsTable(layoutName)
                             end,
                             width = "75%",
                         },
+                        bgTexture = {
+                            order         = 4,
+                            type          = "select",
+                            name          = "Background Texture",
+                            desc          = "Texture for the health/power bar underlays.",
+                            style         = "dropdown",
+                            dialogControl = "LSM30_Statusbar",
+                            values        = StatusbarValues,
+                            get           = function(info)
+                                local layout = info.handler.db.profile.layoutSettings[layoutName]
+                                local t = layout.textures
+                                return (t and t.bgTexture) or "Solid"
+                            end,
+                            set           = function(info, key)
+                                local layout = info.handler.db.profile.layoutSettings[layoutName]
+                                layout.textures = layout.textures or {
+                                    generalStatusBarTexture = "sArena Default",
+                                    healStatusBarTexture    = "sArena Default",
+                                    castbarStatusBarTexture = "sArena Default",
+                                    castbarUninterruptibleTexture = "sArena Default",
+                                    bgTexture = "Solid",
+                                }
+                                layout.textures.bgTexture = key
+                                info.handler:UpdateTextures()
+                            end,
+                            width = "75%",
+                        },
+                        bgColor = {
+                            order = 5,
+                            type  = "color",
+                            name  = "Background Color",
+                            desc  = "Color for the health/power bar underlays.",
+                            hasAlpha = true,
+                            get   = function(info)
+                                local layout = info.handler.db.profile.layoutSettings[layoutName]
+                                local c = layout.textures and layout.textures.bgColor or {0, 0, 0, 0.6}
+                                return c[1], c[2], c[3], c[4]
+                            end,
+                            set   = function(info, r, g, b, a)
+                                local layout = info.handler.db.profile.layoutSettings[layoutName]
+                                layout.textures = layout.textures or {
+                                    generalStatusBarTexture = "sArena Default",
+                                    healStatusBarTexture    = "sArena Default",
+                                    castbarStatusBarTexture = "sArena Default",
+                                    castbarUninterruptibleTexture = "sArena Default",
+                                    bgTexture = "Solid",
+                                    bgColor = {0, 0, 0, 0.6},
+                                }
+                                layout.textures.bgColor = {r, g, b, a}
+                                info.handler:UpdateTextures()
+                            end,
+                            width = 1.5,
+                        },
                     },
                 },
                 other = {
@@ -317,6 +264,13 @@ function sArenaMixin:GetLayoutOptionsTable(layoutName)
                             type  = "toggle",
                             name  = "Replace Class Icon",
                             desc  = "Replace the class icon with spec icon instead and hide the little \"spec icon button\"",
+                            get   = getSetting,
+                            set   = setSetting,
+                        },
+                        showSpecManaText = {
+                            order = 3,
+                            type  = "toggle",
+                            name  = "Spec Text on Manabar",
                             get   = getSetting,
                             set   = setSetting,
                         },
@@ -1385,7 +1339,7 @@ function sArenaMixin:GetLayoutOptionsTable(layoutName)
         Knock        = 7,
     }
 
-    for categoryKey, categoryName in pairs(drCategories) do
+    for categoryKey, categoryName in pairs(drCategoryDisplay) do
         optionsTable.dr.args.drCategorySizing.args[categoryKey] = {
             order = drCategoryOrder[categoryKey],
             name = categoryName,
@@ -2406,6 +2360,122 @@ function sArenaMixin:GetLayoutOptionsTable(layoutName)
                     },
                 },
             },
+            drText = {
+                order = 5,
+                name = "DR Text",
+                type = "group",
+                inline = true,
+                args = {
+                    drTextAnchor = {
+                        order = 1,
+                        name = "Anchor Point",
+                        type = "select",
+                        style = "dropdown",
+                        width = 0.5,
+                        values = {
+                            ["TOPLEFT"] = "TopLeft",
+                            ["TOP"] = "Top",
+                            ["TOPRIGHT"] = "TopRight",
+                            ["LEFT"] = "Left",
+                            ["CENTER"] = "Center",
+                            ["RIGHT"] = "Right",
+                            ["BOTTOMLEFT"] = "BotLeft",
+                            ["BOTTOM"] = "Bottom",
+                            ["BOTTOMRIGHT"] = "BotRight",
+                        },
+                        get = function(info)
+                            local layout = info.handler.db.profile.layoutSettings[layoutName]
+                            layout.textSettings = layout.textSettings or {}
+                            return layout.textSettings.drTextAnchor or "BOTTOMRIGHT"
+                        end,
+                        set = function(info, val)
+                            local layout = info.handler.db.profile.layoutSettings[layoutName]
+                            layout.textSettings = layout.textSettings or {}
+                            layout.textSettings.drTextAnchor = val
+                            sArenaMixin:UpdateDRTextPositions(layout.textSettings, info, val)
+                        end,
+                    },
+                    drTextSize = {
+                        order = 2,
+                        name = "Scale",
+                        type = "range",
+                        min = 0.5,
+                        max = 3,
+                        step = 0.01,
+                        width = 0.8,
+                        isPercent = true,
+                        get = function(info)
+                            local layout = info.handler.db.profile.layoutSettings[layoutName]
+                            layout.textSettings = layout.textSettings or {}
+                            return layout.textSettings.drTextSize or 1.0
+                        end,
+                        set = function(info, val)
+                            local layout = info.handler.db.profile.layoutSettings[layoutName]
+                            layout.textSettings = layout.textSettings or {}
+                            layout.textSettings.drTextSize = val
+                            sArenaMixin:UpdateDRTextPositions(layout.textSettings, info, val)
+                        end,
+                    },
+                    drTextOffsetX = {
+                        order = 3,
+                        name = "Horizontal",
+                        type = "range",
+                        softMin = -50,
+                        softMax = 50,
+                        step = 0.5,
+                        width = 0.8,
+                        get = function(info)
+                            local layout = info.handler.db.profile.layoutSettings[layoutName]
+                            layout.textSettings = layout.textSettings or {}
+                            return layout.textSettings.drTextOffsetX or 4
+                        end,
+                        set = function(info, val)
+                            local layout = info.handler.db.profile.layoutSettings[layoutName]
+                            layout.textSettings = layout.textSettings or {}
+                            layout.textSettings.drTextOffsetX = val
+                            sArenaMixin:UpdateDRTextPositions(layout.textSettings, info, val)
+                        end,
+                    },
+                    drTextOffsetY = {
+                        order = 4,
+                        name = "Vertical",
+                        type = "range",
+                        softMin = -50,
+                        softMax = 50,
+                        step = 0.5,
+                        width = 0.8,
+                        get = function(info)
+                            local layout = info.handler.db.profile.layoutSettings[layoutName]
+                            layout.textSettings = layout.textSettings or {}
+                            return layout.textSettings.drTextOffsetY or -4
+                        end,
+                        set = function(info, val)
+                            local layout = info.handler.db.profile.layoutSettings[layoutName]
+                            layout.textSettings = layout.textSettings or {}
+                            layout.textSettings.drTextOffsetY = val
+                            sArenaMixin:UpdateDRTextPositions(layout.textSettings, info, val)
+                        end,
+                    },
+                    resetDRText = {
+                        order = 5,
+                        name = "Reset",
+                        width = 0.4,
+                        type = "execute",
+                        func = function(info)
+                            local layout = info.handler.db.profile.layoutSettings[layoutName]
+                            local currentLayout = info.handler.layouts[layoutName]
+                            local defaults = currentLayout.defaultSettings.textSettings
+                            layout.textSettings = layout.textSettings or {}
+                            layout.textSettings.drTextAnchor = defaults.drTextAnchor or "BOTTOMRIGHT"
+                            layout.textSettings.drTextSize = defaults.drTextSize or 1.0
+                            layout.textSettings.drTextOffsetX = defaults.drTextOffsetX or 4
+                            layout.textSettings.drTextOffsetY = defaults.drTextOffsetY or -4
+                            sArenaMixin:UpdateDRTextPositions(layout.textSettings, info, nil)
+                            LibStub("AceConfigRegistry-3.0"):NotifyChange("sArena")
+                        end,
+                    },
+                },
+            },
         },
     }
 
@@ -2425,14 +2495,14 @@ function sArenaMixin:UpdateFrameSettings(db, info, val)
     local spacing = db.spacing
 
     for i = 1, sArenaMixin.maxArenaOpponents do
-        local text = self["arena" .. i].ClassIconCooldown.Text
+        local text = self["arena" .. i].ClassIcon.Cooldown.Text
         local layoutCF = (self.layoutdb and self.layoutdb.changeFont)
         local fontToUse = text.fontFile
         if layoutCF then
             fontToUse = LSM:Fetch(LSM.MediaType.FONT, self.layoutdb.cdFont)
         end
         text:SetFont(fontToUse, db.classIconFontSize, "OUTLINE")
-        local sArenaText = self["arena" .. i].ClassIconCooldown.sArenaText
+        local sArenaText = self["arena" .. i].ClassIcon.Cooldown.sArenaText
         if sArenaText then
             sArenaText:SetFont(fontToUse, db.classIconFontSize, "OUTLINE")
         end
@@ -2800,15 +2870,28 @@ function sArenaMixin:InitializeDRFrames()
                     drFrame.DRTextFrame:SetFrameStrata("MEDIUM")
                     drFrame.DRTextFrame:SetFrameLevel(26)
 
+                    local textSettings = layoutdb.textSettings or {}
+                    local drTextAnchor = textSettings.drTextAnchor or "BOTTOMRIGHT"
+                    local drTextSize = textSettings.drTextSize or 1.0
+                    local drTextOffsetX = textSettings.drTextOffsetX or 4
+                    local drTextOffsetY = textSettings.drTextOffsetY or -4
+
                     drFrame.DRText = drFrame.DRTextFrame:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
-                    drFrame.DRText:SetPoint("BOTTOMRIGHT", 4, -4)
+                    drFrame.DRText:SetPoint(drTextAnchor, drTextOffsetX, drTextOffsetY)
                     drFrame.DRText:SetFont("Interface\\AddOns\\sArena_MoP\\Textures\\arialn.ttf", 14, "OUTLINE")
+                    drFrame.DRText:SetScale(drTextSize)
                     drFrame.DRText:SetTextColor(0, 1, 0)
                     drFrame.DRText:SetText("½")
 
+                    hooksecurefunc(drFrame.ImmunityIndicator, "SetShown", function(self, SetShown)
+                        drFrame.Border:SetAlphaFromBoolean(SetShown, 0, 1)
+                        drFrame.DRText:SetAlphaFromBoolean(SetShown, 0, 1)
+                    end)
+
                     drFrame.DRText2 = drFrame.DRTextFrame:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
-                    drFrame.DRText2:SetPoint("BOTTOMRIGHT", 4, -4)
+                    drFrame.DRText2:SetPoint(drTextAnchor, drTextOffsetX, drTextOffsetY)
                     drFrame.DRText2:SetFont("Interface\\AddOns\\sArena_MoP\\Textures\\arialn.ttf", 14, "OUTLINE")
+                    drFrame.DRText2:SetScale(drTextSize)
                     drFrame.DRText2:SetTextColor(1, 0, 0)
                     drFrame.DRText2:SetText("%")
                     drFrame.DRText2:SetParent(drFrame.ImmunityIndicator)
@@ -2859,6 +2942,10 @@ function sArenaMixin:UpdateDRSettings(db, info, val)
     -- For Midnight: full DR settings support with new frame structure
     if sArenaMixin.isMidnight then
         sArenaMixin.drBaseSize = db.size or 28
+        local currentLayout = self.db and self.db.profile and self.db.profile.currentLayout
+        local layoutSettings = self.db and self.db.profile and self.db.profile.layoutSettings and self.db.profile.layoutSettings[currentLayout]
+        local cropIcons = layoutSettings and layoutSettings.cropIcons or false
+        
         for i = 1, sArenaMixin.maxArenaOpponents do
             local frame = self["arena" .. i]
             -- Handle DR swipe settings (global setting) - defined here for both real and fake frames
@@ -2945,6 +3032,7 @@ function sArenaMixin:UpdateDRSettings(db, info, val)
                                 drFrame.Cooldown:SetDrawSwipe(false)
                                 drFrame.Cooldown:SetDrawEdge(false)
                             else
+                                drFrame.Cooldown:SetSwipeColor(0, 0, 0, 0.55)
                                 drFrame.Cooldown:SetDrawSwipe(true)
                                 drFrame.Cooldown:SetDrawEdge(not disableSwipeEdge)
                             end
@@ -2983,7 +3071,11 @@ function sArenaMixin:UpdateDRSettings(db, info, val)
                                 drFrame.PixelBorderImmune:Hide()
                             end
                             if drFrame.Icon then
-                                drFrame.Icon:SetTexCoord(0.08, 0.92, 0.08, 0.92)
+                                if cropIcons then
+                                    drFrame.Icon:SetTexCoord(0.08, 0.92, 0.08, 0.92)
+                                else
+                                    drFrame.Icon:SetTexCoord(0, 1, 0, 1)
+                                end
                             end
                             if drFrame.Cooldown then
                                 drFrame.Cooldown:SetSwipeTexture(1)
@@ -3264,7 +3356,11 @@ function sArenaMixin:UpdateDRSettings(db, info, val)
                                 fakeDRFrame.PixelBorder:Hide()
                             end
                             if fakeDRFrame.Icon then
-                                fakeDRFrame.Icon:SetTexCoord(0.08, 0.92, 0.08, 0.92)
+                                if cropIcons then
+                                    fakeDRFrame.Icon:SetTexCoord(0.08, 0.92, 0.08, 0.92)
+                                else
+                                    fakeDRFrame.Icon:SetTexCoord(0, 1, 0, 1)
+                                end
                             end
                             if fakeDRFrame.Cooldown then
                                 fakeDRFrame.Cooldown:SetSwipeTexture(1)
@@ -3432,11 +3528,18 @@ function sArenaMixin:UpdateDRSettings(db, info, val)
                 end
             end
         end
+        
+        local currentLayout = self.db and self.db.profile and self.db.profile.currentLayout
+        local layoutSettings = self.db and self.db.profile and self.db.profile.layoutSettings and self.db.profile.layoutSettings[currentLayout]
+        if layoutSettings and layoutSettings.textSettings then
+            self:UpdateDRTextPositions(layoutSettings.textSettings)
+        end
+        
         return
     end
 
     -- Legacy system for non-Midnight
-    local categories = drCategorieslist
+    local categories = sArenaMixin.drCategories
     local categorySizeOffsets = db.drCategorySizeOffsets or {}
 
     sArenaMixin.drBaseSize = db.size
@@ -3461,9 +3564,11 @@ function sArenaMixin:UpdateDRSettings(db, info, val)
             local borderSize = (db.drBorderGlowOff and 1.5) or (db.brightDRBorder and 1) or db.borderSize or 1
             local size = db.size + offset
 
+            dr:SetFrameLevel(20)
             dr:SetSize(size, size)
             dr.Border:SetPoint("TOPLEFT", dr, "TOPLEFT", -borderSize, borderSize)
             dr.Border:SetPoint("BOTTOMRIGHT", dr, "BOTTOMRIGHT", borderSize, -borderSize)
+            dr.Cooldown:SetSwipeColor(0, 0, 0, 0.55)
 
             local text = dr.Cooldown.Text
             local layoutCF = (self.layoutdb and self.layoutdb.changeFont)
@@ -3519,6 +3624,11 @@ function sArenaMixin:UpdateDRSettings(db, info, val)
                 dr.Border:Hide()
                 if dr.PixelBorder then
                     dr.PixelBorder:Hide()
+                end
+                if cropIcons then
+                    dr.Icon:SetTexCoord(0.08, 0.92, 0.08, 0.92)
+                else
+                    dr.Icon:SetTexCoord(0, 1, 0, 1)
                 end
             elseif db.thinPixelBorder then
                 dr.Border:Show()
@@ -3584,12 +3694,18 @@ function sArenaMixin:UpdateDRSettings(db, info, val)
                 if not dr.Boverlay then
                     dr.Boverlay = CreateFrame("Frame", nil, dr)
                     dr.Boverlay:SetFrameStrata("MEDIUM")
-                    dr.Boverlay:SetFrameLevel(6)
+                    dr.Boverlay:SetFrameLevel(26)
                 end
                 dr.Boverlay:Show()
                 dr.Border:SetParent(dr.Boverlay)
             end
         end
+    end
+
+    local currentLayout = self.db and self.db.profile and self.db.profile.currentLayout
+    local layoutSettings = self.db and self.db.profile and self.db.profile.layoutSettings and self.db.profile.layoutSettings[currentLayout]
+    if layoutSettings and layoutSettings.textSettings then
+        self:UpdateDRTextPositions(layoutSettings.textSettings)
     end
 end
 
@@ -3686,6 +3802,63 @@ function sArenaMixin:UpdateTextPositions(db, info, val)
     end
 end
 
+function sArenaMixin:UpdateDRTextPositions(db, info, val)
+    if (val) then
+        db[info[#info]] = val
+    end
+
+    for i = 1, sArenaMixin.maxArenaOpponents do
+        local frame = info and info.handler["arena" .. i] or self["arena" .. i]
+        if not frame then return end
+        
+        -- Update real DR frames for Midnight
+        if sArenaMixin.isMidnight and frame.drFrames then
+            for drIndex, drFrame in ipairs(frame.drFrames) do
+                if drFrame and drFrame.DRText then
+                    drFrame.DRText:ClearAllPoints()
+                    drFrame.DRText:SetPoint(db.drTextAnchor or "BOTTOMRIGHT", 
+                        (db.drTextOffsetX or 4), 
+                        (db.drTextOffsetY or -4))
+                    drFrame.DRText:SetScale(db.drTextSize or 1.0)
+                end
+                if drFrame and drFrame.DRText2 then
+                    drFrame.DRText2:ClearAllPoints()
+                    drFrame.DRText2:SetPoint("CENTER", drFrame.DRText, "CENTER", 0, 0)
+                    drFrame.DRText2:SetScale(db.drTextSize or 1.0)
+                end
+            end
+        end
+        
+        -- Update Retail DR frames (non-Midnight)
+        if not sArenaMixin.isMidnight then
+            for _, category in ipairs(sArenaMixin.drCategories) do
+                local drFrame = frame[category]
+                if drFrame and drFrame.DRTextFrame and drFrame.DRTextFrame.DRText then
+                    local drText = drFrame.DRTextFrame.DRText
+                    drText:ClearAllPoints()
+                    drText:SetPoint(db.drTextAnchor or "BOTTOMRIGHT", 
+                        (db.drTextOffsetX or 4), 
+                        (db.drTextOffsetY or -4))
+                    drText:SetScale(db.drTextSize or 1.0)
+                end
+            end
+        end
+        
+        -- Update fake DR frames (test mode)
+        if frame.fakeDRFrames then
+            for drIndex, fakeDRFrame in ipairs(frame.fakeDRFrames) do
+                if fakeDRFrame and fakeDRFrame.DRText then
+                    fakeDRFrame.DRText:ClearAllPoints()
+                    fakeDRFrame.DRText:SetPoint(db.drTextAnchor or "BOTTOMRIGHT", 
+                        (db.drTextOffsetX or 4), 
+                        (db.drTextOffsetY or -4))
+                    fakeDRFrame.DRText:SetScale(db.drTextSize or 1.0)
+                end
+            end
+        end
+    end
+end
+
 function sArenaMixin:UpdateWidgetSettings(db, info, val)
     if info and val ~= nil then
         db[info[#info]] = val
@@ -3724,7 +3897,7 @@ end
 function sArenaFrameMixin:UpdateClassIconCooldownReverse()
     local reverse = self.parent.db.profile.invertClassIconCooldown
 
-    self.ClassIconCooldown:SetReverse(reverse)
+    self.ClassIcon.Cooldown:SetReverse(reverse)
 end
 
 function sArenaFrameMixin:UpdateTrinketRacialCooldownReverse()
@@ -3738,13 +3911,13 @@ function sArenaFrameMixin:UpdateClassIconSwipeSettings()
     local disableSwipe = self.parent.db.profile.disableClassIconSwipe
     local disableSwipeEdge = self.parent.db.profile.disableSwipeEdge
 
-    if self.ClassIconCooldown then
+    if self.ClassIcon.Cooldown then
         if disableSwipe then
-            self.ClassIconCooldown:SetDrawSwipe(false)
-            self.ClassIconCooldown:SetDrawEdge(false)
+            self.ClassIcon.Cooldown:SetDrawSwipe(false)
+            self.ClassIcon.Cooldown:SetDrawEdge(false)
         else
-            self.ClassIconCooldown:SetDrawSwipe(true)
-            self.ClassIconCooldown:SetDrawEdge(not disableSwipeEdge)
+            self.ClassIcon.Cooldown:SetDrawSwipe(true)
+            self.ClassIcon.Cooldown:SetDrawEdge(not disableSwipeEdge)
         end
     end
 end
@@ -3777,7 +3950,7 @@ end
 function sArenaFrameMixin:UpdateSwipeEdgeSettings()
     local disableEdge = self.parent.db.profile.disableSwipeEdge
 
-    self.ClassIconCooldown:SetDrawEdge(not disableEdge)
+    self.ClassIcon.Cooldown:SetDrawEdge(not disableEdge)
     self.Trinket.Cooldown:SetDrawEdge(not disableEdge)
     self.Racial.Cooldown:SetDrawEdge(not disableEdge)
 end
@@ -3930,6 +4103,7 @@ function sArenaMixin:CompatibilityIssueExists()
     local otherSArenaVersions = {
         "sArena", -- Original
         "sArena Updated",
+        "sArena_MoP",
         "sArena_Pinaclonada",
         "sArena_Updated2_by_sammers",
     }
@@ -4407,12 +4581,12 @@ else
                                             info.handler.db.profile.hideClassIcon = val
                                             for i = 1, sArenaMixin.maxArenaOpponents do
                                                 if val then
-                                                    info.handler["arena" .. i].ClassIcon:SetTexture(nil)
+                                                    info.handler["arena" .. i].ClassIcon.Texture:SetTexture(nil)
                                                 else
                                                     if info.handler["arena" .. i].replaceClassIcon then
-                                                        info.handler["arena" .. i].ClassIcon:SetTexture(info.handler["arena" .. i].tempSpecIcon)
+                                                        info.handler["arena" .. i].ClassIcon.Texture:SetTexture(info.handler["arena" .. i].tempSpecIcon)
                                                     else
-                                                        info.handler["arena" .. i].ClassIcon:SetTexture(info.handler.classIcons[info.handler["arena" .. i].tempClass])
+                                                        info.handler["arena" .. i].ClassIcon.Texture:SetTexture(info.handler.classIcons[info.handler["arena" .. i].tempClass])
                                                     end
                                                 end
                                             end
@@ -4681,6 +4855,17 @@ else
                                             info.handler.db.profile.desaturateDispelCD = val
                                         end
                                     },
+                                    disableOvershields = {
+                                        order = 2.3,
+                                        name = "Disable Overshields",
+                                        desc = "Disable absorbs showing backwards onto healthbar when absorbs exceeds max hp",
+                                        type = "toggle",
+                                        width = "full",
+                                        get = function(info) return info.handler.db.profile.disableOvershields end,
+                                        set = function(info, val)
+                                            info.handler.db.profile.disableOvershields = val
+                                        end
+                                    },
                                 },
                             },
                         },
@@ -4858,7 +5043,7 @@ else
                                                 db.profile.drCategories[key] = val
                                             end
                                         end,
-                                        values = drCategories,
+                                        values = drCategoryDisplay,
                                     },
                                 },
                             },
@@ -5094,7 +5279,7 @@ else
 
                                     args["healer_dispels"].args["spell_" .. spellID] = {
                                         order = healerOrder,
-                                        name = "|T" .. data.texture .. ":16|t " .. data.name,
+                                        name = "|T" .. (data.texture or "") .. ":16|t " .. data.name,
                                         type = "toggle",
                                         disabled = function(info) return not info.handler.db.profile.showDispels end,
                                         get = function(info) return info.handler.db.profile.dispelCategories[settingKey] end,

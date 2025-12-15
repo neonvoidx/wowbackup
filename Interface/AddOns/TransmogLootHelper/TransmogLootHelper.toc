@@ -1,11 +1,11 @@
-## Interface: 110205
+## Interface: 120000
 ## Title: |cffC69B6DTransmog Loot Helper|r
 ## Author: Slackluster
 ## IconTexture: Interface\AddOns\TransmogLootHelper\assets\tlh_icon.blp
 ## AddonCompartmentFunc: TransmogLootHelper_Click
 ## AddonCompartmentFuncOnEnter: TransmogLootHelper_Enter
 ## AddonCompartmentFuncOnLeave: TransmogLootHelper_Leave
-## Version: v11.2.5-008
+## Version: v11.2.7-010
 ## X-Curse-Project-ID: 1033752
 ## X-Wago-ID: EGPXOkG1
 

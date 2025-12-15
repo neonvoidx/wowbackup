@@ -1,6 +1,8 @@
 --- @class TTT_NS
 local TTT = select(2, ...);
 
+local StripHyperlinks = C_StringUtil and C_StringUtil.StripHyperlinks or StripHyperlinks;
+
 local Main = TTT.Main;
 local Util = TTT.Util;
 local L = TTT.L;
@@ -39,7 +41,7 @@ local IS_LEMIX;
 
 local GetSpellLink = C_Spell.GetSpellLink;
 
---- @class TTT_GenericTalentModule: TTT_Module, AceEvent-3.0
+--- @class TTT_GenericTalentModule: NumyConfig_Module, AceEvent-3.0
 local Module = Main:NewModule('Skyriding Auto Purchaser', 'AceEvent-3.0');
 -- don't rename the module, the settings etc are stored there
 
@@ -141,7 +143,7 @@ function Module:GetDescription()
     return text;
 end
 
---- @param configBuilder TTT_ConfigBuilder
+--- @param configBuilder NumyConfigBuilder
 --- @param db TTT_GenericTalentModuleDB
 function Module:BuildConfig(configBuilder, db)
     self.db = db;
@@ -404,8 +406,7 @@ function Module:TRAIT_TREE_CURRENCY_INFO_UPDATED(_, treeID)
     end
 end
 
-function Module:GetCurrencyInfo(treeID)
-    local configID = C_Traits.GetConfigIDByTreeID(treeID);
+function Module:GetCurrencyInfo(treeID, configID)
     local excludeStagedChanges = true;
     local currencyInfo = C_Traits.GetTreeCurrencyInfo(configID, treeID, excludeStagedChanges);
 
@@ -528,7 +529,7 @@ function Module:DoPurchase(configID, treeID, ignoredNodeIDs, delayPurchases, onS
 
     if C_Traits.ConfigHasStagedChanges(configID) then return; end
 
-    local currencyInfo = self:GetCurrencyInfo(treeID);
+    local currencyInfo = self:GetCurrencyInfo(treeID, configID);
     if
         not currencyInfo or
         not currencyInfo[1] or

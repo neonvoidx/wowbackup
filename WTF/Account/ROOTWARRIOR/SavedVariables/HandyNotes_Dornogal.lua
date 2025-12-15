@@ -21,21 +21,22 @@ HandyNotes_DornogalDB = {
 ["Smaugchamp - Tichondrius"] = "Default",
 ["Thickshape - Mal'Ganis"] = "Thickshape - Mal'Ganis",
 ["Kitedbro - Mal'Ganis"] = "Kitedbro - Mal'Ganis",
+["Neonvoid - Tichondrius"] = "Default",
 ["Mäñýfäçëð - Mal'Ganis"] = "Default",
 ["Hellavator - Mal'Ganis"] = "Hellavator - Mal'Ganis",
 ["Charizhard - Mal'Ganis"] = "Charizhard - Mal'Ganis",
 ["Hellavator - Tichondrius"] = "Default",
-["Gehyo - Tichondrius"] = "Default",
-["Crillessana - Mal'Ganis"] = "Default",
+["Heilsatan - Tichondrius"] = "Default",
+["Edaroseld - Illidan"] = "Default",
 ["Stormclout - Tichondrius"] = "Default",
 ["Reedingo - Mal'Ganis"] = "Default",
-["Neonvoid - Mal'Ganis"] = "Neonvoid - Mal'Ganis",
-["Gehyo - Mal'Ganis"] = "Default",
-["Tampacks - Mal'Ganis"] = "Tampacks - Mal'Ganis",
-["Choppiez - Tichondrius"] = "Default",
 ["Starstypeshi - Tichondrius"] = "Default",
-["Edaroseld - Illidan"] = "Default",
-["Heilsatan - Tichondrius"] = "Default",
+["Choppiez - Tichondrius"] = "Default",
+["Tampacks - Mal'Ganis"] = "Tampacks - Mal'Ganis",
+["Gehyo - Mal'Ganis"] = "Default",
+["Neonvoid - Mal'Ganis"] = "Neonvoid - Mal'Ganis",
+["Crillessana - Mal'Ganis"] = "Default",
+["Gehyo - Tichondrius"] = "Default",
 ["Clevagirl - Mal'Ganis"] = "Default",
 },
 ["profiles"] = {
@@ -45,29 +46,29 @@ HandyNotes_DornogalDB = {
 },
 ["Charizhard - Mal'Ganis"] = {
 },
-["Hellavator - Mal'Ganis"] = {
-["show_onlymytrainers"] = true,
-["picons_vendor"] = true,
-["picons_trainer"] = true,
+["Stormclout - Mal'Ganis"] = {
 },
 ["Auteist - Mal'Ganis"] = {
 ["show_vendor"] = false,
 },
-["Stormclout - Mal'Ganis"] = {
+["Ofpuss - Mal'Ganis"] = {
 },
-["Tampacks - Mal'Ganis"] = {
+["Thickshape - Mal'Ganis"] = {
 },
 ["Default"] = {
 },
 ["Choppiez - Mal'Ganis"] = {
 },
-["Thickshape - Mal'Ganis"] = {
-},
 ["Praisesun - Mal'Ganis"] = {
+},
+["Tampacks - Mal'Ganis"] = {
 },
 ["Kitedbro - Mal'Ganis"] = {
 },
-["Ofpuss - Mal'Ganis"] = {
+["Hellavator - Mal'Ganis"] = {
+["show_onlymytrainers"] = true,
+["picons_vendor"] = true,
+["picons_trainer"] = true,
 },
 },
 }

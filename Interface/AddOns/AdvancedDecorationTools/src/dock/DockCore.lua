@@ -1,0 +1,780 @@
+
+-- 为 GUI（指挥坞）提供所有必需的 API 函数
+
+local ADDON_NAME, ADT = ...
+
+ADT = ADT or {}
+ADT.L = ADT.L or {}
+
+-- 核心 API 模块
+ADT.API = ADT.API or {}
+local API = ADT.API
+
+-- Mixin
+function API.Mixin(object, ...)
+    for i = 1, select('#', ...) do
+        local mixin = select(i, ...)
+        for k, v in pairs(mixin) do
+            object[k] = v
+        end
+    end
+    return object
+end
+
+-- 数学函数
+function API.Round(n)
+    return math.floor((n or 0) + 0.5)
+end
+
+function API.Clamp(value, min, max)
+    if value > max then return max
+    elseif value < min then return min
+    end
+    return value
+end
+
+function API.Saturate(x)
+    if x < 0 then return 0 elseif x > 1 then return 1 else return x end
+end
+
+function API.Lerp(a, b, t)
+    return (1 - t) * a + t * b
+end
+
+-- 纹理锐化控制
+function API.DisableSharpening(obj)
+    if not obj then return end
+    if obj.SetSnapToPixelGrid then pcall(obj.SetSnapToPixelGrid, obj, false) end
+    if obj.SetTexelSnappingBias then pcall(obj.SetTexelSnappingBias, obj, 0) end
+end
+
+-- 字符串处理
+function API.StringTrim(str)
+    if not str or str == "" then return nil end
+    return str:match("^%s*(.-)%s*$")
+end
+
+-- 兼容函数：判断 ToC 版本
+function ADT.IsToCVersionEqualOrNewerThan(target)
+    local _, _, _, toc = GetBuildInfo()
+    toc = tonumber(toc or 0)
+    return toc >= (tonumber(target) or 0)
+end
+
+-- 缓动函数（动画用）
+ADT.EasingFunctions = ADT.EasingFunctions or {}
+function ADT.EasingFunctions.outQuart(t, b, c, d)
+    t = t / d - 1
+    return -c * (t*t*t*t - 1) + b
+end
+function ADT.EasingFunctions.outQuint(t, b, c, d)
+    t = t / d - 1
+    return c * (t*t*t*t*t + 1) + b
+end
+
+-- 物理弹簧（简易、稳定）：x'' = -k(x-target) - c x'
+-- 说明：
+--  - 采用半隐式欧拉积分，帧间 dt 夹紧到 [0, 1/30] 以避免卡顿时的不稳定。
+--  - stiffness(刚度) 与 damping(阻尼) 为可调参数，便于统一动效风格。
+--  - 返回更新后的 x、v；调用方可据此设置 UI 偏移。
+function API.SpringStep(x, v, target, stiffness, damping, dt)
+    stiffness = tonumber(stiffness) or 260
+    damping   = tonumber(damping)   or 28
+    dt = math.min(math.max(dt or 0, 0), 1/30)
+    local a = -stiffness * (x - target) - damping * v
+    v = v + a * dt
+    x = x + v * dt
+    return x, v
+end
+
+-- 创建标准弹簧驱动器
+-- 用法：
+--   local s = API.CreateSpringDriver({x=initial, stiffness=280, damping=30}, function(x)
+--       -- 根据 x 更新 UI 偏移
+--   end)
+--   s:SetTarget(0) / s:SetTarget(200)
+--   s:AttachFrame(frame)  -- 自动注册/卸载 OnUpdate
+function API.CreateSpringDriver(opts, onUpdate)
+    local driver = {}
+    driver.x = (opts and opts.x) or 0
+    driver.v = 0
+    driver.target = (opts and opts.target) or driver.x
+    driver.stiffness = (opts and opts.stiffness) or 280
+    driver.damping = (opts and opts.damping) or 30
+    driver.onUpdate = onUpdate
+
+    function driver:SetTarget(t)
+        self.target = tonumber(t) or 0
+        self:_ensureTick()
+    end
+
+    function driver:_tick(_, elapsed)
+        local nx, nv = API.SpringStep(self.x, self.v, self.target, self.stiffness, self.damping, elapsed)
+        self.x, self.v = nx, nv
+        if self.onUpdate then pcall(self.onUpdate, self.x) end
+        -- 静止阈值：位置<0.5px 且速度很小即停表
+        if math.abs(self.x - self.target) < 0.5 and math.abs(self.v) < 2 then
+            self.x = self.target; self.v = 0
+            if self.onUpdate then pcall(self.onUpdate, self.x) end
+            self:_stopTick()
+        end
+    end
+
+    function driver:_ensureTick()
+        if self.frame and not self.ticking then
+            self.ticking = true
+            self.frame:SetScript("OnUpdate", function(_, e) driver:_tick(_, e) end)
+        end
+    end
+
+    function driver:_stopTick()
+        if self.frame and self.ticking then
+            self.ticking = false
+            self.frame:SetScript("OnUpdate", nil)
+        end
+    end
+
+    function driver:AttachFrame(frame)
+        self.frame = frame
+        if self.ticking then
+            self.frame:SetScript("OnUpdate", function(_, e) driver:_tick(_, e) end)
+        end
+    end
+
+    return driver
+end
+
+-- UI 声音
+ADT.UI = ADT.UI or {}
+-- PlaySoundCue：统一 UI 声音触发接口
+function ADT.UI.PlaySoundCue(key)
+    local kit = SOUNDKIT and SOUNDKIT.IG_MAINMENU_OPTION_CHECKBOX_ON or 1204
+    if key == 'ui.checkbox.off' then
+        kit = SOUNDKIT and SOUNDKIT.IG_MAINMENU_OPTION_CHECKBOX_OFF or 1203
+    elseif key == 'ui.scroll.step' or key == 'ui.scroll.thumb' then
+        kit = SOUNDKIT and SOUNDKIT.IG_MINIMAP_OPEN or 891
+    elseif key == 'ui.tab.switch' then
+        kit = SOUNDKIT and SOUNDKIT.IG_MAINMENU_OPTION or 857
+    end
+    if PlaySound then pcall(PlaySound, kit) end
+end
+
+-- API.CreateObjectPool：重新实现为最简对象池（与参考插件无关的独立实现）
+function API.CreateObjectPool(createFunc, onAcquire, onRelease)
+    local pool = {}
+    local free, used = {}, {}
+
+    local function attachRelease(obj)
+        obj.Release = function(o)
+            for i, v in ipairs(used) do
+                if v == o then
+                    table.remove(used, i)
+                    if onRelease then onRelease(o) end
+                    o:Hide(); o:ClearAllPoints()
+                    free[#free+1] = o
+                    break
+                end
+            end
+        end
+    end
+
+    function pool:Acquire()
+        local obj = table.remove(free)
+        if not obj then obj = createFunc() end
+        used[#used+1] = obj
+        attachRelease(obj)
+        obj:Show()
+        if onAcquire then onAcquire(obj) end
+        return obj
+    end
+
+    function pool:ReleaseAll()
+        if #used == 0 then return end
+        for i = #used, 1, -1 do
+            local obj = used[i]
+            if onRelease then onRelease(obj) end
+            obj:Hide(); obj:ClearAllPoints()
+            free[#free+1] = obj
+            used[i] = nil
+        end
+    end
+
+    function pool:EnumerateActive()
+        return ipairs(used)
+    end
+
+    function pool:CallMethod(method, ...)
+        for _, obj in ipairs(used) do
+            local fn = obj and obj[method]
+            if fn then fn(obj, ...) end
+        end
+    end
+
+    return pool
+end
+
+-- 历史别名说明：不再暴露任何额外别名，统一直接使用 API.CreateObjectPool
+
+-- 已移除自定义九宫格面板代码：统一使用暴雪内置 Atlas 与现有边框贴图即可。
+
+
+
+
+-- Settings 面板最小依赖
+function ADT.AnyShownModuleOptions() return false end
+function ADT.CloseAllModuleOptions() return false end
+
+-- CommandDock 模块注册
+local CommandDock = ADT.CommandDock or {}
+ADT.CommandDock = CommandDock
+
+local L = ADT.L
+
+-- 内部：构建默认模块，并初始化映射
+local function buildModules()
+    local modules = {}
+    local function dbgToggle(dbKey, state)
+        if ADT and ADT.DebugPrint then
+            ADT.DebugPrint(string.format("[Toggle] %s=%s", tostring(dbKey), tostring(state)))
+        end
+    end
+    
+    -- 进入编辑模式自动打开 Dock（控制中心）
+    local moduleEditorAutoOpen = {
+        name = L["Auto Open Dock in Editor"],
+        dbKey = 'EnableDockAutoOpenInEditor',
+        description = L["Auto Open Dock in Editor tooltip"],
+        -- 无需 toggleFunc：改为订阅 ADT.Settings（见 DockUI 绑定）
+        categoryKeys = { 'Housing' },
+        uiOrder = 0,
+    }
+
+    -- 住宅快捷键设置模块（4 个独立开关）
+    local moduleRepeat = {
+        name = L["Enable Duplicate"],
+        dbKey = 'EnableDupe',
+        description = L["Enable Duplicate tooltip"],
+        -- 统一持久化 + 模块订阅，无需 toggleFunc
+        categoryKeys = { 'Housing' },
+        uiOrder = 1,
+    }
+    
+    local moduleCopy = {
+        name = L["Enable Copy"],
+        dbKey = 'EnableCopy',
+        description = L["Enable Copy tooltip"],
+        categoryKeys = { 'Housing' },
+        uiOrder = 2,
+    }
+    
+    local moduleCut = {
+        name = L["Enable Cut"],
+        dbKey = 'EnableCut',
+        description = L["Enable Cut tooltip"],
+        categoryKeys = { 'Housing' },
+        uiOrder = 3,
+    }
+    
+    local modulePaste = {
+        name = L["Enable Paste"],
+        dbKey = 'EnablePaste',
+        description = L["Enable Paste tooltip"],
+        categoryKeys = { 'Housing' },
+        uiOrder = 4,
+    }
+    
+    local moduleBatchPlace = {
+        name = L["Enable Batch Place"],
+        dbKey = 'EnableBatchPlace',
+        description = L["Enable Batch Place tooltip"],
+        categoryKeys = { 'Housing' },
+        uiOrder = 5,
+    }
+
+
+    -- 启用 T 重置默认属性
+    local moduleResetT = {
+        name = L["Enable T Reset"],
+        dbKey = 'EnableResetT',
+        description = L["Enable T Reset tooltip"],
+        categoryKeys = { 'Housing' },
+        uiOrder = 6,
+    }
+
+    -- 启用 Ctrl+T 全部重置
+    local moduleResetAll = {
+        name = L["Enable CTRL+T Reset All"],
+        dbKey = 'EnableResetAll',
+        description = L["Enable CTRL+T Reset All tooltip"],
+        categoryKeys = { 'Housing' },
+        uiOrder = 7,
+    }
+
+    -- 启用 L 锁定/解锁
+    local moduleLock = {
+        name = L["Enable L Lock"],
+        dbKey = 'EnableLock',
+        description = L["Enable L Lock tooltip"],
+        -- 统一由模块端订阅处理
+        categoryKeys = { 'Housing' },
+        uiOrder = 8,
+    }
+
+    -- 启用 Q/E 旋转 90°
+    local moduleQERotate = {
+        name = L["Enable Q/E Rotate"],
+        dbKey = 'EnableQERotate',
+        description = L["Enable Q/E Rotate tooltip"],
+        -- 统一由模块端订阅处理
+        categoryKeys = { 'Housing' },
+        uiOrder = 9,
+    }
+    
+    -- 启用染料复制（自定义模式）
+    local moduleDyeCopy = {
+        name = L["Enable Dye Copy"],
+        dbKey = 'EnableDyeCopy',
+        description = L["Enable Dye Copy tooltip"],
+        categoryKeys = { 'Housing' },
+        uiOrder = 10,
+    }
+    
+    -- 语言选择下拉菜单模块
+    local function buildLanguageOptions()
+        local opts = {
+            { value = nil, text = L["Language Auto"] },
+        }
+        local list = ADT.SupportedLocales
+        if type(list) ~= "table" then return opts end
+        for _, localeKey in ipairs(list) do
+            opts[#opts + 1] = {
+                value = localeKey,
+                text = L["LocaleName " .. localeKey],
+            }
+        end
+        return opts
+    end
+
+    local moduleLanguage = {
+        name = L["Language"],
+        dbKey = 'SelectedLanguage',
+        type = 'dropdown',  -- 下拉菜单类型
+        options = buildLanguageOptions(),
+        description = L["Language Reload Hint"],
+        -- 下拉选择只需写入；应用逻辑由 Settings 订阅统一处理
+        categoryKeys = { 'Housing' },
+        uiOrder = 100,  -- 放在最后
+    }
+
+    modules[1] = {
+        key = 'Housing',
+        categoryName = L['SC Housing'],
+        categoryType = 'settings', -- 设置类分类
+        modules = { moduleEditorAutoOpen, moduleRepeat, moduleCopy, moduleCut, modulePaste, moduleBatchPlace, moduleResetT, moduleResetAll, moduleLock, moduleQERotate, moduleDyeCopy, moduleLanguage },
+        numModules = 12,
+    }
+
+
+    -- 临时板分类（装饰列表类）
+    modules[2] = {
+        key = 'Clipboard',
+        categoryName = L['SC Clipboard'],
+        categoryType = 'decorList', -- 装饰列表类分类
+        modules = {},
+        numModules = 0,
+        -- 获取列表数据的回调
+        getListData = function()
+            if ADT and ADT.Clipboard and ADT.Clipboard.GetAll then
+                return ADT.Clipboard:GetAll() or {}
+            end
+            return {}
+        end,
+        -- 点击装饰项的回调
+        onItemClick = function(decorID, button)
+            if button == 'RightButton' then
+                -- 右键：从列表移除
+                if ADT and ADT.Clipboard then
+                    local list = ADT.Clipboard:GetAll()
+                    for i, item in ipairs(list) do
+                        if item.decorID == decorID then
+                            ADT.Clipboard:RemoveAt(i)
+                            break
+                        end
+                    end
+                end
+            else
+                -- 左键：开始放置
+                if ADT and ADT.Clipboard and ADT.Clipboard.StartPlacing then
+                    ADT.Clipboard:StartPlacing(decorID)
+                end
+            end
+        end,
+        -- 空列表提示
+        emptyText = string.format("%s\n%s", L['Clipboard Empty Line1'], L['Clipboard Empty Line2']),
+    }
+
+    -- 最近放置分类（装饰列表类）
+    modules[3] = {
+        key = 'History',
+        categoryName = L['SC History'],
+        categoryType = 'decorList', -- 装饰列表类分类
+        modules = {},
+        numModules = 0,
+        -- 获取列表数据的回调
+        getListData = function()
+            if ADT and ADT.History and ADT.History.GetAll then
+                return ADT.History:GetAll() or {}
+            end
+            return {}
+        end,
+        -- 点击装饰项的回调
+        onItemClick = function(decorID, button)
+            if button == 'RightButton' then
+                -- 右键：暂不支持从历史移除单项
+                return
+            else
+                -- 左键：开始放置
+                if ADT and ADT.History and ADT.History.StartPlacing then
+                    ADT.History:StartPlacing(decorID)
+                end
+            end
+        end,
+        -- 空列表提示
+        emptyText = string.format("%s\n%s", L['History Empty Line1'], L['History Empty Line2']),
+    }
+
+    -- 染色预设分类（专用预设列表类）
+    modules[4] = {
+        key = 'DyePresets',
+        categoryName = L['SC DyePresets'],
+        categoryType = 'dyePresetList', -- 染色预设专用类型
+        modules = {},
+        numModules = 0,
+        -- 获取预设列表数据
+        getListData = function()
+            if ADT and ADT.DyeClipboard and ADT.DyeClipboard.GetPresets then
+                return ADT.DyeClipboard:GetPresets() or {}
+            end
+            return {}
+        end,
+        -- 点击预设项的回调
+        onItemClick = function(index, button)
+            if button == 'RightButton' then
+                -- 右键：删除预设
+                if ADT and ADT.DyeClipboard and ADT.DyeClipboard.DeletePreset then
+                    ADT.DyeClipboard:DeletePreset(index)
+                end
+            else
+                -- 左键：加载预设到剪贴板
+                if ADT and ADT.DyeClipboard and ADT.DyeClipboard.LoadPreset then
+                    ADT.DyeClipboard:LoadPreset(index)
+                end
+            end
+        end,
+        -- 保存按钮回调
+        onSaveClick = function()
+            if ADT and ADT.DyeClipboard and ADT.DyeClipboard.SavePreset then
+                ADT.DyeClipboard:SavePreset()
+            end
+        end,
+        -- 空列表提示
+        emptyText = string.format("%s\n%s", L['DyePresets Empty Line1'] or "暂无染色预设", L['DyePresets Empty Line2'] or "在自定义模式下 SHIFT+C 复制染色后，点击上方按钮保存"),
+    }
+
+    -- 自动旋转分类（设置类）——需位于“信息”之上
+    modules[5] = {
+        key = 'AutoRotate',
+        categoryName = L['SC AutoRotate'],
+        categoryType = 'settings', -- 设置类分类
+        modules = {},
+        numModules = 0,
+    }
+
+    -- 快捷键分类（设置类）——自定义按键绑定
+    modules[6] = {
+        key = 'Keybinds',
+        categoryName = L['SC Keybinds'],
+        categoryType = 'keybinds', -- 快捷键专用分类类型
+        modules = {},
+        numModules = 0,
+    }
+
+    -- 动作栏分类（设置类）
+    local function buildQuickbarSizeOptions()
+        return {
+            { value = 'large',  text = L['Quickbar Size Large'] },
+            { value = 'medium', text = L['Quickbar Size Medium'] },
+            { value = 'small',  text = L['Quickbar Size Small'] },
+        }
+    end
+    local moduleQuickbarEnable = {
+        name = L['Enable Quickbar'],
+        dbKey = 'EnableQuickbar',
+        description = L['Enable Quickbar tooltip'],
+        categoryKeys = { 'Quickbar' },
+        uiOrder = 0,
+    }
+    local moduleQuickbarSize = {
+        name = L['Quickbar Size'],
+        dbKey = 'QuickbarSize',
+        type = 'dropdown',
+        options = buildQuickbarSizeOptions(),
+        description = L['Quickbar Size tooltip'],
+        categoryKeys = { 'Quickbar' },
+        uiOrder = 1,
+    }
+    modules[7] = {
+        key = 'Quickbar',
+        categoryName = L['SC Quickbar'],
+        categoryType = 'settings',
+        modules = { moduleQuickbarEnable, moduleQuickbarSize },
+        numModules = 2,
+    }
+
+    -- 信息分类（关于插件的信息）
+    modules[8] = {
+        key = 'About',
+        categoryName = L['SC About'],
+        categoryType = 'about', -- 关于信息类分类
+        modules = {},
+        numModules = 0,
+        -- 获取插件信息
+        getInfoText = function()
+            local ver = "未知"
+            if C_AddOns and C_AddOns.GetAddOnMetadata then
+                ver = C_AddOns.GetAddOnMetadata("AdvancedDecorationTools", "Version") or ver
+            elseif GetAddOnMetadata then
+                ver = GetAddOnMetadata("AdvancedDecorationTools", "Version") or ver
+            end
+            -- 文本本地化：除“瑟小瑟”保留中文外，其他均跟随语言表
+            local name = L['Addon Full Name']
+            local versionLabelFmt = L['Version Label']
+            local creditsLabel = L['Credits Label']
+            local biliLabel = L['Bilibili Label']
+            local qqLabel = L['QQ Group Label']
+            -- 不使用空行，避免产生多余分隔符
+            return string.format(
+                "|cffffcc00%s|r\n" ..
+                "|cffaaaaaa" .. versionLabelFmt .. "|r\n" ..
+                "|cffcccccc%s|r\n" ..
+                "|cff00aaff%s|r 瑟小瑟\n" ..
+                "|cff00aaff%s|r 980228474",
+                name,
+                ver,
+                creditsLabel,
+                biliLabel,
+                qqLabel
+            )
+        end,
+    }
+
+    -- 初始化映射（6 个设置模块）
+    CommandDock._dbKeyMap = {
+        [moduleRepeat.dbKey] = moduleRepeat,
+        [moduleCopy.dbKey] = moduleCopy,
+        [moduleCut.dbKey] = moduleCut,
+        [modulePaste.dbKey] = modulePaste,
+        [moduleBatchPlace.dbKey] = moduleBatchPlace,
+        [moduleLanguage.dbKey] = moduleLanguage,
+    }
+    return modules
+end
+
+-- 分类显示名：集中管理，避免散落重复（单一权威）
+local function getCategoryDisplayName(key)
+    if key == 'Housing' then
+        return L['SC Housing']
+    elseif key == 'Clipboard' then
+        return L['SC Clipboard']
+    elseif key == 'History' then
+        return L['SC History']
+    elseif key == 'DyePresets' then
+        return L['SC DyePresets']
+    elseif key == 'AutoRotate' then
+        return L['SC AutoRotate']
+    elseif key == 'Keybinds' then
+        return L['SC Keybinds']
+    elseif key == 'Quickbar' then
+        return L['SC Quickbar']
+    elseif key == 'About' then
+        return L['SC About']
+    end
+    return tostring(key)
+end
+
+local function ensureSorted(self)
+    -- 若未构建，先构建基础模块（语言、剪切板等）
+    if not self._sorted then self._sorted = buildModules() end
+    if not self._dbKeyMap then self._dbKeyMap = {} end
+
+    -- 语言切换会清空 _sorted/_dbKeyMap；为保持“单一权威 + DRY”，
+    -- 通过“模块提供者”在每次 ensureSorted() 时重新注入外部功能模块（如自动旋转）。
+    -- 提供者是一个函数：function(providerCommandDock) ... end
+    if self._moduleProviders and not self._providersApplied then
+        -- 注意：provider 里通常会调用 CommandDock:AddModule，而该函数内部又会
+        -- 调用 ensureSorted()。如果此处在“调用 provider 之后”才设置
+        -- _providersApplied=true，就会导致重入，再次触发 provider 循环，
+        -- 形成递归/堆栈溢出或把 _sorted 状态弄乱，表现为“切到某分类后
+        -- 中央列表为空，且其它分类也无法再渲染”。
+        -- 解决：在进入 provider 循环之前，先将 _providersApplied 置为 true，
+        -- 把本次“应用提供者”的过程视为已开始，从而阻止重入。
+        self._providersApplied = true
+        for _, provider in ipairs(self._moduleProviders) do
+            if type(provider) == 'function' then
+                -- 安全调用，避免某个模块异常导致整体失败
+                pcall(provider, self)
+            end
+        end
+        -- 如需在 provider 失败时重试，可在外部显式调用 RebuildModules()。
+    end
+    -- 语言可能在 Dock 构建后切换；这里每次确保分类名称与当前语言表同步（单一权威）。
+    if self._sorted then
+        for _, cat in ipairs(self._sorted) do
+            cat.categoryName = getCategoryDisplayName(cat.key)
+        end
+    end
+end
+
+function CommandDock:GetSortedModules()
+    ensureSorted(self)
+    return self._sorted
+end
+
+-- 上移到 ensureSorted 之前，避免首次调用时为 nil
+
+local function sortCategory(cat)
+    table.sort(cat.modules, function(a, b)
+        local ao, bo = tonumber(a.uiOrder) or 9999, tonumber(b.uiOrder) or 9999
+        if ao ~= bo then return ao < bo end
+        local at, bt = tonumber(a.moduleAddedTime) or 0, tonumber(b.moduleAddedTime) or 0
+        if at ~= bt then return at > bt end
+        local an, bn = tostring(a.name or ''), tostring(b.name or '')
+        return an < bn
+    end)
+    cat.numModules = #cat.modules
+end
+
+-- 动态注册模块（供各功能文件调用）
+function CommandDock:AddModule(moduleData)
+    if type(moduleData) ~= 'table' then return end
+    ensureSorted(self)
+
+    local dbKey = moduleData.dbKey
+    if dbKey and self._dbKeyMap and self._dbKeyMap[dbKey] then
+        -- 已存在则先从原分类移除，保证单一权威（DRY）
+        for _, cat in ipairs(self._sorted) do
+            for i, m in ipairs(cat.modules) do
+                if m.dbKey == dbKey then
+                    table.remove(cat.modules, i)
+                    sortCategory(cat)
+                    break
+                end
+            end
+        end
+    end
+
+    local catKey = (moduleData.categoryKeys and moduleData.categoryKeys[1]) or 'Misc'
+    local category
+    for _, cat in ipairs(self._sorted) do
+        if cat.key == catKey then category = cat break end
+    end
+    if not category then
+        category = {
+            key = catKey,
+            categoryName = getCategoryDisplayName(catKey),
+            modules = {},
+            numModules = 0,
+        }
+        table.insert(self._sorted, category)
+    end
+
+    table.insert(category.modules, moduleData)
+    sortCategory(category)
+    if dbKey then self._dbKeyMap[dbKey] = moduleData end
+end
+
+-- 注册模块提供者（用于在语言切换等“重建分类”场景下，重新注入外部模块）
+function CommandDock:RegisterModuleProvider(providerFunc)
+    if type(providerFunc) ~= 'function' then return end
+    self._moduleProviders = self._moduleProviders or {}
+    table.insert(self._moduleProviders, providerFunc)
+end
+
+-- 触发重建：供外部在重大状态变更（如语言切换）后调用
+function CommandDock:RebuildModules()
+    self._sorted = nil
+    self._dbKeyMap = nil
+    self._providersApplied = nil
+    -- 下次访问 GetSortedModules() 时会自动重建并重新注入
+end
+
+function CommandDock:GetModule(dbKey)
+    ensureSorted(self)
+    return dbKey and self._dbKeyMap and self._dbKeyMap[dbKey]
+end
+
+function CommandDock:GetModuleCategoryName(dbKey)
+    ensureSorted(self)
+    if not dbKey then return end
+    for _, cat in ipairs(self._sorted) do
+        for _, m in ipairs(cat.modules) do
+            if m.dbKey == dbKey then
+                return cat.categoryName
+            end
+        end
+    end
+end
+
+function CommandDock:UpdateCurrentSortMethod() return 1 end
+function CommandDock:SetCurrentSortMethod(_) end
+function CommandDock:GetNumFilters() return 1 end
+function CommandDock:AnyNewFeatureMarker() return false end
+function CommandDock:FlagCurrentNewFeatureMarkerSeen() end
+
+-- 获取指定 key 的分类信息（包括装饰列表分类）
+function CommandDock:GetCategoryByKey(key)
+    ensureSorted(self)
+    if not key then return nil end
+    for _, cat in ipairs(self._sorted) do
+        if cat.key == key then
+            return cat
+        end
+    end
+    return nil
+end
+
+-- 获取装饰列表分类的列表项数量（用于角标显示）
+function CommandDock:GetDecorListCount(key)
+    local cat = self:GetCategoryByKey(key)
+    if cat and cat.categoryType == 'decorList' and cat.getListData then
+        local list = cat.getListData()
+        return type(list) == 'table' and #list or 0
+    end
+    return 0
+end
+
+function CommandDock:GetSearchResult(text)
+    ensureSorted(self)
+    text = string.lower(tostring(text or ''))
+    if text == '' then return self:GetSortedModules() end
+    local results = {}
+    for _, cat in ipairs(self._sorted) do
+        local matched = { key = cat.key, categoryName = cat.categoryName, modules = {}, numModules = 0 }
+        for _, m in ipairs(cat.modules) do
+            local hay = table.concat({
+                m.name or '',
+                m.description or '',
+                table.concat(m.searchTags or {}, ' '),
+                cat.categoryName or '',
+            }, ' ')
+            if string.find(string.lower(hay), text, 1, true) then
+                table.insert(matched.modules, m)
+            end
+        end
+        if #matched.modules > 0 then
+            matched.numModules = #matched.modules
+            table.insert(results, matched)
+        end
+    end
+    return results
+end

@@ -86,6 +86,7 @@ local rpNamesFirst
 local rpNamesLast
 local rpNamesColor
 local showLastNameNpc
+local classColorPartyNames
 
 local function GetRPNameColor(unit)
     if not UnitExists(unit) then return end
@@ -120,6 +121,7 @@ function BBF.UpdateUserTargetSettings()
     hidePartyNames = BetterBlizzFramesDB.hidePartyNames
     hidePartyRoles = BetterBlizzFramesDB.hidePartyRoles
     removeRealmNames = BetterBlizzFramesDB.removeRealmNames
+    classColorPartyNames = BetterBlizzFramesDB.classColorPartyNames
     classColorFrames = BetterBlizzFramesDB.classColorFrames
     classColorTargetNames = BetterBlizzFramesDB.classColorTargetNames
     showSpecName = BetterBlizzFramesDB.showSpecName
@@ -179,6 +181,9 @@ local function CenterXName(fontObject, healthBar, ToT, pet)
     else
         fontObject:SetPoint(pet and "BOTTOM" or "TOP", healthBar, "TOP", xPos, yPos)
     end
+    if BetterBlizzFramesDB.classicFrames and ToT then
+        fontObject:SetJustifyH("LEFT")
+    end
 end
 
 
@@ -201,6 +206,9 @@ end
 
 local function GetLocalizedSpecs()
     local specs = {}
+
+    local GetNumSpecializationsForClassID = GetNumSpecializationsForClassID or C_SpecializationInfo.GetNumSpecializationsForClassID
+    local GetSpecializationInfoForClassID = GetSpecializationInfoForClassID or C_SpecializationInfo.GetSpecializationInfoForClassID
 
     for classID = 1, GetNumClasses() do
         local _, class = GetClassInfo(classID)
@@ -321,7 +329,7 @@ local ALL_SPECS = GetLocalizedSpecs()
 -- Caching Tables
 BBA.SpecCache = {}
 local SpecCache = BBA.SpecCache  -- Stores GUID -> specID
-local GetUnitTooltip = C_TooltipInfo.GetUnit
+local GetUnitTooltip = C_TooltipInfo and C_TooltipInfo.GetUnit or function() return nil end
 
 -- Function to retrieve the specialization ID of a unit
 local function GetSpecID(unit)
@@ -520,8 +528,21 @@ local function CompactPartyFrameNameChanges(frame)
                 frame.name.recolored = nil
             end
         end
-    elseif removeRealmNames then
+        return
+    end
+    if removeRealmNames then
         frame.name:SetText(GetNameWithoutRealm(frame))
+    end
+    if classColorPartyNames then
+        if frame.unit and (UnitIsPlayer(frame.unit) or C_LFGInfo.IsInLFGFollowerDungeon()) then
+            local _, class = UnitClass(frame.unit)
+            if class then
+                local color = RAID_CLASS_COLORS[class]
+                if color then
+                    frame.name:SetVertexColor(color.r, color.g, color.b)
+                end
+            end
+        end
     end
 end
 
@@ -548,6 +569,17 @@ local function PartyFrameNameChange(frame)
     end
     if not changeUnitFrameFont then
         frame.bbfName:SetFont(frame.Name:GetFont())
+    end
+    if classColorPartyNames then
+        if frame.unit and (UnitIsPlayer(frame.unit) or C_LFGInfo.IsInLFGFollowerDungeon()) then
+            local _, class = UnitClass(frame.unit)
+            if class then
+                local color = RAID_CLASS_COLORS[class]
+                if color then
+                    frame.bbfName:SetVertexColor(color.r, color.g, color.b)
+                end
+            end
+        end
     end
     if partyArenaNames and IsActiveBattlefieldArena() then
         SetArenaName(frame, frame.unit, frame.bbfName)
@@ -584,7 +616,8 @@ if not EditModeManagerFrame:UseRaidStylePartyFrames() then
     }
 
     for _, frame in ipairs(frames) do
-        hooksecurefunc(frame.Name, "SetText", function(self)
+        local name = frame.Name or frame.name
+        hooksecurefunc(name, "SetText", function(self)
             PartyFrameNameChange(frame)
         end)
         C_Timer.After(1, function()
@@ -677,7 +710,7 @@ local function InitializeFontString(frame)
     -- Set initial text from the original FontString
     frame.bbfName:SetText(name:GetText())
     hooksecurefunc(name, "SetText", function()
-        if centerNames or forceCenterNameSetting then
+        if (centerNames or forceCenterNameSetting) and not BetterBlizzFramesDB.classicFrames then
             frame.bbfName:SetJustifyH("CENTER")
         end
         frame.bbfName:SetSize(name:GetSize())
@@ -1753,6 +1786,12 @@ function BBF.AllNameChanges()
         for _, frame in ipairs(frames) do
             PartyFrameNameChange(frame)
             HideRoleIconDefault(frame)
+        end
+    else
+        for i = 1, 5 do
+            local frame = _G["CompactPartyFrameMember" .. i]
+            CompactPartyFrameNameChanges(frame)
+            HideRoleIcon(frame)
         end
     end
 

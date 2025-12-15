@@ -37,23 +37,25 @@ function skin:Apply(color, desaturation)
     end
   end
 
+
   for _ , texture in pairs({
-    MainMenuBar.EndCaps.LeftEndCap,
-    MainMenuBar.BorderArt,
-    MainMenuBar.EndCaps.RightEndCap,
-    ActionButton1.RightDivider,
-    ActionButton2.RightDivider,
-    ActionButton3.RightDivider,
-    ActionButton4.RightDivider,
-    ActionButton5.RightDivider,
-    ActionButton6.RightDivider,
-    ActionButton7.RightDivider,
-    ActionButton8.RightDivider,
-    ActionButton9.RightDivider,
-    ActionButton10.RightDivider,
-    ActionButton11.RightDivider,
+    MainActionBar.EndCaps.LeftEndCap,
+    MainActionBar.BorderArt,
+    MainActionBar.EndCaps.RightEndCap,
   }) do
     table.insert(textures, texture)
+  end
+
+  for _, v in pairs({MainActionBar:GetChildren()}) do
+    if type(v) == "table" and v.Center then
+      for _, region in pairs({
+        "TopEdge",
+        "Center",
+        "BottomEdge",
+      }) do
+        table.insert(textures, v[region])
+      end
+    end
   end
 
   for _, texture in pairs(textures) do
@@ -61,5 +63,3 @@ function skin:Apply(color, desaturation)
     texture:SetVertexColor(color[1], color[2], color[3], color[4])
   end
 end
-
-

@@ -4,7 +4,7 @@ BarrelsOfFunDB = {
 }
 ZorROpenableScanEnabled = false
 BronzeTrackerDB = {
-["isShown"] = true,
+["isShown"] = false,
 ["position"] = {
 ["yOfs"] = 100.0009918212891,
 ["xOfs"] = -283.3287353515625,
@@ -43,7 +43,21 @@ false,
 ["addCount"] = 9,
 },
 }
-HandyNotes_ZamestoTV_RemixDB = nil
 RemixButtonState = {
 ["isShown"] = true,
+}
+ZamestoTV_RemixDB = {
+["profileKeys"] = {
+["Ofpusstwo - Tichondrius"] = "Ofpusstwo - Tichondrius",
+},
+["profiles"] = {
+["Ofpusstwo - Tichondrius"] = {
+},
+},
+}
+KnownFilterDB = {
+["active"] = false,
+}
+KnownFilterDB = {
+["active"] = false,
 }

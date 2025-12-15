@@ -20,18 +20,13 @@ LegionRemixHelperDB = {
 ["246813"] = false,
 ["251821"] = false,
 ["246815"] = false,
-["245553"] = false,
+["246814"] = false,
 ["254847"] = false,
 ["237812"] = false,
-["246814"] = false,
+["245553"] = false,
 },
 ["autoItemOpen"] = false,
 },
-["merchant"] = {
-["hideCollectedPetsAtLimit"] = false,
-["hideCollectedItems"] = false,
-},
-["version"] = "1.6.3",
 ["editMode"] = {
 ["ToastUI"] = {
 ["relativeTo"] = "UIParent",
@@ -41,13 +36,21 @@ LegionRemixHelperDB = {
 ["xOfs"] = 0,
 },
 },
+["version"] = "1.6.4",
+["quest"] = {
+["ignoreEternus"] = false,
+["autoAccept"] = false,
+["suppressWorldTierIcon"] = false,
+["autoTurnIn"] = false,
+["suppressShift"] = false,
+},
 ["toast"] = {
 ["artifact"] = true,
 ["activate"] = true,
 ["upgrade"] = true,
-["sound"] = true,
 ["bronze"] = true,
 ["trait"] = true,
+["sound"] = true,
 },
 ["scrapping"] = {
 ["autoScrap"] = true,
@@ -142,11 +145,8 @@ LegionRemixHelperDB = {
 },
 },
 },
-["quest"] = {
-["ignoreEternus"] = false,
-["autoAccept"] = false,
-["suppressWorldTierIcon"] = false,
-["suppressShift"] = false,
-["autoTurnIn"] = false,
+["merchant"] = {
+["hideCollectedPetsAtLimit"] = false,
+["hideCollectedItems"] = false,
 },
 }

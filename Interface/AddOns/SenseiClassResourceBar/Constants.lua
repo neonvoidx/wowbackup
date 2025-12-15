@@ -3,7 +3,10 @@ local _, addonTable = ...
 addonTable.LSM = LibStub("LibSharedMedia-3.0")
 local LSM = addonTable.LSM
 
-addonTable.LEM = LibStub("LibEditMode")
+addonTable.LEM = LibStub("LibEQOLEditMode-1.0")
+addonTable.SettingsLib = LibStub("LibEQOLSettingsMode-1.0")
+addonTable.LibSerialize = LibStub("LibSerialize")
+addonTable.LibDeflate = LibStub("LibDeflate")
 
 ------------------------------------------------------------
 -- LIBSHAREDMEDIA INTEGRATION
@@ -40,18 +43,27 @@ addonTable.TextId = {
 -- COMMON DEFAULTS & DROPDOWN OPTIONS
 ------------------------------------------------------------
 addonTable.commonDefaults = {
+	enableOverlayToggle = true,
     point = "CENTER",
     x = 0,
     y = 0,
     barVisible = "Always Visible",
+    hideWhileMountedOrVehicule = false,
+    barStrata = "MEDIUM",
     scale = 1,
     width = 200,
     widthMode = "Manual",
     height = 15,
     fillDirection = "Left to Right",
     smoothProgress = true,
+    fasterUpdates = true,
     showText = true,
+    textColor = {r = 1, g = 1, b = 1, a = 1},
+    textFormat = "Current",
+    textPrecision = "12",
     showFragmentedPowerBarText = false,
+    fragmentedPowerBarTextColor = {r = 1, g = 1, b = 1, a = 1},
+    fragmentedPowerBarTextPrecision = "12.3",
     font = LSM:Fetch(LSM.MediaType.FONT, "Friz Quadrata TT"),
     fontSize = 12,
     fontOutline = "OUTLINE",
@@ -62,38 +74,67 @@ addonTable.commonDefaults = {
 }
 
 addonTable.availableBarVisibilityOptions = {
-    { text = "Always Visible", isRadio = true },
-    { text = "In Combat", isRadio = true },
-    { text = "Has Target Selected", isRadio = true },
-    { text = "Has Target Selected OR In Combat", isRadio = true },
-    { text = "Hidden", isRadio = true },
+    { text = "Always Visible" },
+    { text = "In Combat" },
+    { text = "Has Target Selected" },
+    { text = "Has Target Selected OR In Combat" },
+    { text = "Hidden" },
+}
+
+addonTable.availableBarStrataOptions = {
+    { text = "TOOLTIP"  },
+    { text = "DIALOG"  },
+    { text = "HIGH"  },
+    { text = "MEDIUM"  },
+    { text = "LOW"  },
+    { text = "BACKGROUND"  },
+}
+
+addonTable.availableRoleOptions = {
+    { text = "Tank", value = "TANK" },
+    { text = "Healer", value = "HEALER" },
+    { text = "DPS", value = "DAMAGER" },
 }
 
 addonTable.availableWidthModes = {
-    { text = "Manual", isRadio = true },
-    { text = "Sync With Essential Cooldowns", isRadio = true },
-    { text = "Sync With Utility Cooldowns", isRadio = true },
+    { text = "Manual" },
+    { text = "Sync With Essential Cooldowns" },
+    { text = "Sync With Utility Cooldowns" },
 }
 
 addonTable.availableFillDirections = {
-    { text = "Left to Right", isRadio = true },
-    { text = "Right to Left", isRadio = true },
-    { text = "Top to Bottom", isRadio = true },
-    { text = "Bottom to Top", isRadio = true },
+    { text = "Left to Right" },
+    { text = "Right to Left" },
+    { text = "Top to Bottom" },
+    { text = "Bottom to Top" },
 }
 
 addonTable.availableOutlineStyles = {
-    { text = "NONE", isRadio = true },
-    { text = "OUTLINE", isRadio = true },
-    { text = "THICKOUTLINE", isRadio = true },
+    { text = "NONE" },
+    { text = "OUTLINE" },
+    { text = "THICKOUTLINE" },
+}
+
+addonTable.availableTextFormats = {
+    { text = "Current" },
+    { text = "Current / Maximum" },
+    { text = "Percent" },
+    { text = "Percent%" },
+}
+
+addonTable.availableTextPrecisions = {
+    { text = "12" },
+    { text = "12.3" },
+    { text = "12.34" },
+    { text = "12.345" },
 }
 
 addonTable.availableTextAlignmentStyles = {
-    { text = "TOP", isRadio = true },
-    { text = "LEFT", isRadio = true },
-    { text = "CENTER", isRadio = true },
-    { text = "RIGHT", isRadio = true },
-    { text = "BOTTOM", isRadio = true },
+    { text = "TOP" },
+    { text = "LEFT" },
+    { text = "CENTER" },
+    { text = "RIGHT" },
+    { text = "BOTTOM" },
 }
 
 addonTable.maskAndBorderStyles = {
@@ -130,7 +171,7 @@ addonTable.maskAndBorderStyles = {
 
 addonTable.availableMaskAndBorderStyles = {}
 for styleName, _ in pairs(addonTable.maskAndBorderStyles) do
-    table.insert(addonTable.availableMaskAndBorderStyles, { text = styleName, isRadio = true })
+    table.insert(addonTable.availableMaskAndBorderStyles, { text = styleName })
 end
 
 addonTable.backgroundStyles = {
@@ -155,6 +196,17 @@ addonTable.tickedPowerTypes = {
 
 -- Power types that are fragmented (multiple independent segments)
 addonTable.fragmentedPowerTypes = {
-    --[Enum.PowerType.Essence] = true,
+    [Enum.PowerType.ComboPoints] = true,
+    [Enum.PowerType.Essence] = true,
     [Enum.PowerType.Runes] = true,
 }
+
+addonTable.clamp = function(x, min, max)
+    if x < min then
+        return min
+    elseif x > max then
+        return max
+    else
+        return x
+    end
+end

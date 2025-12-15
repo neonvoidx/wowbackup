@@ -50,7 +50,6 @@ local function PrepareDefaults()
                 Wowhead = true,
             },
             enableCursorKeys = true,
-            slotPosition = "top",
             previewButton = true,
             showPersonalCount = true,
             windowSize = { 0, 0 },
@@ -62,6 +61,17 @@ local function PrepareDefaults()
             displayAnimation = "stand",
             showFilterProfilesInMenu = true,
             syncTarget = false,
+            toolbarButtons = {
+                Equiment = true,
+                SyncTarget = true,
+                Skills = true,
+                ToggleDynamicFlight = true,
+                ToggleRideAlong = true,
+                ToggleWhirlingSurge = true,
+                Drive = true,
+                PetSlot = true,
+                RandomFavorite = true,
+            }
         },
 
         notes = {},

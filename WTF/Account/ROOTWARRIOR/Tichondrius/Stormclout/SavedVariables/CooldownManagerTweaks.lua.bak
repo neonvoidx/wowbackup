@@ -1,0 +1,18 @@
+
+CMT_CharDB = {
+["itemCache"] = {
+},
+["specProfiles"] = {
+},
+["currentProfile"] = "Default",
+["customEntriesBySpec"] = {
+[268] = {
+},
+[269] = {
+},
+},
+["customItemsBySpec"] = {
+},
+["buffIconMappings"] = {
+},
+}

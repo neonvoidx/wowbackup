@@ -237,14 +237,18 @@ local function MakeClassicFrame(frame)
             end
         end
 
-        local function ToggleNoLevelFrame(noLvl)
+        local function ToggleNoLevelFrame(noLvl, skipTexture)
             if noLvl then
-                frame.ClassicFrame.Texture:SetTexture(noLvlTex)
+                if not skipTexture then
+                    frame.ClassicFrame.Texture:SetTexture(noLvlTex)
+                end
                 frameContainer.Flash:SetTexture(flashNoLvl)
                 frameContainer.Flash:SetTexCoord(0, 0.9553125, -0.01,0.733)
                 contentMain.LevelText:SetAlpha(0)
             else
-                frame.ClassicFrame.Texture:SetTexture(defaultTex)
+                if not skipTexture then
+                    frame.ClassicFrame.Texture:SetTexture(defaultTex)
+                end
                 frameContainer.Flash:SetTexture(flashTex)
                 frameContainer.Flash:SetTexCoord(0, 0.9453125, 0, 0.181640625)
                 contentMain.LevelText:SetAlpha(1)
@@ -277,29 +281,35 @@ local function MakeClassicFrame(frame)
             if ( classification == "rareelite" ) then
                 FrameAdjustments(frameContainer)
                 if hideDragon and alwaysHideLvl then
-                    frame.ClassicFrame.Texture:SetTexture(noLvlTex)
+                    ToggleNoLevelFrame(true)
                 elseif hideDragon then
                     frame.ClassicFrame.Texture:SetTexture(defaultTex)
+                    ToggleNoLevelFrame(false, true)
                 else
                     frame.ClassicFrame.Texture:SetTexture("Interface\\TargetingFrame\\UI-TargetingFrame-Rare-Elite")
+                    ToggleNoLevelFrame(false, true)
                 end
             elseif ( classification == "worldboss" or classification == "elite" ) then
                 FrameAdjustments(frameContainer)
                 if hideDragon and alwaysHideLvl then
-                    frame.ClassicFrame.Texture:SetTexture(noLvlTex)
+                    ToggleNoLevelFrame(true)
                 elseif hideDragon then
                     frame.ClassicFrame.Texture:SetTexture(defaultTex)
+                    ToggleNoLevelFrame(false, true)
                 else
                     frame.ClassicFrame.Texture:SetTexture("Interface\\TargetingFrame\\UI-TargetingFrame-Elite")
+                    ToggleNoLevelFrame(false, true)
                 end
             elseif ( classification == "rare" ) then
                 FrameAdjustments(frameContainer)
                 if hideDragon and alwaysHideLvl then
-                    frame.ClassicFrame.Texture:SetTexture(noLvlTex)
+                    ToggleNoLevelFrame(true)
                 elseif hideDragon then
                     frame.ClassicFrame.Texture:SetTexture(defaultTex)
+                    ToggleNoLevelFrame(false, true)
                 else
                     frame.ClassicFrame.Texture:SetTexture("Interface\\TargetingFrame\\UI-TargetingFrame-Rare")
+                    ToggleNoLevelFrame(false, true)
                 end
             elseif ( classification == "minus" ) then
                 FrameAdjustments(frameContainer, true)
@@ -315,7 +325,7 @@ local function MakeClassicFrame(frame)
                 if alwaysHideLvl then
                     ToggleNoLevelFrame(true)
                 elseif hideLvl then
-                    if UnitLevel(frame.unit) == 80 then
+                    if UnitLevel(frame.unit) == 90 then
                         ToggleNoLevelFrame(true)
                     else
                         ToggleNoLevelFrame(false)
@@ -481,7 +491,7 @@ local function MakeClassicFrame(frame)
                     PlayerLevelText:ClearAllPoints()
                     PlayerLevelText:SetPoint("CENTER", -81, -24.5)
                 elseif hideLvl then
-                    if UnitLevel(frame.unit) == 80 then
+                    if UnitLevel(frame.unit) == 90 then
                         PlayerLevelText:SetParent(BBF.hiddenFrame)
                         PlayerLevelText:ClearAllPoints()
                         PlayerLevelText:SetPoint("CENTER", -81, -24.5)
@@ -497,7 +507,7 @@ local function MakeClassicFrame(frame)
                 if mode > 3 then
                     -- Always hide level text for mode > 3 (using UI-FocusFrame-Large texture)
                     PlayerLevelText:SetParent(BBF.hiddenFrame)
-                elseif alwaysHideLvl or (hideLvl and UnitLevel(frame.unit) == 80) then
+                elseif alwaysHideLvl or (hideLvl and UnitLevel(frame.unit) == 90) then
                     -- Hide level text based on hideLvl settings for mode <= 3
                     PlayerLevelText:SetParent(BBF.hiddenFrame)
                 else
@@ -732,7 +742,7 @@ local function MakeClassicFrame(frame)
                 contentMain.StatusTexture:SetTexture("Interface\\CharacterFrame\\UI-Player-Status")
                 -- Handle level text for playerEliteFrame
                 local mode = BetterBlizzFramesDB.playerEliteFrameMode
-                if mode > 3 and (alwaysHideLvl or (hideLvl and UnitLevel("player") == 80)) then
+                if mode > 3 and (alwaysHideLvl or (hideLvl and UnitLevel("player") == 90)) then
                     -- Ensure level text is hidden when using UI-FocusFrame-Large
                     PlayerLevelText:SetParent(BBF.hiddenFrame)
                 end
@@ -740,7 +750,7 @@ local function MakeClassicFrame(frame)
                 if alwaysHideLvl then
                     ToggleNoLevelFrame(true)
                 elseif hideLvl then
-                    if UnitLevel("player") == 80 then
+                    if UnitLevel("player") == 90 then
                         ToggleNoLevelFrame(true)
                     else
                         ToggleNoLevelFrame(false)
@@ -939,6 +949,14 @@ local function MakeClassicFrame(frame)
     end
 end
 
+local fancyManas = {
+    ["INSANITY"] = true,
+    ["MAELSTROM"] = true,
+    ["FURY"] = true,
+    ["LUNAR_POWER"] = true,
+    ["SOUL_FRAGMENTS"] = true,                 -- alt mana, powerName (as opposed to powerType)
+}
+
 local function AdjustAlternateBars()
     AlternatePowerBar:SetSize(104, 12)
     AlternatePowerBar:ClearAllPoints()
@@ -972,13 +990,10 @@ local function AdjustAlternateBars()
     AlternatePowerBar.RightBorder:SetPoint("LEFT", AlternatePowerBar.Border, "RIGHT")
 
     if BetterBlizzFramesDB.changeUnitFrameManabarTexture then
-        hooksecurefunc(AlternatePowerBar, "EvaluateUnit", function(self)
-            self:SetStatusBarTexture(BBF.manaTexture)
-            self:SetStatusBarColor(0, 0, 1)
-            if self.PowerBarMask then
-                self.PowerBarMask:Hide()
-            end
-        end)
+        BBF.ApplyTextureChange("mana", AlternatePowerBar, nil, true, false, true)
+        if AlternatePowerBar.PowerBarMask then
+            AlternatePowerBar.PowerBarMask:Hide()
+        end
     else
         --AdjustFramePoint(AlternatePowerBar.PowerBarMask, nil, -1)
         AlternatePowerBar.PowerBarMask:SetPoint("TOPLEFT", AlternatePowerBar, "TOPLEFT", -2, 3)
@@ -1007,10 +1022,7 @@ local function AdjustAlternateBars()
         MonkStaggerBar.Border:SetTexCoord(0, 1, 0, 0.5)
         MonkStaggerBar.Border:SetPoint("TOPLEFT", -17, 0)
 
-        hooksecurefunc(MonkStaggerBar, "EvaluateUnit", function(self)
-            self:SetStatusBarTexture("Interface\\TargetingFrame\\UI-StatusBar")
-            self:SetStatusBarColor(0, 0, 1)
-        end)
+        BBF.ApplyTextureChange("mana", MonkStaggerBar, nil, true, false, true)
     end
 
     -- if class == "DRUID" then
@@ -1052,14 +1064,57 @@ local function AdjustAlternateBars()
         EvokerEbonMightBar.RightBorder:SetTexCoord(0.125, 0, 1, 0)
         EvokerEbonMightBar.RightBorder:SetPoint("LEFT", EvokerEbonMightBar.Border, "RIGHT")
 
-        hooksecurefunc(EvokerEbonMightBar, "EvaluateUnit", function(self)
-            self:SetStatusBarTexture("Interface\\TargetingFrame\\UI-StatusBar")
-            self:SetStatusBarColor(1, 0.5, 0.25)
+        BBF.ApplyTextureChange("mana", EvokerEbonMightBar, nil, true, false, true)
+        if EvokerEbonMightBar.PowerBarMask then
+            EvokerEbonMightBar.PowerBarMask:Hide()
+        end
+    end
 
-            if self.PowerBarMask then
-                self.PowerBarMask:Hide()
-            end
-        end)
+    if class == "DEMONHUNTER" and DemonHunterSoulFragmentsBar then
+        DemonHunterSoulFragmentsBar:SetSize(104, 12)
+        DemonHunterSoulFragmentsBar:ClearAllPoints()
+        DemonHunterSoulFragmentsBar:SetPoint("BOTTOMLEFT", 95, 17)
+
+        if DemonHunterSoulFragmentsBar.TextString then
+            DemonHunterSoulFragmentsBar.TextString:SetPoint("CENTER", 1, -1)
+        end
+        if DemonHunterSoulFragmentsBar.LeftText then
+            DemonHunterSoulFragmentsBar.LeftText:SetPoint("LEFT", 0, -1)
+        end
+        if DemonHunterSoulFragmentsBar.RightText then
+            DemonHunterSoulFragmentsBar.RightText:SetPoint("RIGHT", 0, -1)
+        end
+
+        DemonHunterSoulFragmentsBar.Background = DemonHunterSoulFragmentsBar:CreateTexture(nil, "BACKGROUND")
+        DemonHunterSoulFragmentsBar.Background:SetAllPoints()
+        DemonHunterSoulFragmentsBar.Background:SetColorTexture(0, 0, 0, 0.5)
+
+        DemonHunterSoulFragmentsBar.Border = DemonHunterSoulFragmentsBar:CreateTexture(nil, "OVERLAY")
+        DemonHunterSoulFragmentsBar.Border:SetSize(0, 16)
+        DemonHunterSoulFragmentsBar.Border:SetTexture("Interface\\CharacterFrame\\UI-CharacterFrame-GroupIndicator")
+        DemonHunterSoulFragmentsBar.Border:SetTexCoord(0.125, 0.250, 1, 0)
+        DemonHunterSoulFragmentsBar.Border:SetPoint("TOPLEFT", 4, 0)
+        DemonHunterSoulFragmentsBar.Border:SetPoint("TOPRIGHT", -4, 0)
+
+        DemonHunterSoulFragmentsBar.LeftBorder = DemonHunterSoulFragmentsBar:CreateTexture(nil, "OVERLAY")
+        DemonHunterSoulFragmentsBar.LeftBorder:SetSize(16, 16)
+        DemonHunterSoulFragmentsBar.LeftBorder:SetTexture("Interface\\CharacterFrame\\UI-CharacterFrame-GroupIndicator")
+        DemonHunterSoulFragmentsBar.LeftBorder:SetTexCoord(0, 0.125, 1, 0)
+        DemonHunterSoulFragmentsBar.LeftBorder:SetPoint("RIGHT", DemonHunterSoulFragmentsBar.Border, "LEFT")
+
+        DemonHunterSoulFragmentsBar.RightBorder = DemonHunterSoulFragmentsBar:CreateTexture(nil, "OVERLAY")
+        DemonHunterSoulFragmentsBar.RightBorder:SetSize(16, 16)
+        DemonHunterSoulFragmentsBar.RightBorder:SetTexture("Interface\\CharacterFrame\\UI-CharacterFrame-GroupIndicator")
+        DemonHunterSoulFragmentsBar.RightBorder:SetTexCoord(0.125, 0, 1, 0)
+        DemonHunterSoulFragmentsBar.RightBorder:SetPoint("LEFT", DemonHunterSoulFragmentsBar.Border, "RIGHT")
+
+        DemonHunterSoulFragmentsBar.CollapsingStarBackground:SetSize(104, 12)
+        DemonHunterSoulFragmentsBar.Glow:SetSize(104, 12)
+        DemonHunterSoulFragmentsBar.Ready:SetSize(104, 12)
+        DemonHunterSoulFragmentsBar.Deplete:SetSize(104, 12)
+        DemonHunterSoulFragmentsBar.CollapsingStarDepleteFin:SetSize(104, 12)
+
+        BBF.ApplyTextureChange("mana", DemonHunterSoulFragmentsBar, nil, true, false, true)
     end
 
     local classicFrameColorTargets = {

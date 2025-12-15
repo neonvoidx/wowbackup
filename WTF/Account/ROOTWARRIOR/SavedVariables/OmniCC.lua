@@ -1,5 +1,9 @@
 
 OmniCCDB = {
+["global"] = {
+["dbVersion"] = 6,
+["addonVersion"] = "11.2.8",
+},
 ["profileKeys"] = {
 ["Månyfaced - Mal'Ganis"] = "Default",
 ["Hellowalls - Mal'Ganis"] = "Default",
@@ -20,26 +24,23 @@ OmniCCDB = {
 ["Choppiez - Mal'Ganis"] = "Default",
 ["Starstypeshi - Tichondrius"] = "Default",
 ["Tampacks - Mal'Ganis"] = "Default",
+["Neonvoid - Tichondrius"] = "Default",
 ["Mäñýfäçëð - Mal'Ganis"] = "Default",
 ["Hellavator - Mal'Ganis"] = "Default",
 ["Charizhard - Mal'Ganis"] = "Default",
 ["Hellavator - Tichondrius"] = "Default",
-["Gehyo - Tichondrius"] = "Default",
-["Crillessana - Mal'Ganis"] = "Default",
+["Gehyo - Mal'Ganis"] = "Default",
+["Smaugchamp - Tichondrius"] = "Default",
 ["Stormclout - Tichondrius"] = "Default",
 ["Reedingo - Mal'Ganis"] = "Default",
-["Edaroseld - Illidan"] = "Default",
-["Heilsatan - Tichondrius"] = "Default",
-["Choppiez - Tichondrius"] = "Default",
-["Thickshape - Mal'Ganis"] = "Default",
 ["Neonvoid - Mal'Ganis"] = "Default",
-["Smaugchamp - Tichondrius"] = "Default",
-["Gehyo - Mal'Ganis"] = "Default",
+["Thickshape - Mal'Ganis"] = "Default",
+["Choppiez - Tichondrius"] = "Default",
+["Heilsatan - Tichondrius"] = "Default",
+["Edaroseld - Illidan"] = "Default",
+["Crillessana - Mal'Ganis"] = "Default",
+["Gehyo - Tichondrius"] = "Default",
 ["Clevagirl - Mal'Ganis"] = "Default",
-},
-["global"] = {
-["dbVersion"] = 6,
-["addonVersion"] = "11.2.7",
 },
 ["profiles"] = {
 ["Default"] = {
@@ -75,9 +76,9 @@ OmniCCDB = {
 ["themes"] = {
 ["Default"] = {
 ["textStyles"] = {
-["soon"] = {
-},
 ["minutes"] = {
+},
+["soon"] = {
 },
 ["seconds"] = {
 },

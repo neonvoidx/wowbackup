@@ -78,6 +78,8 @@ layout.defaultSettings = {
         healStatusBarTexture          = "sArena Stripes",
         castbarStatusBarTexture       = "sArena Default",
         castbarUninterruptibleTexture = "sArena Default",
+        bgTexture = "Solid",
+        bgColor = {0, 0, 0, 0.6},
     },
     retextureHealerClassStackOnly = true,
 
@@ -87,11 +89,9 @@ layout.defaultSettings = {
     mirrored = false,
 
     textSettings = {
+        specNameSize = 0.65,
         nameAnchor = "LEFT",
     },
-
-    -- BlizzArena specific settings
-    trinketCircleBorder = false,
 }
 
 local function getSetting(info)
@@ -149,8 +149,8 @@ function layout:Initialize(frame)
         frame.parent:UpdateWidgetSettings(self.db.widgets)
     end
 
-    frame.ClassIconCooldown:SetSwipeTexture("Interface\\CharacterFrame\\TempPortraitAlphaMask")
-    frame.ClassIconCooldown:SetUseCircularEdge(true)
+    frame.ClassIcon.Cooldown:SetSwipeTexture("Interface\\CharacterFrame\\TempPortraitAlphaMask")
+    frame.ClassIcon.Cooldown:SetUseCircularEdge(true)
 
     frame:SetSize(102, 32)
     frame.SpecIcon:SetSize(14, 14)
@@ -171,13 +171,14 @@ function layout:Initialize(frame)
     local f = frame.ClassIcon
     f:SetSize(24, 24)
     f:Show()
-    f:AddMaskTexture(frame.ClassIconMask)
-    frame.ClassIconMask:SetAllPoints(f)
+    f.Texture:AddMaskTexture(f.Mask)
+    f.Mask:SetAllPoints(f.Texture)
 
     local trinket = frame.Trinket
 
 
     if self.db.trinketCircleBorder then
+        sArenaMixin.showTrinketCircleBorder = true
         if not trinket.Mask then
             trinket.Mask = trinket:CreateMaskTexture()
         end
@@ -202,10 +203,9 @@ function layout:Initialize(frame)
 
         if not trinket.TrinketCircleBorderHook then
             hooksecurefunc(trinket.Texture, "SetTexture", function(self, t)
-                if t == nil or t == "" or t == 0 or t == "nil" or frame.parent.db.profile.currentLayout ~= layoutName then
+                if not t or not sArenaMixin.showTrinketCircleBorder then
                     trinketCircleBorder:Hide()
                 else
-                    trinketCircleBorder:Hide()
                     trinketCircleBorder:Show()
                 end
             end)
@@ -256,26 +256,12 @@ function layout:Initialize(frame)
     frame.PowerText:SetFont(fn, 10, "OUTLINE")
     frame.PowerText:SetAlpha(frame.parent.db.profile.hidePowerText and 0 or 1)
 
+    local fn, fs, fstyle = frame.SpecNameText:GetFont()
+    frame.SpecNameText:SetFont(fn, fs, "OUTLINE")
+    frame.SpecNameText:SetTextColor(1,1,1)
+
     frame.AuraStacks:SetPoint("BOTTOMLEFT", frame.ClassIcon, "BOTTOMLEFT", 1, -4)
     frame.AuraStacks:SetFont("Interface\\AddOns\\sArena_Reloaded\\Textures\\arialn.ttf", 11, "THICKOUTLINE")
-
-    -- Health bar underlay
-    if not frame.hpUnderlay then
-        frame.hpUnderlay = frame:CreateTexture(nil, "BACKGROUND", nil, 1)
-        frame.hpUnderlay:SetPoint("TOPLEFT", frame.HealthBar, "TOPLEFT")
-        frame.hpUnderlay:SetPoint("BOTTOMRIGHT", frame.HealthBar, "BOTTOMRIGHT")
-        frame.hpUnderlay:SetColorTexture(0, 0, 0, 0.65)
-        frame.hpUnderlay:Show()
-    end
-
-    -- Power bar underlay
-    if not frame.ppUnderlay then
-        frame.ppUnderlay = frame:CreateTexture(nil, "BACKGROUND", nil, 1)
-        frame.ppUnderlay:SetPoint("TOPLEFT", frame.PowerBar, "TOPLEFT")
-        frame.ppUnderlay:SetPoint("BOTTOMRIGHT", frame.PowerBar, "BOTTOMRIGHT")
-        frame.ppUnderlay:SetColorTexture(0, 0, 0, 0.65)
-        frame.ppUnderlay:Show()
-    end
 
     -- Frame background texture
     local frameTexture = frame.frameTexture
@@ -405,12 +391,12 @@ function layout:UpdateOrientation(frame)
     end
 
     healthBar:ClearAllPoints()
-    classIcon:ClearAllPoints()
+    frame.ClassIcon:ClearAllPoints()
 
     if (self.db.mirrored) then
         frameTexture:SetTexCoord(0.796, 0, 0, 0.5)
         healthBar:SetPoint("TOPRIGHT", -3, -9)
-        classIcon:SetPoint("TOPLEFT", 4, -4)
+        frame.ClassIcon:SetPoint("TOPLEFT", 4, -4)
     else
         frameTexture:SetTexCoord(0, 0.796, 0, 0.5)
         healthBar:SetPoint("TOPLEFT", 3, -9)

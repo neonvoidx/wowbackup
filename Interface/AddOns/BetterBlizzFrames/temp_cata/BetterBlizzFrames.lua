@@ -495,23 +495,51 @@ end
 -- CLICKTHROUGH
 --------------------------------------
 function BBF.ClickthroughFrames()
-	if not InCombatLockdown() then
+    if not InCombatLockdown() then
         local shift = IsShiftKeyDown()
-        if BetterBlizzFramesDB.playerFrameClickthrough then
+        local db = BetterBlizzFramesDB
+
+        if db.playerFrameClickthrough then
             PlayerFrame:SetMouseClickEnabled(shift)
         end
 
-        if BetterBlizzFramesDB.targetFrameClickthrough then
+        if db.targetFrameClickthrough then
             TargetFrame:SetMouseClickEnabled(shift)
+            TargetFrameToT:SetMouseClickEnabled(shift)
+        end
+
+        if db.focusFrameClickthrough then
+            FocusFrame:SetMouseClickEnabled(shift)
+            FocusFrameToT:SetMouseClickEnabled(shift)
+        end
+    end
+end
+
+local ClickthroughFrames = CreateFrame("Frame")
+ClickthroughFrames:SetScript("OnEvent", function(_, event)
+    if event == "PLAYER_REGEN_DISABLED" then
+        local db = BetterBlizzFramesDB
+
+        if db.playerFrameClickthrough then
+            PlayerFrame:SetMouseClickEnabled(false)
+        end
+
+        if db.targetFrameClickthrough then
+            TargetFrame:SetMouseClickEnabled(false)
             TargetFrameToT:SetMouseClickEnabled(false)
         end
 
-        if BetterBlizzFramesDB.focusFrameClickthrough then
-            FocusFrame:SetMouseClickEnabled(shift)
+        if db.focusFrameClickthrough then
+            FocusFrame:SetMouseClickEnabled(false)
             FocusFrameToT:SetMouseClickEnabled(false)
         end
-	end
-end
+
+        return
+    end
+    BBF.ClickthroughFrames()
+end)
+ClickthroughFrames:RegisterEvent("MODIFIER_STATE_CHANGED")
+ClickthroughFrames:RegisterEvent("PLAYER_REGEN_DISABLED")
 
 local function HookClassComboPoints()
     -- local db = BetterBlizzFramesDB
@@ -804,14 +832,6 @@ local function DisableClickForClassSpecificFrame()
     end
 end
 
-local ClickthroughFrames = CreateFrame("frame")
-ClickthroughFrames:SetScript("OnEvent", function()
-    BBF.ClickthroughFrames()
-end)
-ClickthroughFrames:RegisterEvent("MODIFIER_STATE_CHANGED")
-
-
-
 local resourceFrames = {
     WARLOCK = ShardBarFrame,
     ROGUE = RogueComboPointBarFrame,
@@ -968,6 +988,49 @@ function BBF.EnableResourceMovement()
     BBF.MovingResource = true
 end
 
+function BBF.ZoomDefaultActionbarIcons(enableZoom)
+    if not BetterBlizzFramesDB.zoomActionBarIcons and enableZoom ~= false then return end
+    if BetterBlizzFramesDB.zoomActionBarIcons then
+        enableZoom = true
+    end
+    local function zoom(icon)
+        if icon and icon.SetTexCoord then
+            if enableZoom then
+                icon:SetTexCoord(0.08, 0.92, 0.08, 0.92)
+            else
+                icon:SetTexCoord(0, 1, 0, 1)
+            end
+        end
+    end
+    
+    local function zoomButtons(prefix, count)
+        for i = 1, count do
+            local btn = _G[prefix .. i]
+            if btn then
+                zoom(btn.Icon or btn.icon or _G[prefix .. i .. "Icon"])
+            end
+        end
+    end
+    
+    zoomButtons("ActionButton", 12)
+    zoomButtons("MultiBarBottomLeftButton", 12)
+    zoomButtons("MultiBarBottomRightButton", 12)
+    zoomButtons("MultiBarRightButton", 12)
+    zoomButtons("MultiBarLeftButton", 12)
+    zoomButtons("MultiBar5Button", 12)
+    zoomButtons("MultiBar6Button", 12)
+    zoomButtons("MultiBar7Button", 12)
+    zoomButtons("PetActionButton", 10)
+    zoomButtons("StanceButton", 12)
+    zoomButtons("PossessButton", 2)
+    
+    if ExtraActionButton1 and ExtraActionButton1.icon then
+        zoom(ExtraActionButton1.icon)
+    end
+    if ZoneAbilityFrame and ZoneAbilityFrame.SpellButton and ZoneAbilityFrame.SpellButton.Icon then
+        zoom(ZoneAbilityFrame.SpellButton.Icon)
+    end
+end
 
 function BBF.ActionBarIconZoom()
     --local texCoords = BetterBlizzFramesDB.playerFrameOCDZoom and {0.06, 0.94, 0.06, 0.94} or {0, 1, 0, 1}
@@ -2250,6 +2313,15 @@ function BBF.FixStupidBlizzPTRShit()
             end
             return
         end
+        if not EJMicroButton then
+            if not BBF.missingEJWarning then
+                BBF.missingEJWarning = true
+                print("|A:gmchat-icon-blizz:16:16|a Better|cff00c0ffBlizz|rFrames: Encounter Journal Micro Button is missing, skipping \"OCD Tweaks\" to avoid errors. Needs testing but I don't have access to Titan Reforged realms.")
+            end
+            return
+        end
+
+         -- Backup original settings if not already backed up
         if not originalSettings.backedUp then
             backupSettings()
         end
@@ -2621,7 +2693,7 @@ Frame:SetScript("OnEvent", function(...)
 
     if BetterBlizzFramesDB.reopenOptions then
         --InterfaceOptionsFrame_OpenToCategory(BetterBlizzFrames)
-        Settings.OpenToCategory(BBF.category.ID)
+        Settings.OpenToCategory(BBF.category:GetID())
         BetterBlizzFramesDB.reopenOptions = false
     end
 
@@ -2692,13 +2764,9 @@ SlashCmdList["BBF"] = function(msg)
         if not BBF.category then
             print("|A:gmchat-icon-blizz:16:16|a Better|cff00c0ffBlizz|rFrames: Settings disabled. Likely due to error. Please update your addon.")
             --BBF.InitializeOptions()
-            --Settings.OpenToCategory(BBF.category.ID)
+            --Settings.OpenToCategory(BBF.category:GetID())
         else
-            if not BetterBlizzFrames.guiLoaded then
-                BBF.LoadGUI()
-            else
-                Settings.OpenToCategory(BBF.category.ID)
-            end
+            BBF.LoadGUI()
         end
     end
 end
@@ -2758,6 +2826,7 @@ First:SetScript("OnEvent", function(_, event, addonName)
             BBF.AlwaysShowLegacyComboPoints()
             BBF.GenericLegacyComboSupport()
             BBF.ChangeTotemFrameScale()
+            BBF.ZoomDefaultActionbarIcons()
             --TurnOnEnabledFeaturesOnLogin()
             BBF.RaiseTargetCastbarStratas()
             BBF.HookStatusBarText()

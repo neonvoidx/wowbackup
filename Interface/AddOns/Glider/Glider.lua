@@ -1,10 +1,10 @@
-local addonName = ... ---@type string "Glider"
-local namespace = select(2,...) ---@class (partial) namespace
+local addonName = ... ---@type string # Glider
+local ns = select(2,...) ---@class (partial) namespace
 
 local gameVersion = select(4, GetBuildInfo())
 
 ---@class (partial) Glider
-local Glider = namespace.GliderUI
+local Glider = ns.GliderUI
 
 local defaultPosition = {
   point = 'CENTER',
@@ -17,7 +17,7 @@ local anchorFrame = CreateFrame("Frame", nil, UIParent)
 anchorFrame:SetSize(110, 110)
 anchorFrame:SetPoint(defaultPosition.point, defaultPosition.x, defaultPosition.y)
 anchorFrame.editModeName = "Glider"
-namespace.anchorFrame = anchorFrame
+ns.anchorFrame = anchorFrame
 Glider:SetPoint("CENTER", anchorFrame)
 
 ---@class GliderConfiguration
@@ -48,8 +48,6 @@ local Configuration = {
     [5] = 2.0943951,
     [6] = 1.04719755,
   },
-  SecretAuras = 0, --Enum.RestrictedActionType.SecretAuras,
-  SecretCooldowns = 1, --Enum.RestrictedActionType.SecretCooldowns,
 }
 
 ---@class AdvFlying
@@ -82,7 +80,7 @@ local MutableData = {
   hideWhenGroundedAndFull = false,
   mutedSounds = false,
 }
-namespace.MutableData = MutableData
+ns.MutableData = MutableData
 
 local function DebugPrint(...)
   if GetCVarBool("DebugLogArc") then
@@ -95,7 +93,7 @@ local FrameDeltaLerp = FrameDeltaLerp
 local GetGlidingInfo = C_PlayerInfo.GetGlidingInfo
 
 function Glider:GetAddOnAtlasInfo(atlasName, returnTable)
-  local data = namespace.AtlasInfo[atlasName]
+  local data = ns.AtlasInfo[atlasName]
   if returnTable then
     return {
       w = data[1],
@@ -115,6 +113,8 @@ function Glider:SetupTextures()
   self.Pulse:SetTexCoord(self:GetAddOnAtlasInfo("Pulse"))   ---@diagnostic disable-line
   self.Flash:SetTexCoord(self:GetAddOnAtlasInfo("Flash"))   ---@diagnostic disable-line
   self.TextDisplay.TextBackground:SetTexCoord(self:GetAddOnAtlasInfo("TextBackground")) ---@diagnostic disable-line
+  self.SurgePill:SetTexCoord(self:GetAddOnAtlasInfo("SurgePill")) ---@diagnostic disable-line
+  self.SurgeArc:SetTexCoord(self:GetAddOnAtlasInfo("SurgeGlow")) ---@diagnostic disable-line
 end
 
 ---@param elapsed number
@@ -187,10 +187,9 @@ function Glider:RefreshSpeedDisplay(elapsed)
 end
 
 function Glider:HideAnim()
-  if not namespace.LEM:IsInEditMode() and self:IsShown() and not self.animHide:IsPlaying() then
+  if not ns.LEM:IsInEditMode() and self:IsShown() and not self.animHide:IsPlaying() then
     self.animShow:Stop()
     self.animHide:Play()
-    self:SetScript("OnUpdate", nil)
     MutableData.isRefreshingVigor = false
     MutableData.isThrill = false
   end
@@ -209,36 +208,28 @@ end
 
 ---@type table<integer, boolean>
 local instances = {
-  -- Nokhud Offensive
-  [2093] = true,
-  -- Valdrakken
-  [2112] = true,
-  -- Amirdrassil (Raid)
-  [2234] = true,
+  [2444] = true, -- Dragon Isles
+  [2454] = true, -- Zaralek Cavern
+  [2516] = true, -- Nokhud Offensive
+  [2522] = true, -- Vault of the Incarnates
+  [2548] = true, -- Emerald Dream
+  [2569] = true, -- Aberrus, the Shadowed Crucible
 }
 
 ---@return integer
 function Glider:GetRidingAbroadPercent()
   -- Dragonriding Races, but do not apply to Derby Racing
-  if not (GetRestrictedActionStatus and GetRestrictedActionStatus(Configuration.SecretAuras)) then
+  if not (C_Secrets and C_Secrets.ShouldSpellAuraBeSecret(369968)) then
     if C_UnitAuras.GetPlayerAuraBySpellID(369968) and not HasOverrideActionBar() then
       return 100
     end
   end
-
-  local mapID = C_Map.GetBestMapForUnit('player')
-  if not mapID then return 85 end
-
-  if instances[mapID] then
+  local instanceID = select(8, GetInstanceInfo())
+  if instanceID and instances[instanceID] then
     return 100
+  else
+    return 85
   end
-
-  local mapInfo = C_Map.GetMapInfo(mapID)
-  if mapInfo and mapInfo.parentMapID == 1978 then
-    return 100
-  end
-
-  return 85
 end
 
 function Glider:ProcessWidgets()
@@ -262,7 +253,7 @@ end
 ---@param frame table
 ---@param perc number
 function Glider:SetCooldownPercentage(frame, perc)
-  if namespace.LEM:IsInEditMode() then return end
+  if ns.LEM:IsInEditMode() then return end
   CooldownFrame_SetDisplayAsPercentage(frame, perc);
 end
 
@@ -308,25 +299,35 @@ local spellChargeInfoDefaults = {
   chargeModRate = 0,
 }
 
-local spellChargeInfo = {}
+local cooldownInfoDefaults = {
+  isEnabled = false,
+  duration = 0,
+  modRate = 1,
+  startTime = 0,
+}
+
+local sharedChargeInfo = {}
+local secondWindChargeInfo = {}
+local surgeCooldownInfo = {}
 
 function Glider:UpdateUI()
   if self:IsDerbyRacing() then return end
 
   local isNotSkyriding = not self:IsSkyriding()
-  local isRestricted = GetRestrictedActionStatus and GetRestrictedActionStatus(Configuration.SecretCooldowns)
+  local isRestricted = C_Secrets and C_Secrets.ShouldSpellCooldownBeSecret(1227921)
   if isNotSkyriding or isRestricted then
     -- Always initialize back to 6 on hide, so there is no flashing on showing UI later
     MutableData.previousCharges = 6
     self:HideAnim()
     return
   end
-
-  spellChargeInfo = C_Spell.GetSpellCharges(372608) or spellChargeInfoDefaults
-  local charges = spellChargeInfo.currentCharges
-  local maxCharges = spellChargeInfo.maxCharges
-  local chargeStart = spellChargeInfo.cooldownStartTime
-  local chargeDuration = spellChargeInfo.cooldownDuration
+  surgeCooldownInfo = C_Spell.GetSpellCooldown(1227921) or cooldownInfoDefaults
+  secondWindChargeInfo = C_Spell.GetSpellCharges(425782) or spellChargeInfoDefaults
+  sharedChargeInfo = C_Spell.GetSpellCharges(372608) or spellChargeInfoDefaults
+  local charges = sharedChargeInfo.currentCharges
+  local maxCharges = sharedChargeInfo.maxCharges
+  local chargeStart = sharedChargeInfo.cooldownStartTime
+  local chargeDuration = sharedChargeInfo.cooldownDuration
   local newStartTime = GetTime()
   local newDuration = 0.0
   local isCharging = false
@@ -352,16 +353,45 @@ function Glider:UpdateUI()
   end
   MutableData.getRidingAbroadPercent = self:GetRidingAbroadPercent()
 
+  local surgeState = GliderAddOnDB.Settings["GliderGlobalSettings"].whirlingSurgeState
+  local surgeMode = GliderAddOnDB.Settings["GliderGlobalSettings"].whirlingSurgeMode
+  local duration = surgeCooldownInfo.duration
+
+  local shouldShowSurge = false
+
+  if surgeState == 2 then
+    shouldShowSurge = (duration == 0)
+  elseif surgeState ~= 0 then
+    shouldShowSurge = (duration > 0)
+  end
+
+  if shouldShowSurge then
+    if surgeMode == 0 then
+      self.SurgeArc:Show()
+      self.SurgePill:Hide()
+    else
+      self.SurgeArc:Hide()
+      self.SurgePill:Show()
+    end
+  else
+    self.SurgeArc:Hide()
+    self.SurgePill:Hide()
+  end
+
   if isCharging then
     if self.VigorCharge:IsPaused() then
       self.VigorCharge:Resume()
     end
-    self.VigorCharge:SetCooldown(newStartTime, newDuration, spellChargeInfo.chargeModRate);
+    self.VigorCharge:SetCooldown(newStartTime, newDuration, sharedChargeInfo.chargeModRate);
     self.VigorCharge:SetDrawEdge(true);
+    if GliderAddOnDB.Settings["GliderGlobalSettings"].secondWindMode == 1 then
+      CooldownFrame_SetDisplayAsPercentage(self.secondWindCharge, math.min(maxCharges, (charges + secondWindChargeInfo.currentCharges) / maxCharges));
+    end
   else
     CooldownFrame_SetDisplayAsPercentage(self.VigorCharge, 1);
     self.VigorCharge:SetDrawEdge(false);
   end
+
   self.SpeedDisplay:SetScript("OnUpdate", function(_, elapsed) self:RefreshSpeedDisplay(elapsed) end)
   local shouldHideFullAndGrounded = (not AdvFlying.Flying) and (not isCharging) and MutableData.hideWhenGroundedAndFull
   if shouldHideFullAndGrounded then
@@ -441,15 +471,8 @@ end
 function Glider:OnEvent(e, ...)
   if e == "UPDATE_UI_WIDGET" then
     self:Update(...)
-  elseif e == "UPDATE_ALL_UI_WIDGETS" then
-    -- ugly fix: Flying from Khaz Algar to Ringing Deeps and similar world transitions can flash the vigor bar
-    -- so just hide the entire container for a short duration, permamently hiding it messes with content that uses the same bar
-    if self:IsShown() then
-      UIWidgetPowerBarContainerFrame:Hide()
-      C_Timer.After(5, function() UIWidgetPowerBarContainerFrame:Show() end)
-    end
   elseif e == "UNIT_AURA" and self:IsShown() then
-    if not (GetRestrictedActionStatus and GetRestrictedActionStatus(Configuration.SecretAuras)) then
+    if not (C_Secrets and C_Secrets.ShouldSpellAuraBeSecret(377234)) then
       MutableData.isThrill = not not C_UnitAuras.GetPlayerAuraBySpellID(377234)
     end
   else
@@ -476,11 +499,9 @@ function Glider:OnLoad()
     self:RegisterEvent("PLAYER_CAN_GLIDE_CHANGED")
     self:RegisterEvent("PLAYER_IS_GLIDING_CHANGED")
     self:RegisterEvent("UPDATE_UI_WIDGET")
-    self:RegisterEvent("UPDATE_ALL_UI_WIDGETS")
     self:RegisterEvent("UNIT_AURA")
   else
     self:RegisterEvent("UPDATE_UI_WIDGET")
-    self:RegisterEvent("UPDATE_ALL_UI_WIDGETS")
     self:RegisterEvent("UNIT_AURA")
   end
 end

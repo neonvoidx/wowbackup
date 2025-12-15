@@ -1,0 +1,5 @@
+
+GlobalBlizzardSavedSets = {
+["SeenHousingMarketDecorIDs"] = {
+},
+}

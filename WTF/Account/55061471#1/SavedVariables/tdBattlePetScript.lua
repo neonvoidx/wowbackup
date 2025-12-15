@@ -1,41 +1,14 @@
 
 TD_DB_BATTLEPETSCRIPT_GLOBAL = {
-["profileKeys"] = {
-["Clevagirl - Mal'Ganis"] = "Default",
-["Heilsatan - Tichondrius"] = "Default",
-["Mäñýfäçëð - Tichondrius"] = "Default",
-["Gehyo - Tichondrius"] = "Default",
-["Praisesun - Tichondrius"] = "Default",
-["Smaugchamp - Tichondrius"] = "Default",
-["Auteist - Mal'Ganis"] = "Default",
-["Ofpuss - Mal'Ganis"] = "Default",
-["Neonvoid - Mal'Ganis"] = "Default",
-["Smaugchamp - Mal'Ganis"] = "Default",
-["Choppiez - Mal'Ganis"] = "Default",
-["Choppiez - Tichondrius"] = "Default",
-["Tampacks - Mal'Ganis"] = "Default",
-["Auteist - Tichondrius"] = "Default",
-["Corsic - Mal'Ganis"] = "Default",
-["Mäñýfäçëð - Mal'Ganis"] = "Default",
-["Hellavator - Mal'Ganis"] = "Default",
-["Hellavator - Tichondrius"] = "Default",
-["Ofpusstwo - Tichondrius"] = "Default",
-["Gehyo - Mal'Ganis"] = "Default",
-["Cullnvoid - Tichondrius"] = "Default",
-["Stormclout - Tichondrius"] = "Default",
-["Reedingo - Mal'Ganis"] = "Default",
-["Stormclout - Mal'Ganis"] = "Default",
-["Rakeist - Mal'Ganis"] = "Default",
-["Thickshape - Mal'Ganis"] = "Default",
-["Starstypeshi - Tichondrius"] = "Default",
-["Ofpuss - Tichondrius"] = "Default",
-["Praisesun - Mal'Ganis"] = "Default",
-["Crillessana - Mal'Ganis"] = "Default",
-["Thingreyline - Tichondrius"] = "Default",
-},
 ["global"] = {
 ["version"] = "0.0.0.0",
 ["scripts"] = {
+["AllInOne"] = {
+},
+["FirstEnemy"] = {
+},
+["Base"] = {
+},
 ["Rematch"] = {
 ["team:13"] = {
 ["name"] = "Little Tommy Newcomer",
@@ -133,29 +106,29 @@ TD_DB_BATTLEPETSCRIPT_GLOBAL = {
 ["name"] = "Christoph VonFeasel",
 ["code"] = "change(#1) [self(#2).active]\nchange(#3) [round=3]\nuse(Sweep:457) [round=1]\nuse(Wind-Up:459) [round=2]\nuse(Wind-Up:459) [self.round~1,3 & self(#3).active]\nuse(Supercharge:208) [self.round=2]\nuse(Toxic Smoke:640)\nuse(Batter:455) [enemy.aura(Bubble:933).exists]\nuse(Sweep:457) [!enemy(#2).dead & enemy(#1).active]\nuse(Wind-Up:459) [enemy(#2).active]\nuse(Batter:455)\nchange(#2)",
 },
-["team:36"] = {
-["name"] = "The Power of Friendship",
-["code"] = "use(Toxic Smoke:640) [round>3]\nuse(Supercharge:208) [round=2]\nuse(Wind-Up:459)\nuse(Black Claw:919) [self.round=1]\nuse(Flock:581)\nuse(Arcane Storm:589) [self.round=1]\nuse(Surge of Power:593) [enemy(#3).active & self.aura(Dragonkin:245).exists & enemy.hp<1099]\nuse(Breath:115)\nchange(next)",
+["team:20"] = {
+["name"] = "Robot Rumble",
+["code"] = "use(Blistering Cold:786)\nuse(Chop:943) [!enemy.aura(Bleeding:491).exists]\nuse(BONESTORM!!:1762)\nuse(Chop:943)\nuse(Black Claw:919) [!enemy.aura(Black Claw:918).exists]\nuse(Flock:581)\nstandby\nchange(next)",
 },
-["team:34"] = {
-["name"] = "Deebs, Tyri and Puzzle",
-["code"] = "ability(Sweep:457) [ round=1 ]\nchange(next) [ !self(#3).active & !self(#3).played ]\nability(Wind-Up:459) [ enemy(#3).active ]\nability(#1)\nability(#2)\nability(#3)\nchange(#1)",
+["team:1"] = {
+["name"] = "Training With Durian",
+["code"] = "if [enemy(#1).active]\nability(#1) [ enemy.round =1 ]\nability(#2) [ enemy.round =2 ]\nability(#3) [ enemy.round =3 ]\nability(#1)\nendif\nif [enemy(#2).active]\nability(#1)\nendif\nif [enemy(#3).active]\nchange(#2) [enemy.round =1 ]\nchange(#3) [enemy.round =2 ]\nability(#2) [ enemy.round =3 ]\nability(#3) [ enemy.round =4 ]\nendif",
 },
 ["team:12"] = {
 ["name"] = "Yu'la, Broodling of Yu'lon",
 ["code"] = "use(460)\nuse(282)\nuse(#1) [ self(#3).dead ]\nchange(next)",
 },
-["team:32"] = {
-["name"] = "Jeremy Feasel (2)",
-["code"] = "if [enemy(#1).active]\nability(Thunderbolt:779)\nability(Decoy:334)\nability(Breath:115)\nendif\nif [enemy(#2).active]\nstandby [self.aura(Stunned:927).exists]\nability(Thunderbolt:779)\nability(Decoy:334)\nability(Breath:115)\nability(Alpha Strike:504)\nchange(#3) [self(#1).dead]\nendif\nif [enemy(#3).active]\nchange(#2) [enemy.round=1]\nchange(#3)\nability(Haywire:916)\nability(Alpha Strike:504)\nendif",
+["team:30"] = {
+["name"] = "Loyal Crewmates",
+["code"] = "ability(Arkaner Sturm:589) [!weather(Arkane Winde:590).exists]\nability(Abheben:170)\nability(#2)\nability(#1)\nchange(next)",
 },
-["team:21"] = {
-["name"] = "One Hungry Worm",
-["code"] = "use(Blistering Cold:786)\nuse(Chop:943) [!enemy.aura(Bleeding:491).exists]\nuse(BONESTORM!!:1762)\nuse(Chop:943)\nuse(Black Claw:919) [!enemy.aura(Black Claw:918).exists]\nuse(Flock:581)\nstandby\nchange(next)",
+["team:27"] = {
+["name"] = "Spores, Dusty, and Salad",
+["code"] = "quit [ self(#3).dead ]\nchange(next) [ self(#1).dead & !self(#3).played ]\nuse(Arcane Explosion:299) [ !enemy(#3).active ]\nuse(Arcane Explosion:299) [ enemy(#3).hpp>50 ]\nuse(Arcane Storm:589)\nuse(Mana Surge:489)\nuse(Frost Breath:782)\nstandby",
 },
-["team:29"] = {
-["name"] = "Stitches Jr.",
-["code"] = "standby [round~3,7]\nability(Supercharge:208) [round=5]\nability(Wind-Up:459)\nchange(#2)",
+["team:19"] = {
+["name"] = "Wrathion",
+["code"] = "change(next) [self.dead]\nuse(Dodge:312) [self.aura(Ice Tomb:623).duration = 1]\nuse(Stampede:163) [enemy(Cindy:1299).active & enemy.round = 4]\nuse(Stampede:163) [enemy(Alex:1301).active & !self.aura(Ice Tomb:623).exists]\nstandby [enemy.aura(Undead:242).exists]\nuse(Scratch:119)\nuse(Crush:406) [enemy(Alex:1301).aura(Shattered Defenses:542).exists]\nuse(Stoneskin:436) [!self.aura(Stoneskin:435).exists]\nuse(Deflection:490) [self.aura(Elementium Bolt:605).duration = 1]\nuse(Crush:406)\nuse(Dead Man's Party:1093)\nuse(Macabre Maraca:1094)",
 },
 ["team:2"] = {
 ["name"] = "Tarr the Terrible",
@@ -165,38 +138,65 @@ TD_DB_BATTLEPETSCRIPT_GLOBAL = {
 ["name"] = "The Beakinator",
 ["code"] = "standby [round=1]\nchange(#2) [ self(#1).active ]\nchange(#3) [ self(#2).active ]\nuse(Arcane Storm:589)\nuse(Mana Surge:489)",
 },
-["team:19"] = {
-["name"] = "Wrathion",
-["code"] = "change(next) [self.dead]\nuse(Dodge:312) [self.aura(Ice Tomb:623).duration = 1]\nuse(Stampede:163) [enemy(Cindy:1299).active & enemy.round = 4]\nuse(Stampede:163) [enemy(Alex:1301).active & !self.aura(Ice Tomb:623).exists]\nstandby [enemy.aura(Undead:242).exists]\nuse(Scratch:119)\nuse(Crush:406) [enemy(Alex:1301).aura(Shattered Defenses:542).exists]\nuse(Stoneskin:436) [!self.aura(Stoneskin:435).exists]\nuse(Deflection:490) [self.aura(Elementium Bolt:605).duration = 1]\nuse(Crush:406)\nuse(Dead Man's Party:1093)\nuse(Macabre Maraca:1094)",
+["team:29"] = {
+["name"] = "Stitches Jr.",
+["code"] = "standby [round~3,7]\nability(Supercharge:208) [round=5]\nability(Wind-Up:459)\nchange(#2)",
 },
-["team:27"] = {
-["name"] = "Spores, Dusty, and Salad",
-["code"] = "quit [ self(#3).dead ]\nchange(next) [ self(#1).dead & !self(#3).played ]\nuse(Arcane Explosion:299) [ !enemy(#3).active ]\nuse(Arcane Explosion:299) [ enemy(#3).hpp>50 ]\nuse(Arcane Storm:589)\nuse(Mana Surge:489)\nuse(Frost Breath:782)\nstandby",
+["team:21"] = {
+["name"] = "One Hungry Worm",
+["code"] = "use(Blistering Cold:786)\nuse(Chop:943) [!enemy.aura(Bleeding:491).exists]\nuse(BONESTORM!!:1762)\nuse(Chop:943)\nuse(Black Claw:919) [!enemy.aura(Black Claw:918).exists]\nuse(Flock:581)\nstandby\nchange(next)",
 },
-["team:30"] = {
-["name"] = "Loyal Crewmates",
-["code"] = "ability(Arkaner Sturm:589) [!weather(Arkane Winde:590).exists]\nability(Abheben:170)\nability(#2)\nability(#1)\nchange(next)",
+["team:32"] = {
+["name"] = "Jeremy Feasel (2)",
+["code"] = "if [enemy(#1).active]\nability(Thunderbolt:779)\nability(Decoy:334)\nability(Breath:115)\nendif\nif [enemy(#2).active]\nstandby [self.aura(Stunned:927).exists]\nability(Thunderbolt:779)\nability(Decoy:334)\nability(Breath:115)\nability(Alpha Strike:504)\nchange(#3) [self(#1).dead]\nendif\nif [enemy(#3).active]\nchange(#2) [enemy.round=1]\nchange(#3)\nability(Haywire:916)\nability(Alpha Strike:504)\nendif",
 },
 ["team:15"] = {
 ["name"] = "Dr. Ion Goldbloom",
 ["code"] = "use(Howl:362) [enemy.aura(Flying:341).exists]\nuse(Surge of Power:593) [enemy.aura(Howl:1725).exists]\nuse(Arcane Explosion:299)\nuse(Conflagrate:179) [enemy(#3).active]\nuse(Flame Breath:501) [!enemy.aura(Flame Breath:500).exists]\nuse(Scorched Earth:172)\nuse(Ion Cannon:209) [enemy(#3).hp<1142]\nuse(#1)\nchange(next)",
 },
-["team:1"] = {
-["name"] = "Training With Durian",
-["code"] = "if [enemy(#1).active]\nability(#1) [ enemy.round =1 ]\nability(#2) [ enemy.round =2 ]\nability(#3) [ enemy.round =3 ]\nability(#1)\nendif\nif [enemy(#2).active]\nability(#1)\nendif\nif [enemy(#3).active]\nchange(#2) [enemy.round =1 ]\nchange(#3) [enemy.round =2 ]\nability(#2) [ enemy.round =3 ]\nability(#3) [ enemy.round =4 ]\nendif",
+["team:34"] = {
+["name"] = "Deebs, Tyri and Puzzle",
+["code"] = "ability(Sweep:457) [ round=1 ]\nchange(next) [ !self(#3).active & !self(#3).played ]\nability(Wind-Up:459) [ enemy(#3).active ]\nability(#1)\nability(#2)\nability(#3)\nchange(#1)",
 },
-["team:20"] = {
-["name"] = "Robot Rumble",
-["code"] = "use(Blistering Cold:786)\nuse(Chop:943) [!enemy.aura(Bleeding:491).exists]\nuse(BONESTORM!!:1762)\nuse(Chop:943)\nuse(Black Claw:919) [!enemy.aura(Black Claw:918).exists]\nuse(Flock:581)\nstandby\nchange(next)",
-},
-},
-["Base"] = {
-},
-["FirstEnemy"] = {
-},
-["AllInOne"] = {
+["team:36"] = {
+["name"] = "The Power of Friendship",
+["code"] = "use(Toxic Smoke:640) [round>3]\nuse(Supercharge:208) [round=2]\nuse(Wind-Up:459)\nuse(Black Claw:919) [self.round=1]\nuse(Flock:581)\nuse(Arcane Storm:589) [self.round=1]\nuse(Surge of Power:593) [enemy(#3).active & self.aura(Dragonkin:245).exists & enemy.hp<1099]\nuse(Breath:115)\nchange(next)",
 },
 },
+},
+},
+["profileKeys"] = {
+["Thingreyline - Tichondrius"] = "Default",
+["Crillessana - Mal'Ganis"] = "Default",
+["Heilsatan - Tichondrius"] = "Default",
+["Choppiez - Tichondrius"] = "Default",
+["Gehyo - Tichondrius"] = "Default",
+["Praisesun - Tichondrius"] = "Default",
+["Auteist - Mal'Ganis"] = "Default",
+["Ofpuss - Mal'Ganis"] = "Default",
+["Tampacks - Mal'Ganis"] = "Default",
+["Smaugchamp - Mal'Ganis"] = "Default",
+["Choppiez - Mal'Ganis"] = "Default",
+["Starstypeshi - Tichondrius"] = "Default",
+["Thickshape - Mal'Ganis"] = "Default",
+["Hellavator - Mal'Ganis"] = "Default",
+["Corsic - Mal'Ganis"] = "Default",
+["Mäñýfäçëð - Mal'Ganis"] = "Default",
+["Auteist - Tichondrius"] = "Default",
+["Ofpusstwo - Tichondrius"] = "Default",
+["Hellavator - Tichondrius"] = "Default",
+["Gehyo - Mal'Ganis"] = "Default",
+["Cullnvoid - Tichondrius"] = "Default",
+["Stormclout - Tichondrius"] = "Default",
+["Reedingo - Mal'Ganis"] = "Default",
+["Stormclout - Mal'Ganis"] = "Default",
+["Rakeist - Mal'Ganis"] = "Default",
+["Neonvoid - Mal'Ganis"] = "Default",
+["Smaugchamp - Tichondrius"] = "Default",
+["Ofpuss - Tichondrius"] = "Default",
+["Praisesun - Mal'Ganis"] = "Default",
+["Mäñýfäçëð - Tichondrius"] = "Default",
+["Clevagirl - Mal'Ganis"] = "Default",
 },
 ["profiles"] = {
 ["Default"] = {

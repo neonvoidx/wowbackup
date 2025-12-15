@@ -48,4 +48,5 @@
   <Script file="_WorldMapFrame.lua"/>
   <Script file="_GuildBankFrame.lua"/>
   <Script file="_CooldownViewerSettings.lua"/>
+  <Script file="_OrderHallMissionFrame.lua"/>
 </Ui>

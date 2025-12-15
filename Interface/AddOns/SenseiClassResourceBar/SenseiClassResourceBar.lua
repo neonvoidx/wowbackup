@@ -55,7 +55,7 @@ SCRB:SetScript("OnEvent", function(_, event, arg1)
 
         for _, config in pairs(addonTable.RegistereredBar or {}) do
             if config.loadPredicate == nil or (type(config.loadPredicate) == "function" and config.loadPredicate(config) == true) then
-                local frame = InitializeBar(config, ((config.frameLevel or 0) * 10) + 501) -- 501 so it is above the action bars
+                local frame = InitializeBar(config, config.frameLevel or 1)
                 addonTable.barInstances[config.frameName] = frame
             end
         end

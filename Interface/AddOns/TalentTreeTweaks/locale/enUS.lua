@@ -1,4 +1,4 @@
--- Please use the Localization App on CurseForge to Update this
+-- Please use the Localization App on CurseForge to update this file
 -- https://legacy.curseforge.com/wow/addons/talent-tree-tweaks/localization
 local name, _ = ...
 
@@ -16,7 +16,7 @@ L[ [=[%d points spent past the gate.
 L["%s Switch to %s"] = "%s Switch to %s"
 L["(was %s)"] = "(was %s)"
 L["A workaround for one of the ways that Talent Tree taint can block action buttons from working."] = "A workaround for one of the ways that Talent Tree taint can block action buttons from working."
-L["Addon development takes a large amount of time and effort. If you enjoy using Talent Tree Tweaks, please consider supporting its development by donating. Your support helps ensure the continued improvement and maintenance of the addon. Thank you for your generosity!"] = "Addon development takes a large amount of time and effort. If you enjoy using Talent Tree Tweaks, please consider supporting its development by donating. Your support helps ensure the continued improvement and maintenance of the addon. Thank you for your generosity!"
+L["Addon development takes a large amount of time and effort. If you enjoy using %s, please consider supporting its development by donating. Your support helps ensure the continued improvement and maintenance of the addon. Thank you for your generosity!"] = "Addon development takes a large amount of time and effort. If you enjoy using %s, please consider supporting its development by donating. Your support helps ensure the continued improvement and maintenance of the addon. Thank you for your generosity!"
 L["Adds a button to link the currently shown build in chat."] = "Adds a button to link the currently shown build in chat."
 L["Adds a few fixes for minor issues."] = "Adds a few fixes for minor issues."
 L["Adds a mini tree in various tooltips for Talent Tree Builds"] = "Adds a mini tree in various tooltips for Talent Tree Builds"
@@ -61,6 +61,7 @@ L["Color of the highlight"] = "Color of the highlight"
 L["Copy Loadout"] = "Copy Loadout"
 L["Copy SpellID on hover"] = "Copy SpellID on hover"
 L["CTRL + Click:"] = "CTRL + Click:"
+L["CTRL-C to copy"] = "CTRL-C to copy"
 L["CTRL-C to copy %s"] = "CTRL-C to copy %s"
 L["CTRL-C to copy spellID"] = "CTRL-C to copy spellID"
 L["CTRL-D to debug nodeInfo"] = "CTRL-D to debug nodeInfo"
@@ -95,7 +96,7 @@ L["Hero Talents"] = "Hero Talents"
 L["Highlight Cascade Repurchable"] = "Highlight Cascade Repurchable"
 L["Horrific Visions"] = "Horrific Visions"
 L["If checked, the imported build will be imported into the currently selected loadout."] = "If checked, the imported build will be imported into the currently selected loadout."
-L["If you enjoy using Talent Tree Tweaks, consider supporting its development with a donation."] = "If you enjoy using Talent Tree Tweaks, consider supporting its development with a donation."
+L["If you enjoy using %s, consider supporting its development with a donation."] = "If you enjoy using %s, consider supporting its development with a donation."
 L["Implements various workarounds around taint."] = "Implements various workarounds around taint."
 L["Import into current loadout"] = "Import into current loadout"
 L["Import into current loadout (click \"%s\" afterwards)"] = "Import into current loadout (click \"%s\" afterwards)"

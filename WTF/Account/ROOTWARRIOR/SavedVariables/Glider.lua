@@ -26,13 +26,19 @@ GliderAddOnDB = {
 ["textPosition"] = "Bottom",
 },
 ["GliderGlobalSettings"] = {
-["y"] = -165.1667327880859,
-["x"] = -1.5,
 ["point"] = "CENTER",
 ["scale"] = 1,
-["textPosition"] = "Bottom",
-["style"] = "Class",
+["hideWhenGroundedAndFull"] = false,
+["secondWindMode"] = 0,
 ["mutedSoundsBitfield"] = 0,
+["y"] = -165.1667327880859,
+["x"] = -1.5,
+["style"] = "Class",
+["textPosition"] = "Bottom",
+["whirlingSurgeMode"] = 0,
+["insideCircle"] = false,
+["noDisplayText"] = false,
+["whirlingSurgeState"] = 0,
 },
 ["DEFAULT MOD"] = {
 ["y"] = 15.00013446807861,
@@ -70,25 +76,14 @@ GliderAddOnDB = {
 ["point"] = "CENTER",
 ["textPosition"] = "Bottom",
 },
-["Default Bot"] = {
-["y"] = 170,
-["x"] = 0,
+["Default MidScreen"] = {
+["y"] = -236.6664123535156,
+["x"] = 6.103515625e-05,
 ["point"] = "CENTER",
 ["textPosition"] = "Bottom",
+["style"] = "Class",
 },
 ["TESTING"] = {
-["y"] = 170,
-["x"] = 0,
-["point"] = "CENTER",
-["textPosition"] = "Bottom",
-},
-["Dps"] = {
-["y"] = -229.9996948242188,
-["x"] = 0.00042724609375,
-["point"] = "CENTER",
-["textPosition"] = "Bottom",
-},
-["Classic"] = {
 ["y"] = 170,
 ["x"] = 0,
 ["point"] = "CENTER",
@@ -100,9 +95,21 @@ GliderAddOnDB = {
 ["point"] = "CENTER",
 ["textPosition"] = "Bottom",
 },
-["Default DPS"] = {
+["Classic"] = {
 ["y"] = 170,
 ["x"] = 0,
+["point"] = "CENTER",
+["textPosition"] = "Bottom",
+},
+["Dps"] = {
+["y"] = -229.9996948242188,
+["x"] = 0.00042724609375,
+["point"] = "CENTER",
+["textPosition"] = "Bottom",
+},
+["Default Old"] = {
+["y"] = -144.1665191650391,
+["x"] = -0.832763671875,
 ["point"] = "CENTER",
 ["textPosition"] = "Bottom",
 },
@@ -113,7 +120,7 @@ GliderAddOnDB = {
 ["scale"] = 1.019999980926514,
 ["textPosition"] = "Bottom",
 },
-["123"] = {
+["Modern"] = {
 ["y"] = 170,
 ["x"] = 0,
 ["point"] = "CENTER",
@@ -131,18 +138,18 @@ GliderAddOnDB = {
 ["point"] = "BOTTOM",
 ["scale"] = 1,
 ["textPosition"] = "Bottom",
-["insideCircle"] = false,
 ["style"] = "Class",
+["insideCircle"] = false,
 },
-["Modern"] = {
+["123"] = {
 ["y"] = 170,
 ["x"] = 0,
 ["point"] = "CENTER",
 ["textPosition"] = "Bottom",
 },
-["Default Old"] = {
-["y"] = -144.1665191650391,
-["x"] = -0.832763671875,
+["Default DPS"] = {
+["y"] = 170,
+["x"] = 0,
 ["point"] = "CENTER",
 ["textPosition"] = "Bottom",
 },
@@ -158,12 +165,11 @@ GliderAddOnDB = {
 ["point"] = "BOTTOM",
 ["textPosition"] = "Bottom",
 },
-["Default MidScreen"] = {
-["y"] = -236.6664123535156,
-["x"] = 6.103515625e-05,
+["Default Bot"] = {
+["y"] = 170,
+["x"] = 0,
 ["point"] = "CENTER",
 ["textPosition"] = "Bottom",
-["style"] = "Class",
 },
 },
 ["globalSettingsEnabled"] = true,

@@ -1,9 +1,9 @@
-## Interface: 110205,110207,120000
+## Interface: 110207,120000,120000
 ## Title: Talent Tree Tweaks
 ## Author: Numy
 ## IconTexture: Interface\Addons\TalentTreeTweaks\media\icon
 ## Notes: Various improvements and addition to the Dragonflight talent tree UI
-## Version: v1.13.3
+## Version: v1.13.7
 ## X-Curse-Project-ID: 678792
 ## X-Wago-ID: qKQxm86x
 ## SavedVariables: TalentTreeTweaksDB
@@ -28,8 +28,7 @@ core.lua
 ImportExportUtilV2.lua
 SharedUtil.lua
 
-settingsTemplates.xml
-config.lua
+config.xml
 
 modules\reduceTaint.lua
 

@@ -20,28 +20,28 @@ SimulationCraftDB = {
 ["Mäñýfäçëð - Tichondrius"] = "Mäñýfäçëð - Tichondrius",
 ["Auteist - Mal'Ganis"] = "Auteist - Mal'Ganis",
 ["Ofpuss - Mal'Ganis"] = "Ofpuss - Mal'Ganis",
-["Gehyo - Tichondrius"] = "Gehyo - Tichondrius",
+["Starstypeshi - Tichondrius"] = "Starstypeshi - Tichondrius",
 ["Smaugchamp - Mal'Ganis"] = "Smaugchamp - Mal'Ganis",
 ["Choppiez - Mal'Ganis"] = "Choppiez - Mal'Ganis",
-["Starstypeshi - Tichondrius"] = "Starstypeshi - Tichondrius",
+["Gehyo - Tichondrius"] = "Gehyo - Tichondrius",
 ["Tampacks - Mal'Ganis"] = "Tampacks - Mal'Ganis",
 ["Kitedbro - Mal'Ganis"] = "Kitedbro - Mal'Ganis",
-["Crillessana - Mal'Ganis"] = "Crillessana - Mal'Ganis",
+["Heilsatan - Tichondrius"] = "Heilsatan - Tichondrius",
 ["Mäñýfäçëð - Mal'Ganis"] = "Mäñýfäçëð - Mal'Ganis",
 ["Hellavator - Mal'Ganis"] = "Hellavator - Mal'Ganis",
 ["Charizhard - Mal'Ganis"] = "Charizhard - Mal'Ganis",
 ["Hellavator - Tichondrius"] = "Hellavator - Tichondrius",
 ["Praisesun - Tichondrius"] = "Praisesun - Tichondrius",
-["Smaugchamp - Tichondrius"] = "Smaugchamp - Tichondrius",
+["Neonvoid - Mal'Ganis"] = "Neonvoid - Mal'Ganis",
 ["Stormclout - Tichondrius"] = "Stormclout - Tichondrius",
 ["Reedingo - Mal'Ganis"] = "Reedingo - Mal'Ganis",
 ["Choppiez - Tichondrius"] = "Choppiez - Tichondrius",
-["Thickshape - Mal'Ganis"] = "Thickshape - Mal'Ganis",
 ["Gehyo - Mal'Ganis"] = "Gehyo - Mal'Ganis",
+["Thickshape - Mal'Ganis"] = "Thickshape - Mal'Ganis",
 ["Reedmonchan - Mal'Ganis"] = "Reedmonchan - Mal'Ganis",
-["Neonvoid - Mal'Ganis"] = "Neonvoid - Mal'Ganis",
+["Smaugchamp - Tichondrius"] = "Smaugchamp - Tichondrius",
 ["Smashkeys - Mal'Ganis"] = "Smashkeys - Mal'Ganis",
-["Heilsatan - Tichondrius"] = "Heilsatan - Tichondrius",
+["Crillessana - Mal'Ganis"] = "Crillessana - Mal'Ganis",
 ["Clevagirl - Mal'Ganis"] = "Clevagirl - Mal'Ganis",
 },
 ["profiles"] = {
@@ -77,11 +77,11 @@ SimulationCraftDB = {
 ["Cullnvoid - Tichondrius"] = {
 },
 ["Stormclout - Mal'Ganis"] = {
-["frame"] = {
-["ofsy"] = -0.833363950252533,
-},
 ["minimap"] = {
 ["hide"] = true,
+},
+["frame"] = {
+["ofsy"] = -0.833363950252533,
 },
 },
 ["Rakeist - Mal'Ganis"] = {
@@ -114,11 +114,11 @@ SimulationCraftDB = {
 },
 },
 ["Auteist - Mal'Ganis"] = {
-["frame"] = {
-["ofsy"] = 0.833363950252533,
-},
 ["minimap"] = {
 ["hide"] = true,
+},
+["frame"] = {
+["ofsy"] = 0.833363950252533,
 },
 },
 ["Ofpuss - Mal'Ganis"] = {
@@ -126,7 +126,10 @@ SimulationCraftDB = {
 ["hide"] = true,
 },
 },
-["Gehyo - Tichondrius"] = {
+["Starstypeshi - Tichondrius"] = {
+["minimap"] = {
+["hide"] = true,
+},
 },
 ["Smaugchamp - Mal'Ganis"] = {
 ["minimap"] = {
@@ -139,10 +142,7 @@ SimulationCraftDB = {
 ["hide"] = true,
 },
 },
-["Starstypeshi - Tichondrius"] = {
-["minimap"] = {
-["hide"] = true,
-},
+["Gehyo - Tichondrius"] = {
 },
 ["Tampacks - Mal'Ganis"] = {
 ["minimap"] = {
@@ -151,7 +151,7 @@ SimulationCraftDB = {
 },
 ["Kitedbro - Mal'Ganis"] = {
 },
-["Crillessana - Mal'Ganis"] = {
+["Heilsatan - Tichondrius"] = {
 },
 ["Mäñýfäçëð - Mal'Ganis"] = {
 ["minimap"] = {
@@ -175,8 +175,9 @@ SimulationCraftDB = {
 ["hide"] = true,
 },
 },
-["Smaugchamp - Tichondrius"] = {
+["Neonvoid - Mal'Ganis"] = {
 ["minimap"] = {
+["minimapPos"] = 261.4887522372954,
 ["hide"] = true,
 },
 },
@@ -195,12 +196,12 @@ SimulationCraftDB = {
 ["hide"] = true,
 },
 },
-["Thickshape - Mal'Ganis"] = {
+["Gehyo - Mal'Ganis"] = {
 ["minimap"] = {
 ["hide"] = true,
 },
 },
-["Gehyo - Mal'Ganis"] = {
+["Thickshape - Mal'Ganis"] = {
 ["minimap"] = {
 ["hide"] = true,
 },
@@ -210,15 +211,14 @@ SimulationCraftDB = {
 ["hide"] = true,
 },
 },
-["Neonvoid - Mal'Ganis"] = {
+["Smaugchamp - Tichondrius"] = {
 ["minimap"] = {
-["minimapPos"] = 261.4887522372954,
 ["hide"] = true,
 },
 },
 ["Smashkeys - Mal'Ganis"] = {
 },
-["Heilsatan - Tichondrius"] = {
+["Crillessana - Mal'Ganis"] = {
 },
 ["Clevagirl - Mal'Ganis"] = {
 },

@@ -1,16 +1,12 @@
 
 BAGANATOR_CONFIG = {
-["Version"] = 1,
 ["CharacterSpecific"] = {
 ["sort_ignore_bank_slots_count"] = {
 ["Choppiez-Tichondrius"] = 0,
 ["Stormclout-Mal'Ganis"] = 0,
 ["Ofpusstwo-Tichondrius"] = 0,
 },
-["sort_ignore_slots_count_2"] = {
-["Choppiez-Tichondrius"] = 0,
-["Stormclout-Mal'Ganis"] = 0,
-["Ofpusstwo-Tichondrius"] = 0,
+["currencies_tracked_imported"] = {
 },
 ["currencies_tracked"] = {
 ["Stormclout-Tichondrius"] = {
@@ -137,19 +133,7 @@ BAGANATOR_CONFIG = {
 ["currencyID"] = 2123,
 },
 },
-["Auteist-Mal'Ganis"] = {
-{
-["currencyID"] = 1602,
-},
-{
-["currencyID"] = 1792,
-},
-{
-["currencyID"] = 3008,
-},
-{
-["currencyID"] = 3028,
-},
+["Clevagirl-Mal'Ganis"] = {
 },
 ["Reedingo-Mal'Ganis"] = {
 {
@@ -171,6 +155,12 @@ BAGANATOR_CONFIG = {
 },
 },
 ["Gehyo-Tichondrius"] = {
+{
+["currencyID"] = 1792,
+},
+{
+["currencyID"] = 1602,
+},
 },
 ["Crillessana-Mal'Ganis"] = {
 },
@@ -184,7 +174,10 @@ BAGANATOR_CONFIG = {
 },
 ["Choppiez-Mal'Ganis"] = {
 },
-["Starstypeshi-Tichondrius"] = {
+["Ofpuss-Tichondrius"] = {
+{
+["currencyID"] = 3288,
+},
 {
 ["currencyID"] = 1602,
 },
@@ -192,7 +185,7 @@ BAGANATOR_CONFIG = {
 ["currencyID"] = 1792,
 },
 {
-["currencyID"] = 2123,
+["currencyID"] = 3290,
 },
 },
 ["Mäñýfäçëð-Mal'Ganis"] = {
@@ -217,17 +210,6 @@ BAGANATOR_CONFIG = {
 ["currencyID"] = 3028,
 },
 },
-["Praisesun-Mal'Ganis"] = {
-{
-["currencyID"] = 1602,
-},
-{
-["currencyID"] = 1792,
-},
-{
-["currencyID"] = 2123,
-},
-},
 ["Ofpuss-Mal'Ganis"] = {
 {
 ["currencyID"] = 3008,
@@ -237,6 +219,17 @@ BAGANATOR_CONFIG = {
 },
 {
 ["currencyID"] = 3309,
+},
+},
+["Praisesun-Mal'Ganis"] = {
+{
+["currencyID"] = 1602,
+},
+{
+["currencyID"] = 1792,
+},
+{
+["currencyID"] = 2123,
 },
 },
 ["Praisesun-Tichondrius"] = {
@@ -275,10 +268,7 @@ BAGANATOR_CONFIG = {
 ["currencyID"] = 3028,
 },
 },
-["Ofpuss-Tichondrius"] = {
-{
-["currencyID"] = 3288,
-},
+["Starstypeshi-Tichondrius"] = {
 {
 ["currencyID"] = 1602,
 },
@@ -286,7 +276,7 @@ BAGANATOR_CONFIG = {
 ["currencyID"] = 1792,
 },
 {
-["currencyID"] = 3290,
+["currencyID"] = 2123,
 },
 },
 ["Stormclout-Mal'Ganis"] = {
@@ -317,12 +307,28 @@ BAGANATOR_CONFIG = {
 },
 ["Gehyo-Mal'Ganis"] = {
 },
-["Clevagirl-Mal'Ganis"] = {
+["Auteist-Mal'Ganis"] = {
+{
+["currencyID"] = 1602,
+},
+{
+["currencyID"] = 1792,
+},
+{
+["currencyID"] = 3008,
+},
+{
+["currencyID"] = 3028,
 },
 },
-["currencies_tracked_imported"] = {
+},
+["sort_ignore_slots_count_2"] = {
+["Choppiez-Tichondrius"] = 0,
+["Stormclout-Mal'Ganis"] = 0,
+["Ofpusstwo-Tichondrius"] = 0,
 },
 },
+["Version"] = 1,
 ["Profiles"] = {
 ["DEFAULT"] = {
 ["guild_view_width"] = 14,
@@ -342,18 +348,18 @@ BAGANATOR_CONFIG = {
 ["default_food"] = true,
 ["default_reagent"] = true,
 ["default_special_empty"] = true,
-["default_junk"] = true,
-["default_miscellaneous"] = true,
+["default_recipe"] = true,
+["default_weapon"] = true,
 ["default_consumable"] = true,
 ["default_tradegoods"] = true,
-["default_key"] = true,
-["default_container"] = true,
-["default_profession"] = true,
-["default_auto_equipment_sets"] = true,
-["default_potion"] = true,
 ["default_gem"] = true,
-["default_weapon"] = true,
-["default_recipe"] = true,
+["default_potion"] = true,
+["default_auto_equipment_sets"] = true,
+["default_profession"] = true,
+["default_container"] = true,
+["default_key"] = true,
+["default_miscellaneous"] = true,
+["default_junk"] = true,
 },
 ["show_search_box"] = true,
 ["debug_categories_search"] = false,
@@ -366,7 +372,7 @@ BAGANATOR_CONFIG = {
 ["tradeskill"] = false,
 ["void_storage"] = false,
 ["guild_bank"] = true,
-["trade_partner"] = true,
+["forge_of_bonds"] = false,
 ["item_upgrade"] = true,
 ["merchant"] = true,
 ["character_panel"] = false,
@@ -374,7 +380,7 @@ BAGANATOR_CONFIG = {
 ["item_interaction"] = true,
 ["mail"] = true,
 ["sockets"] = false,
-["forge_of_bonds"] = false,
+["trade_partner"] = true,
 ["bank"] = true,
 },
 ["icon_corners_auto_insert_applied"] = {
@@ -494,1100 +500,8 @@ BAGANATOR_CONFIG = {
 25.00002479553223,
 366.6666259765625,
 },
-["sort_start_at_bottom"] = false,
+["character_bank_view_width"] = 13,
 ["recent_include_owned"] = false,
-["currency_headers_collapsed"] = {
-},
-["bag_icon_size"] = 55,
-["guild_view_position_2"] = {
-"TOPLEFT",
-125.8333892822266,
--81.8330078125,
-},
-["character_select_position"] = {
-"RIGHT",
-"Baganator_CategoryViewBackpackViewFrameblizzard",
-"LEFT",
-0,
-0,
-},
-["debug_timers"] = false,
-["seen_welcome"] = 1,
-["hide_special_container"] = {
-},
-["icon_equipment_set_border"] = true,
-["bag_empty_space_at_top"] = false,
-["bag_view_show_bag_slots"] = false,
-["category_horizontal_spacing_2"] = 0.3,
-["icon_mark_unusable"] = true,
-["category_default_import"] = 2,
-["bag_view_position"] = {
-"BOTTOMRIGHT",
--2.495361328125,
-3.333548307418823,
-},
-["character_bank_current_tab"] = 0,
-["sort_ignore_bank_slots_count"] = {
-["Ofpuss-Mal'Ganis"] = 0,
-["Mäñýfäçëð-Mal'Ganis"] = 0,
-["Neonvoid-Mal'Ganis"] = 0,
-["Auteist-Mal'Ganis"] = 0,
-},
-["category_sort_method"] = "type",
-["upgrade_plugin"] = "simple_item_levels",
-["debug_categories"] = false,
-["migrated_sort_method"] = true,
-["category_migration"] = 5,
-["category_modifications"] = {
-["53"] = {
-["priority"] = 0,
-},
-["136"] = {
-["addedItems"] = {
-["i:128402"] = true,
-["i:120978"] = true,
-["i:128820"] = true,
-["i:128827"] = true,
-["i:136858"] = true,
-["i:127829"] = true,
-["i:128908"] = true,
-["i:128292"] = true,
-["i:133948"] = true,
-["i:128941"] = true,
-["i:134552"] = true,
-["i:137246"] = true,
-["i:128831"] = true,
-["i:128832"] = true,
-["i:128826"] = true,
-["i:128306"] = true,
-["i:128935"] = true,
-["i:128862"] = true,
-["i:128293"] = true,
-["i:128872"] = true,
-["i:128819"] = true,
-["i:128288"] = true,
-["i:128910"] = true,
-["i:128403"] = true,
-["i:128861"] = true,
-["i:128860"] = true,
-["i:158075"] = true,
-["i:134553"] = true,
-["i:127857"] = true,
-["i:128869"] = true,
-["i:128476"] = true,
-["i:128938"] = true,
-["i:128808"] = true,
-["i:139621"] = true,
-["i:128825"] = true,
-["i:127830"] = true,
-["i:128859"] = true,
-["i:128870"] = true,
-["i:128868"] = true,
-["i:128479"] = true,
-["i:128911"] = true,
-["i:136593"] = true,
-["i:128858"] = true,
-["i:128940"] = true,
-["i:128937"] = true,
-["i:128867"] = true,
-["i:128821"] = true,
-["i:128873"] = true,
-["i:128942"] = true,
-["i:128822"] = true,
-["i:128823"] = true,
-},
-["priority"] = 0,
-},
-["73"] = {
-["priority"] = 0,
-},
-["152"] = {
-["priority"] = 1,
-},
-["93"] = {
-["priority"] = 3,
-},
-["83"] = {
-["priority"] = 0,
-},
-["10.2"] = {
-},
-["137"] = {
-["priority"] = 0,
-},
-["default_hearthstone"] = {
-["addedItems"] = {
-["i:65274"] = true,
-["i:210494"] = true,
-["i:188152"] = true,
-["i:109076"] = true,
-},
-},
-["Quest"] = {
-},
-["159"] = {
-["priority"] = 0,
-},
-["154"] = {
-["priority"] = 0,
-},
-["Prismatic"] = {
-},
-["151"] = {
-["priority"] = 0,
-},
-["138"] = {
-["priority"] = 0,
-},
-["13"] = {
-["priority"] = 0,
-},
-["130"] = {
-["priority"] = 0,
-},
-["23"] = {
-["addedItems"] = {
-},
-["priority"] = 0,
-},
-["146"] = {
-["priority"] = -1,
-},
-["52"] = {
-["priority"] = -1,
-},
-["62"] = {
-["priority"] = 1,
-},
-["72"] = {
-["priority"] = 0,
-},
-["82"] = {
-["priority"] = 0,
-},
-["92"] = {
-["priority"] = -1,
-},
-["147"] = {
-["priority"] = 0,
-},
-["143"] = {
-["priority"] = 1,
-},
-["122"] = {
-["group"] = "type",
-["priority"] = 0,
-["showGroupPrefix"] = true,
-},
-["default_battlepet"] = {
-["addedItems"] = {
-["i:92665"] = true,
-["i:163036"] = true,
-["i:127755"] = true,
-["i:116416"] = true,
-["i:116418"] = true,
-["i:92683"] = true,
-["i:116423"] = true,
-["i:116420"] = true,
-["i:116417"] = true,
-["i:116429"] = true,
-["i:116424"] = true,
-["i:98715"] = true,
-["i:116374"] = true,
-},
-["priority"] = -1,
-},
-["164"] = {
-["priority"] = 0,
-},
-["default_key"] = {
-["priority"] = -1,
-},
-["129"] = {
-["priority"] = 0,
-},
-["121"] = {
-["group"] = "expansion",
-["priority"] = 0,
-},
-["148"] = {
-["priority"] = 0,
-},
-["165"] = {
-["priority"] = 3,
-},
-["12"] = {
-["priority"] = 0,
-},
-["22"] = {
-["priority"] = 0,
-},
-["32"] = {
-["priority"] = 0,
-},
-["95"] = {
-["priority"] = -1,
-["addedItems"] = {
-["i:213777"] = true,
-},
-},
-["85"] = {
-["addedItems"] = {
-},
-["priority"] = 1,
-},
-["75"] = {
-["priority"] = 0,
-},
-["65"] = {
-["priority"] = -1,
-},
-["55"] = {
-["priority"] = 0,
-},
-["45"] = {
-["priority"] = 3,
-},
-["35"] = {
-["priority"] = 0,
-},
-["116"] = {
-["priority"] = 1,
-},
-["132"] = {
-["priority"] = 0,
-},
-["1"] = {
-["priority"] = 1,
-},
-["trash"] = {
-["addedItems"] = {
-["i:24999"] = true,
-},
-},
-["2"] = {
-["priority"] = 0,
-},
-["Meta"] = {
-},
-["4"] = {
-["priority"] = 0,
-},
-["7"] = {
-["group"] = "type",
-["priority"] = 0,
-["showGroupPrefix"] = true,
-},
-["131"] = {
-["priority"] = 0,
-},
-["9"] = {
-["priority"] = 0,
-},
-["15"] = {
-["priority"] = 0,
-},
-["135"] = {
-["group"] = "expansion",
-["priority"] = 2,
-},
-["default_auto_equipment_sets"] = {
-["priority"] = 0,
-},
-["110"] = {
-["priority"] = -1,
-},
-["94"] = {
-["priority"] = 3,
-["addedItems"] = {
-["i:180653"] = true,
-},
-},
-["default_miscellaneous"] = {
-["addedItems"] = {
-["i:166751"] = true,
-},
-},
-["84"] = {
-["priority"] = 3,
-},
-["54"] = {
-["priority"] = 0,
-},
-["64"] = {
-["priority"] = 0,
-},
-["34"] = {
-["priority"] = 0,
-},
-["44"] = {
-["priority"] = 0,
-},
-["126"] = {
-["group"] = "slot",
-["priority"] = 3,
-["showGroupPrefix"] = true,
-},
-["102"] = {
-["priority"] = -1,
-["addedItems"] = {
-["i:222546"] = true,
-},
-},
-["default_food"] = {
-["priority"] = -1,
-},
-["144"] = {
-["priority"] = 0,
-},
-["101"] = {
-["priority"] = 3,
-},
-["default_consumable"] = {
-["priority"] = -1,
-},
-["14"] = {
-["priority"] = 0,
-},
-["24"] = {
-["priority"] = 1,
-},
-["128"] = {
-["priority"] = 0,
-},
-["145"] = {
-["priority"] = 0,
-},
-["default_potion"] = {
-["priority"] = -1,
-},
-["120"] = {
-["priority"] = 0,
-},
-["87"] = {
-["priority"] = 0,
-},
-["77"] = {
-["priority"] = 1,
-},
-["176"] = {
-["showGroupPrefix"] = true,
-["priority"] = 0,
-["addedItems"] = {
-["i:217607"] = true,
-["i:217608"] = true,
-["i:217730"] = true,
-["i:217901"] = true,
-["i:217606"] = true,
-["i:238727"] = true,
-["i:217928"] = true,
-["i:217956"] = true,
-["i:217929"] = true,
-["i:217605"] = true,
-["i:217731"] = true,
-},
-},
-["97"] = {
-["priority"] = 3,
-},
-["47"] = {
-["priority"] = 0,
-},
-["37"] = {
-["priority"] = 1,
-},
-["67"] = {
-["priority"] = 0,
-},
-["57"] = {
-["priority"] = 0,
-},
-["173"] = {
-["showGroupPrefix"] = true,
-["priority"] = 0,
-["addedItems"] = {
-["i:230905"] = true,
-},
-},
-["109"] = {
-["priority"] = 0,
-["addedItems"] = {
-["i:219321"] = true,
-["i:159622"] = true,
-["i:133304"] = true,
-["i:219303"] = true,
-["i:178772"] = true,
-},
-},
-["74"] = {
-["priority"] = -1,
-},
-["177"] = {
-["showGroupPrefix"] = true,
-["priority"] = 0,
-},
-["30"] = {
-["priority"] = 0,
-},
-["8"] = {
-["addedItems"] = {
-},
-["priority"] = 1,
-},
-["112"] = {
-["priority"] = -1,
-["addedItems"] = {
-["i:222776"] = true,
-["i:222781"] = true,
-},
-},
-["Tinker"] = {
-},
-["6"] = {
-["group"] = "expansion",
-["priority"] = 0,
-},
-["115"] = {
-["priority"] = 3,
-["addedItems"] = {
-["i:132516"] = true,
-["i:65360"] = true,
-["i:112384"] = true,
-["i:111820"] = true,
-["i:221903"] = true,
-["i:109253"] = true,
-["i:221949"] = true,
-["i:49040"] = true,
-["i:64402"] = true,
-["i:64401"] = true,
-},
-},
-["3"] = {
-["priority"] = 0,
-},
-["170"] = {
-["priority"] = 0,
-},
-["139"] = {
-["priority"] = 1,
-},
-["111"] = {
-["priority"] = -1,
-},
-["Travel"] = {
-["addedItems"] = {
-["i:217904"] = true,
-["i:219222"] = true,
-},
-},
-["134"] = {
-["priority"] = 0,
-},
-["114"] = {
-["showGroupPrefix"] = true,
-["priority"] = 3,
-},
-["119"] = {
-["priority"] = 0,
-},
-["27"] = {
-["group"] = "slot",
-["priority"] = -1,
-["showGroupPrefix"] = false,
-},
-["17"] = {
-["priority"] = 0,
-},
-["113"] = {
-["priority"] = -1,
-["addedItems"] = {
-["i:222738"] = true,
-["i:228338"] = true,
-},
-},
-["42"] = {
-["priority"] = -1,
-},
-["155"] = {
-["priority"] = -1,
-},
-["Sort later"] = {
-},
-["162"] = {
-["priority"] = 0,
-},
-["86"] = {
-["priority"] = -1,
-},
-["96"] = {
-["priority"] = 3,
-},
-["56"] = {
-["priority"] = 0,
-},
-["36"] = {
-["priority"] = 0,
-},
-["46"] = {
-["priority"] = 0,
-},
-["default_toy"] = {
-["priority"] = -1,
-},
-["66"] = {
-["priority"] = 0,
-},
-["Dragonflight Currency"] = {
-},
-["106"] = {
-["priority"] = -1,
-["addedItems"] = {
-["i:178781"] = true,
-["i:178736"] = true,
-["i:178691"] = true,
-["i:178778"] = true,
-["i:178745"] = true,
-["i:231825"] = true,
-["i:133287"] = true,
-["i:159372"] = true,
-["i:221141"] = true,
-["i:178707"] = true,
-["i:178733"] = true,
-["i:212421"] = true,
-["i:225634"] = true,
-["i:225576"] = true,
-},
-},
-["105"] = {
-["priority"] = -1,
-},
-["default_gem"] = {
-["priority"] = -1,
-},
-["123"] = {
-["addedItems"] = {
-["i:221268"] = true,
-["i:221373"] = true,
-["i:227713"] = true,
-},
-["priority"] = 1,
-},
-["default_recipe"] = {
-},
-["133"] = {
-["showGroupPrefix"] = true,
-["priority"] = 0,
-["addedItems"] = {
-["i:22589"] = true,
-["i:71086"] = true,
-["i:22630"] = true,
-["i:30312"] = true,
-["i:17182"] = true,
-["i:77949"] = true,
-["i:30313"] = true,
-["i:30317"] = true,
-["i:32838"] = true,
-["i:22631"] = true,
-["i:30318"] = true,
-["i:207728"] = true,
-["i:34334"] = true,
-["i:206448"] = true,
-["i:137225"] = true,
-["i:19019"] = true,
-["i:204177"] = true,
-["i:186414"] = true,
-["i:216906"] = true,
-["i:151137"] = true,
-["i:22632"] = true,
-["i:46017"] = true,
-["i:49623"] = true,
-["i:30316"] = true,
-["i:77950"] = true,
-["i:151138"] = true,
-["i:22736"] = true,
-["i:30311"] = true,
-["i:32837"] = true,
-},
-},
-["63"] = {
-["priority"] = 0,
-},
-["125"] = {
-["priority"] = 0,
-},
-["108"] = {
-["priority"] = -1,
-},
-["43"] = {
-["priority"] = 1,
-},
-["38"] = {
-["priority"] = 0,
-},
-["169"] = {
-["priority"] = 0,
-},
-["Cogwheel"] = {
-},
-["161"] = {
-["priority"] = 0,
-},
-["default_tradegoods"] = {
-},
-["58"] = {
-["priority"] = 1,
-},
-["124"] = {
-["priority"] = 0,
-},
-["16"] = {
-["priority"] = 0,
-},
-["26"] = {
-["priority"] = 3,
-},
-["76"] = {
-["priority"] = -1,
-},
-["100"] = {
-["priority"] = -1,
-},
-["172"] = {
-["showGroupPrefix"] = true,
-["priority"] = 0,
-["addedItems"] = {
-["i:180653"] = true,
-},
-},
-["41"] = {
-["priority"] = 0,
-},
-["71"] = {
-["priority"] = 1,
-},
-["61"] = {
-["priority"] = -1,
-},
-["51"] = {
-["priority"] = 1,
-["addedItems"] = {
-},
-},
-["156"] = {
-["priority"] = 0,
-},
-["157"] = {
-["priority"] = -1,
-},
-["153"] = {
-["priority"] = 0,
-},
-["91"] = {
-["showGroupPrefix"] = true,
-["priority"] = 0,
-["addedItems"] = {
-["i:157613"] = true,
-["i:178709"] = true,
-},
-},
-["81"] = {
-["priority"] = 0,
-},
-["59"] = {
-["priority"] = 0,
-},
-["49"] = {
-["priority"] = 0,
-},
-["39"] = {
-["priority"] = 0,
-},
-["29"] = {
-["priority"] = 0,
-},
-["99"] = {
-["priority"] = -1,
-["addedItems"] = {
-["i:2460"] = true,
-},
-},
-["89"] = {
-["priority"] = 0,
-},
-["79"] = {
-["priority"] = 3,
-},
-["69"] = {
-["priority"] = 0,
-},
-["174"] = {
-["showGroupPrefix"] = true,
-["priority"] = 0,
-["addedItems"] = {
-["i:249782"] = true,
-["i:249781"] = true,
-["i:249786"] = true,
-["i:245925"] = true,
-["i:254267"] = true,
-["i:246936"] = true,
-["i:253224"] = true,
-["i:237812"] = true,
-["i:245553"] = true,
-},
-},
-["150"] = {
-["priority"] = 0,
-},
-["default_itemenhancement"] = {
-},
-["142"] = {
-["priority"] = -1,
-},
-["19"] = {
-["priority"] = 0,
-},
-["40"] = {
-["priority"] = -1,
-},
-["103"] = {
-["priority"] = 3,
-},
-["default_other"] = {
-["priority"] = -1,
-},
-["175"] = {
-["showGroupPrefix"] = true,
-["priority"] = 0,
-},
-["158"] = {
-["priority"] = 1,
-},
-["171"] = {
-["priority"] = 0,
-},
-["25"] = {
-["priority"] = 0,
-},
-["31"] = {
-["priority"] = -1,
-},
-["21"] = {
-["addedItems"] = {
-},
-["priority"] = 0,
-},
-["11"] = {
-["group"] = "slot",
-["priority"] = 3,
-["showGroupPrefix"] = true,
-},
-["default_reagent"] = {
-["group"] = "type",
-["priority"] = -1,
-},
-["60"] = {
-["priority"] = 3,
-},
-["70"] = {
-["priority"] = 0,
-},
-["166"] = {
-["priority"] = 1,
-["addedItems"] = {
-["i:132514"] = true,
-["i:6948"] = true,
-},
-},
-["50"] = {
-["priority"] = 3,
-},
-["default_armor"] = {
-["group"] = "type",
-},
-["default_weapon"] = {
-["priority"] = -1,
-},
-["80"] = {
-["priority"] = 0,
-},
-["90"] = {
-["priority"] = 0,
-},
-["48"] = {
-["priority"] = 0,
-},
-["163"] = {
-["priority"] = 0,
-},
-["28"] = {
-["priority"] = 1,
-},
-["167"] = {
-["priority"] = -1,
-},
-["88"] = {
-["priority"] = 0,
-},
-["98"] = {
-["showGroupPrefix"] = true,
-["priority"] = 1,
-},
-["68"] = {
-["priority"] = 0,
-},
-["78"] = {
-["priority"] = 0,
-},
-["default_profession"] = {
-["priority"] = -1,
-},
-["149"] = {
-["priority"] = 0,
-},
-["160"] = {
-["priority"] = 3,
-},
-["33"] = {
-["priority"] = 0,
-},
-["107"] = {
-["priority"] = -1,
-},
-["18"] = {
-["showGroupPrefix"] = true,
-["priority"] = 0,
-["addedItems"] = {
-},
-},
-["140"] = {
-["priority"] = 0,
-},
-["117"] = {
-["priority"] = 0,
-},
-["118"] = {
-["priority"] = 0,
-},
-["141"] = {
-["showGroupPrefix"] = true,
-["priority"] = 3,
-},
-["5"] = {
-["priority"] = 0,
-},
-["104"] = {
-["priority"] = -1,
-},
-["20"] = {
-["group"] = "expansion",
-["priority"] = 2,
-},
-["168"] = {
-["priority"] = 0,
-},
-["127"] = {
-["priority"] = 0,
-},
-["10"] = {
-["priority"] = 0,
-},
-},
-["guild_bank_sort_method"] = "unset",
-["warband_bank_view_width"] = 11,
-["category_section_toggled"] = {
-["Crafting"] = false,
-["4"] = false,
-},
-["add_to_category_buttons_2"] = "drag+alt",
-["view_type"] = "unset",
-["bank_current_tab"] = 1,
-["icon_text_quality_colors"] = true,
-["guild_current_tab"] = 0,
-["icon_text_font_size"] = 14,
-["show_buttons_on_alt"] = false,
-["setting_anchors"] = false,
-["disabled_skins"] = {
-},
-["bag_view_width"] = 14,
-["currencies_tracked_imported"] = {
-},
-["currencies_tracked"] = {
-["Ofpuss-Mal'Ganis"] = {
-{
-["currencyID"] = 3008,
-},
-{
-["currencyID"] = 3109,
-},
-{
-["currencyID"] = 3110,
-},
-{
-["currencyID"] = 3028,
-},
-},
-["Rakeist-Mal'Ganis"] = {
-},
-["Neonvoid-Mal'Ganis"] = {
-{
-["currencyID"] = 3008,
-},
-{
-["currencyID"] = 3028,
-},
-{
-["currencyID"] = 1792,
-},
-{
-["currencyID"] = 1602,
-},
-{
-["currencyID"] = 2123,
-},
-},
-["Choppiez-Mal'Ganis"] = {
-},
-["Tampacks-Mal'Ganis"] = {
-},
-["Mäñýfäçëð-Mal'Ganis"] = {
-{
-["currencyID"] = 3028,
-},
-{
-["currencyID"] = 3110,
-},
-{
-["currencyID"] = 3109,
-},
-},
-["Stormclout-Mal'Ganis"] = {
-{
-["currencyID"] = 1602,
-},
-{
-["currencyID"] = 3008,
-},
-{
-["currencyID"] = 3028,
-},
-{
-["currencyID"] = 1792,
-},
-{
-["currencyID"] = 2123,
-},
-{
-["currencyID"] = 3109,
-},
-{
-["currencyID"] = 3110,
-},
-},
-["Auteist-Mal'Ganis"] = {
-{
-["currencyID"] = 1602,
-},
-{
-["currencyID"] = 2915,
-},
-{
-["currencyID"] = 3008,
-},
-{
-["currencyID"] = 3028,
-},
-{
-["currencyID"] = 1792,
-},
-{
-["currencyID"] = 2916,
-},
-{
-["currencyID"] = 2917,
-},
-},
-},
-["skins"] = {
-["blizzard"] = {
-["no_frame_borders"] = false,
-["view_transparency"] = 0,
-["empty_slot_background"] = false,
-},
-["dark"] = {
-["no_frame_borders"] = false,
-["square_icons"] = false,
-["view_transparency"] = 0.3,
-["empty_slot_background"] = false,
-},
-},
-["recent_characters_main_view"] = {
-"Smaugchamp-Tichondrius",
-"Stormclout-Tichondrius",
-"Mäñýfäçëð-Tichondrius",
-"Auteist-Tichondrius",
-"Starstypeshi-Tichondrius",
-"Hellavator-Tichondrius",
-"Thingreyline-Tichondrius",
-"Ofpuss-Tichondrius",
-"Choppiez-Tichondrius",
-"Praisesun-Tichondrius",
-},
-["debug_keywords"] = false,
-["auto_sort_on_open"] = false,
-["sort_ignore_slots_at_end"] = false,
-["sort_ignore_slots_count_2"] = {
-["Ofpuss-Mal'Ganis"] = 0,
-["Mäñýfäçëð-Mal'Ganis"] = 0,
-["Neonvoid-Mal'Ganis"] = 0,
-["Auteist-Mal'Ganis"] = 0,
-},
-["view_alpha"] = 1,
-["guild_view_position"] = {
-"LEFT",
-20,
-0,
-},
-["guild_view_dialog_position"] = {
-"BOTTOM",
-"Baganator_GuildViewFrame",
-"TOP",
-0,
-0,
-},
-["saved_searches"] = {
-},
-["bank_only_view_position"] = {
-"LEFT",
-20,
-0,
-},
-["category_group_empty_slots"] = true,
-["show_sort_button_2"] = true,
-["category_sections"] = {
-["1"] = {
-["name"] = "World of Warcraft",
-},
-["4"] = {
-["name"] = "Profession",
-},
-["3"] = {
-["name"] = "Prep",
-},
-["2"] = {
-["name"] = "Gear",
-},
-},
-["recent_timeout"] = 600,
-["currency_panel_position"] = {
-"RIGHT",
-"Baganator_CategoryViewBackpackViewFrameblizzard",
-"LEFT",
-0,
-0,
-},
-["lock_frames"] = false,
-["new_items_flashing"] = true,
-["icon_context_fading"] = true,
 ["custom_categories"] = {
 ["53"] = {
 ["name"] = "WuE",
@@ -1965,13 +879,13 @@ BAGANATOR_CONFIG = {
 ["name"] = "Reputation",
 ["search"] = "reputation",
 },
-["3"] = {
-["name"] = "Teleporters",
-["search"] = "hearthstone||teleport||returns you||brings you",
+["1"] = {
+["name"] = "Druid Upgrades",
+["search"] = "#gear&>550&(((#leather||cloak)&haste&agility)||trinket||neck) ",
 },
-["30"] = {
-["name"] = "Enchanting",
-["search"] = "#enchanting",
+["168"] = {
+["name"] = "WuE",
+["search"] = "#wue",
 },
 ["113"] = {
 ["name"] = "Mats",
@@ -1989,9 +903,9 @@ BAGANATOR_CONFIG = {
 ["name"] = "Quest",
 ["search"] = "#quest",
 },
-["162"] = {
-["name"] = "Fishing",
-["search"] = "#fishing",
+["127"] = {
+["name"] = "Manuscript",
+["search"] = "drakewatcher manuscript",
 },
 ["169"] = {
 ["name"] = "Ores",
@@ -2001,17 +915,17 @@ BAGANATOR_CONFIG = {
 ["name"] = "Container",
 ["search"] = "#open",
 },
-["14"] = {
-["name"] = "Collected TMog",
-["search"] = "#collected&#equipment",
+["56"] = {
+["name"] = "Gems",
+["search"] = "#gem",
 },
-["76"] = {
+["42"] = {
 ["name"] = "Weapon",
 ["search"] = "#weapon",
 },
-["26"] = {
-["name"] = "Old",
-["search"] = "#gear & <536",
+["164"] = {
+["name"] = "Enchant",
+["search"] = "#item enhancement",
 },
 ["124"] = {
 ["name"] = "Knowledge",
@@ -2033,21 +947,21 @@ BAGANATOR_CONFIG = {
 ["name"] = "Other",
 ["search"] = "",
 },
-["43"] = {
-["name"] = "Shirts",
-["search"] = "#tabard || #shirt",
+["61"] = {
+["name"] = "Armor",
+["search"] = "#armor",
 },
-["156"] = {
-["name"] = "Quest",
-["search"] = "#quest",
+["157"] = {
+["name"] = "Weapon",
+["search"] = "#weapon",
 },
 ["71"] = {
 ["name"] = "Recipe",
 ["search"] = "#recipe",
 },
-["61"] = {
-["name"] = "Armor",
-["search"] = "#armor",
+["172"] = {
+["name"] = "Keys",
+["search"] = "",
 },
 ["51"] = {
 ["name"] = "Perma",
@@ -2057,13 +971,13 @@ BAGANATOR_CONFIG = {
 ["name"] = "Quest",
 ["search"] = "#quest",
 },
-["105"] = {
-["name"] = "Pets",
-["search"] = "#battle pet",
+["160"] = {
+["name"] = "Junk",
+["search"] = "#junk",
 },
-["153"] = {
-["name"] = "Cooking",
-["search"] = "#cooking || #fish ",
+["39"] = {
+["name"] = "BoE",
+["search"] = "#boe || #bwe",
 },
 ["91"] = {
 ["name"] = "Weapon",
@@ -2081,9 +995,9 @@ BAGANATOR_CONFIG = {
 ["name"] = "Enchant",
 ["search"] = "#item enhancement",
 },
-["157"] = {
-["name"] = "Weapon",
-["search"] = "#weapon",
+["153"] = {
+["name"] = "Cooking",
+["search"] = "#cooking || #fish ",
 },
 ["29"] = {
 ["name"] = "Elemental",
@@ -2113,9 +1027,9 @@ BAGANATOR_CONFIG = {
 ["name"] = "Cloth",
 ["search"] = "!gear & (#cloth || #tailoring || #first aid)",
 },
-["15"] = {
-["name"] = "Uncollected TMog",
-["search"] = "#uncollected&#tmog",
+["25"] = {
+["name"] = "Toys",
+["search"] = "#toy",
 },
 ["123"] = {
 ["name"] = "Openable",
@@ -2133,25 +1047,25 @@ BAGANATOR_CONFIG = {
 ["name"] = "Voucher",
 ["search"] = "voucher&consumable",
 },
-["175"] = {
-["name"] = "Remix Upgrades",
-["search"] = "#legion&#upgrade",
-},
-["38"] = {
-["name"] = "Cooking",
-["search"] = "#cooking || #fish ",
-},
 ["158"] = {
 ["name"] = "Shirts",
 ["search"] = "#tabard || #shirt",
+},
+["167"] = {
+["name"] = "Trinkets",
+["search"] = "#trinket",
+},
+["175"] = {
+["name"] = "Remix Upgrades",
+["search"] = "#legion&#upgrade",
 },
 ["171"] = {
 ["name"] = "Gems",
 ["search"] = "#gem",
 },
-["166"] = {
-["name"] = "Perma",
-["search"] = "",
+["142"] = {
+["name"] = "Armor",
+["search"] = "#armor",
 },
 ["31"] = {
 ["name"] = "Reagents",
@@ -2165,9 +1079,9 @@ BAGANATOR_CONFIG = {
 ["name"] = "BoA Weapon",
 ["search"] = "#boa&#weapon",
 },
-["58"] = {
-["name"] = "Tradeable",
-["search"] = "#tradeable loot || #tradable loot",
+["163"] = {
+["name"] = "Misc",
+["search"] = "#miscellaneous",
 },
 ["60"] = {
 ["name"] = "Old",
@@ -2177,9 +1091,9 @@ BAGANATOR_CONFIG = {
 ["name"] = "Container",
 ["search"] = "#open",
 },
-["142"] = {
-["name"] = "Armor",
-["search"] = "#armor",
+["166"] = {
+["name"] = "Perma",
+["search"] = "",
 },
 ["50"] = {
 ["name"] = "PvP",
@@ -2205,17 +1119,17 @@ BAGANATOR_CONFIG = {
 ["name"] = "Misc",
 ["search"] = "#miscellaneous",
 },
-["163"] = {
-["name"] = "Misc",
-["search"] = "#miscellaneous",
+["58"] = {
+["name"] = "Tradeable",
+["search"] = "#tradeable loot || #tradable loot",
 },
 ["28"] = {
 ["name"] = "Profession",
 ["search"] = "#profession",
 },
-["167"] = {
-["name"] = "Trinkets",
-["search"] = "#trinket",
+["38"] = {
+["name"] = "Cooking",
+["search"] = "#cooking || #fish ",
 },
 ["88"] = {
 ["name"] = "Ores",
@@ -2233,49 +1147,49 @@ BAGANATOR_CONFIG = {
 ["name"] = "Pot",
 ["search"] = "#potion",
 },
-["25"] = {
-["name"] = "Toys",
-["search"] = "#toy",
+["15"] = {
+["name"] = "Uncollected TMog",
+["search"] = "#uncollected&#tmog",
 },
 ["149"] = {
 ["name"] = "Pets",
 ["search"] = "#battle pet || #battle pets",
 },
-["160"] = {
-["name"] = "Junk",
-["search"] = "#junk",
+["105"] = {
+["name"] = "Pets",
+["search"] = "#battle pet",
 },
-["39"] = {
-["name"] = "BoE",
-["search"] = "#boe || #bwe",
+["156"] = {
+["name"] = "Quest",
+["search"] = "#quest",
 },
-["172"] = {
-["name"] = "Keys",
-["search"] = "",
+["43"] = {
+["name"] = "Shirts",
+["search"] = "#tabard || #shirt",
 },
 ["18"] = {
 ["name"] = "Legendary",
 ["search"] = "",
 },
-["164"] = {
-["name"] = "Enchant",
-["search"] = "#item enhancement",
+["26"] = {
+["name"] = "Old",
+["search"] = "#gear & <536",
 },
-["42"] = {
+["76"] = {
 ["name"] = "Weapon",
 ["search"] = "#weapon",
 },
-["56"] = {
-["name"] = "Gems",
-["search"] = "#gem",
+["14"] = {
+["name"] = "Collected TMog",
+["search"] = "#collected&#equipment",
 },
 ["141"] = {
 ["name"] = "Old",
 ["search"] = "#gear&<536&!#upgrade",
 },
-["127"] = {
-["name"] = "Manuscript",
-["search"] = "drakewatcher manuscript",
+["162"] = {
+["name"] = "Fishing",
+["search"] = "#fishing",
 },
 ["104"] = {
 ["name"] = "Pots",
@@ -2285,20 +1199,1112 @@ BAGANATOR_CONFIG = {
 ["name"] = "BoE",
 ["search"] = "#boe&#gear",
 },
-["168"] = {
-["name"] = "WuE",
-["search"] = "#wue",
+["30"] = {
+["name"] = "Enchanting",
+["search"] = "#enchanting",
 },
-["1"] = {
-["name"] = "Druid Upgrades",
-["search"] = "#gear&>550&(((#leather||cloak)&haste&agility)||trinket||neck) ",
+["3"] = {
+["name"] = "Teleporters",
+["search"] = "hearthstone||teleport||returns you||brings you",
 },
 ["10"] = {
 ["name"] = "Neck",
 ["search"] = "neck",
 },
 },
-["character_bank_view_width"] = 13,
+["icon_context_fading"] = true,
+["guild_view_position_2"] = {
+"TOPLEFT",
+125.8333892822266,
+-81.8330078125,
+},
+["new_items_flashing"] = true,
+["debug_timers"] = false,
+["seen_welcome"] = 1,
+["hide_special_container"] = {
+},
+["lock_frames"] = false,
+["bag_empty_space_at_top"] = false,
+["bag_view_show_bag_slots"] = false,
+["category_horizontal_spacing_2"] = 0.3,
+["recent_timeout"] = 600,
+["category_default_import"] = 2,
+["bag_view_position"] = {
+"BOTTOMRIGHT",
+-2.495361328125,
+3.333548307418823,
+},
+["character_bank_current_tab"] = 0,
+["category_sections"] = {
+["1"] = {
+["name"] = "World of Warcraft",
+},
+["4"] = {
+["name"] = "Profession",
+},
+["3"] = {
+["name"] = "Prep",
+},
+["2"] = {
+["name"] = "Gear",
+},
+},
+["category_sort_method"] = "type",
+["category_group_empty_slots"] = true,
+["debug_categories"] = false,
+["category_migration"] = 5,
+["saved_searches"] = {
+},
+["guild_bank_sort_method"] = "unset",
+["category_modifications"] = {
+["53"] = {
+["priority"] = 0,
+},
+["136"] = {
+["priority"] = 0,
+["addedItems"] = {
+["i:128402"] = true,
+["i:120978"] = true,
+["i:128820"] = true,
+["i:128827"] = true,
+["i:136858"] = true,
+["i:127829"] = true,
+["i:128908"] = true,
+["i:128292"] = true,
+["i:133948"] = true,
+["i:128941"] = true,
+["i:134552"] = true,
+["i:137246"] = true,
+["i:128831"] = true,
+["i:128832"] = true,
+["i:128826"] = true,
+["i:128306"] = true,
+["i:128935"] = true,
+["i:128862"] = true,
+["i:128293"] = true,
+["i:128872"] = true,
+["i:128819"] = true,
+["i:128823"] = true,
+["i:128822"] = true,
+["i:128403"] = true,
+["i:128861"] = true,
+["i:128860"] = true,
+["i:158075"] = true,
+["i:134553"] = true,
+["i:128873"] = true,
+["i:128821"] = true,
+["i:128476"] = true,
+["i:128938"] = true,
+["i:128869"] = true,
+["i:128867"] = true,
+["i:128937"] = true,
+["i:128940"] = true,
+["i:128859"] = true,
+["i:128870"] = true,
+["i:136593"] = true,
+["i:128479"] = true,
+["i:128911"] = true,
+["i:128868"] = true,
+["i:128858"] = true,
+["i:127830"] = true,
+["i:128825"] = true,
+["i:139621"] = true,
+["i:128808"] = true,
+["i:127857"] = true,
+["i:128942"] = true,
+["i:128910"] = true,
+["i:128288"] = true,
+},
+},
+["73"] = {
+["priority"] = 0,
+},
+["152"] = {
+["priority"] = 1,
+},
+["93"] = {
+["priority"] = 3,
+},
+["83"] = {
+["priority"] = 0,
+},
+["10.2"] = {
+},
+["137"] = {
+["priority"] = 0,
+},
+["default_hearthstone"] = {
+["addedItems"] = {
+["i:65274"] = true,
+["i:210494"] = true,
+["i:188152"] = true,
+["i:109076"] = true,
+},
+},
+["Quest"] = {
+},
+["159"] = {
+["priority"] = 0,
+},
+["154"] = {
+["priority"] = 0,
+},
+["Prismatic"] = {
+},
+["151"] = {
+["priority"] = 0,
+},
+["138"] = {
+["priority"] = 0,
+},
+["13"] = {
+["priority"] = 0,
+},
+["130"] = {
+["priority"] = 0,
+},
+["23"] = {
+["priority"] = 0,
+["addedItems"] = {
+},
+},
+["146"] = {
+["priority"] = -1,
+},
+["52"] = {
+["priority"] = -1,
+},
+["62"] = {
+["priority"] = 1,
+},
+["72"] = {
+["priority"] = 0,
+},
+["82"] = {
+["priority"] = 0,
+},
+["92"] = {
+["priority"] = -1,
+},
+["147"] = {
+["priority"] = 0,
+},
+["143"] = {
+["priority"] = 1,
+},
+["122"] = {
+["group"] = "type",
+["priority"] = 0,
+["showGroupPrefix"] = true,
+},
+["default_battlepet"] = {
+["priority"] = -1,
+["addedItems"] = {
+["i:92665"] = true,
+["i:163036"] = true,
+["i:127755"] = true,
+["i:116416"] = true,
+["i:116418"] = true,
+["i:92683"] = true,
+["i:116423"] = true,
+["i:116420"] = true,
+["i:116417"] = true,
+["i:116429"] = true,
+["i:116374"] = true,
+["i:98715"] = true,
+["i:116424"] = true,
+},
+},
+["164"] = {
+["priority"] = 0,
+},
+["default_key"] = {
+["priority"] = -1,
+},
+["129"] = {
+["priority"] = 0,
+},
+["121"] = {
+["group"] = "expansion",
+["priority"] = 0,
+},
+["148"] = {
+["priority"] = 0,
+},
+["165"] = {
+["priority"] = 3,
+},
+["12"] = {
+["priority"] = 0,
+},
+["22"] = {
+["priority"] = 0,
+},
+["32"] = {
+["priority"] = 0,
+},
+["95"] = {
+["addedItems"] = {
+["i:213777"] = true,
+},
+["priority"] = -1,
+},
+["85"] = {
+["priority"] = 1,
+["addedItems"] = {
+},
+},
+["75"] = {
+["priority"] = 0,
+},
+["65"] = {
+["priority"] = -1,
+},
+["55"] = {
+["priority"] = 0,
+},
+["45"] = {
+["priority"] = 3,
+},
+["35"] = {
+["priority"] = 0,
+},
+["116"] = {
+["priority"] = 1,
+},
+["132"] = {
+["priority"] = 0,
+},
+["1"] = {
+["priority"] = 1,
+},
+["trash"] = {
+["addedItems"] = {
+["i:24999"] = true,
+},
+},
+["2"] = {
+["priority"] = 0,
+},
+["Meta"] = {
+},
+["4"] = {
+["priority"] = 0,
+},
+["7"] = {
+["group"] = "type",
+["priority"] = 0,
+["showGroupPrefix"] = true,
+},
+["131"] = {
+["priority"] = 0,
+},
+["9"] = {
+["priority"] = 0,
+},
+["15"] = {
+["priority"] = 0,
+},
+["135"] = {
+["group"] = "expansion",
+["priority"] = 2,
+},
+["default_auto_equipment_sets"] = {
+["priority"] = 0,
+},
+["110"] = {
+["priority"] = -1,
+},
+["94"] = {
+["addedItems"] = {
+["i:180653"] = true,
+},
+["priority"] = 3,
+},
+["default_miscellaneous"] = {
+["addedItems"] = {
+["i:166751"] = true,
+},
+},
+["84"] = {
+["priority"] = 3,
+},
+["54"] = {
+["priority"] = 0,
+},
+["64"] = {
+["priority"] = 0,
+},
+["34"] = {
+["priority"] = 0,
+},
+["44"] = {
+["priority"] = 0,
+},
+["126"] = {
+["group"] = "slot",
+["priority"] = 3,
+["showGroupPrefix"] = true,
+},
+["102"] = {
+["addedItems"] = {
+["i:222546"] = true,
+},
+["priority"] = -1,
+},
+["default_food"] = {
+["priority"] = -1,
+},
+["144"] = {
+["priority"] = 0,
+},
+["101"] = {
+["priority"] = 3,
+},
+["default_consumable"] = {
+["priority"] = -1,
+},
+["14"] = {
+["priority"] = 0,
+},
+["24"] = {
+["priority"] = 1,
+},
+["128"] = {
+["priority"] = 0,
+},
+["145"] = {
+["priority"] = 0,
+},
+["default_potion"] = {
+["priority"] = -1,
+},
+["120"] = {
+["priority"] = 0,
+},
+["87"] = {
+["priority"] = 0,
+},
+["77"] = {
+["priority"] = 1,
+},
+["176"] = {
+["showGroupPrefix"] = true,
+["priority"] = 0,
+["addedItems"] = {
+["i:217607"] = true,
+["i:217608"] = true,
+["i:217730"] = true,
+["i:217731"] = true,
+["i:217928"] = true,
+["i:238727"] = true,
+["i:217606"] = true,
+["i:217956"] = true,
+["i:217929"] = true,
+["i:217605"] = true,
+["i:217901"] = true,
+},
+},
+["97"] = {
+["priority"] = 3,
+},
+["47"] = {
+["priority"] = 0,
+},
+["37"] = {
+["priority"] = 1,
+},
+["67"] = {
+["priority"] = 0,
+},
+["57"] = {
+["priority"] = 0,
+},
+["173"] = {
+["showGroupPrefix"] = true,
+["priority"] = 0,
+["addedItems"] = {
+["i:230905"] = true,
+},
+},
+["109"] = {
+["addedItems"] = {
+["i:219321"] = true,
+["i:159622"] = true,
+["i:133304"] = true,
+["i:178772"] = true,
+["i:219303"] = true,
+},
+["priority"] = 0,
+},
+["127"] = {
+["priority"] = 0,
+},
+["177"] = {
+["showGroupPrefix"] = true,
+["priority"] = 0,
+},
+["168"] = {
+["priority"] = 0,
+},
+["8"] = {
+["priority"] = 1,
+["addedItems"] = {
+},
+},
+["112"] = {
+["addedItems"] = {
+["i:222776"] = true,
+["i:222781"] = true,
+},
+["priority"] = -1,
+},
+["Tinker"] = {
+},
+["6"] = {
+["group"] = "expansion",
+["priority"] = 0,
+},
+["115"] = {
+["addedItems"] = {
+["i:132516"] = true,
+["i:65360"] = true,
+["i:64401"] = true,
+["i:111820"] = true,
+["i:221903"] = true,
+["i:64402"] = true,
+["i:221949"] = true,
+["i:49040"] = true,
+["i:109253"] = true,
+["i:112384"] = true,
+},
+["priority"] = 3,
+},
+["5"] = {
+["priority"] = 0,
+},
+["170"] = {
+["priority"] = 0,
+},
+["139"] = {
+["priority"] = 1,
+},
+["111"] = {
+["priority"] = -1,
+},
+["118"] = {
+["priority"] = 0,
+},
+["117"] = {
+["priority"] = 0,
+},
+["114"] = {
+["showGroupPrefix"] = true,
+["priority"] = 3,
+},
+["119"] = {
+["priority"] = 0,
+},
+["27"] = {
+["group"] = "slot",
+["priority"] = -1,
+["showGroupPrefix"] = false,
+},
+["17"] = {
+["priority"] = 0,
+},
+["140"] = {
+["priority"] = 0,
+},
+["42"] = {
+["priority"] = -1,
+},
+["162"] = {
+["priority"] = 0,
+},
+["Sort later"] = {
+},
+["107"] = {
+["priority"] = -1,
+},
+["86"] = {
+["priority"] = -1,
+},
+["96"] = {
+["priority"] = 3,
+},
+["33"] = {
+["priority"] = 0,
+},
+["36"] = {
+["priority"] = 0,
+},
+["46"] = {
+["priority"] = 0,
+},
+["default_toy"] = {
+["priority"] = -1,
+},
+["66"] = {
+["priority"] = 0,
+},
+["Dragonflight Currency"] = {
+},
+["106"] = {
+["addedItems"] = {
+["i:178781"] = true,
+["i:225576"] = true,
+["i:178691"] = true,
+["i:178745"] = true,
+["i:178778"] = true,
+["i:231825"] = true,
+["i:133287"] = true,
+["i:159372"] = true,
+["i:221141"] = true,
+["i:178707"] = true,
+["i:178733"] = true,
+["i:212421"] = true,
+["i:225634"] = true,
+["i:178736"] = true,
+},
+["priority"] = -1,
+},
+["160"] = {
+["priority"] = 3,
+},
+["149"] = {
+["priority"] = 0,
+},
+["default_profession"] = {
+["priority"] = -1,
+},
+["default_recipe"] = {
+},
+["133"] = {
+["showGroupPrefix"] = true,
+["priority"] = 0,
+["addedItems"] = {
+["i:22589"] = true,
+["i:71086"] = true,
+["i:22630"] = true,
+["i:30312"] = true,
+["i:17182"] = true,
+["i:77949"] = true,
+["i:30313"] = true,
+["i:30317"] = true,
+["i:32837"] = true,
+["i:22631"] = true,
+["i:30318"] = true,
+["i:207728"] = true,
+["i:22736"] = true,
+["i:151138"] = true,
+["i:77950"] = true,
+["i:19019"] = true,
+["i:30316"] = true,
+["i:151137"] = true,
+["i:216906"] = true,
+["i:206448"] = true,
+["i:22632"] = true,
+["i:46017"] = true,
+["i:49623"] = true,
+["i:204177"] = true,
+["i:186414"] = true,
+["i:137225"] = true,
+["i:34334"] = true,
+["i:30311"] = true,
+["i:32838"] = true,
+},
+},
+["63"] = {
+["priority"] = 0,
+},
+["125"] = {
+["priority"] = 0,
+},
+["108"] = {
+["priority"] = -1,
+},
+["43"] = {
+["priority"] = 1,
+},
+["167"] = {
+["priority"] = -1,
+},
+["169"] = {
+["priority"] = 0,
+},
+["Cogwheel"] = {
+},
+["26"] = {
+["priority"] = 3,
+},
+["default_tradegoods"] = {
+},
+["163"] = {
+["priority"] = 0,
+},
+["124"] = {
+["priority"] = 0,
+},
+["16"] = {
+["priority"] = 0,
+},
+["161"] = {
+["priority"] = 0,
+},
+["76"] = {
+["priority"] = -1,
+},
+["100"] = {
+["priority"] = -1,
+},
+["61"] = {
+["priority"] = -1,
+},
+["156"] = {
+["priority"] = 0,
+},
+["71"] = {
+["priority"] = 1,
+},
+["172"] = {
+["showGroupPrefix"] = true,
+["priority"] = 0,
+["addedItems"] = {
+["i:180653"] = true,
+},
+},
+["51"] = {
+["addedItems"] = {
+},
+["priority"] = 1,
+},
+["41"] = {
+["priority"] = 0,
+},
+["49"] = {
+["priority"] = 0,
+},
+["39"] = {
+["priority"] = 0,
+},
+["91"] = {
+["showGroupPrefix"] = true,
+["priority"] = 0,
+["addedItems"] = {
+["i:157613"] = true,
+["i:178709"] = true,
+},
+},
+["81"] = {
+["priority"] = 0,
+},
+["59"] = {
+["priority"] = 0,
+},
+["default_weapon"] = {
+["priority"] = -1,
+},
+["153"] = {
+["priority"] = 0,
+},
+["29"] = {
+["priority"] = 0,
+},
+["99"] = {
+["addedItems"] = {
+["i:2460"] = true,
+},
+["priority"] = -1,
+},
+["89"] = {
+["priority"] = 0,
+},
+["79"] = {
+["priority"] = 3,
+},
+["69"] = {
+["priority"] = 0,
+},
+["174"] = {
+["showGroupPrefix"] = true,
+["priority"] = 0,
+["addedItems"] = {
+["i:249782"] = true,
+["i:249781"] = true,
+["i:249786"] = true,
+["i:245925"] = true,
+["i:254267"] = true,
+["i:246936"] = true,
+["i:245553"] = true,
+["i:237812"] = true,
+["i:253224"] = true,
+},
+},
+["150"] = {
+["priority"] = 0,
+},
+["default_itemenhancement"] = {
+},
+["166"] = {
+["addedItems"] = {
+["i:132514"] = true,
+["i:6948"] = true,
+},
+["priority"] = 1,
+},
+["19"] = {
+["priority"] = 0,
+},
+["40"] = {
+["priority"] = -1,
+},
+["103"] = {
+["priority"] = 3,
+},
+["default_reagent"] = {
+["group"] = "type",
+["priority"] = -1,
+},
+["158"] = {
+["priority"] = 1,
+},
+["175"] = {
+["showGroupPrefix"] = true,
+["priority"] = 0,
+},
+["171"] = {
+["priority"] = 0,
+},
+["25"] = {
+["priority"] = 0,
+},
+["31"] = {
+["priority"] = -1,
+},
+["21"] = {
+["priority"] = 0,
+["addedItems"] = {
+},
+},
+["11"] = {
+["group"] = "slot",
+["priority"] = 3,
+["showGroupPrefix"] = true,
+},
+["default_other"] = {
+["priority"] = -1,
+},
+["60"] = {
+["priority"] = 3,
+},
+["70"] = {
+["priority"] = 0,
+},
+["142"] = {
+["priority"] = -1,
+},
+["50"] = {
+["priority"] = 3,
+},
+["default_armor"] = {
+["group"] = "type",
+},
+["157"] = {
+["priority"] = -1,
+},
+["80"] = {
+["priority"] = 0,
+},
+["90"] = {
+["priority"] = 0,
+},
+["48"] = {
+["priority"] = 0,
+},
+["58"] = {
+["priority"] = 1,
+},
+["28"] = {
+["priority"] = 1,
+},
+["38"] = {
+["priority"] = 0,
+},
+["88"] = {
+["priority"] = 0,
+},
+["98"] = {
+["showGroupPrefix"] = true,
+["priority"] = 1,
+},
+["68"] = {
+["priority"] = 0,
+},
+["78"] = {
+["priority"] = 0,
+},
+["123"] = {
+["priority"] = 1,
+["addedItems"] = {
+["i:221268"] = true,
+["i:221373"] = true,
+["i:227713"] = true,
+},
+},
+["default_gem"] = {
+["priority"] = -1,
+},
+["105"] = {
+["priority"] = -1,
+},
+["56"] = {
+["priority"] = 0,
+},
+["155"] = {
+["priority"] = -1,
+},
+["18"] = {
+["showGroupPrefix"] = true,
+["priority"] = 0,
+["addedItems"] = {
+},
+},
+["113"] = {
+["addedItems"] = {
+["i:222738"] = true,
+["i:228338"] = true,
+},
+["priority"] = -1,
+},
+["134"] = {
+["priority"] = 0,
+},
+["Travel"] = {
+["addedItems"] = {
+["i:217904"] = true,
+["i:219222"] = true,
+},
+},
+["141"] = {
+["showGroupPrefix"] = true,
+["priority"] = 3,
+},
+["3"] = {
+["priority"] = 0,
+},
+["104"] = {
+["priority"] = -1,
+},
+["20"] = {
+["group"] = "expansion",
+["priority"] = 2,
+},
+["30"] = {
+["priority"] = 0,
+},
+["74"] = {
+["priority"] = -1,
+},
+["10"] = {
+["priority"] = 0,
+},
+},
+["warband_bank_view_width"] = 11,
+["category_section_toggled"] = {
+["4"] = false,
+["Crafting"] = false,
+},
+["add_to_category_buttons_2"] = "drag+alt",
+["view_type"] = "unset",
+["bank_current_tab"] = 1,
+["icon_text_quality_colors"] = true,
+["guild_view_position"] = {
+"LEFT",
+20,
+0,
+},
+["icon_text_font_size"] = 14,
+["disabled_skins"] = {
+},
+["sort_ignore_slots_count_2"] = {
+["Ofpuss-Mal'Ganis"] = 0,
+["Mäñýfäçëð-Mal'Ganis"] = 0,
+["Neonvoid-Mal'Ganis"] = 0,
+["Auteist-Mal'Ganis"] = 0,
+},
+["view_alpha"] = 1,
+["setting_anchors"] = false,
+["sort_ignore_slots_at_end"] = false,
+["currencies_tracked"] = {
+["Ofpuss-Mal'Ganis"] = {
+{
+["currencyID"] = 3008,
+},
+{
+["currencyID"] = 3109,
+},
+{
+["currencyID"] = 3110,
+},
+{
+["currencyID"] = 3028,
+},
+},
+["Auteist-Mal'Ganis"] = {
+{
+["currencyID"] = 1602,
+},
+{
+["currencyID"] = 2915,
+},
+{
+["currencyID"] = 3008,
+},
+{
+["currencyID"] = 3028,
+},
+{
+["currencyID"] = 1792,
+},
+{
+["currencyID"] = 2916,
+},
+{
+["currencyID"] = 2917,
+},
+},
+["Neonvoid-Mal'Ganis"] = {
+{
+["currencyID"] = 3008,
+},
+{
+["currencyID"] = 3028,
+},
+{
+["currencyID"] = 1792,
+},
+{
+["currencyID"] = 1602,
+},
+{
+["currencyID"] = 2123,
+},
+},
+["Choppiez-Mal'Ganis"] = {
+},
+["Mäñýfäçëð-Mal'Ganis"] = {
+{
+["currencyID"] = 3028,
+},
+{
+["currencyID"] = 3110,
+},
+{
+["currencyID"] = 3109,
+},
+},
+["Stormclout-Mal'Ganis"] = {
+{
+["currencyID"] = 1602,
+},
+{
+["currencyID"] = 3008,
+},
+{
+["currencyID"] = 3028,
+},
+{
+["currencyID"] = 1792,
+},
+{
+["currencyID"] = 2123,
+},
+{
+["currencyID"] = 3109,
+},
+{
+["currencyID"] = 3110,
+},
+},
+["Tampacks-Mal'Ganis"] = {
+},
+["Rakeist-Mal'Ganis"] = {
+},
+},
+["debug_keywords"] = false,
+["skins"] = {
+["blizzard"] = {
+["no_frame_borders"] = false,
+["view_transparency"] = 0,
+["empty_slot_background"] = false,
+},
+["dark"] = {
+["no_frame_borders"] = false,
+["square_icons"] = false,
+["view_transparency"] = 0.3,
+["empty_slot_background"] = false,
+},
+},
+["recent_characters_main_view"] = {
+"Smaugchamp-Tichondrius",
+"Stormclout-Tichondrius",
+"Mäñýfäçëð-Tichondrius",
+"Auteist-Tichondrius",
+"Starstypeshi-Tichondrius",
+"Hellavator-Tichondrius",
+"Thingreyline-Tichondrius",
+"Ofpuss-Tichondrius",
+"Choppiez-Tichondrius",
+"Praisesun-Tichondrius",
+},
+["auto_sort_on_open"] = false,
+["currencies_tracked_imported"] = {
+},
+["bag_view_width"] = 14,
+["show_buttons_on_alt"] = false,
+["guild_current_tab"] = 0,
+["guild_view_dialog_position"] = {
+"BOTTOM",
+"Baganator_GuildViewFrame",
+"TOP",
+0,
+0,
+},
+["migrated_sort_method"] = true,
+["bank_only_view_position"] = {
+"LEFT",
+20,
+0,
+},
+["upgrade_plugin"] = "simple_item_levels",
+["show_sort_button_2"] = true,
+["sort_ignore_bank_slots_count"] = {
+["Ofpuss-Mal'Ganis"] = 0,
+["Mäñýfäçëð-Mal'Ganis"] = 0,
+["Neonvoid-Mal'Ganis"] = 0,
+["Auteist-Mal'Ganis"] = 0,
+},
+["icon_mark_unusable"] = true,
+["currency_panel_position"] = {
+"RIGHT",
+"Baganator_CategoryViewBackpackViewFrameblizzard",
+"LEFT",
+0,
+0,
+},
+["icon_equipment_set_border"] = true,
+["character_select_position"] = {
+"RIGHT",
+"Baganator_CategoryViewBackpackViewFrameblizzard",
+"LEFT",
+0,
+0,
+},
+["bag_icon_size"] = 55,
+["currency_headers_collapsed"] = {
+},
+["sort_start_at_bottom"] = false,
 },
 },
 }

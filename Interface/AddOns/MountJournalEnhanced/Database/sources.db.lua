@@ -153,6 +153,7 @@ ADDON.DB.Source["Unavailable"] = {
 [272472] = true, -- Undercity Plaguebat
 [274610] = true, -- Teldrassil Hippogryph
 [278966] = true, -- Fiery Hearthsteed
+[289639] = true, -- Bruce
 [302143] = true, -- Uncorrupted Voidwing
 [307256] = true, -- Explorer's Jungle Hopper
 [307263] = true, -- Explorer's Dunetrekker
@@ -216,9 +217,10 @@ ADDON.DB.Source["Unavailable"] = {
 [446022] = true, -- Astral Emperor's Serpent
 [446352] = true, -- Kickin' Kezan Waveshredder
 [449466] = true, -- Forged Gladiator's Fel Bat
+[454682] = true, -- Startouched Furline
 [458335] = true, -- Diamond Mechsuit
+[463025] = true, -- Gigantic Grrloc
 [463133] = true, -- Coldflame Tempest
-[465235] = true, -- Trader's Gilded Brutosaur
 [466144] = true, -- Prized Gladiator's Fel Bat
 [466811] = true, -- Chaos-Forged Gryphon
 [466812] = true, -- Chaos-Forged Hippogryph
@@ -234,6 +236,7 @@ ADDON.DB.Source["Unavailable"] = {
 [1227076] = true, -- Tyrannotort
 [1236262] = true, -- Shaohao's Sage Serpent
 [1241429] = true, -- Inarius' Charger
+[1272988] = true, -- Inarius' Charger
 }
 
 MergeTable(ADDON.DB.Source.Drop, {
@@ -318,7 +321,7 @@ MergeTable(ADDON.DB.Source.Drop, {
 [447189] = {2404, 5120, 7740, 100.00}, -- Nesting Swarmite
 [447213] = {2248, 2300, 5860, 62.79}, -- Alunira
 [448941] = {2215, 2580, 5740, 5.55}, -- Beledar's Spawn
-[449258] = {2214, 5680, 7660, 5.96}, -- Ol' Mole Rufus
+[449258] = {2214, 6080, 7640, 5.96}, -- Ol' Mole Rufus
 [466026] = {2346, 3200, 2140, 1.66}, -- Salvaged Goblin Gazillionaire's Flying Machine
 [1218305] = {2404, 6300, 3700, 99.77}, -- Void-Forged Stallion
 [1218306] = {2403, 6080, 5480, 100.00}, -- Void-Scarred Pack Mother

@@ -1,0 +1,15 @@
+Version: 1
+Frame: ColorPickerFrame
+FrameLevel: 1
+Anchor: CENTER
+X: 0
+Y: 0
+W: 388
+H: 380
+Frame: REFlexFrame
+FrameLevel: 1
+Anchor: CENTER
+X: 205
+Y: 68
+W: 790
+H: 625

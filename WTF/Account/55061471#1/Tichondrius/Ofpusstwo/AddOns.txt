@@ -147,7 +147,7 @@ EditModeExpanded: enabled
 iLevel: enabled
 QuickQuest: enabled
 TwintopInsanityBar: enabled
-MouseoverActionSettings: enabled
+MouseoverActionSettings: disabled
 Narcissus: enabled
 Narcissus_Achievements: enabled
 Narcissus_BagFilter: enabled
@@ -316,3 +316,4 @@ ZamestoTV_Remix: enabled
 SilentShuffle: enabled
 TransmogLootHelper: enabled
 TransmogUpgradeMaster: disabled
+SenseiClassResourceBar: disabled

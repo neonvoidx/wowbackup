@@ -80,6 +80,7 @@ VER 3 0100000000000039 " " "134400"
 #showtooltip Invoke Xuen, the white tiger
 /use 13
 /use Tempered Potion
+/use Brawler's Fight Tonic of Agility
 /cast Berserking
 /cast Invoke Xuen, the white tiger
 END

@@ -128,3 +128,16 @@ Blizzard_ObjectiveTracker: enabled
 Blizzard_CompactRaidFrames: enabled
 OPie_Classic: disabled
 Blizzard_CombatText: enabled
+AutoQuests: enabled
+CooldownManagerTweaks: enabled
+Dejunk: enabled
+EasyScrap: enabled
+SilentShuffle: enabled
+EasyDelete: enabled
+CursorRing: enabled
+CursorMod: enabled
+DecorVendor: enabled
+HomeBound: enabled
+KeystonePolaris: enabled
+SenseiClassResourceBar: enabled
+TransmogLootHelper: enabled

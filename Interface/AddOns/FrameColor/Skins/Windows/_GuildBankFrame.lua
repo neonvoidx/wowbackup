@@ -65,8 +65,10 @@ function skin:OnEnable()
 end
 
 function skin:OnDisable()
-  local color = {1, 1, 1, 1}
-  self:Apply(color, color, color, color, color, color, 0)
+  if C_AddOns.IsAddOnLoaded("Blizzard_GuildBankUI") then
+    local color = {1, 1, 1, 1}
+    self:Apply(color, color, color, color, color, color, 0)
+  end
 end
 
 function skin:Apply(mainColor, backgroundColor, bordersColor, controlsColor, tabsColor, emblemColor, desaturation)

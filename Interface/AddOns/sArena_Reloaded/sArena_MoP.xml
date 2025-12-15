@@ -1,7 +1,7 @@
 <Ui xsi:schemaLocation="http://www.blizzard.com/wow/ui/ ..\FrameXML\UI.xsd">
     <Script file="Ace3\LibStub\LibStub.lua"/>
     <Include file="Ace3\CallbackHandler-1.0\CallbackHandler-1.0.xml"/>
-    <Include file="Ace3\Libs\LibSharedMedia-3.0\lib.xml"/>
+    <Script file="Ace3\Libs\LibSharedMedia-3.0\LibSharedMedia-3.0.lua"/>
     <Include file="Ace3\AceDB-3.0\AceDB-3.0.xml"/>
     <Include file="Ace3\AceDBOptions-3.0\AceDBOptions-3.0.xml"/>
     <Include file="Ace3\AceConsole-3.0\AceConsole-3.0.xml"/>
@@ -183,8 +183,6 @@
         <Layers>
             <Layer level="BORDER" textureSubLevel="1">
                 <!-- Health/power bar is in this layer -->
-                <Texture parentKey="ClassIcon"/>
-                <MaskTexture parentKey="ClassIconMask" file="Interface\CharacterFrame\TempPortraitAlphaMask"/>
                 <Texture parentKey="myHealPredictionBar" inherits="MyHealPredictionBarTemplate"/>
                 <Texture parentKey="otherHealPredictionBar" inherits="OtherHealPredictionBarTemplate"/>
                 <Texture parentKey="totalAbsorbBar" inherits="TotalAbsorbBarTemplate">
@@ -222,25 +220,51 @@
         </Layers>
 
         <Frames>
-            <StatusBar parentKey="HealthBar" drawLayer="BORDER" useParentLevel="true"/>
-            <StatusBar parentKey="PowerBar" drawLayer="BORDER" useParentLevel="true"/>
+            <StatusBar parentKey="HealthBar" drawLayer="BORDER" useParentLevel="true">
+                <Layers>
+                    <Layer level="BACKGROUND">
+                        <Texture parentKey="hpUnderlay" setAllPoints="true">
+                            <Color r="0" g="0" b="0" a="0.6"/>
+                        </Texture>
+                    </Layer>
+                </Layers>
+            </StatusBar>
+            <StatusBar parentKey="PowerBar" drawLayer="BORDER" useParentLevel="true">
+                <Layers>
+                    <Layer level="BACKGROUND">
+                        <Texture parentKey="ppUnderlay" setAllPoints="true">
+                            <Color r="0" g="0" b="0" a="0.6"/>
+                        </Texture>
+                    </Layer>
+                </Layers>
+            </StatusBar>
             <StatusBar parentKey="CastBar" inherits="sArenaCastBarFrameTemplate"/>
-            <Cooldown parentKey="ClassIconCooldown" drawLayer="BORDER" useParentLevel="true" reverse="true" hideCountdownNumbers="false" inherits="CooldownFrameTemplate">
-                <Scripts>
-                    <OnLoad>
-                        for _, region in next, { self:GetRegions() } do
-                            if region:GetObjectType() == "FontString" then
-                                self.Text = region;
-                                self.Text.fontFile = region:GetFont();
-                            end
-                        end
-                        self:SetAllPoints(self:GetParent().ClassIcon)
-                        self:SetSwipeTexture(1)
-                        self:SetSwipeColor(0, 0, 0, 0.6)
-                        self:SetDrawBling(false)
-                    </OnLoad>
-                </Scripts>
-            </Cooldown>
+            <Frame parentKey="ClassIcon" frameLevel="7" enablemouse="true" movable="true">
+                <Layers>
+                    <Layer level="BORDER" textureSubLevel="1">
+                        <Texture parentKey="Texture" setAllPoints="true"/>
+                        <MaskTexture parentKey="Mask" file="Interface\CharacterFrame\TempPortraitAlphaMask" setAllPoints="true"/>
+                    </Layer>
+                </Layers>
+                <Frames>
+                    <Cooldown parentKey="Cooldown" drawLayer="BORDER" useParentLevel="true" reverse="true" hideCountdownNumbers="false" inherits="CooldownFrameTemplate">
+                        <Scripts>
+                            <OnLoad>
+                                for _, region in next, { self:GetRegions() } do
+                                    if region:GetObjectType() == "FontString" then
+                                        self.Text = region;
+                                        self.Text.fontFile = region:GetFont();
+                                    end
+                                end
+                                self:SetAllPoints(self:GetParent().Texture)
+                                self:SetSwipeTexture(1)
+                                self:SetSwipeColor(0, 0, 0, 0.55)
+                                self:SetDrawBling(false)
+                            </OnLoad>
+                        </Scripts>
+                    </Cooldown>
+                </Frames>
+            </Frame>
             <Frame parentKey="SpecIcon" frameLevel="8" enablemouse="true" movable="true">
                 <Layers>
                     <Layer level="ARTWORK" textureSubLevel="2">

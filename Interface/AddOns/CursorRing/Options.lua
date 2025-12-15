@@ -93,7 +93,7 @@ local colorModeChoices = {
     class   = "Player Class Color",
     highvis = "High-Visibility Green",
     custom  = "Custom Color",
-    gradient= "Gradient (Experimental)",
+    gradient= "Gradient",
 }
 
 local function getColorMode()
@@ -312,7 +312,7 @@ local options = {
 
         gradientWarning = {
             type  = "description",
-            name  = "|cffffd200Experimental:|r Gradient mode is experimental. Alpha sliders and GCD behavior may not function correctly while gradient mode is active.",
+            name  = "Gradient mode now respects alpha settings, in/out-of-combat changes, and the GCD swipe.",
             order = 2,
         },
 
@@ -410,7 +410,7 @@ local options = {
 
                 gradientHeader = {
                     type  = "header",
-                    name  = "Gradient (Experimental)",
+                    name  = "Gradient",
                     order = 30,
                 },
                 gradientColor1 = {

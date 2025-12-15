@@ -24,7 +24,13 @@ local function BuildButton()
 
     button:HookScript("OnClick", function()
         GenericTraitUI_LoadUI()
-        GenericTraitFrame:SetSystemID(DRIVE_TRAIT_SYSTEM)
+
+        -- LATER: cleanup after 11.2.7 release
+        if GenericTraitFrame.SetConfigIDBySystemID then
+            GenericTraitFrame:SetConfigIDBySystemID(DRIVE_TRAIT_SYSTEM)
+        else
+            GenericTraitFrame:SetSystemID(DRIVE_TRAIT_SYSTEM)
+        end
         GenericTraitFrame:SetTreeID(DRIVE_TRAIT_TREE)
         ToggleFrame(GenericTraitFrame)
     end)
@@ -39,6 +45,8 @@ local function BuildButton()
     button:HookScript("OnLeave", function()
         GameTooltip:Hide()
     end)
+
+    button:SetAttribute("MJE_ToolbarIndex", "Drive")
 
     return button
 end

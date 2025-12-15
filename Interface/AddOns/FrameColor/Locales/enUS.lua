@@ -36,6 +36,7 @@ L["btn_pushed_color"]  = "Pushed Button Color"
 L["bar_border_color"] = "Bar Border Color"
 L["class_power_bar"] = "Calss Power Bar"
 L["emblem"] = "Emblem"
+L["corner_textures"] = "Corner Textures"
 
 -- Pre defined toggle options.
 L["update_bg_to_online_status"] = "Update the background based on the online status."
@@ -154,6 +155,7 @@ L["_TradeFrame"] = "Trade"
 L["_WorldMapFrame"] = "Maps & Quest Log"
 L["_GuildBankFrame"] = "Guild Bank"
 L["_CooldownViewerSettings"] = "Cooldown Settings"
+L["_OrderHallMissionFrame"] = "Scouting Map"
 
 -- [[ Addon Skins ]] --
 L["_LibDBIcon"] = "Minimap Icons (LibDBIcon)"

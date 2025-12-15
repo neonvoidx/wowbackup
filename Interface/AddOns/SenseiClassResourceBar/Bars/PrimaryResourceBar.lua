@@ -1,17 +1,9 @@
 local _, addonTable = ...
 
-local LEM = addonTable.LEM or LibStub("LibEditMode")
+local LEM = addonTable.LEM or LibStub("LibEQOLEditMode-1.0")
 
 local PrimaryResourceBarMixin = Mixin({}, addonTable.PowerBarMixin)
 local buildVersion = select(4, GetBuildInfo())
-
-function PrimaryResourceBarMixin:GetResourceNumberColor()
-    return addonTable:GetOverrideTextColor(addonTable.RegistereredBar.PrimaryResourceBar.frameName, addonTable.TextId.ResourceNumber) or { r = 1, b = 1, g = 1}
-end
-
-function PrimaryResourceBarMixin:GetResourceChargeTimerColor()
-    return addonTable:GetOverrideTextColor(addonTable.RegistereredBar.PrimaryResourceBar.frameName, addonTable.TextId.ResourceChargeTimer) or { r = 1, b = 1, g = 1}
-end
 
 function PrimaryResourceBarMixin:GetResource()
     local playerClass = select(2, UnitClass("player"))
@@ -70,22 +62,22 @@ function PrimaryResourceBarMixin:GetResource()
 end
 
 function PrimaryResourceBarMixin:GetResourceValue(resource)
-        if not resource then return nil, nil, nil, nil end
+        if not resource then return nil, nil, nil, nil, nil end
 
         local data = self:GetData()
         local current = UnitPower("player", resource)
         local max = UnitPowerMax("player", resource)
-        if max <= 0 then return nil, nil, nil, nil end
+        if max <= 0 then return nil, nil, nil, nil, nil end
 
-        if data and data.showManaAsPercent and resource == Enum.PowerType.Mana then
+        if data and ((data.showManaAsPercent and resource == Enum.PowerType.Mana) or data.textFormat == "Percent" or data.textFormat == "Percent%") then
             -- UnitPowerPercent does not exist prior to Midnight
             if (buildVersion or 0) < 120000 then
-                return max, current, math.floor((current / max) * 100 + 0.5), "percent"
+                return max, max, current, math.floor((current / max) * 100 + 0.5), "percent"
             else
-                return max, current, UnitPowerPercent("player", resource, false, true), "percent"
+                return max, max, current, UnitPowerPercent("player", resource, false, CurveConstants.ScaleTo100), "percent"
             end
         else
-            return max, current, current, "number"
+            return max, max, current, current, "number"
         end
 end
 
@@ -102,6 +94,7 @@ addonTable.RegistereredBar.PrimaryResourceBar = {
         point = "CENTER",
         x = 0,
         y = 0,
+        hideManaOnRole = {},
         showManaAsPercent = false,
         useResourceAtlas = false,
     },
@@ -110,7 +103,26 @@ addonTable.RegistereredBar.PrimaryResourceBar = {
 
         return {
             {
-                order = 41,
+                parentId = "Bar Visibility",
+                order = 103,
+                name = "Hide Mana On Role",
+                kind = LEM.SettingType.MultiDropdown,
+                default = defaults.hideManaOnRole,
+                values = addonTable.availableRoleOptions,
+                hideSummary = true,
+                useOldStyle = true,
+                get = function(layoutName)
+                    return (SenseiClassResourceBarDB[dbName][layoutName] and SenseiClassResourceBarDB[dbName][layoutName].hideManaOnRole) or defaults.hideManaOnRole
+                end,
+                set = function(layoutName, value)
+                    SenseiClassResourceBarDB[dbName][layoutName] = SenseiClassResourceBarDB[dbName][layoutName] or CopyTable(defaults)
+                    SenseiClassResourceBarDB[dbName][layoutName].hideManaOnRole = value
+                end,
+                tooltip = "Not effective on Arcane Mage",
+            },
+            {
+                parentId = "Text Settings",
+                order = 405,
                 name = "Show Mana As Percent",
                 kind = LEM.SettingType.Checkbox,
                 default = defaults.showManaAsPercent,
@@ -127,9 +139,15 @@ addonTable.RegistereredBar.PrimaryResourceBar = {
                     SenseiClassResourceBarDB[dbName][layoutName].showManaAsPercent = value
                     bar:UpdateDisplay(layoutName)
                 end,
+                isEnabled = function(layoutName)
+                    local data = SenseiClassResourceBarDB[dbName][layoutName]
+                    return data.showText
+                end,
+                tooltip = "Force the Percent format on Mana",
             },
             {
-                order = 63,
+                parentId = "Bar Style",
+                order = 603,
                 name = "Use Resource Foreground And Color",
                 kind = LEM.SettingType.Checkbox,
                 default = defaults.useResourceAtlas,

@@ -291,7 +291,7 @@ StaticPopupDialogs["BBF_CONFIRM_PVP_WHITELIST"] = {
         end
         deepMergeTables(BetterBlizzFramesDB.auraWhitelist, profileData)
         BBF.auraWhitelistRefresh()
-        Settings.OpenToCategory(BBF.aurasSubCategory)
+        Settings.OpenToCategory(BBF.category:GetID(), BBF.aurasSubCategory)
     end,
     timeout = 0,
     whileDead = true,
@@ -5393,11 +5393,11 @@ local function guiFrameLook()
     fontEditBox:SetSize(330, 20)
     fontEditBox:SetPoint("TOPLEFT", howStepOne, "BOTTOMLEFT", 5, -5)
     fontEditBox:SetAutoFocus(false)
-    fontEditBox:SetText("BBF.LSM:Register(\"font\", \"My Font Name\", [[Interface\\AddOns\\CustomMedia\\MyFontFile]], BBF.allLocales)")
+    fontEditBox:SetText("BBF.LSM:Register(\"font\", \"My Font Name\", [[Interface\\AddOns\\CustomMedia\\MyFontFile.ttf]], BBF.allLocales)")
     fontEditBox:HighlightText()
     fontEditBox:SetCursorPosition(0)
     fontEditBox:SetScript("OnTextChanged", function(self)
-        fontEditBox:SetText("BBF.LSM:Register(\"font\", \"My Font Name\", [[Interface\\AddOns\\CustomMedia\\MyFontFile]], BBF.allLocales)")
+        fontEditBox:SetText("BBF.LSM:Register(\"font\", \"My Font Name\", [[Interface\\AddOns\\CustomMedia\\MyFontFile.ttf]], BBF.allLocales)")
     end)
     fontEditBox:SetScript("OnMouseUp", function(self)
         self:SetFocus()
@@ -5414,11 +5414,11 @@ local function guiFrameLook()
     textureEditBox:SetSize(330, 20)
     textureEditBox:SetPoint("TOPLEFT", howStepTwo, "BOTTOMLEFT", 5, -5)
     textureEditBox:SetAutoFocus(false)
-    textureEditBox:SetText("BBF.LSM:Register(\"statusbar\", \"My Texture Name\", [[Interface\\AddOns\\CustomMedia\\MyTextureFile]])")
+    textureEditBox:SetText("BBF.LSM:Register(\"statusbar\", \"My Texture Name\", [[Interface\\AddOns\\CustomMedia\\MyTextureFile.tga]])")
     textureEditBox:HighlightText()
     textureEditBox:SetCursorPosition(0)
     textureEditBox:SetScript("OnTextChanged", function(self)
-        textureEditBox:SetText("BBF.LSM:Register(\"statusbar\", \"My Texture Name\", [[Interface\\AddOns\\CustomMedia\\MyTextureFile]])")
+        textureEditBox:SetText("BBF.LSM:Register(\"statusbar\", \"My Texture Name\", [[Interface\\AddOns\\CustomMedia\\MyTextureFile.tga]])")
     end)
     textureEditBox:SetScript("OnMouseUp", function(self)
         self:SetFocus()
@@ -5429,7 +5429,7 @@ local function guiFrameLook()
     howStepThree:SetJustifyH("LEFT")
     howStepThree:SetFont("Interface\\AddOns\\BetterBlizzFrames\\media\\arialn.TTF", 12)
     howStepThree:SetPoint("TOPLEFT", textureEditBox, "BOTTOMLEFT", -5, -13)
-    howStepThree:SetText("Remember to rename \"My Texture Name\" to whatever name you want\nand \"MyTextureFile\" to exactly what your texture file is named in the folder.")
+    howStepThree:SetText("Remember to rename \"My Texture Name\" to whatever name you want\nand \"MyTextureFile.tga\" to exactly what your texture file is named in the folder.")
 
     local changeUnitFrameFont = CreateCheckbox("changeUnitFrameFont", "Change UnitFrame Font", guiFrameLook)
     changeUnitFrameFont:SetPoint("TOPLEFT", settingsText, "BOTTOMLEFT", -4, pixelsOnFirstBox)
@@ -5783,7 +5783,7 @@ local function guiFrameLook()
         function(arg1)
             BBF.UpdateCustomTextures()
         end,
-        { anchorFrame = changeUnitFrameHealthbarTexture, x = 5, y = 1, label = "Texture" }
+        { anchorFrame = changeUnitFrameHealthbarTexture, x = 5, y = 3, label = "Texture" }
     )
     
     changeUnitFrameHealthbarTexture:HookScript("OnClick", function(self)
@@ -5804,7 +5804,7 @@ local function guiFrameLook()
         function(arg1)
             BBF.UpdateCustomTextures()
         end,
-        { anchorFrame = changeUnitFrameManabarTexture, x = 5, y = 1, label = "Texture" }
+        { anchorFrame = changeUnitFrameManabarTexture, x = 5, y = 3, label = "Texture" }
     )
     changeUnitFrameManabarTexture:HookScript("OnClick", function(self)
         unitFrameManabarTexture:SetEnabled(self:GetChecked())
@@ -5824,7 +5824,7 @@ local function guiFrameLook()
         function(arg1)
             BBF.UpdateCustomTextures()
         end,
-        { anchorFrame = changeUnitFrameCastbarTexture, x = 5, y = 1, label = "Texture" }
+        { anchorFrame = changeUnitFrameCastbarTexture, x = 5, y = 3, label = "Texture" }
     )
     changeUnitFrameCastbarTexture:HookScript("OnClick", function(self)
         unitFrameCastbarTexture:SetEnabled(self:GetChecked())
@@ -5845,7 +5845,7 @@ local function guiFrameLook()
         function(arg1)
             BBF.UpdateCustomTextures()
         end,
-        { anchorFrame = changeRaidFrameHealthbarTexture, x = 5, y = 1, label = "Texture" }
+        { anchorFrame = changeRaidFrameHealthbarTexture, x = 5, y = 3, label = "Texture" }
     )
 
     changeRaidFrameHealthbarTexture:HookScript("OnClick", function(self)
@@ -5866,7 +5866,7 @@ local function guiFrameLook()
         function(arg1)
             BBF.UpdateCustomTextures()
         end,
-        { anchorFrame = changeRaidFrameManabarTexture, x = 5, y = 1, label = "Texture" }
+        { anchorFrame = changeRaidFrameManabarTexture, x = 5, y = 3, label = "Texture" }
     )
 
     changeRaidFrameManabarTexture:HookScript("OnClick", function(self)
@@ -5899,8 +5899,7 @@ local function guiFrameAuras()
     guiFrameAuras.parent = BetterBlizzFrames.name
     --InterfaceOptions_AddCategory(guiFrameAuras)
     local aurasSubCategory = Settings.RegisterCanvasLayoutSubcategory(BBF.category, guiFrameAuras, guiFrameAuras.name, guiFrameAuras.name)
-    aurasSubCategory.ID = guiFrameAuras.name;
-    BBF.aurasSubCategory = aurasSubCategory.ID
+    BBF.aurasSubCategory = guiFrameAuras.name
     CreateTitle(guiFrameAuras)
 
     local bgImg = guiFrameAuras:CreateTexture(nil, "BACKGROUND")
@@ -6794,8 +6793,15 @@ local function guiMisc()
         BBF.MinimapHider()
     end)
 
+    local zoomActionBarIcons = CreateCheckbox("zoomActionBarIcons", "Zoom ActionBar Icons", guiMisc)
+    zoomActionBarIcons:SetPoint("TOPLEFT", hideObjectiveTracker, "BOTTOMLEFT", 0, pixelsBetweenBoxes)
+    CreateTooltipTwo(zoomActionBarIcons, "Zoom ActionBar Icons", "Zoom in on the icons on the action bar icons a little.")
+    zoomActionBarIcons:HookScript("OnClick", function()
+        BBF.ZoomDefaultActionbarIcons(zoomActionBarIcons:GetChecked())
+    end)
+
     local hideActionBarHotKey = CreateCheckbox("hideActionBarHotKey", "Hide ActionBar Keybinds", guiMisc, nil, BBF.HideFrames)
-    hideActionBarHotKey:SetPoint("TOPLEFT", hideObjectiveTracker, "BOTTOMLEFT", 0, pixelsBetweenBoxes)
+    hideActionBarHotKey:SetPoint("TOPLEFT", zoomActionBarIcons, "BOTTOMLEFT", 0, pixelsBetweenBoxes)
     CreateTooltip(hideActionBarHotKey, "Hides the keybind on default actionbars")
 
     local hideActionBarMacroName = CreateCheckbox("hideActionBarMacroName", "Hide ActionBar Macro Name", guiMisc, nil, BBF.HideFrames)
@@ -6814,8 +6820,15 @@ local function guiMisc()
     end)
     CreateTooltip(stealthIndicatorPlayer, "Add a blue border texture around the\nplayer frame during stealth abilities")
 
+    local disableCastbarMovement = CreateCheckbox("disableCastbarMovement", "Disable Castbar Movement", guiMisc, nil, BBF.HideFrames)
+    disableCastbarMovement:SetPoint("TOPLEFT", stealthIndicatorPlayer, "BOTTOMLEFT", 0, pixelsBetweenBoxes)
+    CreateTooltipTwo(disableCastbarMovement, "Disable Castbar Movement", "Disables all moving of the castbar from BBF.\n\nNot recommended but useful for those who might have conflicting addons without options to turn it off there. This WILL make the castbar act weird if you have aura settings enabled (and no other addon to deal with it)")
+    disableCastbarMovement:HookScript("OnClick", function(self)
+        StaticPopup_Show("BBF_CONFIRM_RELOAD")
+    end)
+
     local addUnitFrameBgTexture = CreateCheckbox("addUnitFrameBgTexture", "UnitFrame Background Color", guiMisc)
-    addUnitFrameBgTexture:SetPoint("TOPLEFT", stealthIndicatorPlayer, "BOTTOMLEFT", 0, pixelsBetweenBoxes)
+    addUnitFrameBgTexture:SetPoint("TOPLEFT", disableCastbarMovement, "BOTTOMLEFT", 0, pixelsBetweenBoxes)
     CreateTooltipTwo(addUnitFrameBgTexture, "UnitFrame Background Color", "Enables background color behind health and mana on UnitFrames.\n\n|cff32f795Right-click to change color.|r")
     addUnitFrameBgTexture:HookScript("OnClick", function(self)
         BBF.UnitFrameBackgroundTexture()
@@ -7223,7 +7236,6 @@ local function guiCustomCode()
     guiCustomCode.parent = BetterBlizzFrames.name
     --InterfaceOptions_AddCategory(guiCustomCode)
     local guiCustomCodeSubCategory = Settings.RegisterCanvasLayoutSubcategory(BBF.category, guiCustomCode, guiCustomCode.name, guiCustomCode.name)
-    guiCustomCodeSubCategory.ID = guiCustomCode.name;
     BBF.guiCustomCode = guiCustomCode.name
     CreateTitle(guiCustomCode)
 
@@ -7824,7 +7836,6 @@ function BBF.InitializeOptions()
         BetterBlizzFrames.name = "Better|cff00c0ffBlizz|rFrames |A:gmchat-icon-blizz:16:16|a"
         --InterfaceOptions_AddCategory(BetterBlizzFrames)
         BBF.category = Settings.RegisterCanvasLayoutCategory(BetterBlizzFrames, BetterBlizzFrames.name, BetterBlizzFrames.name)
-        BBF.category.ID = BetterBlizzFrames.name
         Settings.RegisterAddOnCategory(BBF.category)
 
         local titleText = BetterBlizzFrames:CreateFontString(nil, "OVERLAY", "GameFont_Gigantic")
@@ -7847,13 +7858,19 @@ function BBF.InitializeOptions()
 end
 
 function BBF.LoadGUI()
-    if BetterBlizzFrames.guiLoaded then return end
+    -- First time opening settings
     if BetterBlizzFramesDB.hasNotOpenedSettings then
         BBF.CreateIntroMessageWindow()
         BetterBlizzFramesDB.hasNotOpenedSettings = nil
         return
     end
+
     if CombatOnGUICreation() then return end
+
+    if BetterBlizzFrames.guiLoaded then
+        Settings.OpenToCategory(BBF.category:GetID())
+        return
+    end
     guiGeneralTab()
     guiPositionAndScale()
     guiFrameAuras()
@@ -7867,9 +7884,9 @@ function BBF.LoadGUI()
     guiMidnight()
     BetterBlizzFrames.guiLoaded = true
 
-    Settings.OpenToCategory(BBF.category.ID)
-    Settings.OpenToCategory(BBF.guiSupport)
-    Settings.OpenToCategory(BBF.category.ID)
+    Settings.OpenToCategory(BBF.category:GetID())
+    Settings.OpenToCategory(BBF.category:GetID(), BBF.guiSupport)
+    Settings.OpenToCategory(BBF.category:GetID())
 end
 
 
@@ -8004,7 +8021,7 @@ function BBF.CreateIntroMessageWindow()
         if not BetterBlizzFrames.guiLoaded then
             BBF.LoadGUI()
         else
-            Settings.OpenToCategory(BBF.category.ID)
+            Settings.OpenToCategory(BBF.category:GetID())
         end
     end)
     CreateTooltipTwo(buttonLast, "Exit, No Profile", "Exit and customize everything yourself.", nil, "ANCHOR_TOP")
@@ -8015,7 +8032,7 @@ function BBF.CreateIntroMessageWindow()
         if not BetterBlizzFrames.guiLoaded then
             BBF.LoadGUI()
         else
-            Settings.OpenToCategory(BBF.category.ID)
+            Settings.OpenToCategory(BBF.category:GetID())
         end
     end)
 
