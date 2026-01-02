@@ -189,6 +189,7 @@ function layout:Initialize(frame)
     local classIcon = frame.ClassIcon
     frame.ClassIcon:SetSize(42.5, 42.5)
     frame.ClassIcon:Show()
+    frame.ClassIcon:SetFrameStrata("LOW")
     frame.ClassIcon.Texture:SetTexCoord(0.05, 0.95, 0.1, 0.9)
     if not classIcon.Texture.Border then
         classIcon.Texture.Border = frame:CreateTexture(nil, "ARTWORK", nil, 3)
@@ -201,7 +202,7 @@ function layout:Initialize(frame)
     if not classIcon.Texture.BorderParent then
         classIcon.Texture.BorderParent = CreateFrame("Frame", nil, frame)
         classIcon.Texture.BorderParent:SetFrameStrata("MEDIUM")
-        classIcon.Texture.BorderParent:SetFrameLevel(6)
+        classIcon.Texture.BorderParent:SetFrameLevel(8)
     end
     classIconBorder:SetParent(classIcon.Texture.BorderParent)
     classIconBorder:SetAtlas("plunderstorm-actionbar-slot-border")
@@ -282,7 +283,7 @@ function layout:Initialize(frame)
     if not racial.BorderParent then
         racial.BorderParent = CreateFrame("Frame", nil, racial)
         racial.BorderParent:SetFrameStrata("MEDIUM")
-        racial.BorderParent:SetFrameLevel(6)
+        racial.BorderParent:SetFrameLevel(8)
     end
     racialBorder:SetParent(racial.BorderParent)
     racialBorder:SetAtlas("plunderstorm-actionbar-slot-border")
@@ -325,7 +326,7 @@ function layout:Initialize(frame)
     if not dispel.BorderParent then
         dispel.BorderParent = CreateFrame("Frame", nil, dispel)
         dispel.BorderParent:SetFrameStrata("MEDIUM")
-        dispel.BorderParent:SetFrameLevel(6)
+        dispel.BorderParent:SetFrameLevel(8)
     end
     dispelBorder:SetParent(dispel.BorderParent)
     dispelBorder:SetAtlas("plunderstorm-actionbar-slot-border")

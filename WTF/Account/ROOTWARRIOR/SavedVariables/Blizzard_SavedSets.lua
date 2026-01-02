@@ -1,5 +1,3 @@
 
 GlobalBlizzardSavedSets = {
-["SeenHousingMarketDecorIDs"] = {
-},
 }

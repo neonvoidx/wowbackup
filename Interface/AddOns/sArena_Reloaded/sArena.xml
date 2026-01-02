@@ -331,6 +331,20 @@
             </Button>
             <Button name="sArenaEnemyFrame2" parentKey="arena2" inherits="sArenaEnemyUnitFrameTemplate" id="2"/>
             <Button name="sArenaEnemyFrame3" parentKey="arena3" inherits="sArenaEnemyUnitFrameTemplate" id="3"/>
+            
+            <Frame parentKey="ShadowsightTimer" hidden="true">
+                <Size x="250" y="20"/>
+                <Layers>
+                    <Layer level="OVERLAY">
+                        <FontString parentKey="Text" inherits="GameFontNormalSmall">
+                            <Anchors>
+                                <Anchor point="CENTER" relativePoint="CENTER" x="0" y="0"/>
+                            </Anchors>
+                            <Color r="1.0" g="0.8" b="0.0"/>
+                        </FontString>
+                    </Layer>
+                </Layers>
+            </Frame>
         </Frames>
 
         <Scripts>

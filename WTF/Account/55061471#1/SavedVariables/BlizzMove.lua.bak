@@ -397,11 +397,11 @@ BlizzMoveDB = {
 ["dragged"] = true,
 ["dragPoints"] = {
 {
-["anchorPoint"] = "TOPLEFT",
+["anchorPoint"] = "TOP",
 ["relativeFrame"] = "UIParent",
-["offY"] = -94.32314498041524,
-["relativePoint"] = "TOPLEFT",
-["offX"] = 391.8347924283371,
+["offY"] = -96.82291920451826,
+["offX"] = 449.3180644870081,
+["relativePoint"] = "TOP",
 },
 },
 },
@@ -808,8 +808,8 @@ BlizzMoveDB = {
 {
 ["anchorPoint"] = "TOPLEFT",
 ["relativeFrame"] = "UIParent",
-["offY"] = -141.8020413876802,
-["offX"] = 246.1767225289368,
+["offY"] = -141.8018033505578,
+["offX"] = 247.0100309854297,
 ["relativePoint"] = "TOPLEFT",
 },
 },
@@ -1146,6 +1146,8 @@ BlizzMoveDB = {
 },
 ["Baganator_SingleViewBankViewFrameblizzard"] = {
 },
+["GarrisonRecruitSelectFrame"] = {
+},
 ["ScrappingMachineFrame"] = {
 ["startPoints"] = {
 {
@@ -1163,26 +1165,6 @@ BlizzMoveDB = {
 ["relativeFrame"] = "UIParent",
 ["offY"] = -116,
 ["offX"] = 16.83333969116211,
-["relativePoint"] = "TOPLEFT",
-},
-},
-},
-["BlackMarketFrame"] = {
-["startPoints"] = {
-{
-["offX"] = 15.99999904632568,
-["offY"] = -116.0000457763672,
-["anchorPoint"] = "TOPLEFT",
-["relativePoint"] = "TOPLEFT",
-},
-},
-["dragged"] = true,
-["dragPoints"] = {
-{
-["anchorPoint"] = "TOPLEFT",
-["relativeFrame"] = "UIParent",
-["offY"] = -115.1666259765625,
-["offX"] = 15.99999904632568,
 ["relativePoint"] = "TOPLEFT",
 },
 },
@@ -1350,7 +1332,25 @@ BlizzMoveDB = {
 },
 ["RemixArtifactFrame.ButtonsParent"] = {
 },
-["GarrisonRecruitSelectFrame"] = {
+["BlackMarketFrame"] = {
+["startPoints"] = {
+{
+["offX"] = 15.99999904632568,
+["offY"] = -116.0000457763672,
+["anchorPoint"] = "TOPLEFT",
+["relativePoint"] = "TOPLEFT",
+},
+},
+["dragged"] = true,
+["dragPoints"] = {
+{
+["anchorPoint"] = "TOPLEFT",
+["relativeFrame"] = "UIParent",
+["offY"] = -115.1666259765625,
+["offX"] = 15.99999904632568,
+["relativePoint"] = "TOPLEFT",
+},
+},
 },
 ["ModelPreviewFrame"] = {
 },

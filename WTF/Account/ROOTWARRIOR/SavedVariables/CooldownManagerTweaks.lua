@@ -1,6 +1,6 @@
 
 CMT_DB = {
-["lastSeenVersion"] = "4.6.2",
+["lastSeenVersion"] = "4.6.4",
 ["editModeSetupDismissed"] = true,
 ["showMinimapButton"] = false,
 ["currentProfile"] = "Default",
@@ -43,8 +43,8 @@ CMT_DB = {
 ["iconOpacity"] = 1,
 ["visibilityInstanceTypes"] = {
 },
-["visibilityGroup"] = false,
 ["alignment"] = "CENTER",
+["visibilityGroup"] = false,
 ["countTextScale"] = 1,
 ["visibilityInstance"] = false,
 ["masqueDisabled"] = false,
@@ -84,8 +84,8 @@ CMT_DB = {
 ["_persistentDisplayMigrated"] = true,
 ["visibilityInstanceTypes"] = {
 },
-["alignment"] = "CENTER",
 ["visibilityGroup"] = false,
+["alignment"] = "CENTER",
 ["countTextScale"] = 1,
 ["visibilityInstance"] = false,
 ["masqueDisabled"] = false,

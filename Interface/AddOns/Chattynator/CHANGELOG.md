@@ -1,6 +1,7 @@
 # Chattynator
 
-## [171](https://github.com/TheMouseNest/Chattynator/tree/171) (2025-12-13)
-[Full Changelog](https://github.com/TheMouseNest/Chattynator/compare/170...171) 
+## [181](https://github.com/TheMouseNest/Chattynator/tree/181) (2025-12-28)
+[Full Changelog](https://github.com/TheMouseNest/Chattynator/compare/180...181) 
 
-- Prevent message duplication caused by previous bugfix  
+- Fix potential edge case where messages might prevent full render on login  
+- Fix double printing of some addon's login messages  

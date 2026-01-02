@@ -202,4 +202,8 @@ CHATTYNATOR_COMMAND_HISTORY = {
 "/s k",
 "/s lol",
 "/s oh you have to click",
+"/s /script print(IsQuestFlaggedCompleted(90972))",
+"/s /run print(C_QuestLog.IsQuestFlaggedCompleted(90972))",
+"/s /bbf",
+"/s /way 56.85, 24.09",
 }

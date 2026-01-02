@@ -794,7 +794,7 @@ nil,
 },
 {
 ["hasQuickButton"] = true,
-["onQuickBar"] = true,
+["onQuickBar"] = false,
 ["settings"] = {
 ["abilityHighlighting"] = true,
 ["lineColoring"] = true,

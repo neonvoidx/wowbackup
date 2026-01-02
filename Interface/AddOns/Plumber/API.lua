@@ -187,6 +187,9 @@ do  -- String
             return name
         end
     end
+
+
+    API.StripHyperlinks = C_StringUtil and C_StringUtil.StripHyperlinks or StripHyperlinks;
 end
 
 do  -- DEBUG
@@ -439,7 +442,11 @@ do  -- Time
 
     local function SecondsToClock(seconds)
         --Clock: 00:00
-        return format("%s:%02d", floor(seconds / 60), floor(seconds % 60))
+        if seconds >= 3600 then
+            return format("%s:%02d:%02d", floor(seconds / 3600), floor((seconds - 3600 * floor(seconds / 3600)) / 60), floor(seconds % 60))
+        else
+            return format("%s:%02d", floor(seconds / 60), floor(seconds % 60))
+        end
     end
     API.SecondsToClock = SecondsToClock;
 
@@ -550,6 +557,15 @@ do  -- Time
         return 3600 * hours + 60 * minutes + seconds;
     end
     API.TimeLeftTextToSeconds = ConvertTextToSeconds;
+
+
+    function API.SecondsToDate(seconds)
+        local timeString = date("%d %m %y", seconds);
+        local day, month, year = string.split(" ", timeString);
+        month = tonumber(month);
+        local monthName = CALENDAR_FULLDATE_MONTH_NAMES[month];
+        return string.format(L["Format Month Day"], monthName, day);
+    end
 end
 
 do  -- Item
@@ -1656,6 +1672,46 @@ do  -- Chat Message
         return false
     end
     API.SearchChatHistory = SearchChatHistory;
+
+
+    function API.HasActiveChatBox()
+        local activeWindow = ChatFrameUtil and ChatFrameUtil.GetActiveWindow();
+        if activeWindow and activeWindow == GetCurrentKeyBoardFocus() then
+            return true
+        end
+    end
+
+    function API.ChatInsertLink(link)
+        if ChatEdit_InsertLink then
+            return ChatEdit_InsertLink(link)
+        elseif ChatFrameUtil and ChatFrameUtil.InsertLink then
+            return ChatFrameUtil.InsertLink(link)
+        end
+    end
+
+    function API.ChatLinkItem(itemID, itemLink)
+        if not itemID then return end;
+        if not itemLink then
+            itemLink = select(2, C_Item.GetItemInfo(itemID));
+        end
+
+        if itemLink then
+            return API.ChatInsertLink(itemLink)
+        end
+    end
+
+    function API.ChatForceLinkItem(itemID, itemLink)
+        --This set chat box focus
+        if not itemLink then
+            itemLink = select(2, C_Item.GetItemInfo(itemID));
+        end
+
+        if ChatEdit_LinkItem then
+            return ChatEdit_LinkItem(itemID, itemLink)
+        elseif ChatFrameUtil and ChatFrameUtil.LinkItem then
+            return ChatFrameUtil.LinkItem(itemID, itemLink)
+        end
+    end
 end
 
 do  -- Cursor Position
@@ -2178,10 +2234,7 @@ do  -- System
         if InCombatLockdown() then return false end;
 
         if IsModifiedClick("CHATLINK") then
-            if ( ChatEdit_InsertLink(link) ) then
-                return true
-            elseif SocialPostFrame and Social_IsShown() then
-                Social_InsertLink(link);
+            if API.ChatInsertLink(link) then
                 return true
             end
         end
@@ -3635,24 +3688,43 @@ do  -- Container Item Processor
 end
 
 do  -- Chat Message
-    local ADDON_ICON = "|TInterface\\AddOns\\Plumber\\Art\\Logo\\PlumberLogo32:0:0|t";
+    local CM = {};
+    CM.iconMarkup = "|TInterface\\AddOns\\Plumber\\Art\\Logo\\PlumberLogo32:0:0|t";
+    CM.errorCounter = 0;
+    CM.errorTime = 0;
+
     local function PrintMessage(msg)
         if not msg then
             msg = "";
         end
-        print(ADDON_ICON.." |cffb8c8d1Plumber:|r "..msg);
+        print(CM.iconMarkup.." |cffb8c8d1Plumber:|r "..msg);
     end
     API.PrintMessage = PrintMessage;
 
     function API.DisplayErrorMessage(msg)
         if not msg then return end;
         local messageType = 0;
-        UIErrorsFrame:TryDisplayMessage(messageType, (ADDON_ICON.." |cffb8c8d1Plumber:|r ")..msg, RED_FONT_COLOR:GetRGB());
+        UIErrorsFrame:TryDisplayMessage(messageType, (CM.iconMarkup.." |cffb8c8d1Plumber:|r ")..msg, RED_FONT_COLOR:GetRGB());
     end
 
     function API.CheckAndDisplayErrorIfInCombat()
         if InCombatLockdown() then
-            API.DisplayErrorMessage(L["Error Show UI In Combat"]);
+            local timeStamp = GetTime();
+            if timeStamp > CM.errorTime + 2 then
+                CM.errorCounter = 0;
+            else
+                CM.errorCounter = CM.errorCounter + 1;
+            end
+            CM.errorTime = timeStamp;
+
+            if CM.errorCounter < 2 then
+                API.DisplayErrorMessage(L["Error Show UI In Combat"]);
+            elseif CM.errorCounter < 4 then
+                API.DisplayErrorMessage(L["Error Show UI In Combat 1"]);
+            elseif CM.errorCounter < 5 then
+                API.DisplayErrorMessage(L["Error Show UI In Combat 2"]);
+            end
+
             return true
         else
             return false
@@ -3889,6 +3961,7 @@ do  -- Slash Commands
         end
         SlashCmdList[name] = func;
     end
+    API.CreateSlashCommand = SlashCmdUtil.CreateSlashCommand;
 
     function API.AddSlashSubcommand(name, func)
         if not SlashCmdUtil.cmdID[name] then return end;
@@ -3963,7 +4036,7 @@ do  -- Macro Util
     end
 end
 
-do  --Professions
+do  -- Professions
     --/dump ProfessionsBook_GetSpellBookItemSlot(GetMouseFoci()[1]) --Used on ProfessionsBookFrame SpellButton
 
     local GetProfessions = GetProfessions;
@@ -4033,7 +4106,7 @@ do  --Professions
     PlumberGlobals.OpenProfessionFrame = API.OpenProfessionFrame;
 end
 
-do  --Addon Skin
+do  -- Addon Skin
     local AddOnSkinHandler = {
         ElvUI = {
             global = "ElvUI",
@@ -4060,7 +4133,7 @@ do  --Addon Skin
     end
 end
 
-do  --FrameUtil
+do  -- FrameUtil
     function API.RegisterFrameForEvents(frame, events)
         for i, event in ipairs(events) do
             frame:RegisterEvent(event);
@@ -4074,7 +4147,7 @@ do  --FrameUtil
     end
 end
 
-do  --Locale-dependent API
+do  -- Locale-dependent API
     local locale = GetLocale();
     if locale == "ruRU" then
         function API.GetItemCountFromText(text)
@@ -4143,7 +4216,7 @@ do  --Locale-dependent API
     end
 end
 
-do  --Delves
+do  -- Delves
     local function IsInDelves()
         --See Blizzard InstanceDifficulty.lua
         --[[    --This fails when relogging inside a delve
@@ -4263,12 +4336,12 @@ do  --Delves
     end
 end
 
-do  --FocusSolver (Run something when being hovered long enough)
+do  -- FocusSolver (Run something when being hovered long enough)
     local FocusSolverMixin = {};
 
     function FocusSolverMixin:OnUpdate(elapsed)
         self.t = self.t + elapsed;
-        if self.t > 0.05 then
+        if self.t > self.delay then
             self.t = nil;
             self:SetScript("OnUpdate", nil);
             if self:IsObjectFocused() then
@@ -4351,9 +4424,37 @@ do  --FocusSolver (Run something when being hovered long enough)
     end
 end
 
-do  --Timerunning Remix
+do  -- Timerunning Remix
     function API.GetTimerunningSeason()
         return PlayerGetTimerunningSeasonID and PlayerGetTimerunningSeasonID()
+    end
+end
+
+do  -- Plumber Settings
+    local ModuleOptionFrames = {
+        --[frame] = "CloseMethod" (function)
+    };
+
+    addon.AddModuleOptionExitMethod = function(frame, method)
+        ModuleOptionFrames[frame] = method
+    end
+
+    addon.CloseAllModuleOptions = function()
+        --return true: any closed
+        for frame, method in pairs(ModuleOptionFrames) do
+            if method(frame) then
+                return true
+            end
+        end
+        return false
+    end
+
+    addon.AnyShownModuleOptions = function()
+        for frame in pairs(ModuleOptionFrames) do
+            if (frame.IsShown and frame:IsShown()) then
+                return true
+            end
+        end
     end
 end
 

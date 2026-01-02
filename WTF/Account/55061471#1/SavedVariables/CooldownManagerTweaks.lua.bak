@@ -1,10 +1,10 @@
 
 CMT_DB = {
-["lastSeenVersion"] = "4.3.0",
+["lastSeenVersion"] = "4.6.2",
 ["editModeSetupDismissed"] = true,
-["showMinimapButton"] = true,
-["minimapButtonAngle"] = 225,
 ["anchorWarningDismissed"] = false,
+["minimapButtonAngle"] = 225,
+["showMinimapButton"] = true,
 ["profiles"] = {
 ["Default"] = {
 ["items"] = {

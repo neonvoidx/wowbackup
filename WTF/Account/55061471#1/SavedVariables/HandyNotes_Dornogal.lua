@@ -52,15 +52,15 @@ HandyNotes_DornogalDB = {
 },
 ["Ofpuss - Mal'Ganis"] = {
 },
-["Thickshape - Mal'Ganis"] = {
+["Praisesun - Mal'Ganis"] = {
 },
 ["Default"] = {
 },
 ["Choppiez - Mal'Ganis"] = {
 },
-["Praisesun - Mal'Ganis"] = {
-},
 ["Tampacks - Mal'Ganis"] = {
+},
+["Thickshape - Mal'Ganis"] = {
 },
 ["Kitedbro - Mal'Ganis"] = {
 },

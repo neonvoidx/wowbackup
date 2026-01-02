@@ -1,6 +1,6 @@
 
 CMT_DB = {
-["lastSeenVersion"] = "4.3.0",
+["lastSeenVersion"] = "4.6.2",
 ["editModeSetupDismissed"] = true,
 ["anchorWarningDismissed"] = false,
 ["minimapButtonAngle"] = 225,

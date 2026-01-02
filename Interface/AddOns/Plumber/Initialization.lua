@@ -1,5 +1,5 @@
-local VERSION_TEXT = "v1.8.0";
-local VERSION_DATE = 1763400000;
+local VERSION_TEXT = "1.8.4 c";
+local VERSION_DATE = 1766300000;
 
 
 local addonName, addon = ...
@@ -98,6 +98,24 @@ do  --CallbackRegistry
             end
         end
     end
+
+    function CallbackRegistry:UnregisterCallbackOwner(event, owner)
+        if not owner then return end;
+
+        if self.events[event] then
+            local callbacks = self.events[event];
+            local i = 1;
+            local cb = callbacks[i];
+            while cb do
+                if cb[3] == owner then
+                    tremove(callbacks, i);
+                else
+                    i = i + 1;
+                end
+                cb = callbacks[i];
+            end
+        end
+    end
 end
 
 local function GetDBValue(dbKey)
@@ -187,6 +205,9 @@ local DefaultValues = {
         SoftTarget_IconSize = 2,
         SoftTarget_CastBar = true,
         SoftTarget_Objectives = false,
+        SoftTarget_House_HideIcon = false,
+        SoftTarget_House_HideName = false,
+
     AppearanceTab = false,              --Adjust Appearance Tab models to reduce GPU usage spike
         AppearanceTab_ModelCount = 1,
     ItemUpgradeUI = true,
@@ -197,6 +218,8 @@ local DefaultValues = {
         QueueStatus_TextPosition = 1,   --0:Center, 1-4:Clockwise
     InstanceDifficulty = false,         --Instance Difficulty Selector
     TransmogChatCommand = false,        --Adjust /outfit command behavior
+    CraftSearchExtended = false,        --Show more search result, custom keywords
+    SourceAchievementLink = true,       --Make Achievement name in MountJournal, DecorCatalog interactable
 
 
     --Tooltip
@@ -208,7 +231,6 @@ local DefaultValues = {
     TooltipDelvesItem = true,           --Show weekly Coffer Key cap on chest tooltip
     TooltipItemQuest = true,            --Show the quest of quest starting items in bags
     TooltipTransmogEnsemble = true,     --A Raid Ensemble now unlocks outfits (tints) from 4 difficulties, but the default UI only gives one
-    TooltipHousing = true,              --TEMP Midnight BETA PTR
 
 
     --Reduction
@@ -294,11 +316,23 @@ local DefaultValues = {
 
 
     EnableNewByDefault = false,             --Always enable newly added features
+    SettingsPanel_AutoShowChangelog = false,
+    SettingsPanel_ChangelogFontSize = 1,
 
 
-    --Test Server
-    Test_ModuleScaleRef = true,
-        Test_ModuleScaleRef_ShowBanana = false,
+    --Housing
+    DecorModelScaleRef = true,
+        DecorModelScaleRef_ShowBanana = false,
+    Housing_Macro = true,
+    Housing_DecorHover = true,
+        Housing_DecorHover_EnableDupe = true,
+        Housing_DecorHover_DuplicateKey = 2,    --1:Ctrl, 2:Alt
+    Housing_CustomizeMode = true,
+    Housing_Clock = true,
+        Housing_Clock_AnalogClock = true,
+    TooltipDyeDeez = true,                  --Show dyes on pigment tooltip
+    Housing_CatalogSearch = false,
+    Housing_ItemAcquiredAlert = true,       --Click AlertFrame to view decor model
 
 
     --Declared elsewhere:
@@ -348,6 +382,13 @@ local function LoadDatabase()
         DB.installTime = VERSION_DATE;
     end
 
+    if DB.lastVersionTime then
+        if (VERSION_DATE - 1 > DB.lastVersionTime) and DB.SettingsPanel_AutoShowChangelog then
+            CallbackRegistry:Trigger("ShowChangelog");
+        end
+    end
+    DB.lastVersionTime = VERSION_DATE;
+
     DefaultValues = nil;
 
     CallbackRegistry:Trigger("NewDBKeysAdded", newDBKeys);
@@ -372,6 +413,7 @@ EL:SetScript("OnEvent", function(self, event, ...)
         if seasonID and seasonID > 0 then
             CallbackRegistry:Trigger("TimerunningSeason", seasonID);
         end
+        addon.ControlCenter:InitializeModules();
     end
 end);
 

@@ -854,6 +854,15 @@ MapPinEnhancedDB = {
 ["color"] = "Yellow",
 ["mapID"] = 23,
 },
+["setpin-1f78e9b3-a644"] = {
+["y"] = 0.69,
+["x"] = 0.27,
+["title"] = "Elder Deepforge",
+["setTracked"] = false,
+["order"] = 53,
+["color"] = "Yellow",
+["mapID"] = 207,
+},
 ["setpin-f52c17be-9606"] = {
 ["y"] = 0.496,
 ["x"] = 0.429,
@@ -862,15 +871,6 @@ MapPinEnhancedDB = {
 ["order"] = 64,
 ["color"] = "Yellow",
 ["mapID"] = 114,
-},
-["setpin-97cd71de-b9b9"] = {
-["y"] = 0.18,
-["x"] = 0.65,
-["title"] = "Elder Menkhaf",
-["setTracked"] = false,
-["order"] = 28,
-["color"] = "Yellow",
-["mapID"] = 80,
 },
 ["setpin-381f6d70-a777"] = {
 ["y"] = 0.86,
@@ -944,14 +944,14 @@ MapPinEnhancedDB = {
 ["color"] = "Yellow",
 ["mapID"] = 115,
 },
-["setpin-1f78e9b3-a644"] = {
-["y"] = 0.69,
-["x"] = 0.27,
-["title"] = "Elder Deepforge",
+["setpin-97cd71de-b9b9"] = {
+["y"] = 0.18,
+["x"] = 0.65,
+["title"] = "Elder Menkhaf",
 ["setTracked"] = false,
-["order"] = 53,
+["order"] = 28,
 ["color"] = "Yellow",
-["mapID"] = 207,
+["mapID"] = 80,
 },
 ["setpin-f25c3b53-9f49"] = {
 ["y"] = 0.7559999999999999,
@@ -1115,7 +1115,7 @@ MapPinEnhancedDB = {
 },
 ["storedPins"] = {
 },
-["version"] = 3013,
+["version"] = 3014,
 ["floatingPin"] = {
 ["showEstimatedTime"] = true,
 ["unlimitedDistance"] = true,

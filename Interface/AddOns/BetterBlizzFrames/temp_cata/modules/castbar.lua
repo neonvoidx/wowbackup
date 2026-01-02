@@ -1,3 +1,4 @@
+local L = BBF.L
 local spellBars = {}
 local castBarsCreated = false
 local petCastbarCreated = false
@@ -378,7 +379,7 @@ function BBF.partyCastBarTestMode()
 
             spellbar:SetMinMaxValues(minValue, maxValue)
             spellbar:SetValue(currentValue)
-            spellbar.Text:SetText("Frostbolt")
+            spellbar.Text:SetText(L["Label_Frostbolt"])
 
             -- Cancel any existing timer before creating a new one
             if spellbar.tickTimer then
@@ -450,7 +451,7 @@ function BBF.petCastBarTestMode()
             spellBars["pet"].Icon:Show()
             spellBars["pet"].Icon:SetTexture(GetSpellTexture(6358));
         end
-        spellBars["pet"].Text:SetText("Seduction")
+        spellBars["pet"].Text:SetText(L["Label_Seduction"])
         if BetterBlizzFramesDB.petCastBarTimer then
             spellBars["pet"].FakeTimer:Show()
         else
@@ -483,23 +484,6 @@ end)
 
 
 
-
-
-
-
---[[
-CompactRaidFrame1:HookScript("OnShow", function()
-    --Small delay to make EditMode happy going from party > compactparty
-    C_Timer.After(0, function()
-        BBF.UpdateCastbars()
-    end)
-    print("CompactRaidFrame1:OnShow ran")
-end)
-
-
-]]
-
-
 local petUpdate = CreateFrame("Frame")
 petUpdate:RegisterEvent("UNIT_PET")
 petUpdate:SetScript("OnEvent", function(self, event, ...)
@@ -507,21 +491,6 @@ petUpdate:SetScript("OnEvent", function(self, event, ...)
         BBF.UpdatePetCastbar()
     end
 end)
-
-
-
---[[
-hooksecurefunc(CompactRaidFrame, "RefreshMembers", function()
-    local showPartyCastbars = BetterBlizzFramesDB.showPartyCastbar
-    if showPartyCastbars then
-        BBF.CreateCastbars()
-        BBF.UpdateCastbars()
-    end
-    --BBF.OnUpdateName()
-end)
-
-]]
-
 
 
 -- Hook into the OnUpdate, OnShow, and OnHide scripts for the spell bar
@@ -954,7 +923,7 @@ function BBF.ChangeCastbarSizes()
     if CastingBarFrame.ignoreFramePositionManager and not bugNotify then
         bugNotify = true
         C_Timer.After(3, function() 
-            print("|A:gmchat-icon-blizz:16:16|a Better|cff00c0ffBlizz|rFrames:\n\"Cast Bar Underneath\" setting can cause errors. Please disable by right-clicking PlayerFrame -> Move Frame -> Unselect Cast Bar Underneath and reload UI.")
+            BBF.Print("\n" .. L["Print_Cast_Bar_Underneath_Warning"])
         end)
     end
 
@@ -1047,7 +1016,9 @@ function BBF.ChangeCastbarSizes()
         local outline = BetterBlizzFramesDB.unitFrameFontOutline or "THINOUTLINE"
         local _, size, _ = TargetFrameSpellBar.Text:GetFont()
         TargetFrameSpellBar.Text:SetFont(fontPath, size, outline)
-        FocusFrameSpellBar.Text:SetFont(fontPath, size, outline)
+        if FocusFrameSpellBar then
+            FocusFrameSpellBar.Text:SetFont(fontPath, size, outline)
+        end
         local _, size, _ = PlayerCastingBarFrame.Text:GetFont()
         PlayerCastingBarFrame.Text:SetFont(fontPath, size, outline)
     end

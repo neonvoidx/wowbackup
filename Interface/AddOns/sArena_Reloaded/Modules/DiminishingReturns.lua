@@ -1,3 +1,32 @@
+local drCategories = sArenaMixin.drCategories
+
+function sArenaFrameMixin:ResetDRCooldownTextColors()
+	if not sArenaMixin.isMidnight then
+		for i = 1, #drCategories do
+			local drFrame = self[drCategories[i]]
+			if drFrame and drFrame.Cooldown.sArenaText then
+				drFrame.Cooldown.sArenaText:SetTextColor(1, 1, 1, 1)
+			end
+		end
+	else
+		if self.drFrames then
+			for _, drFrame in ipairs(self.drFrames) do
+				if drFrame and drFrame.Cooldown and drFrame.Cooldown.sArenaText then
+					drFrame.Cooldown.sArenaText:SetTextColor(1, 1, 1, 1)
+				end
+			end
+		end
+
+		if self.fakeDRFrames then
+			for _, fakeDRFrame in ipairs(self.fakeDRFrames) do
+				if fakeDRFrame and fakeDRFrame.Cooldown and fakeDRFrame.Cooldown.sArenaText then
+					fakeDRFrame.Cooldown.sArenaText:SetTextColor(1, 1, 1, 1)
+				end
+			end
+		end
+	end
+end
+
 if sArenaMixin.isMidnight then return end
 
 local isRetail = sArenaMixin.isRetail
@@ -6,7 +35,6 @@ local isRetail = sArenaMixin.isRetail
 -- Can be changed in gui, /sarena
 local drTime = (isRetail and 18.5) or 20 -- ^^^^^^^^^^^^
 local drList = sArenaMixin.drList
-local drCategories = sArenaMixin.drCategories
 local severityColor = {
 	[1] = { 0, 1, 0, 1 },
 	[2] = { 1, 1, 0, 1 },
@@ -62,6 +90,12 @@ function sArenaFrameMixin:FindDR(combatEvent, spellID)
 	if (combatEvent == "SPELL_AURA_REMOVED" or combatEvent == "SPELL_AURA_BROKEN") then
         local startTime, startDuration = frame.Cooldown:GetCooldownTimes()
         startTime, startDuration = startTime/1000, startDuration/1000
+
+        -- Guard against division by zero
+        if startDuration == 0 or (1 - ((currTime - startTime) / startDuration)) == 0 then
+            sArenaMixin:Print("|cFFFF0000BUG: DR failed:|r " .. spellID .. ", " .. combatEvent .. ", " .. currTime .. ", " .. startTime .. ", " .. startDuration)
+            return
+        end
 
         local newDuration = drTime / (1 - ((currTime - startTime) / startDuration))
         local newStartTime = drTime + currTime - newDuration
@@ -151,6 +185,10 @@ function sArenaFrameMixin:FindDR(combatEvent, spellID)
 			drText:SetText("%")
 		end
 		drText:SetTextColor(unpack(severityColor[frame.severity]))
+	end
+
+	if self.parent.db.profile.colorDRCooldownText and frame.Cooldown.sArenaText then
+		frame.Cooldown.sArenaText:SetTextColor(unpack(severityColor[frame.severity]))
 	end
 
 	frame.severity = frame.severity + 1

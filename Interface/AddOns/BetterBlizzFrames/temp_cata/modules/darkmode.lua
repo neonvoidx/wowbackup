@@ -469,6 +469,18 @@ function BBF.DarkmodeFrames(bypass)
     }) do
         applySettings(v, desaturationValue, vertexColor)
     end
+
+    if PartyFrame and PartyFrame.MemberFrame1 then
+        for i = 1, 4 do
+            local partyMemberFrame = PartyFrame["MemberFrame"..i]
+            applySettings(partyMemberFrame.PartyMemberOverlay.Texture, desaturationValue, vertexColor)
+        end
+    elseif PartyMemberFrame1 then
+        for i = 1, 4 do
+            local partyMemberFrame = _G["PartyMemberFrame"..i]
+            applySettings(partyMemberFrame.Texture, desaturationValue, vertexColor)
+        end
+    end
     -- for _, v in pairs({
     --     PlayerFrameAlternateManaBarLeftBorder,
     --     PlayerFrameAlternateManaBarRightBorder,
@@ -655,7 +667,7 @@ function BBF.DarkmodeFrames(bypass)
                 _G["MainMenuBarTexture"..i],
                 _G["MainMenuBarTextureExtender"],
                 _G["MainMenuMaxLevelBar"..i],
-                _G["ReputationWatchBar"].StatusBar["XPBarTexture"..i],
+                _G["ReputationWatchBar"] and _G["ReputationWatchBar"].StatusBar["XPBarTexture"..i],
                 _G["MainMenuXPBarTexture"..i],
                 _G["SlidingActionBarTexture"..i]
             }
@@ -910,6 +922,8 @@ function BBF.DarkModeCastbars()
         local castbarBorder = BetterBlizzFramesDB.darkModeUi and (vertexColor + 0.1) or 1
         local lighterVertexColor = BetterBlizzFramesDB.darkModeUi and (vertexColor + 0.3) or 1
         BBF.darkModeCastbars = true
+
+        local CastingBarFrame = CastingBarFrame or PlayerCastingBarFrame
 
         applySettings(TargetFrame.spellbar.Border, desaturationValue, castbarBorder)
         --applySettings(TargetFrame.spellbar.BorderShield, desaturationValue, vertexColor)

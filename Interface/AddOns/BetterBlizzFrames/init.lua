@@ -4,10 +4,23 @@ BetterBlizzFramesDB = BetterBlizzFramesDB or {}
 BBF = BBF or {}
 BBA = BBA or {}
 
+BBF.ICON_NAME = "|A:gmchat-icon-blizz:16:16|a Better|cff00c0ffBlizz|rFrames"
+
+-- Initialize locale table (will be populated by locale files)
+BBF.L = BBF.L or {}
+
+function BBF.Print(msg, noColon)
+	if msg then
+		local suffix = noColon and " " or ": "
+		print(BBF.ICON_NAME .. suffix .. msg)
+	end
+end
+
 local gameVersion = select(1, GetBuildInfo())
 BBF.isMidnight = gameVersion:match("^12")
 BBF.isRetail = gameVersion:match("^11")
 BBF.isMoP = gameVersion:match("^5%.")
+BBF.isTBC = gameVersion:match("^2%.")
 BBF.isEra = gameVersion:match("^1%.")
 
 local function CreateOverlayFrame(frame)

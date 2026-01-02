@@ -1,4 +1,5 @@
 if not BBF.isMidnight then return end
+local L = BBF.L
 local UnitIsFriend = UnitIsFriend
 local UnitIsEnemy = UnitIsEnemy
 local UnitIsPlayer = UnitIsPlayer
@@ -131,12 +132,10 @@ local function getUnitColor(unit, useCustomColors)
                             color = {r = customColor[1], g = customColor[2], b = customColor[3], a = customColor[4] or 1}
                         else
                             color = RAID_CLASS_COLORS[className]
-                            color.a = 1
                         end
                     end
                 else
                     color = RAID_CLASS_COLORS[className]
-                    color.a = 1
                 end
 
                 if color then
@@ -157,12 +156,10 @@ local function getUnitColor(unit, useCustomColors)
                         color = {r = customColor[1], g = customColor[2], b = customColor[3], a = customColor[4] or 1}
                     else
                         color = RAID_CLASS_COLORS[className]
-                        color.a = 1
                     end
                 end
             else
                 color = RAID_CLASS_COLORS[className]
-                color.a = 1
             end
 
             if color then
@@ -958,7 +955,7 @@ function BBF.HookHealthbarColors()
                 HookCfSetStatusBarColor(CfTargetFrameHealthBar, "target")
                 HookCfSetStatusBarColor(CfFocusFrameHealthBar, "focus")
             else
-                print("ClassicFrames healthbars not detected. Please report to dev @bodify")
+                BBF.Print(L["Print_ClassicFrames_Not_Detected"])
             end
         else
             hooksecurefunc("UnitFrameHealthBar_Update", function(self, unit)

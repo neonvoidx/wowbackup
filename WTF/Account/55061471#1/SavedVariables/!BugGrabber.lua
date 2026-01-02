@@ -1,7 +1,7 @@
 
 BugGrabberDB = {
 ["lastSanitation"] = 3,
-["session"] = 4715,
+["session"] = 4719,
 ["errors"] = {
 {
 ["message"] = "...ddOns/BetterBlizzFrames/retail/BetterBlizzFrames.lua:2720: attempt to index global 'MainMenuBar' (a nil value)",
@@ -18,6 +18,34 @@ BugGrabberDB = {
 ["stack"] = "[Interface/AddOns/LegionRemixHelper/Utils/ScrappingUtils.lua]:231: in function 'AutoScrap'\n[Interface/AddOns/LegionRemixHelper/Utils/ScrappingUtils.lua]:38: in function 'func'\n[Interface/AddOns/LegionRemixHelper/Libs/RasuLibs/RasuAddonBase.lua]:300: in function 'OnEvent'\n[Interface/AddOns/LegionRemixHelper/Libs/RasuLibs/RasuAddonBase.lua]:83: in function <...ns/LegionRemixHelper/Libs/RasuLibs/RasuAddonBase.lua:82>\n[C]: ?\n[C]: in function 'UseContainerItem'\n[Interface/AddOns/EasyScrap/EasyScrap_Functions.lua]:91: in function 'addQueueItems'\n[Interface/AddOns/EasyScrap/EasyScrap_ItemDisplay.lua]:411: in function 'queueAllItems'\n[Interface/AddOns/EasyScrap/Frames/EasyScrapMainFrame.lua]:128: in function <...rface/AddOns/EasyScrap/Frames/EasyScrapMainFrame.lua:127>",
 ["session"] = 4715,
 ["counter"] = 30,
+},
+{
+["message"] = "Interface/AddOns/AdvancedDecorationTools/src/i18n/deDE.lua:236: '}' expected (to close '{' at line 7) near 'anzeigen'",
+["time"] = "2025/12/17 09:14:00",
+["locals"] = "",
+["stack"] = "",
+["session"] = 4717,
+["counter"] = 2,
+},
+{
+["message"] = "Interface/AddOns/AdvancedDecorationTools/src/i18n/deDE.lua:1 Interface/AddOns/AdvancedDecorationTools/src/i18n/deDE.lua:236: '}' expected (to close '{' at line 7) near 'anzeigen'",
+["session"] = 4717,
+["time"] = "2025/12/17 09:14:07",
+["counter"] = 2,
+},
+{
+["message"] = "Interface/AddOns/AdvancedDecorationTools/src/i18n/deDE.lua:241: '}' expected (to close '{' at line 7) near 'anzeigen'",
+["time"] = "2025/12/19 15:27:49",
+["locals"] = "",
+["stack"] = "",
+["session"] = 4718,
+["counter"] = 1,
+},
+{
+["message"] = "Interface/AddOns/AdvancedDecorationTools/src/i18n/deDE.lua:1 Interface/AddOns/AdvancedDecorationTools/src/i18n/deDE.lua:241: '}' expected (to close '{' at line 7) near 'anzeigen'",
+["session"] = 4718,
+["time"] = "2025/12/19 15:27:56",
+["counter"] = 1,
 },
 },
 }

@@ -397,11 +397,11 @@ BlizzMoveDB = {
 ["dragged"] = true,
 ["dragPoints"] = {
 {
-["anchorPoint"] = "TOPLEFT",
+["anchorPoint"] = "TOP",
 ["relativeFrame"] = "UIParent",
-["offY"] = -94.32314498041524,
-["offX"] = 391.8347924283371,
-["relativePoint"] = "TOPLEFT",
+["offY"] = -96.82291920451826,
+["relativePoint"] = "TOP",
+["offX"] = 449.3180644870081,
 },
 },
 },
@@ -1181,15 +1181,12 @@ BlizzMoveDB = {
 },
 ["TabardFrame"] = {
 },
-["GarrisonRecruitSelectFrame"] = {
-},
-["ScrappingMachineFrame"] = {
+["BlackMarketFrame"] = {
 ["startPoints"] = {
 {
-["anchorPoint"] = "TOPLEFT",
-["relativeFrame"] = "UIParent",
-["offY"] = -116,
 ["offX"] = 15.99999904632568,
+["offY"] = -116.0000457763672,
+["anchorPoint"] = "TOPLEFT",
 ["relativePoint"] = "TOPLEFT",
 },
 },
@@ -1198,11 +1195,13 @@ BlizzMoveDB = {
 {
 ["anchorPoint"] = "TOPLEFT",
 ["relativeFrame"] = "UIParent",
-["offY"] = -116,
+["offY"] = -115.1666259765625,
 ["relativePoint"] = "TOPLEFT",
-["offX"] = 16.83333969116211,
+["offX"] = 15.99999904632568,
 },
 },
+},
+["GarrisonRecruitSelectFrame"] = {
 },
 ["RemixArtifactFrame.ButtonsParent"] = {
 },
@@ -1367,12 +1366,13 @@ BlizzMoveDB = {
 },
 ["CovenantMissionFrame.FollowerList.MaterialFrame"] = {
 },
-["BlackMarketFrame"] = {
+["ScrappingMachineFrame"] = {
 ["startPoints"] = {
 {
-["offX"] = 15.99999904632568,
-["offY"] = -116.0000457763672,
 ["anchorPoint"] = "TOPLEFT",
+["relativeFrame"] = "UIParent",
+["offY"] = -116,
+["offX"] = 15.99999904632568,
 ["relativePoint"] = "TOPLEFT",
 },
 },
@@ -1381,9 +1381,9 @@ BlizzMoveDB = {
 {
 ["anchorPoint"] = "TOPLEFT",
 ["relativeFrame"] = "UIParent",
-["offY"] = -115.1666259765625,
+["offY"] = -116,
 ["relativePoint"] = "TOPLEFT",
-["offX"] = 15.99999904632568,
+["offX"] = 16.83333969116211,
 },
 },
 },
@@ -1499,9 +1499,9 @@ BlizzMoveDB = {
 {
 ["anchorPoint"] = "TOPLEFT",
 ["relativeFrame"] = "UIParent",
-["offY"] = -141.8020413876802,
+["offY"] = -141.8018033505578,
 ["relativePoint"] = "TOPLEFT",
-["offX"] = 246.1767225289368,
+["offX"] = 247.0100309854297,
 },
 },
 },

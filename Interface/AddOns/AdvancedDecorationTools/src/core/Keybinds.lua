@@ -1,7 +1,7 @@
 -- Keybinds.lua
 -- ADT 自定义快捷键核心模块
 -- 使用 SetOverrideBindingClick 实现动态快捷键绑定
--- 参考自 JST 插件的 UpdateFocusBindingClick 实现模式
+
 
 local ADDON_NAME, ADT = ...
 
@@ -20,6 +20,7 @@ local DEFAULTS = {
     Cut          = "CTRL-X",     -- 剪切
     Paste        = "CTRL-V",     -- 粘贴
     Store        = "CTRL-S",     -- 存入临时板
+    StoreCopy    = "CTRL-SHIFT-S", -- 仅复制到临时板
     Recall       = "CTRL-R",     -- 取出临时板
     Reset        = "T",          -- 重置变换
     ResetAll     = "CTRL-T",     -- 重置全部
@@ -66,6 +67,11 @@ local ACTIONS = {
         name = "存入临时板",
         nameEN = "Store",
         callback = function() if _G.ADT_Temp_StoreSelected then ADT_Temp_StoreSelected() end end,
+    },
+    StoreCopy = {
+        name = "复制到临时板",
+        nameEN = "Store Copy",
+        callback = function() if _G.ADT_Temp_StoreSelectedCopy then ADT_Temp_StoreSelectedCopy() end end,
     },
     Recall = {
         name = "取出临时板",
@@ -161,6 +167,25 @@ local EnsureButton
 function M:GetKeybind(actionName)
     local db = ADT.GetDBValue and ADT.GetDBValue("Keybinds") or {}
     return db[actionName] or DEFAULTS[actionName] or ""
+end
+
+-- 获取某个动作当前“显示用”的按键文本（本地化后的友好格式）
+-- 说明：统一入口，避免各处手写 GetKeybind+GetKeyDisplayName 的重复逻辑（单一权威）
+function M:GetActionKeyDisplay(actionName)
+    if not actionName or actionName == "" then return "" end
+    local raw = self:GetKeybind(actionName)
+    return self:GetKeyDisplayName(raw)
+end
+
+-- Quickbar 专用：按索引获取当前按键（原始/显示）
+function M:GetQuickbarKey(index)
+    if not index then return "" end
+    return self:GetKeybind("Quickbar" .. tostring(index))
+end
+
+function M:GetQuickbarKeyDisplay(index)
+    if not index then return "" end
+    return self:GetActionKeyDisplay("Quickbar" .. tostring(index))
 end
 
 -- 设置用户配置的快捷键
@@ -269,6 +294,19 @@ function M:GetAllActions()
             local storeEntry = table.remove(normals, idxStore)
             if idxStore < idxRecall then idxRecall = idxRecall - 1 end
             table.insert(normals, idxRecall, storeEntry)
+        end
+    end
+    -- 规则：StoreCopy 紧邻 Store 之下
+    do
+        local idxStore, idxStoreCopy
+        for i, v in ipairs(normals) do
+            if v.name == 'Store' then idxStore = i end
+            if v.name == 'StoreCopy' then idxStoreCopy = i end
+        end
+        if idxStore and idxStoreCopy and idxStoreCopy ~= (idxStore + 1) then
+            local entry = table.remove(normals, idxStoreCopy)
+            if idxStoreCopy < idxStore then idxStore = idxStore - 1 end
+            table.insert(normals, idxStore + 1, entry)
         end
     end
 

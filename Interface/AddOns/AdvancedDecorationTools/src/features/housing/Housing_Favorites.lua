@@ -14,6 +14,7 @@ ADT.Favorites = Favorites
 -- DB 约定（唯一权威）
 local KEY_FAV_MAP = "FavoritesByRID"       -- map<number, boolean>
 local KEY_FILTER_ON = "FavoritesFilterOn"  -- boolean
+local KEY_TAG_FILTER = "TagFilterIDs"      -- table<string>（选中的标签 ID 列表）
 
 local function GetFavMap()
     local db = _G.ADT_DB or {}
@@ -21,14 +22,26 @@ local function GetFavMap()
     return db[KEY_FAV_MAP]
 end
 
+-- 委托给 Tags 模块（兼容旧接口）
 local function IsFavoritedRID(recordID)
     if not recordID then return false end
+    -- 优先使用 Tags 模块
+    if ADT.Tags and ADT.Tags.IsFavorited then
+        return ADT.Tags:IsFavorited(recordID)
+    end
+    -- 兜底：直接读取旧版 FavMap
     local map = GetFavMap()
     return not not map[recordID]
 end
 
 local function SetFavoritedRID(recordID, state)
     if not recordID then return end
+    -- 优先使用 Tags 模块
+    if ADT.Tags and ADT.Tags.SetFavorited then
+        ADT.Tags:SetFavorited(recordID, state)
+        return
+    end
+    -- 兜底：直接操作旧版 FavMap
     local map = GetFavMap()
     if state then map[recordID] = true else map[recordID] = nil end
 end
@@ -46,6 +59,56 @@ end
 
 function Favorites:ToggleFilter()
     Favorites:SetFilter(not Favorites:IsFilterOn())
+end
+
+-- 标签筛选管理
+function Favorites:GetTagFilter()
+    local db = _G.ADT_DB or {}
+    return db[KEY_TAG_FILTER] or {}
+end
+
+function Favorites:SetTagFilter(tagIDs, silent)
+    local db = _G.ADT_DB or {}
+    _G.ADT_DB = db
+    db[KEY_TAG_FILTER] = tagIDs
+    if not silent then
+        Favorites:RefreshCatalog()
+    end
+end
+
+function Favorites:IsTagFilterActive()
+    local filter = Favorites:GetTagFilter()
+    return filter and #filter > 0
+end
+
+function Favorites:ToggleTagInFilter(tagID)
+    local filter = Favorites:GetTagFilter()
+    local found = false
+    for i, id in ipairs(filter) do
+        if id == tagID then
+            table.remove(filter, i)
+            found = true
+            break
+        end
+    end
+    if not found then
+        table.insert(filter, tagID)
+    end
+    Favorites:SetTagFilter(filter)
+end
+
+function Favorites:ClearTagFilter(silent)
+    Favorites:SetTagFilter({}, silent)
+end
+
+function Favorites:IsTagInFilter(tagID)
+    local filter = Favorites:GetTagFilter()
+    for _, id in ipairs(filter) do
+        if id == tagID then
+            return true
+        end
+    end
+    return false
 end
 
 -- 工具：从“目录条目按钮”取 decor recordID（单一权威）
@@ -69,6 +132,11 @@ local FX = {
     starAtlas = "CampCollection-icon-star", -- 注意拼写：CampCollection
     starSize = 22,
     starOffset = { x = -4, y = -2 },
+    -- 标签圆点配置
+    dotAtlas = "LevelUp-Dot-Gold",  -- 使用金色圆点并通过 SetVertexColor 着色
+    dotSize = 10,
+    dotSpacing = 2,  -- 圆点间距
+    maxDots = 4,     -- 最多显示 4 个圆点（超过则省略）
     color = {
         normal = {1, 1, 0},     -- 非收藏/提示用黄
         favorited = {1, 0.9, 0}, -- 收藏后更暖的黄
@@ -210,6 +278,71 @@ function Favorites:RefreshStar(btn)
         star:SetAlpha(FX.alpha.decorHover)
         star:Hide()
     end
+    
+    -- 刷新标签圆点（在星标左侧）
+    Favorites:RefreshTagDots(btn, rid)
+end
+
+-- 确保圆点容器已创建
+local function EnsureTagDotsOnButton(btn)
+    if btn._ADTTagDots then return btn._ADTTagDots end
+    
+    -- 创建圆点容器（最多 maxDots 个）
+    local dots = {}
+    for i = 1, FX.maxDots do
+        local dot = btn:CreateTexture(nil, "OVERLAY", nil, 6)
+        dot:SetAtlas(FX.dotAtlas)
+        dot:SetSize(FX.dotSize, FX.dotSize)
+        dot:Hide()
+        dots[i] = dot
+    end
+    btn._ADTTagDots = dots
+    return dots
+end
+
+-- 刷新标签圆点显示
+function Favorites:RefreshTagDots(btn, recordID)
+    local dots = EnsureTagDotsOnButton(btn)
+    local star = btn._ADTStar
+    if not star or not dots then return end
+    
+    -- 获取装饰物的非收藏标签
+    local tagList = {}
+    if ADT.Tags and ADT.Tags.GetDecorTagsWithInfo and recordID then
+        local allTags = ADT.Tags:GetDecorTagsWithInfo(recordID)
+        for _, tag in ipairs(allTags) do
+            if tag.id ~= "favorite" then  -- 排除收藏标签（由星标表示）
+                table.insert(tagList, tag)
+            end
+        end
+    end
+    
+    -- 更新圆点
+    local visibleCount = math.min(#tagList, FX.maxDots)
+    local anchorFrame = star
+    local anchorPoint = "LEFT"
+    local relativePoint = "LEFT"
+    
+    for i = 1, FX.maxDots do
+        local dot = dots[i]
+        if i <= visibleCount then
+            local tag = tagList[i]
+            local rgb = ADT.Tags and ADT.Tags:GetColorRGB(tag.color) or {0.6, 0.6, 0.6}
+            SetColor(dot, rgb)
+            
+            -- 锚定：第一个圆点锚定到星标左侧，后续圆点锚定到前一个圆点左侧
+            dot:ClearAllPoints()
+            if i == 1 then
+                dot:SetPoint("RIGHT", star, "LEFT", -FX.dotSpacing, 0)
+            else
+                dot:SetPoint("RIGHT", dots[i-1], "LEFT", -FX.dotSpacing, 0)
+            end
+            dot:SetAlpha(1)
+            dot:Show()
+        else
+            dot:Hide()
+        end
+    end
 end
 
 -- 遍历可见的目录按钮，安装星标并刷新状态
@@ -232,39 +365,85 @@ end
 -- - 仍保持 recordID 为唯一权威，严禁做任何“兼容映射”。
 local function CollectFavoriteEntries(storagePanel)
     if not (storagePanel and storagePanel.catalogSearcher) then return {} end
-    local favs = GetFavMap()
-    if not next(favs) then return {} end
+    
+    -- 获取收藏 map（通过 Tags 模块）
+    local favMap = {}
+    if ADT.Tags then
+        favMap = ADT.Tags:FilterByTag("favorite")
+    else
+        favMap = GetFavMap()
+    end
+    
+    if not next(favMap) then return {} end
     local results = {}
     -- 以“当前筛选结果”为基集合，随后取与收藏的交集
     local filtered = storagePanel.catalogSearcher:GetCatalogSearchResults()
     for _, id in ipairs(filtered or {}) do
-        if id.entryType == Enum.HousingCatalogEntryType.Decor and favs[id.recordID] then
+        if id.entryType == Enum.HousingCatalogEntryType.Decor and favMap[id.recordID] then
             table.insert(results, id)
         end
     end
     return results
 end
 
--- 根据“仅显示收藏”的开关，刷新右侧列表
+-- 收集“标签筛选 ∩ 当前筛选/分类/搜索结果”的目录条目
+local function CollectTagFilteredEntries(storagePanel)
+    if not (storagePanel and storagePanel.catalogSearcher) then return {} end
+    
+    local filterTagIDs = Favorites:GetTagFilter()
+    if not filterTagIDs or #filterTagIDs == 0 then return {} end
+    
+    -- 获取匹配任一标签的 recordID 集合
+    local matchMap = ADT.Tags and ADT.Tags:FilterByAnyTags(filterTagIDs) or {}
+    if not next(matchMap) then return {} end
+    
+    local results = {}
+    local filtered = storagePanel.catalogSearcher:GetCatalogSearchResults()
+    for _, id in ipairs(filtered or {}) do
+        if id.entryType == Enum.HousingCatalogEntryType.Decor and matchMap[id.recordID] then
+            table.insert(results, id)
+        end
+    end
+    return results
+end
+
+-- 根据"仅显示收藏"/"标签筛选"的开关，刷新右侧列表
 function Favorites:RefreshCatalog()
     local hf = _G.HouseEditorFrame
     local sp = hf and hf.StoragePanel
     if not sp then return end
 
-    -- 新逻辑：收藏筛选应与“左侧分类/返回按钮”解耦，仅覆盖右侧结果集。
+    -- 检查是否有任何 ADT 筛选激活
+    local favFilterOn = Favorites:IsFilterOn()
+    local tagFilterOn = Favorites:IsTagFilterActive()
+    local anyFilterOn = favFilterOn or tagFilterOn
+
+    -- 新逻辑：收藏/标签筛选应与"左侧分类/返回按钮"解耦，仅覆盖右侧结果集。
     -- 因此不再使用 SetCustomCatalogData（它会触发 Categories:SetManualFocusState(true) 从而出现返回按钮）。
-    if Favorites:IsFilterOn() then
-        -- 仅在“仓库”标签内生效；市场/专题等自定义视图不叠加收藏筛选。
+    if anyFilterOn then
+        -- 仅在"仓库"标签内生效；市场/专题等自定义视图不叠加筛选。
         if sp.IsInMarketTab and sp:IsInMarketTab() then
             return
         end
         if sp.customCatalogData then
             return
         end
-        local entries = CollectFavoriteEntries(sp)
+        
+        local entries
+        local header
+        
+        if favFilterOn then
+            -- 优先：收藏筛选
+            entries = CollectFavoriteEntries(sp)
+            header = Ls("Favorites")
+        elseif tagFilterOn then
+            -- 其次：标签筛选
+            entries = CollectTagFilteredEntries(sp)
+            header = Ls("Tag Filter") or "标签筛选"
+        end
+        
         local retain = true
-        local header = Ls("Favorites")
-        -- 直接把“收藏 ∩ 当前筛选”的结果送入 OptionsContainer；不改动分类焦点与返回按钮状态。
+        -- 直接把筛选结果送入 OptionsContainer；不改动分类焦点与返回按钮状态。
         sp.OptionsContainer:SetCatalogData(entries, retain, header, nil)
         -- 在我们覆盖结果后，同步星标与计数显示（官方会在 UpdateCatalogData 里做；此处补齐一次以避免滞后）。
         if sp.UpdateLoadingSpinner then pcall(sp.UpdateLoadingSpinner, sp) end
@@ -283,18 +462,57 @@ local function HookFilterDropdown(filters)
     local fd = filters.FilterDropdown
     if fd._ADTFavHooked then return end
 
-    -- 1) 追加菜单项：保留官方生成器，并在其后注入“仅显示收藏”。
+    -- 1) 追加菜单项：保留官方生成器，并在其后注入 ADT 选项。
     local origGen = fd.menuGenerator
     fd:SetupMenu(function(dropdown, root)
         if type(origGen) == "function" then
             origGen(dropdown, root)
         end
         root:CreateDivider()
+        
+        -- 「仅显示收藏」选项
         root:CreateCheckbox(Ls("Show Favorites Only"), function() return Favorites:IsFilterOn() end, function()
             Favorites:ToggleFilter()
-            -- 保持下拉菜单开启并刷新选中态
             return MenuResponse.Refresh
         end)
+        
+        -- 「标签筛选」子菜单
+        if ADT.Tags then
+            local allTags = ADT.Tags:GetAll()
+            if allTags and #allTags > 0 then
+                local tagFilterSubmenu = root:CreateButton(Ls("Tag Filter") or "标签筛选")
+                
+                -- 添加所有标签（带彩色圆点和勾选框）
+                for _, tag in ipairs(allTags) do
+                    local rgb = ADT.Tags:GetColorRGB(tag.color)
+                    local colorCode = string.format("|cff%02x%02x%02x", 
+                        math.floor(rgb[1] * 255), 
+                        math.floor(rgb[2] * 255), 
+                        math.floor(rgb[3] * 255))
+                    local displayName = colorCode .. "● |r" .. tag.name
+                    
+                    local function IsSelected()
+                        return Favorites:IsTagInFilter(tag.id)
+                    end
+                    
+                    local function SetSelected()
+                        Favorites:ToggleTagInFilter(tag.id)
+                        return MenuResponse.Refresh
+                    end
+                    
+                    tagFilterSubmenu:CreateCheckbox(displayName, IsSelected, SetSelected)
+                end
+                
+                -- 分隔线 + 清除所有筛选
+                if Favorites:IsTagFilterActive() then
+                    tagFilterSubmenu:CreateDivider()
+                    tagFilterSubmenu:CreateButton(Ls("Clear All Tags") or "清除筛选", function()
+                        Favorites:ClearTagFilter()
+                        return MenuResponse.Close
+                    end)
+                end
+            end
+        end
     end)
 
     -- 2) 重写“是否默认/重置”回调，让 Reset 按钮也管控我们的开关
@@ -305,11 +523,12 @@ local function HookFilterDropdown(filters)
         if type(origIsDefault) == "function" then
             ok = not not origIsDefault()
         end
-        return ok and (not Favorites:IsFilterOn())
+        return ok and (not Favorites:IsFilterOn()) and (not Favorites:IsTagFilterActive())
     end)
     fd:SetDefaultCallback(function()
         if type(origDefault) == "function" then origDefault() end
         Favorites:SetFilter(false, true)
+        Favorites:ClearTagFilter(true)
         Favorites:RefreshCatalog()
     end)
 

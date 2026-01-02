@@ -1,9 +1,10 @@
 local config, UIParent, GetCursorPosition = CursorModConfig, UIParent, GetCursorPosition
-config.cursorFrame = CreateFrame("FRAME", nil, UIParent)
-local cursorFrame = config.cursorFrame
+local cursorFrame = CreateFrame("FRAME", nil, UIParent)
+config.cursorFrame = cursorFrame
 cursorFrame:SetFrameStrata("TOOLTIP")
-config.cursor = cursorFrame:CreateTexture(nil, "OVERLAY")
-config.cursor:SetPoint("CENTER")
+cursorFrame.glow = cursorFrame:CreateTexture(nil, "BORDER")
+cursorFrame.outline = cursorFrame:CreateTexture(nil, "ARTWORK")
+cursorFrame.cursor = cursorFrame:CreateTexture(nil, "OVERLAY")
 cursorFrame:SetPoint("TOPLEFT", UIParent, "BOTTOMLEFT")
 cursorFrame:Hide()
 cursorFrame[1], cursorFrame[2] = true, true

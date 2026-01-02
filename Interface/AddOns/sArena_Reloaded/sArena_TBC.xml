@@ -13,6 +13,7 @@
 
     <Script file="sArena_Init.lua"/>
     <Script file="sArena.lua"/>
+    <Script file="Data\SpecSpells_TBC.lua"/>
     <Script file="Modules\SpecFinder.lua"/>
     <Script file="Modules\Interrupt.lua"/>
     <Script file="Modules\Racials.lua"/>
@@ -334,6 +335,20 @@
             <Button name="sArenaEnemyFrame3" parentKey="arena3" inherits="sArenaEnemyUnitFrameTemplate" id="3"/>
             <Button name="sArenaEnemyFrame4" parentKey="arena4" inherits="sArenaEnemyUnitFrameTemplate" id="4"/>
             <Button name="sArenaEnemyFrame5" parentKey="arena5" inherits="sArenaEnemyUnitFrameTemplate" id="5"/>
+            
+            <Frame parentKey="ShadowsightTimer" hidden="true">
+                <Size x="250" y="20"/>
+                <Layers>
+                    <Layer level="OVERLAY">
+                        <FontString parentKey="Text" inherits="GameFontNormalSmall">
+                            <Anchors>
+                                <Anchor point="CENTER" relativePoint="CENTER" x="0" y="0"/>
+                            </Anchors>
+                            <Color r="1.0" g="0.8" b="0.0"/>
+                        </FontString>
+                    </Layer>
+                </Layers>
+            </Frame>
         </Frames>
 
         <Scripts>

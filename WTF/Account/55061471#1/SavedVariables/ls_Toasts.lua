@@ -53,7 +53,7 @@ LS_TOASTS_GLOBAL_CONFIG = {
 ["font"] = {
 ["name"] = "1",
 },
-["version"] = 11020701,
+["version"] = 11020702,
 ["skin"] = "beautycase",
 ["anchors"] = {
 {
@@ -67,6 +67,7 @@ LS_TOASTS_GLOBAL_CONFIG = {
 ["types"] = {
 ["loot_currency"] = {
 ["enabled"] = false,
+["vfx"] = true,
 ["dnd"] = true,
 ["sfx"] = true,
 ["anchor"] = 1,
@@ -170,13 +171,14 @@ LS_TOASTS_GLOBAL_CONFIG = {
 },
 ["loot_special"] = {
 ["enabled"] = false,
-["sfx"] = true,
-["dnd"] = true,
-["legacy_equipment"] = true,
-["anchor"] = 1,
-["tooltip"] = true,
 ["ilvl"] = true,
+["legacy_equipment"] = true,
+["tooltip"] = true,
 ["threshold"] = 1,
+["dnd"] = true,
+["sfx"] = true,
+["anchor"] = 1,
+["vfx"] = true,
 },
 ["recipe"] = {
 ["enabled"] = true,
@@ -184,6 +186,7 @@ LS_TOASTS_GLOBAL_CONFIG = {
 ["sfx"] = true,
 ["anchor"] = 1,
 ["tooltip"] = true,
+["vfx"] = true,
 ["left_click"] = false,
 },
 ["garrison_8_0"] = {
@@ -192,6 +195,7 @@ LS_TOASTS_GLOBAL_CONFIG = {
 ["sfx"] = true,
 ["anchor"] = 1,
 ["tooltip"] = true,
+["vfx"] = true,
 },
 ["loot_common"] = {
 ["enabled"] = false,
@@ -202,7 +206,10 @@ LS_TOASTS_GLOBAL_CONFIG = {
 ["dnd"] = true,
 ["sfx"] = true,
 ["anchor"] = 1,
+["vfx"] = true,
 ["quest"] = false,
+["filters"] = {
+},
 },
 ["runecarving"] = {
 ["enabled"] = true,
@@ -210,25 +217,29 @@ LS_TOASTS_GLOBAL_CONFIG = {
 ["sfx"] = true,
 ["anchor"] = 1,
 ["tooltip"] = true,
+["vfx"] = true,
 },
 ["collection"] = {
 ["enabled"] = true,
 ["dnd"] = true,
 ["sfx"] = true,
 ["anchor"] = 1,
+["vfx"] = true,
 ["left_click"] = false,
 },
 ["world"] = {
-["anchor"] = 1,
 ["enabled"] = true,
 ["dnd"] = true,
 ["sfx"] = true,
+["anchor"] = 1,
+["vfx"] = true,
 },
 ["housing"] = {
-["anchor"] = 1,
 ["enabled"] = true,
 ["dnd"] = false,
 ["sfx"] = true,
+["anchor"] = 1,
+["vfx"] = true,
 },
 ["garrison_6_0"] = {
 ["enabled"] = false,
@@ -236,18 +247,21 @@ LS_TOASTS_GLOBAL_CONFIG = {
 ["sfx"] = true,
 ["anchor"] = 1,
 ["tooltip"] = true,
+["vfx"] = true,
 },
 ["activities"] = {
-["anchor"] = 1,
 ["enabled"] = true,
 ["dnd"] = true,
 ["sfx"] = true,
+["anchor"] = 1,
+["vfx"] = true,
 },
 ["instance"] = {
-["anchor"] = 1,
 ["enabled"] = true,
 ["dnd"] = true,
 ["sfx"] = true,
+["anchor"] = 1,
+["vfx"] = true,
 },
 ["achievement"] = {
 ["enabled"] = true,
@@ -255,6 +269,7 @@ LS_TOASTS_GLOBAL_CONFIG = {
 ["anchor"] = 1,
 ["tooltip"] = true,
 ["earned"] = false,
+["vfx"] = true,
 },
 ["archaeology"] = {
 ["enabled"] = false,
@@ -262,6 +277,7 @@ LS_TOASTS_GLOBAL_CONFIG = {
 ["sfx"] = true,
 ["anchor"] = 1,
 ["tooltip"] = true,
+["vfx"] = true,
 },
 ["garrison_9_0"] = {
 ["enabled"] = false,
@@ -269,6 +285,7 @@ LS_TOASTS_GLOBAL_CONFIG = {
 ["sfx"] = true,
 ["anchor"] = 1,
 ["tooltip"] = true,
+["vfx"] = true,
 },
 ["garrison_7_0"] = {
 ["enabled"] = false,
@@ -276,6 +293,7 @@ LS_TOASTS_GLOBAL_CONFIG = {
 ["sfx"] = true,
 ["anchor"] = 1,
 ["tooltip"] = true,
+["vfx"] = true,
 },
 ["loot_gold"] = {
 ["enabled"] = false,
@@ -284,6 +302,7 @@ LS_TOASTS_GLOBAL_CONFIG = {
 ["anchor"] = 1,
 ["track_loss"] = false,
 ["threshold"] = 1,
+["vfx"] = true,
 },
 ["store"] = {
 ["enabled"] = true,
@@ -291,6 +310,7 @@ LS_TOASTS_GLOBAL_CONFIG = {
 ["sfx"] = true,
 ["anchor"] = 1,
 ["tooltip"] = true,
+["vfx"] = true,
 ["left_click"] = false,
 },
 ["transmog"] = {
@@ -298,6 +318,7 @@ LS_TOASTS_GLOBAL_CONFIG = {
 ["dnd"] = true,
 ["sfx"] = true,
 ["anchor"] = 1,
+["vfx"] = true,
 ["left_click"] = false,
 },
 },

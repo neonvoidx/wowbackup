@@ -1,4 +1,16 @@
-﻿11.2.22 - 3rd December 2025
+﻿11.2.26 - 31st December 2025
+- Happy New Year!
+- Midnight Beta: For 'Enhance tooltip' ('Interface'), tooltips will now be color-coded once again and the tooltip settings will now be available.  Note that color coding and many tooltip settings won't apply during instanced combat encounters.
+- Midnight Beta: The 'Disable bag automation' ('System') option is now available once again.
+- For 'Media', added cinematics 'Voidstorm' and 'The Radiant Visions'.  Watch in Movies and listen in Various > Cinematics.
+
+11.2.25 - 24th December 2025
+- Merry Christmas!
+
+11.2.24 - 17th December 2025
+- PTR (12.0.1): Updated for game patch 12.0.1.
+
+11.2.22 - 3rd December 2025
 - Updated for game patch 11.2.7.
 
 11.2.21 - 26th November 2025

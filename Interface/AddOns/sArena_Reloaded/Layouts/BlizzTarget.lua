@@ -106,8 +106,8 @@ local function setSetting(info, val)
     end
 
     if info[#info] == "mirrored" then
-        local expectedCastBarPosX = val and (layout.defaultSettings.castBar.posX - 50) or layout.defaultSettings.castBar.posX
-        local expectedSpecIconPosX = val and (layout.defaultSettings.specIcon.posX + 161) or layout.defaultSettings.specIcon.posX
+        local expectedCastBarPosX = val and layout.defaultSettings.castBar.posX or (layout.defaultSettings.castBar.posX + 50)
+        local expectedSpecIconPosX = val and layout.defaultSettings.specIcon.posX or (layout.defaultSettings.specIcon.posX - 161)
 
         if layout.db.castBar.posX == expectedCastBarPosX then
             if val then
@@ -172,6 +172,8 @@ function layout:Initialize(frame)
 
     frame.ClassIcon.Cooldown:SetSwipeTexture("Interface\\CharacterFrame\\TempPortraitAlphaMask")
     frame.ClassIcon.Cooldown:SetUseCircularEdge(true)
+    frame.ClassIcon:SetFrameStrata("LOW")
+    frame.ClassIcon:SetFrameLevel(7)
 
     frame:SetSize(192, 76.8)
     frame.SpecIcon:SetSize(22, 22)
@@ -201,11 +203,13 @@ function layout:Initialize(frame)
     powerBar:SetStatusBarTexture("Interface\\TargetingFrame\\UI-StatusBar")
 
     local f = frame.ClassIcon
-    f:SetSize(64, 64)
+    f:SetSize(62, 62)
     f:Show()
     f.Texture:AddMaskTexture(f.Mask)
 
-    f.Mask:SetSize(64, 64)
+    f.Mask:SetSize(66, 66)
+    f.Mask:ClearAllPoints()
+    f.Mask:SetPoint("CENTER", f, "CENTER", 0, 0)
 
     -- SpecIcon border (owned by SpecIcon)
     if not frame.SpecIcon.Border then
@@ -258,8 +262,6 @@ end
 function layout:UpdateOrientation(frame)
     local frameTexture = frame.frameTexture
     local healthBar = frame.HealthBar
-    local classIcon = frame.ClassIcon
-    local classIconMask = frame.ClassIcon.Mask
     local name = frame.Name
     local specName = frame.SpecNameText
     local healthText = frame.HealthText
@@ -375,18 +377,15 @@ function layout:UpdateOrientation(frame)
 
     healthBar:ClearAllPoints()
     frame.ClassIcon:ClearAllPoints()
-    classIconMask:ClearAllPoints()
 
     if (self.db.mirrored) then
         frameTexture:SetTexCoord(0.85, 0.1, 0.05, 0.65)
         healthBar:SetPoint("RIGHT", -5, self.db.bigHealthbar and 7 or -2)
         frame.ClassIcon:SetPoint("LEFT", 5, 0)
-        classIconMask:SetPoint("LEFT", 5, 0)
     else
         frameTexture:SetTexCoord(0.1, 0.85, 0.05, 0.65)
         healthBar:SetPoint("LEFT", 5, self.db.bigHealthbar and 7 or -2)
         frame.ClassIcon:SetPoint("RIGHT", -5, 0)
-        classIconMask:SetPoint("RIGHT", -5, 0)
     end
 end
 

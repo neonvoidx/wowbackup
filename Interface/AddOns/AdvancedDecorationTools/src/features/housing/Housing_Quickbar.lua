@@ -12,6 +12,7 @@ local L = ADT.L or {}
 -- 常量
 -- ===========================
 
+-- 默认键位仅作回退显示，实际显示一律从 ADT.Keybinds 读取（单一权威）
 local SLOT_KEYS = { "F1", "F2", "F3", "F4", "F5", "F6", "F7", "F8" }
 local NUM_SLOTS = #SLOT_KEYS
 
@@ -37,6 +38,17 @@ end
 
 local function Notify(msg, typ)
     if ADT and ADT.Notify then ADT.Notify(msg, typ or 'info') end
+end
+
+-- 统一：根据玩家当前配置返回 Quickbar 槽位的按键显示文本
+local function GetSlotKeyDisplay(slotIndex)
+    if ADT and ADT.Keybinds and ADT.Keybinds.GetQuickbarKeyDisplay then
+        local disp = ADT.Keybinds:GetQuickbarKeyDisplay(slotIndex)
+        if disp and disp ~= '' then
+            return disp
+        end
+    end
+    return SLOT_KEYS[slotIndex]
 end
 
 -- 检测是否在住宅编辑器中
@@ -126,13 +138,8 @@ end
 
 -- 统一：取消当前抓取/预览（等同 R 在预览态）
 local function CancelActiveEditing()
-    if C_HousingBasicMode and C_HousingBasicMode.CancelActiveEditing then
-        C_HousingBasicMode.CancelActiveEditing()
-        return true
-    end
-    if C_HousingExpertMode and C_HousingExpertMode.CancelActiveEditing then
-        C_HousingExpertMode.CancelActiveEditing()
-        return true
+    if ADT and ADT.Housing and ADT.Housing.CancelActiveEditing then
+        return ADT.Housing:CancelActiveEditing()
     end
     return false
 end
@@ -256,7 +263,7 @@ end
 
 function M:ClearSlot(slotIndex)
     self:SetSlotData(slotIndex, nil)
-    Notify(string.format(L["Quickbar slot %s cleared"], SLOT_KEYS[slotIndex]), 'info')
+    Notify(string.format(L["Quickbar slot %s cleared"], GetSlotKeyDisplay(slotIndex)), 'info')
     PlaySound(SOUNDKIT.IG_MAINMENU_OPTION_CHECKBOX_OFF)
 end
 
@@ -279,7 +286,7 @@ function M:OnQuickbarKeyPressed(slotIndex)
     end
     
     D(string.format("[Quickbar] Key %s pressed: slotIndex=%d, isPlacing=%s, isPlacingNew=%s, isSelected=%s, slotHasData=%s, currentRID=%s",
-        SLOT_KEYS[slotIndex], slotIndex, tostring(isPlacing), tostring(isPlacingNew), tostring(isSelected), tostring(slotData ~= nil), tostring(currentRID)))
+        GetSlotKeyDisplay(slotIndex), slotIndex, tostring(isPlacing), tostring(isPlacingNew), tostring(isSelected), tostring(slotData ~= nil), tostring(currentRID)))
     
     if isPlacing then
         -- 当前有抓取
@@ -308,7 +315,8 @@ function M:OnQuickbarKeyPressed(slotIndex)
                     local cancelled = CancelActiveEditing()
                     D("[Quickbar] CancelActiveEditing called after bind (preview or no selection), ok=" .. tostring(cancelled))
                 end
-                Notify(string.format(L["Decor bound to quickbar %s"], SLOT_KEYS[slotIndex]), 'success')
+                -- 文本采用占位符 + 实时读取的按键显示（支持玩家改键后即时反映）
+                Notify(string.format(L["Decor bound to quickbar %s"], GetSlotKeyDisplay(slotIndex)), 'success')
                 PlaySound(SOUNDKIT.UI_70_ARTIFACT_FORGE_APPEARANCE_LOCKED)
             end
         end
@@ -328,19 +336,7 @@ function M:PlaceFromSlot(slotIndex)
         D("[Quickbar] PlaceFromSlot: slot is empty")
         return
     end
-    
-    -- 切换到普通模式（如果在专家模式）
-    local currentMode = C_HouseEditor.GetActiveHouseEditorMode and C_HouseEditor.GetActiveHouseEditorMode()
-    if currentMode and currentMode ~= Enum.HouseEditorMode.BasicDecor then
-        D("[Quickbar] Switching to BasicDecor mode")
-        C_HouseEditor.ActivateHouseEditorMode(Enum.HouseEditorMode.BasicDecor)
-        -- 延迟执行放置
-        C_Timer.After(0.2, function()
-            self:DoPlaceFromSlot(slotIndex)
-        end)
-        return
-    end
-    
+
     self:DoPlaceFromSlot(slotIndex)
 end
 
@@ -349,16 +345,21 @@ function M:DoPlaceFromSlot(slotIndex)
     if not slotData or not slotData.recordID then return end
     
     -- 使用 ADT.Housing 的统一入口
-    if ADT.Housing and ADT.Housing.StartPlacingByRecordID then
-        local ok = ADT.Housing:StartPlacingByRecordID(slotData.recordID)
-        if ok then
-            D(string.format("[Quickbar] Placing from slot %d: %s", slotIndex, slotData.name or "?"))
-            PlaySound(SOUNDKIT.IG_MAINMENU_OPTION_CHECKBOX_ON)
-        else
-            Notify(L["Cannot place decor"], 'warning')
-        end
+    if ADT.Housing and ADT.Housing.StartPlacingByRecordIDSafe then
+        ADT.Housing:StartPlacingByRecordIDSafe(slotData.recordID, {
+            ensureBasic = true,
+            switchDelay = 0.2,
+            onResult = function(ok)
+                if ok then
+                    D(string.format("[Quickbar] Placing from slot %d: %s", slotIndex, slotData.name or "?"))
+                    PlaySound(SOUNDKIT.IG_MAINMENU_OPTION_CHECKBOX_ON)
+                else
+                    Notify(L["Cannot place decor"], 'warning')
+                end
+            end,
+        })
     else
-        D("[Quickbar] ADT.Housing.StartPlacingByRecordID not available")
+        D("[Quickbar] ADT.Housing.StartPlacingByRecordIDSafe not available")
     end
 end
 
@@ -384,19 +385,6 @@ end
 -- 事件处理
 -- ===========================
 
-local function OnEditorOpened()
-    -- 覆盖绑定改由 ADT.Keybinds 统一激活
-    if M.uiFrame then M.uiFrame:Show() end
-    D("[Quickbar] Editor opened")
-end
-
-local function OnEditorClosed()
-    -- 覆盖绑定改由 ADT.Keybinds 统一停用
-    if M.uiFrame then M.uiFrame:Hide() end
-    D("[Quickbar] Editor closed")
-end
-
-M:RegisterEvent("HOUSE_EDITOR_MODE_CHANGED")
 M:RegisterEvent("ADDON_LOADED")
 
 M:SetScript("OnEvent", function(self, event, ...)
@@ -404,13 +392,6 @@ M:SetScript("OnEvent", function(self, event, ...)
         local addon = ...
         if addon == ADDON_NAME then
             M:LoadSlots()
-        end
-    elseif event == "HOUSE_EDITOR_MODE_CHANGED" then
-        local mode = ...
-        if mode and mode ~= Enum.HouseEditorMode.None then
-            OnEditorOpened()
-        else
-            OnEditorClosed()
         end
     end
 end)

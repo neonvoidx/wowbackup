@@ -249,7 +249,15 @@ function BarMixin:UpdateDisplay(layoutName, force)
     self.StatusBar:SetMinMaxValues(0, max, data.smoothProgress and buildVersion >= 120000 and Enum.StatusBarInterpolation.ExponentialEaseOut or nil)
     self.StatusBar:SetValue(current, data.smoothProgress and buildVersion >= 120000 and Enum.StatusBarInterpolation.ExponentialEaseOut or nil)
 
-    if data.textFormat == nil or data.textFormat == "Current" then
+    if (data.showManaAsPercent and resource == Enum.PowerType.Mana) or data.textFormat == "Percent" or data.textFormat == "Percent%" then
+        local precision = data.textPrecision and math.max(0, string.len(data.textPrecision) - 3) or 0
+
+        if valueType == "custom" then
+            self.TextValue:SetText(displayValue)
+        else
+            self.TextValue:SetText(string.format("%." .. (precision or 0) .. "f" .. (data.textFormat == "Percent%" and "%%" or ""), displayValue))
+        end
+    elseif data.textFormat == nil or data.textFormat == "Current" then
         if valueType == "custom" then
             self.TextValue:SetText(displayValue)
         else
@@ -260,14 +268,6 @@ function BarMixin:UpdateDisplay(layoutName, force)
             self.TextValue:SetText(displayValue .. ' / ' .. maxDisplayValue)
         else
             self.TextValue:SetText(AbbreviateNumbers(displayValue) .. ' / ' .. AbbreviateNumbers(maxDisplayValue))
-        end
-    elseif data.textFormat == "Percent" or data.textFormat == "Percent%" then
-        local precision = data.textPrecision and math.max(0, string.len(data.textPrecision) - 3) or 0
-
-        if valueType == "custom" then
-            self.TextValue:SetText(displayValue)
-        else
-            self.TextValue:SetText(string.format("%." .. (precision or 0) .. "f" .. (data.textFormat == "Percent%" and "%%" or ""), displayValue))
         end
     end
 
@@ -469,7 +469,6 @@ function BarMixin:ApplyLayout(layoutName, force)
 
     local resource = self:GetResource()
     if addonTable.fragmentedPowerTypes[resource] then
-        self.StatusBar:SetAlpha(0)
         self:CreateFragmentedPowerBars(layoutName)
         self:UpdateFragmentedPowerDisplay(layoutName)
     else
@@ -619,11 +618,14 @@ function BarMixin:ApplyMaskAndBorderSettings(layoutName)
         local thickness = (style.thickness or 1) * math.max(data.scale or defaults.scale, 1)
         thickness = math.max(thickness, 1)
 
+        local borderColor = data.borderColor or defaults.borderColor
+
         for edge, t in pairs(self.FixedThicknessBorders) do
             local points = bordersInfo[edge]
             t:ClearAllPoints()
             t:SetPoint(points[1], self.Frame, points[1])
             t:SetPoint(points[2], self.Frame, points[2])
+            t:SetColorTexture(borderColor.r or 0, borderColor.g or 0, borderColor.b or 0, borderColor.a or 1)
             if edge == "top" or edge == "bottom" then
                 t:SetHeight(thickness)
             else
@@ -638,6 +640,9 @@ function BarMixin:ApplyMaskAndBorderSettings(layoutName)
         self.Border:SetPoint("CENTER", self.StatusBar, "CENTER")
         self.Border:SetSize(verticalOrientation and height or width, verticalOrientation and width or height)
         self.Border:SetRotation(verticalOrientation and math.rad(90) or 0)
+
+        local borderColor = data.borderColor or defaults.borderColor
+        self.Border:SetVertexColor(borderColor.r or 0, borderColor.g or 0, borderColor.b or 0, borderColor.a or 1)
 
         if self.FixedThicknessBorders then
             for _, t in pairs(self.FixedThicknessBorders) do
@@ -687,11 +692,19 @@ function BarMixin:ApplyBackgroundSettings(layoutName)
 
     if not bgConfig then return end
 
+    local bgColor = data.backgroundColor or defaults.backgroundColor
+
     if bgConfig.type == "color" then
-        self.Background:SetColorTexture(bgConfig.r or 1, bgConfig.g or 1, bgConfig.b or 1, bgConfig.a or 1)
+        -- Blend bgColor with bgConfig color based on how close bgColor is to white
+        -- The closer bgColor is to white, the more bgConfig color shows through
+        local whitenessFactor = (bgColor.r + bgColor.g + bgColor.b) / 3
+        local resultR = (bgConfig.r or 1) * whitenessFactor + bgColor.r * (1 - whitenessFactor)
+        local resultG = (bgConfig.g or 1) * whitenessFactor + bgColor.g * (1 - whitenessFactor)
+        local resultB = (bgConfig.b or 1) * whitenessFactor + bgColor.b * (1 - whitenessFactor)
+        self.Background:SetColorTexture(resultR, resultG, resultB, (bgConfig.a or 1) * (bgColor.a or 1))
     elseif bgConfig.type == "texture" then
         self.Background:SetTexture(bgConfig.value)
-        self.Background:SetVertexColor(1, 1, 1, 1)
+        self.Background:SetVertexColor(bgColor.r or 1, bgColor.g or 1, bgColor.b or 1, bgColor.a or 1)
     end
 end
 
@@ -867,6 +880,7 @@ function BarMixin:UpdateFragmentedPowerDisplay(layoutName)
             end
         end
 
+        self.StatusBar:SetAlpha(0)
         for pos = 1, #displayOrder do
             local idx = displayOrder[pos]
             local cpFrame = self.FragmentedPowerBars[idx]
@@ -949,6 +963,8 @@ function BarMixin:UpdateFragmentedPowerDisplay(layoutName)
             table.insert(displayOrder, i)
         end
 
+        self.StatusBar:SetValue(current)
+
         local precision = data.fragmentedPowerBarTextPrecision and math.max(0, string.len(data.fragmentedPowerBarTextPrecision) - 3) or 0
         for pos = 1, #displayOrder do
             local idx = displayOrder[pos]
@@ -969,22 +985,23 @@ function BarMixin:UpdateFragmentedPowerDisplay(layoutName)
                 essFrame:SetMinMaxValues(0, 1)
 
                 if state == "full" then
+                    essFrame:Hide()
                     essFrame:SetValue(1, data.smoothProgress and buildVersion >= 120000 and Enum.StatusBarInterpolation.ExponentialEaseOut or nil)
                     essFrame:SetStatusBarColor(color.r, color.g, color.b, color.a or 1)
                     essText:SetText("")
                 elseif state == "partial" then
+                    essFrame:Show()
                     local remaining = math.max(0, self._NextEssenceTick - now)
                     local value = 1 - (remaining / tickDuration)
                     essFrame:SetValue(value, data.smoothProgress and buildVersion >= 120000 and Enum.StatusBarInterpolation.ExponentialEaseOut or nil)
                     essFrame:SetStatusBarColor(color.r * 0.5, color.g * 0.5, color.b * 0.5, color.a or 1)
                     essText:SetText(string.format("%." .. (precision or 1) .. "f", remaining))
                 else
+                    essFrame:Show()
                     essFrame:SetValue(0, data.smoothProgress and buildVersion >= 120000 and Enum.StatusBarInterpolation.ExponentialEaseOut or nil)
                     essFrame:SetStatusBarColor(color.r * 0.5, color.g * 0.5, color.b * 0.5, color.a or 1)
                     essText:SetText("")
                 end
-
-                essFrame:Show()
             end
         end
     elseif resource == Enum.PowerType.Runes then
@@ -1032,6 +1049,8 @@ function BarMixin:UpdateFragmentedPowerDisplay(layoutName)
             end
         end
 
+        self.StatusBar:SetValue(#readyList)
+
         local precision = data.fragmentedPowerBarTextPrecision and math.max(0, string.len(data.fragmentedPowerBarTextPrecision) - 3) or 0
         for pos = 1, #displayOrder do
             local runeIndex = displayOrder[pos]
@@ -1051,10 +1070,12 @@ function BarMixin:UpdateFragmentedPowerDisplay(layoutName)
 
                 runeFrame:SetMinMaxValues(0, 1)
                 if readyLookup[runeIndex] then
+                    runeFrame:Hide()
                     runeFrame:SetValue(1, data.smoothProgress and buildVersion >= 120000 and Enum.StatusBarInterpolation.ExponentialEaseOut or nil)
                     runeText:SetText("")
                     runeFrame:SetStatusBarColor(color.r, color.g, color.b, color.a or 1)
                 else
+                    runeFrame:Show()
                     local cdInfo = cdLookup[runeIndex]
                     runeFrame:SetStatusBarColor(color.r * 0.5, color.g * 0.5, color.b * 0.5, color.a or 1)
                     if cdInfo then
@@ -1065,8 +1086,6 @@ function BarMixin:UpdateFragmentedPowerDisplay(layoutName)
                         runeText:SetText("")
                     end
                 end
-
-                runeFrame:Show()
             end
         end
     end

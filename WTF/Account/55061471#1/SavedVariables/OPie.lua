@@ -3,7 +3,7 @@ OneRing_Config = nil
 OPie_SavedData = {
 ["CharProfiles"] = {
 },
-["_OPieVersion"] = "7.11.1 (4.136)",
+["_OPieVersion"] = "7.11.2 (4.137)",
 ["_StoreVersion"] = 122,
 ["_GameVersion"] = "11.2.7",
 ["_StoreVersion2"] = 122,
@@ -264,47 +264,39 @@ OPie_SavedData = {
 ["name"] = "MagePorts",
 ["limit"] = "MAGE",
 },
-["Wormholes"] = {
+["talsLegion"] = {
 {
-"toy",
-172924,
-1,
-["sliceToken"] = "ABueQv8AL3z",
+["id"] = 193753,
+["sliceToken"] = "ABue7PTnJYuI",
+},
+{
+"item",
+144341,
+["sliceToken"] = "ABue7PTnJYu8",
+},
+{
+"item",
+140192,
+["sliceToken"] = "ABue7PTnJYuU",
 },
 {
 "toy",
-48933,
-1,
-["sliceToken"] = "ABueQv8AL35",
+140324,
+["sliceToken"] = "ABue7PTnJYuY",
 },
 {
-"toy",
-168808,
-1,
-["sliceToken"] = "ABueQv8AL3x",
+["id"] = 193759,
+["sliceToken"] = "ABue7PTnJYuT",
 },
 {
-"toy",
-168807,
-1,
-["sliceToken"] = "ABueQv8AL3c",
+["id"] = 224869,
+["sliceToken"] = "ABue7PTnJYuR",
 },
 {
-"toy",
-221966,
-["sliceToken"] = "ABueWwk956r",
+["id"] = 224871,
+["sliceToken"] = "ABue7PTnJYu7",
 },
-{
-"toy",
-112059,
-["sliceToken"] = "ABueWjGy0yi",
-},
-{
-"toy",
-198156,
-["sliceToken"] = "ABueWjGy0y2",
-},
-["name"] = "Wormholes",
+["name"] = "Portals: Legion",
 ["save"] = true,
 },
 ["Toys"] = {
@@ -981,35 +973,47 @@ OPie_SavedData = {
 ["name"] = "Portals: WarlordsofDraenor",
 ["save"] = true,
 },
-["heLichKing"] = {
+["Wormholes"] = {
+{
+"toy",
+172924,
+1,
+["sliceToken"] = "ABueQv8AL3z",
+},
 {
 "toy",
 48933,
-["sliceToken"] = "ABue7PTnJYyN",
+1,
+["sliceToken"] = "ABueQv8AL35",
 },
 {
-"item",
-46874,
-["sliceToken"] = "ABue7PTnJYyB",
+"toy",
+168808,
+1,
+["sliceToken"] = "ABueQv8AL3x",
 },
 {
-"item",
-52251,
-["sliceToken"] = "ABue7PTnJYy/",
+"toy",
+168807,
+1,
+["sliceToken"] = "ABueQv8AL3c",
 },
 {
-["id"] = 193753,
-["sliceToken"] = "ABue7PTnJYyV",
+"toy",
+221966,
+["sliceToken"] = "ABueWwk956r",
 },
 {
-["id"] = 53140,
-["sliceToken"] = "ABue7PTnJYyC",
+"toy",
+112059,
+["sliceToken"] = "ABueWjGy0yi",
 },
 {
-["id"] = 53142,
-["sliceToken"] = "ABue7PTnJYyX",
+"toy",
+198156,
+["sliceToken"] = "ABueWjGy0y2",
 },
-["name"] = "Portals: WrathOfTheLichKing",
+["name"] = "Wormholes",
 ["save"] = true,
 },
 ["HerosPath"] = {
@@ -1187,7 +1191,7 @@ OPie_SavedData = {
 ["dropTokens"] = {
 ["OPCLSw"] = 1,
 ["OPCLSe"] = 1,
-["OPCLSa"] = 44,
+["OPCLSa"] = 48,
 ["OPCLSd"] = 1,
 ["OPCLSi"] = 1,
 },
@@ -1198,39 +1202,35 @@ OPie_SavedData = {
 ["vm"] = 127,
 ["v"] = 5,
 },
-["talsLegion"] = {
-{
-["id"] = 193753,
-["sliceToken"] = "ABue7PTnJYuI",
-},
-{
-"item",
-144341,
-["sliceToken"] = "ABue7PTnJYu8",
-},
-{
-"item",
-140192,
-["sliceToken"] = "ABue7PTnJYuU",
-},
+["heLichKing"] = {
 {
 "toy",
-140324,
-["sliceToken"] = "ABue7PTnJYuY",
+48933,
+["sliceToken"] = "ABue7PTnJYyN",
 },
 {
-["id"] = 193759,
-["sliceToken"] = "ABue7PTnJYuT",
+"item",
+46874,
+["sliceToken"] = "ABue7PTnJYyB",
 },
 {
-["id"] = 224869,
-["sliceToken"] = "ABue7PTnJYuR",
+"item",
+52251,
+["sliceToken"] = "ABue7PTnJYy/",
 },
 {
-["id"] = 224871,
-["sliceToken"] = "ABue7PTnJYu7",
+["id"] = 193753,
+["sliceToken"] = "ABue7PTnJYyV",
 },
-["name"] = "Portals: Legion",
+{
+["id"] = 53140,
+["sliceToken"] = "ABue7PTnJYyC",
+},
+{
+["id"] = 53142,
+["sliceToken"] = "ABue7PTnJYyX",
+},
+["name"] = "Portals: WrathOfTheLichKing",
 ["save"] = true,
 },
 ["hCataclysm"] = {

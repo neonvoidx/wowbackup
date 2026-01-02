@@ -2,10 +2,10 @@
 FrameColor4DB = {
 ["profileKeys"] = {
 ["Thingreyline - Tichondrius"] = "Default",
+["Hellowalls - Mal'Ganis"] = "Default",
 ["Crillessana - Mal'Ganis"] = "Default",
-["Heilsatan - Tichondrius"] = "Default",
 ["Mäñýfäçëð - Tichondrius"] = "Default",
-["Starstypeshi - Tichondrius"] = "Default",
+["Praisesun - Tichondrius"] = "Default",
 ["Gehyo - Tichondrius"] = "Default",
 ["Auteist - Mal'Ganis"] = "Default",
 ["Ofpuss - Mal'Ganis"] = "Default",
@@ -26,11 +26,11 @@ FrameColor4DB = {
 ["Reedingo - Mal'Ganis"] = "Default",
 ["Stormclout - Mal'Ganis"] = "Default",
 ["Rakeist - Mal'Ganis"] = "Default",
-["Praisesun - Tichondrius"] = "Default",
 ["Choppiez - Tichondrius"] = "Default",
+["Starstypeshi - Tichondrius"] = "Default",
 ["Ofpuss - Tichondrius"] = "Default",
 ["Praisesun - Mal'Ganis"] = "Default",
-["Hellowalls - Mal'Ganis"] = "Default",
+["Heilsatan - Tichondrius"] = "Default",
 ["Clevagirl - Mal'Ganis"] = "Default",
 },
 ["profiles"] = {

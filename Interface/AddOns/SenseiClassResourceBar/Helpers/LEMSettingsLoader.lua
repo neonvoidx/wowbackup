@@ -511,7 +511,23 @@ local function BuildLemSettings(bar, defaults)
         },
         {
             parentId = "Bar Style",
-            order = 602,
+            order = 603,
+            name = "Border Color",
+            kind = LEM.SettingType.Color,
+            default = defaults.borderColor,
+            get = function(layoutName)
+                local data = SenseiClassResourceBarDB[config.dbName][layoutName]
+                return data and data.borderColor or defaults.borderColor
+            end,
+            set = function(layoutName, value)
+                SenseiClassResourceBarDB[config.dbName][layoutName] = SenseiClassResourceBarDB[config.dbName][layoutName] or CopyTable(defaults)
+                SenseiClassResourceBarDB[config.dbName][layoutName].borderColor = value
+                bar:ApplyMaskAndBorderSettings(layoutName)
+            end,
+        },
+        {
+            parentId = "Bar Style",
+            order = 604,
             name = "Background",
             kind = LEM.SettingType.Dropdown,
             default = defaults.backgroundStyle,
@@ -578,7 +594,23 @@ local function BuildLemSettings(bar, defaults)
         },
         {
             parentId = "Bar Style",
-            order = 604,
+            order = 605,
+            name = "Background Color",
+            kind = LEM.SettingType.Color,
+            default = defaults.backgroundColor,
+            get = function(layoutName)
+                local data = SenseiClassResourceBarDB[config.dbName][layoutName]
+                return data and data.backgroundColor or defaults.backgroundColor
+            end,
+            set = function(layoutName, value)
+                SenseiClassResourceBarDB[config.dbName][layoutName] = SenseiClassResourceBarDB[config.dbName][layoutName] or CopyTable(defaults)
+                SenseiClassResourceBarDB[config.dbName][layoutName].backgroundColor = value
+                bar:ApplyBackgroundSettings(layoutName)
+            end,
+        },
+        {
+            parentId = "Bar Style",
+            order = 607,
             name = "Foreground",
             kind = LEM.SettingType.Dropdown,
             default = defaults.foregroundStyle,

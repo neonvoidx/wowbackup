@@ -138,8 +138,22 @@ MouseoverActionSettingsDB = {
 ["CountFontSettings"] = {
 ["font"] = "1",
 },
-["MultiBar7"] = {
-["enabled"] = false,
+["MainMenuBar"] = {
+["ARENA_UPDATE"] = true,
+["TARGET_ATTACKABLE_UPDATE"] = true,
+["TARGET_UPDATE"] = true,
+["DUNGEON_UPDATE"] = true,
+["minAlpha"] = 0.3,
+["PLAYER_MOVING_UPDATE"] = false,
+["BATTLEGROUND_UPDATE"] = true,
+["PLAYER_HEALTH_UPDATE"] = false,
+["RAID_UPDATE"] = true,
+["links"] = {
+["MultiBarBottomLeft"] = true,
+["MultiBar5"] = true,
+},
+["RAID_GROUP_UPDATE"] = false,
+["PARTY_GROUP_UPDATE"] = false,
 },
 ["MultiBarRight"] = {
 ["links"] = {
@@ -169,32 +183,6 @@ MouseoverActionSettingsDB = {
 ["PartyFrame"] = {
 ["enabled"] = false,
 },
-["MainMenuBar"] = {
-["ARENA_UPDATE"] = true,
-["TARGET_ATTACKABLE_UPDATE"] = true,
-["TARGET_UPDATE"] = true,
-["DUNGEON_UPDATE"] = true,
-["minAlpha"] = 0.3,
-["PLAYER_MOVING_UPDATE"] = false,
-["BATTLEGROUND_UPDATE"] = true,
-["PLAYER_HEALTH_UPDATE"] = false,
-["RAID_UPDATE"] = true,
-["links"] = {
-["MultiBarBottomLeft"] = true,
-["MultiBar5"] = true,
-},
-["RAID_GROUP_UPDATE"] = false,
-["PARTY_GROUP_UPDATE"] = false,
-},
-["MultiBarBottomRight"] = {
-["links"] = {
-["MultiBar6"] = true,
-["MultiBarRight"] = true,
-},
-["minAlpha"] = 0.2,
-["delay"] = 0,
-["COMBAT_UPDATE"] = false,
-},
 ["MultiBar6"] = {
 ["enabled"] = false,
 ["links"] = {
@@ -205,6 +193,18 @@ MouseoverActionSettingsDB = {
 ["minAlpha"] = 0.3,
 ["delay"] = 0,
 ["COMBAT_UPDATE"] = true,
+},
+["MultiBarBottomRight"] = {
+["links"] = {
+["MultiBar6"] = true,
+["MultiBarRight"] = true,
+},
+["minAlpha"] = 0.2,
+["delay"] = 0,
+["COMBAT_UPDATE"] = false,
+},
+["MultiBar7"] = {
+["enabled"] = false,
 },
 ["MultiBarLeft"] = {
 ["enabled"] = false,

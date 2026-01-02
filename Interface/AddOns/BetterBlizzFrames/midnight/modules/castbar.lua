@@ -1,4 +1,5 @@
 if not BBF.isMidnight then return end
+local L = BBF.L
 local spellBars = {}
 local castBarsCreated = false
 local petCastbarCreated = false
@@ -703,7 +704,7 @@ function BBF.partyCastBarTestMode()
 
             spellbar:SetMinMaxValues(minValue, maxValue)
             spellbar:SetValue(currentValue)
-            spellbar.Text:SetText("Frostbolt")
+            spellbar.Text:SetText(L["Label_Frostbolt"])
 
             -- Cancel any existing timer before creating a new one
             if spellbar.tickTimer then
@@ -774,7 +775,7 @@ function BBF.petCastBarTestMode()
             spellBars["pet"].Icon:Show()
             spellBars["pet"].Icon:SetTexture(C_Spell.GetSpellTexture(6358))
         end
-        spellBars["pet"].Text:SetText("Seduction")
+        spellBars["pet"].Text:SetText(L["Label_Seduction"])
         if BetterBlizzFramesDB.petCastBarTimer then
             spellBars["pet"].FakeTimer:Show()
         else
@@ -1165,7 +1166,7 @@ end)
 local function PlayerCastingBarUpdateNextFrame()
     if PlayerCastingBarFrame.isUpdating then return end
     C_Timer.After(0, function()
-        if EditModeManagerFrame and EditModeManagerFrame.editModeActive then
+        if EditModeSystemSettingsDialog and EditModeSystemSettingsDialog.attachedToSystem and EditModeSystemSettingsDialog.attachedToSystem:GetName() == "PlayerCastingBarFrame" then
             BetterBlizzFramesDB.playerCastBarScale = PlayerCastingBarFrame:GetScale()
         end
         PlayerCastingBarFrame.isUpdating = true
@@ -1198,7 +1199,7 @@ function BBF.HookCastbarsForEvoker()
                 if self.barType == "uninterruptable" then
                     if self.ChargeTier1 then
                         if self.isSArena then
-                            self.SetStatusBarTexture((sArenaMixin and sArenaMixin.castTexture) or "Interface\\RaidFrame\\Raid-Bar-Hp-Fill")
+                            self.SetStatusBarTexture((sArenaMixin and (sArenaMixin.castTexture or "Interface\\RaidFrame\\Raid-Bar-Hp-Fill")) or "Interface\\RaidFrame\\Raid-Bar-Hp-Fill")
                             if recolorCastbars then
                                 local c = castbarColors[self.barType] or castbarColors.standard
                                 local r, g, b = c[1], c[2], c[3]
@@ -1217,7 +1218,7 @@ function BBF.HookCastbarsForEvoker()
                     end
                 elseif self.barType == "empowered" then
                     if self.isSArena then
-                        self.SetStatusBarTexture((sArenaMixin and sArenaMixin.castTexture) or "Interface\\RaidFrame\\Raid-Bar-Hp-Fill")
+                        self.SetStatusBarTexture((sArenaMixin and (sArenaMixin.castTexture or "Interface\\RaidFrame\\Raid-Bar-Hp-Fill")) or "Interface\\RaidFrame\\Raid-Bar-Hp-Fill")
                         if recolorCastbars then
                             local c = castbarColors[self.barType] or castbarColors.standard
                             local r, g, b = c[1], c[2], c[3]

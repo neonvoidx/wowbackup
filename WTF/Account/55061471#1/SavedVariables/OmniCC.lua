@@ -2,7 +2,7 @@
 OmniCCDB = {
 ["global"] = {
 ["dbVersion"] = 6,
-["addonVersion"] = "11.2.7",
+["addonVersion"] = "11.2.8",
 },
 ["profileKeys"] = {
 ["Månyfaced - Mal'Ganis"] = "Default",

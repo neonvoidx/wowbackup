@@ -759,13 +759,13 @@ MapPinEnhancedDB = {
 ["mapID"] = 115,
 ["color"] = "Yellow",
 },
-["setpin-97cd71de-b9b9"] = {
-["y"] = 0.18,
-["x"] = 0.65,
-["title"] = "Elder Menkhaf",
+["setpin-f52c17be-9606"] = {
+["y"] = 0.496,
+["x"] = 0.429,
+["title"] = "Elder Pamuya",
 ["setTracked"] = false,
-["order"] = 28,
-["mapID"] = 80,
+["order"] = 64,
+["mapID"] = 114,
 ["color"] = "Yellow",
 },
 ["setpin-0e505a00-9018"] = {
@@ -795,13 +795,13 @@ MapPinEnhancedDB = {
 ["mapID"] = 71,
 ["color"] = "Yellow",
 },
-["setpin-1f78e9b3-a644"] = {
-["y"] = 0.69,
-["x"] = 0.27,
-["title"] = "Elder Deepforge",
+["setpin-97cd71de-b9b9"] = {
+["y"] = 0.18,
+["x"] = 0.65,
+["title"] = "Elder Menkhaf",
 ["setTracked"] = false,
-["order"] = 53,
-["mapID"] = 207,
+["order"] = 28,
+["mapID"] = 80,
 ["color"] = "Yellow",
 },
 ["setpin-381f6d70-a777"] = {
@@ -858,13 +858,13 @@ MapPinEnhancedDB = {
 ["mapID"] = 1,
 ["color"] = "Yellow",
 },
-["setpin-f52c17be-9606"] = {
-["y"] = 0.496,
-["x"] = 0.429,
-["title"] = "Elder Pamuya",
+["setpin-1f78e9b3-a644"] = {
+["y"] = 0.69,
+["x"] = 0.27,
+["title"] = "Elder Deepforge",
 ["setTracked"] = false,
-["order"] = 64,
-["mapID"] = 114,
+["order"] = 53,
+["mapID"] = 207,
 ["color"] = "Yellow",
 },
 ["setpin-c144598d-b4cf"] = {
@@ -1125,5 +1125,5 @@ MapPinEnhancedDB = {
 ["showTitle"] = true,
 ["blockWorldQuestTracking"] = true,
 },
-["version"] = 3013,
+["version"] = 3014,
 }

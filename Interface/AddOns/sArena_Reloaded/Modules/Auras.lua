@@ -1,40 +1,65 @@
 if sArenaMixin.isMidnight then return end
 
 local isRetail = sArenaMixin.isRetail
-local isTBC = sArenaMixin.isTBC
+local isOldArena = sArenaMixin.isTBC or sArenaMixin.isWrath
 local GetSpellTexture = GetSpellTexture or C_Spell.GetSpellTexture
 local auraList = sArenaMixin.auraList
 local interruptList = sArenaMixin.interruptList
 local tooltipInfoAuras = sArenaMixin.tooltipInfoAuras
 local spellLockReducer = sArenaMixin.spellLockReducer
 
-function sArenaFrameMixin:FindInterrupt(event, spellID)
+function sArenaFrameMixin:FindInterrupt(event, spellID, sourceName, sourceGUID)
     local interruptDuration = interruptList[spellID]
     local unit = self.unit
-    local _, _, _, _, _, _, notInterruptable = UnitChannelInfo(unit)
+    local castBar = self.CastBar
 
-    if (event == "SPELL_INTERRUPT" or notInterruptable == false) then
-        for n = 1, 30 do
-            local aura = C_UnitAuras.GetAuraDataByIndex(unit, n, "HELPFUL")
-            if not aura then break end
-            local mult = spellLockReducer[aura.spellId]
-            if mult then
-                interruptDuration = interruptDuration * mult
+    if event == "SPELL_CAST_SUCCESS" then
+        local notInterruptable = select(7, UnitChannelInfo(unit))
+        if notInterruptable ~= false then
+            return
+        end
+    end
+
+    if sourceName then
+        local name, server = strsplit("-", sourceName)
+        local colorStr = "ffFFFFFF"
+
+        if C_PlayerInfo.GUIDIsPlayer(sourceGUID) then
+            local _, englishClass = GetPlayerInfoByGUID(sourceGUID)
+            if englishClass then
+                colorStr = RAID_CLASS_COLORS[englishClass].colorStr
             end
         end
-        self.currentInterruptSpellID = spellID
-        self.currentInterruptDuration = interruptDuration
-        self.currentInterruptExpirationTime = GetTime() + interruptDuration
-        self.currentInterruptTexture = GetSpellTexture(spellID)
-        self:FindAura()
-        C_Timer.After(interruptDuration, function()
-            self.currentInterruptSpellID = nil
-            self.currentInterruptDuration = 0
-            self.currentInterruptExpirationTime = 0
-            self.currentInterruptTexture = nil
-            self:FindAura()
+
+        local interruptedByName = string.format("|c%s[%s]|r", colorStr, name)
+        castBar.interruptedBy = interruptedByName
+        castBar.Text:SetText(interruptedByName)
+        castBar:Show()
+        C_Timer.After(1, function()
+            castBar.interruptedBy = nil
         end)
     end
+
+    for n = 1, 30 do
+        local aura = C_UnitAuras.GetAuraDataByIndex(unit, n, "HELPFUL")
+        if not aura then break end
+        local mult = spellLockReducer[aura.spellId]
+        if mult then
+            interruptDuration = interruptDuration * mult
+        end
+    end
+    self.currentInterruptSpellID = spellID
+    self.currentInterruptDuration = interruptDuration
+    self.currentInterruptExpirationTime = GetTime() + interruptDuration
+    self.currentInterruptTexture = GetSpellTexture(spellID)
+    self:FindAura()
+    C_Timer.After(interruptDuration, function()
+        self.currentInterruptSpellID = nil
+        self.currentInterruptDuration = 0
+        self.currentInterruptExpirationTime = 0
+        self.currentInterruptTexture = nil
+        self:FindAura()
+    end)
 end
 
 local tooltipScanner = CreateFrame("GameTooltip", "sArenaTooltipScanner", nil, "GameTooltipTemplate")
@@ -109,7 +134,7 @@ function sArenaFrameMixin:FindAura()
             local priority = auraList[spellID]
 
             -- TBC Spec Detection: Check if this buff indicates a spec
-            if isTBC and i == 1 then -- Only check buffs (HELPFUL)
+            if isOldArena and i == 1 then -- Only check buffs (HELPFUL)
                 self:CheckForSpecSpell(spellID)
             end
 

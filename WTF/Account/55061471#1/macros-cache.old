@@ -249,10 +249,6 @@ VER 3 00000000000000B6 "  " "INV_MISC_QUESTIONMARK"
 #showtooltip 
 /cast [ @mouseover,exists,harm, nodead][] Shadow Word: Death
 END
-VER 3 0000000000000158 " A1" "INV_MISC_QUESTIONMARK"
-#showtooltip
-/cast [@arena1] Kidney Shot
-END
 VER 3 000000000000015E " A1" "INV_MISC_QUESTIONMARK"
 #showtooltip
 /cast [@arena1] Sap
@@ -263,6 +259,10 @@ VER 3 00000000000000DB " A1" "INV_MISC_QUESTIONMARK"
 END
 VER 3 00000000000000F1 " A1" "INV_MISC_QUESTIONMARK"
 /cast [@arena1] Counterspell
+END
+VER 3 0000000000000158 " A1" "INV_MISC_QUESTIONMARK"
+#showtooltip
+/cast [@arena1] Kidney Shot
 END
 VER 3 0000000000000156 " A2" "INV_MISC_QUESTIONMARK"
 #showtooltip

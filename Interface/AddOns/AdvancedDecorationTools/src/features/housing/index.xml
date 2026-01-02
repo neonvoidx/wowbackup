@@ -2,10 +2,20 @@
     <!-- 顺序：配置 → 布局管理器 → 样式器/重挂（BlizzardGraft）→ 自建 HoverHUD。 -->
     <Script file="Housing_Config.lua"/>
     <Script file="Housing_LayoutManager.lua"/>
+    <!-- 界面风格控制器：管理现代/传统界面切换 -->
+    <Script file="Housing_InterfaceStyle.lua"/>
     <Script file="Housing_BlizzardGraft.lua"/>
+    <Script file="Housing_UIVisibilityEye.lua"/>
     <Script file="Housing_Favorites.lua"/>
+    <Script file="Housing_Tags.lua"/>
     <Script file="Housing_HoverHUD.lua"/>
+    <!-- 室外解禁：补回室内-only的仓库条目，灰态可点（点击改道为 recordID 抓取） -->
+    <Script file="Housing_IndoorBypass.lua"/>
+    <!-- 专家模式：保持 StoragePanel 不被隐藏 -->
+    <Script file="Housing_StoragePanelExpert.lua"/>
     <Script file="Housing_BatchPlace.lua"/>
+    <!-- 批量摧毁指定数量装饰 -->
+    <Script file="Housing_BatchDestroy.lua"/>
 
     <Script file="Housing_IncrementRotate.lua"/>
     <Script file="Housing_KeyRotate.lua"/>
@@ -14,12 +24,25 @@
     <!-- 自建“装饰物浏览器”弹窗已下线：仅搬运官方清单按钮与面板尺寸，
          遵循单一权威与 KISS，不再额外创建窗口。 -->
     <Script file="Housing_ClipboardCore.lua"/>
+    <!-- 导出/导入：装饰清单分享 -->
+    <Script file="Housing_ExportImport.lua"/>
     <!-- 快捷栏：Z-M 键位快速放置 -->
     <Script file="Housing_Quickbar.lua"/>
     <Script file="Housing_QuickbarUI.lua"/>
+    <!-- 悬停信息面板：显示在 QuickBar 顶部 -->
+    <Script file="Housing_HoverInfoPanel.lua"/>
     <Script file="Housing_RecentSlot.lua"/>
     <!-- 染料复制粘贴模块：自定义模式下 CTRL+C/V -->
     <Script file="Housing_DyeClipboard.lua"/>
+
+    <!-- 专家模式：快速选轴（X/Y/Z）-->
+    <Script file="Housing_AxisSelect.lua"/>
+    <!-- 专家模式操控器缩放：CVar 组统一控制 -->
+    <Script file="Housing_ExpertGizmoScale.lua"/>
+    <!-- 专家模式操控器追踪：彩色调试日志 -->
+    <Script file="Housing_ManipulatorTrace.lua"/>
+    <!-- 模式栏重排：移动到右下角垂直布局 -->
+    <Script file="Housing_ModeBarRelocate.lua"/>
     <!-- 移除临时板弹窗（已整合到 Dock 分类 Clipboard） -->
 
     <!-- 指示条模板（使用 ADT_ 前缀避免冲突） -->

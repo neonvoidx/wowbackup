@@ -1,5 +1,5 @@
 <Ui>
-	<Button name="CursorModTextureSelectTemplate" virtual="true">
+	<Button name="CursorModTextureButtonTemplate" virtual="true">
 		<Size x="32" y="32"/>
 		<Layers>
 			<Layer level="BACKGROUND">
@@ -11,19 +11,25 @@
 					<Color r=".1" g=".1" b=".1"/>
 				</Texture>
 			</Layer>
-			<Layer level="ARTWORK">
-				<Texture parentKey="icon">
-					<Anchors>
-						<Anchor point="TOPLEFT" x="5" y="-5"/>
-						<Anchor point="BOTTOMRIGHT" x="-5" y="5"/>
-					</Anchors>
-				</Texture>
+			<Layer level="OVERLAY" textureSubLevel="0">
+				<Texture parentKey="cursor"/>
 			</Layer>
-			<Layer level="OVERLAY">
+			<Layer level="OVERLAY" textureSubLevel="1">
 				<Texture parentKey="check" file="Interface/Buttons/CheckButtonHilight" setAllPoints="true" alphaMode="ADD" alpha=".3" hidden="true"/>
 			</Layer>
 		</Layers>
 		<HighlightTexture parentKey="highlight" file="Interface/Buttons/ButtonHilight-Square" alphaMode="ADD"/>
+	</Button>
+
+	<Button name="CursorModTextureSelectTemplate" inherits="CursorModTextureButtonTemplate" virtual="true">
+		<Layers>
+			<Layer level="BORDER">
+				<Texture parentKey="glow"/>
+			</Layer>
+			<Layer level="ARTWORK">
+				<Texture parentKey="outline"/>
+			</Layer>
+		</Layers>
 	</Button>
 
 	<CheckButton name="CursorModCheckButtonArtTemplate" virtual="true">

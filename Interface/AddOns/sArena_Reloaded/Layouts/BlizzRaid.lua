@@ -604,7 +604,7 @@ function layout:Initialize(frame)
     end
 
     if not frame.ClassIcon.ClassIconPixelBorderHook then
-        hooksecurefunc(frame.ClassIcon, "SetTexture", function(self, t)
+        hooksecurefunc(frame.ClassIcon.Texture, "SetTexture", function(self, t)
             if not t or not sArenaMixin.showPixelBorder then
                 frame.PixelBorders.classIcon:Hide()
             else

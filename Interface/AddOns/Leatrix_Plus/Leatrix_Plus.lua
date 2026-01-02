@@ -1,5 +1,5 @@
 ﻿----------------------------------------------------------------------
--- 	Leatrix Plus 11.2.23 (10th December 2025)
+-- 	Leatrix Plus 11.2.26 (31st December 2025)
 ----------------------------------------------------------------------
 
 --	01:Functions 02:Locks,  03:Restart 40:Player
@@ -18,7 +18,7 @@
 	local void
 
 	-- Version
-	LeaPlusLC["AddonVer"] = "11.2.23"
+	LeaPlusLC["AddonVer"] = "11.2.26"
 
 	-- Get locale table
 	local void, Leatrix_Plus = ...
@@ -2320,7 +2320,7 @@
 			-- Hide frame when outfit changes
 			if LeaPlusLC.NewPatch then
 
-				-- TODO
+				hooksecurefunc(DressUpFrame.CustomSetDropdown, "UpdateSaveButton", function() pFrame:Hide() end)
 
 			else
 
@@ -4856,6 +4856,7 @@
 
 			-- Add hyperlinks to regular item destroy
 			if not LeaPlusLC.NewPatch then
+				-- Taint in Midnight: Enter Stockade, loot junk, go vendor with transmog items Lisbeth Schneider 58.2 67.0 Stormwind, auto sell, close and shift reopen
 				StaticPopupDialogs["DELETE_ITEM"].OnHyperlinkEnter = StaticPopupDialogs["DELETE_GOOD_ITEM"].OnHyperlinkEnter
 				StaticPopupDialogs["DELETE_ITEM"].OnHyperlinkLeave = StaticPopupDialogs["DELETE_GOOD_ITEM"].OnHyperlinkLeave
 				StaticPopupDialogs["DELETE_QUEST_ITEM"].OnHyperlinkEnter = StaticPopupDialogs["DELETE_GOOD_ITEM"].OnHyperlinkEnter
@@ -9243,23 +9244,6 @@
 			LeaPlusLC:MakeCB(SideTip, "TipHideInCombat", "Hide tooltips for world units during combat", 16, -232, false, "If checked, tooltips for world units will be hidden during combat.")
 			LeaPlusLC:MakeCB(SideTip, "TipHideShiftOverride", "Show tooltips with shift key", 16, -252, false, "If checked, you can hold shift while tooltips are hidden to show them temporarily.")
 
-			if LeaPlusLC.NewPatch then
-				local function LockDF(option, reason)
-					LeaPlusLC[option] = "Off"
-					LeaPlusDB[option] = "Off"
-					LeaPlusLC:LockItem(LeaPlusCB[option], true)
-					if reason then
-						LeaPlusCB[option].tiptext = LeaPlusCB[option].tiptext .. "|n|n|cff00AAFF" .. L[reason]
-					end
-				end
-				LockDF("TipShowRank", "This option is not currently available.")
-				LockDF("TipShowOtherRank", "This option is not currently available.")
-				LockDF("TipShowTarget", "This option is not currently available.")
-				LockDF("TipBackSimple", "This option is not currently available.")
-				LockDF("TipHideInCombat", "This option is not currently available.")
-				LockDF("TipHideShiftOverride", "This option is not currently available.")
-			end
-
 			-- Handle show tooltips with shift key lock
 			local function SetTipHideShiftOverrideFunc()
 				if LeaPlusLC["TipHideInCombat"] == "On" then
@@ -9598,13 +9582,11 @@
 			---------------------------------------------------------------------------------------------------------
 
 			-- Remove the right-click for frame settings instruction (UNIT_POPUP_RIGHT_CLICK)
-			if not LeaPlusLC.NewPatch then
-				hooksecurefunc("UnitFrame_UpdateTooltip", function(self)
-					GameTooltip_SetDefaultAnchor(GameTooltip, self)
-					GameTooltip:SetUnit(self.unit, true)
-					GameTooltip:Show()
-				end)
-			end
+			hooksecurefunc("UnitFrame_UpdateTooltip", function(self)
+				GameTooltip_SetDefaultAnchor(GameTooltip, self)
+				GameTooltip:SetUnit(self.unit, true)
+				GameTooltip:Show()
+			end)
 
 			-- Colorblind setting change
 			SideTip:RegisterEvent("CVAR_UPDATE");
@@ -9660,16 +9642,28 @@
 					return
 				end
 
-				-- Get unit information
+				-- Hide tooltips for world units during combat
 				if WorldFrame:IsMouseMotionFocus() then
-					LT["Unit"] = "mouseover"
-					-- Hide and quit if tips should be hidden during combat
 					if LeaPlusLC["TipHideInCombat"] == "On" and UnitAffectingCombat("player") then
 						if not IsShiftKeyDown() or LeaPlusLC["TipHideShiftOverride"] == "Off" then
 							GameTooltip:Hide()
 							return
 						end
 					end
+				end
+
+				-- Do nothing if tooltip text is secret
+				if LeaPlusLC.NewPatch then
+					local secTip = GameTooltipTextLeft1 and GameTooltipTextLeft1:GetText()
+					if secTip and canaccessvalue(secTip) then
+					else
+						return
+					end
+				end
+
+				-- Get unit information
+				if WorldFrame:IsMouseMotionFocus() then
+					LT["Unit"] = "mouseover"
 				else
 					LT["Unit"] = select(2, GameTooltip:GetUnit())
 					if not (LT["Unit"]) then return end
@@ -9767,15 +9761,6 @@
 					if UnitIsDeadOrGhost(LT["Unit"]) then
 						LT["NameColor"] = "|c88888888"
 					end
-
-					-- Show mythic score
-					--if LT["TipIsPlayer"] and LeaPlusLC["TipShowMythic"] == "On" then
-					--	LT["MythicScore"] = GetPlayerMythicPlusRatingSummary(LT["Unit"]).currentSeasonScore
-					--	if LT["MythicScore"] > 0 then
-					--		LT["MythicColor"] = string.format('%02x%02x%02x', GetDungeonScoreRarityColor(GetPlayerMythicPlusRatingSummary(LT["Unit"]).currentSeasonScore):GetRGBAsBytes())
-					--		LT["NameText"] = LT["NameText"] .. " |cff" .. LT["MythicColor"] .. "(" .. LT["MythicScore"] .. ")|r"
-					--	end
-					--end
 
 					-- Show name line
 					_G["GameTooltipTextLeft1"]:SetText(LT["NameColor"] .. LT["NameText"] .. "|cffffffff|r")
@@ -10031,6 +10016,11 @@
 					-- Get target
 					LT["Target"] = UnitName(LT["Unit"] .. "target");
 
+					if LeaPlusLC.NewPatch then
+						-- Return for now because it's last
+						if not canaccessvalue(LT["Target"]) then return end
+					end
+
 					-- If target doesn't exist, quit
 					if LT["Target"] == nil or LT["Target"] == "" then return end
 
@@ -10054,9 +10044,7 @@
 
 			end
 
-			if not LeaPlusLC.NewPatch then
-				TooltipDataProcessor.AddTooltipPostCall(Enum.TooltipDataType.Unit, ShowTip)
-			end
+			TooltipDataProcessor.AddTooltipPostCall(Enum.TooltipDataType.Unit, ShowTip)
 
 		end
 
@@ -11538,7 +11526,7 @@
 
 				if LeaPlusLC.NewPatch then
 					-- Disable bag automation (enter Stockade, go vendor with transmog items 58.2 67.0 Stormwind, auto sell, close and shift reopen)
-					LockDF("NoBagAutomation", "This option is not currently available.")
+					-- LockDF("NoBagAutomation", "This option is not currently available.")
 				end
 
 				-- Run other startup items

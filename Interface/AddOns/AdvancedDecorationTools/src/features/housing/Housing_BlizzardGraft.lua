@@ -218,9 +218,19 @@ local function _GetAnyDecorCount()
     return nil
 end
 
+-- 对外导出：供 DockUI 在 Header 内锚定齿轮按钮时查询 DecorCount 位置
+ADT.HousingGraft = ADT.HousingGraft or {}
+function ADT.HousingGraft.GetAnyDecorCount()
+    return _GetAnyDecorCount()
+end
+
 -- 对齐函数：必须位于任何使用它的钩子之前（避免前向引用为 nil）
 local function _AnchorDecorCount(dc, header)
     if not (dc and header) then return end
+    if dc._ADTForceHidden or (ADT.HousingUIVisibilityEye and ADT.HousingUIVisibilityEye.IsUIHidden and ADT.HousingUIVisibilityEye:IsUIHidden()) then
+        if dc.SetAlpha then dc:SetAlpha(0) end
+        return
+    end
     local cfg = (ADT and ADT.HousingInstrCFG and ADT.HousingInstrCFG.DecorCount) or {}
     local p  = cfg.point or "RIGHT"
     local rp = cfg.relPoint or p
@@ -238,6 +248,11 @@ local function _AnchorDecorCount(dc, header)
         dc:SetFrameLevel((header:GetFrameLevel() or 10) + bias)
         if dc.SetAlpha then dc:SetAlpha(1) end
     end)
+
+    -- 装饰计数位置变更后，通知 Dock 重新锚定 Header 内部的小部件（齿轮按钮等）
+    if ADT and ADT.DockUI and ADT.DockUI.ReanchorHeaderWidgets then
+        pcall(ADT.DockUI.ReanchorHeaderWidgets)
+    end
 end
 
 -- 钩住所有子模式的 DecorCount：无论当前激活哪种模式，出现就对齐一次
@@ -271,12 +286,18 @@ end
 local function ShowBudgetInHeader()
     local dock = GetDock()
     if not dock or not dock.Header then return end
+    if ADT.HousingUIVisibilityEye and ADT.HousingUIVisibilityEye.IsUIHidden and ADT.HousingUIVisibilityEye:IsUIHidden() then
+        return
+    end
     EnsureDecorCountHooks()
     local dc = _GetAnyDecorCount()
     if not dc then return end
     if dc._ADTForceHidden then dc._ADTForceHidden = nil end
     _AnchorDecorCount(dc, dock.Header)
     if dc.Show then dc:Show() end
+    if ADT and ADT.DockUI and ADT.DockUI.ReanchorHeaderWidgets then
+        pcall(ADT.DockUI.ReanchorHeaderWidgets)
+    end
     -- 首帧和后续尺寸变化都再对齐一次（不加循环，仅一次性延后）
     C_Timer.After(0, function() if dc and dock and dock.Header then _AnchorDecorCount(dc, dock.Header) end end)
     -- 一次性挂钩：当 DecorCount 再次 Show 时，重新对齐
@@ -337,11 +358,12 @@ local function _ADT_ComputeInstrNaturalHeight(instr)
     return h or 0
 end
 
--- 高度自适应改由 SubPanel 统一测量与驱动；此处仅发出“请求自适配”。
+-- 说明区高度变化由 LayoutManager 统一裁决；此处仅发出“请求重排”。
 local function _ADT_QueueResize()
     if not IsHouseEditorShown() then return end
-    if ADT and ADT.DockUI and ADT.DockUI.RequestSubPanelAutoResize then
-        ADT.DockUI.RequestSubPanelAutoResize()
+    local lm = ADT and ADT.HousingLayoutManager
+    if lm and lm.RequestLayout then
+        lm:RequestLayout("InstructionResize")
     end
 end
 
@@ -367,7 +389,7 @@ local function GetPlacedDecorListFrame()
     return nil
 end
 
--- 通用：将任意框体贴合到 Dock.SubPanel 下方（若无 SubPanel 则贴 Dock 下边），并做等宽与高度保护
+-- 通用：将任意框体贴合到 Dock 下方，并做等宽与高度保护
 -- 注意：垂直间距由 CFG.Layout.verticalGapPx 统一权威提供。
 local function AnchorFrameBelowDock(frame, cfg)
     if not frame or not frame.GetHeight then return end
@@ -375,10 +397,7 @@ local function AnchorFrameBelowDock(frame, cfg)
     local dock = GetDock()
     if not dock then return end
 
-    local anchor = dock.SubPanel or (dock.EnsureSubPanel and dock:EnsureSubPanel()) or dock
-    if anchor and anchor.IsShown and not anchor:IsShown() then
-        anchor = dock
-    end
+    local anchor = dock
 
     local dxL = assert(cfg and cfg.anchorLeftCompensation)
     local dxR = assert(cfg and cfg.anchorRightCompensation)
@@ -451,22 +470,18 @@ local function EnsurePlacedListHooks()
     list:HookScript("OnSizeChanged", function() C_Timer.After(0, function() RequestLayout("PlacedListSizeChanged") end) end)
     list:HookScript("OnHide", function() StopWatcher() end)
 
-    -- 主面板/子面板大小变化时也刷新一次（多源冗余保证）
+    -- 主面板大小变化时也刷新一次（多源冗余保证）
     local dock = GetDock()
     if dock then
         if dock.HookScript then
             dock:HookScript("OnSizeChanged", function() C_Timer.After(0, function() RequestLayout("DockSizeChanged") end) end)
-        end
-        if dock.SubPanel and dock.SubPanel.HookScript then
-            dock.SubPanel:HookScript("OnSizeChanged", function() C_Timer.After(0, function() RequestLayout("SubPanelSizeChanged") end) end)
-            dock.SubPanel:HookScript("OnShow",       function() C_Timer.After(0, function() RequestLayout("SubPanelShow") end) end)
         end
     end
     list._ADT_Anchored = true
 end
 
 --
--- 四、染色弹窗（DyeSelectionPopout）：贴合 Dock.SubPanel 下方
+-- 四、染色弹窗（DyeSelectionPopout）：贴合 Dock 下方
 --
 local function GetDyePopoutFrame()
     return _G.DyeSelectionPopout
@@ -537,7 +552,7 @@ local function AnchorDyePopout()
         return
     end
 
-    -- 回落（无自定义面板显示时）：仍采用 Dock.SubPanel 下沿定位
+    -- 回落（无自定义面板显示时）：仍采用 Dock 下沿定位
     AnchorFrameBelowDock(pop, CFG.PlacedList)
 end
 
@@ -578,15 +593,11 @@ local function EnsureDyePopoutHooks()
         self._ADT_naturalHeight = nil
     end)
 
-    -- Dock 或 SubPanel 变化时也刷新
+    -- Dock 变化时也刷新
     local dock = GetDock()
     if dock then
         if dock.HookScript then
             dock:HookScript("OnSizeChanged", function() C_Timer.After(0, function() if pop:IsShown() then AnchorDyePopout() end end) end)
-        end
-        if dock.SubPanel and dock.SubPanel.HookScript then
-            dock.SubPanel:HookScript("OnSizeChanged", function() C_Timer.After(0, function() if pop:IsShown() then AnchorDyePopout() end end) end)
-            dock.SubPanel:HookScript("OnShow",       function() C_Timer.After(0, function() if pop:IsShown() then AnchorDyePopout() end end) end)
         end
     end
 
@@ -594,7 +605,7 @@ local function EnsureDyePopoutHooks()
 end
 
 --
--- 五、定制面板（DecorCustomizationsPane/RoomComponentCustomizationsPane）：同样贴合 Dock.SubPanel 下方
+-- 五、定制面板（DecorCustomizationsPane/RoomComponentCustomizationsPane）：同样贴合 Dock 下方
 --
 GetCustomizePanes = function()
     local LM = ADT and ADT.HousingLayoutManager
@@ -607,40 +618,15 @@ end
 -- 基于 Dock 宽度，计算“定制面板”的内容固定宽度（fixedWidth），避免依赖面板自身宽度
 -- 说明：首次打开时 RoomComponentPane 在 :Show() 前就会执行 :Layout()，
 -- 若此时仍是模板默认 fixedWidth=340，会造成首帧内容未对齐；
--- 这里直接以 Dock.SubPanel 的实际宽度作为权威来源计算 fixedWidth，
--- 消除与锚点/显示顺序相关的竞态。
+-- 固定宽度逻辑统一委托给 LayoutManager（单一权威）。
 local function _ADT_SyncPaneFixedWidthToDock(p)
-    if not (p and p.SetFixedWidth) then return end
-    local lp = tonumber(p.leftPadding) or 0
-    local rp = tonumber(p.rightPadding) or 0
-    local function apply(targetContentW)
-        if not targetContentW or targetContentW <= 0 then return end
-        local cw = math.max(1, targetContentW)
-        if math.abs((p.fixedWidth or 0) - cw) > 0.5 then
-            p:SetFixedWidth(cw)
-            -- 关键修复：SetRoomComponentInfo 在 :Show() 之前会先调用 :Layout()，
-            -- 这里必须在同步 fixedWidth 后主动触发布局，
-            -- 而 VerticalLayoutFrame 使用的是 :Layout()（无 UpdateLayout）。
-            if p.Layout then pcall(p.Layout, p) end
-        end
+    local lm = ADT and ADT.HousingLayoutManager
+    if lm and lm.SyncPaneFixedWidthToDock then
+        lm:SyncPaneFixedWidthToDock(p)
     end
-    -- 优先在“已锚定后”的时序直接以面板自身宽度为准（最稳妥）。
-    local ownW = p.GetWidth and p:GetWidth()
-    if ownW and ownW > 0 then
-        return apply(ownW - lp - rp)
-    end
-    -- 早于 Show/布局时（如 SetRoomComponentInfo 早触发），退化到 Dock.SubPanel 的宽度估算。
-    local dock = GetDock(); if not dock then return end
-    local anchor = dock.SubPanel or (dock.EnsureSubPanel and dock:EnsureSubPanel()) or dock
-    if not (anchor and anchor.GetWidth) then return end
-    local dxL = assert(CFG and CFG.PlacedList and CFG.PlacedList.anchorLeftCompensation)
-    local dxR = assert(CFG and CFG.PlacedList and CFG.PlacedList.anchorRightCompensation)
-    local anchorW = anchor:GetWidth() or 0
-    if anchorW <= 0 then return end
-    apply(anchorW + (dxR or 0) - (dxL or 0) - lp - rp)
 end
 
--- 轻量“跟随观察器”：面板可见期间短时监听宽度变化，确保与 SubPanel 动态缩放完全同步。
+-- 轻量“跟随观察器”：面板可见期间短时监听宽度变化，确保与 Dock 动态缩放完全同步。
 local function _ADT_EnsurePaneResizeWatcher(p)
     if not p or p._ADT_watcherTicker then return end
     local checks = 0
@@ -720,16 +706,6 @@ local function EnsureCustomizePaneHooks()
         if dock.HookScript then
             dock:HookScript("OnSizeChanged", queueSync)
         end
-        if dock.SubPanel and dock.SubPanel.HookScript then
-            dock.SubPanel:HookScript("OnSizeChanged", queueSync)
-            dock.SubPanel:HookScript("OnShow",       queueSync)
-        end
-        -- 关键：SubPanel 的 Content 区域宽度会随 DockUI 的统一左右留白动态调整；
-        -- 仅监听 SubPanel 尺寸不足以捕捉“仅留白变化”的场景，这里补挂 Content 的 OnSizeChanged。
-        local content = dock.SubPanel and dock.SubPanel.Content
-        if content and content.HookScript then
-            content:HookScript("OnSizeChanged", queueSync)
-        end
     end
 
     -- 当进入“自定义模式”时，确保再次贴合
@@ -754,7 +730,7 @@ if _G.RoomComponentPaneMixin and not _G.RoomComponentPaneMixin._ADT_FixedWidthHo
         if not self then return end
         -- 在布局前强制以 Dock 宽度同步 fixedWidth，消除首开竞态
         _ADT_SyncPaneFixedWidthToDock(self)
-        -- 再下一帧复核一次，覆盖 Dock/SubPanel 在本帧内发生的尺寸变化
+        -- 再下一帧复核一次，覆盖 Dock 在本帧内发生的尺寸变化
         C_Timer.After(0, function() _ADT_SyncPaneFixedWidthToDock(self); _ADT_EnsurePaneResizeWatcher(self) end)
     end)
 end
@@ -794,8 +770,7 @@ function IsHouseEditorShown()
 end
 
 local function AdoptInstructionsIntoDock()
-    -- KISS 重构：不再劫持暴雪 Instructions 容器
-    -- 仅将 HoverHUD 挂到当前模式的 Instructions 容器中（参考 Plumber 实现）
+
     
     local active = GetActiveModeFrame()
     local instr = active and active.Instructions
@@ -878,7 +853,7 @@ local function TrySetupHooks()
         end)
         -- 专家模式 Frame 本体 OnShow：这是最稳的时点，直接确保展示与贴合
         -- 不再 hook 专家模式以强制打开清单（保持官方原样）
-        -- 进入专家模式时自动显示官方“放置的装饰”清单（并在 OnShow 时贴合到 Dock.SubPanel 下缘）
+        -- 进入专家模式时自动显示官方“放置的装饰”清单（并在 OnShow 时贴合到 Dock 下缘）
         -- 对行控件进行二次清理：若设置了 _ADTForceHideControl 或检测到“选择装饰”文本，则强制隐藏
         -- KISS 重构：删除行级样式钩子（不再修改暴雪原生样式）
         EL._hooksInstalled = true

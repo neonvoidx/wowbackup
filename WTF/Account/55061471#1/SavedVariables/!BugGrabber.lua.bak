@@ -1,7 +1,51 @@
 
 BugGrabberDB = {
-["session"] = 4714,
+["session"] = 4718,
 ["lastSanitation"] = 3,
 ["errors"] = {
+{
+["message"] = "...ddOns/BetterBlizzFrames/retail/BetterBlizzFrames.lua:2720: attempt to index global 'MainMenuBar' (a nil value)",
+["time"] = "2025/12/10 20:07:45",
+["locals"] = "disable = nil\nalpha = 0.350000\n(*temporary) = <table> {\n}\n(*temporary) = ArcheologyDigsiteProgressBar {\n Shadow = Texture {\n }\n downKeys = <table> {\n }\n Flash = Texture {\n }\n isManagedFrame = true\n ignoreInLayoutWhenActionBarIsOverriden = false\n FillBar = StatusBar {\n }\n isBottomManagedFrame = true\n snappedFrames = <table> {\n }\n BarTitle = FontString {\n }\n layoutParent = UIParentBottomManagedFrameContainer {\n }\n system = 19\n systemNameString = \"Archaeology Bar\"\n BarBackground = Texture {\n }\n timeSinceLeftDigsiteCheck = 0\n hideWhenActionBarIsOverriden = true\n settingDisplayInfoMap = <table> {\n }\n Selection = Frame {\n }\n settingsDialogAnchor = <table> {\n }\n align = \"center\"\n AnimOutAndTriggerToast = AnimationGroup {\n }\n AnimIn = AnimationGroup {\n }\n BarBorderAndOverlay = Texture {\n }\n layoutIndex = 7\n defaultHideSelection = true\n AnimOut = AnimationGroup {\n }\n}\n(*temporary) = BagsBar {\n downKeys = <table> {\n }\n bagBarExpandToggleInitialWidth = 9.999982\n snappedFrames = <table> {\n }\n isHorizontal = true\n systemNameString = \"Bags\"\n Selection = Frame {\n }\n bagBarExpandToggleInitialHeight = 16.000002\n initialHeight = 47\n settingDisplayInfoMap = <table> {\n }\n settingsDialogAnchor = <table> {\n }\n hideExpandToggle  = false\n direction = 0\n system = 14\n}\n(*temporary) = BossTargetFrameContainer {\n downKeys = <table> {\n }\n spacing = 10\n alwaysUseTopRightAnchor = true\n isManagedFrame = true\n dirty = false\n systemIndex = 6\n snappedFrames = <table> {\n }\n isRightManagedFrame = true\n layoutParent = UIParentRightManagedFrameContainer {\n }\n settingDisplayInfoMap = <table> {\n }\n settingsDialogAnchor = <table> {\n }\n systemNameString = \"Boss Frames\"\n respectChildScale = true\n BossTargetFrames = <table> {\n }\n layoutIndex = 4\n hideWhenActionBarIsOverriden = false\n breakSnappedFramesOnSave = true\n defaultHideSelection = true\n Selection = Frame {\n }\n system = 3\n align = \"right\"\n rightPadding = -70\n}\n(*temporary) = BuffFrame {\n downKeys = <table> {\n }\n numHideableBuffs = 0\n CollapseAndExpandButton = CheckButton {\n }\n systemIndex = 1\n snappedFrames = <table> {\n }\n systemNameString = \"Buff Frame\"\n hiddenBuffUpdatePeriod = 0.200000\n hiddenBuffUpdateTimer = 0\n settingDisplayInfoMap = <table> {\n }\n settingsDialogAnchor = <table> {\n }\n Selection = Frame {\n }\n auraFrames = <table> {\n }\n ConsolidatedBuffs = Button {\n }\n isExpanded = true\n exampleAuraType = \"Buff\"\n AuraContainer = Frame {\n }\n defaultHideSelection = true\n system = 6\n maxAuras = 32\n}\n(*temporary) = ChatFrame1 {\n shouldFadeAfterInactivity = true\n isScrollingMessageFrame = true\n buttonFrame = ChatFrame1ButtonFrame {\n }\n snappedFrames = <table> {\n }\n hasOwnFontObject = true\n channelList = <table> {\n }\n FontStringContainer = Frame {\n }\n messageTypeList = <table> {\n }\n fontObject = table: 00000000B58B92E0 {\n }\n systemNameString = \"Chat Frame\"\n EditModeResizeButton = Button {\n }\n settingsDialogAnchor = <table> {\n }\n clickAnywhereButton = ChatFrame1ClickAnywhereButton {\n }\n isLayoutDirty = false\n fadeDurationSecs = 3\n ResizeButton = ChatFrame1ResizeButton {\n }\n overrideFadeTimestamp = 0\n settingDisplayInfoMap = <table> {\n }\n fontStringPool = <table> {\n }\n allowScroll = true\n isDocked = 1\n editBox = ChatFrame1EditBox {\n }\n isDisplayDirty = false\n downKeys = <table> {\n }\n onDisplayRefreshedCallbacks = <table> {\n }\n visibleLines = <table> {\n }\n oldestFadingLineTimestamp = Infinite\n textIsCopyable = false\n scrollOffset = 0\n timeVisibleSecs = 120\n historyBuffer = <table> {\n }\n zoneChannelList = <table> {\n }\n ScrollToBottomButton = Button {\n }\n insertMode = 2\n Background = ChatFrame1Background {\n }\n Selection = Frame {\n }\n ScrollBar = Frame {\n }\n allowAtGlues = true\n system = 8\n isStaticDocked = true\n isLocked = true\n}\n(*temporary) = CompactArenaFrame {\n petUnitFrames = <table> {\n }\n downKeys = <table> {\n }\n breakSnappedFramesOnSave = true\n alwaysUseTopRightAnchor = true\n StealthedUnitFrame1 = Frame {\n }\n isManagedFrame = true\n titleText = \"Arena\"\n StealthedUnitFrame2 = Frame {\n }\n systemIndex = 7\n snappedFrames = <table> {\n }\n isRightManagedFrame = true\n layoutParent = UIParentRightManagedFrameContainer",
+["stack"] = "[Interface/AddOns/BetterBlizzFrames/retail/BetterBlizzFrames.lua]:2720: in function 'ReduceEditModeAlpha'\n[Interface/AddOns/BetterBlizzFrames/retail/BetterBlizzFrames.lua]:4357: in function <...ddOns/BetterBlizzFrames/retail/BetterBlizzFrames.lua:4337>",
+["session"] = 4715,
+["counter"] = 1,
+},
+{
+["message"] = "...ce/AddOns/LegionRemixHelper/Utils/ScrappingUtils.lua:231: attempt to index field 'scrappingMachine' (a nil value)",
+["time"] = "2025/12/10 20:34:19",
+["locals"] = "self = <table> {\n cachedMappedPendingItems = <table> {\n }\n ui = <table> {\n }\n}\n(*temporary) = nil\n(*temporary) = nil\n(*temporary) = \"attempt to index field 'scrappingMachine' (a nil value)\"\n",
+["stack"] = "[Interface/AddOns/LegionRemixHelper/Utils/ScrappingUtils.lua]:231: in function 'AutoScrap'\n[Interface/AddOns/LegionRemixHelper/Utils/ScrappingUtils.lua]:38: in function 'func'\n[Interface/AddOns/LegionRemixHelper/Libs/RasuLibs/RasuAddonBase.lua]:300: in function 'OnEvent'\n[Interface/AddOns/LegionRemixHelper/Libs/RasuLibs/RasuAddonBase.lua]:83: in function <...ns/LegionRemixHelper/Libs/RasuLibs/RasuAddonBase.lua:82>\n[C]: ?\n[C]: in function 'UseContainerItem'\n[Interface/AddOns/EasyScrap/EasyScrap_Functions.lua]:91: in function 'addQueueItems'\n[Interface/AddOns/EasyScrap/EasyScrap_ItemDisplay.lua]:411: in function 'queueAllItems'\n[Interface/AddOns/EasyScrap/Frames/EasyScrapMainFrame.lua]:128: in function <...rface/AddOns/EasyScrap/Frames/EasyScrapMainFrame.lua:127>",
+["session"] = 4715,
+["counter"] = 30,
+},
+{
+["message"] = "Interface/AddOns/AdvancedDecorationTools/src/i18n/deDE.lua:236: '}' expected (to close '{' at line 7) near 'anzeigen'",
+["time"] = "2025/12/17 09:14:00",
+["locals"] = "",
+["stack"] = "",
+["session"] = 4717,
+["counter"] = 2,
+},
+{
+["message"] = "Interface/AddOns/AdvancedDecorationTools/src/i18n/deDE.lua:1 Interface/AddOns/AdvancedDecorationTools/src/i18n/deDE.lua:236: '}' expected (to close '{' at line 7) near 'anzeigen'",
+["time"] = "2025/12/17 09:14:07",
+["session"] = 4717,
+["counter"] = 2,
+},
+{
+["message"] = "Interface/AddOns/AdvancedDecorationTools/src/i18n/deDE.lua:241: '}' expected (to close '{' at line 7) near 'anzeigen'",
+["time"] = "2025/12/19 15:27:49",
+["locals"] = "",
+["stack"] = "",
+["session"] = 4718,
+["counter"] = 1,
+},
+{
+["message"] = "Interface/AddOns/AdvancedDecorationTools/src/i18n/deDE.lua:1 Interface/AddOns/AdvancedDecorationTools/src/i18n/deDE.lua:241: '}' expected (to close '{' at line 7) near 'anzeigen'",
+["time"] = "2025/12/19 15:27:56",
+["session"] = 4718,
+["counter"] = 1,
+},
 },
 }

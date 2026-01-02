@@ -1,6 +1,8 @@
 # Baganator
 
-## [773](https://github.com/TheMouseNest/Baganator/tree/773) (2025-12-08)
-[Full Changelog](https://github.com/TheMouseNest/Baganator/compare/772...773) 
+## [775](https://github.com/TheMouseNest/Baganator/tree/775) (2025-12-30)
+[Full Changelog](https://github.com/TheMouseNest/Baganator/compare/774...775) 
 
-- [Fixes #584] Retail: Fix search not clearing when changing bank type  
+- Update for changed category reference for Syndicator settings  
+- Reapply "Midnight: Temporary fix for spurious tooltip errors"  
+    Needed again  

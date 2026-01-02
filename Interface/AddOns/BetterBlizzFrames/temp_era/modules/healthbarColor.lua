@@ -1,3 +1,4 @@
+local L = BBF.L
 local UnitIsFriend = UnitIsFriend
 local UnitIsEnemy = UnitIsEnemy
 local UnitIsPlayer = UnitIsPlayer
@@ -378,19 +379,6 @@ end
 
 function BBF.HookHealthbarColors()
     if not healthbarsHooked and classColorsOn then
---[[
-        hooksecurefunc("UnitFrameHealthBar_RefreshUpdateEvent", function(self) --pet frames only?
-            if self.unit then
-                print(self:GetName())
-                print(self.unit)
-                --UpdateHealthColor(self, self.unit)
-                --UpdateHealthColor(TargetFrameToTHealthBar, "targettarget")
-                --UpdateHealthColor(FocusFrameToT.HealthBar, "focustarget")
-            end
-        end)
-]]
-
-
         hooksecurefunc("UnitFrameHealthBar_Update", function(self, unit)
             if unit then
                 UpdateHealthColor(self, unit)
@@ -674,7 +662,7 @@ end
 function BBF.HookBiggerHealthbars()
     if C_AddOns.IsAddOnLoaded("DragonflightUI") then
         if not BBF.DFUIUnsupported then
-            print("|A:gmchat-icon-blizz:16:16|aBetter|cff00c0ffBlizz|rFrames: Bigger Healthbars is not supported with DragonflightUI")
+            BBF.Print(L["Print_Bigger_Healthbars_Not_Supported_DragonflightUI"])
             BBF.DFUIUnsupported = true
         end
         return

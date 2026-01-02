@@ -132,7 +132,7 @@ addonTable.RegistereredBar.HealthBar = {
             },
             {
                 parentId = "Bar Style",
-                order = 603,
+                order = 606,
                 name = "Use Class Color",
                 kind = LEM.SettingType.Checkbox,
                 default = defaults.useClassColor,

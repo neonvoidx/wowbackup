@@ -26,31 +26,70 @@ end
 -- 调试偏移（静态左窗已定位正确，恢复为 0；如需再次排障可暂改为负值）
 local DEBUG_LEFT_SHIFT_X = 0
 
--- 依据“实际分类文本宽度”动态计算左侧栏目标宽度（单一权威）
-function DockLeft.ComputeSideSectionWidth()
-    local d = Def()
-    local labelOffset = 9
-    local meterParent = UIParent
-    if not meterParent._ADT_TextMeter then
-        local m = meterParent:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-        m:Hide(); meterParent._ADT_TextMeter = m
+-- 侧栏目标宽度（按语言 + 文本测量）：
+-- KISS 最小化修复：以配置的 locale 宽度为下限，
+-- 再用“当前语言下的分类名称”做一次文本测宽，取二者较大值。
+do
+    local measureFrame, measureFS
+    local function EnsureMeter()
+        if measureFS and measureFS.GetStringWidth then return measureFS end
+        measureFrame = measureFrame or CreateFrame("Frame")
+        measureFrame:Hide()
+        measureFS = measureFrame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+        if measureFS.SetWordWrap then measureFS:SetWordWrap(false) end
+        if measureFS.SetNonSpaceWrap then measureFS:SetNonSpaceWrap(false) end
+        if measureFS.SetMaxLines then measureFS:SetMaxLines(1) end
+        return measureFS
     end
-    local M = meterParent._ADT_TextMeter
-    local function textWidth(text)
-        M:SetText(text or "")
-        local w = math.ceil(M:GetStringWidth() or 0)
-        M:SetText("")
-        return w
+
+    local function GetConfiguredSideWidth()
+        local cfgGetter = ADT and ADT.GetHousingCFG
+        local C = cfgGetter and cfgGetter() or nil
+        local map = C and C.Layout and C.Layout.DockWidthByLocale
+        local locale = (ADT and ADT.GetActiveLocale and ADT.GetActiveLocale())
+                        or ((type(GetLocale) == 'function' and GetLocale()) or "default")
+        local entry = map and (map[locale] or map.default)
+        local side = entry and tonumber(entry.side) or 180
+        return API.Round(side)
     end
-    local maxLabel = 0
-    if CommandDock and CommandDock.GetSortedModules then
-        for _, cat in ipairs(CommandDock:GetSortedModules() or {}) do
-            maxLabel = math.max(maxLabel, textWidth(cat.categoryName))
+
+    local function MeasureCategoriesMaxTextWidth()
+        local fs = EnsureMeter()
+        local maxW = 0
+        -- 与分类按钮一致的字体对象
+        if GameFontNormal and fs.SetFontObject then fs:SetFontObject(GameFontNormal) end
+        -- 从 CommandDock 读取“当前语言”的分类名称列表（不依赖已构建的 UI）
+        local list = CommandDock and CommandDock.GetSortedModules and CommandDock:GetSortedModules() or {}
+        for _, cat in ipairs(list) do
+            local txt = (cat and cat.categoryName) or ""
+            fs:SetText(txt)
+            local w
+            if fs.GetUnboundedStringWidth then
+                w = math.ceil(fs:GetUnboundedStringWidth() or 0)
+            else
+                w = math.ceil(fs:GetStringWidth() or 0)
+            end
+            if w > maxW then maxW = w end
         end
+        return maxW
     end
-    local buttonWidth = maxLabel + 2 * labelOffset
-    local sideWidth = buttonWidth + 2 * (d.WidgetGap or 14)
-    return API.Round(sideWidth)
+
+    function DockLeft.ComputeSideSectionWidth()
+        -- 文本测量：最长分类名 + 左右标签内边距 + 左窗左右留白
+        local d = Def()
+        local labelPad = tonumber(d.CategoryButtonLabelOffset) or 9
+        local sidePad = 2 * (tonumber(d.WidgetGap) or 14)
+        local want = MeasureCategoriesMaxTextWidth()
+        if want and want > 0 then
+            -- 纯按文本 + 内边距计算；增加额外裕量避免重音/字距舍入造成省略
+            local fudge = 6
+            want = API.Round(want + 2 * labelPad + sidePad + fudge)
+            return want
+        end
+        -- 兜底：若无法测得文本宽度，则回退到按语言的固定配置
+        return GetConfiguredSideWidth()
+    end
+
 end
 
 -- 分类按钮模板
@@ -64,6 +103,14 @@ local function CreateCategoryButton(parent)
     f.Label = f:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     f.Label:SetJustifyH("LEFT")
     f.Label:SetPoint("LEFT", f, "LEFT", f.labelOffset, 0)
+    -- 强制“单行且不自动断词/不省略”：超长通过面板增宽解决
+    if f.Label.SetWordWrap then f.Label:SetWordWrap(false) end
+    if f.Label.SetNonSpaceWrap then f.Label:SetNonSpaceWrap(false) end
+    if f.Label.SetIndentedWordWrap then f.Label:SetIndentedWordWrap(false) end
+    if f.Label.SetMaxLines then f.Label:SetMaxLines(1) end
+    if f.Label.SetTextTruncation then f.Label:SetTextTruncation(0) end
+    -- 右侧再加一个锚点，宽度随按钮变化而变化（不再直接 SetWidth）
+    f.Label:SetPoint("RIGHT", f, "RIGHT", -f.labelOffset, 0)
     f.Label:SetTextColor((d.TextColorNormal or {1,1,1})[1], (d.TextColorNormal or {1,1,1})[2], (d.TextColorNormal or {1,1,1})[3])
 
     -- 可选计数（默认隐藏；不再为其预留任何右侧空间）
@@ -82,9 +129,10 @@ local function CreateCategoryButton(parent)
     end
 
     function f:UpdateLabelWidth()
-        local bw = tonumber(self:GetWidth()) or 0
-        if bw <= 0 then return end
-        self.Label:SetWidth(bw - 2 * self.labelOffset)
+        -- 仅保证左右锚点存在；不再主动设定具体像素宽，避免被 UI 层触发省略
+        self.Label:ClearAllPoints()
+        self.Label:SetPoint("LEFT", self, "LEFT", self.labelOffset, 0)
+        self.Label:SetPoint("RIGHT", self, "RIGHT", -self.labelOffset, 0)
     end
 
     function f:ShowCount(count)
@@ -132,22 +180,17 @@ local function CreateCategoryButton(parent)
         local main = self._main
         if not (main and CommandDock and CommandDock.GetCategoryByKey) then return end
         local cat = CommandDock:GetCategoryByKey(self.categoryKey)
-        if cat and cat.categoryType == 'decorList' and main.ShowDecorListCategory then
-            main:ShowDecorListCategory(self.categoryKey)
-        elseif cat and cat.categoryType == 'dyePresetList' and main.ShowDyePresetsCategory then
-            main:ShowDyePresetsCategory(self.categoryKey)
-        elseif cat and cat.categoryType == 'about' and main.ShowAboutCategory then
-            main:ShowAboutCategory(self.categoryKey)
-        elseif cat and cat.categoryType == 'keybinds' and main.ShowKeybindsCategory then
-            main:ShowKeybindsCategory(self.categoryKey)
-        elseif main.ShowSettingsCategory then
-            main:ShowSettingsCategory(self.categoryKey)
+        local categoryType = cat and cat.categoryType or "settings"
+        
+        -- 仅通过 EventBus 上报分类选择（单一权威事件通路）
+        if ADT.EventBus then
+            ADT.EventBus:Fire(ADT.EventBus.Events.CATEGORY_SELECTED, self.categoryKey, categoryType)
         end
-        if ADT and ADT.SetDBValue then ADT.SetDBValue('LastCategoryKey', self.categoryKey) end
-        if ADT and ADT.UI and ADT.UI.PlaySoundCue then ADT.UI.PlaySoundCue('ui.scroll.step') end
+        
+        if ADT.UI and ADT.UI.PlaySoundCue then ADT.UI.PlaySoundCue('ui.scroll.step') end
         if main and main.HighlightButton then main:HighlightButton(self) end
-        if ADT and ADT.DebugPrint and ADT.IsDebugEnabled and ADT.IsDebugEnabled() then
-            ADT.DebugPrint("[DockLeft] OnClick key="..tostring(self.categoryKey))
+        if ADT.DebugPrint and ADT.IsDebugEnabled and ADT.IsDebugEnabled() then
+            ADT.DebugPrint("[DockLeft] OnClick key="..tostring(self.categoryKey).." via EventBus")
         end
     end
 
@@ -207,7 +250,6 @@ function DockLeft.Build(MainFrame, sideSectionWidth)
     LeftSlide:EnableMouseMotion(true)
     LeftSlide:Show()
 
-    -- 恢复旧版正确皮肤（参考你提供的版本）：
     -- The War Within 卡片风格：ui-frame-thewarwithin-cardparchmentwider
     local container = LeftSlide:CreateTexture(nil, "ARTWORK")
     MainFrame.LeftPanelContainer = container
@@ -288,9 +330,39 @@ function DockLeft.Build(MainFrame, sideSectionWidth)
     function MainFrame:UpdateStaticLeftPlacement()
         if not DockLeft.IsStatic() then return end
         if not (self and self:IsShown()) then return end
-        local w = tonumber(self.sideSectionWidth) or DockLeft.ComputeSideSectionWidth()
+        -- 基于“已生成按钮的真实文本宽度”精确计算；
+        -- 优先使用 GetUnboundedStringWidth（11.0+），保证不受当前 Label 宽度限制；
+        -- 对旧版本回退到 GetStringWidth。
+        local maxLabel = 0
+        if self.primaryCategoryPool and self.primaryCategoryPool.EnumerateActive then
+            for _, btn in self.primaryCategoryPool:EnumerateActive() do
+                local fs = btn and btn.Label
+                if fs then
+                    local w = 0
+                    if fs.GetUnboundedStringWidth then
+                        w = tonumber(fs:GetUnboundedStringWidth()) or 0
+                    elseif fs.GetStringWidth then
+                        w = tonumber(fs:GetStringWidth()) or 0
+                    end
+                    w = math.ceil(w)
+                    if w > maxLabel then maxLabel = w end
+                end
+            end
+        end
+        local dcalc = Def()
+        local w = nil
+        if maxLabel > 0 then
+            local labelPad = tonumber(dcalc.CategoryButtonLabelOffset) or 9
+            local sidePad  = 2 * (tonumber(dcalc.WidgetGap) or 14)
+            w = API.Round(maxLabel + 2 * labelPad + sidePad + 2)
+        else
+            w = DockLeft.ComputeSideSectionWidth()
+        end
         if w and w > 0 then
-            LeftSlide:SetWidth(w)
+            -- 记录到 MainFrame 以便 DockUI 其余逻辑复用
+            self.sideSectionWidth = w
+            -- 统一调用 DockUI 的侧宽应用（同步按钮/高亮/滚动区域等）。
+            if type(self._ApplySideWidth) == 'function' then self:_ApplySideWidth(w) end
         end
         local d2 = Def()
         LeftSlide:ClearAllPoints()

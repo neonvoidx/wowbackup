@@ -1,9 +1,9 @@
 -- Housing_LayoutManager.lua
 -- 目的：
---  - 统一裁决住宅编辑右侧三层 UI（DockUI / SubPanel / 官方清单/自定义面板）的纵向布局
+--  - 统一裁决住宅编辑右侧两层 UI（DockUI / 官方清单/自定义面板）的纵向布局
 --  - DockUI 永远停靠在屏幕右上角；高度只随分辨率/缩放变化做裁剪，不随其它内容高频跳动
---  - SubPanel 永远贴在 DockUI 下方；官方面板永远贴在 SubPanel 下方（SubPanel 不可用则贴 DockUI 下方）
---  - 在小分辨率/高缩放下保证“永不越屏”，并按优先级收缩（优先压缩官方面板，再压缩 SubPanel）
+--  - 官方面板永远贴在 DockUI 下方
+--  - 在小分辨率/高缩放下保证“永不越屏”，并按优先级收缩（优先压缩官方面板）
 -- 约束：
 --  - 仅做 UI 布局，不改官方面板数据/刷新逻辑
 --  - 参数全部配置驱动（单一权威见 Housing_Config.lua → CFG.Layout）
@@ -25,6 +25,10 @@ local function Debug(msg)
     if ADT and ADT.DebugPrint then
         ADT.DebugPrint("[Layout] " .. tostring(msg))
     end
+end
+
+local function IsFrameShown(frame)
+    return frame and frame.IsShown and frame:IsShown()
 end
 
 local LayoutManager = {}
@@ -81,23 +85,16 @@ end
 function LayoutManager:GetVisibleOfficialFrames()
     local out = {}
     local list = self:GetPlacedDecorListFrame()
-    if list and list.IsShown and list:IsShown() then out[#out+1] = list end
+    if IsFrameShown(list) then out[#out+1] = list end
     local decorPane, roomPane = self:GetCustomizePanes()
-    if decorPane and decorPane.IsShown and decorPane:IsShown() then out[#out+1] = decorPane end
-    if roomPane and roomPane.IsShown and roomPane.IsShown and roomPane:IsShown() then out[#out+1] = roomPane end
+    if IsFrameShown(decorPane) then out[#out+1] = decorPane end
+    if IsFrameShown(roomPane) then out[#out+1] = roomPane end
     return out
 end
 
--- Dock / SubPanel
+-- Dock
 local function GetDock()
     return ADT and ADT.CommandDock and ADT.CommandDock.SettingsPanel or nil
-end
-local function GetSubPanel(dock)
-    if not dock then return nil end
-    -- 重要：LayoutManager 不主动创建 SubPanel。
-    -- SubPanel 的创建应当由其自身业务（如 HoverHUD/提示）驱动；
-    -- LayoutManager 只在其“已存在且显示”时纳入布局，避免因 EnsureSubPanel() 早期创建导致宽度为 0 的竞态。
-    return dock.SubPanel or nil
 end
 
 local function GetLayoutCFG()
@@ -106,10 +103,8 @@ local function GetLayoutCFG()
 end
 
 -- ===========================
--- 宽度锚点：当 SubPanel 不存在/不可用时，仍让暴雪面板与 DockUI 的“中央区域”保持等宽
--- 说明：
---  - SubPanel 的真实宽度来源是 Dock.CentralSection（BOTTOMLEFT）→ Dock（BOTTOMRIGHT）
---  - 若 SubPanel 不存在，则用一个 1px 高度的“内容锚点”复制同样的水平范围，作为官方面板的宽度裁决源
+-- 宽度锚点：让暴雪面板与 DockUI 的“中央区域”保持等宽
+-- 说明：宽度来源是 Dock.CentralSection（BOTTOMLEFT）→ Dock（BOTTOMRIGHT）
 -- ===========================
 local function GetDockCentralWidthPx(dock)
     if not (dock and dock.GetWidth) then return nil end
@@ -139,14 +134,7 @@ function LayoutManager:GetOfficialPanelFrameWidthPx()
     local dxL = tonumber(placedCfg.anchorLeftCompensation or 0) or 0
     local dxR = tonumber(placedCfg.anchorRightCompensation or 0) or 0
 
-    -- 优先：可见 SubPanel 的实际宽度（最贴近“真实渲染结果”）
-    local sub = dock.SubPanel
-    if sub and sub.IsShown and sub:IsShown() and sub.GetWidth then
-        local w = tonumber(sub:GetWidth() or 0) or 0
-        if w > 0 then return w + dxR - dxL end
-    end
-
-    -- 否则：由 Dock 的“总宽 - 左栏宽”推导中央区域宽度
+    -- 由 Dock 的“总宽 - 左栏宽”推导中央区域宽度
     local centralW = GetDockCentralWidthPx(dock)
     if not centralW then return nil end
     return centralW + dxR - dxL
@@ -193,23 +181,15 @@ function LayoutManager:UpdateDockContentAnchor(dock)
     local left = (dock.CentralSection and dock.CentralSection.GetBottom and dock.CentralSection.GetLeft) and dock.CentralSection or dock
 
     a:ClearAllPoints()
-    -- 与 SubPanel 的水平裁决保持一致：LEFT 跟随 CentralSection，RIGHT 跟随 Dock
+    -- 与中央区域的水平裁决保持一致：LEFT 跟随 CentralSection，RIGHT 跟随 Dock
     a:SetPoint("BOTTOMLEFT",  left, "BOTTOMLEFT",  0, 0)
     a:SetPoint("BOTTOMRIGHT", dock, "BOTTOMRIGHT", 0, 0)
     a:Show()
     return a
 end
 
-local function CalcStackGaps(Hd, Hs, Hl, gapPx)
-    local dockToSub = (Hd > 0 and Hs > 0) and gapPx or 0
-    local subToList = (Hs > 0 and Hl > 0) and gapPx or 0
-    local dockToList = (Hd > 0 and Hs <= 0 and Hl > 0) and gapPx or 0
-    return dockToSub, subToList, dockToList
-end
-
-local function SumStackHeights(Hd, Hs, Hl, gapPx)
-    local dockToSub, subToList, dockToList = CalcStackGaps(Hd, Hs, Hl, gapPx)
-    return Hd + Hs + Hl + dockToSub + subToList + dockToList, dockToSub, subToList, dockToList
+local function CalcStackGap(Hd, Hl, gapPx)
+    return (Hd > 0 and Hl > 0) and gapPx or 0
 end
 
 -- ===========================
@@ -244,15 +224,15 @@ function LayoutManager:ComputeLayout()
         end
     end
 
-    local sub = GetSubPanel(dock)
-    local desiredSubH = 0
-    if sub and sub.IsShown and sub:IsShown() then
-        desiredSubH = tonumber(sub._ADT_DesiredHeight)
-        if not desiredSubH or desiredSubH <= 0 then
-            desiredSubH = tonumber(sub:GetHeight() or 0) or 0
-            if desiredSubH > 0 then
-                sub._ADT_DesiredHeight = desiredSubH
+    -- 折叠模式：Dock 期望高度改为 Header 高度（KISS）
+    do
+        local isCollapsed = ADT and ADT.DockUI and ADT.DockUI.IsCollapsed and ADT.DockUI.IsCollapsed()
+        if isCollapsed then
+            local hh = (dock.Header and dock.Header.GetHeight and dock.Header:GetHeight()) or 0
+            if hh <= 0 and ADT and ADT.DockUI and ADT.DockUI.Def then
+                hh = tonumber(ADT.DockUI.Def.HeaderHeight) or hh
             end
+            if hh and hh > 0 then desiredDockH = hh end
         end
     end
 
@@ -263,7 +243,7 @@ function LayoutManager:ComputeLayout()
         if h > desiredListH then desiredListH = h end
     end
 
-    Debug(string.format("desired Hd=%.1f Hs=%.1f Hl=%.1f screenH=%.1f H=%.1f", desiredDockH, desiredSubH, desiredListH, screenH, H))
+    Debug(string.format("desired Hd=%.1f Hl=%.1f screenH=%.1f H=%.1f", desiredDockH, desiredListH, screenH, H))
 
     -- 套 min/max（Dock）
     local dockMin = tonumber(cfg.dockMinHeightPx) or 160
@@ -280,60 +260,29 @@ function LayoutManager:ComputeLayout()
         end
     end
 
-    -- 套 min/max（SubPanel）
-    local subMin = tonumber(cfg.subPanelMinHeight) or 160
-    local subAbsMax = tonumber(cfg.subPanelMaxHeight) or 720
-    local subMaxRatio = tonumber(cfg.subPanelMaxHeightViewportRatio) or 0.40
-    local subMaxPx = math.floor(screenH * subMaxRatio + 0.5)
-    subMaxPx = math.min(subAbsMax, subMaxPx)
-    if subMaxPx < subMin then subMaxPx = subMin end
-    local Hs = (desiredSubH > 0) and Clamp(desiredSubH, subMin, subMaxPx) or 0
-
     -- 套 min/max（官方面板，默认不扩展，只裁剪）
     local blizMin = tonumber(cfg.blizzardMinHeightPx) or 0
     local Hl = (desiredListH > 0) and math.max(blizMin, desiredListH) or 0
 
-    -- Stack 模式（KISS）：Dock 固定在 TopY；SubPanel 永远在 Dock 下方；官方面板永远在 SubPanel 下方。
-    -- 约束：Dock 不因 SubPanel/官方面板的高度变化而移动（避免竞态争夺 Dock 位置）。
+    -- Stack 模式（KISS）：Dock 固定在 TopY；官方面板永远在 Dock 下方。
+    -- 约束：Dock 不因官方面板的高度变化而移动（避免竞态争夺 Dock 位置）。
     local DockTopY = TopY
     local DockBottomY = DockTopY - Hd
 
     -- 可用高度（Dock 下方）
     local belowH = math.max(0, DockBottomY - BottomY)
 
-    -- 依序分配（KISS）：先 SubPanel，再官方面板。
-    -- 目的：SubPanel 永远紧接 Dock；空间不足时优先牺牲官方面板。
-    do
-        if Hs > 0 then
-            local dockToSubGap = gapPx
-            local subFit = math.max(0, belowH - dockToSubGap)
-            Hs = math.min(Hs, subFit)
-            if Hs <= 0 then
-                Hs = 0
-            end
-        end
-
-        if Hs > 0 then
-            local dockToSubGap = gapPx
-            local remaining = math.max(0, belowH - dockToSubGap - Hs)
-            if Hl > 0 then
-                local subToListGap = gapPx
-                local listFit = math.max(0, remaining - subToListGap)
-                Hl = math.min(Hl, listFit)
-                if Hl <= 0 then Hl = 0 end
-            end
-        else
-            if Hl > 0 then
-                local dockToListGap = gapPx
-                local listFit = math.max(0, belowH - dockToListGap)
-                Hl = math.min(Hl, listFit)
-                if Hl <= 0 then Hl = 0 end
-            end
-        end
+    -- 依序分配（KISS）：仅裁剪官方面板高度
+    if Hl > 0 then
+        local dockToListGap = gapPx
+        local listFit = math.max(0, belowH - dockToListGap)
+        Hl = math.min(Hl, listFit)
+        if Hl <= 0 then Hl = 0 end
     end
 
-    local sum, dockToSubGap, subToListGap, dockToListGap = SumStackHeights(Hd, Hs, Hl, gapPx)
-    Debug(string.format("applied Hd=%.1f Hs=%.1f Hl=%.1f sum=%.1f overflow=%.1f", Hd, Hs, Hl, sum, sum - H))
+    local dockToListGap = CalcStackGap(Hd, Hl, gapPx)
+    local sum = Hd + Hl + dockToListGap
+    Debug(string.format("applied Hd=%.1f Hl=%.1f sum=%.1f overflow=%.1f", Hd, Hl, sum, sum - H))
 
     return {
         rootTop = TopY,
@@ -341,9 +290,8 @@ function LayoutManager:ComputeLayout()
         rawRootTop = rawRootTop,
         rawRootBottom = rawRootBottom,
         dock = { topY = DockTopY, height = Hd },
-        sub  = { height = Hs },
         list = { height = Hl },
-        gaps = { dockToSub = dockToSubGap, subToList = subToListGap, dockToList = dockToListGap, gapPx = gapPx },
+        gaps = { dockToList = dockToListGap, gapPx = gapPx },
     }
 end
 
@@ -376,37 +324,32 @@ function LayoutManager:ApplyLayout(reason)
         dock:SetHeight(Hd)
     end
     dock._ADT_VerticalOffsetOverride = (layout.dock.topY - layout.rawRootTop)
-    if dock.ApplyDockPlacement then
+    local locked = dock.__ADT_TransitionLockAnchor
+    if dock.ApplyDockPlacement and not locked then
         dock:ApplyDockPlacement()
     else
-        -- 极端早期：直接锚 LayoutRoot
-        dock:ClearAllPoints()
-        dock:SetPoint("TOPRIGHT", LayoutRoot, "TOPRIGHT", 0, dock._ADT_VerticalOffsetOverride)
-    end
-
-    -- 2) SubPanel：永远贴在 Dock 下方；仅裁剪高度，不强制显隐（避免与内部逻辑竞争）
-    local sub = GetSubPanel(dock)
-    if sub and sub.SetHeight then
-        local Hs = layout.sub.height
-        -- 与 Dock 下缘保持相切/留白：纵向间距由 LayoutManager 单一裁决
-        if sub.ClearAllPoints and dock.CentralSection then
-            sub:ClearAllPoints()
-            sub:SetPoint("TOPLEFT", dock.CentralSection, "BOTTOMLEFT", 0, -layout.gaps.dockToSub)
-            sub:SetPoint("TOPRIGHT", dock, "BOTTOMRIGHT", 0, -layout.gaps.dockToSub)
-        end
-        if math.abs((sub:GetHeight() or 0) - Hs) > 0.5 then
-            sub:SetHeight(Hs)
+        if not locked then
+            -- 极端早期：直接锚 LayoutRoot
+            dock:ClearAllPoints()
+            dock:SetPoint("TOPRIGHT", LayoutRoot, "TOPRIGHT", 0, dock._ADT_VerticalOffsetOverride)
+        else
+            -- 过渡期间不改 Dock 锚点，避免滑入路径被打断
+            if not self._dockDeferredLayout then
+                self._dockDeferredLayout = true
+                C_Timer.After(0.05, function()
+                    self._dockDeferredLayout = nil
+                    if dock and not dock.__ADT_TransitionLockAnchor then
+                        self:RequestLayout("DockTransitionDone")
+                    end
+                end)
+            end
         end
     end
 
-    -- 3) 官方面板：永远锚到 SubPanel（若高度>0）否则锚 Dock；高度由 LayoutManager 裁决
+    -- 2) 官方面板：永远锚到 Dock；高度由 LayoutManager 裁决
     local cfg = ADT.GetHousingCFG().PlacedList
     local anchor = self:UpdateDockContentAnchor(dock) or dock
     local gapBelow = (layout.list.height > 0 and layout.gaps.dockToList) or 0
-    if sub and (layout.sub.height > 0) then
-        anchor = sub
-        gapBelow = (layout.list.height > 0 and layout.gaps.subToList) or 0
-    end
 
     local officialFrames = self:GetVisibleOfficialFrames()
     for _, f in ipairs(officialFrames) do
@@ -462,13 +405,6 @@ function LayoutManager:EnsureHooks()
         end
     end
 
-    local sub = dock and GetSubPanel(dock)
-    if sub and not sub._ADT_LayoutHooked then
-        sub._ADT_LayoutHooked = true
-        sub:HookScript("OnShow", function() LayoutManager:RequestLayout("SubShow") end)
-        sub:HookScript("OnHide", function() LayoutManager:RequestLayout("SubHide") end)
-        -- 同理：不监听 SubPanel 的 OnSizeChanged，避免与其内部自适应高度竞态。
-    end
 end
 
 -- 视口变化监听（独立帧，关注点分离）

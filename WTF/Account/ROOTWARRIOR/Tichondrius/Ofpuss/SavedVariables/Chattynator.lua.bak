@@ -1,13 +1,6 @@
 
 CHATTYNATOR_CURRENT_PROFILE = "DEFAULT"
 CHATTYNATOR_COMMAND_HISTORY = {
-"/cw Creamyhands-Barthilas ya.. zzzz",
-"/cw Creamyhands-Barthilas dogshit",
-"/cw Creamyhands-Barthilas so sick of waiting for 30min to play with retards",
-"/cw Creamyhands-Barthilas ya i cant heal on dh unfortunately",
-"/cw Creamyhands-Barthilas i healed on my pally",
-"/cw Creamyhands-Barthilas was easy",
-"/cw Creamyhands-Barthilas got 1800 in lke 2 hours",
 "/cw Creamyhands-Barthilas lol",
 "/cw Creamyhands-Barthilas im just trying to get the 1800 sets for like 5 classes",
 "/cw Creamyhands-Barthilas my dh and war are like stuck in purgatory constantly getting to 1790 then getting into a game of pure idiocracy",
@@ -202,4 +195,11 @@ CHATTYNATOR_COMMAND_HISTORY = {
 "/s /way 28 40",
 "/s /sleep",
 "/s /way 52 29",
+"/s /way #2351 63.2 92.5",
+"/s /way 62.0, 88.7",
+"/s /way 61.6, 79.4",
+"/s /opie",
+"/s /m",
+"/s /way 56.6, 67.5",
+"/s /rl",
 }

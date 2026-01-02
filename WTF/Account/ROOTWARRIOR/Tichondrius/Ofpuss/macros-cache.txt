@@ -76,3 +76,8 @@ VER 3 0100000000000035 " " "134400"
 #showtooltip 
 /cast [@cursor] Sigil of Spite
 END
+VER 3 0100000000000036 " " "134400"
+/run SetView(5)
+/run SetView(5)
+/script FlipCameraYaw(180)
+END

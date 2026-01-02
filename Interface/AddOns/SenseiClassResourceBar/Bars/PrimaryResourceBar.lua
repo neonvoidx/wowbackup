@@ -147,7 +147,7 @@ addonTable.RegistereredBar.PrimaryResourceBar = {
             },
             {
                 parentId = "Bar Style",
-                order = 603,
+                order = 606,
                 name = "Use Resource Foreground And Color",
                 kind = LEM.SettingType.Checkbox,
                 default = defaults.useResourceAtlas,

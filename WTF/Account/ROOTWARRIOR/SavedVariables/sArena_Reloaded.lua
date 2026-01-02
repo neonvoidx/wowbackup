@@ -2,6 +2,7 @@
 sArena_ReloadedDB = {
 ["profileKeys"] = {
 ["Neonvoid - Tichondrius"] = "Default",
+["Auteist - Tichondrius"] = "Default",
 ["Ofpusstwo - Tichondrius"] = "Default",
 ["Hellavator - Tichondrius"] = "Default",
 ["Crillessana - Mal'Ganis"] = "Default",
@@ -101,23 +102,11 @@ sArena_ReloadedDB = {
 },
 },
 },
-["classColorNames"] = false,
 ["replaceHealerIcon"] = false,
 ["showDecimalsClassIcon"] = false,
-["drResetTimeFix"] = true,
-["invertDRCooldown"] = false,
-["currentLayout"] = "BlizzTarget",
-["colorTrinket"] = false,
-["statusText"] = {
-["alwaysShow"] = false,
-},
 ["enableMasque"] = false,
-["drStaticIcons"] = true,
-["invertTrinketRacialCooldown"] = false,
-["drStaticIconsPerClass"] = true,
-["drResetTime"] = 18.5,
-["hideClassIcon"] = false,
 ["colorMysteryGray"] = false,
+["classColorNames"] = false,
 ["drIconsPerClass"] = {
 ["EVOKER"] = {
 ["Disorient"] = 136183,
@@ -128,6 +117,18 @@ sArena_ReloadedDB = {
 ["Disorient"] = "136175]",
 },
 },
+["drResetTimeFix"] = true,
+["currentLayout"] = "BlizzTarget",
+["colorTrinket"] = false,
+["statusText"] = {
+["alwaysShow"] = false,
+},
+["drStaticIcons"] = true,
+["invertTrinketRacialCooldown"] = false,
+["drStaticIconsPerClass"] = true,
+["drResetTime"] = 18.5,
+["hideClassIcon"] = false,
+["invertDRCooldown"] = false,
 },
 },
 }

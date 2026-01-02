@@ -2,6 +2,10 @@ local isRetail = sArenaMixin.isRetail
 local isMidnight = sArenaMixin.isMidnight
 local isTBC = sArenaMixin.isTBC
 
+-- Older clients dont show opponents in spawn
+local isOldArena = sArenaMixin.isTBC or sArenaMixin.isWrath
+local isModernArena = isRetail or isMidnight -- For old trinkets
+
 sArenaMixin.layouts = {}
 sArenaMixin.defaultSettings = {
     profile = {
@@ -13,8 +17,10 @@ sArenaMixin.defaultSettings = {
         showDecimalsDR = true,
         showDecimalsClassIcon = true,
         decimalThreshold = 6,
+        colorDRCooldownText = false,
         --darkMode = (BetterBlizzFramesDB and BetterBlizzFramesDB.darkModeUi) or C_AddOns.IsAddOnLoaded("FrameColor") or nil,
         forceShowTrinketOnHuman = not isRetail and true or nil,
+        shadowSightTimer = isOldArena and true or nil,
         darkModeValue = 0.2,
         desaturateTrinketCD = true,
         desaturateDispelCD = true,
@@ -36,7 +42,7 @@ sArenaMixin.defaultSettings = {
 
 sArenaMixin.playerClass = select(2, UnitClass("player"))
 sArenaMixin.maxArenaOpponents = (isRetail and 3) or 5
-sArenaMixin.noTrinketTexture = 638661
+sArenaMixin.noTrinketTexture = (isTBC and 132311) or 638661 --temp texture for tbc. todo: export retail and include in sarena
 sArenaMixin.trinketTexture = (isRetail and 1322720) or 133453
 sArenaMixin.trinketID = (isRetail and 336126) or 42292
 sArenaMixin.showPixelBorder = false
@@ -53,10 +59,15 @@ LSM:Register("font", "Prototype", "Interface\\Addons\\sArena_Reloaded\\Textures\
 LSM:Register("font", "PT Sans Narrow Bold", "Interface\\Addons\\sArena_Reloaded\\Textures\\PTSansNarrow-Bold.ttf", LSM.LOCALE_BIT_western + LSM.LOCALE_BIT_ruRU)
 local GetSpellTexture = GetSpellTexture or C_Spell.GetSpellTexture
 local stealthAlpha = 0.4
+local shadowsightStartTime = 95
+local shadowsightResetTime = 122
+local shadowSightID = 34709
 sArenaMixin.beenInArena = false
+sArenaMixin.shadowsightTimers = {0, 0}
+sArenaMixin.shadowsightAvailable = 2
 
--- TBC: Track which arena units we've seen (to work around UnitExists returning false for stealthed units)
-if isTBC then
+-- Track which arena units we've seen (to work around UnitExists returning false for stealthed units)
+if isOldArena then
     sArenaMixin.seenArenaUnits = {}
 end
 
@@ -86,6 +97,10 @@ local classPowerType = {
 function sArenaMixin:Print(fmt, ...)
     local prefix = "|cffffffffsArena |cffff8000Reloaded|r |T135884:13:13|t:"
     print(prefix, string.format(fmt, ...))
+end
+
+local function IsSoloShuffle()
+    return C_PvP and C_PvP.IsSoloShuffle and C_PvP.IsSoloShuffle()
 end
 
 function sArenaMixin:FontValues()
@@ -288,6 +303,149 @@ function sArenaMixin:CompatibilityEnsurer()
     end
 end
 
+local function TEMPShareCollectedData()
+    if not sArena_ReloadedDB or not sArena_ReloadedDB.collectData then
+        sArenaMixin:Print("Data collection is not enabled. Set db.collectData = true first.")
+        return
+    end
+
+    local hasSpells = sArena_ReloadedDB.collectedSpells and next(sArena_ReloadedDB.collectedSpells) ~= nil
+    local hasAuras = sArena_ReloadedDB.collectedAuras and next(sArena_ReloadedDB.collectedAuras) ~= nil
+
+    if not hasSpells and not hasAuras then
+        sArenaMixin:Print("No spell data has been collected yet.")
+        return
+    end
+
+    if not sArenaMixin.DataExportFrame then
+        local frame = CreateFrame("Frame", "sArenaDataExportFrame", UIParent, "BackdropTemplate")
+        frame:SetSize(600, 500)
+        frame:SetPoint("CENTER")
+        frame:SetFrameStrata("DIALOG")
+        frame:SetBackdrop({
+            bgFile = "Interface\\DialogFrame\\UI-DialogBox-Background",
+            edgeFile = "Interface\\DialogFrame\\UI-DialogBox-Border",
+            tile = true, tileSize = 32, edgeSize = 32,
+            insets = { left = 11, right = 12, top = 12, bottom = 11 }
+        })
+        frame:SetBackdropColor(0, 0, 0, 1)
+        frame:EnableMouse(true)
+        frame:SetMovable(true)
+        frame:RegisterForDrag("LeftButton")
+        frame:SetScript("OnDragStart", frame.StartMoving)
+        frame:SetScript("OnDragStop", frame.StopMovingOrSizing)
+
+        -- Title
+        local title = frame:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
+        title:SetPoint("TOP", 0, -15)
+        title:SetText("sArena Collected Spell Data")
+
+        -- Close button
+        local closeButton = CreateFrame("Button", nil, frame, "UIPanelCloseButton")
+        closeButton:SetPoint("TOPRIGHT", -5, -5)
+
+        -- ScrollFrame for EditBox
+        local scrollFrame = CreateFrame("ScrollFrame", nil, frame, "UIPanelScrollFrameTemplate")
+        scrollFrame:SetPoint("TOPLEFT", 20, -45)
+        scrollFrame:SetPoint("BOTTOMRIGHT", -35, 50)
+
+        -- EditBox
+        local editBox = CreateFrame("EditBox", nil, scrollFrame)
+        editBox:SetMultiLine(true)
+        editBox:SetAutoFocus(false)
+        editBox:SetFontObject("ChatFontNormal")
+        editBox:SetWidth(scrollFrame:GetWidth())
+        editBox:SetScript("OnEscapePressed", function() frame:Hide() end)
+        scrollFrame:SetScrollChild(editBox)
+
+        -- Select All button
+        local selectAllButton = CreateFrame("Button", nil, frame, "UIPanelButtonTemplate")
+        selectAllButton:SetSize(120, 25)
+        selectAllButton:SetPoint("BOTTOM", 0, 15)
+        selectAllButton:SetText("Select All")
+        selectAllButton:SetScript("OnClick", function()
+            editBox:HighlightText()
+            editBox:SetFocus()
+        end)
+
+        frame.editBox = editBox
+        sArenaMixin.DataExportFrame = frame
+    end
+
+    local output = {}
+    local totalCount = 0
+
+    if hasSpells then
+        table.insert(output, "-- Collected Spell Casts")
+        table.insert(output, "sArenaMixin.collectedSpells = {")
+
+        local sortedSpellIDs = {}
+        for spellID in pairs(sArena_ReloadedDB.collectedSpells) do
+            table.insert(sortedSpellIDs, spellID)
+        end
+        table.sort(sortedSpellIDs)
+
+        for _, spellID in ipairs(sortedSpellIDs) do
+            local data = sArena_ReloadedDB.collectedSpells[spellID]
+            local spellName = data[1] or "Unknown"
+            local sourceClass = data[2] or "Unknown"
+            local type = data[3] or "Unknown"
+
+            -- Escape special characters in spell name
+            spellName = spellName:gsub("\\", "\\\\"):gsub('"', '\\"')
+
+            table.insert(output, string.format('    [%d] = {"%s", "%s", "%s"}, -- %s',
+                spellID, spellName, sourceClass, type, spellName))
+        end
+
+        table.insert(output, "}")
+        table.insert(output, "")
+        totalCount = totalCount + #sortedSpellIDs
+    end
+
+    if hasAuras then
+        table.insert(output, "-- Collected Auras (Buffs/Debuffs)")
+        table.insert(output, "sArenaMixin.collectedAuras = {")
+
+        local sortedAuraIDs = {}
+        for spellID in pairs(sArena_ReloadedDB.collectedAuras) do
+            table.insert(sortedAuraIDs, spellID)
+        end
+        table.sort(sortedAuraIDs)
+
+        for _, spellID in ipairs(sortedAuraIDs) do
+            local data = sArena_ReloadedDB.collectedAuras[spellID]
+            local spellName = data[1] or "Unknown"
+            local sourceClass = data[2] or "Unknown"
+            local auraType = data[3] or "Unknown"
+
+            -- Escape special characters in spell name
+            spellName = spellName:gsub("\\", "\\\\"):gsub('"', '\\"')
+
+            table.insert(output, string.format('    [%d] = {"%s", "%s", "%s"}, -- %s',
+                spellID, spellName, sourceClass, auraType, spellName))
+        end
+
+        table.insert(output, "}")
+        totalCount = totalCount + #sortedAuraIDs
+    end
+
+    -- Join all lines
+    local formattedData = table.concat(output, "\n")
+
+    -- Set the text and show the frame
+    sArenaMixin.DataExportFrame.editBox:SetText(formattedData)
+    sArenaMixin.DataExportFrame:Show()
+
+    -- Automatically select all text
+    C_Timer.After(0.1, function()
+        sArenaMixin.DataExportFrame.editBox:HighlightText()
+        sArenaMixin.DataExportFrame.editBox:SetFocus()
+    end)
+
+    sArenaMixin:Print("Collected %d total entries. Data displayed in export window.", totalCount)
+end
+
 local db
 local emptyLayoutOptionsTable = {
     notice = {
@@ -298,7 +456,7 @@ local emptyLayoutOptionsTable = {
 local blizzFrame
 local changedParent
 local UpdateBlizzVisibility
-if isRetail and not isTBC then
+if isRetail and not isOldArena then
     UpdateBlizzVisibility = function()
         -- Hide Blizzard Arena Frames while in Arena
         if CompactArenaFrame.isHidden then return end
@@ -942,7 +1100,7 @@ function sArenaMixin:HandleArenaStart()
         local frame = self["arena" .. i]
         if frame:IsShown() then break end
         if UnitExists("arena"..i) then
-            if isTBC then
+            if isOldArena then
                 sArenaMixin.seenArenaUnits[i] = true
             end
             frame:UpdateVisible()
@@ -1034,6 +1192,23 @@ local function EnsureArenaFramesEnabled()
     end
 end
 
+local function GetFactionTrinketIconByRace(race)
+    local allianceRaces = {
+        ["Human"] = true,
+        ["Dwarf"] = true,
+        ["NightElf"] = true,
+        ["Gnome"] = true,
+        ["Draenei"] = true,
+        ["Worgen"] = true,
+    }
+
+    if allianceRaces[race] then
+        return 133452  -- Alliance trinket
+    else
+        return 133453  -- Horde trinket
+    end
+end
+
 function sArenaMixin:ShowMidnightDRWarning()
     if self.midnightWarningFrame then
         self.midnightWarningFrame:Show()
@@ -1113,16 +1288,56 @@ function sArenaMixin:OnEvent(event, ...)
 
         if combatEvent == "SPELL_CAST_SUCCESS" or combatEvent == "SPELL_AURA_APPLIED" then
 
-            -- TBC Spec Detection
-            if isTBC and (sArenaMixin.tbcSpecSpells[spellID] or sArenaMixin.tbcSpecBuffs[spellID]) then
-                for i = 1, sArenaMixin.maxArenaOpponents do
-                    if (sourceGUID == UnitGUID("arena" .. i)) then
-                        local ArenaFrame = self["arena" .. i]
-                        if ArenaFrame:CheckForSpecSpell(spellID) then
-                            break
+            -- Old Arena Spec Detection
+            if isOldArena then
+
+                -- TEMP DATACOLLECT
+                if sArena_ReloadedDB.collectData then
+                    local spellName = C_Spell.GetSpellName(spellID)
+                    local _, sourceClass
+                    if sourceGUID and select(1, strsplit("-", sourceGUID)) == "Player" then
+                        _, sourceClass = GetPlayerInfoByGUID(sourceGUID)
+                    else
+                        local npcID = nil
+                        if sourceGUID and type(sourceGUID) == "string" then
+                            npcID = tonumber(sourceGUID:match("%-([0-9]+)%-%x+$"))
+                        end
+                        sourceClass = npcID and ("NPC:" .. npcID) or "NPC"
+                    end
+
+                    if combatEvent == "SPELL_CAST_SUCCESS" then
+                        if not sArena_ReloadedDB.collectedSpells then
+                            sArena_ReloadedDB.collectedSpells = {}
+                        end
+                        if not sArena_ReloadedDB.collectedSpells[spellID] then
+                            sArena_ReloadedDB.collectedSpells[spellID] = {spellName, sourceClass, "CAST"}
+                        end
+                    elseif combatEvent == "SPELL_AURA_APPLIED" then
+                        if not sArena_ReloadedDB.collectedAuras then
+                            sArena_ReloadedDB.collectedAuras = {}
+                        end
+                        if not sArena_ReloadedDB.collectedAuras[spellID] then
+                            sArena_ReloadedDB.collectedAuras[spellID] = {spellName, sourceClass, auraType}
                         end
                     end
                 end
+                -- TEMP DATACOLLECT
+
+                if (sArenaMixin.specCasts[spellID] or sArenaMixin.specBuffs[spellID]) then
+                    for i = 1, sArenaMixin.maxArenaOpponents do
+                        if (sourceGUID == UnitGUID("arena" .. i)) then
+                            local ArenaFrame = self["arena" .. i]
+                            if ArenaFrame:CheckForSpecSpell(spellID) then
+                                break
+                            end
+                        end
+                    end
+                end
+            end
+
+            -- Shadowsight
+            if spellID == shadowSightID and db.profile.shadowSightTimer and not IsSoloShuffle() then
+                self:OnShadowsightTaken()
             end
 
             -- Non-duration auras
@@ -1183,32 +1398,11 @@ function sArenaMixin:OnEvent(event, ...)
 
         -- Interrupts
         if sArenaMixin.interruptList[spellID] then
-            if combatEvent == "SPELL_INTERRUPT" then
+            if combatEvent == "SPELL_INTERRUPT" or combatEvent == "SPELL_CAST_SUCCESS" then
                 for i = 1, sArenaMixin.maxArenaOpponents do
                     if (destGUID == UnitGUID("arena" .. i)) then
                         local ArenaFrame = self["arena" .. i]
-                        ArenaFrame:FindInterrupt(combatEvent, spellID)
-                        local castBar = ArenaFrame.CastBar
-
-                        if sourceName then
-                            local name, server = strsplit("-", sourceName)
-                            local colorStr = "ffFFFFFF"
-
-                            if C_PlayerInfo.GUIDIsPlayer(sourceGUID) then
-                                local _, englishClass = GetPlayerInfoByGUID(sourceGUID)
-                                if englishClass then
-                                    colorStr = RAID_CLASS_COLORS[englishClass].colorStr
-                                end
-                            end
-
-                            local interruptedByName = string.format("|c%s[%s]|r", colorStr, name)
-                            castBar.interruptedBy = interruptedByName
-                            castBar.Text:SetText(interruptedByName)
-                            castBar:Show()
-                            C_Timer.After(1, function()
-                                castBar.interruptedBy = nil
-                            end)
-                        end
+                        ArenaFrame:FindInterrupt(combatEvent, spellID, sourceName, sourceGUID)
                         break
                     end
                 end
@@ -1248,20 +1442,22 @@ function sArenaMixin:OnEvent(event, ...)
         self:UpdatePlayerSpec()
         self:SetupGrayTrinket()
         self:AddMasqueSupport()
-        self:SetupCustomCD()
+        --self:SetupCustomCD()
         if sArena_ReloadedDB.reOpenOptions then
             sArena_ReloadedDB.reOpenOptions = nil
             C_Timer.After(0.5, function()
                 LibStub("AceConfigDialog-3.0"):Open("sArena")
             end)
         end
+
+
         self:UnregisterEvent("PLAYER_LOGIN")
     elseif (event == "PLAYER_ENTERING_WORLD") then
         local _, instanceType = IsInInstance()
         UpdateBlizzVisibility(instanceType)
         self:SetMouseState(instanceType ~= "arena")
 
-        if isTBC then
+        if isOldArena then
             sArenaMixin.seenArenaUnits = {}
             if instanceType == "arena" then
                 sArenaMixin.justEnteredArena = true
@@ -1276,6 +1472,11 @@ function sArenaMixin:OnEvent(event, ...)
         if isMidnight and not self.midnightDRFrames then
             self.midnightDRFrames = true
             self:InitializeDRFrames()
+        end
+
+        if not self.customCDText then
+            self.customCDText = true
+            self:SetupCustomCD()
         end
 
         if (instanceType == "arena") then
@@ -1320,6 +1521,7 @@ function sArenaMixin:OnEvent(event, ...)
                 self:UnregisterEvent("CHAT_MSG_BG_SYSTEM_NEUTRAL")
             end
             self:UnregisterWidgetEvents()
+            self:ResetShadowsightTimer()
         end
     elseif event == "CHAT_MSG_BG_SYSTEM_NEUTRAL" then
         local msg = ...
@@ -1327,6 +1529,9 @@ function sArenaMixin:OnEvent(event, ...)
             C_Timer.After(0.5, function()
                 self:HandleArenaStart()
             end)
+            if db.profile.shadowSightTimer and not IsSoloShuffle() then
+                self:StartShadowsightTimer(shadowsightStartTime)
+            end
         end
     elseif event == "PLAYER_SPECIALIZATION_CHANGED" then
         self:UpdatePlayerSpec()
@@ -1352,7 +1557,7 @@ local function ChatCommand(input)
     end
 end
 
-function sArenaMixin:UpdateCleanups(db)
+function sArenaMixin:DatabaseCleanup(db)
     if not db then return end
     -- Migrate old swapHumanTrinket setting to new swapRacialTrinket
     if db.profile.swapHumanTrinket ~= nil and db.profile.swapRacialTrinket == nil then
@@ -1416,6 +1621,37 @@ function sArenaMixin:UpdateCleanups(db)
             pixelatedDR.thickPixelBorder = true
         end
     end
+
+    -- Fix incorrect Stun DR icon on TBC (was 132298, should be 132092)
+    if isTBC and not db.tbcStunIconFix then
+        local oldIcon = 132298 -- Kidney Shot icon (incorrect)
+        local newIcon = 132092 -- Correct Stun icon
+
+        -- Fix global DR categories
+        if db.profile.drCategories and db.profile.drCategories["Stun"] == oldIcon then
+            db.profile.drCategories["Stun"] = newIcon
+        end
+
+        -- Fix per-spec DR categories
+        if db.profile.drCategoriesSpec then
+            for specID, categories in pairs(db.profile.drCategoriesSpec) do
+                if categories["Stun"] == oldIcon then
+                    categories["Stun"] = newIcon
+                end
+            end
+        end
+
+        -- Fix per-class DR categories
+        if db.profile.drCategoriesClass then
+            for class, categories in pairs(db.profile.drCategoriesClass) do
+                if categories["Stun"] == oldIcon then
+                    categories["Stun"] = newIcon
+                end
+            end
+        end
+
+        db.tbcStunIconFix = true
+    end
 end
 
 function sArenaMixin:UpdatePlayerSpec()
@@ -1461,8 +1697,9 @@ function sArenaMixin:Initialize()
     LibStub("AceConfig-3.0"):RegisterOptionsTable("sArena", self.optionsTable)
     LibStub("AceConfigDialog-3.0"):SetDefaultSize("sArena", compatIssue and 520 or 860, compatIssue and 300 or 690)
     LibStub("AceConsole-3.0"):RegisterChatCommand("sarena", ChatCommand)
+    LibStub("AceConsole-3.0"):RegisterChatCommand("sarenasend", TEMPShareCollectedData)
     if not compatIssue then
-        self:UpdateCleanups(db)
+        self:DatabaseCleanup(db)
         if not isMidnight then
             self:UpdateDRTimeSetting()
         end
@@ -1481,6 +1718,142 @@ function sArenaMixin:RefreshConfig()
     self:SetLayout(_, db.profile.currentLayout)
 end
 
+function sArenaMixin:ResetShadowsightTimer()
+    if self.shadowsightTicker then
+        self.shadowsightTicker:Cancel()
+        self.shadowsightTicker = nil
+    end
+    if self.ShadowsightTimer then
+        if self.ShadowsightTimer.Text then
+            self.ShadowsightTimer.Text:SetText("")
+        end
+        self.ShadowsightTimer:Hide()
+    end
+    self.shadowsightTimers = {0, 0}
+    self.shadowsightAvailable = 2
+end
+
+function sArenaMixin:StartShadowsightTimer(time)
+    if self.shadowsightTicker then
+        self.shadowsightTicker:Cancel()
+        self.shadowsightTicker = nil
+    end
+
+    self.ShadowsightTimer:ClearAllPoints()
+    if UIWidgetTopCenterContainerFrame then
+        self.ShadowsightTimer:SetParent(UIWidgetTopCenterContainerFrame)
+        self.ShadowsightTimer:SetPoint("TOP", UIWidgetTopCenterContainerFrame, "BOTTOM", 0, 5)
+    else
+        self.ShadowsightTimer:SetPoint("TOP", UIParent, "TOP", 0, -100)
+    end
+
+    self.ShadowsightTimer:Show()
+
+    local currentTime = GetTime()
+    if isMidnight then
+        -- On Midnight, just track spawn time and when to hide (35s after spawn)
+        self.shadowsightTimers[1] = currentTime + time -- Time when eyes spawn
+        self.shadowsightTimers[2] = currentTime + time + 35 -- Time to hide (35s after spawn)
+        self.shadowsightAvailable = 0
+    else
+        self.shadowsightTimers[1] = currentTime + time
+        self.shadowsightTimers[2] = currentTime + time
+        self.shadowsightAvailable = 0
+    end
+
+    self.shadowsightTicker = C_Timer.NewTicker(0.1, function()
+        self:UpdateShadowsightDisplay()
+    end)
+end
+
+function sArenaMixin:OnShadowsightTaken()
+    local currentTime = GetTime()
+    local resetTime = currentTime + shadowsightResetTime
+
+    if self.shadowsightTimers[1] <= 1 and self.shadowsightTimers[2] <= 1 then
+        self.shadowsightTimers[1] = resetTime
+        self.shadowsightTimers[2] = 0
+
+        if not self.shadowsightTicker then
+            self.ShadowsightTimer:ClearAllPoints()
+            if UIWidgetTopCenterContainerFrame then
+                self.ShadowsightTimer:SetParent(UIWidgetTopCenterContainerFrame)
+                self.ShadowsightTimer:SetPoint("TOP", UIWidgetTopCenterContainerFrame, "BOTTOM", 0, -10)
+            else
+                self.ShadowsightTimer:SetPoint("TOP", UIParent, "TOP", 0, -100)
+            end
+            self.ShadowsightTimer:Show()
+
+            self.shadowsightTicker = C_Timer.NewTicker(0.1, function()
+                self:UpdateShadowsightDisplay()
+            end)
+        end
+    else
+        if self.shadowsightAvailable > 0 then
+            self.shadowsightAvailable = self.shadowsightAvailable - 1
+        end
+
+        if self.shadowsightTimers[1] <= currentTime then
+            self.shadowsightTimers[1] = resetTime
+        elseif self.shadowsightTimers[2] <= currentTime then
+            self.shadowsightTimers[2] = resetTime
+        end
+    end
+
+    self:UpdateShadowsightDisplay()
+end
+
+function sArenaMixin:UpdateShadowsightDisplay()
+    local currentTime = GetTime()
+
+    if isMidnight then
+        -- On Midnight: Show countdown until spawn, then hide after 45 seconds
+        local spawnTime = self.shadowsightTimers[1]
+        local hideTime = self.shadowsightTimers[2]
+
+        if currentTime >= hideTime then
+            -- Hide after 35 seconds from spawn
+            self:ResetShadowsightTimer()
+            return
+        elseif currentTime >= spawnTime then
+            local iconTexture = "|T136155:15:15|t"
+            self.ShadowsightTimer.Text:SetText("Shadowsights Ready " .. iconTexture .. " " .. iconTexture)
+        else
+            local timeLeft = math.ceil(spawnTime - currentTime)
+            self.ShadowsightTimer.Text:SetText(string.format("Shadowsight spawns in %d sec", timeLeft))
+        end
+        return
+    end
+
+    local availableCount = 0
+    local shortestTimer = math.huge
+
+    for i = 1, 2 do
+        if self.shadowsightTimers[i] <= currentTime then
+            availableCount = availableCount + 1
+        else
+            shortestTimer = math.min(shortestTimer, self.shadowsightTimers[i])
+        end
+    end
+
+    self.shadowsightAvailable = availableCount
+
+    local iconTexture = "|T136155:15:15|t"
+    local text = ""
+
+    if availableCount == 2 then
+        text = "Shadowsights Ready " .. iconTexture .. " " .. iconTexture
+    elseif availableCount == 1 then
+        text = "Shadowsight Ready " .. iconTexture
+    elseif shortestTimer < math.huge then
+        local timeLeft = math.ceil(shortestTimer - currentTime)
+        text = string.format("Shadowsight spawns in %d sec", timeLeft)
+    else
+        text = "Shadowsight"
+    end
+
+    self.ShadowsightTimer.Text:SetText(text)
+end
 
 function sArenaMixin:ApplyPrototypeFont(frame)
     local layout = db.profile.currentLayout
@@ -1562,10 +1935,19 @@ function sArenaMixin:UpdateDecimalThreshold()
     decimalThreshold = self.db.profile.decimalThreshold or 6
 end
 
-function sArenaMixin:CreateCustomCooldown(cooldown, showDecimals)
+function sArenaMixin:CreateCustomCooldown(cooldown, showDecimals, isDR)
     local text = cooldown.sArenaText or cooldown:CreateFontString(nil, "OVERLAY", "NumberFontNormal")
     if not cooldown.sArenaText then
         cooldown.sArenaText = text
+
+        if not cooldown.Text then
+            for _, region in next, { cooldown:GetRegions() } do
+                if region:GetObjectType() == "FontString" then
+                    cooldown.Text = region;
+                    cooldown.Text.fontFile = region:GetFont();
+                end
+            end
+        end
 
         local f, s, o = cooldown.Text:GetFont()
         text:SetFont(f, s, o)
@@ -1589,7 +1971,12 @@ function sArenaMixin:CreateCustomCooldown(cooldown, showDecimals)
     cooldown:SetHideCountdownNumbers(hideNumbers)
 
     if showDecimals and not isMidnight then
-        cooldown:SetScript("OnUpdate", function()
+        local lastUpdate = 0
+        cooldown:SetScript("OnUpdate", function(self, elapsed)
+            lastUpdate = lastUpdate + elapsed
+            if lastUpdate < 0.1 then return end
+            lastUpdate = 0
+
             local start, duration = cooldown:GetCooldownTimes()
             start, duration = start / 1000, duration / 1000
             local remaining = (start + duration) - GetTime()
@@ -1609,6 +1996,11 @@ function sArenaMixin:CreateCustomCooldown(cooldown, showDecimals)
                 text:SetText("")
             end
         end)
+    elseif isMidnight and isDR then
+        cooldown:SetScript("OnUpdate", function(self)
+            text:SetText(self.Text:GetText())
+        end)
+        cooldown.Text:SetAlpha(0)
     else
         cooldown:SetScript("OnUpdate", nil)
         text:SetText(nil)
@@ -1624,11 +2016,20 @@ function sArenaMixin:SetupCustomCD()
         -- Class icon cooldown
         self:CreateCustomCooldown(frame.ClassIcon.Cooldown, self.db.profile.showDecimalsClassIcon)
 
-        -- DR frames
-        for _, category in ipairs(self.drCategories) do
-            local drFrame = frame[category]
-            if drFrame and drFrame.Cooldown then
-                self:CreateCustomCooldown(drFrame.Cooldown, self.db.profile.showDecimalsDR)
+        if isMidnight then
+            if frame.drFrames then
+                for _, drFrame in ipairs(frame.drFrames) do
+                    if drFrame and drFrame.Cooldown then
+                        self:CreateCustomCooldown(drFrame.Cooldown, self.db.profile.showDecimalsDR, true)
+                    end
+                end
+            end
+        else
+            for _, category in ipairs(self.drCategories) do
+                local drFrame = frame[category]
+                if drFrame and drFrame.Cooldown then
+                    self:CreateCustomCooldown(drFrame.Cooldown, self.db.profile.showDecimalsDR, true)
+                end
             end
         end
     end
@@ -2104,7 +2505,7 @@ function sArenaMixin:SetMouseState(state)
             child:EnableMouse(state)
         end
 
-        if isTBC and not InCombatLockdown() then
+        if isOldArena and not InCombatLockdown() then
             local shouldEnableMouse
             if state then
                 -- Outside arena: always clickable
@@ -2182,7 +2583,7 @@ end
 function sArenaFrameMixin:CreateDRFrames()
     local id = self:GetID()
     for _, category in ipairs(sArenaMixin.drCategories) do
-        local name = "sArenaDRFrame" .. id .. category
+        local name = "sArenaEnemyFrameDR" .. id .. category
         local drFrame = CreateFrame("Frame", name, self, "sArenaDRFrameTemplate")
         self[category] = drFrame
     end
@@ -2202,7 +2603,7 @@ function sArenaFrameMixin:OnLoad()
     local unit = "arena" .. self:GetID()
     self.parent = self:GetParent()
 
-    if isTBC then
+    if isOldArena then
         self.ogSetShown = self.SetShown
         self.SetShown = function(self, show)
             local _, instanceType = IsInInstance()
@@ -2570,7 +2971,7 @@ function sArenaFrameMixin:OnEvent(event, eventUnit, arg1)
             self.drTray:SetAlpha(instanceType == "arena" and 1 or 0)
         end
 
-        if isTBC and instanceType == "arena" and self.ogShow then
+        if isOldArena and instanceType == "arena" and self.ogShow then
             self.ogShow(self)
             self:SetAlpha(0)
         end
@@ -2596,7 +2997,7 @@ function sArenaFrameMixin:OnEvent(event, eventUnit, arg1)
         else
             self:UpdatePlayer()
         end
-        self:SetAlpha((isTBC and (UnitExists(self.unit) and 1 or stealthAlpha)) or 1)
+        --self:SetAlpha((isOldArena and (UnitExists(self.unit) and 1 or stealthAlpha)) or (UnitIsVisible(self.unit) and 1 or stealthAlpha))
         self.HealthBar:SetAlpha(1)
         if TestTitle then
             TestTitle:Hide()
@@ -2654,13 +3055,13 @@ end
 local function GetNumArenaOpponentsFallback()
     local count = 0
     for i = 1, sArenaMixin.maxArenaOpponents do
-        if UnitExists("arena" .. i) or (isTBC and sArenaMixin.seenArenaUnits[i]) then
+        if UnitExists("arena" .. i) or (isOldArena and sArenaMixin.seenArenaUnits[i]) then
             count = count + 1
         end
     end
 
     -- TBC: Use party size as fallback, but only after the match has started or we're not in the starting room
-    if isTBC and count < GetNumGroupMembers() then
+    if isOldArena and count < GetNumGroupMembers() then
         local inPreparation = C_UnitAuras.GetPlayerAuraBySpellID(32727)
         if not inPreparation and not sArenaMixin.justEnteredArena and sArenaMixin.arenaMatchStarted then
             count = GetNumGroupMembers() or count
@@ -2686,7 +3087,7 @@ function sArenaFrameMixin:UpdateVisible()
     local numSpecs = GetNumArenaOpponentSpecs()
     local numOpponents = (numSpecs == 0) and GetNumArenaOpponentsFallback() or numSpecs
 
-    if numOpponents >= id or (isTBC and sArenaMixin.seenArenaUnits[id]) then
+    if numOpponents >= id or (isOldArena and sArenaMixin.seenArenaUnits[id]) then
         self:Show()
     else
         self:Hide()
@@ -2871,7 +3272,7 @@ end
 function sArenaFrameMixin:UpdatePlayer(unitEvent)
     local unit = self.unit
 
-    if isTBC and UnitExists(unit) then
+    if isOldArena and UnitExists(unit) then
         sArenaMixin.seenArenaUnits[self:GetID()] = true
     end
 
@@ -2937,15 +3338,15 @@ function sArenaFrameMixin:UpdatePlayer(unitEvent)
         self.HealthBar:SetStatusBarColor(0, 1.0, 0, 1.0)
     end
 
-    if isTBC and not UnitExists(unit) then
+    if isOldArena and not UnitExists(unit) then
         self:SetAlpha(stealthAlpha)
     else
         self:SetAlpha(1)
     end
 
-    -- Workaround to show frames in TBC in combat.
-    -- Does not actualy call Show() but SetAlpha() on TBC.
-    if isTBC then
+    -- Workaround to show frames in older arenas in combat.
+    -- Does not actually call Show(), but SetAlpha() on older arenas.
+    if isOldArena then
         self:Show()
     end
 end
@@ -3025,7 +3426,7 @@ function sArenaFrameMixin:GetClass()
     elseif (not self.class) then
         local id = self:GetID()
 
-        if not isTBC then
+        if not isOldArena then
             if (GetNumArenaOpponentSpecs() >= id) then
                 local specID = GetArenaOpponentSpec(id) or 0
                 if (specID > 0) then
@@ -3046,7 +3447,7 @@ function sArenaFrameMixin:GetClass()
             end
         end
 
-        if (not self.class and (isTBC or UnitExists(self.unit))) then
+        if (not self.class and (isOldArena or UnitExists(self.unit))) then
             self.classLocal, self.class = UnitClass(self.unit)
         end
     end
@@ -3164,6 +3565,8 @@ function sArenaFrameMixin:ResetLayout()
         self.CastBar.BorderShield:SetTexture(330124)
     end
 
+    self.ClassIcon:SetFrameStrata("MEDIUM")
+    self.ClassIcon:SetFrameLevel(7)
     self.ClassIcon.Cooldown:SetUseCircularEdge(false)
     self.ClassIcon.Cooldown:SetSwipeTexture(1)
     self.AuraStacks:SetPoint("BOTTOMLEFT", self.ClassIcon.Texture, "BOTTOMLEFT", 2, 0)
@@ -3364,11 +3767,17 @@ function sArenaFrameMixin:SetStatusText(unit)
             self.HealthText:SetFormattedText("%0.f%%", UnitHealthPercent(unit, nil, CurveConstants.ScaleTo100))
             self.PowerText:SetFormattedText("%0.f%%", UnitPowerPercent(unit, nil, CurveConstants.ScaleTo100))
         else
-            local hpPercent = (hpMax > 0) and ceil((hp / hpMax) * 100) or 0
-            local ppPercent = (ppMax > 0) and ceil((pp / ppMax) * 100) or 0
+            -- UnitHealth returns percent on TBC
+            if isTBC then
+                self.HealthText:SetText(hp .. "%")
+                self.PowerText:SetText(pp .. "%")
+            else
+                local hpPercent = (hpMax > 0) and ceil((hp / hpMax) * 100) or 0
+                local ppPercent = (ppMax > 0) and ceil((pp / ppMax) * 100) or 0
 
-            self.HealthText:SetText(hpPercent .. "%")
-            self.PowerText:SetText(ppPercent .. "%")
+                self.HealthText:SetText(hpPercent .. "%")
+                self.PowerText:SetText(ppPercent .. "%")
+            end
         end
     else
         if db.profile.statusText.formatNumbers then
@@ -3395,17 +3804,17 @@ end
 local specTemplates = {
     BM_HUNTER = {
         class = "HUNTER",
-        specIcon = isTBC and 132164 or 461112,
+        specIcon = isOldArena and 132164 or 461112,
         castName = "Cobra Shot",
-        castIcon = isTBC and 132211 or 461114,
-        racial = 132089,
+        castIcon = isOldArena and 132211 or 461114,
+        racial = 135726,
         race = "Orc",
         specName = "Beast Mastery",
         unint = true,
     },
     MM_HUNTER = {
         class = "HUNTER",
-        specIcon = isTBC and 132222 or 461113,
+        specIcon = isOldArena and 132222 or 461113,
         castName = "Aimed Shot",
         castIcon = 132222,
         racial = 136225,
@@ -3415,7 +3824,7 @@ local specTemplates = {
     },
     SURV_HUNTER = {
         class = "HUNTER",
-        specIcon = isTBC and 132215 or 461113,
+        specIcon = isOldArena and 132215 or 461113,
         castName = "Mending Bandage",
         castIcon = isRetail and 1014022 or 133690,
         racial = 136225,
@@ -3428,16 +3837,16 @@ local specTemplates = {
         specIcon = 136048,
         castName = "Lightning Bolt",
         castIcon = 136048,
-        racial = 135923,
+        racial = 135726,
         race = "Orc",
         specName = "Elemental",
     },
     ENH_SHAMAN = {
         class = "SHAMAN",
-        specIcon = isTBC and 136051 or 237581,
+        specIcon = isOldArena and 136051 or 237581,
         castName = "Stormstrike",
         castIcon = 132314,
-        racial = 135923,
+        racial = 135726,
         race = "Orc",
         specName = "Enhancement",
     },
@@ -3447,7 +3856,7 @@ local specTemplates = {
         castName = "Healing Wave",
         castIcon = 136052,
         racial = 135726,
-        race = "Troll",
+        race = "Orc",
         specName = "Restoration",
     },
     RESTO_DRUID = {
@@ -3464,8 +3873,8 @@ local specTemplates = {
         specIcon = 136145,
         castName = "Fear",
         castIcon = 136183,
-        racial = 135726,
-        race = "Scourge",
+        racial = 132089,
+        race = "NightElf",
         specName = "Affliction",
     },
     DESTRO_WARLOCK = {
@@ -3473,8 +3882,8 @@ local specTemplates = {
         specIcon = 136145,
         castName = "Chaos Bolt",
         castIcon = 136186,
-        racial = 135726,
-        race = "Scourge",
+        racial = 132089,
+        race = "NightElf",
         specName = "Destruction",
     },
     ARMS_WARRIOR = {
@@ -3482,7 +3891,7 @@ local specTemplates = {
         specIcon = 132355,
         castName = "Slam",
         castIcon = 132340,
-        racial = 132309,
+        racial = 136129,
         race = "Human",
         specName = "Arms",
         unint = true,
@@ -3492,7 +3901,7 @@ local specTemplates = {
         specIcon = 135940,
         castName = "Penance",
         castIcon = 237545,
-        racial = 136187,
+        racial = 136129,
         race = "Human",
         specName = "Discipline",
         channel = true,
@@ -3502,7 +3911,7 @@ local specTemplates = {
         specIcon = 237542,
         castName = "Holy Fire",
         castIcon = 135972,
-        racial = 136187,
+        racial = 136129,
         race = "Human",
         specName = "Holy",
     },
@@ -3510,7 +3919,7 @@ local specTemplates = {
         class = "DRUID",
         specIcon = 132115,
         castName = "Cyclone",
-        castIcon = isTBC and 136022 or 132469,
+        castIcon = isOldArena and 136022 or 132469,
         racial = 132089,
         race = "NightElf",
         specName = "Feral",
@@ -3538,8 +3947,8 @@ local specTemplates = {
         specIcon = 135810,
         castName = "Pyroblast",
         castIcon = 135808,
-        racial = 135991,
-        race = "Gnome",
+        racial = 132089,
+        race = "NightElf",
         specName = "Fire",
     },
     RET_PALADIN = {
@@ -3555,7 +3964,7 @@ local specTemplates = {
         class = "DEATHKNIGHT",
         specIcon = isTBC and 136212 or 135775,
         racial = 135726,
-        race = "Scourge",
+        race = "Orc",
         specName = "Unholy",
         castName = "Army of the Dead",
         castIcon = isTBC and 136212 or 237511,
@@ -3566,7 +3975,7 @@ local specTemplates = {
         specIcon = 132320,
         castName = "Crippling Poison",
         castIcon = 132273,
-        racial = 132089,
+        racial = 135726,
         race = "Orc",
         specName = "Subtlety",
         unint = true,
@@ -3884,7 +4293,11 @@ function sArenaMixin:Test()
             elseif shouldForceHumanTrinket then
                 frame.Trinket.Texture:SetTexture(133452)
             else
-                frame.Trinket.Texture:SetTexture(sArenaMixin.trinketTexture)
+                if not isModernArena then
+                    frame.Trinket.Texture:SetTexture(GetFactionTrinketIconByRace(data.race))
+                else
+                    frame.Trinket.Texture:SetTexture(sArenaMixin.trinketTexture)
+                end
             end
             frame.Trinket.Texture:SetDesaturated(false)
         end
@@ -3986,10 +4399,10 @@ function sArenaMixin:Test()
                     local drTextOffsetY = textSettings.drTextOffsetY or -4
 
                     local drCategoryTextures = {
-                        [1] = 136071,     -- Incap (Poly)
+                        [1] = 135899,     -- Incap (Whirl 2)
                         [2] = 135860,     -- Stun (Whirl)
                         [3] = 136100,     -- Root (Entangling Roots)
-                        [4] = 237563,     -- Fear (Dispersion)
+                        [4] = 136011,     -- Fear (Pink dispersion swirl)
                     }
 
                     for drIndex = 1, 4 do
@@ -4011,6 +4424,9 @@ function sArenaMixin:Test()
                         fakeDRFrame.Cooldown:SetAllPoints(fakeDRFrame)
                         fakeDRFrame.Cooldown:SetDrawBling(false)
                         fakeDRFrame.Cooldown:SetHideCountdownNumbers(false)
+                        fakeDRFrame.Cooldown:SetSwipeColor(0, 0, 0, 0.55)
+                        fakeDRFrame.Cooldown.Text = fakeDRFrame.Cooldown:GetCountdownFontString()
+                        fakeDRFrame.Cooldown.Text.fontFile = fakeDRFrame.Cooldown.Text:GetFont()
 
                         -- Create Border texture (identical to real DR frames)
                         fakeDRFrame.Border = fakeDRFrame:CreateTexture(nil, "OVERLAY", nil, 6)
@@ -4039,7 +4455,7 @@ function sArenaMixin:Test()
 
                         fakeDRFrame.DRText = fakeDRFrame.DRTextFrame:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
                         fakeDRFrame.DRText:SetPoint(drTextAnchor, drTextOffsetX, drTextOffsetY)
-                        fakeDRFrame.DRText:SetFont("Interface\\AddOns\\sArena_MoP\\Textures\\arialn.ttf", 14, "OUTLINE")
+                        fakeDRFrame.DRText:SetFont("Interface\\AddOns\\sArena_Reloaded\\Textures\\arialn.ttf", 14, "OUTLINE")
                         fakeDRFrame.DRText:SetScale(drTextSize)
                         if drIndex == 1 then
                             fakeDRFrame.DRText:SetTextColor(1, 0, 0)
@@ -4047,6 +4463,18 @@ function sArenaMixin:Test()
                         else
                             fakeDRFrame.DRText:SetTextColor(0, 1, 0)
                             fakeDRFrame.DRText:SetText("½")
+                        end
+
+                        if not C_AddOns.IsAddOnLoaded("OmniCC") then
+                            fakeDRFrame.Cooldown:SetHideCountdownNumbers(false)
+                            self:CreateCustomCooldown(fakeDRFrame.Cooldown, self.db.profile.showDecimalsDR, true)
+                        end
+                        if self.db.profile.colorDRCooldownText and fakeDRFrame.Cooldown.sArenaText then
+                            if drIndex == 1 then
+                                fakeDRFrame.Cooldown.sArenaText:SetTextColor(1, 0, 0, 1)
+                            else
+                                fakeDRFrame.Cooldown.sArenaText:SetTextColor(0, 1, 0, 1)
+                            end
                         end
 
                         if drIndex == 1 then
@@ -4061,11 +4489,9 @@ function sArenaMixin:Test()
                         fakeDRFrame.Cooldown:SetCooldown(currTime, math.random(12, 25))
                     end
 
-                    -- Apply DR settings to newly created fake frames
                     self:UpdateDRSettings(drSettings)
                 end
 
-                -- Show and update all FAKE DR frames (for every test call)
                 if frame.fakeDRFrames then
                     for n = 1, 4 do
                         local fakeDRFrame = frame.fakeDRFrames[n]
@@ -4138,6 +4564,10 @@ function sArenaMixin:Test()
                             drFrame.__MSQ_New_Normal:SetDesaturated(true)
                             drFrame.__MSQ_New_Normal:SetVertexColor(1, 0, 0, 1)
                         end
+
+                        if self.db.profile.colorDRCooldownText and drFrame.Cooldown.sArenaText then
+                            drFrame.Cooldown.sArenaText:SetTextColor(1, 0, 0, 1)
+                        end
                     else
                         local borderColor = blackDRBorder and { 0, 0, 0, 1 } or { 0, 1, 0, 1 }
                         local pixelBorderColor = blackDRBorder and { 0, 0, 0, 1 } or { 0, 1, 0, 1 }
@@ -4150,6 +4580,10 @@ function sArenaMixin:Test()
                         if drFrame.__MSQ_New_Normal then
                             drFrame.__MSQ_New_Normal:SetDesaturated(true)
                             drFrame.__MSQ_New_Normal:SetVertexColor(0, 1, 0, 1)
+                        end
+
+                        if self.db.profile.colorDRCooldownText and drFrame.Cooldown.sArenaText then
+                            drFrame.Cooldown.sArenaText:SetTextColor(0, 1, 0, 1)
                         end
                     end
                 end

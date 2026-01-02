@@ -1,6 +1,6 @@
 # Syndicator
 
-## [252](https://github.com/TheMouseNest/Syndicator/tree/252) (2025-12-08)
-[Full Changelog](https://github.com/TheMouseNest/Syndicator/compare/251...252) 
+## [254](https://github.com/TheMouseNest/Syndicator/tree/254) (2025-12-30)
+[Full Changelog](https://github.com/TheMouseNest/Syndicator/compare/253...254) 
 
-- [Fixes #583] Classic: Fix stat changing English translations in China's Titan  
+- Fix `/syn` not opening Syndicator settings on beta  

@@ -197,11 +197,16 @@ function layout:Initialize(frame)
     frame.ClassIcon.Cooldown:SetUseCircularEdge(true)
     frame.ClassIcon:SetSize(55, 55)
     frame.ClassIcon:Show()
+    frame.ClassIcon:SetFrameStrata("LOW")
+    frame.ClassIcon:SetFrameLevel(7)
     frame.ClassIcon.Texture:SetTexCoord(0.05, 0.95, 0.1, 0.9)
     frame.ClassIcon.Texture:AddMaskTexture(frame.ClassIcon.Mask)
     frame.ClassIcon.Mask:ClearAllPoints()
     frame.ClassIcon.Mask:SetPoint("CENTER", frame.ClassIcon, 0,1)
     frame.ClassIcon.Mask:SetSize(60, 57)
+
+    frame.PowerBar:SetFrameStrata("LOW")
+    frame.PowerBar:SetFrameLevel(5)
 
     -- trinket
     local trinket = frame.Trinket
@@ -222,7 +227,7 @@ function layout:Initialize(frame)
     if not trinket.BorderParent then
         trinket.BorderParent = CreateFrame("Frame", nil, trinket)
         trinket.BorderParent:SetFrameStrata("MEDIUM")
-        trinket.BorderParent:SetFrameLevel(6)
+        trinket.BorderParent:SetFrameLevel(8)
     end
     trinketBorder:SetParent(trinket.BorderParent)
     trinketBorder:SetAtlas("plunderstorm-actionbar-slot-border")
@@ -263,7 +268,7 @@ function layout:Initialize(frame)
     if not racial.BorderParent then
         racial.BorderParent = CreateFrame("Frame", nil, racial)
         racial.BorderParent:SetFrameStrata("MEDIUM")
-        racial.BorderParent:SetFrameLevel(6)
+        racial.BorderParent:SetFrameLevel(8)
     end
     racialBorder:SetParent(racial.BorderParent)
     racialBorder:SetAtlas("plunderstorm-actionbar-slot-border")
@@ -302,7 +307,7 @@ function layout:Initialize(frame)
     if not dispel.BorderParent then
         dispel.BorderParent = CreateFrame("Frame", nil, dispel)
         dispel.BorderParent:SetFrameStrata("MEDIUM")
-        dispel.BorderParent:SetFrameLevel(6)
+        dispel.BorderParent:SetFrameLevel(8)
     end
     dispelBorder:SetParent(dispel.BorderParent)
     dispelBorder:SetAtlas("plunderstorm-actionbar-slot-border")

@@ -3,7 +3,7 @@ local M = {
     Prof = false,
     CurrencyWatcher = false,
     POI = false,
-    Quest = true,
+    Quest = false,
     ModelStressTest = false;
     SetAlphaGradient = false,
 };
@@ -111,7 +111,7 @@ if IsEnabled("AuraWather") then  --Aura Watcher
         end
     end);
 
-    if false then
+    if true then
         EL:RegisterUnitEvent("UNIT_AURA", "player");
         EL:RegisterUnitEvent("UNIT_SPELLCAST_SUCCEEDED", "player");
         EL:RegisterEvent("PLAYER_ENTERING_WORLD");

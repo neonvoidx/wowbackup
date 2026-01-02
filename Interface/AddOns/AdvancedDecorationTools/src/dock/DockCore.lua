@@ -10,208 +10,22 @@ ADT.L = ADT.L or {}
 ADT.API = ADT.API or {}
 local API = ADT.API
 
--- Mixin
-function API.Mixin(object, ...)
-    for i = 1, select('#', ...) do
-        local mixin = select(i, ...)
-        for k, v in pairs(mixin) do
-            object[k] = v
-        end
-    end
-    return object
-end
-
--- 数学函数
-function API.Round(n)
-    return math.floor((n or 0) + 0.5)
-end
-
-function API.Clamp(value, min, max)
-    if value > max then return max
-    elseif value < min then return min
-    end
-    return value
-end
-
-function API.Saturate(x)
-    if x < 0 then return 0 elseif x > 1 then return 1 else return x end
-end
-
-function API.Lerp(a, b, t)
-    return (1 - t) * a + t * b
-end
-
--- 纹理锐化控制
-function API.DisableSharpening(obj)
-    if not obj then return end
-    if obj.SetSnapToPixelGrid then pcall(obj.SetSnapToPixelGrid, obj, false) end
-    if obj.SetTexelSnappingBias then pcall(obj.SetTexelSnappingBias, obj, 0) end
-end
-
--- 字符串处理
-function API.StringTrim(str)
-    if not str or str == "" then return nil end
-    return str:match("^%s*(.-)%s*$")
-end
-
--- 兼容函数：判断 ToC 版本
-function ADT.IsToCVersionEqualOrNewerThan(target)
-    local _, _, _, toc = GetBuildInfo()
-    toc = tonumber(toc or 0)
-    return toc >= (tonumber(target) or 0)
-end
+-- 通用 API/兼容函数已上移至 src/core/*. 本文件不再声明。
 
 -- 缓动函数（动画用）
-ADT.EasingFunctions = ADT.EasingFunctions or {}
-function ADT.EasingFunctions.outQuart(t, b, c, d)
-    t = t / d - 1
-    return -c * (t*t*t*t - 1) + b
-end
-function ADT.EasingFunctions.outQuint(t, b, c, d)
-    t = t / d - 1
-    return c * (t*t*t*t*t + 1) + b
-end
+-- Easing/弹簧已由 src/core/easing.lua 提供
 
 -- 物理弹簧（简易、稳定）：x'' = -k(x-target) - c x'
 -- 说明：
 --  - 采用半隐式欧拉积分，帧间 dt 夹紧到 [0, 1/30] 以避免卡顿时的不稳定。
 --  - stiffness(刚度) 与 damping(阻尼) 为可调参数，便于统一动效风格。
 --  - 返回更新后的 x、v；调用方可据此设置 UI 偏移。
-function API.SpringStep(x, v, target, stiffness, damping, dt)
-    stiffness = tonumber(stiffness) or 260
-    damping   = tonumber(damping)   or 28
-    dt = math.min(math.max(dt or 0, 0), 1/30)
-    local a = -stiffness * (x - target) - damping * v
-    v = v + a * dt
-    x = x + v * dt
-    return x, v
-end
-
--- 创建标准弹簧驱动器
--- 用法：
---   local s = API.CreateSpringDriver({x=initial, stiffness=280, damping=30}, function(x)
---       -- 根据 x 更新 UI 偏移
---   end)
---   s:SetTarget(0) / s:SetTarget(200)
---   s:AttachFrame(frame)  -- 自动注册/卸载 OnUpdate
-function API.CreateSpringDriver(opts, onUpdate)
-    local driver = {}
-    driver.x = (opts and opts.x) or 0
-    driver.v = 0
-    driver.target = (opts and opts.target) or driver.x
-    driver.stiffness = (opts and opts.stiffness) or 280
-    driver.damping = (opts and opts.damping) or 30
-    driver.onUpdate = onUpdate
-
-    function driver:SetTarget(t)
-        self.target = tonumber(t) or 0
-        self:_ensureTick()
-    end
-
-    function driver:_tick(_, elapsed)
-        local nx, nv = API.SpringStep(self.x, self.v, self.target, self.stiffness, self.damping, elapsed)
-        self.x, self.v = nx, nv
-        if self.onUpdate then pcall(self.onUpdate, self.x) end
-        -- 静止阈值：位置<0.5px 且速度很小即停表
-        if math.abs(self.x - self.target) < 0.5 and math.abs(self.v) < 2 then
-            self.x = self.target; self.v = 0
-            if self.onUpdate then pcall(self.onUpdate, self.x) end
-            self:_stopTick()
-        end
-    end
-
-    function driver:_ensureTick()
-        if self.frame and not self.ticking then
-            self.ticking = true
-            self.frame:SetScript("OnUpdate", function(_, e) driver:_tick(_, e) end)
-        end
-    end
-
-    function driver:_stopTick()
-        if self.frame and self.ticking then
-            self.ticking = false
-            self.frame:SetScript("OnUpdate", nil)
-        end
-    end
-
-    function driver:AttachFrame(frame)
-        self.frame = frame
-        if self.ticking then
-            self.frame:SetScript("OnUpdate", function(_, e) driver:_tick(_, e) end)
-        end
-    end
-
-    return driver
-end
+-- 弹簧驱动器已由 src/core/easing.lua 提供
 
 -- UI 声音
-ADT.UI = ADT.UI or {}
--- PlaySoundCue：统一 UI 声音触发接口
-function ADT.UI.PlaySoundCue(key)
-    local kit = SOUNDKIT and SOUNDKIT.IG_MAINMENU_OPTION_CHECKBOX_ON or 1204
-    if key == 'ui.checkbox.off' then
-        kit = SOUNDKIT and SOUNDKIT.IG_MAINMENU_OPTION_CHECKBOX_OFF or 1203
-    elseif key == 'ui.scroll.step' or key == 'ui.scroll.thumb' then
-        kit = SOUNDKIT and SOUNDKIT.IG_MINIMAP_OPEN or 891
-    elseif key == 'ui.tab.switch' then
-        kit = SOUNDKIT and SOUNDKIT.IG_MAINMENU_OPTION or 857
-    end
-    if PlaySound then pcall(PlaySound, kit) end
-end
+-- UI 声音已由 src/core/ui_sound.lua 提供
 
--- API.CreateObjectPool：重新实现为最简对象池（与参考插件无关的独立实现）
-function API.CreateObjectPool(createFunc, onAcquire, onRelease)
-    local pool = {}
-    local free, used = {}, {}
-
-    local function attachRelease(obj)
-        obj.Release = function(o)
-            for i, v in ipairs(used) do
-                if v == o then
-                    table.remove(used, i)
-                    if onRelease then onRelease(o) end
-                    o:Hide(); o:ClearAllPoints()
-                    free[#free+1] = o
-                    break
-                end
-            end
-        end
-    end
-
-    function pool:Acquire()
-        local obj = table.remove(free)
-        if not obj then obj = createFunc() end
-        used[#used+1] = obj
-        attachRelease(obj)
-        obj:Show()
-        if onAcquire then onAcquire(obj) end
-        return obj
-    end
-
-    function pool:ReleaseAll()
-        if #used == 0 then return end
-        for i = #used, 1, -1 do
-            local obj = used[i]
-            if onRelease then onRelease(obj) end
-            obj:Hide(); obj:ClearAllPoints()
-            free[#free+1] = obj
-            used[i] = nil
-        end
-    end
-
-    function pool:EnumerateActive()
-        return ipairs(used)
-    end
-
-    function pool:CallMethod(method, ...)
-        for _, obj in ipairs(used) do
-            local fn = obj and obj[method]
-            if fn then fn(obj, ...) end
-        end
-    end
-
-    return pool
-end
+-- 对象池已由 src/core/api_util.lua 提供
 
 -- 历史别名说明：不再暴露任何额外别名，统一直接使用 API.CreateObjectPool
 
@@ -229,6 +43,20 @@ local CommandDock = ADT.CommandDock or {}
 ADT.CommandDock = CommandDock
 
 local L = ADT.L
+
+-- 临时下线：Dock 左侧“最近放置”分类（不影响 RecentSlot）
+-- 目的：最小化改动地隐藏“最近放置”页面的导航入口，
+--       仅从 Dock 分类列表中移除 'History'，不改变功能实现与数据结构。
+-- 注意：
+--  - Page_Recent.lua 仍会注册页面键 'History'；若外部直接调用
+--    Main:ShowDecorListCategory('History')，页面模块将自行返回失败（找不到分类），
+--    不会产生报错；
+--  - Housing_RecentSlot.lua（最近放置槽）不依赖 Dock 分类，行为不受影响。
+local HIDE_DOCK_HISTORY_CATEGORY = true
+
+-- 临时下线：Dock 左侧"标签"分类
+-- 目的：标签系统尚在开发中，暂时隐藏入口。
+local HIDE_DOCK_TAGS_CATEGORY = true
 
 -- 内部：构建默认模块，并初始化映射
 local function buildModules()
@@ -338,18 +166,20 @@ local function buildModules()
         categoryKeys = { 'Housing' },
         uiOrder = 10,
     }
-    
+
     -- 语言选择下拉菜单模块
     local function buildLanguageOptions()
+        -- 使用“惰性文本函数”，确保在运行时语言切换后，
+        -- 下拉菜单读取到的显示文本始终来自当前 ADT.L（而非构建时的快照）。
         local opts = {
-            { value = nil, text = L["Language Auto"] },
+            { value = nil, text = function() return L["Language Auto"] end },
         }
         local list = ADT.SupportedLocales
         if type(list) ~= "table" then return opts end
         for _, localeKey in ipairs(list) do
             opts[#opts + 1] = {
                 value = localeKey,
-                text = L["LocaleName " .. localeKey],
+                text = function() return L["LocaleName " .. localeKey] end,
             }
         end
         return opts
@@ -365,13 +195,28 @@ local function buildModules()
         categoryKeys = { 'Housing' },
         uiOrder = 100,  -- 放在最后
     }
+    
+    -- 导出语言选项供 Page_General 使用 Bespoke 下拉行
+    ADT.LanguageOptions = buildLanguageOptions()
+
+    -- 界面风格选项（现代 / 传统）
+    local function buildInterfaceStyleOptions()
+        return {
+            { value = "modern", text = function() return L["Style Modern"] end },
+            { value = "classic", text = function() return L["Style Classic"] end },
+        }
+    end
+
+    -- 导出界面风格选项供 Page_General 使用
+    ADT.InterfaceStyleOptions = buildInterfaceStyleOptions()
 
     modules[1] = {
         key = 'Housing',
         categoryName = L['SC Housing'],
         categoryType = 'settings', -- 设置类分类
-        modules = { moduleEditorAutoOpen, moduleRepeat, moduleCopy, moduleCut, modulePaste, moduleBatchPlace, moduleResetT, moduleResetAll, moduleLock, moduleQERotate, moduleDyeCopy, moduleLanguage },
-        numModules = 12,
+        -- 注意：moduleLanguage 已移至 Page_General.lua 使用 Bespoke 样式渲染
+        modules = { moduleEditorAutoOpen, moduleRepeat, moduleCopy, moduleCut, modulePaste, moduleBatchPlace, moduleResetT, moduleResetAll, moduleLock, moduleQERotate, moduleDyeCopy },
+        numModules = 11,
     }
 
 
@@ -490,11 +335,29 @@ local function buildModules()
         numModules = 0,
     }
 
-    -- 快捷键分类（设置类）——自定义按键绑定
+    -- 专家模式设置分类（CVar 控制类）
     modules[6] = {
+        key = 'ExpertSettings',
+        categoryName = L['SC ExpertSettings'],
+        categoryType = 'settings', -- 设置类分类
+        modules = {},
+        numModules = 0,
+    }
+
+    -- 快捷键分类（设置类）——自定义按键绑定
+    modules[7] = {
         key = 'Keybinds',
         categoryName = L['SC Keybinds'],
         categoryType = 'keybinds', -- 快捷键专用分类类型
+        modules = {},
+        numModules = 0,
+    }
+
+    -- 标签管理分类（标签管理类）
+    modules[8] = {
+        key = 'Tags',
+        categoryName = L['SC Tags'],
+        categoryType = 'tagManager', -- 标签管理专用分类类型
         modules = {},
         numModules = 0,
     }
@@ -523,7 +386,7 @@ local function buildModules()
         categoryKeys = { 'Quickbar' },
         uiOrder = 1,
     }
-    modules[7] = {
+    modules[9] = {
         key = 'Quickbar',
         categoryName = L['SC Quickbar'],
         categoryType = 'settings',
@@ -532,7 +395,7 @@ local function buildModules()
     }
 
     -- 信息分类（关于插件的信息）
-    modules[8] = {
+    modules[10] = {
         key = 'About',
         categoryName = L['SC About'],
         categoryType = 'about', -- 关于信息类分类
@@ -568,6 +431,18 @@ local function buildModules()
         end,
     }
 
+    -- 若需临时隐藏“最近放置”分类，从列表中移除以保持数组连续
+    if HIDE_DOCK_HISTORY_CATEGORY then
+        table.remove(modules, 3)
+    end
+
+    -- 若需临时隐藏"标签"分类
+    -- 移除 History 后，Tags 索引从 8 变为 7
+    if HIDE_DOCK_TAGS_CATEGORY then
+        local tagsIndex = HIDE_DOCK_HISTORY_CATEGORY and 7 or 8
+        table.remove(modules, tagsIndex)
+    end
+
     -- 初始化映射（6 个设置模块）
     CommandDock._dbKeyMap = {
         [moduleRepeat.dbKey] = moduleRepeat,
@@ -594,8 +469,12 @@ local function getCategoryDisplayName(key)
         return L['SC AutoRotate']
     elseif key == 'Keybinds' then
         return L['SC Keybinds']
+    elseif key == 'ExpertSettings' then
+        return L['SC ExpertSettings']
     elseif key == 'Quickbar' then
         return L['SC Quickbar']
+    elseif key == 'Tags' then
+        return L['SC Tags']
     elseif key == 'About' then
         return L['SC About']
     end
@@ -637,6 +516,7 @@ end
 
 function CommandDock:GetSortedModules()
     ensureSorted(self)
+    -- 注意：GetSortedModules 仅返回数据，禁止在此触发路由或 UI 行为，避免渲染递归/堆栈溢出。
     return self._sorted
 end
 

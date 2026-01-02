@@ -8,7 +8,7 @@ ADT.L = ADT.L or {}
 ADT.API = ADT.API or {}
 local API = ADT.API
 
--- 帧率无关的线性缓动：将 a 按给定速率 amount 向 b 逼近（与参考手感保持一致）
+
 function API.DeltaLerp(a, b, amount, dt)
     local t = (amount or 0.15) * (dt or 0) * 60
     if t < 0 then t = 0 elseif t > 1 then t = 1 end
@@ -45,6 +45,8 @@ local DEFAULTS = {
     SettingsPanelSize = nil,
     -- 语言选择（nil=跟随客户端）
     SelectedLanguage = nil,
+    -- 解禁：允许在室外抓取/放置“仅限室内”的装饰（默认关闭，谨慎使用）
+    EnableIndoorOutdoorBypass = false,
     -- 自动旋转（批量放置增强）默认配置（顶层仅放“显式可见的用户选项”）
     -- 默认关闭：仅当用户主动开启时才生效
     EnableAutoRotateOnCtrlPlace = false,
@@ -65,6 +67,9 @@ local DEFAULTS = {
     -- 动作栏（Quickbar）开关与尺寸
     EnableQuickbar = true,           -- 默认启用
     QuickbarSize = "medium",         -- 可选：large / medium / small
+    -- 界面风格：modern（现代界面）= QuickBar + HoverInfoPanel + 右下角垂直 ModeBar
+    --          classic（传统界面）= 禁用上述功能，恢复暴雪默认 UI
+    InterfaceStyle = "modern",
 }
 
 -- 统一设置事件总线（单一权威）：任何对 ADT_DB 的写操作都通过此处发出事件
@@ -141,6 +146,12 @@ local function MigrateIfNeeded(db)
     -- 移除已废弃的独立弹窗位置字段
     db.HistoryPopupPos = nil
     db.ClipboardPopupPos = nil
+    -- 移除已废弃的装饰信息面板开关
+    db.EnableDecorationInfoPanel = nil
+    -- 迁移：已下线的分类不再作为持久化记录
+    if db.LastCategoryKey == "History" or db.LastCategoryKey == "Tags" then
+        db.LastCategoryKey = nil
+    end
 end
 
 local function GetDB()
@@ -221,14 +232,47 @@ function ADT.RestoreFrameSize(dbKey, frame)
     end
 end
 
--- 调试打印（仅在 DebugEnabled 时输出到聊天框）
+-- 调试打印（仅在 DebugEnabled 时输出到聊天框，同时输出到 DebugLog 插件）
 function ADT.IsDebugEnabled()
     return ADT.GetDBBool("DebugEnabled")
 end
 
 function ADT.DebugPrint(msg)
-    if ADT.IsDebugEnabled() then
-        print("ADT:", msg)
+    if not ADT.IsDebugEnabled() then return end
+    local text = "ADT: " .. tostring(msg or "")
+    print(text)
+    -- 同时输出到 DebugLog 插件（如已安装）
+    if DLAPI and DLAPI.DebugLog then DLAPI.DebugLog("ADT", text) end
+end
+
+-- 彩色调试打印（仅在 DebugEnabled 时输出到聊天框，同时输出到 DebugLog 插件）
+do
+    local function ConcatArgs(...)
+        local count = select("#", ...)
+        if count == 0 then return "" end
+        local parts = {}
+        for i = 1, count do
+            local v = select(i, ...)
+            parts[i] = tostring(v)
+        end
+        return table.concat(parts, " ")
+    end
+
+    -- tag: 标识前缀（如 "模式"）；colorHex: 8位/6位色值（如 "FF66CCFF"/"66CCFF"）
+    function ADT.DebugPrintColor(tag, colorHex, ...)
+        if not ADT.IsDebugEnabled() then return end
+        local hex = tostring(colorHex or "")
+        if hex == "" then hex = "FF00FF00" end
+        if #hex == 6 then hex = "FF" .. hex end
+        if #hex ~= 8 then hex = "FF00FF00" end
+
+        local label = tag and ("[ADT-" .. tostring(tag) .. "]") or "[ADT]"
+        local msg = ConcatArgs(...)
+        local text = label .. (msg ~= "" and (" " .. msg) or "")
+        -- 聊天框彩色输出
+        print("|c" .. hex .. label .. "|r " .. msg)
+        -- 同时输出到 DebugLog 插件（如已安装）
+        if DLAPI and DLAPI.DebugLog then DLAPI.DebugLog("ADT", text) end
     end
 end
 
@@ -415,6 +459,8 @@ f:SetScript("OnEvent", function(self, event, addonName)
                         Main:ShowSettingsCategory((catType == 'settings') and key or 'Housing')
                     end
 
+                    -- 宽度实时刷新（按语言固定值）：先立即应用中心固定宽度，再触发侧栏宽度动画
+                    if Main.UpdateAutoWidth then Main:UpdateAutoWidth() end
                     if Main.RefreshLanguageLayout then Main:RefreshLanguageLayout(true) end
                 end
 
@@ -439,3 +485,9 @@ f:SetScript("OnEvent", function(self, event, addonName)
         self:UnregisterEvent("ADDON_LOADED")
     end
 end)
+-- 通用：判断 ToC 版本（提供给各模块的早期守卫）
+function ADT.IsToCVersionEqualOrNewerThan(target)
+    local _, _, _, toc = GetBuildInfo()
+    toc = tonumber(toc or 0)
+    return toc >= (tonumber(target) or 0)
+end

@@ -176,6 +176,8 @@ function layout:Initialize(frame)
 
     frame.ClassIcon.Cooldown:SetSwipeTexture("Interface\\CharacterFrame\\TempPortraitAlphaMask")
     frame.ClassIcon.Cooldown:SetUseCircularEdge(true)
+    frame.ClassIcon:SetFrameStrata("LOW")
+    frame.ClassIcon:SetFrameLevel(7)
 
     frame:SetSize(126, 66)
     frame.SpecIcon:SetSize(14, 14)

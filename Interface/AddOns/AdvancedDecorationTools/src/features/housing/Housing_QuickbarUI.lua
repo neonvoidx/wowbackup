@@ -23,35 +23,100 @@ ADT.QuickbarUI = UI
 
 local barFrame = nil
 local slotFrames = {}
-local hudAnchorPatched = false
+local function IsFrameStable(frame)
+    if not (frame and frame.IsShown and frame:IsShown()) then return false end
+    local st = frame.__ADT_TransitionState
+    if st and st.state and st.state ~= "shown" then return false end
+    if ADT and ADT.HousingTransition and ADT.HousingTransition.IsLocked and ADT.HousingTransition:IsLocked(frame) then
+        return false
+    end
+    return true
+end
 
 local function D(msg)
     if ADT and ADT.DebugPrint then ADT.DebugPrint(msg) end
 end
 
--- 将暴雪编辑器底部 HUD（ModesBar）与 Quickbar 顶部相切对齐
-local function AlignEditorHUDToQuickbar()
-    if not (HouseEditorFrame and HouseEditorFrame.ModeBar and barFrame and barFrame:IsShown()) then return end
-    -- QuickBar 进入编辑器后 parent 也被切到 HouseEditorFrame，保持同一坐标系
-    -- 只移动位置，不改外观/缩放
+-- ModeBar 位置改动已移至 Housing_ModeBarRelocate.lua（单一权威）
+
+local function GetAnchorCfg()
     local cfg = ADT and ADT.HousingInstrCFG and ADT.HousingInstrCFG.QuickbarUI or nil
-    local gap = (cfg and cfg.modeBarGap) or 0
-    local hud = HouseEditorFrame.ModeBar
-    hud:ClearAllPoints()
-    hud:SetPoint("BOTTOM", barFrame, "TOP", 0, gap)
-    hudAnchorPatched = true
-    D("[QuickbarUI] Aligned ModeBar to Quickbar top")
+    return cfg and cfg.anchor or nil
 end
 
--- 恢复暴雪 HUD 默认锚点（贴底）
-local function RestoreEditorHUDAnchor()
-    if not (HouseEditorFrame and HouseEditorFrame.ModeBar) then return end
-    if not hudAnchorPatched then return end
-    local hud = HouseEditorFrame.ModeBar
-    hud:ClearAllPoints()
-    hud:SetPoint("BOTTOM", 0, 0)
-    hudAnchorPatched = false
-    D("[QuickbarUI] Restored ModeBar default anchor")
+function UI:ApplyAnchor()
+    if not barFrame then return end
+    local anchor = GetAnchorCfg()
+    local point    = (anchor and anchor.point) or "BOTTOM"
+    local relPoint = (anchor and anchor.relPoint) or "BOTTOM"
+    local x        = (anchor and anchor.x) or 0
+    local y        = (anchor and anchor.bottomMargin) or 0
+    barFrame:ClearAllPoints()
+    barFrame:SetPoint(point, UIParent, relPoint, x, y)
+end
+
+-- QuickbarUI 动画稳定后回调（供依赖 Quickbar 锚点的 UI 使用）
+function UI:IsStable()
+    return IsFrameStable(barFrame)
+end
+
+function UI:ClearStableCallbacks()
+    self._stableCallbacks = nil
+    if self._stableWatcher then
+        self._stableWatcher:SetScript("OnUpdate", nil)
+        self._stableWatcher = nil
+    end
+end
+
+function UI:_EnsureStableWatcher()
+    if self._stableWatcher then return end
+    local f = CreateFrame("Frame")
+    self._stableWatcher = f
+    local acc = 0
+    f:SetScript("OnUpdate", function(_, dt)
+        acc = acc + (dt or 0)
+        if acc < 0.05 then return end
+        acc = 0
+        if UI:IsStable() then
+            local list = UI._stableCallbacks
+            UI._stableCallbacks = nil
+            f:SetScript("OnUpdate", nil)
+            UI._stableWatcher = nil
+            if list then
+                for _, fn in ipairs(list) do
+                    pcall(fn, barFrame)
+                end
+            end
+        elseif not UI._stableCallbacks or #UI._stableCallbacks == 0 then
+            f:SetScript("OnUpdate", nil)
+            UI._stableWatcher = nil
+        end
+    end)
+end
+
+function UI:WhenStable(cb)
+    if type(cb) ~= "function" then return end
+    if self:IsStable() then
+        cb(barFrame)
+        return
+    end
+    self._stableCallbacks = self._stableCallbacks or {}
+    table.insert(self._stableCallbacks, cb)
+    self:_EnsureStableWatcher()
+end
+
+function UI:SetEditorParent()
+    if not (barFrame and HouseEditorFrame) then return end
+    barFrame:SetParent(HouseEditorFrame)
+    barFrame:SetFrameStrata("FULLSCREEN_DIALOG")
+    barFrame:SetFrameLevel(100)
+end
+
+function UI:SetNormalParent()
+    if not barFrame then return end
+    barFrame:SetParent(UIParent)
+    barFrame:SetFrameStrata("FULLSCREEN_DIALOG")
+    barFrame:SetFrameLevel(100)
 end
 
 -- 创建 UI（初始挂到 UIParent，稍后动态切换 parent）
@@ -66,13 +131,7 @@ function UI:Create()
     barFrame = CreateFrame("Frame", "ADTQuickbarFrame", UIParent, "BackdropTemplate")
     barFrame:SetSize(totalWidth, totalHeight)
     -- 锚点与偏移改为“配置驱动”（Housing_Config.QuickbarUI）
-    local cfg = ADT and ADT.HousingInstrCFG and ADT.HousingInstrCFG.QuickbarUI or nil
-    local anchor = cfg and cfg.anchor or nil
-    local point    = (anchor and anchor.point) or "BOTTOM"
-    local relPoint = (anchor and anchor.relPoint) or "BOTTOM"
-    local x        = (anchor and anchor.x) or 0
-    local y        = (anchor and anchor.bottomMargin) or 0
-    barFrame:SetPoint(point, UIParent, relPoint, x, y)
+    self:ApplyAnchor()
     barFrame:SetFrameStrata("FULLSCREEN_DIALOG")
     barFrame:SetFrameLevel(100)
     barFrame:SetClampedToScreen(true)
@@ -126,6 +185,14 @@ function UI:Create()
         ADT.Quickbar.uiFrame = barFrame
     end
     
+    -- 初始隐藏：避免未进入编辑器时闪烁
+    if ADT.HousingTransition and ADT.HousingTransition.PrepareHidden then
+        ADT.HousingTransition:PrepareHidden(barFrame)
+    else
+        barFrame:SetAlpha(0)
+        barFrame:Hide()
+    end
+    
     D("[QuickbarUI] Created successfully")
     return barFrame
 end
@@ -164,14 +231,9 @@ function UI:CreateSlot(parent, slotIndex)
     local INSETS = assert(QBCFG.SlotTextInsets, "QuickbarUI.SlotTextInsets 缺失")
     slot.keyText = slot:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     slot.keyText:SetPoint("TOPRIGHT", slot, "TOPRIGHT", -INSETS.keyRight, -INSETS.keyTop)
-    -- 键帽显示与 Keybinds 保持一致（单一权威）。若玩家在 UI 中换绑为其它键位，这里自动更新。
-    local keyText = SLOT_KEYS[slotIndex]
-    if ADT.Keybinds and ADT.Keybinds.GetKeybind and ADT.Keybinds.GetKeyDisplayName then
-        local key = ADT.Keybinds:GetKeybind('Quickbar'..tostring(slotIndex))
-        local disp = ADT.Keybinds:GetKeyDisplayName(key)
-        if disp and disp ~= '' then keyText = disp end
-    end
-    slot.keyText:SetText(keyText)
+    -- 键帽显示与 Keybinds 保持一致（单一权威）。若玩家改键，这里自动更新。
+    local keyText = (ADT.Keybinds and ADT.Keybinds.GetQuickbarKeyDisplay and ADT.Keybinds:GetQuickbarKeyDisplay(slotIndex)) or SLOT_KEYS[slotIndex]
+    slot.keyText:SetText((keyText ~= '' and keyText) or SLOT_KEYS[slotIndex])
     slot.keyText:SetTextColor(0.8, 0.8, 0.8, 0.9)
     
     -- 库存数量：右下角（内收像素改为配置驱动；初始隐藏）
@@ -192,7 +254,6 @@ function UI:CreateSlot(parent, slotIndex)
     slot:SetScript("OnClick", function(self, button)
         if button == "LeftButton" then
             -- 延迟执行，避免鼠标点击被游戏解读为"放置"命令
-            -- 参考 DreamHouse: C_Timer.After(0.1, ...) 后再调用 StartPlacingNewDecor
             C_Timer.After(0.1, function()
                 if ADT.Quickbar then ADT.Quickbar:OnQuickbarKeyPressed(self.slotIndex) end
             end)
@@ -212,8 +273,9 @@ function UI:CreateSlot(parent, slotIndex)
             local right = L["Right-click: Clear"]
             GameTooltip:AddLine(string.format("%s | %s", left, right), 0.7, 0.7, 0.7)
         else
-            -- 空槽位提示：采用占位符格式，保持多语言
-            GameTooltip:SetText(string.format(L["Empty slot %s"], SLOT_KEYS[self.slotIndex]))
+            -- 空槽位提示：占位符显示玩家当前绑定键
+            local disp = (ADT.Keybinds and ADT.Keybinds.GetQuickbarKeyDisplay and ADT.Keybinds:GetQuickbarKeyDisplay(self.slotIndex)) or SLOT_KEYS[self.slotIndex]
+            GameTooltip:SetText(string.format(L["Empty slot %s"], disp))
             GameTooltip:AddLine(L["Quickbar bind hint"], 0.6, 0.6, 0.6)
         end
         GameTooltip:Show()
@@ -229,10 +291,9 @@ function UI:Refresh()
         local slot = slotFrames[i]
         if slot then
             -- 刷新键帽文本：从 Keybinds 实时读取
-            if ADT.Keybinds and ADT.Keybinds.GetKeybind and ADT.Keybinds.GetKeyDisplayName then
-                local key = ADT.Keybinds:GetKeybind('Quickbar'..tostring(i))
-                local disp = ADT.Keybinds:GetKeyDisplayName(key) or SLOT_KEYS[i]
-                slot.keyText:SetText((disp ~= '' and disp) and disp or SLOT_KEYS[i])
+            if ADT.Keybinds and ADT.Keybinds.GetQuickbarKeyDisplay then
+                local disp = ADT.Keybinds:GetQuickbarKeyDisplay(i)
+                slot.keyText:SetText((disp and disp ~= '' and disp) or SLOT_KEYS[i])
             else
                 slot.keyText:SetText(SLOT_KEYS[i])
             end
@@ -291,6 +352,7 @@ end
 function UI:OnEditorEnter()
     -- 若开关关闭则不显示
     if ADT.GetDBValue and ADT.GetDBValue('EnableQuickbar') == false then
+        if barFrame then UI:Hide() end
         D("[QuickbarUI] Disabled by setting, skipping")
         return
     end
@@ -299,36 +361,46 @@ function UI:OnEditorEnter()
     if not barFrame then return end
     
     -- 关键：设置 parent 为 HouseEditorFrame
-    if HouseEditorFrame then
-        barFrame:SetParent(HouseEditorFrame)
-        barFrame:SetFrameStrata("FULLSCREEN_DIALOG")
-        barFrame:SetFrameLevel(100)
-        D("[QuickbarUI] Parent set to HouseEditorFrame")
+    self:SetEditorParent()
+    if HouseEditorFrame then D("[QuickbarUI] Parent set to HouseEditorFrame") end
+    
+    -- 进入编辑器时同样走配置锚点（过渡期间不抢锚点）
+    local locked = ADT.HousingTransition and ADT.HousingTransition.IsLocked and ADT.HousingTransition:IsLocked(barFrame)
+    if not locked then
+        self:ApplyAnchor()
     end
     
-    barFrame:ClearAllPoints()
-    -- 进入编辑器时同样走配置锚点
-    local cfg = ADT and ADT.HousingInstrCFG and ADT.HousingInstrCFG.QuickbarUI or nil
-    local anchor = cfg and cfg.anchor or nil
-    local point    = (anchor and anchor.point) or "BOTTOM"
-    local relPoint = (anchor and anchor.relPoint) or "BOTTOM"
-    local x        = (anchor and anchor.x) or 0
-    local y        = (anchor and anchor.bottomMargin) or 0
-    barFrame:SetPoint(point, UIParent, relPoint, x, y)
-    barFrame:Show()
-    barFrame:SetAlpha(1)
     self:Refresh()
     self:ApplyScale()
-    AlignEditorHUDToQuickbar()
+    if ADT.InterfaceStyle and ADT.InterfaceStyle:IsClassic() then
+        if ADT.ModeBarRelocate and ADT.ModeBarRelocate.ApplyClassicLayout then
+            ADT.ModeBarRelocate:ApplyClassicLayout(barFrame)
+        end
+    end
+
+    -- 进入动画统一由 Housing_Transition 管理
+    if ADT.HousingTransition and ADT.HousingTransition.PlayEnter then
+        ADT.HousingTransition:PlayEnter(barFrame, "QuickBar")
+    else
+        barFrame:Show()
+        barFrame:SetAlpha(1)
+    end
     D("[QuickbarUI] Shown in editor mode")
 end
 
 function UI:OnEditorExit()
     if not barFrame then return end
-    RestoreEditorHUDAnchor()
-    barFrame:SetParent(UIParent)
-    barFrame:SetFrameStrata("FULLSCREEN_DIALOG")
-    barFrame:Hide()
+    self:ClearStableCallbacks()
+    local function AfterHide()
+        self:SetNormalParent()
+        barFrame:SetAlpha(1)
+    end
+    if ADT.HousingTransition and ADT.HousingTransition.PlayExit then
+        ADT.HousingTransition:PlayExit(barFrame, "QuickBar", { onHidden = AfterHide })
+    else
+        AfterHide()
+        barFrame:Hide()
+    end
     D("[QuickbarUI] Hidden, parent reset to UIParent")
 end
 
@@ -340,7 +412,14 @@ function UI:Show()
 end
 
 function UI:Hide()
-    if barFrame then barFrame:Hide() end
+    if not barFrame then return end
+    self:ClearStableCallbacks()
+    if ADT.HousingTransition and ADT.HousingTransition.HideNow then
+        ADT.HousingTransition:HideNow(barFrame)
+    else
+        barFrame:Hide()
+        barFrame:SetAlpha(1)
+    end
 end
 
 -- 初始化
@@ -352,7 +431,7 @@ local function Initialize()
     if isActive then
         UI:OnEditorEnter()
     else
-        if barFrame then barFrame:Hide() end
+        UI:Hide()
     end
 end
 
@@ -422,6 +501,11 @@ if ADT and ADT.Settings and ADT.Settings.On then
     ADT.Settings.On('EnableQuickbar', function(enabled)
         if enabled == false then
             UI:OnEditorExit()
+            if ADT.InterfaceStyle and ADT.InterfaceStyle:IsClassic() then
+                if ADT.ModeBarRelocate and ADT.ModeBarRelocate.RestoreDefault then
+                    ADT.ModeBarRelocate:RestoreDefault()
+                end
+            end
         else
             local active = C_HouseEditor and C_HouseEditor.IsHouseEditorActive and C_HouseEditor.IsHouseEditorActive()
             if active then UI:OnEditorEnter() end
@@ -431,5 +515,10 @@ if ADT and ADT.Settings and ADT.Settings.On then
     -- 监听"动作栏尺寸"变化
     ADT.Settings.On('QuickbarSize', function()
         if UI and UI.ApplyScale then UI:ApplyScale() end
+        if ADT.InterfaceStyle and ADT.InterfaceStyle:IsClassic() then
+            if ADT.ModeBarRelocate and ADT.ModeBarRelocate.ApplyClassicLayout and barFrame then
+                ADT.ModeBarRelocate:ApplyClassicLayout(barFrame)
+            end
+        end
     end)
 end

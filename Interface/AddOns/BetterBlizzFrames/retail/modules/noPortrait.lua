@@ -180,16 +180,16 @@ local function BlackBorder(bar, width, height, startX, startY, tot)
         PixelUtil.SetPoint(right, "BOTTOMLEFT", posFrame, "BOTTOMRIGHT", 0, -1)
     end
 
-    if not bar.BBFBackground then
-        bar.BBFBackground = bar:CreateTexture(nil, "BACKGROUND")
-        bar.BBFBackground:SetColorTexture(0, 0, 0, 0.45)
+    if not bar.pixelBorderBackground then
+        bar.pixelBorderBackground = bar:CreateTexture(nil, "BACKGROUND")
+        bar.pixelBorderBackground:SetColorTexture(0, 0, 0, 0.45)
     end
 
-    bar.BBFBackground:ClearAllPoints()
+    bar.pixelBorderBackground:ClearAllPoints()
     local scale = bar:GetEffectiveScale() or 1
     local inset = (scale < 1) and (1 / scale) * 0.5 or 0
-    bar.BBFBackground:SetPoint("TOPLEFT", top, "TOPLEFT", inset, -inset)
-    bar.BBFBackground:SetPoint("BOTTOMRIGHT", bottom, "BOTTOMRIGHT", -inset, inset)
+    bar.pixelBorderBackground:SetPoint("TOPLEFT", top, "TOPLEFT", inset, -inset)
+    bar.pixelBorderBackground:SetPoint("BOTTOMRIGHT", bottom, "BOTTOMRIGHT", -inset, inset)
 
     borderFrame:Show()
     for _, tex in ipairs(borders) do
@@ -207,8 +207,8 @@ local function SetBarMask(bar, maskTexture, pixelBorderMode, tot)
 
         if bar.BBFPositionFrame then
             local posFrame = bar.BBFPositionFrame
-            maskTexture:SetPoint("TOPLEFT", bar.BBFBackground, "TOPLEFT", ((tot and 1) or -0.5), -0.5)
-            maskTexture:SetPoint("BOTTOMRIGHT", bar.BBFBackground, "BOTTOMRIGHT", -0.75, 0)
+            maskTexture:SetPoint("TOPLEFT", bar.pixelBorderBackground, "TOPLEFT", ((tot and 1) or -0.5), -0.5)
+            maskTexture:SetPoint("BOTTOMRIGHT", bar.pixelBorderBackground, "BOTTOMRIGHT", -0.75, tot and 0.5 or 0)
             if class == "EVOKER" and not maskTexture.bbfTexHook then
                 hooksecurefunc(maskTexture, "SetAtlas", function(self)
                     if self.changing then return end
@@ -446,7 +446,11 @@ local function MakeNoPortraitMode(frame)
 
         frame.noPortraitMode.Background = frame:CreateTexture(nil, "BACKGROUND")
         frame.noPortraitMode.Background:SetColorTexture(0,0,0,0.45)
-        frame.noPortraitMode.Background:SetPoint("TOPLEFT", hpContainer.HealthBar, "TOPLEFT", 1, -2)
+        frame.noPortraitMode.Background:SetPoint("TOPLEFT", hpContainer.HealthBar, "TOPLEFT", 0, 0)
+        frame.noPortraitMode.BgMask = frame.noPortraitMode:CreateMaskTexture()
+        frame.noPortraitMode.BgMask:SetAllPoints(frame.noPortraitMode.Background)
+        frame.noPortraitMode.BgMask:SetTexture("Interface\\AddOns\\BetterBlizzFrames\\media\\frameMask.tga", "CLAMPTOBLACKADDITIVE", "CLAMPTOBLACKADDITIVE")
+        frame.noPortraitMode.Background:AddMaskTexture(frame.noPortraitMode.BgMask)
 
         local function GetFrameColor()
             local r,g,b = frameContainer.FrameTexture:GetVertexColor()
@@ -577,11 +581,11 @@ local function MakeNoPortraitMode(frame)
                 SetBarMask(totHpBar, totHpBar.HealthBarMask, true)
                 SetBarMask(totManaBar, totManaBar.ManaBarMask, true, true)
 
-                if totHpBar.BBFBackground then
-                    totHpBar.BBFBackground:SetAlpha(1)
+                if totHpBar.pixelBorderBackground then
+                    totHpBar.pixelBorderBackground:SetAlpha(1)
                 end
-                if totManaBar.BBFBackground then
-                    totManaBar.BBFBackground:SetAlpha(1)
+                if totManaBar.pixelBorderBackground then
+                    totManaBar.pixelBorderBackground:SetAlpha(1)
                 end
             elseif frame == FocusFrame then
                 local cfg = BorderPositions.focus.totHealth
@@ -591,11 +595,11 @@ local function MakeNoPortraitMode(frame)
                 SetBarMask(totHpBar, totHpBar.HealthBarMask, true)
                 SetBarMask(totManaBar, totManaBar.ManaBarMask, true, true)
 
-                if totHpBar.BBFBackground then
-                    totHpBar.BBFBackground:SetAlpha(1)
+                if totHpBar.pixelBorderBackground then
+                    totHpBar.pixelBorderBackground:SetAlpha(1)
                 end
-                if totManaBar.BBFBackground then
-                    totManaBar.BBFBackground:SetAlpha(1)
+                if totManaBar.pixelBorderBackground then
+                    totManaBar.pixelBorderBackground:SetAlpha(1)
                 end
             end
 
@@ -605,16 +609,16 @@ local function MakeNoPortraitMode(frame)
                     if totManaBar.BBFPixelBorder then
                         totManaBar.BBFPixelBorder:Hide()
                     end
-                    if totManaBar.BBFBackground then
-                        totManaBar.BBFBackground:SetAlpha(0)
+                    if totManaBar.pixelBorderBackground then
+                        totManaBar.pixelBorderBackground:SetAlpha(0)
                     end
                 end)
                 hooksecurefunc(totManaBar, "Show", function()
                     if db.noPortraitPixelBorder and totManaBar.BBFPixelBorder then
                         totManaBar.BBFPixelBorder:Show()
                     end
-                    if db.noPortraitPixelBorder and totManaBar.BBFBackground then
-                        totManaBar.BBFBackground:SetAlpha(1)
+                    if db.noPortraitPixelBorder and totManaBar.pixelBorderBackground then
+                        totManaBar.pixelBorderBackground:SetAlpha(1)
                     end
                 end)
             end
@@ -639,11 +643,11 @@ local function MakeNoPortraitMode(frame)
             totFrame.FrameTexture:SetAlpha(1)
             totFrame.Background:SetAlpha(1)
 
-            if totHpBar.BBFBackground then
-                totHpBar.BBFBackground:SetAlpha(0)
+            if totHpBar.pixelBorderBackground then
+                totHpBar.pixelBorderBackground:SetAlpha(0)
             end
-            if totManaBar.BBFBackground then
-                totManaBar.BBFBackground:SetAlpha(0)
+            if totManaBar.pixelBorderBackground then
+                totManaBar.pixelBorderBackground:SetAlpha(0)
             end
         end
 
@@ -672,13 +676,13 @@ local function MakeNoPortraitMode(frame)
                 local debuffFrame = _G[debuffFrameName..i]
                 debuffFrame:ClearAllPoints()
                 if i == 1 then
-                    debuffFrame:SetPoint("TOPLEFT", totFrame, "TOPRIGHT", -23, -8)
+                    debuffFrame:SetPoint("TOPLEFT", totFrame, "TOPRIGHT", -18, -9)
                 elseif i == 2 then
-                    debuffFrame:SetPoint("TOPLEFT", totFrame, "TOPRIGHT", -10, -8)
+                    debuffFrame:SetPoint("TOPLEFT", totFrame, "TOPRIGHT", -5, -9)
                 elseif i== 3 then
-                    debuffFrame:SetPoint("TOPLEFT", totFrame, "TOPRIGHT", -23, -21)
+                    debuffFrame:SetPoint("TOPLEFT", totFrame, "TOPRIGHT", -18, -22)
                 elseif  i==4  then
-                    debuffFrame:SetPoint("TOPLEFT", totFrame, "TOPRIGHT", -10, -21)
+                    debuffFrame:SetPoint("TOPLEFT", totFrame, "TOPRIGHT", -5, -22)
                 end
             end
         end
@@ -717,7 +721,7 @@ local function MakeNoPortraitMode(frame)
             local hpContainer = contentMain.HealthBarsContainer
             local manaBar = contentMain.ManaBar
 
-            frame.noPortraitMode.Background:SetPoint("TOPLEFT", hpContainer.HealthBar, "TOPLEFT", 1, -2)
+            frame.noPortraitMode.Background:SetPoint("TOPLEFT", hpContainer.HealthBar, "TOPLEFT", 0, 0)
             frameContainer.FrameTexture:SetAlpha(0)
 
             if db.noPortraitPixelBorder then
@@ -758,22 +762,12 @@ local function MakeNoPortraitMode(frame)
 
             local textureToUse
             local bgYOffset
-            if frame == TargetFrame then
-                if hideMana or classification == "minus" then
-                    textureToUse = minusTex
-                    bgYOffset = 11
-                else
-                    textureToUse = targetDefaultTex
-                    bgYOffset = 0
-                end
+            if hideMana or classification == "minus" then
+                textureToUse = minusTex
+                bgYOffset = classification == "minus" and 0 or 11
             else
-                if hideMana or classification == "minus" then
-                    textureToUse = minusTex
-                    bgYOffset = 11
-                else
-                    textureToUse = targetDefaultTex
-                    bgYOffset = 0
-                end
+                textureToUse = (frame == TargetFrame) and targetDefaultTex or focusDefaultTex
+                bgYOffset = 0
             end
 
             frame.noPortraitMode.Texture:SetTexture(textureToUse)
@@ -814,11 +808,11 @@ local function MakeNoPortraitMode(frame)
                 SetBarMask(hpContainer.HealthBar, hpContainer.HealthBarMask, true)
                 SetBarMask(manaBar, manaBar.ManaBarMask, true)
 
-                if hpContainer.HealthBar.BBFBackground then
-                    hpContainer.HealthBar.BBFBackground:SetAlpha(1)
+                if hpContainer.HealthBar.pixelBorderBackground then
+                    hpContainer.HealthBar.pixelBorderBackground:SetAlpha(1)
                 end
-                if manaBar.BBFBackground then
-                    manaBar.BBFBackground:SetAlpha(1)
+                if manaBar.pixelBorderBackground then
+                    manaBar.pixelBorderBackground:SetAlpha(1)
                 end
             elseif frame == FocusFrame then
                 local cfg = BorderPositions.focus.health
@@ -828,11 +822,11 @@ local function MakeNoPortraitMode(frame)
                 SetBarMask(hpContainer.HealthBar, hpContainer.HealthBarMask, true)
                 SetBarMask(manaBar, manaBar.ManaBarMask, true)
 
-                if hpContainer.HealthBar.BBFBackground then
-                    hpContainer.HealthBar.BBFBackground:SetAlpha(1)
+                if hpContainer.HealthBar.pixelBorderBackground then
+                    hpContainer.HealthBar.pixelBorderBackground:SetAlpha(1)
                 end
-                if manaBar.BBFBackground then
-                    manaBar.BBFBackground:SetAlpha(1)
+                if manaBar.pixelBorderBackground then
+                    manaBar.pixelBorderBackground:SetAlpha(1)
                 end
             end
 
@@ -842,16 +836,16 @@ local function MakeNoPortraitMode(frame)
                     if manaBar.BBFPixelBorder then
                         manaBar.BBFPixelBorder:Hide()
                     end
-                    if manaBar.BBFBackground then
-                        manaBar.BBFBackground:SetAlpha(0)
+                    if manaBar.pixelBorderBackground then
+                        manaBar.pixelBorderBackground:SetAlpha(0)
                     end
                 end)
                 hooksecurefunc(manaBar, "Show", function()
                     if db.noPortraitPixelBorder and manaBar.BBFPixelBorder then
                         manaBar.BBFPixelBorder:Show()
                     end
-                    if db.noPortraitPixelBorder and manaBar.BBFBackground then
-                        manaBar.BBFBackground:SetAlpha(1)
+                    if db.noPortraitPixelBorder and manaBar.pixelBorderBackground then
+                        manaBar.pixelBorderBackground:SetAlpha(1)
                     end
                 end)
             end
@@ -900,11 +894,11 @@ local function MakeNoPortraitMode(frame)
             frame.noPortraitMode.Texture:SetAlpha(1)
             frame.noPortraitMode.Background:SetAlpha(1)
 
-            if hpContainer.HealthBar.BBFBackground then
-                hpContainer.HealthBar.BBFBackground:SetAlpha(0)
+            if hpContainer.HealthBar.pixelBorderBackground then
+                hpContainer.HealthBar.pixelBorderBackground:SetAlpha(0)
             end
-            if manaBar.BBFBackground then
-                manaBar.BBFBackground:SetAlpha(0)
+            if manaBar.pixelBorderBackground then
+                manaBar.pixelBorderBackground:SetAlpha(0)
             end
         end
 
@@ -1042,8 +1036,12 @@ local function MakeNoPortraitMode(frame)
 
         frame.noPortraitMode.Background = frame:CreateTexture(nil, "BACKGROUND")
         frame.noPortraitMode.Background:SetColorTexture(0,0,0,0.45)
-        frame.noPortraitMode.Background:SetPoint("TOPLEFT", hpContainer.HealthBar, "TOPLEFT", 0, -1)
-        frame.noPortraitMode.Background:SetPoint("BOTTOMRIGHT", manaBar, "BOTTOMRIGHT", 0, 1)
+        frame.noPortraitMode.Background:SetPoint("TOPLEFT", hpContainer.HealthBar, "TOPLEFT", 0, 0)
+        frame.noPortraitMode.Background:SetPoint("BOTTOMRIGHT", manaBar, "BOTTOMRIGHT", 0, 0)
+        frame.noPortraitMode.BgMask = frame.noPortraitMode:CreateMaskTexture()
+        frame.noPortraitMode.BgMask:SetAllPoints(frame.noPortraitMode.Background)
+        frame.noPortraitMode.BgMask:SetTexture("Interface\\AddOns\\BetterBlizzFrames\\media\\frameMask.tga", "CLAMPTOBLACKADDITIVE", "CLAMPTOBLACKADDITIVE")
+        frame.noPortraitMode.Background:AddMaskTexture(frame.noPortraitMode.BgMask)
 
         C_Timer.After(1, function()
             local bd = BigDebuffsplayerUnitFrame
@@ -1514,11 +1512,11 @@ local function MakeNoPortraitMode(frame)
 
                 frame.noPortraitMode.Texture:SetAlpha(0)
                 frame.noPortraitMode.Background:SetAlpha(0)
-                if hpContainer.HealthBar.BBFBackground then
-                    hpContainer.HealthBar.BBFBackground:SetAlpha(1)
+                if hpContainer.HealthBar.pixelBorderBackground then
+                    hpContainer.HealthBar.pixelBorderBackground:SetAlpha(1)
                 end
-                if manaBar.BBFBackground then
-                    manaBar.BBFBackground:SetAlpha(1)
+                if manaBar.pixelBorderBackground then
+                    manaBar.pixelBorderBackground:SetAlpha(1)
                 end
             else
                 hpContainer.HealthBarMask:SetTexture("interface/hud/uipartyframeportraitoffhealthmask")
@@ -1531,11 +1529,11 @@ local function MakeNoPortraitMode(frame)
 
                 frame.noPortraitMode.Texture:SetAlpha(1)
                 frame.noPortraitMode.Background:SetAlpha(1)
-                if hpContainer.HealthBar.BBFBackground then
-                    hpContainer.HealthBar.BBFBackground:SetAlpha(0)
+                if hpContainer.HealthBar.pixelBorderBackground then
+                    hpContainer.HealthBar.pixelBorderBackground:SetAlpha(0)
                 end
-                if manaBar.BBFBackground then
-                    manaBar.BBFBackground:SetAlpha(0)
+                if manaBar.pixelBorderBackground then
+                    manaBar.pixelBorderBackground:SetAlpha(0)
                 end
             end
 
@@ -1625,7 +1623,7 @@ local function MakeNoPortraitMode(frame)
                 end
             end
             if not db.noPortraitPixelBorder then
-                frame.noPortraitMode.Background:SetPoint("TOPLEFT", hpContainer.HealthBar, "TOPLEFT", 0, -0.5)
+                frame.noPortraitMode.Background:SetPoint("TOPLEFT", hpContainer.HealthBar, "TOPLEFT", 0, 0)
             end
         end
 
@@ -1818,11 +1816,11 @@ local function MakeNoPortraitMode(frame)
             cfg = BorderPositions.pet.mana
             BlackBorder(PetFrameManaBar, cfg.width, cfg.height, cfg.startX, cfg.startY)
 
-            if PetFrameHealthBar.BBFBackground then
-                PetFrameHealthBar.BBFBackground:SetAlpha(1)
+            if PetFrameHealthBar.pixelBorderBackground then
+                PetFrameHealthBar.pixelBorderBackground:SetAlpha(1)
             end
-            if PetFrameManaBar.BBFBackground then
-                PetFrameManaBar.BBFBackground:SetAlpha(1)
+            if PetFrameManaBar.pixelBorderBackground then
+                PetFrameManaBar.pixelBorderBackground:SetAlpha(1)
             end
 
             if not PetFrameManaBar.BBFVisibilityHooked then
@@ -1831,16 +1829,16 @@ local function MakeNoPortraitMode(frame)
                     if PetFrameManaBar.BBFPixelBorder then
                         PetFrameManaBar.BBFPixelBorder:Hide()
                     end
-                    if PetFrameManaBar.BBFBackground then
-                        PetFrameManaBar.BBFBackground:SetAlpha(0)
+                    if PetFrameManaBar.pixelBorderBackground then
+                        PetFrameManaBar.pixelBorderBackground:SetAlpha(0)
                     end
                 end)
                 hooksecurefunc(PetFrameManaBar, "Show", function()
                     if db.noPortraitPixelBorder and PetFrameManaBar.BBFPixelBorder then
                         PetFrameManaBar.BBFPixelBorder:Show()
                     end
-                    if db.noPortraitPixelBorder and PetFrameManaBar.BBFBackground then
-                        PetFrameManaBar.BBFBackground:SetAlpha(1)
+                    if db.noPortraitPixelBorder and PetFrameManaBar.pixelBorderBackground then
+                        PetFrameManaBar.pixelBorderBackground:SetAlpha(1)
                     end
                 end)
             end
@@ -1859,11 +1857,11 @@ local function MakeNoPortraitMode(frame)
             PetFrameTexture:SetAlpha(1)
             PetFrame.Background:SetAlpha(1)
 
-            if PetFrameHealthBar.BBFBackground then
-                PetFrameHealthBar.BBFBackground:SetAlpha(0)
+            if PetFrameHealthBar.pixelBorderBackground then
+                PetFrameHealthBar.pixelBorderBackground:SetAlpha(0)
             end
-            if PetFrameManaBar.BBFBackground then
-                PetFrameManaBar.BBFBackground:SetAlpha(0)
+            if PetFrameManaBar.pixelBorderBackground then
+                PetFrameManaBar.pixelBorderBackground:SetAlpha(0)
             end
         end
 
@@ -2113,8 +2111,12 @@ local function MakeClassicPartyFrame()
 
         frame.Background = frame:CreateTexture(nil, "BACKGROUND")
         frame.Background:SetColorTexture(0,0,0,0.45)
-        frame.Background:SetPoint("TOPLEFT", hpContainer.HealthBar, "TOPLEFT", 0, -1)
-        frame.Background:SetPoint("BOTTOMRIGHT", manaBar, "BOTTOMRIGHT", -2, 1)
+        frame.Background:SetPoint("TOPLEFT", hpContainer.HealthBar, "TOPLEFT", 0, 0)
+        frame.Background:SetPoint("BOTTOMRIGHT", manaBar, "BOTTOMRIGHT", 0, 0)
+        frame.BgMask = frame:CreateMaskTexture()
+        frame.BgMask:SetAllPoints(frame.Background)
+        frame.BgMask:SetTexture("Interface\\AddOns\\BetterBlizzFrames\\media\\frameMask.tga", "CLAMPTOBLACKADDITIVE", "CLAMPTOBLACKADDITIVE")
+        frame.Background:AddMaskTexture(frame.BgMask)
 
 
 
@@ -2156,11 +2158,11 @@ local function MakeClassicPartyFrame()
             cfg = BorderPositions.party.mana
             BlackBorder(manaBar, cfg.width, cfg.height, cfg.startX, cfg.startY)
 
-            if hpContainer.HealthBar.BBFBackground then
-                hpContainer.HealthBar.BBFBackground:SetAlpha(1)
+            if hpContainer.HealthBar.pixelBorderBackground then
+                hpContainer.HealthBar.pixelBorderBackground:SetAlpha(1)
             end
-            if manaBar.BBFBackground then
-                manaBar.BBFBackground:SetAlpha(1)
+            if manaBar.pixelBorderBackground then
+                manaBar.pixelBorderBackground:SetAlpha(1)
             end
 
             overlay.Status:SetParent(BBF.hiddenFrame)
@@ -2190,16 +2192,16 @@ local function MakeClassicPartyFrame()
                     if manaBar.BBFPixelBorder then
                         manaBar.BBFPixelBorder:Hide()
                     end
-                    if manaBar.BBFBackground then
-                        manaBar.BBFBackground:SetAlpha(0)
+                    if manaBar.pixelBorderBackground then
+                        manaBar.pixelBorderBackground:SetAlpha(0)
                     end
                 end)
                 hooksecurefunc(manaBar, "Show", function()
                     if db.noPortraitPixelBorder and manaBar.BBFPixelBorder then
                         manaBar.BBFPixelBorder:Show()
                     end
-                    if db.noPortraitPixelBorder and manaBar.BBFBackground then
-                        manaBar.BBFBackground:SetAlpha(1)
+                    if db.noPortraitPixelBorder and manaBar.pixelBorderBackground then
+                        manaBar.pixelBorderBackground:SetAlpha(1)
                     end
                 end)
             end
@@ -2218,11 +2220,11 @@ local function MakeClassicPartyFrame()
             frame.Texture:SetAlpha(1)
             frame.Background:SetAlpha(1)
 
-            if hpContainer.HealthBar.BBFBackground then
-                hpContainer.HealthBar.BBFBackground:SetAlpha(0)
+            if hpContainer.HealthBar.pixelBorderBackground then
+                hpContainer.HealthBar.pixelBorderBackground:SetAlpha(0)
             end
-            if manaBar.BBFBackground then
-                manaBar.BBFBackground:SetAlpha(0)
+            if manaBar.pixelBorderBackground then
+                manaBar.pixelBorderBackground:SetAlpha(0)
             end
         end
 
@@ -2351,6 +2353,40 @@ end
 
 function BBF.UpdateNoPortraitManaVisibility()
     local db = BetterBlizzFramesDB
+    if db.classicFrames then
+        if db.hideUnitFramePlayerSecondResource then
+            if AlternatePowerBar then
+                AlternatePowerBar:SetAlpha(0)
+            end
+            if MonkStaggerBar then
+                MonkStaggerBar:SetAlpha(0)
+            end
+            if EvokerEbonMightBar then
+                EvokerEbonMightBar:SetAlpha(0)
+            end
+            if DemonHunterSoulFragmentsBar then
+                DemonHunterSoulFragmentsBar:SetAlpha(0)
+            end
+            BBF.changedSecondResourceAlpha = true
+        else
+            if BBF.changedSecondResourceAlpha then
+                if AlternatePowerBar then
+                    AlternatePowerBar:SetAlpha(1)
+                end
+                if MonkStaggerBar then
+                    MonkStaggerBar:SetAlpha(1)
+                end
+                if EvokerEbonMightBar then
+                    EvokerEbonMightBar:SetAlpha(1)
+                end
+                if DemonHunterSoulFragmentsBar then
+                    DemonHunterSoulFragmentsBar:SetAlpha(1)
+                end
+            end
+            BBF.changedSecondResourceAlpha = nil
+        end
+        return
+    end
     if not db.noPortraitModes then return end
     UpdateTextureVariables()
 
@@ -2408,8 +2444,8 @@ function BBF.UpdateNoPortraitManaVisibility()
             if AlternatePowerBar.BBFPixelBorder then
                 AlternatePowerBar.BBFPixelBorder:Hide()
             end
-            if AlternatePowerBar.BBFBackground then
-                AlternatePowerBar.BBFBackground:SetAlpha(0)
+            if AlternatePowerBar.pixelBorderBackground then
+                AlternatePowerBar.pixelBorderBackground:SetAlpha(0)
             end
         end
         if MonkStaggerBar then
@@ -2417,8 +2453,8 @@ function BBF.UpdateNoPortraitManaVisibility()
             if MonkStaggerBar.BBFPixelBorder then
                 MonkStaggerBar.BBFPixelBorder:Hide()
             end
-            if MonkStaggerBar.BBFBackground then
-                MonkStaggerBar.BBFBackground:SetAlpha(0)
+            if MonkStaggerBar.pixelBorderBackground then
+                MonkStaggerBar.pixelBorderBackground:SetAlpha(0)
             end
         end
         if EvokerEbonMightBar then
@@ -2426,8 +2462,8 @@ function BBF.UpdateNoPortraitManaVisibility()
             if EvokerEbonMightBar.BBFPixelBorder then
                 EvokerEbonMightBar.BBFPixelBorder:Hide()
             end
-            if EvokerEbonMightBar.BBFBackground then
-                EvokerEbonMightBar.BBFBackground:SetAlpha(0)
+            if EvokerEbonMightBar.pixelBorderBackground then
+                EvokerEbonMightBar.pixelBorderBackground:SetAlpha(0)
             end
         end
         if DemonHunterSoulFragmentsBar then
@@ -2435,8 +2471,8 @@ function BBF.UpdateNoPortraitManaVisibility()
             if DemonHunterSoulFragmentsBar.BBFPixelBorder then
                 DemonHunterSoulFragmentsBar.BBFPixelBorder:Hide()
             end
-            if DemonHunterSoulFragmentsBar.BBFBackground then
-                DemonHunterSoulFragmentsBar.BBFBackground:SetAlpha(0)
+            if DemonHunterSoulFragmentsBar.pixelBorderBackground then
+                DemonHunterSoulFragmentsBar.pixelBorderBackground:SetAlpha(0)
             end
         end
     else
@@ -2445,8 +2481,8 @@ function BBF.UpdateNoPortraitManaVisibility()
             if AlternatePowerBar.BBFPixelBorder then
                 AlternatePowerBar.BBFPixelBorder:Show()
             end
-            if AlternatePowerBar.BBFBackground then
-                AlternatePowerBar.BBFBackground:SetAlpha(1)
+            if AlternatePowerBar.pixelBorderBackground then
+                AlternatePowerBar.pixelBorderBackground:SetAlpha(1)
             end
         end
         if MonkStaggerBar then
@@ -2454,8 +2490,8 @@ function BBF.UpdateNoPortraitManaVisibility()
             if MonkStaggerBar.BBFPixelBorder then
                 MonkStaggerBar.BBFPixelBorder:Show()
             end
-            if MonkStaggerBar.BBFBackground then
-                MonkStaggerBar.BBFBackground:SetAlpha(1)
+            if MonkStaggerBar.pixelBorderBackground then
+                MonkStaggerBar.pixelBorderBackground:SetAlpha(1)
             end
         end
         if EvokerEbonMightBar then
@@ -2463,8 +2499,8 @@ function BBF.UpdateNoPortraitManaVisibility()
             if EvokerEbonMightBar.BBFPixelBorder then
                 EvokerEbonMightBar.BBFPixelBorder:Show()
             end
-            if EvokerEbonMightBar.BBFBackground then
-                EvokerEbonMightBar.BBFBackground:SetAlpha(1)
+            if EvokerEbonMightBar.pixelBorderBackground then
+                EvokerEbonMightBar.pixelBorderBackground:SetAlpha(1)
             end
         end
         if DemonHunterSoulFragmentsBar then
@@ -2472,8 +2508,8 @@ function BBF.UpdateNoPortraitManaVisibility()
             if DemonHunterSoulFragmentsBar.BBFPixelBorder then
                 DemonHunterSoulFragmentsBar.BBFPixelBorder:Show()
             end
-            if DemonHunterSoulFragmentsBar.BBFBackground then
-                DemonHunterSoulFragmentsBar.BBFBackground:SetAlpha(1)
+            if DemonHunterSoulFragmentsBar.pixelBorderBackground then
+                DemonHunterSoulFragmentsBar.pixelBorderBackground:SetAlpha(1)
             end
         end
     end
@@ -2594,8 +2630,8 @@ function BBF.UpdateNoPortraitManaVisibility()
                     if manaBar.BBFPixelBorder then
                         manaBar.BBFPixelBorder:Hide()
                     end
-                    if manaBar.BBFBackground then
-                        manaBar.BBFBackground:SetAlpha(0)
+                    if manaBar.pixelBorderBackground then
+                        manaBar.pixelBorderBackground:SetAlpha(0)
                     end
                     if frame.Background then
                         frame.Background:ClearAllPoints()
@@ -2616,8 +2652,8 @@ function BBF.UpdateNoPortraitManaVisibility()
                     if db.noPortraitPixelBorder and manaBar.BBFPixelBorder then
                         manaBar.BBFPixelBorder:Show()
                     end
-                    if db.noPortraitPixelBorder and manaBar.BBFBackground then
-                        manaBar.BBFBackground:SetAlpha(1)
+                    if db.noPortraitPixelBorder and manaBar.pixelBorderBackground then
+                        manaBar.pixelBorderBackground:SetAlpha(1)
                     end
                     if frame.Background then
                         frame.Background:ClearAllPoints()
@@ -2644,36 +2680,6 @@ function BBF.UpdateNoPortraitManaVisibility()
     BBF.UpdateResourcePositionNoPortrait()
 end
 
-
-local function CreateUnitFrame(name, unit, ogFrame)
-    local f = CreateFrame("Button", name, ogFrame, "SecureUnitButtonTemplate")
-    f:SetFrameStrata(ogFrame:GetFrameStrata())
-    f:SetFrameLevel(ogFrame:GetFrameLevel() + 100)
-
-    local healthBar =
-        ogFrame.PlayerFrameContent and ogFrame.PlayerFrameContent.PlayerFrameContentMain.HealthBarsContainer or
-        ogFrame.TargetFrameContent and ogFrame.TargetFrameContent.TargetFrameContentMain.HealthBarsContainer or
-        ogFrame.HealthBar
-
-    f:SetPoint("TOPLEFT", healthBar, "TOPLEFT", -5, 5)
-    f:SetPoint("BOTTOMRIGHT", healthBar, "BOTTOMRIGHT", 5, -10)
-
-    --ogFrame:SetMouseClickEnabled(false)
-    ogFrame:EnableMouse(false)
-    ogFrame.BBF_ClickFrame = f
-    f["original" .. ogFrame:GetName()] = ogFrame
-
-    f:SetAttribute("unit", unit)
-    f:RegisterForClicks("AnyUp")
-    f:SetAttribute("*type1", "target")
-    f:SetAttribute("*type2", "togglemenu")
-    f.unit = unit
-
-    -- Tooltip support
-    f:SetScript("OnEnter", UnitFrame_OnEnter)
-    f:SetScript("OnLeave", UnitFrame_OnLeave)
-end
-
 function BBF.noPortraitModes()
     if not BetterBlizzFramesDB.noPortraitModes and not BetterBlizzFramesDB.noPortraitPixelBorder then return end
     if BetterBlizzFramesDB.noPortraitPixelBorder then
@@ -2689,23 +2695,20 @@ function BBF.noPortraitModes()
     end
     if not BetterBlizzFramesDB.noPortraitSkipTarget then
         MakeNoPortraitMode(TargetFrame)
+    end
+    if not BetterBlizzFramesDB.noPortraitSkipFocus then
         MakeNoPortraitMode(FocusFrame)
     end
     if not BetterBlizzFramesDB.noPortraitSkipPlayer then
         MakeNoPortraitMode(PlayerFrame)
+    end
+    if not BetterBlizzFramesDB.noPortraitSkipPet then
         MakeNoPortraitMode(PetFrame)
     end
 
     MakeClassicPartyFrame()
 
     AdjustAlternateBars()
-
-    -- CreateUnitFrame("BBF_PlayerFrame",  "player", PlayerFrame)
-    -- CreateUnitFrame("BBF_TargetFrame",  "target", TargetFrame)
-    -- CreateUnitFrame("BBF_FocusFrame",   "focus", FocusFrame)
-    -- CreateUnitFrame("BBF_TargetFrameToT", "targettarget", TargetFrameToT)
-    -- CreateUnitFrame("BBF_FocusFrameToT", "focustarget", FocusFrameToT)
-
 
     C_Timer.After(0.5,function()
         for _, child in ipairs({ PlayerFrame.PlayerFrameContent.PlayerFrameContentMain:GetRegions() }) do
@@ -2718,85 +2721,94 @@ function BBF.noPortraitModes()
         end
     end)
 
+    PlayerFrame:SetHitRectInsets(66, 12, 21, 18)
+    TargetFrame:SetHitRectInsets(5, 70, 21, 18)
+    PetFrame:SetHitRectInsets(25, 12, -6, 8)
+    TargetFrameToT:SetHitRectInsets(25, 12, -6, 8)
+    FocusFrameToT:SetHitRectInsets(25, 12, -6, 8)
+    for i = 1, 4 do
+        local partyMemberFrame = PartyFrame["MemberFrame"..i]
+        partyMemberFrame:SetHitRectInsets(29, -8, -6, 8)
+    end
 
-    -- local fixed
-    -- local function SetMouseStateOnFrames(enabled)
-    --     local frames = {PlayerFrame, TargetFrame, FocusFrame, TargetFrameToT, FocusFrameToT}
+    local function FixSelectionHighlight()
+        local frames = {PlayerFrame, PetFrame, TargetFrame, FocusFrame, TargetFrameToT, FocusFrameToT, PartyFrame}
 
-    --     for _, frame in pairs(frames) do
-    --         frame:EnableMouse(enabled)
+        for _, frame in pairs(frames) do
+            if frame.Selection and frame.Selection.TopLeftCorner and not frame.Selection.bbfRepositioned then
+                local xOffsetLeft = (frame == PartyFrame) and 43 or 0
+                local xOffsetRight = (frame == PartyFrame) and -3 or 0
+                local yOffsetBottom = (frame == PartyFrame) and 20 or 0
+                local yOffsetTop = (frame ~= PartyFrame and frame ~= PetFrame) and 6 or 0
+                frame.Selection.TopLeftCorner:ClearAllPoints()
+                frame.Selection.TopLeftCorner:SetPoint("TOPLEFT", (frame.healthBar or frame.HealthBar or frame.healthbar or PartyFrame), "TOPLEFT", -16 + xOffsetLeft, 15 + yOffsetTop)
+                frame.Selection.TopRightCorner:ClearAllPoints()
+                frame.Selection.TopRightCorner:SetPoint("TOPRIGHT", (frame.healthBar or frame.HealthBar or frame.healthbar or PartyFrame), "TOPRIGHT", 15 + xOffsetRight, 15 + yOffsetTop)
+                frame.Selection.BottomLeftCorner:ClearAllPoints()
+                frame.Selection.BottomLeftCorner:SetPoint("BOTTOMLEFT", (frame.healthBar or frame.HealthBar or frame.healthbar or PartyFrame), "BOTTOMLEFT", -16 + xOffsetLeft, -25 + yOffsetBottom)
+                frame.Selection.BottomRightCorner:ClearAllPoints()
+                frame.Selection.BottomRightCorner:SetPoint("BOTTOMRIGHT", (frame.healthBar or frame.HealthBar or frame.healthbar or PartyFrame), "BOTTOMRIGHT", 15 + xOffsetRight, -25 + yOffsetBottom)
+                frame.Selection.MouseOverHighlight:ClearAllPoints()
+                frame.Selection.MouseOverHighlight:SetPoint("TOPLEFT", frame.Selection.TopLeftCorner, "TOPLEFT", 8, -8)
+                frame.Selection.MouseOverHighlight:SetPoint("BOTTOMRIGHT", frame.Selection.BottomRightCorner, "BOTTOMRIGHT", -8, 8)
+                frame.Selection.HorizontalLabel:ClearAllPoints()
+                frame.Selection.HorizontalLabel:SetPoint("CENTER", frame.Selection.MouseOverHighlight, "CENTER", 0, 0)
+                frame.Selection.bbfRepositioned = true
 
-    --         if not fixed then
-    --             if frame.Selection and frame.Selection.TopLeftCorner and not frame.Selection.bbfRepositioned then
-    --                 frame.Selection.TopLeftCorner:ClearAllPoints()
-    --                 frame.Selection.TopLeftCorner:SetPoint("TOPLEFT", frame.BBF_ClickFrame, "TOPLEFT", -15, 15)
-    --                 frame.Selection.TopRightCorner:ClearAllPoints()
-    --                 frame.Selection.TopRightCorner:SetPoint("TOPRIGHT", frame.BBF_ClickFrame, "TOPRIGHT", 15, 15)
-    --                 frame.Selection.BottomLeftCorner:ClearAllPoints()
-    --                 frame.Selection.BottomLeftCorner:SetPoint("BOTTOMLEFT", frame.BBF_ClickFrame, "BOTTOMLEFT", -15, -20)
-    --                 frame.Selection.BottomRightCorner:ClearAllPoints()
-    --                 frame.Selection.BottomRightCorner:SetPoint("BOTTOMRIGHT", frame.BBF_ClickFrame, "BOTTOMRIGHT", 15, -20)
-    --                 frame.Selection.MouseOverHighlight:ClearAllPoints()
-    --                 frame.Selection.MouseOverHighlight:SetPoint("TOPLEFT", frame.Selection.TopLeftCorner, "TOPLEFT", 8, -8)
-    --                 frame.Selection.MouseOverHighlight:SetPoint("BOTTOMRIGHT", frame.Selection.BottomRightCorner, "BOTTOMRIGHT", -8, 8)
-    --                 frame.Selection.HorizontalLabel:ClearAllPoints()
-    --                 frame.Selection.HorizontalLabel:SetPoint("CENTER", frame.Selection.MouseOverHighlight, "CENTER", 0, 0)
-    --                 frame.Selection.bbfRepositioned = true
+                hooksecurefunc(frame.Selection.TopLeftCorner, "SetPoint", function(self)
+                    if self.changing then return end
+                    self.changing = true
+                    self:ClearAllPoints()
+                    self:SetPoint("TOPLEFT", (frame.healthBar or frame.HealthBar or frame.healthbar or PartyFrame), "TOPLEFT", -16 + xOffsetLeft, 15 + yOffsetTop)
+                    self.changing = false
+                end)
 
-    --                 hooksecurefunc(frame.Selection.TopLeftCorner, "SetPoint", function(self)
-    --                     if self.changing then return end
-    --                     self.changing = true
-    --                     self:ClearAllPoints()
-    --                     self:SetPoint("TOPLEFT", frame.BBF_ClickFrame, "TOPLEFT", -15, 15)
-    --                     self.changing = false
-    --                 end)
+                hooksecurefunc(frame.Selection.TopRightCorner, "SetPoint", function(self)
+                    if self.changing then return end
+                    self.changing = true
+                    self:ClearAllPoints()
+                    self:SetPoint("TOPRIGHT", (frame.healthBar or frame.HealthBar or frame.healthbar or PartyFrame), "TOPRIGHT", 15 + xOffsetRight, 15 + yOffsetTop)
+                    self.changing = false
+                end)
 
-    --                 hooksecurefunc(frame.Selection.TopRightCorner, "SetPoint", function(self)
-    --                     if self.changing then return end
-    --                     self.changing = true
-    --                     self:ClearAllPoints()
-    --                     self:SetPoint("TOPRIGHT", frame.BBF_ClickFrame, "TOPRIGHT", 15, 15)
-    --                     self.changing = false
-    --                 end)
+                hooksecurefunc(frame.Selection.BottomLeftCorner, "SetPoint", function(self)
+                    if self.changing then return end
+                    self.changing = true
+                    self:ClearAllPoints()
+                    self:SetPoint("BOTTOMLEFT", (frame.healthBar or frame.HealthBar or frame.healthbar or PartyFrame), "BOTTOMLEFT", -16 + xOffsetLeft, -25 + yOffsetBottom)
+                    self.changing = false
+                end)
 
-    --                 hooksecurefunc(frame.Selection.BottomLeftCorner, "SetPoint", function(self)
-    --                     if self.changing then return end
-    --                     self.changing = true
-    --                     self:ClearAllPoints()
-    --                     self:SetPoint("BOTTOMLEFT", frame.BBF_ClickFrame, "BOTTOMLEFT", -15, -20)
-    --                     self.changing = false
-    --                 end)
+                hooksecurefunc(frame.Selection.BottomRightCorner, "SetPoint", function(self)
+                    if self.changing then return end
+                    self.changing = true
+                    self:ClearAllPoints()
+                    self:SetPoint("BOTTOMRIGHT", (frame.healthBar or frame.HealthBar or frame.healthbar or PartyFrame), "BOTTOMRIGHT", 15 + xOffsetRight, -25 + yOffsetBottom)
+                    self.changing = false
+                end)
 
-    --                 hooksecurefunc(frame.Selection.BottomRightCorner, "SetPoint", function(self)
-    --                     if self.changing then return end
-    --                     self.changing = true
-    --                     self:ClearAllPoints()
-    --                     self:SetPoint("BOTTOMRIGHT", frame.BBF_ClickFrame, "BOTTOMRIGHT", 15, -20)
-    --                     self.changing = false
-    --                 end)
+                hooksecurefunc(frame.Selection.MouseOverHighlight, "SetPoint", function(self)
+                    if self.changing then return end
+                    self.changing = true
+                    self:ClearAllPoints()
+                    self:SetPoint("TOPLEFT", frame.Selection.TopLeftCorner, "TOPLEFT", 8, -8)
+                    self:SetPoint("BOTTOMRIGHT", frame.Selection.BottomRightCorner, "BOTTOMRIGHT", -8, 8)
+                    self.changing = false
+                end)
+            end
 
-    --                 hooksecurefunc(frame.Selection.MouseOverHighlight, "SetPoint", function(self)
-    --                     if self.changing then return end
-    --                     self.changing = true
-    --                     self:ClearAllPoints()
-    --                     self:SetPoint("TOPLEFT", frame.Selection.TopLeftCorner, "TOPLEFT", 8, -8)
-    --                     self:SetPoint("BOTTOMRIGHT", frame.Selection.BottomRightCorner, "BOTTOMRIGHT", -8, 8)
-    --                     self.changing = false
-    --                 end)
-    --             end
-    --         end
-    --     end
-    -- end
+        end
+    end
 
-    -- hooksecurefunc(EditModeManagerFrame, "EnterEditMode", function()
-    --     if InCombatLockdown() then return end
-    --     SetMouseStateOnFrames(true)
-    -- end)
+    hooksecurefunc(EditModeManagerFrame, "EnterEditMode", function()
+        if InCombatLockdown() then return end
+        FixSelectionHighlight()
+    end)
 
-    -- hooksecurefunc(EditModeManagerFrame, "ExitEditMode", function()
-    --     if InCombatLockdown() then return end
-    --     SetMouseStateOnFrames(false)
-    -- end)
+    hooksecurefunc(EditModeManagerFrame, "ExitEditMode", function()
+        if InCombatLockdown() then return end
+        FixSelectionHighlight()
+    end)
 
     BBF.UpdateNoPortraitManaVisibility()
 end

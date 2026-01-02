@@ -46,6 +46,7 @@ do  -- Slice Frame
         NineSlice_GenericBox_Border = true,     --used by BackpackItemTracker
         NineSlice_GenericBox_Black = true,
         NineSlice_GenericBox_Black_Shadowed = true, --CustomSpellFlyout
+        NineSlice_DarkBrownBox = true,
     };
 
     local ThreeSliceLayouts = {
@@ -85,7 +86,7 @@ do  -- Slice Frame
         frame.NineSlice:SetTexture(texture);
     end
 
-    function API.CreateThreeSliceTextures(parent, layer, sideWidth, sideHeight, sideOffset, file, disableSharpenging)
+    function API.CreateThreeSliceTextures(parent, layer, sideWidth, sideHeight, sideOffset, file, disableSharpenging, useTrilinearFilter)
         local slices = {};
         slices[1] = parent:CreateTexture(nil, layer);
         slices[2] = parent:CreateTexture(nil, layer);
@@ -101,9 +102,10 @@ do  -- Slice Frame
         end
 
         if file then
-            slices[1]:SetTexture(file);
-            slices[2]:SetTexture(file);
-            slices[3]:SetTexture(file);
+            local filter = useTrilinearFilter and "TRILINEAR" or "LINEAR";
+            slices[1]:SetTexture(file, nil, nil, filter);
+            slices[2]:SetTexture(file, nil, nil, filter);
+            slices[3]:SetTexture(file, nil, nil, filter);
         end
 
         if disableSharpenging then
@@ -4179,6 +4181,7 @@ do  --Slider
         else
             self:GetParent().isDraggingThumb = false;
         end
+        GameTooltip:Hide();
     end
 
     function SliderScripts:OnMouseUp()
@@ -4747,7 +4750,7 @@ do  --EditMode
 
     local function IsMouseOverOptionToggle()
         local obj = GetMouseFocus();
-        if obj and obj.isPlumberEditModeToggle then
+        if obj and obj.isPlumberSettingsPanelToggle then
             return true
         else
             return false
@@ -5030,7 +5033,7 @@ do  --EditMode
             for order, widgetData in ipairs(schematic.widgets) do
                 local widget;
                 if (not widgetData.validityCheckFunc) or (widgetData.validityCheckFunc()) then
-                    
+
                     if widgetData.type == "Checkbox" then
                         widget = self:CreateCheckbox(widgetData);
                     elseif widgetData.type == "RadioGroup" then
@@ -5117,6 +5120,17 @@ do  --EditMode
         end
     end
 
+    function EditModeSettingsDialogMixin:CloseUI()
+        if self:IsShown() then
+            self:Exit();
+            return true
+        end
+    end
+
+    function EditModeSettingsDialogMixin:OnHide()
+        addon.CallbackRegistry:Trigger("SettingsPanel.ModuleOptionClosed");
+    end
+
     local function SetupSettingsDialog(parent, schematic, forceUpdate)
         if not EditModeSettingsDialog then
             local f = CreateFrame("Frame", nil, UIParent);
@@ -5136,6 +5150,7 @@ do  --EditMode
             f.requireResetPosition = true;
 
             Mixin(f, EditModeSettingsDialogMixin);
+            addon.AddModuleOptionExitMethod(f, f.CloseUI);
 
             f.Border = CreateFrame("Frame", nil, f, "DialogBorderTranslucentTemplate");
             f.CloseButton = CreateFrame("Button", nil, f, "UIPanelCloseButtonNoScripts");
@@ -5149,7 +5164,7 @@ do  --EditMode
 
             f:SetScript("OnDragStart", f.OnDragStart);
             f:SetScript("OnDragStop", f.OnDragStop);
-
+            f:SetScript("OnHide", f.OnHide);
 
             local function CreateCheckbox()
                 return addon.CreateCheckbox(f);

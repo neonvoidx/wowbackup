@@ -2493,10 +2493,10 @@ function sArenaMixin:UpdateFrameSettings(db, info, val)
 
     local growthDirection = db.growthDirection
     local spacing = db.spacing
+    local layoutCF = (self.layoutdb and self.layoutdb.changeFont)
 
     for i = 1, sArenaMixin.maxArenaOpponents do
         local text = self["arena" .. i].ClassIcon.Cooldown.Text
-        local layoutCF = (self.layoutdb and self.layoutdb.changeFont)
         local fontToUse = text.fontFile
         if layoutCF then
             fontToUse = LSM:Fetch(LSM.MediaType.FONT, self.layoutdb.cdFont)
@@ -2781,7 +2781,6 @@ end
 function sArenaMixin:InitializeDRFrames()
     if not sArenaMixin.isMidnight then return end
 
-
     if EditModeManagerFrame and EditModeManagerFrame.AccountSettings then
         ShowUIPanel(EditModeManagerFrame)
     end
@@ -2827,7 +2826,6 @@ function sArenaMixin:InitializeDRFrames()
             anchorPoint = "RIGHT"
         end
         drTray:SetPoint(anchorPoint, arenaFrame, "CENTER", layoutdb.dr.posX + offset, layoutdb.dr.posY)
-
 
         -- Get the 4 DR frames from the tray
         local drFrames = {drTray:GetChildren()}
@@ -2878,19 +2876,31 @@ function sArenaMixin:InitializeDRFrames()
 
                     drFrame.DRText = drFrame.DRTextFrame:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
                     drFrame.DRText:SetPoint(drTextAnchor, drTextOffsetX, drTextOffsetY)
-                    drFrame.DRText:SetFont("Interface\\AddOns\\sArena_MoP\\Textures\\arialn.ttf", 14, "OUTLINE")
+                    drFrame.DRText:SetFont("Interface\\AddOns\\sArena_Reloaded\\Textures\\arialn.ttf", 14, "OUTLINE")
                     drFrame.DRText:SetScale(drTextSize)
                     drFrame.DRText:SetTextColor(0, 1, 0)
                     drFrame.DRText:SetText("½")
 
-                    hooksecurefunc(drFrame.ImmunityIndicator, "SetShown", function(self, SetShown)
+                    local green = CreateColor(0, 1, 0, 1)
+                    local red = CreateColor(1, 0, 0, 1)
+
+                    if not drFrame.Cooldown.Text then
+                        drFrame.Cooldown.Text = drFrame.Cooldown:GetCountdownFontString()
+                        drFrame.Cooldown.Text.fontFile = drFrame.Cooldown.Text:GetFont()
+                    end
+
+                    hooksecurefunc(drFrame.ImmunityIndicator, "SetShown", function(immunityIndicator, SetShown)
                         drFrame.Border:SetAlphaFromBoolean(SetShown, 0, 1)
                         drFrame.DRText:SetAlphaFromBoolean(SetShown, 0, 1)
+
+                        if self.db and self.db.profile.colorDRCooldownText then
+                            drFrame.Cooldown.sArenaText:SetVertexColorFromBoolean(SetShown, red, green)
+                        end
                     end)
 
                     drFrame.DRText2 = drFrame.DRTextFrame:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
                     drFrame.DRText2:SetPoint(drTextAnchor, drTextOffsetX, drTextOffsetY)
-                    drFrame.DRText2:SetFont("Interface\\AddOns\\sArena_MoP\\Textures\\arialn.ttf", 14, "OUTLINE")
+                    drFrame.DRText2:SetFont("Interface\\AddOns\\sArena_Reloaded\\Textures\\arialn.ttf", 14, "OUTLINE")
                     drFrame.DRText2:SetScale(drTextSize)
                     drFrame.DRText2:SetTextColor(1, 0, 0)
                     drFrame.DRText2:SetText("%")
@@ -2938,6 +2948,8 @@ function sArenaMixin:UpdateDRSettings(db, info, val)
     if (val) then
         db[info[#info]] = val
     end
+
+    local layoutCF = (self.layoutdb and self.layoutdb.changeFont)
 
     -- For Midnight: full DR settings support with new frame structure
     if sArenaMixin.isMidnight then
@@ -2997,6 +3009,17 @@ function sArenaMixin:UpdateDRSettings(db, info, val)
                     if drFrame then
                         -- Set size
                         drFrame:SetSize(size, size)
+
+                        local text = drFrame.Cooldown.Text
+                        local fontToUse = text.fontFile
+                        if layoutCF then
+                            fontToUse = LSM:Fetch(LSM.MediaType.FONT, self.layoutdb.cdFont)
+                        end
+                        text:SetFont(fontToUse, db.fontSize, "OUTLINE")
+                        local sArenaText = drFrame.Cooldown.sArenaText
+                        if sArenaText then
+                            sArenaText:SetFont(fontToUse, db.fontSize, "OUTLINE")
+                        end
 
                         -- Position based on growth direction
                         -- drFrame:ClearAllPoints()
@@ -3308,7 +3331,18 @@ function sArenaMixin:UpdateDRSettings(db, info, val)
                 for drIndex, fakeDRFrame in ipairs(frame.fakeDRFrames) do
                     if fakeDRFrame then
                         fakeDRFrame:SetSize(size, size)
-                        
+
+                        local text = fakeDRFrame.Cooldown.Text
+                        local fontToUse = text.fontFile
+                        if layoutCF then
+                            fontToUse = LSM:Fetch(LSM.MediaType.FONT, self.layoutdb.cdFont)
+                        end
+                        text:SetFont(fontToUse, db.fontSize, "OUTLINE")
+                        local sArenaText = fakeDRFrame.Cooldown.sArenaText
+                        if sArenaText then
+                            sArenaText:SetFont(fontToUse, db.fontSize, "OUTLINE")
+                        end
+
                         -- Set border and text colors based on DR index
                         if fakeDRFrame.Border then
                             if drIndex == 1 then
@@ -3571,7 +3605,6 @@ function sArenaMixin:UpdateDRSettings(db, info, val)
             dr.Cooldown:SetSwipeColor(0, 0, 0, 0.55)
 
             local text = dr.Cooldown.Text
-            local layoutCF = (self.layoutdb and self.layoutdb.changeFont)
             local fontToUse = text.fontFile
             if layoutCF then
                 fontToUse = LSM:Fetch(LSM.MediaType.FONT, self.layoutdb.cdFont)
@@ -3728,6 +3761,8 @@ function sArenaMixin:UpdateTrinketSettings(db, info, val)
         db[info[#info]] = val
     end
 
+    local layoutCF = (self.layoutdb and self.layoutdb.changeFont)
+
     for i = 1, sArenaMixin.maxArenaOpponents do
         local frame = self["arena" .. i]
 
@@ -3736,7 +3771,6 @@ function sArenaMixin:UpdateTrinketSettings(db, info, val)
         frame.Trinket:SetScale(db.scale)
 
         local text = self["arena" .. i].Trinket.Cooldown.Text
-        local layoutCF = (self.layoutdb and self.layoutdb.changeFont)
         local fontToUse = text.fontFile
         if layoutCF then
             fontToUse = LSM:Fetch(LSM.MediaType.FONT, self.layoutdb.cdFont)
@@ -3772,6 +3806,8 @@ function sArenaMixin:UpdateDispelSettings(db, info, val)
         db[info[#info]] = val
     end
 
+    local layoutCF = (self.layoutdb and self.layoutdb.changeFont)
+
     for i = 1, sArenaMixin.maxArenaOpponents do
         local frame = self["arena" .. i]
 
@@ -3780,7 +3816,6 @@ function sArenaMixin:UpdateDispelSettings(db, info, val)
         frame.Dispel:SetScale(db.scale)
 
         local text = self["arena" .. i].Dispel.Cooldown.Text
-        local layoutCF = (self.layoutdb and self.layoutdb.changeFont)
         local fontToUse = text.fontFile
         if layoutCF then
             fontToUse = LSM:Fetch(LSM.MediaType.FONT, self.layoutdb.cdFont)
@@ -4605,6 +4640,17 @@ else
                                             info.handler:Test()
                                         end,
                                     },
+                                    shadowSightTimer = {
+                                        order = 7.5,
+                                        name = "Enable Shadowsight Timer",
+                                        desc = "Show a timer at the top of the screen for when Shadowsight buffs spawn in the arena",
+                                        type = "toggle",
+                                        width = "full",
+                                        get = function(info) return info.handler.db.profile.shadowSightTimer end,
+                                        set = function(info, val)
+                                            info.handler.db.profile.shadowSightTimer = val
+                                        end,
+                                    },
                                     colorTrinket = {
                                         order = 8,
                                         name = "Color Trinket",
@@ -4820,17 +4866,13 @@ else
                                     removeUnequippedTrinketTexture = {
                                         order = 2,
                                         name = "Remove Un-Equipped Trinket Texture",
-                                        desc = "Enable this setting to hide the Trinket entirely when the enemy does have a one equipped, instead of showing the default White Flag indicating no Trinket.",
+                                        desc = "Hide the white flag texture in the trinket spot (signifying no trinket is equipped). No texture at all will be shown instead.",
                                         type = "toggle",
                                         width = "full",
                                         get = function(info) return info.handler.db.profile.removeUnequippedTrinketTexture end,
                                         set = function(info, val)
                                             info.handler.db.profile.removeUnequippedTrinketTexture = val
-                                            if val then
-                                                sArenaMixin.noTrinketTexture = nil
-                                            else
-                                                sArenaMixin.noTrinketTexture = 638661
-                                            end
+                                            info.handler:UpdateNoTrinketTexture()
                                         end
                                     },
                                     desaturateTrinketCD = {
@@ -4935,6 +4977,27 @@ else
                                             info.handler.db.profile.decimalThreshold = val
                                             info.handler:UpdateDecimalThreshold()
                                             info.handler:SetupCustomCD()
+                                        end
+                                    },
+                                    colorDRCooldownText = {
+                                        order = 3,
+                                        name = "Color DR Cooldown Text by Severity",
+                                        desc = isMidnight and
+                                        "Colors the DR cooldown countdown text based on diminishing return severity.\n\n|cff00ff00Green|r for ½ diminish\n|cffff0000Red|r for immune" or
+                                        "Colors the DR cooldown countdown text based on diminishing return severity.\n\n|cff00ff00Green|r for ½ diminish\n|cffffff00Yellow|r for ¼ diminish\n|cffff0000Red|r for immune",
+                                        type = "toggle",
+                                        width = "full",
+                                        get = function(info) return info.handler.db.profile.colorDRCooldownText end,
+                                        set = function(info, val)
+                                            info.handler.db.profile.colorDRCooldownText = val
+                                            if not val then
+                                                for i = 1, sArenaMixin.maxArenaOpponents do
+                                                    local frame = info.handler["arena" .. i]
+                                                    frame:ResetDRCooldownTextColors()
+                                                end
+                                            end
+                                            info.handler:SetupCustomCD()
+                                            info.handler:Test()
                                         end
                                     },
                                 },
@@ -5464,6 +5527,20 @@ else
                                 sArenaMixin.exportString = exportString
                                 sArenaMixin.importInputText = ""
                                 LibStub("AceConfigRegistry-3.0"):NotifyChange("sArena")
+                                C_Timer.After(0.1, function()
+                                    local AceGUI = LibStub("AceGUI-3.0")
+                                    for i = 1, AceGUI:GetWidgetCount("MultiLineEditBox") do
+                                        local editBox = _G[("MultiLineEditBox%dEdit"):format(i)]
+                                        if editBox and editBox:IsVisible() then
+                                            local text = editBox:GetText()
+                                            if text and text:match("^!sArena:") then
+                                                editBox:SetFocus()
+                                                editBox:HighlightText(0, text:len())
+                                                break
+                                            end
+                                        end
+                                    end
+                                end)
                             else
                                 sArenaMixin:Print("Export failed:", err)
                             end

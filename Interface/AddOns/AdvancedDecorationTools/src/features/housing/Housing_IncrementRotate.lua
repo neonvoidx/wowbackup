@@ -190,7 +190,7 @@ local function RegisterSettings()
                         if ADT and ADT.Notify then ADT.Notify(L["Invalid number"], 'error') end
                         return
                     end
-                    ADT.SetDBValue('IncrementRotateDegrees', v, true)
+                    ADT.SetDBValue('IncrementRotateDegrees', v)
                     LoadSettings()
                     if ADT and ADT.CommandDock and ADT.CommandDock.SettingsPanel and ADT.CommandDock.SettingsPanel.UpdateSettingsEntries then
                         ADT.CommandDock.SettingsPanel:UpdateSettingsEntries()
@@ -211,25 +211,11 @@ local function RegisterSettings()
         return s .. "°"
     end
 
-    CC:AddModule({
-        name = L["Increment Angle"],
-        dbKey = 'IncrementRotateDegrees',
-        type = 'dropdown',
-        options = {
-            { value = 15,  text = "15°" },
-            { value = 30,  text = "30°" },
-            { value = 45,  text = "45°" },
-            { value = 60,  text = "60°" },
-            { value = 90,  text = "90°" },
-            { value = 120, text = "120°" },
-            { value = 180, text = "180°" },
-            { action = 'button', text = L["Custom..."], onClick = OpenCustomAngleDialog },
-        },
-        valueToText = valueToText, -- 当当前值不在预设项中时，用于标签展示
-        description = L["Increment Angle tooltip"],
-        categoryKeys = { 'AutoRotate' },
-        uiOrder = 11,
-    })
+    -- 导出函数供 Page_AutoRotate 使用
+    ADT.IncrementRotate.OpenCustomAngleDialog = OpenCustomAngleDialog
+    ADT.IncrementRotate.ValueToText = valueToText
+
+    -- 注意：递增角度下拉菜单已移至 Page_AutoRotate.lua 使用 Bespoke 样式渲染
 end
 
 -- ===========================

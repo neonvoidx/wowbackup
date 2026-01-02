@@ -195,14 +195,14 @@ local function MakeClassicFrame(frame)
 
         local hideToTDebuffs = (frame.unit == "target" and db.hideTargetToTDebuffs) or (frame.unit == "focus" and db.hideFocusToTDebuffs)
         if not hideToTDebuffs then
-            -- totFrame.lastUpdate = 0
-            -- totFrame:HookScript("OnUpdate", function(self, elapsed)
-            --     self.lastUpdate = self.lastUpdate + elapsed
-            --     if self.lastUpdate >= 0.2 then
-            --         self.lastUpdate = 0
-            --         RefreshDebuffs(self, self.unit, nil, nil, true)
-            --     end
-            -- end)
+            totFrame.lastUpdate = 0
+            totFrame:HookScript("OnUpdate", function(self, elapsed)
+                self.lastUpdate = self.lastUpdate + elapsed
+                if self.lastUpdate >= 0.2 then
+                    self.lastUpdate = 0
+                    AuraUtil.RefreshAuras(self, self.unit, nil, nil, true)
+                end
+            end)
             local debuffFrameName = totFrame:GetName().."Debuff"
             for i = 1, 4 do
                 local debuffFrame = _G[debuffFrameName..i]
@@ -223,21 +223,21 @@ local function MakeClassicFrame(frame)
             if minus then
                 frame.FrameTexture:ClearAllPoints()
                 frame.FrameTexture:SetPoint("TOPLEFT", 20, -4)
-                frame.Flash:SetSize(256, 128)
+                frame.Flash:SetSize(253, 120)
                 frame.Flash:SetTexture("Interface\\TargetingFrame\\UI-TargetingFrame-Minus-Flash")
                 frame.Flash:SetTexCoord(0, 1, 0, 1)
                 frame.Flash:ClearAllPoints()
-                frame.Flash:SetPoint("TOPLEFT", -4, -4)
+                frame.Flash:SetPoint("TOPLEFT", -2.5, -10)
                 contentMain.ReputationColor:Hide()
                 contentMain.LevelText:SetAlpha(1)
             else
                 frame.FrameTexture:ClearAllPoints()
                 frame.FrameTexture:SetPoint("TOPLEFT", 20.5, -18)
-                frame.Flash:SetSize(242, 93)
+                frame.Flash:SetSize(240.5, 93)
                 frame.Flash:SetTexture(flashTex)
                 frame.Flash:SetTexCoord(0, 0.9453125, 0, 0.181640625)
                 frame.Flash:ClearAllPoints()
-                frame.Flash:SetPoint("TOPLEFT", -4, -8)
+                frame.Flash:SetPoint("TOPLEFT", -2.5, -8)
                 contentMain.LevelText:SetAlpha(1)
                 if frame.unit == "target" then
                     contentMain.ReputationColor:SetShown(not BetterBlizzFramesDB.hideTargetReputationColor)
@@ -560,7 +560,7 @@ local function MakeClassicFrame(frame)
 
         local DEFAULT_X, DEFAULT_Y = 29, 28.5
         local resourceFramePositions = {
-            EVOKER = {x = 28, y = 31, scale = 1.05, specs = {[1473] = { x = 30, y = 24 }}},
+            EVOKER = {x = 28, y = 31, scale = 1.05, specs = {[1473] = { x = 30, y = 24, scale = 1.05 }}},
             WARRIOR = { x = 28, y = 30 },
             ROGUE   = { x = 48, y = 38, scale = 0.85},
             MAGE = { x = 32, y = 32, scale = 0.95 },
@@ -580,7 +580,7 @@ local function MakeClassicFrame(frame)
                     local specData = position.specs[specID]
                     local x = specData.x or DEFAULT_X
                     local y = specData.y or DEFAULT_Y
-                    local scale = specData.scale
+                    local scale = specData.scale or 1
                     return x, y, scale
                 end
                 local x = position.x or DEFAULT_X
@@ -759,11 +759,11 @@ local function MakeClassicFrame(frame)
             frameContainer.AlternatePowerFrameTexture:SetAlpha(0)
 
             frameContainer.FrameFlash:SetParent(db.hideCombatGlow and BBF.hiddenFrame or frame)
-            frameContainer.FrameFlash:SetSize(242, 93)
+            frameContainer.FrameFlash:SetSize(240.5, 93)
             --frameContainer.FrameFlash:SetTexture(flashTex)
             --frameContainer.FrameFlash:SetTexCoord(0.9453125, 0, 0, 0.181640625)
             frameContainer.FrameFlash:ClearAllPoints()
-            frameContainer.FrameFlash:SetPoint("TOPLEFT", -6, -8)
+            frameContainer.FrameFlash:SetPoint("TOPLEFT", -4.5, -8)
             frameContainer.FrameFlash:SetDrawLayer("BACKGROUND")
 
             contentMain.StatusTexture:SetSize(191, 77)
@@ -800,11 +800,11 @@ local function MakeClassicFrame(frame)
             hpContainer.HealthBarMask:SetSize(120, 32)
 
             frameContainer.FrameFlash:SetParent(frame)
-            frameContainer.FrameFlash:SetSize(242, 93)
+            frameContainer.FrameFlash:SetSize(240.5, 93)
             frameContainer.FrameFlash:SetTexture("Interface\\Vehicles\\UI-Vehicle-Frame-Flash")
             frameContainer.FrameFlash:SetTexCoord(-0.02, 1, 0.07, 0.86)
             frameContainer.FrameFlash:ClearAllPoints()
-            frameContainer.FrameFlash:SetPoint("TOPLEFT", -6, -4)
+            frameContainer.FrameFlash:SetPoint("TOPLEFT", -4.5, -4)
             frameContainer.FrameFlash:SetDrawLayer("BACKGROUND")
 
             contentContext.RoleIcon:ClearAllPoints()
@@ -1125,6 +1125,22 @@ local function AdjustAlternateBars()
     end
     GetFrameColor()
     hooksecurefunc(PlayerFrame.PlayerFrameContainer.FrameTexture, "SetVertexColor", GetFrameColor)
+
+    if BetterBlizzFramesDB.hideUnitFramePlayerSecondResource then
+        if AlternatePowerBar then
+            AlternatePowerBar:SetAlpha(0)
+        end
+        if MonkStaggerBar then
+            MonkStaggerBar:SetAlpha(0)
+        end
+        if EvokerEbonMightBar then
+            EvokerEbonMightBar:SetAlpha(0)
+        end
+        if DemonHunterSoulFragmentsBar then
+            DemonHunterSoulFragmentsBar:SetAlpha(0)
+        end
+        BBF.changedSecondResourceAlpha = true
+    end
 end
 
 local function MakeClassicPartyFrame()

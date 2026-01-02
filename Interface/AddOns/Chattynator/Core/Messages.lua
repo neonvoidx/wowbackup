@@ -84,6 +84,7 @@ local function ConvertFormat()
 end
 
 function addonTable.MessagesMonitorMixin:OnLoad()
+  self.spacing = addonTable.Config.Get(addonTable.Config.Options.MESSAGE_SPACING)
   self.timestampFormat = addonTable.Config.Get(addonTable.Config.Options.TIMESTAMP_FORMAT)
 
   self.liveModifiers = {}
@@ -91,6 +92,14 @@ function addonTable.MessagesMonitorMixin:OnLoad()
   self.fontKey = addonTable.Config.Get(addonTable.Config.Options.MESSAGE_FONT)
   self.font = addonTable.Core.GetFontByID(self.fontKey)
   self.scalingFactor = addonTable.Core.GetFontScalingFactor()
+
+  self.inset = 0
+
+  self.sizingFontString = self:CreateFontString(nil, "BACKGROUND")
+
+  self.sizingFontString:SetNonSpaceWrap(true)
+  self.sizingFontString:SetWordWrap(true)
+  self.sizingFontString:Hide()
 
   CHATTYNATOR_MESSAGE_LOG = CHATTYNATOR_MESSAGE_LOG or GetNewLog()
   if CHATTYNATOR_MESSAGE_LOG.version ~= 1 then
@@ -251,8 +260,12 @@ function addonTable.MessagesMonitorMixin:OnLoad()
 
   addonTable.CallbackRegistry:RegisterCallback("SettingChanged", function(_, settingName)
     local renderNeeded = false
-    if settingName == addonTable.Config.Options.TIMESTAMP_FORMAT then
+    if settingName == addonTable.Config.Options.MESSAGE_SPACING then
+      self.spacing = addonTable.Config.Get(addonTable.Config.Options.MESSAGE_SPACING)
+      renderNeeded = true
+    elseif settingName == addonTable.Config.Options.TIMESTAMP_FORMAT then
       self.timestampFormat = addonTable.Config.Get(addonTable.Config.Options.TIMESTAMP_FORMAT)
+      self:SetInset()
       renderNeeded = true
     elseif settingName == addonTable.Config.Options.CHAT_COLORS then
       local colors = addonTable.Config.Get(addonTable.Config.Options.CHAT_COLORS)
@@ -281,6 +294,7 @@ function addonTable.MessagesMonitorMixin:OnLoad()
     if state[addonTable.Constants.RefreshReason.MessageFont] then
       self.font = addonTable.Core.GetFontByID(addonTable.Config.Get(addonTable.Config.Options.MESSAGE_FONT))
       self.scalingFactor = addonTable.Core.GetFontScalingFactor()
+      self:SetInset()
       addonTable.CallbackRegistry:TriggerEvent("MessageDisplayChanged")
       if self:GetScript("OnUpdate") == nil then
         self:SetScript("OnUpdate", function()
@@ -352,6 +366,28 @@ function addonTable.MessagesMonitorMixin:ConfigureStore()
   self:UpdateStores()
 end
 
+function addonTable.MessagesMonitorMixin:SetInset()
+  self.sizingFontString:SetFontObject(self.font)
+  self.sizingFontString:SetTextScale(self.scalingFactor)
+  if self.timestampFormat == "%X" then
+    self.sizingFontString:SetText("00:00:00")
+  elseif self.timestampFormat == "%H:%M" then
+    self.sizingFontString:SetText("00:00")
+  elseif self.timestampFormat == "%I:%M %p" then
+    self.sizingFontString:SetText("00:00 mm")
+  elseif self.timestampFormat == "%I:%M:%S %p" then
+    self.sizingFontString:SetText("00:00:00 mm")
+  elseif self.timestampFormat == " " then
+    self.sizingFontString:SetText(" ")
+  else
+    error("unknown format")
+  end
+  self.inset = self.sizingFontString:GetUnboundedStringWidth() + 10
+  if self.timestampFormat == " " then
+    self.inset = 8
+  end
+end
+
 function addonTable.MessagesMonitorMixin:ShowGMOTD()
   local guildID = C_Club.GetGuildClubId()
   if not guildID then
@@ -414,6 +450,7 @@ function addonTable.MessagesMonitorMixin:OnEvent(eventName, ...)
         end)
       end
     end)
+    self:SetInset()
   elseif eventName == "PLAYER_REPORT_SUBMITTED" then -- Remove messages from chat log
     if self.messageCount < self.newMessageStartPoint then
       return
@@ -471,10 +508,12 @@ function addonTable.MessagesMonitorMixin:OnEvent(eventName, ...)
 
     self:UpdateChannels()
 
+    self.pending = 0
     addonTable.CallbackRegistry:TriggerEvent("Render")
   elseif eventName == "PLAYER_ENTERING_WORLD" then
     self.defaultLanguage = GetDefaultLanguage()
     self.alternativeDefaultLanguage = GetAlternativeDefaultLanguage()
+    self:SetInset()
   else
     local text, playerArg, _, _, _, _, channelID, channelIndex, _, _, lineID, playerGUID = ...
     local channelName = self.channelMap[channelIndex]
@@ -865,11 +904,10 @@ local function GetDecoratedSenderName(event, ...)
     decoratedPlayerName = firstName
   end
 
-  --[[
   -- Add timerunning icon when necessary based on player guid
-  if senderGUID and C_ChatInfo.IsTimerunningPlayer(senderGUID) then
+  if senderGUID and (not issecretvalue or not issecretvalue(senderGUID)) and C_ChatInfo.IsTimerunningPlayer(senderGUID) then
     decoratedPlayerName = TimerunningUtil.AddSmallIcon(decoratedPlayerName);
-  end]]
+  end
 
   if senderGUID and chatTypeInfo and --[[ChatFrameUtil.ShouldColorChatByClass(chatTypeInfo) and]] GetPlayerInfoByGUID ~= nil then
     if englishClass then
@@ -1085,6 +1123,9 @@ function addonTable.MessagesMonitorMixin:MessageEventHandler(event, ...)
       self:AddMessage(arg1, info.r, info.g, info.b, info.id);
     end
   elseif (type == "CHANNEL_NOTICE_USER") then
+    if issecretvalue and issecretvalue(arg1) then
+      return
+    end
     local globalstring = _G["CHAT_"..arg1.."_NOTICE_BN"];
     if ( not globalstring ) then
       globalstring = _G["CHAT_"..arg1.."_NOTICE"];
@@ -1098,8 +1139,8 @@ function addonTable.MessagesMonitorMixin:MessageEventHandler(event, ...)
       self:AddMessage(format(globalstring, arg8, arg4, arg2, arg5), info.r, info.g, info.b, info.id);
     elseif ( arg1 == "INVITE" ) then
       local playerLink = GetPlayerLink(arg2, ("[%s]"):format(arg2), arg11);
-      local accessID = ChatHistory_GetAccessID(chatGroup, chatTarget);
-      local typeID = (not issecretvalue or not issecretvalue(arg12)) and ChatHistory_GetAccessID(infoType, chatTarget, arg12) or accessID
+      local accessID = 0
+      local typeID = 0
       self:AddMessage(string.format(globalstring, arg4, playerLink), info.r, info.g, info.b, info.id, accessID, typeID);
     else
       self:AddMessage(string.format(globalstring, arg8, arg4, arg2), info.r, info.g, info.b, info.id);
@@ -1108,19 +1149,23 @@ function addonTable.MessagesMonitorMixin:MessageEventHandler(event, ...)
       self:AddMessage(CHAT_MSG_BLOCK_CHAT_CHANNEL_INVITE, info.r, info.g, info.b, info.id);
     end
   elseif (type == "CHANNEL_NOTICE") then
-    local accessID = ChatHistory_GetAccessID(GetChatCategory(type), arg8);
-    local typeID = (not issecretvalue or not issecretvalue(arg12)) and ChatHistory_GetAccessID(infoType, chatTarget, arg12) or accessID
+    if issecretvalue and issecretvalue(arg1) then
+      return
+    end
+
+    local accessID = 0
+    local typeID = 0
 
     if arg1 == "YOU_CHANGED" and C_ChatInfo.GetChannelRuleset and C_ChatInfo.GetChannelRuleset(arg8) == Enum.ChatChannelRuleset.Mentor then
       --self:UpdateDefaultChatTarget();
       --self.editBox:UpdateNewcomerEditBoxHint();
     else
-      if arg1 == "YOU_LEFT" then
+      if arg1 == "YOU_LEFT" and self.editBox.UpdateNewcomerEditBoxHint then
         self.editBox:UpdateNewcomerEditBoxHint(arg8);
       end
 
       local globalstring;
-      if ( arg1 == "TRIAL_RESTRICTED" ) then
+      if arg1 == "TRIAL_RESTRICTED" then
         globalstring = CHAT_TRIAL_RESTRICTED_NOTICE_TRIAL;
       else
         globalstring = _G["CHAT_"..arg1.."_NOTICE_BN"];
@@ -1136,6 +1181,9 @@ function addonTable.MessagesMonitorMixin:MessageEventHandler(event, ...)
       self:AddMessage(string.format(globalstring, arg8, (ChatFrame_ResolvePrefixedChannelName or ChatFrameUtil.ResolvePrefixedChannelName)(arg4)), info.r, info.g, info.b, info.id, accessID, typeID);
     end
   elseif ( type == "BN_INLINE_TOAST_ALERT" ) then
+    if issecretvalue and issecretvalue(arg1) then
+      return
+    end
     local globalstring = _G["BN_INLINE_TOAST_"..arg1];
     if not globalstring then
       GMError(("Missing global string for %q"):format("BN_INLINE_TOAST_"..arg1));
@@ -1174,7 +1222,9 @@ function addonTable.MessagesMonitorMixin:MessageEventHandler(event, ...)
     self:AddMessage(message, info.r, info.g, info.b, info.id);
   elseif ( type == "BN_INLINE_TOAST_BROADCAST" ) then
     if ( arg1 ~= "" ) then
-      if not issecretvalue or not issecretvalue(arg1) then
+      if C_StringUtil and C_StringUtil.RemoveContiguousSpaces then
+        arg1 = trim(C_StringUtil.RemoveContiguousSpaces(arg1, 4))
+      else
         arg1 = RemoveNewlines(RemoveExtraSpaces(arg1));
       end
       local linkDisplayText = ("[%s]"):format(arg2);
@@ -1183,8 +1233,10 @@ function addonTable.MessagesMonitorMixin:MessageEventHandler(event, ...)
     end
   elseif ( type == "BN_INLINE_TOAST_BROADCAST_INFORM" ) then
     if ( arg1 ~= "" ) then
-      if not issecretvalue or not issecretvalue(arg1) then
-        arg1 = RemoveExtraSpaces(arg1);
+      if C_StringUtil and C_StringUtil.RemoveContiguousSpaces then
+        arg1 = C_StringUtil.RemoveContiguousSpaces(arg1, 4)
+      else
+        arg1 = RemoveExtraSpaces(arg1)
       end
       self:AddMessage(BN_INLINE_TOAST_BROADCAST_INFORM, info.r, info.g, info.b, info.id);
     end
@@ -1204,7 +1256,9 @@ function addonTable.MessagesMonitorMixin:MessageEventHandler(event, ...)
       local showLink = 1;
       if ( strsub(type, 1, 7) == "MONSTER" or strsub(type, 1, 9) == "RAID_BOSS") then
         showLink = nil;
-      elseif not issecretvalue or not issecretvalue(msg) then
+      elseif C_StringUtil and C_StringUtil.EscapeLuaFormatString then
+        msg = C_StringUtil.EscapeLuaFormatString(msg)
+      else
         msg = string.gsub(msg, "%%", "%%%%");
       end
 
@@ -1212,7 +1266,9 @@ function addonTable.MessagesMonitorMixin:MessageEventHandler(event, ...)
       msg = (ChatFrame_ReplaceIconAndGroupExpressions or C_ChatInfo.ReplaceIconAndGroupExpressions)(msg, arg17, not (ChatFrame_CanChatGroupPerformExpressionExpansion or ChatFrameUtil.CanChatGroupPerformExpressionExpansion)(chatGroup)); -- If arg17 is true, don't convert to raid icons
 
       --Remove groups of many spaces
-      if not issecretvalue or not issecretvalue(msg) then
+      if C_StringUtil and C_StringUtil.RemoveContiguousSpaces then
+        msg = C_StringUtil.RemoveContiguousSpaces(msg, 4)
+      else
         msg = RemoveExtraSpaces(msg);
       end
 
@@ -1264,20 +1320,20 @@ function addonTable.MessagesMonitorMixin:MessageEventHandler(event, ...)
       if ( usingDifferentLanguage ) then
         local languageHeader = "["..arg3.."] ";
         if showLink or (issecretvalue and issecretvalue(arg2)) or arg2 ~= "" then
-          outMsg = string.format(GetOutMessageFormatKey(type) .. "%s%s", string.format("%s%s", pflag, playerLink), languageHeader, message);
+          outMsg = string.format(GetOutMessageFormatKey(type)..languageHeader..message, pflag..playerLink);
         else
-          outMsg = string.format(GetOutMessageFormatKey(type) .. "%s%s", string.format("%s%s", pflag, arg2), languageHeader, message);
+          outMsg = string.format(GetOutMessageFormatKey(type)..languageHeader..message, pflag..arg2);
         end
       else
         if not showLink or (not issecretvalue or not issecretvalue(arg2)) and arg2 == "" then
           if ( type == "TEXT_EMOTE" ) then
             outMsg = message;
           else
-            outMsg = string.format(GetOutMessageFormatKey(type) .. message, pflag .. arg2, arg2);
+            outMsg = string.format(GetOutMessageFormatKey(type)..message, pflag .. arg2, arg2);
           end
         else
           if ( type == "EMOTE" ) then
-            outMsg = string.format(GetOutMessageFormatKey(type) .. message, pflag .. playerLink);
+            outMsg = string.format(GetOutMessageFormatKey(type)..message, pflag .. playerLink);
           elseif ( type == "TEXT_EMOTE") then
             if not issecretvalue or not issecretvalue(message) and not issecretvalue(arg2) and not issecretvalue(playerLink) then
               outMsg = string.gsub(message, arg2, pflag..playerLink, 1);
@@ -1285,13 +1341,9 @@ function addonTable.MessagesMonitorMixin:MessageEventHandler(event, ...)
               outMsg = message
             end
           elseif (type == "GUILD_ITEM_LOOTED") then
-            if not issecretvalue or not issecretvalue(message) and not issecretvalue(arg2) and not issecretvalue(playerLinkDisplayText) then
-              outMsg = string.gsub(message, "$s", GetPlayerLink(arg2, playerLinkDisplayText));
-            end
-          elseif not issecretvalue or (not issecretvalue(message) and not issecretvalue(playerLink)) then
-            outMsg = string.format(GetOutMessageFormatKey(type) .. message, pflag..playerLink)
+            outMsg = string.gsub(message, "$s", GetPlayerLink(arg2, playerLinkDisplayText));
           else
-            outMsg = string.format(GetOutMessageFormatKey(type), pflag..playerLink) .. message;
+            outMsg = string.format(GetOutMessageFormatKey(type)..message, pflag..playerLink)
           end
         end
       end
@@ -1306,8 +1358,8 @@ function addonTable.MessagesMonitorMixin:MessageEventHandler(event, ...)
 
     local isChatLineCensored = C_ChatInfo.IsChatLineCensored(lineID);
     local msg = isChatLineCensored and arg1 or MessageFormatter(arg1);
-    local accessID = (not issecretvalue or not issecretvalue(chatTarget)) and ChatHistory_GetAccessID(chatGroup, chatTarget) or 0
-    local typeID = (not issecretvalue or not issecretvalue(arg12 or arg13)) and ChatHistory_GetAccessID(infoType, chatTarget, arg12 or arg13) or accessID
+    local accessID = 0
+    local typeID = 0
 
     -- The message formatter is captured so that the original message can be reformatted when a censored message
     -- is approved to be shown.

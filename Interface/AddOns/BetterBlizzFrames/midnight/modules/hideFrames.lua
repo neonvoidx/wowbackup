@@ -1,4 +1,5 @@
 if not BBF.isMidnight then return end
+local L = BBF.L
 local hiddenFrame = CreateFrame("Frame")
 hiddenFrame:Hide()
 BBF.hiddenFrame = hiddenFrame
@@ -23,6 +24,21 @@ local changes = {}
 local function applyAlpha(frame, alpha)
     if frame then
         frame:SetAlpha(alpha)
+    end
+end
+
+local function setResourceFrameVisibility(frame, visible)
+    if not frame then return end
+    if visible then
+        frame:SetAlpha(1)
+        if frame.EnableMouse then
+            frame:EnableMouse(true)
+        end
+    else
+        frame:SetAlpha(0)
+        if frame.EnableMouse then
+            frame:EnableMouse(false)
+        end
     end
 end
 
@@ -69,7 +85,7 @@ function BBF.HideFrames()
     local db = BetterBlizzFramesDB
     if db.hasCheckedUi then
         if InCombatLockdown() then
-            print("|A:gmchat-icon-blizz:16:16|a Better|cff00c0ffBlizz|rFrames: Combat detected while adjusting Hide settings. Reload might be required to see updates. Please leave combat.")
+            BBF.Print(L["Print_Combat_Hide_Settings"])
             return
         end
         local playerClass, englishClass = UnitClass("player")
@@ -219,7 +235,7 @@ function BBF.HideFrames()
                 hooksecurefunc(EditModeManagerFrame, "EnterEditMode", function()
                     if InCombatLockdown() then
                         if hiddenBar1 then
-                            print("Could not show ActionBar1 due to combat. Please leave combat and re-open Edit Mode to show it.")
+                            BBF.Print(L["Print_ActionBar1_Show_Combat"])
                         end
                         return
                     end
@@ -229,7 +245,7 @@ function BBF.HideFrames()
                 hooksecurefunc(EditModeManagerFrame, "ExitEditMode", function()
                     if InCombatLockdown() then
                         if not hiddenBar1 then
-                            print("Could not hide ActionBar1 due to combat. Please leave combat and re-open Edit Mode to hide it.")
+                            BBF.Print(L["Print_ActionBar1_Hide_Combat"])
                         end
                         return
                     end
@@ -680,10 +696,11 @@ function BBF.HideFrames()
                 end
             end
             if DruidComboPointBarFrame and englishClass == "DRUID" then
-                if BetterBlizzFramesDB.hidePlayerPowerNoDruid then
-                    DruidComboPointBarFrame:SetAlpha(1)
+                if BetterBlizzFramesDB.hidePlayerPowerNoDruid and originalResourceParent then
+                    setResourceFrameVisibility(DruidComboPointBarFrame, true)
                 else
-                    DruidComboPointBarFrame:SetAlpha(0)
+                    setResourceFrameVisibility(DruidComboPointBarFrame, false)
+                    if not originalResourceParent then originalResourceParent = true end
                 end
             end
             if PaladinPowerBarFrame and englishClass == "PALADIN" then
@@ -711,32 +728,31 @@ function BBF.HideFrames()
                 end
             end
             if MonkHarmonyBarFrame and englishClass == "MONK" then
-                if BetterBlizzFramesDB.hidePlayerPowerNoMonk then
-                    if originalResourceParent then MonkHarmonyBarFrame:SetAlpha(originalResourceParent); MonkHarmonyBarFrame:EnableMouse(true) end
+                if BetterBlizzFramesDB.hidePlayerPowerNoMonk and originalResourceParent then
+                    setResourceFrameVisibility(MonkHarmonyBarFrame, true)
                 else
-                    if not originalResourceParent then originalResourceParent = MonkHarmonyBarFrame:GetAlpha() end
-                    --MonkHarmonyBarFrame:SetParent(hiddenFrame)
-                    MonkHarmonyBarFrame:SetAlpha(0)
-                    MonkHarmonyBarFrame:EnableMouse(false)
+                    setResourceFrameVisibility(MonkHarmonyBarFrame, false)
+                    if not originalResourceParent then originalResourceParent = true end
                 end
             end
             if MageArcaneChargesFrame and englishClass == "MAGE" then
-                if BetterBlizzFramesDB.hidePlayerPowerNoMage then
-                    MageArcaneChargesFrame:SetAlpha(1)
+                if BetterBlizzFramesDB.hidePlayerPowerNoMage and originalResourceParent then
+                    setResourceFrameVisibility(MageArcaneChargesFrame, true)
                 else
-                    MageArcaneChargesFrame:SetAlpha(0)
+                    setResourceFrameVisibility(MageArcaneChargesFrame, false)
+                    if not originalResourceParent then originalResourceParent = true end
                 end
             end
             changes.hidePlayerPower = true
         elseif originalResourceParent then
             if WarlockPowerFrame and englishClass == "WARLOCK" then WarlockPowerFrame:SetParent(originalResourceParent) end
             if RogueComboPointBarFrame and englishClass == "ROGUE" then RogueComboPointBarFrame:SetParent(originalResourceParent) end
-            if DruidComboPointBarFrame and englishClass == "DRUID" then DruidComboPointBarFrame:SetAlpha(1) end
+            if DruidComboPointBarFrame and englishClass == "DRUID" then setResourceFrameVisibility(DruidComboPointBarFrame, true) end
             if PaladinPowerBarFrame and englishClass == "PALADIN" then PaladinPowerBarFrame:SetParent(originalResourceParent) end
             if RuneFrame and englishClass == "DEATHKNIGHT" then RuneFrame:SetParent(originalResourceParent) end
             if EssencePlayerFrame and englishClass == "EVOKER" then EssencePlayerFrame:SetParent(originalResourceParent) end
-            if MonkHarmonyBarFrame and englishClass == "MONK" then MonkHarmonyBarFrame:SetParent(originalResourceParent) end
-            if MageArcaneChargesFrame and englishClass == "MAGE" then MageArcaneChargesFrame:SetAlpha(1) end
+            if MonkHarmonyBarFrame and englishClass == "MONK" then setResourceFrameVisibility(MonkHarmonyBarFrame, true) end
+            if MageArcaneChargesFrame and englishClass == "MAGE" then setResourceFrameVisibility(MageArcaneChargesFrame, true) end
             changes.hidePlayerPower = nil
         end
 
@@ -1534,7 +1550,7 @@ end
 function BBF.MoveQueueStatusEye()
     if not BetterBlizzFramesDB.moveQueueStatusEye then return end
     if C_AddOns.IsAddOnLoaded("Bartender4") then
-        DEFAULT_CHAT_FRAME:AddMessage("|A:gmchat-icon-blizz:16:16|aBetter|cff00c0ffBlizz|rFrames: This setting is disabled with Bartender4. You can already move it with Bartender4.")
+        BBF.Print(L["Print_Bartender4_Conflict"])
         return
     end
 

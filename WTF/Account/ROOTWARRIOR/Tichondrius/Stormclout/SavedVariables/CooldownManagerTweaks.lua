@@ -5,6 +5,8 @@ CMT_CharDB = {
 ["specProfiles"] = {
 },
 ["currentProfile"] = "Default",
+["customItemsBySpec"] = {
+},
 ["buffIconMappings"] = {
 },
 ["customEntriesBySpec"] = {
@@ -12,7 +14,5 @@ CMT_CharDB = {
 },
 [269] = {
 },
-},
-["customItemsBySpec"] = {
 },
 }

@@ -6,17 +6,25 @@
 ## Category-zhCN: 住宅增强
 ## IconTexture: Interface\AddOns\AdvancedDecorationTools\ADTicon.png
 ## Author: 瑟瑟
-## Version: 251214.106
+## Version: 251230.9
 ## SavedVariables: ADT_DB
 ## Bindings: Bindings.xml
 
 # 2025 目录：src/* 为代码主体，bindings/ 为按键定义
 # 加载顺序：核心 → UI → 本地化 → 指挥坞（设置）→ 功能模块（住宅）
+libs/LibStub/LibStub.lua
+libs/LibDeflate/lib.xml
 src/core/init.lua
+src/core/api_util.lua
+src/core/housing_cvars.lua
+src/core/easing.lua
+src/core/ui_sound.lua
 src/core/Keybinds.lua
 src/core/scroll.lua
 src/core/ui.lua
 bindings/Bindings.lua
 src/i18n/Localization.xml
+src/features/housing/Housing_Config.lua
+src/features/housing/Housing_Transition.lua
 src/dock/Dock.xml
 src/features/housing/index.xml

@@ -1,13 +1,6 @@
 
 CHATTYNATOR_CURRENT_PROFILE = "DEFAULT"
 CHATTYNATOR_COMMAND_HISTORY = {
-"/s /bbp",
-"/s /wa",
-"/s /kneel",
-"/s /wa",
-"/s /bbp",
-"/s /wa",
-"/s /bbp",
 "/s /wa",
 "/s /key",
 "/s /keys",

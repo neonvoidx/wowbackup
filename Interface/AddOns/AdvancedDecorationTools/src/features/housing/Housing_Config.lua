@@ -11,46 +11,56 @@ if not ADT then return end
 -- 样式配置（单一权威）
 -- ===========================
 local CFG = {
-    -- Dock 子面板与 Header 的间距、边距以及高度限制
+    -- Dock 与官方面板的布局参数
     Layout = {
-        headerToInstrGap = 8,  -- Header 与说明列表之间的垂直间距
-        contentTopPadding = 14,
-        headerTopNudge   = 10, -- Header 相对 Content 的下移偏移
-        contentBottomPadding = 10,
-        -- SubPanel 最小高度：用于“只有一两行信息”时避免出现大面积空白。
-        -- 160 对应旧版布局的保守值；当前 SubPanel 已支持自适应高度，因此下调为更贴合内容的像素值。
-        subPanelMinHeight = 96,
-        subPanelMaxHeight = 720,
-        -- SubPanel 正文判空相关阈值（单一权威）
-        contentAlphaThreshold = 0.01, -- alpha ≤ 阈值视为不可见（用于排除装饰/占位）
-        leafMinAreaPx = 2,            -- 叶子节点最小边长（像素），过小视为无效区域
-        -- ============ 右侧三层纵向布局（LayoutManager 单一权威） ============
+        -- ============ 右侧两层纵向布局（LayoutManager 单一权威） ============
         -- DockUI 最小高度（像素）：必须保证 Header + 基本交互可见
         dockMinHeightPx = 160,
         -- DockUI 最小临界高度（像素）：再小会破坏交互；溢出时 Dock 不得低于该值
         dockMinHeightCriticalPx = 160,
         -- DockUI 最大高度占屏幕比例（0~1）：仅作为 max-height 防爆，不做主分配
         dockMaxHeightViewportRatio = 0.32,
-        -- SubPanel 最大高度占屏幕比例（0~1）
-        subPanelMaxHeightViewportRatio = 0.40,
         -- 官方面板最小高度（像素）：默认允许为 0
         blizzardMinHeightPx = 0,
-        -- 三层之间的统一垂直间距（像素，默认 0 表示相切）
+        -- 两层之间的统一垂直间距（像素，默认 0 表示相切）
         verticalGapPx = 0,
         -- 视口安全边距（像素）
         topSafeMarginPx = 0,
         bottomSafeMarginPx = 8,
-        -- 说明：布局已改为“Dock 固定右上 + SubPanel 向下堆叠”，不再使用“SubPanel 居中偏置”。
-        -- ============ 新增：宽度约束（Dock/子面板统一权威） ============
+        -- 说明：布局为“Dock 固定右上 + 官方面板向下堆叠”。
+        -- ============ 新增：宽度约束（Dock 统一权威） ============
         -- 中央区域（不含左侧分类栏）的最小宽度，避免短文案把面板压窄导致换行/省略。
         -- 对应 DockUI.UpdateAutoWidth 中的 minCenter。
         dockMinCenterWidth = 300,
         -- Dock 主体“总宽度”相对当前视口宽度的最大占比（0~1）。
         -- 设为 0 或 nil 表示不以比例限制，仅受屏幕边距与内容驱动。
         dockMaxTotalWidthRatio = 0.5,
-        -- 子面板在计算“所需中心宽度”时的硬上限占比（防极端超长 token 拉爆）。
-        -- 仅用于 SubPanel 内部测量，不直接决定 Dock 总宽。
-        subPanelMaxViewportRatio = 0.80,
+
+        -- ============ 重要变更：DockUI 固定宽度（按语言） ============
+        -- 目的：彻底删除 DockUI 的“自动动态调整宽度”逻辑，改为每个语言一组固定宽度。
+        -- 设计：单一权威配置表，键为暴雪 Locale（GetLocale() 返回值），fallback 使用 "default"。
+        -- 说明：
+        -- - center 表示 Dock 右侧主体（中央列表区域）的固定宽度（像素）；
+        -- - side   表示左侧分类面板（静态左窗）的固定宽度（像素）。
+        -- - 若某语言未显式给出，则回退到 default；开发/测试阶段如需微调，仅改本表。
+        DockWidthByLocale = {
+            -- 基线（大多数拉丁语系适用）
+            default = { center = 360, side = 180 },
+            -- 中文：字面密度高，列表与分类建议更宽一些
+            zhCN    = { center = 300, side = 200 },
+            zhTW    = { center = 300, side = 200 },
+            -- 韩语：略放宽中央区域与侧栏
+            koKR    = { center = 380, side = 190 },
+            -- 俄语/德语/法语：单词较长，适当放宽中央区域
+            ruRU    = { center = 420, side = 200 },
+            deDE    = { center = 420, side = 200 },
+            frFR    = { center = 420, side = 200 },
+            -- 南欧/南美语种：适度放宽
+            esES    = { center = 400, side = 190 },
+            esMX    = { center = 400, side = 190 },
+            ptBR    = { center = 400, side = 190 },
+            itIT    = { center = 400, side = 190 },
+        },
     },
     -- 每一“行”说明（HouseEditorInstructionTemplate）的视觉参数
     Row = {
@@ -59,7 +69,7 @@ local CFG = {
         hSpacing  = 8,    -- 左右两列之间的间距（默认 10）
         vSpacing  = 2,    -- 不同行之间的垂直间距（容器级）
         vPadEach  = 1,    -- 每行上下额外内边距（topPadding/bottomPadding）
-        -- 左侧与 SubPanel.Content 对齐：默认采用 DockUI 的统一左右留白（GetRightPadding），
+        -- 左侧与 Dock 内容区对齐：默认采用 DockUI 的统一左右留白（GetRightPadding），
         -- 以便与 Header.Divider 左/右缩进保持一致；若需更贴边，可改为 0。
         leftPad   = nil,       -- nil 表示使用 DockUI 统一留白；设为数字则显式覆盖
         textLeftNudge = 0,     -- 仅信息文字的额外 X 偏移（单位像素，正值→向右，负值→向左）
@@ -98,24 +108,12 @@ local CFG = {
         valueBad       = "FFFF6B6B", -- 不可用/告警（库存=0）
         valueNeutral   = "FFB8C0CC", -- 中性数值（如 0/0、未染色）
     },
-    -- 子面板展开/收起动画（配置驱动，单一权威）
-    SubPanelAnim = {
-        -- 展开/收起的总时长（秒）
-        inDuration  = 0.18,
-        outDuration = 0.18,
-        -- 缩放最小值（避免 0 造成某些版本下的数值异常）
-        minScale    = 0.001,
-        -- 平滑曲线（Animation:SetSmoothing 的参数）：可选 IN/OUT/IN_OUT
-        smoothing   = "OUT",
-        -- 是否同时做 Alpha 的淡入/淡出
-        withAlpha   = true,
-    },
     -- 暴雪“放置的装饰清单”对齐 DockUI 的配置（单一权威）
     PlacedList = {
         -- 说明：官方清单木质边框相对 Frame 有约 ±4px 的外扩；
-        -- 为与 DockUI 右侧面板/子面板的“0 外扩”对齐，这里仅在锚点上做等量补偿。
-        anchorLeftCompensation  = 6,   -- 清单锚到 SubPanel 时，LEFT 方向的 +像素偏移
-        anchorRightCompensation = -6,  -- 清单锚到 SubPanel 时，RIGHT 方向的 -像素偏移
+        -- 为与 DockUI 右侧面板的“0 外扩”对齐，这里仅在锚点上做等量补偿。
+        anchorLeftCompensation  = 6,   -- 清单锚点 LEFT 方向的 +像素偏移
+        anchorRightCompensation = -6,  -- 清单锚点 RIGHT 方向的 -像素偏移
         -- 垂直间距由 Layout.verticalGapPx 统一裁决（单一权威）
     },
     -- 悬停提示淡入/淡出节奏（配置驱动，单一权威）
@@ -143,7 +141,7 @@ local CFG = {
         -- 锚点：将官方 DecorCount 贴到 Dock.Header 的哪个点位
         point    = "CENTER",
         relPoint = "CENTER",
-        offsetX  = -0,
+        offsetX  = -10,
         offsetY  = -2,
         -- 缩放：整体缩放比（不改变父级/显隐）
         scale    = 0.65,
@@ -165,6 +163,41 @@ local CFG = {
         strata   = nil,      -- nil=跟随 Dock 主体；也可指定 "FULLSCREEN_DIALOG" 等
         levelBias = 0,       -- 基于 Header 的提升量
         levelBiasOverBorder = 1, -- 若存在 Dock.BorderFrame，则在其之上再提升的量
+    },
+
+    -- Header 齿轮按钮（折叠/展开 Dock 主体）的定位与尺寸（单一权威）
+    GearButton = {
+        -- 统一锚到 Dock.Header 的右上角附近，保持与关闭按钮、DecorCount 的相对关系稳定
+        point    = "LEFT",
+        relPoint = "LEFT",
+        offsetX  = 30,
+        offsetY  = -3,
+        -- 尺寸（像素）：若未设置，则回落到 DockUI 的 Def.ButtonSize
+        size     = 28,
+        -- 层级（可选）：nil 表示跟随 Header；若需要可指定 "FULLSCREEN_DIALOG"/"TOOLTIP" 等
+        strata   = nil,
+        -- 基于 Header 的 FrameLevel 偏移（正数抬高）
+        levelBias = 2,
+    },
+    -- Header 左侧“眼睛按钮”（Alt+Z 等效）：仅住宅编辑模式显示
+    EyeButton = {
+        -- 锚点：位于 Header 外部的左侧
+        point    = "RIGHT",
+        relPoint = "LEFT",
+        offsetX  = -8,
+        offsetY  = -2,
+        -- 尺寸（像素）
+        size     = 36,
+        -- 层级：按钮父级为 WorldFrame，需要手动指定层级以避免被 UI 遮挡
+        strata   = "TOOLTIP",
+        -- 基于 Header 的 FrameLevel 偏移（正数抬高）
+        levelBias = 10,
+        -- Atlas：默认使用 GM-icon-visible 系列
+        atlasNormal  = "GM-icon-visible",
+        atlasHover   = "GM-icon-visible-hover",
+        atlasPressed = "GM-icon-visible-pressed",
+        -- 高亮透明度（0~1）
+        highlightAlpha = 0.35,
     },
     -- Dock 列表（Clipboard/Recent）的库存数字与名称间距（配置驱动，分类可独立）
     DockDecorList = {
@@ -306,6 +339,148 @@ local CFG = {
             fontFlags    = nil,
             colorNormal = { r = 1, g = 1, b = 1, a = 1 },
             colorZero   = { r = 1, g = 0.3, b = 0.3, a = 1 },
+        },
+    },
+
+    -- DockUI 边框装饰（木框九宫格 + 藤蔓角落装饰）视觉参数（配置驱动，单一权威）
+    DockBorder = {
+        -- 主体木框（housing-wood-frame 九宫格）
+        WoodFrame = {
+            atlas = "housing-wood-frame",
+            sliceMargins = 16,  -- 九宫格边距（四边统一）
+        },
+        -- 四个角落藤蔓装饰（housing-dashboard-filigree-corner-*）
+        -- 基础尺寸（素材原始尺寸约为 54×42 / 66×50）
+        CornerBaseSize = { width = 54, height = 42 },
+        -- 缩放系数：1.0 = 原始大小，1.5 = 放大 50%，0.8 = 缩小 20%
+        CornerScale = 1.2,
+        -- 各角落偏移（相对 BorderFrame 边缘）
+        CornerTL = { x = -4, y = 2 },   -- 左上角
+        CornerTR = { x = 4, y = 2 },    -- 右上角
+        CornerBL = { x = -4, y = -6 },  -- 左下角
+        CornerBR = { x = 4, y = -6 },   -- 右下角
+    },
+
+    -- 模式栏重排布局（ModeBarRelocate）视觉参数（配置驱动，单一权威）
+    ModeBarRelocate = {
+        -- 主模式栏位置（相对于 UIParent 右下角）
+        AnchorOffsetX = -20,  -- 距右边缘像素（负值向左）
+        AnchorOffsetY = 30,   -- 距底边缘像素（正值向上）
+        -- 主按钮之间的间距（负值表示重叠）
+        ButtonSpacing = -8,
+        -- 子模式栏与主按钮之间的间距
+        SubBarOffset = -10,
+        -- 箭头锚点偏移（相对于子模式栏右侧）
+        ArrowOffsetX = -60,    -- 箭头 LEFT 锚点距子模式栏 RIGHT 的 X 偏移
+        ArrowOffsetY = 0,     -- 箭头 Y 偏移（正值向上）
+        -- 背景框内边距
+        BackgroundPadding = 8,
+        -- 楼层切换 UI（LayoutModeFrame.FloorSelect）位置微调
+        -- 说明：现代布局下避免与右下角模式栏重叠
+        FloorSelectOffsetX = -60, -- 水平偏移（负值向左）
+        FloorSelectOffsetY = 0,   -- 垂直偏移（正值向上）
+    },
+
+    -- 悬停信息面板（HoverInfoPanel）配置（配置驱动，单一权威）
+    HoverInfoPanel = {
+        -- 面板尺寸
+        Height = 56,                    -- 面板高度
+        GapToQuickbar = 10,              -- 距离 QuickBar 顶部的间距
+        DividerInsetX = 20,             -- 分隔线左右内缩
+        DividerHeight = 8,              -- 分隔线高度
+        DividerOffsetY = -28,           -- 分隔线 Y 偏移（相对于面板顶部）
+        InfoRowOffsetY = -4,            -- 信息行距分隔线底部的间距
+
+        -- 字体大小
+        TitleFontSize = 18,             -- 标题字体大小
+        InfoFontSize = 12,              -- 信息行字体大小
+
+        -- 预算图标
+        BudgetIconSize = 16,            -- 预算图标尺寸
+        BudgetIconSpacing = 4,          -- 预算图标与数值的间距
+
+        -- 染色色块
+        DyeSwatchSize = 14,             -- 色块尺寸
+        DyeSwatchSpacing = 2,           -- 色块之间的间距
+        DyeIconSize = 16,               -- 染料图标尺寸
+        DyeIconSpacing = 4,             -- 染料图标与色块的间距
+
+        -- 防抖延迟（秒）
+        ClearDelay = 0.15,
+    },
+
+    -- 悬停 HUD 整体位置（HoverHUD）配置（配置驱动，单一权威）
+    -- 说明：控制整个 HoverHUD 区域的位置偏移，包括：
+    -- - 暴雪的"选择装饰+鼠标"提示
+    -- - ADT 自定义的按键气泡（重复、剪切、复制、粘贴等）
+    -- - CustomizeMode 染料提示
+    HoverHUD = {
+        -- === BasicDecorMode 主区域 ===
+        -- 锚点：相对于 HouseEditorFrame.BasicDecorModeFrame 右侧
+        point    = "RIGHT",
+        relPoint = "RIGHT",
+        offsetX  = -100,     -- 水平偏移（负值向左）
+        offsetY  = 200,       -- 垂直偏移（正值向上）
+        width    = 420,     -- 容器宽度（用于文本换行）
+
+        -- === CustomizeMode 染料提示区域 ===
+        -- 锚点：相对于 HouseEditorFrame.CustomizeModeFrame 右侧
+        DyeHint = {
+            point    = "RIGHT",
+            relPoint = "RIGHT",
+            offsetX  = -30,     -- 水平偏移（负值向左）
+            offsetY  = -60,     -- 垂直偏移（负值向下，避开暴雪"选中装饰"提示）
+            width    = 420,
+        },
+    },
+
+    -- ============ 入场/离场过渡动画配置（单一权威） ============
+    -- 说明：控制进入/离开住宅编辑模式时 ADT 自定义 UI 的动画效果
+    TransitionAnimations = {
+        -- 总开关
+        enabled = true,
+
+        -- DockUI（右上角向下滑入）
+        DockUI = {
+            motion = "slide",       -- 入场/离场：滑入/滑出（避免交叉淡入）
+            slideMode = "anchor",   -- slide 模式：anchor(改锚点) | translate(视觉平移)
+            enterDuration = 0.5,    -- 入场动画时长（秒）
+            leaveDuration = 0.35,    -- 离场动画时长（秒）
+            enterDelay = 0,         -- 入场延迟（秒）
+            offsetY = 200,           -- 从上方 80px 处滑入（正值 = 从屏幕外上方）
+            smoothingIn = "OUT_QUART",    -- 入场缓动曲线（丝滑着陆）
+            smoothingOut = "IN_SINE",    -- 离场缓动曲线（平滑减速）
+        },
+
+        -- QuickBar（底部向上滑入）
+        QuickBar = {
+            motion = "slide",
+            slideMode = "translate",
+            enterDuration = 0.5,
+            leaveDuration = 0.35,
+            enterDelay = 0,         -- 与 DockUI 同步入场
+            offsetY = -100,          -- 从下方 60px 处滑入（负值 = 从屏幕外下方）
+            smoothingIn = "OUT_QUART",
+            smoothingOut = "IN_SINE",
+        },
+
+        -- ModeBar（右下角向上溶解淡入）
+        ModeBar = {
+            enterDuration = 0.5,
+            leaveDuration = 0.35,
+            enterDelay = 0.15,      -- 比 QuickBar 延迟 50ms
+            offsetY = 100,          -- 从下方 100px 处淡入
+            smoothingIn = "OUT_QUART",
+            smoothingOut = "IN_SINE",
+        },
+
+        -- DockUI 折叠/展开动画（Header 不变，主体向上收缩/向下展开）
+        DockCollapse = {
+            enabled = true,
+            collapseDuration = 0.35,    -- 折叠动画时长（秒）
+            expandDuration = 0.4,       -- 展开动画时长（秒）
+            smoothingIn = "OUT_QUART",  -- 展开缓动曲线
+            smoothingOut = "IN_OUT_SINE", -- 折叠缓动曲线
         },
     },
 }

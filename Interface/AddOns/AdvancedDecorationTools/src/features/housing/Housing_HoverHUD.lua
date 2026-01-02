@@ -29,6 +29,25 @@ function EL:StartPlacingByRecordID(recordID)
     local entryInfo = GetCatalogDecorInfo(recordID)
     if not entryInfo or not entryInfo.entryID then return false end
 
+    -- 室内/室外限制检查（单一权威，可被隐藏开关解禁）
+    local bypass = ADT and ADT.GetDBBool and ADT.GetDBBool("EnableIndoorOutdoorBypass")
+    if not bypass then
+        local isPlayerIndoors = C_Housing and C_Housing.IsInsideHouse and C_Housing.IsInsideHouse()
+        local decorAllowsIndoors = entryInfo.isAllowedIndoors
+        local decorAllowsOutdoors = entryInfo.isAllowedOutdoors
+        -- 玩家在室外，但装饰仅允许室内
+        if not isPlayerIndoors and decorAllowsIndoors and not decorAllowsOutdoors then
+            if ADT and ADT.Notify then
+                ADT.Notify(L["Cannot place indoor-only decor outdoors"], "warning")
+            end
+            return false
+        end
+    else
+        if ADT and ADT.DebugPrint then
+            ADT.DebugPrint("[Housing] Bypass Indoor/Outdoor check enabled")
+        end
+    end
+
     local decorPlaced = C_HousingDecor.GetSpentPlacementBudget()
     local maxDecor = C_HousingDecor.GetMaxPlacementBudget()
     local hasMaxDecor = C_HousingDecor.HasMaxPlacementBudget()
@@ -38,6 +57,78 @@ function EL:StartPlacingByRecordID(recordID)
     C_HousingBasicMode.StartPlacingNewDecor(entryInfo.entryID)
     return true
 end
+
+-- 统一：取消当前编辑/抓取（单一权威）
+function EL:CancelActiveEditing()
+    local ok = false
+    if C_HousingBasicMode and C_HousingBasicMode.CancelActiveEditing then
+        local success = pcall(C_HousingBasicMode.CancelActiveEditing)
+        ok = success or ok
+    end
+    if C_HousingExpertMode and C_HousingExpertMode.CancelActiveEditing then
+        local success = pcall(C_HousingExpertMode.CancelActiveEditing)
+        ok = success or ok
+    end
+    return not not ok
+end
+
+-- 统一：在基础模式中“安全进入放置”（含模式切换/取消当前编辑）
+-- opts:
+--   ensureBasic=true|false  是否强制切到基础模式（默认 true）
+--   delay=number            已在基础模式时的延迟启动（秒，默认 0）
+--   switchDelay=number      触发模式切换后的延迟启动（秒，默认 0.2）
+--   cancelActive=true|false 是否在启动前取消当前编辑（默认 true）
+--   onResult=function(ok)   结果回调
+function EL:StartPlacingByRecordIDSafe(recordID, opts)
+    opts = opts or {}
+    local onResult = opts.onResult
+    local ensureBasic = opts.ensureBasic ~= false
+    local delay = tonumber(opts.delay or 0) or 0
+    local switchDelay = tonumber(opts.switchDelay or 0.2) or 0.2
+    local cancelActive = opts.cancelActive ~= false
+
+    local function Finish(ok)
+        if type(onResult) == "function" then
+            onResult(ok)
+        end
+        return ok
+    end
+
+    if not recordID then return Finish(false) end
+    if IsHouseEditorActive and not IsHouseEditorActive() then
+        return Finish(false)
+    end
+
+    local function DoStart()
+        if cancelActive then
+            self:CancelActiveEditing()
+        end
+        local ok = self:StartPlacingByRecordID(recordID)
+        return Finish(ok)
+    end
+
+    if ensureBasic then
+        local basicMode = Enum and Enum.HouseEditorMode and Enum.HouseEditorMode.BasicDecor
+        local currentMode = GetActiveHouseEditorMode and GetActiveHouseEditorMode()
+        if basicMode and currentMode and currentMode ~= basicMode and C_HouseEditor and C_HouseEditor.ActivateHouseEditorMode then
+            C_HouseEditor.ActivateHouseEditorMode(basicMode)
+            if switchDelay > 0 then
+                C_Timer.After(switchDelay, DoStart)
+            else
+                C_Timer.After(0, DoStart)
+            end
+            return true
+        end
+    end
+
+    if delay > 0 then
+        C_Timer.After(delay, DoStart)
+        return true
+    end
+
+    return DoStart()
+end
+
 
 --
 -- 简易剪切板（仅当前会话，单一权威）
@@ -188,13 +279,7 @@ StaticPopupDialogs["ADT_CONFIRM_EDIT_PROTECTED"] = {
     OnCancel = function(self, data, reason)
         -- 用户选择"取消选中"
         if reason == "clicked" then
-            pcall(function()
-                if C_HousingBasicMode and C_HousingBasicMode.CancelActiveEditing then
-                    C_HousingBasicMode.CancelActiveEditing()
-                elseif C_HousingExpertMode and C_HousingExpertMode.CancelActiveEditing then
-                    C_HousingExpertMode.CancelActiveEditing()
-                end
-            end)
+            EL:CancelActiveEditing()
             if ADT and ADT.Notify then
                 ADT.Notify(L["Selection cancelled"], "info")
             end
@@ -283,7 +368,7 @@ do
 
     function DisplayFrameMixin:SetDecorInfo(decorInstanceInfo)
         -- HoverHUD 的 DisplayFrame 只作为快捷键容器，不显示 Decor 信息
-        -- Decor 信息由 SubPanel 自己监听悬停事件并显示（关注点分离）
+        -- Decor 信息由 HoverInfoPanel 统一展示（关注点分离）
         if self.InstructionText then self.InstructionText:SetText("") end
         if self.ItemCountText then self.ItemCountText:Hide() end
         
@@ -296,9 +381,25 @@ local function Blizzard_HouseEditor_OnLoaded()
     local container = HouseEditorFrame.BasicDecorModeFrame.Instructions
 
     if not DisplayFrame then
+        -- === 隐藏暴雪原生"选择装饰+鼠标"提示 ===
+        -- 遍历并隐藏原有的 UnselectedInstructions（包含 SelectInstruction）
+        if container.UnselectedInstructions then
+            for _, v in ipairs(container.UnselectedInstructions) do
+                if v and v.Hide then v:Hide() end
+            end
+        end
+
+        -- 从配置读取位置偏移（单一权威）
+        local cfg = (ADT and ADT.HousingInstrCFG and ADT.HousingInstrCFG.HoverHUD) or {}
+        local point    = cfg.point or "RIGHT"
+        local relPoint = cfg.relPoint or "RIGHT"
+        local offsetX  = tonumber(cfg.offsetX) or -30
+        local offsetY  = tonumber(cfg.offsetY) or 0
+        local width    = tonumber(cfg.width) or 420
+
         DisplayFrame = CreateFrame("Frame", nil, container, "ADT_HouseEditorInstructionTemplate")
-        DisplayFrame:SetPoint("RIGHT", HouseEditorFrame.BasicDecorModeFrame, "RIGHT", -30, 0)
-        DisplayFrame:SetWidth(420)
+        DisplayFrame:SetPoint(point, HouseEditorFrame.BasicDecorModeFrame, relPoint, offsetX, offsetY)
+        DisplayFrame:SetWidth(width)
         Mixin(DisplayFrame, DisplayFrameMixin)
         -- 初始化 alpha
         DisplayFrame.alpha = 0
@@ -313,9 +414,10 @@ local function Blizzard_HouseEditor_OnLoaded()
         SubFrame:SetHotkey(L["Duplicate"] or "Duplicate", (ADT.GetDuplicateKeyName and ADT.GetDuplicateKeyName()) or "CTRL+D")
         if SubFrame.LockStatusText then SubFrame.LockStatusText:Hide() end
 
-        -- 追加：显示其它热键提示（Ctrl+X / C / V / S / R / 批量放置）
+        -- 追加：显示其它热键提示（Ctrl+X / C / V / S / Shift+S / R / 批量放置）
         DisplayFrame.HintFrames = {}
         local CTRL = CTRL_KEY_TEXT or "CTRL"
+        local SHIFT = SHIFT_KEY_TEXT or "SHIFT"
         local function addHint(prev, label, key)
             local line = CreateFrame("Frame", nil, DisplayFrame, "ADT_HouseEditorInstructionTemplate")
             line:SetPoint("TOPRIGHT", prev, "BOTTOMRIGHT", 0, 0)
@@ -332,6 +434,7 @@ local function Blizzard_HouseEditor_OnLoaded()
         prev = addHint(prev, L["Hotkey Copy"] or "Copy", CTRL.."+C")
         prev = addHint(prev, L["Hotkey Paste"] or "Paste", CTRL.."+V")
         prev = addHint(prev, L["Hotkey Store"] or "Store", CTRL.."+S")
+        prev = addHint(prev, L["Hotkey StoreCopy"] or "Store Copy", CTRL.."+"..SHIFT.."+S")
         prev = addHint(prev, L["Hotkey Recall"] or "Recall", CTRL.."+R")
         -- 批量放置：按住 CTRL 连续放置
         prev = addHint(prev, L["Hotkey BatchPlace"] or "Batch Place", CTRL)
@@ -375,10 +478,18 @@ local function Blizzard_HouseEditor_OnLoaded()
     -- ============== CustomizeMode 染料提示（独立容器）==============
     local cmf = HouseEditorFrame.CustomizeModeFrame
     if cmf and not EL.DyeHintFrame then
+        -- 从配置读取染料提示位置偏移（单一权威）
+        local baseCfg = (ADT and ADT.HousingInstrCFG and ADT.HousingInstrCFG.HoverHUD) or {}
+        local dyeCfg  = baseCfg.DyeHint or {}
+        local point    = dyeCfg.point or "RIGHT"
+        local relPoint = dyeCfg.relPoint or "RIGHT"
+        local offsetX  = tonumber(dyeCfg.offsetX) or -30
+        local offsetY  = tonumber(dyeCfg.offsetY) or -60
+        local width    = tonumber(dyeCfg.width) or 420
+
         local dyeFrame = CreateFrame("Frame", nil, cmf, "ADT_HouseEditorInstructionTemplate")
-        -- 锚点往下偏移，避免与暴雪"选中装饰"提示重叠（约 -60 像素）
-        dyeFrame:SetPoint("RIGHT", cmf, "RIGHT", -30, -60)
-        dyeFrame:SetWidth(420)
+        dyeFrame:SetPoint(point, cmf, relPoint, offsetX, offsetY)
+        dyeFrame:SetWidth(width)
         Mixin(dyeFrame, DisplayFrameMixin)
         dyeFrame.alpha = 1
         dyeFrame:SetAlpha(1)
@@ -522,14 +633,7 @@ do
         end
         
         -- 🔥 立即取消选中（绕弯实现阻止）
-        pcall(function()
-            if C_HousingBasicMode and C_HousingBasicMode.CancelActiveEditing then
-                C_HousingBasicMode.CancelActiveEditing()
-            end
-            if C_HousingExpertMode and C_HousingExpertMode.CancelActiveEditing then
-                C_HousingExpertMode.CancelActiveEditing()
-            end
-        end)
+        self:CancelActiveEditing()
 
         -- 为规避暴雪编辑器在“被强制取消后”偶发的点击失效，需要做一次“看不见的解限”：
         -- 方案：瞬时切到另一种编辑模式再切回当前模式，相当于你手动点了一次“2→1”。
@@ -682,23 +786,20 @@ do
 
     -- StartPlacingByRecordID 提升为顶层函数，避免局部作用域问题
 
+    -- 重构：TryDuplicateItem 使用单一权威入口，确保室内外限制生效
     function EL:TryDuplicateItem()
         if not self.dupeEnabled then return end
         if not IsHouseEditorActive() then return end
         if IsDecorSelected() then return end
 
-        local entryID = self:GetHoveredDecorEntryID()
-        if not entryID then return end
+        -- 获取悬停装饰的 recordID（而非 entryID），使用 StartPlacingByRecordID 单一权威
+        local recordID, _, _ = self:GetHoveredDecorRecordIDAndName()
+        if not recordID then return end
 
-        local decorPlaced = C_HousingDecor.GetSpentPlacementBudget()
-        local maxDecor = C_HousingDecor.GetMaxPlacementBudget()
-        local hasMaxDecor = C_HousingDecor.HasMaxPlacementBudget()
-        if hasMaxDecor and decorPlaced >= maxDecor then
-            return
-        end
-
-        C_HousingBasicMode.StartPlacingNewDecor(entryID)
+        -- 预算检查已在 StartPlacingByRecordID 中处理，室内外限制也已含其中
+        self:StartPlacingByRecordIDSafe(recordID, { ensureBasic = true, switchDelay = 0.2 })
     end
+
 
     function EL:OnEditorModeChanged()
         -- 保留扩展点
@@ -764,8 +865,9 @@ do
         -- HintFrames[2] = Copy (CTRL+C)
         -- HintFrames[3] = Paste (CTRL+V)
         -- HintFrames[4] = Store (CTRL+S) - 始终显示
-        -- HintFrames[5] = Recall (CTRL+R) - 始终显示
-        -- HintFrames[6] = BatchPlace (CTRL) - 由 EnableBatchPlace 控制
+        -- HintFrames[5] = StoreCopy (CTRL+SHIFT+S) - 始终显示
+        -- HintFrames[6] = Recall (CTRL+R) - 始终显示
+        -- HintFrames[7] = BatchPlace (CTRL) - 由 EnableBatchPlace 控制
         
         local allFrames = {}
         local visibilityConfig = {}
@@ -785,11 +887,12 @@ do
                 [2] = { dbKey = "EnableCopy", default = true },  -- Copy (CTRL+C)
                 [3] = { dbKey = "EnablePaste", default = true }, -- Paste (CTRL+V)
                 [4] = nil,  -- Store (CTRL+S) - 始终显示
-                [5] = nil,  -- Recall (CTRL+R) - 始终显示
-                [6] = { dbKey = "EnableBatchPlace", default = false }, -- Batch Place (CTRL)
-                [7] = { dbKey = "EnableResetT", default = true },      -- Reset (T)
-                [8] = { dbKey = "EnableResetAll", default = true },    -- Reset All (CTRL+T)
-                [9] = { dbKey = "EnableLock", default = true },        -- Lock (L)
+                [5] = nil,  -- StoreCopy (CTRL+SHIFT+S) - 始终显示
+                [6] = nil,  -- Recall (CTRL+R) - 始终显示
+                [7] = { dbKey = "EnableBatchPlace", default = false }, -- Batch Place (CTRL)
+                [8] = { dbKey = "EnableResetT", default = true },      -- Reset (T)
+                [9] = { dbKey = "EnableResetAll", default = true },    -- Reset All (CTRL+T)
+                [10] = { dbKey = "EnableLock", default = true },       -- Lock (L)
             }
             for i, frame in ipairs(DisplayFrame.HintFrames) do
                 table.insert(allFrames, frame)
@@ -819,38 +922,47 @@ do
     end
 end
 
--- 语言切换时，刷新右侧提示行的本地化文本
 function EL:OnLocaleChanged()
     if not DisplayFrame then return end
     local L = ADT and ADT.L or {}
     local CTRL = CTRL_KEY_TEXT or "CTRL"
-    -- 顶部重复提示（键帽文本可能因设置不同而变）
+    -- 顶部 Duplicate：从 ADT.Keybinds 读取（单一权威）
     if DisplayFrame.SubFrame then
-        local keyName = (ADT.GetDuplicateKeyName and ADT.GetDuplicateKeyName()) or (CTRL.."+D")
-        DisplayFrame.SubFrame:SetHotkey(L["Duplicate"] or "Duplicate", keyName)
+        local dup = ADT.Keybinds and ADT.Keybinds.GetKeybind and ADT.Keybinds:GetKeybind('Duplicate')
+        local disp = (ADT.Keybinds and ADT.Keybinds.GetKeyDisplayName and ADT.Keybinds:GetKeyDisplayName(dup))
+            or (ADT.GetDuplicateKeyName and ADT.GetDuplicateKeyName()) or (CTRL.."+D")
+        DisplayFrame.SubFrame:SetHotkey(L["Duplicate"] or "Duplicate", disp)
     end
-    -- 其他提示行
+    -- 其他提示行：严格从 ADT.Keybinds 拉取显示用按键
+    local function KD(name, fb)
+        if ADT.Keybinds and ADT.Keybinds.GetKeybind and ADT.Keybinds.GetKeyDisplayName then
+            return ADT.Keybinds:GetKeyDisplayName(ADT.Keybinds:GetKeybind(name)) or fb
+        end
+        return fb
+    end
     local map = {
         [1] = L["Hotkey Cut"]    or "Cut",
         [2] = L["Hotkey Copy"]   or "Copy",
         [3] = L["Hotkey Paste"]  or "Paste",
         [4] = L["Hotkey Store"]  or "Store",
-        [5] = L["Hotkey Recall"] or "Recall",
-        [6] = L["Hotkey BatchPlace"] or "Batch Place",
-        [7] = L["Reset Current"] or "Reset",
-        [8] = L["Reset All"] or "Reset All",
-        [9] = L["Lock/Unlock"] or "Lock",
+        [5] = L["Hotkey StoreCopy"] or "Store Copy",
+        [6] = L["Hotkey Recall"] or "Recall",
+        [7] = L["Hotkey BatchPlace"] or "Batch Place",
+        [8] = L["Reset Current"] or "Reset",
+        [9] = L["Reset All"] or "Reset All",
+        [10] = L["Lock/Unlock"] or "Lock",
     }
     local keycaps = {
-        [1] = CTRL.."+X",
-        [2] = CTRL.."+C",
-        [3] = CTRL.."+V",
-        [4] = CTRL.."+S",
-        [5] = CTRL.."+R",
-        [6] = CTRL,
-        [7] = "T",
-        [8] = CTRL.."+T",
-        [9] = "L",
+        [1] = KD('Cut',   CTRL.."+X"),
+        [2] = KD('Copy',  CTRL.."+C"),
+        [3] = KD('Paste', CTRL.."+V"),
+        [4] = KD('Store', CTRL.."+S"),
+        [5] = KD('StoreCopy', CTRL.."+SHIFT+S"),
+        [6] = KD('Recall',CTRL.."+R"),
+        [7] = CTRL, -- 批量放置提示保留 CTRL
+        [8] = KD('Reset', 'T'),
+        [9] = KD('ResetAll', CTRL.."+T"),
+        [10] = "L",
     }
     if DisplayFrame.HintFrames then
         for i, line in ipairs(DisplayFrame.HintFrames) do
@@ -861,9 +973,17 @@ function EL:OnLocaleChanged()
     end
     if DisplayFrame.NormalizeKeycapWidth then
         DisplayFrame:NormalizeKeycapWidth()
+        if ADT and ADT.ApplyHousingInstructionStyle then
+            ADT.ApplyHousingInstructionStyle(DisplayFrame)
+        end
     end
     -- 重新应用可见性（用户开关可能影响）
     if self.UpdateHintVisibility then self:UpdateHintVisibility() end
+end
+
+-- 新增：集中刷新键帽文本，供 ADT.Keybinds 调用
+function EL:RefreshKeycaps()
+    self:OnLocaleChanged()
 end
 
 --
@@ -905,10 +1025,15 @@ function EL:Binding_Paste()
         if ADT and ADT.Notify then ADT.Notify(L["Clipboard empty, cannot paste"], 'error') end
         return
     end
-    local ok = self:StartPlacingByRecordID(clip.decorID)
-    if not ok then
-        if ADT and ADT.Notify then ADT.Notify(L["Cannot start placing"], 'error') end
-    end
+    self:StartPlacingByRecordIDSafe(clip.decorID, {
+        ensureBasic = true,
+        switchDelay = 0.2,
+        onResult = function(ok)
+            if not ok then
+                if ADT and ADT.Notify then ADT.Notify(L["Cannot start placing"], 'error') end
+            end
+        end,
+    })
 end
 
 function EL:RemoveSelectedDecor()
@@ -1049,6 +1174,7 @@ do
     local owner
     local btnTempStore, btnTempRecall
     local btnToggleUI
+    local btnToggleAllUI
     local btnDuplicate
     -- 住宅剪切板：复制/粘贴/剪切（强制覆盖）
     local btnCopy, btnPaste, btnCut
@@ -1073,6 +1199,8 @@ do
 
         -- 设置面板切换（/adt 同效）
         btnToggleUI = CreateFrame("Button", "ADT_HousingOverride_ToggleUI", owner, "SecureActionButtonTemplate")
+        -- 眼睛按钮：隐藏/显示住宅编辑 UI（Alt+Z）
+        btnToggleAllUI = CreateFrame("Button", "ADT_HousingOverride_ToggleAllUI", owner, "SecureActionButtonTemplate")
 
         -- 高级编辑按钮（调用 Bindings.lua 中的全局函数）
         btnAdvToggle = CreateFrame("Button", "ADT_HousingOverride_AdvToggle", owner, "SecureActionButtonTemplate")
@@ -1088,6 +1216,13 @@ do
         -- 设置面板切换（调用 UI.lua 中的集中逻辑）
         btnToggleUI:SetScript("OnClick", function()
             if ADT and ADT.ToggleMainUI then ADT.ToggleMainUI() end
+        end)
+        -- 眼睛按钮：调用统一逻辑（仅编辑模式生效）
+        btnToggleAllUI:SetScript("OnClick", function()
+            if InCombatLockdown and InCombatLockdown() then return end
+            if ADT and ADT.HousingUIVisibilityEye and ADT.HousingUIVisibilityEye.ToggleUI then
+                ADT.HousingUIVisibilityEye:ToggleUI()
+            end
         end)
 
         -- 复制/粘贴/剪切 调用（调用当前文件中的实现）
@@ -1130,23 +1265,14 @@ do
         end)
     end
 
+    -- 单一权威：此处仅覆盖“非可配置键”，其余全部交由 ADT.Keybinds 统一注册。
+    -- 这样可以避免出现“修改了自定义键，但默认键仍然生效”的冲突。
     local OVERRIDE_KEYS = {
-        -- 仅强制覆盖这六大类：S/R/X/C/V/D + Q
-        -- 临时板：存入/取出
-        { key = "CTRL-S", button = function() return btnTempStore end },
-        { key = "CTRL-R", button = function() return btnTempRecall end },
-        -- 住宅剪切板：复制/粘贴/剪切
-        { key = "CTRL-C", button = function() return btnCopy end },
-        { key = "CTRL-V", button = function() return btnPaste end },
-        { key = "CTRL-X", button = function() return btnCut end },
-        -- 住宅：悬停复制同款（新的默认：CTRL-D）
-        { key = "CTRL-D", button = function() return btnDuplicate end },
         -- 设置面板：开关（等价 /adt）
         { key = "CTRL-Q", button = function() return btnToggleUI end },
-        -- 一键重置变换
-        { key = "T", button = function() return btnResetSubmode end },
-        { key = "CTRL-T", button = function() return btnResetAll end },
-        -- 误操作保护：锁定/解锁
+        -- 住宅编辑界面：隐藏/显示所有 UI（等价眼睛按钮）
+        { key = "ALT-Z", button = function() return btnToggleAllUI end },
+        -- 误操作保护：锁定/解锁（固定 L 键，不纳入可配置项）
         { key = "L", button = function() return btnToggleLock end },
     }
 
@@ -1158,19 +1284,11 @@ do
     function EL:ApplyOverrides()
         EnsureOwner()
         ClearOverrideBindings(owner)
-        -- 注意：优先级覆盖，确保高于默认与其他非优先覆盖
+        -- 注意：仅覆盖固定键，开关由各自模块控制
         for _, cfg in ipairs(OVERRIDE_KEYS) do
             local btn = cfg.button()
             local allowed = true
-            if cfg.key == "T" then
-                local en = ADT.GetDBValue("EnableResetT")
-                if en == nil then en = true end
-                allowed = en
-            elseif cfg.key == "CTRL-T" then
-                local en2 = ADT.GetDBValue("EnableResetAll")
-                if en2 == nil then en2 = true end
-                allowed = en2
-            elseif cfg.key == "L" then
+            if cfg.key == "L" then
                 local en3 = ADT.GetDBValue("EnableLock")
                 if en3 == nil then en3 = true end
                 allowed = en3

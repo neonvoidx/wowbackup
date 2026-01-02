@@ -797,7 +797,7 @@ nil,
 ["solo"] = true,
 ["raid"] = true,
 },
-["onQuickBar"] = true,
+["onQuickBar"] = false,
 ["settings"] = {
 ["abilityHighlighting"] = true,
 ["lineColoring"] = true,

@@ -150,9 +150,9 @@ BlizzMoveDB = {
 {
 ["anchorPoint"] = "TOPLEFT",
 ["relativeFrame"] = "UIParent",
-["offY"] = -80.16650390625,
-["offX"] = 91,
+["offY"] = -80.166259765625,
 ["relativePoint"] = "TOPLEFT",
+["offX"] = 91.00000762939453,
 },
 },
 },
@@ -529,7 +529,7 @@ BlizzMoveDB = {
 {
 ["anchorPoint"] = "CENTER",
 ["relativeFrame"] = "UIParent",
-["offY"] = 124.6671295166016,
+["offY"] = 124.6672058105469,
 ["relativePoint"] = "CENTER",
 ["offX"] = -70.00006103515625,
 },
@@ -627,8 +627,8 @@ BlizzMoveDB = {
 ["anchorPoint"] = "TOPLEFT",
 ["relativeFrame"] = "UIParent",
 ["offY"] = -115.1663818359375,
-["offX"] = 19.33331489562988,
 ["relativePoint"] = "TOPLEFT",
+["offX"] = 21.83338165283203,
 },
 },
 },
@@ -847,11 +847,11 @@ BlizzMoveDB = {
 ["dragged"] = true,
 ["dragPoints"] = {
 {
-["anchorPoint"] = "LEFT",
+["anchorPoint"] = "TOP",
 ["relativeFrame"] = "UIParent",
-["offY"] = -5.100611953316729,
-["relativePoint"] = "LEFT",
-["offX"] = 189.3365138083482,
+["offY"] = -122.6331065315171,
+["offX"] = 64.33588146012698,
+["relativePoint"] = "TOP",
 },
 },
 },
@@ -1092,11 +1092,11 @@ BlizzMoveDB = {
 ["dragged"] = true,
 ["dragPoints"] = {
 {
-["anchorPoint"] = "TOPLEFT",
+["anchorPoint"] = "LEFT",
 ["relativeFrame"] = "UIParent",
-["offY"] = -51.9744873046875,
-["relativePoint"] = "TOPLEFT",
-["offX"] = 90.6317367553711,
+["offY"] = 16.02547454833984,
+["offX"] = 318.9648132324219,
+["relativePoint"] = "LEFT",
 },
 },
 },
@@ -1214,11 +1214,11 @@ BlizzMoveDB = {
 ["dragged"] = true,
 ["dragPoints"] = {
 {
-["anchorPoint"] = "TOP",
+["anchorPoint"] = "TOPLEFT",
 ["relativeFrame"] = "UIParent",
-["offY"] = -108.6540290800913,
-["offX"] = 69.52036338402104,
-["relativePoint"] = "TOP",
+["offY"] = -116.1534188910737,
+["relativePoint"] = "TOPLEFT",
+["offX"] = 402.0206019752804,
 },
 },
 },
@@ -1247,6 +1247,25 @@ BlizzMoveDB = {
 },
 },
 ["GarrisonCapacitiveDisplayFrame"] = {
+["startPoints"] = {
+{
+["anchorPoint"] = "TOPLEFT",
+["relativeFrame"] = "UIParent",
+["offY"] = -116,
+["relativePoint"] = "TOPLEFT",
+["offX"] = 15.99999904632568,
+},
+},
+["dragged"] = true,
+["dragPoints"] = {
+{
+["anchorPoint"] = "TOPLEFT",
+["relativeFrame"] = "UIParent",
+["offY"] = -125.9998779296875,
+["relativePoint"] = "TOPLEFT",
+["offX"] = 16.83333396911621,
+},
+},
 },
 ["HousingDashboardFrame.HouseInfoContent.DashboardNoHousesFrame"] = {
 },

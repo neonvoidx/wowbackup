@@ -1,6 +1,6 @@
 
 MapPinEnhancedDB = {
-["trackerVisible"] = false,
+["trackerVisible"] = true,
 ["minimapIcon"] = {
 ["minimapPos"] = 270.2038399491452,
 ["lock"] = false,
@@ -10,7 +10,7 @@ MapPinEnhancedDB = {
 ["y"] = -40.19581985473633,
 ["x"] = 12.74316596984863,
 },
-["superTrackingOther"] = true,
+["superTrackingOther"] = false,
 ["sets"] = {
 ["set-64639149-bc1d"] = {
 ["name"] = "Mole Machines",
@@ -1114,6 +1114,17 @@ MapPinEnhancedDB = {
 ["autoVisibility"] = "both",
 },
 ["storedPins"] = {
+{
+["mapID"] = 942,
+["setTracked"] = true,
+["color"] = "Custom",
+["usesAtlas"] = true,
+["x"] = 0.7830069652567079,
+["title"] = "Shrine of the Storm",
+["order"] = 1,
+["y"] = 0.2550922520684262,
+["texture"] = "Dungeon",
+},
 },
 ["general"] = {
 ["autoTrackNearestPin"] = true,

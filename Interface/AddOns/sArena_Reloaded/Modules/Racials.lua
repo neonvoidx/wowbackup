@@ -1,6 +1,7 @@
 local GetTime = GetTime
 local isRetail = sArenaMixin.isRetail
 local isMidnight = sArenaMixin.isMidnight
+local isTBC = sArenaMixin.isTBC
 
 local racialSpells
 local racialData
@@ -165,6 +166,10 @@ else
 		["Worgen"] = { texture = GetSpellTexture(68992), spellID = 68992 },
 		["Pandaren"] = { texture = GetSpellTexture(107079), spellID = 107079 },
 	}
+
+	if isTBC then -- Wotf does not share CD in TBC
+		racialData["Scourge"].sharedCD = nil
+	end
 
 	trinkets = {
 		[42292] = true, -- Trinket Spell Cast

@@ -771,7 +771,7 @@ do
         uiOrder = 3,
         moduleAddedTime = 1704423300,
         optionToggleFunc = OptionToggle_OnClick,
-
+        hasMovableWidget = true,
         visibleInEditMode = true,
         enterEditMode = function()
             NewTalkingHead:EnterEditMode();
@@ -779,6 +779,10 @@ do
         exitEditMode = function()
             NewTalkingHead:ExitEditMode();
         end,
+
+		categoryKeys = {
+			"Signature",
+		},
     };
 
     addon.ControlCenter:AddModule(moduleData);

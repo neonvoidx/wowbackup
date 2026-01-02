@@ -212,13 +212,33 @@ function RecentSlot:Show()
         return
     end
     if not slotFrame then self:Create() end
-    if slotFrame then 
+    if not slotFrame then return end
+
+    local function DoShow()
+        self._pendingShow = nil
+        if ADT.GetDBValue and ADT.GetDBValue('EnableQuickbar') == false then return end
+        local isActive = C_HouseEditor and C_HouseEditor.IsHouseEditorActive and C_HouseEditor.IsHouseEditorActive()
+        if not isActive then return end
         slotFrame:Show()
         self:Refresh()
+    end
+
+    if ADT.QuickbarUI and ADT.QuickbarUI.WhenStable then
+        if ADT.QuickbarUI:IsStable() then
+            DoShow()
+        elseif not self._pendingShow then
+            self._pendingShow = true
+            ADT.QuickbarUI:WhenStable(function()
+                DoShow()
+            end)
+        end
+    else
+        DoShow()
     end
 end
 
 function RecentSlot:Hide()
+    self._pendingShow = nil
     if slotFrame then slotFrame:Hide() end
 end
 

@@ -12,7 +12,7 @@ hb_settings = hb_settings or {
   completedQuest = {}, 
   completedDrop = {},
   showMinimapButton = true, 
-  filters = { achievement = true, quest = true, neutral = true, alliance = true, horde = true } 
+  tabFilters = {}
 }
 dbHB = {minimap = {hide = false}}
 
@@ -29,6 +29,7 @@ local questTitleCache = {}
 local currentFaction = 1
 local currentTab = "decor"
 local hb_options_category = nil
+local currentSearchQuery = ""
 
 local function ApplyBackdrop(f, r, g, b, a)
   f:SetBackdrop({
@@ -638,54 +639,60 @@ local filterButton = CreateFrame("DropdownButton", "HB_FilterButton", frame, "Wo
 filterButton:SetSize(120, 24); filterButton:SetPoint("TOPLEFT", 10, -60); filterButton:SetText("Filters")
 filterButton.Text:ClearAllPoints(); filterButton.Text:SetPoint("CENTER")
 filterButton:SetupMenu(function(dropdown, rootDescription)
+  local activeFilters = hb_settings.tabFilters[currentTab] or {}
+
   rootDescription:CreateCheckbox("Hide Completed", function() return hb_settings.hideCompleted end, function() hb_settings.hideCompleted = not hb_settings.hideCompleted; BuildUI() end)
   rootDescription:CreateDivider()
+  
   if currentTab == "decor" then
-    rootDescription:CreateCheckbox("Achievements", function() return hb_settings.filters.achievement end, function() hb_settings.filters.achievement = not hb_settings.filters.achievement; BuildUI() end)
-    rootDescription:CreateCheckbox("Quests", function() return hb_settings.filters.quest end, function() hb_settings.filters.quest = not hb_settings.filters.quest; BuildUI() end)
+    rootDescription:CreateCheckbox("Achievements", function() return activeFilters.achievement end, function() activeFilters.achievement = not activeFilters.achievement; BuildUI() end)
+    rootDescription:CreateCheckbox("Quests", function() return activeFilters.quest end, function() activeFilters.quest = not activeFilters.quest; BuildUI() end)
     rootDescription:CreateDivider()
   end
+  
   local factionMenu = rootDescription:CreateButton("Faction")
-  factionMenu:CreateCheckbox("Neutral", function() return hb_settings.filters.neutral end, function() hb_settings.filters.neutral = not hb_settings.filters.neutral; BuildUI() end)
-  factionMenu:CreateCheckbox("Alliance", function() return hb_settings.filters.alliance end, function() hb_settings.filters.alliance = not hb_settings.filters.alliance; BuildUI() end)
-  factionMenu:CreateCheckbox("Horde", function() return hb_settings.filters.horde end, function() hb_settings.filters.horde = not hb_settings.filters.horde; BuildUI() end)
+  factionMenu:CreateCheckbox("Neutral", function() return activeFilters.neutral end, function() activeFilters.neutral = not activeFilters.neutral; BuildUI() end)
+  factionMenu:CreateCheckbox("Alliance", function() return activeFilters.alliance end, function() activeFilters.alliance = not activeFilters.alliance; BuildUI() end)
+  factionMenu:CreateCheckbox("Horde", function() return activeFilters.horde end, function() activeFilters.horde = not activeFilters.horde; BuildUI() end)
   rootDescription:CreateDivider()
-  rootDescription:CreateButton("Reset Filters", function() hb_settings.filters.achievement = true; hb_settings.filters.quest = true; hb_settings.filters.neutral = true; hb_settings.filters.alliance = true; hb_settings.filters.horde = true; BuildUI() end)
+  
+  rootDescription:CreateButton("Reset Filters", function() 
+      activeFilters.neutral = true; activeFilters.alliance = true; activeFilters.horde = true; 
+      if currentTab == "decor" then activeFilters.achievement = true; activeFilters.quest = true; end
+      BuildUI() 
+  end)
 end)
 
-local minimapCheckbox = CreateFrame("CheckButton", "HB_MinimapCheckbox", frame, "UICheckButtonTemplate")
-minimapCheckbox:SetPoint("TOPLEFT", filterButton, "TOPRIGHT", 10, 0); minimapCheckbox:SetSize(26, 26)
-local minimapCheckboxText = minimapCheckbox:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-minimapCheckboxText:SetPoint("LEFT", minimapCheckbox, "RIGHT", 2, 0); minimapCheckboxText:SetText("Minimap Button")
-minimapCheckbox:SetScript("OnClick", function(self)
-  if LibDBIcon then
-    if hb_settings.showMinimapButton then LibDBIcon:Hide("HomeBound"); hb_settings.showMinimapButton = false
-    else LibDBIcon:Show("HomeBound"); hb_settings.showMinimapButton = true end
-  end
+local searchBox = CreateFrame("EditBox", "HB_SearchBox", frame, "SearchBoxTemplate")
+searchBox:SetSize(172, 24)
+searchBox.Instructions:SetTextColor(0.8, 0.8, 0.8)
+searchBox:SetPoint("TOPRIGHT", -34, -48)
+searchBox:SetScale(1.2)
+searchBox:SetAutoFocus(false)
+
+local searchDebounce = nil
+searchBox:SetScript("OnTextChanged", function(self)
+    SearchBoxTemplate_OnTextChanged(self)
+    if searchDebounce then searchDebounce:Cancel() end
+    searchDebounce = C_Timer.NewTimer(0.25, function()
+        currentSearchQuery = string.lower(self:GetText())
+        BuildUI()
+    end)
 end)
 
-local tomtomCheckbox = CreateFrame("CheckButton", "HB_TomTomCheckbox", frame, "UICheckButtonTemplate")
-tomtomCheckbox:SetPoint("LEFT", minimapCheckboxText, "RIGHT", 10, 0); tomtomCheckbox:SetSize(26, 26); tomtomCheckbox:Hide() 
-local tomtomCheckboxText = tomtomCheckbox:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-tomtomCheckboxText:SetPoint("LEFT", tomtomCheckbox, "RIGHT", 2, 0); tomtomCheckboxText:SetText("TomTom")
-tomtomCheckbox:SetScript("OnClick", function(self) hb_settings.useTomTom = self:GetChecked() end)
-
-local scaleSlider = CreateFrame("Slider", "HB_ScaleSlider", frame, "UISliderTemplate")
-scaleSlider:SetPropagateMouseMotion(true); scaleSlider:SetWidth(150); scaleSlider:SetHeight(22)
-scaleSlider:SetMinMaxValues(0.5, 1.5); scaleSlider:SetValueStep(0.05)
-scaleSlider:SetPoint("TOPRIGHT", -120, -60); scaleSlider:SetValue(hb_settings.scale or 1.0)
-
-local scaleValueText = frame:CreateFontString(nil, "ARTWORK", "GameFontNormal")
-scaleValueText:SetFont(STANDARD_TEXT_FONT, 14); scaleValueText:SetPoint("TOPLEFT", scaleSlider, "TOPRIGHT", 8, -3)
-scaleSlider:SetScript("OnValueChanged", function(_, value)
-  scaleValueText:SetText(string.format("UI Scale: %.2f", tonumber(string.format("%.2f", value))))
+local optionsBtn = CreateFrame("Button", nil, frame)
+optionsBtn:SetSize(22, 24)
+optionsBtn:SetPoint("TOPRIGHT", -10, -61)
+optionsBtn:SetNormalTexture(5684767)
+optionsBtn:GetNormalTexture():SetTexCoord(0.8057, 0.8350, 0.1201, 0.1514)
+optionsBtn:SetHighlightTexture("Interface\\Buttons\\UI-Common-MouseHilight", "ADD")
+optionsBtn:SetScript("OnClick", function() 
+    if hb_options_category then Settings.OpenToCategory(hb_options_category:GetID()) end 
 end)
-scaleSlider:SetScript("OnMouseUp", function(self)
-  local roundedValue = tonumber(string.format("%.2f", self:GetValue()))
-  hb_settings.scale = roundedValue
-  frame:SetScale(roundedValue); supportFrame:SetScale(roundedValue); vendorPopup:SetScale(roundedValue); wowheadPopup:SetScale(roundedValue)
+optionsBtn:SetScript("OnEnter", function(self) 
+    GameTooltip:SetOwner(self, "ANCHOR_BOTTOMLEFT"); GameTooltip:SetText("Options"); GameTooltip:Show() 
 end)
-scaleValueText:SetText(string.format("UI Scale: %.2f", hb_settings.scale or 1.0))
+optionsBtn:SetScript("OnLeave", function() GameTooltip:Hide() end)
 
 local scrollFrame = CreateFrame("ScrollFrame", nil, frame, "ScrollFrameTemplate")
 scrollFrame:SetPoint("TOPLEFT", 12, -90); scrollFrame:SetPoint("BOTTOMRIGHT", -32, 12)
@@ -1057,20 +1064,46 @@ function BuildUI()
   local dataSource = (currentTab == "vendors" and db.vendors) or (currentTab == "drops" and db.drops) or (currentTab == "professions" and db.professions) or db.collections
   if not dataSource then return end
 
+  local activeFilters = hb_settings.tabFilters[currentTab] or {}
+
   for _, group in ipairs(dataSource) do
     local visibleRewards = {}
     local items = (currentTab == "vendors" and group.npcs) or (currentTab == "drops" and group.items) or (currentTab == "professions" and group.items) or group.achievements
     if items then
       for _, item in ipairs(items) do
-        local rewardFaction = GetRewardFaction(item)
         local showItem = true
-        local factionMatch = (rewardFaction == "neutral" and hb_settings.filters.neutral) or (rewardFaction == "alliance" and hb_settings.filters.alliance) or (rewardFaction == "horde" and hb_settings.filters.horde)
+        
+        local rewardFaction = GetRewardFaction(item)
+        local factionMatch = (rewardFaction == "neutral" and activeFilters.neutral) or (rewardFaction == "alliance" and activeFilters.alliance) or (rewardFaction == "horde" and activeFilters.horde)
         if not factionMatch then showItem = false end
         if currentTab == "decor" then
           local rewardType = item.type or "achievement"
-          local typeMatch = (rewardType == "quest" and hb_settings.filters.quest) or (rewardType == "achievement" and hb_settings.filters.achievement)
+          local typeMatch = (rewardType == "quest" and activeFilters.quest) or (rewardType == "achievement" and activeFilters.achievement)
           if not typeMatch then showItem = false end
         end
+
+        if showItem and currentSearchQuery ~= "" then
+          local nameToCheck = ""
+          if currentTab == "vendors" then
+             nameToCheck = item.title or ""
+          elseif currentTab == "drops" or currentTab == "professions" then
+             nameToCheck = GetCachedItemName(item.id)
+          else
+             local primaryID = item.id
+             if type(item.id) == "table" then primaryID = item.id[currentFaction] end
+             if item.type == "quest" then
+                nameToCheck = questTitleCache[primaryID] or C_QuestLog.GetTitleForQuestID(primaryID) or ""
+             else
+                local _, achievName = GetAchievementInfo(primaryID)
+                nameToCheck = achievName or ""
+             end
+          end
+          
+          if nameToCheck == "" or not string.find(string.lower(nameToCheck), currentSearchQuery, 1, true) then
+            showItem = false
+          end
+        end
+
         if showItem then table.insert(visibleRewards, item) end
       end
     end
@@ -1142,8 +1175,46 @@ local function CreateOptionsPanel()
   escCheck:SetChecked(hb_settings.closeOnEsc)
   escCheck:SetScript("OnClick", function(self) hb_settings.closeOnEsc = self:GetChecked(); UpdateEscBehavior() end)
   
+  local mmCheck = CreateFrame("CheckButton", nil, configFrame, "UICheckButtonTemplate")
+  mmCheck:SetPoint("TOPLEFT", escCheck, "BOTTOMLEFT", 0, -10)
+  mmCheck.Text:SetFont(STANDARD_TEXT_FONT, 14); mmCheck.Text:SetTextColor(1, 0.82, 0); mmCheck.Text:SetText(" Minimap Button")
+  mmCheck:SetChecked(hb_settings.showMinimapButton)
+  mmCheck:SetScript("OnClick", function(self) 
+    hb_settings.showMinimapButton = self:GetChecked()
+    if LibDBIcon then
+       if hb_settings.showMinimapButton then LibDBIcon:Show("HomeBound") else LibDBIcon:Hide("HomeBound") end
+    end
+  end)
+
+  local tomCheck = CreateFrame("CheckButton", nil, configFrame, "UICheckButtonTemplate")
+  tomCheck:SetPoint("TOPLEFT", mmCheck, "BOTTOMLEFT", 0, -10)
+  tomCheck.Text:SetFont(STANDARD_TEXT_FONT, 14); tomCheck.Text:SetTextColor(1, 0.82, 0); tomCheck.Text:SetText(" Enable TomTom Waypoints")
+  tomCheck:SetChecked(hb_settings.useTomTom)
+  tomCheck:SetScript("OnClick", function(self) hb_settings.useTomTom = self:GetChecked() end)
+  if not TomTom then tomCheck:Disable(); tomCheck.Text:SetText(" Enable TomTom Waypoints (Not Installed)") end
+
+  local scaleLabel = configFrame:CreateFontString(nil, "ARTWORK")
+  scaleLabel:SetFont(STANDARD_TEXT_FONT, 14); scaleLabel:SetTextColor(1, 0.82, 0); scaleLabel:SetPoint("TOPLEFT", tomCheck, "BOTTOMLEFT", 0, -20); scaleLabel:SetText("UI Scale")
+  
+  local scaleSlider = CreateFrame("Slider", nil, configFrame, "MinimalSliderWithSteppersTemplate")
+  scaleSlider:SetWidth(200)
+  scaleSlider:SetHeight(20)
+  scaleSlider:SetPoint("TOPLEFT", scaleLabel, "BOTTOMLEFT", 0, -10)
+  scaleSlider:Init(hb_settings.scale or 1.0, 0.5, 1.5, 20, {
+    [MinimalSliderWithSteppersMixin.Label.Right] = function(value)
+      return string.format("%.2f", value)
+    end
+  })
+  scaleSlider.RightText:SetFont(STANDARD_TEXT_FONT, 14)
+  scaleSlider.Slider:SetValueStep(0.05)
+  scaleSlider:RegisterCallback(MinimalSliderWithSteppersMixin.Event.OnValueChanged, function(_, value)
+    local rounded = tonumber(string.format("%.2f", value))
+    hb_settings.scale = rounded
+    frame:SetScale(rounded); supportFrame:SetScale(rounded); vendorPopup:SetScale(rounded); wowheadPopup:SetScale(rounded)
+  end)
+
   local keybindLabel = configFrame:CreateFontString(nil, "ARTWORK")
-  keybindLabel:SetFont(STANDARD_TEXT_FONT, 14); keybindLabel:SetTextColor(1, 0.82, 0); keybindLabel:SetPoint("TOPLEFT", escCheck, "BOTTOMLEFT", 0, -20); keybindLabel:SetText("Toggle Frame Keybind")
+  keybindLabel:SetFont(STANDARD_TEXT_FONT, 14); keybindLabel:SetTextColor(1, 0.82, 0); keybindLabel:SetPoint("TOPLEFT", scaleSlider, "BOTTOMLEFT", 0, -30); keybindLabel:SetText("Toggle Frame Keybind")
   
   local keybindBtn = CreateFrame("Button", nil, configFrame, "UIPanelButtonTemplate")
   keybindBtn:SetPoint("LEFT", keybindLabel, "RIGHT", 10, 0); keybindBtn:SetSize(140, 28)
@@ -1217,12 +1288,22 @@ init:SetScript("OnEvent", function(self, event, addon, ...)
     if hb_settings.useTomTom == nil then hb_settings.useTomTom = true end
     if hb_settings.closeOnEsc == nil then hb_settings.closeOnEsc = true end
 
-    hb_settings.filters = hb_settings.filters or { achievement = true, quest = true, neutral = true, alliance = true, horde = true }
-    if hb_settings.filters.neutral == nil then hb_settings.filters.neutral = true end
-    if hb_settings.filters.alliance == nil then hb_settings.filters.alliance = true end
-    if hb_settings.filters.horde == nil then hb_settings.filters.horde = true end
+    hb_settings.tabFilters = hb_settings.tabFilters or {}
     
-    minimapCheckbox:SetChecked(hb_settings.showMinimapButton)
+    local function InitializeTabFilter(tabName, includeType)
+       if not hb_settings.tabFilters[tabName] then
+           hb_settings.tabFilters[tabName] = { neutral = true, alliance = true, horde = true }
+           if includeType then
+               hb_settings.tabFilters[tabName].achievement = true
+               hb_settings.tabFilters[tabName].quest = true
+           end
+       end
+    end
+
+    InitializeTabFilter("decor", true)
+    InitializeTabFilter("vendors", false)
+    InitializeTabFilter("drops", false)
+    InitializeTabFilter("professions", false)
     
     if not AchievementFrame then AchievementFrame_LoadUI() end
     local ldb = LibStub:GetLibrary("LibDataBroker-1.1", true)
@@ -1243,8 +1324,7 @@ init:SetScript("OnEvent", function(self, event, addon, ...)
 
     local scale = hb_settings.scale or 1.0
     frame:SetScale(scale); supportFrame:SetScale(scale); vendorPopup:SetScale(scale); wowheadPopup:SetScale(scale)
-    scaleSlider:SetValue(scale)
-    scaleValueText:SetText(string.format("UI Scale: %.2f", scale))
+
     BuildUI()
     CreateOptionsPanel()
     UpdateEscBehavior()
@@ -1257,10 +1337,6 @@ init:SetScript("OnEvent", function(self, event, addon, ...)
     vendorPopup:ClearAllPoints()
     vendorPopup:SetPoint("CENTER", frame, "CENTER", 0, 0)
 
-    if TomTom then
-      tomtomCheckbox:Show()
-      tomtomCheckbox:SetChecked(hb_settings.useTomTom)
-    else tomtomCheckbox:Hide() end
     self:UnregisterEvent("PLAYER_ENTERING_WORLD")
   elseif event == "ACHIEVEMENT_EARNED" or event == "QUEST_TURNED_IN" then
     C_Timer.After(0.5, BuildUI)

@@ -4,7 +4,7 @@ local L = addon.L;
 local TooltipFrame = addon.SharedTooltip;
 local UpgradeCurrencies = addon.ItemUpgradeConstant.Crests;
 
-local ENABLE_THIS_MODULE = true;        --DB.BackpackItemTracker
+local ENABLE_THIS_MODULE = false;        --DB.BackpackItemTracker
 local HIDE_ZERO_COUNT_ITEM = true;      --DB.HideZeroCountItem      Dock items inside a flyout menu
 local USE_CONSISE_TOOLTIP = true;       --DB.ConciseTokenTooltip
 local TRACK_UPGRADE_CURRENCY = true;    --DB.TrackItemUpgradeCurrency
@@ -610,13 +610,23 @@ function SettingsFrame:Init()
         f:Hide();
         DragUtil:Stop();
         self:StopArranging();
+        addon.CallbackRegistry:Trigger("SettingsPanel.ModuleOptionClosed");
     end);
 
     function SettingsFrame:CloseUI()
-        f:Hide();
-        PlaySound(SOUNDKIT.IG_MAINMENU_QUIT);
+        if f:IsShown() then
+            f:Hide();
+            PlaySound(SOUNDKIT.IG_MAINMENU_QUIT);
+            return true
+        end
     end
     f.CloseUI = SettingsFrame.CloseUI;
+    addon.AddModuleOptionExitMethod(SettingsFrame, SettingsFrame.CloseUI);
+
+    function SettingsFrame:IsShown()
+        return f:IsShown()
+    end
+
 
     local PADDING = 12;
     local HEADER_HEIGHT = 18;
@@ -2608,6 +2618,9 @@ do
         categoryID = 1,
         uiOrder = 1,
         optionToggleFunc = SettingsFrame_ToggleUIAtCursorPosition,
+		categoryKeys = {
+			"Inventory",
+		},
     };
 
     addon.ControlCenter:AddModule(moduleData);
