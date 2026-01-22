@@ -51,6 +51,8 @@ function HealthBarMixin:OnLoad()
     self.Frame:RegisterUnitEvent("UNIT_ENTERED_VEHICLE", "player")
     self.Frame:RegisterUnitEvent("UNIT_EXITED_VEHICLE", "player")
     self.Frame:RegisterEvent("PLAYER_MOUNT_DISPLAY_CHANGED")
+    self.Frame:RegisterEvent("PET_BATTLE_OPENING_START")
+    self.Frame:RegisterEvent("PET_BATTLE_CLOSE")
 end
 
 function HealthBarMixin:OnEvent(event, ...)
@@ -63,7 +65,11 @@ function HealthBarMixin:OnEvent(event, ...)
         self:ApplyLayout()
         self:UpdateDisplay()
 
-    elseif event == "PLAYER_REGEN_ENABLED" or event == "PLAYER_REGEN_DISABLED" or event == "PLAYER_TARGET_CHANGED" or event == "UNIT_ENTERED_VEHICLE" or event == "UNIT_EXITED_VEHICLE" or event == "PLAYER_MOUNT_DISPLAY_CHANGED" then
+    elseif event == "PLAYER_REGEN_ENABLED" or event == "PLAYER_REGEN_DISABLED"
+        or event == "PLAYER_TARGET_CHANGED"
+        or event == "UNIT_ENTERED_VEHICLE" or event == "UNIT_EXITED_VEHICLE"
+        or event == "PLAYER_MOUNT_DISPLAY_CHANGED"
+        or event == "PET_BATTLE_OPENING_START" or event == "PET_BATTLE_CLOSE" then
 
             self:ApplyVisibilitySettings(nil, event == "PLAYER_REGEN_DISABLED")
             self:UpdateDisplay()
@@ -129,6 +135,7 @@ addonTable.RegistereredBar.HealthBar = {
                     SenseiClassResourceBarDB[dbName][layoutName].hideBlizzardPlayerContainerUi = value
                     bar:HideBlizzardPlayerContainer(layoutName)
                 end,
+                tooltip = "Hides the default Blizzard Player Frame UI",
             },
             {
                 parentId = "Bar Style",

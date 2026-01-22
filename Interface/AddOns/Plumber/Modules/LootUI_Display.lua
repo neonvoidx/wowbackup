@@ -284,7 +284,9 @@ end
 
 do  --Process Loot Message
     function EL:IsMessageSenderPlayer_Retail(text, playerName, languageName, channelName, playerName2, specialFlags, zoneChannelID, channelIndex, channelBaseName, languageID, lineID, guid)
-        return guid == self.playerGUID
+        if Secret_CanAccess(guid) then
+            return guid == self.playerGUID
+        end
     end
     EL.IsMessageSenderPlayer = EL.IsMessageSenderPlayer_Retail;
 
@@ -353,6 +355,8 @@ do  --Process Loot Message
     end
 
     function EL:ProcessMessageCurrency(text)
+        if not Secret_CanAccess(text) then return end;
+
         local currencyID = match(text, "currency:(%d+)", 1);
         if currencyID then
             currencyID = tonumber(currencyID);
@@ -639,14 +643,12 @@ do  --Event Handler
             end
             self:RegisterEvent("CHAT_MSG_LOOT");
             self:RegisterEvent("CHAT_MSG_CURRENCY");
-            self:RegisterEvent("CHAT_MSG_COMBAT_FACTION_CHANGE");
             self:RegisterEvent("PLAYER_MONEY");
             self.t = 0;
             self:SetScript("OnUpdate", nil);
         else
             self:UnregisterEvent("CHAT_MSG_LOOT");
             self:UnregisterEvent("CHAT_MSG_CURRENCY");
-            self:UnregisterEvent("CHAT_MSG_COMBAT_FACTION_CHANGE");
             self:UnregisterEvent("PLAYER_MONEY");
         end
     end
@@ -821,7 +823,7 @@ do  --Event Handler
                     MainFrame:OnErrored(errorType);
                 end
             end
-        elseif event == "CHAT_MSG_LOOT" or event == "CHAT_MSG_CURRENCY" or event == "CHAT_MSG_COMBAT_FACTION_CHANGE" then
+        elseif event == "CHAT_MSG_LOOT" or event == "CHAT_MSG_CURRENCY" then
             --This is the most robust way to determine what's been looted.
             --Less responsive and more costly
             if (not IsMerchantFrameVisible()) and (self.currentLoots) then
@@ -831,8 +833,6 @@ do  --Event Handler
                     end
                 elseif event == "CHAT_MSG_CURRENCY" then    --guid is nil. Appear later than other chat events (~0.8s delay)
                     self:ProcessMessageCurrency(...);
-                elseif event == "CHAT_MSG_COMBAT_FACTION_CHANGE" then
-                    self:ProcessMessageFaction(...);
                 end
             end
         elseif event == "PLAYER_MONEY" then
@@ -1555,7 +1555,7 @@ do  --Edit Mode
         self:ShowSampleItems();
 
         if not self.Selection then
-            local uiName = "Loot Window";
+            local uiName = L["ModuleName LootUI"];
             local hideLabel = true;
             self.Selection = addon.CreateEditModeSelection(self, uiName, hideLabel);
         end
@@ -1709,8 +1709,16 @@ do  --Edit Mode
         end
     end
 
+    local function Tooltip_ShowReputation()
+        local tooltip = L["LootUI Option Show Reputation Tooltip"];
+        if not C_EventUtils.IsEventValid("FACTION_STANDING_CHANGED") then
+            tooltip = tooltip.."\n\n|cffd4641c"..L["Module Wrong Game Version"].."|r";
+        end
+        return tooltip
+    end
+
     local OPTIONS_SCHEMATIC = {
-        title = L["EditMode LootUI"],
+        title = L["Addon Name Colon"]..L["ModuleName LootUI"],
         widgets = {
             {type = "Slider", label = L["Font Size"], minValue = 10, maxValue = 16, valueStep = 2, onValueChangedFunc = Options_FontSizeSlider_OnValueChanged, formatValueMethod = "Decimal1", dbKey = "LootUI_FontSize"},
             {type = "Slider", label = L["LootUI Option Fade Delay"], minValue = 0.25, maxValue = 1.0, valueStep = 0.25, onValueChangedFunc = Options_FadeOutDelaySlider_OnValueChanged, formatValueMethod = "Decimal2", dbKey = "LootUI_FadeDelayPerItem"},
@@ -1723,7 +1731,9 @@ do  --Edit Mode
             {type = "Checkbox", label = L["LootUI Option Custom Quality Color"], tooltip = L["LootUI Option Custom Quality Color Tooltip"], onClickFunc = nil, dbKey = "LootUI_UseCustomColor", validityCheckFunc = function() return C_ColorOverrides and ColorManager and ColorManager.GetColorDataForItemQuality ~= nil end},
             {type = "Checkbox", label = L["LootUI Option Grow Direction"], tooltip = Tooltip_GrowDirection, onClickFunc = Options_GrowDirection_OnClick, dbKey = "LootUI_GrowUpwards", keepTooltipAfterClicks = true},
             {type = "Checkbox", label = L["LootUI Option Combine Items"], tooltip = L["LootUI Option Combine Items Tooltip"], onClickFunc = nil, dbKey = "LootUI_CombineItems"},
+            {newFeature = true, type = "Checkbox", label = L["LootUI Option Show Reputation"], tooltip = Tooltip_ShowReputation, onClickFunc = nil, dbKey = "LootUI_ShowReputation", validityCheckFunc = Validation_IsRetail},
             {type = "Checkbox", label = L["LootUI Option Low Frame Strata"], tooltip = L["LootUI Option Low Frame Strata Tooltip"], onClickFunc = nil, dbKey = "LootUI_LowFrameStrata"},
+
             {type = "Divider"},
             {type = "Checkbox", label = L["LootUI Option Force Auto Loot"], onClickFunc = Options_ForceAutoLoot_OnClick, validityCheckFunc = Options_ForceAutoLoot_ValidityCheck, dbKey = "LootUI_ForceAutoLoot", tooltip = L["LootUI Option Force Auto Loot Tooltip"], tooltip2 = Tooltip_ManualLootInstruction},
             {type = "Checkbox", label = L["LootUI Option Loot Under Mouse"], onClickFunc = nil, dbKey = "LootUI_LootUnderMouse", tooltip = L["LootUI Option Loot Under Mouse Tooltip"]},
@@ -1996,9 +2006,9 @@ do  --Module Registry
     end
 
     local moduleData = {
-        name = addon.L["ModuleName LootUI"],
+        name = L["ModuleName LootUI"],
         dbKey = "LootUI",
-        description = addon.L["ModuleDescription LootUI"],
+        description = L["ModuleDescription LootUI"],
         toggleFunc = EnableModule,
         categoryID = 1,
         uiOrder = 0,
@@ -2048,8 +2058,35 @@ do  --Use Loot UI as Notification Center
 			showGlow = true,
 			tooltipMethod = "SetSpellByID",
             isNotification = true,
+            slotIndex = 0,
 		};
 
 		self:QueueDisplayLoot(data);
+    end
+
+
+    local function TooltipFunc_Reputation(tooltip, factionID)
+        local text, factionName = API.GetFactionStatusText(factionID, true, true);
+        if text then
+            tooltip:SetText(factionName, 1, 0.82, 0);
+            tooltip:AddLine(text, 1, 1, 1);
+            tooltip:Show();
+        end
+    end
+
+    function MainFrame:QueueDisplayReputation(factionID, name, quantity)
+        if EL.enabled then
+            local data = {
+                slotType = Defination.SLOT_TYPE_REP,
+                id = factionID,
+                quality = 1,
+                quantity = quantity,
+                name = name,
+                hideCount = true,
+                tooltipFunc = TooltipFunc_Reputation,
+                slotIndex = 0,
+            };
+            self:QueueDisplayLoot(data);
+        end
     end
 end

@@ -1,0 +1,42 @@
+## Interface: 120000, 120001
+## Title: Targeted Spells
+## DefaultState: Enabled
+## SavedVariables: TargetedSpellsSaved
+## IconTexture: Interface\Icons\ability_hunter_snipershot
+## OptionalDeps: !!AddonLocale, Masque
+## Category: Combat
+## Category-deDE: Kampf
+## Category-esES: Combate
+## Category-esMX: Combate
+## Category-frFR: Combat
+## Category-itIT: Combattimento
+## Category-koKR: 전투
+## Category-ptBR: Combate
+## Category-ruRU: Бой
+## Category-zhCN: 战斗
+## Category-zhTW: 戰鬥
+## Notes: Highlights spells targeting the player and/or the party
+## Version: 1.1.1
+## Author: Xephyris-Blackrock-EU
+
+## X-Curse-Project-ID: 1418323
+## X-Wago-ID: vNAe38No
+
+Libs\LibStub\LibStub.lua
+Libs\LibCustomGlow-1.0\LibCustomGlow-1.0.lua
+Libs\CallbackHandler-1.0\CallbackHandler-1.0.lua
+Libs\LibEditMode\embed.xml
+
+Templates\TargetedSpellsFrameTemplate.xml
+
+Enum.lua
+Init.lua
+Utils.lua
+
+Localization\enUS.lua
+Localization\[TextLocale].lua [AllowLoadTextLocale deDE, frFR, zhCN]
+
+Settings.lua
+TargetedSpellsMixin.lua
+EditMode.lua
+Driver.lua

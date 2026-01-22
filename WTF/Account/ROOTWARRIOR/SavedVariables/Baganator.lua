@@ -115,6 +115,20 @@ BAGANATOR_CONFIG = {
 ["currencyID"] = 2123,
 },
 },
+["Auteist-Mal'Ganis"] = {
+{
+["currencyID"] = 1602,
+},
+{
+["currencyID"] = 1792,
+},
+{
+["currencyID"] = 3008,
+},
+{
+["currencyID"] = 3028,
+},
+},
 ["Smaugchamp-Mal'Ganis"] = {
 {
 ["currencyID"] = 1792,
@@ -137,19 +151,7 @@ BAGANATOR_CONFIG = {
 ["currencyID"] = 2123,
 },
 },
-["Auteist-Mal'Ganis"] = {
-{
-["currencyID"] = 1602,
-},
-{
-["currencyID"] = 1792,
-},
-{
-["currencyID"] = 3008,
-},
-{
-["currencyID"] = 3028,
-},
+["Crillessana-Mal'Ganis"] = {
 },
 ["Rakeist-Mal'Ganis"] = {
 {
@@ -187,8 +189,6 @@ BAGANATOR_CONFIG = {
 ["currencyID"] = 3008,
 },
 },
-["Gehyo-Tichondrius"] = {
-},
 ["Starstypeshi-Tichondrius"] = {
 {
 ["currencyID"] = 1602,
@@ -198,6 +198,20 @@ BAGANATOR_CONFIG = {
 },
 {
 ["currencyID"] = 2123,
+},
+},
+["Starphage-Tichondrius"] = {
+{
+["currencyID"] = 1602,
+},
+{
+["currencyID"] = 1792,
+},
+{
+["currencyID"] = 3288,
+},
+{
+["currencyID"] = 3290,
 },
 },
 ["Ofpusstwo-Tichondrius"] = {
@@ -304,7 +318,7 @@ BAGANATOR_CONFIG = {
 ["currencyID"] = 3028,
 },
 },
-["Crillessana-Mal'Ganis"] = {
+["Gehyo-Tichondrius"] = {
 },
 ["Stormclout-Mal'Ganis"] = {
 {
@@ -344,7 +358,7 @@ BAGANATOR_CONFIG = {
 ["DEFAULT"] = {
 ["guild_view_width"] = 14,
 ["empty_slot_background"] = false,
-["junk_plugin"] = "dejunk",
+["junk_plugin"] = "poor_quality",
 ["reduce_spacing"] = true,
 ["bag_view_type"] = "category",
 ["automatic_categories_added"] = {
@@ -2288,7 +2302,7 @@ BAGANATOR_CONFIG = {
 },
 ["141"] = {
 ["name"] = "Old",
-["search"] = "#gear&<536&!#upgrade",
+["search"] = "#gear&<95&!#upgrade",
 },
 ["127"] = {
 ["name"] = "Manuscript",

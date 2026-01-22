@@ -2,12 +2,10 @@
 MouseoverActionSettingsDB = {
 ["namespaces"] = {
 },
-["global"] = {
-["TinkerZone"] = true,
-},
 ["profileKeys"] = {
 ["Månyfaced - Mal'Ganis"] = "Default",
 ["Hellowalls - Mal'Ganis"] = "Default",
+["Starphage - Tichondrius"] = "Default",
 ["Praisesun - Tichondrius"] = "Default",
 ["Corsic - Mal'Ganis"] = "Default",
 ["Neonvoid - Mal'Ganis"] = "Default",
@@ -29,17 +27,20 @@ MouseoverActionSettingsDB = {
 ["Hellavator - Mal'Ganis"] = "Default",
 ["Hellavator - Tichondrius"] = "Default",
 ["Neonvoid - Tichondrius"] = "Default",
-["Gehyo - Mal'Ganis"] = "Default",
+["Gehyo - Tichondrius"] = "Default",
 ["Stormclout - Tichondrius"] = "Default",
 ["Reedingo - Mal'Ganis"] = "Default",
-["Choppiez - Tichondrius"] = "Default",
-["Auteist - Tichondrius"] = "Default",
-["Smaugchamp - Tichondrius"] = "Default",
-["Crillessana - Mal'Ganis"] = "Default",
-["Heilsatan - Tichondrius"] = "Default",
 ["Tampacks - Mal'Ganis"] = "Default",
-["Gehyo - Tichondrius"] = "Default",
+["Heilsatan - Tichondrius"] = "Default",
+["Crillessana - Mal'Ganis"] = "Default",
+["Smaugchamp - Tichondrius"] = "Default",
+["Auteist - Tichondrius"] = "Default",
+["Choppiez - Tichondrius"] = "Default",
+["Gehyo - Mal'Ganis"] = "Default",
 ["Clevagirl - Mal'Ganis"] = "Default",
+},
+["global"] = {
+["TinkerZone"] = true,
 },
 ["profiles"] = {
 ["Default"] = {
@@ -49,7 +50,7 @@ MouseoverActionSettingsDB = {
 ["MultiBarBottomLeft"] = {
 ["ARENA_UPDATE"] = true,
 ["TARGET_ATTACKABLE_UPDATE"] = true,
-["PARTY_GROUP_UPDATE"] = false,
+["TARGET_UPDATE"] = true,
 ["DUNGEON_UPDATE"] = true,
 ["minAlpha"] = 0.3,
 ["PLAYER_MOVING_UPDATE"] = false,
@@ -61,13 +62,12 @@ MouseoverActionSettingsDB = {
 ["MultiBar5"] = true,
 ["MainMenuBar"] = true,
 },
-["TARGET_UPDATE"] = true,
+["PARTY_GROUP_UPDATE"] = false,
 ["DRAGONRIDING_UPDATE"] = false,
 ["RAID_GROUP_UPDATE"] = false,
 },
-["NameFontSettings"] = {
-["font"] = "1",
-["height"] = 10,
+["Minimap"] = {
+["enabled"] = false,
 },
 ["ChatFrame"] = {
 ["enabled"] = false,
@@ -89,8 +89,8 @@ MouseoverActionSettingsDB = {
 ["maxAlpha"] = 0,
 },
 ["MiniMapButton"] = {
-["enabled"] = false,
 ["minimapPos"] = 122.2449592174659,
+["enabled"] = false,
 },
 ["DebuffFrame"] = {
 ["enabled"] = false,
@@ -103,30 +103,15 @@ MouseoverActionSettingsDB = {
 ["StanceBar"] = {
 ["enabled"] = false,
 },
-["HotKeyFontSettings"] = {
-["flags"] = "OUTLINE",
-["font"] = "1",
-["height"] = 13,
-},
-["MultiBar5"] = {
-["ARENA_UPDATE"] = true,
-["TARGET_ATTACKABLE_UPDATE"] = true,
-["PARTY_GROUP_UPDATE"] = false,
-["DUNGEON_UPDATE"] = true,
-["minAlpha"] = 0.3,
-["PLAYER_MOVING_UPDATE"] = false,
-["BATTLEGROUND_UPDATE"] = true,
-["COMBAT_UPDATE"] = true,
-["enabled"] = false,
-["RAID_UPDATE"] = true,
+["MultiBarRight"] = {
 ["links"] = {
-["MultiBarBottomLeft"] = true,
-["MainMenuBar"] = true,
+["MultiBarBottomRight"] = true,
+["MultiBar6"] = true,
 },
-["NPC_UPDATE"] = false,
-["DRAGONRIDING_UPDATE"] = false,
-["TARGET_UPDATE"] = true,
-["RAID_GROUP_UPDATE"] = false,
+["minAlpha"] = 0.2,
+},
+["MainActionBar"] = {
+["enabled"] = false,
 },
 ["TrackingBarContainer"] = {
 ["enabled"] = false,
@@ -152,23 +137,39 @@ MouseoverActionSettingsDB = {
 ["delay"] = 0,
 ["COMBAT_UPDATE"] = true,
 },
-["MultiBarRight"] = {
-["links"] = {
-["MultiBarBottomRight"] = true,
-["MultiBar6"] = true,
+["HotKeyFontSettings"] = {
+["flags"] = "OUTLINE",
+["font"] = "1",
+["height"] = 13,
 },
-["minAlpha"] = 0.2,
-},
-["MainActionBar"] = {
+["MultiBar5"] = {
+["ARENA_UPDATE"] = true,
+["NPC_UPDATE"] = false,
+["PARTY_GROUP_UPDATE"] = false,
+["DUNGEON_UPDATE"] = true,
+["minAlpha"] = 0.3,
+["PLAYER_MOVING_UPDATE"] = false,
+["BATTLEGROUND_UPDATE"] = true,
+["COMBAT_UPDATE"] = true,
 ["enabled"] = false,
+["RAID_UPDATE"] = true,
+["links"] = {
+["MultiBarBottomLeft"] = true,
+["MainMenuBar"] = true,
+},
+["TARGET_ATTACKABLE_UPDATE"] = true,
+["DRAGONRIDING_UPDATE"] = false,
+["RAID_GROUP_UPDATE"] = false,
+["TARGET_UPDATE"] = true,
 },
 ["BuffFrame"] = {
 ["enabled"] = false,
 },
-["Minimap"] = {
-["enabled"] = false,
+["NameFontSettings"] = {
+["font"] = "1",
+["height"] = 10,
 },
-["PlayerFrame"] = {
+["MultiBarLeft"] = {
 ["enabled"] = false,
 },
 ["ObjectiveTracker"] = {
@@ -196,7 +197,7 @@ MouseoverActionSettingsDB = {
 ["MainMenuBar"] = {
 ["ARENA_UPDATE"] = true,
 ["TARGET_ATTACKABLE_UPDATE"] = true,
-["TARGET_UPDATE"] = true,
+["PARTY_GROUP_UPDATE"] = false,
 ["DUNGEON_UPDATE"] = true,
 ["minAlpha"] = 0.3,
 ["PLAYER_MOVING_UPDATE"] = false,
@@ -208,9 +209,9 @@ MouseoverActionSettingsDB = {
 ["MultiBar5"] = true,
 },
 ["RAID_GROUP_UPDATE"] = false,
-["PARTY_GROUP_UPDATE"] = false,
+["TARGET_UPDATE"] = true,
 },
-["MultiBarLeft"] = {
+["PlayerFrame"] = {
 ["enabled"] = false,
 },
 },

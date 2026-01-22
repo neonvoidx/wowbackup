@@ -47,7 +47,7 @@ function skin:Apply(mainColor, bordersColor, backgroundColor, controlsColor, des
   self:SkinNineSliced(DressUpFrame, mainColor, desaturation)
 
     -- The right overlay.
-  for _, v in pairs({DressUpFrame.OutfitDetailsPanel:GetRegions()}) do
+  for _, v in pairs({DressUpFrame.CustomSetDetailsPanel:GetRegions()}) do
     if v:GetDrawLayer() == "OVERLAY" then
       v:SetDesaturation(desaturation)
       v:SetVertexColor(mainColor[1], mainColor[2], mainColor[3], mainColor[4])
@@ -69,7 +69,7 @@ function skin:Apply(mainColor, bordersColor, backgroundColor, controlsColor, des
 
   -- Controls.
   for _, texture in pairs({
-    DressUpFrameOutfitDropdown.Background,
+    DressUpFrameCustomSetDropdown.Background,
   }) do
     texture:SetDesaturation(desaturation)
     texture:SetVertexColor(controlsColor[1], controlsColor[2], controlsColor[3], controlsColor[4])

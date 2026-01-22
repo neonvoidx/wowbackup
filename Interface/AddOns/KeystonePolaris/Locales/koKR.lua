@@ -1,0 +1,281 @@
+local AddonName, Engine = ...;
+
+local LibStub = LibStub;
+local AceLocale = LibStub:GetLibrary("AceLocale-3.0");
+local L = AceLocale:NewLocale(AddonName, "koKR", false, false);
+if not L then return end
+
+-- TRANSLATION REQUIRED
+
+-- Dungeons Group
+L["DUNGEONS"] = "현재 시즌"
+L["CURRENT_SEASON"] = "현재 시즌"
+L["NEXT_SEASON"] = "다음 시즌"
+L["REMIX"] = "Remix" -- To Translate
+L["SEASON_ENDS_IN_ONE_MONTH"] = "Current season ends in less than one month." -- To Translate
+L["SEASON_ENDS_IN_WEEKS"] = "Current season ends in less than %d weeks." -- To Translate
+L["SEASON_ENDS_IN_DAYS"] = "Current season ends in %d days." -- To Translate
+L["SEASON_ENDS_IN_TOMORROW"] = "Current season ends tomorrow." -- To Translate
+L["SEASON_STARTS_IN_ONE_MONTH"] = "Next season starts in less than one month." -- To Translate
+L["SEASON_STARTS_IN_WEEKS"] = "Next season starts in less than %d weeks." -- To Translate
+L["SEASON_STARTS_IN_DAYS"] = "Next season starts in %d days." -- To Translate
+L["SEASON_STARTS_IN_TOMORROW"] = "Next season starts tomorrow." -- To Translate
+
+L["EXPANSION_MIDNIGHT"] = "Midnight" -- To Translate
+L["EXPANSION_WW"] = "내부전쟁"
+L["EXPANSION_DF"] = "용군단"
+L["EXPANSION_SL"] = "어둠땅"
+L["EXPANSION_BFA"] = "격전의 아제로스"
+L["EXPANSION_LEGION"] = "군단"
+L["EXPANSION_WOD"] = "Warlords of Draenor" -- To Translate
+L["EXPANSION_CATA"] = "대격변"
+L["EXPANSION_WOTLK"] = "Wrath of the Lich King" -- To Translate
+
+-- UI Strings
+L["MODULES"] = "모듈"
+L["MODULES_SUMMARY_HEADER"] = "Modules overview" -- To Translate
+L["MODULES_SUMMARY_DESC"] = "Quick tour of available modules:\n\n• MythicDungeonTools Integration\n  > Mob Percentages\n\n• Group Reminder" -- To Translate
+L["FINISHED"] = "던전 퍼센트 완료"
+L["SECTION_DONE"] = "구역 완료"
+L["DONE"] = "구역 퍼센트 완료"
+L["DUNGEON_DONE"] = "던전 완료"
+L["OPTIONS"] = "옵션"
+L["GENERAL_SETTINGS"] = "일반 옵션"
+L["Changelog"] = "로그 변경"
+L["Version"] = "버전"
+L["Important"] = "중요"
+L["New"] = "새로운"
+L["Bugfixes"] = "오류 수정"
+L["Improvment"] = "개선 사항"
+L["%month%-%day%-%year%"] = "%year%-%month%-%day%"
+L["DEFAULT_PERCENTAGES"] = "기본 퍼센트"
+L["DEFAULT_PERCENTAGES_DESC"] = "이 보기는 애드온의 기본 제공 기본값을 표시하며 커스텀 루트 구성을 반영하지 않습니다."
+L["ROUTES_DISCLAIMER"] = "기본적으로 Keystone Polaris는 Raider.IO 주간 경로(초보자용)를 사용합니다. 커스텀 루트를 사용하면 나만의 경로를 정의할 수 있습니다. 이러한 경로를 활성화하려면 애드온의 일반 설정에서 '커스텀 루트'를 활성화해야 합니다."
+L["ADVANCED_SETTINGS"] = "커스텀 루트"
+L["TANK_GROUP_HEADER"] = "보스 퍼센트"
+L["ROLES_ENABLED"] = "조건 설정"
+L["ROLES_ENABLED_DESC"] = "퍼센트 표시와 알림을 활성화 할 조건 설정"
+L["LEADER"] = "파장"
+L["TANK"] = "탱커"
+L["HEALER"] = "힐러"
+L["DPS"] = "딜러"
+L["ENABLE"] = "Enable" -- To Translate
+L["ENABLE_ADVANCED_OPTIONS"] = "커스텀 루트 활성화"
+L["ADVANCED_OPTIONS_DESC"] = "이를 통해 각 보스가 도달하기 전에 사용자 정의 백분율을 설정하고 누락된 백분율을 그룹에 알릴지 여부를 선택할 수 있습니다."
+L["INFORM_GROUP"] = "그룹 알림"
+L["INFORM_GROUP_DESC"] = "진행도가 모자랄 경우 채팅으로 메시지 보내기"
+L["MESSAGE_CHANNEL"] = "채팅 채널"
+L["MESSAGE_CHANNEL_DESC"] = "알림에 사용할 채팅 채널을 선택하세요."
+L["PARTY"] = "파티"
+L["SAY"] = "일반"
+L["YELL"] = "외침"
+L["PERCENTAGE"] = "퍼센트"
+L["PERCENTAGE_DESC"] = "텍스트 크기를 조정하세요"
+L["FONT"] = "글꼴"
+L["FONT_SIZE"] = "글꼴 크기"
+L["FONT_SIZE_DESC"] = "텍스트 크기를 조정하세요"
+L["POSITIONING"] = "위치"
+L["COLORS"] = "색상"
+L["IN_PROGRESS"] = "진행중"
+L["MISSING"] = "모자람"
+L["FINISHED_COLOR"] = "Done" -- To Translate
+L["VALIDATE"] = "확인"
+L["CANCEL"] = "취소"
+L["POSITION"] = "정렬"
+L["TOP"] = "위"
+L["CENTER"] = "중앙"
+L["BOTTOM"] = "아래"
+L["X_OFFSET"] = "X 오프셋"
+L["Y_OFFSET"] = "Y 오프셋"
+L["SHOW_ANCHOR"] = "표시 위치 확인"
+L["ANCHOR_TEXT"] = "< KPL 표시 >"
+L["RESET_DUNGEON"] = "기본값으로 재설정"
+L["RESET_DUNGEON_DESC"] = "이 던전의 모든 보스 진행도를 기본값으로 재설정 합니다"
+L["RESET_DUNGEON_CONFIRM"] = "이 던전의 모든 보스 진행도를 기본값으로 재설정 하시겠습니까?"
+L["RESET_ALL_DUNGEONS"] = "모든 던전 재설정"
+L["RESET_ALL_DUNGEONS_DESC"] = "모든 던전을 기본값으로 재설정"
+L["RESET_ALL_DUNGEONS_CONFIRM"] = "모든 던전을 기본값으로 재설정 하시겠습니까?"
+L["NEW_SEASON_RESET_PROMPT"] = "새로운 Mythic+ 시즌이 시작되었습니다. 모든 던전 값을 기본값으로 재설정 하시겠습니까?"
+L["YES"] = "예"
+L["NO"] = "아니요"
+L["WE_STILL_NEED"] = "더 잡아야 됨"
+L["NEW_ROUTES_RESET_PROMPT"] = "이 버전에서는 기본 던전 경로가 업데이트되었습니다. 현재 던전 경로를 새로운 기본값으로 재설정 하시겠습니까?"
+L["RESET_ALL"] = "모든 던전 초기화"
+L["RESET_CHANGED_ONLY"] = "변경 사항만 초기화"
+L["CHANGED_ROUTES_DUNGEONS_LIST"] = "다음 던전의 경로가 업데이트 되었습니다.:"
+L["BOSS"] = "Boss" -- To Translate
+L["BOSS_ORDER"] = "Boss Order" -- To Translate
+L["SHOW_COMPARTMENT_ICON"] = "Compartment icon" -- To Translate
+L["SHOW_MINIMAP_ICON"] = "Minimap icon" -- To Translate
+
+-- Commands / Help (To Translate)
+L["COMMANDS_HEADER"] = "Commands"
+L["COMMANDS_HELP_DESC"] = "Available slash commands:\n• /kpl or /polaris - Open options\n• /kpl reminder or /polaris reminder - Show last group reminder\n• /kpl help or /polaris help - Show this help"
+L["COMMANDS_HELP_OPEN"] = "/kpl or /polaris - Open options"
+L["COMMANDS_HELP_CHANGELOG"] = "/kpl changelog or /polaris changelog - Open changelog"
+L["COMMANDS_HELP_REMINDER"] = "/kpl reminder or /polaris reminder - Show last group reminder"
+L["COMMANDS_HELP_HELP"] = "/kpl help or /polaris help - Show this help"
+
+-- Changelog
+L["COPY_INSTRUCTIONS"] = "전체 선택 후 Ctrl+C로 복사하세요. 선택 사항: DeepL https://www.deepl.com/translator"
+L["SELECT_ALL"] = "전체 선택"
+L["TRANSLATE"] = "번역"
+L["TRANSLATE_DESC"] = "이 변경 사항을 팝업으로 복사하여 번역기에 붙여넣으세요."
+
+-- Test Mode
+L["TEST_MODE"] = "테스트 모드"
+L["TEST_MODE_OVERLAY"] = "Keystone Polaris: 테스트 모드"
+L["TEST_MODE_OVERLAY_HINT"] = "미리보기가 사용중입니다. 이 힌트를 마우스 오른쪽 버튼으로 클릭하면 테스트 모드를 종료하고 설정을 다시 열 수 있습니다."
+L["TEST_MODE_DESC"] = "던전에 있지 않아도 디스플레이 구성을 실시간으로 미리 볼 수 있습니다. 이 기능을 사용하면 다음과 같은 효과가 나타납니다.\n• 설정 패널을 닫아 미리 보기를 표시합니다.\n• 디스플레이 위에 희미한 오버레이와 힌트를 표시합니다.\n• 3초마다 전투/비전투 상태를 시뮬레이션하여 예상 값을 표시하고 끌어옵니다.\n팁: 힌트를 마우스 오른쪽 버튼으로 클릭하면 테스트 모드를 종료하고 설정을 다시 열 수 있습니다."
+L["TEST_MODE_DISABLED"] = "테스트 모드가 자동으로 비활성화되었습니다.%s"
+L["TEST_MODE_REASON_ENTERED_COMBAT"] = "전투 시작"
+L["TEST_MODE_REASON_STARTED_DUNGEON"] = "던전 시작"
+L["TEST_MODE_REASON_CHANGED_ZONE"] = "구역 변경"
+
+-- Main Display
+L["MAIN_DISPLAY"] = "메인 화면"
+L["SHOW_REQUIRED_PREFIX"] = "필요한 접두사 표시"
+L["SHOW_REQUIRED_PREFIX_DESC"] = "기본값이 숫자(예: 12.34%)인 경우, 접두사로 레이블(예: '필요한:')을 붙입니다. DONE/SECTION/DUNGEON 상태에는 접두사가 추가되지 않습니다."
+L["LABEL"] = "접두사"
+L["REQUIRED_LABEL_DESC"] = "요구되는 퍼센트 앞에 표시되는 라벨(예: '필요한: 12.34%').\n\n내용을 지우면 기본값으로 재설정됩니다."
+L["SHOW_CURRENT_PERCENT"] = "현재 %"
+L["SHOW_CURRENT_PERCENT_DESC"] = "시나리오 추적기에서 현재 적군의 전체 병력 비율을 표시합니다."
+L["CURRENT_LABEL_DESC"] = "현재 퍼센트 앞에 표시되는 라벨입니다.\n\n기본값으로 재설정하려면 내용을 지우세요."
+L["SHOW_CURRENT_PULL_PERCENT"] = "현재 풀링 % 보기 (MDT)"
+L["SHOW_CURRENT_PULL_PERCENT_DESC"] = "MDT 데이터를 사용하여 몹에 따른 실제 현재 풀링 퍼센트를 표시합니다."
+L["PULL_LABEL_DESC"] = "현재 풀 백분율 값 앞에 표시되는 라벨입니다.\n\n기본값으로 재설정하려면 내용을 지우세요."
+L["USE_MULTI_LINE_LAYOUT"] = "멀티라인 구성을 사용"
+L["USE_MULTI_LINE_LAYOUT_DESC"] = "선택한 각 값을 새 라인에 표시합니다."
+L["SHOW_PROJECTED"] = "예상 값 표시"
+L["SHOW_PROJECTED_DESC"] = "예상 값 추가: 현재 퍼센트(현재 + 풀링). 필요한 퍼센트(필요한 - 풀링)."
+L["SINGLE_LINE_SEPARATOR"] = "단일 줄 구분 기호"
+L["SINGLE_LINE_SEPARATOR_DESC"] = "다중 줄 레이아웃을 사용하지 않을 때 항목 사이에 사용되는 구분 기호입니다."
+L["FONT_ALIGN"] = "글자 정렬"
+L["FONT_ALIGN_DESC"] = "표시 글자의 수평 정렬입니다."
+L["PREFIX_COLOR"] = "접두사 색상"
+L["PREFIX_COLOR_DESC"] = "라벨/접두사에 적용되는 색상(필요한, 현재, 풀링)."
+L["MAX_WIDTH"] = "최대 너비(단일 라인)"
+L["MAX_WIDTH_DESC"] = "단일 줄 레이아웃의 최대 너비(픽셀). 0 = 자동(줄바꿈 없음)."
+L["REQUIRED_DEFAULT"] = "필요한:"
+L["CURRENT_DEFAULT"] = "현재:"
+L["SECTION_REQUIRED_DEFAULT"] = "구역에 필요한 퍼센트:"
+L["PULL_DEFAULT"] = "풀링:"
+
+-- Section required prefix
+L["SHOW_SECTION_REQUIRED_PREFIX"] = "구역별 퍼센트 표시"
+L["SHOW_SECTION_REQUIRED_PREFIX_DESC"] = "이미 진행된 진행 상황을 고려하지 않고 현재 섹션에 필요한 전체 적군 병력 백분율을 표시합니다."
+L["SECTION_REQUIRED_LABEL_DESC"] = "구역 퍼센트 값 앞에 표시되는 라벨입니다.\n\n기본값으로 재설정하려면 내용을 지우세요."
+L["SECTION_REQUIRED_DEFAULT"] = "구역에 필요한 퍼센트:"
+
+L["FORMAT_MODE"] = "텍스트 형식"
+L["FORMAT_MODE_DESC"] = "진행 상황을 표시하는 방법을 선택하세요."
+L["COUNT"] = "카운트"
+
+-- Export/Import
+L["EXPORT_DUNGEON"] = "던전 내보내기"
+L["EXPORT_DUNGEON_DESC"] = "이 던전의 사용자 지정 진행도 내보내기"
+L["IMPORT_DUNGEON"] = "던전 가져오기"
+L["IMPORT_DUNGEON_DESC"] = "이 던전의 사용자 지정 진행도 가져오기"
+L["EXPORT_ALL_DUNGEONS"] = "모든 던전 내보내기"
+L["EXPORT_ALL_DUNGEONS_DESC"] = "모든 던전에 대한 설정 내보내기"
+L["EXPORT_ALL_DIALOG_TEXT"] = "아래 문자열을 복사하여 모든 던전에 대한 사용자 지정 진행도를 공유하세요:"
+L["IMPORT_ALL_DUNGEONS"] = "모든 던전 가져오기"
+L["IMPORT_ALL_DUNGEONS_DESC"] = "모든 던전에 대한 설정 가져오기"
+L["IMPORT_ALL_DIALOG_TEXT"] = "아래 문자열을 붙여넣어 모든 던전에 대한 사용자 지정 진행도를 가져옵니다:"
+L["EXPORT_SECTION"] = "구역 내보내기"
+L["EXPORT_SECTION_DESC"] = "모든 던전 설정을 %s로 내보내기."
+L["EXPORT_SECTION_DIALOG_TEXT"] = "아래 문자열을 복사하여 %s에 대한 사용자 지정 진행도를 공유합니다:"
+L["IMPORT_SECTION"] = "구역 가져오기"
+L["IMPORT_SECTION_DESC"] = "%s에 대한 모든 던전 설정 가져오기."
+L["IMPORT_SECTION_DIALOG_TEXT"] = "아래 문자열을 붙여넣어 %에 대한 사용자 지정 진행도를 가져옵니다:"
+L["EXPORT_DIALOG_TEXT"] = "아래 문자열을 복사하여 사용자 지정 진행도를 공유하세요:"
+L["IMPORT_DIALOG_TEXT"] = "내보낸 문자열을 아래에 붙여넣습니다:"
+L["IMPORT_SUCCESS"] = "%s에 대한 사용자 지정 진행도 가져오기."
+L["IMPORT_ALL_SUCCESS"] = "모든 던전을 위한 사용자 지정 진행도 가져오기."
+L["IMPORT_ERROR"] = "문자열이 잘못되었습니다."
+L["IMPORT_DIFFERENT_DUNGEON"] = "%s에 대한 설정을 가져왔습니다. 해당 던전에 대한 옵션을 엽니다."
+
+-- MDT Integration
+L["MDT_INTEGRATION_FEATURES"] = "Mythic Dungeon Tools 통합 기능"
+L["MOB_PERCENTAGES_INFO"] = "• |cff00ff00몹 퍼센트|r: M+ 던전의 네임플레이트에 몹의 퍼센트를 표시합니다."
+L["MOB_INDICATOR_INFO"] = "• |cff00ff00몹 표시|r: 현재 MDT 경로에 포함된 몹을 표시하기 위해 네임플레이트를 표시합니다."
+
+-- Mob Percentages
+L["MOB_PERCENTAGES"] = "몹 퍼센트"
+L["ENABLE_MOB_PERCENTAGES"] = "몹 퍼센트 활성화"
+L["ENABLE_MOB_PERCENTAGES_DESC"] = "신화+ 던전에서 각 몹의 퍼센트 표시"
+L["MOB_PERCENTAGE_FONT_SIZE"] = "글자 크기"
+L["MOB_PERCENTAGE_FONT_SIZE_DESC"] = "몹 퍼센트 표시의 글자 크기를 설정합니다."
+L["MOB_PERCENTAGE_POSITION"] = "위치"
+L["MOB_PERCENTAGE_POSITION_DESC"] = "네임플레이트를 기준으로 퍼센트 표시 위치를 ​​설정합니다."
+L["RIGHT"] = "오른쪽"
+L["LEFT"] = "왼쪽"
+L["TOP"] = "위"
+L["BOTTOM"] = "아래"
+L["MDT_WARNING"] = "이 기능을 사용하려면 Mythic Dungeon Tools(MDT) 애드온을 설치해야 합니다."
+L["MDT_FOUND"] = "Mythic Dungeon Tools(MDT)를 찾았습니다. 몹 퍼센트는 MDT 데이터를 사용합니다."
+L["MDT_LOADED"] = "Mythic Dungeon Tools(MDT)가 성공적으로 로드되었습니다."
+L["MDT_NOT_FOUND"] = "Mythic Dungeon Tools를 찾을 수 없습니다. 몹 퍼센트가 표시되지 않습니다. 이 기능을 사용하려면 MDT를 설치하세요."
+L["MDT_INTEGRATION"] = "MDT 통합"
+L["MDT_SECTION_WARNING"] = "이 섹션을 사용하려면 Mythic Dungeon Tools(MDT) 애드온을 설치해야 합니다."
+L["DISPLAY_OPTIONS"] = "디스플레이 옵션"
+L["APPEARANCE_OPTIONS"] = "외형 옵션"
+L["SHOW_PERCENTAGE"] = "퍼센트 보기"
+L["SHOW_PERCENTAGE_DESC"] = "각 몹의 퍼센트를 표시합니다."
+L["SHOW_COUNT"] = "카운트 보기"
+L["SHOW_COUNT_DESC"] = "각 몹의 카운트를 표시합니다."
+L["SHOW_TOTAL"] = "전부 보기"
+L["SHOW_TOTAL_DESC"] = "100%에 필요한 총 카운트를 표시합니다."
+L["TEXT_COLOR"] = "글자 색"
+L["TEXT_COLOR_DESC"] = "네임플레이트에 표시될 글자 색을 지정합니다."
+L["CUSTOM_FORMAT"] = "표시 형식"
+L["CUSTOM_FORMAT_DESC"] = "사용자 지정 형식을 입력하세요. 퍼센트는 %s, 카운트는 %c, 합계는 %t를 사용하세요. 예: (%s), %s | %c/%t, %c 등."
+L["RESET_TO_DEFAULT"] = "초기화"
+L["RESET_FORMAT_DESC"] = "표시 형식을 기본값(괄호)으로 재설정합니다."
+
+-- Mob Indicators
+L["MOB_INDICATOR"] = "Mob Indicators"
+L["ENABLE_MOB_INDICATORS"] = "Enable Mob Indicators"
+L["ENABLE_MOB_INDICATORS_DESC"] = "Show an indicator for each mob included in the MDT route"
+L["MOB_INDICATOR_TEXTURE_HEADER"] = "Indicator icon"
+L["MOB_INDICATOR_TEXTURE"] = "Indicator icon (ID or Path)"
+L["MOB_INDICATOR_TEXTURE_SIZE"] = "Size"
+L["MOB_INDICATOR_TEXTURE_SIZE_DESC"] = "Set the texture size for the indicator icon"
+L["MOB_INDICATOR_COLORING_HEADER"] = "Coloring"
+L["MOB_INDICATOR_BEHAVIOR"] = "Behavior"
+L["MOB_INDICATOR_AUTO_ADVANCE"] = "Auto-advance pull"
+L["MOB_INDICATOR_AUTO_ADVANCE_DESC"] = "Auto-advance pull when no current-pull mobs are visible."
+L["MOB_INDICATOR_TINT"] = "Tint the indicator"
+L["MOB_INDICATOR_TINT_DESC"] = "Tint the indicator icon"
+L["MOB_INDICATOR_TINT_COLOR"] = "Color"
+L["MOB_INDICATOR_POSITION_HEADER"] = "Positioning"
+
+-- Group Reminder (Popup labels)
+L["KPL_GR_HEADER"] = "Group Reminder"
+L["KPL_GR_DUNGEON"] = "Dungeon:"
+L["KPL_GR_GROUP"] = "Group:"
+L["KPL_GR_DESCRIPTION"] = "Description:"
+L["KPL_GR_ROLE"] = "Role:"
+L["KPL_GR_TELEPORT"] = "Teleport to dungeon:"
+L["KPL_GR_TELEPORT_UNKNOWN"] = "Teleport spell not known"
+L["KPL_GR_OPEN_REMINDER"] = "Open reminder"
+L["KPL_GR_INVITED"] = "You have been invited to"
+L["KPL_GR_AS_ROLE"] = "as a %s"
+
+-- Group Reminder (Options)
+L["KPL_GR_DESC_LONG"] = "Displays a reminder popup and/or chat message when you are accepted into a Mythic+ group, with a button to teleport to the dungeon."
+L["KPL_GR_NOTIFICATIONS"] = "Notifications"
+L["KPL_GR_SUPPRESS_TOAST"] = "Suppress Blizzard quick-join toast"
+L["KPL_GR_SUPPRESS_TOAST_DESC"] = "Hide the default Blizzard popup that appears at the bottom of the screen when invited."
+L["KPL_GR_SHOW_POPUP"] = "Show popup"
+L["KPL_GR_SHOW_POPUP_DESC"] = "Display the reminder window in the center of the screen."
+L["KPL_GR_SHOW_CHAT"] = "Show chat message"
+L["KPL_GR_SHOW_CHAT_DESC"] = "Print the reminder details in the chat window."
+L["KPL_GR_TEST_CURRENT_SEASON"] = "Simulate current season acceptance"
+L["KPL_GR_TEST_CURRENT_SEASON_DESC"] = "Show the group reminder using a dungeon from the current season."
+L["KPL_GR_CONTENT"] = "Content"
+L["KPL_GR_SHOW_DUNGEON"] = "Show dungeon name"
+L["KPL_GR_SHOW_GROUP"] = "Show group name"
+L["KPL_GR_SHOW_DESC"] = "Show group description"
+L["KPL_GR_SHOW_ROLE"] = "Show applied role"
+

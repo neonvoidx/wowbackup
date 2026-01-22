@@ -35,4 +35,5 @@ if not SpecBisTooltip.DEBUG then
     SpecBisTooltip:AddTrans("ptBR", "LID_catalyst/unknown", "Catalyst/Unknown")
     SpecBisTooltip:AddTrans("ptBR", "LID_unknown", "Unknown")
     SpecBisTooltip:AddTrans("ptBR", "LID_yourbissource", "Your BiS Source: %s")
+    SpecBisTooltip:AddTrans("ptBR", "LID_ITEM", "Item")
 end

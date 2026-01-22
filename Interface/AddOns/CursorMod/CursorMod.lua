@@ -10,12 +10,16 @@ cursorFrame:Hide()
 cursorFrame[1], cursorFrame[2] = true, true
 
 
-local function show(n)
-	cursorFrame[n] = false
-	if cursorFrame[3] then return end
+cursorFrame:SetScript("OnShow", function(self)
 	local x, y = GetCursorPosition()
 	local scale = cursorFrame.scale
 	cursorFrame:SetPoint("TOPLEFT", UIParent, "BOTTOMLEFT", x / scale, y / scale)
+end)
+
+
+local function show(n)
+	cursorFrame[n] = false
+	if cursorFrame[3] or cursorFrame[1] and cursorFrame[2] and not config.pConfig.showAlways then return end
 	cursorFrame:Show()
 end
 

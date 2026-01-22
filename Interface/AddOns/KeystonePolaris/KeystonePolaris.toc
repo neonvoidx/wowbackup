@@ -1,9 +1,8 @@
 ## Interface: 110207, 120000
-## Title: Keystone Polaris
+## Title: |cffff3333K|r|cffff3f2ce|r|cffff4b25y|r|cffff571fs|r|cffff6318t|r|cffff6f11o|r|cffff7a0an|r|cffff8603e|r|cffff9203 |r|cffff9e0aP|r|cffffaa11o|r|cffffb618l|r|cffffc21fa|r|cffffce25r|r|cffffda2ci|r|cffffe633s|r
 ## Author: ZelionGG
-## Version: 3.1.1
+## Version: 3.2
 ## IconTexture: Interface\Addons\KeystonePolaris\icon.png
-## AddonCompartmentFunc: KeystonePolaris_OnAddonCompartmentClick
 
 ## Notes: Addon designed to help you keep track of the percentage to make in each M+ dungeon section.
 ## Notes-frFR: Addon conçu pour vous aider à savoir le pourcentage requis avant chaque boss en Mythique+.
@@ -31,15 +30,22 @@
 ## Category-zhCN: Mythic+ Dungeons
 ## Category-zhTW: Mythic+ Dungeons
 
-embeds.xml
-locales/locales.xml
+Embeds.xml
+Locales/Locales.xml
 
-utils/expansions/expansions.xml
-utils/seasons/seasons.xml
+Core.lua
 
-options.lua
-core.lua
-modules/mdt_integration/mobPercentages.lua
-modules/mdt_integration/mobIndicator.lua
+Data/Expansions/Expansions.xml
+Data/Seasons/Seasons.xml
 
-utils/changelog/Load_Changelog.xml
+Modules/DungeonManager.lua
+Modules/PullTracker.lua
+Modules/GroupReminder.lua
+Modules/Display.lua
+Modules/Changelog/Changelog.lua
+Options.lua
+Modules/ImportExport.lua
+Modules/MdtIntegration/MobPercentages.lua
+Modules/MdtIntegration/MobIndicator.lua
+
+Modules/Changelog/Load_Changelog.xml

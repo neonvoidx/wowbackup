@@ -3,6 +3,7 @@ MythicDungeonToolsDB = {
 ["profileKeys"] = {
 ["Månyfaced - Mal'Ganis"] = "Månyfaced - Mal'Ganis",
 ["Heilsatan - Tichondrius"] = "Heilsatan - Tichondrius",
+["Starphage - Tichondrius"] = "Starphage - Tichondrius",
 ["Choppiez - Tichondrius"] = "Choppiez - Tichondrius",
 ["Corsic - Mal'Ganis"] = "Corsic - Mal'Ganis",
 ["Neonvoid - Mal'Ganis"] = "Neonvoid - Mal'Ganis",
@@ -39,10 +40,79 @@ MythicDungeonToolsDB = {
 },
 ["global"] = {
 ["anchorTo"] = "RIGHT",
-["scale"] = 0.4729828705658784,
+["colorPaletteInfo"] = {
+["colorPaletteIdx"] = 1,
+["customPaletteValues"] = {
+{
+1,
+1,
+1,
+},
+{
+1,
+1,
+1,
+},
+{
+1,
+1,
+1,
+},
+{
+1,
+1,
+1,
+},
+{
+1,
+1,
+1,
+},
+{
+1,
+1,
+1,
+},
+{
+1,
+1,
+1,
+},
+{
+1,
+1,
+1,
+},
+{
+1,
+1,
+1,
+},
+{
+1,
+1,
+1,
+},
+{
+1,
+1,
+1,
+},
+{
+1,
+1,
+1,
+},
+},
+},
 ["hasSeenAssignmentWarning"] = true,
 ["anchorFrom"] = "RIGHT",
-["latestDungeonSeen"] = 123,
+["minimap"] = {
+["minimapPos"] = 137.8717401374864,
+["lock"] = true,
+["showInCompartment"] = true,
+["hide"] = true,
+},
 ["currentPreset"] = {
 [19] = 2,
 [30] = 2,
@@ -55,8 +125,7 @@ MythicDungeonToolsDB = {
 [119] = 2,
 [123] = 2,
 },
-["selectedDungeonList"] = 3,
-["latestSeenDungeonList"] = 8,
+["maximized"] = false,
 ["presets"] = {
 [19] = {
 {
@@ -366,12 +435,12 @@ nil,
 [18] = {
 3,
 },
-[15] = {
-4,
-3,
-},
 [17] = {
 2,
+3,
+},
+[15] = {
+4,
 3,
 },
 },
@@ -510,13 +579,6 @@ nil,
 ["uid"] = "i8o4G59N2zg",
 ["addonVersion"] = 554,
 ["week"] = 1,
-["colorPaletteInfo"] = {
-["autoColoring"] = true,
-["colorPaletteIdx"] = 4,
-},
-["text"] = "Halls || Simple",
-["objects"] = {
-},
 ["value"] = {
 ["riftOffsets"] = {
 {
@@ -882,6 +944,13 @@ nil,
 },
 },
 },
+},
+["text"] = "Halls || Simple",
+["objects"] = {
+},
+["colorPaletteInfo"] = {
+["autoColoring"] = true,
+["colorPaletteIdx"] = 4,
 },
 },
 {
@@ -1282,6 +1351,12 @@ nil,
 ["uid"] = "gN6Nv)StbSh",
 ["addonVersion"] = 550,
 ["week"] = 1,
+["colorPaletteInfo"] = {
+["autoColoring"] = true,
+["colorPaletteIdx"] = 4,
+},
+["text"] = "Streets || Simple",
+["difficulty"] = 10,
 ["value"] = {
 ["riftOffsets"] = {
 {
@@ -1520,12 +1595,6 @@ nil,
 },
 },
 },
-["text"] = "Streets || Simple",
-["difficulty"] = 10,
-["colorPaletteInfo"] = {
-["autoColoring"] = true,
-["colorPaletteIdx"] = 4,
-},
 },
 {
 ["value"] = 0,
@@ -1561,6 +1630,12 @@ nil,
 ["uid"] = "0)m5sk60lH)",
 ["addonVersion"] = 550,
 ["week"] = 1,
+["colorPaletteInfo"] = {
+["autoColoring"] = true,
+["colorPaletteIdx"] = 4,
+},
+["text"] = "Gambit || Simple",
+["difficulty"] = 10,
 ["value"] = {
 ["riftOffsets"] = {
 {
@@ -1794,12 +1869,12 @@ nil,
 },
 {
 ["color"] = "3eff9e",
-[12] = {
-1,
-},
 [20] = {
 1,
 2,
+},
+[12] = {
+1,
 },
 [18] = {
 1,
@@ -1877,12 +1952,6 @@ nil,
 },
 },
 },
-["text"] = "Gambit || Simple",
-["difficulty"] = 10,
-["colorPaletteInfo"] = {
-["autoColoring"] = true,
-["colorPaletteIdx"] = 4,
-},
 },
 {
 ["value"] = 0,
@@ -1941,13 +2010,6 @@ nil,
 ["uid"] = "00Zt0fk1b9Z",
 ["addonVersion"] = 550,
 ["week"] = 1,
-["colorPaletteInfo"] = {
-["autoColoring"] = true,
-["colorPaletteIdx"] = 4,
-},
-["text"] = "Dawnbreaker || Simple",
-["objects"] = {
-},
 ["value"] = {
 ["selection"] = {
 10,
@@ -2173,6 +2235,13 @@ nil,
 },
 },
 },
+["text"] = "Dawnbreaker || Simple",
+["objects"] = {
+},
+["colorPaletteInfo"] = {
+["autoColoring"] = true,
+["colorPaletteIdx"] = 4,
+},
 },
 {
 ["value"] = 0,
@@ -2231,13 +2300,6 @@ nil,
 ["uid"] = "EKGsA5cA8dl",
 ["addonVersion"] = 550,
 ["week"] = 1,
-["colorPaletteInfo"] = {
-["autoColoring"] = true,
-["colorPaletteIdx"] = 4,
-},
-["text"] = "Ara'kara, City of Echoes || Simple",
-["objects"] = {
-},
 ["value"] = {
 ["selection"] = {
 1,
@@ -2593,6 +2655,13 @@ nil,
 },
 },
 },
+["text"] = "Ara'kara, City of Echoes || Simple",
+["objects"] = {
+},
+["colorPaletteInfo"] = {
+["autoColoring"] = true,
+["colorPaletteIdx"] = 4,
+},
 },
 {
 ["value"] = 0,
@@ -2827,10 +2896,6 @@ true,
 },
 ["week"] = 1,
 ["uid"] = "2)joMBoG5)z",
-["colorPaletteInfo"] = {
-["autoColoring"] = true,
-["colorPaletteIdx"] = 4,
-},
 ["value"] = {
 ["currentPull"] = 1,
 ["currentSublevel"] = 1,
@@ -3072,11 +3137,11 @@ true,
 8,
 },
 ["color"] = "ff3e9e",
-[15] = {
-3,
-},
 [17] = {
 1,
+},
+[15] = {
+3,
 },
 },
 {
@@ -3108,6 +3173,10 @@ true,
 {
 },
 },
+},
+["colorPaletteInfo"] = {
+["autoColoring"] = true,
+["colorPaletteIdx"] = 4,
 },
 ["text"] = "TWW S1 City of Threads",
 ["mdi"] = {
@@ -3150,13 +3219,6 @@ true,
 ["uid"] = "NJMxWsWo1uG",
 ["addonVersion"] = 550,
 ["week"] = 1,
-["colorPaletteInfo"] = {
-["autoColoring"] = true,
-["colorPaletteIdx"] = 4,
-},
-["text"] = "Priory of the Sacred Flame || Simple",
-["objects"] = {
-},
 ["value"] = {
 ["selection"] = {
 10,
@@ -3318,10 +3380,6 @@ true,
 1,
 2,
 },
-[20] = {
-2,
-1,
-},
 [4] = {
 4,
 6,
@@ -3331,6 +3389,10 @@ true,
 1,
 5,
 7,
+},
+[20] = {
+2,
+1,
 },
 ["color"] = "a1ff3e",
 },
@@ -3486,19 +3548,19 @@ true,
 },
 },
 },
+["text"] = "Priory of the Sacred Flame || Simple",
+["objects"] = {
+},
+["colorPaletteInfo"] = {
+["autoColoring"] = true,
+["colorPaletteIdx"] = 4,
+},
 },
 {
 ["difficulty"] = 20,
 ["uid"] = "xhDZJSWi6jA",
 ["addonVersion"] = 550,
 ["week"] = 1,
-["colorPaletteInfo"] = {
-["autoColoring"] = true,
-["colorPaletteIdx"] = 4,
-},
-["text"] = "Priory || Simple Left",
-["objects"] = {
-},
 ["value"] = {
 ["selection"] = {
 19,
@@ -3639,10 +3701,6 @@ true,
 1,
 2,
 },
-[20] = {
-2,
-1,
-},
 [4] = {
 5,
 6,
@@ -3652,6 +3710,10 @@ true,
 1,
 4,
 7,
+},
+[20] = {
+2,
+1,
 },
 ["color"] = "ff9b3e",
 },
@@ -3808,6 +3870,13 @@ true,
 },
 },
 },
+["text"] = "Priory || Simple Left",
+["objects"] = {
+},
+["colorPaletteInfo"] = {
+["autoColoring"] = true,
+["colorPaletteIdx"] = 4,
+},
 },
 {
 ["value"] = 0,
@@ -3866,51 +3935,6 @@ true,
 ["uid"] = "Mh1leZ32YFM",
 ["addonVersion"] = 550,
 ["week"] = 1,
-["colorPaletteInfo"] = {
-["autoColoring"] = true,
-["colorPaletteIdx"] = 4,
-},
-["text"] = "Floodgate || Simple",
-["objects"] = {
-{
-["d"] = {
-11,
-1,
-1,
-true,
-"fffcec",
--8,
-},
-["l"] = {
-"241.6",
-"-60.8",
-"318.3",
-"-93.7",
-},
-["t"] = {
-2.736032160920938,
-},
-},
-{
-["d"] = {
-11,
-1,
-1,
-false,
-"fffcec",
--8,
-},
-["l"] = {
-"423.4",
-"-139.0",
-"404.9",
-"-45.3",
-},
-["t"] = {
--1.376018721736849,
-},
-},
-},
 ["value"] = {
 ["selection"] = {
 6,
@@ -3970,15 +3994,14 @@ false,
 ["color"] = "3eff9e",
 },
 {
-["color"] = "ff3e3e",
-[10] = {
-6,
-5,
-},
 [12] = {
 8,
 12,
 },
+[25] = {
+4,
+},
+["color"] = "ff3e3e",
 [14] = {
 6,
 },
@@ -3986,8 +4009,9 @@ false,
 24,
 23,
 },
-[25] = {
-4,
+[10] = {
+6,
+5,
 },
 },
 {
@@ -4210,16 +4234,61 @@ false,
 [21] = {
 1,
 },
+[12] = {
+},
 [26] = {
 1,
 2,
 3,
 },
-[12] = {
-},
 ["color"] = "3effff",
 },
 },
+},
+["text"] = "Floodgate || Simple",
+["objects"] = {
+{
+["d"] = {
+11,
+1,
+1,
+true,
+"fffcec",
+-8,
+},
+["l"] = {
+"241.6",
+"-60.8",
+"318.3",
+"-93.7",
+},
+["t"] = {
+2.736032160920938,
+},
+},
+{
+["d"] = {
+11,
+1,
+1,
+false,
+"fffcec",
+-8,
+},
+["l"] = {
+"423.4",
+"-139.0",
+"404.9",
+"-45.3",
+},
+["t"] = {
+-1.376018721736849,
+},
+},
+},
+["colorPaletteInfo"] = {
+["autoColoring"] = true,
+["colorPaletteIdx"] = 4,
 },
 },
 {
@@ -4256,6 +4325,12 @@ false,
 ["uid"] = "grVA8DFual4",
 ["addonVersion"] = 550,
 ["week"] = 1,
+["colorPaletteInfo"] = {
+["autoColoring"] = true,
+["colorPaletteIdx"] = 4,
+},
+["text"] = "Eco-Dome || Simple",
+["difficulty"] = 10,
 ["value"] = {
 ["selection"] = {
 4,
@@ -4567,96 +4642,39 @@ false,
 },
 },
 },
-["text"] = "Eco-Dome || Simple",
-["difficulty"] = 10,
-["colorPaletteInfo"] = {
-["autoColoring"] = true,
-["colorPaletteIdx"] = 4,
-},
 },
 {
 ["value"] = 0,
 ["text"] = "<New Route>",
 },
 },
+[150] = {
+{
+["difficulty"] = 10,
+["week"] = 1,
+["value"] = {
+["currentPull"] = 1,
+["currentSublevel"] = 1,
+["currentDungeonIdx"] = 150,
+["selection"] = {
+1,
+},
+["pulls"] = {
+{
+["color"] = "ff3eff",
+},
+},
+},
+},
+},
 },
 ["nonFullscreenScale"] = 0.4729828705658784,
 ["toolbarExpanded"] = false,
-["colorPaletteInfo"] = {
-["colorPaletteIdx"] = 1,
-["customPaletteValues"] = {
-{
-1,
-1,
-1,
-},
-{
-1,
-1,
-1,
-},
-{
-1,
-1,
-1,
-},
-{
-1,
-1,
-1,
-},
-{
-1,
-1,
-1,
-},
-{
-1,
-1,
-1,
-},
-{
-1,
-1,
-1,
-},
-{
-1,
-1,
-1,
-},
-{
-1,
-1,
-1,
-},
-{
-1,
-1,
-1,
-},
-{
-1,
-1,
-1,
-},
-{
-1,
-1,
-1,
-},
-},
-},
-["minimap"] = {
-["minimapPos"] = 137.8717401374864,
-["lock"] = true,
-["showInCompartment"] = true,
-["hide"] = true,
-},
-["version"] = 573,
+["latestSeenDungeonList"] = 8,
+["version"] = 600,
 ["xoffset"] = -204.2173156738281,
-["maximized"] = false,
-["currentDungeonIdx"] = 113,
+["scale"] = 0.4729828705658784,
+["latestDungeonSeen"] = 150,
 ["yoffset"] = -227.9413299560547,
 },
 }

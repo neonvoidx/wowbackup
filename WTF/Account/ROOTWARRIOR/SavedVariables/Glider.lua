@@ -89,13 +89,13 @@ GliderAddOnDB = {
 ["point"] = "CENTER",
 ["textPosition"] = "Bottom",
 },
-["Default Minimal"] = {
+["Classic"] = {
 ["y"] = 170,
 ["x"] = 0,
 ["point"] = "CENTER",
 ["textPosition"] = "Bottom",
 },
-["Classic"] = {
+["Default Minimal"] = {
 ["y"] = 170,
 ["x"] = 0,
 ["point"] = "CENTER",
@@ -107,17 +107,17 @@ GliderAddOnDB = {
 ["point"] = "CENTER",
 ["textPosition"] = "Bottom",
 },
-["Default Old"] = {
-["y"] = -144.1665191650391,
-["x"] = -0.832763671875,
-["point"] = "CENTER",
-["textPosition"] = "Bottom",
-},
 ["Default Remix"] = {
 ["y"] = 127.6669006347656,
 ["x"] = -0.0013427734375,
 ["point"] = "BOTTOM",
 ["scale"] = 1.019999980926514,
+["textPosition"] = "Bottom",
+},
+["Default Old"] = {
+["y"] = -144.1665191650391,
+["x"] = -0.832763671875,
+["point"] = "CENTER",
 ["textPosition"] = "Bottom",
 },
 ["Modern"] = {
@@ -131,15 +131,6 @@ GliderAddOnDB = {
 ["x"] = 0,
 ["point"] = "CENTER",
 ["textPosition"] = "Bottom",
-},
-["Default"] = {
-["y"] = 247.166748046875,
-["x"] = 0.1666259765625,
-["point"] = "BOTTOM",
-["scale"] = 1,
-["textPosition"] = "Bottom",
-["style"] = "Class",
-["insideCircle"] = false,
 },
 ["123"] = {
 ["y"] = 170,

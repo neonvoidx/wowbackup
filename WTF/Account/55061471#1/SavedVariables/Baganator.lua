@@ -510,6 +510,12 @@ BAGANATOR_CONFIG = {
 125.8333892822266,
 -81.8330078125,
 },
+["bag_empty_space_at_top"] = false,
+["debug_timers"] = false,
+["seen_welcome"] = 1,
+["hide_special_container"] = {
+},
+["icon_equipment_set_border"] = true,
 ["character_select_position"] = {
 "RIGHT",
 "Baganator_CategoryViewBackpackViewFrameblizzard",
@@ -517,12 +523,6 @@ BAGANATOR_CONFIG = {
 0,
 0,
 },
-["debug_timers"] = false,
-["seen_welcome"] = 1,
-["hide_special_container"] = {
-},
-["icon_equipment_set_border"] = true,
-["bag_empty_space_at_top"] = false,
 ["bag_view_show_bag_slots"] = false,
 ["category_horizontal_spacing_2"] = 0.3,
 ["icon_mark_unusable"] = true,
@@ -543,7 +543,8 @@ BAGANATOR_CONFIG = {
 ["upgrade_plugin"] = "simple_item_levels",
 ["debug_categories"] = false,
 ["migrated_sort_method"] = true,
-["category_migration"] = 5,
+["saved_searches"] = {
+},
 ["category_modifications"] = {
 ["53"] = {
 ["priority"] = 0,
@@ -579,13 +580,13 @@ BAGANATOR_CONFIG = {
 ["i:158075"] = true,
 ["i:134553"] = true,
 ["i:127857"] = true,
-["i:128869"] = true,
+["i:128808"] = true,
 ["i:128476"] = true,
 ["i:128938"] = true,
-["i:128808"] = true,
-["i:139621"] = true,
-["i:128825"] = true,
+["i:128821"] = true,
 ["i:127830"] = true,
+["i:128825"] = true,
+["i:139621"] = true,
 ["i:128859"] = true,
 ["i:128870"] = true,
 ["i:128868"] = true,
@@ -596,7 +597,7 @@ BAGANATOR_CONFIG = {
 ["i:128940"] = true,
 ["i:128937"] = true,
 ["i:128867"] = true,
-["i:128821"] = true,
+["i:128869"] = true,
 ["i:128873"] = true,
 ["i:128942"] = true,
 ["i:128822"] = true,
@@ -1019,8 +1020,8 @@ BAGANATOR_CONFIG = {
 },
 ["Sort later"] = {
 },
-["162"] = {
-["priority"] = 0,
+["107"] = {
+["priority"] = -1,
 },
 ["86"] = {
 ["priority"] = -1,
@@ -1028,8 +1029,8 @@ BAGANATOR_CONFIG = {
 ["96"] = {
 ["priority"] = 3,
 },
-["56"] = {
-["priority"] = 0,
+["default_toy"] = {
+["priority"] = -1,
 },
 ["36"] = {
 ["priority"] = 0,
@@ -1037,8 +1038,8 @@ BAGANATOR_CONFIG = {
 ["46"] = {
 ["priority"] = 0,
 },
-["default_toy"] = {
-["priority"] = -1,
+["56"] = {
+["priority"] = 0,
 },
 ["66"] = {
 ["priority"] = 0,
@@ -1097,12 +1098,12 @@ BAGANATOR_CONFIG = {
 ["i:30318"] = true,
 ["i:207728"] = true,
 ["i:34334"] = true,
-["i:206448"] = true,
 ["i:137225"] = true,
-["i:19019"] = true,
-["i:204177"] = true,
 ["i:186414"] = true,
+["i:19019"] = true,
 ["i:216906"] = true,
+["i:206448"] = true,
+["i:204177"] = true,
 ["i:151137"] = true,
 ["i:22632"] = true,
 ["i:46017"] = true,
@@ -1182,11 +1183,11 @@ BAGANATOR_CONFIG = {
 ["156"] = {
 ["priority"] = 0,
 },
-["157"] = {
-["priority"] = -1,
-},
 ["153"] = {
 ["priority"] = 0,
+},
+["157"] = {
+["priority"] = -1,
 },
 ["91"] = {
 ["showGroupPrefix"] = true,
@@ -1202,8 +1203,8 @@ BAGANATOR_CONFIG = {
 ["59"] = {
 ["priority"] = 0,
 },
-["49"] = {
-["priority"] = 0,
+["default_weapon"] = {
+["priority"] = -1,
 },
 ["39"] = {
 ["priority"] = 0,
@@ -1310,8 +1311,8 @@ BAGANATOR_CONFIG = {
 ["default_armor"] = {
 ["group"] = "type",
 },
-["default_weapon"] = {
-["priority"] = -1,
+["49"] = {
+["priority"] = 0,
 },
 ["80"] = {
 ["priority"] = 0,
@@ -1356,8 +1357,8 @@ BAGANATOR_CONFIG = {
 ["33"] = {
 ["priority"] = 0,
 },
-["107"] = {
-["priority"] = -1,
+["162"] = {
+["priority"] = 0,
 },
 ["18"] = {
 ["showGroupPrefix"] = true,
@@ -1411,10 +1412,14 @@ BAGANATOR_CONFIG = {
 ["guild_current_tab"] = 0,
 ["icon_text_font_size"] = 14,
 ["show_buttons_on_alt"] = false,
-["setting_anchors"] = false,
-["disabled_skins"] = {
-},
 ["bag_view_width"] = 14,
+["view_alpha"] = 1,
+["sort_ignore_slots_count_2"] = {
+["Ofpuss-Mal'Ganis"] = 0,
+["Mäñýfäçëð-Mal'Ganis"] = 0,
+["Neonvoid-Mal'Ganis"] = 0,
+["Auteist-Mal'Ganis"] = 0,
+},
 ["currencies_tracked_imported"] = {
 },
 ["currencies_tracked"] = {
@@ -1455,17 +1460,6 @@ BAGANATOR_CONFIG = {
 },
 ["Tampacks-Mal'Ganis"] = {
 },
-["Mäñýfäçëð-Mal'Ganis"] = {
-{
-["currencyID"] = 3028,
-},
-{
-["currencyID"] = 3110,
-},
-{
-["currencyID"] = 3109,
-},
-},
 ["Stormclout-Mal'Ganis"] = {
 {
 ["currencyID"] = 1602,
@@ -1487,6 +1481,17 @@ BAGANATOR_CONFIG = {
 },
 {
 ["currencyID"] = 3110,
+},
+},
+["Mäñýfäçëð-Mal'Ganis"] = {
+{
+["currencyID"] = 3028,
+},
+{
+["currencyID"] = 3110,
+},
+{
+["currencyID"] = 3109,
 },
 },
 ["Auteist-Mal'Ganis"] = {
@@ -1513,19 +1518,6 @@ BAGANATOR_CONFIG = {
 },
 },
 },
-["skins"] = {
-["blizzard"] = {
-["no_frame_borders"] = false,
-["view_transparency"] = 0,
-["empty_slot_background"] = false,
-},
-["dark"] = {
-["no_frame_borders"] = false,
-["square_icons"] = false,
-["view_transparency"] = 0.3,
-["empty_slot_background"] = false,
-},
-},
 ["recent_characters_main_view"] = {
 "Smaugchamp-Tichondrius",
 "Stormclout-Tichondrius",
@@ -1539,15 +1531,24 @@ BAGANATOR_CONFIG = {
 "Praisesun-Tichondrius",
 },
 ["debug_keywords"] = false,
+["skins"] = {
+["blizzard"] = {
+["no_frame_borders"] = false,
+["view_transparency"] = 0,
+["empty_slot_background"] = false,
+},
+["dark"] = {
+["no_frame_borders"] = false,
+["square_icons"] = false,
+["view_transparency"] = 0.3,
+["empty_slot_background"] = false,
+},
+},
 ["auto_sort_on_open"] = false,
 ["sort_ignore_slots_at_end"] = false,
-["sort_ignore_slots_count_2"] = {
-["Ofpuss-Mal'Ganis"] = 0,
-["Mäñýfäçëð-Mal'Ganis"] = 0,
-["Neonvoid-Mal'Ganis"] = 0,
-["Auteist-Mal'Ganis"] = 0,
+["setting_anchors"] = false,
+["disabled_skins"] = {
 },
-["view_alpha"] = 1,
 ["guild_view_position"] = {
 "LEFT",
 20,
@@ -1560,8 +1561,7 @@ BAGANATOR_CONFIG = {
 0,
 0,
 },
-["saved_searches"] = {
-},
+["category_migration"] = 5,
 ["bank_only_view_position"] = {
 "LEFT",
 20,
@@ -2015,9 +2015,9 @@ BAGANATOR_CONFIG = {
 ["name"] = "Weapon",
 ["search"] = "#weapon",
 },
-["26"] = {
-["name"] = "Old",
-["search"] = "#gear & <536",
+["161"] = {
+["name"] = "Soulbound",
+["search"] = "soulbound",
 },
 ["124"] = {
 ["name"] = "Knowledge",
@@ -2027,9 +2027,9 @@ BAGANATOR_CONFIG = {
 ["name"] = "Voucher",
 ["search"] = "voucher&consumable",
 },
-["161"] = {
-["name"] = "Soulbound",
-["search"] = "soulbound",
+["26"] = {
+["name"] = "Old",
+["search"] = "#gear & <536",
 },
 ["152"] = {
 ["name"] = "Recipe",
@@ -2043,7 +2043,7 @@ BAGANATOR_CONFIG = {
 ["name"] = "Shirts",
 ["search"] = "#tabard || #shirt",
 },
-["156"] = {
+["41"] = {
 ["name"] = "Quest",
 ["search"] = "#quest",
 },
@@ -2051,15 +2051,15 @@ BAGANATOR_CONFIG = {
 ["name"] = "Recipe",
 ["search"] = "#recipe",
 },
-["61"] = {
-["name"] = "Armor",
-["search"] = "#armor",
+["172"] = {
+["name"] = "Keys",
+["search"] = "",
 },
 ["51"] = {
 ["name"] = "Perma",
 ["search"] = "",
 },
-["41"] = {
+["156"] = {
 ["name"] = "Quest",
 ["search"] = "#quest",
 },
@@ -2087,9 +2087,9 @@ BAGANATOR_CONFIG = {
 ["name"] = "Enchant",
 ["search"] = "#item enhancement",
 },
-["157"] = {
-["name"] = "Weapon",
-["search"] = "#weapon",
+["39"] = {
+["name"] = "BoE",
+["search"] = "#boe || #bwe",
 },
 ["29"] = {
 ["name"] = "Elemental",
@@ -2251,13 +2251,13 @@ BAGANATOR_CONFIG = {
 ["name"] = "Junk",
 ["search"] = "#junk",
 },
-["39"] = {
-["name"] = "BoE",
-["search"] = "#boe || #bwe",
+["157"] = {
+["name"] = "Weapon",
+["search"] = "#weapon",
 },
-["172"] = {
-["name"] = "Keys",
-["search"] = "",
+["61"] = {
+["name"] = "Armor",
+["search"] = "#armor",
 },
 ["18"] = {
 ["name"] = "Legendary",

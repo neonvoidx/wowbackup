@@ -125,6 +125,17 @@ L["handler_tooltip_not_discovered"] = "noch nicht entdeckt"
 ----------------------------------------------DATABASE----------------------------------------------
 ----------------------------------------------------------------------------------------------------
 
+----------------------------------------------MIDNIGHT----------------------------------------------
+
+L["Eversong Rootway"] = "Immersangwurzelpfad"
+L["Harandar Rootway"] = "Harandarwurzelpfad"
+L["Portal to Harandar"] = "Portal nach Harandar"
+L["Rootway to Harandar"] = "Wurzelpfad nach Harandar"
+L["Portal to Voidstorm"] = "Portal nach Leerensturm"
+L["Portal to Silvermoon City"] = "Portal nach Silbermond"
+L["Portal to Kun-Lai Summit"] = "Portal zum Kun-Lai-Gipfel"
+L["Portal to Loamm"] = "Portal nach Loamm"
+
 -------------------------------------------------TWW------------------------------------------------
 
 L["Portal to Dragonblight"] = "Portal nach Drachenöde"
@@ -152,6 +163,9 @@ L["Portal to Maldraxxus"] = "Portal nach Maldraxxus"
 L["Portal to K'aresh"] = "Portal nach K'aresh"
 L["Portal to Tazavesh"] = "Portal nach Tazavesh"
 L["Portal to Revendreth"] = "Portal nach Revendreth"
+L["Delver's Headquarters"] = "Tiefenforscherhauptquartier"
+L["Portal to Founder's Point"] = "Portal zur Gründerspitze"
+L["Portal to Razorwind Shores"] = "Portal zur Klingenschluchtküste"
 
 --==========================================DRAGONFLIGHT==========================================--
 
@@ -249,8 +263,12 @@ L["Reflective Portal"] = "Reflexionsportal"
 L["Portal to Jade Forest"] = "Portal zum Jadewald"
 L["Portal to Pandaria"] = "Portal nach Pandaria"
 L["Portal to Isle of Thunder"] = "Portal zur Insel des Donners"
-L["Portal to Shado-Pan Garrison"] = "Portal zur Shado-Pan Garnison"
+L["Portal to Shado-Pan Garrison"] = "Portal zur Shado-Pan-Garnison"
+L["Portal to Shan'ze Dao"] = "Portal nach Shan'ze Dao"
 L["Portal to Peak of Serenity"] = "Portal zum Gipfel der Ruhe"
+L["Hot Air Balloon to Orgrimmar"] = "Heißluftballon nach Orgrimmar"
+L["Hot Air Balloon to Stormwind"] = "Heißluftballon nach Sturmwind"
+L["Hot Air Balloon to Wandering Isle"] = "Heißluftballon zur Wandernden Insel"
 
 -------------------------------------------------CATA-----------------------------------------------
 
@@ -285,12 +303,13 @@ L["Portal to Exodar"] = "Portal zur Exodar"
 L["in Exodar"] = true
 L["Boat to Exodar"] = "Schiff zur Exodar"
 L["Speak with Zephyr"] = "Sprich mit Zephyr"
+L["Teleport to the Dark Portal"] = "Teleport zum Dunklen Portal"
 
 -----------------------------------------------VANILLA----------------------------------------------
 
 L["Boat to Menethil Harbor"] = "Schiff zum Hafen von Menethil"
 
-L["Portal to Silvermoon"] = "Portal nach Silbermond"
+L["Portal to Silvermoon (Burning Crusade)"] = "Portal nach Silbermond (Burning Crusade)"
 
 L["Portal to Undercity"] = "Portal nach Unterstadt"
 L["Orb of translocation"] = "Translokationskugel"

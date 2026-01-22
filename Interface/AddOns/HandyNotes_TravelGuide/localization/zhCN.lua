@@ -154,6 +154,9 @@ L["Portal to Maldraxxus"] = "通往玛卓克萨斯的传送门"
 L["Portal to K'aresh"] = "通往卡雷什的传送门"
 L["Portal to Tazavesh"] = "通往塔扎维什的传送门"
 L["Portal to Revendreth"] = "通往雷文德斯的传送门"
+L["Delver's Headquarters"] = "地下堡行者总部"
+L["Portal to Founder's Point"] = "通往创始者之角的传送门"
+L["Portal to Razorwind Shores"] = "通往烈风海岸的传送门"
 
 --==========================================DRAGONFLIGHT==========================================--
 
@@ -220,7 +223,7 @@ L["Portal to Port of Boralus"] = "通往伯拉勒斯的传送门"
 
 L["Portal to Stormheim"] = "通往风暴峡湾的传送门"
 L["Portal to Helheim"] = "通往冥狱深渊的传送门"
-L["Portal to Dalaran"] = "通往达拉然（晶歌森林）的传送门"
+L["Portal to Dalaran"] = "通往达拉然的传送门"
 L["Portal to Azsuna"] = "通往阿苏纳的传送门"
 L["Portal to Val'sharah"] = "通往瓦尔莎拉的传送门"
 L["Portal to Emerald Dreamway"] = "通往翡翠梦境的传送门"
@@ -252,7 +255,11 @@ L["Portal to Jade Forest"] = "通往翡翠林的传送门"
 L["Portal to Pandaria"] = "通往潘达利亚的传送门"
 L["Portal to Isle of Thunder"] = "通往雷神岛的传送门"
 L["Portal to Shado-Pan Garrison"] = "通往影踪卫戍营的传送门"
+L["Portal to Shan'ze Dao"] = "通往山泽岛的传送门"
 L["Portal to Peak of Serenity"] = "通往晴日峰（昆莱山）的传送门"
+-- L["Hot Air Balloon to Orgrimmar"] = ""
+-- L["Hot Air Balloon to Stormwind"] = ""
+-- L["Hot Air Balloon to Wandering Isle"] = ""
 
 -------------------------------------------------CATA-----------------------------------------------
 
@@ -287,12 +294,13 @@ L["Portal to Exodar"] = "通往埃索达的传送门"
 L["in Exodar"] = "埃索达内部"
 L["Boat to Exodar"] = "前往埃索达的船"
 L["Speak with Zephyr"] = "和塞菲尔对话-传送"
+-- L["Teleport to the Dark Portal"] = ""
 
 -----------------------------------------------VANILLA----------------------------------------------
 
 L["Boat to Menethil Harbor"] = "前往米奈希尔港（湿地）的船"
 
-L["Portal to Silvermoon"] = "通往银月城的传送门"
+L["Portal to Silvermoon (Burning Crusade)"] = "通往银月城的传送门"
 
 L["Portal to Undercity"] = "通往幽暗城的传送门"
 L["Orb of translocation"] = "传送宝珠"

@@ -77,6 +77,7 @@ local isAddonLoaded = C_AddOns.IsAddOnLoaded
 local changeUnitFrameFont
 local targetAndFocusArenaNamePartyOverride
 local showLastNameNpc
+local changePartyFrameFont
 
 function BBF.UpdateUserTargetSettings()
     hidePartyNames = BetterBlizzFramesDB.hidePartyNames
@@ -96,6 +97,7 @@ function BBF.UpdateUserTargetSettings()
     hidePlayerName = BetterBlizzFramesDB.hidePlayerName
     hidePetName = BetterBlizzFramesDB.hidePetName
     changeUnitFrameFont = BetterBlizzFramesDB.changeUnitFrameFont
+    changePartyFrameFont = BetterBlizzFramesDB.changePartyFrameFont
     targetAndFocusArenaNamePartyOverride = BetterBlizzFramesDB.targetAndFocusArenaNamePartyOverride
     showLastNameNpc = BetterBlizzFramesDB.showLastNameNpc
 end
@@ -246,12 +248,20 @@ local function PartyFrameNameChange(frame)
         frame.bbfName:SetText("")
         return
     end
-    if not changeUnitFrameFont then
+    if not changeUnitFrameFont and not changePartyFrameFont then
         frame.bbfName:SetFont(frame.name:GetFont())
     end
     frame.bbfName:ClearAllPoints()
     frame.bbfName:SetPoint("LEFT", frame.name, "LEFT")
-    frame.bbfName:SetWidth(frame.name:GetWidth())
+
+    local _, fontSize = frame.bbfName:GetFont()
+    local baseWidth = frame.name:GetWidth()
+    local extraWidth = 0
+    if fontSize and fontSize > 10 then
+        extraWidth = math.floor((fontSize - 10) / 2) * 15
+    end
+    frame.bbfName:SetWidth(baseWidth + extraWidth)
+
     if partyArenaNames and IsActiveBattlefieldArena() then
         SetArenaName(frame, frame.unit, frame.bbfName)
         return
@@ -520,9 +530,9 @@ local petFrames = {
 
 local function SetUnitFramesValuesFont(font, size, outline)
     for _, textObject in ipairs(statusTexts) do
-                if not textObject then
+        if not textObject then
             BBF.Print("Nil statusText at index:", _)
-                end
+        end
         local ogFont, ogSize, ogOutline = textObject:GetFont()
 
         local newFont = font or ogFont
@@ -806,7 +816,7 @@ function BBF.SetCustomFonts()
 end
 
 local function ClassColorName(textObject, unit)
-    local color = BBF.getUnitColor(unit)
+    local color = BBF.getUnitColor(unit, (BetterBlizzFramesDB.customHealthbarColors and BetterBlizzFramesDB.customColorsUnitFrames) or nil, true)
     if color then
         textObject:SetTextColor(color.r, color.g, color.b)
     else

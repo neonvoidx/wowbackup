@@ -35,4 +35,5 @@ if not SpecBisTooltip.DEBUG then
     SpecBisTooltip:AddTrans("esES", "LID_catalyst/unknown", "Catalyst/Desconocido")
     SpecBisTooltip:AddTrans("esES", "LID_unknown", "Desconocido")
     SpecBisTooltip:AddTrans("esES", "LID_yourbissource", "Tu fuente BiS: %s")
+    SpecBisTooltip:AddTrans("esES", "LID_ITEM", "Item")
 end

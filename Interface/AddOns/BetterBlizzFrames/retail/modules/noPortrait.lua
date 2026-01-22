@@ -540,10 +540,15 @@ local function MakeNoPortraitMode(frame)
         totManaBar:SetFrameLevel(1)
         totFrame.Portrait:SetParent(BBF.hiddenFrame)
 
+        local hideToTMana = (frame == TargetFrame and db.hideUnitFrameTargetMana) or (frame == FocusFrame and db.hideUnitFrameFocusMana)
         totFrame.Background = totFrame.HealthBar:CreateTexture(nil, "BACKGROUND")
         totFrame.Background:SetColorTexture(0,0,0,0.45)
         totFrame.Background:SetPoint("TOPLEFT", totFrame.HealthBar, "TOPLEFT", 1, -1)
-        totFrame.Background:SetPoint("BOTTOMRIGHT", totFrame.manabar, "BOTTOMRIGHT", -1, 1)
+        if hideToTMana then
+            totFrame.Background:SetPoint("BOTTOMRIGHT", totFrame.HealthBar, "BOTTOMRIGHT", -1, 1)
+        else
+            totFrame.Background:SetPoint("BOTTOMRIGHT", totFrame.manabar, "BOTTOMRIGHT", -1, 1)
+        end
         totFrame.FrameTexture:SetSize(130, 33)
         local totTexture = (frame == TargetFrame) and targetDefaultTex or focusDefaultTex
         totFrame.FrameTexture:SetTexture(totTexture)
@@ -773,6 +778,16 @@ local function MakeNoPortraitMode(frame)
             frame.noPortraitMode.Texture:SetTexture(textureToUse)
             frame.noPortraitMode.Background:SetPoint("BOTTOMRIGHT", contentMain.ManaBar, "BOTTOMRIGHT", -10, bgYOffset)
 
+            local hideToTMana = (frame == TargetFrame and db.hideUnitFrameTargetMana) or (frame == FocusFrame and db.hideUnitFrameFocusMana)
+            if frame.totFrame and frame.totFrame.Background then
+                frame.totFrame.Background:ClearAllPoints()
+                frame.totFrame.Background:SetPoint("TOPLEFT", frame.totFrame.HealthBar, "TOPLEFT", 1, -1)
+                if hideToTMana then
+                    frame.totFrame.Background:SetPoint("BOTTOMRIGHT", frame.totFrame.HealthBar, "BOTTOMRIGHT", -1, 1)
+                else
+                    frame.totFrame.Background:SetPoint("BOTTOMRIGHT", frame.totFrame.manabar, "BOTTOMRIGHT", -1, 1)
+                end
+            end
         end)
 
         hooksecurefunc(frame, "CheckFaction", function(self)
@@ -2726,6 +2741,16 @@ function BBF.noPortraitModes()
     PetFrame:SetHitRectInsets(25, 12, -6, 8)
     TargetFrameToT:SetHitRectInsets(25, 12, -6, 8)
     FocusFrameToT:SetHitRectInsets(25, 12, -6, 8)
+
+    local txt = PlayerFrameGroupIndicatorText
+    local wt_p = PlayerFrameGroupIndicatorText:GetParent()
+    local regions = {wt_p:GetRegions()}
+    for _, region in ipairs(regions) do
+        if region ~= txt then
+            region:Hide()
+        end
+    end
+
     for i = 1, 4 do
         local partyMemberFrame = PartyFrame["MemberFrame"..i]
         partyMemberFrame:SetHitRectInsets(29, -8, -6, 8)
@@ -2751,8 +2776,10 @@ function BBF.noPortraitModes()
                 frame.Selection.MouseOverHighlight:ClearAllPoints()
                 frame.Selection.MouseOverHighlight:SetPoint("TOPLEFT", frame.Selection.TopLeftCorner, "TOPLEFT", 8, -8)
                 frame.Selection.MouseOverHighlight:SetPoint("BOTTOMRIGHT", frame.Selection.BottomRightCorner, "BOTTOMRIGHT", -8, 8)
-                frame.Selection.HorizontalLabel:ClearAllPoints()
-                frame.Selection.HorizontalLabel:SetPoint("CENTER", frame.Selection.MouseOverHighlight, "CENTER", 0, 0)
+                if frame.Selection.HorizontalLabel then
+                    frame.Selection.HorizontalLabel:ClearAllPoints()
+                    frame.Selection.HorizontalLabel:SetPoint("CENTER", frame.Selection.MouseOverHighlight, "CENTER", 0, 0)
+                end
                 frame.Selection.bbfRepositioned = true
 
                 hooksecurefunc(frame.Selection.TopLeftCorner, "SetPoint", function(self)

@@ -10,4 +10,5 @@
   <Script file="_EJMicroButton.lua"/>
   <Script file="_StoreMicroButton.lua"/>
   <Script file="_MainMenuMicroButton.lua"/>
+  <Script file="_HousingMicroButton.lua"/>
 </Ui>

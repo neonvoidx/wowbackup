@@ -1,37 +1,38 @@
 
 FrameColor4DB = {
 ["profileKeys"] = {
-["Thingreyline - Tichondrius"] = "Default",
-["Mäñýfäçëð - Tichondrius"] = "Default",
-["Hellowalls - Mal'Ganis"] = "Default",
 ["Heilsatan - Tichondrius"] = "Default",
-["Starstypeshi - Tichondrius"] = "Default",
-["Gehyo - Tichondrius"] = "Default",
-["Tampacks - Mal'Ganis"] = "Default",
+["Starphage - Tichondrius"] = "Default",
+["Choppiez - Tichondrius"] = "Default",
+["Corsic - Mal'Ganis"] = "Default",
+["Auteist - Tichondrius"] = "Default",
+["Ofpusstwo - Tichondrius"] = "Default",
+["Cullnvoid - Tichondrius"] = "Default",
+["Stormclout - Mal'Ganis"] = "Default",
+["Rakeist - Mal'Ganis"] = "Default",
+["Ofpuss - Tichondrius"] = "Default",
+["Praisesun - Mal'Ganis"] = "Default",
+["Thingreyline - Tichondrius"] = "Default",
+["Crillessana - Mal'Ganis"] = "Default",
 ["Auteist - Mal'Ganis"] = "Default",
 ["Ofpuss - Mal'Ganis"] = "Default",
-["Hellavator - Mal'Ganis"] = "Default",
 ["Smaugchamp - Mal'Ganis"] = "Default",
 ["Choppiez - Mal'Ganis"] = "Default",
+["Gehyo - Tichondrius"] = "Default",
+["Tampacks - Mal'Ganis"] = "Default",
+["Mäñýfäçëð - Mal'Ganis"] = "Default",
+["Hellavator - Mal'Ganis"] = "Default",
+["Hellavator - Tichondrius"] = "Default",
+["Hellowalls - Mal'Ganis"] = "Default",
+["Stormclout - Tichondrius"] = "Default",
+["Reedingo - Mal'Ganis"] = "Default",
+["Mäñýfäçëð - Tichondrius"] = "Default",
+["Starstypeshi - Tichondrius"] = "Default",
 ["Smaugchamp - Tichondrius"] = "Default",
 ["Gehyo - Mal'Ganis"] = "Default",
 ["Neonvoid - Tichondrius"] = "Default",
-["Corsic - Mal'Ganis"] = "Default",
-["Mäñýfäçëð - Mal'Ganis"] = "Default",
 ["Neonvoid - Mal'Ganis"] = "Default",
-["Hellavator - Tichondrius"] = "Default",
-["Ofpusstwo - Tichondrius"] = "Default",
-["Auteist - Tichondrius"] = "Default",
-["Cullnvoid - Tichondrius"] = "Default",
-["Stormclout - Tichondrius"] = "Default",
-["Reedingo - Mal'Ganis"] = "Default",
-["Stormclout - Mal'Ganis"] = "Default",
-["Rakeist - Mal'Ganis"] = "Default",
 ["Praisesun - Tichondrius"] = "Default",
-["Choppiez - Tichondrius"] = "Default",
-["Ofpuss - Tichondrius"] = "Default",
-["Praisesun - Mal'Ganis"] = "Default",
-["Crillessana - Mal'Ganis"] = "Default",
 ["Clevagirl - Mal'Ganis"] = "Default",
 },
 ["profiles"] = {
@@ -122,20 +123,6 @@ FrameColor4DB = {
 },
 ["HUD"] = {
 ["colors"] = {
-["main"] = {
-["rgbaValues"] = {
-0.2784313857555389,
-0.2784313857555389,
-0.2784313857555389,
-},
-},
-["borders"] = {
-["rgbaValues"] = {
-0.2000000178813934,
-0.2000000178813934,
-0.2000000178813934,
-},
-},
 ["tabs"] = {
 ["rgbaValues"] = {
 0.1803921610116959,
@@ -148,6 +135,20 @@ FrameColor4DB = {
 0.2196078598499298,
 0.2196078598499298,
 0.2196078598499298,
+},
+},
+["main"] = {
+["rgbaValues"] = {
+0.2784313857555389,
+0.2784313857555389,
+0.2784313857555389,
+},
+},
+["borders"] = {
+["rgbaValues"] = {
+0.2000000178813934,
+0.2000000178813934,
+0.2000000178813934,
 },
 },
 },
@@ -187,7 +188,7 @@ FrameColor4DB = {
 ["followClassColor"] = false,
 },
 },
-["enabled"] = false,
+["enabled"] = true,
 },
 ["_GameMenuFrame"] = {
 ["colors"] = {

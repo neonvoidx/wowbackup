@@ -76,8 +76,10 @@ function addonTable:GetResourceColor(resource)
         color = staggerColors[resource]
         settingKey = resource
     elseif resource == "SOUL_FRAGMENTS" or resource == "SOUL_FRAGMENTS_VOID_META" then
+        local auraData = C_UnitAuras.GetPlayerAuraBySpellID(1217607) -- Void Meta
+
         -- Different color during Void Metamorphosis
-        if resource == "SOUL_FRAGMENTS_VOID_META" or (DemonHunterSoulFragmentsBar and DemonHunterSoulFragmentsBar.CollapsingStarBackground:IsShown()) then
+        if resource == "SOUL_FRAGMENTS_VOID_META" or auraData ~= nil then
             settingKey = "SOUL_FRAGMENTS_VOID_META"
             color = { r = 0.037, g = 0.220, b = 0.566, atlas = "UF-DDH-CollapsingStar-Bar-Ready" }
         else
@@ -112,6 +114,10 @@ function addonTable:GetResourceColor(resource)
         color = { r = 0.169, g = 0.733, b = 0.992 }
     elseif resource == Enum.PowerType.Chi then
         color = { r = 0.024, g = 0.741, b = 0.784 }
+    elseif resource == "MAELSTROM_WEAPON" then
+        color = { r = 0, g = 0.5, b = 1 }
+    elseif resource == "MAELSTROM_WEAPON_ABOVE_5" then
+        color = { r = 1, g = 0.5, b = 0 }
     end
 
     -- If not custom, try with power name or id

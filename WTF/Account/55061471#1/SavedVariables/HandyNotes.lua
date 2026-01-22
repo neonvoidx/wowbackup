@@ -22,10 +22,10 @@ HandyNotesDB = {
 ["Mäñýfäçëð - Tichondrius"] = "Mäñýfäçëð - Tichondrius",
 ["Praisesun - Tichondrius"] = "Praisesun - Tichondrius",
 ["Dernarplan - Mal'Ganis"] = "Dernarplan - Mal'Ganis",
-["Starstypeshi - Tichondrius"] = "Starstypeshi - Tichondrius",
+["Smaugchamp - Tichondrius"] = "Smaugchamp - Tichondrius",
 ["Auteist - Mal'Ganis"] = "Auteist - Mal'Ganis",
 ["Ofpuss - Mal'Ganis"] = "Ofpuss - Mal'Ganis",
-["Smaugchamp - Tichondrius"] = "Smaugchamp - Tichondrius",
+["Starstypeshi - Tichondrius"] = "Starstypeshi - Tichondrius",
 ["Smaugchamp - Mal'Ganis"] = "Smaugchamp - Mal'Ganis",
 ["Choppiez - Mal'Ganis"] = "Choppiez - Mal'Ganis",
 ["Gehyo - Tichondrius"] = "Gehyo - Tichondrius",
@@ -95,13 +95,13 @@ HandyNotesDB = {
 },
 ["Dernarplan - Mal'Ganis"] = {
 },
-["Starstypeshi - Tichondrius"] = {
+["Smaugchamp - Tichondrius"] = {
 },
 ["Auteist - Mal'Ganis"] = {
 },
 ["Ofpuss - Mal'Ganis"] = {
 },
-["Smaugchamp - Tichondrius"] = {
+["Starstypeshi - Tichondrius"] = {
 },
 ["Smaugchamp - Mal'Ganis"] = {
 },
@@ -172,10 +172,10 @@ HandyNotes_HandyNotesDB = {
 ["Mäñýfäçëð - Tichondrius"] = "Mäñýfäçëð - Tichondrius",
 ["Praisesun - Tichondrius"] = "Praisesun - Tichondrius",
 ["Dernarplan - Mal'Ganis"] = "Dernarplan - Mal'Ganis",
-["Starstypeshi - Tichondrius"] = "Starstypeshi - Tichondrius",
+["Smaugchamp - Tichondrius"] = "Smaugchamp - Tichondrius",
 ["Auteist - Mal'Ganis"] = "Auteist - Mal'Ganis",
 ["Ofpuss - Mal'Ganis"] = "Ofpuss - Mal'Ganis",
-["Smaugchamp - Tichondrius"] = "Smaugchamp - Tichondrius",
+["Starstypeshi - Tichondrius"] = "Starstypeshi - Tichondrius",
 ["Smaugchamp - Mal'Ganis"] = "Smaugchamp - Mal'Ganis",
 ["Choppiez - Mal'Ganis"] = "Choppiez - Mal'Ganis",
 ["Gehyo - Tichondrius"] = "Gehyo - Tichondrius",
@@ -242,13 +242,13 @@ HandyNotes_HandyNotesDB = {
 },
 ["Dernarplan - Mal'Ganis"] = {
 },
-["Starstypeshi - Tichondrius"] = {
+["Smaugchamp - Tichondrius"] = {
 },
 ["Auteist - Mal'Ganis"] = {
 },
 ["Ofpuss - Mal'Ganis"] = {
 },
-["Smaugchamp - Tichondrius"] = {
+["Starstypeshi - Tichondrius"] = {
 },
 ["Smaugchamp - Mal'Ganis"] = {
 },

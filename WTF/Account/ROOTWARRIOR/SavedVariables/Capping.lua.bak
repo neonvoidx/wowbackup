@@ -4,6 +4,7 @@ CappingSettings = {
 ["Månyfaced - Mal'Ganis"] = "Default",
 ["Juzöu - Mal'Ganis"] = "Default",
 ["Hellowalls - Mal'Ganis"] = "Default",
+["Starphage - Tichondrius"] = "Default",
 ["Praisesun - Tichondrius"] = "Default",
 ["Corsic - Mal'Ganis"] = "Default",
 ["Neonvoid - Mal'Ganis"] = "Default",

@@ -1,0 +1,781 @@
+---@type string, TargetedSpells
+local addonName, Private = ...
+
+---@class TargetedSpellsDriver
+local TargetedSpellsDriver = {}
+
+function TargetedSpellsDriver:Init()
+	self.framePool = CreateFramePool("Frame", UIParent, "TargetedSpellsFrameTemplate")
+	self.delay = 0.2
+	self.frames = {}
+	self.role = Private.Enum.Role.Damager
+	self.contentType = Private.Enum.ContentType.OpenWorld
+	self.sawPlayerLogin = false
+
+	Private.EventRegistry:RegisterCallback(Private.Enum.Events.SETTING_CHANGED, self.OnSettingsChanged, self)
+
+	self:SetupFrame(true)
+end
+
+function TargetedSpellsDriver:SetupFrame(isBoot)
+	if isBoot then
+		self.frame = CreateFrame("Frame", "TargetedSpellsDriverFrame", UIParent)
+		self.frame:SetSize(1, 1)
+		self.frame:ClearAllPoints()
+		self.frame:SetPoint(
+			TargetedSpellsSaved.Settings.Self.Position.point,
+			TargetedSpellsSaved.Settings.Self.Position.x,
+			TargetedSpellsSaved.Settings.Self.Position.y
+		)
+		self.frame:Show()
+
+		Private.EventRegistry:RegisterCallback(
+			Private.Enum.Events.EDIT_MODE_POSITION_CHANGED,
+			self.OnFrameEvent,
+			self,
+			self.frame,
+			Private.Enum.Events.EDIT_MODE_POSITION_CHANGED
+			-- the remaining args are being passed when the event gets triggered
+		)
+	end
+
+	if
+		(TargetedSpellsSaved.Settings.Self.Enabled or TargetedSpellsSaved.Settings.Party.Enabled)
+		and not self.frame:IsEventRegistered("UNIT_SPELLCAST_START")
+	then
+		self.frame:RegisterEvent("ZONE_CHANGED_NEW_AREA")
+		self.frame:RegisterEvent("LOADING_SCREEN_DISABLED")
+		self.frame:RegisterEvent("UPDATE_INSTANCE_INFO")
+		self.frame:RegisterUnitEvent("UNIT_TARGET")
+		self.frame:RegisterUnitEvent("PLAYER_SPECIALIZATION_CHANGED", "player")
+		self.frame:RegisterUnitEvent("UNIT_SPELLCAST_START")
+		self.frame:RegisterUnitEvent("UNIT_SPELLCAST_SUCCEEDED")
+		self.frame:RegisterUnitEvent("UNIT_SPELLCAST_INTERRUPTED")
+		self.frame:RegisterUnitEvent("UNIT_SPELLCAST_FAILED_QUIET")
+		self.frame:RegisterUnitEvent("UNIT_SPELLCAST_STOP")
+		self.frame:RegisterUnitEvent("UNIT_SPELLCAST_CHANNEL_START")
+		self.frame:RegisterUnitEvent("UNIT_SPELLCAST_CHANNEL_STOP")
+		self.frame:RegisterUnitEvent("UNIT_SPELLCAST_EMPOWER_START")
+		self.frame:RegisterUnitEvent("UNIT_SPELLCAST_EMPOWER_STOP")
+		self.frame:RegisterEvent("NAME_PLATE_UNIT_REMOVED")
+		self.frame:RegisterEvent("NAME_PLATE_UNIT_ADDED")
+		self.frame:RegisterEvent("CVAR_UPDATE")
+
+		self.frame:SetScript("OnEvent", GenerateClosure(self.OnFrameEvent, self))
+	end
+end
+
+function TargetedSpellsDriver:AcquireFrames(castingUnit)
+	local frames = {}
+
+	if
+		TargetedSpellsSaved.Settings.Self.Enabled
+		and not self:LoadConditionsProhibitExecution(Private.Enum.FrameKind.Self)
+	then
+		local selfTargetingFrame = self.framePool:Acquire()
+		selfTargetingFrame:SetParent(self.frame)
+		selfTargetingFrame:PostCreate("player", Private.Enum.FrameKind.Self, castingUnit)
+		table.insert(frames, selfTargetingFrame)
+	end
+
+	if
+		TargetedSpellsSaved.Settings.Party.Enabled
+		and IsInGroup()
+		and not self:LoadConditionsProhibitExecution(Private.Enum.FrameKind.Party)
+	then
+		local partyMemberCount = GetNumGroupMembers()
+
+		for i = 1, partyMemberCount do
+			local unit = i == partyMemberCount and "player" or "party" .. i
+
+			if (unit == "player" and TargetedSpellsSaved.Settings.Party.IncludeSelfInParty) or unit ~= "player" then
+				local frame = self.framePool:Acquire()
+				frame:PostCreate(unit, Private.Enum.FrameKind.Party, castingUnit)
+				table.insert(frames, frame)
+			end
+		end
+	end
+
+	return frames
+end
+
+function TargetedSpellsDriver:ReleaseFrame(frame)
+	frame:Reset()
+	self.framePool:Release(frame)
+end
+
+-- this is where 3rd party unit frames would need addition
+---@param unit string
+---@return Frame?
+local function FindParentFrameForPartyMember(unit)
+	local thirdPartyFrame = Private.Utils.FindThirdPartyGroupFrameForUnit(unit, Private.Enum.FrameKind.Party)
+
+	if thirdPartyFrame then
+		return thirdPartyFrame
+	end
+
+	if unit == "player" then
+		if not EditModeManagerFrame:UseRaidStylePartyFrames() then
+			-- non-raid style party frames don't include the player
+			return nil
+		end
+
+		for _, frame in pairs(CompactPartyFrame.memberUnitFrames) do
+			if frame.unit == "player" then
+				return frame
+			end
+		end
+
+		return nil
+	end
+
+	if EditModeManagerFrame:UseRaidStylePartyFrames() then
+		for _, frame in pairs(CompactPartyFrame.memberUnitFrames) do
+			if frame.unit == unit then
+				return frame
+			end
+		end
+
+		return nil
+	end
+
+	for memberFrame in PartyFrame.PartyMemberFramePool:EnumerateActive() do
+		if memberFrame.unitToken == unit then
+			return memberFrame
+		end
+	end
+
+	return nil
+end
+
+function TargetedSpellsDriver:RepositionFrames()
+	---@type table<string, TargetedSpellsMixin[]>
+	local activeFrames = {}
+
+	for sourceUnit, frames in pairs(self.frames) do
+		for i, frame in pairs(frames) do
+			if frame then
+				local kind = frame:GetKind()
+
+				if kind == Private.Enum.FrameKind.Self then
+					if activeFrames[kind] == nil then
+						activeFrames[kind] = {}
+					end
+
+					table.insert(activeFrames[kind], frame)
+				elseif kind == Private.Enum.FrameKind.Party then
+					local targetUnit = frame:GetUnit()
+
+					if activeFrames[targetUnit] == nil then
+						activeFrames[targetUnit] = {}
+					end
+
+					table.insert(activeFrames[targetUnit], frame)
+				end
+			end
+		end
+	end
+
+	for targetUnit, frames in pairs(activeFrames) do
+		-- may not use "player" here as the unit token in party for the player is identical
+		if targetUnit == Private.Enum.FrameKind.Self then
+			local width, height, gap, sortOrder, direction, grow =
+				TargetedSpellsSaved.Settings.Self.Width,
+				TargetedSpellsSaved.Settings.Self.Height,
+				TargetedSpellsSaved.Settings.Self.Gap,
+				TargetedSpellsSaved.Settings.Self.SortOrder,
+				TargetedSpellsSaved.Settings.Self.Direction,
+				TargetedSpellsSaved.Settings.Self.Grow
+			local isHorizontal = direction == Private.Enum.Direction.Horizontal
+			local point = isHorizontal and "LEFT" or "BOTTOM"
+			local total = (#frames * (isHorizontal and width or height)) + (#frames - 1) * gap
+
+			Private.Utils.SortFrames(frames, sortOrder)
+
+			for i, frame in ipairs(frames) do
+				local x = 0
+				local y = 0
+
+				if isHorizontal then
+					x = Private.Utils.CalculateCoordinate(i, width, gap, width, total, 0, grow)
+				else
+					y = Private.Utils.CalculateCoordinate(i, width, gap, height, total, 0, grow)
+				end
+
+				frame:Reposition(point, self.frame, "CENTER", x, y)
+			end
+		else
+			local parentFrame = FindParentFrameForPartyMember(targetUnit)
+
+			if parentFrame ~= nil then
+				local width, height, gap, sortOrder, sourceAnchor, targetAnchor, direction, grow, offsetX, offsetY =
+					TargetedSpellsSaved.Settings.Party.Width,
+					TargetedSpellsSaved.Settings.Party.Height,
+					TargetedSpellsSaved.Settings.Party.Gap,
+					TargetedSpellsSaved.Settings.Party.SortOrder,
+					TargetedSpellsSaved.Settings.Party.SourceAnchor,
+					TargetedSpellsSaved.Settings.Party.TargetAnchor,
+					TargetedSpellsSaved.Settings.Party.Direction,
+					TargetedSpellsSaved.Settings.Party.Grow,
+					TargetedSpellsSaved.Settings.Party.OffsetX,
+					TargetedSpellsSaved.Settings.Party.OffsetY
+
+				Private.Utils.SortFrames(frames, sortOrder)
+
+				local isHorizontal = direction == Private.Enum.Direction.Horizontal
+				local total = (#frames * (isHorizontal and width or height)) + (#frames - 1) * gap
+				local parentDimension = isHorizontal and parentFrame:GetWidth() or parentFrame:GetHeight()
+
+				for j, frame in ipairs(frames) do
+					local x = offsetX
+					local y = offsetY
+
+					if isHorizontal then
+						x = Private.Utils.CalculateCoordinate(j, width, gap, parentDimension, total, offsetX, grow)
+					else
+						y = Private.Utils.CalculateCoordinate(j, width, gap, parentDimension, total, offsetY, grow)
+					end
+
+					frame:Reposition(sourceAnchor, parentFrame, targetAnchor, x, y)
+				end
+			end
+		end
+	end
+end
+
+function TargetedSpellsDriver:ReleaseFrameForUnit(unit, removeUnit, id)
+	local frames = self.frames[unit]
+
+	if frames == nil then
+		return false
+	end
+
+	local cleanedSomethingUp = false
+	local cleanedEverythingUp = true
+
+	for i, frame in pairs(frames) do
+		if frame:CanBeHidden(id) then
+			self:ReleaseFrame(frame)
+			frames[i] = nil
+			cleanedSomethingUp = true
+		else
+			cleanedEverythingUp = false
+		end
+	end
+
+	if cleanedEverythingUp then
+		table.wipe(frames)
+
+		if removeUnit then
+			self.frames[unit] = nil
+		end
+
+		return true
+	end
+
+	return cleanedSomethingUp
+end
+
+function TargetedSpellsDriver:LoadConditionsProhibitExecution(kind)
+	local tableRef = kind == Private.Enum.FrameKind.Self and TargetedSpellsSaved.Settings.Self
+		or TargetedSpellsSaved.Settings.Party
+
+	if not tableRef.LoadConditionRole[self.role] then
+		return true
+	end
+
+	if not tableRef.LoadConditionContentType[self.contentType] then
+		return true
+	end
+
+	return false
+end
+
+function TargetedSpellsDriver:UnitIsIrrelevant(unit, skipTargetCheck)
+	if string.find(unit, "nameplate") == nil then
+		return true
+	end
+
+	if UnitInParty(unit) then
+		return true
+	end
+
+	if not UnitExists(unit) then
+		return true
+	end
+
+	if not UnitCanAttack("player", unit) then
+		return true
+	end
+
+	if skipTargetCheck then
+		return false
+	end
+
+	local target = string.format("%starget", unit)
+
+	if not UnitExists(target) then
+		return true
+	end
+
+	if UnitCanAttack("player", target) then
+		return true
+	end
+
+	if IsInGroup() and not UnitInParty(target) then
+		return true
+	end
+
+	return false
+end
+
+---@param _ Frame -- identical to self.frame
+---@param event "DELAYED_FRAME_CLEANUP" | "UNIT_SPELLCAST_INTERRUPTED" | "UNIT_SPELLCAST_FAILED_QUIET" | "ZONE_CHANGED_NEW_AREA" | "LOADING_SCREEN_DISABLED" | "PLAYER_SPECIALIZATION_CHANGED" | "UNIT_SPELLCAST_EMPOWER_STOP" | "UNIT_SPELLCAST_EMPOWER_START" | "UNIT_SPELLCAST_SUCCEEDED" |"EDIT_MODE_POSITION_CHANGED" | "DELAYED_UNIT_SPELLCAST_START" | "DELAYED_UNIT_SPELLCAST_CHANNEL_START" | "UNIT_SPELLCAST_START" | "UNIT_SPELLCAST_STOP" | "UNIT_SPELLCAST_CHANNEL_START" | "UNIT_SPELLCAST_CHANNEL_STOP" | "NAME_PLATE_UNIT_REMOVED" | "NAME_PLATE_UNIT_ADDED"
+function TargetedSpellsDriver:OnFrameEvent(_, event, ...)
+	if
+		event == "UNIT_SPELLCAST_START"
+		or event == "UNIT_SPELLCAST_CHANNEL_START"
+		or event == "UNIT_SPELLCAST_EMPOWER_START"
+	then
+		local unit, castGuid, spellId, castId = ...
+
+		if self:UnitIsIrrelevant(unit) then
+			return
+		end
+
+		if event == "UNIT_SPELLCAST_EMPOWER_START" then
+			spellId = select(4, ...)
+			castId = select(3, ...)
+		end
+
+		local id = castId
+
+		C_Timer.After(
+			self.delay,
+			GenerateClosure(
+				self.OnFrameEvent,
+				self,
+				self.frame,
+				event == "UNIT_SPELLCAST_START" and Private.Enum.Events.DELAYED_UNIT_SPELLCAST_START
+					or Private.Enum.Events.DELAYED_UNIT_SPELLCAST_CHANNEL_START,
+				{
+					unit = unit,
+					spellId = spellId,
+					startTime = GetTime(),
+					id = id,
+				}
+			)
+		)
+	elseif event == "UNIT_TARGET" then
+		---@type string
+		local unit = ...
+
+		if self:UnitIsIrrelevant(unit) then
+			return
+		end
+
+		local delayEvent = Private.Enum.Events.DELAYED_UNIT_SPELLCAST_START
+		---@type number|nil
+		local spellId = nil
+		---@type number|nil
+		local startTime = nil
+		---@type number|string|nil
+		local id = nil
+
+		local _, _, _, _, _, _, _, _, castingSpellId, castId = UnitCastingInfo(unit)
+
+		spellId = castingSpellId
+		id = castId
+
+		if spellId == nil then
+			_, _, _, _, _, _, _, castingSpellId, _, _, castId = UnitChannelInfo(unit)
+
+			spellId = castingSpellId
+			id = castId
+			delayEvent = Private.Enum.Events.DELAYED_UNIT_SPELLCAST_CHANNEL_START
+		end
+
+		-- best we can do. _possibly_ wrong depending on when the enemy turned
+		startTime = GetTime()
+
+		if spellId == nil then
+			return
+		end
+
+		self:OnFrameEvent(self.frame, delayEvent, {
+			unit = unit,
+			spellId = spellId,
+			startTime = startTime,
+			id = id,
+		})
+	elseif event == "NAME_PLATE_UNIT_ADDED" then
+		---@type string
+		local unit = ...
+
+		if self:UnitIsIrrelevant(unit) then
+			return
+		end
+
+		local spellId = nil
+		local startTime = nil
+		---@type DurationObjectDummy|number|nil
+		local durationOrCastTime = nil
+		---@type number|string|nil
+		local id = nil
+
+		local _, _, _, _, _, _, _, _, castingSpellId, castId = UnitCastingInfo(unit)
+
+		spellId = castingSpellId
+		id = castId
+
+		if spellId == nil then
+			_, _, _, _, _, _, _, castingSpellId, _, _, castId = UnitChannelInfo(unit)
+			spellId = castingSpellId
+			id = castId
+		end
+
+		if spellId == nil then
+			return
+		end
+
+		durationOrCastTime = UnitCastingDuration(unit) or UnitChannelDuration(unit)
+
+		if durationOrCastTime == nil then
+			return
+		end
+
+		startTime = GetTime() -- todo: this is wrong, but we can't do better yet
+
+		local frames = self:AcquireFrames(unit)
+
+		if #frames == 0 then
+			return
+		end
+
+		if self.frames[unit] == nil then
+			self.frames[unit] = {}
+		else
+			self:ReleaseFrameForUnit(unit, false)
+		end
+
+		for i, frame in ipairs(frames) do
+			table.insert(self.frames[unit], frame)
+			frame:SetSpellId(spellId)
+			frame:SetStartTime(startTime)
+			frame:SetDuration(durationOrCastTime)
+			frame:SetId(id)
+		end
+
+		self:RepositionFrames()
+	elseif event == "CVAR_UPDATE" then
+		local name, value = ...
+
+		if name == "nameplateShowEnemies" then
+			if value ~= 0 then
+				return
+			end
+
+			local cleanedSomethingUp = false
+
+			for unit in pairs(self.frames) do
+				if self:ReleaseFrameForUnit(unit, true) then
+					cleanedSomethingUp = true
+				end
+			end
+
+			if cleanedSomethingUp then
+				self:RepositionFrames()
+			end
+		elseif name == "nameplateShowOffscreen" then
+			if value == "1" or value == 1 then
+			else
+				Private.Utils.ShowStaticPopup({
+					text = Private.L.Functionality.CVarWarning,
+					button1 = ENABLE,
+					button2 = CLOSE,
+					OnAccept = function()
+						C_CVar.SetCVar("nameplateShowOffscreen", 1)
+						-- Settings.OpenToCategory(Settings.NAMEPLATE_OPTIONS_CATEGORY_ID, UNIT_NAMEPLATES_SHOW_OFFSCREEN)
+					end,
+				})
+			end
+		end
+	elseif
+		event == "UNIT_SPELLCAST_STOP"
+		or event == "UNIT_SPELLCAST_CHANNEL_STOP"
+		or event == "UNIT_SPELLCAST_SUCCEEDED"
+		or event == "UNIT_SPELLCAST_EMPOWER_STOP"
+		or event == "NAME_PLATE_UNIT_REMOVED"
+		or event == "UNIT_SPELLCAST_INTERRUPTED"
+		or event == "UNIT_SPELLCAST_FAILED_QUIET"
+	then
+		---@type string, string
+		local unit, castGuid = ...
+
+		if self:UnitIsIrrelevant(unit, true) then
+			return
+		end
+
+		local frames = self.frames[unit]
+
+		if frames == nil or #frames == 0 then
+			return
+		end
+
+		---@type number|string|nil
+		local id = nil
+
+		local interruptedBy = nil
+
+		if event == "UNIT_SPELLCAST_CHANNEL_STOP" or event == "UNIT_SPELLCAST_INTERRUPTED" then
+			interruptedBy = select(4, ...)
+			id = select(5, ...)
+		elseif event == "UNIT_SPELLCAST_EMPOWER_STOP" then
+			interruptedBy = select(5, ...)
+			id = select(6, ...)
+		elseif event == "UNIT_SPELLCAST_STOP" then
+			id = select(4, ...)
+		end
+
+		if interruptedBy ~= nil and self:MaybeMarkAsInterruptedAndDelay(unit, id, interruptedBy) then
+			return
+		end
+
+		if event == "UNIT_SPELLCAST_INTERRUPTED" and self:MaybeMarkAsInterruptedAndDelay(unit, id) then
+			return
+		end
+
+		if self:ReleaseFrameForUnit(unit, true, id) then
+			self:RepositionFrames()
+		end
+	elseif
+		event == Private.Enum.Events.DELAYED_UNIT_SPELLCAST_START
+		or event == Private.Enum.Events.DELAYED_UNIT_SPELLCAST_CHANNEL_START
+	then
+		local info = ...
+
+		-- cast vanished during the delay
+		if event == Private.Enum.Events.DELAYED_UNIT_SPELLCAST_START and UnitCastingInfo(info.unit) == nil then
+			return
+		elseif
+			event == Private.Enum.Events.DELAYED_UNIT_SPELLCAST_CHANNEL_START and UnitChannelInfo(info.unit) == nil
+		then
+			return
+		end
+
+		local frames = self:AcquireFrames(info.unit)
+
+		if #frames == 0 then
+			if self:ReleaseFrameForUnit(info.unit, true) then
+				self:RepositionFrames()
+			end
+
+			return
+		end
+
+		if self.frames[info.unit] == nil then
+			self.frames[info.unit] = {}
+		else
+			self:ReleaseFrameForUnit(info.unit, false, info.id)
+		end
+
+		---@type DurationObjectDummy|number|nil
+		local durationOrCastTime = nil
+
+		durationOrCastTime = UnitCastingDuration(info.unit) or UnitChannelDuration(info.unit)
+
+		-- without `nameplateShowOffscreen` active, castTime may stay nil
+		if durationOrCastTime == nil then
+			return
+		end
+
+		for i, frame in ipairs(frames) do
+			table.insert(self.frames[info.unit], frame)
+			frame:SetSpellId(info.spellId)
+			frame:SetStartTime(info.startTime)
+			frame:SetId(info.id)
+			frame:SetDuration(durationOrCastTime)
+		end
+
+		self:RepositionFrames()
+	elseif event == Private.Enum.Events.DELAYED_FRAME_CLEANUP then
+		---@type DelayInfo
+		local delayInfo = ...
+
+		local frames = self.frames[delayInfo.unit]
+
+		if frames == nil then
+			return
+		end
+
+		local cleanedSomethingUp = false
+
+		for i, frame in pairs(frames) do
+			if delayInfo.kinds[frame:GetKind()] and frame:GetId() == delayInfo.id then
+				self:ReleaseFrame(frame)
+				frames[i] = nil
+				cleanedSomethingUp = true
+			end
+		end
+
+		if cleanedSomethingUp then
+			self:RepositionFrames()
+		end
+	elseif
+		event == "ZONE_CHANGED_NEW_AREA"
+		or event == "LOADING_SCREEN_DISABLED"
+		or event == "PLAYER_SPECIALIZATION_CHANGED"
+		or event == "UPDATE_INSTANCE_INFO"
+	then
+		local name, instanceType, difficultyId = GetInstanceInfo()
+		-- equivalent to `instanceType == "none"`
+		local nextContentType = Private.Enum.ContentType.OpenWorld
+
+		if instanceType == "raid" then
+			nextContentType = Private.Enum.ContentType.Raid
+		elseif instanceType == "party" then
+			if
+				difficultyId == DifficultyUtil.ID.DungeonTimewalker
+				or difficultyId == DifficultyUtil.ID.DungeonNormal
+				or difficultyId == DifficultyUtil.ID.DungeonHeroic
+				or difficultyId == DifficultyUtil.ID.DungeonMythic
+				or difficultyId == DifficultyUtil.ID.DungeonChallenge
+				or difficultyId == 205 -- follower dungeons
+			then
+				nextContentType = Private.Enum.ContentType.Dungeon
+			end
+		elseif instanceType == "pvp" then
+			nextContentType = Private.Enum.ContentType.Battleground
+		elseif instanceType == "arena" then
+			nextContentType = Private.Enum.ContentType.Arena
+		elseif instanceType == "scenario" then
+			if difficultyId == 208 then
+				nextContentType = Private.Enum.ContentType.Delve
+			end
+		end
+
+		if nextContentType ~= self.contentType then
+			self.contentType = nextContentType
+		end
+
+		local specId = PlayerUtil.GetCurrentSpecID()
+
+		if
+			specId == 105 -- restoration druid
+			or specId == 1468 -- preservation evoker
+			or specId == 270 -- mistweaver monk
+			or specId == 65 -- holy paladin
+			or specId == 256 -- discipline priest
+			or specId == 257 -- holy priest
+			or specId == 264 -- restoration shaman
+		then
+			self.role = Private.Enum.Role.Healer
+		elseif
+			specId == 250 -- blood death knight
+			or specId == 581 -- vengeance demon hunter
+			or specId == 104 -- guardian druid
+			or specId == 268 -- brewmaster monk
+			or specId == 66 -- protection paladin
+			or specId == 73 -- protection warrior
+		then
+			self.role = Private.Enum.Role.Tank
+		else
+			self.role = Private.Enum.Role.Damager
+		end
+	elseif event == Private.Enum.Events.EDIT_MODE_POSITION_CHANGED then
+		local point, x, y = ...
+
+		self.frame:ClearAllPoints()
+		self.frame:SetPoint(point, x, y)
+		self.frame:Show()
+	end
+end
+
+function TargetedSpellsDriver:OnSettingsChanged(key, value)
+	if key == Private.Settings.Keys.Self.Enabled or key == Private.Settings.Keys.Party.Enabled then
+		local allDisabled = TargetedSpellsSaved.Settings.Self.Enabled == false
+			and TargetedSpellsSaved.Settings.Party.Enabled == false
+
+		if allDisabled then
+			self.frame:UnregisterAllEvents()
+			self.frame:SetScript("OnEvent", nil)
+		else
+			self:SetupFrame(false)
+		end
+	end
+end
+
+function TargetedSpellsDriver:MaybeMarkAsInterruptedAndDelay(unit, id, interruptedBy)
+	if
+		not TargetedSpellsSaved.Settings.Self.IndicateInterrupts
+		and not TargetedSpellsSaved.Settings.Party.IndicateInterrupts
+	then
+		return false
+	end
+
+	-- either via events that don't communicate interruptedBy, or via interrupt events briefly before deaths, e.g. on totems that cast something like Cinderbrew Meadery barrels
+	if interruptedBy == nil then
+		return false
+	end
+
+	-- event gets sent when unit dies mid-cast, incorrectly implying it was interrupted
+	if not UnitExists(unit) then
+		return false
+	end
+
+	local interruptInfo = {
+		name = nil,
+		color = nil,
+	}
+
+	if interruptedBy ~= nil then
+		local _, englishClass, _, _, _, name = GetPlayerInfoByGUID(interruptedBy)
+
+		if name == nil then
+			local token = UnitTokenFromGUID(interruptedBy)
+			if token ~= nil then
+				name = UnitName(token)
+			end
+		end
+
+		interruptInfo.name = name
+		interruptInfo.color = englishClass and C_ClassColor.GetClassColor(englishClass) or nil
+	end
+
+	local kindsToDelay = {
+		[Private.Enum.FrameKind.Self] = false,
+		[Private.Enum.FrameKind.Party] = false,
+	}
+
+	local frames = self.frames[unit]
+
+	for i, frame in pairs(frames) do
+		local tableRef = frame:GetKind() == Private.Enum.FrameKind.Self and TargetedSpellsSaved.Settings.Self
+			or TargetedSpellsSaved.Settings.Party
+
+		if tableRef.IndicateInterrupts then
+			frame:SetInterrupted(interruptInfo)
+
+			kindsToDelay[frame:GetKind()] = true
+		end
+	end
+
+	if kindsToDelay[Private.Enum.FrameKind.Self] or kindsToDelay[Private.Enum.FrameKind.Party] then
+		---@type DelayInfo
+		local delayInfo = {
+			unit = unit,
+			kinds = kindsToDelay,
+			id = id,
+		}
+
+		C_Timer.After(
+			1,
+			GenerateClosure(self.OnFrameEvent, self, self.frame, Private.Enum.Events.DELAYED_FRAME_CLEANUP, delayInfo)
+		)
+		return true
+	end
+
+	return false
+end
+
+table.insert(Private.LoginFnQueue, GenerateClosure(TargetedSpellsDriver.Init, TargetedSpellsDriver))

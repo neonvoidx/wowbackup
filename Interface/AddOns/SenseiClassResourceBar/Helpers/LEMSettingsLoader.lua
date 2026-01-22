@@ -185,6 +185,31 @@ local function BuildLemSettings(bar, defaults)
         {
             parentId = "Position & Size",
             order = 206,
+            name = "Minimum Width",
+            kind = LEM.SettingType.Slider,
+            default = defaults.minWidth,
+            minValue = 0,
+            maxValue = 500,
+            valueStep = 1,
+            allowInput = true,
+            get = function(layoutName)
+                local data = SenseiClassResourceBarDB[config.dbName][layoutName]
+                return data and data.minWidth or defaults.minWidth
+            end,
+            set = function(layoutName, value)
+                SenseiClassResourceBarDB[config.dbName][layoutName] = SenseiClassResourceBarDB[config.dbName][layoutName] or CopyTable(defaults)
+                SenseiClassResourceBarDB[config.dbName][layoutName].minWidth = value
+                bar:ApplyLayout(layoutName)
+            end,
+            tooltip = "0 to disable. Only active if synced to the Cooldown Manager",
+            isEnabled = function (layoutName)
+                local data = SenseiClassResourceBarDB[config.dbName][layoutName]
+                return data.widthMode == "Sync With Essential Cooldowns" or data.widthMode == "Sync With Utility Cooldowns" 
+            end,
+        },
+        {
+            parentId = "Position & Size",
+            order = 207,
             name = "Height",
             kind = LEM.SettingType.Slider,
             default = defaults.height,

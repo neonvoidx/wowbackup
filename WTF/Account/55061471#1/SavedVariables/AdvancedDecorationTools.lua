@@ -1,5 +1,6 @@
 
 ADT_DB = {
+["EnableHoverHUD"] = true,
 ["EnableDockAutoOpenInEditor"] = true,
 ["PlacementHistory"] = {
 },
@@ -7,11 +8,11 @@ ADT_DB = {
 ["ExtraClipboard"] = {
 },
 ["AutoRotate"] = {
-["StepByRID"] = {
-},
 ["SeqIndexByRID"] = {
 },
 ["LastRotationByRID"] = {
+},
+["StepByRID"] = {
 },
 },
 ["AutoRotateApplyScope"] = "onlyPaint",

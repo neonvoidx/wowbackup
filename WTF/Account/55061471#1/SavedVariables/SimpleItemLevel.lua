@@ -3,9 +3,9 @@ SimpleItemLevelDB = {
 ["characteravg"] = true,
 ["battlepets"] = false,
 ["font"] = "NumberNormal",
+["scalebound"] = 1,
 ["bound"] = false,
 ["bags"] = true,
-["scalebound"] = 1,
 ["missingcharacter"] = false,
 ["scaleup"] = 1,
 }

@@ -88,12 +88,6 @@ GliderAddOnDB = {
 ["point"] = "CENTER",
 ["textPosition"] = "Bottom",
 },
-["Dps"] = {
-["y"] = -229.9996948242188,
-["x"] = 0.00042724609375,
-["point"] = "CENTER",
-["textPosition"] = "Bottom",
-},
 ["Classic"] = {
 ["y"] = 170,
 ["x"] = 0,
@@ -106,9 +100,9 @@ GliderAddOnDB = {
 ["point"] = "CENTER",
 ["textPosition"] = "Bottom",
 },
-["Default DPS"] = {
-["y"] = 170,
-["x"] = 0,
+["Dps"] = {
+["y"] = -229.9996948242188,
+["x"] = 0.00042724609375,
 ["point"] = "CENTER",
 ["textPosition"] = "Bottom",
 },
@@ -117,6 +111,12 @@ GliderAddOnDB = {
 ["x"] = -0.0013427734375,
 ["point"] = "BOTTOM",
 ["scale"] = 1.019999980926514,
+["textPosition"] = "Bottom",
+},
+["Default DPS"] = {
+["y"] = 170,
+["x"] = 0,
+["point"] = "CENTER",
 ["textPosition"] = "Bottom",
 },
 ["123"] = {
@@ -130,15 +130,6 @@ GliderAddOnDB = {
 ["x"] = 0,
 ["point"] = "CENTER",
 ["textPosition"] = "Bottom",
-},
-["Default"] = {
-["y"] = 247.166748046875,
-["x"] = 0.1666259765625,
-["point"] = "BOTTOM",
-["scale"] = 1,
-["textPosition"] = "Bottom",
-["insideCircle"] = false,
-["style"] = "Class",
 },
 ["Modern"] = {
 ["y"] = 170,

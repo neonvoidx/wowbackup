@@ -413,17 +413,18 @@ local function GetSpecName(unit)
 end
 
 local function ShowLastNameOnlyNpc(frame, name)
-    if not name then return end
-    local creatureType = frame.unit and UnitCreatureType(frame.unit)
-    if creatureType == "Totem" then
-        -- Use first word (e.g., "Stoneclaw" from "Stoneclaw Totem")
-        local firstWord = name:match("^[^%s%-]+")
-        return firstWord
-    else
-        -- Use last word (e.g., "Guardian" from "Frostwolf Guardian")
-        local lastWord = name:match("([^%s]+)$")
-        return lastWord
-    end
+    --if not name then return end
+    return name
+    -- local creatureType = frame.unit and UnitCreatureType(frame.unit)
+    -- if creatureType == "Totem" then
+    --     -- Use first word (e.g., "Stoneclaw" from "Stoneclaw Totem")
+    --     local firstWord = name:match("^[^%s%-]+")
+    --     return firstWord
+    -- else
+    --     -- Use last word (e.g., "Guardian" from "Frostwolf Guardian")
+    --     local lastWord = name:match("([^%s]+)$")
+    --     return lastWord
+    -- end
 end
 
 local function GetNameWithoutRealm(frame)
@@ -587,6 +588,15 @@ local function PartyFrameNameChange(frame)
     if not changeUnitFrameFont then
         frame.bbfName:SetFont(frame.Name:GetFont())
     end
+
+    local _, fontSize = frame.bbfName:GetFont()
+    local baseWidth = frame.Name:GetWidth()
+    local extraWidth = 0
+    if fontSize and fontSize > 10 then
+        extraWidth = math.floor((fontSize - 10) / 2) * 15
+    end
+    frame.bbfName:SetWidth(baseWidth + extraWidth)
+
     if classColorPartyNames then
         if frame.unit and (UnitIsPlayer(frame.unit) or C_LFGInfo.IsInLFGFollowerDungeon()) then
             local _, class = UnitClass(frame.unit)
@@ -1327,7 +1337,7 @@ end
 C_Timer.After(1, UpdateNamePositionForClassic)
 
 local function ClassColorName(textObject, unit)
-    local color = BBF.getUnitColor(unit)
+    local color = BBF.getUnitColor(unit, (BetterBlizzFramesDB.customHealthbarColors and BetterBlizzFramesDB.customColorsUnitFrames) or nil, true)
     if color then
         textObject:SetTextColor(color.r, color.g, color.b)
     else

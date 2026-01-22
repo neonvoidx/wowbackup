@@ -1,4 +1,4 @@
-### Changes in 110205.63-Release:
+### Changes in 120000.65-Release:
 
-- Fixed: Accidental pollution of the global table library
+- Fixed: Settings not updating properly when renaming/copying/deleting Edit Mode profiles
 

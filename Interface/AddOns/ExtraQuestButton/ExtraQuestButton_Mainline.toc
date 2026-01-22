@@ -1,6 +1,6 @@
-## Interface: 110200, 110205
+## Interface: 110207, 120000
 ## Author: p3lim
-## Version: 110205.63-Release
+## Version: 120000.65-Release
 ## Title: ExtraQuestButton
 ## Notes: An extra button for quest items!
 ## IconTexture: Interface\Icons\inv_gizmo_goblingtonkcontroller

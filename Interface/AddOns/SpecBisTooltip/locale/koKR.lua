@@ -35,4 +35,5 @@ if not SpecBisTooltip.DEBUG then
     SpecBisTooltip:AddTrans("koKR", "LID_catalyst/unknown", "촉매/알 수 없음")
     SpecBisTooltip:AddTrans("koKR", "LID_unknown", "알 수 없음")
     SpecBisTooltip:AddTrans("koKR", "LID_yourbissource", "귀하의 BiS 소스: %s")
+    SpecBisTooltip:AddTrans("koKR", "LID_ITEM", "Item")
 end

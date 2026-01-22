@@ -627,7 +627,11 @@ BlizzMoveDB = {
 },
 ["TalkingHeadFrame"] = {
 },
+["HousingDashboardFrame.HouseInfoContent.DashboardNoHousesFrame"] = {
+},
 ["CommunitiesGuildTextEditFrame"] = {
+},
+["HousingDashboardFrame"] = {
 },
 ["ChannelFrame"] = {
 },
@@ -1074,8 +1078,6 @@ BlizzMoveDB = {
 },
 ["GarrisonMissionFrame"] = {
 },
-["GenericTraitFrame.ButtonsParent"] = {
-},
 ["ChatConfigFrame"] = {
 ["startPoints"] = {
 {
@@ -1095,6 +1097,8 @@ BlizzMoveDB = {
 ["offX"] = 393.3344421386719,
 },
 },
+},
+["GenericTraitFrame.ButtonsParent"] = {
 },
 ["TabardFrame"] = {
 },
@@ -1146,8 +1150,6 @@ BlizzMoveDB = {
 },
 ["Baganator_SingleViewBankViewFrameblizzard"] = {
 },
-["GarrisonRecruitSelectFrame"] = {
-},
 ["ScrappingMachineFrame"] = {
 ["startPoints"] = {
 {
@@ -1169,13 +1171,11 @@ BlizzMoveDB = {
 },
 },
 },
-["CovenantMissionFrame.FollowerList.MaterialFrame"] = {
-},
-["ArtifactFrame"] = {
+["BlackMarketFrame"] = {
 ["startPoints"] = {
 {
-["offX"] = 51,
-["offY"] = -124.9999694824219,
+["offX"] = 15.99999904632568,
+["offY"] = -116.0000457763672,
 ["anchorPoint"] = "TOPLEFT",
 ["relativePoint"] = "TOPLEFT",
 },
@@ -1185,11 +1185,15 @@ BlizzMoveDB = {
 {
 ["anchorPoint"] = "TOPLEFT",
 ["relativeFrame"] = "UIParent",
-["offY"] = -124.9998779296875,
+["offY"] = -115.1666259765625,
+["offX"] = 15.99999904632568,
 ["relativePoint"] = "TOPLEFT",
-["offX"] = 51.00000381469727,
 },
 },
+},
+["CovenantMissionFrame.FollowerList.MaterialFrame"] = {
+},
+["RemixArtifactFrame.ButtonsParent"] = {
 },
 ["ReputationFrame.ReputationDetailFrame"] = {
 },
@@ -1278,11 +1282,11 @@ BlizzMoveDB = {
 ["dragged"] = true,
 ["dragPoints"] = {
 {
-["anchorPoint"] = "CENTER",
+["anchorPoint"] = "LEFT",
 ["relativeFrame"] = "UIParent",
-["offY"] = 90.80527329840152,
-["relativePoint"] = "CENTER",
-["offX"] = -240.5532729966872,
+["offY"] = 15.80533020708572,
+["offX"] = 112.2466629750907,
+["relativePoint"] = "LEFT",
 },
 },
 },
@@ -1330,13 +1334,11 @@ BlizzMoveDB = {
 },
 },
 },
-["RemixArtifactFrame.ButtonsParent"] = {
-},
-["BlackMarketFrame"] = {
+["ArtifactFrame"] = {
 ["startPoints"] = {
 {
-["offX"] = 15.99999904632568,
-["offY"] = -116.0000457763672,
+["offX"] = 51,
+["offY"] = -124.9999694824219,
 ["anchorPoint"] = "TOPLEFT",
 ["relativePoint"] = "TOPLEFT",
 },
@@ -1346,11 +1348,13 @@ BlizzMoveDB = {
 {
 ["anchorPoint"] = "TOPLEFT",
 ["relativeFrame"] = "UIParent",
-["offY"] = -115.1666259765625,
-["offX"] = 15.99999904632568,
+["offY"] = -124.9998779296875,
 ["relativePoint"] = "TOPLEFT",
+["offX"] = 51.00000381469727,
 },
 },
+},
+["GarrisonRecruitSelectFrame"] = {
 },
 ["ModelPreviewFrame"] = {
 },

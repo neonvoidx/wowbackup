@@ -1,0 +1,918 @@
+
+PLATYNATOR_CONFIG = {
+["CharacterSpecific"] = {
+},
+["Version"] = 1,
+["Profiles"] = {
+["DEFAULT"] = {
+["stack_region_scale_y"] = 1.1,
+["design_all"] = {
+},
+["closer_to_screen_edges"] = true,
+["cast_scale"] = 1.1,
+["simplified_nameplates"] = {
+["minor"] = true,
+["minion"] = true,
+["instancesNormal"] = true,
+},
+["stacking_nameplates"] = {
+["friend"] = false,
+["enemy"] = true,
+},
+["designs_assigned"] = {
+["friend"] = "Friendly",
+["enemySimplified"] = "_hare_simplified",
+["enemy"] = "DarkDevourer",
+},
+["show_nameplates"] = {
+["player"] = true,
+["npc"] = false,
+["enemy"] = true,
+},
+["stack_region_scale_x"] = 1.2,
+["show_friendly_in_instances_1"] = "never",
+["current_skin"] = "blizzard",
+["designs"] = {
+["_custom"] = {
+["highlights"] = {
+{
+["color"] = {
+["a"] = 1,
+["r"] = 1,
+["g"] = 1,
+["b"] = 1,
+},
+["height"] = 1,
+["kind"] = "target",
+["anchor"] = {
+},
+["scale"] = 1.03,
+["layer"] = 0,
+["asset"] = "arrows",
+["width"] = 1,
+},
+{
+["anchor"] = {
+},
+["height"] = 1.24,
+["kind"] = "mouseover",
+["scale"] = 1,
+["color"] = {
+["a"] = 1,
+["r"] = 0.6941176652908325,
+["g"] = 0.3725490272045136,
+["b"] = 0.9215686917304992,
+},
+["layer"] = 0,
+["asset"] = "bold",
+["width"] = 1.03,
+},
+},
+["specialBars"] = {
+},
+["addon"] = "Platynator",
+["auras"] = {
+},
+["font"] = {
+["outline"] = true,
+["shadow"] = true,
+["asset"] = "RobotoCondensed-Bold",
+},
+["version"] = 1,
+["kind"] = "style",
+["bars"] = {
+{
+["absorb"] = {
+["color"] = {
+["a"] = 1,
+["b"] = 1,
+["g"] = 1,
+["r"] = 1,
+},
+["asset"] = "wide/blizzard-absorb",
+},
+["marker"] = {
+["asset"] = "wide/glow",
+},
+["layer"] = 1,
+["border"] = {
+["height"] = 1,
+["color"] = {
+["a"] = 1,
+["r"] = 0,
+["g"] = 0,
+["b"] = 0,
+},
+["asset"] = "thin",
+["width"] = 1,
+},
+["autoColors"] = {
+{
+["colors"] = {
+},
+["kind"] = "classColors",
+},
+{
+["colors"] = {
+["tapped"] = {
+["r"] = 0.4313725490196079,
+["g"] = 0.4313725490196079,
+["b"] = 0.4313725490196079,
+},
+},
+["kind"] = "tapped",
+},
+{
+["combatOnly"] = false,
+["colors"] = {
+["transition"] = {
+["r"] = 1,
+["g"] = 0.6274509803921569,
+["b"] = 0,
+},
+["warning"] = {
+["r"] = 0.8,
+["g"] = 0,
+["b"] = 0,
+},
+["offtank"] = {
+["r"] = 0.05882352941176471,
+["g"] = 0.6666666666666666,
+["b"] = 0.7843137254901961,
+},
+["safe"] = {
+["r"] = 0.05882352941176471,
+["g"] = 0.5882352941176471,
+["b"] = 0.9019607843137256,
+},
+},
+["kind"] = "threat",
+["instancesOnly"] = false,
+["useSafeColor"] = true,
+},
+{
+["colors"] = {
+["unfriendly"] = {
+["b"] = 0,
+["g"] = 0.5058823529411764,
+["r"] = 1,
+},
+["neutral"] = {
+["r"] = 1,
+["g"] = 1,
+["b"] = 0,
+},
+["friendly"] = {
+["r"] = 0,
+["g"] = 1,
+["b"] = 0,
+},
+["hostile"] = {
+["r"] = 1,
+["g"] = 0,
+["b"] = 0,
+},
+},
+["kind"] = "reaction",
+},
+},
+["relativeTo"] = 0,
+["foreground"] = {
+["asset"] = "wide/fade-bottom",
+},
+["anchor"] = {
+},
+["kind"] = "health",
+["background"] = {
+["color"] = {
+["a"] = 1,
+["b"] = 1,
+["g"] = 1,
+["r"] = 1,
+},
+["applyColor"] = true,
+["asset"] = "grey",
+},
+["scale"] = 1,
+},
+},
+["markers"] = {
+{
+["color"] = {
+["r"] = 1,
+["g"] = 1,
+["b"] = 1,
+},
+["kind"] = "raid",
+["anchor"] = {
+"BOTTOM",
+0,
+18,
+},
+["layer"] = 3,
+["asset"] = "normal/blizzard-raid",
+["scale"] = 1.6,
+},
+},
+["texts"] = {
+{
+["widthLimit"] = 0,
+["displayTypes"] = {
+"absolute",
+},
+["color"] = {
+["r"] = 1,
+["g"] = 1,
+["b"] = 1,
+},
+["layer"] = 2,
+["significantFigures"] = 0,
+["align"] = "CENTER",
+["anchor"] = {
+},
+["kind"] = "health",
+["truncate"] = false,
+["scale"] = 3,
+},
+},
+},
+["DarkDevourer"] = {
+["highlights"] = {
+{
+["color"] = {
+["a"] = 1,
+["b"] = 1,
+["g"] = 0,
+["r"] = 0.4196078777313232,
+},
+["anchor"] = {
+},
+["layer"] = 0,
+["height"] = 1.8,
+["scale"] = 0.9,
+["kind"] = "target",
+["asset"] = "soft-glow",
+["width"] = 1.2,
+},
+{
+["scale"] = 0.65,
+["color"] = {
+["a"] = 1,
+["b"] = 0.6666666666666666,
+["g"] = 0.6666666666666666,
+["r"] = 0.6666666666666666,
+},
+["layer"] = 0,
+["height"] = 1,
+["anchor"] = {
+},
+["kind"] = "mouseover",
+["asset"] = "glow",
+["width"] = 1,
+},
+},
+["specialBars"] = {
+{
+["filled"] = "normal/soft-full",
+["layer"] = 3,
+["scale"] = 0.01,
+["blank"] = "normal/soft-faded",
+["kind"] = "power",
+["anchor"] = {
+0,
+-7,
+},
+},
+},
+["auras"] = {
+{
+["direction"] = "RIGHT",
+["scale"] = 1,
+["showCountdown"] = true,
+["sorting"] = {
+["kind"] = "duration",
+["reversed"] = false,
+},
+["showPandemic"] = true,
+["height"] = 1,
+["anchor"] = {
+"BOTTOMLEFT",
+-63,
+14,
+},
+["kind"] = "debuffs",
+["textScale"] = 1,
+["filters"] = {
+["fromYou"] = true,
+["important"] = true,
+},
+},
+{
+["direction"] = "LEFT",
+["scale"] = 1,
+["showCountdown"] = true,
+["sorting"] = {
+["kind"] = "duration",
+["reversed"] = false,
+},
+["anchor"] = {
+"LEFT",
+-86.5,
+0,
+},
+["height"] = 1,
+["kind"] = "buffs",
+["textScale"] = 1,
+["filters"] = {
+["dispelable"] = true,
+["important"] = true,
+},
+},
+{
+["direction"] = "RIGHT",
+["scale"] = 1.4,
+["showCountdown"] = true,
+["sorting"] = {
+["kind"] = "duration",
+["reversed"] = false,
+},
+["anchor"] = {
+"RIGHT",
+98,
+0,
+},
+["height"] = 1,
+["kind"] = "crowdControl",
+["textScale"] = 1,
+["filters"] = {
+["fromYou"] = false,
+},
+},
+},
+["font"] = {
+["outline"] = true,
+["shadow"] = true,
+["asset"] = "1",
+},
+["bars"] = {
+{
+["relativeTo"] = 0,
+["marker"] = {
+["asset"] = "wide/glow",
+},
+["layer"] = 1,
+["border"] = {
+["height"] = 1,
+["color"] = {
+["a"] = 1,
+["b"] = 0,
+["g"] = 0,
+["r"] = 0,
+},
+["asset"] = "soft",
+["width"] = 1,
+},
+["autoColors"] = {
+{
+["colors"] = {
+},
+["kind"] = "classColors",
+},
+{
+["kind"] = "eliteType",
+["colors"] = {
+["boss"] = {
+["a"] = 1,
+["b"] = 0.458823561668396,
+["g"] = 0.4235294461250305,
+["r"] = 0.9450981020927428,
+},
+["melee"] = {
+["a"] = 1,
+["b"] = 0.9803922176361084,
+["g"] = 0.9803922176361084,
+["r"] = 0.9215686917304992,
+},
+["caster"] = {
+["a"] = 1,
+["b"] = 0.9764706492424012,
+["g"] = 0.8196079134941101,
+["r"] = 0.01568627543747425,
+},
+["trivial"] = {
+["a"] = 1,
+["b"] = 0.4980392456054688,
+["g"] = 0.7764706611633301,
+["r"] = 0.9686275124549866,
+},
+["miniboss"] = {
+["a"] = 1,
+["b"] = 0.9490196704864502,
+["g"] = 0.5490196347236633,
+["r"] = 0.6431372761726379,
+},
+},
+["instancesOnly"] = true,
+},
+{
+["colors"] = {
+["tapped"] = {
+["b"] = 0.4313725490196079,
+["g"] = 0.4313725490196079,
+["r"] = 0.4313725490196079,
+},
+},
+["kind"] = "tapped",
+},
+{
+["combatOnly"] = false,
+["colors"] = {
+["safe"] = {
+["b"] = 0.1137254983186722,
+["g"] = 0.1882353127002716,
+["r"] = 0.7450980544090271,
+},
+["transition"] = {
+["b"] = 0,
+["g"] = 0.6745098233222961,
+["r"] = 0.7450980544090271,
+},
+["offtank"] = {
+["b"] = 1,
+["g"] = 0.501960813999176,
+["r"] = 0.501960813999176,
+},
+["warning"] = {
+["b"] = 0,
+["g"] = 0.4352941513061523,
+["r"] = 0.8666667342185974,
+},
+},
+["kind"] = "threat",
+["useSafeColor"] = true,
+["instancesOnly"] = false,
+},
+{
+["colors"] = {
+["neutral"] = {
+["b"] = 0,
+["g"] = 0.8588235974311829,
+["r"] = 0.8980392813682556,
+},
+["hostile"] = {
+["b"] = 0.1137254983186722,
+["g"] = 0.1882353127002716,
+["r"] = 0.7450980544090271,
+},
+["friendly"] = {
+["b"] = 0,
+["g"] = 0.8901961445808411,
+["r"] = 0,
+},
+["unfriendly"] = {
+["r"] = 1,
+["g"] = 0.5058823529411764,
+["b"] = 0,
+},
+},
+["kind"] = "reaction",
+},
+},
+["absorb"] = {
+["color"] = {
+["a"] = 1,
+["b"] = 1,
+["g"] = 1,
+["r"] = 1,
+},
+["asset"] = "wide/blizzard-absorb",
+},
+["foreground"] = {
+["asset"] = "white",
+},
+["anchor"] = {
+},
+["background"] = {
+["color"] = {
+["a"] = 0.6699999999999999,
+["r"] = 1,
+["g"] = 1,
+["b"] = 1,
+},
+["applyColor"] = true,
+["asset"] = "black",
+},
+["kind"] = "health",
+["scale"] = 1,
+},
+{
+["marker"] = {
+["asset"] = "wide/glow",
+},
+["layer"] = 1,
+["border"] = {
+["height"] = 0.95,
+["color"] = {
+["a"] = 1,
+["b"] = 0,
+["g"] = 0,
+["r"] = 0,
+},
+["asset"] = "soft",
+["width"] = 1,
+},
+["autoColors"] = {
+{
+["colors"] = {
+["uninterruptable"] = {
+["a"] = 1,
+["b"] = 0.4431372880935669,
+["g"] = 0.4470588564872742,
+["r"] = 0.4352941513061523,
+},
+},
+["kind"] = "uninterruptableCast",
+},
+{
+["colors"] = {
+["ready"] = {
+["r"] = 0,
+["g"] = 1,
+["b"] = 0,
+},
+},
+["kind"] = "interruptReady",
+},
+{
+["colors"] = {
+["cast"] = {
+["b"] = 0.1529411764705883,
+["g"] = 0.09411764705882351,
+["r"] = 1,
+},
+["channel"] = {
+["b"] = 1,
+["g"] = 0.2627450980392157,
+["r"] = 0.0392156862745098,
+},
+},
+["kind"] = "importantCast",
+},
+{
+["colors"] = {
+["cast"] = {
+["b"] = 0,
+["g"] = 1,
+["r"] = 1,
+},
+["interrupted"] = {
+["b"] = 0.3019607961177826,
+["g"] = 0.3019607961177826,
+["r"] = 0.8000000715255737,
+},
+["channel"] = {
+["r"] = 0.2431372549019608,
+["g"] = 0.7764705882352941,
+["b"] = 0.2156862745098039,
+},
+},
+["kind"] = "cast",
+},
+},
+["scale"] = 1,
+["anchor"] = {
+"TOP",
+0,
+-8,
+},
+["foreground"] = {
+["asset"] = "white",
+},
+["kind"] = "cast",
+["background"] = {
+["color"] = {
+["a"] = 0.5,
+["r"] = 1,
+["g"] = 1,
+["b"] = 1,
+},
+["applyColor"] = true,
+["asset"] = "black",
+},
+["interruptMarker"] = {
+["color"] = {
+["b"] = 1,
+["g"] = 1,
+["r"] = 1,
+},
+["asset"] = "none",
+},
+},
+},
+["markers"] = {
+{
+["anchor"] = {
+"LEFT",
+-72,
+0,
+},
+["layer"] = 3,
+["color"] = {
+["r"] = 1,
+["g"] = 1,
+["b"] = 1,
+},
+["kind"] = "quest",
+["asset"] = "normal/quest-blizzard",
+["scale"] = 0.9,
+},
+{
+["anchor"] = {
+"BOTTOMRIGHT",
+81.5,
+10.5,
+},
+["layer"] = 3,
+["color"] = {
+["r"] = 1,
+["g"] = 1,
+["b"] = 1,
+},
+["kind"] = "raid",
+["asset"] = "normal/blizzard-raid",
+["scale"] = 1,
+},
+{
+["square"] = false,
+["anchor"] = {
+"TOPLEFT",
+-62,
+-22,
+},
+["layer"] = 3,
+["scale"] = 1.14,
+["kind"] = "castIcon",
+["asset"] = "normal/cast-icon",
+["color"] = {
+["r"] = 1,
+["g"] = 1,
+["b"] = 1,
+},
+},
+{
+["color"] = {
+["r"] = 0.392156862745098,
+["g"] = 0.4823529411764706,
+["b"] = 0.4980392156862745,
+},
+["layer"] = 3,
+["anchor"] = {
+"TOPLEFT",
+-63.5,
+-10.5,
+},
+["kind"] = "cannotInterrupt",
+["asset"] = "normal/shield-soft",
+["scale"] = 0.5,
+},
+{
+["openWorldOnly"] = false,
+["color"] = {
+["r"] = 1,
+["g"] = 1,
+["b"] = 1,
+},
+["layer"] = 0,
+["anchor"] = {
+"BOTTOMRIGHT",
+65,
+8.5,
+},
+["kind"] = "elite",
+["asset"] = "special/blizzard-elite-midnight",
+["scale"] = 0.81,
+},
+{
+["anchor"] = {
+"BOTTOMRIGHT",
+52,
+8,
+},
+["layer"] = 0,
+["includeElites"] = true,
+["color"] = {
+["r"] = 1,
+["g"] = 1,
+["b"] = 1,
+},
+["kind"] = "rare",
+["asset"] = "normal/blizzard-rare-midnight",
+["scale"] = 0.75,
+},
+},
+["texts"] = {
+{
+["widthLimit"] = 88,
+["truncate"] = true,
+["scale"] = 1,
+["layer"] = 2,
+["significantFigures"] = 0,
+["displayTypes"] = {
+"percentage",
+},
+["anchor"] = {
+"TOPRIGHT",
+64,
+4,
+},
+["kind"] = "health",
+["align"] = "RIGHT",
+["color"] = {
+["b"] = 1,
+["g"] = 1,
+["r"] = 1,
+},
+},
+{
+["showWhenWowDoes"] = false,
+["truncate"] = true,
+["color"] = {
+["b"] = 1,
+["g"] = 1,
+["r"] = 1,
+},
+["layer"] = 2,
+["autoColors"] = {
+{
+["colors"] = {
+},
+["kind"] = "classColors",
+},
+},
+["align"] = "LEFT",
+["anchor"] = {
+"BOTTOMLEFT",
+-62.5,
+6.5,
+},
+["kind"] = "creatureName",
+["scale"] = 1,
+["widthLimit"] = 96,
+},
+{
+["color"] = {
+["r"] = 1,
+["g"] = 1,
+["b"] = 1,
+},
+["kind"] = "castSpellName",
+["widthLimit"] = 125,
+["truncate"] = true,
+["scale"] = 0.8,
+["layer"] = 2,
+["anchor"] = {
+"TOP",
+0,
+-11.5,
+},
+["align"] = "CENTER",
+},
+{
+["widthLimit"] = 125,
+["truncate"] = true,
+["color"] = {
+["r"] = 1,
+["g"] = 1,
+["b"] = 1,
+},
+["layer"] = 2,
+["scale"] = 0.8,
+["anchor"] = {
+"TOPRIGHT",
+83,
+-26.5,
+},
+["kind"] = "castTarget",
+["align"] = "LEFT",
+["applyClassColors"] = true,
+},
+{
+["color"] = {
+["r"] = 1,
+["g"] = 1,
+["b"] = 1,
+},
+["kind"] = "castTimeLeft",
+["truncate"] = false,
+["anchor"] = {
+"TOPRIGHT",
+64,
+-11.5,
+},
+["layer"] = 2,
+["scale"] = 1,
+["align"] = "CENTER",
+},
+},
+},
+["Friendly"] = {
+["highlights"] = {
+},
+["specialBars"] = {
+},
+["addon"] = "Platynator",
+["auras"] = {
+{
+["direction"] = "RIGHT",
+["scale"] = 1.2,
+["showCountdown"] = true,
+["sorting"] = {
+["reversed"] = false,
+["kind"] = "duration",
+},
+["anchor"] = {
+"BOTTOM",
+0,
+26,
+},
+["height"] = 1,
+["kind"] = "crowdControl",
+["textScale"] = 1,
+["filters"] = {
+["fromYou"] = false,
+},
+},
+},
+["font"] = {
+["outline"] = true,
+["shadow"] = true,
+["asset"] = "1",
+},
+["version"] = 1,
+["bars"] = {
+},
+["markers"] = {
+{
+["color"] = {
+["r"] = 1,
+["g"] = 1,
+["b"] = 1,
+},
+["layer"] = 3,
+["scale"] = 1,
+["kind"] = "raid",
+["asset"] = "normal/blizzard-raid",
+["anchor"] = {
+"BOTTOMLEFT",
+-51,
+11.5,
+},
+},
+},
+["texts"] = {
+{
+["showWhenWowDoes"] = false,
+["truncate"] = true,
+["scale"] = 1,
+["layer"] = 2,
+["autoColors"] = {
+{
+["colors"] = {
+},
+["kind"] = "classColors",
+},
+},
+["color"] = {
+["r"] = 1,
+["g"] = 1,
+["b"] = 1,
+},
+["anchor"] = {
+"BOTTOM",
+0,
+16,
+},
+["kind"] = "creatureName",
+["widthLimit"] = 74,
+["align"] = "CENTER",
+},
+},
+},
+},
+["apply_cvars"] = true,
+["not_target_alpha"] = 1,
+["click_region_scale_y"] = 1,
+["global_scale"] = 1.4,
+["style"] = "DarkDevourer",
+["show_nameplates_only_needed"] = false,
+["click_region_scale_x"] = 1,
+["target_scale"] = 1.2,
+["clickable_nameplates"] = {
+["friend"] = false,
+["enemy"] = true,
+},
+["simplified_scale"] = 0.4,
+["cast_alpha"] = 1,
+},
+},
+}

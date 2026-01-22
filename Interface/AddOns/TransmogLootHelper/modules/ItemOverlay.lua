@@ -4,8 +4,8 @@
 
 -- Initialisation
 local appName, app = ...
-local L = app.locales
 local api = app.api
+local L = app.locales
 
 -------------
 -- ON LOAD --
@@ -19,8 +19,24 @@ app.Event:Register("ADDON_LOADED", function(addOnName, containsBindings)
 
 		app.OverlayCache = {}
 
-		app.ItemOverlayHooks()
-		app.TooltipInfo()
+		app:HookItemOverlay()
+		app:AddTooltipInfo()
+
+		-- Midnight cleanup
+		if not TransmogLootHelper_Cache.Midnight then
+			StaticPopupDialogs["TRANSMOGLOOTHELPER_MIDNIGHT"] = {
+				text = app.NameLong .. "\n\n"
+					.. "Cached recipes have been reset\n"
+					.. "to allow cleanup of specific characters.\n\n"
+					.. "Please log your profession characters\n"
+					.. "again to cache your recipes!",
+				button1 = OKAY,
+				whileDead = true,
+			}
+			StaticPopup_Show("TRANSMOGLOOTHELPER_MIDNIGHT")
+			TransmogLootHelper_Cache.Recipes = {}
+			TransmogLootHelper_Cache.Midnight = true
+		end
 	end
 end)
 
@@ -29,7 +45,7 @@ end)
 ------------------
 
 -- Create and set our icon and text overlay
-function app.ItemOverlay(overlay, itemLink, itemLocation, containerInfo, bagAddon)
+function app:CreateItemOverlay(overlay, itemLink, itemLocation, containerInfo, bagAddon, additionalInfo)
 	-- Create our overlay
 	local function createOverlay()
 		-- Text
@@ -131,7 +147,7 @@ function app.ItemOverlay(overlay, itemLink, itemLocation, containerInfo, bagAddo
 			if containerInfo and containerInfo.hasLoot then
 				itemEquipLoc = "Container"
 			-- Decor
-			elseif C_Item.IsDecorItem(itemLink) then
+			elseif C_Item.IsDecorItem(itemLink) or app.Decor[itemID] then
 				itemEquipLoc = "Decor"
 			-- Mounts
 			elseif classID == Enum.ItemClass.Miscellaneous and subclassID == Enum.ItemMiscellaneousSubclass.Mount then
@@ -140,7 +156,7 @@ function app.ItemOverlay(overlay, itemLink, itemLocation, containerInfo, bagAddo
 			elseif classID == Enum.ItemClass.Recipe and subclassID ~= Enum.ItemRecipeSubclass.Book then
 				itemEquipLoc = "Recipe"
 			-- Toys
-			elseif app.IsToy(itemLink) then
+			elseif C_ToyBox.GetToyInfo(itemID) then
 				itemEquipLoc = "Toy"
 			-- Pets
 			elseif C_PetJournal.GetPetInfoByItemID(itemID) then
@@ -228,7 +244,7 @@ function app.ItemOverlay(overlay, itemLink, itemLocation, containerInfo, bagAddo
 					"使用: 研究以使你的卡兹阿加",
 				}
 				for k, v in pairs(localeProfessionKnowledge) do
-					if app.GetTooltipText(itemLink, v) then
+					if app:GetTooltipText(itemLink, v) then
 						itemEquipLoc = "ProfessionKnowledge"
 						break
 					end
@@ -261,7 +277,7 @@ function app.ItemOverlay(overlay, itemLink, itemLocation, containerInfo, bagAddo
 				}
 				for k, v in pairs(localeOtherContainers) do
 					-- Exception for the Korean string, as it contains two parts that aren't directly concatenated
-					if app.GetTooltipText(itemLink, v) and (v ~= "사용 효과:" or app.GetTooltipText(itemLink, "획득합니다")) then
+					if app:GetTooltipText(itemLink, v) and (v ~= "사용 효과:" or app:GetTooltipText(itemLink, "획득합니다")) then
 						itemEquipLoc = "Container"
 						break
 					end
@@ -343,36 +359,19 @@ function app.ItemOverlay(overlay, itemLink, itemLocation, containerInfo, bagAddo
 					tumInfo = TransmogUpgradeMaster_API.GetAppearanceMissingData(itemLink)
 				end
 
-				-- Legendaries and Artifacts can be a little weird
-				-- if (app.OverlayCache[itemLink].itemQuality == 5 or app.OverlayCache[itemLink].itemQuality == 6) and bindType == 1 then
-				-- 	if TransmogLootHelper_Settings["iconLearned"] then
-				-- 		showOverlay("green")
-				-- 	else
-				-- 		hideOverlay()
-				-- 	end
-				-- Remix conversion
-				if PlayerGetTimerunningSeasonID() == 2 and TransmogLootHelper_Settings["iconNewSource"] and TransmogLootHelper_Cache.Lemix[itemID] and not TransmogLootHelper_Cache.Lemix[itemID].converted then
-					overlay.texture:SetTexture(4622478)
-					showOverlay("yellow")
 				-- New appearance
-				elseif not api.IsAppearanceCollected(itemLink) then
+				if not api:IsAppearanceCollected(itemLink) then
 					showOverlay("purple")
 				-- New source
-				elseif TransmogLootHelper_Settings["iconNewSource"] and not api.IsSourceCollected(itemLink) then
+				elseif TransmogLootHelper_Settings["iconNewSource"] and not api:IsSourceCollected(itemLink) then
 					showOverlay("yellow")
 				-- Catalyst mog
-				elseif TransmogLootHelper_Settings["iconNewCatalyst"] and tumInfo and tumInfo.catalystAppearanceMissing then
+				elseif TransmogLootHelper_Settings["iconNewCatalyst"] and ((tumInfo and tumInfo.catalystAppearanceMissing) or (attInfo and attInfo.filledCatalyst)) then
 					overlay.texture:SetAtlas("CreationCatalyst-32x32")
 					showOverlay("yellow")
-				elseif TransmogLootHelper_Settings["iconNewCatalyst"] and attInfo and attInfo.filledCatalyst then
-					overlay.texture:SetTexture("Interface\\AddOns\\AllTheThings\\assets\\Interface_Catalyst")
-					showOverlay("yellow")
 				-- Upgrade mog
-				elseif TransmogLootHelper_Settings["iconNewUpgrade"] and tumInfo and tumInfo.catalystUpgradeAppearanceMissing then
+				elseif TransmogLootHelper_Settings["iconNewUpgrade"] and ((tumInfo and tumInfo.upgradeAppearanceMissing) or (attInfo and attInfo.filledUpgrade)) then
 					overlay.texture:SetAtlas("CovenantSanctum-Upgrade-Icon-Available")
-					showOverlay("yellow")
-				elseif TransmogLootHelper_Settings["iconNewUpgrade"] and attInfo and attInfo.filledUpgrade then
-					overlay.texture:SetTexture("Interface\\AddOns\\AllTheThings\\assets\\Interface_Upgrade")
 					showOverlay("yellow")
 				-- Learned
 				elseif TransmogLootHelper_Settings["iconLearned"] and not (classID == 15 and subclassID == 0) then
@@ -383,14 +382,14 @@ function app.ItemOverlay(overlay, itemLink, itemLocation, containerInfo, bagAddo
 			-- Ensembles & Arsenals
 			elseif TransmogLootHelper_Settings["iconNewMog"] and (itemEquipLoc == "Ensemble" or itemEquipLoc == "Arsenal") then
 				-- Learned
-				if app.IsLearned(itemLink) then
+				if app:IsLearned(itemLink) then
 					if TransmogLootHelper_Settings["iconLearned"] then
 						showOverlay("green")
 					else
 						hideOverlay()
 					end
 				-- Unusable
-				elseif app.GetTooltipRedText(itemLink) then
+				elseif app:HasRedTooltipText(itemLink) then
 					showOverlay("red")
 				-- Unlearned
 				else
@@ -399,14 +398,14 @@ function app.ItemOverlay(overlay, itemLink, itemLocation, containerInfo, bagAddo
 			-- Illusions
 			elseif TransmogLootHelper_Settings["iconNewIllusion"] and itemEquipLoc == "Illusion" then
 				-- Learned
-				if app.IsLearned(itemLink) then
+				if app:IsLearned(itemLink) then
 					if TransmogLootHelper_Settings["iconLearned"] then
 						showOverlay("green")
 					else
 						hideOverlay()
 					end
 				-- Unusable
-				elseif app.GetTooltipRedText(itemLink) then
+				elseif app:HasRedTooltipText(itemLink) then
 					showOverlay("red")
 				-- Unlearned
 				else
@@ -415,14 +414,14 @@ function app.ItemOverlay(overlay, itemLink, itemLocation, containerInfo, bagAddo
 			-- Mounts
 			elseif TransmogLootHelper_Settings["iconNewMount"] and itemEquipLoc == "Mount" then
 				-- Learned
-				if app.IsLearned(itemLink) then
+				if app:IsLearned(itemLink) then
 					if TransmogLootHelper_Settings["iconLearned"] then
 						showOverlay("green")
 					else
 						hideOverlay()
 					end
 				-- Unusable
-				elseif app.GetTooltipRedText(itemLink) then
+				elseif app:HasRedTooltipText(itemLink) then
 					showOverlay("red")
 				-- Unlearned
 				else
@@ -472,7 +471,7 @@ function app.ItemOverlay(overlay, itemLink, itemLocation, containerInfo, bagAddo
 				if app.SpellItem[itemID] then
 					local recipeID = app.SpellItem[itemID]
 
-					if TransmogLootHelper_Cache.Recipes[recipeID] ~= nil then
+					if TransmogLootHelper_Cache.Recipes[recipeID] then
 						-- Set profession icon
 						local _, _, tradeskill = C_TradeSkillUI.GetTradeSkillLineForRecipe(recipeID)
 						if app.Icon[tradeskill] then
@@ -480,14 +479,14 @@ function app.ItemOverlay(overlay, itemLink, itemLocation, containerInfo, bagAddo
 						end
 
 						-- Learned
-						if TransmogLootHelper_Cache.Recipes[recipeID] then
+						if TransmogLootHelper_Cache.Recipes[recipeID].learned then
 							if TransmogLootHelper_Settings["iconLearned"] then
 								showOverlay("green")
 							else
 								hideOverlay()
 							end
 						-- Unlearned
-						elseif not TransmogLootHelper_Cache.Recipes[recipeID] then
+						else
 							if C_TradeSkillUI.IsRecipeProfessionLearned(recipeID) then
 								showOverlay("purple")
 							else
@@ -496,7 +495,7 @@ function app.ItemOverlay(overlay, itemLink, itemLocation, containerInfo, bagAddo
 						end
 					-- Uncached
 					else
-						overlay.texture:SetTexture(app.Icon["Unknown"])
+						overlay.texture:SetTexture(app.Icon["Recipe"])
 						showOverlay("yellow")
 						overlay.animation:Stop()
 					end
@@ -568,7 +567,7 @@ function app.ItemOverlay(overlay, itemLink, itemLocation, containerInfo, bagAddo
 			-- Profession Knowledge
 			elseif TransmogLootHelper_Settings["iconUsable"] and itemEquipLoc == "ProfessionKnowledge" then
 				-- Unusable
-				if app.GetTooltipRedText(itemLink) then
+				if app:HasRedTooltipText(itemLink) then
 					hideOverlay()
 				-- Usable
 				else
@@ -577,14 +576,14 @@ function app.ItemOverlay(overlay, itemLink, itemLocation, containerInfo, bagAddo
 			-- Customisations (includes spellbooks)
 			elseif TransmogLootHelper_Settings["iconUsable"] and itemEquipLoc == "Customisation" then
 				-- Learned
-				if TransmogLootHelper_Cache.Recipes[app.SpellItem[itemID]] or (app.QuestItem[itemID] and C_QuestLog.IsQuestFlaggedCompletedOnAccount(app.QuestItem[itemID])) or app.IsLearned(itemLink) then
+				if (TransmogLootHelper_Cache.Recipes[app.SpellItem[itemID]] and TransmogLootHelper_Cache.Recipes[app.SpellItem[itemID]].learned) or (app.QuestItem[itemID] and C_QuestLog.IsQuestFlaggedCompletedOnAccount(app.QuestItem[itemID])) or app:IsLearned(itemLink) then
 					if TransmogLootHelper_Settings["iconLearned"] then
 						showOverlay("green")
 					else
 						hideOverlay()
 					end
 				-- Unusable
-				elseif app.GetTooltipRedText(itemLink) then
+				elseif app:HasRedTooltipText(itemLink) then
 					showOverlay("red")
 				-- Unlearned
 				else
@@ -595,7 +594,7 @@ function app.ItemOverlay(overlay, itemLink, itemLocation, containerInfo, bagAddo
 				if not containerInfo then
 					hideOverlay()
 				else
-					if app.GetTooltipRedText(itemLink) then
+					if app:HasRedTooltipText(itemLink) then
 						showOverlay("red")
 					else
 						showOverlay("yellow")
@@ -618,11 +617,11 @@ function app.ItemOverlay(overlay, itemLink, itemLocation, containerInfo, bagAddo
 					overlay.text:SetText("|cff00CCFF" .. L.BINDTEXT_WUE .. "|r")
 				end
 			-- WuE on vendor
-			elseif not itemLocation and app.GetBonding(itemLink) == "WuE" then
+			elseif not itemLocation and app:GetBonding(itemLink) == "WuE" then
 				overlay.text:SetText("|cff00CCFF" .. L.BINDTEXT_WUE .. "|r")
 			-- Soulbound + BoA
 			elseif itemLocation and C_Item.IsBound(itemLocation) then
-				if app.GetBonding(itemLink) == "BoA" then
+				if app:GetBonding(itemLink) == "BoA" then
 					overlay.text:SetText("|cff00CCFF" .. L.BINDTEXT_BOA .. "|r")
 				-- Soulbound
 				else
@@ -646,6 +645,7 @@ function app.ItemOverlay(overlay, itemLink, itemLocation, containerInfo, bagAddo
 	-- Caged pets don't return this info, except this one magical pet cage
 	if not itemID or itemID == 82800 then
 		local speciesID = string.match(itemLink, "battlepet:(%d+):")
+		if additionalInfo and type(additionalInfo) == "number" then speciesID = additionalInfo end
 		if speciesID then
 			app.OverlayCache[itemLink] = { itemEquipLoc = "Pet", bindType = 2, speciesID = speciesID }
 			processOverlay()
@@ -677,7 +677,7 @@ function app.ItemOverlay(overlay, itemLink, itemLocation, containerInfo, bagAddo
 end
 
 -- Hook our overlay onto items in various places
-function app.ItemOverlayHooks()
+function app:HookItemOverlay()
 	if TransmogLootHelper_Settings["overlay"] then
 		-- Hook our overlay onto all bag slots (thank you Plusmouse!)
 		local function bagsOverlay(container)
@@ -708,7 +708,7 @@ function app.ItemOverlayHooks()
 				if exists then
 					local itemLink = C_Item.GetItemLink(itemLocation)
 					local containerInfo = C_Container.GetContainerItemInfo(itemButton:GetBagID(), itemButton:GetID())
-					app.ItemOverlay(itemButton.TLHOverlay, itemLink, itemLocation, containerInfo)
+					app:CreateItemOverlay(itemButton.TLHOverlay, itemLink, itemLocation, containerInfo)
 				else
 					itemButton.TLHOverlay:Hide()
 				end
@@ -723,13 +723,13 @@ function app.ItemOverlayHooks()
 		hooksecurefunc(ContainerFrameCombinedBags, "UpdateItems", bagsOverlay)
 
 		-- Hook our overlay onto all (war)bank slots
-		local function bankOverlay()
+		function app:BankOverlay()
 			if not app.BankThrottle then
 				app.BankThrottle = 0
 				C_Timer.After(0.1, function()
 					if app.BankThrottle >= 1 then
 						app.BankThrottle = nil
-						bankOverlay()
+						app:BankOverlay()
 					else
 						app.BankThrottle = nil
 					end
@@ -757,7 +757,7 @@ function app.ItemOverlayHooks()
 							if exists then
 								local itemLink = C_Item.GetItemLink(itemLocation)
 								local containerInfo = C_Container.GetContainerItemInfo(BankPanel.selectedTabID, i)
-								app.ItemOverlay(itemButton.TLHOverlay, itemLink, itemLocation, containerInfo)
+								app:CreateItemOverlay(itemButton.TLHOverlay, itemLink, itemLocation, containerInfo)
 							else
 								itemButton.TLHOverlay:Hide()
 							end
@@ -775,13 +775,13 @@ function app.ItemOverlayHooks()
 			end
 		end
 
-		hooksecurefunc(BankPanel, "RefreshBankPanel", bankOverlay)
-		hooksecurefunc(BankPanel, "OnUpdate", bankOverlay)
-		app.Event:Register("BANKFRAME_OPENED", bankOverlay)
-		app.Event:Register("BAG_UPDATE_DELAYED", bankOverlay)
+		hooksecurefunc(BankPanel, "RefreshBankPanel", function() app:BankOverlay() end)
+		hooksecurefunc(BankPanel, "OnUpdate", function() app:BankOverlay() end)
+		app.Event:Register("BANKFRAME_OPENED", function() app:BankOverlay() end)
+		app.Event:Register("BAG_UPDATE_DELAYED", function() app:BankOverlay() end)
 		-- Update if we learn a mog or recipe
-		app.Event:Register("TRANSMOG_COLLECTION_UPDATED", function() C_Timer.After(0.1, bankOverlay) end)
-		app.Event:Register("NEW_RECIPE_LEARNED", function() C_Timer.After(0.1, bankOverlay) end)
+		app.Event:Register("TRANSMOG_COLLECTION_UPDATED", function() C_Timer.After(0.1, function() app:BankOverlay() end) end)
+		app.Event:Register("NEW_RECIPE_LEARNED", function() C_Timer.After(0.1, function() app:BankOverlay() end) end)
 
 		-- Hook our overlay onto all guild bank slots
 		local function guildBankOverlay()
@@ -813,7 +813,7 @@ function app.ItemOverlayHooks()
 						local slot = itemButton:GetID()
 						local itemLink = GetGuildBankItemLink(tab, slot)
 						if itemLink then
-							app.ItemOverlay(itemButton.TLHOverlay, itemLink)
+							app:CreateItemOverlay(itemButton.TLHOverlay, itemLink)
 						else
 							itemButton.TLHOverlay:Hide()
 						end
@@ -843,7 +843,7 @@ function app.ItemOverlayHooks()
 
 							local itemLink = v.itemLink
 							if itemLink then
-								app.ItemOverlay(v.TLHOverlay, itemLink)
+								app:CreateItemOverlay(v.TLHOverlay, itemLink)
 								v.TLHOverlay.text:SetText("")	-- No bind text for these
 							end
 						end)
@@ -856,12 +856,12 @@ function app.ItemOverlayHooks()
 		app.Event:Register("BLACK_MARKET_OPEN", function() C_Timer.After(0.1, blackMarketOverlay) end)
 
 		-- Hook our overlay onto all merchant slots
-		local function merchantOverlay()
+		function app:MerchantOverlay()
 			if not app.MerchantHook then
-				MerchantPrevPageButton:HookScript("OnClick", function() merchantOverlay() C_Timer.After(0.1, merchantOverlay) end)	-- Previous page button
-				MerchantNextPageButton:HookScript("OnClick", function() merchantOverlay() C_Timer.After(0.1, merchantOverlay) end)	-- Next page button
-				MerchantFrame:HookScript("OnMouseWheel", function() merchantOverlay() C_Timer.After(0.1, merchantOverlay) end)	-- Scrolling, which also changes the page
-				MerchantFrame.FilterDropdown:RegisterCallback("OnMenuClose", function() merchantOverlay() C_Timer.After(0.1, merchantOverlay) end)	-- For when users change the filtering
+				MerchantPrevPageButton:HookScript("OnClick", function() app:MerchantOverlay() C_Timer.After(0.1, function() app:MerchantOverlay() end) end)	-- Previous page button
+				MerchantNextPageButton:HookScript("OnClick", function() app:MerchantOverlay() C_Timer.After(0.1, function() app:MerchantOverlay() end) end)	-- Next page button
+				MerchantFrame:HookScript("OnMouseWheel", function() app:MerchantOverlay() C_Timer.After(0.1, function() app:MerchantOverlay() end) end)	-- Scrolling, which also changes the page
+				MerchantFrame.FilterDropdown:RegisterCallback("OnMenuClose", function() app:MerchantOverlay() C_Timer.After(0.1, function() app:MerchantOverlay() end) end)	-- For when users change the filtering
 				app.MerchantHook = true
 			end
 
@@ -875,14 +875,14 @@ function app.ItemOverlayHooks()
 
 					-- These take a little moment to load, so check the first slot and assume the rest is also loaded when this one is
 					if i == 1 and itemButton.hasItem == nil then
-						RunNextFrame(merchantOverlay)
+						RunNextFrame(function() app:MerchantOverlay() end)
 						return
 					end
 
 					local t = itemButton.TLHOverlay
 					local itemLink = itemButton.link
 					if itemLink then
-						app.ItemOverlay(itemButton.TLHOverlay, itemLink)
+						app:CreateItemOverlay(itemButton.TLHOverlay, itemLink)
 					else
 						itemButton.TLHOverlay:Hide()
 					end
@@ -890,13 +890,13 @@ function app.ItemOverlayHooks()
 			end
 		end
 
-		app.Event:Register("MERCHANT_SHOW", function() C_Timer.After(0.1, merchantOverlay) end)
+		app.Event:Register("MERCHANT_SHOW", function() C_Timer.After(0.1, function() app:MerchantOverlay() end) end)
 		-- Update if we learn a mog or recipe
-		app.Event:Register("TRANSMOG_COLLECTION_UPDATED", function() C_Timer.After(0.1, merchantOverlay) end)
-		app.Event:Register("NEW_RECIPE_LEARNED", function() C_Timer.After(0.1, merchantOverlay) end)
+		app.Event:Register("TRANSMOG_COLLECTION_UPDATED", function() C_Timer.After(0.1, function() app:MerchantOverlay() end) end)
+		app.Event:Register("NEW_RECIPE_LEARNED", function() C_Timer.After(0.1, function() app:MerchantOverlay() end) end)
 
 		-- Hook our overlay onto all quest rewards
-		local function questOverlay(mode)
+		function app:QuestOverlay(mode)
 			local function rewardOverlay(rewardsFrame)
 				local sellPrice = {}
 
@@ -914,7 +914,7 @@ function app.ItemOverlayHooks()
 
 					if v.type then
 						if mode == "turnin" then
-							-- Set our map quest log to the currently displayed quest; stuff is being weird on quest turn-in
+							-- Set our map quest log to the currently displayed quest, stuff is being weird on quest turn-in
 							if GetQuestID() then
 								C_QuestLog.SetSelectedQuest(GetQuestID())
 							end
@@ -930,7 +930,7 @@ function app.ItemOverlayHooks()
 							itemButton.TLHOverlay:Hide()
 						elseif itemLink then
 							table.insert(sellPrice, { price = select(11, C_Item.GetItemInfo(itemLink)), itemButton = itemButton})
-							app.ItemOverlay(itemButton.TLHOverlay, itemLink)
+							app:CreateItemOverlay(itemButton.TLHOverlay, itemLink)
 							itemButton.TLHOverlay:SetAllPoints(itemButton.IconBorder)
 						else
 							itemButton.TLHOverlay:Hide()
@@ -996,12 +996,12 @@ function app.ItemOverlayHooks()
 			end
 		end
 
-		app.Event:Register("QUEST_DETAIL", questOverlay)
-		app.Event:Register("QUEST_COMPLETE", function() questOverlay("turnin") end)
-		hooksecurefunc("QuestMapFrame_ShowQuestDetails", function() questOverlay() C_Timer.After(0.1, questOverlay) end)
+		app.Event:Register("QUEST_DETAIL", function() app:QuestOverlay() end)
+		app.Event:Register("QUEST_COMPLETE", function() app:QuestOverlay("turnin") end)
+		hooksecurefunc("QuestMapFrame_ShowQuestDetails", function() app:QuestOverlay() C_Timer.After(0.1, function() app:QuestOverlay() end) end)
 
 		-- Hook our overlay onto all world quest pins
-		local function worldQuestOverlay()
+		function app:WorldQuestOverlay()
 			C_Timer.After(0.1, function()
 				for pin in WorldMapFrame:EnumeratePinsByTemplate("WorldMap_WorldQuestPinTemplate") do
 					if not pin.TLHOverlay then
@@ -1015,7 +1015,7 @@ function app.ItemOverlayHooks()
 					if bestIndex and bestType then
 						local itemLink = GetQuestLogItemLink(bestType, bestIndex, pin.questID)
 						if itemLink then
-							app.ItemOverlay(pin.TLHOverlay, itemLink)
+							app:CreateItemOverlay(pin.TLHOverlay, itemLink)
 							pin.TLHOverlay.text:SetText("")	-- No bind text for these
 						else
 							pin.TLHOverlay:Hide()
@@ -1027,11 +1027,39 @@ function app.ItemOverlayHooks()
 			end)
 		end
 
-		WorldMapFrame:HookScript("OnShow", worldQuestOverlay)
-		EventRegistry:RegisterCallback("MapCanvas.MapSet", worldQuestOverlay)
+		WorldMapFrame:HookScript("OnShow", function() app:WorldQuestOverlay() end)
+		EventRegistry:RegisterCallback("MapCanvas.MapSet", function() app:WorldQuestOverlay() end)
+
+		-- Hook our overlay onto all encounter journal loot items
+		local function encounterJournalOverlay()
+			if EncounterJournal and EncounterJournal:IsShown() and not app.Flag.EncounterJournalHook then
+				EncounterJournalEncounterFrameInfo.LootContainer.ScrollBox:RegisterCallback("OnAcquiredFrame", function(_, v)
+					RunNextFrame(function()
+						if v then
+							if not v.TLHOverlay then
+								v.TLHOverlay = CreateFrame("Frame", nil, v)
+								local inset = 4
+								v.TLHOverlay:SetPoint("TOPLEFT", v.icon, "TOPLEFT", inset, -inset)
+								v.TLHOverlay:SetPoint("BOTTOMRIGHT", v.icon, "BOTTOMRIGHT", -inset, inset)
+							end
+							v.TLHOverlay:Hide()
+
+							if v.link then
+								app:CreateItemOverlay(v.TLHOverlay, v.link)
+								v.TLHOverlay.text:SetText("")
+								v.TLHOverlay.animation:Stop()
+							end
+						end
+					end)
+				end)
+				app.Flag.EncounterJournalHook = true
+			end
+		end
+
+		app.Event:Register("UPDATE_INSTANCE_INFO", encounterJournalOverlay)
 
 		-- Hook our overlay onto all recipe rows
-		local function tradeskillOverlay()
+		function app:TradeskillOverlay()
 			if ProfessionsFrame and ProfessionsFrame:IsShown() then
 				if not app.TradeskillHook then
 					-- Thank you AGAIN Plusmouse, for this callback
@@ -1047,7 +1075,7 @@ function app.ItemOverlayHooks()
 							if recipeID then
 								local itemLink = C_TradeSkillUI.GetRecipeItemLink(recipeID)
 								if itemLink then
-									app.ItemOverlay(v.TLHOverlay, itemLink)
+									app:CreateItemOverlay(v.TLHOverlay, itemLink)
 									v.TLHOverlay.text:SetText("")	-- No bind text for these
 
 									v.TLHOverlay.icon:ClearAllPoints()
@@ -1066,43 +1094,45 @@ function app.ItemOverlayHooks()
 			end
 		end
 
-		app.Event:Register("TRADE_SKILL_SHOW", tradeskillOverlay)
+		app.Event:Register("TRADE_SKILL_SHOW", function() app:TradeskillOverlay() end)
 
-		-- Hook our overlay onto all recipe rows
-		local function auctionHouseOverlay()
-			if AuctionHouseFrame and AuctionHouseFrame:IsShown() then
-				if not app.AuctionHouseHook then
-					-- Thank you AGAIN Plusmouse, for this callback
-					AuctionHouseFrame.BrowseResultsFrame.ItemList.ScrollBox:RegisterCallback("OnAcquiredFrame", function(_, v, data)
-						C_Timer.After(0.1, function()
-							if not v.TLHOverlay then
-								v.TLHOverlay = CreateFrame("Frame", nil, v)
-							end
-							v.TLHOverlay:Hide()
+		-- Hook our overlay onto all Auction House entries
+		function app:AuctionHouseOverlay()
+			if AuctionHouseFrame and AuctionHouseFrame:IsShown() and not app.Flag.AuctionHouseHook then
+				-- Thank you AGAIN Plusmouse, for this callback
+				AuctionHouseFrame.BrowseResultsFrame.ItemList.ScrollBox:RegisterCallback("OnAcquiredFrame", function(_, v)
+					C_Timer.After(0.1, function()
+						if not v.TLHOverlay then
+							v.TLHOverlay = CreateFrame("Frame", nil, v)
+						end
+						v.TLHOverlay:Hide()
 
-							local rowData = v.rowData
-							if rowData then
-								local itemID = rowData.itemKey.itemID
-								if itemID then
-									local _, itemLink = C_Item.GetItemInfo(itemID)
-									if itemLink then
-										app.ItemOverlay(v.TLHOverlay, itemLink)
-										v.TLHOverlay.text:SetText("")	-- No bind text for these
-
-										v.TLHOverlay.icon:ClearAllPoints()
-										v.TLHOverlay.icon:SetPoint("LEFT", v, 134, 0)	-- Set the icon to the left of the row
-										v.TLHOverlay.animation:Stop()	-- And don't animate, that's a little obnoxious in these close quarters
+						local rowData = v.rowData
+						if rowData then
+							local itemID = rowData.itemKey.itemID
+							if itemID then
+								local _, itemLink = C_Item.GetItemInfo(itemID)
+								if itemLink then
+									if itemID == 82800 and rowData.itemKey.battlePetSpeciesID then	-- Can't extract pet info from this preview cage
+										app:CreateItemOverlay(v.TLHOverlay, itemLink, nil, nil, nil, rowData.itemKey.battlePetSpeciesID)
+									else
+										app:CreateItemOverlay(v.TLHOverlay, itemLink)
 									end
+									v.TLHOverlay.text:SetText("")	-- No bind text for these
+
+									v.TLHOverlay.icon:ClearAllPoints()
+									v.TLHOverlay.icon:SetPoint("LEFT", v, 134, 0)	-- Set the icon to the left of the row
+									v.TLHOverlay.animation:Stop()	-- And don't animate, that's a little obnoxious in these close quarters
 								end
 							end
-						end)
+						end
 					end)
-					app.AuctionHouseHook = true
-				end
+				end)
+				app.Flag.AuctionHouseHook = true
 			end
 		end
 
-		app.Event:Register("AUCTION_HOUSE_THROTTLED_SYSTEM_READY", auctionHouseOverlay)
+		app.Event:Register("AUCTION_HOUSE_THROTTLED_SYSTEM_READY", function() app:AuctionHouseOverlay() end)
 
 		-- Hook our overlay onto Great Vault rewards
 		local function greatVaultOverlay()
@@ -1118,7 +1148,7 @@ function app.ItemOverlayHooks()
 								end
 
 								local itemLink = C_WeeklyRewards.GetItemHyperlink(v.info.rewards[1].itemDBID)
-								app.ItemOverlay(v.TLHOverlay, itemLink)
+								app:CreateItemOverlay(v.TLHOverlay, itemLink)
 							end
 						end
 					end
@@ -1131,46 +1161,54 @@ function app.ItemOverlayHooks()
 
 		app.Event:Register("WEEKLY_REWARDS_UPDATE", greatVaultOverlay)
 
-		-- Update our overlay if a mog, recipe, or spell is learned
-		function api.UpdateOverlay()
-			C_Timer.After(1, function()
-				-- bagsOverlay()
-				bankOverlay()
-				merchantOverlay()
-				questOverlay()
-				worldQuestOverlay()
-				tradeskillOverlay()
-				auctionHouseOverlay()
-			end)
-		end
-
 		app.Event:Register("TRANSMOG_COLLECTION_UPDATED", function()
-			api.UpdateOverlay()
+			api:UpdateOverlay()
 		end)
 
 		app.Event:Register("NEW_RECIPE_LEARNED", function(recipeID, recipeLevel, baseRecipeID)
-			TransmogLootHelper_Cache.Recipes[recipeID] = true	-- Also cache the recipe as learned, otherwise updating the overlay won't do much good
-			api.UpdateOverlay()
+			app:CacheRecipe(recipeID, true)
+			api:UpdateOverlay()
 		end)
 
 		-- Cache player spells, for books that teach these
 		local function cacheSpells()
-			C_Timer.After(0.9, function()
-				for k, v in pairs(app.SpellItem) do
-					if C_SpellBook.IsSpellKnown(v) or C_SpellBook.IsSpellInSpellBook(v) then
-						TransmogLootHelper_Cache.Recipes[v] = true
+			C_Timer.After(1, function()
+				for itemID, spellID in pairs(app.SpellItem) do
+					if C_SpellBook.IsSpellKnown(spellID) or C_SpellBook.IsSpellInSpellBook(spellID) then
+						app:CacheRecipe(spellID, true)
 					end
 				end
 			end)
 		end
 
 		app.Event:Register("PLAYER_ENTERING_WORLD", function(isInitialLogin, isReloadingUi)
-			cacheSpells()
+			if isInitialLogin or isReloadingUi then cacheSpells() end
 		end)
 
 		app.Event:Register("SPELLS_CHANGED", function()
 			cacheSpells()
-			api.UpdateOverlay()
+			api:UpdateOverlay()
+		end)
+	end
+end
+
+function api:UpdateOverlay()
+	assert(self == api, "Call TransmogLootHelper:UpdateOverlay(), not TransmogLootHelper.UpdateOverlay()")
+
+	if TransmogLootHelper_Settings["overlay"] then
+		RunNextFrame(function()
+			app.RefreshTimer = app.RefreshTimer or 0
+			if GetServerTime() > app.RefreshTimer + 1 then
+				app:BankOverlay()
+				app:MerchantOverlay()
+				app:QuestOverlay()
+				app:WorldQuestOverlay()
+				app:TradeskillOverlay()
+				app:AuctionHouseOverlay()
+				if C_AddOns.IsAddOnLoaded("Baganator") then Baganator.API.RequestItemButtonsRefresh() end
+
+				app.RefreshTimer = GetServerTime()
+			end
 		end)
 	end
 end
@@ -1180,7 +1218,7 @@ end
 ------------------
 
 -- Tooltip information (to tell the user a recipe is not cached)
-function app.TooltipInfo()
+function app:AddTooltipInfo()
 	local function OnTooltipSetItem(tooltip)
 		-- Only run any of this is the relevant setting is enabled
 		if TransmogLootHelper_Settings["iconNewRecipe"] then
@@ -1209,33 +1247,67 @@ end
 -- RECIPE TRACKING --
 ---------------------
 
--- Register a recipe's information
-function app.RegisterRecipe(recipeID)
-	-- Register if the recipe is known
-	local recipeLearned = C_TradeSkillUI.GetRecipeInfo(recipeID).learned
+function app:CacheRecipe(spellID, learned)
+	app.CharacterName = app.CharacterName or UnitName("player") .. "-" .. GetNormalizedRealmName()
 
-	-- Create the table entry
-	if not TransmogLootHelper_Cache.Recipes[recipeID] then
-		TransmogLootHelper_Cache.Recipes[recipeID] = recipeLearned
+	if not TransmogLootHelper_Cache.Recipes[spellID] or type(TransmogLootHelper_Cache.Recipes[spellID]) == "boolean" then
+		TransmogLootHelper_Cache.Recipes[spellID] = { learned = false, knownBy = {} }
 	end
+	if learned then
+		TransmogLootHelper_Cache.Recipes[spellID].learned = true
 
-	-- But only update the recipe learned info if it's our own profession window, and it's true (to avoid the recipe marking as unlearned from viewing the same profession on alts)
-	if not C_TradeSkillUI.IsTradeSkillLinked() and not C_TradeSkillUI.IsTradeSkillGuild() and recipeLearned then
-		TransmogLootHelper_Cache.Recipes[recipeID] = recipeLearned
+		local exists = false
+		for i, character in ipairs(TransmogLootHelper_Cache.Recipes[spellID].knownBy) do
+			if character == app.CharacterName then
+				exists = true
+				break
+			end
+		end
+
+		if not exists then
+			table.insert(TransmogLootHelper_Cache.Recipes[spellID].knownBy, app.CharacterName)
+		end
 	end
 end
 
--- When a tradeskill window is opened
 app.Event:Register("TRADE_SKILL_SHOW", function()
 	if not InCombatLockdown() then
-		-- Register all recipes for this profession, on a delay so we give all this info time to load.
-		C_Timer.After(2, function()
-			for _, recipeID in pairs(C_TradeSkillUI.GetAllRecipeIDs()) do
-				app.RegisterRecipe(recipeID)
+		C_Timer.After(2, function()	-- Delay to ensure data is available
+			if not C_TradeSkillUI.IsTradeSkillLinked() and not C_TradeSkillUI.IsTradeSkillGuild() then
+				for _, recipeID in pairs(C_TradeSkillUI.GetAllRecipeIDs()) do
+					if C_TradeSkillUI.GetRecipeInfo(recipeID).learned then
+						app:CacheRecipe(recipeID, true)
+					else
+						app:CacheRecipe(recipeID)
+					end
+				end
+				api:UpdateOverlay()
 			end
 		end)
 	end
 end)
+
+function api:DeleteCharacter(characterName)
+	assert(self == api, "Call TransmogLootHelper:DeleteCharacter(), not TransmogLootHelper.DeleteCharacter()")
+
+	local removed = 0
+	local unlearned = 0
+	for recipeID, recipeInfo in pairs(TransmogLootHelper_Cache.Recipes) do
+		local oldRemoved = removed
+		for i = #recipeInfo.knownBy, 1, -1 do
+			if recipeInfo.knownBy[i]:lower() == characterName:lower() then
+				table.remove(recipeInfo.knownBy, i)
+				removed = removed + 1
+			end
+		end
+		if oldRemoved ~= removed and #recipeInfo.knownBy == 0 then
+			recipeInfo.learned = false
+			unlearned = unlearned + 1
+		end
+	end
+	app:Print(L.DELETED_ENTRIES .. " " .. removed .. " | " .. L.DELETED_REMOVED .. " " .. unlearned)
+	api:UpdateOverlay()
+end
 
 --------------------
 -- DECOR TRACKING --
@@ -1257,7 +1329,7 @@ app.Event:Register("HOUSE_DECOR_ADDED_TO_CHEST", function(decorGUID, recordID)
 	if decorInfo then
 		TransmogLootHelper_Cache.Decor[recordID].xp = decorInfo.firstAcquisitionBonus
 	end
-	api.UpdateOverlay()
+	api:UpdateOverlay()
 end)
 
 -- This is also triggered when we run C_HousingCatalog.CreateCatalogSearcher()
@@ -1265,13 +1337,16 @@ app.Event:Register("HOUSING_STORAGE_UPDATED", function()
 	for itemID, recordID in pairs(app.Decor) do
 		local decorInfo = C_HousingCatalog.GetCatalogEntryInfoByRecordID(Enum.HousingCatalogEntryType.Decor, recordID, true)
 		if decorInfo then
+			if not decorInfo.numStored then
+				if decorInfo.quantity > 100000 then decorInfo.quantity = 0 end
+				decorInfo.numStored = decorInfo.remainingRedeemable + decorInfo.quantity
+			end
 			if not TransmogLootHelper_Cache.Decor[recordID] then
 				TransmogLootHelper_Cache.Decor[recordID] = { grantsXP = false, xp = decorInfo.firstAcquisitionBonus }
 				if (decorInfo.numStored + decorInfo.numPlaced) == 0 and decorInfo.firstAcquisitionBonus > 0 then
 					TransmogLootHelper_Cache.Decor[recordID].grantsXP = true
 				end
 			end
-
 			TransmogLootHelper_Cache.Decor[recordID].owned = decorInfo.numStored + decorInfo.numPlaced
 		end
 	end

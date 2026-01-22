@@ -111,6 +111,8 @@ BAGANATOR_CONFIG = {
 ["currencyID"] = 2123,
 },
 },
+["Clevagirl-Mal'Ganis"] = {
+},
 ["Smaugchamp-Mal'Ganis"] = {
 {
 ["currencyID"] = 1792,
@@ -133,7 +135,7 @@ BAGANATOR_CONFIG = {
 ["currencyID"] = 2123,
 },
 },
-["Clevagirl-Mal'Ganis"] = {
+["Crillessana-Mal'Ganis"] = {
 },
 ["Neonvoid-Tichondrius"] = {
 {
@@ -173,7 +175,19 @@ BAGANATOR_CONFIG = {
 },
 ["Gehyo-Tichondrius"] = {
 },
-["Crillessana-Mal'Ganis"] = {
+["Starphage-Tichondrius"] = {
+{
+["currencyID"] = 1602,
+},
+{
+["currencyID"] = 1792,
+},
+{
+["currencyID"] = 3288,
+},
+{
+["currencyID"] = 3290,
+},
 },
 ["Ofpusstwo-Tichondrius"] = {
 {
@@ -344,7 +358,7 @@ BAGANATOR_CONFIG = {
 ["DEFAULT"] = {
 ["guild_view_width"] = 14,
 ["empty_slot_background"] = false,
-["junk_plugin"] = "dejunk",
+["junk_plugin"] = "poor_quality",
 ["reduce_spacing"] = true,
 ["bag_view_type"] = "category",
 ["automatic_categories_added"] = {
@@ -1196,7 +1210,7 @@ BAGANATOR_CONFIG = {
 },
 ["141"] = {
 ["name"] = "Old",
-["search"] = "#gear&<536&!#upgrade",
+["search"] = "#gear&<95&!#upgrade",
 },
 ["162"] = {
 ["name"] = "Fishing",

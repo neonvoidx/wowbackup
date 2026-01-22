@@ -1,10 +1,6 @@
 
 CHATTYNATOR_CURRENT_PROFILE = "DEFAULT"
 CHATTYNATOR_COMMAND_HISTORY = {
-"/s /wa",
-"/s /key",
-"/s /keys",
-"/s /key",
 "/s PUT IT IN",
 "/s /key",
 "/s /wa",
@@ -202,4 +198,8 @@ CHATTYNATOR_COMMAND_HISTORY = {
 "/s k",
 "/s lol",
 "/s oh you have to click",
+"/s /script print(IsQuestFlaggedCompleted(90972))",
+"/s /run print(C_QuestLog.IsQuestFlaggedCompleted(90972))",
+"/s /bbf",
+"/s /way 56.85, 24.09",
 }

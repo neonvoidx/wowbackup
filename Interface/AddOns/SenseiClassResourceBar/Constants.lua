@@ -53,6 +53,7 @@ addonTable.commonDefaults = {
     barStrata = "MEDIUM",
     scale = 1,
     width = 200,
+    minWidth = 0,
     widthMode = "Manual",
     height = 15,
     fillDirection = "Left to Right",
@@ -200,6 +201,7 @@ addonTable.tickedPowerTypes = {
     [Enum.PowerType.HolyPower] = true,
     [Enum.PowerType.Runes] = true,
     [Enum.PowerType.SoulShards] = true,
+    ["MAELSTROM_WEAPON"] = true,
 }
 
 -- Power types that are fragmented (multiple independent segments)
@@ -207,6 +209,7 @@ addonTable.fragmentedPowerTypes = {
     [Enum.PowerType.ComboPoints] = true,
     [Enum.PowerType.Essence] = true,
     [Enum.PowerType.Runes] = true,
+    ["MAELSTROM_WEAPON"] = true,
 }
 
 addonTable.clamp = function(x, min, max)

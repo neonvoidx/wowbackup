@@ -1,13 +1,14 @@
-## Interface: 120000
-## Title: |cffC69B6DTransmog Loot Helper|r
+## Interface: 110207, 120000
+## Title: |cff3FC7EBTransmog Loot Helper|r
 ## Author: Slackluster
-## IconTexture: Interface\AddOns\TransmogLootHelper\assets\tlh_icon.blp
+## IconTexture: Interface\AddOns\TransmogLootHelper\assets\icon.png
+## Version: v12.0.0-03
+## X-Curse-Project-ID: 1033752
+## X-Wago-ID: EGPXOkG1
+
 ## AddonCompartmentFunc: TransmogLootHelper_Click
 ## AddonCompartmentFuncOnEnter: TransmogLootHelper_Enter
 ## AddonCompartmentFuncOnLeave: TransmogLootHelper_Leave
-## Version: v11.2.7-010
-## X-Curse-Project-ID: 1033752
-## X-Wago-ID: EGPXOkG1
 
 ## SavedVariables: TransmogLootHelper_Settings, TransmogLootHelper_Cache
 ## SavedVariablesPerCharacter:
@@ -24,16 +25,15 @@
 ## Category-zhCN: 战团藏品
 ## Category-zhTW: 戰隊收藏
 
+libs\ChatThrottleLib\ChatThrottleLib.xml
 libs\LibDBIcon-1.0\embeds.xml
 libs\LibDBIcon-1.0\LibDBIcon-1.0\LibDBIcon-1.0.lua
-libs\ChatThrottleLib\ChatThrottleLib.xml
 Core.lua
 Database.lua
 Settings.lua
 FrameTemplates.xml
 modules\ItemOverlay.lua
 modules\LootTracker.lua
-modules\Remix.lua
 modules\Tweaks.lua
 integrations\ArkInventory.lua
 integrations\Baganator.lua

@@ -7,8 +7,8 @@ local appName, app = ...	-- Returns the addon name and a unique table
 app.locales = {}	-- Localisation table
 app.api = {}	-- Our "API" prefix
 TransmogLootHelper = app.api	-- Create a namespace for our "API"
-local L = app.locales
 local api = app.api
+local L = app.locales
 
 ---------------------------
 -- WOW API EVENT HANDLER --
@@ -40,55 +40,17 @@ end)
 ----------------------
 
 -- App colour
-function app.Colour(string)
-	return "|cffC69B6D" .. string .. "|R"
+function app:Colour(string)
+	return "|cff3FC7EB" .. string .. "|r"
 end
 
 -- Print with addon prefix
-function app.Print(...)
+function app:Print(...)
 	print(app.NameShort .. ":", ...)
 end
 
--- Pop-up window
-function app.Popup(show, text)
-	-- Create popup frame
-	local frame = CreateFrame("Frame", nil, UIParent, "BackdropTemplate")
-	frame:SetPoint("CENTER")
-	frame:SetBackdrop({
-		bgFile = "Interface/Tooltips/UI-Tooltip-Background",
-		edgeFile = "Interface/Tooltips/UI-Tooltip-Border",
-		edgeSize = 16,
-		insets = { left = 4, right = 4, top = 4, bottom = 4 },
-	})
-	frame:SetBackdropColor(0, 0, 0, 1)
-	frame:EnableMouse(true)
-	if show == true then
-		frame:Show()
-	else
-		frame:Hide()
-	end
-
-	-- Close button
-	local close = CreateFrame("Button", "", frame, "UIPanelCloseButton")
-	close:SetPoint("TOPRIGHT", frame, "TOPRIGHT", 2, 2)
-	close:SetScript("OnClick", function()
-		frame:Hide()
-	end)
-
-	-- Text
-	local string = frame:CreateFontString(nil, "ARTWORK", "GameFontNormal")
-	string:SetPoint("CENTER", frame, "CENTER", 0, 0)
-	string:SetPoint("TOP", frame, "TOP", 0, -25)
-	string:SetJustifyH("CENTER")
-	string:SetText(text)
-	frame:SetHeight(string:GetStringHeight()+50)
-	frame:SetWidth(string:GetStringWidth()+50)
-
-	return frame
-end
-
 -- Border
-function app.Border(parent, a, b, c, d)
+function app:SetBorder(parent, a, b, c, d)
 	local border = CreateFrame("Frame", nil, parent, "BackdropTemplate")
 	border:SetPoint("TOPLEFT", parent, a or 0, b or 0)
 	border:SetPoint("BOTTOMRIGHT", parent, c or 0, d or 0)
@@ -99,21 +61,21 @@ function app.Border(parent, a, b, c, d)
 		insets = { left = 4, right = 4, top = 4, bottom = 4 },
 	})
 	border:SetBackdropColor(0, 0, 0, 0)
-	border:SetBackdropBorderColor(0.776, 0.608, 0.427)
+	border:SetBackdropBorderColor(0.25, 0.78, 0.92)
 end
 
 -- Button
-function app.Button(parent, text)
+function app:MakeButton(parent, text)
 	local frame = CreateFrame("Button", nil, parent, "UIPanelButtonTemplate")
 	frame:SetText(text)
 	frame:SetWidth(frame:GetTextWidth()+20)
 
-	app.Border(frame, 0, 0, 0, -1)
+	app:SetBorder(frame, 0, 0, 0, -1)
 	return frame
 end
 
 -- Scan the tooltip for any text
-function app.GetTooltipText(itemLinkie, searchString)
+function app:GetTooltipText(itemLinkie, searchString)
 	local tooltip = app.Tooltip[itemLinkie] or C_TooltipInfo.GetHyperlink(itemLinkie)
 	app.Tooltip[itemLinkie] = tooltip
 
@@ -127,7 +89,7 @@ function app.GetTooltipText(itemLinkie, searchString)
 	return false
 end
 
-function app.GetTransmogText(itemLinkie, searchString)
+function app:GetTransmogText(itemLinkie, searchString)
 	local cvar = C_CVar.GetCVarInfo("missingTransmogSourceInItemTooltips")
 	if cvar ~= "1" then C_CVar.SetCVar("missingTransmogSourceInItemTooltips", 1) end
 	local tooltip = app.Tooltip[itemLinkie] or C_TooltipInfo.GetHyperlink(itemLinkie)
@@ -144,23 +106,7 @@ function app.GetTransmogText(itemLinkie, searchString)
 	return false
 end
 
-function app.IsToy(itemLinkie)
-	local tooltip = app.Tooltip[itemLinkie] or C_TooltipInfo.GetHyperlink(itemLinkie)
-	app.Tooltip[itemLinkie] = tooltip
-
-	if tooltip and tooltip.lines then
-		for _, line in ipairs(tooltip.lines) do
-			if line.type == Enum.TooltipDataLineType.None then
-				if line.leftText and line.leftText:find(ITEM_TOY_ONUSE) then
-					return true
-				end
-			end
-		end
-	end
-	return false
-end
-
-function app.IsLearned(itemLinkie)
+function app:IsLearned(itemLinkie)
 	local tooltip = C_TooltipInfo.GetHyperlink(itemLinkie)
 
 	if tooltip and tooltip.lines then
@@ -173,7 +119,7 @@ function app.IsLearned(itemLinkie)
 	return false
 end
 
-function app.GetBonding(itemLinkie)
+function app:GetBonding(itemLinkie)
 	local tooltip = C_TooltipInfo.GetHyperlink(itemLinkie)
 
 	if tooltip and tooltip.lines then
@@ -195,7 +141,7 @@ function app.GetBonding(itemLinkie)
 end
 
 -- Detect unusable text on tooltips
-function app.GetTooltipRedText(itemLink)
+function app:HasRedTooltipText(itemLink)
 	local tooltip = C_TooltipInfo.GetHyperlink(itemLink)
 	if tooltip and tooltip["lines"] then
 		for k, v in ipairs(tooltip["lines"]) do
@@ -208,7 +154,7 @@ function app.GetTooltipRedText(itemLink)
 end
 
 -- Get an item's SourceID (thank you Plusmouse!)
-function app.GetSourceID(itemLink)
+function app:GetSourceID(itemLink)
 	local _, sourceID = C_TransmogCollection.GetItemInfo(itemLink)
 	if sourceID then
 		return sourceID
@@ -219,10 +165,12 @@ function app.GetSourceID(itemLink)
 end
 
 -- Check if an item's appearance is collected (thank you Plusmouse!)
-function api.IsAppearanceCollected(itemLink)
-	local sourceID = app.GetSourceID(itemLink)
+function api:IsAppearanceCollected(itemLink)
+	assert(self == api, "Call TransmogLootHelper:IsAppearanceCollected(), not TransmogLootHelper.IsAppearanceCollected()")
+
+	local sourceID = app:GetSourceID(itemLink)
 	if not sourceID then
-		if app.GetTransmogText(itemLink, TRANSMOGRIFY_TOOLTIP_APPEARANCE_UNKNOWN) then
+		if app:GetTransmogText(itemLink, TRANSMOGRIFY_TOOLTIP_APPEARANCE_UNKNOWN) then
 			return false
 		else
 			return true	-- Should be nil if the item does not have an appearance, but for our purposes this is fine
@@ -249,10 +197,12 @@ function api.IsAppearanceCollected(itemLink)
 end
 
 -- Check if an item's source is collected (thank you Plusmouse!)
-function api.IsSourceCollected(itemLink)
-	local sourceID = app.GetSourceID(itemLink)
+function api:IsSourceCollected(itemLink)
+	assert(self == api, "Call TransmogLootHelper:IsSourceCollected(), not TransmogLootHelper.IsSourceCollected()")
+
+	local sourceID = app:GetSourceID(itemLink)
 	if not sourceID then
-		if app.GetTransmogText(itemLink, TRANSMOGRIFY_TOOLTIP_APPEARANCE_UNKNOWN) or app.GetTransmogText(itemLink, TRANSMOGRIFY_TOOLTIP_ITEM_UNKNOWN_APPEARANCE_KNOWN) then
+		if app:GetTransmogText(itemLink, TRANSMOGRIFY_TOOLTIP_APPEARANCE_UNKNOWN) or app:GetTransmogText(itemLink, TRANSMOGRIFY_TOOLTIP_ITEM_UNKNOWN_APPEARANCE_KNOWN) then
 			return false
 		else
 			return true	-- Should be nil if the item does not have an appearance, but for our purposes this is fine
@@ -274,7 +224,10 @@ app.Event:Register("ADDON_LOADED", function(addOnName, containsBindings)
 
 		C_ChatInfo.RegisterAddonMessagePrefix("TransmogLootHelp")
 
-		SLASH_TransmogLootHelper1 = "/tlh";
+		SLASH_RELOADUI1 = "/rl"
+		SlashCmdList.RELOADUI = ReloadUI
+
+		SLASH_TransmogLootHelper1 = "/tlh"
 		function SlashCmdList.TransmogLootHelper(msg, editBox)
 			-- Split message into command and rest
 			local command, rest = msg:match("^(%S*)%s*(.-)$")
@@ -282,28 +235,27 @@ app.Event:Register("ADDON_LOADED", function(addOnName, containsBindings)
 			-- Default message
 			if command == "default" then
 				TransmogLootHelper_Settings["message"] = L.DEFAULT_MESSAGE
-				app.Print(L.WHISPER_POPUP_SUCCESS, "'" .. TransmogLootHelper_Settings["message"] .. "'")
+				app:Print(L.WHISPER_POPUP_SUCCESS, "\"" .. TransmogLootHelper_Settings["message"] .. "\"")
 			-- Customise message
 			elseif command == "msg" then
 				app.RenamePopup:Show()
 			-- Open settings
 			elseif command == "settings" then
-				app.OpenSettings()
+				app:OpenSettings()
 			-- Reset window positions
 			elseif command == "resetpos" then
 				TransmogLootHelper_Settings["windowPosition"] = { ["left"] = GetScreenWidth()/2-100, ["bottom"] = GetScreenHeight()/2-100, ["width"] = 200, ["height"] = 200, }
 				TransmogLootHelper_Settings["pcWindowPosition"] = TransmogLootHelper_Settings["windowPosition"]
-				app.Show()
+				app:ShowWindow()
+			-- Delete character from cache
+			elseif command == "delete" then
+				api:DeleteCharacter(rest)
 			-- Toggle window
 			elseif command == "" then
-				if PlayerGetTimerunningSeasonID() == 2 then
-					app.RemixToggle()
-				else
-					app.Toggle()
-				end
+				api:ToggleWindow()
 			-- Unlisted command
 			else
-				app.Print(L.INVALID_COMMAND)
+				app:Print(L.INVALID_COMMAND)
 			end
 		end
 	end
@@ -313,51 +265,45 @@ end)
 -- VERSION COMMS --
 -------------------
 
--- Send information to other TLH users
-function app.SendAddonMessage(message)
+function app:SendAddonMessage(message)
 	if IsInRaid(2) or IsInGroup(2) then
-		ChatThrottleLib:SendAddonMessage("NORMAL", "TransmogLootHelp", message, "INSTANCE_CHAT")
+		ChatThrottleLib:SendAddonMessage("NORMAL", app.NamePrefix, message, "INSTANCE_CHAT")
 	elseif IsInRaid() then
-		ChatThrottleLib:SendAddonMessage("NORMAL", "TransmogLootHelp", message, "RAID")
+		ChatThrottleLib:SendAddonMessage("NORMAL", app.NamePrefix, message, "RAID")
 	elseif IsInGroup() then
-		ChatThrottleLib:SendAddonMessage("NORMAL", "TransmogLootHelp", message, "PARTY")
+		ChatThrottleLib:SendAddonMessage("NORMAL", app.NamePrefix, message, "PARTY")
 	end
 end
 
--- When joining a group
 app.Event:Register("GROUP_ROSTER_UPDATE", function(category, partyGUID)
-	local message = "version:" .. C_AddOns.GetAddOnMetadata("TransmogLootHelper", "Version")
-	app.SendAddonMessage(message)
+	local message = "version:" .. C_AddOns.GetAddOnMetadata(appName, "Version")
+	app:SendAddonMessage(message)
 end)
 
--- When we receive information over the addon comms
 app.Event:Register("CHAT_MSG_ADDON", function(prefix, text, channel, sender, target, zoneChannelID, localID, name, instanceID)
-	if prefix == "TransmogLootHelp" then
-		-- Version
+	if prefix == app.NamePrefix then
 		local version = text:match("version:(.+)")
-		if version then
-			if version ~= "v11.2.7-010" then
-				local expansion, major, minor, iteration = version:match("v(%d+)%.(%d+)%.(%d+)%-(%d%d%d)")
+		if version and not app.Flag.VersionCheck then
+			local expansion, major, minor, iteration = version:match("v(%d+)%.(%d+)%.(%d+)%-(%d+)")
+			if expansion then
 				expansion = string.format("%02d", expansion)
 				major = string.format("%02d", major)
 				minor = string.format("%02d", minor)
 				local otherGameVersion = tonumber(expansion .. major .. minor)
 				local otherAddonVersion = tonumber(iteration)
 
-				local localVersion = C_AddOns.GetAddOnMetadata("TransmogLootHelper", "Version")
-				if localVersion ~= "v11.2.7-010" then
-					expansion, major, minor, iteration = localVersion:match("v(%d+)%.(%d+)%.(%d+)%-(%d%d%d)")
-					expansion = string.format("%02d", expansion)
-					major = string.format("%02d", major)
-					minor = string.format("%02d", minor)
-					local localGameVersion = tonumber(expansion .. major .. minor)
-					local localAddonVersion = tonumber(iteration)
+				local localVersion = C_AddOns.GetAddOnMetadata(appName, "Version")
+				local expansion2, major2, minor2, iteration2 = localVersion:match("v(%d+)%.(%d+)%.(%d+)%-(%d+)")
+				if expansion2 then
+					expansion2 = string.format("%02d", expansion2)
+					major2 = string.format("%02d", major2)
+					minor2 = string.format("%02d", minor2)
+					local localGameVersion = tonumber(expansion2 .. major2 .. minor2)
+					local localAddonVersion = tonumber(iteration2)
 
 					if otherGameVersion > localGameVersion or (otherGameVersion == localGameVersion and otherAddonVersion > localAddonVersion) then
-						if GetServerTime() - app.Flag.VersionCheck > 600 then
-							app.Print(L.NEW_VERSION_AVAILABLE, version)
-							app.Flag.VersionCheck = GetServerTime()
-						end
+						app:Print(L.NEW_VERSION_AVAILABLE, version)
+						app.Flag.VersionCheck = true
 					end
 				end
 			end

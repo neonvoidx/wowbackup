@@ -1353,11 +1353,13 @@ end
 function BBF.HideAbsorbGlow()
     if not BetterBlizzFramesDB.hideAllAbsorbGlow then return end
     hooksecurefunc("CompactUnitFrame_UpdateHealPrediction", function(frame)
+        if not frame or frame:IsForbidden() then return end
         if frame.overAbsorbGlow then
             frame.overAbsorbGlow:SetAlpha(0)
         end
     end)
     hooksecurefunc("UnitFrameHealPredictionBars_Update", function(frame)
+        if not frame or frame:IsForbidden() then return end
         if frame.overAbsorbGlow then
             frame.overAbsorbGlow:SetAlpha(0)
         end
@@ -2412,11 +2414,11 @@ function BBF.GenericLegacyComboSupport()
             finishedFunc = ComboPointShineFadeOut,
             finishedArg1 = frame,
         }
-        UIFrameFade(frame, fadeInfo)
+        BBF.UIFrameFade(frame, fadeInfo)
     end
 
     local function ComboPointShineFadeOut(frame)
-        UIFrameFadeOut(frame, COMBOFRAME_SHINE_FADE_OUT)
+        BBF.UIFrameFadeOut(frame, COMBOFRAME_SHINE_FADE_OUT)
     end
 
     local showAlways = BetterBlizzFramesDB.alwaysShowLegacyComboPoints
@@ -2473,7 +2475,7 @@ function BBF.GenericLegacyComboSupport()
                             finishedFunc = ComboPointShineFadeIn,
                             finishedArg1 = shine,
                         }
-                        UIFrameFade(highlight, fadeInfo)
+                        BBF.UIFrameFade(highlight, fadeInfo)
                     end
                 end
 
@@ -2488,7 +2490,7 @@ function BBF.GenericLegacyComboSupport()
             frame:Show()
         end
 
-        UIFrameFadeRemoveFrame(frame)
+        BBF.UIFrameFadeRemoveFrame(frame)
 
         lastComboPoints = comboPoints
     end
@@ -2702,8 +2704,8 @@ function BBF.InstantComboPoints()
         for i = 1, maxComboPoints do
             local point = frame.ComboPoints[comboIndex]
             if point then
-                UIFrameFadeRemoveFrame(point.Highlight)
-                UIFrameFadeRemoveFrame(point.Shine)
+                BBF.UIFrameFadeRemoveFrame(point.Highlight)
+                BBF.UIFrameFadeRemoveFrame(point.Shine)
 
                 point:SetAlpha(1)
                 point.Highlight:SetAlpha(i <= comboPoints and 1 or 0)
@@ -2723,7 +2725,7 @@ function BBF.InstantComboPoints()
             frame:Hide()
         end
 
-        UIFrameFadeRemoveFrame(frame)
+        BBF.UIFrameFadeRemoveFrame(frame)
     end
 
     local function UpdateDruidComboPoints(self)
@@ -3086,7 +3088,7 @@ function BBF.ReduceEditModeAlpha(disable)
         GameTooltipDefaultContainer,
         LootFrame,
         MainActionBar,
-        MainActionBar.VehicleLeaveButton,
+        MainActionBar and MainActionBar.VehicleLeaveButton,
         MicroMenuContainer,
         MinimapCluster,
         ObjectiveTrackerFrame,
@@ -3117,7 +3119,7 @@ function BBF.ReduceEditModeAlpha(disable)
         BuffBarCooldownViewer,
     }
 
-    for _, frame in ipairs(frames) do
+    for _, frame in pairs(frames) do
         if frame and frame.Selection then
             frame.Selection:SetAlpha(alpha)
         end
@@ -5121,8 +5123,8 @@ First:SetScript("OnEvent", function(_, event, addonName)
         C_Timer.After(0.5, function()
             BBF.ClassColorLegacyCombos()
             BBF.UpdateCustomTextures()
+            BBF.SetCompactUnitFramesBackground()
         end)
-        BBF.SetCompactUnitFramesBackground()
         BBF.ClassicFrames()
         BBF.noPortraitModes()
         if BetterBlizzFramesDB.enableBigDebuffs then
@@ -5146,10 +5148,10 @@ First:SetScript("OnEvent", function(_, event, addonName)
             BBF.SpecPortraits()
         end
         --BBF.AbsorbCaller()
-        BBF.HookStatusBarText()
         BBF.ActionBarMods()
         BBF.GladTracker()
         C_Timer.After(0.5, function()
+            BBF.HookStatusBarText()
             BBF.UnitFrameBackgroundTexture()
             BBF.DarkModeUnitframeBorders()
         end)

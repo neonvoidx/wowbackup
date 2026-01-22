@@ -5,7 +5,7 @@ Auctionator: enabled
 Baganator: enabled
 BattleGroundEnemies: enabled
 BetterBlizzFrames: enabled
-BetterBlizzPlates: enabled
+BetterBlizzPlates: disabled
 BigWigs: enabled
 BigWigs_Core: enabled
 BigWigs_KhazAlgar: enabled
@@ -43,8 +43,8 @@ FrameColorAddOnSkins: enabled
 FrameColorOptions: enabled
 FriendListColors: enabled
 GladiatorlosSA2: enabled
-Glider: enabled
-HandyNotes: enabled
+Glider: disabled
+HandyNotes: disabled
 HandyNotes_Dornogal: enabled
 HandyNotes_TheWarWithin: enabled
 HandyNotes_TravelGuide: enabled
@@ -138,6 +138,14 @@ CursorRing: enabled
 CursorMod: enabled
 DecorVendor: enabled
 HomeBound: enabled
-KeystonePolaris: enabled
+KeystonePolaris: disabled
 SenseiClassResourceBar: enabled
 TransmogLootHelper: enabled
+AdvancedDecorationTools: enabled
+HandyNotes_Midnight: enabled
+Leatrix_Maps: enabled
+Mapzeroth: enabled
+TargetedSpells: enabled
+CooldownManagerCentered: enabled
+Platynator: enabled
+CooldownManagerKeybinds: enabled

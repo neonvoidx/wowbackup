@@ -1,78 +1,78 @@
 -- #region Function to change action bar text
-function updateHotkeyText()
-	local ActionBars =
-		{ "Action", "MultiBarBottomLeft", "MultiBarBottomRight", "MultiBarRight", "MultiBarLeft", "MultiBar5" }
-	--iterate the different actionbars
-	for _, barName in pairs(ActionBars) do
-		--iterate the individual actionbar buttons (12 each)
-		for i = 1, 12 do
-			local button = _G[barName .. "Button" .. i]
-			local hotkey = button["HotKey"]
-			local text = hotkey:GetText()
-			if text ~= nil then
-				---------------------
-				--Modifiers
-				---------------------
-				--shift
-				text = string.gsub(text, "(s%-)", "S")
-				--alt
-				text = string.gsub(text, "(a%-)", "A")
-				--ctrl
-				text = string.gsub(text, "(c%-)", "C")
-				---------------------
-				--Mouse-Buttons
-				---------------------
-				--Left Mouse Button
-				text = string.gsub(text, KEY_BUTTON1, "LM")
-				--Right Mouse Button
-				text = string.gsub(text, KEY_BUTTON2, "RM")
-				--Middle Mouse Button
-				text = string.gsub(text, KEY_BUTTON3, "MM")
-				--Mouse Extra Button 1
-				text = string.gsub(text, KEY_BUTTON4, "M4")
-				--Mouse Extra Button 2
-				text = string.gsub(text, KEY_BUTTON5, "M5")
-				text = string.gsub(text, KEY_MOUSEWHEELDOWN, "MWD")
-				text = string.gsub(text, KEY_MOUSEWHEELUP, "MWU")
-				---------------------
-				--Special Keys
-				---------------------
-				text = string.gsub(text, KEY_PAGEUP, "PU")
-				text = string.gsub(text, KEY_PAGEDOWN, "PD")
-				text = string.gsub(text, KEY_SPACE, "SpB")
-				text = string.gsub(text, KEY_INSERT, "Ins")
-				text = string.gsub(text, KEY_HOME, "Hm")
-				text = string.gsub(text, KEY_DELETE, "Del")
-				---------------------
-				--Numpad
-				---------------------
-				text = string.gsub(text, "Num Pad %.", "N.")
-				text = string.gsub(text, "Num Pad %/", "N/")
-				text = string.gsub(text, "Num Pad %-", "N-")
-				text = string.gsub(text, "Num Pad %*", "N*")
-				text = string.gsub(text, "Num Pad %+", "N+")
-				text = string.gsub(text, KEY_NUMLOCK, "NL")
-				text = string.gsub(text, KEY_NUMPAD0, "N0")
-				text = string.gsub(text, KEY_NUMPAD1, "N1")
-				text = string.gsub(text, KEY_NUMPAD2, "N2")
-				text = string.gsub(text, KEY_NUMPAD3, "N3")
-				text = string.gsub(text, KEY_NUMPAD4, "N4")
-				text = string.gsub(text, KEY_NUMPAD5, "N5")
-				text = string.gsub(text, KEY_NUMPAD6, "N6")
-				text = string.gsub(text, KEY_NUMPAD7, "N7")
-				text = string.gsub(text, KEY_NUMPAD8, "N8")
-				text = string.gsub(text, KEY_NUMPAD9, "N9")
-				---------------------
-
-				if hotkey:GetText() == RANGE_INDICATOR then
-					hotkey:SetText("")
-				else
-					hotkey:SetText(text)
-				end
-			end
-		end
-	end
-end
+-- function updateHotkeyText()
+-- 	local ActionBars =
+-- 		{ "Action", "MultiBarBottomLeft", "MultiBarBottomRight", "MultiBarRight", "MultiBarLeft", "MultiBar5" }
+-- 	--iterate the different actionbars
+-- 	for _, barName in pairs(ActionBars) do
+-- 		--iterate the individual actionbar buttons (12 each)
+-- 		for i = 1, 12 do
+-- 			local button = _G[barName .. "Button" .. i]
+-- 			local hotkey = button["HotKey"]
+-- 			local text = hotkey:GetText()
+-- 			if text ~= nil then
+-- 				---------------------
+-- 				--Modifiers
+-- 				---------------------
+-- 				--shift
+-- 				text = string.gsub(text, "(s%-)", "S")
+-- 				--alt
+-- 				text = string.gsub(text, "(a%-)", "A")
+-- 				--ctrl
+-- 				text = string.gsub(text, "(c%-)", "C")
+-- 				---------------------
+-- 				--Mouse-Buttons
+-- 				---------------------
+-- 				--Left Mouse Button
+-- 				text = string.gsub(text, KEY_BUTTON1, "LM")
+-- 				--Right Mouse Button
+-- 				text = string.gsub(text, KEY_BUTTON2, "RM")
+-- 				--Middle Mouse Button
+-- 				text = string.gsub(text, KEY_BUTTON3, "MM")
+-- 				--Mouse Extra Button 1
+-- 				text = string.gsub(text, KEY_BUTTON4, "M4")
+-- 				--Mouse Extra Button 2
+-- 				text = string.gsub(text, KEY_BUTTON5, "M5")
+-- 				text = string.gsub(text, KEY_MOUSEWHEELDOWN, "MWD")
+-- 				text = string.gsub(text, KEY_MOUSEWHEELUP, "MWU")
+-- 				---------------------
+-- 				--Special Keys
+-- 				---------------------
+-- 				text = string.gsub(text, KEY_PAGEUP, "PU")
+-- 				text = string.gsub(text, KEY_PAGEDOWN, "PD")
+-- 				text = string.gsub(text, KEY_SPACE, "SpB")
+-- 				text = string.gsub(text, KEY_INSERT, "Ins")
+-- 				text = string.gsub(text, KEY_HOME, "Hm")
+-- 				text = string.gsub(text, KEY_DELETE, "Del")
+-- 				---------------------
+-- 				--Numpad
+-- 				---------------------
+-- 				text = string.gsub(text, "Num Pad %.", "N.")
+-- 				text = string.gsub(text, "Num Pad %/", "N/")
+-- 				text = string.gsub(text, "Num Pad %-", "N-")
+-- 				text = string.gsub(text, "Num Pad %*", "N*")
+-- 				text = string.gsub(text, "Num Pad %+", "N+")
+-- 				text = string.gsub(text, KEY_NUMLOCK, "NL")
+-- 				text = string.gsub(text, KEY_NUMPAD0, "N0")
+-- 				text = string.gsub(text, KEY_NUMPAD1, "N1")
+-- 				text = string.gsub(text, KEY_NUMPAD2, "N2")
+-- 				text = string.gsub(text, KEY_NUMPAD3, "N3")
+-- 				text = string.gsub(text, KEY_NUMPAD4, "N4")
+-- 				text = string.gsub(text, KEY_NUMPAD5, "N5")
+-- 				text = string.gsub(text, KEY_NUMPAD6, "N6")
+-- 				text = string.gsub(text, KEY_NUMPAD7, "N7")
+-- 				text = string.gsub(text, KEY_NUMPAD8, "N8")
+-- 				text = string.gsub(text, KEY_NUMPAD9, "N9")
+-- 				---------------------
+--
+-- 				if hotkey:GetText() == RANGE_INDICATOR then
+-- 					hotkey:SetText("")
+-- 				else
+-- 					hotkey:SetText(text)
+-- 				end
+-- 			end
+-- 		end
+-- 	end
+-- end
 -- #endregion
 -- #region Main Tweaks
 local function OnEvent(self, event, ...)
@@ -95,9 +95,9 @@ local function OnEvent(self, event, ...)
 		-- Disable default cast bar
 		-- PlayerCastingBarFrame:UnregisterAllEvents()
 		-- Auto collapse buffs
-		BuffFrame.CollapseAndExpandButton:SetChecked(false)
-		BuffFrame.CollapseAndExpandButton:UpdateOrientation()
-		BuffFrame:SetBuffsExpandedState()
+		-- BuffFrame.CollapseAndExpandButton:SetChecked(false)
+		-- BuffFrame.CollapseAndExpandButton:UpdateOrientation()
+		-- BuffFrame:SetBuffsExpandedState()
 		-- Hide micromenu
 		-- MicroMenuContainer:Hide()
 		-- -- Hide bag bar
@@ -179,9 +179,8 @@ local function OnEvent(self, event, ...)
 
 		-- If BetterBlizzPlates loaded
 		local bbpLoaded, _ = C_AddOns.IsAddOnLoaded("BetterBlizzPlates")
-		local platerLoaded, _ = C_AddOns.IsAddOnLoaded("Plater")
-		if not bbpLoaded and not platerLoaded then
-			C_NamePlate.SetNamePlateFriendlySize(60, 30)
+		local platynatorLoaded, _ = C_AddOns.IsAddOnLoaded("Platynator")
+		if not bbpLoaded and not platynatorLoaded then
 			SetCVar("NamePlateHorizontalScale", 1) -- reduce horizontal scale
 			SetCVar("NamePlateVerticalScale", 3) -- reduce horizontal scale
 			SetCVar("nameplateLargerScale", 1)
@@ -244,9 +243,9 @@ local function OnEvent(self, event, ...)
 		-- end
 	end
 
-	if event == "UPDATE_BINDINGS" or event == "PLAYER_LOGIN" or event == "PLAYER_ENTERING_WORLD" then
-		updateHotkeyText()
-	end
+	-- if event == "UPDATE_BINDINGS" or event == "PLAYER_LOGIN" or event == "PLAYER_ENTERING_WORLD" then
+	-- 	updateHotkeyText()
+	-- end
 end
 
 local f = CreateFrame("Frame")
@@ -261,13 +260,13 @@ f:RegisterEvent("UPDATE_BINDINGS") -- Event for when keybindings are updated
 f:SetScript("OnEvent", OnEvent)
 -- #endregion
 
-hooksecurefunc("CompactUnitFrame_UpdateRoleIcon", function(f)
-	if f.optionTable == DefaultCompactUnitFrameOptions then
-		if f.roleIcon:GetTexture() == 337497 then
-			f.roleIcon:Show()
-		end
-	end
-end)
+-- hooksecurefunc("CompactUnitFrame_UpdateRoleIcon", function(f)
+-- 	if f.optionTable == DefaultCompactUnitFrameOptions then
+-- 		if f.roleIcon:GetTexture() == 337497 then
+-- 			f.roleIcon:Show()
+-- 		end
+-- 	end
+-- end)
 
 -- hooksecurefunc("CompactUnitFrame_UpdateAll", function(f)
 -- 	local buffSize = 25

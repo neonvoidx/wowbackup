@@ -1,8 +1,6 @@
 # Baganator
 
-## [775](https://github.com/TheMouseNest/Baganator/tree/775) (2025-12-30)
-[Full Changelog](https://github.com/TheMouseNest/Baganator/compare/774...775) 
+## [781](https://github.com/TheMouseNest/Baganator/tree/781) (2026-01-21)
+[Full Changelog](https://github.com/TheMouseNest/Baganator/compare/780...781) 
 
-- Update for changed category reference for Syndicator settings  
-- Reapply "Midnight: Temporary fix for spurious tooltip errors"  
-    Needed again  
+- Disable skins if the associated addon is incompatible with current wow version  

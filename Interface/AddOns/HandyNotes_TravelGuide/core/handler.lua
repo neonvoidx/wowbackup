@@ -16,12 +16,6 @@ _G.HandyNotes_TravelGuide = addon
 local IsQuestCompleted = C_QuestLog.IsQuestFlaggedCompleted
 local IsQuestCompletedOnAccount = C_QuestLog.IsQuestFlaggedCompletedOnAccount
 
-local portal_red       = ns.constants.icon.portal_red
-local portal_mixed     = ns.constants.icon.portal_mixed
-local BoatX            = ns.constants.icon.boat_x
-local ZeppelinX        = ns.constants.icon.zeppelin_x
-local molemachineX     = ns.constants.icon.molemachine_x
-
 ----------------------------------------------------------------------------------------------------
 -----------------------------------------------LOCALS-----------------------------------------------
 ----------------------------------------------------------------------------------------------------
@@ -54,6 +48,8 @@ local areaPoisToRemove = {
     [6014] = true, -- Stormwind Portal Room
     [7340] = true, -- Thaldraszus, Boat to Stormwind
     [7335] = true, -- Stormwind, Boat to Dragon Isle
+    [8530] = true, -- Founder's Point, Portal to Stormwind
+    [8310] = true, -- Silvermoon City, Portal to Stormwind
 
     -- Horde
     [5843] = true, -- Drustvar
@@ -70,6 +66,8 @@ local areaPoisToRemove = {
     [6138] = true, -- Mechagon
     [7339] = true, -- Thaldraszus, Zeppelin to Orgrimmar
     [7341] = true, -- Durotar, Zeppelin to the Waking Shores, Dragon Isles
+    [8529] = true, -- Razorwind Shores, Portal to Orgrimmar
+    [8309] = true, -- Silvermoon City, Portal to Orgrimmar
 
     -- Neutral
     [5881] = true, -- The Cape of Stranglethorn, Boat to Ratschet
@@ -84,7 +82,7 @@ local areaPoisToRemove = {
     [7961] = true, -- Searing Gorge, Portal to Dalaran
     [8001] = true, -- Dornogal, Portal to Azj-Kahet
     [8002] = true, -- Azj-Kahet, Portal to Dornogal
-    [8003] = true, -- Dornogal, To Ringing Deeps
+    -- [8003] = true, -- Dornogal, To Ringing Deeps
     [8004] = true, -- Ringing Deeps, to Isle of Dorn (bottom)
     [8006] = true, -- Isle of Dorn, To Ringing Deeps (bottom)
     [8009] = true, -- Isle of Dorn, To Ringing Deeps (top)
@@ -103,23 +101,32 @@ local areaPoisToRemove = {
     [8416] = true, -- Maldraxxus, Portal to Dornogal
     [8417] = true, -- Dornogal, Portal to K'aresh
     [8414] = true, -- Tazavesh, Portal to Dornogal
+    [8545] = true, -- Silvermoon City, Portalchamber
+    [8307] = true, -- Silvermoon City, Portal to Voidsturm
+    [8308] = true, -- Silvermoon City, Wurzelpfad nach Harandar
+    [8479] = true, -- Eversong Woods, Harandar Rootway
+    [8477] = true, -- Harandar, Eversong Rootway
+    [8640] = true, -- Harandar (The Den), Portal to Voidstorm
+    [8478] = true, -- Harandar (The Den), Eversong Rootway
+    [8641] = true, -- Voidstorm (The Howling Ridge), Portal to Harandar
+    [8642] = true, -- Voidstorm (The Howling Ridge), Portal to Silvermoon City
+    [8643] = true, -- Voidstorm, Portal to Silvermoon City
 }
 
 ----------------------------------------------------------------------------------------------------
 ---------------------------------------------HookScript---------------------------------------------
 ----------------------------------------------------------------------------------------------------
 
--- This will remove specified AreaPois on the WorldMapFrame
-local function RemoveAreaPOIs()
-    if (not ns.db.remove_AreaPois) then return end
+local function HookPinMixin(mixin)
+    if (not mixin) then return end
 
-    for pin in WorldMapFrame:EnumeratePinsByTemplate("AreaPOIPinTemplate") do
-        local areaPoiID = pin.poiInfo.areaPoiID
-        if (areaPoisToRemove[areaPoiID]) then
-            WorldMapFrame:RemovePin(pin)
-            addon:debugmsg("removed AreaPOI "..areaPoiID.." "..pin.poiInfo.name)
+    hooksecurefunc(mixin, "OnAcquired", function(self, poiInfo)
+        if (not ns.db.remove_AreaPois) then return end
+        if (poiInfo and poiInfo.areaPoiID and areaPoisToRemove[poiInfo.areaPoiID]) then
+            self:Hide()
+            addon:debugmsg(format("removed %s (%s)", poiInfo.areaPoiID, poiInfo.name or "??"))
         end
-    end
+    end)
 end
 
 ----------------------------------------------------------------------------------------------------
@@ -157,7 +164,7 @@ local function ReqsFulfilled(node)
     or (reqs.timetravel and PLAYERLVL >= REQLVL and IsQuestCompleted(reqs.timetravel.quest) and not reqs.warfront and reqs.timetravel.turn)
     or (reqs.warfront and not IsWarfrontActive(reqs.warfront))
     or (reqs.mageTower and not IsMageTowerActive())
-    or (reqs.spell and not IsSpellKnown(reqs.spell))
+    or (reqs.spell and not C_SpellBook.IsSpellInSpellBook(reqs.spell))
     or (reqs.toy and not PlayerHasToy(reqs.toy))
     then
         return "none"
@@ -212,6 +219,10 @@ local function RefreshAfter(time)
     C_Timer.After(time, function() addon:Refresh() end)
 end
 
+local function GetNoteFromTimetravelQuest(quest, note1, note2)
+    return C_QuestLog.IsQuestFlaggedCompleted(quest) and note1 or note2
+end
+
 -- workaround to prepare the multilabels with and without notes
 -- because the game displays the first line in 14px and
 -- the following lines in 13px with a normal for loop.
@@ -232,7 +243,11 @@ local function Prepare(node, onlyLabels)
 
         -- add additional notes
         if (not onlyLabels and node.multinote and node.multinote[i] and ns.db.show_note) then
-            NOTE = " ("..node.multinote[i]..")"
+            local note = type(node.multinote[i]) == "table"
+                        and GetNoteFromTimetravelQuest(node.multinote[i][1], node.multinote[i][2], node.multinote[i][3])
+                        or node.multinote[i]
+
+            NOTE = " ("..note..")"
         end
 
         if (reqs and not onlyLabels) then
@@ -309,16 +324,21 @@ local GetNodeInfo = function(node)
 
     if (node) then
         local label = node.label or node.multilabel and Prepare(node, true) or UNKNOWN
+        local icons = ns.constants.icon
         if (node.requirements and ReqsFulfilled(node) == 'none') then
-            icon = ((node.icon == "portal" or node.icon == "orderhall" or node.icon == "warfront" or node.icon == "petBattlePortal" or node.icon == "ogreWaygate" or node.icon == "portal_purple") and portal_red)
-            or (node.icon == "boat" and BoatX)
-            or (node.icon == "zeppelin" and ZeppelinX)
-            or (node.icon == "molemachine" and molemachineX)
+            icon = ((node.icon == "portal" or node.icon == "orderhall" or node.icon == "warfront" or node.icon == "petBattlePortal" or node.icon == "ogreWaygate" or node.icon == "portal_purple") and icons.portal_red)
+            or (node.icon == "boat" and icons.boat_x)
+            or (node.icon == "zeppelin" and icons.zeppelin_x)
+            or (node.icon == "molemachine" and icons.molemachine_x)
+            or (node.icon == "elevator" and icons.elevator_x)
+            or (node.icon == "balloon" and icons.balloon_x)
         elseif (node.requirements and ReqsFulfilled(node) == 'some') then
-            icon = ((node.icon == "portal" or node.icon == "orderhall" or node.icon == "warfront" or node.icon == "petBattlePortal" or node.icon == "ogreWaygate" or node.icon == "portal_purple") and portal_mixed)
-            or (node.icon == "boat" and BoatX)
-            or (node.icon == "zeppelin" and ZeppelinX)
-            or (node.icon == "molemachine" and molemachineX)
+            icon = ((node.icon == "portal" or node.icon == "orderhall" or node.icon == "warfront" or node.icon == "petBattlePortal" or node.icon == "ogreWaygate" or node.icon == "portal_purple") and icons.portal_mixed)
+            or (node.icon == "boat" and icons.boat_x)
+            or (node.icon == "zeppelin" and icons.zeppelin_x)
+            or (node.icon == "molemachine" and icons.molemachine_x)
+            or (node.icon == "elevator" and icons.elevator_x)
+            or (node.icon == "balloon" and icons.balloon_x)
         else
             icon = SetIcon(node)
         end
@@ -346,7 +366,10 @@ local function SetTooltip(tooltip, node)
         tooltip:AddLine(node.label)
     end
     if (node.note and ns.db.show_note) then
-        tooltip:AddLine("("..node.note..")")
+        local note = type(node.note) == "table"
+                    and GetNoteFromTimetravelQuest(node.note[1], node.note[2], node.note[3])
+                    or node.note
+        tooltip:AddLine("("..note..")")
     end
     if (node.multilabel) then
         tooltip:AddLine(Prepare(node, false))
@@ -409,7 +432,7 @@ local function SetTooltip(tooltip, node)
         end
         if (reqs.spell) then -- don't show this if the spell is known
             local spellName = C_Spell.GetSpellInfo(reqs.spell).name
-            local isKnown = IsSpellKnown(reqs.spell)
+            local isKnown = C_SpellBook.IsSpellInSpellBook(reqs.spell)
             if (spellName and not isKnown) then
                 tooltip:AddLine(requires..': '..spellName, 1) -- red
             end
@@ -701,14 +724,8 @@ function events:QUEST_FINISHED(...)
 end
 
 function events:PLAYER_LOGIN(...)
-    -- Hook the RefreshAllData() function of the "AreaPOIPinTemplate" data provider
-    for dp in pairs(WorldMapFrame.dataProviders) do
-        if (not dp.GetPinTemplates and type(dp.GetPinTemplate) == "function") then
-            if (dp:GetPinTemplate() == "AreaPOIPinTemplate") then
-                hooksecurefunc(dp, "RefreshAllData", RemoveAreaPOIs)
-            end
-        end
-    end
+    HookPinMixin(AreaPOIPinMixin)
+    HookPinMixin(MapLinkPinMixin)
 end
 
 frame:SetScript("OnEvent", function(self, event, ...)

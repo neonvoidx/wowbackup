@@ -49,4 +49,6 @@
   <Script file="_GuildBankFrame.lua"/>
   <Script file="_CooldownViewerSettings.lua"/>
   <Script file="_OrderHallMissionFrame.lua"/>
+  <Script file="_HousingDashboardFrame.lua"/>
+  <Script file="_TransmogFrame.lua"/>
 </Ui>

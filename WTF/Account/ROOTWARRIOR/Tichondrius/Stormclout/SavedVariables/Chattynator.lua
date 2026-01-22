@@ -1,10 +1,6 @@
 
 CHATTYNATOR_CURRENT_PROFILE = "DEFAULT"
 CHATTYNATOR_COMMAND_HISTORY = {
-"/s /wa",
-"/s /key",
-"/s /keys",
-"/s /key",
 "/s PUT IT IN",
 "/s /key",
 "/s /wa",

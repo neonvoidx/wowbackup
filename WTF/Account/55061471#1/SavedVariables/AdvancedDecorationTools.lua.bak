@@ -1,25 +1,79 @@
 
 ADT_DB = {
 ["AutoRotate"] = {
-["SeqIndexByRID"] = {
-},
 ["LastRotationByRID"] = {
 },
 ["StepByRID"] = {
+},
+["SeqIndexByRID"] = {
 },
 },
 ["EnableAutoRotateOnCtrlPlace"] = false,
 ["EnableResetT"] = true,
 ["ExtraClipboard"] = {
 },
+["EnableDockAutoOpenInEditor"] = true,
 ["AutoRotateApplyScope"] = "onlyPaint",
 ["EnableQuickbar"] = true,
+["InterfaceStyle"] = "modern",
+["PlacementHistory"] = {
+},
 ["DebugEnabled"] = false,
 ["AutoRotatePresetDegrees"] = 90,
-["EnableDockAutoOpenInEditor"] = true,
+["EnableDupe"] = true,
+["DecorTags"] = {
+},
 ["QuickbarSize"] = "medium",
 ["AutoRotateIncrementDegrees"] = 15,
 ["EnableHoverHighlight"] = true,
+["EnableDyeCopy"] = true,
+["Tags"] = {
+{
+["id"] = "favorite",
+["color"] = "yellow",
+["name"] = "Favorites",
+["isDefault"] = true,
+},
+{
+["id"] = "red",
+["name"] = "Red",
+["color"] = "red",
+},
+{
+["id"] = "orange",
+["name"] = "Orange",
+["color"] = "orange",
+},
+{
+["id"] = "green",
+["name"] = "Green",
+["color"] = "green",
+},
+{
+["id"] = "blue",
+["name"] = "Blue",
+["color"] = "blue",
+},
+{
+["id"] = "purple",
+["name"] = "Purple",
+["color"] = "purple",
+},
+{
+["id"] = "gray",
+["name"] = "Gray",
+["color"] = "gray",
+},
+},
+["AutoRotateSequence"] = "0,90",
+["VisitFriendWaitSec"] = 8,
+["EnableIndoorOutdoorBypass"] = false,
+["EnableResetAll"] = true,
+["AutoRotateMode"] = "preset",
+["EnableLock"] = true,
+["Quickbar"] = {
+},
+["EnableQERotate"] = true,
 ["VisitAutoRemoveFriend"] = true,
 ["Keybinds"] = {
 ["Quickbar8"] = "F8",
@@ -42,18 +96,6 @@ ADT_DB = {
 ["Store"] = "CTRL-S",
 ["DyeCopy"] = "SHIFT-C",
 },
-["AutoRotateSequence"] = "0,90",
-["VisitFriendWaitSec"] = 8,
-["PlacementHistory"] = {
-},
-["EnableDupe"] = true,
 ["DuplicateKey"] = 3,
-["EnableResetAll"] = true,
-["Quickbar"] = {
-},
-["EnableQERotate"] = true,
-["EnableDyeCopy"] = true,
-["EnableLock"] = true,
-["AutoRotateMode"] = "preset",
 ["AutoRotateStepDegrees"] = 15,
 }

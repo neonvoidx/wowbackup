@@ -3,6 +3,7 @@ ClassicNumbersDB = {
 ["profileKeys"] = {
 ["Månyfaced - Mal'Ganis"] = "Default",
 ["Hellowalls - Mal'Ganis"] = "Default",
+["Starphage - Tichondrius"] = "Default",
 ["Praisesun - Tichondrius"] = "Default",
 ["Corsic - Mal'Ganis"] = "Default",
 ["Auteist - Tichondrius"] = "Default",

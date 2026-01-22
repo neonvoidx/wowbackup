@@ -184,6 +184,27 @@ BlizzMoveDB = {
 },
 ["PingSystemTutorial"] = {
 },
+["TransmogFrame"] = {
+["startPoints"] = {
+{
+["anchorPoint"] = "CENTER",
+["relativeFrame"] = "UIParent",
+["offY"] = 42.50000762939453,
+["offX"] = 0.00018310546875,
+["relativePoint"] = "CENTER",
+},
+},
+["dragged"] = true,
+["dragPoints"] = {
+{
+["anchorPoint"] = "CENTER",
+["relativeFrame"] = "UIParent",
+["offY"] = 42.50000762939453,
+["offX"] = 0.000457763671875,
+["relativePoint"] = "CENTER",
+},
+},
+},
 ["MailFrameInset"] = {
 },
 ["TutorialFrame"] = {
@@ -360,9 +381,9 @@ BlizzMoveDB = {
 {
 ["anchorPoint"] = "CENTER",
 ["relativeFrame"] = "UIParent",
-["offY"] = 167.3201904296875,
-["offX"] = -54.299560546875,
+["offY"] = 167.3202819824219,
 ["relativePoint"] = "CENTER",
+["offX"] = -54.2994384765625,
 },
 },
 },
@@ -380,8 +401,8 @@ BlizzMoveDB = {
 {
 ["anchorPoint"] = "TOPLEFT",
 ["relativeFrame"] = "UIParent",
-["offY"] = -59.6797642580641,
-["offX"] = 248.0407935476615,
+["offY"] = -60.51274768960138,
+["offX"] = 248.0408301687567,
 ["relativePoint"] = "TOPLEFT",
 },
 },
@@ -401,9 +422,9 @@ BlizzMoveDB = {
 {
 ["anchorPoint"] = "TOPLEFT",
 ["relativeFrame"] = "UIParent",
-["offY"] = -94.32373702144105,
-["relativePoint"] = "TOPLEFT",
+["offY"] = -94.32348067378189,
 ["offX"] = 391.8347924283371,
+["relativePoint"] = "TOPLEFT",
 },
 },
 },
@@ -419,11 +440,11 @@ BlizzMoveDB = {
 ["dragged"] = true,
 ["dragPoints"] = {
 {
-["anchorPoint"] = "LEFT",
+["anchorPoint"] = "CENTER",
 ["relativeFrame"] = "UIParent",
-["offY"] = 96.06870557760521,
-["relativePoint"] = "LEFT",
-["offX"] = 262.5997447664031,
+["offY"] = 157.7352688038391,
+["offX"] = 59.9995959657499,
+["relativePoint"] = "CENTER",
 },
 },
 },
@@ -539,9 +560,11 @@ BlizzMoveDB = {
 },
 ["SendMailFrame"] = {
 },
+["TokenFramePopup"] = {
+},
 ["HousingBulletinBoardFrame"] = {
 },
-["TokenFramePopup"] = {
+["NeighborhoodChangeNameDialog"] = {
 },
 ["AchievementFrame.SearchResults"] = {
 },
@@ -565,7 +588,7 @@ BlizzMoveDB = {
 },
 },
 },
-["NeighborhoodChangeNameDialog"] = {
+["HouseListFrame"] = {
 },
 ["GameMenuFrame"] = {
 ["startPoints"] = {
@@ -587,7 +610,26 @@ BlizzMoveDB = {
 },
 },
 },
-["HouseListFrame"] = {
+["HousingDashboardFrame"] = {
+["startPoints"] = {
+{
+["anchorPoint"] = "TOPLEFT",
+["relativeFrame"] = "UIParent",
+["offY"] = -116,
+["offX"] = 15.99999904632568,
+["relativePoint"] = "TOPLEFT",
+},
+},
+["dragged"] = true,
+["dragPoints"] = {
+{
+["anchorPoint"] = "TOPLEFT",
+["relativeFrame"] = "UIParent",
+["offY"] = -114.33251953125,
+["offX"] = 26.00006484985352,
+["relativePoint"] = "TOPLEFT",
+},
+},
 },
 ["ItemTextFrame"] = {
 ["startPoints"] = {
@@ -611,30 +653,11 @@ BlizzMoveDB = {
 },
 ["CovenantMissionFrame.MissionTab.MissionPage.CostFrame"] = {
 },
-["HousingDashboardFrame"] = {
-["startPoints"] = {
-{
-["anchorPoint"] = "TOPLEFT",
-["relativeFrame"] = "UIParent",
-["offY"] = -116,
-["offX"] = 15.99999904632568,
-["relativePoint"] = "TOPLEFT",
-},
-},
-["dragged"] = true,
-["dragPoints"] = {
-{
-["anchorPoint"] = "TOPLEFT",
-["relativeFrame"] = "UIParent",
-["offY"] = -115.1663818359375,
-["relativePoint"] = "TOPLEFT",
-["offX"] = 21.83338165283203,
-},
-},
-},
 ["Baganator_SingleViewGuildViewFramedark"] = {
 },
 ["HousingCornerstoneVisitorFrame"] = {
+},
+["Baganator_SingleViewGuildViewFrame"] = {
 },
 ["PaperDollFrame"] = {
 },
@@ -658,8 +681,6 @@ BlizzMoveDB = {
 },
 },
 },
-["Baganator_SingleViewGuildViewFrame"] = {
-},
 ["HousingHouseSettingsFrame"] = {
 ["startPoints"] = {
 {
@@ -681,15 +702,15 @@ BlizzMoveDB = {
 },
 },
 },
+["AbandonHouseConfirmationDialog"] = {
+},
 ["LFGListFrame.ApplicationViewer.UnempoweredCover"] = {
-},
-["TalkingHeadFrame"] = {
-},
-["Baganator_SingleViewBackpackViewFrameblizzard"] = {
 },
 ["HouseFinderFrame"] = {
 },
-["AbandonHouseConfirmationDialog"] = {
+["Baganator_SingleViewBackpackViewFrameblizzard"] = {
+},
+["TalkingHeadFrame"] = {
 },
 ["WorldMapFrame"] = {
 ["startPoints"] = {
@@ -711,17 +732,37 @@ BlizzMoveDB = {
 },
 },
 },
-["CommunitiesGuildTextEditFrame"] = {
-},
 ["EncounterJournal.encounter.instance.LoreScrollingFont.ScrollBox"] = {
+},
+["CommunitiesGuildTextEditFrame"] = {
 },
 ["Baganator_SingleViewBackpackViewFramedark"] = {
 },
 ["CollectionsJournal.TitleContainer"] = {
 },
+["ProfessionsFrame.OrdersPage.OrderView.OrderDetails.SchematicForm.QualityDialog"] = {
+},
 ["AccountStoreFrame"] = {
 },
-["ProfessionsFrame.OrdersPage.OrderView.OrderDetails.SchematicForm.QualityDialog"] = {
+["ReadyCheckFrame"] = {
+["startPoints"] = {
+{
+["offX"] = 1271.83349609375,
+["offY"] = -560,
+["anchorPoint"] = "TOPLEFT",
+["relativePoint"] = "TOPLEFT",
+},
+},
+["dragged"] = true,
+["dragPoints"] = {
+{
+["anchorPoint"] = "CENTER",
+["relativeFrame"] = "UIParent",
+["offY"] = 116.6695556640625,
+["relativePoint"] = "CENTER",
+["offX"] = 29.1685791015625,
+},
+},
 },
 ["TradeFrame"] = {
 ["startPoints"] = {
@@ -747,26 +788,6 @@ BlizzMoveDB = {
 },
 ["ReputationFrame"] = {
 },
-["ReadyCheckFrame"] = {
-["startPoints"] = {
-{
-["offX"] = 1271.83349609375,
-["offY"] = -560,
-["anchorPoint"] = "TOPLEFT",
-["relativePoint"] = "TOPLEFT",
-},
-},
-["dragged"] = true,
-["dragPoints"] = {
-{
-["anchorPoint"] = "CENTER",
-["relativeFrame"] = "UIParent",
-["offY"] = 116.6695556640625,
-["relativePoint"] = "CENTER",
-["offX"] = 29.1685791015625,
-},
-},
-},
 ["ChallengesKeystoneFrame"] = {
 ["startPoints"] = {
 {
@@ -787,6 +808,8 @@ BlizzMoveDB = {
 },
 },
 },
+["Baganator_CategoryViewBankViewFrameblizzard"] = {
+},
 ["ProfessionsFrame"] = {
 ["startPoints"] = {
 {
@@ -802,12 +825,10 @@ BlizzMoveDB = {
 ["anchorPoint"] = "LEFT",
 ["relativeFrame"] = "UIParent",
 ["offY"] = 25.04136657714844,
-["offX"] = 223.8429870605469,
 ["relativePoint"] = "LEFT",
+["offX"] = 223.8429870605469,
 },
 },
-},
-["Baganator_CategoryViewBankViewFrameblizzard"] = {
 },
 ["ClickBindingFrame.TutorialFrame"] = {
 ["startPoints"] = {
@@ -831,51 +852,9 @@ BlizzMoveDB = {
 },
 ["CalendarViewEventFrame"] = {
 },
+["InspectPVPFrame"] = {
+},
 ["GuildRenameFrame"] = {
-},
-["CalendarViewHolidayFrame"] = {
-},
-["WardrobeFrame"] = {
-["startPoints"] = {
-{
-["offX"] = 14.54545307159424,
-["offY"] = -105.4545822143555,
-["anchorPoint"] = "TOPLEFT",
-["relativePoint"] = "TOPLEFT",
-},
-},
-["dragged"] = true,
-["dragPoints"] = {
-{
-["anchorPoint"] = "TOP",
-["relativeFrame"] = "UIParent",
-["offY"] = -122.6331065315171,
-["offX"] = 64.33588146012698,
-["relativePoint"] = "TOP",
-},
-},
-},
-["ContainerFrame1.TitleContainer"] = {
-},
-["PVPMatchResults"] = {
-["startPoints"] = {
-{
-["offX"] = 921.3334350585938,
-["offY"] = -157,
-["anchorPoint"] = "TOPLEFT",
-["relativePoint"] = "TOPLEFT",
-},
-},
-["dragged"] = true,
-["dragPoints"] = {
-{
-["anchorPoint"] = "CENTER",
-["relativeFrame"] = "UIParent",
-["offY"] = -91.16082000732422,
-["relativePoint"] = "CENTER",
-["offX"] = -63.3336181640625,
-},
-},
 },
 ["SplashFrame"] = {
 ["startPoints"] = {
@@ -898,49 +877,7 @@ BlizzMoveDB = {
 },
 },
 },
-["HousingCornerstonePurchaseFrame"] = {
-},
-["QuickKeybindFrame"] = {
-["startPoints"] = {
-{
-["offX"] = 1208.333251953125,
-["offY"] = -325,
-["anchorPoint"] = "TOPLEFT",
-["relativePoint"] = "TOPLEFT",
-},
-},
-["dragged"] = true,
-["dragPoints"] = {
-{
-["anchorPoint"] = "CENTER",
-["relativeFrame"] = "UIParent",
-["offY"] = 150.0000915527344,
-["offX"] = -0.83331298828125,
-["relativePoint"] = "CENTER",
-},
-},
-},
-["GossipFrame"] = {
-["startPoints"] = {
-{
-["offX"] = 15.99999904632568,
-["offY"] = -116.0000457763672,
-["anchorPoint"] = "TOPLEFT",
-["relativePoint"] = "TOPLEFT",
-},
-},
-["dragged"] = true,
-["dragPoints"] = {
-{
-["anchorPoint"] = "TOPLEFT",
-["relativeFrame"] = "UIParent",
-["offY"] = -119.9053955078125,
-["relativePoint"] = "TOPLEFT",
-["offX"] = 465.9863891601563,
-},
-},
-},
-["CovenantMissionFrame.MissionTab"] = {
+["ProfessionsCustomerOrdersFrame.Form"] = {
 },
 ["FriendsFrame"] = {
 ["startPoints"] = {
@@ -962,21 +899,11 @@ BlizzMoveDB = {
 },
 },
 },
-["GarrisonRecruiterFrame"] = {
-},
-["InspectPaperDollFrame"] = {
-},
-["HousingInviteResidentFrame"] = {
-},
-["TimeManagerFrame"] = {
-},
-["RaidInfoFrame"] = {
-},
-["PlayerSpellsFrame"] = {
+["PVPMatchResults"] = {
 ["startPoints"] = {
 {
-["offX"] = 624.3333740234375,
-["offY"] = -40.99996948242188,
+["offX"] = 921.3334350585938,
+["offY"] = -157,
 ["anchorPoint"] = "TOPLEFT",
 ["relativePoint"] = "TOPLEFT",
 },
@@ -984,15 +911,45 @@ BlizzMoveDB = {
 ["dragged"] = true,
 ["dragPoints"] = {
 {
-["anchorPoint"] = "TOPRIGHT",
+["anchorPoint"] = "CENTER",
 ["relativeFrame"] = "UIParent",
-["offY"] = -88.56132094697386,
-["relativePoint"] = "TOPRIGHT",
-["offX"] = -468.3324609950942,
+["offY"] = -76.99397277832031,
+["relativePoint"] = "CENTER",
+["offX"] = -66.66680908203125,
 },
 },
 },
-["AlliedRacesFrame"] = {
+["CalendarViewHolidayFrame"] = {
+},
+["HousingCornerstonePurchaseFrame"] = {
+},
+["ContainerFrame1.TitleContainer"] = {
+},
+["GossipFrame"] = {
+["startPoints"] = {
+{
+["offX"] = 15.99999904632568,
+["offY"] = -116.0000457763672,
+["anchorPoint"] = "TOPLEFT",
+["relativePoint"] = "TOPLEFT",
+},
+},
+["dragged"] = true,
+["dragPoints"] = {
+{
+["anchorPoint"] = "TOPLEFT",
+["relativeFrame"] = "UIParent",
+["offY"] = -119.9049072265625,
+["relativePoint"] = "TOPLEFT",
+["offX"] = 466.8197326660156,
+},
+},
+},
+["CovenantMissionFrame.MissionTab"] = {
+},
+["InspectPaperDollFrame"] = {
+},
+["GarrisonRecruiterFrame"] = {
 },
 ["HelpFrame"] = {
 ["startPoints"] = {
@@ -1011,6 +968,72 @@ BlizzMoveDB = {
 ["offY"] = 60.83468627929688,
 ["relativePoint"] = "LEFT",
 ["offX"] = 360.5000305175781,
+},
+},
+},
+["HousingInviteResidentFrame"] = {
+},
+["ProfessionsFrame.CraftingPage.SchematicForm.QualityDialog"] = {
+["startPoints"] = {
+{
+["offX"] = 1103.008422851563,
+["offY"] = -368.4660034179688,
+["anchorPoint"] = "TOPLEFT",
+["relativePoint"] = "TOPLEFT",
+},
+},
+["dragged"] = true,
+["dragPoints"] = {
+{
+["anchorPoint"] = "CENTER",
+["relativeFrame"] = "UIParent",
+["offY"] = 128.0340881347656,
+["offX"] = -165.8248291015625,
+["relativePoint"] = "CENTER",
+},
+},
+},
+["RaidInfoFrame"] = {
+},
+["PlayerSpellsFrame"] = {
+["startPoints"] = {
+{
+["offX"] = 624.3333740234375,
+["offY"] = -40.99996948242188,
+["anchorPoint"] = "TOPLEFT",
+["relativePoint"] = "TOPLEFT",
+},
+},
+["dragged"] = true,
+["dragPoints"] = {
+{
+["anchorPoint"] = "TOPLEFT",
+["relativeFrame"] = "UIParent",
+["offY"] = -40.99931048818689,
+["relativePoint"] = "TOPLEFT",
+["offX"] = 267.9999867969091,
+},
+},
+},
+["AlliedRacesFrame"] = {
+},
+["SettingsPanel"] = {
+["startPoints"] = {
+{
+["offX"] = 973.3331909179688,
+["offY"] = -116.0000457763672,
+["anchorPoint"] = "TOPLEFT",
+["relativePoint"] = "TOPLEFT",
+},
+},
+["dragged"] = true,
+["dragPoints"] = {
+{
+["anchorPoint"] = "TOPLEFT",
+["relativeFrame"] = "UIParent",
+["offY"] = -83.2921142578125,
+["relativePoint"] = "TOPLEFT",
+["offX"] = 201.1091918945313,
 },
 },
 },
@@ -1036,25 +1059,7 @@ BlizzMoveDB = {
 },
 },
 },
-["PVPMatchScoreboard"] = {
-["startPoints"] = {
-{
-["offX"] = 921.3334350585938,
-["offY"] = -241,
-["anchorPoint"] = "TOPLEFT",
-["relativePoint"] = "TOPLEFT",
-},
-},
-["dragged"] = true,
-["dragPoints"] = {
-{
-["anchorPoint"] = "TOP",
-["relativeFrame"] = "UIParent",
-["offY"] = -160.16455078125,
-["relativePoint"] = "TOP",
-["offX"] = 155.8328247070313,
-},
-},
+["Baganator_SingleViewBankViewFrame"] = {
 },
 ["Baganator_CategoryViewBackpackViewFrameblizzard"] = {
 },
@@ -1080,30 +1085,6 @@ BlizzMoveDB = {
 },
 ["QuestMapFrame"] = {
 },
-["SettingsPanel"] = {
-["startPoints"] = {
-{
-["offX"] = 973.3331909179688,
-["offY"] = -116.0000457763672,
-["anchorPoint"] = "TOPLEFT",
-["relativePoint"] = "TOPLEFT",
-},
-},
-["dragged"] = true,
-["dragPoints"] = {
-{
-["anchorPoint"] = "LEFT",
-["relativeFrame"] = "UIParent",
-["offY"] = 16.02547454833984,
-["offX"] = 318.9648132324219,
-["relativePoint"] = "LEFT",
-},
-},
-},
-["Baganator_CategoryViewBackpackViewFrame"] = {
-},
-["RemixArtifactFrame"] = {
-},
 ["ContainerFrameCombinedBags"] = {
 ["startPoints"] = {
 {
@@ -1124,31 +1105,15 @@ BlizzMoveDB = {
 },
 },
 },
+["Baganator_CategoryViewBackpackViewFrame"] = {
+},
+["RemixArtifactFrame"] = {
+},
+["GarrisonMissionFrame"] = {
+},
 ["StableFrame"] = {
 },
 ["CommunitiesSettingsDialog"] = {
-},
-["TaxiFrame"] = {
-},
-["ItemUpgradeFrame"] = {
-["startPoints"] = {
-{
-["offX"] = 15.99999904632568,
-["offY"] = -116.0000457763672,
-["anchorPoint"] = "TOPLEFT",
-["relativePoint"] = "TOPLEFT",
-},
-},
-["dragged"] = true,
-["dragPoints"] = {
-{
-["anchorPoint"] = "TOPLEFT",
-["relativeFrame"] = "UIParent",
-["offY"] = -94.327880859375,
-["offX"] = 63.5,
-["relativePoint"] = "TOPLEFT",
-},
-},
 },
 ["QuestLogPopupDetailFrame"] = {
 ["startPoints"] = {
@@ -1171,23 +1136,12 @@ BlizzMoveDB = {
 },
 },
 },
-["ClubFinderGuildFinderFrame.RequestToJoinFrame"] = {
-},
-["CommunitiesGuildNewsFiltersFrame"] = {
-},
-["TabardFrame"] = {
-},
-["Baganator_SingleViewBankViewFrameblizzard"] = {
-},
-["GenericTraitFrame.ButtonsParent"] = {
-},
-["ScrappingMachineFrame"] = {
+["ItemUpgradeFrame"] = {
 ["startPoints"] = {
 {
-["anchorPoint"] = "TOPLEFT",
-["relativeFrame"] = "UIParent",
-["offY"] = -116,
 ["offX"] = 15.99999904632568,
+["offY"] = -116.0000457763672,
+["anchorPoint"] = "TOPLEFT",
 ["relativePoint"] = "TOPLEFT",
 },
 },
@@ -1196,11 +1150,43 @@ BlizzMoveDB = {
 {
 ["anchorPoint"] = "TOPLEFT",
 ["relativeFrame"] = "UIParent",
-["offY"] = -116,
+["offY"] = -94.327880859375,
+["offX"] = 63.5,
 ["relativePoint"] = "TOPLEFT",
-["offX"] = 16.83333969116211,
 },
 },
+},
+["CovenantMissionFrame.FollowerList.MaterialFrame"] = {
+},
+["ClubFinderGuildFinderFrame.RequestToJoinFrame"] = {
+},
+["GuildRegistrarFrame"] = {
+},
+["GenericTraitFrame.ButtonsParent"] = {
+},
+["TabardFrame"] = {
+},
+["ChatConfigFrame"] = {
+["startPoints"] = {
+{
+["offX"] = 1060.833129882813,
+["offY"] = -116.0000457763672,
+["anchorPoint"] = "TOPLEFT",
+["relativePoint"] = "TOPLEFT",
+},
+},
+["dragged"] = true,
+["dragPoints"] = {
+{
+["anchorPoint"] = "LEFT",
+["relativeFrame"] = "UIParent",
+["offY"] = 115.6670989990234,
+["offX"] = 393.3344421386719,
+["relativePoint"] = "LEFT",
+},
+},
+},
+["HousingDashboardFrame.HouseInfoContent.DashboardNoHousesFrame"] = {
 },
 ["AuctionHouseFrame"] = {
 ["startPoints"] = {
@@ -1267,14 +1253,15 @@ BlizzMoveDB = {
 },
 },
 },
-["HousingDashboardFrame.HouseInfoContent.DashboardNoHousesFrame"] = {
+["Baganator_SingleViewBankViewFrameblizzard"] = {
 },
-["BlackMarketFrame"] = {
+["ScrappingMachineFrame"] = {
 ["startPoints"] = {
 {
-["offX"] = 15.99999904632568,
-["offY"] = -116.0000457763672,
 ["anchorPoint"] = "TOPLEFT",
+["relativeFrame"] = "UIParent",
+["offY"] = -116,
+["offX"] = 15.99999904632568,
 ["relativePoint"] = "TOPLEFT",
 },
 },
@@ -1283,15 +1270,15 @@ BlizzMoveDB = {
 {
 ["anchorPoint"] = "TOPLEFT",
 ["relativeFrame"] = "UIParent",
-["offY"] = -115.1666259765625,
+["offY"] = -116,
 ["relativePoint"] = "TOPLEFT",
-["offX"] = 15.99999904632568,
+["offX"] = 16.83333969116211,
 },
 },
 },
 ["GarrisonRecruitSelectFrame"] = {
 },
-["GuildRegistrarFrame"] = {
+["RemixArtifactFrame.ButtonsParent"] = {
 },
 ["ArtifactFrame"] = {
 ["startPoints"] = {
@@ -1315,8 +1302,6 @@ BlizzMoveDB = {
 },
 ["ReputationFrame.ReputationDetailFrame"] = {
 },
-["LootFrame"] = {
-},
 ["QuestFrame"] = {
 ["startPoints"] = {
 {
@@ -1332,14 +1317,34 @@ BlizzMoveDB = {
 ["anchorPoint"] = "CENTER",
 ["relativeFrame"] = "UIParent",
 ["offY"] = 154.3417053222656,
-["relativePoint"] = "CENTER",
 ["offX"] = -618.3324890136719,
+["relativePoint"] = "CENTER",
 },
 },
+},
+["LootFrame"] = {
 },
 ["CovenantMissionFrame.MissionTab.MissionPage.StartMissionFrame"] = {
 },
-["RemixArtifactFrame.ButtonsParent"] = {
+["BlackMarketFrame"] = {
+["startPoints"] = {
+{
+["offX"] = 15.99999904632568,
+["offY"] = -116.0000457763672,
+["anchorPoint"] = "TOPLEFT",
+["relativePoint"] = "TOPLEFT",
+},
+},
+["dragged"] = true,
+["dragPoints"] = {
+{
+["anchorPoint"] = "TOPLEFT",
+["relativeFrame"] = "UIParent",
+["offY"] = -115.1666259765625,
+["relativePoint"] = "TOPLEFT",
+["offX"] = 15.99999904632568,
+},
+},
 },
 ["HeroTalentsSelectionDialog"] = {
 ["startPoints"] = {
@@ -1363,26 +1368,6 @@ BlizzMoveDB = {
 },
 ["InspectGuildFrame"] = {
 },
-["ChatConfigFrame"] = {
-["startPoints"] = {
-{
-["offX"] = 1060.833129882813,
-["offY"] = -116.0000457763672,
-["anchorPoint"] = "TOPLEFT",
-["relativePoint"] = "TOPLEFT",
-},
-},
-["dragged"] = true,
-["dragPoints"] = {
-{
-["anchorPoint"] = "LEFT",
-["relativeFrame"] = "UIParent",
-["offY"] = 115.6670989990234,
-["offX"] = 393.3344421386719,
-["relativePoint"] = "LEFT",
-},
-},
-},
 ["PVEFrame"] = {
 ["startPoints"] = {
 {
@@ -1397,19 +1382,19 @@ BlizzMoveDB = {
 {
 ["anchorPoint"] = "TOP",
 ["relativeFrame"] = "UIParent",
-["offY"] = -123.4948443355024,
+["offY"] = -123.4946856440874,
 ["offX"] = 183.6151127676749,
 ["relativePoint"] = "TOP",
 },
 },
 },
+["CommunitiesGuildNewsFiltersFrame"] = {
+},
 ["CalendarCreateEventFrame"] = {
 },
-["CovenantMissionFrame.FollowerList.MaterialFrame"] = {
+["TaxiFrame"] = {
 },
 ["TokenFrame"] = {
-},
-["GarrisonMissionFrame"] = {
 },
 ["DeathRecapFrame"] = {
 ["startPoints"] = {
@@ -1431,13 +1416,35 @@ BlizzMoveDB = {
 },
 },
 },
-["Baganator_SingleViewBankViewFrame"] = {
+["DressUpFrame.CustomSetDetailsPanel"] = {
 },
-["ProfessionsFrame.CraftingPage.SchematicForm.QualityDialog"] = {
+["PVPMatchScoreboard"] = {
 ["startPoints"] = {
 {
-["offX"] = 1103.008422851563,
-["offY"] = -368.4660034179688,
+["offX"] = 921.3334350585938,
+["offY"] = -241,
+["anchorPoint"] = "TOPLEFT",
+["relativePoint"] = "TOPLEFT",
+},
+},
+["dragged"] = true,
+["dragPoints"] = {
+{
+["anchorPoint"] = "TOP",
+["relativeFrame"] = "UIParent",
+["offY"] = -160.16455078125,
+["relativePoint"] = "TOP",
+["offX"] = 155.8328247070313,
+},
+},
+},
+["TimeManagerFrame"] = {
+},
+["QuickKeybindFrame"] = {
+["startPoints"] = {
+{
+["offX"] = 1208.333251953125,
+["offY"] = -325,
 ["anchorPoint"] = "TOPLEFT",
 ["relativePoint"] = "TOPLEFT",
 },
@@ -1447,17 +1454,33 @@ BlizzMoveDB = {
 {
 ["anchorPoint"] = "CENTER",
 ["relativeFrame"] = "UIParent",
-["offY"] = 128.0340881347656,
-["offX"] = -165.8248291015625,
+["offY"] = 150.0000915527344,
+["offX"] = -0.83331298828125,
 ["relativePoint"] = "CENTER",
 },
 },
 },
-["InspectPVPFrame"] = {
-},
 ["ModelPreviewFrame"] = {
 },
-["ProfessionsCustomerOrdersFrame.Form"] = {
+["WardrobeFrame"] = {
+["startPoints"] = {
+{
+["offX"] = 14.54545307159424,
+["offY"] = -105.4545822143555,
+["anchorPoint"] = "TOPLEFT",
+["relativePoint"] = "TOPLEFT",
+},
+},
+["dragged"] = true,
+["dragPoints"] = {
+{
+["anchorPoint"] = "TOP",
+["relativeFrame"] = "UIParent",
+["offY"] = -122.6331065315171,
+["offX"] = 64.33588146012698,
+["relativePoint"] = "TOP",
+},
+},
 },
 ["Baganator_SingleViewBankViewFramedark"] = {
 },
@@ -1496,8 +1519,8 @@ BlizzMoveDB = {
 {
 ["anchorPoint"] = "TOP",
 ["relativeFrame"] = "UIParent",
-["offY"] = -77.6666259765625,
-["offX"] = -92.00018310546875,
+["offY"] = -141.8328857421875,
+["offX"] = -423.6673889160156,
 ["relativePoint"] = "TOP",
 },
 },
@@ -1516,9 +1539,9 @@ BlizzMoveDB = {
 {
 ["anchorPoint"] = "TOPLEFT",
 ["relativeFrame"] = "UIParent",
-["offY"] = -141.8020413876802,
-["relativePoint"] = "TOPLEFT",
+["offY"] = -141.8018033505578,
 ["offX"] = 246.1767225289368,
+["relativePoint"] = "TOPLEFT",
 },
 },
 },
@@ -1557,11 +1580,11 @@ BlizzMoveDB = {
 ["dragged"] = true,
 ["dragPoints"] = {
 {
-["anchorPoint"] = "CENTER",
+["anchorPoint"] = "TOP",
 ["relativeFrame"] = "UIParent",
-["offY"] = 146.4683755542646,
-["relativePoint"] = "CENTER",
-["offX"] = -369.200453009762,
+["offY"] = -153.4978960188528,
+["offX"] = -251.7006244132172,
+["relativePoint"] = "TOP",
 },
 },
 },
@@ -1656,9 +1679,9 @@ BlizzMoveDB = {
 {
 ["anchorPoint"] = "LEFT",
 ["relativeFrame"] = "UIParent",
-["offY"] = 91.02106295110934,
-["relativePoint"] = "LEFT",
+["offY"] = 91.02116365911934,
 ["offX"] = 403.5004390434879,
+["relativePoint"] = "LEFT",
 },
 },
 },

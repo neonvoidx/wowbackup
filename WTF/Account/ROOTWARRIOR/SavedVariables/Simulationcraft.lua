@@ -4,6 +4,7 @@ SimulationCraftDB = {
 ["Månyfaced - Mal'Ganis"] = "Månyfaced - Mal'Ganis",
 ["Juzöu - Mal'Ganis"] = "Juzöu - Mal'Ganis",
 ["Hellowalls - Mal'Ganis"] = "Hellowalls - Mal'Ganis",
+["Starphage - Tichondrius"] = "Starphage - Tichondrius",
 ["Edaroseld - Illidan"] = "Edaroseld - Illidan",
 ["Corsic - Mal'Ganis"] = "Corsic - Mal'Ganis",
 ["Auteist - Tichondrius"] = "Auteist - Tichondrius",
@@ -24,7 +25,7 @@ SimulationCraftDB = {
 ["Heilsatan - Tichondrius"] = "Heilsatan - Tichondrius",
 ["Smaugchamp - Mal'Ganis"] = "Smaugchamp - Mal'Ganis",
 ["Choppiez - Mal'Ganis"] = "Choppiez - Mal'Ganis",
-["Starstypeshi - Tichondrius"] = "Starstypeshi - Tichondrius",
+["Gehyo - Tichondrius"] = "Gehyo - Tichondrius",
 ["Tampacks - Mal'Ganis"] = "Tampacks - Mal'Ganis",
 ["Kitedbro - Mal'Ganis"] = "Kitedbro - Mal'Ganis",
 ["Crillessana - Mal'Ganis"] = "Crillessana - Mal'Ganis",
@@ -42,7 +43,7 @@ SimulationCraftDB = {
 ["Reedmonchan - Mal'Ganis"] = "Reedmonchan - Mal'Ganis",
 ["Praisesun - Tichondrius"] = "Praisesun - Tichondrius",
 ["Smashkeys - Mal'Ganis"] = "Smashkeys - Mal'Ganis",
-["Gehyo - Tichondrius"] = "Gehyo - Tichondrius",
+["Starstypeshi - Tichondrius"] = "Starstypeshi - Tichondrius",
 ["Clevagirl - Mal'Ganis"] = "Clevagirl - Mal'Ganis",
 },
 ["profiles"] = {
@@ -54,6 +55,11 @@ SimulationCraftDB = {
 ["Juzöu - Mal'Ganis"] = {
 },
 ["Hellowalls - Mal'Ganis"] = {
+},
+["Starphage - Tichondrius"] = {
+["minimap"] = {
+["hide"] = true,
+},
 },
 ["Edaroseld - Illidan"] = {
 },
@@ -145,10 +151,7 @@ SimulationCraftDB = {
 ["hide"] = true,
 },
 },
-["Starstypeshi - Tichondrius"] = {
-["minimap"] = {
-["hide"] = true,
-},
+["Gehyo - Tichondrius"] = {
 },
 ["Tampacks - Mal'Ganis"] = {
 ["minimap"] = {
@@ -224,7 +227,10 @@ SimulationCraftDB = {
 },
 ["Smashkeys - Mal'Ganis"] = {
 },
-["Gehyo - Tichondrius"] = {
+["Starstypeshi - Tichondrius"] = {
+["minimap"] = {
+["hide"] = true,
+},
 },
 ["Clevagirl - Mal'Ganis"] = {
 },

@@ -99,4 +99,5 @@ CHATTYNATOR_COMMAND_HISTORY = {
 "/s /lol",
 "/s /nod",
 "/s /train",
+"/s /way #90 63.2 49.0 Captain Donald Adams",
 }

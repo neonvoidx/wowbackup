@@ -76,11 +76,6 @@ function config:ADDON_LOADED(addonName)
 		hooksecurefunc(UIParent, "SetScale", function() self:setAutoScale() end)
 		self:RegisterEvent("UI_SCALE_CHANGED")
 		self:setProfile()
-
-		self.cursorFrame:RegisterEvent("PLAYER_STARTED_LOOKING")
-		self.cursorFrame:RegisterEvent("PLAYER_STARTED_TURNING")
-		self.cursorFrame:RegisterEvent("PLAYER_STOPPED_LOOKING")
-		self.cursorFrame:RegisterEvent("PLAYER_STOPPED_TURNING")
 	end
 end
 
@@ -539,6 +534,17 @@ config:SetScript("OnShow", function(self)
 		config:setCombatTracking()
 	end)
 
+	-- SHOW ALWAYS
+	local showAlways = CreateFrame("CheckButton", nil, self, "CursorModCheckButtonTemplate")
+	showAlways:SetPoint("LEFT", showOnlyInCombat.Text, "RIGHT", 10, 1)
+	showAlways.Text:SetText(L["Show always"])
+	showAlways:SetScript("OnClick", function(self)
+		local checked = self:GetChecked()
+		PlaySound(checked and SOUNDKIT.IG_MAINMENU_OPTION_CHECKBOX_ON or SOUNDKIT.IG_MAINMENU_OPTION_CHECKBOX_OFF)
+		config.pConfig.showAlways = checked
+		config:setShowAlways()
+	end)
+
 	-- CursorFreelookStartDelta
 	local cursorDelta = CreateFrame("SLIDER", nil, self, "CursorModSliderTemplate")
 	cursorDelta:SetPoint("TOPLEFT", showOnlyInCombat, "BOTTOMLEFT", 0, -15)
@@ -589,6 +595,8 @@ config:SetScript("OnShow", function(self)
 		self.useClassColor:SetChecked(self.pConfig[self.useClassColorKey])
 
 		showOnlyInCombat:SetChecked(self.pConfig.showOnlyInCombat)
+		
+		showAlways:SetChecked(self.pConfig.showAlways)
 
 		options = Settings.CreateSliderOptions(0, .01, .0001)
 		cursorDelta:Init(self.pConfig.lookStartDelta, options.minValue, options.maxValue, options.steps, options.formatters)
@@ -628,6 +636,26 @@ function config:setCombatTracking()
 		self.cursorFrame:UnregisterEvent("PLAYER_REGEN_DISABLED")
 		self.cursorFrame:UnregisterEvent("PLAYER_REGEN_ENABLED")
 		self.cursorFrame[3] = false
+	end
+	self:setShowAlways()
+end
+
+
+function config:setShowAlways()
+	if self.pConfig.showAlways then
+		self.cursorFrame:UnregisterEvent("PLAYER_STARTED_LOOKING")
+		self.cursorFrame:UnregisterEvent("PLAYER_STARTED_TURNING")
+		self.cursorFrame:UnregisterEvent("PLAYER_STOPPED_LOOKING")
+		self.cursorFrame:UnregisterEvent("PLAYER_STOPPED_TURNING")
+		self.cursorFrame:SetShown(not (self.pConfig.showOnlyInCombat and self.cursorFrame[3]))
+		self.cursorFrame:SetScript("OnUpdate", self.cursorFrame:GetScript("OnShow"))
+	else
+		self.cursorFrame:SetScript("OnUpdate", nil)
+		self.cursorFrame:RegisterEvent("PLAYER_STARTED_LOOKING")
+		self.cursorFrame:RegisterEvent("PLAYER_STARTED_TURNING")
+		self.cursorFrame:RegisterEvent("PLAYER_STOPPED_LOOKING")
+		self.cursorFrame:RegisterEvent("PLAYER_STOPPED_TURNING")
+		self.cursorFrame:Hide()
 	end
 end
 

@@ -1,6 +1,7 @@
 local layoutName = "BlizzTarget"
 local layout = {}
 layout.name = "|cff00b4ffBlizz|r Target |A:NewCharacter-Alliance:36:64|a"
+local L = sArenaMixin.L
 
 layout.defaultSettings = {
     posX = 450,
@@ -136,7 +137,7 @@ local function setupOptionsTable(self)
 
     layout.optionsTable.arenaFrames.args.positioning.args.mirrored = {
         order = 5,
-        name = "Mirrored Frames",
+        name = L["Option_MirroredFrames"],
         type = "toggle",
         width = "full",
         get = getSetting,
@@ -145,7 +146,7 @@ local function setupOptionsTable(self)
 
     layout.optionsTable.arenaFrames.args.other.args.bigHealthbar = {
         order = 1,
-        name = "Big Healthbar",
+        name = L["Option_BigHealthbar"],
         type = "toggle",
         get = getSetting,
         set = setSetting,

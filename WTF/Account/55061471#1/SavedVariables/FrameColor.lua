@@ -2,18 +2,18 @@
 FrameColor4DB = {
 ["profileKeys"] = {
 ["Thingreyline - Tichondrius"] = "Default",
-["Hellowalls - Mal'Ganis"] = "Default",
 ["Crillessana - Mal'Ganis"] = "Default",
+["Heilsatan - Tichondrius"] = "Default",
 ["Mäñýfäçëð - Tichondrius"] = "Default",
-["Praisesun - Tichondrius"] = "Default",
-["Gehyo - Tichondrius"] = "Default",
+["Starstypeshi - Tichondrius"] = "Default",
+["Smaugchamp - Tichondrius"] = "Default",
 ["Auteist - Mal'Ganis"] = "Default",
 ["Ofpuss - Mal'Ganis"] = "Default",
-["Tampacks - Mal'Ganis"] = "Default",
+["Gehyo - Mal'Ganis"] = "Default",
 ["Smaugchamp - Mal'Ganis"] = "Default",
 ["Choppiez - Mal'Ganis"] = "Default",
-["Smaugchamp - Tichondrius"] = "Default",
-["Gehyo - Mal'Ganis"] = "Default",
+["Gehyo - Tichondrius"] = "Default",
+["Tampacks - Mal'Ganis"] = "Default",
 ["Hellavator - Mal'Ganis"] = "Default",
 ["Corsic - Mal'Ganis"] = "Default",
 ["Mäñýfäçëð - Mal'Ganis"] = "Default",
@@ -26,11 +26,11 @@ FrameColor4DB = {
 ["Reedingo - Mal'Ganis"] = "Default",
 ["Stormclout - Mal'Ganis"] = "Default",
 ["Rakeist - Mal'Ganis"] = "Default",
+["Praisesun - Tichondrius"] = "Default",
 ["Choppiez - Tichondrius"] = "Default",
-["Starstypeshi - Tichondrius"] = "Default",
 ["Ofpuss - Tichondrius"] = "Default",
 ["Praisesun - Mal'Ganis"] = "Default",
-["Heilsatan - Tichondrius"] = "Default",
+["Hellowalls - Mal'Ganis"] = "Default",
 ["Clevagirl - Mal'Ganis"] = "Default",
 },
 ["profiles"] = {
@@ -121,20 +121,6 @@ FrameColor4DB = {
 },
 ["HUD"] = {
 ["colors"] = {
-["main"] = {
-["rgbaValues"] = {
-0.2784313857555389,
-0.2784313857555389,
-0.2784313857555389,
-},
-},
-["borders"] = {
-["rgbaValues"] = {
-0.2000000178813934,
-0.2000000178813934,
-0.2000000178813934,
-},
-},
 ["tabs"] = {
 ["rgbaValues"] = {
 0.1803921610116959,
@@ -147,6 +133,20 @@ FrameColor4DB = {
 0.2196078598499298,
 0.2196078598499298,
 0.2196078598499298,
+},
+},
+["main"] = {
+["rgbaValues"] = {
+0.2784313857555389,
+0.2784313857555389,
+0.2784313857555389,
+},
+},
+["borders"] = {
+["rgbaValues"] = {
+0.2000000178813934,
+0.2000000178813934,
+0.2000000178813934,
 },
 },
 },

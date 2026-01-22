@@ -78,6 +78,7 @@ local isAddonLoaded = C_AddOns.IsAddOnLoaded
 local changeUnitFrameFont
 local targetAndFocusArenaNamePartyOverride
 local showLastNameNpc
+local changePartyFrameFont
 
 function BBF.UpdateUserTargetSettings()
     hidePartyNames = BetterBlizzFramesDB.hidePartyNames
@@ -95,10 +96,11 @@ function BBF.UpdateUserTargetSettings()
     hideFocusName = BetterBlizzFramesDB.hideFocusName
     hideTargetToTName = BetterBlizzFramesDB.hideTargetToTName
     hideFocusToTName = BetterBlizzFramesDB.hideFocusToTName
-    classColorLevelText = BetterBlizzFramesDB.classColorLevelText
+    classColorLevelText = BetterBlizzFramesDB.classColorLevelText and BetterBlizzFramesDB.classColorTargetNames
     hidePlayerName = BetterBlizzFramesDB.hidePlayerName
     hidePetName = BetterBlizzFramesDB.hidePetName
     changeUnitFrameFont = BetterBlizzFramesDB.changeUnitFrameFont
+    changePartyFrameFont = BetterBlizzFramesDB.changePartyFrameFont
     targetAndFocusArenaNamePartyOverride = BetterBlizzFramesDB.targetAndFocusArenaNamePartyOverride
     showLastNameNpc = BetterBlizzFramesDB.showLastNameNpc
 end
@@ -250,12 +252,20 @@ local function PartyFrameNameChange(frame)
         frame.bbfName:SetText("")
         return
     end
-    if not changeUnitFrameFont then
+    if not changeUnitFrameFont and not changePartyFrameFont then
         frame.bbfName:SetFont(frame.name:GetFont())
     end
     frame.bbfName:ClearAllPoints()
     frame.bbfName:SetPoint("LEFT", frame.name, "LEFT")
-    frame.bbfName:SetWidth(frame.name:GetWidth())
+
+    local _, fontSize = frame.bbfName:GetFont()
+    local baseWidth = frame.name:GetWidth()
+    local extraWidth = 0
+    if fontSize and fontSize > 10 then
+        extraWidth = math.floor((fontSize - 10) / 2) * 15
+    end
+    frame.bbfName:SetWidth(baseWidth + extraWidth)
+
     if partyArenaNames and IsActiveBattlefieldArena() then
         SetArenaName(frame, frame.unit, frame.bbfName)
         return
@@ -473,30 +483,51 @@ local targetHealthBar = TargetFrameHealthBar
 -- local altBar = AlternatePowerBar
 -- local staggerBar = MonkStaggerBar
 
-local statusTexts = {
-    playerManaBar.LeftText,
-    playerManaBar.RightText,
-    playerManaBar.TextString,
-    --
-    playerHealthBar.LeftText,
-    playerHealthBar.RightText,
-    playerHealthBar.TextString,
-    --
-    petHealthBar.LeftText,
-    petHealthBar.RightText,
-    petHealthBar.TextString,
-    --
-    petManaBar.LeftText,
-    petManaBar.RightText,
-    petManaBar.TextString,
-    --
-    targetManaBar.LeftText,
-    targetManaBar.RightText,
-    targetManaBar.TextString,
-    --
-    targetHealthBar.LeftText,
-    targetHealthBar.RightText,
-    targetHealthBar.TextString,
+-- Variables for Target frame text elements (will be set after addon check)
+local targetHealthLeftText, targetHealthRightText, targetHealthCenterText
+local targetManaLeftText, targetManaRightText, targetManaCenterText
+
+-- Function to check and set Target frame text elements
+local function InitializeTargetTextElements()
+    -- Check for addon-added text elements (HealthPlusOverlay) for Target frame, fallback to default
+    targetHealthLeftText = _G.TargetHealthPercentText or targetHealthBar.LeftText or targetHealthBar.MhnLeftText
+    targetHealthRightText = _G.TargetHealthValueText or targetHealthBar.RightText or targetHealthBar.MhnRightText
+    targetHealthCenterText = _G.TargetHealthCenterText or targetHealthBar.TextString or targetHealthBar.MhnTextString
+    targetManaLeftText = _G.TargetManaPercentText or targetManaBar.LeftText or targetManaBar.MhnLeftText
+    targetManaRightText = _G.TargetManaValueText or targetManaBar.RightText or targetManaBar.MhnRightText
+    targetManaCenterText = _G.TargetManaCenterText or targetManaBar.TextString or targetManaBar.MhnTextString
+end
+
+local function GetStatusTexts()
+    InitializeTargetTextElements()
+    return {
+        playerManaBar.LeftText,
+        playerManaBar.RightText,
+        playerManaBar.TextString,
+        --
+        playerHealthBar.LeftText,
+        playerHealthBar.RightText,
+        playerHealthBar.TextString,
+        --
+        petHealthBar.LeftText,
+        petHealthBar.RightText,
+        petHealthBar.TextString,
+        --
+        petManaBar.LeftText,
+        petManaBar.RightText,
+        petManaBar.TextString,
+        --
+        targetManaLeftText,
+        targetManaRightText,
+        targetManaCenterText,
+        --
+        targetHealthLeftText,
+        targetHealthRightText,
+        targetHealthCenterText,
+    }
+end
+
+local statusTexts = GetStatusTexts()
     --
     -- focusManaBar.LeftText,
     -- focusManaBar.RightText,
@@ -512,7 +543,6 @@ local statusTexts = {
     -- staggerBar.LeftText,
     -- staggerBar.RightText,
     -- staggerBar.TextString,
-}
 
 local petFrames = {
     [petHealthBar.LeftText] = true,
@@ -524,30 +554,35 @@ local petFrames = {
 }
 
 local function SetUnitFramesValuesFont(font, size, outline)
+    -- Refresh statusTexts in case addon elements loaded
+    statusTexts = GetStatusTexts()
+
     for _, textObject in pairs(statusTexts) do
-        local ogFont, ogSize, ogOutline = textObject:GetFont()
+        if textObject then
+            local ogFont, ogSize, ogOutline = textObject:GetFont()
 
-        local newFont = font or ogFont
-        local newSize = size or ogSize
-        local newOutline = outline or ogOutline
+            local newFont = font or ogFont
+            local newSize = size or ogSize
+            local newOutline = outline or ogOutline
 
-        if petFrames[textObject] then
-            if tonumber(newSize) >= 12 then
-                if tonumber(newSize) > 13 then
-                    newSize = newSize - 3
+            if petFrames[textObject] then
+                if tonumber(newSize) >= 12 then
+                    if tonumber(newSize) > 13 then
+                        newSize = newSize - 3
+                    else
+                        newSize = newSize - 2
+                    end
                 else
-                    newSize = newSize - 2
+                    newSize = newSize - 1
                 end
-            else
-                newSize = newSize - 1
             end
-        end
 
-        if newOutline == "NONE" then
-            newOutline = nil
-        end
+            if newOutline == "NONE" then
+                newOutline = nil
+            end
 
-        textObject:SetFont(newFont, newSize, newOutline)
+            textObject:SetFont(newFont, newSize, newOutline)
+        end
     end
 end
 
@@ -808,7 +843,7 @@ function BBF.SetCustomFonts()
 end
 
 local function ClassColorName(textObject, unit)
-    local color = BBF.getUnitColor(unit)
+    local color = BBF.getUnitColor(unit, (BetterBlizzFramesDB.customHealthbarColors and BetterBlizzFramesDB.customColorsUnitFrames) or nil, true)
     if color then
         textObject:SetTextColor(color.r, color.g, color.b)
     else

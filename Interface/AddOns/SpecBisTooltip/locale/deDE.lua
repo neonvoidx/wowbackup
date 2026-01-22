@@ -105,4 +105,5 @@ if not SpecBisTooltip.DEBUG then
     SpecBisTooltip:AddTrans("deDE", "LID_INVTYPE_RELIC_SOURCE", "Quelle für Relikt")
     SpecBisTooltip:AddTrans("deDE", "LID_GUIDEITEMID", "Guide-ItemId")
     SpecBisTooltip:AddTrans("deDE", "LID_OTHERCLASSESMAYALSO", "Andere Klassen könnten dies vielleicht auch gebrauchen.")
+    SpecBisTooltip:AddTrans("deDE", "LID_ITEM", "Gegenstand")
 end

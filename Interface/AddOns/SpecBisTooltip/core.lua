@@ -89,8 +89,8 @@ function SpecBisTooltip:GetSettingsContent(parent)
 			typ = invType .. n
 		end
 
-		SpecBisTooltip:AppendEditbox(typ, "", function(sel, val) end, 14, nil, true, SBTTABPC, "", text, typ)
-		SpecBisTooltip:AppendEditbox(typ .. "_SOURCE", "", function(sel, val) end, 34, nil, false, SBTTABPC, "", nil, typ)
+		SpecBisTooltip:AppendEditbox(typ, "", function(sel, val) end, 14, nil, true, SBTTABPC, SpecBisTooltip:Trans("LID_ITEM") .. ": ", text, typ)
+		SpecBisTooltip:AppendEditbox(typ .. "_SOURCE", "", function(sel, val) end, 34, nil, false, SBTTABPC, SpecBisTooltip:Trans("LID_SOURCE") .. ": ", nil, typ)
 		if invType == "INVTYPE_FINGER" or invType == "INVTYPE_TRINKET" then
 			if invType == "INVTYPE_FINGER" then
 				r = r + 1
@@ -108,8 +108,8 @@ function SpecBisTooltip:GetSettingsContent(parent)
 				typ = invType .. n
 			end
 
-			SpecBisTooltip:AppendEditbox(typ, "", function(val) end, 14, nil, true, SBTTABPC, "", text, typ)
-			SpecBisTooltip:AppendEditbox(typ .. "_SOURCE", "", function(val) end, 34, nil, false, SBTTABPC, "", nil, typ)
+			SpecBisTooltip:AppendEditbox(typ, "", function(val) end, 14, nil, true, SBTTABPC, SpecBisTooltip:Trans("LID_ITEM") .. ": ", text, typ)
+			SpecBisTooltip:AppendEditbox(typ .. "_SOURCE", "", function(val) end, 34, nil, false, SBTTABPC, SpecBisTooltip:Trans("LID_SOURCE") .. ": ", nil, typ)
 		end
 	end
 end
@@ -1086,7 +1086,7 @@ SBTSetup:SetScript(
 			SBTTAB = SBTTAB or {}
 			SBTTABPC = SBTTABPC or {}
 			SpecBisTooltip:SetDbTab(SBTTAB)
-			SpecBisTooltip:SetVersion(136031, "0.13.21")
+			SpecBisTooltip:SetVersion(136031, "0.13.29")
 			SpecBisTooltip:AddSlash("sbt", SpecBisTooltip.ToggleSettings)
 			SpecBisTooltip:AddSlash("specbistooltip", SpecBisTooltip.ToggleSettings)
 			local mmbtn = nil

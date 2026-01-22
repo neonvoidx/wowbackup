@@ -162,7 +162,7 @@ local function GetBBPNameplateColor(unit)
     return npcHealthbarColor
 end
 
-local function getUnitColor(unit)
+local function getUnitColor(unit, useCustomColors, txt)
     if not UnitExists(unit) then return end
     if UnitIsPlayer(unit) then
         local color = RAID_CLASS_COLORS[select(2, UnitClass(unit))]
@@ -190,13 +190,13 @@ local function getUnitColor(unit)
             else
                 local reaction = getUnitReaction(unit)
                 if reaction == "HOSTILE" then
-                    if UnitIsTapDenied(unit) then
+                    if UnitIsTapDenied(unit) and not txt then
                         return {r = 0.9, g = 0.9, b = 0.9}, false
                     else
                         return {r = 1, g = 0, b = 0}, false
                     end
                 elseif reaction == "NEUTRAL" then
-                    if UnitIsTapDenied(unit) then
+                    if UnitIsTapDenied(unit) and not txt then
                         return {r = 0.9, g = 0.9, b = 0.9}, false
                     else
                         return {r = 1, g = 1, b = 0}, false
@@ -209,13 +209,13 @@ local function getUnitColor(unit)
             local reaction = getUnitReaction(unit)
 
             if reaction == "HOSTILE" then
-                if UnitIsTapDenied(unit) then
+                if UnitIsTapDenied(unit) and not txt then
                     return {r = 0.9, g = 0.9, b = 0.9}, false
                 else
                     return {r = 1, g = 0, b = 0}, false
                 end
             elseif reaction == "NEUTRAL" then
-                if UnitIsTapDenied(unit) then
+                if UnitIsTapDenied(unit) and not txt then
                     return {r = 0.9, g = 0.9, b = 0.9}, false
                 else
                     return {r = 1, g = 1, b = 0}, false
@@ -463,20 +463,34 @@ end
 
 local biggerHealthbarHooked
 local frameTextureHooked
+local maxLvl = BBF.isMoP and 90 or BBF.isTBC and 70 or 85
+
 function BBF.BiggerHealthbars(frame, name)
     local texture = _G[frame.."Texture"] or _G[frame.."TextureFrameTexture"]
     local playerGlowTexture = _G["PlayerStatusTexture"]
     local healthbar = _G[frame.."HealthBar"]
     local manabar = _G[frame.."ManaBar"]
     local leftText = _G[frame.."HealthBarTextLeft"] or _G[frame].textureFrame.HealthBarTextLeft
-    local leftTextMana = _G[frame].textureFrame and _G[frame].textureFrame.ManaBarTextLeft
+    local leftTextMana = _G[frame].textureFrame and _G[frame].textureFrame.ManaBarTextLeft or (manabar and manabar.LeftText)
+    local rightTextMana = _G[frame].textureFrame and _G[frame].textureFrame.ManaBarTextRight or (manabar and manabar.RightText)
+    local centerTextMana = (manabar and manabar.TextString)
     local rightText = _G[frame.."HealthBarTextRight"] or _G[frame].textureFrame.HealthBarTextRight
     local centerText = _G[frame.."HealthBarText"] or _G[frame].textureFrame.HealthBarText
     local nameBackground = _G[frame.."NameBackground"]
     local background = _G[frame.."Background"]
     local deadText = _G[frame.."TextureFrameDeadText"]
 
-    local targetTexture = BetterBlizzFramesDB.hideLevelTextAlways and "Interface\\Addons\\BetterBlizzFrames\\media\\UI-TargetingFrame-NoLevel" or "Interface\\Addons\\BetterBlizzFrames\\media\\UI-TargetingFrame"
+    local noLevelTexture = "Interface\\Addons\\BetterBlizzFrames\\media\\UI-TargetingFrame-NoLevel"
+    local normalTexture = "Interface\\Addons\\BetterBlizzFrames\\media\\UI-TargetingFrame"
+
+    local targetTexture = normalTexture
+    if BetterBlizzFramesDB.hideLevelText then
+        if BetterBlizzFramesDB.hideLevelTextAlways then
+            targetTexture = noLevelTexture
+        elseif frame == "PlayerFrame" and UnitLevel("player") == maxLvl then
+            targetTexture = noLevelTexture
+        end
+    end
     -- Texture
     texture:SetTexture(targetTexture)
     playerGlowTexture:SetTexture("Interface\\Addons\\BetterBlizzFrames\\media\\UI-Player-Status")
@@ -494,7 +508,7 @@ function BBF.BiggerHealthbars(frame, name)
     local point, relativeTo, relativePoint, xOfs, yOfs = healthbar:GetPoint()
     local newYOffset = yOfs + 18
     BBF.MoveRegion(healthbar, point, relativeTo, relativePoint, xOfs, newYOffset)
-    healthbar:SetHeight(29)
+    healthbar:SetHeight(27)
     if not BetterBlizzFramesDB.changeUnitFrameHealthbarTexture then
         healthbar:SetStatusBarTexture(LSM:Fetch(LSM.MediaType.STATUSBAR, "Smooth"))
     end
@@ -553,7 +567,18 @@ function BBF.BiggerHealthbars(frame, name)
         if leftTextMana then
             local point, relativeTo, relativePoint, xOfs, yOfs = leftTextMana:GetPoint()
             local newXOffset = xOfs + 1
-            BBF.MoveRegion(leftTextMana, point, relativeTo, relativePoint, newXOffset, yOfs)
+            local newYOffset = yOfs + 1
+            BBF.MoveRegion(leftTextMana, point, relativeTo, relativePoint, newXOffset, newYOffset)
+        end
+        if rightTextMana then
+            local point, relativeTo, relativePoint, xOfs, yOfs = rightTextMana:GetPoint()
+            local newYOffset = yOfs + 1
+            BBF.MoveRegion(rightTextMana, point, relativeTo, relativePoint, xOfs, newYOffset)
+        end
+        if centerTextMana then
+            local point, relativeTo, relativePoint, xOfs, yOfs = centerTextMana:GetPoint()
+            local newYOffset = yOfs + 1
+            BBF.MoveRegion(centerTextMana, point, relativeTo, relativePoint, xOfs, newYOffset)
         end
         local point, relativeTo, relativePoint, xOfs, yOfs = leftText:GetPoint()
         local newYOffset = yOfs + 4
@@ -582,16 +607,26 @@ function BBF.BiggerHealthbars(frame, name)
         local point, relativeTo, relativePoint, xOfs, yOfs = name:GetPoint()
         local newYOffset = yOfs + 17
         BBF.MoveRegion(name, point, relativeTo, relativePoint, xOfs, newYOffset)
-
+        if rightTextMana then
+            local point, relativeTo, relativePoint, xOfs, yOfs = rightTextMana:GetPoint()
+            local newYOffset = yOfs + 1
+            BBF.MoveRegion(rightTextMana, point, relativeTo, relativePoint, xOfs, newYOffset)
+        end
+        if centerTextMana then
+            local point, relativeTo, relativePoint, xOfs, yOfs = centerTextMana:GetPoint()
+            local newYOffset = yOfs + 1
+            BBF.MoveRegion(centerTextMana, point, relativeTo, relativePoint, xOfs, newYOffset)
+        end
 
         -- Statustext
         if leftTextMana then
             local point, relativeTo, relativePoint, xOfs, yOfs = leftTextMana:GetPoint()
             local newXOffset = xOfs + 1
-            BBF.MoveRegion(leftTextMana, point, relativeTo, relativePoint, newXOffset, yOfs)
+            local newYOffset = yOfs + 1
+            BBF.MoveRegion(leftTextMana, point, relativeTo, relativePoint, newXOffset, newYOffset)
         end
         local point, relativeTo, relativePoint, xOfs, yOfs = leftText:GetPoint()
-        local newYOffset = yOfs + 9
+        local newYOffset = yOfs + 10
         local newXOffset = xOfs + 1
         if not leftTextMana then
             BBF.MoveRegion(leftText, point, relativeTo, relativePoint, xOfs, newYOffset)
@@ -600,11 +635,11 @@ function BBF.BiggerHealthbars(frame, name)
         end
 
         local point, relativeTo, relativePoint, xOfs, yOfs = rightText:GetPoint()
-        local newYOffset = yOfs + 9
+        local newYOffset = yOfs + 10
         BBF.MoveRegion(rightText, point, relativeTo, relativePoint, xOfs, newYOffset)
 
         local point, relativeTo, relativePoint, xOfs, yOfs = centerText:GetPoint()
-        local newYOffset = yOfs + 9
+        local newYOffset = yOfs + 10
         BBF.MoveRegion(centerText, point, relativeTo, relativePoint, xOfs, newYOffset)
     end
 
@@ -629,7 +664,13 @@ function BBF.BiggerHealthbars(frame, name)
                 elseif (classification == "rare") then
                     self.borderTexture:SetTexture("Interface\\Addons\\BetterBlizzFrames\\media\\UI-TargetingFrame-Rare")
                 else
-                    self.borderTexture:SetTexture(targetTexture)
+                    local textureToUse = normalTexture
+                    if BetterBlizzFramesDB.hideLevelText then
+                        if BetterBlizzFramesDB.hideLevelTextAlways or UnitLevel(self.unit) == maxLvl then
+                            textureToUse = noLevelTexture
+                        end
+                    end
+                    self.borderTexture:SetTexture(textureToUse)
                 end
             end
         end)

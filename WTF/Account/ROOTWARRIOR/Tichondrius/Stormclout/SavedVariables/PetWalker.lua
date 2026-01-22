@@ -13,6 +13,7 @@ PetWalkerPerCharDB = {
 },
 ["previousPet"] = "BattlePet-0-0000227F123D",
 ["recentPets"] = {
+"BattlePet-0-000018AA804B",
 },
 ["currentPet"] = "BattlePet-0-000022AFB1C4",
 ["charFavsEnabled"] = true,

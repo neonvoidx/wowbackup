@@ -125,6 +125,15 @@ L["handler_tooltip_not_discovered"] = "not yet discovered"
 ----------------------------------------------DATABASE----------------------------------------------
 ----------------------------------------------------------------------------------------------------
 
+----------------------------------------------MIDNIGHT----------------------------------------------
+
+L["Eversong Rootway"] = true
+L["Harandar Rootway"] = true
+L["Portal to Harandar"] = true
+L["Rootway to Harandar"] = true
+L["Portal to Voidstorm"] = true
+L["Portal to Silvermoon City"] = true
+
 -------------------------------------------------TWW------------------------------------------------
 
 L["Portal to Dragonblight"] = true
@@ -152,6 +161,9 @@ L["Portal to Maldraxxus"] = true
 L["Portal to K'aresh"] = true
 L["Portal to Tazavesh"] = true
 L["Portal to Revendreth"] = true
+L["Delver's Headquarters"] = true
+L["Portal to Founder's Point"] = true
+L["Portal to Razorwind Shores"] = true
 
 --==========================================DRAGONFLIGHT==========================================--
 
@@ -250,7 +262,11 @@ L["Portal to Jade Forest"] = true
 L["Portal to Pandaria"] = true
 L["Portal to Isle of Thunder"] = true
 L["Portal to Shado-Pan Garrison"] = true
+L["Portal to Shan'ze Dao"] = true
 L["Portal to Peak of Serenity"] = true
+L["Hot Air Balloon to Orgrimmar"] = true
+L["Hot Air Balloon to Stormwind"] = true
+L["Hot Air Balloon to Wandering Isle"] = true
 
 -------------------------------------------------CATA-----------------------------------------------
 
@@ -285,12 +301,13 @@ L["Portal to Exodar"] = true
 L["in Exodar"] = true
 L["Boat to Exodar"] = true
 L["Speak with Zephyr"] = true
+L["Teleport to the Dark Portal"] = true
 
 -----------------------------------------------VANILLA----------------------------------------------
 
 L["Boat to Menethil Harbor"] = true
 
-L["Portal to Silvermoon"] = true
+L["Portal to Silvermoon (Burning Crusade)"] = true
 
 L["Portal to Undercity"] = true
 L["Orb of translocation"] = true

@@ -94,20 +94,17 @@ function SecondaryResourceBarMixin:GetResourceValue(resource)
     end
 
     if resource == "SOUL_FRAGMENTS" then
-        -- The hack needs the PlayerFrame
-        if not PlayerFrame:IsShown() then return nil, nil, nil, nil, nil end
+        local auraData = C_UnitAuras.GetPlayerAuraBySpellID(1225789) or C_UnitAuras.GetPlayerAuraBySpellID(1227702) -- Soul Fragments / Collapsing Star
+        local current = auraData and auraData.applications or 0
+        local max = 50
 
-        local current = DemonHunterSoulFragmentsBar:GetValue()
-        local max = select(2, DemonHunterSoulFragmentsBar:GetMinMaxValues()) -- Secret values
-
-        if not self._SCRB_DDH_Meta then
-            hooksecurefunc(DemonHunterSoulFragmentsBar.CollapsingStarBackground, "Show", function() self:ApplyForegroundSettings() end)
-            hooksecurefunc(DemonHunterSoulFragmentsBar.CollapsingStarBackground, "Hide", function() self:ApplyForegroundSettings() end)
-            self._SCRB_DDH_Meta = true
+        -- For performance, only update the foreground when current is below 1, this happens when switching in/out of Void Metamorphosis
+        if current <= 1 then
+            self:ApplyForegroundSettings()
         end
 
         if data.textFormat == "Percent" or data.textFormat == "Percent%" then
-            return max, max, current, AbbreviateNumbers(current), "custom"
+            return max, max, current, math.floor((current / max) * 100 + 0.5), "percent"
         else
             return max, max, current, current, "number"
         end
@@ -221,6 +218,7 @@ addonTable.RegistereredBar.SecondaryResourceBar = {
                     SenseiClassResourceBarDB[dbName][layoutName].hideBlizzardSecondaryResourceUi = value
                     bar:HideBlizzardSecondaryResource(layoutName)
                 end,
+                tooltip = "Hides the default Blizzard secondary resource UI (e.g. Rune Frame for Death Knights)",
             },
             {
                 parentId = "Bar Settings",

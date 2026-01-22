@@ -69,7 +69,6 @@ function skin:Apply(mainColor, backgroundColor, bordersColor, controlsColor, tab
   -- Main frame.
   for _, frame in pairs({
     CollectionsJournal,
-    WardrobeFrame,
   }) do
     self:SkinNineSliced(frame, mainColor, desaturation)
   end
@@ -77,7 +76,6 @@ function skin:Apply(mainColor, backgroundColor, bordersColor, controlsColor, tab
   -- Background.
   for _, texture in pairs({
     CollectionsJournalBg,
-    WardrobeFrameBg
   }) do
     texture:SetDesaturation(desaturation)
     texture:SetVertexColor(backgroundColor[1], backgroundColor[2], backgroundColor[3], backgroundColor[4])
@@ -93,7 +91,6 @@ function skin:Apply(mainColor, backgroundColor, bordersColor, controlsColor, tab
     PetJournalPetCardInset,
     ToyBox.iconsFrame,
     HeirloomsJournal.iconsFrame,
-    WardrobeTransmogFrame.Inset,
     WardrobeCollectionFrame.ItemsCollectionFrame,
     WardrobeCollectionFrame.SetsTransmogFrame,
     WardrobeCollectionFrame.SetsCollectionFrame.RightInset,
@@ -151,7 +148,6 @@ function skin:Apply(mainColor, backgroundColor, bordersColor, controlsColor, tab
     WardrobeCollectionFrame.FilterButton.Background,
     WardrobeCollectionFrame.ClassDropdown.Background,
     WardrobeCollectionFrame.SetsCollectionFrame.DetailsFrame.VariantSetsDropdown.Background,
-    WardrobeTransmogFrame.OutfitDropdown.Background,
     WardrobeCollectionFrame.ItemsCollectionFrame.WeaponDropdown.Background,
   }) do
     texture:SetDesaturation(desaturation)

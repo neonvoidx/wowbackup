@@ -18,7 +18,7 @@ Automatically detects your character’s current resource type:
 **Health Bar**
 
 **Primary Resources Supported**  
-Mana, Rage, Energy, Focus, Fury, Runic Power, Astral Power, and more.
+Mana, Rage, Energy, Focus, Fury, Runic Power, Astral Power, Maelstrom Weapon and more.
 
 **Secondary Resources Supported**
 
@@ -30,7 +30,7 @@ Mana, Rage, Energy, Focus, Fury, Runic Power, Astral Power, and more.
 *   **Evoker** → Essence
 *   **Mage** → Arcane Charges
 *   **Druid** → Combo Points (Cat Form)
-*   **Demon Hunter** → Soul (Devourer) ⚠️ It needs to have the Player Frame visible
+*   **Demon Hunter** → Soul Fragments (Devourer)
 
 **Ebon Might as a standalone bar** ⚠️ It needs to have the Player Frame visible
 
@@ -41,7 +41,7 @@ Automatically switches to Mana, Energy, Rage, or Astral Power depending on curre
 
 ## 🧩 Edit Mode Integration
 
-Built on **LibEditMode**, offering seamless integration with Blizzard’s modern UI:
+Built on **LibEQOL**, offering seamless integration with Blizzard’s modern UI:
 
 *   Move and reposition bars anywhere on your screen
 *   Resize and restyle without extra menus

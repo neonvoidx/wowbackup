@@ -105,3 +105,4 @@ SpecBisTooltip:AddTrans("enUS", "LID_INVTYPE_QUIVER_SOURCE", "Source for Quiver"
 SpecBisTooltip:AddTrans("enUS", "LID_INVTYPE_RELIC_SOURCE", "Source for Relic")
 SpecBisTooltip:AddTrans("enUS", "LID_GUIDEITEMID", "Guide-ItemId")
 SpecBisTooltip:AddTrans("enUS", "LID_OTHERCLASSESMAYALSO", "Other Classes may also need this.")
+SpecBisTooltip:AddTrans("enUS", "LID_ITEM", "Item")

@@ -56,10 +56,6 @@ VER 3 0100000000000028 " " "1418287"
 #showtooltip 
 /cast [@cursor] Sigil of Misery
 END
-VER 3 010000000000002B " " "1418288"
-#showtooltip
-/cast [@cursor] Sigil of Silence
-END
 VER 3 010000000000002D " " "3636838"
 #showtooltip The Hunt
 /castsequence reset=2 the hunt
@@ -80,4 +76,12 @@ VER 3 0100000000000036 " " "134400"
 /run SetView(5)
 /run SetView(5)
 /script FlipCameraYaw(180)
+END
+VER 3 0100000000000038 " " "134400"
+#showtooltip
+/cast [@cursor] Shift
+END
+VER 3 0100000000000037 "Teleport Home" "7252953"
+#plumber:home
+/click PLMR_HOME1
 END

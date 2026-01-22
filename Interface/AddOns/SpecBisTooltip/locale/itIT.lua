@@ -35,4 +35,5 @@ if not SpecBisTooltip.DEBUG then
     SpecBisTooltip:AddTrans("itIT", "LID_catalyst/unknown", "Catalizzatore/Sconosciuto")
     SpecBisTooltip:AddTrans("itIT", "LID_unknown", "Sconosciuto")
     SpecBisTooltip:AddTrans("itIT", "LID_yourbissource", "Fonte del tuo BiS: %s")
+    SpecBisTooltip:AddTrans("itIT", "LID_ITEM", "Item")
 end

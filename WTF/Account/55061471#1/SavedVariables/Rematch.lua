@@ -99,26 +99,26 @@ Rematch5Settings = {
 ["KeepCompanion"] = false,
 ["NotesHeight"] = 507.9998168945313,
 ["HidePetToast"] = false,
-["ExpandedOptionsHeaders"] = {
+["PetNotes"] = {
 },
-["ReverseToolbar"] = false,
-["PetCardInBattle"] = false,
+["PetCardBackground"] = "Expansion",
+["QueueRandomWhenEmpty"] = false,
 ["BackupCount"] = 1,
 ["HideToolbarTooltips"] = false,
-["HideLevelBubbles"] = false,
+["ShowNewGroupTab"] = false,
 ["LastOpenLayout"] = "3-teams",
-["CompactTargetList"] = false,
+["InteractOnSoftInteract"] = 0,
 ["HideOptionTooltips"] = false,
 ["MousewheelSpeed"] = "Normal",
-["PetCardShowExpansionStat"] = false,
+["PetCardCanPin"] = false,
 ["UseTypeBar"] = false,
 ["HideNotesButtonInBattle"] = false,
 ["ConvertedTeams"] = {
 },
 ["NotesLeft"] = 1872.66650390625,
-["PreferencesPaused"] = false,
-["StickyNewPets"] = false,
-["PetCardCompactCollected"] = false,
+["QueueSkipDead"] = false,
+["BreedFormat"] = 1,
+["AlwaysTeamTabs"] = false,
 ["ShowAbilityID"] = false,
 ["MinimapButtonPosition"] = -162,
 ["GroupOrder"] = {
@@ -126,10 +126,26 @@ Rematch5Settings = {
 "group:none",
 },
 ["HideLevelingBadges"] = false,
-["LastToastedPetID"] = "BattlePet-0-00002296EE8E",
+["InteractOnTarget"] = 0,
 ["JournalLayout"] = "3-teams",
 ["QueueSortOrder"] = 1,
 ["CardBehavior"] = "Normal",
+["NeverTeamTabs"] = false,
+["WarnWhenRandomNot25"] = false,
+["KeepNotesOnScreen"] = false,
+["LockWindow"] = false,
+["FavoriteFilters"] = {
+},
+["ImportConflictOverwrite"] = false,
+["ExpandedGroups"] = {
+["group:favorites"] = true,
+["group:none"] = true,
+},
+["DontWarnMissing"] = false,
+["HideMarkerBadges"] = false,
+["HideNonBattlePets"] = false,
+["HideTooltips"] = false,
+["ResetFilters"] = false,
 ["Filters"] = {
 ["Other"] = {
 },
@@ -172,39 +188,23 @@ true,
 ["Moveset"] = {
 },
 },
-["ResetFilters"] = false,
-["KeepNotesOnScreen"] = false,
-["HideNonBattlePets"] = false,
-["FavoriteFilters"] = {
-},
-["ImportConflictOverwrite"] = false,
-["ExpandedGroups"] = {
-["group:favorites"] = true,
-["group:none"] = true,
-},
-["DontWarnMissing"] = false,
-["HideMarkerBadges"] = false,
-["LockWindow"] = false,
-["HideTooltips"] = false,
-["WarnWhenRandomNot25"] = false,
-["NeverTeamTabs"] = false,
 ["SortByNickname"] = false,
-["InteractOnTarget"] = 0,
+["LastToastedPetID"] = "BattlePet-0-00002296EE8E",
 ["NotesBottom"] = 231.0002288818359,
 ["WasShownOnLogout"] = false,
-["AlwaysTeamTabs"] = false,
-["BreedFormat"] = 1,
-["QueueSkipDead"] = false,
+["PetCardCompactCollected"] = false,
+["StickyNewPets"] = false,
+["PreferencesPaused"] = false,
 ["LockNotesPosition"] = false,
 ["PetMarkers"] = {
 },
-["PetCardCanPin"] = false,
-["InteractOnSoftInteract"] = 0,
+["PetCardShowExpansionStat"] = false,
+["CompactTargetList"] = false,
 ["NoBackupReminder"] = false,
-["ShowNewGroupTab"] = false,
-["QueueRandomWhenEmpty"] = false,
-["PetCardBackground"] = "Expansion",
-["PetNotes"] = {
+["HideLevelBubbles"] = false,
+["PetCardInBattle"] = false,
+["ReverseToolbar"] = false,
+["ExpandedOptionsHeaders"] = {
 },
 }
 Rematch5SavedTeams = {
@@ -222,13 +222,13 @@ Rematch5SavedTeams = {
 "ZL",
 },
 ["teamID"] = "team:13",
-["groupID"] = "group:none",
-["targets"] = {
-73626,
-},
 ["preferences"] = {
 ["minHP"] = 443,
 ["minXP"] = 5,
+},
+["groupID"] = "group:none",
+["targets"] = {
+73626,
 },
 },
 ["team:12"] = {
@@ -378,14 +378,14 @@ Rematch5SavedTeams = {
 "ZL",
 },
 ["teamID"] = "team:31",
+["groupID"] = "group:none",
+["targets"] = {
+237701,
+},
 ["preferences"] = {
 ["minHP"] = 601,
 ["minXP"] = 10,
 },
-["targets"] = {
-237701,
-},
-["groupID"] = "group:none",
 },
 ["team:20"] = {
 ["pets"] = {
@@ -401,13 +401,13 @@ Rematch5SavedTeams = {
 "ZR0",
 },
 ["teamID"] = "team:20",
-["preferences"] = {
-["minXP"] = 25,
-},
+["groupID"] = "group:none",
 ["targets"] = {
 223407,
 },
-["groupID"] = "group:none",
+["preferences"] = {
+["minXP"] = 25,
+},
 },
 ["team:24"] = {
 ["pets"] = {
@@ -423,12 +423,12 @@ Rematch5SavedTeams = {
 "ZL",
 },
 ["teamID"] = "team:24",
-["preferences"] = {
-["minXP"] = 5,
-},
-["groupID"] = "group:none",
 ["targets"] = {
 66557,
+},
+["groupID"] = "group:none",
+["preferences"] = {
+["minXP"] = 5,
 },
 },
 ["team:22"] = {
@@ -482,14 +482,14 @@ Rematch5SavedTeams = {
 "ZL",
 },
 ["teamID"] = "team:8",
+["groupID"] = "group:none",
+["targets"] = {
+71930,
+},
 ["preferences"] = {
 ["minHP"] = 541,
 ["minXP"] = 10,
 },
-["targets"] = {
-71930,
-},
-["groupID"] = "group:none",
 },
 ["team:26"] = {
 ["pets"] = {
@@ -562,14 +562,14 @@ Rematch5SavedTeams = {
 "ZR0",
 },
 ["teamID"] = "team:28",
-["preferences"] = {
-["minXP"] = 15,
-},
+["groupID"] = "group:none",
 ["targets"] = {
 91015,
 91362,
 },
-["groupID"] = "group:none",
+["preferences"] = {
+["minXP"] = 15,
+},
 },
 ["team:37"] = {
 ["pets"] = {
@@ -623,13 +623,13 @@ Rematch5SavedTeams = {
 "ZR0",
 },
 ["teamID"] = "team:38",
+["preferences"] = {
+["minXP"] = 25,
+},
 ["targets"] = {
 223409,
 },
 ["groupID"] = "group:none",
-["preferences"] = {
-["minXP"] = 25,
-},
 },
 ["team:19"] = {
 ["pets"] = {
@@ -650,24 +650,26 @@ Rematch5SavedTeams = {
 71924,
 },
 },
-["team:30"] = {
-["pets"] = {
-"BattlePet-0-0000227F0851",
-"BattlePet-0-0000227F04F2",
-"BattlePet-0-000022BDEBBE",
-},
-["notes"] = "Strategy added by max988\nPrioritylist: \nif not active: Arcane Storm\nMana Surge\nLift-Off\nCall Darkness\nTail Sweep\n",
-["name"] = "Loyal Crewmates",
+["team:36"] = {
+["notes"] = "Strategy added by Ellimist#1605\nThanks to DragonsAfterDark for the script :)\n\nTurn 1: Wind-Up\nTurn 2: Supercharge\nTurn 3: Wind-Up\nRufus comes in\nTurn 4: Toxic Smoke\nBring in your Ikky\nTurn 5: Black Claw\nTurns 6-8: Flock\nBring in your Emmigosa\nTurn 9: Arcane Storm\nTurn 10: Breath\nTurn 11: Breath\nTurns 12-14: Surge of Power",
 ["tags"] = {
-"12201LP",
-"22101B9",
-"20101GR",
+"12101BB",
+"11101FS",
+"21101LO",
 },
-["teamID"] = "team:30",
-["groupID"] = "group:none",
+["teamID"] = "team:36",
+["homeID"] = "group:none",
 ["targets"] = {
-237712,
+223444,
 },
+["pets"] = {
+"BattlePet-0-0000227F0680",
+"BattlePet-0-0000227F1163",
+"BattlePet-0-0000227F0862",
+},
+["name"] = "The Power of Friendship",
+["favorite"] = true,
+["groupID"] = "group:favorites",
 },
 ["team:35"] = {
 ["pets"] = {
@@ -707,25 +709,24 @@ Rematch5SavedTeams = {
 85519,
 },
 },
-["team:27"] = {
+["team:34"] = {
 ["pets"] = {
-"BattlePet-0-0000227F0882",
+"BattlePet-0-000022C0A961",
 0,
-1165,
+"BattlePet-0-00002283012A",
 },
-["notes"] = "Strategy added by norng\nTurn 1+: Arcane Explosion until Chrominius dies. Do not kill Salad.\nBring in your Level Pet\nTurn 1: Swap to your Nexus Whelpling\nPriority 1: Arcane Storm\nPriority 2: Mana Surge\nPriority 3: Frost Breath\n",
-["name"] = "Spores, Dusty, and Salad",
+["notes"] = "Strategy added by Maizou\nTurn 1: Sweep – Puzzle is forced in\nTurn 2: Swap to your Level Pet\nTurn 3: Swap to your Boneshard\nTurn 4: 10% BONESTORM (1st slot one)\nTurn 5: 30% BONESTORM (2nd slot one)\nTurn 6: 50% BONESTORM (3rd slot one)\nTurn 7: Pass – your Boneshard dies\nBring in your Enchanted Broom\nTurn 8-9: Wind-Up x2 – Puzzle dies\nDeebs comes in\nTurn 10: Batter – Deebs dies\nTyri comes in\nTurn 11: Batter – you win\n",
+["name"] = "Deebs, Tyri and Puzzle",
 ["tags"] = {
-"2000140",
+"22206L",
 "ZL",
-"222014D",
+"22201TB",
 },
-["teamID"] = "team:27",
-["targets"] = {
-90675,
-91026,
-},
+["teamID"] = "team:34",
 ["groupID"] = "group:none",
+["targets"] = {
+79179,
+},
 },
 ["team:32"] = {
 ["pets"] = {
@@ -765,23 +766,129 @@ Rematch5SavedTeams = {
 87125,
 },
 },
-["team:17"] = {
+["team:6"] = {
 ["pets"] = {
-"BattlePet-0-0000227EF798",
-"BattlePet-0-0000227EF78F",
-"BattlePet-0-0000227EF788",
+"BattlePet-0-0000227EF791",
+"BattlePet-0-0000227EF797",
+"random:0",
 },
-["notes"] = "Strategy added by DarDar#21108\nTurn 1: Call Lightning\nTurn 2: Pass\nTurn 3: Swap to your Infernal Pyreclaw\nTurn 4: Great Sting\nTurn 5: Cleave\nTurn 6: Cleave\nTurn 7: Cleave\nTurn 8: Pass\nTurn 9: Pass\nTurn 10: Great Sting\nTurn 11: Swap to your Anomalus\nTurn 12: Poison Protocol\nTurn 13: Void Nova\nTurn 14: Corrosion\n",
-["name"] = "Taran Zhu",
+["notes"] = "Strategy added by unknown\nScript thanks to Eekwibble\n\nTurn 1: Make it Rain\nTurns 2-4: Inflation\nTurn 5: Blingtron Gift Package\nContinue from Turn 1 until Lil' Bling dies.\nHe will easily destroy Carpe Diem and Spirus. Sometimes taking a good chunk out of River as well.\n\nBring in Netherspawn, Spawn of Netherspawn \nTurns 1+: If you have a Whirlpool incoming, use Consume Magic. Otherwise use Creeping Ooze and Nether Blast as a filler.\n",
+["name"] = "Wise Mari",
 ["tags"] = {
-"00202BH",
-"0110219",
-"22102OQ",
+"2110198",
+"11201FK",
+"ZR0",
 },
-["teamID"] = "team:17",
+["teamID"] = "team:6",
 ["groupID"] = "group:none",
 ["targets"] = {
-71931,
+71932,
+},
+},
+["team:1"] = {
+["pets"] = {
+"BattlePet-0-0000227F0887",
+0,
+"BattlePet-0-0000227F0882",
+},
+["name"] = "Training With Durian",
+["tags"] = {
+"11101SE",
+"ZL",
+"1120140",
+},
+["teamID"] = "team:1",
+["targets"] = {
+99035,
+},
+["groupID"] = "group:none",
+},
+["team:29"] = {
+["pets"] = {
+"BattlePet-0-0000227F0680",
+"random:0",
+"random:0",
+},
+["notes"] = "Strategy added by Remte\nIf possible, pick one additional pet that has any damaging spell that does more than 500 damage in one hit.\n\nTurn 1: Wind-Up\nTurn 2: Wind-Up\nTurn 3: Pass\nTurn 4: Wind-Up\nTurn 5: Supercharge\nTurn 6: Wind-Up\n",
+["name"] = "Stitches Jr.",
+["tags"] = {
+"11101BB",
+"ZR0",
+"ZR0",
+},
+["teamID"] = "team:29",
+["groupID"] = "group:none",
+["targets"] = {
+85685,
+},
+["preferences"] = {
+["minXP"] = 25,
+},
+},
+["team:2"] = {
+["pets"] = {
+"BattlePet-0-0000227EF788",
+0,
+"BattlePet-0-0000227F0A14",
+},
+["notes"] = "Strategy added by Mutanis\nTime: 01:25 (10 rounds)\n\nTurn 1: Corrosion (Gladiator Deathy comes in)\nTurn 2: Poison Protocol\nTurn 3: Void Nova\nTurn 4: Swap to your Level Pet (stunned)\nTurn 5: Swap to your Anomalus\nTurn 6: Corrosion\nBring in your Micromancer\nTurn 7: Raise Ally\nTurns 8-10: Dead Man's Party\n",
+["name"] = "Tarr the Terrible",
+["tags"] = {
+"22102OQ",
+"ZL",
+"11102SF",
+},
+["teamID"] = "team:2",
+["targets"] = {
+87110,
+},
+["groupID"] = "group:none",
+["preferences"] = {
+["minHP"] = 62,
+},
+},
+["team:23"] = {
+["pets"] = {
+0,
+0,
+"BattlePet-0-0000227F0851",
+},
+["notes"] = "Strategy added by 48laws\nTurn 1: Pass\nTurn 2: Bring in your Second Level Pet\nTurn 3: Swap to your Nexus Whelpling\nTurn 4: Arcane Storm\nTurn 5: Mana Surge\nCast Arcane Storm if necessary\n",
+["name"] = "The Beakinator",
+["tags"] = {
+"ZL",
+"ZL",
+"12201LP",
+},
+["teamID"] = "team:23",
+["preferences"] = {
+["minXP"] = 4,
+},
+["groupID"] = "group:none",
+["targets"] = {
+85659,
+},
+},
+["team:21"] = {
+["pets"] = {
+"BattlePet-0-00002283012A",
+"BattlePet-0-0000227F1163",
+"random:0",
+},
+["notes"] = "Strategy added by DragonsAfterDark\nPrio 1: Blistering Cold on CD\nPrio 2: Chop until Zaedu is Bleeding, & as filler when Blistering Cold & BONESTORM!! are on CD\nPrio 3: BONESTORM!!\nBring in your Ikky\nTurn 1: Black Claw\nTurns 2-4: Flock\n",
+["name"] = "One Hungry Worm",
+["tags"] = {
+"11201TB",
+"01101FS",
+"ZR0",
+},
+["teamID"] = "team:21",
+["groupID"] = "group:none",
+["targets"] = {
+223406,
+},
+["preferences"] = {
+["minXP"] = 25,
 },
 },
 ["team:11"] = {
@@ -803,129 +910,23 @@ Rematch5SavedTeams = {
 },
 ["groupID"] = "group:none",
 },
-["team:21"] = {
+["team:17"] = {
 ["pets"] = {
-"BattlePet-0-00002283012A",
-"BattlePet-0-0000227F1163",
-"random:0",
-},
-["notes"] = "Strategy added by DragonsAfterDark\nPrio 1: Blistering Cold on CD\nPrio 2: Chop until Zaedu is Bleeding, & as filler when Blistering Cold & BONESTORM!! are on CD\nPrio 3: BONESTORM!!\nBring in your Ikky\nTurn 1: Black Claw\nTurns 2-4: Flock\n",
-["name"] = "One Hungry Worm",
-["tags"] = {
-"11201TB",
-"01101FS",
-"ZR0",
-},
-["teamID"] = "team:21",
-["preferences"] = {
-["minXP"] = 25,
-},
-["targets"] = {
-223406,
-},
-["groupID"] = "group:none",
-},
-["team:2"] = {
-["pets"] = {
+"BattlePet-0-0000227EF798",
+"BattlePet-0-0000227EF78F",
 "BattlePet-0-0000227EF788",
-0,
-"BattlePet-0-0000227F0A14",
 },
-["notes"] = "Strategy added by Mutanis\nTime: 01:25 (10 rounds)\n\nTurn 1: Corrosion (Gladiator Deathy comes in)\nTurn 2: Poison Protocol\nTurn 3: Void Nova\nTurn 4: Swap to your Level Pet (stunned)\nTurn 5: Swap to your Anomalus\nTurn 6: Corrosion\nBring in your Micromancer\nTurn 7: Raise Ally\nTurns 8-10: Dead Man's Party\n",
-["name"] = "Tarr the Terrible",
+["notes"] = "Strategy added by DarDar#21108\nTurn 1: Call Lightning\nTurn 2: Pass\nTurn 3: Swap to your Infernal Pyreclaw\nTurn 4: Great Sting\nTurn 5: Cleave\nTurn 6: Cleave\nTurn 7: Cleave\nTurn 8: Pass\nTurn 9: Pass\nTurn 10: Great Sting\nTurn 11: Swap to your Anomalus\nTurn 12: Poison Protocol\nTurn 13: Void Nova\nTurn 14: Corrosion\n",
+["name"] = "Taran Zhu",
 ["tags"] = {
+"00202BH",
+"0110219",
 "22102OQ",
-"ZL",
-"11102SF",
 },
-["teamID"] = "team:2",
-["preferences"] = {
-["minHP"] = 62,
-},
+["teamID"] = "team:17",
 ["groupID"] = "group:none",
 ["targets"] = {
-87110,
-},
-},
-["team:23"] = {
-["pets"] = {
-0,
-0,
-"BattlePet-0-0000227F0851",
-},
-["notes"] = "Strategy added by 48laws\nTurn 1: Pass\nTurn 2: Bring in your Second Level Pet\nTurn 3: Swap to your Nexus Whelpling\nTurn 4: Arcane Storm\nTurn 5: Mana Surge\nCast Arcane Storm if necessary\n",
-["name"] = "The Beakinator",
-["tags"] = {
-"ZL",
-"ZL",
-"12201LP",
-},
-["teamID"] = "team:23",
-["groupID"] = "group:none",
-["targets"] = {
-85659,
-},
-["preferences"] = {
-["minXP"] = 4,
-},
-},
-["team:29"] = {
-["pets"] = {
-"BattlePet-0-0000227F0680",
-"random:0",
-"random:0",
-},
-["notes"] = "Strategy added by Remte\nIf possible, pick one additional pet that has any damaging spell that does more than 500 damage in one hit.\n\nTurn 1: Wind-Up\nTurn 2: Wind-Up\nTurn 3: Pass\nTurn 4: Wind-Up\nTurn 5: Supercharge\nTurn 6: Wind-Up\n",
-["name"] = "Stitches Jr.",
-["tags"] = {
-"11101BB",
-"ZR0",
-"ZR0",
-},
-["teamID"] = "team:29",
-["preferences"] = {
-["minXP"] = 25,
-},
-["targets"] = {
-85685,
-},
-["groupID"] = "group:none",
-},
-["team:1"] = {
-["pets"] = {
-"BattlePet-0-0000227F0887",
-0,
-"BattlePet-0-0000227F0882",
-},
-["name"] = "Training With Durian",
-["tags"] = {
-"11101SE",
-"ZL",
-"1120140",
-},
-["teamID"] = "team:1",
-["targets"] = {
-99035,
-},
-["groupID"] = "group:none",
-},
-["team:6"] = {
-["pets"] = {
-"BattlePet-0-0000227EF791",
-"BattlePet-0-0000227EF797",
-"random:0",
-},
-["notes"] = "Strategy added by unknown\nScript thanks to Eekwibble\n\nTurn 1: Make it Rain\nTurns 2-4: Inflation\nTurn 5: Blingtron Gift Package\nContinue from Turn 1 until Lil' Bling dies.\nHe will easily destroy Carpe Diem and Spirus. Sometimes taking a good chunk out of River as well.\n\nBring in Netherspawn, Spawn of Netherspawn \nTurns 1+: If you have a Whirlpool incoming, use Consume Magic. Otherwise use Creeping Ooze and Nether Blast as a filler.\n",
-["name"] = "Wise Mari",
-["tags"] = {
-"2110198",
-"11201FK",
-"ZR0",
-},
-["teamID"] = "team:6",
-["groupID"] = "group:none",
-["targets"] = {
-71932,
+71931,
 },
 },
 ["team:15"] = {
@@ -947,62 +948,65 @@ Rematch5SavedTeams = {
 71934,
 },
 },
-["team:34"] = {
+["team:27"] = {
 ["pets"] = {
-"BattlePet-0-000022C0A961",
+"BattlePet-0-0000227F0882",
 0,
-"BattlePet-0-00002283012A",
+1165,
 },
-["notes"] = "Strategy added by Maizou\nTurn 1: Sweep – Puzzle is forced in\nTurn 2: Swap to your Level Pet\nTurn 3: Swap to your Boneshard\nTurn 4: 10% BONESTORM (1st slot one)\nTurn 5: 30% BONESTORM (2nd slot one)\nTurn 6: 50% BONESTORM (3rd slot one)\nTurn 7: Pass – your Boneshard dies\nBring in your Enchanted Broom\nTurn 8-9: Wind-Up x2 – Puzzle dies\nDeebs comes in\nTurn 10: Batter – Deebs dies\nTyri comes in\nTurn 11: Batter – you win\n",
-["name"] = "Deebs, Tyri and Puzzle",
+["notes"] = "Strategy added by norng\nTurn 1+: Arcane Explosion until Chrominius dies. Do not kill Salad.\nBring in your Level Pet\nTurn 1: Swap to your Nexus Whelpling\nPriority 1: Arcane Storm\nPriority 2: Mana Surge\nPriority 3: Frost Breath\n",
+["name"] = "Spores, Dusty, and Salad",
 ["tags"] = {
-"22206L",
+"2000140",
 "ZL",
-"22201TB",
+"222014D",
 },
-["teamID"] = "team:34",
+["teamID"] = "team:27",
+["targets"] = {
+90675,
+91026,
+},
+["groupID"] = "group:none",
+},
+["team:30"] = {
+["pets"] = {
+"BattlePet-0-0000227F0851",
+"BattlePet-0-0000227F04F2",
+"BattlePet-0-000022BDEBBE",
+},
+["notes"] = "Strategy added by max988\nPrioritylist: \nif not active: Arcane Storm\nMana Surge\nLift-Off\nCall Darkness\nTail Sweep\n",
+["name"] = "Loyal Crewmates",
+["tags"] = {
+"12201LP",
+"22101B9",
+"20101GR",
+},
+["teamID"] = "team:30",
 ["groupID"] = "group:none",
 ["targets"] = {
-79179,
+237712,
 },
-},
-["team:36"] = {
-["notes"] = "Strategy added by Ellimist#1605\nThanks to DragonsAfterDark for the script :)\n\nTurn 1: Wind-Up\nTurn 2: Supercharge\nTurn 3: Wind-Up\nRufus comes in\nTurn 4: Toxic Smoke\nBring in your Ikky\nTurn 5: Black Claw\nTurns 6-8: Flock\nBring in your Emmigosa\nTurn 9: Arcane Storm\nTurn 10: Breath\nTurn 11: Breath\nTurns 12-14: Surge of Power",
-["tags"] = {
-"12101BB",
-"11101FS",
-"21101LO",
-},
-["teamID"] = "team:36",
-["homeID"] = "group:none",
-["targets"] = {
-223444,
-},
-["pets"] = {
-"BattlePet-0-0000227F0680",
-"BattlePet-0-0000227F1163",
-"BattlePet-0-0000227F0862",
-},
-["name"] = "The Power of Friendship",
-["favorite"] = true,
-["groupID"] = "group:favorites",
 },
 }
 Rematch5SavedGroups = {
 ["group:favorites"] = {
 ["sortMode"] = 1,
 ["name"] = "Favorite Teams",
+["isExpanded"] = true,
+["meta"] = true,
+["icon"] = "Interface\\Icons\\ACHIEVEMENT_GUILDPERK_MRPOPULARITY_RANK2",
+["groupID"] = "group:favorites",
 ["teams"] = {
 "team:36",
 },
-["meta"] = true,
-["groupID"] = "group:favorites",
-["icon"] = "Interface\\Icons\\ACHIEVEMENT_GUILDPERK_MRPOPULARITY_RANK2",
-["isExpanded"] = true,
 },
 ["group:none"] = {
 ["sortMode"] = 1,
 ["name"] = "Ungrouped Teams",
+["isExpanded"] = true,
+["meta"] = true,
+["icon"] = "Interface\\Icons\\INV_Pet_BattlePetTraining",
+["groupID"] = "group:none",
 ["teams"] = {
 "team:35",
 "team:4",
@@ -1043,10 +1047,6 @@ Rematch5SavedGroups = {
 "team:10",
 "team:37",
 },
-["meta"] = true,
-["groupID"] = "group:none",
-["icon"] = "Interface\\Icons\\INV_Pet_BattlePetTraining",
-["isExpanded"] = true,
 },
 }
 Rematch5SavedTargets = {
@@ -1119,8 +1119,8 @@ Rematch5SavedTargets = {
 [223443] = {
 "team:37",
 },
-[237718] = {
-"team:35",
+[73626] = {
+"team:13",
 },
 [67370] = {
 "team:32",
@@ -1128,11 +1128,11 @@ Rematch5SavedTargets = {
 [222535] = {
 "team:26",
 },
-[72290] = {
-"team:10",
+[237712] = {
+"team:30",
 },
-[79179] = {
-"team:34",
+[71934] = {
+"team:15",
 },
 [223444] = {
 "team:36",
@@ -1143,11 +1143,11 @@ Rematch5SavedTargets = {
 [71930] = {
 "team:8",
 },
-[71934] = {
-"team:15",
+[79179] = {
+"team:34",
 },
-[71927] = {
-"team:18",
+[91015] = {
+"team:28",
 },
 [87125] = {
 "team:3",
@@ -1158,20 +1158,20 @@ Rematch5SavedTargets = {
 [232048] = {
 "team:22",
 },
-[91015] = {
-"team:28",
+[71927] = {
+"team:18",
 },
 [91362] = {
 "team:28",
 },
-[237712] = {
-"team:30",
+[72290] = {
+"team:10",
 },
 [223406] = {
 "team:21",
 },
-[73626] = {
-"team:13",
+[237718] = {
+"team:35",
 },
 }
 Rematch4Saved = nil

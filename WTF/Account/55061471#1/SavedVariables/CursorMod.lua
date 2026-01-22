@@ -11,12 +11,12 @@ CursorModDB = {
 ["opacity"] = 1,
 ["showOnlyInCombat"] = true,
 ["changeCursorSize"] = false,
+["size"] = 0,
 ["glowColor"] = {
 1,
 1,
 1,
 },
-["size"] = 0,
 ["autoScale"] = true,
 ["outlineColor"] = {
 1,

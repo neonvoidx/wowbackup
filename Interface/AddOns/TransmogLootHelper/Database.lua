@@ -7,11 +7,14 @@ local appName, app = ...
 
 -- Used strings
 app.Name = "Transmog Loot Helper"
-app.NameLong = app.Colour("Transmog Loot Helper")
-app.NameShort = app.Colour("TLH")
+app.NameLong = app:Colour("Transmog Loot Helper")
+app.NameShort = app:Colour("TLH")
+app.NamePrefix = "TransmogLootHelp"
+_G["BINDING_NAME_TRANSMOGLOOTHELPER"] = app.Name
+_G["BINDING_NAME_SLACKWARE"] = "Slackware"
 
 -- Used textures
-app.IconTLH = "|TInterface\\AddOns\\TransmogLootHelper\\assets\\tlh_icon.blp:0|t"
+app.IconTLH = "|TInterface\\AddOns\\TransmogLootHelper\\assets\\icon.png:0|t"
 app.IconReady = "|TInterface\\RaidFrame\\ReadyCheck-Ready:0|t"
 app.IconNotReady = "|TInterface\\RaidFrame\\ReadyCheck-NotReady:0|t"
 app.IconMaybeReady = "Interface\\AddOns\\TransmogLootHelper\\assets\\readycheck-ready-orange.blp"
@@ -124,7 +127,7 @@ app.Icon = {
 	["Unknown"] = "Interface\\Icons\\inv_misc_questionMark",
 }
 
--- ItemID -> SpellID (sourced from Collectionator's "RecipesToSpellIDs.lua")
+-- ItemID -> SpellID
 app.SpellItem = {
 	[728] = 2543,
 	[2406] = 2158,
@@ -6685,7 +6688,6 @@ app.QuestItem = {
 	[235693] = 82175,	-- Delver's Dirigible Schematic: Rocket
 	[235692] = 82177,	-- Delver's Dirigible Schematic: Thrusters
 	[235691] = 82191,	-- Delver's Dirigible Schematic: Yellow Paint
-	[235697] = 82192,	-- Delver's Dirigible Schematic: Alliance Decal
 	[235694] = 82117,	-- Delver's Dirigible Schematic: Blue Paint
 	[235688] = 82174,	-- Delver's Dirigible Schematic: Fan
 	[235690] = 82169,	-- Delver's Dirigible Schematic: Harpoon
@@ -7177,6 +7179,7 @@ app.QuestItem = {
 	[249242] = 91961,	-- Bronze Celebration Titles: Khaz Algar Enthusiast
 }
 
+-- ItemID -> DecorID / RecordID
 app.Decor = {
 	[113503] = 15339,
 	[132822] = 1718,
@@ -9391,6 +9394,7 @@ app.Decor = {
 	[265797] = 17521,
 	[265798] = 17522,
 	[265799] = 17523,
+	[265804] = 12250,	-- Sanctuary Chess Collection
 	[265924] = 17609,
 	[265925] = 17610,
 	[265926] = 17611,

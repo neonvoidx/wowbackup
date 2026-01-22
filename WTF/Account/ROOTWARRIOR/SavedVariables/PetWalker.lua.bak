@@ -1,6 +1,6 @@
 
 PetWalkerDB = {
-["autoEnabled"] = false,
+["autoEnabled"] = true,
 ["verbosityLevel"] = 1,
 ["recentPets"] = {
 "BattlePet-0-000018AA80B1",
@@ -11,7 +11,7 @@ PetWalkerDB = {
 ["eventAlt"] = false,
 ["favsOnly"] = true,
 ["numRecents"] = 4,
-["newPetTimer"] = 2700,
-["remainingTimer"] = 20,
+["newPetTimer"] = 600,
+["remainingTimer"] = 582,
 ["debugMode"] = false,
 }

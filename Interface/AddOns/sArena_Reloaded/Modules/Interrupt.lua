@@ -1,29 +1,5 @@
-local interruptSpells = {
-    1766,   -- Kick (Rogue)
-    2139,   -- Counterspell (Mage)
-    6552,   -- Pummel (Warrior)
-    19647,  -- Spell Lock (Warlock)
-    47528,  -- Mind Freeze (Death Knight)
-    57994,  -- Wind Shear (Shaman)
-    96231,  -- Rebuke (Paladin)
-    106839, -- Skull Bash (Feral)
-    115781, -- Optical Blast (Warlock)
-    116705, -- Spear Hand Strike (Monk)
-    132409, -- Spell Lock (Warlock)
-    119910, -- Spell Lock (Warlock Pet)
-    89766,  -- Axe Toss (Warlock Pet)
-    171138, -- Shadow Lock (Warlock)
-    147362, -- Countershot (Hunter)
-    183752, -- Disrupt (Demon Hunter)
-    187707, -- Muzzle (Hunter)
-    212619, -- Call Felhunter (Warlock)
-    351338, -- Quell (Evoker)
-    34490,  -- Silencing Shot (Hunter)
-}
-
--- Function to find and return the interrupt spell the player knows
 local function GetInterruptSpell()
-    for _, spellID in ipairs(interruptSpells) do
+    for spellID, _ in pairs(sArenaMixin.interruptList) do
         if IsSpellKnownOrOverridesKnown(spellID) or (UnitExists("pet") and IsSpellKnownOrOverridesKnown(spellID, true)) then
             return spellID
         end
@@ -67,15 +43,21 @@ local function UpdateInterruptIcon(frame)
         local cooldownInfo = C_Spell.GetSpellCooldown(playerKick)
         if cooldownInfo then
             frame.cooldown:SetCooldown(cooldownInfo.startTime, cooldownInfo.duration)
-            local isOnCooldown = frame.cooldown:IsShown()
-            sArenaMixin.interruptReady = not isOnCooldown
-            sArenaMixin:UpdateCastbarInterruptStatus()
         end
     end
 end
 
-local function OnPetEvent(self, event, unit, _, spellID)
+local function OnInterruptUpdate(self, event, unit, _, spellID)
     if event == "UNIT_SPELLCAST_SUCCEEDED" then
+        if sArenaMixin.interruptList[spellID] then
+            local cooldownInfo = C_Spell.GetSpellCooldown(spellID)
+            if cooldownInfo then
+                sArenaMixin.interruptIcon.cooldown:SetCooldown(cooldownInfo.startTime, cooldownInfo.duration)
+            end
+            sArenaMixin.interruptReady = false
+            sArenaMixin:UpdateCastbarInterruptStatus()
+            return
+        end
         if not petSummonSpells[spellID] then return end
     end
     C_Timer.After(0.1, function()
@@ -92,10 +74,18 @@ cooldownFrame:SetScript("OnEvent", function(self, event, spellID)
     UpdateInterruptIcon(sArenaMixin.interruptIcon)
 end)
 
-local interruptSpellUpdate = CreateFrame("Frame")
-if sArenaMixin.playerClass == "WARLOCK" then
-    interruptSpellUpdate:RegisterUnitEvent("UNIT_SPELLCAST_SUCCEEDED", "player")
+sArenaMixin.interruptSpellUpdate = CreateFrame("Frame")
+sArenaMixin.interruptSpellUpdate:SetScript("OnEvent", OnInterruptUpdate)
+
+function sArenaMixin:RegisterInterruptEvents()
+    self.interruptSpellUpdate:RegisterUnitEvent("UNIT_SPELLCAST_SUCCEEDED", "player")
+    self.interruptSpellUpdate:RegisterEvent("TRAIT_CONFIG_UPDATED")
+    self.interruptSpellUpdate:RegisterEvent("PLAYER_TALENT_UPDATE")
+
+    playerKick = GetInterruptSpell()
+    UpdateInterruptIcon(self.interruptIcon)
 end
-interruptSpellUpdate:RegisterEvent("TRAIT_CONFIG_UPDATED")
-interruptSpellUpdate:RegisterEvent("PLAYER_TALENT_UPDATE")
-interruptSpellUpdate:SetScript("OnEvent", OnPetEvent)
+
+function sArenaMixin:UnregisterInterruptEvents()
+    self.interruptSpellUpdate:UnregisterAllEvents()
+end

@@ -1,5 +1,5 @@
-local VERSION_TEXT = "1.8.4 c";
-local VERSION_DATE = 1766300000;
+local VERSION_TEXT = "1.8.5 b";
+local VERSION_DATE = 1769000000;
 
 
 local addonName, addon = ...
@@ -207,7 +207,6 @@ local DefaultValues = {
         SoftTarget_Objectives = false,
         SoftTarget_House_HideIcon = false,
         SoftTarget_House_HideName = false,
-
     AppearanceTab = false,              --Adjust Appearance Tab models to reduce GPU usage spike
         AppearanceTab_ModelCount = 1,
     ItemUpgradeUI = true,
@@ -220,6 +219,7 @@ local DefaultValues = {
     TransmogChatCommand = false,        --Adjust /outfit command behavior
     CraftSearchExtended = false,        --Show more search result, custom keywords
     SourceAchievementLink = true,       --Make Achievement name in MountJournal, DecorCatalog interactable
+    TransmogOutfitSelect = true,        --Show Minimized Transmog Outfit Collection
 
 
     --Tooltip
@@ -265,6 +265,7 @@ local DefaultValues = {
         LootUI_WindowHide = false,
         LootUI_CombineItems = false,
         LootUI_LowFrameStrata = false,
+        LootUI_ShowReputation = false,
 
 
     --Unified Map Pin System
@@ -353,7 +354,7 @@ local NeverEnableByDefault = {
 
 local function LoadDatabase()
     PlumberDB = PlumberDB or {};
-    PlumberStorage = PlumberStorage or {};  --Save large data (Spell)
+    PlumberStorage = PlumberStorage or {};
     PlumberDB_PC = PlumberDB_PC or {};
 
     DB = PlumberDB;
@@ -393,6 +394,9 @@ local function LoadDatabase()
 
     CallbackRegistry:Trigger("NewDBKeysAdded", newDBKeys);
     CallbackRegistry:Trigger("DBLoaded", DB);
+
+
+    PlumberStorage.CreatureSpells = nil;    --Store SpellcastingInfo, retired in  Midnight
 end
 
 

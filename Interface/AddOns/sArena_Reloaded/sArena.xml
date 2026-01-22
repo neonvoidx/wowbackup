@@ -12,15 +12,17 @@
     <Script file="Ace3\Libs\LibSerialize\LibSerialize.lua"/>
 
     <Script file="sArena_Init.lua"/>
-    <Script file="sArena.lua"/>
+    <Include file="Locales\locales.xml"/>
+    <Script file="Data\Interrupts\InterruptList_Retail.lua"/>
+    <Script file="Data\DRs\DrList_Retail.lua"/>
+    <Script file="Data\Profiles.lua"/>
+    <Script file="Data\Auras\AuraList_Retail.lua"/>
     <Script file="Modules\Interrupt.lua"/>
+    <Script file="sArena.lua"/>
     <Script file="Modules\Racials.lua"/>
     <Script file="Modules\Dispels.lua"/>
-    <Script file="Data\DrList_Retail.lua"/>
     <Script file="Modules\DiminishingReturns.lua"/>
-    <Script file="Data\Profiles.lua"/>
     <Script file="Config.lua"/>
-    <Script file="Data\AuraList_Retail.lua"/>
     <Script file="Modules\Auras.lua"/>
     <Script file="Modules\Trinkets.lua"/>
     <Script file="Modules\ModernCastbar.lua"/>

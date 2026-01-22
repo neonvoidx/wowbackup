@@ -1,4 +1,4 @@
-local MODULE_MAJOR, MINOR = "LibEQOLSettingsMode-1.0", 7011001
+local MODULE_MAJOR, MINOR = "LibEQOLSettingsMode-1.0", 11000001
 local LibStub = _G.LibStub
 assert(LibStub, MODULE_MAJOR .. " requires LibStub")
 
@@ -90,6 +90,55 @@ local function serializeSelection(selection)
 	return table.concat(keys, ",")
 end
 
+local function addOptionToContainer(container, key, entry)
+	local value = key
+	local label = entry
+	local tooltip
+
+	if type(entry) == "table" then
+		if entry.value ~= nil then
+			value = entry.value
+		end
+		label = entry.label or entry.text or entry.name or entry.title or entry.value or key
+		tooltip = entry.tooltip or entry.desc or entry.description
+	end
+
+	if label == nil then
+		label = value
+	end
+	if label == nil then
+		label = ""
+	end
+	if type(label) ~= "string" and type(label) ~= "number" then
+		label = tostring(label)
+	end
+
+	local optionData = container:Add(value, label, tooltip)
+	if type(entry) == "table" then
+		if entry.text ~= nil then
+			local text = entry.text
+			if type(text) ~= "string" and type(text) ~= "number" then
+				text = tostring(text)
+			end
+			optionData.text = text
+		end
+		if entry.disabled ~= nil then
+			optionData.disabled = entry.disabled
+		end
+		if entry.warning ~= nil then
+			optionData.warning = entry.warning
+		end
+		if entry.recommend ~= nil then
+			optionData.recommend = entry.recommend
+		end
+		if entry.onEnter ~= nil then
+			optionData.onEnter = entry.onEnter
+		end
+	end
+
+	return optionData
+end
+
 local function isSearchActive()
 	return SettingsPanel and SettingsPanel.SearchBox and SettingsPanel.SearchBox:HasText()
 end
@@ -105,6 +154,8 @@ local State = {
 	rootName = "LibEQOL Settings",
 	categories = {},
 	elements = {},
+	categoryCacheByID = {},
+	categoryCacheByName = {},
 	categoryTags = {},
 	categoryPrefixes = {},
 	settingPrefixes = {},
@@ -269,6 +320,83 @@ local function prefixTag(tag, explicitPrefix)
 	return tag
 end
 
+local function cacheCategory(category, name)
+	if not category then
+		return
+	end
+
+	local id = category.GetID and category:GetID()
+	if id ~= nil then
+		State.categoryCacheByID[id] = category
+		if type(id) == "number" then
+			State.categoryCacheByID[tostring(id)] = category
+		elseif type(id) == "string" then
+			local numeric = tonumber(id)
+			if numeric then
+				State.categoryCacheByID[numeric] = State.categoryCacheByID[numeric] or category
+			end
+		end
+	end
+
+	local resolvedName = name or (category.GetName and category:GetName())
+	if resolvedName then
+		State.categoryCacheByName[resolvedName] = category
+	end
+end
+
+local function refreshCategoryCache()
+	if not (SettingsPanel and SettingsPanel.GetAllCategories) then
+		return
+	end
+	local ok, categories = pcall(SettingsPanel.GetAllCategories, SettingsPanel)
+	if not ok or type(categories) ~= "table" then
+		return
+	end
+
+	for _, category in pairs(categories) do
+		cacheCategory(category)
+	end
+end
+
+local function normalizeCategoryName(text)
+	if type(text) ~= "string" then
+		return nil
+	end
+	return text:lower():gsub("[%W_]+", "")
+end
+
+local function collectCategories()
+	local list = {}
+	local seen = {}
+	if State.categoryCacheByName then
+		for _, category in pairs(State.categoryCacheByName) do
+			if category and not seen[category] then
+				list[#list + 1] = category
+				seen[category] = true
+			end
+		end
+	end
+	for _, category in pairs(State.categories) do
+		if category and not seen[category] then
+			list[#list + 1] = category
+			seen[category] = true
+		end
+	end
+	return list
+end
+
+local function makeCategoryResult(category)
+	if not category then
+		return nil
+	end
+	local name = category.GetName and category:GetName()
+	local id = category.GetID and category:GetID()
+	if name == nil and id == nil then
+		return nil
+	end
+	return { name = name, id = id }
+end
+
 local function registerCategory(name, parent, sort, newTagID, prefixOverride)
 	local categoryPrefix = prefixOverride or (State.prefixSet and State.prefix) or nil
 	newTagID = prefixTag(newTagID, categoryPrefix)
@@ -279,6 +407,7 @@ local function registerCategory(name, parent, sort, newTagID, prefixOverride)
 		cat._LibEQOLNewTagID = newTagID
 		State.categoryTags[cat:GetID()] = newTagID
 		State.categoryPrefixes[cat:GetID()] = categoryPrefix
+		cacheCategory(cat, name)
 		return cat, layout
 	end
 	local cat, layout = Settings.RegisterVerticalLayoutSubcategory(parent, name)
@@ -287,6 +416,7 @@ local function registerCategory(name, parent, sort, newTagID, prefixOverride)
 	cat._LibEQOLNewTagID = newTagID
 	State.categoryTags[cat:GetID()] = newTagID
 	State.categoryPrefixes[cat:GetID()] = categoryPrefix
+	cacheCategory(cat, name)
 	return cat, layout
 end
 
@@ -508,7 +638,7 @@ function lib:CreateDropdown(cat, data)
 	)
 	local function optionsFunc()
 		local container = Settings.CreateControlTextContainer()
-			local list = data.values
+			local list = data.values or data.options
 			if data.optionfunc then
 				local ok, result = pcall(data.optionfunc)
 				if ok and type(result) == "table" then
@@ -522,14 +652,14 @@ function lib:CreateDropdown(cat, data)
 					seen = {}
 					for _, key in ipairs(orderedKeys) do
 						if key ~= "_order" and list[key] ~= nil then
-							container:Add(key, list[key])
+							addOptionToContainer(container, key, list[key])
 							seen[key] = true
 						end
 					end
 				end
 				for key, value in pairs(list) do
 					if key ~= "_order" and (not seen or not seen[key]) then
-						container:Add(key, value)
+						addOptionToContainer(container, key, value)
 					end
 				end
 			end
@@ -586,21 +716,21 @@ function lib:CreateScrollDropdown(cat, data)
 				seen = {}
 				for _, key in ipairs(orderedKeys) do
 					if key ~= "_order" and list[key] ~= nil then
-						container:Add(key, list[key])
+						addOptionToContainer(container, key, list[key])
 						seen[key] = true
 					end
 				end
 			end
 			for key, value in pairs(list) do
 				if key ~= "_order" and (not seen or not seen[key]) then
-					container:Add(key, value)
+					addOptionToContainer(container, key, value)
 				end
 			end
 		end
 		return container:GetData()
 	end
 
-	local initializer = Settings.CreateElementInitializer("LibEQOL4241735_ScrollDropdownTemplate", {
+	local initializer = Settings.CreateElementInitializer("LibEQOLeffc048_ScrollDropdownTemplate", {
 		label = data.name or data.text or data.key,
 		optionsFunc = optionsFunc,
 		generator = data.generator,
@@ -633,7 +763,7 @@ function lib:CreateSoundDropdown(cat, data)
 		data.set,
 		data
 		)
-		local initializer = Settings.CreateElementInitializer("LibEQOL4241735_SoundDropdownTemplate", {
+		local initializer = Settings.CreateElementInitializer("LibEQOLeffc048_SoundDropdownTemplate", {
 			setting = setting,
 			options = data.values or data.options,
 			optionfunc = data.optionfunc,
@@ -725,14 +855,14 @@ function lib:CreateCheckboxDropdown(cat, data)
 				seen = {}
 				for _, key in ipairs(orderedKeys) do
 					if key ~= "_order" and list[key] ~= nil then
-						container:Add(key, list[key])
+						addOptionToContainer(container, key, list[key])
 						seen[key] = true
 					end
 				end
 			end
 			for key, value in pairs(list) do
 				if key ~= "_order" and (not seen or not seen[key]) then
-					container:Add(key, value)
+					addOptionToContainer(container, key, value)
 				end
 			end
 		end
@@ -897,7 +1027,7 @@ end
 
 function lib:CreateColorOverrides(cat, data)
 	assert(cat and data and data.entries, "category and entries required")
-	local initializer = Settings.CreateElementInitializer("LibEQOL4241735_ColorOverridesPanelNoHead", {
+	local initializer = Settings.CreateElementInitializer("LibEQOLeffc048_ColorOverridesPanelNoHead", {
 		categoryID = cat:GetID(),
 		entries = data.entries,
 		getColor = data.getColor,
@@ -966,7 +1096,7 @@ function lib:CreateMultiDropdown(cat, data)
 		function() end,
 		data
 	)
-	local initializer = Settings.CreateElementInitializer("LibEQOL4241735_MultiDropdownTemplate", {
+	local initializer = Settings.CreateElementInitializer("LibEQOLeffc048_MultiDropdownTemplate", {
 		label = data.name or data.text or data.key,
 		options = data.values,
 		optionfunc = data.optionfunc,
@@ -1109,7 +1239,7 @@ function lib:CreateText(cat, text, extra)
 	local data = normalizeNameData(text, extra)
 	local name = data.name or data.text
 	local init = Settings.CreateElementInitializer(
-		"LibEQOL4241735_SettingsListSectionHintTemplate",
+		"LibEQOLeffc048_SettingsListSectionHintTemplate",
 		{ name = name }
 	)
 	addSearchTags(init, data.searchtags or name, name)
@@ -1148,6 +1278,188 @@ end
 
 function lib:GetCategory(name)
 	return State.categories[name]
+end
+
+local function scoreCategoryName(query, normalizedQuery, lowerQuery, candidateName)
+	if not candidateName then
+		return nil
+	end
+
+	if candidateName == query then
+		return 0
+	end
+
+	local candidateLower = candidateName:lower()
+	if lowerQuery and candidateLower == lowerQuery then
+		return 1
+	end
+
+	local candidateNormalized = normalizeCategoryName(candidateName)
+	if candidateNormalized and normalizedQuery then
+		if candidateNormalized == normalizedQuery then
+			return 2
+		end
+
+		local startIndex = candidateNormalized:find(normalizedQuery, 1, true)
+		if startIndex == 1 then
+			return 3 -- prefix match
+		end
+		if startIndex then
+			return 4 -- substring match
+		end
+	end
+end
+
+function lib:GetCategoryByName(name, fuzzy)
+	if name == nil then
+		return nil
+	end
+
+	local opts = nil
+	if fuzzy == true then
+		opts = { fuzzy = true }
+	elseif type(fuzzy) == "table" then
+		opts = fuzzy
+	end
+	local wantFuzzy = opts and opts.fuzzy
+	local wantMultiple = opts and (opts.multiple or opts.returnAll)
+
+	refreshCategoryCache()
+	local category = State.categoryCacheByName and State.categoryCacheByName[name]
+	if category and not wantFuzzy then
+		return category
+	end
+
+	if not wantFuzzy then
+		return State.categories[name]
+	end
+
+	local normalizedQuery = normalizeCategoryName(name)
+	local lowerQuery = type(name) == "string" and name:lower() or nil
+	if not normalizedQuery and not lowerQuery then
+		return nil
+	end
+
+	local best, bestScore, bestLen
+	local results = wantMultiple and {} or nil
+	for _, cat in ipairs(collectCategories()) do
+		local candidateName = cat.GetName and cat:GetName()
+		local score = scoreCategoryName(name, normalizedQuery, lowerQuery, candidateName)
+		if score then
+			if wantMultiple then
+				results[#results + 1] = cat
+			else
+				local len = candidateName and #candidateName or math.huge
+				if not best or score < bestScore or (score == bestScore and len < bestLen) then
+					best, bestScore, bestLen = cat, score, len
+				end
+			end
+		end
+	end
+
+	if wantMultiple then
+		return results
+	end
+	return best
+end
+
+function lib:FindCategory(query, opts)
+	if query == nil then
+		return nil
+	end
+
+	opts = (type(opts) == "table") and opts or {}
+	local wantFuzzy = opts.fuzzy ~= false -- default on
+	local wantMultiple = opts.multiple ~= false -- default return all matches
+
+	refreshCategoryCache()
+
+	local normalizedQuery = wantFuzzy and normalizeCategoryName(query) or nil
+	local lowerQuery = type(query) == "string" and query:lower() or nil
+
+	local best, bestScore, bestLen
+	local results = wantMultiple and {} or nil
+	local seen = wantMultiple and {} or nil
+
+	for _, cat in ipairs(collectCategories()) do
+		local candidateName = cat.GetName and cat:GetName()
+		local score
+		if wantFuzzy then
+			score = scoreCategoryName(query, normalizedQuery, lowerQuery, candidateName)
+		else
+			if candidateName == query or (lowerQuery and candidateName and candidateName:lower() == lowerQuery) then
+				score = 0
+			end
+		end
+
+		if score then
+			if wantMultiple then
+				local entry = makeCategoryResult(cat)
+				if entry then
+					entry._score = score
+					entry._len = entry.name and #entry.name or math.huge
+					local key = tostring(entry.id or "") .. "|" .. tostring(entry.name or "")
+					if not seen[key] then
+						seen[key] = true
+						results[#results + 1] = entry
+					end
+				end
+			else
+				local len = candidateName and #candidateName or math.huge
+				if not best or score < bestScore or (score == bestScore and len < bestLen) then
+					best, bestScore, bestLen = cat, score, len
+				end
+			end
+		end
+	end
+
+	if wantMultiple then
+		table.sort(results, function(a, b)
+			if a._score ~= b._score then
+				return a._score < b._score
+			end
+			if a._len ~= b._len then
+				return a._len < b._len
+			end
+			if a.name ~= b.name then
+				return tostring(a.name or "") < tostring(b.name or "")
+			end
+			return tostring(a.id or "") < tostring(b.id or "")
+		end)
+		for i = 1, #results do
+			results[i]._score = nil
+			results[i]._len = nil
+		end
+		return results
+	end
+
+	return makeCategoryResult(best)
+end
+
+function lib:GetCategoryByID(id)
+	if id == nil then
+		return nil
+	end
+
+	refreshCategoryCache()
+	local cache = State.categoryCacheByID
+	if not cache then
+		return nil
+	end
+
+	local category = cache[id]
+	if category then
+		return category
+	end
+
+	if type(id) == "number" then
+		return cache[tostring(id)]
+	elseif type(id) == "string" then
+		local numeric = tonumber(id)
+		if numeric then
+			return cache[numeric] or cache[tostring(numeric)]
+		end
+	end
 end
 
 function lib:GetElement(key)

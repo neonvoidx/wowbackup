@@ -76,7 +76,7 @@ if not SpecBisTooltip.DEBUG then
     SpecBisTooltip:AddTrans("ruRU", "LID_INVTYPE_RELIC", "Реликвия")
     SpecBisTooltip:AddTrans("ruRU", "LID_INVTYPE_HEAD_SOURCE", "Источник для головы")
     SpecBisTooltip:AddTrans("ruRU", "LID_INVTYPE_NECK_SOURCE", "Источник для шеи")
-    SpecBisTooltip:AddTrans("enUS", "LID_INVTYPE_SHOULDER_SOURCE", "Источник для плеч")
+    SpecBisTooltip:AddTrans("ruRU", "LID_INVTYPE_SHOULDER_SOURCE", "Источник для плеч")
     SpecBisTooltip:AddTrans("ruRU", "LID_INVTYPE_CLOAK_SOURCE", "Источник для плаща")
     SpecBisTooltip:AddTrans("ruRU", "LID_INVTYPE_ROBE_SOURCE", "Источник для рубашки")
     SpecBisTooltip:AddTrans("ruRU", "LID_INVTYPE_CHEST_SOURCE", "Источник для груди")
@@ -105,4 +105,5 @@ if not SpecBisTooltip.DEBUG then
     SpecBisTooltip:AddTrans("ruRU", "LID_INVTYPE_RELIC_SOURCE", "Источник для реликвии")
     SpecBisTooltip:AddTrans("ruRU", "LID_GUIDEITEMID", "Руководство по идентификаторам предметов")
     SpecBisTooltip:AddTrans("ruRU", "LID_OTHERCLASSESMAYALSO", "Другим классам это также может понадобиться.")
+    SpecBisTooltip:AddTrans("ruRU", "LID_ITEM", "Item")
 end

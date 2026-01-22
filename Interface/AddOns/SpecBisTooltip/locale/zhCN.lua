@@ -35,4 +35,5 @@ if not SpecBisTooltip.DEBUG then
     SpecBisTooltip:AddTrans("zhCN", "LID_catalyst/unknown", "催化剂/未知")
     SpecBisTooltip:AddTrans("zhCN", "LID_unknown", "未知")
     SpecBisTooltip:AddTrans("zhCN", "LID_yourbissource", "你的 BIS 来源：%s")
+    SpecBisTooltip:AddTrans("zhCN", "LID_ITEM", "Item")
 end

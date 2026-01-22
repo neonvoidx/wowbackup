@@ -2,7 +2,7 @@
 -- Equip Recommended Gear: zhCN.lua --
 --------------------------------------
 -- Chinese (Simplified, PRC) localisation
--- Translator(s):
+-- Translator(s): cikichen
 
 -- Initialisation
 if GetLocale() ~= "zhCN" then return end
@@ -11,6 +11,8 @@ local L = app.locales
 
 -- Slash commands
 -- L.INVALID_COMMAND =						"Invalid command."
+-- L.DELETED_ENTRIES =						"Deleted entries:"
+-- L.DELETED_REMOVED =						"Unique collectibles removed:"
 
 -- Version comms
 -- L.NEW_VERSION_AVAILABLE =				"There is a newer version of " .. app.NameLong .. " available:"
@@ -29,15 +31,15 @@ local L = app.locales
 -- L.WINDOW_BUTTON_CLOSE =					"Close the window"
 -- L.WINDOW_BUTTON_LOCK =					"Lock the window"
 -- L.WINDOW_BUTTON_UNLOCK =				"Unlock the window"
--- L.WINDOW_BUTTON_SETTINGS =				"Open the settings"
+L.WINDOW_BUTTON_SETTINGS =				"打开设置"
 -- L.WINDOW_BUTTON_CLEAR =					"Clear all items\nHold Shift to skip confirmation"
--- L.WINDOW_BUTTON_SORT1 =					"Sort by newest first\nCurrent sorting:|cffFFFFFF alphabetical|R"
--- L.WINDOW_BUTTON_SORT2 =					"Sort alphabetically\nCurrent sorting:|cffFFFFFF newest first|R"
--- L.WINDOW_BUTTON_CORNER =				"Double " .. app.IconLMB .. "|cffFFFFFF: Autosize to fit the window"
+-- L.WINDOW_BUTTON_SORT1 =					"Sort by newest first\nCurrent sorting:|cffFFFFFF alphabetical|r"
+-- L.WINDOW_BUTTON_SORT2 =					"Sort alphabetically\nCurrent sorting:|cffFFFFFF newest first|r"
+-- L.WINDOW_BUTTON_CORNER =				"Double " .. app.IconLMB .. "|cffFFFFFF: Autosize to fit the window|r"
 
--- L.WINDOW_HEADER_LOOT_DESC =				"|R" .. app.IconLMB .. "|cffFFFFFF: Whisper and request the item\n|RShift " .. app.IconLMB .. "|cffFFFFFF: Link the item\n|RShift " .. app.IconRMB .. "|cffFFFFFF: Remove the item"
+-- L.WINDOW_HEADER_LOOT_DESC =				"|r" .. app.IconLMB .. "|cffFFFFFF: Whisper and request the item\n|rShift " .. app.IconLMB .. "|cffFFFFFF: Link the item\n|rShift " .. app.IconRMB .. "|cffFFFFFF: Remove the item"
 -- L.WINDOW_HEADER_FILTERED =				"Filtered"
--- L.WINDOW_HEADER_FILTERED_DESC =			"|R" .. app.IconRMB .. "|cffFFFFFF: Debug this item\n|RShift " .. app.IconLMB .. "|cffFFFFFF: Link the item\n|RShift " .. app.IconRMB .. "|cffFFFFFF: Remove the item"
+-- L.WINDOW_HEADER_FILTERED_DESC =			"|r" .. app.IconRMB .. "|cffFFFFFF: Debug this item\n|rShift " .. app.IconLMB .. "|cffFFFFFF: Link the item\n|rShift " .. app.IconRMB .. "|cffFFFFFF: Remove the item"
 
 -- L.PLAYER_COLLECTED_APPEARANCE =			"collected an appearance from this item"	-- Preceded by a character name
 -- L.PLAYER_WHISPERED =					"has been whispered by " .. app.NameShort .. " users"
@@ -54,6 +56,9 @@ local L = app.locales
 -- L.INSTANT_TOOLTIP =						"Hold Shift to instantly receive your item and skip the 5 second timer."
 
 -- Settings
+-- L.SETTINGS_TOOLTIP =					app.NameLong .. "\n|cffFFFFFF" .. app.IconLMB .. ": Toggle the window\n" .. app.IconRMB .. ": " .. L.WINDOW_BUTTON_SETTINGS
+
+-- L.SETTINGS_VERSION =					GAME_VERSION_LABEL .. ":"	-- "Version"
 -- L.SETTINGS_SUPPORT_TEXTLONG =			"Developing this addon takes a significant amount of time and effort.\nPlease consider financially supporting the developer."
 -- L.SETTINGS_SUPPORT_TEXT =				"Support"
 -- L.SETTINGS_SUPPORT_BUTTON =				"Buy Me a Coffee"	-- Brand name, if there isn't a localised version, keep it the way it is
@@ -67,11 +72,17 @@ local L = app.locales
 -- L.SETTINGS_URL_COPY =					"Ctrl+C to copy:"
 -- L.SETTINGS_URL_COPIED =					"Link copied to clipboard"
 
--- L.SETTINGS_TOOLTIP =					app.IconLMB .. "|cffFFFFFF: Toggle the window\n" ..
--- 										app.IconRMB .. ": " .. L.WINDOW_BUTTON_SETTINGS
--- L.SETTINGS_BAGANATOR =					"For Baganator users this is managed by Baganator's own settings."
+-- L.SETTINGS_KEYSLASH_TITLE =				SETTINGS_KEYBINDINGS_LABEL .. " & Slash Commands"	-- "Keybindings"
+-- _G["BINDING_NAME_TLH_TOGGLEWINDOW"] =	app.NameShort .. ": Toggle Window"
+-- L.SETTINGS_SLASH_TOGGLE =				"Toggle the tracking window"
+-- L.SETTINGS_SLASH_RESETPOS =				"Reset the tracking window position"
+-- L.SETTINGS_SLASH_WHISPER_DEFAULT =		"Set the whisper message to its default"
+-- L.SETTINGS_SLASH_DELETE_DESC =			"Mark a character's unique recipes etc. as unlearned"
+-- L.SETTINGS_SLASH_CHARREALM =			"Character-Realm"
 
+-- L.GENERAL =								GENERAL	-- "General"
 -- L.SETTINGS_ITEM_OVERLAY	=				"Item Overlay"
+-- L.SETTINGS_BAGANATOR =					"For Baganator users this is managed by Baganator's own settings."
 -- L.SETTINGS_ITEM_OVERLAY_DESC =			"Show an icon and text on items, to indicate collection status and more.\n\n|cffFF0000" .. REQUIRES_RELOAD .. ".|r Use |cffFFFFFF/reload|r or relog.\n\n" .. L.SETTINGS_BAGANATOR
 -- L.SETTINGS_ICONPOS =					"Icon Position"
 -- L.SETTINGS_ICONPOS_DESC =				"The location of the icon on the item."
@@ -135,23 +146,14 @@ local L = app.locales
 -- L.SETTINGS_MODE_APPEARANCES_DESC =		"Show items only if they have a new appearance."
 -- L.SETTINGS_MODE_SOURCES =				"Sources"
 -- L.SETTINGS_MODE_SOURCES_DESC =			"Show items if they are a new source, including for known appearances."
--- L.SETTINGS_REMIX_FILTER =				"Remix Filter"
--- L.SETTINGS_REMIX_FILTER_DESC =			"Filter items below " .. "|cff" .. string.format("%02x%02x%02x", C_ColorOverrides.GetColorForQuality(3).r * 255, C_ColorOverrides.GetColorForQuality(3).g * 255, C_ColorOverrides.GetColorForQuality(3).b * 255) .. ITEM_QUALITY3_DESC .. "|r quality (untradeable) for Remix characters."
 -- L.SETTINGS_RARITY =						"Rarity"
 -- L.SETTINGS_RARITY_DESC =				"Set from what quality and up " .. app.NameShort .. " should show loot."
 -- L.SETTINGS_WHISPER =					"Whisper Message"
 -- L.SETTINGS_WHISPER_CUSTOMIZE =			"Customize"
--- L.SETTINGS_WHISPER_CUSTOMIZE_DESC =		"Customize the whisper message."
+-- L.SETTINGS_WHISPER_CUSTOMIZE_DESC =		"Customize the whisper message"
 -- L.WHISPER_POPUP_CUSTOMIZE = 			"Customize your whisper message:"
--- L.WHISPER_POPUP_ERROR = 				"Message does not include |cffC69B6D%item|r. Message is not updated."
+-- L.WHISPER_POPUP_ERROR = 				"Message does not include |cff3FC7EB%item|r. Message is not updated."
 -- L.WHISPER_POPUP_SUCCESS =				"Message is updated."
-
--- L.SETTINGS_HEADER_INFORMATION =			"Information"
--- L.SETTINGS_SLASH_TITLE =				"Slash Commands"
--- L.SETTINGS_SLASH_DESC =					"Type these in chat to use them!"
--- L.SETTINGS_SLASH_TOGGLE =				"Toggle the tracking window."
--- L.SETTINGS_SLASH_RESETPOS =				"Reset the tracking window position."
--- L.SETTINGS_SLASH_WHISPER_DEFAULT =		"Set the whisper message to its default."
 
 -- L.SETTINGS_HEADER_TWEAKS =				"Tweaks"
 -- L.SETTINGS_CATALYST =					"Instant Catalyst"

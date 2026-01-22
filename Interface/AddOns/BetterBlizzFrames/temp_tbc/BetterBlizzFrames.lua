@@ -53,6 +53,7 @@ local defaultSettings = {
     --enableLoCFrame = true,
     raiseTargetCastbarStrata = true,
     playerEliteFrameMode = 1,
+    reduceEditModeSelectionAlpha = true,
 
     --Target castbar
     playerCastbarIconXPos = 0,
@@ -1069,7 +1070,7 @@ function BBF.MoveToTFrames()
         TargetFrameToT:ClearAllPoints()
         if BetterBlizzFramesDB.targetToTAnchor == "BOTTOMRIGHT" then
             --TargetFrameToT:SetPoint(BBF.GetOppositeAnchor(BetterBlizzFramesDB.targetToTAnchor),TargetFrame,BetterBlizzFramesDB.targetToTAnchor,BetterBlizzFramesDB.targetToTXPos - 108,BetterBlizzFramesDB.targetToTYPos + 10)
-            TargetFrameToT:SetPoint(BetterBlizzFramesDB.targetToTAnchor,TargetFrame,BetterBlizzFramesDB.targetToTAnchor,BetterBlizzFramesDB.targetToTXPos - 35,BetterBlizzFramesDB.targetToTYPos - 10)
+            TargetFrameToT:SetPoint(BetterBlizzFramesDB.targetToTAnchor,TargetFrame,BetterBlizzFramesDB.targetToTAnchor,BetterBlizzFramesDB.targetToTXPos - 17,BetterBlizzFramesDB.targetToTYPos - 15)
         else
             TargetFrameToT:SetPoint(BBF.GetOppositeAnchor(BetterBlizzFramesDB.targetToTAnchor),TargetFrame,BetterBlizzFramesDB.targetToTAnchor,BetterBlizzFramesDB.targetToTXPos,BetterBlizzFramesDB.targetToTYPos)
         end
@@ -1080,7 +1081,7 @@ function BBF.MoveToTFrames()
         FocusFrameToT:ClearAllPoints()
         if BetterBlizzFramesDB.focusToTAnchor == "BOTTOMRIGHT" then
             --FocusFrameToT:SetPoint(BBF.GetOppositeAnchor(BetterBlizzFramesDB.focusToTAnchor),FocusFrame,BetterBlizzFramesDB.focusToTAnchor,BetterBlizzFramesDB.focusToTXPos - 108,BetterBlizzFramesDB.focusToTYPos + 10)
-            FocusFrameToT:SetPoint(BetterBlizzFramesDB.focusToTAnchor,FocusFrame,BetterBlizzFramesDB.focusToTAnchor,BetterBlizzFramesDB.focusToTXPos - 35,BetterBlizzFramesDB.focusToTYPos - 10)
+            FocusFrameToT:SetPoint(BetterBlizzFramesDB.focusToTAnchor,FocusFrame,BetterBlizzFramesDB.focusToTAnchor,BetterBlizzFramesDB.focusToTXPos - 17,BetterBlizzFramesDB.focusToTYPos - 15)
         else
             FocusFrameToT:SetPoint(BBF.GetOppositeAnchor(BetterBlizzFramesDB.focusToTAnchor),FocusFrame,BetterBlizzFramesDB.focusToTAnchor,BetterBlizzFramesDB.focusToTXPos,BetterBlizzFramesDB.focusToTYPos)
         end
@@ -1225,11 +1226,11 @@ function BBF.GenericLegacyComboSupport()
             finishedFunc = ComboPointShineFadeOut,
             finishedArg1 = frame,
         }
-        UIFrameFade(frame, fadeInfo)
+        BBF.UIFrameFadeIn(frame, fadeInfo)
     end
 
     local function ComboPointShineFadeOut(frame)
-        UIFrameFadeOut(frame, COMBOFRAME_SHINE_FADE_OUT)
+        BBF.UIFrameFadeOut(frame, COMBOFRAME_SHINE_FADE_OUT)
     end
 
     local showAlways = BetterBlizzFramesDB.alwaysShowLegacyComboPoints
@@ -1379,7 +1380,7 @@ function BBF.GenericLegacyComboSupport()
                             finishedFunc = ComboPointShineFadeIn,
                             finishedArg1 = shine,
                         }
-                        UIFrameFade(highlight, fadeInfo)
+                        BBF.UIFrameFade(highlight, fadeInfo)
                     end
                 end
 
@@ -1394,7 +1395,7 @@ function BBF.GenericLegacyComboSupport()
             frame:Show()
         end
 
-        UIFrameFadeRemoveFrame(frame)
+        BBF.UIFrameFadeRemoveFrame(frame)
 
         lastComboPoints = comboPoints
     end
@@ -1603,8 +1604,8 @@ function BBF.InstantComboPoints()
         for i = 1, maxComboPoints do
             local point = frame.ComboPoints[comboIndex]
             if point then
-                UIFrameFadeRemoveFrame(point.Highlight)
-                UIFrameFadeRemoveFrame(point.Shine)
+                BBF.UIFrameFadeRemoveFrame(point.Highlight)
+                BBF.UIFrameFadeRemoveFrame(point.Shine)
 
                 point:SetAlpha(1)
                 point.Highlight:SetAlpha(i <= comboPoints and 1 or 0)
@@ -1624,7 +1625,7 @@ function BBF.InstantComboPoints()
             frame:Hide()
         end
 
-        UIFrameFadeRemoveFrame(frame)
+        BBF.UIFrameFadeRemoveFrame(frame)
     end
 
     local function UpdateDruidComboPoints(self)
@@ -2162,132 +2163,6 @@ local originalSettings = {
     texCoords = {}
 }
 
--- Function to back up current settings
-local function backupSettings()
-    if not originalSettings.backedUp then
-        -- Back up positions
-        originalSettings.positions = {
-            MainMenuBarTexture3 = {MainMenuBarTexture3:GetPoint()},
-            CharacterMicroButton = {CharacterMicroButton:GetPoint()},
-            SpellbookMicroButton = {SpellbookMicroButton:GetPoint()},
-            TalentMicroButton = {TalentMicroButton:GetPoint()},
-            AchievementMicroButton = {AchievementMicroButton:GetPoint()},
-            QuestLogMicroButton = {QuestLogMicroButton:GetPoint()},
-            GuildMicroButton = {GuildMicroButton:GetPoint()},
-            CollectionsMicroButton = {CollectionsMicroButton:GetPoint()},
-            PVPMicroButton = {PVPMicroButton:GetPoint()},
-            LFGMicroButton = {LFGMicroButton:GetPoint()},
-            EJMicroButton = {EJMicroButton:GetPoint()},
-            MainMenuMicroButton = {MainMenuMicroButton:GetPoint()},
-            HelpMicroButton = {HelpMicroButton:GetPoint()},
-            MainMenuBarBackpackButton = {MainMenuBarBackpackButton:GetPoint()},
-            CharacterBag1Slot = {CharacterBag1Slot:GetPoint()},
-            CharacterBag2Slot = {CharacterBag2Slot:GetPoint()},
-            CharacterBag3Slot = {CharacterBag3Slot:GetPoint()},
-            MainMenuExpBar = {MainMenuExpBar:GetPoint()},
-            MainMenuXPBarTexture0 = {MainMenuXPBarTexture0:GetPoint()},
-            MainMenuXPBarTexture1 = {MainMenuXPBarTexture1:GetPoint()},
-            MainMenuXPBarTexture2 = {MainMenuXPBarTexture2:GetPoint()},
-            MainMenuXPBarTexture3 = {MainMenuXPBarTexture3:GetPoint()},
-            MainMenuBarRightEndCap = {MainMenuBarRightEndCap:GetPoint()},
-            MainMenuMaxLevelBar0 = {MainMenuMaxLevelBar0:GetPoint()},
-            MainMenuMaxLevelBar1 = {MainMenuMaxLevelBar1:GetPoint()},
-            MainMenuMaxLevelBar2 = {MainMenuMaxLevelBar2:GetPoint()},
-            MainMenuMaxLevelBar3 = {MainMenuMaxLevelBar3:GetPoint()},
-            ReputationWatchBar = {ReputationWatchBar:GetPoint()},
-            ReputationWatchBar_StatusBar_XPBarTexture0 = {ReputationWatchBar.StatusBar.XPBarTexture0:GetPoint()},
-            ReputationWatchBar_StatusBar_XPBarTexture1 = {ReputationWatchBar.StatusBar.XPBarTexture1:GetPoint()},
-            ReputationWatchBar_StatusBar_XPBarTexture2 = {ReputationWatchBar.StatusBar.XPBarTexture2:GetPoint()},
-            ReputationWatchBar_StatusBar_XPBarTexture3 = {ReputationWatchBar.StatusBar.XPBarTexture3:GetPoint()}
-        }
-
-        -- Back up other sizes
-        originalSettings.sizes = {
-            MainMenuBarTexture3 = {MainMenuBarTexture3:GetSize()},
-            MainMenuBarBackpackButton = {MainMenuBarBackpackButton:GetSize()},
-            MainMenuBarBackpackButtonNormalTexture = {MainMenuBarBackpackButtonNormalTexture:GetSize()},
-            MainMenuExpBar = {MainMenuExpBar:GetSize()},
-            MainMenuXPBarTexture0 = {MainMenuXPBarTexture0:GetSize()},
-            MainMenuXPBarTexture1 = {MainMenuXPBarTexture1:GetSize()},
-            MainMenuXPBarTexture2 = {MainMenuXPBarTexture2:GetSize()},
-            MainMenuXPBarTexture3 = {MainMenuXPBarTexture3:GetSize()},
-            MainMenuMaxLevelBar0 = {MainMenuMaxLevelBar0:GetSize()},
-            MainMenuMaxLevelBar1 = {MainMenuMaxLevelBar1:GetSize()},
-            MainMenuMaxLevelBar2 = {MainMenuMaxLevelBar2:GetSize()},
-            MainMenuMaxLevelBar3 = {MainMenuMaxLevelBar3:GetSize()},
-            ReputationWatchBar = {ReputationWatchBar:GetSize()},
-            ReputationWatchBar_StatusBar = {ReputationWatchBar.StatusBar:GetSize()}
-        }
-
-        -- Mark as backed up
-        originalSettings.backedUp = true
-    end
-end
-
--- Function to restore original settings
-local function restoreSettings()
-    if originalSettings.backedUp then
-        -- Restore positions
-        MainMenuBarTexture3:SetPoint(unpack(originalSettings.positions.MainMenuBarTexture3))
-        CharacterMicroButton:SetPoint(unpack(originalSettings.positions.CharacterMicroButton))
-        SpellbookMicroButton:SetPoint(unpack(originalSettings.positions.SpellbookMicroButton))
-        TalentMicroButton:SetPoint(unpack(originalSettings.positions.TalentMicroButton))
-        AchievementMicroButton:SetPoint(unpack(originalSettings.positions.AchievementMicroButton))
-        QuestLogMicroButton:SetPoint(unpack(originalSettings.positions.QuestLogMicroButton))
-        GuildMicroButton:SetPoint(unpack(originalSettings.positions.GuildMicroButton))
-        CollectionsMicroButton:SetPoint(unpack(originalSettings.positions.CollectionsMicroButton))
-        PVPMicroButton:SetPoint(unpack(originalSettings.positions.PVPMicroButton))
-        LFGMicroButton:SetPoint(unpack(originalSettings.positions.LFGMicroButton))
-        EJMicroButton:SetPoint(unpack(originalSettings.positions.EJMicroButton))
-        MainMenuMicroButton:SetPoint(unpack(originalSettings.positions.MainMenuMicroButton))
-        HelpMicroButton:SetPoint(unpack(originalSettings.positions.HelpMicroButton))
-        MainMenuBarBackpackButton:SetPoint(unpack(originalSettings.positions.MainMenuBarBackpackButton))
-        CharacterBag1Slot:SetPoint(unpack(originalSettings.positions.CharacterBag1Slot))
-        CharacterBag2Slot:SetPoint(unpack(originalSettings.positions.CharacterBag2Slot))
-        CharacterBag3Slot:SetPoint(unpack(originalSettings.positions.CharacterBag3Slot))
-        MainMenuExpBar:SetPoint(unpack(originalSettings.positions.MainMenuExpBar))
-        MainMenuXPBarTexture0:SetPoint(unpack(originalSettings.positions.MainMenuXPBarTexture0))
-        MainMenuXPBarTexture1:SetPoint(unpack(originalSettings.positions.MainMenuXPBarTexture1))
-        MainMenuXPBarTexture2:SetPoint(unpack(originalSettings.positions.MainMenuXPBarTexture2))
-        MainMenuXPBarTexture3:SetPoint(unpack(originalSettings.positions.MainMenuXPBarTexture3))
-        MainMenuBarRightEndCap:SetPoint(unpack(originalSettings.positions.MainMenuBarRightEndCap))
-        MainMenuMaxLevelBar0:SetPoint(unpack(originalSettings.positions.MainMenuMaxLevelBar0))
-        MainMenuMaxLevelBar1:SetPoint(unpack(originalSettings.positions.MainMenuMaxLevelBar1))
-        MainMenuMaxLevelBar2:SetPoint(unpack(originalSettings.positions.MainMenuMaxLevelBar2))
-        MainMenuMaxLevelBar3:SetPoint(unpack(originalSettings.positions.MainMenuMaxLevelBar3))
-        ReputationWatchBar:SetPoint(unpack(originalSettings.positions.ReputationWatchBar))
-        ReputationWatchBar.StatusBar.XPBarTexture0:SetPoint(unpack(originalSettings.positions.ReputationWatchBar_StatusBar_XPBarTexture0))
-        ReputationWatchBar.StatusBar.XPBarTexture1:SetPoint(unpack(originalSettings.positions.ReputationWatchBar_StatusBar_XPBarTexture1))
-        ReputationWatchBar.StatusBar.XPBarTexture2:SetPoint(unpack(originalSettings.positions.ReputationWatchBar_StatusBar_XPBarTexture2))
-        ReputationWatchBar.StatusBar.XPBarTexture3:SetPoint(unpack(originalSettings.positions.ReputationWatchBar_StatusBar_XPBarTexture3))
-
-        -- Restore sizes and texCoords for character bags
-        for i = 0, 3 do
-            local border = _G["CharacterBag"..i.."SlotNormalTexture"]
-            local icon = _G["CharacterBag"..i.."SlotIconTexture"]
-            border:SetSize(64,64)
-            icon:SetSize(30,30)
-            icon:SetTexCoord(0,1,0,1)
-        end
-
-        -- Restore other sizes
-        MainMenuBarTexture3:SetSize(unpack(originalSettings.sizes.MainMenuBarTexture3))
-        MainMenuBarBackpackButton:SetSize(unpack(originalSettings.sizes.MainMenuBarBackpackButton))
-        MainMenuBarBackpackButtonNormalTexture:SetSize(unpack(originalSettings.sizes.MainMenuBarBackpackButtonNormalTexture))
-        MainMenuExpBar:SetSize(unpack(originalSettings.sizes.MainMenuExpBar))
-        MainMenuXPBarTexture0:SetSize(unpack(originalSettings.sizes.MainMenuXPBarTexture0))
-        MainMenuXPBarTexture1:SetSize(unpack(originalSettings.sizes.MainMenuXPBarTexture1))
-        MainMenuXPBarTexture2:SetSize(unpack(originalSettings.sizes.MainMenuXPBarTexture2))
-        MainMenuXPBarTexture3:SetSize(unpack(originalSettings.sizes.MainMenuXPBarTexture3))
-        MainMenuMaxLevelBar0:SetSize(unpack(originalSettings.sizes.MainMenuMaxLevelBar0))
-        MainMenuMaxLevelBar1:SetSize(unpack(originalSettings.sizes.MainMenuMaxLevelBar1))
-        MainMenuMaxLevelBar2:SetSize(unpack(originalSettings.sizes.MainMenuMaxLevelBar2))
-        MainMenuMaxLevelBar3:SetSize(unpack(originalSettings.sizes.MainMenuMaxLevelBar3))
-        ReputationWatchBar:SetSize(unpack(originalSettings.sizes.ReputationWatchBar))
-        ReputationWatchBar.StatusBar:SetSize(unpack(originalSettings.sizes.ReputationWatchBar_StatusBar))
-    end
-end
-
 local function ChangeHotkeyWidth(width)
     local function changeWidth(frame, width)
         if not frame then return end
@@ -2315,193 +2190,29 @@ function BBF.FixStupidBlizzPTRShit()
             end
             return
         end
-        if not EJMicroButton then
-            if not BBF.missingEJWarning then
-                BBF.missingEJWarning = true
-                BBF.Print(L["Print_Missing_EJ_Micro_Button"])
-            end
-            return
-        end
-
-         -- Backup original settings if not already backed up
-        if not originalSettings.backedUp then
-            backupSettings()
-        end
 
         BBF.ActionBarIconZoom()
-        ChangeHotkeyWidth(32)
-
-        if not BBF.hookedActionBarTextWidth then
-            hooksecurefunc("ActionButton_UpdateHotkeys", function(self)
-                if BBF.hotkeyCancel then return end
-                self.HotKey:SetWidth(32)
-            end)
-            BBF.hookedActionBarTextWidth = true
-        end
         BBF.hotkeyCancel = nil
 
         local a,b,c,d,e = TargetFrameToTPortrait:GetPoint()
-        TargetFrameToTPortrait:SetPoint(a,b,c,3,-3)
-        TargetFrameToTPortrait:SetSize(40,40)
+        TargetFrameToTPortrait:SetPoint(a,b,c,5,-5)
+        TargetFrameToTPortrait:SetSize(36,36)
 
         local a,b,c,d,e = FocusFrameToTPortrait:GetPoint()
         FocusFrameToTPortrait:SetPoint(a,b,c,5,-5)
         FocusFrameToTPortrait:SetSize(36,36)
 
-        local a,b,c,d,e = PetFrameHealthBar:GetPoint()
-        PetFrameHealthBar:SetPoint(a,b,c,46,e)
-        local a,b,c,d,e = PetFrameManaBar:GetPoint()
-        PetFrameManaBar:SetPoint(a,b,c,46,e)
-
-        if not BetterBlizzFramesDB.biggerHealthbars then
-            local a,b,c,d,e = TargetFrameNameBackground:GetPoint()
-            TargetFrameNameBackground:SetPoint(a,b,c,-107,-23)
-            TargetFrameNameBackground:SetHeight(18)
-            local a,b,c,d,e = TargetFrameHealthBar:GetPoint()
-            TargetFrameHealthBar:SetPoint(a,b,c,-107,e)
-            local a,b,c,d,e = TargetFrameManaBar:GetPoint()
-            TargetFrameManaBar:SetPoint(a,b,c,-107,e)
-
-            local a,b,c,d,e = FocusFrameNameBackground:GetPoint()
-            FocusFrameNameBackground:SetPoint(a,b,c,-107,-23)
-            FocusFrameNameBackground:SetHeight(18)
-            local a,b,c,d,e = FocusFrameHealthBar:GetPoint()
-            FocusFrameHealthBar:SetPoint(a,b,c,-107,e)
-            local a,b,c,d,e = FocusFrameManaBar:GetPoint()
-            FocusFrameManaBar:SetPoint(a,b,c,-107,e)
+        if not BBF.tfbFix then
+            hooksecurefunc(TargetFrameBackground, "SetSize", function()
+                TargetFrameBackground:SetHeight(40)
+            end)
+            BBF.tfbFix = true
         end
-
-        if C_AddOns.IsAddOnLoaded("Bartender4") then return end
-        if C_AddOns.IsAddOnLoaded("Dominos") then return end
-        if BBF.isMoP then return end
-
-        MainMenuBarTextureExtender:Hide()
-        MainMenuBarTexture3:SetPoint("BOTTOM", MainMenuBarArtFrame, "BOTTOM", 371, 0)
-        MainMenuBarTexture3:SetWidth(260)
-        CharacterMicroButton:SetPoint("BOTTOMLEFT", MainMenuBarArtFrame, "BOTTOMLEFT", 550, 2)
-        SpellbookMicroButton:SetPoint("BOTTOMLEFT", CharacterMicroButton, "BOTTOMRIGHT", -3.5, 0)
-        TalentMicroButton:SetPoint("BOTTOMLEFT", SpellbookMicroButton, "BOTTOMRIGHT", -3.5, 0)
-        AchievementMicroButton:SetPoint("BOTTOMLEFT", TalentMicroButton, "BOTTOMRIGHT", -3.5, 0)
-        QuestLogMicroButton:SetPoint("BOTTOMLEFT", AchievementMicroButton, "BOTTOMRIGHT", -3.5, 0)
-        GuildMicroButton:SetPoint("BOTTOMLEFT", QuestLogMicroButton, "BOTTOMRIGHT", -3.5, 0)
-        CollectionsMicroButton:SetPoint("BOTTOMLEFT", GuildMicroButton, "BOTTOMRIGHT", -3.5, 0)
-        PVPMicroButton:SetPoint("BOTTOMLEFT", CollectionsMicroButton, "BOTTOMRIGHT", -3.5, 0)
-        LFGMicroButton:SetPoint("BOTTOMLEFT", PVPMicroButton, "BOTTOMRIGHT", -3.5, 0)
-        EJMicroButton:SetPoint("BOTTOMLEFT", LFGMicroButton, "BOTTOMRIGHT", -3.5, 0)
-        MainMenuMicroButton:SetPoint("BOTTOMLEFT", EJMicroButton, "BOTTOMRIGHT", -3.5, 0)
-        HelpMicroButton:SetPoint("BOTTOMLEFT", MainMenuMicroButton, "BOTTOMRIGHT", -3.5, 0)
-
-        MainMenuBarBackpackButton:SetPoint("BOTTOMRIGHT", MainMenuBarArtFrame, "BOTTOMRIGHT", -25, 6)
-        CharacterBag1Slot:SetPoint("RIGHT", CharacterBag0Slot, "LEFT", -2, 0)
-        CharacterBag2Slot:SetPoint("RIGHT", CharacterBag1Slot, "LEFT", -2, 0)
-        CharacterBag3Slot:SetPoint("RIGHT", CharacterBag2Slot, "LEFT", -2, 0)
-
-        MainMenuBarBackpackButton:SetSize(32, 32)
-        MainMenuBarBackpackButtonNormalTexture:SetSize(51, 52)
-        for i = 0, 3 do
-            local border = _G["CharacterBag" .. i .. "SlotNormalTexture"]
-            local icon = _G["CharacterBag" .. i .. "SlotIconTexture"]
-            icon:SetSize(32, 33)
-            icon:SetTexCoord(0.06, 0.94, 0.06, 0.94)
-            border:SetSize(52, 53)
-        end
-
-        MainMenuExpBar:SetWidth(1012)
-        MainMenuExpBar:SetPoint("TOP", MainMenuBar, "TOP", -10, 0)
-        MainMenuXPBarTexture0:SetPoint("BOTTOM", MainMenuExpBar, "BOTTOM", -382, 3)
-        MainMenuXPBarTexture0:SetWidth(255)
-        MainMenuXPBarTexture1:SetPoint("BOTTOM", MainMenuExpBar, "BOTTOM", -126, 3)
-        MainMenuXPBarTexture1:SetWidth(255)
-        MainMenuXPBarTexture2:SetPoint("BOTTOM", MainMenuExpBar, "BOTTOM", 126, 3)
-        MainMenuXPBarTexture2:SetWidth(255)
-        MainMenuXPBarTexture3:SetPoint("BOTTOM", MainMenuExpBar, "BOTTOM", 381, 3)
-        MainMenuXPBarTexture3:SetWidth(255)
-        MainMenuBarRightEndCap:SetPoint("BOTTOM", MainMenuBarArtFrame, "BOTTOM", 533, 0)
-
-        MainMenuMaxLevelBar0:SetPoint("BOTTOM", MainMenuExpBar, "BOTTOM", -382, 2)
-        MainMenuMaxLevelBar0:SetWidth(255)
-        MainMenuMaxLevelBar1:SetPoint("BOTTOM", MainMenuExpBar, "BOTTOM", -126, 2)
-        MainMenuMaxLevelBar1:SetWidth(255)
-        MainMenuMaxLevelBar2:SetPoint("BOTTOM", MainMenuExpBar, "BOTTOM", 126, 2)
-        MainMenuMaxLevelBar2:SetWidth(255)
-        MainMenuMaxLevelBar3:SetPoint("BOTTOM", MainMenuExpBar, "BOTTOM", 381, 2)
-        MainMenuMaxLevelBar3:SetWidth(254)
-
-        ReputationWatchBar:SetWidth(1012)
-        ReputationWatchBar.StatusBar:SetWidth(1015)
-        ReputationWatchBar:SetPoint("TOP", MainMenuBar, "TOP", -13, 0)
-        ReputationWatchBar.StatusBar.XPBarTexture0:SetPoint("BOTTOM", MainMenuExpBar, "BOTTOM", -382, 3)
-        ReputationWatchBar.StatusBar.XPBarTexture0:SetWidth(255)
-        ReputationWatchBar.StatusBar.XPBarTexture1:SetPoint("BOTTOM", MainMenuExpBar, "BOTTOM", -126, 3)
-        ReputationWatchBar.StatusBar.XPBarTexture1:SetWidth(255)
-        ReputationWatchBar.StatusBar.XPBarTexture2:SetPoint("BOTTOM", MainMenuExpBar, "BOTTOM", 126, 3)
-        ReputationWatchBar.StatusBar.XPBarTexture2:SetWidth(255)
-        ReputationWatchBar.StatusBar.XPBarTexture3:SetPoint("BOTTOM", MainMenuExpBar, "BOTTOM", 381, 3)
-        ReputationWatchBar.StatusBar.XPBarTexture3:SetWidth(255)
     else
-        BBF.hotkeyCancel = true
-        MainMenuBarTextureExtender:Show()
-        ChangeHotkeyWidth(28)
-        restoreSettings()
+        -- BBF.hotkeyCancel = true
+        -- ChangeHotkeyWidth(28)
         BBF.ActionBarIconZoom()
     end
-end
-
-function BBF.ClassPortraits()
-    hooksecurefunc("SetPortraitTexture", function(portrait, unit)
-        if UnitIsPlayer(unit) then
-            if BetterBlizzFramesDB.classPortraitsIgnoreSelf and portrait:GetParent():GetName() == "PlayerFrame" then return end
-
-            -- Check if spec icons are enabled
-            if BetterBlizzFramesDB.classPortraitsUseSpecIcons and Details then
-                local unitGUID = UnitGUID(unit)
-                local specID = nil
-
-                -- Try to get spec from Details addon
-                if unitGUID then
-                    specID = Details:GetSpecByGUID(unitGUID)
-                end
-
-                -- If we have a specID, try to get spec icon
-                if specID then
-                    local _, _, _, icon = GetSpecializationInfoByID(specID)
-                    if icon then
-                        portrait:SetTexture(icon)
-                        portrait:SetTexCoord(0, 1, 0, 1)
-
-                        -- Apply circular mask to spec icons
-                        if not portrait.circleMask then
-                            portrait.circleMask = portrait:GetParent():CreateMaskTexture()
-                            portrait.circleMask:SetTexture("Interface\\CharacterFrame\\TempPortraitAlphaMask", "CLAMPTOBLACKADDITIVE", "CLAMPTOBLACKADDITIVE")
-                            portrait.circleMask:SetAllPoints(portrait)
-                            portrait:AddMaskTexture(portrait.circleMask)
-                        end
-                        return
-                    end
-                end
-            end
-
-            -- Fallback to class icons
-            local _, class = UnitClass(unit)
-            local texture = "Interface\\TargetingFrame\\UI-Classes-Circles"
-            local coords = CLASS_ICON_TCOORDS[class]
-
-            if coords then
-                -- Remove circular mask for class icons (they're already circular)
-                -- if portrait.circleMask then
-                --     portrait:RemoveMaskTexture(portrait.circleMask)
-                -- end
-                portrait:SetTexture(texture)
-                portrait:SetTexCoord(unpack(coords))
-            end
-        else
-            -- Remove circular mask for class icons (they're already circular)
-            -- if portrait.circleMask then
-            --     portrait:RemoveMaskTexture(portrait.circleMask)
-            -- end
-            portrait:SetTexCoord(0, 1, 0, 1)
-        end
-    end)
 end
 
 local function TurnTestModesOff()
@@ -2552,7 +2263,7 @@ function BBF.AddBackgroundTextureToUnitFrames(frame, tot)
         frame.Background:Hide()
     end
     if PlayerFrameBackground then
-        PlayerFrameBackground:Hide()
+        PlayerFrameBackground:SetHeight(17.5)
     end
 
     frame.bbfBgTexture = bgTex
@@ -2603,13 +2314,10 @@ Frame:SetScript("OnEvent", function(...)
     BBF.EnableQueueTimer()
     BBF.LegacyBlueCombos()
 
-    C_Timer.After(0, function()
+    C_Timer.After(0.5, function()
         BBF.PlayerReputationColor()
         BBF.SetCustomFonts()
         BBF.UpdateCustomTextures()
-    end)
-
-    C_Timer.After(0.5, function()
         BBF.SetResourcePosition()
         ScaleClassResource()
     end)
@@ -2843,9 +2551,10 @@ First:SetScript("OnEvent", function(_, event, addonName)
             BBF.ZoomDefaultActionbarIcons()
             --TurnOnEnabledFeaturesOnLogin()
             BBF.RaiseTargetCastbarStratas()
-            BBF.HookStatusBarText()
+            BBF.ReduceEditModeAlpha()
 
             C_Timer.After(1, function()
+                BBF.HookStatusBarText()
                 BBF.FontColors()
             end)
             C_Timer.After(0.1, function()
@@ -2949,3 +2658,117 @@ end
 if RuneFrame then
     RuneFrame:SetFrameStrata("MEDIUM")
 end
+
+if TargetFrameBackground then
+    hooksecurefunc(TargetFrameBackground, "SetSize", function(self, height)
+        self:SetHeight(40)
+    end)
+end
+
+if FocusFrameBackground then
+    hooksecurefunc(FocusFrameBackground, "SetSize", function(self, height)
+        self:SetHeight(40)
+    end)
+end
+
+function BBF.ReduceEditModeAlpha(disable)
+    if not BetterBlizzFramesDB.reduceEditModeSelectionAlpha and not disable then return end
+    local alpha = (disable and 1) or BetterBlizzFramesDB.editModeSelectionAlpha or 0.15
+
+    local frames = {
+        ArcheologyDigsiteProgressBar,
+        BagsBar,
+        BossTargetFrameContainer,
+        BuffFrame,
+        ChatFrame1,
+        CompactArenaFrame,
+        CompactRaidFrameContainer,
+        DebuffFrame,
+        DurabilityFrame,
+        ExtraAbilityContainer,
+        FocusFrame,
+        GameTooltipDefaultContainer,
+        LootFrame,
+        MainActionBar,
+        MainActionBar and MainActionBar.VehicleLeaveButton,
+        MicroMenuContainer,
+        MinimapCluster,
+        ObjectiveTrackerFrame,
+        EncounterBar,
+        MirrorTimerContainer,
+        MultiBarBottomLeft,
+        MultiBarBottomRight,
+        MultiBarLeft,
+        MultiBarRight,
+        MultiBar5,
+        MultiBar6,
+        MultiBar7,
+        PartyFrame,
+        PetActionBar,
+        PetFrame,
+        PlayerCastingBarFrame,
+        PlayerFrame,
+        PossessActionBar,
+        StanceBar,
+        StatusTrackingBarManager and StatusTrackingBarManager.MainStatusTrackingBarContainer,
+        StatusTrackingBarManager and StatusTrackingBarManager.SecondaryStatusTrackingBarContainer,
+        TargetFrame,
+        TalkingHeadFrame,
+        VehicleSeatIndicator,
+        EssentialCooldownViewer,
+        UtilityCooldownViewer,
+        BuffIconCooldownViewer,
+        BuffBarCooldownViewer,
+    }
+
+    for _, frame in pairs(frames) do
+        if frame and frame.Selection then
+            frame.Selection:SetAlpha(alpha)
+        end
+    end
+end
+
+local function CreateSmoothSlider(parent, variableToAdjust, title, defaultValue, onChangedCallback)
+    local stepSize = 0.05
+    local minValue, maxValue = 0, 1
+
+    local initialValue = BetterBlizzFramesDB[variableToAdjust] or defaultValue or maxValue
+
+    -- Create slider options and hide all labels except top
+    local options = Settings.CreateSliderOptions(minValue, maxValue, stepSize)
+    --options:SetLabelFormatter(MinimalSliderWithSteppersMixin.Label.Top, function() return title end)
+    -- Leave all others blank (default behavior is hidden if no formatter is set)
+
+    -- Create the slider
+    local slider = CreateFrame("Frame", nil, parent, "MinimalSliderWithSteppersTemplate")
+    slider:SetSize(235, 20)
+    slider:SetPoint("LEFT", parent, "RIGHT", 10, -2)
+
+    -- Label
+    local label = slider:CreateFontString(nil, "OVERLAY", "GameFontNormalMed1")
+    label:SetPoint("BOTTOM", slider, "TOP", 0, 1)
+    label:SetText(title)
+    label:SetTextColor(1,1,1,1)
+
+    -- Initialize with value and options
+    slider:Init(initialValue, options.minValue, options.maxValue, options.steps, options.formatters)
+
+    local function RoundToStep(value, step)
+        return math.floor((value / step) + 0.5) * step
+    end
+
+    -- Register OnValueChanged callback
+    slider:RegisterCallback("OnValueChanged", function(_, value)
+        local rounded = RoundToStep(value, stepSize)
+        BetterBlizzFramesDB.reduceEditModeSelectionAlpha = true
+        BetterBlizzFramesDB[variableToAdjust] = rounded
+        if onChangedCallback then
+            onChangedCallback()
+        end
+    end, slider)
+
+    return slider
+end
+C_Timer.After(1, function()
+    BBF.EditModeAlphaSlider = CreateSmoothSlider(EditModeManagerFrame.LayoutDropdown, "editModeSelectionAlpha", "Edit Mode Transparency", 0.85, BBF.ReduceEditModeAlpha)
+end)

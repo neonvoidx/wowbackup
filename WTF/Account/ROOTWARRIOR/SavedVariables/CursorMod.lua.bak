@@ -9,9 +9,9 @@ CursorModDB = {
 ["outlineOpacity"] = 0.75,
 ["scale"] = 1.02,
 ["opacity"] = 1,
-["showOnlyInCombat"] = true,
+["showOnlyInCombat"] = false,
 ["changeCursorSize"] = false,
-["lookStartDelta"] = 0.001,
+["lookStartDelta"] = 0.0001,
 ["glowColor"] = {
 1,
 1,

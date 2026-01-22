@@ -20,8 +20,10 @@ NarcissusDB = {
 ["PaperDollWidget"] = true,
 ["ShowModulePanelOnMouseOver"] = true,
 ["CameraSafeMode"] = true,
+["TransmogFrame"] = true,
 ["WeatherEffect"] = true,
 ["OutfitSortMethod"] = "name",
+["OldMinimapButtonClickBehavior"] = 1,
 ["SearchRelatives"] = false,
 ["DressingRoomIncludeItemID"] = false,
 ["ClassSetTheme_DF_1"] = 2,
@@ -67,37 +69,37 @@ true,
 ["BaseLineOffset"] = 232,
 ["TalentTreeBiggerUI"] = true,
 ["DressingRoomShowIconSelect"] = false,
+["RealmNames"] = {
+[11] = "Tichondrius",
+},
 ["UseAddonCompartment"] = true,
 ["DressingRoom"] = false,
 ["UseBustShot"] = false,
+["AnchorToMinimap"] = true,
+["ConduitTooltip"] = false,
 ["DressingRoomItemSetListHideDupes"] = true,
-["EnableDoubleTap"] = true,
-["PaperDollWidget_ClassSet"] = true,
 ["TranslateName"] = false,
 ["TalentTreeUseClassBackground"] = true,
-["FontHeightItemName"] = 11,
-["AnchorToMinimap"] = true,
+["PaperDollWidget_ClassSet"] = true,
+["AutoFilterGem"] = false,
 ["UseEscapeButton"] = true,
+["CameraOrbit"] = true,
 ["DressingRoomShowSlot"] = true,
-["installTime"] = 1722004162,
-["Tutorials"] = {
-["ExitConfirmation"] = false,
-["Movement"] = false,
-["SpellVisualBrowser"] = false,
-["NPCBrowserEntance"] = false,
-["WeaponBrowser"] = false,
-["NPCBrowser"] = true,
-},
-["IndependentMinimapButton"] = true,
+["PandariaGemManagerDefaultMode"] = 1,
+["SoloQueueLFRDetails"] = false,
 ["AutoPlayAnimation"] = false,
 ["AFKScreen"] = true,
 ["OnlyShowOwnedUpgradeItem"] = true,
 ["AKFScreenDelay"] = false,
-["SpeedyScreenshotAlert"] = true,
+["UseEntranceVisual"] = true,
 ["GlobalScale"] = 0.8999999999999999,
-["HideTextsWithUI"] = true,
-["TalentTreeForPaperDoll"] = false,
+["PandariaRemixLoadout"] = {
+[10] = {
+},
+},
+["TalentTreeAnchor"] = 1,
 ["TalentTreeForEquipmentManager"] = false,
+["TooltipTheme"] = "Bright",
 ["PerksProgramDB"] = {
 ["MonthNames"] = {
 {
@@ -185,9 +187,13 @@ true,
 ["m"] = 35,
 ["n"] = "November: Bountiful Gifts",
 },
+{
+["y"] = 2026,
+["m"] = 37,
+["n"] = "January: A New Dawn",
 },
-["CurrentMonthData"] = {
 },
+["hidePlayerArmorSetting"] = true,
 ["VendorItems"] = {
 [1019] = "::description::These light-weight wraps provide excellent muscle support.::price::20::transmogSetID::0::quality::1::perksVendorCategoryID::1::invType::INVTYPE_FEET::mountID::0::itemModifiedAppearanceID::230787::speciesID::0::name::Banded Azure War Wraps::itemID::233153::addedDate::2025/29::",
 [510] = "::description::The strange icy flames cause you to sweat and shiver at the same time.::price::700::transmogSetID::0::mountTypeName::Ground::perksVendorCategoryID::2::mountID::646::itemModifiedAppearanceID::0::name::Dim Coldflame Core::speciesID::0::itemID::137576::addedDate::2024/24::",
@@ -361,12 +367,20 @@ true,
 [312] = "::description::This style is all the rage in Emberstone Village.::price::75::transmogSetID::0::perksVendorCategoryID::1::mountID::0::itemModifiedAppearanceID::169078::speciesID::0::name::Emberstone Dress::originalPrice::150::itemID::190869::addedDate::2025/26::",
 [313] = "::description::Left over from a Volunteer Guard Day promotion.::price::50::transmogSetID::0::perksVendorCategoryID::1::mountID::0::itemModifiedAppearanceID::169079::name::City Guard Heater Shield::speciesID::0::itemID::190870::addedDate::2024/20::",
 [314] = "::description::Sword and board for the Horde!::price::50::transmogSetID::0::perksVendorCategoryID::1::mountID::0::itemModifiedAppearanceID::169080::name::Grunt's Buckler::speciesID::0::itemID::190871::addedDate::2024/20::",
+[1261] = "::description::This savage turtle sees red at every turn. Though slow in speed, it is vital to remember that nothing can outrun a cannon.::price::500::transmogSetID::0::mountTypeName::Aquatic::quality::4::perksVendorCategoryID::2::invType::INVTYPE_NON_EQUIP_IGNORE::mountID::2823::itemModifiedAppearanceID::0::speciesID::0::name::Savage Crimson Battle Turtle::itemID::260409::addedDate::2026/37::",
 [316] = "::description::Perfect for clearing those pesky jungles.::price::40::transmogSetID::0::perksVendorCategoryID::1::mountID::0::itemModifiedAppearanceID::169044::speciesID::0::name::Razor-Edged Kukri::originalPrice::50::itemID::190831::addedDate::2025/26::",
+[1263] = "::description::Practical? No. Fashionable? Absolutely.::price::150::transmogSetID::0::quality::2::perksVendorCategoryID::1::invType::INVTYPE_CHEST::mountID::0::itemModifiedAppearanceID::302167::speciesID::0::name::Iron Chainkini::itemID::260411::addedDate::2026/37::",
+[1264] = "::description::Woefully alert.::price::150::transmogSetID::0::quality::2::perksVendorCategoryID::1::invType::INVTYPE_CLOAK::mountID::0::itemModifiedAppearanceID::300859::speciesID::0::name::Crest of Unending Woe::itemID::256725::addedDate::2026/37::",
 [633] = "::description::That spring shine is a certain sign that you feel as fine as you look.::price::500::transmogSetID::3360::perksVendorCategoryID::8::mountID::0::itemModifiedAppearanceID::0::speciesID::0::name::Ensemble: Spring Reveler's Lavender Collection::itemID::212940::addedDate::2025/28::",
 [317] = "::description::The mark of a Vrykul acolyte can be seen engraved on the head.::price::50::transmogSetID::0::perksVendorCategoryID::1::mountID::0::itemModifiedAppearanceID::169045::speciesID::0::name::Acolyte's Etched Warhammer::originalPrice::75::itemID::190832::addedDate::2025/26::",
 [634] = "::description::Put on your spring clothes when you feel down and out.::price::300::transmogSetID::3361::perksVendorCategoryID::8::mountID::0::itemModifiedAppearanceID::0::speciesID::0::name::Ensemble: Spring Reveler's Lavender Apparel::itemID::213084::addedDate::2025/28::",
+[1268] = "::description::Perfect for rendering battlefield judgement.::price::200::transmogSetID::0::quality::3::perksVendorCategoryID::1::invType::INVTYPE_WEAPON::mountID::0::itemModifiedAppearanceID::298778::speciesID::0::name::Crusader's Ruby Mace::itemID::253280::addedDate::2026/37::",
+[1269] = "::description::When judgement requires two hands.::price::230::transmogSetID::0::quality::3::perksVendorCategoryID::1::invType::INVTYPE_2HWEAPON::mountID::0::itemModifiedAppearanceID::298775::speciesID::0::name::Crusader's Ruby Greatmace::itemID::253277::addedDate::2026/37::",
 [318] = "::description::Hatuun's Ridgestalkers require only a stable footing and a steady hand.::price::50::transmogSetID::0::perksVendorCategoryID::1::mountID::0::itemModifiedAppearanceID::169046::name::Krokul Guisarme::speciesID::0::itemID::190833::addedDate::2024/21::",
+[1271] = "::description::Handcrafted for the young, aspiring archers of Sunstrider Isle.::price::80::transmogSetID::0::quality::1::perksVendorCategoryID::1::invType::INVTYPE_RANGED::mountID::0::itemModifiedAppearanceID::302154::speciesID::0::name::Thalassian Recruit's Bow::itemID::260394::addedDate::2026/37::",
+[1272] = "::description::Enemies may instinctively target the shield over the wielder.::price::100::transmogSetID::0::quality::3::perksVendorCategoryID::1::invType::INVTYPE_SHIELD::mountID::0::itemModifiedAppearanceID::298262::speciesID::0::name::Shield of Unending Woe::itemID::251517::addedDate::2026/37::",
 [10] = "::description::Quite effective at making the darkest of places feel darker.::price::75::transmogSetID::0::perksVendorCategoryID::1::mountID::0::itemModifiedAppearanceID::168076::speciesID::0::name::Forsaken Cresset::originalPrice::100::itemID::189896::addedDate::2025/26::",
+[1274] = "::description::A modest look for a modest life.::price::440::transmogSetID::5245::quality::1::perksVendorCategoryID::8::invType::INVTYPE_NON_EQUIP_IGNORE::mountID::0::itemModifiedAppearanceID::0::speciesID::0::name::Ensemble: Villager's City Attire::itemID::249946::addedDate::2026/37::",
 [638] = "::description::A favorite of swashbucklers, a shoulder could be discarded to leave a sword arm free for boarding.::price::75::transmogSetID::0::perksVendorCategoryID::1::mountID::0::itemModifiedAppearanceID::194947::name::Dueler's Midnight Shoulder Cape::speciesID::0::itemID::212628::addedDate::2024/22::",
 [80] = "::description::Some hawkstriders are destined to be great. Others are destined to be Egbob.::price::200::transmogSetID::0::perksVendorCategoryID::3::mountID::0::itemModifiedAppearanceID::0::speciesID::3250::name::Egbob::originalPrice::600::itemID::190603::addedDate::2025/26::",
 [639] = "::description::Though its bright hues are reminiscent of jungle birds' feathers, its edge does not tickle.::price::300::transmogSetID::0::quality::3::perksVendorCategoryID::1::invType::INVTYPE_WEAPON::mountID::0::itemModifiedAppearanceID::195181::speciesID::0::name::Paradise's Golden Axe::itemID::213062::addedDate::2025/29::",
@@ -375,6 +389,7 @@ true,
 [642] = "::description::A new meaning to gifting flowers.::price::300::transmogSetID::0::quality::3::perksVendorCategoryID::1::invType::INVTYPE_2HWEAPON::mountID::0::itemModifiedAppearanceID::195187::speciesID::0::name::Lavish Floral Stalk::itemID::213068::addedDate::2025/29::",
 [643] = "::description::Blessed by An'she to be a sentinel of the harvest.::price::300::transmogSetID::0::quality::3::perksVendorCategoryID::1::invType::INVTYPE_2HWEAPON::mountID::0::itemModifiedAppearanceID::195190::speciesID::0::name::Sunny Floral Staff::itemID::213071::addedDate::2025/29::",
 [644] = "::description::A polished replica of the great gladiator Lo'Gosh's blade.::price::275::transmogSetID::0::perksVendorCategoryID::1::mountID::0::itemModifiedAppearanceID::195201::name::Gladiator's Battered Greatsword::speciesID::0::itemID::213106::addedDate::2024/23::",
+[1295] = "::description::Painted in the gold and red palette of Silvermoon City.::price::100::transmogSetID::0::quality::1::perksVendorCategoryID::1::invType::INVTYPE_CLOAK::mountID::0::itemModifiedAppearanceID::302305::speciesID::0::name::Thalassian Archer's Quiver::itemID::260934::addedDate::2026/37::",
 [650] = "::description::Fitting attire for a midnight rendezvous.::price::100::transmogSetID::0::perksVendorCategoryID::1::mountID::0::itemModifiedAppearanceID::195299::name::Gloves of the Midnight Soiree::speciesID::0::itemID::213395::addedDate::2024/22::",
 [652] = "::description::A gift from Granpap Whiskers to the Trading Post, amber skitterflies are remarkably docile.::price::600::transmogSetID::0::mountTypeName::Flying::quality::4::perksVendorCategoryID::2::invType::INVTYPE_NON_EQUIP_IGNORE::mountID::1468::itemModifiedAppearanceID::0::speciesID::0::name::Amber Skitterfly::itemID::192766::addedDate::2025/29::",
 [328] = "::description::Clean, utilitarian and perfect for layering.::price::50::transmogSetID::0::perksVendorCategoryID::1::mountID::0::itemModifiedAppearanceID::169099::name::Orange-Sleeved Shirt::speciesID::0::itemID::190892::addedDate::2024/21::",
@@ -572,67 +587,75 @@ true,
 [903] = "::description::Keep the pressure on!::price::300::transmogSetID::0::perksVendorCategoryID::1::mountID::0::itemModifiedAppearanceID::230865::speciesID::0::name::Steam-Powered Golden Cloak::itemID::233273::addedDate::2025/25::",
 [452] = "::description::Being made of felfire does not inherently add fire resistance.::price::100::transmogSetID::0::perksVendorCategoryID::1::mountID::0::itemModifiedAppearanceID::189040::speciesID::0::name::Aquamarine Felfire Bulwark::originalPrice::400::itemID::207957::addedDate::2025/26::",
 [904] = "::description::A prowler's prefered cape. A shoulder may be discarded to leave an arm free for pilfering.::price::75::transmogSetID::0::perksVendorCategoryID::1::mountID::0::itemModifiedAppearanceID::227813::speciesID::0::name::Prowler's Carrot Shoulder Cape::itemID::230045::addedDate::2025/25::",
+[1276] = "::description::The ideal outfit for a hard workout.::price::100::transmogSetID::4537::quality::2::perksVendorCategoryID::8::invType::INVTYPE_NON_EQUIP_IGNORE::mountID::0::itemModifiedAppearanceID::0::speciesID::0::name::Ensemble: Crimson Sweatsuit::itemID::242478::addedDate::2026/37::",
 [905] = "::description::Steam issues from its vents, discouraging attackers.::price::260::transmogSetID::0::perksVendorCategoryID::1::mountID::0::itemModifiedAppearanceID::230868::speciesID::0::name::Golden Clockwork Defender::itemID::233277::addedDate::2025/25::",
 [453] = "::description::Can also double as a fork and a knife!::price::200::transmogSetID::0::perksVendorCategoryID::1::mountID::0::itemModifiedAppearanceID::189042::speciesID::0::name::Aquamarine Felfire Splitblade::originalPrice::400::itemID::207959::addedDate::2025/26::",
 [906] = "::description::The target will be more than ticked off.::price::300::transmogSetID::0::perksVendorCategoryID::1::mountID::0::itemModifiedAppearanceID::230862::speciesID::0::name::Long-Range Golden Clockstopper::itemID::233270::addedDate::2025/25::",
+[1266] = "::description::Forged within the Scarlet Enclave, this holy blade has been tempered in the flames and faith of the Scarlet Crusade.::price::200::transmogSetID::0::quality::3::perksVendorCategoryID::1::invType::INVTYPE_WEAPON::mountID::0::itemModifiedAppearanceID::298602::speciesID::0::name::Crusader's Ruby Blade::itemID::253046::addedDate::2026/37::",
 [227] = "::description::Everything is better in pink!::price::40::transmogSetID::0::perksVendorCategoryID::1::mountID::0::itemModifiedAppearanceID::168541::speciesID::0::name::Iridescent Warcloak::originalPrice::75::itemID::190434::addedDate::2025/26::",
+[1270] = "::description::Two sides: Sharp and sharper.::price::90::transmogSetID::0::quality::3::perksVendorCategoryID::1::invType::INVTYPE_WEAPON::mountID::0::itemModifiedAppearanceID::302173::speciesID::0::name::Axe of the Crimson Crescent::itemID::260422::addedDate::2026/37::",
 [908] = "::description::Despite being found in Mechagon, none of the Mechagnomes could wield it. Perhaps this indicates the existence of an earlier mecha-civilization?::price::325::transmogSetID::0::perksVendorCategoryID::1::mountID::0::itemModifiedAppearanceID::230844::speciesID::0::name::Golden Clockwork Power Hammer::itemID::233249::addedDate::2025/25::",
+[1275] = "::description::The perfect outfit for all your mysterious magic-related needs! Comes with pockets that may or may not lead to different dimensions.::price::100::transmogSetID::5344::quality::1::perksVendorCategoryID::8::invType::INVTYPE_NON_EQUIP_IGNORE::mountID::0::itemModifiedAppearanceID::0::speciesID::0::name::Ensemble: Sorcerer's Brick Garb::itemID::257979::addedDate::2026/37::",
 [909] = "::description::This is getting heavy.::price::650::transmogSetID::4209::perksVendorCategoryID::8::mountID::0::itemModifiedAppearanceID::0::speciesID::0::name::Ensemble: Golden Clockwork Attire::itemID::233328::addedDate::2025/25::",
+[1267] = "::description::Capable of rending through flesh, steel and bone in the hands of the most faithful Scarlet Crusader.::price::230::transmogSetID::0::quality::3::perksVendorCategoryID::1::invType::INVTYPE_2HWEAPON::mountID::0::itemModifiedAppearanceID::298606::speciesID::0::name::Crusader's Ruby Greatblade::itemID::253050::addedDate::2026/37::",
 [910] = "::description::Who needs to know the time when you're wearing it?::price::650::transmogSetID::4210::perksVendorCategoryID::8::mountID::0::itemModifiedAppearanceID::0::speciesID::0::name::Ensemble: Green Clockwork Attire::itemID::233329::addedDate::2025/25::",
 [114] = "::description::Walk the plank! In style.::price::350::transmogSetID::2340::perksVendorCategoryID::8::mountID::0::itemModifiedAppearanceID::0::speciesID::0::name::Ensemble: Swashbuckling Buccaneer's Slops::originalPrice::650::itemID::190799::addedDate::2025/26::",
 [228] = "::description::Never forget to stop and smell the roses.::price::100::transmogSetID::0::perksVendorCategoryID::1::mountID::0::itemModifiedAppearanceID::169064::speciesID::0::name::Rosy Corsage::itemID::190855::addedDate::2025/26::",
+[1262] = "::description::Wearing this hat tells people that you are not afraid of anything.::price::50::transmogSetID::0::quality::1::perksVendorCategoryID::1::invType::INVTYPE_HEAD::mountID::0::itemModifiedAppearanceID::298550::speciesID::0::name::Crimson Winter Toque::itemID::252748::addedDate::2026/37::",
 [912] = "::description::Battle-tested to allow for maximum manueverability.::price::40::transmogSetID::0::perksVendorCategoryID::1::mountID::0::itemModifiedAppearanceID::230734::speciesID::0::name::Short Sunny War Skirt::itemID::233095::addedDate::2025/25::",
+[1273] = "::description::A modest look for a modest life.::price::440::transmogSetID::5254::quality::1::perksVendorCategoryID::8::invType::INVTYPE_NON_EQUIP_IGNORE::mountID::0::itemModifiedAppearanceID::0::speciesID::0::name::Ensemble: Villager's City Collection::itemID::250911::addedDate::2026/37::",
 [913] = "::description::Battle-tested to allow for maximum maneuverability and muscle support.::price::50::transmogSetID::0::perksVendorCategoryID::1::mountID::0::itemModifiedAppearanceID::230785::speciesID::0::name::Long Sunny War Skirt and Leg Wraps::itemID::233151::addedDate::2025/25::",
+[1265] = "::description::These seasonal sabatons will see you bounding towards discovery.::price::40::transmogSetID::0::quality::1::perksVendorCategoryID::1::invType::INVTYPE_FEET::mountID::0::itemModifiedAppearanceID::302172::speciesID::0::name::Basic Crimson Sabatons::itemID::260418::addedDate::2026/37::",
 [914] = "::description::These light-weight wraps provide excellent muscle support.::price::20::transmogSetID::0::perksVendorCategoryID::1::mountID::0::itemModifiedAppearanceID::230802::speciesID::0::name::Banded Sunny War Wraps::itemID::233168::addedDate::2025/25::",
-[1181] = "::description::Battle-tested to allow for maximum maneuverability.::price::40::transmogSetID::0::quality::1::perksVendorCategoryID::1::invType::INVTYPE_LEGS::mountID::0::itemModifiedAppearanceID::230727::speciesID::0::name::Short Faded War Skirt::itemID::233088::addedDate::2025/34::",
+[1084] = "::description::The arrows within beg to be released.::price::175::transmogSetID::0::quality::3::perksVendorCategoryID::1::invType::INVTYPE_CLOAK::mountID::0::itemModifiedAppearanceID::290221::speciesID::0::name::Forsaken's Grotesque Quiver::itemID::242382::addedDate::2025/31::",
 [229] = "::description::Some roses are better left unsmelled.::price::50::transmogSetID::0::perksVendorCategoryID::1::mountID::0::itemModifiedAppearanceID::169065::speciesID::0::name::Fetid Bouquet::originalPrice::100::itemID::190856::addedDate::2025/26::",
-[1180] = "::description::Battle-tested to allow for maximum maneuverability.::price::40::transmogSetID::0::quality::1::perksVendorCategoryID::1::invType::INVTYPE_LEGS::mountID::0::itemModifiedAppearanceID::230744::speciesID::0::name::Long Faded War Skirt::itemID::233105::addedDate::2025/34::",
+[1095] = "::description::Annointed in filth, blessed by plague.::price::200::transmogSetID::0::quality::3::perksVendorCategoryID::1::invType::INVTYPE_WEAPON::mountID::0::itemModifiedAppearanceID::290200::speciesID::0::name::Wailing Banshee's Mace::itemID::242350::addedDate::2025/31::",
 [916] = "::description::These light-weight wraps provide excellent ankle support.::price::20::transmogSetID::0::perksVendorCategoryID::1::mountID::0::itemModifiedAppearanceID::230819::speciesID::0::name::Banded Sunny War Slippers::itemID::233185::addedDate::2025/25::",
 [1179] = "::description::Battle-tested to allow for maximum maneuverability and muscle support.::price::50::transmogSetID::0::quality::1::perksVendorCategoryID::1::invType::INVTYPE_LEGS::mountID::0::itemModifiedAppearanceID::230761::speciesID::0::name::Short Faded War Skirt and Leg Wraps::itemID::233127::addedDate::2025/34::",
 [917] = "::description::With this bird, feathers will never be out of style.::price::750::transmogSetID::0::mountTypeName::Flying::perksVendorCategoryID::2::mountID::2036::itemModifiedAppearanceID::0::speciesID::0::name::Reins of the Brilliant Sunburst Peafowl::itemID::212631::addedDate::2025/25::",
-[1163] = "::description::Bound by ancient magics, the unmistakable sparkle of Azerite never fades.::price::80::transmogSetID::0::quality::3::perksVendorCategoryID::1::invType::INVTYPE_HOLDABLE::mountID::0::itemModifiedAppearanceID::292914::speciesID::0::name::The Speaker's Crystal Ward::itemID::245957::addedDate::2025/33::",
+[1106] = "::description::Wandering the glades of Felwood on a steady diet of cursed truffles and lost travelers. Do not pet.::price::325::transmogSetID::0::mountTypeName::Ground::quality::3::perksVendorCategoryID::2::invType::INVTYPE_NON_EQUIP_IGNORE::mountID::2600::itemModifiedAppearanceID::0::speciesID::0::name::Unarmored Deathtusk Felboar::itemID::245936::addedDate::2025/31::",
 [918] = "::description::Wisdom throughout the ages has led to a well-known saying, \"Nothing can outrun a cannon.\"::price::500::transmogSetID::0::mountTypeName::Aquatic::perksVendorCategoryID::2::mountID::2347::itemModifiedAppearanceID::0::speciesID::0::name::Savage Alabaster Battle Turtle::itemID::233354::addedDate::2025/25::",
 [1169] = "::description::The Great Anvil lies at the heart of Ironforge, but the spirit of the mountain is wherever you stand.::price::200::transmogSetID::0::quality::3::perksVendorCategoryID::1::invType::INVTYPE_CLOAK::mountID::0::itemModifiedAppearanceID::292905::speciesID::0::name::Bronzebeard's Portable Forge::itemID::245948::addedDate::2025/33::",
 [919] = "::description::Guard yourself from the inequities of the selfish and the tyranny of evil men.::price::140::transmogSetID::0::perksVendorCategoryID::1::mountID::0::itemModifiedAppearanceID::230927::speciesID::0::name::Bronze Helm of Righteousness::itemID::233355::addedDate::2025/25::",
-[1165] = "::description::Certified 100% more magical than your average rock.::price::80::transmogSetID::0::quality::3::perksVendorCategoryID::1::invType::INVTYPE_HOLDABLE::mountID::0::itemModifiedAppearanceID::292913::speciesID::0::name::Bronzebeard's Crystal Ward::itemID::245956::addedDate::2025/33::",
+[259] = "::description::Anything can be held together with duct tape and a little prayer.::price::200::transmogSetID::0::perksVendorCategoryID::1::mountID::0::itemModifiedAppearanceID::168792::speciesID::0::name::Conquest::originalPrice::600::itemID::190560::addedDate::2025/26::",
 [920] = "::description::The comfort these boots provide is worth its weight in gold.::price::40::transmogSetID::0::perksVendorCategoryID::1::mountID::0::itemModifiedAppearanceID::230928::speciesID::0::name::Gold Reinforced Cushion Boots::itemID::233360::addedDate::2025/25::",
 [1171] = "::description::An act of destruction can spark great creations.::price::230::transmogSetID::0::quality::3::perksVendorCategoryID::1::invType::INVTYPE_2HWEAPON::mountID::0::itemModifiedAppearanceID::293190::speciesID::0::name::Bronzebeard's Ancient Crusher::itemID::246781::addedDate::2025/33::",
-[1161] = "::description::The ideal outfit for a hard workout.::price::100::transmogSetID::4539::quality::2::perksVendorCategoryID::8::invType::INVTYPE_NON_EQUIP_IGNORE::mountID::0::itemModifiedAppearanceID::0::speciesID::0::name::Ensemble: Aquatic Sweatsuit::itemID::242485::addedDate::2025/33::",
+[574] = "::description::How do you not fall right through that thing? -Maztha::price::500::transmogSetID::0::mountTypeName::Flying::perksVendorCategoryID::2::mountID::441::itemModifiedAppearanceID::0::speciesID::0::name::Spectral Wind Rider::originalPrice::650::itemID::76902::addedDate::2025/26::",
 [1166] = "::description::A faint resonating harmony echoes from within the mallet, calming its wielder to their core.::price::210::transmogSetID::0::quality::3::perksVendorCategoryID::1::invType::INVTYPE_WEAPON::mountID::0::itemModifiedAppearanceID::292910::speciesID::0::name::The Speaker's Ceremonial Mallet::itemID::245953::addedDate::2025/33::",
 [922] = "::description::With a face this lovable Wuffi is sure you'll wind-up being the best of friends.::price::300::transmogSetID::0::perksVendorCategoryID::3::mountID::0::itemModifiedAppearanceID::0::speciesID::4718::name::Wind-Up Wuffi::itemID::233361::addedDate::2025/25::",
-[1167] = "::description::Perfect for opening ceremonies and closing arguments.::price::210::transmogSetID::0::quality::3::perksVendorCategoryID::1::invType::INVTYPE_WEAPON::mountID::0::itemModifiedAppearanceID::292909::speciesID::0::name::Bronzebeard's Ceremonial Gavel::itemID::245952::addedDate::2025/33::",
+[519] = "::description::Crafted for the high priests of Krag'wa and the loas most ardent adherents.::price::450::transmogSetID::3117::perksVendorCategoryID::8::mountID::0::itemModifiedAppearanceID::0::name::Imminence of Krag'wa's Executor::speciesID::0::itemID::208729::addedDate::2024/23::",
 [923] = "::description::A wag of their tail always brings a smile to your face, like clockwork.::price::300::transmogSetID::0::perksVendorCategoryID::3::mountID::0::itemModifiedAppearanceID::0::speciesID::4719::name::Wind-Up Woofer::itemID::233366::addedDate::2025/25::",
 [462] = "::description::These astral phenomena are rarely sighted due to the speed of the slyvern. It is a good omen to have one following you around.::price::200::transmogSetID::0::perksVendorCategoryID::3::mountID::0::itemModifiedAppearanceID::0::speciesID::4253::name::Slyvy::originalPrice::650::itemID::208045::addedDate::2025/26::",
 [924] = "::description::Battle-tested to allow for maximum maneuverability::price::40::transmogSetID::0::perksVendorCategoryID::1::mountID::0::itemModifiedAppearanceID::230713::speciesID::0::name::Long Crimson War Skirt::itemID::233073::addedDate::2025/26::",
 [1123] = "::description::Battle-tested to allow for maximum maneuverability and muscle support.::price::50::transmogSetID::0::quality::1::perksVendorCategoryID::1::invType::INVTYPE_LEGS::mountID::0::itemModifiedAppearanceID::230769::speciesID::0::name::Long Midnight War Skirt and Leg Wraps::itemID::233135::addedDate::2025/32::",
 [925] = "::description::Battle-tested to allow for maximum maneuverability and muscle support.::price::50::transmogSetID::0::perksVendorCategoryID::1::mountID::0::itemModifiedAppearanceID::230715::speciesID::0::name::Long Crimson War Skirt and Leg Wraps::itemID::233075::addedDate::2025/26::",
-[1115] = "::description::Battle-tested to allow for maximum maneuverability and muscle support.::price::50::transmogSetID::0::quality::1::perksVendorCategoryID::1::invType::INVTYPE_LEGS::mountID::0::itemModifiedAppearanceID::230784::speciesID::0::name::Long Snowy War Skirt and Leg Wraps::itemID::233150::addedDate::2025/32::",
+[1081] = "::description::It squeals in delight as it carves through flesh and bone.::price::200::transmogSetID::0::quality::3::perksVendorCategoryID::1::invType::INVTYPE_WEAPON::mountID::0::itemModifiedAppearanceID::291524::speciesID::0::name::Forsaken's Grotesque Blade::itemID::242628::addedDate::2025/31::",
 [926] = "::description::These light-weight wraps provide excellent muscle support.::price::20::transmogSetID::0::perksVendorCategoryID::1::mountID::0::itemModifiedAppearanceID::230716::speciesID::0::name::Banded Crimson War Wraps::itemID::233076::addedDate::2025/26::",
 [1111] = "::description::Ideal for protecting your identity from authority.::price::50::transmogSetID::0::quality::2::perksVendorCategoryID::1::invType::INVTYPE_HEAD::mountID::0::itemModifiedAppearanceID::249360::speciesID::0::name::Vigilante's Snowy Mask::itemID::235035::addedDate::2025/32::",
 [232] = "::description::A forgotten relic of Lordaeronian ceremony, the shield still offers substantial protection despite its extravagance.::price::100::transmogSetID::0::perksVendorCategoryID::1::mountID::0::itemModifiedAppearanceID::169085::speciesID::0::name::Filigreed Lion's Maw::originalPrice::250::itemID::190876::addedDate::2025/26::",
-[1133] = "::description::Get checked, mate.::price::175::transmogSetID::0::quality::3::perksVendorCategoryID::1::invType::INVTYPE_2HWEAPON::mountID::0::itemModifiedAppearanceID::290208::speciesID::0::name::Grandmaster's Royal Stave::itemID::242359::addedDate::2025/32::",
+[513] = "::description::Krag'wa's temples were guarded by loyal Zandalari wielding weapons designed to honor and protect.::price::500::transmogSetID::3118::perksVendorCategoryID::8::mountID::0::itemModifiedAppearanceID::0::name::Tools of Krag'wa's Executor::speciesID::0::itemID::208730::addedDate::2024/23::",
 [928] = "::description::Battle-tested to allow for maximum manueverability.::price::40::transmogSetID::0::perksVendorCategoryID::1::mountID::0::itemModifiedAppearanceID::230712::speciesID::0::name::Short Crimson War Skirt::itemID::233072::addedDate::2025/26::",
 [1129] = "::description::Knight to head.::price::175::transmogSetID::0::quality::3::perksVendorCategoryID::1::invType::INVTYPE_2HWEAPON::mountID::0::itemModifiedAppearanceID::290286::speciesID::0::name::Grandmaster's Royal Mace::itemID::242541::addedDate::2025/32::",
 [929] = "::description::These light-weight wraps provide excellent ankle support.::price::20::transmogSetID::0::perksVendorCategoryID::1::mountID::0::itemModifiedAppearanceID::230717::speciesID::0::name::Banded Crimson War Slippers::itemID::233078::addedDate::2025/26::",
 [465] = "::description::Gives you just a small unsatiating taste.::price::100::transmogSetID::0::perksVendorCategoryID::1::mountID::0::itemModifiedAppearanceID::51433::speciesID::0::name::Hood of Hungering Darkness::originalPrice::400::itemID::97213::addedDate::2025/26::",
 [930] = "::description::Includes a hood and mask.::price::100::transmogSetID::3922::perksVendorCategoryID::8::mountID::0::itemModifiedAppearanceID::0::speciesID::0::name::Ensemble: Prowler's Pink Headgear::itemID::230175::addedDate::2025/26::",
-[1125] = "::description::The ideal outfit for a hard workout.::price::100::transmogSetID::4540::quality::2::perksVendorCategoryID::8::invType::INVTYPE_NON_EQUIP_IGNORE::mountID::0::itemModifiedAppearanceID::0::speciesID::0::name::Ensemble: Snowy Sweatsuit::itemID::242489::addedDate::2025/32::",
+[515] = "::description::Forged by an unknown chronosmith at an unknown period in time.::price::450::transmogSetID::3113::perksVendorCategoryID::8::mountID::0::itemModifiedAppearanceID::0::name::Scales of the Silver Hoarder::speciesID::0::itemID::208725::addedDate::2024/23::",
 [931] = "::description::A prowler's prefered cape. A shoulder may be discarded to leave an arm free for pilfering.::price::75::transmogSetID::0::perksVendorCategoryID::1::mountID::0::itemModifiedAppearanceID::227812::speciesID::0::name::Prowler's Pink Shoulder Cape::itemID::230044::addedDate::2025/26::",
 [466] = "::description::Power to build snowmen is not included.::price::400::transmogSetID::0::perksVendorCategoryID::1::mountID::0::itemModifiedAppearanceID::50109::name::Crown of Eternal Winter::speciesID::0::itemID::95475::addedDate::2024/24::",
 [932] = "::description::Slice through enemies and obstacles with ease.::price::300::transmogSetID::0::perksVendorCategoryID::1::mountID::0::itemModifiedAppearanceID::230827::speciesID::0::name::Jade Lunar Blade::itemID::233223::addedDate::2025/26::",
-[1119] = "::description::These light-weight wraps provide excellent ankle support.::price::20::transmogSetID::0::quality::1::perksVendorCategoryID::1::invType::INVTYPE_FEET::mountID::0::itemModifiedAppearanceID::230803::speciesID::0::name::Banded Midnight War Slippers::itemID::233169::addedDate::2025/32::",
+[1007] = "::description::Just when you thought it was safe to go back in the water.::price::175::transmogSetID::0::quality::2::perksVendorCategoryID::1::invType::INVTYPE_HEAD::mountID::0::itemModifiedAppearanceID::200149::speciesID::0::name::Frenzied Hat of the Shallows::itemID::217374::addedDate::2025/29::",
 [933] = "::description::Discover what it's like to be a pyromaniac.::price::300::transmogSetID::0::perksVendorCategoryID::1::mountID::0::itemModifiedAppearanceID::230835::speciesID::0::name::Crimson Lunar Firewhacker::itemID::233232::addedDate::2025/26::",
 [467] = "::description::Normally plate would be heavier.::price::450::transmogSetID::3079::perksVendorCategoryID::8::mountID::0::itemModifiedAppearanceID::0::name::Plate of the Light Avenger::speciesID::0::itemID::208176::addedDate::2024/23::",
 [934] = "::description::Add a bit of style when you want to keep distance between yourself and your enemies.::price::300::transmogSetID::0::perksVendorCategoryID::1::mountID::0::itemModifiedAppearanceID::230831::speciesID::0::name::Jade Lunar Polearm::itemID::233228::addedDate::2025/26::",
 [117] = "::description::More affectionate than their cousins, Magenta Cloud Serpents are known to form close bonds with their riders.::price::500::transmogSetID::0::mountTypeName::Flying::perksVendorCategoryID::2::mountID::1573::itemModifiedAppearanceID::0::speciesID::0::name::Reins of the Magenta Cloud Serpent::originalPrice::900::itemID::189978::addedDate::2025/26::",
 [935] = "::description::Light your way to a brighter, more festive future.::price::250::transmogSetID::0::perksVendorCategoryID::1::mountID::0::itemModifiedAppearanceID::230823::speciesID::0::name::Crimson Lunar Lantern::itemID::233218::addedDate::2025/26::",
 [468] = "::description::Measure twice; stab once.::price::500::transmogSetID::3082::perksVendorCategoryID::8::mountID::0::itemModifiedAppearanceID::0::name::Blood Onyx Blades::speciesID::0::itemID::208179::addedDate::2024/23::",
-[1137] = "::description::Enhance ones mysterious backstory.::price::50::transmogSetID::0::quality::4::perksVendorCategoryID::1::invType::INVTYPE_HEAD::mountID::0::itemModifiedAppearanceID::292967::speciesID::0::name::Classic Midnight Eye Patch::itemID::246015::addedDate::2025/32::",
-[1130] = "::description::The Prophet was often accused of cheating at his own game.::price::100::transmogSetID::0::quality::3::perksVendorCategoryID::1::invType::INVTYPE_SHIELD::mountID::0::itemModifiedAppearanceID::290212::speciesID::0::name::Grandmaster's Prophetic Bulwark::itemID::242372::addedDate::2025/32::",
+[517] = "::description::While preparing for a hornstrider hunt experienced hunters will don this ceremonial set to inspire the green hunters on their first hunt.::price::450::transmogSetID::3115::perksVendorCategoryID::8::mountID::0::itemModifiedAppearanceID::0::name::Hornstrider Hunter's Camouflage::speciesID::0::itemID::208727::addedDate::2024/23::",
+[1006] = "::description::For the most serious of leaders.::price::50::transmogSetID::0::quality::2::perksVendorCategoryID::1::invType::INVTYPE_HEAD::mountID::0::itemModifiedAppearanceID::249345::speciesID::0::name::Vigilante's Azure Mask::itemID::235020::addedDate::2025/29::",
 [937] = "::description::For those with an explosive personality.::price::250::transmogSetID::0::perksVendorCategoryID::1::mountID::0::itemModifiedAppearanceID::230839::speciesID::0::name::Crimson Pack of Lunar Explosives::itemID::233236::addedDate::2025/26::",
 [469] = "::description::Who needs a spotlight when you have this much style?::price::500::transmogSetID::3080::perksVendorCategoryID::8::mountID::0::itemModifiedAppearanceID::0::name::Armaments of the Light Avenger::speciesID::0::itemID::208177::addedDate::2024/23::",
 [938] = "::description::Includes a set of spaulders and shoulder capes in sky blue.::price::100::transmogSetID::4204::perksVendorCategoryID::8::mountID::0::itemModifiedAppearanceID::0::speciesID::0::name::Ensemble: Sky Witch's Heartfelt Shoulders::itemID::232933::addedDate::2025/26::",
-[1127] = "::description::The weapon of choice for a frontline combatant.::price::150::transmogSetID::0::quality::3::perksVendorCategoryID::1::invType::INVTYPE_WEAPON::mountID::0::itemModifiedAppearanceID::290277::speciesID::0::name::Grandmaster's Prophetic Axe::itemID::242525::addedDate::2025/32::",
+[260] = "::description::Includes a hood and a cloak.::price::100::transmogSetID::2332::perksVendorCategoryID::8::mountID::0::itemModifiedAppearanceID::0::name::Ensemble: Vagabond's Azure Threads::speciesID::0::itemID::190576::addedDate::2024/20::",
 [939] = "::description::Includes a set of spaulders and shoulder capes in deep violet.::price::100::transmogSetID::4205::perksVendorCategoryID::8::mountID::0::itemModifiedAppearanceID::0::speciesID::0::name::Ensemble: Twilight Witch's Heartfelt Shoulders::itemID::232934::addedDate::2025/26::",
 [470] = "::description::Cult initiates must prove their worthiness before being given their armaments.::price::500::transmogSetID::3081::perksVendorCategoryID::8::mountID::0::itemModifiedAppearanceID::0::name::Secrets of the Unnamed Cult::speciesID::0::itemID::208178::addedDate::2024/23::",
 [940] = "::description::Classic, comfy, but maybe not cute.::price::40::transmogSetID::0::perksVendorCategoryID::1::mountID::0::itemModifiedAppearanceID::231460::speciesID::0::name::Gold-Plated Cushion Boots::itemID::234074::addedDate::2025/26::",
@@ -640,83 +663,83 @@ true,
 [941] = "::description::An ornate set of garments traditionally worn to celebrate the Lunar Festival.::price::600::transmogSetID::4213::perksVendorCategoryID::8::mountID::0::itemModifiedAppearanceID::0::speciesID::0::name::Ensemble: Ornate Crimson Lunar Festival Attire::itemID::234057::addedDate::2025/26::",
 [471] = "::description::The game is afoot.::price::100::transmogSetID::0::perksVendorCategoryID::1::mountID::0::itemModifiedAppearanceID::189589::speciesID::0::name::Yellow Tweed Cap::originalPrice::150::itemID::208147::addedDate::2025/26::",
 [942] = "::description::The Fullbelly meeksi will often put their own safety at risk if they smell food. Nothing brings them happiness like a cup of tea and a warm meal.::price::350::transmogSetID::0::perksVendorCategoryID::3::mountID::0::itemModifiedAppearanceID::0::speciesID::4729::name::Fullbelly Rollingpaw::itemID::234397::addedDate::2025/26::",
-[1126] = "::description::Smoke before fire.::price::150::transmogSetID::0::quality::3::perksVendorCategoryID::1::invType::INVTYPE_WEAPON::mountID::0::itemModifiedAppearanceID::290279::speciesID::0::name::Grandmaster's Royal Axe::itemID::242527::addedDate::2025/32::",
+[520] = "::description::It foresees a deduction of your trader's tender balance.::price::300::transmogSetID::0::perksVendorCategoryID::5::mountID::0::itemModifiedAppearanceID::0::speciesID::0::name::Imp in a Ball::originalPrice::350::itemID::32542::addedDate::2025/26::",
 [236] = "::description::A simple hat best suited for warmer climes.::price::100::transmogSetID::0::perksVendorCategoryID::1::mountID::0::itemModifiedAppearanceID::169105::speciesID::0::name::Red Pith Helmet::originalPrice::175::itemID::190898::addedDate::2025/26::",
 [472] = "::description::It has a lingering essence of Revendreth anima.::price::100::transmogSetID::0::perksVendorCategoryID::1::mountID::0::itemModifiedAppearanceID::189590::speciesID::0::name::Burgundy Cap::originalPrice::150::itemID::208148::addedDate::2025/26::",
 [944] = "::description::The Silvermoon color scheme for the \"Motion By Emotion\" has been a success all across Azeroth.::price::600::transmogSetID::0::mountTypeName::Flying::perksVendorCategoryID::2::mountID::2329::itemModifiedAppearanceID::0::speciesID::0::name::Silvermoon Sweeper::itemID::233023::addedDate::2025/26::",
 [523] = "::description::The endless pursuit of higher knowledge is its own reward.::price::500::transmogSetID::0::perksVendorCategoryID::1::mountID::0::itemModifiedAppearanceID::192903::name::High Scholar's Grand Staff::speciesID::0::itemID::210265::addedDate::2024/23::",
-[1093] = "::description::Undead sinew flexes with each draw of the string.\r\n<Unique Ammunition>::price::175::transmogSetID::0::quality::3::perksVendorCategoryID::1::invType::INVTYPE_RANGED::mountID::0::itemModifiedAppearanceID::290218::speciesID::0::name::Wailing Banshee's Longbow::itemID::242378::addedDate::2025/31::",
+[258] = "::description::Squawks's older (and somehow louder) brother appears to tolerate your presence. For now. You should probably track down some crackers while you still can.::price::750::transmogSetID::0::mountTypeName::Flying::perksVendorCategoryID::2::mountID::1575::itemModifiedAppearanceID::0::speciesID::0::name::Quawks::itemID::190169::addedDate::2025/26::",
 [473] = "::description::There's never a bad time to make sure you look the part.::price::500::transmogSetID::0::perksVendorCategoryID::5::mountID::0::itemModifiedAppearanceID::0::name::Ethereal Transmogrifier::speciesID::0::itemID::206268::addedDate::2024/20::",
 [946] = "::description::Trick your foes into thinking you're a harmless butterfly before finishing them off.::price::225::transmogSetID::0::perksVendorCategoryID::1::mountID::0::itemModifiedAppearanceID::249024::speciesID::0::name::Wings of the Pearlescent Monarch::itemID::234603::addedDate::2025/27::",
-[252] = "::description::It's been handed down between timelines.::price::100::transmogSetID::0::perksVendorCategoryID::1::mountID::0::itemModifiedAppearanceID::168789::speciesID::0::name::Sinister Fel Staff::originalPrice::175::itemID::190557::addedDate::2025/26::",
+[1119] = "::description::These light-weight wraps provide excellent ankle support.::price::20::transmogSetID::0::quality::1::perksVendorCategoryID::1::invType::INVTYPE_FEET::mountID::0::itemModifiedAppearanceID::230803::speciesID::0::name::Banded Midnight War Slippers::itemID::233169::addedDate::2025/32::",
 [947] = "::description::These wings were gifted to the Ember Court by Lady Moonberry, crafted by dipping a wild spirit in a pool of pure sin.::price::225::transmogSetID::0::perksVendorCategoryID::1::mountID::0::itemModifiedAppearanceID::249023::speciesID::0::name::Wings of the Blood Monarch::itemID::234602::addedDate::2025/27::",
 [53] = "::description::In Hakkar's name.::price::100::transmogSetID::0::perksVendorCategoryID::1::mountID::0::itemModifiedAppearanceID::168231::speciesID::0::name::Blade of Brutal Sacrifice::originalPrice::400::itemID::190078::addedDate::2025/26::",
 [948] = "::description::The battlefield is the perfect place to show off your fancy rock collection.::price::250::transmogSetID::0::perksVendorCategoryID::1::mountID::0::itemModifiedAppearanceID::266760::speciesID::0::name::Pearlescent Monarch's Mace::itemID::235270::addedDate::2025/27::",
-[63] = "::description::Given to Merithra's attendants to help them blend into the vibrant verdant hues of the Emerald Dream.::price::50::transmogSetID::0::perksVendorCategoryID::1::mountID::0::itemModifiedAppearanceID::168221::name::Emerald Drape::speciesID::0::itemID::190068::addedDate::2024/21::",
+[1130] = "::description::The Prophet was often accused of cheating at his own game.::price::100::transmogSetID::0::quality::3::perksVendorCategoryID::1::invType::INVTYPE_SHIELD::mountID::0::itemModifiedAppearanceID::290212::speciesID::0::name::Grandmaster's Prophetic Bulwark::itemID::242372::addedDate::2025/32::",
 [949] = "::description::Ruby crystals form the arms of this stalwart mace.::price::250::transmogSetID::0::perksVendorCategoryID::1::mountID::0::itemModifiedAppearanceID::266762::speciesID::0::name::Blood Monarch's Mace::itemID::235272::addedDate::2025/27::",
 [1083] = "::description::It pulses with a sickly green light, as if poisoned by the very magic it wields.\r\n<Unique Ammunition>::price::150::transmogSetID::0::quality::3::perksVendorCategoryID::1::invType::INVTYPE_RANGEDRIGHT::mountID::0::itemModifiedAppearanceID::290225::speciesID::0::name::Forsaken's Grotesque Wand::itemID::242387::addedDate::2025/31::",
 [950] = "::description::A delicate flick of the wrist is all you need to unleash powerful magics.::price::200::transmogSetID::0::perksVendorCategoryID::1::mountID::0::itemModifiedAppearanceID::266771::speciesID::0::name::Pearlescent Monarch's Wand::itemID::235294::addedDate::2025/27::",
-[144] = "::description::Legends say this sword once split a mountain in half.::price::200::transmogSetID::0::perksVendorCategoryID::1::mountID::0::itemModifiedAppearanceID::168333::speciesID::0::name::Fang of the Mountain::originalPrice::400::itemID::190217::addedDate::2025/26::",
+[518] = "::description::Fashioned by an ancient blacksmith, the chronosmiths ventured to their time to create these weapons for a future need. In time that need will become clearer.::price::500::transmogSetID::3114::perksVendorCategoryID::8::mountID::0::itemModifiedAppearanceID::0::name::Treasure of the Silver Hoarder::speciesID::0::itemID::208726::addedDate::2024/23::",
 [238] = "::description::Includes a quiver and shot pouch.::price::500::transmogSetID::2330::perksVendorCategoryID::8::mountID::0::itemModifiedAppearanceID::0::name::Ensemble: Trapper's Munitions::speciesID::0::itemID::190540::addedDate::2024/21::",
-[573] = "::description::When you said an old friend was coming back, this was not quite what I expected. -Bralla Cloudwing::price::500::transmogSetID::0::mountTypeName::Flying::perksVendorCategoryID::2::mountID::440::itemModifiedAppearanceID::0::speciesID::0::name::Spectral Gryphon::originalPrice::650::itemID::76889::addedDate::2025/26::",
+[530] = "::description::A favorite when trading in the southern jungles.::price::100::transmogSetID::0::perksVendorCategoryID::1::mountID::0::itemModifiedAppearanceID::193801::name::Trader's Crimson Sarong::speciesID::0::itemID::210844::addedDate::2024/20::",
 [952] = "::description::The small wings give it a bit more velocity on the final blow.::price::300::transmogSetID::0::perksVendorCategoryID::1::mountID::0::itemModifiedAppearanceID::266801::speciesID::0::name::Blood Monarch's Polearm::itemID::235401::addedDate::2025/27::",
-[256] = "::description::The Scryers wont take lightly to you using this.::price::225::transmogSetID::0::perksVendorCategoryID::1::mountID::0::itemModifiedAppearanceID::168794::speciesID::0::name::Aldori War Mace::originalPrice::500::itemID::190562::addedDate::2025/26::",
-[953] = "::description::This polearm feels as if it could take flight in the heat of battle.::price::300::transmogSetID::0::perksVendorCategoryID::1::mountID::0::itemModifiedAppearanceID::266802::speciesID::0::name::Pearlescent Monarch's Polearm::itemID::235402::addedDate::2025/27::",
 [951] = "::description::Flit, flick, and fire.::price::200::transmogSetID::0::perksVendorCategoryID::1::mountID::0::itemModifiedAppearanceID::266772::speciesID::0::name::Blood Monarch's Wand::itemID::235295::addedDate::2025/27::",
+[953] = "::description::This polearm feels as if it could take flight in the heat of battle.::price::300::transmogSetID::0::perksVendorCategoryID::1::mountID::0::itemModifiedAppearanceID::266802::speciesID::0::name::Pearlescent Monarch's Polearm::itemID::235402::addedDate::2025/27::",
+[235] = "::description::The intricate gilding belies the lethality of the razor-sharp crescent blades.::price::150::transmogSetID::0::perksVendorCategoryID::1::mountID::0::itemModifiedAppearanceID::168545::speciesID::0::name::Crimson Nexus Crescent::originalPrice::225::itemID::190438::addedDate::2025/26::",
 [954] = "::description::The blade may appear delicate, but it slices with a ruthless efficiency.::price::250::transmogSetID::0::perksVendorCategoryID::1::mountID::0::itemModifiedAppearanceID::266767::speciesID::0::name::Pearlescent Monarch's Sword::itemID::235290::addedDate::2025/27::",
-[514] = "::description::Known for their prowess and ferocity the hornstriders make an excellent hunt and even more excellent materials for weapons.::price::500::transmogSetID::3116::perksVendorCategoryID::8::mountID::0::itemModifiedAppearanceID::0::name::Hornstrider Hunter's Preference::speciesID::0::itemID::208728::addedDate::2024/23::",
+[250] = "::description::Perfect for handling the absurdly large rats in the Barkeep's cellar.::price::40::transmogSetID::0::perksVendorCategoryID::1::mountID::0::itemModifiedAppearanceID::168778::speciesID::0::name::Polished Shortsword::originalPrice::75::itemID::190546::addedDate::2025/26::",
 [955] = "::description::Wielded by the witches of twilight, this magnificent sword is forged like glass, but is as sturdy as stone::price::250::transmogSetID::0::perksVendorCategoryID::1::mountID::0::itemModifiedAppearanceID::266768::speciesID::0::name::Blood Monarch's Sword::itemID::235291::addedDate::2025/27::",
-[237] = "::description::An effective icebreaker, literally and figuratively.::price::175::transmogSetID::0::perksVendorCategoryID::1::mountID::0::itemModifiedAppearanceID::169055::name::Fists of Polar Fury::speciesID::0::itemID::190842::addedDate::2024/24::",
+[529] = "::description::Revenge is a dish best served sweet.::price::600::transmogSetID::0::perksVendorCategoryID::1::mountID::0::itemModifiedAppearanceID::193800::name::Candied Blade::speciesID::0::itemID::210843::addedDate::2024/24::",
 [956] = "::description::This regalia was worn by the Blood Monarch when she made an unforeseen appearance at the Ember Court.::price::370::transmogSetID::4263::perksVendorCategoryID::8::mountID::0::itemModifiedAppearanceID::0::speciesID::0::name::Ensemble: Ornaments of the Blood Monarch::itemID::235228::addedDate::2025/27::",
-[1105] = "::description::A favorite when trading in the southern jungles.::price::100::transmogSetID::0::quality::1::perksVendorCategoryID::1::invType::INVTYPE_LEGS::mountID::0::itemModifiedAppearanceID::193814::speciesID::0::name::Trader's Plum Sarong::itemID::210859::addedDate::2025/31::",
+[915] = "::description::Battle-tested to allow for maximum maneuverability::price::40::transmogSetID::0::perksVendorCategoryID::1::mountID::0::itemModifiedAppearanceID::230751::speciesID::0::name::Long Sunny War Skirt::itemID::233112::addedDate::2025/25::",
 [957] = "::description::A prowler's preferred cape. A shoulder may be discarded to leave an arm free for pilfering.::price::75::transmogSetID::0::perksVendorCategoryID::1::mountID::0::itemModifiedAppearanceID::227806::speciesID::0::name::Prowler's Deep Shoulder Cape::itemID::230038::addedDate::2025/27::",
 [479] = "::description::The cult isn't unnamed, the name just cannot be represented in our language.::price::450::transmogSetID::3083::perksVendorCategoryID::8::mountID::0::itemModifiedAppearanceID::0::name::Silks of the Unnamed Cult::speciesID::0::itemID::208400::addedDate::2024/23::",
 [60] = "::description::A well-placed arrow can prove a practical solution for even the magically inclined Azurewing.::price::125::transmogSetID::0::perksVendorCategoryID::1::mountID::0::itemModifiedAppearanceID::168224::speciesID::0::name::Azure Scalesworn Longbow::originalPrice::200::itemID::190071::addedDate::2025/26::",
-[959] = "::description::Click your treads together, but don't shatter them.::price::40::transmogSetID::0::perksVendorCategoryID::1::mountID::0::itemModifiedAppearanceID::267041::speciesID::0::name::Ruby Scale Treads::itemID::235623::addedDate::2025/27::",
 [240] = "::description::Go ahead. Make my day.::price::125::transmogSetID::0::perksVendorCategoryID::1::mountID::0::itemModifiedAppearanceID::168548::speciesID::0::name::Black Iron Blunderbuss::originalPrice::200::itemID::190441::addedDate::2025/26::",
+[959] = "::description::Click your treads together, but don't shatter them.::price::40::transmogSetID::0::perksVendorCategoryID::1::mountID::0::itemModifiedAppearanceID::267041::speciesID::0::name::Ruby Scale Treads::itemID::235623::addedDate::2025/27::",
 [480] = "::description::Blood Onyx assassins are known for their efficiency, not their subtlety.::price::450::transmogSetID::3084::perksVendorCategoryID::8::mountID::0::itemModifiedAppearanceID::0::name::Blood Onyx Uniform::speciesID::0::itemID::208405::addedDate::2024/23::",
 [960] = "::description::Ideal for protecting your identity from authority.::price::50::transmogSetID::0::perksVendorCategoryID::1::mountID::0::itemModifiedAppearanceID::249349::speciesID::0::name::Vigilante's Deep Mask::itemID::235024::addedDate::2025/27::",
 [891] = "::description::Challenge the moon to a beauty contest, and win!::price::225::transmogSetID::0::perksVendorCategoryID::1::mountID::0::itemModifiedAppearanceID::229223::name::Wings of the Sapphire Monarch::speciesID::0::itemID::230940::addedDate::2024/24::",
 [961] = "::description::Includes a hood and mask.::price::100::transmogSetID::3916::perksVendorCategoryID::8::mountID::0::itemModifiedAppearanceID::0::speciesID::0::name::Ensemble: Prowler's Deep Headgear::itemID::230169::addedDate::2025/27::",
 [481] = "::description::It's not particularly inconspicuous.::price::500::transmogSetID::0::perksVendorCategoryID::1::mountID::0::itemModifiedAppearanceID::189734::name::Homebrewer's Sampling Crest::speciesID::0::itemID::208423::addedDate::2024/21::",
 [962] = "::description::Battle-tested to allow for maximum maneuverability.::price::40::transmogSetID::0::perksVendorCategoryID::1::mountID::0::itemModifiedAppearanceID::230723::speciesID::0::name::Short Deep War Skirt::itemID::233084::addedDate::2025/27::",
-[518] = "::description::Fashioned by an ancient blacksmith, the chronosmiths ventured to their time to create these weapons for a future need. In time that need will become clearer.::price::500::transmogSetID::3114::perksVendorCategoryID::8::mountID::0::itemModifiedAppearanceID::0::name::Treasure of the Silver Hoarder::speciesID::0::itemID::208726::addedDate::2024/23::",
+[516] = "::description::None were more skilled in the mastery of arcane than the High Elven Magisters of Quel'Thalas.::price::450::transmogSetID::3111::perksVendorCategoryID::8::mountID::0::itemModifiedAppearanceID::0::name::Battle Magister's Regalia::speciesID::0::itemID::208699::addedDate::2024/23::",
 [963] = "::description::Battle-tested to allow for maximum maneuverability.::price::40::transmogSetID::0::perksVendorCategoryID::1::mountID::0::itemModifiedAppearanceID::230740::speciesID::0::name::Long Deep War Skirt::itemID::233101::addedDate::2025/27::",
 [943] = "::description::The meeksi Teatuft Tamers love lounging with their Teatufts and sipping a cup of mystical tea after a long lazy day.::price::350::transmogSetID::0::perksVendorCategoryID::3::mountID::0::itemModifiedAppearanceID::0::speciesID::4728::name::Teatuft Tamer::itemID::234396::addedDate::2025/26::",
 [964] = "::description::Battle-tested to allow for maximum maneuverability and muscle support.::price::50::transmogSetID::0::perksVendorCategoryID::1::mountID::0::itemModifiedAppearanceID::230757::speciesID::0::name::Short Deep War Skirt and Leg Wraps::itemID::233123::addedDate::2025/27::",
 [1037] = "::description::Burning with the spirit of decay and night, this spreads dread throughout a hag's wood.::price::90::transmogSetID::0::quality::3::perksVendorCategoryID::1::invType::INVTYPE_HOLDABLE::mountID::0::itemModifiedAppearanceID::285118::speciesID::0::name::Night Hag's Fetish::itemID::237180::addedDate::2025/29::",
 [965] = "::description::Battle-tested to allow for maximum maneuverability and muscle support.::price::50::transmogSetID::0::perksVendorCategoryID::1::mountID::0::itemModifiedAppearanceID::230774::speciesID::0::name::Long Deep War Skirt and Leg Wraps::itemID::233140::addedDate::2025/27::",
-[999] = "::description::Take to the skies on a glittering, shimmering, pearlescent butterfly.::price::700::transmogSetID::0::mountTypeName::Flying::perksVendorCategoryID::2::mountID::2489::itemModifiedAppearanceID::0::speciesID::0::name::Pearlescent Butterfly::itemID::235650::addedDate::2025/27::",
+[514] = "::description::Known for their prowess and ferocity the hornstriders make an excellent hunt and even more excellent materials for weapons.::price::500::transmogSetID::3116::perksVendorCategoryID::8::mountID::0::itemModifiedAppearanceID::0::name::Hornstrider Hunter's Preference::speciesID::0::itemID::208728::addedDate::2024/23::",
 [966] = "::description::These light-weight wraps provide excellent muscle support.::price::20::transmogSetID::0::perksVendorCategoryID::1::mountID::0::itemModifiedAppearanceID::230791::speciesID::0::name::Banded Deep War Wraps::itemID::233157::addedDate::2025/27::",
 [121] = "::description::Ready to sing for the king and queen in a coat borrowed from James Deacon.::price::750::transmogSetID::2327::perksVendorCategoryID::8::mountID::0::itemModifiedAppearanceID::0::speciesID::0::name::Ensemble: Darkmoon Harlequin's Bells::itemID::190504::addedDate::2025/26::",
 [967] = "::description::These light-weight wraps provide excellent ankle support.::price::20::transmogSetID::0::perksVendorCategoryID::1::mountID::0::itemModifiedAppearanceID::230808::speciesID::0::name::Banded Deep War Slippers::itemID::233174::addedDate::2025/27::",
-[235] = "::description::The intricate gilding belies the lethality of the razor-sharp crescent blades.::price::150::transmogSetID::0::perksVendorCategoryID::1::mountID::0::itemModifiedAppearanceID::168545::speciesID::0::name::Crimson Nexus Crescent::originalPrice::225::itemID::190438::addedDate::2025/26::",
+[264] = "::description::More ecological than Warp Stalker Leathers.::price::350::transmogSetID::2657::perksVendorCategoryID::8::mountID::0::itemModifiedAppearanceID::0::speciesID::0::name::Ensemble: Sylvan Stalker's Leathers::originalPrice::750::itemID::200915::addedDate::2025/26::",
 [968] = "::description::Unburdened from the saddle and bit, these valerunners are truly free.::price::325::transmogSetID::0::mountTypeName::Flying::perksVendorCategoryID::2::mountID::2488::itemModifiedAppearanceID::0::speciesID::0::name::Shimmermist Free Runner::itemID::235646::addedDate::2025/27::",
 [521] = "::description::The perfect way to practice violence in a safe(ish) environment.::price::300::transmogSetID::0::perksVendorCategoryID::5::mountID::0::itemModifiedAppearanceID::0::speciesID::0::name::Foam Sword Rack::originalPrice::425::itemID::45063::addedDate::2025/26::",
 [969] = "::description::It's all fun and games until someone gets stabbed.::price::140::transmogSetID::0::perksVendorCategoryID::1::mountID::0::itemModifiedAppearanceID::248999::speciesID::0::name::Topsy Turvy Jester's Blade::itemID::234575::addedDate::2025/28::",
 [204] = "::description::The gold and crimson mark a Drekirjar as a force to be reckoned with.::price::350::transmogSetID::2654::perksVendorCategoryID::8::mountID::0::itemModifiedAppearanceID::0::speciesID::0::name::Ensemble: Glorious Dragonrider's Mail::originalPrice::750::itemID::200884::addedDate::2025/26::",
 [970] = "::description::With a turn of phrase or wrist someone might just find themselves splitting up.::price::140::transmogSetID::0::perksVendorCategoryID::1::mountID::0::itemModifiedAppearanceID::249120::speciesID::0::name::Topsy Turvy Clown's Cleaver::itemID::234724::addedDate::2025/28::",
-[243] = "::description::Never wear your heart on your sleeve when you can carry it like a trophy.::price::100::transmogSetID::0::perksVendorCategoryID::1::mountID::0::itemModifiedAppearanceID::168550::speciesID::0::name::Pustulent Demonheart Fetish::originalPrice::150::itemID::190443::addedDate::2025/26::",
 [971] = "::description::Draped in tattered circus banners, this eerie mount is a perfect blend of shadow and spectacle.::price::575::transmogSetID::0::mountTypeName::Ground::perksVendorCategoryID::2::mountID::2482::itemModifiedAppearanceID::0::speciesID::0::name::Lively Darkmoon Charger::itemID::235555::addedDate::2025/28::",
+[243] = "::description::Never wear your heart on your sleeve when you can carry it like a trophy.::price::100::transmogSetID::0::perksVendorCategoryID::1::mountID::0::itemModifiedAppearanceID::168550::speciesID::0::name::Pustulent Demonheart Fetish::originalPrice::150::itemID::190443::addedDate::2025/26::",
 [486] = "::description::No one can resist temptation.::price::450::transmogSetID::3105::perksVendorCategoryID::8::mountID::0::itemModifiedAppearanceID::0::name::Jewels of the Alluring Call::speciesID::0::itemID::208672::addedDate::2024/23::",
 [972] = "::description::Did it just wink at you?::price::140::transmogSetID::0::perksVendorCategoryID::1::mountID::0::itemModifiedAppearanceID::248997::speciesID::0::name::Topsy Turvy Clown's Blade::itemID::234573::addedDate::2025/28::",
-[907] = "::description::One punch and your time is up.::price::300::transmogSetID::0::perksVendorCategoryID::1::mountID::0::itemModifiedAppearanceID::230849::speciesID::0::name::Golden Clockwork Doomfist::itemID::233257::addedDate::2025/25::",
+[534] = "::description::The cloying scent of cathedral incense and righteous indignation clings to the fabric and metals within. Includes a robe, cloak and shield.::price::350::transmogSetID::3303::perksVendorCategoryID::8::mountID::0::itemModifiedAppearanceID::0::speciesID::0::name::Ensemble: Scarlet Zealot's Trappings::originalPrice::550::itemID::210883::addedDate::2025/26::",
 [973] = "::description::A glowing orb means you'll probably fail a stealth roll.::price::200::transmogSetID::0::perksVendorCategoryID::1::mountID::0::itemModifiedAppearanceID::267047::speciesID::0::name::Topsy Turvy Clown's Die::itemID::235641::addedDate::2025/28::",
 [487] = "::description::The way of the watcher is silent and deadly.::price::500::transmogSetID::3106::perksVendorCategoryID::8::mountID::0::itemModifiedAppearanceID::0::name::Instruments of the Alluring Call::speciesID::0::itemID::208673::addedDate::2024/23::",
 [974] = "::description::Wielding this axe while telling a joke guarantees a reaction.::price::140::transmogSetID::0::perksVendorCategoryID::1::mountID::0::itemModifiedAppearanceID::249121::speciesID::0::name::Topsy Turvy Jester's Cleaver::itemID::234725::addedDate::2025/28::",
-[958] = "::description::Sapphire is known for it's hardness. Kicking someone with these treads will hurt.::price::40::transmogSetID::0::perksVendorCategoryID::1::mountID::0::itemModifiedAppearanceID::267042::speciesID::0::name::Sapphire Scale Treads::itemID::235624::addedDate::2025/27::",
+[262] = "::description::Includes a scarf and a cloak.::price::100::transmogSetID::2333::perksVendorCategoryID::8::mountID::0::itemModifiedAppearanceID::0::name::Ensemble: Wanderer's Azure Trappings::speciesID::0::itemID::190577::addedDate::2024/20::",
 [975] = "::description::This steed carries the mystery and magic of the Darkmoon Faire on its back.::price::575::transmogSetID::0::mountTypeName::Ground::perksVendorCategoryID::2::mountID::2483::itemModifiedAppearanceID::0::speciesID::0::name::Violet Darkmoon Charger::itemID::235556::addedDate::2025/28::",
 [488] = "::description::No beast is a match to our champion.::price::450::transmogSetID::3107::perksVendorCategoryID::8::mountID::0::itemModifiedAppearanceID::0::name::Savage Champion's Trophies::speciesID::0::itemID::208674::addedDate::2024/23::",
 [976] = "::description::Roll for initiative!::price::200::transmogSetID::0::perksVendorCategoryID::1::mountID::0::itemModifiedAppearanceID::267048::speciesID::0::name::Topsy Turvy Jester's Die::itemID::235642::addedDate::2025/28::",
-[66] = "::description::Gnomish ingenuity doesn't usually reinvent the wheel, but this isn't the first time it has reinvented the bucket.::price::50::transmogSetID::0::perksVendorCategoryID::1::mountID::0::itemModifiedAppearanceID::168218::speciesID::0::name::Gnomish Liquid Transfer Apparatus::originalPrice::75::itemID::190065::addedDate::2025/26::",
+[245] = "::description::Feel the burn... in your soul!::price::200::transmogSetID::0::perksVendorCategoryID::1::mountID::0::itemModifiedAppearanceID::168554::speciesID::0::name::Soulburner Bardiche::originalPrice::550::itemID::190447::addedDate::2025/26::",
 [977] = "::description::For those plum done with crime.::price::50::transmogSetID::0::perksVendorCategoryID::1::mountID::0::itemModifiedAppearanceID::249356::speciesID::0::name::Vigilante's Plum Mask::itemID::235031::addedDate::2025/28::",
 [489] = "::description::As pale as the moon, as deadly the fang.::price::500::transmogSetID::3108::perksVendorCategoryID::8::mountID::0::itemModifiedAppearanceID::0::name::Savage Champion's Aggression::speciesID::0::itemID::208675::addedDate::2024/23::",
 [978] = "::description::Works perfect to blend in as a vigilante.::price::50::transmogSetID::0::perksVendorCategoryID::1::mountID::0::itemModifiedAppearanceID::249350::speciesID::0::name::Vigilante's Camo Mask::itemID::235025::addedDate::2025/28::",
+[248] = "::description::\"What're you buyin'?\"::price::40::transmogSetID::0::perksVendorCategoryID::1::mountID::0::itemModifiedAppearanceID::168540::speciesID::0::name::Shifty Merchant's Tunic::originalPrice::50::itemID::190433::addedDate::2025/26::",
 [979] = "::description::Includes a hood and mask.::price::100::transmogSetID::3917::perksVendorCategoryID::8::mountID::0::itemModifiedAppearanceID::0::speciesID::0::name::Ensemble: Prowler's Camo Headgear::itemID::230170::addedDate::2025/28::",
-[245] = "::description::Feel the burn... in your soul!::price::200::transmogSetID::0::perksVendorCategoryID::1::mountID::0::itemModifiedAppearanceID::168554::speciesID::0::name::Soulburner Bardiche::originalPrice::550::itemID::190447::addedDate::2025/26::",
 [490] = "::description::The spirit inhabiting this armor is great company.::price::450::transmogSetID::3103::perksVendorCategoryID::8::mountID::0::itemModifiedAppearanceID::0::name::Possessed Watcher Guise::speciesID::0::itemID::208669::addedDate::2024/23::",
 [980] = "::description::A prowler's preferred cape. A shoulder may be discarded to leave an arm free for pilfering.::price::75::transmogSetID::0::perksVendorCategoryID::1::mountID::0::itemModifiedAppearanceID::227808::speciesID::0::name::Prowler's Camo Shoulder Cape::itemID::230040::addedDate::2025/28::",
-[55] = "::description::A witch's hat confers the authority of a witch.::price::175::transmogSetID::0::perksVendorCategoryID::1::mountID::0::itemModifiedAppearanceID::168229::name::Granny's Old Hat::speciesID::0::itemID::190076::addedDate::2024/22::",
+[927] = "::description::Battle-tested to allow for maximum manueverability and muscle support.::price::50::transmogSetID::0::perksVendorCategoryID::1::mountID::0::itemModifiedAppearanceID::230714::speciesID::0::name::Short Crimson War Skirt and Leg Wraps::itemID::233074::addedDate::2025/26::",
 [981] = "::description::Battle-tested to allow for maximum maneuverability.::price::40::transmogSetID::0::perksVendorCategoryID::1::mountID::0::itemModifiedAppearanceID::230730::speciesID::0::name::Short Plum War Skirt::itemID::233091::addedDate::2025/28::",
 [491] = "::description::The way of the Watcher is silent and deadly.::price::500::transmogSetID::3104::perksVendorCategoryID::8::mountID::0::itemModifiedAppearanceID::0::name::Possessed Watcher Arsenal::speciesID::0::itemID::208671::addedDate::2024/23::",
 [982] = "::description::Battle-tested to allow for maximum maneuverability.::price::40::transmogSetID::0::perksVendorCategoryID::1::mountID::0::itemModifiedAppearanceID::230724::speciesID::0::name::Short Camo War Skirt::itemID::233085::addedDate::2025/28::",
@@ -732,113 +755,144 @@ true,
 [987] = "::description::Battle-tested to allow for maximum maneuverability and muscle support.::price::50::transmogSetID::0::perksVendorCategoryID::1::mountID::0::itemModifiedAppearanceID::230775::speciesID::0::name::Long Camo War Skirt and Leg Wraps::itemID::233141::addedDate::2025/28::",
 [494] = "::description::This aerodynamic design will help chase down any demon.::price::500::transmogSetID::3102::perksVendorCategoryID::8::mountID::0::itemModifiedAppearanceID::0::name::Nathreza Blasphemer's Glaives::speciesID::0::itemID::208668::addedDate::2024/23::",
 [988] = "::description::Battle-tested to allow for maximum maneuverability and muscle support.::price::50::transmogSetID::0::perksVendorCategoryID::1::mountID::0::itemModifiedAppearanceID::230781::speciesID::0::name::Long Plum War Skirt and Leg Wraps::itemID::233147::addedDate::2025/28::",
-[991] = "::description::These light-weight wraps provide excellent ankle support.::price::20::transmogSetID::0::perksVendorCategoryID::1::mountID::0::itemModifiedAppearanceID::230809::speciesID::0::name::Banded Camo War Slippers::itemID::233175::addedDate::2025/28::",
+[522] = "::description::Armaments forged from the primal fabric of the cosmos. Who assembled this collection and why remains a mystery. Wielding them will draw the eye of those who covet such power.::price::700::transmogSetID::3122::perksVendorCategoryID::8::mountID::0::itemModifiedAppearanceID::0::speciesID::0::name::Arsenal: Cosmic Weapons Cache::itemID::208943::addedDate::2025/26::",
 [989] = "::description::These light-weight wraps provide excellent muscle support.::price::20::transmogSetID::0::perksVendorCategoryID::1::mountID::0::itemModifiedAppearanceID::230792::speciesID::0::name::Banded Camo War Wraps::itemID::233158::addedDate::2025/28::",
 [495] = "::description::Sharp enough to cut through nerubian silk.::price::500::transmogSetID::3110::perksVendorCategoryID::8::mountID::0::itemModifiedAppearanceID::0::name::Webbed Saronite Weaponry::speciesID::0::itemID::208666::addedDate::2024/23::",
 [990] = "::description::These light-weight wraps provide excellent muscle support.::price::20::transmogSetID::0::perksVendorCategoryID::1::mountID::0::itemModifiedAppearanceID::230798::speciesID::0::name::Banded Plum War Wraps::itemID::233164::addedDate::2025/28::",
 [124] = "::description::For the glory of G'huun!::price::800::transmogSetID::2339::perksVendorCategoryID::8::mountID::0::itemModifiedAppearanceID::0::speciesID::0::name::Ensemble: Bones of the Bloodhunter::itemID::190797::addedDate::2025/26::",
-[248] = "::description::\"What're you buyin'?\"::price::40::transmogSetID::0::perksVendorCategoryID::1::mountID::0::itemModifiedAppearanceID::168540::speciesID::0::name::Shifty Merchant's Tunic::originalPrice::50::itemID::190433::addedDate::2025/26::",
+[991] = "::description::These light-weight wraps provide excellent ankle support.::price::20::transmogSetID::0::perksVendorCategoryID::1::mountID::0::itemModifiedAppearanceID::230809::speciesID::0::name::Banded Camo War Slippers::itemID::233175::addedDate::2025/28::",
 [496] = "::description::Strike fear into any demon's heart with your flame's controlled chaos.::price::450::transmogSetID::3101::perksVendorCategoryID::8::mountID::0::itemModifiedAppearanceID::0::name::Nathreza Blasphemer's Flames::speciesID::0::itemID::208667::addedDate::2024/23::",
 [992] = "::description::These light-weight wraps provide excellent ankle support.::price::20::transmogSetID::0::perksVendorCategoryID::1::mountID::0::itemModifiedAppearanceID::230815::speciesID::0::name::Banded Plum War Slippers::itemID::233181::addedDate::2025/28::",
-[522] = "::description::Armaments forged from the primal fabric of the cosmos. Who assembled this collection and why remains a mystery. Wielding them will draw the eye of those who covet such power.::price::700::transmogSetID::3122::perksVendorCategoryID::8::mountID::0::itemModifiedAppearanceID::0::speciesID::0::name::Arsenal: Cosmic Weapons Cache::itemID::208943::addedDate::2025/26::",
+[958] = "::description::Sapphire is known for it's hardness. Kicking someone with these treads will hurt.::price::40::transmogSetID::0::perksVendorCategoryID::1::mountID::0::itemModifiedAppearanceID::267042::speciesID::0::name::Sapphire Scale Treads::itemID::235624::addedDate::2025/27::",
 [993] = "::description::Gardener Fran has had enough of those damned virmen.::price::125::transmogSetID::0::perksVendorCategoryID::1::mountID::0::itemModifiedAppearanceID::249028::speciesID::0::name::Double-Bladed Rooted Garden Trowel::itemID::234613::addedDate::2025/28::",
 [497] = "::description::Engraved with the Mark of the Ashen Druids.::price::500::transmogSetID::3100::perksVendorCategoryID::8::mountID::0::itemModifiedAppearanceID::0::name::Ashamane's Blessings of Rebirth::speciesID::0::itemID::208664::addedDate::2024/23::",
 [994] = "::description::Good for both planting mushrooms and violently cutting down the inevitable rise of fungarians.::price::125::transmogSetID::0::perksVendorCategoryID::1::mountID::0::itemModifiedAppearanceID::249027::speciesID::0::name::Double-Bladed Blooming Garden Trowel::itemID::234612::addedDate::2025/28::",
-[927] = "::description::Battle-tested to allow for maximum manueverability and muscle support.::price::50::transmogSetID::0::perksVendorCategoryID::1::mountID::0::itemModifiedAppearanceID::230714::speciesID::0::name::Short Crimson War Skirt and Leg Wraps::itemID::233074::addedDate::2025/26::",
+[55] = "::description::A witch's hat confers the authority of a witch.::price::175::transmogSetID::0::perksVendorCategoryID::1::mountID::0::itemModifiedAppearanceID::168229::name::Granny's Old Hat::speciesID::0::itemID::190076::addedDate::2024/22::",
 [995] = "::description::This outfit will grow on you.::price::380::transmogSetID::4274::perksVendorCategoryID::8::mountID::0::itemModifiedAppearanceID::0::speciesID::0::name::Ensemble: Forest Dweller's Rooted Attire::itemID::235595::addedDate::2025/28::",
-[262] = "::description::Includes a scarf and a cloak.::price::100::transmogSetID::2333::perksVendorCategoryID::8::mountID::0::itemModifiedAppearanceID::0::name::Ensemble: Wanderer's Azure Trappings::speciesID::0::itemID::190577::addedDate::2024/20::",
+[66] = "::description::Gnomish ingenuity doesn't usually reinvent the wheel, but this isn't the first time it has reinvented the bucket.::price::50::transmogSetID::0::perksVendorCategoryID::1::mountID::0::itemModifiedAppearanceID::168218::speciesID::0::name::Gnomish Liquid Transfer Apparatus::originalPrice::75::itemID::190065::addedDate::2025/26::",
 [996] = "::description::You are what you eat, but don't eat this outfit.::price::380::transmogSetID::4273::perksVendorCategoryID::8::mountID::0::itemModifiedAppearanceID::0::speciesID::0::name::Ensemble: Forest Dweller's Blooming Attire::itemID::235594::addedDate::2025/28::",
-[534] = "::description::The cloying scent of cathedral incense and righteous indignation clings to the fabric and metals within. Includes a robe, cloak and shield.::price::350::transmogSetID::3303::perksVendorCategoryID::8::mountID::0::itemModifiedAppearanceID::0::speciesID::0::name::Ensemble: Scarlet Zealot's Trappings::originalPrice::550::itemID::210883::addedDate::2025/26::",
+[907] = "::description::One punch and your time is up.::price::300::transmogSetID::0::perksVendorCategoryID::1::mountID::0::itemModifiedAppearanceID::230849::speciesID::0::name::Golden Clockwork Doomfist::itemID::233257::addedDate::2025/25::",
 [997] = "::description::This beautiful longbow once belonged to a Kyrian paragon who flew too close to the sun.\r\n<Unique Ammunition>::price::250::transmogSetID::0::perksVendorCategoryID::1::mountID::0::itemModifiedAppearanceID::267053::speciesID::0::name::Pearlescent Monarch's Longbow::itemID::235652::addedDate::2025/27::",
 [499] = "::description::Includes a scarf and a cloak.::price::100::transmogSetID::3036::perksVendorCategoryID::8::mountID::0::itemModifiedAppearanceID::0::name::Ensemble: Wanderer's Lively Trappings::speciesID::0::itemID::206341::addedDate::2024/21::",
 [998] = "::description::The butterfly longbows are revered for their shimmering looks and beautiful arrows.\r\n<Unique Ammunition>::price::250::transmogSetID::0::perksVendorCategoryID::1::mountID::0::itemModifiedAppearanceID::267056::speciesID::0::name::Blood Monarch's Longbow::itemID::235655::addedDate::2025/27::",
-[264] = "::description::More ecological than Warp Stalker Leathers.::price::350::transmogSetID::2657::perksVendorCategoryID::8::mountID::0::itemModifiedAppearanceID::0::speciesID::0::name::Ensemble: Sylvan Stalker's Leathers::originalPrice::750::itemID::200915::addedDate::2025/26::",
-[250] = "::description::Perfect for handling the absurdly large rats in the Barkeep's cellar.::price::40::transmogSetID::0::perksVendorCategoryID::1::mountID::0::itemModifiedAppearanceID::168778::speciesID::0::name::Polished Shortsword::originalPrice::75::itemID::190546::addedDate::2025/26::",
+[533] = "::description::When she grows up, Mitzy wants to guide Greatfather Winter's sleigh just like Metzen, her famous dad. Until then, she's more than happy to come with you on your adventures.::price::600::transmogSetID::0::perksVendorCategoryID::3::mountID::0::itemModifiedAppearanceID::0::name::Mitzy::speciesID::4311::itemID::210870::addedDate::2024/24::",
+[999] = "::description::Take to the skies on a glittering, shimmering, pearlescent butterfly.::price::700::transmogSetID::0::mountTypeName::Flying::perksVendorCategoryID::2::mountID::2489::itemModifiedAppearanceID::0::speciesID::0::name::Pearlescent Butterfly::itemID::235650::addedDate::2025/27::",
 [500] = "::description::Includes a hood and a cloak.::price::100::transmogSetID::3047::perksVendorCategoryID::8::mountID::0::itemModifiedAppearanceID::0::name::Ensemble: Vagabond's Lively Threads::speciesID::0::itemID::206330::addedDate::2024/21::",
 [1000] = "::description::The elusive Ruby Butterfly is highly sought after by Twilight Witches.::price::700::transmogSetID::0::mountTypeName::Flying::perksVendorCategoryID::2::mountID::2491::itemModifiedAppearanceID::0::speciesID::0::name::Ruby Butterfly::itemID::235657::addedDate::2025/27::",
-[516] = "::description::None were more skilled in the mastery of arcane than the High Elven Magisters of Quel'Thalas.::price::450::transmogSetID::3111::perksVendorCategoryID::8::mountID::0::itemModifiedAppearanceID::0::name::Battle Magister's Regalia::speciesID::0::itemID::208699::addedDate::2024/23::",
+[256] = "::description::The Scryers wont take lightly to you using this.::price::225::transmogSetID::0::perksVendorCategoryID::1::mountID::0::itemModifiedAppearanceID::168794::speciesID::0::name::Aldori War Mace::originalPrice::500::itemID::190562::addedDate::2025/26::",
 [1001] = "::description::This snail protects its treasures with the ferocity of a dragon, but perhaps not the speed.::price::325::transmogSetID::0::mountTypeName::Ground::perksVendorCategoryID::2::mountID::2495::itemModifiedAppearanceID::0::speciesID::0::name::Emerald Snail::itemID::235662::addedDate::2025/28::",
-[915] = "::description::Battle-tested to allow for maximum maneuverability::price::40::transmogSetID::0::perksVendorCategoryID::1::mountID::0::itemModifiedAppearanceID::230751::speciesID::0::name::Long Sunny War Skirt::itemID::233112::addedDate::2025/25::",
-[533] = "::description::When she grows up, Mitzy wants to guide Greatfather Winter's sleigh just like Metzen, her famous dad. Until then, she's more than happy to come with you on your adventures.::price::600::transmogSetID::0::perksVendorCategoryID::3::mountID::0::itemModifiedAppearanceID::0::name::Mitzy::speciesID::4311::itemID::210870::addedDate::2024/24::",
-[529] = "::description::Revenge is a dish best served sweet.::price::600::transmogSetID::0::perksVendorCategoryID::1::mountID::0::itemModifiedAppearanceID::193800::name::Candied Blade::speciesID::0::itemID::210843::addedDate::2024/24::",
+[144] = "::description::Legends say this sword once split a mountain in half.::price::200::transmogSetID::0::perksVendorCategoryID::1::mountID::0::itemModifiedAppearanceID::168333::speciesID::0::name::Fang of the Mountain::originalPrice::400::itemID::190217::addedDate::2025/26::",
+[1105] = "::description::A favorite when trading in the southern jungles.::price::100::transmogSetID::0::quality::1::perksVendorCategoryID::1::invType::INVTYPE_LEGS::mountID::0::itemModifiedAppearanceID::193814::speciesID::0::name::Trader's Plum Sarong::itemID::210859::addedDate::2025/31::",
+[237] = "::description::An effective icebreaker, literally and figuratively.::price::175::transmogSetID::0::perksVendorCategoryID::1::mountID::0::itemModifiedAppearanceID::169055::name::Fists of Polar Fury::speciesID::0::itemID::190842::addedDate::2024/24::",
 [1003] = "::description::For the vigilantes that crave pizza parties.::price::50::transmogSetID::0::quality::2::perksVendorCategoryID::1::invType::INVTYPE_HEAD::mountID::0::itemModifiedAppearanceID::249354::speciesID::0::name::Vigilante's Carrot Mask::itemID::235029::addedDate::2025/29::",
 [502] = "::description::When the tide calls, this belt will hold.::price::40::transmogSetID::0::perksVendorCategoryID::1::mountID::0::itemModifiedAppearanceID::169020::speciesID::0::name::Tidecaller's Cinch::originalPrice::50::itemID::190806::addedDate::2025/26::",
 [1004] = "::description::For those with a tendency for rage.::price::50::transmogSetID::0::quality::2::perksVendorCategoryID::1::invType::INVTYPE_HEAD::mountID::0::itemModifiedAppearanceID::249357::speciesID::0::name::Vigilante's Crimson Mask::itemID::235032::addedDate::2025/29::",
-[530] = "::description::A favorite when trading in the southern jungles.::price::100::transmogSetID::0::perksVendorCategoryID::1::mountID::0::itemModifiedAppearanceID::193801::name::Trader's Crimson Sarong::speciesID::0::itemID::210844::addedDate::2024/20::",
+[573] = "::description::When you said an old friend was coming back, this was not quite what I expected. -Bralla Cloudwing::price::500::transmogSetID::0::mountTypeName::Flying::perksVendorCategoryID::2::mountID::440::itemModifiedAppearanceID::0::speciesID::0::name::Spectral Gryphon::originalPrice::650::itemID::76889::addedDate::2025/26::",
 [1005] = "::description::For those intellectually minded vigilantes.::price::50::transmogSetID::0::quality::2::perksVendorCategoryID::1::invType::INVTYPE_HEAD::mountID::0::itemModifiedAppearanceID::249358::speciesID::0::name::Vigilante's Violet Mask::itemID::235033::addedDate::2025/29::",
 [503] = "::description::Ever feel like you're being watched?::price::225::transmogSetID::0::perksVendorCategoryID::1::mountID::0::itemModifiedAppearanceID::168961::name::Caged Eye of the Watcher::speciesID::0::itemID::190710::addedDate::2024/22::",
-[1006] = "::description::For the most serious of leaders.::price::50::transmogSetID::0::quality::2::perksVendorCategoryID::1::invType::INVTYPE_HEAD::mountID::0::itemModifiedAppearanceID::249345::speciesID::0::name::Vigilante's Azure Mask::itemID::235020::addedDate::2025/29::",
+[63] = "::description::Given to Merithra's attendants to help them blend into the vibrant verdant hues of the Emerald Dream.::price::50::transmogSetID::0::perksVendorCategoryID::1::mountID::0::itemModifiedAppearanceID::168221::name::Emerald Drape::speciesID::0::itemID::190068::addedDate::2024/21::",
 [126] = "::description::Found in the bedchambers of Karazhan, this cloak is infused with the lingering essence of Medivh's soul.::price::100::transmogSetID::0::perksVendorCategoryID::1::mountID::0::itemModifiedAppearanceID::168316::name::Feathered Drape of the Guardian::speciesID::0::itemID::190200::addedDate::2024/23::",
-[1007] = "::description::Just when you thought it was safe to go back in the water.::price::175::transmogSetID::0::quality::2::perksVendorCategoryID::1::invType::INVTYPE_HEAD::mountID::0::itemModifiedAppearanceID::200149::speciesID::0::name::Frenzied Hat of the Shallows::itemID::217374::addedDate::2025/29::",
-[258] = "::description::Squawks's older (and somehow louder) brother appears to tolerate your presence. For now. You should probably track down some crackers while you still can.::price::750::transmogSetID::0::mountTypeName::Flying::perksVendorCategoryID::2::mountID::1575::itemModifiedAppearanceID::0::speciesID::0::name::Quawks::itemID::190169::addedDate::2025/26::",
+[252] = "::description::It's been handed down between timelines.::price::100::transmogSetID::0::perksVendorCategoryID::1::mountID::0::itemModifiedAppearanceID::168789::speciesID::0::name::Sinister Fel Staff::originalPrice::175::itemID::190557::addedDate::2025/26::",
+[1093] = "::description::Undead sinew flexes with each draw of the string.\r\n<Unique Ammunition>::price::175::transmogSetID::0::quality::3::perksVendorCategoryID::1::invType::INVTYPE_RANGED::mountID::0::itemModifiedAppearanceID::290218::speciesID::0::name::Wailing Banshee's Longbow::itemID::242378::addedDate::2025/31::",
 [1008] = "::description::Am I turtley enough?::price::225::transmogSetID::0::quality::2::perksVendorCategoryID::1::invType::INVTYPE_CLOAK::mountID::0::itemModifiedAppearanceID::284492::speciesID::0::name::Heroic Half Shell::itemID::235985::addedDate::2025/29::",
-[520] = "::description::It foresees a deduction of your trader's tender balance.::price::300::transmogSetID::0::perksVendorCategoryID::5::mountID::0::itemModifiedAppearanceID::0::speciesID::0::name::Imp in a Ball::originalPrice::350::itemID::32542::addedDate::2025/26::",
+[1126] = "::description::Smoke before fire.::price::150::transmogSetID::0::quality::3::perksVendorCategoryID::1::invType::INVTYPE_WEAPON::mountID::0::itemModifiedAppearanceID::290279::speciesID::0::name::Grandmaster's Royal Axe::itemID::242527::addedDate::2025/32::",
 [1009] = "::description::These light-weight wraps provide excellent muscle support.::price::20::transmogSetID::0::quality::1::perksVendorCategoryID::1::invType::INVTYPE_FEET::mountID::0::itemModifiedAppearanceID::230799::speciesID::0::name::Banded Violet War Wraps::itemID::233165::addedDate::2025/29::",
-[260] = "::description::Includes a hood and a cloak.::price::100::transmogSetID::2332::perksVendorCategoryID::8::mountID::0::itemModifiedAppearanceID::0::name::Ensemble: Vagabond's Azure Threads::speciesID::0::itemID::190576::addedDate::2024/20::",
+[1127] = "::description::The weapon of choice for a frontline combatant.::price::150::transmogSetID::0::quality::3::perksVendorCategoryID::1::invType::INVTYPE_WEAPON::mountID::0::itemModifiedAppearanceID::290277::speciesID::0::name::Grandmaster's Prophetic Axe::itemID::242525::addedDate::2025/32::",
 [1010] = "::description::Battle-tested to allow for maximum maneuverability and muscle support.::price::50::transmogSetID::0::quality::1::perksVendorCategoryID::1::invType::INVTYPE_LEGS::mountID::0::itemModifiedAppearanceID::230782::speciesID::0::name::Long Violet War Skirt and Leg Wraps::itemID::233148::addedDate::2025/29::",
-[517] = "::description::While preparing for a hornstrider hunt experienced hunters will don this ceremonial set to inspire the green hunters on their first hunt.::price::450::transmogSetID::3115::perksVendorCategoryID::8::mountID::0::itemModifiedAppearanceID::0::name::Hornstrider Hunter's Camouflage::speciesID::0::itemID::208727::addedDate::2024/23::",
+[1137] = "::description::Enhance ones mysterious backstory.::price::50::transmogSetID::0::quality::4::perksVendorCategoryID::1::invType::INVTYPE_HEAD::mountID::0::itemModifiedAppearanceID::292967::speciesID::0::name::Classic Midnight Eye Patch::itemID::246015::addedDate::2025/32::",
 [1011] = "::description::Battle-tested to allow for maximum maneuverability::price::40::transmogSetID::0::quality::1::perksVendorCategoryID::1::invType::INVTYPE_LEGS::mountID::0::itemModifiedAppearanceID::230748::speciesID::0::name::Long Violet War Skirt::itemID::233109::addedDate::2025/29::",
-[515] = "::description::Forged by an unknown chronosmith at an unknown period in time.::price::450::transmogSetID::3113::perksVendorCategoryID::8::mountID::0::itemModifiedAppearanceID::0::name::Scales of the Silver Hoarder::speciesID::0::itemID::208725::addedDate::2024/23::",
+[1125] = "::description::The ideal outfit for a hard workout.::price::100::transmogSetID::4540::quality::2::perksVendorCategoryID::8::invType::INVTYPE_NON_EQUIP_IGNORE::mountID::0::itemModifiedAppearanceID::0::speciesID::0::name::Ensemble: Snowy Sweatsuit::itemID::242489::addedDate::2025/32::",
 [1012] = "::description::Battle-tested to allow for maximum maneuverability and muscle support.::price::50::transmogSetID::0::quality::1::perksVendorCategoryID::1::invType::INVTYPE_LEGS::mountID::0::itemModifiedAppearanceID::230765::speciesID::0::name::Short Violet War Skirt and Leg Wraps::itemID::233131::addedDate::2025/29::",
-[513] = "::description::Krag'wa's temples were guarded by loyal Zandalari wielding weapons designed to honor and protect.::price::500::transmogSetID::3118::perksVendorCategoryID::8::mountID::0::itemModifiedAppearanceID::0::name::Tools of Krag'wa's Executor::speciesID::0::itemID::208730::addedDate::2024/23::",
+[1133] = "::description::Get checked, mate.::price::175::transmogSetID::0::quality::3::perksVendorCategoryID::1::invType::INVTYPE_2HWEAPON::mountID::0::itemModifiedAppearanceID::290208::speciesID::0::name::Grandmaster's Royal Stave::itemID::242359::addedDate::2025/32::",
 [1013] = "::description::Battle-tested to allow for maximum maneuverability.::price::40::transmogSetID::0::quality::1::perksVendorCategoryID::1::invType::INVTYPE_LEGS::mountID::0::itemModifiedAppearanceID::230731::speciesID::0::name::Short Violet War Skirt::itemID::233092::addedDate::2025/29::",
-[1081] = "::description::It squeals in delight as it carves through flesh and bone.::price::200::transmogSetID::0::quality::3::perksVendorCategoryID::1::invType::INVTYPE_WEAPON::mountID::0::itemModifiedAppearanceID::291524::speciesID::0::name::Forsaken's Grotesque Blade::itemID::242628::addedDate::2025/31::",
+[1115] = "::description::Battle-tested to allow for maximum maneuverability and muscle support.::price::50::transmogSetID::0::quality::1::perksVendorCategoryID::1::invType::INVTYPE_LEGS::mountID::0::itemModifiedAppearanceID::230784::speciesID::0::name::Long Snowy War Skirt and Leg Wraps::itemID::233150::addedDate::2025/32::",
 [1014] = "::description::These light-weight wraps provide excellent ankle support.::price::20::transmogSetID::0::quality::1::perksVendorCategoryID::1::invType::INVTYPE_FEET::mountID::0::itemModifiedAppearanceID::230816::speciesID::0::name::Banded Violet War Slippers::itemID::233182::addedDate::2025/29::",
-[519] = "::description::Crafted for the high priests of Krag'wa and the loas most ardent adherents.::price::450::transmogSetID::3117::perksVendorCategoryID::8::mountID::0::itemModifiedAppearanceID::0::name::Imminence of Krag'wa's Executor::speciesID::0::itemID::208729::addedDate::2024/23::",
+[1167] = "::description::Perfect for opening ceremonies and closing arguments.::price::210::transmogSetID::0::quality::3::perksVendorCategoryID::1::invType::INVTYPE_WEAPON::mountID::0::itemModifiedAppearanceID::292909::speciesID::0::name::Bronzebeard's Ceremonial Gavel::itemID::245952::addedDate::2025/33::",
 [1015] = "::description::Battle-tested to allow for maximum maneuverability and muscle support.::price::50::transmogSetID::0::quality::1::perksVendorCategoryID::1::invType::INVTYPE_LEGS::mountID::0::itemModifiedAppearanceID::230753::speciesID::0::name::Short Azure War Skirt and Leg Wraps::itemID::233117::addedDate::2025/29::",
-[574] = "::description::How do you not fall right through that thing? -Maztha::price::500::transmogSetID::0::mountTypeName::Flying::perksVendorCategoryID::2::mountID::441::itemModifiedAppearanceID::0::speciesID::0::name::Spectral Wind Rider::originalPrice::650::itemID::76902::addedDate::2025/26::",
+[1161] = "::description::The ideal outfit for a hard workout.::price::100::transmogSetID::4539::quality::2::perksVendorCategoryID::8::invType::INVTYPE_NON_EQUIP_IGNORE::mountID::0::itemModifiedAppearanceID::0::speciesID::0::name::Ensemble: Aquatic Sweatsuit::itemID::242485::addedDate::2025/33::",
 [1016] = "::description::Battle-tested to allow for maximum maneuverability.::price::40::transmogSetID::0::quality::1::perksVendorCategoryID::1::invType::INVTYPE_LEGS::mountID::0::itemModifiedAppearanceID::230736::speciesID::0::name::Long Azure War Skirt::itemID::233097::addedDate::2025/29::",
-[259] = "::description::Anything can be held together with duct tape and a little prayer.::price::200::transmogSetID::0::perksVendorCategoryID::1::mountID::0::itemModifiedAppearanceID::168792::speciesID::0::name::Conquest::originalPrice::600::itemID::190560::addedDate::2025/26::",
+[1165] = "::description::Certified 100% more magical than your average rock.::price::80::transmogSetID::0::quality::3::perksVendorCategoryID::1::invType::INVTYPE_HOLDABLE::mountID::0::itemModifiedAppearanceID::292913::speciesID::0::name::Bronzebeard's Crystal Ward::itemID::245956::addedDate::2025/33::",
 [1017] = "::description::Battle-tested to allow for maximum maneuverability and muscle support.::price::50::transmogSetID::0::quality::1::perksVendorCategoryID::1::invType::INVTYPE_LEGS::mountID::0::itemModifiedAppearanceID::230770::speciesID::0::name::Long Azure War Skirt and Leg Wraps::itemID::233136::addedDate::2025/29::",
-[1106] = "::description::Wandering the glades of Felwood on a steady diet of cursed truffles and lost travelers. Do not pet.::price::325::transmogSetID::0::mountTypeName::Ground::quality::3::perksVendorCategoryID::2::invType::INVTYPE_NON_EQUIP_IGNORE::mountID::2600::itemModifiedAppearanceID::0::speciesID::0::name::Unarmored Deathtusk Felboar::itemID::245936::addedDate::2025/31::",
+[1163] = "::description::Bound by ancient magics, the unmistakable sparkle of Azerite never fades.::price::80::transmogSetID::0::quality::3::perksVendorCategoryID::1::invType::INVTYPE_HOLDABLE::mountID::0::itemModifiedAppearanceID::292914::speciesID::0::name::The Speaker's Crystal Ward::itemID::245957::addedDate::2025/33::",
 [1018] = "::description::Battle-tested to allow for maximum maneuverability.::price::40::transmogSetID::0::quality::1::perksVendorCategoryID::1::invType::INVTYPE_LEGS::mountID::0::itemModifiedAppearanceID::230719::speciesID::0::name::Short Azure War Skirt::itemID::233080::addedDate::2025/29::",
-[1095] = "::description::Annointed in filth, blessed by plague.::price::200::transmogSetID::0::quality::3::perksVendorCategoryID::1::invType::INVTYPE_WEAPON::mountID::0::itemModifiedAppearanceID::290200::speciesID::0::name::Wailing Banshee's Mace::itemID::242350::addedDate::2025/31::",
-[1084] = "::description::The arrows within beg to be released.::price::175::transmogSetID::0::quality::3::perksVendorCategoryID::1::invType::INVTYPE_CLOAK::mountID::0::itemModifiedAppearanceID::290221::speciesID::0::name::Forsaken's Grotesque Quiver::itemID::242382::addedDate::2025/31::",
+[1180] = "::description::Battle-tested to allow for maximum maneuverability.::price::40::transmogSetID::0::quality::1::perksVendorCategoryID::1::invType::INVTYPE_LEGS::mountID::0::itemModifiedAppearanceID::230744::speciesID::0::name::Long Faded War Skirt::itemID::233105::addedDate::2025/34::",
+[1181] = "::description::Battle-tested to allow for maximum maneuverability.::price::40::transmogSetID::0::quality::1::perksVendorCategoryID::1::invType::INVTYPE_LEGS::mountID::0::itemModifiedAppearanceID::230727::speciesID::0::name::Short Faded War Skirt::itemID::233088::addedDate::2025/34::",
 },
-["hidePlayerArmorSetting"] = true,
+["CurrentMonthData"] = {
+["items"] = {
+905,
+922,
+917,
+1265,
+1273,
+1263,
+1264,
+1295,
+1274,
+906,
+907,
+1262,
+1271,
+1267,
+1269,
+1275,
+1270,
+1272,
+1261,
+1266,
+903,
+908,
+1276,
+1268,
+909,
 },
-["AutoDisplayQuestItem"] = false,
+["month"] = 37,
+},
+},
 ["NamePlateNameOffset"] = 0,
 ["Version"] = 10000,
 ["MinimapIconStyle"] = 2,
 ["GemManager"] = true,
 ["ModelPanelScale"] = 1,
-["TooltipTheme"] = "Bright",
-["TalentTreeAnchor"] = 1,
-["PandariaRemixLoadout"] = {
-[10] = {
-},
-},
+["AutoDisplayQuestItem"] = false,
+["TalentTreeForPaperDoll"] = false,
+["HideTextsWithUI"] = true,
 ["TalentTreeForInspection"] = true,
-["UseEntranceVisual"] = true,
+["SpeedyScreenshotAlert"] = true,
 ["libdbicon"] = {
-["minimapPos"] = 178.7545576493706,
+["minimapPos"] = 114.4626516838481,
 },
-["SoloQueueLFRDetails"] = false,
-["PandariaGemManagerDefaultMode"] = 1,
-["CameraOrbit"] = true,
+["IndependentMinimapButton"] = true,
+["installTime"] = 1722004162,
+["Tutorials"] = {
+["ExitConfirmation"] = false,
+["Movement"] = false,
+["SpellVisualBrowser"] = false,
+["NPCBrowserEntance"] = false,
+["NPCBrowser"] = true,
+["WeaponBrowser"] = false,
+},
 ["TradingPostChangePost"] = true,
-["AutoFilterGem"] = false,
+["EnableDoubleTap"] = true,
 ["SearchSuggestEnable"] = false,
-["ConduitTooltip"] = false,
+["FontHeightItemName"] = 11,
 ["DressingRoomUseTargetModel"] = true,
 }
 NarciAchievementOptions = {
 ["UseAsDefault"] = false,
-["IncompleteFirst"] = true,
+["ShowRedMark"] = false,
 ["Scale"] = 1,
 ["ReplaceToast"] = true,
 ["Theme"] = 1,
-["ShowRedMark"] = false,
+["IncompleteFirst"] = true,
 }
 NarciStatisticsDB = {
 ["ScreenshotsTakenInNarcissus"] = 25,
 ["InstalledDate"] = 1722004177,
-["TimeSpentInNarcissus"] = 108986,
+["TimeSpentInNarcissus"] = 109005,
 ["QuestItems"] = {
 },
 ["AddOnActionForbidden"] = {
-["timeLastError"] = 1760033716,
 ["addons"] = {
 ["Myslot"] = {
 ["count"] = 1,
@@ -909,6 +963,7 @@ NarciStatisticsDB = {
 ["timeLastError"] = 1727102547,
 },
 },
+["timeLastError"] = 1760033716,
 },
 }
 NarciTurntableOptions = {
@@ -928,7 +983,7 @@ NarciCharacterProfiles = {
 ["race"] = 5,
 ["name"] = "Hellavator",
 ["birth"] = 1722554910,
-["serverID"] = "3684",
+["serverID"] = 3684,
 ["lastVisit"] = 1756993002,
 ["outfits"] = {
 {
@@ -994,15 +1049,15 @@ NarciCharacterProfiles = {
 ["race"] = 1,
 ["name"] = "Stormclout",
 ["birth"] = 1757076761,
-["serverID"] = "11",
-["lastVisit"] = 1759417831,
+["serverID"] = 11,
+["lastVisit"] = 1769092457,
 ["outfits"] = {
 {
 ["s"] = "285136,285144,285152,104602,195317,219414,104604,285132,285148,285140,285128,169069:-1:7521,94221",
 ["n"] = "Fox",
 },
 {
-["s"] = "228444,183710,183938,183690,195322,224733,183718,183698,183714,183706,183694,168165:-1:7521,168165:0:7521",
+["s"] = "228444,183710,183938,183690,195322,224733,183718,183698,183714,183706,183694,295468:-1:5876,168165",
 ["n"] = "Crimson Glad",
 },
 {
@@ -1077,6 +1132,10 @@ NarciCharacterProfiles = {
 ["s"] = "116830,77343,77345,229618,80190,83203,193873,198778,84223,2635,2636,3090:-1:7322,9348:0:7322",
 ["n"] = "Matrix",
 },
+{
+["s"] = "228444,228460:-1,228484,228420,195322,224733,228476,228436,228468,228452,228428,188895:-1,0",
+["n"] = "Custom Set",
+},
 },
 ["class"] = 10,
 },
@@ -1084,7 +1143,7 @@ NarciCharacterProfiles = {
 ["race"] = 1,
 ["name"] = "Stormclout",
 ["birth"] = 1745424900,
-["serverID"] = "3684",
+["serverID"] = 3684,
 ["lastVisit"] = 1757037166,
 ["outfits"] = {
 {
@@ -1174,7 +1233,7 @@ NarciCharacterProfiles = {
 ["race"] = 4,
 ["name"] = "Corsic",
 ["birth"] = 1724289012,
-["serverID"] = "3684",
+["serverID"] = 3684,
 ["lastVisit"] = 1743208449,
 ["outfits"] = {
 {
@@ -1264,7 +1323,7 @@ NarciCharacterProfiles = {
 ["race"] = 32,
 ["name"] = "Crillessana",
 ["birth"] = 1763388985,
-["serverID"] = "3684",
+["serverID"] = 3684,
 ["lastVisit"] = 1763388985,
 ["outfits"] = {
 },
@@ -1274,7 +1333,7 @@ NarciCharacterProfiles = {
 ["race"] = 29,
 ["name"] = "Kumire",
 ["birth"] = 1723768373,
-["serverID"] = "3684",
+["serverID"] = 3684,
 ["lastVisit"] = 1724196250,
 ["outfits"] = {
 },
@@ -1284,7 +1343,7 @@ NarciCharacterProfiles = {
 ["race"] = 27,
 ["name"] = "Auteist",
 ["birth"] = 1723952295,
-["serverID"] = "3684",
+["serverID"] = 3684,
 ["lastVisit"] = 1725464284,
 ["outfits"] = {
 {
@@ -1330,7 +1389,7 @@ NarciCharacterProfiles = {
 ["race"] = 85,
 ["name"] = "Edaroseld",
 ["birth"] = 1728518320,
-["serverID"] = "57",
+["serverID"] = 57,
 ["lastVisit"] = 1728518320,
 ["outfits"] = {
 },
@@ -1340,7 +1399,7 @@ NarciCharacterProfiles = {
 ["race"] = 70,
 ["name"] = "Charizhard",
 ["birth"] = 1724950993,
-["serverID"] = "3684",
+["serverID"] = 3684,
 ["lastVisit"] = 1727630492,
 ["outfits"] = {
 {
@@ -1354,7 +1413,7 @@ NarciCharacterProfiles = {
 ["race"] = 26,
 ["name"] = "Stormclout",
 ["birth"] = 1722121948,
-["serverID"] = "3684",
+["serverID"] = 3684,
 ["lastVisit"] = 1728955687,
 ["outfits"] = {
 {
@@ -1416,7 +1475,7 @@ NarciCharacterProfiles = {
 ["race"] = 1,
 ["name"] = "Praisesun",
 ["birth"] = 1724974752,
-["serverID"] = "3684",
+["serverID"] = 3684,
 ["lastVisit"] = 1757028303,
 ["outfits"] = {
 {
@@ -1430,7 +1489,7 @@ NarciCharacterProfiles = {
 ["race"] = 5,
 ["name"] = "Auteist",
 ["birth"] = 1728662066,
-["serverID"] = "3684",
+["serverID"] = 3684,
 ["lastVisit"] = 1756135037,
 ["outfits"] = {
 {
@@ -1504,7 +1563,7 @@ NarciCharacterProfiles = {
 ["race"] = 52,
 ["name"] = "Smaugchamp",
 ["birth"] = 1727652126,
-["serverID"] = "3684",
+["serverID"] = 3684,
 ["lastVisit"] = 1756660691,
 ["outfits"] = {
 {
@@ -1522,7 +1581,7 @@ NarciCharacterProfiles = {
 ["race"] = 4,
 ["name"] = "Rakeist",
 ["birth"] = 1724676207,
-["serverID"] = "3684",
+["serverID"] = 3684,
 ["lastVisit"] = 1757076301,
 ["outfits"] = {
 {
@@ -1544,7 +1603,7 @@ NarciCharacterProfiles = {
 ["race"] = 3,
 ["name"] = "Choppiez",
 ["birth"] = 1725466125,
-["serverID"] = "3684",
+["serverID"] = 3684,
 ["lastVisit"] = 1756261897,
 ["outfits"] = {
 {
@@ -1590,7 +1649,7 @@ NarciCharacterProfiles = {
 ["race"] = 27,
 ["name"] = "Lutreteil",
 ["birth"] = 1723938765,
-["serverID"] = "3684",
+["serverID"] = 3684,
 ["lastVisit"] = 1723939310,
 ["outfits"] = {
 },
@@ -1600,7 +1659,7 @@ NarciCharacterProfiles = {
 ["race"] = 8,
 ["name"] = "Stormclout",
 ["birth"] = 1742585422,
-["serverID"] = "3684",
+["serverID"] = 3684,
 ["lastVisit"] = 1745421005,
 ["outfits"] = {
 {
@@ -1690,7 +1749,7 @@ NarciCharacterProfiles = {
 ["race"] = 1,
 ["name"] = "Stormclout",
 ["birth"] = 1730475317,
-["serverID"] = "3684",
+["serverID"] = 3684,
 ["lastVisit"] = 1742581590,
 ["outfits"] = {
 {
@@ -1772,7 +1831,7 @@ NarciCharacterProfiles = {
 ["race"] = 5,
 ["name"] = "Auteist",
 ["birth"] = 1725823406,
-["serverID"] = "3684",
+["serverID"] = 3684,
 ["lastVisit"] = 1727323547,
 ["outfits"] = {
 {
@@ -1839,11 +1898,11 @@ NarciCharacterProfiles = {
 ["class"] = 8,
 },
 ["0EA2971B"] = {
-["race"] = 4,
-["name"] = "Ofpuss",
+["race"] = 29,
+["name"] = "Starphage",
 ["birth"] = 1757086609,
-["serverID"] = "11",
-["lastVisit"] = 1763649593,
+["serverID"] = 11,
+["lastVisit"] = 1769105585,
 ["outfits"] = {
 {
 ["s"] = "78746,77343,168466,80837,83202,18370,80844,80839,169196,80841,80838,3090:-1:7322,3090:0:7322",
@@ -1898,12 +1957,16 @@ NarciCharacterProfiles = {
 ["n"] = "Matrix",
 },
 {
-["s"] = "104625,184204,288077,288075,195317,83203,288304,288311,288025,288050,288041,7545:-1:6174,7545:0:6174",
+["s"] = "78746,295497,77345,295495,195317,195300,295499,295491,295494,228006,227995,218454:-1:6174,218454:0:6174",
 ["n"] = "Cosmic",
 },
 {
 ["s"] = "228368,228384,228408,228344,195317,195300,228400,228360,228392,228376,228352,168165:-1:6258,168165:0:6258",
 ["n"] = "S3 TWW Elite",
+},
+{
+["s"] = "78746,295497:-1,77345,295495,195317,195300,295499,295491,295494,228006,227995,218454:-1,218454",
+["n"] = "Custom Set",
 },
 },
 ["class"] = 12,
@@ -1912,7 +1975,7 @@ NarciCharacterProfiles = {
 ["race"] = 2,
 ["name"] = "Choppiez",
 ["birth"] = 1724951497,
-["serverID"] = "3684",
+["serverID"] = 3684,
 ["lastVisit"] = 1725464702,
 ["outfits"] = {
 {
@@ -1954,7 +2017,7 @@ NarciCharacterProfiles = {
 ["race"] = 1,
 ["name"] = "Auteist",
 ["birth"] = 1727324810,
-["serverID"] = "3684",
+["serverID"] = 3684,
 ["lastVisit"] = 1728654217,
 ["outfits"] = {
 {
@@ -2024,7 +2087,7 @@ NarciCharacterProfiles = {
 ["race"] = 7,
 ["name"] = "Auteist",
 ["birth"] = 1725465820,
-["serverID"] = "3684",
+["serverID"] = 3684,
 ["lastVisit"] = 1725579302,
 ["outfits"] = {
 {
@@ -2074,7 +2137,7 @@ NarciCharacterProfiles = {
 ["race"] = 5,
 ["name"] = "Auteist",
 ["birth"] = 1757085656,
-["serverID"] = "11",
+["serverID"] = 11,
 ["lastVisit"] = 1758743712,
 ["outfits"] = {
 {
@@ -2152,7 +2215,7 @@ NarciCharacterProfiles = {
 ["race"] = 35,
 ["name"] = "Gehyo",
 ["birth"] = 1763389072,
-["serverID"] = "11",
+["serverID"] = 11,
 ["lastVisit"] = 1763389072,
 ["outfits"] = {
 {
@@ -2170,7 +2233,7 @@ NarciCharacterProfiles = {
 ["race"] = 4,
 ["name"] = "Starstypeshi",
 ["birth"] = 1757077880,
-["serverID"] = "11",
+["serverID"] = 11,
 ["lastVisit"] = 1759430453,
 ["outfits"] = {
 {
@@ -2192,7 +2255,7 @@ NarciCharacterProfiles = {
 ["race"] = 4,
 ["name"] = "Ofpusstwo",
 ["birth"] = 1759950823,
-["serverID"] = "11",
+["serverID"] = 11,
 ["lastVisit"] = 1763498571,
 ["outfits"] = {
 {
@@ -2206,7 +2269,7 @@ NarciCharacterProfiles = {
 ["race"] = 31,
 ["name"] = "Reedingo",
 ["birth"] = 1759950802,
-["serverID"] = "3684",
+["serverID"] = 3684,
 ["lastVisit"] = 1759950802,
 ["outfits"] = {
 {
@@ -2236,7 +2299,7 @@ NarciCharacterProfiles = {
 ["race"] = 32,
 ["name"] = "Tampacks",
 ["birth"] = 1724975160,
-["serverID"] = "3684",
+["serverID"] = 3684,
 ["lastVisit"] = 1744072335,
 ["outfits"] = {
 {
@@ -2246,21 +2309,69 @@ NarciCharacterProfiles = {
 },
 ["class"] = 6,
 },
-["0E897E88"] = {
-["race"] = 27,
-["name"] = "Dernarplan",
-["birth"] = 1723900901,
-["serverID"] = "3684",
-["lastVisit"] = 1723900901,
+["0EA2DCB4"] = {
+["race"] = 7,
+["name"] = "Choppiez",
+["birth"] = 1757642395,
+["serverID"] = 11,
+["lastVisit"] = 1757705450,
 ["outfits"] = {
+{
+["s"] = "4713,77343:77343,77345,104602,103317,104136,104604,94331,104152,104150,104147,53152:-1:6158,53152:0:6158",
+["n"] = "Yas",
 },
-["class"] = 8,
+{
+["s"] = "77344,53729,77345,53769,19967,83203,53744,53676,55068,53773,53742,77737:0:6786,67324",
+["n"] = "Greenboy",
+},
+{
+["s"] = "220688,220690,219875,220685,83202,195164,220693,220687,220691,220689,220686,80770:-1:7641,105223",
+["n"] = "Bloody Blademaster",
+},
+{
+["s"] = "73339,53729,115884,53769,19967,14348,53744,53676,55068,53773,53742,53152:-1:6262,53152:0:6262",
+["n"] = "Green Machine",
+},
+{
+["s"] = "4713,52481,77345,52478,103317,195300,60907,52479,61796,52480,115983,99967:-1:7521,99971",
+["n"] = "Brawlin",
+},
+{
+["s"] = "77344,77343:77343,77345,104602,83202,104135,60907,52479,98614,115986,61773,90755:-1:6162,90755:0:6162",
+["n"] = "Blue",
+},
+{
+["s"] = "105957,77343:77343,165528,104602,20511,83203,104604,105954,98614,106583,105955,96911:-1:4067,96911:0:4067",
+["n"] = "Yeti",
+},
+{
+["s"] = "4713,77343:77343,77345,104602,103317,22002,104604,94331,84223,104150,104603,215:-1:803,215:0:5393",
+["n"] = "zug",
+},
+{
+["s"] = "102302,102303,219875,102304,0,0,102309,102305,102306,102307,102308,116338:-1:6351,0",
+["n"] = "Mura",
+},
+{
+["s"] = "249358,292017,116019,292030,195317,195164,193873,292026,292046,292021,292042,229087:-1:7641,229087:0:7641",
+["n"] = "Purping",
+},
+{
+["s"] = "116830,77343,77345,229618,83202,83203,104604,198778,84223,2635,2636,287420:-1:7322,0",
+["n"] = "Matrix",
+},
+{
+["s"] = "249357,77343,284494,290192,195322,7975,104604,94331,290184,290188,290180,287420:-1:6786,0",
+["n"] = "Rainman",
+},
+},
+["class"] = 1,
 },
 ["0E46172F"] = {
 ["race"] = 29,
 ["name"] = "Hellowalls",
 ["birth"] = 1722004177,
-["serverID"] = "3684",
+["serverID"] = 3684,
 ["lastVisit"] = 1757076245,
 ["outfits"] = {
 {
@@ -2294,7 +2405,7 @@ NarciCharacterProfiles = {
 ["race"] = 31,
 ["name"] = "Reedingo",
 ["birth"] = 1727629849,
-["serverID"] = "3684",
+["serverID"] = 3684,
 ["lastVisit"] = 1756943579,
 ["outfits"] = {
 {
@@ -2324,7 +2435,7 @@ NarciCharacterProfiles = {
 ["race"] = 52,
 ["name"] = "Smaugchamp",
 ["birth"] = 1758757802,
-["serverID"] = "11",
+["serverID"] = 11,
 ["lastVisit"] = 1759415325,
 ["outfits"] = {
 {
@@ -2338,513 +2449,11 @@ NarciCharacterProfiles = {
 },
 ["class"] = 13,
 },
-["0EA380B9"] = {
-["race"] = 4,
-["name"] = "Mäñýfäçëð",
-["birth"] = 1758756163,
-["serverID"] = "11",
-["lastVisit"] = 1758932255,
-["outfits"] = {
-{
-["s"] = "24189,77343,77345,6905,1706,83203,6975,6971,6974,6973,104603,168165:-1:6258,168165:0:6258",
-["n"] = "Bloodfang",
-},
-{
-["s"] = "37721,37719,48672,37723,1706,83203,37725,37722,37728,37720,37727,14984:0:5868,14984:0:5868",
-["n"] = "Cata Glad",
-},
-{
-["s"] = "68097,93948,77345,6905,1706,9374,104604,94331,105814,6907,115983,7496:0:5868,7488",
-["n"] = "Nightslayer",
-},
-{
-["s"] = "21960,21750,77345,21927,1706,83203,37725,22079,21939,22087,21682,36658:0:6162,36658:0:6162",
-["n"] = "Garonas Guise",
-},
-{
-["s"] = "22249,22251,77345,22247,1706,66537,37725,22248,6974,46886,6970,36658,36658",
-["n"] = "Garonas Red",
-},
-{
-["s"] = "225875,198620,198621,198628,103317,218284,198624,198623,198625,198622,198626,77442:0:6158,77442",
-["n"] = "Pirate",
-},
-{
-["s"] = "3814,69807,115884,69702,1706,9374,104604,89985,84223,69790,69723,14984:-1:5868,168165:0:6258",
-["n"] = "Felblade",
-},
-{
-["s"] = "249350,77343,77345,104602,195317,222850,193873,195299,109317,230775,230792,39516:-1:7521,39517:0:7521",
-["n"] = "Naked Zoro",
-},
-{
-["s"] = "220715,220717,77345,220712,19964,224733,220720,220714,220718,220716,220713,39516:-1:7521,39517:0:7521",
-["n"] = "20th Ann",
-},
-{
-["s"] = "105957,77343,77345,105958,1706,83203,37725,105954,84223,105956,105955,7496,7488:0:73539",
-["n"] = "Wendingo",
-},
-{
-["s"] = "102199,101785,105152,102236,1706,83203,37725,103335,84223,101834,101830,7496,7488:0:80738",
-["n"] = "Dazarazalor",
-},
-{
-["s"] = "81183,69807,102770,69702,19960,224733,104604,94069,69819,69790,69723,14984:-1:5391,14984:0:5391",
-["n"] = "Felblade Red",
-},
-{
-["s"] = "113236,14945,114927,74660,195322,184088,6975,6971,6974,6973,6970,21042:-1:7521,95479:0:7521",
-["n"] = "Venthyr",
-},
-{
-["s"] = "7890,96983:86316,77345,1513,195317,195300,96989,96985,96986,96987,96988,80724:0:6158,39517",
-["n"] = "Maghar",
-},
-{
-["s"] = "3814,77343,77345,89261,103317,20962,31321,94331,84223,42171,26161,168165:-1:5391,168165:0:5391",
-["n"] = "Thug Zug",
-},
-{
-["s"] = "168062,77343,77345,104602,1707,83203,104604,94331,84223,89433,30772,80727:-1:7640,183886:0:7640",
-["n"] = "Pirate life",
-},
-{
-["s"] = "68097,220717,77345,220712,19964,224733,220720,220714,220718,220716,220713,39516:-1:7521,39517:0:7521",
-["n"] = "20thWMask",
-},
-{
-["s"] = "14867,77343,77345,229618,80190,83203,193873,198778,84223,2635,64970,39516:-1:7521,39517:0:7521",
-["n"] = "Matrix",
-},
-{
-["s"] = "68100,69807:69807,77345,69702,83202,7975,104604,94331,69819,69790,69723,168941:-1:5868,168941:0:5868",
-["n"] = "The Defiler",
-},
-},
-["class"] = 4,
-},
-["0EA2971A"] = {
-["race"] = 1,
-["name"] = "Praisesun",
-["birth"] = 1757222854,
-["serverID"] = "11",
-["lastVisit"] = 1759416309,
-["outfits"] = {
-{
-["s"] = "220114,220116,220118,220111,83202,9374,220119,220113,220117,220115,220112,220195:-1:7521,220196",
-["n"] = "20th Anniv",
-},
-},
-["class"] = 2,
-},
-["0EA2971C"] = {
-["race"] = 5,
-["name"] = "Hellavator",
-["birth"] = 1757965487,
-["serverID"] = "11",
-["lastVisit"] = 1758476730,
-["outfits"] = {
-{
-["s"] = "69091,69191,38873,69211,1706,14349,19029,6992,69671,12853,12631,0,0",
-["n"] = "Dread",
-},
-{
-["s"] = "13630,13633,77345,13632,1706,83203,19029,14668,83468,14121,98458,80385,80389",
-["n"] = "Corrupter",
-},
-{
-["s"] = "189246,189224,115442,189273,22037,7975,67220,188812,52114,79794,104603,74604:-1:6378,0",
-["n"] = "FEL PLAGUE",
-},
-{
-["s"] = "24637,24640,27742,24639,1706,22004,19029,24636,52114,24638,13967,0,0",
-["n"] = "Dark Coven Blue",
-},
-{
-["s"] = "14119,14122,38874,14120,1706,14349,19029,83463,52114,14121,13967,14984:0:5864,0",
-["n"] = "Wings",
-},
-{
-["s"] = "78494,78497,81665,78496,1706,83203,78499,78493,78498,78495,78492,14984:0:5864,0",
-["n"] = "T19",
-},
-{
-["s"] = "84829,84835,114927,84833,1706,9374,19029,84827,84837,84831,84825,80385,0",
-["n"] = "T20",
-},
-{
-["s"] = "60274,67218,77345,67230,83202,83203,19029,81149,67219,12853,12631,74604:-1:6676,0",
-["n"] = "Guldaniel",
-},
-{
-["s"] = "165903,165906,165956,165905,168248,146210,165908,165902,165907,165904,104603,74610:0:6258,0",
-["n"] = "Diabolic",
-},
-{
-["s"] = "189971,189972,116019,183593,168248,195164,105847,106582,183617,79794,104603,80377:0:5864,0",
-["n"] = "Trading Post",
-},
-{
-["s"] = "189246,189224,115442,165920,2249,7975,165908,165902,165907,165904,165901,80368:0:6258,0",
-["n"] = "Diabolic green/red",
-},
-{
-["s"] = "184300,189766,189776,189767,22037,190178,189771,189772,189768,189769,189770,80384:0:5864,0",
-["n"] = "Forsaken",
-},
-{
-["s"] = "5410,8883,115442,8880,51873,7975,193873,8885,8886,8881,8884,76828:0:6262,0",
-["n"] = "Plagueheart",
-},
-{
-["s"] = "116830,77343,77345,229618,80190,83203,193873,230325,105846,3670,2636,76828:0:6262,0",
-["n"] = "matrix",
-},
-},
-["class"] = 9,
-},
-["0EAABA4A"] = {
-["race"] = 36,
-["name"] = "Mäñýfäçëð",
-["birth"] = 1743211852,
-["serverID"] = "3684",
-["lastVisit"] = 1756135065,
-["outfits"] = {
-{
-["s"] = "24189,77343,77345,6905,1706,83203,6975,6971,6974,6973,104603,168165:-1:6258,168165:0:6258",
-["n"] = "Bloodfang",
-},
-{
-["s"] = "37721,37719,48672,37723,1706,83203,37725,37722,37728,37720,37727,14984:0:5868,14984:0:5868",
-["n"] = "Cata Glad",
-},
-{
-["s"] = "68097,93948,77345,6905,1706,9374,104604,94331,105814,6907,115983,7496:0:5868,7488",
-["n"] = "Nightslayer",
-},
-{
-["s"] = "21960,21750,77345,21927,1706,83203,37725,22079,21939,22087,21682,36658:0:6162,36658:0:6162",
-["n"] = "Garonas Guise",
-},
-{
-["s"] = "22249,22251,77345,22247,1706,66537,37725,22248,6974,46886,6970,36658,36658",
-["n"] = "Garonas Red",
-},
-{
-["s"] = "225875,198620,198621,198628,103317,218284,198624,198623,198625,198622,198626,77442:0:6158,77442",
-["n"] = "Pirate",
-},
-{
-["s"] = "3814,69807,115884,69702,1706,9374,104604,89985,84223,69790,69723,14984:-1:5868,168165:0:6258",
-["n"] = "Felblade",
-},
-{
-["s"] = "220715,220717,77345,220712,19964,224733,220720,220714,220718,220716,220713,39516:-1:7521,39517:0:7521",
-["n"] = "20th Ann",
-},
-{
-["s"] = "105957,77343,77345,105958,1706,83203,37725,105954,84223,105956,105955,7496,7488:0:73539",
-["n"] = "Wendingo",
-},
-{
-["s"] = "102199,101785,105152,102236,1706,83203,37725,103335,84223,101834,101830,7496,7488:0:80738",
-["n"] = "Dazarazalor",
-},
-{
-["s"] = "81183,69807,102770,69702,19960,224733,104604,94069,69819,69790,69723,14984:-1:5391,14984:0:5391",
-["n"] = "Felblade Red",
-},
-{
-["s"] = "113236,14945,114927,74660,195322,184088,6975,6971,6974,6973,6970,21042:-1:7521,95479:0:7521",
-["n"] = "Venthyr",
-},
-{
-["s"] = "3814,77343,77345,89261,103317,20962,31321,94331,84223,42171,26161,168165:-1:5391,168165:0:5391",
-["n"] = "Thug Zug",
-},
-{
-["s"] = "168062,77343,77345,104602,1707,83203,104604,94331,84223,89433,30772,80727:-1:7640,183886:0:7640",
-["n"] = "Pirate life",
-},
-{
-["s"] = "68100,69807:69807,77345,69702,83202,7975,104604,94331,69819,69790,69723,168941:-1:5868,168941:0:5868",
-["n"] = "The Defiler",
-},
-{
-["s"] = "249350,77343,77345,104602,195317,222850,193873,195299,109317,230775,230792,39516:-1:7521,39517:0:7521",
-["n"] = "Naked Zoro",
-},
-{
-["s"] = "7890,96983:86316,77345,1513,195317,195300,96989,96985,96986,96987,96988,80724:0:6158,39517",
-["n"] = "Maghar",
-},
-{
-["s"] = "68097,220717,77345,220712,19964,224733,220720,220714,220718,220716,220713,39516:-1:7521,39517:0:7521",
-["n"] = "20thWMask",
-},
-},
-["class"] = 4,
-},
-["0E499C17"] = {
-["race"] = 4,
-["name"] = "Ofpuss",
-["birth"] = 1724948790,
-["serverID"] = "3684",
-["lastVisit"] = 1756786002,
-["outfits"] = {
-{
-["s"] = "78746,77343,168466,80837,83202,18370,80844,80839,169196,80841,80838,3090:-1:7322,3090:0:7322",
-["n"] = "White/Black Ninja",
-},
-{
-["s"] = "77344,84507,77345,80837,83202,83203,78918,22079,85987,22087,21682,89282:0:5868,89282:0:5868",
-["n"] = "Rogue Tier",
-},
-{
-["s"] = "78746,93948,77345,80837,83202,83203,96706,94331,81838,25957,108155,9348:-1:6258,9348:0:6258",
-["n"] = "Xavius",
-},
-{
-["s"] = "169039,93948,77345,111580,83202,224733,183654,183634,183650,183642,183630,168165:-1:6258,168165:0:6258",
-["n"] = "Red God",
-},
-{
-["s"] = "188802,69798,77345,69702,83202,83203,69827,69735,69819,69773,69723,89282:-1:5868,89282:0:5868",
-["n"] = "Hellfire Mix",
-},
-{
-["s"] = "61915,69798,77345,69702,83202,76894,104604,198623,69819,69773,69723,89282:-1:5864,89282:0:5864",
-["n"] = "Black Temple",
-},
-{
-["s"] = "220881,220883,168466,220878,195317,195300,220886,220880,220884,220882,220879,7545:-1:7521,7545:0:7521",
-["n"] = "T2 20th",
-},
-{
-["s"] = "183638,183646,77345,183626,195317,224733,183654,183634,183650,183642,183630,80627:-1:7521,80627:0:7521",
-["n"] = "Crimson",
-},
-{
-["s"] = "4882,195887,77345,195882,195317,194083,195883,195880,195884,195885,195888,190113:-1:6351,190113:0:6351",
-["n"] = "Warden",
-},
-{
-["s"] = "249356,77343,77345,104602,1707,83203,104604,94331,84223,230764,230815,168164:-1:5360,168164:0:5360",
-["n"] = "Plum",
-},
-{
-["s"] = "227837,184204,77345,222047,195317,195164,224961,106582,230332,116015,115983,218454:-1:5360,218454:0:5360",
-["n"] = "Protoss",
-},
-{
-["s"] = "291679,291681,291675,291676,195317,195300,291682,291678,291683,291680,291677,72801:-1:7641,72801:0:6174",
-["n"] = "Cosmic",
-},
-},
-["class"] = 12,
-},
-["0E8993F4"] = {
-["race"] = 27,
-["name"] = "Vansthalysia",
-["birth"] = 1723921654,
-["serverID"] = "3684",
-["lastVisit"] = 1724196328,
-["outfits"] = {
-},
-["class"] = 10,
-},
-["0E4A5E7C"] = {
-["race"] = 1,
-["name"] = "Auteist",
-["birth"] = 1723745105,
-["serverID"] = "3684",
-["lastVisit"] = 1723950195,
-["outfits"] = {
-{
-["s"] = "165851,165854,116019,165853,22031,195164,193873,165850,98614,165852,165849,73875:0:6786,77361",
-["n"] = "Arcane",
-},
-{
-["s"] = "200506,200507,169040,76769,51865,9374,8629,218959,200508,165981,4852,76527:0:6677,62851",
-["n"] = "Fire",
-},
-{
-["s"] = "50109,84738,84648,84736,83202,83203,84742,84730,84740,84734,84728,74475:0:6678,0",
-["n"] = "Ice",
-},
-{
-["s"] = "3660,77343,184181,3330,168248,83203,193873,89734,98614,96411,86001,80545:0:6786,62851",
-["n"] = "Acolyte",
-},
-{
-["s"] = "8882,8883,115442,8880,83202,83203,8887,8885,8886,8881,8884,80548:-1:5867,0",
-["n"] = "Plague",
-},
-},
-["class"] = 8,
-},
-["0EBA4990"] = {
-["race"] = 2,
-["name"] = "Choppiez",
-["birth"] = 1756300941,
-["serverID"] = "3684",
-["lastVisit"] = 1757037334,
-["outfits"] = {
-{
-["s"] = "4713,77343:77343,77345,104602,103317,104136,104604,94331,104152,104150,104147,53152:-1:6158,53152:0:6158",
-["n"] = "Yas",
-},
-{
-["s"] = "77344,53729,77345,53769,19967,83203,53744,53676,55068,53773,53742,77737:0:6786,67324",
-["n"] = "Greenboy",
-},
-{
-["s"] = "77344,52481,77345,52478,103317,20962,60907,52479,61796,52480,169521,105223:-1:6158,105223:0:6158",
-["n"] = "Sandy Pus",
-},
-{
-["s"] = "73339,53729,115884,53769,19967,14348,53744,53676,55068,53773,53742,53152:-1:6262,53152:0:6262",
-["n"] = "Green Machine",
-},
-{
-["s"] = "77344,77343:61938,77345,52478,103317,20962,60907,52479,61796,52480,61773,105223:-1:6158,105223:0:6158",
-["n"] = "Brawlin",
-},
-{
-["s"] = "77344,77343:77343,77345,104602,83202,104135,60907,52479,98614,115986,61773,90755:-1:6162,90755:0:6162",
-["n"] = "Blue",
-},
-{
-["s"] = "105957,77343:77343,165528,104602,20511,83203,104604,105954,98614,106583,105955,96911:-1:4067,96911:0:4067",
-["n"] = "Yeti",
-},
-{
-["s"] = "4713,77343:77343,77345,104602,103317,22002,104604,94331,84223,104150,104603,215:-1:803,215:0:5393",
-["n"] = "zug",
-},
-{
-["s"] = "102302,102303,219875,102304,0,0,102309,102305,102306,102307,102308,116338:-1:6351,0",
-["n"] = "Mura",
-},
-},
-["class"] = 1,
-},
-["0E96CF12"] = {
-["race"] = 1,
-["name"] = "Stormclout",
-["birth"] = 1728957163,
-["serverID"] = "3684",
-["lastVisit"] = 1730223781,
-["outfits"] = {
-{
-["s"] = "4363,14945,99295,180880,2249,146210,104604,180792,94909,113491,180634,76938:-1:6258,0",
-["n"] = "Red pirate",
-},
-{
-["s"] = "195673,183710,192958,183690,103317,195300,183718,183698,183714,183706,183694,77093:0:7322,0",
-["n"] = "Crimson Glad",
-},
-{
-["s"] = "91103,169350,77345,169346,103300,180108,169348,169354,169352,169344,169356,90755:-1:6351,0",
-["n"] = "Eternal Glad",
-},
-{
-["s"] = "61915,69798,77345,69702,103300,83203,104604,94331,69819,69773,104603,7545:-1:6262,7545:0:6262",
-["n"] = "Hellfire Citadel",
-},
-{
-["s"] = "169039,90150:90150,77345,195661,195317,224733,195668,195663,195667,195665,195662,7545:-1:6258,7545:0:6258",
-["n"] = "RedDead",
-},
-{
-["s"] = "165860,165862,165954,165857,103317,195300,165864,165859,165863,165861,165858,7545:-1:6786,7545:0:6786",
-["n"] = "mage tower",
-},
-{
-["s"] = "87884,87024,77345,87026,195317,9376,87030,87018,87028,87022,87016,7545:-1:6263,7545:0:6263",
-["n"] = "BLUEBALLS",
-},
-{
-["s"] = "14280,77343,77345,183691,195317,195164,104604,183697,108152,89821,108168,218454:-1:5864,218454:0:5864",
-["n"] = "Protoss",
-},
-{
-["s"] = "73339,53473,77345,53475,195317,222850,53466,53467,53462,53471,53464,7545:-1:6351,7545:0:6351",
-["n"] = "Jaded",
-},
-{
-["s"] = "195673,195671,77345,195676,195317,224733,195669,195674,195670,195672,195675,7545:-1:6258,7545:0:6258",
-["n"] = "Shadopan",
-},
-{
-["s"] = "169039,217338,77345,217298,195322,224733,183718,217310,217343,217330,217303,76942:-1:6258,7545",
-["n"] = "TWW S1 Conq",
-},
-{
-["s"] = "76357,217335,77345,217295,195322,224733,217351,217311,217343,217327,217303,7545:-1:6351,7545:0:6351",
-["n"] = "TWW S1 Elite",
-},
-{
-["s"] = "220827,220829,77345,220824,195317,195300,220832,220826,220830,220828,220825,7545:-1:6786,7545:0:6351",
-["n"] = "T2",
-},
-},
-["class"] = 10,
-},
-["0EA29727"] = {
-["race"] = 29,
-["name"] = "Thingreyline",
-["birth"] = 1757077825,
-["serverID"] = "11",
-["lastVisit"] = 1758166731,
-["outfits"] = {
-{
-["s"] = "9610,169012,113301,169013,103317,83203,19029,169007,169009,169008,169010,80711:0:6351,80715",
-["n"] = "Blood God",
-},
-{
-["s"] = "9610,102766,113301,102251,103317,83203,116018,183570,102120,60947,104603,80711:0:6351,80715",
-["n"] = "Skully",
-},
-{
-["s"] = "9610,78709,113295,113264,83202,83203,113291,113274,113288,113280,113269,80711:0:6351,0",
-["n"] = "Greeny",
-},
-{
-["s"] = "3660,165880,183915,165879,83202,83203,165882,165876,165881,165878,165875,165929:-1:5864,77409",
-["n"] = "Challenge",
-},
-{
-["s"] = "9610,77343,168534,168551,83202,83203,104604,94331,84223,69463,104603,80711:0:6258,0",
-["n"] = "Scarlet",
-},
-{
-["s"] = "108055,108072,168466,93088,168248,195300,108107,108111,108096,116015,183565,80711:0:6174,77422",
-["n"] = "Void",
-},
-{
-["s"] = "116830,77343,77345,229618,83202,83203,104604,94331,84223,3670,64970,192903:-1:6174,0",
-["n"] = "Trench",
-},
-},
-["class"] = 5,
-},
-["0EA54627"] = {
-["race"] = 11,
-["name"] = "Heilsatan",
-["birth"] = 1759950406,
-["serverID"] = "11",
-["lastVisit"] = 1759950406,
-["outfits"] = {
-},
-["class"] = 10,
-},
 ["0EA29722"] = {
 ["race"] = 36,
 ["name"] = "Mäñýfäçëð",
 ["birth"] = 1757086172,
-["serverID"] = "11",
+["serverID"] = 11,
 ["lastVisit"] = 1758742699,
 ["outfits"] = {
 {
@@ -2926,26 +2535,250 @@ NarciCharacterProfiles = {
 },
 ["class"] = 4,
 },
-["0DD59B22"] = {
-["race"] = 35,
-["name"] = "Gehyo",
-["birth"] = 1723939456,
-["serverID"] = "3684",
-["lastVisit"] = 1759416464,
+["0EA2971A"] = {
+["race"] = 1,
+["name"] = "Praisesun",
+["birth"] = 1757222854,
+["serverID"] = 11,
+["lastVisit"] = 1759416309,
 ["outfits"] = {
 {
-["s"] = "86901,220771,220773,220766,0,0,220774,220768,220772,220770,220767,91086:-1,0",
-["n"] = "Sruv",
+["s"] = "220114,220116,220118,220111,83202,9374,220119,220113,220117,220115,220112,220195:-1:7521,220196",
+["n"] = "20th Anniv",
 },
 },
-["class"] = 3,
+["class"] = 2,
 },
-["0EA2DCB4"] = {
-["race"] = 7,
+["0EA2971C"] = {
+["race"] = 5,
+["name"] = "Hellavator",
+["birth"] = 1757965487,
+["serverID"] = 11,
+["lastVisit"] = 1758476730,
+["outfits"] = {
+{
+["s"] = "69091,69191,38873,69211,1706,14349,19029,6992,69671,12853,12631,0,0",
+["n"] = "Dread",
+},
+{
+["s"] = "13630,13633,77345,13632,1706,83203,19029,14668,83468,14121,98458,80385,80389",
+["n"] = "Corrupter",
+},
+{
+["s"] = "189246,189224,115442,189273,22037,7975,67220,188812,52114,79794,104603,74604:-1:6378,0",
+["n"] = "FEL PLAGUE",
+},
+{
+["s"] = "24637,24640,27742,24639,1706,22004,19029,24636,52114,24638,13967,0,0",
+["n"] = "Dark Coven Blue",
+},
+{
+["s"] = "14119,14122,38874,14120,1706,14349,19029,83463,52114,14121,13967,14984:0:5864,0",
+["n"] = "Wings",
+},
+{
+["s"] = "78494,78497,81665,78496,1706,83203,78499,78493,78498,78495,78492,14984:0:5864,0",
+["n"] = "T19",
+},
+{
+["s"] = "84829,84835,114927,84833,1706,9374,19029,84827,84837,84831,84825,80385,0",
+["n"] = "T20",
+},
+{
+["s"] = "60274,67218,77345,67230,83202,83203,19029,81149,67219,12853,12631,74604:-1:6676,0",
+["n"] = "Guldaniel",
+},
+{
+["s"] = "165903,165906,165956,165905,168248,146210,165908,165902,165907,165904,104603,74610:0:6258,0",
+["n"] = "Diabolic",
+},
+{
+["s"] = "189971,189972,116019,183593,168248,195164,105847,106582,183617,79794,104603,80377:0:5864,0",
+["n"] = "Trading Post",
+},
+{
+["s"] = "189246,189224,115442,165920,2249,7975,165908,165902,165907,165904,165901,80368:0:6258,0",
+["n"] = "Diabolic green/red",
+},
+{
+["s"] = "184300,189766,189776,189767,22037,190178,189771,189772,189768,189769,189770,80384:0:5864,0",
+["n"] = "Forsaken",
+},
+{
+["s"] = "5410,8883,115442,8880,51873,7975,193873,8885,8886,8881,8884,76828:0:6262,0",
+["n"] = "Plagueheart",
+},
+{
+["s"] = "116830,77343,77345,229618,80190,83203,193873,230325,105846,3670,2636,76828:0:6262,0",
+["n"] = "matrix",
+},
+},
+["class"] = 9,
+},
+["0EA29727"] = {
+["race"] = 29,
+["name"] = "Thingreyline",
+["birth"] = 1757077825,
+["serverID"] = 11,
+["lastVisit"] = 1758166731,
+["outfits"] = {
+{
+["s"] = "9610,169012,113301,169013,103317,83203,19029,169007,169009,169008,169010,80711:0:6351,80715",
+["n"] = "Blood God",
+},
+{
+["s"] = "9610,102766,113301,102251,103317,83203,116018,183570,102120,60947,104603,80711:0:6351,80715",
+["n"] = "Skully",
+},
+{
+["s"] = "9610,78709,113295,113264,83202,83203,113291,113274,113288,113280,113269,80711:0:6351,0",
+["n"] = "Greeny",
+},
+{
+["s"] = "3660,165880,183915,165879,83202,83203,165882,165876,165881,165878,165875,165929:-1:5864,77409",
+["n"] = "Challenge",
+},
+{
+["s"] = "9610,77343,168534,168551,83202,83203,104604,94331,84223,69463,104603,80711:0:6258,0",
+["n"] = "Scarlet",
+},
+{
+["s"] = "108055,108072,168466,93088,168248,195300,108107,108111,108096,116015,183565,80711:0:6174,77422",
+["n"] = "Void",
+},
+{
+["s"] = "116830,77343,77345,229618,83202,83203,104604,94331,84223,3670,64970,192903:-1:6174,0",
+["n"] = "Trench",
+},
+},
+["class"] = 5,
+},
+["0E499C17"] = {
+["race"] = 4,
+["name"] = "Ofpuss",
+["birth"] = 1724948790,
+["serverID"] = 3684,
+["lastVisit"] = 1756786002,
+["outfits"] = {
+{
+["s"] = "78746,77343,168466,80837,83202,18370,80844,80839,169196,80841,80838,3090:-1:7322,3090:0:7322",
+["n"] = "White/Black Ninja",
+},
+{
+["s"] = "77344,84507,77345,80837,83202,83203,78918,22079,85987,22087,21682,89282:0:5868,89282:0:5868",
+["n"] = "Rogue Tier",
+},
+{
+["s"] = "78746,93948,77345,80837,83202,83203,96706,94331,81838,25957,108155,9348:-1:6258,9348:0:6258",
+["n"] = "Xavius",
+},
+{
+["s"] = "169039,93948,77345,111580,83202,224733,183654,183634,183650,183642,183630,168165:-1:6258,168165:0:6258",
+["n"] = "Red God",
+},
+{
+["s"] = "188802,69798,77345,69702,83202,83203,69827,69735,69819,69773,69723,89282:-1:5868,89282:0:5868",
+["n"] = "Hellfire Mix",
+},
+{
+["s"] = "61915,69798,77345,69702,83202,76894,104604,198623,69819,69773,69723,89282:-1:5864,89282:0:5864",
+["n"] = "Black Temple",
+},
+{
+["s"] = "220881,220883,168466,220878,195317,195300,220886,220880,220884,220882,220879,7545:-1:7521,7545:0:7521",
+["n"] = "T2 20th",
+},
+{
+["s"] = "183638,183646,77345,183626,195317,224733,183654,183634,183650,183642,183630,80627:-1:7521,80627:0:7521",
+["n"] = "Crimson",
+},
+{
+["s"] = "4882,195887,77345,195882,195317,194083,195883,195880,195884,195885,195888,190113:-1:6351,190113:0:6351",
+["n"] = "Warden",
+},
+{
+["s"] = "249356,77343,77345,104602,1707,83203,104604,94331,84223,230764,230815,168164:-1:5360,168164:0:5360",
+["n"] = "Plum",
+},
+{
+["s"] = "227837,184204,77345,222047,195317,195164,224961,106582,230332,116015,115983,218454:-1:5360,218454:0:5360",
+["n"] = "Protoss",
+},
+{
+["s"] = "291679,291681,291675,291676,195317,195300,291682,291678,291683,291680,291677,72801:-1:7641,72801:0:6174",
+["n"] = "Cosmic",
+},
+},
+["class"] = 12,
+},
+["0E96CF12"] = {
+["race"] = 1,
+["name"] = "Stormclout",
+["birth"] = 1728957163,
+["serverID"] = 3684,
+["lastVisit"] = 1730223781,
+["outfits"] = {
+{
+["s"] = "4363,14945,99295,180880,2249,146210,104604,180792,94909,113491,180634,76938:-1:6258,0",
+["n"] = "Red pirate",
+},
+{
+["s"] = "195673,183710,192958,183690,103317,195300,183718,183698,183714,183706,183694,77093:0:7322,0",
+["n"] = "Crimson Glad",
+},
+{
+["s"] = "91103,169350,77345,169346,103300,180108,169348,169354,169352,169344,169356,90755:-1:6351,0",
+["n"] = "Eternal Glad",
+},
+{
+["s"] = "61915,69798,77345,69702,103300,83203,104604,94331,69819,69773,104603,7545:-1:6262,7545:0:6262",
+["n"] = "Hellfire Citadel",
+},
+{
+["s"] = "169039,90150:90150,77345,195661,195317,224733,195668,195663,195667,195665,195662,7545:-1:6258,7545:0:6258",
+["n"] = "RedDead",
+},
+{
+["s"] = "165860,165862,165954,165857,103317,195300,165864,165859,165863,165861,165858,7545:-1:6786,7545:0:6786",
+["n"] = "mage tower",
+},
+{
+["s"] = "87884,87024,77345,87026,195317,9376,87030,87018,87028,87022,87016,7545:-1:6263,7545:0:6263",
+["n"] = "BLUEBALLS",
+},
+{
+["s"] = "14280,77343,77345,183691,195317,195164,104604,183697,108152,89821,108168,218454:-1:5864,218454:0:5864",
+["n"] = "Protoss",
+},
+{
+["s"] = "73339,53473,77345,53475,195317,222850,53466,53467,53462,53471,53464,7545:-1:6351,7545:0:6351",
+["n"] = "Jaded",
+},
+{
+["s"] = "195673,195671,77345,195676,195317,224733,195669,195674,195670,195672,195675,7545:-1:6258,7545:0:6258",
+["n"] = "Shadopan",
+},
+{
+["s"] = "169039,217338,77345,217298,195322,224733,183718,217310,217343,217330,217303,76942:-1:6258,7545",
+["n"] = "TWW S1 Conq",
+},
+{
+["s"] = "76357,217335,77345,217295,195322,224733,217351,217311,217343,217327,217303,7545:-1:6351,7545:0:6351",
+["n"] = "TWW S1 Elite",
+},
+{
+["s"] = "220827,220829,77345,220824,195317,195300,220832,220826,220830,220828,220825,7545:-1:6786,7545:0:6351",
+["n"] = "T2",
+},
+},
+["class"] = 10,
+},
+["0EBA4990"] = {
+["race"] = 2,
 ["name"] = "Choppiez",
-["birth"] = 1757642395,
-["serverID"] = "11",
-["lastVisit"] = 1757705450,
+["birth"] = 1756300941,
+["serverID"] = 3684,
+["lastVisit"] = 1757037334,
 ["outfits"] = {
 {
 ["s"] = "4713,77343:77343,77345,104602,103317,104136,104604,94331,104152,104150,104147,53152:-1:6158,53152:0:6158",
@@ -2956,15 +2789,15 @@ NarciCharacterProfiles = {
 ["n"] = "Greenboy",
 },
 {
-["s"] = "220688,220690,219875,220685,83202,195164,220693,220687,220691,220689,220686,80770:-1:7641,105223",
-["n"] = "Bloody Blademaster",
+["s"] = "77344,52481,77345,52478,103317,20962,60907,52479,61796,52480,169521,105223:-1:6158,105223:0:6158",
+["n"] = "Sandy Pus",
 },
 {
 ["s"] = "73339,53729,115884,53769,19967,14348,53744,53676,55068,53773,53742,53152:-1:6262,53152:0:6262",
 ["n"] = "Green Machine",
 },
 {
-["s"] = "4713,52481,77345,52478,103317,195300,60907,52479,61796,52480,115983,99967:-1:7521,99971",
+["s"] = "77344,77343:61938,77345,52478,103317,20962,60907,52479,61796,52480,61773,105223:-1:6158,105223:0:6158",
 ["n"] = "Brawlin",
 },
 {
@@ -2983,26 +2816,256 @@ NarciCharacterProfiles = {
 ["s"] = "102302,102303,219875,102304,0,0,102309,102305,102306,102307,102308,116338:-1:6351,0",
 ["n"] = "Mura",
 },
+},
+["class"] = 1,
+},
+["0E4A5E7C"] = {
+["race"] = 1,
+["name"] = "Auteist",
+["birth"] = 1723745105,
+["serverID"] = 3684,
+["lastVisit"] = 1723950195,
+["outfits"] = {
 {
-["s"] = "249358,292017,116019,292030,195317,195164,193873,292026,292046,292021,292042,229087:-1:7641,229087:0:7641",
-["n"] = "Purping",
+["s"] = "165851,165854,116019,165853,22031,195164,193873,165850,98614,165852,165849,73875:0:6786,77361",
+["n"] = "Arcane",
 },
 {
-["s"] = "116830,77343,77345,229618,83202,83203,104604,198778,84223,2635,2636,287420:-1:7322,0",
+["s"] = "200506,200507,169040,76769,51865,9374,8629,218959,200508,165981,4852,76527:0:6677,62851",
+["n"] = "Fire",
+},
+{
+["s"] = "50109,84738,84648,84736,83202,83203,84742,84730,84740,84734,84728,74475:0:6678,0",
+["n"] = "Ice",
+},
+{
+["s"] = "3660,77343,184181,3330,168248,83203,193873,89734,98614,96411,86001,80545:0:6786,62851",
+["n"] = "Acolyte",
+},
+{
+["s"] = "8882,8883,115442,8880,83202,83203,8887,8885,8886,8881,8884,80548:-1:5867,0",
+["n"] = "Plague",
+},
+},
+["class"] = 8,
+},
+["0E8993F4"] = {
+["race"] = 27,
+["name"] = "Vansthalysia",
+["birth"] = 1723921654,
+["serverID"] = 3684,
+["lastVisit"] = 1724196328,
+["outfits"] = {
+},
+["class"] = 10,
+},
+["0EAABA4A"] = {
+["race"] = 36,
+["name"] = "Mäñýfäçëð",
+["birth"] = 1743211852,
+["serverID"] = 3684,
+["lastVisit"] = 1756135065,
+["outfits"] = {
+{
+["s"] = "24189,77343,77345,6905,1706,83203,6975,6971,6974,6973,104603,168165:-1:6258,168165:0:6258",
+["n"] = "Bloodfang",
+},
+{
+["s"] = "37721,37719,48672,37723,1706,83203,37725,37722,37728,37720,37727,14984:0:5868,14984:0:5868",
+["n"] = "Cata Glad",
+},
+{
+["s"] = "68097,93948,77345,6905,1706,9374,104604,94331,105814,6907,115983,7496:0:5868,7488",
+["n"] = "Nightslayer",
+},
+{
+["s"] = "21960,21750,77345,21927,1706,83203,37725,22079,21939,22087,21682,36658:0:6162,36658:0:6162",
+["n"] = "Garonas Guise",
+},
+{
+["s"] = "22249,22251,77345,22247,1706,66537,37725,22248,6974,46886,6970,36658,36658",
+["n"] = "Garonas Red",
+},
+{
+["s"] = "225875,198620,198621,198628,103317,218284,198624,198623,198625,198622,198626,77442:0:6158,77442",
+["n"] = "Pirate",
+},
+{
+["s"] = "3814,69807,115884,69702,1706,9374,104604,89985,84223,69790,69723,14984:-1:5868,168165:0:6258",
+["n"] = "Felblade",
+},
+{
+["s"] = "220715,220717,77345,220712,19964,224733,220720,220714,220718,220716,220713,39516:-1:7521,39517:0:7521",
+["n"] = "20th Ann",
+},
+{
+["s"] = "105957,77343,77345,105958,1706,83203,37725,105954,84223,105956,105955,7496,7488:0:73539",
+["n"] = "Wendingo",
+},
+{
+["s"] = "102199,101785,105152,102236,1706,83203,37725,103335,84223,101834,101830,7496,7488:0:80738",
+["n"] = "Dazarazalor",
+},
+{
+["s"] = "81183,69807,102770,69702,19960,224733,104604,94069,69819,69790,69723,14984:-1:5391,14984:0:5391",
+["n"] = "Felblade Red",
+},
+{
+["s"] = "113236,14945,114927,74660,195322,184088,6975,6971,6974,6973,6970,21042:-1:7521,95479:0:7521",
+["n"] = "Venthyr",
+},
+{
+["s"] = "3814,77343,77345,89261,103317,20962,31321,94331,84223,42171,26161,168165:-1:5391,168165:0:5391",
+["n"] = "Thug Zug",
+},
+{
+["s"] = "168062,77343,77345,104602,1707,83203,104604,94331,84223,89433,30772,80727:-1:7640,183886:0:7640",
+["n"] = "Pirate life",
+},
+{
+["s"] = "68100,69807:69807,77345,69702,83202,7975,104604,94331,69819,69790,69723,168941:-1:5868,168941:0:5868",
+["n"] = "The Defiler",
+},
+{
+["s"] = "249350,77343,77345,104602,195317,222850,193873,195299,109317,230775,230792,39516:-1:7521,39517:0:7521",
+["n"] = "Naked Zoro",
+},
+{
+["s"] = "7890,96983:86316,77345,1513,195317,195300,96989,96985,96986,96987,96988,80724:0:6158,39517",
+["n"] = "Maghar",
+},
+{
+["s"] = "68097,220717,77345,220712,19964,224733,220720,220714,220718,220716,220713,39516:-1:7521,39517:0:7521",
+["n"] = "20thWMask",
+},
+},
+["class"] = 4,
+},
+["0EA54627"] = {
+["race"] = 11,
+["name"] = "Heilsatan",
+["birth"] = 1759950406,
+["serverID"] = 11,
+["lastVisit"] = 1759950406,
+["outfits"] = {
+},
+["class"] = 10,
+},
+["0EA380B9"] = {
+["race"] = 4,
+["name"] = "Mäñýfäçëð",
+["birth"] = 1758756163,
+["serverID"] = 11,
+["lastVisit"] = 1758932255,
+["outfits"] = {
+{
+["s"] = "24189,77343,77345,6905,1706,83203,6975,6971,6974,6973,104603,168165:-1:6258,168165:0:6258",
+["n"] = "Bloodfang",
+},
+{
+["s"] = "37721,37719,48672,37723,1706,83203,37725,37722,37728,37720,37727,14984:0:5868,14984:0:5868",
+["n"] = "Cata Glad",
+},
+{
+["s"] = "68097,93948,77345,6905,1706,9374,104604,94331,105814,6907,115983,7496:0:5868,7488",
+["n"] = "Nightslayer",
+},
+{
+["s"] = "21960,21750,77345,21927,1706,83203,37725,22079,21939,22087,21682,36658:0:6162,36658:0:6162",
+["n"] = "Garonas Guise",
+},
+{
+["s"] = "22249,22251,77345,22247,1706,66537,37725,22248,6974,46886,6970,36658,36658",
+["n"] = "Garonas Red",
+},
+{
+["s"] = "225875,198620,198621,198628,103317,218284,198624,198623,198625,198622,198626,77442:0:6158,77442",
+["n"] = "Pirate",
+},
+{
+["s"] = "3814,69807,115884,69702,1706,9374,104604,89985,84223,69790,69723,14984:-1:5868,168165:0:6258",
+["n"] = "Felblade",
+},
+{
+["s"] = "249350,77343,77345,104602,195317,222850,193873,195299,109317,230775,230792,39516:-1:7521,39517:0:7521",
+["n"] = "Naked Zoro",
+},
+{
+["s"] = "220715,220717,77345,220712,19964,224733,220720,220714,220718,220716,220713,39516:-1:7521,39517:0:7521",
+["n"] = "20th Ann",
+},
+{
+["s"] = "105957,77343,77345,105958,1706,83203,37725,105954,84223,105956,105955,7496,7488:0:73539",
+["n"] = "Wendingo",
+},
+{
+["s"] = "102199,101785,105152,102236,1706,83203,37725,103335,84223,101834,101830,7496,7488:0:80738",
+["n"] = "Dazarazalor",
+},
+{
+["s"] = "81183,69807,102770,69702,19960,224733,104604,94069,69819,69790,69723,14984:-1:5391,14984:0:5391",
+["n"] = "Felblade Red",
+},
+{
+["s"] = "113236,14945,114927,74660,195322,184088,6975,6971,6974,6973,6970,21042:-1:7521,95479:0:7521",
+["n"] = "Venthyr",
+},
+{
+["s"] = "7890,96983:86316,77345,1513,195317,195300,96989,96985,96986,96987,96988,80724:0:6158,39517",
+["n"] = "Maghar",
+},
+{
+["s"] = "3814,77343,77345,89261,103317,20962,31321,94331,84223,42171,26161,168165:-1:5391,168165:0:5391",
+["n"] = "Thug Zug",
+},
+{
+["s"] = "168062,77343,77345,104602,1707,83203,104604,94331,84223,89433,30772,80727:-1:7640,183886:0:7640",
+["n"] = "Pirate life",
+},
+{
+["s"] = "68097,220717,77345,220712,19964,224733,220720,220714,220718,220716,220713,39516:-1:7521,39517:0:7521",
+["n"] = "20thWMask",
+},
+{
+["s"] = "14867,77343,77345,229618,80190,83203,193873,198778,84223,2635,64970,39516:-1:7521,39517:0:7521",
 ["n"] = "Matrix",
 },
 {
-["s"] = "249357,77343,284494,290192,195322,7975,104604,94331,290184,290188,290180,287420:-1:6786,0",
-["n"] = "Rainman",
+["s"] = "68100,69807:69807,77345,69702,83202,7975,104604,94331,69819,69790,69723,168941:-1:5868,168941:0:5868",
+["n"] = "The Defiler",
 },
 },
-["class"] = 1,
+["class"] = 4,
+},
+["0DD59B22"] = {
+["race"] = 35,
+["name"] = "Gehyo",
+["birth"] = 1723939456,
+["serverID"] = 3684,
+["lastVisit"] = 1759416464,
+["outfits"] = {
+{
+["s"] = "86901,220771,220773,220766,0,0,220774,220768,220772,220770,220767,91086:-1,0",
+["n"] = "Sruv",
+},
+},
+["class"] = 3,
+},
+["0E897E88"] = {
+["race"] = 27,
+["name"] = "Dernarplan",
+["birth"] = 1723900901,
+["serverID"] = 3684,
+["lastVisit"] = 1723900901,
+["outfits"] = {
+},
+["class"] = 8,
 },
 ["0EA2971D"] = {
 ["race"] = 2,
 ["name"] = "Choppiez",
 ["birth"] = 1757086681,
-["serverID"] = "11",
+["serverID"] = 11,
 ["lastVisit"] = 1757443281,
 ["outfits"] = {
 {
@@ -3056,7 +3119,7 @@ NarciCharacterProfiles = {
 ["race"] = 26,
 ["name"] = "Stormclout",
 ["birth"] = 1730227002,
-["serverID"] = "3684",
+["serverID"] = 3684,
 ["lastVisit"] = 1730471605,
 ["outfits"] = {
 {
@@ -3118,7 +3181,7 @@ NarciCharacterProfiles = {
 ["race"] = 1,
 ["name"] = "Clevagirl",
 ["birth"] = 1763388863,
-["serverID"] = "3684",
+["serverID"] = 3684,
 ["lastVisit"] = 1763388863,
 ["outfits"] = {
 {
@@ -3132,3 +3195,7 @@ NarciCharacterProfiles = {
 NarciPhotoModeDB = {
 }
 NarciDevToolOutput = nil
+NarciTransmogUIDB = {
+["SharedSets"] = {
+},
+}

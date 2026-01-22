@@ -13,6 +13,12 @@ local function CreateBarInstance(config, parent, frameLevel)
     local bar = CreateFromMixins(config.mixin or addonTable.BarMixin)
     bar:Init(config, parent, frameLevel)
 
+    -- Copy defaults if needed
+    local curLayout = addonTable.LEM.GetActiveLayoutName() or "Default"
+    if not SenseiClassResourceBarDB[config.dbName][curLayout] then
+        SenseiClassResourceBarDB[config.dbName][curLayout] = CopyTable(bar.defaults)
+    end
+
     bar:OnLoad()
     bar:GetFrame():SetScript("OnEvent", function(_, ...)
         bar:OnEvent(...)

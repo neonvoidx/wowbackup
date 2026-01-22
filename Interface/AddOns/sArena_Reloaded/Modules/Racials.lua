@@ -40,7 +40,7 @@ if isRetail then
 	}
 
 	if isMidnight then
-		sArenaMixin.defaultSettings.profile.racialCategories["Haranir"] = true
+		sArenaMixin.defaultSettings.profile.racialCategories["Harronir"] = true
 	end
 
 	racialSpells = {
@@ -112,7 +112,7 @@ if isRetail then
 		["EarthenDwarf"] = { texture = C_Spell.GetSpellTexture(436344), sharedCD = 0, spellID = 436344 },
 	}
 	if isMidnight then
-		racialData["Haranir"] = { texture = C_Spell.GetSpellTexture(1238623), sharedCD = 0, spellID = 1237885 } -- temp icon
+		racialData["Harronir"] = { texture = C_Spell.GetSpellTexture(1237885), sharedCD = 0, spellID = 1237885 } -- temp icon
 	end
 else
 	sArenaMixin.defaultSettings.profile.racialCategories = {

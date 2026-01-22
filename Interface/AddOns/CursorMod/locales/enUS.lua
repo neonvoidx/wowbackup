@@ -17,6 +17,7 @@ L["Scale"] = "Scale"
 L["Opacity"] = "Opacity"
 L["Use class color"] = "Use class color"
 L["Show only in combat"] = "Show only in combat"
+L["Show always"] = "Show always"
 L["Cursor freelook start delta"] = "Cursor freelook start delta"
 
 setmetatable(L, {__index = function(self, key)

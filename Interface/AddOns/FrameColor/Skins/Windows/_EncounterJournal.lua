@@ -106,6 +106,7 @@ function skin:Apply(mainColor, backgroundColor, bordersColor, controlsColor, tab
 
   -- Controls.
   for _, scrollFrame in pairs({
+    EncounterJournalJourneysFrame,
     EncounterJournalMonthlyActivitiesFrame,
     EncounterJournalMonthlyActivitiesFrame.FilterList,
     EncounterJournalInstanceSelect,
@@ -148,11 +149,13 @@ function skin:Apply(mainColor, backgroundColor, bordersColor, controlsColor, tab
 
   -- Tabs.
   for _, tab in pairs({
+    EncounterJournalJourneysTab,
+    EncounterJournalMonthlyActivitiesTab,
+    EncounterJournalSuggestTab,
     EncounterJournalDungeonTab,
     EncounterJournalRaidTab,
-    EncounterJournalSuggestTab,
     EncounterJournalLootJournalTab,
-    EncounterJournalMonthlyActivitiesTab,
+    EncounterJournal.TutorialsTab,
   }) do
     self:SkinTabs(tab, tabsColor, desaturation)
   end
