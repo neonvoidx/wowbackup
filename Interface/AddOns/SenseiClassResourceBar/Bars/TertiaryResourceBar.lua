@@ -1,13 +1,13 @@
 local _, addonTable = ...
 
 local LEM = addonTable.LEM or LibStub("LibEQOLEditMode-1.0")
+local L = addonTable.L
 
 local TertiaryResourceBarMixin = Mixin({}, addonTable.PowerBarMixin)
-local buildVersion = select(4, GetBuildInfo())
 
 function TertiaryResourceBarMixin:GetResource()
     local playerClass = select(2, UnitClass("player"))
-    local tertiaryResources = {
+    self._resourceTable = self._resourceTable or {
         ["DEATHKNIGHT"] = nil,
         ["DEMONHUNTER"] = nil,
         ["DRUID"]       = nil,
@@ -28,62 +28,58 @@ function TertiaryResourceBarMixin:GetResource()
     local spec = C_SpecializationInfo.GetSpecialization()
     local specID = C_SpecializationInfo.GetSpecializationInfo(spec)
 
+    local resource = self._resourceTable[playerClass]
+
     -- Druid: form-based
     if playerClass == "DRUID" then
         local formID = GetShapeshiftFormID()
-        return tertiaryResources[playerClass] and tertiaryResources[playerClass][formID or 0]
+        resource = resource and resource[formID or 0]
     end
 
-    if type(tertiaryResources[playerClass]) == "table" then
-        return tertiaryResources[playerClass][specID]
-    else 
-        return tertiaryResources[playerClass]
+    if type(resource) == "table" then
+        return resource[specID]
+    else
+        return resource
     end
 end
 
 function TertiaryResourceBarMixin:GetResourceValue(resource)
-    if not resource then return nil, nil, nil, nil, nil end
+    if not resource then return nil, nil end
     local data = self:GetData()
-    if not data then return nil, nil, nil, nil, nil end
+    if not data then return nil, nil end
 
     if resource == "EBON_MIGHT" then
-        -- The hack needs the PlayerFrame
-        if not PlayerFrame:IsShown() then return nil, nil, nil, nil, nil end
+        local auraData = C_UnitAuras.GetPlayerAuraBySpellID(395296) -- Ebon Might
+        local current = auraData and (auraData.expirationTime - GetTime()) or 0
+        local max = 20
 
-        local current = EvokerEbonMightBar:GetValue() 
-        local max = select(2, EvokerEbonMightBar:GetMinMaxValues()) -- Secret values
-
-        if data.textFormat == "Percent" or data.textFormat == "Percent%" then
-            return max, max, current, string.format("%.0f", current), "custom"
-        else
-            return max, max, current, current, "number"
-        end
+        return max, current
     end
 
-    -- Regular secondary resource types
     local current = UnitPower("player", resource)
     local max = UnitPowerMax("player", resource)
     if max <= 0 then return nil, nil, nil, nil end
 
-    if data.textFormat == "Percent" or data.textFormat == "Percent%" then
-        -- UnitPowerPercent does not exist prior to Midnight
-        if (buildVersion or 0) < 120000 then
-            return max, max, current, math.floor((current / max) * 100 + 0.5), "percent"
-        else
-            return max, max, current, UnitPowerPercent("player", resource, false, CurveConstants.ScaleTo100), "percent"
-        end
-    else
-        return max, max, current, current, "number"
+    return max, current
+end
+
+function TertiaryResourceBarMixin:GetTagValues(resource, max, current, precision)
+    local tagValues = addonTable.PowerBarMixin.GetTagValues(self, resource, max, current, precision)
+
+    if resource == "EBON_MIGHT" then
+        tagValues["[current]"] = function() return string.format("%.1f", AbbreviateNumbers(current)) end
     end
+
+    return tagValues
 end
 
 addonTable.TertiaryResourceBarMixin = TertiaryResourceBarMixin
 
-addonTable.RegistereredBar = addonTable.RegistereredBar or {}
-addonTable.RegistereredBar.TertiaryResourceBar = {
+addonTable.RegisteredBar = addonTable.RegisteredBar or {}
+addonTable.RegisteredBar.TertiaryResourceBar = {
     mixin = addonTable.TertiaryResourceBarMixin,
     dbName = "tertiaryResourceBarDB",
-    editModeName = "Ebon Might Bar",
+    editModeName = L["TERNARY_POWER_BAR_EDIT_MODE_NAME"],
     frameName = "TertiaryResourceBar",
     frameLevel = 1,
     defaultValues = {
@@ -106,9 +102,9 @@ addonTable.RegistereredBar.TertiaryResourceBar = {
 
         return {
             {
-                parentId = "Bar Style",
-                order = 606,
-                name = "Use Resource Foreground And Color",
+                parentId = L["CATEGORY_BAR_STYLE"],
+                order = 401,
+                name = L["USE_RESOURCE_TEXTURE_AND_COLOR"],
                 kind = LEM.SettingType.Checkbox,
                 default = defaults.useResourceAtlas,
                 get = function(layoutName)

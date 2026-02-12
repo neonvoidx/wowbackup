@@ -56,6 +56,10 @@ VER 3 010000000000002A " " "134400"
 #showtooltip time stop
 /cast [@mouseover,exists,help,nodead][] time stop
 END
+VER 3 010000000000002B " " "134400"
+#showtooltip
+/cast [@mouseover,exists,help,nodead][] Time Stop
+END
 VER 3 0100000000000026 "  " "134400"
 #showtooltip
 /cast [@mouseover,exists,help,nodead][] Spiritbloom

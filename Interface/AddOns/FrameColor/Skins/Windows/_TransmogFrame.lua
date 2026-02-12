@@ -17,7 +17,6 @@ local options = {
       name = "",
       rgbaValues = private.colors.default.background,
     },
-    --[[
     ["borders"] = {
       order = 3,
       name = "",
@@ -33,7 +32,6 @@ local options = {
       name = "",
       rgbaValues = private.colors.default.tabs,
     },
-    ]]
   },
 }
 
@@ -54,6 +52,7 @@ function skin:OnEnable()
       if addOnName == "Blizzard_Transmog" then
         self:Apply(mainColor, backgroundColor, bordersColor, controlsColor, tabsColor, 1)
         self:UnregisterFromEvent("ADDON_LOADED", onAddonLoaded)
+        self:HookScript(TransmogFrame.WardrobeCollection.TabContent.SituationsFrame.Situations.Background, "OnShow", "SkinSituationsDropdown")
       end
     end
     self:RegisterForEvent("ADDON_LOADED", onAddonLoaded)
@@ -80,15 +79,58 @@ function skin:Apply(mainColor, backgroundColor, bordersColor, controlsColor, tab
   end
 
   -- Borders.
-  for _, frame in pairs({
-
+  for _, texture in pairs({
+    TransmogFrame.WardrobeCollection.TabContent.Border,
   }) do
-    self:SkinNineSliced(frame, bordersColor, desaturation)
+    texture:SetDesaturation(desaturation)
+    texture:SetVertexColor(bordersColor[1], bordersColor[2], bordersColor[3], bordersColor[4])
   end
 
   -- Controls.
+  for _, texture in pairs({
+    TransmogFrame.WardrobeCollection.TabContent.ItemsFrame.SearchBox.Background,
+    TransmogFrame.WardrobeCollection.TabContent.ItemsFrame.FilterButton.Background,
+    TransmogFrame.WardrobeCollection.TabContent.SetsFrame.SearchBox.Background,
+    TransmogFrame.WardrobeCollection.TabContent.SetsFrame.FilterButton.Background,
+  }) do
+    texture:SetDesaturation(desaturation)
+    texture:SetVertexColor(controlsColor[1], controlsColor[2], controlsColor[3], controlsColor[4])
+  end
 
+  for _, scrollFrame in pairs({
+    TransmogFrame.OutfitCollection.OutfitList,
+  }) do
+    self:SkinScrollBarOf(scrollFrame, controlsColor, desaturation)
+  end
+
+  for _, child in pairs({ TransmogFrame.WardrobeCollection.TabContent.SituationsFrame.Situations:GetChildren() }) do
+    if type(child) == "table" and child.Dropdown then
+      local textue = child.Dropdown.Background
+      textue:SetDesaturation(0)
+      textue:SetVertexColor(controlsColor[1], controlsColor[2], controlsColor[3], controlsColor[4])
+    end
+  end
 
   -- Tabs.
+  for _, tab in pairs({ TransmogFrame.WardrobeCollection.TabHeaders:GetChildren() }) do
+    for _, texture in pairs({
+      tab.Left,
+      tab.Middle,
+      tab.Right,
+    }) do
+      texture:SetDesaturation(desaturation)
+      texture:SetVertexColor(tabsColor[1], tabsColor[2], tabsColor[3], tabsColor[4])
+    end
+  end
+end
 
+function skin:SkinSituationsDropdown()
+  local controlsColor = self:GetColor("controls")
+  for _, child in pairs({ TransmogFrame.WardrobeCollection.TabContent.SituationsFrame.Situations:GetChildren() }) do
+    if type(child) == "table" and child.Dropdown then
+      local textue = child.Dropdown.Background
+      textue:SetDesaturation(0)
+      textue:SetVertexColor(controlsColor[1], controlsColor[2], controlsColor[3], controlsColor[4])
+    end
+  end
 end

@@ -1,0 +1,250 @@
+local addonName, addon = ...
+
+local L = addon.L
+local math = math
+local UnitClass = UnitClass
+
+local headerClassInfo = L["headerClassInfo"]:format(select(1, UnitClass("player")))
+
+local function ensureDisplayDB()
+	if addon.functions and addon.functions.ensureDisplayDB then addon.functions.ensureDisplayDB() end
+end
+
+local function refreshLootToast()
+	if addon.functions and addon.functions.initLootToast then addon.functions.initLootToast() end
+end
+
+local onInspect = addon.functions and addon.functions.onInspect
+
+-- Check if a misc option exists (avoids empty debug-only pages)
+
+local function addLootFrame(container, d)
+	local scroll = addon.functions.createContainer("ScrollFrame", "Flow")
+	scroll:SetFullWidth(true)
+	scroll:SetFullHeight(true)
+	container:AddChild(scroll)
+
+	local wrapper = addon.functions.createContainer("SimpleGroup", "Flow")
+	scroll:AddChild(wrapper)
+
+	local lootToastGroup = addon.functions.createContainer("InlineGroup", "List")
+	lootToastGroup:SetTitle(L["lootToastSectionTitle"])
+	wrapper:AddChild(lootToastGroup)
+
+	local editModeAvailable = addon.EditMode and addon.EditMode.IsAvailable and addon.EditMode:IsAvailable()
+	if editModeAvailable then
+		local anchorHint = addon.functions.createLabelAce("", nil, nil, 12)
+		anchorHint:SetFullWidth(true)
+		local hintText = L["lootToastAnchorEditModeHint"] or L["lootToastAnchorLabel"] or ""
+		if addon.db.enableLootToastAnchor then
+			anchorHint:SetText("|cffffd700" .. hintText .. "|r")
+		else
+			anchorHint:SetText("|cff999999" .. hintText .. "|r")
+		end
+		lootToastGroup:AddChild(anchorHint)
+	else
+		local anchorButton = addon.functions.createButtonAce(L["lootToastAnchorButton"] or "", 200, function()
+			if not addon.db.enableLootToastAnchor then return end
+			addon.LootToast:ToggleAnchorPreview()
+		end)
+		anchorButton:SetFullWidth(true)
+		anchorButton:SetDisabled(not addon.db.enableLootToastAnchor)
+		lootToastGroup:AddChild(anchorButton)
+
+		local anchorLabel = addon.functions.createLabelAce("", nil, nil, 12)
+		anchorLabel:SetFullWidth(true)
+		local manualHint = L["lootToastAnchorManualHint"] or L["lootToastAnchorLabel"] or ""
+		if addon.db.enableLootToastAnchor then
+			anchorLabel:SetText("|cffffd700" .. manualHint .. "|r")
+		else
+			anchorLabel:SetText("|cff999999" .. manualHint .. "|r")
+		end
+		lootToastGroup:AddChild(anchorLabel)
+	end
+
+	local filterToggle = addon.functions.createCheckboxAce(L["enableLootToastFilter"], addon.db.enableLootToastFilter, function(self, _, value)
+		addon.db.enableLootToastFilter = value
+		refreshLootToast()
+		container:ReleaseChildren()
+		addLootFrame(container)
+	end, L["enableLootToastFilterDesc"])
+	lootToastGroup:AddChild(filterToggle)
+
+	if addon.db.enableLootToastFilter then
+		local filterGroup = addon.functions.createContainer("InlineGroup", "List")
+		filterGroup:SetTitle(L["lootToastFilterSettings"])
+		lootToastGroup:AddChild(filterGroup)
+
+		local tabs = {
+			{ text = ITEM_QUALITY3_DESC, value = tostring(Enum.ItemQuality.Rare) },
+			{ text = ITEM_QUALITY4_DESC, value = tostring(Enum.ItemQuality.Epic) },
+			{ text = ITEM_QUALITY5_DESC, value = tostring(Enum.ItemQuality.Legendary) },
+			{ text = L["Include"], value = "include" },
+		}
+
+		local function buildTab(tabContainer, rarity)
+			tabContainer:ReleaseChildren()
+			if rarity == "include" then
+				local eBox
+				local dropIncludeList
+
+				local function addInclude(input)
+					local id = tonumber(input)
+					if not id then id = tonumber(string.match(tostring(input), "item:(%d+)")) end
+					if not id then
+						print("|cffff0000Invalid input!|r")
+						eBox:SetText("")
+						return
+					end
+					local eItem
+					if type(input) == "string" and input:find("|Hitem:") then
+						eItem = Item:CreateFromItemLink(input)
+					else
+						eItem = Item:CreateFromItemID(id)
+					end
+					if eItem and not eItem:IsItemEmpty() then
+						eItem:ContinueOnItemLoad(function()
+							local name = eItem:GetItemName()
+							if not name then
+								print(L["Item id does not exist"])
+								eBox:SetText("")
+								return
+							end
+							if not addon.db.lootToastIncludeIDs[eItem:GetItemID()] then
+								addon.db.lootToastIncludeIDs[eItem:GetItemID()] = string.format("%s (%d)", name, eItem:GetItemID())
+								local list, order = addon.functions.prepareListForDropdown(addon.db.lootToastIncludeIDs)
+								dropIncludeList:SetList(list, order)
+								dropIncludeList:SetValue(nil)
+								print(L["lootToastItemAdded"]:format(name, eItem:GetItemID()))
+							end
+							eBox:SetText("")
+						end)
+					else
+						print(L["Item id does not exist"])
+						eBox:SetText("")
+					end
+				end
+
+				eBox = addon.functions.createEditboxAce(L["Item id or drag item"], nil, function(self, _, txt)
+					if txt ~= "" and txt ~= L["Item id or drag item"] then addInclude(txt) end
+				end)
+				tabContainer:AddChild(eBox)
+
+				local list, order = addon.functions.prepareListForDropdown(addon.db.lootToastIncludeIDs)
+				dropIncludeList = addon.functions.createDropdownAce(L["IncludeVendorList"], list, order, nil)
+				local btnRemove = addon.functions.createButtonAce(REMOVE, 100, function()
+					local sel = dropIncludeList:GetValue()
+					if sel then
+						addon.db.lootToastIncludeIDs[sel] = nil
+						local l, o = addon.functions.prepareListForDropdown(addon.db.lootToastIncludeIDs)
+						dropIncludeList:SetList(l, o)
+						dropIncludeList:SetValue(nil)
+					end
+				end)
+				local label = addon.functions.createLabelAce("", nil, nil, 14)
+				label:SetFullWidth(true)
+				tabContainer:AddChild(label)
+				label:SetText("|cffffd700" .. L["includeInfoLoot"] .. "|r")
+				tabContainer:AddChild(dropIncludeList)
+				tabContainer:AddChild(btnRemove)
+			else
+				local q = tonumber(rarity)
+				local filter = addon.db.lootToastFilters[q]
+				local label = addon.functions.createLabelAce("", nil, nil, 14)
+				label:SetFullWidth(true)
+				tabContainer:AddChild(label)
+
+				local function refreshLabel()
+					local text
+					if rarity ~= "include" then
+						local extras = {}
+						if filter.mounts then table.insert(extras, MOUNTS:lower()) end
+						if filter.pets then table.insert(extras, PETS:lower()) end
+						if filter.upgrade then table.insert(extras, L["lootToastExtrasUpgrades"]) end
+						local eText = ""
+						if #extras > 0 then eText = L["alwaysShow"] .. table.concat(extras, " " .. L["andWord"] .. " ") end
+						if filter.ilvl then
+							text = L["lootToastSummaryIlvl"]:format(addon.db.lootToastItemLevels[q], eText)
+						else
+							text = L["lootToastSummaryNoIlvl"]:format(eText)
+						end
+					else
+						text = L["lootToastExplanation"]
+					end
+					label:SetText("|cffffd700" .. text .. "|r")
+				end
+
+				tabContainer:AddChild(addon.functions.createCheckboxAce(L["lootToastCheckIlvl"], filter.ilvl, function(self, _, v)
+					addon.db.lootToastFilters[q].ilvl = v
+					filter.ilvl = v
+					refreshLabel()
+				end))
+				local slider = addon.functions.createSliderAce(L["lootToastItemLevel"] .. ": " .. addon.db.lootToastItemLevels[q], addon.db.lootToastItemLevels[q], 0, 1000, 1, function(self, _, val)
+					addon.db.lootToastItemLevels[q] = val
+					self:SetLabel(L["lootToastItemLevel"] .. ": " .. val)
+					refreshLabel()
+				end)
+				tabContainer:AddChild(slider)
+
+				local alwaysList = {
+					mounts = L["lootToastAlwaysShowMounts"],
+					pets = L["lootToastAlwaysShowPets"],
+					upgrade = L["lootToastAlwaysShowUpgrades"],
+				}
+				local alwaysOrder = { "mounts", "pets", "upgrade" }
+				local dropdownAlways = addon.functions.createDropdownAce(L["lootToastAlwaysShow"], alwaysList, alwaysOrder, function(self, _, key, checked)
+					if not key then return end
+					local isChecked = checked and true or false
+					if addon.db.lootToastFilters[q][key] ~= nil then
+						addon.db.lootToastFilters[q][key] = isChecked
+						filter[key] = isChecked
+						self:SetItemValue(key, isChecked)
+						refreshLabel()
+					end
+				end)
+				dropdownAlways:SetMultiselect(true)
+				for _, key in ipairs(alwaysOrder) do
+					dropdownAlways:SetItemValue(key, not not filter[key])
+				end
+				tabContainer:AddChild(dropdownAlways)
+
+				refreshLabel()
+			end
+			scroll:DoLayout()
+		end
+
+		local cbSound = addon.functions.createCheckboxAce(L["enableLootToastCustomSound"], addon.db.lootToastUseCustomSound, function(self, _, v)
+			addon.db.lootToastUseCustomSound = v
+			container:ReleaseChildren()
+			addLootFrame(container)
+		end)
+		filterGroup:AddChild(cbSound)
+
+		if addon.db.lootToastUseCustomSound then
+			if addon.ChatIM and addon.ChatIM.BuildSoundTable and not addon.ChatIM.availableSounds then addon.ChatIM:BuildSoundTable() end
+			local soundList = {}
+			for name in pairs(addon.ChatIM.availableSounds or {}) do
+				soundList[name] = name
+			end
+			local list, order = addon.functions.prepareListForDropdown(soundList)
+			local dropSound = addon.functions.createDropdownAce(L["lootToastCustomSound"], list, order, function(self, _, val)
+				addon.db.lootToastCustomSoundFile = val
+				self:SetValue(val)
+				local file = addon.ChatIM.availableSounds and addon.ChatIM.availableSounds[val]
+				if file then PlaySoundFile(file, "Master") end
+			end)
+			dropSound:SetValue(addon.db.lootToastCustomSoundFile)
+			filterGroup:AddChild(dropSound)
+		end
+
+		local tabGroup = addon.functions.createContainer("TabGroup", "Flow")
+		tabGroup:SetTabs(tabs)
+		tabGroup:SetCallback("OnGroupSelected", function(tabContainer, _, groupVal) buildTab(tabContainer, groupVal) end)
+		filterGroup:AddChild(tabGroup)
+		tabGroup:SelectTab(tabs[1].value)
+	end
+
+	scroll:DoLayout()
+end
+
+if addon.functions and addon.functions.RegisterOptionsPage then addon.functions.RegisterOptionsPage("items\001loot", addLootFrame) end

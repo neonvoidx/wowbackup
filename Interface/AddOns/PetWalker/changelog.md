@@ -4,6 +4,24 @@ To see all commits, including all alpha changes, [***go here***](https://github.
 
 ## Releases
 
+#### 2.6.9 (2026-02-12)
+
+- Set the default pet pool (when freshly installed) to All Pets, instead of Favorites.
+    - Not everyone has pets marked as favorites, which means they got the Zero Pet Pool warning (“0 (zero) pets eligible as random summon!”) right out of the box ([issue 26](https://github.com/tflo/PetWalker/issues/26)).
+- Change the repeat interval of the Zero Pet Pool warning from 30 to 90 seconds.
+
+#### 2.6.8 (2026-02-11)
+
+- Move the new message from 2.6.7 to debugprints.
+- Fix a number of debugprints to correctly show the current pet name.
+
+#### 2.6.7 (2026-02-10)
+
+- Future-proof handling/migration of changed database structures.
+- Remove the old Recents migration.
+- Chat message (verbosity 3) when a duplicate pet GUID was removed from the Recents table.
+    - If you see this regularly, something isn’t quite right.
+    
 #### 2.6.6 (2026-01-17)
 
 - Bumped compatibility flags to 12000+

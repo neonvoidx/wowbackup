@@ -1,8 +1,16 @@
-local _, addonTable = ...
+local _, addon = ...
+local D = addon.D
 
 -- Mine
-local C, D = {}, {}
-addonTable.C, addonTable.D = C, D
+local function rgb(...)
+	return addon:CreateColor(...)
+end
+
+D.global = {
+	colors = {
+		addon = rgb(28, 211, 162), -- #1CD3A2 (Crayola Carribean Green)
+	},
+}
 
 D.profile = {
 	strata = "DIALOG",

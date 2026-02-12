@@ -14,4 +14,8 @@
 <Include file="libs\LibSharedMedia-3.0\lib.xml"/>
 <Script file="libs\LibDeflate\LibDeflate.lua"/>
 <Script file="libs\LibSerialize\LibSerialize.lua"/>
+<Include file="libs\TaintLess\TaintLess.xml"/>
+<Script file="libs\LibButtonGlow-1.0\LibButtonGlow-1.0.lua"/>
+<Script file="libs\LibActionButton-1.0\LibActionButton-1.0.lua"/>
+
 </Ui>

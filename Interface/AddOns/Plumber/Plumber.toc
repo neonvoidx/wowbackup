@@ -1,7 +1,7 @@
 ## X-Flavor: retail
 ## X-Expansion: TWW
-## Interface: 110207, 120000, 120001
-## Version: 1.8.5
+## Interface: 120000, 120001
+## Version: 1.8.6
 
 ## Title: Plumber
 
@@ -19,11 +19,8 @@ Initialization.lua
 Locales\Localization.xml
 API.lua
 
-Modules\SharedData.lua
-Modules\SharedFonts.xml
-Modules\SharedWidgets.xml
-Modules\SharedTooltip.lua
-Modules\BlizzardEditMode.lua
+Modules\Shared\Load.xml
+
 Modules\ScenarioTracker.lua
 Modules\ReputationTracker.lua
 #Modules\DirectionArrow.lua
@@ -71,6 +68,7 @@ Modules\UnderlightAngler.lua
 Modules\SpellcastInfo.lua
 Modules\ChatOptions.lua
 Modules\NameplateResources.lua
+Modules\NameplateQuestIndicator.lua
 Modules\StaticPopupEnhancement.xml
 Modules\PlayerTitleUI.lua
 Modules\BlizzardSuperTrack.lua

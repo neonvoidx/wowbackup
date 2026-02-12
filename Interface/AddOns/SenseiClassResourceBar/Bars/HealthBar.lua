@@ -1,9 +1,9 @@
 local _, addonTable = ...
 
 local LEM = addonTable.LEM or LibStub("LibEQOLEditMode-1.0")
+local L = addonTable.L
 
 local HealthBarMixin = Mixin({}, addonTable.BarMixin)
-local buildVersion = select(4, GetBuildInfo())
 
 function HealthBarMixin:GetBarColor()
     local playerClass = select(2, UnitClass("player"))
@@ -27,19 +27,47 @@ end
 function HealthBarMixin:GetResourceValue()
     local current = UnitHealth("player")
     local max = UnitHealthMax("player")
-    if max <= 0 then return nil, nil, nil, nil, nil end
+    if max <= 0 then return nil, nil end
 
+    return max, current
+end
+
+function HealthBarMixin:GetTagValues(_, max, current, precision)
+    local pFormat = "%." .. (precision or 0) .. "f"
+
+    -- Pre-compute values instead of creating closures for better performance
+    local currentStr = string.format("%s", AbbreviateNumbers(current))
+    local percentStr = string.format(pFormat, UnitHealthPercent("player", true, CurveConstants.ScaleTo100))
+    local maxStr = string.format("%s", AbbreviateNumbers(max))
+
+    return {
+        ["[current]"] = function() return currentStr end,
+        ["[percent]"] = function() return percentStr end,
+        ["[max]"] = function() return maxStr end,
+    }
+end
+
+function HealthBarMixin:ApplyMouseSettings()
     local data = self:GetData()
-    if data and (data.textFormat == "Percent" or data.textFormat == "Percent%") then
-        -- UnitHealthPercent does not exist prior to Midnight
-        if (buildVersion or 0) < 120000 then
-            return max, max, current, math.floor((current / max) * 100 + 0.5), "percent"
-        else
-            return max, max, current, UnitHealthPercent("player", true, CurveConstants.ScaleTo100), "percent"
-        end
-    else
-        return max, max, current, current, "number"
+    local shouldEnable = data and data.enableHealthBarMouseInteraction
+
+    if InCombatLockdown() then
+        self._mouseUpdatePending = true
+        return -- defer until PLAYER_REGEN_ENABLED
     end
+
+    -- Apply
+    self.Frame:EnableMouse(shouldEnable)
+    if shouldEnable then
+        self.Frame:RegisterForClicks("AnyUp")
+    else
+        self.Frame:RegisterForClicks()
+    end
+    self._mouseUpdatePending = false
+end
+
+function HealthBarMixin:OnLayoutChange()
+    self:ApplyMouseSettings()
 end
 
 function HealthBarMixin:OnLoad()
@@ -53,16 +81,38 @@ function HealthBarMixin:OnLoad()
     self.Frame:RegisterEvent("PLAYER_MOUNT_DISPLAY_CHANGED")
     self.Frame:RegisterEvent("PET_BATTLE_OPENING_START")
     self.Frame:RegisterEvent("PET_BATTLE_CLOSE")
+
+    self:RegisterSecureVisibility()
+    self:ApplyMouseSettings()
+    self._mouseUpdatePending = false
+    self.Frame:SetAttribute("unit", "player")
+    self.Frame:SetAttribute("*type1", "target")
+    self.Frame:SetAttribute("*type2", "togglemenu")
+    self.Frame.menu = function(frame)
+        UnitPopup_ShowMenu(frame, "PLAYER", "player")
+    end
+
+    if not self._registerFrameOnShowAndHide then
+        self.Frame:HookScript("OnShow", function()
+            self:OnShow()
+        end)
+
+        self.Frame:HookScript("OnHide", function()
+            self:OnHide()
+        end)
+        self._registerFrameOnShowAndHide = true
+    end
 end
 
 function HealthBarMixin:OnEvent(event, ...)
     local unit = ...
+    self._curEvent = event
 
     if event == "PLAYER_ENTERING_WORLD"
         or (event == "PLAYER_SPECIALIZATION_CHANGED" and unit == "player") then
 
         self:ApplyVisibilitySettings()
-        self:ApplyLayout()
+        self:ApplyLayout(nil, true)
         self:UpdateDisplay()
 
     elseif event == "PLAYER_REGEN_ENABLED" or event == "PLAYER_REGEN_DISABLED"
@@ -71,19 +121,100 @@ function HealthBarMixin:OnEvent(event, ...)
         or event == "PLAYER_MOUNT_DISPLAY_CHANGED"
         or event == "PET_BATTLE_OPENING_START" or event == "PET_BATTLE_CLOSE" then
 
-            self:ApplyVisibilitySettings(nil, event == "PLAYER_REGEN_DISABLED")
+            self:ApplyVisibilitySettings()
+            self:ApplyLayout(nil, true)
             self:UpdateDisplay()
 
+    end
+
+    if event == "PLAYER_ENTERING_WORLD" then
+        self:ApplyMouseSettings()
+    elseif event == "PLAYER_REGEN_ENABLED" and self._mouseUpdatePending then
+        self:ApplyMouseSettings()
+    end
+end
+
+function HealthBarMixin:RegisterSecureVisibility()
+    -- Don't hide in Edit Mode, unless config disables it
+    if LEM:IsInEditMode() then
+        local conditional = "show"
+        if type(self.config.allowEditPredicate) == "function" and self.config.allowEditPredicate() == false then
+            conditional = "hide"
+        end
+        RegisterAttributeDriver(self.Frame, "state-visibility", conditional)
+        return
+    end
+
+    local data = self:GetData()
+    local conditions = { "[petbattle] hide" } -- Always hide in Pet Battles
+
+    -- Hide based on role
+    local spec = C_SpecializationInfo.GetSpecialization()
+    local role = select(5, C_SpecializationInfo.GetSpecializationInfo(spec))
+    if data.hideHealthOnRole and data.hideHealthOnRole[role] then
+        table.insert(conditions, "hide")
+    end
+
+    -- Hide while mounted or in vehicle
+    if data.hideWhileMountedOrVehicule then
+        table.insert(conditions, "[mounted][vehicleui][possessbar][overridebar][flying] hide")
+    end
+
+    local setting = data.barVisible
+    if setting == "Always Visible" then table.insert(conditions, "show")
+    elseif setting == "Hidden" then table.insert(conditions, "hide")
+    elseif setting == "In Combat" then table.insert(conditions, "[combat] show; hide")
+    elseif setting == "Has Target Selected" then table.insert(conditions, "[@target, exists] show; hide")
+    elseif setting == "Has Target Selected OR In Combat" then table.insert(conditions, "[combat][@target, exists] show; hide")
+    else table.insert(conditions, "show") end
+
+    RegisterAttributeDriver(self.Frame, "state-visibility", table.concat(conditions, "; "))
+end
+
+function HealthBarMixin:ApplyVisibilitySettings(layoutName)
+    local data = self:GetData(layoutName)
+    if not data then return end
+
+    if not InCombatLockdown() then
+        self:HideBlizzardPlayerContainer(layoutName, data)
+        self:RegisterSecureVisibility()
+    end
+
+    self:ApplyTextVisibilitySettings(layoutName, data)
+end
+
+function HealthBarMixin:HideBlizzardPlayerContainer(layoutName, data)
+    -- MSUF compatibility
+    if C_AddOns.IsAddOnLoaded("MidnightSimpleUnitFrames") then return end
+    if InCombatLockdown() then return end
+
+    data = data or self:GetData(layoutName)
+    if not data then return end
+
+    if PlayerFrame then
+        if data.hideBlizzardPlayerContainerUi and not LEM:IsInEditMode() then
+            RegisterAttributeDriver(PlayerFrame, "state-visibility", "hide")
+            RegisterAttributeDriver(PlayerFrame, "alpha", "0")
+            PlayerFrame.SCRB_forcedHidden = true
+        elseif PlayerFrame.SCRB_forcedHidden then
+            UnregisterAttributeDriver(PlayerFrame, "state-visibility")
+            UnregisterAttributeDriver(PlayerFrame, "alpha")
+            PlayerFrame:Show()
+            PlayerFrame:SetAlpha(1)
+            PlayerFrame.SCRB_forcedHidden = nil
+        end
     end
 end
 
 addonTable.HealthBarMixin = HealthBarMixin
 
-addonTable.RegistereredBar = addonTable.RegistereredBar or {}
-addonTable.RegistereredBar.HealthBar = {
+addonTable.RegisteredBar = addonTable.RegisteredBar or {}
+addonTable.RegisteredBar.HealthBar = {
     mixin = addonTable.HealthBarMixin,
     dbName = "healthBarDB",
-    editModeName = "Health Bar",
+    editModeName = L["HEALTH_BAR_EDIT_MODE_NAME"],
+    frameType = "Button",
+    frameTemplate = "SecureUnitButtonTemplate,PingableUnitFrameTemplate",
     frameName = "HealthBar",
     frameLevel = 0,
     defaultValues = {
@@ -94,15 +225,17 @@ addonTable.RegistereredBar.HealthBar = {
         hideHealthOnRole = {},
         hideBlizzardPlayerContainerUi = false,
         useClassColor = true,
+        enableHealthBarMouseInteraction = false,
     },
     lemSettings = function(bar, defaults)
-        local dbName = bar:GetConfig().dbName
+        local config = bar:GetConfig()
+        local dbName = config.dbName
 
         return {
             {
-                parentId = "Bar Visibility",
+                parentId = L["CATEGORY_BAR_VISIBILITY"],
                 order = 103,
-                name = "Hide On Role",
+                name = L["HIDE_HEALTH_ON_ROLE"],
                 kind = LEM.SettingType.MultiDropdown,
                 default = defaults.hideHealthOnRole,
                 values = addonTable.availableRoleOptions,
@@ -114,12 +247,13 @@ addonTable.RegistereredBar.HealthBar = {
                 set = function(layoutName, value)
                     SenseiClassResourceBarDB[dbName][layoutName] = SenseiClassResourceBarDB[dbName][layoutName] or CopyTable(defaults)
                     SenseiClassResourceBarDB[dbName][layoutName].hideHealthOnRole = value
+                    bar:RegisterSecureVisibility()
                 end,
             },
             {
-                parentId = "Bar Visibility",
+                parentId = L["CATEGORY_BAR_VISIBILITY"],
                 order = 105,
-                name = "Hide Blizzard UI",
+                name = L["HIDE_BLIZZARD_UI"],
                 kind = LEM.SettingType.Checkbox,
                 default = defaults.hideBlizzardPlayerContainerUi,
                 get = function(layoutName)
@@ -134,13 +268,37 @@ addonTable.RegistereredBar.HealthBar = {
                     SenseiClassResourceBarDB[dbName][layoutName] = SenseiClassResourceBarDB[dbName][layoutName] or CopyTable(defaults)
                     SenseiClassResourceBarDB[dbName][layoutName].hideBlizzardPlayerContainerUi = value
                     bar:HideBlizzardPlayerContainer(layoutName)
+                    
+                    StaticPopup_Show("SCRB_RELOADUI")
                 end,
-                tooltip = "Hides the default Blizzard Player Frame UI",
+                tooltip = L["HIDE_BLIZZARD_UI_HEALTH_BAR_TOOLTIP"],
             },
             {
-                parentId = "Bar Style",
-                order = 606,
-                name = "Use Class Color",
+                parentId = L["CATEGORY_BAR_VISIBILITY"],
+                order = 106,
+                name = L["ENABLE_HP_BAR_MOUSE_INTERACTION"],
+                kind = LEM.SettingType.Checkbox,
+                default = defaults.enableHealthBarMouseInteraction,
+                get = function(layoutName)
+                    local data = SenseiClassResourceBarDB[dbName][layoutName]
+                    if data and data.enableHealthBarMouseInteraction ~= nil then
+                        return data.enableHealthBarMouseInteraction
+                    else
+                        return defaults.enableHealthBarMouseInteraction
+                    end
+                end,
+                set = function(layoutName, value)
+                    SenseiClassResourceBarDB[dbName][layoutName] = SenseiClassResourceBarDB[dbName][layoutName] or CopyTable(defaults)
+                    SenseiClassResourceBarDB[dbName][layoutName].enableHealthBarMouseInteraction = value
+                    bar:RegisterSecureVisibility()
+                    bar:ApplyMouseSettings()
+                end,
+                tooltip = L["ENABLE_HP_BAR_MOUSE_INTERACTION_TOOLTIP"],
+            },
+            {
+                parentId = L["CATEGORY_BAR_STYLE"],
+                order = 401,
+                name = L["USE_CLASS_COLOR"],
                 kind = LEM.SettingType.Checkbox,
                 default = defaults.useClassColor,
                 get = function(layoutName)
@@ -156,7 +314,7 @@ addonTable.RegistereredBar.HealthBar = {
                     SenseiClassResourceBarDB[dbName][layoutName].useClassColor = value
                     bar:ApplyLayout(layoutName)
                 end,
-            }
+            },
         }
     end,
 }

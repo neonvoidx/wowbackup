@@ -10,51 +10,41 @@ ns.WilduSettings.SettingsLayout = {}
 local SettingsLib = LibStub("LibEQOLSettingsMode-1.0")
 local LSM = LibStub("LibSharedMedia-3.0", true)
 
-local EditModeSaveSetterTimer = nil
-local SaveEditModeChanges = function()
-    if not ns.API:HasCustomLayoutSelected() then
-        ns.API:ShowNoLayoutUIError()
-        return
-    end
-    if EditModeSaveSetterTimer then
-        EditModeSaveSetterTimer:Cancel()
-    end
-    EditModeSaveSetterTimer = C_Timer.After(0.2, function()
-        EditModeManagerFrame:SaveLayoutChanges()
-        ns.API:ShowReloadUIConfirmation()
-    end)
-end
 local function WilduSettings_BuildCooldown(category, layout)
-    SettingsLib:CreateCheckbox(category, {
-        prefix = "CMC_",
-        key = "cooldownManager_enabled",
-        name = "Enable Cooldown Manager",
-        searchtags = { "Toggle", "Activate", "Disable", "On", "Off", "Blizzard", "Viewer" },
-        get = function()
-            return Settings.GetSetting("cooldownViewerEnabled"):GetValue()
-        end,
-        set = function(value)
-            Settings.GetSetting("cooldownViewerEnabled"):ApplyValue(value)
-            if value then
-                ns.API:RefreshCooldownManager()
-            end
-        end,
-        desc = "Toggle Blizzard's built-in Cooldown Manager.",
-    })
+    -- -- Custom Glow Alerts Settings
+    -- SettingsLib:CreateHeader(category, {
+    --     parentSection = customEffectsSection,
+    --     name = "Custom Glow Alerts",
+    -- })
 
-    -- WilduSettings.SettingsCreateCheckbox(category, {
-    --     variable = "cooldownManager_centerBuffIcons",
-    --     name = "Align Buffs Icons",
-    --     defaultValue = false,
-    --     getValue = function()
-    --         return ns.db.profile.cooldownManager_centerBuffIcons
+    -- SettingsLib:CreateText(category, {
+    --     name = "Replace Blizzard's default alert glow with custom LibCustomGlow effects.\nRequires at least one Square Icons Styling option enabled.",
+    --     parentSection = customEffectsSection,
+    -- })
+
+    -- SettingsLib:CreateDropdown(category, {
+    --     parentSection = customEffectsSection,
+    --     prefix = "CMC_",
+    --     key = "cooldownManager_glowStyle",
+    --     name = "Glow Alert Style",
+    --     default = "BLIZZARD",
+    --     values = {
+    --         ["BLIZZARD"] = "Blizzard Default (don't replace)",
+    --         ["PIXEL"] = "Pixel Glow",
+    --         ["AUTOCAST"] = "AutoCast Shine",
+    --         ["BUTTONGLOW"] = "Button Glow",
+    --     },
+    --     order = { "BLIZZARD", "PIXEL", "AUTOCAST", "BUTTONGLOW" },
+    --     get = function()
+    --         return ns.db.profile.cooldownManager_glowStyle or "BLIZZARD"
     --     end,
-    --     setValue = function(v)
-    --         ns.db.profile.cooldownManager_centerBuffIcons = v
-    --         ns.API:RefreshCooldownManager()
+    --     set = function(value)
+    --         ns.db.profile.cooldownManager_glowStyle = value
+    --         if ns.GlowEffects then
+    --             ns.GlowEffects:OnSettingChanged()
+    --         end
     --     end,
-    --     desc = "Enables BetterBuffs-style centered layout for the Buff Icon Cooldown Viewer.\nIcons are positioned in a single centered row",
-    --     previewImage = "cooldownManager_centerBuffIcons",
+    --     desc = "Select the glow effect style for cooldown alerts on Square Icons.\n\n|cff8ccd00Blizzard Default|r - Keep default behavior\n|cff8ccd00Pixel Glow|r - Animated pixel border effect\n|cff8ccd00AutoCast Shine|r - Spinning shine particles\n|cff8ccd00Button Glow|r - Classic action button glow",
     -- })
 
     SettingsLib:CreateHeader(category, {
@@ -72,11 +62,11 @@ local function WilduSettings_BuildCooldown(category, layout)
 
         optionfunc = function()
             return {
-                ["START"] = BuffIconCooldownViewer.isHorizontal and "Grow from the |cff8ccd00Left|r"
-                    or "Grow from the |cff8ccd00Top|r",
+                ["START"] = BuffIconCooldownViewer.isHorizontal and "Grow from the |cff8ccd00Start|r"
+                    or "Grow from the |cff8ccd00Start|r",
                 ["CENTER"] = "Grow from |cff8ccd00Center|r",
-                ["END"] = BuffIconCooldownViewer.isHorizontal and "Grow from the |cff8ccd00Right|r"
-                    or "Grow from the |cff8ccd00Bottom|r",
+                ["END"] = BuffIconCooldownViewer.isHorizontal and "Grow from the |cff8ccd00End|r"
+                    or "Grow from the |cff8ccd00End|r",
                 ["Disable"] = "|cff7c7c7cDisable dynamic layout|r",
             }
         end,
@@ -89,23 +79,6 @@ local function WilduSettings_BuildCooldown(category, layout)
             ns.API:RefreshCooldownManager()
         end,
     })
-
-    -- WilduSettings.SettingsCreateCheckbox(category, {
-    --     variable = "cooldownManager_alignBuffBars",
-    --     name = "Align Buff Bars",
-    --     defaultValue = false,
-    --     getValue = function()
-    --         return ns.db.profile.cooldownManager_alignBuffBars
-    --     end,
-    --     setValue = function(v)
-    --         ns.db.profile.cooldownManager_alignBuffBars = v
-    --         if not v then
-    --             ns.API:RefreshCooldownManager()
-    --         end
-    --     end,
-    --     desc = "Enables BetterBuffs-style absolute layout for buff bars.\nUses existing bar width/height and only controls positioning.",
-    --     previewImage = "cooldownManager_alignBuffBars",
-    -- })
 
     SettingsLib:CreateDropdown(category, {
         prefix = "CMC_",
@@ -135,25 +108,9 @@ local function WilduSettings_BuildCooldown(category, layout)
         end,
         set = function(value)
             ns.db.profile.cooldownManager_alignBuffBars_growFromDirection = value
-            -- if ns.db.profile.cooldownManager_alignBuffBars then
             ns.API:RefreshCooldownManager()
-            -- end
         end,
     })
-    -- WilduSettings.SettingsCreateCheckbox(category, {
-    --     variable = "cooldownManager_centerEssential",
-    --     name = "Center Essential Cooldowns",
-    --     defaultValue = false,
-    --     getValue = function()
-    --         return ns.db.profile.cooldownManager_centerEssential
-    --     end,
-    --     setValue = function(v)
-    --         ns.db.profile.cooldownManager_centerEssential = v
-    --         ns.API:RefreshCooldownManager()
-    --     end,
-    --     desc = "Centers the Essential Cooldowns Icons.",
-    --     previewImage = "cooldownManager_centerEssential",
-    -- })
 
     SettingsLib:CreateDropdown(category, {
         prefix = "CMC_",
@@ -167,8 +124,10 @@ local function WilduSettings_BuildCooldown(category, layout)
                     or "New Columns to the |cff8ccd00Left|r",
                 TOP = EssentialCooldownViewer.isHorizontal and "New Rows |cff8ccd00Below|r"
                     or "New Columns to the |cff8ccd00Right|r",
+                ["Disable"] = "|cff7c7c7cDisable dynamic layout|r",
             }
         end,
+        order = { "TOP", "BOTTOM", "Disable" },
         get = function()
             return ns.db.profile.cooldownManager_centerEssential_growFromDirection or "TOP"
         end,
@@ -177,21 +136,6 @@ local function WilduSettings_BuildCooldown(category, layout)
             ns.API:RefreshCooldownManager()
         end,
     })
-
-    -- WilduSettings.SettingsCreateCheckbox(category, {
-    --     variable = "cooldownManager_centerUtility",
-    --     name = "Center Utility Cooldowns",
-    --     defaultValue = false,
-    --     getValue = function()
-    --         return ns.db.profile.cooldownManager_centerUtility
-    --     end,
-    --     setValue = function(v)
-    --         ns.db.profile.cooldownManager_centerUtility = v
-    --         ns.API:RefreshCooldownManager()
-    --     end,
-    --     desc = "Centers the Utility Cooldowns icons.",
-    --     previewImage = "cooldownManager_centerUtility",
-    -- })
 
     SettingsLib:CreateDropdown(category, {
         prefix = "CMC_",
@@ -205,8 +149,10 @@ local function WilduSettings_BuildCooldown(category, layout)
                     or "New Columns to the |cff8ccd00Left|r",
                 TOP = UtilityCooldownViewer.isHorizontal and "New Rows |cff8ccd00Below|r"
                     or "New Columns to the |cff8ccd00Right|r",
+                ["Disable"] = "|cff7c7c7cDisable dynamic layout|r",
             }
         end,
+        order = { "TOP", "BOTTOM", "Disable" },
         get = function()
             return ns.db.profile.cooldownManager_centerUtility_growFromDirection or "TOP"
         end,
@@ -219,7 +165,7 @@ local function WilduSettings_BuildCooldown(category, layout)
     SettingsLib:CreateCheckboxSlider(category, {
         prefix = "CMC_",
         key = "cooldownManager_utility_dimWhenNotOnCD",
-        name = "Dim Utility on CD",
+        name = "Dim Utility when not on CD",
         searchtags = { "Dim", "Opacity", "Faded", "Transparent", "Utility", "Cooldown", "Hide", "Icons" },
         default = false,
         get = function()
@@ -251,18 +197,38 @@ local function WilduSettings_BuildCooldown(category, layout)
 
     SettingsLib:CreateText(category, {
         name = "|cffff0000*|rTo change |cfffff100Padding|r or to change between |cfffff100columns / rows|r\n Go to |cff87bbcaEdit Mode|r and change |cfffff100Icon Padding & Orientation|r.",
-    }) -- Square Icons Styling Section
+    })
+
+    SettingsLib:CreateButton(category, {
+        text = "Open Edit Mode",
+        func = function()
+            ns.API:ToggleEditMode()
+        end,
+        parentSection = cooldownSection,
+    })
+    SettingsLib:CreateButton(category, {
+        text = "Open Cooldown Settings",
+        func = function()
+            if not InCombatLockdown() then
+                HideUIPanel(SettingsPanel)
+                C_Timer.After(0.1, function()
+                    CooldownViewerSettings:ShowUIPanel(false)
+                end)
+            end
+        end,
+        parentSection = cooldownSection,
+    })
+    SettingsLib:CreateText(category, {
+        name = "You can write |cfffff100/cds|r or |cfffff100/cdm|r Go to |cfffff100Cooldown Settings|r",
+    })
+
     local squareIconsSection = SettingsLib:CreateExpandableSection(category, {
-        name = "|cff5fb64aSquare|r |cff8ccd00Icons|r Styling",
+        name = "|cff5fb64aIco|r|cff8ccd00ns|r Styling",
         expanded = false,
         colorizeTitle = true,
     })
     SettingsLib:CreateText(category, {
-        name = "|cffff0000 Do NOT change padding & border overflow in instances or in combat!|r",
-        parentSection = squareIconsSection,
-    })
-    SettingsLib:CreateText(category, {
-        name = "Please report any issues to Discord channel. Custom Square animations are coming Soon™",
+        name = "|cfffff100Padding|r can no longer be set within addon, please use |cff87bbcaEdit Mode|r",
         parentSection = squareIconsSection,
     })
 
@@ -279,9 +245,7 @@ local function WilduSettings_BuildCooldown(category, layout)
         set = function(value)
             ns.db.profile.cooldownManager_squareIcons_BuffIcons = value
             ns.StyledIcons:OnSettingChanged()
-            if not value then
-                ns.API:ShowReloadUIConfirmation()
-            end
+            ns.API:ShowReloadUIConfirmation()
         end,
         desc = "Apply square icon styling to Buff Icons viewer.",
     })
@@ -292,7 +256,7 @@ local function WilduSettings_BuildCooldown(category, layout)
         name = "Border Thickness",
         searchtags = { "Border", "Thickness", "Width", "Edge", "Frame", "Outline", "Buff", "Size" },
         default = 4,
-        min = 1,
+        min = 0,
         max = 6,
         step = 1,
         formatter = function(value)
@@ -308,65 +272,9 @@ local function WilduSettings_BuildCooldown(category, layout)
             end
         end,
         desc = "Border thickness for square Buff Icons (space between icon edge and texture).",
-        isEnabled = function()
-            return not ns.API:IsSomeAddOnRestrictionActive()
-        end,
-    })
-    local overlapBuffIcons = SettingsLib:CreateCheckbox(category, {
-        parentSection = squareIconsSection,
-        prefix = "CMC_",
-        key = "cooldownManager_squareIconsBorder_BuffIcons_Overlap",
-        name = "Overlap Borders",
-        searchtags = { "Overlap", "Border", "Stack", "Compact", "Dense", "Tight", "Spacing", "Gap" },
-        default = false,
-        get = function()
-            return ns.db.profile.cooldownManager_squareIconsBorder_BuffIcons_Overlap
-        end,
-        set = function(value)
-            ns.db.profile.cooldownManager_squareIconsBorder_BuffIcons_Overlap = value
-
-            local padding = BuffIconCooldownViewer.iconPadding
-            if value then
-                padding = math.max(4 - ns.db.profile.cooldownManager_squareIconsBorder_BuffIcons, 0)
-            else
-                padding = math.max(4, padding)
-            end
-            if padding ~= BuffIconCooldownViewer.iconPadding then
-                BuffIconCooldownViewer:UpdateSystemSettingValue(Enum.EditModeCooldownViewerSetting.IconPadding, padding)
-                SaveEditModeChanges()
-            end
-            SaveEditModeChanges()
-        end,
-        isEnabled = function()
-            return not ns.API:IsSomeAddOnRestrictionActive()
-        end,
-    })
-    SettingsLib:CreateSlider(category, {
-        prefix = "CMC_",
-        key = "cooldownManager_BuffIcons_iconPadding",
-        name = "or set Padding",
-        min = 4,
-        max = 14,
-        step = 1,
-        get = function()
-            -- return ns.db.profile.cooldownManager_squareIconsBorder_BuffIcons_Overlap
-            return BuffIconCooldownViewer.iconPadding
-        end,
-        set = function(value)
-            if value ~= BuffIconCooldownViewer.iconPadding then
-                BuffIconCooldownViewer:UpdateSystemSettingValue(Enum.EditModeCooldownViewerSetting.IconPadding, value)
-                SaveEditModeChanges()
-            end
-        end,
-        parentSection = squareIconsSection,
-        parent = overlapBuffIcons,
-        parentCheck = function()
-            return not ns.db.profile.cooldownManager_squareIconsBorder_BuffIcons_Overlap
-                and not ns.API:IsSomeAddOnRestrictionActive()
-        end,
-        formatter = function(value)
-            return string.format("%d", value)
-        end,
+        -- isEnabled = function()
+        --     return not ns.API:IsSomeAddOnRestrictionActive()
+        -- end,
     })
 
     SettingsLib:CreateSlider(category, {
@@ -409,9 +317,7 @@ local function WilduSettings_BuildCooldown(category, layout)
         set = function(value)
             ns.db.profile.cooldownManager_squareIcons_Essential = value
             ns.StyledIcons:OnSettingChanged()
-            if not value then
-                ns.API:ShowReloadUIConfirmation()
-            end
+            ns.API:ShowReloadUIConfirmation()
         end,
         desc = "Apply square icon styling to Essential Cooldowns viewer.",
     })
@@ -423,7 +329,7 @@ local function WilduSettings_BuildCooldown(category, layout)
         name = "Border Thickness",
         searchtags = { "Border", "Thickness", "Width", "Edge", "Frame", "Outline", "Essential", "Size" },
         default = 4,
-        min = 1,
+        min = 0,
         max = 6,
         step = 1,
         formatter = function(value)
@@ -438,66 +344,9 @@ local function WilduSettings_BuildCooldown(category, layout)
             ns.StyledIcons:OnSettingChanged()
         end,
         desc = "Border thickness for square Essential Icons (space between icon edge and texture).",
-        isEnabled = function()
-            return not ns.API:IsSomeAddOnRestrictionActive()
-        end,
-    })
-    local essentialIconsOverlap = SettingsLib:CreateCheckbox(category, {
-        parentSection = squareIconsSection,
-        prefix = "CMC_",
-        key = "cooldownManager_squareIconsBorder_Essential_Overlap",
-        name = "Overlap Borders",
-        searchtags = { "Overlap", "Border", "Stack", "Compact", "Dense", "Tight", "Spacing", "Gap", "Essential" },
-        default = false,
-        get = function()
-            return ns.db.profile.cooldownManager_squareIconsBorder_Essential_Overlap
-        end,
-        set = function(value)
-            ns.db.profile.cooldownManager_squareIconsBorder_Essential_Overlap = value
-
-            local padding = EssentialCooldownViewer.iconPadding
-            if value then
-                padding = math.max(4 - ns.db.profile.cooldownManager_squareIconsBorder_Essential, 0)
-            else
-                padding = math.max(4, padding)
-            end
-            if padding ~= EssentialCooldownViewer.iconPadding then
-                EssentialCooldownViewer:UpdateSystemSettingValue(
-                    Enum.EditModeCooldownViewerSetting.IconPadding,
-                    padding
-                )
-                SaveEditModeChanges()
-            end
-        end,
-        isEnabled = function()
-            return not ns.API:IsSomeAddOnRestrictionActive()
-        end,
-    })
-    SettingsLib:CreateSlider(category, {
-        prefix = "CMC_",
-        key = "cooldownManager_EssentialIcons_iconPadding",
-        name = "or set Padding",
-        min = 4,
-        max = 14,
-        step = 1,
-        get = function()
-            return EssentialCooldownViewer.iconPadding
-        end,
-        set = function(value)
-            if math.floor(value) ~= EssentialCooldownViewer.iconPadding then
-                EssentialCooldownViewer:UpdateSystemSettingValue(Enum.EditModeCooldownViewerSetting.IconPadding, value)
-                SaveEditModeChanges()
-            end
-        end,
-        parentSection = squareIconsSection,
-        parent = essentialIconsOverlap,
-        parentCheck = function()
-            return not ns.db.profile.cooldownManager_squareIconsBorder_Essential_Overlap
-                and not ns.API:IsSomeAddOnRestrictionActive()
-        end,
-        formatter = function(value)
-            return string.format("%d", value)
-        end,
+        -- isEnabled = function()
+        --     return not ns.API:IsSomeAddOnRestrictionActive()
+        -- end,
     })
 
     SettingsLib:CreateSlider(category, {
@@ -542,9 +391,7 @@ local function WilduSettings_BuildCooldown(category, layout)
         set = function(value)
             ns.db.profile.cooldownManager_squareIcons_Utility = value
             ns.StyledIcons:OnSettingChanged()
-            if not value then
-                ns.API:ShowReloadUIConfirmation()
-            end
+            ns.API:ShowReloadUIConfirmation()
         end,
         desc = "Apply square icon styling to Utility Cooldowns viewer.",
     })
@@ -556,7 +403,7 @@ local function WilduSettings_BuildCooldown(category, layout)
         name = "Border Thickness",
         searchtags = { "Border", "Thickness", "Width", "Edge", "Frame", "Outline", "Utility", "Size" },
         default = 4,
-        min = 1,
+        min = 0,
         max = 6,
         step = 1,
         formatter = function(value)
@@ -572,63 +419,9 @@ local function WilduSettings_BuildCooldown(category, layout)
             end
         end,
         desc = "Border thickness for square Utility Icons (space between icon edge and texture).",
-        isEnabled = function()
-            return not ns.API:IsSomeAddOnRestrictionActive()
-        end,
-    })
-    local utilityIconsOverlap = SettingsLib:CreateCheckbox(category, {
-        parentSection = squareIconsSection,
-        prefix = "CMC_",
-        key = "cooldownManager_squareIconsBorder_Utility_Overlap",
-        name = "Overlap Borders",
-        searchtags = { "Overlap", "Border", "Stack", "Compact", "Dense", "Tight", "Spacing", "Gap", "Utility" },
-        default = false,
-        get = function()
-            return ns.db.profile.cooldownManager_squareIconsBorder_Utility_Overlap
-        end,
-        set = function(value)
-            ns.db.profile.cooldownManager_squareIconsBorder_Utility_Overlap = value
-
-            local padding = UtilityCooldownViewer.iconPadding
-            if value then
-                padding = math.max(4 - ns.db.profile.cooldownManager_squareIconsBorder_Utility, 0)
-            else
-                padding = math.max(4, padding)
-            end
-            if padding ~= UtilityCooldownViewer.iconPadding then
-                UtilityCooldownViewer:UpdateSystemSettingValue(Enum.EditModeCooldownViewerSetting.IconPadding, padding)
-                SaveEditModeChanges()
-            end
-        end,
-        isEnabled = function()
-            return not ns.API:IsSomeAddOnRestrictionActive()
-        end,
-    })
-    SettingsLib:CreateSlider(category, {
-        prefix = "CMC_",
-        key = "cooldownManager_UtilityIcons_iconPadding",
-        name = "or set Padding",
-        min = 4,
-        max = 14,
-        step = 1,
-        get = function()
-            return UtilityCooldownViewer.iconPadding
-        end,
-        set = function(value)
-            if math.floor(value) ~= UtilityCooldownViewer.iconPadding then
-                UtilityCooldownViewer:UpdateSystemSettingValue(Enum.EditModeCooldownViewerSetting.IconPadding, value)
-                SaveEditModeChanges()
-            end
-        end,
-        parentSection = squareIconsSection,
-        parent = utilityIconsOverlap,
-        parentCheck = function()
-            return not ns.db.profile.cooldownManager_squareIconsBorder_Utility_Overlap
-                and not ns.API:IsSomeAddOnRestrictionActive()
-        end,
-        formatter = function(value)
-            return string.format("%d", value)
-        end,
+        -- isEnabled = function()
+        --     return not ns.API:IsSomeAddOnRestrictionActive()
+        -- end,
     })
 
     SettingsLib:CreateSlider(category, {
@@ -655,6 +448,375 @@ local function WilduSettings_BuildCooldown(category, layout)
         end,
         desc = "Zoom level for square Utility Icons (0 = no zoom, 0.5 = maximum zoom).",
     })
+    SettingsLib:CreateCheckbox(category, {
+        parentSection = squareIconsSection,
+        prefix = "CMC_",
+        key = "cooldownManager_normalizeUtilitySize",
+        name = "Normalize Utility Icons Scaling",
+        searchtags = { "Fix", "Normalize", "Size", "Uniform", "Match", "Equal", "Same", "Utility", "Icon" },
+        default = false,
+        get = function()
+            return ns.db.profile.cooldownManager_normalizeUtilitySize
+        end,
+        set = function(value)
+            ns.db.profile.cooldownManager_normalizeUtilitySize = value
+            ns.StyledIcons:OnSettingChanged()
+            ns.API:ShowReloadUIConfirmation()
+        end,
+        desc = "Set base Utility Cooldown Icons |cffff0000base|r size as Essential Cooldowns Icons\nIt helps to have a more uniform look when both viewers are used together.",
+    })
+
+    local cooldownSection = SettingsLib:CreateExpandableSection(category, {
+        name = "|cffeeeeeeCooldown|r Settings",
+        expanded = false,
+        colorizeTitle = true,
+    })
+    local customSwipeColorCheckbox = SettingsLib:CreateCheckbox(category, {
+        prefix = "CMC_",
+        key = "cooldownManager_customSwipeColor_enabled",
+        name = "Enable Custom Overlay Colors",
+        default = false,
+        get = function()
+            return ns.db.profile.cooldownManager_customSwipeColor_enabled or false
+        end,
+        set = function(value)
+            ns.db.profile.cooldownManager_customSwipeColor_enabled = value
+        end,
+        desc = "Enable custom coloring for the cooldown swipe overlay.",
+        parentSection = cooldownSection,
+    })
+
+    SettingsLib:CreateColorOverrides(category, {
+        key = "cooldownManager_customActiveColor",
+        entries = {
+            { key = "active", label = "Active Aura Color" },
+        },
+        hasOpacity = true,
+        getColor = function(key)
+            if key == "active" then
+                return ns.db.profile.cooldownManager_customActiveColor_r or 1,
+                    ns.db.profile.cooldownManager_customActiveColor_g or 0.95,
+                    ns.db.profile.cooldownManager_customActiveColor_b or 0.57,
+                    ns.db.profile.cooldownManager_customActiveColor_a or 0.69
+            end
+        end,
+        setColor = function(key, r, g, b, a)
+            if key == "active" then
+                ns.db.profile.cooldownManager_customActiveColor_r = r
+                ns.db.profile.cooldownManager_customActiveColor_g = g
+                ns.db.profile.cooldownManager_customActiveColor_b = b
+                if a == 0.7 then
+                    a = 0.69
+                end
+                ns.db.profile.cooldownManager_customActiveColor_a = a
+            end
+        end,
+        getDefaultColor = function(key)
+            if key == "active" then
+                return 1, 0.95, 0.57, 0.69 -- Default black swipe
+            end
+        end,
+        parentSection = cooldownSection,
+    })
+
+    SettingsLib:CreateColorOverrides(category, {
+        key = "cooldownManager_customCDSwipeColor",
+        entries = {
+            { key = "active", label = "Cooldown Swipe Color" },
+        },
+        hasOpacity = true,
+        getColor = function(key)
+            if key == "active" then
+                return ns.db.profile.cooldownManager_customCDSwipeColor_r or 0,
+                    ns.db.profile.cooldownManager_customCDSwipeColor_g or 0,
+                    ns.db.profile.cooldownManager_customCDSwipeColor_b or 0,
+                    ns.db.profile.cooldownManager_customCDSwipeColor_a or 0.69
+            end
+        end,
+        setColor = function(key, r, g, b, a)
+            if key == "active" then
+                ns.db.profile.cooldownManager_customCDSwipeColor_r = r
+                ns.db.profile.cooldownManager_customCDSwipeColor_g = g
+                ns.db.profile.cooldownManager_customCDSwipeColor_b = b
+                if a == 0.7 then
+                    a = 0.69
+                end
+                ns.db.profile.cooldownManager_customCDSwipeColor_a = a
+            end
+        end,
+        getDefaultColor = function(key)
+            if key == "active" then
+                return 0, 0, 0, 0.69 -- Default black swipe
+            end
+        end,
+        parentSection = cooldownSection,
+    })
+
+    SettingsLib:CreateButton(category, {
+        text = "Set default colors",
+        func = function()
+            ns.db.profile.cooldownManager_customActiveColor_r = 1
+            ns.db.profile.cooldownManager_customActiveColor_g = 0.95
+            ns.db.profile.cooldownManager_customActiveColor_b = 0.57
+            ns.db.profile.cooldownManager_customActiveColor_a = 0.69
+            ns.db.profile.cooldownManager_customCDSwipeColor_r = 0
+            ns.db.profile.cooldownManager_customCDSwipeColor_g = 0
+            ns.db.profile.cooldownManager_customCDSwipeColor_b = 0
+            ns.db.profile.cooldownManager_customCDSwipeColor_a = 0.69
+            ReloadUI()
+        end,
+        parentSection = cooldownSection,
+    })
+
+    SettingsLib:CreateHeader(category, {
+        name = "Cooldown Number Settings",
+        parentSection = cooldownSection,
+    })
+
+    SettingsLib:CreateScrollDropdown(category, {
+        parentSection = cooldownSection,
+        prefix = "CMC_",
+        key = "cooldownManager_cooldownFontName",
+        name = "Cooldown Font",
+        searchtags = { "Font", "Text", "Cooldown", "Count", "Number", "Typeface", "Typography", "SharedMedia" },
+        default = "Friz Quadrata TT",
+        height = 220,
+        get = function()
+            return ns.db.profile.cooldownManager_cooldownFontName or "Friz Quadrata TT"
+        end,
+        set = function(value)
+            ns.db.profile.cooldownManager_cooldownFontName = value
+            ns.CooldownFont:RefreshAll()
+        end,
+        desc = "Select the font for ability cooldown numbers. Uses SharedMedia fonts if available.",
+        generator = function(dropdown, rootDescription)
+            dropdown.fontPool = {}
+            if not dropdown._CMC_FontFace_Dropdown_OnMenuClosed_hooked then
+                hooksecurefunc(dropdown, "OnMenuClosed", function()
+                    for _, fontDisplay in pairs(dropdown.fontPool) do
+                        fontDisplay:Hide()
+                    end
+                end)
+                dropdown._CMC_FontFace_Dropdown_OnMenuClosed_hooked = true
+            end
+            local fonts = LSM:HashTable(LSM.MediaType.FONT)
+            local sortedFonts = {}
+            for fontName in pairs(fonts) do
+                if fontName ~= "" then
+                    table.insert(sortedFonts, fontName)
+                end
+            end
+            table.sort(sortedFonts)
+
+            for index, fontName in ipairs(sortedFonts) do
+                local fontPath = fonts[fontName]
+
+                local button = rootDescription:CreateRadio(fontName, function()
+                    return ns.db.profile.cooldownManager_cooldownFontName == fontName
+                end, function()
+                    ns.db.profile.cooldownManager_cooldownFontName = fontName
+                    ns.CooldownFont:RefreshAll()
+                    dropdown:SetText(fontName)
+                end)
+
+                button:AddInitializer(function(self)
+                    local fontDisplay = dropdown.fontPool[index]
+                    if not fontDisplay then
+                        fontDisplay = dropdown:CreateFontString(nil, "BACKGROUND")
+                        dropdown.fontPool[index] = fontDisplay
+                    end
+
+                    self.fontString:Hide()
+
+                    fontDisplay:SetParent(self)
+                    fontDisplay:SetPoint("LEFT", self.fontString, "LEFT", 0, 0)
+                    fontDisplay:SetFont(fontPath, 12)
+                    fontDisplay:SetText(fontName)
+                    fontDisplay:Show()
+                end)
+            end
+        end,
+    })
+
+    SettingsLib:CreateMultiDropdown(category, {
+        parentSection = cooldownSection,
+        prefix = "CMC_",
+        key = "cooldownManager_cooldownFontFlags",
+        name = "Font Flags",
+        customText = "No Flags",
+        searchtags = { "Font", "Flags", "Outline", "Shadow", "Thick", "Monochrome", "Text", "Style" },
+        defaultSelection = {},
+        values = {
+            ["OUTLINE"] = "Outline",
+            ["THICKOUTLINE"] = "Thick Outline",
+            ["MONOCHROME"] = "Monochrome",
+        },
+        getSelection = function()
+            return ns.db.profile.cooldownManager_cooldownFontFlags or {}
+        end,
+        setSelection = function(value)
+            ns.db.profile.cooldownManager_cooldownFontFlags = value
+            ns.CooldownFont:RefreshAll()
+        end,
+        desc = "Select font flags for ability cooldown numbers.",
+    })
+
+    local cooldownFontSizeValues = {
+        ["NIL"] = "Default",
+        ["0"] = "Hide",
+        ["10"] = "10",
+        ["12"] = "12",
+        ["14"] = "14",
+        ["16"] = "16",
+        ["18"] = "18",
+        ["20"] = "20",
+        ["22"] = "22",
+        ["24"] = "24",
+        ["26"] = "26",
+        ["28"] = "28",
+        ["30"] = "30",
+        ["32"] = "32",
+        ["34"] = "34",
+        ["36"] = "36",
+        ["38"] = "38",
+    }
+    local cooldownFontSizeOrder = {
+        "NIL",
+        "0",
+        "10",
+        "12",
+        "14",
+        "16",
+        "18",
+        "20",
+        "22",
+        "24",
+        "26",
+        "28",
+        "30",
+        "32",
+        "34",
+        "36",
+        "38",
+    }
+
+    local function CreateCooldownFontSizeDropdown(
+        parentSection,
+        key,
+        name,
+        getFn,
+        setFn,
+        checkboxKey,
+        checkboxGet,
+        checkboxSet
+    )
+        SettingsLib:CreateCheckboxDropdown(category, {
+            parentSection = parentSection,
+            prefix = "CMC_",
+            dropdownKey = key,
+            key = checkboxKey,
+            name = name,
+            dropdownDefault = "NIL",
+            dropdownValues = cooldownFontSizeValues,
+            dropdownOrder = cooldownFontSizeOrder,
+            dropdownGet = getFn,
+            dropdownSet = setFn,
+            get = checkboxGet,
+            set = checkboxSet,
+            default = false,
+        })
+    end
+
+    CreateCooldownFontSizeDropdown(
+        cooldownSection,
+        "cooldownManager_cooldownFontSizeEssential",
+        "Change on Essential",
+        function()
+            return ns.db.profile.cooldownManager_cooldownFontSizeEssential ~= nil
+                    and tostring(ns.db.profile.cooldownManager_cooldownFontSizeEssential)
+                or "NIL"
+        end,
+        function(value)
+            if value == "NIL" then
+                ns.db.profile.cooldownManager_cooldownFontSizeEssential = "NIL"
+            else
+                local n = tonumber(value)
+                ns.db.profile.cooldownManager_cooldownFontSizeEssential = n
+            end
+            ns.CooldownFont:RefreshAll()
+        end,
+        "cooldownManager_cooldownFontSizeEssential_enabled",
+        function()
+            return ns.db.profile.cooldownManager_cooldownFontSizeEssential_enabled
+        end,
+        function(value)
+            ns.db.profile.cooldownManager_cooldownFontSizeEssential_enabled = value
+            if not value then
+                ns.API:ShowReloadUIConfirmation()
+            end
+            ns.CooldownFont:RefreshAll()
+        end
+    )
+    CreateCooldownFontSizeDropdown(
+        cooldownSection,
+        "cooldownManager_cooldownFontSizeUtility",
+        "Change on Utility",
+        function()
+            return ns.db.profile.cooldownManager_cooldownFontSizeUtility ~= nil
+                    and tostring(ns.db.profile.cooldownManager_cooldownFontSizeUtility)
+                or "NIL"
+        end,
+        function(value)
+            if value == "NIL" then
+                ns.db.profile.cooldownManager_cooldownFontSizeUtility = "NIL"
+            else
+                local n = tonumber(value)
+                ns.db.profile.cooldownManager_cooldownFontSizeUtility = n
+            end
+            ns.CooldownFont:RefreshAll()
+        end,
+        "cooldownManager_cooldownFontSizeUtility_enabled",
+        function()
+            return ns.db.profile.cooldownManager_cooldownFontSizeUtility_enabled
+        end,
+        function(value)
+            ns.db.profile.cooldownManager_cooldownFontSizeUtility_enabled = value
+            if not value then
+                ns.API:ShowReloadUIConfirmation()
+            end
+            ns.CooldownFont:RefreshAll()
+        end
+    )
+    CreateCooldownFontSizeDropdown(
+        cooldownSection,
+        "cooldownManager_cooldownFontSizeBuffIcons",
+        "Change on Tracked Buffs",
+        function()
+            return ns.db.profile.cooldownManager_cooldownFontSizeBuffIcons ~= nil
+                    and tostring(ns.db.profile.cooldownManager_cooldownFontSizeBuffIcons)
+                or "NIL"
+        end,
+        function(value)
+            if value == "NIL" then
+                ns.db.profile.cooldownManager_cooldownFontSizeBuffIcons = "NIL"
+            else
+                local n = tonumber(value)
+                ns.db.profile.cooldownManager_cooldownFontSizeBuffIcons = n
+            end
+            ns.CooldownFont:RefreshAll()
+        end,
+        "cooldownManager_cooldownFontSizeBuffIcons_enabled",
+        function()
+            return ns.db.profile.cooldownManager_cooldownFontSizeBuffIcons_enabled
+        end,
+        function(value)
+            ns.db.profile.cooldownManager_cooldownFontSizeBuffIcons_enabled = value
+            if not value then
+                ns.API:ShowReloadUIConfirmation()
+            end
+            ns.CooldownFont:RefreshAll()
+        end
+    )
 
     local stackNumberSection = SettingsLib:CreateExpandableSection(category, {
         name = "Ability |cffeeeeeeStacks|r Number Settings",
@@ -737,6 +899,7 @@ local function WilduSettings_BuildCooldown(category, layout)
         prefix = "CMC_",
         key = "cooldownManager_stackFontFlags",
         name = "Font Flags",
+        customText = "No Flags",
         searchtags = { "Font", "Flags", "Outline", "Shadow", "Thick", "Monochrome", "Text", "Style" },
         defaultSelection = {},
         values = {
@@ -1102,7 +1265,6 @@ local function WilduSettings_BuildCooldown(category, layout)
         end,
     })
 
-    -- Keybinds Display Section
     local keybindsSection = SettingsLib:CreateExpandableSection(category, {
         name = "|cffeeeeeeKeybind|r Text Display",
         expanded = false,
@@ -1184,6 +1346,7 @@ local function WilduSettings_BuildCooldown(category, layout)
         prefix = "CMC_",
         key = "cooldownManager_keybindFontFlags",
         name = "Font Flags",
+        customText = "No Flags",
         searchtags = { "Font", "Flags", "Outline", "Shadow", "Thick", "Monochrome", "Keybind", "Style" },
         defaultSelection = {},
         values = {
@@ -1369,7 +1532,6 @@ local function WilduSettings_BuildCooldown(category, layout)
         parentSection = keybindsSection,
     })
 
-    -- Utility: Keybind Anchor
     SettingsLib:CreateCheckboxDropdown(category, {
         parentSection = keybindsSection,
         prefix = "CMC_",
@@ -1478,23 +1640,39 @@ local function WilduSettings_BuildCooldown(category, layout)
         end,
     })
 
-    -- Rotation Highlight Section (Assisted Combat)
-    local highlightSection = SettingsLib:CreateExpandableSection(category, {
-        name = "|cffeeeeeeRotation|r Highlight (Assisted Combat) on Cooldown Manager Icons",
-        expanded = false,
-        colorizeTitle = true,
-    })
-
-    SettingsLib:CreateText(category, {
-        name = "Highlight icons suggested by Single Button Rotation with a blue border.",
-        parentSection = highlightSection,
+    local tweaksHeader = SettingsLib:CreateHeader(category, {
+        name = "|cff008945Wildu|r|cff8ccd00Tweaks|r for Cooldown Manager",
+        searchtags = {
+            "Wildu",
+            "Tweaks",
+            "Cooldown",
+            "Manager",
+            "CMC",
+            "CDM",
+            "Assistant",
+            "Assisted",
+            "Highlight",
+            "Rotation",
+            "Suggested",
+            "Border",
+            "Glow",
+            "Sync Utility width to Essential",
+            "Fix",
+            "Normalize",
+            "Size",
+            "Uniform",
+            "Match",
+            "Equal",
+            "Same",
+            "Utility",
+            "Icon",
+        },
     })
 
     SettingsLib:CreateCheckbox(category, {
-        parentSection = highlightSection,
         prefix = "CMC_",
         key = "cooldownManager_showHighlight_Essential",
-        name = "Enable Rotation Highlight",
+        name = "Rotation Highlight on CDM",
         searchtags = { "Assistant", "Assisted", "Highlight", "Rotation", "Suggested", "Border", "Glow" },
         default = false,
         get = function()
@@ -1504,78 +1682,55 @@ local function WilduSettings_BuildCooldown(category, layout)
         set = function(value)
             ns.db.profile.cooldownManager_showHighlight_Essential = value
             ns.db.profile.cooldownManager_showHighlight_Utility = value
+            if value then
+                C_CVar.SetCVar("assistedCombatHighlight", "1")
+            end
             if ns.Assistant then
                 ns.Assistant:OnSettingChanged("Essential")
                 ns.Assistant:OnSettingChanged("Utility")
             end
         end,
-        desc = "Show blue border on Essential Cooldowns when suggested by rotation.",
+        desc = "Show blue border on Cooldown Manager when ability is suggested by the rotation helper.",
     })
-
-    local editModeSection = SettingsLib:CreateExpandableSection(category, {
-        name = "|cff87bbcaEdit Mode|r Tweaks&Hacks",
-        expanded = false,
-        colorizeTitle = true,
-    })
-
-    SettingsLib:CreateCheckbox(category, {
-        parentSection = editModeSection,
+    SettingsLib:CreateCheckboxDropdown(category, {
         prefix = "CMC_",
-        key = "cooldownManager_forceCenterX_BuffIcons",
-        name = "Force Center Buff Icons|cffff0000*|r",
-        searchtags = { "Force", "Center", "Horizontal", "Middle", "Screen", "Position", "Buff", "Auto" },
-        defaultValue = false,
+        key = "cooldownManager_buttonPress",
+        name = "Button Press overlay",
+        searchtags = { "Button", "Press", "Overlay", "Experimental", "Cooldowns", "Icons" },
+        default = false,
         get = function()
-            return ns.db.profile.cooldownManager_forceCenterX_BuffIcons
+            return ns.db.profile.cooldownManager_buttonPress
         end,
-        set = function(v)
-            ns.db.profile.cooldownManager_forceCenterX_BuffIcons = v
-            if ns.CooldownManager and ns.CooldownManager.ApplyCenterXPositions then
-                ns.CooldownManager.ApplyCenterXPositions()
+        set = function(value)
+            ns.db.profile.cooldownManager_buttonPress = value
+            if not value then
+                ns.API:ShowReloadUIConfirmation()
             end
         end,
-        desc = "Automatically centers Buff Icon Cooldown Viewer horizontally on screen.",
-    })
-    SettingsLib:CreateCheckbox(category, {
-        parentSection = editModeSection,
-        prefix = "CMC_",
-        key = "cooldownManager_forceCenterX_Essential",
-        name = "Force Center Essential|cffff0000*|r",
-        searchtags = { "Force", "Center", "Horizontal", "Middle", "Screen", "Position", "Essential", "Auto" },
-        defaultValue = false,
-        get = function()
-            return ns.db.profile.cooldownManager_forceCenterX_Essential
+        desc = "Show an overlay on cooldown icons when the corresponding action button is pressed.",
+
+        dropdownKey = "cooldownManager_buttonPress_texture",
+        dropdownName = "Button Press Texture",
+        dropdownValues = {
+            Blizzard = "Blizzard Default",
+            Flat = "Simple Flat Overlay",
+        },
+        dropdownDefault = "Blizzard",
+        dropdownGet = function()
+            return ns.db.profile.cooldownManager_buttonPress_texture or "Blizzard"
         end,
-        set = function(v)
-            ns.db.profile.cooldownManager_forceCenterX_Essential = v
-            if ns.CooldownManager and ns.CooldownManager.ApplyCenterXPositions then
-                ns.CooldownManager.ApplyCenterXPositions()
-            end
+        dropdownSet = function(value)
+            ns.db.profile.cooldownManager_buttonPress_texture = value
+            ns.API:ShowReloadUIConfirmation()
         end,
-        desc = "Automatically centers Essential Cooldown Viewer horizontally on screen.",
+        dropdownDesc = "Select the texture for the button press overlay.",
+        dropdownOrder = {
+            "Blizzard",
+            "Flat",
+        },
     })
 
     SettingsLib:CreateCheckbox(category, {
-        parentSection = editModeSection,
-        prefix = "CMC_",
-        key = "cooldownManager_forceCenterX_Utility",
-        name = "Force Center Utility|cffff0000*|r",
-        searchtags = { "Force", "Center", "Horizontal", "Middle", "Screen", "Position", "Utility", "Auto" },
-        defaultValue = false,
-        get = function()
-            return ns.db.profile.cooldownManager_forceCenterX_Utility
-        end,
-        set = function(v)
-            ns.db.profile.cooldownManager_forceCenterX_Utility = v
-            if ns.CooldownManager and ns.CooldownManager.ApplyCenterXPositions then
-                ns.CooldownManager.ApplyCenterXPositions()
-            end
-        end,
-        desc = "Automatically centers Utility Cooldown Viewer horizontally on screen.",
-    })
-
-    SettingsLib:CreateCheckbox(category, {
-        parentSection = editModeSection,
         prefix = "CMC_",
         key = "cooldownManager_limitUtilitySizeToEssential",
         name = "Sync Utility width to Essential",
@@ -1588,29 +1743,411 @@ local function WilduSettings_BuildCooldown(category, layout)
             ns.db.profile.cooldownManager_limitUtilitySizeToEssential = value
             ns.CooldownManager.ForceRefreshAll()
         end,
-        desc = "Set maximum Utility width to the width of Essential",
+        desc = "Set |cffff0000maximum|r Utility width to the width of Essential\n|cffff0000It will not get narrower than 6 icons or limit you set in |r|cff87bbcaEdit Mode|r",
+    })
+    local version = C_AddOns.GetAddOnMetadata("CooldownManagerCentered", "version")
+    SettingsLib:CreateText(category, {
+        name = "|cffccccccAddon version: " .. version .. "|r",
     })
 
-    SettingsLib:CreateCheckbox(category, {
-        parentSection = editModeSection,
+    local experimentalCategory = SettingsLib:CreateCategory(category, "Experimental", false)
+
+    SettingsLib:CreateHeader(experimentalCategory, {
+        name = "|cffff0000Experimental Features|r",
+        searchtags = { "Experimental", "Beta", "Testing", "Feature", "Features" },
+    })
+
+    SettingsLib:CreateCheckbox(experimentalCategory, {
         prefix = "CMC_",
-        key = "cooldownManager_normalizeUtilitySize",
-        name = "'Fix' Utility Icons Size",
-        searchtags = { "Fix", "Normalize", "Size", "Uniform", "Match", "Equal", "Same", "Utility", "Icon" },
+        key = "cooldownManager_experimental_enableRectangularIcons",
+        name = "Rectangular Icons",
+        searchtags = { "Rectangular", "Icons", "Experimental", "Rectangle", "Wide", "Aspect Ratio" },
         default = false,
         get = function()
-            return ns.db.profile.cooldownManager_normalizeUtilitySize
+            return ns.db.profile.cooldownManager_experimental_enableRectangularIcons
         end,
         set = function(value)
-            ns.db.profile.cooldownManager_normalizeUtilitySize = value
+            ns.db.profile.cooldownManager_experimental_enableRectangularIcons = value
             ns.StyledIcons:OnSettingChanged()
+            ns.API:ShowReloadUIConfirmation()
         end,
-        desc = "Set all Utility Cooldown Icons same |cffff0000base|r size as Essential Cooldowns Icons\nIt helps to have a more uniform look when both viewers are used together.",
+        desc = "Enable rectangular icons for Cooldown Manager viewers. |cffff0000Experimental feature, may cause issues!|r",
+    })
+    SettingsLib:CreateText(experimentalCategory, {
+        name = 'Rectangular icons - require "Square styling" to be enabled - not configurable yet',
     })
 
-    SettingsLib:CreateText(category, {
-        name = '|cffff0000*|r Enabling these settings |cffff0000breaks "Snap to elements" for those elements & doesn\'t work in combat!|r\nIt is recommended to use edit setting snap to grid center instead.',
-        parentSection = editModeSection,
+    SettingsLib:CreateCheckbox(experimentalCategory, {
+        prefix = "CMC_",
+        key = "cooldownManager_experimental_hideAuras",
+        name = "Hide Auras",
+        searchtags = { "Hide", "Auras", "Experimental", "Cooldowns", "Buffs", "Debuffs" },
+        default = false,
+        get = function()
+            return ns.db.profile.cooldownManager_experimental_hideAuras
+        end,
+        set = function(value)
+            ns.db.profile.cooldownManager_experimental_hideAuras = value
+        end,
+        desc = "Hide auras on icons, always show only cooldowns of the abilities. |cffff0000Experimental feature, may cause issues!|r",
+    })
+    SettingsLib:CreateText(experimentalCategory, {
+        name = "Hide auras, always show only cooldowns of the abilites",
+    })
+
+    SettingsLib:CreateCheckbox(experimentalCategory, {
+        prefix = "CMC_",
+        key = "cooldownManager_experimental_trinketRacialTracker",
+        name = "Trinket, Potion & Racial Tracker",
+        searchtags = { "Trinket", "Racial", "Tracker", "Experimental", "Cooldowns", "Icons", "Potion", "Healthstone" },
+        default = false,
+        get = function()
+            return ns.db.profile.cooldownManager_experimental_trinketRacialTracker
+        end,
+        set = function(value)
+            ns.db.profile.cooldownManager_experimental_trinketRacialTracker = value
+            if ns.TrinketRacialTracker then
+                ns.TrinketRacialTracker:OnSettingChanged()
+            end
+        end,
+        desc = "Show a separate tracking bar for trinkets, potions, healthstones, and racial abilities. |cffff0000Experimental feature, may cause issues!|r",
+    })
+    SettingsLib:CreateText(experimentalCategory, {
+        name = "Track cooldowns for trinkets, potions, healthstones, and racial abilities in a movable bar",
+    })
+
+    local trackerStyleSection = SettingsLib:CreateExpandableSection(experimentalCategory, {
+        name = "|cffeeeeeeTrinket Tracker|r Styling",
+        expanded = false,
+        colorizeTitle = true,
+    })
+
+    local function BuildRacialsOptions()
+        local options = {}
+        local spellNameToIds = {}
+
+        for _, spellId in ipairs(ns.TrinketRacialTracker.RACIALS) do
+            local spellInfo = C_Spell.GetSpellInfo(spellId)
+            if spellInfo and spellInfo.name then
+                if not spellNameToIds[spellInfo.name] then
+                    spellNameToIds[spellInfo.name] = {
+                        ids = {},
+                        icon = spellInfo.iconID,
+                    }
+                end
+                table.insert(spellNameToIds[spellInfo.name].ids, spellId)
+            end
+        end
+
+        local sortedNames = {}
+        for name in pairs(spellNameToIds) do
+            table.insert(sortedNames, name)
+        end
+        table.sort(sortedNames)
+
+        for _, name in ipairs(sortedNames) do
+            local data = spellNameToIds[name]
+            local iconText = "|T" .. (data.icon or "Interface\\Icons\\INV_Misc_QuestionMark") .. ":16:16:0:0|t "
+            table.insert(options, {
+                value = name,
+                text = iconText .. name,
+                label = iconText .. name,
+            })
+        end
+
+        return options
+    end
+
+    SettingsLib:CreateMultiDropdown(experimentalCategory, {
+        parentSection = trackerStyleSection,
+        prefix = "CMC_",
+        key = "trinketRacialTracker_ignoredRacials",
+        name = "Ignored Racials",
+        customText = "All Racials shown",
+        searchtags = { "Trinket", "Racial", "Tracker", "Ignore", "Hide", "Filter" },
+        defaultSelection = {},
+        optionfunc = BuildRacialsOptions,
+        getSelection = function()
+            return ns.db.profile.trinketRacialTracker_ignoredRacials or {}
+        end,
+        setSelection = function(value)
+            ns.db.profile.trinketRacialTracker_ignoredRacials = value
+            if ns.TrinketRacialTracker then
+                ns.TrinketRacialTracker:RefreshAll()
+            end
+        end,
+        summary = function(selectionMap, selectedLabels)
+            if #selectedLabels == 0 then
+                return ""
+            end
+            return "Ignoring " .. #selectedLabels .. " Racial" .. (#selectedLabels > 1 and "s" or "")
+        end,
+        desc = "Select racial abilities to hide from the tracker. Multiple spell IDs with the same name will all be hidden.",
+    })
+
+    local function BuildItemsOptions()
+        local options = {}
+        local itemNameToIds = {}
+
+        for _, itemId in ipairs(ns.TrinketRacialTracker.ITEMS) do
+            local itemName = C_Item.GetItemNameByID(itemId)
+            local itemIcon = C_Item.GetItemIconByID(itemId)
+            local itemQuality = C_Item.GetItemQualityByID(itemId)
+
+            if itemName then
+                if not itemNameToIds[itemName] then
+                    itemNameToIds[itemName] = {
+                        ids = {},
+                        icon = itemIcon,
+                        quality = itemQuality,
+                    }
+                end
+                table.insert(itemNameToIds[itemName].ids, itemId)
+            end
+        end
+
+        local sortedNames = {}
+        for name in pairs(itemNameToIds) do
+            table.insert(sortedNames, name)
+        end
+        table.sort(sortedNames)
+
+        for _, name in ipairs(sortedNames) do
+            local data = itemNameToIds[name]
+            local iconText = "|T" .. (data.icon or "Interface\\Icons\\INV_Misc_QuestionMark") .. ":16:16:0:0|t "
+            table.insert(options, {
+                value = name,
+                text = iconText .. name,
+                label = iconText .. name,
+            })
+        end
+
+        return options
+    end
+
+    SettingsLib:CreateMultiDropdown(experimentalCategory, {
+        parentSection = trackerStyleSection,
+        prefix = "CMC_",
+        key = "trinketRacialTracker_ignoredItems",
+        name = "Ignored Items",
+        searchtags = { "Trinket", "Item", "Potion", "Tracker", "Ignore", "Hide", "Filter", "Healthstone" },
+        defaultSelection = {},
+        optionfunc = BuildItemsOptions,
+        getSelection = function()
+            return ns.db.profile.trinketRacialTracker_ignoredItems or {}
+        end,
+        setSelection = function(value)
+            ns.db.profile.trinketRacialTracker_ignoredItems = value
+            if ns.TrinketRacialTracker then
+                ns.TrinketRacialTracker:RefreshAll()
+            end
+        end,
+        customText = "All Items shown",
+        summary = function(selectionMap, selectedLabels)
+            if #selectedLabels == 0 then
+                return ""
+            end
+            return "Ignoring " .. #selectedLabels .. " Item" .. (#selectedLabels > 1 and "s" or "")
+        end,
+        desc = "Select items (potions, healthstones) to hide from the tracker.",
+    })
+
+    SettingsLib:CreateCheckbox(experimentalCategory, {
+        parentSection = trackerStyleSection,
+        prefix = "CMC_",
+        key = "trinketRacialTracker_squareIcons",
+        name = "Square Icons",
+        searchtags = { "Trinket", "Racial", "Tracker", "Square", "Icons", "Style" },
+        default = false,
+        get = function()
+            return ns.db.profile.trinketRacialTracker_squareIcons
+        end,
+        set = function(value)
+            ns.db.profile.trinketRacialTracker_squareIcons = value
+            if ns.TrinketRacialTracker then
+                ns.TrinketRacialTracker:RefreshStyling()
+            end
+        end,
+        desc = "Apply square icon styling to the Trinket, Potion & Racial Tracker. When disabled, the default cooldown manager mask (texture 6707800) is used.",
+    })
+
+    SettingsLib:CreateSlider(experimentalCategory, {
+        parentSection = trackerStyleSection,
+        prefix = "CMC_",
+        key = "trinketRacialTracker_borderThickness",
+        name = "Border Thickness",
+        searchtags = { "Trinket", "Racial", "Tracker", "Border", "Thickness", "Width" },
+        default = 1,
+        min = 0,
+        max = 6,
+        step = 1,
+        formatter = function(value)
+            return string.format("%.0fpx", value)
+        end,
+        get = function()
+            return ns.db.profile.trinketRacialTracker_borderThickness or 1
+        end,
+        set = function(value)
+            ns.db.profile.trinketRacialTracker_borderThickness = value
+            if ns.TrinketRacialTracker then
+                ns.TrinketRacialTracker:RefreshStyling()
+            end
+        end,
+        desc = "Border thickness for tracker icons (space between icon edge and texture).",
+    })
+
+    SettingsLib:CreateSlider(experimentalCategory, {
+        parentSection = trackerStyleSection,
+        prefix = "CMC_",
+        key = "trinketRacialTracker_iconZoom",
+        name = "Icon Zoom",
+        searchtags = { "Trinket", "Racial", "Tracker", "Zoom", "Scale", "Crop" },
+        default = 0.3,
+        min = 0,
+        max = 0.5,
+        step = 0.01,
+        formatter = function(value)
+            return string.format("%.2f", value)
+        end,
+        get = function()
+            return ns.db.profile.trinketRacialTracker_iconZoom or 0.3
+        end,
+        set = function(value)
+            ns.db.profile.trinketRacialTracker_iconZoom = value
+            if ns.TrinketRacialTracker then
+                ns.TrinketRacialTracker:RefreshStyling()
+            end
+        end,
+        desc = "Zoom level for tracker icons (0 = no zoom, 0.5 = maximum zoom).",
+    })
+
+    SettingsLib:CreateHeader(experimentalCategory, {
+        parentSection = trackerStyleSection,
+        name = "Stack/Count Number",
+    })
+
+    local anchorPointValues = {
+        TOPLEFT = "Top Left",
+        TOP = "Top",
+        TOPRIGHT = "Top Right",
+        LEFT = "Left",
+        CENTER = "Center",
+        RIGHT = "Right",
+        BOTTOMLEFT = "Bottom Left",
+        BOTTOM = "Bottom",
+        BOTTOMRIGHT = "Bottom Right",
+    }
+    local anchorPointOrder = {
+        "TOPLEFT",
+        "TOP",
+        "TOPRIGHT",
+        "LEFT",
+        "CENTER",
+        "RIGHT",
+        "BOTTOMLEFT",
+        "BOTTOM",
+        "BOTTOMRIGHT",
+    }
+
+    SettingsLib:CreateDropdown(experimentalCategory, {
+        parentSection = trackerStyleSection,
+        prefix = "CMC_",
+        key = "trinketRacialTracker_stackAnchor",
+        name = "Stack Anchor",
+        searchtags = { "Trinket", "Racial", "Tracker", "Stack", "Anchor", "Position", "Count" },
+        default = "BOTTOMRIGHT",
+        values = anchorPointValues,
+        order = anchorPointOrder,
+        get = function()
+            return ns.db.profile.trinketRacialTracker_stackAnchor or "BOTTOMRIGHT"
+        end,
+        set = function(value)
+            ns.db.profile.trinketRacialTracker_stackAnchor = value
+            if ns.TrinketRacialTracker then
+                ns.TrinketRacialTracker:RefreshStyling()
+            end
+        end,
+        desc = "Anchor point for stack/count number position on tracker icons.",
+    })
+
+    SettingsLib:CreateSlider(experimentalCategory, {
+        parentSection = trackerStyleSection,
+        prefix = "CMC_",
+        key = "trinketRacialTracker_stackFontSize",
+        name = "Stack Font Size",
+        searchtags = { "Trinket", "Racial", "Tracker", "Stack", "Font", "Size", "Count" },
+        default = 14,
+        min = 8,
+        max = 32,
+        step = 1,
+        formatter = function(value)
+            return string.format("%.0f", value)
+        end,
+        get = function()
+            return ns.db.profile.trinketRacialTracker_stackFontSize or 14
+        end,
+        set = function(value)
+            ns.db.profile.trinketRacialTracker_stackFontSize = value
+            if ns.TrinketRacialTracker then
+                ns.TrinketRacialTracker:RefreshStyling()
+            end
+        end,
+        desc = "Font size for stack/count numbers on tracker icons.",
+    })
+
+    SettingsLib:CreateSlider(experimentalCategory, {
+        parentSection = trackerStyleSection,
+        prefix = "CMC_",
+        key = "trinketRacialTracker_stackOffsetX",
+        name = "X Offset",
+        searchtags = { "Trinket", "Racial", "Tracker", "Stack", "Offset", "X", "Horizontal" },
+        default = -1,
+        min = -40,
+        max = 40,
+        step = 1,
+        formatter = function(value)
+            return string.format("%.0f", value)
+        end,
+        get = function()
+            return ns.db.profile.trinketRacialTracker_stackOffsetX or -1
+        end,
+        set = function(value)
+            ns.db.profile.trinketRacialTracker_stackOffsetX = value
+            if ns.TrinketRacialTracker then
+                ns.TrinketRacialTracker:RefreshStyling()
+            end
+        end,
+        desc = "Horizontal offset for stack/count number position.",
+    })
+
+    SettingsLib:CreateSlider(experimentalCategory, {
+        parentSection = trackerStyleSection,
+        prefix = "CMC_",
+        key = "trinketRacialTracker_stackOffsetY",
+        name = "Y Offset",
+        searchtags = { "Trinket", "Racial", "Tracker", "Stack", "Offset", "Y", "Vertical" },
+        default = 1,
+        min = -40,
+        max = 40,
+        step = 1,
+        formatter = function(value)
+            return string.format("%.0f", value)
+        end,
+        get = function()
+            return ns.db.profile.trinketRacialTracker_stackOffsetY or 1
+        end,
+        set = function(value)
+            ns.db.profile.trinketRacialTracker_stackOffsetY = value
+            if ns.TrinketRacialTracker then
+                ns.TrinketRacialTracker:RefreshStyling()
+            end
+        end,
+        desc = "Vertical offset for stack/count number position.",
+    })
+
+    SettingsLib:CreateText(experimentalCategory, {
+        parentSection = trackerStyleSection,
+        name = "Note: Stack font name and flags are taken from the global Stack Font settings.",
     })
 end
 

@@ -133,8 +133,7 @@ L["Portal to Harandar"] = "Portal nach Harandar"
 L["Rootway to Harandar"] = "Wurzelpfad nach Harandar"
 L["Portal to Voidstorm"] = "Portal nach Leerensturm"
 L["Portal to Silvermoon City"] = "Portal nach Silbermond"
-L["Portal to Kun-Lai Summit"] = "Portal zum Kun-Lai-Gipfel"
-L["Portal to Loamm"] = "Portal nach Loamm"
+L["Portal to Ghostlands"] = "Portal in die Geisterlande"
 
 -------------------------------------------------TWW------------------------------------------------
 

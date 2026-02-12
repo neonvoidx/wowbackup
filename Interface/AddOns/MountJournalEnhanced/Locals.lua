@@ -15,7 +15,6 @@ L["FILTER_ONLY_LATEST"] = "Only latest additions"
 L["FILTER_PROFILE"] = "Profile"
 L["FILTER_PROFILE_TOOLTIP_TITLE"] = "Filter Profiles"
 L["FILTER_PROFILE_TOOLTIP_TEXT"] = "Quickly load your predefined filter and search settings.|n|cffeda55fLeft-Click|r to load filter profile.|n|cffeda55fRight-Click|r to save filter profile."
-L["FILTER_PROFILE_TOOLTIP_REMIX_LEGION"] = "You can use this prepared profile for Legion: Remix."
 L["FILTER_SECRET"] = "Hidden by the game"
 L["FILTER_RETIRED"] = "No longer available"
 L["Family"] = "Family"
@@ -180,6 +179,7 @@ L["Gronnlings"] = "Gronnlings"
 L["Gryphons"] = "Gryphons"
 L["Gyrocopters"] = "Gyrocopters"
 L["Hands"] = "Hands"
+L["Harrower"] = "Harrower"
 L["Hawkstriders"] = "Hawkstriders"
 L["Hedgehog"] = "Hedgehog"
 L["Hippogryphs"] = "Hippogryphs"
@@ -335,7 +335,6 @@ L["FAVORITE_PROFILE"] = "Profil"
 L["FILTER_ONLY"] = "nur"
 L["FILTER_ONLY_LATEST"] = "Nur Neuzugänge"
 L["FILTER_PROFILE"] = "Profil"
-L["FILTER_PROFILE_TOOLTIP_REMIX_LEGION"] = "Du kannst dieses vorbereitete Profil für Legion: Remix benutzen."
 L["FILTER_PROFILE_TOOLTIP_TEXT"] = "Lade deine eigenen vordefinierten Filter- und Sucheinstellungen aus einem Profil.|n|cffeda55fLinksklick|r um Profil zu laden.|n|cffeda55fRechtsklick|r um Profil zu speichern."
 L["FILTER_PROFILE_TOOLTIP_TITLE"] = "Filterprofile"
 L["FILTER_RETIRED"] = "nicht mehr erhältlich"
@@ -481,6 +480,7 @@ L["Gronnlings"] = "Gronnlinge"
 L["Gryphons"] = "Greifen"
 L["Gyrocopters"] = "Gyrokopter"
 L["Hands"] = "Hände"
+L["Harrower"] = "Plager"
 L["Hawkstriders"] = "Falkenschreiter"
 L["Hedgehog"] = "Igel"
 L["Hippogryphs"] = "Hippogryphen"
@@ -637,7 +637,6 @@ L["FAVORITE_PROFILE"] = "Perfil"
 L["FILTER_ONLY"] = "sólo"
 L["FILTER_ONLY_LATEST"] = "Sólo las últimas añadidas"
 L["FILTER_PROFILE"] = "Perfil"
-L["FILTER_PROFILE_TOOLTIP_REMIX_LEGION"] = "Puede usar este perfil preparado para Remix: Legión."
 L["FILTER_PROFILE_TOOLTIP_TEXT"] = "Carga rápidamente tu filtro predeterminado y la configuración de búsqueda.|n|cffeda55fClick-Izquierdo|r para cargar el perfil del filtro.|n|cffeda55fClick Derecho|r para guardar el perfil del filtro."
 L["FILTER_PROFILE_TOOLTIP_TITLE"] = "Perfiles de filtros"
 L["FILTER_RETIRED"] = "Ya no está disponible"
@@ -783,6 +782,7 @@ L["Gronnlings"] = "Gronnitos"
 L["Gryphons"] = "Grifos"
 L["Gyrocopters"] = "Helicópteros"
 L["Hands"] = "Manos"
+L["Harrower"] = "Lacerante"
 L["Hawkstriders"] = "Halcones Zancudos"
 L["Hedgehog"] = "Erizos"
 L["Hippogryphs"] = "Hipogrifos"
@@ -962,8 +962,6 @@ All current character assignments will be reset to the default profile "%s".]=]-
 --[[ L["FILTER_ONLY_LATEST"] = "Only latest additions"--]] 
 --[[Translation missing --]]
 --[[ L["FILTER_PROFILE"] = "Profile"--]] 
---[[Translation missing --]]
---[[ L["FILTER_PROFILE_TOOLTIP_REMIX_LEGION"] = "You can use this prepared profile for Legion: Remix."--]] 
 --[[Translation missing --]]
 --[[ L["FILTER_PROFILE_TOOLTIP_TEXT"] = "Quickly load your predefined filter and search settings.|n|cffeda55fLeft-Click|r to load filter profile.|n|cffeda55fRight-Click|r to save filter profile."--]] 
 --[[Translation missing --]]
@@ -1249,6 +1247,8 @@ All current character assignments will be reset to the default profile "%s".]=]-
 --[[ L["Gyrocopters"] = "Gyrocopters"--]] 
 --[[Translation missing --]]
 --[[ L["Hands"] = "Hands"--]] 
+--[[Translation missing --]]
+--[[ L["Harrower"] = "Harrower"--]] 
 --[[Translation missing --]]
 --[[ L["Hawkstriders"] = "Hawkstriders"--]] 
 --[[Translation missing --]]
@@ -1528,7 +1528,6 @@ L["FAVORITE_PROFILE"] = "Profil"
 L["FILTER_ONLY"] = "uniquement"
 L["FILTER_ONLY_LATEST"] = "Uniquement les dernières ajoutées"
 L["FILTER_PROFILE"] = "Profils"
-L["FILTER_PROFILE_TOOLTIP_REMIX_LEGION"] = "Vous pouvez utiliser ce profil préparé pour Legion: Remix."
 L["FILTER_PROFILE_TOOLTIP_TEXT"] = "Chargez rapidement vos paramètres de filtre et de recherche prédéfinis.|n|cffeda55fClic gauche|r pour charger le profil de filtre.|n|cffeda55fClic droit|r pour enregistrer le profil de filtre."
 L["FILTER_PROFILE_TOOLTIP_TITLE"] = [=[Profils de filtre
 ]=]
@@ -1676,6 +1675,8 @@ L["Gronnlings"] = "Gronnlins"
 L["Gryphons"] = "Griffons"
 L["Gyrocopters"] = "Gyrocoptère"
 L["Hands"] = "Mains"
+--[[Translation missing --]]
+--[[ L["Harrower"] = "Harrower"--]] 
 L["Hawkstriders"] = "Faucon-pérégrins"
 L["Hedgehog"] = "Hérisson"
 L["Hippogryphs"] = "Hippogriffes"
@@ -1836,7 +1837,6 @@ L["FILTER_ONLY"] = "soltanto"
 --[[Translation missing --]]
 --[[ L["FILTER_ONLY_LATEST"] = "Only latest additions"--]] 
 L["FILTER_PROFILE"] = "Profili"
-L["FILTER_PROFILE_TOOLTIP_REMIX_LEGION"] = "Puoi usare questo profilo preparato per Legion: Remix."
 L["FILTER_PROFILE_TOOLTIP_TEXT"] = "Carica rapidamente le impostazioni predefinite di filtro e ricerca.|n|cffeda55fFai clic con il tasto sinistro|r per caricare il profilo del filtro.|n|cffeda55fFai clic con il tasto destro|r per salvare il profilo del filtro."
 L["FILTER_PROFILE_TOOLTIP_TITLE"] = "Profili filtro"
 L["FILTER_RETIRED"] = "Non più disponibile"
@@ -2034,6 +2034,8 @@ L["Gronnlings"] = "Protogronn"
 L["Gryphons"] = "Grifoni"
 L["Gyrocopters"] = "Girocottero"
 L["Hands"] = "Mani"
+--[[Translation missing --]]
+--[[ L["Harrower"] = "Harrower"--]] 
 L["Hawkstriders"] = "Zampalesta"
 L["Hedgehog"] = "Riccio"
 L["Hippogryphs"] = "Ippogrifi"
@@ -2203,7 +2205,6 @@ L["FAVORITE_PROFILE"] = "윤곽"
 L["FILTER_ONLY"] = "오직"
 L["FILTER_ONLY_LATEST"] = "최신 추가 사항만"
 L["FILTER_PROFILE"] = "프로필"
-L["FILTER_PROFILE_TOOLTIP_REMIX_LEGION"] = "준비된 프로필을 Legion: Remix에 사용할 수 있습니다."
 L["FILTER_PROFILE_TOOLTIP_TEXT"] = "미리 정의된 필터와 검색 설정을 빠르게 불러옵니다.|n|cffeda55f필터 프로필을 불러오려면 왼쪽 클릭|r을 클릭하세요.|n|cffeda55f필터 프로필을 저장하려면 오른쪽 클릭|r을 클릭하세요."
 L["FILTER_PROFILE_TOOLTIP_TITLE"] = "필터 프로필."
 L["FILTER_RETIRED"] = "더 이상 사용할 수 없습니다"
@@ -2350,6 +2351,8 @@ L["Gronnlings"] = "그론링"
 L["Gryphons"] = "그리폰"
 L["Gyrocopters"] = "자이로콥터"
 L["Hands"] = "손"
+--[[Translation missing --]]
+--[[ L["Harrower"] = "Harrower"--]] 
 L["Hawkstriders"] = "매타조"
 L["Hedgehog"] = "고슴도치"
 L["Hippogryphs"] = "히포그리프"
@@ -2505,7 +2508,6 @@ L["FAVORITE_PROFILE"] = "Perfil"
 L["FILTER_ONLY"] = "só esse"
 L["FILTER_ONLY_LATEST"] = "Apenas adições mais recentes"
 L["FILTER_PROFILE"] = "Perfis"
-L["FILTER_PROFILE_TOOLTIP_REMIX_LEGION"] = "Você pode usar este perfil preparado para Legion: Remix."
 L["FILTER_PROFILE_TOOLTIP_TEXT"] = "Carregue rapidamente seu filtro predefinido e configurações de pesquisa.|n|cffeda55fClique com o botão esquerdo|r para carregar o perfil do filtro.|n|cffeda55fClique com o botão direito|r para salvar o perfil do filtro."
 L["FILTER_PROFILE_TOOLTIP_TITLE"] = "Perfis de filtro"
 L["FILTER_RETIRED"] = "Indisponível"
@@ -2653,6 +2655,8 @@ L["Gronnlings"] = "Gronnídeos"
 L["Gryphons"] = "Grifos"
 L["Gyrocopters"] = "Girocópteros"
 L["Hands"] = "Mãos"
+--[[Translation missing --]]
+--[[ L["Harrower"] = "Harrower"--]] 
 L["Hawkstriders"] = "Falcostruzes"
 L["Hedgehog"] = "Ouriços"
 L["Hippogryphs"] = "Hipogrifos"
@@ -2808,7 +2812,6 @@ L["FAVORITE_PROFILE"] = "Профиль"
 L["FILTER_ONLY"] = "только"
 L["FILTER_ONLY_LATEST"] = "Только последний патч"
 L["FILTER_PROFILE"] = "Профиль"
-L["FILTER_PROFILE_TOOLTIP_REMIX_LEGION"] = "Вы можете использовать этот профиль подготовленный для Legion: Remix."
 L["FILTER_PROFILE_TOOLTIP_TEXT"] = "Быстрая загрузка предопределенных фильтров и настроек поиска.|n|cffeda55fЩелкните левой кнопкой мыши|r, чтобы загрузить профиль фильтра.|n|cffeda55fЩелкните правой кнопкой мыши|r, чтобы сохранить профиль фильтра."
 L["FILTER_PROFILE_TOOLTIP_TITLE"] = "Фильтрация Профилей"
 L["FILTER_RETIRED"] = "Более не доступно"
@@ -2955,6 +2958,8 @@ L["Gronnlings"] = "Малые гронны"
 L["Gryphons"] = "Грифоны"
 L["Gyrocopters"] = "Гирокоптеры"
 L["Hands"] = "Руки"
+--[[Translation missing --]]
+--[[ L["Harrower"] = "Harrower"--]] 
 L["Hawkstriders"] = "Крылобеги"
 L["Hedgehog"] = "Ежики"
 L["Hippogryphs"] = "Гиппогрифы"
@@ -3110,7 +3115,6 @@ L["FAVORITE_PROFILE"] = "配置文件"
 L["FILTER_ONLY"] = "仅"
 L["FILTER_ONLY_LATEST"] = "仅有最新添加的内容"
 L["FILTER_PROFILE"] = "配置文件"
-L["FILTER_PROFILE_TOOLTIP_REMIX_LEGION"] = "可以使用“军团再临：幻境新生”预备配置文件。"
 L["FILTER_PROFILE_TOOLTIP_TEXT"] = "快速载入预设的筛选与搜索设置。|n|cffeda55f点击|r 载入筛选配置。|n|cffeda55f右击|r 保存筛选配置"
 L["FILTER_PROFILE_TOOLTIP_TITLE"] = "过滤配置文件"
 L["FILTER_RETIRED"] = "不再可用"
@@ -3257,6 +3261,8 @@ L["Gronnlings"] = "小戈隆"
 L["Gryphons"] = "狮鹫"
 L["Gyrocopters"] = "旋翼"
 L["Hands"] = "手"
+--[[Translation missing --]]
+--[[ L["Harrower"] = "Harrower"--]] 
 L["Hawkstriders"] = "陆行鸟"
 L["Hedgehog"] = "刺猬"
 L["Hippogryphs"] = "角鹰"
@@ -3439,8 +3445,6 @@ All current character assignments will be reset to the default profile "%s".]=]-
 --[[ L["FILTER_ONLY_LATEST"] = "Only latest additions"--]] 
 --[[Translation missing --]]
 --[[ L["FILTER_PROFILE"] = "Profile"--]] 
---[[Translation missing --]]
---[[ L["FILTER_PROFILE_TOOLTIP_REMIX_LEGION"] = "You can use this prepared profile for Legion: Remix."--]] 
 --[[Translation missing --]]
 --[[ L["FILTER_PROFILE_TOOLTIP_TEXT"] = "Quickly load your predefined filter and search settings.|n|cffeda55fLeft-Click|r to load filter profile.|n|cffeda55fRight-Click|r to save filter profile."--]] 
 --[[Translation missing --]]
@@ -3726,6 +3730,8 @@ All current character assignments will be reset to the default profile "%s".]=]-
 --[[ L["Gyrocopters"] = "Gyrocopters"--]] 
 --[[Translation missing --]]
 --[[ L["Hands"] = "Hands"--]] 
+--[[Translation missing --]]
+--[[ L["Harrower"] = "Harrower"--]] 
 --[[Translation missing --]]
 --[[ L["Hawkstriders"] = "Hawkstriders"--]] 
 --[[Translation missing --]]

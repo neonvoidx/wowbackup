@@ -28,6 +28,7 @@ end
 
 function PowerBarMixin:OnEvent(event, ...)
     local unit = ...
+    self._curEvent = event
 
     if event == "PLAYER_ENTERING_WORLD"
         or event == "UPDATE_SHAPESHIFT_FORM"
@@ -35,6 +36,7 @@ function PowerBarMixin:OnEvent(event, ...)
 
         self:ApplyVisibilitySettings()
         self:ApplyLayout(nil, true)
+        self:UpdateDisplay()
 
     elseif event == "PLAYER_REGEN_ENABLED" or event == "PLAYER_REGEN_DISABLED"
         or event == "PLAYER_TARGET_CHANGED"
@@ -43,6 +45,7 @@ function PowerBarMixin:OnEvent(event, ...)
         or event == "PET_BATTLE_OPENING_START" or event == "PET_BATTLE_CLOSE" then
 
         self:ApplyVisibilitySettings(nil, event == "PLAYER_REGEN_DISABLED")
+        self:ApplyLayout(nil, true)
         self:UpdateDisplay()
 
     elseif event == "UNIT_MAXPOWER" and unit == "player" then
@@ -50,6 +53,28 @@ function PowerBarMixin:OnEvent(event, ...)
         self:ApplyLayout(nil, true)
 
     end
+end
+
+function PowerBarMixin:GetTagValues(resource, max, current, precision)
+    local pFormat = "%." .. (precision or 0) .. "f"
+
+    -- Pre-compute values instead of creating closures for better performance
+    local currentStr = string.format("%s", AbbreviateNumbers(current))
+    local maxStr = string.format("%s", AbbreviateNumbers(max))
+    local percentStr
+    if type(resource) == "number" and (issecretvalue(max) or issecretvalue(current)) then
+        percentStr = string.format(pFormat, UnitPowerPercent("player", resource, true, CurveConstants.ScaleTo100))
+    elseif not issecretvalue(max) and not issecretvalue(current) and max ~= 0 then
+        percentStr = string.format(pFormat, (current / max) * 100)
+    else
+        percentStr = ''
+    end
+
+    return {
+        ["[current]"] = function() return currentStr end,
+        ["[percent]"] = function() return percentStr end,
+        ["[max]"] = function() return maxStr end,
+    }
 end
 
 addonTable.PowerBarMixin = PowerBarMixin

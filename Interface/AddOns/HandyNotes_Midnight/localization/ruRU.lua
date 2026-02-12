@@ -6,6 +6,15 @@ if not L then return end
 ------------------------------------ COMMON -----------------------------------
 -------------------------------------------------------------------------------
 
+L['options_icons_delve_rewards'] = 'Награды в Вылазках'
+L['options_icons_delve_rewards_desc'] = 'Отображать награды в подсказках {location:Вылазки}.'
+
+L['options_icons_stormarion_assault'] = 'Атака на Штормарион'
+L['options_icons_stormarion_assault_desc'] = 'Отображать награды в подсказках {location:Атака на Штормарион}.'
+
+L['options_icons_abundance_rewards'] = 'Изобилие'
+L['options_icons_abundance_rewards_desc'] = 'Отображать награды в подсказках {location:Изобилие}.'
+
 L['skyriding_glyph'] = 'Символы высшего пилотажа'
 L['options_icons_skyriding_glyph'] = 'Символы высшего пилотажа'
 L['options_icons_skyriding_glyph_desc'] = 'Отображение местоположения всех символов высшего пилотажа.'
@@ -43,7 +52,7 @@ L['incomplete_book_of_sonnets'] = nil
 -------------------------------------------------------------------------------
 
 L['glowing_moth'] = nil
-L['options_icons_glowing_moth'] = nil
+L['options_icons_glowing_moth'] = '{achievement:61052}'
 L['options_icons_glowing_moth_desc'] = nil
 
 L['sporespawned_cache_note'] = nil
@@ -53,6 +62,13 @@ L['impenatrably_sealed_gourd_note'] = nil
 L['options_icons_more_than_just_thier_roots'] = '{achievement:62188}'
 L['options_icons_more_than_just_thier_roots_desc'] = 'Отобразить местоположение НПС для достижения {achievement:62188}.'
 L['more_than_just_thier_roots_note'] = 'Поговорите с НПС в указанных ниже локациях:'
+
+L['altar_of_innocence'] = nil
+L['altar_of_vigor'] = nil
+L['altar_of_wisdom'] = nil
+L['altar_of_innocence_note'] = nil
+L['altar_of_vigor_note'] = nil
+L['altar_of_wisdom_note'] = nil
 
 -------------------------------------------------------------------------------
 ---------------------------------- VOIDSTORM ----------------------------------

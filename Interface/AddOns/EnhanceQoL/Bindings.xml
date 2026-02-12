@@ -1,0 +1,62 @@
+<Bindings>
+    <Binding name="CLICK EQOLWorldMarkerCycler:LeftButton"
+             category="Enhance QoL"
+             >
+    </Binding>
+
+    <Binding name="CLICK EQOLWorldMarkerCycler:RightButton"
+             category="Enhance QoL"
+             >
+    </Binding>
+
+    <Binding name="CLICK EQOLRandomMountButton:LeftButton"
+             category="Enhance QoL"
+             >
+    </Binding>
+
+    <Binding name="CLICK EQOLRandomHearthstoneButton:LeftButton"
+             category="Enhance QoL"
+             >
+    </Binding>
+
+    <Binding name="CLICK EQOLRepairMountButton:LeftButton"
+             category="Enhance QoL"
+             >
+    </Binding>
+
+    <Binding name="CLICK EQOLAuctionMountButton:LeftButton"
+             category="Enhance QoL"
+             >
+    </Binding>
+
+    <Binding name="EQOL_TOGGLE_CHATHISTORY"
+             category="Enhance QoL"
+             >
+        if EnhanceQoL and EnhanceQoL.db and EnhanceQoL.db.enableChatHistory and EnhanceQoL.ChatIM and EnhanceQoL.ChatIM.ChannelHistory and EnhanceQoL.ChatIM.ChannelHistory.ToggleWindow then
+            EnhanceQoL.ChatIM.ChannelHistory:ToggleWindow()
+        end
+    </Binding>
+
+    <Binding name="EQOL_TOGGLE_WORLDMAP_TELEPORT"
+             category="Enhance QoL"
+             >
+        if EnhanceQoL and EnhanceQoL.MythicPlus and EnhanceQoL.MythicPlus.functions and EnhanceQoL.MythicPlus.functions.OpenWorldMapTeleportPanel then
+            EnhanceQoL.MythicPlus.functions.OpenWorldMapTeleportPanel()
+        end
+    </Binding>
+
+    <Binding name="EQOL_TOGGLE_COOLDOWN_PANELS"
+             category="Enhance QoL"
+             >
+        if EnhanceQoL and EnhanceQoL.Aura and EnhanceQoL.Aura.CooldownPanels and EnhanceQoL.Aura.CooldownPanels.ToggleEditor then
+            EnhanceQoL.Aura.CooldownPanels:ToggleEditor()
+        end
+    </Binding>
+
+    <Binding name="EQOL_TOGGLE_FRIENDLY_NPCS"
+             category="Enhance QoL"
+             >
+        local value = C_CVar.GetCVar("nameplateShowFriendlyNpcs")
+        C_CVar.SetCVar("nameplateShowFriendlyNpcs", value == "1" and "0" or "1")
+    </Binding>
+</Bindings>

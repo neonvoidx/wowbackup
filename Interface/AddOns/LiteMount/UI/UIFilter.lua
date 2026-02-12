@@ -224,7 +224,7 @@ end
 
 function LM.UIFilter.GetExpansions()
     local out = { 'NONE' }
-    for i = 0, GetExpansionLevel() do
+    for i = 0, GetNumExpansions()-1 do
         out[#out+1] = i
     end
     return out
@@ -281,6 +281,10 @@ end
 
 function LM.UIFilter.GetFamilies()
     return LM.MountDB.GetModelList()
+end
+
+function LM.UIFilter.IsFamilyFiltered()
+    return next(LM.UIFilter.filterList.family) ~= nil
 end
 
 function LM.UIFilter.SetAllFamilyFilters(v)
@@ -437,6 +441,7 @@ end
 
 function LM.UIFilter.GetGroups()
     local groups = LM.Options:GetGroupNames()
+    table.insert(groups, 'FAVORITES')
     table.insert(groups, 'NONE')
     return groups
 end

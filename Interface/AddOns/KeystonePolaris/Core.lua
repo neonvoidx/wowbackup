@@ -11,6 +11,8 @@ KeystonePolaris = AceAddon:NewAddon(KeystonePolaris, AddOnName, "AceConsole-3.0"
 -- Initialize changelog
 KeystonePolaris.Changelog = {}
 
+KeystonePolaris.isMidnight = select(4, GetBuildInfo()) >= 120000
+
 -- Define constants
 KeystonePolaris.constants = {
     mediaPath = "Interface\\AddOns\\" .. AddOnName .. "\\media\\"
@@ -297,8 +299,25 @@ function KeystonePolaris:OnInitialize()
                 type = "group",
                 order = 1,
                 args = {
-                    showCompartmentIcon = {
+                    disclaimerHeader = {
                         order = 0,
+                        type = "header",
+                        name = "|TInterface\\OptionsFrame\\UI-OptionsFrame-NewFeatureIcon:16:16:0:0|t " .. L["COMPATIBILITY_WARNING"],
+                    },
+                    warningMessage = {
+                        name = L["COMPATIBILITY_WARNING_MESSAGE"],
+                        type = "description",
+                        order = 0.15,
+                        width = "full",
+                        fontSize = "medium",
+                    },
+                    separator = {
+                        type = "header",
+                        name = "",
+                        order = 0.25,
+                    },
+                    showCompartmentIcon = {
+                        order = 0.5,
                         type = "toggle",
                         name = L["SHOW_COMPARTMENT_ICON"],
                         width = "2",

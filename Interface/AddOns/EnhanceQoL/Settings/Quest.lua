@@ -1,0 +1,686 @@
+local addonName, addon = ...
+
+local L = LibStub("AceLocale-3.0"):GetLocale(addonName)
+
+local function applyParentSection(entries, section)
+	for _, entry in ipairs(entries or {}) do
+		entry.parentSection = section
+		if entry.children then applyParentSection(entry.children, section) end
+	end
+end
+
+local cQuest = addon.SettingsLayout.rootGAMEPLAY
+addon.SettingsLayout.questCategory = cQuest
+
+local questingExpandable = addon.functions.SettingsCreateExpandableSection(cQuest, {
+	name = L["QuestingAndCinematics"] or "Questing & Cinematics",
+	newTagID = "Questing",
+	expanded = false,
+	colorizeTitle = false,
+})
+
+local REMOVE_IGNORED_QUEST_NPC_DIALOG = addonName .. "QuestIgnoredNPCRemove"
+
+local QUEST_TRACKER_QUEST_COUNT_COLOR = { r = 1, g = 210 / 255, b = 0 }
+local questTrackerQuestCountFrame
+local questTrackerQuestCountText
+local questTrackerQuestCountWatcher
+local objectiveTrackerMinimizeWatcher
+local objectiveTrackerMinimizeHooked
+local objectiveTrackerCollapseHooked
+local OBJECTIVE_TRACKER_MINIMIZE_ANCHORS = {
+	TOPLEFT = { point = "TOPLEFT", x = 1, y = 0 },
+	TOPRIGHT = { point = "TOPRIGHT", x = -1, y = 0 },
+	BOTTOMLEFT = { point = "BOTTOMLEFT", x = 1, y = 0 },
+	BOTTOMRIGHT = { point = "BOTTOMRIGHT", x = -1, y = 0 },
+}
+
+local function GetQuestTrackerQuestCountText()
+	if not C_QuestLog or not C_QuestLog.GetNumQuestLogEntries or not C_QuestLog.GetInfo then return "" end
+	local numEntries = C_QuestLog.GetNumQuestLogEntries()
+	local visibleQuests = 0
+	if numEntries and numEntries > 0 then
+		for i = 1, numEntries do
+			local info = C_QuestLog.GetInfo(i)
+			if info and not info.isHidden and info.questID and info.questID > 0 then visibleQuests = visibleQuests + 1 end
+		end
+	end
+	local maxQuests = C_QuestLog.GetMaxNumQuestsCanAccept and C_QuestLog.GetMaxNumQuestsCanAccept()
+	if not maxQuests or maxQuests <= 0 then
+		if visibleQuests <= 0 then return "" end
+		return tostring(visibleQuests)
+	end
+	return string.format("%d/%d", visibleQuests, maxQuests)
+end
+
+local function PositionQuestTrackerQuestCount()
+	if not questTrackerQuestCountFrame or not addon or not addon.db then return end
+	local header = _G.QuestObjectiveTracker and _G.QuestObjectiveTracker.Header
+	if not header then return end
+	questTrackerQuestCountFrame:ClearAllPoints()
+	local x = addon.db.questTrackerQuestCountOffsetX or 0
+	local y = addon.db.questTrackerQuestCountOffsetY or 0
+	questTrackerQuestCountFrame:SetPoint("CENTER", header, "CENTER", x, y)
+end
+
+local function EnsureQuestTrackerQuestCountFrame()
+	local header = _G.QuestObjectiveTracker and _G.QuestObjectiveTracker.Header
+	if not header then return nil end
+	if not questTrackerQuestCountFrame then
+		questTrackerQuestCountFrame = CreateFrame("Frame", nil, header)
+		questTrackerQuestCountFrame:SetSize(1, 1)
+	end
+	questTrackerQuestCountFrame:SetParent(header)
+	if not questTrackerQuestCountText then
+		questTrackerQuestCountText = questTrackerQuestCountFrame:CreateFontString(nil, "OVERLAY")
+		questTrackerQuestCountText:SetPoint("TOPLEFT")
+		questTrackerQuestCountText:SetJustifyH("LEFT")
+		questTrackerQuestCountText:SetJustifyV("TOP")
+	end
+	local referenceFont = header.Text and header.Text:GetFontObject()
+	if referenceFont then
+		questTrackerQuestCountText:SetFontObject(referenceFont)
+	else
+		questTrackerQuestCountText:SetFont(addon.variables.defaultFont or "Fonts\\FRIZQT__.TTF", 12, "OUTLINE")
+	end
+	questTrackerQuestCountText:SetTextColor(QUEST_TRACKER_QUEST_COUNT_COLOR.r, QUEST_TRACKER_QUEST_COUNT_COLOR.g, QUEST_TRACKER_QUEST_COUNT_COLOR.b)
+	return questTrackerQuestCountFrame
+end
+
+local function UpdateQuestTrackerQuestCountPosition()
+	if not addon or not addon.db then return end
+	if not questTrackerQuestCountFrame or not questTrackerQuestCountFrame:IsShown() then
+		if addon.db.questTrackerShowQuestCount then addon.functions.UpdateQuestTrackerQuestCount() end
+		return
+	end
+	PositionQuestTrackerQuestCount()
+end
+addon.functions.UpdateQuestTrackerQuestCountPosition = UpdateQuestTrackerQuestCountPosition
+
+local function UpdateQuestTrackerQuestCount()
+	if not addon or not addon.db or not addon.db.questTrackerShowQuestCount then
+		if questTrackerQuestCountFrame then questTrackerQuestCountFrame:Hide() end
+		return
+	end
+	local header = _G.QuestObjectiveTracker and _G.QuestObjectiveTracker.Header
+	if not header then
+		if questTrackerQuestCountFrame then questTrackerQuestCountFrame:Hide() end
+		return
+	end
+	local container = EnsureQuestTrackerQuestCountFrame()
+	if not container or not questTrackerQuestCountText then return end
+	PositionQuestTrackerQuestCount()
+	local textValue = GetQuestTrackerQuestCountText()
+	if textValue == "" then
+		questTrackerQuestCountFrame:Hide()
+		return
+	end
+	questTrackerQuestCountText:SetText(textValue)
+	questTrackerQuestCountFrame:SetSize(math.max(1, questTrackerQuestCountText:GetStringWidth()), math.max(1, questTrackerQuestCountText:GetStringHeight()))
+	questTrackerQuestCountFrame:Show()
+	questTrackerQuestCountText:Show()
+end
+addon.functions.UpdateQuestTrackerQuestCount = UpdateQuestTrackerQuestCount
+
+local function EnsureQuestTrackerQuestCountWatcher()
+	if questTrackerQuestCountWatcher then return end
+	questTrackerQuestCountWatcher = CreateFrame("Frame")
+	local events = { "PLAYER_ENTERING_WORLD", "QUEST_ACCEPTED", "QUEST_REMOVED" }
+	for _, evt in ipairs(events) do
+		questTrackerQuestCountWatcher:RegisterEvent(evt)
+	end
+	questTrackerQuestCountWatcher:SetScript("OnEvent", function(_, event)
+		if event == "PLAYER_ENTERING_WORLD" then
+			C_Timer.After(0.5, UpdateQuestTrackerQuestCount)
+		else
+			UpdateQuestTrackerQuestCount()
+		end
+	end)
+end
+
+local function ApplyObjectiveTrackerMinimizeStyle()
+	if not addon or not addon.db then return end
+	local tracker = _G.ObjectiveTrackerFrame
+	local header = tracker and tracker.Header
+	if not header then return end
+	local bg = header.Background
+	local text = header.Text
+	local minimizeButton = header.MinimizeButton
+	if bg and bg._eqolAlpha == nil and bg.GetAlpha then bg._eqolAlpha = bg:GetAlpha() end
+	if text and text._eqolAlpha == nil and text.GetAlpha then text._eqolAlpha = text:GetAlpha() end
+	local collapsed = tracker.IsCollapsed and tracker:IsCollapsed()
+	local hideHeader = addon.db.questTrackerMinimizeButtonOnly == true and collapsed
+	if bg and bg.SetAlpha then bg:SetAlpha(hideHeader and 0 or (bg._eqolAlpha or 1)) end
+	if text and text.SetAlpha then text:SetAlpha(hideHeader and 0 or (text._eqolAlpha or 1)) end
+
+	if minimizeButton and minimizeButton.GetPoint then
+		if not minimizeButton._eqolDefaultPoint then
+			local point = { minimizeButton:GetPoint() }
+			if point[1] then minimizeButton._eqolDefaultPoint = point end
+		end
+		if hideHeader then
+			local anchorKey = addon.db.questTrackerMinimizeButtonAnchor or "TOPRIGHT"
+			local anchor = OBJECTIVE_TRACKER_MINIMIZE_ANCHORS[anchorKey] or OBJECTIVE_TRACKER_MINIMIZE_ANCHORS.TOPRIGHT
+			if anchor then
+				minimizeButton:ClearAllPoints()
+				minimizeButton:SetPoint(anchor.point, tracker, anchor.point, anchor.x, anchor.y)
+				minimizeButton._eqolAnchorApplied = true
+			end
+		elseif minimizeButton._eqolAnchorApplied and minimizeButton._eqolDefaultPoint then
+			local point = minimizeButton._eqolDefaultPoint
+			minimizeButton:ClearAllPoints()
+			minimizeButton:SetPoint(point[1], point[2], point[3], point[4], point[5])
+			minimizeButton._eqolAnchorApplied = nil
+		end
+	end
+end
+addon.functions.UpdateObjectiveTrackerMinimizeStyle = ApplyObjectiveTrackerMinimizeStyle
+
+local function ApplyQuestTrackerCollapsedState()
+	if not addon or not addon.db or not addon.db.questTrackerRememberState then return end
+	local tracker = _G.ObjectiveTrackerFrame
+	if not tracker or not tracker.IsCollapsed or not tracker.SetCollapsed then return end
+	local saved = addon.db.questTrackerCollapsed
+	if saved == nil then
+		addon.db.questTrackerCollapsed = tracker:IsCollapsed() and true or false
+		return
+	end
+	if tracker:IsCollapsed() ~= saved then tracker:SetCollapsed(saved) end
+end
+
+local function CaptureQuestTrackerCollapsedState()
+	if not addon or not addon.db or not addon.db.questTrackerRememberState then return end
+	local tracker = _G.ObjectiveTrackerFrame
+	if not tracker or not tracker.IsCollapsed then return end
+	addon.db.questTrackerCollapsed = tracker:IsCollapsed() and true or false
+end
+
+local function EnsureObjectiveTrackerCollapseHook()
+	if objectiveTrackerCollapseHooked then return end
+	local tracker = _G.ObjectiveTrackerFrame
+	if not tracker or not hooksecurefunc then return end
+	objectiveTrackerCollapseHooked = true
+	hooksecurefunc(tracker, "SetCollapsed", function(_, collapsed)
+		if addon and addon.db and addon.db.questTrackerRememberState then addon.db.questTrackerCollapsed = collapsed and true or false end
+	end)
+end
+
+local function EnsureObjectiveTrackerMinimizeHook()
+	local tracker = _G.ObjectiveTrackerFrame
+	if not tracker then return end
+	EnsureObjectiveTrackerCollapseHook()
+	local header = tracker.Header
+	if not header then return end
+	if not objectiveTrackerMinimizeHooked then
+		objectiveTrackerMinimizeHooked = true
+		if hooksecurefunc then hooksecurefunc(header, "SetCollapsed", function() ApplyObjectiveTrackerMinimizeStyle() end) end
+	end
+	ApplyQuestTrackerCollapsedState()
+	ApplyObjectiveTrackerMinimizeStyle()
+end
+
+local function EnsureObjectiveTrackerMinimizeWatcher()
+	if objectiveTrackerMinimizeWatcher then return end
+	objectiveTrackerMinimizeWatcher = CreateFrame("Frame")
+	objectiveTrackerMinimizeWatcher:RegisterEvent("PLAYER_ENTERING_WORLD")
+	objectiveTrackerMinimizeWatcher:RegisterEvent("ADDON_LOADED")
+	objectiveTrackerMinimizeWatcher:SetScript("OnEvent", function(_, event, name)
+		if event == "ADDON_LOADED" and name ~= "Blizzard_ObjectiveTracker" then return end
+		if C_Timer and C_Timer.After then
+			C_Timer.After(0, EnsureObjectiveTrackerMinimizeHook)
+		else
+			EnsureObjectiveTrackerMinimizeHook()
+		end
+	end)
+end
+
+local function ShowRemoveIgnoredQuestNPCDialog(selectionKey)
+	if not selectionKey or selectionKey == "" then return end
+	if not addon.db or not addon.db["ignoredQuestNPC"] then return end
+
+	local npcID = tonumber(selectionKey) or selectionKey
+	local npcName = addon.db["ignoredQuestNPC"][npcID]
+	if not npcName then
+		local asString = tostring(selectionKey)
+		if addon.db["ignoredQuestNPC"][asString] then
+			npcID = asString
+			npcName = addon.db["ignoredQuestNPC"][asString]
+		end
+	end
+	if not npcName then return end
+
+	StaticPopupDialogs[REMOVE_IGNORED_QUEST_NPC_DIALOG] = StaticPopupDialogs[REMOVE_IGNORED_QUEST_NPC_DIALOG]
+		or {
+			text = L["ignoredQuestNPCRemoveConfirm"],
+			button1 = ACCEPT,
+			button2 = CANCEL,
+			timeout = 0,
+			whileDead = true,
+			hideOnEscape = true,
+			preferredIndex = 3,
+		}
+
+	StaticPopupDialogs[REMOVE_IGNORED_QUEST_NPC_DIALOG].OnAccept = function(_, data)
+		if not data or data == "" or not addon.db or not addon.db["ignoredQuestNPC"] then return end
+		if addon.db["ignoredQuestNPC"][data] then addon.db["ignoredQuestNPC"][data] = nil end
+		local numericID = tonumber(data)
+		if numericID and addon.db["ignoredQuestNPC"][numericID] then addon.db["ignoredQuestNPC"][numericID] = nil end
+		local stringKey = tostring(data)
+		if addon.db["ignoredQuestNPC"][stringKey] then addon.db["ignoredQuestNPC"][stringKey] = nil end
+	end
+
+	StaticPopup_Show(REMOVE_IGNORED_QUEST_NPC_DIALOG, npcName or tostring(npcID), nil, npcID)
+end
+
+local questingData = {
+	{
+		var = "autoChooseQuest",
+		text = L["autoChooseQuest"],
+		desc = L["autoChooseQuestDesc"] or L["interruptWithShift"],
+		func = function(key) addon.db["autoChooseQuest"] = key end,
+		default = false,
+		children = {
+			{
+				var = "autoChooseQuestModifier",
+				text = L["questAutomationModifier"] or "Quest automation modifier",
+				desc = L["questAutomationModifierDesc"],
+				listFunc = function()
+					return {
+						NONE = L["modifierNone"] or "None",
+						SHIFT = L["modifierShift"] or "Shift",
+						CTRL = L["modifierCtrl"] or "Ctrl",
+						ALT = L["modifierAlt"] or "Alt",
+					}
+				end,
+				get = function() return addon.db and addon.db.autoChooseQuestModifier or "NONE" end,
+				set = function(key)
+					if not key or key == "" then key = "NONE" end
+					addon.db["autoChooseQuestModifier"] = key
+				end,
+				parentCheck = function()
+					return addon.SettingsLayout.elements["autoChooseQuest"]
+						and addon.SettingsLayout.elements["autoChooseQuest"].setting
+						and addon.SettingsLayout.elements["autoChooseQuest"].setting:GetValue() == true
+				end,
+				parent = true,
+				sType = "dropdown",
+			},
+			{
+				var = "ignoreDailyQuests",
+				text = L["ignoreDailyQuests"]:format(QUESTS_LABEL),
+				func = function(key) addon.db["ignoreDailyQuests"] = key end,
+				default = false,
+				sType = "checkbox",
+				parentCheck = function()
+					return addon.SettingsLayout.elements["autoChooseQuest"]
+						and addon.SettingsLayout.elements["autoChooseQuest"].setting
+						and addon.SettingsLayout.elements["autoChooseQuest"].setting:GetValue() == true
+				end,
+				parent = true,
+			},
+			{
+				var = "ignoreWarbandCompleted",
+				text = L["ignoreWarbandCompleted"]:format(ACCOUNT_COMPLETED_QUEST_LABEL, QUESTS_LABEL),
+				func = function(key) addon.db["ignoreWarbandCompleted"] = key end,
+				default = false,
+				sType = "checkbox",
+				parentCheck = function()
+					return addon.SettingsLayout.elements["autoChooseQuest"]
+						and addon.SettingsLayout.elements["autoChooseQuest"].setting
+						and addon.SettingsLayout.elements["autoChooseQuest"].setting:GetValue() == true
+				end,
+				parent = true,
+			},
+			{
+				var = "ignoreTrivialQuests",
+				text = L["ignoreTrivialQuests"]:format(QUESTS_LABEL),
+				func = function(key) addon.db["ignoreTrivialQuests"] = key end,
+				default = false,
+				sType = "checkbox",
+				parentCheck = function()
+					return addon.SettingsLayout.elements["autoChooseQuest"]
+						and addon.SettingsLayout.elements["autoChooseQuest"].setting
+						and addon.SettingsLayout.elements["autoChooseQuest"].setting:GetValue() == true
+				end,
+				parent = true,
+			},
+			{
+				text = "|cff99e599" .. L["ignoreNPCTipp"] .. "|r",
+				sType = "hint",
+			},
+			{
+				listFunc = function()
+					local tList = { [""] = "" }
+					for id, name in pairs(addon.db["ignoredQuestNPC"] or {}) do
+						tList[id] = name
+					end
+					return tList
+				end,
+				text = REMOVE,
+				get = function() return "" end,
+				set = function(key)
+					if not key or key == "" then return end
+					ShowRemoveIgnoredQuestNPCDialog(key)
+				end,
+				parentCheck = function()
+					return addon.SettingsLayout.elements["autoChooseQuest"]
+						and addon.SettingsLayout.elements["autoChooseQuest"].setting
+						and addon.SettingsLayout.elements["autoChooseQuest"].setting:GetValue() == true
+				end,
+				parent = true,
+				var = "ignoredQuestNPC",
+				type = Settings.VarType.Number,
+				sType = "dropdown",
+			},
+		},
+	},
+	{
+		var = "questWowheadLink",
+		text = L["questWowheadLink"],
+		func = function(key) addon.db["questWowheadLink"] = key end,
+		default = false,
+	},
+}
+
+local cinematicData = {
+	{
+		var = "autoCancelCinematic",
+		text = L["autoCancelCinematic"],
+		desc = L["autoCancelCinematicDesc"],
+		func = function(value)
+			addon.db["autoCancelCinematic"] = value and true or false
+			if value then
+				addon.db["quickSkipCinematic"] = false
+				local quickSetting = addon.SettingsLayout.elements and addon.SettingsLayout.elements["quickSkipCinematic"]
+				if quickSetting and quickSetting.setting then quickSetting.setting:SetValue(false) end
+			end
+		end,
+		default = false,
+	},
+	{
+		var = "quickSkipCinematic",
+		text = L["quickSkipCinematic"],
+		desc = L["quickSkipCinematicDesc"],
+		func = function(value)
+			addon.db["quickSkipCinematic"] = value and true or false
+			if value then
+				addon.db["autoCancelCinematic"] = false
+				local autoSetting = addon.SettingsLayout.elements and addon.SettingsLayout.elements["autoCancelCinematic"]
+				if autoSetting and autoSetting.setting then autoSetting.setting:SetValue(false) end
+			end
+		end,
+		default = false,
+	},
+}
+
+local trackerData = {
+	{
+		var = "questTrackerShowQuestCount",
+		text = L["questTrackerShowQuestCount"],
+		desc = L["questTrackerShowQuestCount_desc"],
+		func = function(key)
+			addon.db["questTrackerShowQuestCount"] = key
+			addon.functions.UpdateQuestTrackerQuestCount()
+		end,
+		default = false,
+		children = {
+			{
+				var = "questTrackerQuestCountOffsetX",
+				text = L["questTrackerQuestCountOffsetX"],
+				parentCheck = function()
+					return addon.SettingsLayout.elements["questTrackerShowQuestCount"]
+						and addon.SettingsLayout.elements["questTrackerShowQuestCount"].setting
+						and addon.SettingsLayout.elements["questTrackerShowQuestCount"].setting:GetValue() == true
+				end,
+				get = function() return addon.db and addon.db.questTrackerQuestCountOffsetX or 0 end,
+				set = function(value)
+					addon.db["questTrackerQuestCountOffsetX"] = value
+					addon.functions.UpdateQuestTrackerQuestCountPosition()
+				end,
+				min = -200,
+				max = 200,
+				step = 1,
+				parent = true,
+				default = 0,
+				sType = "slider",
+			},
+			{
+				var = "questTrackerQuestCountOffsetY",
+				text = L["questTrackerQuestCountOffsetY"],
+				parentCheck = function()
+					return addon.SettingsLayout.elements["questTrackerShowQuestCount"]
+						and addon.SettingsLayout.elements["questTrackerShowQuestCount"].setting
+						and addon.SettingsLayout.elements["questTrackerShowQuestCount"].setting:GetValue() == true
+				end,
+				get = function() return addon.db and addon.db.questTrackerQuestCountOffsetY or 0 end,
+				set = function(value)
+					addon.db["questTrackerQuestCountOffsetY"] = value
+					addon.functions.UpdateQuestTrackerQuestCountPosition()
+				end,
+				min = -200,
+				max = 200,
+				step = 1,
+				parent = true,
+				default = 0,
+				sType = "slider",
+			},
+		},
+	},
+	{
+		var = "questTrackerMinimizeButtonOnly",
+		text = L["questTrackerMinimizeButtonOnly"],
+		desc = L["questTrackerMinimizeButtonOnly_desc"],
+		func = function(value)
+			addon.db["questTrackerMinimizeButtonOnly"] = value and true or false
+			ApplyObjectiveTrackerMinimizeStyle()
+		end,
+		default = false,
+		children = {
+			{
+				var = "questTrackerMinimizeButtonAnchor",
+				text = L["questTrackerMinimizeButtonAnchor"] or "Minimized '+' anchor",
+				desc = L["questTrackerMinimizeButtonAnchor_desc"],
+				listFunc = function()
+					return {
+						TOPLEFT = L["topLeft"] or "Top Left",
+						TOPRIGHT = L["topRight"] or "Top Right",
+						BOTTOMLEFT = L["bottomLeft"] or "Bottom Left",
+						BOTTOMRIGHT = L["bottomRight"] or "Bottom Right",
+					}
+				end,
+				get = function() return addon.db and addon.db.questTrackerMinimizeButtonAnchor or "TOPRIGHT" end,
+				set = function(key)
+					if not key or key == "" then return end
+					addon.db["questTrackerMinimizeButtonAnchor"] = key
+					ApplyObjectiveTrackerMinimizeStyle()
+				end,
+				parentCheck = function()
+					return addon.SettingsLayout.elements["questTrackerMinimizeButtonOnly"]
+						and addon.SettingsLayout.elements["questTrackerMinimizeButtonOnly"].setting
+						and addon.SettingsLayout.elements["questTrackerMinimizeButtonOnly"].setting:GetValue() == true
+				end,
+				parent = true,
+				sType = "dropdown",
+			},
+		},
+	},
+	{
+		var = "questTrackerRememberState",
+		text = L["questTrackerRememberState"],
+		desc = L["questTrackerRememberState_desc"],
+		func = function(value)
+			addon.db["questTrackerRememberState"] = value and true or false
+			if value then
+				CaptureQuestTrackerCollapsedState()
+				EnsureObjectiveTrackerCollapseHook()
+			end
+		end,
+		default = false,
+	},
+}
+
+addon.functions.SettingsCreateHeadline(cQuest, L["Questing"], { parentSection = questingExpandable })
+applyParentSection(questingData, questingExpandable)
+addon.functions.SettingsCreateCheckboxes(cQuest, questingData)
+
+addon.functions.SettingsCreateHeadline(cQuest, L["Cinematics"], { parentSection = questingExpandable })
+applyParentSection(cinematicData, questingExpandable)
+addon.functions.SettingsCreateCheckboxes(cQuest, cinematicData)
+
+addon.functions.SettingsCreateHeadline(cQuest, L["questTrackerOptions"], { parentSection = questingExpandable })
+applyParentSection(trackerData, questingExpandable)
+addon.functions.SettingsCreateCheckboxes(cQuest, trackerData)
+
+----- REGION END
+
+function addon.functions.initQuest()
+	addon.functions.InitDBValue("autoChooseQuest", false)
+	addon.functions.InitDBValue("autoChooseQuestModifier", "NONE")
+	addon.functions.InitDBValue("ignoreTrivialQuests", false)
+	addon.functions.InitDBValue("ignoreDailyQuests", false)
+	addon.functions.InitDBValue("questTrackerShowQuestCount", false)
+	addon.functions.InitDBValue("questTrackerQuestCountOffsetX", 0)
+	addon.functions.InitDBValue("questTrackerQuestCountOffsetY", 0)
+	addon.functions.InitDBValue("questTrackerMinimizeButtonOnly", false)
+	addon.functions.InitDBValue("questTrackerMinimizeButtonAnchor", "TOPRIGHT")
+	addon.functions.InitDBValue("questTrackerRememberState", false)
+	addon.functions.InitDBValue("questWowheadLink", false)
+	addon.functions.InitDBValue("ignoredQuestNPC", {})
+	addon.functions.InitDBValue("autogossipID", {})
+
+	EnsureObjectiveTrackerMinimizeWatcher()
+	EnsureObjectiveTrackerMinimizeHook()
+
+	local function EQOL_GetQuestIDFromMenu(owner, ctx)
+		if ctx and (ctx.questID or ctx.questId) then return ctx.questID or ctx.questId end
+
+		addon.db.testOwner = owner
+
+		if owner then
+			if owner.questID then return owner.questID end
+			if owner.GetQuestID then
+				local ok, id = pcall(owner.GetQuestID, owner)
+				if ok and id then return id end
+			end
+			if owner.questLogIndex and C_QuestLog and C_QuestLog.GetInfo then
+				local info = C_QuestLog.GetInfo(owner.questLogIndex)
+				if info and info.questID then return info.questID end
+			end
+		end
+		return nil
+	end
+
+	local function EQOL_ShowCopyURL(url)
+		if not StaticPopupDialogs["ENHANCEQOL_COPY_URL"] then
+			StaticPopupDialogs["ENHANCEQOL_COPY_URL"] = {
+				text = "Copy URL:",
+				button1 = OKAY,
+				hasEditBox = true,
+				timeout = 0,
+				whileDead = true,
+				hideOnEscape = true,
+				preferredIndex = 3,
+				OnShow = function(self, data)
+					local eb = self.editBox or self.GetEditBox and self:GetEditBox()
+					eb:SetAutoFocus(true)
+					eb:SetText(data or "")
+					eb:HighlightText()
+					eb:SetCursorPosition(0)
+				end,
+				OnAccept = function(self) end,
+				EditBoxOnEscapePressed = function(self) self:GetParent():Hide() end,
+			}
+		end
+		StaticPopup_Show("ENHANCEQOL_COPY_URL", nil, nil, url)
+	end
+
+	local function EQOL_AddQuestWowheadEntry(owner, root, ctx)
+		if not addon.db["questWowheadLink"] then return end
+		local qid
+		if owner.GetName and owner:GetName() == "ObjectiveTrackerFrame" then
+			local mFocus = GetMouseFoci()
+			if mFocus and mFocus[1] and mFocus[1].GetParent then
+				local pInfo = mFocus[1]:GetParent()
+				if pInfo.poiQuestID then
+					qid = pInfo.poiQuestID
+				else
+					return
+				end
+			end
+		else
+			qid = EQOL_GetQuestIDFromMenu(owner, ctx)
+		end
+		if not qid then return end
+		root:CreateDivider()
+		local btn = root:CreateButton("Copy Wowhead URL", function() EQOL_ShowCopyURL(("https://www.wowhead.com/quest=%d"):format(qid)) end)
+		btn:AddInitializer(function()
+			btn:SetTooltip(function(tt)
+				GameTooltip_SetTitle(tt, "Wowhead")
+				GameTooltip_AddNormalLine(tt, ("quest=%d"):format(qid))
+			end)
+		end)
+	end
+
+	-- Register for Blizzard's menu tags (provided by /etrace):
+	if Menu and Menu.ModifyMenu then
+		Menu.ModifyMenu("MENU_QUEST_MAP_LOG_TITLE", EQOL_AddQuestWowheadEntry)
+		Menu.ModifyMenu("MENU_QUEST_OBJECTIVE_TRACKER", EQOL_AddQuestWowheadEntry)
+	end
+
+	if Menu and Menu.ModifyMenu then
+		local function GetNPCIDFromGUID(guid)
+			if type(guid) == "nil" then return end
+			if type(guid) ~= "nil" and issecretvalue(guid) then return nil end
+			if guid then
+				local type, _, _, _, _, npcID = strsplit("-", guid)
+				if type == "Creature" or type == "Vehicle" then return tonumber(npcID) end
+			end
+			return nil
+		end
+
+		local function AddIgnoreAutoQuest(owner, root, ctx)
+			if not addon.db["autoChooseQuest"] then return end
+			if addon.functions.isRestrictedContent() then return end
+
+			if not UnitExists("target") or UnitPlayerControlled("target") then return end
+			local guid = UnitGUID("target")
+			if issecretvalue(guid) then return end
+			print("tset")
+			local npcID = GetNPCIDFromGUID(guid)
+			if not npcID then return end
+			if issecretvalue and issecretvalue(npcID) then return end
+			local name = UnitName("target")
+			if not name or (issecretvalue and issecretvalue(name)) then return end
+
+			root:CreateDivider()
+			root:CreateTitle(addonName)
+			if addon.db["ignoredQuestNPC"][npcID] then
+				root:CreateButton(L["SettingsQuestHeaderIgnoredNPCRemove"], function(id) addon.db["ignoredQuestNPC"][npcID] = nil end, npcID)
+			else
+				root:CreateButton(L["SettingsQuestHeaderIgnoredNPCAdd"], function(id) addon.db["ignoredQuestNPC"][npcID] = name end, npcID)
+			end
+		end
+
+		Menu.ModifyMenu("MENU_UNIT_TARGET", AddIgnoreAutoQuest)
+	end
+
+	EnsureQuestTrackerQuestCountWatcher()
+	UpdateQuestTrackerQuestCount()
+end
+
+local eventHandlers = {}
+
+local function registerEvents(frame)
+	for event in pairs(eventHandlers) do
+		frame:RegisterEvent(event)
+	end
+end
+
+local function eventHandler(self, event, ...)
+	if eventHandlers[event] then eventHandlers[event](...) end
+end
+
+local frameLoad = CreateFrame("Frame")
+
+registerEvents(frameLoad)
+frameLoad:SetScript("OnEvent", eventHandler)

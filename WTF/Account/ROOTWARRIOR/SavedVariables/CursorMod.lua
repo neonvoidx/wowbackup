@@ -11,7 +11,7 @@ CursorModDB = {
 ["opacity"] = 1,
 ["showOnlyInCombat"] = false,
 ["changeCursorSize"] = false,
-["size"] = 0,
+["lookStartDelta"] = 0.0001,
 ["glowColor"] = {
 1,
 1,
@@ -29,7 +29,7 @@ CursorModDB = {
 1,
 },
 ["useClassColor"] = false,
-["lookStartDelta"] = 0.0001,
+["size"] = 0,
 },
 ["name"] = "Profile 1",
 },

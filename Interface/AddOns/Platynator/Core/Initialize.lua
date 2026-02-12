@@ -26,6 +26,12 @@ local truncateMap = {
 
 function addonTable.Core.UpgradeDesign(design)
   design.appliesToAll = nil
+  design.addon = nil
+  design.kind = nil
+
+  if design.scale == nil then
+    design.scale = 1
+  end
 
   for _, text in ipairs(design.texts) do
     if not text.color then
@@ -43,6 +49,10 @@ function addonTable.Core.UpgradeDesign(design)
     end
     if text.layer == nil then
       text.layer = 2
+    end
+    if text.maxWidth == nil then
+      text.maxWidth = math.floor((text.widthLimit or 0) / addonTable.Assets.BarBordersSize.width * 100) / 100
+      text.widthLimit = nil
     end
   end
   for _, marker in ipairs(design.markers) do
@@ -120,6 +130,11 @@ function addonTable.Core.UpgradeDesign(design)
         important = true,
       }
     end
+    if aura.kind == "buffs" and aura.showDispel == nil then
+      aura.showDispel = {enrage = true}
+    elseif aura.kind ~= "buffs" then
+      aura.showDispel = {}
+    end
     if aura.kind == "crowdControl" and not aura.filters then
       aura.filters = {
         fromYou = false,
@@ -165,6 +180,14 @@ function addonTable.Core.UpgradeDesign(design)
     end
   end
 
+  local function RemoveAutoColorsAlpha(autoColors)
+    for _, ac in ipairs(autoColors) do
+      for _, color in pairs(ac.colors) do
+        color.a = nil
+      end
+    end
+  end
+
   for _, bar in ipairs(design.bars) do
     if bar.kind == "health" and not bar.absorb then
       local mode = bar.border.height and bar.border.height * 100 or addonTable.Assets.BarBordersLegacy[bar.border.asset].mode
@@ -173,6 +196,9 @@ function addonTable.Core.UpgradeDesign(design)
     end
     if bar.kind == "health" and not bar.absorb.color then
       bar.absorb.color = GetColor("FFFFFF")
+    end
+    if bar.kind == "health" and bar.animate == nil then
+      bar.animate = false
     end
     if bar.layer == nil then
       bar.layer = 1
@@ -285,6 +311,16 @@ function addonTable.Core.UpgradeDesign(design)
     end
     if bar.autoColors then
       UpdateAutoColors(bar.autoColors)
+      RemoveAutoColorsAlpha(bar.autoColors)
+    end
+    if addonTable.Assets.BarBackgroundsLegacyMap[bar.background.asset] then
+      bar.background.asset = addonTable.Assets.BarBackgroundsLegacyMap[bar.background.asset]
+    end
+    if addonTable.Assets.BarBackgroundsLegacyMap[bar.foreground.asset] then
+      bar.foreground.asset = addonTable.Assets.BarBackgroundsLegacyMap[bar.foreground.asset]
+    end
+    if bar.kind == "health" and addonTable.Assets.BarBackgroundsLegacyMap[bar.absorb.asset] then
+      bar.absorb.asset = addonTable.Assets.BarBackgroundsLegacyMap[bar.absorb.asset]
     end
   end
 
@@ -335,8 +371,13 @@ function addonTable.Core.UpgradeDesign(design)
     if text.kind == "health" and text.significantFigures == nil then
       text.significantFigures = 0
     end
+    if text.kind == "guild" and text.npcRole == nil then
+      text.playerGuild = true
+      text.npcRole = true
+    end
     if text.autoColors then
       UpdateAutoColors(text.autoColors)
+      RemoveAutoColorsAlpha(text.autoColors)
     end
   end
 
@@ -346,6 +387,10 @@ function addonTable.Core.UpgradeDesign(design)
     end
     if highlight.color.a == nil then
       highlight.color.a = 1
+    end
+
+    if highlight.kind == "mouseover" and highlight.includeTarget == nil then
+      highlight.includeTarget = true
     end
 
     if not addonTable.Assets.Highlights[highlight.asset] then
@@ -365,6 +410,10 @@ function addonTable.Core.UpgradeDesign(design)
         highlight.height = 1
       end
     end
+
+    if highlight.autoColors then
+      UpdateAutoColors(highlight.autoColors)
+    end
   end
 
   for _, bar in ipairs(design.specialBars) do
@@ -378,6 +427,11 @@ function addonTable.Core.UpgradeDesign(design)
     design.font.outline = design.font.flags == "OUTLINE"
     design.font.flags = nil
   end
+
+  if design.font.slug == nil then
+    design.font.slug = true
+  end
+  design.slug = nil
 
   if design.font.asset == "ArialShort" then
     design.font.asset = "ArialNarrow"
@@ -423,17 +477,30 @@ function addonTable.Core.MigrateSettings()
       enemy = state,
     })
   end
+
+  if addonTable.Config.Get(addonTable.Config.Options.SHOW_NAMEPLATES).enemyMinion == nil then
+    local state = addonTable.Config.Get(addonTable.Config.Options.SHOW_NAMEPLATES)
+    state.enemyMinion = true
+    state.enemyMinor = true
+    state.friendlyMinion = false
+    state.friendlyPlayer = state.player
+    state.friendlyNPC = state.npc
+    state.player = nil
+    state.npc = nil
+  end
 end
 
-local function SetStyle()
+local function SetStyle(isInit)
   local mapping = addonTable.Config.Get(addonTable.Config.Options.DESIGNS_ASSIGNED)
 
   local styleName = addonTable.Config.Get(addonTable.Config.Options.STYLE)
-  if mapping["friend"] == mapping["enemy"] and mapping["enemySimplified"] ~= styleName then
-    mapping["friend"] = styleName
-    mapping["enemy"] = styleName
-  elseif mapping["friend"] ~= styleName and mapping["enemy"] ~= styleName and mapping["enemySimplified"] ~= styleName then
-    mapping["enemy"] = styleName
+  if not isInit then
+    if mapping["friend"] == mapping["enemy"] and mapping["enemySimplified"] ~= styleName then
+      mapping["friend"] = styleName
+      mapping["enemy"] = styleName
+    elseif mapping["friend"] ~= styleName and mapping["enemy"] ~= styleName and mapping["enemySimplified"] ~= styleName then
+      mapping["enemy"] = styleName
+    end
   end
   if styleName:match("^_") then
     local designs = addonTable.Config.Get(addonTable.Config.Options.DESIGNS)
@@ -495,22 +562,24 @@ local function UpdateRect(design)
     end
   end
 
-  addonTable.Rect = {left = left, bottom = bottom, width = right ~= left and right - left or 125, height = top ~= bottom and top - bottom or 10}
+  addonTable.Rect = {left = left * design.scale, bottom = bottom * design.scale, width = (right ~= left and right - left or 125) * design.scale, height = (top ~= bottom and top - bottom or 10) * design.scale}
 
   for _, textDetails in ipairs(design.texts) do
     if textDetails.kind == "creatureName" then
-      local rect = GetRect({width = textDetails.widthLimit, height = 10 * textDetails.scale}, 1, textDetails.anchor)
+      local rect = GetRect({width = textDetails.maxWidth * addonTable.Assets.BarBordersSize.width, height = 10 * textDetails.scale}, 1, textDetails.anchor)
       CacheSize(rect)
     end
   end
 
-  addonTable.StackRect = {left = left, bottom = bottom, width = right ~= left and right - left or 125, height = top ~= bottom and top - bottom or 10}
+  addonTable.StackRect = {left = left * design.scale, bottom = bottom * design.scale, width = (right ~= left and right - left or 125) * design.scale, height = (top ~= bottom and top - bottom or 10) * design.scale}
 end
 
 function addonTable.Core.GetDesignByName(name)
   if addonTable.Design.Defaults[name] then
     if not addonTable.Design.ParsedDefaults[name] then
       local design = C_EncodingUtil.DeserializeJSON(addonTable.Design.Defaults[name])
+      design.kind = nil
+      design.addon = nil
       addonTable.Core.UpgradeDesign(design)
       addonTable.Design.ParsedDefaults[name] = design
     end
@@ -543,15 +612,11 @@ function addonTable.Core.Initialize()
   addonTable.Config.InitializeData()
   addonTable.SlashCmd.Initialize()
 
-  --if next(addonTable.Config.Get(addonTable.Config.Options.DESIGN)) == nil then
-  --  addonTable.Config.Set(addonTable.Config.Options.DESIGN, addonTable.Design.GetDefaultDesignSlight())
-  --end
-
   addonTable.Assets.ApplyScale()
 
   addonTable.Core.MigrateSettings()
 
-  SetStyle()
+  SetStyle(true)
   addonTable.CallbackRegistry:RegisterCallback("SettingChanged", function(_, name)
     if name == addonTable.Config.Options.STYLE then
       SetStyle()

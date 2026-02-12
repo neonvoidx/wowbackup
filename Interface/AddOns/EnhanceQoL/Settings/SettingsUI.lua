@@ -1,0 +1,407 @@
+-- SettingsUI.lua (LibEQOLSettingsMode-basiert)
+local addonName, addon = ...
+local L = LibStub("AceLocale-3.0"):GetLocale(addonName)
+local SettingsLib = LibStub("LibEQOLSettingsMode-1.0")
+
+-- Optional: Prefix für Settings-Variablen
+local prefix = "EQOL_"
+
+-- Optional: New-Badge-Resolver (Kategorie-ID oder Variablenname)
+-- Ersetze addon.variables.NewVersionTableEQOL nach Bedarf
+SettingsLib:SetNewTagResolverForPrefix(prefix, function(idOrVar) return addon.variables and addon.variables.NewVersionTableEQOL and addon.variables.NewVersionTableEQOL[idOrVar] end)
+
+addon.SettingsLayout = addon.SettingsLayout or {}
+addon.functions = addon.functions or {}
+
+local function getCVarOptionData(cvarKey) return addon.variables and addon.variables.cvarOptions and addon.variables.cvarOptions[cvarKey] end
+
+function addon.functions.GetCVarOptionState(cvarKey)
+	local optionData = getCVarOptionData(cvarKey)
+	if not optionData or not C_CVar or not C_CVar.GetCVar then return false end
+	local ok, value = pcall(C_CVar.GetCVar, cvarKey)
+	if not ok then return false end
+	return tostring(value) == tostring(optionData.trueValue)
+end
+
+function addon.functions.SetCVarOptionState(cvarKey, enabled)
+	local optionData = getCVarOptionData(cvarKey)
+	if not optionData then return end
+	local newValue = enabled and optionData.trueValue or optionData.falseValue
+	if newValue == nil then return end
+	if optionData.persistent then
+		addon.db = addon.db or {}
+		addon.db.cvarOverrides = addon.db.cvarOverrides or {}
+		addon.db.cvarOverrides[cvarKey] = tostring(newValue)
+	end
+	if addon.functions.setCVarValue then addon.functions.setCVarValue(cvarKey, newValue) end
+end
+
+---------------------------------------------------------
+-- Kategorien
+---------------------------------------------------------
+function addon.functions.SettingsCreateCategory(parent, treeName, sort, newTagID)
+	if nil == parent then parent = addon.SettingsLayout.rootCategory end
+	local cat, layout = SettingsLib:CreateCategory(parent, treeName, sort, newTagID, prefix)
+	addon.SettingsLayout.knownCategoryID = addon.SettingsLayout.knownCategoryID or {}
+	addon.SettingsLayout.knownCategoryID[cat:GetID()] = true
+	return cat, layout
+end
+
+function addon.functions.SettingsCreateKeybind(cat, bindingIndex, parentSection) SettingsLib:CreateKeybind(cat, { bindingIndex = bindingIndex, parentSection = parentSection }) end
+
+---------------------------------------------------------
+-- Checkbox
+---------------------------------------------------------
+function addon.functions.SettingsCreateCheckbox(cat, cbData)
+	local element, setting = SettingsLib:CreateCheckbox(cat, {
+		key = cbData.var,
+		name = cbData.text,
+		default = cbData.default or false,
+		get = cbData.get or function() return addon.db[cbData.var] end,
+		set = cbData.func or cbData.set or function(_, v) addon.db[cbData.var] = v end,
+		desc = cbData.desc,
+		searchtags = cbData.searchtags,
+		parent = cbData.element,
+		parentCheck = cbData.parentCheck,
+		parentSection = cbData.parentSection,
+		prefix = prefix,
+	})
+	addon.SettingsLayout.elements = addon.SettingsLayout.elements or {}
+	addon.SettingsLayout.elements[cbData.var] = { setting = setting, element = element }
+
+	if cbData.notify then SettingsLib:AttachNotify(setting, cbData.notify) end
+	-- Children (rekursiv)
+	if cbData.children then
+		for _, v in pairs(cbData.children) do
+			v.element = v.element or element
+			v.parentCheck = v.parentCheck or cbData.parentCheck
+			local sType = v.sType or v.type
+			if sType == "dropdown" then
+				addon.functions.SettingsCreateDropdown(cat, v)
+			elseif sType == "scrolldropdown" then
+				addon.functions.SettingsCreateScrollDropdown(cat, v)
+			elseif sType == "checkbox" then
+				addon.functions.SettingsCreateCheckbox(cat, v)
+			elseif sType == "multidropdown" then
+				addon.functions.SettingsCreateMultiDropdown(cat, v)
+			elseif sType == "slider" then
+				addon.functions.SettingsCreateSlider(cat, v)
+			elseif sType == "hint" then
+				addon.functions.SettingsCreateText(cat, v.text, { parentSection = v.parentSection })
+			elseif sType == "colorpicker" then
+				addon.functions.SettingsCreateColorPicker(cat, v)
+			elseif sType == "button" then
+				addon.functions.SettingsCreateButton(cat, v)
+			elseif sType == "sounddropdown" then
+				addon.functions.SettingsCreateSoundDropdown(cat, v)
+			end
+		end
+	end
+
+	return addon.SettingsLayout.elements[cbData.var]
+end
+
+function addon.functions.SettingsCreateCheckboxes(cat, data)
+	local rData = {}
+	for _, cbData in ipairs(data) do
+		rData[cbData.var] = addon.functions.SettingsCreateCheckbox(cat, cbData)
+	end
+	return rData
+end
+
+---------------------------------------------------------
+-- Slider
+---------------------------------------------------------
+function addon.functions.SettingsCreateSlider(cat, cbData)
+	local element, setting = SettingsLib:CreateSlider(cat, {
+		key = cbData.var,
+		name = cbData.text,
+		default = cbData.default,
+		min = cbData.min,
+		max = cbData.max,
+		step = cbData.step,
+		get = cbData.get or function() return addon.db[cbData.var] or cbData.default end,
+		set = cbData.set or function(_, v) addon.db[cbData.var] = v end,
+		desc = cbData.desc,
+		formatter = function(value)
+			local s = string.format("%.2f", value)
+			s = s:gsub("(%..-)0+$", "%1")
+			s = s:gsub("%.$", "")
+			return s
+		end,
+		parent = cbData.element,
+		parentCheck = cbData.parentCheck,
+		searchtags = cbData.searchtags,
+		parentSection = cbData.parentSection,
+		prefix = prefix,
+	})
+	addon.SettingsLayout.elements = addon.SettingsLayout.elements or {}
+	addon.SettingsLayout.elements[cbData.var] = { setting = setting, element = element }
+	return addon.SettingsLayout.elements[cbData.var]
+end
+
+---------------------------------------------------------
+-- Dropdown
+---------------------------------------------------------
+function addon.functions.SettingsCreateDropdown(cat, cbData)
+	local element, setting = SettingsLib:CreateDropdown(cat, {
+		key = cbData.var,
+		name = cbData.text,
+		default = cbData.default,
+		values = cbData.list or cbData.values,
+		optionfunc = cbData.listFunc or cbData.optionfunc,
+		order = cbData.order,
+		get = cbData.get or function() return addon.db[cbData.var] end,
+		set = cbData.set or function(_, v) addon.db[cbData.var] = v end,
+		desc = cbData.desc,
+		searchtags = cbData.searchtags,
+		parent = cbData.element or cbData.parent,
+		parentCheck = cbData.parentCheck,
+		parentSection = cbData.parentSection,
+		prefix = prefix,
+	})
+	addon.SettingsLayout.elements = addon.SettingsLayout.elements or {}
+	addon.SettingsLayout.elements[cbData.var] = { setting = setting, element = element }
+	if cbData.notify then SettingsLib:AttachNotify(setting, cbData.notify) end
+	return addon.SettingsLayout.elements[cbData.var]
+end
+
+---------------------------------------------------------
+-- Scroll Dropdown
+---------------------------------------------------------
+function addon.functions.SettingsCreateScrollDropdown(cat, cbData)
+	if not SettingsLib.CreateScrollDropdown then return addon.functions.SettingsCreateDropdown(cat, cbData) end
+
+	local key = cbData.var or cbData.key
+	local initializer, setting = SettingsLib:CreateScrollDropdown(cat, {
+		key = key,
+		name = cbData.text,
+		default = cbData.default,
+		values = cbData.options or cbData.list or cbData.values,
+		optionfunc = cbData.optionfunc or cbData.listFunc,
+		generator = cbData.generator,
+		order = cbData.order,
+		height = cbData.height or cbData.menuHeight or 200,
+		customText = cbData.customText,
+		customDefaultText = cbData.customDefaultText,
+		callback = cbData.callback,
+		get = cbData.get or function() return addon.db[key] end,
+		set = cbData.set or function(_, v) addon.db[key] = v end,
+		searchtags = cbData.searchtags,
+		parent = cbData.element or cbData.parent,
+		parentCheck = cbData.parentCheck,
+		parentSection = cbData.parentSection,
+		prefix = prefix,
+	})
+	addon.SettingsLayout.elements = addon.SettingsLayout.elements or {}
+	addon.SettingsLayout.elements[key] = { initializer = initializer, setting = setting }
+	if cbData.notify then SettingsLib:AttachNotify(setting, cbData.notify) end
+	return initializer
+end
+
+function addon.functions.SettingsAttachNotify(setting, notify)
+	if notify and setting then SettingsLib:AttachNotify(setting, notify) end
+end
+
+---------------------------------------------------------
+-- MultiDropdown
+---------------------------------------------------------
+function addon.functions.SettingsCreateMultiDropdown(cat, cbData)
+	addon.db = addon.db or {}
+	addon.db[cbData.var] = addon.db[cbData.var] or {}
+
+	local function getSelection()
+		local container = addon.db[cbData.var]
+		if cbData.subvar then
+			container = container[cbData.subvar]
+			if type(container) ~= "table" then container = {} end
+		end
+		return container
+	end
+
+	local function setSelection(map)
+		if cbData.subvar then
+			addon.db[cbData.var] = addon.db[cbData.var] or {}
+			addon.db[cbData.var][cbData.subvar] = map
+		else
+			addon.db[cbData.var] = map
+		end
+		if cbData.callback then cbData.callback(map) end
+	end
+
+	local initializer = SettingsLib:CreateMultiDropdown(cat, {
+		key = cbData.var,
+		name = cbData.text,
+		values = cbData.options or cbData.list,
+		optionfunc = cbData.optionfunc or cbData.listFunc,
+		height = cbData.menuHeight or 200,
+		order = cbData.order,
+		isSelected = cbData.isSelectedFunc,
+		setSelected = cbData.setSelectedFunc,
+		getSelection = cbData.getSelection or cbData.get or getSelection,
+		setSelection = cbData.setSelection or cbData.set or setSelection,
+		summary = cbData.summary,
+		searchtags = cbData.searchtags,
+		parent = cbData.element,
+		parentCheck = cbData.parentCheck,
+		notify = cbData.notify,
+		parentSection = cbData.parentSection,
+		isEnabled = cbData.isEnabled,
+		prefix = prefix,
+		hideSummary = true,
+	})
+
+	addon.SettingsLayout.elements = addon.SettingsLayout.elements or {}
+	addon.SettingsLayout.elements[cbData.var] = { initializer = initializer }
+	return initializer
+end
+
+---------------------------------------------------------
+-- Sound Dropdown
+---------------------------------------------------------
+function addon.functions.SettingsCreateSoundDropdown(cat, cbData)
+	local initializer, setting = SettingsLib:CreateSoundDropdown(cat, {
+		key = cbData.var,
+		name = cbData.text,
+		values = cbData.options or cbData.list,
+		optionfunc = cbData.optionfunc or cbData.listFunc,
+		order = cbData.order,
+		default = cbData.default,
+		get = cbData.get or function() return addon.db[cbData.var] end,
+		set = cbData.set or function(_, v) addon.db[cbData.var] = v end,
+		callback = cbData.callback,
+		soundResolver = cbData.soundResolver,
+		previewSoundFunc = cbData.previewSoundFunc,
+		playbackChannel = cbData.playbackChannel,
+		getPlaybackChannel = cbData.getPlaybackChannel,
+		placeholderText = cbData.placeholderText,
+		previewTooltip = cbData.previewTooltip,
+		height = cbData.menuHeight,
+		frameWidth = cbData.frameWidth,
+		frameHeight = cbData.frameHeight,
+		parent = cbData.element,
+		parentCheck = cbData.parentCheck,
+		searchtags = cbData.searchtags,
+		parentSection = cbData.parentSection,
+		prefix = prefix,
+	})
+	addon.SettingsLayout.elements = addon.SettingsLayout.elements or {}
+	addon.SettingsLayout.elements[cbData.var] = { initializer = initializer, setting = setting }
+	if cbData.notify then SettingsLib:AttachNotify(setting, cbData.notify) end
+
+	return initializer
+end
+
+---------------------------------------------------------
+-- Color Overrides Panel
+---------------------------------------------------------
+function addon.functions.SettingsCreateColorOverrides(cat, cbData)
+	local initializer = SettingsLib:CreateColorOverrides(cat, {
+		key = cbData.var or cbData.key,
+		headerText = cbData.text or cbData.name,
+		entries = cbData.entries,
+		getColor = cbData.getColor,
+		setColor = cbData.setColor,
+		getDefaultColor = cbData.getDefaultColor,
+		colorizeLabel = cbData.colorizeLabel or cbData.colorizeText,
+		rowHeight = cbData.rowHeight,
+		basePadding = cbData.basePadding,
+		minHeight = cbData.minHeight,
+		height = cbData.height,
+		spacing = cbData.spacing,
+		parent = cbData.element or cbData.parent,
+		parentCheck = cbData.parentCheck,
+		searchtags = cbData.searchtags,
+		notify = cbData.notify,
+		parentSection = cbData.parentSection,
+		prefix = prefix,
+	})
+	addon.SettingsLayout.elements = addon.SettingsLayout.elements or {}
+	addon.SettingsLayout.elements[cbData.var or cbData.key or "ColorOverrides"] = { initializer = initializer }
+	return initializer
+end
+
+---------------------------------------------------------
+-- Text / Header / Button / Notify
+---------------------------------------------------------
+function addon.functions.SettingsCreateHeadline(cat, text, extra) return SettingsLib:CreateHeader(cat, text, extra) end
+
+function addon.functions.SettingsCreateText(cat, text, extra) return SettingsLib:CreateText(cat, text, extra) end
+
+function addon.functions.SettingsCreateButton(cat, cbData)
+	local btn = SettingsLib:CreateButton(cat, {
+		label = cbData.label,
+		text = cbData.text,
+		func = cbData.func,
+		desc = cbData.desc,
+		searchtags = cbData.searchtags,
+		parent = cbData.element,
+		parentCheck = cbData.parentCheck,
+		parentSection = cbData.parentSection,
+		prefix = prefix,
+	})
+	addon.SettingsLayout.elements = addon.SettingsLayout.elements or {}
+	addon.SettingsLayout.elements[cbData.var or cbData.text] = { element = btn }
+	return btn
+end
+
+function addon.functions.SettingsCreateColorPicker(cat, cbData)
+	local initializer = SettingsLib:CreateColorOverrides(cat, {
+		key = cbData.var, -- eindeutiger Key
+		headerText = cbData.text, -- Überschrift (optional)
+		entries = { { key = cbData.var, label = cbData.text, tooltip = cbData.tooltip } },
+		getColor = function(key)
+			local db = addon.db[cbData.var]
+			if cbData.subvar and db then db = db[cbData.subvar] end
+			local col = db or { r = 0, g = 0, b = 0, a = 1 }
+			return col.r or 0, col.g or 0, col.b or 0, col.a or 1
+		end,
+		setColor = function(key, r, g, b, a)
+			addon.db[cbData.var] = addon.db[cbData.var] or {}
+			if cbData.subvar then
+				addon.db[cbData.var][cbData.subvar] = { r = r, g = g, b = b, a = a }
+			else
+				addon.db[cbData.var] = { r = r, g = g, b = b, a = a }
+			end
+			if cbData.callback then cbData.callback(r, g, b, a) end
+		end,
+		getDefaultColor = function() return 1, 1, 1, 1 end,
+		parent = cbData.element,
+		parentCheck = cbData.parentCheck,
+		searchtags = cbData.searchtags,
+		notify = cbData.notify,
+		parentSection = cbData.parentSection,
+		prefix = prefix,
+		colorizeLabel = cbData.colorizeLabel,
+		hasOpacity = cbData.hasOpacity,
+	})
+
+	addon.SettingsLayout = addon.SettingsLayout or {}
+	addon.SettingsLayout.elements = addon.SettingsLayout.elements or {}
+	addon.SettingsLayout.elements[cbData.var] = { initializer = initializer }
+	return initializer
+end
+
+function addon.functions.SettingsCreateExpandableSection(cat, cbData)
+	local section = SettingsLib:CreateExpandableSection(cat, {
+		name = cbData.name,
+		expanded = cbData.expanded,
+		searchtags = cbData.searchtags,
+		colorizeTitle = cbData.colorizeTitle,
+		titleColor = cbData.titleColor,
+		extent = cbData.extent,
+		newTagID = cbData.newTagID,
+		prefix = prefix,
+	})
+	if cbData.var then
+		addon.SettingsLayout = addon.SettingsLayout or {}
+		addon.SettingsLayout.elements = addon.SettingsLayout.elements or {}
+		addon.SettingsLayout.elements[cbData.var] = { initializer = section }
+	end
+	return section
+end
+
+local cat, layout = SettingsLib:CreateRootCategory(addonName, false)
+
+addon.SettingsLayout.rootCategory = cat
+addon.SettingsLayout.rootLayout = layout

@@ -1,4 +1,4 @@
-local MODULE_MAJOR, MINOR = "LibEQOLSettingsMode-1.0", 11000001
+local MODULE_MAJOR, MINOR = "LibEQOLSettingsMode-1.0", 17010001
 local LibStub = _G.LibStub
 assert(LibStub, MODULE_MAJOR .. " requires LibStub")
 
@@ -430,9 +430,6 @@ local function applyModifyPredicate(initializer, data)
 	if not (initializer and data and data.isEnabled) then
 		return
 	end
-	if data.parentCheck then
-		return
-	end
 	if not initializer.AddModifyPredicate then
 		return
 	end
@@ -613,6 +610,74 @@ function lib:CreateSlider(cat, data)
 	return element, setting
 end
 
+function lib:CreateInput(cat, data)
+	assert(cat and data and data.key, "category and data.key required")
+	local varType = data.varType
+	if not varType then
+		if data.numeric then
+			varType = Settings.VarType.Number
+		else
+			varType = Settings.VarType.String
+		end
+	end
+	local default = data.default
+	if default == nil then
+		default = (varType == Settings.VarType.Number) and 0 or ""
+	end
+	local setting = registerSetting(
+		cat,
+		data.key,
+		varType,
+		data.name or data.text or data.key,
+		default,
+		data.get or function()
+			return default
+		end,
+		data.set,
+		data
+	)
+
+	local initializer = Settings.CreateControlInitializer(
+		"LibEQOL5781585_InputControlTemplate",
+		setting,
+		nil,
+		data.desc
+	)
+	initializer.data.multiline = data.multiline
+	initializer.data.multilineHeight = data.multilineHeight or data.height
+	initializer.data.numeric = data.numeric or (varType == Settings.VarType.Number)
+	initializer.data.formatter = data.formatter
+	initializer.data.maxChars = data.maxChars
+	initializer.data.inputWidth = data.inputWidth
+	initializer.data.readOnly = data.readOnly
+	initializer.data.selectAllOnFocus = data.selectAllOnFocus
+	initializer.data.placeholder = data.placeholder
+	initializer.data.justifyH = data.justifyH
+
+	if initializer.data.multiline then
+		local extent = tonumber(initializer.data.multilineHeight) or 80
+		initializer.GetExtent = function()
+			return extent
+		end
+	elseif data.height then
+		local extent = tonumber(data.height)
+		if extent then
+			initializer.GetExtent = function()
+				return extent
+			end
+		end
+	end
+
+	Settings.RegisterInitializer(cat, initializer)
+	applyParentInitializer(initializer, data.parent, data.parentCheck)
+	applyModifyPredicate(initializer, data)
+	addSearchTags(initializer, data.searchtags, data.name or data.text)
+	applyExpandablePredicate(initializer, data)
+	State.elements[data.key] = initializer
+	maybeAttachNotify(setting, data)
+	return initializer, setting
+end
+
 function lib:CreateDropdown(cat, data)
 	assert(cat and data and data.key, "category and data.key required")
 	local defaultType = type(data.default)
@@ -730,7 +795,7 @@ function lib:CreateScrollDropdown(cat, data)
 		return container:GetData()
 	end
 
-	local initializer = Settings.CreateElementInitializer("LibEQOLeffc048_ScrollDropdownTemplate", {
+	local initializer = Settings.CreateElementInitializer("LibEQOL5781585_ScrollDropdownTemplate", {
 		label = data.name or data.text or data.key,
 		optionsFunc = optionsFunc,
 		generator = data.generator,
@@ -763,7 +828,7 @@ function lib:CreateSoundDropdown(cat, data)
 		data.set,
 		data
 		)
-		local initializer = Settings.CreateElementInitializer("LibEQOLeffc048_SoundDropdownTemplate", {
+		local initializer = Settings.CreateElementInitializer("LibEQOL5781585_SoundDropdownTemplate", {
 			setting = setting,
 			options = data.values or data.options,
 			optionfunc = data.optionfunc,
@@ -1027,7 +1092,7 @@ end
 
 function lib:CreateColorOverrides(cat, data)
 	assert(cat and data and data.entries, "category and entries required")
-	local initializer = Settings.CreateElementInitializer("LibEQOLeffc048_ColorOverridesPanelNoHead", {
+	local initializer = Settings.CreateElementInitializer("LibEQOL5781585_ColorOverridesPanelNoHead", {
 		categoryID = cat:GetID(),
 		entries = data.entries,
 		getColor = data.getColor,
@@ -1096,7 +1161,7 @@ function lib:CreateMultiDropdown(cat, data)
 		function() end,
 		data
 	)
-	local initializer = Settings.CreateElementInitializer("LibEQOLeffc048_MultiDropdownTemplate", {
+	local initializer = Settings.CreateElementInitializer("LibEQOL5781585_MultiDropdownTemplate", {
 		label = data.name or data.text or data.key,
 		options = data.values,
 		optionfunc = data.optionfunc,
@@ -1137,6 +1202,10 @@ function lib.CreateExpandableSection(_, cat, data)
 	end
 
 	local resolvedName = nameGetter() or "Section"
+	local newTagID = data.newTagID
+	if newTagID ~= nil then
+		newTagID = prefixTag(newTagID, data.prefix)
+	end
 	local initializer
 	if type(CreateSettingsExpandableSectionInitializer) == "function" then
 		initializer = CreateSettingsExpandableSectionInitializer(resolvedName)
@@ -1161,6 +1230,31 @@ function lib.CreateExpandableSection(_, cat, data)
 	function initializer:InitFrame(frame)
 		self.data.name = self.data.nameGetter()
 		origInitFrame(self, frame)
+
+		if newTagID then
+			if not frame.NewFeature then
+				local parent = (frame.Button or frame)
+				frame.NewFeature = CreateFrame("Frame", nil, parent, "NewFeatureLabelTemplate")
+				frame.NewFeature:SetScale(0.8)
+				frame.NewFeature:SetFrameStrata("HIGH")
+				frame.NewFeature:SetFrameLevel((parent:GetFrameLevel() or 0) + 5)
+				frame.NewFeature:ClearAllPoints()
+				if frame.Button and frame.Button.Text then
+					frame.NewFeature:SetPoint("BOTTOMRIGHT", frame.Button.Text, "LEFT", 16, -10)
+				else
+					frame.NewFeature:SetPoint("LEFT", frame, "LEFT", 0, 0)
+				end
+			end
+			local resolver, resolvedPrefix = getResolverForPrefix(data.prefix or (State.prefixSet and State.prefix) or nil)
+			local show = false
+			if resolver then
+				local ok, result = pcall(resolver, newTagID, newTagID, nil, resolvedPrefix)
+				show = ok and result == true
+			end
+			frame.NewFeature:SetShown(show)
+		elseif frame.NewFeature then
+			frame.NewFeature:Hide()
+		end
 
 		local function applyVisuals(expanded)
 			if frame.Button and frame.Button.Right then
@@ -1239,7 +1333,7 @@ function lib:CreateText(cat, text, extra)
 	local data = normalizeNameData(text, extra)
 	local name = data.name or data.text
 	local init = Settings.CreateElementInitializer(
-		"LibEQOLeffc048_SettingsListSectionHintTemplate",
+		"LibEQOL5781585_SettingsListSectionHintTemplate",
 		{ name = name }
 	)
 	addSearchTags(init, data.searchtags or name, name)

@@ -133,6 +133,7 @@ L["Portal to Harandar"] = true
 L["Rootway to Harandar"] = true
 L["Portal to Voidstorm"] = true
 L["Portal to Silvermoon City"] = true
+L["Portal to Ghostlands"] = true
 
 -------------------------------------------------TWW------------------------------------------------
 

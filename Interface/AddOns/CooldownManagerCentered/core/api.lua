@@ -162,30 +162,86 @@ function API:ShowReloadUIConfirmation()
     StaticPopup_Show("CMC_RELOAD_UI_ASK")
 end
 
-function API:HasCustomLayoutSelected()
-    local layoutInfo = C_EditMode.GetLayouts()
-    if layoutInfo.activeLayout > 2 then
-        return true
+function API:ToggleEditMode()
+    if InCombatLockdown and InCombatLockdown() then
+        ns.Addon:Print("Cannot toggle Edit Mode while in combat.")
+        return
     end
-    print("Debug Info. Active Layout: ", layoutInfo.activeLayout)
-    return false
+    local frame = _G.EditModeManagerFrame
+    if not frame then
+        local loader = (C_AddOns and C_AddOns.LoadAddOn) or _G.UIParentLoadAddOn
+        if loader then
+            loader("Blizzard_EditMode")
+            frame = _G.EditModeManagerFrame
+        end
+    end
+    if not frame then
+        return
+    end
+    if frame.CanEnterEditMode and not frame:CanEnterEditMode() then
+        ns.Addon:Print("Cannot enter Edit Mode right now.")
+        return
+    end
+    if frame:IsShown() then
+        if HideUIPanel then
+            HideUIPanel(frame)
+        else
+            frame:Hide()
+        end
+    else
+        if ShowUIPanel then
+            ShowUIPanel(frame)
+        else
+            frame:Show()
+        end
+    end
 end
 
-StaticPopupDialogs["CMC_NO_LAYOUT_UI_ERROR"] = {
-    text = "To properly use Cooldown Manager Centered, add custom Layout to Edit Mode",
-    button1 = "Open Edit Mode",
-    button2 = "Not now",
+StaticPopupDialogs["CMC_ELVUI_SKINNING_ASK"] = {
+    text = "ElvUI Cooldown Manager skinning is enabled. It will conflict with Cooldown Manager Centered styling. Disable ElvUI skinning?",
+    button1 = "Yes, I will use CMC styling",
+    button2 = "No\nI promise to not report any visual bugs",
     OnAccept = function(self, profileName)
-        if EditModeManagerFrame:CanEnterEditMode() and not InCombatLockdown() then
-            ShowUIPanel(EditModeManagerFrame)
-        else
-            ns.Addon:Print("Cannot enter Edit Mode right now.")
-        end
+        API:DisableElvUICDMSkinning()
+        ReloadUI()
     end,
     timeout = 0,
     whileDead = true,
     hideOnEscape = true,
 }
-function API:ShowNoLayoutUIError()
-    StaticPopup_Show("CMC_NO_LAYOUT_UI_ERROR")
+function API:IsElvUICDMSkinningEnabled()
+    if C_AddOns and not C_AddOns.IsAddOnLoaded("ElvUI") then
+        return false
+    end
+
+    local E = ElvUI and ElvUI[1]
+    if not E or not E.private then
+        return false
+    end
+
+    local skins = E.private.skins
+    if not skins or not skins.blizzard then
+        return false
+    end
+
+    return skins.blizzard.enable and skins.blizzard.cooldownManager
+end
+
+function API:DisableElvUICDMSkinning()
+    if C_AddOns and not C_AddOns.IsAddOnLoaded("ElvUI") then
+        return false
+    end
+
+    local E = ElvUI and ElvUI[1]
+    if not E or not E.private then
+        return false
+    end
+
+    local skins = E.private.skins
+    if not skins or not skins.blizzard then
+        return false
+    end
+
+    skins.blizzard.cooldownManager = false
+    return true
 end

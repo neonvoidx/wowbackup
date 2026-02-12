@@ -7,7 +7,7 @@ if SpecBisTooltip:GetWoWBuild() == "TBC" then
     end
 end
 
--- SOURCE FROM: 16.01.2026
+-- SOURCE FROM: 07.02.2026
 if SpecBisTooltip:GetWoWBuild() == "TBC" then
     function SpecBisTooltip:TranslationenUS()
         s["npc;sold=20613"] = {"Arodis Sunblade <Keeper of Sha'tari Artifacts>", "Shattrath City"}
@@ -85,6 +85,12 @@ if SpecBisTooltip:GetWoWBuild() == "TBC" then
         s["object;contained=184465"] = {"Cache of the Legion", "The Mechanar"}
         s["npc;drop=17942"] = {"Quagmirran", "The Slave Pens"}
         s["quest;reward=9271"] = {"Atiesh, Greatstaff of the Guardian", "Stratholme"}
+        s["quest;reward=11033"] = {"Assassin No More", "Deadwind Pass"}
+        s["spell;created=35587"] = {"Windhawk Belt", "CRAFTING"}
+        s["npc;drop=16816"] = {"Echo of Medivh", "Karazhan"}
+        s["npc;drop=16152"] = {"Attumen the Huntsman", "Karazhan"}
+        s["spell;created=35584"] = {"Netherstrike Bracers", "CRAFTING"}
+        s["spell;created=35585"] = {"Windhawk Hauberk", "CRAFTING"}
     end
 
     function SpecBisTooltip:TranslationdeDE()
@@ -157,6 +163,12 @@ if SpecBisTooltip:GetWoWBuild() == "TBC" then
         s["npc;drop=184259"] = {"Herr der Nacht", "Karazhan"}
         s["object;contained=184465"] = {"Behälter der Legion", "Die Mechanar"}
         s["quest;reward=9271"] = {"Atiesh, Hohestab des Wächters", "Stratholme"}
+        s["quest;reward=11033"] = {"Nicht mehr Assassine", "Gebirgspass der Totenwinde"}
+        s["spell;created=35587"] = {"Windfalkengürtel", "CRAFTING"}
+        s["npc;drop=16816"] = {"Echo Medivhs", "Karazhan"}
+        s["npc;drop=16152"] = {"Attumen der Jäger", "Karazhan"}
+        s["spell;created=35584"] = {"Netherstoßarmschienen", "CRAFTING"}
+        s["spell;created=35585"] = {"Windfalkenhalsberge", "CRAFTING"}
     end
 
     function SpecBisTooltip:TranslationesES()
@@ -229,6 +241,12 @@ if SpecBisTooltip:GetWoWBuild() == "TBC" then
         s["npc;drop=184259"] = {"Dueño de la noche", "Karazhan"}
         s["object;contained=184465"] = {"Alijo de la Legión", "El Mechanar"}
         s["quest;reward=9271"] = {"Atiesh, el gran báculo del guardián", "Stratholme"}
+        s["quest;reward=11033"] = {"Ya no es asesino", "Paso de la Muerte"}
+        s["spell;created=35587"] = {"Cinturón de halcón del viento", "CRAFTING"}
+        s["npc;drop=16816"] = {"Eco de Medivh", "Karazhan"}
+        s["npc;drop=16152"] = {"Attumen el Montero", "Karazhan"}
+        s["spell;created=35584"] = {"Brazales de golpe abisal", "CRAFTING"}
+        s["spell;created=35585"] = {"Camisote de halcón del viento", "CRAFTING"}
     end
 
     function SpecBisTooltip:TranslationfrFR()
@@ -301,6 +319,12 @@ if SpecBisTooltip:GetWoWBuild() == "TBC" then
         s["object;contained=184465"] = {"Cache de la Légion", "Le Méchanar"}
         s["npc;drop=17942"] = {"Bourbierreux", "Les enclos aux esclaves"}
         s["quest;reward=9271"] = {"Atiesh, le grand bâton du Gardien", "Stratholme"}
+        s["quest;reward=11033"] = {"Quitter la voie de l'assassin", "Défilé de Deuillevent"}
+        s["spell;created=35587"] = {"Ceinture Faucon-du-vent", "CRAFTING"}
+        s["npc;drop=16816"] = {"Echo de Medivh", "Karazhan"}
+        s["npc;drop=16152"] = {"Attumen le Veneur", "Karazhan"}
+        s["spell;created=35584"] = {"Brassards Coup-de-Néant", "CRAFTING"}
+        s["spell;created=35585"] = {"Haubert Faucon-du-vent", "CRAFTING"}
     end
 
     function SpecBisTooltip:TranslationitIT()
@@ -319,6 +343,7 @@ if SpecBisTooltip:GetWoWBuild() == "TBC" then
         s["npc;sold=25176"] = {"Grikkin Copperspring <Arena Vendor>", "Nagrand"}
         s["npc;sold=17657"] = {"Logistics Officer Ulrike <Honor Hold Quartermaster>", "Hellfire Peninsula"}
         s["quest;reward=9271"] = {"Atiesh, Greatstaff of the Guardian", "Stratholme"}
+        s["quest;reward=11033"] = {"Assassin No More", "Deadwind Pass"}
     end
 
     function SpecBisTooltip:TranslationkoKR()
@@ -397,6 +422,12 @@ if SpecBisTooltip:GetWoWBuild() == "TBC" then
         s["object;contained=184465"] = {"군단 저장고", "메카나르"}
         s["npc;drop=17942"] = {"쿠아그미란", "강제 노역소"}
         s["quest;reward=9271"] = {"아티쉬, 수호자의 지팡이", "스트라솔름"}
+        s["quest;reward=11033"] = {"일급 암살자의 길 포기", "죽음의 고개"}
+        s["spell;created=35587"] = {"바람매 허리띠", "CRAFTING"}
+        s["npc;drop=16816"] = {"메디브의 메아리", "카라잔"}
+        s["npc;drop=16152"] = {"사냥꾼 어튜멘", "카라잔"}
+        s["spell;created=35584"] = {"황천쐐기 팔보호구", "CRAFTING"}
+        s["spell;created=35585"] = {"바람매 갑옷", "CRAFTING"}
     end
 
     function SpecBisTooltip:TranslationptBR()
@@ -470,6 +501,12 @@ if SpecBisTooltip:GetWoWBuild() == "TBC" then
         s["object;contained=184465"] = {"Baú da Legião", "Mecanar"}
         s["npc;drop=17942"] = {"Atolaço", "Pátio dos Escravos"}
         s["quest;reward=9271"] = {"Atiesh, Grande Cajado do Guardião", "Stratholme"}
+        s["quest;reward=11033"] = {"Assassino, não mais", "Trilha do Vento Morto"}
+        s["spell;created=35587"] = {"Cinto do Falcão do Vento", "CRAFTING"}
+        s["npc;drop=16816"] = {"Eco de Medivh", "Karazhan"}
+        s["npc;drop=16152"] = {"Attumen, o Caçador", "Karazhan"}
+        s["spell;created=35584"] = {"Braçadeiras do Golpe Etéreo", "CRAFTING"}
+        s["spell;created=35585"] = {"Cota do Falcão do Vento", "CRAFTING"}
     end
 
     function SpecBisTooltip:TranslationruRU()
@@ -548,6 +585,12 @@ if SpecBisTooltip:GetWoWBuild() == "TBC" then
         s["object;contained=184465"] = {"Тайник Легиона", "Механар"}
         s["npc;drop=17942"] = {"Зыбун", "Узилище"}
         s["quest;reward=9271"] = {"Атиеш, большой посох Стража", "Стратхольм"}
+        s["quest;reward=11033"] = {"Перестать быть убийцей из Аметистового Ока", "Перевал Мертвого Ветра"}
+        s["spell;created=35587"] = {"Пояс легкокрылого ястреба", "CRAFTING"}
+        s["npc;drop=16816"] = {"Эхо Медива", "Каражан"}
+        s["npc;drop=16152"] = {"Ловчий Аттумен", "Каражан"}
+        s["spell;created=35584"] = {"Наручи удара Пустоты", "CRAFTING"}
+        s["spell;created=35585"] = {"Хауберк легкокрылого ястреба", "CRAFTING"}
     end
 
     function SpecBisTooltip:TranslationzhCN()
@@ -626,6 +669,12 @@ if SpecBisTooltip:GetWoWBuild() == "TBC" then
         s["object;contained=184465"] = {"军团宝箱", "能源舰"}
         s["npc;drop=17942"] = {"夸格米拉", "奴隶围栏"}
         s["quest;reward=9271"] = {"埃提耶什，守护者的传说之杖", "斯坦索姆"}
+        s["quest;reward=11033"] = {"远离刺客之路", "逆风小径"}
+        s["spell;created=35587"] = {"风鹰腰带", "CRAFTING"}
+        s["npc;drop=16816"] = {"麦迪文的回音", "卡拉赞"}
+        s["npc;drop=16152"] = {"猎手阿图门", "卡拉赞"}
+        s["spell;created=35584"] = {"虚空打击护腕", "CRAFTING"}
+        s["spell;created=35585"] = {"风鹰胸甲", "CRAFTING"}
     end
 
     function SpecBisTooltip:TranslationzhTW()
@@ -704,5 +753,11 @@ if SpecBisTooltip:GetWoWBuild() == "TBC" then
         s["object;contained=184465"] = {"军团宝箱", "能源舰"}
         s["npc;drop=17942"] = {"夸格米拉", "奴隶围栏"}
         s["quest;reward=9271"] = {"埃提耶什，守护者的传说之杖", "斯坦索姆"}
+        s["quest;reward=11033"] = {"远离刺客之路", "逆风小径"}
+        s["spell;created=35587"] = {"风鹰腰带", "CRAFTING"}
+        s["npc;drop=16816"] = {"麦迪文的回音", "卡拉赞"}
+        s["npc;drop=16152"] = {"猎手阿图门", "卡拉赞"}
+        s["spell;created=35584"] = {"虚空打击护腕", "CRAFTING"}
+        s["spell;created=35585"] = {"风鹰胸甲", "CRAFTING"}
     end
 end

@@ -1,0 +1,276 @@
+
+MiniCCDB = {
+["Anchor1"] = "",
+["Portrait"] = {
+["Enabled"] = true,
+["ReverseCooldown"] = false,
+},
+["NotifiedChanges"] = true,
+["Anchor3"] = "",
+["WhatsNew"] = {
+},
+["Default"] = {
+["AdvancedMode"] = {
+["Offset"] = {
+["Y"] = 0,
+["X"] = 2,
+},
+["Point"] = "TOPLEFT",
+["RelativePoint"] = "TOPRIGHT",
+},
+["SimpleMode"] = {
+["Offset"] = {
+["Y"] = 0,
+["X"] = 2,
+},
+["Enabled"] = true,
+["Grow"] = "RIGHT",
+},
+["Enabled"] = true,
+["Icons"] = {
+["Glow"] = true,
+["ReverseCooldown"] = false,
+["ColorByDispelType"] = true,
+["Size"] = 72,
+},
+["ExcludePlayer"] = true,
+},
+["Raid"] = {
+["AdvancedMode"] = {
+["Offset"] = {
+["Y"] = 0,
+["X"] = 2,
+},
+["Point"] = "TOPLEFT",
+["RelativePoint"] = "TOPRIGHT",
+},
+["SimpleMode"] = {
+["Offset"] = {
+["Y"] = 0,
+["X"] = 0,
+},
+["Enabled"] = true,
+["Grow"] = "CENTER",
+},
+["Enabled"] = true,
+["Icons"] = {
+["ReverseSwipe"] = false,
+["Glow"] = true,
+["ColorByDispelType"] = true,
+["ReverseCooldown"] = false,
+["Size"] = 50,
+},
+["ExcludePlayer"] = true,
+},
+["Alerts"] = {
+["Enabled"] = false,
+["RelativeTo"] = "UIParent",
+["Point"] = "CENTER",
+["RelativePoint"] = "TOP",
+["Offset"] = {
+["Y"] = -100,
+["X"] = 0,
+},
+["Icons"] = {
+["ColorByClass"] = true,
+["Glow"] = true,
+["ReverseCooldown"] = false,
+["Size"] = 58,
+},
+["IncludeBigDefensives"] = true,
+},
+["AllyIndicator"] = {
+["Enabled"] = true,
+["ExcludePlayer"] = false,
+["Offset"] = {
+["Y"] = 0,
+["X"] = 0,
+},
+["Icons"] = {
+["Glow"] = true,
+["ReverseCooldown"] = true,
+["Size"] = 40,
+},
+["Grow"] = "CENTER",
+},
+["Version"] = 17,
+["Healer"] = {
+["Offset"] = {
+["Y"] = -111.1999969482422,
+["X"] = -1.600118041038513,
+},
+["RelativeTo"] = "UIParent",
+["Point"] = "TOP",
+["Icons"] = {
+["ReverseSwipe"] = false,
+["Glow"] = true,
+["ColorByDispelType"] = true,
+["ReverseCooldown"] = false,
+["Size"] = 66,
+},
+["Font"] = {
+["Flags"] = "OUTLINE",
+["File"] = "Fonts\\FRIZQT__.TTF",
+["Size"] = 26,
+},
+["RelativePoint"] = "TOP",
+["Enabled"] = true,
+["Sound"] = {
+["Enabled"] = true,
+["Channel"] = "Master",
+},
+["Filters"] = {
+["BattleGrounds"] = false,
+["Arena"] = true,
+["World"] = false,
+},
+},
+["Anchor2"] = "",
+["Trinkets"] = {
+["Enabled"] = true,
+["Font"] = {
+["File"] = "GameFontHighlightSmall",
+},
+["Point"] = "RIGHT",
+["RelativePoint"] = "LEFT",
+["Icons"] = {
+["ReverseCooldown"] = false,
+["Glow"] = false,
+["ShowText"] = true,
+["Size"] = 50,
+},
+["Offset"] = {
+["Y"] = 0,
+["X"] = -2,
+},
+},
+["KickTimer"] = {
+["CasterEnabled"] = false,
+["RelativeTo"] = "UIParent",
+["Point"] = "CENTER",
+["AllEnabled"] = false,
+["Offset"] = {
+["Y"] = -300,
+["X"] = 0,
+},
+["HealerEnabled"] = false,
+["Icons"] = {
+["Glow"] = false,
+["ReverseCooldown"] = true,
+["Size"] = 50,
+},
+["RelativePoint"] = "CENTER",
+},
+["Nameplates"] = {
+["Grow"] = "RIGHT",
+["FriendlyEnabled"] = true,
+["EnemyEnabled"] = true,
+["Offset"] = {
+["Y"] = 0,
+["X"] = 2,
+},
+["Icons"] = {
+["MaxIcons"] = 5,
+["Glow"] = true,
+["ColorByDispelType"] = true,
+["ReverseCooldown"] = true,
+["Size"] = 50,
+},
+["Friendly"] = {
+["Combined"] = {
+["Offset"] = {
+["Y"] = 0,
+["X"] = 2,
+},
+["Grow"] = "RIGHT",
+["Icons"] = {
+["MaxIcons"] = 5,
+["Glow"] = true,
+["ColorByDispelType"] = true,
+["ReverseCooldown"] = true,
+["Size"] = 50,
+},
+["Enabled"] = false,
+},
+["Important"] = {
+["Offset"] = {
+["Y"] = 0,
+["X"] = -2,
+},
+["Enabled"] = false,
+["Icons"] = {
+["MaxIcons"] = 5,
+["Glow"] = true,
+["ColorByDispelType"] = true,
+["ReverseCooldown"] = true,
+["Size"] = 50,
+},
+["Grow"] = "LEFT",
+},
+["CC"] = {
+["Offset"] = {
+["Y"] = 49,
+["X"] = 0,
+},
+["Enabled"] = true,
+["Icons"] = {
+["MaxIcons"] = 5,
+["Glow"] = false,
+["ColorByDispelType"] = true,
+["ReverseCooldown"] = true,
+["Size"] = 30,
+},
+["Grow"] = "CENTER",
+},
+["IgnorePets"] = true,
+},
+["Enemy"] = {
+["Combined"] = {
+["Offset"] = {
+["Y"] = 0,
+["X"] = 2,
+},
+["Grow"] = "RIGHT",
+["Icons"] = {
+["MaxIcons"] = 5,
+["Glow"] = true,
+["ColorByDispelType"] = true,
+["ReverseCooldown"] = true,
+["Size"] = 50,
+},
+["Enabled"] = false,
+},
+["Important"] = {
+["Offset"] = {
+["Y"] = 0,
+["X"] = -2,
+},
+["Enabled"] = true,
+["Icons"] = {
+["MaxIcons"] = 5,
+["Glow"] = true,
+["ColorByDispelType"] = true,
+["ReverseCooldown"] = true,
+["Size"] = 35,
+},
+["Grow"] = "LEFT",
+},
+["CC"] = {
+["Offset"] = {
+["Y"] = 0,
+["X"] = 2,
+},
+["Enabled"] = true,
+["Icons"] = {
+["MaxIcons"] = 5,
+["Glow"] = false,
+["ColorByDispelType"] = true,
+["ReverseCooldown"] = true,
+["Size"] = 35,
+},
+["Grow"] = "RIGHT",
+},
+["IgnorePets"] = true,
+},
+},
+}

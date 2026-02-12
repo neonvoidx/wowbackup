@@ -12,7 +12,7 @@
 ## Notes-koKR: Capping|1을;를; 설정하는 옵션입니다.
 ## Notes-ptBR: Capping Opções de Configuração.
 ## Notes-ruRU: Capping параметры настроек.
-## Version: v12.0.1
+## Version: v12.0.5
 ## LoadOnDemand: 1
 ## Dependencies: Capping
 

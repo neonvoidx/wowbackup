@@ -1,7 +1,7 @@
 
 BugGrabberDB = {
 ["lastSanitation"] = 3,
-["session"] = 4721,
+["session"] = 4723,
 ["errors"] = {
 {
 ["message"] = "...ddOns/BetterBlizzFrames/retail/BetterBlizzFrames.lua:2720: attempt to index global 'MainMenuBar' (a nil value)",

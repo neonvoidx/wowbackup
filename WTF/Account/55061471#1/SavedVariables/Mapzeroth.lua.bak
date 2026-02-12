@@ -1,0 +1,11 @@
+
+MapzerothDB = {
+["settings"] = {
+["maxCooldownValue"] = 8,
+["loadingScreenTax"] = 15,
+["windowScale"] = 1,
+},
+["minimap"] = {
+["hide"] = false,
+},
+}

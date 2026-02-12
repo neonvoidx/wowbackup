@@ -244,11 +244,11 @@ DB.nodes = {
 
     [2352] = { -- Founder's Point (Alliance Neighborhood)
         [57422661] = { icon="portal", label=L["Portal to Stormwind"], note=ElwynnForest, faction="Alliance" },
-        -- [54285587] = { icon="portal", label=L["Portal to Loamm"], note=ZaralekCavern, faction="Alliance" } -- No portal back? -- was not there yet
+        -- [54285587] = { icon="portal", label=L["Portal to Loamm"], note=ZaralekCavern, faction="Alliance" } -- No portal back? -- THIS WILL CHANGE
         },
     [2351] = { -- Razorwind Shores (Horde Neighborhood)
         [53924937] = { icon="portal", label=L["Portal to Orgrimmar"], note=Durotar, faction="Horde" },
-        -- [54285587] = { icon="portal", label=L["Portal to Kun-Lai Summit"], note=Pandaria, faction="Horde" } -- was not there yet
+        -- [54285587] = { icon="portal", label=L["Portal to Kun-Lai Summit"], note=Pandaria, faction="Horde" } -- THIS WILL CHANGE
         },
     [2274] = { -- Khaz Algar
         [72691965] = { icon="portal", label=L["Portal to The Timeways"], requirements={level=80} },
@@ -1247,49 +1247,49 @@ DB.nodes = {
         [38736678] = { icon="boat", label=L["Boat to Ratchet"], note=NorthernBarrens }
         },
     [13] = { -- Eastern Kingdom
-        [53752981] = { icon="portal", label=L["Revealed Portal to Naxxramas"], note=Naxxramas, requirements={quest=76263, accquest=true} },
-        [44058706] = { icon="zeppelin", multilabel={L["Zeppelin to Orgrimmar"], L["Portal to Undercity"]}, multinote={Durotar, Tirisfal}, faction="Horde" },
-        [44058707] = { icon="hzeppelin", label=L["Zeppelin to Orgrimmar"], note=Durotar, faction="Alliance" },
-        [41107209] = { icon="aboat", multilabel={L["Boat to Borean Tundra"], L["Boat to Boralus"], L["Boat to Dragon Isle"]}, multinote={ValianceKeep, TiragardeSound, WakingShores}, faction="Horde" },
-        [41107210] = { icon="boat", multilabel={L["Portal to Darnassus"], L["Boat to Borean Tundra"], L["Boat to Boralus"], L["Boat to Dragon Isle"] }, multinote={Teldrassil, ValianceKeep, TiragardeSound, WakingShores }, faction="Alliance" },
-        [45995488] = { icon="aboat", multilabel={L["Boat to Theramore Isle"], L["Boat to Howling Fjord"]}, multinote={DustwallowMarsh, Valgarde}, faction="Horde" },
-        [45995482] = { icon="boat", multilabel={L["Boat to Theramore Isle"], L["Boat to Howling Fjord"]}, multinote={DustwallowMarsh, Valgarde}, faction="Alliance" },
-        [43179373] = { icon="boat", label=L["Boat to Ratchet"], note=NorthernBarrens },
+        [54483348] = { icon="portal", label=L["Revealed Portal to Naxxramas"], note=Naxxramas, requirements={quest=76263, accquest=true} },
+        [45038933] = { icon="zeppelin", multilabel={L["Zeppelin to Orgrimmar"], L["Portal to Undercity"]}, multinote={Durotar, Tirisfal}, faction="Horde" },
+        [45038934] = { icon="hzeppelin", label=L["Zeppelin to Orgrimmar"], note=Durotar, faction="Alliance" },
+        [42447575] = { icon="aboat", multilabel={L["Boat to Borean Tundra"], L["Boat to Boralus"], L["Boat to Dragon Isle"]}, multinote={ValianceKeep, TiragardeSound, WakingShores}, faction="Horde" },
+        [42447576] = { icon="boat", multilabel={L["Portal to Darnassus"], L["Boat to Borean Tundra"], L["Boat to Boralus"], L["Boat to Dragon Isle"] }, multinote={Teldrassil, ValianceKeep, TiragardeSound, WakingShores }, faction="Alliance" },
+        [47055826] = { icon="aboat", multilabel={L["Boat to Theramore Isle"], L["Boat to Howling Fjord"]}, multinote={DustwallowMarsh, Valgarde}, faction="Horde" },
+        [47055827] = { icon="boat", multilabel={L["Boat to Theramore Isle"], L["Boat to Howling Fjord"]}, multinote={DustwallowMarsh, Valgarde}, faction="Alliance" },
+        [44139605] = { icon="boat", label=L["Boat to Ratchet"], note=NorthernBarrens },
         -- [56161316] = { icon="portal", multilabel={L["Portal to Orgrimmar"], L["Portal to Undercity"]}, multinote={Durotar, Tirisfal}, faction="Horde" }, -- OLD SM
-        [43637155] = { icon="portal", multilabel={L["Portal to Tol Barad"], L["Portal to Uldum"], L["Portal to Deepholm"], L["Portal to Vashj'ir"], L["Portal to Hyjal"], L["Portal to Twilight Highlands"], L["Deeprun Tram to Ironforge"], L["Portal to Darnassus"], L["Portal to Dalaran"], L["Portal to Jade Forest"], L["Portal to Boralus"], L["Portal to Azsuna"], L["Portal to Stormshield"], L["Portal to Shattrath"], L["Portal to Exodar"], L["Portal to Caverns of Time"], L["Portal to Oribos"], L["Portal to Valdrakken"], L["Portal to Bel'ameth"], L["Portal to Dornogal"], L["Portal to Founder's Point"], L["Portal to Silvermoon City"]},
+        [44497418] = { icon="portal", multilabel={L["Portal to Tol Barad"], L["Portal to Uldum"], L["Portal to Deepholm"], L["Portal to Vashj'ir"], L["Portal to Hyjal"], L["Portal to Twilight Highlands"], L["Deeprun Tram to Ironforge"], L["Portal to Darnassus"], L["Portal to Dalaran"], L["Portal to Jade Forest"], L["Portal to Boralus"], L["Portal to Azsuna"], L["Portal to Stormshield"], L["Portal to Shattrath"], L["Portal to Exodar"], L["Portal to Caverns of Time"], L["Portal to Oribos"], L["Portal to Valdrakken"], L["Portal to Bel'ameth"], L["Portal to Dornogal"], L["Portal to Founder's Point"], L["Portal to Silvermoon City"]},
                                     multinote={EasternKingdoms, Kalimdor, Maelstrom, EasternKingdoms, Kalimdor, EasternKingdoms, DunMorogh, Teldrassil, CrystalsongForest, Pandaria, TiragardeSound, BrokenIsles, Ashran, TerokkarForest, AzuremystIsle, Tanaris, Shadowlands, Thaldraszus, Amirdrassil, IsleOfDorn, EasternKingdoms, EversongWoodsNew},
                                     requirements={multiquest={[4]=14482, [6]=26798, [11]=47186, [17]=60151}, multiaccquest={[6]=true, [11]=true, [17]=true}, multilevel={1, 30, 30, 30, 30, 30, [18]=10}},
                                     faction="Alliance" },
-        [43337195] = { icon="tram", label=L["Deeprun Tram to Ironforge"], note=DunMorogh, faction="Horde" },
-        [43863354] = { icon="portal", requirements={timetravel={quest=52758, spell=276824}, multilevel={[4]=10}}, multilabel={L["Portal to Orgrimmar"], L["Portal to Silvermoon (Burning Crusade)"], L["Portal to Stranglethorn Vale"], L["Portal to Hellfire Peninsula"], L["Portal to Howling Fjord"]}, multinote={Durotar, EversongWoods..") ("..L["Orb of translocation"], GromgolBaseCamp, Outland, VengeanceLanding}, faction="Horde" },
-        [47835898] = { icon="tram", label=L["Deeprun Tram to Stormwind"], note=ElwynnForest },
-        [60875918] = { icon="portal", label=L["Portal to Stormwind"], note=ElwynnForest, requirements={quest=27537}, faction="Alliance" },
-        [35224839] = { icon="portal", label=L["Portal to Stormwind"], note=ElwynnForest, requirements={level=30}, faction="Alliance" },
-        [60115603] = { icon="portal", label=L["Portal to Orgrimmar"], note=Durotar, requirements={quest=26798}, faction="Horde" },
-        [34394957] = { icon="portal", label=L["Portal to Orgrimmar"], note=Durotar, requirements={level=30}, faction="Horde" },
-        [57663241] = { icon="orderhall", label=L["Portal to Dalaran"], note=BrokenIsles, class="PALADIN" },
-        [49714419] = { icon="warfront", requirements={level=50, warfront=11, timetravel={quest=52781, spell=276950}}, label=L["Portal to Port of Zandalar"], note=Zuldazar, faction="Horde" },
-        [49244725] = { icon="warfront", requirements={level=50, warfront=11, timetravel={quest=52781, spell=276950}}, label=L["Portal to Port of Boralus"], note=TiragardeSound, faction="Alliance" },
-        [41003949] = { icon="portal", label=L["Portal to Dalaran Crater"], note=HillsbradFoothills, faction="Horde", requirements={quest=27478} },
-        [43674008] = { icon="portal", label=L["Portal to the Sepulcher"], note=SilverpineForest, faction="Horde", requirements={quest=27478} },
-        [45647931] = { icon="orderhall", label=L["Portal to Emerald Dreamway"], note=Valsharah, class="DRUID" },
-        [54353790] = { icon="orderhall", label=L["Portal to Emerald Dreamway"], note=Valsharah, class="DRUID" },
-        [43077220] = { icon="molemachine", label=GetAreaInfo(6816), race="DarkIronDwarf" }, -- Stormwind
-        [46726015] = { icon="molemachine", label=GetAreaInfo(1537), race="DarkIronDwarf" }, -- Ironforge
-        [49754018] = { icon="molemachine", label=GetAreaInfo(348), requirements={quest=53585, hideQuestName=true}, race="DarkIronDwarf" }, -- The Hinterlands, Aerie Peak
-        [53108129] = { icon="molemachine", label=GetAreaInfo(1438), requirements={quest=53594, hideQuestName=true}, race="DarkIronDwarf" }, -- Blasted Lands, Nethergarde Keep
-        [46766773] = { icon="molemachine", label=L["The Masonary"], requirements={quest=53587, hideQuestName=true}, race="DarkIronDwarf" }, -- Black Rock Mountains, The Masonary
-        [54068459] = { icon="portal", label=L["Portal to Orgrimmar"], note=Durotar, faction="Horde", requirements={timetravel={quest=66560, spell=290245, turn=true, level=10}, level=10} },
-        [53508266] = { icon="portal", label=L["Portal to Stormwind"], note=ElwynnForest, faction="Alliance", requirements={timetravel={quest=66560, spell=290245, turn=true, level=10}, level=10} },
-        [41075058] = { icon="boat", label=L["Boat to Belanaar"], note=Amirdrassil },
-        [42467434] = { icon="portal", label=L["Teleport to the Dark Portal"], note={66560, HellfirePeninsula, BlastedLands}, faction="Alliance" },
-        [43307134] = { icon="balloon", label=L["Hot Air Balloon to Wandering Isle"], note=WuSong, faction="Alliance", requirements={quest=92030, accquest=true} },
-        [56380966] = { icon="portal", label=L["Portal to Orgrimmar"], note=Durotar, faction="Horde" },
-        [56410961] = { icon="portal", label=L["Portal to Stormwind"], note=ElwynnForest, faction="Alliance" },
-        [55330985] = { icon="portal", multilabel={L["Rootway to Harandar"], L["Portal to Voidstorm"]}, multinote={QuelThalas, QuelThalas}, requirements={multiquest={86898, 86549}} },
-        [55680918] = { icon="portal", label=L["Portal to The Timeways"], requirements={level=90} },
-        [54681457] = { icon="portal", label=L["Harandar Rootway"], note=QuelThalas, requirements={quest=86899} },
-        [55552836] = { icon="portal", label=L["Portal to Ghostlands"], note="Ghostlands" }
+        [44277473] = { icon="tram", label=L["Deeprun Tram to Ironforge"], note=DunMorogh, faction="Horde" },
+        [44833713] = { icon="portal", requirements={timetravel={quest=52758, spell=276824}, multilevel={[4]=10}}, multilabel={L["Portal to Orgrimmar"], L["Portal to Silvermoon (Burning Crusade)"], L["Portal to Stranglethorn Vale"], L["Portal to Hellfire Peninsula"], L["Portal to Howling Fjord"]}, multinote={Durotar, EversongWoods..") ("..L["Orb of translocation"], GromgolBaseCamp, Outland, VengeanceLanding}, faction="Horde" },
+        [48686202] = { icon="tram", label=L["Deeprun Tram to Stormwind"], note=ElwynnForest },
+        [61456223] = { icon="portal", label=L["Portal to Stormwind"], note=ElwynnForest, requirements={quest=27537}, faction="Alliance" },
+        [36825276] = { icon="portal", label=L["Portal to Stormwind"], note=ElwynnForest, requirements={level=30}, faction="Alliance" },
+        [60715915] = { icon="portal", label=L["Portal to Orgrimmar"], note=Durotar, requirements={quest=26798}, faction="Horde" },
+        [36125327] = { icon="portal", label=L["Portal to Orgrimmar"], note=Durotar, requirements={level=30}, faction="Horde" },
+        [58313603] = { icon="orderhall", label=L["Portal to Dalaran"], note=BrokenIsles, class="PALADIN" },
+        [50524756] = { icon="warfront", requirements={level=50, warfront=11, timetravel={quest=52781, spell=276950}}, label=L["Portal to Port of Zandalar"], note=Zuldazar, faction="Horde" },
+        [50075055] = { icon="warfront", requirements={level=50, warfront=11, timetravel={quest=52781, spell=276950}}, label=L["Portal to Port of Boralus"], note=TiragardeSound, faction="Alliance" },
+        [42004296] = { icon="portal", label=L["Portal to Dalaran Crater"], note=HillsbradFoothills, faction="Horde", requirements={quest=27478} },
+        [44624354] = { icon="portal", label=L["Portal to the Sepulcher"], note=SilverpineForest, faction="Horde", requirements={quest=27478} },
+        [46548193] = { icon="orderhall", label=L["Portal to Emerald Dreamway"], note=Valsharah, class="DRUID" },
+        [55074140] = { icon="orderhall", label=L["Portal to Emerald Dreamway"], note=Valsharah, class="DRUID" },
+        [44037498] = { icon="molemachine", label=GetAreaInfo(6816), race="DarkIronDwarf" }, -- Stormwind
+        [47606318] = { icon="molemachine", label=GetAreaInfo(1537), race="DarkIronDwarf" }, -- Ironforge
+        [50564364] = { icon="molemachine", label=GetAreaInfo(348), requirements={quest=53585, hideQuestName=true}, race="DarkIronDwarf" }, -- The Hinterlands, Aerie Peak
+        [53858387] = { icon="molemachine", label=GetAreaInfo(1438), requirements={quest=53594, hideQuestName=true}, race="DarkIronDwarf" }, -- Blasted Lands, Nethergarde Keep
+        [47647059] = { icon="molemachine", label=L["The Masonary"], requirements={quest=53587, hideQuestName=true}, race="DarkIronDwarf" }, -- Black Rock Mountains, The Masonary
+        [54798710] = { icon="portal", label=L["Portal to Orgrimmar"], note=Durotar, faction="Horde", requirements={timetravel={quest=66560, spell=290245, turn=true, level=10}, level=10} },
+        [54248521] = { icon="portal", label=L["Portal to Stormwind"], note=ElwynnForest, faction="Alliance", requirements={timetravel={quest=66560, spell=290245, turn=true, level=10}, level=10} },
+        [42075381] = { icon="boat", label=L["Boat to Belanaar"], note=Amirdrassil },
+        [43437706] = { icon="portal", label=L["Teleport to the Dark Portal"], note={66560, HellfirePeninsula, BlastedLands}, faction="Alliance" },
+        [44257413] = { icon="balloon", label=L["Hot Air Balloon to Wandering Isle"], note=WuSong, faction="Alliance", requirements={quest=92030, accquest=true} },
+        [57061377] = { icon="portal", label=L["Portal to Orgrimmar"], note=Durotar, faction="Horde" },
+        [57091372] = { icon="portal", label=L["Portal to Stormwind"], note=ElwynnForest, faction="Alliance" },
+        [56031395] = { icon="portal", multilabel={L["Rootway to Harandar"], L["Portal to Voidstorm"]}, multinote={QuelThalas, QuelThalas}, requirements={multiquest={86898, 86549}} },
+        [56371330] = { icon="portal", label=L["Portal to The Timeways"], requirements={level=90} },
+        [55391857] = { icon="portal", label=L["Harandar Rootway"], note=QuelThalas, requirements={quest=86899} },
+        [56253207] = { icon="portal", label=L["Portal to Ghostlands"], note="Ghostlands" }
         },
     [84] = { -- Stormwind City
         [74481841] = { icon="portal", multilabel={L["Portal to Tol Barad"], L["Portal to Uldum"], L["Portal to Deepholm"], L["Portal to Vashj'ir"], L["Portal to Hyjal"], L["Portal to Twilight Highlands"]}, multinote={EasternKingdoms, Kalimdor, Maelstrom, EasternKingdoms, Kalimdor, EasternKingdoms}, requirements={multiquest={[4]=14482}, multilevel={1, 30, 30, 30, 30, 30}}, faction="Alliance" },

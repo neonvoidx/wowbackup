@@ -1,3 +1,119 @@
+# BetterBlizzFrames 1.9.0
+## Prepatch/Midnight
+### New
+- Add Aswog profile (www.twitch.tv/aswog). Thank you for sharing!
+### Tweak
+- Party Range Frame Alpha adjustment setting is now enabled by default in the addon. You'll have to turn it off if you dont want it.
+### Bugfix
+- Fix cast timers
+- fix hide realm name
+- Fix vehicle leave button being hidden when actionbar 1 was hidden
+- Fix custom code section not being clickable in its entire window without text being there
+- Fix misc things
+
+# BetterBlizzFrames 1.8.9h
+## All
+### Bugfix
+- Fix missing locale causing import/export to break
+
+# BetterBlizzFrames 1.8.9g
+## Midnight/Prepatch
+### New
+- New setting: Hide aura tooltips for Target/Focus/Player
+- New setting: Clickthrough Player Auras (you wont be able to click off auras anymore)
+### Bugfix
+- Misc small bugfixes, secret this, bad argument that.
+
+# BetterBlizzFrames 1.8.9f
+## Midnight/Prepatch
+### Bugfix
+- Fix a lua error related to new castbar color stuff.
+
+# BetterBlizzFrames 1.8.9e
+## Midnight/Prepatch
+### New
+- New Bualock profile (www.twitch.tv/bualock). Thanks for sharing!
+### Bugfix
+- Fix castbar color issues due to Midnight restrictions. Uninteruptible should work fine now. Please report any issues.
+- Fix a nil error with party range alpha setting
+
+# BetterBlizzFrames 1.8.9d
+## Midnight/Prepatch
+### Bugfix
+- Fix lua errors from now new restrictions from Blizzard related to castbar types (uninterruptible status).
+    This means currently not possible to color/texture an uninterruptible cast without some sort of wonky workaround maybe.
+    Disabled for now and will just color depending on cast/channel, this may be confusing on uninterruptible casts.
+    Consider disabling castbar color/texture and for now until maybe a solution arrives.
+
+# BetterBlizzFrames 1.8.9c
+## Midnight/Prepatch
+### Bugfix
+- Fix forcing manabars borders to show with Pixel No Portrait setting even though "Hide Target/Focus Manabar" was enabled.
+
+# BetterBlizzFrames 1.8.9b
+## Midnight/Prepatch
+### New
+- Add sub-setting to the party range alpha setting that keeps the background always solid non-transparent. This is enabled by default now (as it was before).
+- Add variable to skip bug warning on login (will remove this ofc when I feel like it), type: /run BetterBlizzFramesDB.skipBugWarning = true
+### Bugfix
+- Fix nil frame error
+- Fix some locale issues for gui tooltips
+
+# BetterBlizzFrames 1.8.9
+## Midnight/Prepatch
+### New
+- Show CD Timer on Auras (Buffs & Debuffs) and size setting for it.
+- Split "Hide Target/Focus Auras" into "Hide Target/Focus Buffs/Debuffs".
+- Add Wolf profile (www.twitch.tv/wolfzx)
+- Add Trimaz profile (www.twitch.tv/trimaz_wow)
+### Tweak
+- Force show No Portrait pixel border on manabar on targets without mana as well for consistency.
+- Add new damage meter header to dark mode.
+### Bugfix
+- Fix aura stack scale setting not being properly implemented, size slider works now.
+- Fix No Portrait's border glow texture not being the smaller one when manabar was hidden.
+- Fix own Pet detection in Class Icon/Party Pointer now that Blizzard allowed it again.
+- Fix lua error on login as petclass with texture changes enabled.
+- Fixes to No Portrait setting Healthbar getting weird on party frames (hopefully)
+- Many minor misc things I've probably forgot to mention. Please continue to report bugs and thank you so much!
+## All classics
+### Tweak
+- TBC: Add missing roots to Loss of Control setting.
+- Fix Class Icons setting to work on default party frames.
+## Note
+- Spec name stuff might be dead, probably, we'll see.
+- The game is still undergoing tons of changes and in an extremly buggy state despite being in Prepatch and releasing in a few weeks. Many things are getting restricted and unrestricted and its a pain to develop for as we have no idea what is happening most of the time. 
+
+# BetterBlizzFrames 1.8.8e
+## Midnight/Prepatch
+### Bugfix
+- Fix party name width error
+
+# BetterBlizzFrames 1.8.8d
+## Midnight/Prepatch
+### Tweak
+- Improve Target/Focus CC icon now that Blizzard unrestricted things again. Could do with more testing and tweaks.
+### Bugfix
+- Fix "CDM: Center Icons" (Misc) setting having some gap issues. Ty to Kaje@CurseForge for sending fix.
+- Fix PartyFrame Range Alpha setting unintentionally affecting nameplates.
+- Fix two midnight secret errors.
+
+# BetterBlizzFrames 1.8.8c
+## Midnight/Prepatch
+### Tweak
+- Update mes profile
+
+# BetterBlizzFrames 1.8.8b
+## Midnight/Prepatch
+### New
+- Add CompactPartyFrame out-of-range alpha setting. (General)
+### Tweak
+- Remove some dead code which could potentially cause game crash for some people since we are playing the Alpha (Prepatch).
+## All versions
+### Tweak
+- Add /rl command to reload ui.
+- Don't attempt to make SettingsPanel moveable if MoveAny is loaded.
+
 # BetterBlizzFrames 1.8.8
 ## Midnight/Prepatch
 ### New

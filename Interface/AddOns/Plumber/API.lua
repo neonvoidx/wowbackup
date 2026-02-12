@@ -29,7 +29,7 @@ local canaccessvalue = canaccessvalue or function(_) return true end;
 API.Secret_IsSecret = issecretvalue;
 
 function API.Secret_CanAccess(v)
-    return canaccessvalue(v) and v
+    return canaccessvalue(v) and v ~= nil
 end
 
 
@@ -1538,6 +1538,13 @@ do  -- Currency
     CurrencyDataProvider.names = {};
     CurrencyDataProvider.icons = {};
     CurrencyDataProvider.qualities = {};
+    CurrencyDataProvider.shouldDisplayForUI = {};
+
+    function CurrencyDataProvider:CacheCurrencyInfo(currencyID, info)
+        self.names[currencyID] = info.name;
+        self.qualities[currencyID] = info.quality;
+        self.icons[currencyID] = info.iconFileID;
+    end
 
     function API.GetCurrencyName(currencyID, colorized)
         local name = CurrencyDataProvider.names[currencyID];
@@ -1547,8 +1554,7 @@ do  -- Currency
             local info = GetCurrencyInfo(currencyID);
             name = info and info.name;
             if name then
-                CurrencyDataProvider.names[currencyID] = name;
-                CurrencyDataProvider.qualities[currencyID] = info.quality;
+                CurrencyDataProvider:CacheCurrencyInfo(currencyID, info);
             else
                 name = "Currency:"..currencyID;
                 quality = 1;
@@ -1559,6 +1565,27 @@ do  -- Currency
             return API.ColorizeTextByQuality(name, quality)
         else
             return name
+        end
+    end
+
+    function API.GetCurrencyDisplayInfo(currencyID)
+        if not currencyID then return end;
+
+        if CurrencyDataProvider.shouldDisplayForUI[currencyID] == nil then
+            local info = GetCurrencyInfo(currencyID);
+            local name = info and info.name;
+            if name then
+                if info.iconFileID and info.iconFileID ~= 0 and info.description and info.description ~= "" and (not find(info.description, "(Hidden)")) and (not find(info.description, "DNT")) then
+                    CurrencyDataProvider.shouldDisplayForUI[currencyID] = true;
+                    CurrencyDataProvider:CacheCurrencyInfo(currencyID, info);
+                end
+            else
+                CurrencyDataProvider.shouldDisplayForUI[currencyID] = false;
+            end
+        end
+
+        if CurrencyDataProvider.shouldDisplayForUI[currencyID] then
+            return CurrencyDataProvider.names[currencyID], CurrencyDataProvider.icons[currencyID], CurrencyDataProvider.qualities[currencyID]
         end
     end
 
@@ -2133,6 +2160,15 @@ do  -- Reputation
             return renownLevelsInfo[#renownLevelsInfo].level
         end
     end
+
+    function API.GetPlayerFactionIndex()
+        local englishFaction = UnitFactionGroup("player");
+        if englishFaction == "Horde" then
+            return 2
+        else
+            return 1
+        end
+    end
 end
 
 do  -- Spell
@@ -2501,6 +2537,10 @@ do  -- ObjectPool
 
     function ObjectPoolMixin:EnumerateActive()
         return ipairs(self.activeObjects)
+    end
+
+    function ObjectPoolMixin:DebugPrint()
+        print(#self.objects, self.numUnused, #self.activeObjects)
     end
 
     local function CreateObjectPool(createObjectFunc, onRemovedFunc, onAcquiredFunc)
@@ -4297,6 +4337,53 @@ do  -- Delves
         end
 
         tooltip:Show();
+    end
+
+    function API.AddGreatVaultWorldProgressToTooltip(tooltip, threshold)
+        local combineSharedDifficulty = true;
+        local activityTierProgress = C_WeeklyRewards.GetSortedProgressForActivity(Enum.WeeklyRewardChestThresholdType.World, combineSharedDifficulty);
+        local total = 0;
+
+        if activityTierProgress then
+            for _, tierProgress in ipairs(activityTierProgress) do
+                total = total + tierProgress.numPoints;
+            end
+        else
+            return false
+        end
+
+        if total > 0 then
+            tooltip:AddLine(" ");
+
+            if total < threshold then
+                local pattern = WEEKLY_REWARDS_MYTHIC_TOP_RUNS:gsub("%%d", "%%s");
+                tooltip:AddLine(pattern:format(total.."/"..threshold), 1, 1, 1);
+            else
+                tooltip:AddLine(WEEKLY_REWARDS_MYTHIC_TOP_RUNS:format(threshold), 1, 1, 1);
+            end
+
+            local desiredRuns = threshold;
+            local tierFormat = "|cff808080-|r |cffffffff%d|r  %s";
+
+            for _, tierProgress in ipairs(activityTierProgress) do
+                local numRuns = math.min(tierProgress.numPoints, desiredRuns);
+                if numRuns <= 0 then
+                    break
+                end
+
+                desiredRuns = desiredRuns - numRuns;
+
+                local text;
+                if tierProgress.difficulty > 1 then
+                    text = L["Great Vault Tier Format"]:format(tierProgress.difficulty);
+                else
+                    text = L["Great Vault World Activity Tooltip"];
+                end
+                tooltip:AddLine(tierFormat:format(numRuns, text), 0.098, 1.000, 0.098);
+            end
+        end
+
+        return true
     end
 
     if C_EventUtils.IsEventValid("WALK_IN_DATA_UPDATE") then

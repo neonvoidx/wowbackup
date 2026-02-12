@@ -10,11 +10,148 @@ local L = addon.L;
 local changelogs = addon.ControlCenter.changelogs;
 
 
+changelogs[10806] = {
+    {
+        type = "date",
+        versionText = "1.8.6 b",
+        timestamp = 1770130000,
+    },
+
+    {
+        type = "h1",
+        text = L["ModuleName LootUI"],
+        dbKey = "LootUI",
+    },
+
+    {
+        type = "Checkbox",
+        dbKey = "LootUI",
+    },
+
+    {
+        type = "p",
+        bullet = true,
+        text = "Added an option to show currencies earned from all sources, not just loot.",
+    },
+
+    {
+        type = "br",
+    },
+
+    {
+        type = "h1",
+        text = L["ModuleName NameplateQuest"],
+    },
+
+    {
+        type = "p",
+        bullet = true,
+        text = "You can now customize the progress text format to show Completed/Required or Remaining quantity, and keep the quest icon visible.",
+    },
+
+    {
+        type = "br",
+    },
+    {
+        type = "br",
+    },
+
+
+    {
+        type = "date",
+        versionText = "1.8.6",
+        timestamp = 1769870000,
+    },
+
+    {
+        type = "h1",
+        text = L["ModuleName NameplateQuest"],
+        dbKey = "NameplateQuest",
+    },
+
+    {
+        type = "Checkbox",
+        dbKey = "NameplateQuest",
+    },
+
+    {
+        type = "p",
+        bullet = true,
+        text = "Show quest indicator on nameplates. This indicator is customizable.",
+    },
+
+    {
+        type = "p",
+        bullet = true,
+        text = "(Optional) Show quest objective progress on your target or mouseover.",
+    },
+
+    {
+        type = "p",
+        bullet = true,
+        text = "(Optional) Show quest indicator if your party members haven't completed the objective.",
+    },
+
+    {
+        type = "img",
+        dbKey = "NameplateQuest",
+    },
+
+    {
+        type = "br",
+    },
+
+    {
+        type = "h1",
+        text = MISCELLANEOUS,
+    },
+
+    {
+        type = "p",
+        bullet = true,
+        text = "Loot Window: Added an option to hide the \"You received\" text.",
+    },
+
+    {
+        type = "p",
+        bullet = true,
+        text = "Fixed several secret-related errors. \"Trust me, bro.\"",
+    },
+};
+
+
 changelogs[10805] = {
     {
         type = "date",
-        versionText = "1.8.5 b",
-        timestamp = 1769050000,
+        versionText = "1.8.5 b-e",
+        timestamp = 1769530000,
+    },
+
+    {
+        type = "h1",
+        text = L["ModuleName LootUI"],
+        dbKey = "LootUI",
+    },
+
+    {
+        type = "Checkbox",
+        dbKey = "LootUI",
+    },
+
+    {
+        type = "p",
+        bullet = true,
+        text = "Added an option to display money earned from all sources, not just loot.",
+    },
+
+    {
+        type = "p",
+        bullet = true,
+        text = "Money earned while interacting with mailbox or NPC will be displayed afterwards.",
+    },
+
+    {
+        type = "br",
     },
 
     {
@@ -41,6 +178,12 @@ changelogs[10805] = {
     },
 
     {
+        type = "p",
+        bullet = true,
+        text = "You can drag the top area of this window to move it.",
+    },
+
+    {
         type = "img",
         fileName = "Changelog_TransmogOutfitSelect",
         large = true,
@@ -58,6 +201,24 @@ changelogs[10805] = {
     {
         type = "p",
         bullet = true,
+        text = "Expansion Summary, Great Vault: World Activities should show the correct, post-stat-squished item levels.",
+    },
+
+    {
+        type = "p",
+        bullet = true,
+        text = "Loot Window, Reputations: Fixed an issue that prevents the changes to Weaver, General, and Vizier from showing.",
+    },
+
+    {
+        type = "p",
+        bullet = true,
+        text = "Drawer Macros should be able to work in combat again.",
+    },
+
+    {
+        type = "p",
+        bullet = true,
         text = "Decor Catalog: Fixed an error when using the decor search box in house editing mode.",
     },
 
@@ -65,6 +226,18 @@ changelogs[10805] = {
         type = "p",
         bullet = true,
         text = "Expansion Summary: The UI should no longer display the paragon progress for factions that haven't reached maximum renown.",
+    },
+
+    {
+        type = "p",
+        bullet = true,
+        text = "Appearances Tab: Fixed an error when Ctrl-clicking an appearance.",
+    },
+
+    {
+        type = "p",
+        bullet = true,
+        text = "Nameplate: Keyflame: Fixed an error when you were in specific areas in Hallowfall.",
     },
 
     {
@@ -874,35 +1047,6 @@ changelogs[10800] = {
         dbKey = "TooltipTransmogEnsemble",
     },
 
-
-    {
-        type = "br",
-    },
-
-    {
-        type = "h1",
-        text = L["ModuleName TransmogChatCommand"],
-        dbKey = "TransmogChatCommand",
-    },
-
-    {
-        type = "Checkbox",
-        dbKey = "TransmogChatCommand",
-    },
-
-    {
-        type = "p",
-        bullet = true,
-        text = "When using a transmog chat command (which starts with /outfit), undress your character first so the old items won't be carried over into the new outfit.",
-    },
-
-    {
-        type = "p",
-        bullet = true,
-        text = "When at the Transmogrifier, using a chat command automatically loads all available items to the Transmog UI instead of opening the Dressing Room.",
-    },
-
-
     {
         type = "br",
     },
@@ -921,7 +1065,7 @@ changelogs[10800] = {
     {
         type = "p",
         bullet = true,
-        text = "Loot UI, Link Item: You can link an item in chat by Shift + clicking an item in Manual Loot mode.",
+        text = "Loot Window, Link Item: You can link an item in chat by Shift + clicking an item in Manual Loot mode.",
     },
 };
 

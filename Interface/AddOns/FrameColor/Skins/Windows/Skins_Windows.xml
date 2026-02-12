@@ -51,4 +51,5 @@
   <Script file="_OrderHallMissionFrame.lua"/>
   <Script file="_HousingDashboardFrame.lua"/>
   <Script file="_TransmogFrame.lua"/>
+  <Script file="_DamageMeter.lua"/>
 </Ui>

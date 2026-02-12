@@ -6,9 +6,10 @@ function addon:OpenSettings()
         ns.Addon:Print("Cannot open settings panel while in combat.")
         return
     end
-
-    local id = ns.WilduSettings.SettingsLayout.rootCategory:GetID()
-    Settings.OpenToCategory(id)
+    if ns.WilduSettings then
+        local id = ns.WilduSettings.SettingsLayout.rootCategory:GetID()
+        Settings.OpenToCategory(id)
+    end
 end
 
 function addon:OnInitialize()
@@ -22,32 +23,55 @@ function addon:OnInitialize()
     self.db.RegisterCallback(self, "OnNewProfile", "OnNewProfile")
     self.db.RegisterCallback(self, "OnProfileDeleted", "OnProfileDeleted")
 
-    ns.WilduSettings:RegisterSettings()
-    ns.WilduSettings:InitializeSettings()
-
-    local openCooldownViewerSettings = function()
-        if CooldownViewerSettings then
-            CooldownViewerSettings:ShowUIPanel(false)
-        else
-            ns.Addon:Print("Cooldown Viewer settings panel not found - you might have Cooldown Manager disabled")
-        end
+    if ns.WilduSettings then
+        ns.WilduSettings:RegisterSettings()
+        ns.WilduSettings:InitializeSettings()
     end
+end
+local openCooldownViewerSettings = function()
+    if not InCombatLockdown() then
+        CooldownViewerSettings:ShowUIPanel(false)
+    else
+        ns.Addon:Print("Cannot open Cooldown Viewer settings while in combat.")
+    end
+end
 
-    self:RegisterChatCommand("cds", openCooldownViewerSettings)
-    self:RegisterChatCommand("cdm", openCooldownViewerSettings)
-    self:RegisterChatCommand("cd", openCooldownViewerSettings)
-    self:RegisterChatCommand("wa", openCooldownViewerSettings)
-    self:RegisterChatCommand("cmc", function()
-        addon:OpenSettings()
-    end)
+SLASH_CMC_CVS1 = "/cds"
+SLASH_CMC_CVS2 = "/cdm"
+SlashCmdList["CMC_CVS"] = openCooldownViewerSettings
+SLASH_CMC_SETTINGS1 = "/cmc"
+SlashCmdList["CMC_SETTINGS"] = function()
+    addon:OpenSettings()
 end
 
 function addon:RefreshConfig()
-    ns.StyledIcons:Initialize()
-    ns.CooldownManager.Initialize()
-    ns.Stacks:Initialize()
-    ns.Keybinds:Initialize()
-    ns.Assistant:Initialize()
+    if ns.StyledIcons then
+        ns.StyledIcons:Initialize()
+    end
+    if ns.CooldownManager then
+        ns.CooldownManager.Initialize()
+    end
+    if ns.Stacks then
+        ns.Stacks:Initialize()
+    end
+    if ns.Keybinds then
+        ns.Keybinds:Initialize()
+    end
+    if ns.Assistant then
+        ns.Assistant:Initialize()
+    end
+    if ns.Swipe then
+        ns.Swipe:Initialize()
+    end
+    if ns.CooldownFont then
+        ns.CooldownFont:Initialize()
+    end
+    if ns.NoAuras then
+        ns.NoAuras:Initialize()
+    end
+    if ns.TrinketRacialTracker then
+        ns.TrinketRacialTracker:Initialize()
+    end
 
     ns.API:RefreshCooldownManager()
     ns.API:ShowReloadUIConfirmation()
@@ -62,13 +86,81 @@ function addon:OnProfileDeleted(event, db, profile)
     self:Print("Deleted profile: " .. profile)
 end
 
+local function _cleanup()
+    ns.db.profile.cooldownManager_forceCenterX_BuffIcons = nil
+    ns.db.profile.cooldownManager_forceCenterX_Essential = nil
+    ns.db.profile.cooldownManager_forceCenterX_Utility = nil
+    ns.db.profile.cooldownManager_forceCenterX_BuffIcons_lastY = nil
+    ns.db.profile.cooldownManager_forceCenterX_Essential_lastY = nil
+    ns.db.profile.cooldownManager_forceCenterX_Utility_lastY = nil
+
+    ns.db.profile.cooldownManager_experimental_subsequentRowScaling = nil
+    ns.db.profile.cooldownManager_experimental_subsequentRowScaling_Essential = nil
+    ns.db.profile.cooldownManager_experimental_subsequentRowScaling_Utility = nil
+
+    if ns.db.profile.cooldownManager_experimental_buttonPress ~= nil then
+        ns.db.profile.cooldownManager_buttonPress = ns.db.profile.cooldownManager_experimental_buttonPress
+        ns.db.profile.cooldownManager_experimental_buttonPress = nil
+    end
+end
+
 function addon:OnEnable()
-    ns.StyledIcons:Initialize()
-    ns.CooldownManager.Initialize()
-    ns.Stacks:Initialize()
-    ns.Keybinds:Initialize()
-    ns.Assistant:Initialize()
+    C_CVar.SetCVar("cooldownViewerEnabled", "1")
+    if ns.StyledIcons then
+        ns.StyledIcons:Initialize()
+    end
+    if ns.CooldownManager then
+        ns.CooldownManager.Initialize()
+    end
+    if ns.Stacks then
+        ns.Stacks:Initialize()
+    end
+    if ns.Keybinds then
+        ns.Keybinds:Initialize()
+    end
+    if ns.Assistant then
+        ns.Assistant:Initialize()
+    end
+    if ns.Swipe then
+        ns.Swipe:Initialize()
+    end
+    if ns.CooldownFont then
+        ns.CooldownFont:Initialize()
+    end
+    if ns.NoAuras then
+        ns.NoAuras:Initialize()
+    end
+    if ns.TrinketRacialTracker then
+        ns.TrinketRacialTracker:Initialize()
+    end
+    _cleanup()
+    ns.ButtonPress:Initialize()
 end
 local gameVersion = select(1, GetBuildInfo())
 addon.isMidnight = gameVersion:match("^12")
 addon.isRetail = gameVersion:match("^11")
+
+C_Timer.After(2, function()
+    local time = C_DateAndTime.GetCurrentCalendarTime()
+    local askedDate = time.year + time.month + time.monthDay
+
+    if
+        ns.API:IsElvUICDMSkinningEnabled()
+        and (ns.StyledIcons:IsAnyStyledFeatureEnabled() or ns.Stacks:IsAnyStacksFeatureEnabled())
+        and (not ns.db.profile._elvui_skinning_asked or ns.db.profile._elvui_skinning_asked < askedDate)
+    then
+        StaticPopup_Show("CMC_ELVUI_SKINNING_ASK")
+        ns.db.profile._elvui_skinning_asked = askedDate
+    end
+end)
+
+local AddOnFrame = CreateFrame("Frame")
+AddOnFrame:RegisterEvent("ADDON_LOADED")
+AddOnFrame:SetScript("OnEvent", function(_, event, argument)
+    if event == "ADDON_LOADED" and argument == "Dominos" then
+        ns.ButtonPress:HookAllDominosButtons()
+    end
+    if event == "ADDON_LOADED" and argument == "ElvUI" then
+        ns.ButtonPress:RegisterElvUICallbacks()
+    end
+end)

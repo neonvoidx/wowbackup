@@ -1,9 +1,6 @@
 -- English (Default) localization for sArena Reloaded
 -- Localization support by: 007bb from Korea Mate Guild
 
-local locale = GetLocale()
-if locale ~= "enUS" and locale ~= "enGB" then return end
-
 local L = sArenaMixin.L
 
 ---------------------------------------
@@ -146,6 +143,8 @@ L["Texture_BackgroundColor_Desc"] = "Color for the health/power bar underlays."
 
 L["Option_ReplaceClassIcon"] = "Replace Class Icon"
 L["Option_ReplaceClassIcon_Desc"] = "Replace the class icon with spec icon instead and hide the little \"spec icon button\""
+L["Option_HideSpecIcon"] = "Hide Spec Icon"
+L["Option_HideSpecIcon_Desc"] = "Hide the spec icon button"
 L["Option_GrowthDirection"] = "Growth Direction"
 L["Option_SpacingBetweenFrames"] = "Spacing between each arena frame"
 L["Option_SpacingBetweenFrames_Desc"] = "Spacing between each arena frame"
@@ -393,6 +392,12 @@ L["Option_FormatNumbers"] = "Format Numbers"
 L["Option_DarkMode"] = "Dark Mode"
 L["Option_Desaturate"] = "Desaturate"
 L["Option_ClassColorNames"] = "Class Color Names"
+L["Option_ColorName"] = "Color Name"
+L["Option_ColorName_Desc"] = "Use a custom color for names instead of class colors"
+L["Option_ClassColorSpecNames"] = "Class Color Spec Names"
+L["Option_ClassColorSpecNames_Desc"] = "Color the spec name text with the player's class color"
+L["Option_ColorSpecName"] = "Color Spec Name"
+L["Option_ColorSpecName_Desc"] = "Use a custom color for spec names instead of class colors"
 L["Option_ReplaceHealerIcon"] = "Replace Healer Icon"
 L["Option_ShowNames"] = "Show Names"
 L["Option_ShowArenaNumber"] = "Show Arena Number"
@@ -439,7 +444,7 @@ L["Option_HealerDispels"] = "Healer Dispels"
 L["Option_DPSDispels"] = "DPS Dispels"
 L["Option_OthersArena"] = "Other sArena"
 L["Option_ImportSettings"] = "Import settings"
-L["Option_ShareProfile"] = "Share Profile"
+L["Option_ImportExport"] = "Import/Export"
 L["Option_ExportCurrentProfile"] = "Export Current Profile"
 L["Option_ExportString"] = "Export String"
 L["Option_PasteProfileString"] = "Paste Profile String"
@@ -450,7 +455,7 @@ L["Option_ShowDispels_Desc"] = "Enable to show Dispel Cooldown on Arena Frames."
 L["Option_OthersArena_Desc"] = "Import settings from another sArena"
 L["Option_ImportSettings_Desc"] = "Import your settings from the other sArena version."
 L["Option_MidnightPlans_Desc"] = "World of Warcraft: Midnight plans"
-L["Option_ShareProfile_Desc"] = "Export or import a sArena profile"
+L["Option_ImportExport_Desc"] = "Export or import a sArena profile"
 L["Option_ExportString_Desc"] = "|cff32f795Ctrl+A|r to select all, |cff32f795Ctrl+C|r to copy"
 L["Option_PasteProfileString_Desc"] = "|cff32f795Ctrl+V|r to paste copied profile string"
 L["Option_TrinketCircleBorder_Desc"] = "Enable circular border for trinket icons"
@@ -460,7 +465,8 @@ L["Option_DPSDispelsNote"] = "|cFFFFFF00Note:|r DPS dispels only appear after ha
 L["Option_DispelsBetaNotice"] = "\n|cFF808080Dispels are in BETA.\nStill need to confirm some spell ids, especially in Mists of Pandaria.\nThings still need more testing (waiting for PTR) and things may see changes along the way.\nIf you want to contribute info/feedback/spell ids please do!|r"
 L["Option_ExportProfileHeader"] = "|cffffff00Export Profile:|r"
 L["Option_ImportProfileHeader"] = "|cffffff00Import Profile:|r"
-L["Option_StreamerProfilesHeader"] = "|cffffff00Streamer Profiles:|r"
+L["Option_StreamerProfilesHeader"] = "|A:MovieRecordingIcon:16:16|a |cffb380ffStreamer Profiles|r"
+L["Option_StreamerProfiles_Desc_Tab"] = "Import pre-configured profiles from streamers."
 
 L["Message_InvalidFormat"] = "Invalid format."
 L["Message_DecompressionError"] = "Decompression error: %s"
@@ -513,5 +519,4 @@ L["Conflict_UseReloaded_Import_Confirm"] = "This will copy your current profile 
 L["Conflict_UseReloaded_NoImport"] = "|cffffffffUse sArena |cffff8000Reloaded|r |T135884:13:13|t: Don't import other settings"
 L["Conflict_UseReloaded_NoImport_Desc"] = "This will disable the other sArena for compatibility and reload your UI so you can start using sArena |cffff8000Reloaded|r |T135884:13:13|t without your other settings."
 L["Conflict_UseReloaded_NoImport_Confirm"] = "This will disable the other sArena for compatibility and reload your UI so you can start using sArena |cffff8000Reloaded|r |T135884:13:13|t without your other settings.\n\nContinue?"
-L["Midnight_UpdateInfo"] = "|cff00ff00UPDATE: All now available on Midnight.|r\n\nI'm planning to continue developing |cffffffffsArena |cffff8000Reloaded|r |T135884:13:13|t for Midnight as well.\n\nSome features will need to be adjusted or removed but the addon should stick around.\nMidnight is still in early Alpha and I haven't started preparing yet (14th Oct), but I will soon.\n\nPlans might change, but I'm confident |cffffffffsArena |cffff8000Reloaded|r |T135884:13:13|t and my other addons\n|A:gmchat-icon-blizz:16:16|aBetter|cff00c0ffBlizz|rFrames & |A:gmchat-icon-blizz:16:16|aBetter|cff00c0ffBlizz|rPlates will stick around for Midnight (with changes/removals).\n\nI have a lot of work ahead of me, and any support is greatly appreciated. (|cff00c0ff@bodify|r)\nI'll update this section with more detailed information as I know more in some weeks/months."
-L["Midnight_BetaInfo"] = "Welcome to Midnight! My other addons |A:gmchat-icon-blizz:16:16|aBetter|cff00c0ffBlizz|rFrames & |A:gmchat-icon-blizz:16:16|aBetter|cff00c0ffBlizz|rPlates are also being worked on.\n\nThings will change rapidly during development here, especially as new API becomes available.\nThis Midnight Beta is premature and a lot of stuff is still missing in the game.\nI will experiment with a lot of things until the release of Midnight.\n\nCurrently this has changed:\n1) DR's are now handled by Blizzard, sArena only tweaks as much as allowed.\n 1.1) Gap setting is gone.\n 1.2) Individual sizing is gone.\n 1.3) Grow up/down is gone.\n 1.4) Icons are now Blizzards weird icons so those settings are gone.\n2) Non-CC auras are no longer shown, only CC that Blizzard lets us see.\n3) Absorbs on frames are gone.\n4)Racial cooldown can't be tracked, but racial is still visible.\n5) Dispels are gone..\n\nNot everything is fully set in stone and there might be new stuff popping up but we will see. I will keep this updated here."
+L["DR_MidnightDisclaimer"] = "|A:services-icon-warning:20:20|a |cffff8800The DR system on Midnight is a temporary solution until I have time to work on a better one. The current system comes with a lot of restrictions due to Midnight and some sliders and settings are disabled and grayed out because of that.|r |A:services-icon-warning:20:20|a\n\nIf you want to change DR icons you will have to do that via texture replacements atm. For info on that check pinned messages in the sArena Reloaded channel on my Discord (link on CurseForge)."

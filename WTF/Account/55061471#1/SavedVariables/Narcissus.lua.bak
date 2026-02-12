@@ -20,8 +20,10 @@ NarcissusDB = {
 ["PaperDollWidget"] = true,
 ["ShowModulePanelOnMouseOver"] = true,
 ["CameraSafeMode"] = true,
+["TransmogFrame"] = true,
 ["WeatherEffect"] = true,
 ["OutfitSortMethod"] = "name",
+["OldMinimapButtonClickBehavior"] = 1,
 ["SearchRelatives"] = false,
 ["DressingRoomIncludeItemID"] = false,
 ["ClassSetTheme_DF_1"] = 2,
@@ -65,18 +67,22 @@ true,
 },
 },
 ["BaseLineOffset"] = 232,
+["RealmNames"] = {
+[11] = "Tichondrius",
+},
 ["TalentTreeBiggerUI"] = true,
 ["DressingRoomShowIconSelect"] = false,
+["AnchorToMinimap"] = true,
 ["UseAddonCompartment"] = true,
 ["DressingRoom"] = false,
 ["UseBustShot"] = false,
+["WardrobeCollectionSetsCheckbox"] = true,
 ["EnableDoubleTap"] = true,
-["AnchorToMinimap"] = true,
-["PaperDollWidget_ClassSet"] = true,
+["DressingRoomItemSetListHideDupes"] = true,
 ["TranslateName"] = false,
 ["TalentTreeUseClassBackground"] = true,
 ["ConduitTooltip"] = false,
-["DressingRoomItemSetListHideDupes"] = true,
+["PaperDollWidget_ClassSet"] = true,
 ["AutoFilterGem"] = false,
 ["installTime"] = 1722004162,
 ["DressingRoomShowSlot"] = true,
@@ -96,12 +102,6 @@ true,
 ["TalentTreeForEquipmentManager"] = false,
 ["TalentTreeAnchor"] = 1,
 ["TooltipTheme"] = "Bright",
-["NamePlateNameOffset"] = 0,
-["Version"] = 10000,
-["MinimapIconStyle"] = 2,
-["GemManager"] = true,
-["ModelPanelScale"] = 1,
-["AutoDisplayQuestItem"] = false,
 ["PerksProgramDB"] = {
 ["MonthNames"] = {
 {
@@ -676,7 +676,7 @@ true,
 [479] = "::description::The cult isn't unnamed, the name just cannot be represented in our language.::price::450::transmogSetID::3083::perksVendorCategoryID::8::mountID::0::itemModifiedAppearanceID::0::name::Silks of the Unnamed Cult::speciesID::0::itemID::208400::addedDate::2024/23::",
 [60] = "::description::A well-placed arrow can prove a practical solution for even the magically inclined Azurewing.::price::125::transmogSetID::0::perksVendorCategoryID::1::mountID::0::itemModifiedAppearanceID::168224::speciesID::0::name::Azure Scalesworn Longbow::originalPrice::200::itemID::190071::addedDate::2025/26::",
 [915] = "::description::Battle-tested to allow for maximum maneuverability::price::40::transmogSetID::0::perksVendorCategoryID::1::mountID::0::itemModifiedAppearanceID::230751::speciesID::0::name::Long Sunny War Skirt::itemID::233112::addedDate::2025/25::",
-[240] = "::description::Go ahead. Make my day.::price::125::transmogSetID::0::perksVendorCategoryID::1::mountID::0::itemModifiedAppearanceID::168548::speciesID::0::name::Black Iron Blunderbuss::originalPrice::200::itemID::190441::addedDate::2025/26::",
+[959] = "::description::Click your treads together, but don't shatter them.::price::40::transmogSetID::0::perksVendorCategoryID::1::mountID::0::itemModifiedAppearanceID::267041::speciesID::0::name::Ruby Scale Treads::itemID::235623::addedDate::2025/27::",
 [480] = "::description::Blood Onyx assassins are known for their efficiency, not their subtlety.::price::450::transmogSetID::3084::perksVendorCategoryID::8::mountID::0::itemModifiedAppearanceID::0::name::Blood Onyx Uniform::speciesID::0::itemID::208405::addedDate::2024/23::",
 [960] = "::description::Ideal for protecting your identity from authority.::price::50::transmogSetID::0::perksVendorCategoryID::1::mountID::0::itemModifiedAppearanceID::249349::speciesID::0::name::Vigilante's Deep Mask::itemID::235024::addedDate::2025/27::",
 [891] = "::description::Challenge the moon to a beauty contest, and win!::price::225::transmogSetID::0::perksVendorCategoryID::1::mountID::0::itemModifiedAppearanceID::229223::name::Wings of the Sapphire Monarch::speciesID::0::itemID::230940::addedDate::2024/24::",
@@ -740,10 +740,10 @@ true,
 [495] = "::description::Sharp enough to cut through nerubian silk.::price::500::transmogSetID::3110::perksVendorCategoryID::8::mountID::0::itemModifiedAppearanceID::0::name::Webbed Saronite Weaponry::speciesID::0::itemID::208666::addedDate::2024/23::",
 [990] = "::description::These light-weight wraps provide excellent muscle support.::price::20::transmogSetID::0::perksVendorCategoryID::1::mountID::0::itemModifiedAppearanceID::230798::speciesID::0::name::Banded Plum War Wraps::itemID::233164::addedDate::2025/28::",
 [124] = "::description::For the glory of G'huun!::price::800::transmogSetID::2339::perksVendorCategoryID::8::mountID::0::itemModifiedAppearanceID::0::speciesID::0::name::Ensemble: Bones of the Bloodhunter::itemID::190797::addedDate::2025/26::",
-[248] = "::description::\"What're you buyin'?\"::price::40::transmogSetID::0::perksVendorCategoryID::1::mountID::0::itemModifiedAppearanceID::168540::speciesID::0::name::Shifty Merchant's Tunic::originalPrice::50::itemID::190433::addedDate::2025/26::",
+[991] = "::description::These light-weight wraps provide excellent ankle support.::price::20::transmogSetID::0::perksVendorCategoryID::1::mountID::0::itemModifiedAppearanceID::230809::speciesID::0::name::Banded Camo War Slippers::itemID::233175::addedDate::2025/28::",
 [496] = "::description::Strike fear into any demon's heart with your flame's controlled chaos.::price::450::transmogSetID::3101::perksVendorCategoryID::8::mountID::0::itemModifiedAppearanceID::0::name::Nathreza Blasphemer's Flames::speciesID::0::itemID::208667::addedDate::2024/23::",
 [992] = "::description::These light-weight wraps provide excellent ankle support.::price::20::transmogSetID::0::perksVendorCategoryID::1::mountID::0::itemModifiedAppearanceID::230815::speciesID::0::name::Banded Plum War Slippers::itemID::233181::addedDate::2025/28::",
-[991] = "::description::These light-weight wraps provide excellent ankle support.::price::20::transmogSetID::0::perksVendorCategoryID::1::mountID::0::itemModifiedAppearanceID::230809::speciesID::0::name::Banded Camo War Slippers::itemID::233175::addedDate::2025/28::",
+[248] = "::description::\"What're you buyin'?\"::price::40::transmogSetID::0::perksVendorCategoryID::1::mountID::0::itemModifiedAppearanceID::168540::speciesID::0::name::Shifty Merchant's Tunic::originalPrice::50::itemID::190433::addedDate::2025/26::",
 [993] = "::description::Gardener Fran has had enough of those damned virmen.::price::125::transmogSetID::0::perksVendorCategoryID::1::mountID::0::itemModifiedAppearanceID::249028::speciesID::0::name::Double-Bladed Rooted Garden Trowel::itemID::234613::addedDate::2025/28::",
 [497] = "::description::Engraved with the Mark of the Ashen Druids.::price::500::transmogSetID::3100::perksVendorCategoryID::8::mountID::0::itemModifiedAppearanceID::0::name::Ashamane's Blessings of Rebirth::speciesID::0::itemID::208664::addedDate::2024/23::",
 [994] = "::description::Good for both planting mushrooms and violently cutting down the inevitable rise of fungarians.::price::125::transmogSetID::0::perksVendorCategoryID::1::mountID::0::itemModifiedAppearanceID::249027::speciesID::0::name::Double-Bladed Blooming Garden Trowel::itemID::234612::addedDate::2025/28::",
@@ -761,7 +761,7 @@ true,
 [1000] = "::description::The elusive Ruby Butterfly is highly sought after by Twilight Witches.::price::700::transmogSetID::0::mountTypeName::Flying::perksVendorCategoryID::2::mountID::2491::itemModifiedAppearanceID::0::speciesID::0::name::Ruby Butterfly::itemID::235657::addedDate::2025/27::",
 [518] = "::description::Fashioned by an ancient blacksmith, the chronosmiths ventured to their time to create these weapons for a future need. In time that need will become clearer.::price::500::transmogSetID::3114::perksVendorCategoryID::8::mountID::0::itemModifiedAppearanceID::0::name::Treasure of the Silver Hoarder::speciesID::0::itemID::208726::addedDate::2024/23::",
 [1001] = "::description::This snail protects its treasures with the ferocity of a dragon, but perhaps not the speed.::price::325::transmogSetID::0::mountTypeName::Ground::perksVendorCategoryID::2::mountID::2495::itemModifiedAppearanceID::0::speciesID::0::name::Emerald Snail::itemID::235662::addedDate::2025/28::",
-[959] = "::description::Click your treads together, but don't shatter them.::price::40::transmogSetID::0::perksVendorCategoryID::1::mountID::0::itemModifiedAppearanceID::267041::speciesID::0::name::Ruby Scale Treads::itemID::235623::addedDate::2025/27::",
+[240] = "::description::Go ahead. Make my day.::price::125::transmogSetID::0::perksVendorCategoryID::1::mountID::0::itemModifiedAppearanceID::168548::speciesID::0::name::Black Iron Blunderbuss::originalPrice::200::itemID::190441::addedDate::2025/26::",
 [1105] = "::description::A favorite when trading in the southern jungles.::price::100::transmogSetID::0::quality::1::perksVendorCategoryID::1::invType::INVTYPE_LEGS::mountID::0::itemModifiedAppearanceID::193814::speciesID::0::name::Trader's Plum Sarong::itemID::210859::addedDate::2025/31::",
 [237] = "::description::An effective icebreaker, literally and figuratively.::price::175::transmogSetID::0::perksVendorCategoryID::1::mountID::0::itemModifiedAppearanceID::169055::name::Fists of Polar Fury::speciesID::0::itemID::190842::addedDate::2024/24::",
 [1003] = "::description::For the vigilantes that crave pizza parties.::price::50::transmogSetID::0::quality::2::perksVendorCategoryID::1::invType::INVTYPE_HEAD::mountID::0::itemModifiedAppearanceID::249354::speciesID::0::name::Vigilante's Carrot Mask::itemID::235029::addedDate::2025/29::",
@@ -801,6 +801,12 @@ true,
 ["CurrentMonthData"] = {
 },
 },
+["Version"] = 10000,
+["MinimapIconStyle"] = 2,
+["GemManager"] = true,
+["ModelPanelScale"] = 1,
+["AutoDisplayQuestItem"] = false,
+["NamePlateNameOffset"] = 0,
 ["TalentTreeForPaperDoll"] = false,
 ["TalentTreeForInspection"] = true,
 ["GlobalScale"] = 0.8999999999999999,
@@ -928,7 +934,7 @@ NarciCharacterProfiles = {
 ["race"] = 5,
 ["name"] = "Hellavator",
 ["birth"] = 1722554910,
-["serverID"] = "3684",
+["serverID"] = 3684,
 ["lastVisit"] = 1756993002,
 ["outfits"] = {
 {
@@ -994,7 +1000,7 @@ NarciCharacterProfiles = {
 ["race"] = 1,
 ["name"] = "Stormclout",
 ["birth"] = 1757076761,
-["serverID"] = "11",
+["serverID"] = 11,
 ["lastVisit"] = 1759417831,
 ["outfits"] = {
 {
@@ -1084,7 +1090,7 @@ NarciCharacterProfiles = {
 ["race"] = 1,
 ["name"] = "Stormclout",
 ["birth"] = 1745424900,
-["serverID"] = "3684",
+["serverID"] = 3684,
 ["lastVisit"] = 1757037166,
 ["outfits"] = {
 {
@@ -1174,7 +1180,7 @@ NarciCharacterProfiles = {
 ["race"] = 4,
 ["name"] = "Corsic",
 ["birth"] = 1724289012,
-["serverID"] = "3684",
+["serverID"] = 3684,
 ["lastVisit"] = 1743208449,
 ["outfits"] = {
 {
@@ -1264,7 +1270,7 @@ NarciCharacterProfiles = {
 ["race"] = 32,
 ["name"] = "Crillessana",
 ["birth"] = 1763388985,
-["serverID"] = "3684",
+["serverID"] = 3684,
 ["lastVisit"] = 1763388985,
 ["outfits"] = {
 },
@@ -1274,7 +1280,7 @@ NarciCharacterProfiles = {
 ["race"] = 29,
 ["name"] = "Kumire",
 ["birth"] = 1723768373,
-["serverID"] = "3684",
+["serverID"] = 3684,
 ["lastVisit"] = 1724196250,
 ["outfits"] = {
 },
@@ -1284,7 +1290,7 @@ NarciCharacterProfiles = {
 ["race"] = 27,
 ["name"] = "Auteist",
 ["birth"] = 1723952295,
-["serverID"] = "3684",
+["serverID"] = 3684,
 ["lastVisit"] = 1725464284,
 ["outfits"] = {
 {
@@ -1330,7 +1336,7 @@ NarciCharacterProfiles = {
 ["race"] = 85,
 ["name"] = "Edaroseld",
 ["birth"] = 1728518320,
-["serverID"] = "57",
+["serverID"] = 57,
 ["lastVisit"] = 1728518320,
 ["outfits"] = {
 },
@@ -1340,7 +1346,7 @@ NarciCharacterProfiles = {
 ["race"] = 70,
 ["name"] = "Charizhard",
 ["birth"] = 1724950993,
-["serverID"] = "3684",
+["serverID"] = 3684,
 ["lastVisit"] = 1727630492,
 ["outfits"] = {
 {
@@ -1354,7 +1360,7 @@ NarciCharacterProfiles = {
 ["race"] = 26,
 ["name"] = "Stormclout",
 ["birth"] = 1722121948,
-["serverID"] = "3684",
+["serverID"] = 3684,
 ["lastVisit"] = 1728955687,
 ["outfits"] = {
 {
@@ -1416,7 +1422,7 @@ NarciCharacterProfiles = {
 ["race"] = 1,
 ["name"] = "Praisesun",
 ["birth"] = 1724974752,
-["serverID"] = "3684",
+["serverID"] = 3684,
 ["lastVisit"] = 1757028303,
 ["outfits"] = {
 {
@@ -1430,7 +1436,7 @@ NarciCharacterProfiles = {
 ["race"] = 5,
 ["name"] = "Auteist",
 ["birth"] = 1728662066,
-["serverID"] = "3684",
+["serverID"] = 3684,
 ["lastVisit"] = 1756135037,
 ["outfits"] = {
 {
@@ -1504,7 +1510,7 @@ NarciCharacterProfiles = {
 ["race"] = 52,
 ["name"] = "Smaugchamp",
 ["birth"] = 1727652126,
-["serverID"] = "3684",
+["serverID"] = 3684,
 ["lastVisit"] = 1756660691,
 ["outfits"] = {
 {
@@ -1522,7 +1528,7 @@ NarciCharacterProfiles = {
 ["race"] = 4,
 ["name"] = "Rakeist",
 ["birth"] = 1724676207,
-["serverID"] = "3684",
+["serverID"] = 3684,
 ["lastVisit"] = 1757076301,
 ["outfits"] = {
 {
@@ -1544,7 +1550,7 @@ NarciCharacterProfiles = {
 ["race"] = 3,
 ["name"] = "Choppiez",
 ["birth"] = 1725466125,
-["serverID"] = "3684",
+["serverID"] = 3684,
 ["lastVisit"] = 1756261897,
 ["outfits"] = {
 {
@@ -1590,7 +1596,7 @@ NarciCharacterProfiles = {
 ["race"] = 27,
 ["name"] = "Lutreteil",
 ["birth"] = 1723938765,
-["serverID"] = "3684",
+["serverID"] = 3684,
 ["lastVisit"] = 1723939310,
 ["outfits"] = {
 },
@@ -1600,7 +1606,7 @@ NarciCharacterProfiles = {
 ["race"] = 8,
 ["name"] = "Stormclout",
 ["birth"] = 1742585422,
-["serverID"] = "3684",
+["serverID"] = 3684,
 ["lastVisit"] = 1745421005,
 ["outfits"] = {
 {
@@ -1690,7 +1696,7 @@ NarciCharacterProfiles = {
 ["race"] = 1,
 ["name"] = "Stormclout",
 ["birth"] = 1730475317,
-["serverID"] = "3684",
+["serverID"] = 3684,
 ["lastVisit"] = 1742581590,
 ["outfits"] = {
 {
@@ -1772,7 +1778,7 @@ NarciCharacterProfiles = {
 ["race"] = 5,
 ["name"] = "Auteist",
 ["birth"] = 1725823406,
-["serverID"] = "3684",
+["serverID"] = 3684,
 ["lastVisit"] = 1727323547,
 ["outfits"] = {
 {
@@ -1842,7 +1848,7 @@ NarciCharacterProfiles = {
 ["race"] = 4,
 ["name"] = "Ofpuss",
 ["birth"] = 1757086609,
-["serverID"] = "11",
+["serverID"] = 11,
 ["lastVisit"] = 1759430318,
 ["outfits"] = {
 {
@@ -1912,7 +1918,7 @@ NarciCharacterProfiles = {
 ["race"] = 2,
 ["name"] = "Choppiez",
 ["birth"] = 1724951497,
-["serverID"] = "3684",
+["serverID"] = 3684,
 ["lastVisit"] = 1725464702,
 ["outfits"] = {
 {
@@ -1954,7 +1960,7 @@ NarciCharacterProfiles = {
 ["race"] = 1,
 ["name"] = "Auteist",
 ["birth"] = 1727324810,
-["serverID"] = "3684",
+["serverID"] = 3684,
 ["lastVisit"] = 1728654217,
 ["outfits"] = {
 {
@@ -2024,7 +2030,7 @@ NarciCharacterProfiles = {
 ["race"] = 7,
 ["name"] = "Auteist",
 ["birth"] = 1725465820,
-["serverID"] = "3684",
+["serverID"] = 3684,
 ["lastVisit"] = 1725579302,
 ["outfits"] = {
 {
@@ -2074,7 +2080,7 @@ NarciCharacterProfiles = {
 ["race"] = 5,
 ["name"] = "Auteist",
 ["birth"] = 1757085656,
-["serverID"] = "11",
+["serverID"] = 11,
 ["lastVisit"] = 1758743712,
 ["outfits"] = {
 {
@@ -2152,8 +2158,8 @@ NarciCharacterProfiles = {
 ["race"] = 35,
 ["name"] = "Gehyo",
 ["birth"] = 1763389072,
-["serverID"] = "11",
-["lastVisit"] = 1763499492,
+["serverID"] = 11,
+["lastVisit"] = 1770170102,
 ["outfits"] = {
 {
 ["s"] = "86901,220771,220773,220766,0,0,220774,220768,220772,220770,220767,91086:-1,0",
@@ -2163,6 +2169,10 @@ NarciCharacterProfiles = {
 ["s"] = "116830,77343,77345,229618,80190,0,193873,198778,84223,2635,2636,221165:-1,0",
 ["n"] = "Black",
 },
+{
+["s"] = "116830,77343:-1,77345,229618,80190,83203,193873,198778,84223,2635,2636,221165:-1,0",
+["n"] = "Custom Set",
+},
 },
 ["class"] = 3,
 },
@@ -2170,7 +2180,7 @@ NarciCharacterProfiles = {
 ["race"] = 4,
 ["name"] = "Starstypeshi",
 ["birth"] = 1757077880,
-["serverID"] = "11",
+["serverID"] = 11,
 ["lastVisit"] = 1759430453,
 ["outfits"] = {
 {
@@ -2192,8 +2202,8 @@ NarciCharacterProfiles = {
 ["race"] = 4,
 ["name"] = "Ofpusstwo",
 ["birth"] = 1759950823,
-["serverID"] = "11",
-["lastVisit"] = 1763498571,
+["serverID"] = 11,
+["lastVisit"] = 1763570318,
 ["outfits"] = {
 {
 ["s"] = "227837,292017,298811,292030,0,0,288304,292026,292046,292021,292042,229025:-1:6174,229025:0:6174",
@@ -2206,7 +2216,7 @@ NarciCharacterProfiles = {
 ["race"] = 31,
 ["name"] = "Reedingo",
 ["birth"] = 1759950802,
-["serverID"] = "3684",
+["serverID"] = 3684,
 ["lastVisit"] = 1759950802,
 ["outfits"] = {
 {
@@ -2236,7 +2246,7 @@ NarciCharacterProfiles = {
 ["race"] = 32,
 ["name"] = "Tampacks",
 ["birth"] = 1724975160,
-["serverID"] = "3684",
+["serverID"] = 3684,
 ["lastVisit"] = 1744072335,
 ["outfits"] = {
 {
@@ -2250,7 +2260,7 @@ NarciCharacterProfiles = {
 ["race"] = 7,
 ["name"] = "Choppiez",
 ["birth"] = 1757642395,
-["serverID"] = "11",
+["serverID"] = 11,
 ["lastVisit"] = 1757705450,
 ["outfits"] = {
 {
@@ -2308,7 +2318,7 @@ NarciCharacterProfiles = {
 ["race"] = 29,
 ["name"] = "Hellowalls",
 ["birth"] = 1722004177,
-["serverID"] = "3684",
+["serverID"] = 3684,
 ["lastVisit"] = 1757076245,
 ["outfits"] = {
 {
@@ -2342,7 +2352,7 @@ NarciCharacterProfiles = {
 ["race"] = 31,
 ["name"] = "Reedingo",
 ["birth"] = 1727629849,
-["serverID"] = "3684",
+["serverID"] = 3684,
 ["lastVisit"] = 1756943579,
 ["outfits"] = {
 {
@@ -2372,7 +2382,7 @@ NarciCharacterProfiles = {
 ["race"] = 52,
 ["name"] = "Smaugchamp",
 ["birth"] = 1758757802,
-["serverID"] = "11",
+["serverID"] = 11,
 ["lastVisit"] = 1759415325,
 ["outfits"] = {
 {
@@ -2390,7 +2400,7 @@ NarciCharacterProfiles = {
 ["race"] = 36,
 ["name"] = "Mäñýfäçëð",
 ["birth"] = 1757086172,
-["serverID"] = "11",
+["serverID"] = 11,
 ["lastVisit"] = 1758742699,
 ["outfits"] = {
 {
@@ -2476,7 +2486,7 @@ NarciCharacterProfiles = {
 ["race"] = 1,
 ["name"] = "Praisesun",
 ["birth"] = 1757222854,
-["serverID"] = "11",
+["serverID"] = 11,
 ["lastVisit"] = 1759416309,
 ["outfits"] = {
 {
@@ -2490,7 +2500,7 @@ NarciCharacterProfiles = {
 ["race"] = 5,
 ["name"] = "Hellavator",
 ["birth"] = 1757965487,
-["serverID"] = "11",
+["serverID"] = 11,
 ["lastVisit"] = 1758476730,
 ["outfits"] = {
 {
@@ -2556,7 +2566,7 @@ NarciCharacterProfiles = {
 ["race"] = 29,
 ["name"] = "Thingreyline",
 ["birth"] = 1757077825,
-["serverID"] = "11",
+["serverID"] = 11,
 ["lastVisit"] = 1758166731,
 ["outfits"] = {
 {
@@ -2594,7 +2604,7 @@ NarciCharacterProfiles = {
 ["race"] = 4,
 ["name"] = "Ofpuss",
 ["birth"] = 1724948790,
-["serverID"] = "3684",
+["serverID"] = 3684,
 ["lastVisit"] = 1756786002,
 ["outfits"] = {
 {
@@ -2652,7 +2662,7 @@ NarciCharacterProfiles = {
 ["race"] = 1,
 ["name"] = "Stormclout",
 ["birth"] = 1728957163,
-["serverID"] = "3684",
+["serverID"] = 3684,
 ["lastVisit"] = 1730223781,
 ["outfits"] = {
 {
@@ -2714,7 +2724,7 @@ NarciCharacterProfiles = {
 ["race"] = 2,
 ["name"] = "Choppiez",
 ["birth"] = 1756300941,
-["serverID"] = "3684",
+["serverID"] = 3684,
 ["lastVisit"] = 1757037334,
 ["outfits"] = {
 {
@@ -2760,7 +2770,7 @@ NarciCharacterProfiles = {
 ["race"] = 1,
 ["name"] = "Auteist",
 ["birth"] = 1723745105,
-["serverID"] = "3684",
+["serverID"] = 3684,
 ["lastVisit"] = 1723950195,
 ["outfits"] = {
 {
@@ -2790,7 +2800,7 @@ NarciCharacterProfiles = {
 ["race"] = 27,
 ["name"] = "Vansthalysia",
 ["birth"] = 1723921654,
-["serverID"] = "3684",
+["serverID"] = 3684,
 ["lastVisit"] = 1724196328,
 ["outfits"] = {
 },
@@ -2800,7 +2810,7 @@ NarciCharacterProfiles = {
 ["race"] = 36,
 ["name"] = "Mäñýfäçëð",
 ["birth"] = 1743211852,
-["serverID"] = "3684",
+["serverID"] = 3684,
 ["lastVisit"] = 1756135065,
 ["outfits"] = {
 {
@@ -2882,7 +2892,7 @@ NarciCharacterProfiles = {
 ["race"] = 11,
 ["name"] = "Heilsatan",
 ["birth"] = 1759950406,
-["serverID"] = "11",
+["serverID"] = 11,
 ["lastVisit"] = 1759950406,
 ["outfits"] = {
 },
@@ -2892,7 +2902,7 @@ NarciCharacterProfiles = {
 ["race"] = 4,
 ["name"] = "Mäñýfäçëð",
 ["birth"] = 1758756163,
-["serverID"] = "11",
+["serverID"] = 11,
 ["lastVisit"] = 1758932255,
 ["outfits"] = {
 {
@@ -2978,7 +2988,7 @@ NarciCharacterProfiles = {
 ["race"] = 35,
 ["name"] = "Gehyo",
 ["birth"] = 1723939456,
-["serverID"] = "3684",
+["serverID"] = 3684,
 ["lastVisit"] = 1759416464,
 ["outfits"] = {
 {
@@ -2992,7 +3002,7 @@ NarciCharacterProfiles = {
 ["race"] = 27,
 ["name"] = "Dernarplan",
 ["birth"] = 1723900901,
-["serverID"] = "3684",
+["serverID"] = 3684,
 ["lastVisit"] = 1723900901,
 ["outfits"] = {
 },
@@ -3002,7 +3012,7 @@ NarciCharacterProfiles = {
 ["race"] = 2,
 ["name"] = "Choppiez",
 ["birth"] = 1757086681,
-["serverID"] = "11",
+["serverID"] = 11,
 ["lastVisit"] = 1757443281,
 ["outfits"] = {
 {
@@ -3056,7 +3066,7 @@ NarciCharacterProfiles = {
 ["race"] = 26,
 ["name"] = "Stormclout",
 ["birth"] = 1730227002,
-["serverID"] = "3684",
+["serverID"] = 3684,
 ["lastVisit"] = 1730471605,
 ["outfits"] = {
 {
@@ -3118,7 +3128,7 @@ NarciCharacterProfiles = {
 ["race"] = 1,
 ["name"] = "Clevagirl",
 ["birth"] = 1763388863,
-["serverID"] = "3684",
+["serverID"] = 3684,
 ["lastVisit"] = 1763388863,
 ["outfits"] = {
 {
@@ -3132,3 +3142,4 @@ NarciCharacterProfiles = {
 NarciPhotoModeDB = {
 }
 NarciDevToolOutput = nil
+NarciTransmogUIDB = nil

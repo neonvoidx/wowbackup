@@ -1,6 +1,6 @@
-local NARCI_VERSION_INFO = "1.8.4";
+local NARCI_VERSION_INFO = "1.8.4 c";
 
-local VERSION_DATE = 1768800000;
+local VERSION_DATE = 1770380000;
 local CURRENT_VERSION = 10804;
 local PREVIOUS_VERSION = CURRENT_VERSION;
 local TIME_SINCE_LAST_UPDATE = 0;
@@ -38,8 +38,6 @@ local DefaultValues = {
     FontHeightItemName = 10,
     GlobalScale = 0.8,
     EnableDoubleTap = false,
-    CameraOrbit = true,
-    CameraSafeMode = true,
     TooltipTheme = "Bright",
     TruncateText = false,
     ItemNameWidth = 180,
@@ -51,8 +49,11 @@ local DefaultValues = {
     AKFScreenDelay = false,                     --Ope Narcissus when you go afk with a delay. Move to cancel.
     UseEscapeButton = true,                     --Use Escape button to exit
     BaseLineOffset = 0,                         --Ultra-wide, adjust UI layout
-    CameraTransition = true,                    --(2nd you use the Character Pane) Camera moves smoothly bewtween presets
-    UseBustShot = true,                         --Zoom in to the upper torso
+    CameraAutoZoomIn = true,                    --Auto zoom in when opening character UI (Master Switch)
+        CameraTransition = true,                    --(the 2nd you use the character UI) Camera moves smoothly bewtween presets
+        CameraOrbit = true,
+        UseBustShot = true,                         --Zoom in to the upper torso
+    CameraSafeMode = true,
     ItemTooltipStyle = 1,
     ShowItemID = false,                         --Show itemID on equipment tooltip
     MissingEnchantAlert = false,                --Show alert if the item isn't enchanted
@@ -69,6 +70,9 @@ local DefaultValues = {
 
     -- Transmog Frame --
     TransmogFrame = true,
+
+    -- Wardrobe Collection --
+    WardrobeCollectionSetsCheckbox = true,      --Show a checkbox to hide uncollected set pieces
 
     -- Dressing Room --
     DressingRoom = true,                        --Enable dressing room module
@@ -372,6 +376,24 @@ Initialization:SetScript("OnEvent",function(self,event,...)
         end)
     end
 end);
+
+
+local function ConvertSecondsToTimePassed(seconds)
+    local timeText;
+    local days = math.floor(TIME_SINCE_LAST_UPDATE / 86400 + 0.5);
+    if days >= 1 then
+        if days < 60 then
+            timeText = string.format(Narci.L["Format Days Ago"], days);
+        else
+            local months = math.floor(days / 30.5 + 0.5);
+            timeText = string.format(Narci.L["Format Months Ago"], months);
+        end
+    else
+        timeText = Narci.L["Today"];
+    end
+    return timeText
+end
+NarciAPI.ConvertSecondsToTimePassed = ConvertSecondsToTimePassed;
 
 
 local function GetAddOnVersionInfo(versionOnly)

@@ -20,6 +20,7 @@ L["Day Plural"] = "天";
 L["Day Singular"] = "天";
 L["Hour Plural"] = "小时";
 L["Hour Singular"] = "小时";
+L["Last Visit"] = "上次登录：";
 
 L["Swap items"] = "更换装备";
 L["Movement Speed"] = STAT_MOVEMENT_SPEED;
@@ -213,6 +214,9 @@ L["Y Offset"] = "纵向偏移";
 L["Sceenshot Quality"] = "截图质量";
 L["Screenshot Quality Description"] = "提高截图质量会增加文件大小。";
 L["General"] = "通用设置";
+L["Camera Auto Zoom In"] = "自动拉近镜头";
+L["Camera Auto Zoom In On"] = "当你打开角色面板时自动拉近镜头。";
+L["Camera Auto Zoom In Off"] = "当你打开角色面板时镜头将只会平移。";
 L["Camera Transition"] = "镜头过渡";
 L["Camera Transition Description On"] = "当你打开角色面板时镜头会平滑地运动到预设位置。";
 L["Camera Transition Description Off"] = "镜头转换变为瞬时。此效果将在你第二次使用角色面板时开始生效。\n此效果会占用镜头预设#4。";
@@ -806,3 +810,13 @@ L["New Set Location Shared"] = "此套装将被保存至共享列表。";
 L["Save Custom Set Location"] = "保存至：";
 L["Save Slots Colon"] = "存档数量：";
 L["Error View Outfit In Combat"] = "你无法在战斗中浏览外观。";
+L["Profile Management"] = "存档管理";
+L["Delete Character Data"] = "删除此角色";
+L["Delete Character Data Tooltip"] = "此选项帮助你清理不活跃的或者已不存在的角色。\n\n删除此角色上本地保存的套装。Narcissus插件会在你登陆这个角色后重新储存套装信息。";
+
+
+--WardrobeCollection--
+L["ModuleName WardrobeCollection"] = "外观页面";
+L["ModuleDescription WardrobeCollection"] = "在战团藏品-外观页面添加一个按钮，允许你隐藏身上还未收集的套装部位。"
+L["Hide Uncollected Slots"] = "Hide Uncollected";
+L["Hide Uncollected Slots Tooltip"] = "Hide Uncollected Slots |cffffd100(%s)|r";

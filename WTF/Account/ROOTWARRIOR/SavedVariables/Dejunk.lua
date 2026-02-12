@@ -53,15 +53,14 @@ __DEJUNK_ADDON_GLOBAL_SAVED_VARIABLES__ = {
 ["exclusions"] = {
 },
 ["excludeEquipmentSets"] = true,
-["includeBelowItemLevel"] = {
-["enabled"] = false,
-["value"] = 0,
-},
-["itemIcons"] = false,
-["excludeWarbandEquipment"] = false,
-["excludeUnboundEquipment"] = false,
-["autoSell"] = true,
+["autoJunkFrame"] = false,
 ["points"] = {
+["mainWindow"] = {
+["offsetX"] = 0,
+["offsetY"] = 50,
+["point"] = "CENTER",
+["relativePoint"] = "CENTER",
+},
 ["merchantButton"] = {
 ["relativeTo"] = "MerchantFrame",
 ["point"] = "TOPLEFT",
@@ -69,24 +68,25 @@ __DEJUNK_ADDON_GLOBAL_SAVED_VARIABLES__ = {
 ["offsetY"] = -28,
 ["offsetX"] = 60,
 },
-["mainWindow"] = {
-["point"] = "CENTER",
-["offsetY"] = 50,
-["offsetX"] = 0,
-["relativePoint"] = "CENTER",
-},
 ["transportFrame"] = {
-["point"] = "CENTER",
-["offsetY"] = 50,
 ["offsetX"] = 0,
+["offsetY"] = 50,
+["point"] = "CENTER",
 ["relativePoint"] = "CENTER",
 },
 ["junkFrame"] = {
-["point"] = "CENTER",
-["offsetY"] = 50,
 ["offsetX"] = 0,
+["offsetY"] = 50,
+["point"] = "CENTER",
 ["relativePoint"] = "CENTER",
 },
 },
-["autoJunkFrame"] = false,
+["autoSell"] = true,
+["excludeUnboundEquipment"] = false,
+["excludeWarbandEquipment"] = false,
+["itemIcons"] = false,
+["includeBelowItemLevel"] = {
+["enabled"] = false,
+["value"] = 0,
+},
 }

@@ -56,7 +56,7 @@ VER 3 0100000000000028 " " "1418287"
 #showtooltip 
 /cast [@cursor] Sigil of Misery
 END
-VER 3 010000000000002D " " "3636838"
+VER 3 010000000000002D " " "134400"
 #showtooltip The Hunt
 /castsequence reset=2 the hunt
 END
@@ -93,10 +93,18 @@ VER 3 010000000000003B " " "134400"
 #showtooltip void ray
 /cast [nochanneling] Void ray
 END
+VER 3 010000000000003D " " "134400"
+#showtooltip Vengeful Retreat
+/castsequence reset=1 Vengeful Retreat, Glide
+END
 VER 3 010000000000003C " STOP" "1345086"
 /stopcasting
 END
-VER 3 0100000000000037 "Teleport Home" "7252953"
+VER 3 010000000000003E "Full Combo" "134400"
+#showtooltip
+/castsequence reset=90 The Hunt, Hungering Slash, Vengeful Retreat, Voidblade, Hungering Slash, Vengeful Retreat
+END
+VER 3 0100000000000037 "Teleport Home" "236350"
 #plumber:home
-/click PLMR_HOME1
+/click PLMR_HOME4
 END

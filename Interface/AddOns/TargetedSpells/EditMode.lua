@@ -16,6 +16,16 @@ function TargetedSpellsEditModeMixin:Init(displayName, frameKind)
 	}
 	self.editModeFrame = CreateFrame("Frame", displayName, UIParent)
 	self.editModeFrame:SetClampedToScreen(true)
+	-- some addons such as BetterCooldownManager toggle the edit mode briefly on login/loading screen end
+	-- which would toggle demos on our end. by flipping this bool, we can avoid that entirely, speeding up load time
+	self.editModeFrame.firstFrameTimestamp = 0
+
+	self.editModeFrame:RegisterEvent("FIRST_FRAME_RENDERED")
+	self.editModeFrame:SetScript("OnEvent", function(self, event)
+		self.firstFrameTimestamp = GetTime()
+		self:SetScript("OnEvent", nil)
+		self:UnregisterAllEvents()
+	end)
 
 	Private.Utils.RegisterEditModeFrame(frameKind, self.editModeFrame)
 	Private.EventRegistry:RegisterCallback(Private.Enum.Events.SETTING_CHANGED, self.OnSettingsChanged, self)
@@ -24,6 +34,10 @@ function TargetedSpellsEditModeMixin:Init(displayName, frameKind)
 	LibEditMode:RegisterCallback("exit", GenerateClosure(self.EndDemo, self))
 
 	self:AppendSettings()
+end
+
+function TargetedSpellsEditModeMixin:IsPastLoadingScreen()
+	return (GetTime() - self.editModeFrame.firstFrameTimestamp) > 1
 end
 
 function TargetedSpellsEditModeMixin:OnSettingsChanged(key, value)
@@ -77,11 +91,11 @@ function TargetedSpellsEditModeMixin:OnSettingsChanged(key, value)
 	end
 end
 
-function TargetedSpellsEditModeMixin:CreateImportExportButtons(kind)
+function TargetedSpellsEditModeMixin:CreateImportExportButtons()
 	return {
 		{
 			click = function()
-				self:OnImportButtonClick(kind)
+				self:OnImportButtonClick()
 			end,
 			text = Private.L.Settings.Import,
 		},
@@ -142,7 +156,7 @@ function TargetedSpellsEditModeMixin:OnExportButtonClick()
 	})
 end
 
-function TargetedSpellsEditModeMixin:OnImportButtonClick(kind)
+function TargetedSpellsEditModeMixin:OnImportButtonClick()
 	Private.Utils.ShowStaticPopup({
 		text = Private.L.Settings.Import,
 		button1 = Private.L.Settings.Import,
@@ -153,16 +167,13 @@ function TargetedSpellsEditModeMixin:OnImportButtonClick(kind)
 		hideOnEscape = true,
 		OnAccept = function(popupSelf)
 			local editBox = popupSelf:GetEditBox()
-			self:OnImportConfirmation({
-				encodedString = editBox:GetText(),
-				kind = kind,
-			})
+			self:OnImportConfirmation(editBox:GetText())
 		end,
 	})
 end
 
-function TargetedSpellsEditModeMixin:OnImportConfirmation(importArgs)
-	local hasAnyChange = Private.Utils.Import(importArgs.encodedString)
+function TargetedSpellsEditModeMixin:OnImportConfirmation(encodedString)
+	local hasAnyChange = Private.Utils.Import(encodedString)
 
 	if hasAnyChange then
 		LibEditMode:RefreshFrameSettings(self.editModeFrame)
@@ -223,6 +234,50 @@ function TargetedSpellsEditModeMixin:CreateSetting(key, defaults)
 		}
 	end
 
+	if key == Private.Settings.Keys.Self.Font or key == Private.Settings.Keys.Party.Font then
+		local tableRef = key == Private.Settings.Keys.Self.Font and TargetedSpellsSaved.Settings.Self
+			or TargetedSpellsSaved.Settings.Party
+
+		---@param layoutName string
+		---@param value string
+		local function Set(layoutName, value)
+			if tableRef.Font ~= value then
+				tableRef.Font = value
+				Private.EventRegistry:TriggerEvent(Private.Enum.Events.SETTING_CHANGED, key, value)
+			end
+		end
+
+		local function Generator(owner, rootDescription, data)
+			local fonts = Private.Settings.GetFontOptions()
+
+			for label, path in pairs(fonts) do
+				local function IsEnabled()
+					return tableRef.Font == path
+				end
+
+				local function SetProxy()
+					Set(LibEditMode:GetActiveLayoutName(), path)
+				end
+
+				rootDescription:CreateCheckbox(label, IsEnabled, SetProxy, {
+					value = path,
+					multiple = false,
+				})
+			end
+		end
+
+		---@type LibEditModeDropdown
+		return {
+			name = L.Settings.FontLabel,
+			kind = Enum.EditModeSettingDisplayType.Dropdown,
+			desc = L.Settings.FontTooltip,
+			default = defaults.Font,
+			multiple = false,
+			generator = Generator,
+			set = Set,
+		}
+	end
+
 	if key == Private.Settings.Keys.Self.Opacity or key == Private.Settings.Keys.Party.Opacity then
 		local tableRef = key == Private.Settings.Keys.Self.Opacity and TargetedSpellsSaved.Settings.Self
 			or TargetedSpellsSaved.Settings.Party
@@ -254,6 +309,35 @@ function TargetedSpellsEditModeMixin:CreateSetting(key, defaults)
 			maxValue = sliderSettings.max,
 			valueStep = sliderSettings.step,
 			formatter = FormatPercentage,
+		}
+	end
+
+	if key == Private.Settings.Keys.Self.ShowSwipe or key == Private.Settings.Keys.Party.ShowSwipe then
+		local tableRef = key == Private.Settings.Keys.Self.ShowSwipe and TargetedSpellsSaved.Settings.Self
+			or TargetedSpellsSaved.Settings.Party
+
+		---@param layoutName string
+		local function Get(layoutName)
+			return tableRef.ShowSwipe
+		end
+
+		---@param layoutName string
+		---@param value boolean
+		local function Set(layoutName, value)
+			if value ~= tableRef.ShowSwipe then
+				tableRef.ShowSwipe = value
+				Private.EventRegistry:TriggerEvent(Private.Enum.Events.SETTING_CHANGED, key, value)
+			end
+		end
+
+		---@type LibEditModeCheckbox
+		return {
+			name = L.Settings.ShowSwipeLabel,
+			kind = Enum.EditModeSettingDisplayType.Checkbox,
+			desc = L.Settings.ShowSwipeTooltip,
+			default = defaults.ShowSwipe,
+			get = Get,
+			set = Set,
 		}
 	end
 
@@ -1247,7 +1331,7 @@ function SelfEditModeMixin:AppendSettings()
 	end
 
 	LibEditMode:AddFrameSettings(self.editModeFrame, settings)
-	LibEditMode:AddFrameSettingsButtons(self.editModeFrame, self:CreateImportExportButtons(Private.Enum.FrameKind.Self))
+	LibEditMode:AddFrameSettingsButtons(self.editModeFrame, self:CreateImportExportButtons())
 end
 
 function SelfEditModeMixin:RestoreEditModePosition()
@@ -1259,7 +1343,6 @@ function SelfEditModeMixin:RestoreEditModePosition()
 	)
 end
 
----@param frame Frame
 function SelfEditModeMixin:OnEditModePositionChanged(frame, layoutName, point, x, y)
 	TargetedSpellsSaved.Settings.Self.Position.point = point
 	TargetedSpellsSaved.Settings.Self.Position.x = x
@@ -1308,23 +1391,24 @@ function SelfEditModeMixin:RepositionPreviewFrames()
 	local point = isHorizontal and "LEFT" or "BOTTOM"
 	local total = (activeFrameCount * (isHorizontal and width or height)) + (activeFrameCount - 1) * gap
 	local parentDimension = isHorizontal and self.editModeFrame:GetWidth() or self.editModeFrame:GetHeight()
+	local centerOffset = grow == Private.Enum.Grow.Center and (-width / 2) or 0
 
 	for i, frame in ipairs(activeFrames) do
 		local x = 0
 		local y = 0
 
 		if isHorizontal then
-			x = Private.Utils.CalculateCoordinate(i, width, gap, parentDimension, total, 0, grow)
+			x = Private.Utils.CalculateCoordinate(i, width, gap, parentDimension, total, centerOffset, grow)
 		else
-			y = Private.Utils.CalculateCoordinate(i, width, gap, parentDimension, total, 0, grow)
+			y = Private.Utils.CalculateCoordinate(i, width, gap, parentDimension, total, centerOffset, grow)
 		end
 
-		frame:Reposition(point, self.editModeFrame, "CENTER", x, y)
+		frame:Reposition(point, self.editModeFrame, "CENTER", x, y, false)
 	end
 end
 
 function SelfEditModeMixin:StartDemo()
-	if self.demoPlaying or not TargetedSpellsSaved.Settings.Self.Enabled then
+	if self.demoPlaying or not TargetedSpellsSaved.Settings.Self.Enabled or not self:IsPastLoadingScreen() then
 		return
 	end
 
@@ -1332,7 +1416,10 @@ function SelfEditModeMixin:StartDemo()
 	self.buildingFrames = true
 
 	for index = 1, self.maxFrames do
-		self.frames[index] = self.frames[index] or self:AcquireFrame()
+		if self.frames[index] == nil then
+			self.frames[index] = self:AcquireFrame()
+		end
+
 		local frame = self.frames[index]
 
 		if frame then
@@ -1494,20 +1581,41 @@ function PartyEditModeMixin:AppendSettings()
 	end
 
 	LibEditMode:AddFrameSettings(self.editModeFrame, settings)
-	LibEditMode:AddFrameSettingsButtons(
-		self.editModeFrame,
-		self:CreateImportExportButtons(Private.Enum.FrameKind.Party)
-	)
+	LibEditMode:AddFrameSettingsButtons(self.editModeFrame, self:CreateImportExportButtons())
 end
 
 function PartyEditModeMixin:RepositionEditModeFrame()
 	local parent = PartyFrame
 	local width = 125
+	local foundMatch = false
 
-	if DandersFrames and DandersPartyGroupContainer then
+	if Private.Utils.HasThirdPartyCandidates() then
+		local maybeFrame = Private.Utils.FindThirdPartyGroupFrameForUnit("party1")
+
+		if maybeFrame then
+			local maybeParent = maybeFrame:GetParent()
+
+			if maybeParent then
+				parent = maybeParent
+				width = maybeParent:GetWidth()
+				foundMatch = true
+			end
+		end
+	end
+
+	if not foundMatch and ElvUI and ElvUI[1].db and ElvUI[1].db.unitframe.units.party.enable and ElvUF_Party then
+		parent = ElvUF_Party
+		width = ElvUF_Party:GetWidth()
+		foundMatch = true
+	end
+
+	if not foundMatch and DandersFrames and DandersPartyGroupContainer then
 		parent = DandersPartyGroupContainer
 		width = DandersPartyGroupContainer:GetWidth()
-	elseif self.useRaidStylePartyFrames then
+		foundMatch = true
+	end
+
+	if not foundMatch and self.useRaidStylePartyFrames then
 		parent = CompactPartyFrame
 		width = CompactPartyFrame.memberUnitFrames[1]:GetWidth()
 	end
@@ -1550,7 +1658,7 @@ function PartyEditModeMixin:OnLayoutSettingChanged(key, value)
 			end
 		end
 	elseif key == Private.Settings.Keys.Party.GlowType then
-		if not Private.Settings.Keys.Party.GlowImportant then
+		if not TargetedSpellsSaved.Settings.Party.GlowImportant then
 			return
 		end
 
@@ -1609,41 +1717,42 @@ function PartyEditModeMixin:RepositionPreviewFrames()
 		local activeFrameCount = #activeFrames
 
 		if activeFrameCount > 0 then
-			Private.Utils.SortFrames(activeFrames, sortOrder)
+			local token = i == 5 and "player" or string.format("party%d", i)
 
-			local parentFrame = Private.Utils.FindThirdPartyGroupFrameForUnit(
-				i == 5 and "player" or string.format("party%d", i),
-				Private.Enum.FrameKind.Party
-			)
+			if i < 5 and true or i == 5 and TargetedSpellsSaved.Settings.Party.IncludeSelfInParty then
+				Private.Utils.SortFrames(activeFrames, sortOrder)
 
-			if parentFrame == nil then
-				if self.useRaidStylePartyFrames then
-					parentFrame = CompactPartyFrame.memberUnitFrames[i]
-				else
-					for memberFrame in PartyFrame.PartyMemberFramePool:EnumerateActive() do
-						if memberFrame.layoutIndex == i then
-							parentFrame = memberFrame
-							break
+				local parentFrame, useTopLevel = Private.Utils.FindThirdPartyGroupFrameForUnit(token)
+
+				if parentFrame == nil then
+					if self.useRaidStylePartyFrames then
+						parentFrame = CompactPartyFrame.memberUnitFrames[i]
+					else
+						for memberFrame in PartyFrame.PartyMemberFramePool:EnumerateActive() do
+							if memberFrame.layoutIndex == i then
+								parentFrame = memberFrame
+								break
+							end
 						end
 					end
 				end
-			end
 
-			if parentFrame ~= nil then
-				local total = (activeFrameCount * (isHorizontal and width or height)) + (activeFrameCount - 1) * gap
-				local parentDimension = isHorizontal and parentFrame:GetWidth() or parentFrame:GetHeight()
+				if parentFrame ~= nil then
+					local total = (activeFrameCount * (isHorizontal and width or height)) + (activeFrameCount - 1) * gap
+					local parentDimension = isHorizontal and parentFrame:GetWidth() or parentFrame:GetHeight()
 
-				for j, frame in ipairs(activeFrames) do
-					local x = offsetX
-					local y = offsetY
+					for j, frame in ipairs(activeFrames) do
+						local x = offsetX
+						local y = offsetY
 
-					if isHorizontal then
-						x = Private.Utils.CalculateCoordinate(j, width, gap, parentDimension, total, offsetX, grow)
-					else
-						y = Private.Utils.CalculateCoordinate(j, width, gap, parentDimension, total, offsetY, grow)
+						if isHorizontal then
+							x = Private.Utils.CalculateCoordinate(j, width, gap, parentDimension, total, offsetX, grow)
+						else
+							y = Private.Utils.CalculateCoordinate(j, width, gap, parentDimension, total, offsetY, grow)
+						end
+
+						frame:Reposition(sourceAnchor, parentFrame, targetAnchor, x, y, useTopLevel)
 					end
-
-					frame:Reposition(sourceAnchor, parentFrame, targetAnchor, x, y)
 				end
 			end
 		end
@@ -1651,7 +1760,7 @@ function PartyEditModeMixin:RepositionPreviewFrames()
 end
 
 function PartyEditModeMixin:StartDemo()
-	if self.demoPlaying or not TargetedSpellsSaved.Settings.Party.Enabled then
+	if self.demoPlaying or not TargetedSpellsSaved.Settings.Party.Enabled or not self:IsPastLoadingScreen() then
 		return
 	end
 
@@ -1659,29 +1768,27 @@ function PartyEditModeMixin:StartDemo()
 	self.buildingFrames = true
 
 	for unit = 1, self.maxUnitCount do
-		if unit > 1 or TargetedSpellsSaved.Settings.Party.IncludeSelfInParty then
-			if self.frames[unit] == nil then
-				self.frames[unit] = {}
+		if self.frames[unit] == nil then
+			self.frames[unit] = {}
+		end
+
+		if unit == self.maxUnitCount and not self.useRaidStylePartyFrames then
+			break
+		end
+
+		for index = 1, self.amountOfPreviewFramesPerUnit do
+			if self.frames[unit][index] == nil then
+				self.frames[unit][index] = self:AcquireFrame()
 			end
 
-			if unit == self.maxUnitCount and not self.useRaidStylePartyFrames then
-				break
-			end
+			local frame = self.frames[unit][index]
 
-			for index = 1, self.amountOfPreviewFramesPerUnit do
-				if self.frames[unit][index] == nil then
-					self.frames[unit][index] = self:AcquireFrame()
-				end
+			table.insert(
+				self.demoTimers.tickers,
+				C_Timer.NewTicker(5 + index + unit, GenerateClosure(self.LoopFrame, self, frame, index + unit))
+			)
 
-				local frame = self.frames[unit][index]
-
-				table.insert(
-					self.demoTimers.tickers,
-					C_Timer.NewTicker(5 + index + unit, GenerateClosure(self.LoopFrame, self, frame, index + unit))
-				)
-
-				self:LoopFrame(frame, index + unit)
-			end
+			self:LoopFrame(frame, index + unit)
 		end
 	end
 

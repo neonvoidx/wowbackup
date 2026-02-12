@@ -214,6 +214,23 @@ map.nodes[44993855] = Rare({
     }
 }) -- Dame Bloodshed
 
+iqd.nodes[55712913] = Rare({
+    id = 252465,
+    quest = 95011,
+    rewards = {
+        Section(L['shared_drops']), Mount({item = 257156, id = 2762}), -- Cerulean Hawkstrider
+        Mount({item = 257147, id = 2758}) -- Cobalt Dragonhawk
+    }
+}) -- Tarhu the Ransacker
+
+iqd.nodes[37093830] = Rare({
+    id = 239864,
+    quest = 95010,
+    rewards = {
+        Section(L['shared_drops']), Mount({item = 257156, id = 2762}), -- Cerulean Hawkstrider
+        Mount({item = 257147, id = 2758}) -- Cobalt Dragonhawk
+    }
+}) -- Dripping Shadow
 -------------------------------------------------------------------------------
 ---------------------------------- TREASURES ----------------------------------
 -------------------------------------------------------------------------------
@@ -366,6 +383,11 @@ smc.nodes[50505659] = PT.Jewelcrafting({
 }) -- Sin'dorei Masterwork Chisel
 map.nodes[56624088] = PT.Jewelcrafting({quest = 89125, id = 238583}) -- Poorly Rounded Vial
 map.nodes[39643882] = PT.Jewelcrafting({quest = 89129, id = 238587}) -- Sin'dorei Gem Faceters
+smc.nodes[28624638] = PT.Jewelcrafting({
+    quest = 89124,
+    id = 238582,
+    parent = map.id
+}) -- Dual-Function Magnifiers
 smc.nodes[44765626] = PT.Leatherworking({
     quest = 89096,
     id = 238595,
@@ -383,8 +405,6 @@ map.nodes[46363487] = PT.Tailoring({quest = 89080, id = 238614}) -- Sin'dorei Ou
 --[[ MOVE TO RIGHT MAP WHEN FOUND
 map.nodes[] = PT.Enchanting({quest = 89101, id = 238549}) -- Enchanted Sunfire Silk
 map.nodes[] = PT.Alchemy({quest = 89111, id = 238532}) -- Vial of Eversong Oddities
-map.nodes[] = PT.Alchemy({quest = 89118, id = 238539}) -- Failed Experiment
-map.nodes[] = PT.Jewelcrafting({quest = 89124, id = 238582}) -- Dual-Function Magnifiers
 map.nodes[] = PT.Inscription({quest = 89072, id = 238577}) -- Half-Baked Techniques
 map.nodes[] = PT.Herbalism({quest = 89161, id = 238469}) -- Sweeping Harvester's Scythe
 

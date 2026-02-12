@@ -24,6 +24,7 @@ L["Quick Slot Layout"] = "Layout";
 L["Quick Slot Layout Linear"] = "Linear";
 L["Quick Slot Layout Radial"] = "Radial";
 L["Restriction Combat"] = "Does not work in combat";    --Indicate a feature can only work when out of combat
+L["Restriction Instance"] = "This feature does not work in instances.";
 L["Map Pin Change Size Method"] = "\n\n*You can change the pin size in World Map> Map Filter> Plumber";
 L["Toggle Plumber UI"] = "Toggle Plumber UI";
 L["Toggle Plumber UI Tooltip"] = "Show the following Plumber UI in the Edit Mode:\n\n%s\n\nThis checkbox only controls their visibility in the Edit Mode. It will not enable or disable these modules.";
@@ -43,6 +44,7 @@ L["New Feature Abbr"] = "New";
 L["Format Month Day"] = EVENT_SCHEDULER_DAY_FORMAT or "%s %d";
 L["Always On Module"] = "This module is always enabled.";
 L["Return To Module List"] = "Return to List";
+L["Generic Addon Conflict"] = "This module might be incompatible with addons of similar functionalities:";
 
 
 --Settings Category
@@ -325,6 +327,7 @@ L["ModuleDescription WorldMapPin_TWW"] = "Show additional pins on Khaz Algar con
 
 --Delves
 L["Great Vault Tier Format"] = GREAT_VAULT_WORLD_TIER or "Tier %s";
+L["Great Vault World Activity Tooltip"] = "Tier 1 and World Activities";
 L["Item Level Format"] = ITEM_LEVEL or "Item Level %d";
 L["Item Level Abbr"] = ITEM_LEVEL_ABBR or "iLvl";
 L["Delves Reputation Name"] = "Delver's Journey";
@@ -382,6 +385,22 @@ L["Click To Disable"] = "Click to disable";
 --NameplateWidget
 L["ModuleName NameplateWidget"] = "Nameplate: Keyflame";
 L["ModuleDescription NameplateWidget"] = "Show the number of owned Radiant Remnant on the nameplate.";
+
+
+--NameplateQuestIndicator
+L["ModuleName NameplateQuest"] = "Nameplate: Quest Indicator";
+L["ModuleDescription NameplateQuest"] = "Show quest indicator on nameplates.\n\n- (Optional) Show quest objective progress for your target.\n\n- (Optional) Show quest indicator if your party members haven't completed the objective.";
+L["NameplateQuest ShowPartyQuest"] = "Show Party Member's Quest";
+L["NameplateQuest ShowPartyQuest Tooltip"] = "Show a marker %s if one of your party members hasn't completed the quest objective.";
+L["NameplateQuest ShowTargetProgress"] = "Show Progress on Target";
+L["NameplateQuest ShowTargetProgress Tooltip"] = "Show the quest objective progress on your target's nameplate.";
+L["NameplateQuest ShowProgressOnHover"] = "Show Progress on Hover";
+L["NameplateQuest ShowProgressOnHover Tooltip"] = "Show the quest objective progress when you hover the cursor over a nameplate or a unit.";
+L["NameplateQuest Instruction Find Nameplate"] = "To adjust the icon position, go to a place with visible NPC nameplates.";
+L["NameplateQuest Progress Format"] = "Progress Format";
+L["Progress Show Icon"] = "Show Icon";
+L["Progress Format Completed"] = "Completed/Required";
+L["Progress Format Remaining"] = "Remaining";
 
 
 --PartyInviterInfo
@@ -564,6 +583,12 @@ L["LootUI Option Low Frame Strata"] = "Send to Back";
 L["LootUI Option Low Frame Strata Tooltip"] = "While in Loot Notification Mode, place the loot window behind other UI.\n\nThis option doesn't affect Manual Loot Mode.";
 L["LootUI Option Show Reputation"] = "Show Reputation Changes";
 L["LootUI Option Show Reputation Tooltip"] = "Display any reputation increases in the loot window.\n\nReputations earned during combat or in PvP instances will be displayed afterwards.";
+L["LootUI Option Show All Money"] = "Show Any Money Changes";
+L["LootUI Option Show All Money Tooltip"] = "Show money earned from all sources, not just loot.";
+L["LootUI Option Show All Currency"] = "Show Any Currency Changes";
+L["LootUI Option Show All Currency Tooltip"] = "Show currencies earned from all sources, not just loot.\n\n|cffff4800You may sometimes see currencies that are not displayed in the chat window.|r";
+L["LootUI Option Hide Title"] = "Hide \"You Received\" Text";
+L["LootUI Option Hide Title Tooltip"] = "Hide the \"You received\" text on the top of the loot window.";
 
 
 --Quick Slot For Third-party Dev
@@ -611,6 +636,7 @@ L["No Slot For New Character Macro Alert"] = "You need to have a spare Character
 --New Expansion Landing Page
 L["ModuleName NewExpansionLandingPage"] = "Expansion Summary";
 L["ModuleDescription NewExpansionLandingPage"] = "A UI that displays factions, weekly activities, and raid lockouts. You can open it by:\n\n- Set a hotkey in Game Settings> Keybindings> Plumber Addon.\n\n- Use the Addon Compartment under the Calendar button.";
+L["Abbr NewExpansionLandingPage"] = "Expansion Summary";    --An abbreviated version of the same phrase. Affects German.
 L["Reward Available"] = "Reward Available";  --As brief as possible
 L["Paragon Reward Available"] = "Paragon Reward Available";
 L["Until Next Level Format"] = "%d until next level";   --Earn x reputation to reach the next level
@@ -724,6 +750,7 @@ L["ModuleDescription CraftSearchExtended"] = "Shows more results when searching 
 --DecorModelScaleRef
 L["ModuleName DecorModelScaleRef"] = "Decor Preview: Banana For Scale"; --See HOUSING_DASHBOARD_CATALOG_TOOLTIP
 L["ModuleDescription DecorModelScaleRef"] = "- Add a size reference (a banana) to the decor preview window, allowing you to gauge the size of the objects.\n\n- Also allow you to change the camera pitch by holding down the Left Button and moving vertically.";
+L["Toggle Banana"] = "Toggle Banana";
 
 
 --Player Housing

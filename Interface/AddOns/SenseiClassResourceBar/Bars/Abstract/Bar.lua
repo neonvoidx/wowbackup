@@ -2,20 +2,21 @@ local _, addonTable = ...
 
 local LSM = addonTable.LSM or LibStub("LibSharedMedia-3.0")
 local LEM = addonTable.LEM or LibStub("LibEQOLEditMode-1.0")
+local L = addonTable.L
 
 ------------------------------------------------------------
 -- YOU SHOULD NOT USE DIRECTLY THIS MIXIN -- YOU NEED TO OVERWRITE SOME METHODS
 ------------------------------------------------------------
 
 local BarMixin = {}
-local buildVersion = select(4, GetBuildInfo())
 
 ------------------------------------------------------------
 -- BAR FACTORY
 ------------------------------------------------------------
 
 function BarMixin:Init(config, parent, frameLevel)
-    local Frame = CreateFrame("Frame", config.frameName or "", parent or UIParent)
+    local Frame = CreateFrame(config.frameType or "Frame", config.frameName or "", parent or UIParent, config.frameTemplate or nil)
+    Frame:SetClampedToScreen(true)
 
     Frame:SetFrameLevel(frameLevel)
     self.config = config
@@ -62,7 +63,7 @@ function BarMixin:Init(config, parent, frameLevel)
     self.TextValue = self.TextFrame:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
     self.TextValue:SetPoint("CENTER", self.TextFrame, "CENTER", 0, 0)
     self.TextValue:SetJustifyH("CENTER")
-    self.TextValue:SetText("0")
+    self.TextValue:SetFormattedText("")
 
     -- STATE
     self.smoothEnabled = false
@@ -71,6 +72,19 @@ function BarMixin:Init(config, parent, frameLevel)
     -- Fragmented powers (Runes, Essences) specific visual elements
     self.FragmentedPowerBars = {}
     self.FragmentedPowerBarTexts = {}
+
+    -- Performance optimizations: pre-allocated tables
+    self._displayOrder = {}
+    self._cachedTextFormat = nil
+    self._cachedTextPattern = nil
+    -- Pre-allocate rune tracking tables (for Death Knights)
+    self._runeReadyList = {}
+    self._runeCdList = {}
+    -- Pre-allocate rune info structs to avoid per-rune allocations
+    self._runeInfoPool = {}
+    for i = 1, 6 do
+        self._runeInfoPool[i] = { index = 0, remaining = 0, frac = 0 }
+    end
 
     self.Frame = Frame
 end
@@ -119,6 +133,53 @@ function BarMixin:InitCooldownManagerWidthHook(layoutName)
 
         self._SCRB_Utility_hooked = true
     end
+
+    v = _G["BuffIconCooldownViewer"]
+    if v and not (self._SCRB_tBuffs_hooked or false) then
+        local hookTrackedBuffs = function(width)
+            if self._SCRB_Tracked_Buff_hook_widthMode ~= "Sync With Tracked Buffs" then
+                return
+            end
+
+            if (width == nil) or (type(width) == "number" and math.floor(width) > 1) then
+                self:ApplyLayout(nil, true)
+            end
+        end
+
+        hooksecurefunc(v, "SetSize", hookTrackedBuffs)
+        hooksecurefunc(v, "Show", hookTrackedBuffs)
+        hooksecurefunc(v, "Hide", hookTrackedBuffs)
+
+        self._SCRB_tBuffs_hooked = true
+    end
+end
+
+function BarMixin:InitCustomFrameWidthHook(layoutName)
+    local data = self:GetData(layoutName)
+    if not data then return nil end
+
+    self._SCRB_Custom_Frames_hooked = self._SCRB_Custom_Frames_hooked or {}
+    self._SCRB_Custom_Frame = data.widthMode
+
+    local hookCustomFrame = function(customFrame, width)
+        if not self._SCRB_Custom_Frame or not _G[self._SCRB_Custom_Frame] or _G[self._SCRB_Custom_Frame] ~= customFrame then
+            return
+        end
+
+        if (width == nil) or (type(width) == "number" and math.floor(width) > 1) then
+            self:ApplyLayout(nil, true)
+        end
+    end
+
+    local v = _G[data.widthMode]
+    if v and not self._SCRB_Custom_Frames_hooked[v] then
+        self._SCRB_Custom_Frames_hooked[v] = true
+
+        hooksecurefunc(v, "SetSize", hookCustomFrame)
+        hooksecurefunc(v, "SetWidth", hookCustomFrame)
+        hooksecurefunc(v, "Show", hookCustomFrame)
+        hooksecurefunc(v, "Hide", hookCustomFrame)
+    end
 end
 
 ------------------------------------------------------------
@@ -126,11 +187,29 @@ end
 ------------------------------------------------------------
 
 function BarMixin:Show()
+    self:OnShow()
     self.Frame:Show()
 end
 
 function BarMixin:Hide()
+    self:OnHide()
     self.Frame:Hide()
+end
+
+function BarMixin:OnShow()
+    local data = self:GetData()
+
+    if data and data.positionMode ~= nil and data.positionMode ~= "Self" then
+        self:ApplyLayout()
+    end
+end
+
+function BarMixin:OnHide()
+    local data = self:GetData()
+
+    if data and data.positionMode ~= nil and data.positionMode ~= "Self" then
+        self:ApplyLayout()
+    end
 end
 
 function BarMixin:IsShown()
@@ -175,17 +254,26 @@ function BarMixin:GetResource()
 end
 
 --- @param _ string|number|nil The value returned by BarMixin:GetResource()
---- @return number|nil Max used for the status bar
---- @return number|nil MaxDisplayValue Value to display as text
---- @return number|nil Value used for the status bar progression
---- @return number|nil DisplayValue Value to display as text
---- @return string|nil ValueType Type for the display, "percent", "number", "custom"
---- @return number|nil precision If needed by the format
+--- @return number|nil Max Used for the status bar
+--- @return number|nil Value Used for the status bar progression
 function BarMixin:GetResourceValue(_)
-    return nil, nil, nil, nil, nil, nil
+    return nil, nil
+end
+
+--- @param resource string|number The value returned by BarMixin:GetResource()
+--- @param max number The max returned by BarMixin:GetResourceValue()
+--- @param current number The current returned by BarMixin:GetResourceValue()
+--- @param precision number The precision if needed by the tag
+--- @return table<string, fun(): string> values A table where keys are the tag (e.g "[current]") and values are functions returning the corresponding value as string
+function BarMixin:GetTagValues(resource, max, current, precision)
+    return {}
 end
 
 function BarMixin:OnLoad()
+end
+
+--- @param _ string The new layout
+function BarMixin:OnLayoutChange(_)
 end
 
 ---@param event string
@@ -196,25 +284,33 @@ end
 -- You should handle what to change here too and set self.fasterUpdates to true
 function BarMixin:EnableFasterUpdates()
     self.fasterUpdates = true
-    self.Frame:SetScript("OnUpdate", function(_, delta)
-        self.Frame.elapsed = (self.Frame.elapsed or 0) + delta
-        if self.Frame.elapsed >= 0.01 then
-            self.Frame.elapsed = 0
-            self:UpdateDisplay()
+    if not self._OnUpdateFast then
+        self._OnUpdateFast = function(frame, delta)
+            frame.elapsed = (frame.elapsed or 0) + delta
+            if frame.elapsed >= 0.1 then
+                frame.elapsed = 0
+                self:UpdateDisplay()
+                self._curEvent = nil
+            end
         end
-    end)
+    end
+    self.Frame:SetScript("OnUpdate", self._OnUpdateFast)
 end
 
 -- You should handle what to change here too and set self.fasterUpdates to false
 function BarMixin:DisableFasterUpdates()
     self.fasterUpdates = false
-    self.Frame:SetScript("OnUpdate", function(_, delta)
-        self.Frame.elapsed = (self.Frame.elapsed or 0) + delta
-        if self.Frame.elapsed >= 0.1 then
-            self.Frame.elapsed = 0
-            self:UpdateDisplay()
+    if not self._OnUpdateSlow then
+        self._OnUpdateSlow = function(frame, delta)
+            frame.elapsed = (frame.elapsed or 0) + delta
+            if frame.elapsed >= 0.25 then
+                frame.elapsed = 0
+                self:UpdateDisplay()
+                self._curEvent = nil
+            end
         end
-    end)
+    end
+    self.Frame:SetScript("OnUpdate", self._OnUpdateSlow)
 end
 
 ------------------------------------------------------------
@@ -227,18 +323,20 @@ function BarMixin:UpdateDisplay(layoutName, force)
     local data = self:GetData(layoutName)
     if not data then return end
 
+    -- Cache data to avoid redundant GetData() calls
+
     local resource = self:GetResource()
     if not resource then
         if LEM:IsInEditMode() then
             -- "4" text for edit mode is resource does not exist (e.g. Secondary resource for warrior)
             self.StatusBar:SetMinMaxValues(0, 5)
-            self.TextValue:SetText("4")
+            self.TextValue:SetFormattedText("4")
             self.StatusBar:SetValue(4)
         end
         return
     end
 
-    local max, maxDisplayValue, current, displayValue, valueType = self:GetResourceValue(resource)
+    local max, current = self:GetResourceValue(resource)
     if not max then
         if not LEM:IsInEditMode() then
             self:Hide()
@@ -246,33 +344,52 @@ function BarMixin:UpdateDisplay(layoutName, force)
         return
     end
 
-    self.StatusBar:SetMinMaxValues(0, max, data.smoothProgress and buildVersion >= 120000 and Enum.StatusBarInterpolation.ExponentialEaseOut or nil)
-    self.StatusBar:SetValue(current, data.smoothProgress and buildVersion >= 120000 and Enum.StatusBarInterpolation.ExponentialEaseOut or nil)
+    self.StatusBar:SetMinMaxValues(0, max, data.smoothProgress and Enum.StatusBarInterpolation.ExponentialEaseOut or nil)
+    self.StatusBar:SetValue(current, data.smoothProgress and Enum.StatusBarInterpolation.ExponentialEaseOut or nil)
 
-    if (data.showManaAsPercent and resource == Enum.PowerType.Mana) or data.textFormat == "Percent" or data.textFormat == "Percent%" then
+    -----------
+
+    if data.showText == true then
         local precision = data.textPrecision and math.max(0, string.len(data.textPrecision) - 3) or 0
+        local tagValues = self:GetTagValues(resource, max, current, precision)
 
-        if valueType == "custom" then
-            self.TextValue:SetText(displayValue)
-        else
-            self.TextValue:SetText(string.format("%." .. (precision or 0) .. "f" .. (data.textFormat == "Percent%" and "%%" or ""), displayValue))
+        local textFormat = ""
+        if (data.showManaAsPercent and resource == Enum.PowerType.Mana) or data.textFormat == "Percent" or data.textFormat == "Percent%" then
+            textFormat = "[percent]" .. (data.textFormat == "Percent%" and "%" or "")
+        elseif data.textFormat == nil or data.textFormat == "Current" then
+            textFormat = "[current]"
+        elseif data.textFormat == "Current / Maximum" then
+            textFormat = "[current] / [max]"
+        elseif data.textFormat == "Current - Percent" or data.textFormat == "Current - Percent%" then
+            textFormat = "[current] - [percent]" .. (data.textFormat == "Current - Percent%" and "%" or "")
         end
-    elseif data.textFormat == nil or data.textFormat == "Current" then
-        if valueType == "custom" then
-            self.TextValue:SetText(displayValue)
-        else
-            self.TextValue:SetText(AbbreviateNumbers(displayValue))
+
+        -- Cache compiled format to avoid repeated pattern matching
+        if self._cachedTextFormat ~= textFormat then
+            self._cachedTextFormat = textFormat
+            self._cachedTextPattern = {}
+            for tag in textFormat:gmatch('%[..-%]+') do
+                self._cachedTextPattern[#self._cachedTextPattern + 1] = tag
+            end
+            self._cachedFormat, self._cachedNum = textFormat:gsub('%%', '%%%%'):gsub('%[..-%]+', '%%s')
         end
-    elseif data.textFormat == "Current / Maximum" then
-        if valueType == "custom" then
-            self.TextValue:SetText(displayValue .. ' / ' .. maxDisplayValue)
-        else
-            self.TextValue:SetText(AbbreviateNumbers(displayValue) .. ' / ' .. AbbreviateNumbers(maxDisplayValue))
+
+        -- Thanks oUF
+        local valuesToDisplay = {}
+        for i = 1, #self._cachedTextPattern do
+            local tag = self._cachedTextPattern[i]
+            if tagValues and tagValues[tag] then
+                valuesToDisplay[i] = tagValues[tag]()
+            else
+                valuesToDisplay[i] = ''
+            end
         end
+
+        self.TextValue:SetFormattedText(self._cachedFormat, unpack(valuesToDisplay, 1, self._cachedNum))
     end
 
     if addonTable.fragmentedPowerTypes[resource] then
-        self:UpdateFragmentedPowerDisplay(layoutName)
+        self:UpdateFragmentedPowerDisplay(layoutName, data, max)
     end
 end
 
@@ -284,8 +401,10 @@ function BarMixin:ApplyVisibilitySettings(layoutName, inCombat)
     local data = self:GetData(layoutName)
     if not data then return end
 
-    self:HideBlizzardPlayerContainer(layoutName)
-    self:HideBlizzardSecondaryResource(layoutName)
+    -- Cannot touch Protected Frame in Combat
+    if self.Frame:IsProtected() and InCombatLockdown() then
+        return
+    end
 
     -- Don't hide while in edit mode...
     if LEM:IsInEditMode() then
@@ -305,14 +424,11 @@ function BarMixin:ApplyVisibilitySettings(layoutName, inCombat)
         return
     end
 
+    local playerClass = select(2, UnitClass("player"))
     local spec = C_SpecializationInfo.GetSpecialization()
     local specID = C_SpecializationInfo.GetSpecializationInfo(spec)
     local role = select(5, C_SpecializationInfo.GetSpecializationInfo(spec))
-
-    if resource == "HEALTH" and data.hideHealthOnRole and data.hideHealthOnRole[role] then
-        self:Hide()
-        return
-    end
+    local formID = GetShapeshiftFormID()
 
     -- Not on arcane mage!
     if resource == Enum.PowerType.Mana and data.hideManaOnRole and data.hideManaOnRole[role] and specID ~= 62 then
@@ -320,7 +436,8 @@ function BarMixin:ApplyVisibilitySettings(layoutName, inCombat)
         return
     end
 
-    if data.hideWhileMountedOrVehicule and (IsMounted() or UnitInVehicle("player")) then
+    local isDruidInFlightForm = playerClass == "DRUID" and (formID == DRUID_FLIGHT_FORM or formID == DRUID_TRAVEL_FORM or formID == DRUID_ACQUATIC_FORM)
+    if data.hideWhileMountedOrVehicule and (IsMounted() or UnitInVehicle("player") or isDruidInFlightForm) then
         self:Hide()
         return
     end
@@ -359,11 +476,11 @@ function BarMixin:ApplyVisibilitySettings(layoutName, inCombat)
         self:Show()
     end
 
-    self:ApplyTextVisibilitySettings(layoutName)
+    self:ApplyTextVisibilitySettings(layoutName, data)
 end
 
-function BarMixin:ApplyTextVisibilitySettings(layoutName)
-    local data = self:GetData(layoutName)
+function BarMixin:ApplyTextVisibilitySettings(layoutName, data)
+    data = data or self:GetData(layoutName)
     if not data then return end
 
     self.TextFrame:SetShown(data.showText ~= false)
@@ -373,65 +490,98 @@ function BarMixin:ApplyTextVisibilitySettings(layoutName)
     end
 end
 
-function BarMixin:HideBlizzardPlayerContainer(layoutName)
-    local data = self:GetData(layoutName)
-    if not data then return end
-
-    -- InCombatLockdown() means protected frames so we cannot touch it
-    if data.hideBlizzardPlayerContainerUi == nil or InCombatLockdown() then return end
-
-    if PlayerFrame then
-        if data.hideBlizzardPlayerContainerUi then
-            if LEM:IsInEditMode() then
-                PlayerFrame:Show()
-            else 
-                PlayerFrame:Hide()
-            end
-        else
-            PlayerFrame:Show()
-        end
-    end
-end
-
-function BarMixin:HideBlizzardSecondaryResource(layoutName)
-    local data = self:GetData(layoutName)
-    if not data then return end
-
-    -- InCombatLockdown() means protected frames so we cannot touch it
-    if data.hideBlizzardSecondaryResourceUi == nil or InCombatLockdown() then return end
-    
-    local playerClass = select(2, UnitClass("player"))
-    local blizzardResourceFrames = {
-        ["DEATHKNIGHT"] = RuneFrame,
-        ["DRUID"] = DruidComboPointBarFrame,
-        ["EVOKER"] = EssencePlayerFrame,
-        ["MAGE"] = MageArcaneChargesFrame,
-        ["MONK"] = MonkHarmonyBarFrame,
-        ["PALADIN"] = PaladinPowerBarFrame,
-        ["ROGUE"] = RogueComboPointBarFrame,
-        ["WARLOCK"] = WarlockPowerFrame,
-    }
-
-    for class, f in pairs(blizzardResourceFrames) do
-        if f and playerClass == class then
-            if data.hideBlizzardSecondaryResourceUi then
-                if LEM:IsInEditMode() then
-                    if class ~= "DRUID" or (class == "DRUID" and GetShapeshiftFormID() == DRUID_CAT_FORM) then
-                        f:Show()
-                    end
-                else 
-                    f:Hide()
-                end
-            elseif class ~= "DRUID" or (class == "DRUID" and GetShapeshiftFormID() == DRUID_CAT_FORM) then
-                f:Show()
-            end
-        end
-    end
-end
-
 ------------------------------------------------------------
 -- LAYOUT related methods
 ------------------------------------------------------------
+
+function BarMixin:GetPoint(layoutName, ignorePositionMode)
+    local defaults = self.defaults or {}
+
+    local data = self:GetData(layoutName)
+    if not data then
+        return defaults.point or "CENTER",
+            addonTable.resolveRelativeFrames(defaults.relativeFrame or "UIParent"),
+            defaults.relativePoint or "CENTER",
+            defaults.x or 0,
+            defaults.y or 0
+    end
+
+    if not ignorePositionMode then
+        if data and data.positionMode == "Use Primary Resource Bar Position If Hidden" then
+            local primaryResource = addonTable.barInstances and addonTable.barInstances["PrimaryResourceBar"]
+
+            if primaryResource then
+                primaryResource:ApplyVisibilitySettings(layoutName, self._curEvent == "PLAYER_REGEN_DISABLED")
+                if not primaryResource:IsShown() then
+                    return primaryResource:GetPoint(layoutName, true)
+                end
+            end
+        elseif data and data.positionMode == "Use Secondary Resource Bar Position If Hidden" then
+            local secondaryResource = addonTable.barInstances and addonTable.barInstances["SecondaryResourceBar"]
+
+            if secondaryResource then
+                secondaryResource:ApplyVisibilitySettings(layoutName, self._curEvent == "PLAYER_REGEN_DISABLED")
+                if not secondaryResource:IsShown() then
+                    return secondaryResource:GetPoint(layoutName, true)
+                end
+            end
+        elseif data and data.positionMode == "Use Health Bar Position If Hidden" then
+            local health = addonTable.barInstances and addonTable.barInstances["HealthBar"]
+
+            if health then
+                health:ApplyVisibilitySettings(layoutName, self._curEvent == "PLAYER_REGEN_DISABLED")
+                if not health:IsShown() then
+                    return health:GetPoint(layoutName, true)
+                end
+            end
+        end
+    end
+
+    local x = data.x or defaults.x
+    local y = data.y or defaults.y
+
+    local point = data.point or defaults.point
+    local relativePoint = data.relativePoint or defaults.relativePoint
+    local relativeFrame = data.relativeFrame or defaults.relativeFrame
+    local resolvedRelativeFrame = addonTable.resolveRelativeFrames(relativeFrame) or UIParent
+    -- Cannot anchor to itself or to a frame already anchored to this frame
+    if self.Frame == resolvedRelativeFrame or self.Frame == select(2, resolvedRelativeFrame:GetPoint(1)) then
+        resolvedRelativeFrame = UIParent
+        data.relativeFrame = "UIParent"
+        LEM.internal:RefreshSettingValues({L["RELATIVE_FRAME"]})
+        addonTable.prettyPrint(L["RELATIVE_FRAME_CYCLIC_WARNING"])
+    end
+
+    return point, resolvedRelativeFrame, relativePoint, x, y
+end
+
+function BarMixin:GetSize(layoutName, data)
+    local defaults = self.defaults or {}
+
+    data = data or self:GetData(layoutName)
+    if not data then return defaults.width or 200, defaults.height or 15 end
+
+    local width = nil
+    if data.widthMode ~= nil and addonTable.customFrameNamesToFrame[data.widthMode] then
+        width = self:GetCustomFrameWidth(layoutName) or data.width or defaults.width
+        if data.minWidth and data.minWidth > 0 then
+            width = max(width, data.minWidth)
+        end
+    elseif data.widthMode ~= nil and data.widthMode ~= "Manual" then
+        width = self:GetCooldownManagerWidth(layoutName) or data.width or defaults.width
+        if data.minWidth and data.minWidth > 0 then
+            width = max(width, data.minWidth)
+        end
+    else -- Use manual width
+        width = data.width or defaults.width
+    end
+
+    local height = data.height or defaults.height
+
+    local scale = addonTable.rounded(data.scale or defaults.scale or 1, 2)
+
+    return addonTable.getNearestPixel(width * scale, scale), addonTable.getNearestPixel(height * scale, scale)
+end
 
 function BarMixin:ApplyLayout(layoutName, force)
     if not self:IsShown() and not force then return end
@@ -442,39 +592,32 @@ function BarMixin:ApplyLayout(layoutName, force)
     -- Init Fragmented Power Bars if needed
     local resource = self:GetResource()
     if addonTable.fragmentedPowerTypes[resource] then
-        self:CreateFragmentedPowerBars(layoutName)
+        self:CreateFragmentedPowerBars(layoutName, data)
     end
 
     local defaults = self.defaults or {}
 
-    local scale = data.scale or defaults.scale
-    local point = data.point or defaults.point
-    local x = data.x or defaults.x
-    local y = data.y or defaults.y
+    -- Cannot touch Protected Frame in Combat
+    if not self.Frame:IsProtected() or (self.Frame:IsProtected() and not InCombatLockdown()) then
+        local width, height = self:GetSize(layoutName, data)
+        self.Frame:SetSize(max(LEM:IsInEditMode() and 2 or 1, width), max(LEM:IsInEditMode() and 2 or 1, height))
 
-    local width = nil
-    if data.widthMode == "Sync With Essential Cooldowns" or data.widthMode == "Sync With Utility Cooldowns" then
-        width = self:GetCooldownManagerWidth(layoutName) or data.width or defaults.width
-        if data.minWidth and data.minWidth > 0 then
-            width = max(width, data.minWidth)
-        end
-    else -- Use manual width
-        width = data.width or defaults.width
+        local point, relativeTo, relativePoint, x, y = self:GetPoint(layoutName)
+        self.Frame:ClearAllPoints()
+        self.Frame:SetPoint(point, relativeTo, relativePoint, x, y)
+        -- Disable drag & drop if the relative frame is not UIParent, due to LEM limitation making x and y position incorrect when dragging
+        LEM:SetFrameDragEnabled(self.Frame, relativeTo == UIParent)
+
+        self:SetFrameStrata(data.barStrata or defaults.barStrata)
     end
-    local height = data.height or defaults.height
-    self.Frame:SetSize(max(LEM:IsInEditMode() and 2 or 1, width * scale), max(LEM:IsInEditMode() and 2 or 1, height * scale))
-    self.Frame:ClearAllPoints()
-    local uiWidth, uiHeight = UIParent:GetWidth() / 2, UIParent:GetHeight() / 2
-    self.Frame:SetPoint(point, UIParent, point, addonTable.clamp(x, uiWidth * -1, uiWidth), addonTable.clamp(y, uiHeight * -1, uiHeight))
 
-    self:SetFrameStrata(data.barStrata or defaults.barStrata)
-    self:ApplyFontSettings(layoutName)
-    self:ApplyFillDirectionSettings(layoutName)
-    self:ApplyMaskAndBorderSettings(layoutName)
-    self:ApplyBackgroundSettings(layoutName)
-    self:ApplyForegroundSettings(layoutName)
+    self:ApplyFontSettings(layoutName, data)
+    self:ApplyFillDirectionSettings(layoutName, data)
+    self:ApplyMaskAndBorderSettings(layoutName, data)
+    self:ApplyForegroundSettings(layoutName, data)
+    self:ApplyBackgroundSettings(layoutName, data)
 
-    self:UpdateTicksLayout(layoutName)
+    self:UpdateTicksLayout(layoutName, data)
 
     if data.fasterUpdates then
         self:EnableFasterUpdates()
@@ -483,22 +626,22 @@ function BarMixin:ApplyLayout(layoutName, force)
     end
 
     if addonTable.fragmentedPowerTypes[resource] then
-        self:UpdateFragmentedPowerDisplay(layoutName)
+        self:UpdateFragmentedPowerDisplay(layoutName, data)
     else
         self.StatusBar:SetAlpha(1)
         for i, _ in pairs(self.FragmentedPowerBars or {}) do
             if self.FragmentedPowerBars[i] then
                 self.FragmentedPowerBars[i]:Hide()
                 if self.FragmentedPowerBarTexts[i] then
-                    self.FragmentedPowerBarTexts[i]:SetText("")
+                    self.FragmentedPowerBarTexts[i]:SetFormattedText("")
                 end
             end
         end
     end
 end
 
-function BarMixin:ApplyFontSettings(layoutName)
-    local data = self:GetData(layoutName)
+function BarMixin:ApplyFontSettings(layoutName, data)
+    data = data or self:GetData(layoutName)
     if not data then return end
 
     local defaults = self.defaults or {}
@@ -547,8 +690,8 @@ function BarMixin:ApplyFontSettings(layoutName)
     end
 end
 
-function BarMixin:ApplyFillDirectionSettings(layoutName)
-    local data = self:GetData(layoutName)
+function BarMixin:ApplyFillDirectionSettings(layoutName, data)
+    data = data or self:GetData(layoutName)
     if not data then return end
 
     if data.fillDirection == "Top to Bottom" or data.fillDirection == "Bottom to Top" then
@@ -578,8 +721,8 @@ function BarMixin:ApplyFillDirectionSettings(layoutName)
     end
 end
 
-function BarMixin:ApplyMaskAndBorderSettings(layoutName)
-    local data = self:GetData(layoutName)
+function BarMixin:ApplyMaskAndBorderSettings(layoutName, data)
+    data = data or self:GetData(layoutName)
     if not data then return end
 
     local defaults = self.defaults or {}
@@ -629,7 +772,7 @@ function BarMixin:ApplyMaskAndBorderSettings(layoutName)
 
         -- Linear multiplier: for example, thickness grows 1x at scale 1, 2x at scale 2
         local thickness = (style.thickness or 1) * math.max(data.scale or defaults.scale, 1)
-        thickness = math.max(thickness, 1)
+        local pThickness = addonTable.getNearestPixel(thickness)
 
         local borderColor = data.borderColor or defaults.borderColor
 
@@ -640,9 +783,9 @@ function BarMixin:ApplyMaskAndBorderSettings(layoutName)
             t:SetPoint(points[2], self.Frame, points[2])
             t:SetColorTexture(borderColor.r or 0, borderColor.g or 0, borderColor.b or 0, borderColor.a or 1)
             if edge == "top" or edge == "bottom" then
-                t:SetHeight(thickness)
+                t:SetHeight(pThickness)
             else
-                t:SetWidth(thickness)
+                t:SetWidth(pThickness)
             end
             t:Show()
         end
@@ -687,13 +830,30 @@ function BarMixin:GetCooldownManagerWidth(layoutName)
         if v then
             return v:IsShown() and v:GetWidth() or nil
         end
+    elseif data.widthMode == "Sync With Tracked Buffs" then
+        local v = _G["BuffIconCooldownViewer"]
+        if v then
+            return v:IsShown() and v:GetWidth() or nil
+        end
     end
 
     return nil
 end
 
-function BarMixin:ApplyBackgroundSettings(layoutName)
+function BarMixin:GetCustomFrameWidth(layoutName)
     local data = self:GetData(layoutName)
+    if not data then return nil end
+
+    local v = _G[addonTable.customFrameNamesToFrame[data.widthMode]]
+    if v then
+        return v:IsShown() and v:GetWidth() or nil
+    end
+
+    return nil
+end
+
+function BarMixin:ApplyBackgroundSettings(layoutName, data)
+    data = data or self:GetData(layoutName)
     if not data then return end
 
     local defaults = self.defaults or {}
@@ -706,6 +866,10 @@ function BarMixin:ApplyBackgroundSettings(layoutName)
     if not bgConfig then return end
 
     local bgColor = data.backgroundColor or defaults.backgroundColor
+    if data.useStatusBarColorForBackgroundColor then
+        local r, g, b, a = self.StatusBar:GetStatusBarColor()
+        bgColor = { r = r * 0.25, g = g * 0.25, b = b * 0.25, a = a or 1 }
+    end
 
     if bgConfig.type == "color" then
         -- Blend bgColor with bgConfig color based on how close bgColor is to white
@@ -721,8 +885,8 @@ function BarMixin:ApplyBackgroundSettings(layoutName)
     end
 end
 
-function BarMixin:ApplyForegroundSettings(layoutName)
-    local data = self:GetData(layoutName)
+function BarMixin:ApplyForegroundSettings(layoutName, data)
+    data = data or self:GetData(layoutName)
     if not data then return end
 
     local defaults = self.defaults or {}
@@ -759,12 +923,23 @@ function BarMixin:ApplyForegroundSettings(layoutName)
     end
 end
 
-function BarMixin:UpdateTicksLayout(layoutName)
-    local data = self:GetData(layoutName)
+function BarMixin:UpdateTicksLayout(layoutName, data)
+    data = data or self:GetData(layoutName)
     if not data then return end
 
     local resource = self:GetResource()
-    local max = resource == "MAELSTROM_WEAPON" and 5 or (type(resource) ~= "number") and 0 or UnitPowerMax("player", resource)
+    local max = 0;
+    if resource == "MAELSTROM_WEAPON" then
+        max = 5
+    elseif resource == "TIP_OF_THE_SPEAR" then
+        max = addonTable.TipOfTheSpear.TIP_MAX_STACKS
+    elseif resource == "WHIRLWIND" then
+        max = addonTable.Whirlwind.IW_MAX_STACKS
+    elseif resource == "SOUL_FRAGMENTS_VENGEANCE" then
+        max = 6
+    elseif type(resource) == "number" then
+        max = UnitPowerMax("player", resource)
+    end
 
     local defaults = self.defaults or {}
 
@@ -786,7 +961,8 @@ function BarMixin:UpdateTicksLayout(layoutName)
     local height = self.StatusBar:GetHeight()
     if width <= 0 or height <= 0 then return end
 
-    local tickThickness = data.tickThickness or defaults.tickThickness or 1
+    local tickThickness = (data.tickThickness or defaults.tickThickness or 1) * math.max(data.scale or defaults.scale, 1)
+    local pThickness = addonTable.getNearestPixel(tickThickness)
     local tickColor = data.tickColor or defaults.tickColor
 
     local needed = max - 1
@@ -799,13 +975,13 @@ function BarMixin:UpdateTicksLayout(layoutName)
         t:SetColorTexture(tickColor.r or 0, tickColor.g or 0, tickColor.b or 0, tickColor.a or 1)
         t:ClearAllPoints()
         if self.StatusBar:GetOrientation() == "VERTICAL" then
-            local y = (i / max) * height
-            t:SetSize(width, tickThickness)
-            t:SetPoint("BOTTOM", self.StatusBar, "BOTTOM", 0, y - (tickThickness) / 2)
+            local rawY = (i / max) * height
+            t:SetSize(width, pThickness)
+            t:SetPoint("BOTTOM", self.StatusBar, "BOTTOM", 0, rawY)
         else
-            local x = (i / max) * width
-            t:SetSize(tickThickness, height)
-            t:SetPoint("LEFT", self.StatusBar, "LEFT", x - (tickThickness) / 2, 0)
+            local rawX = (i / max) * width
+            t:SetSize(pThickness, height)
+            t:SetPoint("LEFT", self.StatusBar, "LEFT", rawX, 0)
         end
         t:Show()
     end
@@ -819,8 +995,8 @@ function BarMixin:UpdateTicksLayout(layoutName)
     end
 end
 
-function BarMixin:CreateFragmentedPowerBars(layoutName)
-    local data = self:GetData(layoutName)
+function BarMixin:CreateFragmentedPowerBars(layoutName, data)
+    data = data or self:GetData(layoutName)
     if not data then return end
 
     local defaults = self.defaults or {}
@@ -850,19 +1026,20 @@ function BarMixin:CreateFragmentedPowerBars(layoutName)
             local text = bar:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
             text:SetPoint("CENTER", bar, "CENTER", 0, 0)
             text:SetJustifyH("CENTER")
-            text:SetText("")
+            text:SetFormattedText("")
             self.FragmentedPowerBarTexts[i] = text
         end
     end
 end
 
-function BarMixin:UpdateFragmentedPowerDisplay(layoutName)
-    local data = self:GetData(layoutName)
+function BarMixin:UpdateFragmentedPowerDisplay(layoutName, data, maxPower)
+    data = data or self:GetData(layoutName)
     if not data then return end
 
     local resource = self:GetResource()
     if not resource then return end
-    local maxPower = resource == "MAELSTROM_WEAPON" and 5 or UnitPowerMax("player", resource)
+    -- Use passed maxPower to avoid redundant UnitPowerMax call
+    maxPower = maxPower or (resource == "MAELSTROM_WEAPON" and 5 or UnitPowerMax("player", resource))
     if maxPower <= 0 then return end
 
     local barWidth = self.Frame:GetWidth()
@@ -875,7 +1052,8 @@ function BarMixin:UpdateFragmentedPowerDisplay(layoutName)
 
     if resource == Enum.PowerType.ComboPoints then
         local current = UnitPower("player", resource)
-        local maxCP = UnitPowerMax("player", resource)
+        -- Reuse cached maxPower to avoid redundant API call
+        local maxCP = maxPower
 
         local overchargedCpColor = addonTable:GetOverrideResourceColor("OVERCHARGED_COMBO_POINTS") or color
         local charged = GetUnitChargedPowerPoints("player") or {}
@@ -884,15 +1062,16 @@ function BarMixin:UpdateFragmentedPowerDisplay(layoutName)
             chargedLookup[index] = true
         end
 
-        local displayOrder = {}
+        -- Reuse pre-allocated table for performance
+        local displayOrder = self._displayOrder
         for i = 1, maxCP do
-            table.insert(displayOrder, i)
+            displayOrder[i] = i
         end
 
         -- Reverse if needed
         if data.fillDirection == "Right to Left" or data.fillDirection == "Top to Bottom" then
-            for i = 1, math.floor(#displayOrder / 2) do
-                displayOrder[i], displayOrder[#displayOrder - i + 1] = displayOrder[#displayOrder - i + 1], displayOrder[i]
+            for i = 1, math.floor(maxCP / 2) do
+                displayOrder[i], displayOrder[maxCP - i + 1] = displayOrder[maxCP - i + 1], displayOrder[i]
             end
         end
 
@@ -915,7 +1094,7 @@ function BarMixin:UpdateFragmentedPowerDisplay(layoutName)
                 cpFrame:SetMinMaxValues(0, 1)
 
                 if chargedLookup[idx] then
-                    cpFrame:SetValue(1, data.smoothProgress and buildVersion >= 120000 and Enum.StatusBarInterpolation.ExponentialEaseOut or nil)
+                    cpFrame:SetValue(1, data.smoothProgress and Enum.StatusBarInterpolation.ExponentialEaseOut or nil)
                     if idx <= current then
                         cpFrame:SetStatusBarColor(overchargedCpColor.r, overchargedCpColor.g, overchargedCpColor.b, overchargedCpColor.a or 1)
                     else
@@ -923,14 +1102,14 @@ function BarMixin:UpdateFragmentedPowerDisplay(layoutName)
                     end
                 else
                     if idx <= current then
-                        cpFrame:SetValue(1, data.smoothProgress and buildVersion >= 120000 and Enum.StatusBarInterpolation.ExponentialEaseOut or nil)
+                        cpFrame:SetValue(1, data.smoothProgress and Enum.StatusBarInterpolation.ExponentialEaseOut or nil)
                         cpFrame:SetStatusBarColor(color.r, color.g, color.b, color.a or 1)
                     else
-                        cpFrame:SetValue(0, data.smoothProgress and buildVersion >= 120000 and Enum.StatusBarInterpolation.ExponentialEaseOut or nil)
+                        cpFrame:SetValue(0, data.smoothProgress and Enum.StatusBarInterpolation.ExponentialEaseOut or nil)
                         cpFrame:SetStatusBarColor(color.r * 0.5, color.g * 0.5, color.b * 0.5, color.a or 1)
                     end
                 end
-                cpText:SetText("")
+                cpText:SetFormattedText("")
 
                 cpFrame:Show()
             end
@@ -966,7 +1145,8 @@ function BarMixin:UpdateFragmentedPowerDisplay(layoutName)
 
         self._LastEssence = current
 
-        local displayOrder = {}
+        -- Reuse pre-allocated table for performance
+        local displayOrder = self._displayOrder
         local stateList = {}
         for i = 1, maxEssence do
             if i <= current then
@@ -976,7 +1156,7 @@ function BarMixin:UpdateFragmentedPowerDisplay(layoutName)
             else
                 stateList[i] = "empty"
             end
-            table.insert(displayOrder, i)
+            displayOrder[i] = i
         end
 
         self.StatusBar:SetValue(current)
@@ -1002,42 +1182,64 @@ function BarMixin:UpdateFragmentedPowerDisplay(layoutName)
 
                 if state == "full" then
                     essFrame:Hide()
-                    essFrame:SetValue(1, data.smoothProgress and buildVersion >= 120000 and Enum.StatusBarInterpolation.ExponentialEaseOut or nil)
+                    essFrame:SetValue(1, data.smoothProgress and Enum.StatusBarInterpolation.ExponentialEaseOut or nil)
                     essFrame:SetStatusBarColor(color.r, color.g, color.b, color.a or 1)
-                    essText:SetText("")
+                    essText:SetFormattedText("")
                 elseif state == "partial" then
                     essFrame:Show()
                     local remaining = math.max(0, self._NextEssenceTick - now)
                     local value = 1 - (remaining / tickDuration)
-                    essFrame:SetValue(value, data.smoothProgress and buildVersion >= 120000 and Enum.StatusBarInterpolation.ExponentialEaseOut or nil)
+                    essFrame:SetValue(value, data.smoothProgress and Enum.StatusBarInterpolation.ExponentialEaseOut or nil)
                     essFrame:SetStatusBarColor(color.r * 0.5, color.g * 0.5, color.b * 0.5, color.a or 1)
-                    essText:SetText(string.format("%." .. (precision or 1) .. "f", remaining))
+                    essText:SetFormattedText(string.format("%." .. (precision or 1) .. "f", remaining))
                 else
                     essFrame:Show()
-                    essFrame:SetValue(0, data.smoothProgress and buildVersion >= 120000 and Enum.StatusBarInterpolation.ExponentialEaseOut or nil)
+                    essFrame:SetValue(0, data.smoothProgress and Enum.StatusBarInterpolation.ExponentialEaseOut or nil)
                     essFrame:SetStatusBarColor(color.r * 0.5, color.g * 0.5, color.b * 0.5, color.a or 1)
-                    essText:SetText("")
+                    essText:SetFormattedText("")
                 end
             end
         end
     elseif resource == Enum.PowerType.Runes then
-        -- Collect rune states: ready and recharging
-        local readyList = {}
-        local cdList = {}
+        -- Collect rune states: ready and recharging (reuse pre-allocated tables)
+        local readyList = self._runeReadyList
+        local cdList = self._runeCdList
+        -- Clear previous data
+        for i = #readyList, 1, -1 do readyList[i] = nil end
+        for i = #cdList, 1, -1 do cdList[i] = nil end
+
         local now = GetTime()
+        local poolIdx = 1
         for i = 1, maxPower do
-            local start, duration, runeReady = GetRuneCooldown(i)
-            if runeReady then
-                table.insert(readyList, { index = i })
+            -- Try to use cached cooldown data first (for runes, cached by GetResourceValue)
+            local start, duration, runeReady
+            if self._runeCooldownCache and self._runeCooldownCache[i] then
+                local cached = self._runeCooldownCache[i]
+                start, duration, runeReady = cached.start, cached.duration, cached.runeReady
             else
+                start, duration, runeReady = GetRuneCooldown(i)
+            end
+
+            if runeReady then
+                -- Reuse pre-allocated struct
+                local info = self._runeInfoPool[poolIdx]
+                poolIdx = poolIdx + 1
+                info.index = i
+                table.insert(readyList, info)
+            else
+                -- Reuse pre-allocated struct
+                local info = self._runeInfoPool[poolIdx]
+                poolIdx = poolIdx + 1
+                info.index = i
                 if start and duration and duration > 0 then
                     local elapsed = now - start
-                    local remaining = math.max(0, duration - elapsed)
-                    local frac = math.max(0, math.min(1, elapsed / duration))
-                    table.insert(cdList, { index = i, remaining = remaining, frac = frac })
+                    info.remaining = math.max(0, duration - elapsed)
+                    info.frac = math.max(0, math.min(1, elapsed / duration))
                 else
-                    table.insert(cdList, { index = i, remaining = math.huge, frac = 0 })
+                    info.remaining = math.huge
+                    info.frac = 0
                 end
+                table.insert(cdList, info)
             end
         end
 
@@ -1047,28 +1249,32 @@ function BarMixin:UpdateFragmentedPowerDisplay(layoutName)
         end)
 
         -- Build final display order: ready runes first (left), then CD runes sorted by remaining
-        local displayOrder = {}
+        local displayOrder = self._displayOrder
         local readyLookup = {}
         local cdLookup = {}
+        local orderIndex = 1
         for _, v in ipairs(readyList) do
-            table.insert(displayOrder, v.index)
+            displayOrder[orderIndex] = v.index
+            orderIndex = orderIndex + 1
             readyLookup[v.index] = true
         end
         for _, v in ipairs(cdList) do
-            table.insert(displayOrder, v.index)
+            displayOrder[orderIndex] = v.index
+            orderIndex = orderIndex + 1
             cdLookup[v.index] = v
         end
+        local totalRunes = orderIndex - 1
 
         if data.fillDirection == "Right to Left" or data.fillDirection == "Top to Bottom" then
-            for i = 1, math.floor(#displayOrder / 2) do
-                displayOrder[i], displayOrder[#displayOrder - i + 1] = displayOrder[#displayOrder - i + 1], displayOrder[i]
+            for i = 1, math.floor(totalRunes / 2) do
+                displayOrder[i], displayOrder[totalRunes - i + 1] = displayOrder[totalRunes - i + 1], displayOrder[i]
             end
         end
 
         self.StatusBar:SetValue(#readyList)
 
         local precision = data.fragmentedPowerBarTextPrecision and math.max(0, string.len(data.fragmentedPowerBarTextPrecision) - 3) or 0
-        for pos = 1, #displayOrder do
+        for pos = 1, totalRunes do
             local runeIndex = displayOrder[pos]
             local runeFrame = self.FragmentedPowerBars[runeIndex]
             local runeText = self.FragmentedPowerBarTexts[runeIndex]
@@ -1087,19 +1293,19 @@ function BarMixin:UpdateFragmentedPowerDisplay(layoutName)
                 runeFrame:SetMinMaxValues(0, 1)
                 if readyLookup[runeIndex] then
                     runeFrame:Hide()
-                    runeFrame:SetValue(1, data.smoothProgress and buildVersion >= 120000 and Enum.StatusBarInterpolation.ExponentialEaseOut or nil)
-                    runeText:SetText("")
+                    runeFrame:SetValue(1, data.smoothProgress and Enum.StatusBarInterpolation.ExponentialEaseOut or nil)
+                    runeText:SetFormattedText("")
                     runeFrame:SetStatusBarColor(color.r, color.g, color.b, color.a or 1)
                 else
                     runeFrame:Show()
                     local cdInfo = cdLookup[runeIndex]
                     runeFrame:SetStatusBarColor(color.r * 0.5, color.g * 0.5, color.b * 0.5, color.a or 1)
                     if cdInfo then
-                        runeFrame:SetValue(cdInfo.frac, data.smoothProgress and buildVersion >= 120000 and Enum.StatusBarInterpolation.ExponentialEaseOut or nil)
-                        runeText:SetText(string.format("%." .. (precision or 1) .. "f", math.max(0, cdInfo.remaining)))
+                        runeFrame:SetValue(cdInfo.frac, data.smoothProgress and Enum.StatusBarInterpolation.ExponentialEaseOut or nil)
+                        runeText:SetFormattedText(string.format("%." .. (precision or 1) .. "f", math.max(0, cdInfo.remaining)))
                     else
-                        runeFrame:SetValue(0, data.smoothProgress and buildVersion >= 120000 and Enum.StatusBarInterpolation.ExponentialEaseOut or nil)
-                        runeText:SetText("")
+                        runeFrame:SetValue(0, data.smoothProgress and Enum.StatusBarInterpolation.ExponentialEaseOut or nil)
+                        runeText:SetFormattedText("")
                     end
                 end
             end
@@ -1109,14 +1315,15 @@ function BarMixin:UpdateFragmentedPowerDisplay(layoutName)
         local current = auraData and auraData.applications or 0
         local above5MwColor = addonTable:GetOverrideResourceColor("MAELSTROM_WEAPON_ABOVE_5") or color
 
-        local displayOrder = {}
+        -- Reuse pre-allocated table for performance
+        local displayOrder = self._displayOrder
         for i = 1, maxPower do
-            table.insert(displayOrder, i)
+            displayOrder[i] = i
         end
 
         if data.fillDirection == "Right to Left" or data.fillDirection == "Top to Bottom" then
-            for i = 1, math.floor(#displayOrder / 2) do
-                displayOrder[i], displayOrder[#displayOrder - i + 1] = displayOrder[#displayOrder - i + 1], displayOrder[i]
+            for i = 1, math.floor(maxPower / 2) do
+                displayOrder[i], displayOrder[maxPower - i + 1] = displayOrder[maxPower - i + 1], displayOrder[i]
             end
         end
 
@@ -1139,17 +1346,17 @@ function BarMixin:UpdateFragmentedPowerDisplay(layoutName)
                 mwFrame:SetMinMaxValues(0, 1)
 
                 if idx <= current then
-                    mwFrame:SetValue(1, data.smoothProgress and buildVersion >= 120000 and Enum.StatusBarInterpolation.ExponentialEaseOut or nil)
+                    mwFrame:SetValue(1, data.smoothProgress and Enum.StatusBarInterpolation.ExponentialEaseOut or nil)
                     if current > 5 and idx <= math.fmod(current - 1, 5) + 1 then
                         mwFrame:SetStatusBarColor(above5MwColor.r, above5MwColor.g, above5MwColor.b, above5MwColor.a or 1)
                     else
                         mwFrame:SetStatusBarColor(color.r, color.g, color.b, color.a or 1)
                     end
                 else
-                    mwFrame:SetValue(0, data.smoothProgress and buildVersion >= 120000 and Enum.StatusBarInterpolation.ExponentialEaseOut or nil)
+                    mwFrame:SetValue(0, data.smoothProgress and Enum.StatusBarInterpolation.ExponentialEaseOut or nil)
                     mwFrame:SetStatusBarColor(color.r * 0.5, color.g * 0.5, color.b * 0.5, color.a or 1)
                 end
-                mwText:SetText("")
+                mwText:SetFormattedText("")
 
                 mwFrame:Show()
             end
@@ -1162,7 +1369,7 @@ function BarMixin:UpdateFragmentedPowerDisplay(layoutName)
         if self.FragmentedPowerBars[i] then
             self.FragmentedPowerBars[i]:Hide()
             if self.FragmentedPowerBarTexts[i] then
-                self.FragmentedPowerBarTexts[i]:SetText("")
+                self.FragmentedPowerBarTexts[i]:SetFormattedText("")
             end
         end
     end

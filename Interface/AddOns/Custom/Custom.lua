@@ -81,6 +81,8 @@ local function OnEvent(self, event, ...)
 		if addonName == "Custom" then
 			print("Custom tweaks loaded...")
 		end
+	elseif event == "PLAYER_LOGIN" then
+		EditModeManagerFrame:SelectLayout(3)
 	elseif event == "PLAYER_ENTERING_WORLD" then
 		-- This event is fired anytime you see a load screen, i.e on login, on UI reload, on new area etc
 		-- #region Hide/Show UI elements
@@ -256,7 +258,7 @@ f:RegisterEvent("PLAYER_LOGIN") -- Event for when player logs in
 f:RegisterEvent("UPDATE_BINDINGS") -- Event for when keybindings are updated
 -- f:RegisterEvent("PLAYER_SPECIALIZATION_CHANGED") -- Event for when player specialization changes
 --f:RegisterEvent("CHAT_MSG_CHANNEL") -- Event for chat messages in channels
--- f:RegisterEvent("PLAYER_LOGIN") -- Happens only on login
+f:RegisterEvent("PLAYER_LOGIN") -- Happens only on login
 f:SetScript("OnEvent", OnEvent)
 -- #endregion
 

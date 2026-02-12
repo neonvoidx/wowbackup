@@ -995,6 +995,9 @@ local function CreateSlider(parent, label, minValue, maxValue, stepValue, elemen
                 elseif element == "partyFrameScale" then
                     BetterBlizzFramesDB.partyFrameScale = value
                     BBF.CompactPartyFrameScale()
+                elseif element == "partyFrameRangeAlpha" then
+                    BetterBlizzFramesDB.partyFrameRangeAlpha = value
+                    BBF.HookAndUpdatePartyFrameRangeAlpha(true)
                 elseif element == "darkModeColor" then
                     BetterBlizzFramesDB.darkModeColor = value
                     if not BBF.checkCombatAndWarn() then
@@ -1194,6 +1197,9 @@ local function CreateSlider(parent, label, minValue, maxValue, stepValue, elemen
                 elseif element == "auraStackSize" then
                     BetterBlizzFramesDB.auraStackSize = value
                     BBF.RefreshAllAuraFrames()
+                elseif element == "auraCdTextSize" then
+                    BetterBlizzFramesDB.auraCdTextSize = value
+                    BBF.RefreshAllAuraFrames()
                 elseif element == "targetAndFocusSmallAuraScale" then
                     BetterBlizzFramesDB.targetAndFocusSmallAuraScale = value
                     BBF.RefreshAllAuraFrames()
@@ -1290,7 +1296,7 @@ local function CreateTooltipTwo(widget, title, mainText, subText, anchor, cvarNa
         -- Set the main text
         GameTooltip:AddLine(mainText, 1, 1, 1, true) -- true for wrap text
 
-        if title == "Format Numbers" then
+        if title == L["Format_Numbers"] then
             local tooltipText = "\n\n18800 K |A:glueannouncementpopup-arrow:20:20|a 18.8 M\n|cff32f795" .. L["Right_Click_Show_Extra_Decimal"] .. "|r"
             if BetterBlizzFramesDB.formatStatusBarTextExtraDecimals then
                 tooltipText = "\n\n18800 K |A:glueannouncementpopup-arrow:20:20|a 18.80 M\n|cff32f795" .. L["Right_Click_Show_Extra_Decimal"] .. "|r|A:ParagonReputation_Checkmark:15:15|a"
@@ -1298,7 +1304,7 @@ local function CreateTooltipTwo(widget, title, mainText, subText, anchor, cvarNa
             GameTooltip:AddLine(tooltipText, 1, 1, 1, true)
         end
 
-        if title == "Class Color Healthbars" then
+        if title == L["Tooltip_Class_Color_Healthbars_Title"] then
             local green = "|cff32f795"
             local babyBlue = "|cff7fc6ff"
             local reset = "|r"
@@ -1318,7 +1324,7 @@ local function CreateTooltipTwo(widget, title, mainText, subText, anchor, cvarNa
             GameTooltip:AddLine(tooltipText, 1, 1, 1, true)
         end
 
-        if title == "Custom Colors" then
+        if title == L["Custom_Colors"] then
             local yellow = "|cffffff00"
             local green = "|cff32f795"
             local babyBlue = "|cff7fc6ff"
@@ -1339,7 +1345,7 @@ local function CreateTooltipTwo(widget, title, mainText, subText, anchor, cvarNa
             GameTooltip:AddLine(tooltipText, 1, 1, 1, true)
         end
 
-        if title == "Hide Dispel Overlay" then
+        if title == L["Hide_Dispel_Overlay"] then
             local green = "|cff32f795"
             local babyBlue = "|cff7fc6ff"
             local reset = "|r"
@@ -1359,7 +1365,7 @@ local function CreateTooltipTwo(widget, title, mainText, subText, anchor, cvarNa
             GameTooltip:AddLine(tooltipText, 1, 1, 1, true)
         end
 
-        if title == "Show Elite Texture" then
+        if title == L["Show_Elite_Texture"] then
             local tooltipText = L["Tooltip_Elite_Texture_Dark_Mode"]
             if BetterBlizzFramesDB.playerEliteFrameDarkmode then
                 tooltipText = L["Tooltip_Elite_Texture_Dark_Mode_Check"] .. "|A:ParagonReputation_Checkmark:15:15|a"
@@ -1372,6 +1378,17 @@ local function CreateTooltipTwo(widget, title, mainText, subText, anchor, cvarNa
             local reset = "|r"
             local activeSize = BetterBlizzFramesDB.raidFramePixelBorderSize and "1.5px" or "1px"
             local tooltipText = "\n" .. green .. "Right-click to toggle between 1px and 1.5px. Active: " .. activeSize .. reset
+            GameTooltip:AddLine(tooltipText, 1, 1, 1, true)
+        end
+
+        if title == L["Change_Party_Frame_Alpha"] then
+            local green = "|cff32f795"
+            local reset = "|r"
+            local check = ""
+            if BetterBlizzFramesDB.partyFrameRangeAlphaSolidBackground then
+                check = " |A:ParagonReputation_Checkmark:15:15|a"
+            end
+            local tooltipText = "\n" .. green .. L["Tooltip_Party_Frame_Range_Alpha_Solid_Bg"] .. reset .. check
             GameTooltip:AddLine(tooltipText, 1, 1, 1, true)
         end
 
@@ -1465,7 +1482,7 @@ end
 
 local function CreateClassButton(parent, class, name, twitchName, onClickFunc)
     local bbfParent = parent == BetterBlizzFrames
-    local btnWidth, btnHeight = bbfParent and 100 or 150, bbfParent and 22 or  30
+    local btnWidth, btnHeight = bbfParent and 104 or 150, bbfParent and 22 or  30
     local button = CreateFrame("Button", nil, parent, "GameMenuButtonTemplate")
     button:SetSize(btnWidth, btnHeight)
 
@@ -2797,7 +2814,7 @@ local function CreateTitle(parent)
     addonNameIcon:SetPoint("LEFT", addonNameText, "RIGHT", -2, -1)
     local verNumber = parent:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     verNumber:SetPoint("LEFT", addonNameText, "RIGHT", 25, 0)
-    verNumber:SetText("v" .. BBF.VersionNumber)
+    verNumber:SetText(BBF.VersionNumber)
 end
 
 local function CreateSearchFrame()
@@ -3103,7 +3120,7 @@ local function guiProfiles()
     frame.streamerText:SetText(L["Profile_Streamers"])
 
     frame.infoText = frame:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-    frame.infoText:SetPoint("BOTTOM", frame, "BOTTOM", 2, 200)
+    frame.infoText:SetPoint("BOTTOM", frame, "BOTTOM", 2, 160)
     frame.infoText:SetText(L["Profile_Info_Message"])
     frame.infoText:SetWidth(100)
 
@@ -3196,7 +3213,7 @@ local function guiGeneralTab()
     -- addonNameIcon:SetPoint("LEFT", addonNameText, "RIGHT", -2, -1)
     -- local verNumber = BetterBlizzFrames:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     -- verNumber:SetPoint("LEFT", addonNameText, "RIGHT", 25, 0)
-    -- verNumber:SetText("v" .. BBF.VersionNumber)
+    -- verNumber:SetText(BBF.VersionNumber)
     CreateTitle(BetterBlizzFrames)
 
     ----------------------
@@ -3874,12 +3891,32 @@ local function guiGeneralTab()
     local partyFrameScale = CreateSlider(BetterBlizzFrames, L["Party_Frame_Scale"], 0.7, 1.7, 0.01, "partyFrameScale", nil, 120)
     partyFrameScale:SetPoint("TOPLEFT", hideRaidFrameContainerBorder, "BOTTOMLEFT", 6, -9)
 
+    local changePartyFrameRangeAlpha = CreateCheckbox("changePartyFrameRangeAlpha", "", BetterBlizzFrames)
 
+    local partyFrameRangeAlpha = CreateSlider(changePartyFrameRangeAlpha, L["Party_Frame_Range_Alpha"], 0, 1, 0.01, "partyFrameRangeAlpha", nil, 120)
+    partyFrameRangeAlpha:SetPoint("TOP", partyFrameScale, "BOTTOM", 0, -19)
+    CreateTooltipTwo(changePartyFrameRangeAlpha, L["Party_Frame_Range_Alpha"], L["Tooltip_Party_Frame_Range_Alpha"])
 
-
-
-
-
+    changePartyFrameRangeAlpha:SetPoint("RIGHT", partyFrameRangeAlpha, "LEFT", 0, 0)
+    CreateTooltipTwo(changePartyFrameRangeAlpha, L["Change_Party_Frame_Alpha"], L["Tooltip_Change_Party_Frame_Alpha"])
+    changePartyFrameRangeAlpha:HookScript("OnClick", function(self)
+        if self:GetChecked() then
+            BBF.HookAndUpdatePartyFrameRangeAlpha(true)
+            EnableElement(partyFrameRangeAlpha)
+        else
+            StaticPopup_Show("BBF_CONFIRM_RELOAD")
+            DisableElement(partyFrameRangeAlpha)
+        end
+    end)
+    changePartyFrameRangeAlpha:HookScript("OnMouseDown", function(self, button)
+        if button == "RightButton" then
+            BetterBlizzFramesDB.partyFrameRangeAlphaSolidBackground = not BetterBlizzFramesDB.partyFrameRangeAlphaSolidBackground
+            if GameTooltip:IsShown() and GameTooltip:GetOwner() == self then
+                self:GetScript("OnEnter")(self)
+            end
+            StaticPopup_Show("BBF_CONFIRM_RELOAD")
+        end
+    end)
 
 
     local targetFrameText = BetterBlizzFrames:CreateFontString(nil, "OVERLAY", "GameFontNormal")
@@ -5406,10 +5443,20 @@ local function guiGeneralTab()
     end)
     aeghisButton:SetPoint("TOP", profilesFrame.streamerText, "BOTTOM", 0, -3)
 
+    local aswogButton = CreateClassButton(BetterBlizzFrames, "PALADIN", "Aswog", "aswog", function()
+        ShowProfileConfirmation("Aswog", "PALADIN", BBF.AswogProfile)
+    end)
+    aswogButton:SetPoint("TOP", aeghisButton, "BOTTOM", 0, btnGap)
+
+    local bualockButton = CreateClassButton(BetterBlizzFrames, "WARLOCK", "Bualock", "bualock", function()
+        ShowProfileConfirmation("Bualock", "WARLOCK", BBF.BualockProfile)
+    end)
+    bualockButton:SetPoint("TOP", aswogButton, "BOTTOM", 0, btnGap)
+
     local kalvishButton = CreateClassButton(BetterBlizzFrames, "ROGUE", "Kalvish", "kalvish", function()
         ShowProfileConfirmation("Kalvish", "ROGUE", BBF.KalvishProfile)
     end)
-    kalvishButton:SetPoint("TOP", aeghisButton, "BOTTOM", 0, btnGap)
+    kalvishButton:SetPoint("TOP", bualockButton, "BOTTOM", 0, btnGap)
 
     local magnuszButton = CreateClassButton(BetterBlizzFrames, "WARRIOR", "Magnusz", "magnusz", function()
         ShowProfileConfirmation("Magnusz", "WARRIOR", BBF.MagnuszProfile)
@@ -5446,14 +5493,24 @@ local function guiGeneralTab()
     end)
     snupyButton:SetPoint("TOP", pmakeButton, "BOTTOM", 0, btnGap)
 
+    local trimazButton = CreateClassButton(BetterBlizzFrames, "ROGUE", "Trimaz", "trimaz_wow", function()
+        ShowProfileConfirmation("Trimaz", "ROGUE", BBF.TrimazProfile)
+    end)
+    trimazButton:SetPoint("TOP", snupyButton, "BOTTOM", 0, btnGap)
+
     local venrukiButton = CreateClassButton(BetterBlizzFrames, "MAGE", "Venruki", "venruki", function()
         ShowProfileConfirmation("Venruki", "MAGE", BBF.VenrukiProfile)
     end)
-    venrukiButton:SetPoint("TOP", snupyButton, "BOTTOM", 0, btnGap)
+    venrukiButton:SetPoint("TOP", trimazButton, "BOTTOM", 0, btnGap)
+
+    local wolfButton = CreateClassButton(BetterBlizzFrames, "DRUID", "Wolf", "wlfzx", function()
+        ShowProfileConfirmation("Wolf", "DRUID", BBF.WolfProfile)
+    end)
+    wolfButton:SetPoint("TOP", venrukiButton, "BOTTOM", 0, btnGap)
 
     local resetBBFButton = CreateFrame("Button", nil, BetterBlizzFrames, "UIPanelButtonTemplate")
     resetBBFButton:SetText(L["Full_Reset"])
-    resetBBFButton:SetWidth(100)
+    resetBBFButton:SetWidth(104)
     resetBBFButton:SetPoint("BOTTOM", profilesFrame, "BOTTOM", 2, 15)
     resetBBFButton:SetScript("OnClick", function()
         StaticPopup_Show("CONFIRM_RESET_BETTERBLIZZFRAMESDB")
@@ -6100,6 +6157,10 @@ local function guiCastbars()
 
     classicCastbarsPlayer:HookScript("OnClick", function(self)
         CheckAndToggleCheckboxes(self)
+        if self:GetChecked() then
+            BetterBlizzFramesDB.castbarPixelBorder = nil
+        end
+        StaticPopup_Show("BBF_CONFIRM_RELOAD")
     end)
 
     local resetPlayerCastbar = CreateFrame("Button", nil, contentFrame, "UIPanelButtonTemplate")
@@ -6241,6 +6302,12 @@ local function guiCastbars()
     local classicCastbars = CreateCheckbox("classicCastbars", L["Castbar_Classic"], contentFrame, nil, BBF.ChangeCastbarSizes)
     classicCastbars:SetPoint("TOPLEFT", quickHideCastbars, "BOTTOMLEFT", 0, pixelsBetweenBoxes)
     CreateTooltipTwo(classicCastbars, L["Castbar_Classic"], L["Tooltip_Castbar_Classic_Target_Focus_Desc"])
+    classicCastbars:HookScript("OnClick", function(self)
+        if self:GetChecked() then
+            BetterBlizzFramesDB.castbarPixelBorder = nil
+        end
+        StaticPopup_Show("BBF_CONFIRM_RELOAD")
+    end)
 
     local classicCastbarsModernSpark = CreateCheckbox("classicCastbarsModernSpark", L["Modern_Spark"], contentFrame, nil, BBF.ChangeCastbarSizes)
     classicCastbarsModernSpark:SetPoint("LEFT", classicCastbars.text, "RIGHT", 0, 0)
@@ -6249,9 +6316,9 @@ local function guiCastbars()
         StaticPopup_Show("BBF_CONFIRM_RELOAD")
     end)
 
-    local unitframeCastBarNoTextBorder = CreateCheckbox("unitframeCastBarNoTextBorder", L["Player_Castbar_Simple"], contentFrame, nil, BBF.ChangeCastbarSizes)
+    local unitframeCastBarNoTextBorder = CreateCheckbox("unitframeCastBarNoTextBorder", L["UnitFrame_Simple_Castbars"], contentFrame, nil, BBF.ChangeCastbarSizes)
     unitframeCastBarNoTextBorder:SetPoint("TOPLEFT", classicCastbars, "BOTTOMLEFT", 0, pixelsBetweenBoxes)
-    CreateTooltipTwo(unitframeCastBarNoTextBorder, L["Player_Castbar_Simple"], L["Tooltip_Player_Castbar_Simple_Desc"])
+    CreateTooltipTwo(unitframeCastBarNoTextBorder, L["UnitFrame_Simple_Castbars"], L["Tooltip_UnitFrame_Simple_Castbars_Desc"])
     unitframeCastBarNoTextBorder:HookScript("OnClick", function()
         if classicCastbars:GetChecked() then
             BetterBlizzFrames.classicCastbars = nil
@@ -6264,6 +6331,24 @@ local function guiCastbars()
             StaticPopup_Show("BBF_CONFIRM_RELOAD")
         end
     end)
+
+    local castbarPixelBorder = CreateCheckbox("castbarPixelBorder", L["Pixel_Border_Castbars"], contentFrame, nil, BBF.ChangeCastbarSizes)
+    castbarPixelBorder:SetPoint("LEFT", unitframeCastBarNoTextBorder.text, "RIGHT", 0, 0)
+    CreateTooltipTwo(castbarPixelBorder, L["Pixel_Border_Castbars"], L["Tooltip_Pixel_Border_Castbars_Desc"])
+
+    local castbarPixelBorderTextInside = CreateCheckbox("castbarPixelBorderTextInside", L["Pixel_Border_Castbars_Text_Inside"], castbarPixelBorder, nil, BBF.ChangeCastbarSizes)
+    castbarPixelBorderTextInside:SetPoint("LEFT", castbarPixelBorder.text, "RIGHT", 0, 0)
+    CreateTooltipTwo(castbarPixelBorderTextInside, L["Pixel_Border_Castbars_Text_Inside"], L["Tooltip_Pixel_Border_Castbars_Text_Inside_Desc"])
+
+    castbarPixelBorder:HookScript("OnClick", function(self)
+        if self:GetChecked() then
+            BetterBlizzFramesDB.classicCastbars = nil
+            BetterBlizzFramesDB.classicCastbarsPlayer = nil
+        end
+        EnableElement(castbarPixelBorderTextInside)
+        StaticPopup_Show("BBF_CONFIRM_RELOAD")
+    end)
+
 
     classicCastbars:HookScript("OnClick", function(self)
         if not self:GetChecked() then
@@ -6286,13 +6371,13 @@ local function guiCastbars()
     recolorCastbars:SetPoint("TOPLEFT", unitframeCastBarNoTextBorder, "BOTTOMLEFT", 0, pixelsBetweenBoxes)
     CreateTooltipTwo(recolorCastbars, L["Recolor_Castbars"], L["Tooltip_Recolor_Castbars_Desc"])
 
-    local castbarCastColor = CreateColorBox(recolorCastbars, "castbarCastColor", L["Cast"])
+    local castbarCastColor = CreateColorBox(recolorCastbars, "castbarCastColor", L["Cast"], function() BBF.CastbarColorHooks() end)
     castbarCastColor:SetPoint("LEFT", recolorCastbars.text, "RIGHT", 0, 0)
 
-    local castbarChannelColor = CreateColorBox(recolorCastbars, "castbarChannelColor", L["Channel"])
+    local castbarChannelColor = CreateColorBox(recolorCastbars, "castbarChannelColor", L["Channel"], function() BBF.CastbarColorHooks() end)
     castbarChannelColor:SetPoint("LEFT", castbarCastColor.text, "RIGHT", 0, 0)
 
-    local castbarUninterruptableColor = CreateColorBox(recolorCastbars, "castbarUninterruptableColor", L["Uninterruptable"])
+    local castbarUninterruptableColor = CreateColorBox(recolorCastbars, "castbarUninterruptableColor", L["Uninterruptable"], function() BBF.CastbarColorHooks() end)
     castbarUninterruptableColor:SetPoint("LEFT", castbarChannelColor.text, "RIGHT", 0, 0)
 
     recolorCastbars:HookScript("OnClick", function(self)
@@ -7650,7 +7735,7 @@ local function guiFrameAuras()
     CreateTooltip(targetAndFocusSmallAuraScale, L["Tooltip_Small_Aura_Size"])
 
     local sameSizeAuras = CreateCheckbox("sameSizeAuras", L["Same_Size"], playerAuraFiltering)
-    sameSizeAuras:SetPoint("LEFT", targetAndFocusSmallAuraScale, "RIGHT", 3, 0)
+    sameSizeAuras:SetPoint("LEFT", targetAndFocusSmallAuraScale, "RIGHT", 3, 2)
     CreateTooltipTwo(sameSizeAuras, L["Same_Size"], L["Tooltip_Same_Size"])
     sameSizeAuras:HookScript("OnClick", function(self)
         if self:GetChecked() then
@@ -7686,6 +7771,22 @@ local function guiFrameAuras()
     auraStackSize:SetPoint("TOPLEFT", auraTypeGap, "BOTTOMLEFT", 0, -17)
     CreateTooltipTwo(auraStackSize, L["Aura_Stack_Size"], L["Tooltip_Aura_Stack_Size"])
 
+    local showAuraCdText = CreateCheckbox("showAuraCdText", L["Show_Aura_Timer_Text"], playerAuraFiltering)
+    CreateTooltipTwo(showAuraCdText, L["Show_Aura_Timer_Text"], L["Tooltip_Show_Aura_Timer_Text"])
+
+    local auraCdTextSize = CreateSlider(showAuraCdText, L["Aura_CD_Text_Size"], 0.25, 1.5, 0.01, "auraCdTextSize")
+    auraCdTextSize:SetPoint("TOPLEFT", auraStackSize, "BOTTOMLEFT", 0, -17)
+    CreateTooltip(auraCdTextSize, L["Tooltip_Aura_CD_Text_Size"])
+
+    showAuraCdText:SetPoint("LEFT", auraCdTextSize, "RIGHT", 3, 2)
+    showAuraCdText:HookScript("OnClick", function(self)
+        if self:GetChecked() then
+            EnableElement(auraCdTextSize)
+        else
+            DisableElement(auraCdTextSize)
+        end
+    end)
+
 --[=[
     local maxTargetBuffs = CreateSlider(playerAuraFiltering, L["Max_Buffs"], 1, 32, 1, "maxTargetBuffs")
     maxTargetBuffs:SetPoint("TOPLEFT", targetAndFocusVerticalGap, "BOTTOMLEFT", 0, -17)
@@ -7702,7 +7803,7 @@ local function guiFrameAuras()
 
 
     local changePurgeTextureColor = CreateCheckbox("changePurgeTextureColor", L["Change_Purge_Texture_Color"], playerAuraFiltering)
-    changePurgeTextureColor:SetPoint("TOPLEFT", auraStackSize, "BOTTOMLEFT", 0, -2)
+    changePurgeTextureColor:SetPoint("TOPLEFT", auraCdTextSize, "BOTTOMLEFT", 0, -2)
     CreateTooltip(changePurgeTextureColor, L["Change_Purge_Texture_Color"])
 
     local increaseAuraStrata = CreateCheckbox("increaseAuraStrata", L["Increase_Aura_Frame_Strata"], playerAuraFiltering)
@@ -7714,27 +7815,44 @@ local function guiFrameAuras()
         end
     end)
 
+    local hideUnitframeAuraTooltips = CreateCheckbox("hideUnitframeAuraTooltips", L["Hide_UnitFrame_Aura_Tooltips"], playerAuraFiltering)
+    hideUnitframeAuraTooltips:SetPoint("TOPLEFT", increaseAuraStrata, "BOTTOMLEFT", 0, pixelsBetweenBoxes)
+    CreateTooltipTwo(hideUnitframeAuraTooltips, L["Hide_UnitFrame_Aura_Tooltips"], L["Tooltip_Hide_UnitFrame_Aura_Tooltips"])
+
     local pixelBorderAuras = CreateCheckbox("pixelBorderAuras", L["Pixel_Border_Auras"], playerAuraFiltering)
-    pixelBorderAuras:SetPoint("TOPLEFT", increaseAuraStrata, "BOTTOMLEFT", 0, pixelsBetweenBoxes)
+    pixelBorderAuras:SetPoint("TOPLEFT", hideUnitframeAuraTooltips, "BOTTOMLEFT", 0, pixelsBetweenBoxes)
     CreateTooltipTwo(pixelBorderAuras, L["Pixel_Border_Auras"], L["Tooltip_Pixel_Border_Auras_Desc"])
     pixelBorderAuras:HookScript("OnClick", function(self)
         StaticPopup_Show("BBF_CONFIRM_RELOAD")
     end)
 
-    local hideTargetAuras = CreateCheckbox("hideTargetAuras", L["Hide_Target_Auras"], playerAuraFiltering)
-    hideTargetAuras:SetPoint("TOPLEFT", pixelBorderAuras, "BOTTOMLEFT", 0, pixelsBetweenBoxes)
-    CreateTooltipTwo(hideTargetAuras, L["Hide_Target_Auras"], L["Tooltip_Hide_Target_Auras_Desc"])
-    hideTargetAuras:HookScript("OnClick", function(self)
+    local hideTargetBuffs = CreateCheckbox("hideTargetBuffs", L["Hide_Target_Buffs"], playerAuraFiltering)
+    hideTargetBuffs:SetPoint("TOPLEFT", pixelBorderAuras, "BOTTOMLEFT", 0, pixelsBetweenBoxes)
+    CreateTooltipTwo(hideTargetBuffs, L["Hide_Target_Buffs"], L["Tooltip_Hide_Target_Buffs_Desc"])
+    hideTargetBuffs:HookScript("OnClick", function(self)
         StaticPopup_Show("BBF_CONFIRM_RELOAD")
     end)
 
-    local hideFocusAuras = CreateCheckbox("hideFocusAuras", L["Hide_Focus_Auras"], playerAuraFiltering)
-    hideFocusAuras:SetPoint("TOPLEFT", hideTargetAuras, "BOTTOMLEFT", 0, pixelsBetweenBoxes)
-    CreateTooltipTwo(hideFocusAuras, L["Hide_Focus_Auras"], L["Tooltip_Hide_Focus_Auras_Desc"])
-    hideFocusAuras:HookScript("OnClick", function(self)
+    local hideTargetDebuffs = CreateCheckbox("hideTargetDebuffs", L["Hide_Target_Debuffs"], playerAuraFiltering)
+    hideTargetDebuffs:SetPoint("TOPLEFT", hideTargetBuffs, "BOTTOMLEFT", 0, pixelsBetweenBoxes)
+    CreateTooltipTwo(hideTargetDebuffs, L["Hide_Target_Debuffs"], L["Tooltip_Hide_Target_Debuffs_Desc"])
+    hideTargetDebuffs:HookScript("OnClick", function(self)
         StaticPopup_Show("BBF_CONFIRM_RELOAD")
     end)
 
+    local hideFocusBuffs = CreateCheckbox("hideFocusBuffs", L["Hide_Focus_Buffs"], playerAuraFiltering)
+    hideFocusBuffs:SetPoint("TOPLEFT", hideTargetDebuffs, "BOTTOMLEFT", 0, pixelsBetweenBoxes)
+    CreateTooltipTwo(hideFocusBuffs, L["Hide_Focus_Buffs"], L["Tooltip_Hide_Focus_Buffs_Desc"])
+    hideFocusBuffs:HookScript("OnClick", function(self)
+        StaticPopup_Show("BBF_CONFIRM_RELOAD")
+    end)
+
+    local hideFocusDebuffs = CreateCheckbox("hideFocusDebuffs", L["Hide_Focus_Debuffs"], playerAuraFiltering)
+    hideFocusDebuffs:SetPoint("TOPLEFT", hideFocusBuffs, "BOTTOMLEFT", 0, pixelsBetweenBoxes)
+    CreateTooltipTwo(hideFocusDebuffs, L["Hide_Focus_Debuffs"], L["Tooltip_Hide_Focus_Debuffs_Desc"])
+    hideFocusDebuffs:HookScript("OnClick", function(self)
+        StaticPopup_Show("BBF_CONFIRM_RELOAD")
+    end)
 
 
     local function OpenColorPicker(entryColors)
@@ -7803,8 +7921,16 @@ local function guiFrameAuras()
     local enablePlayerBuffFiltering = CreateCheckbox("enablePlayerBuffFiltering", L["Enable_Player_Aura_Adjustments"], playerAuraFiltering)
     enablePlayerBuffFiltering:SetPoint("TOPLEFT", playerAuraSettings, "BOTTOMLEFT", -10, 0)
 
+    local clickthroughPlayerAuras = CreateCheckbox("clickthroughPlayerAuras", L["Clickthrough_Player_Auras"], enablePlayerBuffFiltering)
+    clickthroughPlayerAuras:SetPoint("TOPLEFT", enablePlayerBuffFiltering, "BOTTOMLEFT", 0, pixelsBetweenBoxes)
+    CreateTooltip(clickthroughPlayerAuras, L["Tooltip_Clickthrough_Player_Auras"], "ANCHOR_LEFT")
+
+    local hidePlayerAuraTooltips = CreateCheckbox("hidePlayerAuraTooltips", L["Hide_Player_Aura_Tooltips"], enablePlayerBuffFiltering)
+    hidePlayerAuraTooltips:SetPoint("TOPLEFT", clickthroughPlayerAuras, "BOTTOMLEFT", 0, pixelsBetweenBoxes)
+    CreateTooltip(hidePlayerAuraTooltips, L["Tooltip_Hide_Player_Aura_Tooltips"], "ANCHOR_LEFT")
+
     local playerAuraSpacingX = CreateSlider(enablePlayerBuffFiltering, L["Horizontal_Padding"], 0, 10, 1, "playerAuraSpacingX", "X")
-    playerAuraSpacingX:SetPoint("TOP", playerAuraSettings, "BOTTOM", 0, -40)
+    playerAuraSpacingX:SetPoint("TOPLEFT", hidePlayerAuraTooltips, "BOTTOMLEFT", 0, -20)
     CreateTooltip(playerAuraSpacingX, L["Tooltip_Horizontal_Aura_Padding"], "ANCHOR_LEFT")
 
     local playerAuraSpacingY = CreateSlider(enablePlayerBuffFiltering, L["Vertical_Padding"], -10, 10, 1, "playerAuraSpacingY", "Y")
@@ -8175,9 +8301,9 @@ local function guiMisc()
     hideDefaultPartyFramesMana:SetPoint("TOPLEFT", hideUnitFrameFocusMana, "BOTTOMLEFT", 0, pixelsBetweenBoxes)
     CreateTooltipTwo(hideDefaultPartyFramesMana, L["Hide_Default_PartyFrames_Mana"], L["Tooltip_Hide_Default_PartyFrames_Mana_Desc"])
 
-    local cdManagerCenterIcons = CreateCheckbox("cdManagerCenterIcons", L["Center_Icons"], guiMisc, nil, BBF.HookCooldownManagerTweaks)
+    local cdManagerCenterIcons = CreateCheckbox("cdManagerCenterIcons", L["CDM_Center_Icons"], guiMisc, nil, BBF.HookCooldownManagerTweaks)
     cdManagerCenterIcons:SetPoint("TOPLEFT", hideDefaultPartyFramesMana, "BOTTOMLEFT", 0, pixelsBetweenBoxes)
-    CreateTooltipTwo(cdManagerCenterIcons, L["Center_Icons"], L["Center_CDM_Icons"])
+    CreateTooltipTwo(cdManagerCenterIcons, L["CDM_Center_Icons"], L["CDM_Center_Icons_Tooltip"])
     cdManagerCenterIcons:HookScript("OnClick", function(self)
         StaticPopup_Show("BBF_CONFIRM_RELOAD")
     end)
@@ -8569,28 +8695,28 @@ local function guiImportAndExport()
 
     local fullProfile = CreateImportExportUI(guiImportAndExport, "Full Profile", BetterBlizzFramesDB, 20, -20, "fullProfile")
 
-    local auraWhitelist = CreateImportExportUI(fullProfile, "Aura Whitelist", BetterBlizzFramesDB.auraWhitelist, 0, -100, "auraWhitelist")
-    local auraBlacklist = CreateImportExportUI(auraWhitelist, "Aura Blacklist", BetterBlizzFramesDB.auraBlacklist, 210, 0, "auraBlacklist")
+    -- local auraWhitelist = CreateImportExportUI(fullProfile, "Aura Whitelist", BetterBlizzFramesDB.auraWhitelist, 0, -100, "auraWhitelist")
+    -- local auraBlacklist = CreateImportExportUI(auraWhitelist, "Aura Blacklist", BetterBlizzFramesDB.auraBlacklist, 210, 0, "auraBlacklist")
 
-    local importPVPWhitelist = CreateFrame("Button", nil, guiImportAndExport, "UIPanelButtonTemplate")
-    importPVPWhitelist:SetSize(150, 35)
-    importPVPWhitelist:SetPoint("TOP", auraWhitelist, "BOTTOM", 0, -25)
-    importPVPWhitelist:SetText(L["Import_PvP_Whitelist"])
-    importPVPWhitelist:SetScript("OnClick", function()
-        StaticPopup_Show("BBF_CONFIRM_PVP_WHITELIST")
-    end)
-    local coloredText = L["Whitelist_Colors"]
+    -- local importPVPWhitelist = CreateFrame("Button", nil, guiImportAndExport, "UIPanelButtonTemplate")
+    -- importPVPWhitelist:SetSize(150, 35)
+    -- importPVPWhitelist:SetPoint("TOP", auraWhitelist, "BOTTOM", 0, -25)
+    -- importPVPWhitelist:SetText(L["Import_PvP_Whitelist"])
+    -- importPVPWhitelist:SetScript("OnClick", function()
+    --     StaticPopup_Show("BBF_CONFIRM_PVP_WHITELIST")
+    -- end)
+    -- local coloredText = L["Whitelist_Colors"]
 
-    CreateTooltipTwo(importPVPWhitelist, L["Import_PvP_Whitelist"], string.format(L["Tooltip_Import_PvP_Whitelist_Desc"], coloredText))
+    -- CreateTooltipTwo(importPVPWhitelist, L["Import_PvP_Whitelist"], string.format(L["Tooltip_Import_PvP_Whitelist_Desc"], coloredText))
 
-    local importPVPBlacklist = CreateFrame("Button", nil, guiImportAndExport, "UIPanelButtonTemplate")
-    importPVPBlacklist:SetSize(150, 35)
-    importPVPBlacklist:SetPoint("TOP", auraBlacklist, "BOTTOM", 0, -25)
-    importPVPBlacklist:SetText(L["Import_PvP_Blacklist"])
-    importPVPBlacklist:SetScript("OnClick", function()
-        StaticPopup_Show("BBF_CONFIRM_PVP_BLACKLIST")
-    end)
-    CreateTooltipTwo(importPVPBlacklist, L["Import_PvP_Blacklist"], L["Tooltip_Import_Blacklist_Desc"])
+    -- local importPVPBlacklist = CreateFrame("Button", nil, guiImportAndExport, "UIPanelButtonTemplate")
+    -- importPVPBlacklist:SetSize(150, 35)
+    -- importPVPBlacklist:SetPoint("TOP", auraBlacklist, "BOTTOM", 0, -25)
+    -- importPVPBlacklist:SetText(L["Import_PvP_Blacklist"])
+    -- importPVPBlacklist:SetScript("OnClick", function()
+    --     StaticPopup_Show("BBF_CONFIRM_PVP_BLACKLIST")
+    -- end)
+    -- CreateTooltipTwo(importPVPBlacklist, L["Import_PvP_Blacklist"], L["Tooltip_Import_Blacklist_Desc"])
 
 end
 
@@ -8616,19 +8742,17 @@ local function guiCustomCode()
     discordLinkEditBox:SetAutoFocus(false)
     discordLinkEditBox:SetFontObject("ChatFontSmall")
     discordLinkEditBox:SetText("https://discord.gg/cjqVaEMm25")
-    discordLinkEditBox:SetCursorPosition(0) -- Places cursor at start of the text
-    discordLinkEditBox:ClearFocus() -- Removes focus from the EditBox
+    discordLinkEditBox:SetCursorPosition(0)
+    discordLinkEditBox:ClearFocus()
     discordLinkEditBox:SetScript("OnEscapePressed", function(self)
-        self:ClearFocus() -- Allows user to press escape to unfocus the EditBox
+        self:ClearFocus()
     end)
 
-    -- Make the EditBox text selectable and readonly
     discordLinkEditBox:SetScript("OnTextChanged", function(self)
         self:SetText("https://discord.gg/cjqVaEMm25")
     end)
-    --discordLinkEditBox:HighlightText() -- Highlights the text for easy copying
-    discordLinkEditBox:SetScript("OnCursorChanged", function() end) -- Prevents cursor changes
-    discordLinkEditBox:SetScript("OnEditFocusGained", function(self) self:HighlightText() end) -- Re-highlights text when focused
+    discordLinkEditBox:SetScript("OnCursorChanged", function() end)
+    discordLinkEditBox:SetScript("OnEditFocusGained", function(self) self:HighlightText() end)
     discordLinkEditBox:SetScript("OnMouseUp", function(self)
         if not self:IsMouseOver() then
             self:ClearFocus()
@@ -8650,19 +8774,17 @@ local function guiCustomCode()
     boxOne:SetAutoFocus(false)
     boxOne:SetFontObject("ChatFontSmall")
     boxOne:SetText("https://patreon.com/bodifydev")
-    boxOne:SetCursorPosition(0) -- Places cursor at start of the text
-    boxOne:ClearFocus() -- Removes focus from the EditBox
+    boxOne:SetCursorPosition(0)
+    boxOne:ClearFocus()
     boxOne:SetScript("OnEscapePressed", function(self)
-        self:ClearFocus() -- Allows user to press escape to unfocus the EditBox
+        self:ClearFocus()
     end)
 
-    -- Make the EditBox text selectable and readonly
     boxOne:SetScript("OnTextChanged", function(self)
         self:SetText("https://patreon.com/bodifydev")
     end)
-    --boxOne:HighlightText() -- Highlights the text for easy copying
-    boxOne:SetScript("OnCursorChanged", function() end) -- Prevents cursor changes
-    boxOne:SetScript("OnEditFocusGained", function(self) self:HighlightText() end) -- Re-highlights text when focused
+    boxOne:SetScript("OnCursorChanged", function() end)
+    boxOne:SetScript("OnEditFocusGained", function(self) self:HighlightText() end)
     boxOne:SetScript("OnMouseUp", function(self)
         if not self:IsMouseOver() then
             self:ClearFocus()
@@ -8684,19 +8806,16 @@ local function guiCustomCode()
     boxTwo:SetAutoFocus(false)
     boxTwo:SetFontObject("ChatFontSmall")
     boxTwo:SetText("https://paypal.me/bodifydev")
-    boxTwo:SetCursorPosition(0) -- Places cursor at start of the text
-    boxTwo:ClearFocus() -- Removes focus from the EditBox
+    boxTwo:SetCursorPosition(0)
+    boxTwo:ClearFocus()
     boxTwo:SetScript("OnEscapePressed", function(self)
-        self:ClearFocus() -- Allows user to press escape to unfocus the EditBox
+        self:ClearFocus()
     end)
-
-    -- Make the EditBox text selectable and readonly
     boxTwo:SetScript("OnTextChanged", function(self)
         self:SetText("https://paypal.me/bodifydev")
     end)
-    --boxTwo:HighlightText() -- Highlights the text for easy copying
-    boxTwo:SetScript("OnCursorChanged", function() end) -- Prevents cursor changes
-    boxTwo:SetScript("OnEditFocusGained", function(self) self:HighlightText() end) -- Re-highlights text when focused
+    boxTwo:SetScript("OnCursorChanged", function() end)
+    boxTwo:SetScript("OnEditFocusGained", function(self) self:HighlightText() end)
     boxTwo:SetScript("OnMouseUp", function(self)
         if not self:IsMouseOver() then
             self:ClearFocus()
@@ -8712,16 +8831,9 @@ local function guiCustomCode()
     palText:SetPoint("LEFT", boxTwoTex, "RIGHT", 14, -1)
     palText:SetText("Paypal")
 
-
-
-
-
-
-
-    -- Implementing the code editor inside the guiCustomCode frame
     local FAIAP = BBF.indent
 
-    -- Define your color table for syntax highlighting
+    -- Syntax highlighting
     local colorTable = {
         [FAIAP.tokens.TOKEN_SPECIAL] = "|c00F1D710",
         [FAIAP.tokens.TOKEN_KEYWORD] = "|c00BD6CCC",
@@ -8735,33 +8847,28 @@ local function guiCustomCode()
         [0] = "|r",  -- Reset color
     }
 
-    -- Add a scroll frame for the code editor
     local scrollFrame = CreateFrame("ScrollFrame", nil, guiCustomCode, "UIPanelScrollFrameTemplate")
     scrollFrame:SetPoint("TOP", guiCustomCode, "TOP", -10, -110)
-    scrollFrame:SetSize(620, 440)  -- Fixed size for the entire editor box
+    scrollFrame:SetSize(620, 440)
 
-    -- Label for the custom code box
     local customCodeText = guiCustomCode:CreateFontString(nil, "OVERLAY", "GameFontNormalHuge")
     customCodeText:SetPoint("BOTTOM", scrollFrame, "TOP", 0, 5)
     customCodeText:SetText(L["Custom_Code_Text"])
 
-    -- Create the code editor
     local codeEditBox = CreateFrame("EditBox", nil, scrollFrame)
     codeEditBox:SetMultiLine(true)
     codeEditBox:SetFontObject("ChatFontSmall")
-    codeEditBox:SetSize(600, 370)  -- Smaller than the scroll frame to allow scrolling
+    codeEditBox:SetSize(600, 370)
     codeEditBox:SetAutoFocus(false)
     codeEditBox:SetCursorPosition(0)
     codeEditBox:SetText(BetterBlizzFramesDB.customCode or "")
     codeEditBox:ClearFocus()
-
-    -- Attach the EditBox to the scroll frame
     scrollFrame:SetScrollChild(codeEditBox)
 
-    -- Add a static custom background to the scroll frame
+
     local bg = scrollFrame:CreateTexture(nil, "BACKGROUND")
-    bg:SetColorTexture(0, 0, 0, 0.6)  -- Semi-transparent black background
-    bg:SetAllPoints(scrollFrame)  -- Apply the background to the entire scroll frame
+    bg:SetColorTexture(0, 0, 0, 0.6)
+    bg:SetAllPoints(scrollFrame)
 
     -- Add a static custom border around the scroll frame
     local border = CreateFrame("Frame", nil, scrollFrame, BackdropTemplateMixin and "BackdropTemplate")
@@ -8771,10 +8878,13 @@ local function guiCustomCode()
         edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
         edgeSize = 14,
     })
-    border:SetBackdropBorderColor(0.8, 0.8, 0.8, 1)  -- Light gray border
-
-    -- Optional: Set padding or insets if needed
+    border:SetBackdropBorderColor(0.8, 0.8, 0.8, 1)
     codeEditBox:SetTextInsets(6, 10, 4, 10)
+
+    scrollFrame:EnableMouse(true)
+    scrollFrame:SetScript("OnMouseDown", function()
+        codeEditBox:SetFocus()
+    end)
 
     -- Track changes to detect unsaved edits
     local unsavedChanges = false
@@ -8791,11 +8901,10 @@ local function guiCustomCode()
     end)
 
     -- Enable syntax highlighting and indentation with FAIAP
-    FAIAP.enable(codeEditBox, colorTable, 4)  -- Assuming a tab width of 4
+    FAIAP.enable(codeEditBox, colorTable, 4)
 
     local customCodeSaved = L["Print_Custom_Code_Saved"]
 
-    -- Create Save Button
     local saveButton = CreateFrame("Button", nil, guiCustomCode, "UIPanelButtonTemplate")
     saveButton:SetSize(120, 30)
     saveButton:SetPoint("TOP", scrollFrame, "BOTTOM", 0, -10)
@@ -8809,7 +8918,6 @@ local function guiCustomCode()
     -- Flag to prevent double triggering of the prompt
     local promptShown = false
 
-    -- Function to show the save prompt if needed
     local function showSavePrompt()
         if unsavedChanges and not promptShown then
             promptShown = true
@@ -9345,10 +9453,20 @@ function BBF.CreateIntroMessageWindow()
     end)
     aeghisButton:SetPoint("TOP", bodifyButton, "BOTTOM", -150, -40)
 
+    local aswogButton = CreateClassButton(BBF.IntroMessageWindow, "PALADIN", "Aswog", "aswog", function()
+        ShowProfileConfirmation("Aswog", "PALADIN", BBF.AswogProfile)
+    end)
+    aswogButton:SetPoint("TOP", aeghisButton, "BOTTOM", 0, btnGap)
+
+    local bualockButton = CreateClassButton(BBF.IntroMessageWindow, "WARLOCK", "Bualock", "bualock", function()
+        ShowProfileConfirmation("Bualock", "WARLOCK", BBF.BualockProfile)
+    end)
+    bualockButton:SetPoint("TOP", aswogButton, "BOTTOM", 0, btnGap)
+
     local kalvishButton = CreateClassButton(BBF.IntroMessageWindow, "ROGUE", "Kalvish", "kalvish", function()
         ShowProfileConfirmation("Kalvish", "ROGUE", BBF.KalvishProfile)
     end)
-    kalvishButton:SetPoint("TOP", aeghisButton, "BOTTOM", 0, btnGap)
+    kalvishButton:SetPoint("TOP", bualockButton, "BOTTOM", 0, btnGap)
 
     local magnuszButton = CreateClassButton(BBF.IntroMessageWindow, "WARRIOR", "Magnusz", "magnusz", function()
         ShowProfileConfirmation("Magnusz", "WARRIOR", BBF.MagnuszProfile)
@@ -9385,10 +9503,20 @@ function BBF.CreateIntroMessageWindow()
     end)
     snupyButton:SetPoint("TOP", pmakeButton, "BOTTOM", 0, btnGap)
 
+    local trimazButton = CreateClassButton(BBF.IntroMessageWindow, "ROGUE", "Trimaz", "trimaz_wow", function()
+        ShowProfileConfirmation("Trimaz", "ROGUE", BBF.TrimazProfile)
+    end)
+    trimazButton:SetPoint("TOP", snupyButton, "BOTTOM", 0, btnGap)
+
     local venrukiButton = CreateClassButton(BBF.IntroMessageWindow, "MAGE", "Venruki", "venruki", function()
         ShowProfileConfirmation("Venruki", "MAGE", BBF.VenrukiProfile)
     end)
-    venrukiButton:SetPoint("TOP", snupyButton, "BOTTOM", 0, btnGap)
+    venrukiButton:SetPoint("TOP", trimazButton, "BOTTOM", 0, btnGap)
+
+    local wolfButton = CreateClassButton(BBF.IntroMessageWindow, "DRUID", "Wolf", "wlfzx", function()
+        ShowProfileConfirmation("Wolf", "DRUID", BBF.WolfProfile)
+    end)
+    wolfButton:SetPoint("TOP", venrukiButton, "BOTTOM", 0, btnGap)
 
     local orText2 = BBF.IntroMessageWindow:CreateFontString(nil, "OVERLAY", "GameFontNormalMed2")
     orText2:SetPoint("CENTER", mmarkersButton, "BOTTOM", 75, -20)

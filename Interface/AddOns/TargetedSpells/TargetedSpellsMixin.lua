@@ -34,6 +34,7 @@ function TargetedSpellsMixin:OnLoad()
 	self.Cooldown:SetCountdownFont("GameFontHighlightHugeOutline")
 	self.wasInterrupted = false
 	self.doNotHideBefore = nil
+	Private.Utils.MaybeApplyElvUISkin(self)
 end
 
 function TargetedSpellsMixin:SetId(id)
@@ -44,7 +45,7 @@ function TargetedSpellsMixin:GetId()
 	return self.id
 end
 
-function TargetedSpellsMixin:SetInterrupted(interruptInfo)
+function TargetedSpellsMixin:SetInterrupted(name, color)
 	self.wasInterrupted = true
 	self.doNotHideBefore = GetTime() + 0.95
 	self.InterruptIcon:Show()
@@ -53,14 +54,14 @@ function TargetedSpellsMixin:SetInterrupted(interruptInfo)
 	self:SetShowDuration(false, false)
 	self:HideGlow()
 
-	if interruptInfo.name == nil then
+	if name == nil then
 		return
 	end
 
-	self.InterruptSource:SetText(interruptInfo.name)
+	self.InterruptSource:SetText(name)
 
-	if interruptInfo.color ~= nil then
-		self.InterruptSource:SetTextColor(interruptInfo.color.r, interruptInfo.color.g, interruptInfo.color.b)
+	if color ~= nil then
+		self.InterruptSource:SetTextColor(color.r, color.g, color.b)
 	end
 
 	self.InterruptSource:Show()
@@ -157,7 +158,9 @@ function TargetedSpellsMixin:OnSettingChanged(key, value)
 			---@diagnostic disable-next-line: param-type-mismatch
 			self:SetShowDuration(value, TargetedSpellsSaved.Settings.Self.ShowDurationFractions)
 		elseif key == Private.Settings.Keys.Self.FontSize then
-			self:SetFontSize(value)
+			self:SetFontSize()
+		elseif key == Private.Settings.Keys.Self.Font then
+			self:SetFont()
 		elseif key == Private.Settings.Keys.Self.Opacity then
 			self:SetAlpha(value)
 		elseif key == Private.Settings.Keys.Self.ShowBorder then
@@ -175,6 +178,9 @@ function TargetedSpellsMixin:OnSettingChanged(key, value)
 			self.Cooldown:SetHideCountdownNumbers(value)
 			---@diagnostic disable-next-line: param-type-mismatch
 			self.DurationText:SetShown(value)
+		elseif key == Private.Settings.Keys.Self.ShowSwipe then
+			---@diagnostic disable-next-line: param-type-mismatch
+			self.Cooldown:SetDrawSwipe(value)
 		end
 	else
 		if key == Private.Settings.Keys.Party.Width then
@@ -185,7 +191,9 @@ function TargetedSpellsMixin:OnSettingChanged(key, value)
 			---@diagnostic disable-next-line: param-type-mismatch
 			self:SetShowDuration(value, TargetedSpellsSaved.Settings.Party.ShowDurationFractions)
 		elseif key == Private.Settings.Keys.Party.FontSize then
-			self:SetFontSize(value)
+			self:SetFontSize()
+		elseif key == Private.Settings.Keys.Party.Font then
+			self:SetFont()
 		elseif key == Private.Settings.Keys.Party.Opacity then
 			self:SetAlpha(value)
 		elseif key == Private.Settings.Keys.Party.ShowBorder then
@@ -203,6 +211,9 @@ function TargetedSpellsMixin:OnSettingChanged(key, value)
 			self.Cooldown:SetHideCountdownNumbers(value)
 			---@diagnostic disable-next-line: param-type-mismatch
 			self.DurationText:SetShown(value)
+		elseif key == Private.Settings.Keys.Party.ShowSwipe then
+			---@diagnostic disable-next-line: param-type-mismatch
+			self.Cooldown:SetDrawSwipe(value)
 		end
 	end
 end
@@ -355,9 +366,10 @@ function TargetedSpellsMixin:ClearStartTime()
 	self.startTime = nil
 end
 
-function TargetedSpellsMixin:Reposition(point, relativeTo, relativePoint, offsetX, offsetY)
+function TargetedSpellsMixin:Reposition(point, relativeTo, relativePoint, offsetX, offsetY, useTopLevel)
 	self:ClearAllPoints()
 	self:SetPoint(point, relativeTo, relativePoint, offsetX, offsetY)
+	self:SetToplevel(useTopLevel)
 	self:Show()
 end
 
@@ -376,11 +388,13 @@ function TargetedSpellsMixin:SetKind(kind)
 		or TargetedSpellsSaved.Settings.Party
 
 	PixelUtil.SetSize(self, tableRef.Width, tableRef.Height)
-	self:SetFontSize(tableRef.FontSize)
+	self:SetFontSize()
+	self:SetFont()
 	self:HideGlow()
 	self:SetShowBorder(tableRef.ShowBorder)
 	self:SetAlpha(tableRef.Opacity)
 	self:SetShowDuration(tableRef.ShowDuration, tableRef.ShowDurationFractions)
+	self.Cooldown:SetDrawSwipe(tableRef.ShowSwipe)
 end
 
 function TargetedSpellsMixin:GetKind()
@@ -415,13 +429,11 @@ function TargetedSpellsMixin:Reset()
 	self.Cooldown:Clear()
 	self.duration = nil
 	self:ClearAllPoints()
-	self:Hide()
 	self:HideGlow()
 	self.wasInterrupted = false
 	self.doNotHideBefore = nil
 	self.InterruptIcon:Hide()
 	self.Icon:SetDesaturated(false)
-	self.Cooldown:SetDrawSwipe(true)
 	self:SetId()
 	self.InterruptSource:SetText()
 	self.InterruptSource:Hide()
@@ -431,9 +443,12 @@ function TargetedSpellsMixin:Reset()
 		or TargetedSpellsSaved.Settings.Party
 
 	self:SetShowDuration(tableRef.ShowDuration, tableRef.ShowDurationFractions)
+	self.Cooldown:SetDrawSwipe(tableRef.ShowSwipe)
+	-- important to come last - the cooldown swipe ignores display status of its parent
+	self:Hide()
 end
 
-function TargetedSpellsMixin:SetFontSize(fontSize)
+function TargetedSpellsMixin:SetFontSize()
 	local tableRef = self.kind == Private.Enum.FrameKind.Self and TargetedSpellsSaved.Settings.Self
 		or TargetedSpellsSaved.Settings.Party
 
@@ -447,9 +462,30 @@ function TargetedSpellsMixin:SetFontSize(fontSize)
 
 	local font, size, flags = fontString:GetFont()
 
-	if size == fontSize then
+	if size == tableRef.FontSize then
 		return
 	end
 
-	fontString:SetFont(font, fontSize, flags)
+	fontString:SetFont(font, tableRef.FontSize, flags)
+end
+
+function TargetedSpellsMixin:SetFont()
+	local tableRef = self.kind == Private.Enum.FrameKind.Self and TargetedSpellsSaved.Settings.Self
+		or TargetedSpellsSaved.Settings.Party
+
+	local fontString = nil
+
+	if tableRef.ShowDurationFractions then
+		fontString = self.DurationText
+	else
+		fontString = self.Cooldown:GetCountdownFontString()
+	end
+
+	local font, size, flags = fontString:GetFont()
+
+	if font == tableRef.Font then
+		return
+	end
+
+	fontString:SetFont(tableRef.Font, size, flags)
 end

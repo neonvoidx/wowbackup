@@ -5,54 +5,131 @@ local addonName, Private = ...
 Private.Utils = {}
 
 function Private.Utils.CalculateCoordinate(index, dimension, gap, parentDimension, total, offset, grow)
+	local step = dimension + gap
+
 	if grow == Private.Enum.Grow.Start then
-		return (index - 1) * (dimension + gap) - parentDimension / 2 + offset
+		return (index - 1) * step - parentDimension / 2 + offset
 	elseif grow == Private.Enum.Grow.Center then
-		return (index - 1) * (dimension + gap) - total / 2 + offset
+		return (index - 1) * step - total / 2 + dimension / 2 + offset
 	elseif grow == Private.Enum.Grow.End then
-		return parentDimension / 2 - index * (dimension + gap) + offset
+		return parentDimension / 2 - index * step + offset
 	end
 
 	return 0
 end
 
-function Private.Utils.SortFrames(frames, sortOrder)
-	local isAscending = sortOrder == Private.Enum.SortOrder.Ascending
+do
+	local function sortAsc(a, b)
+		return a:GetStartTime() < b:GetStartTime()
+	end
 
-	table.sort(frames, function(a, b)
-		if isAscending then
-			return a:GetStartTime() < b:GetStartTime()
-		end
-
+	local function sortDesc(a, b)
 		return a:GetStartTime() > b:GetStartTime()
-	end)
+	end
+
+	function Private.Utils.SortFrames(frames, sortOrder)
+		local isAscending = sortOrder == Private.Enum.SortOrder.Ascending
+
+		table.sort(frames, isAscending and sortAsc or sortDesc)
+	end
 end
 
 function Private.Utils.RollDice()
 	return math.random(1, 6) == 6
 end
 
-function Private.Utils.FindThirdPartyGroupFrameForUnit(unit, kind)
-	if Grid2 and Grid2LayoutFrame and Grid2LayoutHeader1 then
-		for i = 1, 5 do
-			local name = string.format("Grid2LayoutHeader1UnitButton%d", i)
-			local maybeFrame = _G[name]
+do
+	function Private.Utils.MaybeApplyElvUISkin(frame) end
 
-			if maybeFrame and maybeFrame.unit == unit then
-				return maybeFrame
+	if ElvUI then
+		local E = unpack(ElvUI)
+		local S = E:GetModule("Skins")
+
+		S:AddCallbackForAddon(addonName, addonName, function()
+			function Private.Utils.MaybeApplyElvUISkin(frame)
+				S:HandleButton(frame)
 			end
+		end)
+	end
+end
+
+do
+	---@type table<string, true>
+	local thirdPartyFrameNames = {}
+	local registerdFrames = 0
+	local hasManualThirdPartyRegistrations = false
+
+	function Private.Utils.RegisterFrameByName(frameName)
+		thirdPartyFrameNames[frameName] = true
+		hasManualThirdPartyRegistrations = true
+		registerdFrames = registerdFrames + 1
+
+		return true
+	end
+
+	function Private.Utils.UnregisterFrameByName(frameName)
+		if thirdPartyFrameNames[frameName] == nil then
+			return false
 		end
 
-		return nil
-	elseif DandersFrames and DandersFrames.Api and DandersFrames.Api.GetFrameForUnit then
-		local frame = DandersFrames.Api.GetFrameForUnit(unit, kind)
+		thirdPartyFrameNames[frameName] = nil
+		registerdFrames = registerdFrames - 1
+		hasManualThirdPartyRegistrations = registerdFrames > 0
 
-		if frame then
-			return frame
+		if not hasManualThirdPartyRegistrations then
+			table.wipe(thirdPartyFrameNames)
+		end
+
+		return true
+	end
+
+	function Private.Utils.HasThirdPartyCandidates()
+		return hasManualThirdPartyRegistrations
+	end
+
+	for index = 1, C_AddOns.GetNumAddOns() do
+		local meta = C_AddOns.GetAddOnMetadata(index, "X-oUF")
+
+		if meta and _G[meta] then
+			hooksecurefunc(_G[meta], "SpawnHeader", function(ref)
+				for _, header in next, ref.headers do
+					local headerName = header:GetName()
+
+					if headerName and string.find(headerName, "Party") ~= nil then
+						for unitIndex = 1, 5 do
+							Private.Utils.RegisterFrameByName(string.format("%sUnitButton%d", headerName, unitIndex))
+						end
+					end
+				end
+			end)
 		end
 	end
 
-	return nil
+	function Private.Utils.FindThirdPartyGroupFrameForUnit(unit)
+		if hasManualThirdPartyRegistrations then
+			for frameName, bool in pairs(thirdPartyFrameNames) do
+				local frame = _G[frameName]
+
+				if frame and frame.unit == unit then
+					return frame, false
+				end
+			end
+		end
+
+		if Grid2 then
+			return (next(Grid2:GetUnitFrames(unit))), true
+		end
+
+		if DandersFrames and DandersFrames.Api and DandersFrames.Api.GetFrameForUnit then
+			local frame = DandersFrames.Api.GetFrameForUnit(unit, Private.Enum.FrameKind.Party)
+
+			if frame then
+				return frame, false
+			end
+		end
+
+		return nil, false
+	end
 end
 
 function Private.Utils.ShowStaticPopup(args)
@@ -206,4 +283,6 @@ end
 _G.TargetedSpellsAPI = {
 	Import = Private.Utils.Import,
 	Export = Private.Utils.Export,
+	RegisterFrameByName = Private.Utils.RegisterFrameByName,
+	UnregisterFrameByName = Private.Utils.UnregisterFrameByName,
 }

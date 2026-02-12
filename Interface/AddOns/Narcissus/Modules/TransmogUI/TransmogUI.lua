@@ -2,18 +2,6 @@ local _, addon = ...
 local TransmogUIManager = addon.TransmogUIManager;
 
 
-if addon.IsTOCVersionEqualOrNewerThan(120000) then
-    function TransmogUIManager.IsSupported()
-        return true
-    end
-else
-    function TransmogUIManager.IsSupported()
-        return false
-    end
-    return
-end
-
-
 local MainModule = TransmogUIManager:CreateModule("Main");
 
 
@@ -25,7 +13,7 @@ do
 		"VIEWED_TRANSMOG_OUTFIT_SLOT_REFRESH",
 		"VIEWED_TRANSMOG_OUTFIT_SLOT_WEAPON_OPTION_CHANGED",
 		"VIEWED_TRANSMOG_OUTFIT_SECONDARY_SLOTS_CHANGED",
-		"TRANSMOG_DISPLAYED_OUTFIT_CHANGED",                    
+		"TRANSMOG_DISPLAYED_OUTFIT_CHANGED",
 		"PLAYER_EQUIPMENT_CHANGED",
     };
 

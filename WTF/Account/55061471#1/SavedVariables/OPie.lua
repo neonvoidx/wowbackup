@@ -3,13 +3,13 @@ OneRing_Config = nil
 OPie_SavedData = {
 ["CharProfiles"] = {
 },
-["_OPieVersion"] = "7.11.2 (4.137)",
+["_OPieVersion"] = "8.1.2 (4.138)",
 ["_StoreVersion"] = 122,
 ["_GameLocale"] = "enUS",
 ["_StoreVersion2"] = 122,
 ["ProfileStorage"] = {
 ["default"] = {
-["ShowRecharge"] = true,
+["RingAtMouse"] = true,
 ["Bindings"] = {
 ["SpecMenu"] = false,
 ["CommonTrades"] = false,
@@ -31,7 +31,7 @@ OPie_SavedData = {
 ["onsumables#XTPointerSnap"] = false,
 ["onsumables#ShowCooldowns"] = true,
 },
-["RingAtMouse"] = true,
+["ShowRecharge"] = true,
 },
 ["mine"] = {
 ["RingAtMouse"] = true,
@@ -264,35 +264,39 @@ OPie_SavedData = {
 ["limit"] = "MAGE",
 ["name"] = "MagePorts",
 },
-["heLichKing"] = {
-{
-"toy",
-48933,
-["sliceToken"] = "ABue7PTnJYyN",
-},
-{
-"item",
-46874,
-["sliceToken"] = "ABue7PTnJYyB",
-},
-{
-"item",
-52251,
-["sliceToken"] = "ABue7PTnJYy/",
-},
+["talsLegion"] = {
 {
 ["id"] = 193753,
-["sliceToken"] = "ABue7PTnJYyV",
+["sliceToken"] = "ABue7PTnJYuI",
 },
 {
-["id"] = 53140,
-["sliceToken"] = "ABue7PTnJYyC",
+"item",
+144341,
+["sliceToken"] = "ABue7PTnJYu8",
 },
 {
-["id"] = 53142,
-["sliceToken"] = "ABue7PTnJYyX",
+"item",
+140192,
+["sliceToken"] = "ABue7PTnJYuU",
 },
-["name"] = "Portals: WrathOfTheLichKing",
+{
+"toy",
+140324,
+["sliceToken"] = "ABue7PTnJYuY",
+},
+{
+["id"] = 193759,
+["sliceToken"] = "ABue7PTnJYuT",
+},
+{
+["id"] = 224869,
+["sliceToken"] = "ABue7PTnJYuR",
+},
+{
+["id"] = 224871,
+["sliceToken"] = "ABue7PTnJYu7",
+},
+["name"] = "Portals: Legion",
 ["save"] = true,
 },
 ["Toys"] = {
@@ -765,7 +769,7 @@ OPie_SavedData = {
 ["dropTokens"] = {
 ["OPCLSw"] = 1,
 ["OPCLSe"] = 1,
-["OPCLSa"] = 49,
+["OPCLSa"] = 51,
 ["OPCLSd"] = 1,
 ["OPCLSi"] = 1,
 },
@@ -955,39 +959,47 @@ OPie_SavedData = {
 ["name"] = "Portals: WarlordsofDraenor",
 ["save"] = true,
 },
-["talsLegion"] = {
+["Wormholes"] = {
 {
-["id"] = 193753,
-["sliceToken"] = "ABue7PTnJYuI",
-},
-{
-"item",
-144341,
-["sliceToken"] = "ABue7PTnJYu8",
-},
-{
-"item",
-140192,
-["sliceToken"] = "ABue7PTnJYuU",
+"toy",
+172924,
+1,
+["sliceToken"] = "ABueQv8AL3z",
 },
 {
 "toy",
-140324,
-["sliceToken"] = "ABue7PTnJYuY",
+48933,
+1,
+["sliceToken"] = "ABueQv8AL35",
 },
 {
-["id"] = 193759,
-["sliceToken"] = "ABue7PTnJYuT",
+"toy",
+168808,
+1,
+["sliceToken"] = "ABueQv8AL3x",
 },
 {
-["id"] = 224869,
-["sliceToken"] = "ABue7PTnJYuR",
+"toy",
+168807,
+1,
+["sliceToken"] = "ABueQv8AL3c",
 },
 {
-["id"] = 224871,
-["sliceToken"] = "ABue7PTnJYu7",
+"toy",
+221966,
+["sliceToken"] = "ABueWwk956r",
 },
-["name"] = "Portals: Legion",
+{
+"toy",
+112059,
+["sliceToken"] = "ABueWjGy0yi",
+},
+{
+"toy",
+198156,
+["sliceToken"] = "ABueWjGy0y2",
+},
+["name"] = "Wormholes",
 ["save"] = true,
 },
 ["HerosPath"] = {
@@ -1190,47 +1202,35 @@ OPie_SavedData = {
 ["name"] = "Engineering Gadgets",
 ["limit"] = "Choppiez-Tichondrius",
 },
-["Wormholes"] = {
-{
-"toy",
-172924,
-1,
-["sliceToken"] = "ABueQv8AL3z",
-},
+["heLichKing"] = {
 {
 "toy",
 48933,
-1,
-["sliceToken"] = "ABueQv8AL35",
+["sliceToken"] = "ABue7PTnJYyN",
 },
 {
-"toy",
-168808,
-1,
-["sliceToken"] = "ABueQv8AL3x",
+"item",
+46874,
+["sliceToken"] = "ABue7PTnJYyB",
 },
 {
-"toy",
-168807,
-1,
-["sliceToken"] = "ABueQv8AL3c",
+"item",
+52251,
+["sliceToken"] = "ABue7PTnJYy/",
 },
 {
-"toy",
-221966,
-["sliceToken"] = "ABueWwk956r",
+["id"] = 193753,
+["sliceToken"] = "ABue7PTnJYyV",
 },
 {
-"toy",
-112059,
-["sliceToken"] = "ABueWjGy0yi",
+["id"] = 53140,
+["sliceToken"] = "ABue7PTnJYyC",
 },
 {
-"toy",
-198156,
-["sliceToken"] = "ABueWjGy0y2",
+["id"] = 53142,
+["sliceToken"] = "ABue7PTnJYyX",
 },
-["name"] = "Wormholes",
+["name"] = "Portals: WrathOfTheLichKing",
 ["save"] = true,
 },
 ["hCataclysm"] = {
@@ -1358,5 +1358,5 @@ OPie_SavedData = {
 },
 },
 },
-["_GameVersion"] = "11.2.7",
+["_GameVersion"] = "12.0.0",
 }

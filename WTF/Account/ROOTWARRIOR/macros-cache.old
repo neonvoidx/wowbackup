@@ -134,16 +134,16 @@ VER 3 00000000000000C8 " HS" "517112"
 #showtooltip Healthstone
 /use Healthstone
 END
-VER 3 000000000000020D " MOUNT" "4635197"
-#showtooltip
-/cast [nomounted] !Zen Flight
-/click [flyable] MountJournalSummonRandomFavoriteButton
-END
 VER 3 0000000000000190 " MOUNT" "134156"
 #showtooltip
 /click [nomod] MountJournalSummonRandomFavoriteButton
 /cast [mod:shift] Eternal Gladiator's Soul Eater
 /cast [mod:ctrl] Grand Expedition Yak
+END
+VER 3 000000000000020D " MOUNT" "4635197"
+#showtooltip
+/cast [nomounted] !Zen Flight
+/click [flyable] MountJournalSummonRandomFavoriteButton
 END
 VER 3 0000000000000177 " PassiveFollow" "571320"
 /petfollow
@@ -176,6 +176,10 @@ END
 VER 3 0000000000000206 "BOW" "574570"
 /bow
 END
+VER 3 0000000000000235 "EnhanceQoLHealthMacro" "INV_Misc_QuestionMark"
+#showtooltip
+/cast [nocombat] Recuperate
+END
 VER 3 00000000000001FE "FOCUS" "999949"
 /focus [@mouseover,nodead,exists]; [@target,exists]
 END
@@ -184,4 +188,7 @@ VER 3 000000000000022A "Pull" "1713482"
 END
 VER 3 000000000000022B "Readycheck" "615342"
 /readycheck
+END
+VER 3 0000000000000234 "uuna " "134400"
+/run local a={50140,50141,50142,50143,50144,50145,50146,50147}for i,q in ipairs(a)do print(format("Uuna World Tour %s: %s",i, C_QuestLog.IsQuestFlaggedCompleted(q) and "\124cFF00FF00Done\124r" or "\124cFFFF0000Not Done\124r")) end
 END

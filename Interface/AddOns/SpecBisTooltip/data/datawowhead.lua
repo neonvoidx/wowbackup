@@ -224,7 +224,7 @@ function SpecBisTooltip:GetBisSource(invType, class, specId, content, num, guide
 
 		for itemId, tab in pairs(SpecBisTooltip:GetBisTable()[pool][class][specId]) do
 			local slot = tab[3]
-			if pool == "CLASSIC" or pool == "CATA" then
+			if pool == "CLASSIC" or pool == "TBC" or pool == "CATA" then
 				if slot then
 					if C_Seasons and C_Seasons.GetActiveSeason and C_Seasons.GetActiveSeason() == 2 then
 						bfi[class][specId][slot] = bfi[class][specId][slot] or {}

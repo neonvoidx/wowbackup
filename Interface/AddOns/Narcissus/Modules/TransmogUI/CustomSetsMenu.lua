@@ -47,10 +47,15 @@ do
     end
 
     function MenuButtonMixin:OnClick(button)
-        if self.onClickFunc then
-            self.onClickFunc(self, button);
+        if Menu:HideContextMenu() then
+            return
         end
-        Menu:Hide();
+
+        if self.onClickFunc then
+            if self.onClickFunc(self, button) then
+                Menu:Hide();
+            end
+        end
     end
 
     function MenuButtonMixin:OnEnable()
@@ -90,6 +95,7 @@ do
         self.Texture1:Hide();
         self.ButtonText:SetPoint("LEFT", self, "LEFT", Def.ButtonTextOffset2, 0);
         self.ButtonText:SetPoint("RIGHT", self, "RIGHT", -Def.ButtonTextOffset2 - 20, 0);
+        self.uid = characterInfo.uid;
 
         if characterInfo.numSets > 0 then
             self.RightText:SetText(characterInfo.numSets);
@@ -104,7 +110,12 @@ do
 
         self.onClickFunc = function(self, button)
             --TransmogUIManager:CustomSetsTab_LoadAltSets(characterInfo);
-            addon.CallbackRegistry:Trigger("TransmogUI.LoadAltSets", characterInfo);
+            if button == "LeftButton" then
+                addon.CallbackRegistry:Trigger("TransmogUI.LoadAltSets", characterInfo);
+                return true
+            elseif button == "RightButton" then
+                self:ShowContextMenu();
+            end
         end
     end
 
@@ -122,6 +133,50 @@ do
         if r then
             self.ButtonText:SetTextColor(r, g, b);
         end
+    end
+
+    function MenuButtonMixin:ShowContextMenu()
+        if self.uid then
+            local uid = self.uid;
+            local characterName = self.ButtonText:GetText();
+            local Schematic = {
+                tag = "NARCISSUS_TRANSMOG_MANAGE_SAVES",
+                objects = {
+                    {type = "Title", name = characterName},
+                    {type = "Button", name = L["Delete Character Data"],
+                        tooltip = function(tooltip)
+                            tooltip:SetText(L["Delete Character Data"], 1, 1, 1);
+                            tooltip:AddLine(characterName, 1, 1, 1);
+                            local timeText = addon.ProfileAPI:GetCharacterLastVisit(uid);
+                            if timeText then
+                                tooltip:AddLine(L["Last Visit"]..timeText, 0.5, 0.5, 0.5);
+                            end
+                            tooltip:AddLine(" ");
+                            tooltip:AddLine(L["Delete Character Data Tooltip"], 1, 0.82, 0, true);
+                            tooltip:Show();
+                            Menu:FocusObject(self);
+                        end,
+
+                        OnClick = function()
+                            TransmogUIManager:DeleteCharacterOutfits(uid);
+                        end,
+                    },
+                },
+
+                onMenuClosedCallback = function()
+                    Menu.shownContextMenu = nil;
+                end,
+            };
+
+            local menu = NarciAPI.TranslateContextMenu(self, Schematic);
+            Menu.shownContextMenu = menu;
+            menu:ClearAllPoints();
+            menu:SetPoint("TOPLEFT", self, "TOPRIGHT", -8, 2);
+        end
+    end
+
+    function MenuButtonMixin:HandlesGlobalMouseEvent(buttonName, event)
+        return true
     end
 
     function MenuButton_PostCreate(f)
@@ -336,17 +391,22 @@ end
 do  --MenuMixin
     local Schematic_Static = {
         {type = "Radio", key = "CurrentSourceButton", text = L["OutfitSource Default"],
-            onClickFunc = function()
-                addon.CallbackRegistry:Trigger("TransmogUI.LoadDefaultSets");
+            onClickFunc = function(self, button)
+                if button == "LeftButton" then
+                    addon.CallbackRegistry:Trigger("TransmogUI.LoadDefaultSets");
+                    return true
+                end
             end,
         },
         {type = "Radio", key = "SharedSourceButton", text = L["OutfitSource Shared"], tooltip = L["OutfitSource Shared Tooltip"],
-            onClickFunc = function()
-                addon.CallbackRegistry:Trigger("TransmogUI.LoadSharedSets");
+            onClickFunc = function(self, button)
+                if button == "LeftButton" then
+                    addon.CallbackRegistry:Trigger("TransmogUI.LoadSharedSets");
+                    return true
+                end
             end,
         },
         {type = "Divider", key = "Divider"},
-        --{type = "Radio", key = "ListHeaderButton", text = L["OutfitSource Alts"], tooltip = L["OutfitSource Alts Tooltip"], disabled = true},
     };
 
     function Menu:Init()
@@ -419,6 +479,7 @@ do  --MenuMixin
         end
 
         self.staticHeight = offsetY + Def.MenuPaddingY;
+        Schematic_Static = nil;
     end
 
     function Menu:OnShow()
@@ -437,6 +498,9 @@ do  --MenuMixin
     end
 
     function Menu:IsFocused()
+        if self.shownContextMenu and self.shownContextMenu:IsMouseOver() then
+            return true
+        end
         return self:IsShown() and (self:IsMouseOver() or (self.owner and self.owner:IsMouseOver()))
     end
 
@@ -453,7 +517,17 @@ do  --MenuMixin
         self.owner = owner;
     end
 
+    function Menu:HideContextMenu()
+        if self.shownContextMenu then
+            self.shownContextMenu:Hide();
+            self.shownContextMenu = nil;
+            return true
+        end
+    end
+
     function Menu:OnMouseWheel(delta)
+        self:HideContextMenu();
+
         if not self.page then return end;
 
         if delta > 0 and self.page > 1 then
@@ -483,6 +557,7 @@ do  --MenuMixin
         local fromDataIndex = (self.page - 1) * Def.CharacterButtonPerPage;
         local offsetY = Def.MenuButtonHeight + Def.MenuPaddingY;
         local characterInfo;
+
         for index = fromDataIndex + 1, fromDataIndex + Def.CharacterButtonPerPage do
             characterInfo = self.filteredCharacters[index];
             if characterInfo then
@@ -499,7 +574,13 @@ do  --MenuMixin
                 end
             end
         end
+
         self.PageText:SetText(string.format("%d/%d", self.page <= self.maxPage and self.page or 0, self.maxPage));
+        if self.maxPage > 0 then
+            self.PageText:SetTextColor(1, 1, 1);
+        else
+            self.PageText:SetTextColor(0.5, 0.5, 0.5);
+        end
         self.PrevButton:SetEnabled(self.page > 1);
         self.NextButton:SetEnabled(self.page < self.maxPage);
     end
@@ -685,4 +766,18 @@ end
 
 function TransmogUIManager:IsCustomSetsMenuShown()
     return Menu:IsShown() or Menu.wasShown
+end
+
+function TransmogUIManager:DeleteCharacterOutfits(uid)
+    addon.ProfileAPI:DeleteCharacterOutfits(uid);
+    addon.CallbackRegistry:Trigger("TransmogUI.CharacterInfoDeleted", uid);
+    Menu.filteredCharacters = nil;
+
+    if TransmogUIManager:GetSelectedCharacterUID() == uid then
+        addon.CallbackRegistry:Trigger("TransmogUI.LoadDefaultSets");
+    end
+
+    if Menu:IsShown() then
+        Menu:SetModeTransmogUI();
+    end
 end

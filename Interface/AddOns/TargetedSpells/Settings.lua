@@ -1,5 +1,6 @@
 ---@type string, TargetedSpells
 local addonName, Private = ...
+local LibSharedMedia = LibStub("LibSharedMedia-3.0")
 
 ---@class TargetedSpellsSettings
 Private.Settings = {}
@@ -26,6 +27,8 @@ Private.Settings.Keys = {
 		TargetingFilterApi = "TARGETING_FILTER_API_SELF",
 		Import = "IMPORT_SELF",
 		Export = "EXPORT_SELF",
+		ShowSwipe = "SWIPE_SELF",
+		Font = "FONT_SELF",
 	},
 	Party = {
 		Enabled = "ENABLED_PARTY",
@@ -53,6 +56,8 @@ Private.Settings.Keys = {
 		TargetingFilterApi = "TARGETING_FILTER_API_PARTY",
 		Import = "IMPORT_PARTY",
 		Export = "EXPORT_PARTY",
+		ShowSwipe = "SWIPE_PARTY",
+		Font = "FONT_PARTY",
 	},
 }
 
@@ -73,8 +78,10 @@ function Private.Settings.GetSettingsDisplayOrder(kind)
 			Private.Settings.Keys.Self.GlowType,
 			Private.Settings.Keys.Self.ShowDuration,
 			Private.Settings.Keys.Self.ShowDurationFractions,
+			Private.Settings.Keys.Self.Font,
 			Private.Settings.Keys.Self.FontSize,
 			Private.Settings.Keys.Self.ShowBorder,
+			Private.Settings.Keys.Self.ShowSwipe,
 			Private.Settings.Keys.Self.IndicateInterrupts,
 			Private.Settings.Keys.Self.Opacity,
 		}
@@ -100,8 +107,10 @@ function Private.Settings.GetSettingsDisplayOrder(kind)
 		Private.Settings.Keys.Party.GlowType,
 		Private.Settings.Keys.Party.ShowDuration,
 		Private.Settings.Keys.Party.ShowDurationFractions,
+		Private.Settings.Keys.Party.Font,
 		Private.Settings.Keys.Party.FontSize,
 		Private.Settings.Keys.Party.ShowBorder,
+		Private.Settings.Keys.Party.ShowSwipe,
 		Private.Settings.Keys.Party.IndicateInterrupts,
 		Private.Settings.Keys.Party.Opacity,
 	}
@@ -162,8 +171,8 @@ function Private.Settings.GetSliderSettingsForOption(key)
 
 	if key == Private.Settings.Keys.Party.OffsetX or key == Private.Settings.Keys.Party.OffsetY then
 		return {
-			min = -100,
-			max = 100,
+			min = -200,
+			max = 200,
 			step = 1,
 		}
 	end
@@ -197,7 +206,6 @@ function Private.Settings.GetSelfDefaultSettings()
 			[Private.Enum.Role.Tank] = true,
 			[Private.Enum.Role.Damager] = true,
 		},
-
 		SortOrder = Private.Enum.SortOrder.Ascending,
 		Grow = Private.Enum.Grow.Center,
 		ShowDuration = true,
@@ -210,6 +218,8 @@ function Private.Settings.GetSelfDefaultSettings()
 		GlowType = Private.Enum.GlowType.PixelGlow,
 		IndicateInterrupts = false,
 		TargetingFilterApi = Private.Enum.TargetingFilterApi.UnitIsSpellTarget,
+		ShowSwipe = true,
+		Font = "Fonts\\FRIZQT__.TTF",
 	}
 end
 
@@ -250,7 +260,13 @@ function Private.Settings.GetPartyDefaultSettings()
 		GlowType = Private.Enum.GlowType.PixelGlow,
 		IndicateInterrupts = true,
 		TargetingFilterApi = Private.Enum.TargetingFilterApi.UnitIsSpellTarget,
+		ShowSwipe = true,
+		Font = "Fonts\\FRIZQT__.TTF",
 	}
+end
+
+function Private.Settings.GetFontOptions()
+	return LibSharedMedia:HashTable(LibSharedMedia.MediaType.FONT)
 end
 
 function Private.Settings.IsContentTypeAvailableForKind(kind, contentTypeId)
@@ -347,6 +363,81 @@ table.insert(Private.LoginFnQueue, function()
 			}
 		end
 
+		if key == Private.Settings.Keys.Self.Font or key == Private.Settings.Keys.Party.Font then
+			local tableRef = key == Private.Settings.Keys.Self.Font and TargetedSpellsSaved.Settings.Self
+				or TargetedSpellsSaved.Settings.Party
+
+			local function GetValue()
+				return tableRef.Font
+			end
+
+			local function SetValue(value)
+				tableRef.Font = value
+
+				Private.EventRegistry:TriggerEvent(Private.Enum.Events.SETTING_CHANGED, key, value)
+			end
+
+			local function GetOptions()
+				local container = Settings.CreateControlTextContainer()
+				local fonts = Private.Settings.GetFontOptions()
+
+				for label, path in pairs(fonts) do
+					container:Add(path, label)
+				end
+
+				return container:GetData()
+			end
+
+			local setting = Settings.RegisterProxySetting(
+				category,
+				key,
+				Settings.VarType.String,
+				L.Settings.FontLabel,
+				defaults.Font,
+				GetValue,
+				SetValue
+			)
+			local initializer = Settings.CreateDropdown(category, setting, GetOptions, L.Settings.FontTooltip)
+
+			return {
+				initializer = initializer,
+				hideSteppers = false,
+				IsSectionEnabled = nil,
+			}
+		end
+
+		if key == Private.Settings.Keys.Self.ShowSwipe or key == Private.Settings.Keys.Party.ShowSwipe then
+			local tableRef = key == Private.Settings.Keys.Self.ShowSwipe and TargetedSpellsSaved.Settings.Self
+				or TargetedSpellsSaved.Settings.Party
+
+			local function GetValue()
+				return tableRef.ShowSwipe
+			end
+
+			local function SetValue(value)
+				tableRef.ShowSwipe = not tableRef.ShowSwipe
+				Private.EventRegistry:TriggerEvent(Private.Enum.Events.SETTING_CHANGED, key, tableRef.ShowSwipe)
+			end
+
+			local setting = Settings.RegisterProxySetting(
+				category,
+				key,
+				Settings.VarType.Boolean,
+				L.Settings.ShowSwipeLabel,
+				defaults.ShowSwipe,
+				GetValue,
+				SetValue
+			)
+
+			local initializer = Settings.CreateCheckbox(category, setting, L.Settings.ShowSwipeTooltip)
+
+			return {
+				initializer = initializer,
+				hideSteppers = false,
+				IsSectionEnabled = nil,
+			}
+		end
+
 		if
 			key == Private.Settings.Keys.Self.IndicateInterrupts
 			or key == Private.Settings.Keys.Party.IndicateInterrupts
@@ -360,7 +451,11 @@ table.insert(Private.LoginFnQueue, function()
 
 			local function SetValue(value)
 				tableRef.IndicateInterrupts = not tableRef.IndicateInterrupts
-				Private.EventRegistry:TriggerEvent(Private.Enum.Events.SETTING_CHANGED, key, tableRef.Enabled)
+				Private.EventRegistry:TriggerEvent(
+					Private.Enum.Events.SETTING_CHANGED,
+					key,
+					tableRef.IndicateInterrupts
+				)
 			end
 
 			local setting = Settings.RegisterProxySetting(
@@ -396,7 +491,11 @@ table.insert(Private.LoginFnQueue, function()
 
 			local function SetValue(value)
 				tableRef.ShowDurationFractions = not tableRef.ShowDurationFractions
-				Private.EventRegistry:TriggerEvent(Private.Enum.Events.SETTING_CHANGED, key, tableRef.Enabled)
+				Private.EventRegistry:TriggerEvent(
+					Private.Enum.Events.SETTING_CHANGED,
+					key,
+					tableRef.ShowDurationFractions
+				)
 			end
 
 			local setting = Settings.RegisterProxySetting(

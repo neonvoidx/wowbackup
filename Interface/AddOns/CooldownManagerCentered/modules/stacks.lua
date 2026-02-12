@@ -40,7 +40,7 @@ local function GetStackFontName()
     if ns.db and ns.db.profile and ns.db.profile.cooldownManager_stackFontName then
         return ns.db.profile.cooldownManager_stackFontName
     end
-    return ns.DEFAULT_FONT_NAME or "Friz Quadrata TT"
+    return "Friz Quadrata TT"
 end
 
 local function GetViewerStackSettings(viewerName)
@@ -110,7 +110,8 @@ function Stacks:ApplyStackFonts(viewerName)
         return
     end
 
-    for _, child in ipairs({ viewer:GetChildren() }) do
+    local children = { viewer:GetChildren() }
+    for _, child in ipairs(children) do
         -- BuffIconCooldownViewer has Applications.Applications and other views have ChargeCount.Current
         local fs = child and child.Applications and child.Applications.Applications
             or child.ChargeCount and child.ChargeCount.Current
@@ -126,6 +127,15 @@ function Stacks:ApplyStackFonts(viewerName)
             ApplyStackAnchor(fs, child, stackEnabled, stackPoint, stackX, stackY)
         end
     end
+end
+
+function Stacks:IsAnyStacksFeatureEnabled()
+    return ns.db.profile.cooldownManager_stackFontSizeEssential
+        or ns.db.profile.cooldownManager_stackFontSizeUtility
+        or ns.db.profile.cooldownManager_stackFontSizeBuffIcons
+        or ns.db.profile.cooldownManager_stackAnchorEssential_enabled
+        or ns.db.profile.cooldownManager_stackAnchorUtility_enabled
+        or ns.db.profile.cooldownManager_stackAnchorBuffIcons_enabled
 end
 
 function Stacks:ApplyAllStackFonts()

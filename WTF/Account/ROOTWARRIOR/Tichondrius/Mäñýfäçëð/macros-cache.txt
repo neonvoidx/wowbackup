@@ -73,13 +73,13 @@ VER 3 0100000000000038 "  " "134400"
 #showtooltip Shadow Blades
 /cast Shadow Blades
 END
-VER 3 0100000000000046 " FOCUS" "134400"
-#showtooltip 
-/cast [stealth, target=focus] Cheap Shot
-END
 VER 3 0100000000000044 " FOCUS" "134400"
 #showtooltip Sap
 /cast [target=focus] Sap
+END
+VER 3 0100000000000046 " FOCUS" "134400"
+#showtooltip 
+/cast [stealth, target=focus] Cheap Shot
 END
 VER 3 0100000000000043 " Focus KickStep" "134400"
 #showtooltip

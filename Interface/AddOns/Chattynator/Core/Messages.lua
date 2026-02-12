@@ -373,9 +373,9 @@ function addonTable.MessagesMonitorMixin:SetInset()
   else
     error("unknown format")
   end
-  self.inset = self.sizingFontString:GetUnboundedStringWidth() + 10
+  self.inset = self.sizingFontString:GetUnboundedStringWidth() + 8
   if self.timestampFormat == " " then
-    self.inset = 8
+    self.inset = 6
   end
 end
 
@@ -1165,7 +1165,7 @@ function addonTable.MessagesMonitorMixin:MessageEventHandler(event, ...)
       self:AddMessage(CHAT_MSG_BLOCK_CHAT_CHANNEL_INVITE, info.r, info.g, info.b, info.id);
     end
   elseif (type == "CHANNEL_NOTICE") then
-    if isSecret then
+    if isSecret or not tIndexOf(self.zoneChannelList, arg7) then
       return
     end
 
@@ -1194,7 +1194,9 @@ function addonTable.MessagesMonitorMixin:MessageEventHandler(event, ...)
         end
       end
 
-      self:AddMessage(string.format(globalstring, arg8, (ChatFrame_ResolvePrefixedChannelName or ChatFrameUtil.ResolvePrefixedChannelName)(arg4)), info.r, info.g, info.b, info.id, accessID, typeID);
+      if channelLength > 0 then
+        self:AddMessage(string.format(globalstring, arg8, (ChatFrame_ResolvePrefixedChannelName or ChatFrameUtil.ResolvePrefixedChannelName)(arg4)), info.r, info.g, info.b, info.id, accessID, typeID);
+      end
     end
   elseif ( type == "BN_INLINE_TOAST_ALERT" ) then
     if isSecret then
@@ -1239,7 +1241,7 @@ function addonTable.MessagesMonitorMixin:MessageEventHandler(event, ...)
   elseif ( type == "BN_INLINE_TOAST_BROADCAST" ) then
     if ( arg1 ~= "" ) then
       if C_StringUtil and C_StringUtil.RemoveContiguousSpaces then
-        arg1 = trim(C_StringUtil.RemoveContiguousSpaces(arg1, 4))
+        arg1 = C_StringUtil.RemoveContiguousSpaces(arg1, 4)
       else
         arg1 = RemoveNewlines(RemoveExtraSpaces(arg1));
       end

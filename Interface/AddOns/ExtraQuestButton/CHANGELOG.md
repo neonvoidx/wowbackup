@@ -1,4 +1,6 @@
-### Changes in 120000.65-Release:
+### Changes in 120000.67-Release:
 
-- Fixed: Settings not updating properly when renaming/copying/deleting Edit Mode profiles
+- Changed: Update quest database
+- Changed: Update embeds
+- Fixed: Any potential collisions with other addons using Edit Mode
 

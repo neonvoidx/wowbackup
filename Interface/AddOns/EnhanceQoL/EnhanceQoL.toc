@@ -1,0 +1,120 @@
+## Interface: 110207, 120000, 120001
+## Title: Enhance QoL Core
+## Author: R41Z0R
+## Version: 7.12.1
+## IconTexture: Interface\AddOns\EnhanceQoL\Icons\Icon.tga
+## Category: Quality of Life
+## X-Category: Quality of Life
+## Notes: Little Tweaks for enhancing your Quality of Life
+## Notes-deDE: Kleine Anpassungen zur Verbesserung deiner Lebensqualität
+## Notes-esES: Pequeños ajustes para mejorar tu calidad de vida
+## Notes-esMX: Pequeños ajustes para mejorar tu calidad de vida
+## Notes-frFR: Petits ajustements pour améliorer votre confort de jeu
+## Notes-itIT: Piccole modifiche per migliorare la tua qualità di vita
+## Notes-ptBR: Pequenos ajustes para melhorar sua qualidade de vida
+## Notes-ruRU: Небольшие изменения для улучшения качества вашей игры
+## Notes-koKR: 사소한 편의 기능으로 게임 품질을 향상합니다
+## Notes-zhCN: 一些小调整，以改善您的游戏体验
+## Notes-zhTW: 一些小調整，以改善您的遊戲體驗
+## SavedVariables: EnhanceQoLDB, EnhanceQoL_IMHistory, EnhanceQoL_IgnoreDB, EnhanceQoL_ChannelHistory, EnhanceQoLMoverDB
+## X-Wago-ID: aN0Ykv6j
+## X-Curse-Project-ID: 1076354
+## Retail: true
+## X-Compatible-With: retail
+## X-WoWI-ID: 26888
+## OptionalDeps: MidnightSimpleUnitFrames, UnhaltedUnitFrames, ElvUI
+
+libs\LibStub\LibStub.lua
+libs\AceLocale-3.0\AceLocale-3.0.xml
+libs\LibButtonGlow-1.0\LibButtonGlow-1.0.lua
+libs\LibCustomGlow-1.0\LibCustomGlow-1.0.lua
+locales\[TextLocale].lua
+Modules\MythicPlus\Locales\[TextLocale].lua
+Init.lua
+NewSettingsTable.lua
+
+libs\CallbackHandler-1.0\CallbackHandler-1.0.lua
+libs\LibDataBroker-1.1\LibDataBroker-1.1.lua
+libs\LibDBIcon-1.0\lib.xml
+libs\AceGUI-3.0\AceGUI-3.0.xml
+libs\LibDeflate\lib.xml
+libs\LibSharedMedia-3.0\lib.xml
+libs\LibOpenKeystone\LibOpenKeystone.lua
+libs\AceSerializer-3.0\AceSerializer-3.0.xml
+libs\AceComm-3.0\AceComm-3.0.xml
+libs\LibEQOL\LibEQOL.xml
+Bindings\Slider.xml
+Sounds\sounds.lua
+General\functions.lua
+Core\EditModeLib.lua
+Core\EditMode.lua
+Modules\ActionBarLabels.lua
+Core\Cleanup.lua
+EnhanceQoL.lua
+Core\DataHub.lua
+Core\DataPanel.lua
+Core\MovementSpeedStat.lua
+Core\CharacterStatsFormatting.lua
+Core\Streams\Streams.xml
+Submodules\GemHelper.lua
+Submodules\ContainerActions.lua
+Submodules\MountActions.lua
+Submodules\ActionTracker.lua
+Submodules\GCDBar.lua
+Submodules\CombatText.lua
+Submodules\ChatIM\ChannelHistory.lua
+Submodules\ChatIM\UI.lua
+Submodules\ChatIM\Core.lua
+Submodules\TradeMailLog.xml
+Submodules\TradeMailLog.lua
+Submodules\LootToast.lua
+Submodules\ChatIcons.lua
+Submodules\CommunityChatPrivacy.lua
+Submodules\FriendsListDecor.lua
+Submodules\Ignore\Ignore.lua
+Submodules\Ignore\Ignore.xml
+Submodules\InstanceDifficulty.lua
+Submodules\DungeonJournalLootSpec.lua
+Submodules\Merchant.lua
+Submodules\HealthText.lua
+Submodules\Mailbox.lua
+Submodules\Mailbox.xml
+Modules\Aura\Locales\[TextLocale].lua
+Modules\Aura\Init.lua
+Modules\Aura\ResourceBars.lua
+Modules\Aura\ResourceBarsHelpers.lua
+Modules\Skinner\Init.lua
+Settings\SettingsUI.xml
+
+# Aura
+Modules\Aura\Aura.xml
+
+# Mouse
+Modules\Mouse\Locales\[TextLocale].lua
+Modules\Mouse\Mouse.xml
+
+# Mover
+Modules\Mover\Locales\[TextLocale].lua
+Modules\Mover\Mover.xml
+
+# Sound
+Modules\Sound\Locales\[TextLocale].lua
+Modules\Sound\Sound.xml
+
+# Tooltip
+Modules\Tooltip\Locales\[TextLocale].lua
+Modules\Tooltip\Tooltip.xml
+
+# Visibility
+# Modules\Visibility\Visibility.xml
+
+# MythicPlus
+Modules\MythicPlus\MythicPlus.xml
+
+# Vendor
+Modules\Vendor\Locales\[TextLocale].lua
+Modules\Vendor\Vendor.xml
+
+# Food
+Modules\Food\Locales\[TextLocale].lua
+Modules\Food\Food.xml

@@ -17,20 +17,16 @@ local floor = math.floor
 
 -- Architecture:
 -- LayoutEngine: pure layout computations (no frame access)
--- StateTracker: invalidation/diffing + repaint tracking
 -- ViewerAdapters: WoW Frame interaction per viewer type
--- RuntimeLoop: events
 
 local LayoutEngine = {}
-local StateTracker = {}
 local ViewerAdapters = {}
-local RuntimeLoop = {}
 
 local viewers = {
-    EssentialCooldownViewer = _G["EssentialCooldownViewer"],
-    UtilityCooldownViewer = _G["UtilityCooldownViewer"],
     BuffIconCooldownViewer = _G["BuffIconCooldownViewer"],
     BuffBarCooldownViewer = _G["BuffBarCooldownViewer"],
+    EssentialCooldownViewer = _G["EssentialCooldownViewer"],
+    UtilityCooldownViewer = _G["UtilityCooldownViewer"],
 }
 
 -- Defaults
@@ -57,94 +53,37 @@ local viewerSettingsMap = {
     },
 }
 
-local multipleFramesTickers = {}
+-- Map viewer names to setting key names for StyledIcons functions
+local viewerToSettingKey = {
+    ["EssentialCooldownViewer"] = "Essential",
+    ["UtilityCooldownViewer"] = "Utility",
+    ["BuffIconCooldownViewer"] = "BuffIcons",
+}
 
-local function callForMultipleFrames(fn, nbr, identifier)
-    fn()
-    if identifier then
-        if multipleFramesTickers[identifier] then
-            multipleFramesTickers[identifier]:Cancel()
-        end
-        multipleFramesTickers[identifier] = C_Timer.NewTicker(0, fn, (nbr or 2) - 1)
-    end
-end
-
-local EditModeAlignFixFrame = CreateFrame("FRAME")
-EditModeAlignFixFrame:SetScript("OnEvent", function()
-    if
-        RuntimeLoop.isInEditMode
-        and EditModeSystemSettingsDialog
-        and EditModeSystemSettingsDialog:IsShown()
-        and EditModeSystemSettingsDialog.attachedToSystem
-    then
-        local settingKeyToViewer = {
-            cooldownManager_forceCenterX_Essential = EssentialCooldownViewer,
-            cooldownManager_forceCenterX_Utility = UtilityCooldownViewer,
-            cooldownManager_forceCenterX_BuffIcons = BuffIconCooldownViewer,
-        }
-
-        for settingKey, viewer in pairs(settingKeyToViewer) do
-            if EditModeSystemSettingsDialog.attachedToSystem == viewer and ns.db.profile[settingKey] then
-                if viewer:GetCenter() ~= UIParent:GetCenter() then
-                    CooldownManager.CenterViewerXPosition(viewer:GetName(), settingKey)
-                    UIErrorsFrame:AddExternalWarningMessage(
-                        "If you want to unlock it, uncheck 'Force Center' in Co|cffbcc71fo|r|cff52a855ld|r|cff3faa4fownM|r|cff5fb64aan|r|cff7ac243ag|r|cff8ccd00erCentered|r"
-                    )
-                    UIErrorsFrame:AddExternalWarningMessage(
-                        "Co|cffbcc71fo|r|cff52a855ld|r|cff3faa4fownM|r|cff5fb64aan|r|cff7ac243ag|r|cff8ccd00erCentered|r forced viewer to the center"
-                    )
-                end
-            end
-        end
-    end
-end)
-
--- RuntimeLoop: EditMode gating
-
-RuntimeLoop.stop = false
-RuntimeLoop.isInEditMode = false
-EventRegistry:RegisterCallback("EditMode.Enter", function()
-    -- check if I still need it? it was from time I wanted to do "freeed icons"
-    RuntimeLoop.isInEditMode = true
-    EditModeAlignFixFrame:RegisterEvent("GLOBAL_MOUSE_UP")
-    CooldownManager.ForceRefreshAll()
-    CooldownManager.ApplyCenterXPositions()
-end)
-EventRegistry:RegisterCallback("EditMode.Exit", function()
-    RuntimeLoop.isInEditMode = false
-    EditModeAlignFixFrame:UnregisterAllEvents()
-    CooldownManager.ForceRefreshAll()
-    CooldownManager.ApplyCenterXPositions()
-end)
-
-function LayoutEngine.CenteredRowXOffsets(count, itemWidth, padding, directionModifier)
-    -- Why: Produce symmetric X offsets to center a horizontal row.
-    -- When: Positioning icons in rows; supports reversed direction via modifier.
+function LayoutEngine.CenteredRowXOffsets(count, itemWidth, padding, directionModifier, iconLimit, iconRef)
     if not count or count <= 0 then
         return {}
     end
     local dir = directionModifier or 1
-    local totalWidth = (count * itemWidth) + ((count - 1) * padding)
-    local startX = ((-totalWidth / 2 + itemWidth / 2) * dir)
+    local iconsMissing = iconLimit - count
+    local startX = ((itemWidth + padding) * iconsMissing / 2) * dir
     local offsets = {}
     for i = 1, count do
-        offsets[i] = startX + (i - 1) * (itemWidth + padding) * dir
+        offsets[i] = ns.Scaling:RoundToPixelSize(startX + (i - 1) * (itemWidth + padding) * dir, iconRef)
     end
     return offsets
 end
 
-function LayoutEngine.CenteredColYOffsets(count, itemHeight, padding, directionModifier)
-    -- Why: Produce symmetric Y offsets to center a vertical column.
-    -- When: Positioning icons in columns; supports reversed direction via modifier.
+function LayoutEngine.CenteredColYOffsets(count, itemHeight, padding, directionModifier, iconLimit, iconRef)
     if not count or count <= 0 then
         return {}
     end
     local dir = directionModifier or 1
-    local totalHeight = ((count * itemHeight) + ((count - 1) * padding))
-    local startY = ((totalHeight / 2 - itemHeight / 2) * dir)
+    local iconsMissing = iconLimit - count
+    local startY = -((itemHeight + padding) * iconsMissing / 2) * dir
     local offsets = {}
     for i = 1, count do
-        offsets[i] = (startY - (i - 1) * (itemHeight + padding) * dir)
+        offsets[i] = ns.Scaling:RoundToPixelSize(startY - (i - 1) * (itemHeight + padding) * dir, iconRef)
     end
     return offsets
 end
@@ -221,32 +160,7 @@ function LayoutEngine.BuildRows(iconLimit, children)
     return rows
 end
 
--- StateTracker: invalidation/diffing
-
-function StateTracker.MarkViewersDirty(name)
-    -- if name == "EssentialCooldownViewer" and ns.db.profile.cooldownManager_centerEssential then
-    if name == "EssentialCooldownViewer" then
-        callForMultipleFrames(CooldownManager.UpdateEssentialIfNeeded, 2, name)
-    end
-    if name == "UtilityCooldownViewer" then
-        callForMultipleFrames(CooldownManager.UpdateUtilityIfNeeded, 2, name)
-    end
-end
-
-function StateTracker.MarkBuffIconsDirty()
-    -- if ns.db.profile.cooldownManager_centerBuffIcons then
-    callForMultipleFrames(ViewerAdapters.UpdateBuffIcons, 2, "BuffIconCooldownViewer")
-    -- end
-end
-
-function StateTracker.MarkBuffBarsDirty()
-    -- if ns.db.profile.cooldownManager_alignBuffBars then
-    callForMultipleFrames(ViewerAdapters.UpdateBuffBarsIfNeeded, 2, "BuffBarCooldownViewer")
-    -- end
-end
-
 -- ViewerAdapters: BuffIcon/BuffBar collection + hooks
-
 function ViewerAdapters.GetBuffIconFrames()
     -- Why: Collect visible Buff Icon viewer children, hook change events, and apply stack visuals.
     -- When: Before positioning buff icons and whenever aura events trigger layout updates.
@@ -254,23 +168,27 @@ function ViewerAdapters.GetBuffIconFrames()
         return {}
     end
     local visible = {}
-    for _, child in ipairs({ BuffIconCooldownViewer:GetChildren() }) do
-        if child and (child.icon or child.Icon) then
+    local children = { BuffIconCooldownViewer:GetChildren() }
+    local total = 0
+    for _, child in ipairs(children) do
+        if child and (child.icon or child.Icon) and child.layoutIndex ~= nil then
+            total = total + 1
             if child:IsShown() then
                 visible[#visible + 1] = child
             end
             if not child._wt_isHooked then
                 child._wt_isHooked = true
-                hooksecurefunc(child, "OnActiveStateChanged", StateTracker.MarkBuffIconsDirty)
-                hooksecurefunc(child, "OnUnitAuraAddedEvent", StateTracker.MarkBuffIconsDirty)
-                hooksecurefunc(child, "OnUnitAuraRemovedEvent", StateTracker.MarkBuffIconsDirty)
+                hooksecurefunc(child, "OnActiveStateChanged", ViewerAdapters.UpdateBuffIcons)
+                hooksecurefunc(child, "OnUnitAuraAddedEvent", ViewerAdapters.UpdateBuffIcons)
+                hooksecurefunc(child, "OnUnitAuraRemovedEvent", ViewerAdapters.UpdateBuffIcons)
             end
         end
     end
+
     table.sort(visible, function(a, b)
         return (a.layoutIndex or 0) < (b.layoutIndex or 0)
     end)
-    return visible
+    return visible, total
 end
 
 function ViewerAdapters.GetBuffBarFrames()
@@ -303,9 +221,9 @@ function ViewerAdapters.GetBuffBarFrames()
         end
         if not frame._wt_isHooked and (frame.icon or frame.Icon or frame.bar or frame.Bar) then
             frame._wt_isHooked = true
-            hooksecurefunc(frame, "OnActiveStateChanged", StateTracker.MarkBuffBarsDirty)
-            hooksecurefunc(frame, "OnUnitAuraAddedEvent", StateTracker.MarkBuffBarsDirty)
-            hooksecurefunc(frame, "OnUnitAuraRemovedEvent", StateTracker.MarkBuffBarsDirty)
+            hooksecurefunc(frame, "OnActiveStateChanged", ViewerAdapters.UpdateBuffBars)
+            hooksecurefunc(frame, "OnUnitAuraAddedEvent", ViewerAdapters.UpdateBuffBars)
+            hooksecurefunc(frame, "OnUnitAuraRemovedEvent", ViewerAdapters.UpdateBuffBars)
         end
     end
     table.sort(active, function(a, b)
@@ -319,17 +237,13 @@ function ViewerAdapters.UpdateBuffIcons()
     -- When: On aura events, settings changes, or explicit refresh calls when the feature is enabled.
 
     if
-        not BuffIconCooldownViewer
-        or RuntimeLoop.stop
+        not ns.Runtime:IsReady(BuffIconCooldownViewer)
         or ns.db.profile.cooldownManager_alignBuffIcons_growFromDirection == "Disable"
     then
         return
     end
-    if BuffIconCooldownViewer.layoutApplyInProgress or not BuffIconCooldownViewer:IsInitialized() then
-        return
-    end
 
-    local icons = ViewerAdapters.GetBuffIconFrames()
+    local icons, total = ViewerAdapters.GetBuffIconFrames()
     local count = #icons
     if count == 0 then
         return
@@ -344,27 +258,26 @@ function ViewerAdapters.UpdateBuffIcons()
 
     local isHorizontal = BuffIconCooldownViewer.isHorizontal ~= false
     local iconDirection = BuffIconCooldownViewer.iconDirection == 1 and "NORMAL" or "REVERSED"
-    local iconDirectionModifier = iconDirection == "NORMAL" and 1 or -1
+
     local alignment = ns.db.profile.cooldownManager_alignBuffIcons_growFromDirection or "CENTER"
     local padding = isHorizontal and BuffIconCooldownViewer.childXPadding or BuffIconCooldownViewer.childYPadding
-    local settingMap = viewerSettingsMap["BuffIconCooldownViewer"]
 
     if isHorizontal then
         local offsets
         local anchor, relativePoint
-
+        local iconDirectionModifier = iconDirection == "NORMAL" and 1 or -1
         if alignment == "START" then
             offsets = LayoutEngine.StartRowXOffsets(count, iconWidth, padding, iconDirectionModifier)
-            anchor = "TOPLEFT"
-            relativePoint = "TOPLEFT"
+            anchor = iconDirection == "NORMAL" and "TOPLEFT" or "TOPRIGHT"
+            relativePoint = iconDirection == "NORMAL" and "TOPLEFT" or "TOPRIGHT"
         elseif alignment == "END" then
             offsets = LayoutEngine.EndRowXOffsets(count, iconWidth, padding, iconDirectionModifier)
-            anchor = "TOPRIGHT"
-            relativePoint = "TOPRIGHT"
+            anchor = iconDirection == "NORMAL" and "TOPRIGHT" or "TOPLEFT"
+            relativePoint = iconDirection == "NORMAL" and "TOPRIGHT" or "TOPLEFT"
         else -- CENTER
-            offsets = LayoutEngine.CenteredRowXOffsets(count, iconWidth, padding, iconDirectionModifier)
-            anchor = "TOP"
-            relativePoint = "TOP"
+            offsets = LayoutEngine.CenteredRowXOffsets(count, iconWidth, padding, iconDirectionModifier, total, refIcon)
+            anchor = iconDirection == "NORMAL" and "TOPLEFT" or "TOPRIGHT"
+            relativePoint = iconDirection == "NORMAL" and "TOPLEFT" or "TOPRIGHT"
         end
 
         for i, icon in ipairs(icons) do
@@ -376,19 +289,19 @@ function ViewerAdapters.UpdateBuffIcons()
         -- Vertical layout
         local offsets
         local anchor, relativePoint
-
+        local iconDirectionModifier = iconDirection == "NORMAL" and -1 or 1
         if alignment == "START" then
             offsets = LayoutEngine.StartColYOffsets(count, iconHeight, padding, iconDirectionModifier)
-            anchor = "TOPLEFT"
-            relativePoint = "TOPLEFT"
+            anchor = iconDirection == "NORMAL" and "BOTTOMLEFT" or "TOPLEFT"
+            relativePoint = iconDirection == "NORMAL" and "BOTTOMLEFT" or "TOPLEFT"
         elseif alignment == "END" then
             offsets = LayoutEngine.EndColYOffsets(count, iconHeight, padding, iconDirectionModifier)
-            anchor = "BOTTOMLEFT"
-            relativePoint = "BOTTOMLEFT"
+            anchor = iconDirection == "NORMAL" and "TOPLEFT" or "BOTTOMLEFT"
+            relativePoint = iconDirection == "NORMAL" and "TOPLEFT" or "BOTTOMLEFT"
         else -- CENTER
-            offsets = LayoutEngine.CenteredColYOffsets(count, iconHeight, padding, iconDirectionModifier)
-            anchor = "LEFT"
-            relativePoint = "LEFT"
+            offsets = LayoutEngine.CenteredColYOffsets(count, iconHeight, padding, iconDirectionModifier, total)
+            anchor = iconDirection == "NORMAL" and "BOTTOMLEFT" or "TOPLEFT"
+            relativePoint = iconDirection == "NORMAL" and "BOTTOMLEFT" or "TOPLEFT"
         end
 
         for i, icon in ipairs(icons) do
@@ -399,22 +312,15 @@ function ViewerAdapters.UpdateBuffIcons()
     end
 end
 
-function ViewerAdapters.UpdateBuffBarsIfNeeded()
+function ViewerAdapters.UpdateBuffBars()
     -- Why: Align Buff Bar frames from chosen growth direction when enabled and changes detected.
     -- When: On aura events, settings changes, or explicit refresh calls when the feature is enabled.
     if
-        not BuffBarCooldownViewer
-        or RuntimeLoop.stop
+        not ns.Runtime:IsReady(BuffBarCooldownViewer)
         or ns.db.profile.cooldownManager_alignBuffBars_growFromDirection == "Disable"
     then
         return
     end
-    if BuffBarCooldownViewer.layoutApplyInProgress or not BuffBarCooldownViewer:IsInitialized() then
-        return
-    end
-    -- if not ns.db.profile.cooldownManager_alignBuffBars then
-    --     return
-    -- end
 
     local bars = ViewerAdapters.GetBuffBarFrames()
     local count = #bars
@@ -434,7 +340,7 @@ function ViewerAdapters.UpdateBuffBarsIfNeeded()
     for index, bar in ipairs(bars) do
         local offsetIndex = index - 1
         local y = growFromBottom and offsetIndex * (barHeight + spacing) or -offsetIndex * (barHeight + spacing)
-        y = y
+
         bar:ClearAllPoints()
         if growFromBottom then
             bar:SetPoint("BOTTOM", BuffBarCooldownViewer, "BOTTOM", 0, y)
@@ -451,18 +357,22 @@ function ViewerAdapters.CollectViewerChildren(viewer)
     local viewerName = viewer:GetName()
     local toDim = viewerName == "UtilityCooldownViewer" and ns.db.profile.cooldownManager_utility_dimWhenNotOnCD
     local toDimOpacity = ns.db.profile.cooldownManager_utility_dimOpacity or 0.3
-    for _, child in ipairs({ viewer:GetChildren() }) do
+
+    local children = { viewer:GetChildren() }
+    for _, child in ipairs(children) do
         if child and child:IsShown() and child.Icon then
             all[#all + 1] = child
 
+            -- TODO move from cooldown manager.lua
             if child.cooldownID and toDim then
                 local info = C_CooldownViewer.GetCooldownViewerCooldownInfo(child.cooldownID)
-                if not C_Spell.GetSpellCooldown(info.spellID).isOnGCD then
+                local spellID = info.overrideSpellID or info.spellID
+                if not C_Spell.GetSpellCooldown(spellID).isOnGCD then
                     local cd = nil
                     if not issecretvalue(child.cooldownChargesShown) and child.cooldownChargesShown then
-                        cd = ns.CooldownTracker:getChargeCD(info.spellID)
+                        cd = ns.CooldownTracker:getChargeCD(spellID)
                     else
-                        cd = ns.CooldownTracker:getSpellCD(info.spellID)
+                        cd = ns.CooldownTracker:getSpellCD(spellID)
                     end
 
                     local curve = C_CurveUtil.CreateCurve()
@@ -483,81 +393,140 @@ function ViewerAdapters.CollectViewerChildren(viewer)
     return all
 end
 
-local function PositionRowHorizontal(viewer, row, yOffset, w, padding, iconDirectionModifier, rowAnchor)
-    -- Why: Place a single horizontal row centered with optional reversed direction and stack visuals.
-    -- When: Essential/Utility viewers are horizontal or configured to grow by rows.
+local function PositionRowHorizontal(
+    viewer,
+    row,
+    yOffset,
+    w,
+    padding,
+    iconDirectionModifier,
+    rowAnchor,
+    iconLimit,
+    iconRef
+)
     local count = #row
-    local xOffsets = LayoutEngine.CenteredRowXOffsets(count, w, padding, iconDirectionModifier)
+    local xOffsets = LayoutEngine.CenteredRowXOffsets(count, w, padding, iconDirectionModifier, iconLimit, iconRef)
+
     for i, icon in ipairs(row) do
         local x = xOffsets[i] or 0
+        local stillNeedToSet = true
 
-        icon:ClearAllPoints()
-        icon:SetPoint(rowAnchor, viewer, rowAnchor, x, yOffset)
+        if icon.GetPoint then
+            local point, relativeTo, relativePoint, offsetX, offsetY = icon:GetPoint()
+            if offsetX ~= nil and offsetY ~= nil then
+                local xDiff = math.abs(x - offsetX)
+                local yDiff = math.abs(yOffset - offsetY)
+                if point == rowAnchor and relativePoint == rowAnchor and xDiff < 1 and yDiff < 1 then
+                    stillNeedToSet = false
+                    -- No need to reposition
+                else
+                    if xDiff <= 1 then
+                        x = offsetX
+                    end
+                end
+            end
+        end
+        if stillNeedToSet then
+            icon:ClearAllPoints()
+            icon:SetPoint(rowAnchor, viewer, rowAnchor, x, yOffset)
+        end
     end
 end
 
-local function PositionRowVertical(viewer, row, xOffset, h, padding, iconDirectionModifier, colAnchor)
-    -- Why: Place a single vertical column centered with optional reversed direction and stack visuals.
-    -- When: Essential/Utility viewers are vertical or configured to grow by columns.
+local function PositionRowVertical(
+    viewer,
+    row,
+    xOffset,
+    h,
+    padding,
+    iconDirectionModifier,
+    colAnchor,
+    iconLimit,
+    iconRef
+)
     local count = #row
-    local yOffsets = LayoutEngine.CenteredColYOffsets(count, h, padding, iconDirectionModifier)
+    local yOffsets = LayoutEngine.CenteredColYOffsets(count, h, padding, iconDirectionModifier, iconLimit)
+
     for i, icon in ipairs(row) do
         local y = yOffsets[i] or 0
-        icon:ClearAllPoints()
-        icon:SetPoint(colAnchor, viewer, colAnchor, xOffset, y)
-    end
-end
+        local stillNeedToSet = true
 
-local sizeSavedValues = {
-    EssentialCooldownViewer = { width = 0, height = 0 },
-    UtilityCooldownViewer = { width = 0, height = 0 },
-}
-
-local SetProperPaddingSetter = nil
-function ViewerAdapters.SetProperPadding(viewer, viewerName)
-    local iconTouchingPadding = 4
-
-    if
-        ns.API:IsSomeAddOnRestrictionActive()
-        or not viewer:IsInitialized()
-        or viewer.layoutApplyInProgress
-        or RuntimeLoop.isInEditMode
-    then
-        return
-    end
-    if not ns.API:HasCustomLayoutSelected() then
-        ns.API:ShowNoLayoutUIError()
-        return
-    end
-    if ns.db.profile[viewerSettingsMap[viewerName].squareIconsEnabled] then
-        local padding = viewer.iconPadding
-        if ns.db.profile[viewerSettingsMap[viewerName].squareIconsBorderOverlap] then
-            padding = math.max(iconTouchingPadding - ns.db.profile[viewerSettingsMap[viewerName].squareIconsBorder], 0)
-        else
-            padding = math.max(iconTouchingPadding, padding)
-        end
-        if viewer.iconPadding ~= padding then
-            viewer:UpdateSystemSettingValue(Enum.EditModeCooldownViewerSetting.IconPadding, padding)
-            if SetProperPaddingSetter then
-                SetProperPaddingSetter:Cancel()
+        if icon.GetPoint then
+            local point, relativeTo, relativePoint, offsetX, offsetY = icon:GetPoint()
+            if offsetX ~= nil and offsetY ~= nil then
+                local xDiff = math.abs(xOffset - offsetX)
+                local yDiff = math.abs(y - offsetY)
+                if point == colAnchor and relativePoint == colAnchor and xDiff <= 1 and yDiff <= 1 then
+                    stillNeedToSet = false
+                -- No need to reposition
+                else
+                    if yDiff <= 1 then
+                        y = offsetY
+                    end
+                end
             end
-            SetProperPaddingSetter = C_Timer.After(0.01, function()
-                EditModeManagerFrame:SaveLayoutChanges()
-                ns.API:ShowReloadUIConfirmation()
-            end)
-        else
-            -- print("Proper padding for " .. viewerName .. " is already set to " .. padding)
+        end
+        if stillNeedToSet then
+            icon:ClearAllPoints()
+            icon:SetPoint(colAnchor, viewer, colAnchor, xOffset, y)
         end
     end
 end
 
-function ViewerAdapters.CenterAllRows(viewer, fromDirection)
-    -- Why: Core centering routine that groups children into rows/columns and applies offsets.
-    -- When: `UpdateViewerLayout` determines centering is enabled and changes require recompute.
-    if not viewer then
-        return
+function ViewerAdapters.UpdateViewerSizeIfChanged(viewer)
+    local viewerName = viewer:GetName()
+    local currentWidth = viewer:GetWidth()
+    local currentHeight = viewer:GetHeight()
+
+    local children = ViewerAdapters.CollectViewerChildren(viewer)
+    local top, right, bottom, left = 0, 0, 999999, 999999
+    for _, child in ipairs(children) do
+        local scale = child:GetEffectiveScale() / viewer:GetEffectiveScale()
+        local cTop = child:GetTop() or 0
+        local cRight = child:GetRight() or 0
+        local cBottom = child:GetBottom() or 0
+        local cLeft = child:GetLeft() or 0
+        cTop = cTop * scale
+        cRight = cRight * scale
+        cBottom = cBottom * scale
+        cLeft = cLeft * scale
+        if cTop > top then
+            top = cTop
+        end
+        if cRight > right then
+            right = cRight
+        end
+        if cBottom < bottom then
+            bottom = cBottom
+        end
+        if cLeft < left then
+            left = cLeft
+        end
     end
-    if viewer.layoutApplyInProgress or not viewer:IsInitialized() then
+
+    local targetWidth = (right - left)
+    local targetHeight = (top - bottom)
+
+    if abs(currentWidth - targetWidth) >= 1 or abs(currentHeight - targetHeight) >= 1 then
+        viewer:SetWidth(targetWidth)
+        viewer:SetHeight(targetHeight)
+        viewer:SetSize(targetWidth, targetHeight)
+    end
+end
+
+function ViewerAdapters.UpdateEssential()
+    ViewerAdapters.UpdateCDViewer(
+        EssentialCooldownViewer,
+        ns.db.profile.cooldownManager_centerEssential_growFromDirection
+    )
+end
+
+function ViewerAdapters.UpdateUtility()
+    ViewerAdapters.UpdateCDViewer(UtilityCooldownViewer, ns.db.profile.cooldownManager_centerUtility_growFromDirection)
+end
+
+function ViewerAdapters.UpdateCDViewer(viewer, fromDirection)
+    if not ns.Runtime:IsReady(viewer) then
         return
     end
 
@@ -571,6 +540,10 @@ function ViewerAdapters.CenterAllRows(viewer, fromDirection)
     end
 
     local children = ViewerAdapters.CollectViewerChildren(viewer)
+    -- todo refactor DIMing as now we have to "early" return after collecting children, to leave dimming working
+    if fromDirection == "Disable" or #children == 0 then
+        return
+    end
 
     local first = children[1]
     if not first then
@@ -582,7 +555,11 @@ function ViewerAdapters.CenterAllRows(viewer, fromDirection)
     end
 
     local padding = isHorizontal and viewer.childXPadding or viewer.childYPadding
-    if viewerName == "UtilityCooldownViewer" and ns.db.profile.cooldownManager_limitUtilitySizeToEssential then
+    if
+        viewerName == "UtilityCooldownViewer"
+        and ns.db.profile.cooldownManager_limitUtilitySizeToEssential
+        and isHorizontal
+    then
         local essentialViewer = viewers["EssentialCooldownViewer"]
         if essentialViewer then
             local eWidth = essentialViewer:GetWidth()
@@ -590,7 +567,7 @@ function ViewerAdapters.CenterAllRows(viewer, fromDirection)
                 local iconActualWidth = (w + padding) * viewer.iconScale
                 local maxIcons = floor((eWidth + (padding * viewer.iconScale)) / iconActualWidth)
                 if maxIcons > 0 then
-                    iconLimit = math.min(iconLimit, maxIcons)
+                    iconLimit = math.max(math.min(iconLimit, maxIcons), math.min(iconLimit, 6))
                 end
             end
         end
@@ -600,48 +577,47 @@ function ViewerAdapters.CenterAllRows(viewer, fromDirection)
     if #rows == 0 then
         return
     end
+    local maxIcons = math.min(iconLimit, #children)
+
+    -- Get subsequent row scaling factor for this viewer (only Essential and Utility support it)
+    local settingKey = viewerToSettingKey[viewerName]
 
     if isHorizontal then
         local rowOffsetModifier = fromDirection == "BOTTOM" and 1 or -1
         local iconDirectionModifier = iconDirection == "NORMAL" and 1 or -1
-        local rowAnchor = (fromDirection == "BOTTOM") and "BOTTOM" or "TOP"
+        local fromAnchor1 = fromDirection == "BOTTOM" and "BOTTOM" or "TOP"
+        local fromAnchor2 = iconDirection == "NORMAL" and "LEFT" or "RIGHT"
+        local rowAnchor = fromAnchor1 .. fromAnchor2
+
+        -- if viewer == EssentialCooldownViewer then
+        --     print(ns.Scaling:GetPixelSize(viewer), ns.Scaling:GetPixelSize(first))
+        -- end
+        local cumulativeOffset = 0
         for iRow, row in ipairs(rows) do
-            local yOffset = (iRow - 1) * (h + padding) * rowOffsetModifier
-            PositionRowHorizontal(viewer, row, yOffset, w, padding, iconDirectionModifier, rowAnchor)
+            local currentRowHeight = h
+
+            local yOffset = cumulativeOffset * rowOffsetModifier
+            PositionRowHorizontal(viewer, row, yOffset, w, padding, iconDirectionModifier, rowAnchor, maxIcons, first)
+
+            cumulativeOffset = cumulativeOffset + ns.Scaling:RoundToPixelSize(currentRowHeight + padding)
         end
     else
         local rowOffsetModifier = fromDirection == "BOTTOM" and -1 or 1
         local iconDirectionModifier = iconDirection == "NORMAL" and -1 or 1
-        local colAnchor = (fromDirection == "BOTTOM") and "RIGHT" or "LEFT"
+        local fromAnchor1 = fromDirection == "BOTTOM" and "RIGHT" or "LEFT"
+        local fromAnchor2 = iconDirection == "NORMAL" and "BOTTOM" or "TOP"
+        local colAnchor = fromAnchor2 .. fromAnchor1
+        local cumulativeOffset = 0
         for iRow, row in ipairs(rows) do
-            local xOffset = (iRow - 1) * (w + padding) * rowOffsetModifier
-            PositionRowVertical(viewer, row, xOffset, h, padding, iconDirectionModifier, colAnchor)
+            local currentColWidth = w
+
+            local xOffset = cumulativeOffset * rowOffsetModifier
+            PositionRowVertical(viewer, row, xOffset, h, padding, iconDirectionModifier, colAnchor, maxIcons, first)
+
+            cumulativeOffset = cumulativeOffset + ns.Scaling:RoundToPixelSize(currentColWidth + padding)
         end
     end
-end
-
-function CooldownManager.UpdateViewerLayout(viewer, settingsKey)
-    -- Why: Gate the centering feature per-viewer based on profile toggles and chosen growth.
-    -- When: On layout refresh events, settings changes, or explicit refresh calls.
-    if RuntimeLoop.stop or not viewer then
-        return
-    end
-    local enabledKey = "cooldownManager_center" .. settingsKey
-    local growKey = enabledKey .. "_growFromDirection"
-    assert(ns.db.profile[growKey] ~= nil, "Database missing grow direction for " .. settingsKey)
-    ViewerAdapters.CenterAllRows(viewer, ns.db.profile[growKey])
-end
-
-function CooldownManager.UpdateEssentialIfNeeded()
-    -- Why: Back-compat entrypoint to center Essential viewer when enabled.
-    -- When: On layout refresh events or explicit refresh calls; early-outs if viewer missing or feature disabled.
-    CooldownManager.UpdateViewerLayout(EssentialCooldownViewer, "Essential")
-end
-
-function CooldownManager.UpdateUtilityIfNeeded()
-    -- Why: Back-compat entrypoint to center Utility viewer when enabled.
-    -- When: On layout refresh events or explicit refresh calls; early-outs if viewer missing or feature disabled.
-    CooldownManager.UpdateViewerLayout(UtilityCooldownViewer, "Utility")
+    ViewerAdapters.UpdateViewerSizeIfChanged(viewer)
 end
 
 local function ShouldDebugRefreshLog()
@@ -654,110 +630,22 @@ end
 function CooldownManager.ForceRefresh(parts)
     parts = parts or { icons = true, bars = true, essential = true, utility = true }
     if parts.icons then
-        StateTracker.MarkBuffIconsDirty()
+        ViewerAdapters.UpdateBuffIcons()
     end
     if parts.bars then
-        StateTracker.MarkBuffBarsDirty()
+        ViewerAdapters.UpdateBuffBars()
     end
     if parts.essential then
-        StateTracker.MarkViewersDirty("EssentialCooldownViewer")
+        ViewerAdapters.UpdateEssential()
     end
     if parts.utility then
-        StateTracker.MarkViewersDirty("UtilityCooldownViewer")
+        ViewerAdapters.UpdateUtility()
     end
 end
 
 function CooldownManager.ForceRefreshAll()
     CooldownManager.ForceRefresh({ icons = true, bars = true, essential = true, utility = true })
-
-    CooldownManager.ApplyCenterXPositions()
 end
-
--- RuntimeLoop: events
-
-RuntimeLoop.frame = RuntimeLoop.frame or CreateFrame("FRAME")
-RuntimeLoop.frame:RegisterEvent("PLAYER_ENTERING_WORLD")
-RuntimeLoop.frame:RegisterEvent("PLAYER_TALENT_UPDATE")
-RuntimeLoop.frame:RegisterEvent("PLAYER_SPECIALIZATION_CHANGED")
-RuntimeLoop.frame:RegisterEvent("UPDATE_SHAPESHIFT_FORM")
-RuntimeLoop.frame:RegisterEvent("PLAYER_REGEN_DISABLED")
-RuntimeLoop.frame:RegisterEvent("SPELL_UPDATE_COOLDOWN")
-RuntimeLoop.frame:RegisterEvent("CINEMATIC_STOP")
-
--- Simple event→refresh routing map for targeted invalidation where safe
-RuntimeLoop.EventRefreshMap = {
-    PLAYER_SPECIALIZATION_CHANGED = { essential = true, utility = true },
-    CINEMATIC_STOP = { essential = true, utility = true },
-}
-
-RuntimeLoop.frame:SetScript("OnEvent", function(_, event)
-    local parts = RuntimeLoop.EventRefreshMap[event]
-    if event == "PLAYER_REGEN_DISABLED" then
-        C_Timer.After(0, function()
-            CooldownManager.ForceRefreshAll()
-        end)
-        return
-    end
-    if event == "SPELL_UPDATE_COOLDOWN" and ns.db.profile.cooldownManager_utility_dimWhenNotOnCD then
-        C_Timer.After(0, function()
-            CooldownManager.ForceRefresh({ utility = true })
-        end)
-        return
-    end
-    if parts then
-        CooldownManager.ForceRefresh(parts)
-    else
-        CooldownManager.ForceRefreshAll()
-    end
-end)
-
-function CooldownManager.CenterViewerXPosition(viewerName, settingKey)
-    if not ns.db or not ns.db.profile then
-        return
-    end
-
-    local viewer = _G[viewerName]
-    if not viewer then
-        return
-    end
-    if ns.API:IsSomeAddOnRestrictionActive() then
-        return
-    end
-    if viewer.ApplySystemAnchor and viewer.systemInfo then
-        viewer:ApplySystemAnchor()
-    end
-    if not ns.db.profile[settingKey] then
-        return
-    end
-
-    local x1 = viewer:GetCenter()
-    local x2 = UIParent:GetCenter()
-    if x1 and x2 and abs(x1 - x2) > 1 then
-        local y = viewer:GetTop()
-        viewer:ClearAllPoints()
-        viewer:SetPoint("TOP", UIParent, "BOTTOM", 0, y)
-    end
-end
-
-function CooldownManager.ApplyCenterXPositions()
-    CooldownManager.CenterViewerXPosition("EssentialCooldownViewer", "cooldownManager_forceCenterX_Essential")
-    CooldownManager.CenterViewerXPosition("UtilityCooldownViewer", "cooldownManager_forceCenterX_Utility")
-    CooldownManager.CenterViewerXPosition("BuffIconCooldownViewer", "cooldownManager_forceCenterX_BuffIcons")
-end
-
-EventRegistry:RegisterCallback("CooldownViewerSettings.OnDataChanged", function()
-    PrintDebug("CooldownViewerSettings.OnDataChanged triggered refresh")
-    ns.Stacks:ApplyAllStackFonts()
-    CooldownManager.ForceRefreshAll("CooldownViewerSettings.OnDataChanged")
-end)
-EventRegistry:RegisterCallback("CooldownViewerSettings.OnShow", function()
-    PrintDebug("CooldownViewerSettings.OnShow triggered refresh")
-    CooldownManager.ForceRefreshAll("CooldownViewerSettings.OnShow")
-end)
-EventRegistry:RegisterCallback("CooldownViewerSettings.OnHide", function()
-    PrintDebug("CooldownViewerSettings.OnHide triggered refresh")
-    CooldownManager.ForceRefreshAll("CooldownViewerSettings.OnHide")
-end)
 
 local viewerReasonPartsMap = {
     EssentialCooldownViewer = { essential = true },
@@ -766,122 +654,6 @@ local viewerReasonPartsMap = {
     BuffBarCooldownViewer = { bars = true },
 }
 
-for n, v in pairs(viewers) do
-    if v.RefreshLayout then
-        hooksecurefunc(v, "RefreshLayout", function()
-            CooldownManager.ForceRefresh(viewerReasonPartsMap[n])
-        end)
-    end
-    if v.Layout then
-        hooksecurefunc(v, "Layout", function()
-            CooldownManager.ForceRefresh(viewerReasonPartsMap[n])
-        end)
-    end
-end
-
 function CooldownManager.Initialize()
     CooldownManager.ForceRefreshAll()
-    C_Timer.After(1, function()
-        ViewerAdapters.SetProperPadding(BuffIconCooldownViewer, "BuffIconCooldownViewer")
-        ViewerAdapters.SetProperPadding(EssentialCooldownViewer, "EssentialCooldownViewer")
-        ViewerAdapters.SetProperPadding(UtilityCooldownViewer, "UtilityCooldownViewer")
-    end)
 end
-
---[[DEBUG EVENTS] ]
-local _ignoredEvents = {
-    OnUpdate = true,
-    OnUnitAura = true,
-    OnUnitTarget = true,
-    CacheLayoutSettings = true,
-    IgnoreLayoutIndex = true,
-    AddLayoutChildren = true,
-    IsDirty = true,
-    MarkClean = true,
-    OnCleaned = true,
-    IsLayoutFrame = true,
-    RefreshActiveFramesForTargetChange = true,
-}
-C_Timer.After(3, function()
-    for n, v in pairs(UtilityCooldownViewer) do
-        if type(v) == "function" then
-            -- print(n)
-        end
-        if type(v) == "function" and not _ignoredEvents[n] then
-            hooksecurefunc(UtilityCooldownViewer, n, function(...)
-                local str = n .. ":"
-                for i, v in ipairs(...) do
-                    if type(v) == "string" then
-                        str = str + v
-                    end
-                end
-                if str ~= "" then
-                    print(str)
-                end
-            end)
-        end
-    end
-end)
---]]
-
---[[DEBUG] ]
-local testFrame = CreateFrame("FRAME")
-local testData = {
-    iconHeight = nil,
-    iconWidth = nil,
-    firstIconCenterX = nil,
-    firstIconCenterY = nil,
-    elementHeight = nil,
-    elementTop = nil,
-    elementBottom = nil,
-}
-testFrame:SetScript("OnUpdate", function(_, elapsed)
-    local viewer = UtilityCooldownViewer
-    if not viewer then
-        return
-    end
-    local children = ViewerAdapters.CollectViewerChildren(viewer)
-    if not children or #children == 0 then
-        return
-    end
-
-    for _, child in ipairs(children) do
-        local icon = child and (child.icon or child.Icon)
-        if icon then
-            if testData.iconHeight ~= icon:GetHeight() then
-                print("Icon Height changed:", testData.iconHeight, "->", icon:GetHeight())
-            end
-            testData.iconHeight = icon:GetHeight()
-            if testData.iconWidth ~= icon:GetWidth() then
-                print("Icon Width changed:", testData.iconWidth, "->", icon:GetWidth())
-            end
-            testData.iconWidth = icon:GetWidth()
-            local x, y = icon:GetCenter()
-
-            if testData.firstIconCenterX ~= x then
-                print("First Icon Center X changed:", testData.firstIconCenterX, "->", x)
-            end
-
-            testData.firstIconCenterX = x
-            if testData.firstIconCenterY ~= y then
-                print("First Icon Center Y changed:", testData.firstIconCenterY, "->", y)
-            end
-            testData.firstIconCenterY = y
-
-            break
-        end
-    end
-    if testData.elementHeight ~= viewer:GetHeight() then
-        print("Viewer Height changed:", testData.elementHeight, "->", viewer:GetHeight())
-    end
-    testData.elementHeight = viewer:GetHeight()
-    if testData.elementTop ~= viewer:GetTop() then
-        print("Viewer Top changed:", testData.elementTop, "->", viewer:GetTop())
-    end
-    testData.elementTop = viewer:GetTop()
-    if testData.elementBottom ~= viewer:GetBottom() then
-        print("Viewer Bottom changed:", testData.elementBottom, "->", viewer:GetBottom())
-    end
-    testData.elementBottom = viewer:GetBottom()
-end)
---]]

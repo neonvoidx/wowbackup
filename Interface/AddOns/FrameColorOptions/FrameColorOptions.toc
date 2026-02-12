@@ -1,5 +1,5 @@
 ## Interface: 120000
-## Version: 4.6.0
+## Version: 4.7.0
 ## Title: FrameColor Options
 ## Author: Slothpala
 ## LoadOnDemand: 1

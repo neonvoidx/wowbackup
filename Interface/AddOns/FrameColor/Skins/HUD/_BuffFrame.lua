@@ -31,7 +31,6 @@ function skin:Apply(mainColor, isEnable)
     if isEnable then
       widget.Icon:SetTexCoord(0.135, 0.865, 0.135, 0.865)
       self:ApplyBuffBorder(widget, mainColor)
-      self:HookFunc(widget.Duration, "SetPoint", "UpdateTimerAnchor")
     else
       widget.Icon:SetTexCoord(0, 1, 0, 1)
       if widget.border then
@@ -63,29 +62,4 @@ function skin:ApplyBuffBorder(widget, borderColor)
 
   -- Save the border on the widget.
   widget.border = border
-end
-
-function skin:UpdateTimerAnchor(fontString)
-  -- Prevent recursion using a flag
-  if fontString._updatingAnchor then
-    return
-  end
-
-  fontString._updatingAnchor = true  -- Set the flag
-
-  local point, relativeTo, relativePoint, offsetX, offsetY = fontString:GetPoint()
-
-  if point == "TOP" then
-    offsetY = -2
-  elseif point == "BOTTOM" then
-    offsetY = 2
-  elseif point == "LEFT" then
-    offsetX = 2
-  elseif point == "RIGHT" then
-    offsetX = -2
-  end
-
-  fontString:SetPoint(point, relativeTo, relativePoint, offsetX, offsetY)
-
-  fontString._updatingAnchor = false  -- Reset the flag
 end

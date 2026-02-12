@@ -1,24 +1,46 @@
 local _, addonTable = ...
 
 local LEM = addonTable.LEM or LibStub("LibEQOLEditMode-1.0")
+local L = addonTable.L
 
 local SecondaryResourceBarMixin = Mixin({}, addonTable.PowerBarMixin)
-local buildVersion = select(4, GetBuildInfo())
+
+function SecondaryResourceBarMixin:OnLoad()
+    addonTable.PowerBarMixin.OnLoad(self)
+
+    -- Modules for the special cases requiring more work
+    addonTable.TipOfTheSpear:OnLoad(self)
+    addonTable.Whirlwind:OnLoad(self)
+end
+
+function SecondaryResourceBarMixin:OnEvent(event, ...)
+    addonTable.PowerBarMixin.OnEvent(self, event, ...)
+
+    -- Modules for the special cases requiring more work
+    addonTable.TipOfTheSpear:OnEvent(self, event, ...)
+    addonTable.Whirlwind:OnEvent(self, event, ...)
+end
 
 function SecondaryResourceBarMixin:GetResource()
     local playerClass = select(2, UnitClass("player"))
-    local secondaryResources = {
+    self._resourceTable = self._resourceTable or {
         ["DEATHKNIGHT"] = Enum.PowerType.Runes,
         ["DEMONHUNTER"] = {
+            [581] = "SOUL_FRAGMENTS_VENGEANCE", -- Vengeance
             [1480] = "SOUL_FRAGMENTS", -- Devourer
         },
         ["DRUID"]       = {
+            [0]                     = {
+                [102] = Enum.PowerType.Mana, -- Balance
+            },
             [DRUID_CAT_FORM]        = Enum.PowerType.ComboPoints,
             [DRUID_MOONKIN_FORM_1]  = Enum.PowerType.Mana,
             [DRUID_MOONKIN_FORM_2]  = Enum.PowerType.Mana,
         },
         ["EVOKER"]      = Enum.PowerType.Essence,
-        ["HUNTER"]      = nil,
+        ["HUNTER"]      = {
+            [255] = "TIP_OF_THE_SPEAR", -- Survival
+        },
         ["MAGE"]        = {
             [62]   = Enum.PowerType.ArcaneCharges, -- Arcane
         },
@@ -33,44 +55,36 @@ function SecondaryResourceBarMixin:GetResource()
         ["ROGUE"]       = Enum.PowerType.ComboPoints,
         ["SHAMAN"]      = {
             [262]  = Enum.PowerType.Mana, -- Elemental
-            [263] =  Enum.PowerType.Mana, -- Enhancement
+            [263]  = "MAELSTROM_WEAPON", -- Enhancement
         },
         ["WARLOCK"]     = Enum.PowerType.SoulShards,
-        ["WARRIOR"]     = nil,
+        ["WARRIOR"]     = {
+            [72] = "WHIRLWIND", -- Fury
+        },
     }
 
     local spec = C_SpecializationInfo.GetSpecialization()
     local specID = C_SpecializationInfo.GetSpecializationInfo(spec)
 
+    local resource = self._resourceTable[playerClass]
+
     -- Druid: form-based
     if playerClass == "DRUID" then
         local formID = GetShapeshiftFormID()
-        return secondaryResources[playerClass] and secondaryResources[playerClass][formID or 0]
+        resource = resource and resource[formID or 0]
     end
 
-    if type(secondaryResources[playerClass]) == "table" then
-        return secondaryResources[playerClass][specID]
+    if type(resource) == "table" then
+        return resource[specID]
     else
-        return secondaryResources[playerClass]
+        return resource
     end
 end
 
-local abbrevDataWarlockSoulShards = {
-  breakpointData = {
-    {
-      breakpoint = 0,
-      abbreviation = "",
-      significandDivisor = 1,
-      fractionDivisor = 10,
-      abbreviationIsGlobal = false,
-    },
-  },
-}
-
 function SecondaryResourceBarMixin:GetResourceValue(resource)
-    if not resource then return nil, nil, nil, nil, nil end
+    if not resource then return nil, nil end
     local data = self:GetData()
-    if not data then return nil, nil, nil, nil, nil end
+    if not data then return nil, nil end
 
     if resource == "STAGGER" then
         local stagger = UnitStagger("player") or 0
@@ -86,28 +100,27 @@ function SecondaryResourceBarMixin:GetResourceValue(resource)
         end
         self._lastStaggerPercent = staggerPercent
 
-        if data.textFormat == "Percent" or data.textFormat == "Percent%" then
-            return maxHealth, maxHealth, stagger, staggerPercent, "percent"
-        else
-            return maxHealth, maxHealth, stagger, stagger, "number"
-        end
+        return maxHealth, stagger
+    end
+
+    if resource == "SOUL_FRAGMENTS_VENGEANCE" then
+        local current = C_Spell.GetSpellCastCount(228477) or 0 -- Soul Cleave
+        local max = 6
+
+        return max, current
     end
 
     if resource == "SOUL_FRAGMENTS" then
         local auraData = C_UnitAuras.GetPlayerAuraBySpellID(1225789) or C_UnitAuras.GetPlayerAuraBySpellID(1227702) -- Soul Fragments / Collapsing Star
         local current = auraData and auraData.applications or 0
-        local max = 50
+        local max = C_SpellBook.IsSpellKnown(1247534) and 35 or 50 -- Soul Glutton
 
         -- For performance, only update the foreground when current is below 1, this happens when switching in/out of Void Metamorphosis
         if current <= 1 then
             self:ApplyForegroundSettings()
         end
 
-        if data.textFormat == "Percent" or data.textFormat == "Percent%" then
-            return max, max, current, math.floor((current / max) * 100 + 0.5), "percent"
-        else
-            return max, max, current, current, "number"
-        end
+        return max, current
     end
 
     if resource == Enum.PowerType.Runes then
@@ -115,56 +128,151 @@ function SecondaryResourceBarMixin:GetResourceValue(resource)
         local max = UnitPowerMax("player", resource)
         if max <= 0 then return nil, nil, nil, nil, nil end
 
+        -- Cache rune cooldown data to avoid redundant GetRuneCooldown calls in UpdateFragmentedPowerDisplay
+        if not self._runeCooldownCache then
+            self._runeCooldownCache = {}
+        end
+
         for i = 1, max do
-            local runeReady = select(3, GetRuneCooldown(i))
+            local start, duration, runeReady = GetRuneCooldown(i)
+            self._runeCooldownCache[i] = { start = start, duration = duration, runeReady = runeReady }
             if runeReady then
                 current = current + 1
             end
         end
 
-        if data.textFormat == "Percent" or data.textFormat == "Percent%" then
-            return max, max, current, math.floor((current / max) * 100 + 0.5), "percent"
-        else
-            return max, max, current, current, "number"
-        end
+        return max, current
     end
 
     if resource == Enum.PowerType.SoulShards then
-        local current = UnitPower("player", resource, true)
-        local max = UnitPowerMax("player", resource, true)
-        if max <= 0 then return nil, nil, nil, nil, nil end
+        local spec = C_SpecializationInfo.GetSpecialization()
+        local specID = C_SpecializationInfo.GetSpecializationInfo(spec)
 
-        if data.textFormat == "Percent" or data.textFormat == "Percent%" then
-            return max, max, current, math.floor((current / max) * 100 + 0.5), "percent"
-        else
-            return max, max / 10, current, current / 10, "number"
-        end
+        -- If true, current and max will be something like 14 for 1.4 shard, instead of 1
+        local preciseResourceCount = specID == 267
+
+        local current = UnitPower("player", resource, preciseResourceCount)
+        local max = UnitPowerMax("player", resource, preciseResourceCount)
+        if max <= 0 then return nil, nil end
+
+        return max, current
+    end
+
+    if resource == "MAELSTROM_WEAPON" then
+        local auraData = C_UnitAuras.GetPlayerAuraBySpellID(344179) -- Maelstrom Weapon
+        local current = auraData and auraData.applications or 0
+        local max = 10
+
+        return max / 2, current
+    end
+
+    if resource == "TIP_OF_THE_SPEAR" then
+        return addonTable.TipOfTheSpear:GetStacks()
+    end
+
+    if resource == "WHIRLWIND" then
+        return addonTable.Whirlwind:GetStacks()
     end
 
     -- Regular secondary resource types
     local current = UnitPower("player", resource)
     local max = UnitPowerMax("player", resource)
-    if max <= 0 then return nil, nil, nil, nil, nil end
+    if max <= 0 then return nil, nil end
 
-    if (data.showManaAsPercent and resource == Enum.PowerType.Mana) or data.textFormat == "Percent" or data.textFormat == "Percent%" then
-        -- UnitPowerPercent does not exist prior to Midnight
-        if (buildVersion or 0) < 120000 then
-            return max, max, current, math.floor((current / max) * 100 + 0.5), "percent"
-        else
-            return max, max, current, UnitPowerPercent("player", resource, false, CurveConstants.ScaleTo100), "percent"
+    return max, current
+end
+
+function SecondaryResourceBarMixin:GetTagValues(resource, max, current, precision)
+    local pFormat = "%." .. (precision or 0) .. "f"
+
+    local tagValues = addonTable.PowerBarMixin.GetTagValues(self, resource, max, current, precision)
+
+    if resource == "STAGGER" then
+        local staggerPercentStr = string.format(pFormat, self._lastStaggerPercent)
+        tagValues["[percent]"] = function() return staggerPercentStr end
+    end
+
+    if resource == "SOUL_FRAGMENTS_VENGEANCE" then
+        tagValues["[percent]"] = function() return '' end -- As the value is secret, cannot get percent for it
+    end
+
+    if resource == Enum.PowerType.SoulShards then
+        local spec = C_SpecializationInfo.GetSpecialization()
+        local specID = C_SpecializationInfo.GetSpecializationInfo(spec)
+
+        if specID == 267 then
+            current = current / 10
+            max = max / 10
         end
-    else
-        return max, max, current, current, "number"
+
+        local currentStr = string.format("%s", AbbreviateNumbers(current))
+        local maxStr = string.format("%s", AbbreviateNumbers(max))
+        tagValues["[current]"] = function() return currentStr end
+        tagValues["[max]"] = function() return maxStr end
+    end
+
+    if resource == "MAELSTROM_WEAPON" then
+        local percentStr = string.format(pFormat, (current / (max * 2)) * 100)
+        local maxStr = string.format("%s", AbbreviateNumbers(max * 2))
+        tagValues["[percent]"] = function() return percentStr end
+        tagValues["[max]"] = function() return maxStr end
+    end
+
+    return tagValues
+end
+
+function SecondaryResourceBarMixin:ApplyVisibilitySettings(layoutName, inCombat)
+    local data = self:GetData(layoutName)
+    if not data then return end
+
+    self:HideBlizzardSecondaryResource(layoutName, data)
+
+    addonTable.PowerBarMixin.ApplyVisibilitySettings(self, layoutName, inCombat)
+end
+
+function SecondaryResourceBarMixin:HideBlizzardSecondaryResource(layoutName, data)
+    data = data or self:GetData(layoutName)
+    if not data then return end
+
+    -- Blizzard Frames are protected in combat
+    if data.hideBlizzardSecondaryResourceUi == nil or InCombatLockdown() then return end
+
+    local playerClass = select(2, UnitClass("player"))
+    local blizzardResourceFrames = {
+        ["DEATHKNIGHT"] = RuneFrame,
+        ["DRUID"] = DruidComboPointBarFrame,
+        ["EVOKER"] = EssencePlayerFrame,
+        ["MAGE"] = MageArcaneChargesFrame,
+        ["MONK"] = MonkHarmonyBarFrame,
+        ["PALADIN"] = PaladinPowerBarFrame,
+        ["ROGUE"] = RogueComboPointBarFrame,
+        ["WARLOCK"] = WarlockPowerFrame,
+    }
+
+    for class, f in pairs(blizzardResourceFrames) do
+        if f and playerClass == class then
+            if data.hideBlizzardSecondaryResourceUi == true then
+                if LEM:IsInEditMode() then
+                    if class ~= "DRUID" or (class == "DRUID" and GetShapeshiftFormID() == DRUID_CAT_FORM) then
+                        f:Show()
+                    end
+                else
+                    f:Hide()
+                end
+            elseif class ~= "DRUID" or (class == "DRUID" and GetShapeshiftFormID() == DRUID_CAT_FORM) then
+                f:Show()
+            end
+        end
     end
 end
 
 addonTable.SecondaryResourceBarMixin = SecondaryResourceBarMixin
 
-addonTable.RegistereredBar = addonTable.RegistereredBar or {}
-addonTable.RegistereredBar.SecondaryResourceBar = {
+addonTable.RegisteredBar = addonTable.RegisteredBar or {}
+addonTable.RegisteredBar.SecondaryResourceBar = {
     mixin = addonTable.SecondaryResourceBarMixin,
     dbName = "SecondaryResourceBarDB",
-    editModeName = "Secondary Resource Bar",
+    editModeName = L["SECONDARY_POWER_BAR_EDIT_MODE_NAME"],
     frameName = "SecondaryResourceBar",
     frameLevel = 2,
     defaultValues = {
@@ -173,19 +281,21 @@ addonTable.RegistereredBar.SecondaryResourceBar = {
         y = -40,
         hideBlizzardSecondaryResourceUi = false,
         hideManaOnRole = {},
+        showManaAsPercent = false,
         showTicks = true,
         tickColor = {r = 0, g = 0, b = 0, a = 1},
         tickThickness = 1,
         useResourceAtlas = false,
     },
     lemSettings = function(bar, defaults)
-        local dbName = bar:GetConfig().dbName
+        local config = bar:GetConfig()
+        local dbName = config.dbName
 
         return {
             {
-                parentId = "Bar Visibility",
+                parentId = L["CATEGORY_BAR_VISIBILITY"],
                 order = 103,
-                name = "Hide Mana On Role",
+                name = L["HIDE_MANA_ON_ROLE"],
                 kind = LEM.SettingType.MultiDropdown,
                 default = defaults.hideManaOnRole,
                 values = addonTable.availableRoleOptions,
@@ -200,9 +310,9 @@ addonTable.RegistereredBar.SecondaryResourceBar = {
                 end,
             },
             {
-                parentId = "Bar Visibility",
+                parentId = L["CATEGORY_BAR_VISIBILITY"],
                 order = 105,
-                name = "Hide Blizzard UI",
+                name = L["HIDE_BLIZZARD_UI"],
                 kind = LEM.SettingType.Checkbox,
                 default = defaults.hideBlizzardSecondaryResourceUi,
                 get = function(layoutName)
@@ -218,17 +328,17 @@ addonTable.RegistereredBar.SecondaryResourceBar = {
                     SenseiClassResourceBarDB[dbName][layoutName].hideBlizzardSecondaryResourceUi = value
                     bar:HideBlizzardSecondaryResource(layoutName)
                 end,
-                tooltip = "Hides the default Blizzard secondary resource UI (e.g. Rune Frame for Death Knights)",
+                tooltip = L["HIDE_BLIZZARD_UI_SECONDARY_POWER_BAR_TOOLTIP"],
             },
             {
-                parentId = "Bar Settings",
+                parentId = L["CATEGORY_BAR_SETTINGS"],
                 order = 304,
                 kind = LEM.SettingType.Divider,
             },
             {
-                parentId = "Bar Settings",
+                parentId = L["CATEGORY_BAR_SETTINGS"],
                 order = 305,
-                name = "Show Ticks When Available",
+                name = L["SHOW_TICKS_WHEN_AVAILABLE"],
                 kind = LEM.SettingType.CheckboxColor,
                 default = defaults.showTicks,
                 colorDefault = defaults.tickColor,
@@ -256,9 +366,9 @@ addonTable.RegistereredBar.SecondaryResourceBar = {
                 end,
             },
             {
-                parentId = "Bar Settings",
+                parentId = L["CATEGORY_BAR_SETTINGS"],
                 order = 306,
-                name = "Tick Thickness",
+                name = L["TICK_THICKNESS"],
                 kind = LEM.SettingType.Slider,
                 default = defaults.tickThickness,
                 minValue = 1,
@@ -266,11 +376,11 @@ addonTable.RegistereredBar.SecondaryResourceBar = {
                 valueStep = 1,
                 get = function(layoutName)
                     local data = SenseiClassResourceBarDB[dbName][layoutName]
-                    return data and data.tickThickness or defaults.tickThickness
+                    return data and addonTable.rounded(data.tickThickness) or defaults.tickThickness
                 end,
                 set = function(layoutName, value)
                     SenseiClassResourceBarDB[dbName][layoutName] = SenseiClassResourceBarDB[dbName][layoutName] or CopyTable(defaults)
-                    SenseiClassResourceBarDB[dbName][layoutName].tickThickness = value
+                    SenseiClassResourceBarDB[dbName][layoutName].tickThickness = addonTable.rounded(value)
                     bar:UpdateTicksLayout(layoutName)
                 end,
                 isEnabled = function(layoutName)
@@ -279,9 +389,29 @@ addonTable.RegistereredBar.SecondaryResourceBar = {
                 end,
             },
             {
-                parentId = "Text Settings",
-                order = 405,
-                name = "Show Mana As Percent",
+                parentId = L["CATEGORY_BAR_STYLE"],
+                order = 401,
+                name = L["USE_RESOURCE_TEXTURE_AND_COLOR"],
+                kind = LEM.SettingType.Checkbox,
+                default = defaults.useResourceAtlas,
+                get = function(layoutName)
+                    local data = SenseiClassResourceBarDB[dbName][layoutName]
+                    if data and data.useResourceAtlas ~= nil then
+                        return data.useResourceAtlas
+                    else
+                        return defaults.useResourceAtlas
+                    end
+                end,
+                set = function(layoutName, value)
+                    SenseiClassResourceBarDB[dbName][layoutName] = SenseiClassResourceBarDB[dbName][layoutName] or CopyTable(defaults)
+                    SenseiClassResourceBarDB[dbName][layoutName].useResourceAtlas = value
+                    bar:ApplyLayout(layoutName)
+                end,
+            },
+            {
+                parentId = L["CATEGORY_TEXT_SETTINGS"],
+                order = 505,
+                name = L["SHOW_MANA_AS_PERCENT"],
                 kind = LEM.SettingType.Checkbox,
                 default = defaults.showManaAsPercent,
                 get = function(layoutName)
@@ -301,17 +431,17 @@ addonTable.RegistereredBar.SecondaryResourceBar = {
                     local data = SenseiClassResourceBarDB[dbName][layoutName]
                     return data.showText
                 end,
-                tooltip = "Force the Percent format on Mana",
+                tooltip = L["SHOW_MANA_AS_PERCENT_TOOLTIP"],
             },
             {
-                parentId = "Text Settings",
-                order = 406,
+                parentId = L["CATEGORY_TEXT_SETTINGS"],
+                order = 506,
                 kind = LEM.SettingType.Divider,
             },
             {
-                parentId = "Text Settings",
-                order = 407,
-                name = "Show Resource Charge Timer (e.g. Runes)",
+                parentId = L["CATEGORY_TEXT_SETTINGS"],
+                order = 507,
+                name = L["SHOW_RESOURCE_CHARGE_TIMER"],
                 kind = LEM.SettingType.CheckboxColor,
                 default = defaults.showFragmentedPowerBarText,
                 colorDefault = defaults.fragmentedPowerBarTextColor,
@@ -339,9 +469,9 @@ addonTable.RegistereredBar.SecondaryResourceBar = {
                 end,
             },
             {
-                parentId = "Text Settings",
-                order = 408,
-                name = "Charge Timer Precision",
+                parentId = L["CATEGORY_TEXT_SETTINGS"],
+                order = 508,
+                name = L["CHARGE_TIMER_PRECISION"],
                 kind = LEM.SettingType.Dropdown,
                 default = defaults.fragmentedPowerBarTextPrecision,
                 useOldStyle = true,
@@ -357,26 +487,6 @@ addonTable.RegistereredBar.SecondaryResourceBar = {
                 isEnabled = function(layoutName)
                     local data = SenseiClassResourceBarDB[dbName][layoutName]
                     return data.showFragmentedPowerBarText
-                end,
-            },
-            {
-                parentId = "Bar Style",
-                order = 606,
-                name = "Use Resource Foreground And Color",
-                kind = LEM.SettingType.Checkbox,
-                default = defaults.useResourceAtlas,
-                get = function(layoutName)
-                    local data = SenseiClassResourceBarDB[dbName][layoutName]
-                    if data and data.useResourceAtlas ~= nil then
-                        return data.useResourceAtlas
-                    else
-                        return defaults.useResourceAtlas
-                    end
-                end,
-                set = function(layoutName, value)
-                    SenseiClassResourceBarDB[dbName][layoutName] = SenseiClassResourceBarDB[dbName][layoutName] or CopyTable(defaults)
-                    SenseiClassResourceBarDB[dbName][layoutName].useResourceAtlas = value
-                    bar:ApplyLayout(layoutName)
                 end,
             },
         }

@@ -5016,7 +5016,7 @@ SlashCmdList["BBF"] = function(msg)
             BBF.Print(L["Print_Usage_Blacklist"])
         end
     elseif command == "ver" or command == "version" then
-        BBF.Print("Version "..addonUpdates, true)
+        BBF.Print(addonUpdates, true)
     elseif command == "dump" then
         local exportVersion = BetterBlizzFramesDB.exportVersion or L["Chat_No_Export_Version"]
         BBF.Print("\n\n"..exportVersion)
@@ -5038,7 +5038,7 @@ SlashCmdList["BBF"] = function(msg)
 end
 
 local function MoveableSettingsPanel(talents)
-    if C_AddOns.IsAddOnLoaded("BlizzMove") then return end
+    if C_AddOns.IsAddOnLoaded("BlizzMove") or C_AddOns.IsAddOnLoaded("MoveAny") then return end
     if BetterBlizzFramesDB.dontMoveSettingsPanel then return end
     if not talents then
         local frame = SettingsPanel
@@ -5230,10 +5230,6 @@ First:SetScript("OnEvent", function(_, event, addonName)
         BBF.InitializeOptions()
     elseif addonName == "Blizzard_PlayerSpells" and _G.HeroTalentsSelectionDialog and _G.PlayerSpellsFrame then
         MoveableSettingsPanel(true)
-    elseif addonName == "Clique" then
-        if BetterBlizzFramesDB.noPortraitModes or BetterBlizzFramesDB.noPortraitPixelBorder then
-
-        end
     end
 end)
 

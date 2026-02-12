@@ -22,11 +22,11 @@ BtWLoadoutsCollapsed = {
 },
 ["conditions"] = {
 },
+["talents"] = {
+},
 ["profiles"] = {
 ["children"] = {
 },
-},
-["talents"] = {
 },
 }
 BtWLoadoutsCategories = {
@@ -47,15 +47,15 @@ BtWLoadoutsCategories = {
 ["dftalents"] = {
 "spec",
 },
-["actionbars"] = {
+["essences"] = {
+"role",
 },
 ["conditions"] = {
 },
 ["soulbinds"] = {
 "covenant",
 },
-["essences"] = {
-"role",
+["actionbars"] = {
 },
 }
 BtWLoadoutsFilters = {
@@ -73,8 +73,8 @@ BtWLoadoutsFilters = {
 },
 ["conditions"] = {
 },
-["profiles"] = {
-},
 ["talents"] = {
+},
+["profiles"] = {
 },
 }

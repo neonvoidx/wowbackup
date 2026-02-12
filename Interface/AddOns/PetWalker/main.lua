@@ -424,7 +424,7 @@ function ns:new_pet(the_time, manually_called)
 	local npool = #ns.pet_pool
 	local newpet
 	if npool == 0 then
-		if now - time_pool_msg > 30 then
+		if now - time_pool_msg > 90 then
 			ns.msg_low_petpool(npool)
 			time_pool_msg = now
 		end
@@ -594,7 +594,11 @@ function ns.save_pet()
 	local db = ns.dbc.charFavsEnabled and ns.db.favsOnly and ns.dbc or ns.db
 	if db.recentPets[1] == actpet then return end
 	for i = #db.recentPets, 1, -1 do
-		if db.recentPets[i] == actpet then table.remove(db.recentPets, i) end
+		if db.recentPets[i] == actpet then
+			table.remove(db.recentPets, i)
+			ns.debugprint('Removed a duplicate from recent pets at idx ' .. i .. '.')
+-- 			ns.msg_recents_dupe_removed(i)
+		end
 	end
 	table.insert(db.recentPets, 1, actpet)
 	while #db.recentPets > ns.db.numRecents do
@@ -672,7 +676,7 @@ function ns.initialize_pool()
 	end
 	ns.pool_initialized = true -- Condition in ns:new_pet and ns.ManualSummonNew
 	local now = time()
-	if #ns.pet_pool <= 0 and ns.db.newPetTimer ~= 0 and now - time_pool_msg > 30 then
+	if #ns.pet_pool <= 0 and ns.db.newPetTimer ~= 0 and now - time_pool_msg > 90 then
 		ns.msg_low_petpool(#ns.pet_pool)
 		time_pool_msg = now
 	end

@@ -159,7 +159,7 @@ L["_CooldownViewerSettings"] = "Cooldown Settings"
 L["_OrderHallMissionFrame"] = "Scouting Map"
 L["_HousingDashboardFrame"] = "Housing Dashboard"
 L["_TransmogFrame"] = "Transmogrify"
-
+L["_DamageMeter"] = "Damage Meter"
 
 -- [[ Addon Skins ]] --
 L["_LibDBIcon"] = "Minimap Icons (LibDBIcon)"

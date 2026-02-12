@@ -159,15 +159,9 @@ CONDITIONS["canexitvehicle"] = {
 CONDITIONS["channeling"] = {
     -- name = CHANNELING,
     handler =
-        function (cond, context, v)
+        function (cond, context)
             local unit = context.rule.unit or "player"
-            if not v then
-                return UnitChannelInfo(unit) ~= nil
-            elseif tonumber(v) then
-                return select(8, UnitChannelInfo(unit)) == tonumber(v)
-            else
-                return UnitChannelInfo(unit) == v
-            end
+            return UnitChannelInfo(unit) ~= nil
         end
 }
 
@@ -402,6 +396,7 @@ CONDITIONS["drivable"] = {
 }
 
 CONDITIONS["driving"] = {
+    disabled = ( IsDrivableArea == nil ),
     handler =
         function (cond, context)
             -- Only one D.R.I.V.E. mount so far. Maybe in the future Blizzard will
@@ -887,10 +882,14 @@ CONDITIONS["keystone"] = {
         end,
     handler =
         function (cond, context, minLevel, maxLevel)
-            minLevel = tonumber(minLevel) or 0
-            maxLevel = tonumber(maxLevel) or math.huge
-            local keyLevel = C_ChallengeMode.GetActiveKeystoneInfo()
-            return (keyLevel >= minLevel) and (keyLevel <= maxLevel)
+            if C_ChallengeMode.IsChallengeModeActive() then
+                minLevel = tonumber(minLevel) or 0
+                maxLevel = tonumber(maxLevel) or math.huge
+                local keyLevel = C_ChallengeMode.GetActiveKeystoneInfo()
+                return (keyLevel >= minLevel) and (keyLevel <= maxLevel)
+            else
+                return false
+            end
         end
 }
 
@@ -1727,8 +1726,24 @@ local function GetTransmogSetsMenu()
     return sets
 end
 
--- The args version of this takes slotid/appearanceid and really should be junked
--- now that the other form works. Well, if it reliably did. :(
+local function GetTransmogOutfitsMenu()
+    local outfits = { text = TRANSMOG_OUTFIT_HYPERLINK_TEXT:match("|t(.*)") }
+    for _, info in ipairs(C_TransmogOutfitInfo.GetOutfitsInfo()) do
+        table.insert(outfits, { val = "xmog:"..info.name, text = info.name })
+    end
+    return outfits
+end
+
+local function IsTransmogOutfitActive(name)
+    local id = C_TransmogOutfitInfo.GetActiveOutfitID()
+    if id then
+        local info = C_TransmogOutfitInfo.GetOutfitInfo(id)
+        if info then
+            return info.name == name
+        end
+    end
+    return false
+end
 
 CONDITIONS["xmog"] = {
     name = PERKS_VENDOR_CATEGORY_TRANSMOG,
@@ -1749,13 +1764,15 @@ CONDITIONS["xmog"] = {
         end,
     menu =
         function ()
-            return { GetTransmogSetsMenu() }
+            return { GetTransmogOutfitsMenu(), GetTransmogSetsMenu(), }
         end,
     handler =
         function (cond, context, arg1)
             local setID = tonumber(arg1)
             if setID then
                 return IsTransmogSetActive(setID)
+            else
+                return IsTransmogOutfitActive(arg1)
             end
         end
 }

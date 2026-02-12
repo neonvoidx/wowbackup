@@ -61,3 +61,7 @@ VER 3 01000000000000E6 " " "134400"
 #showtooltip
 /cast [@player] Ravager
 END
+VER 3 01000000000000E7 " " "134400"
+#showtooltip
+/cast [stance:2]!Defensive Stance;!Berserker stance
+END

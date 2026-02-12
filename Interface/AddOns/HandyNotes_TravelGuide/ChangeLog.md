@@ -1,5 +1,11 @@
 ## Revision History:
 
+#### v2.25.1 (February 11, 2026)
+-------------------------------
+* Updated Eastern Kingdom node coords
+* Updated localizations deDE, enUS, zhTW, zhCN [[PR#88]](https://github.com/Dathwada/handynotes-travelguide/pull/88) [[PR#89]](https://github.com/Dathwada/handynotes-travelguide/pull/89)
+* Bump .toc to 120001
+
 #### v2.25.0 (January 21, 2026)
 -------------------------------
 * Added patch 12.0 portals

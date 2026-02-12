@@ -16,7 +16,7 @@
 ## Category-zhCN: 战斗
 ## Category-zhTW: 戰鬥
 ## Notes: Highlights spells targeting the player and/or the party
-## Version: 1.1.1
+## Version: 1.1.5
 ## Author: Xephyris-Blackrock-EU
 
 ## X-Curse-Project-ID: 1418323
@@ -26,6 +26,7 @@ Libs\LibStub\LibStub.lua
 Libs\LibCustomGlow-1.0\LibCustomGlow-1.0.lua
 Libs\CallbackHandler-1.0\CallbackHandler-1.0.lua
 Libs\LibEditMode\embed.xml
+Libs\LibSharedMedia-3.0\lib.xml
 
 Templates\TargetedSpellsFrameTemplate.xml
 

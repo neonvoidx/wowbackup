@@ -1,6 +1,6 @@
 ﻿
 	----------------------------------------------------------------------
-	-- 	Leatrix Maps 12.0.00 (21st January 2026)
+	-- 	Leatrix Maps 12.0.04 (11th February 2026)
 	----------------------------------------------------------------------
 
 	-- 10:Func, 20:Comm, 30:Evnt, 40:Panl
@@ -12,7 +12,7 @@
 	local LeaMapsLC, LeaMapsCB, LeaConfigList = {}, {}, {}
 
 	-- Version
-	LeaMapsLC["AddonVer"] = "12.0.00"
+	LeaMapsLC["AddonVer"] = "12.0.04"
 
 	-- Get locale table
 	local void, Leatrix_Maps = ...
@@ -765,10 +765,10 @@
 		-- Disable map emote when opening the map
 		----------------------------------------------------------------------
 
-		hooksecurefunc("DoEmote", function(emote)
+		hooksecurefunc(C_ChatInfo, "PerformEmote", function(emote)
 			if emote == "READ" and WorldMapFrame:IsShown() then
 				if LeaMapsLC["NoMapEmote"] == "On" then
-					CancelEmote()
+					C_ChatInfo.CancelEmote()
 				end
 			end
 		end)

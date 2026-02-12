@@ -1,0 +1,52 @@
+--- @class TTT_NS
+local TTT = select(2, ...);
+
+local Main = TTT.Main;
+local Util = TTT.Util;
+local L = TTT.L;
+
+local ChatFrame_AddMessageEventFilter = ChatFrameUtil and ChatFrameUtil.AddMessageEventFilter or ChatFrame_AddMessageEventFilter
+local ChatFrame_RemoveMessageEventFilter = ChatFrameUtil and ChatFrameUtil.RemoveMessageEventFilter or ChatFrame_RemoveMessageEventFilter
+
+--- @class TTT_ReduceSpam: NumyConfig_Module, AceHook-3.0
+local Module = Main:NewModule("ReduceSpam", "AceHook-3.0");
+
+function Module:OnEnable()
+    self:SetupHook();
+end
+
+function Module:OnDisable()
+    self:UnhookAll();
+end
+
+function Module:GetDescription()
+    return L["Mute chat spam while switching loadouts or specs."];
+end
+
+function Module:GetName()
+    return L["Reduce spam"];
+end
+
+function Module:SetupHook()
+    self:SetFilterEnabled(true);
+end
+
+function Module:SetFilterEnabled(enable)
+    if enable then
+        ChatFrame_AddMessageEventFilter("CHAT_MSG_SYSTEM", self.FilterMessage);
+    else
+        ChatFrame_RemoveMessageEventFilter("CHAT_MSG_SYSTEM", self.FilterMessage);
+    end
+end
+
+local messagesToHide = {
+    ERR_SPELL_UNLEARNED_S,
+    ERR_LEARN_PASSIVE_S,
+    ERR_LEARN_SPELL_S,
+    ERR_LEARN_ABILITY_S,
+};
+Module.FilterMessage = function(_, _, message)
+    for _, messageToHide in ipairs(messagesToHide) do
+        if message:find("^" .. messageToHide:format(".*") .. "$") then return true; end
+    end
+end

@@ -138,8 +138,16 @@ MouseoverActionSettingsDB = {
 ["CountFontSettings"] = {
 ["font"] = "1",
 },
-["MultiBar7"] = {
+["MultiBar6"] = {
 ["enabled"] = false,
+["links"] = {
+["MultiBarRight"] = true,
+["MultiBarBottomRight"] = true,
+},
+["useCustomDelay"] = true,
+["minAlpha"] = 0.3,
+["delay"] = 0,
+["COMBAT_UPDATE"] = true,
 },
 ["MultiBarRight"] = {
 ["links"] = {
@@ -169,6 +177,18 @@ MouseoverActionSettingsDB = {
 ["PartyFrame"] = {
 ["enabled"] = false,
 },
+["MultiBar7"] = {
+["enabled"] = false,
+},
+["MultiBarBottomRight"] = {
+["links"] = {
+["MultiBar6"] = true,
+["MultiBarRight"] = true,
+},
+["minAlpha"] = 0.2,
+["delay"] = 0,
+["COMBAT_UPDATE"] = false,
+},
 ["MainMenuBar"] = {
 ["ARENA_UPDATE"] = true,
 ["TARGET_ATTACKABLE_UPDATE"] = true,
@@ -185,26 +205,6 @@ MouseoverActionSettingsDB = {
 },
 ["RAID_GROUP_UPDATE"] = false,
 ["PARTY_GROUP_UPDATE"] = false,
-},
-["MultiBarBottomRight"] = {
-["links"] = {
-["MultiBar6"] = true,
-["MultiBarRight"] = true,
-},
-["minAlpha"] = 0.2,
-["delay"] = 0,
-["COMBAT_UPDATE"] = false,
-},
-["MultiBar6"] = {
-["enabled"] = false,
-["links"] = {
-["MultiBarRight"] = true,
-["MultiBarBottomRight"] = true,
-},
-["useCustomDelay"] = true,
-["minAlpha"] = 0.3,
-["delay"] = 0,
-["COMBAT_UPDATE"] = true,
 },
 ["MultiBarLeft"] = {
 ["enabled"] = false,

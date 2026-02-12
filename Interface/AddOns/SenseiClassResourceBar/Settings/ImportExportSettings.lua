@@ -1,6 +1,7 @@
 local _, addonTable = ...
 
 local SettingsLib = addonTable.SettingsLib or LibStub("LibEQOLSettingsMode-1.0")
+local L = addonTable.L
 
 local featureId = "SCRB_IMPORT_EXPORT"
 
@@ -9,20 +10,20 @@ table.insert(addonTable.AvailableFeatures, featureId)
 
 addonTable.FeaturesMetadata = addonTable.FeaturesMetadata or {}
 addonTable.FeaturesMetadata[featureId] = {
-	category = "Import / Export",
+	category = L["SETTINGS_CATEGORY_IMPORT_EXPORT"],
 }
 
 addonTable.SettingsPanelInitializers = addonTable.SettingsPanelInitializers or {}
 addonTable.SettingsPanelInitializers[featureId] = function(category)
-    SettingsLib:CreateText(category, "Export strings generated here encompass all bars of your current Edit Mode Layout.\nIf you wish to only export one bar in particular, please check the Export button in the Bar Settings panel in\nEdit Mode.")
-    SettingsLib:CreateText(category, "The Import button bellow supports global and individual bar export strings. The one in each Bar Settings in\nEdit Mode is restricted to this particular bar.\nFor example, if you exported all your bars but wish to only import the Primary Resource Bar, then use the\nImport button of the Primary Resource bar in Edit Mode.")
+    SettingsLib:CreateText(category, L["SETTINGS_IMPORT_EXPORT_TEXT_1"])
+    SettingsLib:CreateText(category, L["SETTINGS_IMPORT_EXPORT_TEXT_2"])
 
     SettingsLib:CreateButton(category, {
-		text = "Export Only Power Colors",
+		text = L["SETTINGS_BUTTON_EXPORT_ONLY_POWER_COLORS"],
 		func = function()
 			local exportString = addonTable.exportProfileAsString(false, true)
 			if not exportString then
-				addonTable.prettyPrint("Export failed.")
+				addonTable.prettyPrint(L["EXPORT_FAILED"])
 				return
 			end
 
@@ -38,11 +39,11 @@ addonTable.SettingsPanelInitializers[featureId] = function(category)
 	})
 
     SettingsLib:CreateButton(category, {
-		text = "Export With Power Colors",
+		text = L["SETTINGS_BUTTON_EXPORT_WITH_POWER_COLORS"],
 		func = function()
 			local exportString = addonTable.exportProfileAsString(true, true)
 			if not exportString then
-				addonTable.prettyPrint("Export failed.")
+				addonTable.prettyPrint(L["EXPORT_FAILED"])
 				return
 			end
 
@@ -58,11 +59,11 @@ addonTable.SettingsPanelInitializers[featureId] = function(category)
 	})
 
     SettingsLib:CreateButton(category, {
-		text = "Export Without Power Colors",
+		text = L["SETTINGS_BUTTON_EXPORT_WITHOUT_POWER_COLORS"],
 		func = function()
 			local exportString = addonTable.exportProfileAsString(true, false)
 			if not exportString then
-				addonTable.prettyPrint("Export failed.")
+				addonTable.prettyPrint(L["EXPORT_FAILED"])
 				return
 			end
 
@@ -78,7 +79,7 @@ addonTable.SettingsPanelInitializers[featureId] = function(category)
 	})
 
 	SettingsLib:CreateButton(category, {
-		text = "Import",
+		text = L["SETTINGS_BUTTON_IMPORT"],
 		func = function()
 			StaticPopupDialogs["SCRB_IMPORT_SETTINGS"].OnAccept = function(self)
 				local editBox = self.editBox or self:GetEditBox()
@@ -86,7 +87,7 @@ addonTable.SettingsPanelInitializers[featureId] = function(category)
 
 				local ok, error = addonTable.importProfileFromString(input)
 				if not ok then
-					addonTable.prettyPrint("Import failed with the following error: "..error)
+					addonTable.prettyPrint(L["IMPORT_FAILED_WITH_ERROR"] .. error)
 				end
 
 				addonTable.fullUpdateBars()

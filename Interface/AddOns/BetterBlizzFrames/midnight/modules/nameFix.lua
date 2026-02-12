@@ -3,7 +3,7 @@ local specIDToName = {
     -- Death Knight
     [250] = "Blood", [251] = "Frost", [252] = "Unholy",
     -- Demon Hunter
-    [577] = "Havoc", [581] = "Vengeance",
+    [577] = "Havoc", [581] = "Vengeance", [1480] = "Devourer",
     -- Druid
     [102] = "Balance", [103] = "Feral", [104] = "Guardian", [105] = "Restoration",
     -- Evoker
@@ -32,7 +32,7 @@ local specIDToNameShort = {
     -- Death Knight
     [250] = "Blood", [251] = "Frost", [252] = "Unholy",
     -- Demon Hunter
-    [577] = "Havoc", [581] = "Vengeance",
+    [577] = "Havoc", [581] = "Vengeance", [1480] = "Devourer",
     -- Druid
     [102] = "Balance", [103] = "Feral", [104] = "Guardian", [105] = "Resto",
     -- Evoker
@@ -104,6 +104,10 @@ end
 local function SetRPName(name, unit)
     if not TRP3_API.globals.player_realm_id then return end
     local fullName = TRP3_API.r.name(unit) or ""
+    if issecretvalue(fullName) then
+        name:SetText(fullName)
+        return
+    end
     local firstRpName, lastRpName = fullName:match("^(%S+)%s*(.*)$")
 
     if rpNamesFirst and rpNamesLast then
@@ -343,12 +347,25 @@ local GetUnitTooltip = C_TooltipInfo and C_TooltipInfo.GetUnit or function() ret
 -- Function to retrieve the specialization ID of a unit
 local function GetSpecID(unit)
     -- Check if the unit is a player
-    if BBF.isMidnight then return nil end
     if not UnitIsPlayer(unit) then
         return nil
     end
 
     local guid = UnitGUID(unit)
+    if issecretvalue(guid) then
+        if C_PvP.IsArena() then
+            for i = 1, 3 do
+                local arenaUnit = "arena" .. i
+                if UnitIsUnit(unit, arenaUnit) then
+                    local specID = GetArenaOpponentSpec(i)
+                    if specID then
+                        return specID
+                    end
+                end
+            end
+        end
+        return
+    end
 
     -- Return cached specID if already found
     if SpecCache[guid] then
@@ -428,20 +445,7 @@ local function ShowLastNameOnlyNpc(frame, name)
 end
 
 local function GetNameWithoutRealm(frame)
-    if BBF.isMidnight then
-        return frame.name:GetText()
-    end
-    local name = GetUnitName(frame.unit)
-    if name then
-        if showLastNameNpc and not UnitIsPlayer(frame.unit) then
-            local lastName = ShowLastNameOnlyNpc(frame, name)
-            return lastName
-        else
-            name = string.gsub(name, " %(%*%)$", "")
-            return name
-        end
-    end
-    return nil
+    return UnitFullName(frame.unit)
 end
 
 local function SetArenaName(frame, unit, textObject)
@@ -595,7 +599,12 @@ local function PartyFrameNameChange(frame)
     if fontSize and fontSize > 10 then
         extraWidth = math.floor((fontSize - 10) / 2) * 15
     end
-    frame.bbfName:SetWidth(baseWidth + extraWidth)
+
+    if issecretvalue(baseWidth) then -- TODO: figure out a better way to handle this, all of it
+        frame.bbfName:SetWidth(57 + extraWidth)
+    else
+        frame.bbfName:SetWidth(baseWidth + extraWidth)
+    end
 
     if classColorPartyNames then
         if frame.unit and (UnitIsPlayer(frame.unit) or C_LFGInfo.IsInLFGFollowerDungeon()) then

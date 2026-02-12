@@ -1,6 +1,6 @@
 # Baganator
 
-## [781](https://github.com/TheMouseNest/Baganator/tree/781) (2026-01-21)
-[Full Changelog](https://github.com/TheMouseNest/Baganator/compare/780...781) 
+## [786](https://github.com/TheMouseNest/Baganator/tree/786) (2026-02-10)
+[Full Changelog](https://github.com/TheMouseNest/Baganator/compare/785...786) 
 
-- Disable skins if the associated addon is incompatible with current wow version  
+- Update toc for 12.0.1  

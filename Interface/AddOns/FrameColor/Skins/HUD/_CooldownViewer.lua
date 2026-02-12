@@ -36,7 +36,7 @@ function skin:Apply(barBorderColor, desaturation)
   local regions = self:GetAllChildRegionsOf(BuffBarCooldownViewer, {["Texture"] = true})
   for _, texture in pairs(regions) do
     local name = texture:GetDebugName() or ""
-    if not name:match("Icon") and texture:GetDrawLayer() == "BACKGROUND" then
+    if not issecretvalue(name) and not name:match("Icon") and texture:GetDrawLayer() == "BACKGROUND" then
       texture:SetDesaturation(desaturation)
       texture:SetVertexColor(barBorderColor[1], barBorderColor[2], barBorderColor[3], barBorderColor[4])
     end

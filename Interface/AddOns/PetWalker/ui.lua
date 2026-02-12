@@ -130,6 +130,11 @@ function ns.msg_manual_summon_stopped()
 	chat_user_notification(CO.bw .. 'You are in combat lockdown or flying; pet summoning aborted.')
 end
 
+-- function ns.msg_recents_dupe_removed(idx)
+-- 	if ns.db.verbosityLevel < 3 then return end
+-- 	chat_user_notification(CO.bn .. 'Removed a duplicate from recent pets at idx ' .. idx .. '.')
+-- end
+
 
 -- Summon Target Pet messages
 
@@ -201,11 +206,6 @@ function ns.msg_pet_summon_failed()
 	if ns.db.verbosityLevel < 1 then return end
 	chat_user_notification(CO.bw .. "You don't meet the conditions for summoning a pet right now.")
 end
-
--- If we block a command bc auto-summoning is disabled (aka events unregistered). Currently not used.
--- function ns.MsgAutoIsDisabled()
--- 	chat_user_notification(format("%sAuto-summoning must be enabled for this! %s(%s/pw a%2$s)", CO.bw, CO.bn, CO.c))
--- end
 
 
 --[[---------------------------------------------------------------------------

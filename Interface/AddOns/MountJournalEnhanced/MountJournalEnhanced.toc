@@ -3,7 +3,7 @@
 ## Notes: Extends the default Mount Journal
 ## IconTexture: Interface\Addons\MountJournalEnhanced\UI\icons\mje.png
 ## Author: eXochron
-## Version: 2.53.0
+## Version: 2.53.1
 ## SavedVariablesPerCharacter: MJEPersonalSettings
 ## SavedVariables: MJEGlobalSettings, MJETrackingData
 ## X-Curse-Project-ID: 86372
@@ -72,7 +72,7 @@ UI\DisplayBackground.lua
 UI\DisplayCamera.lua
 UI\DisplayText.lua
 UI\DRIVEButton.lua
-UI\SkyridingButtons.lua
+UI\SkyridingButtons.lua [AllowLoadGameType mainline]
 UI\SyncTarget.lua
 UI\Resize.lua
 UI\DisplayStatistics.lua

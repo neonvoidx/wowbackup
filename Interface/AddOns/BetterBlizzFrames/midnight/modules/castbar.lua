@@ -38,39 +38,220 @@ local defaultCastbarColors = {
     uninterruptable = { 0.7, 0.7, 0.7 },
 }
 
-local function UpdateCastTimer(self)
-    if not BBFMIDNIGHT then return end
-    local remainingTime
-    if self.casting or self.reverseChanneling then
-        -- For a cast, we calculate how much time is left until the cast completes
-        remainingTime = self.maxValue - self.value
-    elseif self.channeling then
-        -- For a channel, the remaining time is directly related to the current value
-        remainingTime = self.value
+
+castbarColors.defaultStandard = CreateColor(1.0, 0.7, 0.0, 1)
+castbarColors.defaultChannel = CreateColor(0.0, 1.0, 0.0, 1)
+castbarColors.defaultUninterruptable = CreateColor(0.7, 0.7, 0.7, 1)
+
+local function CreateBorder(frame, r, g, b, a)
+    local border
+    if frame.CreateTexture then
+        border = frame:CreateTexture(nil, "OVERLAY", nil, -1)
+    else
+        border = frame:GetParent():CreateTexture(nil, "OVERLAY", nil, -1)
+    end
+    border:SetColorTexture(r, g, b, a)
+    border:SetIgnoreParentScale(true)
+    return border
+end
+
+function BBF.SetupBorderOnFrame(frame)
+    if frame.newBorder then return end
+
+    --frame:EnableMouse(true)
+
+    if frame.TextBorder then
+        frame.TextBorder:SetParent(BBF.hiddenFrame)
     end
 
-    -- If the remaining time is zero or somehow negative, clear the timer
-    if remainingTime then
-        if remainingTime <= 0 then
-            self.Timer:SetText("")
-            return
+    if frame.Flash then
+        frame.Flash:SetParent(BBF.hiddenFrame)
+    end
+
+    if frame.ChargeFlash then
+        frame.ChargeFlash:SetParent(BBF.hiddenFrame)
+    end
+
+    if frame.StandardGlow then
+        frame.StandardGlow:SetParent(BBF.hiddenFrame)
+    end
+
+    if frame.CraftGlow then
+        frame.CraftGlow:SetParent(BBF.hiddenFrame)
+    end
+
+    if frame.MaskTexture then
+        frame.MaskTexture:Hide()
+        frame.MaskTexture:SetParent(BBF.hiddenFrame)
+        frame.MaskTexture:SetTexture(nil)
+    end
+
+    if frame.BorderMask then
+        frame.BorderMask:Hide()
+        frame.BorderMask:SetParent(BBF.hiddenFrame)
+        frame.BorderMask:SetTexture(nil)
+    end
+
+    if frame.Text then
+        if BetterBlizzFramesDB.castbarPixelBorderTextInside then
+            frame.Text:ClearAllPoints()
+            frame.Text:SetPoint("CENTER", frame, "CENTER", 0, 0)
         end
-        self.Timer:SetFormattedText("%.1f", remainingTime)
+        if not frame.ogText then
+            local font, size, flags = frame.Text:GetFont()
+            frame.ogText = {font, size, flags}
+            frame.Text:SetFont(font, size, "OUTLINE")
+        end
+    end
+
+    if frame.Border then
+        frame.Border:SetParent(BBF.hiddenFrame)
+    end
+
+    if frame.Background then
+        frame.Background:SetColorTexture(0, 0, 0, 0.7)
+    end
+
+    -- Create borders
+    local borderTop = CreateBorder(frame, 0, 0, 0, 1)
+    local borderBottom = CreateBorder(frame, 0, 0, 0, 1)
+    local borderLeft = CreateBorder(frame, 0, 0, 0, 1)
+    local borderRight = CreateBorder(frame, 0, 0, 0, 1)
+
+    frame["borders"] = {borderTop, borderBottom, borderLeft, borderRight}
+
+    local borderThickness = 1
+    local minPixels = 1
+
+
+    local function SizeBorders(borderThickness)
+        PixelUtil.SetHeight(borderTop, borderThickness, minPixels)
+        PixelUtil.SetHeight(borderBottom, borderThickness, minPixels)
+        PixelUtil.SetWidth(borderLeft, borderThickness, minPixels)
+        PixelUtil.SetWidth(borderRight, borderThickness, minPixels)
+
+        borderTop:ClearAllPoints()
+        PixelUtil.SetPoint(borderTop, "BOTTOMLEFT", frame, "TOPLEFT", 0, 0)
+        PixelUtil.SetPoint(borderTop, "BOTTOMRIGHT", frame, "TOPRIGHT", 0, 0)
+
+        borderBottom:ClearAllPoints()
+        PixelUtil.SetPoint(borderBottom, "TOPLEFT", frame, "BOTTOMLEFT", 0, 0)
+        PixelUtil.SetPoint(borderBottom, "TOPRIGHT", frame, "BOTTOMRIGHT", 0, 0)
+
+        borderLeft:ClearAllPoints()
+        PixelUtil.SetPoint(borderLeft, "TOPLEFT", frame, "TOPLEFT", -borderThickness, borderThickness)
+        PixelUtil.SetPoint(borderLeft, "BOTTOMLEFT", frame, "BOTTOMLEFT", -borderThickness, -borderThickness)
+
+        borderRight:ClearAllPoints()
+        PixelUtil.SetPoint(borderRight, "TOPRIGHT", frame, "TOPRIGHT", borderThickness, borderThickness)
+        PixelUtil.SetPoint(borderRight, "BOTTOMRIGHT", frame, "BOTTOMRIGHT", borderThickness, -borderThickness)
+    end
+
+    SizeBorders(borderThickness)
+
+    function frame:SetBorderColor(r, g, b, a)
+        for _, border in ipairs(self.borders) do
+            border:SetColorTexture(r, g, b, a)
+        end
+    end
+
+    function frame:SetBorderSize(size)
+        SizeBorders(size)
+    end
+
+    if frame.Icon then
+        local iconBorderTop = CreateBorder(frame.Icon, 0, 0, 0, 1)
+        local iconBorderBottom = CreateBorder(frame.Icon, 0, 0, 0, 1)
+        local iconBorderLeft = CreateBorder(frame.Icon, 0, 0, 0, 1)
+        local iconBorderRight = CreateBorder(frame.Icon, 0, 0, 0, 1)
+
+        frame.Icon["borders"] = {iconBorderTop, iconBorderBottom, iconBorderLeft, iconBorderRight}
+
+        local iconBorderThickness = 1
+        local minPixels = 1
+
+        local function SizeIconBorders(borderThickness)
+            PixelUtil.SetHeight(iconBorderTop, borderThickness, minPixels)
+            PixelUtil.SetHeight(iconBorderBottom, borderThickness, minPixels)
+            PixelUtil.SetWidth(iconBorderLeft, borderThickness, minPixels)
+            PixelUtil.SetWidth(iconBorderRight, borderThickness, minPixels)
+
+            iconBorderTop:ClearAllPoints()
+            PixelUtil.SetPoint(iconBorderTop, "BOTTOMLEFT", frame.Icon, "TOPLEFT", 0, 0)
+            PixelUtil.SetPoint(iconBorderTop, "BOTTOMRIGHT", frame.Icon, "TOPRIGHT", 0, 0)
+
+            iconBorderBottom:ClearAllPoints()
+            PixelUtil.SetPoint(iconBorderBottom, "TOPLEFT", frame.Icon, "BOTTOMLEFT", 0, 0)
+            PixelUtil.SetPoint(iconBorderBottom, "TOPRIGHT", frame.Icon, "BOTTOMRIGHT", 0, 0)
+
+            iconBorderLeft:ClearAllPoints()
+            PixelUtil.SetPoint(iconBorderLeft, "TOPLEFT", frame.Icon, "TOPLEFT", -borderThickness, borderThickness)
+            PixelUtil.SetPoint(iconBorderLeft, "BOTTOMLEFT", frame.Icon, "BOTTOMLEFT", -borderThickness, -borderThickness)
+
+            iconBorderRight:ClearAllPoints()
+            PixelUtil.SetPoint(iconBorderRight, "TOPRIGHT", frame.Icon, "TOPRIGHT", borderThickness, borderThickness)
+            PixelUtil.SetPoint(iconBorderRight, "BOTTOMRIGHT", frame.Icon, "BOTTOMRIGHT", borderThickness, -borderThickness)
+        end
+
+        SizeIconBorders(iconBorderThickness)
+
+        function frame.Icon:SetBorderColor(r, g, b, a)
+            for _, border in ipairs(self.borders) do
+                border:SetColorTexture(r, g, b, a)
+            end
+        end
+
+        function frame.Icon:SetBorderSize(size)
+            SizeIconBorders(size)
+        end
+
+        hooksecurefunc(frame.Icon, "Show", function(self)
+            self:SetBorderColor(0, 0, 0, 1)
+        end)
+
+        hooksecurefunc(frame.Icon, "Hide", function(self)
+            self:SetBorderColor(0, 0, 0, 0)
+        end)
+
+        hooksecurefunc(frame.Icon, "SetShown", function(self, shown)
+            if shown then
+                self:SetBorderColor(0, 0, 0, 1)
+            else
+                self:SetBorderColor(0, 0, 0, 0)
+            end
+        end)
+
+        frame.Icon:SetTexCoord(0.07, 0.93, 0.07, 0.93)
+    end
+
+    frame.newBorder = true
+end
+
+local function UpdateCastTimer(self)
+    if not self.unit then return end
+
+    local duration = UnitCastingDuration(self.unit)
+    if not duration then
+        duration = UnitChannelDuration(self.unit)
+    end
+
+    if duration then
+        self.Timer:SetFormattedText("%.1f", duration:GetRemainingDuration())
     else
         self.Timer:SetText("")
     end
 end
 
 local function UpdateSparkPosition(castBar)
-    if not BBFMIDNIGHT then return end
-    local val = castBar:GetValue()
-    local minVal, maxVal = castBar:GetMinMaxValues()
-    --local progressPercent = castBar.value / castBar.maxValue
-    if maxVal == 0 then return end
-    local progressPercent = val / maxVal
-    local newX = castBar:GetWidth() * progressPercent
-    castBar.Spark:ClearAllPoints()
-    castBar.Spark:SetPoint("CENTER", castBar, "LEFT", newX, 0)
+    -- if not BBFMIDNIGHT then return end
+    -- local val = castBar:GetValue()
+    -- local minVal, maxVal = castBar:GetMinMaxValues()
+    -- --local progressPercent = castBar.value / castBar.maxValue
+    -- if maxVal == 0 then return end
+    -- local progressPercent = val / maxVal
+    -- local newX = castBar:GetWidth() * progressPercent
+    -- castBar.Spark:ClearAllPoints()
+    -- castBar.Spark:SetPoint("CENTER", castBar, "LEFT", newX, 0)
 end
 
 local function HideChargeTiers(castBar)
@@ -239,7 +420,7 @@ function BBF.ClassicCastbar(castBar, unitType)
     AdjustBorderShieldSize(castBar)
 
     if not castBar.isClassicStyle then
-        castBar:HookScript("OnEvent", function(self)
+        castBar:HookScript("OnEvent", function(self, event)
             self:SetStatusBarTexture(classicCastbarTexture)
             castBar.TextBorder:SetAlpha(0)
             if castBar == PlayerCastingBarFrame then
@@ -262,42 +443,106 @@ function BBF.ClassicCastbar(castBar, unitType)
             self.Icon:SetPoint("RIGHT", self, "LEFT", -5 + castBar.iconXPos, -0.5 + castBar.iconYPos)
             self.Icon:SetSize(18,18)
 
-            if self.BorderShield:IsShown() then
-                AdjustBorderShieldSize(self)
-                --self.Icon:SetPoint("RIGHT", castBar, "LEFT", -3.5, castBar.adjustedIconYOffset)
-                self.Icon:SetPoint("RIGHT", self, "LEFT", -3.5 + castBar.iconXPos, castBar.adjustedIconYOffset + castBar.iconYPos)
-                self.Icon:SetSize(castBar.uninterruptibleIconSize, castBar.uninterruptibleIconSize)
-                self.Border:SetAlpha(0)
+            -- if self.BorderShield:IsShown() then
+            --     AdjustBorderShieldSize(self)
+            --     --self.Icon:SetPoint("RIGHT", castBar, "LEFT", -3.5, castBar.adjustedIconYOffset)
+            --     self.Icon:SetPoint("RIGHT", self, "LEFT", -3.5 + castBar.iconXPos, castBar.adjustedIconYOffset + castBar.iconYPos)
+            --     self.Icon:SetSize(castBar.uninterruptibleIconSize, castBar.uninterruptibleIconSize)
+            --     self.Border:SetAlpha(0)
 
-                if self.ChargeTier1 and castBar ~= PlayerCastingBarFrame then
-                    HideChargeTiers(self)
-                end
-            elseif self.barType == "empowered" then
-                if castBar ~= PlayerCastingBarFrame then
-                    HideChargeTiers(self)
+            --     if self.ChargeTier1 and castBar ~= PlayerCastingBarFrame then
+            --         HideChargeTiers(self)
+            --     end
+            -- elseif self.barType == "empowered" then
+            --     if castBar ~= PlayerCastingBarFrame then
+            --         HideChargeTiers(self)
+            --     end
+            -- end
+
+            AdjustBorderShieldSize(self)
+            self.Border:SetAlphaFromBoolean(self.BorderShield:IsShown(), 0, 1)
+
+            -- if self.barType == "uninterruptable" then
+            --     if isTargets then
+            --         castBar.Text:ClearAllPoints()
+            --         castBar.Text:SetPoint("CENTER", castBar, "CENTER", 0, 1)
+            --     end
+            --     -- self.BorderShield:Show()
+            --     -- self.Border:SetAlpha(0)
+            --     -- AdjustBorderShieldSize(self)
+            -- end
+
+            -- Check if cast is interruptible
+            local notInterruptible
+            local unitToken = self.unit
+            if unitToken then
+                if self.casting then
+                    _, _, _, _, _, _, _, notInterruptible = UnitCastingInfo(unitToken)
+                elseif self.channeling then
+                    _, _, _, _, _, _, notInterruptible = UnitChannelInfo(unitToken)
                 end
             end
 
-            if self.barType == "uninterruptable" then
-                if isTargets then
-                    castBar.Text:ClearAllPoints()
-                    castBar.Text:SetPoint("CENTER", castBar, "CENTER", 0, 1)
-                end
-                -- self.BorderShield:Show()
-                -- self.Border:SetAlpha(0)
-                -- AdjustBorderShieldSize(self)
+            if event == "UNIT_SPELLCAST_INTERRUPTED" then
+                self.lastEvent = event
+                self:SetStatusBarColor(1, 0, 0, 1)
+                return
+            elseif (event == "UNIT_SPELLCAST_STOP" or event == "UNIT_SPELLCAST_CHANNEL_STOP" or event == "UNIT_SPELLCAST_EMPOWER_STOP") and self.lastEvent == "UNIT_SPELLCAST_INTERRUPTED" then
+                self:SetStatusBarColor(1, 0, 0, 1)
+                return
             end
+
             if recolorCastbars then
-                local c = castbarColors[self.barType] or castbarColors.standard
-                local r, g, b = c[1], c[2], c[3]
-
-                self:SetStatusBarColor(r, g, b)
+                local castTexture = self:GetStatusBarTexture()
+                if self.casting then
+                    if notInterruptible ~= nil then
+                        castTexture:SetVertexColorFromBoolean(
+                            notInterruptible,
+                            castbarColors.colorUninterruptable,
+                            castbarColors.colorStandard
+                        )
+                    else
+                        self:SetStatusBarColor(unpack(castbarColors.standard))
+                    end
+                elseif self.channeling then
+                    if notInterruptible ~= nil then
+                        castTexture:SetVertexColorFromBoolean(
+                            notInterruptible,
+                            castbarColors.colorUninterruptable,
+                            castbarColors.colorChannel
+                        )
+                    else
+                        self:SetStatusBarColor(unpack(castbarColors.channel))
+                    end
+                else
+                    self:SetStatusBarColor(unpack(castbarColors.standard))
+                end
                 --self.Spark:SetVertexColor(r, g, b)
             else
-                local c = defaultCastbarColors[self.barType] or defaultCastbarColors.standard
-                local r, g, b = c[1], c[2], c[3]
-
-                self:SetStatusBarColor(r, g, b)
+                local castTexture = self:GetStatusBarTexture()
+                if self.casting then
+                    if notInterruptible ~= nil then
+                        castTexture:SetVertexColorFromBoolean(
+                            notInterruptible,
+                            castbarColors.defaultUninterruptable,
+                            castbarColors.defaultStandard
+                        )
+                    else
+                        self:SetStatusBarColor(unpack(castbarColors.defaultStandard))
+                    end
+                elseif self.channeling then
+                    if notInterruptible ~= nil then
+                        castTexture:SetVertexColorFromBoolean(
+                            notInterruptible,
+                            castbarColors.defaultUninterruptable,
+                            castbarColors.defaultChannel
+                        )
+                    else
+                        self:SetStatusBarColor(unpack(castbarColors.defaultChannel))
+                    end
+                else
+                    self:SetStatusBarColor(1.0, 0.7, 0.0, 1)
+                end
                 --self.Spark:SetVertexColor(r, g, b)
             end
         end)
@@ -412,7 +657,7 @@ function BBF.UpdateCastbars()
                         end
                     else
                         spellbar.Text:ClearAllPoints()
-                        if BetterBlizzFramesDB.unitframeCastBarNoTextBorder then
+                        if BetterBlizzFramesDB.unitframeCastBarNoTextBorder or (BetterBlizzFramesDB.castbarPixelBorder and BetterBlizzFramesDB.castbarPixelBorderTextInside) then
                             if not spellbar.TextBorderHidden then
                                 spellbar.TextBorderHidden = spellbar.TextBorder:GetParent()
                             end
@@ -521,7 +766,7 @@ function BBF.UpdatePetCastbar()
         petSpellBar:SetWidth(width)
         petSpellBar:SetHeight(height)
         petSpellBar.Text:ClearAllPoints()
-        if BetterBlizzFramesDB.unitframeCastBarNoTextBorder then
+        if BetterBlizzFramesDB.unitframeCastBarNoTextBorder or (BetterBlizzFramesDB.castbarPixelBorder and BetterBlizzFramesDB.castbarPixelBorderTextInside) then
             if not petSpellBar.TextBorderHidden then
                 petSpellBar.TextBorderHidden = petSpellBar.TextBorder:GetParent()
             end
@@ -585,7 +830,7 @@ function BBF.CreateCastbars()
                 spellbar.BorderShield:SetPoint("RIGHT", spellbar, "LEFT", -1, -7)
                 spellbar.BorderShield:SetSize(29,33)
                 spellbar.BorderShield:SetScale(BetterBlizzFramesDB.partyCastBarIconScale)
-                if BetterBlizzFramesDB.unitframeCastBarNoTextBorder then
+                if BetterBlizzFramesDB.unitframeCastBarNoTextBorder or (BetterBlizzFramesDB.castbarPixelBorder and BetterBlizzFramesDB.castbarPixelBorderTextInside) then
                     spellbar.Text:ClearAllPoints()
                     spellbar.Text:SetPoint("CENTER", spellbar, "CENTER", 0, 0)
                     spellbar.TextBorder:SetParent(BBF.hiddenFrame)
@@ -647,7 +892,7 @@ function BBF.CreateCastbars()
         petSpellBar:SetHeight(BetterBlizzFramesDB.petCastBarHeight)
 
         -- Handle unitframeCastBarNoTextBorder setting for pet castbar
-        if BetterBlizzFramesDB.unitframeCastBarNoTextBorder then
+        if BetterBlizzFramesDB.unitframeCastBarNoTextBorder or (BetterBlizzFramesDB.castbarPixelBorder and BetterBlizzFramesDB.castbarPixelBorderTextInside) then
             petSpellBar.Text:ClearAllPoints()
             petSpellBar.Text:SetPoint("CENTER", petSpellBar, "CENTER", 0, 0)
             petSpellBar.TextBorder:SetParent(BBF.hiddenFrame)
@@ -942,9 +1187,8 @@ end
 
 function BBF.CastbarRecolorWidgets()
     local classicFrames = C_AddOns.IsAddOnLoaded("ClassicFrames")
-    if (BetterBlizzFramesDB.castBarRecolorInterrupt or BetterBlizzFramesDB.recolorCastbars) and not BBF.RecolorCastbarHooked then
+    if (BetterBlizzFramesDB.castBarRecolorInterrupt or BetterBlizzFramesDB.recolorCastbars) then
         BBF.CastbarColorHooks()
-        BBF.RecolorCastbarHooked = true
     end
 end
 
@@ -970,7 +1214,7 @@ local function PlayerCastingBarFrameMiscAdjustments()
 
     PlayerCastingBarFrame:SetHeight(BetterBlizzFramesDB.playerCastBarHeight)
     PlayerCastingBarFrame.Text:ClearAllPoints()
-    if BetterBlizzFramesDB.playerCastBarNoTextBorder or PlayerCastingBarFrame.attachedToPlayerFrame then
+    if BetterBlizzFramesDB.playerCastBarNoTextBorder or PlayerCastingBarFrame.attachedToPlayerFrame or (BetterBlizzFramesDB.castbarPixelBorder and BetterBlizzFramesDB.castbarPixelBorderTextInside) then
         if not PlayerCastingBarFrame.TextBorderHidden then
             PlayerCastingBarFrame.TextBorderHidden = PlayerCastingBarFrame.TextBorder:GetParent()
         end
@@ -1064,7 +1308,7 @@ function BBF.ChangeCastbarSizes()
         TargetFrameSpellBar.BorderShield:SetPoint("CENTER", TargetFrameSpellBar.Icon, "CENTER", 0, -1.5)
         TargetFrameSpellBar.BorderShield:SetScale(BetterBlizzFramesDB.targetCastBarIconScale)
         TargetFrameSpellBar.Text:ClearAllPoints()
-        if BetterBlizzFramesDB.unitframeCastBarNoTextBorder then
+        if BetterBlizzFramesDB.unitframeCastBarNoTextBorder or (BetterBlizzFramesDB.castbarPixelBorder and BetterBlizzFramesDB.castbarPixelBorderTextInside) then
             if not TargetFrameSpellBar.TextBorderHidden then
                 TargetFrameSpellBar.TextBorderHidden = TargetFrameSpellBar.TextBorder:GetParent()
             end
@@ -1103,7 +1347,7 @@ function BBF.ChangeCastbarSizes()
         FocusFrameSpellBar.BorderShield:SetPoint("CENTER", FocusFrameSpellBar.Icon, "CENTER", 0, -1.5)
         FocusFrameSpellBar.BorderShield:SetScale(BetterBlizzFramesDB.focusCastBarIconScale)
         FocusFrameSpellBar.Text:ClearAllPoints()
-        if BetterBlizzFramesDB.unitframeCastBarNoTextBorder then
+        if BetterBlizzFramesDB.unitframeCastBarNoTextBorder or (BetterBlizzFramesDB.castbarPixelBorder and BetterBlizzFramesDB.castbarPixelBorderTextInside) then
             if not FocusFrameSpellBar.TextBorderHidden then
                 FocusFrameSpellBar.TextBorderHidden = FocusFrameSpellBar.TextBorder:GetParent()
             end
@@ -1324,73 +1568,95 @@ function BBF.HookCastbars()
     end
 end
 
-local function CastbarOnEvent(self)
+local function CastbarOnEvent(self, event)
     local colors = castbarColors
+    local unitToken = self.unit
+    local castBarTexture = self:GetStatusBarTexture()
+    local notInterruptible
+
+    if event == "UNIT_SPELLCAST_INTERRUPTED" then
+        self.lastEvent = event
+        castBarTexture:SetDesaturated(false)
+        self:SetStatusBarColor(1, 1, 1, 1)
+        return
+    elseif (event == "UNIT_SPELLCAST_STOP" or event == "UNIT_SPELLCAST_CHANNEL_STOP" or event == "UNIT_SPELLCAST_EMPOWER_STOP") and self.lastEvent == "UNIT_SPELLCAST_INTERRUPTED" then
+        castBarTexture:SetDesaturated(false)
+        self:SetStatusBarColor(1, 1, 1, 1)
+        return
+    end
+
+    if unitToken then
+        if self.casting then
+            _, _, _, _, _, _, _, notInterruptible = UnitCastingInfo(unitToken)
+        elseif self.channeling then
+            _, _, _, _, _, _, notInterruptible = UnitChannelInfo(unitToken)
+        end
+    end
+
     if not self.textureChangedNeedsColor then
-        if false then     -- custom texture
-            local textureToUse = classicCastbarTexture
-            if self.barType == "uninterruptable" and sArenaMixin.castUninterruptibleTexture then
-                textureToUse = sArenaMixin.castUninterruptibleTexture
+        if colors.enabled then
+            if castBarTexture then
+                castBarTexture:SetDesaturated(true)
             end
-            if textureToUse then
-                self:SetStatusBarTexture(textureToUse)
-            end
-            if colors.enabled then
-                if self.barType == "uninterruptable" then
-                    self:SetStatusBarColor(unpack(colors.uninterruptable or { 0.7, 0.7, 0.7, 1 }))
-                elseif castBarRecolorInterrupt and not BBF.playerKickReady then
-                    self:SetStatusBarColor(unpack(colors.interruptNotReady or { 0.7, 0.7, 0.7, 1 }))
-                elseif self.barType == "channel" then
-                    self:SetStatusBarColor(unpack(colors.channel or { 0.0, 1.0, 0.0, 1 }))
-                elseif self.barType == "interrupted" then
-                    self:SetStatusBarColor(1, 0, 0)
+            if castBarRecolorInterrupt and not BBF.playerKickReady then
+                if colors.colorInterruptNotReady and (self.casting or self.channeling) and notInterruptible ~= nil then
+                    castBarTexture:SetVertexColorFromBoolean(
+                        notInterruptible,
+                        colors.colorUninterruptable,
+                        colors.colorInterruptNotReady
+                    )
                 else
-                    self:SetStatusBarColor(unpack(colors.standard or { 1.0, 0.7, 0.0, 1 }))
+                    self:SetStatusBarColor(unpack(colors.interruptNotReady or {0.7, 0.7, 0.7, 1}))
+                end
+            elseif self.casting then
+                if colors.colorStandard then
+                    if notInterruptible ~= nil then
+                        castBarTexture:SetVertexColorFromBoolean(
+                            notInterruptible,
+                            colors.colorUninterruptable,
+                            colors.colorStandard
+                        )
+                    else
+                        self:SetStatusBarColor(unpack(colors.standard or {1.0, 0.7, 0.0, 1}))
+                    end
+                else
+                    self:SetStatusBarColor(unpack(colors.standard or {1.0, 0.7, 0.0, 1}))
+                end
+            elseif self.channeling then
+                if colors.colorChannel then
+                    if notInterruptible ~= nil then
+                        castBarTexture:SetVertexColorFromBoolean(
+                            notInterruptible,
+                            colors.colorUninterruptable,
+                            colors.colorChannel
+                        )
+                    else
+                        self:SetStatusBarColor(unpack(colors.channel or {0.0, 1.0, 0.0, 1}))
+                    end
+                else
+                    self:SetStatusBarColor(unpack(colors.channel or {0.0, 1.0, 0.0, 1}))
                 end
             else
-                if self.barType == "uninterruptable" then
-                    self:SetStatusBarColor(0.7, 0.7, 0.7)
-                elseif castBarRecolorInterrupt and not BBF.playerKickReady then
-                    self:SetStatusBarColor(unpack(colors.interruptNotReady or { 0.7, 0.7, 0.7, 1 }))
-                elseif self.barType == "channel" then
-                    self:SetStatusBarColor(0, 1, 0)
-                elseif self.barType == "interrupted" then
-                    self:SetStatusBarColor(1, 0, 0)
-                else
-                    self:SetStatusBarColor(1, 0.7, 0)
-                end
+                self:SetStatusBarColor(unpack(colors.standard or {1.0, 0.7, 0.0, 1}))
             end
             self.changedBarColor = true
-        elseif colors.enabled then
-            local castTexture = self:GetStatusBarTexture()
-            if castTexture then
-                castTexture:SetDesaturated(true)
+        elseif castBarRecolorInterrupt and not BBF.playerKickReady then
+            if castBarTexture then
+                castBarTexture:SetDesaturated(true)
             end
-            if self.barType == "uninterruptable" then
-                self:SetStatusBarColor(unpack(colors.uninterruptable or { 0.7, 0.7, 0.7, 1 }))
-            elseif castBarRecolorInterrupt and not BBF.playerKickReady then
-                self:SetStatusBarColor(unpack(colors.interruptNotReady or { 0.7, 0.7, 0.7, 1 }))
-            elseif self.barType == "channel" then
-                self:SetStatusBarColor(unpack(colors.channel or { 0.0, 1.0, 0.0, 1 }))
-            elseif self.barType == "interrupted" then
-                self:SetStatusBarDesaturated(false)
-                self:SetStatusBarColor(1, 1, 1)
-                --self:SetStatusBarColor(1, 0, 0)
+            if (self.casting or self.channeling) and notInterruptible ~= nil then
+                castBarTexture:SetVertexColorFromBoolean(
+                    notInterruptible,
+                    colors.defaultUninterruptable,
+                    colors.colorInterruptNotReady
+                )
             else
-                self:SetStatusBarColor(unpack(colors.standard or { 1.0, 0.7, 0.0, 1 }))
+                self:SetStatusBarColor(unpack(colors.interruptNotReady or {0.7, 0.7, 0.7, 1}))
             end
-            self.changedBarColor = true
-        elseif castBarRecolorInterrupt and not BBF.playerKickReady and self.barType ~= "uninterruptable" then
-            local castTexture = self:GetStatusBarTexture()
-            if castTexture then
-                castTexture:SetDesaturated(true)
-            end
-            self:SetStatusBarColor(unpack(colors.interruptNotReady or { 0.7, 0.7, 0.7, 1 }))
             self.changedBarColor = true
         elseif self.changedBarColor then
-            local castTexture = self:GetStatusBarTexture()
-            if castTexture then
-                castTexture:SetDesaturated(false)
+            if castBarTexture then
+                castBarTexture:SetDesaturated(false)
             end
             self:SetStatusBarColor(1, 1, 1)
             self.changedBarColor = nil
@@ -1398,26 +1664,52 @@ local function CastbarOnEvent(self)
     else
         self:SetStatusBarTexture(classicCastbarTexture)
         if colors.enabled then
-            if self.barType == "uninterruptable" then
-                self:SetStatusBarColor(unpack(colors.uninterruptable or { 0.7, 0.7, 0.7, 1 }))
-            elseif castBarRecolorInterrupt and not BBF.playerKickReady then
-                self:SetStatusBarColor(unpack(colors.interruptNotReady or { 0.7, 0.7, 0.7, 1 }))
-            elseif self.barType == "channel" then
-                self:SetStatusBarColor(unpack(colors.channel or { 0.0, 1.0, 0.0, 1 }))
-            elseif self.barType == "interrupted" then
-                self:SetStatusBarColor(1, 0, 0)
+            if castBarRecolorInterrupt and not BBF.playerKickReady then
+                if notInterruptible ~= nil then
+                    castBarTexture:SetVertexColorFromBoolean(
+                        notInterruptible,
+                        colors.colorUninterruptable,
+                        colors.colorInterruptNotReady
+                    )
+                else
+                    self:SetStatusBarColor(unpack(colors.interruptNotReady or {0.7, 0.7, 0.7, 1}))
+                end
+            elseif self.casting then
+                if notInterruptible ~= nil then
+                    castBarTexture:SetVertexColorFromBoolean(
+                        notInterruptible,
+                        colors.colorUninterruptable,
+                        colors.colorStandard
+                    )
+                else
+                    self:SetStatusBarColor(unpack(colors.standard or {1.0, 0.7, 0.0, 1}))
+                end
+            elseif self.channeling then
+                if notInterruptible ~= nil then
+                    castBarTexture:SetVertexColorFromBoolean(
+                        notInterruptible,
+                        colors.colorUninterruptable,
+                        colors.colorChannel
+                    )
+                else
+                    self:SetStatusBarColor(unpack(colors.channel or {0.0, 1.0, 0.0, 1}))
+                end
             else
-                self:SetStatusBarColor(unpack(colors.standard or { 1.0, 0.7, 0.0, 1 }))
+                self:SetStatusBarColor(unpack(colors.standard or {1.0, 0.7, 0.0, 1}))
             end
         else
-            if self.barType == "uninterruptable" then
-                self:SetStatusBarColor(0.7, 0.7, 0.7)
-            elseif castBarRecolorInterrupt and not BBF.playerKickReady then
-                self:SetStatusBarColor(unpack(colors.interruptNotReady or { 0.7, 0.7, 0.7, 1 }))
-            elseif self.barType == "channel" then
+            if castBarRecolorInterrupt and not BBF.playerKickReady then
+                if (self.casting or self.channeling) and notInterruptible ~= nil then
+                    castBarTexture:SetVertexColorFromBoolean(
+                        notInterruptible,
+                        colors.defaultUninterruptable,
+                        colors.colorInterruptNotReady
+                    )
+                else
+                    self:SetStatusBarColor(unpack(colors.interruptNotReady or {0.7, 0.7, 0.7, 1}))
+                end
+            elseif self.channeling then
                 self:SetStatusBarColor(0, 1, 0)
-            elseif self.barType == "interrupted" then
-                self:SetStatusBarColor(1, 0, 0)
             else
                 self:SetStatusBarColor(1, 0.7, 0)
             end
@@ -1456,22 +1748,75 @@ function BBF.CastbarColorHooks()
         }
     end
 
+    local standardColor = recolorCastbars and BetterBlizzFramesDB.castbarCastColor or { 1.0, 0.7, 0.0, 1 }
+    local channelColor = recolorCastbars and BetterBlizzFramesDB.castbarChannelColor or { 0.0, 1.0, 0.0, 1 }
+    local uninterruptableColor = recolorCastbars and BetterBlizzFramesDB.castbarUninterruptableColor or { 0.7, 0.7, 0.7, 1 }
+    local interruptNotReadyColor = castBarNoInterruptColor or { 0.7, 0.7, 0.7, 1 }
+
+    castbarColors.colorStandard = CreateColor(unpack(standardColor))
+    castbarColors.colorChannel = CreateColor(unpack(channelColor))
+    castbarColors.colorUninterruptable = CreateColor(unpack(uninterruptableColor))
+    castbarColors.colorInterruptNotReady = CreateColor(unpack(interruptNotReadyColor))
+    castbarColors.defaultStandard = CreateColor(1.0, 0.7, 0.0, 1)
+    castbarColors.defaultChannel = CreateColor(0.0, 1.0, 0.0, 1)
+    castbarColors.defaultUninterruptable = CreateColor(0.7, 0.7, 0.7, 1)
+
     local playerCastBarTexture = PlayerCastingBarFrame:GetStatusBarTexture()
-    PlayerCastingBarFrame:HookScript("OnEvent", function(self)
-        if recolorCastbars or self.textureChangedNeedsColor then
-            if self.barType == "interrupted" and not self.textureChangedNeedsColor then
-                playerCastBarTexture:SetDesaturated(false)
-                self:SetStatusBarColor(1, 1, 1)
-            else
-                local c = castbarColors[self.barType] or castbarColors.standard
-                local r, g, b = c[1], c[2], c[3]
+    if not BBF.RecolorCastbarHooked then
+        BBF.RecolorCastbarHooked = true
+        PlayerCastingBarFrame:HookScript("OnEvent", function(self, event)
+            if recolorCastbars or self.textureChangedNeedsColor then
+
+                if event == "UNIT_SPELLCAST_INTERRUPTED" then
+                    self.lastEvent = event
+                    playerCastBarTexture:SetDesaturated(false)
+                    self:SetStatusBarColor(1, 1, 1, 1)
+                    return
+                elseif (event == "UNIT_SPELLCAST_STOP" or event == "UNIT_SPELLCAST_CHANNEL_STOP" or event == "UNIT_SPELLCAST_EMPOWER_STOP") and self.lastEvent == "UNIT_SPELLCAST_INTERRUPTED" then
+                    playerCastBarTexture:SetDesaturated(false)
+                    self:SetStatusBarColor(1, 1, 1, 1)
+                    return
+                end
+
+                local notInterruptible
+                local unitToken = self.unit
+                if unitToken then
+                    if self.casting then
+                        _, _, _, _, _, _, _, notInterruptible = UnitCastingInfo(unitToken)
+                    elseif self.channeling then
+                        _, _, _, _, _, _, notInterruptible = UnitChannelInfo(unitToken)
+                    end
+                end
                 playerCastBarTexture:SetDesaturated(true)
-                self:SetStatusBarColor(r, g, b)
+
+                if self.casting then
+                    if castbarColors.colorStandard then
+                        playerCastBarTexture:SetVertexColorFromBoolean(
+                            notInterruptible,
+                            castbarColors.colorUninterruptable,
+                            castbarColors.colorStandard
+                        )
+                    else
+                        self:SetStatusBarColor(unpack(castbarColors.standard))
+                    end
+                elseif self.channeling then
+                    if castbarColors.colorChannel then
+                        playerCastBarTexture:SetVertexColorFromBoolean(
+                            notInterruptible,
+                            castbarColors.colorUninterruptable,
+                            castbarColors.colorChannel
+                        )
+                    else
+                        self:SetStatusBarColor(unpack(castbarColors.channel))
+                    end
+                else
+                    self:SetStatusBarColor(unpack(castbarColors.standard))
+                end
             end
-        end
-    end)
-    TargetFrameSpellBar:HookScript("OnEvent", CastbarOnEvent)
-    FocusFrameSpellBar:HookScript("OnEvent", CastbarOnEvent)
+        end)
+        TargetFrameSpellBar:HookScript("OnEvent", CastbarOnEvent)
+        FocusFrameSpellBar:HookScript("OnEvent", CastbarOnEvent)
+    end
 end
 
 

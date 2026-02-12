@@ -1,6 +1,7 @@
 local _, addonTable = ...
 
 local SettingsLib = addonTable.SettingsLib or LibStub("LibEQOLSettingsMode-1.0")
+local L = addonTable.L
 
 local featureId = "SCRB_POWER_COLORS"
 
@@ -13,118 +14,130 @@ addonTable.FeaturesMetadata[featureId] = {
 
 local HealthData = {
 	{
-		label = "Health",
+		label = L["HEALTH"],
 		key = "HEALTH",
 	},
 }
 
 local PowerData = {
     {
-        label = "Mana",
+        label = L["MANA"],
         key = Enum.PowerType.Mana, -- Key in config, passed to addonTable.GetOverrideResourceColor and addonTable.GetResourceColor to retrieve the color values
     },
     {
-        label = "Rage",
+        label = L["RAGE"],
         key = Enum.PowerType.Rage,
     },
     {
-        label = "Focus",
+        label = L["WHIRLWIND"],
+        key = "WHIRLWIND",
+    },
+    {
+        label = L["FOCUS"],
         key = Enum.PowerType.Focus,
     },
     {
-        label = "Energy",
+        label = L["TIP_OF_THE_SPEAR"],
+        key = "TIP_OF_THE_SPEAR",
+    },
+    {
+        label = L["ENERGY"],
         key = Enum.PowerType.Energy,
     },
     {
-        label = "Runic Power",
+        label = L["RUNIC_POWER"],
         key = Enum.PowerType.RunicPower,
     },
     {
-        label = "Astral Power",
+        label = L["LUNAR_POWER"],
         key = Enum.PowerType.LunarPower,
     },
     {
-        label = "Maelstrom",
+        label = L["MAELSTROM"],
         key = Enum.PowerType.Maelstrom,
     },
     {
-        label = "Maelstrom Weapon",
+        label = L["MAELSTROM_WEAPON"],
         key = "MAELSTROM_WEAPON",
     },
     {
-        label = "Maelstrom Weapon > 5",
+        label = L["MAELSTROM_WEAPON"] .. ' > 5',
         key = "MAELSTROM_WEAPON_ABOVE_5",
     },
     {
-        label = "Insanity",
+        label = L["INSANITY"],
         key = Enum.PowerType.Insanity,
     },
     {
-        label = "Fury",
+        label = L["FURY"],
         key = Enum.PowerType.Fury,
     },
     {
-        label = "Blood Runes",
+        label = L["BLOOD_RUNE"],
         key = Enum.PowerType.RuneBlood,
     },
     {
-        label = "Frost Runes",
+        label = L["FROST_RUNE"],
         key = Enum.PowerType.RuneFrost,
     },
     {
-        label = "Unholy Runes",
+        label = L["UNHOLY_RUNE"],
         key = Enum.PowerType.RuneUnholy,
     },
     {
-        label = "Combo Points",
+        label = L["COMBO_POINTS"],
         key = Enum.PowerType.ComboPoints,
     },
     {
-        label = "Overcharged Combo Points",
+        label = L["OVERCHARGED_COMBO_POINTS"],
         key = "OVERCHARGED_COMBO_POINTS",
     },
     {
-        label = "Soul Shards",
+        label = L["SOUL_SHARDS"],
         key = Enum.PowerType.SoulShards,
     },
     {
-        label = "Holy Power",
+        label = L["HOLY_POWER"],
         key = Enum.PowerType.HolyPower,
     },
     {
-        label = "Chi",
+        label = L["CHI"],
         key = Enum.PowerType.Chi,
     },
     {
-        label = "Low Stagger",
+        label = L["STAGGER_LOW"],
         key = "STAGGER_LOW",
     },
     {
-        label = "Medium Stagger",
+        label = L["STAGGER_MEDIUM"],
         key = "STAGGER_MEDIUM",
     },
     {
-        label = "High Stagger",
+        label = L["STAGGER_HIGH"],
         key = "STAGGER_HEAVY",
     },
     {
-        label = "Arcane Charges",
+        label = L["ARCANE_CHARGES"],
         key = Enum.PowerType.ArcaneCharges,
     },
     {
-        label = "Soul Fragments",
+        label = L["SOUL_FRAGMENTS_VENGEANCE"],
+        key = "SOUL_FRAGMENTS_VENGEANCE",
+    },
+    {
+        label = L["SOUL_FRAGMENTS_DDH"],
         key = "SOUL_FRAGMENTS",
     },
     {
-        label = "Soul Fragments Void Meta.",
+        label = L["SOUL_FRAGMENTS_VOID_META"],
         key = "SOUL_FRAGMENTS_VOID_META",
     },
     {
-        label = "Essence",
+        label = L["ESSENCE"],
         key = Enum.PowerType.Essence,
     },
     {
-        label = "Ebon Might",
+        label = L["EBON_MIGHT"],
         key = "EBON_MIGHT",
     },
 }
@@ -139,7 +152,11 @@ addonTable.SettingsPanelInitializers[featureId] = function(category)
 		SenseiClassResourceBarDB["_Settings"]["PowerColors"] = {}
 	end
 
-	SettingsLib:CreateHeader(category, "Power Colors")
+    local powerColorSection = SettingsLib:CreateExpandableSection(category, {
+        name = L["SETTINGS_HEADER_POWER_COLORS"],
+        expanded = true,
+        colorizeTitle = true,
+    })
 
     SettingsLib:CreateColorOverrides(category, {
         entries = PowerData,
@@ -157,9 +174,14 @@ addonTable.SettingsPanelInitializers[featureId] = function(category)
             return color.r, color.g, color.b, color.a or 1
         end,
         colorizeLabel = true,
+        parentSection = powerColorSection,
     })
 
-	SettingsLib:CreateHeader(category, "Health Color")
+    local healthColorSection = SettingsLib:CreateExpandableSection(category, {
+        name = L["SETTINGS_HEADER_HEALTH_COLOR"],
+        expanded = true,
+        colorizeTitle = true,
+    })
 
     SettingsLib:CreateColorOverrides(category, {
         entries = HealthData,
@@ -177,5 +199,6 @@ addonTable.SettingsPanelInitializers[featureId] = function(category)
             return color.r, color.g, color.b, color.a or 1
         end,
         colorizeLabel = true,
+        parentSection = healthColorSection,
     })
 end

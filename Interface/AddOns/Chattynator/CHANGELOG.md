@@ -1,6 +1,9 @@
 # Chattynator
 
-## [186](https://github.com/TheMouseNest/Chattynator/tree/186) (2026-01-21)
-[Full Changelog](https://github.com/TheMouseNest/Chattynator/compare/185...186) 
+## [190](https://github.com/TheMouseNest/Chattynator/tree/190) (2026-02-10)
+[Full Changelog](https://github.com/TheMouseNest/Chattynator/compare/189...190) 
 
-- Disable skins if the addon is incompatible with the current version of WoW  
+- Update toc for 12.0.1  
+- [Fixes #146] Error when joining/leaving unrecognised channel  
+- Reduce inset size slightly  
+- Remove usage of "trim" (doesn't work with secrets)  
