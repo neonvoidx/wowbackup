@@ -1,0 +1,30 @@
+VER 3 0100000000000001 " " "INV_MISC_QUESTIONMARK"
+#showtooltip Death Grip
+/cast [@mouseover,exists,harm,nodead][] Death Grip
+END
+VER 3 0100000000000006 " " "INV_MISC_QUESTIONMARK"
+#showtooltip
+/cast [target=mouseover,exists] Dark Command; Dark Command
+END
+VER 3 0100000000000007 " " "134400"
+#showtooltip
+/cast [known: Dark Transformation] Dark Transformation
+/cast [known: Summon Gargoyle] Summon Gargoyle
+END
+VER 3 0100000000000009 " " "134400"
+#showtooltip
+/cast [@cursor] Death and Decay
+END
+VER 3 0100000000000008 " " "134400"
+#showtooltip Unholy Assault
+/use 13
+/cast [known: Unholy Assault] Unholy Assault
+END
+VER 3 0100000000000002 " " "INV_MISC_QUESTIONMARK"
+#showtooltip
+/cast [@player] Death and Decay
+END
+VER 3 0100000000000003 " " "INV_MISC_QUESTIONMARK"
+#showtooltip Raise Ally
+/cast [@mouseover,help][@target]Raise Ally
+END

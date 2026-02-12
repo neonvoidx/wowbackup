@@ -76,7 +76,7 @@ Details_DataStorage: enabled
 Details_Streamer: enabled
 Details_TinyThreat: enabled
 Details_Vanguard: enabled
-HandyNotes: disabled
+HandyNotes: enabled
 HandyNotes_DragonflightTreasures: enabled
 HealthBarColor: enabled
 Leatrix_Maps: enabled
@@ -401,7 +401,7 @@ CursorRing: enabled
 CursorMod: enabled
 DecorVendor: enabled
 HomeBound: enabled
-KeystonePolaris: disabled
+KeystonePolaris: enabled
 SenseiClassResourceBar: enabled
 TransmogLootHelper: enabled
 CooldownManagerCentered: enabled
@@ -410,3 +410,10 @@ HandyNotes_Midnight: enabled
 Mapzeroth: enabled
 Platynator: enabled
 TargetedSpells: enabled
+AccountPlayed: enabled
+EnhanceQoL: enabled
+FreshDRs: enabled
+FrogskisCursorTrail: enabled
+FrogskisInstantCastBar: enabled
+MiniCC: enabled
+EnhanceQoLSharedMedia: enabled

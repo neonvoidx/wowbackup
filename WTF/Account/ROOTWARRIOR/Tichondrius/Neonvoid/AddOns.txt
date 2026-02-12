@@ -158,3 +158,9 @@ FreshDRs: enabled
 FrogskisInstantCastBar: enabled
 MiniCC: enabled
 RETabBinder: enabled
+AccountPlayed: enabled
+BetterFishing: enabled
+BtWLoadouts: enabled
+EnhanceQoL: enabled
+FrogskisCursorTrail: enabled
+EnhanceQoLSharedMedia: enabled

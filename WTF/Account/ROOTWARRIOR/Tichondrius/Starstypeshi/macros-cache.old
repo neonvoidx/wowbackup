@@ -32,7 +32,8 @@ VER 3 0100000000000014 " " "134400"
 /cast [combat] Shadowmeld
 END
 VER 3 0100000000000016 " " "134400"
-#showtooltip
+#showtooltip Moonfire
+/cast [noform:4] Moonkin Form
 /cast [@mouseover,harm,exists,nodead][] Moonfire
 END
 VER 3 010000000000001A " " "134400"
@@ -67,7 +68,18 @@ VER 3 010000000000001E " " "134400"
 #showtooltip
 /cast [@cursor] Grove Guardians
 END
+VER 3 010000000000001F " " "134400"
+#showtooltip starfire
+/cast [noform:4] Moonkin Form
+/cast starfire
+END
+VER 3 0100000000000020 " " "134400"
+#showtooltip wrath
+/cast [noform:4] Moonkin Form
+/cast wrath
+END
 VER 3 0100000000000015 "  " "134400"
-#showtooltip
+#showtooltip Sunfire
+/cast [noform:4] Moonkin Form
 /cast [@mouseover,harm,exists,nodead][] Sunfire
 END

@@ -123,3 +123,4 @@ FrameColorAddOnSkins: enabled
 HealthBarColor: enabled
 Plater: disabled
 BetterWardrobe_SourceData: enabled
+sArena_Reloaded: enabled

@@ -1,0 +1,8 @@
+Version: 1
+Frame: MerchantFrame
+FrameLevel: 1
+Anchor: TOPLEFT
+X: 16
+Y: -117
+W: 336
+H: 444

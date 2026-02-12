@@ -1,6 +1,6 @@
 
 BugGrabberDB = {
-["session"] = 5064,
+["session"] = 5068,
 ["lastSanitation"] = 3,
 ["errors"] = {
 {
@@ -94,6 +94,14 @@ BugGrabberDB = {
 ["stack"] = "[Interface/AddOns/Blizzard_SharedXML/Backdrop.lua]:226: in function 'SetupTextureCoordinates'\n[Interface/AddOns/Blizzard_SharedXML/Backdrop.lua]:191: in function <Interface/AddOns/Blizzard_SharedXML/Backdrop.lua:189>",
 ["session"] = 5057,
 ["counter"] = 3,
+},
+{
+["message"] = "[string \"local s,b=\"SHOW_MULTI_ACTIONBAR_\"b=not _G[s...\"]:1: attempt to call global 'InterfaceOptions_UpdateMultiActionBars' (a nil value)",
+["time"] = "2026/02/12 16:15:02",
+["locals"] = "msg = \"local s,b=\"SHOW_MULTI_ACTIONBAR_\"b=not _G[s..1]for i=1,5 do _G[s..i]=b end InterfaceOptions_UpdateMultiActionBars()\"\nuserScriptsDisabled = false\n",
+["stack"] = "[Interface/AddOns/Blizzard_ChatFrameBase/Shared/SlashCommands.lua]:1172: in function '?'\n[Interface/AddOns/Blizzard_ChatFrameBase/Shared/ChatFrameEditBox.lua]:259: in function 'ParseText'\n[Interface/AddOns/Blizzard_ChatFrameBase/Shared/ChatFrameEditBox.lua]:284: in function 'SendText'\n[Interface/AddOns/Blizzard_ChatFrameBase/Shared/ChatFrameEditBox.lua]:407: in function <...s/Blizzard_ChatFrameBase/Shared/ChatFrameEditBox.lua:403>",
+["session"] = 5065,
+["counter"] = 1,
 },
 },
 }

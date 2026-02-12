@@ -1,28 +1,24 @@
 
 AccountPlayedDB = {
-["Tichondrius-Hellavator"] = {
-["time"] = 3790656,
-["class"] = "WARLOCK",
-},
-["Tichondrius-Stormclout"] = {
-["time"] = 4734177,
-["class"] = "MONK",
+["Tichondrius-Gehyo"] = {
+["time"] = 79983,
+["class"] = "HUNTER",
 },
 ["Tichondrius-Starphage"] = {
-["time"] = 4184677,
+["time"] = 4184712,
 ["class"] = "DEMONHUNTER",
 },
 ["Tichondrius-Smaugchamp"] = {
 ["time"] = 176908,
 ["class"] = "EVOKER",
 },
-["Tichondrius-Choppiez"] = {
-["time"] = 413106,
-["class"] = "WARRIOR",
+["Tichondrius-Hellavator"] = {
+["time"] = 3790656,
+["class"] = "WARLOCK",
 },
-["Tichondrius-Auteist"] = {
-["time"] = 1533016,
-["class"] = "MAGE",
+["Mal'Ganis-Reedingo"] = {
+["time"] = 712572,
+["class"] = "SHAMAN",
 },
 ["Tichondrius-Mäñýfäçëð"] = {
 ["time"] = 1357318,
@@ -32,16 +28,40 @@ AccountPlayedDB = {
 ["time"] = 817504,
 ["class"] = "PRIEST",
 },
+["Mal'Ganis-Tampacks"] = {
+["time"] = 29500,
+["class"] = "DEATHKNIGHT",
+},
+["Tichondrius-Stormclout"] = {
+["time"] = 4734177,
+["class"] = "MONK",
+},
+["Tichondrius-Starstypeshi"] = {
+["time"] = 112010,
+["class"] = "DRUID",
+},
+["Tichondrius-Praisesun"] = {
+["time"] = 128235,
+["class"] = "PALADIN",
+},
+["Tichondrius-Auteist"] = {
+["time"] = 1533016,
+["class"] = "MAGE",
+},
+["Tichondrius-Choppiez"] = {
+["time"] = 413106,
+["class"] = "WARRIOR",
+},
 }
 AccountPlayedMinimapDB = {
 ["y"] = -74.24621202458748,
 ["x"] = -74.2462120245875,
 }
 AccountPlayedPopupDB = {
-["y"] = 0,
-["x"] = 0,
+["y"] = 117.5001983642578,
+["x"] = -447.50048828125,
 ["point"] = "CENTER",
 ["height"] = 300,
-["useYears"] = false,
+["useYears"] = true,
 ["width"] = 520,
 }

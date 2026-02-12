@@ -1,7 +1,7 @@
 
 BugGrabberDB = {
 ["lastSanitation"] = 3,
-["session"] = 5065,
+["session"] = 5069,
 ["errors"] = {
 {
 ["message"] = "...s/Blizzard_CooldownViewer/CooldownViewerItemData.lua:419: attempt to perform boolean test on local 'hasTotem' (a secret boolean value tainted by 'CooldownManagerCentered')",
