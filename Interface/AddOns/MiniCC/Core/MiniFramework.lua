@@ -1,4 +1,5 @@
 local addonName, addon = ...
+local L = addon.L
 local loader = CreateFrame("Frame")
 local loaded = false
 local onLoadCallbacks = {}
@@ -98,7 +99,7 @@ local function GetOrCreateDialog()
 
 	dialog.Title = dialog:CreateFontString(nil, "ARTWORK", "GameFontNormalLarge")
 	dialog.Title:SetPoint("TOP", dialog, "TOP", 0, -8)
-	dialog.Title:SetText("Notification")
+	dialog.Title:SetText(L["Notification"])
 	dialog.Title:SetTextColor(1, 0.82, 0)
 
 	dialog.TitleDivider = dialog:CreateTexture(nil, "ARTWORK")
@@ -140,7 +141,7 @@ function M:Notify(msg, ...)
 end
 
 function M:NotifyCombatLockdown()
-	M:Notify("Can't do that during combat.")
+	M:Notify(L["Can't do that during combat."])
 end
 
 function M:CopyTable(src, dst)
@@ -159,6 +160,14 @@ function M:CopyTable(src, dst)
 	return dst
 end
 
+function M:CopyValueOrTable(src)
+	if type(src) ~= "table" then
+		return src
+	end
+
+	return M:CopyTable(src)
+end
+
 function M:ClampInt(v, minV, maxV, fallback)
 	v = tonumber(v)
 
@@ -167,6 +176,24 @@ function M:ClampInt(v, minV, maxV, fallback)
 	end
 
 	v = math.floor(v + 0.5)
+
+	if v < minV then
+		return minV
+	end
+
+	if v > maxV then
+		return maxV
+	end
+
+	return v
+end
+
+function M:ClampFloat(v, minV, maxV, fallback)
+	v = tonumber(v)
+
+	if not v then
+		return fallback
+	end
 
 	if v < minV then
 		return minV
@@ -703,7 +730,11 @@ function M:Checkbox(options)
 	if options.Tooltip then
 		checkbox:SetScript("OnEnter", function(chkSelf)
 			GameTooltip:SetOwner(chkSelf, "ANCHOR_RIGHT")
-			GameTooltip:SetText(options.LabelText, 1, 0.82, 0)
+			local tooltipTitle = options.LabelText
+			if not tooltipTitle or tooltipTitle:match("^%s*$") then
+				tooltipTitle = "Information"
+			end
+			GameTooltip:SetText(tooltipTitle, 1, 0.82, 0)
 			GameTooltip:AddLine(options.Tooltip, 1, 1, 1, true)
 			GameTooltip:Show()
 		end)
@@ -764,14 +795,46 @@ function M:Slider(options)
 		high:SetText(options.Max)
 	end
 
+	local hasFloat = math.floor(options.Step) ~= options.Step
 	local box = CreateFrame("EditBox", nil, options.Parent, "InputBoxTemplate")
-	ConfigureNumbericBox(box, options.Min < 0)
+
+	if not hasFloat then
+		ConfigureNumbericBox(box, options.Min < 0)
+	end
+
+	local function GetDecimalPlaces(step)
+		local s = tostring(step)
+		local dot = s:find("%.")
+		if not dot then
+			return 0
+		end
+		return #s - dot
+	end
+
+	local function GetMaxLetters(min, max, step)
+		local decimals = GetDecimalPlaces(step)
+
+		local maxAbs = math.max(math.abs(min), math.abs(max))
+		local intDigits = #tostring(math.floor(maxAbs))
+
+		local letters = intDigits
+
+		if decimals > 0 then
+			letters = letters + 1 + decimals -- dot + decimals
+		end
+
+		if min < 0 then
+			letters = letters + 1 -- minus sign
+		end
+
+		return letters
+	end
 
 	box:SetPoint("CENTER", slider, "CENTER", 0, 30)
 	box:SetFontObject("GameFontWhite")
 	box:SetSize(50, 20)
 	box:SetAutoFocus(false)
-	box:SetMaxLetters(math.log(options.Max, 10) + 1)
+	box:SetMaxLetters(GetMaxLetters(options.Min, options.Max, options.Step))
 	box:SetText(tostring(options.GetValue()))
 	box:SetJustifyH("CENTER")
 	box:SetCursorPosition(0)
@@ -1126,7 +1189,7 @@ function M:ShowDialog(options)
 	local width = options.Width or 360
 	dlg:SetWidth(width)
 
-	dlg.Title:SetText(options.Title or "Notification")
+	dlg.Title:SetText(options.Title or L["Notification"])
 	dlg.Text:SetWidth(width - 40)
 	dlg.Text:SetText(options.Text)
 	dlg.Text:SetWordWrap(true)
@@ -1249,7 +1312,7 @@ end
 ---Removes any erronous values from the options table.
 ---@param target table the target table to clean
 ---@param template table what the table should look like
----@param cleanValues any whether or not to clean non-table values, e.g. numbers and strings
+---@param cleanValues any whether or not to clean values (both table and non-table)
 ---@param recurse any whether to recursively clean the table
 function M:CleanTable(target, template, cleanValues, recurse)
 	-- remove values that aren't ours
@@ -1260,18 +1323,15 @@ function M:CleanTable(target, template, cleanValues, recurse)
 	for key, value in pairs(target) do
 		local templateValue = template[key]
 
-		-- only clean non-table values if told to do so
+		-- Remove unknown keys or keys with wrong types when cleanValues is true
 		if cleanValues and templateValue == nil then
 			target[key] = nil
-		end
-
-		if recurse then
-			if type(value) == "table" and type(templateValue) == "table" then
-				M:CleanTable(value, templateValue, cleanValues, recurse)
-			elseif type(value) == "table" and type(templateValue) ~= "table" then
-				-- type mismatch: reset this key to default
-				target[key] = templateValue
-			end
+		elseif cleanValues and type(value) == "table" and type(templateValue) ~= "table" then
+			-- type mismatch: reset this key to default
+			target[key] = templateValue
+		elseif recurse and type(value) == "table" and type(templateValue) == "table" then
+			-- Recursively clean nested tables
+			M:CleanTable(value, templateValue, cleanValues, recurse)
 		end
 	end
 end

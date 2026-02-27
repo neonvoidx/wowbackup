@@ -18,6 +18,10 @@ local THRESHOLD_THICKNESS = (ResourceBars and ResourceBars.THRESHOLD_THICKNESS) 
 local THRESHOLD_DEFAULT = (ResourceBars and ResourceBars.THRESHOLD_DEFAULT) or { 1, 1, 1, 0.5 }
 local DEFAULT_THRESHOLDS = (ResourceBars and ResourceBars.DEFAULT_THRESHOLDS) or { 25, 50, 75, 90 }
 local DEFAULT_THRESHOLD_COUNT = (ResourceBars and ResourceBars.DEFAULT_THRESHOLD_COUNT) or 3
+local MAELSTROM_WEAPON_SEGMENTS = (ResourceBars and ResourceBars.MAELSTROM_WEAPON_SEGMENTS) or 5
+local MAELSTROM_WEAPON_MAX_STACKS = (ResourceBars and ResourceBars.MAELSTROM_WEAPON_MAX_STACKS) or 10
+local MAELSTROM_MID_STACK_DEFAULT = (ResourceBars and ResourceBars.MAELSTROM_WEAPON_MID_STACK_DEFAULT) or MAELSTROM_WEAPON_SEGMENTS
+local MAELSTROM_MID_STACK_MAX = math.max(1, MAELSTROM_WEAPON_MAX_STACKS - 1)
 local STAGGER_EXTRA_THRESHOLD_HIGH = (ResourceBars and ResourceBars.STAGGER_EXTRA_THRESHOLD_HIGH) or 200
 local STAGGER_EXTRA_THRESHOLD_EXTREME = (ResourceBars and ResourceBars.STAGGER_EXTRA_THRESHOLD_EXTREME) or 300
 local STAGGER_EXTRA_COLORS = (ResourceBars and ResourceBars.STAGGER_EXTRA_COLORS) or { high = { 0.62, 0.2, 1, 1 }, extreme = { 1, 0.2, 0.8, 1 } }
@@ -37,6 +41,11 @@ local AUTO_ENABLE_OPTIONS = {
 local AUTO_ENABLE_ORDER = { "HEALTH", "MAIN", "SECONDARY" }
 
 local specSettingVars = {}
+local function getActiveSpecIndex()
+	local apiSpec = C_SpecializationInfo and C_SpecializationInfo.GetSpecialization and C_SpecializationInfo.GetSpecialization()
+	if apiSpec and apiSpec > 0 then return apiSpec end
+	return addon.variables and addon.variables.unitSpec
+end
 local function autoEnableSelection()
 	addon.db.resourceBarsAutoEnable = addon.db.resourceBarsAutoEnable or {}
 	-- Migrate legacy boolean flag into the new selection map
@@ -94,6 +103,11 @@ local function maybeAutoEnableBars(specIndex, specCfg)
 			specCfg[pType] = specCfg[pType] or {}
 			local ok = false
 			if ResourceBars.ApplyGlobalProfile then ok = ResourceBars.ApplyGlobalProfile(pType, specIndex, false) end
+			-- Fallback for fresh profiles/new chars without any saved global template yet.
+			if not ok then
+				specCfg[pType]._rbType = pType
+				ok = true
+			end
 			if ok then
 				applied = applied + 1
 				specCfg[pType].enabled = true
@@ -114,18 +128,27 @@ local function maybeAutoEnableBars(specIndex, specCfg)
 					local a = specCfg[pType].anchor or {}
 					a.point = a.point or "CENTER"
 					a.relativePoint = a.relativePoint or "CENTER"
-					local targetFrame = a.relativeFrame or frameNameFor("HEALTH")
-					if class == "DRUID" then
-						if pType == "COMBO_POINTS" then targetFrame = frameNameFor("ENERGY") end
-						if not targetFrame or targetFrame == "" then targetFrame = prevFrame or (selection.MAIN and mainFrame or nil) end
-					else
-						targetFrame = prevFrame
+					local explicitRelative = type(a.relativeFrame) == "string" and a.relativeFrame ~= ""
+					local chained = false
+					if not explicitRelative then
+						local targetFrame = frameNameFor("HEALTH")
+						if class == "DRUID" then
+							if pType == "COMBO_POINTS" then
+								targetFrame = frameNameFor("ENERGY")
+							else
+								targetFrame = prevFrame
+							end
+							if not targetFrame or targetFrame == "" then targetFrame = prevFrame or (selection.MAIN and mainFrame or nil) end
+						else
+							targetFrame = prevFrame
+						end
+						a.relativeFrame = targetFrame
+						chained = targetFrame and targetFrame ~= ""
 					end
-					a.relativeFrame = targetFrame
 					a.x = a.x or 0
-					a.y = a.y or -2
+					if chained then a.y = a.y or -2 end
 					a.autoSpacing = a.autoSpacing or nil
-					a.matchRelativeWidth = a.matchRelativeWidth or true
+					if chained then a.matchRelativeWidth = a.matchRelativeWidth or true end
 					specCfg[pType].anchor = a
 					if class ~= "DRUID" then prevFrame = frameNameFor(pType) end
 				else
@@ -252,7 +275,9 @@ local function setBarEnabled(specIndex, barType, enabled)
 	if ResourceBars.QueueRefresh then ResourceBars.QueueRefresh(specIndex) end
 	if ResourceBars.MaybeRefreshActive then ResourceBars.MaybeRefreshActive(specIndex) end
 	if EditMode and EditMode.RefreshFrame then
-		local id = "resourceBar_" .. tostring(barType)
+		local curSpec = tonumber(specIndex or getActiveSpecIndex()) or 0
+		local id = (ResourceBars.GetEditModeFrameId and ResourceBars.GetEditModeFrameId(barType, addon.variables.unitClass, curSpec))
+			or ("resourceBar_" .. tostring(addon.variables.unitClass or "UNKNOWN") .. "_" .. tostring(curSpec) .. "_" .. tostring(barType))
 		local layout = EditMode.GetActiveLayoutName and EditMode:GetActiveLayoutName()
 		EditMode:RefreshFrame(id, layout)
 	end
@@ -266,20 +291,34 @@ local function registerEditModeBars()
 	if not EditMode or not EditMode.RegisterFrame then return end
 	local registered = 0
 	local registeredFrames = ResourceBars._editModeRegisteredFrames or {}
+	local registeredByBar = ResourceBars._editModeRegisteredFrameByBar or {}
 	ResourceBars._editModeRegisteredFrames = registeredFrames
+	ResourceBars._editModeRegisteredFrameByBar = registeredByBar
 
 	local function registerBar(idSuffix, frameName, barType, widthDefault, heightDefault)
 		local frame = _G[frameName]
 		if not frame then return end
-		local frameId = "resourceBar_" .. idSuffix
+		local curSpec = tonumber(getActiveSpecIndex()) or 0
+		local registeredSpec = curSpec
+		local frameId = (ResourceBars.GetEditModeFrameId and ResourceBars.GetEditModeFrameId(idSuffix, addon.variables.unitClass, registeredSpec))
+			or ("resourceBar_" .. tostring(addon.variables.unitClass or "UNKNOWN") .. "_" .. tostring(curSpec) .. "_" .. tostring(idSuffix))
+		local prevId = registeredByBar[idSuffix]
+		if prevId and prevId ~= frameId and EditMode and EditMode.UnregisterFrame then
+			EditMode:UnregisterFrame(prevId, false)
+			registeredFrames[prevId] = nil
+		end
 		if registeredFrames[frameId] then return end
 		registeredFrames[frameId] = true
-		local cfg = ResourceBars and ResourceBars.getBarSettings and ResourceBars.getBarSettings(barType) or ResourceBars and ResourceBars.GetBarSettings and ResourceBars.GetBarSettings(barType)
-		local anchor = ResourceBars and ResourceBars.getAnchor and ResourceBars.getAnchor(barType, addon.variables.unitSpec)
+		registeredByBar[idSuffix] = frameId
+		local specCfg = ensureSpecCfg(registeredSpec) or {}
+		local cfg = specCfg[barType]
+		if not cfg and ResourceBars and ResourceBars.getBarSettings then cfg = ResourceBars.getBarSettings(barType) end
+		if not cfg and ResourceBars and ResourceBars.GetBarSettings then cfg = ResourceBars.GetBarSettings(barType) end
+		local anchor = ResourceBars and ResourceBars.getAnchor and ResourceBars.getAnchor(barType, registeredSpec)
 		local titleLabel = (barType == "HEALTH") and (HEALTH or "Health") or (ResourceBars.PowerLabels and ResourceBars.PowerLabels[barType]) or _G["POWER_TYPE_" .. barType] or _G[barType] or barType
 		local function currentSpecInfo()
 			local uc = addon.variables.unitClass
-			local us = addon.variables.unitSpec
+			local us = registeredSpec or getActiveSpecIndex()
 			return ResourceBars and ResourceBars.powertypeClasses and ResourceBars.powertypeClasses[uc] and ResourceBars.powertypeClasses[uc][us]
 		end
 
@@ -295,16 +334,17 @@ local function registerEditModeBars()
 		cfg.backdrop.outset = cfg.backdrop.outset or 0
 		cfg.backdrop.backgroundInset = max(0, cfg.backdrop.backgroundInset or 0)
 		local function curSpecCfg()
-			local spec = addon.variables.unitSpec
+			local spec = registeredSpec or getActiveSpecIndex()
 			local specCfg = ensureSpecCfg(spec)
 			if not specCfg then return nil end
 			specCfg[barType] = specCfg[barType] or {}
 			return specCfg[barType]
 		end
 		local function queueRefresh()
-			if ResourceBars.QueueRefresh then ResourceBars.QueueRefresh(addon.variables.unitSpec) end
-			if ResourceBars.MaybeRefreshActive then ResourceBars.MaybeRefreshActive(addon.variables.unitSpec) end
-			if EditMode and EditMode:IsInEditMode() and addon.variables.unitSpec then
+			local targetSpec = registeredSpec or getActiveSpecIndex()
+			if ResourceBars.QueueRefresh then ResourceBars.QueueRefresh(targetSpec) end
+			if ResourceBars.MaybeRefreshActive then ResourceBars.MaybeRefreshActive(targetSpec) end
+			if EditMode and EditMode:IsInEditMode() and targetSpec then
 				if ResourceBars.Refresh then ResourceBars.Refresh() end
 				if ResourceBars.ReanchorAll then ResourceBars.ReanchorAll() end
 			end
@@ -551,9 +591,9 @@ local function registerEditModeBars()
 						if not c then return end
 						c.useMaelstromTenStacks = value and true or false
 						if c.useMaelstromTenStacks then
-							c.visualSegments = 10
-						elseif c.visualSegments == 10 or c.visualSegments == nil then
-							c.visualSegments = 5
+							c.visualSegments = MAELSTROM_WEAPON_MAX_STACKS
+						elseif c.visualSegments == MAELSTROM_WEAPON_MAX_STACKS or c.visualSegments == nil then
+							c.visualSegments = MAELSTROM_WEAPON_SEGMENTS
 						end
 						queueRefresh()
 					end,
@@ -1066,6 +1106,38 @@ local function registerEditModeBars()
 					isEnabled = function()
 						local c = curSpecCfg()
 						return c and c.showSeparator == true
+					end,
+					parentId = "frame",
+				}
+
+				settingsList[#settingsList + 1] = {
+					name = L["Separated offset"] or "Separated offset",
+					kind = settingType.Slider,
+					allowInput = true,
+					field = "separatedOffset",
+					minValue = 0,
+					maxValue = 30,
+					valueStep = 1,
+					get = function()
+						local c = curSpecCfg()
+						return (c and c.separatedOffset) or 0
+					end,
+					set = function(_, value)
+						local c = curSpecCfg()
+						if not c then return end
+						local new = tonumber(value) or 0
+						if new < 0 then new = 0 end
+						new = math.floor(new + 0.5)
+						if c.separatedOffset == new then return end
+						c.separatedOffset = new
+						queueRefresh()
+					end,
+					default = (cfg and cfg.separatedOffset) or 0,
+					isShown = function() return barType ~= "RUNES" and barType ~= "ESSENCE" end,
+					isEnabled = function()
+						local c = curSpecCfg()
+						if not c then return false end
+						return c.showSeparator == true or c.useGradient == true
 					end,
 					parentId = "frame",
 				}
@@ -1752,6 +1824,24 @@ local function registerEditModeBars()
 				}
 
 				settingsList[#settingsList + 1] = {
+					name = L["Hide percent (%)"] or "Hide percent (%)",
+					kind = settingType.Checkbox,
+					field = "hidePercentSign",
+					parentId = "textsettings",
+					get = function()
+						local c = curSpecCfg()
+						return c and c.hidePercentSign == true
+					end,
+					set = function(_, value)
+						local c = curSpecCfg()
+						if not c then return end
+						c.hidePercentSign = value and true or false
+						queueRefresh()
+					end,
+					default = false,
+				}
+
+				settingsList[#settingsList + 1] = {
 					name = HUD_EDIT_MODE_SETTING_OBJECTIVE_TRACKER_TEXT_SIZE,
 					kind = settingType.Slider,
 					allowInput = true,
@@ -2258,7 +2348,7 @@ local function registerEditModeBars()
 
 				if barType == "MAELSTROM_WEAPON" then
 					settingsList[#settingsList + 1] = {
-						name = "Use 5-stack color",
+						name = "Use stack-threshold color",
 						kind = settingType.CheckboxColor,
 						field = "useMaelstromFiveColor",
 						default = true,
@@ -2287,6 +2377,63 @@ local function registerEditModeBars()
 						end,
 						hasOpacity = true,
 						parentId = "colorsetting",
+					}
+
+					settingsList[#settingsList + 1] = {
+						name = "Stack threshold for color",
+						kind = settingType.Slider,
+						allowInput = true,
+						field = "maelstromMidStack",
+						minValue = 1,
+						maxValue = MAELSTROM_MID_STACK_MAX,
+						valueStep = 1,
+						default = MAELSTROM_MID_STACK_DEFAULT,
+						parentId = "colorsetting",
+						get = function()
+							local c = curSpecCfg()
+							local cur = tonumber(c and c.maelstromMidStack) or MAELSTROM_MID_STACK_DEFAULT
+							cur = math.floor(cur + 0.5)
+							if cur < 1 then cur = 1 end
+							if cur > MAELSTROM_MID_STACK_MAX then cur = MAELSTROM_MID_STACK_MAX end
+							return cur
+						end,
+						set = function(_, value)
+							local c = curSpecCfg()
+							if not c then return end
+							local new = tonumber(value) or MAELSTROM_MID_STACK_DEFAULT
+							new = math.floor(new + 0.5)
+							if new < 1 then new = 1 end
+							if new > MAELSTROM_MID_STACK_MAX then new = MAELSTROM_MID_STACK_MAX end
+							if c.maelstromMidStack == new then return end
+							c.maelstromMidStack = new
+							queueRefresh()
+						end,
+						isEnabled = function()
+							local c = curSpecCfg()
+							return c and c.useMaelstromFiveColor ~= false
+						end,
+					}
+
+					settingsList[#settingsList + 1] = {
+						name = "Carry threshold color above trigger",
+						kind = settingType.Checkbox,
+						field = "useMaelstromCarryFill",
+						default = false,
+						parentId = "colorsetting",
+						get = function()
+							local c = curSpecCfg()
+							return c and c.useMaelstromCarryFill == true
+						end,
+						set = function(_, value)
+							local c = curSpecCfg()
+							if not c then return end
+							c.useMaelstromCarryFill = value and true or false
+							queueRefresh()
+						end,
+						isEnabled = function()
+							local c = curSpecCfg()
+							return c and c.useMaelstromFiveColor ~= false
+						end,
 					}
 				end
 
@@ -2694,12 +2841,28 @@ local function registerEditModeBars()
 				height = cfg and cfg.height or heightDefault or frame:GetHeight() or 20,
 			},
 			onApply = function(_, _, data)
-				local spec = addon.variables.unitSpec
+				data = data or {}
+				local spec = registeredSpec or addon.variables.unitSpec
+				local activeSpec = getActiveSpecIndex()
+				if activeSpec and spec and spec ~= activeSpec then return end
 				local specCfg = ensureSpecCfg(spec)
 				if not specCfg then return end
 				specCfg[barType] = specCfg[barType] or {}
 				local bcfg = specCfg[barType]
 				bcfg.anchor = bcfg.anchor or {}
+				if not frame._eqolEditModeHydrated then
+					frame._eqolEditModeHydrated = true
+					local seedAnchor = bcfg.anchor or {}
+					local seedRelativeFrame = seedAnchor.relativeFrame or "UIParent"
+					if seedRelativeFrame == "UIParent" then
+						data.point = seedAnchor.point or data.point or anchor and anchor.point or "CENTER"
+						data.relativePoint = seedAnchor.relativePoint or data.relativePoint or anchor and anchor.relativePoint or data.point
+						data.x = seedAnchor.x ~= nil and seedAnchor.x or (data.x ~= nil and data.x or (anchor and anchor.x or 0))
+						data.y = seedAnchor.y ~= nil and seedAnchor.y or (data.y ~= nil and data.y or (anchor and anchor.y or 0))
+					end
+					data.width = bcfg.width or data.width or widthDefault or frame:GetWidth() or 200
+					data.height = bcfg.height or data.height or heightDefault or frame:GetHeight() or 20
+				end
 				if data.point then
 					local relFrame = bcfg.anchor.relativeFrame or "UIParent"
 					-- Nur UIParent-Anker von Edit Mode übernehmen; externe Anker behalten ihre Werte
@@ -2713,14 +2876,16 @@ local function registerEditModeBars()
 				end
 				bcfg.width = data.width or bcfg.width
 				bcfg.height = data.height or bcfg.height
-				if barType == "HEALTH" then
-					ResourceBars.SetHealthBarSize(bcfg.width, bcfg.height)
-				else
-					ResourceBars.SetPowerBarSize(bcfg.width, bcfg.height, barType)
+				if spec == addon.variables.unitSpec then
+					if barType == "HEALTH" then
+						ResourceBars.SetHealthBarSize(bcfg.width, bcfg.height)
+					else
+						ResourceBars.SetPowerBarSize(bcfg.width, bcfg.height, barType)
+					end
+					if ResourceBars.ReanchorAll then ResourceBars.ReanchorAll() end
+					if ResourceBars.Refresh then ResourceBars.Refresh() end
+					if addon.EditModeLib and addon.EditModeLib.internal and addon.EditModeLib.internal.RefreshSettingValues then addon.EditModeLib.internal:RefreshSettingValues() end
 				end
-				if ResourceBars.ReanchorAll then ResourceBars.ReanchorAll() end
-				if ResourceBars.Refresh then ResourceBars.Refresh() end
-				if addon.EditModeLib and addon.EditModeLib.internal and addon.EditModeLib.internal.RefreshSettingValues then addon.EditModeLib.internal:RefreshSettingValues() end
 			end,
 			isEnabled = function()
 				local c = curSpecCfg()
@@ -2737,7 +2902,8 @@ local function registerEditModeBars()
 	end
 
 	registerBar("HEALTH", "EQOLHealthBar", "HEALTH", ResourceBars.DEFAULT_HEALTH_WIDTH, ResourceBars.DEFAULT_HEALTH_HEIGHT)
-	for _, pType in ipairs(ResourceBars.classPowerTypes or {}) do
+	local classTypes = (ResourceBars.GetClassPowerTypes and ResourceBars.GetClassPowerTypes(addon.variables.unitClass)) or ResourceBars.classPowerTypes or {}
+	for _, pType in ipairs(classTypes) do
 		local frameName = "EQOL" .. pType .. "Bar"
 		registerBar(pType, frameName, pType, ResourceBars.DEFAULT_POWER_WIDTH, ResourceBars.DEFAULT_POWER_HEIGHT)
 	end
@@ -2889,39 +3055,39 @@ local function buildSettings()
 					sType = "checkbox",
 					parentSection = expandable,
 				},
-					{
-						var = "resourceBarsHidePetBattle",
-						text = L["Hide in pet battles"] or "Hide in pet battles",
-						get = function() return addon.db["resourceBarsHidePetBattle"] end,
-						func = function(val)
-							addon.db["resourceBarsHidePetBattle"] = val and true or false
-							applyResourceBarsVisibility("settings")
-						end,
-						parent = true,
-						parentCheck = function() return addon.db["enableResourceFrame"] == true end,
-						sType = "checkbox",
-						parentSection = expandable,
-					},
-					{
-						var = "resourceBarsHideClientScene",
-						text = L["Hide in client scenes"] or "Hide in client scenes",
-						get = function()
-							local value = addon.db["resourceBarsHideClientScene"]
-							if value == nil then return true end
-							return value == true
-						end,
-						func = function(val)
-							addon.db["resourceBarsHideClientScene"] = val and true or false
-							applyResourceBarsVisibility("settings")
-						end,
-						parent = true,
-						parentCheck = function() return addon.db["enableResourceFrame"] == true end,
-						sType = "checkbox",
-						parentSection = expandable,
-					},
-					{
-						var = "resourceBarsAutoEnable",
-						text = L["AutoEnableAllBars"] or "Auto-enable bars for new characters",
+				{
+					var = "resourceBarsHidePetBattle",
+					text = L["Hide in pet battles"] or "Hide in pet battles",
+					get = function() return addon.db["resourceBarsHidePetBattle"] end,
+					func = function(val)
+						addon.db["resourceBarsHidePetBattle"] = val and true or false
+						applyResourceBarsVisibility("settings")
+					end,
+					parent = true,
+					parentCheck = function() return addon.db["enableResourceFrame"] == true end,
+					sType = "checkbox",
+					parentSection = expandable,
+				},
+				{
+					var = "resourceBarsHideClientScene",
+					text = L["Hide in client scenes"] or "Hide in client scenes",
+					get = function()
+						local value = addon.db["resourceBarsHideClientScene"]
+						if value == nil then return true end
+						return value == true
+					end,
+					func = function(val)
+						addon.db["resourceBarsHideClientScene"] = val and true or false
+						applyResourceBarsVisibility("settings")
+					end,
+					parent = true,
+					parentCheck = function() return addon.db["enableResourceFrame"] == true end,
+					sType = "checkbox",
+					parentSection = expandable,
+				},
+				{
+					var = "resourceBarsAutoEnable",
+					text = L["AutoEnableAllBars"] or "Auto-enable bars for new characters",
 					sType = "multidropdown",
 					options = AUTO_ENABLE_OPTIONS,
 					order = AUTO_ENABLE_ORDER,

@@ -29,6 +29,7 @@ Private.Settings.Keys = {
 		Export = "EXPORT_SELF",
 		ShowSwipe = "SWIPE_SELF",
 		Font = "FONT_SELF",
+		FontFlags = "FONT_FLAGS_SELF",
 	},
 	Party = {
 		Enabled = "ENABLED_PARTY",
@@ -58,6 +59,7 @@ Private.Settings.Keys = {
 		Export = "EXPORT_PARTY",
 		ShowSwipe = "SWIPE_PARTY",
 		Font = "FONT_PARTY",
+		FontFlags = "FONT_FLAGS_PARTY",
 	},
 }
 
@@ -80,6 +82,7 @@ function Private.Settings.GetSettingsDisplayOrder(kind)
 			Private.Settings.Keys.Self.ShowDurationFractions,
 			Private.Settings.Keys.Self.Font,
 			Private.Settings.Keys.Self.FontSize,
+			Private.Settings.Keys.Self.FontFlags,
 			Private.Settings.Keys.Self.ShowBorder,
 			Private.Settings.Keys.Self.ShowSwipe,
 			Private.Settings.Keys.Self.IndicateInterrupts,
@@ -109,6 +112,7 @@ function Private.Settings.GetSettingsDisplayOrder(kind)
 		Private.Settings.Keys.Party.ShowDurationFractions,
 		Private.Settings.Keys.Party.Font,
 		Private.Settings.Keys.Party.FontSize,
+		Private.Settings.Keys.Party.FontFlags,
 		Private.Settings.Keys.Party.ShowBorder,
 		Private.Settings.Keys.Party.ShowSwipe,
 		Private.Settings.Keys.Party.IndicateInterrupts,
@@ -220,6 +224,10 @@ function Private.Settings.GetSelfDefaultSettings()
 		TargetingFilterApi = Private.Enum.TargetingFilterApi.UnitIsSpellTarget,
 		ShowSwipe = true,
 		Font = "Fonts\\FRIZQT__.TTF",
+		FontFlags = {
+			[Private.Enum.FontFlags.OUTLINE] = true,
+			[Private.Enum.FontFlags.SHADOW] = false,
+		},
 	}
 end
 
@@ -262,11 +270,22 @@ function Private.Settings.GetPartyDefaultSettings()
 		TargetingFilterApi = Private.Enum.TargetingFilterApi.UnitIsSpellTarget,
 		ShowSwipe = true,
 		Font = "Fonts\\FRIZQT__.TTF",
+		FontFlags = {
+			[Private.Enum.FontFlags.OUTLINE] = true,
+			[Private.Enum.FontFlags.SHADOW] = false,
+		},
 	}
 end
 
 function Private.Settings.GetFontOptions()
-	return LibSharedMedia:HashTable(LibSharedMedia.MediaType.FONT)
+	local fonts = CopyTable(LibSharedMedia:List(LibSharedMedia.MediaType.FONT))
+	table.sort(fonts)
+	local byLabel = LibSharedMedia:HashTable(LibSharedMedia.MediaType.FONT)
+
+	return {
+		fonts = fonts,
+		byLabel = byLabel,
+	}
 end
 
 function Private.Settings.IsContentTypeAvailableForKind(kind, contentTypeId)
@@ -363,6 +382,68 @@ table.insert(Private.LoginFnQueue, function()
 			}
 		end
 
+		if key == Private.Settings.Keys.Self.FontFlags or key == Private.Settings.Keys.Party.FontFlags then
+			local kindTableRef = key == Private.Settings.Keys.Self.FontFlags and TargetedSpellsSaved.Settings.Self
+				or TargetedSpellsSaved.Settings.Party
+
+			local defaultValue = GetMask(Private.Enum.FontFlags, function(id)
+				return defaults.FontFlags[id]
+			end)
+
+			local function GetValue()
+				return GetMask(Private.Enum.FontFlags, function(id)
+					return kindTableRef.FontFlags[id]
+				end)
+			end
+
+			local function SetValue(mask)
+				local hasChanges = false
+
+				for label, id in pairs(Private.Enum.FontFlags) do
+					local enabled = DecodeBitToBool(mask, id)
+
+					if enabled ~= kindTableRef.FontFlags[id] then
+						kindTableRef.FontFlags[id] = enabled
+						hasChanges = true
+					end
+				end
+
+				if hasChanges then
+					Private.EventRegistry:TriggerEvent(Private.Enum.Events.SETTING_CHANGED, key, kindTableRef.FontFlags)
+				end
+			end
+
+			local setting = Settings.RegisterProxySetting(
+				category,
+				key,
+				Settings.VarType.Number,
+				L.Settings.FontFlagsLabel,
+				defaultValue,
+				GetValue,
+				SetValue
+			)
+
+			local function GetOptions()
+				local container = Settings.CreateControlTextContainer()
+
+				for label, id in pairs(Private.Enum.FontFlags) do
+					local translated = L.Settings.FontFlagsLabels[id]
+
+					container:AddCheckbox(id, translated, L.Settings.FontFlagsTooltip)
+				end
+
+				return container:GetData()
+			end
+
+			local initializer = Settings.CreateDropdown(category, setting, GetOptions, L.Settings.FontFlagsTooltip)
+
+			return {
+				initializer = initializer,
+				hideSteppers = true,
+				IsSectionEnabled = nil,
+			}
+		end
+
 		if key == Private.Settings.Keys.Self.Font or key == Private.Settings.Keys.Party.Font then
 			local tableRef = key == Private.Settings.Keys.Self.Font and TargetedSpellsSaved.Settings.Self
 				or TargetedSpellsSaved.Settings.Party
@@ -379,9 +460,9 @@ table.insert(Private.LoginFnQueue, function()
 
 			local function GetOptions()
 				local container = Settings.CreateControlTextContainer()
-				local fonts = Private.Settings.GetFontOptions()
+				local fontInfo = Private.Settings.GetFontOptions()
 
-				for label, path in pairs(fonts) do
+				for label, path in pairs(fontInfo.byLabel) do
 					container:Add(path, label)
 				end
 

@@ -111,25 +111,81 @@ do
 				local frame = _G[frameName]
 
 				if frame and frame.unit == unit then
-					return frame, false
+					return frame
 				end
 			end
 		end
 
 		if Grid2 then
-			return (next(Grid2:GetUnitFrames(unit))), true
+			return (next(Grid2:GetUnitFrames(unit)))
+		end
+
+		if EnhanceQoL and EQOLUFPartyHeader then
+			for i = 1, 5 do
+				local frame = _G["EQOLUFPartyHeaderUnitButton" .. i]
+
+				if frame and frame.unit == unit then
+					return frame
+				end
+			end
 		end
 
 		if DandersFrames and DandersFrames.Api and DandersFrames.Api.GetFrameForUnit then
 			local frame = DandersFrames.Api.GetFrameForUnit(unit, Private.Enum.FrameKind.Party)
 
 			if frame then
-				return frame, false
+				return frame
 			end
 		end
 
-		return nil, false
+		return nil
 	end
+end
+
+function Private.Utils.CreateEditablePopup(title, text, button1)
+	return {
+		text = title,
+		button1 = button1,
+		hasEditBox = true,
+		hasWideEditBox = true,
+		editBoxWidth = 350,
+		hideOnEscape = true,
+		OnShow = function(popupSelf)
+			local editBox = popupSelf:GetEditBox()
+			editBox:SetText(text)
+			editBox:HighlightText()
+
+			local ctrlDown = false
+
+			editBox:SetScript("OnKeyDown", function(_, key)
+				if key == "LCTRL" or key == "RCTRL" or key == "LMETA" or key == "RMETA" then
+					ctrlDown = true
+				end
+			end)
+			editBox:SetScript("OnKeyUp", function(_, key)
+				C_Timer.After(0.2, function()
+					ctrlDown = false
+				end)
+
+				if ctrlDown and (key == "C" or key == "X") then
+					StaticPopup_Hide(addonName)
+				end
+			end)
+		end,
+		EditBoxOnEscapePressed = function(popupSelf)
+			popupSelf:GetParent():Hide()
+		end,
+		EditBoxOnTextChanged = function(popupSelf)
+			-- ctrl + x sets the text to "" but this triggers hiding and shouldn't trigger resetting the text
+			local currentText = popupSelf:GetText()
+
+			if currentText == "" or currentText == text then
+				return
+			end
+
+			popupSelf:SetText(text)
+		end,
+	}
 end
 
 function Private.Utils.ShowStaticPopup(args)
@@ -140,6 +196,10 @@ function Private.Utils.ShowStaticPopup(args)
 
 	StaticPopup_Hide(addonName)
 	StaticPopup_Show(addonName)
+end
+
+local function DecodeProfileString(string)
+	return C_EncodingUtil.DeserializeCBOR(C_EncodingUtil.DecodeBase64(string))
 end
 
 do
@@ -153,10 +213,12 @@ do
 		editModeFrameByKind[frameKind] = frame
 	end
 
+	function Private.Utils.GetEditModeFrame(frameKind)
+		return editModeFrameByKind[frameKind]
+	end
+
 	function Private.Utils.Import(string)
-		local ok, result = pcall(function()
-			return C_EncodingUtil.DeserializeCBOR(C_EncodingUtil.DecodeBase64(string))
-		end, string)
+		local ok, result = pcall(DecodeProfileString, string)
 
 		if not ok then
 			if result ~= nil then
@@ -186,10 +248,11 @@ do
 					and (point ~= tableRef.Position.point or x ~= tableRef.Position.x or y ~= tableRef.Position.y)
 				then
 					frame:ClearAllPoints()
-					frame:SetPoint(point, x, y)
+					PixelUtil.SetPoint(frame, point, UIParent, "CENTER", x, y)
 					tableRef.Position.point = point
 					tableRef.Position.x = x
 					tableRef.Position.y = y
+					Private.EventRegistry:TriggerEvent(Private.Enum.Events.EDIT_MODE_POSITION_CHANGED, point, x, y)
 				end
 			end
 
@@ -204,7 +267,7 @@ do
 				local newValue = result[kind][key]
 				local expectedType = type(defaultValue)
 
-				if newValue and type(newValue) == expectedType then
+				if newValue ~= nil and type(newValue) == expectedType then
 					local eventKey = eventKeys[key]
 					local hasChanges = false
 
@@ -214,6 +277,8 @@ do
 							enumToCompareAgainst = Private.Enum.ContentType
 						elseif key == "LoadConditionRole" then
 							enumToCompareAgainst = Private.Enum.Role
+						elseif key == "FontFlags" then
+							enumToCompareAgainst = Private.Enum.FontFlags
 						end
 
 						-- only other case is Position but that's taken care of above
@@ -280,9 +345,23 @@ do
 	end
 end
 
-_G.TargetedSpellsAPI = {
-	Import = Private.Utils.Import,
-	Export = Private.Utils.Export,
-	RegisterFrameByName = Private.Utils.RegisterFrameByName,
-	UnregisterFrameByName = Private.Utils.UnregisterFrameByName,
-}
+do
+	local function noop() end
+
+	_G.TargetedSpellsAPI = {
+		Import = Private.Utils.Import,
+		Export = Private.Utils.Export,
+		DecodeProfileString = DecodeProfileString,
+		RegisterFrameByName = Private.Utils.RegisterFrameByName,
+		UnregisterFrameByName = Private.Utils.UnregisterFrameByName,
+		SetProfile = noop,
+		GetProfileKeys = function()
+			return { "Global" }
+		end,
+		GetCurrentProfileKey = function()
+			return "Global"
+		end,
+		OpenConfig = noop,
+		CloseConfig = noop,
+	}
+end

@@ -4,7 +4,6 @@ local LibCustomGlow = LibStub("LibCustomGlow-1.0")
 local LibEditMode = LibStub("LibEditMode")
 
 TARGETED_SPELLS_BACKDROP = {
-	bgFile = "Interface\\Tooltips\\UI-Tooltip-Background",
 	edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
 	tile = true,
 	tileEdge = true,
@@ -34,6 +33,7 @@ function TargetedSpellsMixin:OnLoad()
 	self.Cooldown:SetCountdownFont("GameFontHighlightHugeOutline")
 	self.wasInterrupted = false
 	self.doNotHideBefore = nil
+	self.elapsed = 0
 	Private.Utils.MaybeApplyElvUISkin(self)
 end
 
@@ -79,9 +79,15 @@ function TargetedSpellsMixin:CanBeHidden(id)
 	return id == self:GetId()
 end
 
----@param self TargetedSpellsMixin
----@param elapsed number
-local function OnUpdate(self, elapsed)
+function TargetedSpellsMixin:OnUpdate(elapsed)
+	self.elapsed = self.elapsed + elapsed
+
+	if self.elapsed < 0.1 then
+		return
+	end
+
+	self.elapsed = self.elapsed - 0.1
+
 	if self.duration == nil then
 		return
 	end
@@ -92,14 +98,10 @@ local function OnUpdate(self, elapsed)
 	self.DurationText:SetFormattedText("%.1f", remainingDuration)
 end
 
-function TargetedSpellsMixin:OnUpdate(elapsed)
-	-- noop until it gets overridden by the above
-end
-
 function TargetedSpellsMixin:SetShowDuration(showDuration, showFractions)
 	self.Cooldown:SetHideCountdownNumbers(not showDuration or showFractions)
 	self.DurationText:SetShown(showDuration and showFractions)
-	self:SetScript("OnUpdate", showDuration and showFractions and OnUpdate or nil)
+	self:SetScript("OnUpdate", showDuration and showFractions and self.OnUpdate or nil)
 end
 
 function TargetedSpellsMixin:SetShowBorder(bool)
@@ -114,9 +116,8 @@ end
 ---@param width number
 ---@param height number
 function TargetedSpellsMixin:OnSizeChanged(width, height)
-	local aspectRatio = width / height
-
 	local coordinates = { 0, 0, 0, 1, 1, 0, 1, 1 }
+	local aspectRatio = width / height
 
 	local xRatio = aspectRatio < 1 and aspectRatio or 1
 	local yRatio = aspectRatio > 1 and 1 / aspectRatio or 1
@@ -139,12 +140,19 @@ function TargetedSpellsMixin:OnSizeChanged(width, height)
 
 	do
 		local fifteenPercent = 0.15 * width
-		self.Overlay:SetPoint("TOPLEFT", topleftRelativePoint, "TOPLEFT", -fifteenPercent, fifteenPercent)
+		PixelUtil.SetPoint(self.Overlay, "TOPLEFT", topleftRelativePoint, "TOPLEFT", -fifteenPercent, fifteenPercent)
 	end
 
 	do
 		local fifteenPercent = 0.15 * height
-		self.Overlay:SetPoint("BOTTOMRIGHT", bottomrightRelativePoint, "BOTTOMRIGHT", fifteenPercent, -fifteenPercent)
+		PixelUtil.SetPoint(
+			self.Overlay,
+			"BOTTOMRIGHT",
+			bottomrightRelativePoint,
+			"BOTTOMRIGHT",
+			fifteenPercent,
+			-fifteenPercent
+		)
 	end
 end
 
@@ -159,7 +167,7 @@ function TargetedSpellsMixin:OnSettingChanged(key, value)
 			self:SetShowDuration(value, TargetedSpellsSaved.Settings.Self.ShowDurationFractions)
 		elseif key == Private.Settings.Keys.Self.FontSize then
 			self:SetFontSize()
-		elseif key == Private.Settings.Keys.Self.Font then
+		elseif key == Private.Settings.Keys.Self.Font or key == Private.Settings.Keys.Self.FontFlags then
 			self:SetFont()
 		elseif key == Private.Settings.Keys.Self.Opacity then
 			self:SetAlpha(value)
@@ -173,7 +181,7 @@ function TargetedSpellsMixin:OnSettingChanged(key, value)
 				self:ShowGlow(self:IsSpellImportant(LibEditMode:IsInEditMode() and Private.Utils.RollDice()))
 			end
 		elseif key == Private.Settings.Keys.Self.ShowDurationFractions then
-			self:SetScript("OnUpdate", value and OnUpdate or nil)
+			self:SetScript("OnUpdate", value and self.OnUpdate or nil)
 			---@diagnostic disable-next-line: param-type-mismatch
 			self.Cooldown:SetHideCountdownNumbers(value)
 			---@diagnostic disable-next-line: param-type-mismatch
@@ -192,7 +200,7 @@ function TargetedSpellsMixin:OnSettingChanged(key, value)
 			self:SetShowDuration(value, TargetedSpellsSaved.Settings.Party.ShowDurationFractions)
 		elseif key == Private.Settings.Keys.Party.FontSize then
 			self:SetFontSize()
-		elseif key == Private.Settings.Keys.Party.Font then
+		elseif key == Private.Settings.Keys.Party.Font or key == Private.Settings.Keys.Party.FontFlags then
 			self:SetFont()
 		elseif key == Private.Settings.Keys.Party.Opacity then
 			self:SetAlpha(value)
@@ -206,7 +214,7 @@ function TargetedSpellsMixin:OnSettingChanged(key, value)
 				self:ShowGlow(self:IsSpellImportant(LibEditMode:IsInEditMode() and Private.Utils.RollDice()))
 			end
 		elseif key == Private.Settings.Keys.Party.ShowDurationFractions then
-			self:SetScript("OnUpdate", value and OnUpdate or nil)
+			self:SetScript("OnUpdate", value and self.OnUpdate or nil)
 			---@diagnostic disable-next-line: param-type-mismatch
 			self.Cooldown:SetHideCountdownNumbers(value)
 			---@diagnostic disable-next-line: param-type-mismatch
@@ -309,6 +317,19 @@ function TargetedSpellsMixin:ShowGlow(isImportant)
 		LibCustomGlow.ButtonGlow_Start(self)
 
 		self._ButtonGlow:SetAlphaFromBoolean(isImportant)
+
+		for _, region in pairs({ self._ButtonGlow:GetRegions() }) do
+			region:SetAlphaFromBoolean(isImportant)
+		end
+
+		if self._ButtonGlow.animIn:IsPlaying() then
+			local orig = self._ButtonGlow.animIn:GetScript("OnFinished")
+			self._ButtonGlow.animIn:SetScript("OnFinished", function(anim)
+				orig(anim)
+				anim:GetParent().ants:SetAlphaFromBoolean(isImportant)
+				anim:SetScript("OnFinished", orig)
+			end)
+		end
 	elseif glowType == Private.Enum.GlowType.ProcGlow then
 		LibCustomGlow.ProcGlow_Start(self)
 
@@ -366,10 +387,11 @@ function TargetedSpellsMixin:ClearStartTime()
 	self.startTime = nil
 end
 
-function TargetedSpellsMixin:Reposition(point, relativeTo, relativePoint, offsetX, offsetY, useTopLevel)
+function TargetedSpellsMixin:Reposition(point, relativeTo, relativePoint, offsetX, offsetY)
+	self:SetParent(relativeTo)
 	self:ClearAllPoints()
-	self:SetPoint(point, relativeTo, relativePoint, offsetX, offsetY)
-	self:SetToplevel(useTopLevel)
+	self:SetFrameLevel(relativeTo:GetFrameLevel() + 10)
+	PixelUtil.SetPoint(self, point, relativeTo, relativePoint, offsetX, offsetY)
 	self:Show()
 end
 
@@ -481,11 +503,16 @@ function TargetedSpellsMixin:SetFont()
 		fontString = self.Cooldown:GetCountdownFontString()
 	end
 
-	local font, size, flags = fontString:GetFont()
+	fontString:SetFont(
+		tableRef.Font,
+		tableRef.FontSize,
+		tableRef.FontFlags[Private.Enum.FontFlags.OUTLINE] and "OUTLINE" or ""
+	)
 
-	if font == tableRef.Font then
-		return
+	if tableRef.FontFlags[Private.Enum.FontFlags.SHADOW] then
+		fontString:SetShadowOffset(1, -1)
+		fontString:SetShadowColor(0, 0, 0, 1)
+	else
+		fontString:SetShadowOffset(0, 0)
 	end
-
-	fontString:SetFont(tableRef.Font, size, flags)
 end

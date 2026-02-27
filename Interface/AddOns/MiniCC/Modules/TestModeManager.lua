@@ -2,14 +2,15 @@
 local _, addon = ...
 local frames = addon.Core.Frames
 local instanceOptions = addon.Core.InstanceOptions
-local ccModule = addon.Modules.CcModule
-local healerCcModule = addon.Modules.HealerCcModule
+local ccModule = addon.Modules.CrowdControlModule
+local healerCcModule = addon.Modules.HealerCrowdControlModule
 local portraitModule = addon.Modules.PortraitModule
 local alertsModule = addon.Modules.AlertsModule
 local nameplateModule = addon.Modules.NameplatesModule
 local kickTimerModule = addon.Modules.KickTimerModule
 local trinketsModule = addon.Modules.TrinketsModule
-local allyIndicatorModule = addon.Modules.AllyIndicatorModule
+local friendlyIndicatorModule = addon.Modules.FriendlyIndicatorModule
+local precogGuesserModule = addon.Modules.PrecogGuesserModule
 local active = false
 
 ---@class TestModeManager
@@ -42,12 +43,13 @@ function M:StopTesting()
 	nameplateModule:StopTesting()
 	kickTimerModule:StopTesting()
 	trinketsModule:StopTesting()
-	allyIndicatorModule:StopTesting()
+	friendlyIndicatorModule:StopTesting()
+	precogGuesserModule:StopTesting()
 
 	active = false
 end
 
----@param options InstanceOptions?
+---@param options CrowdControlInstanceOptions?
 function M:StartTesting(options)
 	if active then
 		return
@@ -90,11 +92,12 @@ function M:StartTesting(options)
 	nameplateModule:StartTesting()
 	kickTimerModule:StartTesting()
 	trinketsModule:StartTesting()
-	allyIndicatorModule:StartTesting()
+	friendlyIndicatorModule:StartTesting()
+	precogGuesserModule:StartTesting()
 end
 
 function M:Init() end
 
 ---@class TestSpell
 ---@field SpellId number
----@field DispelColor table
+---@field DispelColor table?

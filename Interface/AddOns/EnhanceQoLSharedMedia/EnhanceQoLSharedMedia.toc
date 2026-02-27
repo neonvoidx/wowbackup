@@ -1,7 +1,7 @@
 ## Interface: 110207, 120000, 120001
 ## Title: Shared Media
 ## Author: R41Z0R
-## Version: 7.12.1
+## Version: 8.1.1
 ## Notes: Provides shared sound files via LibSharedMedia for EnhanceQoL and other addons
 ## Notes-deDE: Stellt geteilte Sound-Dateien und andere Medien für EnhanceQoL bereit
 ## Notes-esES: Proporciona archivos de sonido compartidos y otros medios para EnhanceQoL

@@ -2,7 +2,6 @@ local addonName, addon = ...
 _G[addonName] = addon
 addon.saveVariables = {} -- Cross-Module variables for DB Save
 addon.saveVariables["hidePartyFrameTitle"] = false -- Default for hiding party frame title
-addon.saveVariables["unitFrameTruncateNames"] = false -- Default for truncating unit names
 addon.saveVariables["unitFrameScaleEnabled"] = false -- Default for scaling compact unit frames
 addon.saveVariables["unitFrameScale"] = 1 -- Default scale for compact party frames
 addon.gossip = {}
@@ -552,7 +551,6 @@ addon.variables.catalystID = nil -- Change to get the actual cataclyst charges i
 addon.variables.durabilityIcon = 136241 -- Anvil Symbol
 addon.variables.durabilityCount = 0
 addon.variables.hookedOrderHall = false
-addon.variables.unitFrameMaxNameLength = 6 -- default truncation length
 addon.variables.unitFrameScale = 1 -- default scale value
 addon.variables.maxLevel = GetMaxLevelForPlayerExpansion()
 addon.variables.statusTable = { groups = {} }
@@ -831,6 +829,22 @@ addon.variables.unitFrameNames = {
 		children = { BagsBar:GetChildren() },
 		revealAllChilds = true,
 	},
+	{
+		name = "BuffFrame",
+		var = "unitframeSettingBuffFrame",
+		text = addon.L["BuffFrame"],
+		allowedVisibility = { "NONE", "MOUSEOVER", "HIDE" },
+		children = { BuffFrame:GetChildren() },
+		revealAllChilds = true,
+	},
+	{
+		name = "DebuffFrame",
+		var = "unitframeSettingDebuffFrame",
+		text = addon.L["DebuffFrame"],
+		allowedVisibility = { "NONE", "MOUSEOVER", "HIDE" },
+		children = { DebuffFrame:GetChildren() },
+		revealAllChilds = true,
+	},
 }
 
 table.sort(addon.variables.actionBarNames, function(a, b) return a.text < b.text end)
@@ -906,14 +920,12 @@ addon.variables.cvarOptions = {
 		trueValue = "1",
 		falseValue = "0",
 		description = addon.L["raidFramesDisplayClassColor"],
-		persistent = true,
 		category = "cvarCategoryDisplay",
 	},
 	["pvpFramesDisplayClassColor"] = {
 		trueValue = "1",
 		falseValue = "0",
 		description = addon.L["pvpFramesDisplayClassColor"],
-		persistent = true,
 		category = "cvarCategoryDisplay",
 	},
 	["UnitNamePlayerGuild"] = {

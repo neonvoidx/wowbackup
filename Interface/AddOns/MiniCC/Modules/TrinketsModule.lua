@@ -3,7 +3,10 @@ local _, addon = ...
 local mini = addon.Core.Framework
 local frames = addon.Core.Frames
 local spellCache = addon.Utils.SpellCache
-local fontUtil = addon.Utils.FontUtil
+local iconSlotContainer = addon.Core.IconSlotContainer
+local moduleUtil = addon.Utils.ModuleUtil
+local moduleName = addon.Utils.ModuleName
+local unitsUtil = addon.Utils.Units
 local eventFrame
 local enabled = false
 local paused = false
@@ -12,9 +15,13 @@ local defaultSpellId = 336126
 local defaultTrinketIcon
 ---@type { [table]: TrinketWatcher }
 local watchers = {}
+-- Cache of known-active trinket cooldowns, keyed by unit string.
+-- Only populated from non-secret data so math on Start/Duration is safe.
+---@type table<string, { SpellId: number, Start: number, Duration: number }>
+local trinketCooldowns = {}
 ---@type Db
 local db
----@type TrinketsOptions
+---@type TrinketsModuleOptions
 local options
 
 ---@class TrinketsModule : IModule
@@ -47,16 +54,6 @@ local function GetSpellTexture(spellId)
 	return spellCache:GetSpellTexture(spellId)
 end
 
-local function FormatSeconds(seconds)
-	if not seconds or seconds <= 0 then
-		return ""
-	end
-	if seconds >= 60 then
-		return string.format("%dm", math.floor(seconds / 60 + 0.5))
-	end
-	return string.format("%d", math.floor(seconds + 0.5))
-end
-
 local function IsTrackedUnit(unit)
 	for _, u in ipairs(units) do
 		if u == unit then
@@ -75,155 +72,77 @@ local function NormalizeCooldownValues(start, duration)
 	return start / 1000, duration / 1000
 end
 
-local function CreateIcon(unit)
-	local frame = CreateFrame("Frame", nil, UIParent)
-	frame:SetSize(options.Icons.Size, options.Icons.Size)
-
-	frame.Icon = frame:CreateTexture(nil, "ARTWORK")
-	frame.Icon:SetAllPoints()
-	frame.Icon:SetTexture(defaultTrinketIcon or "Interface\\Icons\\INV_Misc_QuestionMark")
-
-	frame.CD = CreateFrame("Cooldown", nil, frame, "CooldownFrameTemplate")
-	frame.CD:SetAllPoints()
-	frame.CD:SetDrawSwipe(true)
-	frame.CD:SetDrawEdge(false)
-	frame.CD:SetDrawBling(false)
-	frame.CD:SetReverse(false)
-
-	-- Set initial cooldown font size
-	fontUtil:UpdateCooldownFontSize(frame.CD, options.Icons.Size)
-
-	frame.Text = frame:CreateFontString(nil, "OVERLAY", options.Font.File)
-	frame.Text:SetPoint("CENTER", frame, "CENTER", 0, 0)
-	frame.Text:SetText("")
-
-	frame.Unit = unit
-	frame.SpellId = nil
-	frame.Start = nil
-	frame.Duration = nil
-	frame.Ticker = nil
-
-	frame:Hide()
-	return frame
-end
-
-local function ApplyOptionsToIcon(frame)
-	local size = tonumber(options.Icons.Size) or 32
-	local _, fontSize, flags = frame.Text:GetFont()
-
-	frame:SetSize(size, size)
-	frame.Text:SetFont(options.Font.File, fontSize or 12, flags)
-
-	-- Update cooldown font size when icon size changes
-	if frame.CD then
-		fontUtil:UpdateCooldownFontSize(frame.CD, size)
-	end
-end
-
-local function StopTicker(icon)
-	if icon and icon.Ticker then
-		icon.Ticker:Cancel()
-		icon.Ticker = nil
-	end
-end
-
-local function TickText(icon)
-	if not options.Icons.ShowText then
-		icon.Text:SetText("")
-		StopTicker(icon)
-		return
-	end
-
-	if not icon.Start or not icon.Duration or icon.Duration <= 0 then
-		icon.Text:SetText("")
-		StopTicker(icon)
-		return
-	end
-
-	local remain = (icon.Start + icon.Duration) - GetTime()
-	if remain > 0.1 then
-		icon.Text:SetText(FormatSeconds(remain))
-	else
-		icon.Text:SetText("")
-		StopTicker(icon)
-	end
-end
-
-local function StartTicker(icon)
-	StopTicker(icon)
-
-	-- render once immediately
-	TickText(icon)
-
-	if not icon.Start or not icon.Duration or icon.Duration <= 0 then
-		return
-	end
-
-	icon.Ticker = C_Timer.NewTicker(1, function()
-		TickText(icon)
-	end)
-end
-
-local function SetIconState(icon, spellId, start, duration)
-	if not icon then
-		return
-	end
-
-	start, duration = NormalizeCooldownValues(start, duration)
-
-	icon.SpellId = spellId
-	icon.Start = start
-	icon.Duration = duration
-
-	if not spellId or not start or not duration or duration <= 0 then
-		icon.Icon:SetTexture(defaultTrinketIcon or "Interface\\Icons\\INV_Misc_QuestionMark")
-		icon.CD:Clear()
-		icon.Text:SetText("")
-		StopTicker(icon)
+local function SetIconState(container, spellId, start, duration)
+	if not container then
 		return
 	end
 
 	local tex = GetSpellTexture(spellId) or defaultTrinketIcon or "Interface\\Icons\\INV_Misc_QuestionMark"
-	icon.Icon:SetTexture(tex)
 
-	icon.CD:SetCooldown(start, duration)
-	StartTicker(icon)
+	-- Always show the icon, even when not on cooldown
+	if not spellId or not start or not duration then
+		-- Show icon without cooldown
+		container:SetSlot(1, {
+			Texture = tex,
+			StartTime = 0,
+			Duration = 0,
+			Alpha = true,
+			ReverseCooldown = false,
+			Glow = false,
+			FontScale = db.FontScale,
+		})
+		return
+	end
+
+	-- Show icon with cooldown
+	container:SetSlot(1, {
+		Texture = tex,
+		StartTime = start,
+		Duration = duration,
+		Alpha = true,
+		ReverseCooldown = false,
+		Glow = false,
+		FontScale = db.FontScale,
+	})
 end
 
 local function UpdateUnit(unit, spellId, start, duration)
 	for _, w in pairs(watchers) do
 		if w.Unit == unit then
-			SetIconState(w.Icon, spellId, start, duration)
+			SetIconState(w.Container, spellId, start, duration)
 		end
 	end
 end
 
 local function ClearAll()
+	trinketCooldowns = {}
 	for _, w in pairs(watchers) do
-		SetIconState(w.Icon, nil, nil, nil)
+		SetIconState(w.Container, nil, nil, nil)
 	end
 end
 
-local function AnchorIconToFrame(icon, anchorFrame)
-	icon:ClearAllPoints()
-	icon:SetPoint(options.Point, anchorFrame, options.RelativePoint, options.Offset.X, options.Offset.Y)
+local function AnchorContainerToFrame(container, anchorFrame)
+	container.Frame:ClearAllPoints()
+	container.Frame:SetPoint(options.Point, anchorFrame, options.RelativePoint, options.Offset.X, options.Offset.Y)
+	container.Frame:SetAlpha(1)
 end
 
 local function EnsureWatcher(anchorFrame, unit)
 	local watcher = watchers[anchorFrame]
 	if watcher then
 		watcher.Unit = unit
-		watcher.Icon.Unit = unit
-		ApplyOptionsToIcon(watcher.Icon)
 		return watcher
 	end
 
-	local icon = CreateIcon(unit)
+	local size = tonumber(options.Icons.Size) or 32
+	local container = iconSlotContainer:New(UIParent, 1, size, db.IconSpacing or 2, "Trinkets")
+	container.Frame:SetIgnoreParentScale(true)
+	container.Frame:SetIgnoreParentAlpha(true)
 
 	watcher = {
 		Anchor = anchorFrame,
 		Unit = unit,
-		Icon = icon,
+		Container = container,
 	}
 	watchers[anchorFrame] = watcher
 
@@ -236,10 +155,10 @@ local function DestroyWatcher(anchorFrame)
 		return
 	end
 
-	if watcher.Icon then
-		StopTicker(watcher.Icon)
-		watcher.Icon:Hide()
-		watcher.Icon:SetParent(nil)
+	if watcher.Container then
+		watcher.Container:ResetAllSlots()
+		watcher.Container.Frame:Hide()
+		watcher.Container.Frame:SetParent(nil)
 	end
 
 	watchers[anchorFrame] = nil
@@ -255,7 +174,7 @@ local function RebuildAnchors()
 			if unit and unit ~= "" and IsTrackedUnit(unit) then
 				local w = EnsureWatcher(anchor, unit)
 				seen[anchor] = true
-				AnchorIconToFrame(w.Icon, anchor)
+				AnchorContainerToFrame(w.Container, anchor)
 			end
 		end
 	end
@@ -279,22 +198,61 @@ local function RequestAll()
 	end
 end
 
+local function IsOnCooldown(unit)
+	local cd = trinketCooldowns[unit]
+	return cd ~= nil and GetTime() < cd.Start + cd.Duration
+end
+
+local function CacheCooldown(unit, spellId, start, duration)
+	trinketCooldowns[unit] = { SpellId = spellId, Start = start, Duration = duration }
+end
+
+---@return number? spellId, number? start, number? duration
+local function GetTrinketData(unit)
+	local spellId, start, duration = C_PvP.GetArenaCrowdControlInfo(unit)
+
+	if not start or not duration then
+		return spellId, start, duration
+	end
+
+	if issecretvalue(start) or issecretvalue(duration) then
+		-- Secret values can't be used for math; substitute sentinel values so callers
+		-- know a cooldown is active without ever using the secret data directly.
+		return spellId, GetTime(), unitsUtil:IsHealer(unit) and 90 or 120
+	end
+
+	start, duration = NormalizeCooldownValues(start, duration)
+	return spellId, start, duration
+end
+
 -- Refresh only one unit (using unitTarget from ARENA_COOLDOWNS_UPDATE)
 local function RefreshUnit(unit)
 	if not unit or unit == "" or not UnitExists(unit) then
 		return
 	end
 
-	local spellId, start, duration = C_PvP.GetArenaCrowdControlInfo(unit)
-
-	if not spellId or not start or not duration then
-		-- don't overwrite existing data if they've already trinketed
+	if IsOnCooldown(unit) then
+		-- Blizzard sometimes fires this event multiple times, don't know why
+		-- this causes a problem where trinkets keep spam resetting their cooldown
+		-- so block updates until our local timer expires
 		return
 	end
 
+	local spellId, start, duration = GetTrinketData(unit)
+
+	if not spellId or not start or not duration then
+		return
+	end
+
+	-- always cache using non-secret values
+	local localStart = GetTime()
+	local localDuration = unitsUtil:IsHealer(unit) and 90 or 120
+	CacheCooldown(unit, spellId, localStart, localDuration)
+
 	for _, watcher in pairs(watchers) do
-		if watcher.Icon and watcher.Unit == unit then
-			SetIconState(watcher.Icon, spellId, start, duration)
+		if watcher.Container and watcher.Unit == unit then
+			SetIconState(watcher.Container, spellId, localStart, localDuration)
+			break
 		end
 	end
 end
@@ -302,33 +260,52 @@ end
 local function RefreshAll()
 	for _, watcher in pairs(watchers) do
 		local unit = watcher.Unit
-		local icon = watcher.Icon
+		local container = watcher.Container
 
-		if icon and unit and UnitExists(unit) then
-			local spellId, start, duration = C_PvP.GetArenaCrowdControlInfo(unit)
-
-			if spellId and start and duration then
-				SetIconState(icon, spellId, start, duration)
+		if container and unit and UnitExists(unit) then
+			if IsOnCooldown(unit) then
+				-- Use cached data to avoid resetting the start time with a new GetTime() estimate
+				local cd = trinketCooldowns[unit]
+				SetIconState(container, cd.SpellId, cd.Start, cd.Duration)
 			else
-				if not icon.SpellId then
-					SetIconState(icon, nil, nil, nil)
+				local spellId, start, duration = GetTrinketData(unit)
+				if spellId and start and duration then
+					local localStart = GetTime()
+					local localDuration = unitsUtil:IsHealer(unit) and 90 or 120
+					CacheCooldown(unit, spellId, localStart, localDuration)
+					SetIconState(container, spellId, localStart, localDuration)
+				else
+					-- No active cooldown; show icon without timer
+					SetIconState(container, spellId, start, duration)
 				end
 			end
-		elseif icon then
-			SetIconState(icon, nil, nil, nil)
+		elseif container then
+			-- Show default icon when unit doesn't exist
+			SetIconState(container, nil, nil, nil)
 		end
 	end
 end
 
 local function UpdateVisibility()
-	local show = options.Enabled and (IsInArena() or testModeActive)
+	local moduleEnabled = moduleUtil:IsModuleEnabled(moduleName.Trinkets)
+	local show = moduleEnabled and (IsInArena() or testModeActive)
 
 	for _, watcher in pairs(watchers) do
-		if watcher.Icon then
-			if show and watcher.Anchor and watcher.Anchor.IsVisible and watcher.Anchor:IsVisible() then
-				watcher.Icon:Show()
+		if watcher.Container and watcher.Anchor then
+			if show then
+				local anchor = watcher.Anchor
+				local unit = anchor.unit or (anchor.GetAttribute and anchor:GetAttribute("unit"))
+				local shouldExclude = options.ExcludePlayer and unit and UnitIsUnit(unit, "player")
+				if shouldExclude then
+					watcher.Container.Frame:Hide()
+				elseif anchor:IsVisible() then
+					watcher.Container.Frame:SetAlpha(1)
+					watcher.Container.Frame:Show()
+				else
+					watcher.Container.Frame:Hide()
+				end
 			else
-				watcher.Icon:Hide()
+				watcher.Container.Frame:Hide()
 			end
 		end
 	end
@@ -348,12 +325,15 @@ local function OnEvent(_, event, ...)
 		local matchState = C_PvP.GetActiveMatchState()
 		if matchState == Enum.PvPMatchState.StartUp then
 			ClearAll()
+			return
 		end
 
-		-- in case they trinketed before the gates opened
-		-- TODO: does this work?
-		RequestAll()
-		RefreshAll()
+		if matchState == Enum.PvPMatchState.Engaged then
+			-- in case they trinketed before the gates opened
+			RequestAll()
+			RefreshAll()
+			return
+		end
 
 		return
 	end
@@ -384,29 +364,29 @@ local function OnEvent(_, event, ...)
 end
 
 local function RefreshTestTrinkets()
-	local now = GetTime() * 1000
+	local now = GetTime()
 
 	-- Stagger durations so you can see different states
 	local stateByUnit = {
 		player = {
 			spellId = defaultSpellId,
 			start = now,
-			duration = 90 * 1000,
+			duration = 90,
 		},
 		party1 = {
 			spellId = defaultSpellId,
 			start = now,
-			duration = 120 * 1000,
+			duration = 120,
 		},
 		party2 = {
 			spellId = defaultSpellId,
 			start = now,
-			duration = 60 * 1000,
+			duration = 60,
 		},
 		party3 = {
 			spellId = defaultSpellId,
 			start = now,
-			duration = 45 * 1000,
+			duration = 45,
 		},
 	}
 
@@ -432,6 +412,7 @@ function M:StartTesting()
 	testModeActive = true
 	Pause()
 	M:Refresh()
+	RefreshTestTrinkets()
 end
 
 function M:StopTesting()
@@ -446,6 +427,7 @@ function M:Enable()
 	end
 
 	enabled = true
+	paused = false
 
 	eventFrame = CreateFrame("Frame")
 	eventFrame:RegisterEvent("PLAYER_ENTERING_WORLD")
@@ -457,6 +439,7 @@ end
 
 function M:Disable()
 	enabled = false
+	paused = true
 
 	if eventFrame then
 		eventFrame:UnregisterAllEvents()
@@ -467,45 +450,49 @@ function M:Disable()
 	for anchorFrame in pairs(watchers) do
 		DestroyWatcher(anchorFrame)
 	end
+
+	ClearAll()
+
+	for _, watcher in pairs(watchers) do
+		if watcher.Container then
+			watcher.Container.Frame:Hide()
+		end
+	end
 end
 
 function M:Refresh()
-	if options.Enabled and not enabled then
+	local moduleEnabled = moduleUtil:IsModuleEnabled(moduleName.Trinkets)
+
+	if moduleEnabled and not enabled then
 		M:Enable()
-	elseif not options.Enabled and enabled then
+	elseif not moduleEnabled and enabled then
 		M:Disable()
 	end
 
-	if not options.Enabled then
-		ClearAll()
-
-		for _, watcher in pairs(watchers) do
-			if watcher.Icon then
-				watcher.Icon:Hide()
-			end
-		end
+	if not moduleEnabled then
 		return
 	end
 
 	RebuildAnchors()
 	UpdateVisibility()
-	RequestAll()
-	RefreshAll()
 
 	for _, watcher in pairs(watchers) do
-		if watcher.Icon then
-			ApplyOptionsToIcon(watcher.Icon)
+		if watcher.Container then
+			local size = tonumber(options.Icons.Size) or 32
+			watcher.Container:SetIconSize(size)
+			watcher.Container:SetSpacing(db.IconSpacing or 2)
 		end
 	end
 
-	if testModeActive then
-		RefreshTestTrinkets()
+	if moduleEnabled and IsInArena() then
+		RequestAll()
+		RefreshAll()
 	end
 end
 
 function M:Init()
 	db = mini:GetSavedVars()
-	options = db.Trinkets
+	options = db.Modules.TrinketsModule
 
 	defaultTrinketIcon = GetSpellTexture(defaultSpellId)
 
@@ -515,4 +502,4 @@ end
 ---@class TrinketWatcher
 ---@field Anchor table
 ---@field Unit string
----@field Icon table
+---@field Container IconSlotContainer

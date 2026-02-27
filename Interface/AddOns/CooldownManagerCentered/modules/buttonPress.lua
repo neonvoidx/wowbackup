@@ -1,9 +1,8 @@
 local _, ns = ...
 
-local LAB = LibStub and LibStub("LibActionButton-1.0", true)
+local LAB = LibStub("LibActionButton-1.0", true)
 local ButtonPress = {}
 ns.ButtonPress = ButtonPress
-local pressedSpellByButton = {}
 
 local function CreateSpellIDCollection(spellID)
     if not spellID then
@@ -33,7 +32,7 @@ local function GetSpellIDFromCooldownId(cooldownID)
         return nil
     end
     local cooldownIDInfo = C_CooldownViewer.GetCooldownViewerCooldownInfo(cooldownID)
-    if cooldownIDInfo.spellID then
+    if cooldownIDInfo and cooldownIDInfo.spellID then
         return cooldownIDInfo.spellID, cooldownIDInfo.overrideSpellID
     end
 end
@@ -114,11 +113,17 @@ local function GetSpellIdFromButton(btn)
     end
     return nil
 end
+local viewerSettingMap = {
+    ["EssentialCooldownViewer"] = "cooldownManager_squareIcons_Essential",
+    ["UtilityCooldownViewer"] = "cooldownManager_squareIcons_Utility",
+}
 
 local function CreateOrGetTextureFrame(icon)
     if icon.HighlightTexture then
         return icon.HighlightTexture
     end
+
+    local parent = icon:GetParent()
 
     local frame = CreateFrame("Frame", nil, icon, "BackdropTemplate")
     frame:SetFrameLevel(icon:GetFrameLevel() + 10)
@@ -130,8 +135,15 @@ local function CreateOrGetTextureFrame(icon)
         tex:SetTexture("Interface\\AddOns\\CooldownManagerCentered\\Media\\Art\\Square")
         tex:SetBlendMode("ADD")
         tex:SetColorTexture(0.8, 0.8, 0.8, 0.3)
-        if frame.SetInside then
+        if tex.SetInside then
             tex:SetInside()
+        end
+        local settingKey = viewerSettingMap[parent:GetName()]
+        if not ns.db.profile[settingKey] then
+            local mask = frame:CreateMaskTexture(nil, "ARTWORK")
+            mask:SetAllPoints(frame)
+            mask:SetAtlas("UI-HUD-CoolDownManager-Mask")
+            tex:AddMaskTexture(mask)
         end
     else
         tex:SetAtlas("UI-HUD-ActionBar-IconFrame-Down", true)
@@ -143,149 +155,96 @@ local function CreateOrGetTextureFrame(icon)
     return frame
 end
 
-local function EnableTexture(icon)
+local function EnableHighlight(icon)
     local iconFrame = CreateOrGetTextureFrame(icon)
     iconFrame:Show()
 end
 
-local function DisableTexture(icon)
-    local iconFrame = CreateOrGetTextureFrame(icon)
-    iconFrame:Hide()
+local function DisableHighlight(icon)
+    if icon.HighlightTexture and icon.HighlightTexture:IsShown() and icon.HighlightTexture.Hide then
+        icon.HighlightTexture:Hide()
+    end
 end
 
 local toHide = {}
+local isCleaningUp = false
 local function cleanupToHide()
-    for _, icon in ipairs(toHide) do
-        DisableTexture(icon)
+    if isCleaningUp then
+        return
     end
-    toHide = {}
+    isCleaningUp = true
+    for i, icon in ipairs(toHide) do
+        DisableHighlight(icon)
+        toHide[i] = nil
+    end
+    isCleaningUp = false
 end
-hooksecurefunc("ActionButtonDown", function(id)
-    if not ns.db.profile.cooldownManager_buttonPress then
-        return
-    end
-    local btn = _G["ActionButton" .. id]
-    local spellID, isFromMacro = GetSpellIdFromButton(btn)
-    local icon = GetViewerIconBySpellId(spellID)
-    if icon then
-        EnableTexture(icon)
-        if isFromMacro then
-            table.insert(toHide, icon)
-        end
-    end
-end)
 
-hooksecurefunc("ActionButtonUp", function(id)
-    if not ns.db.profile.cooldownManager_buttonPress then
-        return
-    end
-    local btn = _G["ActionButton" .. id]
-    local spellID = GetSpellIdFromButton(btn)
-    local icon = GetViewerIconBySpellId(spellID)
-    if icon then
-        DisableTexture(icon)
-    end
-    cleanupToHide()
-end)
-
-hooksecurefunc("MultiActionButtonDown", function(bar, id)
-    if not ns.db.profile.cooldownManager_buttonPress then
-        return
-    end
-    local btn = _G[bar .. "Button" .. id]
-    local spellID, isFromMacro = GetSpellIdFromButton(btn)
-    local icon = GetViewerIconBySpellId(spellID)
-    if icon then
-        EnableTexture(icon)
-    end
-    if isFromMacro then
-        table.insert(toHide, icon)
-    end
-end)
-
-hooksecurefunc("MultiActionButtonUp", function(bar, id)
-    if not ns.db.profile.cooldownManager_buttonPress then
-        return
-    end
-    local btn = _G[bar .. "Button" .. id]
-    local spellID = GetSpellIdFromButton(btn)
-    local icon = GetViewerIconBySpellId(spellID)
-    if icon then
-        DisableTexture(icon)
-    end
-    cleanupToHide()
-end)
-
-local function ToggleHighlight(icon, show, style)
+local function ToggleHighlight(icon, show)
     if not ns.db.profile.cooldownManager_buttonPress then
         return
     end
     if not icon then
         return
     end
-    local textureFrame = CreateOrGetTextureFrame(icon, style)
+
     if show then
-        textureFrame:Show()
+        EnableHighlight(icon)
     else
-        textureFrame:Hide()
+        DisableHighlight(icon)
     end
 end
 
-local function ButtonPressed(button, mouseButton, isDown, style)
+local isProcessingButtonPress = false
+local function ButtonPressed(button, mouseButton)
+    if isProcessingButtonPress then
+        return
+    end
     if not ns.db.profile.cooldownManager_buttonPress then
         return
     end
     if not button then
         return
     end
-
-    if isDown then
-        local spellID = GetSpellIdFromButton(button)
-        if not spellID then
-            return
-        end
-
-        pressedSpellByButton[button] = spellID
-
-        local icon = GetViewerIconBySpellId(spellID)
-        if not icon then
-            return
-        end
-
-        if style == "ElvUI" then
-            ToggleHighlight(icon, isDown == true, style)
-        else
-            if mouseButton ~= "LeftButton" and mouseButton ~= "RightButton" then
-                ToggleHighlight(icon, isDown == true, nil)
-            end
-        end
-    else
-        local spellID = pressedSpellByButton[button]
-        if not spellID then
-            return
-        end
-        pressedSpellByButton[button] = nil
-
-        local icon = GetViewerIconBySpellId(spellID)
-        if not icon then
-            return
-        end
-
-        if style == "ElvUI" then
-            ToggleHighlight(icon, false, style)
-        else
-            if mouseButton ~= "LeftButton" and mouseButton ~= "RightButton" then
-                ToggleHighlight(icon, false, nil)
-            end
-        end
+    isProcessingButtonPress = true
+    local spellID = GetSpellIdFromButton(button)
+    if not spellID then
+        isProcessingButtonPress = false
+        return
     end
+
+    local icon = GetViewerIconBySpellId(spellID)
+    if not icon then
+        isProcessingButtonPress = false
+        return
+    end
+    table.insert(toHide, icon)
+
+    EnableHighlight(icon)
+    isProcessingButtonPress = false
 end
 
-local function HookButtonPressToPreClick(button, style)
-    button:HookScript("PreClick", function(self, mouseButton, down)
-        ButtonPressed(self, mouseButton, down, style)
-    end)
+local function HookButtonPressToPreClick(button)
+    if not button or button.IsCMCButtonPressHooked then
+        return
+    end
+
     button.IsCMCButtonPressHooked = true
+    button:HookScript("PreClick", function(self, mouseButton, down)
+        if self.IsCMCButtonPressHandlingPreClick then
+            return
+        end
+        self.IsCMCButtonPressHandlingPreClick = true
+
+        local currentTime = GetTimePreciseSec()
+        cleanupToHide()
+        if not down then
+            self.IsCMCButtonPressHandlingPreClick = nil
+            return
+        end
+        ButtonPressed(self, mouseButton)
+        self.IsCMCButtonPressHandlingPreClick = nil
+    end)
 end
 
 local function HookDominosButton(button)
@@ -293,14 +252,24 @@ local function HookDominosButton(button)
         return
     end
     local function handler(_, mouseButton, down)
-        ButtonPressed(button, mouseButton, down, nil)
+        if button.IsCMCButtonPressHandlingBindPreClick then
+            return
+        end
+        button.IsCMCButtonPressHandlingBindPreClick = true
+        cleanupToHide()
+        if not down then
+            button.IsCMCButtonPressHandlingBindPreClick = nil
+            return
+        end
+        ButtonPressed(button, mouseButton)
+        button.IsCMCButtonPressHandlingBindPreClick = nil
     end
     if button.bind and not button.IsCMCButtonPress_BindHooked then
         button.bind:HookScript("PreClick", handler)
         button.IsCMCButtonPress_BindHooked = true
     end
     if not button.IsCMCButtonPressHooked then
-        HookButtonPressToPreClick(button, nil)
+        HookButtonPressToPreClick(button)
     end
 end
 
@@ -330,7 +299,12 @@ local function RegisterLABCallbacks()
     end)
 end
 
+local isElvUICallbackRegistered = false
 function ButtonPress:RegisterElvUICallbacks()
+    if isElvUICallbackRegistered then
+        return
+    end
+    isElvUICallbackRegistered = true
     local ElvUI = _G.ElvUI and _G.ElvUI[1]
     if not ElvUI then
         return
@@ -344,7 +318,11 @@ function ButtonPress:RegisterElvUICallbacks()
     end)
 end
 
+local isDominosHooked = false
 function ButtonPress:HookAllDominosButtons()
+    if isDominosHooked then
+        return
+    end
     local Dominos = _G.Dominos
     if not Dominos or not Dominos.ActionButtons or not Dominos.ActionButtons.GetAll then
         return
@@ -354,9 +332,73 @@ function ButtonPress:HookAllDominosButtons()
             HookDominosButton(button)
         end
     end)
+    isDominosHooked = true
 end
 
+local isInitialized = false
 function ButtonPress:Initialize()
+    if isInitialized then
+        return
+    end
+    if not ns.db.profile.cooldownManager_buttonPress then
+        return
+    end
+    isInitialized = true
+    hooksecurefunc("ActionButtonDown", function(id)
+        if not ns.db.profile.cooldownManager_buttonPress then
+            return
+        end
+        local btn = _G["ActionButton" .. id]
+        local spellID, isFromMacro = GetSpellIdFromButton(btn)
+        local icon = GetViewerIconBySpellId(spellID)
+        if icon then
+            EnableHighlight(icon)
+            if isFromMacro then
+                table.insert(toHide, icon)
+            end
+        end
+    end)
+
+    hooksecurefunc("ActionButtonUp", function(id)
+        if not ns.db.profile.cooldownManager_buttonPress then
+            return
+        end
+        local btn = _G["ActionButton" .. id]
+        local spellID = GetSpellIdFromButton(btn)
+        local icon = GetViewerIconBySpellId(spellID)
+        if icon then
+            DisableHighlight(icon)
+        end
+        cleanupToHide()
+    end)
+
+    hooksecurefunc("MultiActionButtonDown", function(bar, id)
+        if not ns.db.profile.cooldownManager_buttonPress then
+            return
+        end
+        local btn = _G[bar .. "Button" .. id]
+        local spellID, isFromMacro = GetSpellIdFromButton(btn)
+        local icon = GetViewerIconBySpellId(spellID)
+        if icon then
+            EnableHighlight(icon)
+        end
+        if isFromMacro then
+            table.insert(toHide, icon)
+        end
+    end)
+
+    hooksecurefunc("MultiActionButtonUp", function(bar, id)
+        if not ns.db.profile.cooldownManager_buttonPress then
+            return
+        end
+        local btn = _G[bar .. "Button" .. id]
+        local spellID = GetSpellIdFromButton(btn)
+        local icon = GetViewerIconBySpellId(spellID)
+        if icon then
+            DisableHighlight(icon)
+        end
+        cleanupToHide()
+    end)
     RegisterLABCallbacks()
     HookAllLABButtons()
 end

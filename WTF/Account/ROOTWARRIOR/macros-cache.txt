@@ -176,6 +176,9 @@ END
 VER 3 0000000000000206 "BOW" "574570"
 /bow
 END
+VER 3 0000000000000236 "EnhanceQoLFlaskMacro" "INV_Misc_QuestionMark"
+#showtooltip
+END
 VER 3 0000000000000235 "EnhanceQoLHealthMacro" "INV_Misc_QuestionMark"
 #showtooltip
 /cast [nocombat] Recuperate

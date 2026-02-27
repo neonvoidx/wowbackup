@@ -79,6 +79,8 @@ local DB_HIDE_IN_PET_BATTLE = "gcdBarHideInPetBattle"
 local DEFAULT_TEX = "Interface\\TargetingFrame\\UI-StatusBar"
 local GetSpellCooldownInfo = (C_Spell and C_Spell.GetSpellCooldown) or GetSpellCooldown
 local GetTime = GetTime
+local BAR_SIZE_MIN = 6
+local BAR_SIZE_MAX = 2000
 
 local function getValue(key, fallback)
 	if not addon.db then return fallback end
@@ -178,9 +180,16 @@ local function normalizeProgressMode(value)
 end
 
 local function normalizeFillDirection(value)
+	if type(value) == "string" then value = string.upper(value) end
 	if value == "RIGHT" then return "RIGHT" end
+	if value == "UP" or value == "BOTTOM" then return "UP" end
+	if value == "DOWN" or value == "TOP" then return "DOWN" end
 	return "LEFT"
 end
+
+local function isVerticalFillDirection(value) return value == "UP" or value == "DOWN" end
+
+local function isReverseFillDirection(value) return value == "RIGHT" or value == "DOWN" end
 
 local function normalizeAnchorPoint(value, fallback)
 	if value and VALID_ANCHOR_POINTS[value] then return value end
@@ -232,9 +241,9 @@ local function resolvePlayerCastbarFrame()
 	return UIParent, false, wantsCustom
 end
 
-function GCDBar:GetWidth() return clamp(getValue(DB_WIDTH, defaults.width), 50, 800) end
+function GCDBar:GetWidth() return clamp(getValue(DB_WIDTH, defaults.width), BAR_SIZE_MIN, BAR_SIZE_MAX) end
 
-function GCDBar:GetHeight() return clamp(getValue(DB_HEIGHT, defaults.height), 6, 200) end
+function GCDBar:GetHeight() return clamp(getValue(DB_HEIGHT, defaults.height), BAR_SIZE_MIN, BAR_SIZE_MAX) end
 
 function GCDBar:GetTextureKey()
 	local key = getValue(DB_TEXTURE, defaults.texture)
@@ -470,7 +479,7 @@ function GCDBar:GetResolvedWidth()
 	if not (relativeFrame and relativeFrame.GetWidth) then return width end
 	local relativeWidth = tonumber(relativeFrame:GetWidth()) or 0
 	if relativeWidth <= 0 then return width end
-	return math.max(50, relativeWidth)
+	return math.max(BAR_SIZE_MIN, relativeWidth)
 end
 
 function GCDBar:ApplyAppearance()
@@ -479,7 +488,9 @@ function GCDBar:ApplyAppearance()
 	self.frame:SetStatusBarTexture(texture)
 	local r, g, b, a = self:GetColor()
 	self.frame:SetStatusBarColor(r, g, b, a or 1)
-	if self.frame.SetReverseFill then self.frame:SetReverseFill(self:GetFillDirection() == "RIGHT") end
+	local fillDirection = self:GetFillDirection()
+	if self.frame.SetOrientation then self.frame:SetOrientation(isVerticalFillDirection(fillDirection) and "VERTICAL" or "HORIZONTAL") end
+	if self.frame.SetReverseFill then self.frame:SetReverseFill(isReverseFillDirection(fillDirection)) end
 
 	if self.frame.bg then
 		if self:GetBackgroundEnabled() then
@@ -681,8 +692,8 @@ local editModeRegistered = false
 function GCDBar:ApplyLayoutData(data)
 	if not data or not addon.db then return end
 
-	local width = clamp(data.width or defaults.width, 50, 800)
-	local height = clamp(data.height or defaults.height, 6, 200)
+	local width = clamp(data.width or defaults.width, BAR_SIZE_MIN, BAR_SIZE_MAX)
+	local height = clamp(data.height or defaults.height, BAR_SIZE_MIN, BAR_SIZE_MAX)
 	local texture = data.texture or defaults.texture
 	local r, g, b, a = normalizeColor(data.color or defaults.color, defaults.color)
 	local bgEnabled = data.bgEnabled == true
@@ -744,11 +755,11 @@ local function applySetting(field, value)
 	local skipEditValue
 
 	if field == "width" then
-		local width = clamp(value, 50, 800)
+		local width = clamp(value, BAR_SIZE_MIN, BAR_SIZE_MAX)
 		addon.db[DB_WIDTH] = width
 		value = width
 	elseif field == "height" then
-		local height = clamp(value, 6, 200)
+		local height = clamp(value, BAR_SIZE_MIN, BAR_SIZE_MAX)
 		addon.db[DB_HEIGHT] = height
 		value = height
 	elseif field == "texture" then
@@ -1016,9 +1027,10 @@ function GCDBar:RegisterEditMode()
 				kind = SettingType.Slider,
 				field = "width",
 				default = defaults.width,
-				minValue = 50,
-				maxValue = 800,
+				minValue = BAR_SIZE_MIN,
+				maxValue = BAR_SIZE_MAX,
 				valueStep = 1,
+				allowInput = true,
 				get = function() return GCDBar:GetWidth() end,
 				set = function(_, value) applySetting("width", value) end,
 				formatter = function(value) return tostring(math.floor((tonumber(value) or 0) + 0.5)) end,
@@ -1029,9 +1041,10 @@ function GCDBar:RegisterEditMode()
 				kind = SettingType.Slider,
 				field = "height",
 				default = defaults.height,
-				minValue = 6,
-				maxValue = 200,
+				minValue = BAR_SIZE_MIN,
+				maxValue = BAR_SIZE_MAX,
 				valueStep = 1,
+				allowInput = true,
 				get = function() return GCDBar:GetHeight() end,
 				set = function(_, value) applySetting("height", value) end,
 				formatter = function(value) return tostring(math.floor((tonumber(value) or 0) + 0.5)) end,
@@ -1178,13 +1191,15 @@ function GCDBar:RegisterEditMode()
 				name = L["gcdBarFillDirection"] or "Fill direction",
 				kind = SettingType.Dropdown,
 				field = "fillDirection",
-				height = 100,
+				height = 140,
 				get = function() return GCDBar:GetFillDirection() end,
 				set = function(_, value) applySetting("fillDirection", value) end,
 				generator = function(_, root)
 					local opts = {
 						{ value = "LEFT", label = L["gcdBarFillLeft"] or "Left to right" },
 						{ value = "RIGHT", label = L["gcdBarFillRight"] or "Right to left" },
+						{ value = "UP", label = L["gcdBarFillUp"] or "Bottom to top" },
+						{ value = "DOWN", label = L["gcdBarFillDown"] or "Top to bottom" },
 					}
 					for _, option in ipairs(opts) do
 						root:CreateRadio(option.label, function() return GCDBar:GetFillDirection() == option.value end, function() applySetting("fillDirection", option.value) end)
@@ -1192,6 +1207,40 @@ function GCDBar:RegisterEditMode()
 				end,
 			},
 		}
+	end
+
+	local function seedEditModeRecordFromProfile(record)
+		if type(record) ~= "table" then return end
+		record.point = self:GetAnchorPoint()
+		record.relativePoint = self:GetAnchorRelativePoint()
+		record.x = self:GetAnchorOffsetX()
+		record.y = self:GetAnchorOffsetY()
+		record.width = self:GetWidth()
+		record.height = self:GetHeight()
+		record.texture = self:GetTextureKey()
+		record.bgEnabled = self:GetBackgroundEnabled()
+		record.bgTexture = self:GetBackgroundTextureKey()
+		do
+			local r, g, b, a = self:GetBackgroundColor()
+			record.bgColor = { r = r, g = g, b = b, a = a }
+		end
+		record.borderEnabled = self:GetBorderEnabled()
+		record.borderTexture = self:GetBorderTextureKey()
+		do
+			local r, g, b, a = self:GetBorderColor()
+			record.borderColor = { r = r, g = g, b = b, a = a }
+		end
+		record.borderSize = self:GetBorderSize()
+		record.borderOffset = self:GetBorderOffset()
+		record.progressMode = self:GetProgressMode()
+		record.fillDirection = self:GetFillDirection()
+		record.anchorRelativeFrame = self:GetAnchorRelativeFrame()
+		record.anchorMatchWidth = self:GetAnchorMatchWidth()
+		record.hideInPetBattle = self:GetHideInPetBattle()
+		do
+			local r, g, b, a = self:GetColor()
+			record.color = { r = r, g = g, b = b, a = a }
+		end
 	end
 
 	EditMode:RegisterFrame(EDITMODE_ID, {
@@ -1229,7 +1278,16 @@ function GCDBar:RegisterEditMode()
 				return { r = r, g = g, b = b, a = a }
 			end)(),
 		},
-		onApply = function(_, _, data) GCDBar:ApplyLayoutData(data) end,
+		onApply = function(_, _, data)
+			if not self._eqolEditModeHydrated then
+				self._eqolEditModeHydrated = true
+				local record = data or {}
+				seedEditModeRecordFromProfile(record)
+				GCDBar:ApplyLayoutData(record)
+				return
+			end
+			GCDBar:ApplyLayoutData(data)
+		end,
 		onEnter = function() GCDBar:ShowEditModeHint(true) end,
 		onExit = function() GCDBar:ShowEditModeHint(false) end,
 		isEnabled = function() return addon.db and addon.db[DB_ENABLED] end,

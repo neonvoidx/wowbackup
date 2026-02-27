@@ -31,6 +31,7 @@ ChannelHistory.EVENT_FILTER_KEY = ChannelHistory.EVENT_FILTER_KEY
 		CHAT_MSG_BN_WHISPER = "BN_WHISPER",
 		CHAT_MSG_BN_WHISPER_INFORM = "BN_WHISPER",
 		CHAT_MSG_PARTY = "PARTY",
+		CHAT_MSG_PARTY_LEADER = "PARTY",
 		CHAT_MSG_INSTANCE_CHAT = "INSTANCE",
 		CHAT_MSG_INSTANCE_CHAT_LEADER = "INSTANCE",
 		CHAT_MSG_RAID = "RAID",
@@ -401,9 +402,7 @@ local function isLoggingEnabled(filterKey)
 	return val and true or false
 end
 
-function ChannelHistory:IsLoggingEnabled(filterKey)
-	return isLoggingEnabled(filterKey)
-end
+function ChannelHistory:IsLoggingEnabled(filterKey) return isLoggingEnabled(filterKey) end
 
 local function buildEventSet()
 	local events = {}

@@ -10,6 +10,188 @@ local L = addon.L;
 local changelogs = addon.ControlCenter.changelogs;
 
 
+changelogs[10808] = {
+    {
+        type = "date",
+        versionText = "1.8.8",
+        timestamp = 1772120000,
+    },
+
+    {
+        type = "h1",
+        text = L["ModuleName BreakTime"],
+        dbKey = "BreakTime",
+    },
+
+    {
+        type = "Checkbox",
+        dbKey = "BreakTime",
+    },
+
+    {
+        type = "p",
+        bullet = true,
+        text = "Remind you to take a short break after a period of time.",
+    },
+
+    {
+        type = "p",
+        bullet = true,
+        text = "The default schedule is a 5-minute break every 30 min. You can change it in the settings.",
+    },
+
+    {
+        type = "p",
+        bullet = true,
+        text = "You can delay or cancel the break when the timer goes off.",
+    },
+
+    {
+        type = "img",
+        dbKey = "BreakTime",
+    },
+
+    {
+        type = "br",
+    },
+
+    {
+        type = "h1",
+        text = MISCELLANEOUS,
+    },
+
+    {
+        type = "p",
+        bullet = true,
+        text = "Expansion Summary: You can now switch the expansion to Midnight, but the content is still a work in progress.",
+    },
+
+    {
+        type = "p",
+        bullet = true,
+        text = "Map Pin modules have been retired. Displaying Bountiful Delves and Special Assignments on Quel'Thalas map is a WoW native feature now.",
+    },
+
+    {
+        type = "br",
+    },
+
+    {
+        type = "h1",
+        text = "Bug Fixes",
+    },
+
+    {
+        type = "p",
+        bullet = true,
+        text = "Expansion Summary Minimap Button: Fixed a reposition issue when the Minimap's scale was not 100%.",
+    },
+
+    {
+        type = "p",
+        bullet = true,
+        text = "Expansion Summary Minimap Button: This button should correctly become hidden when you start pet battle.",
+    },
+
+    {
+        type = "p",
+        bullet = true,
+        text = "Queue Status: Fixed the timer for PvP queues.",
+    },
+};
+
+
+changelogs[10807] = {
+    {
+        type = "date",
+        versionText = "1.8.7",
+        timestamp = 1771000000,
+    },
+
+    {
+        type = "h1",
+        text = L["ModuleName NewExpansionLandingPage"],
+        dbKey = "NewExpansionLandingPage",
+    },
+
+    {
+        type = "Checkbox",
+        dbKey = "NewExpansionLandingPage",
+    },
+
+    {
+        type = "p",
+        bullet = true,
+        text = "Added a new minimap button to toggle the Expansion Summary UI.",
+    },
+
+    {
+        type = "p",
+        bullet = true,
+        text = "You can right-click this button to access Order Hall UI from previous expansions.",
+    },
+
+    {
+        type = "p",
+        bullet = true,
+        text = "You can customize the button\'s appearance and behavior.",
+    },
+
+    {
+        type = "img",
+        fileName = "Changelog_LandingButton",
+    },
+
+    {
+        type = "br",
+    },
+
+    {
+        type = "h1",
+        text = MISCELLANEOUS,
+    },
+
+    {
+        type = "p",
+        bullet = true,
+        text = "Nameplate Quest Indicator: Added an option to show quest progress on all NPC nameplates when pressing a modifier key.",
+    },
+
+    {
+        type = "p",
+        bullet = true,
+        text = "Drawer Macros: Unusable toys should no longer appear in the flyout when \"Hide Unusable Actions\" is enabled.",
+    },
+
+    {
+        type = "br",
+    },
+
+    {
+        type = "h1",
+        text = "Bug Fixes",
+    },
+
+    {
+        type = "p",
+        bullet = true,
+        text = "Nameplate Quest Indicator: Fixed an error when calculating percentage-based quest progress.",
+    },
+
+    {
+        type = "p",
+        bullet = true,
+        text = "Loot UI: Fixed an error when displaying the item comparison tooltip.",
+    },
+
+    {
+        type = "p",
+        bullet = true,
+        text = "Expansion Summary: Fixed an issue where the reputation level text disappears before reaching Paragon.",
+    },
+};
+
+
 changelogs[10806] = {
     {
         type = "date",

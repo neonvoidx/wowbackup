@@ -72,10 +72,17 @@ local function FormatAnchorPoint(data)
 end
 
 local function BuildAnchorLayoutSnapshot(layoutName)
-	local layout = EditMode and EditMode:GetLayoutData(EDITMODE_ID, layoutName)
-	if layout then return CopyAnchorConfig(layout) end
 	addon.db.containerActionAnchor = FormatAnchorPoint(addon.db.containerActionAnchor)
 	return CopyAnchorConfig(addon.db.containerActionAnchor)
+end
+
+local function SeedEditModeAnchorRecord(record)
+	if type(record) ~= "table" then return end
+	local snapshot = BuildAnchorLayoutSnapshot()
+	record.point = snapshot.point or DEFAULT_ANCHOR.point
+	record.relativePoint = snapshot.relativePoint or record.point
+	record.x = snapshot.x or 0
+	record.y = snapshot.y or 0
 end
 
 local function SecureSort(a, b)
@@ -144,24 +151,76 @@ function ContainerActions:GetAnchorConfig(layoutName)
 	return FormatAnchorPoint(snapshot)
 end
 
-function ContainerActions:GetLayoutAreaBlocks(layoutName)
-	local targetLayout = layoutName or (EditMode and EditMode:GetActiveLayoutName()) or "_Global"
-	addon.db.containerActionLayouts = addon.db.containerActionLayouts or {}
-	local layoutData = addon.db.containerActionLayouts[targetLayout]
-	if not layoutData then
-		local copySource = addon.db.containerActionAreaBlocks
-		layoutData = {
-			areaBlocks = copySource and CopyTable(copySource) or {},
-		}
-		addon.db.containerActionLayouts[targetLayout] = layoutData
+local function copyMissingAreaBlocks(target, source)
+	if type(target) ~= "table" or type(source) ~= "table" then return end
+	for key, value in pairs(source) do
+		if target[key] == nil then target[key] = value and true or nil end
 	end
-	layoutData.areaBlocks = layoutData.areaBlocks or {}
-	return layoutData.areaBlocks
+end
+
+local function sortedLayoutKeys(layouts)
+	local keys = {}
+	if type(layouts) ~= "table" then return keys end
+	for key in pairs(layouts) do
+		if type(key) == "string" then keys[#keys + 1] = key end
+	end
+	table.sort(keys)
+	return keys
+end
+
+local function getPreferredLegacyLayout(layouts)
+	local preferred = EditMode and EditMode.GetActiveLayoutName and EditMode:GetActiveLayoutName()
+	if preferred and type(layouts[preferred]) == "table" then return preferred end
+	if type(layouts._Global) == "table" then return "_Global" end
+	for _, key in ipairs(sortedLayoutKeys(layouts)) do
+		if type(layouts[key]) == "table" then return key end
+	end
+	return nil
+end
+
+local function migrateLegacyAreaBlockStore(profile)
+	if type(profile) ~= "table" then return end
+	local legacy = profile.containerActionLayouts
+	if type(legacy) ~= "table" then
+		profile.containerActionAreaBlocks = profile.containerActionAreaBlocks or {}
+		return
+	end
+
+	local target = profile.containerActionAreaBlocks
+	if type(target) ~= "table" then
+		target = {}
+		profile.containerActionAreaBlocks = target
+	end
+
+	if next(target) == nil then
+		local preferred = getPreferredLegacyLayout(legacy)
+		local preferredData = preferred and legacy[preferred]
+		local preferredBlocks = type(preferredData) == "table" and preferredData.areaBlocks
+		if type(preferredBlocks) == "table" then copyMissingAreaBlocks(target, preferredBlocks) end
+	end
+
+	for _, key in ipairs(sortedLayoutKeys(legacy)) do
+		local layoutData = legacy[key]
+		local blocks = type(layoutData) == "table" and layoutData.areaBlocks
+		if type(blocks) == "table" then copyMissingAreaBlocks(target, blocks) end
+	end
+
+	profile.containerActionLayouts = nil
+end
+
+function ContainerActions:MigrateProfileData(profile)
+	migrateLegacyAreaBlockStore(profile)
+end
+
+function ContainerActions:GetLayoutAreaBlocks(layoutName)
+	if not addon.db then return {} end
+	migrateLegacyAreaBlockStore(addon.db)
+	addon.db.containerActionAreaBlocks = addon.db.containerActionAreaBlocks or {}
+	return addon.db.containerActionAreaBlocks
 end
 
 function ContainerActions:SetAreaBlock(layoutName, key, enabled)
-	layoutName = layoutName or (EditMode and EditMode:GetActiveLayoutName()) or "_Global"
-	local areaBlocks = self:GetLayoutAreaBlocks(layoutName)
+	local areaBlocks = self:GetLayoutAreaBlocks()
 	if enabled then
 		areaBlocks[key] = true
 	else
@@ -230,22 +289,20 @@ function ContainerActions:EnsureAnchor()
 				height = 180,
 				default = {},
 				set = function() end,
-				generator = function(_, rootDescription)
-					for _, areaKey in ipairs(AREA_BLOCK_ORDER) do
-						local key = areaKey
-						rootDescription:CreateCheckbox(GetAreaDisplayName(key), function()
-							local layoutName = EditMode and EditMode:GetActiveLayoutName()
-							local cfg = ContainerActions:GetLayoutAreaBlocks(layoutName)
-							return not not cfg[key]
-						end, function()
-							local layoutName = EditMode and EditMode:GetActiveLayoutName()
-							local cfg = ContainerActions:GetLayoutAreaBlocks(layoutName)
-							local newState = not not cfg[key]
-							ContainerActions:SetAreaBlock(layoutName, key, not newState)
-						end)
-					end
-				end,
-			}
+					generator = function(_, rootDescription)
+						for _, areaKey in ipairs(AREA_BLOCK_ORDER) do
+							local key = areaKey
+							rootDescription:CreateCheckbox(GetAreaDisplayName(key), function()
+								local cfg = ContainerActions:GetLayoutAreaBlocks()
+								return not not cfg[key]
+							end, function()
+								local cfg = ContainerActions:GetLayoutAreaBlocks()
+								local newState = not not cfg[key]
+								ContainerActions:SetAreaBlock(nil, key, not newState)
+							end)
+						end
+					end,
+				}
 		end
 
 		EditMode:RegisterFrame(EDITMODE_ID, {
@@ -253,7 +310,18 @@ function ContainerActions:EnsureAnchor()
 			title = L["containerActionsAnchorLabel"] or "Container Button",
 			layoutDefaults = defaults,
 			isEnabled = function() return ContainerActions:IsEnabled() end,
-			onApply = function(_, layoutName, data) ContainerActions:ApplyAnchorLayout(data) end,
+			onApply = function(_, layoutName, data)
+				if not ContainerActions._eqolEditModeHydrated then
+					ContainerActions._eqolEditModeHydrated = true
+					local record = data or {}
+					SeedEditModeAnchorRecord(record)
+					if EditMode and EditMode.SetFramePosition then
+						EditMode:SetFramePosition(EDITMODE_ID, record.point or DEFAULT_ANCHOR.point, record.x or 0, record.y or 0, layoutName)
+						return
+					end
+				end
+				ContainerActions:ApplyAnchorLayout(data)
+			end,
 			settings = dropdownSetting and { dropdownSetting } or nil,
 		})
 		self.anchorRegistered = true
@@ -830,13 +898,7 @@ function ContainerActions:UpdateItems(list, dirtyBags)
 end
 
 function ContainerActions:UpdateAreaBlocks()
-	local layoutName = EditMode and EditMode:GetActiveLayoutName()
-	local config
-	if layoutName then
-		config = self:GetLayoutAreaBlocks(layoutName)
-	else
-		config = addon.db and addon.db.containerActionAreaBlocks or {}
-	end
+	local config = self:GetLayoutAreaBlocks()
 	local instanceType = GetCurrentInstanceType()
 	for _, key in ipairs(AREA_BLOCK_ORDER) do
 		local def = AREA_BLOCKS[key]

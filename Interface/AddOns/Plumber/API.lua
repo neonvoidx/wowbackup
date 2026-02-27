@@ -28,8 +28,26 @@ local issecretvalue = issecretvalue or function(_) return false end;
 local canaccessvalue = canaccessvalue or function(_) return true end;
 API.Secret_IsSecret = issecretvalue;
 
-function API.Secret_CanAccess(v)
+local function Secret_CanAccess(v)
     return canaccessvalue(v) and v ~= nil
+end
+API.Secret_CanAccess = Secret_CanAccess;
+
+function API.Secret_CanAccessValues(...)
+    if select("#", ...) == 0 then
+        return false
+    end
+
+    local v;
+
+    for i = 1, select("#", ...) do
+        v = select(i, ...);
+        if not Secret_CanAccess(v) then
+            return false
+        end
+    end
+
+    return true
 end
 
 
@@ -440,12 +458,16 @@ do  -- Time
     end
     API.SecondsToTime = SecondsToTime;
 
-    local function SecondsToClock(seconds)
+    local function SecondsToClock(seconds, alwaysTwoDigits)
         --Clock: 00:00
         if seconds >= 3600 then
             return format("%s:%02d:%02d", floor(seconds / 3600), floor((seconds - 3600 * floor(seconds / 3600)) / 60), floor(seconds % 60))
         else
-            return format("%s:%02d", floor(seconds / 60), floor(seconds % 60))
+            if alwaysTwoDigits then
+                return format("%02d:%02d", floor(seconds / 60), floor(seconds % 60))
+            else
+                return format("%s:%02d", floor(seconds / 60), floor(seconds % 60))
+            end
         end
     end
     API.SecondsToClock = SecondsToClock;
@@ -1450,6 +1472,25 @@ do  -- Map
             return info.name
         end
     end
+
+    function API.GetPlayerContinent()
+        local uiMapID = GetBestMapForUnit("player");
+        if uiMapID then
+            local continentMapID;
+            local info = GetMapInfo(uiMapID);
+            while info do
+                if info.mapType == 2 then   --Enum.UIMapType.Continent
+                    continentMapID = info.mapID;
+                    break
+                elseif info.parentMapID then
+                    info = GetMapInfo(info.parentMapID);
+                else
+                    info = nil;
+                end
+            end
+            return continentMapID
+        end
+    end
 end
 
 do  -- Instance -- Map
@@ -1460,6 +1501,15 @@ do  -- Instance -- Map
         return instanceID
     end
     API.GetMapID = GetMapID;
+
+
+    function API.IsInPvP()
+        if C_PvP.IsActiveBattlefield() then
+            return true
+        end
+        local _, instanceType = GetInstanceInfo();
+        return instanceType == "arena" or instanceType == "pvp"
+    end
 end
 
 do  -- Pixel
@@ -1480,6 +1530,14 @@ do  -- Pixel
         return GetPixelForScale(scale, pixelSize);
     end
     API.GetPixelForWidget = GetPixelForWidget;
+
+    function API.GetTexturePixelSize(texture)
+        local SCREEN_WIDTH, SCREEN_HEIGHT = GetPhysicalScreenSize();
+        local scale = texture:GetEffectiveScale();
+        local w, h = texture:GetSize();
+        local pixel = (768/SCREEN_HEIGHT)/scale;
+        return w/pixel, h/pixel
+    end
 
     function API.UpdateTextureSliceScale(textureSlice)
         local SCREEN_WIDTH, SCREEN_HEIGHT = GetPhysicalScreenSize();
@@ -1578,6 +1636,8 @@ do  -- Currency
                 if info.iconFileID and info.iconFileID ~= 0 and info.description and info.description ~= "" and (not find(info.description, "(Hidden)")) and (not find(info.description, "DNT")) then
                     CurrencyDataProvider.shouldDisplayForUI[currencyID] = true;
                     CurrencyDataProvider:CacheCurrencyInfo(currencyID, info);
+                else
+                    CurrencyDataProvider.shouldDisplayForUI[currencyID] = false;
                 end
             else
                 CurrencyDataProvider.shouldDisplayForUI[currencyID] = false;
@@ -1963,15 +2023,13 @@ do  -- Reputation
             end
         end
 
-        if C_Reputation.IsFactionParagon and C_Reputation.IsFactionParagon(factionID) then
-            if not isMajorFaction or C_MajorFactions.HasMaximumRenown(factionID) then
-                isFull = true;
-                if paragonRepEarned and paragonThreshold and paragonThreshold ~= 0 then
-                    local paragonLevel = floor(paragonRepEarned / paragonThreshold);
-                    currentValue = paragonRepEarned - paragonLevel * paragonThreshold;
-                    maxValue = paragonThreshold;
-                    level = paragonLevel;
-                end
+        if C_Reputation.IsFactionParagonForCurrentPlayer and C_Reputation.IsFactionParagonForCurrentPlayer(factionID) then
+            isFull = true;
+            if paragonRepEarned and paragonThreshold and paragonThreshold ~= 0 then
+                local paragonLevel = floor(paragonRepEarned / paragonThreshold);
+                currentValue = paragonRepEarned - paragonLevel * paragonThreshold;
+                maxValue = paragonThreshold;
+                level = paragonLevel;
             end
         end
 
@@ -3748,10 +3806,18 @@ do  -- Chat Message
     end
     API.PrintMessage = PrintMessage;
 
-    function API.DisplayErrorMessage(msg)
+    function API.DisplayAlertMessage(msg, r, g, b)
         if not msg then return end;
         local messageType = 0;
-        UIErrorsFrame:TryDisplayMessage(messageType, (CM.iconMarkup.." |cffb8c8d1Plumber:|r ")..msg, RED_FONT_COLOR:GetRGB());
+        if not (r and g and b) then
+            r, g, b = 1, 0.82, 0;
+        end
+        UIErrorsFrame:TryDisplayMessage(messageType, (CM.iconMarkup.." |cffb8c8d1Plumber:|r ")..msg, r, g, b);
+    end
+
+    function API.DisplayErrorMessage(msg)
+        local r, g, b = RED_FONT_COLOR:GetRGB();
+        API.DisplayAlertMessage(msg, r, g, b)
     end
 
     function API.CheckAndDisplayErrorIfInCombat()
@@ -4032,6 +4098,7 @@ do  -- Macro Util
     local WoWAPI = {
         IsPlayerSpell = IsPlayerSpell,
         PlayerHasToy = PlayerHasToy or Nop,
+        IsToyUsable = C_ToyBox and C_ToyBox.IsToyUsable or Nop,
         GetItemCount = C_Item.GetItemCount,
         GetItemCraftedQualityByItemInfo = C_TradeSkillUI and C_TradeSkillUI.GetItemCraftedQualityByItemInfo or Nop,
         GetItemReagentQualityByItemInfo = C_TradeSkillUI and C_TradeSkillUI.GetItemReagentQualityByItemInfo or Nop,
@@ -4046,7 +4113,7 @@ do  -- Macro Util
             return API.IsSpellKnown(arg1) or WoWAPI.IsPlayerSpell(arg1)
         elseif actionType == "item" then
             if API.IsToyItem(arg1) then
-                return WoWAPI.PlayerHasToy(arg1)
+                return WoWAPI.PlayerHasToy(arg1) and WoWAPI.IsToyUsable(arg1)
             else
                 local _, _, _, _, _, classID, subClassID = WoWAPI.GetItemInfoInstant(arg1);
 

@@ -104,6 +104,10 @@ VER 3 010000000000003E "Full Combo" "134400"
 #showtooltip
 /castsequence reset=90 The Hunt, Hungering Slash, Vengeful Retreat, Voidblade, Hungering Slash, Vengeful Retreat
 END
+VER 3 010000000000003F "Outfit Collection" "2869702"
+#plumber:outfit
+/click PLMR_OUTFIT
+END
 VER 3 0100000000000037 "Teleport Home" "7252953"
 #plumber:home
 /click PLMR_HOME1

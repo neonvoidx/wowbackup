@@ -875,7 +875,8 @@ panel:SetScript("OnShow", function(self)
     end
 
     local y = -(title:GetStringHeight() + 36)
-
+    local adaptiveAnchor
+    local sAdaptiveTarget
     -- ====================
     -- Left column settings
     -- ====================
@@ -1857,7 +1858,10 @@ panel:SetScript("OnShow", function(self)
             nukeBtn:ClearAllPoints()
             nukeBtn:SetPoint("TOPLEFT", content, "TOPLEFT", 20, nukeTopY)
         end
-
+        if adaptiveAnchor then
+            adaptiveAnchor:ClearAllPoints()
+            adaptiveAnchor:SetPoint("TOPLEFT", content, "TOPLEFT", 20, nukeTopY)
+        end
         y = nukeTopY - 40
 
         if RecalcScrollHeight then
@@ -1897,6 +1901,9 @@ panel:SetScript("OnShow", function(self)
     nukeBtn:SetSize(260, 28)
     nukeBtn:SetText("|cffffff00!!! NUKE ALL SETTINGS !!!|r")
     nukeBtn:SetPoint("TOPLEFT", content, "TOPLEFT", 20, y - 40)
+    adaptiveAnchor = CreateFrame("Frame", nil, content)
+    adaptiveAnchor:SetSize(1, 1)
+    adaptiveAnchor:SetPoint("TOPLEFT", content, "TOPLEFT", 20, y - 40)
     -- =========
     -- Debug FPS 
     -- =========
@@ -1910,15 +1917,50 @@ panel:SetScript("OnShow", function(self)
 
     cbDebug:ClearAllPoints()
     cbDebug:SetPoint("LEFT", nukeBtn, "RIGHT", 14, 0)
+    sAdaptiveTarget = Track(MakeSlider(content, "Adaptive target updates (in Hz)",
+        "When Adaptive Update Rate is enabled and your FPS is above 90,\n" ..
+            "the trail will update about this many times per second.\n\n" .. "Examples:\n" ..
+            "• 240 FPS + target 90 => ~90 updates/sec\n" .. "• 90 FPS or below => every frame (ignores target)", 1,
+        240, 1, function()
+            return db.adaptiveTargetFPS or 90
+        end, function(v)
+            db.adaptiveTargetFPS = math.floor(v)
+        end))
+    sAdaptiveTarget:ClearAllPoints()
+    sAdaptiveTarget:SetPoint("TOPLEFT", adaptiveAnchor, "TOPLEFT", 370, 30)
 
-    local cbEveryOther = Track(MakeCheckbox(content, "Update every second frame",
-        "If enabled, the trail engine runs every other frame.", function()
+    local function RefreshAdaptiveSliderEnabled()
+        local on = (db.updateEveryOther == true)
+
+        if sAdaptiveTarget and sAdaptiveTarget.SetEnabled then
+            sAdaptiveTarget:SetEnabled(on)
+            sAdaptiveTarget:SetAlpha(on and 1 or 0.4)
+        end
+
+        if sAdaptiveTarget and sAdaptiveTarget.ValueBox then
+            sAdaptiveTarget.ValueBox:SetEnabled(on)
+            sAdaptiveTarget.ValueBox:SetAlpha(on and 1 or 0.4)
+        end
+    end
+    RefreshAdaptiveSliderEnabled()
+
+    local cbEveryOther = Track(MakeCheckbox(content, "Adaptive Update Rate (reduces CPU usage)",
+        "Tries to keep your FPS healthy by reducing how often the trail updates.\n\n" .. "Rules:\n" ..
+            "• 90 FPS or below: updates every frame (smoothest)\n" ..
+            "• Above 90 FPS: updates about the Target Updates value (slider)\n" ..
+            "  (but never more than your current FPS)", function()
             return db.updateEveryOther == true
         end, function(v)
             db.updateEveryOther = v
+            RefreshAdaptiveSliderEnabled()
         end))
     cbEveryOther:ClearAllPoints()
-    cbEveryOther:SetPoint("LEFT", cbDebug, "RIGHT", 60, 0) -- tweak spacing if you want
+    cbEveryOther:SetPoint("LEFT", cbDebug, "RIGHT", 60, 0)
+
+    RefreshAdaptiveSliderEnabled()
+    if UpdateAutomationBottomY then
+        UpdateAutomationBottomY()
+    end
 
     nukeBtn:SetScript("OnClick", function()
         StaticPopup_Show(POPUP_KEY_NUKE)

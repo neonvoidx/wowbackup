@@ -8,6 +8,14 @@ local function cleanupCombatMeterProfile(profile)
 		if type(key) == "string" and key:lower():find("^combatmeter") then profile[key] = nil end
 	end
 
+	local editData = profile.editModeData
+	if type(editData) == "table" then
+		for id in pairs(editData) do
+			if type(id) == "string" and id:lower():find("^combatmeter") then editData[id] = nil end
+		end
+	end
+
+	-- Legacy fallback for profile versions that still carry layout-keyed data.
 	local layouts = profile.editModeLayouts
 	if type(layouts) ~= "table" then return end
 	for layoutName, layout in pairs(layouts) do

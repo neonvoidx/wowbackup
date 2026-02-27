@@ -12,6 +12,7 @@ local GetSpellInfo = _G.GetSpellInfo
 local LibStub = _G.LibStub
 local UnitGUID = _G.UnitGUID
 local wipe = _G.wipe
+local issecretvalue = _G.issecretvalue
 
 local db
 local enabled = false
@@ -52,6 +53,14 @@ local function SafeAuraValue(data, key)
         return nil
     end
     return value
+end
+
+local function IsSecret(value)
+    if type(issecretvalue) ~= "function" then
+        return false
+    end
+    local ok, secret = pcall(issecretvalue, value)
+    return ok and secret == true
 end
 
 local function SafeIsCrowdControl(spellId)
@@ -133,6 +142,26 @@ local function Debug(msg)
     end
 end
 
+local function IsCategoryVisible(category)
+    if type(_G.FreshDRs_IsCategoryVisible) == "function" then
+        local ok, visible = pcall(_G.FreshDRs_IsCategoryVisible, category)
+        if ok then
+            return visible ~= false
+        end
+    end
+    return true
+end
+
+local function GetIconSpacing()
+    if type(_G.FreshDRs_GetIconSpacing) == "function" then
+        local ok, spacing = pcall(_G.FreshDRs_GetIconSpacing)
+        if ok and type(spacing) == "number" then
+            return spacing
+        end
+    end
+    return ICON_SPACING
+end
+
 local function EnsureDRList()
     if DRList then
         return true
@@ -150,6 +179,29 @@ end
 
 local function GetUnitLabel(guid, fallback)
     return fallback or guid
+end
+
+local function GetStateForGuid(guid)
+    if type(guid) ~= "string" then
+        return nil
+    end
+    local ok, value = pcall(function()
+        return states[guid]
+    end)
+    if ok then
+        return value
+    end
+    return nil
+end
+
+local function SetStateForGuid(guid, value)
+    if type(guid) ~= "string" then
+        return false
+    end
+    local ok = pcall(function()
+        states[guid] = value
+    end)
+    return ok
 end
 
 local function ResetState(state, now)
@@ -177,8 +229,15 @@ end
 
 local function OnAuraApplied(unit, guid, category)
     local now = GetTime()
-    local unitState = states[guid]
+    local unitState = GetStateForGuid(guid)
+    if not unitState then
+        return
+    end
     local catState = unitState[category]
+    if not catState then
+        catState = { count = 0, resetAt = 0, active = false }
+        unitState[category] = catState
+    end
     ResetState(catState, now)
 
     catState.count = math.min(catState.count + 1, 2)
@@ -190,8 +249,15 @@ end
 
 local function OnAuraRemoved(unit, guid, category)
     local now = GetTime()
-    local unitState = states[guid]
+    local unitState = GetStateForGuid(guid)
+    if not unitState then
+        return
+    end
     local catState = unitState[category]
+    if not catState then
+        catState = { count = 0, resetAt = 0, active = false }
+        unitState[category] = catState
+    end
     ResetState(catState, now)
     catState.active = false
     catState.resetAt = now + DR_RESET_TIME
@@ -201,8 +267,17 @@ local function OnAuraRemoved(unit, guid, category)
 end
 
 local function ProcessUnitAuras(unit, filter)
-    local guid = UnitGUID(unit)
-    if not guid then
+    local okGuid, guid = pcall(UnitGUID, unit)
+    if not okGuid then
+        return
+    end
+    if not guid or IsSecret(guid) or type(guid) ~= "string" then
+        return
+    end
+    local okGuidIndex = pcall(function()
+        local _ = states[guid]
+    end)
+    if not okGuidIndex then
         return
     end
     if not EnsureDRList() then
@@ -210,10 +285,12 @@ local function ProcessUnitAuras(unit, filter)
     end
 
     local now = GetTime()
-    local unitState = states[guid]
+    local unitState = GetStateForGuid(guid)
     if not unitState then
         unitState = {}
-        states[guid] = unitState
+        if not SetStateForGuid(guid, unitState) then
+            return
+        end
     end
     unitState.unit = unit
 
@@ -236,28 +313,34 @@ local function ProcessUnitAuras(unit, filter)
         local auraInstanceID = SafeAuraValue(data, "auraInstanceID")
         local category = nil
         if spellId and SafeIsCrowdControl(spellId) then
-            category = DRList:GetCategoryBySpellID(spellId)
+            local okCategory, resolvedCategory = pcall(DRList.GetCategoryBySpellID, DRList, spellId)
+            if okCategory then
+                category = resolvedCategory
+            end
         elseif name then
             category = GetCategoryByName(name)
         end
         if category then
-            if category then
-                present[category] = true
-                if not iconForCategory[category] then
-                    iconForCategory[category] = SafeAuraValue(data, "icon")
-                end
-                if not expiresForCategory[category] then
-                    expiresForCategory[category] = SafeAuraValue(data, "expirationTime")
-                end
-                if not durationForCategory[category] then
-                    durationForCategory[category] = SafeAuraValue(data, "duration")
-                end
-                if not instanceForCategory[category] then
-                    instanceForCategory[category] = auraInstanceID
-                end
-                if not applicationsForCategory[category] then
-                    applicationsForCategory[category] = SafeAuraValue(data, "applications")
-                end
+            if IsSecret(category) then
+                category = nil
+            end
+        end
+        if category then
+            present[category] = true
+            if not iconForCategory[category] then
+                iconForCategory[category] = SafeAuraValue(data, "icon")
+            end
+            if not expiresForCategory[category] then
+                expiresForCategory[category] = SafeAuraValue(data, "expirationTime")
+            end
+            if not durationForCategory[category] then
+                durationForCategory[category] = SafeAuraValue(data, "duration")
+            end
+            if not instanceForCategory[category] then
+                instanceForCategory[category] = auraInstanceID
+            end
+            if not applicationsForCategory[category] then
+                applicationsForCategory[category] = SafeAuraValue(data, "applications")
             end
         elseif db and db.experimentalTracking and db.debug then
             if not spellId and not name then
@@ -331,7 +414,8 @@ local function UpdateOverlayLayout(overlay, items)
         overlay:SetSize(1, 1)
         return
     end
-    local width = (count * ICON_SIZE) + math.max(0, (count - 1) * ICON_SPACING)
+    local spacing = GetIconSpacing()
+    local width = (count * ICON_SIZE) + math.max(0, (count - 1) * spacing)
     overlay:SetSize(width, ICON_SIZE)
     for i = 1, count do
         local item = overlay.items[i]
@@ -339,7 +423,7 @@ local function UpdateOverlayLayout(overlay, items)
         if i == 1 then
             item:SetPoint("RIGHT", overlay, "RIGHT", 0, 0)
         else
-            item:SetPoint("RIGHT", overlay.items[i - 1], "LEFT", -ICON_SPACING, 0)
+            item:SetPoint("RIGHT", overlay.items[i - 1], "LEFT", -spacing, 0)
         end
     end
 end
@@ -370,6 +454,7 @@ function DRTracker.UpdateOverlay(unit, guid, unitState, iconForCategory, duratio
             end
         end
         if category ~= "unit" and (catState.active or (catState.resetAt and catState.resetAt > now)) then
+            if IsCategoryVisible(category) then
             items[#items + 1] = {
                 category = category,
                 stage = FormatStage(catState.count, category),
@@ -379,6 +464,7 @@ function DRTracker.UpdateOverlay(unit, guid, unitState, iconForCategory, duratio
                 duration = durationForCategory and durationForCategory[category] or nil,
                 expires = expiresForCategory and expiresForCategory[category] or nil,
             }
+            end
         end
     end
     table.sort(items, function(a, b)
@@ -402,6 +488,7 @@ function DRTracker.UpdateOverlay(unit, guid, unitState, iconForCategory, duratio
             item.timerText:SetPoint("TOPLEFT", item, "TOPLEFT", 1, -1)
             item.text = item:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
             item.text:SetPoint("BOTTOMRIGHT", item, "BOTTOMRIGHT", -1, 1)
+            item.stageText = item.text
             if item.text.SetFont then
                 item.text:SetFont("Fonts\\FRIZQT__.TTF", 7, "OUTLINE")
             end
@@ -411,26 +498,45 @@ function DRTracker.UpdateOverlay(unit, guid, unitState, iconForCategory, duratio
             overlay.items[i] = item
         end
         if items[i].icon then
-            item.icon:SetTexture(items[i].icon)
+            item.NPDRS_DefaultTexture = items[i].icon
+            if _G.FreshDRs_ApplyIconVisual then
+                _G.FreshDRs_ApplyIconVisual(item, items[i].category, item.NPDRS_DefaultTexture, (items[i].stage == "IMM"))
+            else
+                item.icon:SetTexture(item.NPDRS_DefaultTexture)
+            end
             item.icon:Show()
         else
             item.icon:Hide()
         end
+        item.NPDRS_CurrentStage = items[i].stage
         if not items[i].active and items[i].resetAt and items[i].resetAt > now then
             local start = items[i].resetAt - DR_RESET_TIME
             item.cooldown:SetCooldown(start, DR_RESET_TIME)
             item.cooldown:Show()
+            local remaining = items[i].resetAt - now
+            if _G.FreshDRs_ApplyTextStyle then
+                _G.FreshDRs_ApplyTextStyle(item, items[i].stage, remaining, true)
+            else
+                item.timerText:SetText(string.format("%.0f", remaining))
+            end
         else
             item.cooldown:SetCooldown(0, 0)
             item.cooldown:Hide()
+            if _G.FreshDRs_ApplyTextStyle then
+                _G.FreshDRs_ApplyTextStyle(item, items[i].stage, nil, false)
+            else
+                item.timerText:SetText("")
+            end
         end
-        item.text:SetText(items[i].stage == "full" and "" or items[i].stage)
-        if items[i].stage == "1/2" then
-            item.text:SetTextColor(0, 1, 0, 1)
-        elseif items[i].stage == "IMM" then
-            item.text:SetTextColor(1, 0, 0, 1)
-        else
-            item.text:SetTextColor(1, 1, 1, 1)
+        if not _G.FreshDRs_ApplyTextStyle then
+            item.text:SetText(items[i].stage == "full" and "" or items[i].stage)
+            if items[i].stage == "1/2" then
+                item.text:SetTextColor(0, 1, 0, 1)
+            elseif items[i].stage == "IMM" then
+                item.text:SetTextColor(1, 0, 0, 1)
+            else
+                item.text:SetTextColor(1, 1, 1, 1)
+            end
         end
         item:Show()
     end
@@ -451,12 +557,24 @@ function DRTracker.UpdateOverlay(unit, guid, unitState, iconForCategory, duratio
             if item:IsShown() and item.cooldown and item.cooldown:IsShown() and item.resetAt then
                 local remaining = item.resetAt - nowTime
                 if remaining > 0 then
-                    item.timerText:SetText(string.format("%.0f", remaining))
+                    if _G.FreshDRs_ApplyTextStyle then
+                        _G.FreshDRs_ApplyTextStyle(item, item.NPDRS_CurrentStage, remaining, true)
+                    else
+                        item.timerText:SetText(string.format("%.0f", remaining))
+                    end
+                else
+                    if _G.FreshDRs_ApplyTextStyle then
+                        _G.FreshDRs_ApplyTextStyle(item, item.NPDRS_CurrentStage, nil, false)
+                    else
+                        item.timerText:SetText("")
+                    end
+                end
+            else
+                if _G.FreshDRs_ApplyTextStyle then
+                    _G.FreshDRs_ApplyTextStyle(item, item.NPDRS_CurrentStage, nil, false)
                 else
                     item.timerText:SetText("")
                 end
-            else
-                item.timerText:SetText("")
             end
         end
     end)

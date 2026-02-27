@@ -1127,6 +1127,18 @@ local function createFrameCategory()
 		end,
 		parentSection = expandable,
 	})
+
+	addon.functions.SettingsCreateCheckbox(category, {
+		var = "unclampDamageMeter",
+		text = L["unclampDamageMeter"] or "Unclamp Blizzard damage meter",
+		desc = L["unclampDamageMeterDesc"] or "Allow Blizzard damage meter windows to be moved beyond the screen edges.",
+		func = function(value)
+			addon.db["unclampDamageMeter"] = value and true or false
+			if addon.functions.applyDamageMeterClamp then addon.functions.applyDamageMeterClamp() end
+		end,
+		default = false,
+		parentSection = expandable,
+	})
 end
 
 function addon.functions.initUIOptions()
@@ -1157,12 +1169,31 @@ function addon.functions.initUIOptions()
 	if addon.GCDBar and addon.GCDBar.OnSettingChanged then addon.GCDBar:OnSettingChanged(addon.db["gcdBarEnabled"]) end
 
 	local combatDefaults = (addon.CombatText and addon.CombatText.defaults) or {}
+	local combatAlwaysModeCombatOnly = addon.CombatText and addon.CombatText.ALWAYS_VISIBLE_MODE_COMBAT_ONLY or "COMBAT_ONLY"
+	local combatAlwaysModeStatus = addon.CombatText and addon.CombatText.ALWAYS_VISIBLE_MODE_STATUS or "STATUS"
 	local combatFont = combatDefaults.fontFace or (addon.variables and addon.variables.defaultFont) or STANDARD_TEXT_FONT
+	local function cloneColor(value, fallback)
+		local source = type(value) == "table" and value or fallback
+		source = type(source) == "table" and source or { r = 1, g = 1, b = 1, a = 1 }
+		return {
+			r = source.r or source[1] or 1,
+			g = source.g or source[2] or 1,
+			b = source.b or source[3] or 1,
+			a = source.a or source[4],
+		}
+	end
 	addon.functions.InitDBValue("combatTextEnabled", false)
 	addon.functions.InitDBValue("combatTextDuration", combatDefaults.duration or 3)
+	addon.functions.InitDBValue("combatTextAlwaysVisible", combatDefaults.alwaysVisible == true)
+	local alwaysVisibleMode = combatDefaults.alwaysVisibleMode
+	if alwaysVisibleMode ~= combatAlwaysModeCombatOnly and alwaysVisibleMode ~= combatAlwaysModeStatus then alwaysVisibleMode = combatAlwaysModeStatus end
+	addon.functions.InitDBValue("combatTextAlwaysVisibleMode", alwaysVisibleMode)
 	addon.functions.InitDBValue("combatTextFont", combatFont)
 	addon.functions.InitDBValue("combatTextFontSize", combatDefaults.fontSize or 32)
-	addon.functions.InitDBValue("combatTextColor", combatDefaults.color or { r = 1, g = 1, b = 1, a = 1 })
+	local defaultCombatColor = cloneColor(addon.db["combatTextColor"], combatDefaults.enterColor or combatDefaults.color or { r = 1, g = 1, b = 1, a = 1 })
+	addon.functions.InitDBValue("combatTextColor", cloneColor(defaultCombatColor, defaultCombatColor))
+	addon.functions.InitDBValue("combatTextEnterColor", cloneColor(defaultCombatColor, defaultCombatColor))
+	addon.functions.InitDBValue("combatTextLeaveColor", cloneColor(defaultCombatColor, combatDefaults.leaveColor or defaultCombatColor))
 
 	if addon.CombatText and addon.CombatText.OnSettingChanged then addon.CombatText:OnSettingChanged(addon.db["combatTextEnabled"]) end
 end
@@ -1222,6 +1253,7 @@ local function createCastbarCategory()
 		name = label,
 		expanded = false,
 		colorizeTitle = false,
+		newTagID = "CastbarsAndCooldowns",
 	})
 	addon.SettingsLayout.uiCastbarsExpandable = expandable
 
@@ -1254,6 +1286,50 @@ local function createCastbarCategory()
 			addon.db["combatTextEnabled"] = value and true or false
 			if addon.CombatText and addon.CombatText.OnSettingChanged then addon.CombatText:OnSettingChanged(addon.db["combatTextEnabled"]) end
 		end,
+		parentSection = expandable,
+	})
+	local combatAlwaysVisible = addon.functions.SettingsCreateCheckbox(category, {
+		var = "combatTextAlwaysVisible",
+		text = L["combatTextAlwaysVisible"] or "Always show combat text",
+		desc = L["combatTextAlwaysVisibleDesc"] or "Keeps the combat text visible until the next combat state change.",
+		func = function(value)
+			addon.db["combatTextAlwaysVisible"] = value and true or false
+			if addon.CombatText then
+				if addon.CombatText.RefreshDisplayMode then
+					addon.CombatText:RefreshDisplayMode()
+				elseif addon.CombatText.RefreshHideTimer then
+					addon.CombatText:RefreshHideTimer()
+				end
+			end
+		end,
+		parentSection = expandable,
+	})
+	local combatAlwaysModeCombatOnly = addon.CombatText and addon.CombatText.ALWAYS_VISIBLE_MODE_COMBAT_ONLY or "COMBAT_ONLY"
+	local combatAlwaysModeStatus = addon.CombatText and addon.CombatText.ALWAYS_VISIBLE_MODE_STATUS or "STATUS"
+	local combatAlwaysModeOptions = {
+		[combatAlwaysModeCombatOnly] = L["combatTextAlwaysVisibleModeCombatOnly"] or "Only while in combat (+Combat)",
+		[combatAlwaysModeStatus] = L["combatTextAlwaysVisibleModeStatus"] or "Always show status (+/-Combat)",
+	}
+	addon.functions.SettingsCreateDropdown(category, {
+		var = "combatTextAlwaysVisibleMode",
+		text = L["combatTextAlwaysVisibleMode"] or "Always-show mode",
+		desc = L["combatTextAlwaysVisibleModeDesc"] or "Choose whether always-show mode is only active in combat, or shows + and - permanently.",
+		list = combatAlwaysModeOptions,
+		order = { combatAlwaysModeCombatOnly, combatAlwaysModeStatus },
+		default = combatAlwaysModeStatus,
+		get = function()
+			local mode = addon.db["combatTextAlwaysVisibleMode"]
+			if mode ~= combatAlwaysModeCombatOnly and mode ~= combatAlwaysModeStatus then mode = combatAlwaysModeStatus end
+			return mode
+		end,
+		set = function(mode)
+			if mode ~= combatAlwaysModeCombatOnly and mode ~= combatAlwaysModeStatus then mode = combatAlwaysModeStatus end
+			addon.db["combatTextAlwaysVisibleMode"] = mode
+			if addon.CombatText and addon.CombatText.RefreshDisplayMode then addon.CombatText:RefreshDisplayMode() end
+		end,
+		parent = true,
+		element = combatAlwaysVisible and combatAlwaysVisible.element,
+		parentCheck = function() return combatAlwaysVisible and combatAlwaysVisible.setting and combatAlwaysVisible.setting:GetValue() == true end,
 		parentSection = expandable,
 	})
 	addon.functions.SettingsCreateText(category, "|cffffd700" .. (L["combatTextEditModeHint"] or "Configure text size, font, color, and position in Edit Mode.") .. "|r", {
@@ -1305,7 +1381,6 @@ local function createCastbarCategory()
 	addon.functions.SettingsCreateHeadline(category, L["CastBars2"], {
 		parentSection = expandable,
 	})
-	--[==[@debug@
 	addon.functions.SettingsCreateCheckbox(category, {
 		var = "useCustomPlayerCastbar",
 		text = L["useCustomPlayerCastbar"] or "Enable castbar",
@@ -1319,7 +1394,6 @@ local function createCastbarCategory()
 		default = false,
 		parentSection = expandable,
 	})
-	--@end-debug@]==]
 	addon.functions.SettingsCreateCheckbox(category, {
 		var = "ShowTargetCastbar",
 		text = L["ShowTargetCastbar"],

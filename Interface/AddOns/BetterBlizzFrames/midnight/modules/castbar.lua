@@ -460,7 +460,7 @@ function BBF.ClassicCastbar(castBar, unitType)
             -- end
 
             AdjustBorderShieldSize(self)
-            self.Border:SetAlphaFromBoolean(self.BorderShield:IsShown(), 0, 1)
+            
 
             -- if self.barType == "uninterruptable" then
             --     if isTargets then
@@ -481,6 +481,12 @@ function BBF.ClassicCastbar(castBar, unitType)
                 elseif self.channeling then
                     _, _, _, _, _, _, notInterruptible = UnitChannelInfo(unitToken)
                 end
+            end
+
+            if notInterruptible ~= nil then
+                self.Border:SetAlphaFromBoolean(notInterruptible, 0, 1)
+            else
+                self.Border:SetAlpha(1)
             end
 
             if event == "UNIT_SPELLCAST_INTERRUPTED" then
@@ -1208,6 +1214,7 @@ end
 
 
 local function PlayerCastingBarFrameMiscAdjustments()
+    if BetterBlizzFramesDB.disableCastbarTweaks then return end
     PlayerCastingBarFrame:SetScale(BetterBlizzFramesDB.playerCastBarScale or 1)
     local w = BetterBlizzFramesDB.playerCastBarWidth
     local maskRatio = 256 / 208
@@ -1273,6 +1280,7 @@ local function PlayerCastingBarFrameMiscAdjustments()
 end
 
 function BBF.ChangeCastbarSizes()
+    if BetterBlizzFramesDB.disableCastbarTweaks then return end
     BBF.UpdateUserAuraSettings()
     local classicFrames = C_AddOns.IsAddOnLoaded("ClassicFrames")
     local xClassicAdjustment = classicFrames and -1 or 0
@@ -1394,7 +1402,7 @@ function BBF.ChangeCastbarSizes()
 end
 
 PlayerCastingBarFrame:HookScript("OnEvent", function()
-    local showIcon = BetterBlizzFramesDB.playerCastBarShowIcon
+    local showIcon = BetterBlizzFramesDB.playerCastBarShowIcon and not BetterBlizzFramesDB.disableCastbarTweaks
     if showIcon then
         local playerCastBarIconScale = BetterBlizzFramesDB.playerCastBarIconScale
         PlayerCastingBarFrame.Icon:Show()
@@ -1762,7 +1770,7 @@ function BBF.CastbarColorHooks()
     castbarColors.defaultUninterruptable = CreateColor(0.7, 0.7, 0.7, 1)
 
     local playerCastBarTexture = PlayerCastingBarFrame:GetStatusBarTexture()
-    if not BBF.RecolorCastbarHooked then
+    if not BBF.RecolorCastbarHooked and not BetterBlizzFramesDB.disableCastbarTweaks then
         BBF.RecolorCastbarHooked = true
         PlayerCastingBarFrame:HookScript("OnEvent", function(self, event)
             if recolorCastbars or self.textureChangedNeedsColor then
@@ -1790,7 +1798,7 @@ function BBF.CastbarColorHooks()
                 playerCastBarTexture:SetDesaturated(true)
 
                 if self.casting then
-                    if castbarColors.colorStandard then
+                    if castbarColors.colorStandard and notInterruptible ~= nil then
                         playerCastBarTexture:SetVertexColorFromBoolean(
                             notInterruptible,
                             castbarColors.colorUninterruptable,
@@ -1800,7 +1808,7 @@ function BBF.CastbarColorHooks()
                         self:SetStatusBarColor(unpack(castbarColors.standard))
                     end
                 elseif self.channeling then
-                    if castbarColors.colorChannel then
+                    if castbarColors.colorChannel and notInterruptible ~= nil then
                         playerCastBarTexture:SetVertexColorFromBoolean(
                             notInterruptible,
                             castbarColors.colorUninterruptable,

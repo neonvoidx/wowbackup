@@ -1,10 +1,11 @@
 ---@type string, Addon
 local _, addon = ...
 local mini = addon.Core.Framework
-local array = addon.Utils.Array
 local unitWatcher = addon.Core.UnitAuraWatcher
 local iconSlotContainer = addon.Core.IconSlotContainer
 local spellCache = addon.Utils.SpellCache
+local moduleUtil = addon.Utils.ModuleUtil
+local ModuleName = addon.Utils.ModuleName
 local testModeActive = false
 local paused = false
 local containers = {}
@@ -21,6 +22,25 @@ addon.Modules.PortraitModule = M
 
 local function AddMask(tex, mask)
 	tex:AddMaskTexture(mask)
+end
+
+local function GetPortraitMask(unitFrame)
+	-- player
+	if unitFrame.PlayerFrameContainer and unitFrame.PlayerFrameContainer.PlayerPortraitMask then
+		return unitFrame.PlayerFrameContainer.PlayerPortraitMask
+	end
+
+	-- target/focus
+	if unitFrame.TargetFrameContainer and unitFrame.TargetFrameContainer.PortraitMask then
+		return unitFrame.TargetFrameContainer.PortraitMask
+	end
+
+	-- target of target and pet frame
+	if unitFrame.PortraitMask then
+		return unitFrame.PortraitMask
+	end
+
+	return nil
 end
 
 local function CreatePortraitMask(portrait)
@@ -61,7 +81,6 @@ local function CreateContainer(unitFrame, portrait)
 	-- Position the container over the portrait with inset
 	container.Frame:SetPoint("TOPLEFT", portrait, "TOPLEFT", 2, -2)
 	container.Frame:SetPoint("BOTTOMRIGHT", portrait, "BOTTOMRIGHT", -2, 2)
-	-- the icon slot container starts at +2
 	container.Frame:SetFrameLevel(math.max(0, (unitFrame:GetFrameLevel() or 0) - 1))
 
 	-- Set initial size to match portrait
@@ -70,19 +89,16 @@ local function CreateContainer(unitFrame, portrait)
 	local size = math.min(width, height)
 	container:SetIconSize(size)
 
-	-- creating a mask instead of using the blizzard inbuilt one is better for supporting addons that remove/move it
-	local mask = CreatePortraitMask(portrait)
+	local mask = GetPortraitMask(unitFrame) or CreatePortraitMask(portrait)
 
-	-- Hook SetLayer to apply mask when layers are created
-	local originalSetLayer = container.SetLayer
-	container.SetLayer = function(self, slotIndex, layerIndex, options)
-		-- Call original SetLayer first
-		originalSetLayer(self, slotIndex, layerIndex, options)
+	-- Hook SetSlot to apply mask when the layer is created
+	local originalSetSlot = container.SetSlot
+	container.SetSlot = function(self, slotIndex, options)
+		originalSetSlot(self, slotIndex, options)
 
-		-- Apply mask to the layer that was just created/updated
 		local slot = self.Slots[slotIndex]
-		if slot and slot.Layers[layerIndex] then
-			ApplyMaskToLayer(slot.Layers[layerIndex], mask)
+		if slot and slot.Container then
+			ApplyMaskToLayer(slot.Container, mask)
 		end
 	end
 
@@ -96,81 +112,61 @@ local function OnAuraInfo(watcher, container)
 		return
 	end
 
-	container:ResetAllSlots()
-
 	local ccAuras = watcher:GetCcState()
 	local importantAuras = watcher:GetImportantState()
 	local defensiveAuras = watcher:GetDefensiveState()
-
-	-- Reverse their order so we show latest spells
-	array:Reverse(ccAuras)
-	array:Reverse(importantAuras)
-	array:Reverse(defensiveAuras)
-
 	local slotIndex = 1
-	local layerIndex = 1
 
-	-- Process CC auras
-	for _, aura in ipairs(ccAuras) do
+	-- Show the latest CC aura
+	for i = #ccAuras, 1, -1 do
+		local aura = ccAuras[i]
 		if aura.SpellIcon and aura.StartTime and aura.TotalDuration then
-			container:SetSlotUsed(slotIndex)
-			container:SetLayer(slotIndex, layerIndex, {
+			container:SetSlot(slotIndex, {
 				Texture = aura.SpellIcon,
 				StartTime = aura.StartTime,
 				Duration = aura.TotalDuration,
-				AlphaBoolean = aura.IsCC,
-				Glow = false,
-				ReverseCooldown = db.Portrait.ReverseCooldown,
+				Alpha = aura.IsCC,
+				ReverseCooldown = db.Modules.PortraitModule.ReverseCooldown,
+				FontScale = db.FontScale,
 			})
-
-			if not issecretvalue(aura.IsCC) then
-				-- we're in 12.0.1
-				if aura.IsCC then
-					container:FinalizeSlot(slotIndex, layerIndex)
-					return
-				end
-			end
-
-			layerIndex = layerIndex + 1
-		end
-	end
-
-	-- Process defensive auras
-	for _, aura in ipairs(defensiveAuras) do
-		if aura.SpellIcon and aura.StartTime and aura.TotalDuration then
-			container:SetSlotUsed(slotIndex)
-			container:SetLayer(slotIndex, layerIndex, {
-				Texture = aura.SpellIcon,
-				StartTime = aura.StartTime,
-				Duration = aura.TotalDuration,
-				AlphaBoolean = true, -- we only get defensives in 12.0.1
-				Glow = false,
-				ReverseCooldown = db.Portrait.ReverseCooldown,
-			})
-
-			container:FinalizeSlot(slotIndex, layerIndex)
 			return
 		end
 	end
 
-	-- Process important auras
-	for _, aura in ipairs(importantAuras) do
+	-- Show the latest defensive aura
+	for i = #defensiveAuras, 1, -1 do
+		local aura = defensiveAuras[i]
 		if aura.SpellIcon and aura.StartTime and aura.TotalDuration then
-			container:SetSlotUsed(slotIndex)
-			container:SetLayer(slotIndex, layerIndex, {
+			container:SetSlot(slotIndex, {
 				Texture = aura.SpellIcon,
 				StartTime = aura.StartTime,
 				Duration = aura.TotalDuration,
-				AlphaBoolean = aura.IsImportant,
-				Glow = false,
-				ReverseCooldown = db.Portrait.ReverseCooldown,
+				Alpha = aura.IsDefensive,
+				ReverseCooldown = db.Modules.PortraitModule.ReverseCooldown,
+				FontScale = db.FontScale,
 			})
-
-			layerIndex = layerIndex + 1
+			return
 		end
 	end
 
-	container:FinalizeSlot(slotIndex, layerIndex - 1)
+	-- Show the latest important aura
+	for i = #importantAuras, 1, -1 do
+		local aura = importantAuras[i]
+		if aura.SpellIcon and aura.StartTime and aura.TotalDuration then
+			container:SetSlot(slotIndex, {
+				Texture = aura.SpellIcon,
+				StartTime = aura.StartTime,
+				Duration = aura.TotalDuration,
+				Alpha = aura.IsImportant,
+				ReverseCooldown = db.Modules.PortraitModule.ReverseCooldown,
+				FontScale = db.FontScale,
+			})
+			return
+		end
+	end
+
+	-- No auras to display, clear the slot if it was used
+	container:SetSlotUnused(slotIndex)
 end
 
 ---@return table? unitFrame
@@ -226,6 +222,9 @@ local function Attach(unit, events)
 	---@diagnostic disable-next-line: unused-local
 	watchers[unit] = watcher
 
+	-- lower the draw layer by 1 so our icons show ahead
+	portrait:SetDrawLayer("BACKGROUND", 0)
+
 	return container
 end
 
@@ -234,37 +233,35 @@ local function RefreshTestIcons()
 	local now = GetTime()
 
 	for _, container in pairs(containers) do
-		container:SetSlotUsed(1)
-		container:SetLayer(1, 1, {
+		container:SetSlot(1, {
 			Texture = tex,
 			StartTime = now,
 			Duration = 15, -- 15 second duration for test
-			AlphaBoolean = true,
+			Alpha = true,
 			Glow = false,
-			ReverseCooldown = db.Portrait.ReverseCooldown,
+			ReverseCooldown = db.Modules.PortraitModule.ReverseCooldown,
+			FontScale = db.FontScale,
 		})
-		container:FinalizeSlot(1, 1)
 	end
 end
 
-local function ClearAll()
+local function DisableWatchers()
+	for _, watcher in pairs(watchers) do
+		watcher:Disable()
+		watcher:ClearState(true)
+	end
+
 	for _, container in pairs(containers) do
 		container:ResetAllSlots()
 	end
+
+	paused = true
 end
 
-local function EnableDisable()
-	local options = db.Portrait
-
-	if options.Enabled then
-		for _, watcher in pairs(watchers) do
-			watcher:Enable()
-		end
-	else
-		for _, watcher in pairs(watchers) do
-			watcher:Disable()
-			watcher:ClearState(true)
-		end
+local function EnableWatchers()
+	paused = false
+	for _, watcher in pairs(watchers) do
+		watcher:Enable()
 	end
 end
 
@@ -285,18 +282,23 @@ end
 function M:StopTesting()
 	testModeActive = false
 	Resume()
-	ClearAll()
+
+	for _, container in pairs(containers) do
+		container:ResetAllSlots()
+	end
 end
 
 function M:Refresh()
-	EnableDisable()
+	local moduleEnabled = moduleUtil:IsModuleEnabled(ModuleName.Portrait)
 
-	local options = db.Portrait
-
-	if not options.Enabled then
-		ClearAll()
+	-- If disabled, disable watchers and clear
+	if not moduleEnabled then
+		DisableWatchers()
 		return
 	end
+
+	-- Module is enabled, ensure watchers are enabled
+	EnableWatchers()
 
 	if testModeActive then
 		RefreshTestIcons()

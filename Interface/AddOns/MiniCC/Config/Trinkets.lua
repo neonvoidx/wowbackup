@@ -1,6 +1,7 @@
 ---@type string, Addon
 local _, addon = ...
 local mini = addon.Core.Framework
+local L = addon.L
 local verticalSpacing = mini.VerticalSpacing
 local horizontalSpacing = mini.HorizontalSpacing
 local config = addon.Config
@@ -18,36 +19,55 @@ function M:Build()
 	local panel = CreateFrame("Frame")
 	local title = panel:CreateFontString(nil, "ARTWORK", "GameFontNormalLarge")
 	title:SetPoint("TOPLEFT", 0, -verticalSpacing)
-	title:SetText("Party Trinkets")
+	title:SetText(L["Party Trinkets"])
 
 	local enabled = mini:Checkbox({
 		Parent = panel,
-		LabelText = "Enabled",
-		Tooltip = "Whether to enable or disable this module.",
+		LabelText = L["Enabled"],
+		Tooltip = L["Whether to enable or disable this module."],
 		GetValue = function()
-			return db.Trinkets.Enabled
+			return db.Modules.TrinketsModule.Enabled.Always
 		end,
 		SetValue = function(value)
-			db.Trinkets.Enabled = value
+			db.Modules.TrinketsModule.Enabled.Always = value
 			config:Apply()
 		end,
 	})
 
 	enabled:SetPoint("TOPLEFT", title, "BOTTOMLEFT", 0, -verticalSpacing)
 
-	local iconSizeSlider = mini:Slider({
+	local excludePlayerChk = mini:Checkbox({
 		Parent = panel,
-		LabelText = "Icon Size",
+		LabelText = L["Exclude self"],
+		Tooltip = L["Exclude yourself from showing trinket icons."],
 		GetValue = function()
-			return db.Trinkets.Icons.Size
+			return db.Modules.TrinketsModule.ExcludePlayer
 		end,
 		SetValue = function(value)
-			db.Trinkets.Icons.Size = mini:ClampInt(value, 20, 120, 50)
+			db.Modules.TrinketsModule.ExcludePlayer = value
 			config:Apply()
 		end,
+	})
+
+	excludePlayerChk:SetPoint("TOP", enabled, "TOP", 0, 0)
+	excludePlayerChk:SetPoint("LEFT", panel, "LEFT", columnWidth, 0)
+
+	local iconSizeSlider = mini:Slider({
+		Parent = panel,
+		LabelText = L["Icon Size"],
+		GetValue = function()
+			return db.Modules.TrinketsModule.Icons.Size
+		end,
+		SetValue = function(value)
+			local newValue = mini:ClampInt(value, 10, 100, 40)
+			if db.Modules.TrinketsModule.Icons.Size ~= newValue then
+				db.Modules.TrinketsModule.Icons.Size = newValue
+				config:Apply()
+			end
+		end,
 		Width = columns * columnWidth - horizontalSpacing,
-		Min = 20,
-		Max = 120,
+		Min = 10,
+		Max = 100,
 		Step = 1,
 	})
 
@@ -55,13 +75,16 @@ function M:Build()
 
 	local offsetXSlider = mini:Slider({
 		Parent = panel,
-		LabelText = "Offset X",
+		LabelText = L["Offset X"],
 		GetValue = function()
-			return db.Trinkets.Offset.X
+			return db.Modules.TrinketsModule.Offset.X
 		end,
 		SetValue = function(value)
-			db.Trinkets.Offset.X = mini:ClampInt(value, -200, 200, 0)
-			config:Apply()
+			local newValue = mini:ClampInt(value, -200, 200, 0)
+			if db.Modules.TrinketsModule.Offset.X ~= newValue then
+				db.Modules.TrinketsModule.Offset.X = newValue
+				config:Apply()
+			end
 		end,
 		Width = (columns / 2) * columnWidth - horizontalSpacing,
 		Min = -200,
@@ -73,13 +96,16 @@ function M:Build()
 
 	local offsetYSlider = mini:Slider({
 		Parent = panel,
-		LabelText = "Offset Y",
+		LabelText = L["Offset Y"],
 		GetValue = function()
-			return db.Trinkets.Offset.Y
+			return db.Modules.TrinketsModule.Offset.Y
 		end,
 		SetValue = function(value)
-			db.Trinkets.Offset.Y = mini:ClampInt(value, -200, 200, 0)
-			config:Apply()
+			local newValue = mini:ClampInt(value, -200, 200, 0)
+			if db.Modules.TrinketsModule.Offset.Y ~= newValue then
+				db.Modules.TrinketsModule.Offset.Y = newValue
+				config:Apply()
+			end
 		end,
 		Width = (columns / 2) * columnWidth - horizontalSpacing,
 		Min = -200,
@@ -92,9 +118,10 @@ function M:Build()
 	local lines = mini:TextBlock({
 		Parent = panel,
 		Lines = {
-			"Limitations:",
-			" - Doesn't work if your team mates trinket in the starting room.",
-			" - Doesn't work in the open world.",
+			L["Limitations:"],
+			L[" - Doesn't work if your team mates trinket in the starting room."],
+			L[" - Doesn't work in the open world."],
+			L[" - Racials like stoneform count as a trinket use."],
 		},
 	})
 
@@ -104,12 +131,14 @@ function M:Build()
 	testBtn:SetSize(120, 26)
 	testBtn:SetPoint("RIGHT", panel, "RIGHT", -horizontalSpacing, 0)
 	testBtn:SetPoint("TOP", title, "TOP", 0, 0)
-	testBtn:SetText("Test")
+	testBtn:SetText(L["Test"])
 	testBtn:SetScript("OnClick", function()
-		local options = db.Default
+		local options = db.Modules.CCModule.Default
 
 		addon:ToggleTest(options)
 	end)
+
+	M.Panel = panel
 
 	return panel
 end

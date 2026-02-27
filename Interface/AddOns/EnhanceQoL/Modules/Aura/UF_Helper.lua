@@ -15,9 +15,11 @@ local H = addon.Aura.UFHelper
 addon.variables = addon.variables or {}
 
 local LSM = LibStub("LibSharedMedia-3.0")
-local CASTING_BAR_TYPES = _G.CASTING_BAR_TYPES
 local EnumPowerType = Enum and Enum.PowerType
 local BLIZZARD_TEX = "Interface\\TargetingFrame\\UI-StatusBar"
+local BLIZZARD_CAST_STANDARD_TEX = "ui-castingbar-full-standard"
+local BLIZZARD_CAST_INTERRUPTED_TEX = "ui-castingbar-interrupted"
+local BLIZZARD_CAST_ICON_FALLBACK_TEX = 134400 -- Interface\\Icons\\INV_Misc_QuestionMark
 local DEFAULT_AURA_BORDER_TEX = "Interface\\Buttons\\UI-Debuff-Overlays"
 local DEFAULT_AURA_BORDER_COORDS = { 0.296875, 0.5703125, 0, 0.515625 }
 local CombatFeedback_Initialize = _G.CombatFeedback_Initialize
@@ -32,6 +34,10 @@ local UnitThreatSituation = UnitThreatSituation
 local UnitExists = UnitExists
 local UnitGetTotalAbsorbs = UnitGetTotalAbsorbs
 local UnitHealthPercent = UnitHealthPercent
+local UnitHealthMax = UnitHealthMax
+local UnitPower = UnitPower
+local UnitPowerMax = UnitPowerMax
+local UnitStagger = UnitStagger
 local C_UnitAuras = C_UnitAuras
 local UIParent = UIParent
 
@@ -131,7 +137,27 @@ function H.getNPCSelectionKey(unit)
 	if not npcColorUnits[unit] then return nil end
 	if UnitIsPlayer and UnitIsPlayer(unit) then return nil end
 	local t = UnitSelectionType and UnitSelectionType(unit)
-	return selectionKeyByType[t]
+	if issecretvalue and issecretvalue(t) then t = nil end
+	local key = selectionKeyByType[t]
+
+	local reaction = UnitReaction and UnitReaction(unit, "player")
+	if issecretvalue and issecretvalue(reaction) then reaction = nil end
+	if reaction then
+		if reaction <= 3 then return "enemy" end
+		if reaction == 4 then return "neutral" end
+		return "friendly"
+	end
+
+	if key == "friendly" and UnitCanAttack and UnitCanAttack("player", unit) then
+		if UnitIsEnemy and UnitIsEnemy("player", unit) then return "enemy" end
+		return "neutral"
+	end
+
+	if key then return key end
+	if UnitIsEnemy and UnitIsEnemy("player", unit) then return "enemy" end
+	if UnitCanAttack and UnitCanAttack("player", unit) then return "neutral" end
+	if UnitIsFriend and UnitIsFriend("player", unit) then return "friendly" end
+	return nil
 end
 
 function H.getNPCOverrideColor(unit)
@@ -156,6 +182,7 @@ end
 
 local nameWidthCache = {}
 local DROP_SHADOW_FLAG = "DROPSHADOW"
+local STRONG_DROP_SHADOW_FLAG = "STRONGDROPSHADOW"
 
 local function utf8Iter(str) return (str or ""):gmatch("[%z\1-\127\194-\244][\128-\191]*") end
 
@@ -194,11 +221,15 @@ end
 
 local function normalizeFontOutline(outline)
 	if outline == nil then return "OUTLINE" end
-	if outline == "" or outline == "NONE" or outline == DROP_SHADOW_FLAG then return nil end
+	if outline == "" or outline == "NONE" or outline == DROP_SHADOW_FLAG or outline == STRONG_DROP_SHADOW_FLAG then return nil end
 	return outline
 end
 
-local function wantsDropShadow(outline) return outline == DROP_SHADOW_FLAG end
+local function getDropShadowStrength(outline)
+	if outline == STRONG_DROP_SHADOW_FLAG then return "strong" end
+	if outline == DROP_SHADOW_FLAG then return "normal" end
+	return nil
+end
 
 function H.clamp(value, minV, maxV)
 	if value < minV then return minV end
@@ -246,11 +277,19 @@ function H.setupAbsorbClamp(health, absorb)
 		local clip = CreateFrame("Frame", nil, health)
 		clip:SetAllPoints(health)
 		clip:SetClipsChildren(true)
-		clip:SetFrameLevel(health:GetFrameLevel() + 5)
 		health.absorbClip = clip
 	end
 
 	local clip = health.absorbClip
+	clip:SetAllPoints(health)
+	if clip.SetFrameStrata and health.GetFrameStrata then
+		local healthStrata = health:GetFrameStrata()
+		if healthStrata and clip:GetFrameStrata() ~= healthStrata then clip:SetFrameStrata(healthStrata) end
+	end
+	if clip.SetFrameLevel and health.GetFrameLevel then
+		local desiredLevel = (health:GetFrameLevel() or 0) + 1
+		if clip:GetFrameLevel() ~= desiredLevel then clip:SetFrameLevel(desiredLevel) end
+	end
 
 	absorb:SetParent(clip)
 	absorb:ClearAllPoints()
@@ -299,11 +338,18 @@ function H.setupAbsorbOverShift(healthBar, overAbsorbBar, height, maxHeight)
 	if not healthBar._healthFillClip then
 		local clip = CreateFrame("Frame", nil, healthBar)
 		clip:SetClipsChildren(true)
-		clip:SetFrameLevel(healthBar:GetFrameLevel() + 6)
 		healthBar._healthFillClip = clip
 	end
 
 	local clip = healthBar._healthFillClip
+	if clip.SetFrameStrata and healthBar.GetFrameStrata then
+		local healthStrata = healthBar:GetFrameStrata()
+		if healthStrata and clip:GetFrameStrata() ~= healthStrata then clip:SetFrameStrata(healthStrata) end
+	end
+	if clip.SetFrameLevel and healthBar.GetFrameLevel then
+		local desiredLevel = (healthBar:GetFrameLevel() or 0) + 1
+		if clip:GetFrameLevel() ~= desiredLevel then clip:SetFrameLevel(desiredLevel) end
+	end
 	clip:ClearAllPoints()
 
 	if healthBar:GetReverseFill() then
@@ -385,7 +431,11 @@ function H.applyFont(fs, fontPath, size, outline)
 	if size == nil or size <= 0 then size = 1 end
 	local ok = fs.SetFont and fs:SetFont(fontFile, size or 14, flags)
 	if not ok and fontPath and fontPath ~= "" then fs:SetFont(H.getFont(nil), size or 14, flags) end
-	if wantsDropShadow(outline) then
+	local shadowStrength = getDropShadowStrength(outline)
+	if shadowStrength == "strong" then
+		fs:SetShadowColor(0, 0, 0, 0.85)
+		fs:SetShadowOffset(1, -1)
+	elseif shadowStrength == "normal" then
 		fs:SetShadowColor(0, 0, 0, 0.5)
 		fs:SetShadowOffset(0.5, -0.5)
 	else
@@ -470,6 +520,8 @@ function H.hideAuraBorderFrame(btn)
 end
 
 function H.calcAuraBorderSize(btn, ac)
+	local configured = ac and tonumber(ac.borderSize)
+	if configured and configured > 0 then return floor(configured + 0.5) end
 	local baseSize = (btn and btn.GetWidth and btn:GetWidth()) or (ac and ac.size) or 24
 	local size = floor((baseSize or 24) * 0.08 + 0.5)
 	if size < 1 then size = 1 end
@@ -655,14 +707,23 @@ local function ensurePrivateAuraMousePassthrough(anchor)
 	if not anchor then return nil end
 	local blocker = anchor._eqolPrivateAuraBlocker
 	if not blocker then
-		blocker = CreateFrame("Button", nil, anchor)
+		blocker = CreateFrame("Frame", nil, anchor)
 		blocker:EnableMouse(true)
-		if blocker.SetMouseClickEnabled then
-			blocker:SetMouseClickEnabled(false)
-		elseif blocker.SetPropagateMouseClicks then
+		if blocker.SetMouseMotionEnabled then blocker:SetMouseMotionEnabled(true) end
+
+		local inCombat = InCombatLockdown and InCombatLockdown()
+		if not inCombat and blocker.SetPassThroughButtons then
+			blocker:SetPassThroughButtons("LeftButton", "RightButton", "MiddleButton", "Button4", "Button5")
+			blocker._eqolPassThroughConfigured = true
+		elseif not inCombat and blocker.SetPropagateMouseClicks then
 			blocker:SetPropagateMouseClicks(true)
+			blocker._eqolPassThroughConfigured = true
+		else
+			blocker:EnableMouse(false)
+			blocker._eqolPassThroughConfigured = false
 		end
-		if blocker.SetPropagateMouseMotion then blocker:SetPropagateMouseMotion(false) end
+
+		if not (InCombatLockdown and InCombatLockdown()) and blocker.SetPropagateMouseMotion then blocker:SetPropagateMouseMotion(true) end
 		if blocker.SetScript then
 			blocker:SetScript("OnEnter", function()
 				if GameTooltip and GameTooltip.Hide then GameTooltip:Hide() end
@@ -677,12 +738,20 @@ local function ensurePrivateAuraMousePassthrough(anchor)
 	if blocker.GetParent and blocker:GetParent() ~= anchor then blocker:SetParent(anchor) end
 	if blocker.SetFrameStrata and anchor.GetFrameStrata then blocker:SetFrameStrata(anchor:GetFrameStrata()) end
 	if blocker.SetFrameLevel and anchor.GetFrameLevel then blocker:SetFrameLevel((anchor:GetFrameLevel() or 0) + 30) end
-	if blocker.SetMouseClickEnabled then
-		blocker:SetMouseClickEnabled(false)
-	elseif blocker.SetPropagateMouseClicks then
-		blocker:SetPropagateMouseClicks(true)
+	local inCombat = InCombatLockdown and InCombatLockdown()
+	if not inCombat then
+		if blocker.SetMouseMotionEnabled then blocker:SetMouseMotionEnabled(true) end
+		if blocker.SetPassThroughButtons then
+			blocker:SetPassThroughButtons("LeftButton", "RightButton", "MiddleButton", "Button4", "Button5")
+			blocker._eqolPassThroughConfigured = true
+		elseif blocker.SetPropagateMouseClicks then
+			blocker:SetPropagateMouseClicks(true)
+			blocker._eqolPassThroughConfigured = true
+		end
+		if blocker.SetPropagateMouseMotion then blocker:SetPropagateMouseMotion(true) end
+	else
+		if not blocker._eqolPassThroughConfigured then blocker:EnableMouse(false) end
 	end
-	if blocker.SetPropagateMouseMotion then blocker:SetPropagateMouseMotion(false) end
 	if blocker.SetScript then
 		blocker:SetScript("OnEnter", function()
 			if GameTooltip and GameTooltip.Hide then GameTooltip:Hide() end
@@ -761,7 +830,7 @@ function H.ApplyPrivateAuras(container, unit, cfg, parent, levelFrame, showSampl
 	local parentPoint = tostring(parentCfg.point or "CENTER"):upper()
 	local parentOffsetX = tonumber(parentCfg.offsetX) or 0
 	local parentOffsetY = tonumber(parentCfg.offsetY) or 0
-	local useInverse = inverseAnchor ~= false
+	local useInverse = inverseAnchor == true
 	local anchorPoint = useInverse and inversePoint(parentPoint) or parentPoint
 
 	if parent and container.GetParent and container:GetParent() ~= parent then container:SetParent(parent) end
@@ -1019,15 +1088,20 @@ end
 
 function H.resolveCastTexture(key)
 	if key == "SOLID" then return "Interface\\Buttons\\WHITE8x8" end
-	if not key or key == "DEFAULT" then
-		if CASTING_BAR_TYPES and CASTING_BAR_TYPES.standard and CASTING_BAR_TYPES.standard.full then return CASTING_BAR_TYPES.standard.full end
-		return BLIZZARD_TEX
-	end
+	if not key or key == "DEFAULT" then return BLIZZARD_CAST_STANDARD_TEX or BLIZZARD_TEX end
 	if LSM then
 		local tex = LSM:Fetch("statusbar", key)
 		if tex then return tex end
 	end
 	return key
+end
+
+function H.resolveCastInterruptTexture() return BLIZZARD_CAST_INTERRUPTED_TEX end
+
+function H.resolveCastIconTexture(texture)
+	if issecretvalue and issecretvalue(texture) then return texture end
+	if texture == nil then return BLIZZARD_CAST_ICON_FALLBACK_TEX end
+	return texture
 end
 
 local function normalizePowerToken(powerToken)
@@ -1131,6 +1205,421 @@ end
 
 H.getCanonicalPowerToken = getCanonicalPowerToken
 
+local powerEnumByToken = {
+	MANA = (EnumPowerType and EnumPowerType.MANA) or 0,
+	RAGE = (EnumPowerType and EnumPowerType.RAGE) or 1,
+	FOCUS = (EnumPowerType and EnumPowerType.FOCUS) or 2,
+	ENERGY = (EnumPowerType and EnumPowerType.ENERGY) or 3,
+	COMBO_POINTS = (EnumPowerType and EnumPowerType.COMBO_POINTS) or 4,
+	RUNES = (EnumPowerType and EnumPowerType.RUNES) or 5,
+	RUNIC_POWER = (EnumPowerType and EnumPowerType.RUNIC_POWER) or 6,
+	SOUL_SHARDS = (EnumPowerType and EnumPowerType.SOUL_SHARDS) or 7,
+	LUNAR_POWER = (EnumPowerType and EnumPowerType.LUNAR_POWER) or (EnumPowerType and EnumPowerType.ALTERNATE) or 8,
+	HOLY_POWER = (EnumPowerType and EnumPowerType.HOLY_POWER) or 9,
+	MAELSTROM = (EnumPowerType and EnumPowerType.MAELSTROM) or 11,
+	CHI = (EnumPowerType and EnumPowerType.CHI) or 12,
+	INSANITY = (EnumPowerType and EnumPowerType.INSANITY) or 13,
+	ARCANE_CHARGES = (EnumPowerType and EnumPowerType.ARCANE_CHARGES) or 16,
+	FURY = (EnumPowerType and EnumPowerType.FURY) or 17,
+	PAIN = (EnumPowerType and EnumPowerType.PAIN) or 18,
+	ESSENCE = (EnumPowerType and EnumPowerType.ESSENCE) or 19,
+}
+
+local auraPowerTokenSet = {
+	MAELSTROM_WEAPON = true,
+	VOID_METAMORPHOSIS = true,
+}
+
+local SECONDARY_TRACKED_TOKENS = {
+	"MANA",
+	"STAGGER",
+	"VOID_METAMORPHOSIS",
+}
+
+local secondaryTrackedTokenSet = {
+	MANA = true,
+	STAGGER = true,
+	VOID_METAMORPHOSIS = true,
+}
+
+local secondaryNeverTrackSet = {
+	RUNES = true,
+	COMBO_POINTS = true,
+	ENERGY = true,
+	RAGE = true,
+}
+
+local primaryPowerExcludedSet = {
+	ARCANE_CHARGES = true,
+	CHI = true,
+	ESSENCE = true,
+	HOLY_POWER = true,
+	MAELSTROM_WEAPON = true,
+	RUNIC_POWER = true,
+	SOUL_SHARDS = true,
+	VOID_METAMORPHOSIS = true,
+}
+
+local primaryPowerTokenCache
+local primaryPowerTokenSetCache
+local secondaryPowerTokenCache
+
+local function normalizePrimaryPowerToken(powerEnum, powerToken)
+	local normalized = getCanonicalPowerToken(powerEnum, powerToken)
+	if type(normalized) ~= "string" then return nil end
+	normalized = string.upper(normalized)
+	if normalized == "" or normalized == "NONE" then return nil end
+	return normalized
+end
+
+local function normalizeSecondaryPowerToken(token)
+	if type(token) ~= "string" then return nil end
+	local normalized = getCanonicalPowerToken(nil, token)
+	if type(normalized) ~= "string" then return nil end
+	normalized = string.upper(normalized)
+	if normalized == "" or normalized == "NONE" then return nil end
+	return normalized
+end
+
+local function appendSecondaryToken(list, seen, token)
+	local normalized = normalizeSecondaryPowerToken(token)
+	if not normalized or seen[normalized] then return end
+	seen[normalized] = true
+	list[#list + 1] = normalized
+end
+
+local function isTrackedSecondaryToken(token)
+	local normalized = normalizeSecondaryPowerToken(token)
+	if not normalized then return false end
+	if secondaryNeverTrackSet[normalized] then return false end
+	return secondaryTrackedTokenSet[normalized] == true
+end
+
+function H.getPowerLabel(token)
+	local normalized = normalizeSecondaryPowerToken(token)
+	if not normalized then return "" end
+	local rb = addon.Aura and addon.Aura.ResourceBars
+	local labels = rb and rb.PowerLabels
+	local fromRB = labels and labels[normalized]
+	if type(fromRB) == "string" and fromRB ~= "" then return fromRB end
+	local fromGlobal = _G[normalized]
+	if type(fromGlobal) == "string" and fromGlobal ~= "" then return fromGlobal end
+	return normalized:gsub("_", " ")
+end
+
+local function appendPrimaryPowerToken(list, seen, token)
+	local normalized = normalizePrimaryPowerToken(nil, token)
+	if not normalized or seen[normalized] then return end
+	if primaryPowerExcludedSet[normalized] then return end
+	seen[normalized] = true
+	list[#list + 1] = normalized
+end
+
+local function getPrimaryPowerTokens()
+	if primaryPowerTokenCache then return primaryPowerTokenCache end
+	local list = {}
+	local seen = {}
+	local rb = addon.Aura and addon.Aura.ResourceBars
+	local powertypeClasses = rb and rb.powertypeClasses
+	if type(powertypeClasses) == "table" then
+		for _, specs in pairs(powertypeClasses) do
+			if type(specs) == "table" then
+				for _, info in pairs(specs) do
+					if type(info) == "table" then appendPrimaryPowerToken(list, seen, info.MAIN) end
+				end
+			end
+		end
+	end
+	if #list == 0 then
+		appendPrimaryPowerToken(list, seen, "MANA")
+		appendPrimaryPowerToken(list, seen, "RAGE")
+		appendPrimaryPowerToken(list, seen, "FOCUS")
+		appendPrimaryPowerToken(list, seen, "ENERGY")
+		appendPrimaryPowerToken(list, seen, "RUNIC_POWER")
+		appendPrimaryPowerToken(list, seen, "LUNAR_POWER")
+		appendPrimaryPowerToken(list, seen, "HOLY_POWER")
+		appendPrimaryPowerToken(list, seen, "MAELSTROM")
+		appendPrimaryPowerToken(list, seen, "MAELSTROM_WEAPON")
+		appendPrimaryPowerToken(list, seen, "SOUL_SHARDS")
+		appendPrimaryPowerToken(list, seen, "CHI")
+		appendPrimaryPowerToken(list, seen, "INSANITY")
+		appendPrimaryPowerToken(list, seen, "ARCANE_CHARGES")
+		appendPrimaryPowerToken(list, seen, "FURY")
+		appendPrimaryPowerToken(list, seen, "ESSENCE")
+		appendPrimaryPowerToken(list, seen, "VOID_METAMORPHOSIS")
+	end
+	table.sort(list, function(a, b) return tostring(H.getPowerLabel(a)) < tostring(H.getPowerLabel(b)) end)
+	primaryPowerTokenCache = list
+	primaryPowerTokenSetCache = {}
+	for i = 1, #list do
+		primaryPowerTokenSetCache[list[i]] = true
+	end
+	return primaryPowerTokenCache
+end
+
+local function getPrimaryPowerTokenSet()
+	if primaryPowerTokenSetCache then return primaryPowerTokenSetCache end
+	getPrimaryPowerTokens()
+	return primaryPowerTokenSetCache or {}
+end
+
+function H.GetPrimaryPowerTokens()
+	local src = getPrimaryPowerTokens()
+	local out = {}
+	for i = 1, #src do
+		out[i] = src[i]
+	end
+	return out
+end
+
+function H.GetPrimaryPowerTokenOptions()
+	local options = {}
+	for _, token in ipairs(getPrimaryPowerTokens()) do
+		options[#options + 1] = { value = token, label = H.getPowerLabel(token) }
+	end
+	return options
+end
+
+function H.GetDefaultPrimaryPowerAllowedTypes()
+	local defaults = {}
+	for _, token in ipairs(getPrimaryPowerTokens()) do
+		defaults[token] = true
+	end
+	return defaults
+end
+
+local function getPrimaryAllowedTypes(cfg, def)
+	local src = cfg and cfg.allowedTypes
+	local allowed = {}
+	if type(src) == "table" then
+		for _, token in ipairs(getPrimaryPowerTokens()) do
+			if src[token] == true then allowed[token] = true end
+		end
+		return allowed
+	end
+	src = def and def.allowedTypes
+	if type(src) == "table" then
+		for _, token in ipairs(getPrimaryPowerTokens()) do
+			if src[token] == true then allowed[token] = true end
+		end
+		return allowed
+	end
+	return H.GetDefaultPrimaryPowerAllowedTypes()
+end
+
+local function getEffectivePlayerPrimaryPowerToken(powerToken, powerEnum)
+	local normalized = normalizePrimaryPowerToken(powerEnum, powerToken)
+	if addon.variables and addon.variables.unitClass == "DRUID" then
+		local specMain = H.GetSpecMainPowerToken and H.GetSpecMainPowerToken("DRUID", addon.variables.unitSpec)
+		specMain = normalizePrimaryPowerToken(nil, specMain)
+		if specMain and specMain ~= "MANA" then normalized = specMain end
+	end
+	return normalized
+end
+
+function H.IsPrimaryPowerAllowed(cfg, def, powerToken, powerEnum, unitToken)
+	if unitToken and unitToken ~= "player" then return true end
+	local normalized = getEffectivePlayerPrimaryPowerToken(powerToken, powerEnum)
+	if not normalized then return true end
+	if not getPrimaryPowerTokenSet()[normalized] then return true end
+	local allowed = getPrimaryAllowedTypes(cfg, def)
+	return allowed[normalized] == true
+end
+
+local function getSecondaryPowerTokens()
+	if secondaryPowerTokenCache then return secondaryPowerTokenCache end
+	local list = {}
+	local seen = {}
+	for i = 1, #SECONDARY_TRACKED_TOKENS do
+		appendSecondaryToken(list, seen, SECONDARY_TRACKED_TOKENS[i])
+	end
+	table.sort(list, function(a, b) return tostring(H.getPowerLabel(a)) < tostring(H.getPowerLabel(b)) end)
+	secondaryPowerTokenCache = list
+	return secondaryPowerTokenCache
+end
+
+local function getSpecPowerInfo(classTag, specIndex)
+	local rb = addon.Aura and addon.Aura.ResourceBars
+	local class = classTag or addon.variables.unitClass
+	local spec = tonumber(specIndex or addon.variables.unitSpec)
+	if not class or not spec then return nil end
+	local classTable = rb and rb.powertypeClasses and rb.powertypeClasses[class]
+	if type(classTable) ~= "table" then return nil end
+	local info = classTable[spec]
+	if type(info) ~= "table" then return nil end
+	return info
+end
+
+function H.GetSpecMainPowerToken(classTag, specIndex)
+	local info = getSpecPowerInfo(classTag, specIndex)
+	return normalizeSecondaryPowerToken(info and info.MAIN)
+end
+
+function H.GetSpecSecondaryPowerTokens(classTag, specIndex)
+	local rb = addon.Aura and addon.Aura.ResourceBars
+	local classPowerTypes = rb and rb.classPowerTypes
+	local info = getSpecPowerInfo(classTag, specIndex)
+	local list = {}
+	if not info then return list end
+	local main = normalizeSecondaryPowerToken(info.MAIN)
+	if type(classPowerTypes) ~= "table" then return list end
+	for i = 1, #classPowerTypes do
+		local token = normalizeSecondaryPowerToken(classPowerTypes[i])
+		if token and token ~= main and info[token] == true then list[#list + 1] = token end
+	end
+	return list
+end
+
+function H.GetDefaultSecondaryPowerAllowedTypes()
+	local defaults = {}
+	for _, token in ipairs(getSecondaryPowerTokens()) do
+		defaults[token] = true
+	end
+	return defaults
+end
+
+local function getSecondaryAllowedTypes(cfg, def)
+	local src = cfg and cfg.allowedTypes
+	local allowed = {}
+	if type(src) == "table" then
+		for _, token in ipairs(getSecondaryPowerTokens()) do
+			if src[token] == true then allowed[token] = true end
+		end
+		return allowed
+	end
+	src = def and def.allowedTypes
+	if type(src) == "table" then
+		for _, token in ipairs(getSecondaryPowerTokens()) do
+			if src[token] == true then allowed[token] = true end
+		end
+		return allowed
+	end
+	return H.GetDefaultSecondaryPowerAllowedTypes()
+end
+
+function H.IsSecondaryPowerSupportedForSpec(powerToken, classTag, specIndex)
+	local normalized = normalizeSecondaryPowerToken(powerToken)
+	if not normalized then return false end
+	if not isTrackedSecondaryToken(normalized) then return false end
+	local class = classTag or addon.variables.unitClass
+	local spec = tonumber(specIndex or addon.variables.unitSpec)
+	if class == "DRUID" then
+		if spec == 4 then return false end
+		return normalized == "MANA"
+	end
+	if class == "DEMONHUNTER" and spec == 3 then return normalized == "VOID_METAMORPHOSIS" end
+	local info = getSpecPowerInfo(classTag, specIndex)
+	if not info then return false end
+	local secondaries = H.GetSpecSecondaryPowerTokens(classTag, specIndex)
+	for i = 1, #secondaries do
+		if secondaries[i] == normalized then return true end
+	end
+	return false
+end
+
+local function resolveAutoSecondaryToken(classTag, specIndex)
+	local class = classTag or addon.variables.unitClass
+	local spec = tonumber(specIndex or addon.variables.unitSpec)
+	local info = getSpecPowerInfo(class, spec)
+	if not info then return nil end
+
+	if class == "DRUID" then
+		if spec == 4 then return nil end
+		if info.MAIN == "MANA" then return nil end
+		if info.MANA == true then return "MANA" end
+		return nil
+	end
+
+	if class == "DEMONHUNTER" and spec == 3 then return "VOID_METAMORPHOSIS" end
+
+	local secondaries = H.GetSpecSecondaryPowerTokens(class, spec)
+	for i = 1, #secondaries do
+		local token = secondaries[i]
+		if isTrackedSecondaryToken(token) then return token end
+	end
+	return nil
+end
+
+local function getCurrentPlayerPrimaryPowerToken()
+	if type(UnitPowerType) ~= "function" then return nil end
+	local enumId, token = UnitPowerType("player")
+	return getEffectivePlayerPrimaryPowerToken(token, enumId)
+end
+
+function H.ResolveSecondaryPowerToken(cfg, def, classTag, specIndex)
+	local normalized = normalizeSecondaryPowerToken(resolveAutoSecondaryToken(classTag, specIndex))
+	if not normalized then return nil end
+	if not isTrackedSecondaryToken(normalized) then return nil end
+	local currentPrimary = getCurrentPlayerPrimaryPowerToken()
+	if currentPrimary and currentPrimary == normalized then return nil end
+	local allowed = getSecondaryAllowedTypes(cfg, def)
+	if allowed[normalized] == true then return normalized end
+	return nil
+end
+
+function H.GetSecondaryPowerTokenOptions(includeNone)
+	local options = {}
+	if includeNone == true then options[#options + 1] = { value = "NONE", label = _G.NONE or "None" } end
+	for _, token in ipairs(getSecondaryPowerTokens()) do
+		options[#options + 1] = { value = token, label = H.getPowerLabel(token) }
+	end
+	return options
+end
+
+function H.GetPowerEnumByToken(powerToken)
+	local normalized = normalizeSecondaryPowerToken(powerToken)
+	if not normalized then return nil end
+	return powerEnumByToken[normalized]
+end
+
+function H.IsAuraPowerToken(powerToken)
+	local normalized = normalizeSecondaryPowerToken(powerToken)
+	if not normalized then return false end
+	return auraPowerTokenSet[normalized] == true
+end
+
+function H.IsSecondaryPowerTokenSpecial(powerToken)
+	local normalized = normalizeSecondaryPowerToken(powerToken)
+	if not normalized then return false end
+	return normalized == "STAGGER" or auraPowerTokenSet[normalized] == true
+end
+
+function H.GetPowerValuesForToken(unit, powerToken)
+	local normalized = normalizeSecondaryPowerToken(powerToken)
+	if not normalized then return nil, nil, nil, nil end
+	local unitToken = unit or "player"
+	if normalized == "STAGGER" then
+		local cur = UnitStagger and UnitStagger(unitToken) or 0
+		local maxv = UnitHealthMax and UnitHealthMax(unitToken) or 0
+		return cur or 0, maxv or 0, nil, normalized
+	end
+	if auraPowerTokenSet[normalized] then
+		local rb = addon.Aura and addon.Aura.ResourceBars
+		local getCounts = rb and rb.GetAuraPowerCounts
+		if type(getCounts) == "function" then
+			local cur, maxv = getCounts(normalized)
+			return cur or 0, maxv or 0, nil, normalized
+		end
+		return 0, 0, nil, normalized
+	end
+	local enumId = powerEnumByToken[normalized]
+	if enumId == nil then return nil, nil, nil, normalized end
+	local cur = UnitPower and UnitPower(unitToken, enumId) or 0
+	local maxv = UnitPowerMax and UnitPowerMax(unitToken, enumId) or 0
+	return cur or 0, maxv or 0, enumId, normalized
+end
+
+function H.GetPowerPercentByToken(unit, powerToken, cur, maxv)
+	local normalized = normalizeSecondaryPowerToken(powerToken)
+	if not normalized then return 0 end
+	local enumId = powerEnumByToken[normalized]
+	if enumId ~= nil and addon.functions and addon.functions.GetPowerPercent then return addon.functions.GetPowerPercent(unit or "player", enumId, cur, maxv, true) end
+	local current = tonumber(cur) or 0
+	local maxValue = tonumber(maxv) or 0
+	if maxValue > 0 then return (current / maxValue) * 100 end
+	return 0
+end
+
 local reverseStyle = Enum.StatusBarFillStyle and Enum.StatusBarFillStyle.Reverse or "REVERSE"
 local standardStyle = Enum.StatusBarFillStyle and Enum.StatusBarFillStyle.Standard or "STANDARD"
 function H.applyStatusBarReverseFill(bar, reverse)
@@ -1143,6 +1632,129 @@ function H.applyStatusBarReverseFill(bar, reverse)
 end
 
 function H.shouldUseDefaultCastArt(st) return st and st.castUseDefaultArt == true end
+
+local function clearCastbarGradientState(bar)
+	if not bar then return end
+	bar._eqolGradientEnabled = nil
+	bar._eqolGradientTex = nil
+	bar._eqolGradDir = nil
+	bar._eqolGradSR = nil
+	bar._eqolGradSG = nil
+	bar._eqolGradSB = nil
+	bar._eqolGradSA = nil
+	bar._eqolGradER = nil
+	bar._eqolGradEG = nil
+	bar._eqolGradEB = nil
+	bar._eqolGradEA = nil
+end
+
+local function normalizeGradientColor(color)
+	if type(color) ~= "table" then return 1, 1, 1, 1 end
+	if color.r ~= nil then return color.r or 1, color.g or 1, color.b or 1, color.a or 1 end
+	return color[1] or 1, color[2] or 1, color[3] or 1, color[4] or 1
+end
+
+local function normalizeCastbarGradientMode(value)
+	if type(value) == "string" and value:upper() == "BAR_END" then return "BAR_END" end
+	return "CASTBAR"
+end
+
+local function resolveCastbarGradientProgress(bar, progressOverride)
+	local progress = tonumber(progressOverride)
+	if not progress and bar and bar.GetMinMaxValues and bar.GetValue then
+		local minValue, maxValue = bar:GetMinMaxValues()
+		local value = bar:GetValue()
+		if type(value) == "number" and type(minValue) == "number" and type(maxValue) == "number" then
+			local range = maxValue - minValue
+			if range > 0 then progress = (value - minValue) / range end
+		end
+	end
+	if type(progress) ~= "number" then return nil end
+	return H.clamp(progress, 0, 1)
+end
+
+local function applyCastbarGradient(bar, ccfg, baseR, baseG, baseB, baseA, progressOverride)
+	if not bar or not ccfg or ccfg.useGradient ~= true then return false end
+	local tex = bar.GetStatusBarTexture and bar:GetStatusBarTexture()
+	if not tex or not tex.SetGradient then return false end
+
+	local sr, sg, sb, sa = normalizeGradientColor(ccfg.gradientStartColor)
+	local er, eg, eb, ea = normalizeGradientColor(ccfg.gradientEndColor)
+	local br, bg, bb, ba = baseR or 1, baseG or 1, baseB or 1, baseA or 1
+	sr, sg, sb, sa = br * sr, bg * sg, bb * sb, ba * sa
+	er, eg, eb, ea = br * er, bg * eg, bb * eb, ba * ea
+
+	if normalizeCastbarGradientMode(ccfg.gradientMode) == "BAR_END" then
+		local progress = resolveCastbarGradientProgress(bar, progressOverride)
+		if progress then
+			er = sr + (er - sr) * progress
+			eg = sg + (eg - sg) * progress
+			eb = sb + (eb - sb) * progress
+			ea = sa + (ea - sa) * progress
+		end
+	end
+
+	local direction = ccfg.gradientDirection or "HORIZONTAL"
+	if type(direction) == "string" then direction = direction:upper() end
+	if direction ~= "VERTICAL" then direction = "HORIZONTAL" end
+
+	if
+		bar._eqolGradientEnabled
+		and bar._eqolGradientTex == tex
+		and bar._eqolGradDir == direction
+		and bar._eqolGradSR == sr
+		and bar._eqolGradSG == sg
+		and bar._eqolGradSB == sb
+		and bar._eqolGradSA == sa
+		and bar._eqolGradER == er
+		and bar._eqolGradEG == eg
+		and bar._eqolGradEB == eb
+		and bar._eqolGradEA == ea
+	then
+		return true
+	end
+
+	tex:SetGradient(direction, CreateColor(sr, sg, sb, sa), CreateColor(er, eg, eb, ea))
+	bar._eqolGradientEnabled = true
+	bar._eqolGradientTex = tex
+	bar._eqolGradDir = direction
+	bar._eqolGradSR, bar._eqolGradSG, bar._eqolGradSB, bar._eqolGradSA = sr, sg, sb, sa
+	bar._eqolGradER, bar._eqolGradEG, bar._eqolGradEB, bar._eqolGradEA = er, eg, eb, ea
+	return true
+end
+
+function H.SetCastbarColorWithGradient(bar, ccfg, r, g, b, a, progressOverride)
+	if not bar then return end
+	local br, bg, bb, ba = r or 1, g or 1, b or 1, a or 1
+	local lastColor = bar._eqolLastColor
+	if not lastColor or lastColor[1] ~= br or lastColor[2] ~= bg or lastColor[3] ~= bb or lastColor[4] ~= ba then
+		bar:SetStatusBarColor(br, bg, bb, ba)
+		bar._eqolLastColor = bar._eqolLastColor or {}
+		bar._eqolLastColor[1], bar._eqolLastColor[2], bar._eqolLastColor[3], bar._eqolLastColor[4] = br, bg, bb, ba
+	end
+	if ccfg and ccfg.useGradient == true then
+		if not applyCastbarGradient(bar, ccfg, br, bg, bb, ba, progressOverride) then clearCastbarGradientState(bar) end
+	elseif bar._eqolGradientEnabled then
+		clearCastbarGradientState(bar)
+	end
+end
+
+function H.RefreshCastbarGradient(bar, ccfg, r, g, b, a, progressOverride)
+	if not bar then return end
+	local br, bg, bb, ba = r, g, b, a
+	if br == nil then
+		if bar._eqolLastColor then
+			br, bg, bb, ba = bar._eqolLastColor[1], bar._eqolLastColor[2], bar._eqolLastColor[3], bar._eqolLastColor[4]
+		elseif bar.GetStatusBarColor then
+			br, bg, bb, ba = bar:GetStatusBarColor()
+		end
+	end
+	if ccfg and ccfg.useGradient == true then
+		if not applyCastbarGradient(bar, ccfg, br or 1, bg or 1, bb or 1, ba or 1, progressOverride) then clearCastbarGradientState(bar) end
+	elseif bar._eqolGradientEnabled then
+		clearCastbarGradientState(bar)
+	end
+end
 
 local CAST_SPARK_WIDTH = 8
 local CAST_SPARK_HEIGHT = 20
@@ -2070,7 +2682,7 @@ function H.truncateTextToWidth(fontPath, fontSize, fontOutline, text, maxWidth)
 	local measure = nameWidthCache._measure
 	if not measure then return text end
 	local size = fontSize or 14
-	local outline = fontOutline or "OUTLINE"
+	local outline = normalizeFontOutline(fontOutline)
 	local ok = measure.SetFont and measure:SetFont(H.getFont(fontPath), size, outline)
 	if ok == false then measure:SetFont(H.getFont(nil), size, outline) end
 	measure:SetText(text)
@@ -2651,6 +3263,7 @@ end
 
 local EnableSpellRangeCheck = C_Spell and C_Spell.EnableSpellRangeCheck
 local GetSpellIDForSpellIdentifier = C_Spell and C_Spell.GetSpellIDForSpellIdentifier
+local IsSpellInRange = C_Spell and C_Spell.IsSpellInRange
 local GetSpellName = C_Spell and C_Spell.GetSpellName
 local GetSpellInfo = _G.GetSpellInfo
 local SpellBook = _G.C_SpellBook
@@ -3171,6 +3784,32 @@ function H.RangeFadeReset()
 	rangeFadeState.numInRange = 0
 	rangeFadeState.inRange = true
 	applyRangeFadeAlpha(true, true)
+end
+
+function H.RangeFadeRefreshTargetState(targetUnit)
+	local enabled = getRangeFadeConfig()
+	if not enabled or not IsSpellInRange then
+		H.RangeFadeReset()
+		return
+	end
+
+	local unit = targetUnit or "target"
+	if not (UnitExists and UnitExists(unit)) then
+		H.RangeFadeReset()
+		return
+	end
+
+	clearTable(rangeFadeState.spellStates)
+	rangeFadeState.numChecked = 0
+	rangeFadeState.numInRange = 0
+	rangeFadeState.inRange = true
+
+	for spellId in pairs(rangeFadeState.activeSpells) do
+		local inRange = IsSpellInRange(spellId, unit)
+		if inRange ~= nil then setRangeFadeSpellState(spellId, inRange == true) end
+	end
+
+	recomputeRangeFade()
 end
 
 function H.RangeFadeApplyCurrent(force) applyRangeFadeAlpha(rangeFadeState.inRange, force) end

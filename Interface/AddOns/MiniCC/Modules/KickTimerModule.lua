@@ -2,7 +2,7 @@
 local addonName, addon = ...
 local mini = addon.Core.Framework
 local spellCache = addon.Utils.SpellCache
-local fontUtil = addon.Utils.FontUtil
+local iconSlotContainer = addon.Core.IconSlotContainer
 local paused = false
 local testModeActive = false
 local enabled = false
@@ -17,9 +17,10 @@ local kickedByUnits = {}
 
 ---@type KickBar
 local kickBar = {
-	Icons = {},
-	Size = 50,
-	Spacing = 1,
+	Container = nil, ---@type IconSlotContainer?
+	Anchor = nil, ---@type table?
+	ActiveSlots = {}, ---@type table<number, {Key: number, Timer: table}>
+	MaxSlots = 10,
 }
 
 local friendlyUnitsToWatch = {
@@ -160,21 +161,21 @@ local function GetPlayerSpecId()
 end
 
 local function CreateKickBar()
-	local options = db.KickTimer
-	local relativeTo = _G[options.RelativeTo] or UIParent
-	local frame = CreateFrame("Frame", addonName .. "KickBar", UIParent, "BackdropTemplate")
+	local options = db.Modules.KickTimerModule
+	local iconOptions = options.Icons
+	local size = tonumber(iconOptions.Size) or 50
+	local spacing = db.IconSpacing or 2
 
-	frame:SetPoint(options.Point, relativeTo, options.RelativePoint, options.Offset.X, options.Offset.Y)
-	frame:SetSize(200, kickBar.Size)
-	frame:SetFrameStrata("HIGH")
-	frame:SetClampedToScreen(true)
-	frame:SetMovable(false)
-	frame:EnableMouse(false)
-	frame:SetDontSavePosition(true)
-	frame:SetIgnoreParentScale(true)
-	frame:RegisterForDrag("LeftButton")
-	frame:SetScript("OnDragStart", frame.StartMoving)
-	frame:SetScript("OnDragStop", function(frameSelf)
+	local container = iconSlotContainer:New(UIParent, kickBar.MaxSlots, size, spacing, "Kick Timer")
+	container.Frame:SetFrameStrata("HIGH")
+	container.Frame:SetClampedToScreen(true)
+	container.Frame:SetIgnoreParentScale(true)
+	container.Frame:SetMovable(false)
+	container.Frame:EnableMouse(false)
+	container.Frame:SetDontSavePosition(true)
+	container.Frame:RegisterForDrag("LeftButton")
+	container.Frame:SetScript("OnDragStart", container.Frame.StartMoving)
+	container.Frame:SetScript("OnDragStop", function(frameSelf)
 		frameSelf:StopMovingOrSizing()
 
 		local point, movedRelativeTo, relativePoint, x, y = frameSelf:GetPoint()
@@ -185,73 +186,53 @@ local function CreateKickBar()
 		options.Offset.Y = y
 	end)
 
-	kickBar.Anchor = frame
+	local relativeTo = _G[options.RelativeTo] or UIParent
+	container.Frame:SetPoint(options.Point, relativeTo, options.RelativePoint, options.Offset.X, options.Offset.Y)
+
+	kickBar.Container = container
+	kickBar.Anchor = container.Frame
 end
 
 local function ApplyKickBarIconOptions()
-	local options = db.KickTimer
+	local options = db.Modules.KickTimerModule
 	local iconOptions = options.Icons
+	local size = tonumber(iconOptions.Size) or 50
 
-	kickBar.Size = iconOptions.Size or 50
-
-	if kickBar.Anchor then
-		kickBar.Anchor:SetHeight(kickBar.Size)
+	if kickBar.Container then
+		kickBar.Container:SetIconSize(size)
+		kickBar.Container:SetSpacing(db.IconSpacing or 2)
 	end
 
-	for _, frame in ipairs(kickBar.Icons) do
-		frame:SetSize(kickBar.Size, kickBar.Size)
-		if frame.Icon then
-			frame.Icon:SetAllPoints()
-		end
-		if frame.Cooldown then
-			frame.Cooldown:SetReverse(iconOptions.ReverseCooldown)
-			-- Update cooldown font size when icon size changes
-			fontUtil:UpdateCooldownFontSize(frame.Cooldown, kickBar.Size)
-		end
-	end
 end
 
-local function LayoutKickBar()
-	-- Count active icons
-	local activeCount = 0
-	for _, iconFrame in ipairs(kickBar.Icons) do
-		if iconFrame.Active then
-			activeCount = activeCount + 1
-		end
-	end
-
-	if activeCount == 0 then
-		kickBar.Anchor:Hide()
+local function UpdateKickBarVisibility()
+	if not kickBar.Container or not kickBar.Anchor then
 		return
 	end
 
-	-- Calculate total width and starting offset for centering
-	local totalWidth = (activeCount * kickBar.Size) + ((activeCount - 1) * kickBar.Spacing)
-	local startX = -totalWidth / 2
-
-	-- Position active icons centered
-	local x = startX
-	for _, iconFrame in ipairs(kickBar.Icons) do
-		if iconFrame.Active then
-			iconFrame:ClearAllPoints()
-			iconFrame:SetPoint("LEFT", kickBar.Anchor, "CENTER", x, 0)
-			x = x + kickBar.Size + kickBar.Spacing
-		end
+	local usedCount = kickBar.Container:GetUsedSlotCount()
+	if usedCount == 0 then
+		kickBar.Anchor:Hide()
+	else
+		kickBar.Anchor:Show()
 	end
-
-	kickBar.Anchor:SetWidth(math.max(200, totalWidth + 8))
-	kickBar.Anchor:Show()
 end
 
 local function ClearIcons()
-	for _, frame in ipairs(kickBar.Icons) do
-		frame.Active = false
-		frame:Hide()
+	-- Cancel all active timers
+	for _, slotData in pairs(kickBar.ActiveSlots) do
+		if slotData.Timer then
+			slotData.Timer:Cancel()
+		end
 	end
 
-	if kickBar.Anchor then
-		LayoutKickBar()
+	wipe(kickBar.ActiveSlots)
+
+	if kickBar.Container then
+		kickBar.Container:ResetAllSlots()
 	end
+
+	UpdateKickBarVisibility()
 end
 
 local function PositionKickBar()
@@ -261,71 +242,60 @@ local function PositionKickBar()
 		return
 	end
 
-	local options = db.KickTimer
+	local options = db.Modules.KickTimerModule
 	local relativeTo = _G[options.RelativeTo] or UIParent
 
 	frame:ClearAllPoints()
 	frame:SetPoint(options.Point, relativeTo, options.RelativePoint, options.Offset.X, options.Offset.Y)
 end
 
-local function CreateKickIcon(reverseCooldown)
-	local frame = CreateFrame("Frame", nil, kickBar.Anchor)
-	frame:SetSize(kickBar.Size, kickBar.Size)
-
-	local icon = frame:CreateTexture(nil, "ARTWORK")
-	icon:SetAllPoints()
-
-	local cd = CreateFrame("Cooldown", nil, frame, "CooldownFrameTemplate")
-	cd:SetAllPoints()
-	cd:SetReverse(reverseCooldown)
-	cd:SetDrawEdge(false)
-	cd:SetDrawBling(false)
-
-	-- Set initial cooldown font size
-	fontUtil:UpdateCooldownFontSize(cd, kickBar.Size)
-
-	frame.Icon = icon
-	frame.Cooldown = cd
-	frame.Active = false
-	frame:Hide()
-
-	return frame
-end
-
-local function GetOrCreateIcon()
-	for _, frame in ipairs(kickBar.Icons) do
-		if not frame.Active then
-			local iconOptions = db.KickTimer.Icons
-			frame:SetSize(kickBar.Size, kickBar.Size)
-			frame.Cooldown:SetReverse(iconOptions.ReverseCooldown)
-			return frame
+local function GetNextAvailableSlot()
+	for i = 1, kickBar.MaxSlots do
+		if not kickBar.ActiveSlots[i] then
+			return i
 		end
 	end
-
-	local iconOptions = db.KickTimer.Icons
-	local frame = CreateKickIcon(iconOptions.ReverseCooldown)
-	table.insert(kickBar.Icons, frame)
-	return frame
+	return nil
 end
 
 local function CreateKickEntry(duration, icon)
+	if not kickBar.Container then
+		return
+	end
+
+	local slotIndex = GetNextAvailableSlot()
+	if not slotIndex then
+		return
+	end
+
 	local key = math.random()
-	local frame = GetOrCreateIcon()
-	frame.Icon:SetTexture(icon)
-	frame.Active = true
-	frame.Key = key
-	frame:Show()
-	frame.Cooldown:SetCooldown(GetTime(), duration)
+	local iconOptions = db.Modules.KickTimerModule.Icons
 
-	LayoutKickBar()
+	kickBar.Container:SetSlot(slotIndex, {
+		Texture = icon,
+		StartTime = GetTime(),
+		Duration = duration,
+		Alpha = true,
+		ReverseCooldown = iconOptions.ReverseCooldown or false,
+		Glow = iconOptions.Glow or false,
+		FontScale = db.FontScale,
+	})
 
-	C_Timer.After(duration, function()
-		if frame and frame.Active and frame.Key == key then
-			frame.Active = false
-			frame:Hide()
-			LayoutKickBar()
+	local timer = C_Timer.NewTimer(duration, function()
+		local slotData = kickBar.ActiveSlots[slotIndex]
+		if slotData and slotData.Key == key then
+			kickBar.Container:SetSlotUnused(slotIndex)
+			kickBar.ActiveSlots[slotIndex] = nil
+			UpdateKickBarVisibility()
 		end
 	end)
+
+	kickBar.ActiveSlots[slotIndex] = {
+		Key = key,
+		Timer = timer,
+	}
+
+	UpdateKickBarVisibility()
 end
 
 ---@param specId number?
@@ -471,11 +441,11 @@ local function Disable()
 		end
 	end
 
+	ClearIcons()
+
 	if kickBar.Anchor then
 		kickBar.Anchor:Hide()
 	end
-
-	ClearIcons()
 
 	enabled = false
 end
@@ -506,7 +476,7 @@ local function Enable()
 		end
 	end
 
-	local options = db.KickTimer
+	local options = db.Modules.KickTimerModule
 	local relativeTo = _G[options.RelativeTo] or UIParent
 	kickBar.Anchor:ClearAllPoints()
 	kickBar.Anchor:SetPoint(options.Point, relativeTo, options.RelativePoint, options.Offset.X, options.Offset.Y)
@@ -516,9 +486,9 @@ local function Enable()
 end
 
 local function EnableDisable()
-	local options = db.KickTimer
-
-	if not M:IsEnabledForPlayer(options) then
+	-- don't do a moduleUtil check here, as we cover that inside IsEnabledForPlayer
+	-- and we'd end up with a falsey response as the kick timer has different enabled values
+	if not M:IsEnabledForPlayer(db.Modules.KickTimerModule) then
 		Disable()
 		return
 	end
@@ -541,31 +511,47 @@ local function OnEnteringWorld()
 end
 
 local function ShowTestIcons()
-	ClearIcons()
+	-- Cancel all active timers but don't reset slots yet
+	for _, slotData in pairs(kickBar.ActiveSlots) do
+		if slotData.Timer then
+			slotData.Timer:Cancel()
+		end
+	end
+	wipe(kickBar.ActiveSlots)
+
 	-- Show test kicks: mage, hunter, rogue
 	KickedBySpec(62) -- mage
 	KickedBySpec(254) -- hunter
 	KickedBySpec(259) -- rogue
+
+	-- Clear any unused slots beyond the test icons
+	local testIconCount = 3
+	if kickBar.Container then
+		for i = testIconCount + 1, kickBar.Container.Count do
+			kickBar.Container:SetSlotUnused(i)
+		end
+	end
 end
 
----@param options KickTimerOptions
+---@param options KickTimerModuleOptions
 function M:IsEnabledForPlayer(options)
-	if not options then
+	if not options or not options.Enabled then
 		return false
 	end
 
 	-- nothing toggled on
-	if not (options.AllEnabled or options.CasterEnabled or options.HealerEnabled) then
+	if not (options.Enabled.Always or options.Enabled.Caster or options.Enabled.Healer) then
 		return false
 	end
 
-	if options.AllEnabled then
+	if options.Enabled.Always then
 		return true
 	end
 
 	local specId = GetPlayerSpecId()
 	if not specId then
-		return false
+		-- no data, just assume enabled in this case
+		return true
 	end
 
 	local info = specInfoBySpecId[specId]
@@ -573,11 +559,11 @@ function M:IsEnabledForPlayer(options)
 		return false
 	end
 
-	if options.HealerEnabled and info.IsHealer then
+	if options.Enabled.Healer and info.IsHealer then
 		return true
 	end
 
-	if options.CasterEnabled and info.IsCaster then
+	if options.Enabled.Caster and info.IsCaster then
 		return true
 	end
 
@@ -631,9 +617,6 @@ function M:Refresh()
 	-- Apply icon options even if already enabled (for config changes)
 	ApplyKickBarIconOptions()
 
-	-- Update layout to reflect new sizes
-	LayoutKickBar()
-
 	PositionKickBar()
 
 	local container = kickBar.Anchor
@@ -642,7 +625,7 @@ function M:Refresh()
 		return
 	end
 
-	if not M:IsEnabledForPlayer(db.KickTimer) then
+	if not M:IsEnabledForPlayer(db.Modules.KickTimerModule) then
 		ClearIcons()
 		container:Hide()
 		return
@@ -655,8 +638,6 @@ end
 
 function M:Init()
 	db = mini:GetSavedVars()
-
-	kickBar.Size = db.KickTimer.Icons.Size
 
 	CreateKickBar()
 
@@ -692,10 +673,10 @@ function M:Init()
 end
 
 ---@class KickBar
+---@field Container IconSlotContainer?
 ---@field Anchor table?
----@field Icons table
----@field Size number
----@field Spacing number
+---@field ActiveSlots table<number, {Key: number, Timer: table}>
+---@field MaxSlots number
 
 ---@class EnemyLastCastState
 ---@field Time number?

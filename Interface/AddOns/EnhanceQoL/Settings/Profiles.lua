@@ -60,6 +60,9 @@ local EXPORT_BLACKLIST = {
 	chatChannelFilters = true,
 	chatChannelFiltersEnable = true,
 	chatIMFrameData = true,
+	-- Legacy EditMode stores are migrated on import/copy and should not be propagated.
+	editModeLayouts = true,
+	containerActionLayouts = true,
 }
 
 local function sanitizeProfileData(source)
@@ -71,36 +74,10 @@ local function sanitizeProfileData(source)
 	return filtered
 end
 
-local function reconcileEditModeLayouts(profileData, meta)
+local function normalizeProfileStorage(profileData)
 	if type(profileData) ~= "table" then return end
-	local layouts = profileData.editModeLayouts
-	if type(layouts) ~= "table" then return end
-	local editMode = addon and addon.EditMode
-	if not (editMode and editMode.GetActiveLayoutName) then return end
-	local active = editMode:GetActiveLayoutName() or "_Global"
-	if layouts[active] ~= nil then return end
-
-	local sourceName = meta and (meta.editModeLayout or meta.editModeLayoutName)
-	if sourceName and layouts[sourceName] ~= nil then
-		layouts[active] = CopyTable(layouts[sourceName])
-		return
-	end
-
-	local firstName, firstLayout
-	local count = 0
-	for name, layout in pairs(layouts) do
-		if type(layout) == "table" and next(layout) ~= nil then
-			count = count + 1
-			if not firstName then
-				firstName = name
-				firstLayout = layout
-			end
-		end
-	end
-	if count == 1 and firstName and firstLayout and firstName ~= active then
-		layouts[active] = firstLayout
-		layouts[firstName] = nil
-	end
+	if addon and addon.EditMode and addon.EditMode.MigrateProfileData then addon.EditMode:MigrateProfileData(profileData) end
+	if addon and addon.ContainerActions and addon.ContainerActions.MigrateProfileData then addon.ContainerActions:MigrateProfileData(profileData) end
 end
 
 local function resolveExportProfileName(profileName)
@@ -114,17 +91,15 @@ local function exportActiveProfile(profileName)
 	if not profileName then return nil, "NO_ACTIVE" end
 	local source = EnhanceQoLDB and EnhanceQoLDB.profiles and EnhanceQoLDB.profiles[profileName]
 	if type(source) ~= "table" or not next(source) then return nil, "NO_DATA" end
-
-	local activeLayout = addon.EditMode and addon.EditMode.GetActiveLayoutName and addon.EditMode:GetActiveLayoutName() or nil
+	normalizeProfileStorage(source)
 
 	local payload = {
 		meta = {
 			addon = addonName,
 			kind = PROFILE_EXPORT_KIND,
 			version = tostring(C_AddOns.GetAddOnMetadata(addonName, "Version") or ""),
-			profileVersion = 1,
+			profileVersion = 2,
 			profile = profileName,
-			editModeLayout = activeLayout,
 		},
 		data = sanitizeProfileData(source),
 	}
@@ -160,7 +135,7 @@ local function importActiveProfile(encoded)
 	if not EnhanceQoLDB or type(EnhanceQoLDB.profiles) ~= "table" then return false, "NO_DB" end
 
 	local sanitized = sanitizeProfileData(data)
-	reconcileEditModeLayouts(sanitized, meta)
+	normalizeProfileStorage(sanitized)
 	EnhanceQoLDB.profiles[target] = sanitized
 	addon.db = EnhanceQoLDB.profiles[target]
 
@@ -239,7 +214,9 @@ data = {
 						if not source or source == "" then return end
 						local target = EnhanceQoLDB.profileKeys[UnitGUID("player")]
 						if not target then return end
-						EnhanceQoLDB.profiles[target] = CopyTable(EnhanceQoLDB.profiles[source])
+						local copied = CopyTable(EnhanceQoLDB.profiles[source])
+						normalizeProfileStorage(copied)
+						EnhanceQoLDB.profiles[target] = copied
 						C_UI.Reload()
 					end,
 				}

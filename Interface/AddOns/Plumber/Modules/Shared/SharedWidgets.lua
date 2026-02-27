@@ -300,7 +300,7 @@ do  -- Checkbox
             local f = GameTooltip;
             f:Hide();
             f:SetOwner(self, "ANCHOR_RIGHT");
-            f:SetText(self.Label:GetText(), 1, 1, 1, 1, true);
+            f:SetText(self.tooltipTitle or self.Label:GetText(), 1, 1, 1, 1, true);
 
             if type(self.tooltip) == "function" then
                 f:AddLine(self.tooltip(), 1, 0.82, 0, true);
@@ -412,7 +412,7 @@ do  -- Checkbox
     function CheckboxMixin:SetMaxWidth(maxWidth)
         --this width includes box and label
         self.Label:SetWidth(maxWidth - LABEL_OFFSET);
-        self.SetWidth(maxWidth);
+        self:SetWidth(maxWidth);
     end
 
     function CheckboxMixin:SetLabel(label)
@@ -436,10 +436,15 @@ do  -- Checkbox
         end
     end
 
+    function CheckboxMixin:GetWidgetHeight()
+        return math.max(BUTTON_MIN_SIZE, math.ceil(self.Label:GetHeight() + 4));
+    end
+
     function CheckboxMixin:SetData(data)
         self.dbKey = data.dbKey;
         self.tooltip = data.tooltip;
         self.tooltip2 = data.tooltip2;
+        self.tooltipTitle = data.tooltipTitle;
         self.onClickFunc = data.onClickFunc;
         self.onEnterFunc = data.onEnterFunc;
         self.onLeaveFunc = data.onLeaveFunc;
@@ -464,6 +469,7 @@ do  -- Checkbox
         b.Label:SetJustifyV("TOP");
         b.Label:SetTextColor(1, 0.82, 0);  --labelcolor
         b.Label:SetPoint("LEFT", b, "LEFT", LABEL_OFFSET, 0);
+        b.Label:SetMaxLines(1);
 
         b.Border = b:CreateTexture(nil, "ARTWORK");
         b.Border:SetTexture(Def.CheckboxTexture);
@@ -4200,7 +4206,11 @@ do  --Slider
 
     function SliderScripts:OnMouseUp()
         self:UnlockHighlight();
-        self:GetParent().isDraggingThumb = false;
+        local parent = self:GetParent();
+        parent.isDraggingThumb = false;
+        if parent:IsFocused() then
+            parent:OnEnter();
+        end
         if self.onMouseUpFunc then
             self.onMouseUpFunc(self);
         end
@@ -4390,10 +4400,11 @@ do  --Slider
     end
 
     function SliderFrameMixin:OnEnter()
-        if self.tooltip then
+        if self.tooltip and not self:IsDraggingThumb() then
             local f = GameTooltip;
             f:Hide();
-            f:SetOwner(self, "ANCHOR_RIGHT");
+            f:SetOwner(self, "ANCHOR_NONE");
+            f:SetPoint("BOTTOMLEFT", self.Slider, "TOPLEFT", 0, 4);
             f:SetText(self.Label:GetText(), 1, 1, 1, 1, true);
             f:AddLine(self.tooltip, 1, 0.82, 0, true);
             if self.tooltip2 then
@@ -4434,6 +4445,10 @@ do  --Slider
         end
     end
 
+    function SliderFrameMixin:IsFocused()
+        return self:IsMouseMotionFocus() or self.Slider:IsMouseMotionFocus() or self.Back:IsMouseMotionFocus() or self.Forward:IsMouseMotionFocus()
+    end
+
     local function CreateSlider(parent)
         local f = CreateFrame("Frame", nil, parent, "PlumberMinimalSliderWithControllerTemplate");
         Mixin(f, SliderFrameMixin);
@@ -4470,7 +4485,6 @@ do  --DropdownFrame--
 
     function DropdownFrameMixin:SetLabelWidth(width)
         self.Label:SetWidth(width);
-        self:SetWidth(242 + width);
         self.Button:SetPoint("LEFT", self, "LEFT", 14 + width, 0);
     end
 
@@ -4489,6 +4503,7 @@ do  --DropdownFrame--
 
     function DropdownFrameMixin:SetMenuData(menuData)
         self.menuData = menuData;
+        self.Button.tooltip = menuData.tooltip;
         self:UpdateSelectedText();
         self:UpdateEnabledState();
     end
@@ -4534,14 +4549,27 @@ do  --DropdownFrame--
         addon.LandingPageUtil.DropdownMenu:ToggleMenu(self.Button, menuInfoGetter);
     end
 
+    function DropdownFrameMixin:SetShortened(shortened)
+        if shortened then
+            self.Label:Hide();
+            self:SetWidth(300);
+        else
+            self.Label:Show();
+            self:SetWidth(386);
+        end
+    end
+
 
     local DropdownButtonMixin = {};
 
     function DropdownButtonMixin:OnEnter()
-        if self.Text:IsTruncated() then
+        if self.Text:IsTruncated() or self.tooltip then
             local tooltip = GameTooltip;
             tooltip:SetOwner(self, "ANCHOR_RIGHT");
             tooltip:SetText(self.Text:GetText(), 1, 1, 1);
+            if self.tooltip then
+                tooltip:AddLine(self.tooltip, 1, 0.82, 0, true);
+            end
             tooltip:Show();
         end
     end
@@ -4568,13 +4596,12 @@ do  --DropdownFrame--
     addon.CreateDropdownFrame = function(parent)
         local f = CreateFrame("Frame", nil, parent);
         Mixin(f, DropdownFrameMixin);
-        f:SetSize(342, 36);
+        f:SetSize(342, 24);
 
         local Label = f:CreateFontString(nil, "OVERLAY", "GameFontHighlightMedium");
         f.Label = Label;
         Label:SetJustifyH("LEFT");
         Label:SetPoint("LEFT", f, "LEFT", 0, 0);
-
 
         local Button = CreateFrame("Button", nil, f);
         f.Button = Button;
@@ -4597,8 +4624,8 @@ do  --DropdownFrame--
             tex:SetBlendMode("ADD");
         end
 
-        Button:SetSize(240, 26);
-        Button:SetPoint("RIGHT", f, "RIGHT", -18, 0);
+        Button:SetSize(240, 24);
+        Button:SetPoint("RIGHT", f, "RIGHT", -12, 0);
 
         Button.Text = Button:CreateFontString(nil, "OVERLAY", "GameFontHighlight");
         Button.Text:SetPoint("LEFT", Button, "LEFT", 8, 0);
@@ -4614,7 +4641,7 @@ do  --DropdownFrame--
         Button:SetScript("OnMouseUp", Button.OnMouseUp);
         Button:SetMotionScriptsWhileDisabled(true);
 
-
+        f:SetShortened(false);
         f:SetLabelWidth(144);
         f:Enable();
 
@@ -5805,5 +5832,142 @@ do  --Blizzard Check Button
             f.Button:SetScript(method, func);
         end
         return f
+    end
+end
+
+do  --Esc To Close Frame
+    --Add one frame to UISpecialFrames that will handle the closing of other Plumber UIs
+
+    local FramePool = {};
+
+    local CloseDummy = CreateFrame("Frame", "PlumberCloseDummyFrame", UIParent);
+    CloseDummy:Hide();
+    table.insert(UISpecialFrames, CloseDummy:GetName());
+
+    CloseDummy:SetScript("OnHide", function(self)
+        self:Hide();
+        self:SetScript("OnUpdate", nil);
+        for f in pairs(FramePool) do
+            f:Hide();
+        end
+    end);
+
+    function CloseDummy:OnUpdate()
+        self:SetScript("OnUpdate", nil);
+        for f in pairs(FramePool) do
+            if f:IsShown() then
+                return
+            end
+        end
+        self:Hide();
+    end
+
+    function CloseDummy:Update()
+        self:SetScript("OnUpdate", self.OnUpdate);
+    end
+
+    function addon.AllowFrameClosingByEsc(frame)
+        if not FramePool[frame] then
+            FramePool[frame] = true;
+
+            assert(frame:GetScript("OnShow") ~= nil, "This frame does not have an OnShow script.");
+            assert(frame:GetScript("OnHide") ~= nil, "This frame does not have an OnHide script.");
+
+            frame:HookScript("OnShow", function()
+                CloseDummy:Show();
+            end);
+
+            frame:HookScript("OnHide", function()
+                CloseDummy:Update()
+            end);
+        end
+    end
+end
+
+do
+    local ClickAndHoldCounter;
+
+    function addon.InitClickAndHoldCallback()
+        --The cooldown texture may not be fully loaded on the first call
+        --So we use this to init the cooldown in advance
+
+        if ClickAndHoldCounter then return end;
+
+        ClickAndHoldCounter = CreateFrame("Cooldown", nil, UIParent, "PlumberCursorCooldownTemplate");
+        ClickAndHoldCounter:Hide();
+        ClickAndHoldCounter:SetSize(48, 48);
+        ClickAndHoldCounter:SetReverse(true);
+
+        ClickAndHoldCounter:SetScript("OnShow", function(self)
+            self:RegisterEvent("GLOBAL_MOUSE_UP");
+        end);
+
+        ClickAndHoldCounter:SetScript("OnHide", function(self)
+            self:UnregisterEvent("GLOBAL_MOUSE_UP");
+            self:SetScript("OnCooldownDone", nil);
+            self:ClearAllPoints();
+            self:Hide();
+            self:Clear();
+            self.mouseDownTime = nil;
+            if self.onStopCallback then
+                local cb = self.onStopCallback;
+                local success = self.success;
+                self.onStopCallback = nil;
+                self.success = nil;
+                cb(success);
+            end
+        end);
+
+        ClickAndHoldCounter:SetScript("OnEvent", function(self)
+            self:Hide();
+        end);
+    end
+
+
+    ---Run callback after left-click and hold for x seconds.
+    ---@param duration number Required seconds for a successful Click and Hold
+    ---@param onSuccessCallback function Call if success
+    ---@param parent any (Nilable) Parent of the swipe. No visible swipe if parent is not set.
+    ---@param relativeTo any (Nilable) For anchor. Default to parent CENTER if nil
+    ---@param onStopCallback function (Nilable) Call when stopped, including being canceled
+    function addon.SetClickAndHoldCallback(duration, onSuccessCallback, parent, relativeTo, onStopCallback)
+        addon.InitClickAndHoldCallback()
+
+        ClickAndHoldCounter:Hide();
+
+        if parent then
+            ClickAndHoldCounter:SetParent(parent);
+            ClickAndHoldCounter:SetPoint("CENTER", relativeTo or parent, "CENTER", 0, 0);
+        else
+            ClickAndHoldCounter:SetPoint("TOP", UIParent, "BOTTOM", 0, 0);
+        end
+
+        ClickAndHoldCounter:SetCooldownDuration(duration);
+        ClickAndHoldCounter:SetScript("OnCooldownDone", function(self)
+            self.success = true;
+            self:ClearAllPoints();
+            self:Hide();
+            onSuccessCallback();
+        end);
+        ClickAndHoldCounter.onStopCallback = onStopCallback;
+
+        ClickAndHoldCounter.AnimFadeIn:Stop();
+        ClickAndHoldCounter.AnimFadeIn:Play();
+        ClickAndHoldCounter:Show();
+        ClickAndHoldCounter.mouseDownTime = GetTime();
+    end
+
+    function addon.CancelClickAndHoldCallback()
+        if ClickAndHoldCounter then
+            ClickAndHoldCounter:Hide();
+        end
+    end
+
+    function addon.IsClickAndHoldInProgress()
+        if ClickAndHoldCounter and ClickAndHoldCounter.mouseDownTime then
+            return GetTime() - ClickAndHoldCounter.mouseDownTime > 0.12
+        else
+            return false
+        end
     end
 end

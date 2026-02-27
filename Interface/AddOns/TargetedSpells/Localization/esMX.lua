@@ -1,0 +1,159 @@
+---@type string, TargetedSpells
+local addonName, Private = ...
+
+local addonNameWithIcon = ""
+
+do
+	local icon = C_AddOns.GetAddOnMetadata(addonName, "IconTexture")
+	-- width, height, offsetX, offsetY
+	addonNameWithIcon = string.format("|T%s:%d:%d:%d:%d|t %s", icon, 20, 20, 0, -4, addonName)
+end
+
+local L = Private.L
+
+L.EditMode = {}
+L.Functionality = {}
+L.Settings = {}
+
+L.Settings.EditModeReminder =
+	"Puede usar el modo edición, incluye una vista previa en vivo de todas las configuraciones.\nLas de aquí solo están presentes para permitir la edición en combate."
+L.EditMode.TargetedSpellsSelfLabel = "Targeted Spells - Uno mismo"
+L.EditMode.TargetedSpellsPartyLabel = "Targeted Spells - Grupo"
+
+L.Functionality.CVarWarning = string.format(
+	"%s\n\nLa configuración de placas de nombre '%s' fue deshabilitada.\n\nSin ella, %s no funcionará en enemigos fuera de la pantalla.\n\nHaz clic en '%s' para habilitarla de nuevo.",
+	addonNameWithIcon,
+	UNIT_NAMEPLATES_SHOW_OFFSCREEN,
+	addonName,
+	ENABLE
+)
+
+L.Settings.EnabledLabel = "Activado"
+L.Settings.EnabledTooltip = nil
+L.Settings.DisabledLabel = "Desactivado"
+
+L.Settings.AddonCompartmentTooltipLine1 =
+	string.format("%s es %s", WrapTextInColorCode(L.EditMode.TargetedSpellsSelfLabel, "ffeda55f"), "%s")
+L.Settings.AddonCompartmentTooltipLine2 =
+	string.format("%s es %s", WrapTextInColorCode(L.EditMode.TargetedSpellsPartyLabel, "ffeda55f"), "%s")
+
+L.Settings.LoadConditionContentTypeLabel = "Condición de carga: Tipo de contenido"
+L.Settings.LoadConditionContentTypeLabelAbbreviated = "Cargar en contenido"
+L.Settings.LoadConditionContentTypeTooltip = nil
+L.Settings.LoadConditionContentTypeLabels = {
+	[Private.Enum.ContentType.OpenWorld] = "Mundo abierto",
+	[Private.Enum.ContentType.Delve] = "Profundidades",
+	[Private.Enum.ContentType.Dungeon] = "Mazmorra",
+	[Private.Enum.ContentType.Raid] = "Banda",
+	[Private.Enum.ContentType.Arena] = "Arena",
+	[Private.Enum.ContentType.Battleground] = "Campo de batalla",
+}
+
+L.Settings.LoadConditionRoleLabel = "Condición de carga: Rol"
+L.Settings.LoadConditionRoleLabelAbbreviated = "Cargar en rol"
+L.Settings.LoadConditionRoleTooltip = nil
+L.Settings.LoadConditionRoleLabels = {
+	[Private.Enum.Role.Healer] = "Sanador",
+	[Private.Enum.Role.Tank] = "Tanque",
+	[Private.Enum.Role.Damager] = "Daño",
+}
+
+L.Settings.FrameWidthLabel = "Ancho"
+L.Settings.FrameWidthTooltip = nil
+
+L.Settings.FrameHeightLabel = "Altura"
+L.Settings.FrameHeightTooltip = nil
+
+L.Settings.FontSizeLabel = "Tamaño de fuente"
+L.Settings.FontSizeTooltip = nil
+
+L.Settings.FontFlagsLabel = "Font Options"
+L.Settings.FontFlagsTooltip = nil
+L.Settings.FontFlagsLabels = {
+	[Private.Enum.FontFlags.OUTLINE] = "Outline",
+	[Private.Enum.FontFlags.SHADOW] = "Shadow",
+}
+
+L.Settings.FrameGapLabel = "Espaciado"
+L.Settings.FrameGapTooltip = nil
+
+L.Settings.FrameDirectionLabel = "Dirección"
+L.Settings.FrameDirectionTooltip = nil
+L.Settings.FrameDirectionHorizontal = "Horizontal"
+L.Settings.FrameDirectionVertical = "Vertical"
+
+L.Settings.FrameSortOrderLabel = "Orden"
+L.Settings.FrameSortOrderTooltip = nil
+L.Settings.FrameSortOrderAscending = "Ascendente"
+L.Settings.FrameSortOrderDescending = "Descendente"
+
+L.Settings.FrameGrowLabel = "Crecimiento"
+L.Settings.FrameGrowTooltip = nil
+L.Settings.FrameGrowLabels = {
+	[Private.Enum.Grow.Center] = "Centro",
+	[Private.Enum.Grow.Start] = "Inicio",
+	[Private.Enum.Grow.End] = "Fin",
+}
+
+L.Settings.GlowImportantLabel = "Resaltar hechizos importantes"
+L.Settings.GlowImportantTooltip = "Lo que es importante y lo que no lo es lo declara el juego."
+
+L.Settings.GlowTypeLabel = "Tipo de resplandor"
+L.Settings.GlowTypeTooltip = nil
+L.Settings.GlowTypeLabels = {
+	[Private.Enum.GlowType.PixelGlow] = "Resplandor de píxeles",
+	[Private.Enum.GlowType.AutoCastGlow] = "Resplandor de lanzamiento automático",
+	[Private.Enum.GlowType.ButtonGlow] = "Resplandor de botón",
+	[Private.Enum.GlowType.ProcGlow] = "Resplandor de proc",
+	[Private.Enum.GlowType.Star4] = "Estrella 4",
+}
+
+L.Settings.ShowDurationLabel = "Mostrar duración"
+L.Settings.ShowDurationTooltip = nil
+
+L.Settings.ShowDurationFractionsLabel = "Mostrar fracciones"
+L.Settings.ShowDurationFractionsTooltip = nil
+
+L.Settings.IndicateInterruptsLabel = "Indicar interrupciones"
+L.Settings.IndicateInterruptsTooltip =
+	"Desatura el icono, muestra un indicador encima del icono y retrasa ocultar el icono por 1 segundo. No funciona con hechizos canalizados."
+
+L.Settings.ShowSwipeLabel = "Mostrar barrido"
+L.Settings.ShowSwipeTooltip = nil
+
+L.Settings.ShowBorderLabel = "Mostrar borde"
+L.Settings.ShowBorderTooltip = nil
+
+L.Settings.OpacityLabel = "Opacidad"
+L.Settings.OpacityTooltip = nil
+
+L.Settings.FrameOffsetXLabel = "Desplazamiento X"
+L.Settings.FrameOffsetXTooltip = nil
+
+L.Settings.FrameOffsetYLabel = "Desplazamiento Y"
+L.Settings.FrameOffsetYTooltip = nil
+
+L.Settings.FrameSourceAnchorLabel = "Ancla de origen"
+L.Settings.FrameSourceAnchorTooltip = nil
+
+L.Settings.FrameTargetAnchorLabel = "Ancla de destino"
+L.Settings.FrameTargetAnchorTooltip = nil
+
+L.Settings.IncludeSelfInPartyLabel = "Incluirse a uno mismo en el grupo"
+L.Settings.IncludeSelfInPartyTooltip = "Solo funciona cuando se usan los marcos de grupo estilo banda."
+
+L.Settings.ClickToOpenSettingsLabel = "Haga clic para abrir la configuración"
+
+L.Settings.TargetingFilterApiLabel = "API de selección de objetivo"
+L.Settings.TargetingFilterApiTooltip =
+	"Diferencias sutiles entre las APIs.\n\nSpell target: muestra la unidad que será afectada por el hechizo independientemente del objetivo. No funciona para habilidades que usan indicación de objetivo con flechas en múltiples jugadores.\n\nUnit Target: muestra la unidad actualmente seleccionada por la fuente del lanzamiento. También puede mostrar hechizos que no afectan exclusivamente al objetivo, como AoE para todo el grupo."
+L.Settings.TargetingFilterApiLabels = {
+	[Private.Enum.TargetingFilterApi.UnitIsSpellTarget] = "Spell Target",
+	[Private.Enum.TargetingFilterApi.UnitIsUnit] = "Unit Target",
+}
+
+L.Settings.Import = "Importar"
+L.Settings.Export = "Exportar"
+
+L.Settings.FontLabel = "Fuente"
+L.Settings.FontTooltip = nil

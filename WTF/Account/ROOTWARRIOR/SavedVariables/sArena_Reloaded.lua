@@ -80,14 +80,14 @@ sArena_ReloadedDB = {
 ["width"] = 112,
 },
 ["frameFont"] = "1",
-["fontOutline"] = "THICKOUTLINE",
+["spacing"] = 22,
 ["textures"] = {
 ["healStatusBarTexture"] = "Wglass",
 ["generalStatusBarTexture"] = "Wglass",
 },
 ["posY"] = 131.2,
 ["replaceClassIcon"] = true,
-["spacing"] = 22,
+["fontOutline"] = "THICKOUTLINE",
 ["dr"] = {
 ["blackDRBorder"] = false,
 ["posY"] = 1,
@@ -101,29 +101,28 @@ sArena_ReloadedDB = {
 ["thinPixelBorder"] = false,
 ["size"] = 39,
 },
-["posX"] = 534.4,
-["widgets"] = {
-["enabled"] = true,
-["focusIndicator"] = {
-["enabled"] = true,
-},
-["combatIndicator"] = {
-["enabled"] = true,
-},
-["targetIndicator"] = {
-["enabled"] = true,
-},
-["partyTargetIndicators"] = {
-["enabled"] = true,
-},
-},
-["changeFont"] = true,
 ["textSettings"] = {
 ["drTextOffsetY"] = -15,
 ["drTextAnchor"] = "CENTER",
 ["drTextOffsetX"] = 0,
 ["drTextSize"] = 1.22,
 },
+["widgets"] = {
+["targetIndicator"] = {
+["enabled"] = true,
+},
+["combatIndicator"] = {
+["enabled"] = true,
+},
+["partyTargetIndicators"] = {
+["enabled"] = true,
+},
+["focusIndicator"] = {
+["enabled"] = true,
+},
+},
+["changeFont"] = true,
+["posX"] = 534.4,
 },
 ["Pixelated"] = {
 ["dr"] = {
@@ -140,6 +139,7 @@ sArena_ReloadedDB = {
 ["showArenaNumber"] = false,
 ["darkMode"] = true,
 ["colorMysteryGray"] = false,
+["dbClean1"] = true,
 ["drStaticIconsPerClass"] = true,
 ["drIconsPerClass"] = {
 ["DEMONHUNTER"] = {

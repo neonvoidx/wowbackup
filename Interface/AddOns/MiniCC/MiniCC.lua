@@ -1,20 +1,22 @@
 ---@type string, Addon
 local _, addon = ...
 local mini = addon.Core.Framework
+local L = addon.L
 local instanceOptions = addon.Core.InstanceOptions
 local scheduler = addon.Utils.Scheduler
 local frames = addon.Core.Frames
 local config = addon.Config
 local testModeManager = addon.Modules.TestModeManager
 local modules = {
-	addon.Modules.CcModule,
-	addon.Modules.HealerCcModule,
+	addon.Modules.CrowdControlModule,
+	addon.Modules.HealerCrowdControlModule,
 	addon.Modules.PortraitModule,
 	addon.Modules.AlertsModule,
 	addon.Modules.NameplatesModule,
 	addon.Modules.KickTimerModule,
 	addon.Modules.TrinketsModule,
-	addon.Modules.AllyIndicatorModule,
+	addon.Modules.FriendlyIndicatorModule,
+	addon.Modules.PrecogGuesserModule,
 }
 local eventsFrame
 local db
@@ -24,7 +26,7 @@ local function NotifyChanges()
 		return
 	end
 
-	local title = "MiniCC - What's New?"
+	local title = L["MiniCC - What's New?"]
 	db.NotifiedChanges = true
 
 	if db.Version == 6 then
@@ -60,10 +62,14 @@ local function NotifyChanges()
 			return
 		end
 
-		mini:ShowDialog({
-			Title = title,
-			Text = table.concat(whatsNew, "\n"),
-		})
+		local text = table.concat(whatsNew, "\n")
+
+		if text and text ~= "" then
+			mini:ShowDialog({
+				Title = title,
+				Text = text
+			})
+		end
 	end
 
 	db.WhatsNew = {}
@@ -88,6 +94,7 @@ local function OnAddonLoaded()
 	scheduler:Init()
 	frames:Init()
 	instanceOptions:Init()
+	addon.Utils.ModuleUtil:Init()
 
 	for _, module in ipairs(modules) do
 		module:Init()
@@ -116,7 +123,7 @@ function addon:Refresh()
 	end
 end
 
----@param options InstanceOptions?
+---@param options CrowdControlInstanceOptions?
 function addon:ToggleTest(options)
 	if testModeManager:IsActive() then
 		testModeManager:StopTesting()
@@ -131,51 +138,57 @@ function addon:ToggleTest(options)
 	end
 end
 
----@param options InstanceOptions
-function addon:TestOptions(options)
-	instanceOptions:SetTestInstanceOptions(options)
-
-	if testModeManager:IsActive() then
-		addon:Refresh()
+---@param options CrowdControlInstanceOptions
+function addon:TestWithOptions(options)
+	if not testModeManager:IsActive() then
+		testModeManager:StartTesting(options)
+		return
 	end
+
+	instanceOptions:SetTestInstanceOptions(options)
+	addon:Refresh()
 end
 
 mini:WaitForAddonLoad(OnAddonLoaded)
 
 ---@class Addon
----@field Capabilities Capabilities
+---@field L Localization
 ---@field Utils Utils
 ---@field Core Core
 ---@field Config Config
 ---@field Modules Modules
 ---@field Refresh fun(self: table)
----@field ToggleTest fun(self: table, options: InstanceOptions)
----@field TestOptions fun(self: table, options: InstanceOptions)
+---@field ToggleTest fun(self: table, options: CrowdControlInstanceOptions)
+---@field TestWithOptions fun(self: table, options: CrowdControlInstanceOptions)
 
 ---@class Utils
----@field CcUtil CcUtil
 ---@field Scheduler SchedulerUtil
 ---@field Units UnitUtil
 ---@field Array ArrayUtil
 ---@field SpellCache SpellCache
+---@field FontUtil FontUtil
+---@field ModuleUtil ModuleUtil
+---@field ModuleName ModuleName
+---@field WoWEx WoWEx
 
 ---@class Core
 ---@field Framework MiniFramework
 ---@field Frames Frames
 ---@field UnitAuraWatcher UnitAuraWatcher
 ---@field IconSlotContainer IconSlotContainer
----@field InstanceOptions InstanceOptions
+---@field InstanceOptions CrowdControlInstanceOptions
 
 ---@class Modules
 ---@field TestModeManager TestModeManager
 ---@field PortraitModule PortraitModule
----@field HealerCcModule HealerCcModule
+---@field HealerCrowdControlModule HealerCrowdControlModule
 ---@field NameplatesModule NameplatesModule
 ---@field KickTimerModule KickTimerModule
 ---@field AlertsModule AlertsModule
----@field CcModule CcModule
+---@field CrowdControlModule CrowdControlModule
 ---@field TrinketsModule TrinketsModule
----@field AllyIndicatorModule AllyIndicatorModule
+---@field FriendlyIndicatorModule FriendlyIndicatorModule
+---@field PrecogGuesserModule PrecogGuesserModule
 
 ---@class IModule
 ---@field Init fun(self: IModule) Initialises the module to be ready for use.

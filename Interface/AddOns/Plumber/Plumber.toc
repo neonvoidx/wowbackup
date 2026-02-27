@@ -1,7 +1,7 @@
 ## X-Flavor: retail
 ## X-Expansion: TWW
 ## Interface: 120000, 120001
-## Version: 1.8.6
+## Version: 1.8.8 b
 
 ## Title: Plumber
 
@@ -41,7 +41,7 @@ Modules\SpellFlyout_Secure.lua
 Modules\QuestAreaTrigger.lua
 Modules\Dreamseed.lua
 #Modules\EventMap.lua
-Modules\MapPin.xml
+#Modules\MapPin.xml
 Modules\RareAnnouncement.lua
 Modules\PlayerChoiceUI.lua
 Modules\Lockpicking.lua
@@ -61,7 +61,6 @@ Modules\DelvesScenario.lua
 Modules\DelvesDashboard.lua
 Modules\DelvesAutomation.lua
 Modules\ExpansionLandingPage.xml
-Modules\LandingPageSwitch.lua
 Modules\GameTooltipExtension.xml
 Modules\LootUI.xml
 Modules\UnderlightAngler.lua
@@ -75,7 +74,7 @@ Modules\BlizzardSuperTrack.lua
 Modules\ItemUpgradeUI.xml
 Modules\Macros.lua
 Modules\ProfessionsBook.lua
-Modules\ExpansionLandingPage\ExpansionLandingPage_TWW.xml
+Modules\ExpansionLandingPage\ExpansionLandingPage_Retail.xml
 Modules\BlizzFix_ModelLoading.lua
 Modules\Timerunning\LegionRemix.xml
 Modules\HolidayDungeon.lua
@@ -86,6 +85,7 @@ Modules\QuestWatchCycle.lua
 Modules\CraftSearchExtended.lua
 Modules\SourceAchievementLink.lua
 Modules\OutfitSelect.lua
+Modules\BreakTime.xml
 
 #Modules\MerchantUI\MerchantUI.xml
 

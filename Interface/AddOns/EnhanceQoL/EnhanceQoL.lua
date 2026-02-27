@@ -1,6 +1,6 @@
 -- luacheck: globals DefaultCompactUnitFrameSetup CompactUnitFrame_UpdateAuras CompactUnitFrame_UpdateName UnitTokenFromGUID C_Bank CompactRaidFrameContainer
 -- luacheck: globals HUD_EDIT_MODE_MINIMAP_LABEL
--- luacheck: globals Menu GameTooltip_SetTitle GameTooltip_AddNormalLine EnhanceQoL
+-- luacheck: globals Menu MenuResponse GameTooltip_SetTitle GameTooltip_AddNormalLine EnhanceQoL
 -- luacheck: globals GenericTraitUI_LoadUI GenericTraitFrame
 -- luacheck: globals CancelDuel DeclineGroup C_PetBattles
 -- luacheck: globals ExpansionLandingPage ExpansionLandingPageMinimapButton ShowGarrisonLandingPage GarrisonLandingPage GarrisonLandingPage_Toggle GarrisonLandingPageMinimapButton CovenantSanctumFrame CovenantSanctumFrame_LoadUI EasyMenu
@@ -99,11 +99,29 @@ local DEFAULT_ACTION_BUTTON_COUNT = _G.NUM_ACTIONBAR_BUTTONS or 12
 local PET_ACTION_BUTTON_COUNT = _G.NUM_PET_ACTION_SLOTS or 10
 local STANCE_ACTION_BUTTON_COUNT = _G.NUM_STANCE_SLOTS or _G.NUM_SHAPESHIFT_SLOTS or 10
 
+local ACTION_BAR_FRAME_ALIASES = {
+	PetActionBar = { "PetActionBarFrame" },
+	StanceBar = { "StanceBarFrame" },
+}
+
+local function ResolveActionBarFrame(barName)
+	if type(barName) ~= "string" or barName == "" then return nil end
+	local frame = _G[barName]
+	if frame then return frame end
+	local aliases = ACTION_BAR_FRAME_ALIASES[barName]
+	if not aliases then return nil end
+	for _, alias in ipairs(aliases) do
+		frame = _G[alias]
+		if frame then return frame end
+	end
+	return nil
+end
+
 local function GetActionBarButtonPrefix(barName)
 	if not barName then return nil, 0 end
 	if barName == "MainMenuBar" or barName == "MainActionBar" then return "ActionButton", DEFAULT_ACTION_BUTTON_COUNT end
-	if barName == "PetActionBar" then return "PetActionButton", PET_ACTION_BUTTON_COUNT end
-	if barName == "StanceBar" then return "StanceButton", STANCE_ACTION_BUTTON_COUNT end
+	if barName == "PetActionBar" or barName == "PetActionBarFrame" then return "PetActionButton", PET_ACTION_BUTTON_COUNT end
+	if barName == "StanceBar" or barName == "StanceBarFrame" then return "StanceButton", STANCE_ACTION_BUTTON_COUNT end
 	return barName .. "Button", DEFAULT_ACTION_BUTTON_COUNT
 end
 
@@ -295,97 +313,6 @@ function EQOL.PersistSignUpNote()
 	end
 end
 
-local function ensureAssistFrame(key, parent, refFrame)
-	addon.variables.assistFrame = addon.variables.assistFrame or {}
-	local af = addon.variables.assistFrame[key]
-	if not af then
-		af = CreateFrame("Frame", nil, parent)
-		af:SetFrameStrata(refFrame:GetFrameStrata())
-		af:SetFrameLevel(refFrame:GetFrameLevel() + 1)
-		af.leaderIcon = af:CreateTexture(nil, "OVERLAY")
-		af.leaderIcon:SetTexture(132061)
-		af.leaderIcon:SetSize(16, 16)
-		addon.variables.assistFrame[key] = af
-	else
-		af:SetParent(parent)
-	end
-	af.leaderIcon:ClearAllPoints()
-	af.leaderIcon:SetPoint("TOPRIGHT", refFrame, "TOPRIGHT", 5, 6)
-	af:Show()
-	return af
-end
-
-local function removeAssistIcon()
-	if addon.variables.assistFrame then
-		for _, f in pairs(addon.variables.assistFrame) do
-			f:Hide()
-			f.leaderIcon:ClearAllPoints()
-		end
-	end
-end
-
-local function ensureLeaderFrame(parent, anchor)
-	if not addon.variables.leaderFrame then
-		local f = CreateFrame("Frame", nil, parent)
-		f.leaderIcon = f:CreateTexture(nil, "OVERLAY")
-		f.leaderIcon:SetTexture("Interface\\GroupFrame\\UI-Group-LeaderIcon")
-		f.leaderIcon:SetSize(16, 16)
-		addon.variables.leaderFrame = f
-	else
-		addon.variables.leaderFrame:SetParent(parent)
-	end
-	addon.variables.leaderFrame.leaderIcon:ClearAllPoints()
-	addon.variables.leaderFrame.leaderIcon:SetPoint("TOPRIGHT", anchor, "TOPRIGHT", 5, 6)
-	addon.variables.leaderFrame:SetFrameStrata(anchor:GetFrameStrata())
-	addon.variables.leaderFrame:SetFrameLevel(anchor:GetFrameLevel() + 1)
-	addon.variables.leaderFrame:Show()
-	return addon.variables.leaderFrame
-end
-
-local function removeLeaderIcon()
-	local f = addon.variables.leaderFrame
-	if f then
-		f:Hide()
-		f.leaderIcon:ClearAllPoints()
-	end
-	removeAssistIcon()
-end
-addon.functions.removeLeaderIcon = removeLeaderIcon
-
-local function setLeaderIcon()
-	if addon.EditModeLib:IsInEditMode() then return end
-	local leaderFound = false
-	if UnitInParty("player") and not UnitInRaid("player") then
-		for i = 1, 5 do
-			if _G["CompactPartyFrameMember" .. i] and _G["CompactPartyFrameMember" .. i]:IsShown() and _G["CompactPartyFrameMember" .. i].unit then
-				if UnitIsGroupLeader(_G["CompactPartyFrameMember" .. i].unit) then
-					ensureLeaderFrame(_G["CompactPartyFrameMember" .. i], _G["CompactPartyFrameMember" .. i])
-					leaderFound = true
-					break
-				end
-			end
-		end
-	elseif UnitInRaid("player") then
-		removeAssistIcon()
-		for i = 1, 8 do
-			for j = 1, 5 do
-				if _G["CompactRaidGroup" .. i .. "Member" .. j] and _G["CompactRaidGroup" .. i .. "Member" .. j]:IsShown() and _G["CompactRaidGroup" .. i .. "Member" .. j].unit then
-					local tmpUnit = _G["CompactRaidGroup" .. i .. "Member" .. j].unit
-					if UnitIsGroupLeader(tmpUnit) then
-						ensureLeaderFrame(_G["CompactRaidFrameContainer"], _G["CompactRaidGroup" .. i .. "Member" .. j])
-						leaderFound = true
-					elseif UnitIsRaidOfficer(tmpUnit) then
-						ensureAssistFrame(tmpUnit, _G["CompactRaidFrameContainer"], _G["CompactRaidGroup" .. i .. "Member" .. j])
-					end
-				end
-			end
-		end
-	end
-
-	if not leaderFound then removeLeaderIcon() end
-end
-addon.functions.setLeaderIcon = setLeaderIcon
-
 local function GameTooltipActionButton(button)
 	button:HookScript("OnEnter", function(self)
 		GameTooltip:SetOwner(self, "ANCHOR_NONE")
@@ -455,7 +382,7 @@ local visibilityRuleMetadata = {
 		key = "PLAYER_HAS_TARGET",
 		label = L["visibilityRule_playerHasTarget"] or "When I have a target",
 		description = L["visibilityRule_playerHasTarget_desc"],
-		appliesTo = { frame = true },
+		appliesTo = { actionbar = true, frame = true },
 		unitRequirement = "player",
 		order = 45,
 	},
@@ -494,7 +421,7 @@ local visibilityRuleMetadata = {
 		key = "ALWAYS_HIDDEN",
 		label = L["visibilityRule_alwaysHidden"] or "Always hidden",
 		description = L["visibilityRule_alwaysHidden_desc"],
-		appliesTo = { frame = true },
+		appliesTo = { actionbar = true, frame = true },
 		advanced = true,
 		order = 100,
 	},
@@ -592,6 +519,8 @@ local function MigrateLegacyVisibilityFlags()
 	MigrateLegacyVisibilityFlag("hidePlayerFrame", "unitframeSettingPlayerFrame")
 	MigrateLegacyVisibilityFlag("hideMicroMenu", "unitframeSettingMicroMenu")
 	MigrateLegacyVisibilityFlag("hideBagsBar", "unitframeSettingBagsBar")
+	MigrateLegacyVisibilityFlag("hideBuffFrame", "unitframeSettingBuffFrame")
+	MigrateLegacyVisibilityFlag("hideDebuffFrame", "unitframeSettingDebuffFrame")
 end
 
 local function StopFrameFade(target)
@@ -823,6 +752,13 @@ local function getVisibilityFadeAlpha(state)
 	return clampVisibilityAlpha(state.fadeAlpha)
 end
 
+local function HasFrameVisibilityRuleBesidesGroupHide(cfg)
+	if type(cfg) ~= "table" then return false end
+	return (cfg.MOUSEOVER or cfg.ALWAYS_IN_COMBAT or cfg.ALWAYS_OUT_OF_COMBAT or cfg.PLAYER_HAS_TARGET or cfg.PLAYER_CASTING or cfg.PLAYER_MOUNTED or cfg.PLAYER_NOT_MOUNTED or cfg.PLAYER_IN_GROUP)
+			and true
+		or false
+end
+
 local function EvaluateFrameVisibility(state)
 	local cfg = state.config
 	if not cfg or not next(cfg) then return false, nil end
@@ -830,9 +766,13 @@ local function EvaluateFrameVisibility(state)
 	if cfg.ALWAYS_HIDDEN then return false, "ALWAYS_HIDDEN" end
 	local context = frameVisibilityContext
 
-	if cfg.ALWAYS_HIDE_IN_GROUP and state.supportsGroupRule and context.inGroup then
-		if cfg.MOUSEOVER and state.isMouseOver then return true, "MOUSEOVER" end
-		return false, "ALWAYS_HIDE_IN_GROUP"
+	if cfg.ALWAYS_HIDE_IN_GROUP and state.supportsGroupRule then
+		if context.inGroup then
+			if cfg.MOUSEOVER and state.isMouseOver then return true, "MOUSEOVER" end
+			return false, "ALWAYS_HIDE_IN_GROUP"
+		end
+		-- If this is the only active rule, keep the frame visible while solo.
+		if not HasFrameVisibilityRuleBesidesGroupHide(cfg) then return true, "ALWAYS_HIDE_IN_GROUP_SOLO" end
 	end
 
 	if cfg.ALWAYS_IN_COMBAT and context.inCombat then return true, "ALWAYS_IN_COMBAT" end
@@ -1826,7 +1766,19 @@ local function GetActionBarVisibilityConfig(variable, incoming, persistLegacy)
 
 	if not persistLegacy and incoming == nil then
 		if type(source) == "table" then
-			if source.MOUSEOVER == true or source.ALWAYS_IN_COMBAT == true or source.ALWAYS_OUT_OF_COMBAT == true or source.SKYRIDING_ACTIVE == true or source.SKYRIDING_INACTIVE == true then
+			if
+				source.MOUSEOVER == true
+				or source.ALWAYS_IN_COMBAT == true
+				or source.ALWAYS_OUT_OF_COMBAT == true
+				or source.SKYRIDING_ACTIVE == true
+				or source.SKYRIDING_INACTIVE == true
+				or source.PLAYER_CASTING == true
+				or source.PLAYER_MOUNTED == true
+				or source.PLAYER_NOT_MOUNTED == true
+				or source.PLAYER_HAS_TARGET == true
+				or source.PLAYER_IN_GROUP == true
+				or source.ALWAYS_HIDDEN == true
+			then
 				return source
 			end
 			return nil
@@ -1845,7 +1797,9 @@ local function GetActionBarVisibilityConfig(variable, incoming, persistLegacy)
 			PLAYER_CASTING = source.PLAYER_CASTING == true,
 			PLAYER_MOUNTED = source.PLAYER_MOUNTED == true,
 			PLAYER_NOT_MOUNTED = source.PLAYER_NOT_MOUNTED == true,
+			PLAYER_HAS_TARGET = source.PLAYER_HAS_TARGET == true,
 			PLAYER_IN_GROUP = source.PLAYER_IN_GROUP == true,
+			ALWAYS_HIDDEN = source.ALWAYS_HIDDEN == true,
 		}
 	elseif source == true then
 		config = {
@@ -1857,7 +1811,13 @@ local function GetActionBarVisibilityConfig(variable, incoming, persistLegacy)
 			PLAYER_CASTING = false,
 			PLAYER_MOUNTED = false,
 			PLAYER_NOT_MOUNTED = false,
+			PLAYER_HAS_TARGET = false,
 			PLAYER_IN_GROUP = false,
+			ALWAYS_HIDDEN = false,
+		}
+	elseif source == "hide" then
+		config = {
+			ALWAYS_HIDDEN = true,
 		}
 	else
 		config = nil
@@ -1874,7 +1834,9 @@ local function GetActionBarVisibilityConfig(variable, incoming, persistLegacy)
 			or config.PLAYER_CASTING
 			or config.PLAYER_MOUNTED
 			or config.PLAYER_NOT_MOUNTED
+			or config.PLAYER_HAS_TARGET
 			or config.PLAYER_IN_GROUP
+			or config.ALWAYS_HIDDEN
 		)
 	then
 		config = nil
@@ -1893,7 +1855,9 @@ local function GetActionBarVisibilityConfig(variable, incoming, persistLegacy)
 			if config.PLAYER_CASTING then stored.PLAYER_CASTING = true end
 			if config.PLAYER_MOUNTED then stored.PLAYER_MOUNTED = true end
 			if config.PLAYER_NOT_MOUNTED then stored.PLAYER_NOT_MOUNTED = true end
+			if config.PLAYER_HAS_TARGET then stored.PLAYER_HAS_TARGET = true end
 			if config.PLAYER_IN_GROUP then stored.PLAYER_IN_GROUP = true end
+			if config.ALWAYS_HIDDEN then stored.ALWAYS_HIDDEN = true end
 			addon.db[variable] = stored
 		end
 	end
@@ -1928,6 +1892,7 @@ end
 
 local function ActionBarShouldForceShowByConfig(config, context, combatOverride)
 	if not config then return false end
+	if config.ALWAYS_HIDDEN then return false end
 	local ctx = context or GetActionBarVisibilityContext(combatOverride)
 	if config.SKYRIDING_ACTIVE and ctx.isSkyriding then return true end
 	if config.ALWAYS_IN_COMBAT and ctx.inCombat then return true end
@@ -1935,6 +1900,7 @@ local function ActionBarShouldForceShowByConfig(config, context, combatOverride)
 	if config.PLAYER_CASTING and ctx.isCasting then return true end
 	if config.PLAYER_MOUNTED and ctx.mounted then return true end
 	if config.PLAYER_NOT_MOUNTED and not ctx.mounted then return true end
+	if config.PLAYER_HAS_TARGET and ctx.hasTarget then return true end
 	if config.PLAYER_IN_GROUP and ctx.inGroup then return true end
 	return false
 end
@@ -2011,8 +1977,12 @@ local function ApplyActionBarAlpha(bar, variable, config, combatOverride, skipFa
 		cfg = GetActionBarVisibilityConfig(variable)
 	end
 	if not cfg then return end
-	local ctx = context or GetActionBarVisibilityContext(combatOverride)
 	local useFade = ShouldFadeActionBar(skipFade)
+	if cfg.ALWAYS_HIDDEN then
+		ApplyAlphaToRegion(bar, 0, useFade)
+		return
+	end
+	local ctx = context or GetActionBarVisibilityContext(combatOverride)
 	local fadedAlpha = GetActionBarFadedAlpha()
 	local baseAlpha = GetActionBarBaseAlpha(cfg, fadedAlpha)
 	local hasShowRules = cfg.MOUSEOVER
@@ -2022,6 +1992,7 @@ local function ApplyActionBarAlpha(bar, variable, config, combatOverride, skipFa
 		or cfg.PLAYER_CASTING
 		or cfg.PLAYER_MOUNTED
 		or cfg.PLAYER_NOT_MOUNTED
+		or cfg.PLAYER_HAS_TARGET
 		or cfg.PLAYER_IN_GROUP
 
 	if cfg.SKYRIDING_INACTIVE then
@@ -2063,6 +2034,10 @@ local function EQOL_HideBarIfNotHovered(bar, variable)
 		local context = GetActionBarVisibilityContext()
 		local fadedAlpha = GetActionBarFadedAlpha()
 		local baseAlpha = GetActionBarBaseAlpha(current, fadedAlpha)
+		if current.ALWAYS_HIDDEN then
+			ApplyAlphaToRegion(bar, 0, useFade)
+			return
+		end
 		if ActionBarShouldForceShowByConfig(current, context) then
 			ApplyAlphaToRegion(bar, 1, useFade)
 			return
@@ -2112,7 +2087,7 @@ end
 -- Action Bars
 local EnsureActionBarVisibilityWatcher
 local function UpdateActionBarMouseover(barName, config, variable)
-	local bar = _G[barName]
+	local bar = ResolveActionBarFrame(barName)
 	if not bar then return end
 
 	local btnPrefix
@@ -2124,9 +2099,9 @@ local function UpdateActionBarMouseover(barName, config, variable)
 			leave:SetAlpha(1)
 		end
 		btnPrefix = "ActionButton"
-	elseif barName == "PetActionBar" then
+	elseif barName == "PetActionBar" or barName == "PetActionBarFrame" then
 		btnPrefix = "PetActionButton"
-	elseif barName == "StanceBar" then
+	elseif barName == "StanceBar" or barName == "StanceBarFrame" then
 		btnPrefix = "StanceButton"
 	else
 		btnPrefix = barName .. "Button"
@@ -2187,11 +2162,17 @@ local function UpdateActionBarMouseover(barName, config, variable)
 	end
 
 	local function handleButtonLeave(self)
-		if IsActionBarMouseoverGroupEnabled() then
-			UpdateActionBarGroupHoverState(self, false)
-		else
-			EQOL_HideBarIfNotHovered(bar, variable)
+		local current = GetActionBarVisibilityConfig(variable)
+		if not current then return end
+		if current.MOUSEOVER then
+			if IsActionBarMouseoverGroupEnabled() then
+				UpdateActionBarGroupHoverState(self, false)
+			else
+				EQOL_HideBarIfNotHovered(bar, variable)
+			end
+			return
 		end
+		ApplyActionBarAlpha(bar, variable, current)
 	end
 
 	for i = 1, 12 do
@@ -2331,7 +2312,7 @@ local function ApplyActionBarVisibilityAlpha(skipFade, event)
 	end
 	local context = GetActionBarVisibilityContext(combatOverride)
 	for _, info in ipairs(addon.variables.actionBarNames or {}) do
-		local bar = _G[info.name]
+		local bar = ResolveActionBarFrame(info.name)
 		if bar then ApplyActionBarAlpha(bar, info.var, nil, combatOverride, skipFade, context) end
 	end
 end
@@ -2427,6 +2408,7 @@ local ACTIONBAR_VISIBILITY_EVENTS = {
 	"PLAYER_MOUNT_DISPLAY_CHANGED",
 	"UPDATE_SHAPESHIFT_FORM",
 	"GROUP_ROSTER_UPDATE",
+	"PLAYER_TARGET_CHANGED",
 	"ACTIONBAR_SHOWGRID",
 	"ACTIONBAR_HIDEGRID",
 }
@@ -2693,38 +2675,6 @@ local function initParty()
 	addon.functions.InitDBValue("autoAcceptGroupInviteFriendOnly", false)
 	addon.functions.InitDBValue("autoAcceptGroupInviteGuildOnly", false)
 	addon.functions.InitDBValue("autoAcceptSummon", false)
-	addon.functions.InitDBValue("showLeaderIconRaidFrame", false)
-
-	if CompactUnitFrame_SetUnit then
-		hooksecurefunc("CompactUnitFrame_SetUnit", function(s, type)
-			if addon.db["showLeaderIconRaidFrame"] then
-				if type then
-					if (_G["CompactPartyFrame"]:IsShown() and strmatch(type, "party%d")) or (_G["CompactRaidFrameContainer"]:IsShown() and strmatch(type, "raid%d+")) then setLeaderIcon() end
-				end
-			end
-		end)
-	end
-
-	local leaderUpdateFrame = CreateFrame("Frame")
-	leaderUpdateFrame:RegisterEvent("GROUP_ROSTER_UPDATE")
-	leaderUpdateFrame:RegisterEvent("PLAYER_ENTERING_WORLD")
-	leaderUpdateFrame:SetScript("OnEvent", function()
-		if addon.db["showLeaderIconRaidFrame"] then
-			setLeaderIcon()
-		else
-			removeLeaderIcon()
-		end
-	end)
-
-	addon.EditModeLib:RegisterCallback("enter", function()
-		removeLeaderIcon()
-		removeAssistIcon()
-		if InCombatLockdown() then return end
-		CompactRaidFrameContainer:Layout()
-	end)
-	addon.EditModeLib:RegisterCallback("exit", function()
-		if addon.db["showLeaderIconRaidFrame"] then setLeaderIcon() end
-	end)
 end
 
 local function setupQuickSkipCinematic()
@@ -2880,9 +2830,11 @@ end
 
 local function shouldAutoAcceptResurrection(offerer)
 	if not addon.db or not addon.db["autoAcceptResurrection"] then return false end
-	if addon.db["autoAcceptResurrectionExcludeCombat"] and UnitAffectingCombat("player") then return false end
+	local unit = resolveResurrectOffererUnit(offerer)
+	if addon.db["autoAcceptResurrectionExcludeCombat"] then
+		if unit and UnitAffectingCombat(unit) then return false end
+	end
 	if addon.db["autoAcceptResurrectionExcludeAfterlife"] then
-		local unit = resolveResurrectOffererUnit(offerer)
 		if unit and UnitIsDeadOrGhost(unit) then return false end
 	end
 	return true
@@ -2910,6 +2862,11 @@ local function initMisc()
 	addon.functions.InitDBValue("hideRaidTools", false)
 	addon.functions.InitDBValue("autoRepair", false)
 	addon.functions.InitDBValue("autoRepairGuildBank", false)
+	addon.functions.InitDBValue("autoWarbandGold", false)
+	addon.functions.InitDBValue("autoWarbandGoldTargetGold", 10000)
+	addon.functions.InitDBValue("autoWarbandGoldPerCharacter", {})
+	addon.functions.InitDBValue("autoWarbandGoldTargetCharacter", "")
+	addon.functions.InitDBValue("autoWarbandGoldWithdraw", false)
 	addon.functions.InitDBValue("sellAllJunk", false)
 	addon.functions.InitDBValue("autoCancelCinematic", false)
 	addon.functions.InitDBValue("quickSkipCinematic", false)
@@ -3029,18 +2986,42 @@ local function initMisc()
 		AzeriteLevelUpToast:Hide()
 	end
 	addon.functions.updateRaidToolsHook()
-	ExpansionLandingPageMinimapButton:HookScript("OnShow", function(self)
-		local id = addon.variables.landingPageReverse[self.title]
-		if addon.db["enableSquareMinimap"] then
-			self:ClearAllPoints()
-			if id == 20 then
-				self:SetPoint("BOTTOMLEFT", Minimap, "BOTTOMLEFT", -25, -25)
-			else
-				self:SetPoint("BOTTOMLEFT", Minimap, "BOTTOMLEFT", -16, -16)
-			end
+	addon.variables = addon.variables or {}
+
+	local function applySquareLandingPageButtonAnchor(button)
+		if not button or not addon.db or not addon.db["enableSquareMinimap"] then return end
+		local reverse = addon.variables and addon.variables.landingPageReverse
+		local id = reverse and reverse[button.title]
+		button:ClearAllPoints()
+		if id == 20 then
+			button:SetPoint("BOTTOMLEFT", Minimap, "BOTTOMLEFT", -25, -25)
+		else
+			button:SetPoint("BOTTOMLEFT", Minimap, "BOTTOMLEFT", -16, -16)
 		end
-		if addon.db["hiddenLandingPages"][id] then self:Hide() end
-	end)
+	end
+
+	local function refreshLandingPageButtonFix()
+		local button = _G.ExpansionLandingPageMinimapButton
+		if not button then return end
+
+		applySquareLandingPageButtonAnchor(button)
+
+		local reverse = addon.variables and addon.variables.landingPageReverse
+		local id = reverse and reverse[button.title]
+		if addon.db and addon.db["hiddenLandingPages"] and id and addon.db["hiddenLandingPages"][id] then button:Hide() end
+	end
+
+	if ExpansionLandingPageMinimapButton and not addon.variables._eqolLandingPageButtonHooked then
+		ExpansionLandingPageMinimapButton:HookScript("OnShow", refreshLandingPageButtonFix)
+		ExpansionLandingPageMinimapButton:RegisterEvent("COVENANT_CHOSEN")
+		ExpansionLandingPageMinimapButton:HookScript("OnEvent", function(_, event)
+			if event ~= "COVENANT_CHOSEN" then return end
+			C_Timer.After(0, refreshLandingPageButtonFix)
+		end)
+		addon.variables._eqolLandingPageButtonHooked = true
+	end
+
+	C_Timer.After(0, refreshLandingPageButtonFix)
 
 	-- Right-click context menu for expansion/garrison minimap buttons
 	local MU = MenuUtil
@@ -3074,6 +3055,7 @@ end
 
 local function initLoot()
 	addon.functions.InitDBValue("enableLootToastAnchor", false)
+	addon.functions.InitDBValue("enableMajorFactionsRenownToastAnchor", false)
 	addon.functions.InitDBValue("enableLootToastFilter", false)
 	addon.functions.InitDBValue("lootToastItemLevels", {
 		[Enum.ItemQuality.Rare] = 0,
@@ -3100,6 +3082,7 @@ local function initLoot()
 	addon.functions.InitDBValue("lootToastUseCustomSound", false)
 	addon.functions.InitDBValue("lootToastCustomSoundFile", "")
 	addon.functions.InitDBValue("lootToastAnchor", { point = "BOTTOM", relativePoint = "BOTTOM", x = 0, y = 240 })
+	addon.functions.InitDBValue("majorFactionsRenownToastAnchor", { point = "TOP", relativePoint = "TOP", x = 0, y = -250 })
 	-- migrate legacy LootRollMover-inspired settings to the new group-loot anchor keys
 	if addon.db.enableLootRollAnchor ~= nil then
 		if addon.db.enableGroupLootAnchor == nil then addon.db.enableGroupLootAnchor = addon.db.enableLootRollAnchor == true end
@@ -3139,8 +3122,6 @@ local function initUnitFrame()
 	-- Player resting visuals (ZZZ + glow)
 	addon.functions.InitDBValue("hideRestingGlow", false)
 	addon.functions.InitDBValue("hidePartyFrameTitle", false)
-	addon.functions.InitDBValue("unitFrameTruncateNames", false)
-	addon.functions.InitDBValue("unitFrameMaxNameLength", addon.variables.unitFrameMaxNameLength)
 	addon.functions.InitDBValue("unitFrameScaleEnabled", false)
 	addon.functions.InitDBValue("unitFrameScale", addon.variables.unitFrameScale)
 	addon.functions.InitDBValue("ufUseCustomClassColors", false)
@@ -3226,56 +3207,10 @@ local function initUnitFrame()
 	end) end
 	addon.functions.togglePartyFrameTitle(addon.db["hidePartyFrameTitle"])
 
-	local function TruncateFrameName(cuf)
-		if not addon.db["unitFrameTruncateNames"] then return end
-		if not addon.db["unitFrameMaxNameLength"] then return end
-		if not cuf then return end
-		if issecretvalue and issecretvalue(cuf.unit) then return end
-
-		if cuf.unit and cuf.unit:match("^nameplate") then return end
-
-		local name
-		if cuf.unit and UnitExists(cuf.unit) then
-			name = UnitName(cuf.unit)
-		elseif cuf.displayedUnit and UnitExists(cuf.displayedUnit) then
-			name = UnitName(cuf.displayedUnit)
-		elseif cuf.name and type(cuf.name.GetText) == "function" then
-			name = cuf.name:GetText()
-		end
-
-		if issecretvalue and issecretvalue(name) then return end
-
-		if name and cuf.name and type(cuf.name.SetText) == "function" then
-			-- Remove server names before truncation
-			local shortName = strsplit("-", name)
-			if #shortName > addon.db["unitFrameMaxNameLength"] then shortName = strsub(shortName, 1, addon.db["unitFrameMaxNameLength"]) end
-			if shortName ~= name then cuf.name:SetText(shortName) end
-		end
-	end
-
-	local function ApplyFrameSettings(cuf) TruncateFrameName(cuf) end
-
-	local function EnsureUnitFrameNameHooks()
-		addon.variables = addon.variables or {}
-		if addon.variables._eqolUnitFrameNameHooks then return end
-		if CompactUnitFrame_UpdateName then hooksecurefunc("CompactUnitFrame_UpdateName", TruncateFrameName) end
-		if DefaultCompactUnitFrameSetup then hooksecurefunc("DefaultCompactUnitFrameSetup", ApplyFrameSettings) end
-		addon.variables._eqolUnitFrameNameHooks = true
-	end
-	addon.functions.EnsureUnitFrameNameHooks = EnsureUnitFrameNameHooks
-
-	function addon.functions.updateUnitFrameNames()
-		if not addon.db["unitFrameTruncateNames"] then return end
-		if addon.functions.EnsureUnitFrameNameHooks then addon.functions.EnsureUnitFrameNameHooks() end
-		for i = 1, 5 do
-			local f = _G["CompactPartyFrameMember" .. i]
-			TruncateFrameName(f)
-		end
-		for i = 1, 40 do
-			local f = _G["CompactRaidFrame" .. i]
-			TruncateFrameName(f)
-		end
-	end
+	-- Name truncation was removed to avoid touching CompactUnitFrame name update flows.
+	-- Keep no-op functions for compatibility with any lingering callers.
+	addon.functions.EnsureUnitFrameNameHooks = function() end
+	addon.functions.updateUnitFrameNames = function() end
 
 	function addon.functions.updatePartyFrameScale()
 		if not addon.db["unitFrameScaleEnabled"] then return end
@@ -3355,7 +3290,6 @@ local function initUnitFrame()
 		end
 	end
 
-	if addon.db["unitFrameTruncateNames"] then addon.functions.updateUnitFrameNames() end
 	if addon.db["unitFrameScaleEnabled"] then addon.functions.updatePartyFrameScale() end
 	-- Apply resting visuals if option is enabled
 	if addon.db["hideRestingGlow"] and addon.functions.ApplyRestingVisuals then addon.functions.ApplyRestingVisuals() end
@@ -3515,6 +3449,7 @@ local function initChatFrame()
 			if addon.db and addon.db.chatEditBoxOnTop and addon.functions.ApplyChatEditBoxOnTop then addon.functions.ApplyChatEditBoxOnTop(true) end
 			if addon.db and addon.db.chatUnclampFrame and addon.functions.ApplyChatUnclampFrame then addon.functions.ApplyChatUnclampFrame(true) end
 			if addon.db and addon.db.chatHideCombatLogTab and addon.functions.ApplyChatHideCombatLogTab then addon.functions.ApplyChatHideCombatLogTab(true) end
+			if addon.db and addon.functions.ApplyChatFrameFade then addon.functions.ApplyChatFrameFade() end
 		end)
 
 		hooksecurefunc("FCF_SetTabPosition", function()
@@ -3529,6 +3464,7 @@ local function initChatFrame()
 			if addon.db and addon.db.chatEditBoxOnTop and addon.functions.ApplyChatEditBoxOnTop then addon.functions.ApplyChatEditBoxOnTop(true) end
 			if addon.db and addon.db.chatUnclampFrame and addon.functions.ApplyChatUnclampFrame then addon.functions.ApplyChatUnclampFrame(true) end
 			if addon.db and addon.db.chatHideCombatLogTab and addon.functions.ApplyChatHideCombatLogTab then addon.functions.ApplyChatHideCombatLogTab(true) end
+			if addon.db and addon.functions.ApplyChatFrameFade then addon.functions.ApplyChatFrameFade() end
 		end)
 		addon.variables.chatFrameWatcher = frame
 	end
@@ -3555,42 +3491,11 @@ local function initChatFrame()
 			ensureChatFrameHooks()
 		end
 
-	local function storeEditBoxPoints(editBox)
-		addon.variables = addon.variables or {}
-		addon.variables.chatEditBoxAnchorCache = addon.variables.chatEditBoxAnchorCache or {}
-		local cache = addon.variables.chatEditBoxAnchorCache
-		if cache[editBox] then return end
-		local points = {}
-		for i = 1, editBox:GetNumPoints() do
-			points[i] = { editBox:GetPoint(i) }
-		end
-		cache[editBox] = { points = points, width = editBox:GetWidth(), height = editBox:GetHeight() }
-	end
-
-	local function restoreEditBoxPoints(editBox)
-		addon.variables = addon.variables or {}
-		local cache = addon.variables.chatEditBoxAnchorCache
-		local state = cache and cache[editBox]
-		if not state then return end
-		editBox:ClearAllPoints()
-		if state.points then
-			for _, point in ipairs(state.points) do
-				editBox:SetPoint(point[1], point[2], point[3], point[4], point[5])
-			end
-		end
-		if not state.points or #state.points == 0 then
-			if state.width then editBox:SetWidth(state.width) end
-			if state.height then editBox:SetHeight(state.height) end
-		end
-		cache[editBox] = nil
-	end
-
 	addon.functions.ApplyChatEditBoxOnTop = addon.functions.ApplyChatEditBoxOnTop
 		or function(enabled)
 			forEachChatFrame(function(frame, editBox)
 				if not (frame and editBox) then return end
 				if enabled then
-					storeEditBoxPoints(editBox)
 					editBox:ClearAllPoints()
 					editBox:SetPoint("TOPLEFT", frame, "TOPLEFT", 0, 0)
 					editBox:SetWidth(frame:GetWidth())
@@ -3600,8 +3505,6 @@ local function initChatFrame()
 						end)
 						frame.eqolEditBoxSizeHooked = true
 					end
-				else
-					restoreEditBoxPoints(editBox)
 				end
 			end)
 
@@ -3640,6 +3543,23 @@ local function initChatFrame()
 				else
 					restoreChatClampState(frame)
 				end
+			end)
+
+			ensureChatFrameHooks()
+		end
+
+	addon.functions.ApplyChatFrameFade = addon.functions.ApplyChatFrameFade
+		or function()
+			if not addon.db then return end
+			local enabled = addon.db["chatFrameFadeEnabled"]
+			local timeVisible = addon.db["chatFrameFadeTimeVisible"]
+			local fadeDuration = addon.db["chatFrameFadeDuration"]
+			if enabled == nil or timeVisible == nil or fadeDuration == nil then return end
+
+			forEachChatFrame(function(frame)
+				if frame.SetFading then frame:SetFading(enabled) end
+				if frame.SetTimeVisible then frame:SetTimeVisible(timeVisible) end
+				if frame.SetFadeDuration then frame:SetFadeDuration(fadeDuration) end
 			end)
 
 			ensureChatFrameHooks()
@@ -3717,15 +3637,12 @@ local function initChatFrame()
 		addon.functions.InitDBValue("chatFrameFadeEnabled", ChatFrame1:GetFading())
 		addon.functions.InitDBValue("chatFrameFadeTimeVisible", ChatFrame1:GetTimeVisible())
 		addon.functions.InitDBValue("chatFrameFadeDuration", ChatFrame1:GetFadeDuration())
-
-		ChatFrame1:SetFading(addon.db["chatFrameFadeEnabled"])
-		ChatFrame1:SetTimeVisible(addon.db["chatFrameFadeTimeVisible"])
-		ChatFrame1:SetFadeDuration(addon.db["chatFrameFadeDuration"])
 	else
 		addon.functions.InitDBValue("chatFrameFadeEnabled", true)
 		addon.functions.InitDBValue("chatFrameFadeTimeVisible", 120)
 		addon.functions.InitDBValue("chatFrameFadeDuration", 3)
 	end
+	if addon.functions.ApplyChatFrameFade then addon.functions.ApplyChatFrameFade() end
 
 	addon.functions.InitDBValue("chatFrameMaxLines2000", false)
 	addon.functions.InitDBValue("enableChatIM", false)
@@ -3828,7 +3745,11 @@ end
 local initLootToast
 
 initLootToast = function()
-	if (addon.db.enableLootToastFilter or addon.db.enableLootToastAnchor or addon.db.enableGroupLootAnchor) and addon.LootToast and addon.LootToast.Enable then
+	if
+		(addon.db.enableLootToastFilter or addon.db.enableLootToastAnchor or addon.db.enableGroupLootAnchor or addon.db.enableMajorFactionsRenownToastAnchor)
+		and addon.LootToast
+		and addon.LootToast.Enable
+	then
 		addon.LootToast:Enable()
 	elseif addon.LootToast and addon.LootToast.Disable then
 		addon.LootToast:Disable()
@@ -3842,6 +3763,7 @@ local function initUI()
 	addon.functions.InitDBValue("frameVisibilityFadeStrength", 1)
 	addon.functions.InitDBValue("buttonsink", {})
 	addon.functions.InitDBValue("buttonSinkAnchorPreference", "AUTO")
+	addon.functions.InitDBValue("minimapButtonBinIconClickToggle", false)
 	addon.functions.InitDBValue("minimapButtonBinColumns", DEFAULT_BUTTON_SINK_COLUMNS)
 	addon.functions.InitDBValue("minimapButtonBinHideBackground", false)
 	addon.functions.InitDBValue("minimapButtonBinHideBorder", false)
@@ -3861,8 +3783,62 @@ local function initUI()
 	addon.functions.InitDBValue("enableSquareMinimapLayout", false)
 	addon.functions.InitDBValue("squareMinimapBorderSize", 1)
 	addon.functions.InitDBValue("squareMinimapBorderColor", { r = 0, g = 0, b = 0 })
+	addon.functions.InitDBValue("enableSquareMinimapStats", false)
+	addon.functions.InitDBValue("squareMinimapStatsFont", STANDARD_TEXT_FONT)
+	addon.functions.InitDBValue("squareMinimapStatsOutline", "OUTLINE")
+	addon.functions.InitDBValue("squareMinimapStatsTime", true)
+	addon.functions.InitDBValue("squareMinimapStatsTimeAnchor", "BOTTOMLEFT")
+	addon.functions.InitDBValue("squareMinimapStatsTimeOffsetX", 3)
+	addon.functions.InitDBValue("squareMinimapStatsTimeOffsetY", 17)
+	addon.functions.InitDBValue("squareMinimapStatsTimeFontSize", 18)
+	addon.functions.InitDBValue("squareMinimapStatsTimeColor", { r = 1, g = 1, b = 1, a = 1 })
+	addon.functions.InitDBValue("squareMinimapStatsTimeDisplayMode", "server")
+	addon.functions.InitDBValue("squareMinimapStatsTimeUse24Hour", true)
+	addon.functions.InitDBValue("squareMinimapStatsTimeShowSeconds", false)
+	addon.functions.InitDBValue("squareMinimapStatsFPS", true)
+	addon.functions.InitDBValue("squareMinimapStatsFPSAnchor", "BOTTOMLEFT")
+	addon.functions.InitDBValue("squareMinimapStatsFPSOffsetX", 3)
+	addon.functions.InitDBValue("squareMinimapStatsFPSOffsetY", 3)
+	addon.functions.InitDBValue("squareMinimapStatsFPSFontSize", 12)
+	addon.functions.InitDBValue("squareMinimapStatsFPSColor", { r = 1, g = 1, b = 1, a = 1 })
+	addon.functions.InitDBValue("squareMinimapStatsFPSThresholdMedium", 30)
+	addon.functions.InitDBValue("squareMinimapStatsFPSThresholdHigh", 60)
+	addon.functions.InitDBValue("squareMinimapStatsFPSColorLow", { r = 1, g = 0, b = 0, a = 1 })
+	addon.functions.InitDBValue("squareMinimapStatsFPSColorMid", { r = 1, g = 1, b = 0, a = 1 })
+	addon.functions.InitDBValue("squareMinimapStatsFPSColorHigh", { r = 0, g = 1, b = 0, a = 1 })
+	addon.functions.InitDBValue("squareMinimapStatsFPSUpdateInterval", 0.25)
+	addon.functions.InitDBValue("squareMinimapStatsLatency", true)
+	addon.functions.InitDBValue("squareMinimapStatsLatencyAnchor", "BOTTOMRIGHT")
+	addon.functions.InitDBValue("squareMinimapStatsLatencyOffsetX", -3)
+	addon.functions.InitDBValue("squareMinimapStatsLatencyOffsetY", 3)
+	addon.functions.InitDBValue("squareMinimapStatsLatencyFontSize", 12)
+	addon.functions.InitDBValue("squareMinimapStatsLatencyColor", { r = 1, g = 1, b = 1, a = 1 })
+	addon.functions.InitDBValue("squareMinimapStatsLatencyMode", "max")
+	addon.functions.InitDBValue("squareMinimapStatsLatencyThresholdLow", 50)
+	addon.functions.InitDBValue("squareMinimapStatsLatencyThresholdMid", 150)
+	addon.functions.InitDBValue("squareMinimapStatsLatencyColorLow", { r = 0, g = 1, b = 0, a = 1 })
+	addon.functions.InitDBValue("squareMinimapStatsLatencyColorMid", { r = 1, g = 0.65, b = 0, a = 1 })
+	addon.functions.InitDBValue("squareMinimapStatsLatencyColorHigh", { r = 1, g = 0, b = 0, a = 1 })
+	addon.functions.InitDBValue("squareMinimapStatsLatencyUpdateInterval", 1.0)
+	addon.functions.InitDBValue("squareMinimapStatsLocation", true)
+	addon.functions.InitDBValue("squareMinimapStatsLocationAnchor", "TOP")
+	addon.functions.InitDBValue("squareMinimapStatsLocationOffsetX", 0)
+	addon.functions.InitDBValue("squareMinimapStatsLocationOffsetY", -3)
+	addon.functions.InitDBValue("squareMinimapStatsLocationFontSize", 12)
+	addon.functions.InitDBValue("squareMinimapStatsLocationColor", { r = 1, g = 1, b = 1, a = 1 })
+	addon.functions.InitDBValue("squareMinimapStatsLocationShowSubzone", false)
+	addon.functions.InitDBValue("squareMinimapStatsLocationUseZoneColor", true)
+	addon.functions.InitDBValue("squareMinimapStatsCoordinates", true)
+	addon.functions.InitDBValue("squareMinimapStatsCoordinatesAnchor", "TOP")
+	addon.functions.InitDBValue("squareMinimapStatsCoordinatesOffsetX", 0)
+	addon.functions.InitDBValue("squareMinimapStatsCoordinatesOffsetY", -17)
+	addon.functions.InitDBValue("squareMinimapStatsCoordinatesFontSize", 12)
+	addon.functions.InitDBValue("squareMinimapStatsCoordinatesColor", { r = 1, g = 1, b = 1, a = 1 })
+	addon.functions.InitDBValue("squareMinimapStatsCoordinatesHideInInstance", true)
+	addon.functions.InitDBValue("squareMinimapStatsCoordinatesUpdateInterval", 0.2)
 	addon.functions.InitDBValue("minimapButtonsMouseover", false)
 	addon.functions.InitDBValue("unclampMinimapCluster", false)
+	addon.functions.InitDBValue("unclampDamageMeter", false)
 	addon.functions.InitDBValue("enableMinimapClusterScale", false)
 	addon.functions.InitDBValue("minimapClusterScale", 1)
 	addon.functions.InitDBValue("showWorldMapCoordinates", false)
@@ -4009,6 +3985,62 @@ local function initUI()
 		if addon.functions.applySquareMinimapBorder then addon.functions.applySquareMinimapBorder() end
 		if addon.functions.applySquareMinimapHousingBackdrop then addon.functions.applySquareMinimapHousingBackdrop() end
 	end)
+
+	function addon.functions.applyDamageMeterClamp()
+		local damageMeter = _G.DamageMeter
+		local clampedToScreen = not (addon.db and addon.db.unclampDamageMeter == true)
+
+		local function applyClamp(frame)
+			if frame and frame.SetClampedToScreen then frame:SetClampedToScreen(clampedToScreen) end
+		end
+
+		applyClamp(damageMeter)
+
+		if damageMeter and damageMeter.ForEachSessionWindow then
+			damageMeter:ForEachSessionWindow(function(sessionWindow) applyClamp(sessionWindow) end)
+		else
+			for index = 1, 3 do
+				applyClamp(_G["DamageMeterSessionWindow" .. index])
+			end
+		end
+	end
+
+	local function ensureDamageMeterClampHook()
+		addon.variables = addon.variables or {}
+		if addon.variables.damageMeterClampHooked then return end
+
+		local damageMeter = _G.DamageMeter
+		if not (damageMeter and damageMeter.SetupSessionWindow) then return end
+
+		hooksecurefunc(damageMeter, "SetupSessionWindow", function()
+			if addon.functions and addon.functions.applyDamageMeterClamp then addon.functions.applyDamageMeterClamp() end
+		end)
+
+		addon.variables.damageMeterClampHooked = true
+	end
+
+	local function onDamageMeterAddonLoaded()
+		ensureDamageMeterClampHook()
+		if addon.functions.applyDamageMeterClamp then addon.functions.applyDamageMeterClamp() end
+	end
+
+	addon.variables = addon.variables or {}
+	if not addon.variables.damageMeterClampLoadHookRegistered then
+		addon.variables.damageMeterClampLoadHookRegistered = true
+		if EventUtil and EventUtil.ContinueOnAddOnLoaded then
+			EventUtil.ContinueOnAddOnLoaded("Blizzard_DamageMeter", onDamageMeterAddonLoaded)
+		else
+			local clampLoader = CreateFrame("Frame")
+			clampLoader:RegisterEvent("ADDON_LOADED")
+			clampLoader:SetScript("OnEvent", function(_, _, loadedAddonName)
+				if loadedAddonName ~= "Blizzard_DamageMeter" then return end
+				onDamageMeterAddonLoaded()
+				clampLoader:UnregisterEvent("ADDON_LOADED")
+			end)
+		end
+	end
+
+	onDamageMeterAddonLoaded()
 
 	function addon.functions.applyMinimapClusterClamp()
 		if not MinimapCluster or not MinimapCluster.SetClampedToScreen then return end
@@ -4455,7 +4487,7 @@ local function initUI()
 
 			if addon.db["useMinimapButtonBinIcon"] then
 				buttonBag:SetScript("OnLeave", function(self)
-					if addon.db["useMinimapButtonBinIcon"] then C_Timer.After(1, function() hoverOutFrame() end) end
+					if addon.db["useMinimapButtonBinIcon"] and addon.db["minimapButtonBinIconClickToggle"] ~= true then C_Timer.After(1, function() hoverOutFrame() end) end
 				end)
 			else
 				if not addon.db["lockMinimapButtonBin"] then
@@ -4497,11 +4529,26 @@ local function initUI()
 					icon = "Interface\\AddOns\\" .. addonName .. "\\Icons\\SinkHole.tga" or "Interface\\ICONS\\INV_Misc_QuestionMark", -- irgendein Icon
 					label = addonName .. "_ButtonSinkMap",
 					OnEnter = function(self)
-						positionBagFrame(addon.variables.buttonSink, LDBIcon.objects[addonName .. "_ButtonSinkMap"])
+						if addon.db["minimapButtonBinIconClickToggle"] then return end
+						local anchorButton = LDBIcon.objects[addonName .. "_ButtonSinkMap"] or self
+						if not anchorButton then return end
+						positionBagFrame(addon.variables.buttonSink, anchorButton)
 						addon.variables.buttonSink:Show()
 					end,
+					OnClick = function(self, button)
+						if addon.db["minimapButtonBinIconClickToggle"] ~= true then return end
+						if button and button ~= "LeftButton" then return end
+						if not addon.variables.buttonSink then return end
+						if addon.variables.buttonSink:IsShown() then
+							addon.variables.buttonSink:Hide()
+						else
+							local anchorButton = LDBIcon.objects[addonName .. "_ButtonSinkMap"] or self
+							if anchorButton then positionBagFrame(addon.variables.buttonSink, anchorButton) end
+							addon.variables.buttonSink:Show()
+						end
+					end,
 					OnLeave = function(self)
-						if addon.db["useMinimapButtonBinIcon"] then C_Timer.After(1, function() hoverOutFrame() end) end
+						if addon.db["useMinimapButtonBinIcon"] and addon.db["minimapButtonBinIconClickToggle"] ~= true then C_Timer.After(1, function() hoverOutFrame() end) end
 					end,
 				}
 				-- Registriere das Icon bei LibDBIcon
@@ -4626,8 +4673,8 @@ local function initUI()
 			columns = math.floor(columns + 0.5)
 			if columns < 1 then
 				columns = 1
-			elseif columns > 10 then
-				columns = 10
+			elseif columns > 99 then
+				columns = 99
 			end
 			if addon.variables.buttonSink then
 				local index = 0
@@ -5111,13 +5158,38 @@ local function CreateUI()
 			end)
 		end
 
+		local ufProfiles = addon.Aura and addon.Aura.UF and addon.Aura.UF.Profiles
+		if ufProfiles and ufProfiles.GetSortedNames then
+			local names = ufProfiles.GetSortedNames()
+			if #names > 0 then
+				DoDevider()
+				local menu = root:CreateButton(L["UFProfileMenuTitle"] or "Unit Frames profile")
+				local activeName = ufProfiles.GetActiveName and ufProfiles.GetActiveName()
+				if activeName and activeName ~= "" then
+					local activeLabel = (L["UFProfileMenuActive"] or "Active: %s"):format(activeName)
+					local activeButton = menu:CreateButton(activeLabel)
+					if activeButton and activeButton.SetEnabled then activeButton:SetEnabled(false) end
+					if menu.CreateDivider then menu:CreateDivider() end
+				end
+				for _, profileName in ipairs(names) do
+					menu:CreateRadio(profileName, function() return (ufProfiles.GetActiveName and ufProfiles.GetActiveName()) == profileName end, function()
+						local ok = ufProfiles.SetActiveName and ufProfiles.SetActiveName(profileName, "MINIMAP_MENU")
+						if not ok then print("|cff00ff98Enhance QoL|r: " .. tostring(L["UFProfileSetActiveFailed"] or "Could not switch the active Unit Frames profile.")) end
+						return MenuResponse and MenuResponse.Close
+					end)
+				end
+			end
+		end
+
 		DoDevider()
 		root:CreateButton(L["CooldownPanelEditor"] or "Cooldown Panel Editor", function()
 			if addon.Aura and addon.Aura.CooldownPanels and addon.Aura.CooldownPanels.OpenEditor then addon.Aura.CooldownPanels:OpenEditor() end
 		end)
+		--[==[@debug@
 		root:CreateButton(L["VisibilityEditor"] or "Visibility Configurator", function()
 			if addon.Visibility and addon.Visibility.OpenEditor then addon.Visibility:OpenEditor() end
 		end)
+		--@end-debug@]==]
 	end
 
 	-- Datenobjekt fr den Minimap-Button
@@ -5153,28 +5225,18 @@ local function CreateUI()
 	})
 end
 
+local ensureClassResourceHideHook
+
 local function updateClassResourceVisibility()
 	if not addon.db then return end
 	local ufActive = addon.db.ufFrames and addon.db.ufFrames.player and addon.db.ufFrames.player.enabled
 	local _, classTag = UnitClass("player")
 	if not classTag then return end
-
-	local function showFrame(frame)
-		if not frame then return end
-		if frame.Setup then
-			frame:Setup()
-		else
-			frame:Show()
-		end
-	end
+	if ensureClassResourceHideHook then ensureClassResourceHideHook() end
 
 	local function apply(frame, hideKey)
 		if not frame then return end
-		if addon.db[hideKey] and not ufActive then
-			frame:Hide()
-		else
-			showFrame(frame)
-		end
+		if addon.db[hideKey] and not ufActive then frame:Hide() end
 	end
 
 	if classTag == "DEATHKNIGHT" then
@@ -5196,75 +5258,36 @@ end
 
 addon.functions.UpdateClassResourceVisibility = updateClassResourceVisibility
 
+local classResourceHideHooks = {}
+local classResourceHideConfig = {
+	DEATHKNIGHT = { frameName = "RuneFrame", hideKey = "deathknight_HideRuneFrame" },
+	DRUID = { frameName = "DruidComboPointBarFrame", hideKey = "druid_HideComboPoint" },
+	EVOKER = { frameName = "EssencePlayerFrame", hideKey = "evoker_HideEssence" },
+	MONK = { frameName = "MonkHarmonyBarFrame", hideKey = "monk_HideHarmonyBar" },
+	ROGUE = { frameName = "RogueComboPointBarFrame", hideKey = "rogue_HideComboPoint" },
+	PALADIN = { frameName = "PaladinPowerBarFrame", hideKey = "paladin_HideHolyPower" },
+	WARLOCK = { frameName = "WarlockPowerFrame", hideKey = "warlock_HideSoulShardBar" },
+}
+
+local function isPlayerUFActive() return addon.db and addon.db.ufFrames and addon.db.ufFrames.player and addon.db.ufFrames.player.enabled end
+
+local function shouldHideClassResource(hideKey) return addon.db and addon.db[hideKey] and not isPlayerUFActive() end
+
+ensureClassResourceHideHook = function()
+	local _, classTag = UnitClass("player")
+	local cfg = classTag and classResourceHideConfig[classTag]
+	if not cfg or not addon.db or not addon.db[cfg.hideKey] then return end
+	if classResourceHideHooks[cfg.hideKey] then return end
+	local frame = _G[cfg.frameName]
+	if not frame then return end
+	classResourceHideHooks[cfg.hideKey] = true
+	hooksecurefunc(frame, "Show", function(self)
+		if shouldHideClassResource(cfg.hideKey) then self:Hide() end
+	end)
+end
+
 local function setAllHooks()
-	if RuneFrame then
-		RuneFrame:HookScript("OnShow", function(self)
-			local ufActive = addon.db and addon.db.ufFrames and addon.db.ufFrames.player and addon.db.ufFrames.player.enabled
-			if addon.db["deathknight_HideRuneFrame"] and not ufActive then
-				RuneFrame:Hide()
-			else
-				RuneFrame:Show()
-			end
-		end)
-
-		if addon.db["deathknight_HideRuneFrame"] and not (addon.db and addon.db.ufFrames and addon.db.ufFrames.player and addon.db.ufFrames.player.enabled) then RuneFrame:Hide() end
-	end
-
-	if DruidComboPointBarFrame then
-		DruidComboPointBarFrame:HookScript("OnShow", function(self)
-			local ufActive = addon.db and addon.db.ufFrames and addon.db.ufFrames.player and addon.db.ufFrames.player.enabled
-			if addon.db["druid_HideComboPoint"] and not ufActive then
-				DruidComboPointBarFrame:Hide()
-			else
-				DruidComboPointBarFrame:Show()
-			end
-		end)
-		if addon.db["druid_HideComboPoint"] and not (addon.db and addon.db.ufFrames and addon.db.ufFrames.player and addon.db.ufFrames.player.enabled) then DruidComboPointBarFrame:Hide() end
-	end
-
-	if EssencePlayerFrame then
-		EssencePlayerFrame:HookScript("OnShow", function(self)
-			local ufActive = addon.db and addon.db.ufFrames and addon.db.ufFrames.player and addon.db.ufFrames.player.enabled
-			if addon.db["evoker_HideEssence"] and not ufActive then EssencePlayerFrame:Hide() end
-		end)
-		if addon.db["evoker_HideEssence"] and not (addon.db and addon.db.ufFrames and addon.db.ufFrames.player and addon.db.ufFrames.player.enabled) then EssencePlayerFrame:Hide() end -- Initialset
-	end
-
-	if MonkHarmonyBarFrame then
-		MonkHarmonyBarFrame:HookScript("OnShow", function(self)
-			local ufActive = addon.db and addon.db.ufFrames and addon.db.ufFrames.player and addon.db.ufFrames.player.enabled
-			if addon.db["monk_HideHarmonyBar"] and not ufActive then
-				MonkHarmonyBarFrame:Hide()
-			else
-				MonkHarmonyBarFrame:Show()
-			end
-		end)
-		if addon.db["monk_HideHarmonyBar"] and not (addon.db and addon.db.ufFrames and addon.db.ufFrames.player and addon.db.ufFrames.player.enabled) then MonkHarmonyBarFrame:Hide() end
-	end
-
-	if RogueComboPointBarFrame then
-		RogueComboPointBarFrame:HookScript("OnShow", function(self)
-			local ufActive = addon.db and addon.db.ufFrames and addon.db.ufFrames.player and addon.db.ufFrames.player.enabled
-			if addon.db["rogue_HideComboPoint"] and not ufActive then
-				RogueComboPointBarFrame:Hide()
-			else
-				RogueComboPointBarFrame:Show()
-			end
-		end)
-		if addon.db["rogue_HideComboPoint"] and not (addon.db and addon.db.ufFrames and addon.db.ufFrames.player and addon.db.ufFrames.player.enabled) then RogueComboPointBarFrame:Hide() end
-	end
-
-	if PaladinPowerBarFrame then
-		PaladinPowerBarFrame:HookScript("OnShow", function(self)
-			local ufActive = addon.db and addon.db.ufFrames and addon.db.ufFrames.player and addon.db.ufFrames.player.enabled
-			if addon.db["paladin_HideHolyPower"] and not ufActive then
-				PaladinPowerBarFrame:Hide()
-			else
-				PaladinPowerBarFrame:Show()
-			end
-		end)
-		if addon.db["paladin_HideHolyPower"] and not (addon.db and addon.db.ufFrames and addon.db.ufFrames.player and addon.db.ufFrames.player.enabled) then PaladinPowerBarFrame:Hide() end
-	end
+	updateClassResourceVisibility()
 
 	if TotemFrame then
 		local classname = string.lower(select(2, UnitClass("player")))
@@ -5276,18 +5299,6 @@ local function setAllHooks()
 			end
 		end)
 		if addon.db[classname .. "_HideTotemBar"] then TotemFrame:Hide() end
-	end
-
-	if WarlockPowerFrame then
-		WarlockPowerFrame:HookScript("OnShow", function(self)
-			local ufActive = addon.db and addon.db.ufFrames and addon.db.ufFrames.player and addon.db.ufFrames.player.enabled
-			if addon.db["warlock_HideSoulShardBar"] and not ufActive then
-				WarlockPowerFrame:Hide()
-			else
-				WarlockPowerFrame:Show()
-			end
-		end)
-		if addon.db["warlock_HideSoulShardBar"] and not (addon.db and addon.db.ufFrames and addon.db.ufFrames.player and addon.db.ufFrames.player.enabled) then WarlockPowerFrame:Hide() end
 	end
 
 	local ignoredApplicants = {}
@@ -5435,6 +5446,7 @@ local function setAllHooks()
 		if addon.Drinks.functions.InitFoodReminder then addon.Drinks.functions.InitFoodReminder() end
 	end
 	if addon.Health and addon.Health.functions and addon.Health.functions.InitHealthMacro then addon.Health.functions.InitHealthMacro() end
+	if addon.Flasks and addon.Flasks.functions and addon.Flasks.functions.InitFlaskMacro then addon.Flasks.functions.InitFlaskMacro() end
 	if addon.Mouse and addon.Mouse.functions then
 		if addon.Mouse.functions.InitDB then addon.Mouse.functions.InitDB() end
 		if addon.Mouse.functions.InitState then addon.Mouse.functions.InitState() end
@@ -5483,6 +5495,7 @@ function loadMain()
 	-- Slash-Command hinzufügen
 	SLASH_ENHANCEQOL1 = "/eqol"
 	SlashCmdList["ENHANCEQOL"] = function(msg)
+		msg = tostring(msg or "")
 		if msg:match("^aag%s*(%d+)$") then
 			local id = tonumber(msg:match("^aag%s*(%d+)$")) -- Extrahiere die ID
 			if id then
@@ -5515,6 +5528,27 @@ function loadMain()
 			end
 		elseif msg == "rq" then
 			if addon.Query and addon.Query.frame then addon.Query.frame:Show() end
+		elseif msg:match("^hbp") then
+			if InCombatLockdown and InCombatLockdown() then return end
+
+			local kind = "raid"
+			local arg = msg:match("^hbp%s+(%S+)")
+			arg = arg and arg:lower() or ""
+			if arg == "party" or arg == "p" then kind = "party" end
+			if arg == "raid" or arg == "r" then kind = "raid" end
+
+			local function openHealerBuffEditor()
+				local UF = addon.Aura and addon.Aura.UF
+				local editor = UF and UF.GroupFramesHealerBuffEditor
+				if editor and editor.Toggle then
+					editor:Toggle(kind)
+					return
+				end
+				local GF = UF and UF.GroupFrames
+				if GF and GF.ToggleHealerBuffPlacementEditor then GF:ToggleHealerBuffPlacementEditor(kind) end
+			end
+
+			openHealerBuffEditor()
 		else
 			OpenSettingsRoot()
 		end
@@ -5539,6 +5573,45 @@ local function shouldAutoChooseQuest()
 	if modifier == "SHIFT" or modifier == "CTRL" or modifier == "ALT" then return isQuestAutomationModifierHeld(modifier) end
 	-- Legacy behavior: allow auto questing unless Shift is held
 	return not IsShiftKeyDown()
+end
+
+local COPPER_PER_GOLD = 10000
+
+function addon.functions.AutoSyncWarbandGold()
+	if not addon.db or not addon.db["autoWarbandGold"] then return end
+	if not C_Bank or not Enum or not Enum.BankType or not Enum.BankType.Account then return end
+
+	local bankType = Enum.BankType.Account
+	if not C_Bank.DoesBankTypeSupportMoneyTransfer or not C_Bank.DoesBankTypeSupportMoneyTransfer(bankType) then return end
+	if not C_Bank.CanUseBank or not C_Bank.CanUseBank(bankType) then return end
+
+	local targetGold = tonumber(addon.db["autoWarbandGoldTargetGold"]) or 0
+	local playerGuid = UnitGUID("player")
+	local perCharacterTargets = addon.db["autoWarbandGoldPerCharacter"]
+	if type(perCharacterTargets) == "table" and playerGuid and perCharacterTargets[playerGuid] ~= nil then targetGold = tonumber(perCharacterTargets[playerGuid]) or targetGold end
+	if targetGold < 0 then targetGold = 0 end
+	local targetCopper = math.floor((targetGold * COPPER_PER_GOLD) + 0.5)
+	local playerMoney = GetMoney() or 0
+
+	if playerMoney > targetCopper then
+		if not (C_Bank.CanDepositMoney and C_Bank.DepositMoney and C_Bank.CanDepositMoney(bankType)) then return end
+		local amountToDeposit = playerMoney - targetCopper
+		if amountToDeposit <= 0 then return end
+		C_Bank.DepositMoney(bankType, amountToDeposit)
+		print((L["autoWarbandGoldDeposited"] or "Deposited %s to Warband bank."):format(addon.functions.formatMoney(amountToDeposit)))
+		return
+	end
+
+	if not addon.db["autoWarbandGoldWithdraw"] then return end
+	if playerMoney >= targetCopper then return end
+	if not (C_Bank.CanWithdrawMoney and C_Bank.WithdrawMoney and C_Bank.CanWithdrawMoney(bankType)) then return end
+
+	local warbandMoney = C_Bank.FetchDepositedMoney and C_Bank.FetchDepositedMoney(bankType) or 0
+	local amountToWithdraw = math.min(targetCopper - playerMoney, warbandMoney)
+	if amountToWithdraw <= 0 then return end
+
+	C_Bank.WithdrawMoney(bankType, amountToWithdraw)
+	print((L["autoWarbandGoldWithdrawn"] or "Withdrew %s from Warband bank."):format(addon.functions.formatMoney(amountToWithdraw)))
 end
 
 local function loadSubAddon(name)
@@ -5618,6 +5691,16 @@ local eventHandlers = {
 			if not EnhanceQoLDB.profiles[defaultProfile] or type(EnhanceQoLDB.profiles[defaultProfile]) ~= "table" then EnhanceQoLDB.profiles[defaultProfile] = {} end
 
 			addon.db = EnhanceQoLDB.profiles[defaultProfile]
+			if type(EnhanceQoLDB._temp) == "table" then
+				EnhanceQoLDB._temp.ufProfileDebug = nil
+				EnhanceQoLDB._temp.ufProfileTrace = nil
+				if not next(EnhanceQoLDB._temp) then EnhanceQoLDB._temp = nil end
+			end
+			if type(addon.db._temp) == "table" then
+				addon.db._temp.ufProfileDebug = nil
+				addon.db._temp.ufProfileTrace = nil
+				if not next(addon.db._temp) then addon.db._temp = nil end
+			end
 
 			if next(legacy) then
 				for k, v in pairs(legacy) do
@@ -5858,8 +5941,15 @@ local eventHandlers = {
 			if CharacterFrame:IsShown() == false then ToggleCharacter("PaperDollFrame") end
 		end
 	end,
+	["BANKFRAME_OPENED"] = function()
+		C_Timer.After(0, function()
+			if addon.functions and addon.functions.AutoSyncWarbandGold then addon.functions.AutoSyncWarbandGold() end
+		end)
+	end,
 	["PLAYER_LOGIN"] = function()
 		addon.functions.applyUIScalePreset()
+
+		addon.variables.screenHeight = GetScreenHeight()
 
 		if addon.db["enableMinimapButtonBin"] then addon.functions.toggleButtonSink() end
 		if addon.db["actionBarAnchorEnabled"] then RefreshAllActionBarAnchors() end

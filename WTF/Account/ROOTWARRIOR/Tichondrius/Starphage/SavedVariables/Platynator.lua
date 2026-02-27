@@ -2,5 +2,5 @@
 PLATYNATOR_CURRENT_PROFILE = "DEFAULT"
 PLATYNATOR_LAST_INSTANCE = {
 ["inInstance"] = false,
-["level"] = 80,
+["level"] = 84,
 }

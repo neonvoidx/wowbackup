@@ -1,21 +1,21 @@
 
 ExtraQuestButtonDB3 = {
 ["profiles"] = {
-["Default Heals"] = {
+["Modern"] = {
 ["artworkAlpha"] = 1,
-["noCooldownText"] = false,
+["artworkStyle"] = "Default",
 ["trackingOnly"] = false,
 ["position"] = {
 ["y"] = 0,
 ["x"] = 0,
 ["point"] = "CENTER",
 },
-["artworkStyle"] = "Default",
-["zoneOnly"] = false,
-["distanceYd"] = 1000,
 ["scale"] = 1,
+["distanceYd"] = 1000,
+["zoneOnly"] = false,
+["noCooldownText"] = false,
 },
-["Default"] = {
+["Default bot"] = {
 ["artworkAlpha"] = 1,
 ["artworkStyle"] = "Default",
 ["trackingOnly"] = false,
@@ -25,9 +25,23 @@ ExtraQuestButtonDB3 = {
 ["point"] = "BOTTOM",
 },
 ["scale"] = 1,
+["distanceYd"] = 1000,
+["zoneOnly"] = false,
+["noCooldownText"] = false,
+},
+["Default"] = {
+["artworkAlpha"] = 1,
+["scale"] = 1,
+["trackingOnly"] = false,
+["position"] = {
+["y"] = -87.50096130371094,
+["x"] = 1.6632080078125,
+["point"] = "CENTER",
+},
+["noCooldownText"] = false,
 ["zoneOnly"] = false,
 ["distanceYd"] = 1000,
-["noCooldownText"] = false,
+["artworkStyle"] = "Default",
 },
 ["MidScreen"] = {
 ["artworkAlpha"] = 1,
@@ -57,33 +71,19 @@ ExtraQuestButtonDB3 = {
 ["distanceYd"] = 1000,
 ["noCooldownText"] = false,
 },
-["Modern"] = {
+["Default Heals"] = {
 ["artworkAlpha"] = 1,
-["artworkStyle"] = "Default",
+["noCooldownText"] = false,
 ["trackingOnly"] = false,
 ["position"] = {
 ["y"] = 0,
 ["x"] = 0,
 ["point"] = "CENTER",
 },
-["scale"] = 1,
-["distanceYd"] = 1000,
-["zoneOnly"] = false,
-["noCooldownText"] = false,
-},
-["Default Bot"] = {
-["artworkAlpha"] = 1,
 ["artworkStyle"] = "Default",
-["trackingOnly"] = false,
-["position"] = {
-["y"] = -166.66650390625,
-["x"] = -117.4989013671875,
-["point"] = "CENTER",
-},
-["scale"] = 1,
-["distanceYd"] = 1000,
 ["zoneOnly"] = false,
-["noCooldownText"] = false,
+["distanceYd"] = 1000,
+["scale"] = 1,
 },
 },
 }

@@ -2,7 +2,7 @@
 ## Title: Fresh DRs
 ## Notes: Shows diminishing returns on nameplates.
 ## Author: lesh
-## Version: 0.2
+## Version: 0.8
 ## Notes: /ndr or /fdr for options
 ## SavedVariables: FreshDRsDB
 

@@ -3,49 +3,52 @@ MJEPersonalSettings = {
 ["notes"] = {
 },
 ["trackUsageStats"] = false,
-["summonPreviousPetAgain"] = true,
-["personalFilter"] = false,
-["filterProfile"] = {
-{
-["search"] = "",
-["sort"] = {
-},
-["filter"] = {
-},
-},
-{
-["search"] = "",
-["sort"] = {
-},
-["filter"] = {
-},
-},
-{
-["search"] = "",
-["sort"] = {
-},
-["filter"] = {
-},
-},
-{
-["search"] = "",
-["sort"] = {
-},
-["filter"] = {
-},
-},
-{
-["search"] = "",
-["sort"] = {
-},
-["filter"] = {
-},
-},
-},
 ["personalUi"] = false,
-["hiddenMounts"] = {
+["personalFilter"] = false,
+["ui"] = {
+["showMountspecialButton"] = true,
+["enableCursorKeys"] = true,
+["syncTarget"] = false,
+["toolbarButtons"] = {
+["ToggleDynamicFlight"] = true,
+["SyncTarget"] = true,
+["Drive"] = true,
+["Equiment"] = true,
+["RandomFavorite"] = true,
+["PetSlot"] = true,
+["Skills"] = true,
+["ToggleWhirlingSurge"] = true,
+["ToggleRideAlong"] = true,
+},
+["displayBackground"] = "original",
+["showAchievementPoints"] = true,
+["compactMountList"] = true,
+["displayStatistics"] = {
+["LearnedDate"] = true,
+["UsedCount"] = true,
+["TravelTime"] = true,
+["Rarity"] = true,
+["Family"] = true,
+["CustomizationCount"] = true,
+["Wowhead"] = true,
+["TravelDistance"] = true,
+},
+["showFilterProfilesInMenu"] = true,
+["showResizeEdge"] = true,
+["showPersonalCount"] = true,
+["windowSize"] = {
+0,
+0,
+},
+["previewButton"] = true,
+["autoRotateModel"] = false,
+["colorizeNameByRarity"] = true,
+["unlockDisplayCamera"] = true,
+["displayAnimation"] = "stand",
 },
 ["searchInNotes"] = true,
+["searchInFamilyName"] = true,
+["summonPreviousPetAgain"] = true,
 ["pets"] = {
 ["assignments"] = {
 },
@@ -99,20 +102,12 @@ true,
 ["Promotion"] = true,
 ["Class"] = true,
 },
-["hiddenIngame"] = false,
 ["color"] = {
 },
+["hiddenIngame"] = false,
 ["notCollected"] = true,
 ["hidden"] = false,
-["mountType"] = {
-["repair"] = true,
-["flying"] = true,
-["underwater"] = true,
-["rideAlong"] = true,
-["passenger"] = true,
-["ground"] = true,
-["transform"] = true,
-},
+["onlyUsable"] = false,
 ["family"] = {
 ["Drakes"] = {
 ["Drakes"] = true,
@@ -186,9 +181,9 @@ true,
 ["Reptiles"] = {
 ["Armoredon"] = true,
 ["Others"] = true,
-["Crocolisks"] = true,
-["Mushan"] = true,
 ["Mana Wyrm"] = true,
+["Mushan"] = true,
+["Crocolisks"] = true,
 ["N'Zoth Serpents"] = true,
 ["Snapdragons"] = true,
 ["Turtles"] = true,
@@ -227,10 +222,10 @@ true,
 ["Broom"] = true,
 ["Kites"] = true,
 ["Rockets"] = true,
-["Mechanical Animals"] = true,
+["Carpets"] = true,
 ["Spider Tanks"] = true,
 ["Motorcycles"] = true,
-["Carpets"] = true,
+["Mechanical Animals"] = true,
 ["Mecha-suits"] = true,
 ["Hover Board"] = true,
 ["Hands"] = true,
@@ -259,10 +254,10 @@ true,
 },
 ["Rays"] = {
 ["Nether Rays"] = true,
-["Stingrays"] = true,
 ["Fathom Rays"] = true,
-["Mana Rays"] = true,
+["Stingrays"] = true,
 ["Shalewing"] = true,
+["Mana Rays"] = true,
 },
 ["Plant"] = true,
 ["Bovids"] = {
@@ -270,9 +265,9 @@ true,
 ["Yaks"] = true,
 ["Talbuks"] = true,
 ["Rams"] = true,
-["Clefthooves"] = true,
 ["Ruinstriders"] = true,
 ["Slateback"] = true,
+["Clefthooves"] = true,
 ["Goats"] = true,
 },
 ["Wolves"] = {
@@ -352,12 +347,20 @@ true,
 },
 },
 ["onlyFavorites"] = false,
+["mountType"] = {
+["repair"] = true,
+["flying"] = true,
+["underwater"] = true,
+["rideAlong"] = true,
+["passenger"] = true,
+["ground"] = true,
+["transform"] = true,
+},
 ["faction"] = {
 ["horde"] = true,
 ["alliance"] = true,
 ["noFaction"] = true,
 },
-["onlyUsable"] = false,
 ["onlyTradable"] = false,
 ["collected"] = true,
 ["onlyRecent"] = false,
@@ -391,47 +394,44 @@ true,
 },
 },
 ["personalHiddenMounts"] = false,
-["searchInFamilyName"] = true,
-["ui"] = {
-["showMountspecialButton"] = true,
-["enableCursorKeys"] = true,
-["syncTarget"] = false,
-["toolbarButtons"] = {
-["ToggleDynamicFlight"] = true,
-["SyncTarget"] = true,
-["Drive"] = true,
-["Equiment"] = true,
-["RandomFavorite"] = true,
-["PetSlot"] = true,
-["Skills"] = true,
-["ToggleWhirlingSurge"] = true,
-["ToggleRideAlong"] = true,
+["hiddenMounts"] = {
 },
-["displayBackground"] = "original",
-["showAchievementPoints"] = true,
-["compactMountList"] = true,
-["displayStatistics"] = {
-["TravelTime"] = true,
-["TravelDistance"] = true,
-["LearnedDate"] = true,
-["Rarity"] = true,
-["Family"] = true,
-["CustomizationCount"] = true,
-["Wowhead"] = true,
-["UsedCount"] = true,
+["filterProfile"] = {
+{
+["search"] = "",
+["sort"] = {
 },
-["showFilterProfilesInMenu"] = true,
-["showResizeEdge"] = true,
-["showPersonalCount"] = true,
-["windowSize"] = {
-0,
-0,
+["filter"] = {
 },
-["previewButton"] = true,
-["autoRotateModel"] = false,
-["colorizeNameByRarity"] = true,
-["unlockDisplayCamera"] = true,
-["displayAnimation"] = "stand",
+},
+{
+["search"] = "",
+["sort"] = {
+},
+["filter"] = {
+},
+},
+{
+["search"] = "",
+["sort"] = {
+},
+["filter"] = {
+},
+},
+{
+["search"] = "",
+["sort"] = {
+},
+["filter"] = {
+},
+},
+{
+["search"] = "",
+["sort"] = {
+},
+["filter"] = {
+},
+},
 },
 ["searchInDescription"] = true,
 }

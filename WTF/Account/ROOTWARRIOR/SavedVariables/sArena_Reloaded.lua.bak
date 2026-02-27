@@ -53,19 +53,13 @@ sArena_ReloadedDB = {
 ["scale"] = 1.2,
 ["changeFont"] = true,
 ["frameFont"] = "1",
-["textSettings"] = {
-["drTextOffsetY"] = -15,
-["drTextSize"] = 1.22,
-["drTextOffsetX"] = 0,
-["drTextAnchor"] = "CENTER",
-},
+["posX"] = 534.4,
 ["textures"] = {
 ["generalStatusBarTexture"] = "Wglass",
 ["healStatusBarTexture"] = "Wglass",
 },
 ["posY"] = 131.2,
 ["widgets"] = {
-["enabled"] = true,
 ["focusIndicator"] = {
 ["enabled"] = true,
 },
@@ -79,7 +73,7 @@ sArena_ReloadedDB = {
 ["enabled"] = true,
 },
 },
-["fontOutline"] = "THICKOUTLINE",
+["spacing"] = 22,
 ["cdFont"] = "1",
 ["castBar"] = {
 ["useModernCastbars"] = true,
@@ -87,8 +81,13 @@ sArena_ReloadedDB = {
 ["width"] = 112,
 },
 ["replaceClassIcon"] = true,
-["posX"] = 534.4,
-["spacing"] = 22,
+["textSettings"] = {
+["drTextOffsetY"] = -15,
+["drTextSize"] = 1.22,
+["drTextOffsetX"] = 0,
+["drTextAnchor"] = "CENTER",
+},
+["fontOutline"] = "THICKOUTLINE",
 },
 ["BlizzRetail"] = {
 ["dr"] = {
@@ -140,6 +139,7 @@ sArena_ReloadedDB = {
 ["showArenaNumber"] = false,
 ["darkMode"] = true,
 ["colorMysteryGray"] = false,
+["dbClean1"] = true,
 ["classColorNames"] = true,
 ["drIconsPerClass"] = {
 ["ROGUE"] = {

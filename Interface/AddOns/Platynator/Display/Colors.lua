@@ -4,6 +4,7 @@ local addonTable = select(2, ...)
 local IsTapped = addonTable.Display.Utilities.IsTappedUnit
 local IsNeutral = addonTable.Display.Utilities.IsNeutralUnit
 local IsUnfriendly = addonTable.Display.Utilities.IsUnfriendlyUnit
+local IsInCombatWith = addonTable.Display.Utilities.IsInCombatWith
 
 local roleType = {
   Damage = 1,
@@ -94,9 +95,6 @@ local stateToEvent = {
     "UNIT_SPELLCAST_CHANNEL_START",
     "UNIT_SPELLCAST_CHANNEL_STOP",
   },
-  quest = {
-    "QUEST_LOG_UPDATE",
-  },
   threat = {
     "UNIT_THREAT_LIST_UPDATE",
   }
@@ -107,9 +105,6 @@ local stateToCalculator = {
     state.cast = true
     state.castInfo = {UnitCastingInfo(unit)}
     state.channelInfo = {UnitChannelInfo(unit)}
-  end,
-  quest = function(state, unit)
-    state.quest = #addonTable.Display.Utilities.GetQuestInfo(unit) > 0
   end,
   threat = function(state, unit)
     state.threat = UnitThreatSituation("player", unit)
@@ -133,7 +128,6 @@ local kindToEvent = {
   softTarget = {"PLAYER_TARGET_CHANGED", "PLAYER_SOFT_ENEMY_CHANGED", "PLAYER_SOFT_FRIEND_CHANGED"},
   focus = {"PLAYER_FOCUS_CHANGED"},
   threat = {"UNIT_THREAT_LIST_UPDATE"},
-  quest = {"QUEST_LOG_UPDATE"},
   execute = {"UNIT_HEALTH"},
   interruptReady = {
     "UNIT_SPELLCAST_START",
@@ -208,7 +202,10 @@ end
 
 function addonTable.Display.RegisterForColorEvents(frame, settings, defaultColor)
   local events = { FORCED = true }
-  frame.colorState = { frequentUpdater = {} }
+  frame.colorState = {
+    frequentUpdater = {},
+    isPlayer = UnitIsPlayer(frame.unit) or UnitTreatAsPlayerForDisplay and UnitTreatAsPlayerForDisplay(frame.unit)
+  }
   frame.colorSettings = settings
   frame.colorState.defaultColor = defaultColor or transparency
   for _, s in ipairs(settings) do
@@ -280,7 +277,7 @@ function addonTable.Display.GetColor(settings, state, unit)
         break
       end
     elseif s.kind == "softTarget" then
-      if IsTargetLoose() and (UnitIsUnit("softenemy", unit) or UnitIsUnit("softfriend", unit)) then
+      if not UnitIsUnit("target", unit) and (UnitIsUnit("softenemy", unit) or UnitIsUnit("softfriend", unit)) then
         table.insert(colorQueue, {color = s.colors.softTarget})
         break
       end
@@ -292,7 +289,7 @@ function addonTable.Display.GetColor(settings, state, unit)
     elseif s.kind == "threat" then
       local threat = state.threat
       local hostile = state.hostile
-      if (inRelevantInstance or not s.instancesOnly) and (threat or (hostile and not s.combatOnly) or (inRelevantInstance and UnitAffectingCombat(unit))) then
+      if not state.isPlayer and (inRelevantInstance or not s.instancesOnly) and (threat or (hostile and not s.combatOnly) or IsInCombatWith(unit)) then
         if (isTank and (threat == 0 or threat == nil) and not DoesOtherTankHaveAggro(unit)) or (not isTank and threat == 3) then
           table.insert(colorQueue, {color = s.colors.warning})
           break
@@ -321,19 +318,19 @@ function addonTable.Display.GetColor(settings, state, unit)
         if classification == "elite" then
           local level = UnitEffectiveLevel(unit)
           local playerLevel = PLATYNATOR_LAST_INSTANCE.level
-          if level >= playerLevel + 2 or level == -1 then
-            table.insert(colorQueue, {color = s.colors.boss})
-            break
-          elseif level == playerLevel + 1 then
-            table.insert(colorQueue, {color = s.colors.miniboss})
-            break
-          elseif level == playerLevel then
+          if level == playerLevel or addonTable.Constants.IsClassic then
             local class = UnitClassBase(unit)
             if class == "PALADIN" then
               table.insert(colorQueue, {color = s.colors.caster})
             else
               table.insert(colorQueue, {color = s.colors.melee})
             end
+            break
+          elseif level >= playerLevel + 2 or level == -1 then
+            table.insert(colorQueue, {color = s.colors.boss})
+            break
+          elseif level == playerLevel + 1 then
+            table.insert(colorQueue, {color = s.colors.miniboss})
             break
           end
         elseif classification == "normal" or classification == "trivial" then
@@ -342,7 +339,7 @@ function addonTable.Display.GetColor(settings, state, unit)
         end
       end
     elseif s.kind == "quest" then
-      if state.quest then
+      if #addonTable.Display.Utilities.GetQuestInfo(unit) > 0 then
         if IsNeutral(unit) then
           table.insert(colorQueue, {color = s.colors.neutral})
           break
@@ -364,7 +361,7 @@ function addonTable.Display.GetColor(settings, state, unit)
         end
       end
     elseif s.kind == "classColors" then
-      if UnitIsPlayer(unit) or UnitTreatAsPlayerForDisplay and UnitTreatAsPlayerForDisplay(unit) then
+      if state.isPlayer then
         local _, class = UnitClass(unit)
         table.insert(colorQueue, {color = RAID_CLASS_COLORS[class]})
         break

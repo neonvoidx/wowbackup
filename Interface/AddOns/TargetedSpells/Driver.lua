@@ -16,17 +16,66 @@ function TargetedSpellsDriver:Init()
 	self:SetupFrame(true)
 end
 
+function TargetedSpellsDriver:PositionSelfFrame()
+	local offsetX = 0
+	local offsetY = 0
+
+	-- the edit mode frame anchors via its own position.point, but self.frame always anchors via CENTER,
+	-- so the offset must compensate for the difference between those two anchor origins
+	local editModeFrame = Private.Utils.GetEditModeFrame(Private.Enum.FrameKind.Self)
+
+	if editModeFrame ~= nil then
+		local AnchorSign = {
+			[Private.Enum.Anchor.Center] = { x = 0, y = 0 },
+			[Private.Enum.Anchor.Top] = { x = 0, y = 1 },
+			[Private.Enum.Anchor.Bottom] = { x = 0, y = -1 },
+			[Private.Enum.Anchor.Left] = { x = -1, y = 0 },
+			[Private.Enum.Anchor.Right] = { x = 1, y = 0 },
+			[Private.Enum.Anchor.TopLeft] = { x = -1, y = 1 },
+			[Private.Enum.Anchor.TopRight] = { x = 1, y = 1 },
+			[Private.Enum.Anchor.BottomLeft] = { x = -1, y = -1 },
+			[Private.Enum.Anchor.BottomRight] = { x = 1, y = -1 },
+		}
+
+		local GrowTarget = {
+			[Private.Enum.Direction.Horizontal] = {
+				[Private.Enum.Grow.Start] = { x = -1, y = 0 },
+				[Private.Enum.Grow.Center] = { x = 0, y = 0 },
+				[Private.Enum.Grow.End] = { x = 1, y = 0 },
+			},
+			[Private.Enum.Direction.Vertical] = {
+				[Private.Enum.Grow.Start] = { x = 0, y = -1 },
+				[Private.Enum.Grow.Center] = { x = 0, y = 0 },
+				[Private.Enum.Grow.End] = { x = 0, y = 1 },
+			},
+		}
+
+		local width, height = editModeFrame:GetSize()
+
+		local anchor = AnchorSign[TargetedSpellsSaved.Settings.Self.Position.point]
+		local target = GrowTarget[TargetedSpellsSaved.Settings.Self.Direction][TargetedSpellsSaved.Settings.Self.Grow]
+
+		offsetX = (target.x - anchor.x) * (width / 2)
+		offsetY = (target.y - anchor.y) * (height / 2)
+	end
+
+	self.frame:ClearAllPoints()
+	PixelUtil.SetPoint(
+		self.frame,
+		"CENTER",
+		UIParent,
+		TargetedSpellsSaved.Settings.Self.Position.point,
+		TargetedSpellsSaved.Settings.Self.Position.x + offsetX,
+		TargetedSpellsSaved.Settings.Self.Position.y + offsetY
+	)
+	self.frame:Show()
+end
+
 function TargetedSpellsDriver:SetupFrame(isBoot)
 	if isBoot then
 		self.frame = CreateFrame("Frame", "TargetedSpellsDriverFrame", UIParent)
 		self.frame:SetSize(1, 1)
-		self.frame:ClearAllPoints()
-		self.frame:SetPoint(
-			TargetedSpellsSaved.Settings.Self.Position.point,
-			TargetedSpellsSaved.Settings.Self.Position.x,
-			TargetedSpellsSaved.Settings.Self.Position.y
-		)
-		self.frame:Show()
+		self:PositionSelfFrame()
 
 		Private.EventRegistry:RegisterCallback(
 			Private.Enum.Events.EDIT_MODE_POSITION_CHANGED,
@@ -110,51 +159,52 @@ end
 
 -- this is where 3rd party unit frames would need addition
 ---@param unit string
----@return Frame?, boolean
+---@return Frame?
 local function FindParentFrameForPartyMember(unit)
-	local thirdPartyFrame, useTopLevel = Private.Utils.FindThirdPartyGroupFrameForUnit(unit)
+	local thirdPartyFrame = Private.Utils.FindThirdPartyGroupFrameForUnit(unit)
 
 	if thirdPartyFrame then
-		return thirdPartyFrame, useTopLevel
+		return thirdPartyFrame
 	end
 
 	if unit == "player" then
 		if not EditModeManagerFrame:UseRaidStylePartyFrames() then
 			-- non-raid style party frames don't include the player
-			return nil, false
+			return nil
 		end
 
 		for _, frame in pairs(CompactPartyFrame.memberUnitFrames) do
 			if frame.unit == "player" then
-				return frame, false
+				return frame
 			end
 		end
 
-		return nil, false
+		return nil
 	end
 
 	if EditModeManagerFrame:UseRaidStylePartyFrames() then
 		for _, frame in pairs(CompactPartyFrame.memberUnitFrames) do
 			if frame.unit == unit then
-				return frame, false
+				return frame
 			end
 		end
 
-		return nil, false
+		return nil
 	end
 
 	for memberFrame in PartyFrame.PartyMemberFramePool:EnumerateActive() do
 		if memberFrame.unitToken == unit then
-			return memberFrame, false
+			return memberFrame
 		end
 	end
 
-	return nil, false
+	return nil
 end
 
 function TargetedSpellsDriver:RepositionFrames()
 	---@type table<string, TargetedSpellsMixin[]>
 	local activeFrames = {}
+
 	for sourceUnit, frames in pairs(self.frames) do
 		for i, frame in pairs(frames) do
 			if frame then
@@ -186,8 +236,9 @@ function TargetedSpellsDriver:RepositionFrames()
 			local width, height, gap, sortOrder, direction, grow =
 				tableRef.Width, tableRef.Height, tableRef.Gap, tableRef.SortOrder, tableRef.Direction, tableRef.Grow
 			local isHorizontal = direction == Private.Enum.Direction.Horizontal
-			local point = isHorizontal and "LEFT" or "BOTTOM"
+			local point = grow == Private.Enum.Grow.Center and "CENTER" or isHorizontal and "LEFT" or "BOTTOM"
 			local total = (#frames * (isHorizontal and width or height)) + (#frames - 1) * gap
+			local parentDimension = isHorizontal and self.frame:GetWidth() or self.frame:GetHeight()
 
 			Private.Utils.SortFrames(frames, sortOrder)
 
@@ -196,15 +247,15 @@ function TargetedSpellsDriver:RepositionFrames()
 				local y = 0
 
 				if isHorizontal then
-					x = Private.Utils.CalculateCoordinate(i, width, gap, width, total, 0, grow)
+					x = Private.Utils.CalculateCoordinate(i, width, gap, parentDimension, total, 0, grow)
 				else
-					y = Private.Utils.CalculateCoordinate(i, width, gap, height, total, 0, grow)
+					y = Private.Utils.CalculateCoordinate(i, height, gap, parentDimension, total, 0, grow)
 				end
 
-				frame:Reposition(point, self.frame, "CENTER", x, y, false)
+				frame:Reposition(point, self.frame, "CENTER", x, y)
 			end
 		else
-			local parentFrame, useTopLevel = FindParentFrameForPartyMember(targetUnit)
+			local parentFrame = FindParentFrameForPartyMember(targetUnit)
 
 			if parentFrame ~= nil then
 				local tableRef = TargetedSpellsSaved.Settings.Party
@@ -236,7 +287,7 @@ function TargetedSpellsDriver:RepositionFrames()
 						y = Private.Utils.CalculateCoordinate(j, width, gap, parentDimension, total, offsetY, grow)
 					end
 
-					frame:Reposition(sourceAnchor, parentFrame, targetAnchor, x, y, useTopLevel)
+					frame:Reposition(sourceAnchor, parentFrame, targetAnchor, x, y)
 				end
 			end
 		end
@@ -508,7 +559,7 @@ function TargetedSpellsDriver:OnFrameEvent(_, event, ...)
 			id = select(4, ...)
 		end
 
-		if interruptedBy ~= nil and self:MaybeMarkAsInterruptedAndDelay(unit, id, interruptedBy) then
+		if self:MaybeMarkAsInterruptedAndDelay(unit, id, interruptedBy) then
 			return
 		end
 
@@ -569,7 +620,7 @@ function TargetedSpellsDriver:OnFrameEvent(_, event, ...)
 
 		local frames = self.frames[delayInfo.unit]
 
-		if frames == nil then
+		if frames == nil or #frames == 0 then
 			return
 		end
 
@@ -592,6 +643,10 @@ function TargetedSpellsDriver:OnFrameEvent(_, event, ...)
 		or event == "PLAYER_SPECIALIZATION_CHANGED"
 		or event == "UPDATE_INSTANCE_INFO"
 	then
+		if event == "LOADING_SCREEN_DISABLED" then
+			self:CleanupDanglingFrames()
+		end
+
 		local _, instanceType, difficultyId = GetInstanceInfo()
 		-- equivalent to `instanceType == "none"`
 		local nextContentType = Private.Enum.ContentType.OpenWorld
@@ -646,11 +701,21 @@ function TargetedSpellsDriver:OnFrameEvent(_, event, ...)
 			self.role = Private.Enum.Role.Damager
 		end
 	elseif event == Private.Enum.Events.EDIT_MODE_POSITION_CHANGED then
-		local point, x, y = ...
+		self:PositionSelfFrame()
+	end
+end
 
-		self.frame:ClearAllPoints()
-		self.frame:SetPoint(point, x, y)
-		self.frame:Show()
+function TargetedSpellsDriver:CleanupDanglingFrames()
+	local cleanedSomethingUp = false
+
+	for unit in pairs(self.frames) do
+		local thisUnitWasCleanedUp = self:ReleaseFrameForUnit(unit, true)
+
+		cleanedSomethingUp = cleanedSomethingUp or thisUnitWasCleanedUp
+	end
+
+	if cleanedSomethingUp then
+		self:RepositionFrames()
 	end
 end
 
@@ -665,6 +730,14 @@ function TargetedSpellsDriver:OnSettingsChanged(key, value)
 		else
 			self:SetupFrame(false)
 		end
+	elseif
+		key == Private.Settings.Keys.Self.Grow
+		or key == Private.Settings.Keys.Self.Direction
+		or key == Private.Settings.Keys.Self.Width
+		or key == Private.Settings.Keys.Self.Height
+		or key == Private.Settings.Keys.Self.Gap
+	then
+		self:PositionSelfFrame()
 	end
 end
 
@@ -686,21 +759,13 @@ function TargetedSpellsDriver:MaybeMarkAsInterruptedAndDelay(unit, id, interrupt
 		return false
 	end
 
-	local interruptName = nil
+	local interruptName = UnitNameFromGUID(interruptedBy)
+	---@type string?
+	local className = select(2, UnitClassFromGUID(interruptedBy))
 	local interruptColor = nil
 
-	if interruptedBy ~= nil then
-		local _, englishClass, _, _, _, name = GetPlayerInfoByGUID(interruptedBy)
-
-		if name == nil then
-			local token = UnitTokenFromGUID(interruptedBy)
-			if token ~= nil then
-				name = UnitName(token)
-			end
-		end
-
-		interruptName = name
-		interruptColor = englishClass and C_ClassColor.GetClassColor(englishClass) or nil
+	if className ~= nil then
+		interruptColor = C_ClassColor.GetClassColor(className)
 	end
 
 	local kindsToDelay = {

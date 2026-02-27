@@ -8,7 +8,9 @@ PLATYNATOR_CONFIG = {
 ["stack_region_scale_y"] = 1.1,
 ["design_all"] = {
 },
+["mouseover_alpha"] = 1,
 ["closer_to_screen_edges"] = true,
+["simplified_scale"] = 0.4,
 ["cast_scale"] = 1.1,
 ["simplified_nameplates"] = {
 ["minor"] = true,
@@ -33,7 +35,7 @@ PLATYNATOR_CONFIG = {
 ["friendlyNPC"] = false,
 },
 ["stack_region_scale_x"] = 1.2,
-["simplified_scale"] = 0.4,
+["blizzard_widget_scale"] = 1.2,
 ["show_friendly_in_instances_1"] = "never",
 ["global_scale"] = 1.4,
 ["click_region_scale_y"] = 1,
@@ -44,20 +46,21 @@ PLATYNATOR_CONFIG = {
 ["_custom"] = {
 ["highlights"] = {
 {
-["anchor"] = {
-},
 ["scale"] = 1.03,
+["layer"] = 0,
+["asset"] = "Platy: Arrow",
+["width"] = 1.23,
 ["kind"] = "target",
+["height"] = 1.22,
+["sliced"] = true,
 ["color"] = {
 ["a"] = 1,
 ["r"] = 1,
 ["g"] = 1,
 ["b"] = 1,
 },
-["height"] = 1,
-["layer"] = 0,
-["asset"] = "arrows",
-["width"] = 1,
+["anchor"] = {
+},
 },
 {
 ["color"] = {
@@ -67,13 +70,14 @@ PLATYNATOR_CONFIG = {
 ["b"] = 0.9215686917304992,
 },
 ["layer"] = 0,
-["asset"] = "bold",
+["asset"] = "Platy: 7px",
 ["width"] = 1.03,
 ["scale"] = 1,
-["height"] = 1.24,
 ["kind"] = "mouseover",
 ["anchor"] = {
 },
+["sliced"] = true,
+["height"] = 1.24,
 ["includeTarget"] = true,
 },
 },
@@ -113,7 +117,7 @@ PLATYNATOR_CONFIG = {
 ["g"] = 0,
 ["b"] = 0,
 },
-["asset"] = "thin",
+["asset"] = "Platy: 2px",
 ["width"] = 1,
 },
 ["autoColors"] = {
@@ -249,20 +253,21 @@ PLATYNATOR_CONFIG = {
 ["DarkDevourer"] = {
 ["highlights"] = {
 {
-["height"] = 1.8,
 ["scale"] = 0.9,
 ["layer"] = 0,
+["asset"] = "Platy: Soft Glow",
+["width"] = 1.2,
+["kind"] = "target",
+["anchor"] = {
+},
+["sliced"] = true,
 ["color"] = {
 ["a"] = 1,
 ["b"] = 1,
 ["g"] = 0,
 ["r"] = 0.4196078777313232,
 },
-["anchor"] = {
-},
-["kind"] = "target",
-["asset"] = "soft-glow",
-["width"] = 1.2,
+["height"] = 1.8,
 },
 {
 ["color"] = {
@@ -272,14 +277,54 @@ PLATYNATOR_CONFIG = {
 ["r"] = 0.6666666666666666,
 },
 ["layer"] = 0,
-["asset"] = "glow",
+["asset"] = "Platy: Glow",
 ["width"] = 1,
-["height"] = 1,
+["scale"] = 0.65,
+["kind"] = "mouseover",
 ["anchor"] = {
 },
-["kind"] = "mouseover",
-["scale"] = 0.65,
+["sliced"] = false,
+["height"] = 1,
 ["includeTarget"] = true,
+},
+{
+["color"] = {
+["a"] = 1,
+["r"] = 1,
+["g"] = 1,
+["b"] = 1,
+},
+["layer"] = 3,
+["asset"] = "Platy: Animated Dashes Long",
+["width"] = 1.03,
+["autoColors"] = {
+{
+["colors"] = {
+["cast"] = {
+["a"] = 1,
+["b"] = 0.1529411764705883,
+["g"] = 0.09411764705882353,
+["r"] = 1,
+},
+["channel"] = {
+["a"] = 1,
+["b"] = 1,
+["g"] = 0.2627450980392157,
+["r"] = 0.0392156862745098,
+},
+},
+["kind"] = "importantCast",
+},
+},
+["height"] = 0.91,
+["anchor"] = {
+"TOP",
+0,
+-8,
+},
+["kind"] = "animatedBorder",
+["borderWidth"] = 1,
+["scale"] = 1,
 },
 },
 ["specialBars"] = {
@@ -310,8 +355,8 @@ PLATYNATOR_CONFIG = {
 ["height"] = 1,
 ["anchor"] = {
 "BOTTOMLEFT",
--63,
-14,
+-61.5,
+10,
 },
 ["showDispel"] = {
 },
@@ -319,6 +364,31 @@ PLATYNATOR_CONFIG = {
 ["filters"] = {
 ["fromYou"] = true,
 ["important"] = true,
+},
+},
+{
+["direction"] = "LEFT",
+["scale"] = 1.26,
+["showCountdown"] = true,
+["sorting"] = {
+["kind"] = "duration",
+["reversed"] = false,
+},
+["textScale"] = 1,
+["kind"] = "buffs",
+["height"] = 1,
+["showDispel"] = {
+["enrage"] = true,
+},
+["anchor"] = {
+"LEFT",
+-91,
+0,
+},
+["filters"] = {
+["dispelable"] = true,
+["important"] = true,
+["defensive"] = false,
 },
 },
 },
@@ -344,7 +414,7 @@ PLATYNATOR_CONFIG = {
 ["g"] = 0,
 ["r"] = 0,
 },
-["asset"] = "soft",
+["asset"] = "Platy: Soft",
 ["width"] = 1,
 },
 ["autoColors"] = {
@@ -362,9 +432,9 @@ PLATYNATOR_CONFIG = {
 ["r"] = 0.9450981020927428,
 },
 ["melee"] = {
-["b"] = 0.9803922176361084,
-["g"] = 0.9803922176361084,
-["r"] = 0.9215686917304992,
+["b"] = 0.007843137718737125,
+["g"] = 0,
+["r"] = 0.9803922176361084,
 },
 ["caster"] = {
 ["b"] = 0.9764706492424012,
@@ -460,7 +530,7 @@ PLATYNATOR_CONFIG = {
 ["anchor"] = {
 },
 ["foreground"] = {
-["asset"] = "white",
+["asset"] = "Platy: Solid White",
 },
 ["kind"] = "health",
 ["background"] = {
@@ -488,7 +558,7 @@ PLATYNATOR_CONFIG = {
 ["g"] = 0,
 ["r"] = 0,
 },
-["asset"] = "soft",
+["asset"] = "Platy: Soft",
 ["width"] = 1,
 },
 ["autoColors"] = {
@@ -550,7 +620,7 @@ PLATYNATOR_CONFIG = {
 },
 ["scale"] = 1,
 ["foreground"] = {
-["asset"] = "white",
+["asset"] = "Platy: Solid White",
 },
 ["anchor"] = {
 "TOP",

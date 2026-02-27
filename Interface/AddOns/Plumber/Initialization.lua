@@ -1,5 +1,5 @@
-local VERSION_TEXT = "1.8.6 b";
-local VERSION_DATE = 1770130000;
+local VERSION_TEXT = "1.8.8 b";
+local VERSION_DATE = 1772120000;
 
 
 local addonName, addon = ...
@@ -198,7 +198,6 @@ local DefaultValues = {
     BlizzardSuperTrack = false,         --Add timer to the SuperTrackedFrame when tracking a POI with time format
     ProfessionsBook = true,             --Show unspent points on ProfessionsBookFrame
     EditModeShowPlumberUI = true,
-    LandingPageSwitch = true,           --Right click on ExpansionLandingPageMinimapButton to open a menu to access mission report
     SoftTargetName = false,             --Show object's name on SoftTargetFrame
         SoftTarget_TextOutline = false,
         SoftTarget_FontSize = 2,
@@ -244,6 +243,18 @@ local DefaultValues = {
         LandingPage_Activity_HideCompleted = true,
         LandingPage_Raid_CollapsedAchievement = false,
         LandingPage_AdvancedTooltip = true,
+
+        LandingButton_ShowButton = true,
+        LandingButton_Unaffected = false,
+        LandingButton_PrimaryUI = 1,
+        LandingButton_SmartExpansion = false,
+        LandingButton_ReduceSize = false,
+        LandingButton_DarkColor = false,
+        LandingButton_HideWhenIdle = false,
+        --LandingButton_UseLibDBIcon = nil,     --Addon-dependant. Init on first load
+        LandingButton_UseLibDBIcon_NoBorder = true, --Remove the golden button border if supported
+
+        --LandingButton_Pos_X, LandingButton_Pos_Y
 
 
     --Custom Loot Window
@@ -344,12 +355,23 @@ local DefaultValues = {
         NameplateQuest_IconSize = 2,
         NameplateQuest_ShowPartyQuest = false,
         NameplateQuest_ShowTargetProgress = false,
-            NameplateQuest_TextOutline = true,
+        NameplateQuest_ShowProgressOnHover = false,
+        NameplateQuest_ShowProgressOnKeyPress = false,
+            NameplateQuest_ShowProgressModifierKey = "ALT",
         NameplateQuest_WidgetOffsetX = 0,
         NameplateQuest_WidgetOffsetY = 0,
         NameplateQuest_ProgressFormat = 1,
         NameplateQuest_ProgressShowIcon = false,
+        NameplateQuest_TextOutline = true,
         --NameplateQuest_Side = "RIGHT",    --Initial value dedfined by detecting addon
+
+
+    --Break Time Reminder
+    BreakTime = false,
+        BreakTime_Cycle = 30,
+        BreakTime_Rest = 5,
+        BreakTime_Delay = 5,
+        BreakTime_FlashTaskbar = false,
 
 
     --Declared elsewhere:
@@ -360,12 +382,14 @@ local DefaultValues = {
     --DruidModelFix = true,                 --Fixed by Blizzard in 10.2.0
     --BlizzFixWardrobeTrackingTip = true,   --Hide Wardrobe tip that cannot be disabled   --Tip removed by Blizzard
     --MinimapMouseover = false,             --Ridden with compatibility issue
+    --LandingPageSwitch = true,             --Right click on ExpansionLandingPageMinimapButton to open a menu to access mission report  --Merged into NewExpansionLandingPage
 };
 
 
 local NeverEnableByDefault = {
     AppearanceTab = true,
     NameplateQuest = true,
+    BreakTime = true,
 };
 
 
@@ -420,6 +444,7 @@ end
 local EL = CreateFrame("Frame");
 EL:RegisterEvent("ADDON_LOADED");
 EL:RegisterEvent("PLAYER_ENTERING_WORLD");
+EL:RegisterEvent("PLAYER_LOGOUT");
 
 EL:SetScript("OnEvent", function(self, event, ...)
     if event == "ADDON_LOADED" then
@@ -435,6 +460,28 @@ EL:SetScript("OnEvent", function(self, event, ...)
             CallbackRegistry:Trigger("TimerunningSeason", seasonID);
         end
         addon.ControlCenter:InitializeModules();
+
+
+        local isInitialLogin = ...
+
+        local lastLoginTime = time();
+
+        if type(DB.lastLogoutTime) ~= "number" then
+            DB.lastLogoutTime = nil;
+        end
+
+        if type(DB.lastLoginTime) ~= "number" then
+            DB.lastLoginTime = lastLoginTime;
+        end
+
+        if (not DB.lastLogoutTime) or (lastLoginTime > DB.lastLogoutTime + 600) then
+            --If the player didn't log in for 10 min, consider it as a new game session
+            DB.lastLoginTime = lastLoginTime;
+            CallbackRegistry:Trigger("NewGameSessionBegin");
+        end
+
+    elseif event == "PLAYER_LOGOUT" then
+        DB.lastLogoutTime = time();
     end
 end);
 
@@ -453,4 +500,9 @@ do
     addon.IS_CLASSIC = C_AddOns.GetAddOnMetadata(addonName, "X-Flavor") ~= "retail";
 
     addon.IS_MOP = C_AddOns.GetAddOnMetadata(addonName, "X-Expansion") == "MOP";
+
+
+    function addon.GetLastLoginTime()
+        return DB.lastLoginTime or time()
+    end
 end

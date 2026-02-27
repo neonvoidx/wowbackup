@@ -1,6 +1,7 @@
 # Baganator
 
-## [786](https://github.com/TheMouseNest/Baganator/tree/786) (2026-02-10)
-[Full Changelog](https://github.com/TheMouseNest/Baganator/compare/785...786) 
+## [789](https://github.com/TheMouseNest/Baganator/tree/789) (2026-02-17)
+[Full Changelog](https://github.com/TheMouseNest/Baganator/compare/788...789) [Previous Releases](https://github.com/TheMouseNest/Baganator/releases)
 
-- Update toc for 12.0.1  
+- Cleanup  
+- [CanIMogIt] Pass item location data to CIMI to calculate bind type (#619)  

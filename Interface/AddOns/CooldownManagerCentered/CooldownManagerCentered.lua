@@ -1,6 +1,9 @@
 local _, ns = ...
 local addon = ns.Addon
 
+local AddOnFrame = CreateFrame("Frame")
+AddOnFrame:RegisterEvent("ADDON_LOADED")
+
 function addon:OpenSettings()
     if InCombatLockdown() then
         ns.Addon:Print("Cannot open settings panel while in combat.")
@@ -27,6 +30,9 @@ function addon:OnInitialize()
         ns.WilduSettings:RegisterSettings()
         ns.WilduSettings:InitializeSettings()
     end
+    print(
+        "|cff008945Cool|r|cff1e9a4e|r|cff3faa4fdown Ma|r|cff5fb64anag|r|cff7ac243er Ce|r|cff8ccd00ntered|r is rarely responsible for Cooldown Manager bugs. Through the beta cycle, Blizzard ignored and still did not resolve many issues related to disappearing/changing abilities, wrong or missing auras, and other bugs. If you encounter any of those, please report them to Blizzard as well, so they can prioritize fixing them."
+    )
 end
 local openCooldownViewerSettings = function()
     if not InCombatLockdown() then
@@ -60,17 +66,26 @@ function addon:RefreshConfig()
     if ns.Assistant then
         ns.Assistant:Initialize()
     end
-    if ns.Swipe then
-        ns.Swipe:Initialize()
-    end
     if ns.CooldownFont then
         ns.CooldownFont:Initialize()
     end
-    if ns.NoAuras then
-        ns.NoAuras:Initialize()
+    if ns.TrackerDB then
+        ns.TrackerDB:InitializeDB()
     end
-    if ns.TrinketRacialTracker then
-        ns.TrinketRacialTracker:Initialize()
+    if ns.TrackerItemViewer then
+        ns.TrackerItemViewer:Initialize()
+    end
+    if ns.GlowStyle then
+        ns.GlowStyle:Initialize()
+    end
+    if ns.CooldownStyle then
+        ns.CooldownStyle:Initialize()
+    end
+    if ns.ButtonPress then
+        ns.ButtonPress:Initialize()
+    end
+    if ns.CMCVisibility then
+        ns.CMCVisibility:Initialize()
     end
 
     ns.API:RefreshCooldownManager()
@@ -97,14 +112,49 @@ local function _cleanup()
     ns.db.profile.cooldownManager_experimental_subsequentRowScaling = nil
     ns.db.profile.cooldownManager_experimental_subsequentRowScaling_Essential = nil
     ns.db.profile.cooldownManager_experimental_subsequentRowScaling_Utility = nil
+    ns.db.profile.cooldownManager_experimental_hideAuras = nil
+    if ns.db.profile.cooldownManager_experimental_trinketRacialTracker ~= nil then
+        ns.db.profile.tracker_enabled = ns.db.profile.cooldownManager_experimental_trinketRacialTracker
+        local oldTrackerPosition = ns.db.profile.editMode.trinketRacialTracker
+        for k, v in pairs(oldTrackerPosition) do
+            ns.db.profile.editMode.tracker1[k] = v
+        end
+
+        ns.db.profile.cooldownManager_experimental_trinketRacialTracker = nil
+    end
+    if
+        ns.db.profile.trinketRacialTracker_position ~= nil
+        or ns.db.profile.editMode.trinketRacialTracker ~= nil
+        or ns.db.profile.trinketRacialTracker_ignoredRacials ~= nil
+        or ns.db.profile.trinketRacialTracker_ignoredItems ~= nil
+    then
+        -- cleanup old settings... later
+        ns.db.profile.editMode.trinketRacialTracker = nil
+        ns.db.profile.trinketRacialTracker_position = nil
+        ns.db.profile.trinketRacialTracker_ignoredRacials = nil
+        ns.db.profile.trinketRacialTracker_ignoredItems = nil
+    end
 
     if ns.db.profile.cooldownManager_experimental_buttonPress ~= nil then
         ns.db.profile.cooldownManager_buttonPress = ns.db.profile.cooldownManager_experimental_buttonPress
         ns.db.profile.cooldownManager_experimental_buttonPress = nil
     end
+
+    if ns.db.profile.cooldownManager_experimental_enableRectangularIcons ~= nil then
+        ns.db.profile.cooldownManager_experimental_enableRectangularIcons_essential =
+            ns.db.profile.cooldownManager_experimental_enableRectangularIcons
+        ns.db.profile.cooldownManager_experimental_enableRectangularIcons_utility =
+            ns.db.profile.cooldownManager_experimental_enableRectangularIcons
+        ns.db.profile.cooldownManager_experimental_enableRectangularIcons_buffIcons =
+            ns.db.profile.cooldownManager_experimental_enableRectangularIcons
+        ns.db.profile.cooldownManager_experimental_enableRectangularIcons = nil
+    end
+
+    ns.db.profile.cooldownManager_visibility_enabled = nil
 end
 
 function addon:OnEnable()
+    _cleanup()
     C_CVar.SetCVar("cooldownViewerEnabled", "1")
     if ns.StyledIcons then
         ns.StyledIcons:Initialize()
@@ -121,20 +171,47 @@ function addon:OnEnable()
     if ns.Assistant then
         ns.Assistant:Initialize()
     end
-    if ns.Swipe then
-        ns.Swipe:Initialize()
-    end
     if ns.CooldownFont then
         ns.CooldownFont:Initialize()
     end
-    if ns.NoAuras then
-        ns.NoAuras:Initialize()
+    if ns.TrackerDB then
+        ns.TrackerDB:InitializeDB()
     end
-    if ns.TrinketRacialTracker then
-        ns.TrinketRacialTracker:Initialize()
+    if ns.TrackerItemViewer then
+        ns.TrackerItemViewer:Initialize()
     end
-    _cleanup()
-    ns.ButtonPress:Initialize()
+    if ns.GlowStyle then
+        ns.GlowStyle:Initialize()
+    end
+    if ns.CooldownStyle then
+        ns.CooldownStyle:Initialize()
+    end
+    if ns.ButtonPress then
+        ns.ButtonPress:Initialize()
+    end
+    if ns.CMCVisibility then
+        ns.CMCVisibility:Initialize()
+    end
+
+    if ns.db.profile.cooldownManager_buttonPress then
+        AddOnFrame:SetScript("OnEvent", function(_, event, argument)
+            if not ns.db.profile.cooldownManager_buttonPress then
+                return
+            end
+            if event == "ADDON_LOADED" and argument == "Dominos" then
+                ns.ButtonPress:HookAllDominosButtons()
+            end
+            if event == "ADDON_LOADED" and argument == "ElvUI" then
+                ns.ButtonPress:RegisterElvUICallbacks()
+            end
+        end)
+        if C_AddOns.IsAddOnLoaded("Dominos") then
+            ns.ButtonPress:HookAllDominosButtons()
+        end
+        if C_AddOns.IsAddOnLoaded("ElvUI") then
+            ns.ButtonPress:RegisterElvUICallbacks()
+        end
+    end
 end
 local gameVersion = select(1, GetBuildInfo())
 addon.isMidnight = gameVersion:match("^12")
@@ -142,25 +219,17 @@ addon.isRetail = gameVersion:match("^11")
 
 C_Timer.After(2, function()
     local time = C_DateAndTime.GetCurrentCalendarTime()
-    local askedDate = time.year + time.month + time.monthDay
+    local askedDate = time.year * 10000 + time.month * 100 + time.monthDay
 
     if
         ns.API:IsElvUICDMSkinningEnabled()
         and (ns.StyledIcons:IsAnyStyledFeatureEnabled() or ns.Stacks:IsAnyStacksFeatureEnabled())
-        and (not ns.db.profile._elvui_skinning_asked or ns.db.profile._elvui_skinning_asked < askedDate)
+        and (
+            not ns.db.profile._elvui_skinning_asked
+            or (ns.db.profile._elvui_skinning_asked < askedDate - 4 or ns.db.profile._elvui_skinning_asked < 10000)
+        )
     then
         StaticPopup_Show("CMC_ELVUI_SKINNING_ASK")
         ns.db.profile._elvui_skinning_asked = askedDate
-    end
-end)
-
-local AddOnFrame = CreateFrame("Frame")
-AddOnFrame:RegisterEvent("ADDON_LOADED")
-AddOnFrame:SetScript("OnEvent", function(_, event, argument)
-    if event == "ADDON_LOADED" and argument == "Dominos" then
-        ns.ButtonPress:HookAllDominosButtons()
-    end
-    if event == "ADDON_LOADED" and argument == "ElvUI" then
-        ns.ButtonPress:RegisterElvUICallbacks()
     end
 end)

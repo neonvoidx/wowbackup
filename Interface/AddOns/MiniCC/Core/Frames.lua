@@ -3,6 +3,7 @@ local addonName, addon = ...
 local mini = addon.Core.Framework
 local array = addon.Utils.Array
 local units = addon.Utils.Units
+local wowEx = addon.Utils.WoWEx
 local maxParty = MAX_PARTY_MEMBERS or 4
 local maxRaid = MAX_RAID_MEMBERS or 40
 local maxTestFrames = 3
@@ -77,7 +78,7 @@ local function CreateTestFrames()
 	testFramesContainer:SetSize(width + padding * 2, height * maxTestFrames + padding * 2)
 end
 
----Retrieves a list of Blizzard frames.
+---Retrieves a list of Blizzard compact party/raid member frames.
 ---@param visibleOnly boolean
 ---@return table
 function M:BlizzardFrames(visibleOnly)
@@ -103,41 +104,19 @@ function M:BlizzardFrames(visibleOnly)
 	return frames
 end
 
----Retrieves a list of DandersFrames frames.
----@param visibleOnly boolean
+---Retrieves a list of visible DandersFrames frames.
 ---@return table
-function M:DandersFrames(visibleOnly)
-	if not DandersFrames or not DandersFrames.Api or not DandersFrames.Api.GetFrameForUnit then
-		return {}
-	end
+function M:DandersFrames()
+	local frames
 
-	local frames = {}
-	local playerParty = DandersFrames.Api.GetFrameForUnit("player", "party")
-	local playerRaid = DandersFrames.Api.GetFrameForUnit("player", "raid")
-
-	if playerParty and (playerParty:IsVisible() or not visibleOnly) then
-		frames[#frames + 1] = playerParty
-	end
-
-	if playerRaid and (playerRaid:IsVisible() or not visibleOnly) then
-		frames[#frames + 1] = playerRaid
-	end
-
-	for i = 1, maxParty do
-		local frame = DandersFrames.Api.GetFrameForUnit("party" .. i, "party")
-
-		if frame and frame:IsVisible() then
-			frames[#frames + 1] = frame
+	if DandersFrames_GetAllFrames then
+		local dandersSuccess, result = pcall(DandersFrames_GetAllFrames)
+		if dandersSuccess then
+			frames = result
 		end
 	end
 
-	for i = 1, maxRaid do
-		local frame = DandersFrames.Api.GetFrameForUnit("raid" .. i, "raid")
-
-		if frame and frame:IsVisible() then
-			frames[#frames + 1] = frame
-		end
-	end
+	frames = frames or {}
 
 	return frames
 end
@@ -151,25 +130,29 @@ function M:Grid2Frames(visibleOnly)
 	end
 
 	local frames = {}
-	local playerFrames = Grid2:GetUnitFrames("player")
-	local playerFrame = playerFrames and next(playerFrames)
+	local playerSuccess, playerFrames = pcall(Grid2.GetUnitFrames, Grid2, "player")
+	local playerFrame = playerSuccess and playerFrames and next(playerFrames)
 
 	if playerFrame and (playerFrame:IsVisible() or not visibleOnly) then
 		frames[#frames + 1] = playerFrame
 	end
 
 	for i = 1, maxParty do
-		local partyFrames = Grid2:GetUnitFrames("party" .. i)
-		local frame = partyFrames and next(partyFrames)
+		local partySuccess, partyFrames = pcall(Grid2.GetUnitFrames, Grid2, "party" .. i)
+		local frame = partySuccess and partyFrames and next(partyFrames)
 
-		if frame and (frame:IsVisible() or not visibleOnly) then
+		if not frame then
+			break
+		end
+
+		if frame:IsVisible() or not visibleOnly then
 			frames[#frames + 1] = frame
 		end
 	end
 
 	for i = 1, maxRaid do
-		local raidFrames = Grid2:GetUnitFrames("party" .. i)
-		local frame = raidFrames and next(raidFrames)
+		local raidSuccess, raidFrames = pcall(Grid2.GetUnitFrames, Grid2, "raid" .. i)
+		local frame = raidSuccess and raidFrames and next(raidFrames)
 
 		if frame and (frame:IsVisible() or not visibleOnly) then
 			frames[#frames + 1] = frame
@@ -188,15 +171,15 @@ function M:ElvUIFrames(visibleOnly)
 	end
 
 	---@diagnostic disable-next-line: deprecated
-	local E = unpack(ElvUI)
+	local elvuiSuccess, E = pcall(unpack, ElvUI)
 
-	if not E then
+	if not elvuiSuccess or not E then
 		return {}
 	end
 
-	local UF = E:GetModule("UnitFrames")
+	local ufSuccess, UF = pcall(E.GetModule, E, "UnitFrames")
 
-	if not UF then
+	if not ufSuccess or not UF then
 		return {}
 	end
 
@@ -249,7 +232,6 @@ function M:ShadowedUFFrames(visibleOnly)
 		end
 	end
 
-	-- “Normal” SUF unit frames (SUFUnit<unit>) :contentReference[oaicite:1]{index=1}
 	local unitNames = {
 		"player",
 		"pet",
@@ -368,41 +350,12 @@ function M:GetTestFrames()
 	return testPartyFrames
 end
 
----Anchors a frame to a texture region (which can't be anchored to with SetAllPoints()).
-function M:AnchorFrameToRegionGeometry(frame, region)
-	frame:ClearAllPoints()
-
-	local parent = region:GetParent()
-	local num = region:GetNumPoints()
-
-	if num == 0 then
-		frame:SetSize(region:GetSize())
-		frame:SetPoint("CENTER", parent, "CENTER", 0, 0)
-		return
-	end
-
-	for i = 1, num do
-		local point, relativeTo, relativePoint, xOfs, yOfs = region:GetPoint(i)
-
-		if relativeTo and relativeTo.GetObjectType then
-			while relativeTo and relativeTo.GetObjectType and relativeTo:GetObjectType() ~= "Frame" do
-				relativeTo = relativeTo:GetParent()
-			end
-		end
-
-		relativeTo = relativeTo or parent
-		frame:SetPoint(point, relativeTo, relativePoint, xOfs or 0, yOfs or 0)
-	end
-
-	frame:SetSize(region:GetSize())
-end
-
 function M:GetAll(visibleOnly, includeTestFrames)
 	local anchors = {}
 	local elvui = M:ElvUIFrames(visibleOnly)
 	local grid2 = M:Grid2Frames(visibleOnly)
-	local danders = M:DandersFrames(visibleOnly)
-	local blizzard = M:BlizzardFrames(visibleOnly)
+	local danders = M:DandersFrames()
+	local blizzard = not wowEx:IsDandersEnabled() and M:BlizzardFrames(visibleOnly) or {}
 	local suf = M:ShadowedUFFrames(visibleOnly)
 	local plexus = M:PlexusFrames(visibleOnly)
 	local custom = M:CustomFrames(visibleOnly)
@@ -436,31 +389,21 @@ function M:IsFriendlyCuf(frame)
 	return string.find(name, "CompactParty") ~= nil or string.find(name, "CompactRaid") ~= nil
 end
 
----@param header table
+---@param frame table
 ---@param anchor table
 ---@param isTest boolean
----@param options HeaderOptions
-function M:ShowHideFrame(header, anchor, isTest, options)
-	if not isTest and not options.Enabled then
-		header:Hide()
-		return
-	end
-
+---@param excludePlayer boolean
+function M:ShowHideFrame(frame, anchor, isTest, excludePlayer)
 	if anchor:IsForbidden() then
-		header:Hide()
+		frame:Hide()
 		return
 	end
 
-	local unit = header:GetAttribute("unit") or anchor.unit or anchor:GetAttribute("unit")
+	local unit = frame:GetAttribute("unit") or anchor.unit or anchor:GetAttribute("unit")
 
 	if unit and unit ~= "" then
-		if units:IsPet(unit) then
-			header:Hide()
-			return
-		end
-
-		if not isTest and options.ExcludePlayer and UnitIsUnit(unit, "player") then
-			header:Hide()
+		if excludePlayer and UnitIsUnit(unit, "player") then
+			frame:Hide()
 			return
 		end
 	end
@@ -468,19 +411,21 @@ function M:ShowHideFrame(header, anchor, isTest, options)
 	local alpha = anchor:GetAlpha()
 	if mini:IsSecret(alpha) and anchor:IsVisible() then
 		if not isTest then
-			header:SetAlpha(alpha)
+			-- in real mode set the alpha to the secret value
+			frame:SetAlpha(alpha)
 		else
-			header:SetAlpha(1)
+			-- in test mode assume it's visible
+			frame:SetAlpha(1)
 		end
-		header:Show()
+		frame:Show()
 		return
 	end
 
 	if anchor:IsVisible() then
-		header:SetAlpha(1)
-		header:Show()
+		frame:SetAlpha(1)
+		frame:Show()
 	else
-		header:Hide()
+		frame:Hide()
 	end
 end
 

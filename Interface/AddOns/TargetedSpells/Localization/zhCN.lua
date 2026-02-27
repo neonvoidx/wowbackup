@@ -67,6 +67,13 @@ L.Settings.FrameHeightTooltip = nil
 L.Settings.FontSizeLabel = "字体大小"
 L.Settings.FontSizeTooltip = nil
 
+L.Settings.FontFlagsLabel = "字体选项"
+L.Settings.FontFlagsTooltip = nil
+L.Settings.FontFlagsLabels = {
+	[Private.Enum.FontFlags.OUTLINE] = "轮廓",
+	[Private.Enum.FontFlags.SHADOW] = "阴影",
+}
+
 L.Settings.FrameGapLabel = "间距"
 L.Settings.FrameGapTooltip = nil
 
@@ -148,5 +155,5 @@ L.Settings.TargetingFilterApiLabels = {
 L.Settings.Import = "导入"
 L.Settings.Export = "导出"
 
-L.Settings.FontLabel = "Font"
+L.Settings.FontLabel = "字体"
 L.Settings.FontTooltip = nil

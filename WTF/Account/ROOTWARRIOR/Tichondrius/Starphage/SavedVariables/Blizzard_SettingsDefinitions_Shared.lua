@@ -10,5 +10,6 @@ NewSettingsSeen = {
 ["raidFramesDispelIndicatorType"] = true,
 ["raidFramesDisplayClassColor"] = true,
 ["COMBAT_WARNINGS_LABEL"] = true,
+["enableConnectToPhotoSharing"] = true,
 ["raidFramesDispelIndicatorOverlay"] = true,
 }

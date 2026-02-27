@@ -63,6 +63,7 @@ FrogskisCursorTrailDB = {
 0,
 0,
 },
+["adaptiveTargetFPS"] = 90,
 ["colour7"] = {
 0,
 0,

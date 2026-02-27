@@ -104,7 +104,7 @@ VER 3 010000000000003E "Full Combo" "134400"
 #showtooltip
 /castsequence reset=90 The Hunt, Hungering Slash, Vengeful Retreat, Voidblade, Hungering Slash, Vengeful Retreat
 END
-VER 3 0100000000000037 "Teleport Home" "236350"
+VER 3 0100000000000037 "Teleport Home" "7252953"
 #plumber:home
-/click PLMR_HOME4
+/click PLMR_HOME1
 END

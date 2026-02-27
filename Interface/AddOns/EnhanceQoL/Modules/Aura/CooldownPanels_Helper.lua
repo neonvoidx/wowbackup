@@ -26,6 +26,7 @@ Api.GetInventoryItemID = GetInventoryItemID
 Api.GetInventoryItemCooldown = GetInventoryItemCooldown
 Api.GetInventorySlotInfo = GetInventorySlotInfo
 Api.GetActionInfo = GetActionInfo
+Api.GetActionText = GetActionText
 Api.GetCursorInfo = GetCursorInfo
 Api.GetCursorPosition = GetCursorPosition
 Api.ClearCursor = ClearCursor
@@ -40,7 +41,22 @@ Api.GetSpellPowerCost = C_Spell and C_Spell.GetSpellPowerCost
 Api.EnableSpellRangeCheck = C_Spell and C_Spell.EnableSpellRangeCheck
 Api.IsSpellUsableFn = C_Spell and C_Spell.IsSpellUsable or IsUsableSpell
 Api.IsSpellPassiveFn = C_Spell and C_Spell.IsSpellPassive or IsPassiveSpell
-Api.IsSpellKnown = C_SpellBook.IsSpellInSpellBook
+Api.GetAssistedCombatNextSpell = C_AssistedCombat and C_AssistedCombat.GetNextCastSpell
+Api.GetAssistedCombatRotationSpells = C_AssistedCombat and C_AssistedCombat.GetRotationSpells
+Api.IsSpellKnown = function(spellId, includeOverrides)
+	if not spellId then return false end
+	if not (C_SpellBook and C_SpellBook.IsSpellInSpellBook) then return true end
+	local spellBank = Enum and Enum.SpellBookSpellBank
+	local playerBank = (spellBank and spellBank.Player) or 0
+	local petBank = (spellBank and spellBank.Pet) or 1
+	if C_SpellBook.IsSpellInSpellBook(spellId, playerBank, includeOverrides) then return true end
+	if C_SpellBook.IsSpellInSpellBook(spellId, petBank, includeOverrides) then return true end
+	return false
+end
+Api.GetMacroInfo = GetMacroInfo
+Api.GetMacroSpell = GetMacroSpell
+Api.GetMacroItem = GetMacroItem
+Api.GetMacroIndexByName = GetMacroIndexByName
 Api.IsEquippedItem = C_Item.IsEquippedItem
 Api.GetTime = GetTime
 Api.MenuUtil = MenuUtil
@@ -111,6 +127,11 @@ Helper.PANEL_LAYOUT_DEFAULTS = {
 	hideOnCooldown = false,
 	showOnCooldown = false,
 	showIconTexture = true,
+	iconBorderEnabled = false,
+	iconBorderTexture = "DEFAULT",
+	iconBorderSize = 1,
+	iconBorderOffset = 0,
+	iconBorderColor = { 0, 0, 0, 0.8 },
 	stackAnchor = "BOTTOMRIGHT",
 	stackX = -1,
 	stackY = 1,
@@ -743,6 +764,10 @@ function Helper.NormalizeEntry(entry, defaults)
 	if entry.type == "SPELL" then
 		if not hadShowCharges then entry.showCharges = spellHasCharges(entry.spellID) end
 		if not hadShowStacks then entry.showStacks = false end
+	elseif entry.type == "MACRO" then
+		entry.macroID = tonumber(entry.macroID)
+		if type(entry.macroName) == "string" and strtrim then entry.macroName = strtrim(entry.macroName) end
+		if type(entry.macroName) ~= "string" or entry.macroName == "" then entry.macroName = nil end
 	end
 	local duration = tonumber(entry.glowDuration)
 	if duration == nil then duration = defaults.entry and defaults.entry.glowDuration or Helper.ENTRY_DEFAULTS.glowDuration or 0 end
@@ -821,6 +846,8 @@ function Helper.CreateEntry(entryType, idValue, defaults)
 		if entry.showItemCount == nil then entry.showItemCount = true end
 	elseif entryType == "SLOT" then
 		entry.slotID = tonumber(idValue)
+	elseif entryType == "MACRO" then
+		entry.macroID = tonumber(idValue)
 	end
 	return entry
 end
@@ -854,12 +881,32 @@ local DEFAULT_ACTION_BUTTON_NAMES = {
 	"MultiBar7Button",
 }
 
+local THIRD_PARTY_ACTION_BUTTON_PREFIXES = {
+	{ prefix = "DominosActionButton", count = 180 },
+	{ prefix = "BT4Button", count = 180 },
+	{ prefix = "MultiBarRightActionButton", count = 12 },
+	{ prefix = "MultiBarLeftActionButton", count = 12 },
+	{ prefix = "MultiBarBottomRightActionButton", count = 12 },
+	{ prefix = "MultiBarBottomLeftActionButton", count = 12 },
+	{ prefix = "MultiBar5ActionButton", count = 12 },
+	{ prefix = "MultiBar6ActionButton", count = 12 },
+	{ prefix = "MultiBar7ActionButton", count = 12 },
+}
+
+local ELVUI_ACTION_BARS = 15
+local ELVUI_ACTION_BUTTONS = 12
+
 local GetItemInfoInstantFn = (C_Item and C_Item.GetItemInfoInstant) or GetItemInfoInstant
 local GetOverrideSpell = C_Spell and C_Spell.GetOverrideSpell
 local GetInventoryItemID = GetInventoryItemID
 local GetActionDisplayCount = C_ActionBar and C_ActionBar.GetActionDisplayCount
+local GetMacroIndexByName = GetMacroIndexByName
+local GetMacroInfo = GetMacroInfo
 local FindSpellActionButtons = C_ActionBar and C_ActionBar.FindSpellActionButtons
 local issecretvalue = _G.issecretvalue
+local RangeIndicatorText = RANGE_INDICATOR
+local DotIndicatorText = "\226\151\143"
+local strtrimFn = strtrim
 
 local function getEffectiveSpellId(spellId)
 	local id = tonumber(spellId)
@@ -904,6 +951,58 @@ local function getActionDisplayCountForSpell(spellId)
 	local slot = getActionSlotForSpell(spellId)
 	if not slot then return nil end
 	return GetActionDisplayCount(slot)
+end
+
+local function getButtonActionSlot(button)
+	if not button then return nil end
+	local slot = tonumber(button.action)
+	if not slot and button.GetAttribute then slot = tonumber(button:GetAttribute("action")) end
+	if slot and slot > 0 then return slot end
+	return nil
+end
+
+local function eachActionButton(callback)
+	if type(callback) ~= "function" then return end
+	local seen = {}
+	local function visit(button)
+		if not button or seen[button] then return end
+		seen[button] = true
+		callback(button)
+	end
+
+	for _, info in ipairs(THIRD_PARTY_ACTION_BUTTON_PREFIXES) do
+		for i = 1, info.count do
+			visit(_G[info.prefix .. i])
+		end
+	end
+
+	for bar = 1, ELVUI_ACTION_BARS do
+		for buttonIndex = 1, ELVUI_ACTION_BUTTONS do
+			visit(_G["ElvUI_Bar" .. bar .. "Button" .. buttonIndex])
+		end
+	end
+
+	local buttonNames = (ActionButtonUtil and ActionButtonUtil.ActionBarButtonNames) or DEFAULT_ACTION_BUTTON_NAMES
+	local buttonCount = NUM_ACTIONBAR_BUTTONS or 12
+	for _, prefix in ipairs(buttonNames) do
+		for i = 1, buttonCount do
+			visit(_G[prefix .. i])
+		end
+	end
+end
+
+local function normalizeBindingText(text)
+	if type(text) ~= "string" then return nil end
+	if strtrimFn then text = strtrimFn(text) end
+	if text == "" or text == DotIndicatorText or text == RangeIndicatorText then return nil end
+	return text
+end
+
+local function getDisplayedHotKeyText(button)
+	if not button then return nil end
+	local hotKey = button.HotKey
+	if not (hotKey and hotKey.GetText) then return nil end
+	return normalizeBindingText(hotKey:GetText())
 end
 
 function Helper.UpdateActionDisplayCountsForSpell(spellId, baseSpellId)
@@ -973,29 +1072,30 @@ local function getActionButtonSlotMap()
 	local runtime = CooldownPanels.runtime or {}
 	if runtime._eqolActionButtonSlotMap then return runtime._eqolActionButtonSlotMap end
 	local map = {}
-	local buttonNames = (ActionButtonUtil and ActionButtonUtil.ActionBarButtonNames) or DEFAULT_ACTION_BUTTON_NAMES
-	local buttonCount = NUM_ACTIONBAR_BUTTONS or 12
-	for _, prefix in ipairs(buttonNames) do
-		for i = 1, buttonCount do
-			local btn = _G[prefix .. i]
-			local action = btn and btn.action
-			if action and map[action] == nil then map[action] = btn end
-		end
-	end
+	eachActionButton(function(button)
+		local slot = getButtonActionSlot(button)
+		if slot and map[slot] == nil then map[slot] = button end
+	end)
 	runtime._eqolActionButtonSlotMap = map
 	CooldownPanels.runtime = runtime
 	return map
 end
 
 local function getBindingTextForButton(button)
-	if not button or not GetBindingKey then return nil end
+	if not button then return nil end
 	local key = nil
-	if button.bindingAction then key = GetBindingKey(button.bindingAction) end
-	if button:GetName() == "MultiBarBottomLeftButton6" then
+	if GetBindingKey then
+		if button.bindingAction then key = GetBindingKey(button.bindingAction) end
+		if not key and button.commandName then key = GetBindingKey(button.commandName) end
+		if not key and type(button.config) == "table" and button.config.keyBoundTarget then key = GetBindingKey(button.config.keyBoundTarget) end
+		if not key and button.GetName then
+			local name = button:GetName()
+			if name and name ~= "" then key = GetBindingKey("CLICK " .. name .. ":LeftButton") end
+		end
 	end
-	if not key and button.GetName then key = GetBindingKey("CLICK " .. button:GetName() .. ":LeftButton") end
 	local text = key and GetBindingText and GetBindingText(key, 1)
-	if text == "" then text = nil end
+	text = normalizeBindingText(text)
+	if not text then text = getDisplayedHotKeyText(button) end
 	return text
 end
 
@@ -1016,8 +1116,44 @@ local function getBindingTextForActionSlot(slot)
 		local index = ((slot - 1) % buttons) + 1
 		local key = GetBindingKey("ACTIONBUTTON" .. index)
 		text = key and GetBindingText and GetBindingText(key, 1)
-		if text == "" then text = nil end
+		text = normalizeBindingText(text)
 		return text
+	end
+	return nil
+end
+
+local function getBindingTextForSpell(spellId)
+	if not spellId then return nil end
+	local text = nil
+	if ActionButtonUtil and ActionButtonUtil.GetActionButtonBySpellID then
+		text = getBindingTextForButton(ActionButtonUtil.GetActionButtonBySpellID(spellId, false, false))
+		if text then return text end
+	end
+	if FindSpellActionButtons then
+		local slots = FindSpellActionButtons(spellId)
+		if type(slots) == "table" then
+			local seen = {}
+			for _, slot in ipairs(slots) do
+				if slot and not seen[slot] then
+					seen[slot] = true
+					text = getBindingTextForActionSlot(slot)
+					if text then return text end
+				end
+			end
+			for key, value in pairs(slots) do
+				local slot = nil
+				if type(value) == "number" then
+					slot = value
+				elseif value == true and type(key) == "number" then
+					slot = key
+				end
+				if slot and not seen[slot] then
+					seen[slot] = true
+					text = getBindingTextForActionSlot(slot)
+					if text then return text end
+				end
+			end
+		end
 	end
 	return nil
 end
@@ -1027,46 +1163,46 @@ local function buildKeybindLookup()
 	if runtime._eqolKeybindLookup then return runtime._eqolKeybindLookup end
 	local lookup = {
 		item = {},
+		macro = {},
+		macroName = {},
 	}
-	local buttonNames = (ActionButtonUtil and ActionButtonUtil.ActionBarButtonNames) or DEFAULT_ACTION_BUTTON_NAMES
-	local buttonCount = NUM_ACTIONBAR_BUTTONS or 12
 	local getMacroItem = GetMacroItem
 
-	for _, prefix in ipairs(buttonNames) do
-		for i = 1, buttonCount do
-			local btn = _G[prefix .. i]
-			local slot = btn and btn.action
-			if slot then
-				local keyText = getBindingTextForButton(btn)
-				if not keyText and GetBindingKey then
-					local buttons = NUM_ACTIONBAR_BUTTONS or 12
-					local index = ((slot - 1) % buttons) + 1
-					local key = GetBindingKey("ACTIONBUTTON" .. index)
-					keyText = key and GetBindingText and GetBindingText(key, 1)
-					if keyText == "" then keyText = nil end
-				end
-				if keyText and GetActionInfo then
-					local actionType, actionId = GetActionInfo(slot)
-					if actionType == "item" and actionId then
-						if not lookup.item[actionId] then lookup.item[actionId] = keyText end
-					elseif actionType == "macro" and actionId then
-						if getMacroItem then
-							local macroItem = getMacroItem(actionId)
-							if macroItem then
-								local itemId
-								if type(macroItem) == "number" then
-									itemId = macroItem
-								elseif GetItemInfoInstantFn then
-									itemId = GetItemInfoInstantFn(macroItem)
-								end
-								if itemId and not lookup.item[itemId] then lookup.item[itemId] = keyText end
-							end
-						end
+	eachActionButton(function(button)
+		local slot = getButtonActionSlot(button)
+		if not slot then return end
+		local keyText = getBindingTextForButton(button)
+		if not keyText and GetBindingKey then
+			local buttons = NUM_ACTIONBAR_BUTTONS or 12
+			local index = ((slot - 1) % buttons) + 1
+			local key = GetBindingKey("ACTIONBUTTON" .. index)
+			keyText = key and GetBindingText and GetBindingText(key, 1)
+			keyText = normalizeBindingText(keyText)
+		end
+		if not (keyText and GetActionInfo) then return end
+		local actionType, actionId = GetActionInfo(slot)
+		if actionType == "item" and actionId then
+			if not lookup.item[actionId] then lookup.item[actionId] = keyText end
+		elseif actionType == "macro" and actionId then
+			if not lookup.macro[actionId] then lookup.macro[actionId] = keyText end
+			if GetMacroInfo then
+				local macroName = GetMacroInfo(actionId)
+				if type(macroName) == "string" and macroName ~= "" and not lookup.macroName[macroName] then lookup.macroName[macroName] = keyText end
+			end
+			if getMacroItem then
+				local macroItem = getMacroItem(actionId)
+				if macroItem then
+					local itemId
+					if type(macroItem) == "number" then
+						itemId = macroItem
+					elseif GetItemInfoInstantFn then
+						itemId = GetItemInfoInstantFn(macroItem)
 					end
+					if itemId and not lookup.item[itemId] then lookup.item[itemId] = keyText end
 				end
 			end
 		end
-	end
+	end)
 
 	runtime._eqolKeybindLookup = lookup
 	CooldownPanels.runtime = runtime
@@ -1146,43 +1282,32 @@ function Keybinds.GetEntryKeybindText(entry, layout)
 	local slotItemId
 	if entry.type == "SLOT" and entry.slotID then slotItemId = GetInventoryItemID and GetInventoryItemID("player", entry.slotID) end
 	local effectiveSpellId = entry.type == "SPELL" and getEffectiveSpellId(entry.spellID) or nil
-	local cacheKey = tostring(entry.type) .. ":" .. tostring(effectiveSpellId or entry.spellID or entry.itemID or entry.slotID or "") .. ":" .. tostring(slotItemId or "")
+	local cacheValue = effectiveSpellId or entry.spellID or entry.itemID or entry.slotID or entry.macroID or entry.macroName or ""
+	local cacheKey = tostring(entry.type) .. ":" .. tostring(cacheValue) .. ":" .. tostring(slotItemId or "")
 	local cached = runtime._eqolKeybindCache[cacheKey]
 	if cached ~= nil then return cached or nil end
 
 	local text = nil
 	if entry.type == "SPELL" and entry.spellID then
 		local spellId = effectiveSpellId or entry.spellID
-		-- if C_ActionBar and C_ActionBar.FindSpellActionButtons then
-		-- 	local slots = C_ActionBar.FindSpellActionButtons(spellId)
-		-- 	if type(slots) == "table" then
-		-- 		for _, slot in ipairs(slots) do
-		-- 			text = getBindingTextForActionSlot(slot)
-		-- 			if text then break end
-		-- 		end
-		-- 	end
-		-- end
-		if not text and ActionButtonUtil and ActionButtonUtil.GetActionButtonBySpellID then text = getBindingTextForButton(ActionButtonUtil.GetActionButtonBySpellID(spellId, false, false)) end
-		if not text and effectiveSpellId and effectiveSpellId ~= entry.spellID then
-			-- if C_ActionBar and C_ActionBar.FindSpellActionButtons then
-			-- 	local slots = C_ActionBar.FindSpellActionButtons(entry.spellID)
-			-- 	if type(slots) == "table" then
-			-- 		for _, slot in ipairs(slots) do
-			-- 			text = getBindingTextForActionSlot(slot)
-			-- 			if text then break end
-			-- 		end
-			-- 	end
-			-- end
-			if not text and ActionButtonUtil and ActionButtonUtil.GetActionButtonBySpellID then
-				text = getBindingTextForButton(ActionButtonUtil.GetActionButtonBySpellID(entry.spellID, false, false))
-			end
-		end
+		text = getBindingTextForSpell(spellId)
+		if not text and effectiveSpellId and effectiveSpellId ~= entry.spellID then text = getBindingTextForSpell(entry.spellID) end
 	elseif entry.type == "ITEM" and entry.itemID then
 		local lookup = buildKeybindLookup()
 		text = lookup.item and lookup.item[entry.itemID]
 	elseif entry.type == "SLOT" and slotItemId then
 		local lookup = buildKeybindLookup()
 		text = lookup.item and lookup.item[slotItemId]
+	elseif entry.type == "MACRO" then
+		local lookup = buildKeybindLookup()
+		local macroId = tonumber(entry.macroID)
+		local macroName = type(entry.macroName) == "string" and entry.macroName or nil
+		if macroId and lookup.macro then text = lookup.macro[macroId] end
+		if not text and macroName and lookup.macroName then text = lookup.macroName[macroName] end
+		if not text and macroName and GetMacroIndexByName and lookup.macro then
+			local resolvedId = GetMacroIndexByName(macroName)
+			if type(resolvedId) == "number" and resolvedId > 0 then text = lookup.macro[resolvedId] end
+		end
 	end
 
 	text = formatKeybindText(text)

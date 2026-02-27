@@ -1,6 +1,7 @@
 local addonName, addon = ...
 
 local AceGUI = LibStub("AceGUI-3.0")
+local SharedMedia = LibStub("LibSharedMedia-3.0", true)
 
 local L = LibStub("AceLocale-3.0"):GetLocale("EnhanceQoL")
 
@@ -9,14 +10,54 @@ local GetItemInfoInstant = C_Item.GetItemInfoInstant
 local GetItemInfo = C_Item.GetItemInfo
 local GetBagItem = C_TooltipInfo.GetBagItem
 local IsEquippableItem = C_Item.IsEquippableItem
-local UnitInParty = UnitInParty
-local UnitInRaid = UnitInRaid
 addon.functions = addon.functions or {}
 
 local UnitHealth, UnitHealthMax = UnitHealth, UnitHealthMax
 local UnitPower, UnitPowerMax = UnitPower, UnitPowerMax
 local UnitHealthPercent = UnitHealthPercent
 local UnitPowerPercent = UnitPowerPercent
+
+local function normalizeMediaValue(value)
+	if type(value) ~= "string" or value == "" then return nil end
+	return value
+end
+
+local function defaultFontFace() return (addon.variables and addon.variables.defaultFont) or STANDARD_TEXT_FONT end
+
+function addon.functions.ResolveLSMMedia(mediaType, configured, fallback, allowPath)
+	local mediaKind = normalizeMediaValue(mediaType)
+	local fallbackValue = normalizeMediaValue(fallback)
+	local configuredValue = normalizeMediaValue(configured)
+	if not configuredValue then return fallbackValue end
+	if configuredValue == fallbackValue then return configuredValue end
+	if not mediaKind then
+		if allowPath ~= false and (configuredValue:find("\\", 1, true) or configuredValue:find("/", 1, true)) then return configuredValue end
+		return fallbackValue
+	end
+	local lsm = SharedMedia or LibStub("LibSharedMedia-3.0", true)
+	if lsm then
+		if lsm.IsValid and lsm:IsValid(mediaKind, configuredValue) then
+			local fetched = lsm.Fetch and lsm:Fetch(mediaKind, configuredValue, true)
+			if type(fetched) == "string" and fetched ~= "" then return fetched end
+			return configuredValue
+		end
+		if lsm.HashTable then
+			local hash = lsm:HashTable(mediaKind) or {}
+			local byName = hash[configuredValue]
+			if type(byName) == "string" and byName ~= "" then return byName end
+			for _, path in pairs(hash) do
+				if path == configuredValue then return configuredValue end
+			end
+		end
+	end
+	if allowPath ~= false and (configuredValue:find("\\", 1, true) or configuredValue:find("/", 1, true)) then return configuredValue end
+	return fallbackValue
+end
+
+function addon.functions.ResolveFontFace(configured, fallback)
+	local fallbackFace = normalizeMediaValue(fallback) or defaultFontFace()
+	return addon.functions.ResolveLSMMedia("font", configured, fallbackFace, true) or fallbackFace
+end
 
 function addon.functions.InitDBValue(key, defaultValue)
 	if addon.db[key] == nil then addon.db[key] = defaultValue end
@@ -38,66 +79,54 @@ function addon.functions.IsTimerunner()
 	return false
 end
 
-local function canChangeProtectedVisibility(frame)
-	if not frame then return false end
-	if InCombatLockdown and InCombatLockdown() then
-		if frame.IsProtected and frame:IsProtected() then return false end
+local hiddenParent
+
+local function getHiddenParent()
+	if hiddenParent then return hiddenParent end
+	hiddenParent = CreateFrame("Frame")
+	hiddenParent:Hide()
+	return hiddenParent
+end
+
+local function hideFrameLocked(frame)
+	if not frame or frame._eqolHidden then return end
+
+	local function enforceHidden(target)
+		if not target then return end
+		local canHide = true
+		if InCombatLockdown and InCombatLockdown() then
+			if target.IsProtected and target:IsProtected() then canHide = false end
+		end
+		if canHide then
+			if target.Hide then pcall(target.Hide, target) end
+		elseif target.SetAlpha then
+			target:SetAlpha(0)
+			target._eqolAlphaHidden = true
+		end
 	end
-	return true
+
+	if frame.UnregisterAllEvents then frame:UnregisterAllEvents() end
+	enforceHidden(frame)
+	frame._eqolHidden = true
+	if frame.SetParent then pcall(frame.SetParent, frame, getHiddenParent()) end
+	if not frame._eqolHiddenHooks then
+		frame._eqolHiddenHooks = true
+		if frame.Show then hooksecurefunc(frame, "Show", function(f) enforceHidden(f) end) end
+		if frame.SetShown then hooksecurefunc(frame, "SetShown", function(f, shown)
+			if shown then enforceHidden(f) end
+		end) end
+	end
 end
 
 function addon.functions.toggleRaidTools(value, self)
-	if not self then return end
-	local inParty = UnitInParty("player")
-	local inRaid = UnitInRaid("player")
-	local inGroup = inParty or inRaid
-	local hideInParty = value == true and inParty and not inRaid
-
-	if not inGroup then
-		if self._eqolRaidToolsAlphaHidden and self.SetAlpha then
-			self._eqolRaidToolsAlphaHidden = nil
-			self:SetAlpha(1)
-		end
-		return
-	end
-
-	if hideInParty then
-		if canChangeProtectedVisibility(self) then
-			if self.Hide then self:Hide() end
-		elseif self.SetAlpha then
-			self._eqolRaidToolsAlphaHidden = true
-			self:SetAlpha(0)
-		end
-	else
-		if self._eqolRaidToolsAlphaHidden and self.SetAlpha then
-			self._eqolRaidToolsAlphaHidden = nil
-			self:SetAlpha(1)
-		end
-		if canChangeProtectedVisibility(self) then
-			if self.Show then self:Show() end
-		elseif self.SetAlpha then
-			self:SetAlpha(1)
-		end
-	end
+	if value ~= true then return end
+	local manager = self or _G.CompactRaidFrameManager
+	hideFrameLocked(manager)
+	if CompactRaidFrameManager_SetSetting then pcall(CompactRaidFrameManager_SetSetting, "IsShown", "0") end
 end
 
 function addon.functions.updateRaidToolsHook()
-	local manager = _G.CompactRaidFrameManager
-	if not manager or not manager.SetScript then return end
-	if addon.db and addon.db["hideRaidTools"] then
-		if not manager._eqolRaidToolsOnShowHooked then
-			manager:SetScript("OnShow", function(self) addon.functions.toggleRaidTools(addon.db["hideRaidTools"], self) end)
-			manager._eqolRaidToolsOnShowHooked = true
-		end
-		addon.functions.toggleRaidTools(addon.db["hideRaidTools"], manager)
-	elseif manager._eqolRaidToolsOnShowHooked then
-		manager:SetScript("OnShow", nil)
-		manager._eqolRaidToolsOnShowHooked = nil
-		if manager._eqolRaidToolsAlphaHidden and manager.SetAlpha then
-			manager._eqolRaidToolsAlphaHidden = nil
-			manager:SetAlpha(1)
-		end
-	end
+	if addon.db and addon.db["hideRaidTools"] then addon.functions.toggleRaidTools(true, _G.CompactRaidFrameManager) end
 end
 
 function addon.functions.GetHealthPercent(unit, cur, max, usePredicted, curve)
@@ -440,6 +469,67 @@ local function getTooltipInfo(bag, slot, classID, tBindType)
 	return bType, bKey, upgradeKey, bAuc
 end
 
+local function normalizeItemLevelOutline(outline)
+	if outline == nil then return "OUTLINE" end
+	if outline == "" or outline == "NONE" then return nil end
+	return outline
+end
+
+local function getItemLevelFontFace()
+	local configured = addon.db and addon.db["ilvlFontFace"]
+	return addon.functions.ResolveFontFace(configured, defaultFontFace())
+end
+
+local function getItemLevelFontSize()
+	local value = tonumber(addon.db and addon.db["ilvlFontSize"])
+	if not value then return 14 end
+	value = math.floor(value + 0.5)
+	if value < 8 then value = 8 end
+	if value > 32 then value = 32 end
+	return value
+end
+
+local function getItemLevelCustomColor()
+	local color = addon.db and addon.db["ilvlTextColor"]
+	local r = (color and color.r) or 1
+	local g = (color and color.g) or 1
+	local b = (color and color.b) or 1
+	local a = color and color.a
+	if a == nil then a = 1 end
+	return r, g, b, a
+end
+
+function addon.functions.GetItemLevelTextColor(itemQuality)
+	if addon.db and addon.db["ilvlUseItemQualityColor"] ~= false then
+		if type(itemQuality) == "number" then
+			local r, g, b = C_Item.GetItemQualityColor(itemQuality)
+			if r and g and b then return r, g, b, 1 end
+		elseif type(itemQuality) == "table" then
+			local r = itemQuality.r or itemQuality[1]
+			local g = itemQuality.g or itemQuality[2]
+			local b = itemQuality.b or itemQuality[3]
+			local a = itemQuality.a or itemQuality[4] or 1
+			if r and g and b then return r, g, b, a end
+		end
+	end
+	return getItemLevelCustomColor()
+end
+
+function addon.functions.ApplyItemLevelTextStyle(fontString)
+	if not fontString then return end
+	local face = getItemLevelFontFace()
+	local size = getItemLevelFontSize()
+	local outline = normalizeItemLevelOutline(addon.db and addon.db["ilvlFontOutline"])
+	local ok = fontString:SetFont(face, size, outline)
+	if ok == false then fontString:SetFont(addon.variables.defaultFont, size, outline) end
+end
+
+function addon.functions.ApplyItemLevelTextColor(fontString, itemQuality)
+	if not fontString then return end
+	local r, g, b, a = addon.functions.GetItemLevelTextColor(itemQuality)
+	fontString:SetTextColor(r, g, b, a or 1)
+end
+
 local bagIlvlAnchors = {
 	TOPLEFT = { point = "TOPLEFT", x = 2, y = -2 },
 	TOP = { point = "TOP", x = 0, y = -2 },
@@ -450,6 +540,7 @@ local bagIlvlAnchors = {
 	BOTTOMLEFT = { point = "BOTTOMLEFT", x = 2, y = 2 },
 	BOTTOM = { point = "BOTTOM", x = 0, y = 2 },
 	BOTTOMRIGHT = { point = "BOTTOMRIGHT", x = 0, y = 2 },
+	OUTSIDE = { point = "TOPLEFT", relativePoint = "TOPRIGHT", x = 2, y = -2 },
 }
 
 local bagUpgradeAnchors = {
@@ -466,8 +557,9 @@ local UPGRADE_ICON_GLOW_SIZE = 24
 function addon.functions.ApplyBagItemLevelPosition(target, anchorFrame, position)
 	if not target or not anchorFrame then return end
 	local anchor = bagIlvlAnchors[position] or bagIlvlAnchors.TOPRIGHT
+	local relativePoint = anchor.relativePoint or anchor.point
 	target:ClearAllPoints()
-	target:SetPoint(anchor.point, anchorFrame, anchor.point, anchor.x, anchor.y)
+	target:SetPoint(anchor.point, anchorFrame, relativePoint, anchor.x, anchor.y)
 end
 
 local function resolveBoundAnchor(position)
@@ -763,16 +855,16 @@ local function updateButtonInfo(itemButton, bag, slot, frameName)
 				itemButton.ItemLevelText:SetShadowOffset(2, -2)
 				itemButton.ItemLevelText:SetShadowColor(0, 0, 0, 1)
 			end
+			addon.functions.ApplyItemLevelTextStyle(itemButton.ItemLevelText)
 
 			itemButton.ItemLevelText:ClearAllPoints()
 			local pos = addon.db["bagIlvlPosition"] or "TOPRIGHT"
 			addon.functions.ApplyBagItemLevelPosition(itemButton.ItemLevelText, itemButton, pos)
 			if nil ~= addon.variables.allowedEquipSlotsBagIlvl[itemEquipLoc] then
-				local r, g, b = C_Item.GetItemQualityColor(itemQuality)
 				local itemLevelText = C_Item.GetCurrentItemLevel(ItemLocation:CreateFromBagAndSlot(bag, slot))
 
 				itemButton.ItemLevelText:SetFormattedText(itemLevelText)
-				itemButton.ItemLevelText:SetTextColor(r, g, b, 1)
+				addon.functions.ApplyItemLevelTextColor(itemButton.ItemLevelText, itemQuality)
 
 				itemButton.ItemLevelText:Show()
 

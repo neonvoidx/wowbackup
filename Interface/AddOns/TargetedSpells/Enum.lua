@@ -82,3 +82,9 @@ Private.Enum.TargetingFilterApi = {
 	UnitIsSpellTarget = 1,
 	UnitIsUnit = 2,
 }
+
+---@enum FontFlags
+Private.Enum.FontFlags = {
+	OUTLINE = 1,
+	SHADOW = 2,
+}

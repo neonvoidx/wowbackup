@@ -1,276 +1,332 @@
 
 MiniCCDB = {
-["Anchor1"] = "",
-["Portrait"] = {
+["Modules"] = {
+["FriendlyIndicatorModule"] = {
+["Enabled"] = {
+["Always"] = true,
+["Arena"] = false,
+["Raids"] = false,
+["Dungeons"] = false,
+},
+["Offset"] = {
+["Y"] = 0,
+["X"] = 0,
+},
+["ShowImportant"] = true,
+["Grow"] = "CENTER",
+["ExcludePlayer"] = false,
+["Icons"] = {
+["MaxIcons"] = 1,
+["Glow"] = true,
+["ReverseCooldown"] = true,
+["Size"] = 40,
+},
+["ShowDefensives"] = true,
+},
+["NameplatesModule"] = {
+["Enabled"] = {
+["Always"] = true,
+["Arena"] = true,
+["Raids"] = false,
+["Dungeons"] = false,
+},
+["Friendly"] = {
+["Combined"] = {
+["Grow"] = "RIGHT",
+["Offset"] = {
+["Y"] = 0,
+["X"] = 2,
+},
+["Icons"] = {
+["MaxIcons"] = 5,
+["Glow"] = true,
+["ColorByCategory"] = true,
+["ReverseCooldown"] = true,
+["Size"] = 50,
+},
+["Enabled"] = false,
+},
+["Important"] = {
+["Enabled"] = false,
+["Offset"] = {
+["Y"] = 0,
+["X"] = -2,
+},
+["Icons"] = {
+["MaxIcons"] = 5,
+["Glow"] = true,
+["ColorByCategory"] = true,
+["ReverseCooldown"] = true,
+["Size"] = 50,
+},
+["Grow"] = "LEFT",
+},
+["CC"] = {
 ["Enabled"] = true,
+["Offset"] = {
+["Y"] = 49,
+["X"] = 0,
+},
+["Icons"] = {
+["MaxIcons"] = 5,
+["Glow"] = false,
+["ColorByCategory"] = true,
+["ReverseCooldown"] = true,
+["Size"] = 30,
+},
+["Grow"] = "CENTER",
+},
+["IgnorePets"] = true,
+},
+["Enemy"] = {
+["Combined"] = {
+["Grow"] = "RIGHT",
+["Offset"] = {
+["Y"] = 0,
+["X"] = 2,
+},
+["Icons"] = {
+["MaxIcons"] = 5,
+["Glow"] = true,
+["ColorByCategory"] = true,
+["ReverseCooldown"] = true,
+["Size"] = 50,
+},
+["Enabled"] = false,
+},
+["Important"] = {
+["Enabled"] = true,
+["Offset"] = {
+["Y"] = 0,
+["X"] = -2,
+},
+["Icons"] = {
+["MaxIcons"] = 5,
+["Glow"] = true,
+["ColorByCategory"] = true,
+["ReverseCooldown"] = true,
+["Size"] = 35,
+},
+["Grow"] = "LEFT",
+},
+["CC"] = {
+["Enabled"] = true,
+["Offset"] = {
+["Y"] = 0,
+["X"] = 2,
+},
+["Icons"] = {
+["MaxIcons"] = 5,
+["Glow"] = false,
+["ColorByCategory"] = true,
+["ReverseCooldown"] = true,
+["Size"] = 35,
+},
+["Grow"] = "RIGHT",
+},
+["IgnorePets"] = true,
+},
+},
+["PetCCModule"] = {
+["Enabled"] = {
+["Always"] = false,
+["Arena"] = false,
+["Raids"] = false,
+["Dungeons"] = false,
+},
+["Grow"] = "CENTER",
+["Icons"] = {
+["Glow"] = true,
+["Count"] = 3,
+["ReverseCooldown"] = true,
+["ColorByDispelType"] = true,
+["Size"] = 30,
+},
+["Offset"] = {
+["Y"] = 0,
+["X"] = 0,
+},
+},
+["CCModule"] = {
+["Enabled"] = {
+["Always"] = true,
+["Arena"] = true,
+["Raids"] = false,
+["Dungeons"] = true,
+},
+["Raid"] = {
+["Grow"] = "CENTER",
+["ExcludePlayer"] = false,
+["Icons"] = {
+["Glow"] = true,
+["ColorByDispelType"] = true,
+["ReverseCooldown"] = true,
+["Count"] = 3,
+["Size"] = 50,
+},
+["Offset"] = {
+["Y"] = 0,
+["X"] = 2,
+},
+},
+["Default"] = {
+["Grow"] = "RIGHT",
+["ExcludePlayer"] = false,
+["Icons"] = {
+["Glow"] = true,
+["ColorByDispelType"] = true,
+["ReverseCooldown"] = true,
+["Count"] = 3,
+["Size"] = 50,
+},
+["Offset"] = {
+["Y"] = 0,
+["X"] = 2,
+},
+},
+},
+["PortraitModule"] = {
+["Enabled"] = {
+["Always"] = true,
+},
 ["ReverseCooldown"] = false,
 },
-["NotifiedChanges"] = true,
-["Anchor2"] = "",
-["WhatsNew"] = {
+["PrecogGuesserModule"] = {
+["Enabled"] = {
+["Always"] = true,
 },
-["Version"] = 17,
-["Trinkets"] = {
+["RelativeTo"] = "UIParent",
+["Point"] = "CENTER",
+["RelativePoint"] = "CENTER",
+["Icons"] = {
+["Glow"] = true,
+["ReverseCooldown"] = true,
+["Size"] = 70,
+},
+["Offset"] = {
+["Y"] = 70,
+["X"] = 0,
+},
+},
+["AlertsModule"] = {
+["Offset"] = {
+["Y"] = -100,
+["X"] = 0,
+},
+["RelativeTo"] = "UIParent",
+["Point"] = "CENTER",
+["Icons"] = {
 ["Enabled"] = true,
+["Glow"] = true,
+["ReverseCooldown"] = false,
+["ColorByClass"] = true,
+["Size"] = 58,
+},
+["IncludeBigDefensives"] = true,
+["RelativePoint"] = "TOP",
+["Enabled"] = {
+["Always"] = false,
+},
+["Sound"] = {
+["Defensive"] = {
+["Enabled"] = false,
+["File"] = "AlertToastWarm.ogg",
+["Channel"] = "Master",
+},
+["Important"] = {
+["Enabled"] = false,
+["File"] = "AirHorn.ogg",
+["Channel"] = "Master",
+},
+},
+["TTS"] = {
+["Important"] = {
+["Enabled"] = false,
+},
+["Defensive"] = {
+["Enabled"] = false,
+},
+["Volume"] = 100,
+},
+},
+["KickTimerModule"] = {
+["Offset"] = {
+["Y"] = -300,
+["X"] = 0,
+},
+["RelativeTo"] = "UIParent",
+["Point"] = "CENTER",
+["RelativePoint"] = "CENTER",
+["Icons"] = {
+["Glow"] = false,
+["ReverseCooldown"] = true,
+["Size"] = 50,
+},
+["Enabled"] = {
+["Always"] = false,
+["Caster"] = false,
+["Healer"] = false,
+},
+},
+["TrinketsModule"] = {
+["Enabled"] = {
+["Always"] = true,
+},
 ["Font"] = {
 ["File"] = "GameFontHighlightSmall",
 },
 ["Point"] = "RIGHT",
 ["RelativePoint"] = "LEFT",
+["Offset"] = {
+["Y"] = 0,
+["X"] = -2,
+},
 ["Icons"] = {
-["Glow"] = false,
 ["ReverseCooldown"] = false,
+["Glow"] = false,
 ["ShowText"] = true,
 ["Size"] = 50,
 },
-["Offset"] = {
-["Y"] = 0,
-["X"] = -2,
+["ExcludePlayer"] = false,
 },
+["HealerCCModule"] = {
+["Enabled"] = {
+["Always"] = true,
+["Arena"] = true,
+["Raids"] = false,
+["Dungeons"] = false,
 },
-["Alerts"] = {
-["Enabled"] = false,
 ["RelativeTo"] = "UIParent",
 ["Point"] = "CENTER",
-["RelativePoint"] = "TOP",
-["IncludeBigDefensives"] = true,
 ["Icons"] = {
-["Glow"] = true,
-["ColorByClass"] = true,
-["ReverseCooldown"] = false,
-["Size"] = 58,
-},
-["Offset"] = {
-["Y"] = -100,
-["X"] = 0,
-},
-},
-["Nameplates"] = {
-["Grow"] = "RIGHT",
-["FriendlyEnabled"] = true,
-["EnemyEnabled"] = true,
-["Offset"] = {
-["Y"] = 0,
-["X"] = 2,
-},
-["Friendly"] = {
-["Combined"] = {
-["Offset"] = {
-["Y"] = 0,
-["X"] = 2,
-},
-["Enabled"] = false,
-["Icons"] = {
-["MaxIcons"] = 5,
-["Glow"] = true,
-["ColorByDispelType"] = true,
 ["ReverseCooldown"] = true,
-["Size"] = 50,
-},
-["Grow"] = "RIGHT",
-},
-["Important"] = {
-["Offset"] = {
-["Y"] = 0,
-["X"] = -2,
-},
-["Grow"] = "LEFT",
-["Icons"] = {
-["MaxIcons"] = 5,
-["Glow"] = true,
-["ColorByDispelType"] = true,
-["ReverseCooldown"] = true,
-["Size"] = 50,
-},
-["Enabled"] = false,
-},
-["CC"] = {
-["Offset"] = {
-["Y"] = 49,
-["X"] = 0,
-},
-["Grow"] = "CENTER",
-["Icons"] = {
-["MaxIcons"] = 5,
-["Glow"] = false,
-["ColorByDispelType"] = true,
-["ReverseCooldown"] = true,
-["Size"] = 30,
-},
-["Enabled"] = true,
-},
-["IgnorePets"] = true,
-},
-["Icons"] = {
-["MaxIcons"] = 5,
-["Glow"] = true,
-["ColorByDispelType"] = true,
-["ReverseCooldown"] = true,
-["Size"] = 50,
-},
-["Enemy"] = {
-["Combined"] = {
-["Offset"] = {
-["Y"] = 0,
-["X"] = 2,
-},
-["Enabled"] = false,
-["Icons"] = {
-["MaxIcons"] = 5,
-["Glow"] = true,
-["ColorByDispelType"] = true,
-["ReverseCooldown"] = true,
-["Size"] = 50,
-},
-["Grow"] = "RIGHT",
-},
-["Important"] = {
-["Offset"] = {
-["Y"] = 0,
-["X"] = -2,
-},
-["Grow"] = "LEFT",
-["Icons"] = {
-["MaxIcons"] = 5,
-["Glow"] = true,
-["ColorByDispelType"] = true,
-["ReverseCooldown"] = true,
-["Size"] = 35,
-},
-["Enabled"] = true,
-},
-["CC"] = {
-["Offset"] = {
-["Y"] = 0,
-["X"] = 2,
-},
-["Grow"] = "RIGHT",
-["Icons"] = {
-["MaxIcons"] = 5,
-["Glow"] = false,
-["ColorByDispelType"] = true,
-["ReverseCooldown"] = true,
-["Size"] = 35,
-},
-["Enabled"] = true,
-},
-["IgnorePets"] = true,
-},
-},
-["Default"] = {
-["AdvancedMode"] = {
-["Offset"] = {
-["Y"] = 0,
-["X"] = 2,
-},
-["Point"] = "TOPLEFT",
-["RelativePoint"] = "TOPRIGHT",
-},
-["SimpleMode"] = {
-["Offset"] = {
-["Y"] = 0,
-["X"] = 2,
-},
-["Grow"] = "RIGHT",
-["Enabled"] = true,
-},
-["ExcludePlayer"] = true,
-["Icons"] = {
-["ReverseCooldown"] = false,
 ["Glow"] = true,
 ["ColorByDispelType"] = true,
 ["Size"] = 72,
 },
-["Enabled"] = true,
-},
-["Healer"] = {
-["Offset"] = {
-["Y"] = -111.1999969482422,
-["X"] = -1.600118041038513,
-},
-["RelativeTo"] = "UIParent",
-["Point"] = "TOP",
-["Icons"] = {
-["ReverseSwipe"] = false,
-["Glow"] = true,
-["ColorByDispelType"] = true,
-["ReverseCooldown"] = false,
-["Size"] = 66,
-},
+["ShowWarningText"] = true,
 ["Font"] = {
 ["Flags"] = "OUTLINE",
 ["File"] = "Fonts\\FRIZQT__.TTF",
-["Size"] = 26,
+["Size"] = 32,
 },
 ["RelativePoint"] = "TOP",
-["Enabled"] = true,
 ["Sound"] = {
 ["Enabled"] = true,
+["File"] = "Sonar.ogg",
 ["Channel"] = "Master",
 },
-["Filters"] = {
-["BattleGrounds"] = false,
-["Arena"] = true,
-["World"] = false,
-},
-},
-["AllyIndicator"] = {
-["Enabled"] = true,
-["Grow"] = "CENTER",
 ["Offset"] = {
-["Y"] = 0,
-["X"] = 0,
-},
-["Icons"] = {
-["Glow"] = true,
-["ReverseCooldown"] = true,
-["Size"] = 40,
-},
-["ExcludePlayer"] = false,
-},
-["Raid"] = {
-["AdvancedMode"] = {
-["Offset"] = {
-["Y"] = 0,
-["X"] = 2,
-},
-["Point"] = "TOPLEFT",
-["RelativePoint"] = "TOPRIGHT",
-},
-["SimpleMode"] = {
-["Offset"] = {
-["Y"] = 0,
-["X"] = 0,
-},
-["Grow"] = "CENTER",
-["Enabled"] = true,
-},
-["ExcludePlayer"] = true,
-["Icons"] = {
-["ReverseSwipe"] = false,
-["Glow"] = true,
-["ColorByDispelType"] = true,
-["ReverseCooldown"] = false,
-["Size"] = 50,
-},
-["Enabled"] = true,
-},
-["KickTimer"] = {
-["CasterEnabled"] = false,
-["RelativeTo"] = "UIParent",
-["Point"] = "CENTER",
-["AllEnabled"] = false,
-["RelativePoint"] = "CENTER",
-["HealerEnabled"] = false,
-["Icons"] = {
-["Glow"] = false,
-["ReverseCooldown"] = true,
-["Size"] = 50,
-},
-["Offset"] = {
-["Y"] = -300,
+["Y"] = -200,
 ["X"] = 0,
 },
 },
-["Anchor3"] = "",
+},
+["Version"] = 24,
+["NotifiedChanges"] = true,
+["IconSpacing"] = 2,
+["WhatsNew"] = {
+},
+["FontScale"] = 1,
+["GlowType"] = "Proc Glow",
 }

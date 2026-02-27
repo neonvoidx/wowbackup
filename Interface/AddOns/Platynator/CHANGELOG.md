@@ -1,9 +1,11 @@
 # Platynator
 
-## [313](https://github.com/TheMouseNest/Platynator/tree/313) (2026-02-11)
-[Full Changelog](https://github.com/TheMouseNest/Platynator/compare/312...313) 
+## [330](https://github.com/TheMouseNest/Platynator/tree/330) (2026-02-25)
+[Full Changelog](https://github.com/TheMouseNest/Platynator/compare/329...330) [Previous Releases](https://github.com/TheMouseNest/Platynator/releases)
 
-- Disable class colors on name-only friendlies in instances if removed from style  
-- Designer: Prevent a blank tab if some settings don't exist for that widget  
-- Fix guild widget not showing anything by default when added in manually  
-- Designer: Fix reinserting buffs widget  
+- Tweak default style "Blizzard"  
+- Add border asset matching Blizzard style more & update "Blizzard" default style  
+- Show labels on class icon options  
+- Fix loading of custom borders  
+- Add "Blizzard Metal" border texture  
+- Add fancier class icon assets  

@@ -1,7 +1,7 @@
 ## Interface: 110207, 120000, 120001
 ## Title: Enhance QoL Core
 ## Author: R41Z0R
-## Version: 7.12.1
+## Version: 8.1.1
 ## IconTexture: Interface\AddOns\EnhanceQoL\Icons\Icon.tga
 ## Category: Quality of Life
 ## X-Category: Quality of Life
@@ -22,7 +22,7 @@
 ## Retail: true
 ## X-Compatible-With: retail
 ## X-WoWI-ID: 26888
-## OptionalDeps: MidnightSimpleUnitFrames, UnhaltedUnitFrames, ElvUI
+## OptionalDeps: MidnightSimpleUnitFrames, UnhaltedUnitFrames, ElvUI, Baganator, HarreksAdvancedRaidFrames
 
 libs\LibStub\LibStub.lua
 libs\AceLocale-3.0\AceLocale-3.0.xml

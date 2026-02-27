@@ -105,55 +105,27 @@ function TargetedSpellsEditModeMixin:CreateImportExportButtons()
 			end,
 			text = Private.L.Settings.Export,
 		},
+		{
+			click = function()
+				self:OnDiscordButtonClick()
+			end,
+			text = "Discord",
+		},
 	}
 end
 
+function TargetedSpellsEditModeMixin:OnDiscordButtonClick()
+	local link = C_EncodingUtil.DeserializeCBOR(
+		C_EncodingUtil.DecodeBase64("oURsaW5rWB1odHRwczovL2Rpc2NvcmQuZ2cvQzVTVGpZUnNDRA==")
+	).link
+
+	Private.Utils.ShowStaticPopup(Private.Utils.CreateEditablePopup("Discord", link, ACCEPT))
+end
+
 function TargetedSpellsEditModeMixin:OnExportButtonClick()
-	local string = Private.Utils.Export()
-
-	Private.Utils.ShowStaticPopup({
-		text = Private.L.Settings.Export,
-		button1 = Private.L.Settings.Export,
-		hasEditBox = true,
-		hasWideEditBox = true,
-		editBoxWidth = 350,
-		hideOnEscape = true,
-		OnShow = function(popupSelf)
-			local editBox = popupSelf:GetEditBox()
-			editBox:SetText(string)
-			editBox:HighlightText()
-
-			local ctrlDown = false
-
-			editBox:SetScript("OnKeyDown", function(_, key)
-				if key == "LCTRL" or key == "RCTRL" or key == "LMETA" or key == "RMETA" then
-					ctrlDown = true
-				end
-			end)
-			editBox:SetScript("OnKeyUp", function(_, key)
-				C_Timer.After(0.2, function()
-					ctrlDown = false
-				end)
-
-				if ctrlDown and (key == "C" or key == "X") then
-					StaticPopup_Hide(addonName)
-				end
-			end)
-		end,
-		EditBoxOnEscapePressed = function(popupSelf)
-			popupSelf:GetParent():Hide()
-		end,
-		EditBoxOnTextChanged = function(popupSelf)
-			-- ctrl + x sets the text to "" but this triggers hiding and shouldn't trigger resetting the text
-			local currentText = popupSelf:GetText()
-
-			if currentText == "" or currentText == string then
-				return
-			end
-
-			popupSelf:SetText(string)
-		end,
-	})
+	Private.Utils.ShowStaticPopup(
+		Private.Utils.CreateEditablePopup(Private.L.Settings.Export, Private.Utils.Export(), ACCEPT)
+	)
 end
 
 function TargetedSpellsEditModeMixin:OnImportButtonClick()
@@ -215,10 +187,7 @@ function TargetedSpellsEditModeMixin:CreateSetting(key, defaults)
 
 				local translated = L.Settings.TargetingFilterApiLabels[id]
 
-				rootDescription:CreateCheckbox(translated, IsEnabled, SetProxy, {
-					value = label,
-					multiple = false,
-				})
+				rootDescription:CreateRadio(translated, IsEnabled, SetProxy)
 			end
 		end
 
@@ -230,6 +199,60 @@ function TargetedSpellsEditModeMixin:CreateSetting(key, defaults)
 			default = defaults.TargetingFilterApi,
 			multiple = false,
 			generator = Generator,
+			set = Set,
+		}
+	end
+
+	if key == Private.Settings.Keys.Self.FontFlags or key == Private.Settings.Keys.Party.FontFlags then
+		local tableRef = key == Private.Settings.Keys.Self.FontFlags and TargetedSpellsSaved.Settings.Self
+			or TargetedSpellsSaved.Settings.Party
+
+		local function Generator(owner, rootDescription, data)
+			for label, id in pairs(Private.Enum.FontFlags) do
+				local function IsEnabled()
+					return tableRef.FontFlags[id] == true
+				end
+
+				local function Toggle()
+					tableRef.FontFlags[id] = not tableRef.FontFlags[id]
+
+					Private.EventRegistry:TriggerEvent(Private.Enum.Events.SETTING_CHANGED, key, tableRef.FontFlags)
+				end
+
+				local translated = L.Settings.FontFlagsLabels[id]
+
+				rootDescription:CreateCheckbox(translated, IsEnabled, Toggle, {
+					value = label,
+					multiple = true,
+				})
+			end
+		end
+
+		---@param layoutName string
+		---@param values table<string, boolean>
+		local function Set(layoutName, values)
+			local hasChanges = false
+
+			for id, bool in pairs(values) do
+				if tableRef.FontFlags[id] ~= bool then
+					tableRef.FontFlags[id] = bool
+					hasChanges = true
+				end
+			end
+
+			if hasChanges then
+				Private.EventRegistry:TriggerEvent(Private.Enum.Events.SETTING_CHANGED, key, tableRef.FontFlags)
+			end
+		end
+
+		---@type LibEditModeDropdown
+		return {
+			name = L.Settings.FontFlagsLabel,
+			kind = Enum.EditModeSettingDisplayType.Dropdown,
+			default = defaults.FontFlags,
+			desc = L.Settings.FontFlagsTooltip,
+			generator = Generator,
+			-- technically is a reset only
 			set = Set,
 		}
 	end
@@ -247,10 +270,63 @@ function TargetedSpellsEditModeMixin:CreateSetting(key, defaults)
 			end
 		end
 
-		local function Generator(owner, rootDescription, data)
-			local fonts = Private.Settings.GetFontOptions()
+		---@param path string
+		---@param label string
+		---@return string globalName
+		local function CreateAndGetFontIfNeeded(path, label)
+			local sanitizedName = string.gsub(label, " ", "")
+			local globalName = addonName .. "_" .. sanitizedName
 
-			for label, path in pairs(fonts) do
+			if _G[globalName] == nil then
+				local locale = GAME_LOCALE or GetLocale()
+				local overrideAlphabet = "roman"
+				if locale == "koKR" then
+					overrideAlphabet = "korean"
+				elseif locale == "zhCN" then
+					overrideAlphabet = "simplifiedchinese"
+				elseif locale == "zhTW" then
+					overrideAlphabet = "traditionalchinese"
+				elseif locale == "ruRU" then
+					overrideAlphabet = "russian"
+				end
+
+				local members = {}
+				local coreFont = GameFontNormal
+				local alphabets = { "roman", "korean", "simplifiedchinese", "traditionalchinese", "russian" }
+				for _, alphabet in ipairs(alphabets) do
+					local forAlphabet = coreFont:GetFontObjectForAlphabet(alphabet)
+					local file, size, _ = forAlphabet:GetFont()
+					if alphabet == overrideAlphabet then
+						table.insert(members, {
+							alphabet = alphabet,
+							file = path,
+							height = size,
+							flags = "",
+						})
+					else
+						table.insert(members, {
+							alphabet = alphabet,
+							file = file,
+							height = size,
+							flags = "",
+						})
+					end
+				end
+
+				local font = CreateFontFamily(globalName, members)
+				font:SetTextColor(1, 1, 1)
+				_G[globalName] = font
+			end
+
+			return globalName
+		end
+
+		local function Generator(owner, rootDescription, data)
+			local fontInfo = Private.Settings.GetFontOptions()
+
+			for index, label in pairs(fontInfo.fonts) do
+				local path = fontInfo.byLabel[label]
+
 				local function IsEnabled()
 					return tableRef.Font == path
 				end
@@ -259,10 +335,12 @@ function TargetedSpellsEditModeMixin:CreateSetting(key, defaults)
 					Set(LibEditMode:GetActiveLayoutName(), path)
 				end
 
-				rootDescription:CreateCheckbox(label, IsEnabled, SetProxy, {
-					value = path,
-					multiple = false,
-				})
+				local radio = rootDescription:CreateRadio(label, IsEnabled, SetProxy)
+
+				radio:AddInitializer(function(button, elementDescription, menu)
+					local globalName = CreateAndGetFontIfNeeded(path, label)
+					button.fontString:SetFontObject(globalName)
+				end)
 			end
 		end
 
@@ -466,10 +544,7 @@ function TargetedSpellsEditModeMixin:CreateSetting(key, defaults)
 
 				local translated = L.Settings.GlowTypeLabels[id]
 
-				rootDescription:CreateCheckbox(translated, IsEnabled, SetProxy, {
-					value = label,
-					multiple = false,
-				})
+				rootDescription:CreateRadio(translated, IsEnabled, SetProxy)
 			end
 		end
 
@@ -940,10 +1015,7 @@ function TargetedSpellsEditModeMixin:CreateSetting(key, defaults)
 				local translated = id == Private.Enum.Direction.Horizontal and L.Settings.FrameDirectionHorizontal
 					or L.Settings.FrameDirectionVertical
 
-				rootDescription:CreateCheckbox(translated, IsEnabled, SetProxy, {
-					value = id,
-					multiple = false,
-				})
+				rootDescription:CreateRadio(translated, IsEnabled, SetProxy)
 			end
 		end
 
@@ -1040,10 +1112,7 @@ function TargetedSpellsEditModeMixin:CreateSetting(key, defaults)
 					Set(LibEditMode:GetActiveLayoutName(), enumValue)
 				end
 
-				rootDescription:CreateCheckbox(label, IsEnabled, SetProxy, {
-					value = label,
-					multiple = false,
-				})
+				rootDescription:CreateRadio(label, IsEnabled, SetProxy)
 			end
 		end
 
@@ -1078,10 +1147,7 @@ function TargetedSpellsEditModeMixin:CreateSetting(key, defaults)
 					Set(LibEditMode:GetActiveLayoutName(), enumValue)
 				end
 
-				rootDescription:CreateCheckbox(label, IsEnabled, SetProxy, {
-					value = label,
-					multiple = false,
-				})
+				rootDescription:CreateRadio(label, IsEnabled, SetProxy)
 			end
 		end
 
@@ -1122,10 +1188,7 @@ function TargetedSpellsEditModeMixin:CreateSetting(key, defaults)
 				local translated = id == Private.Enum.SortOrder.Ascending and L.Settings.FrameSortOrderAscending
 					or L.Settings.FrameSortOrderDescending
 
-				rootDescription:CreateCheckbox(translated, IsEnabled, SetProxy, {
-					value = id,
-					multiple = false,
-				})
+				rootDescription:CreateRadio(translated, IsEnabled, SetProxy)
 			end
 		end
 
@@ -1165,10 +1228,7 @@ function TargetedSpellsEditModeMixin:CreateSetting(key, defaults)
 
 				local translated = L.Settings.FrameGrowLabels[id]
 
-				rootDescription:CreateCheckbox(translated, IsEnabled, SetProxy, {
-					value = id,
-					multiple = false,
-				})
+				rootDescription:CreateRadio(translated, IsEnabled, SetProxy)
 			end
 		end
 
@@ -1285,7 +1345,7 @@ function SelfEditModeMixin:Init()
 	TargetedSpellsEditModeMixin.Init(self, Private.L.EditMode.TargetedSpellsSelfLabel, Private.Enum.FrameKind.Self)
 	self.maxFrames = 5
 
-	self.editModeFrame:SetPoint("CENTER", UIParent)
+	PixelUtil.SetPoint(self.editModeFrame, "CENTER", UIParent, "CENTER", 0, 0)
 	self:ResizeEditModeFrame()
 end
 
@@ -1336,7 +1396,10 @@ end
 
 function SelfEditModeMixin:RestoreEditModePosition()
 	self.editModeFrame:ClearAllPoints()
-	self.editModeFrame:SetPoint(
+	PixelUtil.SetPoint(
+		self.editModeFrame,
+		"CENTER",
+		UIParent,
 		TargetedSpellsSaved.Settings.Self.Position.point,
 		TargetedSpellsSaved.Settings.Self.Position.x,
 		TargetedSpellsSaved.Settings.Self.Position.y
@@ -1388,22 +1451,21 @@ function SelfEditModeMixin:RepositionPreviewFrames()
 
 	local isHorizontal = direction == Private.Enum.Direction.Horizontal
 
-	local point = isHorizontal and "LEFT" or "BOTTOM"
+	local point = grow == Private.Enum.Grow.Center and "CENTER" or isHorizontal and "LEFT" or "BOTTOM"
 	local total = (activeFrameCount * (isHorizontal and width or height)) + (activeFrameCount - 1) * gap
 	local parentDimension = isHorizontal and self.editModeFrame:GetWidth() or self.editModeFrame:GetHeight()
-	local centerOffset = grow == Private.Enum.Grow.Center and (-width / 2) or 0
 
 	for i, frame in ipairs(activeFrames) do
 		local x = 0
 		local y = 0
 
 		if isHorizontal then
-			x = Private.Utils.CalculateCoordinate(i, width, gap, parentDimension, total, centerOffset, grow)
+			x = Private.Utils.CalculateCoordinate(i, width, gap, parentDimension, total, 0, grow)
 		else
-			y = Private.Utils.CalculateCoordinate(i, width, gap, parentDimension, total, centerOffset, grow)
+			y = Private.Utils.CalculateCoordinate(i, height, gap, parentDimension, total, 0, grow)
 		end
 
-		frame:Reposition(point, self.editModeFrame, "CENTER", x, y, false)
+		frame:Reposition(point, self.editModeFrame, "CENTER", x, y)
 	end
 end
 
@@ -1589,7 +1651,7 @@ function PartyEditModeMixin:RepositionEditModeFrame()
 	local width = 125
 	local foundMatch = false
 
-	if Private.Utils.HasThirdPartyCandidates() then
+	if Private.Utils.HasThirdPartyCandidates() or Grid2 ~= nil then
 		local maybeFrame = Private.Utils.FindThirdPartyGroupFrameForUnit("party1")
 
 		if maybeFrame then
@@ -1603,13 +1665,25 @@ function PartyEditModeMixin:RepositionEditModeFrame()
 		end
 	end
 
-	if not foundMatch and ElvUI and ElvUI[1].db and ElvUI[1].db.unitframe.units.party.enable and ElvUF_Party then
+	if not foundMatch and EnhanceQoL ~= nil and EQOLUFPartyHeader ~= nil then
+		parent = EQOLUFPartyHeader
+		width = EQOLUFPartyHeader:GetWidth()
+		foundMatch = true
+	end
+
+	if
+		not foundMatch
+		and ElvUI ~= nil
+		and ElvUI[1].db ~= nil
+		and ElvUI[1].db.unitframe.units.party.enable ~= nil
+		and ElvUF_Party ~= nil
+	then
 		parent = ElvUF_Party
 		width = ElvUF_Party:GetWidth()
 		foundMatch = true
 	end
 
-	if not foundMatch and DandersFrames and DandersPartyGroupContainer then
+	if not foundMatch and DandersFrames ~= nil and DandersPartyGroupContainer ~= nil then
 		parent = DandersPartyGroupContainer
 		width = DandersPartyGroupContainer:GetWidth()
 		foundMatch = true
@@ -1624,7 +1698,7 @@ function PartyEditModeMixin:RepositionEditModeFrame()
 
 	PixelUtil.SetSize(self.editModeFrame, width, height)
 	self.editModeFrame:ClearAllPoints()
-	self.editModeFrame:SetPoint("CENTER", parent, "TOP", 0, 16)
+	PixelUtil.SetPoint(self.editModeFrame, "CENTER", parent, "TOP", 0, 16)
 end
 
 function PartyEditModeMixin:OnEditModePositionChanged()
@@ -1722,7 +1796,7 @@ function PartyEditModeMixin:RepositionPreviewFrames()
 			if i < 5 and true or i == 5 and TargetedSpellsSaved.Settings.Party.IncludeSelfInParty then
 				Private.Utils.SortFrames(activeFrames, sortOrder)
 
-				local parentFrame, useTopLevel = Private.Utils.FindThirdPartyGroupFrameForUnit(token)
+				local parentFrame = Private.Utils.FindThirdPartyGroupFrameForUnit(token)
 
 				if parentFrame == nil then
 					if self.useRaidStylePartyFrames then
@@ -1751,7 +1825,7 @@ function PartyEditModeMixin:RepositionPreviewFrames()
 							y = Private.Utils.CalculateCoordinate(j, width, gap, parentDimension, total, offsetY, grow)
 						end
 
-						frame:Reposition(sourceAnchor, parentFrame, targetAnchor, x, y, useTopLevel)
+						frame:Reposition(sourceAnchor, parentFrame, targetAnchor, x, y)
 					end
 				end
 			end

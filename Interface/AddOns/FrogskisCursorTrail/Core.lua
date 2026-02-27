@@ -41,6 +41,7 @@ local DEFAULTS = {
     offsetY = -18,
 
     updateEveryOther = true,
+    adaptiveTargetFPS = 90,
     enableLook = false,
     enableCombatLook = false,
     enableIndicator = true,
@@ -61,12 +62,6 @@ local function Clamp(n, lo, hi)
         return hi
     end
     return n
-end
-local function PosFade(rank, total)
-    if total <= 1 then
-        return 1
-    end
-    return 1 - (rank / (total - 1))
 end
 
 local function DeepCopy(src)
@@ -120,8 +115,6 @@ local cfg
 local rootDB
 local accountDB
 local activeName
-local conditionOverrideName
-local conditionOverrideCfg
 local glowBoost = 1
 local trailDormant = false
 local dormantX, dormantY
@@ -177,7 +170,10 @@ local function SanitizeProfile(p)
         p.maxdots = DEFAULTS.maxdots
     end
     p.maxdots = math.floor(Clamp(p.maxdots, 1, 800))
-
+    if type(p.adaptiveTargetFPS) ~= "number" then
+        p.adaptiveTargetFPS = 90
+    end
+    p.adaptiveTargetFPS = math.floor(Clamp(p.adaptiveTargetFPS, 1, 240))
     if type(p.widthx) ~= "number" then
         p.widthx = 45
     end
@@ -1432,7 +1428,8 @@ _G.RMBLook = RMBLook
 local Anchor = CreateFrame("Frame", nil, UIParent)
 Anchor:SetAllPoints(UIParent)
 
-local textures = {}
+local headTex
+local slotTex = {}
 local pointsX, pointsY, pointsT = {}, {}, {}
 local headIndex = 1
 local haveInit = false
@@ -1457,25 +1454,59 @@ local offX, offY = 0, 0
 local shrinkWithTime = true
 local shrinkWithDistance = true
 local updateEveryOther = false
-
+local adaptiveTargetFPS = 90
+local lastHeadPX, lastHeadPY = nil, nil
+local lastHeadOffX, lastHeadOffY = nil, nil
+local invDuration = 1 / duration
+local posByRank = {}
+local sqrtPosByRank = {}
 local MAX_STEPS_PER_TICK = 250
+
 local DEBUG_COUNT = false
-local debugFS = UIParent:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
-debugFS:SetPoint("TOP", UIParent, "TOP", 0, -40)
-debugFS:SetJustifyH("CENTER")
-debugFS:Hide()
+
+local debugHolder = CreateFrame("Frame", nil, UIParent)
+debugHolder:SetPoint("TOP", UIParent, "TOP", 0, -40)
+debugHolder:SetSize(900, 90)
+debugHolder:Hide()
+
+local debugLabel1 = debugHolder:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
+debugLabel1:SetPoint("TOP", debugHolder, "TOP", 0, 0)
+debugLabel1:SetJustifyH("RIGHT")
+debugLabel1:SetText("Frogski's Cursor Trail Textures count:")
+debugLabel1:SetScale(1.3)
+
+local debugValue1 = debugHolder:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
+debugValue1:SetPoint("LEFT", debugLabel1, "RIGHT", 8, 0)
+debugValue1:SetJustifyH("LEFT")
+debugValue1:SetScale(1.3)
+
+local debugLabel2 = debugHolder:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
+debugLabel2:SetPoint("TOP", debugHolder, "TOP", 0, -28)
+debugLabel2:SetJustifyH("RIGHT")
+debugLabel2:SetText("FPS / update target:")
+debugLabel2:SetScale(1.3)
+
+local debugValue2 = debugHolder:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
+debugValue2:SetPoint("LEFT", debugLabel2, "RIGHT", 8, 0)
+debugValue2:SetJustifyH("LEFT")
+debugValue2:SetScale(1.3)
 
 local fpsElapsed, fpsFrames, fpsValue = 0, 0, 0
+
+local fpsSampleElapsed = 0
+local fpsAutoValue = 120
+local FPS_SAMPLE_PERIOD = 0.25
+
 function FrogskisCursorTrail2:IsDebugEnabled()
     return DEBUG_COUNT == true
 end
+
 function FrogskisCursorTrail2:SetDebugEnabled(enabled)
     DEBUG_COUNT = enabled
-
     if enabled then
-        debugFS:Show()
+        debugHolder:Show()
     else
-        debugFS:Hide()
+        debugHolder:Hide()
     end
 end
 
@@ -1504,7 +1535,8 @@ local function EnsurePoints(count, x, y)
     headIndex = 1
     haveInit = true
 end
-
+local SetSlotTexPos
+local SetHeadTexPos
 local function ResetTrailSilent(x, y, now)
     local deadTime = now - (duration + 1)
     lastEmitTime = deadTime
@@ -1513,10 +1545,17 @@ local function ResetTrailSilent(x, y, now)
         pointsY[i] = y
         pointsT[i] = deadTime
     end
+    for slot = 1, ElementCap do
+        if slotTex[slot] then
+            SetSlotTexPos(slot, x, y)
+        end
+    end
     headIndex = 1
     haveInit = true
     lastSampleX, lastSampleY = x, y
     lastX, lastY = x, y
+    lastHeadPX, lastHeadPY = nil, nil
+    lastHeadOffX, lastHeadOffY = nil, nil
 end
 
 local function PushPoint(x, y, now)
@@ -1525,12 +1564,42 @@ local function PushPoint(x, y, now)
     pointsY[headIndex] = y
     pointsT[headIndex] = now or GetTime()
     lastEmitTime = pointsT[headIndex]
+    SetSlotTexPos(headIndex, x, y)
 end
 
 local function GetCursorXY()
     local x, y = GetCursorPosition()
     local scale = UIParent:GetEffectiveScale()
     return x / scale, y / scale
+end
+SetSlotTexPos = function(slot, x, y)
+    local tex = slotTex[slot]
+    if not tex then
+        return
+    end
+    tex:ClearAllPoints()
+    tex:SetPoint("CENTER", UIParent, "BOTTOMLEFT", x + offX, y + offY)
+end
+
+SetHeadTexPos = function(x, y)
+    if not headTex then
+        return
+    end
+
+    local px = x + offX
+    local py = y + offY
+
+    if lastHeadPX and lastHeadPY and lastHeadOffX == offX and lastHeadOffY == offY then
+        if math.abs(px - lastHeadPX) < 0.05 and math.abs(py - lastHeadPY) < 0.05 then
+            return
+        end
+    end
+
+    headTex:ClearAllPoints()
+    headTex:SetPoint("CENTER", UIParent, "BOTTOMLEFT", px, py)
+
+    lastHeadPX, lastHeadPY = px, py
+    lastHeadOffX, lastHeadOffY = offX, offY
 end
 
 -- ===============
@@ -1593,16 +1662,23 @@ local function CreateOneTexture()
 end
 
 local function EnsureTextures(count)
-    for i = 1, count do
-        if not textures[i] then
-            textures[i] = CreateOneTexture()
-        end
-        textures[i]:SetBlendMode(blendmodeStr)
-        ApplyElementTexture(textures[i])
+
+    if not headTex then
+        headTex = CreateOneTexture()
     end
-    for i = count + 1, #textures do
-        if textures[i] then
-            textures[i]:Hide()
+    headTex:SetBlendMode(blendmodeStr)
+    ApplyElementTexture(headTex)
+
+    for slot = 1, count do
+        if not slotTex[slot] then
+            slotTex[slot] = CreateOneTexture()
+        end
+        slotTex[slot]:SetBlendMode(blendmodeStr)
+        ApplyElementTexture(slotTex[slot])
+    end
+    for slot = count + 1, #slotTex do
+        if slotTex[slot] then
+            slotTex[slot]:Hide()
         end
     end
 end
@@ -1674,32 +1750,6 @@ local function ColorByVisibleRank(rank, total)
     local b = b1 + (b2 - b1) * frac
     return r, g, b
 end
-local function SmoothScrolledPhaseColor(rank, total)
-    local phases = math.max(1, numPhases or 1)
-    if not phaseColors or not phaseColors[1] then
-        return 1, 1, 1
-    end
-    if phases == 1 then
-        local c = phaseColors[1]
-        return c[1] or 1, c[2] or 1, c[3] or 1
-    end
-
-    local t = (total and total > 1) and ((rank - 1) / (total - 1)) or 0
-
-    local u = (t * phases - phaseOffset) % phases
-
-    local i1 = math.floor(u) + 1
-    local frac = u - math.floor(u)
-    local i2 = (i1 % phases) + 1
-
-    local c1 = phaseColors[i1] or phaseColors[1]
-    local c2 = phaseColors[i2] or c1
-
-    local r1, g1, b1 = c1[1] or 1, c1[2] or 1, c1[3] or 1
-    local r2, g2, b2 = c2[1] or 1, c2[2] or 1, c2[3] or 1
-
-    return r1 + (r2 - r1) * frac, g1 + (g2 - g1) * frac, b1 + (b2 - b1) * frac
-end
 
 local function GetPlayerClassColorRGB()
     local _, classFile = UnitClass("player")
@@ -1716,49 +1766,6 @@ local function GetPlayerClassColorRGB()
         end
     end
     return 1, 1, 1
-end
-
-local function TimeBasedTransitionColor(startTime, now)
-    local elapsedTime = (now or GetTime()) - (startTime or (now or GetTime()))
-    local spd = (colourspeed and colourspeed > 0) and colourspeed or 1
-    local cycleDuration = 1 / spd
-    local phaseDuration = cycleDuration / math.max(1, numPhases)
-    local phaseProgress = (elapsedTime % cycleDuration) / phaseDuration
-    local currentPhase = math.floor(phaseProgress)
-    local nextPhase = (currentPhase + 1) % numPhases
-    local phaseFraction = phaseProgress - currentPhase
-
-    currentPhase = (currentPhase % numPhases) + 1
-    nextPhase = (nextPhase % numPhases) + 1
-
-    local r1, g1, b1 = unpack(phaseColors[nextPhase])
-    local r2, g2, b2 = unpack(phaseColors[currentPhase])
-    local r = r2 + (r1 - r2) * phaseFraction
-    local g = g2 + (g1 - g2) * phaseFraction
-    local b = b2 + (b1 - b2) * phaseFraction
-    return r, g, b
-end
-
-local function TransitionColor(remainingDuration, totalDuration)
-    if totalDuration <= 0 then
-        totalDuration = 0.001
-    end
-    remainingDuration = math.max(0, math.min(remainingDuration, totalDuration))
-
-    local t = 1 - (remainingDuration / totalDuration)
-    local phaseProgress = t * numPhases
-
-    local currentPhase = math.min(math.floor(phaseProgress), numPhases - 1)
-    local nextPhase = math.min(currentPhase + 1, numPhases - 1)
-    local phaseFraction = phaseProgress - currentPhase
-
-    local r1, g1, b1 = unpack(phaseColors[currentPhase + 1])
-    local r2, g2, b2 = unpack(phaseColors[nextPhase + 1])
-
-    local r = r1 + (r2 - r1) * phaseFraction
-    local g = g1 + (g2 - g1) * phaseFraction
-    local b = b1 + (b2 - b1) * phaseFraction
-    return r, g, b
 end
 
 -- =====================
@@ -1786,6 +1793,22 @@ local function ApplyConfig()
     end
 
     ElementCap = math.floor(Clamp(tonumber(p.maxdots) or 800, 1, 2000))
+    invDuration = (duration > 0) and (1 / duration) or 0
+
+    wipe(posByRank)
+    wipe(sqrtPosByRank)
+
+    if ElementCap <= 1 then
+        posByRank[1] = 1
+        sqrtPosByRank[1] = 1
+    else
+        local denom = (ElementCap - 1)
+        for rank = 1, ElementCap do
+            local pos = 1 - ((rank - 1) / denom)
+            posByRank[rank] = pos
+            sqrtPosByRank[rank] = math.sqrt(pos)
+        end
+    end
 
     onlyincombat = (p.combatoption == true)
     rainbowx = (p.changeWithTime == true)
@@ -1834,7 +1857,7 @@ local function ApplyConfig()
         blendmodeStr = "ADD"
     end
     updateEveryOther = (p.updateEveryOther == true)
-
+    adaptiveTargetFPS = math.floor(Clamp(tonumber(p.adaptiveTargetFPS) or 90, 1, 240))
     if p.cursorlayer == 1 then
         cursorLayerStrata = "TOOLTIP"
     elseif p.cursorlayer == 2 then
@@ -1866,7 +1889,11 @@ function FCT2:Refresh()
     ApplyConfig()
 
     EnsureTextures(ElementCap)
-
+    for slot = 1, ElementCap do
+        if slotTex[slot] and pointsX[slot] and pointsY[slot] then
+            SetSlotTexPos(slot, pointsX[slot], pointsY[slot])
+        end
+    end
     if not haveInit then
         local x, y = GetCursorXY()
         ResetTrailSilent(x, y, GetTime())
@@ -1890,8 +1917,14 @@ local function CountVisibleDots(now, shouldGenerate, headFade)
     end
 
     local count = 1
+    local idx = headIndex
+
     for i = 2, ElementCap do
-        local idx = WrapIndex(headIndex - (i - 2), ElementCap)
+        idx = idx - 1
+        if idx <= 0 then
+            idx = ElementCap
+        end
+
         local born = pointsT[idx]
         if not born then
             break
@@ -1904,19 +1937,13 @@ local function CountVisibleDots(now, shouldGenerate, headFade)
 
         count = count + 1
     end
+
     return count
 end
 
 -- =============
 -- Trail update 
 -- =============
-local function AlphaForIndex(i, count)
-    if count <= 1 then
-        return 1
-    end
-    local t = (i - 1) / (count - 1)
-    return 1 - t
-end
 
 local function AddCursorPathPoint(x, y, now)
     now = now or GetTime()
@@ -1960,11 +1987,6 @@ local function AddCursorPathPoint(x, y, now)
         return
     end
     trailDist = trailDist + (n * step)
-    -- do
-    --     local phases = math.max(1, numPhases or 1)
-    --     local dotsPerPhase = math.max(1, ElementCap / phases)
-    --     phaseOffset = (phaseOffset + (n / dotsPerPhase)) % phases
-    -- end
 
     local ux = dx / dist
     local uy = dy / dist
@@ -1983,8 +2005,11 @@ local function UpdateTrail(dt)
     local x, y = GetCursorXY()
     if trailDormant and dormantX and dormantY then
         if math.abs(x - dormantX) < 0.5 and math.abs(y - dormantY) < 0.5 then
-            for i = 1, ElementCap do
-                local tex = textures[i]
+            if headTex then
+                headTex:Hide()
+            end
+            for slot = 1, ElementCap do
+                local tex = slotTex[slot]
                 if tex then
                     tex:Hide()
                 end
@@ -2041,128 +2066,167 @@ local function UpdateTrail(dt)
 
     local r, g, b
 
-    for i = 1, ElementCap do
-        local tex = textures[i]
-        if tex then
-            if i == 1 then
+    -- ==========================
+    -- Render (NO SetPoint spam)
+    -- ==========================
 
-                if headFade <= 0.01 then
+    if headTex then
+        if headFade <= 0.01 or visibleCount == 0 then
+            headTex:Hide()
+        else
+            local pos = (shrinkWithDistance and (posByRank[1] or 1)) or 1
+            local sqrtPos = (shrinkWithDistance and (sqrtPosByRank[1] or 1)) or 1
+
+            local headScale = headFade
+            local headAlpha = headFade
+            if not shrinkWithTime then
+                headScale = 1
+                headAlpha = 1
+            end
+
+            local alpha, scale
+            if shrinkWithTime and shrinkWithDistance then
+                local sTime = math.sqrt(headAlpha) -- headAlpha == headScale here
+                alpha = alphaMul * sTime * sqrtPos
+                scale = sTime * sqrtPos
+            else
+                alpha = alphaMul * headAlpha * pos
+                scale = headScale * pos
+            end
+
+            if alpha <= 0.01 or scale <= 0.01 then
+                headTex:Hide()
+            else
+                visibleRank = 1
+                if rainbowx then
+                    r, g, b = WorldLockedRainbowColor(trailDist)
+                else
+                    r, g, b = ColorByVisibleRank(visibleRank, visibleCount)
+                end
+
+                headTex:Show()
+                headTex:SetSize(dotW * scale, dotH * scale)
+                headTex:SetVertexColor(r * glowBoost, g * glowBoost, b * glowBoost, alpha)
+                SetHeadTexPos(x, y)
+            end
+        end
+    end
+
+    local slot = headIndex
+
+    for rank = 2, visibleCount do
+        slot = slot - 1
+        if slot <= 0 then
+            slot = ElementCap
+        end
+
+        local tex = slotTex[slot]
+        if tex then
+            local born = pointsT[slot]
+            if not born then
+                tex:Hide()
+            else
+                local age = now - born
+                if duration > 0 and age >= duration then
                     tex:Hide()
                 else
-                    local pos = AlphaForIndex(1, ElementCap)
-                    if not shrinkWithDistance then
-                        pos = 1
+                    local t = age * invDuration
+                    if t < 0 then
+                        t = 0
+                    elseif t > 1 then
+                        t = 1
                     end
 
-                    local headScale = headFade
-                    local headAlpha = headFade
+                    local timeFade = 1 - t
+                    local timeScale = 1 - t
                     if not shrinkWithTime then
-                        headScale = 1
-                        headAlpha = 1
+                        timeFade = 1
+                        timeScale = 1
                     end
+
+                    local pos = (shrinkWithDistance and (posByRank[rank] or 1)) or 1
+                    local sqrtPos = (shrinkWithDistance and (sqrtPosByRank[rank] or 1)) or 1
 
                     local alpha, scale
                     if shrinkWithTime and shrinkWithDistance then
-                        alpha = alphaMul * math.sqrt(headAlpha * pos)
-                        scale = math.sqrt(headScale * pos)
+                        local sTime = math.sqrt(timeFade)
+                        alpha = alphaMul * sTime * sqrtPos
+                        scale = sTime * sqrtPos
                     else
-                        alpha = alphaMul * headAlpha * pos
-                        scale = headScale * pos
+                        alpha = alphaMul * timeFade * pos
+                        scale = timeScale * pos
                     end
 
                     if alpha <= 0.01 or scale <= 0.01 then
                         tex:Hide()
                     else
-                        visibleRank = visibleRank + 1
-
                         if rainbowx then
-                            local behind = (visibleRank - 1) * MaxSpacing
+                            local behind = (rank - 1) * MaxSpacing
                             r, g, b = WorldLockedRainbowColor(trailDist - behind)
                         else
-                            r, g, b = ColorByVisibleRank(visibleRank, visibleCount)
+                            r, g, b = ColorByVisibleRank(rank, visibleCount)
                         end
 
                         tex:Show()
                         tex:SetSize(dotW * scale, dotH * scale)
                         tex:SetVertexColor(r * glowBoost, g * glowBoost, b * glowBoost, alpha)
-                        tex:ClearAllPoints()
-                        tex:SetPoint("CENTER", UIParent, "BOTTOMLEFT", x + offX, y + offY)
-                    end
-
-                end
-
-            else
-                local idx = WrapIndex(headIndex - (i - 2), ElementCap)
-                local born = pointsT[idx]
-                if not born then
-                    tex:Hide()
-                else
-                    local age = now - born
-                    if duration > 0 and age >= duration then
-                        tex:Hide()
-                    else
-                        local t = (duration > 0) and Clamp(age / duration, 0, 1) or 0
-
-                        local timeFade = 1 - t
-                        local timeScale = 1 - t
-                        if not shrinkWithTime then
-                            timeFade = 1
-                            timeScale = 1
-                        end
-
-                        local pos = AlphaForIndex(i, ElementCap)
-                        if not shrinkWithDistance then
-                            pos = 1
-                        end
-
-                        local alpha, scale
-                        if shrinkWithTime and shrinkWithDistance then
-                            alpha = alphaMul * math.sqrt(timeFade * pos)
-                            scale = math.sqrt(timeScale * pos)
-                        else
-                            alpha = alphaMul * timeFade * pos
-                            scale = timeScale * pos
-                        end
-
-                        if alpha <= 0.01 or scale <= 0.01 then
-                            tex:Hide()
-                        else
-                            visibleRank = visibleRank + 1
-                            if rainbowx then
-                                local behind = (visibleRank - 1) * MaxSpacing
-                                r, g, b = WorldLockedRainbowColor(trailDist - behind)
-                            else
-                                r, g, b = ColorByVisibleRank(visibleRank, visibleCount)
-                            end
-
-                            tex:Show()
-                            tex:SetSize(dotW * scale, dotH * scale)
-                            tex:SetVertexColor(r * glowBoost, g * glowBoost, b * glowBoost, alpha)
-                            tex:ClearAllPoints()
-                            tex:SetPoint("CENTER", UIParent, "BOTTOMLEFT", (pointsX[idx] or x) + offX,
-                                (pointsY[idx] or y) + offY)
-                        end
                     end
                 end
             end
+        end
+    end
+    local slot2 = slot
+    for rank = visibleCount + 1, ElementCap do
+        slot2 = slot2 - 1
+        if slot2 <= 0 then
+            slot2 = ElementCap
+        end
+        local tex = slotTex[slot2]
+        if tex then
+            tex:Hide()
         end
     end
 
     if DEBUG_COUNT then
         local shown = 0
         for i = 1, ElementCap do
-            local tex = textures[i]
+            local tex = slotTex[i]
             if tex and tex:IsShown() then
                 shown = shown + 1
             end
         end
-        debugFS:SetText(("Frogski's Cursor Trail Textures count: %d / %d\nFPS: %d"):format(shown, ElementCap, fpsValue))
 
-        -- debugFS:Show()
-        debugFS:SetScale(1.3)
+        local hzStr = updateEveryOther and (("%d Hz"):format(adaptiveTargetFPS or 0)) or "every frame"
+
+        debugValue1:SetText(("%d / %d"):format(shown, ElementCap))
+        debugValue2:SetText(("%d  /  %s"):format(fpsValue, hzStr))
     else
-        debugFS:Hide()
     end
+
+end
+
+local function UpdateAutoFPS(dt)
+    fpsSampleElapsed = fpsSampleElapsed + (dt or 0)
+
+    if fpsSampleElapsed < FPS_SAMPLE_PERIOD then
+        return
+    end
+    fpsSampleElapsed = 0
+
+    local fpsNow
+    if type(GetFramerate) == "function" then
+        fpsNow = GetFramerate()
+    end
+
+    if not fpsNow or fpsNow <= 0 then
+        if fpsElapsed > 0 then
+            fpsNow = fpsFrames / fpsElapsed
+        else
+            fpsNow = fpsAutoValue
+        end
+    end
+
+    fpsAutoValue = fpsAutoValue * 0.8 + fpsNow * 0.2
 end
 
 -- =======
@@ -2203,7 +2267,6 @@ FCT2:SetScript("OnEvent", function(self, event)
 
         OnAnyAutomationEvent()
 
-        local _everyOther = false
         local _dtAcc = 0
 
         self:SetScript("OnUpdate", function(_, dt)
@@ -2217,20 +2280,33 @@ FCT2:SetScript("OnEvent", function(self, event)
                 end
             end
 
-            if updateEveryOther then
-                _everyOther = not _everyOther
-                _dtAcc = _dtAcc + dt
-
-                if not _everyOther then
-                    return
-                end
-
-                UpdateTrail(_dtAcc)
+            if not updateEveryOther then
                 _dtAcc = 0
+                UpdateTrail(dt)
                 return
             end
 
-            UpdateTrail(dt)
+            local targetHz = tonumber(adaptiveTargetFPS) or 60
+            targetHz = math.floor(Clamp(targetHz, 1, 240))
+
+            local interval = 1 / targetHz
+            _dtAcc = _dtAcc + dt
+
+            if _dtAcc < interval then
+                return
+            end
+
+            local steps = math.floor(_dtAcc / interval)
+            if steps > 3 then
+                steps = 3
+            end
+
+            for i = 1, steps do
+                UpdateTrail(interval)
+            end
+
+            _dtAcc = _dtAcc - (steps * interval)
+
         end)
 
     elseif event == "PLAYER_LOGOUT" then

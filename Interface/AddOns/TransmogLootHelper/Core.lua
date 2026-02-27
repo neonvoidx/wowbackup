@@ -111,12 +111,24 @@ function app:IsLearned(itemLinkie)
 
 	if tooltip and tooltip.lines then
 		for _, line in ipairs(tooltip.lines) do
-			if line.type == Enum.TooltipDataLineType.RestrictedSpellKnown then
+			if line.requirementType == Enum.TooltipDataUsageRequirementType.NotAlreadyKnown then
 				return true
 			end
 		end
 	end
 	return false
+end
+
+function app:GetLearnedSpell(itemLinkie)
+	local tooltip = C_TooltipInfo.GetHyperlink(itemLinkie)
+
+	if tooltip and tooltip.lines then
+		for _, line in ipairs(tooltip.lines) do
+			if line.type == Enum.TooltipDataLineType.ItemSpellTriggerLearn then
+				return line.spellID
+			end
+		end
+	end
 end
 
 function app:GetBonding(itemLinkie)
