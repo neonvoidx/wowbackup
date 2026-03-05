@@ -118,6 +118,9 @@ L.Settings.IndicateInterruptsLabel = "Indicar interrupciones"
 L.Settings.IndicateInterruptsTooltip =
 	"Desatura el icono, muestra un indicador encima del icono y retrasa ocultar el icono 1 segundo. No funciona con hechizos canalizados."
 
+L.Settings.RenderInterruptSourceNameLabel = "Render Interrupt Source Name"
+L.Settings.RenderInterruptSourceNameTooltip = nil
+
 L.Settings.ShowSwipeLabel = "Mostrar barrido"
 L.Settings.ShowSwipeTooltip = nil
 
@@ -143,14 +146,6 @@ L.Settings.IncludeSelfInPartyLabel = "Incluirse a uno mismo en el grupo"
 L.Settings.IncludeSelfInPartyTooltip = "Solo funciona cuando se usan los marcos de grupo estilo banda."
 
 L.Settings.ClickToOpenSettingsLabel = "Haz clic para abrir la configuración"
-
-L.Settings.TargetingFilterApiLabel = "API de selección de objetivo"
-L.Settings.TargetingFilterApiTooltip =
-	"Diferencias sutiles entre las APIs.\n\nSpell target: muestra la unidad que será afectada por el hechizo independientemente del objetivo. No funciona para habilidades que usan indicación de objetivo con flechas en múltiples jugadores.\n\nUnit Target: muestra la unidad actualmente seleccionada por la fuente del lanzamiento. También puede mostrar hechizos que no afectan exclusivamente al objetivo, como AoE para todo el grupo."
-L.Settings.TargetingFilterApiLabels = {
-	[Private.Enum.TargetingFilterApi.UnitIsSpellTarget] = "Spell Target",
-	[Private.Enum.TargetingFilterApi.UnitIsUnit] = "Unit Target",
-}
 
 L.Settings.Import = "Importar"
 L.Settings.Export = "Exportar"

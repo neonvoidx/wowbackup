@@ -82,7 +82,7 @@ local function OnEvent(self, event, ...)
 			print("Custom tweaks loaded...")
 		end
 	elseif event == "PLAYER_LOGIN" then
-		EditModeManagerFrame:SelectLayout(3)
+		-- EditModeManagerFrame:SelectLayout(3)
 	elseif event == "PLAYER_ENTERING_WORLD" then
 		-- This event is fired anytime you see a load screen, i.e on login, on UI reload, on new area etc
 		-- #region Hide/Show UI elements
@@ -154,9 +154,9 @@ local function OnEvent(self, event, ...)
 		SetCVar("UnitNameEnemyPlayerName", 1)
 		SetCVar("UnitNameNPC", 1)
 		SetCVar("UnitNameFriendlyPlayerName", 1) -- Show friendly player names always
-		SetCVar("UnitNamePlayerGuild", 0) -- Show guild
+		SetCVar("UnitNamePlayerGuild", 1) -- Show guild
 		SetCVar("UnitNamePlayerPVPTitle", 0) -- Show titles
-		SetCVar("UnitNameOwn", 0) -- Show own name
+		SetCVar("UnitNameOwn", 1) -- Show own name
 
 		-- Personal Resource Display
 		SetCVar("NameplatePersonalShowAlways", 0)
@@ -207,19 +207,19 @@ local function OnEvent(self, event, ...)
 				SetCVar("nameplateShowFriends", 0)
 			end
 		elseif bbpLoaded then
-			SetCVar("NamePlateHorizontalScale", 1) -- reduce horizontal scale
-			SetCVar("NamePlateVerticalScale", 3) -- reduce horizontal scale
-			SetCVar("nameplateLargerScale", 1)
-			SetCVar("NamePlateClassificationScale", 1)
-			SetCVar("nameplateSelectedScale", 1.05)
-			SetCVar("nameplateMinScale", 1)
-			SetCVar("nameplateMaxScale", 1)
-			SetCVar("nameplateGlobalScale", 1.1)
-			SetCVar("nameplateOverlapV", 0.85) -- Vertical overlap
-			SetCVar("nameplateOverlapH", 0.8) -- Horizontal overlap
-			SetCVar("nameplateMaxAlpha", 1)
-			SetCVar("nameplateMinAlpha", 0.6)
-			SetCVar("nameplateOccludedAlphaMult", 1)
+			-- SetCVar("NamePlateHorizontalScale", 1) -- reduce horizontal scale
+			-- SetCVar("NamePlateVerticalScale", 3) -- reduce horizontal scale
+			-- SetCVar("nameplateLargerScale", 1)
+			-- SetCVar("NamePlateClassificationScale", 1)
+			-- SetCVar("nameplateSelectedScale", 1.05)
+			-- SetCVar("nameplateMinScale", 1)
+			-- SetCVar("nameplateMaxScale", 1)
+			-- SetCVar("nameplateGlobalScale", 1.1)
+			-- SetCVar("nameplateOverlapV", 0.85) -- Vertical overlap
+			-- SetCVar("nameplateOverlapH", 0.8) -- Horizontal overlap
+			-- SetCVar("nameplateMaxAlpha", 1)
+			-- SetCVar("nameplateMinAlpha", 0.6)
+			-- SetCVar("nameplateOccludedAlphaMult", 1)
 		end
 		-- #endregion
 

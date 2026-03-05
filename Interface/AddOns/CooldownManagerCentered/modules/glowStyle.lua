@@ -3,6 +3,8 @@ local _, ns = ...
 local GlowStyle = {}
 ns.GlowStyle = GlowStyle
 
+local LCG = LibStub("LibCustomGlow-1.0")
+
 local viewers = {
     ["BuffIconCooldownViewer"] = BuffIconCooldownViewer,
     ["BuffBarCooldownViewer"] = BuffBarCooldownViewer,
@@ -73,31 +75,34 @@ local function HookActionButtonSpellAlertManager()
             if activeGlowTarget.SpellActivationAlert then
                 activeGlowTarget.SpellActivationAlert:SetAlpha(0)
             end
+            return
         else
             if activeGlowTarget.SpellActivationAlert then
                 activeGlowTarget.SpellActivationAlert:SetAlpha(1)
             end
         end
-        if activeGlowTarget.CMCActiveGlow then
+
+        if ns.db.profile.cooldownManager_experimental_custom_glows then
+            activeGlowTarget.SpellActivationAlert:SetAlpha(0)
+            if activeGlowTarget.CMCActiveGlow then
+                return
+            end
+
+            activeGlowTarget.CMCActiveGlow = true
+
+            LCG.PixelGlow_Start(activeGlowTarget)
+        end
+    end)
+
+    hooksecurefunc(ActionButtonSpellAlertManager, "HideAlert", function(_, frame)
+        local activeGlowTarget = GetGlowTarget(frame)
+        if not activeGlowTarget or not activeGlowTarget.CMCActiveGlow then
             return
         end
 
-        -- activeGlowTarget.CMCActiveGlow = true
-
-        -- C_Timer.After(0, function()
-        --     CMC:StartCustomGlow(activeGlowTarget)
-        -- end)
+        activeGlowTarget.CMCActiveGlow = nil
+        LCG.PixelGlow_Stop(activeGlowTarget)
     end)
-
-    -- hooksecurefunc(ActionButtonSpellAlertManager, "HideAlert", function(_, frame)
-    --     local activeGlowTarget = GetGlowTarget(frame)
-    --     if not activeGlowTarget or not activeGlowTarget.CMCActiveGlow then
-    --         return
-    --     end
-
-    --     activeGlowTarget.CMCActiveGlow = nil
-    --     CMC:StopCustomGlow(activeGlowTarget)
-    -- end)
     ActionButtonSpellAlertManager._CMC_Hooked = true
 end
 

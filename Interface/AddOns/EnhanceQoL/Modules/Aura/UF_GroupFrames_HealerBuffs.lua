@@ -32,6 +32,9 @@ local sort = table.sort
 local format = string.format
 local wipe = _G.wipe or (table and table.wipe)
 local issecretvalue = _G.issecretvalue
+local UnitIsUnit = _G.UnitIsUnit
+local UnitExists = _G.UnitExists
+local UnitIsPlayer = _G.UnitIsPlayer
 
 local EMPTY = {}
 
@@ -168,6 +171,34 @@ HB.GROWTH_OPTIONS = GFH and GFH.auraGrowthOptions
 	}
 
 local FAMILY_DATA = {
+	-- Shared class buffs
+	{ id = "druid_mark_of_the_wild", classToken = "DRUID", spellIds = { 1126 }, fallbackName = "Mark of the Wild", ignoreForNpcUnits = true },
+	{ id = "mage_arcane_intellect", classToken = "MAGE", spellIds = { 1459 }, fallbackName = "Arcane Intellect", ignoreForNpcUnits = true },
+	{ id = "priest_power_word_fortitude", classToken = "PRIEST", spellIds = { 21562 }, fallbackName = "Power Word: Fortitude", ignoreForNpcUnits = true },
+	{ id = "warrior_battle_shout", classToken = "WARRIOR", spellIds = { 6673 }, fallbackName = "Battle Shout", ignoreForNpcUnits = true },
+	{
+		id = "evoker_blessing_of_the_bronze",
+		classToken = "EVOKER",
+		ignoreForNpcUnits = true,
+		spellIds = {
+			381732,
+			381741,
+			381746,
+			381748,
+			381749,
+			381750,
+			381751,
+			381752,
+			381753,
+			381754,
+			381756,
+			381757,
+			381758,
+		},
+		fallbackName = "Blessing of the Bronze",
+	},
+	{ id = "shaman_skyfury", classToken = "SHAMAN", spellIds = { 462854 }, fallbackName = "Skyfury", ignoreForNpcUnits = true },
+
 	-- Preservation Evoker
 	{ id = "evoker_pres_dream_breath", classToken = "EVOKER", spec = "Preservation", spellIds = { 355941 }, fallbackName = "Dream Breath" },
 	{ id = "evoker_pres_dream_flight", classToken = "EVOKER", spec = "Preservation", spellIds = { 363502 }, fallbackName = "Dream Flight" },
@@ -205,6 +236,9 @@ local FAMILY_DATA = {
 	-- Restoration Shaman
 	{ id = "shaman_earth_shield", classToken = "SHAMAN", spec = "Restoration", spellIds = { 974, 383648 }, fallbackName = "Earth Shield" },
 	{ id = "shaman_riptide", classToken = "SHAMAN", spec = "Restoration", spellIds = { 61295 }, fallbackName = "Riptide" },
+	{ id = "shaman_ancestral_vigor", classToken = "SHAMAN", spec = "Restoration", spellIds = { 207400 }, fallbackName = "Ancestral Vigor" },
+	{ id = "shaman_earthliving_weapon", classToken = "SHAMAN", spec = "Restoration", spellIds = { 382024 }, fallbackName = "Earthliving Weapon" },
+	{ id = "shaman_hydrobubble", classToken = "SHAMAN", spec = "Restoration", spellIds = { 444490 }, fallbackName = "Hydrobubble" },
 	-- Holy Paladin
 	{ id = "paladin_beacon_of_light", classToken = "PALADIN", spec = "Holy", spellIds = { 53563 }, fallbackName = "Beacon of Light" },
 	{ id = "paladin_eternal_flame", classToken = "PALADIN", spec = "Holy", spellIds = { 156322 }, fallbackName = "Eternal Flame" },
@@ -229,6 +263,132 @@ end
 HB.FAMILY_BY_ID = FAMILY_BY_ID
 HB.FAMILY_ORDER = FAMILY_ORDER
 HB.SPELL_TO_FAMILY = SPELL_TO_FAMILY
+
+local PROVIDER_SPEC_IDS = {
+	DRUID = { Restoration = 105 },
+	EVOKER = { Preservation = 1468, Augmentation = 1473 },
+	MONK = { Mistweaver = 270 },
+	PALADIN = { Holy = 65 },
+	PRIEST = { Discipline = 256, Holy = 257 },
+	SHAMAN = { Restoration = 264 },
+}
+
+local function getPlayerClassToken()
+	local classToken = addon.variables and addon.variables.unitClass
+	if type(classToken) == "string" and classToken ~= "" then return classToken end
+	if UnitClass then
+		local _, token = UnitClass("player")
+		if type(token) == "string" and token ~= "" then return token end
+	end
+	return nil
+end
+
+local function getPlayerSpecId()
+	local sid = addon.variables and addon.variables.unitSpecId
+	sid = tonumber(sid)
+	if sid and sid > 0 then return sid end
+
+	local specIndex = nil
+	if C_SpecializationInfo and C_SpecializationInfo.GetSpecialization then
+		specIndex = C_SpecializationInfo.GetSpecialization()
+	elseif GetSpecialization then
+		specIndex = GetSpecialization()
+	end
+	if not specIndex then return nil end
+
+	if C_SpecializationInfo and C_SpecializationInfo.GetSpecializationInfo then
+		local info = C_SpecializationInfo.GetSpecializationInfo(specIndex)
+		if type(info) == "table" then
+			sid = tonumber(info.specID or info.id)
+		else
+			sid = tonumber(info)
+		end
+		if sid and sid > 0 then return sid end
+	end
+
+	if GetSpecializationInfo then
+		sid = tonumber(GetSpecializationInfo(specIndex))
+		if sid and sid > 0 then return sid end
+	end
+
+	return nil
+end
+
+local function canPlayerProvideFamily(familyId)
+	local family = familyId and FAMILY_BY_ID[tostring(familyId)] or nil
+	if not family then return false end
+
+	local familyClass = family.classToken and tostring(family.classToken) or nil
+	if familyClass then
+		local playerClass = getPlayerClassToken()
+		if not playerClass or tostring(playerClass) ~= familyClass then return false end
+	end
+
+	local familySpec = family.spec and tostring(family.spec) or nil
+	if familySpec and familySpec ~= "" then
+		local classSpecMap = familyClass and PROVIDER_SPEC_IDS[familyClass] or nil
+		local requiredSpecId = classSpecMap and classSpecMap[familySpec] or nil
+		if requiredSpecId then
+			local playerSpecId = getPlayerSpecId()
+			if playerSpecId ~= requiredSpecId then return false end
+		end
+	end
+
+	return true
+end
+
+local _playerFamilyProvisionCache = {
+	key = nil,
+	map = nil,
+}
+
+local function getPlayerFamilyProvisionMap()
+	local classToken = addon.variables and addon.variables.unitClass
+	if type(classToken) == "string" and classToken == "" then classToken = nil end
+	if classToken == nil and UnitClass then
+		local _, token = UnitClass("player")
+		if type(token) == "string" and token ~= "" then classToken = token end
+	end
+	local specId = addon.variables and addon.variables.unitSpecId
+	specId = tonumber(specId)
+	if specId == nil or specId <= 0 then specId = getPlayerSpecId() end
+	specId = tonumber(specId) or 0
+
+	local cacheKey = tostring(classToken or "") .. "|" .. tostring(specId)
+	if _playerFamilyProvisionCache.key == cacheKey and _playerFamilyProvisionCache.map ~= nil then
+		return _playerFamilyProvisionCache.map
+	end
+
+	local map = {}
+	local specMap = classToken and PROVIDER_SPEC_IDS[classToken] or nil
+	for familyId, family in pairs(FAMILY_BY_ID) do
+		if family and family.classToken then
+			local familyIdKey = tostring(familyId)
+			if tostring(family.classToken) ~= classToken then
+				map[familyIdKey] = false
+			else
+				local classSpec = family.spec and tostring(family.spec) or nil
+				if classSpec == nil or classSpec == "" then
+					map[familyIdKey] = true
+				else
+					local requiredSpec = specMap and specMap[classSpec] or nil
+					map[familyIdKey] = requiredSpec ~= nil and requiredSpec == specId or false
+				end
+			end
+		end
+	end
+	_playerFamilyProvisionCache.key = cacheKey
+	_playerFamilyProvisionCache.map = map
+	return map
+end
+
+local function canPlayerProvideFamilyCached(familyId)
+	local family = familyId and FAMILY_BY_ID[tostring(familyId)] or nil
+	if family == nil or family.classToken == nil then return canPlayerProvideFamily(familyId) end
+	local map = getPlayerFamilyProvisionMap()
+	if map == nil then return false end
+	return map[tostring(familyId)] == true
+end
 
 local function wipeTable(tbl)
 	if not tbl then return end
@@ -339,6 +499,12 @@ local function normalizeColor(value, fallback)
 	b = clamp(b, 0, 1, 1)
 	a = clamp(a, 0, 1, 1)
 	return { r, g, b, a }
+end
+
+local function normalizeOptionalColor(value)
+	if value == nil then return nil end
+	if type(value) ~= "table" then return nil end
+	return normalizeColor(value, { 1, 1, 1, 1 })
 end
 
 local function normalizeKind(kind)
@@ -458,6 +624,15 @@ function HB.GetFamilyFromSpell(spellId)
 	return SPELL_TO_FAMILY[tonumber(spellId)]
 end
 
+function HB.MarkPlacementDirty(cfgOrPlacement)
+	if type(cfgOrPlacement) ~= "table" then return end
+	local placement = cfgOrPlacement.healerBuffPlacement
+	if type(placement) ~= "table" then placement = cfgOrPlacement end
+	if type(placement) ~= "table" then return end
+	placement._eqolDirty = true
+	placement._eqolNormalized = nil
+end
+
 local function newPlacementConfig()
 	return {
 		enabled = false,
@@ -495,6 +670,11 @@ function HB.CreateDefaultGroup(id)
 		borderSize = 2,
 		ruleMatch = RULE_MATCH_ANY,
 		iconMode = ICON_MODE_ALL,
+		showCooldownSwipe = true,
+		showCooldownEdge = true,
+		showCooldownBling = true,
+		hideCooldownText = false,
+		hideChargeText = false,
 		color = { 1, 0.82, 0.1, 0.9 },
 	}
 end
@@ -531,10 +711,40 @@ local function normalizeGroup(group, id)
 	group.borderSize = roundInt(clamp(group.borderSize, 1, 24, 2))
 	group.ruleMatch = normalizeRuleMatch(group.ruleMatch or group.matchMode or group.ruleMode)
 	group.iconMode = normalizeIconMode(group.iconMode or group.iconDisplayMode or group.iconRuleMode)
+	local showCooldownSwipe = group.showCooldownSwipe
+	if showCooldownSwipe == nil then showCooldownSwipe = group.cooldownSwipe end
+	group.showCooldownSwipe = showCooldownSwipe ~= false
+	local showCooldownEdge = group.showCooldownEdge
+	if showCooldownEdge == nil then showCooldownEdge = group.cooldownEdge end
+	if showCooldownEdge == nil then showCooldownEdge = group.drawEdge end
+	group.showCooldownEdge = showCooldownEdge ~= false
+	local showCooldownBling = group.showCooldownBling
+	if showCooldownBling == nil then showCooldownBling = group.cooldownBling end
+	if showCooldownBling == nil then showCooldownBling = group.drawBling end
+	group.showCooldownBling = showCooldownBling ~= false
+	group.hideCooldownText = group.hideCooldownText == true
+	if group.hideChargeText == nil then group.hideChargeText = group.hideStacks end
+	group.hideChargeText = group.hideChargeText == true
+	local cooldownTextSize = clamp(group.cooldownTextSize or group.cooldownSize or group.cooldownFontSizeOverride, 6, 64, nil)
+	if cooldownTextSize ~= nil then cooldownTextSize = roundInt(cooldownTextSize) end
+	group.cooldownTextSize = cooldownTextSize
+	local chargeTextSize = clamp(group.chargeTextSize or group.chargeSize or group.countFontSizeOverride, 6, 64, nil)
+	if chargeTextSize ~= nil then chargeTextSize = roundInt(chargeTextSize) end
+	group.chargeTextSize = chargeTextSize
 	group.matchMode = nil
 	group.ruleMode = nil
 	group.iconDisplayMode = nil
 	group.iconRuleMode = nil
+	group.cooldownSwipe = nil
+	group.cooldownEdge = nil
+	group.cooldownBling = nil
+	group.drawEdge = nil
+	group.drawBling = nil
+	group.hideStacks = nil
+	group.cooldownSize = nil
+	group.chargeSize = nil
+	group.cooldownFontSizeOverride = nil
+	group.countFontSizeOverride = nil
 	group.color = normalizeColor(group.color, { 1, 0.82, 0.1, 0.9 })
 	return group
 end
@@ -564,6 +774,8 @@ local function normalizeRule(rule, id)
 	rule.appliesToRaid = nil
 	rule.party = nil
 	rule.raid = nil
+	rule.color = normalizeOptionalColor(rule.color or rule.spellColor)
+	rule.spellColor = nil
 	return rule
 end
 
@@ -573,6 +785,11 @@ function HB.EnsureConfig(cfg)
 	if type(placement) ~= "table" then
 		placement = newPlacementConfig()
 		cfg.healerBuffPlacement = placement
+	end
+	if placement._eqolNormalized == true and placement._eqolDirty ~= true then
+		if placement.enabled == nil then placement.enabled = false end
+		if placement.version == nil then placement.version = 1 end
+		return placement
 	end
 	if placement.enabled == nil then placement.enabled = false end
 	if placement.version == nil then placement.version = 1 end
@@ -596,6 +813,8 @@ function HB.EnsureConfig(cfg)
 	end
 	placement.rulesById = normalizedRules
 	placement.ruleOrder = normalizeOrder(placement.ruleOrder, normalizedRules)
+	placement._eqolDirty = nil
+	placement._eqolNormalized = true
 
 	return placement
 end
@@ -965,24 +1184,78 @@ local function resetState(state)
 	wipeTable(state.renderHashByStyle)
 end
 
-local function getFamilyForAura(compiled, aura)
+local function isNpcUnit(unit)
+	if type(unit) ~= "string" or unit == "" then return false end
+	if issecretvalue and issecretvalue(unit) then return false end
+
+	if UnitExists then
+		local exists = UnitExists(unit)
+		if issecretvalue and issecretvalue(exists) then return false end
+		if exists ~= true then return false end
+	end
+
+	if not UnitIsPlayer then return false end
+	local isPlayer = UnitIsPlayer(unit)
+	if issecretvalue and issecretvalue(isPlayer) then return false end
+	return isPlayer == false
+end
+
+local function shouldIgnoreFamilyForUnit(familyId, unit)
+	if familyId == nil then return false end
+	local family = FAMILY_BY_ID[tostring(familyId)]
+	if not (family and family.ignoreForNpcUnits == true) then return false end
+	return isNpcUnit(unit)
+end
+
+local PLAYER_HELPFUL_FILTER = "HELPFUL|PLAYER"
+local PLAYER_HARMFUL_FILTER = "HARMFUL|PLAYER"
+local HELPFUL_FILTER = "HELPFUL"
+local HARMFUL_FILTER = "HARMFUL"
+local function isAuraFilteredByInstanceFilter(unit, aura, filter)
+	if aura == nil or filter == nil then return false end
+	return not C_UnitAuras.IsAuraFilteredOutByInstanceID(unit, aura.auraInstanceID, filter)
+end
+
+local function isAuraFromPlayer(unit, aura, familyId)
+	if aura == nil then return false end
+
+	local family = familyId and FAMILY_BY_ID[tostring(familyId)] or nil
+	if family and family.classToken ~= nil then
+		if not canPlayerProvideFamilyCached(familyId) then return false end
+		local isHarmful = aura.isHarmful
+		if issecretvalue and issecretvalue(isHarmful) then return false end
+		if not C_UnitAuras or not C_UnitAuras.IsAuraFilteredOutByInstanceID then return false end
+		return isAuraFilteredByInstanceFilter(unit, aura, isHarmful and HARMFUL_FILTER or HELPFUL_FILTER)
+	end
+
+	if not C_UnitAuras or not C_UnitAuras.IsAuraFilteredOutByInstanceID then return false end
+	local isHarmful = aura.isHarmful
+	if issecretvalue and issecretvalue(isHarmful) then return false end
+	return isAuraFilteredByInstanceFilter(unit, aura, isHarmful and PLAYER_HARMFUL_FILTER or PLAYER_HELPFUL_FILTER)
+end
+
+local function getFamilyForAura(compiled, aura, unit)
 	if not (compiled and aura) then return nil end
 	local spellId = aura.spellId
 	if spellId == nil then return nil end
 	if issecretvalue and issecretvalue(spellId) then return nil end
-	return compiled.spellToFamily[tonumber(spellId)]
+	local familyId = compiled.spellToFamily[tonumber(spellId)]
+	if familyId == nil then return nil end
+	if shouldIgnoreFamilyForUnit(familyId, unit) then return nil end
+	if not isAuraFromPlayer(unit, aura, familyId) then return nil end
+	return familyId
 end
 
-function HB.ShouldSuppressRegularBuffAura(kind, cfg, aura)
+function HB.ShouldSuppressRegularBuffAura(kind, cfg, aura, compiled, unit)
 	if aura == nil or cfg == nil then return false end
-	local compiled = compile(kind, cfg)
+	compiled = compiled or compile(kind, cfg)
 	if not (compiled and compiled.enabled) then return false end
-	local familyId = getFamilyForAura(compiled, aura)
+	local familyId = getFamilyForAura(compiled, aura, unit)
 	if familyId == nil then return false end
 	return compiled.suppressedFamilies and compiled.suppressedFamilies[familyId] == true
 end
 
-local function rebuildFamilyStateFromCache(state, compiled, cache)
+local function rebuildFamilyStateFromCache(state, compiled, cache, unit)
 	wipeTable(state.auraFamilyByInstance)
 	wipeTable(state.familyCounts)
 	wipeTable(state.familyAura)
@@ -994,7 +1267,7 @@ local function rebuildFamilyStateFromCache(state, compiled, cache)
 		local auraId = order[i]
 		local aura = auraId and auras[auraId]
 		if aura and auraId then
-			local familyId = getFamilyForAura(compiled, aura)
+			local familyId = getFamilyForAura(compiled, aura, unit)
 			if familyId then
 				state.auraFamilyByInstance[auraId] = familyId
 				state.familyCounts[familyId] = (state.familyCounts[familyId] or 0) + 1
@@ -1031,9 +1304,9 @@ local function markFamilyChanged(changedFamilies, familyId)
 	if familyId then changedFamilies[familyId] = true end
 end
 
-local function updateFamilyFromAura(state, compiled, auraId, aura, changedFamilies)
+local function updateFamilyFromAura(state, compiled, auraId, aura, changedFamilies, unit)
 	local oldFamily = state.auraFamilyByInstance[auraId]
-	local newFamily = aura and getFamilyForAura(compiled, aura) or nil
+	local newFamily = aura and getFamilyForAura(compiled, aura, unit) or nil
 	if oldFamily == newFamily then
 		if newFamily then
 			state.familyAura[newFamily] = aura
@@ -1070,7 +1343,7 @@ local function updateFamilyFromAura(state, compiled, auraId, aura, changedFamili
 	end
 end
 
-local function applyDeltaToFamilyState(state, compiled, cache, updateInfo)
+local function applyDeltaToFamilyState(state, compiled, cache, updateInfo, unit)
 	local changedFamilies = state.changedFamilies
 	wipeTable(changedFamilies)
 	if not updateInfo then return changedFamilies end
@@ -1078,7 +1351,7 @@ local function applyDeltaToFamilyState(state, compiled, cache, updateInfo)
 	if updateInfo.removedAuraInstanceIDs then
 		for i = 1, #updateInfo.removedAuraInstanceIDs do
 			local auraId = updateInfo.removedAuraInstanceIDs[i]
-			if auraId then updateFamilyFromAura(state, compiled, auraId, nil, changedFamilies) end
+			if auraId then updateFamilyFromAura(state, compiled, auraId, nil, changedFamilies, unit) end
 		end
 	end
 
@@ -1086,7 +1359,7 @@ local function applyDeltaToFamilyState(state, compiled, cache, updateInfo)
 		for i = 1, #updateInfo.addedAuras do
 			local aura = updateInfo.addedAuras[i]
 			local auraId = aura and aura.auraInstanceID
-			if auraId then updateFamilyFromAura(state, compiled, auraId, aura, changedFamilies) end
+			if auraId then updateFamilyFromAura(state, compiled, auraId, aura, changedFamilies, unit) end
 		end
 	end
 
@@ -1095,7 +1368,7 @@ local function applyDeltaToFamilyState(state, compiled, cache, updateInfo)
 			local auraId = updateInfo.updatedAuraInstanceIDs[i]
 			if auraId then
 				local aura = cache.auras[auraId]
-				updateFamilyFromAura(state, compiled, auraId, aura, changedFamilies)
+				updateFamilyFromAura(state, compiled, auraId, aura, changedFamilies, unit)
 			end
 		end
 	end
@@ -1107,8 +1380,10 @@ local function applyDeltaToFamilyState(state, compiled, cache, updateInfo)
 	return changedFamilies
 end
 
-local function evaluateRuleActive(rule, familyCounts)
+local function evaluateRuleActive(rule, familyCounts, unit)
 	if not rule or rule.enabled == false then return false end
+	if shouldIgnoreFamilyForUnit(rule.spellFamilyId, unit) then return false end
+	if rule["not"] and not canPlayerProvideFamilyCached(rule.spellFamilyId) then return false end
 	local active = (familyCounts[rule.spellFamilyId] or 0) > 0
 	if rule["not"] then active = not active end
 	return active
@@ -1145,20 +1420,20 @@ local function evaluateGroupActive(state, compiled, groupId)
 	return changed
 end
 
-local function evaluateAllRulesAndGroups(state, compiled)
+local function evaluateAllRulesAndGroups(state, compiled, unit)
 	wipeTable(state.ruleActive)
 	wipeTable(state.groupActive)
 	for i = 1, #compiled.ruleOrder do
 		local ruleId = compiled.ruleOrder[i]
 		local rule = compiled.ruleById[ruleId]
-		if rule then state.ruleActive[ruleId] = evaluateRuleActive(rule, state.familyCounts) end
+		if rule then state.ruleActive[ruleId] = evaluateRuleActive(rule, state.familyCounts, unit) end
 	end
 	for i = 1, #compiled.groupOrder do
 		evaluateGroupActive(state, compiled, compiled.groupOrder[i])
 	end
 end
 
-local function evaluateDeltaRulesAndGroups(state, compiled, changedFamilies)
+local function evaluateDeltaRulesAndGroups(state, compiled, changedFamilies, unit)
 	local changedRules = state.changedRules
 	local changedGroups = state.changedGroups
 	wipeTable(changedRules)
@@ -1176,7 +1451,7 @@ local function evaluateDeltaRulesAndGroups(state, compiled, changedFamilies)
 	for ruleId in pairs(changedRules) do
 		local rule = compiled.ruleById[ruleId]
 		if rule then
-			local newActive = evaluateRuleActive(rule, state.familyCounts)
+			local newActive = evaluateRuleActive(rule, state.familyCounts, unit)
 			if state.ruleActive[ruleId] ~= newActive then
 				state.ruleActive[ruleId] = newActive
 				changedGroups[rule.groupId] = true
@@ -1213,6 +1488,13 @@ local function getAuraStyleForGroup(state, cfg, group)
 		group.size,
 		group.spacing,
 		ac.showTooltip == false and 0 or 1,
+		group.showCooldownSwipe == false and 0 or 1,
+		group.showCooldownEdge == false and 0 or 1,
+		group.showCooldownBling == false and 0 or 1,
+		group.hideCooldownText == true and 1 or 0,
+		group.hideChargeText == true and 1 or 0,
+		tostring(group.cooldownTextSize),
+		tostring(group.chargeTextSize),
 		ac.showCooldown == false and 0 or 1,
 		tostring(ac.showCooldownText),
 		tostring(ac.cooldownAnchor),
@@ -1231,18 +1513,41 @@ local function getAuraStyleForGroup(state, cfg, group)
 	styleCache.size = group.size
 	styleCache.padding = group.spacing
 	styleCache.showTooltip = ac.showTooltip ~= false
+	styleCache.showCooldownSwipe = group.showCooldownSwipe ~= false
+	styleCache.showCooldownEdge = group.showCooldownEdge ~= false
+	styleCache.showCooldownBling = group.showCooldownBling ~= false
 	styleCache.showCooldown = ac.showCooldown ~= false
-	if ac.showCooldownText ~= nil then styleCache.showCooldownText = ac.showCooldownText end
-	if ac.showStacks ~= nil then styleCache.showStacks = ac.showStacks end
+	if group.hideCooldownText == true then
+		styleCache.showCooldownText = false
+	elseif ac.showCooldownText ~= nil then
+		styleCache.showCooldownText = ac.showCooldownText
+	else
+		styleCache.showCooldownText = nil
+	end
+	if group.hideChargeText == true then
+		styleCache.showStacks = false
+	elseif ac.showStacks ~= nil then
+		styleCache.showStacks = ac.showStacks
+	else
+		styleCache.showStacks = nil
+	end
 	styleCache.cooldownAnchor = ac.cooldownAnchor
 	styleCache.cooldownOffset = ac.cooldownOffset
 	styleCache.cooldownFont = ac.cooldownFont
-	styleCache.cooldownFontSize = ac.cooldownFontSize
+	if group.cooldownTextSize ~= nil then
+		styleCache.cooldownFontSize = group.cooldownTextSize
+	else
+		styleCache.cooldownFontSize = ac.cooldownFontSize
+	end
 	styleCache.cooldownFontOutline = ac.cooldownFontOutline
 	styleCache.countAnchor = ac.countAnchor
 	styleCache.countOffset = ac.countOffset
 	styleCache.countFont = ac.countFont
-	styleCache.countFontSize = ac.countFontSize
+	if group.chargeTextSize ~= nil then
+		styleCache.countFontSize = group.chargeTextSize
+	else
+		styleCache.countFontSize = ac.countFontSize
+	end
 	styleCache.countFontOutline = ac.countFontOutline
 	styleCache.showDR = false
 	styleCache._eqolStyleHash = key
@@ -1347,6 +1652,11 @@ local function renderIconStyleForGroup(btn, st, state, compiled, cfg, group, cha
 	if group.style == STYLE_SQUARE then
 		local cr, cg, cb, ca = resolveColor(group.color)
 		styleHash = table.concat({ styleHash, cr, cg, cb, ca }, ":")
+		for i = 1, #activeRules do
+			local rule = compiled.ruleById[activeRules[i]]
+			local rr, rg, rb, ra = resolveColor((rule and rule.color) or group.color)
+			styleHash = styleHash .. "|" .. table.concat({ rr, rg, rb, ra }, ",")
+		end
 	end
 	local hash = buildRuleHash(compiled, activeRules, state.familyAuraInstance, styleHash)
 	if not force and renderHashes[group.id] == hash then return end
@@ -1371,6 +1681,21 @@ local function renderIconStyleForGroup(btn, st, state, compiled, cfg, group, cha
 		local button = buttons[index]
 		if not button then button = AuraUtil.ensureAuraButton(container, buttons, index, style) end
 		if not button then break end
+		local drawCooldownSwipe = style.showCooldownSwipe ~= false
+		if button.cd and button._hbDrawCooldownSwipe ~= drawCooldownSwipe then
+			button._hbDrawCooldownSwipe = drawCooldownSwipe
+			if button.cd.SetDrawSwipe then button.cd:SetDrawSwipe(drawCooldownSwipe) end
+		end
+		local drawCooldownEdge = style.showCooldownEdge ~= false
+		if button.cd and button._hbDrawCooldownEdge ~= drawCooldownEdge then
+			button._hbDrawCooldownEdge = drawCooldownEdge
+			if button.cd.SetDrawEdge then button.cd:SetDrawEdge(drawCooldownEdge) end
+		end
+		local drawCooldownBling = style.showCooldownBling ~= false
+		if button.cd and button._hbDrawCooldownBling ~= drawCooldownBling then
+			button._hbDrawCooldownBling = drawCooldownBling
+			if button.cd.SetDrawBling then button.cd:SetDrawBling(drawCooldownBling) end
+		end
 		local familyChanged = changedFamilies and familyId and changedFamilies[familyId] == true
 		if familyChanged or button._hbAuraInstance ~= auraInstanceId or button._hbStyleKey ~= styleHash then
 			AuraUtil.applyAuraToButton(button, aura, style, false, unitToken)
@@ -1378,7 +1703,7 @@ local function renderIconStyleForGroup(btn, st, state, compiled, cfg, group, cha
 			button._hbStyleKey = styleHash
 		end
 		if group.style == STYLE_SQUARE then
-			styleSquareButton(button, group.color)
+			styleSquareButton(button, (rule and rule.color) or group.color)
 			setAuraTooltipState(button, false)
 		else
 			styleIconButton(button)
@@ -1605,23 +1930,24 @@ function HB.ClearButton(btn)
 	hideAllVisuals(btn, st, state)
 end
 
-function HB.UpdateFromAuras(btn, updateInfo, cache, changed, isFullUpdate)
+function HB.UpdateFromAuras(btn, updateInfo, cache, changed, isFullUpdate, compiledOverride)
 	local state, st = getState(btn)
 	if not (state and st and btn) then return end
 	local kind = normalizeKind(btn._eqolGroupKind or KIND_PARTY)
 	local cfg = btn._eqolCfg
 	if not cfg then return end
-	local compiled = compile(kind, cfg)
+	local compiled = compiledOverride or compile(kind, cfg)
 	if not (compiled and compiled.enabled) then
 		HB.ClearButton(btn)
 		return
 	end
 
 	ensureVisualLayers(btn, st)
+	local unit = btn.unit
 
 	if isFullUpdate or not updateInfo then
-		rebuildFamilyStateFromCache(state, compiled, cache)
-		evaluateAllRulesAndGroups(state, compiled)
+		rebuildFamilyStateFromCache(state, compiled, cache, unit)
+		evaluateAllRulesAndGroups(state, compiled, unit)
 		wipeTable(state.changedFamilies)
 		for familyId in pairs(state.familyCounts) do
 			state.changedFamilies[familyId] = true
@@ -1630,8 +1956,8 @@ function HB.UpdateFromAuras(btn, updateInfo, cache, changed, isFullUpdate)
 		return
 	end
 
-	local changedFamilies = applyDeltaToFamilyState(state, compiled, cache, updateInfo)
-	evaluateDeltaRulesAndGroups(state, compiled, changedFamilies)
+	local changedFamilies = applyDeltaToFamilyState(state, compiled, cache, updateInfo, unit)
+	evaluateDeltaRulesAndGroups(state, compiled, changedFamilies, unit)
 	renderAll(btn, st, state, compiled, cfg, changedFamilies)
 end
 

@@ -1,7 +1,15 @@
 
 BugGrabberDB = {
-["session"] = 5104,
 ["lastSanitation"] = 3,
+["session"] = 5213,
 ["errors"] = {
+{
+["message"] = "Interface/AddOns/Blizzard_SharedXML/Backdrop.lua:226: attempt to perform arithmetic on local 'width' (a secret number value tainted by '*** ForceTaint_Strong ***')",
+["time"] = "2026/03/05 03:15:54",
+["locals"] = "self = Frame {\n Center = Texture {\n }\n RightEdge = Texture {\n }\n backdropInfo = <table> {\n }\n BottomEdge = Texture {\n }\n BottomLeftCorner = Texture {\n }\n BottomRightCorner = Texture {\n }\n TopEdge = Texture {\n }\n TopRightCorner = Texture {\n }\n TopLeftCorner = Texture {\n }\n LeftEdge = Texture {\n }\n}\nwidth = <no value>\nheight = <no value>\neffectiveScale = 0.960000\nedgeSize = 8.500000\n(*temporary) = 0\n(*temporary) = nil\n(*temporary) = nil\n(*temporary) = nil\n(*temporary) = nil\n(*temporary) = nil\n(*temporary) = nil\n(*temporary) = nil\n(*temporary) = nil\n(*temporary) = nil\n(*temporary) = nil\n(*temporary) = nil\n(*temporary) = nil\n(*temporary) = nil\n(*temporary) = \"attempt to perform arithmetic on local 'width' (a secret number value tainted by '*** ForceTaint_Strong ***')\"\ncoordStart = 0.062500\ntextureUVs = <table> {\n BottomLeftCorner = <table> {\n }\n TopEdge = <table> {\n }\n BottomEdge = <table> {\n }\n Center = <table> {\n }\n RightEdge = <table> {\n }\n TopRightCorner = <table> {\n }\n TopLeftCorner = <table> {\n }\n LeftEdge = <table> {\n }\n BottomRightCorner = <table> {\n }\n}\n",
+["stack"] = "[Interface/AddOns/Blizzard_SharedXML/Backdrop.lua]:226: in function 'SetupTextureCoordinates'\n[Interface/AddOns/Blizzard_SharedXML/Backdrop.lua]:191: in function <Interface/AddOns/Blizzard_SharedXML/Backdrop.lua:189>\n",
+["session"] = 5213,
+["counter"] = 10,
+},
 },
 }

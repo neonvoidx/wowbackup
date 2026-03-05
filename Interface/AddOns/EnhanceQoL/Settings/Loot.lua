@@ -1,6 +1,39 @@
 local addonName, addon = ...
 
 local L = LibStub("AceLocale-3.0"):GetLocale(addonName)
+local wipeTable = _G.wipe or table.wipe
+
+local lootToastSoundOptions = {}
+local lootToastSoundOrder = {}
+local lootToastSoundCacheVersion = -1
+local function getLootToastSoundOptions()
+	local version = (addon.functions and addon.functions.GetLSMMediaVersion and addon.functions.GetLSMMediaVersion("sound")) or 0
+	if lootToastSoundCacheVersion == version then return lootToastSoundOptions end
+	lootToastSoundCacheVersion = version
+
+	local list, order
+	if addon.functions and addon.functions.GetLSMMediaDropdown then
+		list, order = addon.functions.GetLSMMediaDropdown("sound", true, "")
+	else
+		if addon.ChatIM and addon.ChatIM.BuildSoundTable and not addon.ChatIM.availableSounds then addon.ChatIM:BuildSoundTable() end
+		list = { [""] = "" }
+		order = { "" }
+		for name in pairs((addon.ChatIM and addon.ChatIM.availableSounds) or {}) do
+			list[name] = name
+			order[#order + 1] = name
+		end
+	end
+
+	wipeTable(lootToastSoundOptions)
+	for key, value in pairs(list or {}) do
+		lootToastSoundOptions[key] = value
+	end
+	wipeTable(lootToastSoundOrder)
+	for i = 1, #(order or {}) do
+		lootToastSoundOrder[i] = order[i]
+	end
+	return lootToastSoundOptions
+end
 
 local cLoot = addon.SettingsLayout.rootGENERAL
 local expandable = addon.functions.SettingsCreateExpandableSection(cLoot, {
@@ -188,19 +221,15 @@ data = {
 				parentSection = expandable,
 				children = {
 					{
-						optionfunc = function()
-							if addon.ChatIM and addon.ChatIM.BuildSoundTable and not addon.ChatIM.availableSounds then addon.ChatIM:BuildSoundTable() end
-							local tList = { [""] = "" }
-							for name in pairs(addon.ChatIM.availableSounds or {}) do
-								tList[name] = name
-							end
-							return tList
-						end,
 						text = L["lootToastCustomSound"],
+						optionfunc = getLootToastSoundOptions,
+						order = lootToastSoundOrder,
 						get = function() return addon.db.lootToastCustomSoundFile or "" end,
 						set = function(key)
 							addon.db.lootToastCustomSoundFile = key
-							local file = addon.ChatIM.availableSounds and addon.ChatIM.availableSounds[key]
+							local soundTable = (addon.ChatIM and addon.ChatIM.availableSounds)
+								or (addon.functions and addon.functions.GetLSMMediaHash and addon.functions.GetLSMMediaHash("sound"))
+							local file = soundTable and soundTable[key]
 							if file then PlaySoundFile(file, "Master") end
 						end,
 						parentCheck = function()

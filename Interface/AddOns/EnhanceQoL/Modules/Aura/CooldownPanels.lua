@@ -25,6 +25,7 @@ CooldownPanels.ENTRY_TYPE = {
 	SPELL = "SPELL",
 	ITEM = "ITEM",
 	SLOT = "SLOT",
+	STANCE = "STANCE",
 	MACRO = "MACRO",
 }
 
@@ -667,12 +668,13 @@ local function iconBorderOptions()
 		list[#list + 1] = { value = value, label = label or value }
 	end
 	add(ICON_BORDER_TEXTURE_DEFAULT, _G.DEFAULT or (L and L["Default"]) or "Default")
-	if not LSM then return list end
-	local hash = LSM:HashTable("border") or {}
-	for name, path in pairs(hash) do
+	local names = addon.functions and addon.functions.GetLSMMediaNames and addon.functions.GetLSMMediaNames("border") or {}
+	local hash = addon.functions and addon.functions.GetLSMMediaHash and addon.functions.GetLSMMediaHash("border") or {}
+	for i = 1, #names do
+		local name = names[i]
+		local path = hash[name]
 		if type(path) == "string" and path ~= "" then add(name, tostring(name)) end
 	end
-	table.sort(list, function(a, b) return tostring(a.label) < tostring(b.label) end)
 	return list
 end
 
@@ -901,14 +903,12 @@ local function getSoundOptions()
 		seen[key] = true
 		list[#list + 1] = name
 	end
-	if LSM and LSM.HashTable then
-		for name in pairs(LSM:HashTable("sound") or {}) do
-			add(name)
-		end
+	local names = addon.functions and addon.functions.GetLSMMediaNames and addon.functions.GetLSMMediaNames("sound") or {}
+	for i = 1, #names do
+		add(names[i])
 	end
 	add((LSM and LSM.DefaultMedia and LSM.DefaultMedia.sound) or nil)
 	add((Helper and Helper.ENTRY_DEFAULTS and Helper.ENTRY_DEFAULTS.soundReadyFile) or nil)
-	table.sort(list, function(a, b) return tostring(a) < tostring(b) end)
 	for i, name in ipairs(list) do
 		if name == "None" then
 			table.remove(list, i)
@@ -1189,6 +1189,10 @@ local function getEntryIcon(entry)
 			return icon
 		end
 	end
+	if entry.type == "STANCE" and CooldownPanels.GetStanceEntryIcon then
+		local icon = CooldownPanels:GetStanceEntryIcon(entry)
+		if icon then return icon end
+	end
 	return Helper.PREVIEW_ICON
 end
 
@@ -1274,6 +1278,11 @@ local function getEntryName(entry)
 		return name or ("Item " .. tostring(entry.itemID or ""))
 	end
 	if entry.type == "SLOT" then return getSlotLabel(entry.slotID) end
+	if entry.type == "STANCE" and CooldownPanels.GetStanceEntryName then
+		local name = CooldownPanels:GetStanceEntryName(entry)
+		if name and name ~= "" then return name end
+		return (CooldownPanels.GetStanceTypeLabel and CooldownPanels:GetStanceTypeLabel()) or (_G.STANCE or "Stance")
+	end
 	if entry.type == "MACRO" then
 		local macro = CooldownPanels.ResolveMacroEntry(entry)
 		if macro and macro.macroName then return macro.macroName end
@@ -1287,6 +1296,7 @@ local function getEntryTypeLabel(entryType)
 	if key == "SPELL" then return _G.STAT_CATEGORY_SPELL or _G.SPELLS or "Spell" end
 	if key == "ITEM" then return _G.AUCTION_HOUSE_HEADER_ITEM or _G.ITEMS or "Item" end
 	if key == "SLOT" then return L["CooldownPanelSlotType"] or "Slot" end
+	if key == "STANCE" then return (CooldownPanels.GetStanceTypeLabel and CooldownPanels:GetStanceTypeLabel()) or (_G.STANCE or "Stance") end
 	if key == "MACRO" then return _G.MACRO or "Macro" end
 	return entryType or ""
 end
@@ -1502,13 +1512,17 @@ function CooldownPanels:AddEntry(panelId, entryType, idValue, overrides)
 	local panel = self:GetPanel(panelId)
 	if not panel then return nil end
 	local typeKey = entryType and tostring(entryType):upper() or nil
-	if typeKey ~= "SPELL" and typeKey ~= "ITEM" and typeKey ~= "SLOT" and typeKey ~= "MACRO" then return nil end
+	if typeKey ~= "SPELL" and typeKey ~= "ITEM" and typeKey ~= "SLOT" and typeKey ~= "STANCE" and typeKey ~= "MACRO" then return nil end
 	local entryValue = idValue
 	local numericValue = tonumber(idValue)
 	if typeKey == "SPELL" or typeKey == "ITEM" or typeKey == "SLOT" then
 		if not numericValue then return nil end
 		if typeKey == "SPELL" then numericValue = getBaseSpellId(numericValue) or numericValue end
 		entryValue = numericValue
+	elseif typeKey == "STANCE" then
+		local stanceDef = CooldownPanels.GetStanceDefinition and CooldownPanels:GetStanceDefinition(idValue) or nil
+		if not stanceDef then return nil end
+		entryValue = stanceDef.id
 	elseif typeKey == "MACRO" then
 		if numericValue then
 			entryValue = numericValue
@@ -1527,6 +1541,8 @@ function CooldownPanels:AddEntry(panelId, entryType, idValue, overrides)
 	if entry.type == "MACRO" then
 		entry.macroID = tonumber(entry.macroID)
 		entry.macroName = CooldownPanels.NormalizeMacroName(entry.macroName)
+	elseif entry.type == "STANCE" and CooldownPanels.NormalizeStanceEntry then
+		CooldownPanels:NormalizeStanceEntry(entry)
 	end
 	panel.entries[entryId] = entry
 	panel.order[#panel.order + 1] = entryId
@@ -1548,12 +1564,15 @@ function CooldownPanels:FindEntryByValue(panelId, entryType, idValue)
 	local typeKey = entryType and tostring(entryType):upper() or nil
 	local numericValue = tonumber(idValue)
 	local macroName = CooldownPanels.NormalizeMacroName(type(idValue) == "string" and idValue or nil)
-	if typeKey ~= "SPELL" and typeKey ~= "ITEM" and typeKey ~= "SLOT" and typeKey ~= "MACRO" then return nil end
+	local stanceDef = typeKey == "STANCE" and CooldownPanels.GetStanceDefinition and CooldownPanels:GetStanceDefinition(idValue) or nil
+	local stanceID = stanceDef and stanceDef.id or nil
+	if typeKey ~= "SPELL" and typeKey ~= "ITEM" and typeKey ~= "SLOT" and typeKey ~= "STANCE" and typeKey ~= "MACRO" then return nil end
 	for entryId, entry in pairs(panel.entries or {}) do
 		if entry and entry.type == typeKey then
 			if typeKey == "SPELL" and entry.spellID == numericValue then return entryId, entry end
 			if typeKey == "ITEM" and entry.itemID == numericValue then return entryId, entry end
 			if typeKey == "SLOT" and entry.slotID == numericValue then return entryId, entry end
+			if typeKey == "STANCE" and stanceID and entry.stanceID == stanceID then return entryId, entry end
 			if typeKey == "MACRO" then
 				local entryMacroID = tonumber(entry.macroID)
 				local entryMacroName = CooldownPanels.NormalizeMacroName(entry.macroName)
@@ -1773,6 +1792,31 @@ function CooldownPanels:AddEntrySafe(panelId, entryType, idValue, overrides)
 			return nil
 		end
 	end
+	if typeKey == "STANCE" then
+		local stanceDef = CooldownPanels.GetStanceDefinition and CooldownPanels:GetStanceDefinition(idValue) or nil
+		if not stanceDef then
+			local stanceLabel = (CooldownPanels.GetStanceTypeLabel and CooldownPanels:GetStanceTypeLabel()) or (_G.STANCE or "Stance")
+			showErrorMessage((stanceLabel or (_G.STANCE or "Stance")) .. " does not exist.")
+			return nil
+		end
+		if self:FindEntryByValue(panelId, typeKey, stanceDef.id) then
+			showErrorMessage(L["CooldownPanelEntry"] and (L["CooldownPanelEntry"] .. " already exists.") or "Entry already exists.")
+			return nil
+		end
+		local finalOverrides = {}
+		if type(overrides) == "table" then
+			for key, value in pairs(overrides) do
+				finalOverrides[key] = value
+			end
+		end
+		local defaults = CooldownPanels.GetStanceDefaultOverrides and CooldownPanels:GetStanceDefaultOverrides() or nil
+		if type(defaults) == "table" then
+			for key, value in pairs(defaults) do
+				if finalOverrides[key] == nil then finalOverrides[key] = value end
+			end
+		end
+		return self:AddEntry(panelId, typeKey, stanceDef.id, finalOverrides)
+	end
 	if typeKey == "MACRO" then
 		local macroName = nil
 		if type(overrides) == "table" then macroName = CooldownPanels.NormalizeMacroName(overrides.macroName) end
@@ -1913,6 +1957,8 @@ function CooldownPanels.ShowIconTooltip(self)
 		local shown = false
 		if GameTooltip.SetInventoryItem then shown = GameTooltip:SetInventoryItem("player", entry.slotID) end
 		if not shown then GameTooltip:SetText(getSlotLabel(entry.slotID)) end
+	elseif entry.type == "STANCE" then
+		GameTooltip:SetText(getEntryName(entry))
 	else
 		return
 	end
@@ -1949,7 +1995,9 @@ local function applyStaticText(icon, entry, defaultFontPath, defaultFontSize, de
 	local fontPath = Helper.ResolveFontPath(entry.staticTextFont, defaultFontPath)
 	local fontSize = Helper.ClampInt(entry.staticTextSize, 6, 64, defaultFontSize or 12)
 	local fontStyle = Helper.NormalizeFontStyle(entry.staticTextStyle, defaultFontStyle) or ""
+	local fontColor = Helper.NormalizeColor(entry.staticTextColor, Helper.ENTRY_DEFAULTS.staticTextColor or { 1, 1, 1, 1 })
 	icon.staticText:SetFont(fontPath, fontSize, fontStyle)
+	icon.staticText:SetTextColor(fontColor[1] or 1, fontColor[2] or 1, fontColor[3] or 1, fontColor[4] or 1)
 	icon.staticText:ClearAllPoints()
 	local anchor = Helper.NormalizeAnchor(entry.staticTextAnchor, "CENTER")
 	local x = Helper.ClampInt(entry.staticTextX, -Helper.OFFSET_RANGE, Helper.OFFSET_RANGE, 0)
@@ -2887,19 +2935,42 @@ end
 
 local function showSlotMenu(owner, panelId)
 	if not panelId or not Api.MenuUtil or not Api.MenuUtil.CreateContextMenu then return end
-	local entries = getSlotMenuEntries()
-	if not entries or #entries == 0 then return end
+	local slotEntries = getSlotMenuEntries()
+	local stanceEntries = CooldownPanels.GetStanceMenuEntries and CooldownPanels:GetStanceMenuEntries() or nil
+	if ((not slotEntries) or #slotEntries == 0) and ((not stanceEntries) or #stanceEntries == 0) then return end
 	Api.MenuUtil.CreateContextMenu(owner, function(_, rootDescription)
-		rootDescription:SetTag("MENU_EQOL_COOLDOWN_PANEL_SLOTS")
-		rootDescription:CreateTitle(L["CooldownPanelAddSlot"] or "Add Slot")
-		for _, slot in ipairs(entries) do
-			rootDescription:CreateButton(slot.label, function()
-				CooldownPanels:AddEntrySafe(panelId, "SLOT", slot.id)
-				CooldownPanels:RefreshEditor()
-			end)
-		end
-	end)
-end
+		rootDescription:SetTag("MENU_EQOL_COOLDOWN_PANEL_ENTRY_ADD")
+		rootDescription:CreateTitle(L["CooldownPanelAddSlot"] or "Add more")
+		if slotEntries and #slotEntries > 0 then
+			local slotMenu = rootDescription:CreateButton(L["CooldownPanelSlotType"] or _G.SLOT or "Slot")
+			for _, slot in ipairs(slotEntries) do
+				slotMenu:CreateButton(slot.label, function()
+					CooldownPanels:AddEntrySafe(panelId, "SLOT", slot.id)
+					CooldownPanels:RefreshEditor()
+				end)
+			end
+			end
+			if stanceEntries and #stanceEntries > 0 then
+				local stanceMenu = rootDescription:CreateButton((CooldownPanels.GetStanceTypeLabel and CooldownPanels:GetStanceTypeLabel()) or (_G.STANCE or "Stance"))
+				for _, classData in ipairs(stanceEntries) do
+					local classMenu = stanceMenu:CreateButton(classData.label or tostring(classData.classTag or "Class"))
+					for _, stance in ipairs(classData.entries or {}) do
+						local menuLabel = stance.label or (_G.STEALTH or "Stealth")
+						local iconToken = stance.icon
+						local iconType = type(iconToken)
+						if (iconType == "string" and iconToken ~= "") or iconType == "number" then
+							menuLabel = string.format("|T%s:14:14:0:0:64:64:4:60:4:60|t %s", tostring(iconToken), menuLabel)
+						end
+						classMenu:CreateButton(menuLabel, function()
+							local overrides = CooldownPanels.GetStanceDefaultOverrides and CooldownPanels:GetStanceDefaultOverrides() or nil
+							CooldownPanels:AddEntrySafe(panelId, "STANCE", stance.id, overrides)
+							CooldownPanels:RefreshEditor()
+						end)
+					end
+				end
+			end
+		end)
+	end
 
 local function getSpellIdFromCooldownManagerChild(child)
 	if not child then return nil end
@@ -3421,7 +3492,7 @@ local function ensureEditor()
 	entryEmptyHint:SetJustifyH("LEFT")
 	entryEmptyHint:SetJustifyV("TOP")
 	if entryEmptyHint.SetWordWrap then entryEmptyHint:SetWordWrap(true) end
-	entryEmptyHint:SetText(L["CooldownPanelSelectEntryHint"] or "Click a spell/item/macro/slot to modify")
+	entryEmptyHint:SetText(L["CooldownPanelSelectEntryHint"] or "Click a spell/item/macro/slot/stance to modify")
 	entryEmptyHint:SetTextColor(0.75, 0.75, 0.75, 1)
 	entryEmptyHint:Hide()
 
@@ -3583,7 +3654,7 @@ local function ensureEditor()
 	local editModeButton = Helper.CreateButton(middle, _G.HUD_EDIT_MODE_MENU or L["CooldownPanelEditModeButton"] or "Edit Mode", 110, 20)
 	editModeButton:SetPoint("BOTTOMRIGHT", middle, "BOTTOMRIGHT", -12, 44)
 
-	local slotButton = Helper.CreateButton(middle, L["CooldownPanelAddSlot"] or "Add Slot", 120, 20)
+	local slotButton = Helper.CreateButton(middle, L["CooldownPanelAddSlot"] or "Add more", 120, 20)
 	slotButton:SetPoint("BOTTOMRIGHT", middle, "BOTTOMRIGHT", -12, 18)
 
 	local importCDMButton = Helper.CreateButton(middle, L["CooldownPanelImportCDM"] or "Import CDM", 120, 20)
@@ -3770,6 +3841,11 @@ local function ensureEditor()
 			CooldownPanels:RefreshEditor()
 			return
 		end
+		if entry.type == "STANCE" then
+			self:ClearFocus()
+			CooldownPanels:RefreshEditor()
+			return
+		end
 		if not value then
 			self:ClearFocus()
 			CooldownPanels:RefreshEditor()
@@ -3846,7 +3922,20 @@ local function ensureEditor()
 	bindEntryToggle(cbCharges, "showCharges")
 	bindEntryToggle(cbStacks, "showStacks")
 	bindEntryToggle(cbCooldownText, "showCooldownText")
-	bindEntryToggle(cbAlwaysShow, "alwaysShow")
+	cbAlwaysShow:SetScript("OnClick", function(self)
+		local panelId = editor.selectedPanelId
+		local entryId = editor.selectedEntryId
+		local panel = panelId and CooldownPanels:GetPanel(panelId)
+		local entry = panel and panel.entries and panel.entries[entryId]
+		if not entry then return end
+		if entry.type == "STANCE" then
+			entry.showWhenMissing = self:GetChecked() and true or false
+		else
+			entry.alwaysShow = self:GetChecked() and true or false
+		end
+		CooldownPanels:RefreshPanel(panelId)
+		CooldownPanels:RefreshEditor()
+	end)
 	bindEntryToggle(cbItemCount, "showItemCount")
 	bindEntryToggle(cbItemUses, "showItemUses")
 	bindEntryToggle(cbShowWhenEmpty, "showWhenEmpty")
@@ -4375,7 +4464,7 @@ local function refreshPreview(editor, panel)
 				icon.keybind:Hide()
 			end
 			if entry.type ~= "MACRO" and entry.glowReady and icon.previewGlow then icon.previewGlow:Show() end
-			if entry.type ~= "MACRO" and entry.soundReady and icon.previewSoundBorder then icon.previewSoundBorder:Show() end
+			if entry.type ~= "MACRO" and entry.type ~= "STANCE" and entry.soundReady and icon.previewSoundBorder then icon.previewSoundBorder:Show() end
 		end
 	end
 
@@ -4438,7 +4527,7 @@ local function layoutInspectorToggles(inspector, entry)
 		end
 	end
 
-	place(inspector.cbCooldownText, true, -2)
+	place(inspector.cbCooldownText, effectiveType ~= "STANCE", -2)
 	if effectiveType == "SPELL" then
 		place(inspector.cbAlwaysShow, false)
 		place(inspector.cbCharges, true)
@@ -4463,6 +4552,14 @@ local function layoutInspectorToggles(inspector, entry)
 		place(inspector.cbItemUses, false)
 		place(inspector.cbShowWhenEmpty, false)
 		place(inspector.cbShowWhenNoCooldown, true)
+	elseif effectiveType == "STANCE" then
+		place(inspector.cbAlwaysShow, true)
+		place(inspector.cbCharges, false)
+		place(inspector.cbStacks, false)
+		place(inspector.cbItemCount, false)
+		place(inspector.cbItemUses, false)
+		place(inspector.cbShowWhenEmpty, false)
+		place(inspector.cbShowWhenNoCooldown, false)
 	else
 		place(inspector.cbAlwaysShow, false)
 		place(inspector.cbCharges, false)
@@ -4472,11 +4569,13 @@ local function layoutInspectorToggles(inspector, entry)
 		place(inspector.cbShowWhenEmpty, false)
 		place(inspector.cbShowWhenNoCooldown, false)
 	end
-	place(inspector.staticTextLabel, true, 2, -8)
-	place(inspector.staticTextBox, true, -2, -4)
-	place(inspector.cbStaticTextDuringCD, true, -2, -6)
-	local showReadyEffects = entry.type ~= "MACRO"
-	place(inspector.cbGlow, showReadyEffects)
+	local allowStaticText = effectiveType ~= "STANCE"
+	place(inspector.staticTextLabel, allowStaticText, 2, -8)
+	place(inspector.staticTextBox, allowStaticText, -2, -4)
+	place(inspector.cbStaticTextDuringCD, allowStaticText, -2, -6)
+	local showGlowToggle = entry.type ~= "MACRO"
+	local showReadyEffects = entry.type ~= "MACRO" and entry.type ~= "STANCE"
+	place(inspector.cbGlow, showGlowToggle)
 	if showReadyEffects and inspector.glowDuration then
 		inspector.glowDuration:ClearAllPoints()
 		inspector.glowDuration:SetPoint("TOPLEFT", inspector.cbGlow, "BOTTOMLEFT", 18, -8)
@@ -4579,15 +4678,34 @@ local function refreshInspector(editor, panel, entry)
 		inspector.entryIcon:SetTexture(getEntryIcon(entry))
 		inspector.entryName:SetText(getEntryName(entry))
 		inspector.entryType:SetText(getEntryTypeLabel(entry.type))
-		inspector.entryId:SetText(tostring(entry.spellID or entry.itemID or entry.slotID or entry.macroID or ""))
+		inspector.entryId:SetText(tostring(entry.spellID or entry.itemID or entry.slotID or entry.stanceID or entry.macroID or ""))
 		local effectiveType = entry and entry.type or nil
 		if effectiveType == "MACRO" then
 			local macro = CooldownPanels.ResolveMacroEntry(entry)
 			effectiveType = (macro and macro.kind) or "MACRO"
 		end
+		if inspector.entryId and inspector.entryId.SetNumeric then inspector.entryId:SetNumeric(effectiveType ~= "STANCE") end
+			if inspector.cbAlwaysShow and inspector.cbAlwaysShow.Text then
+				if effectiveType == "STANCE" then
+					inspector.cbAlwaysShow.Text:SetText(L["CooldownPanelShowWhenMissing"] or "Show when missing")
+				else
+					inspector.cbAlwaysShow.Text:SetText(L["CooldownPanelAlwaysShow"] or "Always show")
+				end
+			end
+		if inspector.cbGlow and inspector.cbGlow.Text then
+			if effectiveType == "STANCE" then
+				inspector.cbGlow.Text:SetText(_G.GLOW or "Glow")
+			else
+				inspector.cbGlow.Text:SetText(L["CooldownPanelGlowReady"] or "Glow when ready")
+			end
+		end
 
 		inspector.cbCooldownText:SetChecked(entry.showCooldownText ~= false)
-		inspector.cbAlwaysShow:SetChecked(effectiveType == "ITEM" and entry.alwaysShow ~= false)
+		if effectiveType == "STANCE" then
+			inspector.cbAlwaysShow:SetChecked(entry.showWhenMissing == true)
+		else
+			inspector.cbAlwaysShow:SetChecked(effectiveType == "ITEM" and entry.alwaysShow ~= false)
+		end
 		inspector.cbCharges:SetChecked(entry.showCharges and true or false)
 		inspector.cbStacks:SetChecked(entry.showStacks and true or false)
 		inspector.cbItemCount:SetChecked(effectiveType == "ITEM" and entry.showItemCount ~= false)
@@ -4595,7 +4713,7 @@ local function refreshInspector(editor, panel, entry)
 		inspector.cbShowWhenEmpty:SetChecked(effectiveType == "ITEM" and entry.showWhenEmpty == true)
 		inspector.cbShowWhenNoCooldown:SetChecked(effectiveType == "SLOT" and entry.showWhenNoCooldown == true)
 		inspector.cbGlow:SetChecked(entry.type ~= "MACRO" and entry.glowReady and true or false)
-		inspector.cbSound:SetChecked(entry.type ~= "MACRO" and entry.soundReady and true or false)
+		inspector.cbSound:SetChecked(entry.type ~= "MACRO" and entry.type ~= "STANCE" and entry.soundReady and true or false)
 		if inspector.soundButton then inspector.soundButton:SetText(getSoundButtonText(entry.soundReadyFile)) end
 		if inspector.staticTextBox then inspector.staticTextBox:SetText(entry.staticText or "") end
 		if inspector.cbStaticTextDuringCD then inspector.cbStaticTextDuringCD:SetChecked(entry.staticTextShowOnCooldown == true) end
@@ -4609,13 +4727,17 @@ local function refreshInspector(editor, panel, entry)
 			if inspector.glowDuration.High then inspector.glowDuration.High:SetText("30s") end
 		end
 
-		inspector.entryId:Enable()
+		if effectiveType == "STANCE" then
+			inspector.entryId:Disable()
+		else
+			inspector.entryId:Enable()
+		end
 		inspector.removeEntry:Enable()
 		layoutInspectorToggles(inspector, entry)
 	else
 		if inspector.entryHeader then inspector.entryHeader:Hide() end
 		if inspector.entryEmptyHint then
-			inspector.entryEmptyHint:SetText(L["CooldownPanelSelectEntryHint"] or "Click a spell/item/macro/slot to modify")
+			inspector.entryEmptyHint:SetText(L["CooldownPanelSelectEntryHint"] or "Click a spell/item/macro/slot/stance to modify")
 			inspector.entryEmptyHint:Show()
 		end
 		if inspector.entryIcon then inspector.entryIcon:Hide() end
@@ -4623,8 +4745,11 @@ local function refreshInspector(editor, panel, entry)
 		if inspector.entryType then inspector.entryType:Hide() end
 		if inspector.entryId then
 			inspector.entryId:SetText("")
+			if inspector.entryId.SetNumeric then inspector.entryId:SetNumeric(true) end
 			inspector.entryId:Hide()
 		end
+		if inspector.cbAlwaysShow and inspector.cbAlwaysShow.Text then inspector.cbAlwaysShow.Text:SetText(L["CooldownPanelAlwaysShow"] or "Always show") end
+		if inspector.cbGlow and inspector.cbGlow.Text then inspector.cbGlow.Text:SetText(L["CooldownPanelGlowReady"] or "Glow when ready") end
 
 		if inspector.staticTextBox then inspector.staticTextBox:SetText("") end
 		if inspector.cbStaticTextDuringCD then inspector.cbStaticTextDuringCD:SetChecked(false) end
@@ -5039,15 +5164,18 @@ function CooldownPanels:UpdateRuntimeIcons(panelId)
 			local showStacks = entry.showStacks == true and resolvedType == "SPELL"
 			local showItemCount = resolvedType == "ITEM" and entry.showItemCount ~= false
 			local showItemUses = resolvedType == "ITEM" and entry.showItemUses == true
-			local showWhenEmpty = resolvedType == "ITEM" and entry.showWhenEmpty == true
-			local showWhenNoCooldown = resolvedType == "SLOT" and entry.showWhenNoCooldown == true
+				local showWhenEmpty = resolvedType == "ITEM" and entry.showWhenEmpty == true
+				local showWhenNoCooldown = resolvedType == "SLOT" and entry.showWhenNoCooldown == true
+				local showWhenMissing = resolvedType == "STANCE" and entry.showWhenMissing == true
 			local alwaysShow = entry.alwaysShow ~= false
 			local glowReady = entry.type ~= "MACRO" and entry.glowReady ~= false
 			local glowDuration = Helper.ClampInt(entry.glowDuration, 0, 30, 0)
-			local soundReady = entry.type ~= "MACRO" and entry.soundReady == true
+			local soundReady = entry.type ~= "MACRO" and entry.type ~= "STANCE" and entry.soundReady == true
 			local soundName = normalizeSoundName(entry.soundReadyFile)
 			local baseSpellId = resolvedType == "SPELL" and ((macro and macro.spellID) or entry.spellID) or nil
 			local effectiveSpellId = baseSpellId and getEffectiveSpellId(baseSpellId) or nil
+				local stanceRelevant = resolvedType == "STANCE" and CooldownPanels.IsStanceEntryRelevant and CooldownPanels:IsStanceEntryRelevant(entry) or false
+				local stanceActive = stanceRelevant and CooldownPanels.IsStanceEntryActive and CooldownPanels:IsStanceEntryActive(entry) or false
 			local spellPassive = baseSpellId and isSpellPassiveSafe(baseSpellId, effectiveSpellId) or false
 			-- local function isSpellFlagged(map)
 			-- 	if not map then return false end
@@ -5190,7 +5318,15 @@ function CooldownPanels:UpdateRuntimeIcons(panelId)
 						show = true
 					end
 				end
-			end
+				elseif resolvedType == "STANCE" then
+					if not stanceRelevant then
+						show = false
+					elseif showWhenMissing then
+						show = not stanceActive
+					else
+						show = stanceActive
+					end
+				end
 
 			if show then
 				visibleCount = visibleCount + 1
@@ -5212,6 +5348,7 @@ function CooldownPanels:UpdateRuntimeIcons(panelId)
 				data.entry = entry
 				data.entryId = entryId
 				data.overlayGlow = overlayGlow
+				if resolvedType == "STANCE" and glowReady then data.overlayGlow = true end
 				data.powerInsufficient = powerInsufficient
 				data.spellUnusable = spellUnusable
 				data.rangeOverlay = rangeOverlay
@@ -5221,6 +5358,7 @@ function CooldownPanels:UpdateRuntimeIcons(panelId)
 				data.soundReady = soundReady
 				data.soundName = soundName
 				data.readyAt = runtime.readyAt[entryId]
+				data.stanceActive = stanceActive == true
 				data.stackCount = Helper.NormalizeDisplayCount(stackCount)
 				data.itemCount = itemCount
 				data.itemUses = itemUses
@@ -5491,7 +5629,9 @@ function CooldownPanels:UpdateRuntimeIcons(panelId)
 			end
 		end
 		local staticTextCooldown = false
-		if data.entry and data.entry.staticTextShowOnCooldown == true then staticTextCooldown = durationActive or (cooldownEnabledOk and isCooldownActive(cooldownStart, cooldownDuration)) end
+		if data.entry and data.entry.staticTextShowOnCooldown == true then
+			staticTextCooldown = data.stanceActive == true or durationActive or (cooldownEnabledOk and isCooldownActive(cooldownStart, cooldownDuration))
+		end
 		applyStaticText(icon, data.entry, staticFontPath, staticFontSize, staticFontStyle, staticTextCooldown)
 		if icon.rangeOverlay then
 			if data.rangeOverlay then
@@ -6129,6 +6269,7 @@ function CooldownPanels:RegisterEditModePanel(panelId)
 		staticTextFont = true,
 		staticTextSize = true,
 		staticTextStyle = true,
+		staticTextColor = true,
 		staticTextAnchor = true,
 		staticTextX = true,
 		staticTextY = true,
@@ -7083,6 +7224,24 @@ function CooldownPanels:RegisterEditModePanel(panelId)
 							updateStaticTextEntry(entry, "staticTextStyle", option.value)
 						end)
 					end
+				end,
+			},
+			{
+				name = L["CooldownPanelStaticTextColor"] or _G.COLOR or "Color",
+				kind = SettingType.Color,
+				parentId = "cooldownPanelStaticText",
+				hasOpacity = true,
+				isShown = function() return hasStaticTextEntries() end,
+				default = Helper.NormalizeColor(Helper.ENTRY_DEFAULTS.staticTextColor, { 1, 1, 1, 1 }),
+				get = function()
+					local entry = getStaticTextEntry()
+					local color = Helper.NormalizeColor(entry and entry.staticTextColor, Helper.ENTRY_DEFAULTS.staticTextColor or { 1, 1, 1, 1 })
+					return { r = color[1], g = color[2], b = color[3], a = color[4] }
+				end,
+				set = function(_, value)
+					local entry = getStaticTextEntry()
+					if not entry then return end
+					updateStaticTextEntry(entry, "staticTextColor", Helper.NormalizeColor(value, Helper.ENTRY_DEFAULTS.staticTextColor or { 1, 1, 1, 1 }))
 				end,
 			},
 			{
@@ -8635,6 +8794,7 @@ function CooldownPanels:RequestUpdate(cause)
 end
 
 function CooldownPanels:Init()
+	if self.InitStanceTracker then self:InitStanceTracker() end
 	self:NormalizeAll()
 	self:EnsureEditMode()
 	updateItemCountCache()

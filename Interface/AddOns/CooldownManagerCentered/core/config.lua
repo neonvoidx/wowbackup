@@ -95,6 +95,14 @@ ns.DEFAULT_SETTINGS = {
         cooldownManager_normalizeUtilitySize = false,
 
         cooldownManager_visibility_enabled_rules = {},
+        cooldownManager_visibility_enabled_viewers = {
+            ["BuffIconCooldownViewer"] = true,
+            ["BuffBarCooldownViewer"] = true,
+            ["EssentialCooldownViewer"] = true,
+            ["UtilityCooldownViewer"] = true,
+            ["CMCTracker1"] = true,
+            ["CMCTracker2"] = true,
+        },
 
         cooldownManager_customSwipeColor_enabled = false,
         cooldownManager_customActiveColor_r = 1,

@@ -118,6 +118,9 @@ L.Settings.IndicateInterruptsLabel = "标记可打断法术"
 L.Settings.IndicateInterruptsTooltip =
 	"使图标去色，在图标上显示标记，并延迟1秒隐藏图标。对引导类法术无效。"
 
+L.Settings.RenderInterruptSourceNameLabel = "Render Interrupt Source Name"
+L.Settings.RenderInterruptSourceNameTooltip = nil
+
 L.Settings.ShowSwipeLabel = "显示滑动"
 L.Settings.ShowSwipeTooltip = nil
 
@@ -143,14 +146,6 @@ L.Settings.IncludeSelfInPartyLabel = "在小队中包含自己"
 L.Settings.IncludeSelfInPartyTooltip = "仅在使用团队样式小队框架时生效。"
 
 L.Settings.ClickToOpenSettingsLabel = "点击打开设置"
-
-L.Settings.TargetingFilterApiLabel = "目标检测接口"
-L.Settings.TargetingFilterApiTooltip =
-	"不同接口间存在细微差别。\n\n法术目标：显示将被法术击中的单位，无视当前目标。对使用箭头指示器同时指向多个玩家的技能无效。\n\n目标单位：显示当前施法正在瞄准的单位。也可以显示并非仅击中目标的法术，例如全队AoE。"
-L.Settings.TargetingFilterApiLabels = {
-	[Private.Enum.TargetingFilterApi.UnitIsSpellTarget] = "法术目标",
-	[Private.Enum.TargetingFilterApi.UnitIsUnit] = "单位目标",
-}
 
 L.Settings.Import = "导入"
 L.Settings.Export = "导出"

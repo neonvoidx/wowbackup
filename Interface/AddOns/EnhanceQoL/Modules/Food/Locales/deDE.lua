@@ -19,6 +19,7 @@ L["Enable Health Macro"] = "Gesundheits-Makro aktivieren"
 L["Flask Macro"] = "Flask-Makro"
 L["flaskMacroLimitReached"] = "Flask-Makro: Makro-Limit erreicht. Bitte einen Slot freimachen."
 L["flaskMacroPlaceOnBar"] = "%s - auf deine Leiste ziehen (aktualisiert außerhalb des Kampfes)"
+L["FlaskSharedWithClassReminder"] = "Fläschchen-Präferenzen werden mit dem Fläschchen-Tracking des Klassenbuff-Erinnerers geteilt."
 L["FlaskUseRoleSetting"] = "Rolleneinstellung verwenden"
 L["Health Macro"] = "Gesundheits-Makro"
 L["healthCustomSpellsHint"] = [=[Wenn du einen Zauber im Dropdown auswählst, wird er entfernt (das Feld bleibt absichtlich leer).

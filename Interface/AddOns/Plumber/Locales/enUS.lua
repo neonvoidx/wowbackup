@@ -852,8 +852,15 @@ L["BreakTime Option Delay"] = "Delay Duration";
 L["BreakTime Option Delay Tooltip"] = "Delay the timer by this amount of minutes when clicking the Delay button.";
 L["BreakTime Option FlashTaskbar"] = "Flash Taskbar Icon";
 L["BreakTime Option FlashTaskbar Tooltip"] = "Flash WoW's taskbar icon when the timer goes off.";
+L["BreakTime Option DND"] = "Do Not Disturb";
+L["BreakTime Option DNDCombat"] = "Combat or PvP";
+L["BreakTime Option DNDCombat Tooltip"] = "Do not show the Clock UI while in combat, battleground, or arena.\n\nThis option is always enabled.";
+L["BreakTime Option DNDInstances"] = "Instances";
+L["BreakTime Option DNDInstances Tooltip"] = "Do not show the Clock UI while in a dungeon, raid, or delve.";
+L["BreakTime AFK Pause"] = "The countdown is on hold because you are AFK.";
 L["BreakTime Reset Cancellation"] = "Reset Cancelled Break";
 L["BreakTime Annouce Timer Deferred Combat"] = "Remember to take a break after fight!";
+L["BreakTime Shared Countdown Tooltip Format"] = "Scheduled break in |cffffffff%d|r min.";
 
 
 --Generic
@@ -865,6 +872,7 @@ L["Font Size"] = FONT_SIZE or "Font Size";
 L["Icon Size"] = "Icon Size";
 L["Reset To Default Position"] = HUD_EDIT_MODE_RESET_POSITION or "Reset To Default Position";
 L["Renown Level Label"] = "Renown ";  --There is a space
+L["Progress Label"] = "Progress";  --There is a space
 L["Paragon Reputation"] = "Paragon";
 L["Level Maxed"] = "(Maxed)";   --Reached max level
 L["Current Colon"] = ITEM_UPGRADE_CURRENT or "Current:";

@@ -27,20 +27,84 @@ function M:Build(panel, options)
 
 	lines:SetPoint("TOPLEFT", panel, "TOPLEFT", 0, 0)
 
-	local enabledChk = mini:Checkbox({
+	local enabledDivider = mini:Divider({
 		Parent = panel,
-		LabelText = L["Enabled"],
-		Tooltip = L["Enable this module everywhere."],
+		Text = L["Enable in:"],
+	})
+	enabledDivider:SetPoint("LEFT", panel, "LEFT")
+	enabledDivider:SetPoint("RIGHT", panel, "RIGHT")
+	enabledDivider:SetPoint("TOP", lines, "BOTTOM", 0, -verticalSpacing)
+
+	local enabledEverywhere = mini:Checkbox({
+		Parent = panel,
+		LabelText = L["World"],
+		Tooltip = L["Enable this module in the open world."],
 		GetValue = function()
-			return db.Modules.AlertsModule.Enabled.Always
+			return db.Modules.AlertsModule.Enabled.World
 		end,
 		SetValue = function(value)
-			db.Modules.AlertsModule.Enabled.Always = value
+			db.Modules.AlertsModule.Enabled.World = value
 			config:Apply()
 		end,
 	})
 
-	enabledChk:SetPoint("TOPLEFT", lines, "BOTTOMLEFT", 0, -verticalSpacing)
+	enabledEverywhere:SetPoint("TOPLEFT", enabledDivider, "BOTTOMLEFT", 0, -verticalSpacing)
+
+	local enabledArena = mini:Checkbox({
+		Parent = panel,
+		LabelText = L["Arena"],
+		Tooltip = L["Enable this module in arena."],
+		GetValue = function()
+			return db.Modules.AlertsModule.Enabled.Arena
+		end,
+		SetValue = function(value)
+			db.Modules.AlertsModule.Enabled.Arena = value
+			config:Apply()
+		end,
+	})
+
+	enabledArena:SetPoint("LEFT", panel, "LEFT", columnWidth, 0)
+	enabledArena:SetPoint("TOP", enabledEverywhere, "TOP", 0, 0)
+
+	local enabledBattleGrounds = mini:Checkbox({
+		Parent = panel,
+		LabelText = L["Battlegrounds"],
+		Tooltip = L["Enable this module in battlegrounds."],
+		GetValue = function()
+			return db.Modules.AlertsModule.Enabled.BattleGrounds
+		end,
+		SetValue = function(value)
+			db.Modules.AlertsModule.Enabled.BattleGrounds = value
+			config:Apply()
+		end,
+	})
+
+	enabledBattleGrounds:SetPoint("LEFT", panel, "LEFT", columnWidth * 2, 0)
+	enabledBattleGrounds:SetPoint("TOP", enabledEverywhere, "TOP", 0, 0)
+
+	local enabledPvE = mini:Checkbox({
+		Parent = panel,
+		LabelText = L["PvE"],
+		Tooltip = L["Enable this module in PvE."],
+		GetValue = function()
+			return db.Modules.AlertsModule.Enabled.PvE
+		end,
+		SetValue = function(value)
+			db.Modules.AlertsModule.Enabled.PvE = value
+			config:Apply()
+		end,
+	})
+
+	enabledPvE:SetPoint("LEFT", panel, "LEFT", columnWidth * 3, 0)
+	enabledPvE:SetPoint("TOP", enabledEverywhere, "TOP", 0, 0)
+
+	local settingsDivider = mini:Divider({
+		Parent = panel,
+		Text = L["Settings:"],
+	})
+	settingsDivider:SetPoint("LEFT", panel, "LEFT")
+	settingsDivider:SetPoint("RIGHT", panel, "RIGHT")
+	settingsDivider:SetPoint("TOP", enabledEverywhere, "BOTTOM", 0, -verticalSpacing)
 
 	local iconsEnabledChk = mini:Checkbox({
 		Parent = panel,
@@ -55,8 +119,7 @@ function M:Build(panel, options)
 		end,
 	})
 
-	iconsEnabledChk:SetPoint("TOP", enabledChk, "TOP", 0, 0)
-	iconsEnabledChk:SetPoint("LEFT", panel, "LEFT", columnWidth, 0)
+	iconsEnabledChk:SetPoint("TOPLEFT", settingsDivider, "BOTTOMLEFT", 0, -verticalSpacing)
 
 	local includeDefensivesChk = mini:Checkbox({
 		Parent = panel,
@@ -72,8 +135,8 @@ function M:Build(panel, options)
 		end,
 	})
 
-	includeDefensivesChk:SetPoint("TOP", enabledChk, "TOP", 0, 0)
-	includeDefensivesChk:SetPoint("LEFT", panel, "LEFT", columnWidth * 2, 0)
+	includeDefensivesChk:SetPoint("TOP", iconsEnabledChk, "TOP", 0, 0)
+	includeDefensivesChk:SetPoint("LEFT", panel, "LEFT", columnWidth, 0)
 
 	local glowChk = mini:Checkbox({
 		Parent = panel,
@@ -88,7 +151,7 @@ function M:Build(panel, options)
 		end,
 	})
 
-	glowChk:SetPoint("TOPLEFT", enabledChk, "BOTTOMLEFT", 0, -verticalSpacing)
+	glowChk:SetPoint("TOPLEFT", iconsEnabledChk, "BOTTOMLEFT", 0, -verticalSpacing)
 
 	local colorByClassChk = mini:Checkbox({
 		Parent = panel,
@@ -125,15 +188,15 @@ function M:Build(panel, options)
 	local iconSize = mini:Slider({
 		Parent = panel,
 		Min = 10,
-		Max = 200,
-		Width = (columnWidth * columns) - horizontalSpacing,
+		Max = 100,
+		Width = columnWidth * 2 - horizontalSpacing,
 		Step = 1,
 		LabelText = L["Icon Size"],
 		GetValue = function()
 			return options.Icons.Size
 		end,
 		SetValue = function(v)
-			local newValue = mini:ClampInt(v, 10, 200, 32)
+			local newValue = mini:ClampInt(v, 10, 100, 32)
 			if options.Icons.Size ~= newValue then
 				options.Icons.Size = newValue
 				config:Apply()
@@ -142,6 +205,27 @@ function M:Build(panel, options)
 	})
 
 	iconSize.Slider:SetPoint("TOPLEFT", glowChk, "BOTTOMLEFT", 4, -verticalSpacing * 3)
+
+	local maxIcons = mini:Slider({
+		Parent = panel,
+		Min = 1,
+		Max = 10,
+		Width = columnWidth * 2 - horizontalSpacing,
+		Step = 1,
+		LabelText = L["Max Icons"],
+		GetValue = function()
+			return options.Icons.MaxIcons
+		end,
+		SetValue = function(v)
+			local newValue = mini:ClampInt(v, 1, 10, 8)
+			if options.Icons.MaxIcons ~= newValue then
+				options.Icons.MaxIcons = newValue
+				config:Apply()
+			end
+		end,
+	})
+
+	maxIcons.Slider:SetPoint("LEFT", iconSize.Slider, "RIGHT", horizontalSpacing, 0)
 
 	local soundDivider = mini:Divider({
 		Parent = panel,
@@ -259,7 +343,10 @@ function M:Build(panel, options)
 
 	local function EnsureTtsOptions()
 		if not options.TTS then
-			options.TTS = { Volume = 100 }
+			options.TTS = { Volume = 100, SpeechRate = 0 }
+		end
+		if options.TTS.SpeechRate == nil then
+			options.TTS.SpeechRate = 0
 		end
 	end
 
@@ -305,7 +392,8 @@ function M:Build(panel, options)
 		SetValue = function(value)
 			EnsureTtsOptions()
 			options.TTS.VoiceID = value
-			C_VoiceChat.SpeakText(value, L["Voice"], 1, options.TTS.Volume or 100, true)
+			local speechRate = options.TTS.SpeechRate or 0
+			C_VoiceChat.SpeakText(value, L["Voice"], speechRate, options.TTS.Volume or 100, true)
 			config:Apply()
 		end,
 		GetText = function(value)
@@ -324,9 +412,7 @@ function M:Build(panel, options)
 			return options.TTS and options.TTS.Important and options.TTS.Important.Enabled or false
 		end,
 		SetValue = function(value)
-			if not options.TTS then
-				options.TTS = { Volume = 100 }
-			end
+			EnsureTtsOptions()
 			if not options.TTS.Important then
 				options.TTS.Important = { Enabled = false }
 			end
@@ -335,8 +421,9 @@ function M:Build(panel, options)
 			if value then
 				local voiceId = (options.TTS and options.TTS.VoiceID) or C_TTSSettings.GetVoiceOptionID(0)
 				local volume = options.TTS.Volume or 100
+				local speechRate = options.TTS.SpeechRate or 0
 
-				C_VoiceChat.SpeakText(voiceId, L["Important"], 1, volume, true)
+				C_VoiceChat.SpeakText(voiceId, L["Important"], speechRate, volume, true)
 			end
 			config:Apply()
 		end,
@@ -352,9 +439,7 @@ function M:Build(panel, options)
 			return options.TTS and options.TTS.Defensive and options.TTS.Defensive.Enabled or false
 		end,
 		SetValue = function(value)
-			if not options.TTS then
-				options.TTS = { Volume = 100 }
-			end
+			EnsureTtsOptions()
 			if not options.TTS.Defensive then
 				options.TTS.Defensive = { Enabled = false }
 			end
@@ -363,8 +448,9 @@ function M:Build(panel, options)
 			if value then
 				local voiceId = (options.TTS and options.TTS.VoiceID) or C_TTSSettings.GetVoiceOptionID(0)
 				local volume = options.TTS.Volume or 100
+				local speechRate = options.TTS.SpeechRate or 0
 
-				C_VoiceChat.SpeakText(voiceId, L["Defensive"], 1, volume, true)
+				C_VoiceChat.SpeakText(voiceId, L["Defensive"], speechRate, volume, true)
 			end
 
 			config:Apply()
@@ -386,9 +472,7 @@ function M:Build(panel, options)
 		end,
 		SetValue = function(v)
 			local newValue = mini:ClampInt(v, 0, 100, 100)
-			if not options.TTS then
-				options.TTS = { Volume = 100 }
-			end
+			EnsureTtsOptions()
 			if options.TTS.Volume ~= newValue then
 				options.TTS.Volume = newValue
 				config:Apply()
@@ -397,6 +481,52 @@ function M:Build(panel, options)
 	})
 
 	volumeSlider.Slider:SetPoint("TOPLEFT", announceImportantSpellsChk, "BOTTOMLEFT", 4, -verticalSpacing * 3)
+
+	local speechRateSlider = mini:Slider({
+		Parent = panel,
+		Min = -5,
+		Max = 5,
+		Width = (columnWidth * 2) - horizontalSpacing,
+		Step = 1,
+		LabelText = L["TTS Speech Rate"] or "TTS Speech Rate",
+		GetValue = function()
+			EnsureTtsOptions()
+			return options.TTS.SpeechRate or 0
+		end,
+		SetValue = function(v)
+			local newValue = mini:ClampInt(v, -5, 5, 0)
+			EnsureTtsOptions()
+			if options.TTS.SpeechRate ~= newValue then
+				options.TTS.SpeechRate = newValue
+				config:Apply()
+			end
+		end,
+	})
+
+	speechRateSlider.Slider:SetPoint("TOPLEFT", volumeSlider.Slider, "BOTTOMLEFT", 0, -verticalSpacing * 3)
+
+	local miscDivider = mini:Divider({
+		Parent = panel,
+		Text = L["Miscellaneous"],
+	})
+	miscDivider:SetPoint("LEFT", panel, "LEFT")
+	miscDivider:SetPoint("RIGHT", panel, "RIGHT")
+	miscDivider:SetPoint("TOP", speechRateSlider.Slider, "BOTTOM", 0, -verticalSpacing * 2)
+
+	local targetFocusOnlyChk = mini:Checkbox({
+		Parent = panel,
+		LabelText = L["Target/Focus Only"],
+		Tooltip = L["Only show alerts for your target and focus in battlegrounds and the open world."],
+		GetValue = function()
+			return options.TargetFocusOnly ~= false
+		end,
+		SetValue = function(value)
+			options.TargetFocusOnly = value
+			config:Apply()
+		end,
+	})
+
+	targetFocusOnlyChk:SetPoint("TOPLEFT", miscDivider, "BOTTOMLEFT", 0, -verticalSpacing)
 
 	panel:HookScript("OnShow", function()
 		panel:MiniRefresh()

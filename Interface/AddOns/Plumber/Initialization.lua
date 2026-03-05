@@ -1,5 +1,5 @@
-local VERSION_TEXT = "1.8.8 b";
-local VERSION_DATE = 1772120000;
+local VERSION_TEXT = "1.8.8 d";
+local VERSION_DATE = 1772630000;
 
 
 local addonName, addon = ...
@@ -372,6 +372,8 @@ local DefaultValues = {
         BreakTime_Rest = 5,
         BreakTime_Delay = 5,
         BreakTime_FlashTaskbar = false,
+        BreakTime_DNDCombat = true,
+        BreakTime_DNDInstances = false,
 
 
     --Declared elsewhere:

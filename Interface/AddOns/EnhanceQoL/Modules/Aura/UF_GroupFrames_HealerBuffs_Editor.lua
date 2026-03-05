@@ -269,6 +269,14 @@ local function createEditBox(parent, width)
 	return box
 end
 
+local function createNumberInput(parent, width, maxLetters)
+	local box = createEditBox(parent, width or 72)
+	box:SetJustifyH("CENTER")
+	box:SetMaxLetters(maxLetters or 8)
+	if box.SetNumeric then box:SetNumeric(false) end
+	return box
+end
+
 local function createSlider(parent, width, minValue, maxValue, step)
 	local slider = CreateFrame("Slider", nil, parent, "OptionsSliderTemplate")
 	slider:SetWidth(width or 180)
@@ -278,6 +286,28 @@ local function createSlider(parent, width, minValue, maxValue, step)
 	if slider.Low then slider.Low:SetText(tostring(minValue or 0)) end
 	if slider.High then slider.High:SetText(tostring(maxValue or 1)) end
 	return slider
+end
+
+local function createColorSwatchButton(parent, size)
+	local button = CreateFrame("Button", nil, parent, "BackdropTemplate")
+	button:SetSize(size or 26, size or 26)
+	button:SetBackdrop({
+		bgFile = "Interface\\Buttons\\WHITE8x8",
+		edgeFile = "Interface\\Buttons\\WHITE8x8",
+		tile = false,
+		edgeSize = 1,
+		insets = { left = 0, right = 0, top = 0, bottom = 0 },
+	})
+	button:SetBackdropColor(0, 0, 0, 0.65)
+	button:SetBackdropBorderColor(0.28, 0.33, 0.4, 1)
+	local swatch = button:CreateTexture(nil, "ARTWORK")
+	swatch:SetPoint("TOPLEFT", button, "TOPLEFT", 3, -3)
+	swatch:SetPoint("BOTTOMRIGHT", button, "BOTTOMRIGHT", -3, 3)
+	swatch:SetColorTexture(1, 1, 1, 1)
+	button.ColorSwatch = swatch
+	button._eqolColorSwatch = swatch
+	if button.RegisterForClicks then button:RegisterForClicks("LeftButtonUp", "RightButtonUp") end
+	return button
 end
 
 local function toggleDropdown(dropdown)
@@ -430,26 +460,39 @@ end
 local function showColorPicker(initialColor, onApply)
 	if type(onApply) ~= "function" then return end
 	local r, g, b, a = unpackRgba(initialColor)
+	local useModernPicker = ColorPickerFrame and ColorPickerFrame.SetupColorPickerAndShow ~= nil
+	local isInitializing = false
+
+	local function alphaFromPicker(defaultAlpha)
+		if ColorPickerFrame and ColorPickerFrame.GetColorAlpha then
+			local alpha = tonumber(ColorPickerFrame:GetColorAlpha())
+			if alpha ~= nil then return alpha end
+		end
+		-- Legacy picker path uses OpacitySliderFrame as inverted alpha.
+		if not useModernPicker and OpacitySliderFrame and OpacitySliderFrame.GetValue then
+			local opacity = tonumber(OpacitySliderFrame:GetValue())
+			if opacity ~= nil then return 1 - opacity end
+		end
+		return defaultAlpha
+	end
 
 	local function applyFromPicker(restore)
+		if isInitializing then return end
 		local nr, ng, nb, na
 		if type(restore) == "table" then
 			nr = tonumber(restore.r) or tonumber(restore[1]) or r
 			ng = tonumber(restore.g) or tonumber(restore[2]) or g
 			nb = tonumber(restore.b) or tonumber(restore[3]) or b
-			na = tonumber(restore.a) or tonumber(restore[4]) or a
+			na = tonumber(restore.a)
+			if na == nil and not useModernPicker and restore.opacity ~= nil then na = 1 - (tonumber(restore.opacity) or 0) end
+			if na == nil then na = tonumber(restore[4]) or a end
 		else
 			if ColorPickerFrame and ColorPickerFrame.GetColorRGB then
 				nr, ng, nb = ColorPickerFrame:GetColorRGB()
 			else
 				nr, ng, nb = r, g, b
 			end
-			if ColorPickerFrame and ColorPickerFrame.GetColorAlpha then
-				na = ColorPickerFrame:GetColorAlpha()
-			else
-				local opacity = (OpacitySliderFrame and OpacitySliderFrame.GetValue and OpacitySliderFrame:GetValue()) or 0
-				na = 1 - opacity
-			end
+			na = alphaFromPicker(a)
 		end
 		nr = min(1, max(0, tonumber(nr) or 1))
 		ng = min(1, max(0, tonumber(ng) or 1))
@@ -458,17 +501,19 @@ local function showColorPicker(initialColor, onApply)
 		onApply(nr, ng, nb, na)
 	end
 
-	if ColorPickerFrame and ColorPickerFrame.SetupColorPickerAndShow then
+	if useModernPicker then
+		isInitializing = true
 		ColorPickerFrame:SetupColorPickerAndShow({
 			r = r,
 			g = g,
 			b = b,
-			opacity = 1 - a,
+			opacity = a,
 			hasOpacity = true,
 			swatchFunc = function() applyFromPicker() end,
 			opacityFunc = function() applyFromPicker() end,
 			cancelFunc = function(restore) applyFromPicker(restore) end,
 		})
+		isInitializing = false
 		return
 	end
 
@@ -476,7 +521,7 @@ local function showColorPicker(initialColor, onApply)
 	ColorPickerFrame.hasOpacity = true
 	ColorPickerFrame.opacity = 1 - a
 	ColorPickerFrame:SetColorRGB(r, g, b)
-	ColorPickerFrame.previousValues = { r = r, g = g, b = b, a = a }
+	ColorPickerFrame.previousValues = { r = r, g = g, b = b, a = a, opacity = 1 - a }
 	ColorPickerFrame.func = function() applyFromPicker() end
 	ColorPickerFrame.opacityFunc = function() applyFromPicker() end
 	ColorPickerFrame.cancelFunc = function(restore)
@@ -528,10 +573,13 @@ local function createThinScrollFrameBar(scrollFrame, xOffset)
 		local vrange = yRange
 		if vrange == nil and scrollFrame.GetVerticalScrollRange then vrange = scrollFrame:GetVerticalScrollRange() end
 		local maxRange = max(0, vrange or 0)
+		local clampedScroll = scrollFrame.GetVerticalScroll and (scrollFrame:GetVerticalScroll() or 0) or 0
+		if clampedScroll < 0 then clampedScroll = 0 end
+		if clampedScroll > maxRange then clampedScroll = maxRange end
+		if scrollFrame.SetVerticalScroll then scrollFrame:SetVerticalScroll(clampedScroll) end
 		sb._suppress = true
 		sb:SetMinMaxValues(0, maxRange)
-		local cur = sb:GetValue() or 0
-		if cur > maxRange then sb:SetValue(maxRange) end
+		sb:SetValue(clampedScroll)
 		sb._suppress = false
 		applyVisibility(maxRange)
 	end
@@ -576,8 +624,12 @@ local function createThinScrollFrameBar(scrollFrame, xOffset)
 	function sb:Sync()
 		local range = scrollFrame.GetVerticalScrollRange and scrollFrame:GetVerticalScrollRange() or 0
 		updateRange(nil, nil, range)
+		local clampedScroll = scrollFrame.GetVerticalScroll and (scrollFrame:GetVerticalScroll() or 0) or 0
+		if clampedScroll < 0 then clampedScroll = 0 end
+		if clampedScroll > range then clampedScroll = range end
+		if scrollFrame.SetVerticalScroll then scrollFrame:SetVerticalScroll(clampedScroll) end
 		sb._suppress = true
-		sb:SetValue(scrollFrame:GetVerticalScroll() or 0)
+		sb:SetValue(clampedScroll)
 		sb._suppress = false
 	end
 
@@ -1217,6 +1269,11 @@ function Editor:EnsureFrame()
 	previewTitle:SetPoint("TOPLEFT", 10, -10)
 	previewPanel.Title = previewTitle
 
+	local previewLoop = createCheck(previewPanel, tr("UFGroupHealerBuffEditorLoopLivePreview", "Loop Live Preview"))
+	previewLoop:SetPoint("LEFT", previewTitle, "RIGHT", 14, -4)
+	previewLoop:SetChecked(Editor._previewLoopEnabled == true)
+	previewPanel.LoopCheck = previewLoop
+
 	local previewFrame = CreateFrame("Frame", nil, previewPanel, "BackdropTemplate")
 	previewFrame:SetPoint("TOPLEFT", previewTitle, "BOTTOMLEFT", 0, -8)
 	previewFrame:SetPoint("TOPRIGHT", previewPanel, "TOPRIGHT", -10, -30)
@@ -1356,6 +1413,7 @@ function Editor:EnsureFrame()
 	local controls = {}
 	frame.Controls = controls
 	local groupControlParent = groupControlContent
+	controls.PreviewLoop = previewPanel.LoopCheck
 
 	controls.GroupNameLabel = groupControlParent:CreateFontString(nil, "OVERLAY", "GameFontNormal")
 	controls.GroupNameLabel:SetPoint("TOPLEFT", groupControlParent, "TOPLEFT", 0, 0)
@@ -1396,19 +1454,21 @@ function Editor:EnsureFrame()
 		label:SetText(text)
 		local slider = createSlider(groupControlParent, 180, minValue, maxValue, step)
 		slider:SetPoint("TOPLEFT", label, "TOPRIGHT", 8, 8)
-		local valueText = groupControlParent:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
-		valueText:SetPoint("LEFT", slider, "RIGHT", 10, 0)
-		valueText:SetWidth(44)
-		valueText:SetJustifyH("RIGHT")
-		valueText:SetText("0")
-		return label, slider, valueText
+		local valueInput = createNumberInput(groupControlParent, 56, 8)
+		valueInput:SetPoint("LEFT", slider, "RIGHT", 14, 0)
+		valueInput:SetText("0")
+		return label, slider, valueInput
 	end
 
 	controls.PerRowLabel, controls.PerRow, controls.PerRowValue = createSettingSlider(controls.GroupBarOrientationLabel, tr("UFGroupHealerBuffEditorPerRow", "Per Row"), 1, 20, 1)
 	controls.MaxLabel, controls.MaxCount, controls.MaxValue = createSettingSlider(controls.PerRowLabel, tr("UFGroupHealerBuffEditorMax", "Max"), 0, 40, 1)
 	controls.SpacingLabel, controls.Spacing, controls.SpacingValue = createSettingSlider(controls.MaxLabel, tr("UFGroupHealerBuffEditorSpacing", "Spacing"), 0, 20, 1)
 	controls.SizeLabel, controls.Size, controls.SizeValue = createSettingSlider(controls.SpacingLabel, tr("UFGroupHealerBuffEditorIconSize", "Icon Size"), 4, 64, 1)
-	controls.XLabel, controls.XOffset, controls.XValue = createSettingSlider(controls.SizeLabel, tr("UFGroupHealerBuffEditorXOffset", "X Offset"), -200, 200, 1)
+	controls.CooldownTextSizeLabel, controls.CooldownTextSize, controls.CooldownTextSizeValue =
+		createSettingSlider(controls.SizeLabel, tr("UFGroupHealerBuffEditorCooldownTextSize", "Cooldown Size"), 6, 64, 1)
+	controls.ChargeTextSizeLabel, controls.ChargeTextSize, controls.ChargeTextSizeValue =
+		createSettingSlider(controls.CooldownTextSizeLabel, tr("UFGroupHealerBuffEditorChargeTextSize", "Charge Size"), 6, 64, 1)
+	controls.XLabel, controls.XOffset, controls.XValue = createSettingSlider(controls.ChargeTextSizeLabel, tr("UFGroupHealerBuffEditorXOffset", "X Offset"), -200, 200, 1)
 	controls.YLabel, controls.YOffset, controls.YValue = createSettingSlider(controls.XLabel, tr("UFGroupHealerBuffEditorYOffset", "Y Offset"), -200, 200, 1)
 	controls.ThicknessLabel, controls.Thickness, controls.ThicknessValue = createSettingSlider(controls.YLabel, tr("UFGroupHealerBuffEditorBarThickness", "Bar Thickness"), 1, 64, 1)
 	controls.InsetLabel, controls.Inset, controls.InsetValue = createSettingSlider(controls.ThicknessLabel, tr("UFGroupHealerBuffEditorInset", "Inset"), 0, 40, 1)
@@ -1417,33 +1477,32 @@ function Editor:EnsureFrame()
 	controls.ColorLabel = groupControlParent:CreateFontString(nil, "OVERLAY", "GameFontNormal")
 	controls.ColorLabel:SetPoint("TOPLEFT", controls.BorderSizeLabel, "BOTTOMLEFT", 0, -22)
 	controls.ColorLabel:SetText(tr("UFGroupHealerBuffEditorColor", "Color"))
-	controls.ColorButton = CreateFrame("Button", nil, groupControlParent, "BackdropTemplate")
-	controls.ColorButton:SetSize(26, 26)
-	controls.ColorButton:SetPoint("TOPLEFT", controls.ColorLabel, "TOPRIGHT", 10, -2)
-	controls.ColorButton:SetBackdrop({
-		bgFile = "Interface\\Buttons\\WHITE8x8",
-		edgeFile = "Interface\\Buttons\\WHITE8x8",
-		tile = false,
-		edgeSize = 1,
-		insets = { left = 0, right = 0, top = 0, bottom = 0 },
-	})
-	controls.ColorButton:SetBackdropColor(0, 0, 0, 0.65)
-	controls.ColorButton:SetBackdropBorderColor(0.28, 0.33, 0.4, 1)
-	controls.ColorSwatch = controls.ColorButton:CreateTexture(nil, "ARTWORK")
-	controls.ColorSwatch:SetPoint("TOPLEFT", controls.ColorButton, "TOPLEFT", 3, -3)
-	controls.ColorSwatch:SetPoint("BOTTOMRIGHT", controls.ColorButton, "BOTTOMRIGHT", -3, 3)
-	controls.ColorSwatch:SetColorTexture(1, 1, 1, 1)
+	controls.ColorButton = createColorSwatchButton(groupControlParent, 26)
+	controls.ColorButton:SetPoint("LEFT", controls.ColorLabel, "RIGHT", 10, 0)
+	controls.ColorSwatch = controls.ColorButton.ColorSwatch
 	controls.ColorButton.ColorSwatch = controls.ColorSwatch
 	controls.ColorButton._eqolColorSwatch = controls.ColorSwatch
+	controls.CooldownSwipe = createCheck(groupControlParent, tr("UFGroupHealerBuffEditorCooldownSwipe", "Cooldown Swipe"))
+	controls.CooldownSwipe:SetPoint("TOPLEFT", controls.ColorLabel, "BOTTOMLEFT", -4, -8)
+	controls.CooldownEdge = createCheck(groupControlParent, tr("UFGroupHealerBuffEditorCooldownEdge", "Draw Edge"))
+	controls.CooldownEdge:SetPoint("TOPLEFT", controls.CooldownSwipe, "BOTTOMLEFT", 0, -4)
+	controls.CooldownBling = createCheck(groupControlParent, tr("UFGroupHealerBuffEditorCooldownBling", "Draw Bling"))
+	controls.CooldownBling:SetPoint("TOPLEFT", controls.CooldownEdge, "BOTTOMLEFT", 0, -4)
+	controls.HideCooldownText = createCheck(groupControlParent, tr("UFGroupHealerBuffEditorHideCooldownText", "Hide Cooldown Text"))
+	controls.HideCooldownText:SetPoint("TOPLEFT", controls.CooldownBling, "BOTTOMLEFT", 0, -4)
+	controls.HideChargeText = createCheck(groupControlParent, tr("UFGroupHealerBuffEditorHideChargeText", "Hide Charge Text"))
+	controls.HideChargeText:SetPoint("TOPLEFT", controls.HideCooldownText, "BOTTOMLEFT", 0, -4)
 	groupControlContent:SetHeight(340)
 
 	local function layoutGroupControlRows()
 		local LABEL_X = 8
 		local CONTROL_X = 84
+		local SLIDER_X = CONTROL_X + 28
 		local FIRST_ROW_Y = -8
 		local GAP_DROPDOWN = 20
 		local GAP_SLIDER = 20
 		local GAP_COLOR = 20
+		local GAP_CHECK = 16
 		local prevLabel
 		local lastBottom
 
@@ -1480,18 +1539,33 @@ function Editor:EnsureFrame()
 			if not (label:IsShown() and slider:IsShown() and valueText:IsShown()) then return end
 			beginRow(label, GAP_SLIDER)
 			slider:ClearAllPoints()
-			slider:SetPoint("TOPLEFT", label, "TOPLEFT", CONTROL_X - LABEL_X, 8)
+			slider:SetPoint("TOPLEFT", label, "TOPLEFT", SLIDER_X - LABEL_X, 8)
 			valueText:ClearAllPoints()
-			valueText:SetPoint("LEFT", slider, "RIGHT", 10, 0)
+			valueText:SetPoint("LEFT", slider, "RIGHT", 14, 0)
 			includeBottom(slider)
+			includeBottom(valueText)
 		end
 
 		local function placeColor(label, button)
 			if not (label:IsShown() and button:IsShown()) then return end
 			beginRow(label, GAP_COLOR)
 			button:ClearAllPoints()
-			button:SetPoint("TOPLEFT", label, "TOPLEFT", CONTROL_X - LABEL_X, 0)
+			button:SetPoint("LEFT", label, "RIGHT", 10, 0)
 			includeBottom(button)
+		end
+
+		local function placeCheck(check, anchorControl, xOffset, yOffset)
+			if not (check and check:IsShown()) then return end
+			check:ClearAllPoints()
+			if anchorControl and anchorControl:IsShown() then
+				check:SetPoint("TOPLEFT", anchorControl, "BOTTOMLEFT", xOffset or 0, yOffset or -4)
+			elseif prevLabel then
+				check:SetPoint("TOPLEFT", prevLabel, "BOTTOMLEFT", 0, -GAP_CHECK)
+			else
+				check:SetPoint("TOPLEFT", groupControlParent, "TOPLEFT", LABEL_X, FIRST_ROW_Y)
+			end
+			prevLabel = check
+			includeBottom(check)
 		end
 
 		placeDropdown(controls.GroupAnchorLabel, controls.GroupAnchor)
@@ -1502,12 +1576,31 @@ function Editor:EnsureFrame()
 		placeSlider(controls.MaxLabel, controls.MaxCount, controls.MaxValue)
 		placeSlider(controls.SpacingLabel, controls.Spacing, controls.SpacingValue)
 		placeSlider(controls.SizeLabel, controls.Size, controls.SizeValue)
+		placeSlider(controls.CooldownTextSizeLabel, controls.CooldownTextSize, controls.CooldownTextSizeValue)
+		placeSlider(controls.ChargeTextSizeLabel, controls.ChargeTextSize, controls.ChargeTextSizeValue)
 		placeSlider(controls.XLabel, controls.XOffset, controls.XValue)
 		placeSlider(controls.YLabel, controls.YOffset, controls.YValue)
 		placeSlider(controls.ThicknessLabel, controls.Thickness, controls.ThicknessValue)
 		placeSlider(controls.InsetLabel, controls.Inset, controls.InsetValue)
 		placeSlider(controls.BorderSizeLabel, controls.BorderSize, controls.BorderSizeValue)
 		placeColor(controls.ColorLabel, controls.ColorButton)
+		local cooldownAnchor = controls.ColorLabel
+		if not (cooldownAnchor and cooldownAnchor:IsShown()) then
+			if controls.YLabel and controls.YLabel:IsShown() then
+				cooldownAnchor = controls.YLabel
+			elseif controls.XLabel and controls.XLabel:IsShown() then
+				cooldownAnchor = controls.XLabel
+			elseif controls.YOffset and controls.YOffset:IsShown() then
+				cooldownAnchor = controls.YOffset
+			elseif controls.XOffset and controls.XOffset:IsShown() then
+				cooldownAnchor = controls.XOffset
+			end
+		end
+		placeCheck(controls.CooldownSwipe, cooldownAnchor, -4, -8)
+		placeCheck(controls.CooldownEdge, controls.CooldownSwipe, 0, -4)
+		placeCheck(controls.CooldownBling, controls.CooldownEdge, 0, -4)
+		placeCheck(controls.HideCooldownText, controls.CooldownBling, 0, -4)
+		placeCheck(controls.HideChargeText, controls.HideCooldownText, 0, -4)
 
 		local top = controls.GroupNameLabel:GetTop()
 		local bottom = lastBottom and lastBottom:GetBottom()
@@ -1545,6 +1638,14 @@ function Editor:EnsureFrame()
 	controls.RuleMatch:SetPoint("TOPLEFT", controls.RuleMatchLabel, "TOPRIGHT", 0, 12)
 	controls.RuleMatchLabel:Hide()
 	controls.RuleMatch:Hide()
+
+	controls.RuleColorLabel = settingsPanel:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+	controls.RuleColorLabel:SetPoint("TOPLEFT", controls.RuleAppliesRaid, "BOTTOMLEFT", 0, -14)
+	controls.RuleColorLabel:SetText(tr("UFGroupHealerBuffEditorSpellColor", "Spell Color"))
+	controls.RuleColorButton = createColorSwatchButton(settingsPanel, 24)
+	controls.RuleColorButton:SetPoint("LEFT", controls.RuleColorLabel, "RIGHT", 10, 0)
+	controls.RuleColorLabel:Hide()
+	controls.RuleColorButton:Hide()
 
 	controls.RuleInfo = settingsPanel:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
 	controls.RuleInfo:SetPoint("TOPLEFT", controls.RuleAppliesRaid, "BOTTOMLEFT", 0, -10)
@@ -2009,46 +2110,94 @@ function Editor:EnsureFrame()
 		return ruleId and placement.rulesById and placement.rulesById[ruleId] or nil
 	end
 
-	local function updateGroupFromSlider(field, slider, valueText, minValue, maxValue, step)
-		slider:SetScript("OnValueChanged", function(self, value)
+	local function normalizeSliderValue(value, minValue, maxValue, step)
+		if step and step >= 1 then
+			value = roundInt(value)
+		else
+			value = tonumber(string.format("%.2f", value))
+		end
+		if minValue ~= nil and value < minValue then value = minValue end
+		if maxValue ~= nil and value > maxValue then value = maxValue end
+		return value
+	end
+
+	local function formatSliderValue(value, step)
+		if step and step < 1 then return string.format("%.2f", tonumber(value) or 0) end
+		return tostring(roundInt(value or 0))
+	end
+
+	local function updateGroupFromSlider(field, slider, valueInput, minValue, maxValue, step)
+		local function applyValue(rawValue)
 			if Editor._controlUpdateLock then return end
 			local group = groupFromSelection()
-			if not group then return end
-			if step and step >= 1 then
-				value = roundInt(value)
-			else
-				value = tonumber(string.format("%.2f", value))
+			if not group then
+				if valueInput then valueInput:SetText("") end
+				return
 			end
-			if minValue ~= nil and value < minValue then value = minValue end
-			if maxValue ~= nil and value > maxValue then value = maxValue end
+			local value = normalizeSliderValue(rawValue, minValue, maxValue, step)
 			group[field] = value
 			if field == "x" or field == "y" then
 				local preview = Editor.frame and Editor.frame.PreviewPanel and Editor.frame.PreviewPanel.Frame and Editor.frame.PreviewPanel.Frame.UnitFrame
 				if preview then
 					group.x, group.y = HB.ClampOffsets(group.anchorPoint, group.x, group.y, preview:GetWidth(), preview:GetHeight(), 0)
-					if field == "x" then
-						value = group.x
-					else
-						value = group.y
-					end
 				end
+				value = field == "x" and group.x or group.y
 			end
-			if valueText then
-				if step and step < 1 then
-					valueText:SetText(string.format("%.2f", value))
-				else
-					valueText:SetText(tostring(value))
-				end
+			if slider and slider:GetValue() ~= value then
+				slider._eqolSliderSync = true
+				slider:SetValue(value)
+				slider._eqolSliderSync = nil
 			end
+			if valueInput then valueInput:SetText(formatSliderValue(value, step)) end
 			Editor:RefreshPreview()
 			Editor:QueueRuntimeRefresh()
+		end
+
+		slider:SetScript("OnValueChanged", function(self, value)
+			if self._eqolSliderSync then return end
+			applyValue(value)
 		end)
+
+		if valueInput then
+			local function commitInput(self)
+				local raw = tonumber(self:GetText() or "")
+				if raw == nil then
+					local group = groupFromSelection()
+					if group then
+						local current = field == "x" and group.x or (field == "y" and group.y or group[field])
+						self:SetText(formatSliderValue(current, step))
+					else
+						self:SetText("")
+					end
+					return
+				end
+				applyValue(raw)
+			end
+
+			valueInput:SetScript("OnEnterPressed", function(self)
+				commitInput(self)
+				self:ClearFocus()
+			end)
+			valueInput:SetScript("OnEditFocusLost", function(self) commitInput(self) end)
+			valueInput:SetScript("OnEscapePressed", function(self)
+				local group = groupFromSelection()
+				if group then
+					local current = field == "x" and group.x or (field == "y" and group.y or group[field])
+					self:SetText(formatSliderValue(current, step))
+				else
+					self:SetText("")
+				end
+				self:ClearFocus()
+			end)
+		end
 	end
 
 	updateGroupFromSlider("perRow", controls.PerRow, controls.PerRowValue, 1, 20, 1)
 	updateGroupFromSlider("max", controls.MaxCount, controls.MaxValue, 0, 40, 1)
 	updateGroupFromSlider("spacing", controls.Spacing, controls.SpacingValue, 0, 20, 1)
 	updateGroupFromSlider("size", controls.Size, controls.SizeValue, 4, 64, 1)
+	updateGroupFromSlider("cooldownTextSize", controls.CooldownTextSize, controls.CooldownTextSizeValue, 6, 64, 1)
+	updateGroupFromSlider("chargeTextSize", controls.ChargeTextSize, controls.ChargeTextSizeValue, 6, 64, 1)
 	updateGroupFromSlider("x", controls.XOffset, controls.XValue, -200, 200, 1)
 	updateGroupFromSlider("y", controls.YOffset, controls.YValue, -200, 200, 1)
 	updateGroupFromSlider("barThickness", controls.Thickness, controls.ThicknessValue, 1, 64, 1)
@@ -2108,13 +2257,97 @@ function Editor:EnsureFrame()
 		Editor:RefreshRuntimeNow()
 	end)
 
-	controls.ColorButton:SetScript("OnClick", function()
+	controls.ColorButton:SetScript("OnClick", function(_, mouseButton)
+		if mouseButton == "RightButton" then return end
 		local group = groupFromSelection()
 		if not group then return end
 		group.color = group.color or { 1, 0.82, 0.1, 0.9 }
 		showColorPicker(group.color, function(r, g, b, a)
 			group.color[1], group.color[2], group.color[3], group.color[4] = r, g, b, a
 			Editor:RefreshGroupControls()
+			Editor:RefreshPreview()
+			Editor:QueueRuntimeRefresh()
+		end)
+	end)
+
+	controls.CooldownSwipe:SetScript("OnClick", function(self)
+		if Editor._controlUpdateLock then return end
+		local group = groupFromSelection()
+		if not group then
+			self:SetChecked(false)
+			return
+		end
+		group.showCooldownSwipe = self:GetChecked() ~= false
+		Editor:RefreshPreview()
+		Editor:QueueRuntimeRefresh()
+	end)
+
+	controls.CooldownEdge:SetScript("OnClick", function(self)
+		if Editor._controlUpdateLock then return end
+		local group = groupFromSelection()
+		if not group then
+			self:SetChecked(false)
+			return
+		end
+		group.showCooldownEdge = self:GetChecked() ~= false
+		Editor:RefreshPreview()
+		Editor:QueueRuntimeRefresh()
+	end)
+
+	controls.CooldownBling:SetScript("OnClick", function(self)
+		if Editor._controlUpdateLock then return end
+		local group = groupFromSelection()
+		if not group then
+			self:SetChecked(false)
+			return
+		end
+		group.showCooldownBling = self:GetChecked() ~= false
+		Editor:RefreshPreview()
+		Editor:QueueRuntimeRefresh()
+	end)
+
+	controls.HideCooldownText:SetScript("OnClick", function(self)
+		if Editor._controlUpdateLock then return end
+		local group = groupFromSelection()
+		if not group then
+			self:SetChecked(false)
+			return
+		end
+		group.hideCooldownText = self:GetChecked() == true
+		Editor:RefreshPreview()
+		Editor:QueueRuntimeRefresh()
+	end)
+
+	controls.HideChargeText:SetScript("OnClick", function(self)
+		if Editor._controlUpdateLock then return end
+		local group = groupFromSelection()
+		if not group then
+			self:SetChecked(false)
+			return
+		end
+		group.hideChargeText = self:GetChecked() == true
+		Editor:RefreshPreview()
+		Editor:QueueRuntimeRefresh()
+	end)
+
+	if controls.PreviewLoop then controls.PreviewLoop:SetScript("OnClick", function(self) Editor:SetPreviewLoopEnabled(self:GetChecked() == true) end) end
+
+	controls.RuleColorButton:SetScript("OnClick", function(_, mouseButton)
+		local group = groupFromSelection()
+		local rule = ruleFromSelection()
+		if not (group and rule) then return end
+		if tostring(group.style or ""):upper() ~= "SQUARE" then return end
+		if mouseButton == "RightButton" then
+			rule.color = nil
+			Editor:RefreshRuleControls()
+			Editor:RefreshPreview()
+			Editor:QueueRuntimeRefresh()
+			return
+		end
+		local baseColor = rule.color or group.color or { 1, 0.82, 0.1, 0.9 }
+		showColorPicker(baseColor, function(r, g, b, a)
+			rule.color = { r, g, b, a }
+			Editor:RefreshRuleControls()
 			Editor:RefreshPreview()
 			Editor:QueueRuntimeRefresh()
 		end)
@@ -2197,7 +2430,9 @@ function Editor:EnsureFrame()
 
 	frame:SetScript("OnShow", function()
 		if frame._updateGroupControlScroll then frame._updateGroupControlScroll() end
+		Editor:UpdatePreviewLoopTicker()
 	end)
+	frame:SetScript("OnHide", function() Editor:UpdatePreviewLoopTicker() end)
 	frame:SetScript("OnSizeChanged", function()
 		if frame._updateGroupControlScroll then frame._updateGroupControlScroll() end
 	end)
@@ -2337,6 +2572,7 @@ function Editor:RefreshRuleControls()
 	local selectedGroupStyle = tostring(selectedGroup and selectedGroup.style or "")
 	local showIconRuleMode = selectedGroupStyle == "ICON" or selectedGroupStyle == "SQUARE"
 	local showTintRuleMatch = selectedGroupStyle == "TINT"
+	local showRuleColor = selectedGroupStyle == "SQUARE"
 	local iconModeOptions = HB.ICON_MODE_OPTIONS
 		or {
 			{ value = "ALL", label = tr("UFGroupHealerBuffIconModeAll", "Show All Active Spells") },
@@ -2358,13 +2594,38 @@ function Editor:RefreshRuleControls()
 	setControlEnabled(controls.RuleMatch, showTintRuleMatch)
 	if showTintRuleMatch then setDropdown(controls.RuleMatch, ruleMatchOptions, tostring(selectedGroup.ruleMatch or "ANY"):upper(), controls.RuleMatch._eqolOnSelect) end
 
-	controls.RuleInfo:ClearAllPoints()
+	controls.RuleColorLabel:ClearAllPoints()
 	if showTintRuleMatch then
-		controls.RuleInfo:SetPoint("TOPLEFT", controls.RuleMatchLabel, "BOTTOMLEFT", 0, -10)
+		controls.RuleColorLabel:SetPoint("TOPLEFT", controls.RuleMatchLabel, "BOTTOMLEFT", 0, -16)
 	elseif showIconRuleMode then
-		controls.RuleInfo:SetPoint("TOPLEFT", controls.RuleIconModeLabel, "BOTTOMLEFT", 0, -10)
+		controls.RuleColorLabel:SetPoint("TOPLEFT", controls.RuleIconModeLabel, "BOTTOMLEFT", 0, -16)
 	else
-		controls.RuleInfo:SetPoint("TOPLEFT", controls.RuleAppliesRaid, "BOTTOMLEFT", 0, -10)
+		controls.RuleColorLabel:SetPoint("TOPLEFT", controls.RuleAppliesRaid, "BOTTOMLEFT", 0, -14)
+	end
+	controls.RuleColorButton:ClearAllPoints()
+	controls.RuleColorButton:SetPoint("LEFT", controls.RuleColorLabel, "RIGHT", 10, 0)
+	setControlVisible(controls.RuleColorLabel, showRuleColor)
+	setControlVisible(controls.RuleColorButton, showRuleColor)
+	setControlEnabled(controls.RuleColorButton, showRuleColor and rule ~= nil)
+	if showRuleColor then
+		local baseColor = (rule and rule.color) or (selectedGroup and selectedGroup.color) or { 1, 0.82, 0.1, 0.9 }
+		setColorPreview(controls.RuleColorButton, baseColor)
+		if rule and rule.color then
+			controls.RuleColorButton:SetBackdropBorderColor(0.45, 0.78, 0.52, 1)
+		else
+			controls.RuleColorButton:SetBackdropBorderColor(0.28, 0.33, 0.4, 1)
+		end
+	end
+
+	controls.RuleInfo:ClearAllPoints()
+	if showRuleColor then
+		controls.RuleInfo:SetPoint("TOPLEFT", controls.RuleColorLabel, "BOTTOMLEFT", 0, -20)
+	elseif showTintRuleMatch then
+		controls.RuleInfo:SetPoint("TOPLEFT", controls.RuleMatchLabel, "BOTTOMLEFT", 0, -12)
+	elseif showIconRuleMode then
+		controls.RuleInfo:SetPoint("TOPLEFT", controls.RuleIconModeLabel, "BOTTOMLEFT", 0, -12)
+	else
+		controls.RuleInfo:SetPoint("TOPLEFT", controls.RuleAppliesRaid, "BOTTOMLEFT", 0, -12)
 	end
 	controls.RuleInfo:SetPoint("RIGHT", frame.SettingsPanel, "RIGHT", -14, 0)
 
@@ -2383,6 +2644,16 @@ function Editor:RefreshRuleControls()
 			controls.RuleInfo:SetText(
 				string.format(tr("UFGroupHealerBuffEditorRuleInfoTint", "Showing rules for %s. Scope is set per rule (Party/Raid). Tint can require any or all active spells."), groupLabel)
 			)
+		elseif showRuleColor then
+			controls.RuleInfo:SetText(
+				string.format(
+					tr(
+						"UFGroupHealerBuffEditorRuleInfoSquare",
+						"Showing rules for %s. Scope is set per rule (Party/Raid). Priority follows the rule order in this list. Spell Color overrides are per rule (right click to reset)."
+					),
+					groupLabel
+				)
+			)
 		elseif showIconRuleMode then
 			controls.RuleInfo:SetText(
 				string.format(tr("UFGroupHealerBuffEditorRuleInfoIcon", "Showing rules for %s. Scope is set per rule (Party/Raid). Priority follows the rule order in this list."), groupLabel)
@@ -2396,8 +2667,11 @@ end
 function Editor:RefreshGroupControls()
 	local frame = self:EnsureFrame()
 	local controls = frame.Controls
-	local _, placement = self:GetContext()
+	local cfg, placement = self:GetContext()
 	local group = placement and self.selectedGroupId and placement.groupsById and placement.groupsById[self.selectedGroupId] or nil
+	local selectedGroupId = group and group.id or nil
+	local groupSelectionChanged = self._lastGroupControlGroupId ~= selectedGroupId
+	local ac = cfg and cfg.auras and cfg.auras.buff or EMPTY
 
 	local function setFieldState(label, control, visible, enabled)
 		setControlVisible(label, visible)
@@ -2410,12 +2684,19 @@ function Editor:RefreshGroupControls()
 		setControlVisible(slider, visible)
 		setControlVisible(valueText, visible)
 		setControlEnabled(slider, enabled and visible)
+		setControlEnabled(valueText, enabled and visible)
 	end
 
 	local function setColorState(visible, enabled)
 		setControlVisible(controls.ColorLabel, visible)
 		setControlVisible(controls.ColorButton, visible)
 		setControlEnabled(controls.ColorButton, enabled and visible)
+	end
+
+	local function setCheckState(control, visible, enabled, checked)
+		setControlVisible(control, visible)
+		setControlEnabled(control, enabled and visible)
+		if control and control.SetChecked then control:SetChecked(checked == true) end
 	end
 
 	self._controlUpdateLock = true
@@ -2434,6 +2715,9 @@ function Editor:RefreshGroupControls()
 		local showInset = style == "BAR" or style == "BORDER"
 		local showBorder = style == "BORDER"
 		local showColor = style == "SQUARE" or style == "BAR" or style == "BORDER" or style == "TINT"
+		local showCooldownSwipe = style == "ICON" or style == "SQUARE"
+		local showCooldownDrawOptions = style == "ICON" or style == "SQUARE"
+		local showTextSizeOverrides = style == "ICON" or style == "SQUARE"
 
 		controls.GroupName:SetText(group.name or "")
 		setDropdown(controls.GroupAnchor, HB.ANCHOR_OPTIONS, group.anchorPoint or "CENTER", controls.GroupAnchor._eqolOnSelect)
@@ -2453,6 +2737,20 @@ function Editor:RefreshGroupControls()
 		controls.SpacingValue:SetText(tostring(group.spacing or 0))
 		controls.Size:SetValue(group.size or 16)
 		controls.SizeValue:SetText(tostring(group.size or 16))
+		local cooldownTextSize = tonumber(group.cooldownTextSize)
+		if cooldownTextSize == nil then cooldownTextSize = tonumber(ac.cooldownFontSize) or 12 end
+		if cooldownTextSize < 6 then cooldownTextSize = 6 end
+		if cooldownTextSize > 64 then cooldownTextSize = 64 end
+		cooldownTextSize = roundInt(cooldownTextSize)
+		controls.CooldownTextSize:SetValue(cooldownTextSize)
+		controls.CooldownTextSizeValue:SetText(tostring(cooldownTextSize))
+		local chargeTextSize = tonumber(group.chargeTextSize)
+		if chargeTextSize == nil then chargeTextSize = tonumber(ac.countFontSize) or 14 end
+		if chargeTextSize < 6 then chargeTextSize = 6 end
+		if chargeTextSize > 64 then chargeTextSize = 64 end
+		chargeTextSize = roundInt(chargeTextSize)
+		controls.ChargeTextSize:SetValue(chargeTextSize)
+		controls.ChargeTextSizeValue:SetText(tostring(chargeTextSize))
 		controls.XOffset:SetValue(group.x or 0)
 		controls.XValue:SetText(tostring(group.x or 0))
 		controls.YOffset:SetValue(group.y or 0)
@@ -2464,7 +2762,12 @@ function Editor:RefreshGroupControls()
 		controls.BorderSize:SetValue(group.borderSize or 2)
 		controls.BorderSizeValue:SetText(tostring(group.borderSize or 2))
 
-		group.color = group.color or { 1, 0.82, 0.1, 0.22 }
+		group.color = group.color or { 1, 0.82, 0.1, 0.9 }
+		if group.showCooldownSwipe == nil then group.showCooldownSwipe = true end
+		if group.showCooldownEdge == nil then group.showCooldownEdge = true end
+		if group.showCooldownBling == nil then group.showCooldownBling = true end
+		if group.hideCooldownText == nil then group.hideCooldownText = false end
+		if group.hideChargeText == nil then group.hideChargeText = false end
 		setColorPreview(controls.ColorButton, group.color)
 
 		setControlEnabled(controls.GroupName, true)
@@ -2475,12 +2778,19 @@ function Editor:RefreshGroupControls()
 		setSliderState(controls.MaxLabel, controls.MaxCount, controls.MaxValue, showGrid, true)
 		setSliderState(controls.SpacingLabel, controls.Spacing, controls.SpacingValue, showGrid, true)
 		setSliderState(controls.SizeLabel, controls.Size, controls.SizeValue, showSize, true)
+		setSliderState(controls.CooldownTextSizeLabel, controls.CooldownTextSize, controls.CooldownTextSizeValue, showTextSizeOverrides, true)
+		setSliderState(controls.ChargeTextSizeLabel, controls.ChargeTextSize, controls.ChargeTextSizeValue, showTextSizeOverrides, true)
 		setSliderState(controls.XLabel, controls.XOffset, controls.XValue, showOffsets, true)
 		setSliderState(controls.YLabel, controls.YOffset, controls.YValue, showOffsets, true)
 		setSliderState(controls.ThicknessLabel, controls.Thickness, controls.ThicknessValue, showBar, true)
 		setSliderState(controls.InsetLabel, controls.Inset, controls.InsetValue, showInset, true)
 		setSliderState(controls.BorderSizeLabel, controls.BorderSize, controls.BorderSizeValue, showBorder, true)
 		setColorState(showColor, true)
+		setCheckState(controls.CooldownSwipe, showCooldownSwipe, true, group.showCooldownSwipe ~= false)
+		setCheckState(controls.CooldownEdge, showCooldownDrawOptions, true, group.showCooldownEdge ~= false)
+		setCheckState(controls.CooldownBling, showCooldownDrawOptions, true, group.showCooldownBling ~= false)
+		setCheckState(controls.HideCooldownText, showCooldownDrawOptions, true, group.hideCooldownText == true)
+		setCheckState(controls.HideChargeText, showCooldownDrawOptions, true, group.hideChargeText == true)
 	else
 		controls.GroupName:SetText("")
 		setControlEnabled(controls.GroupName, false)
@@ -2491,24 +2801,53 @@ function Editor:RefreshGroupControls()
 		setSliderState(controls.MaxLabel, controls.MaxCount, controls.MaxValue, false, false)
 		setSliderState(controls.SpacingLabel, controls.Spacing, controls.SpacingValue, false, false)
 		setSliderState(controls.SizeLabel, controls.Size, controls.SizeValue, false, false)
+		setSliderState(controls.CooldownTextSizeLabel, controls.CooldownTextSize, controls.CooldownTextSizeValue, false, false)
+		setSliderState(controls.ChargeTextSizeLabel, controls.ChargeTextSize, controls.ChargeTextSizeValue, false, false)
 		setSliderState(controls.XLabel, controls.XOffset, controls.XValue, false, false)
 		setSliderState(controls.YLabel, controls.YOffset, controls.YValue, false, false)
 		setSliderState(controls.ThicknessLabel, controls.Thickness, controls.ThicknessValue, false, false)
 		setSliderState(controls.InsetLabel, controls.Inset, controls.InsetValue, false, false)
 		setSliderState(controls.BorderSizeLabel, controls.BorderSize, controls.BorderSizeValue, false, false)
 		setColorState(false, false)
+		setCheckState(controls.CooldownSwipe, false, false, false)
+		setCheckState(controls.CooldownEdge, false, false, false)
+		setCheckState(controls.CooldownBling, false, false, false)
+		setCheckState(controls.HideCooldownText, false, false, false)
+		setCheckState(controls.HideChargeText, false, false, false)
 		setColorPreview(controls.ColorButton, { 1, 1, 1, 1 })
 	end
 	self._controlUpdateLock = nil
 
 	if frame._layoutGroupControlRows then frame._layoutGroupControlRows() end
 	if frame._updateGroupControlScroll then frame._updateGroupControlScroll() end
+	if groupSelectionChanged then
+		local viewport = frame.SettingsPanel and frame.SettingsPanel.GroupControlViewport
+		if viewport and viewport.SetVerticalScroll then viewport:SetVerticalScroll(0) end
+		local scroll = frame.SettingsPanel and frame.SettingsPanel.GroupControlScroll
+		if scroll and scroll.Sync then scroll:Sync() end
+	end
+	self._lastGroupControlGroupId = selectedGroupId
 end
 
 local function clearPreview(unitFrame)
 	if not unitFrame then return end
 	for i = 1, #(unitFrame.SampleIcons or {}) do
-		unitFrame.SampleIcons[i]:Hide()
+		local icon = unitFrame.SampleIcons[i]
+		if icon then
+			icon:Hide()
+			if icon.PreviewCooldown then
+				if icon.PreviewCooldown.Clear then icon.PreviewCooldown:Clear() end
+				icon.PreviewCooldown:Hide()
+			end
+			if icon.PreviewCount then
+				icon.PreviewCount:SetText("")
+				icon.PreviewCount:Hide()
+			end
+			icon._eqolPreviewAura = nil
+			icon._eqolPreviewGroup = nil
+			icon._eqolPreviewAC = nil
+			icon._eqolPreviewSampleIndex = nil
+		end
 	end
 	for i = 1, #(unitFrame.SampleTints or {}) do
 		unitFrame.SampleTints[i]:Hide()
@@ -2520,6 +2859,164 @@ local function clearPreview(unitFrame)
 		unitFrame.SampleBorders[i]:Hide()
 	end
 	if unitFrame.HealthTexture then unitFrame.HealthTexture:SetColorTexture(0.08, 0.42, 0.19, 1) end
+end
+
+local function ensurePreviewAuraWidgets(icon)
+	if not icon then return end
+	if icon.PreviewCooldown then return end
+	local cooldown = CreateFrame("Cooldown", nil, icon, "CooldownFrameTemplate")
+	cooldown:SetAllPoints(icon)
+	if cooldown.SetReverse then cooldown:SetReverse(true) end
+	if cooldown.SetDrawEdge then cooldown:SetDrawEdge(true) end
+	if cooldown.SetDrawSwipe then cooldown:SetDrawSwipe(true) end
+	if cooldown.SetDrawBling then cooldown:SetDrawBling(true) end
+	icon.PreviewCooldown = cooldown
+
+	local overlay = CreateFrame("Frame", nil, icon)
+	overlay:SetAllPoints(icon)
+	if overlay.SetFrameStrata and cooldown.GetFrameStrata then overlay:SetFrameStrata(cooldown:GetFrameStrata()) end
+	if overlay.SetFrameLevel and cooldown.GetFrameLevel then overlay:SetFrameLevel((cooldown:GetFrameLevel() or 0) + 5) end
+	icon.PreviewOverlay = overlay
+
+	local countText = overlay:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+	countText:SetPoint("BOTTOMRIGHT", overlay, "BOTTOMRIGHT", -2, 2)
+	icon.PreviewCount = countText
+end
+
+local function setPreviewFont(fontString, size, outline)
+	if not fontString then return end
+	local fontPath = (addon.variables and addon.variables.defaultFont) or STANDARD_TEXT_FONT
+	size = tonumber(size) or 12
+	if size < 6 then size = 6 end
+	if size > 64 then size = 64 end
+	fontString:SetFont(fontPath, size, outline or "OUTLINE")
+end
+
+local function getPreviewCooldownTiming(sampleIndex, now, loopEnabled, loopOrigin)
+	sampleIndex = tonumber(sampleIndex) or 1
+	now = tonumber(now) or ((GetTime and GetTime()) or 0)
+	local duration = 8 + ((sampleIndex - 1) % 3) * 4
+	if loopEnabled == true then
+		local origin = tonumber(loopOrigin) or now
+		local phaseOffset = ((sampleIndex - 1) % 4) * 0.55
+		local elapsed = (now - origin + phaseOffset) % duration
+		local remaining = duration - elapsed
+		if remaining <= 0 then remaining = duration end
+		return duration, remaining
+	end
+	local remaining = duration * (0.25 + ((sampleIndex - 1) % 3) * 0.2)
+	return duration, remaining
+end
+
+local function applyPreviewCooldown(icon, group, ac, sampleIndex, now, loopEnabled, loopOrigin)
+	if not icon then return end
+	ensurePreviewAuraWidgets(icon)
+	local cooldown = icon.PreviewCooldown
+	if not cooldown then return end
+
+	local drawSwipe = group.showCooldownSwipe ~= false
+	local drawEdge = group.showCooldownEdge ~= false
+	local drawBling = group.showCooldownBling ~= false
+	if cooldown.SetDrawSwipe then cooldown:SetDrawSwipe(drawSwipe) end
+	if cooldown.SetDrawEdge then cooldown:SetDrawEdge(drawEdge) end
+	if cooldown.SetDrawBling then cooldown:SetDrawBling(drawBling) end
+	if cooldown.SetHideCountdownNumbers then cooldown:SetHideCountdownNumbers(group.hideCooldownText == true) end
+
+	now = tonumber(now) or ((GetTime and GetTime()) or 0)
+	local duration, remaining = getPreviewCooldownTiming(sampleIndex, now, loopEnabled, loopOrigin)
+	local startTime = now - (duration - remaining)
+	cooldown:SetCooldown(startTime, duration)
+	cooldown:Show()
+
+	local cooldownText = cooldown.GetCountdownFontString and cooldown:GetCountdownFontString()
+	if cooldownText then
+		cooldownText:ClearAllPoints()
+		cooldownText:SetPoint("CENTER", icon, "CENTER", 0, 0)
+		local size = group.cooldownTextSize
+		if size == nil and ac then size = ac.cooldownFontSize end
+		setPreviewFont(cooldownText, size or 12, ac and ac.cooldownFontOutline)
+	end
+end
+
+local function applyPreviewCharges(icon, group, ac, sampleIndex)
+	if not icon then return end
+	ensurePreviewAuraWidgets(icon)
+	local text = icon.PreviewCount
+	if not text then return end
+
+	if group.hideChargeText == true then
+		text:SetText("")
+		text:Hide()
+		return
+	end
+
+	local sampleCounts = { 4, 2, 5, 3 }
+	local count = sampleCounts[((sampleIndex - 1) % #sampleCounts) + 1]
+	if not count or count <= 1 then
+		text:SetText("")
+		text:Hide()
+		return
+	end
+	local size = group.chargeTextSize
+	if size == nil and ac then size = ac.countFontSize end
+	setPreviewFont(text, size or 14, ac and ac.countFontOutline)
+	text:SetText(tostring(count))
+	text:Show()
+end
+
+function Editor:SetPreviewLoopEnabled(enabled)
+	enabled = enabled == true
+	if self._previewLoopEnabled == enabled then
+		self:UpdatePreviewLoopTicker()
+		return
+	end
+	self._previewLoopEnabled = enabled
+	if enabled then
+		self._previewLoopStart = (GetTime and GetTime()) or 0
+	else
+		self._previewLoopStart = nil
+	end
+	local frame = self.frame
+	if frame and frame.Controls and frame.Controls.PreviewLoop and frame.Controls.PreviewLoop.GetChecked and frame.Controls.PreviewLoop:GetChecked() ~= enabled then
+		frame.Controls.PreviewLoop:SetChecked(enabled)
+	end
+	self:RefreshPreview()
+end
+
+function Editor:TickPreviewLoop()
+	if self._previewLoopEnabled ~= true then return end
+	local frame = self.frame
+	local preview = frame and frame.PreviewPanel and frame.PreviewPanel.Frame and frame.PreviewPanel.Frame.UnitFrame
+	if not preview then return end
+	local now = (GetTime and GetTime()) or 0
+	local loopOrigin = self._previewLoopStart or now
+	for i = 1, #(preview.SampleIcons or EMPTY) do
+		local icon = preview.SampleIcons[i]
+		if icon and icon:IsShown() and icon._eqolPreviewAura == true then
+			local group = icon._eqolPreviewGroup
+			if group then applyPreviewCooldown(icon, group, icon._eqolPreviewAC or EMPTY, icon._eqolPreviewSampleIndex or 1, now, true, loopOrigin) end
+		end
+	end
+end
+
+function Editor:UpdatePreviewLoopTicker()
+	local frame = self.frame
+	local shouldRun = self._previewLoopEnabled == true and frame and frame:IsShown() and C_Timer and C_Timer.NewTicker
+	if not shouldRun then
+		if self._previewLoopTicker and self._previewLoopTicker.Cancel then self._previewLoopTicker:Cancel() end
+		self._previewLoopTicker = nil
+		return
+	end
+	if self._previewLoopTicker then return end
+	if not self._previewLoopStart then self._previewLoopStart = (GetTime and GetTime()) or 0 end
+	self._previewLoopTicker = C_Timer.NewTicker(0.1, function()
+		if not (Editor and Editor._previewLoopEnabled == true and Editor.frame and Editor.frame:IsShown()) then
+			if Editor and Editor._previewLoopTicker and Editor._previewLoopTicker.Cancel then Editor._previewLoopTicker:Cancel() end
+			if Editor then Editor._previewLoopTicker = nil end
+			return
+		end
+		Editor:TickPreviewLoop()
+	end)
 end
 
 local function resolveColor(color)
@@ -2589,12 +3086,24 @@ end
 
 function Editor:RefreshPreview()
 	local frame = self:EnsureFrame()
-	local _, placement = self:GetContext()
+	local cfg, placement = self:GetContext()
+	local ac = cfg and cfg.auras and cfg.auras.buff or EMPTY
+	local loopEnabled = self._previewLoopEnabled == true
+	local now = (GetTime and GetTime()) or 0
+	if loopEnabled and not self._previewLoopStart then self._previewLoopStart = now end
+	local loopOrigin = self._previewLoopStart or now
+	if frame.Controls and frame.Controls.PreviewLoop then frame.Controls.PreviewLoop:SetChecked(loopEnabled) end
 	local preview = frame.PreviewPanel and frame.PreviewPanel.Frame and frame.PreviewPanel.Frame.UnitFrame
-	if not preview then return end
+	if not preview then
+		self:UpdatePreviewLoopTicker()
+		return
+	end
 	clearPreview(preview)
 
-	if not placement then return end
+	if not placement then
+		self:UpdatePreviewLoopTicker()
+		return
+	end
 	local order = placement.groupOrder or EMPTY
 	local iconIndex, barIndex, borderIndex = 1, 1, 1
 	local tintR, tintG, tintB, tintA
@@ -2676,13 +3185,20 @@ function Editor:RefreshPreview()
 							end
 						end
 						if style == "SQUARE" then
-							local r, g, b, a = resolveColor(group.color)
+							local squareColor = (rule and rule.color) or group.color
+							local r, g, b, a = resolveColor(squareColor)
 							icon.Texture:SetTexture("Interface\\Buttons\\WHITE8x8")
 							icon.Texture:SetVertexColor(r, g, b, a)
 						else
 							icon.Texture:SetTexture(iconTex or 134400)
 							icon.Texture:SetVertexColor(1, 1, 1, 1)
 						end
+						icon._eqolPreviewAura = true
+						icon._eqolPreviewGroup = group
+						icon._eqolPreviewAC = ac
+						icon._eqolPreviewSampleIndex = i
+						applyPreviewCooldown(icon, group, ac, i, now, loopEnabled, loopOrigin)
+						applyPreviewCharges(icon, group, ac, i)
 						icon:SetBackdropBorderColor(selected and 0.95 or 0, selected and 0.8 or 0, selected and 0.25 or 0, selected and 1 or 0.8)
 						icon:Show()
 					end
@@ -2748,6 +3264,7 @@ function Editor:RefreshPreview()
 	end
 
 	applyPreviewHealthTint(preview, tintR, tintG, tintB, hasTint and tintA or nil)
+	self:UpdatePreviewLoopTicker()
 end
 
 function Editor:RefreshControls()

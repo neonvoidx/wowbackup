@@ -830,6 +830,13 @@ addon.variables.unitFrameNames = {
 		revealAllChilds = true,
 	},
 	{
+		name = "MinimapCluster",
+		var = "unitframeSettingMinimap",
+		text = _G.MINIMAP_LABEL or "Minimap",
+		visibilityRules = { "ALWAYS_OUT_OF_COMBAT", "ALWAYS_HIDDEN" },
+		showWhenNoRule = true,
+	},
+	{
 		name = "BuffFrame",
 		var = "unitframeSettingBuffFrame",
 		text = addon.L["BuffFrame"],

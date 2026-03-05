@@ -58,6 +58,23 @@ local squareMinimapStatsAnchorOptions = {
 	BOTTOMRIGHT = L["squareMinimapStatsAnchorBottomRight"] or "Bottom Right",
 }
 
+local function getCachedFontMedia()
+	local names = addon.functions and addon.functions.GetLSMMediaNames and addon.functions.GetLSMMediaNames("font")
+	local hash = addon.functions and addon.functions.GetLSMMediaHash and addon.functions.GetLSMMediaHash("font")
+	if type(names) == "table" and type(hash) == "table" then return names, hash end
+	return {}, {}
+end
+
+local function getGlobalFontConfigKey()
+	if addon.functions and addon.functions.GetGlobalFontConfigKey then return addon.functions.GetGlobalFontConfigKey() end
+	return "__EQOL_GLOBAL_FONT__"
+end
+
+local function getGlobalFontConfigLabel()
+	if addon.functions and addon.functions.GetGlobalFontConfigLabel then return addon.functions.GetGlobalFontConfigLabel() end
+	return "Use global font config"
+end
+
 local function normalizeSquareMinimapStatsOutlineSelection(primary, secondary)
 	local outline = getSettingSelectedValue(primary, secondary)
 	if outline == nil or outline == "" then return "OUTLINE" end
@@ -74,28 +91,32 @@ local function normalizeSquareMinimapAnchorSelection(primary, secondary, fallbac
 end
 
 local function normalizeSquareMinimapStatsFontSelection(primary, secondary)
-	local fallback = (addon.variables and addon.variables.defaultFont) or STANDARD_TEXT_FONT
+	local fallback = getGlobalFontConfigKey()
 	local selected = getSettingSelectedValue(primary, secondary)
-	if addon.functions and addon.functions.ResolveFontFace then return addon.functions.ResolveFontFace(selected, fallback) or fallback end
+	if addon.functions and addon.functions.IsGlobalFontConfigValue and addon.functions.IsGlobalFontConfigValue(selected) then return fallback end
 	if type(selected) == "string" and selected ~= "" then return selected end
 	return fallback
 end
 
 local function buildSquareMinimapStatsFontDropdown()
 	local defaultFont = (addon.variables and addon.variables.defaultFont) or STANDARD_TEXT_FONT
+	local globalFontKey = getGlobalFontConfigKey()
+	local globalFontLabel = getGlobalFontConfigLabel()
 	local map = {
 		[defaultFont] = L["actionBarFontDefault"] or "Blizzard font",
+		[globalFontKey] = globalFontLabel,
 	}
-	local LSM = LibStub("LibSharedMedia-3.0", true)
-	if LSM and LSM.HashTable then
-		for name, path in pairs(LSM:HashTable("font") or {}) do
-			if type(path) == "string" and path ~= "" then map[path] = tostring(name) end
-		end
+	local names, hash = getCachedFontMedia()
+	for i = 1, #names do
+		local name = names[i]
+		local path = hash[name]
+		if type(path) == "string" and path ~= "" then map[path] = tostring(name) end
 	end
 	local list, order = addon.functions.prepareListForDropdown(map)
 	wipe(squareMinimapStatsFontOrder)
-	for i, key in ipairs(order or {}) do
-		squareMinimapStatsFontOrder[i] = key
+	if list[globalFontKey] then squareMinimapStatsFontOrder[#squareMinimapStatsFontOrder + 1] = globalFontKey end
+	for _, key in ipairs(order or {}) do
+		if key ~= globalFontKey then squareMinimapStatsFontOrder[#squareMinimapStatsFontOrder + 1] = key end
 	end
 	return list
 end
@@ -319,12 +340,12 @@ data = {
 				text = L["squareMinimapStatsFont"] or "Font (all stats)",
 				listFunc = buildSquareMinimapStatsFontDropdown,
 				order = squareMinimapStatsFontOrder,
-				default = (addon.variables and addon.variables.defaultFont) or STANDARD_TEXT_FONT,
+				default = getGlobalFontConfigKey(),
 				get = function()
-					local defaultFont = (addon.variables and addon.variables.defaultFont) or STANDARD_TEXT_FONT
-					local current = addon.db and addon.db.squareMinimapStatsFont or defaultFont
+					local globalFontKey = getGlobalFontConfigKey()
+					local current = addon.db and addon.db.squareMinimapStatsFont or globalFontKey
 					local list = buildSquareMinimapStatsFontDropdown()
-					if not list[current] then current = defaultFont end
+					if not list[current] then current = globalFontKey end
 					return current
 				end,
 				set = function(value, maybeValue)
@@ -916,6 +937,20 @@ data = {
 				parentSection = mapExpandable,
 				children = {
 					{
+						var = "squareMinimapStatsLocationShowZone",
+						text = L["squareMinimapStatsLocationShowZone"] or "Show zone",
+						func = function(value)
+							addon.db["squareMinimapStatsLocationShowZone"] = value and true or false
+							applySquareMinimapStatsNow(true)
+						end,
+						default = true,
+						sType = "checkbox",
+						parent = true,
+						parentCheck = isSquareMinimapStatElementEnabled("squareMinimapStatsLocation"),
+						notify = "squareMinimapStatsLocation",
+						parentSection = mapExpandable,
+					},
+					{
 						var = "squareMinimapStatsLocationShowSubzone",
 						text = L["squareMinimapStatsLocationShowSubzone"] or "Show subzone",
 						func = function(value)
@@ -1067,6 +1102,23 @@ data = {
 						max = 1.0,
 						step = 0.05,
 						default = 0.2,
+						sType = "slider",
+						parent = true,
+						parentCheck = isSquareMinimapStatElementEnabled("squareMinimapStatsCoordinates"),
+						parentSection = mapExpandable,
+					},
+					{
+						var = "squareMinimapStatsCoordinatesDecimals",
+						text = L["squareMinimapStatsCoordinatesDecimals"] or "Precision (decimals)",
+						get = function() return addon.db and addon.db.squareMinimapStatsCoordinatesDecimals or 2 end,
+						set = function(value)
+							addon.db["squareMinimapStatsCoordinatesDecimals"] = math.floor((tonumber(value) or 2) + 0.5)
+							applySquareMinimapStatsNow(true)
+						end,
+						min = 0,
+						max = 3,
+						step = 1,
+						default = 2,
 						sType = "slider",
 						parent = true,
 						parentCheck = isSquareMinimapStatElementEnabled("squareMinimapStatsCoordinates"),
@@ -2101,7 +2153,7 @@ end
 
 local squareMinimapStatsDefaults = {
 	enableSquareMinimapStats = false,
-	squareMinimapStatsFont = STANDARD_TEXT_FONT,
+	squareMinimapStatsFont = getGlobalFontConfigKey(),
 	squareMinimapStatsOutline = "OUTLINE",
 	squareMinimapStatsTime = true,
 	squareMinimapStatsTimeAnchor = "BOTTOMLEFT",
@@ -2143,6 +2195,7 @@ local squareMinimapStatsDefaults = {
 	squareMinimapStatsLocationOffsetY = -3,
 	squareMinimapStatsLocationFontSize = 12,
 	squareMinimapStatsLocationColor = { r = 1, g = 1, b = 1, a = 1 },
+	squareMinimapStatsLocationShowZone = true,
 	squareMinimapStatsLocationShowSubzone = false,
 	squareMinimapStatsLocationUseZoneColor = true,
 	squareMinimapStatsCoordinates = true,
@@ -2152,6 +2205,7 @@ local squareMinimapStatsDefaults = {
 	squareMinimapStatsCoordinatesFontSize = 12,
 	squareMinimapStatsCoordinatesColor = { r = 1, g = 1, b = 1, a = 1 },
 	squareMinimapStatsCoordinatesHideInInstance = true,
+	squareMinimapStatsCoordinatesDecimals = 2,
 	squareMinimapStatsCoordinatesUpdateInterval = 0.2,
 }
 
@@ -2248,7 +2302,9 @@ local function getSquareMinimapStatsColor(colorKey)
 end
 
 local function getSquareMinimapStatsFontPath()
-	local fallback = (addon.variables and addon.variables.defaultFont) or STANDARD_TEXT_FONT
+	local fallback = (addon.functions and addon.functions.GetGlobalDefaultFontFace and addon.functions.GetGlobalDefaultFontFace())
+		or (addon.variables and addon.variables.defaultFont)
+		or STANDARD_TEXT_FONT
 	if addon.functions and addon.functions.ResolveFontFace then return addon.functions.ResolveFontFace(addon.db and addon.db.squareMinimapStatsFont, fallback) or fallback end
 	local font = addon.db and addon.db.squareMinimapStatsFont
 	if type(font) ~= "string" or font == "" then font = fallback end
@@ -2316,6 +2372,102 @@ local function getSquareMinimapFontStringWidth(fontString)
 	local width = fontString.GetUnboundedStringWidth and fontString:GetUnboundedStringWidth() or nil
 	if not width or width <= 0 then width = fontString:GetStringWidth() or 0 end
 	return width
+end
+
+local function utf8Iter(str) return (str or ""):gmatch("[%z\1-\127\194-\244][\128-\191]*") end
+
+local function utf8Len(str)
+	local len = 0
+	for _ in utf8Iter(str) do
+		len = len + 1
+	end
+	return len
+end
+
+local function utf8Sub(str, i, j)
+	str = str or ""
+	if str == "" then return "" end
+	i = i or 1
+	j = j or -1
+	if i < 1 then i = 1 end
+	local len = utf8Len(str)
+	if j < 0 then j = len + j + 1 end
+	if j > len then j = len end
+	if i > j then return "" end
+	local pos = 1
+	local startByte, endByte
+	local idx = 0
+	for char in utf8Iter(str) do
+		idx = idx + 1
+		if idx == i then startByte = pos end
+		if idx == j then
+			endByte = pos + #char - 1
+			break
+		end
+		pos = pos + #char
+	end
+	return str:sub(startByte or 1, endByte or #str)
+end
+
+local function getSquareMinimapLocationMaxWidth(point, xOffset)
+	if not Minimap or not Minimap.GetWidth then return nil end
+	local minimapWidth = tonumber(Minimap:GetWidth()) or 0
+	if minimapWidth <= 0 then return nil end
+
+	local margin = 8
+	local anchorX
+	if point and point:find("LEFT", 1, true) then
+		anchorX = 0
+	elseif point and point:find("RIGHT", 1, true) then
+		anchorX = minimapWidth
+	else
+		anchorX = minimapWidth * 0.5
+	end
+
+	anchorX = anchorX + (tonumber(xOffset) or 0)
+	local leftSpace = anchorX - margin
+	local rightSpace = (minimapWidth - margin) - anchorX
+	local justify = getSquareMinimapStatJustify(point)
+	local maxWidth
+	if justify == "LEFT" then
+		maxWidth = rightSpace
+	elseif justify == "RIGHT" then
+		maxWidth = leftSpace
+	else
+		maxWidth = math.min(leftSpace, rightSpace) * 2
+	end
+
+	local upperBound = math.max(minimapWidth - (margin * 2), 24)
+	return clamp(maxWidth or 0, 24, upperBound)
+end
+
+local function truncateSquareMinimapTextToWidth(fontString, text, maxWidth)
+	if not fontString then return text or "" end
+	local source = tostring(text or "")
+	if source == "" or not maxWidth or maxWidth <= 0 then return source end
+
+	fontString:SetText(source)
+	if getSquareMinimapFontStringWidth(fontString) <= maxWidth then return source end
+
+	local ellipsis = "..."
+	fontString:SetText(ellipsis)
+	if getSquareMinimapFontStringWidth(fontString) > maxWidth then return "" end
+
+	local low, high = 0, utf8Len(source)
+	local best = ellipsis
+	while low <= high do
+		local mid = math.floor((low + high) / 2)
+		local prefix = utf8Sub(source, 1, mid):gsub("%s+$", "")
+		local candidate = (prefix ~= "" and (prefix .. ellipsis)) or ellipsis
+		fontString:SetText(candidate)
+		if getSquareMinimapFontStringWidth(fontString) <= maxWidth then
+			best = candidate
+			low = mid + 1
+		else
+			high = mid - 1
+		end
+	end
+	return best
 end
 
 local function ensureSquareMinimapStatFrame(statKey)
@@ -2406,13 +2558,26 @@ local function getSquareMinimapLocationText()
 	local zone = GetZoneText and GetZoneText() or nil
 	if not zone or zone == "" then zone = GetRealZoneText and GetRealZoneText() or "" end
 	local subzone = GetSubZoneText and GetSubZoneText() or ""
+	local showZone = addon.db.squareMinimapStatsLocationShowZone ~= false
 	local showSubzone = addon.db.squareMinimapStatsLocationShowSubzone ~= false
-	if showSubzone and subzone ~= "" and subzone ~= zone then
-		if zone and zone ~= "" then return zone .. " - " .. subzone end
+	if not showZone and not showSubzone then return "" end
+	if showZone and showSubzone then
+		if subzone ~= "" and subzone ~= zone then
+			if zone and zone ~= "" then return zone .. " - " .. subzone end
+			return subzone
+		end
+		if zone and zone ~= "" then return zone end
 		return subzone
 	end
-	if zone and zone ~= "" then return zone end
-	return subzone
+	if showZone then
+		if zone and zone ~= "" then return zone end
+		return subzone
+	end
+	if showSubzone then
+		if subzone ~= "" then return subzone end
+		if zone and zone ~= "" then return zone end
+	end
+	return ""
 end
 
 local function getSquareMinimapCoordinatesText()
@@ -2422,7 +2587,9 @@ local function getSquareMinimapCoordinatesText()
 	if not mapID then return "" end
 	local pos = C_Map.GetPlayerMapPosition(mapID, "player")
 	if not pos then return "" end
-	return string.format("%.2f, %.2f", (pos.x or 0) * 100, (pos.y or 0) * 100)
+	local decimals = math.floor(clamp(tonumber(addon.db and addon.db.squareMinimapStatsCoordinatesDecimals) or 2, 0, 3) + 0.5)
+	local fmt = "%." .. tostring(decimals) .. "f, %." .. tostring(decimals) .. "f"
+	return string.format(fmt, (pos.x or 0) * 100, (pos.y or 0) * 100)
 end
 
 local function getSquareMinimapLatencySplitTexts()
@@ -2490,9 +2657,15 @@ local function updateSquareMinimapStat(statKey)
 	local latencyMode = statKey == "latency" and (addon.db.squareMinimapStatsLatencyMode or "max") or nil
 	local useVerticalLatency = statKey == "latency" and latencyMode == "split_vertical"
 	local lineGap = math.max(math.floor(size * 0.15), 2)
+	local justify = getSquareMinimapStatJustify(point)
 
-	frame:ClearAllPoints()
-	frame:SetPoint(point, Minimap, point, x, y)
+	if frame._eqolAnchorPoint ~= point or frame._eqolAnchorX ~= x or frame._eqolAnchorY ~= y then
+		frame:ClearAllPoints()
+		frame:SetPoint(point, Minimap, point, x, y)
+		frame._eqolAnchorPoint = point
+		frame._eqolAnchorX = x
+		frame._eqolAnchorY = y
+	end
 
 	local r, g, b, a = getSquareMinimapStatsColor(cfg.colorKey)
 	if statKey == "location" and addon.db.squareMinimapStatsLocationUseZoneColor then
@@ -2500,41 +2673,90 @@ local function updateSquareMinimapStat(statKey)
 		a = 1
 	end
 
-	frame.text:ClearAllPoints()
-	frame.text:SetPoint(point, frame, point, 0, 0)
-	frame.text:SetJustifyH(getSquareMinimapStatJustify(point))
-	frame.textSecondary:ClearAllPoints()
-	frame.textSecondary:SetPoint(point, frame, point, 0, 0)
-	frame.textSecondary:SetJustifyH(getSquareMinimapStatJustify(point))
-	frame.textSecondary:Hide()
+	if frame._eqolTextPoint ~= point then
+		frame.text:ClearAllPoints()
+		frame.text:SetPoint(point, frame, point, 0, 0)
+		frame.textSecondary:ClearAllPoints()
+		frame.textSecondary:SetPoint(point, frame, point, 0, 0)
+		frame._eqolTextPoint = point
+		frame._eqolSecondaryPoint = point
+		frame._eqolSecondaryOffsetY = 0
+	end
+	if frame._eqolTextJustify ~= justify then
+		frame.text:SetJustifyH(justify)
+		frame.textSecondary:SetJustifyH(justify)
+		frame._eqolTextJustify = justify
+	end
+
 	local fontPath = getSquareMinimapStatsFontPath()
 	local outline = getSquareMinimapStatsOutlineFlag()
-	local ok = frame.text:SetFont(fontPath, size, outline)
-	if not ok then frame.text:SetFont((addon.variables and addon.variables.defaultFont) or STANDARD_TEXT_FONT or "Fonts\\FRIZQT__.TTF", size, outline) end
-	local okSecondary = frame.textSecondary:SetFont(fontPath, size, outline)
-	if not okSecondary then frame.textSecondary:SetFont((addon.variables and addon.variables.defaultFont) or STANDARD_TEXT_FONT or "Fonts\\FRIZQT__.TTF", size, outline) end
-	frame.textSecondary:SetText("")
-	frame.text:SetTextColor(r, g, b, a)
-	frame.textSecondary:SetTextColor(r, g, b, a)
+	if frame._eqolFontPath ~= fontPath or frame._eqolFontSize ~= size or frame._eqolFontOutline ~= outline then
+		local ok = frame.text:SetFont(fontPath, size, outline)
+		if not ok then frame.text:SetFont((addon.variables and addon.variables.defaultFont) or STANDARD_TEXT_FONT or "Fonts\\FRIZQT__.TTF", size, outline) end
+		local okSecondary = frame.textSecondary:SetFont(fontPath, size, outline)
+		if not okSecondary then frame.textSecondary:SetFont((addon.variables and addon.variables.defaultFont) or STANDARD_TEXT_FONT or "Fonts\\FRIZQT__.TTF", size, outline) end
+		frame._eqolFontPath = fontPath
+		frame._eqolFontSize = size
+		frame._eqolFontOutline = outline
+	end
+	if frame._eqolTextColorR ~= r or frame._eqolTextColorG ~= g or frame._eqolTextColorB ~= b or frame._eqolTextColorA ~= a then
+		frame.text:SetTextColor(r, g, b, a)
+		frame.textSecondary:SetTextColor(r, g, b, a)
+		frame._eqolTextColorR = r
+		frame._eqolTextColorG = g
+		frame._eqolTextColorB = b
+		frame._eqolTextColorA = a
+	end
+
+	local primaryText = ""
+	local secondaryText = ""
+	local showSecondary = false
 	if useVerticalLatency then
 		local homeText, worldText = getSquareMinimapLatencySplitTexts()
 		local stackUpwards = point and point:find("BOTTOM", 1, true) ~= nil
+		local secondaryY
 		if stackUpwards then
-			frame.text:SetText(worldText)
-			frame.textSecondary:SetPoint(point, frame, point, 0, size + lineGap)
-			frame.textSecondary:SetText(homeText)
+			primaryText = worldText or ""
+			secondaryText = homeText or ""
+			secondaryY = size + lineGap
 		else
-			frame.text:SetText(homeText)
-			frame.textSecondary:SetPoint(point, frame, point, 0, -(size + lineGap))
-			frame.textSecondary:SetText(worldText)
+			primaryText = homeText or ""
+			secondaryText = worldText or ""
+			secondaryY = -(size + lineGap)
 		end
-		frame.textSecondary:Show()
+		if frame._eqolSecondaryPoint ~= point or frame._eqolSecondaryOffsetY ~= secondaryY then
+			frame.textSecondary:ClearAllPoints()
+			frame.textSecondary:SetPoint(point, frame, point, 0, secondaryY)
+			frame._eqolSecondaryPoint = point
+			frame._eqolSecondaryOffsetY = secondaryY
+		end
+		showSecondary = true
 	else
-		frame.text:SetText(getSquareMinimapStatText(statKey) or "")
+		primaryText = getSquareMinimapStatText(statKey) or ""
+		if statKey == "location" then
+			local maxWidth = getSquareMinimapLocationMaxWidth(point, x)
+			if maxWidth and maxWidth > 0 then primaryText = truncateSquareMinimapTextToWidth(frame.text, primaryText, maxWidth) end
+		end
 	end
 
-	local primaryText = frame.text:GetText() or ""
-	local secondaryText = frame.textSecondary:GetText() or ""
+	if frame._eqolPrimaryText ~= primaryText then
+		frame.text:SetText(primaryText)
+		frame._eqolPrimaryText = primaryText
+	end
+	if showSecondary then
+		if frame._eqolSecondaryText ~= secondaryText then
+			frame.textSecondary:SetText(secondaryText)
+			frame._eqolSecondaryText = secondaryText
+		end
+		if not frame.textSecondary:IsShown() then frame.textSecondary:Show() end
+	else
+		if frame.textSecondary:IsShown() then frame.textSecondary:Hide() end
+		if frame._eqolSecondaryText ~= "" then
+			frame.textSecondary:SetText("")
+			frame._eqolSecondaryText = ""
+		end
+	end
+
 	if primaryText == "" and secondaryText == "" then
 		frame:Hide()
 		return
@@ -2546,7 +2768,13 @@ local function updateSquareMinimapStat(statKey)
 		width = math.max(width, getSquareMinimapFontStringWidth(frame.textSecondary))
 		height = height + frame.textSecondary:GetStringHeight() + lineGap
 	end
-	frame:SetSize(math.max(width, 1), math.max(height, 1))
+	local finalW = math.max(width, 1)
+	local finalH = math.max(height, 1)
+	if frame._eqolWidth ~= finalW or frame._eqolHeight ~= finalH then
+		frame:SetSize(finalW, finalH)
+		frame._eqolWidth = finalW
+		frame._eqolHeight = finalH
+	end
 	frame:Show()
 end
 

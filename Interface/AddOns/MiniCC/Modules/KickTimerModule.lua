@@ -1,5 +1,5 @@
 ---@type string, Addon
-local addonName, addon = ...
+local _, addon = ...
 local mini = addon.Core.Framework
 local spellCache = addon.Utils.SpellCache
 local iconSlotContainer = addon.Core.IconSlotContainer
@@ -167,9 +167,7 @@ local function CreateKickBar()
 	local spacing = db.IconSpacing or 2
 
 	local container = iconSlotContainer:New(UIParent, kickBar.MaxSlots, size, spacing, "Kick Timer")
-	container.Frame:SetFrameStrata("HIGH")
 	container.Frame:SetClampedToScreen(true)
-	container.Frame:SetIgnoreParentScale(true)
 	container.Frame:SetMovable(false)
 	container.Frame:EnableMouse(false)
 	container.Frame:SetDontSavePosition(true)
@@ -281,14 +279,14 @@ local function CreateKickEntry(duration, icon)
 		FontScale = db.FontScale,
 	})
 
-	local timer = C_Timer.NewTimer(duration, function()
+	local timer = not testModeActive and C_Timer.NewTimer(duration, function()
 		local slotData = kickBar.ActiveSlots[slotIndex]
 		if slotData and slotData.Key == key then
 			kickBar.Container:SetSlotUnused(slotIndex)
 			kickBar.ActiveSlots[slotIndex] = nil
 			UpdateKickBarVisibility()
 		end
-	end)
+	end) or nil
 
 	kickBar.ActiveSlots[slotIndex] = {
 		Key = key,

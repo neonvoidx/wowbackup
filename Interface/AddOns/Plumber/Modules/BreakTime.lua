@@ -2,7 +2,9 @@ local _, addon = ...
 local L = addon.L;
 local API = addon.API;
 local GetDBValue = addon.GetDBValue;
+local GetDBBool = addon.GetDBBool;
 local SecondsToClock = API.SecondsToClock;
+local time = time;
 
 
 local Def = {
@@ -55,12 +57,11 @@ local function HideClockUI(resetBreakTime)
     if ClockUI then
         ClockUI:Hide();
         if resetBreakTime then
-            if Controller:GetScript("OnUpdate") == OnUpdate.Counting then
-                Controller:SetScript("OnUpdate", nil);
-            end
+            Controller:DisableCounting();
             Controller.timeLeft = nil;
         end
     end
+    Controller.Scheduler.pauseUpdate = nil;
 end
 
 
@@ -392,6 +393,8 @@ do  --OnUpdate Funcs
     end
 
     function OnUpdate.Counting(self, elapsed)
+        --elapsed = elapsed * 50;  --Debug Time multiplier
+
         self.radian = self.radian + 0.1*elapsed * self.pi2;
         if self.radian > self.pi2 then
             self.radian = self.radian - self.pi2;
@@ -484,7 +487,7 @@ do  --Options
     end
 
     function Options.GetScheduleTooltip()
-        if addon.GetDBBool("BreakTime") then
+        if GetDBBool("BreakTime") then
             local cycle, rest = Options.GetValidatedDurationsInMinutes();
             local scheduleText = L["BreakTime Current Schedule Format"]:format(rest, cycle);
             local tooltip;
@@ -521,6 +524,9 @@ do  --Options
                 f.Title:SetText(scheduleText.."\n|cff808080"..L["BreakTime Announce Timer Cancelled"].."|r");
             else
                 local nextText = L["BreakTime Announce Time Before Alert Format"]:format(Controller.GetMinutesUntilNextGoOff());
+                if Controller.Scheduler.isAFK then
+                    nextText = nextText.."\n|cff808080"..L["BreakTime AFK Pause"].."|r";
+                end
                 f.Title:SetText(scheduleText.."\n"..nextText);
             end
         end
@@ -528,7 +534,7 @@ do  --Options
         f.t = 0;
         f:SetScript("OnUpdate", function(self, elapsed)
             self.t = self.t + elapsed;
-            if self.t >= 5 then
+            if self.t >= 2 then
                 self.t = 0;
                 Options.UpdateDemoFrame();
             end
@@ -571,7 +577,7 @@ do  --Options
     end
 
     local function IsAnyScheduleCancelled()
-        if addon.GetDBBool("BreakTimeFlag_Cancelled") then
+        if GetDBBool("BreakTimeFlag_Cancelled") then
             return true
         end
 
@@ -581,11 +587,12 @@ do  --Options
     local function ResetCancelledSchedule()
         local current = time();
         if PlumberDB.lastLoginTime and PlumberDB.lastLoginTime > current then
-            PlumberDB.lastLoginTime = current;
+            Controller:UpdateLastLoginTime();
         end
         Controller.OnNewGameSessionBegin();
         addon.UpdateSettingsDialog();
     end
+
 
     local OPTIONS_SCHEMATIC = {
         title = L["ModuleName BreakTime"],
@@ -601,6 +608,11 @@ do  --Options
             {type = "Divider"},
             {type = "Slider", label = L["BreakTime Option Delay"], tooltip = L["BreakTime Option Delay Tooltip"], minValue = Options.DelayDuration.minVal, maxValue = Options.DelayDuration.maxVal, valueStep = 1, onValueChangedFunc = Delay_Slider_OnValueChanged, formatValueFunc = FormatNumericValue, dbKey = "BreakTime_Delay"},
             {type = "Checkbox", label = L["BreakTime Option FlashTaskbar"], tooltip = L["BreakTime Option FlashTaskbar Tooltip"], dbKey = "BreakTime_FlashTaskbar"},
+
+            {type = "Divider"},
+            {type = "Header", label = L["BreakTime Option DND"]};
+            {type = "Checkbox", label = L["BreakTime Option DNDCombat"], tooltip = L["BreakTime Option DNDCombat Tooltip"], dbKey = "BreakTime_DNDCombat", stateCheckFunc = function() return false end},   --This option is always enabled
+            {type = "Checkbox", label = L["BreakTime Option DNDInstances"], tooltip = L["BreakTime Option DNDInstances Tooltip"], dbKey = "BreakTime_DNDInstances"},
         },
     };
 
@@ -616,8 +628,44 @@ end
 do  --Controller
     Controller.pi2 = 2*math.pi;
 
+
     local Scheduler = CreateFrame("Frame");
     Controller.Scheduler = Scheduler;
+
+    Scheduler:SetScript("OnEvent", function(self, event, ...)
+        --only CHAT_MSG_SYSTEM
+        --UnitIsAFK doesn't change immediately
+        self.afkUpdateElapsed = 0;
+    end);
+
+    function Scheduler:UpdateAFKStatus()
+        local isAFK = UnitIsAFK("player");
+        if API.Secret_CanAccess(isAFK) then
+            isAFK = isAFK;
+        else
+            isAFK = false;
+        end
+
+        if isAFK ~= self.isAFK then
+            if (self.isAFK and not isAFK) and self.afkStartTime then
+                local _, restSeconds = Options.GetValidatedDurationsInSeconds();
+                if time() - self.afkStartTime > 0.98 * restSeconds then     --2% 2s/120s
+                    Controller:UpdateLastLoginTime();
+                    Controller:UpdateSchedule();
+                end
+            end
+
+            if isAFK then
+                self.afkStartTime = time();
+            else
+                self.afkStartTime = nil;
+            end
+
+            self.isAFK = isAFK;
+            Options.TryUpdateDemoFrame();
+        end
+    end
+
 
     local HealthyEvents = {
         PLAYER_STOPPED_MOVING = true,
@@ -697,9 +745,13 @@ do  --Controller
     function Controller:PlayIntroAnimation()
         InitClockUI();
 
+        if ClockUI:IsShown() and ClockUI.AnimIn:IsPlaying() then
+            return
+        end
+
         self:Stop();
         self.radian = 0;
-        self.second = 0;
+        self.second = self.second or 0;
 
         ClockUI:StopAnimating();
         ClockUI:SetScript("OnUpdate", nil);
@@ -745,23 +797,34 @@ do  --Controller
         self:EvaluateCountdown();
     end
 
+    function Controller:UpdateLastLoginTime()
+        PlumberDB.lastLoginTime = time();
+    end
+
     function Controller.GetDefaultDelayInMinutes()
         return Options.GetValidatedDelay()
+    end
+
+    function Controller:DisableCounting()
+        if self:GetScript("OnUpdate") == OnUpdate.Counting or self:GetScript("OnUpdate") == OnUpdate.PauseCountdown then
+            self:SetScript("OnUpdate", nil);
+            RegisterEvent(self, HealthyEvents, false);
+            RegisterEvent(self, UnhealthyEvents, false);
+            if self:GetScript("OnEvent") == self.OnEvent_ClockReady then
+                self:SetScript("OnEvent", nil);
+            end
+        end
     end
 
     function Controller.DelayCurrentTimer()
         HideClockUI();
         local delay = Controller.GetDefaultDelayInMinutes();
+        local delaySeconds = 60 * delay;
         API.DisplayAlertMessage(L["BreakTime Announce Time Before Alert Format"]:format(delay));
-
-        --Extend remainingTime if the delay is longer
-        if Scheduler.remainingTime and Scheduler.remainingTime < 60 * delay then
-            local diff = 60 * delay - Scheduler.remainingTime;
-            if PlumberDB.lastLoginTime then
-                PlumberDB.lastLoginTime = PlumberDB.lastLoginTime + diff;
-            end
-            Scheduler.remainingTime = 60 * delay;
-        end
+        local cycleSeconds = Options.GetValidatedDurationsInSeconds();
+        PlumberDB.lastLoginTime = time() - (cycleSeconds - delaySeconds);
+        Controller:DisableCounting();
+        Controller:UpdateSchedule();
 
         Options.TryUpdateDemoFrame();
     end
@@ -771,13 +834,9 @@ do  --Controller
             return
         end
         HideClockUI(true);
+        Controller.second = 0;
 
         if Scheduler.remainingTime then
-            local cycleSeconds = Options.GetValidatedDurationsInSeconds();
-            Scheduler.remainingTime = Scheduler.remainingTime + cycleSeconds;
-            if PlumberDB.lastLoginTime then
-                PlumberDB.lastLoginTime = PlumberDB.lastLoginTime + cycleSeconds;
-            end
             API.DisplayAlertMessage(L["BreakTime Announce Time Before Alert Format"]:format(Controller.GetMinutesUntilNextGoOff()));
         end
 
@@ -788,6 +847,7 @@ do  --Controller
         Controller.isCancelledForSession = true;
         addon.SetDBValue("BreakTimeFlag_Cancelled", true);
         HideClockUI(true);
+        Controller.second = 0;
         API.DisplayErrorMessage(L["BreakTime Announce Timer Cancelled"]);
         Options.TryUpdateDemoFrame();
     end
@@ -806,9 +866,18 @@ do  --Controller
         local nextGoOff = addon.GetLastLoginTime() + cycleSeconds;
         local current = time();
 
-        while nextGoOff < current do
+        while nextGoOff <= current + 1 do
             nextGoOff = nextGoOff + cycleSeconds;
         end
+
+
+        --debug
+        --[[
+        if not self.firstGoOffModified then
+            self.firstGoOffModified = true;
+            nextGoOff = current + 5;
+        end
+        --]]
 
         return nextGoOff, nextGoOff - current
     end
@@ -832,8 +901,8 @@ do  --Controller
     end
 
     function Controller:UpdateSchedule()
-        self.enabled = addon.GetDBBool("BreakTime");
-        self.isCancelledForSession = addon.GetDBBool("BreakTimeFlag_Cancelled");
+        self.enabled = GetDBBool("BreakTime");
+        self.isCancelledForSession = GetDBBool("BreakTimeFlag_Cancelled");
 
         if self.enabled then
             if self.isCancelledForSession then
@@ -843,6 +912,20 @@ do  --Controller
                 Scheduler.remainingTime = remainingTime;
 
                 Scheduler:SetScript("OnUpdate", function(f, elapsed)
+                    --elapsed = elapsed * 50;  --Debug Time multiplier
+
+                    if f.afkUpdateElapsed then
+                        f.afkUpdateElapsed = f.afkUpdateElapsed + elapsed;
+                        if f.afkUpdateElapsed >= 1 then
+                            f.afkUpdateElapsed = nil;
+                            f:UpdateAFKStatus();
+                        end
+                    end
+
+                    if f.isAFK or f.pauseUpdate then
+                        return
+                    end
+
                     f.remainingTime = f.remainingTime - elapsed;
                     if f.remainingTime <= 0 then
                         f.remainingTime = 0;
@@ -851,7 +934,7 @@ do  --Controller
                         if self.isCancelledForSession then return end;
 
                         local _, restSeconds = Options.GetValidatedDurationsInSeconds();
-                        if (not Controller.timeLeft) or Controller.timeLeft < restSeconds then
+                        if (not Controller.timeLeft) or Controller.timeLeft > restSeconds then
                             Controller.timeLeft = restSeconds;
                         end
                         Controller.lastCycleComplete = false;
@@ -885,10 +968,12 @@ do  --Controller
 
     function Controller:OnCountdownComplete()
         self.lastCycleComplete = true;
+        self.second = 0;
         self:Stop();
         if ClockUI:IsShown() then
             ClockUI.MouseoverFrame:Hide();
             ClockUI.ButtonContainer:Hide();
+            Scheduler.pauseUpdate = true;
             self:PlayCheeringAnimation();
             for event in pairs(AutoCloseEvents) do
                 self:RegisterEvent(event);
@@ -899,10 +984,12 @@ do  --Controller
 
 
     local InCombatLockdown = InCombatLockdown;
+    local IsInInstance = IsInInstance;
 
     local DeferredEvents = {
         PLAYER_REGEN_ENABLED = true,
         LOADING_SCREEN_DISABLED = true,
+        PLAYER_MAP_CHANGED = true,
     };
 
     function Controller:OnEvent_TryShowTimer(event)
@@ -912,7 +999,7 @@ do  --Controller
     end
 
     function Controller:TryShowTimer()
-        if API.IsInPvP() or InCombatLockdown() then
+        if API.IsInPvP() or InCombatLockdown() or (GetDBBool("BreakTime_DNDInstances") and IsInInstance()) then
             if self:GetScript("OnEvent") ~= self.OnEvent_TryShowTimer then
                 self:SetScript("OnEvent", self.OnEvent_TryShowTimer);
                 RegisterEvent(self, DeferredEvents, true);
@@ -922,8 +1009,10 @@ do  --Controller
             RegisterEvent(self, DeferredEvents, false);
             self:SetScript("OnEvent", nil);
             self:PlayIntroAnimation();
+            self:UpdateLastLoginTime();
             self:UpdateSchedule();
-            if addon.GetDBBool("BreakTime_FlashTaskbar") then
+            Scheduler.pauseUpdate = nil;
+            if GetDBBool("BreakTime_FlashTaskbar") then
                 FlashClientIcon();
             end
         end
@@ -931,6 +1020,12 @@ do  --Controller
 
     function Controller.EnableModule(state)
         Controller:UpdateSchedule();
+        if state then
+            Controller.Scheduler:RegisterEvent("CHAT_MSG_SYSTEM");
+            Controller.Scheduler:UpdateAFKStatus();
+        else
+            Controller.Scheduler:UnregisterEvent("CHAT_MSG_SYSTEM");
+        end
     end
 end
 
@@ -950,6 +1045,16 @@ do
     };
 
     addon.ControlCenter:AddModule(moduleData);
+end
+
+
+do
+    function addon.TryAddBreakTimeToTooltip(tooltip)
+        if GetDBBool("BreakTime") then
+            tooltip:AddLine(" ");
+            tooltip:AddLine(L["BreakTime Shared Countdown Tooltip Format"]:format(Controller.GetMinutesUntilNextGoOff()), 1, 0.82, 0, false);
+        end
+    end
 end
 
 

@@ -1,0 +1,72 @@
+﻿local _, addon = ...
+
+if (GetLocale() ~= "koKR") then return end;
+
+local L = {};
+
+L["AMOUNT_COLORS"] = "수량 색상"
+L["AMOUNT_COLORS_TT"] = "보상 유형에 따라 퀘스트 목록에 보상 수량을 색칠합니다."
+L["AUTO_EMISARRY"] = "사절만 자동"
+L["AUTO_EMISARRY_TT"] = "세계 지도 현상 수배 게시판의 사절을 클릭하면 '사절만' 필터가 일시적으로 활성화됩니다."
+L["BLIZZARD"] = "블리자드"
+L["CALLINGS_BOARD"] = "보드 부름"
+L["CALLINGS_BOARD_TT"] = "이전 확장판의 사절 보드와 유사한 성약 부름에 대한 지도 오버레이를 추가합니다."
+L["CONTAINER_DRAG"] = "이동"
+L["CONTAINER_DRAG_TT"] = "다른 위치로 드래그합니다."
+L["CURRENT_PROFILE"] = "현제 프로필"
+L["CURRENT_PROFILE_TT"] = "활성 프로필 선택"
+L["CUSTOM_COLORS"] = "색상 설정"
+L["DEFAULT_TAB"] = "기본 탭"
+L["DEFAULT_TAB_TT"] = "로그인 했을 때 WQT를 기본 탭으로 설정합니다. 최대 레벨 캐릭터에만 적용됩니다."
+L["EMISSARY_COUNTER"] = "사절 카운터"
+L["EMISSARY_COUNTER_TT"] = "각 사절의 진행 상황을 나타내는 사절 탭에 카운터를 추가합니다."
+L["FILTER_PINS"] = "지도 표시 필터"
+L["FILTER_PINS_TT"] = [=[지도 상의 표시에
+필터를 적용합니다.]=]
+L["LIST_FULL_TIME"] = "시간 확장"
+L["LIST_FULL_TIME_TT"] = "시간에 일, 분, 시간을 추가하여 시간에 보조 비율을 포함시킵니다."
+L["MAP_FILTER_DISABLED"] = "세계 지도 필터로 비활성화."
+L["MAP_FILTER_DISABLED_INFO"] = "세계 지도의 오른쪽 상단에 있는 돋보기에서 일부 필터를 사용하지 않도록 설정했습니다. 목록에서 일부 퀘스트를 숨기고 일부 필터 설정을 비활성화 할 수 있습니다."
+L["NO_FACTION"] = "진영 없음"
+L["NUMBERS_FIRST"] = "%g만"
+L["NUMBERS_SECOND"] = "%g억"
+L["NUMBERS_THIRD"] = "%g조"
+L["PIN_DISABLE"] = "표시 변경 비활성화"
+L["PIN_DISABLE_TT"] = "WQT가 지도 표시를 변경하지 못하게 막습니다."
+L["PIN_RIMG_TIME_TT"] = "남은 시간에 따른 고리 색상입니다."
+L["PIN_RING_COLOR"] = "보상 색상"
+L["PIN_RING_COLOR_TT"] = "보상 유형에 따른 고리 색상입니다."
+L["PIN_RING_DEFAULT"] = "기본값"
+L["PIN_RING_DEFAULT_TT"] = "핀 고리에 특별한 변경이 없습니다."
+L["PIN_RING_TIME"] = "남은 시간"
+L["PIN_RING_TITLE"] = "고리 유형"
+L["PIN_TIME"] = "시간 지도 표시"
+L["PIN_TIME_TT"] = "지도 표시에 남은 시간을 추가합니다."
+L["PIN_TYPE"] = "퀘스트 유형 아이콘"
+L["PIN_TYPE_TT"] = "특별 퀘스트 유형의 핀에 퀘스트 유형 아이콘을 추가합니다."
+L["PRECISE_FILTER"] = "정밀 필터"
+L["PRECISE_FILTER_TT"] = "하나의 범주가 아닌 모든 필터 범주와 일치하는 퀘스트만 표시하도록 필터링합니다."
+L["SAVE_SETTINGS"] = "필터/정렬 저장"
+L["SAVE_SETTINGS_TT"] = [=[세션과 다시 불러오기 간에
+필터와 정렬 설정을 저장합니다.]=]
+L["SHOW_FACTION"] = "진영 표시"
+L["SHOW_FACTION_TT"] = [=[퀘스트 목록에
+진영 아이콘을 표시합니다.]=]
+L["SHOW_TYPE"] = "유형 표시"
+L["SHOW_TYPE_TT"] = [=[퀘스트 목록에
+유형 아이콘을 표시합니다.]=]
+L["SHOW_ZONE"] = "지역 표시"
+L["SHOW_ZONE_TT"] = "목록에 여러 지역의 퀘스트가 포함된 경우 지역 이름을 표시합니다."
+L["TIME"] = "시간"
+L["TOMTOM_AUTO_ARROW"] = "추적으로 목표지점 설정"
+L["TOMTOM_AUTO_ARROW_TT"] = "Shift-클릭 또는 드롭다운 메뉴의 '추적' 설정을 사용하여 퀘스트를 추적하면 TomTom 목표지점아 자동으로 생성됩니다."
+L["TOMTOM_CLICK_ARROW"] = "클릭으로 목표지점 설정"
+L["TOMTOM_CLICK_ARROW_TT"] = "마지막으로 클릭한 전역 퀘스트에 TomTom 목표지점과 화살표를 만듭니다. 이 방법으로 추가한 이전 목표지점은 제거됩니다."
+L["TYPE_EMISSARY"] = "사절"
+L["TYPE_EMISSARY_TT"] = "현재 선택된 사절에 대한 퀘스트만 표시합니다. 이 필터는 다른 모든 필터를 덮어 씌웁니다."
+L["TYPE_INVASION"] = "침공"
+L["USE_TOMTOM"] = "TomTom 허용"
+L["USE_TOMTOM_TT"] = "애드온에 TomTom 기능을 추가합니다."
+L["WHATS_NEW"] = "새 기능"
+
+addon.loca:ApplyLocalization(L);

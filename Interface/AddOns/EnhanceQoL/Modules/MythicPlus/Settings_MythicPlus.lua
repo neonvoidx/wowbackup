@@ -12,7 +12,6 @@ addon.MythicPlus.functions = addon.MythicPlus.functions or {}
 addon.MythicPlus.variables = addon.MythicPlus.variables or {}
 
 local L = LibStub("AceLocale-3.0"):GetLocale("EnhanceQoL_MythicPlus")
-local LSM = LibStub("LibSharedMedia-3.0")
 local wipe = wipe
 
 local function buildSettings()
@@ -25,6 +24,7 @@ local function buildSettings()
 			name = L["Teleports"],
 			expanded = false,
 			colorizeTitle = false,
+			newTagID = "Teleports",
 		})
 		addon.SettingsLayout.gameplayTeleportsSection = sectionTeleports
 	end
@@ -45,9 +45,7 @@ local function buildSettings()
 			desc = L["teleportsWorldMapEnabledDesc"],
 			func = function(v)
 				addon.db["teleportsWorldMapEnabled"] = v
-				if addon.MythicPlus and addon.MythicPlus.functions and addon.MythicPlus.functions.RefreshWorldMapTeleportPanel then
-					addon.MythicPlus.functions.RefreshWorldMapTeleportPanel()
-				end
+				if addon.MythicPlus and addon.MythicPlus.functions and addon.MythicPlus.functions.RefreshWorldMapTeleportPanel then addon.MythicPlus.functions.RefreshWorldMapTeleportPanel() end
 			end,
 			children = {
 				{
@@ -87,6 +85,41 @@ local function buildSettings()
 		applyParentSection(entry)
 	end
 	addon.functions.SettingsCreateCheckboxes(cGameplay, data)
+
+	local hearthstoneOrder = {}
+	addon.functions.SettingsCreateDropdown(cGameplay, {
+		var = "teleportsPreferredHearthstone",
+		text = L["teleportsPreferredHearthstone"],
+		desc = L["teleportsPreferredHearthstoneDesc"],
+		type = Settings.VarType.String,
+		default = "random",
+		listFunc = function()
+			local list = { random = L["teleportsPreferredHearthstoneRandom"] or "Random (owned Hearthstones)" }
+			local order = { "random" }
+			if addon.MythicPlus and addon.MythicPlus.functions and addon.MythicPlus.functions.GetHearthstoneDropdownOptions then
+				list, order = addon.MythicPlus.functions.GetHearthstoneDropdownOptions(true)
+			end
+			wipe(hearthstoneOrder)
+			for i, key in ipairs(order or {}) do
+				hearthstoneOrder[i] = key
+			end
+			return list
+		end,
+		order = hearthstoneOrder,
+		get = function()
+			local value = addon.db["teleportsPreferredHearthstone"]
+			if value == nil or value == "" then return "random" end
+			return tostring(value)
+		end,
+		set = function(value)
+			local selected = value and tostring(value) or "random"
+			if selected == "" then selected = "random" end
+			addon.db["teleportsPreferredHearthstone"] = selected
+			if addon.MythicPlus and addon.MythicPlus.functions and addon.MythicPlus.functions.setRandomHearthstone then addon.MythicPlus.functions.setRandomHearthstone(true) end
+			if addon.MythicPlus and addon.MythicPlus.functions and addon.MythicPlus.functions.RefreshWorldMapTeleportPanel then addon.MythicPlus.functions.RefreshWorldMapTeleportPanel() end
+		end,
+		parentSection = sectionTeleports,
+	})
 
 	-- Keybinding: World Map Teleport panel
 	if addon.functions.FindBindingIndex then
@@ -144,14 +177,43 @@ local function buildSettings()
 		return list
 	end
 
+	local talentSoundOptions = {}
+	local talentSoundOrder = {}
+	local talentSoundCacheVersion = -1
 	local function buildTalentSoundOptions()
-		local soundList = {}
-		if addon.ChatIM and addon.ChatIM.BuildSoundTable and not addon.ChatIM.availableSounds then addon.ChatIM:BuildSoundTable() end
-		local soundTable = (addon.ChatIM and addon.ChatIM.availableSounds) or (LSM and LSM:HashTable("sound"))
-		for name, file in pairs(soundTable or {}) do
-			if type(name) == "string" and name ~= "" then soundList[name] = { value = name, label = name, file = file } end
+		local version = (addon.functions and addon.functions.GetLSMMediaVersion and addon.functions.GetLSMMediaVersion("sound")) or 0
+		if talentSoundCacheVersion == version then return talentSoundOptions end
+		talentSoundCacheVersion = version
+
+		local list, order
+		if addon.functions and addon.functions.GetLSMMediaDropdown then
+			list, order = addon.functions.GetLSMMediaDropdown("sound", false)
+		else
+			list, order = {}, {}
+			local soundTable = (addon.ChatIM and addon.ChatIM.availableSounds) or {}
+			for name in pairs(soundTable) do
+				if type(name) == "string" and name ~= "" then
+					list[name] = name
+					order[#order + 1] = name
+				end
+			end
+			table.sort(order, function(a, b)
+				local al = string.lower(a)
+				local bl = string.lower(b)
+				if al == bl then return a < b end
+				return al < bl
+			end)
 		end
-		return soundList
+
+		wipe(talentSoundOptions)
+		for key, value in pairs(list or {}) do
+			talentSoundOptions[key] = value
+		end
+		wipe(talentSoundOrder)
+		for i = 1, #(order or {}) do
+			talentSoundOrder[i] = order[i]
+		end
+		return talentSoundOptions
 	end
 
 	local talentEnable = addon.functions.SettingsCreateCheckbox(cGameplay, {
@@ -215,6 +277,7 @@ local function buildSettings()
 		var = "talentReminderCustomSoundFile",
 		text = L["talentReminderCustomSound"],
 		listFunc = buildTalentSoundOptions,
+		order = talentSoundOrder,
 		default = "",
 		get = function()
 			local value = addon.db["talentReminderCustomSoundFile"]
@@ -222,7 +285,8 @@ local function buildSettings()
 		end,
 		set = function(value) addon.db["talentReminderCustomSoundFile"] = value end,
 		callback = function(value)
-			local soundTable = (addon.ChatIM and addon.ChatIM.availableSounds) or (LSM and LSM:HashTable("sound"))
+			local soundTable = (addon.ChatIM and addon.ChatIM.availableSounds)
+				or (addon.functions and addon.functions.GetLSMMediaHash and addon.functions.GetLSMMediaHash("sound"))
 			local file = soundTable and soundTable[value]
 			if file then PlaySoundFile(file, "Master") end
 		end,

@@ -53,7 +53,8 @@ do
     end
 
     function ReputationTooltipScripts.AppendProgressBar(tooltip, min, max, value)
-        GameTooltip_ShowProgressBar(tooltip, min, max, value, REPUTATION_PROGRESS_FORMAT:format(value, max));
+        --GameTooltip_ShowProgressBar(tooltip, min, max, value, REPUTATION_PROGRESS_FORMAT:format(value, max));
+        tooltip:AddLine(string.format("|cffffd100%s|r %d/%d", L["Progress Label"], value, max), 1, 1, 1, false);
     end
 
     function ReputationTooltipScripts.ShowMajorFactionRenownTooltip(self)
@@ -75,7 +76,7 @@ do
         --GameTooltip_AddHighlightLine(tooltip, RENOWN_LEVEL_LABEL:format(data.renownLevel));
         local maxLevel = API.GetMaxRenownLevel(factionID);
 
-        tooltip:AddLine(string.format("%s %d/%d", LANDING_PAGE_RENOWN_LABEL, data.renownLevel, maxLevel), 1, 1, 1);
+        tooltip:AddLine(string.format("|cffffd100%s|r %d/%d", LANDING_PAGE_RENOWN_LABEL, data.renownLevel, maxLevel), 1, 1, 1);
         local value = data.renownReputationEarned;
         local threshold = data.renownLevelThreshold;
         ReputationTooltipScripts.AppendProgressBar(tooltip, 0, threshold, value);
@@ -569,6 +570,7 @@ local function FactionButton_OnClickFunc(self, button)
     if self.playerCompanionID and not InCombatLockdown() then
         local f = DelvesCompanionConfigurationFrame;
         if not f:IsShown() then
+            f.playerCompanionID = self.playerCompanionID;
             ShowUIPanel(f);
         else
             HideUIPanel(f);

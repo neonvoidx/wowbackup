@@ -395,8 +395,7 @@ function TargetedSpellsDriver:OnFrameEvent(_, event, ...)
 		end
 
 		if event == "UNIT_SPELLCAST_EMPOWER_START" then
-			spellId = select(4, ...)
-			id = select(3, ...)
+			spellId, id = select(3, ...)
 		end
 
 		C_Timer.After(
@@ -550,11 +549,9 @@ function TargetedSpellsDriver:OnFrameEvent(_, event, ...)
 		local interruptedBy = nil
 
 		if event == "UNIT_SPELLCAST_CHANNEL_STOP" or event == "UNIT_SPELLCAST_INTERRUPTED" then
-			interruptedBy = select(4, ...)
-			id = select(5, ...)
+			interruptedBy, id = select(4, ...)
 		elseif event == "UNIT_SPELLCAST_EMPOWER_STOP" then
-			interruptedBy = select(5, ...)
-			id = select(6, ...)
+			interruptedBy, id = select(5, ...)
 		elseif event == "UNIT_SPELLCAST_STOP" then
 			id = select(4, ...)
 		end

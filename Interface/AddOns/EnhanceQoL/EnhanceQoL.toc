@@ -1,7 +1,7 @@
 ## Interface: 110207, 120000, 120001
 ## Title: Enhance QoL Core
 ## Author: R41Z0R
-## Version: 8.1.1
+## Version: 8.8.1
 ## IconTexture: Interface\AddOns\EnhanceQoL\Icons\Icon.tga
 ## Category: Quality of Life
 ## X-Category: Quality of Life
@@ -22,7 +22,7 @@
 ## Retail: true
 ## X-Compatible-With: retail
 ## X-WoWI-ID: 26888
-## OptionalDeps: MidnightSimpleUnitFrames, UnhaltedUnitFrames, ElvUI, Baganator, HarreksAdvancedRaidFrames
+## OptionalDeps: MidnightSimpleUnitFrames, UnhaltedUnitFrames, ElvUI, Baganator
 
 libs\LibStub\LibStub.lua
 libs\AceLocale-3.0\AceLocale-3.0.xml
@@ -60,6 +60,7 @@ Submodules\GemHelper.lua
 Submodules\ContainerActions.lua
 Submodules\MountActions.lua
 Submodules\ActionTracker.lua
+Submodules\ClassBuffReminder.lua
 Submodules\GCDBar.lua
 Submodules\CombatText.lua
 Submodules\ChatIM\ChannelHistory.lua
@@ -83,6 +84,7 @@ Modules\Aura\Locales\[TextLocale].lua
 Modules\Aura\Init.lua
 Modules\Aura\ResourceBars.lua
 Modules\Aura\ResourceBarsHelpers.lua
+Modules\Aura\ExperienceBar.lua
 Modules\Skinner\Init.lua
 Settings\SettingsUI.xml
 
@@ -105,8 +107,6 @@ Modules\Sound\Sound.xml
 Modules\Tooltip\Locales\[TextLocale].lua
 Modules\Tooltip\Tooltip.xml
 
-# Visibility
-# Modules\Visibility\Visibility.xml
 
 # MythicPlus
 Modules\MythicPlus\MythicPlus.xml

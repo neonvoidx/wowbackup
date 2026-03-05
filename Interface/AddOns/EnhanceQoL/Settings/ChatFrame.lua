@@ -12,6 +12,39 @@ local function applyParentSection(entries, section)
 	end
 end
 
+local wipeTable = _G.wipe or table.wipe
+local chatIMSoundOptions = {}
+local chatIMSoundOrder = {}
+local chatIMSoundCacheVersion = -1
+local function getChatIMSoundDropdownOptions()
+	local version = (addon.functions and addon.functions.GetLSMMediaVersion and addon.functions.GetLSMMediaVersion("sound")) or 0
+	if chatIMSoundCacheVersion == version then return chatIMSoundOptions end
+	chatIMSoundCacheVersion = version
+
+	local list, order
+	if addon.functions and addon.functions.GetLSMMediaDropdown then
+		list, order = addon.functions.GetLSMMediaDropdown("sound", true, "")
+	else
+		if addon.ChatIM and addon.ChatIM.BuildSoundTable and not addon.ChatIM.availableSounds then addon.ChatIM:BuildSoundTable() end
+		list = { [""] = "" }
+		order = { "" }
+		for name in pairs((addon.ChatIM and addon.ChatIM.availableSounds) or {}) do
+			list[name] = name
+			order[#order + 1] = name
+		end
+	end
+
+	wipeTable(chatIMSoundOptions)
+	for key, value in pairs(list or {}) do
+		chatIMSoundOptions[key] = value
+	end
+	wipeTable(chatIMSoundOrder)
+	for i = 1, #(order or {}) do
+		chatIMSoundOrder[i] = order[i]
+	end
+	return chatIMSoundOptions
+end
+
 local cChatFrame = addon.SettingsLayout.rootSOCIAL
 addon.SettingsLayout.chatframeCategory = cChatFrame
 
@@ -285,14 +318,8 @@ data = {
 						var = "ChatIMCustomSound",
 						text = L["ChatIMCustomSound"],
 						default = "",
-						optionfunc = function()
-							if addon.ChatIM and addon.ChatIM.BuildSoundTable and not addon.ChatIM.availableSounds then addon.ChatIM:BuildSoundTable() end
-							local tList = { [""] = "" }
-							for name in pairs(addon.ChatIM.availableSounds or {}) do
-								tList[name] = name
-							end
-							return tList
-						end,
+						optionfunc = getChatIMSoundDropdownOptions,
+						order = chatIMSoundOrder,
 						get = function() return addon.db.chatIMCustomSoundFile or "" end,
 						set = function(key) addon.db.chatIMCustomSoundFile = key end,
 						parentCheck = function()

@@ -6,6 +6,7 @@ local instanceOptions = addon.Core.InstanceOptions
 local scheduler = addon.Utils.Scheduler
 local frames = addon.Core.Frames
 local config = addon.Config
+local migrator = addon.Config.Migrator
 local testModeManager = addon.Modules.TestModeManager
 local modules = {
 	addon.Modules.CrowdControlModule,
@@ -67,7 +68,7 @@ local function NotifyChanges()
 		if text and text ~= "" then
 			mini:ShowDialog({
 				Title = title,
-				Text = text
+				Text = text,
 			})
 		end
 	end
@@ -81,9 +82,17 @@ local function OnEvent(_, event)
 			testModeManager:StopTesting()
 			addon:Refresh()
 		end
-	end
-
-	if event == "PLAYER_ENTERING_WORLD" then
+	elseif event == "PLAYER_LOGIN" then
+		if migrator:RunDeferredMigrations(db) then
+			local tabController = addon.Config.TabController
+			if tabController then
+				local ccPanel = tabController:GetContent("CC")
+				if ccPanel and ccPanel.MiniRefresh then
+					ccPanel:MiniRefresh()
+				end
+			end
+		end
+	elseif event == "PLAYER_ENTERING_WORLD" then
 		NotifyChanges()
 		addon:Refresh()
 	end
@@ -105,6 +114,7 @@ local function OnAddonLoaded()
 	eventsFrame = CreateFrame("Frame")
 	eventsFrame:SetScript("OnEvent", OnEvent)
 	eventsFrame:RegisterEvent("PLAYER_REGEN_DISABLED")
+	eventsFrame:RegisterEvent("PLAYER_LOGIN")
 	eventsFrame:RegisterEvent("PLAYER_ENTERING_WORLD")
 
 	db = mini:GetSavedVars()

@@ -5,7 +5,7 @@ local mini = addon.Core.Framework
 local L = addon.L
 ---@class Db
 local dbDefaults = {
-	Version = 24,
+	Version = 28,
 	WhatsNew = {},
 	NotifiedChanges = true,
 	GlowType = "Proc Glow",
@@ -15,10 +15,10 @@ local dbDefaults = {
 		---@class CrowdControlModuleOptions
 		CCModule = {
 			Enabled = {
-				Always = true,
+				World = true,
 				Arena = true,
-				Raids = false,
-				Dungeons = true,
+				BattleGrounds = true,
+				PvE = true,
 			},
 
 			---@class CrowdControlInstanceOptions
@@ -31,7 +31,7 @@ local dbDefaults = {
 				Grow = "RIGHT",
 
 				Icons = {
-					Size = 50,
+					Size = 32,
 					Glow = true,
 					ReverseCooldown = true,
 					ColorByDispelType = true,
@@ -49,7 +49,7 @@ local dbDefaults = {
 				Grow = "CENTER",
 
 				Icons = {
-					Size = 50,
+					Size = 20,
 					Glow = true,
 					ReverseCooldown = true,
 					ColorByDispelType = true,
@@ -61,10 +61,10 @@ local dbDefaults = {
 		---@class PetCrowdControlModuleOptions
 		PetCCModule = {
 			Enabled = {
-				Always = false,
+				World = false,
 				Arena = false,
-				Raids = false,
-				Dungeons = false,
+				BattleGrounds = false,
+				PvE = false,
 			},
 
 			Grow = "CENTER",
@@ -74,7 +74,7 @@ local dbDefaults = {
 			},
 
 			Icons = {
-				Size = 30,
+				Size = 20,
 				Count = 3,
 				Glow = true,
 				ReverseCooldown = true,
@@ -85,10 +85,10 @@ local dbDefaults = {
 		---@class HealerCrowdControlModuleOptions
 		HealerCCModule = {
 			Enabled = {
-				Always = true,
+				World = true,
 				Arena = true,
-				Raids = false,
-				Dungeons = true,
+				BattleGrounds = false,
+				PvE = true,
 			},
 
 			Sound = {
@@ -106,7 +106,7 @@ local dbDefaults = {
 			},
 
 			Icons = {
-				Size = 72,
+				Size = 50,
 				Glow = true,
 				ReverseCooldown = true,
 				ColorByDispelType = true,
@@ -131,10 +131,14 @@ local dbDefaults = {
 		---@class AlertsModuleOptions
 		AlertsModule = {
 			Enabled = {
-				Always = true,
+				World = true,
+				Arena = true,
+				BattleGrounds = false,
+				PvE = false,
 			},
 
 			IncludeBigDefensives = true,
+			TargetFocusOnly = false,
 			Point = "CENTER",
 			RelativePoint = "TOP",
 			RelativeTo = "UIParent",
@@ -169,19 +173,20 @@ local dbDefaults = {
 
 			Icons = {
 				Enabled = true,
-				Size = 72,
+				Size = 50,
 				Glow = true,
 				ReverseCooldown = true,
 				ColorByClass = true,
+				MaxIcons = 8,
 			},
 		},
 		---@class NameplateModuleOptions
 		NameplatesModule = {
 			Enabled = {
-				Always = true,
+				World = true,
 				Arena = true,
-				Raids = false,
-				Dungeons = false,
+				BattleGrounds = true,
+				PvE = true,
 			},
 
 			---@class NameplateFactionOptions
@@ -197,7 +202,7 @@ local dbDefaults = {
 					},
 
 					Icons = {
-						Size = 50,
+						Size = 35,
 						Glow = true,
 						ReverseCooldown = true,
 						ColorByCategory = true,
@@ -213,7 +218,7 @@ local dbDefaults = {
 					},
 
 					Icons = {
-						Size = 50,
+						Size = 35,
 						Glow = true,
 						ReverseCooldown = true,
 						ColorByCategory = true,
@@ -229,7 +234,7 @@ local dbDefaults = {
 					},
 
 					Icons = {
-						Size = 50,
+						Size = 35,
 						Glow = true,
 						ReverseCooldown = true,
 						ColorByCategory = true,
@@ -248,7 +253,7 @@ local dbDefaults = {
 					},
 
 					Icons = {
-						Size = 50,
+						Size = 35,
 						Glow = true,
 						ReverseCooldown = true,
 						ColorByCategory = true,
@@ -264,7 +269,7 @@ local dbDefaults = {
 					},
 
 					Icons = {
-						Size = 50,
+						Size = 35,
 						Glow = true,
 						ReverseCooldown = true,
 						ColorByCategory = true,
@@ -280,7 +285,7 @@ local dbDefaults = {
 					},
 
 					Icons = {
-						Size = 50,
+						Size = 35,
 						Glow = true,
 						ReverseCooldown = true,
 						ColorByCategory = true,
@@ -302,7 +307,7 @@ local dbDefaults = {
 			RelativePoint = "CENTER",
 			Offset = {
 				X = 0,
-				Y = -300,
+				Y = -200,
 			},
 
 			Icons = {
@@ -327,7 +332,7 @@ local dbDefaults = {
 			},
 
 			Icons = {
-				Size = 50,
+				Size = 40,
 				Glow = false,
 				ReverseCooldown = false,
 				ShowText = true,
@@ -340,10 +345,10 @@ local dbDefaults = {
 		---@class FriendlyIndicatorModuleOptions
 		FriendlyIndicatorModule = {
 			Enabled = {
-				Always = true,
+				World = true,
 				Arena = true,
-				Raids = true,
-				Dungeons = true,
+				BattleGrounds = true,
+				PvE = true,
 			},
 
 			ExcludePlayer = false,
@@ -357,7 +362,7 @@ local dbDefaults = {
 			Grow = "CENTER",
 
 			Icons = {
-				Size = 40,
+				Size = 30,
 				Glow = true,
 				ReverseCooldown = true,
 				MaxIcons = 1,
@@ -1124,7 +1129,7 @@ function M:UpgradeToVersion18(vars)
 		vars.Modules.HealerCCModule.Enabled = {
 			Always = vars.Healer.Enabled,
 			Arena = vars.Healer.Filters.Arena,
-			BattleGrounds = vars.Healer.BattleGrounds,
+			Raids = vars.Healer.BattleGrounds,
 			Dungeons = vars.Healer.Enabled,
 		}
 
@@ -1685,6 +1690,124 @@ function M:UpgradeToVersion24(vars)
 	return true
 end
 
+function M:UpgradeToVersion25(vars)
+	if vars.Version ~= 24 then
+		return false
+	end
+
+	-- Rename Raids→BattleGrounds and Dungeons→PvE in all module Enabled tables
+	if vars.Modules then
+		local modules = {
+			"CCModule", "PetCCModule", "HealerCCModule",
+			"AlertsModule", "NameplatesModule", "FriendlyIndicatorModule",
+		}
+		for _, moduleName in ipairs(modules) do
+			local m = vars.Modules[moduleName]
+			if m and m.Enabled then
+				if m.Enabled.Raids ~= nil then
+					m.Enabled.BattleGrounds = m.Enabled.Raids
+					m.Enabled.Raids = nil
+				end
+				if m.Enabled.Dungeons ~= nil then
+					m.Enabled.PvE = m.Enabled.Dungeons
+					m.Enabled.Dungeons = nil
+				end
+			end
+		end
+	end
+
+	vars.Version = 25
+	return true
+end
+
+function M:UpgradeToVersion26(vars)
+	if vars.Version ~= 25 then
+		return false
+	end
+
+	-- CC module now uses SetIgnoreParentScale(true), so saved icon sizes need to be
+	-- scaled up by UIParent:GetScale(). That value isn't reliable at load time (returns 1),
+	-- so set a flag and apply it later via RunDeferredMigrations on PLAYER_LOGIN.
+	vars.PendingScaleMigration26 = true
+
+	vars.Version = 26
+	return true
+end
+
+function M:UpgradeToVersion27(vars)
+	if vars.Version ~= 26 then
+		return false
+	end
+
+	-- Rename Always→World in location-based modules.
+	-- If Always was true, it acted as an override for all contexts, so enable all of them.
+	if vars.Modules then
+		local modules = {
+			"CCModule", "PetCCModule", "HealerCCModule",
+			"AlertsModule", "NameplatesModule", "FriendlyIndicatorModule",
+		}
+		for _, moduleName in ipairs(modules) do
+			local m = vars.Modules[moduleName]
+			if m and m.Enabled and m.Enabled.Always ~= nil then
+				if m.Enabled.Always == true then
+					m.Enabled.World = true
+					m.Enabled.Arena = true
+					m.Enabled.BattleGrounds = true
+					m.Enabled.PvE = true
+				else
+					m.Enabled.World = false
+				end
+				m.Enabled.Always = nil
+			end
+		end
+	end
+
+	vars.Version = 27
+	return true
+end
+
+function M:UpgradeToVersion28(vars)
+	if vars.Version ~= 27 then
+		return false
+	end
+
+	-- Add MaxIcons to AlertsModule.Icons
+	if vars.Modules and vars.Modules.AlertsModule and vars.Modules.AlertsModule.Icons then
+		vars.Modules.AlertsModule.Icons.MaxIcons = 8
+	end
+
+	vars.Version = 28
+	return true
+end
+
+---@return boolean true if any deferred migrations were applied
+function M:RunDeferredMigrations(vars)
+	local applied = false
+
+	if vars.PendingScaleMigration26 then
+		local scale = UIParent:GetScale()
+		if vars.Modules then
+			local ccModule = vars.Modules.CCModule
+			if ccModule then
+				if ccModule.Default and ccModule.Default.Icons and ccModule.Default.Icons.Size then
+					ccModule.Default.Icons.Size = math.floor(ccModule.Default.Icons.Size * scale + 0.5)
+				end
+				if ccModule.Raid and ccModule.Raid.Icons and ccModule.Raid.Icons.Size then
+					ccModule.Raid.Icons.Size = math.floor(ccModule.Raid.Icons.Size * scale + 0.5)
+				end
+			end
+			local petCCModule = vars.Modules.PetCCModule
+			if petCCModule and petCCModule.Icons and petCCModule.Icons.Size then
+				petCCModule.Icons.Size = math.floor(petCCModule.Icons.Size * scale + 0.5)
+			end
+		end
+		vars.PendingScaleMigration26 = nil
+		applied = true
+	end
+
+	return applied
+end
+
 ---@return Db
 function M:GetAndUpgradeDb()
 	local vars = mini:GetSavedVars()
@@ -1726,6 +1849,11 @@ function M:GetAndUpgradeDb()
 
 	-- grab any new keys
 	vars = mini:GetSavedVars(dbDefaults)
+
+	if vars.Version == dbDefaults.Version then
+		-- if we are running the latest version, clean up any garbage that may have been left over from old versions
+		mini:CleanTable(vars, dbDefaults, true, true)
+	end
 
 	return vars
 end

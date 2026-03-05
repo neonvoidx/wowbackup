@@ -608,7 +608,15 @@ function ViewerAdapters.UpdateCDViewer(viewer, fromDirection)
             local currentRowHeight = h
 
             local yOffset = cumulativeOffset * rowOffsetModifier
-            PositionRowHorizontal(viewer, row, yOffset, w, padding, iconDirectionModifier, rowAnchor, maxIcons)
+            if
+                ns.db.profile.cooldownManager_experimental_layoutOptimizations
+                and fromDirection == "TOP"
+                and iRow == 1
+            then
+                -- omit - redundant calculations for the first row when growing from top, as it's the most common case and often doesn't need adjustments
+            else
+                PositionRowHorizontal(viewer, row, yOffset, w, padding, iconDirectionModifier, rowAnchor, maxIcons)
+            end
 
             cumulativeOffset = cumulativeOffset + currentRowHeight + padding
         end
@@ -623,7 +631,15 @@ function ViewerAdapters.UpdateCDViewer(viewer, fromDirection)
             local currentColWidth = w
 
             local xOffset = cumulativeOffset * rowOffsetModifier
-            PositionRowVertical(viewer, row, xOffset, h, padding, iconDirectionModifier, colAnchor, maxIcons)
+            if
+                ns.db.profile.cooldownManager_experimental_layoutOptimizations
+                and fromDirection == "TOP"
+                and iRow == 1
+            then
+                -- omit - redundant calculations for the first row when growing from top, as it's the most common case and often doesn't need adjustments
+            else
+                PositionRowVertical(viewer, row, xOffset, h, padding, iconDirectionModifier, colAnchor, maxIcons)
+            end
 
             cumulativeOffset = cumulativeOffset + currentColWidth + padding
         end

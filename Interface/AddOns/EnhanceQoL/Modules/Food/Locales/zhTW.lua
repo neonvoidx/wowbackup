@@ -19,6 +19,7 @@ L["Enable Health Macro"] = "啟用治療巨集"
 L["Flask Macro"] = "精煉藥劑巨集"
 L["flaskMacroLimitReached"] = "精煉藥劑巨集：已達巨集數量上限。請先騰出一個欄位。"
 L["flaskMacroPlaceOnBar"] = "%s - 請放到你的動作列上（離開戰鬥後更新）"
+L["FlaskSharedWithClassReminder"] = "精鍊偏好會與職業增益提醒的精鍊追蹤共用。"
 L["FlaskUseRoleSetting"] = "使用角色設定"
 L["Health Macro"] = "治療巨集"
 L["healthCustomSpellsHint"] = [=[在下拉選單中選擇法術會將其移除（此欄位設計上保持空白）。

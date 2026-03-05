@@ -190,6 +190,27 @@ function ChatIM:HookInsertLink()
 	self.insertLinkHooked = true
 end
 
+local function ensureChatIMFrameData()
+	if not addon.db then addon.db = {} end
+	if type(addon.db.chatIMFrameData) ~= "table" then addon.db.chatIMFrameData = {} end
+	local status = addon.db.chatIMFrameData
+	if type(status.width) ~= "number" then status.width = 400 end
+	if type(status.height) ~= "number" then status.height = 300 end
+	return status
+end
+
+local function saveChatIMFrameData(widgetFrame)
+	local status = ensureChatIMFrameData()
+	if not widgetFrame or not widgetFrame.frame then return end
+	local frame = widgetFrame.frame
+	status.width = frame:GetWidth()
+	status.height = frame:GetHeight()
+	local top = frame:GetTop()
+	local left = frame:GetLeft()
+	if top then status.top = top end
+	if left then status.left = left end
+end
+
 function ChatIM:CreateUI()
 	if self.widget then return end
 	self:HookInsertLink()
@@ -199,15 +220,22 @@ function ChatIM:CreateUI()
 	frame:SetHeight(300)
 	frame:SetLayout("Fill")
 	frame:SetCallback("OnClose", function() ChatIM:HideWindow() end)
-	frame:SetStatusTable(addon.db.chatIMFrameData)
+	frame:SetStatusTable(ensureChatIMFrameData())
 	frame.frame:SetClampedToScreen(true)
 	frame.frame:SetAlpha(0.4)
+	frame.frame:HookScript("OnMouseUp", function() saveChatIMFrameData(frame) end)
+	frame.frame:HookScript("OnSizeChanged", function() saveChatIMFrameData(frame) end)
+	if frame.title then frame.title:HookScript("OnMouseUp", function() saveChatIMFrameData(frame) end) end
+	if frame.sizer_se then frame.sizer_se:HookScript("OnMouseUp", function() saveChatIMFrameData(frame) end) end
+	if frame.sizer_s then frame.sizer_s:HookScript("OnMouseUp", function() saveChatIMFrameData(frame) end) end
+	if frame.sizer_e then frame.sizer_e:HookScript("OnMouseUp", function() saveChatIMFrameData(frame) end) end
 	frame.frame:HookScript("OnEnter", function() ChatIM:UpdateAlpha() end)
 	frame.frame:HookScript("OnLeave", function()
 		C_Timer.After(5, function() ChatIM:UpdateAlpha() end)
 	end)
 	frame.frame:SetFrameStrata("MEDIUM")
 	frame.frame:Hide()
+	saveChatIMFrameData(frame)
 
 	local tabGroup = AceGUI:Create("TabGroup")
 	tabGroup:SetLayout("Fill")

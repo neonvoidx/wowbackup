@@ -168,6 +168,7 @@ Helper.ENTRY_DEFAULTS = {
 	showItemUses = false,
 	showWhenEmpty = false,
 	showWhenNoCooldown = false,
+	showWhenMissing = false,
 	glowReady = false,
 	glowDuration = 0,
 	soundReady = false,
@@ -177,6 +178,7 @@ Helper.ENTRY_DEFAULTS = {
 	staticTextFont = "",
 	staticTextSize = 12,
 	staticTextStyle = "OUTLINE",
+	staticTextColor = { 1, 1, 1, 1 },
 	staticTextAnchor = "CENTER",
 	staticTextX = 0,
 	staticTextY = 0,
@@ -448,8 +450,11 @@ function Helper.NormalizeOpacity(value, fallback)
 end
 
 function Helper.ResolveFontPath(value, fallback)
+	if addon.functions and addon.functions.IsGlobalFontConfigValue and addon.functions.IsGlobalFontConfigValue(value) then value = nil end
+	if addon.functions and addon.functions.IsGlobalFontConfigValue and addon.functions.IsGlobalFontConfigValue(fallback) then fallback = nil end
 	if type(value) == "string" and value ~= "" then return value end
 	if type(fallback) == "string" and fallback ~= "" then return fallback end
+	if addon.functions and addon.functions.GetGlobalDefaultFontFace then return addon.functions.GetGlobalDefaultFontFace() end
 	return STANDARD_TEXT_FONT
 end
 
@@ -458,7 +463,10 @@ function Helper.GetCountFontDefaults(frame)
 		local icon = frame.icons and frame.icons[1]
 		if icon and icon.count and icon.count.GetFont then return icon.count:GetFont() end
 	end
-	local fallback = (addon.variables and addon.variables.defaultFont) or (LSM and LSM:Fetch("font", LSM.DefaultMedia.font)) or STANDARD_TEXT_FONT
+	local fallback = (addon.functions and addon.functions.GetGlobalDefaultFontFace and addon.functions.GetGlobalDefaultFontFace())
+		or (addon.variables and addon.variables.defaultFont)
+		or (LSM and LSM:Fetch("font", LSM.DefaultMedia.font))
+		or STANDARD_TEXT_FONT
 	return fallback, 12, "OUTLINE"
 end
 
@@ -473,6 +481,8 @@ end
 function Helper.GetFontOptions(defaultPath)
 	local list = {}
 	local seen = {}
+	local globalFontKey = addon.functions and addon.functions.GetGlobalFontConfigKey and addon.functions.GetGlobalFontConfigKey() or "__EQOL_GLOBAL_FONT__"
+	local globalFontLabel = addon.functions and addon.functions.GetGlobalFontConfigLabel and addon.functions.GetGlobalFontConfigLabel() or "Use global font config"
 	local function add(path, label)
 		if type(path) ~= "string" or path == "" then return end
 		local key = string.lower(path)
@@ -480,13 +490,15 @@ function Helper.GetFontOptions(defaultPath)
 		seen[key] = true
 		list[#list + 1] = { value = path, label = label }
 	end
-	if LSM and LSM.HashTable then
-		for name, path in pairs(LSM:HashTable("font") or {}) do
-			add(path, tostring(name))
-		end
+	local names = addon.functions and addon.functions.GetLSMMediaNames and addon.functions.GetLSMMediaNames("font") or {}
+	local hash = addon.functions and addon.functions.GetLSMMediaHash and addon.functions.GetLSMMediaHash("font") or {}
+	for i = 1, #names do
+		local name = names[i]
+		local path = hash[name]
+		add(path, tostring(name))
 	end
 	if defaultPath then add(defaultPath, DEFAULT) end
-	table.sort(list, function(a, b) return tostring(a.label) < tostring(b.label) end)
+	table.insert(list, 1, { value = globalFontKey, label = globalFontLabel })
 	return list
 end
 
@@ -768,6 +780,9 @@ function Helper.NormalizeEntry(entry, defaults)
 		entry.macroID = tonumber(entry.macroID)
 		if type(entry.macroName) == "string" and strtrim then entry.macroName = strtrim(entry.macroName) end
 		if type(entry.macroName) ~= "string" or entry.macroName == "" then entry.macroName = nil end
+	elseif entry.type == "STANCE" then
+		if CooldownPanels and CooldownPanels.NormalizeStanceEntry then CooldownPanels:NormalizeStanceEntry(entry) end
+		entry.showWhenMissing = entry.showWhenMissing == true
 	end
 	local duration = tonumber(entry.glowDuration)
 	if duration == nil then duration = defaults.entry and defaults.entry.glowDuration or Helper.ENTRY_DEFAULTS.glowDuration or 0 end
@@ -781,6 +796,7 @@ function Helper.NormalizeEntry(entry, defaults)
 	if type(entry.staticTextFont) ~= "string" then entry.staticTextFont = Helper.ENTRY_DEFAULTS.staticTextFont end
 	entry.staticTextSize = Helper.ClampInt(entry.staticTextSize, 6, 64, Helper.ENTRY_DEFAULTS.staticTextSize or 12)
 	entry.staticTextStyle = Helper.NormalizeFontStyleChoice(entry.staticTextStyle, Helper.ENTRY_DEFAULTS.staticTextStyle or "OUTLINE")
+	entry.staticTextColor = Helper.NormalizeColor(entry.staticTextColor, Helper.ENTRY_DEFAULTS.staticTextColor or { 1, 1, 1, 1 })
 	entry.staticTextAnchor = Helper.NormalizeAnchor(entry.staticTextAnchor, Helper.ENTRY_DEFAULTS.staticTextAnchor or "CENTER")
 	entry.staticTextX = Helper.ClampInt(entry.staticTextX, -Helper.OFFSET_RANGE, Helper.OFFSET_RANGE, Helper.ENTRY_DEFAULTS.staticTextX or 0)
 	entry.staticTextY = Helper.ClampInt(entry.staticTextY, -Helper.OFFSET_RANGE, Helper.OFFSET_RANGE, Helper.ENTRY_DEFAULTS.staticTextY or 0)
@@ -846,6 +862,15 @@ function Helper.CreateEntry(entryType, idValue, defaults)
 		if entry.showItemCount == nil then entry.showItemCount = true end
 	elseif entryType == "SLOT" then
 		entry.slotID = tonumber(idValue)
+	elseif entryType == "STANCE" then
+		entry.stanceID = type(idValue) == "string" and string.upper(idValue) or nil
+		if CooldownPanels and CooldownPanels.NormalizeStanceEntry then CooldownPanels:NormalizeStanceEntry(entry) end
+		entry.alwaysShow = false
+		entry.showWhenMissing = false
+		entry.showCooldown = false
+		entry.showCooldownText = false
+		entry.glowReady = false
+		entry.soundReady = false
 	elseif entryType == "MACRO" then
 		entry.macroID = tonumber(idValue)
 	end

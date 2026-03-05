@@ -676,6 +676,7 @@ local function EnsureUnitFrameDriverWatcher()
 				if not data or not data.expression then
 					if UnregisterStateDriver then pcall(UnregisterStateDriver, frame, "visibility") end
 					frame.EQOL_VisibilityStateDriver = nil
+					if data and data.showWhenCleared and frame.Show then pcall(frame.Show, frame) end
 				elseif RegisterStateDriver then
 					local ok = pcall(RegisterStateDriver, frame, "visibility", data.expression)
 					if ok then frame.EQOL_VisibilityStateDriver = data.expression end
@@ -686,19 +687,20 @@ local function EnsureUnitFrameDriverWatcher()
 	addon.variables.unitFrameDriverWatcher = watcher
 end
 
-local function ApplyUnitFrameStateDriver(frame, expression)
+local function ApplyUnitFrameStateDriver(frame, expression, showWhenCleared)
 	if not frame then return end
 	if frame.EQOL_VisibilityStateDriver == expression then return end
 	if InCombatLockdown and InCombatLockdown() then
 		addon.variables = addon.variables or {}
 		addon.variables.pendingUnitFrameDriverUpdates = addon.variables.pendingUnitFrameDriverUpdates or {}
-		addon.variables.pendingUnitFrameDriverUpdates[frame] = { expression = expression }
+		addon.variables.pendingUnitFrameDriverUpdates[frame] = { expression = expression, showWhenCleared = showWhenCleared == true }
 		EnsureUnitFrameDriverWatcher()
 		return
 	end
 	if not expression then
 		if UnregisterStateDriver then pcall(UnregisterStateDriver, frame, "visibility") end
 		frame.EQOL_VisibilityStateDriver = nil
+		if showWhenCleared and frame.Show then pcall(frame.Show, frame) end
 		return
 	end
 	if RegisterStateDriver then
@@ -949,12 +951,12 @@ end
 local function ClearUnitFrameState(frame, cbData, opts)
 	if not frame then return end
 	if IsBossFrameContainer(frame) then
-		ApplyUnitFrameStateDriver(frame, nil)
+		ApplyUnitFrameStateDriver(frame, nil, cbData and cbData.showWhenNoRule)
 		SetBossFrameHidden(false)
 		frameVisibilityStates[frame] = nil
 		return
 	end
-	if not (opts and opts.noStateDriver) then ApplyUnitFrameStateDriver(frame, nil) end
+	if not (opts and opts.noStateDriver) then ApplyUnitFrameStateDriver(frame, nil, cbData and cbData.showWhenNoRule) end
 	RestoreUnitFrameVisibility(frame, cbData)
 	frameVisibilityStates[frame] = nil
 end
@@ -975,11 +977,11 @@ local function ApplyVisibilityToUnitFrame(frameName, cbData, config, opts)
 	state.isBossFrame = frameName == BOSS_FRAME_CONTAINER_NAME
 	local unitToken = cbData.unitToken
 	local isPlayerUnit = (unitToken == "player")
-	local isTargetUnit = (unitToken == "target")
-	state.supportsPlayerTargetRule = isPlayerUnit or isTargetUnit
-	state.supportsPlayerCastingRule = isPlayerUnit
-	state.supportsPlayerMountedRule = isPlayerUnit
-	state.supportsGroupRule = isPlayerUnit
+	local supportsPlayerScopedRules = isPlayerUnit or unitToken == "target" or unitToken == "targettarget" or unitToken == "focus" or unitToken == "pet"
+	state.supportsPlayerTargetRule = supportsPlayerScopedRules
+	state.supportsPlayerCastingRule = supportsPlayerScopedRules
+	state.supportsPlayerMountedRule = supportsPlayerScopedRules
+	state.supportsGroupRule = supportsPlayerScopedRules
 
 	local driverExpression = BuildUnitFrameDriverExpression(config)
 	local usesManualRules = config and (config.MOUSEOVER or config.PLAYER_HAS_TARGET or config.PLAYER_CASTING or config.PLAYER_MOUNTED or config.PLAYER_NOT_MOUNTED or config.PLAYER_IN_GROUP)
@@ -994,7 +996,7 @@ local function ApplyVisibilityToUnitFrame(frameName, cbData, config, opts)
 	end
 
 	state.driverActive = false
-	if not (opts and opts.noStateDriver) or state.isBossFrame then ApplyUnitFrameStateDriver(frame, nil) end
+	if not (opts and opts.noStateDriver) or state.isBossFrame then ApplyUnitFrameStateDriver(frame, nil, state.cbData and state.cbData.showWhenNoRule) end
 
 	if config.MOUSEOVER then
 		state.isMouseOver = MouseIsOver(frame)
@@ -2426,8 +2428,6 @@ local function setActionBarVisibilityWatcherEnabled(watcher, enabled)
 		SafeRegisterUnitEvent(watcher, "UNIT_SPELLCAST_INTERRUPTED", "player")
 		SafeRegisterUnitEvent(watcher, "UNIT_SPELLCAST_CHANNEL_START", "player")
 		SafeRegisterUnitEvent(watcher, "UNIT_SPELLCAST_CHANNEL_STOP", "player")
-		SafeRegisterUnitEvent(watcher, "UNIT_HEALTH", "player")
-		SafeRegisterUnitEvent(watcher, "UNIT_MAXHEALTH", "player")
 		watcher._eqolEventsRegistered = true
 	else
 		if not watcher._eqolEventsRegistered then return end
@@ -2598,6 +2598,8 @@ addon.functions.initializePersistentCVars = initializePersistentCVars
 -- removed: addPartyFrame (party settings relocated to Social/UI sections)
 
 local function initActionBars()
+	local globalFontKey = addon.functions.GetGlobalFontConfigKey and addon.functions.GetGlobalFontConfigKey() or addon.variables.defaultFont
+	addon.functions.InitDBValue("globalFontFace", addon.variables.defaultFont)
 	addon.functions.InitDBValue("actionBarAnchorEnabled", false)
 	addon.functions.InitDBValue("actionBarFadeStrength", 1)
 	addon.functions.InitDBValue("actionBarFullRangeColoring", false)
@@ -2614,16 +2616,19 @@ local function initActionBars()
 	addon.functions.InitDBValue("hideMacroNames", false)
 	addon.functions.InitDBValue("actionBarMacroFontOverride", false)
 	addon.functions.InitDBValue("actionBarHotkeyFontOverride", false)
-	addon.functions.InitDBValue("actionBarMacroFontFace", addon.variables.defaultFont)
+	addon.functions.InitDBValue("actionBarMacroFontFace", globalFontKey)
 	addon.functions.InitDBValue("actionBarMacroFontSize", 12)
 	addon.functions.InitDBValue("actionBarMacroFontOutline", "OUTLINE")
-	addon.functions.InitDBValue("actionBarHotkeyFontFace", addon.variables.defaultFont)
+	addon.functions.InitDBValue("actionBarMacroFontColor", { r = 1, g = 1, b = 1, a = 1 })
+	addon.functions.InitDBValue("actionBarHotkeyFontFace", globalFontKey)
 	addon.functions.InitDBValue("actionBarHotkeyFontSize", 12)
 	addon.functions.InitDBValue("actionBarHotkeyFontOutline", "OUTLINE")
+	addon.functions.InitDBValue("actionBarHotkeyFontColor", { r = 1, g = 1, b = 1, a = 1 })
 	addon.functions.InitDBValue("actionBarCountFontOverride", false)
-	addon.functions.InitDBValue("actionBarCountFontFace", addon.variables.defaultFont)
+	addon.functions.InitDBValue("actionBarCountFontFace", globalFontKey)
 	addon.functions.InitDBValue("actionBarCountFontSize", 12)
 	addon.functions.InitDBValue("actionBarCountFontOutline", "OUTLINE")
+	addon.functions.InitDBValue("actionBarCountFontColor", { r = 1, g = 1, b = 1, a = 1 })
 	addon.functions.InitDBValue("actionBarShortHotkeys", false)
 	addon.functions.InitDBValue("actionBarHiddenHotkeys", {})
 	if type(addon.db.actionBarHiddenHotkeys) ~= "table" then addon.db.actionBarHiddenHotkeys = {} end
@@ -3784,7 +3789,7 @@ local function initUI()
 	addon.functions.InitDBValue("squareMinimapBorderSize", 1)
 	addon.functions.InitDBValue("squareMinimapBorderColor", { r = 0, g = 0, b = 0 })
 	addon.functions.InitDBValue("enableSquareMinimapStats", false)
-	addon.functions.InitDBValue("squareMinimapStatsFont", STANDARD_TEXT_FONT)
+	addon.functions.InitDBValue("squareMinimapStatsFont", addon.functions.GetGlobalFontConfigKey and addon.functions.GetGlobalFontConfigKey() or "__EQOL_GLOBAL_FONT__")
 	addon.functions.InitDBValue("squareMinimapStatsOutline", "OUTLINE")
 	addon.functions.InitDBValue("squareMinimapStatsTime", true)
 	addon.functions.InitDBValue("squareMinimapStatsTimeAnchor", "BOTTOMLEFT")
@@ -3882,9 +3887,37 @@ local function initUI()
 	addon.functions.InitDBValue("enableMailboxAddressBook", false)
 	addon.functions.InitDBValue("mailboxContacts", {})
 
+	local function suppressMinimapBlobRings()
+		if not Minimap then return end
+
+		local setters = {
+			{ name = "SetArchBlobRingAlpha", value = 0 },
+			{ name = "SetArchBlobRingScalar", value = 0 },
+			{ name = "SetQuestBlobRingAlpha", value = 0 },
+			{ name = "SetQuestBlobRingScalar", value = 0 },
+			{ name = "SetTaskBlobRingAlpha", value = 0 },
+			{ name = "SetTaskBlobRingScalar", value = 0 },
+		}
+
+		for _, setter in ipairs(setters) do
+			local fn = Minimap[setter.name]
+			if type(fn) == "function" then fn(Minimap, setter.value) end
+		end
+	end
+
 	local function makeSquareMinimap()
 		MinimapCompassTexture:Hide()
 		Minimap:SetMaskTexture("Interface\\BUTTONS\\WHITE8X8")
+		suppressMinimapBlobRings()
+
+		addon.variables = addon.variables or {}
+		if not addon.variables.squareMinimapBlobRingHooked and Minimap.HookScript then
+			Minimap:HookScript("OnEvent", function(_, event)
+				if event == "PLAYER_ENTERING_WORLD" and addon.db and addon.db["enableSquareMinimap"] then suppressMinimapBlobRings() end
+			end)
+			addon.variables.squareMinimapBlobRingHooked = true
+		end
+
 		function GetMinimapShape() return "SQUARE" end
 	end
 	if addon.db["enableSquareMinimap"] then makeSquareMinimap() end
@@ -4053,6 +4086,32 @@ local function initUI()
 
 	if addon.functions.applyMinimapClusterClamp then addon.functions.applyMinimapClusterClamp() end
 
+	local function setMinimapClusterScaleKeepingPosition(scale)
+		if not MinimapCluster or not MinimapCluster.SetScale then return end
+
+		local point, relativeTo, relativePoint, xOfs, yOfs = MinimapCluster:GetPoint(1)
+		local beforeX, beforeY = MinimapCluster:GetCenter()
+
+		MinimapCluster:SetScale(scale)
+
+		if not point or not beforeX or not beforeY then return end
+		if InCombatLockdown and InCombatLockdown() and MinimapCluster.IsProtected and MinimapCluster:IsProtected() then return end
+
+		local afterX, afterY = MinimapCluster:GetCenter()
+		if not afterX or not afterY then return end
+
+		local deltaX = beforeX - afterX
+		local deltaY = beforeY - afterY
+		if math.abs(deltaX) < 0.01 and math.abs(deltaY) < 0.01 then return end
+
+		local relative = relativeTo or UIParent
+		local relativeScale = (relative and relative.GetEffectiveScale and relative:GetEffectiveScale()) or (UIParent and UIParent.GetEffectiveScale and UIParent:GetEffectiveScale()) or 1
+		if relativeScale == 0 then relativeScale = 1 end
+
+		MinimapCluster:ClearAllPoints()
+		MinimapCluster:SetPoint(point, relative, relativePoint or point, (xOfs or 0) + (deltaX / relativeScale), (yOfs or 0) + (deltaY / relativeScale))
+	end
+
 	function addon.functions.applyMinimapClusterScale()
 		if not MinimapCluster or not MinimapCluster.SetScale then return end
 		if addon.db and addon.db.enableMinimapClusterScale then
@@ -4062,9 +4121,9 @@ local function initUI()
 			elseif scale > 2 then
 				scale = 2
 			end
-			MinimapCluster:SetScale(scale)
+			setMinimapClusterScaleKeepingPosition(scale)
 		else
-			MinimapCluster:SetScale(1)
+			setMinimapClusterScaleKeepingPosition(1)
 		end
 	end
 
@@ -5403,6 +5462,7 @@ local function setAllHooks()
 	addon.functions.initChatFrame()
 	addon.functions.initUIOptions()
 	addon.functions.initActionTracker()
+	addon.functions.initClassBuffReminder()
 	initParty()
 	initActionBars()
 	initUI()
@@ -5415,7 +5475,81 @@ local function setAllHooks()
 
 	local LSM = LibStub("LibSharedMedia-3.0")
 	local lsmSoundDirty = false
+	local lsmFontDirty = false
+	local function refreshExperienceBarForMedia(mediaType, mediaKey)
+		local xpBar = addon.Aura and addon.Aura.ExperienceBar
+		if not (xpBar and xpBar.IsEnabled and xpBar:IsEnabled()) then return end
+		if not xpBar.frame then return end
+
+		local shouldRefresh = false
+		if mediaType == "statusbar" then
+			local textureKey = xpBar.GetTextureKey and xpBar:GetTextureKey() or nil
+			local bgTextureKey = xpBar.GetBackgroundTextureKey and xpBar:GetBackgroundTextureKey() or nil
+			shouldRefresh = mediaKey == textureKey or mediaKey == bgTextureKey
+		elseif mediaType == "border" then
+			local borderKey = xpBar.GetBorderTextureKey and xpBar:GetBorderTextureKey() or nil
+			shouldRefresh = mediaKey == borderKey
+		elseif mediaType == "font" then
+			local fontKey = xpBar.GetTextFont and xpBar:GetTextFont() or nil
+			shouldRefresh = mediaKey == fontKey
+		end
+
+		if shouldRefresh then
+			if xpBar.ApplyAppearance then xpBar:ApplyAppearance() end
+			if xpBar.UpdateSoon then xpBar:UpdateSoon() end
+		end
+	end
+
+	local function refreshGlobalFontConsumers()
+		if ActionBarLabels then
+			if ActionBarLabels.RefreshAllMacroNameVisibility then ActionBarLabels.RefreshAllMacroNameVisibility() end
+			if ActionBarLabels.RefreshAllHotkeyStyles then ActionBarLabels.RefreshAllHotkeyStyles() end
+			if ActionBarLabels.RefreshAllCountStyles then ActionBarLabels.RefreshAllCountStyles() end
+		end
+		if addon.functions and addon.functions.refreshItemLevelDisplays then addon.functions.refreshItemLevelDisplays() end
+		if addon.CombatText then
+			if addon.CombatText.ApplyStyle then addon.CombatText:ApplyStyle() end
+			if addon.CombatText.UpdateFrameSize then addon.CombatText:UpdateFrameSize() end
+		end
+		if addon.DataPanel and addon.DataPanel.List and addon.DataPanel.Get then
+			for id in pairs(addon.DataPanel.List() or {}) do
+				local panel = addon.DataPanel.Get(id)
+				if panel and panel.ApplyTextStyle then panel:ApplyTextStyle() end
+			end
+		end
+		if addon.Aura then
+			local xpBar = addon.Aura.ExperienceBar
+			if xpBar and xpBar.ApplyAppearance then
+				xpBar:ApplyAppearance()
+				if xpBar.UpdateSoon then xpBar:UpdateSoon() end
+			end
+			if addon.Aura.ResourceBars and addon.Aura.ResourceBars.Refresh then addon.Aura.ResourceBars.Refresh() end
+			if addon.Aura.CooldownPanels and addon.Aura.CooldownPanels.RefreshAllPanels then addon.Aura.CooldownPanels:RefreshAllPanels() end
+			if addon.Aura.UF and addon.Aura.UF.Refresh then addon.Aura.UF.Refresh() end
+			if addon.Aura.UF and addon.Aura.UF.GroupFrames and addon.Aura.UF.GroupFrames.RefreshTextStyles then addon.Aura.UF.GroupFrames:RefreshTextStyles() end
+		end
+	end
+
+	addon.functions.RefreshGlobalFontConsumers = refreshGlobalFontConsumers
+
+	local function queueGlobalFontRefresh()
+		if lsmFontDirty then return end
+		lsmFontDirty = true
+		local trigger = C_Timer and C_Timer.After
+		if trigger then
+			trigger(0.2, function()
+				lsmFontDirty = false
+				if addon.functions and addon.functions.RefreshGlobalFontConsumers then addon.functions.RefreshGlobalFontConsumers() end
+			end)
+		else
+			lsmFontDirty = false
+			if addon.functions and addon.functions.RefreshGlobalFontConsumers then addon.functions.RefreshGlobalFontConsumers() end
+		end
+	end
+
 	LSM:RegisterCallback("LibSharedMedia_Registered", function(event, mediaType, ...)
+		local mediaKey = ...
+		if addon.functions and addon.functions.InvalidateLSMMediaCache and mediaType then addon.functions.InvalidateLSMMediaCache(mediaType) end
 		if mediaType == "sound" then
 			if not lsmSoundDirty then
 				lsmSoundDirty = true
@@ -5430,8 +5564,13 @@ local function setAllHooks()
 			if addon.MythicPlus and addon.MythicPlus.functions and addon.MythicPlus.functions.RefreshPotionTextureDropdown then addon.MythicPlus.functions.RefreshPotionTextureDropdown() end
 			if addon.MythicPlus and addon.MythicPlus.functions and addon.MythicPlus.functions.applyPotionBarTexture then addon.MythicPlus.functions.applyPotionBarTexture() end
 			if addon.Aura and addon.Aura.ResourceBars and addon.Aura.ResourceBars.RefreshTextureDropdown then addon.Aura.ResourceBars.RefreshTextureDropdown() end
+			refreshExperienceBarForMedia(mediaType, mediaKey)
 		elseif mediaType == "border" then
 			if ActionBarLabels and ActionBarLabels.ResetBorderCache then ActionBarLabels.ResetBorderCache() end
+			refreshExperienceBarForMedia(mediaType, mediaKey)
+		elseif mediaType == "font" then
+			refreshExperienceBarForMedia(mediaType, mediaKey)
+			queueGlobalFontRefresh()
 		end
 	end)
 

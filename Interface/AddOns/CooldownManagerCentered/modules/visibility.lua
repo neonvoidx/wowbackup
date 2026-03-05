@@ -60,6 +60,7 @@ function CMCVisibility:Update(viewer, viewerName, settingsKey)
     local isMounted = IsMounted()
     local shapeshiftFormID = GetShapeshiftFormID()
     local hasTarget = UnitExists("target")
+    local targetIsEnemy = UnitCanAttack("player", "target")
 
     local rules = ns.db.profile.cooldownManager_visibility_enabled_rules
     local alpha = 1
@@ -69,6 +70,10 @@ function CMCVisibility:Update(viewer, viewerName, settingsKey)
         alpha = (viewer.settingMap[Enum.EditModeCooldownViewerSetting.Opacity].value + 50) / 100
     end
 
+    if not ns.db.profile.cooldownManager_visibility_enabled_viewers[viewerName] then
+        viewer:SetAlpha(alpha)
+        return
+    end
     if rules.SHOW_IN_COMBAT and (inCombat or InCombatLockdown()) then
         viewer:SetAlpha(alpha)
         return
@@ -80,6 +85,10 @@ function CMCVisibility:Update(viewer, viewerName, settingsKey)
         return
     end
     if rules.SHOW_WITH_TARGET and hasTarget then
+        viewer:SetAlpha(alpha)
+        return
+    end
+    if rules.SHOW_WITH_ENEMY_TARGET and hasTarget and targetIsEnemy then
         viewer:SetAlpha(alpha)
         return
     end

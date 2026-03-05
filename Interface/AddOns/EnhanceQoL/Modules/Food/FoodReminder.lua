@@ -17,11 +17,26 @@ else
 end
 
 local L = LibStub("AceLocale-3.0"):GetLocale("EnhanceQoL_DrinkMacro")
-local LSM = LibStub("LibSharedMedia-3.0")
 local EditMode = addon.EditMode
 local SettingType = EditMode and EditMode.lib and EditMode.lib.SettingType
 local DEFAULT_SOUND_SENTINEL = "__DEFAULT_SOUND__"
 local NONE_SOUND_SENTINEL = "__NONE_SOUND__"
+
+local function getSoundHash()
+	if addon.functions and addon.functions.GetLSMMediaHash then
+		local hash = addon.functions.GetLSMMediaHash("sound")
+		if type(hash) == "table" then return hash end
+	end
+	return {}
+end
+
+local function getSoundNames()
+	if addon.functions and addon.functions.GetLSMMediaNames then
+		local names = addon.functions.GetLSMMediaNames("sound")
+		if type(names) == "table" then return names end
+	end
+	return {}
+end
 
 local defaultPos = { point = "TOP", x = 0, y = -100 }
 local function initReminderDefaults()
@@ -137,7 +152,7 @@ local function playReminderSound(kind)
 	if key == NONE_SOUND_SENTINEL then return end -- explicit opt-out
 
 	if key and key ~= "" then
-		local soundTable = LSM and LSM:HashTable("sound")
+		local soundTable = getSoundHash()
 		local file = soundTable and soundTable[key]
 		if file then
 			PlaySoundFile(file, "Master")
@@ -423,7 +438,7 @@ local function createSoundDropdownSetting(labelKey, dbKey)
 				addon.db[dbKey] = NONE_SOUND_SENTINEL
 			else
 				addon.db[dbKey] = value
-				local soundTable = LSM and LSM:HashTable("sound")
+				local soundTable = getSoundHash()
 				local file = soundTable and soundTable[value]
 				if file then PlaySoundFile(file, "Master") end
 			end
@@ -437,9 +452,9 @@ local function createSoundDropdownSetting(labelKey, dbKey)
 				addon.db[dbKey] = nil
 				PlaySound(SOUNDKIT.RAID_WARNING)
 			end)
-			local soundTable = LSM and LSM:HashTable("sound")
+			local soundTable = getSoundHash()
 			if soundTable then
-				for _, soundName in ipairs(LSM:List("sound")) do
+				for _, soundName in ipairs(getSoundNames()) do
 					rootDescription:CreateRadio(soundName, function() return addon.db[dbKey] == soundName end, function()
 						addon.db[dbKey] = soundName
 						local file = soundTable[soundName]

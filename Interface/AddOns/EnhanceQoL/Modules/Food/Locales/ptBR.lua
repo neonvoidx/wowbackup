@@ -19,6 +19,7 @@ L["Enable Health Macro"] = "Ativar Macro de Vida"
 L["Flask Macro"] = "Macro de frasco"
 L["flaskMacroLimitReached"] = "Macro de frasco: limite de macros atingido. Libere um espaço."
 L["flaskMacroPlaceOnBar"] = "%s - coloque na sua barra (atualiza fora de combate)"
+L["FlaskSharedWithClassReminder"] = "As preferências de frasco são compartilhadas com o rastreamento de frascos do Lembrete de Bônus de Classe."
 L["FlaskUseRoleSetting"] = "Usar configuração por função"
 L["Health Macro"] = "Macro de Vida"
 L["healthCustomSpellsHint"] = [=[Ao selecionar um feitiço no menu suspenso, ele é removido (o campo fica em branco de propósito).

@@ -52,6 +52,11 @@ local VALID_ANCHOR_POINTS = {
 	BOTTOM = true,
 	BOTTOMRIGHT = true,
 }
+local VALID_TEXT_ANCHORS = {
+	LEFT = true,
+	CENTER = true,
+	RIGHT = true,
+}
 local STRATA_ORDER = { "BACKGROUND", "LOW", "MEDIUM", "HIGH", "DIALOG", "FULLSCREEN", "FULLSCREEN_DIALOG", "TOOLTIP" }
 local STRATA_INDEX = {}
 for i = 1, #STRATA_ORDER do
@@ -61,6 +66,7 @@ end
 local state = Castbar._state or {}
 Castbar._state = state
 local onUpdateActive = false
+local function isRuntimeActive() return Castbar._runtimeActive == true end
 
 local fallbackCastDefaults = {
 	enabled = false,
@@ -68,7 +74,7 @@ local fallbackCastDefaults = {
 	height = 16,
 	anchor = "BOTTOM",
 	offset = { x = 0, y = -4 },
-	backdrop = { enabled = true, color = { 0, 0, 0, 0.6 } },
+	backdrop = { enabled = true, color = { 0, 0, 0, 0.6 }, texture = "DEFAULT" },
 	border = {
 		enabled = false,
 		color = { 0, 0, 0, 0.8 },
@@ -77,6 +83,7 @@ local fallbackCastDefaults = {
 		offset = 1,
 	},
 	showName = true,
+	nameAnchor = "LEFT",
 	nameMaxChars = 0,
 	showCastTarget = false,
 	nameOffset = { x = 6, y = 0 },
@@ -129,6 +136,14 @@ local function normalizeAnchorPoint(value, fallback)
 	local point = tostring(value or fallback or "CENTER"):upper()
 	if VALID_ANCHOR_POINTS[point] then return point end
 	return tostring(fallback or "CENTER"):upper()
+end
+
+local function normalizeTextAnchor(value, fallback)
+	local fallbackAnchor = tostring(fallback or "LEFT"):upper()
+	if not VALID_TEXT_ANCHORS[fallbackAnchor] then fallbackAnchor = "LEFT" end
+	local anchor = tostring(value or fallback or "LEFT"):upper()
+	if VALID_TEXT_ANCHORS[anchor] then return anchor end
+	return fallbackAnchor
 end
 
 local function legacyAnchorToPoints(anchorValue)
@@ -273,7 +288,9 @@ local function getBarHorizontalOutsets(castCfg, castDefaults)
 	local useDefaultArt = not texKey or texKey == "" or texKey == "DEFAULT"
 	local backdrop = castCfg.backdrop
 	if backdrop == nil then backdrop = castDefaults.backdrop end
-	if type(backdrop) == "table" and backdrop.enabled ~= false and useDefaultArt then
+	local backdropTexKey = type(backdrop) == "table" and backdrop.texture or nil
+	local useDefaultBackdropArt = useDefaultArt and (not backdropTexKey or backdropTexKey == "" or backdropTexKey == "DEFAULT")
+	if type(backdrop) == "table" and backdrop.enabled ~= false and useDefaultBackdropArt then
 		left = math.max(left, 1)
 		right = math.max(right, 1)
 	end
@@ -374,6 +391,7 @@ Castbar._pendingRelativeFrameHookRetry = pendingRelativeFrameHookRetry
 local relativeWidthSyncPending = false
 
 local function scheduleRelativeFrameWidthSync()
+	if not isRuntimeActive() then return end
 	if relativeWidthSyncPending then return end
 	if not After then
 		Castbar.Refresh()
@@ -382,13 +400,18 @@ local function scheduleRelativeFrameWidthSync()
 	relativeWidthSyncPending = true
 	After(0.15, function()
 		relativeWidthSyncPending = false
+		if not isRuntimeActive() then return end
 		Castbar.Refresh()
 	end)
 end
 
-local function onRelativeFrameGeometryChanged() scheduleRelativeFrameWidthSync() end
+local function onRelativeFrameGeometryChanged()
+	if not isRuntimeActive() then return end
+	scheduleRelativeFrameWidthSync()
+end
 
 local function ensureRelativeFrameHooks(frameName)
+	if not isRuntimeActive() then return end
 	if not frameName or frameName == "" or frameName == "UIParent" then return end
 	local foundFrame = false
 	for _, targetName in ipairs(getRelativeFrameHookTargets(frameName)) do
@@ -412,6 +435,7 @@ local function ensureRelativeFrameHooks(frameName)
 			pendingRelativeFrameHookRetry[frameName] = true
 			After(1, function()
 				pendingRelativeFrameHookRetry[frameName] = nil
+				if not isRuntimeActive() then return end
 				ensureRelativeFrameHooks(frameName)
 			end)
 		end
@@ -465,6 +489,7 @@ local function isCastbarEnabled()
 end
 
 local function shouldShowSampleCast()
+	if not isCastbarEnabled() then return false end
 	local lib = addon.EditModeLib
 	return lib and lib.IsInEditMode and lib:IsInEditMode()
 end
@@ -572,15 +597,6 @@ local function updateAnchorFromFrame(frame, layoutData)
 	anchor.y = roundNumber(y or 0)
 end
 
-local function ensureEditModeCallbacks()
-	if Castbar._editModeCallbacksRegistered then return end
-	local lib = addon.EditModeLib
-	if not (lib and lib.RegisterCallback) then return end
-	Castbar._editModeCallbacksRegistered = true
-	lib:RegisterCallback("enter", function() Castbar.Refresh() end)
-	lib:RegisterCallback("exit", function() Castbar.Refresh() end)
-end
-
 local function tryRegisterEditModeSettings()
 	if Castbar._editModeSettingsApplied then return end
 	if not Castbar._editModeRegistered then return end
@@ -611,7 +627,7 @@ local function ensureEditModeRegistration()
 		enableOverlayToggle = true,
 		allowDrag = function()
 			local cfg, defs = ensureCastConfig()
-			return (isCastbarEnabled() or shouldShowSampleCast()) and anchorUsesUIParent(cfg, defs)
+			return isCastbarEnabled() and anchorUsesUIParent(cfg, defs)
 		end,
 		managePosition = false,
 		settingsMaxHeight = EDITMODE_SETTINGS_MAX_HEIGHT,
@@ -627,7 +643,9 @@ local function ensureEditModeRegistration()
 			updateAnchorFromFrame(frame, data)
 			Castbar.Refresh()
 		end,
-		isEnabled = function() return isCastbarEnabled() or shouldShowSampleCast() end,
+		onEnter = function() Castbar.Refresh() end,
+		onExit = function() Castbar.Refresh() end,
+		isEnabled = function() return isCastbarEnabled() end,
 		settings = Castbar._editModeSettings,
 		showOutsideEditMode = false,
 		showReset = false,
@@ -637,6 +655,16 @@ local function ensureEditModeRegistration()
 	Castbar._editModeRegistered = true
 	Castbar._editModeSettingsApplied = false
 	tryRegisterEditModeSettings()
+end
+
+local function disableEditModeRegistration()
+	if not Castbar._editModeRegistered then return end
+	local editMode = addon.EditMode
+	if editMode and editMode.UnregisterFrame then editMode:UnregisterFrame(EDITMODE_FRAME_ID, false) end
+	Castbar._editModeRegistered = nil
+	Castbar._editModeSettingsApplied = nil
+	if addon.EditModeLib and addon.EditModeLib.internal and addon.EditModeLib.internal.RefreshSettings then addon.EditModeLib.internal:RefreshSettings() end
+	if addon.EditModeLib and addon.EditModeLib.internal and addon.EditModeLib.internal.RefreshSettingValues then addon.EditModeLib.internal:RefreshSettingValues() end
 end
 
 function Castbar.SetEditModeSettings(settings)
@@ -878,8 +906,9 @@ local function applyCastLayout(castCfg, castDefaults)
 
 	if state.castName then
 		local nameOff = castCfg.nameOffset or castDefaults.nameOffset or { x = 6, y = 0 }
+		local nameAnchor = normalizeTextAnchor(castCfg.nameAnchor, castDefaults.nameAnchor or "LEFT")
 		state.castName:ClearAllPoints()
-		state.castName:SetPoint("LEFT", state.castBar, "LEFT", nameOff.x or 0, nameOff.y or 0)
+		state.castName:SetPoint(nameAnchor, state.castBar, nameAnchor, nameOff.x or 0, nameOff.y or 0)
 		state.castName:SetShown(castCfg.showName ~= false)
 	end
 	if state.castDuration then
@@ -908,6 +937,10 @@ local function applyCastLayout(castCfg, castDefaults)
 
 	do -- Cast backdrop
 		local bd = castCfg.backdrop or castDefaults.backdrop or { enabled = true, color = { 0, 0, 0, 0.6 } }
+		local backdropTexKey = bd.texture
+		if backdropTexKey == nil or backdropTexKey == "" or backdropTexKey == "DEFAULT" then backdropTexKey = texKey end
+		local useDefaultBackdropArt = not backdropTexKey or backdropTexKey == "" or backdropTexKey == "DEFAULT"
+		local castBackdropTexture = UFHelper.resolveCastTexture(backdropTexKey)
 		if state.castBar.SetBackdrop then state.castBar:SetBackdrop(nil) end
 		local bg = state.castBar.backdropTexture
 		if bd.enabled == false then
@@ -919,12 +952,12 @@ local function applyCastLayout(castCfg, castDefaults)
 			end
 			local col = bd.color or { 0, 0, 0, 0.6 }
 			bg:ClearAllPoints()
-			if useDefaultArt and bg.SetAtlas then
+			if useDefaultBackdropArt and bg.SetAtlas then
 				bg:SetAtlas("ui-castingbar-background", false)
 				bg:SetPoint("TOPLEFT", state.castBar, "TOPLEFT", -defaultBackdropInset, defaultBackdropInset)
 				bg:SetPoint("BOTTOMRIGHT", state.castBar, "BOTTOMRIGHT", defaultBackdropInset, -defaultBackdropInset)
 			else
-				bg:SetTexture(castTexture)
+				bg:SetTexture(castBackdropTexture)
 				bg:SetAllPoints(state.castBar)
 			end
 			bg:SetVertexColor(col[1] or 0, col[2] or 0, col[3] or 0, col[4] or 0.6)
@@ -952,7 +985,10 @@ local function applyCastLayout(castCfg, castDefaults)
 		state.castName:SetWidth(available)
 		if state.castName.SetWordWrap then state.castName:SetWordWrap(false) end
 		if state.castName.SetMaxLines then state.castName:SetMaxLines(1) end
-		if state.castName.SetJustifyH then state.castName:SetJustifyH("LEFT") end
+		if state.castName.SetJustifyH then
+			local nameAnchor = normalizeTextAnchor(castCfg.nameAnchor, castDefaults.nameAnchor or "LEFT")
+			state.castName:SetJustifyH(nameAnchor)
+		end
 	end
 	if state.castEmpower and state.castEmpower.stagePercents then UFHelper.layoutEmpowerStages(state) end
 end
@@ -1445,52 +1481,77 @@ end
 
 function Castbar.Refresh()
 	ensureCastConfig()
-	ensureFrame()
-	ensureEditModeCallbacks()
-	ensureEditModeRegistration()
-	tryRegisterEditModeSettings()
-	local editMode = addon.EditMode
-	if editMode and editMode.IsInEditMode and editMode:IsInEditMode() and editMode.RefreshFrame then editMode:RefreshFrame(EDITMODE_FRAME_ID) end
 	if not isCastbarEnabled() then
-		if shouldShowSampleCast() then
-			setSampleCast()
-			return
+		Castbar._runtimeActive = false
+		local eventFrame = Castbar._eventFrame
+		if eventFrame and Castbar._eventsRegistered then
+			eventFrame:UnregisterAllEvents()
+			Castbar._eventsRegistered = nil
 		end
-		stopCast()
+		disableEditModeRegistration()
+		if state.castBar then stopCast() end
 		return
 	end
+
+	Castbar._runtimeActive = true
+	ensureFrame()
+	ensureEditModeRegistration()
+	tryRegisterEditModeSettings()
+	local eventFrame = Castbar._eventFrame
+	if not eventFrame then
+		eventFrame = CreateFrame("Frame")
+		Castbar._eventFrame = eventFrame
+	end
+	if eventFrame:GetScript("OnEvent") ~= Castbar._onEvent then eventFrame:SetScript("OnEvent", Castbar._onEvent) end
+	if not Castbar._eventsRegistered then
+		eventFrame:RegisterEvent("PLAYER_ENTERING_WORLD")
+		eventFrame:RegisterEvent("EDIT_MODE_LAYOUTS_UPDATED")
+		if eventFrame.RegisterUnitEvent then
+			eventFrame:RegisterUnitEvent("UNIT_SPELLCAST_SENT", UNIT)
+			eventFrame:RegisterUnitEvent("UNIT_SPELLCAST_START", UNIT)
+			eventFrame:RegisterUnitEvent("UNIT_SPELLCAST_STOP", UNIT)
+			eventFrame:RegisterUnitEvent("UNIT_SPELLCAST_FAILED", UNIT)
+			eventFrame:RegisterUnitEvent("UNIT_SPELLCAST_INTERRUPTED", UNIT)
+			eventFrame:RegisterUnitEvent("UNIT_SPELLCAST_CHANNEL_START", UNIT)
+			eventFrame:RegisterUnitEvent("UNIT_SPELLCAST_CHANNEL_STOP", UNIT)
+			eventFrame:RegisterUnitEvent("UNIT_SPELLCAST_CHANNEL_UPDATE", UNIT)
+			eventFrame:RegisterUnitEvent("UNIT_SPELLCAST_EMPOWER_START", UNIT)
+			eventFrame:RegisterUnitEvent("UNIT_SPELLCAST_EMPOWER_UPDATE", UNIT)
+			eventFrame:RegisterUnitEvent("UNIT_SPELLCAST_DELAYED", UNIT)
+			eventFrame:RegisterUnitEvent("UNIT_SPELLCAST_EMPOWER_STOP", UNIT)
+		else
+			eventFrame:RegisterEvent("UNIT_SPELLCAST_SENT")
+			eventFrame:RegisterEvent("UNIT_SPELLCAST_START")
+			eventFrame:RegisterEvent("UNIT_SPELLCAST_STOP")
+			eventFrame:RegisterEvent("UNIT_SPELLCAST_FAILED")
+			eventFrame:RegisterEvent("UNIT_SPELLCAST_INTERRUPTED")
+			eventFrame:RegisterEvent("UNIT_SPELLCAST_CHANNEL_START")
+			eventFrame:RegisterEvent("UNIT_SPELLCAST_CHANNEL_STOP")
+			eventFrame:RegisterEvent("UNIT_SPELLCAST_CHANNEL_UPDATE")
+			eventFrame:RegisterEvent("UNIT_SPELLCAST_EMPOWER_START")
+			eventFrame:RegisterEvent("UNIT_SPELLCAST_EMPOWER_UPDATE")
+			eventFrame:RegisterEvent("UNIT_SPELLCAST_DELAYED")
+			eventFrame:RegisterEvent("UNIT_SPELLCAST_EMPOWER_STOP")
+		end
+		Castbar._eventsRegistered = true
+	end
+	local editMode = addon.EditMode
+	if editMode and editMode.IsInEditMode and editMode:IsInEditMode() and editMode.RefreshFrame then editMode:RefreshFrame(EDITMODE_FRAME_ID) end
 	setCastInfoFromUnit()
 end
 
-local eventFrame = Castbar._eventFrame
-if not eventFrame then
-	eventFrame = CreateFrame("Frame")
-	Castbar._eventFrame = eventFrame
-	eventFrame:RegisterEvent("PLAYER_LOGIN")
-	eventFrame:RegisterEvent("PLAYER_ENTERING_WORLD")
-	eventFrame:RegisterEvent("EDIT_MODE_LAYOUTS_UPDATED")
-	eventFrame:RegisterUnitEvent("UNIT_SPELLCAST_SENT", UNIT)
-	eventFrame:RegisterUnitEvent("UNIT_SPELLCAST_START", UNIT)
-	eventFrame:RegisterUnitEvent("UNIT_SPELLCAST_STOP", UNIT)
-	eventFrame:RegisterUnitEvent("UNIT_SPELLCAST_FAILED", UNIT)
-	eventFrame:RegisterUnitEvent("UNIT_SPELLCAST_INTERRUPTED", UNIT)
-	eventFrame:RegisterUnitEvent("UNIT_SPELLCAST_CHANNEL_START", UNIT)
-	eventFrame:RegisterUnitEvent("UNIT_SPELLCAST_CHANNEL_STOP", UNIT)
-	eventFrame:RegisterUnitEvent("UNIT_SPELLCAST_CHANNEL_UPDATE", UNIT)
-	eventFrame:RegisterUnitEvent("UNIT_SPELLCAST_EMPOWER_START", UNIT)
-	eventFrame:RegisterUnitEvent("UNIT_SPELLCAST_EMPOWER_UPDATE", UNIT)
-	eventFrame:RegisterUnitEvent("UNIT_SPELLCAST_DELAYED", UNIT)
-	eventFrame:RegisterUnitEvent("UNIT_SPELLCAST_EMPOWER_STOP", UNIT)
-end
-
-eventFrame:SetScript("OnEvent", function(_, event, unit, ...)
-	if event == "PLAYER_LOGIN" or event == "PLAYER_ENTERING_WORLD" or event == "EDIT_MODE_LAYOUTS_UPDATED" then
+Castbar._onEvent = function(_, event, unit, ...)
+	if not isRuntimeActive() then return end
+	if event == "PLAYER_ENTERING_WORLD" or event == "EDIT_MODE_LAYOUTS_UPDATED" then
 		Castbar.Refresh()
 		return
 	end
 
 	if unit ~= UNIT then return end
-	if not isCastbarEnabled() then return end
+	if not isCastbarEnabled() then
+		Castbar.Refresh()
+		return
+	end
 
 	if event == "UNIT_SPELLCAST_SENT" then
 		state.castTarget = ...
@@ -1512,4 +1573,22 @@ eventFrame:SetScript("OnEvent", function(_, event, unit, ...)
 			if shouldShowSampleCast() then setSampleCast() end
 		end
 	end
-end)
+end
+
+if IsLoggedIn and IsLoggedIn() then
+	if isCastbarEnabled() then Castbar.Refresh() end
+else
+	local startupFrame = Castbar._startupFrame
+	if not startupFrame then
+		startupFrame = CreateFrame("Frame")
+		Castbar._startupFrame = startupFrame
+		startupFrame:RegisterEvent("PLAYER_LOGIN")
+		startupFrame:SetScript("OnEvent", function(self, event)
+			if event ~= "PLAYER_LOGIN" then return end
+			self:UnregisterAllEvents()
+			self:SetScript("OnEvent", nil)
+			Castbar._startupFrame = nil
+			if isCastbarEnabled() then Castbar.Refresh() end
+		end)
+	end
+end

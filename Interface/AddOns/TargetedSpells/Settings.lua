@@ -24,12 +24,12 @@ Private.Settings.Keys = {
 		Opacity = "OPACITY_SELF",
 		ShowBorder = "BORDER_SELF",
 		IndicateInterrupts = "INDICATE_INTERRUPTS_SELF",
-		TargetingFilterApi = "TARGETING_FILTER_API_SELF",
 		Import = "IMPORT_SELF",
 		Export = "EXPORT_SELF",
 		ShowSwipe = "SWIPE_SELF",
 		Font = "FONT_SELF",
 		FontFlags = "FONT_FLAGS_SELF",
+		RenderInterruptSourceName = "RENDER_INTERRUPT_SOURCE_NAME_SELF",
 	},
 	Party = {
 		Enabled = "ENABLED_PARTY",
@@ -54,12 +54,12 @@ Private.Settings.Keys = {
 		Opacity = "OPACITY_PARTY",
 		ShowBorder = "BORDER_PARTY",
 		IndicateInterrupts = "INDICATE_INTERRUPTS_PARTY",
-		TargetingFilterApi = "TARGETING_FILTER_API_PARTY",
 		Import = "IMPORT_PARTY",
 		Export = "EXPORT_PARTY",
 		ShowSwipe = "SWIPE_PARTY",
 		Font = "FONT_PARTY",
 		FontFlags = "FONT_FLAGS_PARTY",
+		RenderInterruptSourceName = "RENDER_INTERRUPT_SOURCE_NAME_PARTY",
 	},
 }
 
@@ -69,7 +69,6 @@ function Private.Settings.GetSettingsDisplayOrder(kind)
 			Private.Settings.Keys.Self.Enabled,
 			Private.Settings.Keys.Self.LoadConditionContentType,
 			Private.Settings.Keys.Self.LoadConditionRole,
-			Private.Settings.Keys.Self.TargetingFilterApi,
 			Private.Settings.Keys.Self.Width,
 			Private.Settings.Keys.Self.Height,
 			Private.Settings.Keys.Self.Gap,
@@ -86,6 +85,7 @@ function Private.Settings.GetSettingsDisplayOrder(kind)
 			Private.Settings.Keys.Self.ShowBorder,
 			Private.Settings.Keys.Self.ShowSwipe,
 			Private.Settings.Keys.Self.IndicateInterrupts,
+			Private.Settings.Keys.Self.RenderInterruptSourceName,
 			Private.Settings.Keys.Self.Opacity,
 		}
 	end
@@ -94,7 +94,6 @@ function Private.Settings.GetSettingsDisplayOrder(kind)
 		Private.Settings.Keys.Party.Enabled,
 		Private.Settings.Keys.Party.LoadConditionContentType,
 		Private.Settings.Keys.Party.LoadConditionRole,
-		Private.Settings.Keys.Party.TargetingFilterApi,
 		Private.Settings.Keys.Party.IncludeSelfInParty,
 		Private.Settings.Keys.Party.Width,
 		Private.Settings.Keys.Party.Height,
@@ -116,6 +115,7 @@ function Private.Settings.GetSettingsDisplayOrder(kind)
 		Private.Settings.Keys.Party.ShowBorder,
 		Private.Settings.Keys.Party.ShowSwipe,
 		Private.Settings.Keys.Party.IndicateInterrupts,
+		Private.Settings.Keys.Party.RenderInterruptSourceName,
 		Private.Settings.Keys.Party.Opacity,
 	}
 end
@@ -221,7 +221,7 @@ function Private.Settings.GetSelfDefaultSettings()
 		GlowImportant = true,
 		GlowType = Private.Enum.GlowType.PixelGlow,
 		IndicateInterrupts = false,
-		TargetingFilterApi = Private.Enum.TargetingFilterApi.UnitIsSpellTarget,
+		RenderInterruptSourceName = false,
 		ShowSwipe = true,
 		Font = "Fonts\\FRIZQT__.TTF",
 		FontFlags = {
@@ -267,7 +267,7 @@ function Private.Settings.GetPartyDefaultSettings()
 		GlowImportant = true,
 		GlowType = Private.Enum.GlowType.PixelGlow,
 		IndicateInterrupts = true,
-		TargetingFilterApi = Private.Enum.TargetingFilterApi.UnitIsSpellTarget,
+		RenderInterruptSourceName = true,
 		ShowSwipe = true,
 		Font = "Fonts\\FRIZQT__.TTF",
 		FontFlags = {
@@ -335,53 +335,6 @@ table.insert(Private.LoginFnQueue, function()
 	---@param defaults SavedVariablesSettingsSelf|SavedVariablesSettingsParty
 	---@return SettingConfig
 	local function CreateSetting(key, defaults)
-		if
-			key == Private.Settings.Keys.Self.TargetingFilterApi
-			or key == Private.Settings.Keys.Party.TargetingFilterApi
-		then
-			local tableRef = key == Private.Settings.Keys.Self.TargetingFilterApi and TargetedSpellsSaved.Settings.Self
-				or TargetedSpellsSaved.Settings.Party
-
-			local function GetValue()
-				return tableRef.TargetingFilterApi
-			end
-
-			local function SetValue(value)
-				tableRef.TargetingFilterApi = value
-
-				Private.EventRegistry:TriggerEvent(Private.Enum.Events.SETTING_CHANGED, key, value)
-			end
-
-			local function GetOptions()
-				local container = Settings.CreateControlTextContainer()
-
-				for label, id in pairs(Private.Enum.TargetingFilterApi) do
-					local translated = L.Settings.TargetingFilterApiLabels[id]
-					container:Add(id, translated)
-				end
-
-				return container:GetData()
-			end
-
-			local setting = Settings.RegisterProxySetting(
-				category,
-				key,
-				Settings.VarType.Number,
-				L.Settings.TargetingFilterApiLabel,
-				defaults.TargetingFilterApi,
-				GetValue,
-				SetValue
-			)
-			local initializer =
-				Settings.CreateDropdown(category, setting, GetOptions, L.Settings.TargetingFilterApiTooltip)
-
-			return {
-				initializer = initializer,
-				hideSteppers = false,
-				IsSectionEnabled = nil,
-			}
-		end
-
 		if key == Private.Settings.Keys.Self.FontFlags or key == Private.Settings.Keys.Party.FontFlags then
 			local kindTableRef = key == Private.Settings.Keys.Self.FontFlags and TargetedSpellsSaved.Settings.Self
 				or TargetedSpellsSaved.Settings.Party
@@ -550,6 +503,46 @@ table.insert(Private.LoginFnQueue, function()
 			)
 
 			local initializer = Settings.CreateCheckbox(category, setting, L.Settings.IndicateInterruptsTooltip)
+
+			return {
+				initializer = initializer,
+				hideSteppers = false,
+				IsSectionEnabled = nil,
+			}
+		end
+
+		if
+			key == Private.Settings.Keys.Self.RenderInterruptSourceName
+			or key == Private.Settings.Keys.Party.RenderInterruptSourceName
+		then
+			local tableRef = key == Private.Settings.Keys.Self.RenderInterruptSourceName
+					and TargetedSpellsSaved.Settings.Self
+				or TargetedSpellsSaved.Settings.Party
+
+			local function GetValue()
+				return tableRef.RenderInterruptSourceName
+			end
+
+			local function SetValue(value)
+				tableRef.RenderInterruptSourceName = not tableRef.RenderInterruptSourceName
+				Private.EventRegistry:TriggerEvent(
+					Private.Enum.Events.SETTING_CHANGED,
+					key,
+					tableRef.RenderInterruptSourceName
+				)
+			end
+
+			local setting = Settings.RegisterProxySetting(
+				category,
+				key,
+				Settings.VarType.Boolean,
+				L.Settings.RenderInterruptSourceNameLabel,
+				defaults.RenderInterruptSourceName,
+				GetValue,
+				SetValue
+			)
+
+			local initializer = Settings.CreateCheckbox(category, setting, L.Settings.RenderInterruptSourceNameTooltip)
 
 			return {
 				initializer = initializer,

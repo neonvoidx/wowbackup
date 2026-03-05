@@ -16,25 +16,201 @@ local UnitHealth, UnitHealthMax = UnitHealth, UnitHealthMax
 local UnitPower, UnitPowerMax = UnitPower, UnitPowerMax
 local UnitHealthPercent = UnitHealthPercent
 local UnitPowerPercent = UnitPowerPercent
+local GLOBAL_FONT_CONFIG_KEY = "__EQOL_GLOBAL_FONT__"
+local GLOBAL_FONT_CONFIG_LABEL = "Use global font config"
+local EMPTY_TABLE = {}
+local LSM_CACHE = {}
+local LSM_DROPDOWN_CACHE = {}
+
+local function normalizeMediaType(mediaType)
+	if type(mediaType) ~= "string" or mediaType == "" then return nil end
+	return string.lower(mediaType)
+end
+
+local function getSharedMedia()
+	if SharedMedia and SharedMedia.HashTable then return SharedMedia end
+	SharedMedia = LibStub("LibSharedMedia-3.0", true)
+	return SharedMedia
+end
+
+local function ensureLSMCache(mediaType)
+	local key = normalizeMediaType(mediaType)
+	if not key then return nil end
+	local cache = LSM_CACHE[key]
+	if not cache then
+		cache = {
+			dirty = true,
+			version = 0,
+			hash = EMPTY_TABLE,
+			names = EMPTY_TABLE,
+			options = EMPTY_TABLE,
+		}
+		LSM_CACHE[key] = cache
+	end
+	return cache, key
+end
+
+local function sortMediaNames(names)
+	table.sort(names, function(a, b)
+		local al = string.lower(a)
+		local bl = string.lower(b)
+		if al == bl then return a < b end
+		return al < bl
+	end)
+end
+
+local function rebuildLSMCache(mediaType)
+	local cache, key = ensureLSMCache(mediaType)
+	if not cache or not key then return nil end
+
+	local lsm = getSharedMedia()
+	local hash = (lsm and lsm.HashTable and lsm:HashTable(key)) or EMPTY_TABLE
+
+	local names = {}
+	for name in pairs(hash or EMPTY_TABLE) do
+		if type(name) == "string" and name ~= "" then
+			names[#names + 1] = name
+		end
+	end
+	sortMediaNames(names)
+
+	local options = {}
+	for i = 1, #names do
+		local name = names[i]
+		options[i] = {
+			value = name,
+			label = name,
+		}
+	end
+
+	cache.hash = hash
+	cache.names = names
+	cache.options = options
+	cache.dirty = false
+	return cache
+end
+
+local function getLSMCache(mediaType)
+	local cache = ensureLSMCache(mediaType)
+	if not cache then return nil end
+	if cache.dirty then
+		cache = rebuildLSMCache(mediaType)
+	end
+	return cache
+end
+
+function addon.functions.InvalidateLSMMediaCache(mediaType)
+	if mediaType == nil then
+		for _, cache in pairs(LSM_CACHE) do
+			cache.dirty = true
+			cache.version = (cache.version or 0) + 1
+		end
+		LSM_DROPDOWN_CACHE = {}
+		return
+	end
+
+	local cache, key = ensureLSMCache(mediaType)
+	if not cache or not key then return end
+	cache.dirty = true
+	cache.version = (cache.version or 0) + 1
+	for cacheKey in pairs(LSM_DROPDOWN_CACHE) do
+		if type(cacheKey) == "string" and cacheKey:find(key .. "|", 1, true) == 1 then
+			LSM_DROPDOWN_CACHE[cacheKey] = nil
+		end
+	end
+end
+
+function addon.functions.GetLSMMediaVersion(mediaType)
+	local cache = ensureLSMCache(mediaType)
+	if not cache then return 0 end
+	return cache.version or 0
+end
+
+function addon.functions.GetLSMMediaHash(mediaType)
+	local cache = getLSMCache(mediaType)
+	return (cache and cache.hash) or EMPTY_TABLE
+end
+
+function addon.functions.GetLSMMediaNames(mediaType)
+	local cache = getLSMCache(mediaType)
+	return (cache and cache.names) or EMPTY_TABLE
+end
+
+function addon.functions.GetLSMMediaOptions(mediaType)
+	local cache = getLSMCache(mediaType)
+	return (cache and cache.options) or EMPTY_TABLE
+end
+
+function addon.functions.GetLSMMediaDropdown(mediaType, includeEmptyOption, emptyLabel)
+	local key = normalizeMediaType(mediaType)
+	if not key then return EMPTY_TABLE, EMPTY_TABLE end
+
+	local version = addon.functions.GetLSMMediaVersion(key)
+	local noneLabel = (type(emptyLabel) == "string" and emptyLabel) or ""
+	local includeEmpty = includeEmptyOption == true
+	local cacheKey = key .. "|" .. (includeEmpty and "1" or "0") .. "|" .. noneLabel
+	local cached = LSM_DROPDOWN_CACHE[cacheKey]
+	if cached and cached.version == version then return cached.list, cached.order end
+
+	local names = addon.functions.GetLSMMediaNames(key)
+	local list = {}
+	local order = {}
+	if includeEmpty then
+		list[""] = noneLabel
+		order[#order + 1] = ""
+	end
+	for i = 1, #names do
+		local name = names[i]
+		list[name] = name
+		order[#order + 1] = name
+	end
+
+	LSM_DROPDOWN_CACHE[cacheKey] = {
+		version = version,
+		list = list,
+		order = order,
+	}
+	return list, order
+end
 
 local function normalizeMediaValue(value)
 	if type(value) ~= "string" or value == "" then return nil end
 	return value
 end
 
-local function defaultFontFace() return (addon.variables and addon.variables.defaultFont) or STANDARD_TEXT_FONT end
+local function isGlobalFontConfigValue(value) return normalizeMediaValue(value) == GLOBAL_FONT_CONFIG_KEY end
+
+function addon.functions.GetGlobalFontConfigKey() return GLOBAL_FONT_CONFIG_KEY end
+
+function addon.functions.GetGlobalFontConfigLabel()
+	if L and L["useGlobalFontConfig"] then return L["useGlobalFontConfig"] end
+	return GLOBAL_FONT_CONFIG_LABEL
+end
+
+function addon.functions.IsGlobalFontConfigValue(value) return isGlobalFontConfigValue(value) end
+
+function addon.functions.GetLocaleDefaultFontFace() return (addon.variables and addon.variables.defaultFont) or STANDARD_TEXT_FONT end
+
+function addon.functions.GetGlobalDefaultFontFace()
+	local localeDefault = addon.functions.GetLocaleDefaultFontFace()
+	local configured = addon.db and addon.db.globalFontFace
+	return addon.functions.ResolveLSMMedia("font", configured, localeDefault, false) or localeDefault
+end
+
+local function defaultFontFace() return addon.functions.GetGlobalDefaultFontFace() end
 
 function addon.functions.ResolveLSMMedia(mediaType, configured, fallback, allowPath)
 	local mediaKind = normalizeMediaValue(mediaType)
 	local fallbackValue = normalizeMediaValue(fallback)
 	local configuredValue = normalizeMediaValue(configured)
+	if isGlobalFontConfigValue(configuredValue) then return fallbackValue end
 	if not configuredValue then return fallbackValue end
 	if configuredValue == fallbackValue then return configuredValue end
 	if not mediaKind then
 		if allowPath ~= false and (configuredValue:find("\\", 1, true) or configuredValue:find("/", 1, true)) then return configuredValue end
 		return fallbackValue
 	end
-	local lsm = SharedMedia or LibStub("LibSharedMedia-3.0", true)
+	local lsm = getSharedMedia()
 	if lsm then
 		if lsm.IsValid and lsm:IsValid(mediaKind, configuredValue) then
 			local fetched = lsm.Fetch and lsm:Fetch(mediaKind, configuredValue, true)
@@ -56,6 +232,7 @@ end
 
 function addon.functions.ResolveFontFace(configured, fallback)
 	local fallbackFace = normalizeMediaValue(fallback) or defaultFontFace()
+	if isGlobalFontConfigValue(configured) then return fallbackFace end
 	return addon.functions.ResolveLSMMedia("font", configured, fallbackFace, true) or fallbackFace
 end
 

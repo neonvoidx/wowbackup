@@ -17,6 +17,7 @@
 	<Script file='UIInput.lua'/>
 	<Script file='../Modules/Aura/Settings_CooldownPanels.lua'/>
 	<Script file='ActionTracker.lua'/>
+	<Script file='ClassBuffReminder.lua'/>
 	<Script file='MapNavigation.lua'/>
 	<Script file='DataPanel.lua'/>
 	<Script file='Profiles.lua'/>

@@ -1720,30 +1720,44 @@ function H.TextureOptions(LSM)
 	end
 	add("DEFAULT", "Default (Blizzard)")
 	add("SOLID", "Solid")
-	if not LSM then return list end
-	local hash = LSM:HashTable("statusbar") or {}
-	for name, path in pairs(hash) do
+	local names = addon.functions and addon.functions.GetLSMMediaNames and addon.functions.GetLSMMediaNames("statusbar") or {}
+	local hash = addon.functions and addon.functions.GetLSMMediaHash and addon.functions.GetLSMMediaHash("statusbar") or {}
+	for i = 1, #names do
+		local name = names[i]
+		local path = hash[name]
 		if type(path) == "string" and path ~= "" then add(name, tostring(name)) end
 	end
-	table.sort(list, function(a, b) return tostring(a.label) < tostring(b.label) end)
 	return list
 end
 
 function H.FontOptions(LSM)
 	local list = {}
 	local seen = {}
+	local globalFontKey = addon.functions and addon.functions.GetGlobalFontConfigKey and addon.functions.GetGlobalFontConfigKey() or "__EQOL_GLOBAL_FONT__"
+	local globalFontLabel = addon.functions and addon.functions.GetGlobalFontConfigLabel and addon.functions.GetGlobalFontConfigLabel() or "Use global font config"
 	local function add(value, label)
 		local lv = tostring(value or ""):lower()
 		if lv == "" or seen[lv] then return end
 		seen[lv] = true
 		list[#list + 1] = { value = value, label = label }
 	end
-	if not LSM then return list end
-	local hash = LSM:HashTable("font") or {}
-	for name, path in pairs(hash) do
+	add(globalFontKey, globalFontLabel)
+	local names = addon.functions and addon.functions.GetLSMMediaNames and addon.functions.GetLSMMediaNames("font") or {}
+	local hash = addon.functions and addon.functions.GetLSMMediaHash and addon.functions.GetLSMMediaHash("font") or {}
+	for i = 1, #names do
+		local name = names[i]
+		local path = hash[name]
 		if type(path) == "string" and path ~= "" then add(name, tostring(name)) end
 	end
-	table.sort(list, function(a, b) return tostring(a.label) < tostring(b.label) end)
+	for idx, option in ipairs(list) do
+		if option.value == globalFontKey then
+			if idx > 1 then
+				table.remove(list, idx)
+				table.insert(list, 1, option)
+			end
+			break
+		end
+	end
 	return list
 end
 

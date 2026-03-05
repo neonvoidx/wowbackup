@@ -10,7 +10,7 @@ end
 if not addon.Sounds or not addon.Sounds.soundFiles then return end
 
 local L = LibStub("AceLocale-3.0"):GetLocale("EnhanceQoL_Sound")
-local LSM = LibStub("LibSharedMedia-3.0", true)
+local wipeTable = _G.wipe or table.wipe
 
 local function GetLabel(key) return L[key] or key end
 
@@ -202,16 +202,33 @@ local extraSoundExpandable = addon.functions.SettingsCreateExpandableSection(cSo
 	colorizeTitle = false,
 })
 
+local extraSoundOptionsCache = {}
+local extraSoundOrder = {}
+local extraSoundOptionsVersion = -1
+local extraSoundOptionsNoneLabel
+
 local function buildExtraSoundOptions()
-	local entries = {
-		{ value = "", label = L["soundExtraNone"] or NONE },
-	}
-	local sounds = (LSM and LSM:List("sound")) or {}
-	table.sort(sounds, function(a, b) return tostring(a) < tostring(b) end)
-	for _, name in ipairs(sounds) do
-		if name ~= "" and name ~= "None" and name ~= NONE and name ~= (L["soundExtraNone"] or NONE) then entries[#entries + 1] = { value = name, label = name } end
+	local noneLabel = L["soundExtraNone"] or NONE
+	local version = (addon.functions and addon.functions.GetLSMMediaVersion and addon.functions.GetLSMMediaVersion("sound")) or 0
+	if extraSoundOptionsCache and extraSoundOptionsVersion == version and extraSoundOptionsNoneLabel == noneLabel then return extraSoundOptionsCache end
+
+	wipeTable(extraSoundOptionsCache)
+	wipeTable(extraSoundOrder)
+	extraSoundOptionsCache[""] = noneLabel
+	extraSoundOrder[#extraSoundOrder + 1] = ""
+
+	local sounds = (addon.functions and addon.functions.GetLSMMediaNames and addon.functions.GetLSMMediaNames("sound")) or {}
+	for i = 1, #sounds do
+		local name = sounds[i]
+		if name ~= "" and name ~= "None" and name ~= NONE and name ~= noneLabel then
+			extraSoundOptionsCache[name] = name
+			extraSoundOrder[#extraSoundOrder + 1] = name
+		end
 	end
-	return entries
+
+	extraSoundOptionsVersion = version
+	extraSoundOptionsNoneLabel = noneLabel
+	return extraSoundOptionsCache
 end
 
 local function getExtraSound(eventName)
@@ -269,6 +286,7 @@ if type(extraEvents) == "table" then
 			var = varName,
 			text = label,
 			listFunc = buildExtraSoundOptions,
+			order = extraSoundOrder,
 			default = "",
 			get = function() return getExtraSound(eventName) end,
 			set = function(value) setExtraSound(eventName, value) end,

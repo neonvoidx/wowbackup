@@ -19,6 +19,7 @@ L["Enable Health Macro"] = "Abilita Macro Salute"
 L["Flask Macro"] = "Macro fiaschetta"
 L["flaskMacroLimitReached"] = "Macro fiaschetta: limite macro raggiunto. Libera uno slot."
 L["flaskMacroPlaceOnBar"] = "%s - mettila sulla tua barra (si aggiorna fuori dal combattimento)"
+L["FlaskSharedWithClassReminder"] = "Le preferenze delle fiaschette sono condivise con il tracciamento fiaschette del Promemoria buff di classe."
 L["FlaskUseRoleSetting"] = "Usa impostazione ruolo"
 L["Health Macro"] = "Macro Salute"
 L["healthCustomSpellsHint"] = [=[Selezionare un incantesimo nel menu a discesa lo rimuove (il campo resta vuoto di proposito).

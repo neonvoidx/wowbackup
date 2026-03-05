@@ -19,6 +19,7 @@ L["Enable Health Macro"] = "Activer la macro de soin"
 L["Flask Macro"] = "Macro de flacon"
 L["flaskMacroLimitReached"] = "Macro de flacon : limite de macros atteinte. Veuillez libérer un emplacement."
 L["flaskMacroPlaceOnBar"] = "%s - placez-la sur votre barre (mise à jour hors combat)"
+L["FlaskSharedWithClassReminder"] = "Les préférences de flacon sont partagées avec le suivi des flacons du Rappel de buff de classe."
 L["FlaskUseRoleSetting"] = "Utiliser le réglage de rôle"
 L["Health Macro"] = "Macro de soin"
 L["healthCustomSpellsHint"] = [=[Sélectionner un sort dans la liste déroulante le supprime (le champ reste vide volontairement).

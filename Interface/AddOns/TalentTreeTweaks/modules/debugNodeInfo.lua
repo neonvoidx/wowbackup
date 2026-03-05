@@ -37,8 +37,8 @@ function Module:OnEnable()
     end);
     self:RegisterEvent('PLAYER_REGEN_DISABLED');
     self:RegisterEvent('PLAYER_REGEN_ENABLED');
-    EventRegistry:RegisterCallback("TalentDisplay.TooltipCreated", self.OnTalentTooltipCreated, self)
-    EventRegistry:RegisterCallback("ProfessionSpecs.SpecPathEntered", self.OnTalentTooltipCreated, self)
+    Util:RegisterEventRegistryCallback("TalentDisplay.TooltipCreated", self.OnTalentTooltipCreated, self, 12);
+    Util:RegisterEventRegistryCallback("ProfessionSpecs.SpecPathEntered", self.OnTalentTooltipCreated, self, 12);
 end
 
 function Module:OnDisable()
@@ -53,13 +53,17 @@ function Module:OnDisable()
     if TalentViewer then
         TalentViewer:GetTalentFrame():UnregisterCallback(TalentFrameBaseMixin.Event.TalentButtonAcquired, self);
     end
+    if ProfessionsFrame and ProfessionsFrame.SpecPage then
+        ProfessionsFrame.SpecPage:UnregisterCallback(TalentFrameBaseMixin.Event.TalentButtonAcquired, self);
+    end
     if GenericTraitFrame then
         GenericTraitFrame:UnregisterCallback(TalentFrameBaseMixin.Event.TalentButtonAcquired, self);
     end
     if RemixArtifactFrame then
         RemixArtifactFrame:UnregisterCallback(TalentFrameBaseMixin.Event.TalentButtonAcquired, self);
     end
-    EventRegistry:UnregisterCallback("TalentDisplay.TooltipCreated", self)
+    Util:UnregisterEventRegistryCallback("TalentDisplay.TooltipCreated", self);
+    Util:UnregisterEventRegistryCallback("ProfessionSpecs.SpecPathEntered", self);
 end
 
 function Module:GetDescription()
@@ -178,17 +182,12 @@ function Module:OnShowSelections(talentsTab)
 end
 
 function Module:OnTalentTooltipCreated()
-    RunNextFrame(function()
-        local owner = GameTooltip:GetOwner();
-        if owner ~= self.targetButton then return; end
-
-        local text = GREEN_FONT_COLOR:WrapTextInColorCode(L['CTRL-D to debug nodeInfo']);
-        if InCombatLockdown() then
-            text = string.format('%s|cFFFF0000 %s|r', text, L['blocked in combat']);
-        end
-        GameTooltip:AddLine(text);
-        GameTooltip:Show();
-    end);
+    local text = GREEN_FONT_COLOR:WrapTextInColorCode(L['CTRL-D to debug nodeInfo']);
+    if InCombatLockdown() then
+        text = string.format('%s|cFFFF0000 %s|r', text, L['blocked in combat']);
+    end
+    GameTooltip:AddLine(text);
+    GameTooltip:Show();
 end
 
 --- @param buttonFrame TalentButtonSpendMixin|Button

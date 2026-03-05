@@ -19,6 +19,7 @@ L["Enable Health Macro"] = "Activar macro de salud"
 L["Flask Macro"] = "Macro de frasco"
 L["flaskMacroLimitReached"] = "Macro de frasco: se alcanzó el límite de macros. Libera un espacio."
 L["flaskMacroPlaceOnBar"] = "%s - colócalo en tu barra (se actualiza fuera de combate)"
+L["FlaskSharedWithClassReminder"] = "Las preferencias de frasco se comparten con el seguimiento de frascos del Recordatorio de beneficios de clase."
 L["FlaskUseRoleSetting"] = "Usar ajuste por rol"
 L["Health Macro"] = "Macro de salud"
 L["healthCustomSpellsHint"] = [=[Al seleccionar un hechizo en el desplegable se elimina (el campo queda en blanco a propósito).

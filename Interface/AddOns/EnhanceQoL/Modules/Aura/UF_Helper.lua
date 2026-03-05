@@ -412,6 +412,11 @@ function H.trim(str)
 end
 
 function H.getFont(path)
+	local fallbackFont = (addon.functions and addon.functions.GetGlobalDefaultFontFace and addon.functions.GetGlobalDefaultFontFace())
+		or (addon.variables and addon.variables.defaultFont)
+		or (LSM and LSM:Fetch("font", LSM.DefaultMedia.font))
+		or STANDARD_TEXT_FONT
+	if addon.functions and addon.functions.IsGlobalFontConfigValue and addon.functions.IsGlobalFontConfigValue(path) then return fallbackFont end
 	if type(path) == "string" and path ~= "" then
 		local lower = path:lower()
 		if path:find("\\") or path:find("/") or lower:find(".ttf", 1, true) or lower:find(".otf", 1, true) or lower:find(".ttc", 1, true) then return path end
@@ -421,7 +426,7 @@ function H.getFont(path)
 		end
 		return path
 	end
-	return addon.variables and addon.variables.defaultFont or (LSM and LSM:Fetch("font", LSM.DefaultMedia.font)) or STANDARD_TEXT_FONT
+	return fallbackFont
 end
 
 function H.applyFont(fs, fontPath, size, outline)
@@ -3191,7 +3196,63 @@ function H.disableCombatFeedbackAll(states)
 	end
 end
 
-function H.getPowerColor(powerEnum, powerToken)
+function H._getColorComponents(color, fallback)
+	color = color or fallback
+	if not color then return 1, 1, 1, 1 end
+	if color.r then return color.r or 1, color.g or 1, color.b or 1, color.a or 1 end
+	return color[1] or 1, color[2] or 1, color[3] or 1, color[4] or 1
+end
+
+function H._getStaggerStateColorForUnit(unitTokenValue, cfg)
+	local STAGGER_YELLOW_THRESHOLD = 0.30
+	local STAGGER_RED_THRESHOLD = 0.60
+	local STAGGER_FALLBACK_COLORS = {
+		green = { r = 0.52, g = 1.0, b = 0.52, a = 1 },
+		yellow = { r = 1.0, g = 0.98, b = 0.72, a = 1 },
+		red = { r = 1.0, g = 0.42, b = 0.42, a = 1 },
+	}
+	local STAGGER_EXTRA_COLORS_FALLBACK = {
+		high = { r = 0.62, g = 0.2, b = 1.0, a = 1 },
+		extreme = { r = 1.0, g = 0.2, b = 0.8, a = 1 },
+	}
+
+	unitTokenValue = unitTokenValue or "player"
+	local stagger = UnitStagger and UnitStagger(unitTokenValue) or 0
+	local maxHealth = UnitHealthMax and UnitHealthMax(unitTokenValue) or 0
+	local percent = 0
+	if maxHealth and maxHealth > 0 then percent = (stagger or 0) / maxHealth end
+
+	local rb = addon.Aura and addon.Aura.ResourceBars
+	local extraHighDefault = (rb and rb.STAGGER_EXTRA_THRESHOLD_HIGH) or 200
+	local extraExtremeDefault = (rb and rb.STAGGER_EXTRA_THRESHOLD_EXTREME) or 300
+	local extraColors = (rb and rb.STAGGER_EXTRA_COLORS) or STAGGER_EXTRA_COLORS_FALLBACK
+
+	if cfg and cfg.staggerHighColors == true then
+		local high = tonumber(cfg.staggerHighThreshold) or extraHighDefault
+		local extreme = tonumber(cfg.staggerExtremeThreshold) or extraExtremeDefault
+		if high < 0 then high = 0 end
+		if extreme < high then extreme = high end
+		if percent >= (extreme / 100) then
+			return H._getColorComponents(cfg.staggerExtremeColor, extraColors.extreme)
+		elseif percent >= (high / 100) then
+			return H._getColorComponents(cfg.staggerHighColor, extraColors.high)
+		end
+	end
+
+	local info = (_G.GetPowerBarColor and _G.GetPowerBarColor("STAGGER")) or (PowerBarColor and PowerBarColor.STAGGER)
+	local key
+	if percent >= STAGGER_RED_THRESHOLD then
+		key = "red"
+	elseif percent >= STAGGER_YELLOW_THRESHOLD then
+		key = "yellow"
+	else
+		key = "green"
+	end
+	return H._getColorComponents((info and info[key]) or STAGGER_FALLBACK_COLORS[key] or STAGGER_FALLBACK_COLORS.green)
+end
+
+function H.getPowerColor(powerEnum, powerToken, colorCfg, unitToken)
+
 	if powerToken == nil and type(powerEnum) == "string" then
 		powerToken = powerEnum
 		powerEnum = nil
@@ -3206,6 +3267,8 @@ function H.getPowerColor(powerEnum, powerToken)
 		if override.r then return override.r, override.g, override.b, override.a or 1 end
 		if override[1] then return override[1], override[2], override[3], override[4] or 1 end
 	end
+	local canonicalToken = getCanonicalPowerToken(powerEnum, powerToken)
+	if canonicalToken == "STAGGER" then return H._getStaggerStateColorForUnit(unitToken, colorCfg) end
 	local c = getPowerColorEntry(powerEnum, powerToken)
 	if c then
 		if c.r then return c.r, c.g, c.b, c.a or 1 end

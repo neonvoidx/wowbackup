@@ -18,4 +18,5 @@ CHATTYNATOR_COMMAND_HISTORY = {
 "/cw Unclechip-Tichondrius /who Unclechip",
 "/cw Unclechip-Tichondrius /who the move",
 "/cw Madliß can you ginvite me please, my main is already in",
+"/s /m",
 }

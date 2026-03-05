@@ -20,6 +20,7 @@ FrogskiInstantCastBarDB = {
 ["borderHidden"] = false,
 ["sparkAlpha"] = 1,
 ["textBgHidden"] = false,
+["useElvUIStyle"] = true,
 ["borderAlpha"] = 1,
 ["textBgAlpha"] = 1,
 ["shineHidden"] = false,

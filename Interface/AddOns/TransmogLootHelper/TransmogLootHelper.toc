@@ -2,7 +2,7 @@
 ## Title: |cff3FC7EBTransmog Loot Helper|r
 ## Author: Slackluster
 ## IconTexture: Interface\AddOns\TransmogLootHelper\assets\icon.png
-## Version: v12.0.1-01
+## Version: v12.0.1-02
 ## X-Curse-Project-ID: 1033752
 ## X-Wago-ID: EGPXOkG1
 
@@ -38,8 +38,8 @@ modules\Tweaks.lua
 integrations\ArkInventory.lua
 integrations\Baganator.lua
 integrations\BetterBags.lua
+integrations\OneWoW_Bags.lua
 integrations\WorldQuestTab.lua
-integrations\WoWNotesBags.lua
 locales\enUS.lua
 locales\deDE.lua
 locales\esES.lua

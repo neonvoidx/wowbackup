@@ -275,7 +275,7 @@ function CastbarSettings.BuildStandaloneCastbarSettings(ctx)
 	castWidth.isEnabled = function() return isCastEnabled() and not isCastWidthMatchedToAnchor() end
 	list[#list + 1] = castWidth
 
-	local castHeight = slider(L["Cast bar height"] or "Cast bar height", 6, 40, 1, function() return getCast({ "cast", "height" }, castDef.height or 16) end, function(val)
+	local castHeight = slider(L["Cast bar height"] or "Cast bar height", 6, 200, 1, function() return getCast({ "cast", "height" }, castDef.height or 16) end, function(val)
 		setCast({ "cast", "height" }, val or castDef.height or 16)
 		refreshCastbar()
 	end, castDef.height or 16, section.layout, true)
@@ -635,6 +635,19 @@ function CastbarSettings.BuildStandaloneCastbarSettings(ctx)
 	})
 	castBackdrop.isEnabled = isCastEnabled
 	list[#list + 1] = castBackdrop
+	local castBackdropTexture = checkboxDropdown(
+		L["Backdrop texture"] or "Backdrop texture",
+		textureOpts,
+		function() return getCast({ "cast", "backdrop", "texture" }, (castDef.backdrop and castDef.backdrop.texture) or "DEFAULT") end,
+		function(val)
+			setCast({ "cast", "backdrop", "texture" }, val or "DEFAULT")
+			refreshCastbar()
+		end,
+		(castDef.backdrop and castDef.backdrop.texture) or "DEFAULT",
+		section.frameAppearance
+	)
+	castBackdropTexture.isEnabled = function() return isCastEnabled() and getCast({ "cast", "backdrop", "enabled" }, (castDef.backdrop and castDef.backdrop.enabled) ~= false) ~= false end
+	list[#list + 1] = castBackdropTexture
 
 	local function isCastBorderEnabled() return getCast({ "cast", "border", "enabled" }, (castDef.border and castDef.border.enabled) == true) == true end
 	list[#list + 1] = checkboxColor({
@@ -741,9 +754,7 @@ function CastbarSettings.BuildStandaloneCastbarSettings(ctx)
 		refreshSettingsUI()
 	end, castDef.useClassColor == true, section.colors, isCastEnabled)
 
-	local function isCastGradientEnabled()
-		return isCastEnabled() and not isCastClassColorEnabled() and getCast({ "cast", "useGradient" }, castDef.useGradient == true) == true
-	end
+	local function isCastGradientEnabled() return isCastEnabled() and not isCastClassColorEnabled() and getCast({ "cast", "useGradient" }, castDef.useGradient == true) == true end
 	list[#list + 1] = checkbox(L["Use gradient"] or "Use gradient", isCastGradientEnabled, function(val)
 		local useGradient = val and true or false
 		setCast({ "cast", "useGradient" }, useGradient)

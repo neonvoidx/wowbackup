@@ -16,6 +16,11 @@ local ENTRY_KIND_WILDCARD_SLOTS = "wildcardSlots"
 local WILDCARD_SLOT_TRINKET1 = "trinket1"
 local WILDCARD_SLOT_TRINKET2 = "trinket2"
 
+local IGNORED_WILDCARD_TRINKETS = {
+    [264694] = true, -- Ultradon Cuirass
+    [248583] = true, -- Drum of Renewed Bonds
+}
+
 local WILDCARD_SLOT_DISPLAY_NAMES = {
     [WILDCARD_SLOT_TRINKET1] = "Trinket in first slot",
     [WILDCARD_SLOT_TRINKET2] = "Trinket in second slot",
@@ -394,7 +399,7 @@ end
 
 local function IsTrackableWildcardSlot(slotID)
     local itemID = GetWildcardSlotItemID(slotID)
-    return itemID ~= nil and IsTrackableItem(itemID)
+    return itemID ~= nil and IsTrackableItem(itemID) and not IGNORED_WILDCARD_TRINKETS[itemID]
 end
 
 function ItemsData:ScanOwnedItems()

@@ -152,7 +152,7 @@ CooldownManagerKeybinds: enabled
 DamageMeterFormatting: enabled
 RETabBinder: enabled
 MiniCC: enabled
-FreshDRs: enabled
+FreshDRs: disabled
 FrogskisInstantCastBar: enabled
 FishingBuddy: enabled
 AccountPlayed: enabled
@@ -161,3 +161,7 @@ BtWLoadouts: enabled
 EnhanceQoL: enabled
 FrogskisCursorTrail: enabled
 EnhanceQoLSharedMedia: enabled
+HandyNotes_Silvermoon: enabled
+WorldQuestTab: enabled
+ColouredEnemyNameplates: enabled
+ItemLevelNameplate: enabled

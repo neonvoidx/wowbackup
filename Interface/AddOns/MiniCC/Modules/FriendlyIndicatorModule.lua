@@ -110,11 +110,8 @@ local function AnchorContainer(header, anchor, options)
 
 	local frame = header.Frame
 	frame:ClearAllPoints()
-	frame:SetIgnoreParentAlpha(true)
-	frame:SetIgnoreParentScale(true)
 	frame:SetAlpha(1)
 	frame:SetFrameLevel(anchor:GetFrameLevel() + 5)
-	frame:SetFrameStrata("HIGH")
 
 	local anchorPoint = "CENTER"
 	local relativeToPoint = "CENTER"
@@ -128,15 +125,6 @@ local function AnchorContainer(header, anchor, options)
 	end
 
 	frame:SetPoint(anchorPoint, anchor, relativeToPoint, options.Offset.X, options.Offset.Y)
-end
-
-local function OnAuraStateUpdated(watcher)
-	for _, entry in pairs(watchers) do
-		if entry.Watcher == watcher then
-			UpdateWatcherAuras(entry)
-			break
-		end
-	end
 end
 
 ---@param anchor table
@@ -168,11 +156,7 @@ local function EnsureWatcher(anchor, unit)
 		local size = tonumber(options.Icons.Size) or 32
 		local spacing = db.IconSpacing or 2
 		local container = iconSlotContainer:New(UIParent, maxIcons, size, spacing, "Friendly Indicators")
-		container.Frame:SetIgnoreParentScale(true)
-		container.Frame:SetIgnoreParentAlpha(true)
 		local watcher = UnitAuraWatcher:New(unit, nil, { Defensives = true, Important = true })
-
-		watcher:RegisterCallback(OnAuraStateUpdated)
 
 		entry = {
 			Container = container,
@@ -181,20 +165,26 @@ local function EnsureWatcher(anchor, unit)
 			Unit = unit,
 		}
 		watchers[anchor] = entry
+
+		watcher:RegisterCallback(function()
+			UpdateWatcherAuras(entry)
+		end)
 	else
 		-- Check if unit has changed
 		if entry.Unit ~= unit then
 			-- Unit changed, recreate the watcher
 			entry.Watcher:Dispose()
 			entry.Watcher = UnitAuraWatcher:New(unit, nil, { Defensives = true, Important = true })
-			entry.Watcher:RegisterCallback(OnAuraStateUpdated)
+			entry.Watcher:RegisterCallback(function()
+				UpdateWatcherAuras(entry)
+			end)
 			entry.Unit = unit
 
 			-- Clear the container since it's a different unit now
 			entry.Container:ResetAllSlots()
 
-			-- Force immediate aura scan for the new unit
-			entry.Watcher:ForceFullUpdate()
+			-- Force immediate refresh for the new unit
+			UpdateWatcherAuras(entry)
 		end
 	end
 
@@ -409,26 +399,21 @@ function M:Refresh()
 end
 
 function M:StartTesting()
-	-- Pause real watcher updates
-	Pause()
 	testModeActive = true
+	Pause()
 
 	M:Refresh()
 end
 
 function M:StopTesting()
-	-- Clear all test data
+	testModeActive = false
+
 	for _, entry in pairs(watchers) do
 		entry.Container:ResetAllSlots()
 		entry.Container.Frame:Hide()
 	end
 
-	testModeActive = false
-
-	-- Resume real watcher updates
 	Resume()
-
-	-- Refresh to show real data
 	M:Refresh()
 end
 

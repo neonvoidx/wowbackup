@@ -82,6 +82,22 @@ local GetTime = GetTime
 local BAR_SIZE_MIN = 6
 local BAR_SIZE_MAX = 2000
 
+local function getCachedMediaNames(mediaType)
+	if addon.functions and addon.functions.GetLSMMediaNames then
+		local names = addon.functions.GetLSMMediaNames(mediaType)
+		if type(names) == "table" then return names end
+	end
+	return {}
+end
+
+local function getCachedMediaHash(mediaType)
+	if addon.functions and addon.functions.GetLSMMediaHash then
+		local hash = addon.functions.GetLSMMediaHash(mediaType)
+		if type(hash) == "table" then return hash end
+	end
+	return {}
+end
+
 local function getValue(key, fallback)
 	if not addon.db then return fallback end
 	local value = addon.db[key]
@@ -145,12 +161,13 @@ local function textureOptions()
 	end
 	add("DEFAULT", _G.DEFAULT)
 	add("SOLID", "Solid")
-	if LSM and LSM.HashTable then
-		for name, path in pairs(LSM:HashTable("statusbar") or {}) do
-			if type(path) == "string" and path ~= "" then add(name, tostring(name)) end
-		end
+	local names = getCachedMediaNames("statusbar")
+	local hash = getCachedMediaHash("statusbar")
+	for i = 1, #names do
+		local name = names[i]
+		local path = hash[name]
+		if type(path) == "string" and path ~= "" then add(name, tostring(name)) end
 	end
-	table.sort(list, function(a, b) return tostring(a.label) < tostring(b.label) end)
 	return list
 end
 
@@ -165,12 +182,13 @@ local function borderOptions()
 	end
 	add("DEFAULT", _G.DEFAULT)
 	add("SOLID", "Solid")
-	if LSM and LSM.HashTable then
-		for name, path in pairs(LSM:HashTable("border") or {}) do
-			if type(path) == "string" and path ~= "" then add(name, tostring(name)) end
-		end
+	local names = getCachedMediaNames("border")
+	local hash = getCachedMediaHash("border")
+	for i = 1, #names do
+		local name = names[i]
+		local path = hash[name]
+		if type(path) == "string" and path ~= "" then add(name, tostring(name)) end
 	end
-	table.sort(list, function(a, b) return tostring(a.label) < tostring(b.label) end)
 	return list
 end
 

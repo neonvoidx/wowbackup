@@ -137,11 +137,32 @@ local function normalizeBorderOffset(value, fallback)
 	return clamp(num, -20, 20)
 end
 
-local function defaultFontFace() return (addon.variables and addon.variables.defaultFont) or STANDARD_TEXT_FONT end
+local function defaultFontFace()
+	if addon.functions and addon.functions.GetGlobalDefaultFontFace then return addon.functions.GetGlobalDefaultFontFace() end
+	return (addon.variables and addon.variables.defaultFont) or STANDARD_TEXT_FONT
+end
+
+local function globalFontConfigKey()
+	if addon.functions and addon.functions.GetGlobalFontConfigKey then return addon.functions.GetGlobalFontConfigKey() end
+	return "__EQOL_GLOBAL_FONT__"
+end
+
+local function globalFontConfigLabel()
+	if addon.functions and addon.functions.GetGlobalFontConfigLabel then return addon.functions.GetGlobalFontConfigLabel() end
+	return "Use global font config"
+end
 
 local function normalizeFontFace(value)
 	if type(value) ~= "string" or value == "" then return nil end
 	return value
+end
+
+local function normalizeFontSetting(value, fallback)
+	local selected = normalizeFontFace(value)
+	if selected then return selected end
+	local fallbackValue = normalizeFontFace(fallback)
+	if fallbackValue then return fallbackValue end
+	return globalFontConfigKey()
 end
 
 local function resolveFontFace(value, fallback)
@@ -205,21 +226,38 @@ local function resolveBorderTexture(key)
 	return key
 end
 
+local function getCachedMediaNames(mediaType)
+	if addon.functions and addon.functions.GetLSMMediaNames then
+		local names = addon.functions.GetLSMMediaNames(mediaType)
+		if type(names) == "table" then return names end
+	end
+	return {}
+end
+
+local function getCachedMediaHash(mediaType)
+	if addon.functions and addon.functions.GetLSMMediaHash then
+		local hash = addon.functions.GetLSMMediaHash(mediaType)
+		if type(hash) == "table" then return hash end
+	end
+	return {}
+end
+
 local function fontFaceOptions()
 	local list = {}
 	local defaultPath = defaultFontFace()
 	local hasDefault = false
-	if LSM and LSM.HashTable then
-		local hash = LSM:HashTable("font") or {}
-		for name, path in pairs(hash) do
-			if type(path) == "string" and path ~= "" then
-				list[#list + 1] = { value = path, label = tostring(name) }
-				if path == defaultPath then hasDefault = true end
-			end
+	local names = getCachedMediaNames("font")
+	local hash = getCachedMediaHash("font")
+	for i = 1, #names do
+		local name = names[i]
+		local path = hash[name]
+		if type(path) == "string" and path ~= "" then
+			list[#list + 1] = { value = path, label = tostring(name) }
+			if path == defaultPath then hasDefault = true end
 		end
 	end
 	if defaultPath and not hasDefault then list[#list + 1] = { value = defaultPath, label = DEFAULT } end
-	table.sort(list, function(a, b) return tostring(a.label) < tostring(b.label) end)
+	table.insert(list, 1, { value = globalFontConfigKey(), label = globalFontConfigLabel() })
 	return list
 end
 
@@ -234,12 +272,13 @@ local function backgroundTextureOptions()
 	end
 	add("DEFAULT", _G.DEFAULT or "Default")
 	add("SOLID", "Solid")
-	if LSM and LSM.HashTable then
-		for name, path in pairs(LSM:HashTable("background") or {}) do
-			if type(path) == "string" and path ~= "" then add(name, tostring(name)) end
-		end
+	local names = getCachedMediaNames("background")
+	local hash = getCachedMediaHash("background")
+	for i = 1, #names do
+		local name = names[i]
+		local path = hash[name]
+		if type(path) == "string" and path ~= "" then add(name, tostring(name)) end
 	end
-	table.sort(list, function(a, b) return tostring(a.label) < tostring(b.label) end)
 	return list
 end
 
@@ -254,12 +293,13 @@ local function borderTextureOptions()
 	end
 	add("DEFAULT", _G.DEFAULT or "Default")
 	add("SOLID", "Solid")
-	if LSM and LSM.HashTable then
-		for name, path in pairs(LSM:HashTable("border") or {}) do
-			if type(path) == "string" and path ~= "" then add(name, tostring(name)) end
-		end
+	local names = getCachedMediaNames("border")
+	local hash = getCachedMediaHash("border")
+	for i = 1, #names do
+		local name = names[i]
+		local path = hash[name]
+		if type(path) == "string" and path ~= "" then add(name, tostring(name)) end
 	end
-	table.sort(list, function(a, b) return tostring(a.label) < tostring(b.label) end)
 	return list
 end
 
@@ -693,7 +733,7 @@ local function seedEditModeRecordFromPanelInfo(panel, defaults, record)
 	record.fontShadow = info.fontShadow == true
 	record.streamFontScale = normalizeStreamFontScale(info.streamFontScale, defaults.streamFontScale)
 	record.useClassTextColor = info.useClassTextColor == true
-	record.fontFace = resolveFontFace(info.fontFace, defaults.fontFace)
+	record.fontFace = normalizeFontSetting(info.fontFace, defaults.fontFace)
 	record.backgroundTexture = normalizeMediaKey(info.backgroundTexture, defaults.backgroundTexture)
 	record.backgroundColor = normalizeColorTable(info.backgroundColor, defaults.backgroundColor)
 	record.borderTexture = normalizeMediaKey(info.borderTexture, defaults.borderTexture)
@@ -731,7 +771,7 @@ local function registerEditModePanel(panel)
 		fontShadow = panel.info.fontShadow == true,
 		streamFontScale = normalizeStreamFontScale(panel.info.streamFontScale, DEFAULT_STREAM_FONT_SCALE),
 		useClassTextColor = panel.info.useClassTextColor == true,
-		fontFace = resolveFontFace(panel.info.fontFace, defaultFontFace()),
+		fontFace = normalizeFontSetting(panel.info.fontFace, globalFontConfigKey()),
 		backgroundTexture = normalizeMediaKey(panel.info.backgroundTexture, "DEFAULT"),
 		backgroundColor = normalizeColorTable(panel.info.backgroundColor, DEFAULT_BACKDROP_COLOR),
 		borderTexture = normalizeMediaKey(panel.info.borderTexture, "DEFAULT"),
@@ -1019,14 +1059,14 @@ local function registerEditModePanel(panel)
 				default = defaults.fontFace,
 				height = 200,
 				get = function(layoutName)
-					if EditMode and EditMode.GetValue then return resolveFontFace(EditMode:GetValue(id, "fontFace", layoutName), defaults.fontFace) end
-					return resolveFontFace(panel.info and panel.info.fontFace, defaults.fontFace)
+					if EditMode and EditMode.GetValue then return normalizeFontSetting(EditMode:GetValue(id, "fontFace", layoutName), defaults.fontFace) end
+					return normalizeFontSetting(panel.info and panel.info.fontFace, defaults.fontFace)
 				end,
 				set = function(layoutName, value)
 					if EditMode and EditMode.SetValue then
 						EditMode:SetValue(id, "fontFace", value, layoutName)
 					elseif panel.info then
-						panel.info.fontFace = resolveFontFace(value, panel.info.fontFace or defaultFontFace())
+						panel.info.fontFace = normalizeFontSetting(value, panel.info.fontFace or globalFontConfigKey())
 						panel:ApplyTextStyle()
 					end
 				end,
@@ -1202,7 +1242,7 @@ local function ensureSettings(id, name)
 			fontShadow = DEFAULT_FONT_SHADOW,
 			streamFontScale = DEFAULT_STREAM_FONT_SCALE,
 			useClassTextColor = false,
-			fontFace = defaultFontFace(),
+			fontFace = globalFontConfigKey(),
 			backgroundTexture = "DEFAULT",
 			backgroundColor = { r = 0, g = 0, b = 0, a = DEFAULT_BACKDROP_ALPHA },
 			borderTexture = "DEFAULT",
@@ -1237,7 +1277,7 @@ local function ensureSettings(id, name)
 		if info.fontShadow == nil then info.fontShadow = DEFAULT_FONT_SHADOW end
 		info.streamFontScale = normalizeStreamFontScale(info.streamFontScale, DEFAULT_STREAM_FONT_SCALE)
 		if info.useClassTextColor == nil then info.useClassTextColor = false end
-		info.fontFace = resolveFontFace(info.fontFace, defaultFontFace())
+		info.fontFace = normalizeFontSetting(info.fontFace, globalFontConfigKey())
 		info.backgroundTexture = normalizeMediaKey(info.backgroundTexture, "DEFAULT")
 		info.backgroundColor = normalizeColorTable(info.backgroundColor, DEFAULT_BACKDROP_COLOR)
 		info.borderTexture = normalizeMediaKey(info.borderTexture, "DEFAULT")
@@ -1311,7 +1351,6 @@ function DataPanel.Create(id, name, existingOnly)
 	frame:SetMovable(true)
 	frame:SetResizable(true)
 	frame:EnableMouse(true)
-	if frame.SetClampedToScreen then frame:SetClampedToScreen(true) end
 	local initialStrata = normalizeStrata(info.strata, frame:GetFrameStrata())
 	info.strata = initialStrata
 	if frame:GetFrameStrata() ~= initialStrata then frame:SetFrameStrata(initialStrata) end
@@ -1747,7 +1786,7 @@ function DataPanel.Create(id, name, existingOnly)
 			end
 		end
 		if data.fontFace ~= nil then
-			local desired = resolveFontFace(data.fontFace, info.fontFace or defaultFontFace())
+			local desired = normalizeFontSetting(data.fontFace, info.fontFace or globalFontConfigKey())
 			if info.fontFace ~= desired then
 				info.fontFace = desired
 				fontFaceChanged = true

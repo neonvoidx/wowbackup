@@ -13,6 +13,99 @@ local changelogs = addon.ControlCenter.changelogs;
 changelogs[10808] = {
     {
         type = "date",
+        versionText = "1.8.8 c-d",
+        timestamp = 1772630000,
+    },
+
+    {
+        type = "h1",
+        text = "Bug Fixes",
+    },
+
+    {
+        type = "p",
+        bullet = true,
+        text = "Event Toast: This module has been retired because most event toasts already support \"right click to close\" without using addons. Additionally, this module may have prevented you from viewing Abundance completion details.",
+    },
+
+    {
+        type = "p",
+        bullet = true,
+        text = "Loot UI: Midnight ores, herbs, and skins should use the updated version of quality icons.",
+    },
+
+    {
+        type = "p",
+        bullet = true,
+        text = "Expansion Summary: Clicking Valeera should show her abilities instead of Brann's.",
+    },
+
+    {
+        type = "p",
+        bullet = true,
+        text = "Expansion Summary: To address the taint errors, the renown progress on the faction tooltip has been changed from a progress bar to text.",
+    },
+
+    {
+        type = "p",
+        bullet = true,
+        text = "Plumber Torch Macro: Fixed an issue that affected typing in the macro edit box if you used Plumber Torch macro.",
+    },
+
+    {
+        type = "p",
+        bullet = true,
+        text = "Fixed an error when pressing hotkeys to focus on the next/previous quest in the objective tracker.",
+    },
+
+    {
+        type = "p",
+        bullet = true,
+        text = "Instance Difficulty Selector: Adjusted entrance coordinates for the two Utgarde dungeons.",
+    },
+
+    {
+        type = "br",
+    },
+
+    {
+        type = "h1",
+        text = "Added",
+    },
+
+    {
+        type = "p",
+        bullet = true,
+        text = "Break Time Reminder: Added an option to postpone the alert when you are in instance.",
+    },
+
+    {
+        type = "p",
+        bullet = true,
+        text = "Break Time Reminder: Auto postpone schedule when AFK. The countdown to your next scheduled break will pause when you are AFK. It will continue pausing if the break time is over, but you have not performed any action.",
+    },
+
+    {
+        type = "p",
+        bullet = true,
+        text = "Break Time Reminder: The time until your next scheduled break will be displayed on the Plumber minimap button's tooltip.",
+    },
+
+    {
+        type = "p",
+        bullet = true,
+        text = "Updated the currencies (crests) used for upgrading Midnight items.",
+    },
+
+    {
+        type = "br",
+    },
+    {
+        type = "br",
+    },
+
+    {
+        type = "date",
         versionText = "1.8.8",
         timestamp = 1772120000,
     },

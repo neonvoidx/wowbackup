@@ -1,7 +1,524 @@
 
 Blizzard_Console_SavedVars = {
 ["version"] = 3,
+["height"] = 299.9998779296875,
 ["messageHistory"] = {
+{
+"Test CVar test_cameraOverShoulder has been set to 0.62784054264209 (default 0.000000)",
+0,
+},
+{
+"Test CVar test_cameraOverShoulder has been set to 0.58897101480554 (default 0.000000)",
+0,
+},
+{
+"Test CVar test_cameraOverShoulder has been set to 0.54590181742585 (default 0.000000)",
+0,
+},
+{
+"Test CVar test_cameraOverShoulder has been set to 0.51198881301033 (default 0.000000)",
+0,
+},
+{
+"Test CVar test_cameraOverShoulder has been set to 0.47905998160285 (default 0.000000)",
+0,
+},
+{
+"Test CVar test_cameraOverShoulder has been set to 0.45197601216757 (default 0.000000)",
+0,
+},
+{
+"Test CVar test_cameraOverShoulder has been set to 0.4185515840015 (default 0.000000)",
+0,
+},
+{
+"Test CVar test_cameraOverShoulder has been set to 0.3863137426886 (default 0.000000)",
+0,
+},
+{
+"Test CVar test_cameraOverShoulder has been set to 0.34234883076399 (default 0.000000)",
+0,
+},
+{
+"Test CVar test_cameraOverShoulder has been set to 0.31510788587524 (default 0.000000)",
+0,
+},
+{
+"Test CVar test_cameraOverShoulder has been set to 0.29487830016031 (default 0.000000)",
+0,
+},
+{
+"Test CVar test_cameraOverShoulder has been set to 0.27336044001618 (default 0.000000)",
+0,
+},
+{
+"Test CVar test_cameraOverShoulder has been set to 0.24893105637726 (default 0.000000)",
+0,
+},
+{
+"Test CVar test_cameraOverShoulder has been set to 0.22559553459992 (default 0.000000)",
+0,
+},
+{
+"Test CVar test_cameraOverShoulder has been set to 0.20503435911485 (default 0.000000)",
+0,
+},
+{
+"Test CVar test_cameraOverShoulder has been set to 0.18224453789749 (default 0.000000)",
+0,
+},
+{
+"Test CVar test_cameraOverShoulder has been set to 0.16224713931119 (default 0.000000)",
+0,
+},
+{
+"Test CVar test_cameraOverShoulder has been set to 0.14479078520722 (default 0.000000)",
+0,
+},
+{
+"Test CVar test_cameraOverShoulder has been set to 0.12697347054599 (default 0.000000)",
+0,
+},
+{
+"Test CVar test_cameraOverShoulder has been set to 0.10906598011758 (default 0.000000)",
+0,
+},
+{
+"Test CVar test_cameraOverShoulder has been set to 0.093633912121425 (default 0.000000)",
+0,
+},
+{
+"Test CVar test_cameraOverShoulder has been set to 0.079360461217515 (default 0.000000)",
+0,
+},
+{
+"Test CVar test_cameraOverShoulder has been set to 0.066251579096784 (default 0.000000)",
+0,
+},
+{
+"Test CVar test_cameraOverShoulder has been set to 0.054312731852567 (default 0.000000)",
+0,
+},
+{
+"Test CVar test_cameraOverShoulder has been set to 0.044335063461445 (default 0.000000)",
+0,
+},
+{
+"Test CVar test_cameraOverShoulder has been set to 0.034659851616235 (default 0.000000)",
+0,
+},
+{
+"Test CVar test_cameraOverShoulder has been set to 0.026167847649594 (default 0.000000)",
+0,
+},
+{
+"Test CVar test_cameraOverShoulder has been set to 0.019382329846452 (default 0.000000)",
+0,
+},
+{
+"Test CVar test_cameraOverShoulder has been set to 0.014052647596547 (default 0.000000)",
+0,
+},
+{
+"Test CVar test_cameraOverShoulder has been set to 0.010326627953222 (default 0.000000)",
+0,
+},
+{
+"Test CVar test_cameraOverShoulder has been set to 0.0071725813957904 (default 0.000000)",
+0,
+},
+{
+"Test CVar test_cameraOverShoulder has been set to 0.004095299303795 (default 0.000000)",
+0,
+},
+{
+"Test CVar test_cameraOverShoulder has been set to 0.0014172766468277 (default 0.000000)",
+0,
+},
+{
+"Test CVar test_cameraOverShoulder has been set to 0.00017362769096696 (default 0.000000)",
+0,
+},
+{
+"Test CVar test_cameraOverShoulder has been set to 0 (default 0.000000)",
+0,
+},
+{
+"Test CVar test_cameraDynamicPitch has been set to 0 (default 0.000000)",
+0,
+},
+{
+"Test CVar test_cameraHeadMovementStrength has been set to 0 (default 0.000000)",
+0,
+},
+{
+"ACTION Camera set to 'off' - 'Disable action cam features'",
+0,
+},
+{
+"Time set to 3/3/2026 (Tue) 11:52",
+0,
+},
+{
+"Time set to 3/3/2026 (Tue) 11:52",
+0,
+},
+{
+"Time set to 3/3/2026 (Tue) 11:58",
+0,
+},
+{
+"Time set to 3/3/2026 (Tue) 11:58",
+0,
+},
+{
+"-------------------------------------------------- Previous Session --------------------------------------------------",
+0,
+},
+{
+"-------------------------------------------------- Previous Session --------------------------------------------------",
+0,
+},
+{
+"Sorting particles normally.",
+0,
+},
+{
+"Multithreaded rendering enabled.",
+0,
+},
+{
+"Multithreaded BeginDraw enabled.",
+0,
+},
+{
+"Multithread shadows changed to 1.",
+0,
+},
+{
+"Multithreaded prepass enabled.",
+0,
+},
+{
+"Multithreaded opaque pass enabled.",
+0,
+},
+{
+"Multithreaded opaque pass enabled.",
+0,
+},
+{
+"Multithreaded alpha M2 pass enabled.",
+0,
+},
+{
+"Multithreaded opaque WMO pass enabled.",
+0,
+},
+{
+"Multithreaded terrain pass enabled.",
+0,
+},
+{
+"Multithreaded volumetric fog enabled.",
+0,
+},
+{
+"Multithreaded Refraction Pass enabled.",
+0,
+},
+{
+"Multithreaded miscellaneous passes disabled.",
+0,
+},
+{
+"Multithreaded decal pass enabled.",
+0,
+},
+{
+"Multithreaded outline passes enabled.",
+0,
+},
+{
+"Multithreaded lightshaft passes enabled.",
+0,
+},
+{
+"Multithreaded alpha pass enabled.",
+0,
+},
+{
+"Multithreaded daynight update enabled.",
+0,
+},
+{
+"Water detail changed to 3",
+0,
+},
+{
+"Ripple detail changed to 2",
+0,
+},
+{
+"Reflection mode changed to 3",
+0,
+},
+{
+"Reflection downscale changed to 0",
+0,
+},
+{
+"Sunshafts quality changed to 2",
+0,
+},
+{
+"Refraction mode changed to 2",
+0,
+},
+{
+"Volume fog enabled.",
+0,
+},
+{
+"Particulate volumes enabled.",
+0,
+},
+{
+"Projected textures enabled.",
+0,
+},
+{
+"Shadow mode changed to 4 - 4 band dynamic shadows on units and terrain, 2048",
+0,
+},
+{
+"Shadow texture size changed to 2048.",
+0,
+},
+{
+"Soft shadows changed to 1.",
+0,
+},
+{
+"Shadow cascade blending changed to 1",
+0,
+},
+{
+"Number of shadow cascades changed to 4",
+0,
+},
+{
+"Shadow RT mode changed to 0 (Disabled)",
+0,
+},
+{
+"maxLightCount must be in range 0 to 32.",
+0,
+},
+{
+"CVar 'maxLightCount' failed validation for its initial value.",
+0,
+},
+{
+"Clustered shading enabled.",
+0,
+},
+{
+"Not forcing clustered shading.",
+0,
+},
+{
+"SSAO mode set to 4",
+0,
+},
+{
+"SSAO type set to 0",
+0,
+},
+{
+"Depth Based Opacity Enabled",
+0,
+},
+{
+"SkyCloudLOD set to 1",
+0,
+},
+{
+"Texture filtering mode updated.",
+0,
+},
+{
+"Terrain mip level changed to 0.",
+0,
+},
+{
+"Outline mode changed to 2",
+0,
+},
+{
+"Physics interaction level changed to 1",
+0,
+},
+{
+"Render scale changed to 1",
+0,
+},
+{
+"Resample quality changed to 3",
+0,
+},
+{
+"MSAA disabled",
+0,
+},
+{
+"MSAA for alpha-test enabled.",
+0,
+},
+{
+"Variable Rate Shading not supported on this hardware",
+0,
+},
+{
+"CVar 'vrsWorldGeo' failed validation for its initial value.",
+0,
+},
+{
+"Variable Rate Shading not supported on this hardware",
+0,
+},
+{
+"Variable Rate Shading not supported on this hardware",
+0,
+},
+{
+"VALAR mode changed to 0",
+0,
+},
+{
+"lodObjectSizeScale cannot be changed.",
+0,
+},
+{
+"Volume fog enabled.",
+0,
+},
+{
+"dynamicLod enabled",
+0,
+},
+{
+"World preload object sort enabled.",
+0,
+},
+{
+"World load object sort enabled.",
+0,
+},
+{
+"World preload non critical enabled.",
+0,
+},
+{
+"World preload high res textures disabled.",
+0,
+},
+{
+"FFX: Color Blind Test Mode Disabled",
+0,
+},
+{
+"Error display disabled",
+0,
+},
+{
+"Error display shown",
+0,
+},
+{
+"Displaying errors through fatal errors",
+0,
+},
+{
+"Displaying errors through fatal errors",
+0,
+},
+{
+"Now filtering: all messages",
+0,
+},
+{
+"CVar 'Sound_AmbienceHighpassDSPCutoff' failed validation for its initial value.",
+0,
+},
+{
+"CVar 'Sound_AllyPlayerHighpassDSPCutoff' failed validation for its initial value.",
+0,
+},
+{
+"CVar 'Sound_EnemyPlayerHighpassDSPCutoff' failed validation for its initial value.",
+0,
+},
+{
+"CVar 'Sound_NPCHighpassDSPCutoff' failed validation for its initial value.",
+0,
+},
+{
+"ChromaEffects disabled",
+0,
+},
+{
+"NetClient::HandleConnect()\n",
+0,
+},
+{
+"Got new connection 2",
+0,
+},
+{
+"[WowEntitlements] [BNetAccount-0-000003482BDF] [WowAccount-0-0000003C5D98] Initialized with 205 entitlements.",
+0,
+},
+{
+"-------------------------------------------------- Previous Session --------------------------------------------------",
+0,
+},
+{
+"Got new connection 3",
+0,
+},
+{
+"Proficiency in item class 2 set to 0x0000000001",
+0,
+},
+{
+"Proficiency in item class 4 set to 0x0000000021",
+0,
+},
+{
+"Proficiency in item class 2 set to 0x0000004001",
+0,
+},
+{
+"Proficiency in item class 4 set to 0x0000000025",
+0,
+},
+{
+"Proficiency in item class 2 set to 0x0000006001",
+0,
+},
+{
+"Proficiency in item class 2 set to 0x0000106001",
+0,
+},
+{
+"Proficiency in item class 2 set to 0x0000106081",
+0,
+},
+{
+"Proficiency in item class 4 set to 0x0000000027",
+0,
+},
 {
 "Proficiency in item class 2 set to 0x0000106281",
 0,
@@ -19,7 +536,7 @@ Blizzard_Console_SavedVars = {
 0,
 },
 {
-"Time set to 2/26/2026 (Thu) 6:18",
+"Time set to 3/3/2026 (Tue) 16:31",
 0,
 },
 {
@@ -28,6 +545,1522 @@ Blizzard_Console_SavedVars = {
 },
 {
 "Got new connection 3",
+0,
+},
+{
+"Weather changed to 0, intensity 0.000000\n",
+0,
+},
+{
+"-------------------------------------------------- Previous Session --------------------------------------------------",
+0,
+},
+{
+"Got new connection 3",
+0,
+},
+{
+"Weather changed to 0, intensity 0.000000\n",
+0,
+},
+{
+"World transfer pending...",
+0,
+},
+{
+"Got new connection 3",
+0,
+},
+{
+"Dissolve Effect ID 306 has invalid fade out time. This will result in the record beign ignore and a regular fade out being applied to the creature.",
+0,
+},
+{
+"Weather changed to 0, intensity 0.000000\n",
+0,
+},
+{
+"World transfer pending...",
+0,
+},
+{
+"Got new connection 3",
+0,
+},
+{
+"Weather changed to 0, intensity 0.000000\n",
+0,
+},
+{
+"World transfer pending...",
+0,
+},
+{
+"Got new connection 3",
+0,
+},
+{
+"Dissolve Effect ID 306 has invalid fade out time. This will result in the record beign ignore and a regular fade out being applied to the creature.",
+0,
+},
+{
+"Weather changed to 0, intensity 0.000000\n",
+0,
+},
+{
+"Dissolve Effect ID 306 has invalid fade out time. This will result in the record beign ignore and a regular fade out being applied to the creature.",
+0,
+},
+{
+"Dissolve Effect ID 306 has invalid fade out time. This will result in the record beign ignore and a regular fade out being applied to the creature.",
+0,
+},
+{
+"Dissolve Effect ID 306 has invalid fade out time. This will result in the record beign ignore and a regular fade out being applied to the creature.",
+0,
+},
+{
+"Dissolve Effect ID 306 has invalid fade out time. This will result in the record beign ignore and a regular fade out being applied to the creature.",
+0,
+},
+{
+"Dissolve Effect ID 306 has invalid fade out time. This will result in the record beign ignore and a regular fade out being applied to the creature.",
+0,
+},
+{
+"Dissolve Effect ID 306 has invalid fade out time. This will result in the record beign ignore and a regular fade out being applied to the creature.",
+0,
+},
+{
+"Dissolve Effect ID 306 has invalid fade out time. This will result in the record beign ignore and a regular fade out being applied to the creature.",
+0,
+},
+{
+"Dissolve Effect ID 306 has invalid fade out time. This will result in the record beign ignore and a regular fade out being applied to the creature.",
+0,
+},
+{
+"Dissolve Effect ID 306 has invalid fade out time. This will result in the record beign ignore and a regular fade out being applied to the creature.",
+0,
+},
+{
+"Weather changed to 4, intensity 1.000000\n",
+0,
+},
+{
+"Weather changed to 0, intensity 0.000000\n",
+0,
+},
+{
+"Dissolve Effect ID 306 has invalid fade out time. This will result in the record beign ignore and a regular fade out being applied to the creature.",
+0,
+},
+{
+"Dissolve Effect ID 306 has invalid fade out time. This will result in the record beign ignore and a regular fade out being applied to the creature.",
+0,
+},
+{
+"Weather changed to 4, intensity 1.000000\n",
+0,
+},
+{
+"Weather changed to 0, intensity 0.000000\n",
+0,
+},
+{
+"Weather changed to 4, intensity 1.000000\n",
+0,
+},
+{
+"Weather changed to 0, intensity 0.000000\n",
+0,
+},
+{
+"Dissolve Effect ID 306 has invalid fade out time. This will result in the record beign ignore and a regular fade out being applied to the creature.",
+0,
+},
+{
+"Dissolve Effect ID 306 has invalid fade out time. This will result in the record beign ignore and a regular fade out being applied to the creature.",
+0,
+},
+{
+"Weather changed to 4, intensity 1.000000\n",
+0,
+},
+{
+"Weather changed to 0, intensity 0.000000\n",
+0,
+},
+{
+"Dissolve Effect ID 306 has invalid fade out time. This will result in the record beign ignore and a regular fade out being applied to the creature.",
+0,
+},
+{
+"Dissolve Effect ID 306 has invalid fade out time. This will result in the record beign ignore and a regular fade out being applied to the creature.",
+0,
+},
+{
+"Weather changed to 4, intensity 1.000000\n",
+0,
+},
+{
+"Weather changed to 0, intensity 0.000000\n",
+0,
+},
+{
+"Weather changed to 4, intensity 1.000000\n",
+0,
+},
+{
+"Weather changed to 0, intensity 0.000000\n",
+0,
+},
+{
+"Dissolve Effect ID 306 has invalid fade out time. This will result in the record beign ignore and a regular fade out being applied to the creature.",
+0,
+},
+{
+"Dissolve Effect ID 306 has invalid fade out time. This will result in the record beign ignore and a regular fade out being applied to the creature.",
+0,
+},
+{
+"Weather changed to 4, intensity 1.000000\n",
+0,
+},
+{
+"Weather changed to 0, intensity 0.000000\n",
+0,
+},
+{
+"Weather changed to 4, intensity 1.000000\n",
+0,
+},
+{
+"Weather changed to 0, intensity 0.000000\n",
+0,
+},
+{
+"Weather changed to 4, intensity 1.000000\n",
+0,
+},
+{
+"Weather changed to 0, intensity 0.000000\n",
+0,
+},
+{
+"Dissolve Effect ID 306 has invalid fade out time. This will result in the record beign ignore and a regular fade out being applied to the creature.",
+0,
+},
+{
+"Dissolve Effect ID 306 has invalid fade out time. This will result in the record beign ignore and a regular fade out being applied to the creature.",
+0,
+},
+{
+"Weather changed to 4, intensity 1.000000\n",
+0,
+},
+{
+"Weather changed to 0, intensity 0.000000\n",
+0,
+},
+{
+"Dissolve Effect ID 306 has invalid fade out time. This will result in the record beign ignore and a regular fade out being applied to the creature.",
+0,
+},
+{
+"Dissolve Effect ID 306 has invalid fade out time. This will result in the record beign ignore and a regular fade out being applied to the creature.",
+0,
+},
+{
+"Weather changed to 4, intensity 1.000000\n",
+0,
+},
+{
+"Weather changed to 0, intensity 0.000000\n",
+0,
+},
+{
+"Weather changed to 4, intensity 1.000000\n",
+0,
+},
+{
+"Weather changed to 0, intensity 0.000000\n",
+0,
+},
+{
+"Dissolve Effect ID 306 has invalid fade out time. This will result in the record beign ignore and a regular fade out being applied to the creature.",
+0,
+},
+{
+"Dissolve Effect ID 306 has invalid fade out time. This will result in the record beign ignore and a regular fade out being applied to the creature.",
+0,
+},
+{
+"GameTimeSync: skipping forwards 2 game minutes, (current = 3/3/2026 (Tue) 17:37, newtime = 3/3/2026 (Tue) 17:39)",
+0,
+},
+{
+"Weather changed to 4, intensity 1.000000\n",
+0,
+},
+{
+"Weather changed to 0, intensity 0.000000\n",
+0,
+},
+{
+"Weather changed to 4, intensity 1.000000\n",
+0,
+},
+{
+"Weather changed to 0, intensity 0.000000\n",
+0,
+},
+{
+"Dissolve Effect ID 306 has invalid fade out time. This will result in the record beign ignore and a regular fade out being applied to the creature.",
+0,
+},
+{
+"World transfer pending...",
+0,
+},
+{
+"Got new connection 3",
+0,
+},
+{
+"Weather changed to 0, intensity 0.000000\n",
+0,
+},
+{
+"Time set to 3/3/2026 (Tue) 17:45",
+0,
+},
+{
+"Time set to 3/3/2026 (Tue) 17:45",
+0,
+},
+{
+"Time set to 3/3/2026 (Tue) 17:47",
+0,
+},
+{
+"Time set to 3/3/2026 (Tue) 17:47",
+0,
+},
+{
+"Time set to 3/3/2026 (Tue) 17:48",
+0,
+},
+{
+"Time set to 3/3/2026 (Tue) 17:48",
+0,
+},
+{
+"Time set to 3/3/2026 (Tue) 17:48",
+0,
+},
+{
+"Time set to 3/3/2026 (Tue) 17:48",
+0,
+},
+{
+"Weather changed to 0, intensity 0.000000\n",
+0,
+},
+{
+"Got new connection 3",
+0,
+},
+{
+"Weather changed to 0, intensity 0.000000\n",
+0,
+},
+{
+"-------------------------------------------------- Previous Session --------------------------------------------------",
+0,
+},
+{
+"Weather changed to 0, intensity 0.000000\n",
+0,
+},
+{
+"Got new connection 3",
+0,
+},
+{
+"Weather changed to 0, intensity 0.000000\n",
+0,
+},
+{
+"World transfer pending...",
+0,
+},
+{
+"Got new connection 3",
+0,
+},
+{
+"Weather changed to 0, intensity 0.000000\n",
+0,
+},
+{
+"Weather changed to 0, intensity 0.000000\n",
+0,
+},
+{
+"Time set to 3/3/2026 (Tue) 17:54",
+0,
+},
+{
+"Time set to 3/3/2026 (Tue) 17:54",
+0,
+},
+{
+"Time set to 3/3/2026 (Tue) 17:54",
+0,
+},
+{
+"Time set to 3/3/2026 (Tue) 17:54",
+0,
+},
+{
+"Weather changed to 0, intensity 0.000000\n",
+0,
+},
+{
+"[Airlock] Received PreloadMap Destination MapID:2963, Current MapID:2694, PreviousTransitionID:-1, Position (-778.85, -1790.71, 915.116)",
+0,
+},
+{
+"[Airlock] Preload initiated for map 2963, with already loaded cosmetic parent 2694",
+0,
+},
+{
+"Got new connection 3",
+0,
+},
+{
+"Weather changed to 0, intensity 0.000000\n",
+0,
+},
+{
+"Weather changed to 0, intensity 0.000000\n",
+0,
+},
+{
+"[Airlock] Received PreloadMap Destination MapID:2694, Current MapID:2694, PreviousTransitionID:-1, Position (-785.104, -1797.75, 913.187)",
+0,
+},
+{
+"[Airlock] Received PreloadMap Destination MapID:2694, Current MapID:2694, PreviousTransitionID:-1, Position (-809.278, -1837.01, 911.861)",
+0,
+},
+{
+"Got new connection 3",
+0,
+},
+{
+"Weather changed to 0, intensity 0.000000\n",
+0,
+},
+{
+"[Airlock] Received PreloadMap Destination MapID:2963, Current MapID:2694, PreviousTransitionID:-1, Position (-779.469, -1786.91, 916.646)",
+0,
+},
+{
+"[Airlock] Preload initiated for map 2963, with already loaded cosmetic parent 2694",
+0,
+},
+{
+"Got new connection 3",
+0,
+},
+{
+"Weather changed to 0, intensity 0.000000\n",
+0,
+},
+{
+"[Airlock] Received PreloadMap Destination MapID:2694, Current MapID:2694, PreviousTransitionID:-1, Position (-785.759, -1798.3, 912.937)",
+0,
+},
+{
+"[Airlock] Received PreloadMap Destination MapID:2694, Current MapID:2694, PreviousTransitionID:-1, Position (-807.027, -1836.32, 910.861)",
+0,
+},
+{
+"Skill 2916 increased from 43 to 44",
+0,
+},
+{
+"Got new connection 3",
+0,
+},
+{
+"Weather changed to 0, intensity 0.000000\n",
+0,
+},
+{
+"World transfer pending...",
+0,
+},
+{
+"Got new connection 3",
+0,
+},
+{
+"Weather changed to 0, intensity 0.000000\n",
+0,
+},
+{
+"Time set to 3/3/2026 (Tue) 18:35",
+0,
+},
+{
+"Time set to 3/3/2026 (Tue) 18:35",
+0,
+},
+{
+"-------------------------------------------------- Previous Session --------------------------------------------------",
+0,
+},
+{
+"-------------------------------------------------- Previous Session --------------------------------------------------",
+0,
+},
+{
+"Sorting particles normally.",
+0,
+},
+{
+"Multithreaded rendering enabled.",
+0,
+},
+{
+"Multithreaded BeginDraw enabled.",
+0,
+},
+{
+"Multithread shadows changed to 1.",
+0,
+},
+{
+"Multithreaded prepass enabled.",
+0,
+},
+{
+"Multithreaded opaque pass enabled.",
+0,
+},
+{
+"Multithreaded opaque pass enabled.",
+0,
+},
+{
+"Multithreaded alpha M2 pass enabled.",
+0,
+},
+{
+"Multithreaded opaque WMO pass enabled.",
+0,
+},
+{
+"Multithreaded terrain pass enabled.",
+0,
+},
+{
+"Multithreaded volumetric fog enabled.",
+0,
+},
+{
+"Multithreaded Refraction Pass enabled.",
+0,
+},
+{
+"Multithreaded miscellaneous passes disabled.",
+0,
+},
+{
+"Multithreaded decal pass enabled.",
+0,
+},
+{
+"Multithreaded outline passes enabled.",
+0,
+},
+{
+"Multithreaded lightshaft passes enabled.",
+0,
+},
+{
+"Multithreaded alpha pass enabled.",
+0,
+},
+{
+"Multithreaded daynight update enabled.",
+0,
+},
+{
+"Water detail changed to 3",
+0,
+},
+{
+"Ripple detail changed to 2",
+0,
+},
+{
+"Reflection mode changed to 3",
+0,
+},
+{
+"Reflection downscale changed to 0",
+0,
+},
+{
+"Sunshafts quality changed to 2",
+0,
+},
+{
+"Refraction mode changed to 2",
+0,
+},
+{
+"Volume fog enabled.",
+0,
+},
+{
+"Particulate volumes enabled.",
+0,
+},
+{
+"Projected textures enabled.",
+0,
+},
+{
+"Shadow mode changed to 4 - 4 band dynamic shadows on units and terrain, 2048",
+0,
+},
+{
+"Shadow texture size changed to 2048.",
+0,
+},
+{
+"Soft shadows changed to 1.",
+0,
+},
+{
+"Shadow cascade blending changed to 1",
+0,
+},
+{
+"Number of shadow cascades changed to 4",
+0,
+},
+{
+"Shadow RT mode changed to 0 (Disabled)",
+0,
+},
+{
+"maxLightCount must be in range 0 to 32.",
+0,
+},
+{
+"CVar 'maxLightCount' failed validation for its initial value.",
+0,
+},
+{
+"Clustered shading enabled.",
+0,
+},
+{
+"Not forcing clustered shading.",
+0,
+},
+{
+"SSAO mode set to 4",
+0,
+},
+{
+"SSAO type set to 0",
+0,
+},
+{
+"Depth Based Opacity Enabled",
+0,
+},
+{
+"SkyCloudLOD set to 1",
+0,
+},
+{
+"Texture filtering mode updated.",
+0,
+},
+{
+"Terrain mip level changed to 0.",
+0,
+},
+{
+"Outline mode changed to 2",
+0,
+},
+{
+"Physics interaction level changed to 1",
+0,
+},
+{
+"Render scale changed to 1",
+0,
+},
+{
+"Resample quality changed to 3",
+0,
+},
+{
+"MSAA disabled",
+0,
+},
+{
+"MSAA for alpha-test enabled.",
+0,
+},
+{
+"Variable Rate Shading not supported on this hardware",
+0,
+},
+{
+"CVar 'vrsWorldGeo' failed validation for its initial value.",
+0,
+},
+{
+"Variable Rate Shading not supported on this hardware",
+0,
+},
+{
+"Variable Rate Shading not supported on this hardware",
+0,
+},
+{
+"VALAR mode changed to 0",
+0,
+},
+{
+"lodObjectSizeScale cannot be changed.",
+0,
+},
+{
+"Volume fog enabled.",
+0,
+},
+{
+"dynamicLod enabled",
+0,
+},
+{
+"World preload object sort enabled.",
+0,
+},
+{
+"World load object sort enabled.",
+0,
+},
+{
+"World preload non critical enabled.",
+0,
+},
+{
+"World preload high res textures disabled.",
+0,
+},
+{
+"FFX: Color Blind Test Mode Disabled",
+0,
+},
+{
+"Error display disabled",
+0,
+},
+{
+"Error display shown",
+0,
+},
+{
+"Displaying errors through fatal errors",
+0,
+},
+{
+"Displaying errors through fatal errors",
+0,
+},
+{
+"Now filtering: all messages",
+0,
+},
+{
+"CVar 'Sound_AmbienceHighpassDSPCutoff' failed validation for its initial value.",
+0,
+},
+{
+"CVar 'Sound_AllyPlayerHighpassDSPCutoff' failed validation for its initial value.",
+0,
+},
+{
+"CVar 'Sound_EnemyPlayerHighpassDSPCutoff' failed validation for its initial value.",
+0,
+},
+{
+"CVar 'Sound_NPCHighpassDSPCutoff' failed validation for its initial value.",
+0,
+},
+{
+"ChromaEffects disabled",
+0,
+},
+{
+"NetClient::HandleConnect()\n",
+0,
+},
+{
+"[WowEntitlements] [BNetAccount-0-000003482BDF] [WowAccount-0-0000003C5D98] Initialized with 205 entitlements.",
+0,
+},
+{
+"-------------------------------------------------- Previous Session --------------------------------------------------",
+0,
+},
+{
+"Got new connection 3",
+0,
+},
+{
+"Proficiency in item class 2 set to 0x0000008000",
+0,
+},
+{
+"Proficiency in item class 4 set to 0x0000000021",
+0,
+},
+{
+"Proficiency in item class 2 set to 0x000000c000",
+0,
+},
+{
+"Proficiency in item class 2 set to 0x000000c400",
+0,
+},
+{
+"Proficiency in item class 2 set to 0x000000c410",
+0,
+},
+{
+"Proficiency in item class 4 set to 0x0000000023",
+0,
+},
+{
+"Proficiency in item class 2 set to 0x000008c410",
+0,
+},
+{
+"Proficiency in item class 2 set to 0x000008c410",
+0,
+},
+{
+"Proficiency in item class 4 set to 0x0000000023",
+0,
+},
+{
+"Weather changed to 1, intensity 0.800000\n",
+0,
+},
+{
+"Time set to 3/4/2026 (Wed) 9:03",
+0,
+},
+{
+"Gamespeed set from 0.017 to 0.017",
+0,
+},
+{
+"Got new connection 3",
+0,
+},
+{
+"Weather changed to 0, intensity 0.000000\n",
+0,
+},
+{
+"World transfer pending...",
+0,
+},
+{
+"Got new connection 3",
+0,
+},
+{
+"Weather changed to 0, intensity 0.000000\n",
+0,
+},
+{
+"Weather changed to 0, intensity 0.000000\n",
+0,
+},
+{
+"-------------------------------------------------- Previous Session --------------------------------------------------",
+0,
+},
+{
+"-------------------------------------------------- Previous Session --------------------------------------------------",
+0,
+},
+{
+"Attempted to register existing command: SetDifficulty",
+0,
+},
+{
+"Got new connection 3",
+0,
+},
+{
+"Proficiency in item class 2 set to 0x0000000001",
+0,
+},
+{
+"Proficiency in item class 4 set to 0x0000000021",
+0,
+},
+{
+"Proficiency in item class 2 set to 0x0000004001",
+0,
+},
+{
+"Proficiency in item class 4 set to 0x0000000025",
+0,
+},
+{
+"Proficiency in item class 2 set to 0x0000006001",
+0,
+},
+{
+"Proficiency in item class 2 set to 0x0000106001",
+0,
+},
+{
+"Proficiency in item class 2 set to 0x0000106081",
+0,
+},
+{
+"Proficiency in item class 4 set to 0x0000000027",
+0,
+},
+{
+"Proficiency in item class 2 set to 0x0000106281",
+0,
+},
+{
+"Proficiency in item class 2 set to 0x0000106281",
+0,
+},
+{
+"Proficiency in item class 4 set to 0x0000000027",
+0,
+},
+{
+"Weather changed to 0, intensity 0.000000\n",
+0,
+},
+{
+"Time set to 3/4/2026 (Wed) 9:04",
+0,
+},
+{
+"Gamespeed set from 0.017 to 0.017",
+0,
+},
+{
+"Got new connection 3",
+0,
+},
+{
+"Weather changed to 0, intensity 0.000000\n",
+0,
+},
+{
+"World transfer pending...",
+0,
+},
+{
+"Got new connection 3",
+0,
+},
+{
+"Dissolve Effect ID 306 has invalid fade out time. This will result in the record beign ignore and a regular fade out being applied to the creature.",
+0,
+},
+{
+"Weather changed to 0, intensity 0.000000\n",
+0,
+},
+{
+"World transfer pending...",
+0,
+},
+{
+"Got new connection 3",
+0,
+},
+{
+"Weather changed to 0, intensity 0.000000\n",
+0,
+},
+{
+"World transfer pending...",
+0,
+},
+{
+"Got new connection 3",
+0,
+},
+{
+"Dissolve Effect ID 306 has invalid fade out time. This will result in the record beign ignore and a regular fade out being applied to the creature.",
+0,
+},
+{
+"Weather changed to 0, intensity 0.000000\n",
+0,
+},
+{
+"World transfer pending...",
+0,
+},
+{
+"Got new connection 3",
+0,
+},
+{
+"Weather changed to 0, intensity 0.000000\n",
+0,
+},
+{
+"-------------------------------------------------- Previous Session --------------------------------------------------",
+0,
+},
+{
+"-------------------------------------------------- Previous Session --------------------------------------------------",
+0,
+},
+{
+"Attempted to register existing command: SetDifficulty",
+0,
+},
+{
+"Got new connection 3",
+0,
+},
+{
+"Proficiency in item class 2 set to 0x0000000001",
+0,
+},
+{
+"Proficiency in item class 4 set to 0x0000000021",
+0,
+},
+{
+"Proficiency in item class 2 set to 0x0000004001",
+0,
+},
+{
+"Proficiency in item class 4 set to 0x0000000025",
+0,
+},
+{
+"Proficiency in item class 2 set to 0x0000006001",
+0,
+},
+{
+"Proficiency in item class 2 set to 0x0000106001",
+0,
+},
+{
+"Proficiency in item class 2 set to 0x0000106081",
+0,
+},
+{
+"Proficiency in item class 4 set to 0x0000000027",
+0,
+},
+{
+"Proficiency in item class 2 set to 0x0000106281",
+0,
+},
+{
+"Proficiency in item class 2 set to 0x0000106281",
+0,
+},
+{
+"Proficiency in item class 4 set to 0x0000000027",
+0,
+},
+{
+"Weather changed to 0, intensity 0.000000\n",
+0,
+},
+{
+"Time set to 3/4/2026 (Wed) 9:28",
+0,
+},
+{
+"Gamespeed set from 0.017 to 0.017",
+0,
+},
+{
+"Got new connection 3",
+0,
+},
+{
+"Weather changed to 0, intensity 0.000000\n",
+0,
+},
+{
+"World transfer pending...",
+0,
+},
+{
+"Got new connection 3",
+0,
+},
+{
+"Weather changed to 0, intensity 0.000000\n",
+0,
+},
+{
+"Dissolve Effect ID 2167 has invalid fade out time. This will result in the record beign ignore and a regular fade out being applied to the creature.",
+0,
+},
+{
+"Dissolve Effect ID 2167 has invalid fade out time. This will result in the record beign ignore and a regular fade out being applied to the creature.",
+0,
+},
+{
+"Dissolve Effect ID 2167 has invalid fade out time. This will result in the record beign ignore and a regular fade out being applied to the creature.",
+0,
+},
+{
+"-------------------------------------------------- Previous Session --------------------------------------------------",
+0,
+},
+{
+"-------------------------------------------------- Previous Session --------------------------------------------------",
+0,
+},
+{
+"-------------------------------------------------- Previous Session --------------------------------------------------",
+0,
+},
+{
+"-------------------------------------------------- Previous Session --------------------------------------------------",
+0,
+},
+{
+"Time set to 3/4/2026 (Wed) 10:01",
+0,
+},
+{
+"Time set to 3/4/2026 (Wed) 10:01",
+0,
+},
+{
+"-------------------------------------------------- Previous Session --------------------------------------------------",
+0,
+},
+{
+"World transfer pending...",
+0,
+},
+{
+"Got new connection 3",
+0,
+},
+{
+"Weather changed to 0, intensity 0.000000\n",
+0,
+},
+{
+"World transfer pending...",
+0,
+},
+{
+"Got new connection 3",
+0,
+},
+{
+"Weather changed to 0, intensity 0.000000\n",
+0,
+},
+{
+"World transfer pending...",
+0,
+},
+{
+"Got new connection 3",
+0,
+},
+{
+"Weather changed to 1, intensity 0.221443\n",
+0,
+},
+{
+"Weather changed to 1, intensity 0.221443\n",
+0,
+},
+{
+"houseEditingPermitted: false",
+0,
+},
+{
+"houseEntryPermitted: false",
+0,
+},
+{
+"plotEntryPermitted: true",
+0,
+},
+{
+"Weather changed to 1, intensity 0.355043\n",
+0,
+},
+{
+"houseEditingPermitted: false",
+0,
+},
+{
+"houseEntryPermitted: false",
+0,
+},
+{
+"plotEntryPermitted: false",
+0,
+},
+{
+"Weather changed to 1, intensity 0.400000\n",
+0,
+},
+{
+"World transfer pending...",
+0,
+},
+{
+"Got new connection 3",
+0,
+},
+{
+"Weather changed to 0, intensity 0.000000\n",
+0,
+},
+{
+"World transfer pending...",
+0,
+},
+{
+"Got new connection 3",
+0,
+},
+{
+"Weather changed to 0, intensity 0.000000\n",
+0,
+},
+{
+"-------------------------------------------------- Previous Session --------------------------------------------------",
+0,
+},
+{
+"Weather changed to 0, intensity 0.000000\n",
+0,
+},
+{
+"Got new connection 3",
+0,
+},
+{
+"Weather changed to 0, intensity 0.000000\n",
+0,
+},
+{
+"-------------------------------------------------- Previous Session --------------------------------------------------",
+0,
+},
+{
+"World transfer pending...",
+0,
+},
+{
+"Got new connection 3",
+0,
+},
+{
+"Weather changed to 0, intensity 0.000000\n",
+0,
+},
+{
+"Weather changed to 0, intensity 0.000000\n",
+0,
+},
+{
+"Weather changed to 0, intensity 0.000000\n",
+0,
+},
+{
+"Got new connection 3",
+0,
+},
+{
+"Weather changed to 0, intensity 0.000000\n",
+0,
+},
+{
+"World transfer pending...",
+0,
+},
+{
+"Got new connection 3",
+0,
+},
+{
+"Weather changed to 0, intensity 0.000000\n",
+0,
+},
+{
+"Time set to 3/4/2026 (Wed) 10:59",
+0,
+},
+{
+"Time set to 3/4/2026 (Wed) 10:59",
+0,
+},
+{
+"Time set to 3/4/2026 (Wed) 10:59",
+0,
+},
+{
+"Time set to 3/4/2026 (Wed) 10:59",
+0,
+},
+{
+"Time set to 3/4/2026 (Wed) 10:59",
+0,
+},
+{
+"Time set to 3/4/2026 (Wed) 10:59",
+0,
+},
+{
+"Time set to 3/4/2026 (Wed) 10:59",
+0,
+},
+{
+"Time set to 3/4/2026 (Wed) 10:59",
+0,
+},
+{
+"Time set to 3/4/2026 (Wed) 10:59",
+0,
+},
+{
+"Time set to 3/4/2026 (Wed) 10:59",
+0,
+},
+{
+"Time set to 3/4/2026 (Wed) 10:59",
+0,
+},
+{
+"Time set to 3/4/2026 (Wed) 10:59",
+0,
+},
+{
+"Time set to 3/4/2026 (Wed) 10:59",
+0,
+},
+{
+"Time set to 3/4/2026 (Wed) 10:59",
+0,
+},
+{
+"Time set to 3/4/2026 (Wed) 10:59",
+0,
+},
+{
+"Time set to 3/4/2026 (Wed) 10:59",
+0,
+},
+{
+"Time set to 3/4/2026 (Wed) 10:59",
+0,
+},
+{
+"Time set to 3/4/2026 (Wed) 10:59",
+0,
+},
+{
+"Time set to 3/4/2026 (Wed) 10:59",
+0,
+},
+{
+"Time set to 3/4/2026 (Wed) 10:59",
+0,
+},
+{
+"Time set to 3/4/2026 (Wed) 10:59",
+0,
+},
+{
+"Time set to 3/4/2026 (Wed) 10:59",
+0,
+},
+{
+"Time set to 3/4/2026 (Wed) 10:59",
+0,
+},
+{
+"Time set to 3/4/2026 (Wed) 10:59",
+0,
+},
+{
+"Time set to 3/4/2026 (Wed) 10:59",
+0,
+},
+{
+"Time set to 3/4/2026 (Wed) 10:59",
+0,
+},
+{
+"Time set to 3/4/2026 (Wed) 10:59",
+0,
+},
+{
+"Time set to 3/4/2026 (Wed) 10:59",
+0,
+},
+{
+"Time set to 3/4/2026 (Wed) 10:59",
+0,
+},
+{
+"Time set to 3/4/2026 (Wed) 10:59",
+0,
+},
+{
+"Time set to 3/4/2026 (Wed) 10:59",
+0,
+},
+{
+"Time set to 3/4/2026 (Wed) 10:59",
+0,
+},
+{
+"Time set to 3/4/2026 (Wed) 10:59",
+0,
+},
+{
+"Time set to 3/4/2026 (Wed) 10:59",
+0,
+},
+{
+"Time set to 3/4/2026 (Wed) 10:59",
+0,
+},
+{
+"Time set to 3/4/2026 (Wed) 10:59",
+0,
+},
+{
+"Time set to 3/4/2026 (Wed) 11:00",
+0,
+},
+{
+"Time set to 3/4/2026 (Wed) 11:00",
+0,
+},
+{
+"Time set to 3/4/2026 (Wed) 11:07",
+0,
+},
+{
+"Time set to 3/4/2026 (Wed) 11:07",
+0,
+},
+{
+"World transfer pending...",
+0,
+},
+{
+"Got new connection 3",
+0,
+},
+{
+"Weather changed to 0, intensity 0.000000\n",
+0,
+},
+{
+"Weather changed to 0, intensity 0.000000\n",
+0,
+},
+{
+"World transfer pending...",
+0,
+},
+{
+"Got new connection 3",
+0,
+},
+{
+"Weather changed to 0, intensity 0.000000\n",
+0,
+},
+{
+"World transfer pending...",
+0,
+},
+{
+"Got new connection 3",
+0,
+},
+{
+"Weather changed to 0, intensity 0.000000\n",
+0,
+},
+{
+"Weather changed to 0, intensity 0.000000\n",
+0,
+},
+{
+"-------------------------------------------------- Previous Session --------------------------------------------------",
+0,
+},
+{
+"World transfer pending...",
+0,
+},
+{
+"Got new connection 3",
+0,
+},
+{
+"Weather changed to 0, intensity 0.000000\n",
+0,
+},
+{
+"Weather changed to 0, intensity 0.000000\n",
+0,
+},
+{
+"World transfer pending...",
+0,
+},
+{
+"Got new connection 3",
+0,
+},
+{
+"Dissolve Effect ID 306 has invalid fade out time. This will result in the record beign ignore and a regular fade out being applied to the creature.",
 0,
 },
 {
@@ -111,47 +2144,47 @@ Blizzard_Console_SavedVars = {
 0,
 },
 {
-"Test CVar test_cameraOverShoulder has been set to 1.0514525789174 (default 0.000000)",
+"Test CVar test_cameraOverShoulder has been set to 1.0546623040747 (default 0.000000)",
 0,
 },
 {
-"Test CVar test_cameraOverShoulder has been set to 1.0854599021449 (default 0.000000)",
+"Test CVar test_cameraOverShoulder has been set to 1.0884081973144 (default 0.000000)",
 0,
 },
 {
-"Test CVar test_cameraOverShoulder has been set to 1.1174469885574 (default 0.000000)",
+"Test CVar test_cameraOverShoulder has been set to 1.1192301927766 (default 0.000000)",
 0,
 },
 {
-"Test CVar test_cameraOverShoulder has been set to 1.1454467196501 (default 0.000000)",
+"Test CVar test_cameraOverShoulder has been set to 1.1478406327696 (default 0.000000)",
 0,
 },
 {
-"Test CVar test_cameraOverShoulder has been set to 1.170369324784 (default 0.000000)",
+"Test CVar test_cameraOverShoulder has been set to 1.1724800533267 (default 0.000000)",
 0,
 },
 {
-"Test CVar test_cameraOverShoulder has been set to 1.1927580874267 (default 0.000000)",
+"Test CVar test_cameraOverShoulder has been set to 1.1939697256272 (default 0.000000)",
 0,
 },
 {
-"Test CVar test_cameraOverShoulder has been set to 1.2112361597866 (default 0.000000)",
+"Test CVar test_cameraOverShoulder has been set to 1.2127553147804 (default 0.000000)",
 0,
 },
 {
-"Test CVar test_cameraOverShoulder has been set to 1.2264603695567 (default 0.000000)",
+"Test CVar test_cameraOverShoulder has been set to 1.2276815583293 (default 0.000000)",
 0,
 },
 {
-"Test CVar test_cameraOverShoulder has been set to 1.238699522773 (default 0.000000)",
+"Test CVar test_cameraOverShoulder has been set to 1.2393097604001 (default 0.000000)",
 0,
 },
 {
-"Test CVar test_cameraOverShoulder has been set to 1.2472009449197 (default 0.000000)",
+"Test CVar test_cameraOverShoulder has been set to 1.2478079351491 (default 0.000000)",
 0,
 },
 {
-"Test CVar test_cameraOverShoulder has been set to 1.2523518887442 (default 0.000000)",
+"Test CVar test_cameraOverShoulder has been set to 1.2526534680253 (default 0.000000)",
 0,
 },
 {
@@ -163,475 +2196,259 @@ Blizzard_Console_SavedVars = {
 0,
 },
 {
-"Test CVar test_cameraOverShoulder has been set to 1.2462601210043 (default 0.000000)",
+"Test CVar test_cameraOverShoulder has been set to 1.2403503511603 (default 0.000000)",
 0,
 },
 {
-"Test CVar test_cameraOverShoulder has been set to 1.0696323351125 (default 0.000000)",
+"Test CVar test_cameraOverShoulder has been set to 1.0579493292518 (default 0.000000)",
 0,
 },
 {
-"Test CVar test_cameraOverShoulder has been set to 1.0404578118808 (default 0.000000)",
+"Test CVar test_cameraOverShoulder has been set to 1.0114019166307 (default 0.000000)",
 0,
 },
 {
-"Test CVar test_cameraOverShoulder has been set to 1.0210730339222 (default 0.000000)",
+"Test CVar test_cameraOverShoulder has been set to 0.97287310970653 (default 0.000000)",
 0,
 },
 {
-"Test CVar test_cameraOverShoulder has been set to 1.0056063869863 (default 0.000000)",
+"Test CVar test_cameraOverShoulder has been set to 0.94415659557294 (default 0.000000)",
 0,
 },
 {
-"Test CVar test_cameraOverShoulder has been set to 0.99210518208598 (default 0.000000)",
+"Test CVar test_cameraOverShoulder has been set to 0.91561216554052 (default 0.000000)",
 0,
 },
 {
-"Test CVar test_cameraOverShoulder has been set to 0.9767141206986 (default 0.000000)",
+"Test CVar test_cameraOverShoulder has been set to 0.88537230036851 (default 0.000000)",
 0,
 },
 {
-"Test CVar test_cameraOverShoulder has been set to 0.96136686808785 (default 0.000000)",
+"Test CVar test_cameraOverShoulder has been set to 0.84790223856189 (default 0.000000)",
 0,
 },
 {
-"Test CVar test_cameraOverShoulder has been set to 0.94606584776306 (default 0.000000)",
+"Test CVar test_cameraOverShoulder has been set to 0.82006078105166 (default 0.000000)",
 0,
 },
 {
-"Test CVar test_cameraOverShoulder has been set to 0.93081347593293 (default 0.000000)",
+"Test CVar test_cameraOverShoulder has been set to 0.79246029814443 (default 0.000000)",
 0,
 },
 {
-"Test CVar test_cameraOverShoulder has been set to 0.91940757225581 (default 0.000000)",
+"Test CVar test_cameraOverShoulder has been set to 0.76330265141843 (default 0.000000)",
 0,
 },
 {
-"Test CVar test_cameraOverShoulder has been set to 0.90803140145458 (default 0.000000)",
+"Test CVar test_cameraOverShoulder has been set to 0.73624857632467 (default 0.000000)",
 0,
 },
 {
-"Test CVar test_cameraOverShoulder has been set to 0.89102510323552 (default 0.000000)",
+"Test CVar test_cameraOverShoulder has been set to 0.69709351128739 (default 0.000000)",
 0,
 },
 {
-"Test CVar test_cameraOverShoulder has been set to 0.87972767955405 (default 0.000000)",
+"Test CVar test_cameraOverShoulder has been set to 0.67077543969373 (default 0.000000)",
 0,
 },
 {
-"Test CVar test_cameraOverShoulder has been set to 0.86846351334604 (default 0.000000)",
+"Test CVar test_cameraOverShoulder has been set to 0.64650379970484 (default 0.000000)",
 0,
 },
 {
-"Test CVar test_cameraOverShoulder has been set to 0.85910283454381 (default 0.000000)",
+"Test CVar test_cameraOverShoulder has been set to 0.62252600723933 (default 0.000000)",
 0,
 },
 {
-"Test CVar test_cameraOverShoulder has been set to 0.8479022368261 (default 0.000000)",
+"Test CVar test_cameraOverShoulder has been set to 0.59885365774558 (default 0.000000)",
 0,
 },
 {
-"Test CVar test_cameraOverShoulder has been set to 0.83673772350174 (default 0.000000)",
+"Test CVar test_cameraOverShoulder has been set to 0.57218823356896 (default 0.000000)",
 0,
 },
 {
-"Test CVar test_cameraOverShoulder has been set to 0.82561028626736 (default 0.000000)",
+"Test CVar test_cameraOverShoulder has been set to 0.53784616511399 (default 0.000000)",
 0,
 },
 {
-"Test CVar test_cameraOverShoulder has been set to 0.80899080843706 (default 0.000000)",
+"Test CVar test_cameraOverShoulder has been set to 0.51538215173927 (default 0.000000)",
 0,
 },
 {
-"Test CVar test_cameraOverShoulder has been set to 0.7961258860503 (default 0.000000)",
+"Test CVar test_cameraOverShoulder has been set to 0.48702629722388 (default 0.000000)",
 0,
 },
 {
-"Test CVar test_cameraOverShoulder has been set to 0.78149101335564 (default 0.000000)",
+"Test CVar test_cameraOverShoulder has been set to 0.46386390283088 (default 0.000000)",
 0,
 },
 {
-"Test CVar test_cameraOverShoulder has been set to 0.76874664673346 (default 0.000000)",
+"Test CVar test_cameraOverShoulder has been set to 0.43814422546881 (default 0.000000)",
 0,
 },
 {
-"Test CVar test_cameraOverShoulder has been set to 0.75606096487596 (default 0.000000)",
+"Test CVar test_cameraOverShoulder has been set to 0.40572624840758 (default 0.000000)",
 0,
 },
 {
-"Test CVar test_cameraOverShoulder has been set to 0.73266276225083 (default 0.000000)",
+"Test CVar test_cameraOverShoulder has been set to 0.38278369825774 (default 0.000000)",
 0,
 },
 {
-"Test CVar test_cameraOverShoulder has been set to 0.71837132847702 (default 0.000000)",
+"Test CVar test_cameraOverShoulder has been set to 0.36454747204393 (default 0.000000)",
 0,
 },
 {
-"Test CVar test_cameraOverShoulder has been set to 0.70593564912389 (default 0.000000)",
+"Test CVar test_cameraOverShoulder has been set to 0.34668218486939 (default 0.000000)",
 0,
 },
 {
-"Test CVar test_cameraOverShoulder has been set to 0.69356624847572 (default 0.000000)",
+"Test CVar test_cameraOverShoulder has been set to 0.32389195934402 (default 0.000000)",
 0,
 },
 {
-"Test CVar test_cameraOverShoulder has been set to 0.67951286598097 (default 0.000000)",
+"Test CVar test_cameraOverShoulder has been set to 0.29665681409341 (default 0.000000)",
 0,
 },
 {
-"Test CVar test_cameraOverShoulder has been set to 0.6655502237907 (default 0.000000)",
+"Test CVar test_cameraOverShoulder has been set to 0.27414047235613 (default 0.000000)",
 0,
 },
 {
-"Test CVar test_cameraOverShoulder has been set to 0.65168052676816 (default 0.000000)",
+"Test CVar test_cameraOverShoulder has been set to 0.2571684706348 (default 0.000000)",
 0,
 },
 {
-"Test CVar test_cameraOverShoulder has been set to 0.63962250830063 (default 0.000000)",
+"Test CVar test_cameraOverShoulder has been set to 0.23951940804603 (default 0.000000)",
 0,
 },
 {
-"Test CVar test_cameraOverShoulder has been set to 0.62593297490069 (default 0.000000)",
+"Test CVar test_cameraOverShoulder has been set to 0.22243360157057 (default 0.000000)",
 0,
 },
 {
-"Test CVar test_cameraOverShoulder has been set to 0.61234264269194 (default 0.000000)",
+"Test CVar test_cameraOverShoulder has been set to 0.20700340325199 (default 0.000000)",
 0,
 },
 {
-"Test CVar test_cameraOverShoulder has been set to 0.59214783755534 (default 0.000000)",
+"Test CVar test_cameraOverShoulder has been set to 0.19312862900756 (default 0.000000)",
 0,
 },
 {
-"Test CVar test_cameraOverShoulder has been set to 0.58047569543224 (default 0.000000)",
+"Test CVar test_cameraOverShoulder has been set to 0.17868149976723 (default 0.000000)",
 0,
 },
 {
-"Test CVar test_cameraOverShoulder has been set to 0.56723591706337 (default 0.000000)",
+"Test CVar test_cameraOverShoulder has been set to 0.16475445277705 (default 0.000000)",
 0,
 },
 {
-"Test CVar test_cameraOverShoulder has been set to 0.55410460883245 (default 0.000000)",
+"Test CVar test_cameraOverShoulder has been set to 0.15229377182711 (default 0.000000)",
 0,
 },
 {
-"Test CVar test_cameraOverShoulder has been set to 0.54270532427032 (default 0.000000)",
+"Test CVar test_cameraOverShoulder has been set to 0.14210877097436 (default 0.000000)",
 0,
 },
 {
-"Test CVar test_cameraOverShoulder has been set to 0.52978297279378 (default 0.000000)",
+"Test CVar test_cameraOverShoulder has been set to 0.13402239302436 (default 0.000000)",
 0,
 },
 {
-"Test CVar test_cameraOverShoulder has been set to 0.51856967707986 (default 0.000000)",
+"Test CVar test_cameraOverShoulder has been set to 0.12615987751843 (default 0.000000)",
 0,
 },
 {
-"Test CVar test_cameraOverShoulder has been set to 0.50586345606684 (default 0.000000)",
+"Test CVar test_cameraOverShoulder has been set to 0.11768821351594 (default 0.000000)",
 0,
 },
 {
-"Test CVar test_cameraOverShoulder has been set to 0.49327539661572 (default 0.000000)",
+"Test CVar test_cameraOverShoulder has been set to 0.1103034020059 (default 0.000000)",
 0,
 },
 {
-"Test CVar test_cameraOverShoulder has been set to 0.47925754385357 (default 0.000000)",
+"Test CVar test_cameraOverShoulder has been set to 0.10236623280357 (default 0.000000)",
 0,
 },
 {
-"Test CVar test_cameraOverShoulder has been set to 0.46233520228409 (default 0.000000)",
+"Test CVar test_cameraOverShoulder has been set to 0.091732049108368 (default 0.000000)",
 0,
 },
 {
-"Test CVar test_cameraOverShoulder has been set to 0.45017623696298 (default 0.000000)",
+"Test CVar test_cameraOverShoulder has been set to 0.081659995648675 (default 0.000000)",
 0,
 },
 {
-"Test CVar test_cameraOverShoulder has been set to 0.43964122029987 (default 0.000000)",
+"Test CVar test_cameraOverShoulder has been set to 0.073477916452261 (default 0.000000)",
 0,
 },
 {
-"Test CVar test_cameraOverShoulder has been set to 0.42920467772249 (default 0.000000)",
+"Test CVar test_cameraOverShoulder has been set to 0.067616489515449 (default 0.000000)",
 0,
 },
 {
-"Test CVar test_cameraOverShoulder has been set to 0.41739939888452 (default 0.000000)",
+"Test CVar test_cameraOverShoulder has been set to 0.062605372460949 (default 0.000000)",
 0,
 },
 {
-"Test CVar test_cameraOverShoulder has been set to 0.40717810562688 (default 0.000000)",
+"Test CVar test_cameraOverShoulder has been set to 0.056022468062014 (default 0.000000)",
 0,
 },
 {
-"Test CVar test_cameraOverShoulder has been set to 0.39705921129238 (default 0.000000)",
+"Test CVar test_cameraOverShoulder has been set to 0.050902424982693 (default 0.000000)",
 0,
 },
 {
-"Test CVar test_cameraOverShoulder has been set to 0.38704393926997 (default 0.000000)",
+"Test CVar test_cameraOverShoulder has been set to 0.042903891320643 (default 0.000000)",
 0,
 },
 {
-"Test CVar test_cameraOverShoulder has been set to 0.37854281367863 (default 0.000000)",
+"Test CVar test_cameraOverShoulder has been set to 0.036045168640436 (default 0.000000)",
 0,
 },
 {
-"Test CVar test_cameraOverShoulder has been set to 0.36872318597531 (default 0.000000)",
+"Test CVar test_cameraOverShoulder has been set to 0.02977550587863 (default 0.000000)",
 0,
 },
 {
-"Test CVar test_cameraOverShoulder has been set to 0.35901060645042 (default 0.000000)",
+"Test CVar test_cameraOverShoulder has been set to 0.024483779943948 (default 0.000000)",
 0,
 },
 {
-"Test CVar test_cameraOverShoulder has been set to 0.34261289705082 (default 0.000000)",
+"Test CVar test_cameraOverShoulder has been set to 0.01970479155313 (default 0.000000)",
 0,
 },
 {
-"Test CVar test_cameraOverShoulder has been set to 0.33186065837792 (default 0.000000)",
+"Test CVar test_cameraOverShoulder has been set to 0.015133886131656 (default 0.000000)",
 0,
 },
 {
-"Test CVar test_cameraOverShoulder has been set to 0.31862536083251 (default 0.000000)",
+"Test CVar test_cameraOverShoulder has been set to 0.011425935268937 (default 0.000000)",
 0,
 },
 {
-"Test CVar test_cameraOverShoulder has been set to 0.3107947718075 (default 0.000000)",
+"Test CVar test_cameraOverShoulder has been set to 0.0080123026686629 (default 0.000000)",
 0,
 },
 {
-"Test CVar test_cameraOverShoulder has been set to 0.30176503836693 (default 0.000000)",
+"Test CVar test_cameraOverShoulder has been set to 0.0052012864328488 (default 0.000000)",
 0,
 },
 {
-"Test CVar test_cameraOverShoulder has been set to 0.29285044844147 (default 0.000000)",
+"Test CVar test_cameraOverShoulder has been set to 0.0031318374799159 (default 0.000000)",
 0,
 },
 {
-"Test CVar test_cameraOverShoulder has been set to 0.28405207981791 (default 0.000000)",
+"Test CVar test_cameraOverShoulder has been set to 0.0014865935168991 (default 0.000000)",
 0,
 },
 {
-"Test CVar test_cameraOverShoulder has been set to 0.27537099623173 (default 0.000000)",
+"Test CVar test_cameraOverShoulder has been set to 0.00039606883528154 (default 0.000000)",
 0,
 },
 {
-"Test CVar test_cameraOverShoulder has been set to 0.26680824723846 (default 0.000000)",
-0,
-},
-{
-"Test CVar test_cameraOverShoulder has been set to 0.25836486808681 (default 0.000000)",
-0,
-},
-{
-"Test CVar test_cameraOverShoulder has been set to 0.2488627677464 (default 0.000000)",
-0,
-},
-{
-"Test CVar test_cameraOverShoulder has been set to 0.24067859988164 (default 0.000000)",
-0,
-},
-{
-"Test CVar test_cameraOverShoulder has been set to 0.23376108495012 (default 0.000000)",
-0,
-},
-{
-"Test CVar test_cameraOverShoulder has been set to 0.22693420598102 (default 0.000000)",
-0,
-},
-{
-"Test CVar test_cameraOverShoulder has been set to 0.21908487601863 (default 0.000000)",
-0,
-},
-{
-"Test CVar test_cameraOverShoulder has been set to 0.2102674999461 (default 0.000000)",
-0,
-},
-{
-"Test CVar test_cameraOverShoulder has been set to 0.20268746903513 (default 0.000000)",
-0,
-},
-{
-"Test CVar test_cameraOverShoulder has been set to 0.1952345602604 (default 0.000000)",
-0,
-},
-{
-"Test CVar test_cameraOverShoulder has been set to 0.18790967468934 (default 0.000000)",
-0,
-},
-{
-"Test CVar test_cameraOverShoulder has been set to 0.17969627518484 (default 0.000000)",
-0,
-},
-{
-"Test CVar test_cameraOverShoulder has been set to 0.17264868714133 (default 0.000000)",
-0,
-},
-{
-"Test CVar test_cameraOverShoulder has been set to 0.16573185296614 (default 0.000000)",
-0,
-},
-{
-"Test CVar test_cameraOverShoulder has been set to 0.15894660891452 (default 0.000000)",
-0,
-},
-{
-"Test CVar test_cameraOverShoulder has been set to 0.15229377533227 (default 0.000000)",
-0,
-},
-{
-"Test CVar test_cameraOverShoulder has been set to 0.14577415655656 (default 0.000000)",
-0,
-},
-{
-"Test CVar test_cameraOverShoulder has been set to 0.1402925380546 (default 0.000000)",
-0,
-},
-{
-"Test CVar test_cameraOverShoulder has been set to 0.13402239715049 (default 0.000000)",
-0,
-},
-{
-"Test CVar test_cameraOverShoulder has been set to 0.12702239028276 (default 0.000000)",
-0,
-},
-{
-"Test CVar test_cameraOverShoulder has been set to 0.12188912856604 (default 0.000000)",
-0,
-},
-{
-"Test CVar test_cameraOverShoulder has been set to 0.11602746781537 (default 0.000000)",
-0,
-},
-{
-"Test CVar test_cameraOverShoulder has been set to 0.10949695654065 (default 0.000000)",
-0,
-},
-{
-"Test CVar test_cameraOverShoulder has been set to 0.10393099819956 (default 0.000000)",
-0,
-},
-{
-"Test CVar test_cameraOverShoulder has been set to 0.098504101794586 (default 0.000000)",
-0,
-},
-{
-"Test CVar test_cameraOverShoulder has been set to 0.093216923445316 (default 0.000000)",
-0,
-},
-{
-"Test CVar test_cameraOverShoulder has been set to 0.08734633636415 (default 0.000000)",
-0,
-},
-{
-"Test CVar test_cameraOverShoulder has been set to 0.082360684580185 (default 0.000000)",
-0,
-},
-{
-"Test CVar test_cameraOverShoulder has been set to 0.07751670261437 (default 0.000000)",
-0,
-},
-{
-"Test CVar test_cameraOverShoulder has been set to 0.072814976111115 (default 0.000000)",
-0,
-},
-{
-"Test CVar test_cameraOverShoulder has been set to 0.06825607351594 (default 0.000000)",
-0,
-},
-{
-"Test CVar test_cameraOverShoulder has been set to 0.063840546006749 (default 0.000000)",
-0,
-},
-{
-"Test CVar test_cameraOverShoulder has been set to 0.060170328219747 (default 0.000000)",
-0,
-},
-{
-"Test CVar test_cameraOverShoulder has been set to 0.05602247185763 (default 0.000000)",
-0,
-},
-{
-"Test CVar test_cameraOverShoulder has been set to 0.052019469641593 (default 0.000000)",
-0,
-},
-{
-"Test CVar test_cameraOverShoulder has been set to 0.048703984364894 (default 0.000000)",
-0,
-},
-{
-"Test CVar test_cameraOverShoulder has been set to 0.044971267669485 (default 0.000000)",
-0,
-},
-{
-"Test CVar test_cameraOverShoulder has been set to 0.041384741226693 (default 0.000000)",
-0,
-},
-{
-"Test CVar test_cameraOverShoulder has been set to 0.037465417703142 (default 0.000000)",
-0,
-},
-{
-"Test CVar test_cameraOverShoulder has been set to 0.034193593483904 (default 0.000000)",
-0,
-},
-{
-"Test CVar test_cameraOverShoulder has been set to 0.031506550890779 (default 0.000000)",
-0,
-},
-{
-"Test CVar test_cameraOverShoulder has been set to 0.029350298146464 (default 0.000000)",
-0,
-},
-{
-"Test CVar test_cameraOverShoulder has been set to 0.026862533453854 (default 0.000000)",
-0,
-},
-{
-"Test CVar test_cameraOverShoulder has been set to 0.024483782649641 (default 0.000000)",
-0,
-},
-{
-"Test CVar test_cameraOverShoulder has been set to 0.022584917425335 (default 0.000000)",
-0,
-},
-{
-"Test CVar test_cameraOverShoulder has been set to 0.020762020334363 (default 0.000000)",
-0,
-},
-{
-"Test CVar test_cameraOverShoulder has been set to 0.018674979879474 (default 0.000000)",
-0,
-},
-{
-"Test CVar test_cameraOverShoulder has been set to 0.017019601873959 (default 0.000000)",
-0,
-},
-{
-"Test CVar test_cameraOverShoulder has been set to 0.015133888120805 (default 0.000000)",
-0,
-},
-{
-"Test CVar test_cameraOverShoulder has been set to 0.01364652341075 (default 0.000000)",
-0,
-},
-{
-"Test CVar test_cameraOverShoulder has been set to 0.011962699335639 (default 0.000000)",
-0,
-},
-{
-"Test CVar test_cameraOverShoulder has been set to 0.010643791970994 (default 0.000000)",
-0,
-},
-{
-"Test CVar test_cameraOverShoulder has been set to 0.0091623602764517 (default 0.000000)",
-0,
-},
-{
-"Test CVar test_cameraOverShoulder has been set to 0.0080123040145399 (default 0.000000)",
-0,
-},
-{
-"Test CVar test_cameraOverShoulder has been set to 0.0067337069792237 (default 0.000000)",
+"Test CVar test_cameraOverShoulder has been set to 6.1886707141134e-06 (default 0.000000)",
 0,
 },
 {
@@ -651,43 +2468,7 @@ Blizzard_Console_SavedVars = {
 0,
 },
 {
-"Player-11-0EA2971B TRAIT_VALIDATION: Failure: Config 47496153. 10 pending (including duplicates) after adding all open nodes.",
-0,
-},
-{
-"Player-11-0EA2971B TRAIT_VALIDATION: Failure: Config 47496153. 10 pending (including duplicates) after adding all open nodes.",
-0,
-},
-{
-"Player-11-0EA2971B TRAIT_VALIDATION: Config 47496153. Failed to purchase node 110416 entry 137016 rank 0 with fail reason NODE_OP_FAILURE_REASON_LEVEL_TOO_LOW",
-0,
-},
-{
-"Player-11-0EA2971B TRAIT_VALIDATION: Failure: Config 47496153. 8 pending (including duplicates) after adding all open nodes.",
-0,
-},
-{
-"Player-11-0EA2971B TRAIT_VALIDATION: Config 47496153. Failed to purchase node 110416 entry 137016 rank 0 with fail reason NODE_OP_FAILURE_REASON_LEVEL_TOO_LOW",
-0,
-},
-{
-"Player-11-0EA2971B TRAIT_VALIDATION: Failure: Config 47496153. 8 pending (including duplicates) after adding all open nodes.",
-0,
-},
-{
-"World transfer pending...",
-0,
-},
-{
-"Got new connection 3",
-0,
-},
-{
-"Weather changed to 0, intensity 0.000000\n",
-0,
-},
-{
-"Weather changed to 0, intensity 0.000000\n",
+"Dissolve Effect ID 306 has invalid fade out time. This will result in the record beign ignore and a regular fade out being applied to the creature.",
 0,
 },
 {
@@ -699,483 +2480,7 @@ Blizzard_Console_SavedVars = {
 0,
 },
 {
-"Attempted to register existing command: SetDifficulty",
-0,
-},
-{
-"Got new connection 3",
-0,
-},
-{
-"Proficiency in item class 2 set to 0x0000008000",
-0,
-},
-{
-"Proficiency in item class 4 set to 0x0000000021",
-0,
-},
-{
-"Proficiency in item class 2 set to 0x000000c000",
-0,
-},
-{
-"Proficiency in item class 2 set to 0x000000c400",
-0,
-},
-{
-"Proficiency in item class 2 set to 0x000000c410",
-0,
-},
-{
-"Proficiency in item class 4 set to 0x0000000023",
-0,
-},
-{
-"Proficiency in item class 2 set to 0x000008c410",
-0,
-},
-{
-"Proficiency in item class 2 set to 0x000008c410",
-0,
-},
-{
-"Proficiency in item class 4 set to 0x0000000023",
-0,
-},
-{
-"Weather changed to 0, intensity 0.000000\n",
-0,
-},
-{
-"Time set to 2/26/2026 (Thu) 6:37",
-0,
-},
-{
-"Gamespeed set from 0.017 to 0.017",
-0,
-},
-{
-"Got new connection 3",
-0,
-},
-{
-"Weather changed to 0, intensity 0.000000\n",
-0,
-},
-{
-"Weather changed to 0, intensity 0.000000\n",
-0,
-},
-{
-"-------------------------------------------------- Previous Session --------------------------------------------------",
-0,
-},
-{
-"-------------------------------------------------- Previous Session --------------------------------------------------",
-0,
-},
-{
-"Attempted to register existing command: SetDifficulty",
-0,
-},
-{
-"Got new connection 3",
-0,
-},
-{
-"Proficiency in item class 2 set to 0x0000000001",
-0,
-},
-{
-"Proficiency in item class 4 set to 0x0000000021",
-0,
-},
-{
-"Proficiency in item class 2 set to 0x0000004001",
-0,
-},
-{
-"Proficiency in item class 4 set to 0x0000000025",
-0,
-},
-{
-"Proficiency in item class 2 set to 0x0000006001",
-0,
-},
-{
-"Proficiency in item class 2 set to 0x0000106001",
-0,
-},
-{
-"Proficiency in item class 2 set to 0x0000106081",
-0,
-},
-{
-"Proficiency in item class 4 set to 0x0000000027",
-0,
-},
-{
-"Proficiency in item class 2 set to 0x0000106281",
-0,
-},
-{
-"Proficiency in item class 2 set to 0x0000106281",
-0,
-},
-{
-"Proficiency in item class 4 set to 0x0000000027",
-0,
-},
-{
-"Weather changed to 0, intensity 0.000000\n",
-0,
-},
-{
-"Time set to 2/26/2026 (Thu) 6:39",
-0,
-},
-{
-"Gamespeed set from 0.017 to 0.017",
-0,
-},
-{
-"Got new connection 3",
-0,
-},
-{
-"Weather changed to 0, intensity 0.000000\n",
-0,
-},
-{
-"-------------------------------------------------- Previous Session --------------------------------------------------",
-0,
-},
-{
-"-------------------------------------------------- Previous Session --------------------------------------------------",
-0,
-},
-{
-"Attempted to register existing command: SetDifficulty",
-0,
-},
-{
-"Got new connection 3",
-0,
-},
-{
-"Proficiency in item class 2 set to 0x0000008000",
-0,
-},
-{
-"Proficiency in item class 4 set to 0x0000000021",
-0,
-},
-{
-"Proficiency in item class 2 set to 0x000000c000",
-0,
-},
-{
-"Proficiency in item class 2 set to 0x000000c400",
-0,
-},
-{
-"Proficiency in item class 2 set to 0x000000c410",
-0,
-},
-{
-"Proficiency in item class 4 set to 0x0000000023",
-0,
-},
-{
-"Proficiency in item class 2 set to 0x000008c410",
-0,
-},
-{
-"Proficiency in item class 2 set to 0x000008c410",
-0,
-},
-{
-"Proficiency in item class 4 set to 0x0000000023",
-0,
-},
-{
-"Weather changed to 0, intensity 0.000000\n",
-0,
-},
-{
-"Time set to 2/26/2026 (Thu) 6:40",
-0,
-},
-{
-"Gamespeed set from 0.017 to 0.017",
-0,
-},
-{
-"Got new connection 3",
-0,
-},
-{
-"Weather changed to 0, intensity 0.000000\n",
-0,
-},
-{
-"-------------------------------------------------- Previous Session --------------------------------------------------",
-0,
-},
-{
-"-------------------------------------------------- Previous Session --------------------------------------------------",
-0,
-},
-{
-"Attempted to register existing command: SetDifficulty",
-0,
-},
-{
-"Got new connection 3",
-0,
-},
-{
-"Proficiency in item class 2 set to 0x0000000001",
-0,
-},
-{
-"Proficiency in item class 4 set to 0x0000000021",
-0,
-},
-{
-"Proficiency in item class 2 set to 0x0000004001",
-0,
-},
-{
-"Proficiency in item class 4 set to 0x0000000025",
-0,
-},
-{
-"Proficiency in item class 2 set to 0x0000006001",
-0,
-},
-{
-"Proficiency in item class 2 set to 0x0000106001",
-0,
-},
-{
-"Proficiency in item class 2 set to 0x0000106081",
-0,
-},
-{
-"Proficiency in item class 4 set to 0x0000000027",
-0,
-},
-{
-"Proficiency in item class 2 set to 0x0000106281",
-0,
-},
-{
-"Proficiency in item class 2 set to 0x0000106281",
-0,
-},
-{
-"Proficiency in item class 4 set to 0x0000000027",
-0,
-},
-{
-"Weather changed to 0, intensity 0.000000\n",
-0,
-},
-{
-"Time set to 2/26/2026 (Thu) 6:41",
-0,
-},
-{
-"Gamespeed set from 0.017 to 0.017",
-0,
-},
-{
-"Got new connection 3",
-0,
-},
-{
-"Weather changed to 0, intensity 0.000000\n",
-0,
-},
-{
-"-------------------------------------------------- Previous Session --------------------------------------------------",
-0,
-},
-{
-"-------------------------------------------------- Previous Session --------------------------------------------------",
-0,
-},
-{
-"Attempted to register existing command: SetDifficulty",
-0,
-},
-{
-"Got new connection 3",
-0,
-},
-{
-"Proficiency in item class 2 set to 0x0000008000",
-0,
-},
-{
-"Proficiency in item class 4 set to 0x0000000021",
-0,
-},
-{
-"Proficiency in item class 2 set to 0x000000c000",
-0,
-},
-{
-"Proficiency in item class 2 set to 0x000000c400",
-0,
-},
-{
-"Proficiency in item class 2 set to 0x000000c410",
-0,
-},
-{
-"Proficiency in item class 4 set to 0x0000000023",
-0,
-},
-{
-"Proficiency in item class 2 set to 0x000008c410",
-0,
-},
-{
-"Proficiency in item class 2 set to 0x000008c410",
-0,
-},
-{
-"Proficiency in item class 4 set to 0x0000000023",
-0,
-},
-{
-"Weather changed to 0, intensity 0.000000\n",
-0,
-},
-{
-"Time set to 2/26/2026 (Thu) 6:42",
-0,
-},
-{
-"Gamespeed set from 0.017 to 0.017",
-0,
-},
-{
-"Got new connection 3",
-0,
-},
-{
-"Weather changed to 0, intensity 0.000000\n",
-0,
-},
-{
-"-------------------------------------------------- Previous Session --------------------------------------------------",
-0,
-},
-{
-"-------------------------------------------------- Previous Session --------------------------------------------------",
-0,
-},
-{
-"Attempted to register existing command: SetDifficulty",
-0,
-},
-{
-"Got new connection 3",
-0,
-},
-{
-"Proficiency in item class 2 set to 0x0000000001",
-0,
-},
-{
-"Proficiency in item class 4 set to 0x0000000021",
-0,
-},
-{
-"Proficiency in item class 2 set to 0x0000004001",
-0,
-},
-{
-"Proficiency in item class 4 set to 0x0000000025",
-0,
-},
-{
-"Proficiency in item class 2 set to 0x0000006001",
-0,
-},
-{
-"Proficiency in item class 2 set to 0x0000106001",
-0,
-},
-{
-"Proficiency in item class 2 set to 0x0000106081",
-0,
-},
-{
-"Proficiency in item class 4 set to 0x0000000027",
-0,
-},
-{
-"Proficiency in item class 2 set to 0x0000106281",
-0,
-},
-{
-"Proficiency in item class 2 set to 0x0000106281",
-0,
-},
-{
-"Proficiency in item class 4 set to 0x0000000027",
-0,
-},
-{
-"Weather changed to 0, intensity 0.000000\n",
-0,
-},
-{
-"Time set to 2/26/2026 (Thu) 6:42",
-0,
-},
-{
-"Gamespeed set from 0.017 to 0.017",
-0,
-},
-{
-"Got new connection 3",
-0,
-},
-{
-"Weather changed to 0, intensity 0.000000\n",
-0,
-},
-{
-"World transfer pending...",
-0,
-},
-{
-"Got new connection 3",
-0,
-},
-{
-"Weather changed to 0, intensity 0.000000\n",
-0,
-},
-{
-"World transfer pending...",
-0,
-},
-{
-"Got new connection 3",
-0,
-},
-{
-"Weather changed to 0, intensity 0.000000\n",
-0,
-},
-{
-"Weather changed to 0, intensity 0.000000\n",
+"Dissolve Effect ID 306 has invalid fade out time. This will result in the record beign ignore and a regular fade out being applied to the creature.",
 0,
 },
 {
@@ -1195,663 +2500,15 @@ Blizzard_Console_SavedVars = {
 0,
 },
 {
-"-------------------------------------------------- Previous Session --------------------------------------------------",
+"Time set to 3/4/2026 (Wed) 12:02",
 0,
 },
 {
-"Sorting particles normally.",
-0,
-},
-{
-"Multithreaded rendering enabled.",
-0,
-},
-{
-"Multithreaded BeginDraw enabled.",
-0,
-},
-{
-"Multithread shadows changed to 1.",
-0,
-},
-{
-"Multithreaded prepass enabled.",
-0,
-},
-{
-"Multithreaded opaque pass enabled.",
-0,
-},
-{
-"Multithreaded opaque pass enabled.",
-0,
-},
-{
-"Multithreaded alpha M2 pass enabled.",
-0,
-},
-{
-"Multithreaded opaque WMO pass enabled.",
-0,
-},
-{
-"Multithreaded terrain pass enabled.",
-0,
-},
-{
-"Multithreaded volumetric fog enabled.",
-0,
-},
-{
-"Multithreaded Refraction Pass enabled.",
-0,
-},
-{
-"Multithreaded miscellaneous passes disabled.",
-0,
-},
-{
-"Multithreaded decal pass enabled.",
-0,
-},
-{
-"Multithreaded outline passes enabled.",
-0,
-},
-{
-"Multithreaded lightshaft passes enabled.",
-0,
-},
-{
-"Multithreaded alpha pass enabled.",
-0,
-},
-{
-"Multithreaded daynight update enabled.",
-0,
-},
-{
-"Water detail changed to 3",
-0,
-},
-{
-"Ripple detail changed to 2",
-0,
-},
-{
-"Reflection mode changed to 3",
-0,
-},
-{
-"Reflection downscale changed to 0",
-0,
-},
-{
-"Sunshafts quality changed to 2",
-0,
-},
-{
-"Refraction mode changed to 2",
-0,
-},
-{
-"Volume fog enabled.",
-0,
-},
-{
-"Particulate volumes enabled.",
-0,
-},
-{
-"Projected textures enabled.",
-0,
-},
-{
-"Shadow mode changed to 4 - 4 band dynamic shadows on units and terrain, 2048",
-0,
-},
-{
-"Shadow texture size changed to 2048.",
-0,
-},
-{
-"Soft shadows changed to 1.",
-0,
-},
-{
-"Shadow cascade blending changed to 1",
-0,
-},
-{
-"Number of shadow cascades changed to 4",
-0,
-},
-{
-"Shadow RT mode changed to 0 (Disabled)",
-0,
-},
-{
-"maxLightCount must be in range 0 to 32.",
-0,
-},
-{
-"CVar 'maxLightCount' failed validation for its initial value.",
-0,
-},
-{
-"Clustered shading enabled.",
-0,
-},
-{
-"Not forcing clustered shading.",
-0,
-},
-{
-"SSAO mode set to 4",
-0,
-},
-{
-"SSAO type set to 0",
-0,
-},
-{
-"Depth Based Opacity Enabled",
-0,
-},
-{
-"SkyCloudLOD set to 1",
-0,
-},
-{
-"Texture filtering mode updated.",
-0,
-},
-{
-"Terrain mip level changed to 0.",
-0,
-},
-{
-"Outline mode changed to 2",
-0,
-},
-{
-"Physics interaction level changed to 1",
-0,
-},
-{
-"Render scale changed to 1",
-0,
-},
-{
-"Resample quality changed to 3",
-0,
-},
-{
-"MSAA disabled",
-0,
-},
-{
-"MSAA for alpha-test enabled.",
-0,
-},
-{
-"Variable Rate Shading not supported on this hardware",
-0,
-},
-{
-"CVar 'vrsWorldGeo' failed validation for its initial value.",
-0,
-},
-{
-"Variable Rate Shading not supported on this hardware",
-0,
-},
-{
-"Variable Rate Shading not supported on this hardware",
-0,
-},
-{
-"VALAR mode changed to 0",
-0,
-},
-{
-"lodObjectSizeScale cannot be changed.",
-0,
-},
-{
-"Volume fog enabled.",
-0,
-},
-{
-"dynamicLod enabled",
-0,
-},
-{
-"World preload object sort enabled.",
-0,
-},
-{
-"World load object sort enabled.",
-0,
-},
-{
-"World preload non critical enabled.",
-0,
-},
-{
-"World preload high res textures disabled.",
-0,
-},
-{
-"FFX: Color Blind Test Mode Disabled",
-0,
-},
-{
-"Error display disabled",
-0,
-},
-{
-"Error display shown",
-0,
-},
-{
-"Displaying errors through fatal errors",
-0,
-},
-{
-"Displaying errors through fatal errors",
-0,
-},
-{
-"Now filtering: all messages",
-0,
-},
-{
-"CVar 'Sound_AmbienceHighpassDSPCutoff' failed validation for its initial value.",
-0,
-},
-{
-"CVar 'Sound_AllyPlayerHighpassDSPCutoff' failed validation for its initial value.",
-0,
-},
-{
-"CVar 'Sound_EnemyPlayerHighpassDSPCutoff' failed validation for its initial value.",
-0,
-},
-{
-"CVar 'Sound_NPCHighpassDSPCutoff' failed validation for its initial value.",
-0,
-},
-{
-"ChromaEffects disabled",
-0,
-},
-{
-"-------------------------------------------------- Previous Session --------------------------------------------------",
-0,
-},
-{
-"Sorting particles normally.",
-0,
-},
-{
-"Multithreaded rendering enabled.",
-0,
-},
-{
-"Multithreaded BeginDraw enabled.",
-0,
-},
-{
-"Multithread shadows changed to 1.",
-0,
-},
-{
-"Multithreaded prepass enabled.",
-0,
-},
-{
-"Multithreaded opaque pass enabled.",
-0,
-},
-{
-"Multithreaded opaque pass enabled.",
-0,
-},
-{
-"Multithreaded alpha M2 pass enabled.",
-0,
-},
-{
-"Multithreaded opaque WMO pass enabled.",
-0,
-},
-{
-"Multithreaded terrain pass enabled.",
-0,
-},
-{
-"Multithreaded volumetric fog enabled.",
-0,
-},
-{
-"Multithreaded Refraction Pass enabled.",
-0,
-},
-{
-"Multithreaded miscellaneous passes disabled.",
-0,
-},
-{
-"Multithreaded decal pass enabled.",
-0,
-},
-{
-"Multithreaded outline passes enabled.",
-0,
-},
-{
-"Multithreaded lightshaft passes enabled.",
-0,
-},
-{
-"Multithreaded alpha pass enabled.",
-0,
-},
-{
-"Multithreaded daynight update enabled.",
-0,
-},
-{
-"Water detail changed to 3",
-0,
-},
-{
-"Ripple detail changed to 2",
-0,
-},
-{
-"Reflection mode changed to 3",
-0,
-},
-{
-"Reflection downscale changed to 0",
-0,
-},
-{
-"Sunshafts quality changed to 2",
-0,
-},
-{
-"Refraction mode changed to 2",
-0,
-},
-{
-"Volume fog enabled.",
-0,
-},
-{
-"Particulate volumes enabled.",
-0,
-},
-{
-"Projected textures enabled.",
-0,
-},
-{
-"Shadow mode changed to 4 - 4 band dynamic shadows on units and terrain, 2048",
-0,
-},
-{
-"Shadow texture size changed to 2048.",
-0,
-},
-{
-"Soft shadows changed to 1.",
-0,
-},
-{
-"Shadow cascade blending changed to 1",
-0,
-},
-{
-"Number of shadow cascades changed to 4",
-0,
-},
-{
-"Shadow RT mode changed to 0 (Disabled)",
-0,
-},
-{
-"maxLightCount must be in range 0 to 32.",
-0,
-},
-{
-"CVar 'maxLightCount' failed validation for its initial value.",
-0,
-},
-{
-"Clustered shading enabled.",
-0,
-},
-{
-"Not forcing clustered shading.",
-0,
-},
-{
-"SSAO mode set to 4",
-0,
-},
-{
-"SSAO type set to 0",
-0,
-},
-{
-"Depth Based Opacity Enabled",
-0,
-},
-{
-"SkyCloudLOD set to 1",
-0,
-},
-{
-"Texture filtering mode updated.",
-0,
-},
-{
-"Terrain mip level changed to 0.",
-0,
-},
-{
-"Outline mode changed to 2",
-0,
-},
-{
-"Physics interaction level changed to 1",
-0,
-},
-{
-"Render scale changed to 1",
-0,
-},
-{
-"Resample quality changed to 3",
-0,
-},
-{
-"MSAA disabled",
-0,
-},
-{
-"MSAA for alpha-test enabled.",
-0,
-},
-{
-"Variable Rate Shading not supported on this hardware",
-0,
-},
-{
-"CVar 'vrsWorldGeo' failed validation for its initial value.",
-0,
-},
-{
-"Variable Rate Shading not supported on this hardware",
-0,
-},
-{
-"Variable Rate Shading not supported on this hardware",
-0,
-},
-{
-"VALAR mode changed to 0",
-0,
-},
-{
-"lodObjectSizeScale cannot be changed.",
-0,
-},
-{
-"Volume fog enabled.",
-0,
-},
-{
-"dynamicLod enabled",
-0,
-},
-{
-"World preload object sort enabled.",
-0,
-},
-{
-"World load object sort enabled.",
-0,
-},
-{
-"World preload non critical enabled.",
-0,
-},
-{
-"World preload high res textures disabled.",
-0,
-},
-{
-"FFX: Color Blind Test Mode Disabled",
-0,
-},
-{
-"Error display disabled",
-0,
-},
-{
-"Error display shown",
-0,
-},
-{
-"Displaying errors through fatal errors",
-0,
-},
-{
-"Displaying errors through fatal errors",
-0,
-},
-{
-"Now filtering: all messages",
-0,
-},
-{
-"CVar 'Sound_AmbienceHighpassDSPCutoff' failed validation for its initial value.",
-0,
-},
-{
-"CVar 'Sound_AllyPlayerHighpassDSPCutoff' failed validation for its initial value.",
-0,
-},
-{
-"CVar 'Sound_EnemyPlayerHighpassDSPCutoff' failed validation for its initial value.",
-0,
-},
-{
-"CVar 'Sound_NPCHighpassDSPCutoff' failed validation for its initial value.",
-0,
-},
-{
-"ChromaEffects disabled",
-0,
-},
-{
-"NetClient::HandleConnect()\n",
-0,
-},
-{
-"Got new connection 2",
-0,
-},
-{
-"[WowEntitlements] [BNetAccount-0-000003482BDF] [WowAccount-0-0000003C5D98] Initialized with 201 entitlements.",
-0,
-},
-{
-"-------------------------------------------------- Previous Session --------------------------------------------------",
-0,
-},
-{
-"Got new connection 3",
-0,
-},
-{
-"Proficiency in item class 2 set to 0x0000000001",
-0,
-},
-{
-"Proficiency in item class 4 set to 0x0000000021",
-0,
-},
-{
-"Proficiency in item class 2 set to 0x0000004001",
-0,
-},
-{
-"Proficiency in item class 4 set to 0x0000000025",
-0,
-},
-{
-"Proficiency in item class 2 set to 0x0000006001",
-0,
-},
-{
-"Proficiency in item class 2 set to 0x0000106001",
-0,
-},
-{
-"Proficiency in item class 2 set to 0x0000106081",
-0,
-},
-{
-"Proficiency in item class 4 set to 0x0000000027",
-0,
-},
-{
-"Proficiency in item class 2 set to 0x0000106281",
-0,
-},
-{
-"Proficiency in item class 2 set to 0x0000106281",
-0,
-},
-{
-"Proficiency in item class 4 set to 0x0000000027",
+"Time set to 3/4/2026 (Wed) 12:02",
 0,
 },
 {
 "Weather changed to 0, intensity 0.000000\n",
-0,
-},
-{
-"Time set to 2/26/2026 (Thu) 10:31",
-0,
-},
-{
-"Gamespeed set from 0.017 to 0.017",
 0,
 },
 {
@@ -1860,6 +2517,562 @@ Blizzard_Console_SavedVars = {
 },
 {
 "Weather changed to 0, intensity 0.000000\n",
+0,
+},
+{
+"-------------------------------------------------- Previous Session --------------------------------------------------",
+0,
+},
+{
+"Skill 2916 increased from 44 to 45",
+0,
+},
+{
+"-------------------------------------------------- Previous Session --------------------------------------------------",
+0,
+},
+{
+"Time set to 3/4/2026 (Wed) 12:32",
+0,
+},
+{
+"Time set to 3/4/2026 (Wed) 12:32",
+0,
+},
+{
+"Time set to 3/4/2026 (Wed) 12:32",
+0,
+},
+{
+"Time set to 3/4/2026 (Wed) 12:32",
+0,
+},
+{
+"Skill 2916 increased from 45 to 46",
+0,
+},
+{
+"Time set to 3/4/2026 (Wed) 12:33",
+0,
+},
+{
+"Time set to 3/4/2026 (Wed) 12:33",
+0,
+},
+{
+"Skill 2916 increased from 46 to 47",
+0,
+},
+{
+"Weather changed to 1, intensity 0.221202\n",
+0,
+},
+{
+"Weather changed to 0, intensity 0.000000\n",
+0,
+},
+{
+"Weather changed to 1, intensity 0.221202\n",
+0,
+},
+{
+"Weather changed to 0, intensity 0.000000\n",
+0,
+},
+{
+"Skill 2916 increased from 47 to 48",
+0,
+},
+{
+"World transfer pending...",
+0,
+},
+{
+"Got new connection 3",
+0,
+},
+{
+"Weather changed to 0, intensity 0.000000\n",
+0,
+},
+{
+"Weather changed to 0, intensity 0.000000\n",
+0,
+},
+{
+"Test CVar test_cameraDynamicPitch has been set to 1 (default 0.000000)",
+0,
+},
+{
+"Test CVar test_cameraOverShoulder has been set to 0.067669537231785 (default 0.000000)",
+0,
+},
+{
+"Test CVar test_cameraOverShoulder has been set to 0.1398080515632 (default 0.000000)",
+0,
+},
+{
+"Test CVar test_cameraOverShoulder has been set to 0.22085606090418 (default 0.000000)",
+0,
+},
+{
+"Test CVar test_cameraOverShoulder has been set to 0.30172752126795 (default 0.000000)",
+0,
+},
+{
+"Test CVar test_cameraOverShoulder has been set to 0.36446409537697 (default 0.000000)",
+0,
+},
+{
+"Test CVar test_cameraOverShoulder has been set to 0.42256231341405 (default 0.000000)",
+0,
+},
+{
+"Test CVar test_cameraOverShoulder has been set to 0.48048433297556 (default 0.000000)",
+0,
+},
+{
+"Test CVar test_cameraOverShoulder has been set to 0.53820600195134 (default 0.000000)",
+0,
+},
+{
+"Test CVar test_cameraOverShoulder has been set to 0.59570325177266 (default 0.000000)",
+0,
+},
+{
+"Test CVar test_cameraOverShoulder has been set to 0.66612558579216 (default 0.000000)",
+0,
+},
+{
+"Test CVar test_cameraOverShoulder has been set to 0.72740150333498 (default 0.000000)",
+0,
+},
+{
+"Test CVar test_cameraOverShoulder has been set to 0.788325655944 (default 0.000000)",
+0,
+},
+{
+"Test CVar test_cameraOverShoulder has been set to 0.84455735402838 (default 0.000000)",
+0,
+},
+{
+"Test CVar test_cameraOverShoulder has been set to 0.89615149906174 (default 0.000000)",
+0,
+},
+{
+"Test CVar test_cameraOverShoulder has been set to 0.95168528121839 (default 0.000000)",
+0,
+},
+{
+"Test CVar test_cameraOverShoulder has been set to 1.0068222331551 (default 0.000000)",
+0,
+},
+{
+"Test CVar test_cameraOverShoulder has been set to 1.0573457786406 (default 0.000000)",
+0,
+},
+{
+"Test CVar test_cameraOverShoulder has been set to 1.107493654199 (default 0.000000)",
+0,
+},
+{
+"Test CVar test_cameraOverShoulder has been set to 1.1737423400708 (default 0.000000)",
+0,
+},
+{
+"Test CVar test_cameraOverShoulder has been set to 1.2636153222769 (default 0.000000)",
+0,
+},
+{
+"Test CVar test_cameraOverShoulder has been set to 1.3360302294171 (default 0.000000)",
+0,
+},
+{
+"Test CVar test_cameraOverShoulder has been set to 1.4073771343049 (default 0.000000)",
+0,
+},
+{
+"Test CVar test_cameraOverShoulder has been set to 1.4853295399964 (default 0.000000)",
+0,
+},
+{
+"Test CVar test_cameraOverShoulder has been set to 1.5504395504381 (default 0.000000)",
+0,
+},
+{
+"Test CVar test_cameraOverShoulder has been set to 1.6181736037338 (default 0.000000)",
+0,
+},
+{
+"Test CVar test_cameraOverShoulder has been set to 1.6809578172415 (default 0.000000)",
+0,
+},
+{
+"Test CVar test_cameraOverShoulder has been set to 1.7317644381727 (default 0.000000)",
+0,
+},
+{
+"Test CVar test_cameraOverShoulder has been set to 1.7746473352302 (default 0.000000)",
+0,
+},
+{
+"Test CVar test_cameraOverShoulder has been set to 1.8203918068286 (default 0.000000)",
+0,
+},
+{
+"Test CVar test_cameraOverShoulder has been set to 1.8653772181628 (default 0.000000)",
+0,
+},
+{
+"Test CVar test_cameraOverShoulder has been set to 1.9095848113817 (default 0.000000)",
+0,
+},
+{
+"Test CVar test_cameraOverShoulder has been set to 1.9596029905987 (default 0.000000)",
+0,
+},
+{
+"Test CVar test_cameraOverShoulder has been set to 2.0149737009123 (default 0.000000)",
+0,
+},
+{
+"Test CVar test_cameraOverShoulder has been set to 2.0626383223794 (default 0.000000)",
+0,
+},
+{
+"Test CVar test_cameraOverShoulder has been set to 2.0999468296642 (default 0.000000)",
+0,
+},
+{
+"Test CVar test_cameraOverShoulder has been set to 2.1574875787035 (default 0.000000)",
+0,
+},
+{
+"Test CVar test_cameraOverShoulder has been set to 2.2159798745995 (default 0.000000)",
+0,
+},
+{
+"Test CVar test_cameraOverShoulder has been set to 2.3157175911482 (default 0.000000)",
+0,
+},
+{
+"Test CVar test_cameraOverShoulder has been set to 2.3781152746562 (default 0.000000)",
+0,
+},
+{
+"Test CVar test_cameraOverShoulder has been set to 2.4251209485053 (default 0.000000)",
+0,
+},
+{
+"Test CVar test_cameraOverShoulder has been set to 2.4676608541604 (default 0.000000)",
+0,
+},
+{
+"Test CVar test_cameraOverShoulder has been set to 2.5082281492468 (default 0.000000)",
+0,
+},
+{
+"Test CVar test_cameraOverShoulder has been set to 2.5488733359183 (default 0.000000)",
+0,
+},
+{
+"Test CVar test_cameraOverShoulder has been set to 2.5852857511078 (default 0.000000)",
+0,
+},
+{
+"Test CVar test_cameraOverShoulder has been set to 2.6196315281742 (default 0.000000)",
+0,
+},
+{
+"Test CVar test_cameraOverShoulder has been set to 2.653613045143 (default 0.000000)",
+0,
+},
+{
+"Test CVar test_cameraOverShoulder has been set to 2.6836263606336 (default 0.000000)",
+0,
+},
+{
+"Test CVar test_cameraOverShoulder has been set to 2.7114944260131 (default 0.000000)",
+0,
+},
+{
+"Test CVar test_cameraOverShoulder has been set to 2.7385587967187 (default 0.000000)",
+0,
+},
+{
+"Test CVar test_cameraOverShoulder has been set to 2.7607074298963 (default 0.000000)",
+0,
+},
+{
+"Test CVar test_cameraOverShoulder has been set to 2.7820130282729 (default 0.000000)",
+0,
+},
+{
+"Test CVar test_cameraOverShoulder has been set to 2.8000932436222 (default 0.000000)",
+0,
+},
+{
+"Test CVar test_cameraOverShoulder has been set to 2.8179372746536 (default 0.000000)",
+0,
+},
+{
+"Test CVar test_cameraOverShoulder has been set to 2.831775956412 (default 0.000000)",
+0,
+},
+{
+"Test CVar test_cameraOverShoulder has been set to 2.8448528568866 (default 0.000000)",
+0,
+},
+{
+"Test CVar test_cameraOverShoulder has been set to 2.8549043762909 (default 0.000000)",
+0,
+},
+{
+"Test CVar test_cameraOverShoulder has been set to 2.8623020832986 (default 0.000000)",
+0,
+},
+{
+"Test CVar test_cameraOverShoulder has been set to 2.8674003308642 (default 0.000000)",
+0,
+},
+{
+"Test CVar test_cameraOverShoulder has been set to 2.870832724673 (default 0.000000)",
+0,
+},
+{
+"Test CVar test_cameraOverShoulder has been set to 2.8722358267078 (default 0.000000)",
+0,
+},
+{
+"Test CVar test_cameraOverShoulder has been set to 2.87225 (default 0.000000)",
+0,
+},
+{
+"Test CVar test_cameraDynamicPitch has been set to 0 (default 0.000000)",
+0,
+},
+{
+"Test CVar test_cameraOverShoulder has been set to 2.8226235482827 (default 0.000000)",
+0,
+},
+{
+"Test CVar test_cameraOverShoulder has been set to 2.4184754711367 (default 0.000000)",
+0,
+},
+{
+"Test CVar test_cameraOverShoulder has been set to 2.2853769075013 (default 0.000000)",
+0,
+},
+{
+"Test CVar test_cameraOverShoulder has been set to 2.1798221309129 (default 0.000000)",
+0,
+},
+{
+"Test CVar test_cameraOverShoulder has been set to 2.0882637709689 (default 0.000000)",
+0,
+},
+{
+"Test CVar test_cameraOverShoulder has been set to 1.9975584079433 (default 0.000000)",
+0,
+},
+{
+"Test CVar test_cameraOverShoulder has been set to 1.8823493227952 (default 0.000000)",
+0,
+},
+{
+"Test CVar test_cameraOverShoulder has been set to 1.7981456247738 (default 0.000000)",
+0,
+},
+{
+"Test CVar test_cameraOverShoulder has been set to 1.7108740553233 (default 0.000000)",
+0,
+},
+{
+"Test CVar test_cameraOverShoulder has been set to 1.6330003159938 (default 0.000000)",
+0,
+},
+{
+"Test CVar test_cameraOverShoulder has been set to 1.5322274931296 (default 0.000000)",
+0,
+},
+{
+"Test CVar test_cameraOverShoulder has been set to 1.4688075797194 (default 0.000000)",
+0,
+},
+{
+"Test CVar test_cameraOverShoulder has been set to 1.3869204492144 (default 0.000000)",
+0,
+},
+{
+"Test CVar test_cameraOverShoulder has been set to 1.3066493949653 (default 0.000000)",
+0,
+},
+{
+"Test CVar test_cameraOverShoulder has been set to 1.2059587437455 (default 0.000000)",
+0,
+},
+{
+"Test CVar test_cameraOverShoulder has been set to 1.1368882642964 (default 0.000000)",
+0,
+},
+{
+"Test CVar test_cameraOverShoulder has been set to 1.0658534336414 (default 0.000000)",
+0,
+},
+{
+"Test CVar test_cameraOverShoulder has been set to 1.0000205042687 (default 0.000000)",
+0,
+},
+{
+"Test CVar test_cameraOverShoulder has been set to 0.90605949695035 (default 0.000000)",
+0,
+},
+{
+"Test CVar test_cameraOverShoulder has been set to 0.84445523986089 (default 0.000000)",
+0,
+},
+{
+"Test CVar test_cameraOverShoulder has been set to 0.79086496627724 (default 0.000000)",
+0,
+},
+{
+"Test CVar test_cameraOverShoulder has been set to 0.73574074451526 (default 0.000000)",
+0,
+},
+{
+"Test CVar test_cameraOverShoulder has been set to 0.6562701120341 (default 0.000000)",
+0,
+},
+{
+"Test CVar test_cameraOverShoulder has been set to 0.60549524958648 (default 0.000000)",
+0,
+},
+{
+"Test CVar test_cameraOverShoulder has been set to 0.55386616084058 (default 0.000000)",
+0,
+},
+{
+"Test CVar test_cameraOverShoulder has been set to 0.51198879864364 (default 0.000000)",
+0,
+},
+{
+"Test CVar test_cameraOverShoulder has been set to 0.4765681413386 (default 0.000000)",
+0,
+},
+{
+"Test CVar test_cameraOverShoulder has been set to 0.4351164582628 (default 0.000000)",
+0,
+},
+{
+"Test CVar test_cameraOverShoulder has been set to 0.39540254065744 (default 0.000000)",
+0,
+},
+{
+"Test CVar test_cameraOverShoulder has been set to 0.35527806399399 (default 0.000000)",
+0,
+},
+{
+"Test CVar test_cameraOverShoulder has been set to 0.31305643802936 (default 0.000000)",
+0,
+},
+{
+"Test CVar test_cameraOverShoulder has been set to 0.27528462987102 (default 0.000000)",
+0,
+},
+{
+"Test CVar test_cameraOverShoulder has been set to 0.24163391623926 (default 0.000000)",
+0,
+},
+{
+"Test CVar test_cameraOverShoulder has been set to 0.21691366085874 (default 0.000000)",
+0,
+},
+{
+"Test CVar test_cameraOverShoulder has been set to 0.18862363187841 (default 0.000000)",
+0,
+},
+{
+"Test CVar test_cameraOverShoulder has been set to 0.16374537317018 (default 0.000000)",
+0,
+},
+{
+"Test CVar test_cameraOverShoulder has been set to 0.13918703680831 (default 0.000000)",
+0,
+},
+{
+"Test CVar test_cameraOverShoulder has been set to 0.11530854006876 (default 0.000000)",
+0,
+},
+{
+"Test CVar test_cameraOverShoulder has been set to 0.094779927385185 (default 0.000000)",
+0,
+},
+{
+"Test CVar test_cameraOverShoulder has been set to 0.080417135516351 (default 0.000000)",
+0,
+},
+{
+"Test CVar test_cameraOverShoulder has been set to 0.068192295557044 (default 0.000000)",
+0,
+},
+{
+"Test CVar test_cameraOverShoulder has been set to 0.056963723965593 (default 0.000000)",
+0,
+},
+{
+"Test CVar test_cameraOverShoulder has been set to 0.046735410200089 (default 0.000000)",
+0,
+},
+{
+"Test CVar test_cameraOverShoulder has been set to 0.038241264154482 (default 0.000000)",
+0,
+},
+{
+"Test CVar test_cameraOverShoulder has been set to 0.028654520610585 (default 0.000000)",
+0,
+},
+{
+"Test CVar test_cameraOverShoulder has been set to 0.021531651578107 (default 0.000000)",
+0,
+},
+{
+"Test CVar test_cameraOverShoulder has been set to 0.015892056909767 (default 0.000000)",
+0,
+},
+{
+"Test CVar test_cameraOverShoulder has been set to 0.010712393236511 (default 0.000000)",
+0,
+},
+{
+"Test CVar test_cameraOverShoulder has been set to 0.006857464020642 (default 0.000000)",
+0,
+},
+{
+"Test CVar test_cameraOverShoulder has been set to 0.0036277657546862 (default 0.000000)",
+0,
+},
+{
+"Test CVar test_cameraOverShoulder has been set to 0.00127910090132 (default 0.000000)",
+0,
+},
+{
+"Test CVar test_cameraOverShoulder has been set to 0.00017362722895964 (default 0.000000)",
+0,
+},
+{
+"Test CVar test_cameraOverShoulder has been set to 0 (default 0.000000)",
+0,
+},
+{
+"Test CVar test_cameraDynamicPitch has been set to 0 (default 0.000000)",
+0,
+},
+{
+"Test CVar test_cameraHeadMovementStrength has been set to 0 (default 0.000000)",
+0,
+},
+{
+"ACTION Camera set to 'off' - 'Disable action cam features'",
 0,
 },
 {
@@ -2163,11 +3376,7 @@ Blizzard_Console_SavedVars = {
 0,
 },
 {
-"Got new connection 2",
-0,
-},
-{
-"[WowEntitlements] [BNetAccount-0-000003482BDF] [WowAccount-0-0000003C5D98] Initialized with 201 entitlements.",
+"[WowEntitlements] [BNetAccount-0-000003482BDF] [WowAccount-0-0000003C5D98] Initialized with 205 entitlements.",
 0,
 },
 {
@@ -2227,7 +3436,7 @@ Blizzard_Console_SavedVars = {
 0,
 },
 {
-"Time set to 2/26/2026 (Thu) 16:02",
+"Time set to 3/4/2026 (Wed) 16:13",
 0,
 },
 {
@@ -2243,59 +3452,19 @@ Blizzard_Console_SavedVars = {
 0,
 },
 {
-"World transfer pending...",
+"Time set to 3/4/2026 (Wed) 16:15",
 0,
 },
 {
-"Got new connection 3",
+"Time set to 3/4/2026 (Wed) 16:15",
 0,
 },
 {
-"Weather changed to 0, intensity 0.000000\n",
+"Time set to 3/4/2026 (Wed) 16:15",
 0,
 },
 {
-"Time set to 2/26/2026 (Thu) 16:11",
-0,
-},
-{
-"Time set to 2/26/2026 (Thu) 16:11",
-0,
-},
-{
-"World transfer pending...",
-0,
-},
-{
-"Got new connection 3",
-0,
-},
-{
-"Weather changed to 0, intensity 0.000000\n",
-0,
-},
-{
-"Got new connection 3",
-0,
-},
-{
-"Weather changed to 0, intensity 0.000000\n",
-0,
-},
-{
-"Time set to 2/26/2026 (Thu) 16:44",
-0,
-},
-{
-"Time set to 2/26/2026 (Thu) 16:44",
-0,
-},
-{
-"Time set to 2/26/2026 (Thu) 16:46",
-0,
-},
-{
-"Time set to 2/26/2026 (Thu) 16:46",
+"Time set to 3/4/2026 (Wed) 16:15",
 0,
 },
 {
@@ -2303,167 +3472,111 @@ Blizzard_Console_SavedVars = {
 0,
 },
 {
-"Skill 2910 increased from 0 to 1",
+"-------------------------------------------------- Previous Session --------------------------------------------------",
 0,
 },
 {
-"Skill 2916 increased from 0 to 1",
+"-------------------------------------------------- Previous Session --------------------------------------------------",
 0,
 },
 {
-"Time set to 2/26/2026 (Thu) 16:52",
+"-------------------------------------------------- Previous Session --------------------------------------------------",
 0,
 },
 {
-"Time set to 2/26/2026 (Thu) 16:52",
+"-------------------------------------------------- Previous Session --------------------------------------------------",
 0,
 },
 {
-"Weather changed to 0, intensity 0.000000\n",
+"-------------------------------------------------- Previous Session --------------------------------------------------",
 0,
 },
 {
-"Got new connection 3",
+"-------------------------------------------------- Previous Session --------------------------------------------------",
 0,
 },
 {
-"Weather changed to 0, intensity 0.000000\n",
+"-------------------------------------------------- Previous Session --------------------------------------------------",
 0,
 },
 {
-"DBCache::CancelCallback ignored",
+"-------------------------------------------------- Previous Session --------------------------------------------------",
 0,
 },
 {
-"DBCache::CancelCallback ignored",
+"-------------------------------------------------- Previous Session --------------------------------------------------",
 0,
 },
 {
-"Time set to 2/26/2026 (Thu) 16:56",
+"-------------------------------------------------- Previous Session --------------------------------------------------",
 0,
 },
 {
-"Time set to 2/26/2026 (Thu) 16:56",
+"-------------------------------------------------- Previous Session --------------------------------------------------",
 0,
 },
 {
-"DBCache::CancelCallback ignored",
+"-------------------------------------------------- Previous Session --------------------------------------------------",
 0,
 },
 {
-"Time set to 2/26/2026 (Thu) 17:00",
+"-------------------------------------------------- Previous Session --------------------------------------------------",
 0,
 },
 {
-"Time set to 2/26/2026 (Thu) 17:00",
+"-------------------------------------------------- Previous Session --------------------------------------------------",
 0,
 },
 {
-"DBCache::CancelCallback ignored",
+"-------------------------------------------------- Previous Session --------------------------------------------------",
 0,
 },
 {
-"Skill 118 increased from 400 to 405",
+"-------------------------------------------------- Previous Session --------------------------------------------------",
 0,
 },
 {
-"Skill 183 increased from 400 to 405",
+"-------------------------------------------------- Previous Session --------------------------------------------------",
 0,
 },
 {
-"Skill 1848 increased from 400 to 405",
+"-------------------------------------------------- Previous Session --------------------------------------------------",
 0,
 },
 {
-"Skill 2152 increased from 400 to 405",
+"Time set to 3/4/2026 (Wed) 17:10",
 0,
 },
 {
-"Skill 2423 increased from 400 to 405",
+"Time set to 3/4/2026 (Wed) 17:10",
 0,
 },
 {
-"Skill 2733 increased from 400 to 405",
+"-------------------------------------------------- Previous Session --------------------------------------------------",
 0,
 },
 {
-"DBCache::CancelCallback ignored",
+"-------------------------------------------------- Previous Session --------------------------------------------------",
 0,
 },
 {
-"Time set to 2/26/2026 (Thu) 17:21",
+"-------------------------------------------------- Previous Session --------------------------------------------------",
 0,
 },
 {
-"Time set to 2/26/2026 (Thu) 17:21",
+"-------------------------------------------------- Previous Session --------------------------------------------------",
 0,
 },
 {
-"Skill 2916 increased from 1 to 2",
+"Time set to 3/4/2026 (Wed) 17:16",
 0,
 },
 {
-"[Airlock] Received PreloadMap Destination MapID:2952, Current MapID:0, PreviousTransitionID:-1, Position (13.6196, 255.846, 273.21)",
+"Time set to 3/4/2026 (Wed) 17:16",
 0,
 },
 {
-"[Airlock] Preload initiated for map 2952",
-0,
-},
-{
-"Got new connection 3",
-0,
-},
-{
-"[Airlock] Loading new map 2952 from previous map 0 with translation: (-4767.33, 4377.68, 242.491)\n    Location : (-17.7822, 237.286, 265.426)\n    Location in previous map : (4749.55, -4140.4, 22.9348)",
-0,
-},
-{
-"[Airlock] Destination 2952 had not finished preload at position (-17.7822, 237.286, 265.426), putting up loading screen\n",
-0,
-},
-{
-"[Airlock] Swapping to preloaded map 2952 but keeping old map 0 RESIDENT.",
-0,
-},
-{
-"[Airlock] Freezing AOI updates for old map 0",
-0,
-},
-{
-"[Airlock] Finished transition to new map 2952",
-0,
-},
-{
-"Weather changed to 0, intensity 0.000000\n",
-0,
-},
-{
-"[Airlock] Received PreloadMap Destination MapID:0, Current MapID:2952, PreviousTransitionID:0, Position (4749.55, -4140.4, 22.9348)",
-0,
-},
-{
-"[Airlock] Preload skipped - map is same as current map.",
-0,
-},
-{
-"Skill 2916 increased from 2 to 3",
-0,
-},
-{
-"Skill 2916 increased from 3 to 4",
-0,
-},
-{
-"[Airlock] Received PreloadMap Destination MapID:0, Current MapID:2952, PreviousTransitionID:0, Position (4902.58, -4435.98, -26.2768)",
-0,
-},
-{
-"[Airlock] Preload skipped - map is same as current map.",
-0,
-},
-{
-"Skill 2916 increased from 4 to 5",
+"World transfer pending...",
 0,
 },
 {
@@ -2471,19 +3584,7 @@ Blizzard_Console_SavedVars = {
 0,
 },
 {
-"[Airlock] Loading new map 0 from previous map 2952 with translation: (4767.33, -4377.68, -242.491)\n    Location : (4780.58, -4122.92, 30.4551)\n    Location in previous map : (13.2554, 254.762, 272.946)",
-0,
-},
-{
-"[Airlock] Destination 0 had not finished preload at position (4780.58, -4122.92, 30.4551), putting up loading screen\n",
-0,
-},
-{
-"[Airlock] Swapping to preloaded map 0 and unloading map 2952. (Map Table Size 2310 larger than budget 8)",
-0,
-},
-{
-"[Airlock] Finished transition to new map 0",
+"Dissolve Effect ID 306 has invalid fade out time. This will result in the record beign ignore and a regular fade out being applied to the creature.",
 0,
 },
 {
@@ -2491,187 +3592,111 @@ Blizzard_Console_SavedVars = {
 0,
 },
 {
-"Weather changed to 0, intensity 0.000000\n",
+"-------------------------------------------------- Previous Session --------------------------------------------------",
 0,
 },
 {
-"[Airlock] Received Cancel Preload for MapID 2952, but we have not preloaded it. Current preloaded map: -1",
+"-------------------------------------------------- Previous Session --------------------------------------------------",
 0,
 },
 {
-"Skill 2916 increased from 5 to 6",
+"-------------------------------------------------- Previous Session --------------------------------------------------",
 0,
 },
 {
-"Skill 2916 increased from 6 to 7",
+"-------------------------------------------------- Previous Session --------------------------------------------------",
 0,
 },
 {
-"Time set to 2/26/2026 (Thu) 17:40",
+"-------------------------------------------------- Previous Session --------------------------------------------------",
 0,
 },
 {
-"Time set to 2/26/2026 (Thu) 17:40",
+"-------------------------------------------------- Previous Session --------------------------------------------------",
 0,
 },
 {
-"Time set to 2/26/2026 (Thu) 17:40",
+"-------------------------------------------------- Previous Session --------------------------------------------------",
 0,
 },
 {
-"Time set to 2/26/2026 (Thu) 17:40",
+"-------------------------------------------------- Previous Session --------------------------------------------------",
 0,
 },
 {
-"Skill 2916 increased from 7 to 8",
+"-------------------------------------------------- Previous Session --------------------------------------------------",
 0,
 },
 {
-"Weather changed to 1, intensity 0.241521\n",
+"-------------------------------------------------- Previous Session --------------------------------------------------",
 0,
 },
 {
-"Time set to 2/26/2026 (Thu) 17:55",
+"-------------------------------------------------- Previous Session --------------------------------------------------",
 0,
 },
 {
-"Time set to 2/26/2026 (Thu) 17:55",
+"-------------------------------------------------- Previous Session --------------------------------------------------",
 0,
 },
 {
-"Weather changed to 0, intensity 0.000000\n",
+"-------------------------------------------------- Previous Session --------------------------------------------------",
 0,
 },
 {
-"Weather changed to 0, intensity 0.000000\n",
+"-------------------------------------------------- Previous Session --------------------------------------------------",
 0,
 },
 {
-"Got new connection 3",
+"-------------------------------------------------- Previous Session --------------------------------------------------",
 0,
 },
 {
-"Weather changed to 0, intensity 0.000000\n",
+"-------------------------------------------------- Previous Session --------------------------------------------------",
 0,
 },
 {
-"Skill 2911 increased from 0 to 1",
+"-------------------------------------------------- Previous Session --------------------------------------------------",
 0,
 },
 {
-"Skill 2908 increased from 0 to 1",
+"-------------------------------------------------- Previous Session --------------------------------------------------",
 0,
 },
 {
-"Skill 118 increased from 405 to 410",
+"-------------------------------------------------- Previous Session --------------------------------------------------",
 0,
 },
 {
-"Skill 183 increased from 405 to 410",
+"-------------------------------------------------- Previous Session --------------------------------------------------",
 0,
 },
 {
-"Skill 1848 increased from 405 to 410",
+"-------------------------------------------------- Previous Session --------------------------------------------------",
 0,
 },
 {
-"Skill 2152 increased from 405 to 410",
+"-------------------------------------------------- Previous Session --------------------------------------------------",
 0,
 },
 {
-"Skill 2423 increased from 405 to 410",
+"-------------------------------------------------- Previous Session --------------------------------------------------",
 0,
 },
 {
-"Skill 2733 increased from 405 to 410",
+"-------------------------------------------------- Previous Session --------------------------------------------------",
 0,
 },
 {
-"Got new connection 3",
+"-------------------------------------------------- Previous Session --------------------------------------------------",
 0,
 },
 {
-"Weather changed to 0, intensity 0.000000\n",
+"-------------------------------------------------- Previous Session --------------------------------------------------",
 0,
 },
 {
-"DBCache::CancelCallback ignored",
-0,
-},
-{
-"DBCache::CancelCallback ignored",
-0,
-},
-{
-"Got new connection 3",
-0,
-},
-{
-"Weather changed to 0, intensity 0.000000\n",
-0,
-},
-{
-"Weather changed to 0, intensity 0.000000\n",
-0,
-},
-{
-"Got new connection 3",
-0,
-},
-{
-"Weather changed to 0, intensity 0.000000\n",
-0,
-},
-{
-"Weather changed to 0, intensity 0.000000\n",
-0,
-},
-{
-"Got new connection 3",
-0,
-},
-{
-"Weather changed to 0, intensity 0.000000\n",
-0,
-},
-{
-"DBCache::CancelCallback ignored",
-0,
-},
-{
-"DBCache::CancelCallback ignored",
-0,
-},
-{
-"Got new connection 3",
-0,
-},
-{
-"Weather changed to 0, intensity 0.000000\n",
-0,
-},
-{
-"Got new connection 3",
-0,
-},
-{
-"Weather changed to 0, intensity 0.000000\n",
-0,
-},
-{
-"Got new connection 3",
-0,
-},
-{
-"Weather changed to 0, intensity 0.000000\n",
-0,
-},
-{
-"Time set to 2/26/2026 (Thu) 18:16",
-0,
-},
-{
-"Time set to 2/26/2026 (Thu) 18:16",
+"-------------------------------------------------- Previous Session --------------------------------------------------",
 0,
 },
 {
@@ -2687,15 +3712,31 @@ Blizzard_Console_SavedVars = {
 0,
 },
 {
-"Time set to 2/26/2026 (Thu) 18:18",
+"-------------------------------------------------- Previous Session --------------------------------------------------",
 0,
 },
 {
-"Time set to 2/26/2026 (Thu) 18:18",
+"Time set to 3/4/2026 (Wed) 17:56",
 0,
 },
 {
-"DBCache::CancelCallback ignored",
+"Time set to 3/4/2026 (Wed) 17:56",
+0,
+},
+{
+"-------------------------------------------------- Previous Session --------------------------------------------------",
+0,
+},
+{
+"-------------------------------------------------- Previous Session --------------------------------------------------",
+0,
+},
+{
+"Time set to 3/4/2026 (Wed) 17:58",
+0,
+},
+{
+"Time set to 3/4/2026 (Wed) 17:58",
 0,
 },
 {
@@ -2731,15 +3772,23 @@ Blizzard_Console_SavedVars = {
 0,
 },
 {
-"DBCache::CancelCallback ignored",
+"-------------------------------------------------- Previous Session --------------------------------------------------",
 0,
 },
 {
-"Time set to 2/26/2026 (Thu) 18:30",
+"Time set to 3/4/2026 (Wed) 18:08",
 0,
 },
 {
-"Time set to 2/26/2026 (Thu) 18:30",
+"Time set to 3/4/2026 (Wed) 18:08",
+0,
+},
+{
+"Time set to 3/4/2026 (Wed) 18:09",
+0,
+},
+{
+"Time set to 3/4/2026 (Wed) 18:09",
 0,
 },
 {
@@ -2755,23 +3804,43 @@ Blizzard_Console_SavedVars = {
 0,
 },
 {
-"DBCache::CancelCallback ignored",
+"Time set to 3/4/2026 (Wed) 18:10",
 0,
 },
 {
-"DBCache::CancelCallback ignored",
+"Time set to 3/4/2026 (Wed) 18:10",
 0,
 },
 {
-"DBCache::CancelCallback ignored",
+"Time set to 3/4/2026 (Wed) 18:10",
 0,
 },
 {
-"DBCache::CancelCallback ignored",
+"Time set to 3/4/2026 (Wed) 18:10",
 0,
 },
 {
-"DBCache::CancelCallback ignored",
+"Time set to 3/4/2026 (Wed) 18:10",
+0,
+},
+{
+"Time set to 3/4/2026 (Wed) 18:10",
+0,
+},
+{
+"Time set to 3/4/2026 (Wed) 18:10",
+0,
+},
+{
+"Time set to 3/4/2026 (Wed) 18:10",
+0,
+},
+{
+"Time set to 3/4/2026 (Wed) 18:10",
+0,
+},
+{
+"Time set to 3/4/2026 (Wed) 18:10",
 0,
 },
 {
@@ -2815,395 +3884,15 @@ Blizzard_Console_SavedVars = {
 0,
 },
 {
-"Time set to 2/26/2026 (Thu) 19:07",
+"-------------------------------------------------- Previous Session --------------------------------------------------",
 0,
 },
 {
-"Time set to 2/26/2026 (Thu) 19:07",
-0,
-},
-{
-"Weather changed to 0, intensity 0.000000\n",
+"World transfer pending...",
 0,
 },
 {
 "Got new connection 3",
-0,
-},
-{
-"Weather changed to 0, intensity 0.000000\n",
-0,
-},
-{
-"Skill 118 increased from 410 to 415",
-0,
-},
-{
-"Skill 183 increased from 410 to 415",
-0,
-},
-{
-"Skill 1848 increased from 410 to 415",
-0,
-},
-{
-"Skill 2152 increased from 410 to 415",
-0,
-},
-{
-"Skill 2423 increased from 410 to 415",
-0,
-},
-{
-"Skill 2733 increased from 410 to 415",
-0,
-},
-{
-"Got new connection 3",
-0,
-},
-{
-"Weather changed to 0, intensity 0.000000\n",
-0,
-},
-{
-"Time set to 2/26/2026 (Thu) 19:14",
-0,
-},
-{
-"Time set to 2/26/2026 (Thu) 19:14",
-0,
-},
-{
-"-------------------------------------------------- Previous Session --------------------------------------------------",
-0,
-},
-{
-"-------------------------------------------------- Previous Session --------------------------------------------------",
-0,
-},
-{
-"Weather changed to 1, intensity 0.278523\n",
-0,
-},
-{
-"Weather changed to 0, intensity 0.000000\n",
-0,
-},
-{
-"-------------------------------------------------- Previous Session --------------------------------------------------",
-0,
-},
-{
-"-------------------------------------------------- Previous Session --------------------------------------------------",
-0,
-},
-{
-"-------------------------------------------------- Previous Session --------------------------------------------------",
-0,
-},
-{
-"Time set to 2/26/2026 (Thu) 19:29",
-0,
-},
-{
-"Time set to 2/26/2026 (Thu) 19:29",
-0,
-},
-{
-"-------------------------------------------------- Previous Session --------------------------------------------------",
-0,
-},
-{
-"-------------------------------------------------- Previous Session --------------------------------------------------",
-0,
-},
-{
-"-------------------------------------------------- Previous Session --------------------------------------------------",
-0,
-},
-{
-"-------------------------------------------------- Previous Session --------------------------------------------------",
-0,
-},
-{
-"Weather changed to 1, intensity 0.211927\n",
-0,
-},
-{
-"Weather changed to 1, intensity 0.211927\n",
-0,
-},
-{
-"DBCache::CancelCallback ignored",
-0,
-},
-{
-"Weather changed to 1, intensity 0.211927\n",
-0,
-},
-{
-"-------------------------------------------------- Previous Session --------------------------------------------------",
-0,
-},
-{
-"Weather changed to 1, intensity 0.211927\n",
-0,
-},
-{
-"-------------------------------------------------- Previous Session --------------------------------------------------",
-0,
-},
-{
-"Weather changed to 0, intensity 0.000000\n",
-0,
-},
-{
-"Weather changed to 0, intensity 0.000000\n",
-0,
-},
-{
-"Weather changed to 0, intensity 0.000000\n",
-0,
-},
-{
-"-------------------------------------------------- Previous Session --------------------------------------------------",
-0,
-},
-{
-"Weather changed to 0, intensity 0.000000\n",
-0,
-},
-{
-"Weather changed to 0, intensity 0.000000\n",
-0,
-},
-{
-"Weather changed to 0, intensity 0.000000\n",
-0,
-},
-{
-"Time set to 2/26/2026 (Thu) 19:52",
-0,
-},
-{
-"Time set to 2/26/2026 (Thu) 19:52",
-0,
-},
-{
-"Time set to 2/26/2026 (Thu) 19:52",
-0,
-},
-{
-"Time set to 2/26/2026 (Thu) 19:52",
-0,
-},
-{
-"Weather changed to 0, intensity 0.000000\n",
-0,
-},
-{
-"-------------------------------------------------- Previous Session --------------------------------------------------",
-0,
-},
-{
-"-------------------------------------------------- Previous Session --------------------------------------------------",
-0,
-},
-{
-"Weather changed to 0, intensity 0.000000\n",
-0,
-},
-{
-"DBCache::CancelCallback ignored",
-0,
-},
-{
-"DBCache::CancelCallback ignored",
-0,
-},
-{
-"DBCache::CancelCallback ignored",
-0,
-},
-{
-"Weather changed to 0, intensity 0.000000\n",
-0,
-},
-{
-"Weather changed to 0, intensity 0.000000\n",
-0,
-},
-{
-"Weather changed to 0, intensity 0.000000\n",
-0,
-},
-{
-"Weather changed to 0, intensity 0.000000\n",
-0,
-},
-{
-"Weather changed to 0, intensity 0.000000\n",
-0,
-},
-{
-"Weather changed to 1, intensity 0.800000\n",
-0,
-},
-{
-"Weather changed to 1, intensity 0.292866\n",
-0,
-},
-{
-"Weather changed to 0, intensity 0.000000\n",
-0,
-},
-{
-"Skill 2916 increased from 8 to 9",
-0,
-},
-{
-"Weather changed to 0, intensity 0.000000\n",
-0,
-},
-{
-"Weather changed to 1, intensity 0.800000\n",
-0,
-},
-{
-"Skill 2916 increased from 9 to 10",
-0,
-},
-{
-"Weather changed to 1, intensity 1.000000\n",
-0,
-},
-{
-"Weather changed to 0, intensity 0.000000\n",
-0,
-},
-{
-"Time set to 2/26/2026 (Thu) 20:20",
-0,
-},
-{
-"Time set to 2/26/2026 (Thu) 20:20",
-0,
-},
-{
-"Weather changed to recID 1 intensity 0\n",
-0,
-},
-{
-"Weather changed to recID 211 intensity 0\n",
-0,
-},
-{
-"Weather changed to recID 211 intensity 0\n",
-0,
-},
-{
-"Weather changed to 1, intensity 0.800000\n",
-0,
-},
-{
-"Skill 2916 increased from 10 to 11",
-0,
-},
-{
-"DBCache::CancelCallback ignored",
-0,
-},
-{
-"DBCache::CancelCallback ignored",
-0,
-},
-{
-"DBCache::CancelCallback ignored",
-0,
-},
-{
-"Weather changed to 1, intensity 1.000000\n",
-0,
-},
-{
-"Weather changed to 1, intensity 1.000000\n",
-0,
-},
-{
-"Only one lightning storm at a time is supported (including storms from weather).",
-0,
-},
-{
-"Changing lightning storm from previous lightning ID:0 to new lightning ID: 131.",
-0,
-},
-{
-"Weather changed to 1, intensity 0.750000\n",
-0,
-},
-{
-"Only one lightning storm at a time is supported (including storms from weather).",
-0,
-},
-{
-"Changing lightning storm from previous lightning ID:131 to new lightning ID: 132.",
-0,
-},
-{
-"Skill 2916 increased from 11 to 12",
-0,
-},
-{
-"Weather changed to 1, intensity 0.800000\n",
-0,
-},
-{
-"End lightning storm.",
-0,
-},
-{
-"Weather changed to 0, intensity 0.000000\n",
-0,
-},
-{
-"Weather changed to 0, intensity 0.000000\n",
-0,
-},
-{
-"Skill 2916 increased from 12 to 13",
-0,
-},
-{
-"Weather changed to 1, intensity 0.800000\n",
-0,
-},
-{
-"Weather changed to 0, intensity 0.000000\n",
-0,
-},
-{
-"Weather changed to 1, intensity 0.800000\n",
-0,
-},
-{
-"Weather changed to 0, intensity 0.000000\n",
-0,
-},
-{
-"-------------------------------------------------- Previous Session --------------------------------------------------",
-0,
-},
-{
-"Weather changed to 0, intensity 0.150000\n",
-0,
-},
-{
-"Only one lightning storm at a time is supported (including storms from weather).",
-0,
-},
-{
-"Changing lightning storm from previous lightning ID:0 to new lightning ID: 129.",
 0,
 },
 {
@@ -3219,35 +3908,7 @@ Blizzard_Console_SavedVars = {
 0,
 },
 {
-"Skill 118 increased from 415 to 420",
-0,
-},
-{
-"Skill 183 increased from 415 to 420",
-0,
-},
-{
-"Skill 1848 increased from 415 to 420",
-0,
-},
-{
-"Skill 2152 increased from 415 to 420",
-0,
-},
-{
-"Skill 2423 increased from 415 to 420",
-0,
-},
-{
-"Skill 2733 increased from 415 to 420",
-0,
-},
-{
-"Weather changed to 2, intensity 1.000000\n",
-0,
-},
-{
-"Weather changed to 0, intensity 0.000000\n",
+"-------------------------------------------------- Previous Session --------------------------------------------------",
 0,
 },
 {
@@ -3259,347 +3920,7 @@ Blizzard_Console_SavedVars = {
 0,
 },
 {
-"Weather changed to 1, intensity 0.800000\n",
-0,
-},
-{
-"Weather changed to 1, intensity 0.800000\n",
-0,
-},
-{
-"Weather changed to 0, intensity 0.000000\n",
-0,
-},
-{
-"Weather changed to 1, intensity 0.800000\n",
-0,
-},
-{
-"Weather changed to 1, intensity 0.800000\n",
-0,
-},
-{
-"Weather changed to 1, intensity 0.255150\n",
-0,
-},
-{
-"Weather changed to 0, intensity 0.000000\n",
-0,
-},
-{
-"Weather changed to 1, intensity 0.800000\n",
-0,
-},
-{
-"Weather changed to 0, intensity 0.000000\n",
-0,
-},
-{
-"DBCache::CancelCallback ignored",
-0,
-},
-{
-"DBCache::CancelCallback ignored",
-0,
-},
-{
-"Weather changed to 1, intensity 0.800000\n",
-0,
-},
-{
-"Weather changed to 1, intensity 0.800000\n",
-0,
-},
-{
-"Weather changed to 0, intensity 0.000000\n",
-0,
-},
-{
-"Weather changed to 0, intensity 0.000000\n",
-0,
-},
-{
-"Weather changed to 0, intensity 0.000000\n",
-0,
-},
-{
 "World transfer pending...",
-0,
-},
-{
-"Got new connection 3",
-0,
-},
-{
-"Weather changed to 0, intensity 0.000000\n",
-0,
-},
-{
-"Weather changed to 0, intensity 0.000000\n",
-0,
-},
-{
-"Weather changed to 0, intensity 0.000000\n",
-0,
-},
-{
-"Got new connection 3",
-0,
-},
-{
-"Weather changed to 0, intensity 0.000000\n",
-0,
-},
-{
-"DBCache::CancelCallback ignored",
-0,
-},
-{
-"World transfer pending...",
-0,
-},
-{
-"Got new connection 3",
-0,
-},
-{
-"Weather changed to 0, intensity 0.000000\n",
-0,
-},
-{
-"Time set to 2/26/2026 (Thu) 21:49",
-0,
-},
-{
-"Time set to 2/26/2026 (Thu) 21:49",
-0,
-},
-{
-"-------------------------------------------------- Previous Session --------------------------------------------------",
-0,
-},
-{
-"-------------------------------------------------- Previous Session --------------------------------------------------",
-0,
-},
-{
-"Attempted to register existing command: SetDifficulty",
-0,
-},
-{
-"Got new connection 3",
-0,
-},
-{
-"Proficiency in item class 2 set to 0x0000008000",
-0,
-},
-{
-"Proficiency in item class 4 set to 0x0000000021",
-0,
-},
-{
-"Proficiency in item class 2 set to 0x000000c000",
-0,
-},
-{
-"Proficiency in item class 2 set to 0x000000c400",
-0,
-},
-{
-"Proficiency in item class 2 set to 0x000000c410",
-0,
-},
-{
-"Proficiency in item class 4 set to 0x0000000023",
-0,
-},
-{
-"Proficiency in item class 2 set to 0x000008c410",
-0,
-},
-{
-"Proficiency in item class 2 set to 0x000008c410",
-0,
-},
-{
-"Proficiency in item class 4 set to 0x0000000023",
-0,
-},
-{
-"Weather changed to 0, intensity 0.000000\n",
-0,
-},
-{
-"Time set to 2/26/2026 (Thu) 21:50",
-0,
-},
-{
-"Gamespeed set from 0.017 to 0.017",
-0,
-},
-{
-"Got new connection 3",
-0,
-},
-{
-"Weather changed to 0, intensity 0.000000\n",
-0,
-},
-{
-"-------------------------------------------------- Previous Session --------------------------------------------------",
-0,
-},
-{
-"-------------------------------------------------- Previous Session --------------------------------------------------",
-0,
-},
-{
-"Attempted to register existing command: SetDifficulty",
-0,
-},
-{
-"Got new connection 3",
-0,
-},
-{
-"Proficiency in item class 2 set to 0x0000000001",
-0,
-},
-{
-"Proficiency in item class 2 set to 0x0000000041",
-0,
-},
-{
-"Proficiency in item class 4 set to 0x0000000021",
-0,
-},
-{
-"Proficiency in item class 2 set to 0x0000004041",
-0,
-},
-{
-"Proficiency in item class 2 set to 0x0000004441",
-0,
-},
-{
-"Proficiency in item class 4 set to 0x0000000025",
-0,
-},
-{
-"Proficiency in item class 2 set to 0x0000006441",
-0,
-},
-{
-"Proficiency in item class 2 set to 0x0000106441",
-0,
-},
-{
-"Proficiency in item class 2 set to 0x0000106451",
-0,
-},
-{
-"Proficiency in item class 2 set to 0x00001064d1",
-0,
-},
-{
-"Proficiency in item class 4 set to 0x0000000027",
-0,
-},
-{
-"Proficiency in item class 2 set to 0x00001064d1",
-0,
-},
-{
-"Proficiency in item class 4 set to 0x0000000027",
-0,
-},
-{
-"Weather changed to 0, intensity 0.000000\n",
-0,
-},
-{
-"Time set to 2/26/2026 (Thu) 21:51",
-0,
-},
-{
-"Gamespeed set from 0.017 to 0.017",
-0,
-},
-{
-"Got new connection 3",
-0,
-},
-{
-"Weather changed to 0, intensity 0.000000\n",
-0,
-},
-{
-"-------------------------------------------------- Previous Session --------------------------------------------------",
-0,
-},
-{
-"-------------------------------------------------- Previous Session --------------------------------------------------",
-0,
-},
-{
-"Attempted to register existing command: SetDifficulty",
-0,
-},
-{
-"Got new connection 3",
-0,
-},
-{
-"Proficiency in item class 2 set to 0x0000008000",
-0,
-},
-{
-"Proficiency in item class 4 set to 0x0000000021",
-0,
-},
-{
-"Proficiency in item class 2 set to 0x000000c000",
-0,
-},
-{
-"Proficiency in item class 2 set to 0x000000c400",
-0,
-},
-{
-"Proficiency in item class 2 set to 0x000010c400",
-0,
-},
-{
-"Proficiency in item class 2 set to 0x000010c480",
-0,
-},
-{
-"Proficiency in item class 4 set to 0x0000000023",
-0,
-},
-{
-"Proficiency in item class 2 set to 0x000018c480",
-0,
-},
-{
-"Proficiency in item class 2 set to 0x000018c480",
-0,
-},
-{
-"Proficiency in item class 4 set to 0x0000000023",
-0,
-},
-{
-"Weather changed to 0, intensity 0.000000\n",
-0,
-},
-{
-"Time set to 2/26/2026 (Thu) 21:51",
-0,
-},
-{
-"Gamespeed set from 0.017 to 0.017",
 0,
 },
 {
@@ -3623,15 +3944,15 @@ Blizzard_Console_SavedVars = {
 0,
 },
 {
-"-------------------------------------------------- Previous Session --------------------------------------------------",
+"Time set to 3/4/2026 (Wed) 18:57",
 0,
 },
 {
-"-------------------------------------------------- Previous Session --------------------------------------------------",
+"Time set to 3/4/2026 (Wed) 18:57",
 0,
 },
 {
-"Attempted to register existing command: SetDifficulty",
+"World transfer pending...",
 0,
 },
 {
@@ -3639,43 +3960,15 @@ Blizzard_Console_SavedVars = {
 0,
 },
 {
-"Proficiency in item class 2 set to 0x0000008000",
+"Weather changed to 0, intensity 0.000000\n",
 0,
 },
 {
-"Proficiency in item class 4 set to 0x0000000021",
+"World transfer pending...",
 0,
 },
 {
-"Proficiency in item class 2 set to 0x000000c000",
-0,
-},
-{
-"Proficiency in item class 2 set to 0x000000c400",
-0,
-},
-{
-"Proficiency in item class 2 set to 0x000010c400",
-0,
-},
-{
-"Proficiency in item class 2 set to 0x000010c480",
-0,
-},
-{
-"Proficiency in item class 4 set to 0x0000000023",
-0,
-},
-{
-"Proficiency in item class 2 set to 0x000018c480",
-0,
-},
-{
-"Proficiency in item class 2 set to 0x000018c480",
-0,
-},
-{
-"Proficiency in item class 4 set to 0x0000000023",
+"Got new connection 3",
 0,
 },
 {
@@ -3683,11 +3976,23 @@ Blizzard_Console_SavedVars = {
 0,
 },
 {
-"Time set to 2/26/2026 (Thu) 21:53",
+"Time set to 3/4/2026 (Wed) 19:01",
 0,
 },
 {
-"Gamespeed set from 0.017 to 0.017",
+"Time set to 3/4/2026 (Wed) 19:01",
+0,
+},
+{
+"Time set to 3/4/2026 (Wed) 19:01",
+0,
+},
+{
+"Time set to 3/4/2026 (Wed) 19:01",
+0,
+},
+{
+"World transfer pending...",
 0,
 },
 {
@@ -3703,307 +4008,7 @@ Blizzard_Console_SavedVars = {
 0,
 },
 {
-"-------------------------------------------------- Previous Session --------------------------------------------------",
-0,
-},
-{
-"Sorting particles normally.",
-0,
-},
-{
-"Multithreaded rendering enabled.",
-0,
-},
-{
-"Multithreaded BeginDraw enabled.",
-0,
-},
-{
-"Multithread shadows changed to 1.",
-0,
-},
-{
-"Multithreaded prepass enabled.",
-0,
-},
-{
-"Multithreaded opaque pass enabled.",
-0,
-},
-{
-"Multithreaded opaque pass enabled.",
-0,
-},
-{
-"Multithreaded alpha M2 pass enabled.",
-0,
-},
-{
-"Multithreaded opaque WMO pass enabled.",
-0,
-},
-{
-"Multithreaded terrain pass enabled.",
-0,
-},
-{
-"Multithreaded volumetric fog enabled.",
-0,
-},
-{
-"Multithreaded Refraction Pass enabled.",
-0,
-},
-{
-"Multithreaded miscellaneous passes disabled.",
-0,
-},
-{
-"Multithreaded decal pass enabled.",
-0,
-},
-{
-"Multithreaded outline passes enabled.",
-0,
-},
-{
-"Multithreaded lightshaft passes enabled.",
-0,
-},
-{
-"Multithreaded alpha pass enabled.",
-0,
-},
-{
-"Multithreaded daynight update enabled.",
-0,
-},
-{
-"Water detail changed to 3",
-0,
-},
-{
-"Ripple detail changed to 2",
-0,
-},
-{
-"Reflection mode changed to 3",
-0,
-},
-{
-"Reflection downscale changed to 0",
-0,
-},
-{
-"Sunshafts quality changed to 2",
-0,
-},
-{
-"Refraction mode changed to 2",
-0,
-},
-{
-"Volume fog enabled.",
-0,
-},
-{
-"Particulate volumes enabled.",
-0,
-},
-{
-"Projected textures enabled.",
-0,
-},
-{
-"Shadow mode changed to 4 - 4 band dynamic shadows on units and terrain, 2048",
-0,
-},
-{
-"Shadow texture size changed to 2048.",
-0,
-},
-{
-"Soft shadows changed to 1.",
-0,
-},
-{
-"Shadow cascade blending changed to 1",
-0,
-},
-{
-"Number of shadow cascades changed to 4",
-0,
-},
-{
-"Shadow RT mode changed to 0 (Disabled)",
-0,
-},
-{
-"maxLightCount must be in range 0 to 32.",
-0,
-},
-{
-"CVar 'maxLightCount' failed validation for its initial value.",
-0,
-},
-{
-"Clustered shading enabled.",
-0,
-},
-{
-"Not forcing clustered shading.",
-0,
-},
-{
-"SSAO mode set to 4",
-0,
-},
-{
-"SSAO type set to 0",
-0,
-},
-{
-"Depth Based Opacity Enabled",
-0,
-},
-{
-"SkyCloudLOD set to 1",
-0,
-},
-{
-"Texture filtering mode updated.",
-0,
-},
-{
-"Terrain mip level changed to 0.",
-0,
-},
-{
-"Outline mode changed to 2",
-0,
-},
-{
-"Physics interaction level changed to 1",
-0,
-},
-{
-"Render scale changed to 1",
-0,
-},
-{
-"Resample quality changed to 3",
-0,
-},
-{
-"MSAA disabled",
-0,
-},
-{
-"MSAA for alpha-test enabled.",
-0,
-},
-{
-"Variable Rate Shading not supported on this hardware",
-0,
-},
-{
-"CVar 'vrsWorldGeo' failed validation for its initial value.",
-0,
-},
-{
-"Variable Rate Shading not supported on this hardware",
-0,
-},
-{
-"Variable Rate Shading not supported on this hardware",
-0,
-},
-{
-"VALAR mode changed to 0",
-0,
-},
-{
-"lodObjectSizeScale cannot be changed.",
-0,
-},
-{
-"Volume fog enabled.",
-0,
-},
-{
-"dynamicLod enabled",
-0,
-},
-{
-"World preload object sort enabled.",
-0,
-},
-{
-"World load object sort enabled.",
-0,
-},
-{
-"World preload non critical enabled.",
-0,
-},
-{
-"World preload high res textures disabled.",
-0,
-},
-{
-"FFX: Color Blind Test Mode Disabled",
-0,
-},
-{
-"Error display disabled",
-0,
-},
-{
-"Error display shown",
-0,
-},
-{
-"Displaying errors through fatal errors",
-0,
-},
-{
-"Displaying errors through fatal errors",
-0,
-},
-{
-"Now filtering: all messages",
-0,
-},
-{
-"CVar 'Sound_AmbienceHighpassDSPCutoff' failed validation for its initial value.",
-0,
-},
-{
-"CVar 'Sound_AllyPlayerHighpassDSPCutoff' failed validation for its initial value.",
-0,
-},
-{
-"CVar 'Sound_EnemyPlayerHighpassDSPCutoff' failed validation for its initial value.",
-0,
-},
-{
-"CVar 'Sound_NPCHighpassDSPCutoff' failed validation for its initial value.",
-0,
-},
-{
-"ChromaEffects disabled",
-0,
-},
-{
-"NetClient::HandleConnect()\n",
-0,
-},
-{
-"[WowEntitlements] [BNetAccount-0-000003482BDF] [WowAccount-0-0000003C5D98] Initialized with 202 entitlements.",
-0,
-},
-{
-"-------------------------------------------------- Previous Session --------------------------------------------------",
+"World transfer pending...",
 0,
 },
 {
@@ -4011,47 +4016,59 @@ Blizzard_Console_SavedVars = {
 0,
 },
 {
-"Proficiency in item class 2 set to 0x0000000001",
+"Weather changed to 1, intensity 0.286776\n",
 0,
 },
 {
-"Proficiency in item class 4 set to 0x0000000021",
+"Weather changed to 1, intensity 0.286776\n",
 0,
 },
 {
-"Proficiency in item class 2 set to 0x0000004001",
+"Time set to 3/4/2026 (Wed) 19:15",
 0,
 },
 {
-"Proficiency in item class 4 set to 0x0000000025",
+"Time set to 3/4/2026 (Wed) 19:15",
 0,
 },
 {
-"Proficiency in item class 2 set to 0x0000006001",
+"Time set to 3/4/2026 (Wed) 19:15",
 0,
 },
 {
-"Proficiency in item class 2 set to 0x0000106001",
+"Time set to 3/4/2026 (Wed) 19:15",
 0,
 },
 {
-"Proficiency in item class 2 set to 0x0000106081",
+"Time set to 3/4/2026 (Wed) 19:16",
 0,
 },
 {
-"Proficiency in item class 4 set to 0x0000000027",
+"Time set to 3/4/2026 (Wed) 19:16",
 0,
 },
 {
-"Proficiency in item class 2 set to 0x0000106281",
+"Time set to 3/4/2026 (Wed) 19:16",
 0,
 },
 {
-"Proficiency in item class 2 set to 0x0000106281",
+"Time set to 3/4/2026 (Wed) 19:16",
 0,
 },
 {
-"Proficiency in item class 4 set to 0x0000000027",
+"Time set to 3/4/2026 (Wed) 19:16",
+0,
+},
+{
+"Time set to 3/4/2026 (Wed) 19:16",
+0,
+},
+{
+"Time set to 3/4/2026 (Wed) 19:16",
+0,
+},
+{
+"Time set to 3/4/2026 (Wed) 19:16",
 0,
 },
 {
@@ -4059,11 +4076,15 @@ Blizzard_Console_SavedVars = {
 0,
 },
 {
-"Time set to 2/26/2026 (Thu) 22:07",
+"Time set to 3/4/2026 (Wed) 19:24",
 0,
 },
 {
-"Gamespeed set from 0.017 to 0.017",
+"Time set to 3/4/2026 (Wed) 19:24",
+0,
+},
+{
+"World transfer pending...",
 0,
 },
 {
@@ -4075,11 +4096,55 @@ Blizzard_Console_SavedVars = {
 0,
 },
 {
+"World transfer pending...",
+0,
+},
+{
+"Got new connection 3",
+0,
+},
+{
 "Weather changed to 0, intensity 0.000000\n",
 0,
 },
 {
-"Weather changed to 1, intensity 0.264281\n",
+"Time set to 3/4/2026 (Wed) 19:34",
+0,
+},
+{
+"Time set to 3/4/2026 (Wed) 19:34",
+0,
+},
+{
+"Time set to 3/4/2026 (Wed) 19:34",
+0,
+},
+{
+"Time set to 3/4/2026 (Wed) 19:34",
+0,
+},
+{
+"Time set to 3/4/2026 (Wed) 19:35",
+0,
+},
+{
+"Time set to 3/4/2026 (Wed) 19:35",
+0,
+},
+{
+"Time set to 3/4/2026 (Wed) 19:35",
+0,
+},
+{
+"Time set to 3/4/2026 (Wed) 19:35",
+0,
+},
+{
+"World transfer pending...",
+0,
+},
+{
+"Got new connection 3",
 0,
 },
 {
@@ -4087,9 +4152,8 @@ Blizzard_Console_SavedVars = {
 0,
 },
 },
-["height"] = 299.9998779296875,
-["fontHeight"] = 14,
 ["isShown"] = false,
+["fontHeight"] = 14,
 ["commandHistory"] = {
 },
 }

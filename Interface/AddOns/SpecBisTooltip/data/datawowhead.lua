@@ -74,31 +74,33 @@ function SpecBisTooltip:InitBFSContent(pool, content)
 	if SpecBisTooltip:GetBisTable()[pool] then
 		for className, classTab in pairs(SpecBisTooltip:GetBisTable()[pool]) do
 			for specId, specTab in pairs(classTab) do
-				for itemId, itemTab in pairs(specTab[content]) do
-					if itemId > 100 then
-						bfs[content][itemId] = bfs[content][itemId] or {}
-						local found = false
-						for i, v in pairs(bfs[content][itemId]) do
-							if v[1] == className and v[2] == specId then
-								found = true
-							end
-						end
-
-						if not found then
-							table.insert(bfs[content][itemId], {className, specId, itemTab})
-						end
-					else
-						for itemId2, itemTab2 in pairs(specTab[content][itemId]) do
-							bfs[content][itemId2] = bfs[content][itemId2] or {}
+				if specTab[content] then
+					for itemId, itemTab in pairs(specTab[content]) do
+						if itemId > 100 then
+							bfs[content][itemId] = bfs[content][itemId] or {}
 							local found = false
-							for i, v in pairs(bfs[content][itemId2]) do
+							for i, v in pairs(bfs[content][itemId]) do
 								if v[1] == className and v[2] == specId then
 									found = true
 								end
 							end
 
 							if not found then
-								table.insert(bfs[content][itemId2], {className, specId, itemTab2})
+								table.insert(bfs[content][itemId], {className, specId, itemTab})
+							end
+						else
+							for itemId2, itemTab2 in pairs(specTab[content][itemId]) do
+								bfs[content][itemId2] = bfs[content][itemId2] or {}
+								local found = false
+								for i, v in pairs(bfs[content][itemId2]) do
+									if v[1] == className and v[2] == specId then
+										found = true
+									end
+								end
+
+								if not found then
+									table.insert(bfs[content][itemId2], {className, specId, itemTab2})
+								end
 							end
 						end
 					end

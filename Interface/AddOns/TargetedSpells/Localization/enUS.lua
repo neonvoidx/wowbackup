@@ -118,6 +118,9 @@ L.Settings.IndicateInterruptsLabel = "Indicate Interrupts"
 L.Settings.IndicateInterruptsTooltip =
 	"Desaturates the icon, shows an indicator on top of the icon and delays hiding the icon by 1 second. Does not work with channeled spells."
 
+L.Settings.RenderInterruptSourceNameLabel = "Render Interrupt Source Name"
+L.Settings.RenderInterruptSourceNameTooltip = nil
+
 L.Settings.ShowSwipeLabel = "Show Swipe"
 L.Settings.ShowSwipeTooltip = nil
 
@@ -143,14 +146,6 @@ L.Settings.IncludeSelfInPartyLabel = "Include Self In Party"
 L.Settings.IncludeSelfInPartyTooltip = "Only works when using Raid-Style Party Frames."
 
 L.Settings.ClickToOpenSettingsLabel = "Click to open settings"
-
-L.Settings.TargetingFilterApiLabel = "Targeting API"
-L.Settings.TargetingFilterApiTooltip =
-	"Subtle differences between the APIs.\n\nSpell Target: shows the unit that'll get hit by the spell regardless of the target. Does not work for abilities using arrow targeting indication on multiple players.\n\nUnit Target: shows the unit currently targeted by the cast source. Can also show spells that don't exclusively hit the target, such as party-wide AoE."
-L.Settings.TargetingFilterApiLabels = {
-	[Private.Enum.TargetingFilterApi.UnitIsSpellTarget] = "Spell Target",
-	[Private.Enum.TargetingFilterApi.UnitIsUnit] = "Unit Target",
-}
 
 L.Settings.Import = "Import"
 L.Settings.Export = "Export"

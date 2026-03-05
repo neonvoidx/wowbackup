@@ -55,12 +55,13 @@ local function borderOptions()
 		list[#list + 1] = { value = value, label = label }
 	end
 	add("DEFAULT", "Default (Border)")
-	if not LSM then return list end
-	local hash = LSM:HashTable("border") or {}
-	for name, path in pairs(hash) do
+	local names = addon.functions and addon.functions.GetLSMMediaNames and addon.functions.GetLSMMediaNames("border") or {}
+	local hash = addon.functions and addon.functions.GetLSMMediaHash and addon.functions.GetLSMMediaHash("border") or {}
+	for i = 1, #names do
+		local name = names[i]
+		local path = hash[name]
 		if type(path) == "string" and path ~= "" then add(name, tostring(name)) end
 	end
-	table.sort(list, function(a, b) return tostring(a.label) < tostring(b.label) end)
 	return list
 end
 
@@ -75,89 +76,17 @@ local AURA_FILTERS = GFH.AuraFilters
 local SECRET_TEXT_UPDATE_INTERVAL = 0.1
 local FONT_DROPDOWN_SCROLL_HEIGHT = 220
 
--- !Harreks integration (EQoL <-> HarreksAdvancedRaidFrames)
-function GF.HarreksAPI()
-	local api = _G.AdvancedRaidFramesAPI
-	if api and api.RegisterFrameForUnit and api.UnregisterFrameForUnit then return api end
-	return nil
+function GF.NormalizeBuffHelpfulFilterMode(value)
+	value = tostring(value or ""):upper()
+	if value == "RAID" then return "RAID" end
+	return "RAID_IN_COMBAT"
 end
 
-function GF.IsHarreksSupportedUnit(unit)
-	if unit == "player" then return true end
-	local partyIndex = unit and unit:match("^party(%d)$")
-	if partyIndex then
-		local n = tonumber(partyIndex)
-		return n and n >= 1 and n <= 4
-	end
-	local raidIndex = unit and unit:match("^raid(%d+)$")
-	if raidIndex then
-		local n = tonumber(raidIndex)
-		return n and n >= 1 and n <= 30
-	end
-	return false
+function GF.GetBuffHelpfulFilter(ac)
+	local mode = GF.NormalizeBuffHelpfulFilterMode(ac and ac.buff and ac.buff.helpfulFilterMode)
+	if mode == "RAID" then return "HELPFUL|INCLUDE_NAME_PLATE_ONLY|RAID|PLAYER" end
+	return (AURA_FILTERS and AURA_FILTERS.helpful) or "HELPFUL|INCLUDE_NAME_PLATE_ONLY|RAID_IN_COMBAT|PLAYER"
 end
-
-function GF.HarfColoringFunc(frame, shouldBeColored, color)
-	local glow = LCG
-	if not glow and LibStub then glow = LibStub("LibCustomGlow-1.0", true) end
-	if not (glow and glow.PixelGlow_Start and glow.PixelGlow_Stop) then return end
-
-	local target = (frame and frame._eqolUFState and frame._eqolUFState.barGroup) or frame
-	if not target then return end
-
-	if shouldBeColored then
-		color = color or EMPTY
-		local c = frame._eqolHarfGlowColor
-		if not c then
-			c = { 1, 1, 1, 1 }
-			frame._eqolHarfGlowColor = c
-		end
-		c[1], c[2], c[3], c[4] = color.r or 1, color.g or 1, color.b or 1, color.a or 1
-		glow.PixelGlow_Start(target, c, 8, 0.25, nil, 3, 0, 0, nil, "EQOL_HARF_HEALTHCOLOR")
-	else
-		glow.PixelGlow_Stop(target, "EQOL_HARF_HEALTHCOLOR")
-	end
-end
-
-function GF.HarfUnregister(btn)
-	local api = GF.HarreksAPI()
-	local glow = LCG
-	if not glow and LibStub then glow = LibStub("LibCustomGlow-1.0", true) end
-	local target = btn and ((btn._eqolUFState and btn._eqolUFState.barGroup) or btn)
-	if glow and target and glow.PixelGlow_Stop then glow.PixelGlow_Stop(target, "EQOL_HARF_HEALTHCOLOR") end
-	if api and btn and btn._eqolHarfUnit and btn._eqolHarfIndex then api.UnregisterFrameForUnit(btn._eqolHarfUnit, btn._eqolHarfIndex) end
-	if btn then
-		btn._eqolHarfUnit = nil
-		btn._eqolHarfIndex = nil
-	end
-end
-
-function GF.HarfRegister(btn)
-	if not btn then return end
-	if btn._eqolPreview then return end
-	local kind = btn._eqolGroupKind
-	if kind == "mt" or kind == "ma" then return end
-
-	local api = GF.HarreksAPI()
-	if not api then return end
-
-	local unit = btn.unit
-	if not (unit and GF.IsHarreksSupportedUnit(unit)) then
-		GF.HarfUnregister(btn)
-		return
-	end
-
-	if btn._eqolHarfUnit == unit and btn._eqolHarfIndex then return end
-
-	GF.HarfUnregister(btn)
-
-	local idx = api.RegisterFrameForUnit(unit, btn, GF.HarfColoringFunc)
-	if idx then
-		btn._eqolHarfUnit = unit
-		btn._eqolHarfIndex = idx
-	end
-end
--- !HarreksAdvancedRaidFrames end
 
 local function queryAuraSlots(unit, filter, maxCount)
 	if not filter then return nil end
@@ -385,6 +314,10 @@ local function applyBarBackdrop(bar, cfg, options)
 	local b = col[3] or 0
 	local a = col[4] or 0.6
 	local currentStatusTex = (clampToFill and bar.GetStatusBarTexture and bar:GetStatusBarTexture()) or nil
+	local backdropTextureKey = bd.texture
+	if backdropTextureKey == nil or backdropTextureKey == "" or backdropTextureKey == "DEFAULT" then backdropTextureKey = options.textureKey or cfg.texture end
+	local backdropTexture = (UFHelper and UFHelper.resolveTexture and UFHelper.resolveTexture(backdropTextureKey)) or backdropTextureKey
+	if not backdropTexture or backdropTexture == "" then backdropTexture = "Interface\\Buttons\\WHITE8x8" end
 
 	if not enabled then
 		if bar._eqolBackdropEnabled == false and bar._eqolBackdropClampToFill == clampToFill then return end
@@ -395,6 +328,7 @@ local function applyBarBackdrop(bar, cfg, options)
 		bar._eqolBackdropConfigured = nil
 		bar._eqolBackdropClampToFill = clampToFill
 		bar._eqolBackdropStatusTex = nil
+		bar._eqolBackdropTexturePath = nil
 		return
 	end
 	if
@@ -406,6 +340,7 @@ local function applyBarBackdrop(bar, cfg, options)
 		and bar._eqolBackdropA == a
 		and bar._eqolBackdropClampToFill == clampToFill
 		and bar._eqolBackdropStatusTex == currentStatusTex
+		and bar._eqolBackdropTexturePath == backdropTexture
 	then
 		return
 	end
@@ -415,7 +350,6 @@ local function applyBarBackdrop(bar, cfg, options)
 		local tex = bar._eqolBackdropTexture
 		if not tex then
 			tex = bar:CreateTexture(nil, "BACKGROUND")
-			tex:SetTexture("Interface\\Buttons\\WHITE8x8")
 			bar._eqolBackdropTexture = tex
 		end
 		local htex = bar.GetStatusBarTexture and bar:GetStatusBarTexture()
@@ -428,13 +362,16 @@ local function applyBarBackdrop(bar, cfg, options)
 		else
 			tex:SetAllPoints(bar)
 		end
-		tex:SetColorTexture(r, g, b, a)
+		tex:SetTexture(backdropTexture)
+		if tex.SetHorizTile then tex:SetHorizTile(false) end
+		if tex.SetVertTile then tex:SetVertTile(false) end
+		if tex.SetVertexColor then tex:SetVertexColor(r, g, b, a) end
 		tex:Show()
 	else
 		if not bar.SetBackdrop then return end
 		if bar._eqolBackdropTexture then bar._eqolBackdropTexture:Hide() end
 		bar:SetBackdrop({
-			bgFile = "Interface\\Buttons\\WHITE8x8",
+			bgFile = backdropTexture,
 			edgeFile = nil,
 			tile = false,
 		})
@@ -445,6 +382,7 @@ local function applyBarBackdrop(bar, cfg, options)
 	bar._eqolBackdropConfigured = true
 	bar._eqolBackdropClampToFill = clampToFill
 	bar._eqolBackdropStatusTex = currentStatusTex
+	bar._eqolBackdropTexturePath = backdropTexture
 	bar._eqolBackdropR, bar._eqolBackdropG, bar._eqolBackdropB, bar._eqolBackdropA = r, g, b, a
 end
 
@@ -980,11 +918,6 @@ local function stopDispelGlow(frame)
 	if LCG.ProcGlow_Stop then LCG.ProcGlow_Stop(frame, DISPEL_GLOW_KEY) end
 	if LCG.ButtonGlow_Stop then LCG.ButtonGlow_Stop(frame) end
 end
-local function stopDispelGlowIfActive(st, frame)
-	if not (st and st._dispelGlowActive) then return end
-	st._dispelGlowActive = nil
-	stopDispelGlow(frame)
-end
 
 local function resolveDispelIndicatorEnabled(cfg, kind)
 	local sc = cfg and cfg.status or {}
@@ -1274,7 +1207,7 @@ local DEFAULTS = {
 			offsetLeft = { x = 6, y = 0 },
 			offsetCenter = { x = 0, y = 0 },
 			offsetRight = { x = -6, y = 0 },
-			backdrop = { enabled = true, color = { 0, 0, 0, 0.6 }, clampToFill = false },
+			backdrop = { enabled = true, color = { 0, 0, 0, 0.6 }, texture = "DEFAULT", clampToFill = false },
 		},
 		power = {
 			texture = "DEFAULT",
@@ -1293,7 +1226,7 @@ local DEFAULTS = {
 			offsetLeft = { x = 6, y = 0 },
 			offsetCenter = { x = 0, y = 0 },
 			offsetRight = { x = -6, y = 0 },
-			backdrop = { enabled = true, color = { 0, 0, 0, 0.6 }, clampToFill = false },
+			backdrop = { enabled = true, color = { 0, 0, 0, 0.6 }, texture = "DEFAULT", clampToFill = false },
 			showRoles = { TANK = true, HEALER = true, DAMAGER = false },
 			showSpecs = {},
 		},
@@ -1480,6 +1413,7 @@ local DEFAULTS = {
 			enabled = false,
 			buff = {
 				enabled = false,
+				helpfulFilterMode = "RAID_IN_COMBAT",
 				size = 26,
 				perRow = 3,
 				max = 6,
@@ -1672,7 +1606,7 @@ local DEFAULTS = {
 			offsetLeft = { x = 5, y = 0 },
 			offsetCenter = { x = 0, y = 20 },
 			offsetRight = { x = 0, y = 0 },
-			backdrop = { enabled = true, color = { 0, 0, 0, 0.6 } },
+			backdrop = { enabled = true, color = { 0, 0, 0, 0.6 }, texture = "DEFAULT" },
 		},
 		power = {
 			texture = "DEFAULT",
@@ -1690,7 +1624,7 @@ local DEFAULTS = {
 			offsetLeft = { x = 5, y = 0 },
 			offsetCenter = { x = 0, y = 0 },
 			offsetRight = { x = -5, y = 0 },
-			backdrop = { enabled = true, color = { 0, 0, 0, 0.6 } },
+			backdrop = { enabled = true, color = { 0, 0, 0, 0.6 }, texture = "DEFAULT" },
 			showRoles = { TANK = true, HEALER = true, DAMAGER = false },
 			showSpecs = {},
 		},
@@ -1866,6 +1800,7 @@ local DEFAULTS = {
 			enabled = false,
 			buff = {
 				enabled = false,
+				helpfulFilterMode = "RAID_IN_COMBAT",
 				size = 20,
 				perRow = 5,
 				max = 5,
@@ -2899,8 +2834,8 @@ function GF:BuildButton(self)
 		st.health:SetValue(0)
 		if st.health.SetStatusBarDesaturated then st.health:SetStatusBarDesaturated(true) end
 	end
+	local healthTexKey = getEffectiveBarTexture(cfg, hc)
 	if st.health.SetStatusBarTexture and UFHelper and UFHelper.resolveTexture then
-		local healthTexKey = getEffectiveBarTexture(cfg, hc)
 		st.health:SetStatusBarTexture(UFHelper.resolveTexture(healthTexKey))
 		if UFHelper.configureSpecialTexture then UFHelper.configureSpecialTexture(st.health, "HEALTH", healthTexKey, hc) end
 		st._lastHealthTexture = healthTexKey
@@ -2909,7 +2844,7 @@ function GF:BuildButton(self)
 	local healthBackdropClampToFill = (hc.backdrop and hc.backdrop.clampToFill)
 	if healthBackdropClampToFill == nil then healthBackdropClampToFill = defH.backdrop and defH.backdrop.clampToFill end
 	if healthBackdropClampToFill == nil then healthBackdropClampToFill = false end
-	applyBarBackdrop(st.health, hc, { clampToFill = healthBackdropClampToFill == true })
+	applyBarBackdrop(st.health, hc, { clampToFill = healthBackdropClampToFill == true, textureKey = healthTexKey })
 
 	if not st.absorb then
 		st.absorb = CreateFrame("StatusBar", nil, st.health, "BackdropTemplate")
@@ -2931,12 +2866,12 @@ function GF:BuildButton(self)
 		st.power:SetMinMaxValues(0, 1)
 		st.power:SetValue(0)
 	end
+	local powerTexKey = getEffectiveBarTexture(cfg, pcfg)
 	if st.power.SetStatusBarTexture and UFHelper and UFHelper.resolveTexture then
-		local powerTexKey = getEffectiveBarTexture(cfg, pcfg)
 		st.power:SetStatusBarTexture(UFHelper.resolveTexture(powerTexKey))
 		st._lastPowerTexture = powerTexKey
 	end
-	applyBarBackdrop(st.power, pcfg)
+	applyBarBackdrop(st.power, pcfg, { textureKey = powerTexKey })
 	if st.power.SetStatusBarDesaturated then st.power:SetStatusBarDesaturated(true) end
 
 	if not st.healthTextLayer then
@@ -2975,10 +2910,10 @@ function GF:BuildButton(self)
 	if not st.statusText then st.statusText = st.healthTextLayer:CreateFontString(nil, "OVERLAY", "GameFontHighlight") end
 	if not st.groupNumberText then st.groupNumberText = st.healthTextLayer:CreateFontString(nil, "OVERLAY", "GameFontHighlight") end
 	if not st.privateAuras then
-		st.privateAuras = CreateFrame("Frame", nil, st.health or st.barGroup or self)
+		st.privateAuras = CreateFrame("Frame", nil, st.barGroup or st.health or self)
 		st.privateAuras:EnableMouse(false)
 	end
-	local privateAuraParent = st.health or st.barGroup or self
+	local privateAuraParent = st.barGroup or st.health or self
 	if st.privateAuras.GetParent and privateAuraParent and st.privateAuras:GetParent() ~= privateAuraParent then st.privateAuras:SetParent(privateAuraParent) end
 
 	local indicatorLayer = st.statusIconLayer or st.healthTextLayer
@@ -3042,6 +2977,14 @@ function GF:BuildButton(self)
 		st._sizeHooked = true
 		self:HookScript("OnSizeChanged", function(btn) GF:OnUnitButtonSizeChanged(btn) end)
 	end
+	if not st._dispelOnHideHooked then
+		st._dispelOnHideHooked = true
+		self:HookScript("OnHide", function(btn)
+			local s = getState(btn)
+			hideDispelTint(s)
+			stopDispelGlow((s and s.barGroup) or btn)
+		end)
+	end
 
 	self:SetClampedToScreen(true)
 	self:SetScript("OnMouseDown", nil)
@@ -3083,10 +3026,13 @@ function GF:LayoutButton(self)
 	local cfg = self._eqolCfg or getCfg(kind or "party")
 	local def = DEFAULTS[kind] or {}
 	local hc = cfg.health or {}
+	local pcfg = cfg.power or {}
 	local defH = def.health or {}
 	local healthBackdropClampToFill = (hc.backdrop and hc.backdrop.clampToFill)
 	if healthBackdropClampToFill == nil then healthBackdropClampToFill = defH.backdrop and defH.backdrop.clampToFill end
 	if healthBackdropClampToFill == nil then healthBackdropClampToFill = false end
+	local healthTexKey = getEffectiveBarTexture(cfg, hc)
+	local powerTexKey = getEffectiveBarTexture(cfg, pcfg)
 
 	local scale = GFH.GetEffectiveScale(self)
 	if not scale or scale <= 0 then scale = (UIParent and UIParent.GetEffectiveScale and UIParent:GetEffectiveScale()) or 1 end
@@ -3120,8 +3066,8 @@ function GF:LayoutButton(self)
 	st.health:ClearAllPoints()
 	st.health:SetPoint("TOPLEFT", st.barGroup, "TOPLEFT", 0, 0)
 	st.health:SetPoint("BOTTOMRIGHT", st.barGroup, "BOTTOMRIGHT", 0, healthBottomOffset)
-	applyBarBackdrop(st.health, hc, { clampToFill = healthBackdropClampToFill == true })
-	applyBarBackdrop(st.power, cfg.power or {})
+	applyBarBackdrop(st.health, hc, { clampToFill = healthBackdropClampToFill == true, textureKey = healthTexKey })
+	applyBarBackdrop(st.power, pcfg, { textureKey = powerTexKey })
 
 	self.powerBarUsedHeight = powerH > 0 and powerH or 0
 	if st.dispelTint then
@@ -3161,7 +3107,6 @@ function GF:LayoutButton(self)
 		applyStatusTextAnchor(st, style.anchor, style.offset, scale, st.barGroup or self, st.groupNumberText)
 	end
 
-	local healthTexKey = getEffectiveBarTexture(cfg, hc)
 	if st.health.SetStatusBarTexture and UFHelper and UFHelper.resolveTexture then
 		if st._lastHealthTexture ~= healthTexKey then
 			st.health:SetStatusBarTexture(UFHelper.resolveTexture(healthTexKey))
@@ -3170,8 +3115,6 @@ function GF:LayoutButton(self)
 			stabilizeStatusBarTexture(st.health)
 		end
 	end
-	local pcfg = cfg.power or {}
-	local powerTexKey = getEffectiveBarTexture(cfg, pcfg)
 	if st.power.SetStatusBarTexture and UFHelper and UFHelper.resolveTexture then
 		if st._lastPowerTexture ~= powerTexKey then
 			st.power:SetStatusBarTexture(UFHelper.resolveTexture(powerTexKey))
@@ -4118,15 +4061,21 @@ local function isAuraFilteredIn(unit, auraInstanceID, filter)
 	return false
 end
 
-local function getAuraKindFlags(unit, aura, helpfulFilter, harmfulFilter, externalFilter, dispelFilter, wantBuff, wantDebuff, wantExternals, wantsDispel, wantsHealerBuffPlacement)
+local function getAuraKindFlags(unit, aura, helpfulFilter, harmfulFilter, externalFilter, dispelFilter, wantBuff, wantDebuff, wantExternals, wantsDispel, wantsHealerBuffPlacement, contextKind)
 	if not (unit and aura and aura.auraInstanceID) then return nil end
+	if UF.GlobalAuraIgnore and UF.GlobalAuraIgnore.ShouldIgnoreAura and UF.GlobalAuraIgnore.ShouldIgnoreAura(contextKind, aura) then return nil end
 	local auraId = aura.auraInstanceID
 	local flags
 	local harmfulMatch, helpfulMatch
+	local healerTracked
 
 	if wantBuff or wantsHealerBuffPlacement then
 		helpfulMatch = isAuraFilteredIn(unit, auraId, helpfulFilter)
 		if helpfulMatch then flags = setAuraFlag(flags, AURA_KIND_HELPFUL) end
+		if wantsHealerBuffPlacement and aura.spellId and UF.GroupFramesHealerBuffs and UF.GroupFramesHealerBuffs.GetFamilyFromSpell then
+			healerTracked = UF.GroupFramesHealerBuffs.GetFamilyFromSpell(aura.spellId) ~= nil
+			if healerTracked then flags = setAuraFlag(flags, 16) end -- internal marker: healer-buff tracked aura
+		end
 	end
 
 	if (wantDebuff or wantsDispel) and not helpfulMatch then
@@ -4425,7 +4374,7 @@ function GF:LayoutAuras(self)
 	end
 end
 
-local function updateAuraType(self, unit, st, ac, kindKey, cache, changed)
+local function updateAuraType(self, unit, st, ac, kindKey, cache, changed, healerBuffCompiled)
 	local meta = AURA_TYPE_META[kindKey]
 	if not meta then return end
 	local typeCfg = (ac and ac[kindKey]) or EMPTY
@@ -4481,7 +4430,7 @@ local function updateAuraType(self, unit, st, ac, kindKey, cache, changed)
 			elseif kindKey == "buff" then
 				match = hasAuraFlag(auraFlags, AURA_KIND_HELPFUL)
 				if match and externalsEnabled and hasAuraFlag(auraFlags, AURA_KIND_EXTERNAL) then match = false end
-				if match and suppressHealerBuffAura and suppressHealerBuffAura(suppressKind, suppressCfg, aura) then match = false end
+				if match and suppressHealerBuffAura and suppressHealerBuffAura(suppressKind, suppressCfg, aura, healerBuffCompiled, unit) then match = false end
 			elseif kindKey == "externals" then
 				match = hasAuraFlag(auraFlags, AURA_KIND_EXTERNAL)
 			end
@@ -4516,23 +4465,40 @@ local function updateAuraType(self, unit, st, ac, kindKey, cache, changed)
 	hideAuraButtons(buttons, shown + 1)
 end
 
-local function fullScanGroupAuras(unit, st, cache, helpfulFilter, harmfulFilter, externalFilter, dispelFilter, wantBuff, wantDebuff, wantExternals, wantsDispel, wantsHealerBuffPlacement, queryMax)
+local function fullScanGroupAuras(
+	unit,
+	st,
+	cache,
+	helpfulFilter,
+	harmfulFilter,
+	externalFilter,
+	dispelFilter,
+	wantBuff,
+	wantDebuff,
+	wantExternals,
+	wantsDispel,
+	wantsHealerBuffPlacement,
+	queryMax,
+	contextKind
+)
 	if not (unit and st and cache and C_UnitAuras) then return end
 	resetAuraCache(cache)
 	clearAuraKinds(st)
 	local flagsById = st._auraKindById
 	local seen = {}
+	local helpfulScanFilter = helpfulFilter
+	if wantsHealerBuffPlacement then helpfulScanFilter = "HELPFUL|INCLUDE_NAME_PLATE_ONLY" end
 
 	local function storeAura(aura)
 		local auraId = aura and aura.auraInstanceID
 		if not auraId or seen[auraId] then return end
 		seen[auraId] = true
-		local flags = getAuraKindFlags(unit, aura, helpfulFilter, harmfulFilter, externalFilter, dispelFilter, wantBuff, wantDebuff, wantExternals, wantsDispel, wantsHealerBuffPlacement)
+		local flags = getAuraKindFlags(unit, aura, helpfulFilter, harmfulFilter, externalFilter, dispelFilter, wantBuff, wantDebuff, wantExternals, wantsDispel, wantsHealerBuffPlacement, contextKind)
 		cacheAuraWithFlags(cache, flagsById, aura, flags, st)
 	end
 
-	if wantBuff and helpfulFilter then
-		local helpfulSlots = queryAuraSlots(unit, helpfulFilter, queryMax and queryMax.helpful)
+	if wantBuff and helpfulScanFilter then
+		local helpfulSlots = queryAuraSlots(unit, helpfulScanFilter, queryMax and queryMax.helpful)
 		for i = 2, (helpfulSlots and #helpfulSlots or 0) do
 			local aura = C_UnitAuras.GetAuraDataBySlot(unit, helpfulSlots[i])
 			if aura then storeAura(aura) end
@@ -4554,7 +4520,7 @@ local function fullScanGroupAuras(unit, st, cache, helpfulFilter, harmfulFilter,
 	end
 end
 
-local function updateGroupAuraCache(unit, st, updateInfo, ac, helpfulFilter, harmfulFilter, externalFilter, dispelFilter, wantsHealerBuffPlacement)
+local function updateGroupAuraCache(unit, st, updateInfo, ac, helpfulFilter, harmfulFilter, externalFilter, dispelFilter, wantsHealerBuffPlacement, contextKind)
 	if not (unit and st and updateInfo) then return end
 
 	local wantBuff = ((ac and (ac.buff and ac.buff.enabled ~= false)) or wantsHealerBuffPlacement) and true or false
@@ -4584,7 +4550,8 @@ local function updateGroupAuraCache(unit, st, updateInfo, ac, helpfulFilter, har
 	if updateInfo.addedAuras then
 		for i = 1, #updateInfo.addedAuras do
 			local aura = updateInfo.addedAuras[i]
-			local flags = getAuraKindFlags(unit, aura, helpfulFilter, harmfulFilter, externalFilter, dispelFilter, wantBuff, wantDebuff, wantExternals, wantsDispel, wantsHealerBuffPlacement)
+			local flags =
+				getAuraKindFlags(unit, aura, helpfulFilter, harmfulFilter, externalFilter, dispelFilter, wantBuff, wantDebuff, wantExternals, wantsDispel, wantsHealerBuffPlacement, contextKind)
 			cacheAuraWithFlags(cache, flagsById, aura, flags, st)
 		end
 	end
@@ -4592,16 +4559,15 @@ local function updateGroupAuraCache(unit, st, updateInfo, ac, helpfulFilter, har
 	if updateInfo.updatedAuraInstanceIDs and C_UnitAuras and C_UnitAuras.GetAuraDataByAuraInstanceID then
 		for i = 1, #updateInfo.updatedAuraInstanceIDs do
 			local auraId = updateInfo.updatedAuraInstanceIDs[i]
-			local isKnown = auraId and ((flagsById and flagsById[auraId]) or (cache.auras and cache.auras[auraId]))
-			if isKnown then
-				local aura = C_UnitAuras.GetAuraDataByAuraInstanceID(unit, auraId)
-				if aura then
-					local flags = getAuraKindFlags(unit, aura, helpfulFilter, harmfulFilter, externalFilter, dispelFilter, wantBuff, wantDebuff, wantExternals, wantsDispel, wantsHealerBuffPlacement)
-					cacheAuraWithFlags(cache, flagsById, aura, flags, st)
-				else
-					markDispelAuraDirty(st, auraId)
-					removeAuraFromGroupStore(cache, flagsById, auraId)
-				end
+			local wasKnown = auraId and ((flagsById and flagsById[auraId]) or (cache.auras and cache.auras[auraId]))
+			local aura = auraId and C_UnitAuras.GetAuraDataByAuraInstanceID(unit, auraId)
+			if aura then
+				local flags =
+					getAuraKindFlags(unit, aura, helpfulFilter, harmfulFilter, externalFilter, dispelFilter, wantBuff, wantDebuff, wantExternals, wantsDispel, wantsHealerBuffPlacement, contextKind)
+				if flags or wasKnown then cacheAuraWithFlags(cache, flagsById, aura, flags, st) end
+			elseif wasKnown then
+				markDispelAuraDirty(st, auraId)
+				removeAuraFromGroupStore(cache, flagsById, auraId)
 			end
 		end
 	end
@@ -4624,7 +4590,8 @@ function GF:UpdateAuras(self, updateInfo)
 			hideAuraButtons(st.externalButtons, 1)
 			st._auraSampleActive = nil
 			GF:UpdateDispelTint(self, nil, nil)
-			if UF.GroupFramesHealerBuffs and UF.GroupFramesHealerBuffs.ClearButton then UF.GroupFramesHealerBuffs.ClearButton(self) end
+			if st._healerBuffPlacementActive and UF.GroupFramesHealerBuffs and UF.GroupFramesHealerBuffs.ClearButton then UF.GroupFramesHealerBuffs.ClearButton(self) end
+			st._healerBuffPlacementActive = nil
 			return
 		end
 		GF:UpdateSampleAuras(self)
@@ -4638,12 +4605,14 @@ function GF:UpdateAuras(self, updateInfo)
 		hideAuraButtons(st.externalButtons, 1)
 		st._auraSampleActive = nil
 		GF:UpdateDispelTint(self, nil, nil)
-		if UF.GroupFramesHealerBuffs and UF.GroupFramesHealerBuffs.ClearButton then UF.GroupFramesHealerBuffs.ClearButton(self) end
+		if st._healerBuffPlacementActive and UF.GroupFramesHealerBuffs and UF.GroupFramesHealerBuffs.ClearButton then UF.GroupFramesHealerBuffs.ClearButton(self) end
+		st._healerBuffPlacementActive = nil
 		return
 	end
 	if not (unit and C_UnitAuras) then
 		GF:UpdateDispelTint(self, nil, nil)
-		if UF.GroupFramesHealerBuffs and UF.GroupFramesHealerBuffs.ClearButton then UF.GroupFramesHealerBuffs.ClearButton(self) end
+		if st._healerBuffPlacementActive and UF.GroupFramesHealerBuffs and UF.GroupFramesHealerBuffs.ClearButton then UF.GroupFramesHealerBuffs.ClearButton(self) end
+		st._healerBuffPlacementActive = nil
 		return
 	end
 	local cfg = self._eqolCfg or getCfg(self._eqolGroupKind or "party")
@@ -4653,6 +4622,10 @@ function GF:UpdateAuras(self, updateInfo)
 	if wantsAuras == nil then wantsAuras = ((ac.buff and ac.buff.enabled) or (ac.debuff and ac.debuff.enabled) or (ac.externals and ac.externals.enabled)) or false end
 	local wantsDispelTint = st._wantsDispelTint == true
 	local wantsHealerBuffPlacement = st._wantsHealerBuffPlacement == true
+	if wantsHealerBuffPlacement and not (cfg and cfg.healerBuffPlacement and cfg.healerBuffPlacement.enabled == true) then
+		wantsHealerBuffPlacement = false
+		st._wantsHealerBuffPlacement = false
+	end
 	if wantsAuras == false and not wantsDispelTint and not wantsHealerBuffPlacement then
 		if st.buffContainer then st.buffContainer:Hide() end
 		if st.debuffContainer then st.debuffContainer:Hide() end
@@ -4660,7 +4633,8 @@ function GF:UpdateAuras(self, updateInfo)
 		hideAuraButtons(st.buffButtons, 1)
 		hideAuraButtons(st.debuffButtons, 1)
 		hideAuraButtons(st.externalButtons, 1)
-		if UF.GroupFramesHealerBuffs and UF.GroupFramesHealerBuffs.ClearButton then UF.GroupFramesHealerBuffs.ClearButton(self) end
+		if st._healerBuffPlacementActive and UF.GroupFramesHealerBuffs and UF.GroupFramesHealerBuffs.ClearButton then UF.GroupFramesHealerBuffs.ClearButton(self) end
+		st._healerBuffPlacementActive = nil
 		return
 	end
 	if wantsAuras == false then
@@ -4687,10 +4661,11 @@ function GF:UpdateAuras(self, updateInfo)
 			GF:LayoutAuras(self)
 		end
 	end
-	local helpfulFilter = AURA_FILTERS.helpful
+	local helpfulFilter = GF.GetBuffHelpfulFilter(ac)
 	local harmfulFilter = AURA_FILTERS.harmful
 	local dispelFilter = AURA_FILTERS.dispellable
 	local externalFilter = AURA_FILTERS.bigDefensive
+	local auraContextKind = self and (self._eqolGroupKind or "party") or "party"
 	local auraQueryMax = st._auraQueryMax
 	if not auraQueryMax then
 		auraQueryMax = {}
@@ -4704,7 +4679,10 @@ function GF:UpdateAuras(self, updateInfo)
 	local buffMax = normalizeMax(st._auraLayout and st._auraLayout.buff and st._auraLayout.buff.maxCount)
 	local debuffMax = normalizeMax(st._auraLayout and st._auraLayout.debuff and st._auraLayout.debuff.maxCount)
 	local externalMax = normalizeMax(st._auraLayout and st._auraLayout.externals and st._auraLayout.externals.maxCount)
-	if wantBuff and buffMax then
+	if wantsHealerBuffPlacement then
+		-- Healer buff placement needs the full helpful aura set; capped scans can miss tracked spells.
+		auraQueryMax.helpful = nil
+	elseif wantBuff and buffMax then
 		local extra = (wantExternals and externalMax) or 0
 		local helpfulMax = normalizeMax(buffMax + extra)
 		auraQueryMax.helpful = helpfulMax or buffMax
@@ -4719,21 +4697,46 @@ function GF:UpdateAuras(self, updateInfo)
 		auraQueryMax.harmful = nil
 	end
 	auraQueryMax.external = wantExternals and externalMax or nil
+	local healerBuffCompiled = nil
+	if wantsHealerBuffPlacement and UF.GroupFramesHealerBuffs and UF.GroupFramesHealerBuffs.GetCompiled then
+		healerBuffCompiled = UF.GroupFramesHealerBuffs.GetCompiled(self._eqolGroupKind or "party", cfg)
+	end
 	local allCache = getAuraCache(st, "all")
 	st._auraKindById = st._auraKindById or {}
 	if not updateInfo or updateInfo.isFullUpdate then
-		fullScanGroupAuras(unit, st, allCache, helpfulFilter, harmfulFilter, externalFilter, dispelFilter, wantBuff, wantDebuff, wantExternals, wantsDispelTint, wantsHealerBuffPlacement, auraQueryMax)
+		fullScanGroupAuras(
+			unit,
+			st,
+			allCache,
+			helpfulFilter,
+			harmfulFilter,
+			externalFilter,
+			dispelFilter,
+			wantBuff,
+			wantDebuff,
+			wantExternals,
+			wantsDispelTint,
+			wantsHealerBuffPlacement,
+			auraQueryMax,
+			auraContextKind
+		)
 		if wantsAuras then
-			if wantBuff then updateAuraType(self, unit, st, ac, "buff", allCache) end
-			if wantDebuff then updateAuraType(self, unit, st, ac, "debuff", allCache) end
-			if wantExternals then updateAuraType(self, unit, st, ac, "externals", allCache) end
+			if wantBuff then updateAuraType(self, unit, st, ac, "buff", allCache, nil, healerBuffCompiled) end
+			if wantDebuff then updateAuraType(self, unit, st, ac, "debuff", allCache, nil, healerBuffCompiled) end
+			if wantExternals then updateAuraType(self, unit, st, ac, "externals", allCache, nil, healerBuffCompiled) end
 		end
 		if wantsDispelTint then
 			GF:UpdateDispelTint(self, allCache, dispelFilter, nil, AURA_KIND_DISPEL)
 		else
 			GF:UpdateDispelTint(self, nil, nil)
 		end
-		if UF.GroupFramesHealerBuffs and UF.GroupFramesHealerBuffs.UpdateFromAuras then UF.GroupFramesHealerBuffs.UpdateFromAuras(self, updateInfo, allCache, nil, true) end
+		if wantsHealerBuffPlacement and UF.GroupFramesHealerBuffs and UF.GroupFramesHealerBuffs.UpdateFromAuras then
+			UF.GroupFramesHealerBuffs.UpdateFromAuras(self, updateInfo, allCache, nil, true, healerBuffCompiled)
+			st._healerBuffPlacementActive = true
+		elseif st._healerBuffPlacementActive and UF.GroupFramesHealerBuffs and UF.GroupFramesHealerBuffs.ClearButton then
+			UF.GroupFramesHealerBuffs.ClearButton(self)
+			st._healerBuffPlacementActive = nil
+		end
 		return
 	end
 	local touchBuff, touchDebuff, touchExternals
@@ -4767,7 +4770,7 @@ function GF:UpdateAuras(self, updateInfo)
 		end
 	end
 
-	updateGroupAuraCache(unit, st, updateInfo, ac, helpfulFilter, harmfulFilter, externalFilter, dispelFilter, wantsHealerBuffPlacement)
+	updateGroupAuraCache(unit, st, updateInfo, ac, helpfulFilter, harmfulFilter, externalFilter, dispelFilter, wantsHealerBuffPlacement, auraContextKind)
 	local changed = st._auraChanged
 	if updateInfo then
 		if not changed then
@@ -4819,16 +4822,22 @@ function GF:UpdateAuras(self, updateInfo)
 		end
 	end
 	if wantsAuras then
-		if wantBuff and touchBuff then updateAuraType(self, unit, st, ac, "buff", allCache, changed) end
-		if wantDebuff and touchDebuff then updateAuraType(self, unit, st, ac, "debuff", allCache, changed) end
-		if wantExternals and touchExternals then updateAuraType(self, unit, st, ac, "externals", allCache, changed) end
+		if wantBuff and touchBuff then updateAuraType(self, unit, st, ac, "buff", allCache, changed, healerBuffCompiled) end
+		if wantDebuff and touchDebuff then updateAuraType(self, unit, st, ac, "debuff", allCache, changed, healerBuffCompiled) end
+		if wantExternals and touchExternals then updateAuraType(self, unit, st, ac, "externals", allCache, changed, healerBuffCompiled) end
 	end
 	if wantsDispelTint then
 		GF:UpdateDispelTint(self, allCache, dispelFilter, nil, AURA_KIND_DISPEL)
 	else
 		GF:UpdateDispelTint(self, nil, nil)
 	end
-	if UF.GroupFramesHealerBuffs and UF.GroupFramesHealerBuffs.UpdateFromAuras then UF.GroupFramesHealerBuffs.UpdateFromAuras(self, updateInfo, allCache, changed, false) end
+	if wantsHealerBuffPlacement and UF.GroupFramesHealerBuffs and UF.GroupFramesHealerBuffs.UpdateFromAuras then
+		UF.GroupFramesHealerBuffs.UpdateFromAuras(self, updateInfo, allCache, changed, false, healerBuffCompiled)
+		st._healerBuffPlacementActive = true
+	elseif st._healerBuffPlacementActive and UF.GroupFramesHealerBuffs and UF.GroupFramesHealerBuffs.ClearButton then
+		UF.GroupFramesHealerBuffs.ClearButton(self)
+		st._healerBuffPlacementActive = nil
+	end
 end
 
 function GF:UpdateSampleAuras(self)
@@ -4841,6 +4850,10 @@ function GF:UpdateSampleAuras(self)
 	local wantsDispelTint = resolveDispelIndicatorEnabled(cfg, self._eqolGroupKind or "party")
 	st._wantsDispelTint = wantsDispelTint
 	local wantsHealerBuffPlacement = st._wantsHealerBuffPlacement == true
+	if wantsHealerBuffPlacement and not (cfg and cfg.healerBuffPlacement and cfg.healerBuffPlacement.enabled == true) then
+		wantsHealerBuffPlacement = false
+		st._wantsHealerBuffPlacement = false
+	end
 	if cfg then GFH.SyncAurasEnabled(cfg) end
 	local wantsAuras = ((ac.buff and ac.buff.enabled) or (ac.debuff and ac.debuff.enabled) or (ac.externals and ac.externals.enabled)) or false
 	if ac.enabled == true then wantsAuras = true end
@@ -4861,9 +4874,11 @@ function GF:UpdateSampleAuras(self)
 		if UF.GroupFramesHealerBuffs then
 			if wantsHealerBuffPlacement and UF.GroupFramesHealerBuffs.UpdateSample then
 				UF.GroupFramesHealerBuffs.UpdateSample(self)
+				st._healerBuffPlacementActive = true
 				st._auraSampleActive = true
-			elseif UF.GroupFramesHealerBuffs.ClearButton then
+			elseif st._healerBuffPlacementActive and UF.GroupFramesHealerBuffs.ClearButton then
 				UF.GroupFramesHealerBuffs.ClearButton(self)
+				st._healerBuffPlacementActive = nil
 			end
 		end
 		return
@@ -4953,8 +4968,10 @@ function GF:UpdateSampleAuras(self)
 	if UF.GroupFramesHealerBuffs then
 		if wantsHealerBuffPlacement and UF.GroupFramesHealerBuffs.UpdateSample then
 			UF.GroupFramesHealerBuffs.UpdateSample(self)
-		elseif UF.GroupFramesHealerBuffs.ClearButton then
+			st._healerBuffPlacementActive = true
+		elseif st._healerBuffPlacementActive and UF.GroupFramesHealerBuffs.ClearButton then
 			UF.GroupFramesHealerBuffs.ClearButton(self)
+			st._healerBuffPlacementActive = nil
 		end
 	end
 	st._auraSampleActive = true
@@ -5321,7 +5338,7 @@ function GF:UpdateDispelTint(self, cache, dispelFilter, allowSample, requiredFla
 	if glowEnabled == nil then glowEnabled = defDispel.glowEnabled == true end
 	if not overlayEnabled and not glowEnabled then
 		hideDispelTint(st)
-		stopDispelGlowIfActive(st, st.barGroup or self)
+		stopDispelGlow(st.barGroup or self)
 		return
 	end
 	if allowSample then
@@ -5329,7 +5346,7 @@ function GF:UpdateDispelTint(self, cache, dispelFilter, allowSample, requiredFla
 		if showSample == nil then showSample = defDispel.showSample == true end
 		if not showSample then
 			hideDispelTint(st)
-			stopDispelGlowIfActive(st, st.barGroup or self)
+			stopDispelGlow(st.barGroup or self)
 			return
 		end
 	end
@@ -5345,10 +5362,8 @@ function GF:UpdateDispelTint(self, cache, dispelFilter, allowSample, requiredFla
 	local bgAlpha = fillAlpha * (fa or 1)
 
 	local r, g, b
-	local colorKey
 	if allowSample then
 		r, g, b = GFH.GetDebuffColorFromName("Magic")
-		colorKey = "Magic"
 	else
 		local unit = getUnit(self)
 		if unit and cache and cache.order and cache.auras then
@@ -5396,21 +5411,17 @@ function GF:UpdateDispelTint(self, cache, dispelFilter, allowSample, requiredFla
 						elseif color.r then
 							r, g, b = color.r, color.g, color.b
 						end
-						colorKey = auraId
 					end
 				end
 				if not r then
 					local dispelName = dispelAura.dispelName
 					if not (issecretvalue and issecretvalue(dispelName)) and dispelName and dispelName ~= "" then
-						colorKey = dispelName
 						r, g, b = GFH.GetDebuffColorFromName(dispelName)
 					end
 				end
 			end
 		end
 	end
-
-	if r and not colorKey then colorKey = "UNKNOWN" end
 
 	if overlayEnabled then
 		if r then
@@ -5423,13 +5434,13 @@ function GF:UpdateDispelTint(self, cache, dispelFilter, allowSample, requiredFla
 	end
 
 	if glowEnabled then
-		GF:UpdateDispelGlow(self, r, g, b, colorKey)
+		GF:UpdateDispelGlow(self, r, g, b)
 	else
-		stopDispelGlowIfActive(st, st.barGroup or self)
+		stopDispelGlow(st.barGroup or self)
 	end
 end
 
-function GF:UpdateDispelGlow(self, r, g, b, colorKey)
+function GF:UpdateDispelGlow(self, r, g, b)
 	local st = getState(self)
 	if not st then return end
 	if not (LCG and LCG.PixelGlow_Start) then return end
@@ -5441,11 +5452,11 @@ function GF:UpdateDispelGlow(self, r, g, b, colorKey)
 	local glowEnabled = dcfg.glowEnabled
 	if glowEnabled == nil then glowEnabled = defDispel.glowEnabled == true end
 	if not glowEnabled then
-		stopDispelGlowIfActive(st, st.barGroup or self)
+		stopDispelGlow(st.barGroup or self)
 		return
 	end
 	if not (r and g and b) then
-		stopDispelGlowIfActive(st, st.barGroup or self)
+		stopDispelGlow(st.barGroup or self)
 		return
 	end
 
@@ -5469,28 +5480,9 @@ function GF:UpdateDispelGlow(self, r, g, b, colorKey)
 		scale = 4
 	end
 
-	if
-		st._dispelGlowActive
-		and st._dispelGlowLines == lines
-		and st._dispelGlowFreq == freq
-		and st._dispelGlowThickness == thickness
-		and st._dispelGlowX == xoff
-		and st._dispelGlowY == yoff
-		and st._dispelGlowEffect == effect
-		and colorKey
-		and st._dispelGlowKey == colorKey
-	then
-		return
-	end
-
 	local target = st.barGroup or self
-	stopDispelGlowIfActive(st, target)
-	local glowColor = st._dispelGlowColor
-	if not glowColor then
-		glowColor = { 1, 1, 1, 1 }
-		st._dispelGlowColor = glowColor
-	end
-	glowColor[1], glowColor[2], glowColor[3], glowColor[4] = cr, cg, cb, 1
+	stopDispelGlow(target)
+	local glowColor = { cr, cg, cb, 1 }
 	if effect == "SHINE" and LCG.AutoCastGlow_Start then
 		LCG.AutoCastGlow_Start(target, glowColor, lines, freq, scale, xoff, yoff, DISPEL_GLOW_KEY)
 	elseif effect == "BLIZZARD" and LCG.ButtonGlow_Start then
@@ -5498,13 +5490,6 @@ function GF:UpdateDispelGlow(self, r, g, b, colorKey)
 	else
 		LCG.PixelGlow_Start(target, glowColor, lines, freq, nil, thickness, xoff, yoff, nil, DISPEL_GLOW_KEY)
 	end
-	st._dispelGlowActive = true
-	st._dispelGlowLines = lines
-	st._dispelGlowFreq = freq
-	st._dispelGlowThickness = thickness
-	st._dispelGlowX, st._dispelGlowY = xoff, yoff
-	st._dispelGlowEffect = effect
-	st._dispelGlowKey = colorKey
 end
 
 function GF:UpdateRange(self, inRange)
@@ -5546,7 +5531,7 @@ function GF:UpdatePrivateAuras(self)
 	local cfg = self._eqolCfg or getCfg(kind)
 	local def = DEFAULTS[kind] or {}
 	local pcfg = (cfg and cfg.privateAuras) or def.privateAuras
-	local privateAuraParent = st.health or st.barGroup or self
+	local privateAuraParent = st.barGroup or st.health or self
 	local privateAuraLevelParent = st.statusIconLayer or st.healthTextLayer or st.health or st.barGroup or self
 	if not st.privateAuras then
 		if not (pcfg and pcfg.enabled == true) then return end
@@ -6215,6 +6200,8 @@ function GF:UnitButton_ClearUnit(self)
 	local st = self._eqolUFState
 	if st then
 		GFH.CancelReadyCheckIconTimer(st)
+		hideDispelTint(st)
+		stopDispelGlow(st.barGroup or self)
 		st._guid = nil
 		st._unitToken = nil
 		st._class = nil
@@ -6232,17 +6219,11 @@ function GF:UnitButton_ClearUnit(self)
 		clearDispelAuraState(st)
 	end
 	if UF.GroupFramesHealerBuffs and UF.GroupFramesHealerBuffs.ClearButton then UF.GroupFramesHealerBuffs.ClearButton(self) end
+	if st then st._healerBuffPlacementActive = nil end
 	if st and st.privateAuras and UFHelper then
 		if UFHelper.RemovePrivateAuras then UFHelper.RemovePrivateAuras(st.privateAuras) end
 		if UFHelper.UpdatePrivateAuraSound then UFHelper.UpdatePrivateAuraSound(st.privateAuras, nil, (self._eqolCfg and self._eqolCfg.privateAuras) or {}) end
 	end
-end
-
--- !Remove when HarreksAdvancedRaidFrames gets blocked or removed
-if hooksecurefunc then
-	hooksecurefunc(GF, "UnitButton_SetUnit", function(_, btn) GF.HarfRegister(btn) end)
-
-	hooksecurefunc(GF, "UnitButton_ClearUnit", function(_, btn) GF.HarfUnregister(btn) end)
 end
 
 function GF:UnitButton_RegisterUnitEvents(self, unit)
@@ -7016,13 +6997,26 @@ function GF:RefreshHealerBuffPlacement(kind)
 		if kind ~= "party" and kind ~= "raid" then kind = nil end
 	end
 	local db = DB or ensureDB()
-	if db and db.party and db.raid then kind = nil end
-	if UF.GroupFramesHealerBuffs.InvalidateKind then
+	local hbm = UF.GroupFramesHealerBuffs
+	if hbm and hbm.MarkPlacementDirty and db then
+		local function markKind(value)
+			local cfg = db[value]
+			if cfg and cfg.healerBuffPlacement then hbm.MarkPlacementDirty(cfg.healerBuffPlacement) end
+		end
 		if kind then
-			UF.GroupFramesHealerBuffs.InvalidateKind(kind)
+			markKind(kind)
 		else
-			UF.GroupFramesHealerBuffs.InvalidateKind("party")
-			UF.GroupFramesHealerBuffs.InvalidateKind("raid")
+			markKind("party")
+			markKind("raid")
+		end
+	end
+	if db and db.party and db.raid then kind = nil end
+	if hbm and hbm.InvalidateKind then
+		if kind then
+			hbm.InvalidateKind(kind)
+		else
+			hbm.InvalidateKind("party")
+			hbm.InvalidateKind("raid")
 		end
 	end
 
@@ -7083,6 +7077,15 @@ function GF:ToggleHealerBuffPlacementEditor(kind)
 	kind = tostring(kind or "raid"):lower()
 	if kind ~= "party" and kind ~= "raid" then kind = "raid" end
 	editor:Toggle(kind)
+	if addon.EditModeLib and addon.EditModeLib.internal and addon.EditModeLib.internal.RequestRefreshSettings then addon.EditModeLib.internal:RequestRefreshSettings() end
+end
+
+function GF:ToggleGlobalAuraIgnoreEditor(kind)
+	local editor = UF and UF.GlobalAuraIgnore
+	if not (editor and editor.ToggleEditor) then return end
+	kind = tostring(kind or "raid"):lower()
+	if kind ~= "party" and kind ~= "raid" then kind = "raid" end
+	editor:ToggleEditor(kind)
 	if addon.EditModeLib and addon.EditModeLib.internal and addon.EditModeLib.internal.RequestRefreshSettings then addon.EditModeLib.internal:RequestRefreshSettings() end
 end
 
@@ -11961,6 +11964,58 @@ local function buildEditModeSettings(kind, editModeId)
 			end,
 		},
 		{
+			name = "Backdrop texture",
+			kind = SettingType.Dropdown,
+			field = "healthBackdropTexture",
+			parentId = "health",
+			height = 180,
+			get = function()
+				local cfg = getCfg(kind)
+				local hc = cfg and cfg.health or {}
+				local def = DEFAULTS[kind] and DEFAULTS[kind].health or {}
+				local defBackdrop = def and def.backdrop or {}
+				return (hc.backdrop and hc.backdrop.texture) or defBackdrop.texture or "DEFAULT"
+			end,
+			set = function(_, value)
+				local cfg = getCfg(kind)
+				if not cfg then return end
+				cfg.health = cfg.health or {}
+				cfg.health.backdrop = cfg.health.backdrop or {}
+				cfg.health.backdrop.texture = value or "DEFAULT"
+				if EditMode and EditMode.SetValue then EditMode:SetValue(editModeId, "healthBackdropTexture", cfg.health.backdrop.texture, nil, true) end
+				GF:ApplyHeaderAttributes(kind)
+			end,
+			generator = function(_, root)
+				for _, option in ipairs(textureOptions()) do
+					root:CreateRadio(option.label, function()
+						local cfg = getCfg(kind)
+						local hc = cfg and cfg.health or {}
+						local def = DEFAULTS[kind] and DEFAULTS[kind].health or {}
+						local defBackdrop = def and def.backdrop or {}
+						return ((hc.backdrop and hc.backdrop.texture) or defBackdrop.texture or "DEFAULT") == option.value
+					end, function()
+						local cfg = getCfg(kind)
+						if not cfg then return end
+						cfg.health = cfg.health or {}
+						cfg.health.backdrop = cfg.health.backdrop or {}
+						cfg.health.backdrop.texture = option.value
+						if EditMode and EditMode.SetValue then EditMode:SetValue(editModeId, "healthBackdropTexture", option.value, nil, true) end
+						GF:ApplyHeaderAttributes(kind)
+					end)
+				end
+			end,
+			isEnabled = function()
+				local cfg = getCfg(kind)
+				local hc = cfg and cfg.health or {}
+				local def = DEFAULTS[kind] and DEFAULTS[kind].health or {}
+				local defBackdrop = def and def.backdrop or {}
+				local enabled = hc.backdrop and hc.backdrop.enabled
+				if enabled == nil then enabled = defBackdrop.enabled end
+				if enabled == nil then enabled = true end
+				return enabled ~= false
+			end,
+		},
+		{
 			name = "Clamp backdrop to missing health",
 			kind = SettingType.Checkbox,
 			field = "healthBackdropClampToFill",
@@ -15282,6 +15337,58 @@ local function buildEditModeSettings(kind, editModeId)
 			end,
 		},
 		{
+			name = "Backdrop texture",
+			kind = SettingType.Dropdown,
+			field = "powerBackdropTexture",
+			parentId = "power",
+			height = 180,
+			get = function()
+				local cfg = getCfg(kind)
+				local pcfg = cfg and cfg.power or {}
+				local def = DEFAULTS[kind] and DEFAULTS[kind].power or {}
+				local defBackdrop = def and def.backdrop or {}
+				return (pcfg.backdrop and pcfg.backdrop.texture) or defBackdrop.texture or "DEFAULT"
+			end,
+			set = function(_, value)
+				local cfg = getCfg(kind)
+				if not cfg then return end
+				cfg.power = cfg.power or {}
+				cfg.power.backdrop = cfg.power.backdrop or {}
+				cfg.power.backdrop.texture = value or "DEFAULT"
+				if EditMode and EditMode.SetValue then EditMode:SetValue(editModeId, "powerBackdropTexture", cfg.power.backdrop.texture, nil, true) end
+				GF:ApplyHeaderAttributes(kind)
+			end,
+			generator = function(_, root)
+				for _, option in ipairs(textureOptions()) do
+					root:CreateRadio(option.label, function()
+						local cfg = getCfg(kind)
+						local pcfg = cfg and cfg.power or {}
+						local def = DEFAULTS[kind] and DEFAULTS[kind].power or {}
+						local defBackdrop = def and def.backdrop or {}
+						return ((pcfg.backdrop and pcfg.backdrop.texture) or defBackdrop.texture or "DEFAULT") == option.value
+					end, function()
+						local cfg = getCfg(kind)
+						if not cfg then return end
+						cfg.power = cfg.power or {}
+						cfg.power.backdrop = cfg.power.backdrop or {}
+						cfg.power.backdrop.texture = option.value
+						if EditMode and EditMode.SetValue then EditMode:SetValue(editModeId, "powerBackdropTexture", option.value, nil, true) end
+						GF:ApplyHeaderAttributes(kind)
+					end)
+				end
+			end,
+			isEnabled = function()
+				local cfg = getCfg(kind)
+				local pcfg = cfg and cfg.power or {}
+				local def = DEFAULTS[kind] and DEFAULTS[kind].power or {}
+				local defBackdrop = def and def.backdrop or {}
+				local enabled = pcfg.backdrop and pcfg.backdrop.enabled
+				if enabled == nil then enabled = defBackdrop.enabled end
+				if enabled == nil then enabled = true end
+				return enabled ~= false
+			end,
+		},
+		{
 			name = "Backdrop color",
 			kind = SettingType.Color,
 			field = "powerBackdropColor",
@@ -15332,6 +15439,37 @@ local function buildEditModeSettings(kind, editModeId)
 				ac.buff.enabled = value and true or false
 				GFH.SyncAurasEnabled(cfg)
 				if EditMode and EditMode.SetValue then EditMode:SetValue(editModeId, "buffsEnabled", ac.buff.enabled, nil, true) end
+				GF:ApplyHeaderAttributes(kind)
+			end,
+		},
+		{
+			name = L["UFGroupBuffFilter"] or "Buff filter",
+			kind = SettingType.Dropdown,
+			field = "buffHelpfulFilterMode",
+			parentId = "buffs",
+			values = {
+				{
+					value = "RAID_IN_COMBAT",
+					label = L["UFGroupBuffFilterRaidInCombat"] or "Healer buffs",
+					text = L["UFGroupBuffFilterRaidInCombat"] or "Healer buffs",
+				},
+				{
+					value = "RAID",
+					label = L["UFGroupBuffFilterRaid"] or "Helpful effects",
+					text = L["UFGroupBuffFilterRaid"] or "Helpful effects",
+				},
+			},
+			get = function()
+				local cfg = getCfg(kind)
+				local ac = ensureAuraConfig(cfg)
+				local def = (DEFAULTS[kind] and DEFAULTS[kind].auras and DEFAULTS[kind].auras.buff) or {}
+				return GF.NormalizeBuffHelpfulFilterMode(ac.buff.helpfulFilterMode or def.helpfulFilterMode)
+			end,
+			set = function(_, value)
+				local cfg = getCfg(kind)
+				local ac = ensureAuraConfig(cfg)
+				ac.buff.helpfulFilterMode = GF.NormalizeBuffHelpfulFilterMode(value)
+				if EditMode and EditMode.SetValue then EditMode:SetValue(editModeId, "buffHelpfulFilterMode", ac.buff.helpfulFilterMode, nil, true) end
 				GF:ApplyHeaderAttributes(kind)
 			end,
 		},
@@ -18321,11 +18459,6 @@ local function buildEditModeSettings(kind, editModeId)
 	return settings
 end
 
--- Keep EditMode layout payload in sync with the current GroupFrame config.
---
--- EditMode re-applies stored layout data (onApply) on frame drag and other actions.
--- If cfg changes (for example through the copy system) without updating that payload,
--- stale values overwrite the freshly copied configuration on the next apply.
 function GF._syncGroupEditModeLayoutData(kind, editModeId, layoutName)
 	if not (kind and editModeId) then return end
 	if not (EditMode and EditMode.EnsureLayoutData and EditMode.GetActiveLayoutName) then return end
@@ -18335,27 +18468,17 @@ function GF._syncGroupEditModeLayoutData(kind, editModeId, layoutName)
 
 	local data = EditMode:EnsureLayoutData(editModeId, layoutName)
 	if type(data) ~= "table" then return end
+	local cfg = getCfg(kind)
+	local def = DEFAULTS[kind] or {}
+	local point = tostring((cfg and cfg.point) or def.point or data.point or "CENTER"):upper()
+	local relativePoint = tostring((cfg and (cfg.relativePoint or cfg.point)) or def.relativePoint or def.point or point):upper()
+	local x = roundToPixel(clampNumber((cfg and cfg.x) or def.x or data.x or 0, -4000, 4000, 0), 1)
+	local y = roundToPixel(clampNumber((cfg and cfg.y) or def.y or data.y or 0, -4000, 4000, 0), 1)
 
-	-- Reuse the same field->getter mapping the settings sheet uses.
-	local settings = buildEditModeSettings(kind, editModeId)
-	if type(settings) ~= "table" then return end
-
-	for _, setting in ipairs(settings) do
-		local field = setting and setting.field
-		local getter = setting and setting.get
-		if field and getter then
-			local ok, value = pcall(getter, layoutName)
-			if ok then
-				if type(value) == "table" then
-					data[field] = CopyTable(value)
-				else
-					data[field] = value
-				end
-			else
-				geterrorhandler()(value)
-			end
-		end
-	end
+	data.point = point
+	data.relativePoint = relativePoint
+	data.x = x
+	data.y = y
 end
 
 local function applyEditModeData(kind, data)
@@ -18589,6 +18712,11 @@ local function applyEditModeData(kind, data)
 		cfg.health = cfg.health or {}
 		cfg.health.backdrop = cfg.health.backdrop or {}
 		cfg.health.backdrop.color = data.healthBackdropColor
+	end
+	if data.healthBackdropTexture ~= nil then
+		cfg.health = cfg.health or {}
+		cfg.health.backdrop = cfg.health.backdrop or {}
+		cfg.health.backdrop.texture = data.healthBackdropTexture
 	end
 	if data.healthLeftX ~= nil or data.healthLeftY ~= nil then
 		cfg.health = cfg.health or {}
@@ -19001,6 +19129,11 @@ local function applyEditModeData(kind, data)
 		cfg.power.backdrop = cfg.power.backdrop or {}
 		cfg.power.backdrop.color = data.powerBackdropColor
 	end
+	if data.powerBackdropTexture ~= nil then
+		cfg.power = cfg.power or {}
+		cfg.power.backdrop = cfg.power.backdrop or {}
+		cfg.power.backdrop.texture = data.powerBackdropTexture
+	end
 	if data.powerLeftX ~= nil or data.powerLeftY ~= nil then
 		cfg.power = cfg.power or {}
 		cfg.power.offsetLeft = cfg.power.offsetLeft or {}
@@ -19035,6 +19168,7 @@ local function applyEditModeData(kind, data)
 	if data.buffPerRow ~= nil then ac.buff.perRow = data.buffPerRow end
 	if data.buffMax ~= nil then ac.buff.max = data.buffMax end
 	if data.buffSpacing ~= nil then ac.buff.spacing = data.buffSpacing end
+	if data.buffHelpfulFilterMode ~= nil then ac.buff.helpfulFilterMode = GF.NormalizeBuffHelpfulFilterMode(data.buffHelpfulFilterMode) end
 	if data.buffCooldownTextEnabled ~= nil then ac.buff.showCooldownText = data.buffCooldownTextEnabled and true or false end
 	if data.buffCooldownTextAnchor ~= nil then ac.buff.cooldownAnchor = data.buffCooldownTextAnchor end
 	if data.buffCooldownTextOffsetX ~= nil or data.buffCooldownTextOffsetY ~= nil then
@@ -19224,8 +19358,6 @@ local function applyEditModeData(kind, data)
 					local current = tostring(cfg.sortMethod or ""):upper()
 					if current == "NAMELIST" or current == "CUSTOM" then cfg.sortMethod = (DEFAULTS.raid and DEFAULTS.raid.sortMethod) or "INDEX" end
 				end
-			elseif EditMode and EditMode.SetValue then
-				EditMode:SetValue(EDITMODE_IDS[kind], "customSortEnabled", custom and custom.enabled == true, nil, true)
 			end
 			if data.customSortSeparateMeleeRanged ~= nil then
 				custom.separateMeleeRanged = data.customSortSeparateMeleeRanged and true or false
@@ -19234,8 +19366,6 @@ local function applyEditModeData(kind, data)
 				else
 					custom.roleOrder = GFH.CollapseRoleOrder(custom.roleOrder)
 				end
-			elseif EditMode and EditMode.SetValue then
-				EditMode:SetValue(EDITMODE_IDS[kind], "customSortSeparateMeleeRanged", custom and custom.separateMeleeRanged == true, nil, true)
 			end
 		end
 		if data.unitsPerColumn ~= nil then
@@ -19427,6 +19557,7 @@ function GF:EnsureEditMode()
 				healthBackdropEnabled = (hcBackdrop.enabled ~= nil) and (hcBackdrop.enabled ~= false) or (defHBackdrop.enabled ~= false),
 				healthBackdropClampToFill = (hcBackdrop.clampToFill ~= nil) and (hcBackdrop.clampToFill == true) or ((hcBackdrop.clampToFill == nil) and (defHBackdrop.clampToFill == true)),
 				healthBackdropColor = hcBackdrop.color or defHBackdrop.color or { 0, 0, 0, 0.6 },
+				healthBackdropTexture = hcBackdrop.texture or defHBackdrop.texture or "DEFAULT",
 				healthLeftX = (cfg.health and cfg.health.offsetLeft and cfg.health.offsetLeft.x) or 0,
 				healthLeftY = (cfg.health and cfg.health.offsetLeft and cfg.health.offsetLeft.y) or 0,
 				healthCenterX = (cfg.health and cfg.health.offsetCenter and cfg.health.offsetCenter.x) or 0,
@@ -19615,6 +19746,7 @@ function GF:EnsureEditMode()
 				powerTexture = pcfg.texture or defP.texture or "DEFAULT",
 				powerBackdropEnabled = (pcfgBackdrop.enabled ~= nil) and (pcfgBackdrop.enabled ~= false) or (defPBackdrop.enabled ~= false),
 				powerBackdropColor = pcfgBackdrop.color or defPBackdrop.color or { 0, 0, 0, 0.6 },
+				powerBackdropTexture = pcfgBackdrop.texture or defPBackdrop.texture or "DEFAULT",
 				powerLeftX = (pcfg.offsetLeft and pcfg.offsetLeft.x) or 0,
 				powerLeftY = (pcfg.offsetLeft and pcfg.offsetLeft.y) or 0,
 				powerCenterX = (pcfg.offsetCenter and pcfg.offsetCenter.x) or 0,
@@ -19645,6 +19777,7 @@ function GF:EnsureEditMode()
 				buffPerRow = ac.buff.perRow or 6,
 				buffMax = ac.buff.max or 6,
 				buffSpacing = ac.buff.spacing or 2,
+				buffHelpfulFilterMode = GF.NormalizeBuffHelpfulFilterMode(ac.buff.helpfulFilterMode or defBuff.helpfulFilterMode),
 				buffCooldownTextEnabled = (ac.buff.showCooldownText ~= nil and ac.buff.showCooldownText ~= false) or (ac.buff.showCooldownText == nil and defBuff.showCooldownText ~= false),
 				buffCooldownTextAnchor = ac.buff.cooldownAnchor or defBuff.cooldownAnchor or "CENTER",
 				buffCooldownTextOffsetX = (ac.buff.cooldownOffset and ac.buff.cooldownOffset.x) or (defBuff.cooldownOffset and defBuff.cooldownOffset.x) or 0,
@@ -19722,18 +19855,44 @@ function GF:EnsureEditMode()
 				title = (kind == "party" and (PARTY or "Party")) or (kind == "raid" and (RAID or "Raid")) or (kind == "mt" and "Main Tank") or (kind == "ma" and "Main Assist") or tostring(kind),
 				layoutDefaults = defaults,
 				settings = buildEditModeSettings(kind, EDITMODE_IDS[kind]),
-				onApply = function(_, _, data) applyEditModeData(kind, data) end,
-				onPositionChanged = function(_, _, dataOrPoint, x, y)
-					if type(dataOrPoint) == "table" then
-						applyEditModeData(kind, dataOrPoint)
-					else
+				onApply = function(_, layoutName, data)
+					local token = addon.db
+					if anchor._eqolEditModeHydratedToken ~= token then
+						anchor._eqolEditModeHydratedToken = token
+						if GF._syncGroupEditModeLayoutData then GF._syncGroupEditModeLayoutData(kind, EDITMODE_IDS[kind], layoutName) end
+						if EditMode and EditMode.EnsureLayoutData then
+							local synced = EditMode:EnsureLayoutData(EDITMODE_IDS[kind], layoutName)
+							if type(synced) == "table" then data = synced end
+						end
+					end
+					if type(data) == "table" and (data.point or data.relativePoint or data.x ~= nil or data.y ~= nil) then
 						applyEditModeData(kind, {
+							point = data.point,
+							relativePoint = data.relativePoint,
+							x = data.x,
+							y = data.y,
+						})
+					end
+				end,
+				onPositionChanged = function(_, _, dataOrPoint, x, y)
+					local positionData
+					if type(dataOrPoint) == "table" then
+						positionData = {
+							point = dataOrPoint.point,
+							relativePoint = dataOrPoint.relativePoint,
+							x = dataOrPoint.x,
+							y = dataOrPoint.y,
+						}
+					else
+						positionData = {
 							point = dataOrPoint,
 							relativePoint = dataOrPoint,
 							x = x,
 							y = y,
-						})
+						}
 					end
+
+					if positionData.point or positionData.relativePoint or positionData.x ~= nil or positionData.y ~= nil then applyEditModeData(kind, positionData) end
 				end,
 				onEnter = function() GF:OnEnterEditMode(kind) end,
 				onExit = function() GF:OnExitEditMode(kind) end,
@@ -19778,6 +19937,10 @@ function GF:EnsureEditMode()
 					table.insert(buttons, 2, {
 						text = L["UFGroupHealerBuffEditModeButton"] or "Edit healer buff placement",
 						click = function() GF:ToggleHealerBuffPlacementEditor(kind) end,
+					})
+					table.insert(buttons, 3, {
+						text = L["UFGroupGlobalAuraIgnoreEditModeButton"] or "Edit global aura ignore",
+						click = function() GF:ToggleGlobalAuraIgnoreEditor(kind) end,
 					})
 				end
 				if kind == "raid" then table.insert(buttons, 2, {
@@ -19827,6 +19990,8 @@ end
 function GF:OnExitEditMode(kind)
 	local editor = UF and UF.GroupFramesHealerBuffEditor
 	if editor and editor.IsShown and editor:IsShown() then editor:Hide() end
+	local globalIgnoreEditor = UF and UF.GlobalAuraIgnore
+	if globalIgnoreEditor and globalIgnoreEditor.HideEditor then globalIgnoreEditor:HideEditor() end
 	if not isFeatureEnabled() then return end
 	local cfg = getCfg(kind)
 	if not (cfg and cfg.enabled == true) then return end
@@ -19853,6 +20018,10 @@ registerFeatureEvents = function(frame)
 		frame:RegisterEvent("PARTY_LEADER_CHANGED")
 		frame:RegisterEvent("PLAYER_ROLES_ASSIGNED")
 		frame:RegisterEvent("PLAYER_SPECIALIZATION_CHANGED")
+		frame:RegisterEvent("PLAYER_TALENT_UPDATE")
+		frame:RegisterEvent("TRAIT_CONFIG_UPDATED")
+		frame:RegisterEvent("SPELLS_CHANGED")
+		frame:RegisterEvent("ACTIVE_TALENT_GROUP_CHANGED")
 		frame:RegisterEvent("INSPECT_READY")
 		frame:RegisterEvent("RAID_TARGET_UPDATE")
 		frame:RegisterEvent("PLAYER_TARGET_CHANGED")
@@ -19874,6 +20043,10 @@ unregisterFeatureEvents = function(frame)
 		frame:UnregisterEvent("PARTY_LEADER_CHANGED")
 		frame:UnregisterEvent("PLAYER_ROLES_ASSIGNED")
 		frame:UnregisterEvent("PLAYER_SPECIALIZATION_CHANGED")
+		frame:UnregisterEvent("PLAYER_TALENT_UPDATE")
+		frame:UnregisterEvent("TRAIT_CONFIG_UPDATED")
+		frame:UnregisterEvent("SPELLS_CHANGED")
+		frame:UnregisterEvent("ACTIVE_TALENT_GROUP_CHANGED")
 		frame:UnregisterEvent("INSPECT_READY")
 		frame:UnregisterEvent("RAID_TARGET_UPDATE")
 		frame:UnregisterEvent("PLAYER_TARGET_CHANGED")
@@ -20027,6 +20200,9 @@ do
 			local cfg = getCfg("raid")
 			local custom = cfg and GFH and GFH.EnsureCustomSortConfig and GFH.EnsureCustomSortConfig(cfg)
 			if custom and custom.separateMeleeRanged == true and resolveSortMethod(cfg) == "NAMELIST" and GFH and GFH.QueueInspectGroup then GFH.QueueInspectGroup() end
+			refreshAllAuras()
+		elseif event == "PLAYER_TALENT_UPDATE" or event == "TRAIT_CONFIG_UPDATED" or event == "SPELLS_CHANGED" or event == "ACTIVE_TALENT_GROUP_CHANGED" then
+			refreshAllAuras()
 		end
 	end)
 end

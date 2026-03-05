@@ -30,9 +30,6 @@ function addon:OnInitialize()
         ns.WilduSettings:RegisterSettings()
         ns.WilduSettings:InitializeSettings()
     end
-    print(
-        "|cff008945Cool|r|cff1e9a4e|r|cff3faa4fdown Ma|r|cff5fb64anag|r|cff7ac243er Ce|r|cff8ccd00ntered|r is rarely responsible for Cooldown Manager bugs. Through the beta cycle, Blizzard ignored and still did not resolve many issues related to disappearing/changing abilities, wrong or missing auras, and other bugs. If you encounter any of those, please report them to Blizzard as well, so they can prioritize fixing them."
-    )
 end
 local openCooldownViewerSettings = function()
     if not InCombatLockdown() then
@@ -219,17 +216,24 @@ addon.isRetail = gameVersion:match("^11")
 
 C_Timer.After(2, function()
     local time = C_DateAndTime.GetCurrentCalendarTime()
-    local askedDate = time.year * 10000 + time.month * 100 + time.monthDay
+    local todaysDate = time.year * 10000 + time.month * 100 + time.monthDay
 
     if
         ns.API:IsElvUICDMSkinningEnabled()
         and (ns.StyledIcons:IsAnyStyledFeatureEnabled() or ns.Stacks:IsAnyStacksFeatureEnabled())
         and (
             not ns.db.profile._elvui_skinning_asked
-            or (ns.db.profile._elvui_skinning_asked < askedDate - 4 or ns.db.profile._elvui_skinning_asked < 10000)
+            or (ns.db.profile._elvui_skinning_asked < todaysDate - 4 or ns.db.profile._elvui_skinning_asked < 10000)
         )
     then
         StaticPopup_Show("CMC_ELVUI_SKINNING_ASK")
-        ns.db.profile._elvui_skinning_asked = askedDate
+        ns.db.profile._elvui_skinning_asked = todaysDate
+    end
+
+    if not ns.db.profile._bug_warning_displayed or (ns.db.profile._bug_warning_displayed <= todaysDate - 1) then
+        print(
+            "|cff008945Cool|r|cff1e9a4e|r|cff3faa4fdown Ma|r|cff5fb64anag|r|cff7ac243er Ce|r|cff8ccd00ntered|r is rarely responsible for Cooldown Manager bugs. Through the beta cycle, Blizzard ignored and still did not resolve many issues related to disappearing/changing abilities, wrong or missing auras, and other bugs. If you encounter any of those, please report them to Blizzard as well, so they can prioritize fixing them."
+        )
+        ns.db.profile._bug_warning_displayed = todaysDate
     end
 end)

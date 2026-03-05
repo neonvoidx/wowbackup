@@ -12,9 +12,47 @@ local expandable = addon.functions.SettingsCreateExpandableSection(cProfiles, {
 	name = L["AddOn"],
 	expanded = false,
 	colorizeTitle = false,
+	newTagID = "ProfilesAddOn",
 })
 
 local profileOrderActive, profileOrderGlobal, profileOrderCopy, profileOrderDelete = {}, {}, {}, {}
+local globalFontOrder = {}
+
+local function getCachedFontMedia()
+	local names = addon.functions and addon.functions.GetLSMMediaNames and addon.functions.GetLSMMediaNames("font")
+	local hash = addon.functions and addon.functions.GetLSMMediaHash and addon.functions.GetLSMMediaHash("font")
+	if type(names) == "table" and type(hash) == "table" then return names, hash end
+	return {}, {}
+end
+
+local function buildGlobalFontDropdown()
+	local map = {
+		[(addon.variables and addon.variables.defaultFont) or STANDARD_TEXT_FONT] = L["actionBarFontDefault"] or "Blizzard font",
+	}
+	local names, hash = getCachedFontMedia()
+	for i = 1, #names do
+		local name = names[i]
+		local path = hash[name]
+		if type(path) == "string" and path ~= "" then map[path] = tostring(name) end
+	end
+	local list, order = addon.functions.prepareListForDropdown(map)
+	wipe(globalFontOrder)
+	for i, key in ipairs(order or {}) do
+		globalFontOrder[i] = key
+	end
+	return list
+end
+
+local function refreshGlobalFonts()
+	if addon.functions and addon.functions.RefreshGlobalFontConsumers then
+		addon.functions.RefreshGlobalFontConsumers()
+		return
+	end
+	local actionBarLabels = addon.ActionBarLabels
+	if actionBarLabels and actionBarLabels.RefreshAllMacroNameVisibility then actionBarLabels.RefreshAllMacroNameVisibility() end
+	if actionBarLabels and actionBarLabels.RefreshAllHotkeyStyles then actionBarLabels.RefreshAllHotkeyStyles() end
+	if actionBarLabels and actionBarLabels.RefreshAllCountStyles then actionBarLabels.RefreshAllCountStyles() end
+end
 
 -- Build a sorted dropdown list, optionally keeping an empty entry pinned to the top
 local function buildSortedProfileList(orderTarget, excludeFunc, includeEmpty)
@@ -189,6 +227,25 @@ data = {
 
 addon.functions.SettingsCreateDropdown(cProfiles, data)
 addon.functions.SettingsCreateText(cProfiles, L["ProfileUseGlobalDesc"], { parentSection = expandable })
+
+addon.functions.SettingsCreateScrollDropdown(cProfiles, {
+	var = "globalFontFace",
+	text = L["globalFontConfigLabel"] or "Global font",
+	listFunc = buildGlobalFontDropdown,
+	order = globalFontOrder,
+	default = (addon.variables and addon.variables.defaultFont) or STANDARD_TEXT_FONT,
+	get = function()
+		local current = addon.db and addon.db.globalFontFace or ((addon.variables and addon.variables.defaultFont) or STANDARD_TEXT_FONT)
+		local list = buildGlobalFontDropdown()
+		if not list[current] then current = (addon.variables and addon.variables.defaultFont) or STANDARD_TEXT_FONT end
+		return current
+	end,
+	set = function(value)
+		addon.db.globalFontFace = value
+		refreshGlobalFonts()
+	end,
+	parentSection = expandable,
+})
 
 data = {
 	listFunc = function()

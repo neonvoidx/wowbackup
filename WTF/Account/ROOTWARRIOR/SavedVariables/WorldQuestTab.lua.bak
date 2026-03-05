@@ -1,0 +1,35 @@
+
+BWQDB = {
+["char"] = {
+["Starphage - Tichondrius"] = {
+["activeProfile"] = 0,
+},
+["Neonvoid - Tichondrius"] = {
+["activeProfile"] = 0,
+},
+},
+["global"] = {
+["versionCheck"] = 120006,
+["profiles"] = {
+[0] = {
+["colors"] = {
+},
+["name"] = "Default",
+["list"] = {
+},
+["general"] = {
+},
+["pin"] = {
+},
+["external"] = {
+},
+["filters"] = {
+},
+},
+},
+},
+["profileKeys"] = {
+["Starphage - Tichondrius"] = "Default",
+["Neonvoid - Tichondrius"] = "Default",
+},
+}

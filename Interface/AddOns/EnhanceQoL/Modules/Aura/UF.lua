@@ -394,16 +394,121 @@ function UFProfileManager._resolveUFGlobalProfile(profiles)
 	return globalName
 end
 
+function UFProfileManager._deepValueEquals(a, b, seenA, seenB)
+	local ta, tb = type(a), type(b)
+	if ta ~= tb then return false end
+	if ta ~= "table" then return a == b end
+	if a == b then return true end
+
+	seenA = seenA or {}
+	seenB = seenB or {}
+	if seenA[a] and seenB[b] then return true end
+	seenA[a] = true
+	seenB[b] = true
+
+	for key, value in pairs(a) do
+		if not UFProfileManager._deepValueEquals(value, b[key], seenA, seenB) then return false end
+	end
+	for key in pairs(b) do
+		if a[key] == nil then return false end
+	end
+	return true
+end
+
+function UFProfileManager._runtimeMatchesUFProfile(profile)
+	if type(profile) ~= "table" or type(addon.db) ~= "table" then return false end
+	for _, key in ipairs(UFProfileManager.RUNTIME_KEYS) do
+		local runtimeValue = addon.db[key]
+		local profileValue = profile[key]
+		if key == "ufUseCustomClassColors" then
+			if (runtimeValue == true) ~= (profileValue == true) then return false end
+		elseif not UFProfileManager._deepValueEquals(runtimeValue, profileValue) then
+			return false
+		end
+	end
+	return true
+end
+
+function UFProfileManager._findRuntimeMatchingUFProfileName(profiles, preferredName)
+	if type(profiles) ~= "table" then return nil end
+	if preferredName and type(preferredName) == "string" and UFProfileManager._runtimeMatchesUFProfile(profiles[preferredName]) then return preferredName end
+	local activeName = UFProfileManager._trimProfileName(UFProfileManager._activeProfileName)
+	if activeName and profiles[activeName] and UFProfileManager._runtimeMatchesUFProfile(profiles[activeName]) then return activeName end
+	for _, name in ipairs(UFProfileManager._getSortedUFProfileNames(profiles)) do
+		if UFProfileManager._runtimeMatchesUFProfile(profiles[name]) then return name end
+	end
+	return nil
+end
+
+function UFProfileManager._resolveUFSpecMappedProfileName(profiles, guid)
+	if type(profiles) ~= "table" or type(guid) ~= "string" or guid == "" then return nil end
+	local byGuid = addon.db and addon.db.ufProfileSpecKeys and addon.db.ufProfileSpecKeys[guid]
+	if type(byGuid) ~= "table" then return nil end
+	local specID = UFProfileManager._getCurrentSpecID()
+	if not specID then return nil end
+	local mapped = byGuid[specID]
+	if type(mapped) ~= "string" or mapped == "" then mapped = byGuid[tostring(specID)] end
+	mapped = UFProfileManager._trimProfileName(mapped)
+	if not mapped or not profiles[mapped] then return nil end
+	return mapped
+end
+
 function UFProfileManager._resolveUFActiveProfileName(profiles)
 	local globalName = UFProfileManager._resolveUFGlobalProfile(profiles)
 	local guid = UFProfileManager._getCurrentPlayerGUID()
-	if not guid then return globalName end
-	local activeName = UFProfileManager._trimProfileName(addon.db.ufProfileKeys and addon.db.ufProfileKeys[guid])
-	if not activeName or not profiles[activeName] then
-		activeName = globalName
-		addon.db.ufProfileKeys[guid] = activeName
+	if not guid then
+		local runtimeMatch = UFProfileManager._findRuntimeMatchingUFProfileName(profiles, globalName)
+		if runtimeMatch then return runtimeMatch, false end
+		return globalName, true
 	end
-	return activeName
+
+	local activeName = UFProfileManager._trimProfileName(addon.db.ufProfileKeys and addon.db.ufProfileKeys[guid])
+	if activeName and profiles[activeName] then return activeName, false end
+
+	local specMapped = UFProfileManager._resolveUFSpecMappedProfileName(profiles, guid)
+	if specMapped then
+		addon.db.ufProfileKeys[guid] = specMapped
+		return specMapped, false
+	end
+
+	local runtimeMatch = UFProfileManager._findRuntimeMatchingUFProfileName(profiles, globalName)
+	if runtimeMatch then
+		addon.db.ufProfileKeys[guid] = runtimeMatch
+		return runtimeMatch, false
+	end
+
+	addon.db.ufProfileKeys[guid] = globalName
+	return globalName, true
+end
+
+function UFProfileManager._seedProfileFromRuntime(profileName)
+	if type(addon.db) ~= "table" then return false end
+	local profiles = addon.db.ufProfiles
+	if type(profiles) ~= "table" then return false end
+	local profile = profiles[profileName]
+	if type(profile) ~= "table" then return false end
+	if UFProfileManager._isUFProfileBound(profileName) then return false end
+
+	local seeded = false
+	for _, key in ipairs(UFProfileManager.RUNTIME_KEYS) do
+		local runtimeValue = addon.db[key]
+		if key == "ufUseCustomClassColors" then
+			profile[key] = runtimeValue == true
+			seeded = true
+		elseif type(runtimeValue) == "table" then
+			profile[key] = UFProfileManager._copyProfileValue(runtimeValue) or {}
+			seeded = true
+		elseif runtimeValue ~= nil then
+			profile[key] = runtimeValue
+			seeded = true
+		end
+	end
+
+	if not seeded then return false end
+	profiles[profileName] = UFProfileManager._ensureUFProfilePayload(profile)
+	UFProfileManager.Debug("seed runtime into UF profile %s (first guid mapping)", tostring(profileName))
+	UFProfileManager.Trace("SEED_RUNTIME", profileName)
+	return true
 end
 
 function UFProfileManager._bindUFProfileToRuntime(profileName)
@@ -470,8 +575,9 @@ function UFProfileManager.Initialize()
 	if type(profiles) ~= "table" then return false, "NO_DB" end
 	UFProfileManager._dedupeUFProfileTables(profiles)
 	UFProfileManager._cleanUFProfileReferences(profiles)
-	local activeName = UFProfileManager._resolveUFActiveProfileName(profiles)
+	local activeName, shouldSeedFromRuntime = UFProfileManager._resolveUFActiveProfileName(profiles)
 	if not activeName or not profiles[activeName] then return false, "NO_PROFILE" end
+	if shouldSeedFromRuntime then UFProfileManager._seedProfileFromRuntime(activeName) end
 	local guid = UFProfileManager._getCurrentPlayerGUID()
 	local keyProfile = guid and addon.db.ufProfileKeys and addon.db.ufProfileKeys[guid] or nil
 	UFProfileManager.Debug("initialize guid=%s key=%s global=%s resolved=%s", tostring(guid), tostring(keyProfile), tostring(addon.db.ufProfileGlobal), tostring(activeName))
@@ -856,6 +962,16 @@ local defaults = {
 			useCustomColor = false,
 			useClassColor = false,
 			useTapDeniedColor = true,
+			usePercentColorCurve = false,
+			percentColorCurveType = "COSINE",
+			percentColorCurvePointCount = 2,
+			percentColorCurvePoints = {
+				{ percent = 0, color = { 0.9, 0.0, 0.0, 1 } },
+				{ percent = 60, color = { 0.9, 0.9, 0.0, 1 } },
+			},
+			percentColorCurveMidpoint = 60,
+			percentColorCurveMidColor = { 0.9, 0.9, 0.0, 1 },
+			percentColorCurveLowColor = { 0.9, 0.0, 0.0, 1 },
 			color = { 0.0, 0.8, 0.0, 1 },
 			tapDeniedColor = { 0.5, 0.5, 0.5, 1 },
 			absorbColor = { 0.85, 0.95, 1.0, 0.7 },
@@ -870,7 +986,7 @@ local defaults = {
 			showSampleHealAbsorb = false,
 			healAbsorbTexture = "SOLID",
 			healAbsorbReverseFill = true,
-			backdrop = { enabled = true, color = { 0, 0, 0, 0.6 }, useClassColor = false, clampToFill = false },
+			backdrop = { enabled = true, color = { 0, 0, 0, 0.6 }, texture = "DEFAULT", useClassColor = false, clampToFill = false },
 			textLeft = "PERCENT",
 			textCenter = "NONE",
 			textRight = "CURMAX",
@@ -896,7 +1012,7 @@ local defaults = {
 			detachedStrata = nil,
 			emptyMaxFallback = false,
 			color = { 0.1, 0.45, 1, 1 },
-			backdrop = { enabled = true, color = { 0, 0, 0, 0.6 } },
+			backdrop = { enabled = true, color = { 0, 0, 0, 0.6 }, texture = "DEFAULT" },
 			useCustomColor = false,
 			textLeft = "PERCENT",
 			textCenter = "NONE",
@@ -920,6 +1036,11 @@ local defaults = {
 				STAGGER = true,
 				VOID_METAMORPHOSIS = true,
 			},
+			staggerHighColors = false,
+			staggerHighThreshold = 200,
+			staggerExtremeThreshold = 300,
+			staggerHighColor = { 0.62, 0.2, 1.0, 1 },
+			staggerExtremeColor = { 1.0, 0.2, 0.8, 1 },
 			detached = false,
 			detachedGrowFromCenter = false,
 			detachedMatchHealthWidth = false,
@@ -927,7 +1048,7 @@ local defaults = {
 			detachedStrata = nil,
 			emptyMaxFallback = false,
 			color = { 0.1, 0.45, 1, 1 },
-			backdrop = { enabled = true, color = { 0, 0, 0, 0.6 } },
+			backdrop = { enabled = true, color = { 0, 0, 0, 0.6 }, texture = "DEFAULT" },
 			useCustomColor = false,
 			textLeft = "PERCENT",
 			textCenter = "NONE",
@@ -1021,7 +1142,7 @@ local defaults = {
 			frameLevelOffset = nil,
 			anchor = "BOTTOM", -- or "TOP"
 			offset = { x = 0, y = -4 },
-			backdrop = { enabled = true, color = { 0, 0, 0, 0.6 } },
+			backdrop = { enabled = true, color = { 0, 0, 0, 0.6 }, texture = "DEFAULT" },
 			border = {
 				enabled = false,
 				color = { 0, 0, 0, 0.8 },
@@ -1030,6 +1151,7 @@ local defaults = {
 				offset = 1,
 			},
 			showName = true,
+			nameAnchor = "LEFT",
 			nameMaxChars = 0,
 			showCastTarget = false,
 			nameOffset = { x = 6, y = 0 },
@@ -1203,7 +1325,7 @@ local defaults = {
 			frameLevelOffset = nil,
 			anchor = "BOTTOM", -- or "TOP"
 			offset = { x = 11, y = -4 },
-			backdrop = { enabled = true, color = { 0, 0, 0, 0.6 } },
+			backdrop = { enabled = true, color = { 0, 0, 0, 0.6 }, texture = "DEFAULT" },
 			border = {
 				enabled = false,
 				color = { 0, 0, 0, 0.8 },
@@ -1212,6 +1334,7 @@ local defaults = {
 				offset = 1,
 			},
 			showName = true,
+			nameAnchor = "LEFT",
 			nameMaxChars = 0,
 			showCastTarget = false,
 			nameOffset = { x = 6, y = 0 },
@@ -1954,15 +2077,18 @@ applyClassResourceLayout = function(cfg)
 				if frame.SetScale then frame:SetScale(scale) end
 				if frame.SetFrameStrata and st.frame.GetFrameStrata then frame:SetFrameStrata(resourceStrata or st.frame:GetFrameStrata()) end
 				if frame.SetFrameLevel then frame:SetFrameLevel(minLevel) end
-				local shouldForceShow = true
-				if type(frame.eqolShouldShowClassResource) == "function" then
-					local ok, result = pcall(frame.eqolShouldShowClassResource, frame)
-					if ok and result == false then shouldForceShow = false end
-				end
-				if shouldForceShow then
-					if frame.Show and frame.IsShown and not frame:IsShown() then frame:Show() end
-				elseif frame.Hide then
-					frame:Hide()
+				local manageVisibility = frame._eqolManageVisibility == true or type(frame.eqolShouldShowClassResource) == "function"
+				if manageVisibility then
+					local shouldShow = true
+					if type(frame.eqolShouldShowClassResource) == "function" then
+						local ok, result = pcall(frame.eqolShouldShowClassResource, frame)
+						if ok and result == false then shouldShow = false end
+					end
+					if shouldShow then
+						if frame.Show and frame.IsShown and not frame:IsShown() then frame:Show() end
+					elseif frame.Hide then
+						frame:Hide()
+					end
 				end
 			else
 				ClassResourceUtil.restoreClassResourceFrame(frame)
@@ -3529,7 +3655,11 @@ function AuraUtil.scanTargetAuraSlots(unit, filter, queryLimit, hidePermanent)
 	end
 	for i = 2, #slots do
 		local aura = C_UnitAuras.GetAuraDataBySlot(unit, slots[i])
-		if aura and (not hidePermanent or not AuraUtil.isPermanentAura(aura, unit)) then
+		if
+			aura
+			and (not hidePermanent or not AuraUtil.isPermanentAura(aura, unit))
+			and not (UF.GlobalAuraIgnore and UF.GlobalAuraIgnore.ShouldIgnoreAura and UF.GlobalAuraIgnore.ShouldIgnoreAura(unit, aura))
+		then
 			AuraUtil.cacheTargetAura(aura, unit)
 			AuraUtil.addTargetAuraToOrder(aura.auraInstanceID, unit)
 		end
@@ -3931,12 +4061,6 @@ local function ensureBorderFrame(frame)
 	return border
 end
 
-local BAR_BACKDROP_STYLE = {
-	bgFile = "Interface\\Buttons\\WHITE8x8",
-	edgeFile = nil,
-	tile = false,
-}
-
 local function unpackColor(color, defaultR, defaultG, defaultB, defaultA)
 	if type(color) ~= "table" then return defaultR, defaultG, defaultB, defaultA end
 	return color[1] or color.r or defaultR, color[2] or color.g or defaultG, color[3] or color.b or defaultB, color[4] or color.a or defaultA
@@ -4028,6 +4152,9 @@ local function applyBarBackdrop(bar, cfg, overrideR, overrideG, overrideB, overr
 	cfg = cfg or {}
 	options = options or {}
 	local bd = cfg.backdrop or {}
+	local backdropTextureKey = bd.texture
+	if backdropTextureKey == nil or backdropTextureKey == "" or backdropTextureKey == "DEFAULT" then backdropTextureKey = cfg.texture end
+	local backdropTexture = UFHelper.resolveTexture(backdropTextureKey)
 	local clampToFill = options.clampToFill == true
 	local reverseFill = options.reverseFill == true
 	local cache = bar._ufBackdropCache
@@ -4040,6 +4167,7 @@ local function applyBarBackdrop(bar, cfg, overrideR, overrideG, overrideB, overr
 		cache.clampToFill = clampToFill
 		cache.reverseFill = reverseFill
 		cache.statusTex = nil
+		cache.texture = nil
 		bar._ufBackdropCache = cache
 		return
 	end
@@ -4064,13 +4192,13 @@ local function applyBarBackdrop(bar, cfg, overrideR, overrideG, overrideB, overr
 		or cache.clampToFill ~= clampToFill
 		or cache.reverseFill ~= reverseFill
 		or cache.statusTex ~= currentStatusTex
+		or cache.texture ~= backdropTexture
 	if not styleChanged then return end
 	if clampToFill then
 		if bar.SetBackdrop then bar:SetBackdrop(nil) end
 		local tex = bar._ufBackdropTexture
 		if not tex then
 			tex = bar:CreateTexture(nil, "BACKGROUND")
-			tex:SetTexture("Interface\\Buttons\\WHITE8x8")
 			bar._ufBackdropTexture = tex
 		end
 		local htex = bar.GetStatusBarTexture and bar:GetStatusBarTexture()
@@ -4090,11 +4218,18 @@ local function applyBarBackdrop(bar, cfg, overrideR, overrideG, overrideB, overr
 		else
 			tex:SetAllPoints(bar)
 		end
-		tex:SetColorTexture(colorR, colorG, colorB, colorA)
+		tex:SetTexture(backdropTexture)
+		if tex.SetHorizTile then tex:SetHorizTile(false) end
+		if tex.SetVertTile then tex:SetVertTile(false) end
+		if tex.SetVertexColor then tex:SetVertexColor(colorR, colorG, colorB, colorA) end
 		tex:Show()
 	else
 		if bar._ufBackdropTexture then bar._ufBackdropTexture:Hide() end
-		bar:SetBackdrop(BAR_BACKDROP_STYLE)
+		bar:SetBackdrop({
+			bgFile = backdropTexture,
+			edgeFile = nil,
+			tile = false,
+		})
 		bar:SetBackdropColor(colorR, colorG, colorB, colorA)
 	end
 	cache = cache or {}
@@ -4106,6 +4241,7 @@ local function applyBarBackdrop(bar, cfg, overrideR, overrideG, overrideB, overr
 	cache.clampToFill = clampToFill
 	cache.reverseFill = reverseFill
 	cache.statusTex = currentStatusTex
+	cache.texture = backdropTexture
 	bar._ufBackdropCache = cache
 end
 
@@ -4227,6 +4363,11 @@ local function applyCastLayout(cfg, unit)
 	local ccfg = (cfg and cfg.cast) or {}
 	local defc = (def and def.cast) or {}
 	local hc = (cfg and cfg.health) or {}
+	local nameAnchor = type(ccfg.nameAnchor) == "string" and string.upper(ccfg.nameAnchor) or nil
+	if nameAnchor ~= "LEFT" and nameAnchor ~= "CENTER" and nameAnchor ~= "RIGHT" then
+		nameAnchor = type(defc.nameAnchor) == "string" and string.upper(defc.nameAnchor) or "LEFT"
+		if nameAnchor ~= "LEFT" and nameAnchor ~= "CENTER" and nameAnchor ~= "RIGHT" then nameAnchor = "LEFT" end
+	end
 	local width = ccfg.width or (cfg and cfg.width) or defc.width or (def and def.width) or 220
 	local height = ccfg.height or defc.height or 16
 	local defaultBackdropInset = ((tonumber(height) or 0) <= 20) and 0 or 1
@@ -4252,7 +4393,7 @@ local function applyCastLayout(cfg, unit)
 	if st.castName then
 		local nameOff = ccfg.nameOffset or defc.nameOffset or { x = 6, y = 0 }
 		st.castName:ClearAllPoints()
-		st.castName:SetPoint("LEFT", st.castBar, "LEFT", nameOff.x or 0, nameOff.y or 0)
+		st.castName:SetPoint(nameAnchor, st.castBar, nameAnchor, nameOff.x or 0, nameOff.y or 0)
 		st.castName:SetShown(ccfg.showName ~= false)
 	end
 	if st.castDuration then
@@ -4279,6 +4420,10 @@ local function applyCastLayout(cfg, unit)
 	st.castUseDefaultArt = useDefaultArt
 	do -- Cast backdrop
 		local bd = (ccfg and ccfg.backdrop) or (defc and defc.backdrop) or { enabled = true, color = { 0, 0, 0, 0.6 } }
+		local backdropTexKey = bd.texture
+		if backdropTexKey == nil or backdropTexKey == "" or backdropTexKey == "DEFAULT" then backdropTexKey = texKey end
+		local useDefaultBackdropArt = not backdropTexKey or backdropTexKey == "" or backdropTexKey == "DEFAULT"
+		local castBackdropTexture = UFHelper.resolveCastTexture(backdropTexKey)
 		if st.castBar.SetBackdrop then st.castBar:SetBackdrop(nil) end
 		local bg = st.castBar.backdropTexture
 		if bd.enabled == false then
@@ -4290,12 +4435,12 @@ local function applyCastLayout(cfg, unit)
 			end
 			local col = bd.color or { 0, 0, 0, 0.6 }
 			bg:ClearAllPoints()
-			if useDefaultArt and bg.SetAtlas then
+			if useDefaultBackdropArt and bg.SetAtlas then
 				bg:SetAtlas("ui-castingbar-background", false)
 				bg:SetPoint("TOPLEFT", st.castBar, "TOPLEFT", -defaultBackdropInset, defaultBackdropInset)
 				bg:SetPoint("BOTTOMRIGHT", st.castBar, "BOTTOMRIGHT", defaultBackdropInset, -defaultBackdropInset)
 			else
-				bg:SetTexture(castTexture)
+				bg:SetTexture(castBackdropTexture)
 				bg:SetAllPoints(st.castBar)
 			end
 			bg:SetVertexColor(col[1] or 0, col[2] or 0, col[3] or 0, col[4] or 0.6)
@@ -4323,7 +4468,7 @@ local function applyCastLayout(cfg, unit)
 		st.castName:SetWidth(available)
 		if st.castName.SetWordWrap then st.castName:SetWordWrap(false) end
 		if st.castName.SetMaxLines then st.castName:SetMaxLines(1) end
-		if st.castName.SetJustifyH then st.castName:SetJustifyH("LEFT") end
+		if st.castName.SetJustifyH then st.castName:SetJustifyH(nameAnchor) end
 	end
 	if st.castEmpower and st.castEmpower.stagePercents then UFHelper.layoutEmpowerStages(st) end
 end
@@ -4988,6 +5133,205 @@ local function ensureBossBarsVisible(unit, st)
 	if st.status and not st.status:IsShown() then st.status:Show() end
 end
 
+function UF.resolveHealthBaseColor(unit, hc, defH)
+	local useCustom = hc.useCustomColor == true
+	local isPlayerUnit = UnitIsPlayer and UnitIsPlayer(unit)
+	local hr, hg, hb, ha = nil, nil, nil, nil
+
+	if useCustom then
+		if not isPlayerUnit then
+			local nr, ng, nb, na
+			if UFHelper and UFHelper.getNPCOverrideColor then
+				nr, ng, nb, na = UFHelper.getNPCOverrideColor(unit)
+			end
+			if nr then
+				hr, hg, hb, ha = nr, ng, nb, na
+			elseif hc.color then
+				hr, hg, hb, ha = hc.color[1], hc.color[2], hc.color[3], hc.color[4] or 1
+			end
+		elseif hc.color then
+			hr, hg, hb, ha = hc.color[1], hc.color[2], hc.color[3], hc.color[4] or 1
+		end
+	elseif hc.useClassColor then
+		local class
+		if isPlayerUnit then
+			class = select(2, UnitClass(unit))
+		elseif unit == UNIT.PET then
+			class = select(2, UnitClass(UNIT.PLAYER))
+		end
+		local cr, cg, cb, ca = getClassColor(class)
+		if cr then
+			hr, hg, hb, ha = cr, cg, cb, ca
+		end
+	end
+
+	if not hr and not useCustom then
+		local nr, ng, nb, na
+		if UFHelper and UFHelper.getNPCHealthColor then
+			nr, ng, nb, na = UFHelper.getNPCHealthColor(unit)
+		end
+		if nr then
+			hr, hg, hb, ha = nr, ng, nb, na
+		end
+	end
+
+	if not hr then
+		local color = defH.color or { 0, 0.8, 0, 1 }
+		hr, hg, hb, ha = color[1] or 0, color[2] or 0.8, color[3] or 0, color[4] or 1
+	end
+
+	return hr, hg, hb, ha
+end
+
+function UF.resolveHealthColorCurveType(value)
+	local curveType = Enum and Enum.LuaCurveType
+	if not curveType then return nil end
+	local token = type(value) == "string" and value:upper() or "COSINE"
+	if token == "LINEAR" then return curveType.Linear or curveType.Cosine or curveType.Step end
+	if token == "STEP" then return curveType.Step or curveType.Cosine or curveType.Linear end
+	return curveType.Cosine or curveType.Linear or curveType.Step
+end
+
+local function extractCurveColorRGBA(color)
+	if not color then return nil end
+	if color.GetRGBA then return color:GetRGBA() end
+	if color.r then return color.r, color.g, color.b, color.a end
+	return color[1], color[2], color[3], color[4]
+end
+
+function UF.getHealthPercentCurveColor(st, unit, hc, defH, maxR, maxG, maxB, maxA)
+	local useCurve = hc.usePercentColorCurve
+	if useCurve == nil then useCurve = defH.usePercentColorCurve end
+	if useCurve ~= true then return nil end
+	if not (C_CurveUtil and C_CurveUtil.CreateColorCurve and CreateColor) then return nil end
+
+	local hr, hg, hb, ha = maxR or 0, maxG or 0.8, maxB or 0, maxA or 1
+	local curveTypeToken = type(hc.percentColorCurveType) == "string" and hc.percentColorCurveType or defH.percentColorCurveType or "COSINE"
+	curveTypeToken = tostring(curveTypeToken):upper()
+	local curve = st._healthPercentCurve
+	if
+		curve
+		and st._healthPercentCurveDirty ~= true
+		and st._healthPercentCurveTypeToken == curveTypeToken
+		and st._healthPercentCurveMaxR == hr
+		and st._healthPercentCurveMaxG == hg
+		and st._healthPercentCurveMaxB == hb
+		and st._healthPercentCurveMaxA == ha
+	then
+		local fastColor
+		if UFHelper and UFHelper.getHealthCurveValue then
+			fastColor = UFHelper.getHealthCurveValue(unit, curve)
+		elseif UnitHealthPercent then
+			fastColor = UnitHealthPercent(unit, true, curve)
+		end
+		if not fastColor then return nil end
+		return extractCurveColorRGBA(fastColor)
+	end
+
+	local pointsSource = hc.percentColorCurvePoints
+	if type(pointsSource) ~= "table" or next(pointsSource) == nil then pointsSource = defH.percentColorCurvePoints end
+
+	local pointCount = tonumber(hc.percentColorCurvePointCount)
+	if pointCount == nil then pointCount = tonumber(defH.percentColorCurvePointCount) end
+	if pointCount == nil or pointCount <= 0 then
+		if type(pointsSource) == "table" then
+			for i = 1, 5 do
+				if type(pointsSource[i]) == "table" then pointCount = i end
+			end
+		end
+	end
+	if pointCount == nil or pointCount <= 0 then pointCount = 2 end
+	pointCount = math.floor(pointCount + 0.5)
+	if pointCount < 1 then pointCount = 1 end
+	if pointCount > 5 then pointCount = 5 end
+
+	local legacyMidpoint = tonumber(hc.percentColorCurveMidpoint)
+	if legacyMidpoint == nil then legacyMidpoint = tonumber(defH.percentColorCurveMidpoint) end
+	if legacyMidpoint == nil then legacyMidpoint = 60 end
+	if legacyMidpoint < 1 then legacyMidpoint = 1 end
+	if legacyMidpoint > 99 then legacyMidpoint = 99 end
+	local legacyLowColor = hc.percentColorCurveLowColor or defH.percentColorCurveLowColor or { 0.9, 0.0, 0.0, 1 }
+	local legacyMidColor = hc.percentColorCurveMidColor or defH.percentColorCurveMidColor or { 0.9, 0.9, 0.0, 1 }
+	local fallbackPoints = {
+		{ percent = 0, color = legacyLowColor },
+		{ percent = legacyMidpoint, color = legacyMidColor },
+		{ percent = 80, color = { 0.6, 0.85, 0.0, 1 } },
+		{ percent = 40, color = { 0.95, 0.6, 0.0, 1 } },
+		{ percent = 20, color = { 0.95, 0.25, 0.0, 1 } },
+	}
+
+	local points = {}
+	for i = 1, pointCount do
+		local fallback = fallbackPoints[i] or fallbackPoints[#fallbackPoints]
+		local src = type(pointsSource) == "table" and pointsSource[i] or nil
+		local percent, pointColor
+		if type(src) == "table" then
+			percent = tonumber(src.percent or src[1])
+			pointColor = src.color or src[2]
+			if pointColor == nil and src.percent == nil and src[1] ~= nil and src[2] ~= nil and src[3] ~= nil then pointColor = src end
+		end
+		if percent == nil then percent = fallback.percent end
+		if percent < 0 then percent = 0 end
+		if percent > 99 then percent = 99 end
+		local pr, pg, pb, pa = unpackColor(pointColor, fallback.color[1] or 1, fallback.color[2] or 1, fallback.color[3] or 1, fallback.color[4] or 1)
+		points[#points + 1] = { percent = percent, r = pr, g = pg, b = pb, a = pa }
+	end
+	if #points == 0 then return nil end
+	table.sort(points, function(a, b) return (a.percent or 0) > (b.percent or 0) end)
+
+	local uniquePoints = {}
+	local lastPercent
+	for i = 1, #points do
+		local point = points[i]
+		if point.percent ~= lastPercent then
+			uniquePoints[#uniquePoints + 1] = point
+			lastPercent = point.percent
+		end
+	end
+	points = uniquePoints
+
+	local signatureParts = {
+		curveTypeToken,
+		string.format("MAX:%.4f,%.4f,%.4f,%.4f", hr, hg, hb, ha),
+	}
+	for i = 1, #points do
+		local point = points[i]
+		signatureParts[#signatureParts + 1] = string.format("%d:%.4f,%.4f,%.4f,%.4f,%.4f", i, (point.percent or 0) / 100, point.r or 1, point.g or 1, point.b or 1, point.a or 1)
+	end
+	local signature = table.concat(signatureParts, "|")
+
+	if st._healthPercentCurveSig ~= signature then
+		curve = C_CurveUtil.CreateColorCurve()
+		if not curve then return nil end
+		local curveType = UF.resolveHealthColorCurveType(curveTypeToken)
+		if curveType then curve:SetType(curveType) end
+		curve:AddPoint(1.0, CreateColor(hr, hg, hb, ha))
+		for i = 1, #points do
+			local point = points[i]
+			curve:AddPoint((point.percent or 0) / 100, CreateColor(point.r or 1, point.g or 1, point.b or 1, point.a or 1))
+		end
+		st._healthPercentCurve = curve
+		st._healthPercentCurveSig = signature
+	else
+		curve = st._healthPercentCurve
+	end
+
+	st._healthPercentCurveTypeToken = curveTypeToken
+	st._healthPercentCurveMaxR, st._healthPercentCurveMaxG, st._healthPercentCurveMaxB, st._healthPercentCurveMaxA = hr, hg, hb, ha
+	st._healthPercentCurveDirty = nil
+
+	if not curve then return nil end
+	local color
+	if UFHelper and UFHelper.getHealthCurveValue then
+		color = UFHelper.getHealthCurveValue(unit, curve)
+	elseif UnitHealthPercent then
+		color = UnitHealthPercent(unit, true, curve)
+	end
+	if not color then return nil end
+
+	return extractCurveColorRGBA(color)
+end
+
 local function updateHealth(cfg, unit)
 	cfg = cfg or (states[unit] and states[unit].cfg) or ensureDB(unit)
 	if cfg and cfg.enabled == false then return end
@@ -5020,63 +5364,27 @@ local function updateHealth(cfg, unit)
 
 	local hr, hg, hb, ha = st._healthColorR, st._healthColorG, st._healthColorB, st._healthColorA
 	if st._healthColorDirty or hr == nil then
-		local useCustom = hc.useCustomColor == true
-		local isPlayerUnit = UnitIsPlayer and UnitIsPlayer(unit)
-		hr, hg, hb, ha = nil, nil, nil, nil
-
-		if useCustom then
-			if not isPlayerUnit then
-				local nr, ng, nb, na
-				if UFHelper and UFHelper.getNPCOverrideColor then
-					nr, ng, nb, na = UFHelper.getNPCOverrideColor(unit)
-				end
-				if nr then
-					hr, hg, hb, ha = nr, ng, nb, na
-				elseif hc.color then
-					hr, hg, hb, ha = hc.color[1], hc.color[2], hc.color[3], hc.color[4] or 1
-				end
-			elseif hc.color then
-				hr, hg, hb, ha = hc.color[1], hc.color[2], hc.color[3], hc.color[4] or 1
-			end
-		elseif hc.useClassColor then
-			local class
-			if isPlayerUnit then
-				class = select(2, UnitClass(unit))
-			elseif unit == UNIT.PET then
-				class = select(2, UnitClass(UNIT.PLAYER))
-			end
-			local cr, cg, cb, ca = getClassColor(class)
-			if cr then
-				hr, hg, hb, ha = cr, cg, cb, ca
-			end
-		end
-
-		if not hr and not useCustom then
-			local nr, ng, nb, na
-			if UFHelper and UFHelper.getNPCHealthColor then
-				nr, ng, nb, na = UFHelper.getNPCHealthColor(unit)
-			end
-			if nr then
-				hr, hg, hb, ha = nr, ng, nb, na
-			end
-		end
-
-		local useTapDenied = hc.useTapDeniedColor
-		if useTapDenied == nil then useTapDenied = defH.useTapDeniedColor end
-		if useTapDenied ~= false and UnitIsTapDenied and UnitPlayerControlled and not UnitPlayerControlled(unit) and UnitIsTapDenied(unit) then
-			local tc = hc.tapDeniedColor or defH.tapDeniedColor or { 0.5, 0.5, 0.5, 1 }
-			hr, hg, hb, ha = tc[1] or 0.5, tc[2] or 0.5, tc[3] or 0.5, tc[4] or 1
-		end
-
-		if not hr then
-			local color = defH.color or { 0, 0.8, 0, 1 }
-			hr, hg, hb, ha = color[1] or 0, color[2] or 0.8, color[3] or 0, color[4] or 1
-		end
+		hr, hg, hb, ha = UF.resolveHealthBaseColor(unit, hc, defH)
 
 		st._healthColorR, st._healthColorG, st._healthColorB, st._healthColorA = hr, hg, hb, ha
+		st._healthPercentCurveDirty = true
 		st._healthColorDirty = nil
 	end
-	st.health:SetStatusBarColor(hr or 0, hg or 0.8, hb or 0, ha or 1)
+
+	local finalR, finalG, finalB, finalA = hr, hg, hb, ha
+	local cr, cg, cb, ca = UF.getHealthPercentCurveColor(st, unit, hc, defH, hr, hg, hb, ha)
+	if cr then
+		finalR, finalG, finalB, finalA = cr, cg, cb, ca
+	end
+
+	local useTapDenied = hc.useTapDeniedColor
+	if useTapDenied == nil then useTapDenied = defH.useTapDeniedColor end
+	if useTapDenied ~= false and UnitIsTapDenied and UnitPlayerControlled and not UnitPlayerControlled(unit) and UnitIsTapDenied(unit) then
+		local tc = hc.tapDeniedColor or defH.tapDeniedColor or { 0.5, 0.5, 0.5, 1 }
+		finalR, finalG, finalB, finalA = tc[1] or 0.5, tc[2] or 0.5, tc[3] or 0.5, tc[4] or 1
+	end
+
+	st.health:SetStatusBarColor(finalR or 0, finalG or 0.8, finalB or 0, finalA or 1)
 	if allowAbsorb and (st.absorb or st.healAbsorb) then
 		local cacheGuid = UnitGUID and UnitGUID(unit) or unit
 		local guidComparable = not (issecretvalue and issecretvalue(cacheGuid))
@@ -5264,8 +5572,9 @@ local function updatePower(cfg, unit)
 			local secondaryColorDirty = st._secondaryPowerColorDirty
 			if not secondaryColorDirty and st._secondaryPowerColorEnum ~= enumId then secondaryColorDirty = true end
 			if not secondaryColorDirty and st._secondaryPowerColorToken ~= resolvedToken then secondaryColorDirty = true end
+			if not secondaryColorDirty and resolvedToken == "STAGGER" then secondaryColorDirty = true end
 			if secondaryColorDirty or st._secondaryPowerColorR == nil then
-				local cr, cg, cb, ca = UFHelper.getPowerColor(enumId, resolvedToken)
+				local cr, cg, cb, ca = UFHelper.getPowerColor(enumId, resolvedToken, secondaryCfg, unit)
 				st._secondaryPowerColorR, st._secondaryPowerColorG, st._secondaryPowerColorB, st._secondaryPowerColorA = cr, cg, cb, ca
 				st._secondaryPowerColorDesaturated = UFHelper.isPowerDesaturated(enumId, resolvedToken)
 				st._secondaryPowerColorEnum = enumId
@@ -6737,6 +7046,7 @@ local function applyConfig(unit)
 	local st = states[unit]
 	st.cfg = cfg
 	st._healthColorDirty = true
+	st._healthPercentCurveDirty = true
 	st._powerColorDirty = true
 	st._secondaryPowerColorDirty = true
 	st._healthTextDirty = true
@@ -6990,8 +7300,13 @@ local function applyBossEditSample(idx, cfg)
 	local percentVal = getHealthPercent("player", cur, maxv)
 	st.health:SetMinMaxValues(0, maxv)
 	st.health:SetValue(cur, interpolation)
-	local color = hc.color or (def.health and def.health.color) or { 0, 0.8, 0, 1 }
-	st.health:SetStatusBarColor(color[1] or 0, color[2] or 0.8, color[3] or 0, color[4] or 1)
+	local baseR, baseG, baseB, baseA = UF.resolveHealthBaseColor(unit, hc, defH)
+	local sampleR, sampleG, sampleB, sampleA = baseR, baseG, baseB, baseA
+	local cr, cg, cb, ca = UF.getHealthPercentCurveColor(st, "player", hc, defH, baseR, baseG, baseB, baseA)
+	if cr then
+		sampleR, sampleG, sampleB, sampleA = cr, cg, cb, ca
+	end
+	st.health:SetStatusBarColor(sampleR or 0, sampleG or 0.8, sampleB or 0, sampleA or 1)
 	local leftMode = hc.textLeft or "PERCENT"
 	local centerMode = hc.textCenter or "NONE"
 	local rightMode = hc.textRight or "CURMAX"
@@ -8194,7 +8509,13 @@ onEvent = function(self, event, unit, ...)
 		local firstChanged
 		if eventInfo.addedAuras then
 			for _, aura in ipairs(eventInfo.addedAuras) do
-				if aura and hidePermanent and AuraUtil.isPermanentAura(aura, unit) then
+				if
+					aura
+					and (
+						(hidePermanent and AuraUtil.isPermanentAura(aura, unit))
+						or (UF.GlobalAuraIgnore and UF.GlobalAuraIgnore.ShouldIgnoreAura and UF.GlobalAuraIgnore.ShouldIgnoreAura(unit, aura))
+					)
+				then
 					if auras[aura.auraInstanceID] then
 						auras[aura.auraInstanceID] = nil
 						local idx = AuraUtil.removeTargetAuraFromOrder(aura.auraInstanceID, unit)
@@ -8219,12 +8540,28 @@ onEvent = function(self, event, unit, ...)
 		end
 		if eventInfo.updatedAuraInstanceIDs and C_UnitAuras and C_UnitAuras.GetAuraDataByAuraInstanceID then
 			for _, inst in ipairs(eventInfo.updatedAuraInstanceIDs) do
-				if auras[inst] then
-					local data = C_UnitAuras.GetAuraDataByAuraInstanceID(unit, inst)
-					if data then AuraUtil.cacheTargetAura(data, unit) end
-				end
 				local idx = indexById[inst]
-				if idx and idx <= ac.max then
+				local data = C_UnitAuras.GetAuraDataByAuraInstanceID(unit, inst)
+				local keepAura = false
+				if
+					data
+					and not (hidePermanent and AuraUtil.isPermanentAura(data, unit))
+					and not (UF.GlobalAuraIgnore and UF.GlobalAuraIgnore.ShouldIgnoreAura and UF.GlobalAuraIgnore.ShouldIgnoreAura(unit, data))
+				then
+					if showDebuffs and not C_UnitAuras.IsAuraFilteredOutByInstanceID(unit, data.auraInstanceID, harmfulFilter) then
+						keepAura = true
+					elseif showBuffs and not C_UnitAuras.IsAuraFilteredOutByInstanceID(unit, data.auraInstanceID, helpfulFilter) then
+						keepAura = true
+					end
+				end
+				if keepAura then
+					AuraUtil.cacheTargetAura(data, unit)
+					if not idx then idx = AuraUtil.addTargetAuraToOrder(data.auraInstanceID, unit) end
+				else
+					auras[inst] = nil
+					if idx then idx = AuraUtil.removeTargetAuraFromOrder(inst, unit) end
+				end
+				if idx and idx <= (ac.max + 1) then
 					if not firstChanged or idx < firstChanged then firstChanged = idx end
 				end
 			end

@@ -22,6 +22,20 @@ local MAELSTROM_WEAPON_SEGMENTS = (ResourceBars and ResourceBars.MAELSTROM_WEAPO
 local MAELSTROM_WEAPON_MAX_STACKS = (ResourceBars and ResourceBars.MAELSTROM_WEAPON_MAX_STACKS) or 10
 local MAELSTROM_MID_STACK_DEFAULT = (ResourceBars and ResourceBars.MAELSTROM_WEAPON_MID_STACK_DEFAULT) or MAELSTROM_WEAPON_SEGMENTS
 local MAELSTROM_MID_STACK_MAX = math.max(1, MAELSTROM_WEAPON_MAX_STACKS - 1)
+local ROGUE_CHARGED_COMBO_DEFAULTS = (ResourceBars and ResourceBars.ROGUE_CHARGED_COMBO_DEFAULTS)
+	or {
+		enabled = true,
+		affectFill = true,
+		affectBackground = true,
+		fillUseCustomColor = false,
+		fillColor = { 1.0, 0.95, 0.45, 1.0 },
+		fillLighten = 0.35,
+		fillAlphaBoost = 0.10,
+		backgroundUseCustomColor = false,
+		backgroundColor = { 0.75, 0.60, 0.25, 0.75 },
+		backgroundLighten = 0.30,
+		backgroundAlphaBoost = 0.10,
+	}
 local STAGGER_EXTRA_THRESHOLD_HIGH = (ResourceBars and ResourceBars.STAGGER_EXTRA_THRESHOLD_HIGH) or 200
 local STAGGER_EXTRA_THRESHOLD_EXTREME = (ResourceBars and ResourceBars.STAGGER_EXTRA_THRESHOLD_EXTREME) or 300
 local STAGGER_EXTRA_COLORS = (ResourceBars and ResourceBars.STAGGER_EXTRA_COLORS) or { high = { 0.62, 0.2, 1, 1 }, extreme = { 1, 0.2, 0.8, 1 } }
@@ -39,6 +53,13 @@ local AUTO_ENABLE_OPTIONS = {
 	SECONDARY = L["AutoEnableSecondary"] or "Secondary resources",
 }
 local AUTO_ENABLE_ORDER = { "HEALTH", "MAIN", "SECONDARY" }
+
+local function getCachedLSMMedia(mediaType)
+	local names = addon.functions and addon.functions.GetLSMMediaNames and addon.functions.GetLSMMediaNames(mediaType)
+	local hash = addon.functions and addon.functions.GetLSMMediaHash and addon.functions.GetLSMMediaHash(mediaType)
+	if type(names) == "table" and type(hash) == "table" then return names, hash end
+	return {}, {}
+end
 
 local specSettingVars = {}
 local function getActiveSpecIndex()
@@ -175,6 +196,21 @@ end
 local function toUIColor(value, fallback)
 	local r, g, b, a = toColorComponents(value, fallback)
 	return { r = r, g = g, b = b, a = a }
+end
+
+local function globalFontDefaultPath()
+	if addon.functions and addon.functions.GetGlobalDefaultFontFace then return addon.functions.GetGlobalDefaultFontFace() end
+	return (addon.variables and addon.variables.defaultFont) or STANDARD_TEXT_FONT
+end
+
+local function globalFontConfigKey()
+	if addon.functions and addon.functions.GetGlobalFontConfigKey then return addon.functions.GetGlobalFontConfigKey() end
+	return "__EQOL_GLOBAL_FONT__"
+end
+
+local function globalFontConfigLabel()
+	if addon.functions and addon.functions.GetGlobalFontConfigLabel then return addon.functions.GetGlobalFontConfigLabel() end
+	return "Use global font config"
 end
 
 local function resolveStatusbarPreviewPath(key)
@@ -349,6 +385,87 @@ local function registerEditModeBars()
 				if ResourceBars.ReanchorAll then ResourceBars.ReanchorAll() end
 			end
 		end
+		local visibilityGlobalKeys = {
+			hideOutOfCombat = "resourceBarsHideOutOfCombat",
+			hideMounted = "resourceBarsHideMounted",
+			hideVehicle = "resourceBarsHideVehicle",
+			hidePetBattle = "resourceBarsHidePetBattle",
+			hideClientScene = "resourceBarsHideClientScene",
+		}
+		local visibilityDefaults = {
+			hideOutOfCombat = false,
+			hideMounted = false,
+			hideVehicle = false,
+			hidePetBattle = false,
+			hideClientScene = true,
+		}
+		local function getGlobalVisibilityFallback(field)
+			local dbKey = visibilityGlobalKeys[field]
+			local defaultValue = visibilityDefaults[field] == true
+			if not dbKey then return defaultValue end
+			local db = addon and addon.db
+			if db and db[dbKey] ~= nil then return db[dbKey] == true end
+			return defaultValue
+		end
+		local visibilityRuleOptions = (ResourceBars.GetVisibilityRuleOptions and ResourceBars.GetVisibilityRuleOptions()) or {}
+		local function getBarVisibilitySelection()
+			local c = curSpecCfg()
+			if not c then return nil end
+			local normalized = ResourceBars.NormalizeVisibilityConfig and ResourceBars.NormalizeVisibilityConfig(c.visibility, c) or nil
+			if not normalized then
+				local fallbackLegacy = nil
+				local function ensureFallbackLegacy()
+					if fallbackLegacy == nil then fallbackLegacy = {} end
+				end
+				if getGlobalVisibilityFallback("hideOutOfCombat") then
+					ensureFallbackLegacy()
+					fallbackLegacy.ALWAYS_IN_COMBAT = true
+				end
+				if getGlobalVisibilityFallback("hideMounted") then
+					ensureFallbackLegacy()
+					fallbackLegacy.PLAYER_NOT_MOUNTED = true
+				end
+				if fallbackLegacy and ResourceBars.NormalizeVisibilityConfig then normalized = ResourceBars.NormalizeVisibilityConfig(fallbackLegacy) end
+			end
+			if ResourceBars.CopyVisibilitySelection then return ResourceBars.CopyVisibilitySelection(normalized) end
+			return normalized and CopyTable(normalized) or nil
+		end
+		local function setBarVisibilityRule(rule, state)
+			local c = curSpecCfg()
+			if not c then return end
+			local normalized = getBarVisibilitySelection() or {}
+			c.visibilityExplicit = true
+			if rule == "ALWAYS_HIDDEN" and state then
+				normalized = { ALWAYS_HIDDEN = true }
+			elseif state then
+				normalized[rule] = true
+				normalized.ALWAYS_HIDDEN = nil
+			else
+				normalized[rule] = nil
+			end
+			if not next(normalized) then
+				c.visibility = nil
+			elseif ResourceBars.CopyVisibilitySelection then
+				c.visibility = ResourceBars.CopyVisibilitySelection(normalized)
+			else
+				c.visibility = CopyTable(normalized)
+			end
+			-- Keep legacy flags removed once a per-bar visibility selection is set.
+			c.hideOutOfCombat = nil
+			c.hideMounted = nil
+			queueRefresh()
+		end
+		local function getBarVisibilitySetting(field)
+			local c = curSpecCfg()
+			if c and c[field] ~= nil then return c[field] == true end
+			return getGlobalVisibilityFallback(field)
+		end
+		local function setBarVisibilitySetting(field, value)
+			local c = curSpecCfg()
+			if not c then return end
+			c[field] = value and true or false
+			queueRefresh()
+		end
 		local function applyBarSize()
 			local c = curSpecCfg()
 			if not c then return end
@@ -470,13 +587,11 @@ local function registerEditModeBars()
 					["Interface\\DialogFrame\\UI-DialogBox-Background"] = "Dialog Background",
 					["Interface\\Buttons\\WHITE8x8"] = "Solid (tintable)",
 				}
-				if LibStub then
-					local media = LibStub("LibSharedMedia-3.0", true)
-					if media then
-						for name, path in pairs(media:HashTable("background") or {}) do
-							if type(path) == "string" and path ~= "" then map[path] = tostring(name) end
-						end
-					end
+				local names, hash = getCachedLSMMedia("background")
+				for i = 1, #names do
+					local name = names[i]
+					local path = hash[name]
+					if type(path) == "string" and path ~= "" then map[path] = tostring(name) end
 				end
 				return addon.functions.prepareListForDropdown(map)
 			end
@@ -486,13 +601,11 @@ local function registerEditModeBars()
 				for id, label in pairs(customBorderOptions() or {}) do
 					map[id] = label
 				end
-				if LibStub then
-					local media = LibStub("LibSharedMedia-3.0", true)
-					if media then
-						for name, path in pairs(media:HashTable("border") or {}) do
-							if type(path) == "string" and path ~= "" then map[path] = tostring(name) end
-						end
-					end
+				local names, hash = getCachedLSMMedia("border")
+				for i = 1, #names do
+					local name = names[i]
+					local path = hash[name]
+					if type(path) == "string" and path ~= "" then map[path] = tostring(name) end
 				end
 				return addon.functions.prepareListForDropdown(map)
 			end
@@ -573,6 +686,66 @@ local function registerEditModeBars()
 						queueRefresh()
 					end,
 					isShown = function() return barType ~= "HEALTH" end,
+				},
+				{
+					name = L["Show when"] or "Show when",
+					kind = settingType.MultiDropdown,
+					field = "visibility",
+					parentId = "frame",
+					height = 220,
+					values = visibilityRuleOptions,
+					hideSummary = true,
+					default = getBarVisibilitySelection(),
+					isSelected = function(_, value)
+						local selection = getBarVisibilitySelection()
+						return selection and selection[value] == true or false
+					end,
+					setSelected = function(_, value, state) setBarVisibilityRule(value, state and true or false) end,
+					isShown = function() return visibilityRuleOptions and #visibilityRuleOptions > 0 end,
+					isEnabled = function() return visibilityRuleOptions and #visibilityRuleOptions > 0 end,
+				},
+				{
+					name = L["Combine Show when rules with AND"] or "Combine Show when rules with AND",
+					kind = settingType.Checkbox,
+					field = "visibilityMatchAll",
+					parentId = "frame",
+					default = false,
+					get = function()
+						local c = curSpecCfg()
+						return c and c.visibilityMatchAll == true
+					end,
+					set = function(_, value)
+						local c = curSpecCfg()
+						if not c then return end
+						c.visibilityMatchAll = value and true or false
+						queueRefresh()
+					end,
+					isShown = function() return visibilityRuleOptions and #visibilityRuleOptions > 0 end,
+					isEnabled = function() return visibilityRuleOptions and #visibilityRuleOptions > 0 end,
+				},
+				{
+					name = L["Hide in vehicles"],
+					kind = settingType.Checkbox,
+					parentId = "frame",
+					get = function() return getBarVisibilitySetting("hideVehicle") end,
+					set = function(_, value) setBarVisibilitySetting("hideVehicle", value) end,
+					default = getGlobalVisibilityFallback("hideVehicle"),
+				},
+				{
+					name = L["Hide in pet battles"] or "Hide in pet battles",
+					kind = settingType.Checkbox,
+					parentId = "frame",
+					get = function() return getBarVisibilitySetting("hidePetBattle") end,
+					set = function(_, value) setBarVisibilitySetting("hidePetBattle", value) end,
+					default = getGlobalVisibilityFallback("hidePetBattle"),
+				},
+				{
+					name = L["Hide in client scenes"] or "Hide in client scenes",
+					kind = settingType.Checkbox,
+					parentId = "frame",
+					get = function() return getBarVisibilitySetting("hideClientScene") end,
+					set = function(_, value) setBarVisibilitySetting("hideClientScene", value) end,
+					default = getGlobalVisibilityFallback("hideClientScene"),
 				},
 			}
 			if barType == "MAELSTROM_WEAPON" then
@@ -1624,33 +1797,44 @@ local function registerEditModeBars()
 					field = "fontFace",
 					parentId = "textsettings",
 					generator = function(_, root)
-						local function currentFontPath()
+						local function currentFontSetting()
 							local c = curSpecCfg()
-							return (c and c.fontFace) or cfg.fontFace or addon.variables.defaultFont
+							return (c and c.fontFace) or cfg.fontFace or globalFontConfigKey()
+						end
+						local function currentFontPath()
+							local configured = currentFontSetting()
+							if addon.functions and addon.functions.ResolveFontFace then return addon.functions.ResolveFontFace(configured, globalFontDefaultPath()) end
+							return configured or globalFontDefaultPath()
 						end
 						local currentPath = currentFontPath()
+						local globalFontValue = globalFontConfigKey()
+						local function isGlobalSelected() return currentFontSetting() == globalFontValue end
+						root:CreateCheckbox(globalFontConfigLabel(), function() return currentFontSetting() == globalFontValue end, function()
+							local c = curSpecCfg()
+							if not c then return end
+							c.fontFace = globalFontValue
+							queueRefresh()
+						end)
 						local seen = {}
-						if not LibStub then return end
-						local media = LibStub("LibSharedMedia-3.0", true)
-						if not media then return end
-						local hash = media:HashTable("font") or {}
-						for _, name in ipairs(media:List("font") or {}) do
+						local names, hash = getCachedLSMMedia("font")
+						for i = 1, #names do
+							local name = names[i]
 							local path = hash[name] or name
 							seen[path] = name
-							root:CreateCheckbox(name, function() return currentFontPath() == path end, function()
+							root:CreateCheckbox(name, function() return (not isGlobalSelected()) and currentFontPath() == path end, function()
 								local c = curSpecCfg()
 								if not c then return end
-								if currentFontPath() == path then return end
+								if (not isGlobalSelected()) and currentFontPath() == path then return end
 								c.fontFace = path
 								queueRefresh()
 							end)
 						end
 						if currentPath and not seen[currentPath] then
 							local label = tostring(currentPath)
-							root:CreateCheckbox(label, function() return currentFontPath() == currentPath end, function()
+							root:CreateCheckbox(label, function() return (not isGlobalSelected()) and currentFontPath() == currentPath end, function()
 								local c = curSpecCfg()
 								if not c then return end
-								if currentFontPath() == currentPath then return end
+								if (not isGlobalSelected()) and currentFontPath() == currentPath then return end
 								c.fontFace = currentPath
 								queueRefresh()
 							end)
@@ -1658,7 +1842,7 @@ local function registerEditModeBars()
 					end,
 					get = function()
 						local c = curSpecCfg()
-						return (c and c.fontFace) or cfg.fontFace or addon.variables.defaultFont
+						return (c and c.fontFace) or cfg.fontFace or globalFontConfigKey()
 					end,
 					set = function(_, value)
 						local c = curSpecCfg()
@@ -1680,7 +1864,7 @@ local function registerEditModeBars()
 						queueRefresh()
 					end,
 					hasOpacity = true,
-					default = addon.variables.defaultFont,
+					default = globalFontConfigKey(),
 				}
 
 				local outlineOptions = {
@@ -1922,33 +2106,44 @@ local function registerEditModeBars()
 					field = "fontFace",
 					parentId = "textsettings",
 					generator = function(_, root)
-						local function currentFontPath()
+						local function currentFontSetting()
 							local c = curSpecCfg()
-							return (c and c.fontFace) or cfg.fontFace or addon.variables.defaultFont
+							return (c and c.fontFace) or cfg.fontFace or globalFontConfigKey()
+						end
+						local function currentFontPath()
+							local configured = currentFontSetting()
+							if addon.functions and addon.functions.ResolveFontFace then return addon.functions.ResolveFontFace(configured, globalFontDefaultPath()) end
+							return configured or globalFontDefaultPath()
 						end
 						local currentPath = currentFontPath()
+						local globalFontValue = globalFontConfigKey()
+						local function isGlobalSelected() return currentFontSetting() == globalFontValue end
+						root:CreateCheckbox(globalFontConfigLabel(), function() return currentFontSetting() == globalFontValue end, function()
+							local c = curSpecCfg()
+							if not c then return end
+							c.fontFace = globalFontValue
+							queueRefresh()
+						end)
 						local seen = {}
-						if not LibStub then return end
-						local media = LibStub("LibSharedMedia-3.0", true)
-						if not media then return end
-						local hash = media:HashTable("font") or {}
-						for _, name in ipairs(media:List("font") or {}) do
+						local names, hash = getCachedLSMMedia("font")
+						for i = 1, #names do
+							local name = names[i]
 							local path = hash[name] or name
 							seen[path] = name
-							root:CreateCheckbox(name, function() return currentFontPath() == path end, function()
+							root:CreateCheckbox(name, function() return (not isGlobalSelected()) and currentFontPath() == path end, function()
 								local c = curSpecCfg()
 								if not c then return end
-								if currentFontPath() == path then return end
+								if (not isGlobalSelected()) and currentFontPath() == path then return end
 								c.fontFace = path
 								queueRefresh()
 							end)
 						end
 						if currentPath and not seen[currentPath] then
 							local label = tostring(currentPath)
-							root:CreateCheckbox(label, function() return currentFontPath() == currentPath end, function()
+							root:CreateCheckbox(label, function() return (not isGlobalSelected()) and currentFontPath() == currentPath end, function()
 								local c = curSpecCfg()
 								if not c then return end
-								if currentFontPath() == currentPath then return end
+								if (not isGlobalSelected()) and currentFontPath() == currentPath then return end
 								c.fontFace = currentPath
 								queueRefresh()
 							end)
@@ -1956,7 +2151,7 @@ local function registerEditModeBars()
 					end,
 					get = function()
 						local c = curSpecCfg()
-						return (c and c.fontFace) or cfg.fontFace or addon.variables.defaultFont
+						return (c and c.fontFace) or cfg.fontFace or globalFontConfigKey()
 					end,
 					set = function(_, value)
 						local c = curSpecCfg()
@@ -1978,7 +2173,7 @@ local function registerEditModeBars()
 						queueRefresh()
 					end,
 					hasOpacity = true,
-					default = addon.variables.defaultFont,
+					default = globalFontConfigKey(),
 				}
 
 				local outlineOptions = {
@@ -2342,6 +2537,281 @@ local function registerEditModeBars()
 							queueRefresh()
 						end,
 						hasOpacity = true,
+						parentId = "colorsetting",
+					}
+				end
+
+				if addon.variables.unitClass == "ROGUE" and barType == "COMBO_POINTS" then
+					local function chargedCfg()
+						local c = curSpecCfg()
+						if not c then return nil end
+						if ResourceBars and ResourceBars.EnsureRogueChargedComboDefaults then ResourceBars.EnsureRogueChargedComboDefaults(c, "COMBO_POINTS") end
+						return c
+					end
+
+					local function percentFromUnit(value, fallback)
+						local n = tonumber(value)
+						if n == nil then n = tonumber(fallback) or 0 end
+						if n < 0 then
+							n = 0
+						elseif n > 1 then
+							n = 1
+						end
+						return math.floor((n * 100) + 0.5)
+					end
+
+					local function unitFromPercent(value, fallback)
+						local n = tonumber(value)
+						if n == nil then n = tonumber(fallback) or 0 end
+						n = n / 100
+						if n < 0 then
+							n = 0
+						elseif n > 1 then
+							n = 1
+						end
+						return n
+					end
+
+					settingsList[#settingsList + 1] = {
+						name = L["Charged combo point styling"] or "Charged combo point styling",
+						kind = settingType.Checkbox,
+						field = "useChargedComboStyling",
+						default = ROGUE_CHARGED_COMBO_DEFAULTS.enabled ~= false,
+						get = function()
+							local c = chargedCfg()
+							return c and c.useChargedComboStyling ~= false
+						end,
+						set = function(_, value)
+							local c = chargedCfg()
+							if not c then return end
+							c.useChargedComboStyling = value and true or false
+							queueRefresh()
+							refreshSettingsUI()
+						end,
+						parentId = "colorsetting",
+					}
+
+					settingsList[#settingsList + 1] = {
+						name = L["Affect charged fill"] or "Affect charged fill",
+						kind = settingType.Checkbox,
+						field = "chargedComboAffectFill",
+						default = ROGUE_CHARGED_COMBO_DEFAULTS.affectFill ~= false,
+						get = function()
+							local c = chargedCfg()
+							return c and c.chargedComboAffectFill ~= false
+						end,
+						set = function(_, value)
+							local c = chargedCfg()
+							if not c then return end
+							c.chargedComboAffectFill = value and true or false
+							queueRefresh()
+							refreshSettingsUI()
+						end,
+						isEnabled = function()
+							local c = chargedCfg()
+							return c and c.useChargedComboStyling ~= false
+						end,
+						parentId = "colorsetting",
+					}
+
+					settingsList[#settingsList + 1] = {
+						name = L["Custom charged fill color"] or "Custom charged fill color",
+						kind = settingType.CheckboxColor,
+						field = "chargedComboUseCustomFillColor",
+						default = ROGUE_CHARGED_COMBO_DEFAULTS.fillUseCustomColor == true,
+						get = function()
+							local c = chargedCfg()
+							return c and c.chargedComboUseCustomFillColor == true
+						end,
+						set = function(_, value)
+							local c = chargedCfg()
+							if not c then return end
+							c.chargedComboUseCustomFillColor = value and true or false
+							queueRefresh()
+							refreshSettingsUI()
+						end,
+						colorDefault = toUIColor(ROGUE_CHARGED_COMBO_DEFAULTS.fillColor, { 1.0, 0.95, 0.45, 1.0 }),
+						colorGet = function()
+							local c = chargedCfg()
+							local col = (c and c.chargedComboFillColor) or ROGUE_CHARGED_COMBO_DEFAULTS.fillColor or { 1.0, 0.95, 0.45, 1.0 }
+							local r, g, b, a = toColorComponents(col, { 1.0, 0.95, 0.45, 1.0 })
+							return { r = r, g = g, b = b, a = a }
+						end,
+						colorSet = function(_, value)
+							local c = chargedCfg()
+							if not c then return end
+							c.chargedComboFillColor = toColorArray(value, ROGUE_CHARGED_COMBO_DEFAULTS.fillColor or { 1.0, 0.95, 0.45, 1.0 })
+							queueRefresh()
+						end,
+						hasOpacity = true,
+						isEnabled = function()
+							local c = chargedCfg()
+							return c and c.useChargedComboStyling ~= false and c.chargedComboAffectFill ~= false
+						end,
+						parentId = "colorsetting",
+					}
+
+					settingsList[#settingsList + 1] = {
+						name = L["Auto charged fill highlight"] or "Auto charged fill highlight (%)",
+						kind = settingType.Slider,
+						allowInput = true,
+						field = "chargedComboFillLighten",
+						minValue = 0,
+						maxValue = 100,
+						valueStep = 1,
+						default = percentFromUnit(ROGUE_CHARGED_COMBO_DEFAULTS.fillLighten, 0.35),
+						get = function()
+							local c = chargedCfg()
+							return percentFromUnit(c and c.chargedComboFillLighten, ROGUE_CHARGED_COMBO_DEFAULTS.fillLighten or 0.35)
+						end,
+						set = function(_, value)
+							local c = chargedCfg()
+							if not c then return end
+							c.chargedComboFillLighten = unitFromPercent(value, percentFromUnit(ROGUE_CHARGED_COMBO_DEFAULTS.fillLighten, 0.35))
+							queueRefresh()
+						end,
+						isEnabled = function()
+							local c = chargedCfg()
+							return c and c.useChargedComboStyling ~= false and c.chargedComboAffectFill ~= false and c.chargedComboUseCustomFillColor ~= true
+						end,
+						parentId = "colorsetting",
+					}
+
+					settingsList[#settingsList + 1] = {
+						name = L["Auto charged fill alpha"] or "Auto charged fill alpha boost (%)",
+						kind = settingType.Slider,
+						allowInput = true,
+						field = "chargedComboFillAlphaBoost",
+						minValue = 0,
+						maxValue = 100,
+						valueStep = 1,
+						default = percentFromUnit(ROGUE_CHARGED_COMBO_DEFAULTS.fillAlphaBoost, 0.10),
+						get = function()
+							local c = chargedCfg()
+							return percentFromUnit(c and c.chargedComboFillAlphaBoost, ROGUE_CHARGED_COMBO_DEFAULTS.fillAlphaBoost or 0.10)
+						end,
+						set = function(_, value)
+							local c = chargedCfg()
+							if not c then return end
+							c.chargedComboFillAlphaBoost = unitFromPercent(value, percentFromUnit(ROGUE_CHARGED_COMBO_DEFAULTS.fillAlphaBoost, 0.10))
+							queueRefresh()
+						end,
+						isEnabled = function()
+							local c = chargedCfg()
+							return c and c.useChargedComboStyling ~= false and c.chargedComboAffectFill ~= false and c.chargedComboUseCustomFillColor ~= true
+						end,
+						parentId = "colorsetting",
+					}
+
+					settingsList[#settingsList + 1] = {
+						name = L["Affect charged background"] or "Affect charged background",
+						kind = settingType.Checkbox,
+						field = "chargedComboAffectBackground",
+						default = ROGUE_CHARGED_COMBO_DEFAULTS.affectBackground ~= false,
+						get = function()
+							local c = chargedCfg()
+							return c and c.chargedComboAffectBackground ~= false
+						end,
+						set = function(_, value)
+							local c = chargedCfg()
+							if not c then return end
+							c.chargedComboAffectBackground = value and true or false
+							queueRefresh()
+							refreshSettingsUI()
+						end,
+						isEnabled = function()
+							local c = chargedCfg()
+							return c and c.useChargedComboStyling ~= false
+						end,
+						parentId = "colorsetting",
+					}
+
+					settingsList[#settingsList + 1] = {
+						name = L["Custom charged background color"] or "Custom charged background color",
+						kind = settingType.CheckboxColor,
+						field = "chargedComboUseCustomBackgroundColor",
+						default = ROGUE_CHARGED_COMBO_DEFAULTS.backgroundUseCustomColor == true,
+						get = function()
+							local c = chargedCfg()
+							return c and c.chargedComboUseCustomBackgroundColor == true
+						end,
+						set = function(_, value)
+							local c = chargedCfg()
+							if not c then return end
+							c.chargedComboUseCustomBackgroundColor = value and true or false
+							queueRefresh()
+							refreshSettingsUI()
+						end,
+						colorDefault = toUIColor(ROGUE_CHARGED_COMBO_DEFAULTS.backgroundColor, { 0.75, 0.60, 0.25, 0.75 }),
+						colorGet = function()
+							local c = chargedCfg()
+							local col = (c and c.chargedComboBackgroundColor) or ROGUE_CHARGED_COMBO_DEFAULTS.backgroundColor or { 0.75, 0.60, 0.25, 0.75 }
+							local r, g, b, a = toColorComponents(col, { 0.75, 0.60, 0.25, 0.75 })
+							return { r = r, g = g, b = b, a = a }
+						end,
+						colorSet = function(_, value)
+							local c = chargedCfg()
+							if not c then return end
+							c.chargedComboBackgroundColor = toColorArray(value, ROGUE_CHARGED_COMBO_DEFAULTS.backgroundColor or { 0.75, 0.60, 0.25, 0.75 })
+							queueRefresh()
+						end,
+						hasOpacity = true,
+						isEnabled = function()
+							local c = chargedCfg()
+							return c and c.useChargedComboStyling ~= false and c.chargedComboAffectBackground ~= false
+						end,
+						parentId = "colorsetting",
+					}
+
+					settingsList[#settingsList + 1] = {
+						name = L["Auto charged background highlight"] or "Auto charged background highlight (%)",
+						kind = settingType.Slider,
+						allowInput = true,
+						field = "chargedComboBackgroundLighten",
+						minValue = 0,
+						maxValue = 100,
+						valueStep = 1,
+						default = percentFromUnit(ROGUE_CHARGED_COMBO_DEFAULTS.backgroundLighten, 0.30),
+						get = function()
+							local c = chargedCfg()
+							return percentFromUnit(c and c.chargedComboBackgroundLighten, ROGUE_CHARGED_COMBO_DEFAULTS.backgroundLighten or 0.30)
+						end,
+						set = function(_, value)
+							local c = chargedCfg()
+							if not c then return end
+							c.chargedComboBackgroundLighten = unitFromPercent(value, percentFromUnit(ROGUE_CHARGED_COMBO_DEFAULTS.backgroundLighten, 0.30))
+							queueRefresh()
+						end,
+						isEnabled = function()
+							local c = chargedCfg()
+							return c and c.useChargedComboStyling ~= false and c.chargedComboAffectBackground ~= false and c.chargedComboUseCustomBackgroundColor ~= true
+						end,
+						parentId = "colorsetting",
+					}
+
+					settingsList[#settingsList + 1] = {
+						name = L["Auto charged background alpha"] or "Auto charged background alpha boost (%)",
+						kind = settingType.Slider,
+						allowInput = true,
+						field = "chargedComboBackgroundAlphaBoost",
+						minValue = 0,
+						maxValue = 100,
+						valueStep = 1,
+						default = percentFromUnit(ROGUE_CHARGED_COMBO_DEFAULTS.backgroundAlphaBoost, 0.10),
+						get = function()
+							local c = chargedCfg()
+							return percentFromUnit(c and c.chargedComboBackgroundAlphaBoost, ROGUE_CHARGED_COMBO_DEFAULTS.backgroundAlphaBoost or 0.10)
+						end,
+						set = function(_, value)
+							local c = chargedCfg()
+							if not c then return end
+							c.chargedComboBackgroundAlphaBoost = unitFromPercent(value, percentFromUnit(ROGUE_CHARGED_COMBO_DEFAULTS.backgroundAlphaBoost, 0.10))
+							queueRefresh()
+						end,
+						isEnabled = function()
+							local c = chargedCfg()
+							return c and c.useChargedComboStyling ~= false and c.chargedComboAffectBackground ~= false and c.chargedComboUseCustomBackgroundColor ~= true
+						end,
 						parentId = "colorsetting",
 					}
 				end
@@ -3016,75 +3486,6 @@ local function buildSettings()
 			parentSection = expandable,
 			default = false,
 			children = {
-				{
-					var = "resourceBarsHideOutOfCombat",
-					text = L["Hide out of combat"],
-					get = function() return addon.db["resourceBarsHideOutOfCombat"] end,
-					func = function(val)
-						addon.db["resourceBarsHideOutOfCombat"] = val and true or false
-						if ResourceBars.ApplyVisibilityPreference then ResourceBars.ApplyVisibilityPreference("settings") end
-					end,
-					parent = true,
-					parentCheck = function() return addon.db["enableResourceFrame"] == true end,
-					sType = "checkbox",
-					parentSection = expandable,
-				},
-				{
-					var = "resourceBarsHideMounted",
-					text = L["Hide when mounted"],
-					get = function() return addon.db["resourceBarsHideMounted"] end,
-					func = function(val)
-						addon.db["resourceBarsHideMounted"] = val and true or false
-						if ResourceBars.ApplyVisibilityPreference then ResourceBars.ApplyVisibilityPreference("settings") end
-					end,
-					parent = true,
-					parentCheck = function() return addon.db["enableResourceFrame"] == true end,
-					sType = "checkbox",
-					parentSection = expandable,
-				},
-				{
-					var = "resourceBarsHideVehicle",
-					text = L["Hide in vehicles"],
-					get = function() return addon.db["resourceBarsHideVehicle"] end,
-					func = function(val)
-						addon.db["resourceBarsHideVehicle"] = val and true or false
-						if ResourceBars.ApplyVisibilityPreference then ResourceBars.ApplyVisibilityPreference("settings") end
-					end,
-					parent = true,
-					parentCheck = function() return addon.db["enableResourceFrame"] == true end,
-					sType = "checkbox",
-					parentSection = expandable,
-				},
-				{
-					var = "resourceBarsHidePetBattle",
-					text = L["Hide in pet battles"] or "Hide in pet battles",
-					get = function() return addon.db["resourceBarsHidePetBattle"] end,
-					func = function(val)
-						addon.db["resourceBarsHidePetBattle"] = val and true or false
-						applyResourceBarsVisibility("settings")
-					end,
-					parent = true,
-					parentCheck = function() return addon.db["enableResourceFrame"] == true end,
-					sType = "checkbox",
-					parentSection = expandable,
-				},
-				{
-					var = "resourceBarsHideClientScene",
-					text = L["Hide in client scenes"] or "Hide in client scenes",
-					get = function()
-						local value = addon.db["resourceBarsHideClientScene"]
-						if value == nil then return true end
-						return value == true
-					end,
-					func = function(val)
-						addon.db["resourceBarsHideClientScene"] = val and true or false
-						applyResourceBarsVisibility("settings")
-					end,
-					parent = true,
-					parentCheck = function() return addon.db["enableResourceFrame"] == true end,
-					sType = "checkbox",
-					parentSection = expandable,
-				},
 				{
 					var = "resourceBarsAutoEnable",
 					text = L["AutoEnableAllBars"] or "Auto-enable bars for new characters",

@@ -1981,18 +1981,20 @@ local function WilduSettings_BuildCooldown(category, layout)
         },
         defaultSelection = {},
         values = {
-            ["SHOW_IN_COMBAT"] = "Always show in Combat",
-            ["SHOW_WITH_TARGET"] = "Always show with Target",
-            ["HIDE_WHEN_MOUNTED"] = "Hide when Mounted",
-            ["HIDE_OUT_OF_COMBAT"] = "Hide out of Combat",
-            ["HIDE_IN_VEHICLES"] = "Hide in Vehicles & Active Scenes",
+            ["SHOW_IN_COMBAT"] = "Always show in Combat (overrides other rules)",
+            ["SHOW_WITH_TARGET"] = "Show with Target (require having any hide rules enabled)",
+            ["SHOW_WITH_ENEMY_TARGET"] = "Show with Enemy Target (require having any hide rules enabled)",
+            ["HIDE_WHEN_MOUNTED"] = "Hide when Mounted or Flying",
+            ["HIDE_OUT_OF_COMBAT"] = "Hide out of Combat & Show in combat",
+            ["HIDE_IN_VEHICLES"] = "Hide in Mini games & Vehicles (not mounts)",
         },
         order = {
-            "SHOW_IN_COMBAT",
-            "SHOW_WITH_TARGET",
             "HIDE_WHEN_MOUNTED",
-            "HIDE_OUT_OF_COMBAT",
             "HIDE_IN_VEHICLES",
+            "HIDE_OUT_OF_COMBAT",
+            "SHOW_WITH_TARGET",
+            "SHOW_WITH_ENEMY_TARGET",
+            "SHOW_IN_COMBAT",
         },
         getSelection = function()
             return ns.db.profile.cooldownManager_visibility_enabled_rules or {}
@@ -2013,6 +2015,73 @@ local function WilduSettings_BuildCooldown(category, layout)
         end,
         desc = "Select conditions for Cooldown Manager Visibility.",
     })
+
+    local VISIBILITY_VIEWERS_OPTIONS = {
+        "BuffIconCooldownViewer",
+        "BuffBarCooldownViewer",
+        "EssentialCooldownViewer",
+        "UtilityCooldownViewer",
+        "CMCTracker1",
+        "CMCTracker2",
+    }
+    SettingsLib:CreateMultiDropdown(category, {
+        prefix = "CMC_",
+        key = "cooldownManager_visibility_enabled_viewers",
+        name = "Affected viewers (|cff008945S|r|cff1e9a4em|r|cff3faa4fa|r|cff5fb64ar|r|cff8ccd00t|r Visibility)",
+        customText = "No viewers affected",
+        searchtags = {
+            "Visibility",
+            "Rules",
+            "Conditions",
+            "Hide",
+            "Show",
+            "Utility",
+            "Essential",
+            "CDM",
+            "Opacity",
+            "Alpha",
+        },
+        defaultSelection = {},
+        values = {
+            ["BuffIconCooldownViewer"] = "Buff Icon Cooldown Viewer",
+            ["BuffBarCooldownViewer"] = "Buff Bar Cooldown Viewer",
+            ["EssentialCooldownViewer"] = "Essential Cooldown Viewer",
+            ["UtilityCooldownViewer"] = "Utility Cooldown Viewer",
+            ["CMCTracker1"] = "CMC Tracker 1",
+            ["CMCTracker2"] = "CMC Tracker 2",
+        },
+        order = {
+            "BuffIconCooldownViewer",
+            "BuffBarCooldownViewer",
+            "EssentialCooldownViewer",
+            "UtilityCooldownViewer",
+            "CMCTracker1",
+            "CMCTracker2",
+        },
+        getSelection = function()
+            return ns.db.profile.cooldownManager_visibility_enabled_viewers or {}
+        end,
+        setSelection = function(value)
+            for _, viewer in ipairs(VISIBILITY_VIEWERS_OPTIONS) do
+                if not value[viewer] then
+                    value[viewer] = false
+                end
+            end
+            ns.db.profile.cooldownManager_visibility_enabled_viewers = value
+            ns.CMCVisibility:Initialize()
+        end,
+        summary = function(selectionMap, labels)
+            local count = ns.API:GetTableLength(selectionMap)
+            if count == 0 then
+                return "No viewers affected"
+            elseif count == 1 then
+                return "1 viewer affected"
+            else
+                return count .. " viewers affected"
+            end
+        end,
+    })
+
     SettingsLib:CreateCheckbox(category, {
         prefix = "CMC_",
         key = "cooldownManager_limitUtilitySizeToEssential",
@@ -2072,6 +2141,38 @@ local function WilduSettings_BuildCooldown(category, layout)
     SettingsLib:CreateHeader(experimentalCategory, {
         name = "|cffff0000Experimental Features|r",
         searchtags = { "Experimental", "Beta", "Testing", "Feature", "Features" },
+    })
+
+    SettingsLib:CreateCheckbox(experimentalCategory, {
+        prefix = "CMC_",
+        key = "cooldownManager_experimental_layoutOptimizations",
+        name = "Layout Optimizations",
+        searchtags = { "Cooldown", "Text", "Layout", "Experimental", "Optimization", "Performance" },
+        default = false,
+        get = function()
+            return ns.db.profile.cooldownManager_experimental_layoutOptimizations
+        end,
+        set = function(value)
+            ns.db.profile.cooldownManager_experimental_layoutOptimizations = value
+            ns.API:RefreshCooldownManager()
+        end,
+        desc = "Enable layout optimizations for lower CPU usage (may have bugs). |cffff0000Experimental feature, use with caution!|r",
+    })
+
+    SettingsLib:CreateCheckbox(experimentalCategory, {
+        prefix = "CMC_",
+        key = "cooldownManager_experimental_custom_glows",
+        name = "Custom Glows",
+        searchtags = { "Cooldown", "Text", "Layout", "Experimental", "Glow", "Custom", "Performance" },
+        default = false,
+        get = function()
+            return ns.db.profile.cooldownManager_experimental_custom_glows
+        end,
+        set = function(value)
+            ns.db.profile.cooldownManager_experimental_custom_glows = value
+            ns.API:ShowReloadUIConfirmation()
+        end,
+        desc = "Enable custom glows for cooldowns. |cffff0000Experimental feature, use with caution!|r",
     })
 
     SettingsLib:CreateHeader(experimentalCategory, {

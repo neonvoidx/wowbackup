@@ -1,0 +1,989 @@
+﻿local _, addon = ...
+
+----------------------------
+-- VARIABLES
+----------------------------
+
+local WQT = addon.WQT;
+local _V = addon.variables;
+
+local _azuriteID = C_CurrencyInfo.GetAzeriteCurrencyID();
+
+----------------------------
+-- LOCAL FUNCTIONS
+----------------------------
+local function WipeQuestInfoRecursive(questInfo)
+	-- Clean out everthing that isn't a color
+	for k, v in pairs(questInfo) do
+		local objType = type(v);
+		if objType == "table" and not v.GetRGB then
+			WipeQuestInfoRecursive(v)
+		else
+			if (objType == "boolean" or objType == "number") then
+				questInfo[k] = nil;
+			elseif (objType == "string") then
+				questInfo[k] = "";
+			end
+		end
+	end
+end
+
+local function RewardSortFunc(a, b)
+	if (a.searchMatch ~= b.searchMatch) then
+		if (not a.searchMatch or not b.searchMatch) then
+			return a.searchMatch ~= nil;
+		end
+		return a.searchMatch < b.searchMatch;
+	end
+
+
+	local aPassed = WQT:RewardTypePassesFilter(a.type);
+	local bPassed = WQT:RewardTypePassesFilter(b.type);
+
+	-- Rewards that pass the filters get priority
+	if (aPassed ~= bPassed) then
+		return aPassed and not bPassed;
+	end
+
+	if (a.type == b.type) then
+		if (a.quality == b.quality) then
+			if (a.id and b.id and a.id ~= b.id) then
+				return a.id > b.id;
+			end
+			if (a.amount == b.amount) then
+				return a.id < b.id;
+			end
+			return a.amount > b.amount;
+		end
+		return a.quality > b.quality;
+	end
+	return a.type < b.type;
+end
+
+local function SortQuestList(a, b, sortID)
+	-- Invalid goes to the bottom
+	if (not a.isValid or not b.isValid) then
+		if (a.isValid == b.isValid) then
+			return a.questID < b.questID;
+		end;
+		return a.isValid and not b.isValid;
+	end
+
+	-- Filtered out quests go to the back (for debug view mainly)
+	if (not a.passedFilter or not b.passedFilter) then
+		if (a.passedFilter == b.passedFilter) then
+			return a.questID < b.questID;
+		end;
+		return a.passedFilter and not b.passedFilter;
+	end
+
+	-- Favorite quests go to the top of the list
+	if (WQT_Utils:GetSetting("list", "favoritesAtTop")) then
+		local aFavorite = a:IsFavorite();
+		local bFavorite = b:IsFavorite();
+		if (aFavorite ~= bFavorite) then
+			return aFavorite;
+		end
+	end
+
+	-- Disliked quests go to the back of the list
+	local aDisliked = a:IsDisliked();
+	local bDisliked = b:IsDisliked();
+	if (aDisliked ~= bDisliked) then
+		return not aDisliked;
+	end
+
+	-- Search sorting
+	do
+		local aMatch = a:GetSearchBestRewardMatch();
+		local bMatch = b:GetSearchBestRewardMatch();
+		if (aMatch ~= bMatch) then
+			if (not aMatch or not bMatch) then
+				return aMatch ~= nil;
+			end
+			return aMatch < bMatch;
+		end
+	end
+
+	-- Sorting based on the dropdown
+	local result = WQT.sortDataContainer:SortQuests(sortID, a, b);
+	if (result ~= nil) then
+		return result;
+	end
+
+	-- Worst case fallback
+	return a.questID < b.questID;
+end
+
+----------------------------
+-- QuestInfoMixin
+----------------------------
+
+local QuestInfoMixin = {};
+
+function WQT_Utils:QuestCreationFunc(questId)
+	local questInfo = CreateFromMixins(QuestInfoMixin);
+	questInfo:OnCreate();
+	return questInfo;
+end
+
+local function QuestResetFunc(pool, questInfo)
+	questInfo:Reset();
+end
+
+function QuestInfoMixin:Reset()
+	wipe(self.rewardList);
+	wipe(self.searchResults);
+
+	WipeQuestInfoRecursive(self);
+	-- Reset defaults
+	self.reward.typeBits = WQT_REWARDTYPE.missing;
+	self.hasRewardData = false;
+	self.isValid = false;
+	self.tagInfo = nil;
+end
+
+function QuestInfoMixin:Init(questID, qInfo)
+	self.questID = questID;
+	self.mapID = qInfo and qInfo.mapID;
+	self:UpdateTitleAndFaction();
+
+	self.tagInfo = C_QuestLog.GetQuestTagInfo(questID);
+
+	self.classification = C_QuestInfoSystem.GetQuestClassification(questID);
+	self.isBonusQuest = self.classification == Enum.QuestClassification.BonusObjective;
+	self.isBanned = qInfo and _V:GetBuggedQuestMapID(questID) == qInfo.mapID;
+	self.alwaysHide = self.isBonusQuest and not MapUtil.ShouldShowTask(qInfo.mapID, qInfo);
+
+	self.passedFilter = true;
+	self:UpdateValidity();
+	self:UpdateTimeRemaining();
+	self:UpdateHasWarbandBonus();
+
+	-- rewards
+	self:LoadRewards();
+
+	return self.hasRewardData;
+end
+
+function QuestInfoMixin:UpdateTitleAndFaction()
+	if (self.factionID == nil or self.title == nil) then
+		local oldTitle = self.title;
+		local oldFaction = self.factionID;
+		local title, factionID = C_TaskQuest.GetQuestInfoByQuestID(self.questID);
+		self.title = title;
+		self.factionID = factionID;
+		return self.factionID ~= oldFaction or self.title ~= oldTitle;
+	end
+
+	return false;
+end
+
+function QuestInfoMixin:UpdateHasWarbandBonus()
+	self.hasWarbandBonus = C_QuestLog.QuestContainsFirstTimeRepBonusForPlayer(self.questID);
+end
+
+function QuestInfoMixin:UpdateValidity()
+	local correctClassification = self.classification == Enum.QuestClassification.BonusObjective or self.classification == Enum.QuestClassification.WorldQuest;
+	self.isValid = correctClassification and not self.isBanned and HaveQuestData(self.questID);
+	return self.isValid;
+end
+
+function QuestInfoMixin:UpdateTimeRemaining()
+	local oldTime = self.time.seconds;
+	self.time.seconds = C_TaskQuest.GetQuestTimeLeftSeconds(self.questID) or 0;
+	return self.time.seconds ~= oldTime;
+end
+
+function QuestInfoMixin:OnCreate()
+	self.time = {};
+	self.reward = {
+			["typeBits"] = WQT_REWARDTYPE.missing;
+		};
+	self.rewardList = {};
+	self.hasRewardData = false;
+	self.searchResults = {};
+end
+
+do
+	local function GetTooltipLineOfType(data, type, pattern)
+		if (not data or not data.lines) then return; end
+
+		for k, line in ipairs(data.lines) do
+			if (line.type == type) then
+				if (not pattern or not line.leftText) then
+					return line, line.leftText;
+				end
+				local result = line.leftText:match(pattern);
+				if (result) then
+					return line, result;
+				end
+			end
+		end
+	end
+
+	function QuestInfoMixin:LoadRewards(force)
+		-- If we already have our data, don't try again;
+		if (not force and self.hasRewardData) then return; end
+
+		wipe(self.rewardList);
+		local haveData = HaveQuestRewardData(self.questID);
+		if (haveData) then
+			self.reward.typeBits = WQT_REWARDTYPE.none;
+			-- Items
+			local numItemAwards = GetNumQuestLogRewards(self.questID);
+			if (numItemAwards> 0) then
+				for rewardIndex = 1, numItemAwards, 1 do
+					local itemName, texture, numItems, quality, _, rewardId, ilvl = GetQuestLogRewardInfo(rewardIndex, self.questID);
+
+					if (rewardId) then
+						local rewardType = WQT_REWARDTYPE.none;
+						local subType, typeName;
+
+						local tooltipData = C_TooltipInfo.GetQuestLogItem("reward", rewardIndex, self.questID);
+
+						-- Getting ilvl from the tooltip data because it can differ. I.e. artifact relics
+						local iLvlLine = GetTooltipLineOfType(tooltipData, Enum.TooltipDataLineType.ItemLevel);
+						if (iLvlLine) then
+							ilvl = iLvlLine.itemLevel;
+						end
+
+						local price, typeID, subTypeID = select(11, C_Item.GetItemInfo(rewardId));
+						if (C_Soulbinds.IsItemConduitByItemInfo(rewardId)) then
+							-- Conduits
+							rewardType = WQT_REWARDTYPE.conduit;
+							local lineData, result = GetTooltipLineOfType(tooltipData, Enum.TooltipDataLineType.None);
+							subType = result or CONDUIT_TYPE_ENDURANCE;
+							numItems = ilvl;
+						elseif (typeID == Enum.ItemClass.Armor or typeID == Enum.ItemClass.Weapon) then
+							if (typeID == Enum.ItemClass.Armor) then
+								rewardType = WQT_REWARDTYPE.equipment;
+								typeName = ARMOR;
+							else
+								rewardType = WQT_REWARDTYPE.weapon;
+								typeName = WEAPON;
+							end
+							numItems = ilvl;
+						elseif (typeID == Enum.ItemClass.Gem and subTypeID == Enum.ItemGemSubclass.Artifactrelic) then
+							rewardType = WQT_REWARDTYPE.relic;
+							numItems = ilvl;
+						elseif(C_Item.IsAnimaItemByID(rewardId)) then
+							-- Anima
+							rewardType = WQT_REWARDTYPE.anima;
+							local line, result = GetTooltipLineOfType(tooltipData, Enum.TooltipDataLineType.None, " (%d+) ");
+							local value = tonumber(result);
+							if (value) then
+								numItems = numItems * value;
+							end
+							if (WQT.settings.general.sl_genericAnimaIcons) then
+								texture = numItems >= 250 and 3528287 or 3528288;
+							end
+
+							typeName = WORLD_QUEST_REWARD_FILTERS_ANIMA;
+						else
+							-- Normal items
+							if (texture == 894556) then
+								-- Bonus player xp item is counted as actual xp
+								rewardType = WQT_REWARDTYPE.xp;
+							elseif (typeID == Enum.ItemClass.Consumable and subTypeID == Enum.ItemConsumableSubclass.Other and price == 0 and ilvl > 100) then
+								-- Item converting into equipment
+								rewardType = WQT_REWARDTYPE.equipment;
+							else
+								rewardType = WQT_REWARDTYPE.item;
+							end
+						end
+
+
+						if (rewardType ~= WQT_REWARDTYPE.none) then
+							local rewardInfo = self:AddReward(rewardType, itemName, numItems, texture, quality, rewardId, subType);
+							rewardInfo.typeName = typeName;
+							rewardInfo.dataInstanceID = tooltipData and tooltipData.dataInstanceID;
+
+							local flavorLine, flavorText = GetTooltipLineOfType(tooltipData, Enum.TooltipDataLineType.None, "^\".*\"$");
+							if(flavorLine) then
+								rewardInfo.flavorText = flavorText;
+							end
+						end
+					end
+				end
+			end
+			-- Spells
+			if (C_QuestInfoSystem.HasQuestRewardSpells(self.questID)) then
+				local spellIds = C_QuestInfoSystem.GetQuestRewardSpells(self.questID);
+
+				for k, spellId in ipairs(spellIds) do
+					local spellInfo = C_Spell.GetSpellInfo(spellId)
+					self:AddReward(WQT_REWARDTYPE.spell, spellInfo.name, 1, spellInfo.iconID, 1, spellId);
+				end
+			end
+			-- Honor
+			if (GetQuestLogRewardHonor(self.questID) > 0) then
+				local numItems = GetQuestLogRewardHonor(self.questID);
+				self:AddReward(WQT_REWARDTYPE.honor, HONOR, numItems, 1455894, 1);
+			end
+			-- Gold
+			if (GetQuestLogRewardMoney(self.questID) > 0) then
+				local numItems = floor(abs(GetQuestLogRewardMoney(self.questID)));
+				self:AddReward(WQT_REWARDTYPE.gold, WORLD_QUEST_REWARD_FILTERS_GOLD, numItems, 133784, 1);
+			end
+			-- Currency
+			local currencies = C_QuestLog.GetQuestRewardCurrencies(self.questID);
+			for k, currency in ipairs(currencies) do
+				local container = C_CurrencyInfo.GetCurrencyContainerInfo(currency.currencyID, currency.totalRewardAmount);
+				local name = container and container.name or currency.name;
+				local texture = container and container.icon or currency.texture;
+				local quality = container and container.quality or currency.quality;
+				local isRep = C_CurrencyInfo.GetFactionGrantedByCurrency(currency.currencyID) ~= nil;
+				local currType = currency.currencyID == _azuriteID and WQT_REWARDTYPE.artifact or (isRep and WQT_REWARDTYPE.reputation or WQT_REWARDTYPE.currency);
+				self:AddReward(currType, name, currency.totalRewardAmount, texture, quality, currency.currencyID);
+			end
+			-- XP
+			if (GetQuestLogRewardXP(self.questID) > 0) then
+				local numItems = GetQuestLogRewardXP(self.questID);
+				self:AddReward(WQT_REWARDTYPE.xp, POWER_TYPE_EXPERIENCE, numItems, 894556, 1);
+			end
+
+			self:ParseRewards();
+		end
+
+		self.hasRewardData = haveData;
+	end
+end
+
+function QuestInfoMixin:AddReward(rewardType, name, amount, texture, quality, id, subType)
+	local index = #self.rewardList + 1;
+
+	-- Create reward
+	local rewardInfo = self.rewardList[index] or {};
+	rewardInfo.name = name;
+	rewardInfo.id = id or 0;
+	rewardInfo.type = rewardType;
+	rewardInfo.amount = amount or 1;
+	rewardInfo.texture = texture;
+	rewardInfo.quality = quality;
+	rewardInfo.color, rewardInfo.textColor = WQT_Utils:GetRewardTypeColorIDs(rewardType);
+	rewardInfo.subType = subType;
+
+	self.rewardList[index] = rewardInfo;
+
+	-- Raise type flag
+	self.reward.typeBits = bit.bor(self.reward.typeBits, rewardType);
+
+	return rewardInfo;
+end
+
+function QuestInfoMixin:ParseRewards()
+	table.sort(self.rewardList, RewardSortFunc);
+end
+
+function QuestInfoMixin:TryDressUpReward()
+	for k, rewardInfo in self:IterateRewards() do
+		if (bit.band(rewardInfo.type, WQT_REWARDTYPE.gear) > 0) then
+			local _, link = C_Item.GetItemInfo(rewardInfo.id);
+			DressUpItemLink(link)
+		end
+	end
+end
+
+function QuestInfoMixin:IterateRewards()
+	return ipairs(self.rewardList);
+end
+
+function QuestInfoMixin:GetReward(index)
+	if (index < 1 or index > #self.rewardList) then
+		return nil;
+	end
+	return self.rewardList[index];
+end
+
+function QuestInfoMixin:IsExpired()
+	local timeLeftSeconds =  C_TaskQuest.GetQuestTimeLeftSeconds(self.questID) or 0;
+	return self.time.seconds and self.time.seconds > 0 and timeLeftSeconds < 1;
+end
+
+function QuestInfoMixin:SetAsWaypoint()
+	local x, y = WQT_Utils:GetQuestMapLocation(self.questID, self.mapID);
+	local wayPoint = UiMapPoint.CreateFromCoordinates(self.mapID, x, y);
+	C_Map.SetUserWaypoint(wayPoint);
+end
+
+-- Getters for the most important reward
+function QuestInfoMixin:GetFirstNoneAzeriteType()
+	if (self.reward.typeBits == WQT_REWARDTYPE.none) then
+		return WQT_REWARDTYPE.none;
+	end
+
+	local hasAzerite = false;
+	for i = 1, #self.rewardList do
+		local reward = self.rewardList[i];
+		if (reward.type ~= WQT_REWARDTYPE.artifact) then
+			return reward.type, reward.subType;
+		else
+			hasAzerite = true;
+		end
+	end
+
+	return hasAzerite and WQT_REWARDTYPE.artifact or WQT_REWARDTYPE.missing;
+end
+
+function QuestInfoMixin:GetRewardType()
+	if (self.reward.typeBits == WQT_REWARDTYPE.none) then
+		return WQT_REWARDTYPE.none;
+	end
+	local reward = self.rewardList[1];
+
+	local rewardType = reward and reward.type or WQT_REWARDTYPE.missing;
+	local rewardSubType = reward and reward.subType;
+	return rewardType, rewardSubType;
+end
+
+function QuestInfoMixin:GetRewardId()
+	local reward = #self.rewardList > 0 and self.rewardList[1];
+	return reward and reward.id or 0;
+end
+
+function QuestInfoMixin:GetRewardAmount(warmode)
+	local reward = self:GetReward(1);
+	local amount = reward and reward.amount or 0;
+	if (warmode and amount > 0) then
+		amount = WQT_Utils:CalculateWarmodeAmount(reward);
+	end
+
+	return amount;
+end
+
+function QuestInfoMixin:GetRewardTexture()
+	if (self.reward.typeBits == WQT_REWARDTYPE.none) then
+		-- Dark empty texture
+		return "Interface/Garrison/GarrisonMissionUIInfoBoxBackgroundTile";
+	end
+
+	local reward = self.rewardList[1];
+	return reward and reward.texture or 134400;
+end
+
+function QuestInfoMixin:GetRewardQuality()
+	if(#self.rewardList == 0) then return 0 end
+	local reward = self.rewardList[1];
+	return reward and reward.quality or 1;
+end
+
+function QuestInfoMixin:GetRewardColor()
+	if (self.reward.typeBits == WQT_REWARDTYPE.none) then
+		return WQT_Utils:GetColor("rewardNone");
+	end
+	local reward = self.rewardList[1];
+	return reward and reward.color or WQT_Utils:GetColor("rewardMissing");
+end
+
+function QuestInfoMixin:IsCriteria(forceSingle)
+	local bountyBoard = WQT_Utils:GetOldBountyBoard();
+	local activityBoard = WQT_Utils:GetNewBountyBoard();
+	if (not bountyBoard or not activityBoard) then return false; end
+
+	-- Try only selected
+	if (forceSingle) then
+		if (bountyBoard:IsWorldQuestCriteriaForSelectedBounty(self.questID)) then
+			return true;
+		end
+		if (activityBoard and activityBoard.selectedBounty) then
+			return self.factionID == activityBoard.selectedBounty.factionID;
+		end
+
+		return false;
+	end
+
+	-- Try any of them
+	if (bountyBoard.bounties) then
+		for k, bounty in ipairs(bountyBoard.bounties) do
+			if (C_QuestLog.IsQuestCriteriaForBounty(self.questID, bounty.questID)) then
+				return true;
+			end
+		end
+	end
+
+	return false;
+end
+
+function QuestInfoMixin:GetTagInfo()
+	return self.tagInfo;
+end
+
+function QuestInfoMixin:GetTagInfoQuality()
+	return self.tagInfo and self.tagInfo.quality or 0;
+end
+
+function QuestInfoMixin:IsDisliked()
+	return WQT_Utils:QuestIsDisliked(self.questID);
+end
+
+function QuestInfoMixin:IsFavorite()
+	return WQT_Utils:QuestIsFavorite(self.questID);
+end
+
+function QuestInfoMixin:DataIsValid()
+	return self.questID ~= nil;
+end
+
+function QuestInfoMixin:UpdateSearchResults(searchString)
+	wipe(self.searchResults);
+	for k, rewardInfo in self:IterateRewards() do
+		rewardInfo.searchMatch = nil;
+	end
+	if (not searchString or #searchString == 0) then
+		return;
+	end
+	searchString = searchString:lower();
+	local titleMatch = string.find(self.title:lower(), searchString);
+	self.searchResults.titleMatch = titleMatch;
+
+	local mapInfo = WQT_Utils:GetCachedMapInfo(self.mapID);
+	if (mapInfo) then
+		local zoneMatch = string.find(mapInfo.name:lower(), searchString);
+		self.searchResults.zoneMatch = zoneMatch;
+	end
+
+	local factionInfo = _V:GetFactionData(self.factionID);
+	if (factionInfo) then
+		local factionMatch = string.find(factionInfo.name:lower(), searchString);
+		self.searchResults.factionMatch = factionMatch;
+	end
+
+	local bestRewardMatch = nil;
+	for k, rewardInfo in self:IterateRewards() do
+		local nameMatch = string.find(rewardInfo.name:lower(), searchString);
+
+		if (not nameMatch and rewardInfo.typeName) then
+			nameMatch = string.find(rewardInfo.typeName:lower(), searchString);
+			nameMatch = nameMatch and nameMatch + 100;
+		end
+
+		if (not nameMatch and rewardInfo.flavorText) then
+			nameMatch = string.find(rewardInfo.flavorText:lower(), searchString);
+			nameMatch = nameMatch and nameMatch + 200;
+		end
+
+		rewardInfo.searchMatch = nameMatch;
+		if (not bestRewardMatch or (nameMatch and nameMatch < bestRewardMatch)) then
+			bestRewardMatch = nameMatch;
+		end
+	end
+	self.searchResults.bestRewardMatch = bestRewardMatch;
+end
+
+function QuestInfoMixin:GetSearchTitleMatch()
+	return self.searchResults.titleMatch;
+end
+
+function QuestInfoMixin:GetSearchZoneMatch()
+	return self.searchResults.zoneMatch;
+end
+
+function QuestInfoMixin:GetSearchFactionMatch()
+	return self.searchResults.factionMatch;
+end
+
+function QuestInfoMixin:GetSearchBestRewardMatch()
+	return self.searchResults.bestRewardMatch;
+end
+
+function QuestInfoMixin:PassesSearchFilter()
+	return self:GetSearchTitleMatch() ~= nil
+		or self:GetSearchZoneMatch() ~= nil
+		or self:GetSearchFactionMatch() ~= nil
+		or self:GetSearchBestRewardMatch() ~= nil;
+end
+
+----------------------------
+-- MIXIN
+----------------------------
+
+WQT_DataProvider = {};
+
+function WQT_DataProvider:Init()
+	self.frame = CreateFrame("FRAME");
+	self.frame:SetScript("OnEvent", function(frame, ...) self:OnEvent(...); end);
+	self.frame:SetScript("OnLoad", function(frame, ...) self:OnEvent(...); end);
+	self.frame:RegisterEvent("QUEST_LOG_UPDATE");
+	self.frame:RegisterEvent("QUEST_DATA_LOAD_RESULT");
+	self.frame:RegisterEvent("TAXIMAP_OPENED");
+	self.frame:RegisterEvent("CVAR_UPDATE");
+	self.frame:RegisterEvent("TOOLTIP_DATA_UPDATE");
+
+	self.updateScriptSet = false;
+
+	self.pool = CreateObjectPool(WQT_Utils.QuestCreationFunc, QuestResetFunc);
+	self.iterativeList = {};
+	self.ignoreNextLogUpdate = false;
+
+	self.processedQuestList = {};
+	self.shouldUpdateFiltedList = false;
+
+	self.zoneLoading = {
+		needsUpdate = false,
+		startTimestamp = 0,
+		remainingZones = {},
+		numRemaining = 0,
+		numTotal = 0,
+		questsFound = {},
+		questsActive = {},
+	};
+
+	WQT_CallbackRegistry:RegisterCallback("WQT.SearchUpdated", function() self:RequestFilterUpdate(); end, self);
+	WQT_CallbackRegistry:RegisterCallback("WQT.FiltersUpdated", function() self:RequestFilterUpdate(); end, self);
+	WQT_CallbackRegistry:RegisterCallback("WQT.SortUpdated", function() self:RequestFilterUpdate(); end, self);
+	WQT_CallbackRegistry:RegisterCallback("WQT.SettingChanged",
+		function(_, _, tag)
+			if (tag == "ZONE_QUESTS") then
+				self:RequestDataUpdate();
+			elseif (tag == "GENERIC_ANIMA") then
+				self:RequestRewardsUpdate();
+			elseif (tag == "QUEST_FAVORITES_AT_TOP") then
+				self:RequestFilterUpdate();
+			end
+		end,
+		self);
+
+	-- Needed to trigger update in full screen map
+	EventRegistry:RegisterCallback(
+		"MapCanvas.MapSet"
+		,function()
+				self:RequestDataUpdate();
+			end
+		, self);
+end
+
+function WQT_DataProvider:OnEvent(event, ...)
+	if (event == "QUEST_LOG_UPDATE") then
+		self:RequestDataUpdate();
+	elseif (event == "QUEST_DATA_LOAD_RESULT") then
+		self:RequestDataUpdate();
+	elseif (event == "TAXIMAP_OPENED") then
+		self:RequestDataUpdate();
+	elseif (event == "TOOLTIP_DATA_UPDATE") then
+		local id = ...;
+		for questInfo, v in self.pool:EnumerateActive() do
+			for k, rewardInfo in questInfo:IterateRewards() do
+				if (rewardInfo.dataInstanceID == id) then
+					questInfo:LoadRewards(true);
+					self:RequestFilterUpdate();
+					return;
+				end
+			end
+		end
+	elseif (event =="CVAR_UPDATE") then
+		local cvar = ...;
+		if (_V:IsRelevantOfficialCvar(cvar)) then
+			self:RequestFilterUpdate();
+		end
+	end
+end
+
+function WQT_DataProvider:RequestDataUpdate()
+	self.zoneLoading.needsUpdate = true;
+	self:SetUpdateScript();
+end
+
+function WQT_DataProvider:RequestFilterUpdate()
+	self.shouldUpdateFiltedList = true;
+	self:SetUpdateScript();
+end
+
+function WQT_DataProvider:RequestRewardsUpdate()
+	self.requestedRewardsUpdate = true;
+	self:SetUpdateScript();
+end
+
+function WQT_DataProvider:SetUpdateScript()
+	if (not self.updateScriptSet) then
+		self.frame:SetScript("OnUpdate", function(...) self:OnUpdate(...); end);
+		self.updateScriptSet = true;
+	end
+end
+
+local MAX_PROCESSING_TIME = 0.005;
+function WQT_DataProvider:OnUpdate(elapsed)
+	if(self.zoneLoading.needsUpdate) then
+		self.zoneLoading.needsUpdate = false;
+		self.requestedRewardsUpdate = false;
+
+		local mapIDToLoad = nil;
+		local isFlightMap = false;
+		if(WorldMapFrame:IsShown()) then
+			mapIDToLoad = WorldMapFrame.mapID;
+		elseif(FlightMapFrame and FlightMapFrame:IsShown()) then
+			mapIDToLoad = FlightMapFrame.mapID;
+			isFlightMap = true;
+		end
+
+		if (mapIDToLoad) then
+			self:LoadQuestsInZone(mapIDToLoad, isFlightMap);
+		end
+	end
+
+	if(self.zoneLoading.numRemaining > 0) then
+
+		local processedCount = 0;
+		local updateStart = GetTimePreciseSec();
+		local timeSpent = 0;
+
+		-- Get quests from all the zones in our list
+		-- Only spend a max amount of time on it each frame to prevent extreme stutters when we have a lot of zones
+		local enumZoneQuests = _V:GetZoneQuestsEnum();
+		local matchQuestZone = not self.zoneLoading.isFlightMap and WQT_Utils:GetSetting("general", "zoneQuests") == enumZoneQuests.zone;
+		for zoneID in pairs(self.zoneLoading.remainingZones) do
+			self.zoneLoading.remainingZones[zoneID] = nil;
+			self.zoneLoading.numRemaining = self.zoneLoading.numRemaining - 1;
+			processedCount = processedCount + 1;
+
+			local taskPOIs = C_TaskQuest.GetQuestsOnMap(zoneID);
+			local numPoIs = taskPOIs and #taskPOIs or 0;
+			if (numPoIs > 0) then
+				for k, apiInfo in ipairs(taskPOIs) do
+					if (not matchQuestZone or apiInfo.mapID == zoneID) then
+						self.zoneLoading.questsFound[apiInfo.questID] = apiInfo;
+					end
+				end
+			end
+
+			timeSpent = GetTimePreciseSec() - updateStart;
+			if (timeSpent >= MAX_PROCESSING_TIME) then
+				break;
+			end
+		end
+
+		-- Current progress
+		local progress = (self.zoneLoading.numTotal - self.zoneLoading.numRemaining) / self.zoneLoading.numTotal;
+
+		if (self.zoneLoading.numRemaining == 0) then
+			-- We're done getting quests from all the zones. Turn them into quest info for the add-on
+			-- Remove quests we no longer need, add new ones, and update existing in case we didn't have all data yet
+
+			local questForRemove = {};
+			local questsToAdd = {};
+			-- Mark all for removal
+			for addonInfo in self.pool:EnumerateActive() do
+				questForRemove[addonInfo.questID] = addonInfo;
+			end
+
+			local acceptedCount = 0;
+			local updated = 0;
+			-- Go through quests, mark for add if we don't currently have it, otherwise unmark for removal
+			for questID, apiInfo in pairs(self.zoneLoading.questsFound) do
+				if (self.zoneLoading.expansion == 0 or self.zoneLoading.expansion == GetQuestExpansion(questID)) then
+					acceptedCount = acceptedCount + 1;
+					if (not questForRemove[questID]) then
+						questsToAdd[questID] = apiInfo;
+					else
+						local addonInfo = questForRemove[questID];
+						questForRemove[questID] = nil;
+						local updateSuccess = false;
+						-- Just always update these
+						addonInfo:UpdateTimeRemaining();
+						addonInfo:UpdateHasWarbandBonus();
+
+						updateSuccess = addonInfo:UpdateTitleAndFaction() or updateSuccess;
+						-- Quest log update might have been for missing data
+						if (not addonInfo.hasRewardData) then
+							updateSuccess = addonInfo:LoadRewards(true) or updateSuccess;
+						end
+						if (not addonInfo.isValid) then
+							updateSuccess = addonInfo:UpdateValidity() or updateSuccess;
+						end
+						if (addonInfo.alwaysHide and MapUtil.ShouldShowTask(apiInfo.mapID, apiInfo)) then
+							-- Have only encountered this once and not been able to replicate to test if this even works
+							addonInfo.alwaysHide = false;
+							WQT:DebugPrint(string.format("Quest alwaysHide updated (%s)", questID));
+							updateSuccess = addonInfo:UpdateValidity() or updateSuccess;
+						end
+						if (updateSuccess) then
+							updated = updated + 1;
+						end
+					end
+				end
+			end
+
+			local removed = 0;
+			-- Remove everything still marked for removal
+			for questID, addonInfo in pairs(questForRemove) do
+				removed = removed + 1;
+				self.pool:Release(addonInfo);
+			end
+
+			local added = 0;
+			-- Add all new ones
+			for questID, apiInfo in pairs(questsToAdd) do
+				added = added + 1;
+				local questInfo = self.pool:Acquire();
+				questInfo:Init(apiInfo.questID, apiInfo);
+			end
+
+			WQT:DebugPrint(string.format("Done: %s quests (-%s +%s ~%s)", acceptedCount, removed, added, updated));
+
+			self.zoneLoading.startTimestamp = 0;
+			progress = 0;
+			WQT_CallbackRegistry:TriggerEvent("WQT.DataProvider.QuestsLoaded");
+			self.shouldUpdateFiltedList = true;
+		end
+
+		WQT_CallbackRegistry:TriggerEvent("WQT.DataProvider.ProgressUpdated", progress);
+	elseif(self.requestedRewardsUpdate) then
+		self.requestedRewardsUpdate = false;
+		for questInfo, v in self.pool:EnumerateActive() do
+			questInfo:LoadRewards(true);
+		end
+		self.shouldUpdateFiltedList = true;
+	end
+
+	if (self.shouldUpdateFiltedList) then
+		self.shouldUpdateFiltedList = false;
+		self:FilterAndSortQuestList();
+	end
+
+	if (not self.zoneLoading.needsUpdate
+		and self.zoneLoading.numRemaining == 0
+		and not self.shouldUpdateFiltedList
+		and not self.requestedRewardsUpdate) then
+		self.frame:SetScript("OnUpdate", nil);
+		self.updateScriptSet = false;
+	end
+end
+
+function WQT_DataProvider:FilterAndSortQuestList()
+	wipe(self.processedQuestList);
+	local searchText = WQT:GetSearchString():lower();
+
+	for questInfo in self.pool:EnumerateActive() do
+		questInfo:UpdateSearchResults(searchText);
+
+		questInfo.passedFilter = false;
+		local searchPass = not searchText or #searchText == 0 or questInfo:PassesSearchFilter();
+		if (searchPass and questInfo.isValid and not questInfo.alwaysHide and questInfo.hasRewardData and not questInfo:IsExpired()) then
+			local passed = WQT:PassesAllFilters(questInfo);
+			questInfo.passedFilter = passed;
+		end
+
+		-- Update reward orders in case the filtering for one of the changed
+		questInfo:ParseRewards();
+
+		table.insert(self.processedQuestList, questInfo);
+	end
+
+	-- Apply sorting
+	local sortOption =  WQT.settings.general.sortBy;
+	table.sort(self.processedQuestList, function (a, b) return SortQuestList(a, b, sortOption); end);
+
+	WQT_CallbackRegistry:TriggerEvent("WQT.DataProvider.FilteredListUpdated");
+end
+
+function WQT_DataProvider:ClearData()
+	wipe(self.iterativeList);
+end
+
+function WQT_DataProvider:AddZoneToBuffer(zoneID, includeChildren)
+	if(self.zoneLoading.remainingZones[zoneID]) then return; end
+
+	self.zoneLoading.remainingZones[zoneID] = true;
+	self.zoneLoading.numRemaining = self.zoneLoading.numRemaining + 1;
+	self.zoneLoading.numTotal = self.zoneLoading.numTotal + 1;
+
+	local zoneData = _V:GetZoneData(zoneID);
+	if (not zoneData) then return; end
+
+	for childID, childData in pairs(zoneData.children) do
+		if (childData.isSubZone or includeChildren) then
+			self:AddZoneToBuffer(childID, includeChildren);
+		end
+	end
+end
+
+function WQT_DataProvider:AddZoneListToBuffer(zoneList)
+	if (type(zoneList) ~= "table") then return; end
+	for zoneID in pairs(zoneList) do
+		local zoneData = _V:GetZoneData(zoneID);
+		if (zoneData and not zoneData.isFlightMap) then
+			self:AddZoneToBuffer(zoneID);
+		end
+	end
+end
+
+function WQT_DataProvider:LoadQuestsInZone(zoneID, isFlightMap)
+	if (not zoneID) then return end
+	self:ClearData();
+
+	-- No update while invisible
+	if (not WorldMapFrame:IsShown()
+		and not (FlightMapFrame and FlightMapFrame:IsShown())) then
+		return;
+	end
+
+	if(self.zoneLoading.startTimestamp > 0) then
+		WQT:DebugPrint("Interrupt");
+	end
+
+	self.zoneLoading.isFlightMap = isFlightMap;
+	self.zoneLoading.startTimestamp = GetTimePreciseSec();
+	self.zoneLoading.numRemaining = 0;
+	self.zoneLoading.numTotal = 0;
+	self.zoneLoading.expansion = 0;
+	wipe(self.zoneLoading.remainingZones);
+	wipe(self.zoneLoading.questsFound);
+
+	self.latestZoneId = zoneID;
+
+	local currentMapInfo = WQT_Utils:GetCachedMapInfo(zoneID);
+	if (not currentMapInfo) then return end;
+
+	local zoneQuests = WQT_Utils:GetSetting("general", "zoneQuests");
+	local enumZoneQuests = _V:GetZoneQuestsEnum();
+
+	if (currentMapInfo.mapType == Enum.UIMapType.World) then
+		self:AddZoneListToBuffer(_V:GetZonesOfExpansion(0));
+		local expansionLevel = WQT_Utils:GetCharacterExpansionLevel();
+		self.zoneLoading.expansion = expansionLevel;
+		self:AddZoneListToBuffer(_V:GetZonesOfExpansion(expansionLevel));
+
+	else
+		local addChildren = zoneQuests ~= enumZoneQuests.zone;
+		if (zoneQuests == enumZoneQuests.expansion) then
+			local zoneData = _V:GetZoneData(zoneID);
+			if (zoneData and zoneData.expansion > 0) then
+				self.zoneLoading.expansion = zoneData.expansion;
+				self:AddZoneListToBuffer(_V:GetZonesOfExpansion(zoneData.expansion));
+			end
+		elseif (currentMapInfo.mapType == Enum.UIMapType.Continent) then
+			while (currentMapInfo.mapType > Enum.UIMapType.Continent and currentMapInfo.parentMapID and zoneID ~= currentMapInfo.parentMapID) do
+				local parentMapInfo = WQT_Utils:GetCachedMapInfo(currentMapInfo.parentMapID);
+				if (not parentMapInfo) then
+					break;
+				end
+				zoneID = currentMapInfo.parentMapID;
+				currentMapInfo = parentMapInfo;
+			end
+			addChildren = true;
+		end
+
+		self:AddZoneToBuffer(zoneID, addChildren);
+	end
+end
+
+function WQT_DataProvider:GetIterativeList()
+	wipe(self.iterativeList);
+
+	for questInfo in self.pool:EnumerateActive() do
+		table.insert(self.iterativeList, questInfo);
+	end
+
+	return self.iterativeList;
+end
+
+function WQT_DataProvider:GetQuestById(id)
+	for questInfo in self.pool:EnumerateActive() do
+		if questInfo.questID == id then return questInfo; end
+	end
+	return nil;
+end
+
+function WQT_DataProvider:EnumerateProcessedQuestList()
+	return ipairs(self.processedQuestList);
+end

@@ -2,8 +2,6 @@ local addonName, addon = ...
 
 local L = LibStub("AceLocale-3.0"):GetLocale(addonName)
 local LMP = LibStub("AceLocale-3.0"):GetLocale("EnhanceQoL_MythicPlus")
-local LSM = LibStub("LibSharedMedia-3.0")
-local wipe = wipe
 
 ---- REGION Functions
 local timeoutReleaseDifficultyLookup = {}
@@ -564,8 +562,8 @@ function addon.functions.initDungeonFrame()
 
 	addon.functions.SettingsCreateCheckbox(addon.SettingsLayout.characterInspectCategory, {
 		var = "randomMountCastSlowFallWhenFalling",
-		text = L["randomMountCastSlowFallWhenFalling"] or "Cast Slow Fall/Levitate while falling",
-		desc = L["randomMountCastSlowFallWhenFallingDesc"] or "Only applies to Mages (Slow Fall) and Priests (Levitate).",
+		text = L["randomMountCastSlowFallWhenFalling"] or "Cast Slow Fall/Levitate/Travel Form while falling",
+		desc = L["randomMountCastSlowFallWhenFallingDesc"] or "Only applies to Mages (Slow Fall), Druids (Travel Form) and Priests (Levitate).",
 		func = function(value) addon.db["randomMountCastSlowFallWhenFalling"] = value and true or false end,
 		default = false,
 		parentSection = expandable,
@@ -608,6 +606,7 @@ if not sectionDungeon then
 		name = L["DungeonsMythicPlus"],
 		expanded = false,
 		colorizeTitle = false,
+		newTagID = "DungeonsMythicPlus",
 	})
 	addon.SettingsLayout.gameplayDungeonsMythicSection = sectionDungeon
 end
@@ -754,6 +753,21 @@ if cChar and sectionDungeon then
 				addon.MythicPlus.functions.createBRFrame()
 			elseif addon.MythicPlus and addon.MythicPlus.functions and addon.MythicPlus.functions.setObjectiveFrames then
 				addon.MythicPlus.functions.setObjectiveFrames()
+			end
+		end,
+		parentSection = sectionDungeon,
+	})
+
+	addon.functions.SettingsCreateCheckbox(cChar, {
+		var = "mythicPlusBloodlustTrackerEnabled",
+		text = LMP["mythicPlusBloodlustTrackerEnabled"],
+		desc = LMP["mythicPlusBloodlustTrackerEditModeHint"],
+		func = function(v)
+			addon.db["mythicPlusBloodlustTrackerEnabled"] = v
+			if addon.MythicPlus and addon.MythicPlus.functions and addon.MythicPlus.functions.syncBloodlustUnitAuraRegistration then addon.MythicPlus.functions.syncBloodlustUnitAuraRegistration() end
+			if addon.MythicPlus and addon.MythicPlus.functions and addon.MythicPlus.functions.createBloodlustFrame then
+				addon.MythicPlus.functions.createBloodlustFrame()
+				if addon.MythicPlus.functions.refreshBloodlustTracker then addon.MythicPlus.functions.refreshBloodlustTracker(false) end
 			end
 		end,
 		parentSection = sectionDungeon,

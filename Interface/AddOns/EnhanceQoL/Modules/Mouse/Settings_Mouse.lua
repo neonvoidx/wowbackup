@@ -483,6 +483,33 @@ local data = {
 }
 addon.functions.SettingsCreateCheckboxes(cMouse, data)
 
+addon.functions.SettingsCreateHeadline(cMouse, L["mouseCrosshair"], { parentSection = expandable })
+data = {
+	{
+		var = "mouseCrosshairEnabled",
+		text = L["mouseCrosshairEnabled"],
+		default = false,
+		func = function(v)
+			addon.db["mouseCrosshairEnabled"] = v and true or false
+			if addon.Mouse.functions.refreshCrosshairVisibility then addon.Mouse.functions.refreshCrosshairVisibility() end
+		end,
+		parentSection = expandable,
+		children = {
+			{
+				text = "|cffffd700" .. L["mouseCrosshairEditModeHint"] .. "|r",
+				sType = "hint",
+				parentCheck = function()
+					return addon.SettingsLayout.elements["mouseCrosshairEnabled"]
+						and addon.SettingsLayout.elements["mouseCrosshairEnabled"].setting
+						and addon.SettingsLayout.elements["mouseCrosshairEnabled"].setting:GetValue() == true
+				end,
+				parentSection = expandable,
+			},
+		},
+	},
+}
+addon.functions.SettingsCreateCheckboxes(cMouse, data)
+
 addon.functions.SettingsCreateHeadline(cMouse, L["mouseTrail"], { parentSection = expandable })
 addon.functions.SettingsCreateText(cMouse, "|cff99e599" .. L["Trailinfo"] .. "|r", { parentSection = expandable })
 

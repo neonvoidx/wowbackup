@@ -98,21 +98,38 @@ local ilvlOutlineOptions = {
 	THICKOUTLINE = L["fontOutlineThick"] or "Thick Outline",
 	MONOCHROMEOUTLINE = L["fontOutlineMono"] or "Monochrome Outline",
 }
+local enchantDisplayModeOrder = { "FULL", "BADGE", "WARNING" }
+local enchantDisplayModeOptions = {
+	FULL = L["gearEnchantDisplayModeFull"] or "Full",
+	BADGE = L["gearEnchantDisplayModeBadge"] or "Badge (E)",
+	WARNING = L["gearEnchantDisplayModeWarningOnly"] or "Warning only",
+}
+
+local function getCachedFontMedia()
+	local names = addon.functions and addon.functions.GetLSMMediaNames and addon.functions.GetLSMMediaNames("font")
+	local hash = addon.functions and addon.functions.GetLSMMediaHash and addon.functions.GetLSMMediaHash("font")
+	if type(names) == "table" and type(hash) == "table" then return names, hash end
+	return {}, {}
+end
 
 local function buildIlvlFontDropdown()
 	local map = {
 		[addon.variables.defaultFont] = L["actionBarFontDefault"] or "Blizzard font",
 	}
-	local LSM = LibStub("LibSharedMedia-3.0", true)
-	if LSM and LSM.HashTable then
-		for name, path in pairs(LSM:HashTable("font") or {}) do
-			if type(path) == "string" and path ~= "" then map[path] = tostring(name) end
-		end
+	local globalFontKey = addon.functions and addon.functions.GetGlobalFontConfigKey and addon.functions.GetGlobalFontConfigKey() or "__EQOL_GLOBAL_FONT__"
+	local globalFontLabel = addon.functions and addon.functions.GetGlobalFontConfigLabel and addon.functions.GetGlobalFontConfigLabel() or "Use global font config"
+	map[globalFontKey] = globalFontLabel
+	local names, hash = getCachedFontMedia()
+	for i = 1, #names do
+		local name = names[i]
+		local path = hash[name]
+		if type(path) == "string" and path ~= "" then map[path] = tostring(name) end
 	end
 	local list, order = addon.functions.prepareListForDropdown(map)
 	wipe(ilvlFontOrder)
-	for i, key in ipairs(order) do
-		ilvlFontOrder[i] = key
+	if list[globalFontKey] then ilvlFontOrder[#ilvlFontOrder + 1] = globalFontKey end
+	for _, key in ipairs(order) do
+		if key ~= globalFontKey then ilvlFontOrder[#ilvlFontOrder + 1] = key end
 	end
 	return list
 end
@@ -135,6 +152,28 @@ local charDisplayDropdown = addon.functions.SettingsCreateMultiDropdown(cGearUpg
 	setSelection = applyCharDisplaySelection,
 	parentSection = expandable,
 	notify = "showMissingEnchantOverlayOnCharframe",
+})
+
+addon.functions.SettingsCreateDropdown(cGearUpgrade, {
+	var = "charEnchantDisplayMode",
+	text = L["gearEnchantDisplayMode"] or "Enchant display",
+	desc = L["gearEnchantDisplayModeDesc"]
+		or "Full: show full enchant text.\nBadge (E): show a green E if enchanted and red E if missing.\nWarning only: hide enchant text and only show missing enchant warning.",
+	list = enchantDisplayModeOptions,
+	order = enchantDisplayModeOrder,
+	default = "FULL",
+	get = function()
+		local mode = addon.db["charEnchantDisplayMode"]
+		if mode ~= "BADGE" and mode ~= "WARNING" then mode = "FULL" end
+		return mode
+	end,
+	set = function(key)
+		addon.db["charEnchantDisplayMode"] = key
+		refreshItemLevelDisplays()
+	end,
+	parent = charDisplayDropdown,
+	parentCheck = function() return isCharDisplaySelected("enchants") end,
+	parentSection = expandable,
 })
 
 local missingOverlayCheckbox = addon.functions.SettingsCreateCheckbox(cGearUpgrade, {
@@ -211,11 +250,12 @@ addon.functions.SettingsCreateScrollDropdown(cGearUpgrade, {
 	text = L["ilvlFontLabel"] or "Item level font",
 	listFunc = buildIlvlFontDropdown,
 	order = ilvlFontOrder,
-	default = addon.variables.defaultFont,
+	default = addon.functions.GetGlobalFontConfigKey and addon.functions.GetGlobalFontConfigKey() or "__EQOL_GLOBAL_FONT__",
 	get = function()
-		local current = addon.db.ilvlFontFace or addon.variables.defaultFont
+		local globalFontKey = addon.functions.GetGlobalFontConfigKey and addon.functions.GetGlobalFontConfigKey() or "__EQOL_GLOBAL_FONT__"
+		local current = addon.db.ilvlFontFace or globalFontKey
 		local list = buildIlvlFontDropdown()
-		if not list[current] then current = addon.variables.defaultFont end
+		if not list[current] then current = globalFontKey end
 		return current
 	end,
 	set = function(key)
@@ -374,10 +414,11 @@ addon.functions.SettingsCreateCheckboxes(cGearUpgrade, data)
 function addon.functions.initGearUpgrade()
 	addon.functions.InitDBValue("charDisplayOptions", {})
 	addon.functions.InitDBValue("inspectDisplayOptions", {})
+	addon.functions.InitDBValue("charEnchantDisplayMode", "FULL")
 	addon.functions.InitDBValue("missingEnchantOverlayColor", { r = 1, g = 0, b = 0, a = 0.6 })
 	addon.functions.InitDBValue("ilvlUseItemQualityColor", true)
 	addon.functions.InitDBValue("ilvlTextColor", { r = 1, g = 1, b = 1, a = 1 })
-	addon.functions.InitDBValue("ilvlFontFace", addon.variables.defaultFont)
+	addon.functions.InitDBValue("ilvlFontFace", addon.functions.GetGlobalFontConfigKey and addon.functions.GetGlobalFontConfigKey() or "__EQOL_GLOBAL_FONT__")
 	addon.functions.InitDBValue("ilvlFontSize", 14)
 	addon.functions.InitDBValue("ilvlFontOutline", "OUTLINE")
 end

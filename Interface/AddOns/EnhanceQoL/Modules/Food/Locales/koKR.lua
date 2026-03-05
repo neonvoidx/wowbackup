@@ -19,6 +19,7 @@ L["Enable Health Macro"] = "생명력 매크로 사용"
 L["Flask Macro"] = "플라스크 매크로"
 L["flaskMacroLimitReached"] = "플라스크 매크로: 매크로 한도에 도달했습니다. 슬롯을 비워 주세요."
 L["flaskMacroPlaceOnBar"] = "%s - 행동 단축바에 올려 두세요 (전투 중이 아닐 때 업데이트됨)"
+L["FlaskSharedWithClassReminder"] = "물약 선호 설정은 클래스 버프 알림의 물약 추적과 공유됩니다."
 L["FlaskUseRoleSetting"] = "역할 설정 사용"
 L["Health Macro"] = "생명력 매크로"
 L["healthCustomSpellsHint"] = [=[드롭다운에서 주문을 선택하면 삭제됩니다(의도적으로 필드는 비어 있습니다).

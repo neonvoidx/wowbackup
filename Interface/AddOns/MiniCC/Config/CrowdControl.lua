@@ -164,7 +164,7 @@ local function BuildInstance(panel, options, addTestButton)
 	local iconSize = mini:Slider({
 		Parent = parent,
 		Min = 10,
-		Max = 200,
+		Max = 100,
 		Width = columnWidth * 2 - horizontalSpacing,
 		Step = 1,
 		LabelText = L["Icon Size"],
@@ -172,7 +172,7 @@ local function BuildInstance(panel, options, addTestButton)
 			return options.Icons.Size
 		end,
 		SetValue = function(v)
-			local newValue = mini:ClampInt(v, 10, 200, 32)
+			local newValue = mini:ClampInt(v, 10, 100, 32)
 			if options.Icons.Size ~= newValue then
 				options.Icons.Size = newValue
 				config:Apply()
@@ -231,13 +231,13 @@ local function BuildPetInstance(panel, options)
 
 	local petEnabledEverywhere = mini:Checkbox({
 		Parent = parent,
-		LabelText = L["Everywhere"],
-		Tooltip = L["Enable pet frame CC everywhere."],
+		LabelText = L["World"],
+		Tooltip = L["Enable pet frame CC in the open world."],
 		GetValue = function()
-			return options.Enabled.Always
+			return options.Enabled.World
 		end,
 		SetValue = function(value)
-			options.Enabled.Always = value
+			options.Enabled.World = value
 			config:Apply()
 		end,
 	})
@@ -260,37 +260,37 @@ local function BuildPetInstance(panel, options)
 	petEnabledArena:SetPoint("LEFT", parent, "LEFT", columnWidth, 0)
 	petEnabledArena:SetPoint("TOP", petEnabledEverywhere, "TOP", 0, 0)
 
-	local petEnabledRaids = mini:Checkbox({
+	local petEnabledBattleGrounds = mini:Checkbox({
 		Parent = parent,
-		LabelText = L["BGS & Raids"],
-		Tooltip = L["Enable pet frame CC in BGs and raids."],
+		LabelText = L["Battlegrounds"],
+		Tooltip = L["Enable pet frame CC in battlegrounds."],
 		GetValue = function()
-			return options.Enabled.Raids
+			return options.Enabled.BattleGrounds
 		end,
 		SetValue = function(value)
-			options.Enabled.Raids = value
+			options.Enabled.BattleGrounds = value
 			config:Apply()
 		end,
 	})
 
-	petEnabledRaids:SetPoint("LEFT", parent, "LEFT", columnWidth * 2, 0)
-	petEnabledRaids:SetPoint("TOP", petEnabledEverywhere, "TOP", 0, 0)
+	petEnabledBattleGrounds:SetPoint("LEFT", parent, "LEFT", columnWidth * 2, 0)
+	petEnabledBattleGrounds:SetPoint("TOP", petEnabledEverywhere, "TOP", 0, 0)
 
-	local petEnabledDungeons = mini:Checkbox({
+	local petEnabledPvE = mini:Checkbox({
 		Parent = parent,
-		LabelText = L["Dungeons"],
-		Tooltip = L["Enable pet frame CC in dungeons and M+."],
+		LabelText = L["PvE"],
+		Tooltip = L["Enable pet frame CC in PvE."],
 		GetValue = function()
-			return options.Enabled.Dungeons
+			return options.Enabled.PvE
 		end,
 		SetValue = function(value)
-			options.Enabled.Dungeons = value
+			options.Enabled.PvE = value
 			config:Apply()
 		end,
 	})
 
-	petEnabledDungeons:SetPoint("LEFT", parent, "LEFT", columnWidth * 3, 0)
-	petEnabledDungeons:SetPoint("TOP", petEnabledEverywhere, "TOP", 0, 0)
+	petEnabledPvE:SetPoint("LEFT", parent, "LEFT", columnWidth * 3, 0)
+	petEnabledPvE:SetPoint("TOP", petEnabledEverywhere, "TOP", 0, 0)
 
 	local glowChk = mini:Checkbox({
 		Parent = parent,
@@ -342,7 +342,7 @@ local function BuildPetInstance(panel, options)
 	local iconSize = mini:Slider({
 		Parent = parent,
 		Min = 10,
-		Max = 200,
+		Max = 100,
 		Width = columnWidth * 2 - horizontalSpacing,
 		Step = 1,
 		LabelText = L["Icon Size"],
@@ -350,7 +350,7 @@ local function BuildPetInstance(panel, options)
 			return options.Icons.Size
 		end,
 		SetValue = function(v)
-			local newValue = mini:ClampInt(v, 10, 200, 24)
+			local newValue = mini:ClampInt(v, 10, 100, 24)
 			if options.Icons.Size ~= newValue then
 				options.Icons.Size = newValue
 				config:Apply()
@@ -416,13 +416,13 @@ function M:Build(panel, default, raid)
 
 	local enabledEverywhere = mini:Checkbox({
 		Parent = panel,
-		LabelText = L["Everywhere"],
-		Tooltip = L["Enable this module everywhere."],
+		LabelText = L["World"],
+		Tooltip = L["Enable this module in the open world."],
 		GetValue = function()
-			return db.Modules.CCModule.Enabled.Always
+			return db.Modules.CCModule.Enabled.World
 		end,
 		SetValue = function(value)
-			db.Modules.CCModule.Enabled.Always = value
+			db.Modules.CCModule.Enabled.World = value
 			config:Apply()
 		end,
 	})
@@ -445,37 +445,37 @@ function M:Build(panel, default, raid)
 	enabledArena:SetPoint("LEFT", panel, "LEFT", columnWidth, 0)
 	enabledArena:SetPoint("TOP", enabledEverywhere, "TOP", 0, 0)
 
-	local enabledRaids = mini:Checkbox({
+	local enabledBattleGrounds = mini:Checkbox({
 		Parent = panel,
-		LabelText = L["BGS & Raids"],
-		Tooltip = L["Enable this module in BGs and raids."],
+		LabelText = L["Battlegrounds"],
+		Tooltip = L["Enable this module in battlegrounds."],
 		GetValue = function()
-			return db.Modules.CCModule.Enabled.Raids
+			return db.Modules.CCModule.Enabled.BattleGrounds
 		end,
 		SetValue = function(value)
-			db.Modules.CCModule.Enabled.Raids = value
+			db.Modules.CCModule.Enabled.BattleGrounds = value
 			config:Apply()
 		end,
 	})
 
-	enabledRaids:SetPoint("LEFT", panel, "LEFT", columnWidth * 2, 0)
-	enabledRaids:SetPoint("TOP", enabledEverywhere, "TOP", 0, 0)
+	enabledBattleGrounds:SetPoint("LEFT", panel, "LEFT", columnWidth * 2, 0)
+	enabledBattleGrounds:SetPoint("TOP", enabledEverywhere, "TOP", 0, 0)
 
-	local enabledDungeons = mini:Checkbox({
+	local enabledPvE = mini:Checkbox({
 		Parent = panel,
-		LabelText = L["Dungeons"],
-		Tooltip = L["Enable this module in dungeons and M+."],
+		LabelText = L["PvE"],
+		Tooltip = L["Enable this module in PvE."],
 		GetValue = function()
-			return db.Modules.CCModule.Enabled.Dungeons
+			return db.Modules.CCModule.Enabled.PvE
 		end,
 		SetValue = function(value)
-			db.Modules.CCModule.Enabled.Dungeons = value
+			db.Modules.CCModule.Enabled.PvE = value
 			config:Apply()
 		end,
 	})
 
-	enabledDungeons:SetPoint("LEFT", panel, "LEFT", columnWidth * 3, 0)
-	enabledDungeons:SetPoint("TOP", enabledEverywhere, "TOP", 0, 0)
+	enabledPvE:SetPoint("LEFT", panel, "LEFT", columnWidth * 3, 0)
+	enabledPvE:SetPoint("TOP", enabledEverywhere, "TOP", 0, 0)
 
 	local defaultDivider = mini:Divider({
 		Parent = panel,

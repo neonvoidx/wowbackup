@@ -106,7 +106,8 @@ local function ApplySquareStyle(button, viewerSettingName)
     local borderKey = "cooldownManager_squareIconsBorder_" .. viewerSettingName
     local borderThickness = ns.db.profile[borderKey]
     if borderThickness > 0 then
-        borderThickness = ns.Scaling:RoundToPixelSize(borderThickness, button)
+        local pixelSize = ns.Scaling:GetPixelSize(button)
+        borderThickness = pixelSize * borderThickness
     end
 
     button:SetSize(width, height)

@@ -5,7 +5,6 @@ if _G[parentAddonName] then
 else
 	error(parentAddonName .. " is not loaded")
 end
-local LSM = LibStub("LibSharedMedia-3.0")
 local ChatFrameUtil = _G.ChatFrameUtil
 
 local ChatIM = addon.ChatIM or {}
@@ -14,13 +13,16 @@ ChatIM.enabled = false
 ChatIM.whisperHooked = ChatIM.whisperHooked or false
 ChatIM.soundPath = "Interface\\AddOns\\" .. parentAddonName .. "\\Sounds\\ChatIM\\"
 
-function ChatIM:BuildSoundTable()
-	local result = {}
-
-	for name, path in pairs(LSM:HashTable("sound")) do
-		result[name] = path
+local function getSoundTable()
+	if addon.functions and addon.functions.GetLSMMediaHash then
+		local hash = addon.functions.GetLSMMediaHash("sound")
+		if type(hash) == "table" then return hash end
 	end
-	ChatIM.availableSounds = result
+	return {}
+end
+
+function ChatIM:BuildSoundTable()
+	ChatIM.availableSounds = getSoundTable()
 end
 
 local function shouldPlaySound(sender)

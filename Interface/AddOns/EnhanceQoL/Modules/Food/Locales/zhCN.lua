@@ -19,6 +19,7 @@ L["Enable Health Macro"] = "启用治疗宏"
 L["Flask Macro"] = "合剂宏"
 L["flaskMacroLimitReached"] = "合剂宏：已达到宏数量上限。请先腾出一个宏槽位。"
 L["flaskMacroPlaceOnBar"] = "%s - 请放到动作条上（脱离战斗后更新）"
+L["FlaskSharedWithClassReminder"] = "合剂偏好与职业增益提醒的合剂追踪共享。"
 L["FlaskUseRoleSetting"] = "使用职责设置"
 L["Health Macro"] = "治疗宏"
 L["healthCustomSpellsHint"] = [=[在下拉菜单中选择法术会将其移除（该字段按设计保持空白）。

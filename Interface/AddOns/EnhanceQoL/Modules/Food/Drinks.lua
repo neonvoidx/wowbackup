@@ -18,6 +18,35 @@ local newItem = addon.functions.newItem
 local _, race = UnitRace("player")
 local isEarthen = (race == "EarthenDwarf")
 
+addon.Drinks._wrapped = addon.Drinks._wrapped or {}
+addon.Drinks.filteredDrinks = addon.Drinks.filteredDrinks or {}
+addon.Drinks.mageFood = addon.Drinks.mageFood or {}
+
+local function wipeTable(tbl)
+	if not tbl then return end
+	if wipe then
+		wipe(tbl)
+	else
+		for k in pairs(tbl) do
+			tbl[k] = nil
+		end
+	end
+end
+
+local function wrapDrink(drink)
+	if not drink or not drink.id then return nil end
+	local key = (drink.isSpell and "s:" or "i:") .. tostring(drink.id)
+	local obj = addon.Drinks._wrapped[key]
+	if not obj then
+		obj = newItem(drink.id, drink.desc, drink.isSpell)
+		addon.Drinks._wrapped[key] = obj
+	else
+		obj.name = drink.desc
+		obj.isSpell = drink.isSpell == true
+	end
+	return obj
+end
+
 addon.Drinks.drinkList = { -- Special Food
 	{ key = "MarinatedMaggots", id = 226811, requiredLevel = 75, mana = 2700000, isBuffFood = false },
 	{ key = "ConjureRefreshment", id = 190336, requiredLevel = 5, mana = 0, isSpell = true }, -- set mana to zero, because we update it anyway
@@ -715,9 +744,13 @@ function addon.functions.updateAllowedDrinks()
 
 	local minManaValue = mana * ((db.minManaFoodValue or 50) / 100)
 
-	-- prepare new result tables
-	local filtered = {}
-	local mageFoodMap = {}
+	-- Reuse result tables to avoid allocations on refresh.
+	local filtered = addon.Drinks.filteredDrinks or {}
+	local mageFoodMap = addon.Drinks.mageFood or {}
+	wipeTable(filtered)
+	wipeTable(mageFoodMap)
+	addon.Drinks.filteredDrinks = filtered
+	addon.Drinks.mageFood = mageFoodMap
 
 	local preferMage = db.preferMageFood
 	-- Always ignore Well Fed buff food and Jewelcrafting gem foods
@@ -745,15 +778,15 @@ function addon.functions.updateAllowedDrinks()
 				and not (drink.earthenOnly and drink.isGem and ignoreGems)
 				and not (drink.isSpell and not IsSpellInSpellBook(drink.id))
 			then
-				if drink.isMageFood and preferMage then
-					tinsert(filtered, 1, newItem(drink.id, drink.desc, drink.isSpell))
+				local wrapped = wrapDrink(drink)
+				if not wrapped then
+					-- skip malformed entries
+				elseif drink.isMageFood and preferMage then
+					tinsert(filtered, 1, wrapped)
 				else
-					tinsert(filtered, newItem(drink.id, drink.desc, drink.isSpell))
+					tinsert(filtered, wrapped)
 				end
 			end
 		end
 	end
-
-	addon.Drinks.filteredDrinks = filtered
-	addon.Drinks.mageFood = mageFoodMap
 end

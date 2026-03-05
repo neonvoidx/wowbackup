@@ -2,15 +2,17 @@ local addonName, addon = ...
 
 addon.variables.NewVersionTableEQOL = {
 
-	-- Profiles -> EQoL Unit Frames
+	-- Root category id from Settings/MainCategory.lua
+	["EQOL_GAMEPLAY"] = true,
 	["EQOL_PROFILES"] = true,
-	["EQOL_UFProfiles"] = true,
-	["EQOL_ufProfileActive"] = true,
-	["EQOL_ufProfileGlobal"] = true,
 
-	-- Loot Toast -> Major Factions Renown Toast Anchor
-	["EQOL_GENERAL"] = true,
-	["EQOL_Loot"] = true,
-	["EQOL_enableMajorFactionsRenownToastAnchor"] = true,
-	["EQOL_majorFactionsRenownToastAnchor"] = true,
+	-- Expandable section id in Settings/ClassBuffReminder.lua
+	["EQOL_ProfilesAddOn"] = true,
+	["EQOL_DungeonsMythicPlus"] = true,
+
+	-- Feature setting keys
+	["EQOL_globalFontFace"] = true,
+	["EQOL_teleportsPreferredHearthstone"] = true,
+	["EQOL_Teleports"] = true,
+	["EQOL_mythicPlusBloodlustTrackerEnabled"] = true,
 }

@@ -1333,6 +1333,7 @@ do  --Currency Change Handler
         if quantityChange and quantityChange > 0 then
             local name, icon, quality = GetCurrencyDisplayInfo(currencyID);
             if name then
+                --print(name, currencyID, quantity, quantityChange, quantityGainSource);    --debug
                 local link = string.format("|Hcurrency:%d|h", currencyID);
                 local slotIndex = 0;
                 local data = CreateCurrencyDataFromCurrencyID(link, currencyID, slotIndex, icon, name, quantityChange, quality);

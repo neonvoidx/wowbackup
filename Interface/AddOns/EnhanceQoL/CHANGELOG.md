@@ -1,5 +1,202 @@
 # Changelog
 
+## [8.8.1] - 2026-03-04
+
+### 🐛 Fixed
+
+- Resource Bars (Druid): Fixed Cat/Bear shapeshift flicker in combat when combining `Show in` (form filters) with `Show when` visibility rules by merging form-based hides into the secure visibility driver.
+- Mythic+ (Teleports): Added missing Haranir racial teleport `Rootwalking` (`1238686`) to class/race teleports (only shown for Haranir/Harronir).
+- Shared Media (Performance): Fixed settings freezes with very large SharedMedia libraries by introducing a global, sorted media cache for `sound`/`font`/`border`/`statusbar`/`background` instead of rebuilding lists on each settings open.
+- Shared Media (Live Updates): New media registrations now invalidate the relevant cache via the `LibSharedMedia_Registered` callback, so newly added sounds/fonts/textures appear without repeated full rescans.
+- Settings Dropdowns: Reworked affected dropdown providers (including Mythic+ Bloodlust Tracker, Class Buff Reminder, UI/Aura/Food/Sound related settings) to consume cached values directly, preventing repeated per-open sorting and list reconstruction.
+- Group Frames (Healer Buff Placement): Sometimes stale buffs were shown
+
+---
+
+## [8.8.0] - 2026-03-03
+
+### ✨ Added
+
+- Group Frames (Healer Buff Placement): Added new Shaman buffs (`Ancestral Vigor`, `Earthliving Weapon`, `Hydrobubble`) and additional shared class-buff families in the rule editor.
+- Unit Frames (Aura Ignore): Added a new global aura-ignore editor to quickly hide selected buffs/debuffs in `Player`, `Target`, `Focus`, `Party`, and `Raid` frames.
+- Unit Frames (Aura Ignore): Added simple per-frame ignore categories for `Sated/Exhaustion Debuffs` and `Deserter Debuffs` (enabled by default).
+- Unit Frames (Aura Ignore): Added a spell-family ignore list (same families as the Healer Buff editor) with cleaner name-only labels.
+- Mythic+: Added a new Bloodlust lockout tracker for `Sated/Exhaustion` debuffs.
+- Mythic+ (Edit Mode): Bloodlust tracker is now fully movable and customizable (icon, text, border, sounds).
+- Shared Media: Added new sound `Wrestling Bell`.
+- Class Buff Reminder: Added `Grow from center` and expanded self-buff/enchant coverage for Paladin (`Rites`), Rogue (`Lethal + Non-lethal Poisons`), and Shaman (`Skyfury`, `Earthliving`, `Tidecaller's Guard`).
+- Class Buff Reminder (Evoker): Added `Source of Magic` tracking with healer-target-aware logic (only when at least one other healer target exists).
+- Class Buff Reminder: Added optional flask tracking (shared with Flask Macro preferences), only showing when a matching flask is available in bags.
+- Resource Bars (Rogue): Added charged combo point styling with Rogue-only options (toggle, custom fill/background colors, highlight strength, and alpha).
+
+### 🐛 Fixed
+
+- Group Frames (Healer Buff Placement): `NOT (active when missing)` now only considers buffs the current class/spec can provide.
+- Combat Text: `-Combat` now reliably uses the correct color after login and instance transitions.
+
+---
+
+## [8.7.1] - 2026-03-02
+
+### 🐛 Fixed
+
+- Resource Bars: Bugfix migration of settings
+
+---
+
+## [8.7.0] - 2026-03-02
+
+### ✨ Added
+
+- Mythic+ (World Map Dungeon Portals): Added `Abundant Beacon`.
+- Mythic+ (Hearthstone): Added `Preferred Hearthstone` dropdown in Teleport settings to pick a fixed owned Hearthstone instead of random.
+- Group Frames (Healer Buff Placement): Added new Indicator options for `Icon`/`Square`: `Cooldown Swipe`, `Draw Edge`, `Draw Bling`, `Hide Cooldown Text`, and `Hide Charge Text`.
+- Group Frames (Healer Buff Placement): Added `Cooldown Size` and `Charge Size` sliders (up to `64`) for `Icon`/`Square` indicators.
+- Group Frames (Healer Buff Placement): Added `Loop Live Preview` toggle in the editor.
+- Visibility & Fading (Frames): Added a `Minimap` visibility rule entry with rule options `Always out of combat` and `Always hidden`.
+- Unit Frames / Castbars: Added a separate `Backdrop texture` selector (SharedMedia statusbar) for `Health`, `Power`, and `Cast` backdrops, including Standalone Castbar and Group Frames.
+- Data Panels (Bag Space): Added `Current/Max` display mode and `Ignore components bag` option.
+- Fonts (Global): Added `Global font` under `Profiles -> AddOn` plus `Use global font config` at the top of supported font dropdowns; defaults now follow the global font setting with locale fallback and SharedMedia updates.
+
+### 🔄 Changed
+
+- Group Frames (Healer Buff Placement): Improved editor spacing/alignment for labels, checkboxes, and color pickers to avoid overlaps and improve readability.
+
+### 🐛 Fixed
+
+- Health Macro: Updated outdated post-squish heal values for older health potions so current Midnight potions are prioritized correctly.
+- Health Macro: Corrected `Algari Healing Potion` ranking values (`211878`, `211879`, `211880`) to match current in-game magnitudes.
+- Group Frames (Healer Buff Placement): Fixed Indicator Settings scroll behavior when switching from long to short indicator styles (for example `Tint`), so settings are no longer hidden off-screen.
+- Group Frames (Private Auras): Fixed private aura anchor drift when a power bar is shown by anchoring to the frame container consistently.
+- Square Minimap Stats (Location): In `subzone only` mode, location text now automatically falls back to zone text when no subzone name is available.
+- Experience Bar: Fixed a visible seam between normal XP fill and rested overlay fill, so both segments now blend continuously at the transition.
+
+---
+
+## [8.6.0] - 2026-03-01
+
+### ✨ Added
+
+- Aura (Experience Bar): Added optional progression text modes for `Left / Center / Right` slots: `Time this level`, `XP per hour`, `Leveling in`, and `Leveling in (+XP/h)`.
+
+### 🐛 Fixed
+
+- Action Bars (Button text): Fixed an interaction where enabling `Change keybind font` could make keybind labels visible again on bars selected in `Hide keybinds per bar`. Per-bar hide now always takes precedence.
+- Group Frames (Healer Buff Placement): Fixed Color Picker alpha/cancel behavior for indicator and per-spell square colors, so opacity now applies correctly and `Cancel` reliably restores the previous color.
+- Group Frames (Healer Buff Placement): Fixed numeric slider inputs (including `X Offset`/`Y Offset`) to stay in sync with sliders and apply precise clamped values consistently.
+- Resource Bars: Bugfix migration of settings
+- Tooltips (Unit / Modifier refresh): Fixed taint/secret-value errors while updating visible unit tooltips on modifier key changes.
+
+---
+
+## [8.5.1] - 2026-03-01
+
+### 🐛 Fixed
+
+- Mythic+ (World Map Dungeon Portals): Added missing data for `Personal Key to the Arcantina`.
+- Character/Inspect Frame (Enchants): Fixed a regression where missing-enchant warnings could appear on non-enchantable slots.
+
+---
+
+## [8.5.0] - 2026-03-01
+
+### ✨ Added
+
+- Castbars (Unit Frames + Standalone): Added `Cast name anchor` (`LEFT` / `CENTER` / `RIGHT`) so the spell name can be centered or right-aligned instead of always being left-aligned.
+- Character/Inspect Frame (Enchants): Added `Enchant display` mode selector with `Full`, `Badge (E)`, and `Warning only`.
+
+### 🐛 Fixed
+
+- Mouse (Crosshair): Fixed crosshair registration in Edit Mode while the feature is disabled.
+- Group Frames (Healer Buff Placement): Fixed delayed self Earth Shield tracking (`383648`).
+- Health Macro: Added support for `Potent Healing Potion` (`258138`).
+
+---
+
+## [8.4.0] - 2026-03-01
+
+### ✨ Added
+
+- Mouse (Crosshair): Added `Enable screen crosshair` in regular Settings (`General -> Mouse & Accessibility`) to globally toggle the feature.
+- Resource Bars (Mage Frost): Added support for `Icicles` as an aura-based resource bar.
+- Resource Bars (Edit Mode): Added per-bar `Show when` (same visibility rules as Cooldown Panels) directly under `Frame`, including migration from legacy mounted/combat hide settings.
+- Aura (Experience Bar): Added a fully customizable Experience Bar with Edit Mode integration (anchor target/point/offset, optional match-width, texture/background/border, and hide options for pet battles + Blizzard tracking bars).
+- Aura (Experience Bar): Added text customization with independent `Left / Center / Right` slots and selectable content (`Level`, `Current/Max`, `Percent`, rested variants), plus font, size, outline, and text color controls.
+- Aura (Experience Bar): Added separate fill colors for rested and non-rested XP states.
+- Mythic+ (World Map Dungeon Portals): Added Midnight spells `Teleport: Silvermoon City` (`1259190`), `Portal: Silvermoon City` (`1259194`), and `Personal Key to the Arcantina` (`1255801`).
+
+### 🔄 Changed
+
+- Castbars (Unit Frames + Standalone): Increased `Cast bar height` slider maximum from `40` to `200`.
+- Square Minimap Stats: Added configurable coordinate precision (`0-3` decimals) and automatic location text truncation (`...`) to fit minimap width.
+- Unit Frames (Focus/ToT/Pet): Extended `Show when` rules with player-scoped conditions such as `Mounted`, `Not mounted`, `Player is casting`, `When I have a target`, and `In party/raid` (same rule handling as Player/Target).
+
+### 🐛 Fixed
+
+- Action Bars (Button text): Fixed a regression where custom keybind text colors could reset to default white/red after action state updates (for example during combat/range checks or key presses).
+- Class Buff Reminder: Fix for 5man content showing missing buff
+
+---
+
+## [8.3.2] - 2026-02-28
+
+### 🐛 Fixed
+
+- Minimap: Fixed slight position drift when changing Minimap Cluster scale.
+
+---
+
+## [8.3.1] - 2026-02-28
+
+### 🐛 Fixed
+
+- Unit Frames (Class Resource): Fixed a regression where Class Resource settings used resource IDs from all classes in the selector/visibility options. Changes now correctly apply to the active class resource again, so moving and adjusting it (anchor/offset/scale/strata/frame level) works as expected.
+
+---
+
+## [8.3.0] - 2026-02-27
+
+### ✨ Added
+
+- Unit Frames (Health): Added `Use health percent gradient` with configurable curve type (`Cosine`, `Linear`, `Step`) and up to 5 custom gradient points (each with percent + color). The max-health color remains driven by class/custom/default health color.
+- Action Bars (Button text): Added color pickers for macro name, keybind, and charge/stack text when their font overrides are enabled.
+- Cooldown Panels (Edit Mode): Added a `Static text color` option for static entry text.
+- Cooldown Panels (Edit Mode): Added `Stance` entries under `Add more` with class submenus for `Druid`, `Rogue`, `Paladin`, and `Warrior`, including `Show when missing` + `Glow`.
+- Square Minimap Stats (Location): Added `Show zone` so zone and subzone can be toggled independently (`zone only`, `subzone only`, or both).
+
+### 🔄 Changed
+
+- Cooldown Panels (Edit Mode): Renamed `Add Slot` to `Add more`.
+
+### 🐛 Fixed
+
+- Character/Inspect Frame: Enchant text now clears correctly when swapping from an enchanted item to an unenchanted item.
+
+---
+
+## [8.2.0] - 2026-02-27
+
+### ✨ Added
+
+- Group Frames (Party/Raid): Added a new Buff filter dropdown in Edit Mode (`Buffs`) options: `Healer buffs` and `Helpful effects`.
+- Class Buff Reminder: Added a standalone reminder for class-provided group buffs with full Edit Mode support.
+
+### 🔄 Changed
+
+- Group Frames: Removed obsolete external raid-frame integration hooks.
+
+---
+
+## [8.1.2] - 2026-02-27
+
+### 🐛 Fixed
+
+- Edit Mode: EQoL now only stores frame positions there. All other settings remain fully in the active AddOn profile.
+- Profile stability: Switching Blizzard Edit Mode layouts no longer overwrites EQoL frame settings with old layout data.
+- Craft Shopper: Fixed cases where the custom 1:n recipe tracking control did not appear in Professions and the default "Track Recipe" checkbox stayed visible.
+
+---
+
 ## [8.1.1] - 2026-02-27
 
 ### 🐛 Fixed
@@ -44,7 +241,6 @@
 - Unit Frames (Profiles): Added optional spec mapping, so each specialization can auto-switch to a selected UF profile.
 - Unit Frames (Profiles): Added create/copy/delete actions on the Profiles page.
 - Unit Frames (Profiles): Added quick UF profile switching in the minimap right-click menu.
-- Group Frames (Party/Raid): Added optional integration with `HarreksAdvancedRaidFrames`.
 - Group Frames (Party/Raid): Added a new `Healer Buff Placement` editor to place healer spell indicators exactly where you want them on frames.
 - Group Frames (Party/Raid): You can now create custom indicators with different visual styles (Icon, Square, Bar, Border, Tint) and assign healer spells to them.
 - Group Frames (Party/Raid): Indicators can now also be used as reminders when important buffs are missing.

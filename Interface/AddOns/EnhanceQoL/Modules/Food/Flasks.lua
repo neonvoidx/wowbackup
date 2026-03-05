@@ -50,8 +50,8 @@ addon.Flasks.typeFlasks = addon.Flasks.typeFlasks
 	or {
 		haste = {
 			-- Midnight
-			{ key = "FlaskOfTheShatteredSun2", id = 241326, requiredLevel = 81, rank = 2, typeKey = "haste", label = STAT_HASTE_LABEL },
-			{ key = "FlaskOfTheShatteredSun1", id = 241327, requiredLevel = 81, rank = 1, typeKey = "haste", label = STAT_HASTE_LABEL },
+			{ key = "FlaskOfTheBloodKnights2", id = 241324, requiredLevel = 81, rank = 2, typeKey = "haste", label = STAT_HASTE_LABEL },
+			{ key = "FlaskOfTheBloodKnights1", id = 241325, requiredLevel = 81, rank = 1, typeKey = "haste", label = STAT_HASTE_LABEL },
 			-- TWW legacy
 			{ key = "FlaskOfTemperedSwiftness3", id = 212274, requiredLevel = 71, rank = 3, typeKey = "haste", label = STAT_HASTE_LABEL },
 			{ key = "FlaskOfTemperedSwiftness2", id = 212273, requiredLevel = 71, rank = 2, typeKey = "haste", label = STAT_HASTE_LABEL },
@@ -59,8 +59,8 @@ addon.Flasks.typeFlasks = addon.Flasks.typeFlasks
 		},
 		criticalStrike = {
 			-- Midnight
-			{ key = "FlaskOfTheBloodKnights2", id = 241324, requiredLevel = 81, rank = 2, typeKey = "criticalStrike", label = STAT_CRIT_LABEL },
-			{ key = "FlaskOfTheBloodKnights1", id = 241325, requiredLevel = 81, rank = 1, typeKey = "criticalStrike", label = STAT_CRIT_LABEL },
+			{ key = "FlaskOfTheShatteredSun2", id = 241326, requiredLevel = 81, rank = 2, typeKey = "criticalStrike", label = STAT_CRIT_LABEL },
+			{ key = "FlaskOfTheShatteredSun1", id = 241327, requiredLevel = 81, rank = 1, typeKey = "criticalStrike", label = STAT_CRIT_LABEL },
 			-- TWW legacy
 			{ key = "FlaskOfTemperedAggression3", id = 212271, requiredLevel = 71, rank = 3, typeKey = "criticalStrike", label = STAT_CRIT_LABEL },
 			{ key = "FlaskOfTemperedAggression2", id = 212270, requiredLevel = 71, rank = 2, typeKey = "criticalStrike", label = STAT_CRIT_LABEL },
@@ -96,8 +96,8 @@ addon.Flasks.fleetingTypeFlasks = addon.Flasks.fleetingTypeFlasks
 	or {
 		haste = {
 			-- Midnight
-			{ key = "FleetingFlaskOfTheShatteredSun2", id = 245929, requiredLevel = 81, rank = 2, typeKey = "haste" },
-			{ key = "FleetingFlaskOfTheShatteredSun1", id = 245928, requiredLevel = 81, rank = 1, typeKey = "haste" },
+			{ key = "FleetingFlaskOfTheBloodKnights2", id = 245931, requiredLevel = 81, rank = 2, typeKey = "haste" },
+			{ key = "FleetingFlaskOfTheBloodKnights1", id = 245930, requiredLevel = 81, rank = 1, typeKey = "haste" },
 			-- TWW legacy
 			{ key = "FleetingFlaskOfTemperedSwiftness3", id = 212731, requiredLevel = 71, rank = 3, typeKey = "haste" },
 			{ key = "FleetingFlaskOfTemperedSwiftness2", id = 212730, requiredLevel = 71, rank = 2, typeKey = "haste" },
@@ -105,8 +105,8 @@ addon.Flasks.fleetingTypeFlasks = addon.Flasks.fleetingTypeFlasks
 		},
 		criticalStrike = {
 			-- Midnight
-			{ key = "FleetingFlaskOfTheBloodKnights2", id = 245931, requiredLevel = 81, rank = 2, typeKey = "criticalStrike" },
-			{ key = "FleetingFlaskOfTheBloodKnights1", id = 245930, requiredLevel = 81, rank = 1, typeKey = "criticalStrike" },
+			{ key = "FleetingFlaskOfTheShatteredSun2", id = 245929, requiredLevel = 81, rank = 2, typeKey = "criticalStrike" },
+			{ key = "FleetingFlaskOfTheShatteredSun1", id = 245928, requiredLevel = 81, rank = 1, typeKey = "criticalStrike" },
 			-- TWW legacy
 			{ key = "FleetingFlaskOfTemperedAggression3", id = 212728, requiredLevel = 71, rank = 3, typeKey = "criticalStrike" },
 			{ key = "FleetingFlaskOfTemperedAggression2", id = 212727, requiredLevel = 71, rank = 2, typeKey = "criticalStrike" },
@@ -246,14 +246,74 @@ local function getClassInfoById(classId)
 	return nil, nil, nil
 end
 
+local function getDirectBagItemCount(itemId)
+	local targetId = tonumber(itemId)
+	if not targetId or targetId <= 0 then return 0 end
+
+	local count = 0
+	local maxBag = tonumber(NUM_TOTAL_EQUIPPED_BAG_SLOTS) or tonumber(NUM_BAG_SLOTS) or 4
+
+	if C_Container and C_Container.GetContainerNumSlots and C_Container.GetContainerItemInfo then
+		for bag = 0, maxBag do
+			local slotCount = C_Container.GetContainerNumSlots(bag) or 0
+			for slot = 1, slotCount do
+				local info = C_Container.GetContainerItemInfo(bag, slot)
+				if info and tonumber(info.itemID) == targetId then count = count + (tonumber(info.stackCount) or 1) end
+			end
+		end
+		return count
+	end
+
+	if GetContainerNumSlots and GetContainerItemID and GetContainerItemInfo then
+		for bag = 0, maxBag do
+			local slotCount = GetContainerNumSlots(bag) or 0
+			for slot = 1, slotCount do
+				local slotItemId = GetContainerItemID(bag, slot)
+				if tonumber(slotItemId) == targetId then
+					local _, stackCount = GetContainerItemInfo(bag, slot)
+					count = count + (tonumber(stackCount) or 1)
+				end
+			end
+		end
+	end
+
+	return count
+end
+
+local function getBestItemCount(itemId)
+	local targetId = tonumber(itemId)
+	if not targetId or targetId <= 0 then return 0, 0, 0 end
+
+	local countApi = 0
+	local countBag = getDirectBagItemCount(targetId)
+
+	if GetItemCount then
+		local direct = tonumber(GetItemCount(targetId, false, false)) or 0
+		local defaultArgs = tonumber(GetItemCount(targetId)) or 0
+		if direct > countApi then countApi = direct end
+		if defaultArgs > countApi then countApi = defaultArgs end
+	end
+
+	if C_Item and C_Item.GetItemCount then
+		local cNoBank = tonumber(C_Item.GetItemCount(targetId, false, false)) or 0
+		local cDefault = tonumber(C_Item.GetItemCount(targetId)) or 0
+		if cNoBank > countApi then countApi = cNoBank end
+		if cDefault > countApi then countApi = cDefault end
+	end
+
+	local best = countApi
+	if countBag > best then best = countBag end
+	return best, countApi, countBag
+end
+
 local function isEntryAvailable(entry, playerLevel)
 	if not entry or not entry.id then return false end
 	if (entry.requiredLevel or 1) > playerLevel then return false end
-	if C_Item and C_Item.IsUsableItem then
-		local usable = C_Item.IsUsableItem(entry.id)
-		if usable == false then return false end
-	end
-	return (C_Item.GetItemCount(entry.id, false, false) or 0) > 0
+
+	-- Do not gate candidate detection on C_Item.IsUsableItem().
+	-- Some flask items report unusable in states where they are still valid reminders.
+	local count = getBestItemCount(entry.id)
+	return count > 0
 end
 
 local function appendAvailable(list, playerLevel, out)
@@ -351,6 +411,35 @@ function addon.Flasks.functions.getRoleBucketForSpec(specID)
 	return nil
 end
 
+local function getEffectiveRoleBucketForSpec(specID)
+	local roleBucket = addon.Flasks.functions.getRoleBucketForSpec and addon.Flasks.functions.getRoleBucketForSpec(specID) or nil
+	roleBucket = normalizeRoleKey(roleBucket)
+	if roleBucket then return roleBucket end
+
+	roleBucket = addon.variables and getRoleBucketFromRoleToken(addon.variables.unitRole, specID) or nil
+	roleBucket = normalizeRoleKey(roleBucket)
+	if roleBucket then return roleBucket end
+
+	if UnitGroupRolesAssigned then
+		local assignedRole = UnitGroupRolesAssigned("player")
+		roleBucket = getRoleBucketFromRoleToken(assignedRole, specID)
+		roleBucket = normalizeRoleKey(roleBucket)
+		if roleBucket then return roleBucket end
+	end
+
+	if GetSpecializationRole and C_SpecializationInfo and C_SpecializationInfo.GetSpecialization then
+		local specIndex = C_SpecializationInfo.GetSpecialization()
+		if specIndex then
+			local specRole = GetSpecializationRole(specIndex)
+			roleBucket = getRoleBucketFromRoleToken(specRole, specID)
+			roleBucket = normalizeRoleKey(roleBucket)
+			if roleBucket then return roleBucket end
+		end
+	end
+
+	return nil
+end
+
 function addon.Flasks.functions.getTypeDisplayName(typeKey)
 	local entries = addon.Flasks and addon.Flasks.typeFlasks and addon.Flasks.typeFlasks[typeKey]
 	if type(entries) == "table" then
@@ -398,7 +487,7 @@ function addon.Flasks.functions.getAvailableCandidatesForSpec(specID)
 
 	if db.flaskPreferredBySpec and specID and db.flaskPreferredBySpec[specID] ~= nil then selectedPreference = db.flaskPreferredBySpec[specID] end
 	if selectedPreference == "useRole" then
-		selectedRoleKey = addon.Flasks.functions.getRoleBucketForSpec and addon.Flasks.functions.getRoleBucketForSpec(specID) or nil
+		selectedRoleKey = getEffectiveRoleBucketForSpec(specID)
 		local roleSelection = db.flaskPreferredByRole and selectedRoleKey and db.flaskPreferredByRole[selectedRoleKey] or nil
 		selectedType = normalizeTypeKey(roleSelection)
 	else
@@ -407,9 +496,15 @@ function addon.Flasks.functions.getAvailableCandidatesForSpec(specID)
 
 	if db.flaskPreferCauldrons then
 		-- "Prefer Cauldrons" maps to fleeting flasks in this implementation.
-		if selectedType ~= "none" then appendAvailable(addon.Flasks.fleetingTypeFlasks and addon.Flasks.fleetingTypeFlasks[selectedType], playerLevel, candidates) end
+		if selectedType ~= "none" then
+			local fleetingList = addon.Flasks.fleetingTypeFlasks and addon.Flasks.fleetingTypeFlasks[selectedType]
+			appendAvailable(fleetingList, playerLevel, candidates)
+		end
 	end
-	if selectedType ~= "none" then appendAvailable(addon.Flasks.typeFlasks[selectedType], playerLevel, candidates) end
+	if selectedType ~= "none" then
+		local normalList = addon.Flasks.typeFlasks[selectedType]
+		appendAvailable(normalList, playerLevel, candidates)
+	end
 
 	return candidates, selectedType, selectedRoleKey, selectedPreference
 end

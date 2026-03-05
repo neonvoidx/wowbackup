@@ -29,6 +29,10 @@ end
 local function refreshFlaskMacro()
 	if addon.Flasks and addon.Flasks.functions and addon.Flasks.functions.syncEventRegistration then addon.Flasks.functions.syncEventRegistration() end
 	if addon.Flasks and addon.Flasks.functions and addon.Flasks.functions.updateFlaskMacro then addon.Flasks.functions.updateFlaskMacro(false) end
+	if addon.ClassBuffReminder then
+		if addon.ClassBuffReminder.InvalidateFlaskCache then addon.ClassBuffReminder:InvalidateFlaskCache() end
+		if addon.ClassBuffReminder.RequestUpdate then addon.ClassBuffReminder:RequestUpdate(true) end
+	end
 end
 
 local function buildDrinkMacroSettings()
@@ -485,8 +489,9 @@ local function buildDrinkMacroSettings()
 	if addon.variables and addon.variables.unitClass == "WARLOCK" then addon.functions.SettingsCreateText(cDrink, L["healthMacroTipReset"], { parentSection = convenienceSection }) end
 
 	addon.functions.SettingsCreateHeadline(cDrink, L["Flask Macro"] or "Flask Macro", { parentSection = convenienceSection })
+	addon.functions.SettingsCreateText(cDrink, L["FlaskSharedWithClassReminder"] or "Flask preferences are shared with Class Buff Reminder flask tracking.", { parentSection = convenienceSection })
 
-	local flaskEnable = addon.functions.SettingsCreateCheckbox(cDrink, {
+	addon.functions.SettingsCreateCheckbox(cDrink, {
 		var = "flaskMacroEnabled",
 		text = L["Enable Flask Macro"] or "Enable Flask Macro",
 		desc = L["Enable Flask Macro Desc"] or "Creates/updates EnhanceQoLFlaskMacro and uses your role/spec selection with the highest usable rank from your bags.",
@@ -498,8 +503,6 @@ local function buildDrinkMacroSettings()
 		parentSection = convenienceSection,
 	})
 
-	local function flaskParentCheck() return isCheckboxEnabled("flaskMacroEnabled") end
-
 	addon.functions.SettingsCreateCheckbox(cDrink, {
 		var = "flaskPreferCauldrons",
 		text = L["Prefer Cauldrons"] or "Prefer cauldrons",
@@ -508,9 +511,6 @@ local function buildDrinkMacroSettings()
 			addon.db.flaskPreferCauldrons = value and true or false
 			refreshFlaskMacro()
 		end,
-		parentCheck = flaskParentCheck,
-		parent = true,
-		element = flaskEnable.element,
 		default = true,
 		type = Settings.VarType.Boolean,
 		parentSection = convenienceSection,
@@ -566,9 +566,6 @@ local function buildDrinkMacroSettings()
 		addon.functions.SettingsCreateDropdown(cDrink, {
 			var = string.format("flaskPreferredRole_%s", roleKey),
 			text = roleLabel,
-			parentCheck = flaskParentCheck,
-			parent = true,
-			element = flaskEnable.element,
 			listFunc = flaskTypeListFunc,
 			order = flaskTypeOrder,
 			default = "none",
@@ -589,9 +586,6 @@ local function buildDrinkMacroSettings()
 		})
 	end
 	addon.functions.SettingsCreateText(cDrink, "", {
-		parentCheck = flaskParentCheck,
-		parent = true,
-		element = flaskEnable.element,
 		parentSection = convenienceSection,
 	})
 
@@ -608,9 +602,6 @@ local function buildDrinkMacroSettings()
 		local specClassKey = tostring(specData.classID or specData.className or specData.classToken or "player")
 		if lastSpecClassKey ~= nil and specClassKey ~= lastSpecClassKey then
 			addon.functions.SettingsCreateText(cDrink, "", {
-				parentCheck = flaskParentCheck,
-				parent = true,
-				element = flaskEnable.element,
 				parentSection = convenienceSection,
 			})
 		end
@@ -618,9 +609,6 @@ local function buildDrinkMacroSettings()
 		addon.functions.SettingsCreateDropdown(cDrink, {
 			var = string.format("flaskPreferredSpec_%d", specID),
 			text = specName,
-			parentCheck = flaskParentCheck,
-			parent = true,
-			element = flaskEnable.element,
 			listFunc = flaskSpecTypeListFunc,
 			order = flaskSpecTypeOrder,
 			default = "useRole",
@@ -659,4 +647,22 @@ function addon.functions.initDrinkMacro()
 	if not (addon.SettingsLayout and addon.SettingsLayout.rootGAMEPLAY) then return end
 	buildDrinkMacroSettings()
 	addon.SettingsLayout.drinkMacroSettingsReady = true
+end
+
+function addon.functions.OpenFlaskMacroSettings()
+	if not (Settings and Settings.OpenToCategory) then return end
+	if InCombatLockdown and InCombatLockdown() then
+		if UIErrorsFrame and ERR_NOT_IN_COMBAT then UIErrorsFrame:AddMessage(ERR_NOT_IN_COMBAT, 1, 0, 0) end
+		return
+	end
+
+	if addon.functions and addon.functions.initDrinkMacro then addon.functions.initDrinkMacro() end
+
+	local gameplayCategory = addon.SettingsLayout and addon.SettingsLayout.rootGAMEPLAY
+	if not gameplayCategory then return end
+
+	local convenienceSection = addon.SettingsLayout and addon.SettingsLayout.gameplayConvenienceSection
+	if convenienceSection and convenienceSection.data then convenienceSection.data.expanded = true end
+
+	Settings.OpenToCategory(gameplayCategory:GetID(), L["Flask Macro"] or "Flask Macro")
 end

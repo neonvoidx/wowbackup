@@ -43,6 +43,9 @@ local function ImportProfile(str)
 	-- Run migrations to bring the profile up to the current version
 	local db = dbMigrator:GetAndUpgradeDb()
 
+	-- Run deferred migrations immediately — UIParent:GetScale() is correct at this point
+	dbMigrator:RunDeferredMigrations(db)
+
 	-- Suppress the what's new popup
 	db.WhatsNew = {}
 	db.NotifiedChanges = true
@@ -219,9 +222,9 @@ function M:Build(panel)
 
 	local glowTypeDropdown = mini:Dropdown({
 		Parent = panel,
-		Items = { L["Pixel Glow"], L["Autocast Shine"], L["Proc Glow"] },
+		Items = { "Pixel Glow", "Autocast Shine", "Proc Glow" },
 		GetValue = function()
-			return db.GlowType or L["Proc Glow"]
+			return db.GlowType or "Proc Glow"
 		end,
 		SetValue = function(value)
 			db.GlowType = value

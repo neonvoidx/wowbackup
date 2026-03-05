@@ -35,6 +35,13 @@ local MIN_WIDTH = 50
 local OFFSET_RANGE = 3000
 local defaultStrata = "LOW"
 local defaultLevel = (_G.PlayerFrame and _G.PlayerFrame.GetFrameLevel and _G.PlayerFrame:GetFrameLevel()) or 0
+local AuraResourceBars = addon.Aura and addon.Aura.ResourceBars
+local STAGGER_EXTRA_THRESHOLD_HIGH = (AuraResourceBars and AuraResourceBars.STAGGER_EXTRA_THRESHOLD_HIGH) or 200
+local STAGGER_EXTRA_THRESHOLD_EXTREME = (AuraResourceBars and AuraResourceBars.STAGGER_EXTRA_THRESHOLD_EXTREME) or 300
+local STAGGER_EXTRA_COLORS = (AuraResourceBars and AuraResourceBars.STAGGER_EXTRA_COLORS) or {
+	high = { r = 0.62, g = 0.2, b = 1.0, a = 1 },
+	extreme = { r = 1.0, g = 0.2, b = 0.8, a = 1 },
+}
 
 local strataOptions = {
 	{ value = "BACKGROUND", label = "BACKGROUND" },
@@ -221,7 +228,20 @@ local function defaultsFor(unit)
 	if UF.defaults then return UF.defaults[unit] or UF.defaults.player end
 	return {}
 end
-local function defaultFontPath() return (addon.variables and addon.variables.defaultFont) or (LSM and LSM:Fetch("font", LSM.DefaultMedia.font)) or STANDARD_TEXT_FONT end
+local function defaultFontPath()
+	if addon.functions and addon.functions.GetGlobalDefaultFontFace then return addon.functions.GetGlobalDefaultFontFace() end
+	return (addon.variables and addon.variables.defaultFont) or (LSM and LSM:Fetch("font", LSM.DefaultMedia.font)) or STANDARD_TEXT_FONT
+end
+
+local function globalFontConfigKey()
+	if addon.functions and addon.functions.GetGlobalFontConfigKey then return addon.functions.GetGlobalFontConfigKey() end
+	return "__EQOL_GLOBAL_FONT__"
+end
+
+local function globalFontConfigLabel()
+	if addon.functions and addon.functions.GetGlobalFontConfigLabel then return addon.functions.GetGlobalFontConfigLabel() end
+	return "Use global font config"
+end
 
 local pendingDebounce = {}
 local pendingTimers = {}
@@ -549,6 +569,20 @@ local frameIds = {
 	boss = "EQOL_UF_Boss",
 }
 
+local function getGlobalAuraIgnoreEditorContext(unit)
+	if unit == "player" or unit == "target" or unit == "focus" then return unit end
+	return nil
+end
+
+local function toggleGlobalAuraIgnoreEditor(unit)
+	local context = getGlobalAuraIgnoreEditorContext(unit)
+	if not context then return end
+	local editor = UF and UF.GlobalAuraIgnore
+	if not (editor and editor.ToggleEditor) then return end
+	editor:ToggleEditor(context)
+	if addon.EditModeLib and addon.EditModeLib.internal and addon.EditModeLib.internal.RequestRefreshSettings then addon.EditModeLib.internal:RequestRefreshSettings() end
+end
+
 local function refreshEditModeFrame(unit)
 	if not (EditMode and EditMode.RefreshFrame) then return end
 	local frameId = frameIds[unit]
@@ -783,6 +817,10 @@ local function refreshCopySelectionDialog(dialog)
 	if dialog.button1 and dialog.button1.SetEnabled then dialog.button1:SetEnabled(selectedCount > 0) end
 end
 
+local function isPlayerScopedFrameVisibilityRule(key) return key == "PLAYER_CASTING" or key == "PLAYER_MOUNTED" or key == "PLAYER_NOT_MOUNTED" or key == "PLAYER_HAS_TARGET" or key == "PLAYER_IN_GROUP" end
+
+local function supportsPlayerScopedFrameVisibility(unitToken) return unitToken == "player" or unitToken == "target" or unitToken == "targettarget" or unitToken == "focus" or unitToken == "pet" end
+
 local function getVisibilityRuleOptions(unit)
 	if not GetVisibilityRuleMetadata then return {} end
 	local options = {}
@@ -790,7 +828,11 @@ local function getVisibilityRuleOptions(unit)
 	for key, data in pairs(GetVisibilityRuleMetadata() or {}) do
 		local allowed = data.appliesTo and data.appliesTo.frame
 		if allowed and data.unitRequirement and data.unitRequirement ~= unitToken then
-			if not (key == "PLAYER_HAS_TARGET" and unitToken == "target") then allowed = false end
+			if data.unitRequirement == "player" and isPlayerScopedFrameVisibilityRule(key) and supportsPlayerScopedFrameVisibility(unitToken) then
+				allowed = true
+			else
+				allowed = false
+			end
 		end
 		if allowed then options[#options + 1] = { value = key, label = data.label or key, order = data.order or 999 } end
 	end
@@ -866,18 +908,27 @@ local function hideFrameReset(frame)
 	if frame and lib and lib.SetFrameSettingsResetVisible then lib:SetFrameSettingsResetVisible(frame, false) end
 end
 
+local function getCachedLSMMedia(mediaType)
+	local names = addon.functions and addon.functions.GetLSMMediaNames and addon.functions.GetLSMMediaNames(mediaType)
+	local hash = addon.functions and addon.functions.GetLSMMediaHash and addon.functions.GetLSMMediaHash(mediaType)
+	if type(names) == "table" and type(hash) == "table" then return names, hash end
+	return {}, {}
+end
+
 local function fontOptions()
 	local list = {}
 	local defaultPath = defaultFontPath()
-	if not LSM then return list end
-	local hash = LSM:HashTable("font") or {}
+	local globalOption = { value = globalFontConfigKey(), label = globalFontConfigLabel() }
+	local names, hash = getCachedLSMMedia("font")
 	local hasDefault = false
-	for name, path in pairs(hash) do
+	for i = 1, #names do
+		local name = names[i]
+		local path = hash[name]
 		if type(path) == "string" and path ~= "" then list[#list + 1] = { value = path, label = tostring(name) } end
 		if path == defaultPath then hasDefault = true end
 	end
 	if defaultPath and not hasDefault then list[#list + 1] = { value = defaultPath, label = DEFAULT } end
-	table.sort(list, function(a, b) return tostring(a.label) < tostring(b.label) end)
+	table.insert(list, 1, globalOption)
 	return list
 end
 
@@ -892,9 +943,10 @@ local function textureOptions()
 	end
 	add("DEFAULT", "Default (Blizzard)")
 	add("SOLID", "Solid")
-	if not LSM then return list end
-	local hash = LSM:HashTable("statusbar") or {}
-	for name, path in pairs(hash) do
+	local names, hash = getCachedLSMMedia("statusbar")
+	for i = 1, #names do
+		local name = names[i]
+		local path = hash[name]
 		if type(path) == "string" and path ~= "" then add(name, tostring(name)) end
 	end
 	table.sort(list, function(a, b) return tostring(a.label) < tostring(b.label) end)
@@ -911,9 +963,10 @@ local function borderOptions()
 		list[#list + 1] = { value = value, label = label }
 	end
 	add("DEFAULT", DEFAULT)
-	if not LSM then return list end
-	local hash = LSM:HashTable("border") or {}
-	for name, path in pairs(hash) do
+	local names, hash = getCachedLSMMedia("border")
+	for i = 1, #names do
+		local name = names[i]
+		local path = hash[name]
 		if type(path) == "string" and path ~= "" then add(name, tostring(name)) end
 	end
 	table.sort(list, function(a, b) return tostring(a.label) < tostring(b.label) end)
@@ -1305,6 +1358,11 @@ local function appendSecondaryPowerSettings(list, unit, def, textureOpts, addDiv
 	local function isSecondaryPowerEnabled() return getValue(unit, { "secondaryPower", "enabled" }, secondaryDef.enabled == true) ~= false end
 	local function isSecondaryPowerDetached() return getValue(unit, { "secondaryPower", "detached" }, secondaryDef.detached == true) == true end
 	local function isSecondaryPowerDetachedEnabled() return isSecondaryPowerEnabled() and isSecondaryPowerDetached() end
+	local function isSecondaryStaggerAllowed() return isSecondaryAllowedTypeSelected("STAGGER") end
+	local function isSecondaryStaggerSettingsShown() return isSecondaryPowerEnabled() and isSecondaryStaggerAllowed() end
+	local function isSecondaryStaggerExtendedEnabled()
+		return getValue(unit, { "secondaryPower", "staggerHighColors" }, secondaryDef.staggerHighColors == true) == true
+	end
 	local function isDetachedSecondaryWidthMatched() return getValue(unit, { "secondaryPower", "detachedMatchHealthWidth" }, secondaryDef.detachedMatchHealthWidth == true) == true end
 	local function isDetachedSecondaryBorderEnabled()
 		local border = getValue(unit, { "border" }, def.border or {})
@@ -1660,12 +1718,12 @@ local function appendSecondaryPowerSettings(list, unit, def, textureOpts, addDiv
 		local secondaryFont = checkboxDropdown(
 			L["Font"] or "Font",
 			fontOptions,
-			function() return getValue(unit, { "secondaryPower", "font" }, secondaryDef.font or defaultFontPath()) end,
+			function() return getValue(unit, { "secondaryPower", "font" }, secondaryDef.font or globalFontConfigKey()) end,
 			function(val)
 				setValue(unit, { "secondaryPower", "font" }, val)
 				refreshSelf()
 			end,
-			secondaryDef.font or defaultFontPath(),
+			secondaryDef.font or globalFontConfigKey(),
 			"secondaryPower"
 		)
 		secondaryFont.isEnabled = isSecondaryPowerEnabled
@@ -1865,6 +1923,140 @@ local function appendSecondaryPowerSettings(list, unit, def, textureOpts, addDiv
 		colorDefault = { r = 0, g = 0, b = 0, a = 0.6 },
 		isEnabled = isSecondaryPowerEnabled,
 	})
+
+	local staggerColorsSection = {
+		name = L["UFSecondaryStaggerColors"] or "Stagger colors",
+		kind = settingType.Collapsible,
+		id = "secondaryPowerStaggerColors",
+		parentId = "secondaryPower",
+		defaultCollapsed = true,
+	}
+	staggerColorsSection.isEnabled = isSecondaryStaggerSettingsShown
+	staggerColorsSection.isShown = isSecondaryStaggerSettingsShown
+	list[#list + 1] = staggerColorsSection
+
+	local staggerHighDefaultColor = secondaryDef.staggerHighColor or (STAGGER_EXTRA_COLORS and STAGGER_EXTRA_COLORS.high) or { 0.62, 0.2, 1, 1 }
+	local staggerExtremeDefaultColor = secondaryDef.staggerExtremeColor or (STAGGER_EXTRA_COLORS and STAGGER_EXTRA_COLORS.extreme) or { 1, 0.2, 0.8, 1 }
+
+	local staggerUseExtended = checkbox(
+		L["UFSecondaryStaggerUseExtended"] or "Use extended stagger colors",
+		isSecondaryStaggerExtendedEnabled,
+		function(val)
+			setValue(unit, { "secondaryPower", "staggerHighColors" }, val and true or false)
+			refresh()
+			refreshSettingsUI()
+		end,
+		secondaryDef.staggerHighColors == true,
+		"secondaryPowerStaggerColors",
+		isSecondaryStaggerSettingsShown
+	)
+	staggerUseExtended.isShown = isSecondaryStaggerSettingsShown
+	list[#list + 1] = staggerUseExtended
+
+	local staggerHighThreshold = slider(
+		L["UFSecondaryStaggerHighThreshold"] or "Stagger high threshold (%)",
+		100,
+		1000,
+		10,
+		function() return getValue(unit, { "secondaryPower", "staggerHighThreshold" }, secondaryDef.staggerHighThreshold or STAGGER_EXTRA_THRESHOLD_HIGH) end,
+		function(val)
+			local high = clampNumber(val, 100, 1000, STAGGER_EXTRA_THRESHOLD_HIGH)
+			setValue(unit, { "secondaryPower", "staggerHighThreshold" }, high)
+			local extreme = clampNumber(
+				getValue(unit, { "secondaryPower", "staggerExtremeThreshold" }, secondaryDef.staggerExtremeThreshold or STAGGER_EXTRA_THRESHOLD_EXTREME),
+				100,
+				1000,
+				STAGGER_EXTRA_THRESHOLD_EXTREME
+			)
+			if extreme < high then setValue(unit, { "secondaryPower", "staggerExtremeThreshold" }, high) end
+			refresh()
+		end,
+		secondaryDef.staggerHighThreshold or STAGGER_EXTRA_THRESHOLD_HIGH,
+		"secondaryPowerStaggerColors",
+		true,
+		function(value) return tostring(value) .. "%" end
+	)
+	staggerHighThreshold.isEnabled = function() return isSecondaryStaggerSettingsShown() and isSecondaryStaggerExtendedEnabled() end
+	staggerHighThreshold.isShown = isSecondaryStaggerSettingsShown
+	list[#list + 1] = staggerHighThreshold
+
+	local staggerHighColor = {
+		name = L["UFSecondaryStaggerHighColor"] or "Stagger high color",
+		kind = settingType.Color,
+		parentId = "secondaryPowerStaggerColors",
+		isEnabled = function() return isSecondaryStaggerSettingsShown() and isSecondaryStaggerExtendedEnabled() end,
+		isShown = isSecondaryStaggerSettingsShown,
+		get = function() return getValue(unit, { "secondaryPower", "staggerHighColor" }, staggerHighDefaultColor) end,
+		set = function(_, color)
+			setColor(unit, { "secondaryPower", "staggerHighColor" }, color.r, color.g, color.b, color.a)
+			refresh()
+		end,
+		colorGet = function() return getValue(unit, { "secondaryPower", "staggerHighColor" }, staggerHighDefaultColor) end,
+		colorSet = function(_, color)
+			setColor(unit, { "secondaryPower", "staggerHighColor" }, color.r, color.g, color.b, color.a)
+			refresh()
+		end,
+		colorDefault = {
+			r = select(1, toRGBA(staggerHighDefaultColor, { 0.62, 0.2, 1, 1 })),
+			g = select(2, toRGBA(staggerHighDefaultColor, { 0.62, 0.2, 1, 1 })),
+			b = select(3, toRGBA(staggerHighDefaultColor, { 0.62, 0.2, 1, 1 })),
+			a = select(4, toRGBA(staggerHighDefaultColor, { 0.62, 0.2, 1, 1 })),
+		},
+		hasOpacity = true,
+	}
+	list[#list + 1] = staggerHighColor
+
+	local staggerExtremeThreshold = slider(
+		L["UFSecondaryStaggerExtremeThreshold"] or "Stagger extreme threshold (%)",
+		100,
+		1000,
+		10,
+		function() return getValue(unit, { "secondaryPower", "staggerExtremeThreshold" }, secondaryDef.staggerExtremeThreshold or STAGGER_EXTRA_THRESHOLD_EXTREME) end,
+		function(val)
+			local high = clampNumber(
+				getValue(unit, { "secondaryPower", "staggerHighThreshold" }, secondaryDef.staggerHighThreshold or STAGGER_EXTRA_THRESHOLD_HIGH),
+				100,
+				1000,
+				STAGGER_EXTRA_THRESHOLD_HIGH
+			)
+			local extreme = clampNumber(val, high, 1000, STAGGER_EXTRA_THRESHOLD_EXTREME)
+			setValue(unit, { "secondaryPower", "staggerExtremeThreshold" }, extreme)
+			refresh()
+		end,
+		secondaryDef.staggerExtremeThreshold or STAGGER_EXTRA_THRESHOLD_EXTREME,
+		"secondaryPowerStaggerColors",
+		true,
+		function(value) return tostring(value) .. "%" end
+	)
+	staggerExtremeThreshold.isEnabled = function() return isSecondaryStaggerSettingsShown() and isSecondaryStaggerExtendedEnabled() end
+	staggerExtremeThreshold.isShown = isSecondaryStaggerSettingsShown
+	list[#list + 1] = staggerExtremeThreshold
+
+	local staggerExtremeColor = {
+		name = L["UFSecondaryStaggerExtremeColor"] or "Stagger extreme color",
+		kind = settingType.Color,
+		parentId = "secondaryPowerStaggerColors",
+		isEnabled = function() return isSecondaryStaggerSettingsShown() and isSecondaryStaggerExtendedEnabled() end,
+		isShown = isSecondaryStaggerSettingsShown,
+		get = function() return getValue(unit, { "secondaryPower", "staggerExtremeColor" }, staggerExtremeDefaultColor) end,
+		set = function(_, color)
+			setColor(unit, { "secondaryPower", "staggerExtremeColor" }, color.r, color.g, color.b, color.a)
+			refresh()
+		end,
+		colorGet = function() return getValue(unit, { "secondaryPower", "staggerExtremeColor" }, staggerExtremeDefaultColor) end,
+		colorSet = function(_, color)
+			setColor(unit, { "secondaryPower", "staggerExtremeColor" }, color.r, color.g, color.b, color.a)
+			refresh()
+		end,
+		colorDefault = {
+			r = select(1, toRGBA(staggerExtremeDefaultColor, { 1, 0.2, 0.8, 1 })),
+			g = select(2, toRGBA(staggerExtremeDefaultColor, { 1, 0.2, 0.8, 1 })),
+			b = select(3, toRGBA(staggerExtremeDefaultColor, { 1, 0.2, 0.8, 1 })),
+			a = select(4, toRGBA(staggerExtremeDefaultColor, { 1, 0.2, 0.8, 1 })),
+		},
+		hasOpacity = true,
+	}
+	list[#list + 1] = staggerExtremeColor
 end
 
 addon.Aura = addon.Aura or {}
@@ -2488,6 +2680,181 @@ local function buildUnitSettings(unit)
 		isEnabled = function() return getValue(unit, { "health", "useClassColor" }, healthDef.useClassColor == true) ~= true end,
 	})
 
+	local function isHealthPercentCurveEnabled() return getValue(unit, { "health", "usePercentColorCurve" }, healthDef.usePercentColorCurve == true) == true end
+
+	local MAX_HEALTH_GRADIENT_POINTS = 5
+	local healthGradientPointDefaults = {
+		{ percent = 0, color = healthDef.percentColorCurveLowColor or { 0.9, 0.0, 0.0, 1 } },
+		{ percent = healthDef.percentColorCurveMidpoint or 60, color = healthDef.percentColorCurveMidColor or { 0.9, 0.9, 0.0, 1 } },
+		{ percent = 80, color = { 0.6, 0.85, 0.0, 1 } },
+		{ percent = 40, color = { 0.95, 0.6, 0.0, 1 } },
+		{ percent = 20, color = { 0.95, 0.25, 0.0, 1 } },
+	}
+
+	local configuredGradientPoints = healthDef.percentColorCurvePoints
+	if type(configuredGradientPoints) == "table" then
+		for i = 1, MAX_HEALTH_GRADIENT_POINTS do
+			local src = configuredGradientPoints[i]
+			if type(src) == "table" then
+				local target = healthGradientPointDefaults[i] or {}
+				local pct = tonumber(src.percent or src[1])
+				if pct then target.percent = pct end
+				local col = src.color or src[2]
+				if col == nil and src.percent == nil and src[1] ~= nil and src[2] ~= nil and src[3] ~= nil then col = src end
+				if col then target.color = col end
+				healthGradientPointDefaults[i] = target
+			end
+		end
+	end
+
+	local function clampGradientPercent(value)
+		local pct = tonumber(value)
+		if pct == nil then return nil end
+		if pct < 0 then pct = 0 end
+		if pct > 99 then pct = 99 end
+		return pct
+	end
+
+	local function normalizeGradientPointColor(color, fallback)
+		local r, g, b, a = toRGBA(color, fallback)
+		return { r or 1, g or 1, b or 1, a or 1 }
+	end
+
+	local function getDefaultGradientPoint(index)
+		local fallback = healthGradientPointDefaults[index] or healthGradientPointDefaults[#healthGradientPointDefaults] or { percent = 0, color = { 0.9, 0.0, 0.0, 1 } }
+		local percent = clampGradientPercent(fallback.percent) or 0
+		local color = normalizeGradientPointColor(fallback.color, { 0.9, 0.0, 0.0, 1 })
+		return percent, color
+	end
+
+	local function countGradientPoints(points)
+		if type(points) ~= "table" then return 0 end
+		local count = 0
+		for i = 1, MAX_HEALTH_GRADIENT_POINTS do
+			if type(points[i]) == "table" then count = i end
+		end
+		return count
+	end
+
+	local function getHealthGradientPointCount()
+		local fallbackCount = tonumber(healthDef.percentColorCurvePointCount)
+		local configuredCount = countGradientPoints(healthDef.percentColorCurvePoints)
+		if (not fallbackCount or fallbackCount <= 0) and configuredCount > 0 then fallbackCount = configuredCount end
+		if not fallbackCount or fallbackCount <= 0 then fallbackCount = 2 end
+		local stored = tonumber(getValue(unit, { "health", "percentColorCurvePointCount" }, fallbackCount))
+		if stored == nil or stored <= 0 then stored = fallbackCount end
+		if stored > MAX_HEALTH_GRADIENT_POINTS then stored = MAX_HEALTH_GRADIENT_POINTS end
+		return floor(stored + 0.5)
+	end
+
+	local function ensureHealthGradientPoint(index)
+		local defaultPercent, defaultColor = getDefaultGradientPoint(index)
+		if getValue(unit, { "health", "percentColorCurvePoints", index, "percent" }) == nil then setValue(unit, { "health", "percentColorCurvePoints", index, "percent" }, defaultPercent) end
+		if getValue(unit, { "health", "percentColorCurvePoints", index, "color" }) == nil then setValue(unit, { "health", "percentColorCurvePoints", index, "color" }, defaultColor) end
+	end
+
+	list[#list + 1] = checkbox(L["UFHealthPercentGradient"] or "Use health percent gradient", isHealthPercentCurveEnabled, function(val)
+		local enabled = val and true or false
+		setValue(unit, { "health", "usePercentColorCurve" }, enabled)
+		if enabled then
+			if getValue(unit, { "health", "percentColorCurveType" }) == nil then setValue(unit, { "health", "percentColorCurveType" }, healthDef.percentColorCurveType or "COSINE") end
+			local count = getHealthGradientPointCount()
+			setValue(unit, { "health", "percentColorCurvePointCount" }, count)
+			for i = 1, count do
+				ensureHealthGradientPoint(i)
+			end
+		end
+		refreshSelf()
+		refreshSettingsUI()
+	end, healthDef.usePercentColorCurve == true, "health")
+
+	local healthCurveTypeOptions = {
+		{ value = "COSINE", label = L["UFCurveTypeCosine"] or "Cosine" },
+		{ value = "LINEAR", label = L["UFCurveTypeLinear"] or "Linear" },
+		{ value = "STEP", label = L["UFCurveTypeStep"] or "Step" },
+	}
+	local healthCurveType = radioDropdown(
+		L["UFHealthGradientCurveType"] or "Gradient curve type",
+		healthCurveTypeOptions,
+		function() return tostring(getValue(unit, { "health", "percentColorCurveType" }, healthDef.percentColorCurveType or "COSINE")):upper() end,
+		function(val)
+			setValue(unit, { "health", "percentColorCurveType" }, (val or "COSINE"):upper())
+			refreshSelf()
+		end,
+		healthDef.percentColorCurveType or "COSINE",
+		"health"
+	)
+	healthCurveType.isEnabled = isHealthPercentCurveEnabled
+	list[#list + 1] = healthCurveType
+
+	local healthCurvePointCountOptions = {
+		{ value = 1, label = "1" },
+		{ value = 2, label = "2" },
+		{ value = 3, label = "3" },
+		{ value = 4, label = "4" },
+		{ value = 5, label = "5" },
+	}
+	local healthCurvePointCount = radioDropdown(L["UFHealthGradientPointCount"] or "Gradient points", healthCurvePointCountOptions, function() return getHealthGradientPointCount() end, function(val)
+		local count = floor(tonumber(val) or 2)
+		if count < 1 then count = 1 end
+		if count > MAX_HEALTH_GRADIENT_POINTS then count = MAX_HEALTH_GRADIENT_POINTS end
+		setValue(unit, { "health", "percentColorCurvePointCount" }, count)
+		for i = 1, count do
+			ensureHealthGradientPoint(i)
+		end
+		refreshSelf()
+		refreshSettingsUI()
+	end, getHealthGradientPointCount(), "health")
+	healthCurvePointCount.isEnabled = isHealthPercentCurveEnabled
+	list[#list + 1] = healthCurvePointCount
+
+	for i = 1, MAX_HEALTH_GRADIENT_POINTS do
+		local pointColorName = string.format(L["UFHealthGradientPointColor"] or "Point %d color", i)
+		local pointPercentName = string.format(L["UFHealthGradientPointPercent"] or "Point %d percent", i)
+
+		local pointPercent = slider(pointPercentName, 0, 99, 1, function()
+			local defaultPercent = getDefaultGradientPoint(i)
+			local value = clampGradientPercent(getValue(unit, { "health", "percentColorCurvePoints", i, "percent" }, defaultPercent))
+			if value == nil then value = defaultPercent end
+			return value
+		end, function(val)
+			local pct = clampGradientPercent(val)
+			if pct == nil then pct = getDefaultGradientPoint(i) end
+			setValue(unit, { "health", "percentColorCurvePoints", i, "percent" }, pct)
+			refreshSelf()
+		end, getDefaultGradientPoint(i), "health", true, function(v) return tostring(v) .. "%" end)
+		pointPercent.isEnabled = isHealthPercentCurveEnabled
+		pointPercent.isShown = function() return isHealthPercentCurveEnabled() and i <= getHealthGradientPointCount() end
+		list[#list + 1] = pointPercent
+
+		local _, defaultPointColor = getDefaultGradientPoint(i)
+		local pointColor = {
+			name = pointColorName,
+			kind = settingType.Color,
+			parentId = "health",
+			isEnabled = isHealthPercentCurveEnabled,
+			isShown = function() return isHealthPercentCurveEnabled() and i <= getHealthGradientPointCount() end,
+			get = function() return getValue(unit, { "health", "percentColorCurvePoints", i, "color" }, defaultPointColor) end,
+			set = function(_, color)
+				setColor(unit, { "health", "percentColorCurvePoints", i, "color" }, color.r, color.g, color.b, color.a)
+				refreshSelf()
+			end,
+			colorGet = function() return getValue(unit, { "health", "percentColorCurvePoints", i, "color" }, defaultPointColor) end,
+			colorSet = function(_, color)
+				setColor(unit, { "health", "percentColorCurvePoints", i, "color" }, color.r, color.g, color.b, color.a)
+				refreshSelf()
+			end,
+			colorDefault = {
+				r = defaultPointColor[1] or 1,
+				g = defaultPointColor[2] or 1,
+				b = defaultPointColor[3] or 1,
+				a = defaultPointColor[4] or 1,
+			},
+			hasOpacity = true,
+		}
+		list[#list + 1] = pointColor
+	end
+
 	local showTapDeniedColor = unit == "target" or unit == "targettarget" or unit == "focus" or isBoss
 	if showTapDeniedColor then
 		local tapDef = healthDef.tapDeniedColor or { 0.5, 0.5, 0.5, 1 }
@@ -2624,10 +2991,10 @@ local function buildUnitSettings(unit)
 	end, healthDef.fontSize or 14, "health", true)
 
 	if #fontOptions() > 0 then
-		list[#list + 1] = checkboxDropdown(L["Font"] or "Font", fontOptions, function() return getValue(unit, { "health", "font" }, healthDef.font or defaultFontPath()) end, function(val)
+		list[#list + 1] = checkboxDropdown(L["Font"] or "Font", fontOptions, function() return getValue(unit, { "health", "font" }, healthDef.font or globalFontConfigKey()) end, function(val)
 			setValue(unit, { "health", "font" }, val)
 			refresh()
-		end, healthDef.font or defaultFontPath(), "health")
+		end, healthDef.font or globalFontConfigKey(), "health")
 	end
 
 	list[#list + 1] = checkboxDropdown(
@@ -2808,6 +3175,21 @@ local function buildUnitSettings(unit)
 			return useBackdropClassColor ~= true
 		end,
 	})
+	list[#list + 1] = checkboxDropdown(
+		L["Backdrop texture"] or "Backdrop texture",
+		textureOpts,
+		function() return getValue(unit, { "health", "backdrop", "texture" }, (healthDef.backdrop and healthDef.backdrop.texture) or "DEFAULT") end,
+		function(val)
+			setValue(unit, { "health", "backdrop", "texture" }, val or "DEFAULT")
+			refresh()
+		end,
+		(healthDef.backdrop and healthDef.backdrop.texture) or "DEFAULT",
+		"health"
+	)
+	list[#list].isEnabled = function()
+		local isBackdropEnabled = getValue(unit, { "health", "backdrop", "enabled" }, (healthDef.backdrop and healthDef.backdrop.enabled) ~= false) ~= false
+		return isBackdropEnabled
+	end
 	list[#list + 1] = checkbox(
 		L["UFHealthBackdropClampToFill"] or "Clamp backdrop to missing health",
 		function()
@@ -3383,10 +3765,10 @@ local function buildUnitSettings(unit)
 	list[#list + 1] = powerFontSize
 
 	if #fontOptions() > 0 then
-		local powerFont = checkboxDropdown(L["Font"] or "Font", fontOptions, function() return getValue(unit, { "power", "font" }, powerDef.font or defaultFontPath()) end, function(val)
+		local powerFont = checkboxDropdown(L["Font"] or "Font", fontOptions, function() return getValue(unit, { "power", "font" }, powerDef.font or globalFontConfigKey()) end, function(val)
 			setValue(unit, { "power", "font" }, val)
 			refreshSelf()
-		end, powerDef.font or defaultFontPath(), "power")
+		end, powerDef.font or globalFontConfigKey(), "power")
 		powerFont.isEnabled = isPowerEnabled
 		list[#list + 1] = powerFont
 	end
@@ -3567,6 +3949,18 @@ local function buildUnitSettings(unit)
 		colorDefault = { r = 0, g = 0, b = 0, a = 0.6 },
 		isEnabled = isPowerEnabled,
 	})
+	list[#list + 1] = checkboxDropdown(
+		L["Backdrop texture"] or "Backdrop texture",
+		textureOpts,
+		function() return getValue(unit, { "power", "backdrop", "texture" }, (powerDef.backdrop and powerDef.backdrop.texture) or "DEFAULT") end,
+		function(val)
+			setValue(unit, { "power", "backdrop", "texture" }, val or "DEFAULT")
+			refresh()
+		end,
+		(powerDef.backdrop and powerDef.backdrop.texture) or "DEFAULT",
+		"power"
+	)
+	list[#list].isEnabled = function() return isPowerEnabled() and getValue(unit, { "power", "backdrop", "enabled" }, (powerDef.backdrop and powerDef.backdrop.enabled) ~= false) ~= false end
 
 	if addon.Aura and addon.Aura.AppendUFSecondaryPowerSettings then addon.Aura.AppendUFSecondaryPowerSettings(list, unit, def, textureOpts, addDivider, refresh, refreshSelf) end
 
@@ -3680,7 +4074,8 @@ local function buildUnitSettings(unit)
 		local function getClassResourceOptions()
 			local util = UF and UF.ClassResourceUtil
 			if util and util.getClassResourceOptions then
-				local options = util.getClassResourceOptions("ALL")
+				local classToken = addon.variables and addon.variables.unitClass
+				local options = util.getClassResourceOptions(classToken)
 				if type(options) == "table" then return options end
 			end
 			return {}
@@ -4089,7 +4484,7 @@ local function buildUnitSettings(unit)
 		castWidth.isEnabled = isCastEnabled
 		list[#list + 1] = castWidth
 
-		local castHeight = slider(L["Cast bar height"] or "Cast bar height", 6, 40, 1, function() return getValue(unit, { "cast", "height" }, castDef.height or 16) end, function(val)
+		local castHeight = slider(L["Cast bar height"] or "Cast bar height", 6, 200, 1, function() return getValue(unit, { "cast", "height" }, castDef.height or 16) end, function(val)
 			setValue(unit, { "cast", "height" }, val or castDef.height or 16)
 			refresh()
 		end, castDef.height or 16, "cast", true)
@@ -4219,6 +4614,21 @@ local function buildUnitSettings(unit)
 			)
 		end
 
+		local castNameAnchor = radioDropdown(L["UFCastNameAnchor"] or "Cast name anchor", anchorOptions, function()
+			local fallback = castDef.nameAnchor or "LEFT"
+			if fallback ~= "LEFT" and fallback ~= "CENTER" and fallback ~= "RIGHT" then fallback = "LEFT" end
+			local value = getValue(unit, { "cast", "nameAnchor" }, fallback)
+			if value ~= "LEFT" and value ~= "CENTER" and value ~= "RIGHT" then return fallback end
+			return value
+		end, function(val)
+			local value = val
+			if value ~= "LEFT" and value ~= "CENTER" and value ~= "RIGHT" then value = "LEFT" end
+			setValue(unit, { "cast", "nameAnchor" }, value)
+			refresh()
+		end, castDef.nameAnchor or "LEFT", "cast")
+		castNameAnchor.isEnabled = isCastNameEnabled
+		list[#list + 1] = castNameAnchor
+
 		local castNameX = slider(
 			L["Name X Offset"] or "Name X Offset",
 			-OFFSET_RANGE,
@@ -4253,14 +4663,14 @@ local function buildUnitSettings(unit)
 		castNameY.isEnabled = isCastNameEnabled
 		list[#list + 1] = castNameY
 
-		local function getCastFont() return getValue(unit, { "cast", "font" }, castDef.font or "") end
+		local function getCastFont() return getValue(unit, { "cast", "font" }, castDef.font or globalFontConfigKey()) end
 
 		local castNameFont = {
 			name = L["Font"] or "Font",
 			kind = settingType.DropdownColor,
 			height = 180,
 			parentId = "cast",
-			default = castDef.font or "",
+			default = castDef.font or globalFontConfigKey(),
 			generator = function(_, root)
 				local opts = fontOptions()
 				if type(opts) ~= "table" then return end
@@ -4429,6 +4839,18 @@ local function buildUnitSettings(unit)
 		})
 		castBackdrop.isEnabled = isCastEnabled
 		list[#list + 1] = castBackdrop
+		list[#list + 1] = checkboxDropdown(
+			L["Backdrop texture"] or "Backdrop texture",
+			textureOpts,
+			function() return getValue(unit, { "cast", "backdrop", "texture" }, (castDef.backdrop and castDef.backdrop.texture) or "DEFAULT") end,
+			function(val)
+				setValue(unit, { "cast", "backdrop", "texture" }, val or "DEFAULT")
+				refresh()
+			end,
+			(castDef.backdrop and castDef.backdrop.texture) or "DEFAULT",
+			"cast"
+		)
+		list[#list].isEnabled = function() return isCastEnabled() and getValue(unit, { "cast", "backdrop", "enabled" }, (castDef.backdrop and castDef.backdrop.enabled) ~= false) ~= false end
 
 		local function isCastBorderEnabled() return getValue(unit, { "cast", "border", "enabled" }, (castDef.border and castDef.border.enabled) == true) == true end
 
@@ -4538,9 +4960,7 @@ local function buildUnitSettings(unit)
 		end, castDef.useClassColor == true, "cast", isCastEnabled)
 
 		if unit == "player" then
-			local function isCastGradientEnabled()
-				return isCastEnabled() and not isCastClassColorEnabled() and getValue(unit, { "cast", "useGradient" }, castDef.useGradient == true) == true
-			end
+			local function isCastGradientEnabled() return isCastEnabled() and not isCastClassColorEnabled() and getValue(unit, { "cast", "useGradient" }, castDef.useGradient == true) == true end
 			list[#list + 1] = checkbox(L["Use gradient"] or "Use gradient", isCastGradientEnabled, function(val)
 				local useGradient = val and true or false
 				setValue(unit, { "cast", "useGradient" }, useGradient)
@@ -5042,10 +5462,10 @@ local function buildUnitSettings(unit)
 	end
 
 	if #fontOptions() > 0 then
-		local statusFont = checkboxDropdown(L["Font"] or "Font", fontOptions, function() return getValue(unit, { "status", "font" }, statusDef.font or defaultFontPath()) end, function(val)
+		local statusFont = checkboxDropdown(L["Font"] or "Font", fontOptions, function() return getValue(unit, { "status", "font" }, statusDef.font or globalFontConfigKey()) end, function(val)
 			setValue(unit, { "status", "font" }, val)
 			refreshSelf()
-		end, statusDef.font or defaultFontPath(), "status")
+		end, statusDef.font or globalFontConfigKey(), "status")
 		statusFont.isEnabled = isStatusTextEnabled
 		list[#list + 1] = statusFont
 	end
@@ -5297,12 +5717,12 @@ local function buildUnitSettings(unit)
 		local unitStatusFontSetting = checkboxDropdown(
 			L["Font"] or "Font",
 			fontOptions,
-			function() return getValue(unit, { "status", "unitStatus", "font" }, usDef.font or statusDef.font or defaultFontPath()) end,
+			function() return getValue(unit, { "status", "unitStatus", "font" }, usDef.font or statusDef.font or globalFontConfigKey()) end,
 			function(val)
 				setValue(unit, { "status", "unitStatus", "font" }, val)
 				refreshSelf()
 			end,
-			usDef.font or statusDef.font or defaultFontPath(),
+			usDef.font or statusDef.font or globalFontConfigKey(),
 			"unitStatus"
 		)
 		unitStatusFontSetting.isEnabled = isUnitStatusEnabled
@@ -5398,12 +5818,12 @@ local function buildUnitSettings(unit)
 			local groupFontSetting = checkboxDropdown(
 				L["UFUnitStatusGroupFont"] or "Group number font",
 				fontOptions,
-				function() return getValue(unit, { "status", "unitStatus", "groupFont" }, usDef.groupFont or usDef.font or statusDef.font or defaultFontPath()) end,
+				function() return getValue(unit, { "status", "unitStatus", "groupFont" }, usDef.groupFont or usDef.font or statusDef.font or globalFontConfigKey()) end,
 				function(val)
 					setValue(unit, { "status", "unitStatus", "groupFont" }, val)
 					refreshSelf()
 				end,
-				usDef.groupFont or usDef.font or statusDef.font or defaultFontPath(),
+				usDef.groupFont or usDef.font or statusDef.font or globalFontConfigKey(),
 				"unitStatus"
 			)
 			groupFontSetting.isEnabled = isGroupEnabled
@@ -5675,12 +6095,12 @@ local function buildUnitSettings(unit)
 		local combatFontSetting = checkboxDropdown(
 			L["UFCombatFeedbackFont"] or "Combat feedback font",
 			fontOptions,
-			function() return getValue(unit, { "combatFeedback", "font" }, combatDef.font or defaultFontPath()) end,
+			function() return getValue(unit, { "combatFeedback", "font" }, combatDef.font or globalFontConfigKey()) end,
 			function(val)
 				setValue(unit, { "combatFeedback", "font" }, val)
 				refreshSelf()
 			end,
-			combatDef.font or defaultFontPath(),
+			combatDef.font or globalFontConfigKey(),
 			"combatFeedback"
 		)
 		combatFontSetting.isEnabled = isCombatFeedbackEnabled
@@ -6633,7 +7053,7 @@ end
 
 local function buildStandaloneCastbarSettings()
 	if not (CastbarSettings and CastbarSettings.BuildStandaloneCastbarSettings) then return {} end
-	return CastbarSettings.BuildStandaloneCastbarSettings({
+	local list = CastbarSettings.BuildStandaloneCastbarSettings({
 		L = L,
 		settingType = settingType,
 		getCastbarModule = getCastbarModule,
@@ -6651,6 +7071,63 @@ local function buildStandaloneCastbarSettings()
 		checkboxDropdown = checkboxDropdown,
 		checkboxColor = checkboxColor,
 	})
+	if type(list) ~= "table" then return {} end
+
+	local function normalizeCastNameAnchor(value, fallback)
+		local anchor = type(value) == "string" and string.upper(value) or nil
+		local fallbackAnchor = type(fallback) == "string" and string.upper(fallback) or "LEFT"
+		if fallbackAnchor ~= "LEFT" and fallbackAnchor ~= "CENTER" and fallbackAnchor ~= "RIGHT" then fallbackAnchor = "LEFT" end
+		if anchor ~= "LEFT" and anchor ~= "CENTER" and anchor ~= "RIGHT" then return fallbackAnchor end
+		return anchor
+	end
+
+	local castCfg, castDef
+	local castbarModule = getCastbarModule()
+	if castbarModule and castbarModule.GetConfig then
+		castCfg, castDef = castbarModule.GetConfig()
+	end
+	if type(castCfg) ~= "table" then
+		addon.db = addon.db or {}
+		addon.db.castbar = type(addon.db.castbar) == "table" and addon.db.castbar or {}
+		castCfg = addon.db.castbar
+	end
+	if type(castDef) ~= "table" and castbarModule and castbarModule.GetDefaults then castDef = castbarModule.GetDefaults() end
+	if type(castDef) ~= "table" then castDef = {} end
+
+	local function refreshCastbar()
+		local module = getCastbarModule()
+		if module and module.Refresh then module.Refresh() end
+	end
+	local function isCastNameEnabled()
+		local showName = castCfg.showName
+		if showName == nil then showName = castDef.showName ~= false end
+		return showName ~= false
+	end
+
+	local castNameAnchorSetting = radioDropdown(
+		L["UFCastNameAnchor"] or "Cast name anchor",
+		anchorOptions,
+		function() return normalizeCastNameAnchor(castCfg.nameAnchor, castDef.nameAnchor or "LEFT") end,
+		function(val)
+			castCfg.nameAnchor = normalizeCastNameAnchor(val, castDef.nameAnchor or "LEFT")
+			refreshCastbar()
+		end,
+		normalizeCastNameAnchor(castDef.nameAnchor, "LEFT"),
+		"castSpellName"
+	)
+	castNameAnchorSetting.isEnabled = isCastNameEnabled
+
+	local insertIndex = #list + 1
+	local targetName = L["Name X Offset"] or "Name X Offset"
+	for i = 1, #list do
+		local entry = list[i]
+		if type(entry) == "table" and entry.parentId == "castSpellName" and entry.name == targetName then
+			insertIndex = i
+			break
+		end
+	end
+	table.insert(list, insertIndex, castNameAnchorSetting)
+	return list
 end
 
 local standaloneCastbarSettingsRegistered = false
@@ -6762,6 +7239,15 @@ local function registerUnitFrame(unit, info)
 		collapseExclusive = true,
 		showReset = false,
 	})
+	local editorContext = getGlobalAuraIgnoreEditorContext(unit)
+	if editorContext and EditMode and EditMode.RegisterButtons then
+		EditMode:RegisterButtons(info.frameId, {
+			{
+				text = L["UFGlobalAuraIgnoreEditModeButton"] or L["UFGroupGlobalAuraIgnoreEditModeButton"] or "Edit aura ignore",
+				click = function() toggleGlobalAuraIgnoreEditor(editorContext) end,
+			},
+		})
+	end
 	registeredUnitFrames[unit] = frame
 	applyFrameSettingsMaxHeight(frame)
 	hideFrameReset(frame)

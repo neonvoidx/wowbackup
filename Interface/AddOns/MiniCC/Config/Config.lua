@@ -25,6 +25,12 @@ M.SoundFiles = {
 	"WhooshSwing.ogg",
 }
 
+local locale = GetLocale()
+
+if locale == "zhCN" or locale == "zhTW" then
+	table.insert(M.SoundFiles, "夏一可.ogg")
+end
+
 function M:Apply()
 	if InCombatLockdown() then
 		mini:Notify(L["Can't apply settings during combat."])

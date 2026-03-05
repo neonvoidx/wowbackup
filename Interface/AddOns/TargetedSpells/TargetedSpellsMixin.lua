@@ -58,10 +58,20 @@ function TargetedSpellsMixin:SetInterrupted(name, color)
 		return
 	end
 
-	self.InterruptSource:SetText(name)
+	local renderInterruptSourceName = false
 
-	if color ~= nil then
-		self.InterruptSource:SetTextColor(color.r, color.g, color.b)
+	if self.kind == Private.Enum.FrameKind.Self then
+		renderInterruptSourceName = TargetedSpellsSaved.Settings.Self.RenderInterruptSourceName
+	else
+		renderInterruptSourceName = TargetedSpellsSaved.Settings.Party.RenderInterruptSourceName
+	end
+
+	if renderInterruptSourceName then
+		self.InterruptSource:SetText(name)
+
+		if color ~= nil then
+			self.InterruptSource:SetTextColor(color.r, color.g, color.b)
+		end
 	end
 
 	self.InterruptSource:Show()
@@ -431,17 +441,14 @@ function TargetedSpellsMixin:PostCreate(unit, kind, castingUnit)
 	self:SetUnit(unit)
 	self:SetKind(kind)
 
-	if castingUnit ~= nil then
-		local tableRef = kind == Private.Enum.FrameKind.Self and TargetedSpellsSaved.Settings.Self
-			or TargetedSpellsSaved.Settings.Party
+	if castingUnit == nil then
+		return
+	end
 
-		if tableRef.TargetingFilterApi == Private.Enum.TargetingFilterApi.UnitIsSpellTarget then
-			self:SetAlphaFromBoolean(UnitIsSpellTarget(castingUnit, unit))
-		else
-			-- using UnitIsSpellTarget(castingUnit, unit) works and is technically more accurate
-			-- but it omits spells that - while the enemy is targeting something - doesn't affect the target, e.g. aoe enrages or party-wide damage
-			self:SetAlphaFromBoolean(UnitIsUnit(string.format("%starget", castingUnit), unit))
-		end
+	if kind == Private.Enum.FrameKind.Self then
+		self:SetAlphaFromBoolean(PlayerIsSpellTarget(castingUnit, unit))
+	else
+		self:SetAlphaFromBoolean(UnitIsUnit(string.format("%starget", castingUnit), unit))
 	end
 end
 
@@ -451,7 +458,6 @@ function TargetedSpellsMixin:Reset()
 	self.Cooldown:Clear()
 	self.duration = nil
 	self:ClearAllPoints()
-	self:HideGlow()
 	self.wasInterrupted = false
 	self.doNotHideBefore = nil
 	self.InterruptIcon:Hide()
@@ -463,6 +469,34 @@ function TargetedSpellsMixin:Reset()
 
 	local tableRef = self.kind == Private.Enum.FrameKind.Self and TargetedSpellsSaved.Settings.Self
 		or TargetedSpellsSaved.Settings.Party
+
+	if tableRef.GlowImportant then
+		local glowType = tableRef.GlowType
+
+		if glowType == Private.Enum.GlowType.PixelGlow then
+			if self._PixelGlow ~= nil then
+				self._PixelGlow:SetAlpha(1)
+			end
+		elseif glowType == Private.Enum.GlowType.AutoCastGlow then
+			if self._AutoCastGlow ~= nil then
+				self._AutoCastGlow:SetAlpha(1)
+			end
+		elseif glowType == Private.Enum.GlowType.ButtonGlow then
+			if self._ButtonGlow ~= nil then
+				self._ButtonGlow:SetAlpha(1)
+
+				for _, region in pairs({ self._ButtonGlow:GetRegions() }) do
+					region:SetAlpha(1)
+				end
+			end
+		elseif glowType == Private.Enum.GlowType.ProcGlow then
+			if self._ProcGlow ~= nil then
+				self._ProcGlow:SetAlpha(1)
+			end
+		end
+	end
+
+	self:HideGlow()
 
 	self:SetShowDuration(tableRef.ShowDuration, tableRef.ShowDurationFractions)
 	self.Cooldown:SetDrawSwipe(tableRef.ShowSwipe)

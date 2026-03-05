@@ -77,12 +77,6 @@ Private.Enum.GlowType = {
 	Star4 = 5,
 }
 
----@enum TargetingFilterApi
-Private.Enum.TargetingFilterApi = {
-	UnitIsSpellTarget = 1,
-	UnitIsUnit = 2,
-}
-
 ---@enum FontFlags
 Private.Enum.FontFlags = {
 	OUTLINE = 1,

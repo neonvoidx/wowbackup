@@ -97,10 +97,8 @@ local function AnchorContainer(header, anchor, options)
 
 	local frame = header.Frame
 	frame:ClearAllPoints()
-	frame:SetIgnoreParentAlpha(true)
 	frame:SetAlpha(1)
 	frame:SetFrameLevel(anchor:GetFrameLevel() + 1)
-	frame:SetFrameStrata("HIGH")
 
 	local anchorPoint = "CENTER"
 	local relativeToPoint = "CENTER"
@@ -184,8 +182,8 @@ local function EnsureWatcher(anchor, unit)
 			-- Clear the container since it's a different unit now
 			entry.Container:ResetAllSlots()
 
-			-- Force immediate aura scan for the new unit
-			entry.Watcher:ForceFullUpdate()
+			-- Force immediate refresh for the new unit
+			UpdateWatcherAuras(entry)
 		end
 	end
 
@@ -384,12 +382,13 @@ function M:StartTesting()
 end
 
 function M:StopTesting()
+	testModeActive = false
+
 	for _, entry in pairs(watchers) do
 		entry.Container:ResetAllSlots()
 		entry.Container.Frame:Hide()
 	end
 
-	testModeActive = false
 	Resume()
 	M:Refresh()
 end

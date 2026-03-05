@@ -8,14 +8,13 @@ CooldownManagerCenteredDB = {
 ["Starphage - Tichondrius"] = "Default",
 ["Ofpuss - Tichondrius"] = "Default",
 ["Tampacks - Mal'Ganis"] = "Default",
-["Hellavator - Tichondrius"] = "Default",
 ["Gehyo - Tichondrius"] = "Default",
+["Hellavator - Tichondrius"] = "Default",
 },
 ["profiles"] = {
 ["Default"] = {
 ["cooldownManager_squareIconsZoom_BuffIcons"] = 0,
 ["cooldownManager_showHighlight_Essential"] = true,
-["cooldownManager_normalizeUtilitySize"] = true,
 ["cooldownManager_keybindFontName"] = "1",
 ["cooldownManager_squareIconsZoom_Essential"] = 0,
 ["cooldownManager_showHighlight_Utility"] = true,
@@ -29,7 +28,9 @@ CooldownManagerCenteredDB = {
 ["cooldownManager_cooldownFontFlags"] = {
 ["THICKOUTLINE"] = true,
 },
+["_bug_warning_displayed"] = 20260304,
 ["cooldownManager_showKeybinds_Utility"] = true,
+["cooldownManager_normalizeUtilitySize"] = true,
 ["cooldownManager_squareIconsZoom_Utility"] = 0,
 ["cooldownManager_stackFontFlags"] = {
 ["THICKOUTLINE"] = true,

@@ -1,0 +1,39 @@
+## Interface: 120001, 120000, 110207
+## Title: Better|cff00c0ffBlizz|rPlates
+## Notes: Default Blizzard Nameplates with more features added to them with easy settings.
+## Author: Bodify
+## Version: v1.9.7d
+## SavedVariables: BetterBlizzPlatesDB, BBPCVarBackupsDB
+## IconAtlas: gmchat-icon-blizz
+## X-Curse-Project-ID: 913377
+## X-Wago-ID: b6mb47KP
+
+embeds.xml
+
+init.lua
+retail\temp_tww.lua
+temp_shared\ImportExport.lua
+
+retail\modules\combat.lua
+midnight\modules\castbar.lua
+midnight\modules\arenaid.lua
+midnight\modules\execute.lua
+midnight\modules\healthNumbers.lua
+midnight\modules\target.lua
+retail\modules\healer.lua
+midnight\modules\absorb.lua
+midnight\modules\classIcon.lua
+retail\modules\partyPointer.lua
+midnight\modules\pet.lua
+retail\modules\bgIndicator.lua
+retail\modules\quest.lua
+midnight\modules\auras.lua
+retail\modules\profiles.lua
+retail\modules\importConvert.lua
+midnight\modules\misc.lua
+
+retail\modules\druid\overcharges.lua
+midnight\modules\druid\overcharges.lua
+
+midnight\gui.lua
+midnight\BetterBlizzPlates.lua

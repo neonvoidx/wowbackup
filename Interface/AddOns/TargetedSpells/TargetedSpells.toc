@@ -6,7 +6,7 @@
 ## OptionalDeps: !!AddonLocale, Masque
 ## Category: Archon
 ## Notes: Highlights spells targeting the player and/or the party
-## Version: 1.1.10
+## Version: 1.1.14
 ## Author: Xephyris-Blackrock-EU
 
 ## X-Curse-Project-ID: 1418323

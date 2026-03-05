@@ -19,7 +19,20 @@ local EDITMODE_ID = "combatText"
 local PREVIEW_PADDING_X = 20
 local PREVIEW_PADDING_Y = 10
 
-local function defaultFontFace() return (addon.variables and addon.variables.defaultFont) or STANDARD_TEXT_FONT end
+local function defaultFontFace()
+	if addon.functions and addon.functions.GetGlobalDefaultFontFace then return addon.functions.GetGlobalDefaultFontFace() end
+	return (addon.variables and addon.variables.defaultFont) or STANDARD_TEXT_FONT
+end
+
+local function globalFontConfigKey()
+	if addon.functions and addon.functions.GetGlobalFontConfigKey then return addon.functions.GetGlobalFontConfigKey() end
+	return "__EQOL_GLOBAL_FONT__"
+end
+
+local function globalFontConfigLabel()
+	if addon.functions and addon.functions.GetGlobalFontConfigLabel then return addon.functions.GetGlobalFontConfigLabel() end
+	return "Use global font config"
+end
 
 CombatText.defaults = CombatText.defaults
 	or {
@@ -27,7 +40,7 @@ CombatText.defaults = CombatText.defaults
 		alwaysVisible = false,
 		alwaysVisibleMode = "STATUS",
 		fontSize = 32,
-		fontFace = defaultFontFace(),
+		fontFace = globalFontConfigKey(),
 		color = { r = 1, g = 1, b = 1, a = 1 },
 		enterColor = { r = 1, g = 1, b = 1, a = 1 },
 		leaveColor = { r = 1, g = 1, b = 1, a = 1 },
@@ -53,6 +66,22 @@ local DB_FONT_SIZE = "combatTextFontSize"
 local DB_COLOR = "combatTextColor"
 local DB_ENTER_COLOR = "combatTextEnterColor"
 local DB_LEAVE_COLOR = "combatTextLeaveColor"
+
+local function getCachedMediaNames(mediaType)
+	if addon.functions and addon.functions.GetLSMMediaNames then
+		local names = addon.functions.GetLSMMediaNames(mediaType)
+		if type(names) == "table" then return names end
+	end
+	return {}
+end
+
+local function getCachedMediaHash(mediaType)
+	if addon.functions and addon.functions.GetLSMMediaHash then
+		local hash = addon.functions.GetLSMMediaHash(mediaType)
+		if type(hash) == "table" then return hash end
+	end
+	return {}
+end
 
 local function getValue(key, fallback)
 	if not addon.db then return fallback end
@@ -92,21 +121,35 @@ local function normalizeAlwaysVisibleMode(value)
 	return ALWAYS_VISIBLE_MODE_STATUS
 end
 
+function CombatText:_debugTrace(...) end
+
+function CombatText:_debugCheckExternal(...) end
+
+function CombatText:_debugCheckVisual(...) end
+
+function CombatText:_debugEnsureWatcher(enabled)
+	if self._debugWatchFrame then
+		self._debugWatchFrame:Hide()
+		self._debugWatchFrame = nil
+	end
+end
+
 local function fontFaceOptions()
 	local list = {}
 	local defaultPath = defaultFontFace()
 	local hasDefault = false
-	if LSM and LSM.HashTable then
-		local hash = LSM:HashTable("font") or {}
-		for name, path in pairs(hash) do
-			if type(path) == "string" and path ~= "" then
-				list[#list + 1] = { value = path, label = tostring(name) }
-				if path == defaultPath then hasDefault = true end
-			end
+	local names = getCachedMediaNames("font")
+	local hash = getCachedMediaHash("font")
+	for i = 1, #names do
+		local name = names[i]
+		local path = hash[name]
+		if type(path) == "string" and path ~= "" then
+			list[#list + 1] = { value = path, label = tostring(name) }
+			if path == defaultPath then hasDefault = true end
 		end
 	end
 	if defaultPath and not hasDefault then list[#list + 1] = { value = defaultPath, label = DEFAULT } end
-	table.sort(list, function(a, b) return tostring(a.label) < tostring(b.label) end)
+	table.insert(list, 1, { value = globalFontConfigKey(), label = globalFontConfigLabel() })
 	return list
 end
 
@@ -127,10 +170,16 @@ function CombatText:GetAlwaysVisibleMode() return normalizeAlwaysVisibleMode(get
 
 function CombatText:GetFontSize() return clamp(getValue(DB_FONT_SIZE, defaults.fontSize), 8, 96) end
 
-function CombatText:GetFontFace()
+function CombatText:GetFontFaceSetting()
 	local face = normalizeFontFace(getValue(DB_FONT, defaults.fontFace))
-	if not face then face = defaultFontFace() end
+	if not face then face = defaults.fontFace end
 	return face
+end
+
+function CombatText:GetFontFace()
+	local face = self:GetFontFaceSetting()
+	if addon.functions and addon.functions.ResolveFontFace then return addon.functions.ResolveFontFace(face, defaultFontFace()) end
+	return face or defaultFontFace()
 end
 
 function CombatText:GetEnterColor()
@@ -152,11 +201,30 @@ function CombatText:ApplyStyle(r, g, b, a)
 	local font = self:GetFontFace()
 	local size = self:GetFontSize()
 	local ok = self.frame.text:SetFont(font, size, "OUTLINE")
-	if not ok then self.frame.text:SetFont(defaultFontFace(), size, "OUTLINE") end
+	local appliedFont = font
+	local fallbackUsed = false
+	if not ok then
+		appliedFont = defaultFontFace()
+		self.frame.text:SetFont(appliedFont, size, "OUTLINE")
+		fallbackUsed = true
+	end
 	if r == nil or g == nil or b == nil then
-		r, g, b, a = self:GetEnterColor()
+		local inCombat = type(InCombatLockdown) == "function" and InCombatLockdown() == true
+		if inCombat then
+			r, g, b, a = self:GetEnterColor()
+		else
+			r, g, b, a = self:GetLeaveColor()
+		end
 	end
 	self.frame.text:SetTextColor(r, g, b, a or 1)
+	self:_debugTrace("ApplyStyle", {
+		requestedFont = tostring(font),
+		appliedFont = tostring(appliedFont),
+		fontSize = size,
+		setFontOk = ok == true,
+		fallbackUsed = fallbackUsed == true,
+	})
+	self:_debugCheckVisual("ApplyStyle")
 end
 
 function CombatText:UpdateFrameSize()
@@ -333,12 +401,13 @@ end
 
 function CombatText:ApplyLayoutData(data)
 	if not data or not addon.db then return end
+	self:_debugTrace("ApplyLayoutData:begin")
 
 	local duration = clamp(data.duration or defaults.duration, 0.5, 10)
 	local alwaysVisible = data.alwaysVisible == true
 	local alwaysVisibleMode = normalizeAlwaysVisibleMode(data.alwaysVisibleMode)
 	local fontSize = clamp(data.fontSize or defaults.fontSize, 8, 96)
-	local fontFace = normalizeFontFace(data.fontFace) or defaultFontFace()
+	local fontFace = normalizeFontFace(data.fontFace) or defaults.fontFace
 	local enterR, enterG, enterB, enterA = normalizeColor(data.enterColor or data.color or defaults.enterColor, defaults.enterColor)
 	local leaveR, leaveG, leaveB, leaveA = normalizeColor(data.leaveColor or data.enterColor or data.color or defaults.leaveColor, defaults.leaveColor)
 
@@ -354,10 +423,12 @@ function CombatText:ApplyLayoutData(data)
 	self:ApplyStyle()
 	self:UpdateFrameSize()
 	self:RefreshDisplayMode()
+	self:_debugTrace("ApplyLayoutData:end")
 end
 
 local function applySetting(field, value)
 	if not addon.db then return end
+	CombatText:_debugTrace("applySetting:begin", { field = tostring(field) })
 
 	if field == "duration" then
 		local duration = clamp(value, 0.5, 10)
@@ -376,7 +447,7 @@ local function applySetting(field, value)
 		addon.db[DB_FONT_SIZE] = fontSize
 		value = fontSize
 	elseif field == "fontFace" then
-		local fontFace = normalizeFontFace(value) or defaultFontFace()
+		local fontFace = normalizeFontFace(value) or defaults.fontFace
 		addon.db[DB_FONT] = fontFace
 		value = fontFace
 	elseif field == "enterColor" then
@@ -396,7 +467,6 @@ local function applySetting(field, value)
 		value = addon.db[DB_ENTER_COLOR]
 	end
 
-	if EditMode and EditMode.SetValue then EditMode:SetValue(EDITMODE_ID, field, value, nil, true) end
 	CombatText:ApplyStyle()
 	CombatText:UpdateFrameSize()
 	if field == "alwaysVisible" or field == "alwaysVisibleMode" then
@@ -404,6 +474,7 @@ local function applySetting(field, value)
 	else
 		CombatText:RefreshHideTimer()
 	end
+	CombatText:_debugTrace("applySetting:end", { field = tostring(field) })
 end
 
 local editModeRegistered = false
@@ -472,11 +543,11 @@ function CombatText:RegisterEditMode()
 				kind = SettingType.Dropdown,
 				field = "fontFace",
 				height = 200,
-				get = function() return CombatText:GetFontFace() end,
+				get = function() return CombatText:GetFontFaceSetting() end,
 				set = function(_, value) applySetting("fontFace", value) end,
 				generator = function(_, root)
 					for _, option in ipairs(fontFaceOptions()) do
-						root:CreateRadio(option.label, function() return CombatText:GetFontFace() == option.value end, function() applySetting("fontFace", option.value) end)
+						root:CreateRadio(option.label, function() return CombatText:GetFontFaceSetting() == option.value end, function() applySetting("fontFace", option.value) end)
 					end
 				end,
 			},
@@ -507,23 +578,6 @@ function CombatText:RegisterEditMode()
 		}
 	end
 
-	local function seedEditModeRecordFromProfile(record)
-		if type(record) ~= "table" then return end
-		record.duration = self:GetDuration()
-		record.alwaysVisible = self:IsAlwaysVisible()
-		record.alwaysVisibleMode = self:GetAlwaysVisibleMode()
-		record.fontSize = self:GetFontSize()
-		record.fontFace = self:GetFontFace()
-		do
-			local r, g, b, a = self:GetEnterColor()
-			record.enterColor = { r = r, g = g, b = b, a = a }
-		end
-		do
-			local r, g, b, a = self:GetLeaveColor()
-			record.leaveColor = { r = r, g = g, b = b, a = a }
-		end
-	end
-
 	EditMode:RegisterFrame(EDITMODE_ID, {
 		frame = self:EnsureFrame(),
 		title = L["CombatText"] or "Combat text",
@@ -532,29 +586,13 @@ function CombatText:RegisterEditMode()
 			relativePoint = "CENTER",
 			x = 0,
 			y = 120,
-			duration = self:GetDuration(),
-			alwaysVisible = self:IsAlwaysVisible(),
-			alwaysVisibleMode = self:GetAlwaysVisibleMode(),
-			fontSize = self:GetFontSize(),
-			fontFace = self:GetFontFace(),
-			enterColor = (function()
-				local r, g, b, a = self:GetEnterColor()
-				return { r = r, g = g, b = b, a = a }
-			end)(),
-			leaveColor = (function()
-				local r, g, b, a = self:GetLeaveColor()
-				return { r = r, g = g, b = b, a = a }
-			end)(),
 		},
-		onApply = function(_, _, data)
-			if not self._eqolEditModeHydrated then
-				self._eqolEditModeHydrated = true
-				local record = data or {}
-				seedEditModeRecordFromProfile(record)
-				CombatText:ApplyLayoutData(record)
-				return
-			end
-			CombatText:ApplyLayoutData(data)
+		onApply = function()
+			CombatText:_debugCheckExternal("onApply:before")
+			CombatText:ApplyStyle()
+			CombatText:UpdateFrameSize()
+			CombatText:RefreshDisplayMode()
+			CombatText:_debugCheckExternal("onApply:after")
 		end,
 		onEnter = function() CombatText:ShowEditModeHint(true) end,
 		onExit = function() CombatText:ShowEditModeHint(false) end,
@@ -570,6 +608,14 @@ function CombatText:RegisterEditMode()
 end
 
 function CombatText:OnSettingChanged(enabled)
+	if addon.db then
+		addon.db["_combatTextTraceEnabled"] = nil
+		addon.db["_combatTextTrace"] = nil
+	end
+	self:_debugEnsureWatcher(enabled == true)
+	self:_debugCheckExternal("OnSettingChanged:begin")
+	self:_debugTrace("OnSettingChanged:begin", { enabled = enabled == true })
+
 	if enabled then
 		self:EnsureFrame()
 		self:RegisterEditMode()
@@ -584,6 +630,8 @@ function CombatText:OnSettingChanged(enabled)
 	end
 
 	if EditMode and EditMode.RefreshFrame then EditMode:RefreshFrame(EDITMODE_ID) end
+	self:_debugCheckExternal("OnSettingChanged:end")
+	self:_debugTrace("OnSettingChanged:end", { enabled = enabled == true })
 end
 
 return CombatText

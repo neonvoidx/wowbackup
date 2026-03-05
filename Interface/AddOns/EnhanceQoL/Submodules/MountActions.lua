@@ -16,6 +16,7 @@ local RANDOM_FAVORITE_SPELL_ID = 150544
 local GHOST_WOLF_SPELL_ID = 2645
 local SLOW_FALL_SPELL_ID = 130
 local LEVITATE_SPELL_ID = 1706
+local DRUID_TRAVEL_FORM_SPELL_ID = 783
 local DRACTHYR_RACE_TAG = "Dracthyr"
 local DRACTHYR_VISAGE_AURA_CHECK_SPELL_ID = 372014
 local DRACTHYR_VISAGE_SPELL_ID = 351239
@@ -170,6 +171,7 @@ local function getFallingSafetySpellID()
 	if not (IsFalling and IsFalling()) then return nil end
 
 	local classTag = (addon.variables and addon.variables.unitClass) or select(2, UnitClass("player"))
+	if classTag == "DRUID" and isSpellKnown(DRUID_TRAVEL_FORM_SPELL_ID) then return DRUID_TRAVEL_FORM_SPELL_ID end
 	if classTag == "PRIEST" and isSpellKnown(LEVITATE_SPELL_ID) then return LEVITATE_SPELL_ID end
 	if classTag == "MAGE" and isSpellKnown(SLOW_FALL_SPELL_ID) then return SLOW_FALL_SPELL_ID end
 	return nil

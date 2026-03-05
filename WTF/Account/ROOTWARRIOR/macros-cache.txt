@@ -182,7 +182,6 @@ END
 VER 3 0000000000000235 "EnhanceQoLHealthMacro" "INV_Misc_QuestionMark"
 #showtooltip
 /cast [nocombat] Recuperate
-/castsequence [combat] reset=combat item:244839
 END
 VER 3 00000000000001FE "FOCUS" "999949"
 /focus [@mouseover,nodead,exists]; [@target,exists]

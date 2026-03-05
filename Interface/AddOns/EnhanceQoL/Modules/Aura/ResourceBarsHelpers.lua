@@ -10,15 +10,22 @@ end
 local ResourceBars = addon.Aura and addon.Aura.ResourceBars
 if not ResourceBars then return end
 
-function ResourceBars.ShouldHideInClientScene() return addon and addon.db and addon.db.resourceBarsHideClientScene == true end
+local function resolveVisibilityFlag(cfg, cfgKey, globalKey, defaultValue)
+	if type(cfg) == "table" and cfg[cfgKey] ~= nil then return cfg[cfgKey] == true end
+	local db = addon and addon.db
+	if db and db[globalKey] ~= nil then return db[globalKey] == true end
+	return defaultValue == true
+end
 
-function ResourceBars.ShouldHideOutOfCombat() return addon and addon.db and addon.db.resourceBarsHideOutOfCombat == true end
+function ResourceBars.ShouldHideInClientScene(cfg) return resolveVisibilityFlag(cfg, "hideClientScene", "resourceBarsHideClientScene", true) end
 
-function ResourceBars.ShouldHideMounted() return addon and addon.db and addon.db.resourceBarsHideMounted == true end
+function ResourceBars.ShouldHideOutOfCombat(cfg) return resolveVisibilityFlag(cfg, "hideOutOfCombat", "resourceBarsHideOutOfCombat", false) end
 
-function ResourceBars.ShouldHideInVehicle() return addon and addon.db and addon.db.resourceBarsHideVehicle == true end
+function ResourceBars.ShouldHideMounted(cfg) return resolveVisibilityFlag(cfg, "hideMounted", "resourceBarsHideMounted", false) end
 
-function ResourceBars.ShouldHideInPetBattle() return addon and addon.db and addon.db.resourceBarsHidePetBattle == true end
+function ResourceBars.ShouldHideInVehicle(cfg) return resolveVisibilityFlag(cfg, "hideVehicle", "resourceBarsHideVehicle", false) end
+
+function ResourceBars.ShouldHideInPetBattle(cfg) return resolveVisibilityFlag(cfg, "hidePetBattle", "resourceBarsHidePetBattle", false) end
 
 function ResourceBars.ApplyClientSceneAlphaToFrame(frame, forceHide)
 	if not (frame and frame.SetAlpha) then return end
@@ -603,7 +610,7 @@ function ResourceBars.LayoutDiscreteSegments(bar, cfg, count, texturePath, separ
 	bar._rbDiscreteReverse = reverse
 end
 
-function ResourceBars.UpdateDiscreteSegments(bar, cfg, count, value, color, texturePath, separatorThickness, separatorColor)
+function ResourceBars.UpdateDiscreteSegments(bar, cfg, count, value, color, texturePath, separatorThickness, separatorColor, chargedPoints)
 	if not bar then return end
 	count = tonumber(count) or 0
 	if count < 1 then
@@ -653,11 +660,39 @@ function ResourceBars.UpdateDiscreteSegments(bar, cfg, count, value, color, text
 	end
 	local useMaelstromCarryFill, carryOverflow, carryR, carryG, carryB, carryA = resolveMaelstromCarryMode(bar, cfg, count, clamped)
 	if useMaelstromCarryFill then clamped = count end
+	local chargedStyleActive = bar and bar._rbType == "COMBO_POINTS" and addon and addon.variables and addon.variables.unitClass == "ROGUE" and (cfg and cfg.useChargedComboStyling ~= false)
+	local chargedFillActive = chargedStyleActive and (cfg.chargedComboAffectFill ~= false)
+	local chargedBgActive = chargedStyleActive and (cfg.chargedComboAffectBackground ~= false)
+	local chargedUseCustomFillColor = chargedFillActive and cfg.chargedComboUseCustomFillColor == true
+	local chargedUseCustomBackgroundColor = chargedBgActive and cfg.chargedComboUseCustomBackgroundColor == true
+	local function clamp01(value, defaultValue)
+		local n = tonumber(value)
+		if n == nil then n = defaultValue end
+		if n < 0 then
+			n = 0
+		elseif n > 1 then
+			n = 1
+		end
+		return n
+	end
+	local chargedFillLighten = clamp01(cfg and cfg.chargedComboFillLighten, 0.35)
+	local chargedFillAlphaBoost = clamp01(cfg and cfg.chargedComboFillAlphaBoost, 0.10)
+	local chargedBackgroundLighten = clamp01(cfg and cfg.chargedComboBackgroundLighten, 0.30)
+	local chargedBackgroundAlphaBoost = clamp01(cfg and cfg.chargedComboBackgroundAlphaBoost, 0.10)
+	local chargedFillCustomR, chargedFillCustomG, chargedFillCustomB, chargedFillCustomA
+	if chargedUseCustomFillColor then
+		chargedFillCustomR, chargedFillCustomG, chargedFillCustomB, chargedFillCustomA = normalizeGradientColor((cfg and cfg.chargedComboFillColor) or { 1.0, 0.95, 0.45, 1.0 })
+	end
+	local chargedBgCustomR, chargedBgCustomG, chargedBgCustomB, chargedBgCustomA
+	if chargedUseCustomBackgroundColor then
+		chargedBgCustomR, chargedBgCustomG, chargedBgCustomB, chargedBgCustomA = normalizeGradientColor((cfg and cfg.chargedComboBackgroundColor) or { 0.75, 0.60, 0.25, 0.75 })
+	end
 
 	for physicalIndex = 1, count do
 		local sb = segments[physicalIndex]
 		if sb then
 			local logicalIndex = reverse and (count - physicalIndex + 1) or physicalIndex
+			local isChargedPoint = type(chargedPoints) == "table" and chargedPoints[logicalIndex] == true
 			local segmentValue = clamped - (logicalIndex - 1)
 			if segmentValue < 0 then
 				segmentValue = 0
@@ -673,13 +708,26 @@ function ResourceBars.UpdateDiscreteSegments(bar, cfg, count, value, color, text
 			applyDiscreteSegmentBorder(sb, bar, borderEnabled, borderTexture, borderEdgeSize, borderOutset, borderR, borderG, borderB, borderA)
 			if sb._rbSegmentBg then
 				if segmentBgVisible then
+					local bgR, bgG, bgB, bgA = segmentBgR, segmentBgG, segmentBgB, segmentBgA
+					local segmentBgColorKey = bgColorKey
+					if isChargedPoint and chargedBgActive then
+						if chargedUseCustomBackgroundColor then
+							bgR, bgG, bgB, bgA = chargedBgCustomR, chargedBgCustomG, chargedBgCustomB, chargedBgCustomA
+						else
+							bgR = min(1, bgR + (1 - bgR) * chargedBackgroundLighten)
+							bgG = min(1, bgG + (1 - bgG) * chargedBackgroundLighten)
+							bgB = min(1, bgB + (1 - bgB) * chargedBackgroundLighten)
+							bgA = min(1, (bgA or 1) + chargedBackgroundAlphaBoost)
+						end
+						segmentBgColorKey = bgR .. ":" .. bgG .. ":" .. bgB .. ":" .. bgA .. ":charged"
+					end
 					if sb._rbSegmentBgPath ~= segmentBgPath then
 						sb._rbSegmentBg:SetTexture(segmentBgPath)
 						sb._rbSegmentBgPath = segmentBgPath
 					end
-					if sb._rbSegmentBgColorKey ~= bgColorKey then
-						sb._rbSegmentBg:SetVertexColor(segmentBgR, segmentBgG, segmentBgB, segmentBgA)
-						sb._rbSegmentBgColorKey = bgColorKey
+					if sb._rbSegmentBgColorKey ~= segmentBgColorKey then
+						sb._rbSegmentBg:SetVertexColor(bgR, bgG, bgB, bgA)
+						sb._rbSegmentBgColorKey = segmentBgColorKey
 					end
 					if not sb._rbSegmentBg:IsShown() then sb._rbSegmentBg:Show() end
 				else
@@ -694,6 +742,17 @@ function ResourceBars.UpdateDiscreteSegments(bar, cfg, count, value, color, text
 				segmentR, segmentG, segmentB, segmentA = carryR, carryG, carryB, carryA
 				segmentColorKey = segmentR .. ":" .. segmentG .. ":" .. segmentB .. ":" .. segmentA
 			end
+			if isChargedPoint and chargedFillActive then
+				if chargedUseCustomFillColor then
+					segmentR, segmentG, segmentB, segmentA = chargedFillCustomR, chargedFillCustomG, chargedFillCustomB, chargedFillCustomA
+				else
+					segmentR = min(1, segmentR + (1 - segmentR) * chargedFillLighten)
+					segmentG = min(1, segmentG + (1 - segmentG) * chargedFillLighten)
+					segmentB = min(1, segmentB + (1 - segmentB) * chargedFillLighten)
+					segmentA = min(1, (segmentA or 1) + chargedFillAlphaBoost)
+				end
+			end
+			segmentColorKey = segmentR .. ":" .. segmentG .. ":" .. segmentB .. ":" .. segmentA
 			if sb._rbSegmentFillColorKey ~= segmentColorKey then
 				if ResourceBars.SetStatusBarColorWithGradient then
 					ResourceBars.SetStatusBarColorWithGradient(sb, cfg, segmentR, segmentG, segmentB, segmentA)

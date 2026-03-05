@@ -12,7 +12,6 @@ addon.MythicPlus.functions = addon.MythicPlus.functions or {}
 addon.MythicPlus.variables = addon.MythicPlus.variables or {}
 
 local L = LibStub("AceLocale-3.0"):GetLocale("EnhanceQoL_MythicPlus")
-local LSM = LibStub("LibSharedMedia-3.0")
 local EditMode = addon.EditMode
 
 addon.MythicPlus.variables.knownLoadout = {}
@@ -184,7 +183,8 @@ local function showPopup(actTalent, requiredTalent)
 	if addon.db["talentReminderSoundOnDifference"] and not playedMusic then
 		if addon.db["talentReminderUseCustomSound"] then
 			local key = addon.db["talentReminderCustomSoundFile"]
-			local soundTable = (addon.ChatIM and addon.ChatIM.availableSounds) or LSM:HashTable("sound")
+			local soundTable = (addon.ChatIM and addon.ChatIM.availableSounds)
+				or ((addon.functions and addon.functions.GetLSMMediaHash and addon.functions.GetLSMMediaHash("sound")) or {})
 			local file = key ~= "" and soundTable and soundTable[key]
 			if file then
 				PlaySoundFile(file, "Master")

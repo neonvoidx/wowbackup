@@ -21,6 +21,7 @@ function addon.MythicPlus.functions.InitDB()
 	if not addon.db or not addon.functions or not addon.functions.InitDBValue then return end
 	addon.MythicPlus.variables.dbInitialized = true
 	local init = addon.functions.InitDBValue
+	local globalFontKey = addon.functions.GetGlobalFontConfigKey and addon.functions.GetGlobalFontConfigKey() or "__EQOL_GLOBAL_FONT__"
 
 	-- Always use the improved Keystone Helper UI (legacy removed)
 	-- PullTimer
@@ -56,6 +57,34 @@ function addon.MythicPlus.functions.InitDB()
 	init("mythicPlusBRTrackerPoint", "CENTER")
 	init("mythicPlusBRTrackerX", 0)
 	init("mythicPlusBRTrackerY", 0)
+
+	-- Bloodlust Tracker
+	init("mythicPlusBloodlustTrackerEnabled", false)
+	init("mythicPlusBloodlustButtonSize", 50)
+	init("mythicPlusBloodlustTrackerPoint", "CENTER")
+	init("mythicPlusBloodlustTrackerX", 0)
+	init("mythicPlusBloodlustTrackerY", 0)
+	init("mythicPlusBloodlustTrackerIcon", 136090)
+	init("mythicPlusBloodlustTrackerBorderEnabled", true)
+	init("mythicPlusBloodlustTrackerBorderTexture", "DEFAULT")
+	init("mythicPlusBloodlustTrackerBorderSize", 1)
+	init("mythicPlusBloodlustTrackerBorderOffset", 0)
+	init("mythicPlusBloodlustTrackerBorderColor", { 1, 1, 1, 1 })
+	init("mythicPlusBloodlustTrackerCooldownDrawSwipe", true)
+	init("mythicPlusBloodlustTrackerCooldownDrawEdge", false)
+	init("mythicPlusBloodlustTrackerCooldownDrawBling", false)
+	init("mythicPlusBloodlustTrackerCooldownFontFace", globalFontKey)
+	init("mythicPlusBloodlustTrackerCooldownTextSize", 16)
+	init("mythicPlusBloodlustTrackerCooldownTextOutline", "OUTLINE")
+	init("mythicPlusBloodlustTrackerCooldownTextColor", { 1, 1, 1, 1 })
+	init("mythicPlusBloodlustTrackerCooldownTextOffsetX", 0)
+	init("mythicPlusBloodlustTrackerCooldownTextOffsetY", 0)
+	init("mythicPlusBloodlustTrackerSoundOnDebuffActive", false)
+	init("mythicPlusBloodlustTrackerUseCustomDebuffSound", false)
+	init("mythicPlusBloodlustTrackerDebuffSoundFile", "")
+	init("mythicPlusBloodlustTrackerReadySoundOnEncounterStart", false)
+	init("mythicPlusBloodlustTrackerUseCustomReadySound", false)
+	init("mythicPlusBloodlustTrackerReadySoundFile", "")
 
 	-- Talent Reminder
 	init("talentReminderEnabled", false)
@@ -93,6 +122,8 @@ function addon.MythicPlus.functions.InitDB()
 	init("teleportsWorldMapEnabled", false)
 	-- Also show the classic current season list in the World Map panel
 	init("teleportsWorldMapShowSeason", false)
+	-- "random" keeps the legacy behavior; otherwise stores a hearthstone item/toy ID as string.
+	init("teleportsPreferredHearthstone", "random")
 	-- Favorites override is now always active in code
 	init("teleportFrameLocked", true)
 	init("teleportFrameData", {})
@@ -471,6 +502,10 @@ addon.MythicPlus.variables.portalCompendium = {
 			[1254572] = { text = "MT", cId = { [558] = true }, mapID = 2511, locID = 2424, x = 0.6329, y = 0.1549, zoneID = 2511 },
 			-- [1254580] = { text = "DON", mapID = 2514, locID = 2437, x = 0.2969, y = 0.8454, zoneID = 2514 },
 			[1254400] = { text = "WRS", cId = { [557] = true }, mapID = 2494, locID = 2395, x = 0.3543, y = 0.7908, zoneID = 2494 },
+			[1271425] = { text = "ABUN", isItem = true, itemID = 252607, icon = 1362642, locID = 2437, x = 0.31263855520737, y = 0.26260265863074, zoneID = 2437 }, -- Abundont Beacon
+			[1259190] = { text = "SMC", isClassTP = "MAGE", locID = 2393, x = 0.5279, y = 0.6556, zoneID = 2393 }, -- Teleport: Silvermoon City
+			[1259194] = { text = "SMC", isMagePortal = true, locID = 2393, x = 0.5279, y = 0.6556, zoneID = 2393 }, -- Portal: Silvermoon City
+			[1255801] = { text = "ARC", isToy = true, toyID = 253629, isHearthstone = true, icon = 7322718, locID = 2541, x = 0.50215210538362, y = 0.755379994799, zoneID = 2541 }, -- Personal Key to the Arcantina
 			-- [1254569] = { text = "MR", mapID = 2433, locID = 2393, x = 0.5719, y = 0.6097, zoneID = 2433 },
 			-- [1254577] = { text = "TBV", mapID = 2500, locID = 2413, x = 0.2635, y = 0.7790, zoneID = 2500 },
 			-- [1254567] = { text = "VSA", mapID = 2572, locID = 2405, x = 0.5145, y = 0.1918, zoneID = 2572 },
@@ -959,6 +994,8 @@ addon.MythicPlus.variables.portalCompendium = {
 			[126892] = { text = "CLASS", isClassTP = "MONK", x = 0.5133, y = 0.4992, zoneID = 709, locID = 709 },
 			[265225] = { text = RACIAL_TRAITS_TOOLTIP, isRaceTP = "DarkIronDwarf" },
 			[312372] = { text = RACIAL_TRAITS_TOOLTIP, isRaceTP = "Vulpera" },
+			[430265] = { text = "Gilneas", isRaceTP = "Worgen", isToy = true, toyID = 211788, isHearthstone = true, icon = 133939, x = 0.5939, y = 0.4820, zoneID = 218, locID = 217 },
+			[1238686] = { text = RACIAL_TRAITS_TOOLTIP, isRaceTP = "Harronir" }, -- Rootwalking
 		},
 	},
 }
@@ -1003,9 +1040,7 @@ local hearthstoneID = {
 		icon = 1686574,
 		id = 210455,
 		spellID = 438606,
-		usable = function()
-			return addon.variables.unitRace == "LightforgedDraenei" or addon.variables.unitRace == "Draenei"
-		end,
+		usable = function() return addon.variables.unitRace == "LightforgedDraenei" or addon.variables.unitRace == "Draenei" end,
 	}, -- Draenic Hologem
 
 	-- Covenent Hearthstones
@@ -1019,7 +1054,7 @@ local availableHearthstones = {}
 
 local function setAvailableHearthstone()
 	availableHearthstones = {}
-	for _, v in pairs(hearthstoneID) do
+	for _, v in ipairs(hearthstoneID) do
 		local addIt = false
 		if v.isItem then
 			if C_Item.GetItemCount(v.id) > 0 then addIt = true end
@@ -1036,15 +1071,128 @@ local function setAvailableHearthstone()
 	end
 end
 
+local pendingHearthstoneItemLoads = {}
+local hearthstoneNameFallbackByID = {
+	[263489] = "Naaru's Enfold",
+}
+
+local function normalizeHearthstoneName(name)
+	if type(name) ~= "string" then return nil end
+	name = name:gsub("^%s+", ""):gsub("%s+$", "")
+	if name == "" then return nil end
+	if name:match("^%d+$") then return nil end
+	return name
+end
+
+local function requestHearthstoneItemData(itemID)
+	if not itemID or pendingHearthstoneItemLoads[itemID] then return end
+	if C_Item and C_Item.RequestLoadItemDataByID then pcall(C_Item.RequestLoadItemDataByID, itemID) end
+	if not Item or not Item.CreateFromItemID then return end
+	local eItem = Item:CreateFromItemID(itemID)
+	if not eItem or not eItem.ContinueOnItemLoad then return end
+	pendingHearthstoneItemLoads[itemID] = true
+	eItem:ContinueOnItemLoad(function()
+		pendingHearthstoneItemLoads[itemID] = nil
+		if Settings and Settings.NotifyUpdate then Settings.NotifyUpdate("EQOL_teleportsPreferredHearthstone") end
+	end)
+end
+
+local function getHearthstoneName(entry)
+	if not entry then return nil end
+	local name
+	if entry.spellID then
+		if C_Spell and C_Spell.GetSpellInfo then
+			local si = C_Spell.GetSpellInfo(entry.spellID)
+			name = normalizeHearthstoneName(si and si.name)
+		end
+		if C_Spell and C_Spell.GetSpellName then name = name or normalizeHearthstoneName(C_Spell.GetSpellName(entry.spellID)) end
+		if (not name or name == "") and GetSpellInfo then name = normalizeHearthstoneName(GetSpellInfo(entry.spellID)) end
+	end
+	if (not name or name == "") and entry.isToy and C_ToyBox and C_ToyBox.GetToyInfo then name = normalizeHearthstoneName(C_ToyBox.GetToyInfo(entry.id)) end
+	if (not name or name == "") and entry.isToy and C_ToyBox and C_ToyBox.GetToyLink then
+		local toyLink = C_ToyBox.GetToyLink(entry.id)
+		if type(toyLink) == "string" then
+			name = normalizeHearthstoneName(toyLink:match("%[(.-)%]"))
+			if (not name or name == "") and GetItemInfo then name = normalizeHearthstoneName(GetItemInfo(toyLink)) end
+		end
+	end
+	if (not name or name == "") and C_Item and C_Item.GetItemNameByID then name = normalizeHearthstoneName(C_Item.GetItemNameByID(entry.id)) end
+	if (not name or name == "") and GetItemInfo then name = normalizeHearthstoneName(GetItemInfo(entry.id)) end
+	if (not name or name == "") and C_Item and C_Item.GetItemInfo then
+		local info = C_Item.GetItemInfo(entry.id)
+		if type(info) == "table" then
+			name = normalizeHearthstoneName(info.itemName)
+		else
+			name = normalizeHearthstoneName(info)
+		end
+	end
+	if (not name or name == "") and entry.id == 6948 then name = normalizeHearthstoneName(addon.MythicPlus.variables.hearthstoneName) end
+	if (not name or name == "") and hearthstoneNameFallbackByID[entry.id] then name = normalizeHearthstoneName(hearthstoneNameFallbackByID[entry.id]) end
+	if not name or name == "" then requestHearthstoneItemData(entry.id) end
+	if name and name ~= "" then return name end
+	return UNKNOWNOBJECT or UNKNOWN or "Unknown"
+end
+
+function addon.MythicPlus.functions.GetHearthstoneDropdownOptions(forceRefresh)
+	if forceRefresh or #availableHearthstones == 0 then setAvailableHearthstone() end
+
+	local randomLabel = L["teleportsPreferredHearthstoneRandom"] or "Random (owned Hearthstones)"
+	local list, order = { random = randomLabel }, { "random" }
+	local seen = {}
+	local entries = {}
+
+	for _, entry in ipairs(availableHearthstones) do
+		local key = tostring(entry.id)
+		if not seen[key] then
+			seen[key] = true
+			table.insert(entries, {
+				key = key,
+				name = getHearthstoneName(entry),
+			})
+		end
+	end
+
+	table.sort(entries, function(a, b)
+		local aName = string.lower(a.name or "")
+		local bName = string.lower(b.name or "")
+		if aName == bName then return a.key < b.key end
+		return aName < bName
+	end)
+
+	for _, entry in ipairs(entries) do
+		list[entry.key] = entry.name
+		table.insert(order, entry.key)
+	end
+
+	return list, order
+end
+
+local function getPreferredHearthstoneID()
+	local selected = addon.db and addon.db["teleportsPreferredHearthstone"]
+	if selected == nil or selected == "" then return nil end
+	if selected == "random" or selected == "0" then return nil end
+	return tonumber(selected) or selected
+end
+
+local function selectPreferredOrRandomHearthstone()
+	local preferredID = getPreferredHearthstoneID()
+	if preferredID ~= nil then
+		for _, entry in ipairs(availableHearthstones) do
+			if entry.id == preferredID then return entry end
+		end
+	end
+	local randomIndex = math.random(1, #availableHearthstones)
+	return availableHearthstones[randomIndex]
+end
+
 function addon.MythicPlus.functions.setRandomHearthstone(forceRefresh)
 	if forceRefresh or #availableHearthstones == 0 then
 		setAvailableHearthstone() -- recheck hearthstones
 		if #availableHearthstones == 0 then return nil end
 	end
 
-	local randomIndex = math.random(1, #availableHearthstones)
-
-	local hs = availableHearthstones[randomIndex]
+	local hs = selectPreferredOrRandomHearthstone()
+	if not hs then return nil end
 	-- Ensure we do not overwrite other HOME entries (e.g., class/race teleports)
 	local homeSection = addon.MythicPlus.variables.portalCompendium[9999]
 	if not homeSection then
