@@ -105,13 +105,13 @@ VER 3 0100000000000026 "Barrage" "236222"
 #showtooltip Touch of the Magi
 /castsequence reset=10 Arcane Barrage, Touch of the Magi, Touch of the Magi
 END
-VER 3 0100000000000030 "CANCEL" "5927630"
-/cancelaura Excess Frost
-/cancelaura Excess Fire
-END
 VER 3 010000000000003D "Cancel" "134400"
 #showtooltip Alter Time
 /cancelaura Alter Time
+END
+VER 3 0100000000000030 "CANCEL" "5927630"
+/cancelaura Excess Frost
+/cancelaura Excess Fire
 END
 VER 3 0100000000000025 "POM" "135735"
 #showtooltip Presence of Mind
@@ -119,14 +119,14 @@ VER 3 0100000000000025 "POM" "135735"
 /cast known: Presence of Mind] Arcane Blast
 /cqs
 END
+VER 3 010000000000003F "PVP" "135824"
+#showtooltip Combustion
+/cast Combustion
+END
 VER 3 0100000000000039 "PVP" "4667417"
 #showtooltip Arcane Surge
 /use Saltwater potion
 /castsequence reset=10 13, Arcane Surge, Arcane Surge
 /cast Arcane Surge
 /cqs
-END
-VER 3 010000000000003F "PVP" "135824"
-#showtooltip Combustion
-/cast Combustion
 END

@@ -1,21 +1,17 @@
 
 PLATYNATOR_CONFIG = {
+["Version"] = 1,
 ["CharacterSpecific"] = {
 },
-["Version"] = 1,
 ["Profiles"] = {
 ["DEFAULT"] = {
 ["stack_region_scale_y"] = 1.1,
 ["design_all"] = {
 },
-["designs_enabled"] = {
-["pvpInstance"] = false,
-["combat"] = false,
-["pvpWorld"] = false,
-},
+["cast_alpha"] = 1,
 ["mouseover_alpha"] = 1,
 ["closer_to_screen_edges"] = true,
-["simplified_scale"] = 0.8,
+["obscured_alpha"] = 0.4,
 ["cast_scale"] = 1.1,
 ["simplified_nameplates"] = {
 ["minor"] = true,
@@ -29,313 +25,254 @@ PLATYNATOR_CONFIG = {
 ["designs_assigned"] = {
 ["enemySimplifiedCombat"] = "_hare_simplified",
 ["enemyPvPPlayer"] = "_deer",
-["enemyCombat"] = "_deer",
+["enemy"] = "DarkDevourer",
 ["friendCombat"] = "_name-only",
 ["friendPvPPlayer"] = "_name-only",
-["friend"] = "Friendly",
 ["enemySimplified"] = "DarkDevourer",
-["enemy"] = "DarkDevourer",
+["friend"] = "Friendly",
+["enemyCombat"] = "_deer",
 },
 ["show_nameplates"] = {
 ["friendlyMinion"] = false,
 ["enemyMinor"] = true,
 ["friendlyPlayer"] = true,
-["enemy"] = true,
-["enemyMinion"] = true,
 ["friendlyNPC"] = false,
+["enemyMinion"] = true,
+["enemy"] = true,
 },
-["stack_region_scale_x"] = 1.2,
+["current_skin"] = "blizzard",
 ["blizzard_widget_scale"] = 1.2,
 ["show_friendly_in_instances_1"] = "always",
-["click_region_scale_y"] = 1,
-["style"] = "DarkDevourer",
+["click_region_scale_x"] = 1,
+["show_nameplates_only_needed"] = false,
 ["apply_cvars"] = true,
-["current_skin"] = "blizzard",
-["global_scale"] = 1.4,
+["not_target_alpha"] = 1,
+["target_scale"] = 1.15,
 ["designs"] = {
 ["_custom"] = {
 ["highlights"] = {
 {
-["scale"] = 1.03,
-["layer"] = 0,
-["asset"] = "Platy: Arrow",
-["width"] = 1.23,
+["scale"] = 0.9,
+["layer"] = 2,
+["asset"] = "Platy: Blizzard Midnight Selected",
+["width"] = 1.16,
+["color"] = {
+["a"] = 1,
+["b"] = 1,
+["g"] = 1,
+["r"] = 1,
+},
+["height"] = 1.46,
+["sliced"] = true,
+["anchor"] = {
+},
 ["kind"] = "target",
-["anchor"] = {
-},
-["sliced"] = true,
-["height"] = 1.22,
-["color"] = {
-["a"] = 1,
-["b"] = 1,
-["g"] = 1,
-["r"] = 1,
-},
 },
 {
 ["color"] = {
-["a"] = 1,
-["b"] = 0.9215686917304992,
-["g"] = 0.3725490272045136,
-["r"] = 0.6941176652908325,
-},
-["layer"] = 0,
-["asset"] = "Platy: 7px",
-["width"] = 1.03,
-["scale"] = 1,
-["kind"] = "mouseover",
-["anchor"] = {
-},
-["sliced"] = true,
-["height"] = 1.24,
-["includeTarget"] = true,
-},
-},
-["specialBars"] = {
-},
-["scale"] = 0.99,
-["auras"] = {
-},
-["font"] = {
-["outline"] = true,
-["shadow"] = true,
-["asset"] = "RobotoCondensed-Bold",
-["slug"] = true,
-},
-["version"] = 1,
-["bars"] = {
-{
-["absorb"] = {
-["color"] = {
-["a"] = 1,
-["r"] = 1,
-["g"] = 1,
-["b"] = 1,
-},
-["asset"] = "Platy: Absorb Wide",
-},
-["animate"] = false,
-["marker"] = {
-["asset"] = "wide/glow",
-},
-["layer"] = 1,
-["border"] = {
-["height"] = 1,
-["color"] = {
-["a"] = 1,
-["b"] = 0,
-["g"] = 0,
-["r"] = 0,
-},
-["asset"] = "Platy: 2px",
-["width"] = 1,
-},
-["autoColors"] = {
-{
-["colors"] = {
-},
-["kind"] = "classColors",
-},
-{
-["colors"] = {
-["tapped"] = {
-["b"] = 0.4313725490196079,
-["g"] = 0.4313725490196079,
-["r"] = 0.4313725490196079,
-},
-},
-["kind"] = "tapped",
-},
-{
-["combatOnly"] = false,
-["colors"] = {
-["offtank"] = {
-["b"] = 0.7843137254901961,
-["g"] = 0.6666666666666666,
-["r"] = 0.05882352941176471,
-},
-["warning"] = {
-["b"] = 0,
-["g"] = 0,
-["r"] = 0.8,
-},
-["safe"] = {
-["b"] = 0.9019607843137256,
-["g"] = 0.5882352941176471,
-["r"] = 0.05882352941176471,
-},
-["transition"] = {
-["b"] = 0,
-["g"] = 0.6274509803921569,
-["r"] = 1,
-},
-},
-["kind"] = "threat",
-["useSafeColor"] = true,
-["instancesOnly"] = false,
-},
-{
-["colors"] = {
-["unfriendly"] = {
-["r"] = 1,
-["g"] = 0.5058823529411764,
-["b"] = 0,
-},
-["friendly"] = {
-["b"] = 0,
-["g"] = 1,
-["r"] = 0,
-},
-["hostile"] = {
-["b"] = 0,
-["g"] = 0,
-["r"] = 1,
-},
-["neutral"] = {
-["b"] = 0,
-["g"] = 1,
-["r"] = 1,
-},
-},
-["kind"] = "reaction",
-},
-},
-["scale"] = 1,
-["kind"] = "health",
-["anchor"] = {
-},
-["background"] = {
-["color"] = {
-["a"] = 1,
-["r"] = 1,
-["g"] = 1,
-["b"] = 1,
-},
-["applyColor"] = true,
-["asset"] = "Platy: Solid Grey",
-},
-["foreground"] = {
-["asset"] = "Platy: Fade Bottom",
-},
-["relativeTo"] = 0,
-},
-},
-["markers"] = {
-{
-["anchor"] = {
-"BOTTOM",
-0,
-18,
-},
-["layer"] = 3,
-["scale"] = 1.6,
-["kind"] = "raid",
-["asset"] = "normal/blizzard-raid",
-["color"] = {
-["b"] = 1,
-["g"] = 1,
-["r"] = 1,
-},
-},
-},
-["texts"] = {
-{
-["displayTypes"] = {
-"absolute",
-},
-["color"] = {
-["b"] = 1,
-["g"] = 1,
-["r"] = 1,
+["a"] = 0.5364580154418945,
+["b"] = 0.6666666865348816,
+["g"] = 0.6666666865348816,
+["r"] = 0.6666666865348816,
 },
 ["layer"] = 2,
-["maxWidth"] = 0,
-["significantFigures"] = 0,
-["scale"] = 3,
+["asset"] = "Platy: Blizzard Midnight Selected",
+["width"] = 1.16,
+["scale"] = 0.9,
 ["anchor"] = {
 },
-["kind"] = "health",
-["truncate"] = false,
-["align"] = "CENTER",
+["height"] = 1.42,
+["sliced"] = true,
+["kind"] = "mouseover",
+["includeTarget"] = true,
 },
-},
-},
-["Simplified"] = {
-["highlights"] = {
 {
-["scale"] = 1.03,
-["layer"] = 0,
-["asset"] = "Platy: Arrow",
-["width"] = 1.23,
 ["color"] = {
 ["a"] = 1,
 ["r"] = 1,
 ["g"] = 1,
 ["b"] = 1,
 },
-["anchor"] = {
+["layer"] = 2,
+["asset"] = "Platy: Blizzard Cast Bar",
+["width"] = 1,
+["autoColors"] = {
+{
+["colors"] = {
+["cast"] = {
+["a"] = 1,
+["r"] = 1,
+["g"] = 0.09411764705882351,
+["b"] = 0.1529411764705883,
 },
-["kind"] = "target",
-["height"] = 1.22,
-["sliced"] = true,
+["channel"] = {
+["a"] = 1,
+["r"] = 1,
+["g"] = 0.0941176563501358,
+["b"] = 0.1529411822557449,
+},
+},
+["kind"] = "importantCast",
 },
 {
-["color"] = {
+["colors"] = {
+["uninterruptable"] = {
 ["a"] = 1,
-["r"] = 0.6941176652908325,
-["g"] = 0.3725490272045136,
-["b"] = 0.9215686917304992,
+["r"] = 0.5137254901960784,
+["g"] = 0.7529411764705882,
+["b"] = 0.7647058823529411,
 },
-["layer"] = 0,
-["asset"] = "Platy: 7px",
-["width"] = 1.03,
+},
+["kind"] = "uninterruptableCast",
+},
+},
 ["scale"] = 1,
-["height"] = 1.24,
 ["anchor"] = {
+"TOP",
+0,
+-8,
 },
-["kind"] = "mouseover",
 ["sliced"] = true,
-["includeTarget"] = true,
+["height"] = 0.51,
+["kind"] = "automatic",
 },
 },
 ["specialBars"] = {
 },
-["scale"] = 1,
+["scale"] = 1.1,
 ["auras"] = {
+{
+["direction"] = "RIGHT",
+["scale"] = 1,
+["showCountdown"] = true,
+["filters"] = {
+["important"] = true,
+["fromYou"] = true,
+},
+["showPandemic"] = true,
+["kind"] = "debuffs",
+["anchor"] = {
+"BOTTOMLEFT",
+-64,
+9.5,
+},
+["height"] = 1,
+["showDispel"] = {
+},
+["textScale"] = 1,
+["sorting"] = {
+["kind"] = "duration",
+["reversed"] = false,
+},
+},
+{
+["direction"] = "LEFT",
+["scale"] = 1.19,
+["showCountdown"] = true,
+["filters"] = {
+["dispelable"] = false,
+["important"] = true,
+["defensive"] = false,
+},
+["textScale"] = 1,
+["kind"] = "buffs",
+["height"] = 1,
+["showDispel"] = {
+["enrage"] = true,
+},
+["anchor"] = {
+"LEFT",
+-93,
+0,
+},
+["sorting"] = {
+["kind"] = "duration",
+["reversed"] = false,
+},
+},
+{
+["direction"] = "RIGHT",
+["scale"] = 1.46,
+["showCountdown"] = true,
+["filters"] = {
+["fromYou"] = false,
+},
+["textScale"] = 1,
+["kind"] = "crowdControl",
+["height"] = 1,
+["showDispel"] = {
+},
+["anchor"] = {
+"RIGHT",
+93,
+0,
+},
+["sorting"] = {
+["kind"] = "duration",
+["reversed"] = false,
+},
+},
 },
 ["font"] = {
 ["outline"] = true,
 ["shadow"] = true,
-["asset"] = "RobotoCondensed-Bold",
+["asset"] = "FritzQuadrata",
 ["slug"] = true,
 },
 ["version"] = 1,
 ["bars"] = {
 {
-["absorb"] = {
-["color"] = {
-["a"] = 1,
-["b"] = 1,
-["g"] = 1,
-["r"] = 1,
-},
-["asset"] = "Platy: Absorb Wide",
-},
+["relativeTo"] = 0,
 ["animate"] = false,
-["scale"] = 1,
+["marker"] = {
+["asset"] = "wide/glow",
+},
 ["layer"] = 1,
 ["border"] = {
 ["color"] = {
 ["a"] = 1,
-["r"] = 0,
-["g"] = 0,
-["b"] = 0,
+["r"] = 1,
+["g"] = 1,
+["b"] = 1,
 },
-["height"] = 1,
-["asset"] = "Platy: 2px",
-["width"] = 1,
+["height"] = 1.09,
+["asset"] = "Platy: Blizzard Midnight",
+["width"] = 1.12,
 },
 ["autoColors"] = {
+{
+["kind"] = "eliteType",
+["colors"] = {
+["boss"] = {
+["r"] = 0.7372549019607844,
+["g"] = 0.1098039215686275,
+["b"] = 0,
+},
+["melee"] = {
+["r"] = 0.9882352941176471,
+["g"] = 0.9882352941176471,
+["b"] = 0.9882352941176471,
+},
+["caster"] = {
+["a"] = 1,
+["b"] = 0.9647059440612793,
+["g"] = 0.8901961445808411,
+["r"] = 0,
+},
+["trivial"] = {
+["r"] = 0.6980392156862745,
+["g"] = 0.5568627450980392,
+["b"] = 0.3333333333333333,
+},
+["miniboss"] = {
+["a"] = 1,
+["b"] = 0.6980392336845398,
+["g"] = 0.4470588564872742,
+["r"] = 0.2274509966373444,
+},
+},
+["instancesOnly"] = true,
+},
 {
 ["colors"] = {
 },
@@ -344,35 +281,35 @@ PLATYNATOR_CONFIG = {
 {
 ["colors"] = {
 ["tapped"] = {
-["r"] = 0.4313725490196079,
-["g"] = 0.4313725490196079,
 ["b"] = 0.4313725490196079,
+["g"] = 0.4313725490196079,
+["r"] = 0.4313725490196079,
 },
 },
 ["kind"] = "tapped",
 },
 {
-["combatOnly"] = false,
+["combatOnly"] = true,
 ["colors"] = {
-["transition"] = {
-["r"] = 1,
-["g"] = 0.6274509803921569,
-["b"] = 0,
-},
-["warning"] = {
-["r"] = 0.8,
-["g"] = 0,
-["b"] = 0,
-},
 ["offtank"] = {
 ["r"] = 0.05882352941176471,
 ["g"] = 0.6666666666666666,
 ["b"] = 0.7843137254901961,
 },
+["transition"] = {
+["r"] = 1,
+["g"] = 0.6274509803921569,
+["b"] = 0,
+},
 ["safe"] = {
 ["r"] = 0.05882352941176471,
 ["g"] = 0.5882352941176471,
 ["b"] = 0.9019607843137256,
+},
+["warning"] = {
+["r"] = 0.8,
+["g"] = 0,
+["b"] = 0,
 },
 },
 ["kind"] = "threat",
@@ -381,11 +318,6 @@ PLATYNATOR_CONFIG = {
 },
 {
 ["colors"] = {
-["unfriendly"] = {
-["b"] = 0,
-["g"] = 0.5058823529411764,
-["r"] = 1,
-},
 ["neutral"] = {
 ["r"] = 1,
 ["g"] = 1,
@@ -401,43 +333,56 @@ PLATYNATOR_CONFIG = {
 ["g"] = 0,
 ["b"] = 0,
 },
+["unfriendly"] = {
+["r"] = 1,
+["g"] = 0.5058823529411764,
+["b"] = 0,
+},
 },
 ["kind"] = "reaction",
 },
 },
-["relativeTo"] = 0,
-["foreground"] = {
-["asset"] = "Platy: Fade Bottom",
+["scale"] = 0.9,
+["background"] = {
+["color"] = {
+["a"] = 0.2865839898586273,
+["b"] = 0,
+["g"] = 0,
+["r"] = 0,
 },
-["anchor"] = {
+["applyColor"] = false,
+["asset"] = "Platy: Solid White",
+},
+["foreground"] = {
+["asset"] = "Platy: Solid White",
 },
 ["kind"] = "health",
-["background"] = {
+["anchor"] = {
+},
+["absorb"] = {
 ["color"] = {
 ["a"] = 1,
 ["b"] = 1,
 ["g"] = 1,
 ["r"] = 1,
 },
-["applyColor"] = true,
-["asset"] = "Platy: Solid Grey",
-},
-["marker"] = {
-["asset"] = "wide/glow",
+["asset"] = "Platy: Absorb Wide",
 },
 },
 {
-["scale"] = 1,
+["marker"] = {
+["asset"] = "wide/glow",
+},
 ["layer"] = 1,
 ["border"] = {
-["height"] = 1,
 ["color"] = {
-["a"] = 1,
-["b"] = 0,
-["g"] = 0,
-["r"] = 0,
+["a"] = 0.5,
+["r"] = 1,
+["g"] = 0.984313725490196,
+["b"] = 0.3215686274509804,
 },
-["asset"] = "Platy: 7px",
+["height"] = 0.51,
+["asset"] = "Platy: Blizzard Cast Bar",
 ["width"] = 1,
 },
 ["autoColors"] = {
@@ -458,10 +403,20 @@ PLATYNATOR_CONFIG = {
 },
 {
 ["colors"] = {
+["ready"] = {
+["r"] = 0,
+["g"] = 1,
+["b"] = 0,
+},
+},
+["kind"] = "interruptReady",
+},
+{
+["colors"] = {
 ["uninterruptable"] = {
-["r"] = 0.5137254901960784,
-["g"] = 0.7529411764705882,
-["b"] = 0.7647058823529411,
+["r"] = 0.5294117647058824,
+["g"] = 0.5294117647058824,
+["b"] = 0.5294117647058824,
 },
 },
 ["kind"] = "uninterruptableCast",
@@ -469,13 +424,13 @@ PLATYNATOR_CONFIG = {
 {
 ["colors"] = {
 ["cast"] = {
-["r"] = 0.9882352941176471,
-["g"] = 0.5490196078431373,
+["r"] = 1,
+["g"] = 0.7411764705882353,
 ["b"] = 0,
 },
 ["interrupted"] = {
-["r"] = 0.9882352941176471,
-["g"] = 0.2117647058823529,
+["r"] = 0.9882352941176472,
+["g"] = 0.211764705882353,
 ["b"] = 0.8784313725490196,
 },
 ["channel"] = {
@@ -487,34 +442,458 @@ PLATYNATOR_CONFIG = {
 ["kind"] = "cast",
 },
 },
-["marker"] = {
-["asset"] = "none",
-},
+["scale"] = 1,
 ["foreground"] = {
-["asset"] = "Platy: Fade Bottom",
+["asset"] = "Platy: Blizzard Cast Bar",
 },
 ["anchor"] = {
 "TOP",
 0,
--10.5,
+-8,
 },
 ["kind"] = "cast",
 ["background"] = {
+["color"] = {
+["a"] = 1,
+["b"] = 0.1764705926179886,
+["g"] = 0.1764705926179886,
+["r"] = 0.1764705926179886,
+},
+["applyColor"] = false,
+["asset"] = "Platy: Solid White",
+},
+["interruptMarker"] = {
+["color"] = {
+["r"] = 1,
+["g"] = 1,
+["b"] = 1,
+},
+["asset"] = "none",
+},
+},
+},
+["markers"] = {
+{
+["layer"] = 3,
+["scale"] = 0.9,
+["color"] = {
+["r"] = 1,
+["g"] = 1,
+["b"] = 1,
+},
+["kind"] = "quest",
+["asset"] = "normal/quest-blizzard",
+["anchor"] = {
+"TOPLEFT",
+-81,
+8.5,
+},
+},
+{
+["layer"] = 3,
+["scale"] = 0.5,
+["color"] = {
+["r"] = 1,
+["g"] = 1,
+["b"] = 1,
+},
+["kind"] = "cannotInterrupt",
+["asset"] = "normal/blizzard-shield",
+["anchor"] = {
+"TOPLEFT",
+-68,
+-6.5,
+},
+},
+{
+["layer"] = 3,
+["scale"] = 1,
+["color"] = {
+["r"] = 1,
+["g"] = 1,
+["b"] = 1,
+},
+["kind"] = "raid",
+["asset"] = "normal/blizzard-raid",
+["anchor"] = {
+"BOTTOMRIGHT",
+70,
+0,
+},
+},
+{
+["square"] = false,
+["color"] = {
+["r"] = 1,
+["g"] = 1,
+["b"] = 1,
+},
+["kind"] = "castIcon",
+["anchor"] = {
+"TOPLEFT",
+-67,
+-15.5,
+},
+["layer"] = 2,
+["asset"] = "normal/cast-icon",
+["scale"] = 0.54,
+},
+{
+["openWorldOnly"] = false,
+["color"] = {
+["b"] = 1,
+["g"] = 1,
+["r"] = 1,
+},
+["kind"] = "elite",
+["anchor"] = {
+"LEFT",
+-74,
+0,
+},
+["layer"] = 3,
+["asset"] = "special/blizzard-elite-midnight",
+["scale"] = 0.66,
+},
+},
+["texts"] = {
+{
+["displayTypes"] = {
+"percentage",
+},
+["align"] = "CENTER",
+["layer"] = 2,
+["maxWidth"] = 0,
+["significantFigures"] = 0,
+["truncate"] = false,
+["anchor"] = {
+"RIGHT",
+60.5,
+0,
+},
+["kind"] = "health",
+["scale"] = 0.8,
+["color"] = {
+["r"] = 1,
+["g"] = 1,
+["b"] = 1,
+},
+},
+{
+["showWhenWowDoes"] = false,
+["truncate"] = true,
+["align"] = "LEFT",
+["layer"] = 2,
+["maxWidth"] = 0.75,
+["autoColors"] = {
+},
+["anchor"] = {
+"LEFT",
+-59,
+0,
+},
+["kind"] = "creatureName",
+["scale"] = 0.8,
+["color"] = {
+["b"] = 1,
+["g"] = 1,
+["r"] = 1,
+},
+},
+{
+["color"] = {
+["r"] = 1,
+["g"] = 1,
+["b"] = 1,
+},
+["align"] = "LEFT",
+["kind"] = "castSpellName",
+["truncate"] = true,
+["scale"] = 0.7,
+["layer"] = 2,
+["anchor"] = {
+"TOPLEFT",
+-57,
+-16,
+},
+["maxWidth"] = 0.44,
+},
+{
+["truncate"] = true,
+["color"] = {
+["r"] = 1,
+["g"] = 1,
+["b"] = 1,
+},
+["layer"] = 2,
+["maxWidth"] = 0.46,
+["align"] = "RIGHT",
+["anchor"] = {
+"TOPRIGHT",
+61.5,
+-16,
+},
+["kind"] = "castTarget",
+["scale"] = 0.7,
+["applyClassColors"] = true,
+},
+},
+},
+["Simplified"] = {
+["highlights"] = {
+{
+["scale"] = 1.03,
+["layer"] = 0,
+["asset"] = "Platy: Arrow",
+["width"] = 1.23,
+["kind"] = "target",
+["anchor"] = {
+},
+["sliced"] = true,
+["height"] = 1.22,
 ["color"] = {
 ["a"] = 1,
 ["b"] = 1,
 ["g"] = 1,
 ["r"] = 1,
 },
+},
+{
+["color"] = {
+["a"] = 1,
+["b"] = 0.9215686917304992,
+["g"] = 0.3725490272045136,
+["r"] = 0.6941176652908325,
+},
+["layer"] = 0,
+["asset"] = "Platy: 7px",
+["width"] = 1.03,
+["scale"] = 1,
+["kind"] = "mouseover",
+["anchor"] = {
+},
+["sliced"] = true,
+["height"] = 1.24,
+["includeTarget"] = true,
+},
+},
+["specialBars"] = {
+},
+["scale"] = 1,
+["auras"] = {
+},
+["font"] = {
+["outline"] = true,
+["shadow"] = true,
+["asset"] = "RobotoCondensed-Bold",
+["slug"] = true,
+},
+["version"] = 1,
+["bars"] = {
+{
+["absorb"] = {
+["color"] = {
+["a"] = 1,
+["r"] = 1,
+["g"] = 1,
+["b"] = 1,
+},
+["asset"] = "Platy: Absorb Wide",
+},
+["animate"] = false,
+["scale"] = 1,
+["layer"] = 1,
+["border"] = {
+["color"] = {
+["a"] = 1,
+["b"] = 0,
+["g"] = 0,
+["r"] = 0,
+},
+["height"] = 1,
+["asset"] = "Platy: 2px",
+["width"] = 1,
+},
+["autoColors"] = {
+{
+["colors"] = {
+},
+["kind"] = "classColors",
+},
+{
+["colors"] = {
+["tapped"] = {
+["b"] = 0.4313725490196079,
+["g"] = 0.4313725490196079,
+["r"] = 0.4313725490196079,
+},
+},
+["kind"] = "tapped",
+},
+{
+["combatOnly"] = false,
+["colors"] = {
+["offtank"] = {
+["b"] = 0.7843137254901961,
+["g"] = 0.6666666666666666,
+["r"] = 0.05882352941176471,
+},
+["warning"] = {
+["b"] = 0,
+["g"] = 0,
+["r"] = 0.8,
+},
+["safe"] = {
+["b"] = 0.9019607843137256,
+["g"] = 0.5882352941176471,
+["r"] = 0.05882352941176471,
+},
+["transition"] = {
+["b"] = 0,
+["g"] = 0.6274509803921569,
+["r"] = 1,
+},
+},
+["kind"] = "threat",
+["useSafeColor"] = true,
+["instancesOnly"] = false,
+},
+{
+["colors"] = {
+["unfriendly"] = {
+["r"] = 1,
+["g"] = 0.5058823529411764,
+["b"] = 0,
+},
+["friendly"] = {
+["b"] = 0,
+["g"] = 1,
+["r"] = 0,
+},
+["hostile"] = {
+["b"] = 0,
+["g"] = 0,
+["r"] = 1,
+},
+["neutral"] = {
+["b"] = 0,
+["g"] = 1,
+["r"] = 1,
+},
+},
+["kind"] = "reaction",
+},
+},
+["marker"] = {
+["asset"] = "wide/glow",
+},
+["kind"] = "health",
+["anchor"] = {
+},
+["background"] = {
+["color"] = {
+["a"] = 1,
+["r"] = 1,
+["g"] = 1,
+["b"] = 1,
+},
+["applyColor"] = true,
+["asset"] = "Platy: Solid Grey",
+},
+["foreground"] = {
+["asset"] = "Platy: Fade Bottom",
+},
+["relativeTo"] = 0,
+},
+{
+["scale"] = 1,
+["layer"] = 1,
+["border"] = {
+["height"] = 1,
+["color"] = {
+["a"] = 1,
+["r"] = 0,
+["g"] = 0,
+["b"] = 0,
+},
+["asset"] = "Platy: 7px",
+["width"] = 1,
+},
+["autoColors"] = {
+{
+["colors"] = {
+["cast"] = {
+["b"] = 0.1529411764705883,
+["g"] = 0.09411764705882353,
+["r"] = 1,
+},
+["channel"] = {
+["b"] = 1,
+["g"] = 0.2627450980392157,
+["r"] = 0.0392156862745098,
+},
+},
+["kind"] = "importantCast",
+},
+{
+["colors"] = {
+["uninterruptable"] = {
+["b"] = 0.7647058823529411,
+["g"] = 0.7529411764705882,
+["r"] = 0.5137254901960784,
+},
+},
+["kind"] = "uninterruptableCast",
+},
+{
+["colors"] = {
+["cast"] = {
+["b"] = 0,
+["g"] = 0.5490196078431373,
+["r"] = 0.9882352941176471,
+},
+["interrupted"] = {
+["b"] = 0.8784313725490196,
+["g"] = 0.2117647058823529,
+["r"] = 0.9882352941176471,
+},
+["channel"] = {
+["b"] = 0.2156862745098039,
+["g"] = 0.7764705882352941,
+["r"] = 0.2431372549019608,
+},
+},
+["kind"] = "cast",
+},
+},
+["marker"] = {
+["asset"] = "none",
+},
+["kind"] = "cast",
+["anchor"] = {
+"TOP",
+0,
+-10.5,
+},
+["background"] = {
+["color"] = {
+["a"] = 1,
+["r"] = 1,
+["g"] = 1,
+["b"] = 1,
+},
 ["applyColor"] = false,
+["asset"] = "Platy: Fade Bottom",
+},
+["foreground"] = {
 ["asset"] = "Platy: Fade Bottom",
 },
 ["interruptMarker"] = {
 ["asset"] = "none",
 ["color"] = {
-["b"] = 1,
-["g"] = 1,
 ["r"] = 1,
+["g"] = 1,
+["b"] = 1,
 },
 },
 },
@@ -522,17 +901,17 @@ PLATYNATOR_CONFIG = {
 ["markers"] = {
 {
 ["color"] = {
-["r"] = 1,
-["g"] = 1,
 ["b"] = 1,
+["g"] = 1,
+["r"] = 1,
 },
-["kind"] = "raid",
+["layer"] = 3,
 ["anchor"] = {
 "BOTTOM",
 0,
 18,
 },
-["layer"] = 3,
+["kind"] = "raid",
 ["asset"] = "normal/blizzard-raid",
 ["scale"] = 1.6,
 },
@@ -543,14 +922,14 @@ PLATYNATOR_CONFIG = {
 -76.5,
 -10,
 },
-["kind"] = "castIcon",
-["scale"] = 1,
 ["layer"] = 3,
+["scale"] = 1,
+["kind"] = "castIcon",
 ["asset"] = "normal/cast-icon",
 ["color"] = {
-["b"] = 1,
-["g"] = 1,
 ["r"] = 1,
+["g"] = 1,
+["b"] = 1,
 },
 },
 {
@@ -559,14 +938,14 @@ PLATYNATOR_CONFIG = {
 -62,
 -12,
 },
-["kind"] = "cannotInterrupt",
-["scale"] = 0.75,
 ["layer"] = 3,
+["scale"] = 0.75,
+["kind"] = "cannotInterrupt",
 ["asset"] = "normal/shield-soft",
 ["color"] = {
-["b"] = 0.4980392156862745,
-["g"] = 0.4823529411764706,
 ["r"] = 0.392156862745098,
+["g"] = 0.4823529411764706,
+["b"] = 0.4980392156862745,
 },
 },
 },
@@ -579,47 +958,47 @@ PLATYNATOR_CONFIG = {
 ["layer"] = 2,
 ["maxWidth"] = 0,
 ["significantFigures"] = 0,
-["align"] = "CENTER",
+["color"] = {
+["b"] = 1,
+["g"] = 1,
+["r"] = 1,
+},
 ["anchor"] = {
 },
 ["kind"] = "health",
 ["truncate"] = false,
-["color"] = {
-["r"] = 1,
-["g"] = 1,
-["b"] = 1,
-},
+["align"] = "CENTER",
 },
 {
 ["truncate"] = false,
 ["color"] = {
-["r"] = 1,
-["g"] = 1,
 ["b"] = 1,
+["g"] = 1,
+["r"] = 1,
 },
 ["layer"] = 2,
 ["maxWidth"] = 0,
 ["colors"] = {
 ["npc"] = {
 ["neutral"] = {
-["r"] = 1,
-["g"] = 1,
 ["b"] = 0,
+["g"] = 1,
+["r"] = 1,
 },
 ["tapped"] = {
-["r"] = 0.4313725490196079,
-["g"] = 0.4313725490196079,
 ["b"] = 0.4313725490196079,
+["g"] = 0.4313725490196079,
+["r"] = 0.4313725490196079,
 },
 ["friendly"] = {
-["r"] = 0,
-["g"] = 1,
 ["b"] = 0,
+["g"] = 1,
+["r"] = 0,
 },
 ["hostile"] = {
-["r"] = 1,
-["g"] = 0,
 ["b"] = 0,
+["g"] = 0,
+["r"] = 1,
 },
 },
 },
@@ -629,24 +1008,24 @@ PLATYNATOR_CONFIG = {
 -13,
 },
 ["kind"] = "castSpellName",
-["align"] = "CENTER",
 ["scale"] = 1,
+["align"] = "CENTER",
 },
 {
+["scale"] = 1,
 ["align"] = "CENTER",
+["layer"] = 2,
+["truncate"] = false,
+["color"] = {
+["b"] = 1,
+["g"] = 1,
+["r"] = 1,
+},
+["kind"] = "castTimeLeft",
 ["anchor"] = {
 "TOPRIGHT",
 65,
 -13,
-},
-["kind"] = "castTimeLeft",
-["truncate"] = false,
-["scale"] = 1,
-["layer"] = 2,
-["color"] = {
-["r"] = 1,
-["g"] = 1,
-["b"] = 1,
 },
 ["maxWidth"] = 0,
 },
@@ -659,42 +1038,42 @@ PLATYNATOR_CONFIG = {
 ["layer"] = 0,
 ["asset"] = "Platy: Feathered",
 ["width"] = 1.2,
-["kind"] = "target",
 ["anchor"] = {
 },
+["height"] = 1.87,
 ["sliced"] = true,
 ["color"] = {
 ["a"] = 1,
-["r"] = 1,
-["g"] = 0,
 ["b"] = 0.615686297416687,
+["g"] = 0,
+["r"] = 1,
 },
-["height"] = 1.87,
+["kind"] = "target",
 },
 {
 ["color"] = {
 ["a"] = 1,
-["r"] = 1,
-["g"] = 1,
 ["b"] = 1,
+["g"] = 1,
+["r"] = 1,
 },
 ["layer"] = 0,
 ["asset"] = "Platy: Feathered",
 ["width"] = 1.65,
 ["scale"] = 0.65,
-["kind"] = "mouseover",
 ["anchor"] = {
 },
-["sliced"] = true,
 ["height"] = 2.35,
+["sliced"] = true,
+["kind"] = "mouseover",
 ["includeTarget"] = true,
 },
 {
 ["color"] = {
 ["a"] = 1,
-["r"] = 1,
-["g"] = 1,
 ["b"] = 1,
+["g"] = 1,
+["r"] = 1,
 },
 ["layer"] = 3,
 ["asset"] = "Platy: Animated Dashes Long",
@@ -704,21 +1083,21 @@ PLATYNATOR_CONFIG = {
 ["colors"] = {
 ["cast"] = {
 ["a"] = 1,
-["b"] = 0.1529411764705883,
-["g"] = 0.09411764705882353,
 ["r"] = 1,
+["g"] = 0.09411764705882353,
+["b"] = 0.1529411764705883,
 },
 ["channel"] = {
 ["a"] = 1,
-["b"] = 1,
-["g"] = 0.2627450980392157,
 ["r"] = 0.0392156862745098,
+["g"] = 0.2627450980392157,
+["b"] = 1,
 },
 },
 ["kind"] = "importantCast",
 },
 },
-["height"] = 0.91,
+["scale"] = 1,
 ["anchor"] = {
 "TOP",
 0,
@@ -726,20 +1105,20 @@ PLATYNATOR_CONFIG = {
 },
 ["kind"] = "animatedBorder",
 ["borderWidth"] = 1,
-["scale"] = 1,
+["height"] = 0.91,
 },
 },
 ["specialBars"] = {
 {
 ["filled"] = "normal/soft-full",
-["blank"] = "normal/soft-faded",
 ["anchor"] = {
 0,
 -7,
 },
+["scale"] = 0.01,
 ["layer"] = 3,
 ["kind"] = "power",
-["scale"] = 0.01,
+["blank"] = "normal/soft-faded",
 },
 },
 ["scale"] = 1.05,
@@ -748,36 +1127,35 @@ PLATYNATOR_CONFIG = {
 ["direction"] = "RIGHT",
 ["scale"] = 1,
 ["showCountdown"] = true,
-["sorting"] = {
-["kind"] = "duration",
-["reversed"] = false,
+["filters"] = {
+["important"] = true,
+["fromYou"] = true,
 },
-["showPandemic"] = true,
-["kind"] = "debuffs",
-["height"] = 1,
+["textScale"] = 1,
+["showDispel"] = {
+},
 ["anchor"] = {
 "BOTTOMLEFT",
 -61.5,
 10,
 },
-["showDispel"] = {
-},
-["textScale"] = 1,
-["filters"] = {
-["fromYou"] = true,
-["important"] = true,
+["height"] = 1,
+["kind"] = "debuffs",
+["showPandemic"] = true,
+["sorting"] = {
+["reversed"] = false,
+["kind"] = "duration",
 },
 },
 {
 ["direction"] = "LEFT",
 ["scale"] = 1.26,
 ["showCountdown"] = true,
-["sorting"] = {
-["kind"] = "duration",
-["reversed"] = false,
+["filters"] = {
+["dispelable"] = true,
+["important"] = true,
+["defensive"] = false,
 },
-["textScale"] = 1,
-["kind"] = "buffs",
 ["height"] = 1,
 ["showDispel"] = {
 ["enrage"] = true,
@@ -787,10 +1165,11 @@ PLATYNATOR_CONFIG = {
 -91,
 0,
 },
-["filters"] = {
-["dispelable"] = true,
-["important"] = true,
-["defensive"] = false,
+["kind"] = "buffs",
+["textScale"] = 1,
+["sorting"] = {
+["reversed"] = false,
+["kind"] = "duration",
 },
 },
 },
@@ -812,9 +1191,9 @@ PLATYNATOR_CONFIG = {
 ["height"] = 1,
 ["color"] = {
 ["a"] = 1,
-["b"] = 0,
-["g"] = 0,
 ["r"] = 0,
+["g"] = 0,
+["b"] = 0,
 },
 ["asset"] = "Platy: Soft",
 ["width"] = 1,
@@ -829,29 +1208,29 @@ PLATYNATOR_CONFIG = {
 ["kind"] = "eliteType",
 ["colors"] = {
 ["boss"] = {
-["b"] = 0.458823561668396,
-["g"] = 0.4235294461250305,
 ["r"] = 0.9450981020927428,
+["g"] = 0.4235294461250305,
+["b"] = 0.458823561668396,
 },
 ["melee"] = {
-["b"] = 0.007843137718737125,
-["g"] = 0,
 ["r"] = 0.9803922176361084,
+["g"] = 0,
+["b"] = 0.007843137718737125,
 },
 ["caster"] = {
-["b"] = 0.9764706492424012,
-["g"] = 0.8196079134941101,
 ["r"] = 0.01568627543747425,
+["g"] = 0.8196079134941101,
+["b"] = 0.9764706492424012,
 },
 ["trivial"] = {
-["b"] = 0.4980392456054688,
-["g"] = 0.7764706611633301,
 ["r"] = 0.9686275124549866,
+["g"] = 0.7764706611633301,
+["b"] = 0.4980392456054688,
 },
 ["miniboss"] = {
-["b"] = 0.9490196704864502,
-["g"] = 0.5490196347236633,
 ["r"] = 0.6431372761726379,
+["g"] = 0.5490196347236633,
+["b"] = 0.9490196704864502,
 },
 },
 ["instancesOnly"] = true,
@@ -859,9 +1238,9 @@ PLATYNATOR_CONFIG = {
 {
 ["colors"] = {
 ["tapped"] = {
-["b"] = 0.4313725490196079,
-["g"] = 0.4313725490196079,
 ["r"] = 0.4313725490196079,
+["g"] = 0.4313725490196079,
+["b"] = 0.4313725490196079,
 },
 },
 ["kind"] = "tapped",
@@ -869,83 +1248,83 @@ PLATYNATOR_CONFIG = {
 {
 ["combatOnly"] = false,
 ["colors"] = {
-["offtank"] = {
-["b"] = 1,
-["g"] = 0.501960813999176,
-["r"] = 0.501960813999176,
-},
 ["warning"] = {
-["b"] = 0,
-["g"] = 0.4352941513061523,
 ["r"] = 0.8666667342185974,
-},
-["safe"] = {
-["b"] = 0.1137254983186722,
-["g"] = 0.1882353127002716,
-["r"] = 0.7450980544090271,
+["g"] = 0.4352941513061523,
+["b"] = 0,
 },
 ["transition"] = {
-["b"] = 0,
-["g"] = 0.6745098233222961,
 ["r"] = 0.7450980544090271,
+["g"] = 0.6745098233222961,
+["b"] = 0,
+},
+["safe"] = {
+["r"] = 0.7450980544090271,
+["g"] = 0.1882353127002716,
+["b"] = 0.1137254983186722,
+},
+["offtank"] = {
+["r"] = 0.501960813999176,
+["g"] = 0.501960813999176,
+["b"] = 1,
 },
 },
 ["kind"] = "threat",
-["useSafeColor"] = true,
 ["instancesOnly"] = false,
+["useSafeColor"] = true,
 },
 {
 ["colors"] = {
 ["neutral"] = {
-["b"] = 0,
-["g"] = 0.8588235974311829,
 ["r"] = 0.8980392813682556,
-},
-["friendly"] = {
+["g"] = 0.8588235974311829,
 ["b"] = 0,
-["g"] = 0.8901961445808411,
-["r"] = 0,
-},
-["hostile"] = {
-["b"] = 0.1137254983186722,
-["g"] = 0.1882353127002716,
-["r"] = 0.7450980544090271,
 },
 ["unfriendly"] = {
-["r"] = 1,
+["b"] = 0,
 ["g"] = 0.5058823529411764,
+["r"] = 1,
+},
+["hostile"] = {
+["r"] = 0.7450980544090271,
+["g"] = 0.1882353127002716,
+["b"] = 0.1137254983186722,
+},
+["friendly"] = {
+["r"] = 0,
+["g"] = 0.8901961445808411,
 ["b"] = 0,
 },
 },
 ["kind"] = "reaction",
 },
 },
-["absorb"] = {
-["color"] = {
-["a"] = 1,
-["b"] = 1,
-["g"] = 1,
-["r"] = 1,
-},
-["asset"] = "Platy: Absorb Wide",
-},
-["anchor"] = {
-},
+["scale"] = 1,
+["kind"] = "health",
 ["foreground"] = {
 ["asset"] = "Platy: Solid White",
 },
-["kind"] = "health",
 ["background"] = {
 ["color"] = {
 ["a"] = 0.6699999999999999,
-["r"] = 1,
-["g"] = 1,
 ["b"] = 1,
+["g"] = 1,
+["r"] = 1,
 },
 ["applyColor"] = true,
 ["asset"] = "Platy: Solid Black",
 },
-["scale"] = 1,
+["anchor"] = {
+},
+["absorb"] = {
+["color"] = {
+["a"] = 1,
+["r"] = 1,
+["g"] = 1,
+["b"] = 1,
+},
+["asset"] = "Platy: Absorb Wide",
+},
 },
 {
 ["marker"] = {
@@ -956,9 +1335,9 @@ PLATYNATOR_CONFIG = {
 ["height"] = 0.95,
 ["color"] = {
 ["a"] = 1,
-["b"] = 0,
-["g"] = 0,
 ["r"] = 0,
+["g"] = 0,
+["b"] = 0,
 },
 ["asset"] = "Platy: Soft",
 ["width"] = 1,
@@ -967,9 +1346,9 @@ PLATYNATOR_CONFIG = {
 {
 ["colors"] = {
 ["uninterruptable"] = {
-["b"] = 0.4431372880935669,
-["g"] = 0.4470588564872742,
 ["r"] = 0.4352941513061523,
+["g"] = 0.4470588564872742,
+["b"] = 0.4431372880935669,
 },
 },
 ["kind"] = "uninterruptableCast",
@@ -977,9 +1356,9 @@ PLATYNATOR_CONFIG = {
 {
 ["colors"] = {
 ["ready"] = {
-["r"] = 0,
-["g"] = 1,
 ["b"] = 0,
+["g"] = 1,
+["r"] = 0,
 },
 },
 ["kind"] = "interruptReady",
@@ -987,14 +1366,14 @@ PLATYNATOR_CONFIG = {
 {
 ["colors"] = {
 ["cast"] = {
-["b"] = 0.1529411764705883,
-["g"] = 0.09411764705882351,
 ["r"] = 1,
+["g"] = 0.09411764705882351,
+["b"] = 0.1529411764705883,
 },
 ["channel"] = {
-["b"] = 1,
-["g"] = 0.2627450980392157,
 ["r"] = 0.0392156862745098,
+["g"] = 0.2627450980392157,
+["b"] = 1,
 },
 },
 ["kind"] = "importantCast",
@@ -1002,49 +1381,49 @@ PLATYNATOR_CONFIG = {
 {
 ["colors"] = {
 ["cast"] = {
-["b"] = 0,
-["g"] = 1,
 ["r"] = 1,
+["g"] = 1,
+["b"] = 0,
 },
 ["interrupted"] = {
-["b"] = 0.3019607961177826,
-["g"] = 0.3019607961177826,
 ["r"] = 0.8000000715255737,
+["g"] = 0.3019607961177826,
+["b"] = 0.3019607961177826,
 },
 ["channel"] = {
-["r"] = 0.2431372549019608,
-["g"] = 0.7764705882352941,
 ["b"] = 0.2156862745098039,
+["g"] = 0.7764705882352941,
+["r"] = 0.2431372549019608,
 },
 },
 ["kind"] = "cast",
 },
 },
 ["scale"] = 1,
-["foreground"] = {
-["asset"] = "Platy: Solid White",
+["background"] = {
+["color"] = {
+["a"] = 0.5,
+["b"] = 1,
+["g"] = 1,
+["r"] = 1,
+},
+["applyColor"] = true,
+["asset"] = "Platy: Solid Black",
 },
 ["anchor"] = {
 "TOP",
 0,
 -8,
 },
-["background"] = {
-["color"] = {
-["a"] = 0.5,
-["r"] = 1,
-["g"] = 1,
-["b"] = 1,
-},
-["applyColor"] = true,
-["asset"] = "Platy: Solid Black",
-},
 ["kind"] = "cast",
+["foreground"] = {
+["asset"] = "Platy: Solid White",
+},
 ["interruptMarker"] = {
 ["color"] = {
-["b"] = 1,
-["g"] = 1,
 ["r"] = 1,
+["g"] = 1,
+["b"] = 1,
 },
 ["asset"] = "none",
 },
@@ -1057,13 +1436,13 @@ PLATYNATOR_CONFIG = {
 -72,
 0,
 },
-["layer"] = 3,
-["color"] = {
-["r"] = 1,
-["g"] = 1,
-["b"] = 1,
-},
 ["kind"] = "quest",
+["color"] = {
+["b"] = 1,
+["g"] = 1,
+["r"] = 1,
+},
+["layer"] = 3,
 ["asset"] = "normal/quest-blizzard",
 ["scale"] = 0.9,
 },
@@ -1073,13 +1452,13 @@ PLATYNATOR_CONFIG = {
 81.5,
 10.5,
 },
-["layer"] = 3,
-["color"] = {
-["r"] = 1,
-["g"] = 1,
-["b"] = 1,
-},
 ["kind"] = "raid",
+["color"] = {
+["b"] = 1,
+["g"] = 1,
+["r"] = 1,
+},
+["layer"] = 3,
 ["asset"] = "normal/blizzard-raid",
 ["scale"] = 1,
 },
@@ -1090,46 +1469,46 @@ PLATYNATOR_CONFIG = {
 -62,
 -22,
 },
-["layer"] = 3,
-["scale"] = 1.14,
 ["kind"] = "castIcon",
+["scale"] = 1.14,
+["layer"] = 3,
 ["asset"] = "normal/cast-icon",
 ["color"] = {
-["r"] = 1,
-["g"] = 1,
 ["b"] = 1,
+["g"] = 1,
+["r"] = 1,
 },
 },
 {
 ["color"] = {
-["r"] = 0.392156862745098,
-["g"] = 0.4823529411764706,
 ["b"] = 0.4980392156862745,
+["g"] = 0.4823529411764706,
+["r"] = 0.392156862745098,
 },
-["layer"] = 3,
+["kind"] = "cannotInterrupt",
 ["anchor"] = {
 "TOPLEFT",
 -63.5,
 -10.5,
 },
-["kind"] = "cannotInterrupt",
+["layer"] = 3,
 ["asset"] = "normal/shield-soft",
 ["scale"] = 0.5,
 },
 {
 ["openWorldOnly"] = false,
 ["color"] = {
-["r"] = 1,
-["g"] = 1,
 ["b"] = 1,
+["g"] = 1,
+["r"] = 1,
 },
-["layer"] = 0,
+["kind"] = "elite",
 ["anchor"] = {
 "BOTTOMRIGHT",
 65,
 8.5,
 },
-["kind"] = "elite",
+["layer"] = 0,
 ["asset"] = "special/blizzard-elite-midnight",
 ["scale"] = 0.81,
 },
@@ -1139,14 +1518,14 @@ PLATYNATOR_CONFIG = {
 52,
 8,
 },
-["layer"] = 0,
+["kind"] = "rare",
 ["includeElites"] = true,
 ["color"] = {
-["r"] = 1,
-["g"] = 1,
 ["b"] = 1,
+["g"] = 1,
+["r"] = 1,
 },
-["kind"] = "rare",
+["layer"] = 0,
 ["asset"] = "normal/blizzard-rare-midnight",
 ["scale"] = 0.75,
 },
@@ -1158,8 +1537,10 @@ PLATYNATOR_CONFIG = {
 ["layer"] = 2,
 ["maxWidth"] = 0.7,
 ["significantFigures"] = 0,
-["displayTypes"] = {
-"percentage",
+["color"] = {
+["r"] = 1,
+["g"] = 1,
+["b"] = 1,
 },
 ["anchor"] = {
 "TOPRIGHT",
@@ -1168,19 +1549,17 @@ PLATYNATOR_CONFIG = {
 },
 ["kind"] = "health",
 ["align"] = "RIGHT",
-["color"] = {
-["b"] = 1,
-["g"] = 1,
-["r"] = 1,
+["displayTypes"] = {
+"percentage",
 },
 },
 {
 ["showWhenWowDoes"] = false,
 ["truncate"] = true,
 ["color"] = {
-["b"] = 1,
-["g"] = 1,
 ["r"] = 1,
+["g"] = 1,
+["b"] = 1,
 },
 ["layer"] = 2,
 ["maxWidth"] = 0.76,
@@ -1197,33 +1576,33 @@ PLATYNATOR_CONFIG = {
 6.5,
 },
 ["kind"] = "creatureName",
-["align"] = "LEFT",
 ["scale"] = 1,
+["align"] = "LEFT",
 },
 {
+["scale"] = 0.8,
 ["align"] = "CENTER",
+["kind"] = "castSpellName",
+["truncate"] = true,
+["color"] = {
+["b"] = 1,
+["g"] = 1,
+["r"] = 1,
+},
+["layer"] = 2,
 ["anchor"] = {
 "TOP",
 0,
 -11.5,
-},
-["layer"] = 2,
-["truncate"] = true,
-["scale"] = 0.8,
-["kind"] = "castSpellName",
-["color"] = {
-["r"] = 1,
-["g"] = 1,
-["b"] = 1,
 },
 ["maxWidth"] = 1,
 },
 {
 ["truncate"] = true,
 ["color"] = {
-["r"] = 1,
-["g"] = 1,
 ["b"] = 1,
+["g"] = 1,
+["r"] = 1,
 },
 ["layer"] = 2,
 ["maxWidth"] = 1,
@@ -1238,21 +1617,21 @@ PLATYNATOR_CONFIG = {
 ["applyClassColors"] = true,
 },
 {
+["align"] = "CENTER",
 ["color"] = {
-["r"] = 1,
-["g"] = 1,
 ["b"] = 1,
+["g"] = 1,
+["r"] = 1,
 },
+["kind"] = "castTimeLeft",
+["truncate"] = false,
+["scale"] = 1,
+["layer"] = 2,
 ["anchor"] = {
 "TOPRIGHT",
 64,
 -11.5,
 },
-["layer"] = 2,
-["truncate"] = false,
-["align"] = "CENTER",
-["kind"] = "castTimeLeft",
-["scale"] = 1,
 ["maxWidth"] = 0,
 },
 },
@@ -1268,22 +1647,22 @@ PLATYNATOR_CONFIG = {
 ["direction"] = "RIGHT",
 ["scale"] = 1.7,
 ["showCountdown"] = true,
-["sorting"] = {
-["reversed"] = false,
-["kind"] = "duration",
+["filters"] = {
+["fromYou"] = false,
 },
-["height"] = 1,
-["kind"] = "crowdControl",
+["textScale"] = 1,
+["showDispel"] = {
+},
 ["anchor"] = {
 "BOTTOM",
 0,
-26,
+33.5,
 },
-["showDispel"] = {
-},
-["textScale"] = 1,
-["filters"] = {
-["fromYou"] = false,
+["kind"] = "crowdControl",
+["height"] = 1,
+["sorting"] = {
+["kind"] = "duration",
+["reversed"] = false,
 },
 },
 },
@@ -1299,33 +1678,33 @@ PLATYNATOR_CONFIG = {
 ["markers"] = {
 {
 ["color"] = {
-["r"] = 1,
-["g"] = 1,
 ["b"] = 1,
+["g"] = 1,
+["r"] = 1,
 },
-["layer"] = 3,
-["scale"] = 1,
 ["kind"] = "raid",
+["scale"] = 1,
+["layer"] = 3,
 ["asset"] = "normal/blizzard-raid",
 ["anchor"] = {
 "BOTTOMLEFT",
--51,
-11.5,
+-52,
+13.5,
 },
 },
 {
 ["color"] = {
-["b"] = 1,
-["g"] = 1,
 ["r"] = 1,
+["g"] = 1,
+["b"] = 1,
 },
-["kind"] = "class",
+["layer"] = 1,
 ["anchor"] = {
 "BOTTOM",
 0,
-25.5,
+34.5,
 },
-["layer"] = 1,
+["kind"] = "class",
 ["asset"] = "normal/class",
 ["scale"] = 1.35,
 },
@@ -1347,29 +1726,33 @@ PLATYNATOR_CONFIG = {
 ["anchor"] = {
 "BOTTOM",
 0,
-16,
+18,
 },
 ["kind"] = "creatureName",
-["color"] = {
-["r"] = 1,
-["g"] = 1,
-["b"] = 1,
-},
 ["align"] = "CENTER",
+["color"] = {
+["b"] = 1,
+["g"] = 1,
+["r"] = 1,
 },
 },
 },
 },
-["target_scale"] = 1.15,
-["show_nameplates_only_needed"] = false,
-["click_region_scale_x"] = 1,
-["not_target_alpha"] = 1,
+},
+["global_scale"] = 1.4,
+["style"] = "DarkDevourer",
+["click_region_scale_y"] = 1,
+["stack_region_scale_x"] = 1.2,
 ["clickable_nameplates"] = {
 ["friend"] = false,
 ["enemy"] = true,
 },
-["obscured_alpha"] = 0.4,
-["cast_alpha"] = 1,
+["simplified_scale"] = 0.8,
+["designs_enabled"] = {
+["pvpInstance"] = false,
+["combat"] = false,
+["pvpWorld"] = false,
+},
 },
 },
 }

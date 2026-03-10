@@ -18,7 +18,7 @@ L:SetStrings({
 	["Caster"] = "Zauberwirker",
 	["Healer"] = "Heiler",
 	["Enable if you are:"] = "Aktivieren, wenn du bist:",
-	["Enable in:"] = "Aktivieren in:",
+	["Enable in"] = "Aktivieren in",
 	["Enabled"] = "Aktiviert",
 	["Enable this module everywhere."] = "Aktiviere dieses Modul überall.",
 	["Enable this module in the open world."] = "Aktiviere dieses Modul in der offenen Welt.",
@@ -41,8 +41,11 @@ L:SetStrings({
 	["Reverse swipe"] = "Umgekehrtes Wischen",
 	["Reverses the direction of the cooldown swipe animation."] = "Kehrt die Richtung der Abklingzeit-Wischanimation um.",
 	["Settings"] = "Einstellungen",
+	["Open Settings"] = "Einstellungen öffnen",
+	["Use /minicc, /mcc, or /cc to open the MiniCC config window."] = "Verwende /minicc, /mcc oder /cc, um das MiniCC-Einstellungsfenster zu öffnen.",
 	["Show a glow around the icons."] = "Zeige ein Leuchten um die Symbole.",
 	["Test"] = "Testen",
+	["Test these settings"] = "Diese Einstellungen testen",
 	["Whether to enable or disable this module if you are a caster."] = "Ob dieses Modul aktiviert oder deaktiviert werden soll, wenn du ein Zauberwirker bist.",
 	["Whether to enable or disable this module if you are a healer."] = "Ob dieses Modul aktiviert oder deaktiviert werden soll, wenn du ein Heiler bist.",
 	["Whether to enable or disable this module regardless of what spec you are."] = "Ob dieses Modul unabhängig von deiner Spezialisierung aktiviert oder deaktiviert werden soll.",
@@ -74,7 +77,6 @@ L:SetStrings({
 	["Import Profile"] = "Profil importieren",
 	["Miscellaneous"] = "Sonstiges",
 	["Reset"] = "Zurücksetzen",
-	["Settings:"] = "Einstellungen:",
 	["The others seem to use a non-trivial amount of CPU."] = "Die anderen scheinen eine beträchtliche Menge CPU zu verwenden.",
 	["The Proc Glow uses the least CPU."] = "Das Proc-Leuchten verwendet am wenigsten CPU.",
 
@@ -103,10 +105,12 @@ L:SetStrings({
 	["TTS Volume"] = "TTS-Lautstärke",
 	["Voice"] = "Stimme",
 	["You must choose a voice in your language for this to work."] = "Du musst eine Stimme in deiner Sprache auswählen, damit dies funktioniert.",
+	["These voices come from your installed system language packs and you can add more through your Windows settings."] = "Diese Stimmen stammen aus deinen installierten Systemsprachpaketen und du kannst weitere über die Windows-Einstellungen hinzufügen.",
+	["Note that some voices don't perform well, for example Microsoft Hazel is bad and Microsoft Zira is good."] = "Beachte, dass einige Stimmen nicht gut funktionieren, z. B. ist Microsoft Hazel schlecht und Microsoft Zira gut.",
 
 	-- CC tab
 	["CC"] = "Massenkontrolle",
-	["Change the colour of the glow/border based on dispel type (e.g., blue for magic, red for physical)."] = "Ändere die Farbe des Leuchtens/Rahmens basierend auf dem Banntyp (z.B. blau für Magie, rot für physisch).",
+	["Change the colour of the glow/border based on dispel type (e.g., blue for magic, red for physical). This only applies to CC icons."] = "Ändere die Farbe des Leuchtens/Rahmens basierend auf dem Banntyp (z.B. blau für Magie, rot für physisch). Dies gilt nur für Betäubungs-Icons.",
 	["Color by class"] = "Nach Klasse färben",
 	["Color the glow/border by the enemy's class color."] = "Färbe das Leuchten/Rahmen mit der Klassenfarbe des Gegners.",
 	["Dispel colours"] = "Bannfarben",
@@ -122,17 +126,20 @@ L:SetStrings({
 	["Show a glow around the CC icons."] = "Zeige ein Leuchten um die Massenkontroll-Symbole.",
 	["Shows CC icons on party/raid frames."] = "Zeigt Massenkontroll-Symbole auf Gruppen-/Schlachtzugs-Rahmen.",
 
-	-- CDs tab
-	["CDs"] = "Abklingzeiten",
+	-- Indicator tab
+	["Auras"] = "Auras",
 	["Change the colour of the glow/border. Defensive spells are green and Important spells are red."] = "Ändere die Farbe des Leuchtens/Rahmens. Defensive Zauber sind grün und wichtige Zauber sind rot.",
 	["Defensive"] = "Defensiv",
 	["Don't forget to disable the Blizzard 'center big defensives' option when using this."] = "Vergiss nicht, die Blizzard-Option 'Große Defensivfähigkeiten zentrieren' zu deaktivieren, wenn du dies verwendest.",
 	["Exclude yourself from showing trinket icons."] = "Schließe dich selbst vom Anzeigen von Schmuckstück-Symbolen aus.",
+	["Show CC"] = "CC anzeigen",
+	["Show CC icons."] = "CC-Symbole anzeigen.",
 	["Show Defensives"] = "Defensive anzeigen",
 	["Show defensive spell icons."] = "Symbole für defensive Zauber anzeigen.",
 	["Show Important"] = "Wichtiges anzeigen",
 	["Show important spell icons."] = "Symbole für wichtige Zauber anzeigen.",
-	["Shows active friendly cooldowns party/raid frames."] = "Zeigt aktive verbündete Abklingzeiten auf Gruppen-/Schlachtzugs-Rahmen.",
+	["Shows CC, defensives, and important auras as one set of icons on party/raid frames."] = "Zeigt CC, Defensives und wichtige Auren als einen Satz Symbole auf Gruppen-/Schlachtzugs-Rahmen.",
+	["Tip: Disable the CC module for BGs and enable CC within this module."] = "Tipp: Deaktiviere das CC-Modul für Schlachtfelder und aktiviere CC in diesem Modul.",
 
 	-- Healer tab
 	["A separate region for when your healer is CC'd."] = "Ein separater Bereich für wenn dein Heiler unter Kontrolle ist.",
@@ -167,6 +174,8 @@ L:SetStrings({
 	["Ignore Friendly Pets"] = "Verbündete Begleiter ignorieren",
 	["Nameplates"] = "Namensplaketten",
 	["Nameplates_Short"] = "Platten",
+	["Scale with Nameplate"] = "Scale with Nameplate",
+	["Icons scale along with the nameplate scale. Use this option if you have a different size for the target nameplate (e.g. in BBF's settings)."] = "Icons scale along with the nameplate scale. Use this option if you have a different size for the target nameplate (e.g. in BBF's settings).",
 	["Shows CC and important spells on nameplates (works with nameplate addons e.g. BBP, Platynator, and Plater)."] = "Zeigt Massenkontrolle und wichtige Zauber auf Namensplaketten (funktioniert mit Namensplaketten-Addons wie BBP, Platynator und Plater).",
 	["Spell colours"] = "Zauberfarben",
 
@@ -178,8 +187,7 @@ L:SetStrings({
 
 	-- Party Trinkets tab
 	[" - Doesn't work if your team mates trinket in the starting room."] = " - Funktioniert nicht, wenn deine Teamkollegen Schmuckstücke im Startraum verwenden.",
-	[" - Doesn't work in the open world."] = " - Funktioniert nicht in der offenen Welt.",
-	[" - Racials like stoneform count as a trinket use."] = " - Volksfähigkeiten wie Steinform zählen als Schmuckstück-Benutzung.",
+	[" - Only works inside arena."] = " - Funktioniert nur in der Arena.",
 	["Party Trinkets"] = "Gruppen-Schmuckstücke",
 	["Party Trinkets_Short"] = "Schmuck",
 

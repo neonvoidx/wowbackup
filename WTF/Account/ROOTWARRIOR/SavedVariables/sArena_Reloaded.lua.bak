@@ -74,35 +74,36 @@ sArena_ReloadedDB = {
 ["BlizzTarget"] = {
 ["cdFont"] = "1",
 ["scale"] = 1.17,
-["castBar"] = {
-["useModernCastbars"] = true,
-["posX"] = -34,
-["width"] = 112,
-},
+["changeFont"] = true,
 ["frameFont"] = "1",
-["fontOutline"] = "THICKOUTLINE",
+["textSettings"] = {
+["drTextOffsetY"] = -15,
+["drTextAnchor"] = "CENTER",
+["drTextOffsetX"] = 0,
+["drTextSize"] = 1.22,
+},
 ["textures"] = {
 ["healStatusBarTexture"] = "Wglass",
 ["generalStatusBarTexture"] = "Wglass",
 },
-["posY"] = 111.8,
+["posY"] = 63.4,
 ["replaceClassIcon"] = true,
-["spacing"] = 22,
+["posX"] = 546.5,
 ["dr"] = {
 ["blackDRBorder"] = true,
 ["posY"] = 1,
-["posX"] = -116,
 ["brightDRBorder"] = false,
 ["drCategorySizeOffsets"] = {
 },
 ["drBorderGlowOff"] = false,
+["posX"] = -116,
 ["thickPixelBorder"] = false,
 ["showDRText"] = true,
 ["disableDRBorder"] = false,
 ["thinPixelBorder"] = false,
 ["size"] = 39,
 },
-["posX"] = 451.8,
+["fontOutline"] = "THICKOUTLINE",
 ["widgets"] = {
 ["targetIndicator"] = {
 ["enabled"] = true,
@@ -117,13 +118,12 @@ sArena_ReloadedDB = {
 ["enabled"] = true,
 },
 },
-["changeFont"] = true,
-["textSettings"] = {
-["drTextOffsetY"] = -15,
-["drTextAnchor"] = "CENTER",
-["drTextOffsetX"] = 0,
-["drTextSize"] = 1.22,
+["castBar"] = {
+["useModernCastbars"] = true,
+["posX"] = -34,
+["width"] = 112,
 },
+["spacing"] = 22,
 },
 ["Pixelated"] = {
 ["dr"] = {

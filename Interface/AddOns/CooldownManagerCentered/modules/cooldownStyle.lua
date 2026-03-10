@@ -11,6 +11,120 @@ local DEFAULT_ALWAYS_SHOW_COOLDOWN_EDGE = false
 local DEFAULT_SHOW_AURAS = true
 local DEFAULT_DISABLE_PROCS_GLOW = false
 local DEFAULT_REVERSE_AURA_SWIPE = false
+local DEFAULT_GLOW_WHEN_READY = false
+local DEFAULT_ALWAYS_GLOW = false
+local DEFAULT_NEVER_DESATURATE = false
+
+local LCG = LibStub("LibCustomGlow-1.0")
+local GLOW_STYLE_DEFAULT = "DEFAULT"
+local GLOW_STYLE_PROC = "PROC"
+local GLOW_STYLE_AUTOCAST = "AUTOCAST"
+local GLOW_STYLE_PIXEL = "PIXEL"
+
+local desaturationCurve = C_CurveUtil.CreateCurve()
+desaturationCurve:AddPoint(0, 0)
+desaturationCurve:AddPoint(0.001, 1)
+
+local notOnCDCurve = C_CurveUtil.CreateCurve()
+notOnCDCurve:AddPoint(0, 1)
+notOnCDCurve:AddPoint(0.001, 0)
+
+local function GetConfiguredGlowStyle()
+    local style = ns.db.profile.cooldownManager_experimental_glow_style or GLOW_STYLE_DEFAULT
+    if
+        style ~= GLOW_STYLE_DEFAULT
+        and style ~= GLOW_STYLE_PROC
+        and style ~= GLOW_STYLE_AUTOCAST
+        and style ~= GLOW_STYLE_PIXEL
+    then
+        return GLOW_STYLE_DEFAULT
+    end
+    return style
+end
+
+local function ResolveGlowStyle(defaultStyle)
+    local selectedStyle = GetConfiguredGlowStyle()
+    if selectedStyle == GLOW_STYLE_DEFAULT then
+        return defaultStyle
+    end
+    return selectedStyle
+end
+
+local function GetConfiguredGlowColor()
+    if not ns.db.profile.cooldownManager_experimental_glow_custom_color then
+        return nil
+    end
+    return {
+        ns.db.profile.cooldownManager_experimental_glow_color_r or 0.95,
+        ns.db.profile.cooldownManager_experimental_glow_color_g or 0.95,
+        ns.db.profile.cooldownManager_experimental_glow_color_b or 0.32,
+        ns.db.profile.cooldownManager_experimental_glow_color_a or 1,
+    }
+end
+
+local function GetConfiguredGlowFrequency()
+    local speed = tonumber(ns.db.profile.cooldownManager_experimental_glow_animation_speed) or 0
+    if speed > 1 then
+        speed = 1
+    elseif speed < -1 then
+        speed = -1
+    end
+    return speed
+end
+
+local function GetConfiguredGlowDensity()
+    local density = tonumber(ns.db.profile.cooldownManager_experimental_glow_animation_density) or 0
+    if density > 16 then
+        density = 16
+    elseif density < 0.5 then
+        density = 0
+    end
+    return density
+end
+
+local function StopAllCustomGlows(frame)
+    LCG.ProcGlow_Stop(frame)
+    LCG.AutoCastGlow_Stop(frame)
+    LCG.PixelGlow_Stop(frame)
+end
+
+local function StartConfiguredGlow(frame, defaultStyle)
+    local resolvedStyle = ResolveGlowStyle(defaultStyle)
+    local color = GetConfiguredGlowColor()
+    local frequency = GetConfiguredGlowFrequency()
+    local density = GetConfiguredGlowDensity()
+    if resolvedStyle == GLOW_STYLE_AUTOCAST then
+        LCG.AutoCastGlow_Start(frame, color, density, frequency)
+    elseif resolvedStyle == GLOW_STYLE_PIXEL then
+        LCG.PixelGlow_Start(frame, color, density, frequency)
+    else
+        LCG.ProcGlow_Start(frame, { startAnim = false, color = color })
+    end
+    return resolvedStyle
+end
+
+local function GetGlowSignature(defaultStyle)
+    local resolvedStyle = ResolveGlowStyle(defaultStyle)
+    if resolvedStyle == GLOW_STYLE_AUTOCAST or resolvedStyle == GLOW_STYLE_PIXEL then
+        local frequency = GetConfiguredGlowFrequency()
+        local density = GetConfiguredGlowDensity()
+        local color = GetConfiguredGlowColor()
+        if color then
+            return string.format(
+                "%s:%.3f:%.3f:%.3f:%.3f:%d:%d",
+                resolvedStyle,
+                color[1] or 0,
+                color[2] or 0,
+                color[3] or 0,
+                color[4] or 1,
+                frequency,
+                density
+            )
+        end
+        return string.format("%s:%.2f:%d", resolvedStyle, frequency, density)
+    end
+    return resolvedStyle
+end
 
 CooldownStyle.FORCE_DISABLED_INSTANT_CASTS = {
     -- Druid
@@ -79,9 +193,82 @@ local function GetBuffIconFrames()
     return frames
 end
 
-local desaturationCurve = C_CurveUtil.CreateCurve()
-desaturationCurve:AddPoint(0, 0)
-desaturationCurve:AddPoint(0.001, 1)
+local function SetButtonGlow(cdmFrame, shouldGlow)
+    if shouldGlow then
+        local signature = GetGlowSignature(GLOW_STYLE_PROC)
+        if cdmFrame._CMC_CustomGlowing and cdmFrame._CMC_CustomGlowSignature == signature then
+            return
+        end
+        StopAllCustomGlows(cdmFrame)
+        cdmFrame._CMC_CustomGlowing = true
+        cdmFrame._CMC_CustomGlowStyle = StartConfiguredGlow(cdmFrame, GLOW_STYLE_PROC)
+        cdmFrame._CMC_CustomGlowSignature = signature
+    else
+        if not cdmFrame._CMC_CustomGlowing then
+            return
+        end
+        cdmFrame._CMC_CustomGlowing = false
+        cdmFrame._CMC_CustomGlowStyle = nil
+        cdmFrame._CMC_CustomGlowSignature = nil
+        StopAllCustomGlows(cdmFrame)
+    end
+end
+
+local function GetButtonGlowFrame(cdmFrame)
+    if cdmFrame._ProcGlow then
+        return cdmFrame._ProcGlow
+    end
+    if cdmFrame._AutoCastGlow then
+        return cdmFrame._AutoCastGlow
+    end
+    if cdmFrame._PixelGlow then
+        return cdmFrame._PixelGlow
+    end
+    -- action button glow is broken - please remember to ignore it
+    return nil
+end
+
+local function UpdateButtonGlowState(cdmFrame, value)
+    local cooldownInfo = cdmFrame:GetCooldownInfo()
+    if cooldownInfo == nil then
+        SetButtonGlow(cdmFrame, false)
+        return
+    end
+
+    if cooldownInfo.category == 0 or cooldownInfo.category == 1 then
+        if not CooldownStyle.GetGlowWhenReady(cooldownInfo.spellID) then
+            SetButtonGlow(cdmFrame, false)
+            return
+        end
+        local glow = GetButtonGlowFrame(cdmFrame)
+        if not glow then
+            SetButtonGlow(cdmFrame, true)
+            return
+        end
+        if issecretvalue(value) or value ~= nil then
+            glow:SetAlphaFromBoolean(value, 0, 1)
+            return
+        end
+
+        local spellID = cooldownInfo.overrideSpellID or cooldownInfo.spellID
+        local cooldown = C_Spell.GetSpellCooldown(spellID)
+        if cooldown.isOnGCD then
+            SetButtonGlow(cdmFrame, true)
+            return
+        end
+        local cooldownDuration = C_Spell.GetSpellCooldownDuration(spellID)
+        local alpha = cooldownDuration:EvaluateRemainingDuration(notOnCDCurve)
+        glow:SetAlpha(alpha)
+        return
+    end
+
+    if cooldownInfo.category == 2 then
+        SetButtonGlow(cdmFrame, CooldownStyle.GetAlwaysGlow(cooldownInfo.spellID))
+        return
+    end
+
+    SetButtonGlow(cdmFrame, false)
+end
 
 local function ApplyIconSettings(cdmFrame)
     local cooldownInfo = cdmFrame:GetCooldownInfo()
@@ -106,9 +293,14 @@ local function ApplyIconSettings(cdmFrame)
         cdmFrame.Icon:SetDesaturation(0)
         return
     end
-    if cdmFrame._CMCTracker_Desaturation ~= nil then
+
+    local shouldNeverDesaturate = CooldownStyle.GetNeverDesaturate(baseSpellId)
+    if shouldNeverDesaturate then
+        cdmFrame.Icon:SetDesaturation(0)
+    elseif cdmFrame._CMCTracker_Desaturation ~= nil then
         cdmFrame.Icon:SetDesaturation(cdmFrame._CMCTracker_Desaturation)
     end
+
     if cdmFrame.wasSetFromAura then
         local spellCharges = C_Spell.GetSpellCharges(spellID)
         if spellCharges then
@@ -215,32 +407,57 @@ local function ApplyCooldownSettings(cdmFrame)
 end
 
 local function HookCooldownFrame(cdmFrame)
-    if cdmFrame._CMCTracker_Hooked or cdmFrame.Cooldown == nil or cdmFrame.Icon == nil then
+    if cdmFrame.Cooldown == nil or cdmFrame.Icon == nil then
         return
     end
 
+    UpdateButtonGlowState(cdmFrame)
+    ApplyCooldownSettings(cdmFrame)
+
+    if cdmFrame._CMCTracker_Hooked then
+        return
+    end
+
+    cdmFrame._CMCTracker_Hooked = true
+
     hooksecurefunc(cdmFrame.Cooldown, "SetCooldown", function(self)
-        ApplyCooldownSettings(self:GetParent())
+        local cdmFrame = self:GetParent()
+        ApplyCooldownSettings(cdmFrame)
     end)
 
-    -- local cooldownInfo = cdmFrame:GetCooldownInfo()
-    hooksecurefunc(cdmFrame.Icon, "SetDesaturated", function(self)
-        ApplyIconSettings(self:GetParent())
+    hooksecurefunc(cdmFrame.Icon, "SetDesaturated", function(self, secretValue)
+        local cdmFrame = self:GetParent()
+        UpdateButtonGlowState(cdmFrame, secretValue)
+        ApplyIconSettings(cdmFrame)
     end)
+
     -- if FIX_BLIZZARD_MISSING_DEBUFF[cooldownInfo.spellID] then
     --     print("Applying fix for missing desaturation for spellID", cooldownInfo.spellID)
     --     hooksecurefunc(cdmFrame.Cooldown, "Clear", function(self)
     --         ApplyCooldownSettings(self:GetParent(), true)
     --     end)
     -- end
-
-    cdmFrame._CMCTracker_Hooked = true
 end
 
 local function HookBuffIconFrame(cdmFrame)
-    if cdmFrame._CMCTracker_Hooked or cdmFrame.Cooldown == nil or cdmFrame.Icon == nil then
+    if cdmFrame.Cooldown == nil or cdmFrame.Icon == nil then
         return
     end
+    if cdmFrame.GetCooldownInfo then
+        local cooldownInfo = cdmFrame:GetCooldownInfo()
+        if cooldownInfo and cooldownInfo.spellID then
+            local baseSpellId = FindBaseSpellByID(cooldownInfo.spellID)
+            if cooldownInfo.category == 2 then
+                SetButtonGlow(cdmFrame, CooldownStyle.GetAlwaysGlow(baseSpellId))
+            end
+        end
+    end
+
+    if cdmFrame._CMCTracker_Hooked then
+        return
+    end
+
+    cdmFrame._CMCTracker_Hooked = true
 
     hooksecurefunc(cdmFrame.Cooldown, "SetCooldown", function(self)
         local cdmFrame = self:GetParent()
@@ -255,45 +472,33 @@ local function HookBuffIconFrame(cdmFrame)
         end
 
         cdmFrame.Cooldown:SetDrawEdge(CooldownStyle.GetAlwaysShowCooldownEdge(spellID))
+        local baseSpellId = FindBaseSpellByID(cooldownInfo.spellID)
+        if cooldownInfo.category == 2 then
+            SetButtonGlow(cdmFrame, CooldownStyle.GetAlwaysGlow(baseSpellId))
+        end
     end)
-
-    cdmFrame._CMCTracker_Hooked = true
 end
 
 local function HookFrames()
     local cooldownFrames = GetCooldownFrames()
 
     for _, cdmFrame in ipairs(cooldownFrames) do
-        if not cdmFrame._CMCTracker_Hooked then
-            if cdmFrame.Cooldown ~= nil then
-                HookCooldownFrame(cdmFrame)
-            end
+        if cdmFrame.Cooldown and cdmFrame.Icon then
+            HookCooldownFrame(cdmFrame)
         end
     end
 
     local buffIconFrames = GetBuffIconFrames()
 
     for _, cdmFrame in ipairs(buffIconFrames) do
-        if not cdmFrame._CMCTracker_Hooked then
-            if cdmFrame.Cooldown ~= nil then
-                HookBuffIconFrame(cdmFrame)
-            end
+        if cdmFrame.Cooldown and cdmFrame.Icon then
+            HookBuffIconFrame(cdmFrame)
         end
     end
 end
 
 local function RefreshCooldownManagerFrames()
-    if InCombatLockdown() then
-        return
-    end
-
     HookFrames()
-
-    for _, cdmFrame in ipairs(GetCooldownFrames()) do
-        if cdmFrame.Cooldown and cdmFrame.Icon then
-            ApplyCooldownSettings(cdmFrame)
-        end
-    end
 end
 
 function CooldownStyle:RefreshHooks()
@@ -357,6 +562,29 @@ function CooldownStyle:Initialize()
             end, function()
                 CooldownStyle.ToggleDisableProcsGlow(spellID)
                 -- RefreshCooldownManagerFrames()
+            end)
+
+            rootDescription:CreateCheckbox("(Experimental) Glow when ready", function()
+                return CooldownStyle.GetGlowWhenReady(spellID)
+            end, function()
+                CooldownStyle.ToggleGlowWhenReady(spellID)
+                RefreshCooldownManagerFrames()
+            end)
+
+            rootDescription:CreateCheckbox("(Experimental) Never Desaturate", function()
+                return CooldownStyle.GetNeverDesaturate(spellID)
+            end, function()
+                CooldownStyle.ToggleNeverDesaturate(spellID)
+                RefreshCooldownManagerFrames()
+            end)
+        end
+
+        if category == 2 then
+            rootDescription:CreateCheckbox("(Experimental) Always glow", function()
+                return CooldownStyle.GetAlwaysGlow(spellID)
+            end, function()
+                CooldownStyle.ToggleAlwaysGlow(spellID)
+                RefreshCooldownManagerFrames()
             end)
         end
 
@@ -490,4 +718,82 @@ end
 function CooldownStyle.ToggleDisableProcsGlow(spellID)
     local current = CooldownStyle.GetDisableProcsGlow(spellID)
     CooldownStyle.SetDisableProcsGlow(spellID, not current)
+end
+
+function CooldownStyle.GetGlowWhenReady(spellID)
+    local settings = CooldownStyle.GetSpellSettings(spellID)
+    if settings and settings.glowWhenReady ~= nil then
+        return settings.glowWhenReady
+    end
+    return DEFAULT_GLOW_WHEN_READY
+end
+
+function CooldownStyle.SetGlowWhenReady(spellID, value)
+    if value == DEFAULT_GLOW_WHEN_READY then
+        local settings = CooldownStyle.GetSpellSettings(spellID)
+        if settings ~= nil then
+            settings.glowWhenReady = nil
+        end
+        return
+    end
+
+    local settings = CooldownStyle.EnsureSpellSettings(spellID)
+    settings.glowWhenReady = value
+end
+
+function CooldownStyle.ToggleGlowWhenReady(spellID)
+    local current = CooldownStyle.GetGlowWhenReady(spellID)
+    CooldownStyle.SetGlowWhenReady(spellID, not current)
+end
+
+function CooldownStyle.GetAlwaysGlow(spellID)
+    local settings = CooldownStyle.GetSpellSettings(spellID)
+    if settings and settings.alwaysGlow ~= nil then
+        return settings.alwaysGlow
+    end
+    return DEFAULT_ALWAYS_GLOW
+end
+
+function CooldownStyle.SetAlwaysGlow(spellID, value)
+    if value == DEFAULT_ALWAYS_GLOW then
+        local settings = CooldownStyle.GetSpellSettings(spellID)
+        if settings ~= nil then
+            settings.alwaysGlow = nil
+        end
+        return
+    end
+
+    local settings = CooldownStyle.EnsureSpellSettings(spellID)
+    settings.alwaysGlow = value
+end
+
+function CooldownStyle.ToggleAlwaysGlow(spellID)
+    local current = CooldownStyle.GetAlwaysGlow(spellID)
+    CooldownStyle.SetAlwaysGlow(spellID, not current)
+end
+
+function CooldownStyle.GetNeverDesaturate(spellID)
+    local settings = CooldownStyle.GetSpellSettings(spellID)
+    if settings and settings.neverDesaturate ~= nil then
+        return settings.neverDesaturate
+    end
+    return DEFAULT_NEVER_DESATURATE
+end
+
+function CooldownStyle.SetNeverDesaturate(spellID, value)
+    if value == DEFAULT_NEVER_DESATURATE then
+        local settings = CooldownStyle.GetSpellSettings(spellID)
+        if settings ~= nil then
+            settings.neverDesaturate = nil
+        end
+        return
+    end
+
+    local settings = CooldownStyle.EnsureSpellSettings(spellID)
+    settings.neverDesaturate = value
+end
+
+function CooldownStyle.ToggleNeverDesaturate(spellID)
+    local current = CooldownStyle.GetNeverDesaturate(spellID)
+    CooldownStyle.SetNeverDesaturate(spellID, not current)
 end

@@ -1458,6 +1458,9 @@ local function WilduSettings_BuildCooldown(category, layout)
             if ns.Keybinds then
                 ns.Keybinds:OnSettingChanged("Essential")
             end
+            if not value then
+                ns.API:ShowReloadUIConfirmation()
+            end
         end,
         dropdownGet = function()
             return ns.db.profile.cooldownManager_keybindAnchor_Essential or "TOPRIGHT"
@@ -1574,6 +1577,9 @@ local function WilduSettings_BuildCooldown(category, layout)
             if ns.Keybinds then
                 ns.Keybinds:OnSettingChanged("UtilityCooldownViewer")
             end
+            if not value then
+                ns.API:ShowReloadUIConfirmation()
+            end
         end,
         dropdownGet = function()
             return ns.db.profile.cooldownManager_keybindAnchor_Utility or "TOPRIGHT"
@@ -1661,6 +1667,127 @@ local function WilduSettings_BuildCooldown(category, layout)
             ns.db.profile.cooldownManager_keybindOffsetY_Utility = v
             if ns.Keybinds then
                 ns.Keybinds:ApplyKeybindSettings("UtilityCooldownViewer")
+            end
+        end,
+    })
+
+    SettingsLib:CreateText(category, {
+        name = "",
+        parentSection = keybindsSection,
+    })
+
+    SettingsLib:CreateCheckboxDropdown(category, {
+        parentSection = keybindsSection,
+        prefix = "CMC_",
+        key = "cooldownManager_showKeybinds_CMCTracker",
+        dropdownKey = "cooldownManager_keybindAnchor_CMCTracker",
+        name = "CMC Tracker: Enable & Anchor",
+        searchtags = { "Keybind", "Hotkey", "Binding", "Key", "Shortcut", "CMC Tracker", "Show", "Display", "Anchor" },
+        default = false,
+        dropdownDefault = "TOPRIGHT",
+        get = function()
+            return ns.db.profile.cooldownManager_showKeybinds_CMCTracker
+        end,
+        set = function(value)
+            ns.db.profile.cooldownManager_showKeybinds_CMCTracker = value
+            if ns.Keybinds then
+                ns.Keybinds:OnSettingChanged("CMCTracker1")
+                ns.Keybinds:OnSettingChanged("CMCTracker2")
+            end
+            if not value then
+                ns.API:ShowReloadUIConfirmation()
+            end
+        end,
+        dropdownGet = function()
+            return ns.db.profile.cooldownManager_keybindAnchor_CMCTracker or "TOPRIGHT"
+        end,
+        dropdownSet = function(value)
+            ns.db.profile.cooldownManager_keybindAnchor_CMCTracker = value
+            if ns.Keybinds then
+                ns.Keybinds:ApplyKeybindSettings("CMCTracker1")
+                ns.Keybinds:ApplyKeybindSettings("CMCTracker2")
+            end
+        end,
+        dropdownValues = {
+            TOPLEFT = "Top Left",
+            TOP = "Top",
+            TOPRIGHT = "Top Right",
+            LEFT = "Left",
+            CENTER = "Center",
+            RIGHT = "Right",
+            BOTTOMLEFT = "Bottom Left",
+            BOTTOM = "Bottom",
+            BOTTOMRIGHT = "Bottom Right",
+        },
+        dropdownOrder = {
+            "TOPLEFT",
+            "TOP",
+            "TOPRIGHT",
+            "LEFT",
+            "CENTER",
+            "RIGHT",
+            "BOTTOMLEFT",
+            "BOTTOM",
+            "BOTTOMRIGHT",
+        },
+        desc = "Enable keybind text on CMC Tracker and select anchor position.",
+    })
+
+    CreateKeybindFontSizeDropdown(keybindsSection, "cooldownManager_keybindFontSize_CMCTracker", "Font Size", function()
+        return tostring(ns.db.profile.cooldownManager_keybindFontSize_CMCTracker or 10)
+    end, function(value)
+        local n = tonumber(value)
+        ns.db.profile.cooldownManager_keybindFontSize_CMCTracker = n and math.floor(n + 0.5) or 14
+        if ns.Keybinds then
+            ns.Keybinds:ApplyKeybindSettings("CMCTracker1")
+            ns.Keybinds:ApplyKeybindSettings("CMCTracker2")
+        end
+    end)
+    SettingsLib:CreateSlider(category, {
+        parentSection = keybindsSection,
+        prefix = "CMC_",
+        key = "cooldownManager_keybindOffsetX_CMCTracker",
+        name = "X Offset",
+        default = -3,
+        min = -40,
+        max = 40,
+        step = 1,
+        formatter = function(value)
+            return string.format("%.0f", value)
+        end,
+        get = function()
+            return ns.db.profile.cooldownManager_keybindOffsetX_CMCTracker or -3
+        end,
+        set = function(value)
+            local v = math.floor((value or 0) + 0.5)
+            ns.db.profile.cooldownManager_keybindOffsetX_CMCTracker = v
+            if ns.Keybinds then
+                ns.Keybinds:ApplyKeybindSettings("CMCTracker1")
+                ns.Keybinds:ApplyKeybindSettings("CMCTracker2")
+            end
+        end,
+    })
+    SettingsLib:CreateSlider(category, {
+        parentSection = keybindsSection,
+        prefix = "CMC_",
+        key = "cooldownManager_keybindOffsetY_CMCTracker",
+        name = "Y Offset",
+        default = -3,
+        min = -40,
+        max = 40,
+        step = 1,
+        formatter = function(value)
+            return string.format("%.0f", value)
+        end,
+        get = function()
+            return ns.db.profile.cooldownManager_keybindOffsetY_CMCTracker or -3
+        end,
+        set = function(value)
+            local v = math.floor((value or 0) + 0.5)
+            ns.db.profile.cooldownManager_keybindOffsetY_CMCTracker = v
+            if ns.Keybinds then
+                ns.Keybinds:ApplyKeybindSettings("CMCTracker1")
+                ns.Keybinds:ApplyKeybindSettings("CMCTracker2")
             end
         end,
     })
@@ -2139,7 +2266,7 @@ local function WilduSettings_BuildCooldown(category, layout)
     local experimentalCategory = SettingsLib:CreateCategory(category, "Experimental", false)
 
     SettingsLib:CreateHeader(experimentalCategory, {
-        name = "|cffff0000Experimental Features|r",
+        name = "|cffff0000Experimental performance features|r",
         searchtags = { "Experimental", "Beta", "Testing", "Feature", "Features" },
     })
 
@@ -2158,11 +2285,30 @@ local function WilduSettings_BuildCooldown(category, layout)
         end,
         desc = "Enable layout optimizations for lower CPU usage (may have bugs). |cffff0000Experimental feature, use with caution!|r",
     })
+    SettingsLib:CreateCheckbox(experimentalCategory, {
+        prefix = "CMC_",
+        key = "cooldownManager_experimental_disablePerSpellSettings",
+        name = "Disable Spell Overrides",
+        searchtags = { "Cooldown", "Spell", "Overrides", "Experimental", "Optimization", "Performance" },
+        default = false,
+        get = function()
+            return ns.db.profile.cooldownManager_experimental_disablePerSpellSettings
+        end,
+        set = function(value)
+            ns.db.profile.cooldownManager_experimental_disablePerSpellSettings = value
+            ns.API:ShowReloadUIConfirmation()
+        end,
+        desc = "Disable per-spell overrides for cooldown settings. |cffff0000Experimental feature, use with caution!|r",
+    })
 
+    SettingsLib:CreateHeader(experimentalCategory, {
+        name = "Cooldown Style Glows",
+        searchtags = { "Cooldown", "Style", "Glow", "Glows", "Experimental", "Customization" },
+    })
     SettingsLib:CreateCheckbox(experimentalCategory, {
         prefix = "CMC_",
         key = "cooldownManager_experimental_custom_glows",
-        name = "Custom Glows",
+        name = "Custom Procs Glows",
         searchtags = { "Cooldown", "Text", "Layout", "Experimental", "Glow", "Custom", "Performance" },
         default = false,
         get = function()
@@ -2173,6 +2319,180 @@ local function WilduSettings_BuildCooldown(category, layout)
             ns.API:ShowReloadUIConfirmation()
         end,
         desc = "Enable custom glows for cooldowns. |cffff0000Experimental feature, use with caution!|r",
+    })
+
+    SettingsLib:CreateDropdown(experimentalCategory, {
+        prefix = "CMC_",
+        key = "cooldownManager_experimental_glow_style",
+        name = "Custom Glow Style",
+        searchtags = { "Experimental", "Glow", "Style", "Proc", "Auto Cast", "Pixel", "Default" },
+        default = "DEFAULT",
+        values = {
+            DEFAULT = "Default",
+            PROC = "Proc Glow",
+            AUTOCAST = "Auto Cast Glow",
+            PIXEL = "Pixel Glow",
+        },
+        order = { "DEFAULT", "PROC", "AUTOCAST", "PIXEL" },
+        get = function()
+            return ns.db.profile.cooldownManager_experimental_glow_style or "DEFAULT"
+        end,
+        set = function(value)
+            ns.db.profile.cooldownManager_experimental_glow_style = value
+            if not ns.db.profile.cooldownManager_experimental_disablePerSpellSettings then
+                if ns.CooldownStyle then
+                    ns.CooldownStyle:RefreshHooks()
+                end
+            end
+            ns.API:ShowReloadUIConfirmation()
+        end,
+        desc = "Set one global glow style used by cooldown style glows and glow overrides.",
+    })
+
+    SettingsLib:CreateCheckbox(experimentalCategory, {
+        prefix = "CMC_",
+        key = "cooldownManager_experimental_glow_custom_color",
+        name = "Custom Glow Color",
+        searchtags = { "Experimental", "Glow", "Color", "Auto Cast", "Pixel" },
+        default = false,
+        get = function()
+            return ns.db.profile.cooldownManager_experimental_glow_custom_color
+        end,
+        set = function(value)
+            ns.db.profile.cooldownManager_experimental_glow_custom_color = value
+            if not ns.db.profile.cooldownManager_experimental_disablePerSpellSettings then
+                if ns.CooldownStyle then
+                    ns.CooldownStyle:RefreshHooks()
+                end
+            end
+            ns.API:ShowReloadUIConfirmation()
+        end,
+    })
+
+    SettingsLib:CreateColorOverrides(experimentalCategory, {
+        key = "cooldownManager_experimental_glow_color",
+        entries = {
+            { key = "glow", label = "Glow Color" },
+        },
+        hasOpacity = true,
+        getColor = function()
+            return ns.db.profile.cooldownManager_experimental_glow_color_r or 0.95,
+                ns.db.profile.cooldownManager_experimental_glow_color_g or 0.95,
+                ns.db.profile.cooldownManager_experimental_glow_color_b or 0.32,
+                ns.db.profile.cooldownManager_experimental_glow_color_a or 1
+        end,
+        setColor = function(_, r, g, b, a)
+            ns.db.profile.cooldownManager_experimental_glow_color_r = r
+            ns.db.profile.cooldownManager_experimental_glow_color_g = g
+            ns.db.profile.cooldownManager_experimental_glow_color_b = b
+            ns.db.profile.cooldownManager_experimental_glow_color_a = a
+            if not ns.db.profile.cooldownManager_experimental_disablePerSpellSettings then
+                if ns.CooldownStyle then
+                    ns.CooldownStyle:RefreshHooks()
+                end
+            end
+            ns.API:ShowReloadUIConfirmation()
+        end,
+        getDefaultColor = function()
+            return 0.95, 0.95, 0.32, 1
+        end,
+    })
+
+    SettingsLib:CreateText(experimentalCategory, {
+        name = "Glow style & color applies to Proc Glows and Custom Glows set from Cooldown Settings\nAdditional settings for autocast and pixel glow: (set 0 for default)",
+    })
+
+    SettingsLib:CreateSlider(experimentalCategory, {
+        prefix = "CMC_",
+        key = "cooldownManager_experimental_glow_animation_speed",
+        name = "Animation Speed",
+        searchtags = { "Experimental", "Glow", "Animation", "Speed", "Frequency", "Auto Cast", "Pixel" },
+        default = 0,
+        min = -1,
+        max = 1,
+        step = 0.01,
+        formatter = function(value)
+            return string.format("%.2f", value)
+        end,
+        get = function()
+            return ns.db.profile.cooldownManager_experimental_glow_animation_speed or 0
+        end,
+        set = function(value)
+            local speed = tonumber(value) or 0
+            if speed > 2 then
+                speed = 2
+            elseif speed < -2 then
+                speed = -2
+            end
+            ns.db.profile.cooldownManager_experimental_glow_animation_speed = speed
+            if not ns.db.profile.cooldownManager_experimental_disablePerSpellSettings then
+                if ns.CooldownStyle then
+                    ns.CooldownStyle:RefreshHooks()
+                end
+            end
+            ns.API:ShowReloadUIConfirmation()
+        end,
+        desc = 'Controls glow animation speed (frequency) for Auto Cast and Pixel Glow.\n0 is not "zero", it\'s Default speed.',
+    })
+    SettingsLib:CreateSlider(experimentalCategory, {
+        prefix = "CMC_",
+        key = "cooldownManager_experimental_glow_animation_density",
+        name = "Animation Density",
+        searchtags = { "Experimental", "Glow", "Animation", "Density", "Frequency", "Auto Cast", "Pixel" },
+        default = 0,
+        min = 0,
+        max = 16,
+        step = 1,
+        formatter = function(value)
+            return string.format("%d", value)
+        end,
+        get = function()
+            return ns.db.profile.cooldownManager_experimental_glow_animation_density or 0
+        end,
+        set = function(value)
+            local density = tonumber(value) or 0
+            if density > 16 then
+                density = 16
+            elseif density < 0 then
+                density = 0
+            end
+            ns.db.profile.cooldownManager_experimental_glow_animation_density = density
+            if not ns.db.profile.cooldownManager_experimental_disablePerSpellSettings then
+                if ns.CooldownStyle then
+                    ns.CooldownStyle:RefreshHooks()
+                end
+            end
+            ns.API:ShowReloadUIConfirmation()
+        end,
+        desc = 'Controls glow animation density for Auto Cast and Pixel Glow.\n0 is not "zero", it\'s Default density.',
+    })
+
+    SettingsLib:CreateButton(experimentalCategory, {
+        text = "Restore Default Values",
+        searchtags = {
+            "Experimental",
+            "Glow",
+            "Animation",
+            "Speed",
+            "Density",
+            "Auto Cast",
+            "Pixel",
+            "Reset",
+            "Default",
+        },
+        func = function()
+            ns.db.profile.cooldownManager_experimental_glow_animation_speed = 0
+            ns.db.profile.cooldownManager_experimental_glow_animation_density = 0
+            if not ns.db.profile.cooldownManager_experimental_disablePerSpellSettings then
+                if ns.CooldownStyle then
+                    ns.CooldownStyle:RefreshHooks()
+                end
+            end
+            ns.API:ShowReloadUIConfirmation()
+        end,
+    })
+    SettingsLib:CreateText(experimentalCategory, {
+        name = "Use some GCD ability to refresh the glows and see the changes.",
     })
 
     SettingsLib:CreateHeader(experimentalCategory, {

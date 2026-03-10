@@ -58,32 +58,56 @@ OPie_SavedData = {
 },
 ["PersistentStorage"] = {
 ["RingKeeper"] = {
-["aidsLegion"] = {
+["agonflight1"] = {
 {
-["sliceToken"] = "ABueRnypwP1C",
-["id"] = 424163,
+["id"] = 393256,
+["sliceToken"] = "ABueRnypwP1J",
 },
 {
-["sliceToken"] = "ABueRnypwP1X",
-["id"] = 424153,
+["id"] = 393276,
+["sliceToken"] = "ABueRnypwP1H",
 },
 {
-["id"] = 393764,
-["sliceToken"] = "ABueRnypwP1Z",
+["id"] = 393262,
+["sliceToken"] = "ABueRnypwP10",
 },
 {
-["id"] = 393766,
-["sliceToken"] = "ABueRnypwP1=",
+["id"] = 393279,
+["sliceToken"] = "ABueRnypwP1G",
 },
 {
-["id"] = 410078,
-["sliceToken"] = "ABueRnypwP1L",
+["id"] = 393267,
+["sliceToken"] = "ABueRnypwP1F",
 },
 {
-["id"] = 373262,
-["sliceToken"] = "ABueRnypwP1K",
+["id"] = 393273,
+["sliceToken"] = "ABueRnypwP1D",
 },
-["name"] = "Dungeons and Raids: Legion",
+{
+["id"] = 393283,
+["sliceToken"] = "ABueRnypwP1S",
+},
+{
+["id"] = 393222,
+["sliceToken"] = "ABueRnypwP19",
+},
+{
+["id"] = 424197,
+["sliceToken"] = "ABueRnypwP1A",
+},
+{
+["id"] = 432254,
+["sliceToken"] = "ABueRnypwP1P",
+},
+{
+["id"] = 432257,
+["sliceToken"] = "ABueRnypwP1O",
+},
+{
+["id"] = 432258,
+["sliceToken"] = "ABueRnypwP1I",
+},
+["name"] = "Dungeons and Raids: Dragonflight",
 ["save"] = true,
 },
 ["hadowlands"] = {
@@ -378,9 +402,9 @@ OPie_SavedData = {
 248485,
 ["sliceToken"] = "ABueTrVxdUw",
 },
-["name"] = "Portals: Midnight",
 ["save"] = true,
 ["limit"] = "Starphage-Tichondrius",
+["name"] = "Portals: Midnight",
 },
 ["ofPandaria"] = {
 {
@@ -438,39 +462,52 @@ OPie_SavedData = {
 ["name"] = "Dungeons and Raids: Cataclysm",
 ["save"] = true,
 },
-["talsLegion"] = {
+["Wormholes"] = {
 {
-["id"] = 193753,
-["sliceToken"] = "ABueRnypwPr9",
-},
-{
-"item",
-144341,
-["sliceToken"] = "ABueRnypwPrA",
+"toy",
+172924,
+1,
+["sliceToken"] = "ABueQv8AL3z",
 },
 {
 "toy",
-140324,
-["sliceToken"] = "ABueRnypwPrO",
-},
-{
-["id"] = 193759,
-["sliceToken"] = "ABueRnypwPrI",
-},
-{
-["id"] = 224869,
-["sliceToken"] = "ABueRnypwPr8",
-},
-{
-["id"] = 224871,
-["sliceToken"] = "ABueRnypwPrU",
+48933,
+1,
+["sliceToken"] = "ABueQv8AL35",
 },
 {
 "toy",
-140192,
-["sliceToken"] = "ABueRnypwP1U",
+168808,
+1,
+["sliceToken"] = "ABueQv8AL3x",
 },
-["name"] = "Portals: Legion",
+{
+"toy",
+168807,
+1,
+["sliceToken"] = "ABueQv8AL3c",
+},
+{
+"toy",
+221966,
+["sliceToken"] = "ABueWwk956r",
+},
+{
+"toy",
+112059,
+["sliceToken"] = "ABueWjGy0yi",
+},
+{
+"toy",
+198156,
+["sliceToken"] = "ABueWjGy0y2",
+},
+{
+"toy",
+248485,
+["sliceToken"] = "ABueTrVxdUr",
+},
+["name"] = "Wormholes",
 ["save"] = true,
 },
 ["sofDraenor"] = {
@@ -885,113 +922,6 @@ OPie_SavedData = {
 ["name"] = "Portals: Azeroth&Cataclysm",
 ["save"] = true,
 },
-["ingGadgets"] = {
-{
-"toy",
-60854,
-["sliceToken"] = "ABue7PTnJYyA",
-},
-{
-"item",
-114943,
-["sliceToken"] = "ABue7PTnJYyP",
-},
-{
-"item",
-49040,
-["sliceToken"] = "ABue7PTnJYyO",
-},
-{
-"toy",
-40768,
-["sliceToken"] = "ABue7PTnJYyI",
-},
-{
-"toy",
-87214,
-["sliceToken"] = "ABue7PTnJYy8",
-},
-{
-"toy",
-111821,
-["sliceToken"] = "ABue7PTnJYyU",
-},
-{
-"item",
-144341,
-["sliceToken"] = "ABue7PTnJYyY",
-},
-{
-"toy",
-168667,
-["sliceToken"] = "ABue7PTnJYyT",
-},
-{
-"toy",
-40727,
-["sliceToken"] = "ABue7PTnJYyR",
-},
-{
-"item",
-111820,
-["sliceToken"] = "ABue7PTnJYy7",
-},
-["save"] = true,
-["limit"] = "Choppiez-Tichondrius",
-["name"] = "Engineering Gadgets",
-},
-["agonflight1"] = {
-{
-["id"] = 393256,
-["sliceToken"] = "ABueRnypwP1J",
-},
-{
-["id"] = 393276,
-["sliceToken"] = "ABueRnypwP1H",
-},
-{
-["id"] = 393262,
-["sliceToken"] = "ABueRnypwP10",
-},
-{
-["id"] = 393279,
-["sliceToken"] = "ABueRnypwP1G",
-},
-{
-["id"] = 393267,
-["sliceToken"] = "ABueRnypwP1F",
-},
-{
-["id"] = 393273,
-["sliceToken"] = "ABueRnypwP1D",
-},
-{
-["id"] = 393283,
-["sliceToken"] = "ABueRnypwP1S",
-},
-{
-["id"] = 393222,
-["sliceToken"] = "ABueRnypwP19",
-},
-{
-["id"] = 424197,
-["sliceToken"] = "ABueRnypwP1A",
-},
-{
-["id"] = 432254,
-["sliceToken"] = "ABueRnypwP1P",
-},
-{
-["id"] = 432257,
-["sliceToken"] = "ABueRnypwP1O",
-},
-{
-["id"] = 432258,
-["sliceToken"] = "ABueRnypwP1I",
-},
-["name"] = "Dungeons and Raids: Dragonflight",
-["save"] = true,
-},
 ["agonflight"] = {
 {
 ["id"] = 395277,
@@ -1008,6 +938,75 @@ OPie_SavedData = {
 },
 ["name"] = "Portals: Dragonflight",
 ["save"] = true,
+},
+["ngineering"] = {
+{
+"item",
+49040,
+["sliceToken"] = "ABueQUpYKHi",
+},
+{
+"toy",
+40768,
+["sliceToken"] = "ABueQUpYKH2",
+},
+{
+"toy",
+109183,
+["sliceToken"] = "ABueQUpYKHo",
+},
+{
+"toy",
+198206,
+["sliceToken"] = "ABueQUpYKHa",
+},
+{
+"toy",
+219403,
+["sliceToken"] = "ABueQUazdFw",
+},
+["name"] = "Engineering",
+["save"] = true,
+},
+["WarlockLTS"] = {
+{
+["id"] = "/cast [mod:alt] {{spell:20707}}; [group,nomod][nogroup,mod] {{spell:29893}}; {{spell:6201}}",
+["sliceToken"] = "OPCLSh",
+["vm"] = 2,
+},
+{
+["id"] = "/cast [nomod] {{spell:48018}}; {{spell:48020}}",
+["sliceToken"] = "OPCLSt",
+["vm"] = 2,
+},
+{
+["id"] = 698,
+["sliceToken"] = "ABueQE3OmCe",
+},
+{
+["id"] = 20707,
+["sliceToken"] = "ABueQE3OmCr",
+},
+{
+["id"] = 5697,
+["sliceToken"] = "ABueQE3OmC1",
+},
+{
+["id"] = 342601,
+["sliceToken"] = "ABueQE3OmCt",
+},
+["v"] = 5,
+["name"] = "Utility",
+["limit"] = "WARLOCK",
+["hotkey"] = "BUTTON4",
+["save"] = true,
+["vm"] = 127,
+["dropTokens"] = {
+["OPCLSd"] = 1,
+["OPCLSw"] = 1,
+["OPCLSi"] = 1,
+["OPCLSe"] = 1,
+},
 },
 ["arthstones"] = {
 {
@@ -1159,35 +1158,39 @@ OPie_SavedData = {
 ["name"] = "Dungeons and Raids: Warlords of Draenor",
 ["save"] = true,
 },
-["heLichKing"] = {
-{
-"toy",
-48933,
-["sliceToken"] = "ABueRnypwPre",
-},
-{
-"item",
-46874,
-["sliceToken"] = "ABueRnypwPrw",
-},
-{
-"item",
-52251,
-["sliceToken"] = "ABueRnypwPrq",
-},
+["talsLegion"] = {
 {
 ["id"] = 193753,
-["sliceToken"] = "ABueRnypwPeM",
+["sliceToken"] = "ABueRnypwPr9",
 },
 {
-["id"] = 53140,
-["sliceToken"] = "ABueRnypwPeN",
+"item",
+144341,
+["sliceToken"] = "ABueRnypwPrA",
 },
 {
-["id"] = 53142,
-["sliceToken"] = "ABueRnypwPeB",
+"toy",
+140324,
+["sliceToken"] = "ABueRnypwPrO",
 },
-["name"] = "Portals: WrathOfTheLichKing",
+{
+["id"] = 193759,
+["sliceToken"] = "ABueRnypwPrI",
+},
+{
+["id"] = 224869,
+["sliceToken"] = "ABueRnypwPr8",
+},
+{
+["id"] = 224871,
+["sliceToken"] = "ABueRnypwPrU",
+},
+{
+"toy",
+140192,
+["sliceToken"] = "ABueRnypwP1U",
+},
+["name"] = "Portals: Legion",
 ["save"] = true,
 },
 ["MyShit"] = {
@@ -1249,8 +1252,8 @@ OPie_SavedData = {
 ["sliceToken"] = "ABueRnypwPrJ",
 },
 {
-["id"] = 126892,
 ["sliceToken"] = "ABueRnypwPrH",
+["id"] = 126892,
 },
 ["name"] = "Portals: MistsOfPandaria",
 ["save"] = true,
@@ -1263,37 +1266,37 @@ OPie_SavedData = {
 {
 ["id"] = "#showtooltip\n/cast [mod] {{spell:30146}}\n/cast [nomod] {{spell:333889}} \n/cast [nomod] {{spell:30146}}\n",
 ["sliceToken"] = "OPCLDf",
-["icon"] = 136216,
 ["vm"] = 3,
+["icon"] = 136216,
 },
 {
 ["id"] = "#showtooltip\n/cast [mod] {{spell:697}}\n/cast [nomod] {{spell:333889}} \n/cast [nomod] {{spell:697}}",
 ["sliceToken"] = "OPCLDv",
-["icon"] = 136221,
 ["vm"] = 3,
+["icon"] = 136221,
 },
 {
 ["id"] = "#showtooltip\n/cast [mod] {{spell:688}}\n/cast [nomod] {{spell:333889}} \n/cast [nomod] {{spell:688}}",
 ["sliceToken"] = "OPCLDi",
-["icon"] = 136218,
 ["vm"] = 3,
+["icon"] = 136218,
 },
 {
 ["id"] = "#showtooltip\n/cast [mod] Summon Succubus\n/cast [nomod] {{spell:333889}} \n/cast [nomod] Summon Succubus",
 ["sliceToken"] = "OPCLDs",
-["icon"] = 4352493,
 ["vm"] = 3,
+["icon"] = 4352493,
 },
 {
 ["id"] = "#showtooltip\n/cast [mod] {{spell:691}}\n/cast [nomod] {{spell:333889}} \n/cast [nomod] {{spell:691}}",
 ["sliceToken"] = "OPCLDh",
-["icon"] = 136217,
 ["vm"] = 3,
+["icon"] = 136217,
 },
 ["limit"] = "WARLOCK",
 ["name"] = "Demons",
-["save"] = true,
 ["internal"] = true,
+["save"] = true,
 ["vm"] = 127,
 ["v"] = 1,
 },
@@ -1339,33 +1342,32 @@ OPie_SavedData = {
 ["name"] = "Portals: BurningCrusade",
 ["save"] = true,
 },
-["ngineering"] = {
+["aidsLegion"] = {
 {
-"item",
-49040,
-["sliceToken"] = "ABueQUpYKHi",
+["sliceToken"] = "ABueRnypwP1C",
+["id"] = 424163,
 },
 {
-"toy",
-40768,
-["sliceToken"] = "ABueQUpYKH2",
+["sliceToken"] = "ABueRnypwP1X",
+["id"] = 424153,
 },
 {
-"toy",
-109183,
-["sliceToken"] = "ABueQUpYKHo",
+["id"] = 393764,
+["sliceToken"] = "ABueRnypwP1Z",
 },
 {
-"toy",
-198206,
-["sliceToken"] = "ABueQUpYKHa",
+["id"] = 393766,
+["sliceToken"] = "ABueRnypwP1=",
 },
 {
-"toy",
-219403,
-["sliceToken"] = "ABueQUazdFw",
+["id"] = 410078,
+["sliceToken"] = "ABueRnypwP1L",
 },
-["name"] = "Engineering",
+{
+["id"] = 373262,
+["sliceToken"] = "ABueRnypwP1K",
+},
+["name"] = "Dungeons and Raids: Legion",
 ["save"] = true,
 },
 ["nsWarlords"] = {
@@ -1551,8 +1553,8 @@ OPie_SavedData = {
 221966,
 ["sliceToken"] = "ABueRFYN07w",
 },
-["limit"] = "Starphage-Tichondrius",
 ["save"] = true,
+["limit"] = "Starphage-Tichondrius",
 ["name"] = "Portals: TWW",
 },
 ["ForAzeroth"] = {
@@ -1672,99 +1674,97 @@ OPie_SavedData = {
 ["id"] = 193759,
 ["sliceToken"] = "ABueQEvFhve",
 },
-["name"] = "Portals and Teleports",
 ["limit"] = "MAGE",
+["name"] = "Portals and Teleports",
 ["hotkey"] = "ALT-G",
 ["save"] = true,
 ["vm"] = 127,
 ["v"] = 2,
 },
-["WarlockLTS"] = {
-{
-["id"] = "/cast [mod:alt] {{spell:20707}}; [group,nomod][nogroup,mod] {{spell:29893}}; {{spell:6201}}",
-["sliceToken"] = "OPCLSh",
-["vm"] = 2,
-},
-{
-["id"] = "/cast [nomod] {{spell:48018}}; {{spell:48020}}",
-["sliceToken"] = "OPCLSt",
-["vm"] = 2,
-},
-{
-["id"] = 698,
-["sliceToken"] = "ABueQE3OmCe",
-},
-{
-["id"] = 20707,
-["sliceToken"] = "ABueQE3OmCr",
-},
-{
-["id"] = 5697,
-["sliceToken"] = "ABueQE3OmC1",
-},
-{
-["id"] = 342601,
-["sliceToken"] = "ABueQE3OmCt",
-},
-["v"] = 5,
-["name"] = "Utility",
-["limit"] = "WARLOCK",
-["hotkey"] = "BUTTON4",
-["save"] = true,
-["vm"] = 127,
-["dropTokens"] = {
-["OPCLSd"] = 1,
-["OPCLSw"] = 1,
-["OPCLSi"] = 1,
-["OPCLSe"] = 1,
-},
-},
-["Wormholes"] = {
+["ingGadgets"] = {
 {
 "toy",
-172924,
-1,
-["sliceToken"] = "ABueQv8AL3z",
+60854,
+["sliceToken"] = "ABue7PTnJYyA",
 },
+{
+"item",
+114943,
+["sliceToken"] = "ABue7PTnJYyP",
+},
+{
+"item",
+49040,
+["sliceToken"] = "ABue7PTnJYyO",
+},
+{
+"toy",
+40768,
+["sliceToken"] = "ABue7PTnJYyI",
+},
+{
+"toy",
+87214,
+["sliceToken"] = "ABue7PTnJYy8",
+},
+{
+"toy",
+111821,
+["sliceToken"] = "ABue7PTnJYyU",
+},
+{
+"item",
+144341,
+["sliceToken"] = "ABue7PTnJYyY",
+},
+{
+"toy",
+168667,
+["sliceToken"] = "ABue7PTnJYyT",
+},
+{
+"toy",
+40727,
+["sliceToken"] = "ABue7PTnJYyR",
+},
+{
+"item",
+111820,
+["sliceToken"] = "ABue7PTnJYy7",
+},
+["save"] = true,
+["limit"] = "Choppiez-Tichondrius",
+["name"] = "Engineering Gadgets",
+},
+["heLichKing"] = {
 {
 "toy",
 48933,
-1,
-["sliceToken"] = "ABueQv8AL35",
+["sliceToken"] = "ABueRnypwPre",
 },
 {
-"toy",
-168808,
-1,
-["sliceToken"] = "ABueQv8AL3x",
+"item",
+46874,
+["sliceToken"] = "ABueRnypwPrw",
 },
 {
-"toy",
-168807,
-1,
-["sliceToken"] = "ABueQv8AL3c",
+"item",
+52251,
+["sliceToken"] = "ABueRnypwPrq",
 },
 {
-"toy",
-221966,
-["sliceToken"] = "ABueWwk956r",
+["id"] = 193753,
+["sliceToken"] = "ABueRnypwPeM",
 },
 {
-"toy",
-112059,
-["sliceToken"] = "ABueWjGy0yi",
+["id"] = 53140,
+["sliceToken"] = "ABueRnypwPeN",
 },
 {
-"toy",
-198156,
-["sliceToken"] = "ABueWjGy0y2",
+["id"] = 53142,
+["sliceToken"] = "ABueRnypwPeB",
 },
-{
-"toy",
-248485,
-["sliceToken"] = "ABueTrVxdUr",
-},
-["name"] = "Wormholes",
+["name"] = "Portals: WrathOfTheLichKing",
 ["save"] = true,
 },
 },

@@ -19,4 +19,13 @@ CHATTYNATOR_COMMAND_HISTORY = {
 "/cw Unclechip-Tichondrius /who the move",
 "/cw Madliß can you ginvite me please, my main is already in",
 "/s /m",
+" ya",
+"/s /m",
+"/s /rl",
+"/s /wa",
+"/s /bbp",
+"/s '",
+"/s /wa",
+"/s /way 40.76 54.06",
+"/s /bbp",
 }

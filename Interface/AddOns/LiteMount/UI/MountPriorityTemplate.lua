@@ -8,7 +8,7 @@
 
 local _, LM = ...
 
-local L = LM.Localize
+local L = LM.L
 
 
 --[[------------------------------------------------------------------------]]--
@@ -23,15 +23,10 @@ function LiteMountPriorityMixin:Update(mount)
     self.mount = mount
 
     local value = self:Get()
-    if value then
-        self.Minus:SetShown(value > LM.Options.MIN_PRIORITY)
-        self.Plus:SetShown(value < LM.Options.MAX_PRIORITY)
-        self.Priority:SetText(value)
-    else
-        self.Minus:Show()
-        self.Plus:Show()
-        self.Priority:SetText('')
-    end
+    self.Minus:SetShown(value > LM.Options.MIN_PRIORITY)
+    self.Plus:SetShown(value < LM.Options.MAX_PRIORITY)
+    self.Priority:SetText(value)
+
     if LM.Options:GetOption('randomWeightStyle') == 'Priority' or value == 0 then
         local r, g, b = LM.UIFilter.GetPriorityColor(value):GetRGB()
         self.Background:SetColorTexture(r, g, b, 0.33)

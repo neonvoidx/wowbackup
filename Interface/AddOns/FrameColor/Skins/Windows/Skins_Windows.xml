@@ -52,4 +52,5 @@
   <Script file="_HousingDashboardFrame.lua"/>
   <Script file="_TransmogFrame.lua"/>
   <Script file="_DamageMeter.lua"/>
+  <Script file="_HousingModelPreviewFrame.lua"/>
 </Ui>

@@ -18,7 +18,7 @@ L:SetStrings({
 	["Caster"] = "Заклинатель",
 	["Healer"] = "Целитель",
 	["Enable if you are:"] = "Включить, если вы:",
-	["Enable in:"] = "Включить в:",
+	["Enable in"] = "Включить в",
 	["Enabled"] = "Включено",
 	["Enable this module everywhere."] = "Включить этот модуль везде.",
 	["Enable this module in the open world."] = "Включить этот модуль в открытом мире.",
@@ -41,8 +41,11 @@ L:SetStrings({
 	["Reverse swipe"] = "Обратное смахивание",
 	["Reverses the direction of the cooldown swipe animation."] = "Изменяет направление анимации смахивания перезарядки.",
 	["Settings"] = "Настройки",
+	["Open Settings"] = "Открыть настройки",
+	["Use /minicc, /mcc, or /cc to open the MiniCC config window."] = "Используйте /minicc, /mcc или /cc, чтобы открыть окно настроек MiniCC.",
 	["Show a glow around the icons."] = "Показывать свечение вокруг иконок.",
 	["Test"] = "Тест",
+	["Test these settings"] = "Проверить эти настройки",
 	["Whether to enable or disable this module if you are a caster."] = "Включить или отключить этот модуль, если вы заклинатель.",
 	["Whether to enable or disable this module if you are a healer."] = "Включить или отключить этот модуль, если вы целитель.",
 	["Whether to enable or disable this module regardless of what spec you are."] = "Включить или отключить этот модуль независимо от вашей специализации.",
@@ -74,7 +77,6 @@ L:SetStrings({
 	["Import Profile"] = "Импорт профиля",
 	["Miscellaneous"] = "Прочее",
 	["Reset"] = "Сброс",
-	["Settings:"] = "Настройки:",
 	["The others seem to use a non-trivial amount of CPU."] = "Остальные используют значительное количество ЦП.",
 	["The Proc Glow uses the least CPU."] = "Proc свечение использует меньше всего ЦП.",
 
@@ -103,10 +105,12 @@ L:SetStrings({
 	["TTS Volume"] = "Громкость TTS",
 	["Voice"] = "Голос",
 	["You must choose a voice in your language for this to work."] = "Вы должны выбрать голос на вашем языке, чтобы это работало.",
+	["These voices come from your installed system language packs and you can add more through your Windows settings."] = "Эти голоса берутся из установленных языковых пакетов системы, и вы можете добавить больше через настройки Windows.",
+	["Note that some voices don't perform well, for example Microsoft Hazel is bad and Microsoft Zira is good."] = "Обратите внимание, что некоторые голоса работают плохо, например Microsoft Hazel плохой, а Microsoft Zira хороший.",
 
 	-- CC tab
 	["CC"] = "Контроль",
-	["Change the colour of the glow/border based on dispel type (e.g., blue for magic, red for physical)."] = "Изменить цвет свечения/границы в зависимости от типа рассеивания (напр. синий для магии, красный для физического).",
+	["Change the colour of the glow/border based on dispel type (e.g., blue for magic, red for physical). This only applies to CC icons."] = "Изменить цвет свечения/границы в зависимости от типа рассеивания (напр. синий для магии, красный для физического). Применяется только к иконкам контроля.",
 	["Color by class"] = "Цвет по классу",
 	["Color the glow/border by the enemy's class color."] = "Окрашивать свечение/границу цветом класса противника.",
 	["Dispel colours"] = "Цвета рассеивания",
@@ -122,17 +126,21 @@ L:SetStrings({
 	["Show a glow around the CC icons."] = "Показывать свечение вокруг иконок контроля.",
 	["Shows CC icons on party/raid frames."] = "Показывает иконки контроля на рамках группы/рейда.",
 
-	-- CDs tab
-	["CDs"] = "Восстановление",
+	-- Indicator tab
+	["Auras"] = "Ауры",
 	["Change the colour of the glow/border. Defensive spells are green and Important spells are red."] = "Изменить цвет свечения/границы. Защитные заклинания - зеленые, важные заклинания - красные.",
 	["Defensive"] = "Защитное",
 	["Don't forget to disable the Blizzard 'center big defensives' option when using this."] = "Не забудьте отключить опцию Blizzard 'центрировать большие защитные способности' при использовании этого.",
 	["Exclude yourself from showing trinket icons."] = "Исключить себя из отображения иконок аксессуаров.",
+	["Show CC"] = "Показать контроль",
+	["Show CC icons."] = "Показывать иконки контроля.",
 	["Show Defensives"] = "Показать защитные",
 	["Show defensive spell icons."] = "Показывать иконки защитных заклинаний.",
 	["Show Important"] = "Показать важные",
 	["Show important spell icons."] = "Показывать иконки важных заклинаний.",
-	["Shows active friendly cooldowns party/raid frames."] = "Показывает активные союзные перезарядки на рамках группы/рейда.",
+	["Shows CC, defensives, and important auras as one set of icons on party/raid frames."] = "Показывает CC, защитные способности и важные ауры одним набором иконок на рамках группы/рейда.",
+	["Tip: Disable the CC module for BGs and enable CC within this module."] = "Совет: отключите модуль контроля для полей боя и включите контроль в этом модуле.",
+
 
 	-- Healer tab
 	["A separate region for when your healer is CC'd."] = "Отдельная область для когда ваш целитель под контролем.",
@@ -167,6 +175,8 @@ L:SetStrings({
 	["Ignore Friendly Pets"] = "Игнорировать союзных питомцев",
 	["Nameplates"] = "Полоски здоровья",
 	["Nameplates_Short"] = "Полоски",
+	["Scale with Nameplate"] = "Scale with Nameplate",
+	["Icons scale along with the nameplate scale. Use this option if you have a different size for the target nameplate (e.g. in BBF's settings)."] = "Icons scale along with the nameplate scale. Use this option if you have a different size for the target nameplate (e.g. in BBF's settings).",
 	["Shows CC and important spells on nameplates (works with nameplate addons e.g. BBP, Platynator, and Plater)."] = "Показывает контроль и важные заклинания на полосках здоровья (работает с аддонами полосок здоровья, например BBP, Platynator и Plater).",
 	["Spell colours"] = "Цвета заклинаний",
 
@@ -178,8 +188,7 @@ L:SetStrings({
 
 	-- Party Trinkets tab
 	[" - Doesn't work if your team mates trinket in the starting room."] = " - Не работает, если ваши союзники используют аксессуар в стартовой комнате.",
-	[" - Doesn't work in the open world."] = " - Не работает в открытом мире.",
-	[" - Racials like stoneform count as a trinket use."] = " - Расовые способности вроде «Каменной формы» считаются использованием аксессуара.",
+	[" - Only works inside arena."] = " - Работает только внутри арены.",
 	["Party Trinkets"] = "Аксессуары группы",
 	["Party Trinkets_Short"] = "Амулеты",
 

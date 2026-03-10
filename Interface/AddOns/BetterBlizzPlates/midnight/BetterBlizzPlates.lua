@@ -2453,16 +2453,10 @@ end
 
 --#################################################################################################
 -- Clickthrough nameplates function
-function BBP.ClickthroughNameplateAuras(pool, namePlateFrameBase)
-    if not namePlateFrameBase.BuffFrame.buffPool.hooked then
-        namePlateFrameBase.BuffFrame.buffPool.hooked=true
-        hooksecurefunc(namePlateFrameBase.BuffFrame.buffPool,"resetterFunc",function(pool2,buff)
-            buff:SetMouseClickEnabled(false)
-        end)
-    end
-end
---hooksecurefunc(NamePlateDriverFrame.pools:GetPool("NamePlateUnitFrameTemplate"),"resetterFunc",BBP.ClickthroughNameplateAuras) --tww change
---hooksecurefunc(NamePlateDriverFrame.pools:GetPool("ForbiddenNamePlateUnitFrameTemplate"),"resetterFunc",BBP.ClickthroughNameplateAuras)
+hooksecurefunc(NamePlateAuraItemMixin, "SetAura", function(self)
+    if self:IsForbidden() then return end
+    self:SetMouseClickEnabled(false)
+end)
 
 function BBP.PersonalBarSettings()
     local db = BetterBlizzPlatesDB
@@ -3474,13 +3468,13 @@ function BBP.ColorThreat(frame)
             local targetUnit = frame.unit.."target"
             if not UnitIsPlayer(targetUnit) then
                 local otherThreatStatus = UnitThreatSituation(targetUnit, frame.unit)
-                if otherThreatStatus and otherThreatStatus >= 2 then
+                if otherThreatStatus and not issecretvalue(otherThreatStatus) and otherThreatStatus >= 2 then
                     r, g, b = unpack(BetterBlizzPlatesDB.tankOffTankAggroColorRGB)
                 end
             else
                 for _, unit in ipairs(offTanks) do
                     local otherThreatStatus = UnitThreatSituation(unit, frame.unit)
-                    if otherThreatStatus and otherThreatStatus >= 2 then
+                    if otherThreatStatus and not issecretvalue(otherThreatStatus) and otherThreatStatus >= 2 then
                         r, g, b = unpack(BetterBlizzPlatesDB.tankOffTankAggroColorRGB)
                         break
                     end
@@ -5561,9 +5555,14 @@ local function CreateBetterClassicHealthbarBorder(frame)
         end
     end
 
-    local height = frame.healthBar:GetHeight()
-    local bottomOffset = -((0.455) * height - 1.09)
-    local topOffset = (2 * height) - 1
+    local height = frame.HealthBarsContainer:GetHeight()
+    if not issecretvalue(height) then
+        frame.hpBarHeight = height -- temp fix, needs a better way to handle this
+    else
+        height = frame.hpBarHeight or 13
+    end
+    local bottomOffset = -((0.455) * (frame.hpBarHeight or height) - 1.09)
+    local topOffset = (2 * (frame.hpBarHeight or height)) - 1
     local hideLevel = config.hideLevelFrame or (BBP.isInPvP and not BetterBlizzPlatesDB.hideLevelFrameForceOnInPvP)
     local rightXOffset = hideLevel and 27.9 or 20.9
 
@@ -6092,7 +6091,7 @@ local function HandleNamePlateAdded(unit)
 
         local castTexture = newBar:GetStatusBarTexture()
         if not newBar.MaskTexture then
-        newBar.MaskTexture = newBar:CreateMaskTexture()
+            newBar.MaskTexture = newBar:CreateMaskTexture()
         end
         newBar.MaskTexture:SetTexture("interface\\castingbar\\uicastingbarfullmask")
         newBar.MaskTexture:ClearAllPoints()
@@ -6206,11 +6205,11 @@ local function HandleNamePlateAdded(unit)
                 frame.HealthBarsContainer:SetBorderColor(0, 0, 0, 1)
             end
         end
+        frame.HealthBarsContainer.healthBar.deselectedOverlay:SetAlpha(0)
     end
     if BetterBlizzPlatesDB.classicRetailNameplates or not config.useCustomTextureForBars then
         if frame.HealthBarsContainer.healthBar.MaskTexture then
             frame.HealthBarsContainer.healthBar.MaskTexture:Hide()
-            frame.HealthBarsContainer.healthBar.deselectedOverlay:SetAlpha(0)
         end
     end
     -- if info.isFriend and BetterBlizzPlatesDB.friendlyNameplateClickthrough then
@@ -6433,6 +6432,7 @@ local function HandleNamePlateAdded(unit)
     if config.classicNameplates then
         CreateBetterClassicHealthbarBorder(frame)
         frame.HealthBarsContainer.healthBar.selectedBorder:SetAlpha(0)
+        frame.HealthBarsContainer.healthBar.deselectedOverlay:SetAlpha(0)
         frame.classicNameplatesOn = true
     elseif frame.classicNameplatesOn then
         frame.BetterBlizzPlates.bbpBorder:Hide()
@@ -6478,6 +6478,10 @@ local function HandleNamePlateAdded(unit)
     if config.showGuildNames then ShowFriendlyGuildName(frame, frame.unit) end
 
     NameplateShadowAndMouseoverHighlight(frame)
+
+    if BetterBlizzPlatesDB.hideDeselectNonTargetOverlay then
+        frame.HealthBarsContainer.healthBar.deselectedOverlay:SetAlpha(0)
+    end
 
     -- print("3: ", frame:GetFrameLevel(), nameplate:GetFrameLevel())
     -- print("______________________")
@@ -7333,12 +7337,6 @@ Frame:SetScript("OnEvent", function(...)
     end
 
     CheckForUpdate()
-
-    if not db.skipBugWarning then
-        C_Timer.After(4, function()
-            print("|A:gmchat-icon-blizz:16:16|a Better|cff00c0ffBlizz|rPlates: Bugs are expected in this very early release. Use at own risk for now. Please report bugs.")
-        end)
-    end
 
     _, playerClass = UnitClass("player")
     playerClassColor = RAID_CLASS_COLORS[playerClass]
@@ -8442,7 +8440,6 @@ function BBP.NameplateAuraTweaksTemp()
         local HEIGHT = (not rectangleAuras) and 20 or 14
 
         if auraFrame and auraFrame:IsShown() then
-            auraFrame:SetMouseClickEnabled(false)
             if isDebuffList then
                 if hideCooldownTimer then
                     auraFrame.Cooldown:SetHideCountdownNumbers(true)

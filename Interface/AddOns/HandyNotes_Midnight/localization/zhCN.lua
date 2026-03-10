@@ -98,6 +98,12 @@ L['spiritpaw_marathon_note'] = '和 {npc:258938} 交谈，然后抱起附近的 
 L['options_icons_gnome_alone'] = '{achievement:62200}'
 L['options_icons_gnome_alone_desc'] = '显示 {achievement:62200} 成就中的位置。'
 
+L['abandoned_ritual_skull'] = '被遗弃的仪式颅骨'
+
+L['options_icons_put_a_pin_in_it'] = '{achievement:62199}'
+L['options_icons_put_a_pin_in_it_desc'] = '显示 {achievement:62199} 成就中的位置。'
+L['kalika_note'] = '与 {npc:258884} 交谈，然后与附近的 {object:翡翠雕像} 后面的 {object:被遗忘的纽扣} 互动。'
+
 -------------------------------------------------------------------------------
 ---------------------------------- ARCANTINA ----------------------------------
 -------------------------------------------------------------------------------
@@ -110,3 +116,5 @@ L['share_a_drink_note'] = '从奥术秘社的 {npc:250495} 处购买 {item:25103
 
 L['sturdy_chest'] = '坚固宝箱'
 L['sturdy_chest_suffix'] = '已找到坚固宝箱'
+
+L['gulf_of_memory_chest_note'] = '沿着树的根部向上攀爬以到达宝藏。'

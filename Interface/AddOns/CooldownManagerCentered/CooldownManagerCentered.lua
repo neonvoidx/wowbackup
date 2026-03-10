@@ -75,8 +75,10 @@ function addon:RefreshConfig()
     if ns.GlowStyle then
         ns.GlowStyle:Initialize()
     end
-    if ns.CooldownStyle then
-        ns.CooldownStyle:Initialize()
+    if not ns.db.profile.cooldownManager_experimental_disablePerSpellSettings then
+        if ns.CooldownStyle then
+            ns.CooldownStyle:Initialize()
+        end
     end
     if ns.ButtonPress then
         ns.ButtonPress:Initialize()
@@ -180,9 +182,12 @@ function addon:OnEnable()
     if ns.GlowStyle then
         ns.GlowStyle:Initialize()
     end
-    if ns.CooldownStyle then
-        ns.CooldownStyle:Initialize()
+    if not ns.db.profile.cooldownManager_experimental_disablePerSpellSettings then
+        if ns.CooldownStyle then
+            ns.CooldownStyle:Initialize()
+        end
     end
+
     if ns.ButtonPress then
         ns.ButtonPress:Initialize()
     end

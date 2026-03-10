@@ -160,6 +160,7 @@ L["_OrderHallMissionFrame"] = "Scouting Map"
 L["_HousingDashboardFrame"] = "Housing Dashboard"
 L["_TransmogFrame"] = "Transmogrify"
 L["_DamageMeter"] = "Damage Meter"
+L["_HousingModelPreviewFrame"] = "Housing Preview"
 
 -- [[ Addon Skins ]] --
 L["_LibDBIcon"] = "Minimap Icons (LibDBIcon)"

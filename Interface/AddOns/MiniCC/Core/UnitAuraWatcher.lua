@@ -1,6 +1,5 @@
 ---@type string, Addon
 local _, addon = ...
-local maxAuras = 40
 
 -- Dispel type color mapping
 local dispelColours = {
@@ -192,13 +191,9 @@ end
 ---@param filter string
 ---@param callback fun(auraData: table, start: number, duration: number, dispelColor: table)
 local function IterateAuras(unit, filter, callback)
-	for i = 1, maxAuras do
-		local auraData = C_UnitAuras.GetAuraDataByIndex(unit, i, filter)
+	local auras = C_UnitAuras.GetUnitAuras(unit, filter)
 
-		if not auraData then
-			break
-		end
-
+	for _, auraData in ipairs(auras) do
 		local durationInfo = C_UnitAuras.GetAuraDuration(unit, auraData.auraInstanceID)
 		local start = durationInfo and durationInfo:GetStartTime()
 		local duration = durationInfo and durationInfo:GetTotalDuration()
@@ -217,6 +212,7 @@ function Watcher:RebuildStates()
 		return
 	end
 
+	---@type AuraTypeFilter?
 	local interestedIn = self.State.InterestedIn
 	local interestedInDefensives = not interestedIn or (interestedIn and interestedIn.Defensives)
 	local interestedInCC = not interestedIn or (interestedIn and interestedIn.CC)
@@ -316,6 +312,13 @@ function Watcher:RebuildStates()
 		end)
 	end
 
+	-- for some reason it's possible for auras to come back non-deterministically from the API, so sort by instance ID to ensure a consistent order
+	-- I've only ever seen this happen on Chinese clients
+	local byInstanceId = function(a, b) return a.AuraInstanceID < b.AuraInstanceID end
+	table.sort(ccSpellData, byInstanceId)
+	table.sort(importantSpellData, byInstanceId)
+	table.sort(defensivesSpellData, byInstanceId)
+
 	local state = self.State
 	state.CcAuraState = ccSpellData
 	state.ImportantAuraState = importantSpellData
@@ -390,7 +393,7 @@ InitColourCurve()
 ---@class AuraTypeFilter
 ---@field CC boolean?
 ---@field Important boolean?
----@field Defensive boolean?
+---@field Defensives boolean?
 
 ---@class AuraInfo
 ---@field IsImportant? boolean

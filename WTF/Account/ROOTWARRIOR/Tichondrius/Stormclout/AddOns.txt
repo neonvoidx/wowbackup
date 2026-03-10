@@ -116,7 +116,7 @@ WeakAurasOptions: enabled
 WeakAurasTemplates: enabled
 BartrubySummonPet: enabled
 BetterBlizzFrames: enabled
-BetterBlizzPlates: disabled
+BetterBlizzPlates: enabled
 Conceal: enabled
 EditModeExpanded: enabled
 idTip: enabled
@@ -417,3 +417,8 @@ FrogskisCursorTrail: enabled
 FrogskisInstantCastBar: enabled
 MiniCC: enabled
 EnhanceQoLSharedMedia: enabled
+BattleGroundEnemiesFixed: enabled
+Collectionator: enabled
+HandyNotes_Silvermoon: enabled
+MidnightRoutine: enabled
+WorldQuestTab: enabled

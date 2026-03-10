@@ -193,6 +193,26 @@ end
 
 ---@return table? unitFrame
 ---@return table? portrait
+local function GetTPerlFrame(unit)
+	if unit == "player" then
+		if TPerl_PlayerportraitFrame then
+			return TPerl_PlayerportraitFrame, TPerl_PlayerportraitFrame
+		end
+	elseif unit == "target" then
+		if TPerl_TargetportraitFrame then
+			return TPerl_TargetportraitFrame, TPerl_TargetportraitFrame
+		end
+	elseif unit == "focus" then
+		if TPerl_FocusportraitFrame then
+			return TPerl_FocusportraitFrame, TPerl_FocusportraitFrame
+		end
+	end
+
+	return nil
+end
+
+---@return table? unitFrame
+---@return table? portrait
 local function GetElvUIFrame(unit)
 	if unit == "player" then
 		if ElvUF_Player and ElvUF_Player.Portrait then
@@ -233,6 +253,11 @@ local function Attach(unit, events)
 	watchers[unit] = watcher
 
 	local container = CreateContainer(unitFrame, portrait)
+
+	if unit == "pet" then
+		container.Frame:SetFrameLevel(math.max(0, (PetFrame:GetFrameLevel() or 0) - 2))
+	end
+
 	local mask = GetPortraitMask(unitFrame) or CreatePortraitMask(portrait)
 
 	if mask then
@@ -268,7 +293,12 @@ local function AttachElvUIFrame(unit)
 	end
 
 	local container = CreateContainer(elvuiFrame, elvuiPortrait)
-	container.Frame:SetFrameLevel((elvuiPortrait:GetFrameLevel() or 0))
+	-- 3d models are a frame, where as 2d portraits are textures which don't have a frame level
+	-- so for 2d textures we get the frame level from the parent frame, for 3d portraits we get it directly from the portrait frame
+	local portraitLevel = elvuiPortrait.GetFrameLevel and elvuiPortrait:GetFrameLevel()
+		or elvuiFrame:GetFrameLevel()
+		or 0
+	container.Frame:SetFrameLevel(portraitLevel)
 
 	local originalSetSlot = container.SetSlot
 	container.SetSlot = function(self, slotIndex, options)
@@ -281,6 +311,32 @@ local function AttachElvUIFrame(unit)
 			slot.Container.Cooldown:SetAllPoints(elvuiPortrait)
 		end
 	end
+
+	watcher:RegisterCallback(function()
+		OnAuraInfo(watcher, container)
+	end)
+	containers[#containers + 1] = container
+end
+
+---@param unit string
+local function AttachTPerlFrame(unit)
+	local tperlFrame, tperlPortrait = GetTPerlFrame(unit)
+
+	if not tperlFrame or not tperlPortrait then
+		return
+	end
+
+	local watcher = watchers[unit]
+
+	if not watcher then
+		return
+	end
+
+	local container = CreateContainer(tperlFrame, tperlPortrait)
+	local portraitLevel = tperlPortrait.GetFrameLevel and tperlPortrait:GetFrameLevel()
+		or tperlFrame:GetFrameLevel()
+		or 0
+	container.Frame:SetFrameLevel(portraitLevel)
 
 	watcher:RegisterCallback(function()
 		OnAuraInfo(watcher, container)
@@ -314,12 +370,9 @@ local function DisableWatchers()
 	for _, container in pairs(containers) do
 		container:ResetAllSlots()
 	end
-
-	paused = true
 end
 
 local function EnableWatchers()
-	paused = false
 	for _, watcher in pairs(watchers) do
 		watcher:Enable()
 	end
@@ -387,6 +440,9 @@ function M:Init()
 		AttachElvUIFrame("player")
 		AttachElvUIFrame("target")
 		AttachElvUIFrame("focus")
+		AttachTPerlFrame("player")
+		AttachTPerlFrame("target")
+		AttachTPerlFrame("focus")
 	end)
 
 	M:Refresh()

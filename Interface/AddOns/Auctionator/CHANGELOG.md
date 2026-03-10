@@ -1,7 +1,8 @@
 # Auctionator
 
-## [310](https://github.com/TheMouseNest/Auctionator/tree/310) (2026-01-18)
-[Full Changelog](https://github.com/TheMouseNest/Auctionator/compare/309...310) 
+## [318](https://github.com/TheMouseNest/Auctionator/tree/318) (2026-03-08)
+[Full Changelog](https://github.com/TheMouseNest/Auctionator/compare/317...318) 
 
-- [Fixes #1745] Classic Anniversary: Fix keyring items not showing in selling tab  
-- Midnight: [Fixes #1744, Fixes #1743] Fix a couple of errors  
+- Ensure tooltips of items in the auction house show the right price for the ilvl  
+- Fix prices shown for crafting enchants  
+- Update enchant spell mappings for Midnight (#1785)  

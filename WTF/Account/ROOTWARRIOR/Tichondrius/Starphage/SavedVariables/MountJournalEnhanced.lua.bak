@@ -3,7 +3,7 @@ MJEPersonalSettings = {
 ["notes"] = {
 },
 ["trackUsageStats"] = false,
-["summonPreviousPetAgain"] = true,
+["searchInNotes"] = true,
 ["personalFilter"] = false,
 ["filterProfile"] = {
 {
@@ -42,10 +42,10 @@ MJEPersonalSettings = {
 },
 },
 },
-["personalUi"] = false,
+["summonPreviousPetAgain"] = false,
 ["hiddenMounts"] = {
 },
-["searchInNotes"] = true,
+["personalUi"] = false,
 ["pets"] = {
 ["assignments"] = {
 },
@@ -104,14 +104,10 @@ true,
 },
 ["notCollected"] = true,
 ["hidden"] = false,
-["mountType"] = {
-["repair"] = true,
-["flying"] = true,
-["underwater"] = true,
-["rideAlong"] = true,
-["passenger"] = true,
-["ground"] = true,
-["transform"] = true,
+["faction"] = {
+["horde"] = true,
+["alliance"] = true,
+["noFaction"] = true,
 },
 ["family"] = {
 ["Drakes"] = {
@@ -270,9 +266,9 @@ true,
 ["Yaks"] = true,
 ["Talbuks"] = true,
 ["Rams"] = true,
+["Slateback"] = true,
 ["Clefthooves"] = true,
 ["Ruinstriders"] = true,
-["Slateback"] = true,
 ["Goats"] = true,
 },
 ["Wolves"] = {
@@ -352,12 +348,16 @@ true,
 },
 },
 ["onlyFavorites"] = false,
-["faction"] = {
-["horde"] = true,
-["alliance"] = true,
-["noFaction"] = true,
-},
 ["onlyUsable"] = false,
+["mountType"] = {
+["repair"] = true,
+["flying"] = true,
+["underwater"] = true,
+["rideAlong"] = true,
+["passenger"] = true,
+["ground"] = true,
+["transform"] = true,
+},
 ["onlyTradable"] = false,
 ["collected"] = true,
 ["onlyRecent"] = false,

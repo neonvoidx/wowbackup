@@ -49,7 +49,8 @@ CappingSettings = {
 ["position"] = {
 "TOPLEFT",
 "TOPLEFT",
-56.66669464111328,
+50.00001525878906,
+-22.4999942779541,
 },
 ["outline"] = "OUTLINE",
 ["barOnShift"] = "INSTANCE_CHAT",

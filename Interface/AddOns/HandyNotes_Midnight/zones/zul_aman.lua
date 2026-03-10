@@ -16,6 +16,7 @@ local FrogPrincess = ns.node.FrogPrincess
 local Songseeker = ns.node.Songseeker
 local SpiritpawMarathon = ns.node.SpiritpawMarathon
 local GnomeAlone = ns.node.GnomeAlone
+local PutAPinInIt = ns.node.PutAPinInIt
 
 local Achievement = ns.reward.Achievement
 local Mount = ns.reward.Mount
@@ -24,6 +25,8 @@ local Transmog = ns.reward.Transmog
 local Reputation = ns.reward.Reputation
 local Section = ns.reward.Section
 local Spacer = ns.reward.Spacer
+
+local Gray = ns.status.Gray
 
 local POI = ns.poi.POI
 local Path = ns.poi.Path
@@ -69,7 +72,7 @@ map.nodes[51857291] = Rare({
         Achievement({id = 62122, criteria = 111841}),
         Reputation({id = 2696, gain = 50, quest = 94698}),
         Transmog({item = 264542, type = L['leather']}), -- Skullcrusher's Mantle
-        Transmog({item = 256231, type = L['2h_sword']}), -- Harak's Skullcutter
+        Transmog({item = 264631, type = L['2h_sword']}), -- Harak's Skullcutter
         Spacer(), Section(L['shared_drops']), Mount({item = 257152, id = 2760}), -- Amani Sharptalon
         Mount({item = 257200, id = 2775}) -- Witherbark Pango
     }
@@ -238,10 +241,12 @@ map.nodes[45294170] = Rare({
 -------------------------------------------------------------------------------
 
 map.nodes[44724409] = Treasure({
+    label = L['abandoned_ritual_skull'],
+    icon = 'star_chest_b',
+    scale = 1.5,
     requires = ns.requirement.Item(259361, 1000), -- Vile Essence
     quest = 90794,
     rewards = {
-        Achievement({id = 62125, criteria = 111854}),
         Mount({item = 257444, id = 2786}) -- Hexed Vilefeather Eagle
     }
 }) -- Abandoned Ritual Skull
@@ -305,13 +310,6 @@ map.nodes[42645243] = Treasure({
     }
 }) -- Abandoned Nest
 
-map.nodes[44325620] = Treasure({
-    label = 'Ruz\'avalt\'s Prized Tackle',
-    quest = 90790,
-    rewards = {}
-}) -- Ruz'avalt's Prized Tackle
--- TODO: not interactable
-
 -------------------------------------------------------------------------------
 ----------------------------- PROFESSION TREASURES ----------------------------
 -------------------------------------------------------------------------------
@@ -335,6 +333,7 @@ aam.nodes[65143476] = PT.Engineering({
     parent = map.id
 }) -- Offline Helper Bot
 map.nodes[34218780] = PT.Engineering({quest = 89140, id = 238563}) -- Handy Wrench
+map.nodes[41914591] = PT.Herbalism({quest = 89161, id = 238469}) -- Sweeping Harvester's Scythe
 map.nodes[40484935] = PT.Inscription({quest = 89068, id = 238573}) -- Leather-Bound Techniques
 aam.nodes[45294561] = PT.Leatherworking({
     quest = 89092,
@@ -582,6 +581,36 @@ map.nodes[34791716] = GnomeAlone({
         Achievement({id = 62200, criteria = 112848}) -- Parting Note,
     }
 })
+
+-------------------------- PUT A PIN IN IT -----------------------------
+
+map.nodes[59247109] = PutAPinInIt({
+    label = '{npc:258933}', -- Chu'ke
+    quest = 95005,
+    rewards = {
+        Achievement({id = 62199, criteria = 112038}) -- Chu'ke found
+    },
+    rlabel = Gray('1/3')
+})
+
+map.nodes[38662378] = PutAPinInIt({
+    label = '{npc:258884}', -- Kalika
+    quest = 95045,
+    questDeps = 95005,
+    note = L['kalika_note'],
+    pois = {POI({points = 38682391})},
+    rlabel = Gray('2/3')
+})
+
+map.nodes[37809011] = PutAPinInIt({
+    quest = 95046,
+    questDeps = 95045,
+    rewards = {
+        Achievement({id = 62199, criteria = 112444}) -- Chu'ke found
+    },
+    rlabel = Gray('3/3')
+})
+
 -------------------------------------------------------------------------------
 -------------------------------- SAFARI ---------------------------------------
 -------------------------------------------------------------------------------

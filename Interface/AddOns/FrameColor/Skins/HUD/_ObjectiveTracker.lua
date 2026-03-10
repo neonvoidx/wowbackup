@@ -40,6 +40,7 @@ function skin:Apply(mainColor, desaturation)
     AchievementObjectiveTracker,
     CampaignQuestObjectiveTracker,
     ProfessionsRecipeTracker,
+    InitiativeTasksObjectiveTracker,
   }) do
     objectiveTrackerFrame.Header.Background:SetDesaturation(desaturation)
     objectiveTrackerFrame.Header.Background:SetVertexColor(mainColor[1], mainColor[2], mainColor[3], mainColor[4])

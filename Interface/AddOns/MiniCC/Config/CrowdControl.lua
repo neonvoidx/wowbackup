@@ -11,7 +11,7 @@ local growOptions = {
 local verticalSpacing = mini.VerticalSpacing
 local horizontalSpacing = mini.HorizontalSpacing
 local columns = 4
-local columnWidth = mini:ColumnWidth(columns, 0, 0)
+local columnWidth
 local config = addon.Config
 
 ---@class CrowdControlConfig
@@ -127,7 +127,8 @@ local function BuildInstance(panel, options, addTestButton)
 		end,
 	})
 
-	glowChk:SetPoint("TOPLEFT", excludePlayerChk, "BOTTOMLEFT", 0, -verticalSpacing)
+	glowChk:SetPoint("LEFT", parent, "LEFT", columnWidth, 0)
+	glowChk:SetPoint("TOP", excludePlayerChk, "TOP", 0, 0)
 
 	local dispelColoursChk = mini:Checkbox({
 		Parent = parent,
@@ -142,8 +143,8 @@ local function BuildInstance(panel, options, addTestButton)
 		end,
 	})
 
-	dispelColoursChk:SetPoint("LEFT", parent, "LEFT", columnWidth, 0)
-	dispelColoursChk:SetPoint("TOP", glowChk, "TOP", 0, 0)
+	dispelColoursChk:SetPoint("LEFT", parent, "LEFT", columnWidth * 2, 0)
+	dispelColoursChk:SetPoint("TOP", excludePlayerChk, "TOP", 0, 0)
 
 	local reverseChk = mini:Checkbox({
 		Parent = parent,
@@ -158,8 +159,8 @@ local function BuildInstance(panel, options, addTestButton)
 		end,
 	})
 
-	reverseChk:SetPoint("LEFT", parent, "LEFT", columnWidth * 2, 0)
-	reverseChk:SetPoint("TOP", glowChk, "TOP", 0, 0)
+	reverseChk:SetPoint("LEFT", parent, "LEFT", columnWidth * 3, 0)
+	reverseChk:SetPoint("TOP", excludePlayerChk, "TOP", 0, 0)
 
 	local iconSize = mini:Slider({
 		Parent = parent,
@@ -180,7 +181,7 @@ local function BuildInstance(panel, options, addTestButton)
 		end,
 	})
 
-	iconSize.Slider:SetPoint("TOPLEFT", glowChk, "BOTTOMLEFT", 4, -verticalSpacing * 3)
+	iconSize.Slider:SetPoint("TOPLEFT", excludePlayerChk, "BOTTOMLEFT", 4, -verticalSpacing * 3)
 
 	local maxIcons = mini:Slider({
 		Parent = parent,
@@ -208,11 +209,11 @@ local function BuildInstance(panel, options, addTestButton)
 
 	if addTestButton then
 		local testBtn = CreateFrame("Button", nil, panel, "UIPanelButtonTemplate")
-		testBtn:SetSize(120, 26)
+		testBtn:SetSize(160, 26)
 		testBtn:SetPoint("TOPLEFT", anchorPanel, "BOTTOMLEFT", 0, -verticalSpacing * 2)
-		testBtn:SetText(L["Test"])
+		testBtn:SetText(L["Test these settings"])
 		testBtn:SetScript("OnClick", function()
-			addon:TestWithOptions(options)
+			addon:TestWithOptions(true)
 		end)
 	end
 
@@ -395,6 +396,7 @@ end
 ---@param default CrowdControlInstanceOptions
 ---@param raid CrowdControlInstanceOptions
 function M:Build(panel, default, raid)
+	columnWidth = mini:ColumnWidth(columns, 0, 0)
 	local db = mini:GetSavedVars()
 
 	local lines = mini:TextBlock({
@@ -408,7 +410,7 @@ function M:Build(panel, default, raid)
 
 	local enabledDivider = mini:Divider({
 		Parent = panel,
-		Text = L["Enable in:"],
+		Text = L["Enable in"],
 	})
 	enabledDivider:SetPoint("LEFT", panel, "LEFT")
 	enabledDivider:SetPoint("RIGHT", panel, "RIGHT")
@@ -484,14 +486,15 @@ function M:Build(panel, default, raid)
 
 	defaultDivider:SetPoint("LEFT", panel, "LEFT")
 	defaultDivider:SetPoint("RIGHT", panel, "RIGHT")
-	defaultDivider:SetPoint("TOP", enabledEverywhere, "BOTTOM", 0, -verticalSpacing * 2)
+	defaultDivider:SetPoint("TOP", enabledEverywhere, "BOTTOM", 0, -verticalSpacing)
 
+	local subPanelHeight = 290
 	local defaultPanel = BuildInstance(panel, default, false)
 
 	defaultPanel:SetPoint("TOPLEFT", defaultDivider, "BOTTOMLEFT", 0, -verticalSpacing)
 	defaultPanel:SetPoint("TOPRIGHT", defaultDivider, "BOTTOMRIGHT", 0, -verticalSpacing)
 	-- TODO: calculate real child height
-	defaultPanel:SetHeight(370)
+	defaultPanel:SetHeight(subPanelHeight)
 
 	local raidDivider = mini:Divider({
 		Parent = panel,
@@ -506,7 +509,7 @@ function M:Build(panel, default, raid)
 
 	raidPanel:SetPoint("TOPLEFT", raidDivider, "BOTTOMLEFT", 0, -verticalSpacing)
 	raidPanel:SetPoint("TOPRIGHT", raidDivider, "TOPRIGHT")
-	raidPanel:SetHeight(370)
+	raidPanel:SetHeight(subPanelHeight)
 
 	local petDivider = mini:Divider({
 		Parent = panel,
@@ -521,7 +524,7 @@ function M:Build(panel, default, raid)
 
 	petPanel:SetPoint("TOPLEFT", petDivider, "BOTTOMLEFT", 0, -verticalSpacing)
 	petPanel:SetPoint("TOPRIGHT", petDivider, "TOPRIGHT")
-	petPanel:SetHeight(370)
+	petPanel:SetHeight(subPanelHeight)
 
 	panel.OnMiniRefresh = function()
 		defaultPanel:MiniRefresh()

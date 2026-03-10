@@ -15,7 +15,7 @@ L:SetDefaultStrings({
 	["Caster"] = "Caster",
 	["Healer"] = "Healer",
 	["Enable if you are:"] = "Enable if you are:",
-	["Enable in:"] = "Enable in:",
+	["Enable in"] = "Enable in",
 	["Enabled"] = "Enabled",
 	["Enable this module everywhere."] = "Enable this module everywhere.",
 	["Enable this module in the open world."] = "Enable this module in the open world.",
@@ -38,8 +38,11 @@ L:SetDefaultStrings({
 	["Reverse swipe"] = "Reverse swipe",
 	["Reverses the direction of the cooldown swipe animation."] = "Reverses the direction of the cooldown swipe animation.",
 	["Settings"] = "Settings",
+	["Open Settings"] = "Open Settings",
+	["Use /minicc, /mcc, or /cc to open the MiniCC config window."] = "Use /minicc, /mcc, or /cc to open the MiniCC config window.",
 	["Show a glow around the icons."] = "Show a glow around the icons.",
 	["Test"] = "Test",
+	["Test these settings"] = "Test these settings",
 	["Whether to enable or disable this module if you are a caster."] = "Whether to enable or disable this module if you are a caster.",
 	["Whether to enable or disable this module if you are a healer."] = "Whether to enable or disable this module if you are a healer.",
 	["Whether to enable or disable this module regardless of what spec you are."] = "Whether to enable or disable this module regardless of what spec you are.",
@@ -74,7 +77,6 @@ L:SetDefaultStrings({
 	["Pixel Glow"] = "Pixel Glow",
 	["Proc Glow"] = "Proc Glow",
 	["Reset"] = "Reset",
-	["Settings:"] = "Settings:",
 	["The others seem to use a non-trivial amount of CPU."] = "The others seem to use a non-trivial amount of CPU.",
 	["The Proc Glow uses the least CPU."] = "The Proc Glow uses the least CPU.",
 
@@ -103,10 +105,12 @@ L:SetDefaultStrings({
 	["TTS Volume"] = "TTS Volume",
 	["Voice"] = "Voice",
 	["You must choose a voice in your language for this to work."] = "You must choose a voice in your language for this to work.",
+	["These voices come from your installed system language packs and you can add more through your Windows settings."] = "These voices come from your installed system language packs and you can add more through your Windows settings.",
+	["Note that some voices don't perform well, for example Microsoft Hazel is bad and Microsoft Zira is good."] = "Note that some voices don't perform well, for example Microsoft Hazel is bad and Microsoft Zira is good.",
 
 	-- CC tab
 	["CC"] = "CC",
-	["Change the colour of the glow/border based on dispel type (e.g., blue for magic, red for physical)."] = "Change the colour of the glow/border based on dispel type (e.g., blue for magic, red for physical).",
+	["Change the colour of the glow/border based on dispel type (e.g., blue for magic, red for physical). This only applies to CC icons."] = "Change the colour of the glow/border based on dispel type (e.g., blue for magic, red for physical). This only applies to CC icons.",
 	["Color by class"] = "Color by class",
 	["Color the glow/border by the enemy's class color."] = "Color the glow/border by the enemy's class color.",
 	["Dispel colours"] = "Dispel colours",
@@ -122,17 +126,20 @@ L:SetDefaultStrings({
 	["Show a glow around the CC icons."] = "Show a glow around the CC icons.",
 	["Shows CC icons on party/raid frames."] = "Shows CC icons on party/raid frames.",
 
-	-- CDs tab
-	["CDs"] = "CDs",
+	-- Indicator tab
+	["Auras"] = "Auras",
 	["Change the colour of the glow/border. Defensive spells are green and Important spells are red."] = "Change the colour of the glow/border. Defensive spells are green and Important spells are red.",
 	["Defensive"] = "Defensive",
 	["Don't forget to disable the Blizzard 'center big defensives' option when using this."] = "Don't forget to disable the Blizzard 'center big defensives' option when using this.",
 	["Exclude yourself from showing trinket icons."] = "Exclude yourself from showing trinket icons.",
+	["Show CC"] = "Show CC",
+	["Show CC icons."] = "Show CC icons.",
 	["Show Defensives"] = "Show Defensives",
 	["Show defensive spell icons."] = "Show defensive spell icons.",
 	["Show Important"] = "Show Important",
 	["Show important spell icons."] = "Show important spell icons.",
-	["Shows active friendly cooldowns party/raid frames."] = "Shows active friendly cooldowns party/raid frames.",
+	["Shows CC, defensives, and important auras as one set of icons on party/raid frames."] = "Shows CC, defensives, and important auras as one set of icons on party/raid frames.",
+	["Tip: Disable the CC module for BGs and enable CC within this module."] = "Tip: Disable the CC module for BGs and enable CC within this module.",
 
 	-- Healer tab
 	["A separate region for when your healer is CC'd."] = "A separate region for when your healer is CC'd.",
@@ -167,6 +174,8 @@ L:SetDefaultStrings({
 	["Ignore Friendly Pets"] = "Ignore Friendly Pets",
 	["Nameplates"] = "Nameplates",
 	["Nameplates_Short"] = "Nameplates",
+	["Scale with Nameplate"] = "Scale with Nameplate",
+	["Icons scale along with the nameplate scale. Use this option if you have a different size for the target nameplate (e.g. in BBF's settings)."] = "Icons scale along with the nameplate scale. Use this option if you have a different size for the target nameplate (e.g. in BBF's settings).",
 	["Shows CC and important spells on nameplates (works with nameplate addons e.g. BBP, Platynator, and Plater)."] = "Shows CC and important spells on nameplates (works with nameplate addons e.g. BBP, Platynator, and Plater).",
 	["Spell colours"] = "Spell colours",
 
@@ -178,8 +187,7 @@ L:SetDefaultStrings({
 
 	-- Party Trinkets tab
 	[" - Doesn't work if your team mates trinket in the starting room."] = " - Doesn't work if your team mates trinket in the starting room.",
-	[" - Doesn't work in the open world."] = " - Doesn't work in the open world.",
-	[" - Racials like stoneform count as a trinket use."] = " - Racials like stoneform count as a trinket use.",
+	[" - Only works inside arena."] = " - Only works inside arena.",
 	["Party Trinkets"] = "Party Trinkets",
 	["Party Trinkets_Short"] = "Trinkets",
 

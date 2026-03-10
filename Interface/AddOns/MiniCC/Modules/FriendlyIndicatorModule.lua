@@ -1,6 +1,7 @@
 ---@type string, Addon
 local _, addon = ...
 local mini = addon.Core.Framework
+local instanceOptions = addon.Core.InstanceOptions
 local frames = addon.Core.Frames
 local units = addon.Utils.Units
 local iconSlotContainer = addon.Core.IconSlotContainer
@@ -8,6 +9,7 @@ local UnitAuraWatcher = addon.Core.UnitAuraWatcher
 local spellCache = addon.Utils.SpellCache
 local moduleUtil = addon.Utils.ModuleUtil
 local moduleName = addon.Utils.ModuleName
+local slotDistribution = addon.Utils.SlotDistribution
 local wowEx = addon.Utils.WoWEx
 local eventsFrame
 local paused = false
@@ -18,8 +20,18 @@ local watchers = {}
 local testDefensiveSpells = {}
 ---@type TestSpell[]
 local testImportantSpells = {}
+---@type TestSpell[]
+local testCcSpells = {}
 ---@type Db
 local db
+
+local function GetOptions()
+	local m = db.Modules.FriendlyIndicatorModule
+	if not m then
+		return nil
+	end
+	return instanceOptions:IsRaid() and m.Raid or m.Default
+end
 
 ---@class FriendlyIndicatorModule : IModule
 local M = {}
@@ -31,6 +43,11 @@ addon.Modules.FriendlyIndicatorModule = M
 ---@field Watcher Watcher
 ---@field Anchor table
 ---@field Unit string
+
+---@class FriendlyIndicatorModuleOptions
+---@field ShowDefensives boolean
+---@field ShowImportant boolean
+---@field ShowCC boolean
 
 ---@param entry FriendlyIndicatorWatchEntry
 local function UpdateWatcherAuras(entry)
@@ -46,7 +63,7 @@ local function UpdateWatcherAuras(entry)
 		return
 	end
 
-	local options = db.Modules.FriendlyIndicatorModule
+	local options = GetOptions()
 	if not options or not moduleUtil:IsModuleEnabled(moduleName.FriendlyIndicator) then
 		return
 	end
@@ -56,37 +73,69 @@ local function UpdateWatcherAuras(entry)
 	local iconsGlow = options.Icons.Glow
 	local maxIcons = options.Icons.MaxIcons or 1
 	local container = entry.Container
+	local colorByDispelType = options.Icons.ColorByDispelType
 
-	-- Get both defensive and important states
+	-- Get aura states
+	local ccState = entry.Watcher:GetCcState()
 	local defensiveState = entry.Watcher:GetDefensiveState()
 	local importantState = entry.Watcher:GetImportantState()
 
-	-- Combine all auras (defensive first, then important), filtered by options
-	local allAuras = {}
-	if options.ShowDefensives ~= false then
-		for _, aura in ipairs(defensiveState) do
-			table.insert(allAuras, { aura = aura, alpha = aura.IsDefensive })
-		end
-	end
-	if options.ShowImportant ~= false then
-		for _, aura in ipairs(importantState) do
-			table.insert(allAuras, { aura = aura, alpha = aura.IsImportant })
-		end
-	end
+	-- Count auras per enabled category
+	local ccCount = options.ShowCC and #ccState or 0
+	local defensiveCount = options.ShowDefensives and #defensiveState or 0
+	local importantCount = options.ShowImportant and #importantState or 0
 
-	-- Display up to MaxIcons auras
+	-- Distribute slots: CC first, then Defensive, then Important
+	local ccSlots, defensiveSlots, importantSlots =
+		slotDistribution.Calculate(maxIcons, ccCount, defensiveCount, importantCount)
+
 	local slotIndex = 1
-	for _, auraData in ipairs(allAuras) do
-		if slotIndex > maxIcons or slotIndex > container.Count then
+
+	for i = 1, ccSlots do
+		if slotIndex > container.Count then
 			break
 		end
-
-		local aura = auraData.aura
+		local aura = ccState[i]
 		container:SetSlot(slotIndex, {
 			Texture = aura.SpellIcon,
 			StartTime = aura.StartTime,
 			Duration = aura.TotalDuration,
-			Alpha = auraData.alpha,
+			Alpha = aura.IsCC,
+			ReverseCooldown = iconsReverse,
+			Glow = iconsGlow,
+			Color = colorByDispelType and aura.DispelColor,
+			FontScale = db.FontScale,
+		})
+		slotIndex = slotIndex + 1
+	end
+
+	for i = 1, defensiveSlots do
+		if slotIndex > container.Count then
+			break
+		end
+		local aura = defensiveState[i]
+		container:SetSlot(slotIndex, {
+			Texture = aura.SpellIcon,
+			StartTime = aura.StartTime,
+			Duration = aura.TotalDuration,
+			Alpha = aura.IsDefensive,
+			ReverseCooldown = iconsReverse,
+			Glow = iconsGlow,
+			FontScale = db.FontScale,
+		})
+		slotIndex = slotIndex + 1
+	end
+
+	for i = 1, importantSlots do
+		if slotIndex > container.Count then
+			break
+		end
+		local aura = importantState[i]
+		container:SetSlot(slotIndex, {
+			Texture = aura.SpellIcon,
+			StartTime = aura.StartTime,
+			Duration = aura.TotalDuration,
+			Alpha = aura.IsImportant,
 			ReverseCooldown = iconsReverse,
 			Glow = iconsGlow,
 			FontScale = db.FontScale,
@@ -102,7 +151,7 @@ end
 
 ---@param header IconSlotContainer
 ---@param anchor table
----@param options FriendlyIndicatorModuleOptions
+---@param options FriendlyIndicatorInstanceOptions
 local function AnchorContainer(header, anchor, options)
 	if not options then
 		return
@@ -111,7 +160,8 @@ local function AnchorContainer(header, anchor, options)
 	local frame = header.Frame
 	frame:ClearAllPoints()
 	frame:SetAlpha(1)
-	frame:SetFrameLevel(anchor:GetFrameLevel() + 5)
+	frame:SetFrameStrata(frames:GetNextStrata(anchor:GetFrameStrata()))
+	frame:SetFrameLevel(anchor:GetFrameLevel() + 1)
 
 	local anchorPoint = "CENTER"
 	local relativeToPoint = "CENTER"
@@ -143,7 +193,7 @@ local function EnsureWatcher(anchor, unit)
 		return nil
 	end
 
-	local options = db.Modules.FriendlyIndicatorModule
+	local options = GetOptions()
 
 	if not options then
 		return
@@ -156,7 +206,7 @@ local function EnsureWatcher(anchor, unit)
 		local size = tonumber(options.Icons.Size) or 32
 		local spacing = db.IconSpacing or 2
 		local container = iconSlotContainer:New(UIParent, maxIcons, size, spacing, "Friendly Indicators")
-		local watcher = UnitAuraWatcher:New(unit, nil, { Defensives = true, Important = true })
+		local watcher = UnitAuraWatcher:New(unit, nil, { Defensives = true, Important = true, CC = true })
 
 		entry = {
 			Container = container,
@@ -174,7 +224,7 @@ local function EnsureWatcher(anchor, unit)
 		if entry.Unit ~= unit then
 			-- Unit changed, recreate the watcher
 			entry.Watcher:Dispose()
-			entry.Watcher = UnitAuraWatcher:New(unit, nil, { Defensives = true, Important = true })
+			entry.Watcher = UnitAuraWatcher:New(unit, nil, { Defensives = true, Important = true, CC = true })
 			entry.Watcher:RegisterCallback(function()
 				UpdateWatcherAuras(entry)
 			end)
@@ -214,7 +264,7 @@ local function OnCufUpdateVisible(frame)
 		return
 	end
 
-	local options = db.Modules.FriendlyIndicatorModule
+	local options = GetOptions()
 
 	if not options then
 		return
@@ -248,7 +298,7 @@ local function OnEvent(_, event)
 end
 
 local function RefreshTestIcons()
-	local options = db.Modules.FriendlyIndicatorModule
+	local options = GetOptions()
 
 	if not options then
 		return
@@ -262,66 +312,86 @@ local function RefreshTestIcons()
 		end
 	end
 
+	local ccCount = options.ShowCC and #testCcSpells or 0
+	local defensiveCount = options.ShowDefensives and #testDefensiveSpells or 0
+	local importantCount = options.ShowImportant and #testImportantSpells or 0
+
 	for _, entry in ipairs(orderedEntries) do
 		local container = entry.Container
 		local now = GetTime()
 		local maxIcons = options.Icons.MaxIcons or 1
+		local iconsReverse = options.Icons.ReverseCooldown
+		local iconsGlow = options.Icons.Glow
+		local colorByDispelType = options.Icons.ColorByDispelType
 
-		-- Build test pool from enabled types, alternating defensive/important when both are on
-		local testPool = {}
-		local showDefensives = options.ShowDefensives ~= false
-		local showImportant = options.ShowImportant ~= false
-		if showDefensives and showImportant then
-			local defLen = #testDefensiveSpells
-			local impLen = #testImportantSpells
-			for i = 1, math.max(defLen, impLen) do
-				table.insert(testPool, testDefensiveSpells[((i - 1) % defLen) + 1])
-				table.insert(testPool, testImportantSpells[((i - 1) % impLen) + 1])
+		local ccSlots, defensiveSlots, importantSlots =
+			slotDistribution.Calculate(maxIcons, ccCount, defensiveCount, importantCount)
+
+		local slotIndex = 1
+
+		for i = 1, ccSlots do
+			if slotIndex > container.Count then
+				break
 			end
-		elseif showDefensives then
-			for _, spell in ipairs(testDefensiveSpells) do
-				table.insert(testPool, spell)
-			end
-		elseif showImportant then
-			for _, spell in ipairs(testImportantSpells) do
-				table.insert(testPool, spell)
+			local spell = testCcSpells[i]
+			local texture = spellCache:GetSpellTexture(spell.SpellId)
+			if texture then
+				container:SetSlot(slotIndex, {
+					Texture = texture,
+					StartTime = now,
+					Duration = 15,
+					Alpha = true,
+					ReverseCooldown = iconsReverse,
+					Glow = iconsGlow,
+					Color = colorByDispelType and spell.DispelColor,
+					FontScale = db.FontScale,
+				})
+				slotIndex = slotIndex + 1
 			end
 		end
 
-		if #testPool == 0 then
-			-- Both types disabled, clear all slots
-			for i = 1, container.Count do
-				container:SetSlotUnused(i)
+		for i = 1, defensiveSlots do
+			if slotIndex > container.Count then
+				break
 			end
-		else
-			-- Fill up to MaxIcons test icons, cycling through the enabled pool
-			for slotIndex = 1, math.min(maxIcons, container.Count) do
-				local spell = testPool[((slotIndex - 1) % #testPool) + 1]
-
-				if spell then
-					local texture = spellCache:GetSpellTexture(spell.SpellId)
-
-					if texture then
-						local duration = 15
-						local startTime = now
-
-						container:SetSlot(slotIndex, {
-							Texture = texture,
-							StartTime = startTime,
-							Duration = duration,
-							Alpha = true,
-							ReverseCooldown = options.Icons.ReverseCooldown,
-							Glow = options.Icons.Glow,
-							FontScale = db.FontScale,
-						})
-					end
-				end
+			local spell = testDefensiveSpells[i]
+			local texture = spellCache:GetSpellTexture(spell.SpellId)
+			if texture then
+				container:SetSlot(slotIndex, {
+					Texture = texture,
+					StartTime = now,
+					Duration = 15,
+					Alpha = true,
+					ReverseCooldown = iconsReverse,
+					Glow = iconsGlow,
+					FontScale = db.FontScale,
+				})
+				slotIndex = slotIndex + 1
 			end
+		end
 
-			-- Clear any unused slots beyond maxIcons
-			for i = maxIcons + 1, container.Count do
-				container:SetSlotUnused(i)
+		for i = 1, importantSlots do
+			if slotIndex > container.Count then
+				break
 			end
+			local spell = testImportantSpells[i]
+			local texture = spellCache:GetSpellTexture(spell.SpellId)
+			if texture then
+				container:SetSlot(slotIndex, {
+					Texture = texture,
+					StartTime = now,
+					Duration = 15,
+					Alpha = true,
+					ReverseCooldown = iconsReverse,
+					Glow = iconsGlow,
+					FontScale = db.FontScale,
+				})
+				slotIndex = slotIndex + 1
+			end
+		end
+
+		for i = slotIndex, container.Count do
+			container:SetSlotUnused(i)
 		end
 
 		AnchorContainer(container, entry.Anchor, options)
@@ -359,7 +429,7 @@ local function EnableWatchers()
 end
 
 function M:Refresh()
-	local options = db.Modules.FriendlyIndicatorModule
+	local options = GetOptions()
 
 	if not options then
 		return
@@ -424,8 +494,12 @@ function M:Init()
 	local blessingOfProtection = { SpellId = 1022 }
 	local combustion = { SpellId = 190319 }
 	local shadowBlades = { SpellId = 121471 }
+	local kidneyShot = { SpellId = 408, DispelColor = DEBUFF_TYPE_NONE_COLOR }
+	local fear = { SpellId = 5782, DispelColor = DEBUFF_TYPE_MAGIC_COLOR }
+	local hex = { SpellId = 254412, DispelColor = DEBUFF_TYPE_CURSE_COLOR }
 	testDefensiveSpells = { painSupp, blessingOfProtection }
 	testImportantSpells = { combustion, shadowBlades }
+	testCcSpells = { kidneyShot, fear, hex }
 
 	eventsFrame = CreateFrame("Frame")
 	eventsFrame:SetScript("OnEvent", OnEvent)

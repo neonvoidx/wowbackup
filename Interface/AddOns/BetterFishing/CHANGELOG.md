@@ -1,5 +1,8 @@
 # CHANGELOG
 
+## 53
+- Fix Zenflight support regression
+
 ## 52
 - Midnight support
 

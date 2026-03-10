@@ -8,7 +8,7 @@
 
 local _, LM = ...
 
-local L = LM.Localize
+local L = LM.L
 
 
 --[[------------------------------------------------------------------------]]--
@@ -73,7 +73,7 @@ function LiteMountTooltipMixin:SetMount(m, hasMenu)
 
     if WOW_PROJECT_ID == WOW_PROJECT_MAINLINE then
         if m.family then
-            self:AddLine("|cffffffff"..L.LM_FAMILY..":|r "..L[m.family])
+            self:AddLine("|cffffffff"..L.LM_FAMILY..":|r "..m.family)
         end
 
         if m.expansion then

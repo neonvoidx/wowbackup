@@ -5,7 +5,7 @@ local mini = addon.Core.Framework
 local L = addon.L
 ---@class Db
 local dbDefaults = {
-	Version = 28,
+	Version = 33,
 	WhatsNew = {},
 	NotifiedChanges = true,
 	GlowType = "Proc Glow",
@@ -17,7 +17,7 @@ local dbDefaults = {
 			Enabled = {
 				World = true,
 				Arena = true,
-				BattleGrounds = true,
+				BattleGrounds = false,
 				PvE = true,
 			},
 
@@ -137,7 +137,7 @@ local dbDefaults = {
 				PvE = false,
 			},
 
-			IncludeBigDefensives = true,
+			IncludeDefensives = true,
 			TargetFocusOnly = false,
 			Point = "CENTER",
 			RelativePoint = "TOP",
@@ -163,6 +163,8 @@ local dbDefaults = {
 
 			TTS = {
 				Volume = 100,
+				VoiceID = 0,
+				SpeechRate = 0,
 				Important = {
 					Enabled = false,
 				},
@@ -188,6 +190,7 @@ local dbDefaults = {
 				BattleGrounds = true,
 				PvE = true,
 			},
+			ScaleWithNameplate = true,
 
 			---@class NameplateFactionOptions
 			Friendly = {
@@ -197,7 +200,7 @@ local dbDefaults = {
 					Enabled = false,
 					Grow = "RIGHT",
 					Offset = {
-						X = 2,
+						X = 0,
 						Y = 0,
 					},
 
@@ -213,7 +216,7 @@ local dbDefaults = {
 					Enabled = false,
 					Grow = "LEFT",
 					Offset = {
-						X = -2,
+						X = 0,
 						Y = 0,
 					},
 
@@ -229,7 +232,7 @@ local dbDefaults = {
 					Enabled = false,
 					Grow = "RIGHT",
 					Offset = {
-						X = 2,
+						X = 0,
 						Y = 0,
 					},
 
@@ -248,7 +251,7 @@ local dbDefaults = {
 					Enabled = true,
 					Grow = "RIGHT",
 					Offset = {
-						X = 2,
+						X = 0,
 						Y = 0,
 					},
 
@@ -264,7 +267,7 @@ local dbDefaults = {
 					Enabled = true,
 					Grow = "LEFT",
 					Offset = {
-						X = -2,
+						X = 0,
 						Y = 0,
 					},
 
@@ -280,7 +283,7 @@ local dbDefaults = {
 					Enabled = false,
 					Grow = "RIGHT",
 					Offset = {
-						X = 2,
+						X = 0,
 						Y = 0,
 					},
 
@@ -351,21 +354,38 @@ local dbDefaults = {
 				PvE = true,
 			},
 
-			ExcludePlayer = false,
-			ShowDefensives = true,
-			ShowImportant = true,
-
-			Offset = {
-				X = 0,
-				Y = 0,
+			---@class FriendlyIndicatorInstanceOptions
+			Default = {
+				ExcludePlayer = false,
+				ShowDefensives = true,
+				ShowImportant = true,
+				ShowCC = false,
+				Offset = { X = 0, Y = 0 },
+				Grow = "CENTER",
+				Icons = {
+					Size = 30,
+					Glow = true,
+					ReverseCooldown = true,
+					MaxIcons = 1,
+					ColorByDispelType = true,
+				},
 			},
-			Grow = "CENTER",
 
-			Icons = {
-				Size = 30,
-				Glow = true,
-				ReverseCooldown = true,
-				MaxIcons = 1,
+			---@type FriendlyIndicatorInstanceOptions
+			Raid = {
+				ExcludePlayer = false,
+				ShowDefensives = true,
+				ShowImportant = true,
+				ShowCC = true,
+				Offset = { X = 0, Y = 0 },
+				Grow = "CENTER",
+				Icons = {
+					Size = 25,
+					Glow = true,
+					ReverseCooldown = true,
+					MaxIcons = 1,
+					ColorByDispelType = true,
+				},
 			},
 		},
 		---@class PrecogGuesserModuleOptions
@@ -517,8 +537,6 @@ function M:UpgradeToVersion4(vars)
 	if vars.Version ~= 3 then
 		return false
 	end
-
-	print("Simple", vars.SimpleMode, "Advanced", vars.AdvancedMode, "Icons", vars.Icons)
 
 	vars.Arena = {
 		SimpleMode = mini:CopyTable(vars.SimpleMode),
@@ -1332,7 +1350,7 @@ function M:UpgradeToVersion18(vars)
 					Always = true,
 				},
 
-				IncludeBigDefensives = true,
+				IncludeDefensives = true,
 				Point = "CENTER",
 				RelativePoint = "TOP",
 				RelativeTo = "UIParent",
@@ -1698,8 +1716,12 @@ function M:UpgradeToVersion25(vars)
 	-- Rename Raids→BattleGrounds and Dungeons→PvE in all module Enabled tables
 	if vars.Modules then
 		local modules = {
-			"CCModule", "PetCCModule", "HealerCCModule",
-			"AlertsModule", "NameplatesModule", "FriendlyIndicatorModule",
+			"CCModule",
+			"PetCCModule",
+			"HealerCCModule",
+			"AlertsModule",
+			"NameplatesModule",
+			"FriendlyIndicatorModule",
 		}
 		for _, moduleName in ipairs(modules) do
 			local m = vars.Modules[moduleName]
@@ -1743,8 +1765,12 @@ function M:UpgradeToVersion27(vars)
 	-- If Always was true, it acted as an override for all contexts, so enable all of them.
 	if vars.Modules then
 		local modules = {
-			"CCModule", "PetCCModule", "HealerCCModule",
-			"AlertsModule", "NameplatesModule", "FriendlyIndicatorModule",
+			"CCModule",
+			"PetCCModule",
+			"HealerCCModule",
+			"AlertsModule",
+			"NameplatesModule",
+			"FriendlyIndicatorModule",
 		}
 		for _, moduleName in ipairs(modules) do
 			local m = vars.Modules[moduleName]
@@ -1780,6 +1806,135 @@ function M:UpgradeToVersion28(vars)
 	return true
 end
 
+function M:UpgradeToVersion29(vars)
+	if vars.Version ~= 28 then
+		return false
+	end
+
+	-- Add ShowCC and ColorByDispelType to FriendlyIndicatorModule
+	if vars.Modules and vars.Modules.FriendlyIndicatorModule then
+		local fi = vars.Modules.FriendlyIndicatorModule
+		fi.ShowCC = false
+		if fi.Icons then
+			fi.Icons.ColorByDispelType = true
+		end
+	end
+
+	vars.Version = 29
+	return true
+end
+
+function M:UpgradeToVersion30(vars)
+	if vars.Version ~= 29 then
+		return false
+	end
+
+	if vars.Modules and vars.Modules.FriendlyIndicatorModule then
+		local fi = vars.Modules.FriendlyIndicatorModule
+
+		local instanceSettings = {
+			ExcludePlayer = fi.ExcludePlayer,
+			ShowDefensives = fi.ShowDefensives,
+			ShowImportant = fi.ShowImportant,
+			ShowCC = fi.ShowCC,
+			Offset = fi.Offset and mini:CopyTable(fi.Offset) or { X = 0, Y = 0 },
+			Grow = fi.Grow,
+			Icons = fi.Icons and mini:CopyTable(fi.Icons) or nil,
+		}
+
+		-- Write into the existing table shells so upvalue references captured by
+		-- Config UI closures during Build() remain valid after a profile import.
+		local function MergeInPlace(target, src)
+			for key, value in pairs(src) do
+				if type(value) == "table" then
+					target[key] = target[key] or {}
+					for subKey, subValue in pairs(value) do
+						target[key][subKey] = subValue
+					end
+				else
+					target[key] = value
+				end
+			end
+		end
+
+		fi.Default = fi.Default or {}
+		MergeInPlace(fi.Default, instanceSettings)
+
+		fi.Raid = fi.Raid or {}
+		MergeInPlace(fi.Raid, instanceSettings)
+		fi.Raid.ShowCC = true
+
+		-- nil old flat values that are no longer used
+		fi.ExcludePlayer = nil
+		fi.ShowDefensives = nil
+		fi.ShowImportant = nil
+		fi.ShowCC = nil
+		fi.Offset = nil
+		fi.Grow = nil
+		fi.Icons = nil
+	end
+
+	vars.Version = 30
+	return true
+end
+
+
+function M:UpgradeToVersion31(vars)
+	if vars.Version ~= 30 then
+		return false
+	end
+
+	-- Add ScaleWithNameplate to NameplatesModule. Existing installs default to false
+	-- to preserve their current behaviour (icons were previously not scaling with the nameplate).
+	if vars.Modules and vars.Modules.NameplatesModule then
+		vars.Modules.NameplatesModule.ScaleWithNameplate = false
+	end
+
+	vars.Version = 31
+	return true
+end
+
+function M:UpgradeToVersion32(vars)
+	if vars.Version ~= 31 then
+		return false
+	end
+
+	-- Rename IncludeBigDefensives to IncludeDefensives in AlertsModule
+	if vars.Modules and vars.Modules.AlertsModule then
+		local am = vars.Modules.AlertsModule
+		if am.IncludeBigDefensives ~= nil then
+			am.IncludeDefensives = am.IncludeBigDefensives
+			am.IncludeBigDefensives = nil
+		end
+	end
+
+	vars.Version = 32
+	return true
+end
+
+function M:UpgradeToVersion33(vars)
+	if vars.Version ~= 32 then
+		return false
+	end
+
+	-- If the CC module is enabled in battlegrounds AND the friendly indicator is also
+	-- showing CC icons for groups greater than 5 members, disable the latter to avoid
+	-- both modules displaying CC icons simultaneously in battlegrounds.
+	-- this is to fix a migration where the CC module used to be enabled "always"
+	-- and Show CC is defaulted to true for the indicator module in bgs, which would result in both modules showing CC icons in bgs after the migration
+	local mods = vars.Modules
+	if mods and mods.CCModule and mods.FriendlyIndicatorModule then
+		local ccEnabledBGs = mods.CCModule.Enabled and mods.CCModule.Enabled.BattleGrounds
+		local fiRaidShowCC = mods.FriendlyIndicatorModule.Raid and mods.FriendlyIndicatorModule.Raid.ShowCC
+		if ccEnabledBGs and fiRaidShowCC then
+			mods.FriendlyIndicatorModule.Raid.ShowCC = false
+		end
+	end
+
+	vars.Version = 33
+	return true
+end
+
 ---@return boolean true if any deferred migrations were applied
 function M:RunDeferredMigrations(vars)
 	local applied = false
@@ -1810,12 +1965,13 @@ end
 
 ---@return Db
 function M:GetAndUpgradeDb()
-	local vars = mini:GetSavedVars()
+	local isFirstTimeSetup = MiniCCDB == nil
 
-	if vars == nil then
-		-- fresh install
+	if isFirstTimeSetup then
 		return mini:GetSavedVars(dbDefaults)
 	end
+
+	local vars = mini:GetSavedVars()
 
 	if vars.Version and vars.Version > dbDefaults.Version then
 		-- they are running some version ahead of us, let's reset to factory

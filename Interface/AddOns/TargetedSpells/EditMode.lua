@@ -1641,10 +1641,33 @@ function PartyEditModeMixin:AppendSettings()
 	LibEditMode:AddFrameSettingsButtons(self.editModeFrame, self:CreateImportExportButtons())
 end
 
-function PartyEditModeMixin:RepositionEditModeFrame()
-	local parent = PartyFrame
-	local width = 125
-	local foundMatch = false
+---@param useRaidStylePartyFrames boolean
+---@return Frame, number
+local function GetEditModePartyParentFrame(useRaidStylePartyFrames)
+	if Vd1 ~= nil then
+		return Vd1, Vd1:GetWidth()
+	end
+
+	if ShadowUF ~= nil and SUFHeaderparty ~= nil then
+		return SUFHeaderparty, SUFHeaderparty:GetWidth()
+	end
+
+	if EnhanceQoL ~= nil and EQOLUFPartyHeader ~= nil then
+		return EQOLUFPartyHeader, EQOLUFPartyHeader:GetWidth()
+	end
+
+	if
+		ElvUI ~= nil
+		and ElvUI[1].db ~= nil
+		and ElvUI[1].db.unitframe.units.party.enable ~= nil
+		and ElvUF_Party ~= nil
+	then
+		return ElvUF_Party, ElvUF_Party:GetWidth()
+	end
+
+	if DandersFrames ~= nil and DandersPartyGroupContainer ~= nil then
+		return DandersPartyGroupContainer, DandersPartyGroupContainer:GetWidth()
+	end
 
 	if Private.Utils.HasThirdPartyCandidates() or Grid2 ~= nil then
 		local maybeFrame = Private.Utils.FindThirdPartyGroupFrameForUnit("party1")
@@ -1653,45 +1676,21 @@ function PartyEditModeMixin:RepositionEditModeFrame()
 			local maybeParent = maybeFrame:GetParent()
 
 			if maybeParent then
-				parent = maybeParent
-				width = maybeParent:GetWidth()
-				foundMatch = true
+				return maybeParent, maybeParent:GetWidth()
 			end
 		end
 	end
 
-	if not foundMatch and EnhanceQoL ~= nil and EQOLUFPartyHeader ~= nil then
-		parent = EQOLUFPartyHeader
-		width = EQOLUFPartyHeader:GetWidth()
-		foundMatch = true
+	if useRaidStylePartyFrames then
+		return CompactPartyFrame, CompactPartyFrame.memberUnitFrames[1]:GetWidth()
 	end
 
-	if
-		not foundMatch
-		and ElvUI ~= nil
-		and ElvUI[1].db ~= nil
-		and ElvUI[1].db.unitframe.units.party.enable ~= nil
-		and ElvUF_Party ~= nil
-	then
-		parent = ElvUF_Party
-		width = ElvUF_Party:GetWidth()
-		foundMatch = true
-	end
+	return PartyFrame, 125
+end
 
-	if not foundMatch and DandersFrames ~= nil and DandersPartyGroupContainer ~= nil then
-		parent = DandersPartyGroupContainer
-		width = DandersPartyGroupContainer:GetWidth()
-		foundMatch = true
-	end
-
-	if not foundMatch and self.useRaidStylePartyFrames then
-		parent = CompactPartyFrame
-		width = CompactPartyFrame.memberUnitFrames[1]:GetWidth()
-	end
-
-	local height = 16
-
-	PixelUtil.SetSize(self.editModeFrame, width, height)
+function PartyEditModeMixin:RepositionEditModeFrame()
+	local parent, width = GetEditModePartyParentFrame(self.useRaidStylePartyFrames)
+	PixelUtil.SetSize(self.editModeFrame, width, 16)
 	self.editModeFrame:ClearAllPoints()
 	PixelUtil.SetPoint(self.editModeFrame, "CENTER", parent, "TOP", 0, 16)
 end

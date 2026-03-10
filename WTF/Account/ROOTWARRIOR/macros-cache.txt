@@ -155,6 +155,9 @@ END
 VER 3 00000000000000BC " RaidMark" "INV_MISC_QUESTIONMARK"
 /run local m=8; if UnitExists("mouseover") and GetRaidTargetIndex("mouseover")~=m then SetRaidTarget("mouseover",m) elseif UnitExists("target") and GetRaidTargetIndex("target")~=m then SetRaidTarget("target",m) end
 END
+VER 3 0000000000000237 " STOP" "1345086"
+/stopcasting
+END
 VER 3 00000000000000D1 " Wargames" "Ability_DeathKnight_DeathChain."
 /wg
 END
@@ -182,6 +185,7 @@ END
 VER 3 0000000000000235 "EnhanceQoLHealthMacro" "INV_Misc_QuestionMark"
 #showtooltip
 /cast [nocombat] Recuperate
+/castsequence [combat] reset=combat item:244839
 END
 VER 3 00000000000001FE "FOCUS" "999949"
 /focus [@mouseover,nodead,exists]; [@target,exists]

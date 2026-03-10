@@ -98,7 +98,7 @@ local function AnnounceTTS(spellName, spellType)
 	end)
 end
 
-local function ProcessWatcherData(watcher, slot, iconsEnabled, iconsGlow, iconsReverse, colorByClass, includeBigDefensives)
+local function ProcessWatcherData(watcher, slot, iconsEnabled, iconsGlow, iconsReverse, colorByClass, includeDefensives)
 	local unit = watcher:GetUnit()
 
 	-- when units go stealth, we can't get their aura data anymore
@@ -158,7 +158,7 @@ local function ProcessWatcherData(watcher, slot, iconsEnabled, iconsGlow, iconsR
 
 	-- Process defensive spells
 	for _, data in ipairs(defensivesData) do
-		if includeBigDefensives and iconsEnabled and slot < container.Count then
+		if includeDefensives and iconsEnabled and slot < container.Count then
 			slot = slot + 1
 			slotOptionsScratch.Texture = data.SpellIcon
 			slotOptionsScratch.StartTime = data.StartTime
@@ -202,7 +202,7 @@ local function OnAuraDataChanged()
 	local iconsGlow = db.Modules.AlertsModule.Icons.Glow
 	local iconsReverse = db.Modules.AlertsModule.Icons.ReverseCooldown
 	local colorByClass = db.Modules.AlertsModule.Icons.ColorByClass
-	local includeBigDefensives = db.Modules.AlertsModule.IncludeBigDefensives
+	local includeDefensives = db.Modules.AlertsModule.IncludeDefensives
 	local slot = 0
 	local hasImportantAlerts
 	local hasDefensiveAlerts
@@ -221,14 +221,14 @@ local function OnAuraDataChanged()
 				iconsGlow,
 				iconsReverse,
 				colorByClass,
-				includeBigDefensives
+				includeDefensives
 			)
 		end
 	end
 
 	-- Process watchers for World/BG
 	if instanceType == "pvp" or not inInstance then
-		local targetFocusOnly = db.Modules.AlertsModule.TargetFocusOnly ~= false
+		local targetFocusOnly = db.Modules.AlertsModule.TargetFocusOnly
 		if targetFocusOnly then
 			-- Process target/focus watchers
 			for _, pair in ipairs({ { targetWatcher, "target" }, { focusWatcher, "focus" } }) do
@@ -241,7 +241,7 @@ local function OnAuraDataChanged()
 						iconsGlow,
 						iconsReverse,
 						colorByClass,
-						includeBigDefensives
+						includeDefensives
 					)
 				end
 			end
@@ -255,7 +255,7 @@ local function OnAuraDataChanged()
 					iconsGlow,
 					iconsReverse,
 					colorByClass,
-					includeBigDefensives
+					includeDefensives
 				)
 			end
 		end
@@ -352,22 +352,24 @@ local function RefreshTestAlerts()
 		return
 	end
 
-	local testAlertSpellIds = {
-		190319, -- Combustion
-		121471, -- Shadow Blades
-		107574, -- Avatar
-		47788,  -- Guardian Spirit
-		45438,  -- Ice Block
+	local includeDefensives = db.Modules.AlertsModule.IncludeDefensives
+
+	local testAlertSpells = {
+		{ spellId = 190319, class = "MAGE" }, -- Combustion
+		{ spellId = 121471, class = "ROGUE" }, -- Shadow Blades
+		{ spellId = 107574, class = "WARRIOR" }, -- Avatar
+		{ spellId = 47788, class = "PRIEST", defensive = true }, -- Guardian Spirit
+		{ spellId = 45438, class = "MAGE", defensive = true }, -- Ice Block
 	}
 
-	-- Test class colors for demo purposes
-	local testClassColors = {
-		"MAGE",
-		"ROGUE",
-		"WARRIOR",
-		"PRIEST",
-		"MAGE",
-	}
+	local testAlertSpellIds = {}
+	local testClassColors = {}
+	for _, entry in ipairs(testAlertSpells) do
+		if not entry.defensive or includeDefensives then
+			testAlertSpellIds[#testAlertSpellIds + 1] = entry.spellId
+			testClassColors[#testClassColors + 1] = entry.class
+		end
+	end
 
 	local count = math.min(#testAlertSpellIds, container.Count or #testAlertSpellIds)
 	local now = GetTime()
@@ -421,9 +423,10 @@ local function OnNamePlateAdded(unitToken)
 		return
 	end
 
+	---@type AuraTypeFilter
 	local watcherFilter = {
 		CC = true,
-		Defensive = true,
+		Defensives = true,
 		Important = true,
 	}
 
@@ -497,10 +500,10 @@ local function RebuildNameplateWatchers()
 end
 
 local function InitTargetFocusWatchers()
-	-- Create watchers for target and focus
+	---@type AuraTypeFilter
 	local watcherFilter = {
 		CC = true,
-		Defensive = true,
+		Defensives = true,
 		Important = true,
 	}
 
@@ -515,7 +518,7 @@ local function InitArenaWatchers()
 	-- Always create watchers with all types
 	local watcherFilter = {
 		CC = true,
-		Defensive = true,
+		Defensives = true,
 		Important = true,
 	}
 
@@ -585,7 +588,7 @@ local function EnableDisable()
 
 	-- Enable watchers (for World/BG)
 	if instanceType == "pvp" or not inInstance then
-		local targetFocusOnly = options.TargetFocusOnly ~= false
+		local targetFocusOnly = options.TargetFocusOnly
 		if targetFocusOnly then
 			EnableTargetFocusWatchers()
 			ClearNamePlateWatchers()

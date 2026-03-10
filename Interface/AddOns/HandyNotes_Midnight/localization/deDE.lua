@@ -99,6 +99,12 @@ L['spiritpaw_marathon_note'] = 'Sprich mit {npc:258938}.'
 L['options_icons_gnome_alone'] = '{achievement:62200}'
 L['options_icons_gnome_alone_desc'] = nil
 
+L['abandoned_ritual_skull'] = 'Zurückgelassener Ritualschädel'
+
+L['options_icons_put_a_pin_in_it'] = '{achievement:62199}'
+L['options_icons_put_a_pin_in_it_desc'] = nil
+L['kalika_note'] = nil
+
 -------------------------------------------------------------------------------
 ---------------------------------- ARCANTINA ----------------------------------
 -------------------------------------------------------------------------------
@@ -111,3 +117,5 @@ L['share_a_drink_note'] = 'Kaufe {item:251039} von {npc:250495} in der Arcantina
 
 L['sturdy_chest'] = 'Robuste Truhe'
 L['sturdy_chest_suffix'] = 'robuste Truhen geöffnet'
+
+L['gulf_of_memory_chest_note'] = nil

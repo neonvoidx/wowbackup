@@ -60,10 +60,6 @@ VER 3 0100000000000034 " " "134400"
 /cast Breath of fire
 /use Fire-eater's Vial
 END
-VER 3 0100000000000036 " " "134400"
-#showtooltip
-/cast Invoke Niuzao, the black ox
-END
 VER 3 0100000000000037 " " "134400"
 #showtooltip Blackout Kick
 /stopmacro [channeling:Fists of Fury]
@@ -80,6 +76,7 @@ VER 3 0100000000000039 " " "134400"
 #showtooltip Invoke Xuen, the white tiger
 /use 13
 /use Tempered Potion
+/use Brawler's Fight Tonic of Agility
 /cast Berserking
 /cast Invoke Xuen, the white tiger
 END
@@ -92,4 +89,40 @@ END
 VER 3 010000000000003B " " "134400"
 #showtooltip
 /cast [@cursor] Summon Jade Serpent Statue
+END
+VER 3 010000000000003C " " "134400"
+#showtooltip [known: Whirling Dragon Punch] Whirling Dragon Punch; [known: Strike of the Windlord] Strike of the Windlord
+/cast [known: Whirling Dragon Punch] Whirling Dragon Punch
+/cast [known: Strike of the Windlord] Strike of the Windlord
+END
+VER 3 010000000000003E " " "134400"
+#showtooltip
+/cast [@cursor] Summon Black Ox Statue
+END
+VER 3 0100000000000040 " " "134400"
+#showtooltip
+/cast [@cursor] Exploding Keg
+END
+VER 3 0100000000000041 " " "134400"
+#showtooltip
+/cast [known: Ring of peace, @cursor] Ring of Peace
+/cast [known: Song of chi-ji] Song of chi-ji
+END
+VER 3 0100000000000042 " " "134400"
+#showtooltip Zenith
+/use Saltwater Potion
+/cast Zenith
+END
+VER 3 010000000000003D "Black Ox" "134400"
+#showtooltip Provoke
+/targetexact Black Ox Statue
+/cast Provoke
+/targetlasttarget
+END
+VER 3 010000000000003F "Dimiss" "627607"
+/run if not UnitAffectingCombat("player")then for i=1,4 do n="t"..i CreateFrame("Button",n,UIParent,"SecureUnitButtonTemplate")_G[n]:SetAttribute("type", "destroytotem")_G[n]:SetAttribute("totem-slot",i)end end
+/click t1
+/click t2
+/click t3
+/click t4
 END

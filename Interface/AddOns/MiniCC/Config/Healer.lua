@@ -5,7 +5,7 @@ local L = addon.L
 local verticalSpacing = mini.VerticalSpacing
 local horizontalSpacing = mini.HorizontalSpacing
 local columns = 4
-local columnWidth = mini:ColumnWidth(columns, 0, 0)
+local columnWidth
 local config = addon.Config
 
 ---@class HealerCrowdControlConfig
@@ -16,6 +16,7 @@ config.Healer = M
 ---@param panel table
 ---@param options HealerCrowdControlModuleOptions
 function M:Build(panel, options)
+	columnWidth = mini:ColumnWidth(columns, 0, 0)
 	local db = mini:GetSavedVars()
 
 	local lines = mini:TextBlock({
@@ -29,7 +30,7 @@ function M:Build(panel, options)
 
 	local enabledDivider = mini:Divider({
 		Parent = panel,
-		Text = L["Enable in:"],
+		Text = L["Enable in"],
 	})
 	enabledDivider:SetPoint("LEFT", panel, "LEFT")
 	enabledDivider:SetPoint("RIGHT", panel, "RIGHT")
@@ -126,7 +127,7 @@ function M:Build(panel, options)
 		LabelText = L["Show warning text"],
 		Tooltip = L["Show the 'Healer in CC!' text above the icons."],
 		GetValue = function()
-			return options.ShowWarningText ~= false
+			return options.ShowWarningText
 		end,
 		SetValue = function(value)
 			options.ShowWarningText = value
@@ -166,7 +167,8 @@ function M:Build(panel, options)
 		end,
 	})
 
-	dispelColoursChk:SetPoint("TOPLEFT", glowChk, "BOTTOMLEFT", 0, -verticalSpacing)
+	dispelColoursChk:SetPoint("LEFT", panel, "LEFT", columnWidth * 3, 0)
+	dispelColoursChk:SetPoint("TOP", glowChk, "TOP", 0, 0)
 
 	local soundChk = mini:Checkbox({
 		Parent = panel,
@@ -187,7 +189,7 @@ function M:Build(panel, options)
 		end,
 	})
 
-	soundChk:SetPoint("TOPLEFT", dispelColoursChk, "BOTTOMLEFT", 0, -verticalSpacing)
+	soundChk:SetPoint("TOPLEFT", glowChk, "BOTTOMLEFT", 0, -verticalSpacing)
 
 	local soundFileDropdown = mini:Dropdown({
 		Parent = panel,
@@ -212,11 +214,13 @@ function M:Build(panel, options)
 	soundFileDropdown:SetPoint("TOP", soundChk, "TOP", 0, -4)
 	soundFileDropdown:SetWidth(200)
 
+	local sliderWidth = (columnWidth * 2) - horizontalSpacing
+
 	local iconSize = mini:Slider({
 		Parent = panel,
 		Min = 10,
 		Max = 100,
-		Width = (columnWidth * columns) - horizontalSpacing,
+		Width = sliderWidth,
 		Step = 1,
 		LabelText = L["Icon Size"],
 		GetValue = function()
@@ -237,7 +241,7 @@ function M:Build(panel, options)
 		Parent = panel,
 		Min = 10,
 		Max = 100,
-		Width = (columnWidth * columns) - horizontalSpacing,
+		Width = sliderWidth,
 		Step = 1,
 		LabelText = L["Text Size"],
 		GetValue = function()
@@ -252,7 +256,8 @@ function M:Build(panel, options)
 		end,
 	})
 
-	fontSize.Slider:SetPoint("TOPLEFT", iconSize.Slider, "BOTTOMLEFT", 0, -verticalSpacing * 3)
+	fontSize.Slider:SetPoint("LEFT", panel, "LEFT", columnWidth * 2 + 4, 0)
+	fontSize.Slider:SetPoint("TOP", iconSize.Slider, "TOP", 0, 0)
 
 	panel:HookScript("OnShow", function()
 		panel:MiniRefresh()

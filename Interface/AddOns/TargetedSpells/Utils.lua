@@ -106,18 +106,30 @@ do
 	end
 
 	function Private.Utils.FindThirdPartyGroupFrameForUnit(unit)
-		if hasManualThirdPartyRegistrations then
-			for frameName, bool in pairs(thirdPartyFrameNames) do
-				local frame = _G[frameName]
+		if Grid2 then
+			return (next(Grid2:GetUnitFrames(unit)))
+		end
+
+		if VUHDO_getUnitButtons then
+			local frames = VUHDO_getUnitButtons(unit)
+
+			if frames ~= nil then
+				for _, frame in pairs(frames) do
+					if frame.raidid == unit and frame:IsVisible() then
+						return frame
+					end
+				end
+			end
+		end
+
+		if ShadowUF and SUFHeaderparty then
+			for i = 1, 5 do
+				local frame = _G["SUFHeaderpartyUnitButton" .. i]
 
 				if frame and frame.unit == unit then
 					return frame
 				end
 			end
-		end
-
-		if Grid2 then
-			return (next(Grid2:GetUnitFrames(unit)))
 		end
 
 		if EnhanceQoL and EQOLUFPartyHeader then
@@ -135,6 +147,18 @@ do
 
 			if frame then
 				return frame
+			end
+		end
+
+		-- use these last, including e.g. ElvUI. people using multiple unit frame addons (god knows for what reason)
+		-- _likely_ prefer using the other one over oUF derivates because what else would be the point of having them.
+		if hasManualThirdPartyRegistrations then
+			for frameName, bool in pairs(thirdPartyFrameNames) do
+				local frame = _G[frameName]
+
+				if frame and frame.unit == unit then
+					return frame
+				end
 			end
 		end
 

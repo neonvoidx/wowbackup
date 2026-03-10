@@ -2,14 +2,15 @@
 ## Title: MiniCC
 ## Notes: Shows CC and important spells on frames/nameplates/alerts in PvP.
 ## Author: Verz
-## Version: 2.26.0
+## Version: 2.32.1
 ## SavedVariables: MiniCCDB
-## OptionalDeps: ElvUI, Grid2, DandersFrames, FrameSort, Masque
+## OptionalDeps: ElvUI, Grid2, DandersFrames, FrameSort, Masque, TPerl
 ## IconTexture: Interface\AddOns\MiniCC\Icon.blp
 ## X-Curse-Project-ID: 1439482
 
 Libs\LibStub\LibStub.lua
 Libs\LibCustomGlow-1.0\LibCustomGlow-1.0.xml
+Libs\LibRangeCheck-3.0\LibRangeCheck-3.0.lua
 
 Namespace.lua
 
@@ -32,6 +33,7 @@ Utils\Array.lua
 Utils\SpellCache.lua
 Utils\FontUtil.lua
 Utils\ModuleUtil.lua
+Utils\SlotDistribution.lua
 Utils\WoWEx.lua
 
 Core\MiniFramework.lua

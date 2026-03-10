@@ -1,3 +1,36 @@
+# BetterBlizzPlates 1.9.7h
+## Midnight
+### Tweak
+- Force all nameplate auras to be clickthrough by default again regardless of settings (was broken by Midnight). Blizzard has them clickable for no reason and it destroys your camera movement sometimes.
+- Update Magnusz profile (www.twitch.tv/magnusz). Thank you for sharing.
+## TBC
+### Tweak
+- Rename elite icon frame to hopefully have it fixed and not disappear randomly in combat. Potentially caused by Blizzards own code due to same name before.
+
+# BetterBlizzPlates 1.9.7g
+## Midnight
+### New
+- Add Saul profile (www.twitch.tv/saul). Thank you for sharing.
+### Tweak
+- Remove Trimaz profile upon request after a change of hearts.
+
+# BetterBlizzPlates 1.9.7f
+## Midnight
+### Bugfix
+- Fix secret error from classic nameplates setting during combat/instance.
+
+# BetterBlizzPlates 1.9.7e
+## Midnight
+### New
+- Misc: Hide Deselect Overlay. This hides the dark transparent overlay on non-target nameplates (which is new in Midnight by Blizzard).
+- Added Trimaz profile (www.twitch.tv/trimaz_wow). Thank you for sharing!
+### Tweak
+- Few fixups on how the deselect overlay was treated with various settings.
+- Remove rogue combo points offset cuz it was too much now.
+- Fix some gui issues with list search and cleaning names of strings removing the brackets etc causing you to not be able to add for example "Fearie Fire (Feral)"
+- Fix scaling issue of arena names (arenaID / spec name)
+- Fix a secret error in Threat Color API
+
 # BetterBlizzPlates 1.9.7d
 ## Mindight
 ### Tweak

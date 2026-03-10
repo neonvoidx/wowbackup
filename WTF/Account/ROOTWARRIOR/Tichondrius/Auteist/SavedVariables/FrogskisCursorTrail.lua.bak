@@ -2,7 +2,6 @@
 FrogskisCursorTrailDB = {
 ["conditions"] = {
 },
-["currentProfile"] = "Default",
 ["profiles"] = {
 ["Default"] = {
 ["changeWithTime"] = true,
@@ -63,22 +62,24 @@ FrogskisCursorTrailDB = {
 0,
 0,
 },
+["adaptiveTargetFPS"] = 90,
 ["colour7"] = {
 0,
 0,
 0,
 },
 ["textureInput"] = "bags-glow-flash",
-["Alphax"] = 1,
+["maxdots"] = 300,
 ["colour5"] = {
 0,
 0,
 1,
 },
 ["updateEveryOther"] = true,
-["maxdots"] = 300,
+["Alphax"] = 1,
 ["useClassColor"] = false,
 ["phasecount"] = 6,
 },
 },
+["currentProfile"] = "Default",
 }

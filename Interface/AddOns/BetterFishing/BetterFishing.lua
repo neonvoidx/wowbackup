@@ -29,6 +29,8 @@ BINDING_NAME_BETTERFISHINGKEY = "Cast and Interact"
 
 -- Compat
 local IsSpellKnown = IsSpellKnown or C_SpellBook.IsSpellKnown
+local GetPlayerAuraBySpellID = C_UnitAuras and C_UnitAuras.GetPlayerAuraBySpellID
+local ShouldSpellAuraBeSecret = C_Secrets and C_Secrets.ShouldSpellAuraBeSecret
 
 local FishingIDs = {
   [131474] = true,   -- Live/MoP
@@ -44,6 +46,7 @@ local FishingIDs = {
   [110410] = true, -- MoP fishing
   [158743] = true, -- WoD Fishing
   [377895] = true, -- Ice Fishing
+  [1224771] = true, -- Void Fishing
 }
 
 function BetterFishing:GetFishingID()
@@ -79,6 +82,7 @@ function BetterFishing:GetSecureButton()
       if down then return end
       MouselookStop()
     end)
+
     SecureHandlerWrapScript(button, "PostClick", button,  string.format([[
       local isClassic = %s
       if isClassic == true then
@@ -96,11 +100,15 @@ function BetterFishing:GetSecureButton()
 end
 
 function BetterFishing:IsFlying()
-  if C_UnitAuras and not (C_Secrets and C_Secrets.ShouldSpellAuraBeSecret(125883)) then
-    return C_UnitAuras.GetPlayerAuraBySpellID(125883)
-  else
+    if ShouldSpellAuraBeSecret and ShouldSpellAuraBeSecret(125883) then
+        return IsFlying()
+    end
+
+    if GetPlayerAuraBySpellID and GetPlayerAuraBySpellID(125883) then
+        return false
+    end
+
     return IsFlying()
-  end
 end
 
 function BetterFishing_Run()
@@ -297,7 +305,7 @@ FrameUtil.RegisterFrameForEvents(internal._frame, {
   "CVAR_UPDATE",
   "PLAYER_LOGOUT",
   "GLOBAL_MOUSE_DOWN",
-  "GLOBAL_MOUSE_UP"
+  "GLOBAL_MOUSE_UP",
 })
 internal._frame:RegisterUnitEvent("UNIT_SPELLCAST_CHANNEL_START", "player")
 internal._frame:RegisterUnitEvent("UNIT_SPELLCAST_CHANNEL_STOP", "player")

@@ -18,7 +18,7 @@ L:SetStrings({
 	["Caster"] = "Lanceur de sorts",
 	["Healer"] = "Soigneur",
 	["Enable if you are:"] = "Activer si vous êtes:",
-	["Enable in:"] = "Activer dans:",
+	["Enable in"] = "Activer dans",
 	["Enabled"] = "Activé",
 	["Enable this module everywhere."] = "Activer ce module partout.",
 	["Enable this module in the open world."] = "Activer ce module en monde ouvert.",
@@ -41,8 +41,11 @@ L:SetStrings({
 	["Reverse swipe"] = "Balayage inversé",
 	["Reverses the direction of the cooldown swipe animation."] = "Inverse la direction de l'animation de balayage du temps de recharge.",
 	["Settings"] = "Paramètres",
+	["Open Settings"] = "Ouvrir les paramètres",
+	["Use /minicc, /mcc, or /cc to open the MiniCC config window."] = "Utilisez /minicc, /mcc ou /cc pour ouvrir la fenêtre de configuration MiniCC.",
 	["Show a glow around the icons."] = "Affiche une lueur autour des icônes.",
 	["Test"] = "Tester",
+	["Test these settings"] = "Tester ces paramètres",
 	["Whether to enable or disable this module if you are a caster."] = "Activer ou désactiver ce module si vous êtes un lanceur de sorts.",
 	["Whether to enable or disable this module if you are a healer."] = "Activer ou désactiver ce module si vous êtes un soigneur.",
 	["Whether to enable or disable this module regardless of what spec you are."] = "Activer ou désactiver ce module quelle que soit votre spécialisation.",
@@ -74,7 +77,6 @@ L:SetStrings({
 	["Import Profile"] = "Importer le profil",
 	["Miscellaneous"] = "Divers",
 	["Reset"] = "Réinitialiser",
-	["Settings:"] = "Paramètres :",
 	["The others seem to use a non-trivial amount of CPU."] = "Les autres semblent utiliser une quantité non négligeable de CPU.",
 	["The Proc Glow uses the least CPU."] = "La lueur proc utilise le moins de CPU.",
 
@@ -103,10 +105,12 @@ L:SetStrings({
 	["TTS Volume"] = "Volume TTS",
 	["Voice"] = "Voix",
 	["You must choose a voice in your language for this to work."] = "Vous devez choisir une voix dans votre langue pour que cela fonctionne.",
+	["These voices come from your installed system language packs and you can add more through your Windows settings."] = "Ces voix proviennent des packs de langue système installés et vous pouvez en ajouter d'autres via les paramètres Windows.",
+	["Note that some voices don't perform well, for example Microsoft Hazel is bad and Microsoft Zira is good."] = "Notez que certaines voix ne fonctionnent pas bien, par exemple Microsoft Hazel est mauvaise et Microsoft Zira est bonne.",
 
 	-- CC tab
 	["CC"] = "Contrôle",
-	["Change the colour of the glow/border based on dispel type (e.g., blue for magic, red for physical)."] = "Change la couleur de la lueur/bordure selon le type de dissipation (par ex. bleu pour magie, rouge pour physique).",
+	["Change the colour of the glow/border based on dispel type (e.g., blue for magic, red for physical). This only applies to CC icons."] = "Change la couleur de la lueur/bordure selon le type de dissipation (par ex. bleu pour magie, rouge pour physique). Ceci s'applique uniquement aux icônes de contrôle.",
 	["Color by class"] = "Couleur par classe",
 	["Color the glow/border by the enemy's class color."] = "Colore la lueur/bordure selon la couleur de classe de l'ennemi.",
 	["Dispel colours"] = "Couleurs de dissipation",
@@ -122,17 +126,21 @@ L:SetStrings({
 	["Show a glow around the CC icons."] = "Affiche une lueur autour des icônes de contrôle.",
 	["Shows CC icons on party/raid frames."] = "Affiche les icônes de contrôle sur les cadres de groupe/raid.",
 
-	-- CDs tab
-	["CDs"] = "Temps de recharge",
+	-- Indicator tab
+	["Auras"] = "Auras",
 	["Change the colour of the glow/border. Defensive spells are green and Important spells are red."] = "Change la couleur de la lueur/bordure. Les sorts défensifs sont verts et les sorts importants sont rouges.",
 	["Defensive"] = "Défensif",
 	["Don't forget to disable the Blizzard 'center big defensives' option when using this."] = "N'oubliez pas de désactiver l'option Blizzard 'centrer les grandes défensives' lors de l'utilisation de ceci.",
 	["Exclude yourself from showing trinket icons."] = "Excluez-vous de l'affichage des icônes de bijoux.",
+	["Show CC"] = "Afficher CC",
+	["Show CC icons."] = "Afficher les icônes CC.",
 	["Show Defensives"] = "Afficher les défensifs",
 	["Show defensive spell icons."] = "Afficher les icônes de sorts défensifs.",
 	["Show Important"] = "Afficher les importants",
 	["Show important spell icons."] = "Afficher les icônes de sorts importants.",
-	["Shows active friendly cooldowns party/raid frames."] = "Affiche les temps de recharge alliés actifs sur les cadres de groupe/raid.",
+	["Shows CC, defensives, and important auras as one set of icons on party/raid frames."] = "Affiche les CC, défensifs et aures importants sous forme d'un ensemble d'icônes sur les cadres de groupe/raid.",
+	["Tip: Disable the CC module for BGs and enable CC within this module."] = "Conseil : Désactivez le module CC pour les champs de bataille et activez le CC dans ce module.",
+
 
 	-- Healer tab
 	["A separate region for when your healer is CC'd."] = "Une région séparée pour quand votre soigneur est sous contrôle.",
@@ -167,6 +175,8 @@ L:SetStrings({
 	["Ignore Friendly Pets"] = "Ignorer les familiers alliés",
 	["Nameplates"] = "Barres de nom",
 	["Nameplates_Short"] = "Barres",
+	["Scale with Nameplate"] = "Scale with Nameplate",
+	["Icons scale along with the nameplate scale. Use this option if you have a different size for the target nameplate (e.g. in BBF's settings)."] = "Icons scale along with the nameplate scale. Use this option if you have a different size for the target nameplate (e.g. in BBF's settings).",
 	["Shows CC and important spells on nameplates (works with nameplate addons e.g. BBP, Platynator, and Plater)."] = "Affiche le contrôle et les sorts importants sur les barres de nom (fonctionne avec les addons de barres de nom comme BBP, Platynator et Plater).",
 	["Spell colours"] = "Couleurs de sorts",
 
@@ -178,8 +188,7 @@ L:SetStrings({
 
 	-- Party Trinkets tab
 	[" - Doesn't work if your team mates trinket in the starting room."] = " - Ne fonctionne pas si vos coéquipiers utilisent leurs bijoux dans la salle de départ.",
-	[" - Doesn't work in the open world."] = " - Ne fonctionne pas en monde ouvert.",
-	[" - Racials like stoneform count as a trinket use."] = " - Les raciaux comme Forme de pierre comptent comme une utilisation de bijou.",
+	[" - Only works inside arena."] = " - Fonctionne uniquement en arène.",
 	["Party Trinkets"] = "Bijoux du groupe",
 	["Party Trinkets_Short"] = "Bijoux",
 

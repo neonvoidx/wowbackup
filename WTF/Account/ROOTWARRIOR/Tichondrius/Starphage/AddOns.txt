@@ -165,3 +165,5 @@ HandyNotes_Silvermoon: enabled
 WorldQuestTab: enabled
 ColouredEnemyNameplates: enabled
 ItemLevelNameplate: enabled
+BattleGroundEnemiesFixed: enabled
+Collectionator: enabled

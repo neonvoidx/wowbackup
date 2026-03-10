@@ -103,4 +103,5 @@ CHATTYNATOR_COMMAND_HISTORY = {
 "/s /way Vol'dun 56.70 49.80 Hoarder Jena",
 "/s /run SetActionBarToggles(1,1,1,1,1,0,0,0)",
 "/s /run local s,b=\"SHOW_MULTI_ACTIONBAR_\"b=not _G[s..1]for i=1,5 do _G[s..i]=b end InterfaceOptions_UpdateMultiActionBars()",
+"/cw Däzedx one more",
 }

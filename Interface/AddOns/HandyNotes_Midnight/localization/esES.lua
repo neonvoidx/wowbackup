@@ -98,6 +98,12 @@ L['spiritpaw_marathon_note'] = 'Habla con {npc:258938}, coge los {npc:250100} ce
 L['options_icons_gnome_alone'] = '{achievement:62200}'
 L['options_icons_gnome_alone_desc'] = 'Muestra todas las ubicaciones para el logro {achievement:62200}.'
 
+L['abandoned_ritual_skull'] = 'Calavera de ritual abandonada'
+
+L['options_icons_put_a_pin_in_it'] = '{achievement:62199}'
+L['options_icons_put_a_pin_in_it_desc'] = 'Muestra todas las ubicaciones para el logro {achievement:62199}.'
+L['kalika_note'] = 'Habla con {npc:258884}. Tras ello interactúa con el {object:Botón olvidado} que hay detrás de la {object:Estatua de jade} cercana.'
+
 -------------------------------------------------------------------------------
 ---------------------------------- ARCANTINA ----------------------------------
 -------------------------------------------------------------------------------
@@ -110,3 +116,5 @@ L['share_a_drink_note'] = 'Compra una {item:251039} al {npc:250495} en la Arcant
 
 L['sturdy_chest'] = 'Cofre robusto'
 L['sturdy_chest_suffix'] = 'Cofre robusto encontrado'
+
+L['gulf_of_memory_chest_note'] = 'Sube por las raíces del árbol para llegar al tesoro.'

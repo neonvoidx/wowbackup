@@ -4,12 +4,21 @@ BWQDB = {
 ["Starphage - Tichondrius"] = {
 ["activeProfile"] = 0,
 },
+["Auteist - Tichondrius"] = {
+["activeProfile"] = 0,
+},
 ["Neonvoid - Tichondrius"] = {
+["activeProfile"] = 0,
+},
+["Stormclout - Tichondrius"] = {
+["activeProfile"] = 0,
+},
+["Hellavator - Tichondrius"] = {
 ["activeProfile"] = 0,
 },
 },
 ["global"] = {
-["versionCheck"] = 120006,
+["versionCheck"] = 120007,
 ["profiles"] = {
 [0] = {
 ["colors"] = {
@@ -19,17 +28,31 @@ BWQDB = {
 },
 ["general"] = {
 },
-["pin"] = {
-},
 ["external"] = {
 },
+["pin"] = {
+},
 ["filters"] = {
+[3] = {
+["flags"] = {
+["Honor"] = false,
+["Reputation"] = false,
+["Currency"] = false,
+["Item"] = false,
+["Gold"] = false,
+["Experience"] = false,
+["None"] = false,
+},
+},
 },
 },
 },
 },
 ["profileKeys"] = {
 ["Starphage - Tichondrius"] = "Default",
+["Auteist - Tichondrius"] = "Default",
 ["Neonvoid - Tichondrius"] = "Default",
+["Stormclout - Tichondrius"] = "Default",
+["Hellavator - Tichondrius"] = "Default",
 },
 }

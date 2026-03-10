@@ -99,6 +99,12 @@ L['spiritpaw_marathon_note'] = 'Parlez avec {npc:258938}, puis récupérez les {
 L['options_icons_gnome_alone'] = '{achievement:62200}'
 L['options_icons_gnome_alone_desc'] = 'Afficher les emplacements des objets liés au haut-fait {achievement:62200}.'
 
+L['abandoned_ritual_skull'] = 'Crâne rituel abandonné'
+
+L['options_icons_put_a_pin_in_it'] = '{achievement:62199}'
+L['options_icons_put_a_pin_in_it_desc'] = 'Affichez les emplacements liés au haut-fait {achievement:62199}.'
+L['kalika_note'] = 'Parlez à {npc:258884}, puis interagissez avec le {object:Bouton oublié} situé derrière la {object:Statue de jade} à proximité.'
+
 -------------------------------------------------------------------------------
 ---------------------------------- ARCANTINA ----------------------------------
 -------------------------------------------------------------------------------
@@ -111,3 +117,5 @@ L['share_a_drink_note'] = 'Achetez des {item:251039} auprès de {npc:250495} à 
 
 L['sturdy_chest'] = 'Coffre solide'
 L['sturdy_chest_suffix'] = 'Coffre solide trouvé'
+
+L['gulf_of_memory_chest_note'] = 'Grimpez le long des racines de l\'arbre pour atteindre le trésor.'

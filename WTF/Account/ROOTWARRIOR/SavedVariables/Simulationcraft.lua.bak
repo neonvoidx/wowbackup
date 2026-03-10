@@ -22,10 +22,10 @@ SimulationCraftDB = {
 ["Neonvoid - Tichondrius"] = "Neonvoid - Tichondrius",
 ["Auteist - Mal'Ganis"] = "Auteist - Mal'Ganis",
 ["Ofpuss - Mal'Ganis"] = "Ofpuss - Mal'Ganis",
-["Starstypeshi - Tichondrius"] = "Starstypeshi - Tichondrius",
+["Gehyo - Tichondrius"] = "Gehyo - Tichondrius",
 ["Smaugchamp - Mal'Ganis"] = "Smaugchamp - Mal'Ganis",
 ["Choppiez - Mal'Ganis"] = "Choppiez - Mal'Ganis",
-["Gehyo - Tichondrius"] = "Gehyo - Tichondrius",
+["Starstypeshi - Tichondrius"] = "Starstypeshi - Tichondrius",
 ["Tampacks - Mal'Ganis"] = "Tampacks - Mal'Ganis",
 ["Kitedbro - Mal'Ganis"] = "Kitedbro - Mal'Ganis",
 ["Crillessana - Mal'Ganis"] = "Crillessana - Mal'Ganis",
@@ -138,10 +138,7 @@ SimulationCraftDB = {
 ["hide"] = true,
 },
 },
-["Starstypeshi - Tichondrius"] = {
-["minimap"] = {
-["hide"] = true,
-},
+["Gehyo - Tichondrius"] = {
 },
 ["Smaugchamp - Mal'Ganis"] = {
 ["minimap"] = {
@@ -154,7 +151,10 @@ SimulationCraftDB = {
 ["hide"] = true,
 },
 },
-["Gehyo - Tichondrius"] = {
+["Starstypeshi - Tichondrius"] = {
+["minimap"] = {
+["hide"] = true,
+},
 },
 ["Tampacks - Mal'Ganis"] = {
 ["minimap"] = {

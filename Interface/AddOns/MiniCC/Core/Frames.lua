@@ -317,6 +317,43 @@ function M:PlexusFrames(visibleOnly)
 	return frames
 end
 
+---Retrieves a list of Cell party/raid unit frames.
+---@param visibleOnly boolean
+---@return table
+function M:CellFrames(visibleOnly)
+	if not CellPartyFrameHeader and not CellRaidFrameHeader0 then
+		return {}
+	end
+
+	local frames = {}
+	local headers = { CellPartyFrameHeader, CellSoloFrame }
+
+	for i = 0, 8 do
+		local header = _G["CellRaidFrameHeader" .. i]
+		if header then
+			headers[#headers + 1] = header
+		end
+	end
+
+	for _, header in ipairs(headers) do
+		if header then
+			for _, child in ipairs({ header:GetChildren() }) do
+				local unit = child.unit or (child.GetAttribute and child:GetAttribute("unit"))
+
+				if unit and unit ~= "" then
+					if child.IsForbidden and child:IsForbidden() then
+						-- skip
+					elseif child:IsVisible() or not visibleOnly then
+						frames[#frames + 1] = child
+					end
+				end
+			end
+		end
+	end
+
+	return frames
+end
+
 ---Retrieves a list of custom frames from our saved vars.
 ---@param visibleOnly boolean
 ---@return table
@@ -357,6 +394,7 @@ function M:GetAll(visibleOnly, includeTestFrames)
 	local blizzard = not wowEx:IsDandersEnabled() and M:BlizzardFrames(visibleOnly) or {}
 	local suf = M:ShadowedUFFrames(visibleOnly)
 	local plexus = M:PlexusFrames(visibleOnly)
+	local cell = M:CellFrames(visibleOnly)
 	local custom = M:CustomFrames(visibleOnly)
 
 	array:Append(blizzard, anchors)
@@ -365,6 +403,7 @@ function M:GetAll(visibleOnly, includeTestFrames)
 	array:Append(danders, anchors)
 	array:Append(suf, anchors)
 	array:Append(plexus, anchors)
+	array:Append(cell, anchors)
 	array:Append(custom, anchors)
 
 	if includeTestFrames then
@@ -373,6 +412,17 @@ function M:GetAll(visibleOnly, includeTestFrames)
 	end
 
 	return anchors
+end
+
+local strataOrder = { "BACKGROUND", "LOW", "MEDIUM", "HIGH", "DIALOG", "FULLSCREEN", "FULLSCREEN_DIALOG", "TOOLTIP" }
+local strataIndex = {}
+for i, v in ipairs(strataOrder) do strataIndex[v] = i end
+
+---Returns the frame strata one level above the given strata, clamped at TOOLTIP.
+---@param strata string
+---@return string
+function M:GetNextStrata(strata)
+	return strataOrder[math.min((strataIndex[strata] or 1) + 1, #strataOrder)]
 end
 
 function M:IsFriendlyCuf(frame)
@@ -407,20 +457,9 @@ function M:ShowHideFrame(frame, anchor, isTest, excludePlayer)
 		end
 	end
 
-	local alpha = anchor:GetAlpha()
-	if mini:IsSecret(alpha) and anchor:IsVisible() then
-		if not isTest then
-			-- in real mode set the alpha to the secret value
-			frame:SetAlpha(alpha)
-		else
-			-- in test mode assume it's visible
-			frame:SetAlpha(1)
-		end
-		frame:Show()
-		return
-	end
-
 	if anchor:IsVisible() then
+		-- technically it can be visible but have an alpha of 0, or even worse a secret alpha of 0
+		-- but we're going to assume frame addons are sane and properly hide frames instead of doing that
 		frame:SetAlpha(1)
 		frame:Show()
 	else

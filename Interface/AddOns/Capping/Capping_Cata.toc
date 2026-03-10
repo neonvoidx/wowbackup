@@ -1,5 +1,5 @@
 ## Interface: 40402
-## Version: v12.0.5
+## Version: v12.0.8
 ## Title: Capping
 ## Author: Funkeh
 ## Notes: Battleground timers and other PvP features.

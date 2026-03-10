@@ -3,24 +3,46 @@ MiniCCDB = {
 ["Modules"] = {
 ["FriendlyIndicatorModule"] = {
 ["Enabled"] = {
-["BattleGrounds"] = true,
+["BattleGrounds"] = false,
 ["Arena"] = true,
 ["World"] = true,
 ["PvE"] = true,
 },
-["ShowDefensives"] = true,
-["ShowImportant"] = true,
-["Grow"] = "CENTER",
+["Raid"] = {
 ["ExcludePlayer"] = false,
-["Icons"] = {
-["MaxIcons"] = 1,
-["Glow"] = true,
-["ReverseCooldown"] = true,
-["Size"] = 40,
-},
+["Grow"] = "CENTER",
+["ShowImportant"] = false,
+["ShowDefensives"] = false,
 ["Offset"] = {
 ["Y"] = 0,
 ["X"] = 0,
+},
+["Icons"] = {
+["MaxIcons"] = 1,
+["Glow"] = false,
+["ColorByDispelType"] = true,
+["ReverseCooldown"] = false,
+["Size"] = 40,
+},
+["ShowCC"] = false,
+},
+["Default"] = {
+["ExcludePlayer"] = false,
+["ShowDefensives"] = true,
+["ShowImportant"] = true,
+["Grow"] = "CENTER",
+["Offset"] = {
+["Y"] = 0,
+["X"] = 0,
+},
+["Icons"] = {
+["MaxIcons"] = 1,
+["Glow"] = true,
+["ColorByDispelType"] = true,
+["ReverseCooldown"] = true,
+["Size"] = 40,
+},
+["ShowCC"] = true,
 },
 },
 ["NameplatesModule"] = {
@@ -30,6 +52,7 @@ MiniCCDB = {
 ["World"] = true,
 ["PvE"] = true,
 },
+["ScaleWithNameplate"] = false,
 ["Friendly"] = {
 ["Combined"] = {
 ["Grow"] = "RIGHT",
@@ -139,17 +162,17 @@ MiniCCDB = {
 ["X"] = 0,
 },
 ["Icons"] = {
-["Glow"] = true,
+["Glow"] = false,
 ["Count"] = 3,
-["ReverseCooldown"] = true,
-["ColorByDispelType"] = true,
+["ReverseCooldown"] = false,
+["ColorByDispelType"] = false,
 ["Size"] = 19,
 },
 ["Grow"] = "CENTER",
 },
 ["CCModule"] = {
 ["Enabled"] = {
-["BattleGrounds"] = true,
+["BattleGrounds"] = false,
 ["Arena"] = true,
 ["World"] = true,
 ["PvE"] = true,
@@ -161,9 +184,9 @@ MiniCCDB = {
 ["X"] = 2,
 },
 ["Icons"] = {
-["Glow"] = true,
-["ColorByDispelType"] = true,
-["ReverseCooldown"] = true,
+["Glow"] = false,
+["ColorByDispelType"] = false,
+["ReverseCooldown"] = false,
 ["Count"] = 3,
 ["Size"] = 32,
 },
@@ -182,7 +205,7 @@ MiniCCDB = {
 ["Count"] = 3,
 ["Size"] = 32,
 },
-["ExcludePlayer"] = false,
+["ExcludePlayer"] = true,
 },
 },
 ["PortraitModule"] = {
@@ -223,21 +246,52 @@ MiniCCDB = {
 ["X"] = 0,
 },
 },
-["PrecogGuesserModule"] = {
-["Enabled"] = {
-["Always"] = true,
+["AlertsModule"] = {
+["Offset"] = {
+["Y"] = -100,
+["X"] = 0,
 },
 ["RelativeTo"] = "UIParent",
 ["Point"] = "CENTER",
-["RelativePoint"] = "CENTER",
 ["Icons"] = {
+["Enabled"] = true,
 ["Glow"] = true,
-["ReverseCooldown"] = true,
-["Size"] = 70,
+["MaxIcons"] = 8,
+["ReverseCooldown"] = false,
+["ColorByClass"] = true,
+["Size"] = 58,
 },
-["Offset"] = {
-["Y"] = 70,
-["X"] = 0,
+["TargetFocusOnly"] = false,
+["RelativePoint"] = "TOP",
+["TTS"] = {
+["VoiceID"] = 0,
+["Volume"] = 100,
+["Important"] = {
+["Enabled"] = false,
+},
+["SpeechRate"] = 0,
+["Defensive"] = {
+["Enabled"] = false,
+},
+},
+["IncludeDefensives"] = true,
+["Sound"] = {
+["Defensive"] = {
+["Enabled"] = false,
+["File"] = "AlertToastWarm.ogg",
+["Channel"] = "Master",
+},
+["Important"] = {
+["Enabled"] = false,
+["File"] = "AirHorn.ogg",
+["Channel"] = "Master",
+},
+},
+["Enabled"] = {
+["BattleGrounds"] = false,
+["Arena"] = true,
+["World"] = false,
+["PvE"] = false,
 },
 },
 ["KickTimerModule"] = {
@@ -280,55 +334,25 @@ MiniCCDB = {
 ["X"] = -2,
 },
 },
-["AlertsModule"] = {
-["Offset"] = {
-["Y"] = -100,
-["X"] = 0,
+["PrecogGuesserModule"] = {
+["Enabled"] = {
+["Always"] = true,
 },
 ["RelativeTo"] = "UIParent",
 ["Point"] = "CENTER",
+["RelativePoint"] = "CENTER",
 ["Icons"] = {
-["Enabled"] = true,
 ["Glow"] = true,
-["MaxIcons"] = 8,
-["ReverseCooldown"] = false,
-["ColorByClass"] = true,
-["Size"] = 58,
+["ReverseCooldown"] = true,
+["Size"] = 70,
 },
-["TargetFocusOnly"] = false,
-["IncludeBigDefensives"] = true,
-["TTS"] = {
-["SpeechRate"] = 0,
-["Important"] = {
-["Enabled"] = false,
-},
-["Defensive"] = {
-["Enabled"] = false,
-},
-["Volume"] = 100,
-},
-["Enabled"] = {
-["BattleGrounds"] = false,
-["Arena"] = false,
-["World"] = false,
-["PvE"] = false,
-},
-["Sound"] = {
-["Defensive"] = {
-["Enabled"] = false,
-["File"] = "AlertToastWarm.ogg",
-["Channel"] = "Master",
-},
-["Important"] = {
-["Enabled"] = false,
-["File"] = "AirHorn.ogg",
-["Channel"] = "Master",
+["Offset"] = {
+["Y"] = 70,
+["X"] = 0,
 },
 },
-["RelativePoint"] = "TOP",
 },
-},
-["Version"] = 28,
+["Version"] = 33,
 ["NotifiedChanges"] = true,
 ["IconSpacing"] = 2,
 ["WhatsNew"] = {

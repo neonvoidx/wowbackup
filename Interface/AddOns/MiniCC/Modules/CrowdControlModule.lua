@@ -15,6 +15,10 @@ local paused = false
 local testModeActive = false
 ---@type Db
 local db
+
+local function GetOptions()
+	return instanceOptions:IsRaid() and db.Modules.CCModule.Raid or db.Modules.CCModule.Default
+end
 ---@type table<table, CrowdControlWatchEntry>
 local watchers = {}
 ---@type TestSpell[]
@@ -53,7 +57,7 @@ local function UpdateWatcherAuras(entry)
 		if not moduleUtil:IsModuleEnabled(moduleName.CrowdControl) then
 			return
 		end
-		options = instanceOptions:GetInstanceOptions()
+		options = GetOptions()
 	end
 
 	if not options then
@@ -98,6 +102,9 @@ local function AnchorContainer(header, anchor, options)
 	local frame = header.Frame
 	frame:ClearAllPoints()
 	frame:SetAlpha(1)
+	-- plexus frames sit at a MEDIUM frame strata, so we need to be above it
+	-- that's the only reason we need this strata code, Blizzard and all other addons don't require this
+	frame:SetFrameStrata(frames:GetNextStrata(anchor:GetFrameStrata()))
 	frame:SetFrameLevel(anchor:GetFrameLevel() + 1)
 
 	local anchorPoint = "CENTER"
@@ -139,8 +146,7 @@ local function EnsureWatcher(anchor, unit)
 		return nil
 	end
 
-	local memberOptions = testModeActive and instanceOptions:GetTestInstanceOptions()
-		or instanceOptions:GetInstanceOptions()
+	local memberOptions = GetOptions()
 	local petOptions = db.Modules.PetCCModule
 	local options = isPet and petOptions or memberOptions
 
@@ -232,7 +238,7 @@ local function OnCufUpdateVisible(frame)
 		return
 	end
 
-	local options = isPet and db.Modules.PetCCModule or instanceOptions:GetInstanceOptions()
+	local options = isPet and db.Modules.PetCCModule or GetOptions()
 
 	if not options then
 		return
@@ -267,7 +273,7 @@ local function OnEvent(_, event)
 end
 
 local function RefreshTestIcons()
-	local options = instanceOptions:GetTestInstanceOptions()
+	local options = GetOptions()
 
 	if not options then
 		return
@@ -394,7 +400,7 @@ function M:StopTesting()
 end
 
 function M:Refresh()
-	local options = testModeActive and instanceOptions:GetTestInstanceOptions() or instanceOptions:GetInstanceOptions()
+	local options = GetOptions()
 
 	if not options then
 		return

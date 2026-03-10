@@ -10,7 +10,9 @@
 
 local _, LM = ...
 
-local L = LM.Localize
+local L = LM.L
+
+local LMDB = LibStub("LibMountDB-1.0")
 
 local DefaultFilterList = {
     family = { },
@@ -280,7 +282,7 @@ end
 -- Families --------------------------------------------------------------------
 
 function LM.UIFilter.GetFamilies()
-    return LM.MountDB.GetModelList()
+    return LMDB.GetModelList()
 end
 
 function LM.UIFilter.IsFamilyFiltered()

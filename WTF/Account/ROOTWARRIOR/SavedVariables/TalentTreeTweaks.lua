@@ -10,7 +10,7 @@ TalentTreeTweaksDB = {
 ["ExportInspectedBuild"] = true,
 ["TooltipIds"] = true,
 ["ImportIntoCurrentLoadout"] = true,
-["AlwaysShowGates"] = true,
+["ReduceSpam"] = true,
 ["ChangeBackground"] = true,
 ["CopyTalentButtonInfo"] = true,
 ["HeroTalents"] = true,
@@ -21,7 +21,7 @@ TalentTreeTweaksDB = {
 ["RespecButtons"] = true,
 ["ScaleTalentFrame"] = true,
 ["MiscFixes"] = true,
-["ReduceSpam"] = true,
+["AlwaysShowGates"] = true,
 },
 ["moduleDb"] = {
 ["InspectDiff"] = {
@@ -55,30 +55,30 @@ TalentTreeTweaksDB = {
 ["unlockShareButton"] = true,
 },
 ["MiniTreeInTooltip"] = {
-["inactiveSubTreeAlpha"] = 0.5,
+["diffGreen"] = {
+["r"] = 0,
+["g"] = 1,
+["b"] = 0,
+},
 ["displayStyle"] = "simple-default-diff",
-["upgradedDisplayStyle"] = 1,
+["diffOrange"] = {
+["r"] = 1,
+["g"] = 1,
+["b"] = 0,
+},
 ["diffRed"] = {
 ["r"] = 1,
 ["g"] = 0,
 ["b"] = 0,
 },
 ["scale"] = 1,
-["diffGreen"] = {
-["r"] = 0,
-["g"] = 1,
-["b"] = 0,
-},
+["inactiveSubTreeAlpha"] = 0.5,
 ["diffYellow"] = {
 ["r"] = 1,
 ["g"] = 1,
 ["b"] = 1,
 },
-["diffOrange"] = {
-["r"] = 1,
-["g"] = 1,
-["b"] = 0,
-},
+["upgradedDisplayStyle"] = 1,
 },
 ["ReduceTaint"] = {
 ["alwaysReplaceShareButton"] = false,
@@ -107,10 +107,10 @@ TalentTreeTweaksDB = {
 ["rowColInfo"] = false,
 },
 },
+["ReduceSpam"] = {
+},
 ["AlwaysShowGates"] = {
 ["shiftHeroTrees"] = false,
-},
-["ReduceSpam"] = {
 },
 ["ChangeBackground"] = {
 ["showAlphaInSpellbookUI"] = true,
@@ -144,13 +144,13 @@ TalentTreeTweaksDB = {
 ["Choppiez-Mal'Ganis"] = 1,
 ["Månyfaced-Mal'Ganis"] = 1,
 ["Edaroseld-Illidan"] = 1,
+["Ofpuss-Mal'Ganis"] = 1,
 ["Tampacks-Mal'Ganis"] = 1,
-["Praisesun-Tichondrius"] = 1,
 ["Thickshape-Mal'Ganis"] = 1,
 ["Smaugchamp-Tichondrius"] = 1,
 ["Praisesun-Mal'Ganis"] = 1,
 ["Auteist-Tichondrius"] = 1,
-["Ofpuss-Mal'Ganis"] = 1,
+["Praisesun-Tichondrius"] = 1,
 ["Gehyo-Mal'Ganis"] = 1,
 ["Starstypeshi-Tichondrius"] = 1,
 },

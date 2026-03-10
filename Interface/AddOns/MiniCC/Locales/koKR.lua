@@ -18,7 +18,7 @@ L:SetStrings({
 	["Caster"] = "시전자",
 	["Healer"] = "치유사",
 	["Enable if you are:"] = "다음인 경우 활성화:",
-	["Enable in:"] = "활성화 위치:",
+	["Enable in"] = "활성화 위치",
 	["Enabled"] = "활성화",
 	["Enable this module everywhere."] = "이 모듈을 어디서나 활성화합니다.",
 	["Enable this module in the open world."] = "야외에서 이 모듈을 활성화합니다.",
@@ -41,8 +41,11 @@ L:SetStrings({
 	["Reverse swipe"] = "역방향 스와이프",
 	["Reverses the direction of the cooldown swipe animation."] = "재사용 대기시간 스와이프 애니메이션의 방향을 반대로 합니다.",
 	["Settings"] = "설정",
+	["Open Settings"] = "설정 열기",
+	["Use /minicc, /mcc, or /cc to open the MiniCC config window."] = "/minicc, /mcc 또는 /cc를 사용하여 MiniCC 설정 창을 엽니다.",
 	["Show a glow around the icons."] = "아이콘 주위에 발광을 표시합니다.",
 	["Test"] = "테스트",
+	["Test these settings"] = "이 설정 테스트",
 	["Whether to enable or disable this module if you are a caster."] = "시전자인 경우 이 모듈을 활성화 또는 비활성화합니다.",
 	["Whether to enable or disable this module if you are a healer."] = "치유사인 경우 이 모듈을 활성화 또는 비활성화합니다.",
 	["Whether to enable or disable this module regardless of what spec you are."] = "전문화에 관계없이 이 모듈을 활성화 또는 비활성화합니다.",
@@ -74,7 +77,6 @@ L:SetStrings({
 	["Import Profile"] = "프로필 가져오기",
 	["Miscellaneous"] = "기타",
 	["Reset"] = "재설정",
-	["Settings:"] = "설정:",
 	["The others seem to use a non-trivial amount of CPU."] = "다른 것들은 상당한 CPU를 사용하는 것 같습니다.",
 	["The Proc Glow uses the least CPU."] = "프록 발광은 CPU를 가장 적게 사용합니다.",
 
@@ -103,10 +105,12 @@ L:SetStrings({
 	["TTS Volume"] = "TTS 볼륨",
 	["Voice"] = "음성",
 	["You must choose a voice in your language for this to work."] = "이 기능이 작동하려면 해당 언어의 음성을 선택해야 합니다.",
+	["These voices come from your installed system language packs and you can add more through your Windows settings."] = "이 음성들은 설치된 시스템 언어 팩에서 제공되며 Windows 설정을 통해 추가할 수 있습니다.",
+	["Note that some voices don't perform well, for example Microsoft Hazel is bad and Microsoft Zira is good."] = "일부 음성은 성능이 좋지 않을 수 있습니다. 예를 들어 Microsoft Hazel은 좋지 않고 Microsoft Zira는 좋습니다.",
 
 	-- CC tab
 	["CC"] = "군중 제어",
-	["Change the colour of the glow/border based on dispel type (e.g., blue for magic, red for physical)."] = "해제 유형에 따라 발광/테두리 색상을 변경합니다 (예: 마법은 파란색, 물리는 빨간색).",
+	["Change the colour of the glow/border based on dispel type (e.g., blue for magic, red for physical). This only applies to CC icons."] = "해제 유형에 따라 발광/테두리 색상을 변경합니다 (예: 마법은 파란색, 물리는 빨간색). CC 아이콘에만 적용됩니다.",
 	["Color by class"] = "직업별 색상",
 	["Color the glow/border by the enemy's class color."] = "적의 직업 색상으로 발광/테두리를 색칠합니다.",
 	["Dispel colours"] = "해제 색상",
@@ -122,17 +126,20 @@ L:SetStrings({
 	["Show a glow around the CC icons."] = "군중 제어 아이콘 주위에 발광을 표시합니다.",
 	["Shows CC icons on party/raid frames."] = "파티/공격대 프레임에 군중 제어 아이콘을 표시합니다.",
 
-	-- CDs tab
-	["CDs"] = "재사용 대기시간",
+	-- Indicator tab
+	["Auras"] = "오라",
 	["Change the colour of the glow/border. Defensive spells are green and Important spells are red."] = "발광/테두리 색상을 변경합니다. 방어 주문은 녹색이고 중요한 주문은 빨간색입니다.",
 	["Defensive"] = "방어",
 	["Don't forget to disable the Blizzard 'center big defensives' option when using this."] = "이것을 사용할 때 Blizzard의 '큰 방어 기술 중앙 표시' 옵션을 비활성화하는 것을 잊지 마세요.",
 	["Exclude yourself from showing trinket icons."] = "장신구 아이콘 표시에서 자신을 제외합니다.",
+	["Show CC"] = "CC 표시",
+	["Show CC icons."] = "CC 아이콘을 표시합니다.",
 	["Show Defensives"] = "방어기술 표시",
 	["Show defensive spell icons."] = "방어 주문 아이콘을 표시합니다.",
 	["Show Important"] = "중요 기술 표시",
 	["Show important spell icons."] = "중요 주문 아이콘을 표시합니다.",
-	["Shows active friendly cooldowns party/raid frames."] = "파티/공격대 프레임에 아군의 활성 재사용 대기시간을 표시합니다.",
+	["Shows CC, defensives, and important auras as one set of icons on party/raid frames."] = "파티/공격대 프레임에 CC, 방어기 및 중요 오라를 하나의 아이콘 세트로 표시합니다.",
+	["Tip: Disable the CC module for BGs and enable CC within this module."] = "팁: 전장에서 CC 모듈을 비활성화하고 이 모듈 내에서 CC를 활성화하십시오.",
 
 	-- Healer tab
 	["A separate region for when your healer is CC'd."] = "치유사가 군중 제어당할 때를 위한 별도 영역입니다.",
@@ -167,6 +174,8 @@ L:SetStrings({
 	["Ignore Friendly Pets"] = "아군 소환수 무시",
 	["Nameplates"] = "이름표",
 	["Nameplates_Short"] = "이름표",
+	["Scale with Nameplate"] = "Scale with Nameplate",
+	["Icons scale along with the nameplate scale. Use this option if you have a different size for the target nameplate (e.g. in BBF's settings)."] = "Icons scale along with the nameplate scale. Use this option if you have a different size for the target nameplate (e.g. in BBF's settings).",
 	["Shows CC and important spells on nameplates (works with nameplate addons e.g. BBP, Platynator, and Plater)."] = "이름표에 군중 제어와 중요한 주문을 표시합니다 (BBP, Platynator, Plater 등의 이름표 애드온과 함께 작동합니다).",
 	["Spell colours"] = "주문 색상",
 
@@ -178,8 +187,7 @@ L:SetStrings({
 
 	-- Party Trinkets tab
 	[" - Doesn't work if your team mates trinket in the starting room."] = " - 팀원이 시작 방에서 장신구를 사용하면 작동하지 않습니다.",
-	[" - Doesn't work in the open world."] = " - 오픈 월드에서는 작동하지 않습니다.",
-	[" - Racials like stoneform count as a trinket use."] = " - 석화 같은 종족 기술도 장신구 사용으로 취급됩니다.",
+	[" - Only works inside arena."] = " - 투기장 내부에서만 작동합니다.",
 	["Party Trinkets"] = "파티 장신구",
 	["Party Trinkets_Short"] = "장신구",
 

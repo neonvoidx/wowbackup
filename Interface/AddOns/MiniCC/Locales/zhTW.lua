@@ -18,7 +18,7 @@ L:SetStrings({
 	["Caster"] = "施法者",
 	["Healer"] = "治療者",
 	["Enable if you are:"] = "如果您是以下角色則啟用：",
-	["Enable in:"] = "啟用於：",
+	["Enable in"] = "啟用於",
 	["Enabled"] = "已啟用",
 	["Enable this module everywhere."] = "在任何地方啟用此模組。",
 	["Enable this module in the open world."] = "在開放世界中啟用此模組。",
@@ -41,8 +41,11 @@ L:SetStrings({
 	["Reverse swipe"] = "反向滑動",
 	["Reverses the direction of the cooldown swipe animation."] = "反轉冷卻時間滑動動畫的方向。",
 	["Settings"] = "設定",
+	["Open Settings"] = "開啟設定",
+	["Use /minicc, /mcc, or /cc to open the MiniCC config window."] = "使用 /minicc、/mcc 或 /cc 開啟 MiniCC 設定視窗。",
 	["Show a glow around the icons."] = "在圖示周圍顯示發光。",
 	["Test"] = "測試",
+	["Test these settings"] = "測試這些設定",
 	["Whether to enable or disable this module if you are a caster."] = "如果您是施法者，是否啟用或停用此模組。",
 	["Whether to enable or disable this module if you are a healer."] = "如果您是治療者，是否啟用或停用此模組。",
 	["Whether to enable or disable this module regardless of what spec you are."] = "無論您是什麼專精，是否啟用或停用此模組。",
@@ -74,7 +77,6 @@ L:SetStrings({
 	["Import Profile"] = "匯入設定檔",
 	["Miscellaneous"] = "雜項",
 	["Reset"] = "重置",
-	["Settings:"] = "設置：",
 	["The others seem to use a non-trivial amount of CPU."] = "其他的似乎使用了大量的CPU。",
 	["The Proc Glow uses the least CPU."] = "觸發發光使用最少的CPU。",
 
@@ -106,10 +108,12 @@ L:SetStrings({
 	["TTS Volume"] = "TTS音量",
 	["Voice"] = "語音",
 	["You must choose a voice in your language for this to work."] = "必須選擇與你的語言相符的語音才能使其運作。",
+	["These voices come from your installed system language packs and you can add more through your Windows settings."] = "這些語音來自已安裝的系統語言包，你可以透過 Windows 設定新增更多語音。",
+	["Note that some voices don't perform well, for example Microsoft Hazel is bad and Microsoft Zira is good."] = "請注意，某些語音效果不佳，例如 Microsoft Hazel 較差，而 Microsoft Zira 較好。",
 
 	-- CC tab
 	["CC"] = "控制",
-	["Change the colour of the glow/border based on dispel type (e.g., blue for magic, red for physical)."] = "根據驅散類型更改發光/邊框的顏色（例如，魔法為藍色，物理為紅色）。",
+	["Change the colour of the glow/border based on dispel type (e.g., blue for magic, red for physical). This only applies to CC icons."] = "根據驅散類型更改發光/邊框的顏色（例如，魔法為藍色，物理為紅色）。僅適用於CC圖示。",
 	["Color by class"] = "按職業著色",
 	["Color the glow/border by the enemy's class color."] = "用敵人的職業顏色為發光/邊框著色。",
 	["Dispel colours"] = "驅散顏色",
@@ -125,17 +129,21 @@ L:SetStrings({
 	["Show a glow around the CC icons."] = "在控制圖示周圍顯示發光。",
 	["Shows CC icons on party/raid frames."] = "在隊伍/團隊框架上顯示控制圖示。",
 
-	-- CDs tab
-	["CDs"] = "冷卻時間",
+	-- Indicator tab
+	["Auras"] = "光環",
 	["Change the colour of the glow/border. Defensive spells are green and Important spells are red."] = "更改發光/邊框的顏色。防禦法術為綠色，重要法術為紅色。",
 	["Defensive"] = "防禦",
 	["Don't forget to disable the Blizzard 'center big defensives' option when using this."] = "使用此功能時不要忘記停用暴雪的「置中顯示大型防禦技能」選項。",
 	["Exclude yourself from showing trinket icons."] = "將自己從顯示飾品圖示中排除。",
+	["Show CC"] = "顯示CC",
+	["Show CC icons."] = "顯示控制圖示。",
 	["Show Defensives"] = "顯示防禦技能",
 	["Show defensive spell icons."] = "顯示防禦法術圖示。",
 	["Show Important"] = "顯示重要技能",
 	["Show important spell icons."] = "顯示重要法術圖示。",
-	["Shows active friendly cooldowns party/raid frames."] = "在隊伍/團隊框架上顯示活躍的友方冷卻時間。",
+	["Shows CC, defensives, and important auras as one set of icons on party/raid frames."] = "在隊伍/團隊框架上將CC、防禦技能和重要光環顯示為一組圖示。",
+	["Tip: Disable the CC module for BGs and enable CC within this module."] = "提示：在戰場中停用CC模組，並在此模組中啟用CC。",
+
 
 	-- Healer tab
 	["A separate region for when your healer is CC'd."] = "當您的治療者被控制時的單獨區域。",
@@ -147,7 +155,7 @@ L:SetStrings({
 	-- Kick Timer tab
 	[" - Currently only works inside arena (doesn't work in duels/world, will add this later)."] = " - 目前僅在競技場內工作（在決鬥/世界中無效，將來會添加）。",
 	[" - Doesn't work if the enemy misses kick (still investigating potential workaround/solution)."] = " - 如果敵人打斷未命中則無效（仍在研究潛在的解決方案）。",
-	["As you can tell it's not guaranteed to be accurate, but so far from our testing it's pretty damn good with ancedotally a 95%+ success rate."] = "如你所見，它不能保證準確，但到目前為止我們的測試顯示它非常好，軾事性成功率95%+。",
+	["As you can tell it's not guaranteed to be accurate, but so far from our testing it's pretty damn good with ancedotally a 95%+ success rate."] = "如你所見，它不能保證準確，但到目前為止我們的測試顯示它非常好，軼事性成功率95%+。",
 	["For example you are facing 3 enemies who are all pressing buttons."] = "例如，你面對的3個敵人都在按按鈕。",
 	["How does it work? It guesses who kicked you by correlating enemy action events against interrupt events."] = "它如何工作？它透過關聯敵人行動事件和打斷事件來猜測是誰打斷了你。",
 	["Kick timer"] = "斷法計時器",
@@ -170,6 +178,8 @@ L:SetStrings({
 	["Ignore Friendly Pets"] = "忽略友方寵物",
 	["Nameplates"] = "名條",
 	["Nameplates_Short"] = "名條",
+	["Scale with Nameplate"] = "Scale with Nameplate",
+	["Icons scale along with the nameplate scale. Use this option if you have a different size for the target nameplate (e.g. in BBF's settings)."] = "Icons scale along with the nameplate scale. Use this option if you have a different size for the target nameplate (e.g. in BBF's settings).",
 	["Shows CC and important spells on nameplates (works with nameplate addons e.g. BBP, Platynator, and Plater)."] = "在名條上顯示控制和重要法術（與名條插件一起工作，例如BBP、Platynator和Plater）。",
 	["Spell colours"] = "法術顏色",
 
@@ -181,8 +191,7 @@ L:SetStrings({
 
 	-- Party Trinkets tab
 	[" - Doesn't work if your team mates trinket in the starting room."] = " - 如果隊友在起始房間使用飾品則無效。",
-	[" - Doesn't work in the open world."] = " - 在開放世界中無效。",
-	[" - Racials like stoneform count as a trinket use."] = " - 像石像形態這類種族技能也會被算作一次飾品使用。",
+	[" - Only works inside arena."] = " - 僅在競技場內有效。",
 	["Party Trinkets"] = "隊伍飾品",
 	["Party Trinkets_Short"] = "飾品",
 

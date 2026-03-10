@@ -3,25 +3,47 @@ MiniCCDB = {
 ["Modules"] = {
 ["FriendlyIndicatorModule"] = {
 ["Enabled"] = {
-["BattleGrounds"] = true,
+["BattleGrounds"] = false,
 ["Arena"] = true,
 ["PvE"] = true,
 ["World"] = true,
 },
+["Raid"] = {
+["ExcludePlayer"] = false,
+["Grow"] = "CENTER",
+["ShowImportant"] = false,
+["ShowDefensives"] = false,
 ["Offset"] = {
 ["Y"] = 0,
 ["X"] = 0,
 },
+["Icons"] = {
+["MaxIcons"] = 1,
+["Glow"] = false,
+["ColorByDispelType"] = true,
+["ReverseCooldown"] = false,
+["Size"] = 40,
+},
+["ShowCC"] = false,
+},
+["Default"] = {
+["ExcludePlayer"] = false,
+["ShowDefensives"] = true,
 ["ShowImportant"] = true,
 ["Grow"] = "CENTER",
-["ExcludePlayer"] = false,
+["Offset"] = {
+["Y"] = 0,
+["X"] = 0,
+},
 ["Icons"] = {
 ["MaxIcons"] = 1,
 ["Glow"] = true,
+["ColorByDispelType"] = true,
 ["ReverseCooldown"] = true,
 ["Size"] = 40,
 },
-["ShowDefensives"] = true,
+["ShowCC"] = true,
+},
 },
 ["NameplatesModule"] = {
 ["Enabled"] = {
@@ -30,6 +52,7 @@ MiniCCDB = {
 ["PvE"] = true,
 ["World"] = true,
 },
+["ScaleWithNameplate"] = false,
 ["Friendly"] = {
 ["Combined"] = {
 ["Grow"] = "RIGHT",
@@ -136,10 +159,10 @@ MiniCCDB = {
 },
 ["Grow"] = "CENTER",
 ["Icons"] = {
-["Glow"] = true,
+["Glow"] = false,
 ["Count"] = 3,
-["ReverseCooldown"] = true,
-["ColorByDispelType"] = true,
+["ReverseCooldown"] = false,
+["ColorByDispelType"] = false,
 ["Size"] = 19,
 },
 ["Offset"] = {
@@ -149,7 +172,7 @@ MiniCCDB = {
 },
 ["CCModule"] = {
 ["Enabled"] = {
-["BattleGrounds"] = true,
+["BattleGrounds"] = false,
 ["Arena"] = true,
 ["PvE"] = true,
 ["World"] = true,
@@ -158,9 +181,9 @@ MiniCCDB = {
 ["Grow"] = "CENTER",
 ["ExcludePlayer"] = false,
 ["Icons"] = {
-["Glow"] = true,
-["ColorByDispelType"] = true,
-["ReverseCooldown"] = true,
+["Glow"] = false,
+["ColorByDispelType"] = false,
+["ReverseCooldown"] = false,
 ["Count"] = 3,
 ["Size"] = 32,
 },
@@ -171,7 +194,7 @@ MiniCCDB = {
 },
 ["Default"] = {
 ["Grow"] = "RIGHT",
-["ExcludePlayer"] = false,
+["ExcludePlayer"] = true,
 ["Icons"] = {
 ["Glow"] = true,
 ["ColorByDispelType"] = true,
@@ -191,6 +214,54 @@ MiniCCDB = {
 },
 ["ReverseCooldown"] = false,
 },
+["AlertsModule"] = {
+["Offset"] = {
+["Y"] = -100,
+["X"] = 0,
+},
+["RelativeTo"] = "UIParent",
+["Point"] = "CENTER",
+["Icons"] = {
+["Enabled"] = true,
+["Glow"] = true,
+["MaxIcons"] = 8,
+["ReverseCooldown"] = false,
+["ColorByClass"] = true,
+["Size"] = 58,
+},
+["Enabled"] = {
+["BattleGrounds"] = false,
+["Arena"] = true,
+["PvE"] = false,
+["World"] = false,
+},
+["RelativePoint"] = "TOP",
+["TTS"] = {
+["VoiceID"] = 0,
+["Volume"] = 100,
+["Important"] = {
+["Enabled"] = false,
+},
+["SpeechRate"] = 0,
+["Defensive"] = {
+["Enabled"] = false,
+},
+},
+["IncludeDefensives"] = true,
+["Sound"] = {
+["Defensive"] = {
+["Enabled"] = false,
+["File"] = "AlertToastWarm.ogg",
+["Channel"] = "Master",
+},
+["Important"] = {
+["Enabled"] = false,
+["File"] = "AirHorn.ogg",
+["Channel"] = "Master",
+},
+},
+["TargetFocusOnly"] = false,
+},
 ["PrecogGuesserModule"] = {
 ["Enabled"] = {
 ["Always"] = true,
@@ -207,53 +278,6 @@ MiniCCDB = {
 ["Y"] = 70,
 ["X"] = 0,
 },
-},
-["AlertsModule"] = {
-["Offset"] = {
-["Y"] = -100,
-["X"] = 0,
-},
-["RelativeTo"] = "UIParent",
-["Point"] = "CENTER",
-["Icons"] = {
-["Enabled"] = true,
-["Glow"] = true,
-["MaxIcons"] = 8,
-["ReverseCooldown"] = false,
-["ColorByClass"] = true,
-["Size"] = 58,
-},
-["IncludeBigDefensives"] = true,
-["RelativePoint"] = "TOP",
-["TTS"] = {
-["Defensive"] = {
-["Enabled"] = false,
-},
-["Important"] = {
-["Enabled"] = false,
-},
-["SpeechRate"] = 0,
-["Volume"] = 100,
-},
-["Enabled"] = {
-["BattleGrounds"] = false,
-["Arena"] = false,
-["PvE"] = false,
-["World"] = false,
-},
-["Sound"] = {
-["Defensive"] = {
-["Enabled"] = false,
-["File"] = "AlertToastWarm.ogg",
-["Channel"] = "Master",
-},
-["Important"] = {
-["Enabled"] = false,
-["File"] = "AirHorn.ogg",
-["Channel"] = "Master",
-},
-},
-["TargetFocusOnly"] = false,
 },
 ["KickTimerModule"] = {
 ["Offset"] = {
@@ -328,7 +352,7 @@ MiniCCDB = {
 },
 },
 },
-["Version"] = 28,
+["Version"] = 33,
 ["NotifiedChanges"] = true,
 ["IconSpacing"] = 2,
 ["WhatsNew"] = {

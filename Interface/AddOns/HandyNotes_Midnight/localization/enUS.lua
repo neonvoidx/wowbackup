@@ -98,6 +98,12 @@ L['spiritpaw_marathon_note'] = 'Speak with {npc:258938}, then pick up the nearby
 L['options_icons_gnome_alone'] = '{achievement:62200}'
 L['options_icons_gnome_alone_desc'] = 'Display the locations for the {achievement:62200} achievement.'
 
+L['abandoned_ritual_skull'] = 'Abandoned Ritual Skull'
+
+L['options_icons_put_a_pin_in_it'] = '{achievement:62199}'
+L['options_icons_put_a_pin_in_it_desc'] = 'Display the locations for the {achievement:62199} achievement.'
+L['kalika_note'] = 'Speak with {npc:258884}, then interact with the {object:Forgotten Button} behind the nearby {object:Jade Statue}.'
+
 -------------------------------------------------------------------------------
 ---------------------------------- ARCANTINA ----------------------------------
 -------------------------------------------------------------------------------
@@ -110,3 +116,5 @@ L['share_a_drink_note'] = 'Purchase {item:251039} from {npc:250495} in the Arcan
 
 L['sturdy_chest'] = 'Sturdy Chest'
 L['sturdy_chest_suffix'] = 'Sturdy Chest found'
+
+L['gulf_of_memory_chest_note'] = 'Walk up the roots of the tree to reach the treasure.'

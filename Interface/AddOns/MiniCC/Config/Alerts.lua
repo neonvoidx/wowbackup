@@ -5,7 +5,7 @@ local L = addon.L
 local verticalSpacing = mini.VerticalSpacing
 local horizontalSpacing = mini.HorizontalSpacing
 local columns = 4
-local columnWidth = mini:ColumnWidth(columns, 0, 0)
+local columnWidth
 local config = addon.Config
 
 ---@class AlertsConfig
@@ -16,6 +16,7 @@ config.Alerts = M
 ---@param panel table
 ---@param options AlertsModuleOptions
 function M:Build(panel, options)
+	columnWidth = mini:ColumnWidth(columns, 0, 0)
 	local db = mini:GetSavedVars()
 
 	local lines = mini:TextBlock({
@@ -29,7 +30,7 @@ function M:Build(panel, options)
 
 	local enabledDivider = mini:Divider({
 		Parent = panel,
-		Text = L["Enable in:"],
+		Text = L["Enable in"],
 	})
 	enabledDivider:SetPoint("LEFT", panel, "LEFT")
 	enabledDivider:SetPoint("RIGHT", panel, "RIGHT")
@@ -100,7 +101,7 @@ function M:Build(panel, options)
 
 	local settingsDivider = mini:Divider({
 		Parent = panel,
-		Text = L["Settings:"],
+		Text = L["Settings"],
 	})
 	settingsDivider:SetPoint("LEFT", panel, "LEFT")
 	settingsDivider:SetPoint("RIGHT", panel, "RIGHT")
@@ -126,11 +127,10 @@ function M:Build(panel, options)
 		LabelText = L["Include Defensives"],
 		Tooltip = L["Includes defensives in the alerts."],
 		GetValue = function()
-			-- TODO: refactor this to just "IncludeDefensives" as it also includes externals
-			return options.IncludeBigDefensives
+			return options.IncludeDefensives
 		end,
 		SetValue = function(value)
-			options.IncludeBigDefensives = value
+			options.IncludeDefensives = value
 			config:Apply()
 		end,
 	})
@@ -298,7 +298,8 @@ function M:Build(panel, options)
 		end,
 	})
 
-	soundDefensiveChk:SetPoint("TOPLEFT", soundImportantChk, "BOTTOMLEFT", 0, -verticalSpacing * 2)
+	soundDefensiveChk:SetPoint("LEFT", panel, "LEFT", columnWidth * 2, 0)
+	soundDefensiveChk:SetPoint("TOP", soundImportantChk, "TOP", 0, 0)
 
 	local soundDefensiveDropdown = mini:Dropdown({
 		Parent = panel,
@@ -318,7 +319,7 @@ function M:Build(panel, options)
 		end,
 	})
 
-	soundDefensiveDropdown:SetPoint("LEFT", panel, "LEFT", columnWidth, 0)
+	soundDefensiveDropdown:SetPoint("LEFT", panel, "LEFT", columnWidth * 3, 0)
 	soundDefensiveDropdown:SetPoint("TOP", soundDefensiveChk, "TOP", 0, -4)
 	soundDefensiveDropdown:SetWidth(200)
 
@@ -329,13 +330,15 @@ function M:Build(panel, options)
 	})
 	ttsDivider:SetPoint("LEFT", panel, "LEFT")
 	ttsDivider:SetPoint("RIGHT", panel, "RIGHT")
-	ttsDivider:SetPoint("TOP", soundDefensiveChk, "BOTTOM", 0, -verticalSpacing * 2)
+	ttsDivider:SetPoint("TOP", soundImportantChk, "BOTTOM", 0, -verticalSpacing * 2)
 
 	local ttsIntro = mini:TextBlock({
 		Parent = panel,
 		Lines = {
 			L["Announce spell names using text-to-speech when they are cast."],
 			L["You must choose a voice in your language for this to work."],
+			L["These voices come from your installed system language packs and you can add more through your Windows settings."],
+			L["Note that some voices don't perform well, for example Microsoft Hazel is bad and Microsoft Zira is good."],
 		},
 	})
 
@@ -375,16 +378,10 @@ function M:Build(panel, options)
 		voiceNameById[fallback] = tostring(fallback)
 	end
 
-	local voiceLabel = mini:TextLine({
-		Parent = panel,
-		Text = L["Voice"],
-	})
-	voiceLabel:SetPoint("TOPLEFT", ttsIntro, "BOTTOMLEFT", 0, -verticalSpacing)
-
 	local voiceDropdown = mini:Dropdown({
 		Parent = panel,
 		Items = voiceItems,
-		Width = 240,
+		Width = 400,
 		GetValue = function()
 			EnsureTtsOptions()
 			return options.TTS.VoiceID or C_TTSSettings.GetVoiceOptionID(0)
@@ -400,9 +397,8 @@ function M:Build(panel, options)
 			return voiceNameById[value] or tostring(value)
 		end,
 	})
-	voiceDropdown:SetPoint("LEFT", panel, "LEFT", columnWidth, 0)
-	voiceDropdown:SetPoint("TOP", voiceLabel, "TOP", 0, 8)
-	voiceDropdown:SetWidth(200)
+	voiceDropdown:SetPoint("TOPLEFT", ttsIntro, "BOTTOMLEFT", 0, -verticalSpacing)
+	voiceDropdown:SetWidth(400)
 
 	local announceImportantSpellsChk = mini:Checkbox({
 		Parent = panel,
@@ -429,7 +425,7 @@ function M:Build(panel, options)
 		end,
 	})
 
-	announceImportantSpellsChk:SetPoint("TOPLEFT", voiceLabel, "BOTTOMLEFT", 0, -verticalSpacing)
+	announceImportantSpellsChk:SetPoint("TOPLEFT", voiceDropdown, "BOTTOMLEFT", 0, -verticalSpacing)
 
 	local announceDefensiveSpellsChk = mini:Checkbox({
 		Parent = panel,
@@ -503,7 +499,8 @@ function M:Build(panel, options)
 		end,
 	})
 
-	speechRateSlider.Slider:SetPoint("TOPLEFT", volumeSlider.Slider, "BOTTOMLEFT", 0, -verticalSpacing * 3)
+	speechRateSlider.Slider:SetPoint("LEFT", volumeSlider.Slider, "RIGHT", horizontalSpacing, 0)
+	speechRateSlider.Slider:SetPoint("TOP", volumeSlider.Slider, "TOP", 0, 0)
 
 	local miscDivider = mini:Divider({
 		Parent = panel,
@@ -511,14 +508,14 @@ function M:Build(panel, options)
 	})
 	miscDivider:SetPoint("LEFT", panel, "LEFT")
 	miscDivider:SetPoint("RIGHT", panel, "RIGHT")
-	miscDivider:SetPoint("TOP", speechRateSlider.Slider, "BOTTOM", 0, -verticalSpacing * 2)
+	miscDivider:SetPoint("TOP", volumeSlider.Slider, "BOTTOM", 0, -verticalSpacing * 2)
 
 	local targetFocusOnlyChk = mini:Checkbox({
 		Parent = panel,
 		LabelText = L["Target/Focus Only"],
 		Tooltip = L["Only show alerts for your target and focus in battlegrounds and the open world."],
 		GetValue = function()
-			return options.TargetFocusOnly ~= false
+			return options.TargetFocusOnly
 		end,
 		SetValue = function(value)
 			options.TargetFocusOnly = value

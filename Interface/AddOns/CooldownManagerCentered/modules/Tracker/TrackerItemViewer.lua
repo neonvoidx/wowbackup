@@ -19,6 +19,7 @@ local DEFAULT_FONT_PATH = "Fonts\\FRIZQT__.TTF"
 
 local ORIENTATION_ANCHORS = {
     ["Horizontal Right"] = { primary = "LEFT", offsetX = 1, offsetY = 0 },
+    ["Horizontal Center"] = { primary = "CENTER", offsetX = 1, offsetY = 0 },
     ["Horizontal Left"] = { primary = "RIGHT", offsetX = -1, offsetY = 0 },
     ["Vertical Down"] = { primary = "TOP", offsetX = 0, offsetY = -1 },
     ["Vertical Up"] = { primary = "BOTTOM", offsetX = 0, offsetY = 1 },
@@ -224,12 +225,6 @@ local function ApplyStackFontToFrame(frame)
         frame.count:ClearAllPoints()
         frame.count:SetPoint(anchor, frame, anchor, offsetX, offsetY)
     end
-
-    if frame.charges then
-        frame.charges:SetFont(fontPath, fontSize, fontFlags)
-        frame.charges:ClearAllPoints()
-        frame.charges:SetPoint(anchor, frame, anchor, offsetX, offsetY)
-    end
 end
 
 local ItemViewerFrame = {}
@@ -279,13 +274,6 @@ function ItemViewerFrame:Initialize()
         count:SetShadowOffset(1, -1)
         count:SetShadowColor(0, 0, 0, 1)
         frame.count = count
-
-        local charges = overlay:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
-        charges:SetFont(STANDARD_TEXT_FONT, 14, "OUTLINE")
-        charges:SetPoint("CENTER", frame, "TOP", 0, -1)
-        charges:SetShadowOffset(1, -1)
-        charges:SetShadowColor(0, 0, 0, 1)
-        frame.charges = charges
     end
     ApplyStyleToFrame(frame)
     ApplyStackFontToFrame(frame)
@@ -313,6 +301,24 @@ function ItemViewerFrame:UpdateEntry(entry)
     frame._CMCTracker_EntryKind = entry.kind
     frame._CMCTracker_EntryID = entry.id
 
+    if entry.kind == "item" then
+        local _spellName, spellID = C_Item.GetItemSpell(entry.id)
+        frame.itemID = entry.id
+        if spellID then
+            frame.spellID = spellID
+        end
+    elseif entry.kind == "wildcardSlots" then
+        local itemID = ItemsData:GetWildcardSlotItemID(entry.id)
+        if itemID then
+            frame.itemID = itemID
+            local _spellName, spellID = C_Item.GetItemSpell(itemID)
+            if spellID then
+                frame.spellID = spellID
+            end
+        end
+    elseif entry.kind == "spell" then
+        frame.spellID = entry.id
+    end
     ItemVisuals:ApplyEntryIcon(frame, entry.kind, entry.id)
     ItemVisuals:UpdateEntryCooldown(frame, entry.kind, entry.id)
     ApplyStyleToFrame(frame)
@@ -371,15 +377,13 @@ function TrackerInstance:UpdateIconPosition(frame, visibleIndex)
     local orientation = self:GetOrientation()
     local anchorData = ORIENTATION_ANCHORS[orientation] or ORIENTATION_ANCHORS["Horizontal Right"]
 
+    local anchorPoint = anchorData.primary
+    if anchorPoint == "CENTER" then
+        anchorPoint = "LEFT"
+    end
     frame:ClearAllPoints()
     local offset = (visibleIndex - 1) * (iconSize + padding)
-    frame:SetPoint(
-        anchorData.primary,
-        self.anchor,
-        anchorData.primary,
-        anchorData.offsetX * offset,
-        anchorData.offsetY * offset
-    )
+    frame:SetPoint(anchorPoint, self.anchor, anchorPoint, anchorData.offsetX * offset, anchorData.offsetY * offset)
 end
 
 function TrackerInstance:UpdateCooldowns()
@@ -439,7 +443,9 @@ function TrackerInstance:RefreshEntries()
         self.iconFrames[i]:UpdateEntry(nil)
     end
 
-    local isHorizontal = orientation == "Horizontal Right" or orientation == "Horizontal Left"
+    local isHorizontal = orientation == "Horizontal Right"
+        or orientation == "Horizontal Left"
+        or orientation == "Horizontal Center"
     local totalSize = count > 0 and (count * iconSize + (count - 1) * padding) or iconSize
     if isHorizontal then
         self.anchor:SetSize(totalSize, iconSize)
@@ -448,6 +454,7 @@ function TrackerInstance:RefreshEntries()
     end
 
     self.anchor:SetShown(count > 0 or self.anchor._CMCTracker_ForceShow)
+    ns.Keybinds:UpdateAllKeybinds()
 end
 
 function TrackerInstance:RefreshStyling()
@@ -578,6 +585,9 @@ function TrackerInstance:Create()
         elseif anchorPrimary == "BOTTOM" then
             newX = centerX + (screenWidth * factor.x)
             newY = centerY - frameHeight / 2
+        elseif anchorPrimary == "CENTER" then
+            newX = centerX - screenWidth / 2
+            newY = centerY - screenHeight / 2
         end
 
         ns.db.profile.editMode[configKey].point = anchorPrimary
@@ -638,6 +648,7 @@ function TrackerInstance:Create()
             end,
             values = {
                 { text = "Horizontal Right" },
+                { text = "Horizontal Center" },
                 { text = "Horizontal Left" },
                 { text = "Vertical Down" },
                 { text = "Vertical Up" },

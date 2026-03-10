@@ -356,7 +356,7 @@ map.nodes[31504451] = Treasure({
     quest = 93500,
     rewards = {
         Achievement({id = 62126, criteria = 111872}),
-        Pet({item = 266076, id = 4881})
+        Pet({item = 266076, id = 4881}) -- Nether Siphoner
     }
 }) -- Quivering Egg
 
@@ -489,7 +489,11 @@ map.nodes[37815497] = Telescope({
 
 slr.nodes[41964062] = PT.Alchemy({quest = 89112, id = 238533, parent = map.id}) -- Vial of Voidstorm Oddities
 map.nodes[32794329] = PT.Alchemy({quest = 89118, id = 238539}) -- Failed Experiment
-map.nodes[30516899] = PT.Blacksmithing({quest = 89181, id = 238544}) -- Voidstorm Defense Spear
+slr.nodes[30516899] = PT.Blacksmithing({
+    quest = 89181,
+    id = 238544,
+    parent = map.id
+}) -- Voidstorm Defense Spear
 map.nodes[35495882] = PT.Enchanting({quest = 89102, id = 238550}) -- Pure Void Crystal
 slr.nodes[54135101] = PT.Engineering({
     quest = 89137,
@@ -619,7 +623,9 @@ local STORMARION_ASSAULT = {
     ['stormarion_assault'] = {
         Achievement({id = 61912, criteria = {111329, 111330, 111331, 111332}}), -- Anchoring the Defense
         Achievement({id = 61913, criteria = {111335, 111334, 111333}}), -- A Singular Problem
-        Achievement({id = 61922, criteria = {111379}}) -- Ninety Percent is Good Enough
+        Achievement({id = 61922, criteria = {111379}}), -- Ninety Percent is Good Enough
+        Spacer(), Pet({item = 265030, id = 4983}), -- Kai
+        Mount({item = 257180, id = 2767}) -- Contained Stormarion Defender
     }
 }
 local STORMARION_ASSAULT_AREA_POIS = {

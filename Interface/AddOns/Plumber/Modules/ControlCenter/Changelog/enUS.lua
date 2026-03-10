@@ -10,7 +10,83 @@ local L = addon.L;
 local changelogs = addon.ControlCenter.changelogs;
 
 
+changelogs[10809] = {
+    {
+        type = "date",
+        versionText = "1.8.9",
+        timestamp = 1773000000,
+    },
+
+    {
+        type = "h1",
+        text = L["ModuleName TooltipRichSoil"],
+        dbKey = "TooltipRichSoil",
+    },
+
+    {
+        type = "Checkbox",
+        dbKey = "TooltipRichSoil",
+    },
+
+    {
+        type = "p",
+        bullet = true,
+        text = "For Herbalists: Show Resilient Seed buttons when double-clicking on Rich Soil.",
+    },
+
+    {
+        type = "img",
+        dbKey = "TooltipRichSoil",
+    },
+
+    {
+        type = "br",
+    },
+
+    {
+        type = "h1",
+        text = MISCELLANEOUS,
+    },
+
+    {
+        type = "p",
+        bullet = true,
+        text = "Nameplate: Soft Target: Show the number of owned Latent Arcana for Misplaced Tomes.",
+    },
+};
+
+
 changelogs[10808] = {
+    {
+        type = "date",
+        versionText = "1.8.8 e",
+        timestamp = 1772900000,
+    },
+
+    {
+        type = "h1",
+        text = "Added",
+    },
+
+    {
+        type = "p",
+        bullet = true,
+        text = "Expansion Summary: The Activities tab now supports Saltheril's Soiree and Prey.",
+    },
+
+    {
+        type = "p",
+        bullet = true,
+        text = "Choice UI Item Cost: Shows the number of owned Latent Arcana on the \"Runic Shield Charge\" UI.",
+    },
+
+    {
+        type = "br",
+    },
+    {
+        type = "br",
+    },
+
     {
         type = "date",
         versionText = "1.8.8 c-d",

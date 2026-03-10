@@ -853,6 +853,7 @@ L["currency-2917"] = "Позолоченный";
 L["Scenario Delves"] = "Вылазка";
 L["GameObject Door"] = "Дверь";
 L["Delve Chest 1 Rare"] = "Богатый сундук";   --We'll use the GameObjectID once it shows up in the database
+L["GameObject Rich Soil"] = "Плодородная земля";
 
 L["Season Maximum Colon"] = "Максимум за сезон:";
 L["Item Changed"] = "в предмет";   --CHANGED_OWN_ITEM
@@ -862,6 +863,9 @@ L["Restored Coffer Key"] = "Отреставрированный ключ от �
 L["Coffer Key Shard"] = "Осколок ключа от сундука";
 L["Epoch Mementos"] = "Сокровище эпох";
 L["Timeless Scrolls"] = "Вневременный свиток"; --item: 217605
+L["QuestName Runestone"] = "Укрепление рунических камней";    --4 Mutually exclusive quests: 90575
+L["QuestName HarandarRelic"] = "Легенды хараниров";
+L["Prey System"] = "Добыча";
 
 L["CONFIRM_PURCHASE_NONREFUNDABLE_ITEM"] = "Вы действительно хотите обменять %s на следующий предмет?\n\n|cffff2020Покупка невозвратная.|r\n %s";  --Base: CONFIRM_PURCHASE_NONREFUNDABLE_ITEM Change the warning's color and added a new line.
 
