@@ -249,12 +249,12 @@ MidnightRoutineDB = {
 ["vault_w_progress"] = 0,
 ["vault_w_slots"] = 0,
 ["vault_r_slots"] = 0,
-["vault_d_slots"] = 0,
 ["vault_d_max_level"] = 0,
-["vault_d_progress"] = 0,
+["vault_d_slots"] = 0,
+["vault_r_progress"] = 0,
 ["vault_r_diff_id"] = 14,
 ["vault_world"] = 0,
-["vault_r_progress"] = 0,
+["vault_d_progress"] = 0,
 },
 ["currencies"] = {
 ["shards_wallet"] = 0,
@@ -367,11 +367,11 @@ MidnightRoutineDB = {
 },
 ["raresKills"] = {
 ["93550"] = {
-["w"] = 1773136780,
+["w"] = 1773136805,
 ["d"] = 20523,
 },
 ["93953"] = {
-["w"] = 1773136780,
+["w"] = 1773136805,
 ["d"] = 20523,
 },
 },

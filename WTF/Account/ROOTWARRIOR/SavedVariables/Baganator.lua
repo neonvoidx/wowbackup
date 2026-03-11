@@ -2076,8 +2076,7 @@ BAGANATOR_CONFIG = {
 ["44"] = {
 ["priority"] = 0,
 },
-["195"] = {
-["showGroupPrefix"] = true,
+["17"] = {
 ["priority"] = 0,
 },
 ["189"] = {
@@ -2142,7 +2141,7 @@ BAGANATOR_CONFIG = {
 ["144"] = {
 ["priority"] = 0,
 },
-["191"] = {
+["214"] = {
 ["priority"] = 0,
 },
 ["101"] = {
@@ -2240,15 +2239,15 @@ BAGANATOR_CONFIG = {
 ["194"] = {
 ["priority"] = 0,
 },
-["17"] = {
-["priority"] = 0,
+["default_profession"] = {
+["priority"] = -1,
 },
 ["177"] = {
 ["showGroupPrefix"] = true,
 ["priority"] = 0,
 },
-["default_profession"] = {
-["priority"] = -1,
+["191"] = {
+["priority"] = 0,
 },
 ["158"] = {
 ["priority"] = 1,
@@ -2344,7 +2343,8 @@ BAGANATOR_CONFIG = {
 ["priority"] = -1,
 ["showGroupPrefix"] = false,
 },
-["214"] = {
+["195"] = {
+["showGroupPrefix"] = true,
 ["priority"] = 0,
 },
 ["178"] = {

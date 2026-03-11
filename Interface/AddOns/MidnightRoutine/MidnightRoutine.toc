@@ -3,7 +3,7 @@
 ## Notes: Auto-tracking quest log style todo list for Midnight
 ## Notes-zhCN: 自动追踪至暗之夜任务进度及其他待办日志
 ## Author: Azro
-## Version: v12.0.37
+## Version: v12.0.39
 ## SavedVariables: MidnightRoutineDB
 ## OptionalDeps: Blizzard_Professions
 ## IconTexture: Interface\AddOns\MidnightRoutine\Media\Icon

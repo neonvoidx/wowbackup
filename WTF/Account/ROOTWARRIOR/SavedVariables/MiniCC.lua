@@ -27,7 +27,7 @@ MiniCCDB = {
 ["ShowCC"] = false,
 },
 ["Default"] = {
-["ExcludePlayer"] = false,
+["ExcludePlayer"] = true,
 ["ShowDefensives"] = true,
 ["ShowImportant"] = true,
 ["Grow"] = "CENTER",
@@ -36,13 +36,13 @@ MiniCCDB = {
 ["X"] = 0,
 },
 ["Icons"] = {
-["MaxIcons"] = 1,
+["MaxIcons"] = 2,
 ["Glow"] = true,
 ["ColorByDispelType"] = true,
 ["ReverseCooldown"] = true,
-["Size"] = 40,
+["Size"] = 23,
 },
-["ShowCC"] = true,
+["ShowCC"] = false,
 },
 },
 ["NameplatesModule"] = {
@@ -120,22 +120,22 @@ MiniCCDB = {
 ["Important"] = {
 ["Enabled"] = true,
 ["Offset"] = {
-["Y"] = 3,
-["X"] = 6,
+["Y"] = -5,
+["X"] = 8,
 },
 ["Icons"] = {
 ["MaxIcons"] = 5,
 ["Glow"] = true,
 ["ColorByCategory"] = true,
 ["ReverseCooldown"] = true,
-["Size"] = 28,
+["Size"] = 30,
 },
 ["Grow"] = "LEFT",
 },
 ["CC"] = {
 ["Enabled"] = true,
 ["Offset"] = {
-["Y"] = 3,
+["Y"] = -4,
 ["X"] = -8,
 },
 ["Icons"] = {
@@ -185,7 +185,7 @@ MiniCCDB = {
 ["ColorByDispelType"] = false,
 ["ReverseCooldown"] = false,
 ["Count"] = 3,
-["Size"] = 32,
+["Size"] = 26,
 },
 ["Offset"] = {
 ["Y"] = 0,
@@ -200,7 +200,7 @@ MiniCCDB = {
 ["ColorByDispelType"] = true,
 ["ReverseCooldown"] = true,
 ["Count"] = 3,
-["Size"] = 32,
+["Size"] = 40,
 },
 ["Offset"] = {
 ["Y"] = 0,
@@ -210,9 +210,9 @@ MiniCCDB = {
 },
 ["PortraitModule"] = {
 ["Enabled"] = {
-["Always"] = false,
+["Always"] = true,
 },
-["ReverseCooldown"] = false,
+["ReverseCooldown"] = true,
 },
 ["PrecogGuesserModule"] = {
 ["Enabled"] = {
@@ -224,7 +224,7 @@ MiniCCDB = {
 ["Icons"] = {
 ["Glow"] = true,
 ["ReverseCooldown"] = true,
-["Size"] = 70,
+["Size"] = 55,
 },
 ["Offset"] = {
 ["Y"] = 70,
@@ -281,8 +281,8 @@ MiniCCDB = {
 },
 ["KickTimerModule"] = {
 ["Offset"] = {
-["Y"] = -300,
-["X"] = 0,
+["Y"] = -111.7323150634766,
+["X"] = -0.5333529114723206,
 },
 ["RelativeTo"] = "UIParent",
 ["Point"] = "CENTER",
@@ -290,12 +290,12 @@ MiniCCDB = {
 ["Icons"] = {
 ["Glow"] = false,
 ["ReverseCooldown"] = true,
-["Size"] = 50,
+["Size"] = 24,
 },
 ["Enabled"] = {
 ["Always"] = false,
-["Caster"] = false,
-["Healer"] = false,
+["Caster"] = true,
+["Healer"] = true,
 },
 },
 ["TrinketsModule"] = {
@@ -309,13 +309,13 @@ MiniCCDB = {
 ["RelativePoint"] = "LEFT",
 ["Offset"] = {
 ["Y"] = 0,
-["X"] = -2,
+["X"] = -1,
 },
 ["Icons"] = {
 ["ReverseCooldown"] = false,
 ["Glow"] = false,
 ["ShowText"] = true,
-["Size"] = 50,
+["Size"] = 40,
 },
 ["ExcludePlayer"] = false,
 },

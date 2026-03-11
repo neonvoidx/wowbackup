@@ -1896,7 +1896,7 @@ BetterBlizzPlatesDB = {
 ["nameplateEnemyPlayerAuraDisplay"] = {
 ["1"] = false,
 ["3"] = false,
-["2"] = false,
+["2"] = true,
 },
 ["nameplateSimplifiedTypes"] = {
 ["1"] = true,

@@ -17,7 +17,6 @@ CooldownManagerCenteredDB = {
 ["cooldownManager_squareIconsZoom_BuffIcons"] = 0,
 ["cooldownManager_keybindFontName"] = "1",
 ["cooldownManager_squareIconsZoom_Essential"] = 0,
-["cooldownManager_alignBuffBars_growFromDirection"] = "TOP",
 ["cooldownManager_keybindFontSize_Essential"] = 12,
 ["cooldownManager_showKeybinds_Essential"] = true,
 ["cooldownManager_keybindFontSize_Utility"] = 14,

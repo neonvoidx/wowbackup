@@ -1,0 +1,26 @@
+
+FontMagicDB = {
+["minimapAngle"] = -165.8080115641514,
+["minimapHide"] = false,
+["combatOverrides"] = {
+["combatDamage"] = true,
+["lowManaHealth"] = false,
+},
+["windowPos"] = {
+["left"] = 557.9998168945312,
+["top"] = 896.6665649414062,
+},
+["selectedFont"] = "Popular/Roboto-Bold.ttf",
+["extraCombatOverrides"] = {
+},
+["combatTextOutlineMode"] = "NONE",
+["__fmPopularFolderMigrationDone"] = true,
+["favorites"] = {
+},
+["showExtraCombatToggles"] = false,
+["__fmDebugCombatText"] = false,
+["incomingOverrides"] = {
+},
+["floatingTextGravity"] = 0.5,
+["floatingTextFadeDuration"] = 1,
+}

@@ -365,16 +365,20 @@ local function ApplyCooldownSettings(cdmFrame)
 
     if shouldShowAuras and cdmFrame.wasSetFromAura then
         cdmFrame.Cooldown:SetReverse(CooldownStyle.GetReverseAuraSwipe(baseSpellId))
-        local _r, _g, _b, _a = GetCustomActiveSwipe()
-        cdmFrame.Cooldown:SetSwipeColor(_r, _g, _b, _a)
+        if ns.db.profile.cooldownManager_customSwipeColor_enabled then
+            local _r, _g, _b, _a = GetCustomActiveSwipe()
+            cdmFrame.Cooldown:SetSwipeColor(_r, _g, _b, _a)
+        end
         return
     end
     local shouldHideAuras = not shouldShowAuras and cdmFrame.wasSetFromAura
 
     cdmFrame.Cooldown:SetReverse(false)
 
-    local _r, _g, _b, _a = GetCustomGCDSwipe()
-    cdmFrame.Cooldown:SetSwipeColor(_r, _g, _b, _a)
+    if ns.db.profile.cooldownManager_customSwipeColor_enabled then
+        local _r, _g, _b, _a = GetCustomGCDSwipe()
+        cdmFrame.Cooldown:SetSwipeColor(_r, _g, _b, _a)
+    end
 
     local cooldown = C_Spell.GetSpellCooldown(spellID)
 
@@ -513,20 +517,21 @@ function CooldownStyle:Initialize()
     end
 
     Menu.ModifyMenu("MENU_COOLDOWN_SETTINGS_ITEM", function(owner, rootDescription, contextData)
-        local cooldownID = owner.cooldownID
-        local cdInfo = C_CooldownViewer.GetCooldownViewerCooldownInfo(cooldownID)
+        local cdInfo = owner:GetCooldownInfo()
         local category = cdInfo.category
         local spellID = owner:GetBaseSpellID()
 
         rootDescription:CreateDivider()
         rootDescription:CreateTitle(MENU_TITLE)
 
-        rootDescription:CreateCheckbox("Always Show Cooldown Edge", function()
-            return CooldownStyle.GetAlwaysShowCooldownEdge(spellID)
-        end, function()
-            CooldownStyle.ToggleAlwaysShowCooldownEdge(spellID)
-            RefreshCooldownManagerFrames()
-        end)
+        if category ~= 3 then
+            rootDescription:CreateCheckbox("Always Show Cooldown Edge", function()
+                return CooldownStyle.GetAlwaysShowCooldownEdge(spellID)
+            end, function()
+                CooldownStyle.ToggleAlwaysShowCooldownEdge(spellID)
+                RefreshCooldownManagerFrames()
+            end)
+        end
 
         --[[category:
             HiddenAura: integer = -2,
@@ -537,7 +542,7 @@ function CooldownStyle:Initialize()
             TrackedBar: integer = 3,
         ]]
         if cdInfo.hasAura or cdInfo.selfAura then
-            if category == 0 or category == 1 then
+            if category == 0 or category == 1 or category == -1 then
                 rootDescription:CreateCheckbox("Hide Aura", function()
                     return not CooldownStyle.GetShowAuras(spellID)
                 end, function()
@@ -546,7 +551,7 @@ function CooldownStyle:Initialize()
                 end)
             end
 
-            if category == 0 or category == 1 then
+            if category == 0 or category == 1 or category == -1 then
                 rootDescription:CreateCheckbox("Reverse Aura Swipe", function()
                     return CooldownStyle.GetReverseAuraSwipe(spellID)
                 end, function()
@@ -556,7 +561,7 @@ function CooldownStyle:Initialize()
             end
         end
 
-        if category == 0 or category == 1 then
+        if category == 0 or category == 1 or category == -1 then
             rootDescription:CreateCheckbox("Disable Proc Glow", function()
                 return CooldownStyle.GetDisableProcsGlow(spellID)
             end, function()
@@ -579,7 +584,7 @@ function CooldownStyle:Initialize()
             end)
         end
 
-        if category == 2 then
+        if category == 2 or category == -2 then
             rootDescription:CreateCheckbox("(Experimental) Always glow", function()
                 return CooldownStyle.GetAlwaysGlow(spellID)
             end, function()

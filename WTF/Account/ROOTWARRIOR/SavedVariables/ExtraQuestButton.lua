@@ -20,9 +20,9 @@ ExtraQuestButtonDB3 = {
 ["noCooldownText"] = false,
 ["trackingOnly"] = true,
 ["position"] = {
-["y"] = -184.1668701171875,
-["x"] = -394.9990844726563,
-["point"] = "CENTER",
+["y"] = 178.1667022705078,
+["x"] = -314.9987182617188,
+["point"] = "BOTTOM",
 },
 ["artworkStyle"] = "Ultraxxion",
 ["zoneOnly"] = false,

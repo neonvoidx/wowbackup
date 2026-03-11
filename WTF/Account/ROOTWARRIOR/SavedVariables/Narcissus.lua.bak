@@ -1054,7 +1054,7 @@ NarciAchievementOptions = {
 NarciStatisticsDB = {
 ["ScreenshotsTakenInNarcissus"] = 25,
 ["InstalledDate"] = 1722004177,
-["TimeSpentInNarcissus"] = 119286,
+["TimeSpentInNarcissus"] = 119342,
 ["QuestItems"] = {
 },
 ["AddOnActionForbidden"] = {
@@ -1226,7 +1226,7 @@ NarciCharacterProfiles = {
 ["name"] = "Stormclout",
 ["birth"] = 1757076761,
 ["serverID"] = 11,
-["lastVisit"] = 1773168387,
+["lastVisit"] = 1773242471,
 ["outfits"] = {
 {
 ["s"] = "285136,285144,285152,104602,195317,219414,104604,285132,285148,285140,285128,169069:-1:7521,94221",
