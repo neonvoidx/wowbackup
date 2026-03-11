@@ -1,7 +1,7 @@
 
 BugGrabberDB = {
+["session"] = 5324,
 ["lastSanitation"] = 3,
-["session"] = 5323,
 ["errors"] = {
 {
 ["message"] = "[ADDON_ACTION_BLOCKED] AddOn 'MiniCC' tried to call the protected function 'MiniCCConfigFrame:SetPropagateKeyboardInput()'.",
