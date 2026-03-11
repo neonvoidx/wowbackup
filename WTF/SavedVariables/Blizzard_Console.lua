@@ -3,514 +3,6 @@ Blizzard_Console_SavedVars = {
 ["version"] = 3,
 ["messageHistory"] = {
 {
-"Test CVar test_cameraOverShoulder has been set to 4.4875271766016 (default 0.000000)",
-0,
-},
-{
-"Test CVar test_cameraOverShoulder has been set to 4.5284419680527 (default 0.000000)",
-0,
-},
-{
-"Test CVar test_cameraOverShoulder has been set to 4.575667249543 (default 0.000000)",
-0,
-},
-{
-"Test CVar test_cameraOverShoulder has been set to 4.6223393262589 (default 0.000000)",
-0,
-},
-{
-"Test CVar test_cameraOverShoulder has been set to 4.661899377624 (default 0.000000)",
-0,
-},
-{
-"Test CVar test_cameraOverShoulder has been set to 4.7010453321236 (default 0.000000)",
-0,
-},
-{
-"Test CVar test_cameraOverShoulder has been set to 4.7397737125877 (default 0.000000)",
-0,
-},
-{
-"Test CVar test_cameraOverShoulder has been set to 4.7780810789374 (default 0.000000)",
-0,
-},
-{
-"Test CVar test_cameraDynamicPitch has been set to 0 (default 0.000000)",
-0,
-},
-{
-"Test CVar test_cameraOverShoulder has been set to 0 (default 0.000000)",
-0,
-},
-{
-"Test CVar test_cameraOverShoulder has been set to 4.7330493919727 (default 0.000000)",
-0,
-},
-{
-"Test CVar test_cameraOverShoulder has been set to 4.2836120457318 (default 0.000000)",
-0,
-},
-{
-"Test CVar test_cameraOverShoulder has been set to 4.1866756526299 (default 0.000000)",
-0,
-},
-{
-"Test CVar test_cameraOverShoulder has been set to 4.1271424858658 (default 0.000000)",
-0,
-},
-{
-"Test CVar test_cameraOverShoulder has been set to 4.0083939093626 (default 0.000000)",
-0,
-},
-{
-"Test CVar test_cameraOverShoulder has been set to 3.9344181721061 (default 0.000000)",
-0,
-},
-{
-"Test CVar test_cameraOverShoulder has been set to 3.8753865853315 (default 0.000000)",
-0,
-},
-{
-"Test CVar test_cameraOverShoulder has been set to 3.8238505619046 (default 0.000000)",
-0,
-},
-{
-"Test CVar test_cameraOverShoulder has been set to 3.7724299063244 (default 0.000000)",
-0,
-},
-{
-"Test CVar test_cameraOverShoulder has been set to 3.7211308354224 (default 0.000000)",
-0,
-},
-{
-"Test CVar test_cameraOverShoulder has been set to 3.6699595513303 (default 0.000000)",
-0,
-},
-{
-"Test CVar test_cameraOverShoulder has been set to 3.6043656213525 (default 0.000000)",
-0,
-},
-{
-"Test CVar test_cameraOverShoulder has been set to 3.5390062656679 (default 0.000000)",
-0,
-},
-{
-"Test CVar test_cameraOverShoulder has been set to 3.4378331680637 (default 0.000000)",
-0,
-},
-{
-"Test CVar test_cameraOverShoulder has been set to 3.3874866228414 (default 0.000000)",
-0,
-},
-{
-"Test CVar test_cameraOverShoulder has been set to 3.3301539342602 (default 0.000000)",
-0,
-},
-{
-"Test CVar test_cameraOverShoulder has been set to 3.2801750839585 (default 0.000000)",
-0,
-},
-{
-"Test CVar test_cameraOverShoulder has been set to 3.2303773326534 (default 0.000000)",
-0,
-},
-{
-"Test CVar test_cameraOverShoulder has been set to 3.1807667009649 (default 0.000000)",
-0,
-},
-{
-"Test CVar test_cameraOverShoulder has been set to 3.1313491868902 (default 0.000000)",
-0,
-},
-{
-"Test CVar test_cameraOverShoulder has been set to 3.0891495540085 (default 0.000000)",
-0,
-},
-{
-"Test CVar test_cameraOverShoulder has been set to 3.0401065198091 (default 0.000000)",
-0,
-},
-{
-"Test CVar test_cameraOverShoulder has been set to 2.9912736092423 (default 0.000000)",
-0,
-},
-{
-"Test CVar test_cameraOverShoulder has been set to 2.9357294343311 (default 0.000000)",
-0,
-},
-{
-"Test CVar test_cameraOverShoulder has been set to 2.8392324275176 (default 0.000000)",
-0,
-},
-{
-"Test CVar test_cameraOverShoulder has been set to 2.7776908361312 (default 0.000000)",
-0,
-},
-{
-"Test CVar test_cameraOverShoulder has been set to 2.7301009265636 (default 0.000000)",
-0,
-},
-{
-"Test CVar test_cameraOverShoulder has been set to 2.6827586207521 (default 0.000000)",
-0,
-},
-{
-"Test CVar test_cameraOverShoulder has been set to 2.6356696424499 (default 0.000000)",
-0,
-},
-{
-"Test CVar test_cameraOverShoulder has been set to 2.5955136062862 (default 0.000000)",
-0,
-},
-{
-"Test CVar test_cameraOverShoulder has been set to 2.5489101738442 (default 0.000000)",
-0,
-},
-{
-"Test CVar test_cameraOverShoulder has been set to 2.5091786707584 (default 0.000000)",
-0,
-},
-{
-"Test CVar test_cameraOverShoulder has been set to 2.469648704707 (default 0.000000)",
-0,
-},
-{
-"Test CVar test_cameraOverShoulder has been set to 2.4303237869703 (default 0.000000)",
-0,
-},
-{
-"Test CVar test_cameraOverShoulder has been set to 2.3912074106148 (default 0.000000)",
-0,
-},
-{
-"Test CVar test_cameraOverShoulder has been set to 2.3007663402462 (default 0.000000)",
-0,
-},
-{
-"Test CVar test_cameraOverShoulder has been set to 2.2559923467269 (default 0.000000)",
-0,
-},
-{
-"Test CVar test_cameraOverShoulder has been set to 2.2178571294125 (default 0.000000)",
-0,
-},
-{
-"Test CVar test_cameraOverShoulder has been set to 2.1360154713224 (default 0.000000)",
-0,
-},
-{
-"Test CVar test_cameraOverShoulder has been set to 2.0924010461932 (default 0.000000)",
-0,
-},
-{
-"Test CVar test_cameraOverShoulder has been set to 2.0429538887675 (default 0.000000)",
-0,
-},
-{
-"Test CVar test_cameraOverShoulder has been set to 1.9878424876246 (default 0.000000)",
-0,
-},
-{
-"Test CVar test_cameraOverShoulder has been set to 1.9453630389856 (default 0.000000)",
-0,
-},
-{
-"Test CVar test_cameraOverShoulder has been set to 1.903226070046 (default 0.000000)",
-0,
-},
-{
-"Test CVar test_cameraOverShoulder has been set to 1.8614366752262 (default 0.000000)",
-0,
-},
-{
-"Test CVar test_cameraOverShoulder has been set to 1.7847671383082 (default 0.000000)",
-0,
-},
-{
-"Test CVar test_cameraOverShoulder has been set to 1.7439985062724 (default 0.000000)",
-0,
-},
-{
-"Test CVar test_cameraOverShoulder has been set to 1.7035966991985 (default 0.000000)",
-0,
-},
-{
-"Test CVar test_cameraOverShoulder has been set to 1.6692622461857 (default 0.000000)",
-0,
-},
-{
-"Test CVar test_cameraOverShoulder has been set to 1.635203936442 (default 0.000000)",
-0,
-},
-{
-"Test CVar test_cameraOverShoulder has been set to 1.5958222899145 (default 0.000000)",
-0,
-},
-{
-"Test CVar test_cameraOverShoulder has been set to 1.5623726358062 (default 0.000000)",
-0,
-},
-{
-"Test CVar test_cameraOverShoulder has been set to 1.5292086195203 (default 0.000000)",
-0,
-},
-{
-"Test CVar test_cameraOverShoulder has been set to 1.5017922591771 (default 0.000000)",
-0,
-},
-{
-"Test CVar test_cameraOverShoulder has been set to 1.4691595447104 (default 0.000000)",
-0,
-},
-{
-"Test CVar test_cameraOverShoulder has been set to 1.4421900124397 (default 0.000000)",
-0,
-},
-{
-"Test CVar test_cameraOverShoulder has been set to 1.3994674579942 (default 0.000000)",
-0,
-},
-{
-"Test CVar test_cameraOverShoulder has been set to 1.3311841756508 (default 0.000000)",
-0,
-},
-{
-"Test CVar test_cameraOverShoulder has been set to 1.3001518746624 (default 0.000000)",
-0,
-},
-{
-"Test CVar test_cameraOverShoulder has been set to 1.269428503461 (default 0.000000)",
-0,
-},
-{
-"Test CVar test_cameraOverShoulder has been set to 1.2390167910742 (default 0.000000)",
-0,
-},
-{
-"Test CVar test_cameraOverShoulder has been set to 1.2089194388461 (default 0.000000)",
-0,
-},
-{
-"Test CVar test_cameraOverShoulder has been set to 1.1840803762724 (default 0.000000)",
-0,
-},
-{
-"Test CVar test_cameraOverShoulder has been set to 1.1545662741773 (default 0.000000)",
-0,
-},
-{
-"Test CVar test_cameraOverShoulder has been set to 1.1302169436499 (default 0.000000)",
-0,
-},
-{
-"Test CVar test_cameraOverShoulder has been set to 1.1060926305973 (default 0.000000)",
-0,
-},
-{
-"Test CVar test_cameraOverShoulder has been set to 1.0821948231208 (default 0.000000)",
-0,
-},
-{
-"Test CVar test_cameraOverShoulder has been set to 1.0538185178466 (default 0.000000)",
-0,
-},
-{
-"Test CVar test_cameraOverShoulder has been set to 1.0304241917496 (default 0.000000)",
-0,
-},
-{
-"Test CVar test_cameraOverShoulder has been set to 1.0072610388153 (default 0.000000)",
-0,
-},
-{
-"Test CVar test_cameraOverShoulder has been set to 0.97977241632389 (default 0.000000)",
-0,
-},
-{
-"Test CVar test_cameraOverShoulder has been set to 0.95712285354183 (default 0.000000)",
-0,
-},
-{
-"Test CVar test_cameraOverShoulder has been set to 0.9347089854948 (default 0.000000)",
-0,
-},
-{
-"Test CVar test_cameraOverShoulder has been set to 0.91253219477595 (default 0.000000)",
-0,
-},
-{
-"Test CVar test_cameraOverShoulder has been set to 0.89059384935439 (default 0.000000)",
-0,
-},
-{
-"Test CVar test_cameraOverShoulder has been set to 0.8688953024908 (default 0.000000)",
-0,
-},
-{
-"Test CVar test_cameraOverShoulder has been set to 0.84743789265394 (default 0.000000)",
-0,
-},
-{
-"Test CVar test_cameraOverShoulder has been set to 0.82622294343812 (default 0.000000)",
-0,
-},
-{
-"Test CVar test_cameraOverShoulder has been set to 0.80525176348152 (default 0.000000)",
-0,
-},
-{
-"Test CVar test_cameraOverShoulder has been set to 0.78452564638548 (default 0.000000)",
-0,
-},
-{
-"Test CVar test_cameraOverShoulder has been set to 0.76404587063472 (default 0.000000)",
-0,
-},
-{
-"Test CVar test_cameraOverShoulder has been set to 0.74381369951846 (default 0.000000)",
-0,
-},
-{
-"Test CVar test_cameraOverShoulder has been set to 0.72383038105248 (default 0.000000)",
-0,
-},
-{
-"Test CVar test_cameraOverShoulder has been set to 0.70018062035652 (default 0.000000)",
-0,
-},
-{
-"Test CVar test_cameraOverShoulder has been set to 0.68074909495882 (default 0.000000)",
-0,
-},
-{
-"Test CVar test_cameraOverShoulder has been set to 0.6577649907398 (default 0.000000)",
-0,
-},
-{
-"Test CVar test_cameraOverShoulder has been set to 0.64264545727002 (default 0.000000)",
-0,
-},
-{
-"Test CVar test_cameraOverShoulder has been set to 0.62397569361674 (default 0.000000)",
-0,
-},
-{
-"Test CVar test_cameraOverShoulder has been set to 0.6055621747875 (default 0.000000)",
-0,
-},
-{
-"Test CVar test_cameraOverShoulder has been set to 0.58740603661501 (default 0.000000)",
-0,
-},
-{
-"Test CVar test_cameraOverShoulder has been set to 0.56950839905557 (default 0.000000)",
-0,
-},
-{
-"Test CVar test_cameraOverShoulder has been set to 0.55187036611992 (default 0.000000)",
-0,
-},
-{
-"Test CVar test_cameraOverShoulder has been set to 0.53449302580517 (default 0.000000)",
-0,
-},
-{
-"Test CVar test_cameraOverShoulder has been set to 0.51737745002768 (default 0.000000)",
-0,
-},
-{
-"Test CVar test_cameraOverShoulder has been set to 0.50052469455693 (default 0.000000)",
-0,
-},
-{
-"Test CVar test_cameraOverShoulder has been set to 0.48064977457091 (default 0.000000)",
-0,
-},
-{
-"Test CVar test_cameraOverShoulder has been set to 0.46115657728817 (default 0.000000)",
-0,
-},
-{
-"Test CVar test_cameraOverShoulder has been set to 0.44204683420721 (default 0.000000)",
-0,
-},
-{
-"Test CVar test_cameraOverShoulder has been set to 0.4264161893934 (default 0.000000)",
-0,
-},
-{
-"Test CVar test_cameraOverShoulder has been set to 0.41105397580615 (default 0.000000)",
-0,
-},
-{
-"Test CVar test_cameraOverShoulder has been set to 0.39297498290204 (default 0.000000)",
-0,
-},
-{
-"Test CVar test_cameraOverShoulder has been set to 0.37820663019354 (default 0.000000)",
-0,
-},
-{
-"Test CVar test_cameraOverShoulder has been set to 0.36370968250472 (default 0.000000)",
-0,
-},
-{
-"Test CVar test_cameraOverShoulder has been set to 0.34948503407572 (default 0.000000)",
-0,
-},
-{
-"Test CVar test_cameraOverShoulder has been set to 0.33553356235 (default 0.000000)",
-0,
-},
-{
-"Test CVar test_cameraOverShoulder has been set to 0.32456965133478 (default 0.000000)",
-0,
-},
-{
-"Test CVar test_cameraOverShoulder has been set to 0.31111205500553 (default 0.000000)",
-0,
-},
-{
-"Test CVar test_cameraOverShoulder has been set to 0.29793000240598 (default 0.000000)",
-0,
-},
-{
-"Test CVar test_cameraOverShoulder has been set to 0.28502430666735 (default 0.000000)",
-0,
-},
-{
-"Test CVar test_cameraOverShoulder has been set to 0.27239576387386 (default 0.000000)",
-0,
-},
-{
-"Test CVar test_cameraOverShoulder has been set to 0.26004515301361 (default 0.000000)",
-0,
-},
-{
-"Test CVar test_cameraOverShoulder has been set to 0.24797323593058 (default 0.000000)",
-0,
-},
-{
-"Test CVar test_cameraOverShoulder has been set to 0.23851686298733 (default 0.000000)",
-0,
-},
-{
-"Test CVar test_cameraOverShoulder has been set to 0.22694845964135 (default 0.000000)",
-0,
-},
-{
-"Test CVar test_cameraOverShoulder has been set to 0.21566079163281 (default 0.000000)",
-0,
-},
-{
-"Test CVar test_cameraOverShoulder has been set to 0.20465455523836 (default 0.000000)",
-0,
-},
-{
-"Test CVar test_cameraOverShoulder has been set to 0.19393042937458 (default 0.000000)",
-0,
-},
-{
 "Test CVar test_cameraOverShoulder has been set to 0.18348907555618 (default 0.000000)",
 0,
 },
@@ -4088,6 +3580,438 @@ Blizzard_Console_SavedVars = {
 },
 {
 "Time set to 3/11/2026 (Wed) 8:25",
+0,
+},
+{
+"-------------------------------------------------- Previous Session --------------------------------------------------",
+0,
+},
+{
+"Time set to 3/11/2026 (Wed) 8:36",
+0,
+},
+{
+"Time set to 3/11/2026 (Wed) 8:36",
+0,
+},
+{
+"Time set to 3/11/2026 (Wed) 8:43",
+0,
+},
+{
+"Time set to 3/11/2026 (Wed) 8:43",
+0,
+},
+{
+"Time set to 3/11/2026 (Wed) 8:46",
+0,
+},
+{
+"Time set to 3/11/2026 (Wed) 8:46",
+0,
+},
+{
+"Test CVar test_cameraDynamicPitch has been set to 1 (default 0.000000)",
+0,
+},
+{
+"Test CVar test_cameraOverShoulder has been set to 0.07468632909828 (default 0.000000)",
+0,
+},
+{
+"Test CVar test_cameraOverShoulder has been set to 0.14697431620337 (default 0.000000)",
+0,
+},
+{
+"Test CVar test_cameraOverShoulder has been set to 0.21886747177599 (default 0.000000)",
+0,
+},
+{
+"Test CVar test_cameraOverShoulder has been set to 0.29232222279337 (default 0.000000)",
+0,
+},
+{
+"Test CVar test_cameraOverShoulder has been set to 0.36282130256485 (default 0.000000)",
+0,
+},
+{
+"Test CVar test_cameraOverShoulder has been set to 0.43234569985708 (default 0.000000)",
+0,
+},
+{
+"Test CVar test_cameraOverShoulder has been set to 0.50276017298738 (default 0.000000)",
+0,
+},
+{
+"Test CVar test_cameraOverShoulder has been set to 0.56973442405661 (default 0.000000)",
+0,
+},
+{
+"Test CVar test_cameraOverShoulder has been set to 0.63517814161795 (default 0.000000)",
+0,
+},
+{
+"Test CVar test_cameraOverShoulder has been set to 0.7008184987889 (default 0.000000)",
+0,
+},
+{
+"Test CVar test_cameraOverShoulder has been set to 0.76261879277073 (default 0.000000)",
+0,
+},
+{
+"Test CVar test_cameraOverShoulder has been set to 0.82237038903165 (default 0.000000)",
+0,
+},
+{
+"Test CVar test_cameraOverShoulder has been set to 0.88162034675376 (default 0.000000)",
+0,
+},
+{
+"Test CVar test_cameraOverShoulder has been set to 0.93672495526168 (default 0.000000)",
+0,
+},
+{
+"Test CVar test_cameraOverShoulder has been set to 0.9893131475743 (default 0.000000)",
+0,
+},
+{
+"Test CVar test_cameraOverShoulder has been set to 1.0407137752057 (default 0.000000)",
+0,
+},
+{
+"Test CVar test_cameraOverShoulder has been set to 1.0877658398562 (default 0.000000)",
+0,
+},
+{
+"Test CVar test_cameraOverShoulder has been set to 1.1318957323571 (default 0.000000)",
+0,
+},
+{
+"Test CVar test_cameraOverShoulder has been set to 1.1801202138821 (default 0.000000)",
+0,
+},
+{
+"Test CVar test_cameraOverShoulder has been set to 1.2174741488201 (default 0.000000)",
+0,
+},
+{
+"Test CVar test_cameraOverShoulder has been set to 1.2515574634461 (default 0.000000)",
+0,
+},
+{
+"Test CVar test_cameraOverShoulder has been set to 1.283156160369 (default 0.000000)",
+0,
+},
+{
+"Test CVar test_cameraOverShoulder has been set to 1.3103270059774 (default 0.000000)",
+0,
+},
+{
+"Test CVar test_cameraOverShoulder has been set to 1.3339777915294 (default 0.000000)",
+0,
+},
+{
+"Test CVar test_cameraOverShoulder has been set to 1.3545965426967 (default 0.000000)",
+0,
+},
+{
+"Test CVar test_cameraOverShoulder has been set to 1.370915262562 (default 0.000000)",
+0,
+},
+{
+"Test CVar test_cameraOverShoulder has been set to 1.3835511581898 (default 0.000000)",
+0,
+},
+{
+"Test CVar test_cameraOverShoulder has been set to 1.392682261503 (default 0.000000)",
+0,
+},
+{
+"Test CVar test_cameraOverShoulder has been set to 1.3977470345714 (default 0.000000)",
+0,
+},
+{
+"Test CVar test_cameraOverShoulder has been set to 1.3991000543594 (default 0.000000)",
+0,
+},
+{
+"Test CVar test_cameraDynamicPitch has been set to 0 (default 0.000000)",
+0,
+},
+{
+"Test CVar test_cameraOverShoulder has been set to 1.3815189064405 (default 0.000000)",
+0,
+},
+{
+"Test CVar test_cameraOverShoulder has been set to 1.1110776547566 (default 0.000000)",
+0,
+},
+{
+"Test CVar test_cameraOverShoulder has been set to 1.0490297789016 (default 0.000000)",
+0,
+},
+{
+"Test CVar test_cameraOverShoulder has been set to 1.0087635656736 (default 0.000000)",
+0,
+},
+{
+"Test CVar test_cameraOverShoulder has been set to 0.97931418737388 (default 0.000000)",
+0,
+},
+{
+"Test CVar test_cameraOverShoulder has been set to 0.95214980635972 (default 0.000000)",
+0,
+},
+{
+"Test CVar test_cameraOverShoulder has been set to 0.92724015199547 (default 0.000000)",
+0,
+},
+{
+"Test CVar test_cameraOverShoulder has been set to 0.89224054901011 (default 0.000000)",
+0,
+},
+{
+"Test CVar test_cameraOverShoulder has been set to 0.86571869373878 (default 0.000000)",
+0,
+},
+{
+"Test CVar test_cameraOverShoulder has been set to 0.83740573835535 (default 0.000000)",
+0,
+},
+{
+"Test CVar test_cameraOverShoulder has been set to 0.81135806740145 (default 0.000000)",
+0,
+},
+{
+"Test CVar test_cameraOverShoulder has been set to 0.78753133996059 (default 0.000000)",
+0,
+},
+{
+"Test CVar test_cameraOverShoulder has been set to 0.7561018236515 (default 0.000000)",
+0,
+},
+{
+"Test CVar test_cameraOverShoulder has been set to 0.72315341061775 (default 0.000000)",
+0,
+},
+{
+"Test CVar test_cameraOverShoulder has been set to 0.70018452061259 (default 0.000000)",
+0,
+},
+{
+"Test CVar test_cameraOverShoulder has been set to 0.67558203360257 (default 0.000000)",
+0,
+},
+{
+"Test CVar test_cameraOverShoulder has been set to 0.65313958654712 (default 0.000000)",
+0,
+},
+{
+"Test CVar test_cameraOverShoulder has been set to 0.62546015953245 (default 0.000000)",
+0,
+},
+{
+"Test CVar test_cameraOverShoulder has been set to 0.60001320800646 (default 0.000000)",
+0,
+},
+{
+"Test CVar test_cameraOverShoulder has been set to 0.56963401850084 (default 0.000000)",
+0,
+},
+{
+"Test CVar test_cameraOverShoulder has been set to 0.54680081157656 (default 0.000000)",
+0,
+},
+{
+"Test CVar test_cameraOverShoulder has been set to 0.52775760907552 (default 0.000000)",
+0,
+},
+{
+"Test CVar test_cameraOverShoulder has been set to 0.50220993466304 (default 0.000000)",
+0,
+},
+{
+"Test CVar test_cameraOverShoulder has been set to 0.48379062469536 (default 0.000000)",
+0,
+},
+{
+"Test CVar test_cameraOverShoulder has been set to 0.46400867765997 (default 0.000000)",
+0,
+},
+{
+"Test CVar test_cameraOverShoulder has been set to 0.4477772155471 (default 0.000000)",
+0,
+},
+{
+"Test CVar test_cameraOverShoulder has been set to 0.42229674851916 (default 0.000000)",
+0,
+},
+{
+"Test CVar test_cameraOverShoulder has been set to 0.39896884577971 (default 0.000000)",
+0,
+},
+{
+"Test CVar test_cameraOverShoulder has been set to 0.38221386502392 (default 0.000000)",
+0,
+},
+{
+"Test CVar test_cameraOverShoulder has been set to 0.36724538008058 (default 0.000000)",
+0,
+},
+{
+"Test CVar test_cameraOverShoulder has been set to 0.35253148987418 (default 0.000000)",
+0,
+},
+{
+"Test CVar test_cameraOverShoulder has been set to 0.33521599491656 (default 0.000000)",
+0,
+},
+{
+"Test CVar test_cameraOverShoulder has been set to 0.32107490246472 (default 0.000000)",
+0,
+},
+{
+"Test CVar test_cameraOverShoulder has been set to 0.299003834124 (default 0.000000)",
+0,
+},
+{
+"Test CVar test_cameraOverShoulder has been set to 0.28423221359274 (default 0.000000)",
+0,
+},
+{
+"Test CVar test_cameraOverShoulder has been set to 0.27109218329786 (default 0.000000)",
+0,
+},
+{
+"Test CVar test_cameraOverShoulder has been set to 0.24814362801487 (default 0.000000)",
+0,
+},
+{
+"Test CVar test_cameraOverShoulder has been set to 0.23335463244886 (default 0.000000)",
+0,
+},
+{
+"Test CVar test_cameraOverShoulder has been set to 0.21897982068762 (default 0.000000)",
+0,
+},
+{
+"Test CVar test_cameraOverShoulder has been set to 0.20388042264034 (default 0.000000)",
+0,
+},
+{
+"Test CVar test_cameraOverShoulder has been set to 0.18817706620086 (default 0.000000)",
+0,
+},
+{
+"Test CVar test_cameraOverShoulder has been set to 0.16989667405749 (default 0.000000)",
+0,
+},
+{
+"Test CVar test_cameraOverShoulder has been set to 0.15449436852068 (default 0.000000)",
+0,
+},
+{
+"Test CVar test_cameraOverShoulder has been set to 0.13315644755378 (default 0.000000)",
+0,
+},
+{
+"Test CVar test_cameraOverShoulder has been set to 0.11858605233784 (default 0.000000)",
+0,
+},
+{
+"Test CVar test_cameraOverShoulder has been set to 0.10650012357033 (default 0.000000)",
+0,
+},
+{
+"Test CVar test_cameraOverShoulder has been set to 0.091098680718338 (default 0.000000)",
+0,
+},
+{
+"Test CVar test_cameraOverShoulder has been set to 0.079761919818827 (default 0.000000)",
+0,
+},
+{
+"Test CVar test_cameraOverShoulder has been set to 0.070528955267886 (default 0.000000)",
+0,
+},
+{
+"Test CVar test_cameraOverShoulder has been set to 0.061849973395725 (default 0.000000)",
+0,
+},
+{
+"Test CVar test_cameraOverShoulder has been set to 0.053127066063883 (default 0.000000)",
+0,
+},
+{
+"Test CVar test_cameraOverShoulder has been set to 0.045055059365239 (default 0.000000)",
+0,
+},
+{
+"Test CVar test_cameraOverShoulder has been set to 0.037637856850845 (default 0.000000)",
+0,
+},
+{
+"Test CVar test_cameraOverShoulder has been set to 0.03180415303434 (default 0.000000)",
+0,
+},
+{
+"Test CVar test_cameraOverShoulder has been set to 0.025612290366077 (default 0.000000)",
+0,
+},
+{
+"Test CVar test_cameraOverShoulder has been set to 0.01898681374127 (default 0.000000)",
+0,
+},
+{
+"Test CVar test_cameraOverShoulder has been set to 0.014269256905892 (default 0.000000)",
+0,
+},
+{
+"Test CVar test_cameraOverShoulder has been set to 0.010221391996558 (default 0.000000)",
+0,
+},
+{
+"Test CVar test_cameraOverShoulder has been set to 0.0060041442215746 (default 0.000000)",
+0,
+},
+{
+"Test CVar test_cameraOverShoulder has been set to 0.0033403365069136 (default 0.000000)",
+0,
+},
+{
+"Test CVar test_cameraOverShoulder has been set to 0.0012581130444491 (default 0.000000)",
+0,
+},
+{
+"Test CVar test_cameraOverShoulder has been set to 0.00029169395238093 (default 0.000000)",
+0,
+},
+{
+"Test CVar test_cameraOverShoulder has been set to 0 (default 0.000000)",
+0,
+},
+{
+"Test CVar test_cameraDynamicPitch has been set to 0 (default 0.000000)",
+0,
+},
+{
+"Test CVar test_cameraHeadMovementStrength has been set to 0 (default 0.000000)",
+0,
+},
+{
+"ACTION Camera set to 'off' - 'Disable action cam features'",
+0,
+},
+{
+"-------------------------------------------------- Previous Session --------------------------------------------------",
+0,
+},
+{
+"Time set to 3/11/2026 (Wed) 8:53",
+0,
+},
+{
+"Time set to 3/11/2026 (Wed) 8:53",
 0,
 },
 },

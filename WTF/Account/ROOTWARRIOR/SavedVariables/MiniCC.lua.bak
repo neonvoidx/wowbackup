@@ -246,52 +246,21 @@ MiniCCDB = {
 ["X"] = 0,
 },
 },
-["AlertsModule"] = {
-["Offset"] = {
-["Y"] = -100,
-["X"] = 0,
+["PrecogGuesserModule"] = {
+["Enabled"] = {
+["Always"] = true,
 },
 ["RelativeTo"] = "UIParent",
 ["Point"] = "CENTER",
+["RelativePoint"] = "CENTER",
 ["Icons"] = {
-["Enabled"] = true,
 ["Glow"] = true,
-["MaxIcons"] = 8,
-["ReverseCooldown"] = false,
-["ColorByClass"] = true,
-["Size"] = 58,
+["ReverseCooldown"] = true,
+["Size"] = 55,
 },
-["TargetFocusOnly"] = false,
-["RelativePoint"] = "TOP",
-["TTS"] = {
-["VoiceID"] = 0,
-["Volume"] = 100,
-["Important"] = {
-["Enabled"] = false,
-},
-["SpeechRate"] = 0,
-["Defensive"] = {
-["Enabled"] = false,
-},
-},
-["IncludeDefensives"] = true,
-["Sound"] = {
-["Defensive"] = {
-["Enabled"] = false,
-["File"] = "AlertToastWarm.ogg",
-["Channel"] = "Master",
-},
-["Important"] = {
-["Enabled"] = false,
-["File"] = "AirHorn.ogg",
-["Channel"] = "Master",
-},
-},
-["Enabled"] = {
-["BattleGrounds"] = false,
-["Arena"] = true,
-["World"] = false,
-["PvE"] = false,
+["Offset"] = {
+["Y"] = 70,
+["X"] = 0,
 },
 },
 ["KickTimerModule"] = {
@@ -334,21 +303,52 @@ MiniCCDB = {
 ["X"] = -1,
 },
 },
-["PrecogGuesserModule"] = {
-["Enabled"] = {
-["Always"] = true,
+["AlertsModule"] = {
+["Offset"] = {
+["Y"] = -100,
+["X"] = 0,
 },
 ["RelativeTo"] = "UIParent",
 ["Point"] = "CENTER",
-["RelativePoint"] = "CENTER",
 ["Icons"] = {
+["Enabled"] = true,
 ["Glow"] = true,
-["ReverseCooldown"] = true,
-["Size"] = 55,
+["MaxIcons"] = 8,
+["ReverseCooldown"] = false,
+["ColorByClass"] = true,
+["Size"] = 58,
 },
-["Offset"] = {
-["Y"] = 70,
-["X"] = 0,
+["RelativePoint"] = "TOP",
+["TargetFocusOnly"] = false,
+["TTS"] = {
+["VoiceID"] = 0,
+["Volume"] = 100,
+["Important"] = {
+["Enabled"] = false,
+},
+["SpeechRate"] = 0,
+["Defensive"] = {
+["Enabled"] = false,
+},
+},
+["IncludeDefensives"] = true,
+["Sound"] = {
+["Defensive"] = {
+["Enabled"] = false,
+["File"] = "AlertToastWarm.ogg",
+["Channel"] = "Master",
+},
+["Important"] = {
+["Enabled"] = false,
+["File"] = "AirHorn.ogg",
+["Channel"] = "Master",
+},
+},
+["Enabled"] = {
+["BattleGrounds"] = false,
+["Arena"] = true,
+["World"] = false,
+["PvE"] = false,
 },
 },
 },

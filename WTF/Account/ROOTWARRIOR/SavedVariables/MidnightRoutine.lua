@@ -47,9 +47,9 @@ MidnightRoutineDB = {
 },
 ["prof_herbalism"] = {
 ["prof_catchup"] = 0,
-["herb_treatise"] = 0,
 ["herb_dmf"] = 0,
 ["herb_notebook"] = 0,
+["herb_treatise"] = 0,
 },
 ["prof_leatherworking"] = {
 ["lw_notebook"] = 0,
@@ -82,8 +82,8 @@ MidnightRoutineDB = {
 ["crest_adventurer"] = 200,
 ["shards"] = 0,
 ["crest_hero"] = 0,
-["crest_champion"] = 0,
 ["crest_veteran"] = 90,
+["crest_champion"] = 0,
 },
 ["prof_alchemy"] = {
 ["alch_notebook"] = 0,
@@ -225,8 +225,8 @@ MidnightRoutineDB = {
 ["ch_5798"] = 0,
 ["ch_5797"] = 0,
 ["ch_5793"] = 0,
-["ch_5796"] = 0,
 ["ch_5795"] = 0,
+["ch_5796"] = 0,
 ["ch_5792"] = 0,
 },
 ["prof_mining"] = {
@@ -249,12 +249,12 @@ MidnightRoutineDB = {
 ["vault_w_progress"] = 0,
 ["vault_w_slots"] = 0,
 ["vault_r_slots"] = 0,
-["vault_d_max_level"] = 0,
-["vault_d_slots"] = 0,
 ["vault_r_progress"] = 0,
+["vault_d_slots"] = 0,
+["vault_d_progress"] = 0,
 ["vault_r_diff_id"] = 14,
 ["vault_world"] = 0,
-["vault_d_progress"] = 0,
+["vault_d_max_level"] = 0,
 },
 ["currencies"] = {
 ["shards_wallet"] = 0,
@@ -335,8 +335,8 @@ MidnightRoutineDB = {
 ["tail_treatise"] = 0,
 ["prof_catchup"] = 0,
 ["prof_catchup_wallet"] = 0,
-["tail_dmf"] = 0,
 ["tail_notebook"] = 0,
+["tail_dmf"] = 0,
 },
 ["prof_blacksmithing"] = {
 ["bs_treatise"] = 0,
@@ -448,8 +448,8 @@ MidnightRoutineDB = {
 ["crest_adventurer"] = 0,
 ["shards"] = 0,
 ["crest_hero"] = 0,
-["crest_veteran"] = 0,
 ["crest_champion"] = 0,
+["crest_veteran"] = 0,
 },
 ["prof_alchemy"] = {
 ["alch_treatise"] = 0,

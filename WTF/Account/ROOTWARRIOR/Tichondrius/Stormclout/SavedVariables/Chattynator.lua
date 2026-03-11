@@ -1,12 +1,6 @@
 
 CHATTYNATOR_CURRENT_PROFILE = "DEFAULT"
 CHATTYNATOR_COMMAND_HISTORY = {
-"/i /rl",
-"/s /m",
-"/s /ginvite Lightevo",
-"/s /bbf",
-"/s dk?",
-"/s i have no pvp gear",
 "/s so itll be rough",
 "/s kk",
 "/i o7",
@@ -203,5 +197,9 @@ CHATTYNATOR_COMMAND_HISTORY = {
 "/s /bbf",
 "/s /rl",
 "/s /bbf",
+"/s /rl",
+"/s /bbf",
+"/s /sarena",
+"/s /bbp",
 "/s /rl",
 }

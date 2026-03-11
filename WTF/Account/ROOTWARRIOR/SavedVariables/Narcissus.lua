@@ -67,27 +67,27 @@ true,
 },
 },
 ["BaseLineOffset"] = 232,
-["CameraAutoZoomIn"] = true,
-["TalentTreeBiggerUI"] = true,
-["DressingRoomShowIconSelect"] = false,
 ["RealmNames"] = {
 [11] = "Tichondrius",
 [59] = "Mal'Ganis",
 },
+["TalentTreeBiggerUI"] = true,
+["DressingRoomShowIconSelect"] = false,
+["AnchorToMinimap"] = false,
 ["ConduitTooltip"] = false,
 ["UseAddonCompartment"] = true,
 ["DressingRoom"] = false,
 ["UseBustShot"] = false,
-["AnchorToMinimap"] = false,
-["DressingRoomItemSetListHideDupes"] = true,
+["CameraAutoZoomIn"] = true,
 ["PaperDollWidget_ClassSet"] = true,
+["DressingRoomItemSetListHideDupes"] = true,
 ["TranslateName"] = false,
 ["TalentTreeUseClassBackground"] = true,
 ["EnableDoubleTap"] = true,
 ["CameraOrbit"] = true,
 ["UseEscapeButton"] = true,
 ["PandariaGemManagerDefaultMode"] = 1,
-["installTime"] = 1722004162,
+["DressingRoomShowSlot"] = true,
 ["IndependentMinimapButton"] = true,
 ["OnlyShowOwnedUpgradeItem"] = true,
 ["AutoPlayAnimation"] = false,
@@ -104,6 +104,8 @@ true,
 ["TalentTreeForEquipmentManager"] = false,
 ["TalentTreeAnchor"] = 1,
 ["Version"] = 10000,
+["NamePlateNameOffset"] = 0,
+["MinimapIconStyle"] = 3,
 ["PerksProgramDB"] = {
 ["MonthNames"] = {
 {
@@ -850,8 +852,8 @@ true,
 [957] = "::description::A prowler's preferred cape. A shoulder may be discarded to leave an arm free for pilfering.::price::75::transmogSetID::0::perksVendorCategoryID::1::mountID::0::itemModifiedAppearanceID::227806::speciesID::0::name::Prowler's Deep Shoulder Cape::itemID::230038::addedDate::2025/27::",
 [479] = "::description::The cult isn't unnamed, the name just cannot be represented in our language.::price::450::transmogSetID::3083::perksVendorCategoryID::8::mountID::0::itemModifiedAppearanceID::0::name::Silks of the Unnamed Cult::speciesID::0::itemID::208400::addedDate::2024/23::",
 [958] = "::description::Sapphire is known for it's hardness. Kicking someone with these treads will hurt.::price::40::transmogSetID::0::perksVendorCategoryID::1::mountID::0::itemModifiedAppearanceID::267042::speciesID::0::name::Sapphire Scale Treads::itemID::235624::addedDate::2025/27::",
-[240] = "::description::Go ahead. Make my day.::price::125::transmogSetID::0::perksVendorCategoryID::1::mountID::0::itemModifiedAppearanceID::168548::speciesID::0::name::Black Iron Blunderbuss::originalPrice::200::itemID::190441::addedDate::2025/26::",
 [959] = "::description::Click your treads together, but don't shatter them.::price::40::transmogSetID::0::perksVendorCategoryID::1::mountID::0::itemModifiedAppearanceID::267041::speciesID::0::name::Ruby Scale Treads::itemID::235623::addedDate::2025/27::",
+[240] = "::description::Go ahead. Make my day.::price::125::transmogSetID::0::perksVendorCategoryID::1::mountID::0::itemModifiedAppearanceID::168548::speciesID::0::name::Black Iron Blunderbuss::originalPrice::200::itemID::190441::addedDate::2025/26::",
 [480] = "::description::Blood Onyx assassins are known for their efficiency, not their subtlety.::price::450::transmogSetID::3084::perksVendorCategoryID::8::mountID::0::itemModifiedAppearanceID::0::name::Blood Onyx Uniform::speciesID::0::itemID::208405::addedDate::2024/23::",
 [960] = "::description::Ideal for protecting your identity from authority.::price::50::transmogSetID::0::perksVendorCategoryID::1::mountID::0::itemModifiedAppearanceID::249349::speciesID::0::name::Vigilante's Deep Mask::itemID::235024::addedDate::2025/27::",
 [907] = "::description::One punch and your time is up.::price::300::transmogSetID::0::perksVendorCategoryID::1::mountID::0::itemModifiedAppearanceID::230849::speciesID::0::name::Golden Clockwork Doomfist::itemID::233257::addedDate::2025/25::",
@@ -1015,8 +1017,6 @@ true,
 ["month"] = 39,
 },
 },
-["MinimapIconStyle"] = 3,
-["NamePlateNameOffset"] = 0,
 ["GemManager"] = true,
 ["ModelPanelScale"] = 1,
 ["AutoDisplayQuestItem"] = false,
@@ -1027,7 +1027,7 @@ true,
 ["libdbicon"] = {
 ["minimapPos"] = 198.661735262115,
 },
-["DressingRoomShowSlot"] = true,
+["installTime"] = 1722004162,
 ["AutoFilterGem"] = false,
 ["Tutorials"] = {
 ["ExitConfirmation"] = false,
@@ -1054,7 +1054,7 @@ NarciAchievementOptions = {
 NarciStatisticsDB = {
 ["ScreenshotsTakenInNarcissus"] = 25,
 ["InstalledDate"] = 1722004177,
-["TimeSpentInNarcissus"] = 119342,
+["TimeSpentInNarcissus"] = 119442,
 ["QuestItems"] = {
 },
 ["AddOnActionForbidden"] = {
@@ -1226,7 +1226,7 @@ NarciCharacterProfiles = {
 ["name"] = "Stormclout",
 ["birth"] = 1757076761,
 ["serverID"] = 11,
-["lastVisit"] = 1773242713,
+["lastVisit"] = 1773244397,
 ["outfits"] = {
 {
 ["s"] = "285136,285144,285152,104602,195317,219414,104604,285132,285148,285140,285128,169069:-1:7521,94221",
@@ -1831,12 +1831,12 @@ NarciCharacterProfiles = {
 },
 ["class"] = 10,
 },
-["0EC26D6E"] = {
+["0EBB3F42"] = {
 ["race"] = 31,
 ["name"] = "Reedingo",
-["birth"] = 1770913460,
+["birth"] = 1759950802,
 ["serverID"] = 3684,
-["lastVisit"] = 1770913460,
+["lastVisit"] = 1759950802,
 ["outfits"] = {
 {
 ["s"] = "77344,98400,92252,80971,83202,83203,61532,94808,97032,93983,93980,94834:0:5384,94834:0:80558",
@@ -1857,10 +1857,6 @@ NarciCharacterProfiles = {
 {
 ["s"] = "77344,14095,77345,80971,83202,83203,51142,51056,54465,69094,61568,96918,0:0:80557",
 ["n"] = "assa",
-},
-{
-["s"] = "220796,220798:-1,0,220793,0,0,220801,220795,220799,0,220794,0:-1:5400,0",
-["n"] = "Custom Set",
 },
 },
 ["class"] = 7,
@@ -2181,6 +2177,82 @@ NarciCharacterProfiles = {
 },
 ["class"] = 12,
 },
+["0EC26D6E"] = {
+["race"] = 31,
+["name"] = "Reedingo",
+["birth"] = 1770913460,
+["serverID"] = 3684,
+["lastVisit"] = 1770913460,
+["outfits"] = {
+{
+["s"] = "77344,98400,92252,80971,83202,83203,61532,94808,97032,93983,93980,94834:0:5384,94834:0:80558",
+["n"] = "Reedingo",
+},
+{
+["s"] = "77344,102289,92320,80971,83202,83203,98391,101847,101902,76423,101910,0,0:0:80561",
+["n"] = "Assuh",
+},
+{
+["s"] = "220796,220798,220800,220793,20512,22002,220801,220795,220799,220797,220794,77674,94855",
+["n"] = "Reedjin",
+},
+{
+["s"] = "40023,51059,94619,80971,83202,96517,51142,51056,69942,34193,61568,96918,50994:0:80559",
+["n"] = "Witch Doctor",
+},
+{
+["s"] = "77344,14095,77345,80971,83202,83203,51142,51056,54465,69094,61568,96918,0:0:80557",
+["n"] = "assa",
+},
+{
+["s"] = "220796,220798:-1,0,220793,0,0,220801,220795,220799,0,220794,0:-1:5400,0",
+["n"] = "Custom Set",
+},
+},
+["class"] = 7,
+},
+["0DF1A872"] = {
+["race"] = 2,
+["name"] = "Choppiez",
+["birth"] = 1724951497,
+["serverID"] = 3684,
+["lastVisit"] = 1725464702,
+["outfits"] = {
+{
+["s"] = "4713,77343:77343,77345,104602,103317,104136,104604,94331,104152,104150,104147,53152:-1:6158,53152:0:6158",
+["n"] = "Yas",
+},
+{
+["s"] = "77344,53729,77345,53769,19967,83203,53744,53676,55068,53773,53742,77737:0:6786,67324",
+["n"] = "Greenboy",
+},
+{
+["s"] = "77344,52481,77345,52478,103317,20962,60907,52479,61796,52480,169521,105223:-1:6158,105223:0:6158",
+["n"] = "Sandy Pus",
+},
+{
+["s"] = "73339,53729,115884,53769,19967,14348,53744,53676,55068,53773,53742,53152:-1:6262,53152:0:6262",
+["n"] = "Green Machine",
+},
+{
+["s"] = "77344,77343:61938,77345,52478,103317,20962,60907,52479,61796,52480,61773,105223:-1:6158,105223:0:6158",
+["n"] = "Brawlin",
+},
+{
+["s"] = "77344,77343:77343,77345,104602,83202,104135,60907,52479,98614,115986,61773,90755:-1:6162,90755:0:6162",
+["n"] = "Blue",
+},
+{
+["s"] = "105957,77343:77343,165528,104602,20511,83203,104604,105954,98614,106583,105955,96911:-1:4067,96911:0:4067",
+["n"] = "Yeti",
+},
+{
+["s"] = "4713,77343:77343,77345,104602,103317,22002,104604,94331,84223,104150,104603,215:-1:803,215:0:5393",
+["n"] = "zug",
+},
+},
+["class"] = 1,
+},
 ["0E93DBA7"] = {
 ["race"] = 1,
 ["name"] = "Auteist",
@@ -2250,78 +2322,6 @@ NarciCharacterProfiles = {
 },
 },
 ["class"] = 8,
-},
-["0DF1A872"] = {
-["race"] = 2,
-["name"] = "Choppiez",
-["birth"] = 1724951497,
-["serverID"] = 3684,
-["lastVisit"] = 1725464702,
-["outfits"] = {
-{
-["s"] = "4713,77343:77343,77345,104602,103317,104136,104604,94331,104152,104150,104147,53152:-1:6158,53152:0:6158",
-["n"] = "Yas",
-},
-{
-["s"] = "77344,53729,77345,53769,19967,83203,53744,53676,55068,53773,53742,77737:0:6786,67324",
-["n"] = "Greenboy",
-},
-{
-["s"] = "77344,52481,77345,52478,103317,20962,60907,52479,61796,52480,169521,105223:-1:6158,105223:0:6158",
-["n"] = "Sandy Pus",
-},
-{
-["s"] = "73339,53729,115884,53769,19967,14348,53744,53676,55068,53773,53742,53152:-1:6262,53152:0:6262",
-["n"] = "Green Machine",
-},
-{
-["s"] = "77344,77343:61938,77345,52478,103317,20962,60907,52479,61796,52480,61773,105223:-1:6158,105223:0:6158",
-["n"] = "Brawlin",
-},
-{
-["s"] = "77344,77343:77343,77345,104602,83202,104135,60907,52479,98614,115986,61773,90755:-1:6162,90755:0:6162",
-["n"] = "Blue",
-},
-{
-["s"] = "105957,77343:77343,165528,104602,20511,83203,104604,105954,98614,106583,105955,96911:-1:4067,96911:0:4067",
-["n"] = "Yeti",
-},
-{
-["s"] = "4713,77343:77343,77345,104602,103317,22002,104604,94331,84223,104150,104603,215:-1:803,215:0:5393",
-["n"] = "zug",
-},
-},
-["class"] = 1,
-},
-["0EBB3F42"] = {
-["race"] = 31,
-["name"] = "Reedingo",
-["birth"] = 1759950802,
-["serverID"] = 3684,
-["lastVisit"] = 1759950802,
-["outfits"] = {
-{
-["s"] = "77344,98400,92252,80971,83202,83203,61532,94808,97032,93983,93980,94834:0:5384,94834:0:80558",
-["n"] = "Reedingo",
-},
-{
-["s"] = "77344,102289,92320,80971,83202,83203,98391,101847,101902,76423,101910,0,0:0:80561",
-["n"] = "Assuh",
-},
-{
-["s"] = "220796,220798,220800,220793,20512,22002,220801,220795,220799,220797,220794,77674,94855",
-["n"] = "Reedjin",
-},
-{
-["s"] = "40023,51059,94619,80971,83202,96517,51142,51056,69942,34193,61568,96918,50994:0:80559",
-["n"] = "Witch Doctor",
-},
-{
-["s"] = "77344,14095,77345,80971,83202,83203,51142,51056,54465,69094,61568,96918,0:0:80557",
-["n"] = "assa",
-},
-},
-["class"] = 7,
 },
 ["0E8F0F8D"] = {
 ["race"] = 7,

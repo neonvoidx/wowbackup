@@ -214,23 +214,6 @@ MiniCCDB = {
 },
 ["ReverseCooldown"] = true,
 },
-["PrecogGuesserModule"] = {
-["Enabled"] = {
-["Always"] = true,
-},
-["RelativeTo"] = "UIParent",
-["Point"] = "CENTER",
-["RelativePoint"] = "CENTER",
-["Icons"] = {
-["Glow"] = true,
-["ReverseCooldown"] = true,
-["Size"] = 55,
-},
-["Offset"] = {
-["Y"] = 70,
-["X"] = 0,
-},
-},
 ["AlertsModule"] = {
 ["Offset"] = {
 ["Y"] = -100,
@@ -252,7 +235,7 @@ MiniCCDB = {
 ["PvE"] = false,
 ["World"] = false,
 },
-["TargetFocusOnly"] = false,
+["RelativePoint"] = "TOP",
 ["TTS"] = {
 ["VoiceID"] = 0,
 ["Volume"] = 100,
@@ -277,7 +260,24 @@ MiniCCDB = {
 ["Channel"] = "Master",
 },
 },
-["RelativePoint"] = "TOP",
+["TargetFocusOnly"] = false,
+},
+["PrecogGuesserModule"] = {
+["Enabled"] = {
+["Always"] = true,
+},
+["RelativeTo"] = "UIParent",
+["Point"] = "CENTER",
+["RelativePoint"] = "CENTER",
+["Icons"] = {
+["Glow"] = true,
+["ReverseCooldown"] = true,
+["Size"] = 55,
+},
+["Offset"] = {
+["Y"] = 70,
+["X"] = 0,
+},
 },
 ["KickTimerModule"] = {
 ["Offset"] = {

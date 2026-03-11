@@ -10,3 +10,8 @@
   - EditMode_profile.txt
   - SArena_profile.txt
 - For upscaled Icon pack use [this](https://github.com/AcidWeb/Clean-Icons-Mechagnome-Edition/releases/latest), and you place them under `Wow folder/_retail_/Interface`, so you should after copying have `Wow folder/_retail_/Interface/ICONS`
+
+## Screenshots
+
+![](./ui.png)
+![](./editmode.png)

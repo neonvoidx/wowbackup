@@ -1,8 +1,6 @@
 
 CHATTYNATOR_CURRENT_PROFILE = "DEFAULT"
 CHATTYNATOR_COMMAND_HISTORY = {
-"/i /rl",
-"/s /m",
 "/s /ginvite Lightevo",
 "/s /bbf",
 "/s dk?",
@@ -201,5 +199,11 @@ CHATTYNATOR_COMMAND_HISTORY = {
 "/s /bt help",
 "/s /rl",
 "/s /bbf",
+"/s /rl",
+"/s /bbf",
+"/s /rl",
+"/s /bbf",
+"/s /sarena",
+"/s /bbp",
 "/s /rl",
 }
