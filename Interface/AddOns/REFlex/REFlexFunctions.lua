@@ -11,7 +11,6 @@ local sgsub, sbyte, slower, srep = string.gsub, string.byte, string.lower, strin
 local GetAchievementCriteriaInfo = GetAchievementCriteriaInfo
 local GetHonorRewardInfo = C_PvP.GetHonorRewardInfo
 local GetCurrencyInfo = C_CurrencyInfo.GetCurrencyInfo
-local GetConquestWeeklyProgress = C_WeeklyRewards.GetConquestWeeklyProgress
 local GetSecondsUntilWeeklyReset = C_DateAndTime.GetSecondsUntilWeeklyReset
 local PanelTemplates_GetSelectedTab = PanelTemplates_GetSelectedTab
 local IsActiveBattlefieldArena = IsActiveBattlefieldArena
@@ -377,6 +376,7 @@ function RE:GetArenaStatsTooltip(mode)
 	if #RE.TableArena.filtered > 0 then
 		local payload = RE:GetArenaTeamStats(mode)
 		RE.Tooltip = QTIP:Acquire("REFlexTooltipArena", 1, "CENTER")
+		RE:SkinTooltip(RE.Tooltip)
 		RE.Tooltip:SmartAnchorTo(REFlexFrame_StatsButton)
 		if mode == 1 then
 			RE.Tooltip:AddHeader("|cFF74D06C"..L["Most common teams"].."|r")
@@ -776,13 +776,13 @@ function RE:DumpCSV()
 	end
 	RE.DumpFrame:Display()
 
-	if RE.IsSkinned then
+	if ElvUI then
 		local f = DUMP.frames[RE.DumpFrame]:GetName()
-		AddOnSkins[1]:SkinFrame(_G[f])
-		AddOnSkins[1]:CreateBackdrop(_G[f].scrollArea)
-		AddOnSkins[1]:SetOutside(_G[f].scrollArea.Backdrop, _G[f].scrollArea, 4, 4)
-		AddOnSkins[1]:SkinCloseButton(_G[f.."Close"])
-		AddOnSkins[1]:SkinScrollBar(_G[f].scrollArea.ScrollBar)
+		local E = unpack(ElvUI)
+  		local S = E:GetModule("Skins")
+		S:HandleFrame(_G[f])
+		S:HandleCloseButton(_G[f.."Close"])
+		S:HandleScrollBar(_G[f].scrollArea.ScrollBar)
 	end
 end
 
@@ -792,22 +792,6 @@ function RE:GetConquestPoints()
 		return min(currencyInfo.totalEarned, currencyInfo.maxQuantity), currencyInfo.maxQuantity
 	else
 		return 0, 0
-	end
-end
-
-function RE:GetWeeklyChest()
-	local progress = GetConquestWeeklyProgress()
-	if progress then
-		local weeklyStatus = {}
-		for _=1, progress.unlocksCompleted do
-			tinsert(weeklyStatus, "|TInterface\\RaidFrame\\ReadyCheck-Ready:0|t")
-		end
-		for _=1, progress.maxUnlocks - progress.unlocksCompleted do
-			tinsert(weeklyStatus, "|TInterface\\RaidFrame\\ReadyCheck-NotReady:0|t")
-		end
-		return progress.progress, progress.maxProgress, tconcat(weeklyStatus, " ")
-	else
-		return 0, 0, ""
 	end
 end
 

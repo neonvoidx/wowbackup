@@ -21,16 +21,16 @@ BWQDB = {
 ["versionCheck"] = 120007,
 ["profiles"] = {
 [0] = {
-["name"] = "Default",
 ["colors"] = {
 },
+["name"] = "Default",
 ["list"] = {
+},
+["general"] = {
 },
 ["pin"] = {
 },
 ["external"] = {
-},
-["general"] = {
 },
 ["filters"] = {
 [3] = {
@@ -38,9 +38,9 @@ BWQDB = {
 ["Honor"] = false,
 ["Reputation"] = false,
 ["Currency"] = false,
-["Experience"] = false,
-["Gold"] = false,
 ["Item"] = false,
+["Gold"] = false,
+["Experience"] = false,
 ["None"] = false,
 },
 },

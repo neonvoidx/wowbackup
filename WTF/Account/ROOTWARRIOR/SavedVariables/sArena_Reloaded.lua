@@ -8,101 +8,37 @@ sArena_ReloadedDB = {
 ["Auteist - Tichondrius"] = "Default",
 ["Tampacks - Mal'Ganis"] = "Default",
 ["Ofpusstwo - Tichondrius"] = "Default",
-["Neonvoid - Tichondrius"] = "Default",
-["Heilsatan - Tichondrius"] = "Default",
+["Choppiez - Tichondrius"] = "Default",
+["Hellavator - Tichondrius"] = "Default",
 ["Stormclout - Tichondrius"] = "Default",
 ["Reedingo - Mal'Ganis"] = "Default",
 ["Praisesun - Tichondrius"] = "Default",
-["Gehyo - Tichondrius"] = "Default",
-["Crillessana - Mal'Ganis"] = "Default",
 ["Smaugchamp - Tichondrius"] = "Default",
+["Crillessana - Mal'Ganis"] = "Default",
+["Gehyo - Tichondrius"] = "Default",
 ["Ofpuss - Tichondrius"] = "Default",
-["Hellavator - Tichondrius"] = "Default",
-["Choppiez - Tichondrius"] = "Default",
+["Heilsatan - Tichondrius"] = "Default",
+["Neonvoid - Tichondrius"] = "Default",
 ["Clevagirl - Mal'Ganis"] = "Default",
 },
 ["profiles"] = {
 ["Default"] = {
 ["layoutSettings"] = {
-["Pixelated"] = {
-["dr"] = {
-["drCategorySizeOffsets"] = {
+["Gladiuish"] = {
+["cdFont"] = "1",
+["retextureHealerClassStackOnly"] = false,
+["castBar"] = {
+["useModernCastbars"] = true,
 },
-},
-},
-["BlizzTourney"] = {
-["dr"] = {
-["drCategorySizeOffsets"] = {
-},
-},
-},
-["BlizzTarget"] = {
-["dr"] = {
-["blackDRBorder"] = true,
-["posY"] = 1,
-["brightDRBorder"] = false,
-["drCategorySizeOffsets"] = {
-},
-["drBorderGlowOff"] = false,
-["thickPixelBorder"] = false,
-["posX"] = -116,
-["showDRText"] = true,
-["disableDRBorder"] = false,
-["thinPixelBorder"] = false,
-["size"] = 39,
-},
-["scale"] = 1.17,
-["changeFont"] = true,
 ["frameFont"] = "1",
-["posX"] = 546.5,
+["spacing"] = 47,
+["cropIcons"] = false,
 ["textures"] = {
 ["generalStatusBarTexture"] = "Wglass",
 ["healStatusBarTexture"] = "Wglass",
 },
-["posY"] = 63.4,
-["widgets"] = {
-["focusIndicator"] = {
-["enabled"] = true,
-},
-["combatIndicator"] = {
-["enabled"] = true,
-},
-["partyTargetIndicators"] = {
-["enabled"] = true,
-},
-["targetIndicator"] = {
-["enabled"] = true,
-},
-},
-["spacing"] = 22,
-["cdFont"] = "1",
-["castBar"] = {
-["useModernCastbars"] = true,
-["posX"] = -34,
-["width"] = 112,
-},
-["replaceClassIcon"] = true,
-["textSettings"] = {
-["drTextOffsetY"] = -15,
-["drTextSize"] = 1.22,
-["drTextOffsetX"] = 0,
-["drTextAnchor"] = "CENTER",
-},
-["fontOutline"] = "THICKOUTLINE",
-},
-["BlizzRetail"] = {
-["dr"] = {
-["drCategorySizeOffsets"] = {
-},
-},
-},
-["Xaryu"] = {
-["dr"] = {
-["drCategorySizeOffsets"] = {
-},
-},
-},
-["Gladiuish"] = {
+["posY"] = 123,
+["classIconFontSize"] = 15,
 ["dr"] = {
 ["blackDRBorder"] = false,
 ["brightDRBorder"] = true,
@@ -115,21 +51,85 @@ sArena_ReloadedDB = {
 ["posX"] = -104,
 ["size"] = 37,
 },
-["retextureHealerClassStackOnly"] = false,
+["posX"] = 387.6,
+},
+["BlizzTourney"] = {
+["dr"] = {
+["drCategorySizeOffsets"] = {
+},
+},
+},
+["Xaryu"] = {
+["dr"] = {
+["drCategorySizeOffsets"] = {
+},
+},
+},
+["BlizzRetail"] = {
+["dr"] = {
+["drCategorySizeOffsets"] = {
+},
+},
+},
+["BlizzTarget"] = {
+["cdFont"] = "1",
+["scale"] = 1.17,
 ["castBar"] = {
 ["useModernCastbars"] = true,
+["posX"] = -34,
+["width"] = 112,
 },
 ["frameFont"] = "1",
-["spacing"] = 47,
-["cropIcons"] = false,
+["spacing"] = 22,
 ["textures"] = {
 ["healStatusBarTexture"] = "Wglass",
 ["generalStatusBarTexture"] = "Wglass",
 },
-["posY"] = 123,
-["classIconFontSize"] = 15,
-["cdFont"] = "1",
-["posX"] = 387.6,
+["posY"] = 63.4,
+["replaceClassIcon"] = true,
+["fontOutline"] = "THICKOUTLINE",
+["dr"] = {
+["blackDRBorder"] = true,
+["posY"] = 1,
+["brightDRBorder"] = false,
+["drCategorySizeOffsets"] = {
+},
+["drBorderGlowOff"] = false,
+["posX"] = -116,
+["thickPixelBorder"] = false,
+["showDRText"] = true,
+["disableDRBorder"] = false,
+["thinPixelBorder"] = false,
+["size"] = 39,
+},
+["textSettings"] = {
+["drTextOffsetY"] = -15,
+["drTextAnchor"] = "CENTER",
+["drTextOffsetX"] = 0,
+["drTextSize"] = 1.22,
+},
+["widgets"] = {
+["targetIndicator"] = {
+["enabled"] = true,
+},
+["combatIndicator"] = {
+["enabled"] = true,
+},
+["partyTargetIndicators"] = {
+["enabled"] = true,
+},
+["focusIndicator"] = {
+["enabled"] = true,
+},
+},
+["changeFont"] = true,
+["posX"] = 546.5,
+},
+["Pixelated"] = {
+["dr"] = {
+["drCategorySizeOffsets"] = {
+},
+},
 },
 },
 ["replaceHealerIcon"] = true,
@@ -141,20 +141,20 @@ sArena_ReloadedDB = {
 ["darkMode"] = true,
 ["colorMysteryGray"] = false,
 ["dbClean1"] = true,
-["classColorNames"] = true,
+["drStaticIconsPerClass"] = true,
 ["drIconsPerClass"] = {
-["ROGUE"] = {
-["Silence"] = 132297,
-["Incapacitate"] = 132310,
-["Disorient"] = "136175]",
-},
-["EVOKER"] = {
-["Disorient"] = 136183,
-},
 ["DEMONHUNTER"] = {
 ["Stun"] = 7554172,
 ["Incapacitate"] = 1380368,
 ["Disorient"] = 1418287,
+},
+["EVOKER"] = {
+["Disorient"] = 136183,
+},
+["ROGUE"] = {
+["Silence"] = 132297,
+["Incapacitate"] = 132310,
+["Disorient"] = "136175]",
 },
 },
 ["drResetTimeFix"] = true,
@@ -166,7 +166,7 @@ sArena_ReloadedDB = {
 },
 ["drStaticIcons"] = true,
 ["invertTrinketRacialCooldown"] = false,
-["drStaticIconsPerClass"] = true,
+["classColorNames"] = true,
 ["drResetTime"] = 18.5,
 ["hideClassIcon"] = false,
 ["disableAurasOnClassIcon"] = false,

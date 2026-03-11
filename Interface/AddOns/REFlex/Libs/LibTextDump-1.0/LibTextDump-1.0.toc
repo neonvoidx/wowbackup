@@ -1,10 +1,10 @@
-## Interface: 90001
+## Interface: 110207, 120000, 120001
 ## Title: Lib: TextDump-1.0
 ## Notes: Provides one or many frames for dumping text into.
 ## Author: Torhal
-## Version: f896211
+## Version: 12.0.0.1
 ## LoadOnDemand: 1
-## X-Date: 2023-03-31T02:26:43Z
+## X-Date: 2026-01-30T16:16:08Z
 ## X-Category: Libraries
 ## X-License: All Rights Reserved
 

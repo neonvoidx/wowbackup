@@ -202,4 +202,6 @@ CHATTYNATOR_COMMAND_HISTORY = {
 "/s lol you can just stand in middle here",
 "/s you wont get sucked",
 "/s /rl",
+"/s /m",
+"/s /wa",
 }

@@ -5,8 +5,8 @@ MiniCCDB = {
 ["Enabled"] = {
 ["BattleGrounds"] = false,
 ["Arena"] = true,
-["World"] = true,
 ["PvE"] = true,
+["World"] = true,
 },
 ["Raid"] = {
 ["ExcludePlayer"] = false,
@@ -49,29 +49,17 @@ MiniCCDB = {
 ["Enabled"] = {
 ["BattleGrounds"] = true,
 ["Arena"] = true,
-["World"] = true,
 ["PvE"] = true,
+["World"] = true,
 },
 ["ScaleWithNameplate"] = false,
 ["Friendly"] = {
 ["Combined"] = {
 ["Grow"] = "RIGHT",
-["Enabled"] = false,
-["Icons"] = {
-["MaxIcons"] = 5,
-["Glow"] = true,
-["ColorByCategory"] = true,
-["ReverseCooldown"] = true,
-["Size"] = 50,
-},
 ["Offset"] = {
 ["Y"] = 0,
 ["X"] = 2,
 },
-},
-["Important"] = {
-["Enabled"] = false,
-["Grow"] = "LEFT",
 ["Icons"] = {
 ["MaxIcons"] = 5,
 ["Glow"] = true,
@@ -79,14 +67,29 @@ MiniCCDB = {
 ["ReverseCooldown"] = true,
 ["Size"] = 50,
 },
+["Enabled"] = false,
+},
+["Important"] = {
+["Enabled"] = false,
 ["Offset"] = {
 ["Y"] = 0,
 ["X"] = -2,
 },
+["Icons"] = {
+["MaxIcons"] = 5,
+["Glow"] = true,
+["ColorByCategory"] = true,
+["ReverseCooldown"] = true,
+["Size"] = 50,
+},
+["Grow"] = "LEFT",
 },
 ["CC"] = {
 ["Enabled"] = true,
-["Grow"] = "CENTER",
+["Offset"] = {
+["Y"] = 49,
+["X"] = 0,
+},
 ["Icons"] = {
 ["MaxIcons"] = 5,
 ["Glow"] = false,
@@ -94,17 +97,17 @@ MiniCCDB = {
 ["ReverseCooldown"] = true,
 ["Size"] = 30,
 },
-["Offset"] = {
-["Y"] = 49,
-["X"] = 0,
-},
+["Grow"] = "CENTER",
 },
 ["IgnorePets"] = true,
 },
 ["Enemy"] = {
 ["Combined"] = {
 ["Grow"] = "RIGHT",
-["Enabled"] = false,
+["Offset"] = {
+["Y"] = 0,
+["X"] = 2,
+},
 ["Icons"] = {
 ["MaxIcons"] = 5,
 ["Glow"] = true,
@@ -112,14 +115,14 @@ MiniCCDB = {
 ["ReverseCooldown"] = true,
 ["Size"] = 50,
 },
-["Offset"] = {
-["Y"] = 0,
-["X"] = 2,
-},
+["Enabled"] = false,
 },
 ["Important"] = {
 ["Enabled"] = true,
-["Grow"] = "LEFT",
+["Offset"] = {
+["Y"] = 3,
+["X"] = 6,
+},
 ["Icons"] = {
 ["MaxIcons"] = 5,
 ["Glow"] = true,
@@ -127,14 +130,14 @@ MiniCCDB = {
 ["ReverseCooldown"] = true,
 ["Size"] = 28,
 },
-["Offset"] = {
-["Y"] = 3,
-["X"] = 6,
-},
+["Grow"] = "LEFT",
 },
 ["CC"] = {
 ["Enabled"] = true,
-["Grow"] = "RIGHT",
+["Offset"] = {
+["Y"] = 3,
+["X"] = -8,
+},
 ["Icons"] = {
 ["MaxIcons"] = 5,
 ["Glow"] = false,
@@ -142,10 +145,7 @@ MiniCCDB = {
 ["ReverseCooldown"] = true,
 ["Size"] = 32,
 },
-["Offset"] = {
-["Y"] = 3,
-["X"] = -8,
-},
+["Grow"] = "RIGHT",
 },
 ["IgnorePets"] = true,
 },
@@ -154,13 +154,10 @@ MiniCCDB = {
 ["Enabled"] = {
 ["BattleGrounds"] = false,
 ["Arena"] = false,
-["World"] = false,
 ["PvE"] = false,
+["World"] = false,
 },
-["Offset"] = {
-["Y"] = 0,
-["X"] = 0,
-},
+["Grow"] = "CENTER",
 ["Icons"] = {
 ["Glow"] = false,
 ["Count"] = 3,
@@ -168,21 +165,21 @@ MiniCCDB = {
 ["ColorByDispelType"] = false,
 ["Size"] = 19,
 },
-["Grow"] = "CENTER",
+["Offset"] = {
+["Y"] = 0,
+["X"] = 0,
+},
 },
 ["CCModule"] = {
 ["Enabled"] = {
 ["BattleGrounds"] = false,
 ["Arena"] = true,
-["World"] = true,
 ["PvE"] = true,
+["World"] = true,
 },
 ["Raid"] = {
 ["Grow"] = "CENTER",
-["Offset"] = {
-["Y"] = 0,
-["X"] = 2,
-},
+["ExcludePlayer"] = false,
 ["Icons"] = {
 ["Glow"] = false,
 ["ColorByDispelType"] = false,
@@ -190,14 +187,14 @@ MiniCCDB = {
 ["Count"] = 3,
 ["Size"] = 32,
 },
-["ExcludePlayer"] = false,
-},
-["Default"] = {
-["Grow"] = "RIGHT",
 ["Offset"] = {
 ["Y"] = 0,
 ["X"] = 2,
 },
+},
+["Default"] = {
+["Grow"] = "RIGHT",
+["ExcludePlayer"] = true,
 ["Icons"] = {
 ["Glow"] = true,
 ["ColorByDispelType"] = true,
@@ -205,7 +202,10 @@ MiniCCDB = {
 ["Count"] = 3,
 ["Size"] = 32,
 },
-["ExcludePlayer"] = true,
+["Offset"] = {
+["Y"] = 0,
+["X"] = 2,
+},
 },
 },
 ["PortraitModule"] = {
@@ -214,35 +214,20 @@ MiniCCDB = {
 },
 ["ReverseCooldown"] = false,
 },
-["HealerCCModule"] = {
+["PrecogGuesserModule"] = {
 ["Enabled"] = {
-["BattleGrounds"] = false,
-["Arena"] = true,
-["World"] = false,
-["PvE"] = false,
+["Always"] = true,
 },
 ["RelativeTo"] = "UIParent",
 ["Point"] = "CENTER",
+["RelativePoint"] = "CENTER",
 ["Icons"] = {
 ["Glow"] = true,
 ["ReverseCooldown"] = true,
-["ColorByDispelType"] = true,
-["Size"] = 72,
-},
-["ShowWarningText"] = true,
-["Font"] = {
-["Flags"] = "OUTLINE",
-["File"] = "Fonts\\FRIZQT__.TTF",
-["Size"] = 32,
-},
-["RelativePoint"] = "TOP",
-["Sound"] = {
-["Enabled"] = true,
-["File"] = "Sonar.ogg",
-["Channel"] = "Master",
+["Size"] = 70,
 },
 ["Offset"] = {
-["Y"] = -200,
+["Y"] = 70,
 ["X"] = 0,
 },
 },
@@ -261,8 +246,13 @@ MiniCCDB = {
 ["ColorByClass"] = true,
 ["Size"] = 58,
 },
+["Enabled"] = {
+["BattleGrounds"] = false,
+["Arena"] = true,
+["PvE"] = false,
+["World"] = false,
+},
 ["TargetFocusOnly"] = false,
-["RelativePoint"] = "TOP",
 ["TTS"] = {
 ["VoiceID"] = 0,
 ["Volume"] = 100,
@@ -287,12 +277,7 @@ MiniCCDB = {
 ["Channel"] = "Master",
 },
 },
-["Enabled"] = {
-["BattleGrounds"] = false,
-["Arena"] = true,
-["World"] = false,
-["PvE"] = false,
-},
+["RelativePoint"] = "TOP",
 },
 ["KickTimerModule"] = {
 ["Offset"] = {
@@ -309,8 +294,8 @@ MiniCCDB = {
 },
 ["Enabled"] = {
 ["Always"] = false,
-["Healer"] = false,
 ["Caster"] = false,
+["Healer"] = false,
 },
 },
 ["TrinketsModule"] = {
@@ -322,32 +307,47 @@ MiniCCDB = {
 },
 ["Point"] = "RIGHT",
 ["RelativePoint"] = "LEFT",
-["ExcludePlayer"] = false,
-["Icons"] = {
-["Glow"] = false,
-["ReverseCooldown"] = false,
-["ShowText"] = true,
-["Size"] = 50,
-},
 ["Offset"] = {
 ["Y"] = 0,
 ["X"] = -2,
 },
+["Icons"] = {
+["ReverseCooldown"] = false,
+["Glow"] = false,
+["ShowText"] = true,
+["Size"] = 50,
 },
-["PrecogGuesserModule"] = {
+["ExcludePlayer"] = false,
+},
+["HealerCCModule"] = {
 ["Enabled"] = {
-["Always"] = true,
+["BattleGrounds"] = false,
+["Arena"] = true,
+["PvE"] = false,
+["World"] = false,
 },
 ["RelativeTo"] = "UIParent",
 ["Point"] = "CENTER",
-["RelativePoint"] = "CENTER",
 ["Icons"] = {
-["Glow"] = true,
 ["ReverseCooldown"] = true,
-["Size"] = 70,
+["Glow"] = true,
+["ColorByDispelType"] = true,
+["Size"] = 72,
+},
+["ShowWarningText"] = true,
+["Font"] = {
+["Flags"] = "OUTLINE",
+["File"] = "Fonts\\FRIZQT__.TTF",
+["Size"] = 32,
+},
+["RelativePoint"] = "TOP",
+["Sound"] = {
+["Enabled"] = true,
+["File"] = "Sonar.ogg",
+["Channel"] = "Master",
 },
 ["Offset"] = {
-["Y"] = 70,
+["Y"] = -200,
 ["X"] = 0,
 },
 },
@@ -357,6 +357,6 @@ MiniCCDB = {
 ["IconSpacing"] = 2,
 ["WhatsNew"] = {
 },
-["GlowType"] = "Proc Glow",
 ["FontScale"] = 1,
+["GlowType"] = "Proc Glow",
 }

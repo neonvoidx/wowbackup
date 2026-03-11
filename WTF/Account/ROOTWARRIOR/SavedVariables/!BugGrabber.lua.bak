@@ -1,7 +1,7 @@
 
 BugGrabberDB = {
+["session"] = 5296,
 ["lastSanitation"] = 3,
-["session"] = 5295,
 ["errors"] = {
 {
 ["message"] = "...AddOns/Blizzard_GameTooltip/Mainline/GameTooltip.lua:754: attempt to perform arithmetic on a secret number value (tainted by 'HandyNotes_Midnight')",

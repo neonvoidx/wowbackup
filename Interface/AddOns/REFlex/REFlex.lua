@@ -60,10 +60,9 @@ local UIParentLoadAddOn = UIParentLoadAddOn
 local RegisterAddonMessagePrefix = C_ChatInfo.RegisterAddonMessagePrefix
 local SendAddonMessage = C_ChatInfo.SendAddonMessage
 local PlaySound = PlaySound
-local ElvUI = ElvUI
 
-RE.Version = 3322
-RE.LastSquash = 1602662400
+RE.Version = 3500
+RE.LastSquash = 1768917600
 RE.FoundNewVersion = false
 
 RE.DataSaved = false
@@ -72,7 +71,7 @@ RE.PrepareGUI = true
 RE.MatchData = {}
 RE.BGData = {}
 RE.ArenaData = {}
-RE.RatingChange = {0, 0, 0, 0, 0, 0, 0}
+RE.RatingChange = {0, 0, 0, 0, 0, 0, 0, 0, 0}
 RE.CalendarMode = 0
 RE.HideID = 0
 RE.Season = 0
@@ -255,11 +254,8 @@ function RE:OnEvent(_, event, ...)
 			local brawlInfo = GetAvailableBrawlInfo()
 			local mod = 0
 			RE.Tooltip = QTIP:Acquire("REFlexTooltipLDB", 2, "LEFT", "LEFT")
+			RE:SkinTooltip(RE.Tooltip)
 			RE.Tooltip:SmartAnchorTo(frame or self)
-			if ElvUI then
-				local red, green, blue = unpack(ElvUI[1].media.backdropfadecolor)
-				RE.Tooltip:SetBackdropColor(red, green, blue, ElvUI[1].Tooltip and ElvUI[1].Tooltip.db.colorAlpha or 1)
-			end
 			RE.Tooltip:AddHeader("", "")
 			RE.Tooltip:SetCell(1, 1, "|cFFFFD100"..DAILY.."|r", RE.Tooltip:GetHeaderFont(), "CENTER", 2)
 			RE.Tooltip:AddLine(BATTLEGROUND , GetRandomBGInfo().hasRandomWinToday and "|TInterface\\RaidFrame\\ReadyCheck-Ready:0|t" or "|TInterface\\RaidFrame\\ReadyCheck-NotReady:0|t")
@@ -270,29 +266,21 @@ function RE:OnEvent(_, event, ...)
 			else
 				mod = 1
 			end
-			RE.Tooltip:AddLine(PVP_RATED_SOLO_SHUFFLE, select(5, GetBrawlRewards(4)) and "|TInterface\\RaidFrame\\ReadyCheck-Ready:0|t" or "|TInterface\\RaidFrame\\ReadyCheck-NotReady:0|t")
 			RE.Tooltip:AddSeparator()
-			for _, i in pairs({7, 1, 2, 4}) do
+			for _, i in pairs({7, 1, 2, 9, 4}) do
 				RE.Tooltip:AddLine(RE.BracketNames[i], select(9, GetPersonalRatedInfo(i)) and "|TInterface\\RaidFrame\\ReadyCheck-Ready:0|t" or "|TInterface\\RaidFrame\\ReadyCheck-NotReady:0|t")
 			end
 			RE.Tooltip:AddLine("", "")
 			RE.Tooltip:AddHeader("", "")
-			RE.Tooltip:SetCell(13 - mod, 1, "|cFFFFD100"..HONOR.."|r", RE.Tooltip:GetHeaderFont(), "CENTER", 2)
+			RE.Tooltip:SetCell(12 - mod, 1, "|cFFFFD100"..LFG_LIST_HONOR_LEVEL_INSTR_SHORT.."|r", RE.Tooltip:GetHeaderFont(), "CENTER", 2)
 			RE.Tooltip:AddLine("", "")
-			RE.Tooltip:SetCell(14 - mod, 1, UnitHonor("player").." / "..UnitHonorMax("player"), "CENTER", 2)
+			RE.Tooltip:SetCell(13 - mod, 1, UnitHonor("player").." / "..UnitHonorMax("player"), "CENTER", 2)
 			if IsPlayerAtEffectiveMaxLevel() and GetCurrentArenaSeason() > 0 then
 				local current, cap = RE:GetConquestPoints()
-				local weeklyCurrent, weeklycap, weeklyProgress = RE:GetWeeklyChest()
 				RE.Tooltip:AddHeader("", "")
-				RE.Tooltip:SetCell(15 - mod, 1, "|cFFFFD100"..PVP_CONQUEST.."|r", RE.Tooltip:GetHeaderFont(), "CENTER", 2)
+				RE.Tooltip:SetCell(14 - mod, 1, "|cFFFFD100"..PVP_CONQUEST.."|r", RE.Tooltip:GetHeaderFont(), "CENTER", 2)
 				RE.Tooltip:AddLine("", "")
-				RE.Tooltip:SetCell(16 - mod, 1, current.." / "..cap, "CENTER", 2)
-				RE.Tooltip:AddHeader("", "")
-				RE.Tooltip:SetCell(17 - mod, 1, "|cFFFFD100"..RATED_PVP_WEEKLY_CHEST.."|r", RE.Tooltip:GetHeaderFont(), "CENTER", 2)
-				RE.Tooltip:AddLine("", "")
-				RE.Tooltip:SetCell(18 - mod, 1, weeklyCurrent.." / "..weeklycap, "CENTER", 2)
-				RE.Tooltip:AddLine("", "")
-				RE.Tooltip:SetCell(19 - mod, 1, weeklyProgress, "CENTER", 2)
+				RE.Tooltip:SetCell(15 - mod, 1, current.." / "..cap, "CENTER", 2)
 			end
 			RE.Tooltip:Show()
 		end
@@ -320,7 +308,7 @@ function RE:OnEvent(_, event, ...)
 				elseif button == "MiddleButton" then
 					RE:SurrenderMatch()
 				elseif button == "RightButton" then
-					Settings.OpenToCategory("REFlex")
+					Settings.OpenToCategory(RE.OptionsMenu.name)
 				end
 			else
 				if button == "LeftButton" then
@@ -370,8 +358,6 @@ function RE:OnEvent(_, event, ...)
 
 		RE.DumpFrame = DUMP:New("REFlex - CSV")
 
-		RE.IsSkinned = AddOnSkins and AddOnSkins[1]:CheckOption("REFlex") or false
-
 		if RE.Settings.LDBMode == 1 then
 			RE:GetSessionHonor()
 		end
@@ -407,7 +393,6 @@ function RE:OnEvent(_, event, ...)
 		end
 		if instanceType == "pvp" or instanceType == "arena" then
 			RE.Match = true
-			SendAddonMessage("REFlex", "Version;"..RE.Version, "INSTANCE_CHAT")
 			if IsInGuild() then
 				SendAddonMessage("REFlex", "Version;"..RE.Version, "GUILD")
 			end
@@ -419,7 +404,7 @@ function RE:OnEvent(_, event, ...)
 		TimerAfter(1, RE.PVPEnd)
 	elseif event == "PVP_RATED_STATS_UPDATE" then
 		RE.Season = GetCurrentArenaSeason()
-		for _, i in pairs({1, 2, 4, 7}) do
+		for _, i in pairs({1, 2, 4, 7, 9}) do
 			local currentRating, _, _, _, _, _, _, bestRating = GetPersonalRatedInfo(i)
 			RE.RatingChange[i] = currentRating - bestRating
 		end
@@ -441,6 +426,7 @@ function RE:OnEnterTooltip(cellFrame, databaseID)
 		if RE.Database[databaseID].isSoloShuffle then
 			local team, damageSum, healingSum = RE:GetArenaTeamDetails(databaseID, true)
 			RE.Tooltip = QTIP:Acquire("REFlexTooltip", 3, "CENTER", "CENTER", "CENTER")
+			RE:SkinTooltip(RE.Tooltip)
 			RE.Tooltip:AddLine()
 			for i=1, 3 do
 				RE.Tooltip:SetCell(1, i, "", nil, nil, nil, nil, nil, nil, nil, 80)
@@ -463,6 +449,7 @@ function RE:OnEnterTooltip(cellFrame, databaseID)
 			local team, damageSum, healingSum = RE:GetArenaTeamDetails(databaseID, true)
 			local teamEnemy, damageSumEnemy, healingSumEnemy = RE:GetArenaTeamDetails(databaseID, false)
 			RE.Tooltip = QTIP:Acquire("REFlexTooltip", 7, "CENTER", "CENTER", "CENTER", "CENTER", "CENTER", "CENTER", "CENTER")
+			RE:SkinTooltip(RE.Tooltip)
 			RE.Tooltip:AddLine()
 			for i=1, 7 do
 				if i == 4 then
@@ -492,6 +479,7 @@ function RE:OnEnterTooltip(cellFrame, databaseID)
 		local placeFKB, placeFHK, placeFHonor, placeFDamage, placeFHealing = unpack(RE.Database[databaseID].BGPlace[1])
 		local mmrLine = nil
 		RE.Tooltip = QTIP:Acquire("REFlexTooltip", 3, "CENTER", "CENTER", "CENTER")
+		RE:SkinTooltip(RE.Tooltip)
 		if RE.Database[databaseID].isRated then
 			if RE.PlayerFaction == 0 then
 				mmrLine = "|cFF74D06CMMR|r|n|cFFFF141D"..RE:GetMMR(databaseID, true).."|r|n|cFF00A9FF"..RE:GetMMR(databaseID, false).."|r"
@@ -549,6 +537,7 @@ function RE:OnEnterTooltip(cellFrame, databaseID)
 		if IsAltKeyDown() and RE.Database[databaseID].isRated then
 			local team, damageSum, healingSum, kbSum = RE:GetRGBTeamDetails(databaseID, true)
 			RE.TooltipRGB1 = QTIP:Acquire("REFlexTooltipRGB1", 7, "CENTER", "CENTER", "CENTER", "CENTER", "CENTER", "CENTER", "CENTER")
+			RE:SkinTooltip(RE.TooltipRGB1)
 			RE.TooltipRGB1:AddLine()
 			for i=1, 7 do
 				if i == 2 then
@@ -568,13 +557,10 @@ function RE:OnEnterTooltip(cellFrame, databaseID)
 			RE.TooltipRGB1:ClearAllPoints()
 			RE.TooltipRGB1:SetClampedToScreen(true)
 			RE.TooltipRGB1:SetPoint("RIGHT", RE.Tooltip, "LEFT", -5, 0)
-			if ElvUI then
-				local red, green, blue = unpack(ElvUI[1].media.backdropfadecolor)
-				RE.TooltipRGB1:SetBackdropColor(red, green, blue, ElvUI[1].Tooltip and ElvUI[1].Tooltip.db.colorAlpha or 1)
-			end
 			RE.TooltipRGB1:Show()
 			team, damageSum, healingSum, kbSum = RE:GetRGBTeamDetails(databaseID, false)
 			RE.TooltipRGB2 = QTIP:Acquire("REFlexTooltipRGB2", 7, "CENTER", "CENTER", "CENTER", "CENTER", "CENTER", "CENTER", "CENTER")
+			RE:SkinTooltip(RE.TooltipRGB2)
 			RE.TooltipRGB2:AddLine()
 			for i=1, 7 do
 				if i == 2 then
@@ -594,16 +580,8 @@ function RE:OnEnterTooltip(cellFrame, databaseID)
 			RE.TooltipRGB2:ClearAllPoints()
 			RE.TooltipRGB2:SetClampedToScreen(true)
 			RE.TooltipRGB2:SetPoint("LEFT", RE.Tooltip, "RIGHT", 5, 0)
-			if ElvUI then
-				local red, green, blue = unpack(ElvUI[1].media.backdropfadecolor)
-				RE.TooltipRGB2:SetBackdropColor(red, green, blue, ElvUI[1].Tooltip and ElvUI[1].Tooltip.db.colorAlpha or 1)
-			end
 			RE.TooltipRGB2:Show()
 		end
-	end
-	if ElvUI then
-		local red, green, blue = unpack(ElvUI[1].media.backdropfadecolor)
-		RE.Tooltip:SetBackdropColor(red, green, blue, ElvUI[1].Tooltip and ElvUI[1].Tooltip.db.colorAlpha or 1)
 	end
 	RE.Tooltip:SmartAnchorTo(cellFrame)
 	RE.Tooltip:Show()
@@ -725,13 +703,13 @@ function RE:UpdateGUI()
 		RE.TableBG:SetData(RE.BGData, true)
 		if PanelTemplates_GetSelectedTab(REFlexFrame) == 1 then
 			RE.TableBG:SetFilter(RE.FilterDefault)
-			REFlexFrame_ScoreHolder_RBG:SetText("|cFFFFD100"..RATING..":|r "..select(1, GetPersonalRatedInfo(4)))
+			REFlexFrame_ScoreHolder_RBG:SetText("|cFFFFD100"..RATING..":|r "..select(1, GetPersonalRatedInfo(9)).." |cFFFFD100/|r "..select(1, GetPersonalRatedInfo(4)))
 		elseif PanelTemplates_GetSelectedTab(REFlexFrame) == 2 then
 			RE.TableBG:SetFilter(RE.FilterCasual)
 			REFlexFrame_ScoreHolder_RBG:SetText("")
 		elseif PanelTemplates_GetSelectedTab(REFlexFrame) == 3 then
 			RE.TableBG:SetFilter(RE.FilterRated)
-			REFlexFrame_ScoreHolder_RBG:SetText("|cFFFFD100"..RATING..":|r "..select(1, GetPersonalRatedInfo(4)))
+			REFlexFrame_ScoreHolder_RBG:SetText("|cFFFFD100"..RATING..":|r "..select(1, GetPersonalRatedInfo(9)).." |cFFFFD100/|r "..select(1, GetPersonalRatedInfo(4)))
 		end
 		local won, lost = RE:GetWinNumber(PanelTemplates_GetSelectedTab(REFlexFrame), false)
 		local kb, topKB, hk, topHK, _, _, damage, topDamage, healing, topHealing = RE:GetStats(PanelTemplates_GetSelectedTab(REFlexFrame), false, false)
@@ -896,8 +874,8 @@ function RE:UpdateLDB()
 	end
 	RE.Settings.Filters = savedFilters
 
-	RE.LDBA = "|cFF00FF00"..RE.LDBData.Won.."|r|cFF9D9D9D-|r|cFFFF141C"..RE.LDBData.Lost.."|r |cFF9D9D9D|||r |cFFCC9900"..AbbreviateNumbers(RE.LDBData.Honor).."|r |cFF9D9D9D|||r "..AbbreviateNumbers(RE.LDBData.HK)
-	RE.LDBB = RE:RatingChangeClean(RE.RatingChange[7], false).." |cFF9D9D9D|||r "..RE:RatingChangeClean(RE.RatingChange[1], false).." |cFF9D9D9D|||r "..RE:RatingChangeClean(RE.RatingChange[2], false).." |cFF9D9D9D|||r "..RE:RatingChangeClean(RE.RatingChange[4], false)
+	RE.LDBA = "|cFF00FF00"..RE.LDBData.Won.."|r|cFF9D9D9D-|r|cFFFF141C"..RE.LDBData.Lost.."|r | |cFFCC9900"..AbbreviateNumbers(RE.LDBData.Honor).."|r | "..AbbreviateNumbers(RE.LDBData.HK)
+	RE.LDBB = RE:RatingChangeClean(RE.RatingChange[7], false).." | "..RE:RatingChangeClean(RE.RatingChange[1], false).." | "..RE:RatingChangeClean(RE.RatingChange[2], false).." | "..RE:RatingChangeClean(RE.RatingChange[9], false).." | "..RE:RatingChangeClean(RE.RatingChange[4], false)
 
 	RE.LDB.text = RE["LDB"..RE.Settings.LDBSide]
 end
@@ -917,13 +895,14 @@ function RE:PVPEnd()
 	RE.MatchData.Time = RE:GetUTCTimestamp()
 	RE.MatchData.isBrawl = IsInBrawl()
 	RE.MatchData.isSoloShuffle = IsSoloShuffle()
+	RE.MatchData.isRatedSoloShuffle = IsRatedSoloShuffle()
 	RE.MatchData.Version = RE.Version
 
 	if RE.MapIDRemap[RE.MatchData.Map] then
 		RE.MatchData.Map = RE.MapIDRemap[RE.MatchData.Map]
 	end
 
-	if IsRatedBattleground() or IsSoloRBG() or (IsRatedArena() and not IsArenaSkirmish() and not RE.MatchData.isSoloShuffle) or IsRatedSoloShuffle() then
+	if IsRatedBattleground() or IsSoloRBG() or (IsRatedArena() and not IsArenaSkirmish() and not RE.MatchData.isSoloShuffle) or RE.MatchData.isRatedSoloShuffle then
 		RE.MatchData.isRated = true
 	else
 		RE.MatchData.isRated = false

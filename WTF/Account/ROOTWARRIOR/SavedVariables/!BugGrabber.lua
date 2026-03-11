@@ -1,15 +1,7 @@
 
 BugGrabberDB = {
-["session"] = 5296,
 ["lastSanitation"] = 3,
+["session"] = 5297,
 ["errors"] = {
-{
-["message"] = "...AddOns/Blizzard_GameTooltip/Mainline/GameTooltip.lua:754: attempt to perform arithmetic on a secret number value (tainted by 'HandyNotes_Midnight')",
-["time"] = "2026/03/10 19:28:35",
-["locals"] = "self = Frame {\n itemTextureSet = true\n IconOverlay2 = Texture {\n }\n count = 1\n isCraftedItem = false\n Text = FontString {\n }\n FollowerTooltip = GameTooltipGarrisonFollowerTooltip {\n }\n isProfessionItem = false\n yspacing = 13\n IconOverlay = Texture {\n }\n Count = FontString {\n }\n IconBorder = Texture {\n }\n itemID = 238556\n Tooltip = GameTooltipTooltip {\n }\n Icon = Texture {\n }\n}\nitemTooltipExtraBorderHeight = 22\n(*temporary) = <no value>\n(*temporary) = <no value>\n(*temporary) = Texture {\n}\n(*temporary) = <no value>\n(*temporary) = nil\n(*temporary) = nil\n(*temporary) = \"attempt to perform arithmetic on a secret number value (tainted by 'HandyNotes_Midnight')\"\n",
-["stack"] = "[Interface/AddOns/Blizzard_GameTooltip/Mainline/GameTooltip.lua]:754: in function 'EmbeddedItemTooltip_UpdateSize'\n[*GameTooltip.xml:96_OnSizeChanged]:1: in function <[string \"*GameTooltip.xml:96_OnSizeChanged\"]:1>\n[C]: in function 'GetWidth'\n[Interface/AddOns/Blizzard_GameTooltip/Mainline/GameTooltip.lua]:754: in function 'EmbeddedItemTooltip_UpdateSize'\n[Interface/AddOns/Blizzard_GameTooltip/Mainline/GameTooltip.lua]:807: in function <...AddOns/Blizzard_GameTooltip/Mainline/GameTooltip.lua:794>\n[C]: in function 'EmbeddedItemTooltip_SetItemByID'\n[Interface/AddOns/HandyNotes_Midnight/core/nodes.lua]:477: in function 'Render'\n[Interface/AddOns/HandyNotes_Midnight/core/core.lua]:141: in function <Interface/AddOns/HandyNotes_Midnight/core/core.lua:140>\n",
-["session"] = 5293,
-["counter"] = 2,
-},
 },
 }

@@ -1,9 +1,5 @@
 VER 3 0100000000000020 " " "INV_MISC_QUESTIONMARK"
 #showtooltip Rising Sun Kick
-/stopmacro [channeling:Fists of Fury]
-/stopmacro [channeling:Crackling Jade Lightning]
-/stopmacro [channeling:Spinning Crane Kick]
-/stopmacro [channeling:Celestial Conduit]
 /cast Rising Sun Kick
 END
 VER 3 0100000000000017 " " "INV_MISC_QUESTIONMARK"

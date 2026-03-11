@@ -20,10 +20,19 @@ MR:RegisterModule({
         }
 
         local UATV_BRANCHES = {
-            { quest = 93909, name = L["Unity_Delves"]    },
-            { quest = 93911, name = L["Unity_Dungeons"]  },
-            { quest = 93912, name = L["Unity_Raids"]     },
-            { quest = 93910, name = L["Unity_PvP"]       },
+            { quest = 93890, name = L["Unity_Abundance"]     },
+            { quest = 93767, name = L["Unity_Arcantina"]     },
+            { quest = 94457, name = L["Unity_Battlegrounds"] },
+            { quest = 93909, name = L["Unity_Delves"]        },
+            { quest = 93911, name = L["Unity_Dungeons"]      },
+            { quest = 93769, name = L["Unity_Housing"]       },
+            { quest = 93891, name = L["Unity_Legends"]       },
+            { quest = 93910, name = L["Unity_Prey"]          },
+            { quest = 93912, name = L["Unity_Raids"]         },
+            { quest = 93889, name = L["Unity_Soiree"]        },
+            { quest = 93892, name = L["Unity_Stormarion"]    },
+            { quest = 93913, name = L["Unity_WorldBoss"]     },
+            { quest = 93766, name = L["Unity_WorldQuests"]   },
         }
 
         local db = MR.db.char.progress
@@ -65,20 +74,17 @@ MR:RegisterModule({
             questIds = { 89507 },
         },
         {
-            key   = "lost_legends",
-            label = L["Weekly_Legends_Label"],
-            max   = 1,
-        },
-        {
-            key   = "high_esteem",
-            label = L["Weekly_Esteem_Label"],
-            max   = 1,
+            key      = "lost_legends",
+            label    = L["Weekly_Legends_Label"],
+            max      = 1,
+            questIds = { 89268 }, 
         },
         {
             key      = "saltherils_soiree",
             label    = L["Weekly_Soiree_Label"],
             max      = 1,
             note     = L["Weekly_Soiree_Note"],
+            questIds = { 89289 }, 
             tooltipFunc = function(tip)
                 local variants = {
                     { quest = 93889, name = "Midnight: Saltheril's Soiree" },
@@ -117,29 +123,101 @@ MR:RegisterModule({
             end,
         },
         {
+            key      = "fortify_runestones",
+            label    = L["Weekly_Fortify_Label"],
+            max      = 1,
+            note     = L["Weekly_Fortify_Note"],
+            questIds = { 90573, 90574, 90575, 90576 },
+
+            tooltipFunc = function(tip)
+                local variants = {
+                    { quest = 90573, name = L["Magisters"]                },
+                    { quest = 90574, name = L["Subfaction_BloodKnights"]  },
+                    { quest = 90575, name = L["Farstriders"]              },
+                    { quest = 90576, name = L["Subfaction_ShadesOfTheRow"] },
+                }
+                local completedName, activeName = nil, nil
+                for _, v in ipairs(variants) do
+                    if C_QuestLog.IsQuestFlaggedCompleted(v.quest) then
+                        completedName = v.name; break
+                    end
+                end
+                if not completedName then
+                    for _, v in ipairs(variants) do
+                        if C_QuestLog.IsOnQuest(v.quest) then
+                            activeName = v.name; break
+                        end
+                    end
+                end
+                tip:AddLine(" ")
+                if completedName then
+                    tip:AddLine(L["Tooltip_Done_Variant"], 1, 1, 1)
+                    tip:AddLine("  " .. completedName, 0.4, 0.85, 0.4)
+                elseif activeName then
+                    tip:AddLine(L["Tooltip_Active_Variant"], 1, 1, 1)
+                    tip:AddLine("  " .. activeName, 1, 0.9, 0.3)
+                else
+                    tip:AddLine(L["Tooltip_No_Subfaction"], 1, 1, 1)
+                    tip:AddLine(L["Tooltip_Visit_Haven"], 0.7, 0.7, 0.7)
+                end
+            end,
+        },
+        {
             key      = "unity_against_void",
             label    = L["Weekly_Unity_Label"],
             max      = 1,
             note     = L["Weekly_Unity_Note"],
+            questIds = { 93890, 93767, 94457, 93909, 93911, 93769, 93891, 93910, 93912, 93889, 93892, 93913, 93766 },
+
+            isVisible = function()
+                local ids = { 93890, 93767, 94457, 93909, 93911, 93769, 93891, 93910, 93912, 93889, 93892, 93913, 93766 }
+                for _, qid in ipairs(ids) do
+                    if C_QuestLog.IsOnQuest(qid) or C_QuestLog.IsQuestFlaggedCompleted(qid) then
+                        return true
+                    end
+                end
+                return C_QuestLog.IsQuestFlaggedCompleted(93744)
+            end,
 
             tooltipFunc = function(tip)
-                local activeName = nil
-                for _, b in ipairs({
-                    { quest = 93909, name = L["Unity_Delves"]   },
-                    { quest = 93911, name = L["Unity_Dungeons"] },
-                    { quest = 93912, name = L["Unity_Raids"]    },
-                    { quest = 93910, name = L["Unity_PvP"]      },
-                }) do
-                    if C_QuestLog.IsOnQuest(b.quest) then
-                        activeName = b.name
-                        break
+                local branches = {
+                    { quest = 93890, name = L["Unity_Abundance"]     },
+                    { quest = 93767, name = L["Unity_Arcantina"]     },
+                    { quest = 94457, name = L["Unity_Battlegrounds"] },
+                    { quest = 93909, name = L["Unity_Delves"]        },
+                    { quest = 93911, name = L["Unity_Dungeons"]      },
+                    { quest = 93769, name = L["Unity_Housing"]       },
+                    { quest = 93891, name = L["Unity_Legends"]       },
+                    { quest = 93910, name = L["Unity_Prey"]          },
+                    { quest = 93912, name = L["Unity_Raids"]         },
+                    { quest = 93889, name = L["Unity_Soiree"]        },
+                    { quest = 93892, name = L["Unity_Stormarion"]    },
+                    { quest = 93913, name = L["Unity_WorldBoss"]     },
+                    { quest = 93766, name = L["Unity_WorldQuests"]   },
+                }
+                local completedBranch, activeBranch = nil, nil
+                for _, b in ipairs(branches) do
+                    if C_QuestLog.IsQuestFlaggedCompleted(b.quest) then
+                        completedBranch = b.name; break
+                    end
+                end
+                if not completedBranch then
+                    for _, b in ipairs(branches) do
+                        if C_QuestLog.IsOnQuest(b.quest) then
+                            activeBranch = b.name; break
+                        end
                     end
                 end
 
                 tip:AddLine(" ")
-                if activeName then
+                if completedBranch or C_QuestLog.IsQuestFlaggedCompleted(93744) then
+                    tip:AddLine(L["Tooltip_Done_Variant"], 1, 1, 1)
+                    if completedBranch then
+                        tip:AddLine("  " .. completedBranch, 0.4, 0.85, 0.4)
+                    end
+                elseif activeBranch then
                     tip:AddLine(L["Tooltip_Active_Progress"], 1, 1, 1)
-                    tip:AddLine("  " .. activeName, 1, 0.9, 0.3)
+                    tip:AddLine("  " .. activeBranch, 1, 0.9, 0.3)
                 else
                     tip:AddLine(L["Tooltip_No_Activity"], 1, 1, 1)
                     tip:AddLine(L["Tooltip_Pick_Activity"], 0.7, 0.7, 0.7)

@@ -8,8 +8,8 @@ HandyNotes_MidnightDB = {
 ["Starphage - Tichondrius"] = "Default",
 ["Ofpuss - Tichondrius"] = "Default",
 ["Tampacks - Mal'Ganis"] = "Default",
-["Gehyo - Tichondrius"] = "Default",
 ["Hellavator - Tichondrius"] = "Default",
+["Gehyo - Tichondrius"] = "Default",
 },
 ["profiles"] = {
 ["Default"] = {
