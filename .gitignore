@@ -18,6 +18,5 @@ llvm_7_0_1.dll
 vkd3d-proton.cache
 vkd3d-proton.cache.write
 wow_loader.dll
-.flavor.info
 /Fonts/*.slug*
-/Fonts/override_1180123557.slugo
+/.flavor.info
