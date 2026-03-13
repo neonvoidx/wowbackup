@@ -1,7 +1,7 @@
 
 BugGrabberDB = {
-["session"] = 34,
 ["lastSanitation"] = 3,
+["session"] = 41,
 ["errors"] = {
 {
 ["message"] = "...ce/AddOns/Blizzard_CooldownViewer/CooldownViewer.lua:303: attempt to perform boolean test on a secret boolean value (tainted by 'TalentTreeTweaks')",

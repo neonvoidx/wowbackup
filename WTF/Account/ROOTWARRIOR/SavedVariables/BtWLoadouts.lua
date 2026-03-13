@@ -16,18 +16,18 @@ BtWLoadoutsSets = {
 },
 ["pvptalents"] = {
 },
-["useCount"] = 2,
-["setID"] = 1,
 ["character"] = {
+},
+["setID"] = 1,
+["dftalents"] = {
+1,
 },
 ["actionbars"] = {
 },
 ["equipment"] = {
 2,
 },
-["dftalents"] = {
-1,
-},
+["useCount"] = 2,
 ["name"] = "WW PVP",
 ["essences"] = {
 },
@@ -41,8 +41,8 @@ BtWLoadoutsSets = {
 },
 ["disabled"] = 0,
 ["spec"] = 269,
-["class"] = "MONK",
 ["role"] = "DAMAGER",
+["class"] = "MONK",
 },
 },
 {
@@ -52,18 +52,18 @@ BtWLoadoutsSets = {
 },
 ["pvptalents"] = {
 },
-["useCount"] = 1,
-["setID"] = 2,
 ["character"] = {
+},
+["setID"] = 2,
+["dftalents"] = {
+4,
 },
 ["actionbars"] = {
 },
 ["equipment"] = {
 1,
 },
-["dftalents"] = {
-4,
-},
+["useCount"] = 1,
 ["name"] = "WW M+",
 ["essences"] = {
 },
@@ -77,8 +77,8 @@ BtWLoadoutsSets = {
 },
 ["disabled"] = 0,
 ["spec"] = 269,
-["class"] = "MONK",
 ["role"] = "DAMAGER",
+["class"] = "MONK",
 },
 },
 {
@@ -88,19 +88,19 @@ BtWLoadoutsSets = {
 },
 ["pvptalents"] = {
 },
-["useCount"] = 1,
-["setID"] = 3,
 ["character"] = {
+},
+["setID"] = 3,
+["dftalents"] = {
+5,
+6,
 },
 ["actionbars"] = {
 },
 ["equipment"] = {
 1,
 },
-["dftalents"] = {
-5,
-6,
-},
+["useCount"] = 1,
 ["name"] = "WW Raid",
 ["essences"] = {
 },
@@ -114,8 +114,8 @@ BtWLoadoutsSets = {
 },
 ["disabled"] = 0,
 ["spec"] = 269,
-["class"] = "MONK",
 ["role"] = "DAMAGER",
+["class"] = "MONK",
 },
 },
 ["nextID"] = 4,
@@ -148,7 +148,7 @@ BtWLoadoutsSets = {
 ["setID"] = 1,
 ["ignored"] = {
 },
-["character"] = "Tichondrius-Stormclout",
+["useCount"] = 2,
 ["equipment"] = {
 "|cnIQ4:|Hitem:266430::::::::90:269::42:2:13577:12785:1:28:4240:::::|h[Silvermoon Sunguard]|h|r",
 "|cnIQ4:|Hitem:265739::::::::90:269::42:3:12785:6652:13668:1:28:4240:::::|h[Amani Heartstring Pendant]|h|r",
@@ -169,7 +169,7 @@ BtWLoadoutsSets = {
 "|cnIQ4:|Hitem:251122::::::::90:269::23:4:13439:6652:12701:12780:1:28:3025:::::|h[Shadowslash Slicer]|h|r",
 [19] = "|cnIQ4:|Hitem:43349::::::::90:269:::::::::|h[Tabard of Brute Force]|h|r",
 },
-["useCount"] = 2,
+["character"] = "Tichondrius-Stormclout",
 ["name"] = "PVE",
 ["managerID"] = 0,
 ["restrictions"] = {
@@ -235,8 +235,8 @@ BtWLoadoutsSets = {
 },
 },
 ["filters"] = {
-["character"] = "Tichondrius-Stormclout",
 ["class"] = "MONK",
+["character"] = "Tichondrius-Stormclout",
 },
 },
 {
@@ -346,8 +346,8 @@ BtWLoadoutsSets = {
 },
 },
 ["filters"] = {
-["character"] = "Tichondrius-Stormclout",
 ["class"] = "MONK",
+["character"] = "Tichondrius-Stormclout",
 },
 },
 ["nextID"] = 2,
@@ -357,9 +357,11 @@ BtWLoadoutsSets = {
 ["setID"] = 1,
 ["configID"] = 50746128,
 ["classID"] = 10,
-["useCount"] = 1,
-["character"] = "Tichondrius-Stormclout",
 ["name"] = "PVP",
+["character"] = "Tichondrius-Stormclout",
+["treeID"] = 1000,
+["restrictions"] = {
+},
 ["nodes"] = {
 [110022] = 1,
 [101206] = 1,
@@ -422,17 +424,15 @@ BtWLoadoutsSets = {
 [101167] = 1,
 [101165] = 1,
 },
-["restrictions"] = {
-},
 ["specID"] = 269,
-["treeID"] = 1000,
+["useCount"] = 1,
 ["filters"] = {
+["role"] = "DAMAGER",
+["class"] = "MONK",
 ["character"] = {
 "Tichondrius-Stormclout",
 },
-["class"] = "MONK",
 ["spec"] = 269,
-["role"] = "DAMAGER",
 },
 },
 {
@@ -441,7 +441,7 @@ BtWLoadoutsSets = {
 ["classID"] = 10,
 ["character"] = "Tichondrius-Stormclout",
 ["name"] = "ST",
-["useCount"] = 0,
+["treeID"] = 1000,
 ["nodes"] = {
 [110022] = 1,
 [101206] = 1,
@@ -505,14 +505,14 @@ BtWLoadoutsSets = {
 [101039] = 1,
 },
 ["specID"] = 269,
-["treeID"] = 1000,
+["useCount"] = 0,
 ["filters"] = {
+["class"] = "MONK",
 ["character"] = {
 "Tichondrius-Stormclout",
 },
-["spec"] = 269,
 ["role"] = "DAMAGER",
-["class"] = "MONK",
+["spec"] = 269,
 },
 },
 {
@@ -521,7 +521,7 @@ BtWLoadoutsSets = {
 ["classID"] = 10,
 ["character"] = "Tichondrius-Stormclout",
 ["name"] = "Cleave",
-["useCount"] = 0,
+["treeID"] = 1000,
 ["nodes"] = {
 [110022] = 1,
 [101206] = 1,
@@ -585,14 +585,14 @@ BtWLoadoutsSets = {
 [101167] = 1,
 },
 ["specID"] = 269,
-["treeID"] = 1000,
+["useCount"] = 0,
 ["filters"] = {
+["class"] = "MONK",
 ["character"] = {
 "Tichondrius-Stormclout",
 },
-["spec"] = 269,
 ["role"] = "DAMAGER",
-["class"] = "MONK",
+["spec"] = 269,
 },
 },
 {
@@ -601,7 +601,7 @@ BtWLoadoutsSets = {
 ["classID"] = 10,
 ["character"] = "Tichondrius-Stormclout",
 ["name"] = "M+",
-["useCount"] = 1,
+["treeID"] = 1000,
 ["nodes"] = {
 [110022] = 1,
 [101206] = 1,
@@ -665,14 +665,14 @@ BtWLoadoutsSets = {
 [101165] = 1,
 },
 ["specID"] = 269,
-["treeID"] = 1000,
+["useCount"] = 1,
 ["filters"] = {
+["class"] = "MONK",
 ["character"] = {
 "Tichondrius-Stormclout",
 },
-["spec"] = 269,
 ["role"] = "DAMAGER",
-["class"] = "MONK",
+["spec"] = 269,
 },
 },
 {
@@ -681,7 +681,7 @@ BtWLoadoutsSets = {
 ["classID"] = 10,
 ["character"] = "Tichondrius-Stormclout",
 ["name"] = "Raid ST",
-["useCount"] = 1,
+["treeID"] = 1000,
 ["nodes"] = {
 [110022] = 1,
 [101206] = 1,
@@ -745,14 +745,14 @@ BtWLoadoutsSets = {
 [101039] = 1,
 },
 ["specID"] = 269,
-["treeID"] = 1000,
+["useCount"] = 1,
 ["filters"] = {
+["class"] = "MONK",
 ["character"] = {
 "Tichondrius-Stormclout",
 },
-["spec"] = 269,
 ["role"] = "DAMAGER",
-["class"] = "MONK",
+["spec"] = 269,
 },
 },
 {
@@ -761,7 +761,7 @@ BtWLoadoutsSets = {
 ["classID"] = 10,
 ["character"] = "Tichondrius-Stormclout",
 ["name"] = "Raid Cleave",
-["useCount"] = 1,
+["treeID"] = 1000,
 ["nodes"] = {
 [110022] = 1,
 [101206] = 1,
@@ -825,14 +825,14 @@ BtWLoadoutsSets = {
 [101167] = 1,
 },
 ["specID"] = 269,
-["treeID"] = 1000,
+["useCount"] = 1,
 ["filters"] = {
+["class"] = "MONK",
 ["character"] = {
 "Tichondrius-Stormclout",
 },
-["spec"] = 269,
 ["role"] = "DAMAGER",
-["class"] = "MONK",
+["spec"] = 269,
 },
 },
 ["nextID"] = 6,
@@ -849,8 +849,8 @@ BtWLoadoutsSets = {
 },
 ["name"] = "WW PVP",
 ["useCount"] = 0,
-["mapProfileSet"] = 1,
 ["profileSet"] = 1,
+["mapProfileSet"] = 1,
 ["filters"] = {
 ["character"] = {
 "Tichondrius-Stormclout",
@@ -858,8 +858,8 @@ BtWLoadoutsSets = {
 ["disabled"] = 0,
 ["instanceType"] = "arena",
 ["spec"] = 269,
-["class"] = "MONK",
 ["role"] = "DAMAGER",
+["class"] = "MONK",
 },
 },
 {
@@ -873,8 +873,8 @@ BtWLoadoutsSets = {
 },
 ["mapProfileSet"] = 1,
 ["useCount"] = 0,
-["name"] = "WW PVP",
 ["profileSet"] = 1,
+["name"] = "WW PVP",
 ["filters"] = {
 ["character"] = {
 "Tichondrius-Stormclout",
@@ -882,8 +882,8 @@ BtWLoadoutsSets = {
 ["disabled"] = 0,
 ["instanceType"] = "pvp",
 ["spec"] = 269,
-["class"] = "MONK",
 ["role"] = "DAMAGER",
+["class"] = "MONK",
 },
 },
 {
@@ -897,8 +897,8 @@ BtWLoadoutsSets = {
 },
 ["mapProfileSet"] = 2,
 ["useCount"] = 0,
-["name"] = "WW M+",
 ["profileSet"] = 2,
+["name"] = "WW M+",
 ["filters"] = {
 ["character"] = {
 "Tichondrius-Stormclout",
@@ -906,8 +906,8 @@ BtWLoadoutsSets = {
 ["disabled"] = 0,
 ["instanceType"] = "party",
 ["spec"] = 269,
-["class"] = "MONK",
 ["role"] = "DAMAGER",
+["class"] = "MONK",
 },
 },
 {
@@ -921,8 +921,8 @@ BtWLoadoutsSets = {
 },
 ["mapProfileSet"] = 3,
 ["useCount"] = 0,
-["name"] = "WW Raid",
 ["profileSet"] = 3,
+["name"] = "WW Raid",
 ["filters"] = {
 ["character"] = {
 "Tichondrius-Stormclout",
@@ -930,16 +930,149 @@ BtWLoadoutsSets = {
 ["disabled"] = 0,
 ["instanceType"] = "raid",
 ["spec"] = 269,
-["class"] = "MONK",
 ["role"] = "DAMAGER",
+["class"] = "MONK",
 },
 },
 ["nextID"] = 4,
+},
+["talents"] = {
+["version"] = 4,
 },
 ["actionbars"] = {
 {
 ["useCount"] = 0,
 ["name"] = "Monk",
+["ignored"] = {
+true,
+true,
+true,
+true,
+true,
+true,
+true,
+true,
+true,
+true,
+true,
+true,
+true,
+true,
+true,
+true,
+true,
+true,
+true,
+true,
+true,
+true,
+true,
+true,
+[121] = true,
+[122] = true,
+[123] = true,
+[124] = true,
+[125] = true,
+[126] = true,
+[127] = true,
+[128] = true,
+[130] = true,
+[132] = true,
+[134] = true,
+[136] = true,
+[138] = true,
+[140] = true,
+[142] = true,
+[144] = true,
+[146] = true,
+[148] = true,
+[150] = true,
+[152] = true,
+[154] = true,
+[156] = true,
+[65] = true,
+[67] = true,
+[68] = true,
+[69] = true,
+[70] = true,
+[71] = true,
+[72] = true,
+[73] = true,
+[147] = true,
+[149] = true,
+[61] = true,
+[151] = true,
+[62] = true,
+[153] = true,
+[63] = true,
+[155] = true,
+[64] = true,
+[129] = true,
+[66] = true,
+[133] = true,
+[135] = true,
+[137] = true,
+[139] = true,
+[141] = true,
+[143] = true,
+[145] = true,
+[74] = true,
+[75] = true,
+[76] = true,
+[77] = true,
+[78] = true,
+[79] = true,
+[80] = true,
+[81] = true,
+[82] = true,
+[83] = true,
+[84] = true,
+[85] = true,
+[86] = true,
+[87] = true,
+[88] = true,
+[89] = true,
+[90] = true,
+[91] = true,
+[92] = true,
+[93] = true,
+[94] = true,
+[95] = true,
+[96] = true,
+[97] = true,
+[98] = true,
+[99] = true,
+[100] = true,
+[101] = true,
+[102] = true,
+[103] = true,
+[104] = true,
+[105] = true,
+[106] = true,
+[107] = true,
+[108] = true,
+[109] = true,
+[110] = true,
+[111] = true,
+[112] = true,
+[113] = true,
+[114] = true,
+[115] = true,
+[116] = true,
+[117] = true,
+[118] = true,
+[119] = true,
+[120] = true,
+[131] = true,
+},
+["restrictions"] = {
+["spec"] = {
+[269] = true,
+[270] = true,
+[268] = true,
+},
+},
+["setID"] = 1,
 ["actions"] = {
 {
 ["type"] = "macro",
@@ -1389,16 +1522,16 @@ nil,
 ["icon"] = 620830,
 ["subType"] = "spell",
 },
-[121] = {
-["id"] = 372608,
+[122] = {
+["id"] = 372610,
 ["type"] = "spell",
-["icon"] = 4640490,
+["icon"] = 4640498,
 ["subType"] = "spell",
 },
-[145] = {
-["id"] = 59752,
+[78] = {
+["id"] = 106898,
 ["type"] = "spell",
-["icon"] = 136129,
+["icon"] = 464343,
 ["subType"] = "spell",
 },
 [102] = {
@@ -1407,10 +1540,12 @@ nil,
 ["icon"] = 464343,
 ["subType"] = "spell",
 },
-[132] = {
-["id"] = 436854,
-["type"] = "spell",
-["icon"] = 5145511,
+[155] = {
+["type"] = "macro",
+["name"] = " ",
+["macroText"] = "#showtooltip\n/cast  [@focus,exists,mod:shift,harm,nodead][] Spear Hand Strike\n/use Goblin Weather Machine - Prototype 01-B",
+["id"] = 127,
+["icon"] = 608940,
 ["subType"] = "spell",
 },
 [146] = {
@@ -1424,178 +1559,43 @@ nil,
 ["type"] = "item",
 ["icon"] = 1385244,
 },
-[155] = {
-["type"] = "macro",
-["name"] = " ",
-["macroText"] = "#showtooltip\n/cast  [@focus,exists,mod:shift,harm,nodead][] Spear Hand Strike\n/use Goblin Weather Machine - Prototype 01-B",
-["id"] = 127,
-["icon"] = 608940,
-["subType"] = "spell",
-},
-[78] = {
-["id"] = 106898,
+[132] = {
+["id"] = 436854,
 ["type"] = "spell",
-["icon"] = 464343,
+["icon"] = 5145511,
 ["subType"] = "spell",
 },
-[122] = {
-["id"] = 372610,
+[145] = {
+["id"] = 59752,
 ["type"] = "spell",
-["icon"] = 4640498,
+["icon"] = 136129,
 ["subType"] = "spell",
 },
+[121] = {
+["id"] = 372608,
+["type"] = "spell",
+["icon"] = 4640490,
+["subType"] = "spell",
 },
-["restrictions"] = {
-["spec"] = {
-[269] = true,
-[270] = true,
-[268] = true,
-},
-},
-["setID"] = 1,
-["ignored"] = {
-true,
-true,
-true,
-true,
-true,
-true,
-true,
-true,
-true,
-true,
-true,
-true,
-true,
-true,
-true,
-true,
-true,
-true,
-true,
-true,
-true,
-true,
-true,
-true,
-[121] = true,
-[122] = true,
-[123] = true,
-[124] = true,
-[125] = true,
-[126] = true,
-[127] = true,
-[128] = true,
-[130] = true,
-[132] = true,
-[134] = true,
-[136] = true,
-[138] = true,
-[140] = true,
-[142] = true,
-[144] = true,
-[146] = true,
-[148] = true,
-[150] = true,
-[152] = true,
-[154] = true,
-[156] = true,
-[131] = true,
-[133] = true,
-[135] = true,
-[137] = true,
-[139] = true,
-[141] = true,
-[143] = true,
-[145] = true,
-[74] = true,
-[75] = true,
-[61] = true,
-[76] = true,
-[62] = true,
-[77] = true,
-[63] = true,
-[78] = true,
-[64] = true,
-[65] = true,
-[66] = true,
-[67] = true,
-[68] = true,
-[69] = true,
-[70] = true,
-[71] = true,
-[72] = true,
-[73] = true,
-[147] = true,
-[149] = true,
-[151] = true,
-[153] = true,
-[155] = true,
-[79] = true,
-[80] = true,
-[81] = true,
-[82] = true,
-[83] = true,
-[84] = true,
-[85] = true,
-[86] = true,
-[87] = true,
-[88] = true,
-[89] = true,
-[90] = true,
-[91] = true,
-[92] = true,
-[93] = true,
-[94] = true,
-[95] = true,
-[96] = true,
-[97] = true,
-[98] = true,
-[99] = true,
-[100] = true,
-[101] = true,
-[102] = true,
-[103] = true,
-[104] = true,
-[105] = true,
-[106] = true,
-[107] = true,
-[108] = true,
-[109] = true,
-[110] = true,
-[111] = true,
-[112] = true,
-[113] = true,
-[114] = true,
-[115] = true,
-[116] = true,
-[117] = true,
-[118] = true,
-[119] = true,
-[120] = true,
-[129] = true,
 },
 ["filters"] = {
 ["class"] = {
 "MONK",
-},
-["spec"] = {
-269,
-270,
-268,
 },
 ["role"] = {
 "DAMAGER",
 "TANK",
 "HEALER",
 },
+["spec"] = {
+269,
+270,
+268,
+},
 },
 },
 ["nextID"] = 1,
 ["version"] = 1,
-},
-["talents"] = {
-["version"] = 4,
 },
 }
 BtWLoadoutsSpecInfo = {
@@ -1843,6 +1843,13 @@ BtWLoadoutsTraitsInfo = {
 ["ranksIncreased"] = 0,
 ["totalMaxRanks"] = 0,
 ["flags"] = 0,
+["isDisplayError"] = false,
+["posX"] = 8600,
+["ID"] = 101233,
+["conditionIDs"] = {
+49218,
+},
+["maxRanks"] = 0,
 ["groupIDs"] = {
 10878,
 10870,
@@ -1850,13 +1857,6 @@ BtWLoadoutsTraitsInfo = {
 12437,
 12434,
 },
-["posX"] = 8600,
-["ID"] = 101233,
-["maxRanks"] = 0,
-["conditionIDs"] = {
-49218,
-},
-["isDisplayError"] = false,
 },
 [101249] = {
 ["entryIDs"] = {
@@ -1879,8 +1879,8 @@ BtWLoadoutsTraitsInfo = {
 [268] = {
 {
 ["type"] = 2,
-["targetNode"] = 101250,
 ["visualStyle"] = 1,
+["targetNode"] = 101250,
 },
 },
 },
@@ -1937,8 +1937,8 @@ BtWLoadoutsTraitsInfo = {
 [268] = {
 {
 ["type"] = 2,
-["targetNode"] = 101227,
 ["visualStyle"] = 1,
+["targetNode"] = 101227,
 },
 },
 },
@@ -1990,8 +1990,8 @@ BtWLoadoutsTraitsInfo = {
 [268] = {
 {
 ["type"] = 2,
-["targetNode"] = 101193,
 ["visualStyle"] = 1,
+["targetNode"] = 101193,
 },
 },
 },
@@ -2001,19 +2001,19 @@ BtWLoadoutsTraitsInfo = {
 ["amount"] = 1,
 },
 },
-["maxRanks"] = 2,
+["conditionIDs"] = {
+27730,
+27816,
+},
+["flags"] = 0,
+["posX"] = 12600,
+["ID"] = 101074,
 ["groupIDs"] = {
 10879,
 10884,
 10891,
 },
-["posX"] = 12600,
-["ID"] = 101074,
-["flags"] = 0,
-["conditionIDs"] = {
-27730,
-27816,
-},
+["maxRanks"] = 2,
 ["incomingEdgesBySpecID"] = {
 [268] = {
 101076,
@@ -2038,18 +2038,18 @@ BtWLoadoutsTraitsInfo = {
 [268] = {
 {
 ["type"] = 2,
+["visualStyle"] = 1,
 ["targetNode"] = 101152,
-["visualStyle"] = 1,
 },
 {
 ["type"] = 2,
+["visualStyle"] = 1,
 ["targetNode"] = 101184,
-["visualStyle"] = 1,
 },
 {
 ["type"] = 2,
-["targetNode"] = 110027,
 ["visualStyle"] = 1,
+["targetNode"] = 110027,
 },
 },
 },
@@ -2059,16 +2059,16 @@ BtWLoadoutsTraitsInfo = {
 ["amount"] = 1,
 },
 },
-["maxRanks"] = 1,
-["groupIDs"] = {
-10881,
-},
-["posX"] = 5400,
-["ID"] = 101090,
-["flags"] = 8,
 ["conditionIDs"] = {
 27786,
 },
+["flags"] = 8,
+["posX"] = 5400,
+["ID"] = 101090,
+["groupIDs"] = {
+10881,
+},
+["maxRanks"] = 1,
 ["incomingEdgesBySpecID"] = {
 [268] = {
 101149,
@@ -2086,21 +2086,21 @@ BtWLoadoutsTraitsInfo = {
 ["ranksIncreased"] = 0,
 ["totalMaxRanks"] = 0,
 ["flags"] = 0,
+["isDisplayError"] = false,
+["posX"] = 12600,
+["ID"] = 101106,
+["conditionIDs"] = {
+27725,
+27820,
+27816,
+},
+["maxRanks"] = 0,
 ["groupIDs"] = {
 10885,
 10871,
 10891,
 10884,
 },
-["posX"] = 12600,
-["ID"] = 101106,
-["maxRanks"] = 0,
-["conditionIDs"] = {
-27725,
-27820,
-27816,
-},
-["isDisplayError"] = false,
 },
 [101122] = {
 ["visibleEdges"] = {
@@ -2112,19 +2112,19 @@ BtWLoadoutsTraitsInfo = {
 ["ranksIncreased"] = 0,
 ["totalMaxRanks"] = 0,
 ["flags"] = 0,
+["isDisplayError"] = false,
+["posX"] = 13200,
+["ID"] = 101122,
+["conditionIDs"] = {
+27816,
+27725,
+},
+["maxRanks"] = 0,
 ["groupIDs"] = {
 10891,
 10885,
 10884,
 },
-["posX"] = 13200,
-["ID"] = 101122,
-["maxRanks"] = 0,
-["conditionIDs"] = {
-27816,
-27725,
-},
-["isDisplayError"] = false,
 },
 [101138] = {
 ["entryIDs"] = {
@@ -2152,13 +2152,13 @@ BtWLoadoutsTraitsInfo = {
 [268] = {
 {
 ["type"] = 2,
-["targetNode"] = 101173,
 ["visualStyle"] = 1,
+["targetNode"] = 101173,
 },
 {
 ["type"] = 2,
-["targetNode"] = 101181,
 ["visualStyle"] = 1,
+["targetNode"] = 101181,
 },
 },
 },
@@ -2344,48 +2344,48 @@ BtWLoadoutsTraitsInfo = {
 125008,
 125007,
 },
+["totalMaxRanks"] = 1,
+["ranksIncreased"] = 0,
 ["edgesBySpecID"] = {
 [268] = {
 {
 ["type"] = 2,
+["visualStyle"] = 1,
 ["targetNode"] = 101078,
-["visualStyle"] = 1,
 },
 {
 ["type"] = 2,
+["visualStyle"] = 1,
 ["targetNode"] = 101084,
-["visualStyle"] = 1,
 },
 {
 ["type"] = 2,
-["targetNode"] = 101076,
 ["visualStyle"] = 1,
+["targetNode"] = 101076,
 },
 },
 },
-["ranksIncreased"] = 0,
-["totalMaxRanks"] = 1,
-["maxRanks"] = 1,
+["entryIDToRanksIncreased"] = {
+[125007] = 0,
+[125008] = 0,
+},
 ["costs"] = {
 {
 ["ID"] = 3625,
 ["amount"] = 1,
 },
 },
-["flags"] = 1,
+["conditionIDs"] = {
+27730,
+},
+["ID"] = 101202,
+["posX"] = 12600,
 ["groupIDs"] = {
 10879,
 10884,
 },
-["posX"] = 12600,
-["ID"] = 101202,
-["conditionIDs"] = {
-27730,
-},
-["entryIDToRanksIncreased"] = {
-[125007] = 0,
-[125008] = 0,
-},
+["flags"] = 1,
+["maxRanks"] = 1,
 ["incomingEdgesBySpecID"] = {
 [268] = {
 101065,
@@ -2525,8 +2525,8 @@ BtWLoadoutsTraitsInfo = {
 [268] = {
 {
 ["type"] = 2,
-["targetNode"] = 101251,
 ["visualStyle"] = 1,
+["targetNode"] = 101251,
 },
 },
 },
@@ -2562,49 +2562,25 @@ BtWLoadoutsTraitsInfo = {
 },
 },
 },
-[110095] = {
-["entryIDs"] = {
-136596,
+[110097] = {
+["visibleEdges"] = {
 },
-["nextEntry"] = {
-["entryID"] = 136596,
-["rank"] = 1,
+["type"] = 0,
+["posY"] = 3300,
+["entryIDs"] = {
 },
 ["ranksIncreased"] = 0,
-["totalMaxRanks"] = 1,
-["edgesBySpecID"] = {
-[269] = {
-{
-["visualStyle"] = 1,
-["type"] = 2,
-["targetNode"] = 101182,
-},
-},
-},
-["costs"] = {
-{
-["ID"] = 3623,
-["amount"] = 1,
-},
-},
-["posX"] = 4800,
-["ID"] = 110095,
-["posY"] = 3900,
-["conditionIDs"] = {
-49066,
-27732,
-},
+["totalMaxRanks"] = 0,
 ["flags"] = 0,
-["type"] = 0,
-["maxRanks"] = 1,
+["isDisplayError"] = false,
+["posX"] = 4800,
+["ID"] = 110097,
+["conditionIDs"] = {
+49069,
+},
+["maxRanks"] = 0,
 ["groupIDs"] = {
-10883,
 10881,
-},
-["incomingEdgesBySpecID"] = {
-[269] = {
-110098,
-},
 },
 },
 [109697] = {
@@ -2628,8 +2604,8 @@ BtWLoadoutsTraitsInfo = {
 [268] = {
 {
 ["type"] = 2,
-["targetNode"] = 109698,
 ["visualStyle"] = 1,
+["targetNode"] = 109698,
 },
 },
 },
@@ -2778,13 +2754,13 @@ BtWLoadoutsTraitsInfo = {
 [268] = {
 {
 ["type"] = 2,
-["targetNode"] = 109910,
 ["visualStyle"] = 1,
+["targetNode"] = 109910,
 },
 {
 ["type"] = 2,
-["targetNode"] = 101073,
 ["visualStyle"] = 1,
+["targetNode"] = 101073,
 },
 },
 },
@@ -2794,21 +2770,21 @@ BtWLoadoutsTraitsInfo = {
 ["amount"] = 1,
 },
 },
-["maxRanks"] = 1,
+["conditionIDs"] = {
+27730,
+27816,
+27820,
+},
+["flags"] = 0,
+["posX"] = 14400,
+["ID"] = 101075,
 ["groupIDs"] = {
 10879,
 10891,
 10884,
 10871,
 },
-["posX"] = 14400,
-["ID"] = 101075,
-["flags"] = 0,
-["conditionIDs"] = {
-27730,
-27816,
-27820,
-},
+["maxRanks"] = 1,
 ["incomingEdgesBySpecID"] = {
 [268] = {
 101079,
@@ -2817,20 +2793,30 @@ BtWLoadoutsTraitsInfo = {
 },
 },
 },
-[101711] = {
+[101201] = {
 ["type"] = 0,
-["posY"] = 6900,
+["posY"] = 4500,
 ["entryIDs"] = {
-125002,
+125006,
 },
 ["nextEntry"] = {
-["entryID"] = 125002,
+["entryID"] = 125006,
 ["rank"] = 1,
 },
 ["ranksIncreased"] = 0,
 ["totalMaxRanks"] = 1,
 ["edgesBySpecID"] = {
 [268] = {
+{
+["type"] = 2,
+["visualStyle"] = 1,
+["targetNode"] = 101080,
+},
+{
+["type"] = 2,
+["visualStyle"] = 1,
+["targetNode"] = 101083,
+},
 },
 },
 ["costs"] = {
@@ -2839,24 +2825,23 @@ BtWLoadoutsTraitsInfo = {
 ["amount"] = 1,
 },
 },
-["maxRanks"] = 1,
+["conditionIDs"] = {
+27730,
+27816,
+},
+["flags"] = 0,
+["posX"] = 14400,
+["ID"] = 101201,
 ["groupIDs"] = {
 10879,
-10871,
 10891,
 10884,
 },
-["posX"] = 11400,
-["ID"] = 101711,
-["flags"] = 1,
-["conditionIDs"] = {
-27730,
-27820,
-27816,
-},
+["maxRanks"] = 1,
 ["incomingEdgesBySpecID"] = {
 [268] = {
-101197,
+101710,
+109882,
 },
 },
 },
@@ -2870,17 +2855,17 @@ BtWLoadoutsTraitsInfo = {
 ["ranksIncreased"] = 0,
 ["totalMaxRanks"] = 0,
 ["flags"] = 0,
+["isDisplayError"] = false,
+["posX"] = 13200,
+["ID"] = 101107,
+["conditionIDs"] = {
+27725,
+},
+["maxRanks"] = 0,
 ["groupIDs"] = {
 10885,
 10884,
 },
-["posX"] = 13200,
-["ID"] = 101107,
-["maxRanks"] = 0,
-["conditionIDs"] = {
-27725,
-},
-["isDisplayError"] = false,
 },
 [101123] = {
 ["visibleEdges"] = {
@@ -2892,21 +2877,21 @@ BtWLoadoutsTraitsInfo = {
 ["ranksIncreased"] = 0,
 ["totalMaxRanks"] = 0,
 ["flags"] = 0,
+["isDisplayError"] = false,
+["posX"] = 13200,
+["ID"] = 101123,
+["conditionIDs"] = {
+27820,
+27725,
+27816,
+},
+["maxRanks"] = 0,
 ["groupIDs"] = {
 10871,
 10885,
 10891,
 10884,
 },
-["posX"] = 13200,
-["ID"] = 101123,
-["maxRanks"] = 0,
-["conditionIDs"] = {
-27820,
-27725,
-27816,
-},
-["isDisplayError"] = false,
 },
 [101139] = {
 ["visibleEdges"] = {
@@ -2918,18 +2903,18 @@ BtWLoadoutsTraitsInfo = {
 ["ranksIncreased"] = 0,
 ["totalMaxRanks"] = 0,
 ["flags"] = 0,
-["groupIDs"] = {
-10883,
-10881,
-},
+["isDisplayError"] = false,
 ["posX"] = 5400,
 ["ID"] = 101139,
-["maxRanks"] = 0,
 ["conditionIDs"] = {
 27782,
 27732,
 },
-["isDisplayError"] = false,
+["maxRanks"] = 0,
+["groupIDs"] = {
+10883,
+10881,
+},
 },
 [101155] = {
 ["entryIDs"] = {
@@ -2952,8 +2937,8 @@ BtWLoadoutsTraitsInfo = {
 [268] = {
 {
 ["type"] = 2,
-["targetNode"] = 101169,
 ["visualStyle"] = 1,
+["targetNode"] = 101169,
 },
 },
 },
@@ -3015,13 +3000,13 @@ BtWLoadoutsTraitsInfo = {
 [268] = {
 {
 ["type"] = 2,
-["targetNode"] = 101176,
 ["visualStyle"] = 1,
+["targetNode"] = 101176,
 },
 {
 ["type"] = 2,
-["targetNode"] = 101170,
 ["visualStyle"] = 1,
+["targetNode"] = 101170,
 },
 },
 },
@@ -3062,42 +3047,42 @@ BtWLoadoutsTraitsInfo = {
 124987,
 124986,
 },
+["totalMaxRanks"] = 1,
+["ranksIncreased"] = 0,
 ["edgesBySpecID"] = {
 [268] = {
 {
 ["type"] = 2,
-["targetNode"] = 101197,
 ["visualStyle"] = 1,
+["targetNode"] = 101197,
 },
 },
 },
-["ranksIncreased"] = 0,
-["totalMaxRanks"] = 1,
-["maxRanks"] = 1,
+["entryIDToRanksIncreased"] = {
+[124986] = 0,
+[124987] = 0,
+},
 ["costs"] = {
 {
 ["ID"] = 3625,
 ["amount"] = 1,
 },
 },
-["flags"] = 1,
+["conditionIDs"] = {
+27820,
+27730,
+27816,
+},
+["ID"] = 101187,
+["posX"] = 10200,
 ["groupIDs"] = {
 10871,
 10879,
 10884,
 10891,
 },
-["posX"] = 10200,
-["ID"] = 101187,
-["conditionIDs"] = {
-27820,
-27730,
-27816,
-},
-["entryIDToRanksIncreased"] = {
-[124986] = 0,
-[124987] = 0,
-},
+["flags"] = 1,
+["maxRanks"] = 1,
 ["incomingEdgesBySpecID"] = {
 [268] = {
 101188,
@@ -3170,29 +3155,29 @@ BtWLoadoutsTraitsInfo = {
 125028,
 125027,
 },
+["totalMaxRanks"] = 1,
+["ranksIncreased"] = 0,
 ["edgesBySpecID"] = {
 [268] = {
 },
-},
-["ranksIncreased"] = 0,
-["totalMaxRanks"] = 1,
-["maxRanks"] = 1,
-["costs"] = {
-},
-["flags"] = 9,
-["groupIDs"] = {
-10882,
-},
-["posX"] = 6900,
-["ID"] = 101219,
-["conditionIDs"] = {
-27774,
-27759,
 },
 ["entryIDToRanksIncreased"] = {
 [125027] = 0,
 [125028] = 0,
 },
+["costs"] = {
+},
+["conditionIDs"] = {
+27774,
+27759,
+},
+["ID"] = 101219,
+["posX"] = 6900,
+["groupIDs"] = {
+10882,
+},
+["flags"] = 9,
+["maxRanks"] = 1,
 ["incomingEdgesBySpecID"] = {
 [268] = {
 },
@@ -3282,8 +3267,8 @@ BtWLoadoutsTraitsInfo = {
 [268] = {
 {
 ["type"] = 2,
-["targetNode"] = 101252,
 ["visualStyle"] = 1,
+["targetNode"] = 101252,
 },
 },
 },
@@ -3319,12 +3304,12 @@ BtWLoadoutsTraitsInfo = {
 },
 },
 },
-[110098] = {
+[101173] = {
 ["entryIDs"] = {
-136599,
+124968,
 },
 ["nextEntry"] = {
-["entryID"] = 136599,
+["entryID"] = 124968,
 ["rank"] = 1,
 },
 ["ranksIncreased"] = 0,
@@ -3334,17 +3319,34 @@ BtWLoadoutsTraitsInfo = {
 {
 ["visualStyle"] = 1,
 ["type"] = 2,
-["targetNode"] = 101183,
+["targetNode"] = 101162,
 },
 {
 ["visualStyle"] = 1,
 ["type"] = 2,
-["targetNode"] = 110095,
+["targetNode"] = 101174,
 },
 {
 ["visualStyle"] = 1,
 ["type"] = 2,
-["targetNode"] = 101167,
+["targetNode"] = 108540,
+},
+},
+[268] = {
+{
+["type"] = 2,
+["visualStyle"] = 1,
+["targetNode"] = 101174,
+},
+{
+["type"] = 2,
+["visualStyle"] = 1,
+["targetNode"] = 101172,
+},
+{
+["type"] = 2,
+["visualStyle"] = 1,
+["targetNode"] = 108540,
 },
 },
 },
@@ -3355,22 +3357,26 @@ BtWLoadoutsTraitsInfo = {
 },
 },
 ["posX"] = 4800,
-["ID"] = 110098,
-["posY"] = 3300,
+["ID"] = 101173,
+["posY"] = 5100,
 ["conditionIDs"] = {
-49067,
+27732,
 },
 ["flags"] = 0,
 ["type"] = 0,
 ["maxRanks"] = 1,
 ["groupIDs"] = {
 10881,
+10883,
 },
 ["incomingEdgesBySpecID"] = {
 [269] = {
-101148,
-101150,
-101153,
+101136,
+101138,
+},
+[268] = {
+101136,
+101138,
 },
 },
 },
@@ -3395,8 +3401,8 @@ BtWLoadoutsTraitsInfo = {
 [268] = {
 {
 ["type"] = 2,
-["targetNode"] = 109699,
 ["visualStyle"] = 1,
+["targetNode"] = 109699,
 },
 },
 },
@@ -3544,18 +3550,18 @@ BtWLoadoutsTraitsInfo = {
 [268] = {
 {
 ["type"] = 2,
+["visualStyle"] = 1,
 ["targetNode"] = 101082,
-["visualStyle"] = 1,
 },
 {
 ["type"] = 2,
+["visualStyle"] = 1,
 ["targetNode"] = 102004,
-["visualStyle"] = 1,
 },
 {
 ["type"] = 2,
-["targetNode"] = 101074,
 ["visualStyle"] = 1,
+["targetNode"] = 101074,
 },
 },
 },
@@ -3565,19 +3571,19 @@ BtWLoadoutsTraitsInfo = {
 ["amount"] = 1,
 },
 },
-["maxRanks"] = 1,
+["conditionIDs"] = {
+27816,
+27730,
+},
+["flags"] = 1,
+["posX"] = 12600,
+["ID"] = 101076,
 ["groupIDs"] = {
 10891,
 10879,
 10884,
 },
-["posX"] = 12600,
-["ID"] = 101076,
-["flags"] = 1,
-["conditionIDs"] = {
-27816,
-27730,
-},
+["maxRanks"] = 1,
 ["incomingEdgesBySpecID"] = {
 [268] = {
 101202,
@@ -3594,19 +3600,19 @@ BtWLoadoutsTraitsInfo = {
 ["ranksIncreased"] = 0,
 ["totalMaxRanks"] = 0,
 ["flags"] = 0,
+["isDisplayError"] = false,
+["posX"] = 12000,
+["ID"] = 101092,
+["conditionIDs"] = {
+27816,
+27725,
+},
+["maxRanks"] = 0,
 ["groupIDs"] = {
 10891,
 10885,
 10884,
 },
-["posX"] = 12000,
-["ID"] = 101092,
-["maxRanks"] = 0,
-["conditionIDs"] = {
-27816,
-27725,
-},
-["isDisplayError"] = false,
 },
 [101108] = {
 ["visibleEdges"] = {
@@ -3618,19 +3624,19 @@ BtWLoadoutsTraitsInfo = {
 ["ranksIncreased"] = 0,
 ["totalMaxRanks"] = 0,
 ["flags"] = 0,
+["isDisplayError"] = false,
+["posX"] = 13800,
+["ID"] = 101108,
+["conditionIDs"] = {
+27816,
+27725,
+},
+["maxRanks"] = 0,
 ["groupIDs"] = {
 10891,
 10885,
 10884,
 },
-["posX"] = 13800,
-["ID"] = 101108,
-["maxRanks"] = 0,
-["conditionIDs"] = {
-27816,
-27725,
-},
-["isDisplayError"] = false,
 },
 [101124] = {
 ["visibleEdges"] = {
@@ -3642,21 +3648,21 @@ BtWLoadoutsTraitsInfo = {
 ["ranksIncreased"] = 0,
 ["totalMaxRanks"] = 0,
 ["flags"] = 0,
+["isDisplayError"] = false,
+["posX"] = 12600,
+["ID"] = 101124,
+["conditionIDs"] = {
+27820,
+27725,
+27816,
+},
+["maxRanks"] = 0,
 ["groupIDs"] = {
 10871,
 10885,
 10891,
 10884,
 },
-["posX"] = 12600,
-["ID"] = 101124,
-["maxRanks"] = 0,
-["conditionIDs"] = {
-27820,
-27725,
-27816,
-},
-["isDisplayError"] = false,
 },
 [101140] = {
 ["entryIDs"] = {
@@ -3684,13 +3690,13 @@ BtWLoadoutsTraitsInfo = {
 [268] = {
 {
 ["type"] = 2,
-["targetNode"] = 101180,
 ["visualStyle"] = 1,
+["targetNode"] = 101180,
 },
 {
 ["type"] = 2,
-["targetNode"] = 101181,
 ["visualStyle"] = 1,
+["targetNode"] = 101181,
 },
 },
 },
@@ -3740,13 +3746,13 @@ BtWLoadoutsTraitsInfo = {
 [268] = {
 {
 ["type"] = 2,
-["targetNode"] = 101155,
 ["visualStyle"] = 1,
+["targetNode"] = 101155,
 },
 {
 ["type"] = 2,
-["targetNode"] = 101157,
 ["visualStyle"] = 1,
+["targetNode"] = 101157,
 },
 },
 },
@@ -3756,18 +3762,18 @@ BtWLoadoutsTraitsInfo = {
 ["amount"] = 1,
 },
 },
-["maxRanks"] = 1,
-["groupIDs"] = {
-10883,
-10881,
-},
-["posX"] = 3000,
-["ID"] = 101156,
-["flags"] = 0,
 ["conditionIDs"] = {
 49049,
 27732,
 },
+["flags"] = 0,
+["posX"] = 3000,
+["ID"] = 101156,
+["groupIDs"] = {
+10883,
+10881,
+},
+["maxRanks"] = 1,
 ["incomingEdgesBySpecID"] = {
 [268] = {
 101158,
@@ -3776,26 +3782,54 @@ BtWLoadoutsTraitsInfo = {
 },
 },
 },
-[110097] = {
-["visibleEdges"] = {
-},
+[101172] = {
 ["type"] = 0,
-["posY"] = 3300,
+["posY"] = 5700,
 ["entryIDs"] = {
+124967,
+},
+["nextEntry"] = {
+["entryID"] = 124967,
+["rank"] = 1,
 },
 ["ranksIncreased"] = 0,
-["totalMaxRanks"] = 0,
+["totalMaxRanks"] = 1,
+["edgesBySpecID"] = {
+[268] = {
+{
+["type"] = 2,
+["visualStyle"] = 1,
+["targetNode"] = 101175,
+},
+},
+},
+["costs"] = {
+{
+["ID"] = 3623,
+["amount"] = 1,
+},
+},
+["conditionIDs"] = {
+27772,
+27822,
+27732,
+},
 ["flags"] = 0,
+["posX"] = 4200,
+["ID"] = 101172,
 ["groupIDs"] = {
+10873,
+10883,
 10881,
 },
-["posX"] = 4800,
-["ID"] = 110097,
-["maxRanks"] = 0,
-["conditionIDs"] = {
-49069,
+["maxRanks"] = 1,
+["incomingEdgesBySpecID"] = {
+[268] = {
+101163,
+101165,
+101173,
 },
-["isDisplayError"] = false,
+},
 },
 [101188] = {
 ["type"] = 2,
@@ -3804,50 +3838,50 @@ BtWLoadoutsTraitsInfo = {
 124989,
 124988,
 },
+["totalMaxRanks"] = 1,
+["ranksIncreased"] = 0,
 ["edgesBySpecID"] = {
 [268] = {
 {
 ["type"] = 2,
+["visualStyle"] = 1,
 ["targetNode"] = 101187,
-["visualStyle"] = 1,
 },
 {
 ["type"] = 2,
+["visualStyle"] = 1,
 ["targetNode"] = 101197,
-["visualStyle"] = 1,
 },
 {
 ["type"] = 2,
-["targetNode"] = 101189,
 ["visualStyle"] = 1,
+["targetNode"] = 101189,
 },
 },
 },
-["ranksIncreased"] = 0,
-["totalMaxRanks"] = 1,
-["maxRanks"] = 1,
+["entryIDToRanksIncreased"] = {
+[124988] = 0,
+[124989] = 0,
+},
 ["costs"] = {
 {
 ["ID"] = 3625,
 ["amount"] = 1,
 },
 },
-["flags"] = 1,
+["conditionIDs"] = {
+27816,
+27730,
+},
+["ID"] = 101188,
+["posX"] = 10800,
 ["groupIDs"] = {
 10891,
 10879,
 10884,
 },
-["posX"] = 10800,
-["ID"] = 101188,
-["conditionIDs"] = {
-27816,
-27730,
-},
-["entryIDToRanksIncreased"] = {
-[124988] = 0,
-[124989] = 0,
-},
+["flags"] = 1,
+["maxRanks"] = 1,
 ["incomingEdgesBySpecID"] = {
 [268] = {
 101069,
@@ -3920,8 +3954,8 @@ BtWLoadoutsTraitsInfo = {
 [268] = {
 {
 ["type"] = 2,
-["targetNode"] = 101227,
 ["visualStyle"] = 1,
+["targetNode"] = 101227,
 },
 },
 },
@@ -4074,29 +4108,28 @@ BtWLoadoutsTraitsInfo = {
 },
 },
 },
-[101094] = {
+[110019] = {
 ["visibleEdges"] = {
 },
 ["type"] = 0,
-["posY"] = 4500,
+["posY"] = 5100,
 ["entryIDs"] = {
 },
 ["ranksIncreased"] = 0,
 ["totalMaxRanks"] = 0,
 ["flags"] = 0,
-["groupIDs"] = {
-10891,
-10885,
-10884,
-},
-["posX"] = 12000,
-["ID"] = 101094,
-["maxRanks"] = 0,
-["conditionIDs"] = {
-27816,
-27725,
-},
 ["isDisplayError"] = false,
+["posX"] = 3000,
+["ID"] = 110019,
+["conditionIDs"] = {
+49047,
+27732,
+},
+["maxRanks"] = 0,
+["groupIDs"] = {
+10883,
+10881,
+},
 },
 [109699] = {
 ["entryIDs"] = {
@@ -4119,8 +4152,8 @@ BtWLoadoutsTraitsInfo = {
 [268] = {
 {
 ["type"] = 2,
-["targetNode"] = 101252,
 ["visualStyle"] = 1,
+["targetNode"] = 101252,
 },
 },
 },
@@ -4267,18 +4300,18 @@ BtWLoadoutsTraitsInfo = {
 [268] = {
 {
 ["type"] = 2,
+["visualStyle"] = 1,
 ["targetNode"] = 101196,
-["visualStyle"] = 1,
 },
 {
 ["type"] = 2,
+["visualStyle"] = 1,
 ["targetNode"] = 101081,
-["visualStyle"] = 1,
 },
 {
 ["type"] = 2,
-["targetNode"] = 101193,
 ["visualStyle"] = 1,
+["targetNode"] = 101193,
 },
 },
 },
@@ -4288,19 +4321,19 @@ BtWLoadoutsTraitsInfo = {
 ["amount"] = 1,
 },
 },
-["maxRanks"] = 1,
+["conditionIDs"] = {
+27816,
+27730,
+},
+["flags"] = 0,
+["posX"] = 13200,
+["ID"] = 101077,
 ["groupIDs"] = {
 10891,
 10879,
 10884,
 },
-["posX"] = 13200,
-["ID"] = 101077,
-["flags"] = 0,
-["conditionIDs"] = {
-27816,
-27730,
-},
+["maxRanks"] = 1,
 ["incomingEdgesBySpecID"] = {
 [268] = {
 101082,
@@ -4317,19 +4350,19 @@ BtWLoadoutsTraitsInfo = {
 ["ranksIncreased"] = 0,
 ["totalMaxRanks"] = 0,
 ["flags"] = 0,
+["isDisplayError"] = false,
+["posX"] = 12000,
+["ID"] = 101093,
+["conditionIDs"] = {
+27816,
+27725,
+},
+["maxRanks"] = 0,
 ["groupIDs"] = {
 10891,
 10885,
 10884,
 },
-["posX"] = 12000,
-["ID"] = 101093,
-["maxRanks"] = 0,
-["conditionIDs"] = {
-27816,
-27725,
-},
-["isDisplayError"] = false,
 },
 [101109] = {
 ["visibleEdges"] = {
@@ -4341,17 +4374,17 @@ BtWLoadoutsTraitsInfo = {
 ["ranksIncreased"] = 0,
 ["totalMaxRanks"] = 0,
 ["flags"] = 0,
+["isDisplayError"] = false,
+["posX"] = 14400,
+["ID"] = 101109,
+["conditionIDs"] = {
+27725,
+},
+["maxRanks"] = 0,
 ["groupIDs"] = {
 10885,
 10884,
 },
-["posX"] = 14400,
-["ID"] = 101109,
-["maxRanks"] = 0,
-["conditionIDs"] = {
-27725,
-},
-["isDisplayError"] = false,
 },
 [101125] = {
 ["visibleEdges"] = {
@@ -4363,21 +4396,21 @@ BtWLoadoutsTraitsInfo = {
 ["ranksIncreased"] = 0,
 ["totalMaxRanks"] = 0,
 ["flags"] = 0,
+["isDisplayError"] = false,
+["posX"] = 13200,
+["ID"] = 101125,
+["conditionIDs"] = {
+27725,
+27820,
+27816,
+},
+["maxRanks"] = 0,
 ["groupIDs"] = {
 10885,
 10871,
 10891,
 10884,
 },
-["posX"] = 13200,
-["ID"] = 101125,
-["maxRanks"] = 0,
-["conditionIDs"] = {
-27725,
-27820,
-27816,
-},
-["isDisplayError"] = false,
 },
 [101141] = {
 ["entryIDs"] = {
@@ -4400,8 +4433,8 @@ BtWLoadoutsTraitsInfo = {
 [268] = {
 {
 ["type"] = 2,
-["targetNode"] = 101167,
 ["visualStyle"] = 1,
+["targetNode"] = 101167,
 },
 },
 },
@@ -4452,8 +4485,8 @@ BtWLoadoutsTraitsInfo = {
 [268] = {
 {
 ["type"] = 2,
-["targetNode"] = 101169,
 ["visualStyle"] = 1,
+["targetNode"] = 101169,
 },
 },
 },
@@ -4489,12 +4522,12 @@ BtWLoadoutsTraitsInfo = {
 },
 },
 },
-[101173] = {
+[110098] = {
 ["entryIDs"] = {
-124968,
+136599,
 },
 ["nextEntry"] = {
-["entryID"] = 124968,
+["entryID"] = 136599,
 ["rank"] = 1,
 },
 ["ranksIncreased"] = 0,
@@ -4504,34 +4537,17 @@ BtWLoadoutsTraitsInfo = {
 {
 ["visualStyle"] = 1,
 ["type"] = 2,
-["targetNode"] = 101162,
+["targetNode"] = 101183,
 },
 {
 ["visualStyle"] = 1,
 ["type"] = 2,
-["targetNode"] = 101174,
+["targetNode"] = 110095,
 },
 {
 ["visualStyle"] = 1,
 ["type"] = 2,
-["targetNode"] = 108540,
-},
-},
-[268] = {
-{
-["type"] = 2,
-["targetNode"] = 101174,
-["visualStyle"] = 1,
-},
-{
-["type"] = 2,
-["targetNode"] = 101172,
-["visualStyle"] = 1,
-},
-{
-["type"] = 2,
-["targetNode"] = 108540,
-["visualStyle"] = 1,
+["targetNode"] = 101167,
 },
 },
 },
@@ -4542,26 +4558,22 @@ BtWLoadoutsTraitsInfo = {
 },
 },
 ["posX"] = 4800,
-["ID"] = 101173,
-["posY"] = 5100,
+["ID"] = 110098,
+["posY"] = 3300,
 ["conditionIDs"] = {
-27732,
+49067,
 },
 ["flags"] = 0,
 ["type"] = 0,
 ["maxRanks"] = 1,
 ["groupIDs"] = {
 10881,
-10883,
 },
 ["incomingEdgesBySpecID"] = {
 [269] = {
-101136,
-101138,
-},
-[268] = {
-101136,
-101138,
+101148,
+101150,
+101153,
 },
 },
 },
@@ -4581,13 +4593,13 @@ BtWLoadoutsTraitsInfo = {
 [268] = {
 {
 ["type"] = 2,
-["targetNode"] = 101199,
 ["visualStyle"] = 1,
+["targetNode"] = 101199,
 },
 {
 ["type"] = 2,
-["targetNode"] = 101197,
 ["visualStyle"] = 1,
+["targetNode"] = 101197,
 },
 },
 },
@@ -4597,21 +4609,21 @@ BtWLoadoutsTraitsInfo = {
 ["amount"] = 1,
 },
 },
-["maxRanks"] = 2,
+["conditionIDs"] = {
+27820,
+27730,
+27816,
+},
+["flags"] = 0,
+["posX"] = 11400,
+["ID"] = 101189,
 ["groupIDs"] = {
 10871,
 10879,
 10884,
 10891,
 },
-["posX"] = 11400,
-["ID"] = 101189,
-["flags"] = 0,
-["conditionIDs"] = {
-27820,
-27730,
-27816,
-},
+["maxRanks"] = 2,
 ["incomingEdgesBySpecID"] = {
 [268] = {
 101068,
@@ -4691,8 +4703,8 @@ BtWLoadoutsTraitsInfo = {
 [268] = {
 {
 ["type"] = 2,
-["targetNode"] = 101220,
 ["visualStyle"] = 1,
+["targetNode"] = 101220,
 },
 },
 },
@@ -4806,8 +4818,8 @@ BtWLoadoutsTraitsInfo = {
 [268] = {
 {
 ["type"] = 2,
-["targetNode"] = 101252,
 ["visualStyle"] = 1,
+["targetNode"] = 101252,
 },
 },
 },
@@ -4843,32 +4855,71 @@ BtWLoadoutsTraitsInfo = {
 },
 },
 },
-[110067] = {
-["visibleEdges"] = {
-},
-["type"] = 0,
-["posY"] = 1300,
+[101142] = {
 ["entryIDs"] = {
+124932,
+},
+["nextEntry"] = {
+["entryID"] = 124932,
+["rank"] = 1,
 },
 ["ranksIncreased"] = 0,
-["totalMaxRanks"] = 0,
-["flags"] = 0,
-["groupIDs"] = {
-12432,
-10874,
-12437,
-10870,
-12435,
-12434,
+["totalMaxRanks"] = 1,
+["edgesBySpecID"] = {
+[269] = {
+{
+["visualStyle"] = 1,
+["type"] = 2,
+["targetNode"] = 101147,
 },
-["posX"] = 8300,
-["ID"] = 110067,
-["maxRanks"] = 0,
+{
+["visualStyle"] = 1,
+["type"] = 2,
+["targetNode"] = 101149,
+},
+},
+[268] = {
+{
+["type"] = 2,
+["visualStyle"] = 1,
+["targetNode"] = 101147,
+},
+{
+["type"] = 2,
+["visualStyle"] = 1,
+["targetNode"] = 101149,
+},
+},
+},
+["costs"] = {
+{
+["ID"] = 3623,
+["amount"] = 1,
+},
+},
+["posX"] = 4200,
+["ID"] = 101142,
+["posY"] = 1500,
 ["conditionIDs"] = {
-27747,
-49218,
+27728,
+27818,
+27726,
 },
-["isDisplayError"] = false,
+["flags"] = 0,
+["type"] = 0,
+["maxRanks"] = 1,
+["groupIDs"] = {
+10877,
+10893,
+10875,
+10881,
+},
+["incomingEdgesBySpecID"] = {
+[269] = {
+},
+[268] = {
+},
+},
 },
 [109700] = {
 ["entryIDs"] = {
@@ -5037,40 +5088,40 @@ BtWLoadoutsTraitsInfo = {
 124853,
 124852,
 },
+["totalMaxRanks"] = 1,
+["ranksIncreased"] = 0,
 ["edgesBySpecID"] = {
 [268] = {
 {
 ["type"] = 2,
-["targetNode"] = 101082,
 ["visualStyle"] = 1,
+["targetNode"] = 101082,
 },
 },
 },
-["ranksIncreased"] = 0,
-["totalMaxRanks"] = 1,
-["maxRanks"] = 1,
+["entryIDToRanksIncreased"] = {
+[124852] = 0,
+[124853] = 0,
+},
 ["costs"] = {
 {
 ["ID"] = 3625,
 ["amount"] = 1,
 },
 },
-["flags"] = 1,
+["conditionIDs"] = {
+27816,
+27730,
+},
+["ID"] = 101078,
+["posX"] = 13200,
 ["groupIDs"] = {
 10891,
 10879,
 10884,
 },
-["posX"] = 13200,
-["ID"] = 101078,
-["conditionIDs"] = {
-27816,
-27730,
-},
-["entryIDToRanksIncreased"] = {
-[124852] = 0,
-[124853] = 0,
-},
+["flags"] = 1,
+["maxRanks"] = 1,
 ["incomingEdgesBySpecID"] = {
 [268] = {
 101086,
@@ -5078,28 +5129,29 @@ BtWLoadoutsTraitsInfo = {
 },
 },
 },
-[110019] = {
+[101094] = {
 ["visibleEdges"] = {
 },
 ["type"] = 0,
-["posY"] = 5100,
+["posY"] = 4500,
 ["entryIDs"] = {
 },
 ["ranksIncreased"] = 0,
 ["totalMaxRanks"] = 0,
 ["flags"] = 0,
-["groupIDs"] = {
-10883,
-10881,
-},
-["posX"] = 3000,
-["ID"] = 110019,
-["maxRanks"] = 0,
-["conditionIDs"] = {
-49047,
-27732,
-},
 ["isDisplayError"] = false,
+["posX"] = 12000,
+["ID"] = 101094,
+["conditionIDs"] = {
+27816,
+27725,
+},
+["maxRanks"] = 0,
+["groupIDs"] = {
+10891,
+10885,
+10884,
+},
 },
 [101110] = {
 ["visibleEdges"] = {
@@ -5111,17 +5163,17 @@ BtWLoadoutsTraitsInfo = {
 ["ranksIncreased"] = 0,
 ["totalMaxRanks"] = 0,
 ["flags"] = 0,
+["isDisplayError"] = false,
+["posX"] = 13800,
+["ID"] = 101110,
+["conditionIDs"] = {
+27725,
+},
+["maxRanks"] = 0,
 ["groupIDs"] = {
 10885,
 10884,
 },
-["posX"] = 13800,
-["ID"] = 101110,
-["maxRanks"] = 0,
-["conditionIDs"] = {
-27725,
-},
-["isDisplayError"] = false,
 },
 [101126] = {
 ["visibleEdges"] = {
@@ -5133,86 +5185,47 @@ BtWLoadoutsTraitsInfo = {
 ["ranksIncreased"] = 0,
 ["totalMaxRanks"] = 0,
 ["flags"] = 0,
+["isDisplayError"] = false,
+["posX"] = 12000,
+["ID"] = 101126,
+["conditionIDs"] = {
+27820,
+27725,
+27816,
+},
+["maxRanks"] = 0,
 ["groupIDs"] = {
 10871,
 10885,
 10891,
 10884,
 },
-["posX"] = 12000,
-["ID"] = 101126,
-["maxRanks"] = 0,
-["conditionIDs"] = {
-27820,
-27725,
-27816,
 },
-["isDisplayError"] = false,
+[110067] = {
+["visibleEdges"] = {
 },
-[101142] = {
+["type"] = 0,
+["posY"] = 1300,
 ["entryIDs"] = {
-124932,
-},
-["nextEntry"] = {
-["entryID"] = 124932,
-["rank"] = 1,
 },
 ["ranksIncreased"] = 0,
-["totalMaxRanks"] = 1,
-["edgesBySpecID"] = {
-[269] = {
-{
-["visualStyle"] = 1,
-["type"] = 2,
-["targetNode"] = 101147,
-},
-{
-["visualStyle"] = 1,
-["type"] = 2,
-["targetNode"] = 101149,
-},
-},
-[268] = {
-{
-["type"] = 2,
-["targetNode"] = 101147,
-["visualStyle"] = 1,
-},
-{
-["type"] = 2,
-["targetNode"] = 101149,
-["visualStyle"] = 1,
-},
-},
-},
-["costs"] = {
-{
-["ID"] = 3623,
-["amount"] = 1,
-},
-},
-["posX"] = 4200,
-["ID"] = 101142,
-["posY"] = 1500,
-["conditionIDs"] = {
-27728,
-27818,
-27726,
-},
+["totalMaxRanks"] = 0,
 ["flags"] = 0,
-["type"] = 0,
-["maxRanks"] = 1,
+["isDisplayError"] = false,
+["posX"] = 8300,
+["ID"] = 110067,
+["conditionIDs"] = {
+27747,
+49218,
+},
+["maxRanks"] = 0,
 ["groupIDs"] = {
-10877,
-10893,
-10875,
-10881,
-},
-["incomingEdgesBySpecID"] = {
-[269] = {
-},
-[268] = {
-},
+12432,
+10874,
+12437,
+10870,
+12435,
+12434,
 },
 },
 [101158] = {
@@ -5244,13 +5257,13 @@ BtWLoadoutsTraitsInfo = {
 [268] = {
 {
 ["type"] = 2,
-["targetNode"] = 101156,
 ["visualStyle"] = 1,
+["targetNode"] = 101156,
 },
 {
 ["type"] = 2,
-["targetNode"] = 101157,
 ["visualStyle"] = 1,
+["targetNode"] = 101157,
 },
 },
 },
@@ -5316,18 +5329,18 @@ BtWLoadoutsTraitsInfo = {
 [268] = {
 {
 ["type"] = 2,
+["visualStyle"] = 1,
 ["targetNode"] = 101179,
-["visualStyle"] = 1,
 },
 {
 ["type"] = 2,
+["visualStyle"] = 1,
 ["targetNode"] = 101177,
-["visualStyle"] = 1,
 },
 {
 ["type"] = 2,
-["targetNode"] = 101175,
 ["visualStyle"] = 1,
+["targetNode"] = 101175,
 },
 },
 },
@@ -5366,50 +5379,50 @@ BtWLoadoutsTraitsInfo = {
 124992,
 124991,
 },
+["totalMaxRanks"] = 1,
+["ranksIncreased"] = 0,
 ["edgesBySpecID"] = {
 [268] = {
 {
 ["type"] = 2,
+["visualStyle"] = 1,
 ["targetNode"] = 101193,
-["visualStyle"] = 1,
 },
 {
 ["type"] = 2,
+["visualStyle"] = 1,
 ["targetNode"] = 101189,
-["visualStyle"] = 1,
 },
 {
 ["type"] = 2,
-["targetNode"] = 101199,
 ["visualStyle"] = 1,
+["targetNode"] = 101199,
 },
 },
 },
-["ranksIncreased"] = 0,
-["totalMaxRanks"] = 1,
-["maxRanks"] = 1,
+["entryIDToRanksIncreased"] = {
+[124991] = 0,
+[124992] = 0,
+},
 ["costs"] = {
 {
 ["ID"] = 3625,
 ["amount"] = 1,
 },
 },
-["flags"] = 1,
+["conditionIDs"] = {
+27816,
+27730,
+},
+["ID"] = 101190,
+["posX"] = 12000,
 ["groupIDs"] = {
 10891,
 10879,
 10884,
 },
-["posX"] = 12000,
-["ID"] = 101190,
-["conditionIDs"] = {
-27816,
-27730,
-},
-["entryIDToRanksIncreased"] = {
-[124991] = 0,
-[124992] = 0,
-},
+["flags"] = 1,
+["maxRanks"] = 1,
 ["incomingEdgesBySpecID"] = {
 [268] = {
 102004,
@@ -5490,8 +5503,8 @@ BtWLoadoutsTraitsInfo = {
 [268] = {
 {
 ["type"] = 2,
-["targetNode"] = 101221,
 ["visualStyle"] = 1,
+["targetNode"] = 101221,
 },
 },
 },
@@ -5617,8 +5630,8 @@ BtWLoadoutsTraitsInfo = {
 [268] = {
 {
 ["type"] = 2,
-["targetNode"] = 101253,
 ["visualStyle"] = 1,
+["targetNode"] = 101253,
 },
 },
 },
@@ -5649,6 +5662,57 @@ BtWLoadoutsTraitsInfo = {
 },
 [268] = {
 101247,
+},
+},
+},
+[110211] = {
+["entryIDs"] = {
+136747,
+},
+["nextEntry"] = {
+["entryID"] = 136747,
+["rank"] = 1,
+},
+["ranksIncreased"] = 0,
+["totalMaxRanks"] = 1,
+["edgesBySpecID"] = {
+[269] = {
+{
+["visualStyle"] = 1,
+["type"] = 2,
+["targetNode"] = 110220,
+},
+},
+},
+["costs"] = {
+{
+["ID"] = 3622,
+["amount"] = 1,
+},
+},
+["subTreeActive"] = false,
+["subTreeID"] = 64,
+["posX"] = 8000,
+["ID"] = 110211,
+["posY"] = 2500,
+["conditionIDs"] = {
+49218,
+49217,
+},
+["flags"] = 8,
+["type"] = 0,
+["maxRanks"] = 1,
+["groupIDs"] = {
+12434,
+12437,
+12436,
+12435,
+},
+["incomingEdgesBySpecID"] = {
+[269] = {
+101242,
+101242,
+101242,
 },
 },
 },
@@ -5706,57 +5770,6 @@ BtWLoadoutsTraitsInfo = {
 ["incomingEdgesBySpecID"] = {
 [269] = {
 101243,
-},
-},
-},
-[110211] = {
-["entryIDs"] = {
-136747,
-},
-["nextEntry"] = {
-["entryID"] = 136747,
-["rank"] = 1,
-},
-["ranksIncreased"] = 0,
-["totalMaxRanks"] = 1,
-["edgesBySpecID"] = {
-[269] = {
-{
-["visualStyle"] = 1,
-["type"] = 2,
-["targetNode"] = 110220,
-},
-},
-},
-["costs"] = {
-{
-["ID"] = 3622,
-["amount"] = 1,
-},
-},
-["subTreeActive"] = false,
-["subTreeID"] = 64,
-["posX"] = 8000,
-["ID"] = 110211,
-["posY"] = 2500,
-["conditionIDs"] = {
-49218,
-49217,
-},
-["flags"] = 8,
-["type"] = 0,
-["maxRanks"] = 1,
-["groupIDs"] = {
-12434,
-12437,
-12436,
-12435,
-},
-["incomingEdgesBySpecID"] = {
-[269] = {
-101242,
-101242,
-101242,
 },
 },
 },
@@ -5820,8 +5833,8 @@ BtWLoadoutsTraitsInfo = {
 [268] = {
 {
 ["type"] = 2,
-["targetNode"] = 101086,
 ["visualStyle"] = 1,
+["targetNode"] = 101086,
 },
 },
 },
@@ -5831,17 +5844,17 @@ BtWLoadoutsTraitsInfo = {
 ["amount"] = 1,
 },
 },
-["maxRanks"] = 1,
+["conditionIDs"] = {
+27730,
+},
+["flags"] = 0,
+["posX"] = 13800,
+["ID"] = 101063,
 ["groupIDs"] = {
 10879,
 10884,
 },
-["posX"] = 13800,
-["ID"] = 101063,
-["flags"] = 0,
-["conditionIDs"] = {
-27730,
-},
+["maxRanks"] = 1,
 ["incomingEdgesBySpecID"] = {
 [268] = {
 101087,
@@ -5864,8 +5877,8 @@ BtWLoadoutsTraitsInfo = {
 [268] = {
 {
 ["type"] = 2,
-["targetNode"] = 101075,
 ["visualStyle"] = 1,
+["targetNode"] = 101075,
 },
 },
 },
@@ -5875,21 +5888,21 @@ BtWLoadoutsTraitsInfo = {
 ["amount"] = 1,
 },
 },
-["maxRanks"] = 1,
+["conditionIDs"] = {
+27820,
+27730,
+27816,
+},
+["flags"] = 1,
+["posX"] = 15000,
+["ID"] = 101079,
 ["groupIDs"] = {
 10871,
 10879,
 10884,
 10891,
 },
-["posX"] = 15000,
-["ID"] = 101079,
-["flags"] = 1,
-["conditionIDs"] = {
-27820,
-27730,
-27816,
-},
+["maxRanks"] = 1,
 ["incomingEdgesBySpecID"] = {
 [268] = {
 101080,
@@ -5906,19 +5919,19 @@ BtWLoadoutsTraitsInfo = {
 ["ranksIncreased"] = 0,
 ["totalMaxRanks"] = 0,
 ["flags"] = 0,
+["isDisplayError"] = false,
+["posX"] = 11400,
+["ID"] = 101095,
+["conditionIDs"] = {
+27816,
+27725,
+},
+["maxRanks"] = 0,
 ["groupIDs"] = {
 10891,
 10885,
 10884,
 },
-["posX"] = 11400,
-["ID"] = 101095,
-["maxRanks"] = 0,
-["conditionIDs"] = {
-27816,
-27725,
-},
-["isDisplayError"] = false,
 },
 [101111] = {
 ["visibleEdges"] = {
@@ -5930,19 +5943,19 @@ BtWLoadoutsTraitsInfo = {
 ["ranksIncreased"] = 0,
 ["totalMaxRanks"] = 0,
 ["flags"] = 0,
+["isDisplayError"] = false,
+["posX"] = 14400,
+["ID"] = 101111,
+["conditionIDs"] = {
+27816,
+27725,
+},
+["maxRanks"] = 0,
 ["groupIDs"] = {
 10891,
 10885,
 10884,
 },
-["posX"] = 14400,
-["ID"] = 101111,
-["maxRanks"] = 0,
-["conditionIDs"] = {
-27816,
-27725,
-},
-["isDisplayError"] = false,
 },
 [101127] = {
 ["visibleEdges"] = {
@@ -5954,19 +5967,19 @@ BtWLoadoutsTraitsInfo = {
 ["ranksIncreased"] = 0,
 ["totalMaxRanks"] = 0,
 ["flags"] = 0,
+["isDisplayError"] = false,
+["posX"] = 12000,
+["ID"] = 101127,
+["conditionIDs"] = {
+27725,
+27820,
+},
+["maxRanks"] = 0,
 ["groupIDs"] = {
 10885,
 10871,
 10884,
 },
-["posX"] = 12000,
-["ID"] = 101127,
-["maxRanks"] = 0,
-["conditionIDs"] = {
-27725,
-27820,
-},
-["isDisplayError"] = false,
 },
 [101143] = {
 ["entryIDs"] = {
@@ -5994,13 +6007,13 @@ BtWLoadoutsTraitsInfo = {
 [268] = {
 {
 ["type"] = 2,
-["targetNode"] = 101147,
 ["visualStyle"] = 1,
+["targetNode"] = 101147,
 },
 {
 ["type"] = 2,
-["targetNode"] = 101144,
 ["visualStyle"] = 1,
+["targetNode"] = 101144,
 },
 },
 },
@@ -6102,8 +6115,8 @@ BtWLoadoutsTraitsInfo = {
 [268] = {
 {
 ["type"] = 2,
-["targetNode"] = 101176,
 ["visualStyle"] = 1,
+["targetNode"] = 101176,
 },
 },
 },
@@ -6141,57 +6154,61 @@ BtWLoadoutsTraitsInfo = {
 },
 },
 },
-[101239] = {
+[102004] = {
+["type"] = 0,
+["posY"] = 4500,
 ["entryIDs"] = {
-125058,
+124859,
 },
 ["nextEntry"] = {
-["entryID"] = 125058,
+["entryID"] = 124859,
 ["rank"] = 1,
 },
 ["ranksIncreased"] = 0,
 ["totalMaxRanks"] = 1,
 ["edgesBySpecID"] = {
-[269] = {
+[268] = {
+{
+["type"] = 2,
+["visualStyle"] = 1,
+["targetNode"] = 101190,
+},
+{
+["type"] = 2,
+["visualStyle"] = 1,
+["targetNode"] = 101068,
+},
+{
+["type"] = 2,
+["visualStyle"] = 1,
+["targetNode"] = 101074,
+},
 },
 },
 ["costs"] = {
 {
-["ID"] = 3622,
+["ID"] = 3625,
 ["amount"] = 1,
 },
 },
-["subTreeActive"] = false,
-["subTreeID"] = 64,
-["posX"] = 8300,
-["ID"] = 101239,
-["posY"] = 3700,
 ["conditionIDs"] = {
-49218,
-49217,
+27730,
+27816,
 },
-["flags"] = 8,
-["type"] = 0,
-["maxRanks"] = 1,
+["flags"] = 1,
+["posX"] = 12000,
+["ID"] = 102004,
 ["groupIDs"] = {
-10870,
-12433,
-10878,
-12437,
-12432,
-12436,
-12434,
+10879,
+10891,
+10884,
 },
+["maxRanks"] = 1,
 ["incomingEdgesBySpecID"] = {
-[269] = {
-101235,
-101235,
-101238,
-101238,
-101238,
-109700,
-109700,
-110220,
+[268] = {
+101067,
+101076,
+101084,
 },
 },
 },
@@ -6288,23 +6305,23 @@ BtWLoadoutsTraitsInfo = {
 [268] = {
 {
 ["type"] = 2,
+["visualStyle"] = 1,
 ["targetNode"] = 101230,
-["visualStyle"] = 1,
 },
 {
 ["type"] = 2,
+["visualStyle"] = 1,
 ["targetNode"] = 101222,
-["visualStyle"] = 1,
 },
 {
 ["type"] = 2,
+["visualStyle"] = 1,
 ["targetNode"] = 101224,
-["visualStyle"] = 1,
 },
 {
 ["type"] = 2,
-["targetNode"] = 109694,
 ["visualStyle"] = 1,
+["targetNode"] = 109694,
 },
 },
 },
@@ -6341,69 +6358,62 @@ BtWLoadoutsTraitsInfo = {
 },
 },
 },
-[102004] = {
-["type"] = 0,
-["posY"] = 4500,
+[101239] = {
 ["entryIDs"] = {
-124859,
+125058,
 },
 ["nextEntry"] = {
-["entryID"] = 124859,
+["entryID"] = 125058,
 ["rank"] = 1,
 },
 ["ranksIncreased"] = 0,
 ["totalMaxRanks"] = 1,
 ["edgesBySpecID"] = {
-[268] = {
-{
-["type"] = 2,
-["targetNode"] = 101190,
-["visualStyle"] = 1,
-},
-{
-["type"] = 2,
-["targetNode"] = 101068,
-["visualStyle"] = 1,
-},
-{
-["type"] = 2,
-["targetNode"] = 101074,
-["visualStyle"] = 1,
-},
+[269] = {
 },
 },
 ["costs"] = {
 {
-["ID"] = 3625,
+["ID"] = 3622,
 ["amount"] = 1,
 },
 },
+["subTreeActive"] = false,
+["subTreeID"] = 64,
+["posX"] = 8300,
+["ID"] = 101239,
+["posY"] = 3700,
+["conditionIDs"] = {
+49218,
+49217,
+},
+["flags"] = 8,
+["type"] = 0,
 ["maxRanks"] = 1,
 ["groupIDs"] = {
-10879,
-10891,
-10884,
-},
-["posX"] = 12000,
-["ID"] = 102004,
-["flags"] = 1,
-["conditionIDs"] = {
-27730,
-27816,
+10870,
+12433,
+10878,
+12437,
+12432,
+12436,
+12434,
 },
 ["incomingEdgesBySpecID"] = {
-[268] = {
-101067,
-101076,
-101084,
+[269] = {
+101235,
+101235,
+101238,
+101238,
+101238,
+109700,
+109700,
+110220,
 },
 },
 },
 [110435] = {
-["edgesBySpecID"] = {
-[268] = {
-},
-},
+["totalMaxRanks"] = 4,
 ["type"] = 1,
 ["posY"] = 7650,
 ["entryIDs"] = {
@@ -6416,27 +6426,9 @@ BtWLoadoutsTraitsInfo = {
 ["rank"] = 1,
 },
 ["ranksIncreased"] = 0,
-["totalMaxRanks"] = 4,
-["maxRanks"] = 4,
-["costs"] = {
-{
-["ID"] = 3625,
-["amount"] = 1,
+["edgesBySpecID"] = {
+[268] = {
 },
-},
-["flags"] = 256,
-["groupIDs"] = {
-10879,
-10871,
-10891,
-10884,
-},
-["posX"] = 12600,
-["ID"] = 110435,
-["entryIDToRanksIncreased"] = {
-[137074] = 0,
-[137073] = 0,
-[137075] = 0,
 },
 ["conditionIDs"] = {
 49445,
@@ -6447,58 +6439,105 @@ BtWLoadoutsTraitsInfo = {
 27820,
 27816,
 },
+["costs"] = {
+{
+["ID"] = 3625,
+["amount"] = 1,
+},
+},
+["entryIDToRanksIncreased"] = {
+[137074] = 0,
+[137073] = 0,
+[137075] = 0,
+},
+["ID"] = 110435,
+["posX"] = 12600,
+["groupIDs"] = {
+10879,
+10871,
+10891,
+10884,
+},
+["flags"] = 256,
+["maxRanks"] = 4,
 ["incomingEdgesBySpecID"] = {
 [268] = {
 },
 },
 },
-[102432] = {
-["visibleEdges"] = {
-},
-["type"] = 0,
-["posY"] = 3900,
+[110020] = {
 ["entryIDs"] = {
+136511,
+},
+["nextEntry"] = {
+["entryID"] = 136511,
+["rank"] = 1,
 },
 ["ranksIncreased"] = 0,
-["totalMaxRanks"] = 0,
-["flags"] = 0,
-["groupIDs"] = {
-10883,
-10881,
+["totalMaxRanks"] = 1,
+["edgesBySpecID"] = {
+[269] = {
+{
+["visualStyle"] = 1,
+["type"] = 2,
+["targetNode"] = 101155,
+},
+{
+["visualStyle"] = 1,
+["type"] = 2,
+["targetNode"] = 101157,
+},
+},
+},
+["costs"] = {
+{
+["ID"] = 3623,
+["amount"] = 1,
+},
 },
 ["posX"] = 3000,
-["ID"] = 102432,
-["maxRanks"] = 0,
+["ID"] = 110020,
+["posY"] = 5100,
 ["conditionIDs"] = {
-28646,
+49048,
 27732,
 },
-["isDisplayError"] = false,
+["flags"] = 0,
+["type"] = 0,
+["maxRanks"] = 1,
+["groupIDs"] = {
+10883,
+10881,
 },
-[110021] = {
+["incomingEdgesBySpecID"] = {
+[269] = {
+101158,
+101159,
+101166,
+},
+},
+},
+[101096] = {
 ["visibleEdges"] = {
 },
 ["type"] = 0,
-["posY"] = 5700,
+["posY"] = 2700,
 ["entryIDs"] = {
 },
 ["ranksIncreased"] = 0,
 ["totalMaxRanks"] = 0,
 ["flags"] = 0,
-["groupIDs"] = {
-10883,
-10873,
-10881,
-},
-["posX"] = 3600,
-["ID"] = 110021,
-["maxRanks"] = 0,
-["conditionIDs"] = {
-49050,
-27732,
-27822,
-},
 ["isDisplayError"] = false,
+["posX"] = 11400,
+["ID"] = 101096,
+["conditionIDs"] = {
+27725,
+},
+["maxRanks"] = 0,
+["groupIDs"] = {
+10885,
+10884,
+},
 },
 [101048] = {
 ["entryIDs"] = {
@@ -6565,18 +6604,18 @@ BtWLoadoutsTraitsInfo = {
 [268] = {
 {
 ["type"] = 2,
+["visualStyle"] = 1,
 ["targetNode"] = 109883,
-["visualStyle"] = 1,
 },
 {
 ["type"] = 2,
+["visualStyle"] = 1,
 ["targetNode"] = 101085,
-["visualStyle"] = 1,
 },
 {
 ["type"] = 2,
-["targetNode"] = 101065,
 ["visualStyle"] = 1,
+["targetNode"] = 101065,
 },
 },
 },
@@ -6586,17 +6625,17 @@ BtWLoadoutsTraitsInfo = {
 ["amount"] = 1,
 },
 },
-["maxRanks"] = 1,
+["conditionIDs"] = {
+27730,
+},
+["flags"] = 0,
+["posX"] = 12000,
+["ID"] = 101064,
 ["groupIDs"] = {
 10879,
 10884,
 },
-["posX"] = 12000,
-["ID"] = 101064,
-["flags"] = 0,
-["conditionIDs"] = {
-27730,
-},
+["maxRanks"] = 1,
 ["incomingEdgesBySpecID"] = {
 [268] = {
 101088,
@@ -6619,18 +6658,18 @@ BtWLoadoutsTraitsInfo = {
 [268] = {
 {
 ["type"] = 2,
+["visualStyle"] = 1,
 ["targetNode"] = 101079,
-["visualStyle"] = 1,
 },
 {
 ["type"] = 2,
+["visualStyle"] = 1,
 ["targetNode"] = 101081,
-["visualStyle"] = 1,
 },
 {
 ["type"] = 2,
-["targetNode"] = 101075,
 ["visualStyle"] = 1,
+["targetNode"] = 101075,
 },
 },
 },
@@ -6640,46 +6679,49 @@ BtWLoadoutsTraitsInfo = {
 ["amount"] = 1,
 },
 },
-["maxRanks"] = 1,
+["conditionIDs"] = {
+27816,
+27730,
+},
+["flags"] = 0,
+["posX"] = 14400,
+["ID"] = 101080,
 ["groupIDs"] = {
 10891,
 10879,
 10884,
 },
-["posX"] = 14400,
-["ID"] = 101080,
-["flags"] = 0,
-["conditionIDs"] = {
-27816,
-27730,
-},
+["maxRanks"] = 1,
 ["incomingEdgesBySpecID"] = {
 [268] = {
 101201,
 },
 },
 },
-[101096] = {
+[110021] = {
 ["visibleEdges"] = {
 },
 ["type"] = 0,
-["posY"] = 2700,
+["posY"] = 5700,
 ["entryIDs"] = {
 },
 ["ranksIncreased"] = 0,
 ["totalMaxRanks"] = 0,
 ["flags"] = 0,
-["groupIDs"] = {
-10885,
-10884,
-},
-["posX"] = 11400,
-["ID"] = 101096,
-["maxRanks"] = 0,
-["conditionIDs"] = {
-27725,
-},
 ["isDisplayError"] = false,
+["posX"] = 3600,
+["ID"] = 110021,
+["conditionIDs"] = {
+49050,
+27732,
+27822,
+},
+["maxRanks"] = 0,
+["groupIDs"] = {
+10883,
+10873,
+10881,
+},
 },
 [101112] = {
 ["visibleEdges"] = {
@@ -6691,19 +6733,19 @@ BtWLoadoutsTraitsInfo = {
 ["ranksIncreased"] = 0,
 ["totalMaxRanks"] = 0,
 ["flags"] = 0,
+["isDisplayError"] = false,
+["posX"] = 13200,
+["ID"] = 101112,
+["conditionIDs"] = {
+27816,
+27725,
+},
+["maxRanks"] = 0,
 ["groupIDs"] = {
 10891,
 10885,
 10884,
 },
-["posX"] = 13200,
-["ID"] = 101112,
-["maxRanks"] = 0,
-["conditionIDs"] = {
-27816,
-27725,
-},
-["isDisplayError"] = false,
 },
 [101128] = {
 ["visibleEdges"] = {
@@ -6715,19 +6757,19 @@ BtWLoadoutsTraitsInfo = {
 ["ranksIncreased"] = 0,
 ["totalMaxRanks"] = 0,
 ["flags"] = 0,
+["isDisplayError"] = false,
+["posX"] = 12600,
+["ID"] = 101128,
+["conditionIDs"] = {
+27816,
+27725,
+},
+["maxRanks"] = 0,
 ["groupIDs"] = {
 10891,
 10885,
 10884,
 },
-["posX"] = 12600,
-["ID"] = 101128,
-["maxRanks"] = 0,
-["conditionIDs"] = {
-27816,
-27725,
-},
-["isDisplayError"] = false,
 },
 [101144] = {
 ["entryIDs"] = {
@@ -6755,13 +6797,13 @@ BtWLoadoutsTraitsInfo = {
 [268] = {
 {
 ["type"] = 2,
-["targetNode"] = 101145,
 ["visualStyle"] = 1,
+["targetNode"] = 101145,
 },
 {
 ["type"] = 2,
-["targetNode"] = 101146,
 ["visualStyle"] = 1,
+["targetNode"] = 101146,
 },
 },
 },
@@ -6817,13 +6859,13 @@ BtWLoadoutsTraitsInfo = {
 [268] = {
 {
 ["type"] = 2,
-["targetNode"] = 101167,
 ["visualStyle"] = 1,
+["targetNode"] = 101167,
 },
 {
 ["type"] = 2,
-["targetNode"] = 102433,
 ["visualStyle"] = 1,
+["targetNode"] = 102433,
 },
 },
 },
@@ -6908,31 +6950,48 @@ BtWLoadoutsTraitsInfo = {
 },
 },
 },
-[101240] = {
-["visibleEdges"] = {
-},
+[109910] = {
 ["type"] = 0,
-["posY"] = 3100,
+["posY"] = 6900,
 ["entryIDs"] = {
+136177,
+},
+["nextEntry"] = {
+["entryID"] = 136177,
+["rank"] = 1,
 },
 ["ranksIncreased"] = 0,
-["totalMaxRanks"] = 0,
-["flags"] = 0,
-["groupIDs"] = {
-12432,
-12437,
-10870,
-10878,
-12434,
+["totalMaxRanks"] = 1,
+["edgesBySpecID"] = {
+[268] = {
 },
-["posX"] = 8000,
-["ID"] = 101240,
-["maxRanks"] = 0,
+},
+["costs"] = {
+{
+["ID"] = 3625,
+["amount"] = 1,
+},
+},
 ["conditionIDs"] = {
-49230,
-49218,
+27820,
+27730,
+27816,
 },
-["isDisplayError"] = false,
+["flags"] = 0,
+["posX"] = 13800,
+["ID"] = 109910,
+["groupIDs"] = {
+10871,
+10879,
+10884,
+10891,
+},
+["maxRanks"] = 1,
+["incomingEdgesBySpecID"] = {
+[268] = {
+101075,
+},
+},
 },
 [101208] = {
 ["entryIDs"] = {
@@ -7002,8 +7061,8 @@ BtWLoadoutsTraitsInfo = {
 [268] = {
 {
 ["type"] = 2,
-["targetNode"] = 101225,
 ["visualStyle"] = 1,
+["targetNode"] = 101225,
 },
 },
 },
@@ -7037,47 +7096,30 @@ BtWLoadoutsTraitsInfo = {
 },
 },
 },
-[109910] = {
-["type"] = 0,
-["posY"] = 6900,
-["entryIDs"] = {
-136177,
+[101240] = {
+["visibleEdges"] = {
 },
-["nextEntry"] = {
-["entryID"] = 136177,
-["rank"] = 1,
+["type"] = 0,
+["posY"] = 3100,
+["entryIDs"] = {
 },
 ["ranksIncreased"] = 0,
-["totalMaxRanks"] = 1,
-["edgesBySpecID"] = {
-[268] = {
-},
-},
-["costs"] = {
-{
-["ID"] = 3625,
-["amount"] = 1,
-},
-},
-["maxRanks"] = 1,
-["groupIDs"] = {
-10871,
-10879,
-10884,
-10891,
-},
-["posX"] = 13800,
-["ID"] = 109910,
+["totalMaxRanks"] = 0,
 ["flags"] = 0,
+["isDisplayError"] = false,
+["posX"] = 8000,
+["ID"] = 101240,
 ["conditionIDs"] = {
-27820,
-27730,
-27816,
+49230,
+49218,
 },
-["incomingEdgesBySpecID"] = {
-[268] = {
-101075,
-},
+["maxRanks"] = 0,
+["groupIDs"] = {
+12432,
+12437,
+10870,
+10878,
+12434,
 },
 },
 [110436] = {
@@ -7130,6 +7172,226 @@ BtWLoadoutsTraitsInfo = {
 },
 ["incomingEdgesBySpecID"] = {
 [269] = {
+},
+},
+},
+[101097] = {
+["visibleEdges"] = {
+},
+["type"] = 0,
+["posY"] = 3300,
+["entryIDs"] = {
+},
+["ranksIncreased"] = 0,
+["totalMaxRanks"] = 0,
+["flags"] = 0,
+["isDisplayError"] = false,
+["posX"] = 10800,
+["ID"] = 101097,
+["conditionIDs"] = {
+27725,
+},
+["maxRanks"] = 0,
+["groupIDs"] = {
+10885,
+10884,
+},
+},
+[110221] = {
+["entryIDs"] = {
+136760,
+136744,
+},
+["ranksIncreased"] = 0,
+["totalMaxRanks"] = 1,
+["costs"] = {
+{
+["ID"] = 3622,
+["amount"] = 1,
+},
+},
+["edgesBySpecID"] = {
+[269] = {
+{
+["visualStyle"] = 1,
+["type"] = 2,
+["targetNode"] = 101234,
+},
+},
+},
+["subTreeActive"] = false,
+["posX"] = 8600,
+["ID"] = 110221,
+["subTreeID"] = 64,
+["posY"] = 1900,
+["entryIDToRanksIncreased"] = {
+[136744] = 0,
+[136760] = 0,
+},
+["conditionIDs"] = {
+49219,
+49217,
+},
+["flags"] = 9,
+["type"] = 2,
+["maxRanks"] = 1,
+["groupIDs"] = {
+12435,
+12436,
+12434,
+},
+["incomingEdgesBySpecID"] = {
+[269] = {
+101243,
+},
+},
+},
+[101049] = {
+["entryIDs"] = {
+124821,
+},
+["nextEntry"] = {
+["entryID"] = 124821,
+["rank"] = 1,
+},
+["ranksIncreased"] = 0,
+["totalMaxRanks"] = 1,
+["edgesBySpecID"] = {
+[269] = {
+{
+["visualStyle"] = 1,
+["type"] = 2,
+["targetNode"] = 101055,
+},
+},
+},
+["costs"] = {
+{
+["ID"] = 3625,
+["amount"] = 1,
+},
+},
+["posX"] = 11400,
+["ID"] = 101049,
+["posY"] = 2700,
+["conditionIDs"] = {
+27757,
+},
+["flags"] = 0,
+["type"] = 0,
+["maxRanks"] = 1,
+["groupIDs"] = {
+10880,
+10884,
+},
+["incomingEdgesBySpecID"] = {
+[269] = {
+101048,
+},
+},
+},
+[101065] = {
+["type"] = 2,
+["posY"] = 2700,
+["entryIDs"] = {
+124839,
+136148,
+},
+["totalMaxRanks"] = 1,
+["ranksIncreased"] = 0,
+["edgesBySpecID"] = {
+[268] = {
+{
+["type"] = 2,
+["visualStyle"] = 1,
+["targetNode"] = 101202,
+},
+{
+["type"] = 2,
+["visualStyle"] = 1,
+["targetNode"] = 101071,
+},
+},
+},
+["entryIDToRanksIncreased"] = {
+[124839] = 0,
+[136148] = 0,
+},
+["costs"] = {
+{
+["ID"] = 3625,
+["amount"] = 1,
+},
+},
+["conditionIDs"] = {
+27730,
+},
+["ID"] = 101065,
+["posX"] = 12000,
+["groupIDs"] = {
+10879,
+10884,
+},
+["flags"] = 1,
+["maxRanks"] = 1,
+["incomingEdgesBySpecID"] = {
+[268] = {
+101064,
+},
+},
+},
+[101081] = {
+["type"] = 0,
+["posY"] = 5700,
+["entryIDs"] = {
+124856,
+},
+["nextEntry"] = {
+["entryID"] = 124856,
+["rank"] = 1,
+},
+["ranksIncreased"] = 0,
+["totalMaxRanks"] = 2,
+["edgesBySpecID"] = {
+[268] = {
+{
+["type"] = 2,
+["visualStyle"] = 1,
+["targetNode"] = 101075,
+},
+{
+["type"] = 2,
+["visualStyle"] = 1,
+["targetNode"] = 101196,
+},
+},
+},
+["costs"] = {
+{
+["ID"] = 3625,
+["amount"] = 1,
+},
+},
+["conditionIDs"] = {
+27820,
+27730,
+27816,
+},
+["flags"] = 0,
+["posX"] = 13800,
+["ID"] = 101081,
+["groupIDs"] = {
+10871,
+10879,
+10884,
+10891,
+},
+["maxRanks"] = 2,
+["incomingEdgesBySpecID"] = {
+[268] = {
+101077,
+101080,
+101083,
 },
 },
 },
@@ -7191,225 +7453,6 @@ BtWLoadoutsTraitsInfo = {
 },
 },
 },
-[101041] = {
-["entryIDs"] = {
-124812,
-},
-["nextEntry"] = {
-["entryID"] = 124812,
-["rank"] = 1,
-},
-["ranksIncreased"] = 0,
-["totalMaxRanks"] = 1,
-["edgesBySpecID"] = {
-[269] = {
-{
-["visualStyle"] = 1,
-["type"] = 2,
-["targetNode"] = 101210,
-},
-},
-},
-["costs"] = {
-{
-["ID"] = 3625,
-["amount"] = 1,
-},
-},
-["posX"] = 12000,
-["ID"] = 101041,
-["posY"] = 5700,
-["conditionIDs"] = {
-27757,
-27820,
-27816,
-},
-["flags"] = 0,
-["type"] = 0,
-["maxRanks"] = 1,
-["groupIDs"] = {
-10880,
-10871,
-10891,
-10884,
-},
-["incomingEdgesBySpecID"] = {
-[269] = {
-101207,
-},
-},
-},
-[101049] = {
-["entryIDs"] = {
-124821,
-},
-["nextEntry"] = {
-["entryID"] = 124821,
-["rank"] = 1,
-},
-["ranksIncreased"] = 0,
-["totalMaxRanks"] = 1,
-["edgesBySpecID"] = {
-[269] = {
-{
-["visualStyle"] = 1,
-["type"] = 2,
-["targetNode"] = 101055,
-},
-},
-},
-["costs"] = {
-{
-["ID"] = 3625,
-["amount"] = 1,
-},
-},
-["posX"] = 11400,
-["ID"] = 101049,
-["posY"] = 2700,
-["conditionIDs"] = {
-27757,
-},
-["flags"] = 0,
-["type"] = 0,
-["maxRanks"] = 1,
-["groupIDs"] = {
-10880,
-10884,
-},
-["incomingEdgesBySpecID"] = {
-[269] = {
-101048,
-},
-},
-},
-[101065] = {
-["type"] = 2,
-["posY"] = 2700,
-["entryIDs"] = {
-124839,
-136148,
-},
-["edgesBySpecID"] = {
-[268] = {
-{
-["type"] = 2,
-["targetNode"] = 101202,
-["visualStyle"] = 1,
-},
-{
-["type"] = 2,
-["targetNode"] = 101071,
-["visualStyle"] = 1,
-},
-},
-},
-["ranksIncreased"] = 0,
-["totalMaxRanks"] = 1,
-["maxRanks"] = 1,
-["costs"] = {
-{
-["ID"] = 3625,
-["amount"] = 1,
-},
-},
-["flags"] = 1,
-["groupIDs"] = {
-10879,
-10884,
-},
-["posX"] = 12000,
-["ID"] = 101065,
-["conditionIDs"] = {
-27730,
-},
-["entryIDToRanksIncreased"] = {
-[124839] = 0,
-[136148] = 0,
-},
-["incomingEdgesBySpecID"] = {
-[268] = {
-101064,
-},
-},
-},
-[101081] = {
-["type"] = 0,
-["posY"] = 5700,
-["entryIDs"] = {
-124856,
-},
-["nextEntry"] = {
-["entryID"] = 124856,
-["rank"] = 1,
-},
-["ranksIncreased"] = 0,
-["totalMaxRanks"] = 2,
-["edgesBySpecID"] = {
-[268] = {
-{
-["type"] = 2,
-["targetNode"] = 101075,
-["visualStyle"] = 1,
-},
-{
-["type"] = 2,
-["targetNode"] = 101196,
-["visualStyle"] = 1,
-},
-},
-},
-["costs"] = {
-{
-["ID"] = 3625,
-["amount"] = 1,
-},
-},
-["maxRanks"] = 2,
-["groupIDs"] = {
-10871,
-10879,
-10884,
-10891,
-},
-["posX"] = 13800,
-["ID"] = 101081,
-["flags"] = 0,
-["conditionIDs"] = {
-27820,
-27730,
-27816,
-},
-["incomingEdgesBySpecID"] = {
-[268] = {
-101077,
-101080,
-101083,
-},
-},
-},
-[101097] = {
-["visibleEdges"] = {
-},
-["type"] = 0,
-["posY"] = 3300,
-["entryIDs"] = {
-},
-["ranksIncreased"] = 0,
-["totalMaxRanks"] = 0,
-["flags"] = 0,
-["groupIDs"] = {
-10885,
-10884,
-},
-["posX"] = 10800,
-["ID"] = 101097,
-["maxRanks"] = 0,
-["conditionIDs"] = {
-27725,
-},
-["isDisplayError"] = false,
-},
 [101113] = {
 ["visibleEdges"] = {
 },
@@ -7420,21 +7463,21 @@ BtWLoadoutsTraitsInfo = {
 ["ranksIncreased"] = 0,
 ["totalMaxRanks"] = 0,
 ["flags"] = 0,
+["isDisplayError"] = false,
+["posX"] = 12600,
+["ID"] = 101113,
+["conditionIDs"] = {
+27820,
+27725,
+27816,
+},
+["maxRanks"] = 0,
 ["groupIDs"] = {
 10871,
 10885,
 10891,
 10884,
 },
-["posX"] = 12600,
-["ID"] = 101113,
-["maxRanks"] = 0,
-["conditionIDs"] = {
-27820,
-27725,
-27816,
-},
-["isDisplayError"] = false,
 },
 [101129] = {
 ["visibleEdges"] = {
@@ -7446,19 +7489,19 @@ BtWLoadoutsTraitsInfo = {
 ["ranksIncreased"] = 0,
 ["totalMaxRanks"] = 0,
 ["flags"] = 0,
+["isDisplayError"] = false,
+["posX"] = 12600,
+["ID"] = 101129,
+["conditionIDs"] = {
+27816,
+27725,
+},
+["maxRanks"] = 0,
 ["groupIDs"] = {
 10891,
 10885,
 10884,
 },
-["posX"] = 12600,
-["ID"] = 101129,
-["maxRanks"] = 0,
-["conditionIDs"] = {
-27816,
-27725,
-},
-["isDisplayError"] = false,
 },
 [101145] = {
 ["type"] = 0,
@@ -7476,13 +7519,13 @@ BtWLoadoutsTraitsInfo = {
 [268] = {
 {
 ["type"] = 2,
-["targetNode"] = 101158,
 ["visualStyle"] = 1,
+["targetNode"] = 101158,
 },
 {
 ["type"] = 2,
-["targetNode"] = 102433,
 ["visualStyle"] = 1,
+["targetNode"] = 102433,
 },
 },
 },
@@ -7492,16 +7535,16 @@ BtWLoadoutsTraitsInfo = {
 ["amount"] = 1,
 },
 },
-["maxRanks"] = 1,
-["groupIDs"] = {
-10881,
-},
-["posX"] = 2400,
-["ID"] = 101145,
-["flags"] = 0,
 ["conditionIDs"] = {
 49054,
 },
+["flags"] = 0,
+["posX"] = 2400,
+["ID"] = 101145,
+["groupIDs"] = {
+10881,
+},
+["maxRanks"] = 1,
 ["incomingEdgesBySpecID"] = {
 [268] = {
 101144,
@@ -7530,8 +7573,8 @@ BtWLoadoutsTraitsInfo = {
 [268] = {
 {
 ["type"] = 2,
-["targetNode"] = 101160,
 ["visualStyle"] = 1,
+["targetNode"] = 101160,
 },
 },
 },
@@ -7587,13 +7630,13 @@ BtWLoadoutsTraitsInfo = {
 [268] = {
 {
 ["type"] = 2,
-["targetNode"] = 101176,
 ["visualStyle"] = 1,
+["targetNode"] = 101176,
 },
 {
 ["type"] = 2,
-["targetNode"] = 101178,
 ["visualStyle"] = 1,
+["targetNode"] = 101178,
 },
 },
 },
@@ -7634,52 +7677,52 @@ BtWLoadoutsTraitsInfo = {
 124997,
 124996,
 },
+["totalMaxRanks"] = 1,
+["ranksIncreased"] = 0,
 ["edgesBySpecID"] = {
 [268] = {
 {
 ["type"] = 2,
+["visualStyle"] = 1,
 ["targetNode"] = 101195,
-["visualStyle"] = 1,
 },
 {
 ["type"] = 2,
+["visualStyle"] = 1,
 ["targetNode"] = 101199,
-["visualStyle"] = 1,
 },
 {
 ["type"] = 2,
-["targetNode"] = 101196,
 ["visualStyle"] = 1,
+["targetNode"] = 101196,
 },
 },
 },
-["ranksIncreased"] = 0,
-["totalMaxRanks"] = 1,
-["maxRanks"] = 1,
+["entryIDToRanksIncreased"] = {
+[124996] = 0,
+[124997] = 0,
+},
 ["costs"] = {
 {
 ["ID"] = 3625,
 ["amount"] = 1,
 },
 },
-["flags"] = 1,
+["conditionIDs"] = {
+27820,
+27730,
+27816,
+},
+["ID"] = 101193,
+["posX"] = 12600,
 ["groupIDs"] = {
 10871,
 10879,
 10884,
 10891,
 },
-["posX"] = 12600,
-["ID"] = 101193,
-["conditionIDs"] = {
-27820,
-27730,
-27816,
-},
-["entryIDToRanksIncreased"] = {
-[124996] = 0,
-[124997] = 0,
-},
+["flags"] = 1,
+["maxRanks"] = 1,
 ["incomingEdgesBySpecID"] = {
 [268] = {
 101074,
@@ -7765,8 +7808,8 @@ BtWLoadoutsTraitsInfo = {
 [268] = {
 {
 ["type"] = 2,
-["targetNode"] = 101226,
 ["visualStyle"] = 1,
+["targetNode"] = 101226,
 },
 },
 },
@@ -7818,13 +7861,13 @@ BtWLoadoutsTraitsInfo = {
 [268] = {
 {
 ["type"] = 2,
-["targetNode"] = 101090,
 ["visualStyle"] = 1,
+["targetNode"] = 101090,
 },
 {
 ["type"] = 2,
-["targetNode"] = 101184,
 ["visualStyle"] = 1,
+["targetNode"] = 101184,
 },
 },
 },
@@ -7834,72 +7877,69 @@ BtWLoadoutsTraitsInfo = {
 ["amount"] = 1,
 },
 },
-["maxRanks"] = 1,
-["groupIDs"] = {
-10881,
-},
-["posX"] = 6000,
-["ID"] = 109826,
-["flags"] = 0,
 ["conditionIDs"] = {
 48628,
 },
+["flags"] = 0,
+["posX"] = 6000,
+["ID"] = 109826,
+["groupIDs"] = {
+10881,
+},
+["maxRanks"] = 1,
 ["incomingEdgesBySpecID"] = {
 [268] = {
 109827,
 },
 },
 },
-[102433] = {
-["type"] = 2,
-["posY"] = 3900,
+[109827] = {
+["type"] = 0,
+["posY"] = 1500,
 ["entryIDs"] = {
-126502,
-126501,
+136086,
 },
+["nextEntry"] = {
+["entryID"] = 136086,
+["rank"] = 1,
+},
+["ranksIncreased"] = 0,
+["totalMaxRanks"] = 1,
 ["edgesBySpecID"] = {
 [268] = {
 {
 ["type"] = 2,
-["targetNode"] = 101156,
 ["visualStyle"] = 1,
+["targetNode"] = 109826,
 },
 {
 ["type"] = 2,
-["targetNode"] = 101158,
 ["visualStyle"] = 1,
+["targetNode"] = 101149,
 },
 },
 },
-["ranksIncreased"] = 0,
-["totalMaxRanks"] = 1,
-["maxRanks"] = 1,
 ["costs"] = {
 {
 ["ID"] = 3623,
 ["amount"] = 1,
 },
 },
-["flags"] = 1,
-["groupIDs"] = {
-10883,
-10881,
-},
-["posX"] = 3000,
-["ID"] = 102433,
 ["conditionIDs"] = {
-28647,
-27732,
+48631,
+27818,
 },
-["entryIDToRanksIncreased"] = {
-[126501] = 0,
-[126502] = 0,
+["flags"] = 0,
+["posX"] = 5400,
+["ID"] = 109827,
+["groupIDs"] = {
+10886,
+10881,
+10893,
 },
+["maxRanks"] = 1,
 ["incomingEdgesBySpecID"] = {
 [268] = {
-101145,
-101160,
-110024,
 },
 },
 },
@@ -8038,6 +8078,89 @@ BtWLoadoutsTraitsInfo = {
 },
 },
 },
+[101098] = {
+["visibleEdges"] = {
+},
+["type"] = 0,
+["posY"] = 5100,
+["entryIDs"] = {
+},
+["ranksIncreased"] = 0,
+["totalMaxRanks"] = 0,
+["flags"] = 0,
+["isDisplayError"] = false,
+["posX"] = 10800,
+["ID"] = 101098,
+["conditionIDs"] = {
+27816,
+27725,
+},
+["maxRanks"] = 0,
+["groupIDs"] = {
+10891,
+10885,
+10884,
+},
+},
+[101082] = {
+["type"] = 2,
+["posY"] = 4500,
+["entryIDs"] = {
+124858,
+124857,
+},
+["totalMaxRanks"] = 1,
+["ranksIncreased"] = 0,
+["edgesBySpecID"] = {
+[268] = {
+{
+["type"] = 2,
+["visualStyle"] = 1,
+["targetNode"] = 101074,
+},
+{
+["type"] = 2,
+["visualStyle"] = 1,
+["targetNode"] = 101083,
+},
+{
+["type"] = 2,
+["visualStyle"] = 1,
+["targetNode"] = 101077,
+},
+},
+},
+["entryIDToRanksIncreased"] = {
+[124857] = 0,
+[124858] = 0,
+},
+["costs"] = {
+{
+["ID"] = 3625,
+["amount"] = 1,
+},
+},
+["conditionIDs"] = {
+27730,
+27816,
+},
+["ID"] = 101082,
+["posX"] = 13200,
+["groupIDs"] = {
+10879,
+10891,
+10884,
+},
+["flags"] = 1,
+["maxRanks"] = 1,
+["incomingEdgesBySpecID"] = {
+[268] = {
+101076,
+101078,
+109882,
+},
+},
+},
 [110023] = {
 ["entryIDs"] = {
 136515,
@@ -8087,89 +8210,6 @@ BtWLoadoutsTraitsInfo = {
 },
 },
 },
-[101082] = {
-["type"] = 2,
-["posY"] = 4500,
-["entryIDs"] = {
-124858,
-124857,
-},
-["edgesBySpecID"] = {
-[268] = {
-{
-["type"] = 2,
-["targetNode"] = 101074,
-["visualStyle"] = 1,
-},
-{
-["type"] = 2,
-["targetNode"] = 101083,
-["visualStyle"] = 1,
-},
-{
-["type"] = 2,
-["targetNode"] = 101077,
-["visualStyle"] = 1,
-},
-},
-},
-["ranksIncreased"] = 0,
-["totalMaxRanks"] = 1,
-["maxRanks"] = 1,
-["costs"] = {
-{
-["ID"] = 3625,
-["amount"] = 1,
-},
-},
-["flags"] = 1,
-["groupIDs"] = {
-10879,
-10891,
-10884,
-},
-["posX"] = 13200,
-["ID"] = 101082,
-["conditionIDs"] = {
-27730,
-27816,
-},
-["entryIDToRanksIncreased"] = {
-[124857] = 0,
-[124858] = 0,
-},
-["incomingEdgesBySpecID"] = {
-[268] = {
-101076,
-101078,
-109882,
-},
-},
-},
-[101098] = {
-["visibleEdges"] = {
-},
-["type"] = 0,
-["posY"] = 5100,
-["entryIDs"] = {
-},
-["ranksIncreased"] = 0,
-["totalMaxRanks"] = 0,
-["flags"] = 0,
-["groupIDs"] = {
-10891,
-10885,
-10884,
-},
-["posX"] = 10800,
-["ID"] = 101098,
-["maxRanks"] = 0,
-["conditionIDs"] = {
-27816,
-27725,
-},
-["isDisplayError"] = false,
-},
 [101114] = {
 ["visibleEdges"] = {
 },
@@ -8180,21 +8220,21 @@ BtWLoadoutsTraitsInfo = {
 ["ranksIncreased"] = 0,
 ["totalMaxRanks"] = 0,
 ["flags"] = 0,
+["isDisplayError"] = false,
+["posX"] = 13200,
+["ID"] = 101114,
+["conditionIDs"] = {
+27820,
+27816,
+27725,
+},
+["maxRanks"] = 0,
 ["groupIDs"] = {
 10871,
 10891,
 10885,
 10884,
 },
-["posX"] = 13200,
-["ID"] = 101114,
-["maxRanks"] = 0,
-["conditionIDs"] = {
-27820,
-27816,
-27725,
-},
-["isDisplayError"] = false,
 },
 [101130] = {
 ["visibleEdges"] = {
@@ -8206,19 +8246,19 @@ BtWLoadoutsTraitsInfo = {
 ["ranksIncreased"] = 0,
 ["totalMaxRanks"] = 0,
 ["flags"] = 0,
+["isDisplayError"] = false,
+["posX"] = 13200,
+["ID"] = 101130,
+["conditionIDs"] = {
+27816,
+27725,
+},
+["maxRanks"] = 0,
 ["groupIDs"] = {
 10891,
 10885,
 10884,
 },
-["posX"] = 13200,
-["ID"] = 101130,
-["maxRanks"] = 0,
-["conditionIDs"] = {
-27816,
-27725,
-},
-["isDisplayError"] = false,
 },
 [101146] = {
 ["entryIDs"] = {
@@ -8251,18 +8291,18 @@ BtWLoadoutsTraitsInfo = {
 [268] = {
 {
 ["type"] = 2,
+["visualStyle"] = 1,
 ["targetNode"] = 110024,
-["visualStyle"] = 1,
 },
 {
 ["type"] = 2,
+["visualStyle"] = 1,
 ["targetNode"] = 101160,
-["visualStyle"] = 1,
 },
 {
 ["type"] = 2,
-["targetNode"] = 101145,
 ["visualStyle"] = 1,
+["targetNode"] = 101145,
 },
 },
 },
@@ -8391,29 +8431,57 @@ BtWLoadoutsTraitsInfo = {
 },
 },
 },
-[101099] = {
-["visibleEdges"] = {
-},
-["type"] = 0,
-["posY"] = 4500,
+[110024] = {
 ["entryIDs"] = {
+136517,
+},
+["nextEntry"] = {
+["entryID"] = 136517,
+["rank"] = 1,
 },
 ["ranksIncreased"] = 0,
-["totalMaxRanks"] = 0,
-["flags"] = 0,
-["groupIDs"] = {
-10891,
-10885,
-10884,
+["totalMaxRanks"] = 1,
+["edgesBySpecID"] = {
+[269] = {
+{
+["visualStyle"] = 1,
+["type"] = 2,
+["targetNode"] = 101159,
 },
-["posX"] = 10800,
-["ID"] = 101099,
-["maxRanks"] = 0,
+},
+[268] = {
+{
+["type"] = 2,
+["visualStyle"] = 1,
+["targetNode"] = 102433,
+},
+},
+},
+["costs"] = {
+{
+["ID"] = 3623,
+["amount"] = 1,
+},
+},
+["posX"] = 3000,
+["ID"] = 110024,
+["posY"] = 3300,
 ["conditionIDs"] = {
-27816,
-27725,
 },
-["isDisplayError"] = false,
+["flags"] = 8,
+["type"] = 0,
+["maxRanks"] = 1,
+["groupIDs"] = {
+10881,
+},
+["incomingEdgesBySpecID"] = {
+[269] = {
+101146,
+},
+[268] = {
+101146,
+},
+},
 },
 [101210] = {
 ["entryIDs"] = {
@@ -8499,8 +8567,8 @@ BtWLoadoutsTraitsInfo = {
 [268] = {
 {
 ["type"] = 2,
-["targetNode"] = 101227,
 ["visualStyle"] = 1,
+["targetNode"] = 101227,
 },
 },
 },
@@ -8596,50 +8664,85 @@ BtWLoadoutsTraitsInfo = {
 },
 },
 },
-[110026] = {
+[101101] = {
 ["visibleEdges"] = {
 },
 ["type"] = 0,
-["posY"] = 3300,
+["posY"] = 6900,
 ["entryIDs"] = {
 },
 ["ranksIncreased"] = 0,
 ["totalMaxRanks"] = 0,
 ["flags"] = 0,
-["groupIDs"] = {
-10881,
-},
-["posX"] = 2400,
-["ID"] = 110026,
-["maxRanks"] = 0,
-["conditionIDs"] = {
-49055,
-},
 ["isDisplayError"] = false,
+["posX"] = 11400,
+["ID"] = 101101,
+["conditionIDs"] = {
+27820,
+27725,
+27816,
 },
-[101100] = {
-["visibleEdges"] = {
-},
-["type"] = 0,
-["posY"] = 5100,
-["entryIDs"] = {
-},
-["ranksIncreased"] = 0,
-["totalMaxRanks"] = 0,
-["flags"] = 0,
+["maxRanks"] = 0,
 ["groupIDs"] = {
-10891,
+10871,
 10885,
+10891,
 10884,
 },
-["posX"] = 11400,
-["ID"] = 101100,
-["maxRanks"] = 0,
-["conditionIDs"] = {
-27816,
-27725,
 },
-["isDisplayError"] = false,
+[110025] = {
+["entryIDs"] = {
+136518,
+},
+["nextEntry"] = {
+["entryID"] = 136518,
+["rank"] = 1,
+},
+["ranksIncreased"] = 0,
+["totalMaxRanks"] = 1,
+["edgesBySpecID"] = {
+[269] = {
+{
+["visualStyle"] = 1,
+["type"] = 2,
+["targetNode"] = 101140,
+},
+},
+[268] = {
+{
+["type"] = 2,
+["visualStyle"] = 1,
+["targetNode"] = 101140,
+},
+},
+},
+["costs"] = {
+{
+["ID"] = 3623,
+["amount"] = 1,
+},
+},
+["posX"] = 6000,
+["ID"] = 110025,
+["posY"] = 3900,
+["conditionIDs"] = {
+27732,
+},
+["flags"] = 8,
+["type"] = 0,
+["maxRanks"] = 1,
+["groupIDs"] = {
+10881,
+10883,
+},
+["incomingEdgesBySpecID"] = {
+[269] = {
+101184,
+},
+[268] = {
+101184,
+},
+},
 },
 [101035] = {
 ["entryIDs"] = {
@@ -8734,50 +8837,50 @@ BtWLoadoutsTraitsInfo = {
 124841,
 136146,
 },
+["totalMaxRanks"] = 1,
+["ranksIncreased"] = 0,
 ["edgesBySpecID"] = {
 [268] = {
 {
 ["type"] = 2,
+["visualStyle"] = 1,
 ["targetNode"] = 101069,
-["visualStyle"] = 1,
 },
 {
 ["type"] = 2,
+["visualStyle"] = 1,
 ["targetNode"] = 101068,
-["visualStyle"] = 1,
 },
 {
 ["type"] = 2,
-["targetNode"] = 102004,
 ["visualStyle"] = 1,
+["targetNode"] = 102004,
 },
 },
 },
-["ranksIncreased"] = 0,
-["totalMaxRanks"] = 1,
-["maxRanks"] = 1,
+["entryIDToRanksIncreased"] = {
+[124841] = 0,
+[136146] = 0,
+},
 ["costs"] = {
 {
 ["ID"] = 3625,
 ["amount"] = 1,
 },
 },
-["flags"] = 1,
+["conditionIDs"] = {
+27730,
+27816,
+},
+["ID"] = 101067,
+["posX"] = 11400,
 ["groupIDs"] = {
 10879,
 10891,
 10884,
 },
-["posX"] = 11400,
-["ID"] = 101067,
-["conditionIDs"] = {
-27730,
-27816,
-},
-["entryIDToRanksIncreased"] = {
-[124841] = 0,
-[136146] = 0,
-},
+["flags"] = 1,
+["maxRanks"] = 1,
 ["incomingEdgesBySpecID"] = {
 [268] = {
 101071,
@@ -8800,8 +8903,8 @@ BtWLoadoutsTraitsInfo = {
 [268] = {
 {
 ["type"] = 2,
-["targetNode"] = 101081,
 ["visualStyle"] = 1,
+["targetNode"] = 101081,
 },
 },
 },
@@ -8811,19 +8914,19 @@ BtWLoadoutsTraitsInfo = {
 ["amount"] = 1,
 },
 },
-["maxRanks"] = 1,
+["conditionIDs"] = {
+27816,
+27730,
+},
+["flags"] = 1,
+["posX"] = 13800,
+["ID"] = 101083,
 ["groupIDs"] = {
 10891,
 10879,
 10884,
 },
-["posX"] = 13800,
-["ID"] = 101083,
-["flags"] = 1,
-["conditionIDs"] = {
-27816,
-27730,
-},
+["maxRanks"] = 1,
 ["incomingEdgesBySpecID"] = {
 [268] = {
 101082,
@@ -8832,56 +8935,28 @@ BtWLoadoutsTraitsInfo = {
 },
 },
 },
-[110024] = {
-["entryIDs"] = {
-136517,
+[101099] = {
+["visibleEdges"] = {
 },
-["nextEntry"] = {
-["entryID"] = 136517,
-["rank"] = 1,
+["type"] = 0,
+["posY"] = 4500,
+["entryIDs"] = {
 },
 ["ranksIncreased"] = 0,
-["totalMaxRanks"] = 1,
-["edgesBySpecID"] = {
-[269] = {
-{
-["visualStyle"] = 1,
-["type"] = 2,
-["targetNode"] = 101159,
-},
-},
-[268] = {
-{
-["type"] = 2,
-["targetNode"] = 102433,
-["visualStyle"] = 1,
-},
-},
-},
-["costs"] = {
-{
-["ID"] = 3623,
-["amount"] = 1,
-},
-},
-["posX"] = 3000,
-["ID"] = 110024,
-["posY"] = 3300,
+["totalMaxRanks"] = 0,
+["flags"] = 0,
+["isDisplayError"] = false,
+["posX"] = 10800,
+["ID"] = 101099,
 ["conditionIDs"] = {
+27816,
+27725,
 },
-["flags"] = 8,
-["type"] = 0,
-["maxRanks"] = 1,
+["maxRanks"] = 0,
 ["groupIDs"] = {
-10881,
-},
-["incomingEdgesBySpecID"] = {
-[269] = {
-101146,
-},
-[268] = {
-101146,
-},
+10891,
+10885,
+10884,
 },
 },
 [101115] = {
@@ -8894,21 +8969,21 @@ BtWLoadoutsTraitsInfo = {
 ["ranksIncreased"] = 0,
 ["totalMaxRanks"] = 0,
 ["flags"] = 0,
+["isDisplayError"] = false,
+["posX"] = 13800,
+["ID"] = 101115,
+["conditionIDs"] = {
+27725,
+27820,
+27816,
+},
+["maxRanks"] = 0,
 ["groupIDs"] = {
 10885,
 10871,
 10891,
 10884,
 },
-["posX"] = 13800,
-["ID"] = 101115,
-["maxRanks"] = 0,
-["conditionIDs"] = {
-27725,
-27820,
-27816,
-},
-["isDisplayError"] = false,
 },
 [101131] = {
 ["visibleEdges"] = {
@@ -8920,17 +8995,17 @@ BtWLoadoutsTraitsInfo = {
 ["ranksIncreased"] = 0,
 ["totalMaxRanks"] = 0,
 ["flags"] = 0,
+["isDisplayError"] = false,
+["posX"] = 12600,
+["ID"] = 101131,
+["conditionIDs"] = {
+27725,
+},
+["maxRanks"] = 0,
 ["groupIDs"] = {
 10885,
 10884,
 },
-["posX"] = 12600,
-["ID"] = 101131,
-["maxRanks"] = 0,
-["conditionIDs"] = {
-27725,
-},
-["isDisplayError"] = false,
 },
 [101147] = {
 ["entryIDs"] = {
@@ -8963,18 +9038,18 @@ BtWLoadoutsTraitsInfo = {
 [268] = {
 {
 ["type"] = 2,
+["visualStyle"] = 1,
 ["targetNode"] = 101153,
-["visualStyle"] = 1,
 },
 {
 ["type"] = 2,
+["visualStyle"] = 1,
 ["targetNode"] = 101161,
-["visualStyle"] = 1,
 },
 {
 ["type"] = 2,
-["targetNode"] = 101146,
 ["visualStyle"] = 1,
+["targetNode"] = 101146,
 },
 },
 },
@@ -9027,8 +9102,8 @@ BtWLoadoutsTraitsInfo = {
 [268] = {
 {
 ["type"] = 2,
-["targetNode"] = 101172,
 ["visualStyle"] = 1,
+["targetNode"] = 101172,
 },
 },
 },
@@ -9086,13 +9161,13 @@ BtWLoadoutsTraitsInfo = {
 [268] = {
 {
 ["type"] = 2,
-["targetNode"] = 101154,
 ["visualStyle"] = 1,
+["targetNode"] = 101154,
 },
 {
 ["type"] = 2,
-["targetNode"] = 101178,
 ["visualStyle"] = 1,
+["targetNode"] = 101178,
 },
 },
 },
@@ -9150,21 +9225,21 @@ BtWLoadoutsTraitsInfo = {
 ["amount"] = 1,
 },
 },
-["maxRanks"] = 1,
+["conditionIDs"] = {
+27820,
+27730,
+27816,
+},
+["flags"] = 0,
+["posX"] = 12600,
+["ID"] = 101195,
 ["groupIDs"] = {
 10871,
 10879,
 10884,
 10891,
 },
-["posX"] = 12600,
-["ID"] = 101195,
-["flags"] = 0,
-["conditionIDs"] = {
-27820,
-27730,
-27816,
-},
+["maxRanks"] = 1,
 ["incomingEdgesBySpecID"] = {
 [268] = {
 101193,
@@ -9344,22 +9419,34 @@ BtWLoadoutsTraitsInfo = {
 },
 },
 },
-[101212] = {
+[109882] = {
+["type"] = 0,
+["posY"] = 3900,
 ["entryIDs"] = {
-125019,
+136145,
 },
 ["nextEntry"] = {
-["entryID"] = 125019,
+["entryID"] = 136145,
 ["rank"] = 1,
 },
 ["ranksIncreased"] = 0,
 ["totalMaxRanks"] = 1,
 ["edgesBySpecID"] = {
-[269] = {
+[268] = {
 {
-["visualStyle"] = 1,
 ["type"] = 2,
-["targetNode"] = 101208,
+["visualStyle"] = 1,
+["targetNode"] = 101083,
+},
+{
+["type"] = 2,
+["visualStyle"] = 1,
+["targetNode"] = 101201,
+},
+{
+["type"] = 2,
+["visualStyle"] = 1,
+["targetNode"] = 101082,
 },
 },
 },
@@ -9369,55 +9456,54 @@ BtWLoadoutsTraitsInfo = {
 ["amount"] = 1,
 },
 },
-["posX"] = 13200,
-["ID"] = 101212,
-["posY"] = 6300,
 ["conditionIDs"] = {
-27757,
-27820,
+27730,
 27816,
 },
 ["flags"] = 0,
-["type"] = 0,
-["maxRanks"] = 1,
+["posX"] = 13800,
+["ID"] = 109882,
 ["groupIDs"] = {
-10880,
-10871,
-10891,
+10879,
 10884,
+10891,
 },
+["maxRanks"] = 1,
 ["incomingEdgesBySpecID"] = {
-[269] = {
-101046,
-101203,
+[268] = {
+101086,
 },
 },
 },
-[101101] = {
+[109516] = {
 ["visibleEdges"] = {
 },
 ["type"] = 0,
-["posY"] = 6900,
+["posY"] = 7650,
 ["entryIDs"] = {
 },
 ["ranksIncreased"] = 0,
 ["totalMaxRanks"] = 0,
 ["flags"] = 0,
+["isDisplayError"] = false,
+["posX"] = 12600,
+["ID"] = 109516,
+["conditionIDs"] = {
+49101,
+49441,
+49440,
+49439,
+27820,
+27725,
+27816,
+},
+["maxRanks"] = 0,
 ["groupIDs"] = {
 10871,
 10885,
 10891,
 10884,
 },
-["posX"] = 11400,
-["ID"] = 101101,
-["maxRanks"] = 0,
-["conditionIDs"] = {
-27820,
-27725,
-27816,
-},
-["isDisplayError"] = false,
 },
 [101036] = {
 ["entryIDs"] = {
@@ -9537,8 +9623,8 @@ BtWLoadoutsTraitsInfo = {
 [268] = {
 {
 ["type"] = 2,
-["targetNode"] = 101189,
 ["visualStyle"] = 1,
+["targetNode"] = 101189,
 },
 },
 },
@@ -9548,19 +9634,19 @@ BtWLoadoutsTraitsInfo = {
 ["amount"] = 1,
 },
 },
-["maxRanks"] = 1,
+["conditionIDs"] = {
+27730,
+27816,
+},
+["flags"] = 0,
+["posX"] = 11400,
+["ID"] = 101068,
 ["groupIDs"] = {
 10879,
 10891,
 10884,
 },
-["posX"] = 11400,
-["ID"] = 101068,
-["flags"] = 0,
-["conditionIDs"] = {
-27730,
-27816,
-},
+["maxRanks"] = 1,
 ["incomingEdgesBySpecID"] = {
 [268] = {
 101067,
@@ -9585,8 +9671,8 @@ BtWLoadoutsTraitsInfo = {
 [268] = {
 {
 ["type"] = 2,
-["targetNode"] = 102004,
 ["visualStyle"] = 1,
+["targetNode"] = 102004,
 },
 },
 },
@@ -9596,19 +9682,19 @@ BtWLoadoutsTraitsInfo = {
 ["amount"] = 1,
 },
 },
-["maxRanks"] = 1,
+["conditionIDs"] = {
+27730,
+27816,
+},
+["flags"] = 0,
+["posX"] = 12000,
+["ID"] = 101084,
 ["groupIDs"] = {
 10879,
 10884,
 10891,
 },
-["posX"] = 12000,
-["ID"] = 101084,
-["flags"] = 0,
-["conditionIDs"] = {
-27730,
-27816,
-},
+["maxRanks"] = 1,
 ["incomingEdgesBySpecID"] = {
 [268] = {
 101071,
@@ -9616,58 +9702,28 @@ BtWLoadoutsTraitsInfo = {
 },
 },
 },
-[110025] = {
-["entryIDs"] = {
-136518,
+[101100] = {
+["visibleEdges"] = {
 },
-["nextEntry"] = {
-["entryID"] = 136518,
-["rank"] = 1,
+["type"] = 0,
+["posY"] = 5100,
+["entryIDs"] = {
 },
 ["ranksIncreased"] = 0,
-["totalMaxRanks"] = 1,
-["edgesBySpecID"] = {
-[269] = {
-{
-["visualStyle"] = 1,
-["type"] = 2,
-["targetNode"] = 101140,
-},
-},
-[268] = {
-{
-["type"] = 2,
-["targetNode"] = 101140,
-["visualStyle"] = 1,
-},
-},
-},
-["costs"] = {
-{
-["ID"] = 3623,
-["amount"] = 1,
-},
-},
-["posX"] = 6000,
-["ID"] = 110025,
-["posY"] = 3900,
+["totalMaxRanks"] = 0,
+["flags"] = 0,
+["isDisplayError"] = false,
+["posX"] = 11400,
+["ID"] = 101100,
 ["conditionIDs"] = {
-27732,
+27816,
+27725,
 },
-["flags"] = 8,
-["type"] = 0,
-["maxRanks"] = 1,
+["maxRanks"] = 0,
 ["groupIDs"] = {
-10881,
-10883,
-},
-["incomingEdgesBySpecID"] = {
-[269] = {
-101184,
-},
-[268] = {
-101184,
-},
+10891,
+10885,
+10884,
 },
 },
 [101116] = {
@@ -9680,21 +9736,21 @@ BtWLoadoutsTraitsInfo = {
 ["ranksIncreased"] = 0,
 ["totalMaxRanks"] = 0,
 ["flags"] = 0,
+["isDisplayError"] = false,
+["posX"] = 13800,
+["ID"] = 101116,
+["conditionIDs"] = {
+27725,
+27820,
+27816,
+},
+["maxRanks"] = 0,
 ["groupIDs"] = {
 10885,
 10871,
 10891,
 10884,
 },
-["posX"] = 13800,
-["ID"] = 101116,
-["maxRanks"] = 0,
-["conditionIDs"] = {
-27725,
-27820,
-27816,
-},
-["isDisplayError"] = false,
 },
 [101132] = {
 ["visibleEdges"] = {
@@ -9706,17 +9762,17 @@ BtWLoadoutsTraitsInfo = {
 ["ranksIncreased"] = 0,
 ["totalMaxRanks"] = 0,
 ["flags"] = 0,
+["isDisplayError"] = false,
+["posX"] = 12600,
+["ID"] = 101132,
+["conditionIDs"] = {
+27725,
+},
+["maxRanks"] = 0,
 ["groupIDs"] = {
 10885,
 10884,
 },
-["posX"] = 12600,
-["ID"] = 101132,
-["maxRanks"] = 0,
-["conditionIDs"] = {
-27725,
-},
-["isDisplayError"] = false,
 },
 [101148] = {
 ["entryIDs"] = {
@@ -9739,8 +9795,8 @@ BtWLoadoutsTraitsInfo = {
 [268] = {
 {
 ["type"] = 2,
-["targetNode"] = 101152,
 ["visualStyle"] = 1,
+["targetNode"] = 101152,
 },
 },
 },
@@ -9780,20 +9836,20 @@ BtWLoadoutsTraitsInfo = {
 ["ranksIncreased"] = 0,
 ["totalMaxRanks"] = 0,
 ["flags"] = 0,
-["groupIDs"] = {
-10873,
-10883,
-10881,
-},
+["isDisplayError"] = false,
 ["posX"] = 4200,
 ["ID"] = 101164,
-["maxRanks"] = 0,
 ["conditionIDs"] = {
 27770,
 27822,
 27732,
 },
-["isDisplayError"] = false,
+["maxRanks"] = 0,
+["groupIDs"] = {
+10873,
+10883,
+10881,
+},
 },
 [101180] = {
 ["entryIDs"] = {
@@ -9816,8 +9872,8 @@ BtWLoadoutsTraitsInfo = {
 [268] = {
 {
 ["type"] = 2,
-["targetNode"] = 101179,
 ["visualStyle"] = 1,
+["targetNode"] = 101179,
 },
 },
 },
@@ -9860,42 +9916,42 @@ BtWLoadoutsTraitsInfo = {
 125000,
 136149,
 },
+["totalMaxRanks"] = 1,
+["ranksIncreased"] = 0,
 ["edgesBySpecID"] = {
 [268] = {
 {
 ["type"] = 2,
-["targetNode"] = 101195,
 ["visualStyle"] = 1,
+["targetNode"] = 101195,
 },
 },
 },
-["ranksIncreased"] = 0,
-["totalMaxRanks"] = 1,
-["maxRanks"] = 1,
+["entryIDToRanksIncreased"] = {
+[125000] = 0,
+[136149] = 0,
+},
 ["costs"] = {
 {
 ["ID"] = 3625,
 ["amount"] = 1,
 },
 },
-["flags"] = 1,
+["conditionIDs"] = {
+27730,
+27816,
+27820,
+},
+["ID"] = 101196,
+["posX"] = 13200,
 ["groupIDs"] = {
 10879,
 10884,
 10891,
 10871,
 },
-["posX"] = 13200,
-["ID"] = 101196,
-["conditionIDs"] = {
-27730,
-27816,
-27820,
-},
-["entryIDToRanksIncreased"] = {
-[125000] = 0,
-[136149] = 0,
-},
+["flags"] = 1,
+["maxRanks"] = 1,
 ["incomingEdgesBySpecID"] = {
 [268] = {
 101077,
@@ -9904,34 +9960,22 @@ BtWLoadoutsTraitsInfo = {
 },
 },
 },
-[109882] = {
-["type"] = 0,
-["posY"] = 3900,
+[101212] = {
 ["entryIDs"] = {
-136145,
+125019,
 },
 ["nextEntry"] = {
-["entryID"] = 136145,
+["entryID"] = 125019,
 ["rank"] = 1,
 },
 ["ranksIncreased"] = 0,
 ["totalMaxRanks"] = 1,
 ["edgesBySpecID"] = {
-[268] = {
+[269] = {
 {
-["type"] = 2,
-["targetNode"] = 101083,
 ["visualStyle"] = 1,
-},
-{
 ["type"] = 2,
-["targetNode"] = 101201,
-["visualStyle"] = 1,
-},
-{
-["type"] = 2,
-["targetNode"] = 101082,
-["visualStyle"] = 1,
+["targetNode"] = 101208,
 },
 },
 },
@@ -9941,22 +9985,27 @@ BtWLoadoutsTraitsInfo = {
 ["amount"] = 1,
 },
 },
-["maxRanks"] = 1,
-["groupIDs"] = {
-10879,
-10884,
-10891,
-},
-["posX"] = 13800,
-["ID"] = 109882,
-["flags"] = 0,
+["posX"] = 13200,
+["ID"] = 101212,
+["posY"] = 6300,
 ["conditionIDs"] = {
-27730,
+27757,
+27820,
 27816,
 },
+["flags"] = 0,
+["type"] = 0,
+["maxRanks"] = 1,
+["groupIDs"] = {
+10880,
+10871,
+10891,
+10884,
+},
 ["incomingEdgesBySpecID"] = {
-[268] = {
-101086,
+[269] = {
+101046,
+101203,
 },
 },
 },
@@ -9981,8 +10030,8 @@ BtWLoadoutsTraitsInfo = {
 [268] = {
 {
 ["type"] = 2,
-["targetNode"] = 101227,
 ["visualStyle"] = 1,
+["targetNode"] = 101227,
 },
 },
 },
@@ -10039,8 +10088,8 @@ BtWLoadoutsTraitsInfo = {
 [268] = {
 {
 ["type"] = 2,
-["targetNode"] = 101252,
 ["visualStyle"] = 1,
+["targetNode"] = 101252,
 },
 },
 },
@@ -10076,22 +10125,24 @@ BtWLoadoutsTraitsInfo = {
 },
 },
 },
-[101213] = {
+[109883] = {
+["type"] = 0,
+["posY"] = 2700,
 ["entryIDs"] = {
-125020,
+136147,
 },
 ["nextEntry"] = {
-["entryID"] = 125020,
+["entryID"] = 136147,
 ["rank"] = 1,
 },
 ["ranksIncreased"] = 0,
 ["totalMaxRanks"] = 1,
 ["edgesBySpecID"] = {
-[269] = {
+[268] = {
 {
-["visualStyle"] = 1,
 ["type"] = 2,
-["targetNode"] = 101210,
+["visualStyle"] = 1,
+["targetNode"] = 101071,
 },
 },
 },
@@ -10101,36 +10152,29 @@ BtWLoadoutsTraitsInfo = {
 ["amount"] = 1,
 },
 },
+["conditionIDs"] = {
+27730,
+},
+["flags"] = 0,
 ["posX"] = 11400,
-["ID"] = 101213,
-["posY"] = 5700,
-["conditionIDs"] = {
-27757,
-27820,
-27816,
-},
-["flags"] = 0,
-["type"] = 0,
-["maxRanks"] = 1,
+["ID"] = 109883,
 ["groupIDs"] = {
-10880,
-10871,
-10891,
+10879,
 10884,
 },
+["maxRanks"] = 1,
 ["incomingEdgesBySpecID"] = {
-[269] = {
-101060,
-101062,
+[268] = {
+101064,
 },
 },
 },
-[101038] = {
+[110218] = {
 ["entryIDs"] = {
-124809,
+136754,
 },
 ["nextEntry"] = {
-["entryID"] = 124809,
+["entryID"] = 136754,
 ["rank"] = 1,
 },
 ["ranksIncreased"] = 0,
@@ -10140,34 +10184,43 @@ BtWLoadoutsTraitsInfo = {
 {
 ["visualStyle"] = 1,
 ["type"] = 2,
-["targetNode"] = 101215,
+["targetNode"] = 109700,
+},
+{
+["visualStyle"] = 1,
+["type"] = 2,
+["targetNode"] = 109700,
 },
 },
 },
 ["costs"] = {
 {
-["ID"] = 3625,
+["ID"] = 3622,
 ["amount"] = 1,
 },
 },
-["posX"] = 14400,
-["ID"] = 101038,
-["posY"] = 3900,
+["subTreeActive"] = false,
+["subTreeID"] = 64,
+["posX"] = 9200,
+["ID"] = 110218,
+["posY"] = 2500,
 ["conditionIDs"] = {
-27757,
-27816,
+49218,
+49217,
 },
-["flags"] = 0,
+["flags"] = 8,
 ["type"] = 0,
 ["maxRanks"] = 1,
 ["groupIDs"] = {
-10880,
-10891,
-10884,
+12437,
+12434,
+12435,
+12436,
 },
 ["incomingEdgesBySpecID"] = {
 [269] = {
-101039,
+109701,
+109701,
 },
 },
 },
@@ -10297,13 +10350,13 @@ BtWLoadoutsTraitsInfo = {
 [268] = {
 {
 ["type"] = 2,
-["targetNode"] = 101188,
 ["visualStyle"] = 1,
+["targetNode"] = 101188,
 },
 {
 ["type"] = 2,
-["targetNode"] = 101068,
 ["visualStyle"] = 1,
+["targetNode"] = 101068,
 },
 },
 },
@@ -10313,19 +10366,19 @@ BtWLoadoutsTraitsInfo = {
 ["amount"] = 1,
 },
 },
-["maxRanks"] = 1,
+["conditionIDs"] = {
+27816,
+27730,
+},
+["flags"] = 0,
+["posX"] = 10800,
+["ID"] = 101069,
 ["groupIDs"] = {
 10891,
 10879,
 10884,
 },
-["posX"] = 10800,
-["ID"] = 101069,
-["flags"] = 0,
-["conditionIDs"] = {
-27816,
-27730,
-},
+["maxRanks"] = 1,
 ["incomingEdgesBySpecID"] = {
 [268] = {
 101067,
@@ -10349,8 +10402,8 @@ BtWLoadoutsTraitsInfo = {
 [268] = {
 {
 ["type"] = 2,
-["targetNode"] = 101202,
 ["visualStyle"] = 1,
+["targetNode"] = 101202,
 },
 },
 },
@@ -10360,17 +10413,17 @@ BtWLoadoutsTraitsInfo = {
 ["amount"] = 1,
 },
 },
-["maxRanks"] = 1,
+["conditionIDs"] = {
+27730,
+},
+["flags"] = 0,
+["posX"] = 12600,
+["ID"] = 101085,
 ["groupIDs"] = {
 10879,
 10884,
 },
-["posX"] = 12600,
-["ID"] = 101085,
-["flags"] = 0,
-["conditionIDs"] = {
-27730,
-},
+["maxRanks"] = 1,
 ["incomingEdgesBySpecID"] = {
 [268] = {
 101064,
@@ -10378,35 +10431,26 @@ BtWLoadoutsTraitsInfo = {
 },
 },
 },
-[109516] = {
+[110026] = {
 ["visibleEdges"] = {
 },
 ["type"] = 0,
-["posY"] = 7650,
+["posY"] = 3300,
 ["entryIDs"] = {
 },
 ["ranksIncreased"] = 0,
 ["totalMaxRanks"] = 0,
 ["flags"] = 0,
-["groupIDs"] = {
-10871,
-10885,
-10891,
-10884,
-},
-["posX"] = 12600,
-["ID"] = 109516,
-["maxRanks"] = 0,
-["conditionIDs"] = {
-49101,
-49441,
-49440,
-49439,
-27820,
-27725,
-27816,
-},
 ["isDisplayError"] = false,
+["posX"] = 2400,
+["ID"] = 110026,
+["conditionIDs"] = {
+49055,
+},
+["maxRanks"] = 0,
+["groupIDs"] = {
+10881,
+},
 },
 [101117] = {
 ["visibleEdges"] = {
@@ -10418,21 +10462,21 @@ BtWLoadoutsTraitsInfo = {
 ["ranksIncreased"] = 0,
 ["totalMaxRanks"] = 0,
 ["flags"] = 0,
+["isDisplayError"] = false,
+["posX"] = 13800,
+["ID"] = 101117,
+["conditionIDs"] = {
+27820,
+27816,
+27725,
+},
+["maxRanks"] = 0,
 ["groupIDs"] = {
 10871,
 10891,
 10885,
 10884,
 },
-["posX"] = 13800,
-["ID"] = 101117,
-["maxRanks"] = 0,
-["conditionIDs"] = {
-27820,
-27816,
-27725,
-},
-["isDisplayError"] = false,
 },
 [101133] = {
 ["visibleEdges"] = {
@@ -10444,17 +10488,17 @@ BtWLoadoutsTraitsInfo = {
 ["ranksIncreased"] = 0,
 ["totalMaxRanks"] = 0,
 ["flags"] = 0,
+["isDisplayError"] = false,
+["posX"] = 12000,
+["ID"] = 101133,
+["conditionIDs"] = {
+27725,
+},
+["maxRanks"] = 0,
 ["groupIDs"] = {
 10885,
 10884,
 },
-["posX"] = 12000,
-["ID"] = 101133,
-["maxRanks"] = 0,
-["conditionIDs"] = {
-27725,
-},
-["isDisplayError"] = false,
 },
 [101149] = {
 ["entryIDs"] = {
@@ -10490,18 +10534,18 @@ BtWLoadoutsTraitsInfo = {
 [268] = {
 {
 ["type"] = 2,
+["visualStyle"] = 1,
 ["targetNode"] = 101090,
-["visualStyle"] = 1,
 },
 {
 ["type"] = 2,
+["visualStyle"] = 1,
 ["targetNode"] = 101153,
-["visualStyle"] = 1,
 },
 {
 ["type"] = 2,
-["targetNode"] = 101148,
 ["visualStyle"] = 1,
+["targetNode"] = 101148,
 },
 },
 },
@@ -10562,18 +10606,18 @@ BtWLoadoutsTraitsInfo = {
 [268] = {
 {
 ["type"] = 2,
+["visualStyle"] = 1,
 ["targetNode"] = 101135,
-["visualStyle"] = 1,
 },
 {
 ["type"] = 2,
+["visualStyle"] = 1,
 ["targetNode"] = 101155,
-["visualStyle"] = 1,
 },
 {
 ["type"] = 2,
-["targetNode"] = 101172,
 ["visualStyle"] = 1,
+["targetNode"] = 101172,
 },
 },
 },
@@ -10623,8 +10667,8 @@ BtWLoadoutsTraitsInfo = {
 [268] = {
 {
 ["type"] = 2,
-["targetNode"] = 101180,
 ["visualStyle"] = 1,
+["targetNode"] = 101180,
 },
 },
 },
@@ -10634,18 +10678,18 @@ BtWLoadoutsTraitsInfo = {
 ["amount"] = 1,
 },
 },
-["maxRanks"] = 1,
-["groupIDs"] = {
-10883,
-10881,
-},
-["posX"] = 5400,
-["ID"] = 101181,
-["flags"] = 8,
 ["conditionIDs"] = {
 27788,
 27732,
 },
+["flags"] = 8,
+["posX"] = 5400,
+["ID"] = 101181,
+["groupIDs"] = {
+10883,
+10881,
+},
+["maxRanks"] = 1,
 ["incomingEdgesBySpecID"] = {
 [268] = {
 101138,
@@ -10670,13 +10714,13 @@ BtWLoadoutsTraitsInfo = {
 [268] = {
 {
 ["type"] = 2,
-["targetNode"] = 101711,
 ["visualStyle"] = 1,
+["targetNode"] = 101711,
 },
 {
 ["type"] = 2,
-["targetNode"] = 101198,
 ["visualStyle"] = 1,
+["targetNode"] = 101198,
 },
 },
 },
@@ -10686,21 +10730,21 @@ BtWLoadoutsTraitsInfo = {
 ["amount"] = 1,
 },
 },
-["maxRanks"] = 1,
+["conditionIDs"] = {
+27820,
+27730,
+27816,
+},
+["flags"] = 0,
+["posX"] = 10800,
+["ID"] = 101197,
 ["groupIDs"] = {
 10871,
 10879,
 10884,
 10891,
 },
-["posX"] = 10800,
-["ID"] = 101197,
-["flags"] = 0,
-["conditionIDs"] = {
-27820,
-27730,
-27816,
-},
+["maxRanks"] = 1,
 ["incomingEdgesBySpecID"] = {
 [268] = {
 101187,
@@ -10709,24 +10753,22 @@ BtWLoadoutsTraitsInfo = {
 },
 },
 },
-[109883] = {
-["type"] = 0,
-["posY"] = 2700,
+[101213] = {
 ["entryIDs"] = {
-136147,
+125020,
 },
 ["nextEntry"] = {
-["entryID"] = 136147,
+["entryID"] = 125020,
 ["rank"] = 1,
 },
 ["ranksIncreased"] = 0,
 ["totalMaxRanks"] = 1,
 ["edgesBySpecID"] = {
-[268] = {
+[269] = {
 {
-["type"] = 2,
-["targetNode"] = 101071,
 ["visualStyle"] = 1,
+["type"] = 2,
+["targetNode"] = 101210,
 },
 },
 },
@@ -10736,20 +10778,27 @@ BtWLoadoutsTraitsInfo = {
 ["amount"] = 1,
 },
 },
+["posX"] = 11400,
+["ID"] = 101213,
+["posY"] = 5700,
+["conditionIDs"] = {
+27757,
+27820,
+27816,
+},
+["flags"] = 0,
+["type"] = 0,
 ["maxRanks"] = 1,
 ["groupIDs"] = {
-10879,
+10880,
+10871,
+10891,
 10884,
 },
-["posX"] = 11400,
-["ID"] = 109883,
-["flags"] = 0,
-["conditionIDs"] = {
-27730,
-},
 ["incomingEdgesBySpecID"] = {
-[268] = {
-101064,
+[269] = {
+101060,
+101062,
 },
 },
 },
@@ -10777,8 +10826,8 @@ BtWLoadoutsTraitsInfo = {
 [268] = {
 {
 ["type"] = 2,
-["targetNode"] = 101228,
 ["visualStyle"] = 1,
+["targetNode"] = 101228,
 },
 },
 },
@@ -10836,8 +10885,8 @@ BtWLoadoutsTraitsInfo = {
 [268] = {
 {
 ["type"] = 2,
-["targetNode"] = 101244,
 ["visualStyle"] = 1,
+["targetNode"] = 101244,
 },
 },
 },
@@ -10871,142 +10920,150 @@ BtWLoadoutsTraitsInfo = {
 },
 },
 },
-[101102] = {
-["visibleEdges"] = {
-},
-["type"] = 0,
-["posY"] = 6300,
+[110027] = {
 ["entryIDs"] = {
+136520,
+},
+["nextEntry"] = {
+["entryID"] = 136520,
+["rank"] = 1,
 },
 ["ranksIncreased"] = 0,
-["totalMaxRanks"] = 0,
-["flags"] = 0,
+["totalMaxRanks"] = 1,
+["edgesBySpecID"] = {
+[269] = {
+{
+["visualStyle"] = 1,
+["type"] = 2,
+["targetNode"] = 101183,
+},
+},
+[268] = {
+{
+["type"] = 2,
+["visualStyle"] = 1,
+["targetNode"] = 101183,
+},
+},
+},
+["costs"] = {
+{
+["ID"] = 3623,
+["amount"] = 1,
+},
+},
+["posX"] = 5400,
+["ID"] = 110027,
+["posY"] = 3300,
+["conditionIDs"] = {
+},
+["flags"] = 8,
+["type"] = 0,
+["maxRanks"] = 1,
 ["groupIDs"] = {
+10881,
+},
+["incomingEdgesBySpecID"] = {
+[269] = {
+101150,
+},
+[268] = {
+101090,
+},
+},
+},
+[102250] = {
+["entryIDs"] = {
+126307,
+},
+["nextEntry"] = {
+["entryID"] = 126307,
+["rank"] = 1,
+},
+["ranksIncreased"] = 0,
+["totalMaxRanks"] = 1,
+["edgesBySpecID"] = {
+[269] = {
+{
+["visualStyle"] = 1,
+["type"] = 2,
+["targetNode"] = 101043,
+},
+},
+},
+["costs"] = {
+{
+["ID"] = 3625,
+["amount"] = 1,
+},
+},
+["posX"] = 13800,
+["ID"] = 102250,
+["posY"] = 6300,
+["conditionIDs"] = {
+27757,
+27820,
+27816,
+},
+["flags"] = 0,
+["type"] = 0,
+["maxRanks"] = 1,
+["groupIDs"] = {
+10880,
 10871,
-10885,
 10891,
 10884,
 },
-["posX"] = 11400,
-["ID"] = 101102,
-["maxRanks"] = 0,
+["incomingEdgesBySpecID"] = {
+[269] = {
+101046,
+101209,
+},
+},
+},
+[101038] = {
+["entryIDs"] = {
+124809,
+},
+["nextEntry"] = {
+["entryID"] = 124809,
+["rank"] = 1,
+},
+["ranksIncreased"] = 0,
+["totalMaxRanks"] = 1,
+["edgesBySpecID"] = {
+[269] = {
+{
+["visualStyle"] = 1,
+["type"] = 2,
+["targetNode"] = 101215,
+},
+},
+},
+["costs"] = {
+{
+["ID"] = 3625,
+["amount"] = 1,
+},
+},
+["posX"] = 14400,
+["ID"] = 101038,
+["posY"] = 3900,
 ["conditionIDs"] = {
-27820,
-27725,
+27757,
 27816,
 },
-["isDisplayError"] = false,
-},
-[101230] = {
-["entryIDs"] = {
-125043,
-},
-["nextEntry"] = {
-["entryID"] = 125043,
-["rank"] = 1,
-},
-["ranksIncreased"] = 0,
-["totalMaxRanks"] = 1,
-["edgesBySpecID"] = {
-[269] = {
-{
-["visualStyle"] = 1,
-["type"] = 2,
-["targetNode"] = 101229,
-},
-},
-[268] = {
-{
-["type"] = 2,
-["targetNode"] = 101229,
-["visualStyle"] = 1,
-},
-},
-},
-["costs"] = {
-{
-["ID"] = 3624,
-["amount"] = 1,
-},
-},
-["subTreeActive"] = false,
-["subTreeID"] = 66,
-["posX"] = 8400,
-["ID"] = 101230,
-["posY"] = 4800,
-["conditionIDs"] = {
-27751,
-27749,
-27735,
-},
-["flags"] = 8,
+["flags"] = 0,
 ["type"] = 0,
 ["maxRanks"] = 1,
 ["groupIDs"] = {
-10876,
-10887,
+10880,
+10891,
+10884,
 },
 ["incomingEdgesBySpecID"] = {
 [269] = {
-101223,
-},
-[268] = {
-101223,
-},
-},
-},
-[110218] = {
-["entryIDs"] = {
-136754,
-},
-["nextEntry"] = {
-["entryID"] = 136754,
-["rank"] = 1,
-},
-["ranksIncreased"] = 0,
-["totalMaxRanks"] = 1,
-["edgesBySpecID"] = {
-[269] = {
-{
-["visualStyle"] = 1,
-["type"] = 2,
-["targetNode"] = 109700,
-},
-{
-["visualStyle"] = 1,
-["type"] = 2,
-["targetNode"] = 109700,
-},
-},
-},
-["costs"] = {
-{
-["ID"] = 3622,
-["amount"] = 1,
-},
-},
-["subTreeActive"] = false,
-["subTreeID"] = 64,
-["posX"] = 9200,
-["ID"] = 110218,
-["posY"] = 2500,
-["conditionIDs"] = {
-49218,
-49217,
-},
-["flags"] = 8,
-["type"] = 0,
-["maxRanks"] = 1,
-["groupIDs"] = {
-12437,
-12434,
-12435,
-12436,
-},
-["incomingEdgesBySpecID"] = {
-[269] = {
-109701,
-109701,
+101039,
 },
 },
 },
@@ -11080,8 +11137,8 @@ BtWLoadoutsTraitsInfo = {
 [268] = {
 {
 ["type"] = 2,
-["targetNode"] = 101069,
 ["visualStyle"] = 1,
+["targetNode"] = 101069,
 },
 },
 },
@@ -11091,19 +11148,19 @@ BtWLoadoutsTraitsInfo = {
 ["amount"] = 1,
 },
 },
-["maxRanks"] = 1,
+["conditionIDs"] = {
+27816,
+27730,
+},
+["flags"] = 0,
+["posX"] = 10800,
+["ID"] = 101070,
 ["groupIDs"] = {
 10891,
 10879,
 10884,
 },
-["posX"] = 10800,
-["ID"] = 101070,
-["flags"] = 0,
-["conditionIDs"] = {
-27816,
-27730,
-},
+["maxRanks"] = 1,
 ["incomingEdgesBySpecID"] = {
 [268] = {
 101071,
@@ -11126,18 +11183,18 @@ BtWLoadoutsTraitsInfo = {
 [268] = {
 {
 ["type"] = 2,
+["visualStyle"] = 1,
 ["targetNode"] = 109882,
-["visualStyle"] = 1,
 },
 {
 ["type"] = 2,
+["visualStyle"] = 1,
 ["targetNode"] = 101078,
-["visualStyle"] = 1,
 },
 {
 ["type"] = 2,
-["targetNode"] = 101710,
 ["visualStyle"] = 1,
+["targetNode"] = 101710,
 },
 },
 },
@@ -11147,17 +11204,17 @@ BtWLoadoutsTraitsInfo = {
 ["amount"] = 1,
 },
 },
-["maxRanks"] = 1,
+["conditionIDs"] = {
+27730,
+},
+["flags"] = 0,
+["posX"] = 13800,
+["ID"] = 101086,
 ["groupIDs"] = {
 10879,
 10884,
 },
-["posX"] = 13800,
-["ID"] = 101086,
-["flags"] = 0,
-["conditionIDs"] = {
-27730,
-},
+["maxRanks"] = 1,
 ["incomingEdgesBySpecID"] = {
 [268] = {
 101063,
@@ -11165,56 +11222,30 @@ BtWLoadoutsTraitsInfo = {
 },
 },
 },
-[110027] = {
-["entryIDs"] = {
-136520,
+[101102] = {
+["visibleEdges"] = {
 },
-["nextEntry"] = {
-["entryID"] = 136520,
-["rank"] = 1,
+["type"] = 0,
+["posY"] = 6300,
+["entryIDs"] = {
 },
 ["ranksIncreased"] = 0,
-["totalMaxRanks"] = 1,
-["edgesBySpecID"] = {
-[269] = {
-{
-["visualStyle"] = 1,
-["type"] = 2,
-["targetNode"] = 101183,
-},
-},
-[268] = {
-{
-["type"] = 2,
-["targetNode"] = 101183,
-["visualStyle"] = 1,
-},
-},
-},
-["costs"] = {
-{
-["ID"] = 3623,
-["amount"] = 1,
-},
-},
-["posX"] = 5400,
-["ID"] = 110027,
-["posY"] = 3300,
+["totalMaxRanks"] = 0,
+["flags"] = 0,
+["isDisplayError"] = false,
+["posX"] = 11400,
+["ID"] = 101102,
 ["conditionIDs"] = {
+27820,
+27725,
+27816,
 },
-["flags"] = 8,
-["type"] = 0,
-["maxRanks"] = 1,
+["maxRanks"] = 0,
 ["groupIDs"] = {
-10881,
-},
-["incomingEdgesBySpecID"] = {
-[269] = {
-101150,
-},
-[268] = {
-101090,
-},
+10871,
+10885,
+10891,
+10884,
 },
 },
 [101118] = {
@@ -11227,21 +11258,21 @@ BtWLoadoutsTraitsInfo = {
 ["ranksIncreased"] = 0,
 ["totalMaxRanks"] = 0,
 ["flags"] = 0,
+["isDisplayError"] = false,
+["posX"] = 15000,
+["ID"] = 101118,
+["conditionIDs"] = {
+27725,
+27820,
+27816,
+},
+["maxRanks"] = 0,
 ["groupIDs"] = {
 10885,
 10871,
 10891,
 10884,
 },
-["posX"] = 15000,
-["ID"] = 101118,
-["maxRanks"] = 0,
-["conditionIDs"] = {
-27725,
-27820,
-27816,
-},
-["isDisplayError"] = false,
 },
 [101134] = {
 ["visibleEdges"] = {
@@ -11253,17 +11284,17 @@ BtWLoadoutsTraitsInfo = {
 ["ranksIncreased"] = 0,
 ["totalMaxRanks"] = 0,
 ["flags"] = 0,
+["isDisplayError"] = false,
+["posX"] = 12600,
+["ID"] = 101134,
+["conditionIDs"] = {
+27725,
+},
+["maxRanks"] = 0,
 ["groupIDs"] = {
 10885,
 10884,
 },
-["posX"] = 12600,
-["ID"] = 101134,
-["maxRanks"] = 0,
-["conditionIDs"] = {
-27725,
-},
-["isDisplayError"] = false,
 },
 [101150] = {
 ["entryIDs"] = {
@@ -11345,13 +11376,13 @@ BtWLoadoutsTraitsInfo = {
 [268] = {
 {
 ["type"] = 2,
-["targetNode"] = 101156,
 ["visualStyle"] = 1,
+["targetNode"] = 101156,
 },
 {
 ["type"] = 2,
-["targetNode"] = 101165,
 ["visualStyle"] = 1,
+["targetNode"] = 101165,
 },
 },
 },
@@ -11404,8 +11435,8 @@ BtWLoadoutsTraitsInfo = {
 [268] = {
 {
 ["type"] = 2,
-["targetNode"] = 101181,
 ["visualStyle"] = 1,
+["targetNode"] = 101181,
 },
 },
 },
@@ -11440,10 +11471,7 @@ BtWLoadoutsTraitsInfo = {
 },
 },
 [101198] = {
-["edgesBySpecID"] = {
-[268] = {
-},
-},
+["totalMaxRanks"] = 1,
 ["type"] = 0,
 ["posY"] = 6900,
 ["entryIDs"] = {
@@ -11455,32 +11483,35 @@ BtWLoadoutsTraitsInfo = {
 ["rank"] = 1,
 },
 ["ranksIncreased"] = 0,
-["totalMaxRanks"] = 1,
-["maxRanks"] = 1,
-["costs"] = {
-{
-["ID"] = 3625,
-["amount"] = 1,
+["edgesBySpecID"] = {
+[268] = {
 },
-},
-["flags"] = 1,
-["groupIDs"] = {
-10871,
-10879,
-10884,
-10891,
-},
-["posX"] = 10200,
-["ID"] = 101198,
-["entryIDToRanksIncreased"] = {
-[125003] = 0,
-[136150] = 0,
 },
 ["conditionIDs"] = {
 27820,
 27730,
 27816,
 },
+["costs"] = {
+{
+["ID"] = 3625,
+["amount"] = 1,
+},
+},
+["entryIDToRanksIncreased"] = {
+[125003] = 0,
+[136150] = 0,
+},
+["ID"] = 101198,
+["posX"] = 10200,
+["groupIDs"] = {
+10871,
+10879,
+10884,
+10891,
+},
+["flags"] = 1,
+["maxRanks"] = 1,
 ["incomingEdgesBySpecID"] = {
 [268] = {
 101197,
@@ -11538,12 +11569,12 @@ BtWLoadoutsTraitsInfo = {
 },
 },
 },
-[102250] = {
+[101230] = {
 ["entryIDs"] = {
-126307,
+125043,
 },
 ["nextEntry"] = {
-["entryID"] = 126307,
+["entryID"] = 125043,
 ["rank"] = 1,
 },
 ["ranksIncreased"] = 0,
@@ -11553,37 +11584,46 @@ BtWLoadoutsTraitsInfo = {
 {
 ["visualStyle"] = 1,
 ["type"] = 2,
-["targetNode"] = 101043,
+["targetNode"] = 101229,
+},
+},
+[268] = {
+{
+["type"] = 2,
+["visualStyle"] = 1,
+["targetNode"] = 101229,
 },
 },
 },
 ["costs"] = {
 {
-["ID"] = 3625,
+["ID"] = 3624,
 ["amount"] = 1,
 },
 },
-["posX"] = 13800,
-["ID"] = 102250,
-["posY"] = 6300,
+["subTreeActive"] = false,
+["subTreeID"] = 66,
+["posX"] = 8400,
+["ID"] = 101230,
+["posY"] = 4800,
 ["conditionIDs"] = {
-27757,
-27820,
-27816,
+27751,
+27749,
+27735,
 },
-["flags"] = 0,
+["flags"] = 8,
 ["type"] = 0,
 ["maxRanks"] = 1,
 ["groupIDs"] = {
-10880,
-10871,
-10891,
-10884,
+10876,
+10887,
 },
 ["incomingEdgesBySpecID"] = {
 [269] = {
-101046,
-101209,
+101223,
+},
+[268] = {
+101223,
 },
 },
 },
@@ -11608,8 +11648,8 @@ BtWLoadoutsTraitsInfo = {
 [268] = {
 {
 ["type"] = 2,
-["targetNode"] = 101245,
 ["visualStyle"] = 1,
+["targetNode"] = 101245,
 },
 },
 },
@@ -11688,12 +11728,12 @@ BtWLoadoutsTraitsInfo = {
 },
 },
 },
-[101040] = {
+[110220] = {
 ["entryIDs"] = {
-124811,
+136745,
 },
 ["nextEntry"] = {
-["entryID"] = 124811,
+["entryID"] = 136745,
 ["rank"] = 1,
 },
 ["ranksIncreased"] = 0,
@@ -11703,36 +11743,35 @@ BtWLoadoutsTraitsInfo = {
 {
 ["visualStyle"] = 1,
 ["type"] = 2,
-["targetNode"] = 101204,
+["targetNode"] = 101239,
 },
 },
 },
 ["costs"] = {
 {
-["ID"] = 3625,
+["ID"] = 3622,
 ["amount"] = 1,
 },
 },
-["posX"] = 12000,
-["ID"] = 101040,
-["posY"] = 6300,
+["subTreeActive"] = false,
+["subTreeID"] = 64,
+["posX"] = 8000,
+["ID"] = 110220,
+["posY"] = 3100,
 ["conditionIDs"] = {
-27757,
-27820,
-27816,
+49217,
 },
-["flags"] = 0,
+["flags"] = 8,
 ["type"] = 0,
 ["maxRanks"] = 1,
 ["groupIDs"] = {
-10880,
-10871,
-10891,
-10884,
+12436,
+12435,
+12434,
 },
 ["incomingEdgesBySpecID"] = {
 [269] = {
-101203,
+110211,
 },
 },
 },
@@ -11862,18 +11901,18 @@ BtWLoadoutsTraitsInfo = {
 [268] = {
 {
 ["type"] = 2,
+["visualStyle"] = 1,
 ["targetNode"] = 101067,
-["visualStyle"] = 1,
 },
 {
 ["type"] = 2,
+["visualStyle"] = 1,
 ["targetNode"] = 101070,
-["visualStyle"] = 1,
 },
 {
 ["type"] = 2,
-["targetNode"] = 101084,
 ["visualStyle"] = 1,
+["targetNode"] = 101084,
 },
 },
 },
@@ -11883,17 +11922,17 @@ BtWLoadoutsTraitsInfo = {
 ["amount"] = 1,
 },
 },
-["maxRanks"] = 1,
+["conditionIDs"] = {
+27730,
+},
+["flags"] = 0,
+["posX"] = 11400,
+["ID"] = 101071,
 ["groupIDs"] = {
 10879,
 10884,
 },
-["posX"] = 11400,
-["ID"] = 101071,
-["flags"] = 0,
-["conditionIDs"] = {
-27730,
-},
+["maxRanks"] = 1,
 ["incomingEdgesBySpecID"] = {
 [268] = {
 101065,
@@ -11917,18 +11956,18 @@ BtWLoadoutsTraitsInfo = {
 [268] = {
 {
 ["type"] = 2,
+["visualStyle"] = 1,
 ["targetNode"] = 101063,
-["visualStyle"] = 1,
 },
 {
 ["type"] = 2,
+["visualStyle"] = 1,
 ["targetNode"] = 101085,
-["visualStyle"] = 1,
 },
 {
 ["type"] = 2,
-["targetNode"] = 101072,
 ["visualStyle"] = 1,
+["targetNode"] = 101072,
 },
 },
 },
@@ -11938,17 +11977,17 @@ BtWLoadoutsTraitsInfo = {
 ["amount"] = 1,
 },
 },
-["maxRanks"] = 1,
+["conditionIDs"] = {
+27730,
+},
+["flags"] = 0,
+["posX"] = 13200,
+["ID"] = 101087,
 ["groupIDs"] = {
 10879,
 10884,
 },
-["posX"] = 13200,
-["ID"] = 101087,
-["flags"] = 0,
-["conditionIDs"] = {
-27730,
-},
+["maxRanks"] = 1,
 ["incomingEdgesBySpecID"] = {
 [268] = {
 101088,
@@ -11965,21 +12004,21 @@ BtWLoadoutsTraitsInfo = {
 ["ranksIncreased"] = 0,
 ["totalMaxRanks"] = 0,
 ["flags"] = 0,
+["isDisplayError"] = false,
+["posX"] = 10800,
+["ID"] = 101103,
+["conditionIDs"] = {
+27820,
+27725,
+27816,
+},
+["maxRanks"] = 0,
 ["groupIDs"] = {
 10871,
 10885,
 10891,
 10884,
 },
-["posX"] = 10800,
-["ID"] = 101103,
-["maxRanks"] = 0,
-["conditionIDs"] = {
-27820,
-27725,
-27816,
-},
-["isDisplayError"] = false,
 },
 [101119] = {
 ["visibleEdges"] = {
@@ -11991,21 +12030,21 @@ BtWLoadoutsTraitsInfo = {
 ["ranksIncreased"] = 0,
 ["totalMaxRanks"] = 0,
 ["flags"] = 0,
+["isDisplayError"] = false,
+["posX"] = 14400,
+["ID"] = 101119,
+["conditionIDs"] = {
+27820,
+27725,
+27816,
+},
+["maxRanks"] = 0,
 ["groupIDs"] = {
 10871,
 10885,
 10891,
 10884,
 },
-["posX"] = 14400,
-["ID"] = 101119,
-["maxRanks"] = 0,
-["conditionIDs"] = {
-27820,
-27725,
-27816,
-},
-["isDisplayError"] = false,
 },
 [101135] = {
 ["type"] = 2,
@@ -12014,51 +12053,51 @@ BtWLoadoutsTraitsInfo = {
 124924,
 124923,
 },
+["totalMaxRanks"] = 1,
+["ranksIncreased"] = 0,
 ["edgesBySpecID"] = {
 [268] = {
 {
 ["type"] = 2,
+["visualStyle"] = 1,
 ["targetNode"] = 101175,
-["visualStyle"] = 1,
 },
 {
 ["type"] = 2,
+["visualStyle"] = 1,
 ["targetNode"] = 101169,
-["visualStyle"] = 1,
 },
 {
 ["type"] = 2,
-["targetNode"] = 101171,
 ["visualStyle"] = 1,
+["targetNode"] = 101171,
 },
 },
 },
-["ranksIncreased"] = 0,
-["totalMaxRanks"] = 1,
-["maxRanks"] = 1,
+["entryIDToRanksIncreased"] = {
+[124923] = 0,
+[124924] = 0,
+},
 ["costs"] = {
 {
 ["ID"] = 3623,
 ["amount"] = 1,
 },
 },
-["flags"] = 9,
-["groupIDs"] = {
-10883,
-10873,
-10881,
-},
-["posX"] = 3600,
-["ID"] = 101135,
 ["conditionIDs"] = {
 49051,
 27732,
 27822,
 },
-["entryIDToRanksIncreased"] = {
-[124923] = 0,
-[124924] = 0,
+["ID"] = 101135,
+["posX"] = 3600,
+["groupIDs"] = {
+10883,
+10873,
+10881,
 },
+["flags"] = 9,
+["maxRanks"] = 1,
 ["incomingEdgesBySpecID"] = {
 [268] = {
 101165,
@@ -12081,8 +12120,8 @@ BtWLoadoutsTraitsInfo = {
 [268] = {
 {
 ["type"] = 2,
-["targetNode"] = 101182,
 ["visualStyle"] = 1,
+["targetNode"] = 101182,
 },
 },
 },
@@ -12092,18 +12131,18 @@ BtWLoadoutsTraitsInfo = {
 ["amount"] = 1,
 },
 },
-["maxRanks"] = 1,
-["groupIDs"] = {
-10883,
-10881,
-},
-["posX"] = 4800,
-["ID"] = 101151,
-["flags"] = 0,
 ["conditionIDs"] = {
 49064,
 27732,
 },
+["flags"] = 0,
+["posX"] = 4800,
+["ID"] = 101151,
+["groupIDs"] = {
+10883,
+10881,
+},
+["maxRanks"] = 1,
 ["incomingEdgesBySpecID"] = {
 [268] = {
 101152,
@@ -12141,18 +12180,18 @@ BtWLoadoutsTraitsInfo = {
 [268] = {
 {
 ["type"] = 2,
+["visualStyle"] = 1,
 ["targetNode"] = 101136,
-["visualStyle"] = 1,
 },
 {
 ["type"] = 2,
+["visualStyle"] = 1,
 ["targetNode"] = 101138,
-["visualStyle"] = 1,
 },
 {
 ["type"] = 2,
-["targetNode"] = 101166,
 ["visualStyle"] = 1,
+["targetNode"] = 101166,
 },
 },
 },
@@ -12217,13 +12256,13 @@ BtWLoadoutsTraitsInfo = {
 [268] = {
 {
 ["type"] = 2,
-["targetNode"] = 101140,
 ["visualStyle"] = 1,
+["targetNode"] = 101140,
 },
 {
 ["type"] = 2,
-["targetNode"] = 101182,
 ["visualStyle"] = 1,
+["targetNode"] = 101182,
 },
 },
 },
@@ -12273,8 +12312,8 @@ BtWLoadoutsTraitsInfo = {
 [268] = {
 {
 ["type"] = 2,
-["targetNode"] = 101195,
 ["visualStyle"] = 1,
+["targetNode"] = 101195,
 },
 },
 },
@@ -12284,21 +12323,21 @@ BtWLoadoutsTraitsInfo = {
 ["amount"] = 1,
 },
 },
-["maxRanks"] = 1,
+["conditionIDs"] = {
+27730,
+27820,
+27816,
+},
+["flags"] = 1,
+["posX"] = 12000,
+["ID"] = 101199,
 ["groupIDs"] = {
 10879,
 10871,
 10884,
 10891,
 },
-["posX"] = 12000,
-["ID"] = 101199,
-["flags"] = 1,
-["conditionIDs"] = {
-27730,
-27820,
-27816,
-},
+["maxRanks"] = 1,
 ["incomingEdgesBySpecID"] = {
 [268] = {
 101189,
@@ -12375,17 +12414,17 @@ BtWLoadoutsTraitsInfo = {
 ["ranksIncreased"] = 0,
 ["totalMaxRanks"] = 0,
 ["flags"] = 0,
-["groupIDs"] = {
-10882,
-},
+["isDisplayError"] = false,
 ["posX"] = 7800,
 ["ID"] = 101231,
-["maxRanks"] = 0,
 ["conditionIDs"] = {
 27776,
 27759,
 },
-["isDisplayError"] = false,
+["maxRanks"] = 0,
+["groupIDs"] = {
+10882,
+},
 },
 [101247] = {
 ["entryIDs"] = {
@@ -12411,8 +12450,8 @@ BtWLoadoutsTraitsInfo = {
 [268] = {
 {
 ["type"] = 2,
-["targetNode"] = 101254,
 ["visualStyle"] = 1,
+["targetNode"] = 101254,
 },
 },
 },
@@ -12510,8 +12549,8 @@ BtWLoadoutsTraitsInfo = {
 [268] = {
 {
 ["type"] = 2,
-["targetNode"] = 109695,
 ["visualStyle"] = 1,
+["targetNode"] = 109695,
 },
 },
 },
@@ -12547,12 +12586,12 @@ BtWLoadoutsTraitsInfo = {
 },
 },
 },
-[110220] = {
+[101040] = {
 ["entryIDs"] = {
-136745,
+124811,
 },
 ["nextEntry"] = {
-["entryID"] = 136745,
+["entryID"] = 124811,
 ["rank"] = 1,
 },
 ["ranksIncreased"] = 0,
@@ -12562,35 +12601,36 @@ BtWLoadoutsTraitsInfo = {
 {
 ["visualStyle"] = 1,
 ["type"] = 2,
-["targetNode"] = 101239,
+["targetNode"] = 101204,
 },
 },
 },
 ["costs"] = {
 {
-["ID"] = 3622,
+["ID"] = 3625,
 ["amount"] = 1,
 },
 },
-["subTreeActive"] = false,
-["subTreeID"] = 64,
-["posX"] = 8000,
-["ID"] = 110220,
-["posY"] = 3100,
+["posX"] = 12000,
+["ID"] = 101040,
+["posY"] = 6300,
 ["conditionIDs"] = {
-49217,
+27757,
+27820,
+27816,
 },
-["flags"] = 8,
+["flags"] = 0,
 ["type"] = 0,
 ["maxRanks"] = 1,
 ["groupIDs"] = {
-12436,
-12435,
-12434,
+10880,
+10871,
+10891,
+10884,
 },
 ["incomingEdgesBySpecID"] = {
 [269] = {
-110211,
+101203,
 },
 },
 },
@@ -12661,13 +12701,13 @@ BtWLoadoutsTraitsInfo = {
 [268] = {
 {
 ["type"] = 2,
-["targetNode"] = 101086,
 ["visualStyle"] = 1,
+["targetNode"] = 101086,
 },
 {
 ["type"] = 2,
-["targetNode"] = 101202,
 ["visualStyle"] = 1,
+["targetNode"] = 101202,
 },
 },
 },
@@ -12677,17 +12717,17 @@ BtWLoadoutsTraitsInfo = {
 ["amount"] = 1,
 },
 },
-["maxRanks"] = 1,
+["conditionIDs"] = {
+27730,
+},
+["flags"] = 0,
+["posX"] = 13200,
+["ID"] = 101072,
 ["groupIDs"] = {
 10879,
 10884,
 },
-["posX"] = 13200,
-["ID"] = 101072,
-["flags"] = 0,
-["conditionIDs"] = {
-27730,
-},
+["maxRanks"] = 1,
 ["incomingEdgesBySpecID"] = {
 [268] = {
 101087,
@@ -12710,13 +12750,13 @@ BtWLoadoutsTraitsInfo = {
 [268] = {
 {
 ["type"] = 2,
-["targetNode"] = 101064,
 ["visualStyle"] = 1,
+["targetNode"] = 101064,
 },
 {
 ["type"] = 2,
-["targetNode"] = 101087,
 ["visualStyle"] = 1,
+["targetNode"] = 101087,
 },
 },
 },
@@ -12726,17 +12766,17 @@ BtWLoadoutsTraitsInfo = {
 ["amount"] = 1,
 },
 },
-["maxRanks"] = 1,
+["conditionIDs"] = {
+27730,
+},
+["flags"] = 0,
+["posX"] = 12600,
+["ID"] = 101088,
 ["groupIDs"] = {
 10879,
 10884,
 },
-["posX"] = 12600,
-["ID"] = 101088,
-["flags"] = 0,
-["conditionIDs"] = {
-27730,
-},
+["maxRanks"] = 1,
 ["incomingEdgesBySpecID"] = {
 [268] = {
 },
@@ -12752,19 +12792,19 @@ BtWLoadoutsTraitsInfo = {
 ["ranksIncreased"] = 0,
 ["totalMaxRanks"] = 0,
 ["flags"] = 0,
+["isDisplayError"] = false,
+["posX"] = 12600,
+["ID"] = 101104,
+["conditionIDs"] = {
+27725,
+27816,
+},
+["maxRanks"] = 0,
 ["groupIDs"] = {
 10885,
 10891,
 10884,
 },
-["posX"] = 12600,
-["ID"] = 101104,
-["maxRanks"] = 0,
-["conditionIDs"] = {
-27725,
-27816,
-},
-["isDisplayError"] = false,
 },
 [101120] = {
 ["visibleEdges"] = {
@@ -12776,21 +12816,21 @@ BtWLoadoutsTraitsInfo = {
 ["ranksIncreased"] = 0,
 ["totalMaxRanks"] = 0,
 ["flags"] = 0,
+["isDisplayError"] = false,
+["posX"] = 14400,
+["ID"] = 101120,
+["conditionIDs"] = {
+27725,
+27820,
+27816,
+},
+["maxRanks"] = 0,
 ["groupIDs"] = {
 10885,
 10871,
 10891,
 10884,
 },
-["posX"] = 14400,
-["ID"] = 101120,
-["maxRanks"] = 0,
-["conditionIDs"] = {
-27725,
-27820,
-27816,
-},
-["isDisplayError"] = false,
 },
 [101136] = {
 ["entryIDs"] = {
@@ -12826,18 +12866,18 @@ BtWLoadoutsTraitsInfo = {
 [268] = {
 {
 ["type"] = 2,
+["visualStyle"] = 1,
 ["targetNode"] = 101173,
-["visualStyle"] = 1,
 },
 {
 ["type"] = 2,
+["visualStyle"] = 1,
 ["targetNode"] = 101163,
-["visualStyle"] = 1,
 },
 {
 ["type"] = 2,
-["targetNode"] = 101165,
 ["visualStyle"] = 1,
+["targetNode"] = 101165,
 },
 },
 },
@@ -12883,18 +12923,18 @@ BtWLoadoutsTraitsInfo = {
 [268] = {
 {
 ["type"] = 2,
+["visualStyle"] = 1,
 ["targetNode"] = 101183,
-["visualStyle"] = 1,
 },
 {
 ["type"] = 2,
+["visualStyle"] = 1,
 ["targetNode"] = 101151,
-["visualStyle"] = 1,
 },
 {
 ["type"] = 2,
-["targetNode"] = 101167,
 ["visualStyle"] = 1,
+["targetNode"] = 101167,
 },
 },
 },
@@ -12904,16 +12944,16 @@ BtWLoadoutsTraitsInfo = {
 ["amount"] = 1,
 },
 },
-["maxRanks"] = 1,
-["groupIDs"] = {
-10881,
-},
-["posX"] = 4800,
-["ID"] = 101152,
-["flags"] = 0,
 ["conditionIDs"] = {
 49065,
 },
+["flags"] = 0,
+["posX"] = 4800,
+["ID"] = 101152,
+["groupIDs"] = {
+10881,
+},
+["maxRanks"] = 1,
 ["incomingEdgesBySpecID"] = {
 [268] = {
 101090,
@@ -12994,13 +13034,13 @@ BtWLoadoutsTraitsInfo = {
 [268] = {
 {
 ["type"] = 2,
-["targetNode"] = 110025,
 ["visualStyle"] = 1,
+["targetNode"] = 110025,
 },
 {
 ["type"] = 2,
-["targetNode"] = 101183,
 ["visualStyle"] = 1,
+["targetNode"] = 101183,
 },
 },
 },
@@ -13048,8 +13088,8 @@ BtWLoadoutsTraitsInfo = {
 [268] = {
 {
 ["type"] = 2,
-["targetNode"] = 101201,
 ["visualStyle"] = 1,
+["targetNode"] = 101201,
 },
 },
 },
@@ -13059,19 +13099,19 @@ BtWLoadoutsTraitsInfo = {
 ["amount"] = 1,
 },
 },
-["maxRanks"] = 1,
+["conditionIDs"] = {
+27730,
+27816,
+},
+["flags"] = 0,
+["posX"] = 14400,
+["ID"] = 101710,
 ["groupIDs"] = {
 10879,
 10884,
 10891,
 },
-["posX"] = 14400,
-["ID"] = 101710,
-["flags"] = 0,
-["conditionIDs"] = {
-27730,
-27816,
-},
+["maxRanks"] = 1,
 ["incomingEdgesBySpecID"] = {
 [268] = {
 101086,
@@ -13196,23 +13236,23 @@ BtWLoadoutsTraitsInfo = {
 [268] = {
 {
 ["type"] = 2,
+["visualStyle"] = 1,
 ["targetNode"] = 101246,
-["visualStyle"] = 1,
 },
 {
 ["type"] = 2,
+["visualStyle"] = 1,
 ["targetNode"] = 101247,
-["visualStyle"] = 1,
 },
 {
 ["type"] = 2,
+["visualStyle"] = 1,
 ["targetNode"] = 101249,
-["visualStyle"] = 1,
 },
 {
 ["type"] = 2,
-["targetNode"] = 109697,
 ["visualStyle"] = 1,
+["targetNode"] = 109697,
 },
 },
 },
@@ -13248,31 +13288,32 @@ BtWLoadoutsTraitsInfo = {
 },
 },
 },
-[109827] = {
-["type"] = 0,
-["posY"] = 1500,
+[102433] = {
+["type"] = 2,
+["posY"] = 3900,
 ["entryIDs"] = {
-136086,
+126502,
+126501,
 },
-["nextEntry"] = {
-["entryID"] = 136086,
-["rank"] = 1,
-},
-["ranksIncreased"] = 0,
 ["totalMaxRanks"] = 1,
+["ranksIncreased"] = 0,
 ["edgesBySpecID"] = {
 [268] = {
 {
 ["type"] = 2,
-["targetNode"] = 109826,
 ["visualStyle"] = 1,
+["targetNode"] = 101156,
 },
 {
 ["type"] = 2,
-["targetNode"] = 101149,
 ["visualStyle"] = 1,
+["targetNode"] = 101158,
 },
 },
+},
+["entryIDToRanksIncreased"] = {
+[126501] = 0,
+[126502] = 0,
 },
 ["costs"] = {
 {
@@ -13280,21 +13321,23 @@ BtWLoadoutsTraitsInfo = {
 ["amount"] = 1,
 },
 },
-["maxRanks"] = 1,
-["groupIDs"] = {
-10886,
-10881,
-10893,
-},
-["posX"] = 5400,
-["ID"] = 109827,
-["flags"] = 0,
 ["conditionIDs"] = {
-48631,
-27818,
+28647,
+27732,
 },
+["ID"] = 102433,
+["posX"] = 3000,
+["groupIDs"] = {
+10883,
+10881,
+},
+["flags"] = 1,
+["maxRanks"] = 1,
 ["incomingEdgesBySpecID"] = {
 [268] = {
+101145,
+101160,
+110024,
 },
 },
 },
@@ -13319,8 +13362,8 @@ BtWLoadoutsTraitsInfo = {
 [268] = {
 {
 ["type"] = 2,
-["targetNode"] = 109696,
 ["visualStyle"] = 1,
+["targetNode"] = 109696,
 },
 },
 },
@@ -13356,52 +13399,51 @@ BtWLoadoutsTraitsInfo = {
 },
 },
 },
-[110221] = {
+[101041] = {
 ["entryIDs"] = {
-136760,
-136744,
+124812,
+},
+["nextEntry"] = {
+["entryID"] = 124812,
+["rank"] = 1,
 },
 ["ranksIncreased"] = 0,
 ["totalMaxRanks"] = 1,
-["costs"] = {
-{
-["ID"] = 3622,
-["amount"] = 1,
-},
-},
 ["edgesBySpecID"] = {
 [269] = {
 {
 ["visualStyle"] = 1,
 ["type"] = 2,
-["targetNode"] = 101234,
+["targetNode"] = 101210,
 },
 },
 },
-["subTreeActive"] = false,
-["posX"] = 8600,
-["ID"] = 110221,
-["subTreeID"] = 64,
-["posY"] = 1900,
-["entryIDToRanksIncreased"] = {
-[136744] = 0,
-[136760] = 0,
+["costs"] = {
+{
+["ID"] = 3625,
+["amount"] = 1,
 },
+},
+["posX"] = 12000,
+["ID"] = 101041,
+["posY"] = 5700,
 ["conditionIDs"] = {
-49219,
-49217,
+27757,
+27820,
+27816,
 },
-["flags"] = 9,
-["type"] = 2,
+["flags"] = 0,
+["type"] = 0,
 ["maxRanks"] = 1,
 ["groupIDs"] = {
-12435,
-12436,
-12434,
+10880,
+10871,
+10891,
+10884,
 },
 ["incomingEdgesBySpecID"] = {
 [269] = {
-101243,
+101207,
 },
 },
 },
@@ -13481,21 +13523,21 @@ BtWLoadoutsTraitsInfo = {
 ["amount"] = 1,
 },
 },
-["maxRanks"] = 1,
+["conditionIDs"] = {
+27820,
+27730,
+27816,
+},
+["flags"] = 0,
+["posX"] = 15000,
+["ID"] = 101073,
 ["groupIDs"] = {
 10871,
 10879,
 10884,
 10891,
 },
-["posX"] = 15000,
-["ID"] = 101073,
-["flags"] = 0,
-["conditionIDs"] = {
-27820,
-27730,
-27816,
-},
+["maxRanks"] = 1,
 ["incomingEdgesBySpecID"] = {
 [268] = {
 101075,
@@ -13512,67 +13554,38 @@ BtWLoadoutsTraitsInfo = {
 ["ranksIncreased"] = 0,
 ["totalMaxRanks"] = 0,
 ["flags"] = 0,
-["groupIDs"] = {
-10881,
-},
+["isDisplayError"] = false,
 ["posX"] = 5400,
 ["ID"] = 101089,
-["maxRanks"] = 0,
 ["conditionIDs"] = {
 27784,
 },
-["isDisplayError"] = false,
+["maxRanks"] = 0,
+["groupIDs"] = {
+10881,
 },
-[110020] = {
+},
+[102432] = {
+["visibleEdges"] = {
+},
+["type"] = 0,
+["posY"] = 3900,
 ["entryIDs"] = {
-136511,
-},
-["nextEntry"] = {
-["entryID"] = 136511,
-["rank"] = 1,
 },
 ["ranksIncreased"] = 0,
-["totalMaxRanks"] = 1,
-["edgesBySpecID"] = {
-[269] = {
-{
-["visualStyle"] = 1,
-["type"] = 2,
-["targetNode"] = 101155,
-},
-{
-["visualStyle"] = 1,
-["type"] = 2,
-["targetNode"] = 101157,
-},
-},
-},
-["costs"] = {
-{
-["ID"] = 3623,
-["amount"] = 1,
-},
-},
+["totalMaxRanks"] = 0,
+["flags"] = 0,
+["isDisplayError"] = false,
 ["posX"] = 3000,
-["ID"] = 110020,
-["posY"] = 5100,
+["ID"] = 102432,
 ["conditionIDs"] = {
-49048,
+28646,
 27732,
 },
-["flags"] = 0,
-["type"] = 0,
-["maxRanks"] = 1,
+["maxRanks"] = 0,
 ["groupIDs"] = {
 10883,
 10881,
-},
-["incomingEdgesBySpecID"] = {
-[269] = {
-101158,
-101159,
-101166,
-},
 },
 },
 [101121] = {
@@ -13585,19 +13598,19 @@ BtWLoadoutsTraitsInfo = {
 ["ranksIncreased"] = 0,
 ["totalMaxRanks"] = 0,
 ["flags"] = 0,
+["isDisplayError"] = false,
+["posX"] = 13800,
+["ID"] = 101121,
+["conditionIDs"] = {
+27816,
+27725,
+},
+["maxRanks"] = 0,
 ["groupIDs"] = {
 10891,
 10885,
 10884,
 },
-["posX"] = 13800,
-["ID"] = 101121,
-["maxRanks"] = 0,
-["conditionIDs"] = {
-27816,
-27725,
-},
-["isDisplayError"] = false,
 },
 [101137] = {
 ["entryIDs"] = {
@@ -13677,18 +13690,18 @@ BtWLoadoutsTraitsInfo = {
 [268] = {
 {
 ["type"] = 2,
+["visualStyle"] = 1,
 ["targetNode"] = 101160,
-["visualStyle"] = 1,
 },
 {
 ["type"] = 2,
+["visualStyle"] = 1,
 ["targetNode"] = 101141,
-["visualStyle"] = 1,
 },
 {
 ["type"] = 2,
-["targetNode"] = 101152,
 ["visualStyle"] = 1,
+["targetNode"] = 101152,
 },
 },
 },
@@ -13746,13 +13759,13 @@ BtWLoadoutsTraitsInfo = {
 [268] = {
 {
 ["type"] = 2,
-["targetNode"] = 101168,
 ["visualStyle"] = 1,
+["targetNode"] = 101168,
 },
 {
 ["type"] = 2,
-["targetNode"] = 101170,
 ["visualStyle"] = 1,
+["targetNode"] = 101170,
 },
 },
 },
@@ -13839,30 +13852,20 @@ BtWLoadoutsTraitsInfo = {
 },
 },
 },
-[101201] = {
+[101711] = {
 ["type"] = 0,
-["posY"] = 4500,
+["posY"] = 6900,
 ["entryIDs"] = {
-125006,
+125002,
 },
 ["nextEntry"] = {
-["entryID"] = 125006,
+["entryID"] = 125002,
 ["rank"] = 1,
 },
 ["ranksIncreased"] = 0,
 ["totalMaxRanks"] = 1,
 ["edgesBySpecID"] = {
 [268] = {
-{
-["type"] = 2,
-["targetNode"] = 101080,
-["visualStyle"] = 1,
-},
-{
-["type"] = 2,
-["targetNode"] = 101083,
-["visualStyle"] = 1,
-},
 },
 },
 ["costs"] = {
@@ -13871,44 +13874,43 @@ BtWLoadoutsTraitsInfo = {
 ["amount"] = 1,
 },
 },
-["maxRanks"] = 1,
+["conditionIDs"] = {
+27730,
+27820,
+27816,
+},
+["flags"] = 1,
+["posX"] = 11400,
+["ID"] = 101711,
 ["groupIDs"] = {
 10879,
+10871,
 10891,
 10884,
 },
-["posX"] = 14400,
-["ID"] = 101201,
-["flags"] = 0,
-["conditionIDs"] = {
-27730,
-27816,
-},
+["maxRanks"] = 1,
 ["incomingEdgesBySpecID"] = {
 [268] = {
-101710,
-109882,
+101197,
 },
 },
 },
-[101172] = {
-["type"] = 0,
-["posY"] = 5700,
+[110095] = {
 ["entryIDs"] = {
-124967,
+136596,
 },
 ["nextEntry"] = {
-["entryID"] = 124967,
+["entryID"] = 136596,
 ["rank"] = 1,
 },
 ["ranksIncreased"] = 0,
 ["totalMaxRanks"] = 1,
 ["edgesBySpecID"] = {
-[268] = {
+[269] = {
 {
-["type"] = 2,
-["targetNode"] = 101175,
 ["visualStyle"] = 1,
+["type"] = 2,
+["targetNode"] = 101182,
 },
 },
 },
@@ -13918,25 +13920,23 @@ BtWLoadoutsTraitsInfo = {
 ["amount"] = 1,
 },
 },
+["posX"] = 4800,
+["ID"] = 110095,
+["posY"] = 3900,
+["conditionIDs"] = {
+49066,
+27732,
+},
+["flags"] = 0,
+["type"] = 0,
 ["maxRanks"] = 1,
 ["groupIDs"] = {
-10873,
 10883,
 10881,
 },
-["posX"] = 4200,
-["ID"] = 101172,
-["flags"] = 0,
-["conditionIDs"] = {
-27772,
-27822,
-27732,
-},
 ["incomingEdgesBySpecID"] = {
-[268] = {
-101163,
-101165,
-101173,
+[269] = {
+110098,
 },
 },
 },
@@ -14474,133 +14474,6 @@ BtWLoadoutsTraitsInfo = {
 },
 ["maxZoom"] = 0.75,
 ["ID"] = 1000,
-["visibleNodes"] = {
-[101147] = true,
-[101155] = true,
-[101163] = true,
-[101171] = true,
-[101179] = true,
-[101187] = true,
-[101068] = true,
-[101076] = true,
-[101084] = true,
-[101219] = true,
-[101227] = true,
-[109910] = true,
-[101251] = true,
-[101190] = true,
-[101140] = true,
-[101148] = true,
-[101156] = true,
-[110435] = true,
-[101172] = true,
-[101180] = true,
-[101188] = true,
-[101196] = true,
-[101077] = true,
-[101085] = true,
-[101220] = true,
-[101228] = true,
-[101197] = true,
-[101244] = true,
-[101252] = true,
-[109826] = true,
-[101141] = true,
-[101149] = true,
-[101157] = true,
-[101165] = true,
-[101173] = true,
-[101181] = true,
-[101189] = true,
-[101070] = true,
-[101078] = true,
-[101086] = true,
-[101221] = true,
-[101229] = true,
-[109882] = true,
-[101245] = true,
-[101253] = true,
-[110024] = true,
-[101142] = true,
-[101064] = true,
-[101158] = true,
-[101166] = true,
-[101174] = true,
-[101182] = true,
-[101063] = true,
-[101071] = true,
-[101079] = true,
-[101087] = true,
-[101222] = true,
-[101230] = true,
-[101199] = true,
-[101246] = true,
-[101254] = true,
-[101135] = true,
-[101143] = true,
-[101151] = true,
-[101075] = true,
-[101167] = true,
-[101175] = true,
-[101183] = true,
-[109827] = true,
-[101072] = true,
-[101080] = true,
-[101088] = true,
-[101223] = true,
-[109697] = true,
-[101247] = true,
-[109883] = true,
-[109696] = true,
-[101136] = true,
-[101144] = true,
-[101152] = true,
-[101160] = true,
-[101168] = true,
-[101176] = true,
-[101184] = true,
-[101065] = true,
-[101073] = true,
-[101081] = true,
-[101711] = true,
-[101224] = true,
-[101202] = true,
-[102433] = true,
-[101248] = true,
-[101074] = true,
-[110027] = true,
-[101145] = true,
-[101153] = true,
-[101161] = true,
-[101169] = true,
-[101177] = true,
-[109694] = true,
-[101193] = true,
-[101201] = true,
-[101082] = true,
-[101090] = true,
-[101225] = true,
-[109698] = true,
-[101198] = true,
-[101249] = true,
-[101195] = true,
-[101138] = true,
-[101146] = true,
-[101154] = true,
-[108540] = true,
-[101170] = true,
-[101178] = true,
-[109695] = true,
-[101067] = true,
-[101710] = true,
-[101083] = true,
-[110025] = true,
-[101226] = true,
-[109699] = true,
-[102004] = true,
-[101250] = true,
-[101069] = true,
-},
 ["nodes"] = {
 101035,
 101036,
@@ -14855,6 +14728,133 @@ BtWLoadoutsTraitsInfo = {
 110221,
 110435,
 110436,
+},
+["visibleNodes"] = {
+[101147] = true,
+[101155] = true,
+[101163] = true,
+[101171] = true,
+[101179] = true,
+[101187] = true,
+[101068] = true,
+[101076] = true,
+[101084] = true,
+[101219] = true,
+[101227] = true,
+[101196] = true,
+[101251] = true,
+[101063] = true,
+[101140] = true,
+[101148] = true,
+[101156] = true,
+[110435] = true,
+[101172] = true,
+[101180] = true,
+[101188] = true,
+[101069] = true,
+[101077] = true,
+[101085] = true,
+[101220] = true,
+[101228] = true,
+[101070] = true,
+[101244] = true,
+[101252] = true,
+[101190] = true,
+[101141] = true,
+[101149] = true,
+[101157] = true,
+[101165] = true,
+[101173] = true,
+[101181] = true,
+[101189] = true,
+[101197] = true,
+[101078] = true,
+[101086] = true,
+[101221] = true,
+[101229] = true,
+[101246] = true,
+[101245] = true,
+[101253] = true,
+[110024] = true,
+[101142] = true,
+[101135] = true,
+[101158] = true,
+[101166] = true,
+[101174] = true,
+[101182] = true,
+[109699] = true,
+[101071] = true,
+[101079] = true,
+[101087] = true,
+[101222] = true,
+[101230] = true,
+[101072] = true,
+[109882] = true,
+[101254] = true,
+[110025] = true,
+[101143] = true,
+[101151] = true,
+[101710] = true,
+[101167] = true,
+[101175] = true,
+[101183] = true,
+[109827] = true,
+[101199] = true,
+[101080] = true,
+[101088] = true,
+[101223] = true,
+[109697] = true,
+[109883] = true,
+[101247] = true,
+[109696] = true,
+[101136] = true,
+[101144] = true,
+[101152] = true,
+[101160] = true,
+[101168] = true,
+[101176] = true,
+[101184] = true,
+[101065] = true,
+[101073] = true,
+[101081] = true,
+[101711] = true,
+[101224] = true,
+[108540] = true,
+[102433] = true,
+[101248] = true,
+[101201] = true,
+[110027] = true,
+[101145] = true,
+[101153] = true,
+[101161] = true,
+[101169] = true,
+[101177] = true,
+[109694] = true,
+[101193] = true,
+[101074] = true,
+[101082] = true,
+[101090] = true,
+[101225] = true,
+[109698] = true,
+[101195] = true,
+[101249] = true,
+[101198] = true,
+[101138] = true,
+[101146] = true,
+[101154] = true,
+[101202] = true,
+[101170] = true,
+[101178] = true,
+[109695] = true,
+[101067] = true,
+[101075] = true,
+[101083] = true,
+[101064] = true,
+[101226] = true,
+[109826] = true,
+[102004] = true,
+[101250] = true,
+[109910] = true,
 },
 },
 },

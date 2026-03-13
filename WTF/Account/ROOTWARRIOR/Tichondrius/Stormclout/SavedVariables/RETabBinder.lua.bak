@@ -1,6 +1,6 @@
 
 RETabBinderSettings = {
+["OpenWorld"] = false,
 ["SilentMode"] = false,
 ["DefaultKey"] = true,
-["OpenWorld"] = false,
 }

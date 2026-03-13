@@ -1,14 +1,6 @@
 
 CHATTYNATOR_CURRENT_PROFILE = "DEFAULT"
 CHATTYNATOR_COMMAND_HISTORY = {
-"/g https://www.wowhead.com/news/new-timegated-4-week-pvp-quest-chain-to-earn-hero-track-gear-380708",
-"/g if you look closely it says \"the end of this quest line rewards\"",
-"/g not sure why it gives hero track pve gear for a 4 week pvp quest chain",
-"/g but ok",
-"/g also its a neck or ring",
-"/g /wa",
-"/s /wa",
-"/s /edit",
 "/s /cdm",
 "/s /rl",
 "/s holy shit this is buggy",
@@ -207,4 +199,9 @@ CHATTYNATOR_COMMAND_HISTORY = {
 "/s /edit",
 "/s /sarena",
 "/s /bbf",
+"/s /rl",
+"/s /bbp",
+"/s /rl",
+"/s /edit",
+"/s /rl",
 }

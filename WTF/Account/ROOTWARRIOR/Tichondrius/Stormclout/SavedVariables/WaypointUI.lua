@@ -4,6 +4,8 @@ WaypointDB_Local = {
 ["Stormclout - Mal'Ganis"] = "Default",
 ["Stormclout - Tichondrius"] = "Default",
 },
+["slashWayCache"] = {
+},
 }
 WaypointDB_Local_Persistent = {
 ["profileKeys"] = {

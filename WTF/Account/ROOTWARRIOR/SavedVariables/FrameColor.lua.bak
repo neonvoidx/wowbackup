@@ -26,13 +26,13 @@ FrameColor4DB = {
 ["Hellowalls - Mal'Ganis"] = "Default",
 ["Stormclout - Tichondrius"] = "Default",
 ["Reedingo - Mal'Ganis"] = "Default",
-["Mäñýfäçëð - Tichondrius"] = "Default",
-["Starstypeshi - Tichondrius"] = "Default",
-["Smaugchamp - Tichondrius"] = "Default",
-["Gehyo - Mal'Ganis"] = "Default",
-["Neonvoid - Tichondrius"] = "Default",
-["Neonvoid - Mal'Ganis"] = "Default",
 ["Praisesun - Tichondrius"] = "Default",
+["Neonvoid - Mal'Ganis"] = "Default",
+["Neonvoid - Tichondrius"] = "Default",
+["Gehyo - Mal'Ganis"] = "Default",
+["Smaugchamp - Tichondrius"] = "Default",
+["Starstypeshi - Tichondrius"] = "Default",
+["Mäñýfäçëð - Tichondrius"] = "Default",
 ["Clevagirl - Mal'Ganis"] = "Default",
 },
 ["profiles"] = {
@@ -51,10 +51,10 @@ FrameColor4DB = {
 ["background"] = {
 ["followClassColor"] = false,
 },
-["main"] = {
+["borders"] = {
 ["followClassColor"] = false,
 },
-["borders"] = {
+["main"] = {
 ["followClassColor"] = false,
 },
 },
@@ -94,14 +94,6 @@ FrameColor4DB = {
 ["background"] = {
 ["followClassColor"] = false,
 },
-["main"] = {
-["rgbaValues"] = {
-0.05098039656877518,
-0.05098039656877518,
-0.05098039656877518,
-},
-["followClassColor"] = false,
-},
 ["borders"] = {
 ["rgbaValues"] = {
 0.05098039656877518,
@@ -110,49 +102,13 @@ FrameColor4DB = {
 },
 ["followClassColor"] = false,
 },
-},
-},
-["UnitFrames"] = {
-["colors"] = {
 ["main"] = {
 ["rgbaValues"] = {
-0.06666667014360428,
-0.06666667014360428,
-0.06666667014360428,
+0.05098039656877518,
+0.05098039656877518,
+0.05098039656877518,
 },
 ["followClassColor"] = false,
-},
-},
-},
-["HUD"] = {
-["colors"] = {
-["tabs"] = {
-["rgbaValues"] = {
-0.1803921610116959,
-0.1803921610116959,
-0.1803921610116959,
-},
-},
-["fallback"] = {
-["rgbaValues"] = {
-0.2196078598499298,
-0.2196078598499298,
-0.2196078598499298,
-},
-},
-["main"] = {
-["rgbaValues"] = {
-0.2784313857555389,
-0.2784313857555389,
-0.2784313857555389,
-},
-},
-["borders"] = {
-["rgbaValues"] = {
-0.2000000178813934,
-0.2000000178813934,
-0.2000000178813934,
-},
 },
 },
 },
@@ -173,6 +129,50 @@ FrameColor4DB = {
 0.2784313857555389,
 0.2784313857555389,
 0.2784313857555389,
+},
+["followClassColor"] = false,
+},
+},
+},
+["HUD"] = {
+["colors"] = {
+["tabs"] = {
+["rgbaValues"] = {
+0.1803921610116959,
+0.1803921610116959,
+0.1803921610116959,
+},
+},
+["borders"] = {
+["rgbaValues"] = {
+0.2000000178813934,
+0.2000000178813934,
+0.2000000178813934,
+},
+},
+["fallback"] = {
+["rgbaValues"] = {
+0.2196078598499298,
+0.2196078598499298,
+0.2196078598499298,
+},
+},
+["main"] = {
+["rgbaValues"] = {
+0.2784313857555389,
+0.2784313857555389,
+0.2784313857555389,
+},
+},
+},
+},
+["UnitFrames"] = {
+["colors"] = {
+["main"] = {
+["rgbaValues"] = {
+0.06666667014360428,
+0.06666667014360428,
+0.06666667014360428,
 },
 ["followClassColor"] = false,
 },

@@ -1,3 +1,7 @@
+VER 3 0000000000000205 " " "134400"
+#showtooltip
+/use 14
+END
 VER 3 000000000000020E " " "1016706"
 /clearfocus
 END
@@ -9,24 +13,20 @@ VER 3 00000000000000D2 " " "INV_MISC_QUESTIONMARK"
 #showtooltip 13
 /use 13
 END
-VER 3 0000000000000205 " " "134400"
-#showtooltip
-/use 14
-END
 VER 3 00000000000000C8 " HS" "517112"
 #showtooltip Healthstone
 /use Healthstone
+END
+VER 3 000000000000020D " MOUNT" "4635197"
+#showtooltip
+/cast [nomounted] !Zen Flight
+/click [flyable] MountJournalSummonRandomFavoriteButton
 END
 VER 3 0000000000000190 " MOUNT" "134156"
 #showtooltip
 /click [nomod] MountJournalSummonRandomFavoriteButton
 /cast [mod:shift] Eternal Gladiator's Soul Eater
 /cast [mod:ctrl] Grand Expedition Yak
-END
-VER 3 000000000000020D " MOUNT" "4635197"
-#showtooltip
-/cast [nomounted] !Zen Flight
-/click [flyable] MountJournalSummonRandomFavoriteButton
 END
 VER 3 0000000000000177 " PassiveFollow" "571320"
 /petfollow

@@ -55,6 +55,17 @@ local function OnEvent(self, event, ...)
 		SetCVar("raidFramesHealthText", "perc")
 		-- Character highlight
 		SetCVar("findYourselfAnywhere", 1)
+		SetCVar("findYourselfAnywhereOnlyInCombat", 1)
+		SetCVar("findYourselfInBG", 0)
+		SetCVar("findYourselfInBGOnlyInCombat", 1)
+		SetCVar("findYourselfInRaid", 0)
+		SetCVar("findYourselfInRaidOnlyInCombat", 1)
+		SetCVar("findYourselfMode", 1)
+		SetCVar("findYourselfModeCircle", 0)
+		SetCVar("findYourselfModeIcon", 0)
+		SetCVar("findYourselfModeOutline", 1)
+		-- Silhouette
+		SetCVar("occludedSilhouettePlayer", 1)
 
 		-- #region Nameplates
 		-- Nameplate max distance
@@ -70,6 +81,7 @@ local function OnEvent(self, event, ...)
 		SetCVar("UnitNamePlayerGuild", 1) -- Show guild
 		SetCVar("UnitNamePlayerPVPTitle", 0) -- Show titles
 		SetCVar("UnitNameOwn", 1) -- Show own name
+		SetCVar("UnitNamePlayerPVPTitle", 1) -- Show character title
 
 		-- Personal Resource Display
 		SetCVar("NameplatePersonalShowAlways", 0)

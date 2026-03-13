@@ -1,11 +1,6 @@
 
 CHATTYNATOR_CURRENT_PROFILE = "DEFAULT"
 CHATTYNATOR_COMMAND_HISTORY = {
-"/g /wa",
-"/s /wa",
-"/s /edit",
-"/s /cdm",
-"/s /rl",
 "/s holy shit this is buggy",
 "/y this event is so braindead lol",
 "/s lol you can just stand in middle here",
@@ -202,4 +197,9 @@ CHATTYNATOR_COMMAND_HISTORY = {
 "/s /edit",
 "/s /sarena",
 "/s /bbf",
+"/s /rl",
+"/s /bbp",
+"/s /rl",
+"/s /edit",
+"/s /rl",
 }

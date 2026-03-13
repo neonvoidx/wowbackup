@@ -134,27 +134,27 @@ MacroToolkitDB = {
 },
 },
 },
-["global"] = {
-["backups"] = {
-},
-["ebackups"] = {
-},
-},
 ["profileKeys"] = {
 ["Stormclout - Tichondrius"] = "profile",
+},
+["global"] = {
+["ebackups"] = {
+},
+["backups"] = {
+},
 },
 ["profiles"] = {
 ["profile"] = {
 ["x"] = 845.69482421875,
-["confirmdelete"] = false,
-["override"] = true,
 ["scale"] = 1.2,
+["override"] = true,
+["confirmdelete"] = false,
 ["visconditions"] = true,
 ["width"] = 637.9999389648438,
 ["fonts"] = {
-["edfont"] = "1",
-["mifont"] = "1",
 ["mfont"] = "1",
+["mifont"] = "1",
+["edfont"] = "1",
 ["errfont"] = "1",
 },
 ["y"] = 332.2777099609375,
