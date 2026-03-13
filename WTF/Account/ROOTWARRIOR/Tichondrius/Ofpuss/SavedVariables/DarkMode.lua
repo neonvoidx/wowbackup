@@ -1,2 +1,0 @@
-
-DMTABPC = nil

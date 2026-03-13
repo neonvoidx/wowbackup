@@ -1,2 +1,0 @@
-
-GWT_LoginIntro = true

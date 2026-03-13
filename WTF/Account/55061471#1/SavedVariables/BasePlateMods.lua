@@ -1,2 +1,0 @@
-
-BPMDB = nil

@@ -1,6 +1,0 @@
-
-PetWalkerPerCharDB = {
-["charFavsEnabled"] = false,
-["charFavs"] = {
-},
-}

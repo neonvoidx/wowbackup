@@ -8,7 +8,7 @@ local TooltipUpdator = LandingPageUtil.TooltipUpdator;
 
 
 local ipairs = ipairs;
-local ReadyForTurnIn = C_QuestLog.ReadyForTurnIn or IsQuestComplete;
+local ReadyForTurnIn = API.IsQuestReadyForTurnIn;
 
 
 local ActivityTab;
@@ -239,9 +239,9 @@ do  --Checklist Button
         else
             local data = ActivityUtil.GetActivityData(self.dataIndex);
             if data then
-                if data.tooltip or data.children or data.tooltipSetter then
+                if data.tooltip or data.children or data.tooltipSetter or data.tooltipItem then
                     TooltipUpdator:SetFocusedObject(self);
-                    TooltipUpdator:SetHeaderText(self.Name:GetText());
+                    TooltipUpdator:SetHeaderText(data.tooltipHeader or self.Name:GetText());
                     local tooltipLines = {};
 
                     if data.children and data.addChildrenToTooltip then
@@ -264,6 +264,7 @@ do  --Checklist Button
 
                     TooltipUpdator:RequestTooltipLines(tooltipLines);
                     TooltipUpdator:RequestTooltipSetter(data.tooltipSetter);
+                    TooltipUpdator:RequestItemID(data.tooltipItem);
                 end
             end
         end

@@ -1,20 +1,6 @@
 
 CHATTYNATOR_CURRENT_PROFILE = "DEFAULT"
 CHATTYNATOR_COMMAND_HISTORY = {
-"/cw Throwfade-Tichondrius that sounds aids",
-"/cw Throwfade-Tichondrius NeonVoid#11166",
-"/cw Throwfade-Tichondrius /ginvite Dazedret",
-"/cw Throwfade-Tichondrius /ginvite Fullmagazine",
-"/cw Throwfade-Tichondrius /ginvite ultibullpen",
-"/cw Throwfade-Tichondrius /ginvite %t",
-"/p did that go through",
-"/p /ginvite Ninêlight",
-"/s /ginvite Throwingfade",
-" all set?",
-" ah ok",
-" lol",
-" this one is already in though",
-" /ginvite Throwingfade",
 " ripp",
 " /ginvite Ninelight",
 " /ginvite Ninelight-Stormrage",

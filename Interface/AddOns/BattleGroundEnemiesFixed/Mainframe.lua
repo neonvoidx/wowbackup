@@ -1743,6 +1743,10 @@ function BattleGroundEnemies.Enemies:RemoveGroupPetTarget(button, sourceUnit)
 end
 
 function BattleGroundEnemies.Enemies:UNIT_TARGET(unitID)
+  -- Invalidate sticky PID cache for the compound token that just changed.
+  -- e.g. raid3 fires UNIT_TARGET → "raid3target" now points to someone else.
+  BattleGroundEnemies:InvalidateStickyPID(unitID .. "target")
+
   -- Single-token handlers (your own unit changed target)
   if unitID == "target" then
     UpdateUnitIDForToken(self, "TargetTarget", "targettarget")

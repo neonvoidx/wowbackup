@@ -315,7 +315,6 @@ function BattleGroundEnemies:FlipSettingsHorizontallyRecursive(dblocation)
   return dbLocationFlippedHorizontally
 end
 
-
 function BattleGroundEnemies:GetPlayerCountsFromConfig(playerCountConfig)
   if type(playerCountConfig) ~= "table" then
     error("playerCountConfig must be a table")
@@ -1590,15 +1589,29 @@ do
   -- across ScanTargets iterations. Cleared at the start of each ScanTargets call.
   local scanCycleCache = {}
 
+  -- Cross-tick sticky cache: prevents PID oscillation between scan cycles.
+  -- Once a unitID resolves to a button, it stays pinned until:
+  --   1) ClearPIDCaches (roster change)
+  --   2) UNIT_TARGET fires for the source unit (target changed)
+  --   3) Class validation fails (definitely a different player)
+  local stickyPIDCache = {}
+
   function BattleGroundEnemies:ClearPIDCaches()
     wipe(guidInfoCache)
     wipe(scanCycleCache)
+    wipe(stickyPIDCache)
     self.DuplicateLog = {}
     self.PlayerGUIDs = {}
   end
 
   function BattleGroundEnemies:ClearScanCycleCache()
     wipe(scanCycleCache)
+  end
+
+  -- Invalidate a specific sticky cache entry (called when UNIT_TARGET fires
+  -- for the source unit, meaning the compound token now points to someone else)
+  function BattleGroundEnemies:InvalidateStickyPID(unitID)
+    stickyPIDCache[unitID] = nil
   end
 
   -- @param playerType: "Enemies" or "Allies" - specifies which player table to search
@@ -1661,6 +1674,34 @@ do
           scanCycleCache[unitID] = directButton
         end
         return directButton
+      end
+    end
+
+    -- Check cross-tick sticky cache (prevents PID oscillation between scan cycles).
+    -- Only used when GUID lookup failed (combat taint, compound tokens, etc.).
+    -- Validates that the cached button still exists in the roster and class still matches.
+    local sticky = stickyPIDCache[unitID]
+    if sticky then
+      local stickyValid = false
+      if sticky.button and playersTable and playersTable[sticky.button.PlayerName] == sticky.button then
+        -- Button still in roster — verify class still matches the unit
+        local okClass, _, classToken = pcall(UnitClass, unitID)
+        if okClass and classToken and sticky.classToken == classToken then
+          stickyValid = true
+        elseif not okClass or not classToken then
+          -- Can't verify class (combat taint on compound token) — trust the sticky cache
+          -- This is the exact scenario that causes oscillation: PID re-resolves differently
+          -- each tick because UnitClass/UnitGUID fail intermittently in combat.
+          stickyValid = true
+        end
+      end
+      if stickyValid then
+        if not ignoreExistingArena then
+          scanCycleCache[unitID] = sticky.button
+        end
+        return sticky.button
+      else
+        stickyPIDCache[unitID] = nil
       end
     end
 
@@ -1842,6 +1883,18 @@ do
     end
 
     scanCycleCache[unitID] = result or false -- cache nil as false
+
+    -- Store in sticky cache for cross-tick stability (prevents PID oscillation).
+    -- We record the class token so we can detect when the unitID starts pointing
+    -- at a genuinely different player (e.g. raid3 retargets to a different class).
+    if result then
+      local okClass, _, classToken = pcall(UnitClass, unitID)
+      stickyPIDCache[unitID] = {
+        button = result,
+        classToken = (okClass and classToken) or (result.PlayerDetails and result.PlayerDetails.PlayerClass),
+      }
+    end
+
     return result
   end
 end
@@ -2895,6 +2948,10 @@ function BattleGroundEnemies:PLAYER_DEAD()
 end
 
 function BattleGroundEnemies:UNIT_TARGET(unitID)
+  -- Invalidate sticky PID cache — this unit changed target so the compound
+  -- token (unitID.."target") now points to a different player.
+  self:InvalidateStickyPID(unitID .. "target")
+
   local playerButton = self:GetPlayerbuttonByUnitID(unitID, "Enemies")
 
   if playerButton and playerButton ~= self.UserButton then --we use Player_target_changed for the player

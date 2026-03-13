@@ -4,19 +4,13 @@ BattleGroundEnemiesDB = {
 ["Starphage - Tichondrius"] = "Default",
 ["Auteist - Tichondrius"] = "Default",
 ["Neonvoid - Tichondrius"] = "Default",
-["Stormclout - Tichondrius"] = "Default",
 ["Hellavator - Tichondrius"] = "Default",
+["Stormclout - Tichondrius"] = "Default",
+["Mäñýfäçëð - Tichondrius"] = "Default",
 },
 ["profiles"] = {
 ["Default"] = {
 ["DisableRoleCheckWarning"] = true,
-["Allies"] = {
-["Enabled"] = false,
-},
-["dbVersion"] = 2,
-["Text"] = {
-["Font"] = "1",
-},
 ["Enemies"] = {
 ["playerCountConfigs"] = {
 nil,
@@ -40,6 +34,13 @@ nil,
 ["Position_X"] = 1377.601940432578,
 },
 },
+},
+["dbVersion"] = 2,
+["Text"] = {
+["Font"] = "1",
+},
+["Allies"] = {
+["Enabled"] = false,
 },
 },
 },

@@ -1,0 +1,24 @@
+## Interface: 120001
+## Title: City Guide
+## Notes: Displays important NPCs on capital city maps
+## Author: Valash
+## Version: 1.7.1
+## SavedVariables: CityGuideConfig
+## IconTexture: Interface\Icons\INV_Misc_Map02
+
+CityRegistry.lua
+NPCData.lua
+Utils.lua
+Clustering.lua
+ProfessionFilter.lua
+FirstTimeUX.lua
+UI.lua
+Core.lua
+Commands.lua
+SettingsGeneral.lua
+SettingsFilters.lua
+SettingsDisplay.lua
+SettingsSizes.lua
+SettingsCityTemplate.lua
+Settings.lua
+SettingsWindow.lua

@@ -7,9 +7,10 @@ CooldownManagerCenteredDB = {
 ["Reedingo - Mal'Ganis"] = "Default",
 ["Starphage - Tichondrius"] = "Default",
 ["Ofpuss - Tichondrius"] = "Default",
+["Gehyo - Tichondrius"] = "Default",
 ["Tampacks - Mal'Ganis"] = "Default",
 ["Hellavator - Tichondrius"] = "Default",
-["Gehyo - Tichondrius"] = "Default",
+["Mäñýfäçëð - Tichondrius"] = "Default",
 },
 ["profiles"] = {
 ["Default"] = {
@@ -20,7 +21,7 @@ CooldownManagerCenteredDB = {
 ["cooldownManager_keybindFontSize_Essential"] = 12,
 ["cooldownManager_showKeybinds_Essential"] = true,
 ["cooldownManager_keybindFontSize_Utility"] = 14,
-["cooldownManager_squareIconsZoom_Utility"] = 0,
+["cooldownManager_centerEssential_growFromDirection"] = "BOTTOM",
 ["cooldownManager_stackFontName"] = "1",
 ["trinketRacialTracker_stackAnchor"] = "TOP",
 ["cooldownManager_cooldownFontName"] = "1",
@@ -31,11 +32,18 @@ CooldownManagerCenteredDB = {
 ["cooldownManager_normalizeUtilitySize"] = true,
 ["cooldownManager_stackAnchorBuffIcons_point"] = "TOP",
 ["cooldownManager_showKeybinds_Utility"] = true,
-["cooldownManager_centerEssential_growFromDirection"] = "BOTTOM",
+["cooldownManager_squareIconsZoom_Utility"] = 0,
 ["cooldownStyleSettings"] = {
 ["spellSettings"] = {
 [1249625] = {
+["alwaysGlow"] = true,
 ["alwaysShowCooldownEdge"] = true,
+},
+[443294] = {
+["alwaysGlow"] = true,
+},
+[325202] = {
+["alwaysGlow"] = true,
 },
 },
 },

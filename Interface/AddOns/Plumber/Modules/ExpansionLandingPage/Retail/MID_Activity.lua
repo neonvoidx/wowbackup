@@ -49,7 +49,7 @@ do
     end
     --]]
 
-    function SetupFuncs.PreyProgress(listButton)
+    function SetupFuncs.HuntTable(listButton)
         local activeQuestID = C_QuestLog.GetActivePreyQuest();
         if activeQuestID then
             listButton:SetQuest(activeQuestID);
@@ -121,6 +121,98 @@ do
         end
     end
 
+    local function AddQuestsByPattern(tbl, fromID, step, times)
+        local n = #tbl;
+        local questID = fromID - step;
+        for i = 1, times do
+            n = n + 1;
+            questID = questID + step;
+            tbl[n] = questID;
+        end
+    end
+
+    local PreyTargetQuests = {
+        Normal = {},
+        Hard = {},
+        Nightmare = {},
+    };
+
+    AddQuestsByPattern(PreyTargetQuests.Normal, 91095, 1, 30);  --Consecutive 91095 - 91124
+    AddQuestsByPattern(PreyTargetQuests.Hard, 91210, 2, 16);    --Even 91210 - 91240
+    AddQuestsByPattern(PreyTargetQuests.Hard, 91242, 1, 14);    --Consecutive 91242 - 91255
+    AddQuestsByPattern(PreyTargetQuests.Nightmare, 91211, 2, 16);    --Odd 91211 - 91241
+    AddQuestsByPattern(PreyTargetQuests.Nightmare, 91256, 1, 14);    --Consecutive 91256 - 91269
+
+    local function GetUnlockedPreyDifficulties()
+        local level = C_MajorFactions.GetCurrentRenownLevel(2764);
+        if level then
+            if level >= 4 then
+                return {"Nightmare", "Hard", "Normal"}
+            elseif level >= 1 then
+                return {"Hard", "Normal"}
+            end
+        end
+        return {"Normal"}
+    end
+
+    function SetupFuncs.KillCount(listButton)
+        local IsQuestFlaggedCompleted = C_QuestLog.IsQuestFlaggedCompleted;
+        local difficulties = GetUnlockedPreyDifficulties();
+        local text;
+
+        for _, k in ipairs(difficulties) do
+            local difficultyName = L["Prey Difficulty "..k];
+            local numCompleted = 0;
+            for _, questID in ipairs(PreyTargetQuests[k]) do
+                if IsQuestFlaggedCompleted(questID) then
+                    numCompleted = numCompleted + 1;
+                end
+            end
+
+            local progressText = string.format("|W%s/4 %s|w", numCompleted, difficultyName);
+            if text then
+                text = text.."    "..progressText;
+            else
+                text = progressText;
+            end
+        end
+
+        listButton.Name:SetText(text);
+    end
+
+    function SetupFuncs.DefeatedPreyTooltip(tooltip)
+        local IsQuestFlaggedCompleted = C_QuestLog.IsQuestFlaggedCompleted;
+        local GetQuestName = addon.API.GetQuestName;
+        local difficulties = GetUnlockedPreyDifficulties();
+        local loaded = true;
+
+        for _, k in ipairs(difficulties) do
+            local difficultyName = L["Prey Difficulty "..k];
+            local anyComplete;
+
+            tooltip:AddLine(" ");
+            tooltip:AddLine(difficultyName, 1, 0.82, 0, false);
+
+            for _, questID in ipairs(PreyTargetQuests[k]) do
+                if IsQuestFlaggedCompleted(questID) then
+                    anyComplete = true;
+                    local questName = GetQuestName(questID);
+                    if questName then
+                        tooltip:AddLine("|TInterface/AddOns/Plumber/Art/ExpansionLandingPage/Icons/CheckmarkGrey:0:0|t "..questName, 0.5, 0.5, 0.5, false);
+                    else
+                        loaded = false;
+                    end
+                end
+            end
+
+            if not anyComplete then
+                tooltip:AddLine(NONE, 0.5, 0.5, 0.5, false);
+            end
+        end
+
+        return loaded
+    end
+
 
     local function GetActiveAbundance()
         local pois = C_AreaPoiInfo.GetEventsForMap(AbundantHarvest.continentUiMapID);
@@ -173,34 +265,34 @@ do
 end
 
 
-local ActivityData = {  --Constant
-    --questClassification: 5 is recurring
-
-    --[[
+local ActivityData = {
+    --[[    --Enable After S1
     {isHeader = true, name = "Delves", localizedName = DELVES_LABEL, categoryID = 10000,
         entries = {
-            {name = "The Key to Success", questID = 84370, isWeeklyQuest = true, accountwide = true},
-            {name = "Delver\'s Bounty", itemID = 233071, flagQuest = 86371, icon = 1064187, conditions = ActivityUtil.Conditions.DelversBounty},
+            {name = "A Gnawing Void of Curiosity", questID = 93784, isWeeklyQuest = true, accountwide = true},
+            {name = "Trovehunter\'s Bounty", itemID = 252415, flagQuest = 86371, icon = 1064187, tooltipItem = 252415},
 
-            {name = "Coffer Keys", label = L["Restored Coffer Key"], questClassification = 5, tooltipSetter = ActivityUtil.TooltipFuncs.WeeklyRestoredCofferKey, icon = 4622270, useItemIcon = true,
-                children = ActivityUtil.CreateChildrenFromQuestList(addon.WeeklyRewardsConstant.CofferKeyFlags),
-            },
+            --{name = "Coffer Keys", label = L["Restored Coffer Key"], questClassification = 5, tooltipSetter = ActivityUtil.TooltipFuncs.WeeklyRestoredCofferKey, icon = 4622270, useItemIcon = true,
+            --    children = ActivityUtil.CreateChildrenFromQuestList(addon.WeeklyRewardsConstant.CofferKeyFlags),
+            --},
 
-            {name = "Coffer Key Shards", label = L["Coffer Key Shard"], questClassification = 5, tooltipSetter = ActivityUtil.TooltipFuncs.WeeklyCofferKeyShard, icon = 133016, useItemIcon = true,
-                children = ActivityUtil.CreateChildrenFromQuestList(addon.WeeklyRewardsConstant.CofferKeyShardFlags),
-            },
+            --{name = "Coffer Key Shards", label = L["Coffer Key Shard"], questClassification = 5, tooltipSetter = ActivityUtil.TooltipFuncs.WeeklyCofferKeyShard, icon = 133016, useItemIcon = true,
+            --    children = ActivityUtil.CreateChildrenFromQuestList(addon.WeeklyRewardsConstant.CofferKeyShardFlags),
+            --},
         }
     },
     --]]
 
     {isHeader = true, name = "Prey", localizedName = L["Prey System"], categoryID = 120000, nameGetter = SetupFuncs.GetPreyHeader,
         entries = {
-            {name = "Prey Progress", icon = "Interface/AddOns/Plumber/Art/ExpansionLandingPage/Icons/InProgressPrey.png", sortToTop = true, setupFunc = SetupFuncs.PreyProgress, removeSharedPrefix = true},
+            {name = "Kill Count", icon = "Interface/AddOns/Plumber/Art/ExpansionLandingPage/Icons/Checklist.png", sortToTop = true, setupFunc = SetupFuncs.KillCount, tooltipHeader = L["Defeated Prey"], tooltipSetter = SetupFuncs.DefeatedPreyTooltip},
+            {name = "Hunt Table", icon = "Interface/AddOns/Plumber/Art/ExpansionLandingPage/Icons/InProgressPrey.png", sortToTop = true, setupFunc = SetupFuncs.HuntTable, removeSharedPrefix = true},
         },
     },
 
     {isHeader = true, name = "Silvermoon Court", factionID = 2710, categoryID = 2710, uiMapID = 2395,
         entries = {
+            {name = "Favor of the Court", questID = 89289, isWeeklyQuest = true, uiMapID = 2395, sortToTop = true},
             {name = L["QuestName Runestone"], localizedName = L["QuestName Runestone"], isWeeklyQuest = true, uiMapID = 2395, sortToTop = true, useActiveQuestTitle = true,
                 questPool = {
                     {name = "Fortify the Runestones: Magisters", questID = 90573, isWeeklyQuest = true, uiMapID = 2395},
@@ -217,7 +309,7 @@ local ActivityData = {  --Constant
 
     {isHeader = true, name = "Amani Tribe", factionID = 2696, categoryID = 2696, uiMapID = 2437,
         entries = {
-            {name = "Abundant Offerings", questID = 89507, sortToTop = true},
+            {name = "Abundant Offerings", questID = 89507, isWeeklyQuest = true, sortToTop = true},
             {name = "Abundance", icon = "Interface/AddOns/Plumber/Art/ExpansionLandingPage/Icons/Abundance.png", shouldShow = SetupFuncs.ShouldShowAbundance, setupFunc = SetupFuncs.AbundanceEvent, tooltipSetter = SetupFuncs.AbundanceTooltip},
 
             --{name = "Weekly Delve", localizedName = L["Bountiful Delve"], isDelveReputation = true, flagQuest = 83317, accountwide = true},
@@ -260,7 +352,21 @@ local ActivityData = {  --Constant
             --{name = "Weekly Delve", localizedName = L["Bountiful Delve"], isDelveReputation = true, flagQuest = 83317, accountwide = true},
         },
     },
+
+    {isHeader = true, name = "Slayer's Duellum", factionID = 2770, categoryID = 2770, uiMapID = 2444,
+        entries = {
+            {name = "Preparing for Battle", questID = 89354, isWeeklyQuest = true, uiMapID = 2444, sortToTop = true},
+        },
+    },
 };
+
+local function GetActivityEntries(categoryID)
+    for k, v in ipairs(ActivityData) do
+        if v.categoryID == categoryID then
+            return v.entries
+        end
+    end
+end
 
 
 do  --Add Prey Quests
@@ -280,7 +386,7 @@ do  --Add Prey Quests
         91604,
     };
 
-    local target = ActivityData[1].entries;
+    local target = GetActivityEntries(120000);
     local n = #target;
 
     for _, questID in ipairs(PreyWorldQuests) do
@@ -292,10 +398,6 @@ do  --Add Prey Quests
             removeSharedPrefix = true,
         };
     end
-
-    --[[    ???
-        92392 (#1)
-    --]]
 end
 
 

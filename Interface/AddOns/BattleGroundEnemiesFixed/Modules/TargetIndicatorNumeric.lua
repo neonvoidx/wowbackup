@@ -79,8 +79,22 @@ function targetIndicatorNumeric:AttachToPlayerButton(playerButton)
     local enemyTargets = 0
 
     if playerButton.UnitIDs and playerButton.UnitIDs.TargetedByEnemy then
-      for enemyButton in pairs(playerButton.UnitIDs.TargetedByEnemy) do
-        enemyTargets = enemyTargets + 1
+      -- Render-time validation: prune stale entries where the source button's
+      -- .Target no longer points back to us. This catches phantom counts
+      -- caused by PID oscillation leaving orphaned TargetedByEnemy entries.
+      local stale
+      for sourceButton in pairs(playerButton.UnitIDs.TargetedByEnemy) do
+        if sourceButton.Target ~= playerButton then
+          stale = stale or {}
+          stale[#stale + 1] = sourceButton
+        else
+          enemyTargets = enemyTargets + 1
+        end
+      end
+      if stale then
+        for _, key in ipairs(stale) do
+          playerButton.UnitIDs.TargetedByEnemy[key] = nil
+        end
       end
     end
 

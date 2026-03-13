@@ -9,9 +9,9 @@ local L = Data.L
 
 -- 12.0: GetArenaCrowdControlInfo returns nil in BGs. Synthetic trinket cooldown as fallback.
 local FAKE_TRINKET = true
-local FAKE_TRINKET_DURATION = 120       -- DPS / Tank
+local FAKE_TRINKET_DURATION = 120 -- DPS / Tank
 local FAKE_TRINKET_HEALER_DURATION = 90 -- Healer (30s reduction)
-local FAKE_TRINKET_SPELL = 208683       -- Gladiator's Medallion (for icon texture)
+local FAKE_TRINKET_SPELL = 208683 -- Gladiator's Medallion (for icon texture)
 ---@class PlayerDetails: table
 ---@field PlayerName string
 ---@field PlayerClass string
@@ -933,7 +933,7 @@ function BattleGroundEnemies:CreatePlayerButton(mainframe, num)
     local health = self:FakeUnitHealth()
     local maxHealth = self:FakeUnitHealthMax()
     if maxHealth > 0 then
-      return (health / maxHealth) * 100  -- Return 0-100 percentage
+      return (health / maxHealth) * 100 -- Return 0-100 percentage
     else
       return 0
     end
@@ -979,10 +979,12 @@ function BattleGroundEnemies:CreatePlayerButton(mainframe, num)
       -- 12.0: Compound tokens (e.g. "raid1target") are rejected by UnitHealth.
       local ok, h = pcall(UnitHealth, unitID, true)
       if not ok then
-        health = 1
-        healthMissing = 0
-        healthPercent = 100
-        maxHealth = 1
+        -- Token is tainted/restricted in combat — don't overwrite the health bar
+        -- with fake 1/1 (100%) values. Keep the last known good health from a
+        -- previous successful read (nameplate, arena, or earlier successful poll).
+        -- This prevents the bar from briefly flashing full every scan tick when a
+        -- compound token intermittently fails alongside a working direct token.
+        return
       else
         health = h or 0
         healthMissing = UnitHealthMissing(unitID, true) or 0

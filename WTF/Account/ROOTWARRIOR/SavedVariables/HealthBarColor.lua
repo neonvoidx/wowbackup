@@ -4,36 +4,41 @@ HealthBarColorDB = {
 },
 ["profileKeys"] = {
 ["Mäñýfäçëð - Tichondrius"] = "Default",
-["Clevagirl - Mal'Ganis"] = "Default",
+["Thingreyline - Tichondrius"] = "Default",
 ["Auteist - Mal'Ganis"] = "Default",
 ["Ofpuss - Mal'Ganis"] = "Default",
-["Starstypeshi - Tichondrius"] = "Default",
+["Crillessana - Mal'Ganis"] = "Default",
 ["Smaugchamp - Mal'Ganis"] = "Default",
 ["Choppiez - Mal'Ganis"] = "Default",
 ["Gehyo - Tichondrius"] = "Default",
 ["Gehyo - Mal'Ganis"] = "Default",
 ["Heilsatan - Tichondrius"] = "Default",
 ["Choppiez - Tichondrius"] = "Default",
-["Praisesun - Tichondrius"] = "Default",
+["Hellowalls - Mal'Ganis"] = "Default",
 ["Auteist - Tichondrius"] = "Default",
-["Smaugchamp - Tichondrius"] = "Default",
 ["Hellavator - Tichondrius"] = "Default",
+["Ofpusstwo - Tichondrius"] = "Default",
 ["Hellavator - Mal'Ganis"] = "Default",
 ["Cullnvoid - Tichondrius"] = "Default",
 ["Stormclout - Tichondrius"] = "Default",
 ["Reedingo - Mal'Ganis"] = "Default",
 ["Stormclout - Mal'Ganis"] = "Default",
 ["Rakeist - Mal'Ganis"] = "Default",
-["Ofpusstwo - Tichondrius"] = "Default",
-["Hellowalls - Mal'Ganis"] = "Default",
+["Smaugchamp - Tichondrius"] = "Default",
+["Praisesun - Tichondrius"] = "Default",
 ["Ofpuss - Tichondrius"] = "Default",
 ["Praisesun - Mal'Ganis"] = "Default",
-["Crillessana - Mal'Ganis"] = "Default",
-["Thingreyline - Tichondrius"] = "Default",
+["Starstypeshi - Tichondrius"] = "Default",
+["Clevagirl - Mal'Ganis"] = "Default",
 },
 ["profiles"] = {
 ["Default"] = {
-["HealthBarColor_boss3"] = {
+["BackgroundTextures"] = {
+["color"] = {
+["a"] = 0.9405550956726074,
+},
+["texture"] = "Wglass (GladiusEx)",
+["enabled"] = true,
 },
 ["HealthBarColor_pet"] = {
 },
@@ -57,11 +62,8 @@ HealthBarColorDB = {
 ["nameFont"] = "1",
 ["powerFont"] = "1",
 },
-["Font_targettarget"] = {
-["nameFontOutlineMode"] = 3,
-["healthFont"] = "1",
-["nameFont"] = "1",
-["powerFont"] = "1",
+["DebuffColor"] = {
+["enabled"] = true,
 },
 ["Font_party4"] = {
 ["nameFontOutlineMode"] = 3,
@@ -88,7 +90,11 @@ HealthBarColorDB = {
 },
 ["HealthBarColor_focus"] = {
 },
-["HealthBarColor_boss4"] = {
+["Font_focus"] = {
+["nameFontOutlineMode"] = 3,
+["healthFont"] = "1",
+["nameFont"] = "1",
+["powerFont"] = "1",
 },
 ["Font_boss5"] = {
 ["nameFontOutlineMode"] = 3,
@@ -96,12 +102,7 @@ HealthBarColorDB = {
 ["nameFont"] = "1",
 ["powerFont"] = "1",
 },
-["Font_player"] = {
-["nameFontOutlineMode"] = 3,
-["healthFont"] = "1",
-["nameFont"] = "1",
-["nameFontSize"] = 9,
-["powerFont"] = "1",
+["HealthBarColor_target"] = {
 },
 ["BiggerHealthBar"] = {
 ["enabled"] = true,
@@ -111,22 +112,27 @@ HealthBarColorDB = {
 ["enabled"] = true,
 ["healthBarTexture"] = "Wglass",
 },
-["BackgroundTextures"] = {
-["color"] = {
-["a"] = 0.9405550956726074,
+["HealthBarColor_boss3"] = {
 },
-["texture"] = "Wglass (GladiusEx)",
-["enabled"] = true,
+["HealthBarColor_boss4"] = {
 },
-["Font_focus"] = {
+["Font_player"] = {
+["nameFontOutlineMode"] = 3,
+["healthFont"] = "1",
+["nameFont"] = "1",
+["nameFontSize"] = 9,
+["powerFont"] = "1",
+},
+["Font_party2"] = {
+["nameFontOutlineMode"] = 3,
+},
+["Font_targettarget"] = {
 ["nameFontOutlineMode"] = 3,
 ["healthFont"] = "1",
 ["nameFont"] = "1",
 ["powerFont"] = "1",
 },
-["HealthBarColor_target"] = {
-},
-["Font_party2"] = {
+["Font_party3"] = {
 ["nameFontOutlineMode"] = 3,
 },
 ["Font_boss3"] = {
@@ -135,21 +141,15 @@ HealthBarColorDB = {
 ["nameFont"] = "1",
 ["powerFont"] = "1",
 },
+["MinimapButton"] = {
+["minimapPos"] = 69.587679475945,
+["enabled"] = false,
+},
 ["Font_focustarget"] = {
 ["nameFontOutlineMode"] = 3,
 ["healthFont"] = "1",
 ["nameFont"] = "1",
 ["powerFont"] = "1",
-},
-["DebuffColor"] = {
-["enabled"] = true,
-},
-["MinimapButton"] = {
-["minimapPos"] = 69.587679475945,
-["enabled"] = false,
-},
-["Font_party3"] = {
-["nameFontOutlineMode"] = 3,
 },
 },
 },

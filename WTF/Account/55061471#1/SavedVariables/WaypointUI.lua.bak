@@ -1,9 +1,0 @@
-
-WaypointDB_Global = {
-["PinpointInfoExtended"] = true,
-["DistanceThresholdHidden"] = 20,
-["WaypointScale"] = 0.800000011920929,
-["lastLoadedVersion"] = 10020,
-}
-WaypointDB_Global_Persistent = {
-}

@@ -64,18 +64,6 @@ VER 3 0100000000000037 " " "134400"
 /stopmacro [channeling:Celestial Conduit]
 /cast Blackout Kick
 END
-VER 3 0100000000000038 " " "134400"
-#showtooltip
-/cast [@mouseover,help,exists,nodead][] Sheilun's Gift
-END
-VER 3 0100000000000039 " " "134400"
-#showtooltip Invoke Xuen, the white tiger
-/use 13
-/use Tempered Potion
-/use Brawler's Fight Tonic of Agility
-/cast Berserking
-/cast Invoke Xuen, the white tiger
-END
 VER 3 010000000000003A " " "135734"
 #showtooltip [known:Chi burst] Chi Burst;[known: chi wave] Chi wave;
 /cast [known:Chi Burst] Chi burst;
@@ -109,20 +97,30 @@ VER 3 0100000000000042 " " "134400"
 /use Saltwater Potion
 /cast Zenith
 END
+VER 3 0100000000000045 " " "134400"
+#showtooltip
+/cast roll
+/cast Prismatic Bauble
+END
+VER 3 0100000000000044 " " "134400"
+#showtooltip
+/cast [@mouseover, exists, harm][] Touch of Death
+/use Seafarer's Slidewhistle
+END
 VER 3 010000000000003D "Black Ox" "134400"
 #showtooltip Provoke
 /targetexact Black Ox Statue
 /cast Provoke
 /targetlasttarget
 END
-VER 3 010000000000003F "Dimiss" "627607"
+VER 3 0100000000000047 "Dismiss" "615340"
 /run if not UnitAffectingCombat("player")then for i=1,4 do n="t"..i CreateFrame("Button",n,UIParent,"SecureUnitButtonTemplate")_G[n]:SetAttribute("type", "destroytotem")_G[n]:SetAttribute("totem-slot",i)end end
 /click t1
 /click t2
 /click t3
 /click t4
 END
-VER 3 0100000000000043 "Outfit Collection" "2869702"
-#plumber:outfit
-/click PLMR_OUTFIT
+VER 3 0100000000000048 "Teleport Home" "7252953"
+#plumber:home
+/click PLMR_HOME1
 END

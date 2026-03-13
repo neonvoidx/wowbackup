@@ -49,7 +49,7 @@ false,
 ["Font"] = "Interface\\Addons\\SharedMedia_MyMedia\\font\\1.ttf",
 ["FontSize"] = 20,
 ["Position"] = {
-["y"] = 11.66665649414063,
+["y"] = -122.4999237060547,
 ["x"] = 6.103515625e-05,
 ["point"] = "CENTER",
 },

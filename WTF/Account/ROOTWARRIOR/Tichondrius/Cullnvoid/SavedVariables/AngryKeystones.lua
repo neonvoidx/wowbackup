@@ -1,2 +1,0 @@
-
-AngryKeystones_CharacterConfig = nil

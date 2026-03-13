@@ -94,6 +94,22 @@ function symbolicTargetIndicator:AttachToPlayerButton(playerButton)
   function playerButton.TargetIndicatorSymbolic:UpdateTargetIndicators()
     self:GetConfig()
 
+    -- Render-time validation: prune stale entries where the source button's
+    -- .Target no longer points back to us. This catches phantom indicators
+    -- caused by PID oscillation leaving orphaned TargetedByEnemy entries.
+    local stale
+    for sourceButton in pairs(playerButton.UnitIDs.TargetedByEnemy) do
+      if sourceButton.Target ~= playerButton then
+        stale = stale or {}
+        stale[#stale + 1] = sourceButton
+      end
+    end
+    if stale then
+      for _, key in ipairs(stale) do
+        playerButton.UnitIDs.TargetedByEnemy[key] = nil
+      end
+    end
+
     local i = 1
     for enemyButton in pairs(playerButton.UnitIDs.TargetedByEnemy) do
       local indicator = self.Symbols[i]

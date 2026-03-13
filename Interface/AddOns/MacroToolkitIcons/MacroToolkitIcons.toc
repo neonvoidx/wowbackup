@@ -1,0 +1,12 @@
+## Interface: 120001, 120001, 50503, 40402, 30403, 20505, 11508
+## Author: Deepac
+## IconTexture: Interface\AddOns\MacroToolkit\mtsm
+## Title: MacroToolkit Icon Data
+## Version: v2.3.40
+## Notes: Load on demand data for MacroToolkit
+## LoadOnDemand: 1
+## RequiredDeps: MacroToolkit
+## X-Curse-Project-ID: 47117
+## X-Wago-ID: jK8XprKy
+
+..\MacroToolkit\modules\textures.lua

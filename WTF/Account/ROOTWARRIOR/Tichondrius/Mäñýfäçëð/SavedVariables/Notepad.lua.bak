@@ -1,5 +1,0 @@
-
-Notepad_CVars = {
-["Notes"] = {
-},
-}

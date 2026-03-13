@@ -1,138 +1,26 @@
+VER 3 0000000000000238 " " "2869702"
+#plumber:outfit
+/click PLMR_OUTFIT
+END
 VER 3 00000000000000D2 " " "INV_MISC_QUESTIONMARK"
 #showtooltip 13
 /use 13
-END
-VER 3 00000000000000D8 " " "INV_MISC_QUESTIONMARK"
-#showtooltip
-/cast [@mouseover, exists, harm][] Touch of Death
-/use Seafarer's Slidewhistle
-END
-VER 3 00000000000000E8 " " "136172"
-#showtolltip
-/cast Grimoire: Felguard
-END
-VER 3 0000000000000102 " " "INV_MISC_QUESTIONMARK"
-#showtooltip
-/cast roll
-/cast Prismatic Bauble
-END
-VER 3 000000000000010C " " "INV_MISC_QUESTIONMARK"
-#showtooltip
-/cast Thunder Focus Tea
-/use Fire-Eater's Vial
-END
-VER 3 0000000000000115 " " "INV_MISC_QUESTIONMARK"
-#showtooltip
-/cast Felstorm
-END
-VER 3 0000000000000116 " " "INV_MISC_QUESTIONMARK"
-#showtooltip
-/petattack
-/cast Demon Bolt
-END
-VER 3 0000000000000140 " " "INV_MISC_QUESTIONMARK"
-#showtooltip
-/cast [@cursor] Cataclysm
-END
-VER 3 0000000000000154 " " "INV_MISC_QUESTIONMARK"
-#showtooltip backstab
-/cast [nomod,nocombat] !stealth
-/cast [nomod] backstab
-END
-VER 3 000000000000015D " " "INV_MISC_QUESTIONMARK"
-#showtooltip
-/cast [@cursor] Grappling Hook
-END
-VER 3 0000000000000165 " " "INV_MISC_QUESTIONMARK"
-#showtooltip 
-/stopmacro [channeling:Fists of Fury]
-/stopmacro [channeling:Crackling Jade Lightning]
-/stopmacro [channeling:Spinning Crane Kick]
-/cast [known: Flying Serpent Kick] Flying Serpent Kick; [known: Slicing Winds] Slicing Winds
-END
-VER 3 0000000000000170 " " "INV_MISC_QUESTIONMARK"
-#showtooltip shadowmeld
-/stopattack
-/cast [combat] shadowmeld
-/cast [nocombat,nostealth] Stealth
-END
-VER 3 0000000000000172 " " "INV_MISC_QUESTIONMARK"
-#showtooltip
-/cast [@mouseover,harm,exists][] Shackle undead
-END
-VER 3 0000000000000175 " " "INV_MISC_QUESTIONMARK"
-#showtooltip
-/cast [@mouseover, exists, noharm] Reawaken
-/cast Resuscitate
-END
-VER 3 0000000000000181 " " "134400"
-#showtooltip [known:322118] Invoke Yu'lon, the Jade Serpent; [known:325197] Invoke Chi-ji, the Red Crane
-/use 13
-/cast [known:322118] Invoke Yu'lon, the Jade Serpent
-/cast [known:325197] Invoke Chi-ji, the Red Crane
-END
-VER 3 0000000000000182 " " "134400"
-#showtooltip
-/cast [known:Revival] Revival
-/cast [known:Restoral] Restoral
 END
 VER 3 0000000000000205 " " "134400"
 #showtooltip
 /use 14
 END
-VER 3 0000000000000208 " " "134400"
-#showtooltip
-/use [@mouseover,exists,dead,help][] Convincingly Realistic Jumper Cables
-END
 VER 3 000000000000020E " " "1016706"
 /clearfocus
-END
-VER 3 0000000000000214 " " "134400"
-#showtooltip ironclaw whetstone
-/use ironclaw whetstone
-/use [button:2] 17; 16
-/click StaticPopup1Button1
-END
-VER 3 0000000000000215 " " "134400"
-#showtooltip
-/use item:224107
-/use [button:2] 17; 16
-/click StaticPopup1Button1
-END
-VER 3 000000000000022C " " "134400"
-#showtooltip Weapons of Order
-/use Tempered Potion
-/cast Weapons of ORder
-END
-VER 3 000000000000022E " " "132900"
-/run GenericTraitUI_LoadUI()GenericTraitFrame:SetSystemID(29)GenericTraitFrame:SetTreeID(1115)ToggleFrame(GenericTraitFrame)
-END
-VER 3 000000000000022F " " "134400"
-#showtooltip 
-END
-VER 3 0000000000000230 " " "134400"
-#showtooltip
-/cast [@mouseover,harm,nodead,exists][] Clash
-END
-VER 3 0000000000000231 " " "134400"
-#showtooltip 
-/stopattack
-/cast [combat] shadowmeld
-/cast [nocombat] Prowl
-END
-VER 3 0000000000000232 " " "134400"
-#showtooltip
-/cast [@mouseover,exists,help,nodead][] Symbiotic Relationship
-END
-VER 3 0000000000000233 " " "INV_MISC_QUESTIONMARK"
-#showtooltip item:93672
-#macro version 1
-/run if not InCombatLockdown() then RHT.b:SetAttribute("item","Dark Portal") end
-/click RHTB LeftButton
 END
 VER 3 00000000000000C8 " HS" "517112"
 #showtooltip Healthstone
 /use Healthstone
+END
+VER 3 000000000000020D " MOUNT" "4635197"
+#showtooltip
+/cast [nomounted] !Zen Flight
+/click [flyable] MountJournalSummonRandomFavoriteButton
 END
 VER 3 0000000000000190 " MOUNT" "134156"
 #showtooltip
@@ -140,35 +28,12 @@ VER 3 0000000000000190 " MOUNT" "134156"
 /cast [mod:shift] Eternal Gladiator's Soul Eater
 /cast [mod:ctrl] Grand Expedition Yak
 END
-VER 3 000000000000020D " MOUNT" "4635197"
-#showtooltip
-/cast [nomounted] !Zen Flight
-/click [flyable] MountJournalSummonRandomFavoriteButton
-END
 VER 3 0000000000000177 " PassiveFollow" "571320"
 /petfollow
 /petpassive
 END
-VER 3 00000000000000D0 " PVP AUDIT" "135340"
-/pvpaudit
-END
-VER 3 00000000000000BC " RaidMark" "INV_MISC_QUESTIONMARK"
-/run local m=8; if UnitExists("mouseover") and GetRaidTargetIndex("mouseover")~=m then SetRaidTarget("mouseover",m) elseif UnitExists("target") and GetRaidTargetIndex("target")~=m then SetRaidTarget("target",m) end
-END
 VER 3 0000000000000237 " STOP" "1345086"
 /stopcasting
-END
-VER 3 00000000000000D1 " Wargames" "Ability_DeathKnight_DeathChain."
-/wg
-END
-VER 3 0000000000000193 "." "3578227"
-/cast [@player] Bonedust Brew
-END
-VER 3 000000000000020A "AFK" "6124644"
-/afk
-END
-VER 3 000000000000021B "APR_MACRO" "134400"
-/script print('no button yet')
 END
 VER 3 0000000000000210 "BOOGIE" "133836"
 #showtooltip Blazing Shadowflame Cinder
@@ -176,7 +41,7 @@ VER 3 0000000000000210 "BOOGIE" "133836"
 /use World Shrinker
 /use Shuffling Sands
 END
-VER 3 0000000000000206 "BOW" "574570"
+VER 3 0000000000000206 "BOW" "INV_Ability_MasterOfHarmonyMonk_AspectOfHarmony."
 /bow
 END
 VER 3 0000000000000236 "EnhanceQoLFlaskMacro" "INV_Misc_QuestionMark"
@@ -185,17 +50,20 @@ END
 VER 3 0000000000000235 "EnhanceQoLHealthMacro" "INV_Misc_QuestionMark"
 #showtooltip
 /cast [nocombat] Recuperate
-/castsequence [combat] reset=combat item:244839
+/castsequence [combat] reset=combat item:241305
 END
-VER 3 00000000000001FE "FOCUS" "999949"
+VER 3 00000000000001FE "FOCUS" "Ability_Rogue_BloodyEye."
 /focus [@mouseover,nodead,exists]; [@target,exists]
+END
+VER 3 0000000000000215 "ItemOnWeap" "463561"
+#showtooltip
+/use item:224107
+/use [button:2] 17; 16
+/click StaticPopup1Button1
 END
 VER 3 000000000000022A "Pull" "1713482"
 /pull 10
 END
 VER 3 000000000000022B "Readycheck" "615342"
 /readycheck
-END
-VER 3 0000000000000234 "uuna " "134400"
-/run local a={50140,50141,50142,50143,50144,50145,50146,50147}for i,q in ipairs(a)do print(format("Uuna World Tour %s: %s",i, C_QuestLog.IsQuestFlaggedCompleted(q) and "\124cFF00FF00Done\124r" or "\124cFFFF0000Not Done\124r")) end
 END

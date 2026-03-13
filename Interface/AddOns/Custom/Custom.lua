@@ -1,79 +1,3 @@
--- #region Function to change action bar text
--- function updateHotkeyText()
--- 	local ActionBars =
--- 		{ "Action", "MultiBarBottomLeft", "MultiBarBottomRight", "MultiBarRight", "MultiBarLeft", "MultiBar5" }
--- 	--iterate the different actionbars
--- 	for _, barName in pairs(ActionBars) do
--- 		--iterate the individual actionbar buttons (12 each)
--- 		for i = 1, 12 do
--- 			local button = _G[barName .. "Button" .. i]
--- 			local hotkey = button["HotKey"]
--- 			local text = hotkey:GetText()
--- 			if text ~= nil then
--- 				---------------------
--- 				--Modifiers
--- 				---------------------
--- 				--shift
--- 				text = string.gsub(text, "(s%-)", "S")
--- 				--alt
--- 				text = string.gsub(text, "(a%-)", "A")
--- 				--ctrl
--- 				text = string.gsub(text, "(c%-)", "C")
--- 				---------------------
--- 				--Mouse-Buttons
--- 				---------------------
--- 				--Left Mouse Button
--- 				text = string.gsub(text, KEY_BUTTON1, "LM")
--- 				--Right Mouse Button
--- 				text = string.gsub(text, KEY_BUTTON2, "RM")
--- 				--Middle Mouse Button
--- 				text = string.gsub(text, KEY_BUTTON3, "MM")
--- 				--Mouse Extra Button 1
--- 				text = string.gsub(text, KEY_BUTTON4, "M4")
--- 				--Mouse Extra Button 2
--- 				text = string.gsub(text, KEY_BUTTON5, "M5")
--- 				text = string.gsub(text, KEY_MOUSEWHEELDOWN, "MWD")
--- 				text = string.gsub(text, KEY_MOUSEWHEELUP, "MWU")
--- 				---------------------
--- 				--Special Keys
--- 				---------------------
--- 				text = string.gsub(text, KEY_PAGEUP, "PU")
--- 				text = string.gsub(text, KEY_PAGEDOWN, "PD")
--- 				text = string.gsub(text, KEY_SPACE, "SpB")
--- 				text = string.gsub(text, KEY_INSERT, "Ins")
--- 				text = string.gsub(text, KEY_HOME, "Hm")
--- 				text = string.gsub(text, KEY_DELETE, "Del")
--- 				---------------------
--- 				--Numpad
--- 				---------------------
--- 				text = string.gsub(text, "Num Pad %.", "N.")
--- 				text = string.gsub(text, "Num Pad %/", "N/")
--- 				text = string.gsub(text, "Num Pad %-", "N-")
--- 				text = string.gsub(text, "Num Pad %*", "N*")
--- 				text = string.gsub(text, "Num Pad %+", "N+")
--- 				text = string.gsub(text, KEY_NUMLOCK, "NL")
--- 				text = string.gsub(text, KEY_NUMPAD0, "N0")
--- 				text = string.gsub(text, KEY_NUMPAD1, "N1")
--- 				text = string.gsub(text, KEY_NUMPAD2, "N2")
--- 				text = string.gsub(text, KEY_NUMPAD3, "N3")
--- 				text = string.gsub(text, KEY_NUMPAD4, "N4")
--- 				text = string.gsub(text, KEY_NUMPAD5, "N5")
--- 				text = string.gsub(text, KEY_NUMPAD6, "N6")
--- 				text = string.gsub(text, KEY_NUMPAD7, "N7")
--- 				text = string.gsub(text, KEY_NUMPAD8, "N8")
--- 				text = string.gsub(text, KEY_NUMPAD9, "N9")
--- 				---------------------
---
--- 				if hotkey:GetText() == RANGE_INDICATOR then
--- 					hotkey:SetText("")
--- 				else
--- 					hotkey:SetText(text)
--- 				end
--- 			end
--- 		end
--- 	end
--- end
--- #endregion
 -- #region Main Tweaks
 local function OnEvent(self, event, ...)
 	if event == "ADDON_LOADED" then
@@ -107,22 +31,11 @@ local function OnEvent(self, event, ...)
 		-- BagsBar:Hide()
 		-- #endregion
 
-		-- Only show player unit frame on hover
-		-- MainStatusTrackingBarContainer:Hide()
-		-- -- Hide player frame when not hovered
-		-- PlayerFrame:SetAlpha(0)
-		-- -- on mouseover show with fade
-		-- PlayerFrame:HookScript("OnEnter", function(self)
-		--   UIFrameFadeIn(self, 0.6 * (1-self:GetAlpha()), self:GetAlpha(), 1)
-		-- end)
-		-- -- on mouseover leave hide with fade
-		-- PlayerFrame:HookScript("OnLeave", function(self)
-		--   UIFrameFadeIn(self, 0.6 * self:GetAlpha(), self:GetAlpha(), 0)
-		-- end)
-
 		-- #region CVARs
 		-- Player silhouette behind objects
 		SetCVar("cameraIndirectVisibility", 1)
+		-- Uber tooltip, 2 sets items/spells to cursor while rest to edit mode position
+		SetCVar("UberTooltips", 2)
 		-- Player camera weird shit inside buildings
 		SetCVar("cameraIndirectOffset", 10)
 		-- Mage invisibility fx
@@ -161,7 +74,7 @@ local function OnEvent(self, event, ...)
 		-- Personal Resource Display
 		SetCVar("NameplatePersonalShowAlways", 0)
 		SetCVar("NameplatePersonalShowInCombat", 1)
-		SetCVar("NameplatePersonalShowWithTarget", 0)
+		SetCVar("NameplatePersonalShowWithTarget", 1)
 
 		-- Floating Combat
 		SetCVar("floatingCombatTextCombatHealing", 0)
@@ -171,7 +84,7 @@ local function OnEvent(self, event, ...)
 		SetCVar("autoDismountFlying", 1)
 
 		-- Comparison tooltips, 0 = hold shift to show, 1 = always show
-		SetCVar("alwaysCompareItems", 1)
+		SetCVar("alwaysCompareItems", 0)
 
 		-- Audio
 		SetCVar("Sound_EnableEmoteSounds", 1) -- Allow emote sounds
@@ -206,23 +119,8 @@ local function OnEvent(self, event, ...)
 				-- turn off
 				SetCVar("nameplateShowFriends", 0)
 			end
-		elseif bbpLoaded then
-			-- SetCVar("NamePlateHorizontalScale", 1) -- reduce horizontal scale
-			-- SetCVar("NamePlateVerticalScale", 3) -- reduce horizontal scale
-			-- SetCVar("nameplateLargerScale", 1)
-			-- SetCVar("NamePlateClassificationScale", 1)
-			-- SetCVar("nameplateSelectedScale", 1.05)
-			-- SetCVar("nameplateMinScale", 1)
-			-- SetCVar("nameplateMaxScale", 1)
-			-- SetCVar("nameplateGlobalScale", 1.1)
-			-- SetCVar("nameplateOverlapV", 0.85) -- Vertical overlap
-			-- SetCVar("nameplateOverlapH", 0.8) -- Horizontal overlap
-			-- SetCVar("nameplateMaxAlpha", 1)
-			-- SetCVar("nameplateMinAlpha", 0.6)
-			-- SetCVar("nameplateOccludedAlphaMult", 1)
 		end
 		-- #endregion
-
 		--#endregion
 
 		-- Set edit mode profile to 1st custom profile by default
