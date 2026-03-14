@@ -2,7 +2,6 @@
 MacroToolkitDB = {
 ["char"] = {
 ["Stormclout - Tichondrius"] = {
-["classFile"] = "MONK",
 ["macros"] = {
 [131] = {
 ["icon"] = "134400",
@@ -20,9 +19,9 @@ MacroToolkitDB = {
 ["body"] = "#showtooltip\n/cast [known: Ring of peace, @cursor] Ring of Peace\n/cast [known: Song of chi-ji] Song of chi-ji\n",
 },
 [143] = {
-["icon"] = "620830",
-["name"] = "Black Ox",
-["body"] = "#showtooltip Provoke\n/targetexact Black Ox Statue\n/cast Provoke\n/targetlasttarget\n",
+["icon"] = "606543",
+["name"] = " ",
+["body"] = "#showtooltip Spinning Crane Kick\n/use Fire-Eater's Vial\n/cast Spinning Crane Kick\n",
 },
 [122] = {
 ["icon"] = "642414",
@@ -50,7 +49,7 @@ MacroToolkitDB = {
 ["body"] = "#showtooltip\n/cast Breath of fire\n/use Fire-eater's Vial\n",
 },
 [136] = {
-["icon"] = "988194",
+["icon"] = "134400",
 ["name"] = " ",
 ["body"] = "#showtooltip [known: Whirling Dragon Punch] Whirling Dragon Punch; [known: Strike of the Windlord] Strike of the Windlord\n/cast [known: Whirling Dragon Punch] Whirling Dragon Punch\n/cast [known: Strike of the Windlord] Strike of the Windlord\n",
 },
@@ -60,9 +59,9 @@ MacroToolkitDB = {
 ["body"] = "#showtooltip Zenith\n/use Saltwater Potion\n/cast Zenith\n",
 },
 [144] = {
-["icon"] = "615340",
-["name"] = "Dismiss",
-["body"] = "/run if not UnitAffectingCombat(\"player\")then for i=1,4 do n=\"t\"..i CreateFrame(\"Button\",n,UIParent,\"SecureUnitButtonTemplate\")_G[n]:SetAttribute(\"type\", \"destroytotem\")_G[n]:SetAttribute(\"totem-slot\",i)end end\n/click t1\n/click t2\n/click t3\n/click t4\n",
+["icon"] = "620830",
+["name"] = "Black Ox",
+["body"] = "#showtooltip Provoke\n/targetexact Black Ox Statue\n/cast Provoke\n/targetlasttarget\n",
 },
 [129] = {
 ["icon"] = "1360980",
@@ -124,10 +123,138 @@ MacroToolkitDB = {
 ["name"] = " ",
 ["body"] = "#showtooltip\n/cast [@mouseover, exists, harm][] Touch of Death\n/use Seafarer's Slidewhistle\n",
 },
-[145] = {
+[146] = {
 ["icon"] = "7252953",
 ["name"] = "Teleport Home",
 ["body"] = "#plumber:home\n/click PLMR_HOME1\n",
+},
+[145] = {
+["icon"] = "615340",
+["name"] = "Dismiss",
+["body"] = "/run if not UnitAffectingCombat(\"player\")then for i=1,4 do n=\"t\"..i CreateFrame(\"Button\",n,UIParent,\"SecureUnitButtonTemplate\")_G[n]:SetAttribute(\"type\", \"destroytotem\")_G[n]:SetAttribute(\"totem-slot\",i)end end\n/click t1\n/click t2\n/click t3\n/click t4\n",
+},
+},
+["classFile"] = "MONK",
+["backups"] = {
+},
+},
+["Neonvoid - Tichondrius"] = {
+["classFile"] = "PRIEST",
+["macros"] = {
+[131] = {
+["icon"] = "134400",
+["name"] = " ",
+["body"] = "#showtooltip\n/cast [@mouseover,help,exists] Rapture;[] Rapture\n",
+},
+[135] = {
+["icon"] = "134400",
+["name"] = " ",
+["body"] = "#showtooltip\n/cast [@mouseover,help,exists][] Renew\n",
+},
+[139] = {
+["icon"] = "134400",
+["name"] = " ",
+["body"] = "#showtoolip\n/cast [mod:shift,@focus,exists,harm,nodead][] Psychic Horror\n",
+},
+[143] = {
+["icon"] = "134400",
+["name"] = " ",
+["body"] = "#showtooltip\n/cast [@mouseover,help,exists,nodead][] Void shift\n",
+},
+[122] = {
+["icon"] = "463835",
+["name"] = " ",
+["body"] = "#showtooltip\n/cast [@mouseover,help,exists,nodead][] Leap of Faith\n",
+},
+[124] = {
+["icon"] = "134400",
+["name"] = " ",
+["body"] = "#showtooltip [known: Void Eruption] Void Eruption; [known: Dark Ascension] Dark Ascension\n/use 13\n/use Tempered Potion\n/cast [known: Void Eruption] Void Eruption\n/cast [known: Dark Ascension] Dark Ascension\n",
+},
+[126] = {
+["icon"] = "135987",
+["name"] = " ",
+["body"] = "#showtooltip\n/cast [@player] Power Word: Fortitude\n/use Goblin Weather Machine - Prototype 01-B\n/use Thaumaturgist's Orb\n",
+},
+[128] = {
+["icon"] = "237563",
+["name"] = " ",
+["body"] = "#showtooltip Dispersion\n/use Thaumaturgist's Orb\n/cast Dispersion\n",
+},
+[132] = {
+["icon"] = "134400",
+["name"] = " ",
+["body"] = "#showtooltip\n/cast [@mouseover,help,exists][] Pain Suppression\n",
+},
+[136] = {
+["icon"] = "135907",
+["name"] = " ",
+["body"] = "#showtooltip\n/cast [@mouseover,help,exists][] Flash Heal\n",
+},
+[140] = {
+["icon"] = "458230",
+["name"] = " ",
+["body"] = "#showtooltip\n/cancelaura Dispersion\n/cast [mod:shift,@focus,exists,harm,nodead][] Silence\n",
+},
+[129] = {
+["icon"] = "135928",
+["name"] = " ",
+["body"] = "#showtooltip\n/cast [@player] Levitate\n/cancelaura levitate\n",
+},
+[133] = {
+["icon"] = "134400",
+["name"] = " ",
+["body"] = "#showtooltip\n/cast [@mouseover,help,exists][] Power Word: Life\n",
+},
+[137] = {
+["icon"] = "134400",
+["name"] = " ",
+["body"] = "#showtooltip\n/cast [@cursor] Power Word: Barrier\n",
+},
+[141] = {
+["icon"] = "136206",
+["name"] = " ",
+["body"] = "#showtooltip Mind Control\n/cast [nochanneling: Mind Control,mod:shift,@focus,exists,harm,nodead][nochanneling: Mind Control] Mind Controll\n/stopcasting [channeling: Mind Control]\n",
+},
+[121] = {
+["icon"] = "642580",
+["name"] = " ",
+["body"] = "#showtooltip\n/cast [nomod,@player] Angelic Feather;[mod:shift,@cursor] Angelic Feather; [@player] Angelic Feather;\n/use prismatic bauble\n",
+},
+[123] = {
+["icon"] = "135940",
+["name"] = " ",
+["body"] = "#showtooltip\n/cast [@mouseover,help,exists][] Power Word: Shield\n",
+},
+[125] = {
+["icon"] = "135939",
+["name"] = " ",
+["body"] = "#showtooltip Power Infusion\n/cast [@focus,exists,help,nodead] Power Infusion;[@mouseover,help,exists,nodead] Power Infusion;[] Power Infusion;\n",
+},
+[127] = {
+["icon"] = "135978",
+["name"] = " ",
+["body"] = "#showtooltip\n/cast [@mouseover,harm,exists][] Vampiric Touch\n",
+},
+[130] = {
+["icon"] = "135739",
+["name"] = " ",
+["body"] = "#showtooltip\n/cast [@cursor] Mass Dispel\n",
+},
+[134] = {
+["icon"] = "136207",
+["name"] = " ",
+["body"] = "#showtooltip\n/cast [@mouseover,harm,exists][] Shadow Word: Pain\n",
+},
+[138] = {
+["icon"] = "134400",
+["name"] = " ",
+["body"] = "#showtooltip\n/cast [known:457042] Shadow Crash\n/cast [known:205385, @cursor] Shadow Crash\n",
+},
+[142] = {
+["icon"] = "136224",
+["name"] = " ",
+["body"] = "#showtooltip mind blast\n/cancelaura Dispersion\n/cast Mind Blast\n",
 },
 },
 ["backups"] = {
@@ -136,6 +263,7 @@ MacroToolkitDB = {
 },
 ["profileKeys"] = {
 ["Stormclout - Tichondrius"] = "profile",
+["Neonvoid - Tichondrius"] = "profile",
 },
 ["global"] = {
 ["ebackups"] = {
@@ -145,19 +273,20 @@ MacroToolkitDB = {
 },
 ["profiles"] = {
 ["profile"] = {
-["x"] = 845.69482421875,
-["scale"] = 1.2,
+["x"] = 633.1947631835938,
+["height"] = 423.9999389648438,
+["scale"] = 1.4,
 ["override"] = true,
 ["confirmdelete"] = false,
 ["visconditions"] = true,
-["width"] = 637.9999389648438,
+["width"] = 638,
 ["fonts"] = {
 ["mfont"] = "1",
 ["mifont"] = "1",
 ["edfont"] = "1",
 ["errfont"] = "1",
 },
-["y"] = 332.2777099609375,
+["y"] = 300.630859375,
 },
 },
 }

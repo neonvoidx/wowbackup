@@ -164,3 +164,10 @@ BtWLoadouts: enabled
 EnhanceQoL: enabled
 FrogskisCursorTrail: enabled
 EnhanceQoLSharedMedia: enabled
+BattleGroundEnemiesFixed: enabled
+CityGuide: enabled
+MacroToolkit: enabled
+MacroToolkitIcons: enabled
+tullaCTC: enabled
+tullaCTC_Config: enabled
+WorldQuestTab: enabled

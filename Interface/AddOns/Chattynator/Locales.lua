@@ -476,8 +476,9 @@ L["ABBREV_RAID"] = "Р"
 L["ABBREV_RAID_LEADER"] = "РЛ"
 L["ABBREV_SERVICES"] = "У"
 L["ABBREV_TRADE"] = "Т"
---[[Translation missing --]]
-L["ACTION_UNAVAILABLE_DUE_TO_ENCOUNTER_RESTRICTIONS"] = "Action unavailable, due to encounter restrictions"
+L["ACTION_UNAVAILABLE_DUE_TO_ENCOUNTER_RESTRICTIONS"] = [=[Действие недоступно из-за возникших ограничений
+
+]=]
 L["ADDONS"] = "Аддоны"
 L["ALL_ADDONS"] = "Все аддоны"
 L["ALL_MESSAGES"] = "Все сообщения"
@@ -514,17 +515,19 @@ L["ENTER_PROFILE_NAME"] = "Введите имя профиля:"
 L["FADE_CHAT_WHEN_NOT_IN_USE"] = "Скрыть чат, когда он не используется"
 L["FLASH_TABS_ON"] = "Мигание вкладок"
 L["FORMATTING"] = "Форматирование"
-L["GLOBAL_SETTINGS"] = "Настройка Chattynator"
+L["GLOBAL_SETTINGS"] = [=[Глобальные настройки
+
+]=]
 L["GW2_UI"] = "GW2 UI"
 L["JOIN_THE_DISCORD"] = "Присоединяйтесь к Discord"
---[[Translation missing --]]
-L["KEEP_EDIT_BOX_VISIBLE"] = "Keep edit box visible"
+L["KEEP_EDIT_BOX_VISIBLE"] = "Оставить поле редактирования видимым"
 L["LAYOUT"] = "Макет"
-L["LEAVE_UNTICKED_ADDONS"] = "Оставьте этот флажок неактивным, чтобы контролировать, какие аддоны будут отображаться."
+L["LEAVE_UNTICKED_ADDONS"] = "Оставьте эту галочку неактивной, чтобы контролировать, какие аддоны будут отображаться."
 L["LEFT_INSIDE"] = "Слева внутри"
 L["LEFT_OUTSIDE"] = "Слева снаружи"
---[[Translation missing --]]
-L["LINE_SPACING"] = "Line spacing"
+L["LINE_SPACING"] = [=[Межстрочный интервал
+
+]=]
 L["LINK"] = "Ссылка"
 L["LOCK_CHAT"] = "Заблокировать чат"
 L["MESSAGE_COLORS"] = "Цвета сообщений"
@@ -535,7 +538,7 @@ L["MESSAGE_FONT_SHADOW"] = "Тень шрифта сообщений"
 L["MESSAGE_FONT_SIZE"] = "Размер шрифта сообщений"
 L["MESSAGE_SPACING"] = "Интервал между сообщениями"
 L["MESSAGE_TYPES"] = "Типы сообщений"
-L["MOUSEOVER"] = "По наведению курсором"
+L["MOUSEOVER"] = "При наведении курсора мыши"
 L["MOVE_TO_NEW_WINDOW"] = "Переместить в новое окно"
 L["NEVER"] = "Никогда"
 L["NEW_PROFILE_BLANK"] = "Новый профиль (пустой)"
@@ -549,7 +552,7 @@ L["PROFILES"] = "Профили"
 L["QUICK_CHAT"] = "Быстрый чат"
 L["REDUCE_REDUNDANT_TEXT"] = "Сократить лишний текст"
 L["RELOAD"] = "Перезагрузка"
-L["RELOAD_REQUIRED"] = "Требуется перезагрузка UI. Выполнить сейчас?"
+L["RELOAD_REQUIRED"] = "Требуется перезагрузка UI. Перезагрузить сейчас?"
 L["REMOVE_OLD_MESSAGES"] = "Удалять старые сообщения"
 L["RENAME_TAB"] = "Переименовать вкладку"
 L["RENAME_X_MESSAGE"] = "Переименовать \"%s\" в:"

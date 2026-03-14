@@ -2,7 +2,7 @@
 REFlexSettings = {
 ["ForceCivilisedClock"] = false,
 ["MiniMapButtonSettings"] = {
-["minimapPos"] = 163.9984604388424,
+["minimapPos"] = 134.4553658805554,
 ["hide"] = false,
 },
 ["ShowServerName"] = false,
@@ -27,4 +27,5 @@ REFlexSettings = {
 REFlexDatabase = {
 }
 REFlexHonorDatabase = {
+[1773442800] = 150,
 }

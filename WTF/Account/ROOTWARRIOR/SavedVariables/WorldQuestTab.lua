@@ -29,9 +29,9 @@ BWQDB = {
 },
 ["list"] = {
 },
-["pin"] = {
-},
 ["external"] = {
+},
+["pin"] = {
 },
 ["general"] = {
 },

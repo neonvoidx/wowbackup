@@ -5,6 +5,7 @@ HealthBarColorDB = {
 ["profileKeys"] = {
 ["Mäñýfäçëð - Tichondrius"] = "Default",
 ["Clevagirl - Mal'Ganis"] = "Default",
+["Heilsatan - Tichondrius"] = "Default",
 ["Auteist - Mal'Ganis"] = "Default",
 ["Ofpuss - Mal'Ganis"] = "Default",
 ["Gehyo - Tichondrius"] = "Default",
@@ -12,19 +13,19 @@ HealthBarColorDB = {
 ["Choppiez - Mal'Ganis"] = "Default",
 ["Starstypeshi - Tichondrius"] = "Default",
 ["Gehyo - Mal'Ganis"] = "Default",
-["Heilsatan - Tichondrius"] = "Default",
 ["Choppiez - Tichondrius"] = "Default",
 ["Praisesun - Tichondrius"] = "Default",
-["Auteist - Tichondrius"] = "Default",
 ["Smaugchamp - Tichondrius"] = "Default",
-["Ofpusstwo - Tichondrius"] = "Default",
+["Auteist - Tichondrius"] = "Default",
+["Neonvoid - Tichondrius"] = "Default",
+["Hellavator - Tichondrius"] = "Default",
 ["Hellavator - Mal'Ganis"] = "Default",
 ["Cullnvoid - Tichondrius"] = "Default",
 ["Stormclout - Tichondrius"] = "Default",
 ["Reedingo - Mal'Ganis"] = "Default",
 ["Stormclout - Mal'Ganis"] = "Default",
 ["Rakeist - Mal'Ganis"] = "Default",
-["Hellavator - Tichondrius"] = "Default",
+["Ofpusstwo - Tichondrius"] = "Default",
 ["Hellowalls - Mal'Ganis"] = "Default",
 ["Ofpuss - Tichondrius"] = "Default",
 ["Praisesun - Mal'Ganis"] = "Default",
@@ -57,8 +58,11 @@ HealthBarColorDB = {
 ["nameFont"] = "1",
 ["powerFont"] = "1",
 },
-["DebuffColor"] = {
-["enabled"] = true,
+["Font_targettarget"] = {
+["nameFontOutlineMode"] = 3,
+["healthFont"] = "1",
+["nameFont"] = "1",
+["powerFont"] = "1",
 },
 ["Font_party4"] = {
 ["nameFontOutlineMode"] = 3,
@@ -100,11 +104,8 @@ HealthBarColorDB = {
 ["nameFontSize"] = 9,
 ["powerFont"] = "1",
 },
-["Font_boss3"] = {
-["nameFontOutlineMode"] = 3,
-["healthFont"] = "1",
-["nameFont"] = "1",
-["powerFont"] = "1",
+["BiggerHealthBar"] = {
+["enabled"] = true,
 },
 ["Textures"] = {
 ["powerBarTexture"] = "Wglass",
@@ -129,8 +130,11 @@ HealthBarColorDB = {
 ["Font_party2"] = {
 ["nameFontOutlineMode"] = 3,
 },
-["BiggerHealthBar"] = {
-["enabled"] = true,
+["Font_boss3"] = {
+["nameFontOutlineMode"] = 3,
+["healthFont"] = "1",
+["nameFont"] = "1",
+["powerFont"] = "1",
 },
 ["Font_focustarget"] = {
 ["nameFontOutlineMode"] = 3,
@@ -138,11 +142,8 @@ HealthBarColorDB = {
 ["nameFont"] = "1",
 ["powerFont"] = "1",
 },
-["Font_targettarget"] = {
-["nameFontOutlineMode"] = 3,
-["healthFont"] = "1",
-["nameFont"] = "1",
-["powerFont"] = "1",
+["DebuffColor"] = {
+["enabled"] = true,
 },
 ["MinimapButton"] = {
 ["minimapPos"] = 69.587679475945,

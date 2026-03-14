@@ -4,17 +4,19 @@ BtWLoadoutsCollapsed = {
 },
 ["talents"] = {
 },
-["essences"] = {
+["actionbars"] = {
 },
 ["pvptalents"] = {
 },
-["actionbars"] = {
+["essences"] = {
 },
 ["conditions"] = {
 },
 ["dftalents"] = {
 },
 ["profiles"] = {
+["children"] = {
+},
 },
 }
 BtWLoadoutsCategories = {
@@ -49,11 +51,11 @@ BtWLoadoutsFilters = {
 },
 ["talents"] = {
 },
-["essences"] = {
+["actionbars"] = {
 },
 ["pvptalents"] = {
 },
-["actionbars"] = {
+["essences"] = {
 },
 ["conditions"] = {
 },

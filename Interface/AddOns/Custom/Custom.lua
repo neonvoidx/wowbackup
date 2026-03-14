@@ -21,9 +21,16 @@ local function OnEvent(self, event, ...)
 		-- Disable default cast bar
 		-- PlayerCastingBarFrame:UnregisterAllEvents()
 		-- Auto collapse buffs
-		-- BuffFrame.CollapseAndExpandButton:SetChecked(false)
-		-- BuffFrame.CollapseAndExpandButton:UpdateOrientation()
-		-- BuffFrame:SetBuffsExpandedState()
+		BuffFrame.CollapseAndExpandButton:SetAlpha(0)
+		BuffFrame.CollapseAndExpandButton:SetChecked(false)
+		BuffFrame.CollapseAndExpandButton:UpdateOrientation()
+		BuffFrame:SetBuffsExpandedState()
+		BuffFrame.CollapseAndExpandButton:HookScript("OnEnter", function()
+			BuffFrame.CollapseAndExpandButton:SetAlpha(1)
+		end)
+		BuffFrame.CollapseAndExpandButton:HookScript("OnLeave", function()
+			BuffFrame.CollapseAndExpandButton:SetAlpha(0)
+		end)
 		-- Hide micromenu
 		-- MicroMenuContainer:Hide()
 		-- -- Hide bag bar
@@ -84,9 +91,19 @@ local function OnEvent(self, event, ...)
 		SetCVar("UnitNamePlayerPVPTitle", 1) -- Show character title
 
 		-- Personal Resource Display
+		SetCVar("nameplateShowSelf", 1)
 		SetCVar("NameplatePersonalShowAlways", 0)
 		SetCVar("NameplatePersonalShowInCombat", 1)
 		SetCVar("NameplatePersonalShowWithTarget", 1)
+
+		SetCVar("damageMeterEnabled", 1)
+		SetCVar("damageMeterResetOnNewInstance", 1)
+
+		SetCVar("assistedCombatHighlight", 0)
+		SetCVar("combatWarningsEnabled", 1)
+		SetCVar("externalDefensivesEnabled", 1)
+		SetCVar("cooldownViewerEnabled", 1)
+		SetCVar("spellDiminishPVPEnemiesEnabled", 1)
 
 		-- Floating Combat
 		SetCVar("floatingCombatTextCombatHealing", 0)

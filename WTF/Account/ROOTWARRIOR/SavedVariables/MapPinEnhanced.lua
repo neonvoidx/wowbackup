@@ -2,7 +2,7 @@
 MapPinEnhancedDB = {
 ["trackerVisible"] = false,
 ["minimapIcon"] = {
-["minimapPos"] = 113.5160583503319,
+["minimapPos"] = 165.3461936196945,
 ["hide"] = false,
 ["lock"] = false,
 },
@@ -10,7 +10,7 @@ MapPinEnhancedDB = {
 ["y"] = -40.19581985473633,
 ["x"] = 12.74316596984863,
 },
-["superTrackingOther"] = false,
+["superTrackingOther"] = true,
 ["sets"] = {
 ["set-ef3112b9-9423"] = {
 ["name"] = "Imported Set 2",
@@ -273,13 +273,13 @@ MapPinEnhancedDB = {
 ["mapID"] = 199,
 ["color"] = "Yellow",
 },
-["setpin-43e2db32-889b"] = {
-["y"] = 0.65,
-["x"] = 0.53,
+["setpin-e706f795-8120"] = {
+["y"] = 0.176,
+["x"] = 0.725,
 ["title"] = "Map Pin",
 ["setTracked"] = false,
-["order"] = 9,
-["mapID"] = 100,
+["order"] = 7,
+["mapID"] = 105,
 ["color"] = "Yellow",
 },
 ["setpin-66c1f039-aa4a"] = {
@@ -300,13 +300,13 @@ MapPinEnhancedDB = {
 ["mapID"] = 376,
 ["color"] = "Yellow",
 },
-["setpin-e706f795-8120"] = {
-["y"] = 0.176,
-["x"] = 0.725,
+["setpin-43e2db32-889b"] = {
+["y"] = 0.65,
+["x"] = 0.53,
 ["title"] = "Map Pin",
 ["setTracked"] = false,
-["order"] = 7,
-["mapID"] = 105,
+["order"] = 9,
+["mapID"] = 100,
 ["color"] = "Yellow",
 },
 ["setpin-fa1b0cad-82d5"] = {

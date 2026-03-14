@@ -83,6 +83,7 @@ local defaultSettings = {
     guildNameColorRGB = {0, 1, 0},
     npcTitleColorRGB = {1, 0.85, 0},
     npcTitleScale = 1,
+    friendIndicatorScale = 1,
     hideNpcMurlocScale = 1,
     hideNpcMurlocYPos = 0,
     partyPointerWidth = 36,
@@ -1499,7 +1500,6 @@ local function SendUpdateMessage()
                 whileDead = true,
                 }
                 StaticPopup_Show("BBP_NP_UPDATE")
-                print("asd")
             end)
         else
             BetterBlizzPlatesDB.scStart = nil
@@ -1825,13 +1825,9 @@ end
 
 --#################################################################################################
 function BBP.isFriendlistFriend(unit)
-    -- for i = 1, C_FriendList.GetNumFriends() do
-    --     local friendInfo = C_FriendList.GetFriendInfoByIndex(i)
-    --     if friendInfo and friendInfo.name == UnitName(unit) then
-    --         return true
-    --     end
-    -- end
-    return false
+    local guid = UnitGUID(unit)
+    if not guid or issecretvalue(guid) then return false end
+    return C_FriendList.IsFriend(guid)
 end
 
 function BBP.isUnitGuildmate(unit)
@@ -1841,17 +1837,18 @@ function BBP.isUnitGuildmate(unit)
 end
 
 function BBP.isUnitBNetFriend(unit)
-    -- local unitName = UnitName(unit)
-    -- local numBNetFriends = BNGetNumFriends()
-    -- for i = 1, numBNetFriends do
-    --     local accountInfo = C_BattleNet.GetFriendAccountInfo(i)
-    --     if accountInfo and accountInfo.gameAccountInfo and accountInfo.gameAccountInfo.isOnline then
-    --         local characterName = accountInfo.gameAccountInfo.characterName
-    --         if characterName and characterName == unitName then
-    --             return true
-    --         end
-    --     end
-    -- end
+    local unitName = UnitName(unit)
+    if issecretvalue(unitName) then return false end
+    local numBNetFriends = BNGetNumFriends()
+    for i = 1, numBNetFriends do
+        local accountInfo = C_BattleNet.GetFriendAccountInfo(i)
+        if accountInfo and accountInfo.gameAccountInfo and accountInfo.gameAccountInfo.isOnline then
+            local characterName = accountInfo.gameAccountInfo.characterName
+            if characterName and characterName == unitName then
+                return true
+            end
+        end
+    end
     return false
 end
 
@@ -1956,11 +1953,20 @@ function BBP.TexturePRD()
     local frame = PersonalResourceDisplayFrame
     if not frame then return end
     if BetterBlizzPlatesDB.useCustomTextureForSelf then
+        frame.changedPrdHealthTexture = true
         frame.HealthBarsContainer.healthBar:SetStatusBarTexture(customTextureSelf)
         textureExtraBars(frame.HealthBarsContainer.healthBar, customTextureSelf)
+    elseif frame.changedPrdHealthTexture then
+        frame.HealthBarsContainer.healthBar:SetStatusBarTexture("Interface\\TargetingFrame\\UI-TargetingFrame-BarFill")
+        textureExtraBars(frame.HealthBarsContainer.healthBar, "Interface\\TargetingFrame\\UI-TargetingFrame-BarFill")
+        frame.changedPrdHealthTexture = nil
     end
     if BetterBlizzPlatesDB.useCustomTextureForSelfMana then
+        frame.changedPrdManaTexture = true
         frame.PowerBar:SetStatusBarTexture(customTextureSelfMana)
+    elseif frame.changedPrdManaTexture then
+        frame.PowerBar:SetStatusBarTexture("Interface\\TargetingFrame\\UI-TargetingFrame-BarFill")
+        frame.changedPrdManaTexture = nil
     end
 
     -- fix borders
@@ -2192,12 +2198,20 @@ function BBP.SetFontBasedOnOption(namePlateObj, specifiedSize, forcedOutline)
         font = fontPath
         outline = forcedOutline or "THINOUTLINE, SLUG"
         currentSize = (specifiedSize + 2) or (fontSize + 3)
+        -- if db.customFontShadowOff then
+        --     namePlateObj:SetShadowColor(0, 0, 0, 0)
+        -- else
+        --     namePlateObj:SetShadowColor(0, 0, 0, 1)
+        --     namePlateObj:SetShadowOffset(1, -1)
+        -- end
     else
         local defaultNamePlateFontFlags = db.defaultNamePlateFontFlags
         local defaultFontSize = db.defaultFontSize
         font = db.defaultNamePlateFont
         outline = forcedOutline or defaultNamePlateFontFlags
         currentSize = specifiedSize or defaultFontSize
+        -- namePlateObj:SetShadowColor(0, 0, 0, 1)
+        -- namePlateObj:SetShadowOffset(1, -1)
     end
 
     if outline == "" then
@@ -2207,16 +2221,6 @@ function BBP.SetFontBasedOnOption(namePlateObj, specifiedSize, forcedOutline)
     end
 
     namePlateObj:SetFont(font, currentSize, outline)
-    if db.customFontShadowOff then
-        if not namePlateObj.oldShadow then
-            local r, g, b, a = namePlateObj:GetShadowColor()
-            namePlateObj.oldShadow = {r, g, b, a}
-            namePlateObj:SetShadowColor(0, 0, 0, 0)
-        end
-    elseif namePlateObj.oldShadow then
-        namePlateObj:SetShadowColor(unpack(namePlateObj.oldShadow))
-        namePlateObj.oldShadow = nil
-    end
 end
 
 --#################################################################################################
@@ -3645,10 +3649,10 @@ function BBP.AuraColor(frame)
     if auraColor then
         config.auraColorRGB = auraColor
         frame.healthBar:SetStatusBarColor(config.auraColorRGB.r, config.auraColorRGB.g, config.auraColorRGB.b, config.auraColorRGB.a)
-        if (config.focusTargetIndicator and config.focusTargetIndicatorColorNameplate and frame == BBP.currentFocusNameplate)  then
+        if (config.focusTargetIndicator and config.focusTargetIndicatorColorNameplate and UnitIsUnit(frame.unit, "focus"))  then
             frame.healthBar:SetStatusBarColor(unpack(config.focusTargetIndicatorColorNameplateRGB))
         end
-        if (config.targetIndicator and config.targetIndicatorColorNameplate and frame == BBP.currentTargetNameplate) then
+        if (config.targetIndicator and config.targetIndicatorColorNameplate and UnitIsUnit(frame.unit, "target")) then
             frame.healthBar:SetStatusBarColor(unpack(config.targetIndicatorColorNameplateRGB))
         end
     else
@@ -3977,17 +3981,35 @@ end
 
 function BBP.ColorPRD()
     local frame = PersonalResourceDisplayFrame and PersonalResourceDisplayFrame.HealthBarsContainer
+    if not frame then return end
     _, playerClass = UnitClass("player")
     playerClassColor = RAID_CLASS_COLORS[playerClass]
-    if BetterBlizzPlatesDB.personalNpTRP3Color then
-        local r,g,b = GetRPNameColor("player")
-        if r then
-            frame.healthBar:SetStatusBarColor(r, g, b)
+
+    local function ColorPRD()
+        if BetterBlizzPlatesDB.personalNpTRP3Color then
+            local r,g,b = GetRPNameColor("player")
+            if r then
+                frame.healthBar:SetStatusBarColor(r, g, b)
+            elseif BetterBlizzPlatesDB.classColorPersonalNameplate then
+                frame.healthBar:SetStatusBarColor(playerClassColor.r, playerClassColor.g, playerClassColor.b)
+            end
         elseif BetterBlizzPlatesDB.classColorPersonalNameplate then
             frame.healthBar:SetStatusBarColor(playerClassColor.r, playerClassColor.g, playerClassColor.b)
+        else
+            frame.healthBar:SetStatusBarColor(0, 1, 0)
         end
-    elseif BetterBlizzPlatesDB.classColorPersonalNameplate then
-        frame.healthBar:SetStatusBarColor(playerClassColor.r, playerClassColor.g, playerClassColor.b)
+    end
+
+    ColorPRD()
+
+    if not BBP.prdColorHook then
+        hooksecurefunc(frame.healthBar, "SetStatusBarColor", function(self)
+            if self.changingColor then return end
+            self.changingColor = true
+            ColorPRD()
+            self.changingColor = nil
+        end)
+        BBP.prdColorHook = true
     end
 end
 
@@ -4631,7 +4653,7 @@ local function ChangeHealthbarBorderSize(frame)
         local minPixels = 0.5
         local unit = frame.unit
 
-        if frame == BBP.currentTargetNameplate then
+        if UnitIsUnit(unit, "target") then
             borderSize = config.nameplateTargetBorderSize
         -- elseif UnitIsUnit("player", unit) then
         --     borderSize = config.nameplatePersonalBorderSize
@@ -4663,7 +4685,7 @@ local function ChangeHealthbarBorderSize(frame)
         local borderSize = config.nameplateBorderSize
         local unit = frame.unit
 
-        if frame == BBP.currentTargetNameplate then
+        if UnitIsUnit(unit, "target") then
             borderSize = config.nameplateTargetBorderSize
         end
 
@@ -4795,7 +4817,7 @@ local function HookNameplateCastbarHide(frame)
         frame.castBar:HookScript("OnHide", function()
             if frame:IsForbidden() then return end
             if not frame.unit then return end
-            if frame == BBP.currentTargetNameplate then --BBP.isMidnight
+            if UnitIsUnit(frame.unit, "target") then
                 BBP.UpdateNameplateResourcePositionForCasting(frame:GetParent(), true)
             end
         end)
@@ -4811,7 +4833,7 @@ local function HideFriendlyHealthbar(frame)
     if frame.healthBar and info.isFriend then
         if BetterBlizzPlatesDB.friendlyHideHealthBar and info.isPlayer then
             local showOnTarget = BetterBlizzPlatesDB.friendlyHideHealthBarShowTarget
-            if showOnTarget and frame == BBP.currentTargetNameplate and UnitIsUnit(frame.unit, "target") then
+            if showOnTarget and UnitIsUnit(frame.unit, "target") then
                 frame.HealthBarsContainer:SetAlpha(1)
                 frame.HealthBarsContainer.alphaZero = false
                 frame.selectionHighlight:SetAlpha(config.hideTargetHighlight and 0 or (info.isFriend and ((config.friendlyHideHealthBar and not info.isNpc) or (config.friendlyHideHealthBarNpc and info.isNpc)) and 0) or 0.22)
@@ -4862,23 +4884,33 @@ local function FriendIndicator(frame)
         frame.friendIndicator:SetSize(20, 21)
     end
 
+    frame.friendIndicator:SetScale(BetterBlizzPlatesDB.friendIndicatorScale or 1)
+
+    local anchor = BetterBlizzPlatesDB.friendIndicatorAnchor or "LEFT"
+    local oppositeAnchor = BBP.GetOppositeAnchor(anchor)
+
+    local function SetAnchor(relativeTo)
+        frame.friendIndicator:ClearAllPoints()
+        frame.friendIndicator:SetPoint(oppositeAnchor, relativeTo, anchor, 0, 0)
+    end
+
     if isFriend or isBnetFriend then
         frame.friendIndicator:SetDesaturated(false)
         frame.friendIndicator:SetVertexColor(1, 1, 1)
         frame.friendIndicator:Show()
         if BBP.isInArena and frame.specNameText and frame.specNameText ~= "" then
-            frame.friendIndicator:SetPoint("RIGHT", frame.specNameText, "LEFT", 0, 0)
+            SetAnchor(frame.specNameText)
         else
-            frame.friendIndicator:SetPoint("RIGHT", frame.name, "LEFT", 0, 0)
+            SetAnchor(frame.name)
         end
     elseif isGuildmate then
         frame.friendIndicator:SetDesaturated(true)
         frame.friendIndicator:SetVertexColor(0, 1, 0)
         frame.friendIndicator:Show()
         if BBP.isInArena and frame.specNameText and frame.specNameText ~= "" then
-            frame.friendIndicator:SetPoint("RIGHT", frame.specNameText, "LEFT", 0, 0)
+            SetAnchor(frame.specNameText)
         else
-            frame.friendIndicator:SetPoint("RIGHT", frame.name, "LEFT", 0, 0)
+            SetAnchor(frame.name)
         end
     else
         frame.friendIndicator:Hide()
@@ -6093,10 +6125,34 @@ local function HandleNamePlateAdded(unit)
         if not newBar.MaskTexture then
             newBar.MaskTexture = newBar:CreateMaskTexture()
         end
-        newBar.MaskTexture:SetTexture("interface\\castingbar\\uicastingbarfullmask")
+        --newBar.MaskTexture:SetTexture("interface\\castingbar\\uicastingbarfullmask")
+        newBar.MaskTexture:SetTexture("Interface\\AddOns\\BetterBlizzPlates\\media\\midnightNpMask.tga")
         newBar.MaskTexture:ClearAllPoints()
-        newBar.MaskTexture:SetPoint("TOPLEFT", frame.HealthBarsContainer, "TOPLEFT", -13, 1.5)
-        newBar.MaskTexture:SetPoint("BOTTOMRIGHT", frame.HealthBarsContainer, "BOTTOMRIGHT", 12, -0.5)
+        newBar.MaskTexture:SetPoint("TOPLEFT", frame.HealthBarsContainer, "TOPLEFT", -0.5, 1)
+        if not BetterBlizzPlatesDB.changeHealthbarHeight then
+            local height = BetterBlizzPlatesDB.nameplateGeneralHpHeight or 16
+            if height <= 23 then
+                newBar.MaskTexture:SetPoint("BOTTOMRIGHT", frame.HealthBarsContainer, "BOTTOMRIGHT", 0.5, -0.5)
+            elseif height <= 32 then
+                newBar.MaskTexture:SetPoint("BOTTOMRIGHT", frame.HealthBarsContainer, "BOTTOMRIGHT", 0.5, -1)
+            elseif height <= 40 then
+                newBar.MaskTexture:SetPoint("BOTTOMRIGHT", frame.HealthBarsContainer, "BOTTOMRIGHT", 0.5, -1.5)
+            else
+                newBar.MaskTexture:SetPoint("BOTTOMRIGHT", frame.HealthBarsContainer, "BOTTOMRIGHT", 0.5, -2)
+            end
+        else
+            local height = isEnemy(frame.unit) and (config.hpHeightEnemy or 11) or (config.hpHeightFriendly or 11)
+            if height <= 23 then
+                newBar.MaskTexture:SetPoint("BOTTOMRIGHT", frame.HealthBarsContainer, "BOTTOMRIGHT", 0.5, -0.5)
+            elseif height <= 32 then
+                newBar.MaskTexture:SetPoint("BOTTOMRIGHT", frame.HealthBarsContainer, "BOTTOMRIGHT", 0.5, -1)
+            elseif height <= 40 then
+                newBar.MaskTexture:SetPoint("BOTTOMRIGHT", frame.HealthBarsContainer, "BOTTOMRIGHT", 0.5, -1.5)
+            else
+                newBar.MaskTexture:SetPoint("BOTTOMRIGHT", frame.HealthBarsContainer, "BOTTOMRIGHT", 0.5, -2)
+            end
+        end
+
         newBar.MaskTexture:Show()
         castTexture:AddMaskTexture(newBar.MaskTexture)
 

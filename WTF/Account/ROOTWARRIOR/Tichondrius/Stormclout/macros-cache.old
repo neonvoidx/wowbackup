@@ -120,3 +120,7 @@ VER 3 0100000000000047 "Dismiss" "615340"
 /click t3
 /click t4
 END
+VER 3 0100000000000048 "Teleport Home" "7252953"
+#plumber:home
+/click PLMR_HOME1
+END

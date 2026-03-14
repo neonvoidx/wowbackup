@@ -107,6 +107,11 @@ VER 3 0100000000000044 " " "134400"
 /cast [@mouseover, exists, harm][] Touch of Death
 /use Seafarer's Slidewhistle
 END
+VER 3 0100000000000049 " " "INV_Misc_QuestionMark"
+#showtooltip Spinning Crane Kick
+/use Fire-Eater's Vial
+/cast Spinning Crane Kick
+END
 VER 3 010000000000003D "Black Ox" "134400"
 #showtooltip Provoke
 /targetexact Black Ox Statue
