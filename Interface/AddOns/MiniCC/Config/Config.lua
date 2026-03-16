@@ -65,21 +65,30 @@ function M:Init()
 
 	-- Standalone config window
 	local version = C_AddOns.GetAddOnMetadata(addonName, "Version")
+	local windowWidth = 1000
+	local windowHeight = 600
 
 	local window = mini:CreateStandaloneWindow({
 		Name = addonName .. "ConfigFrame",
 		Title = addonName,
 		Subtitle = version,
-		Width = 1080,
-		Height = 680,
+		Width = windowWidth,
+		Height = windowHeight,
 	})
 
 	M.Window = window
 
-	-- reset the window position for people who accidentally drag it off screen
-	window:SetScript("OnShow", function(self)
-		self:ClearAllPoints()
-		self:SetPoint("CENTER", UIParent, "CENTER", 0, 0)
+	-- Center the window when it becomes visible from a hidden state.
+	local windowPreviouslyHidden = true
+	window:HookScript("OnHide", function()
+		windowPreviouslyHidden = true
+	end)
+	window:HookScript("OnShow", function(self)
+		if windowPreviouslyHidden then
+			windowPreviouslyHidden = false
+			self:ClearAllPoints()
+			self:SetPoint("CENTER", UIParent, "CENTER", 0, 0)
+		end
 	end)
 
 	-- Test button in the title bar
@@ -172,12 +181,20 @@ function M:Init()
 				M.OtherAddons:Build(content)
 			end,
 		},
+		{
+			Key = "Miscellaneous",
+			Title = L["Miscellaneous_Short"] or L["Miscellaneous"],
+			Build = function(content)
+				M.Miscellaneous:Build(content)
+			end,
+		},
 	}
 
-	local windowWidth = 1050
 	local contentPadding = 12
 	local windowInset = 2 + contentPadding * 2 + 8 -- border, padding, and small right margin
-	local contentWidth = windowWidth - windowInset
+	local tabStripWidth = 130
+	local tabHorizontalPadding = 12
+	local contentWidth = windowWidth - windowInset - tabStripWidth - tabHorizontalPadding
 	mini.ContentWidth = contentWidth
 	mini.TextMaxWidth = contentWidth - windowInset
 
@@ -186,10 +203,11 @@ function M:Init()
 		InitialKey = "General",
 		ScrollBody = true,
 		ScrollContentWidth = contentWidth,
-		ContentInsets = {
-			Top = verticalSpacing,
-		},
+		ContentInsets = { Top = 4 },
 		TabFitToParent = true,
+		Vertical = true,
+		StripWidth = tabStripWidth,
+		HorizontalPadding = tabHorizontalPadding,
 		Tabs = tabs,
 	})
 
@@ -229,6 +247,13 @@ function M:Init()
 		window:Toggle()
 	end
 
+	-- add a /rl alias if the user doesn't have one defined already
+	if not SLASH_RL1 then
+		SLASH_RL1 = "/rl"
+		SlashCmdList["RL"] = function()
+			C_UI.Reload()
+		end
+	end
 end
 
 ---@class Config
@@ -249,3 +274,4 @@ end
 ---@field PrecogGuesser PrecogGuesserConfig
 ---@field OtherAddons OtherAddonsConfig
 ---@field FriendlyIndicator FriendlyIndicatorConfig
+---@field Miscellaneous MiscellaneousConfig

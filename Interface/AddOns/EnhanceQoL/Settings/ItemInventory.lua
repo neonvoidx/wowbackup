@@ -534,7 +534,7 @@ local function onInspect(arg1)
 									if (statName:find("EMPTY_SOCKET") or statName:find("empty_socket")) and addon.variables.allowedSockets[statName] then socketCount = socketCount + statValue end
 								end
 								local neededSockets = addon.variables.shouldSocketed[key] or 0
-								if neededSockets then
+								if neededSockets > 0 then
 									local cSeason, isPvP = getTooltipInfo(itemLink)
 									if addon.variables.shouldSocketedChecks[key] then
 										if not addon.variables.shouldSocketedChecks[key].func(cSeason, isPvP) then neededSockets = 0 end
@@ -746,7 +746,7 @@ local function setIlvlText(element, slot)
 		if eItem and not eItem:IsItemEmpty() then
 			eItem:ContinueOnItemLoad(function()
 				local link = eItem:GetItemLink()
-				local itemQuality = link and select(3, GetItemInfo(link)) or nil
+				local itemQuality = link and select(3, C_Item.GetItemInfo(link)) or nil
 				updateCharRarityGlow(element, itemQuality)
 				local _, itemID, enchantID = string.match(link, "item:(%d+):(%d*):(%d*):(%d*):(%d*):(%d*):(%d*):(%d*):(%d*):(%d*):(%d*)")
 				local displayCount = 0
@@ -757,7 +757,7 @@ local function setIlvlText(element, slot)
 						if (statName:find("EMPTY_SOCKET") or statName:find("empty_socket")) and addon.variables.allowedSockets[statName] then socketCount = socketCount + statValue end
 					end
 					local neededSockets = addon.variables.shouldSocketed[slot] or 0
-					if neededSockets then
+					if neededSockets > 0 then
 						local cSeason, isPvP = getTooltipInfo(link)
 						if addon.variables.shouldSocketedChecks[slot] then
 							if not addon.variables.shouldSocketedChecks[slot].func(cSeason, isPvP) then neededSockets = 0 end
@@ -1456,6 +1456,7 @@ local function applyMerchantButtonInfo()
 
 							-- Upgrade arrow for Merchant items
 							if addon.db["showUpgradeArrowOnBagItems"] then
+								local isRecommended = addon.functions.IsItemRecommendedForSpec and addon.functions.IsItemRecommendedForSpec(itemLink, itemEquipLoc, classID, subclassID)
 								local function getEquipSlotsFor(equipLoc)
 									if equipLoc == "INVTYPE_FINGER" then
 										return { 11, 12 }
@@ -1491,21 +1492,24 @@ local function applyMerchantButtonInfo()
 									return nil
 								end
 
-								local invSlot = select(4, C_Item.GetItemInfoInstant(itemLink))
-								local slots = getEquipSlotsFor(invSlot)
-								local baseline
-								if slots and #slots > 0 then
-									for _, s in ipairs(slots) do
-										local eqLink = GetInventoryItemLink("player", s)
-										local eqIlvl = eqLink and (C_Item.GetDetailedItemLevelInfo(eqLink) or 0) or 0
-										if baseline == nil then
-											baseline = eqIlvl
-										else
-											baseline = math.min(baseline, eqIlvl)
+								local isUpgrade = false
+								if isRecommended then
+									local invSlot = select(4, C_Item.GetItemInfoInstant(itemLink))
+									local slots = getEquipSlotsFor(invSlot)
+									local baseline
+									if slots and #slots > 0 then
+										for _, s in ipairs(slots) do
+											local eqLink = GetInventoryItemLink("player", s)
+											local eqIlvl = eqLink and (C_Item.GetDetailedItemLevelInfo(eqLink) or 0) or 0
+											if baseline == nil then
+												baseline = eqIlvl
+											else
+												baseline = math.min(baseline, eqIlvl)
+											end
 										end
 									end
+									isUpgrade = baseline ~= nil and candidateIlvl and candidateIlvl > baseline
 								end
-								local isUpgrade = baseline ~= nil and candidateIlvl and candidateIlvl > baseline
 								if isUpgrade then
 									addon.functions.EnsureBagUpgradeIcon(itemButton)
 									local posUp = addon.db["bagUpgradeIconPosition"] or "BOTTOMRIGHT"
@@ -1868,6 +1872,10 @@ local function refreshMerchantButtons()
 	end
 end
 
+local function refreshBaganatorCornerWidgets()
+	if addon.Vendor and addon.Vendor.functions and addon.Vendor.functions.refreshBaganatorWidgets then addon.Vendor.functions.refreshBaganatorWidgets() end
+end
+
 local function refreshItemLevelDisplays()
 	if addon.functions and addon.functions.setCharFrame then addon.functions.setCharFrame() end
 	refreshBagFrames(true)
@@ -1878,6 +1886,7 @@ local function refreshItemLevelDisplays()
 		local guid = UnitGUID(InspectFrame.unit)
 		if guid then onInspect(guid) end
 	end
+	refreshBaganatorCornerWidgets()
 end
 
 addon.functions.refreshItemLevelDisplays = refreshItemLevelDisplays
@@ -1897,6 +1906,7 @@ local function setBagDisplayOption(key, value)
 	elseif key == "upgrade" then
 		addon.db["showUpgradeArrowOnBagItems"] = enabled
 		refreshBagFrames(true)
+		refreshBaganatorCornerWidgets()
 	elseif key == "bind" then
 		addon.db["showBindOnBagItems"] = enabled
 		refreshBagFrames(false)
@@ -1909,6 +1919,7 @@ local function applyBagDisplaySelection(selection)
 	addon.db["showUpgradeArrowOnBagItems"] = selection.upgrade == true
 	addon.db["showBindOnBagItems"] = selection.bind == true
 	refreshBagFrames(true)
+	refreshBaganatorCornerWidgets()
 end
 
 local bindDesc = L["showBindOnBagItemsDesc"]

@@ -116,51 +116,42 @@ local function OnAuraInfo(watcher, container)
 	local slotIndex = 1
 
 	-- Show the latest CC aura
-	for i = #ccAuras, 1, -1 do
-		local aura = ccAuras[i]
-		if aura.SpellIcon and aura.StartTime and aura.TotalDuration then
-			container:SetSlot(slotIndex, {
-				Texture = aura.SpellIcon,
-				StartTime = aura.StartTime,
-				Duration = aura.TotalDuration,
-				Alpha = aura.IsCC,
-				ReverseCooldown = db.Modules.PortraitModule.ReverseCooldown,
-				FontScale = db.FontScale,
-			})
-			return
-		end
+	for _, aura in ipairs(ccAuras) do
+		container:SetSlot(slotIndex, {
+			Texture = aura.SpellIcon,
+			StartTime = aura.StartTime,
+			Duration = aura.TotalDuration,
+			Alpha = aura.IsCC,
+			ReverseCooldown = db.Modules.PortraitModule.ReverseCooldown,
+			FontScale = db.FontScale,
+		})
+		return
 	end
 
 	-- Show the latest defensive aura
-	for i = #defensiveAuras, 1, -1 do
-		local aura = defensiveAuras[i]
-		if aura.SpellIcon and aura.StartTime and aura.TotalDuration then
-			container:SetSlot(slotIndex, {
-				Texture = aura.SpellIcon,
-				StartTime = aura.StartTime,
-				Duration = aura.TotalDuration,
-				Alpha = aura.IsDefensive,
-				ReverseCooldown = db.Modules.PortraitModule.ReverseCooldown,
-				FontScale = db.FontScale,
-			})
-			return
-		end
+	for _, aura in ipairs(defensiveAuras) do
+		container:SetSlot(slotIndex, {
+			Texture = aura.SpellIcon,
+			StartTime = aura.StartTime,
+			Duration = aura.TotalDuration,
+			Alpha = aura.IsDefensive,
+			ReverseCooldown = db.Modules.PortraitModule.ReverseCooldown,
+			FontScale = db.FontScale,
+		})
+		return
 	end
 
 	-- Show the latest important aura
-	for i = #importantAuras, 1, -1 do
-		local aura = importantAuras[i]
-		if aura.SpellIcon and aura.StartTime and aura.TotalDuration then
-			container:SetSlot(slotIndex, {
-				Texture = aura.SpellIcon,
-				StartTime = aura.StartTime,
-				Duration = aura.TotalDuration,
-				Alpha = aura.IsImportant,
-				ReverseCooldown = db.Modules.PortraitModule.ReverseCooldown,
-				FontScale = db.FontScale,
-			})
-			return
-		end
+	for _, aura in ipairs(importantAuras) do
+		container:SetSlot(slotIndex, {
+			Texture = aura.SpellIcon,
+			StartTime = aura.StartTime,
+			Duration = aura.TotalDuration,
+			Alpha = aura.IsImportant,
+			ReverseCooldown = db.Modules.PortraitModule.ReverseCooldown,
+			FontScale = db.FontScale,
+		})
+		return
 	end
 
 	-- No auras to display, clear the slot if it was used
@@ -249,7 +240,7 @@ local function Attach(unit, events)
 		return
 	end
 
-	local watcher = unitWatcher:New(unit, events)
+	local watcher = unitWatcher:New(unit, events, nil, nil, Enum.UnitAuraSortDirection.Reverse)
 	watchers[unit] = watcher
 
 	local container = CreateContainer(unitFrame, portrait)
@@ -403,6 +394,13 @@ function M:StopTesting()
 	M:Refresh()
 end
 
+local function GetCCSortOptions()
+	if db.CCNativeOrder then
+		return Enum.UnitAuraSortRule.Default, Enum.UnitAuraSortDirection.Normal
+	end
+	return Enum.UnitAuraSortRule.Unsorted, Enum.UnitAuraSortDirection.Reverse
+end
+
 function M:Refresh()
 	local moduleEnabled = moduleUtil:IsModuleEnabled(ModuleName.Portrait)
 
@@ -414,6 +412,11 @@ function M:Refresh()
 
 	-- Module is enabled, ensure watchers are enabled
 	EnableWatchers()
+
+	local sortRule, sortDirection = GetCCSortOptions()
+	for _, watcher in pairs(watchers) do
+		watcher:SetSort(sortRule, sortDirection)
+	end
 
 	if testModeActive then
 		RefreshTestIcons()

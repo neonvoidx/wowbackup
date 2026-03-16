@@ -48,6 +48,7 @@ local getSeparatorSegmentCount
 local shouldUseDiscreteSeparatorSegments
 local refreshDiscreteSegmentsForBar
 local ensureEditModeRegistration
+local ensureRelativeFrameFallback
 local lastBarSelectionPerSpec = {}
 local lastSpecCopySelection = {}
 local lastProfileShareScope = {}
@@ -66,6 +67,38 @@ local ResourcebarVars = {
 	THRESHOLD_DEFAULT = { 1, 1, 1, 0.5 },
 	DEFAULT_THRESHOLDS = { 25, 50, 75, 90 },
 	DEFAULT_THRESHOLD_COUNT = 3,
+	ABSOLUTE_THRESHOLD_COLOR_MAX_POINTS = 10,
+	ABSOLUTE_THRESHOLD_COLOR_DEFAULT_COUNT = 2,
+	ABSOLUTE_THRESHOLD_COLOR_VALUE_CAP = 10,
+	ABSOLUTE_THRESHOLD_COLOR_VALUE_CAP_VOID_METAMORPHOSIS = 50,
+	ABSOLUTE_THRESHOLD_COLOR_VALUE_CAP_CONTINUOUS = 200,
+	ABSOLUTE_THRESHOLD_COLOR_VALUE_CAP_PERCENT = 100,
+	ABSOLUTE_THRESHOLD_COLOR_DEFAULTS = {
+		{ value = 2, color = { 1.00, 0.78, 0.25, 1.0 } },
+		{ value = 4, color = { 0.95, 0.55, 0.20, 1.0 } },
+		{ value = 6, color = { 0.95, 0.90, 0.20, 1.0 } },
+		{ value = 8, color = { 0.45, 0.90, 0.25, 1.0 } },
+		{ value = 10, color = { 0.20, 0.90, 0.40, 1.0 } },
+	},
+	ABSOLUTE_THRESHOLD_COLOR_DEFAULTS_VOID_METAMORPHOSIS = {
+		{ value = 10, color = { 1.00, 0.78, 0.25, 1.0 } },
+		{ value = 20, color = { 0.95, 0.55, 0.20, 1.0 } },
+		{ value = 30, color = { 0.95, 0.90, 0.20, 1.0 } },
+		{ value = 40, color = { 0.45, 0.90, 0.25, 1.0 } },
+		{ value = 50, color = { 0.20, 0.90, 0.40, 1.0 } },
+	},
+	ABSOLUTE_THRESHOLD_COLOR_DEFAULTS_CONTINUOUS = {
+		{ value = 50, color = { 1.00, 0.78, 0.25, 1.0 } },
+		{ value = 100, color = { 0.95, 0.55, 0.20, 1.0 } },
+		{ value = 150, color = { 0.95, 0.90, 0.20, 1.0 } },
+		{ value = 200, color = { 0.20, 0.90, 0.40, 1.0 } },
+	},
+	ABSOLUTE_THRESHOLD_COLOR_DEFAULTS_PERCENT = {
+		{ value = 25, color = { 1.00, 0.78, 0.25, 1.0 } },
+		{ value = 50, color = { 0.95, 0.55, 0.20, 1.0 } },
+		{ value = 75, color = { 0.95, 0.90, 0.20, 1.0 } },
+		{ value = 100, color = { 0.20, 0.90, 0.40, 1.0 } },
+	},
 	WHITE = { 1, 1, 1, 1 },
 	DEFAULT_MAX_COLOR = { 0, 1, 0, 1 },
 	DEFAULT_RB_TEX = "Interface\\Buttons\\WHITE8x8", -- historical default (Solid)
@@ -87,6 +120,7 @@ local ResourcebarVars = {
 	VOID_METAMORPHOSIS_SPELL_ID = 1225789,
 	VOID_META_TALENT_SOUL_GLUTTON_SPELL_ID = 1247534,
 	COLLAPSING_STAR_SPELL_ID = 1227702,
+	TIP_OF_THE_SPEAR_SPELL_ID = 260286,
 	DEFAULT_MAELSTROM_WEAPON_FIVE_COLOR = { 0.10, 0.85, 0.55, 1 },
 	ROGUE_CHARGED_COMBO_DEFAULTS = {
 		enabled = true,
@@ -245,6 +279,9 @@ local COSMETIC_BAR_KEYS = {
 	"thresholdColor",
 	"thresholdThickness",
 	"thresholdCount",
+	"useAbsoluteThresholdColors",
+	"absoluteThresholdColorPointCount",
+	"absoluteThresholdColorPoints",
 	"showCooldownText",
 	"cooldownTextFontSize",
 	"backdrop",
@@ -254,29 +291,61 @@ local wasMax = false
 local wasMaxPower = {}
 local curve = C_CurveUtil and C_CurveUtil.CreateColorCurve()
 local curvePower = {}
-local function SetColorCurvePoints(maxColor)
-	if curve then
-		curve = C_CurveUtil and C_CurveUtil.CreateColorCurve()
-		curve:SetType(Enum.LuaCurveType.Cosine)
-		if maxColor then
-			curve:AddPoint(1.0, CreateColor(maxColor[1], maxColor[2], maxColor[3], maxColor[4])) -- sattes Grün
-		else
-			curve:AddPoint(1.0, CreateColor(0.0, 0.85, 0.0, 1)) -- sattes Grün
-		end
-		curve:AddPoint(0.8, CreateColor(0.6, 0.85, 0.0, 1)) -- Gelbgrün
-		curve:AddPoint(0.6, CreateColor(0.9, 0.9, 0.0, 1)) -- Knallgelb
-		curve:AddPoint(0.4, CreateColor(0.95, 0.6, 0.0, 1)) -- Orange
-		curve:AddPoint(0.2, CreateColor(0.95, 0.25, 0.0, 1)) -- Rot-Orange
-		curve:AddPoint(0.0, CreateColor(0.9, 0.0, 0.0, 1)) -- Rot
+
+function ResourceBars.HashCurveStep(hash, value)
+	local numeric = tonumber(value)
+	if numeric == nil then numeric = 0 end
+	numeric = floor((numeric * 1000) + 0.5)
+	return ((hash * 131) + numeric) % 2147483647
+end
+
+function ResourceBars.HashCurveColor(hash, color)
+	if type(color) ~= "table" then
+		hash = ResourceBars.HashCurveStep(hash, 1)
+		hash = ResourceBars.HashCurveStep(hash, 1)
+		hash = ResourceBars.HashCurveStep(hash, 1)
+		hash = ResourceBars.HashCurveStep(hash, 1)
+		return hash
 	end
+	hash = ResourceBars.HashCurveStep(hash, color[1] or color.r or 1)
+	hash = ResourceBars.HashCurveStep(hash, color[2] or color.g or 1)
+	hash = ResourceBars.HashCurveStep(hash, color[3] or color.b or 1)
+	hash = ResourceBars.HashCurveStep(hash, color[4] or color.a or 1)
+	return hash
+end
+
+local function SetColorCurvePoints(maxColor)
+	if not (C_CurveUtil and C_CurveUtil.CreateColorCurve and CreateColor and Enum and Enum.LuaCurveType and Enum.LuaCurveType.Cosine) then return end
+	local signature = ResourceBars.HashCurveColor(17, maxColor)
+	if curve and ResourceBars._curveSignature == signature then return end
+	curve = C_CurveUtil.CreateColorCurve()
+	if not curve then return end
+	curve:SetType(Enum.LuaCurveType.Cosine)
+	if maxColor then
+		curve:AddPoint(1.0, CreateColor(maxColor[1], maxColor[2], maxColor[3], maxColor[4])) -- sattes Grün
+	else
+		curve:AddPoint(1.0, CreateColor(0.0, 0.85, 0.0, 1)) -- sattes Grün
+	end
+	curve:AddPoint(0.8, CreateColor(0.6, 0.85, 0.0, 1)) -- Gelbgrün
+	curve:AddPoint(0.6, CreateColor(0.9, 0.9, 0.0, 1)) -- Knallgelb
+	curve:AddPoint(0.4, CreateColor(0.95, 0.6, 0.0, 1)) -- Orange
+	curve:AddPoint(0.2, CreateColor(0.95, 0.25, 0.0, 1)) -- Rot-Orange
+	curve:AddPoint(0.0, CreateColor(0.9, 0.0, 0.0, 1)) -- Rot
+	ResourceBars._curveSignature = signature
 end
 local function SetColorCurvePointsPower(pType, maxColor, defColor)
-	if curve then
-		curvePower[pType] = C_CurveUtil and C_CurveUtil.CreateColorCurve()
-		curvePower[pType]:SetType(Enum.LuaCurveType.Cosine)
-		if maxColor then curvePower[pType]:AddPoint(1.0, CreateColor(maxColor[1], maxColor[2], maxColor[3], maxColor[4])) end
-		if defColor then curvePower[pType]:AddPoint(1.0, CreateColor(defColor[1], defColor[2], defColor[3], defColor[4])) end
-	end
+	if not pType then return end
+	if not (C_CurveUtil and C_CurveUtil.CreateColorCurve and CreateColor and Enum and Enum.LuaCurveType and Enum.LuaCurveType.Cosine) then return end
+	ResourceBars._curvePowerSignature = ResourceBars._curvePowerSignature or {}
+	local signature = ResourceBars.HashCurveColor(ResourceBars.HashCurveColor(17, maxColor), defColor)
+	if curvePower[pType] and ResourceBars._curvePowerSignature[pType] == signature then return end
+	local builtCurve = C_CurveUtil.CreateColorCurve()
+	if not builtCurve then return end
+	builtCurve:SetType(Enum.LuaCurveType.Cosine)
+	if maxColor then builtCurve:AddPoint(1.0, CreateColor(maxColor[1], maxColor[2], maxColor[3], maxColor[4])) end
+	if defColor then builtCurve:AddPoint(1.0, CreateColor(defColor[1], defColor[2], defColor[3], defColor[4])) end
+	curvePower[pType] = builtCurve
+	ResourceBars._curvePowerSignature[pType] = signature
 end
 SetColorCurvePoints()
 
@@ -287,11 +356,12 @@ local function getHealthPercent(unit, curHealth, maxHealth)
 	return (curHealth or 0) / max(maxHealth or 1, 1) * 100
 end
 
-local function getPowerPercent(unit, powerEnum, curPower, maxPower)
+local function getPowerPercent(unit, powerEnum, curPower, maxPower, curve)
 	if addon.functions and addon.functions.GetPowerPercent then
-		return addon.functions.GetPowerPercent(unit, powerEnum, curPower, maxPower, true)
+		return addon.functions.GetPowerPercent(unit, powerEnum, curPower, maxPower, true, curve)
 		-- Unmodified flag defaults to true for personal resource bars
 	end
+	if curve and UnitPowerPercent then return UnitPowerPercent(unit, powerEnum, true, curve) end
 	curPower = curPower or UnitPower(unit, powerEnum)
 	maxPower = maxPower or UnitPowerMax(unit, powerEnum)
 	if maxPower and maxPower > 0 then return (curPower or 0) / maxPower * 100 end
@@ -327,6 +397,13 @@ local function formatPercentDisplay(value, cfg)
 	return (addon.variables and addon.variables.isMidnight) and (percentText .. "%") or percentText
 end
 
+function ResourceBars.FormatBarTextByStyle(style, currentText, maxText, percentText)
+	if style == "PERCENT" then return percentText end
+	if style == "CURRENT" then return currentText end
+	if style == "CURPERCENT" then return currentText .. " - " .. percentText end
+	return currentText .. " / " .. maxText
+end
+
 local function isSpellKnownSafe(spellId)
 	if not spellId then return false end
 	if issecretvalue and issecretvalue(spellId) then return false end
@@ -338,6 +415,7 @@ ResourceBars.PowerLabels = {
 	MAELSTROM_WEAPON = (C_Spell.GetSpellName(RB.MAELSTROM_WEAPON_SPELL_ID)) or "Maelstrom Weapon",
 	ICICLES = (C_Spell.GetSpellName(RB.ICICLES_SPELL_ID)) or (L and L["Icicles"]) or "Icicles",
 	VOID_METAMORPHOSIS = (C_Spell.GetSpellName(RB.VOID_METAMORPHOSIS_SPELL_ID)) or "Void Metamorphosis",
+	TIP_OF_THE_SPEAR = (C_Spell.GetSpellName(RB.TIP_OF_THE_SPEAR_SPELL_ID)) or "Tip of the Spear",
 	STAGGER = (_G and _G["STAGGER"]) or "Stagger",
 }
 
@@ -357,6 +435,14 @@ RB.AURA_POWER_CONFIG = {
 		maxStacks = 5,
 		visualSegments = 5,
 		defaultColor = { 0.45, 0.80, 1.00, 1 },
+		useMaxColorDefault = true,
+		defaultShowSeparator = true,
+	},
+	TIP_OF_THE_SPEAR = {
+		spellIds = { RB.TIP_OF_THE_SPEAR_SPELL_ID },
+		maxStacks = 3,
+		visualSegments = 3,
+		defaultColor = { 1.00, 0.60, 0.20, 1 },
 		useMaxColorDefault = true,
 		defaultShowSeparator = true,
 	},
@@ -845,11 +931,13 @@ local function maybeChainSecondaryAnchor(cfg, prevType)
 	if not cfg or cfg.anchor then return end
 	if not prevType then return end
 	cfg.anchor = {
-		point = "TOP",
-		relativePoint = "BOTTOM",
+		point = "TOPLEFT",
+		relativePoint = "BOTTOMLEFT",
 		relativeFrame = "EQOL" .. prevType .. "Bar",
 		x = 0,
-		y = -2,
+		y = RB.DEFAULT_STACK_SPACING,
+		autoSpacing = true,
+		matchRelativeWidth = true,
 	}
 end
 
@@ -1119,25 +1207,34 @@ ensureSpecCfg = function(specIndex)
 					specCfg[pType].enabled = true
 					if pType == mainType and pType ~= "HEALTH" then
 						local a = specCfg[pType].anchor or {}
-						a.point = a.point or "CENTER"
-						a.relativePoint = a.relativePoint or "CENTER"
-						local targetFrame = a.relativeFrame or frameNameFor("HEALTH")
-						if not selection.HEALTH and targetFrame == frameNameFor("HEALTH") then targetFrame = nil end
-						a.relativeFrame = targetFrame
-						a.x = a.x or 0
-						a.y = a.y or -2
-						a.autoSpacing = a.autoSpacing or nil
-						a.matchRelativeWidth = a.matchRelativeWidth or true
+						local explicitRelative = type(a.relativeFrame) == "string" and a.relativeFrame ~= ""
+						local targetFrame = explicitRelative and a.relativeFrame or frameNameFor("HEALTH")
+						if not selection.HEALTH and targetFrame == frameNameFor("HEALTH") and not explicitRelative then targetFrame = nil end
+						if not explicitRelative and targetFrame and targetFrame ~= "" and targetFrame ~= "UIParent" then
+							a.point = "TOPLEFT"
+							a.relativePoint = "BOTTOMLEFT"
+							a.relativeFrame = targetFrame
+							a.x = 0
+							a.y = RB.DEFAULT_STACK_SPACING
+							a.autoSpacing = true
+							a.matchRelativeWidth = a.matchRelativeWidth or true
+						else
+							a.point = a.point or "CENTER"
+							a.relativePoint = a.relativePoint or "CENTER"
+							a.relativeFrame = targetFrame
+							a.x = a.x or 0
+							a.y = a.y or -2
+							a.autoSpacing = a.autoSpacing or nil
+							a.matchRelativeWidth = a.matchRelativeWidth or true
+						end
 						specCfg[pType].anchor = a
 						prevFrame = frameNameFor(pType)
 					elseif pType ~= "HEALTH" then
 						local a = specCfg[pType].anchor or {}
-						a.point = a.point or "CENTER"
-						a.relativePoint = a.relativePoint or "CENTER"
 						local explicitRelative = type(a.relativeFrame) == "string" and a.relativeFrame ~= ""
-						local chained = false
+						local targetFrame = explicitRelative and a.relativeFrame or nil
 						if not explicitRelative then
-							local targetFrame = frameNameFor("HEALTH")
+							targetFrame = frameNameFor("HEALTH")
 							if class == "DRUID" then
 								if pType == "COMBO_POINTS" then
 									targetFrame = frameNameFor("ENERGY")
@@ -1148,13 +1245,23 @@ ensureSpecCfg = function(specIndex)
 							else
 								targetFrame = prevFrame
 							end
-							a.relativeFrame = targetFrame
-							chained = targetFrame and targetFrame ~= ""
 						end
-						a.x = a.x or 0
-						if chained then a.y = a.y or -2 end
-						a.autoSpacing = a.autoSpacing or nil
-						if chained then a.matchRelativeWidth = a.matchRelativeWidth or true end
+						local chained = (not explicitRelative) and targetFrame and targetFrame ~= "" and targetFrame ~= "UIParent"
+						if chained then
+							a.point = "TOPLEFT"
+							a.relativePoint = "BOTTOMLEFT"
+							a.relativeFrame = targetFrame
+							a.x = 0
+							a.y = RB.DEFAULT_STACK_SPACING
+							a.autoSpacing = true
+							a.matchRelativeWidth = a.matchRelativeWidth or true
+						else
+							a.point = a.point or "CENTER"
+							a.relativePoint = a.relativePoint or "CENTER"
+							a.x = a.x or 0
+							if not explicitRelative then a.relativeFrame = targetFrame end
+							a.autoSpacing = a.autoSpacing or nil
+						end
 						specCfg[pType].anchor = a
 						if class ~= "DRUID" then prevFrame = frameNameFor(pType) end
 					else
@@ -1562,6 +1669,7 @@ local function shouldNormalizeAtlasColor(cfg, pType, bar)
 		if cfg.useClassColor == true then return false end
 		if cfg.useGradient == true then return false end
 		if cfg.useMaxColor == true and bar and bar._usingMaxColor then return false end
+		if cfg.useAbsoluteThresholdColors == true and bar and bar._usingAbsoluteThresholdColor then return false end
 	end
 	local auraDef = RB.AURA_POWER_CONFIG and RB.AURA_POWER_CONFIG[pType]
 	if auraDef and auraDef.defaultColor then return false end
@@ -1899,6 +2007,38 @@ applyAbsorbLayout = function(bar, cfg)
 	absorb._rbOverfill = overfill and true or false
 end
 
+function ResourceBars.SyncAbsorbBarAppearance(bar, cfg, forceLayout)
+	if not bar or not bar.absorbBar then return end
+	cfg = cfg or {}
+
+	local absorb = bar.absorbBar
+	local desiredTexture = resolveTexture({ barTexture = cfg.absorbTexture or cfg.barTexture })
+	local currentTexture = absorb.GetStatusBarTexture and absorb:GetStatusBarTexture() or nil
+	local currentPath = currentTexture and currentTexture.GetTexture and currentTexture:GetTexture() or nil
+	local textureChanged = currentPath ~= desiredTexture
+
+	if textureChanged and absorb.SetStatusBarTexture then absorb:SetStatusBarTexture(desiredTexture) end
+
+	local wantVertical = cfg.verticalFill == true
+	if absorb.SetOrientation and absorb._isVertical ~= wantVertical then
+		absorb:SetOrientation(wantVertical and "VERTICAL" or "HORIZONTAL")
+		absorb._isVertical = wantVertical
+	end
+
+	local tex = absorb.GetStatusBarTexture and absorb:GetStatusBarTexture() or nil
+	if tex and tex.SetRotation then
+		if textureChanged or absorb._texRotation ~= 0 then tex:SetRotation(0) end
+		if absorb._texRotation ~= 0 then textureChanged = true end
+		absorb._texRotation = 0
+	end
+
+	local reverseAbsorb = cfg.absorbReverseFill == true
+	if cfg.absorbOverfill then reverseAbsorb = false end
+	if absorb.SetReverseFill then absorb:SetReverseFill(reverseAbsorb) end
+
+	if forceLayout or textureChanged or cfg.absorbOverfill then applyAbsorbLayout(bar, cfg) end
+end
+
 local function applyBackdrop(frame, cfg)
 	if not frame then return end
 	cfg = cfg or {}
@@ -1922,7 +2062,9 @@ local function applyBackdrop(frame, cfg)
 	applyStatusBarInsets(frame, state.insets, true)
 
 	local separatedOffset = tonumber(cfg and cfg.separatedOffset) or 0
-	local hideParentBackdropForSeparated = separatedOffset > 0 and frame._rbType and shouldUseDiscreteSeparatorSegments and shouldUseDiscreteSeparatorSegments(frame._rbType, cfg)
+	local hideParentBackdropForSeparated = separatedOffset > 0
+		and frame._rbType
+		and (frame._rbType == "RUNES" or frame._rbType == "ESSENCE" or (shouldUseDiscreteSeparatorSegments and shouldUseDiscreteSeparatorSegments(frame._rbType, cfg)))
 	if hideParentBackdropForSeparated then
 		if bgFrame:IsShown() then bgFrame:Hide() end
 		if borderFrame:IsShown() then borderFrame:Hide() end
@@ -2030,6 +2172,249 @@ local function applyTextPosition(bar, cfg, baseX, baseY)
 	bar.text:SetPoint("CENTER", bar, "CENTER", ox, oy)
 end
 
+function ResourceBars.GetThresholdColorModeAndCap(pType)
+	if pType == "VOID_METAMORPHOSIS" then return "ABSOLUTE", tonumber(RB.ABSOLUTE_THRESHOLD_COLOR_VALUE_CAP_VOID_METAMORPHOSIS) or 50, 1 end
+	if pType == "MANA" or pType == "ENERGY" or pType == "RAGE" or pType == "FURY" or pType == "FOCUS" or pType == "INSANITY" or pType == "LUNAR_POWER" then
+		return "PERCENT", tonumber(RB.ABSOLUTE_THRESHOLD_COLOR_VALUE_CAP_PERCENT) or 100, 0
+	end
+	if ResourceBars.separatorEligible and ResourceBars.separatorEligible[pType] then return "ABSOLUTE", tonumber(RB.ABSOLUTE_THRESHOLD_COLOR_VALUE_CAP) or 10, 1 end
+	return "ABSOLUTE", tonumber(RB.ABSOLUTE_THRESHOLD_COLOR_VALUE_CAP_CONTINUOUS) or 200, 1
+end
+
+function ResourceBars.ClampAbsoluteThresholdColorValue(value, pType)
+	local mode, cap, minValue = ResourceBars.GetThresholdColorModeAndCap(pType)
+	local v = tonumber(value)
+	if v == nil then return nil end
+	if mode == "PERCENT" then
+		v = floor((v * 10) + 0.5) / 10
+	else
+		v = floor(v + 0.5)
+	end
+	if v < (minValue or 1) then v = minValue or 1 end
+	if v > cap then v = cap end
+	return v
+end
+
+function ResourceBars.GetDefaultAbsoluteThresholdColorPoint(index, pType)
+	local mode, cap = ResourceBars.GetThresholdColorModeAndCap(pType)
+	local defaults
+	if mode == "PERCENT" then
+		defaults = RB.ABSOLUTE_THRESHOLD_COLOR_DEFAULTS_PERCENT
+	elseif pType == "VOID_METAMORPHOSIS" then
+		defaults = RB.ABSOLUTE_THRESHOLD_COLOR_DEFAULTS_VOID_METAMORPHOSIS
+	elseif cap and cap <= (tonumber(RB.ABSOLUTE_THRESHOLD_COLOR_VALUE_CAP) or 10) then
+		defaults = RB.ABSOLUTE_THRESHOLD_COLOR_DEFAULTS
+	else
+		defaults = RB.ABSOLUTE_THRESHOLD_COLOR_DEFAULTS_CONTINUOUS
+	end
+	local fallback = type(defaults) == "table" and defaults[index]
+	if fallback == nil and type(defaults) == "table" then fallback = defaults[#defaults] end
+	local fallbackValue = fallback and (fallback.value or fallback[1]) or index
+	local value = ResourceBars.ClampAbsoluteThresholdColorValue(fallbackValue, pType)
+	if value == nil then
+		local _, _, minValue = ResourceBars.GetThresholdColorModeAndCap(pType)
+		value = minValue or 1
+	end
+	local color = fallback and (fallback.color or fallback[2]) or RB.WHITE
+	local r, g, b, a
+	if type(color) == "table" then
+		if color.r then
+			r, g, b, a = color.r or 1, color.g or 1, color.b or 1, color.a or 1
+		else
+			r, g, b, a = color[1] or 1, color[2] or 1, color[3] or 1, color[4] or 1
+		end
+	else
+		r, g, b, a = 1, 1, 1, 1
+	end
+	return value, { r, g, b, a }
+end
+
+function ResourceBars.NormalizeAbsoluteThresholdColorPoints(cfg, pType)
+	if type(cfg) ~= "table" or cfg.useAbsoluteThresholdColors ~= true then return nil end
+	local cacheByType = cfg._eqolAbsoluteThresholdColorCache
+	if not cacheByType then
+		cacheByType = {}
+		cfg._eqolAbsoluteThresholdColorCache = cacheByType
+	end
+
+	local maxPoints = tonumber(RB.ABSOLUTE_THRESHOLD_COLOR_MAX_POINTS) or 10
+	local count = tonumber(cfg.absoluteThresholdColorPointCount) or tonumber(RB.ABSOLUTE_THRESHOLD_COLOR_DEFAULT_COUNT) or 2
+	count = floor(count + 0.5)
+	if count < 1 then count = 1 end
+	if count > maxPoints then count = maxPoints end
+	local signature = ResourceBars.HashCurveStep(ResourceBars.HashCurveStep(17, count), #tostring(pType or ""))
+	local source = cfg.absoluteThresholdColorPoints
+
+	for i = 1, count do
+		local defaultValue, defaultColor = ResourceBars.GetDefaultAbsoluteThresholdColorPoint(i, pType)
+		local entry = type(source) == "table" and source[i] or nil
+		local value = ResourceBars.ClampAbsoluteThresholdColorValue(entry and (entry.value or entry[1]), pType) or defaultValue
+		local color = entry and (entry.color or entry[2]) or defaultColor
+		local r, g, b, a
+		if type(color) == "table" then
+			if color.r then
+				r, g, b, a = color.r or defaultColor[1], color.g or defaultColor[2], color.b or defaultColor[3], color.a or defaultColor[4]
+			else
+				r = color[1] or defaultColor[1]
+				g = color[2] or defaultColor[2]
+				b = color[3] or defaultColor[3]
+				a = color[4] or defaultColor[4]
+			end
+		else
+			r, g, b, a = defaultColor[1], defaultColor[2], defaultColor[3], defaultColor[4]
+		end
+
+		signature = ResourceBars.HashCurveStep(signature, value)
+		signature = ResourceBars.HashCurveStep(signature, r)
+		signature = ResourceBars.HashCurveStep(signature, g)
+		signature = ResourceBars.HashCurveStep(signature, b)
+		signature = ResourceBars.HashCurveStep(signature, a)
+	end
+
+	local cached = cacheByType[pType]
+	if cached and cached.signature == signature then return cached.points end
+
+	local points = {}
+	for i = 1, count do
+		local defaultValue, defaultColor = ResourceBars.GetDefaultAbsoluteThresholdColorPoint(i, pType)
+		local entry = type(source) == "table" and source[i] or nil
+		local value = ResourceBars.ClampAbsoluteThresholdColorValue(entry and (entry.value or entry[1]), pType) or defaultValue
+		local color = entry and (entry.color or entry[2]) or defaultColor
+		local r, g, b, a
+		if type(color) == "table" then
+			if color.r then
+				r, g, b, a = color.r or defaultColor[1], color.g or defaultColor[2], color.b or defaultColor[3], color.a or defaultColor[4]
+			else
+				r = color[1] or defaultColor[1]
+				g = color[2] or defaultColor[2]
+				b = color[3] or defaultColor[3]
+				a = color[4] or defaultColor[4]
+			end
+		else
+			r, g, b, a = defaultColor[1], defaultColor[2], defaultColor[3], defaultColor[4]
+		end
+		points[#points + 1] = { value = value, color = { r, g, b, a } }
+	end
+
+	if #points == 0 then return nil end
+	tsort(points, function(a, b) return (a.value or 0) < (b.value or 0) end)
+	cacheByType[pType] = {
+		signature = signature,
+		points = points,
+	}
+	return points
+end
+
+function ResourceBars.ResolveAbsoluteThresholdColor(cfg, currentValue, pType, maxValue)
+	if type(cfg) ~= "table" or cfg.useAbsoluteThresholdColors ~= true then return nil end
+	if issecretvalue and (issecretvalue(currentValue) or issecretvalue(maxValue)) then return nil end
+	local cur = tonumber(currentValue)
+	if cur == nil then return nil end
+	local mode = ResourceBars.GetThresholdColorModeAndCap(pType)
+	if mode == "PERCENT" then
+		local mx = tonumber(maxValue)
+		if mx ~= nil and mx > 0 then cur = (cur / mx) * 100 end
+		cur = floor((cur * 10) + 0.5) / 10
+	end
+	local points = ResourceBars.NormalizeAbsoluteThresholdColorPoints(cfg, pType)
+	if not points then return nil end
+	local selectedColor
+	for i = 1, #points do
+		local point = points[i]
+		if cur >= (point.value or 0) then
+			selectedColor = point.color
+		else
+			break
+		end
+	end
+	if not selectedColor then return nil end
+	return selectedColor[1] or 1, selectedColor[2] or 1, selectedColor[3] or 1, selectedColor[4] or 1
+end
+
+function ResourceBars.ResolveAbsoluteThresholdColorForSecretPower(cfg, pType, powerEnum, curPower, maxPower, baseColor, maxColor)
+	if type(cfg) ~= "table" or cfg.useAbsoluteThresholdColors ~= true then return nil end
+	if not powerEnum then return nil end
+	local points = ResourceBars.NormalizeAbsoluteThresholdColorPoints(cfg, pType)
+	if not points or #points == 0 then return nil end
+
+	if not (C_CurveUtil and C_CurveUtil.CreateColorCurve and CreateColor and Enum and Enum.LuaCurveType and Enum.LuaCurveType.Step) then return nil end
+	local br, bg, bb, ba = 1, 1, 1, 1
+	if type(baseColor) == "table" then
+		br = baseColor[1] or 1
+		bg = baseColor[2] or 1
+		bb = baseColor[3] or 1
+		ba = baseColor[4] or 1
+	end
+	local useMaxColor = type(maxColor) == "table"
+	local mr, mg, mb, ma = br, bg, bb, ba
+	if useMaxColor then
+		mr = maxColor[1] or mr
+		mg = maxColor[2] or mg
+		mb = maxColor[3] or mb
+		ma = maxColor[4] or ma
+	end
+
+	local pointsCache = cfg._eqolAbsoluteThresholdColorCache and cfg._eqolAbsoluteThresholdColorCache[pType]
+	local curveCacheByType = cfg._eqolAbsoluteThresholdCurveCache
+	if not curveCacheByType then
+		curveCacheByType = {}
+		cfg._eqolAbsoluteThresholdCurveCache = curveCacheByType
+	end
+	local signature = ResourceBars.HashCurveStep(17, pointsCache and pointsCache.signature or #points)
+	signature = ResourceBars.HashCurveColor(signature, { br, bg, bb, ba })
+	signature = ResourceBars.HashCurveStep(signature, useMaxColor and 1 or 0)
+	if useMaxColor then signature = ResourceBars.HashCurveColor(signature, { mr, mg, mb, ma }) end
+	local curveCache = curveCacheByType[pType]
+	local curve = curveCache and curveCache.curve or nil
+	if not (curve and curveCache.signature == signature) then
+		curve = C_CurveUtil.CreateColorCurve()
+		if not curve then return nil end
+		curve:SetType(Enum.LuaCurveType.Step)
+
+		local lastR, lastG, lastB, lastA = br, bg, bb, ba
+		local lastProgress = nil
+		local firstProgress = nil
+		if points[1] then
+			firstProgress = tonumber(points[1].value) or 0
+			firstProgress = firstProgress / 100
+			if firstProgress < 0 then firstProgress = 0 end
+			if firstProgress > 1 then firstProgress = 1 end
+		end
+		if firstProgress == nil or firstProgress > 0 then curve:AddPoint(0.0, CreateColor(br, bg, bb, ba)) end
+
+		for i = 1, #points do
+			local point = points[i]
+			local value = tonumber(point and point.value) or 0
+			local progress = value / 100
+			if progress < 0 then progress = 0 end
+			if progress > 1 then progress = 1 end
+			if not (useMaxColor and progress >= 1) then
+				local color = point and point.color
+				local r = color and color[1] or 1
+				local g = color and color[2] or 1
+				local b = color and color[3] or 1
+				local a = color and color[4] or 1
+				curve:AddPoint(progress, CreateColor(r, g, b, a))
+				lastR, lastG, lastB, lastA = r, g, b, a
+				lastProgress = progress
+			end
+		end
+		if useMaxColor then
+			curve:AddPoint(1.0, CreateColor(mr, mg, mb, ma))
+		elseif lastProgress == nil or lastProgress < 1 then
+			curve:AddPoint(1.0, CreateColor(lastR, lastG, lastB, lastA))
+		end
+		curveCacheByType[pType] = {
+			signature = signature,
+			curve = curve,
+		}
+	end
+
+	local curveColor = getPowerPercent("player", powerEnum, curPower, maxPower, curve)
+	if curveColor and curveColor.GetRGBA then return curveColor:GetRGBA() end
+	return nil
+end
+
 local function applyBarFillColor(bar, cfg, pType)
 	if not bar then return end
 	cfg = cfg or {}
@@ -2083,29 +2468,46 @@ local function applyBarFillColor(bar, cfg, pType)
 
 	local targetR, targetG, targetB, targetA = baseR, baseG, baseB, baseA
 	local usingMaxColor = false
+	local usingThresholdColor = false
 	local secretCurveColor
-	if cfg.useMaxColor == true then
-		local capState = isAtCap()
-		if capState == true then
-			local maxCol = cfg.maxColor or RB.DEFAULT_MAX_COLOR
-			targetR = maxCol[1] or targetR
-			targetG = maxCol[2] or targetG
-			targetB = maxCol[3] or targetB
-			targetA = maxCol[4] or targetA
-			usingMaxColor = true
-		elseif capState == nil then
-			-- Midnight secret values must use curve-based coloring instead of direct comparisons.
+	local thresholdMode = ResourceBars.GetThresholdColorModeAndCap and ResourceBars.GetThresholdColorModeAndCap(pType) or nil
+	local wantsSecretThresholdCurve = cfg.useAbsoluteThresholdColors == true and pType ~= "RUNES" and thresholdMode == "PERCENT"
+	local capState = (cfg.useMaxColor == true or wantsSecretThresholdCurve) and isAtCap() or false
+	if cfg.useMaxColor == true and capState == true then
+		local maxCol = cfg.maxColor or RB.DEFAULT_MAX_COLOR
+		targetR = maxCol[1] or targetR
+		targetG = maxCol[2] or targetG
+		targetB = maxCol[3] or targetB
+		targetA = maxCol[4] or targetA
+		usingMaxColor = true
+	elseif capState == nil and pType ~= "RUNES" then
+		-- Midnight secret values must use curves instead of direct comparisons.
+		local powerEnum = POWER_ENUM and POWER_ENUM[pType]
+		local useRawPower = pType == "SOUL_SHARDS" and addon.variables and addon.variables.unitClass == "WARLOCK" and addon.variables.unitSpec == 3
+		if powerEnum and ResourceBars.ResolveAbsoluteThresholdColorForSecretPower and thresholdMode == "PERCENT" then
+			local tr, tg, tb, ta = ResourceBars.ResolveAbsoluteThresholdColorForSecretPower(
+				cfg,
+				pType,
+				powerEnum,
+				UnitPower("player", powerEnum, useRawPower),
+				UnitPowerMax("player", powerEnum, useRawPower),
+				{ baseR, baseG, baseB, baseA or 1 },
+				cfg.useMaxColor == true and (cfg.maxColor or RB.DEFAULT_MAX_COLOR) or nil
+			)
+			if tr ~= nil then
+				targetR, targetG, targetB, targetA = tr, tg, tb, ta
+				usingThresholdColor = true
+			end
+		end
+		if not usingThresholdColor then
 			if pType == "HEALTH" then
 				if UnitHealthPercent and curve then
 					SetColorCurvePoints(cfg.maxColor or RB.DEFAULT_MAX_COLOR)
 					secretCurveColor = UnitHealthPercent("player", true, curve)
 				end
-			elseif pType ~= "RUNES" then
-				local powerEnum = POWER_ENUM and POWER_ENUM[pType]
-				if powerEnum and UnitPowerPercent then
-					if not curvePower[pType] then SetColorCurvePointsPower(pType, cfg.maxColor or RB.DEFAULT_MAX_COLOR, { baseR, baseG, baseB, baseA or 1 }) end
-					if curvePower[pType] then secretCurveColor = UnitPowerPercent("player", powerEnum, false, curvePower[pType]) end
-				end
+			elseif cfg.useMaxColor == true and powerEnum and UnitPowerPercent then
+				SetColorCurvePointsPower(pType, cfg.maxColor or RB.DEFAULT_MAX_COLOR, { baseR, baseG, baseB, baseA or 1 })
+				if curvePower[pType] then secretCurveColor = UnitPowerPercent("player", powerEnum, false, curvePower[pType]) end
 			end
 			if secretCurveColor then usingMaxColor = true end
 		end
@@ -2118,6 +2520,7 @@ local function applyBarFillColor(bar, cfg, pType)
 	bar._lastColor = bar._lastColor or {}
 	bar._lastColor[1], bar._lastColor[2], bar._lastColor[3], bar._lastColor[4] = targetR, targetG, targetB, targetA or 1
 	bar._usingMaxColor = usingMaxColor
+	bar._usingAbsoluteThresholdColor = usingThresholdColor and not usingMaxColor
 	if pType and pType ~= "RUNES" then SetColorCurvePointsPower(pType, cfg.maxColor, bar._baseColor) end
 	configureSpecialTexture(bar, pType, cfg)
 	if ResourceBars.RefreshStatusBarGradient then ResourceBars.RefreshStatusBarGradient(bar, cfg) end
@@ -2160,26 +2563,7 @@ local function configureBarBehavior(bar, cfg, pType)
 	if bar.SetReverseFill then bar:SetReverseFill(cfg.reverseFill == true) end
 
 	if pType ~= "RUNES" and bar.SetOrientation then bar:SetOrientation((cfg.verticalFill == true) and "VERTICAL" or "HORIZONTAL") end
-	if pType == "HEALTH" and bar.absorbBar then
-		local absorb = bar.absorbBar
-		local wantVertical = cfg.verticalFill == true
-		if absorb.SetOrientation and absorb._isVertical ~= wantVertical then
-			absorb:SetOrientation(wantVertical and "VERTICAL" or "HORIZONTAL")
-			absorb._isVertical = wantVertical
-		end
-		local tex = absorb:GetStatusBarTexture()
-		if tex then
-			local desiredRotation = wantVertical and (math.pi / 2) or 0
-			if absorb._texRotation ~= desiredRotation then
-				tex:SetRotation(desiredRotation)
-				absorb._texRotation = desiredRotation
-			end
-		end
-		local reverseAbsorb = cfg.absorbReverseFill == true
-		if cfg.absorbOverfill then reverseAbsorb = false end
-		if absorb.SetReverseFill then absorb:SetReverseFill(reverseAbsorb) end
-		applyAbsorbLayout(bar, cfg)
-	end
+	if pType == "HEALTH" and bar.absorbBar then ResourceBars.SyncAbsorbBarAppearance(bar, cfg, true) end
 
 	if bar._rbBackdropState and bar._rbBackdropState.insets then applyStatusBarInsets(bar, bar._rbBackdropState.insets, true) end
 end
@@ -2456,9 +2840,24 @@ local function ensureDruidShowFormsDefaults(cfg, pType, specInfo)
 	cfg.showForms = sf
 end
 
+function ResourceBars.PrepareBarConfigForRuntime(cfg, pType, specInfo)
+	if type(cfg) ~= "table" then return cfg end
+
+	local stamp = tostring(addon.variables.unitClass or "") .. "|" .. tostring(addon.variables.unitSpec or "") .. "|" .. tostring(specInfo and specInfo.MAIN or "") .. "|" .. tostring(pType or "")
+	if cfg._eqolRuntimePrepareStamp == stamp then return cfg end
+
+	if cfg._rbType ~= pType then cfg._rbType = pType end
+	if isAuraPowerType and isAuraPowerType(pType) then ensureAuraPowerDefaults(pType, cfg) end
+	if ResourceBars.EnsureRogueChargedComboDefaults then ResourceBars.EnsureRogueChargedComboDefaults(cfg, pType) end
+	ensureDruidShowFormsDefaults(cfg, pType, specInfo)
+	ensureRelativeFrameFallback(cfg.anchor, pType, specInfo)
+	cfg._eqolRuntimePrepareStamp = stamp
+	return cfg
+end
+
 local function isEQOLBarFrameName(name) return type(name) == "string" and name:match("^EQOL.+Bar$") end
 
-local function ensureRelativeFrameFallback(anchor, pType, specInfo)
+ensureRelativeFrameFallback = function(anchor, pType, specInfo)
 	if pType == "HEALTH" then return end
 	if not anchor then return end
 	local rf = anchor.relativeFrame
@@ -2511,14 +2910,7 @@ function updateHealthBar(evt)
 					healthBar._lastText = ""
 				end
 			else
-				local text
-				if style == "PERCENT" then
-					text = percentStr
-				elseif style == "CURRENT" then
-					text = formatNumber(curHealth, useShortNumbers)
-				else -- CURMAX
-					text = formatNumber(curHealth, useShortNumbers) .. " / " .. formatNumber(maxHealth, useShortNumbers)
-				end
+				local text = ResourceBars.FormatBarTextByStyle(style, formatNumber(curHealth, useShortNumbers), formatNumber(maxHealth, useShortNumbers), percentStr)
 				if not addon.variables.isMidnight and healthBar._lastText ~= text then
 					healthBar.text:SetText(text)
 					healthBar._lastText = text
@@ -2610,10 +3002,7 @@ function updateHealthBar(evt)
 				absorbBar._lastVal = 0
 			else
 				if not absorbBar:IsShown() then absorbBar:Show() end
-				-- Texture
-				local absorbTex = resolveTexture({ barTexture = settings.absorbTexture or settings.barTexture })
-				local curTex = absorbBar:GetStatusBarTexture() and absorbBar:GetStatusBarTexture():GetTexture()
-				if curTex ~= absorbTex then absorbBar:SetStatusBarTexture(absorbTex) end
+				ResourceBars.SyncAbsorbBarAppearance(healthBar, settings)
 				-- Color
 				local defAbsorb = { 0.8, 0.8, 0.8, 0.8 }
 				local col = (settings.absorbUseCustomColor and settings.absorbColor) or defAbsorb
@@ -2625,7 +3014,6 @@ function updateHealthBar(evt)
 
 				local abs = UnitGetTotalAbsorbs("player") or 0
 				if settings.absorbSample then abs = maxHealth * 0.6 end
-				if settings.absorbOverfill then applyAbsorbLayout(healthBar, settings) end
 				if addon.variables.isMidnight then
 					absorbBar:SetMinMaxValues(0, maxHealth)
 					setBarValue(absorbBar, abs, smooth)
@@ -2785,21 +3173,8 @@ function createHealthBar()
 		absorbBar:SetStatusBarTexture(resolveTexture({ barTexture = cfgTexH.absorbTexture or cfgTexH.barTexture }))
 	end
 	absorbBar:SetStatusBarColor(0.8, 0.8, 0.8, 0.8)
-	local wantVertical = settings and settings.verticalFill == true
-	if absorbBar.SetOrientation and absorbBar._isVertical ~= wantVertical then absorbBar:SetOrientation(wantVertical and "VERTICAL" or "HORIZONTAL") end
-	absorbBar._isVertical = wantVertical
-	local reverseAbsorb = settings and settings.absorbReverseFill == true
-	if settings and settings.absorbOverfill then reverseAbsorb = false end
-	if absorbBar.SetReverseFill then absorbBar:SetReverseFill(reverseAbsorb) end
-	local absorbTex = absorbBar:GetStatusBarTexture()
-	if absorbTex then
-		local desiredRotation = wantVertical and (math.pi / 2) or 0
-		if absorbBar._texRotation ~= desiredRotation then
-			absorbTex:SetRotation(desiredRotation)
-			absorbBar._texRotation = desiredRotation
-		end
-	end
 	healthBar.absorbBar = absorbBar
+	ResourceBars.SyncAbsorbBarAppearance(healthBar, settings, true)
 	if healthBar._rbBackdropState and healthBar._rbBackdropState.insets then applyStatusBarInsets(healthBar, healthBar._rbBackdropState.insets, true) end
 
 	updateHealthBar("UNIT_ABSORB_AMOUNT_CHANGED")
@@ -2838,7 +3213,7 @@ powertypeClasses = {
 	HUNTER = {
 		[1] = { MAIN = "FOCUS" },
 		[2] = { MAIN = "FOCUS" },
-		[3] = { MAIN = "FOCUS" },
+		[3] = { MAIN = "FOCUS", TIP_OF_THE_SPEAR = true },
 	},
 	ROGUE = {
 		[1] = { MAIN = "ENERGY", COMBO_POINTS = true },
@@ -2902,6 +3277,7 @@ classPowerTypes = {
 	"INSANITY",
 	"ARCANE_CHARGES",
 	"ICICLES",
+	"TIP_OF_THE_SPEAR",
 	"MANA",
 }
 
@@ -2915,6 +3291,7 @@ ResourceBars.separatorEligible = {
 	CHI = true,
 	COMBO_POINTS = true,
 	ICICLES = true,
+	TIP_OF_THE_SPEAR = true,
 	VOID_METAMORPHOSIS = true,
 	MAELSTROM_WEAPON = true,
 	RUNES = true,
@@ -2928,14 +3305,7 @@ function getBarSettings(pType)
 	if not ResourceBars.IsSpecBarTypeSupported(specInfo, pType) then return nil end
 	if addon.db.personalResourceBarSettings and addon.db.personalResourceBarSettings[class] and addon.db.personalResourceBarSettings[class][spec] then
 		local cfg = addon.db.personalResourceBarSettings[class][spec][pType]
-		if cfg then
-			if cfg._rbType ~= pType then cfg._rbType = pType end
-			if isAuraPowerType and isAuraPowerType(pType) then ensureAuraPowerDefaults(pType, cfg) end
-			if ResourceBars.EnsureRogueChargedComboDefaults then ResourceBars.EnsureRogueChargedComboDefaults(cfg, pType) end
-			ensureDruidShowFormsDefaults(cfg, pType, specInfo)
-			ensureRelativeFrameFallback(cfg.anchor, pType, specInfo)
-			return cfg
-		end
+		if cfg then return ResourceBars.PrepareBarConfigForRuntime(cfg, pType, specInfo) end
 	end
 	if class and spec then
 		local specCfg = ensureSpecCfg(spec)
@@ -2971,10 +3341,7 @@ function getBarSettings(pType)
 				local unsupportedRelative = relType and relType ~= "HEALTH" and specInfo and not (specInfo.MAIN == relType or specInfo[relType])
 				if crossTypeTemplate or unsupportedRelative then copied.anchor = nil end
 				specCfg[pType] = copied
-				if isAuraPowerType and isAuraPowerType(pType) then ensureAuraPowerDefaults(pType, specCfg[pType]) end
-				if ResourceBars.EnsureRogueChargedComboDefaults then ResourceBars.EnsureRogueChargedComboDefaults(specCfg[pType], pType) end
-				ensureDruidShowFormsDefaults(specCfg[pType], pType, specInfo)
-				ensureRelativeFrameFallback(specCfg[pType].anchor, pType, specInfo)
+				ResourceBars.PrepareBarConfigForRuntime(specCfg[pType], pType, specInfo)
 				if secondaryIdx and secondaryIdx > 1 then
 					local prevType = specSecondaries(specInfo)[secondaryIdx - 1]
 					if prevType then maybeChainSecondaryAnchor(specCfg[pType], prevType) end
@@ -3122,6 +3489,15 @@ function updatePowerBar(type, runeSlot)
 		for i = count + 1, #charging do
 			charging[i] = nil
 		end
+		local readyCount = 6 - count
+		local usingThresholdColor = false
+		do
+			local tr, tg, tb, ta = ResourceBars.ResolveAbsoluteThresholdColor(cfg, readyCount, "RUNES", 6)
+			if tr ~= nil then
+				readyR, readyG, readyB, readyA = tr, tg, tb, ta
+				usingThresholdColor = true
+			end
+		end
 		-- Runes use max color only when all six runes are ready (resource at maximum).
 		local allRunesReady = count == 0
 		if cfg.useMaxColor == true and allRunesReady then
@@ -3136,6 +3512,7 @@ function updatePowerBar(type, runeSlot)
 		bar._runeReadyR, bar._runeReadyG, bar._runeReadyB, bar._runeReadyA = readyR, readyG, readyB, readyA
 		bar._runeCooldownR, bar._runeCooldownG, bar._runeCooldownB, bar._runeCooldownA = cooldownR, cooldownG, cooldownB, cooldownA
 		bar._usingMaxColor = cfg.useMaxColor == true and allRunesReady
+		bar._usingAbsoluteThresholdColor = usingThresholdColor and not bar._usingMaxColor
 		if count > 1 then
 			local snapshot = bar._chargingSnapshot
 			if not snapshot then
@@ -3233,6 +3610,36 @@ function updatePowerBar(type, runeSlot)
 						if ResourceBars.RefreshStatusBarGradient then ResourceBars.RefreshStatusBarGradient(sb, cfg, readyR, readyG, readyB, readyA) end
 					else
 						if ResourceBars.RefreshStatusBarGradient then ResourceBars.RefreshStatusBarGradient(sb, cfg, cooldownR, cooldownG, cooldownB, cooldownA) end
+					end
+				end
+				if sb._rbSegmentBg then
+					local fallbackR, fallbackG, fallbackB, fallbackA
+					if wantReady then
+						fallbackR, fallbackG, fallbackB, fallbackA = readyR * 0.35, readyG * 0.35, readyB * 0.35, (readyA or 1) * 0.9
+					else
+						fallbackR, fallbackG, fallbackB, fallbackA = cooldownR * 0.35, cooldownG * 0.35, cooldownB * 0.35, (cooldownA or 1) * 0.9
+					end
+					local bgTexture, bgR, bgG, bgB, bgA, bgVisible
+					if ResourceBars.ResolveDiscreteSegmentBackground then
+						bgTexture, bgR, bgG, bgB, bgA, bgVisible = ResourceBars.ResolveDiscreteSegmentBackground(cfg, resolveTexture(cfg), fallbackR, fallbackG, fallbackB, fallbackA)
+					else
+						bgTexture, bgR, bgG, bgB, bgA, bgVisible = resolveTexture(cfg), fallbackR, fallbackG, fallbackB, fallbackA, true
+					end
+					if bgVisible then
+						if sb._rbSegmentBgPath ~= bgTexture then
+							sb._rbSegmentBg:SetTexture(bgTexture)
+							sb._rbSegmentBgPath = bgTexture
+						end
+						local bgColorKey = tostring(bgR) .. ":" .. tostring(bgG) .. ":" .. tostring(bgB) .. ":" .. tostring(bgA)
+						if sb._rbSegmentBgColorKey ~= bgColorKey then
+							sb._rbSegmentBg:SetVertexColor(bgR, bgG, bgB, bgA)
+							sb._rbSegmentBgColorKey = bgColorKey
+						end
+						if not sb._rbSegmentBg:IsShown() then sb._rbSegmentBg:Show() end
+					else
+						if sb._rbSegmentBg:IsShown() then sb._rbSegmentBg:Hide() end
+						sb._rbSegmentBgPath = nil
+						sb._rbSegmentBgColorKey = nil
 					end
 				end
 				if sb.fs then
@@ -3420,14 +3827,7 @@ function updatePowerBar(type, runeSlot)
 					bar._lastText = ""
 				end
 			else
-				local text
-				if style == "PERCENT" then
-					text = percentStr
-				elseif style == "CURRENT" then
-					text = formatNumber(curPower, useShortNumbers)
-				else
-					text = formatNumber(curPower, useShortNumbers) .. " / " .. formatNumber(maxHealth, useShortNumbers)
-				end
+				local text = ResourceBars.FormatBarTextByStyle(style, formatNumber(curPower, useShortNumbers), formatNumber(maxHealth, useShortNumbers), percentStr)
 				if (not addon.variables.isMidnight or (issecretvalue and not issecretvalue(text))) and bar._lastText ~= text then
 					bar.text:SetText(text)
 					bar._lastText = text
@@ -3471,6 +3871,7 @@ function updatePowerBar(type, runeSlot)
 			end
 		end
 		bar._usingMaxColor = flag == "max"
+		bar._usingAbsoluteThresholdColor = false
 		configureSpecialTexture(bar, type, cfg)
 		if ResourceBars.RefreshStatusBarGradient then ResourceBars.RefreshStatusBarGradient(bar, cfg) end
 		return
@@ -3518,14 +3919,7 @@ function updatePowerBar(type, runeSlot)
 					bar._lastText = ""
 				end
 			else
-				local text
-				if style == "PERCENT" then
-					text = percentStr
-				elseif style == "CURRENT" then
-					text = formatNumber(stacks, useShortNumbers)
-				else
-					text = formatNumber(stacks, useShortNumbers) .. " / " .. formatNumber(logicalMax, useShortNumbers)
-				end
+				local text = ResourceBars.FormatBarTextByStyle(style, formatNumber(stacks, useShortNumbers), formatNumber(logicalMax, useShortNumbers), percentStr)
 				if (not addon.variables.isMidnight or (issecretvalue and not issecretvalue(text))) and bar._lastText ~= text then
 					bar.text:SetText(text)
 					bar._lastText = text
@@ -3557,11 +3951,15 @@ function updatePowerBar(type, runeSlot)
 
 		local targetR, targetG, targetB, targetA = bar._baseColor[1] or 1, bar._baseColor[2] or 1, bar._baseColor[3] or 1, bar._baseColor[4] or 1
 		local flag
+		local thresholdR, thresholdG, thresholdB, thresholdA = ResourceBars.ResolveAbsoluteThresholdColor(cfg, stacks, type, logicalMax)
 		local useMaxDefault = (RB.AURA_POWER_CONFIG[type] and RB.AURA_POWER_CONFIG[type].useMaxColorDefault) or false
 		if (cfg.useMaxColor ~= false and (cfg.useMaxColor or useMaxDefault)) and logicalMax > 0 and stacks >= logicalMax then
 			local maxCol = cfg.maxColor or RB.DEFAULT_MAX_COLOR
 			targetR, targetG, targetB, targetA = maxCol[1] or targetR, maxCol[2] or targetG, maxCol[3] or targetB, maxCol[4] or targetA
 			flag = "max"
+		elseif thresholdR ~= nil then
+			targetR, targetG, targetB, targetA = thresholdR, thresholdG, thresholdB, thresholdA
+			flag = "threshold"
 		elseif
 			type == "MAELSTROM_WEAPON"
 			and cfg.useMaelstromFiveColor ~= false
@@ -3582,6 +3980,7 @@ function updatePowerBar(type, runeSlot)
 			end
 		end
 		bar._usingMaxColor = flag == "max"
+		bar._usingAbsoluteThresholdColor = flag == "threshold"
 		bar._usingMaelstromFiveColor = flag == "mid"
 		local usingDiscreteSegments = refreshDiscreteSegmentsForBar(type, bar, cfg, shownStacks, visualMax, stacks)
 		configureSpecialTexture(bar, type, cfg)
@@ -3596,6 +3995,7 @@ function updatePowerBar(type, runeSlot)
 	if not pType then return end
 	local cfg = getBarSettings(type) or {}
 	local cfgDef = (RB.POWER_CONFIG and RB.POWER_CONFIG[type]) or {}
+	local thresholdModeForBar = ResourceBars.GetThresholdColorModeAndCap(type)
 	local isSoulShards = type == "SOUL_SHARDS"
 	local useRaw = isSoulShards and addon.variables and addon.variables.unitClass == "WARLOCK" and addon.variables.unitSpec == 3
 	local maxPower = bar._lastMax
@@ -3628,7 +4028,6 @@ function updatePowerBar(type, runeSlot)
 	end
 	local chargedPowerPointMap
 	if type == "COMBO_POINTS" and addon.variables.unitClass == "ROGUE" then
-		if ResourceBars.EnsureRogueChargedComboDefaults then ResourceBars.EnsureRogueChargedComboDefaults(cfg, type) end
 		local chargedCache = bar._rbChargedPowerPointMap or {}
 		for index in pairs(chargedCache) do
 			chargedCache[index] = nil
@@ -3665,22 +4064,16 @@ function updatePowerBar(type, runeSlot)
 				bar._lastText = ""
 			end
 		else
-			local text
-			if style == "PERCENT" then
-				text = percentStr
-			elseif style == "CURRENT" then
-				if isSoulShards then
-					text = formatSoulShardValue(displayCur)
-				else
-					text = formatNumber(curPower, useShortNumbers)
-				end
-			else -- CURMAX
-				if isSoulShards then
-					text = formatSoulShardValue(displayCur) .. " / " .. formatSoulShardValue(displayMax)
-				else
-					text = formatNumber(curPower, useShortNumbers) .. " / " .. formatNumber(maxPower, useShortNumbers)
-				end
+			local currentText
+			local maxText
+			if isSoulShards then
+				currentText = formatSoulShardValue(displayCur)
+				maxText = formatSoulShardValue(displayMax)
+			else
+				currentText = formatNumber(curPower, useShortNumbers)
+				maxText = formatNumber(maxPower, useShortNumbers)
 			end
+			local text = ResourceBars.FormatBarTextByStyle(style, currentText, maxText, percentStr)
 			if (not addon.variables.isMidnight or (issecretvalue and not issecretvalue(text))) and bar._lastText ~= text then
 				bar.text:SetText(text)
 				bar._lastText = text
@@ -3716,15 +4109,25 @@ function updatePowerBar(type, runeSlot)
 	local maxPowerSecret = addon.variables.isMidnight and issecretvalue and issecretvalue(maxPower)
 	local hasSecretPower = curPowerSecret or maxPowerSecret
 	local reachedThree = useHolyThreeColor and not curPowerSecret and curPower >= holyThreeThreshold
+	local thresholdSampleValue = isSoulShards and displayCur or curPower
+	local secretThresholdR, secretThresholdG, secretThresholdB, secretThresholdA
+	if hasSecretPower and thresholdModeForBar == "PERCENT" then
+		secretThresholdR, secretThresholdG, secretThresholdB, secretThresholdA =
+			ResourceBars.ResolveAbsoluteThresholdColorForSecretPower(cfg, type, pType, curPower, maxPower, bar._baseColor, cfg.useMaxColor == true and (cfg.maxColor or RB.DEFAULT_MAX_COLOR) or nil)
+	end
 	if not hasSecretPower then
 		local reachedCap = curPower >= max(maxPower, 1)
 		local useMaxColor = cfg.useMaxColor == true
+		local thresholdR, thresholdG, thresholdB, thresholdA = ResourceBars.ResolveAbsoluteThresholdColor(cfg, thresholdSampleValue, type, maxPower)
 		local targetR, targetG, targetB, targetA = bar._baseColor[1], bar._baseColor[2], bar._baseColor[3], bar._baseColor[4]
 		local flag
 		if useMaxColor and reachedCap then
 			local maxCol = cfg.maxColor or RB.DEFAULT_MAX_COLOR
 			targetR, targetG, targetB, targetA = maxCol[1] or targetR, maxCol[2] or targetG, maxCol[3] or targetB, maxCol[4] or (bar._baseColor[4] or 1)
 			flag = "max"
+		elseif thresholdR ~= nil then
+			targetR, targetG, targetB, targetA = thresholdR, thresholdG, thresholdB, thresholdA
+			flag = "threshold"
 		elseif reachedThree then
 			targetR, targetG, targetB, targetA = getHolyThreeColor(cfg)
 			flag = "holy3"
@@ -3740,6 +4143,7 @@ function updatePowerBar(type, runeSlot)
 			end
 		end
 		bar._usingMaxColor = flag == "max"
+		bar._usingAbsoluteThresholdColor = flag == "threshold"
 		bar._usingHolyThreeColor = flag == "holy3"
 	else
 		local lc = bar._lastColor or {}
@@ -3749,8 +4153,11 @@ function updatePowerBar(type, runeSlot)
 			local targetR, targetG, targetB, targetA = br, bgc, bb, ba
 			local useMaxColor = cfg.useMaxColor == true
 			local flag
-			if useMaxColor and UnitPowerPercent then
-				if not curvePower[type] then SetColorCurvePointsPower(type, cfg.maxColor or RB.DEFAULT_MAX_COLOR, { br, bgc, bb, ba }) end
+			if secretThresholdR ~= nil then
+				targetR, targetG, targetB, targetA = secretThresholdR, secretThresholdG, secretThresholdB, secretThresholdA
+				flag = "threshold"
+			elseif useMaxColor and UnitPowerPercent then
+				SetColorCurvePointsPower(type, cfg.maxColor or RB.DEFAULT_MAX_COLOR, { br, bgc, bb, ba })
 				if curvePower[type] then
 					local curveColor = UnitPowerPercent("player", pType, false, curvePower[type])
 					if curveColor then
@@ -3762,25 +4169,30 @@ function updatePowerBar(type, runeSlot)
 						flag = "maxCurve"
 					end
 				end
+			elseif reachedThree then
+				targetR, targetG, targetB, targetA = getHolyThreeColor(cfg)
+				flag = "holy3"
 			end
-			if not flag then
-				if reachedThree then
-					targetR, targetG, targetB, targetA = getHolyThreeColor(cfg)
-					flag = "holy3"
+			if flag ~= "maxCurve" then
+				lc[1], lc[2], lc[3], lc[4] = targetR, targetG, targetB, targetA
+				bar._lastColor = lc
+				if cfg.useBarColor and not cfg.useMaxColor and not reachedThree then
+					local tex = bar.GetStatusBarTexture and bar:GetStatusBarTexture()
+					if tex and tex.SetVertexColor then tex:SetVertexColor(1, 1, 1, 1) end
 				end
-				if lc[1] ~= targetR or lc[2] ~= targetG or lc[3] ~= targetB or lc[4] ~= targetA then
-					lc[1], lc[2], lc[3], lc[4] = targetR, targetG, targetB, targetA
-					bar._lastColor = lc
-					if cfg.useBarColor and not cfg.useMaxColor and not reachedThree then bar:GetStatusBarTexture():SetVertexColor(1, 1, 1, 1) end
-					if ResourceBars.SetStatusBarColorWithGradient then
-						ResourceBars.SetStatusBarColorWithGradient(bar, cfg, targetR, targetG, targetB, targetA)
-					else
-						bar:SetStatusBarColor(targetR, targetG, targetB, targetA)
-					end
+				if ResourceBars.SetStatusBarColorWithGradient then
+					ResourceBars.SetStatusBarColorWithGradient(bar, cfg, targetR, targetG, targetB, targetA)
+				else
+					bar:SetStatusBarColor(targetR, targetG, targetB, targetA)
 				end
 			end
 			bar._usingMaxColor = flag == "maxCurve"
+			bar._usingAbsoluteThresholdColor = flag == "threshold"
 			bar._usingHolyThreeColor = flag == "holy3"
+		else
+			bar._usingMaxColor = false
+			bar._usingAbsoluteThresholdColor = false
+			bar._usingHolyThreeColor = false
 		end
 	end
 
@@ -3958,10 +4370,32 @@ updateBarSeparators = function(pType)
 		if bar:IsShown() then layoutRunes(bar) end
 		return
 	end
+	if pType == "ESSENCE" then
+		local cfg = getBarSettings("ESSENCE") or {}
+		local separatedOffset = tonumber(cfg.separatedOffset) or 0
+		if separatedOffset > 0 then
+			if bar.separatorMarks then
+				for _, tx in ipairs(bar.separatorMarks) do
+					tx:Hide()
+				end
+			end
+			if bar:IsShown() then
+				local count = POWER_ENUM and UnitPowerMax("player", POWER_ENUM.ESSENCE) or 0
+				ResourceBars.LayoutEssences(bar, cfg, count, resolveTexture(cfg))
+			end
+			return
+		end
+	end
 	local cfg = getBarSettings(pType)
 	local useDiscrete = shouldUseDiscreteSeparatorSegments(pType, cfg)
 	if not (cfg and (cfg.showSeparator == true or useDiscrete)) then
-		if pType ~= "RUNES" and pType ~= "ESSENCE" then
+		if pType == "ESSENCE" then
+			if ResourceBars.HideDiscreteSegments then ResourceBars.HideDiscreteSegments(bar) end
+			if bar:IsShown() then
+				local count = POWER_ENUM and UnitPowerMax("player", POWER_ENUM.ESSENCE) or 0
+				ResourceBars.LayoutEssences(bar, cfg or {}, count, resolveTexture(cfg or {}))
+			end
+		elseif pType ~= "RUNES" then
 			if ResourceBars.HideDiscreteSegments then ResourceBars.HideDiscreteSegments(bar) end
 			setParentBarTextureVisible(bar, true)
 		end
@@ -3989,7 +4423,13 @@ updateBarSeparators = function(pType)
 			end
 		end
 		return
-	elseif pType ~= "RUNES" and pType ~= "ESSENCE" then
+	elseif pType == "ESSENCE" then
+		if ResourceBars.HideDiscreteSegments then ResourceBars.HideDiscreteSegments(bar) end
+		if bar:IsShown() then
+			local count = POWER_ENUM and UnitPowerMax("player", POWER_ENUM.ESSENCE) or 0
+			ResourceBars.LayoutEssences(bar, cfg or {}, count, resolveTexture(cfg or {}))
+		end
+	elseif pType ~= "RUNES" then
 		if ResourceBars.HideDiscreteSegments then ResourceBars.HideDiscreteSegments(bar) end
 		setParentBarTextureVisible(bar, true)
 	end
@@ -4278,13 +4718,16 @@ function layoutRunes(bar)
 	local h = max(1, inner:GetHeight() or (bar:GetHeight() or 0))
 	local cfg = getBarSettings("RUNES") or {}
 	local showSeparator = cfg.showSeparator == true
+	local configuredSeparator = tonumber(cfg.separatorThickness)
+	if configuredSeparator == nil then configuredSeparator = RB.SEPARATOR_THICKNESS end
+	if configuredSeparator == nil then configuredSeparator = 1 end
 	local gap = 0
-	if showSeparator then
-		local configured = tonumber(cfg.separatorThickness)
-		if configured == nil then configured = RB.SEPARATOR_THICKNESS end
-		if configured == nil then configured = 1 end
-		gap = max(0, floor(configured + 0.5))
+	if ResourceBars.ResolveDiscreteSegmentGap then
+		gap = ResourceBars.ResolveDiscreteSegmentGap(cfg, configuredSeparator)
+	else
+		gap = showSeparator and max(0, floor(configuredSeparator + 0.5)) or 0
 	end
+	gap = max(0, floor((tonumber(gap) or 0) + 0.5))
 	if nil == cfg.showCooldownText then cfg.showCooldownText = true end
 	local show = cfg.showCooldownText ~= false -- default on
 	local size = cfg.cooldownTextFontSize or cfg.fontSize or 16
@@ -4293,6 +4736,19 @@ function layoutRunes(bar)
 	local fr, fg, fb, fa = resolveFontColor(cfg)
 	local vertical = cfg.verticalFill == true
 	local readyR, readyG, readyB, readyA = resolveRuneReadyColor(cfg)
+	local texturePath = resolveTexture(cfg)
+	local separatedOffset = tonumber(cfg.separatedOffset) or 0
+	local useSegmentBorders = separatedOffset > 0 or cfg.useGradient == true
+	local borderEnabled, borderTexture, borderEdgeSize, borderOutset, borderR, borderG, borderB, borderA
+	if ResourceBars.ResolveDiscreteSegmentBorderStyle then
+		borderEnabled, borderTexture, borderEdgeSize, borderOutset, borderR, borderG, borderB, borderA = ResourceBars.ResolveDiscreteSegmentBorderStyle(cfg, useSegmentBorders)
+	end
+	local bgTexture, bgR, bgG, bgB, bgA, bgVisible
+	if ResourceBars.ResolveDiscreteSegmentBackground then
+		bgTexture, bgR, bgG, bgB, bgA, bgVisible = ResourceBars.ResolveDiscreteSegmentBackground(cfg, texturePath, readyR * 0.35, readyG * 0.35, readyB * 0.35, (readyA or 1) * 0.9)
+	else
+		bgTexture, bgR, bgG, bgB, bgA, bgVisible = texturePath, readyR * 0.35, readyG * 0.35, readyB * 0.35, (readyA or 1) * 0.9, true
+	end
 	local span = vertical and h or w
 	local maxGap = (count > 1) and max(0, floor((span - count) / (count - 1))) or 0
 	if gap > maxGap then gap = maxGap end
@@ -4324,6 +4780,7 @@ function layoutRunes(bar)
 		end
 		sb:ClearAllPoints()
 		if sb:GetParent() ~= inner then sb:SetParent(inner) end
+		sb:SetFrameLevel((bar:GetFrameLevel() or 1) + 1)
 		if vertical then
 			sb:SetWidth(w)
 			sb:SetHeight(segPrimary)
@@ -4347,6 +4804,29 @@ function layoutRunes(bar)
 			else
 				sb:SetWidth(segPrimary)
 			end
+		end
+		if not sb._rbSegmentBg then
+			sb._rbSegmentBg = sb:CreateTexture(nil, "BACKGROUND")
+			sb._rbSegmentBg:SetAllPoints(sb)
+		end
+		if bgVisible then
+			if sb._rbSegmentBgPath ~= bgTexture then
+				sb._rbSegmentBg:SetTexture(bgTexture)
+				sb._rbSegmentBgPath = bgTexture
+			end
+			local bgColorKey = tostring(bgR) .. ":" .. tostring(bgG) .. ":" .. tostring(bgB) .. ":" .. tostring(bgA)
+			if sb._rbSegmentBgColorKey ~= bgColorKey then
+				sb._rbSegmentBg:SetVertexColor(bgR, bgG, bgB, bgA)
+				sb._rbSegmentBgColorKey = bgColorKey
+			end
+			if not sb._rbSegmentBg:IsShown() then sb._rbSegmentBg:Show() end
+		else
+			if sb._rbSegmentBg:IsShown() then sb._rbSegmentBg:Hide() end
+			sb._rbSegmentBgPath = nil
+			sb._rbSegmentBgColorKey = nil
+		end
+		if ResourceBars.ApplyDiscreteSegmentBorder then
+			ResourceBars.ApplyDiscreteSegmentBorder(sb, bar, borderEnabled, borderTexture, borderEdgeSize, borderOutset, borderR, borderG, borderB, borderA)
 		end
 		-- cooldown text per segment
 		if not sb.fs then sb.fs = overlay:CreateFontString(nil, "OVERLAY", "GameFontHighlight") end
@@ -4642,7 +5122,6 @@ local function setPowerbars(opts)
 		return
 	end
 
-	local _, powerToken = UnitPowerType("player")
 	powerfrequent = {}
 	local isDruid = addon.variables.unitClass == "DRUID"
 	local editModeActive = addon.EditMode and addon.EditMode.IsInEditMode and addon.EditMode:IsInEditMode()
@@ -4718,15 +5197,14 @@ local function setPowerbars(opts)
 					showBar = true
 				elseif pType == mainPowerBar then
 					showBar = true
-				elseif pType == "MANA" then
-					createPowerBar(pType, powerbar[lastBar] or ((specCfg and specCfg.HEALTH and specCfg.HEALTH.enabled == true) and EQOLHealthBar or nil))
-					lastBar = pType
-					showBar = true
 				elseif pType == "COMBO_POINTS" and druidForm == "CAT" then
 					createPowerBar(pType, powerbar[lastBar] or ((specCfg and specCfg.HEALTH and specCfg.HEALTH.enabled == true) and EQOLHealthBar or nil))
 					lastBar = pType
 					showBar = true
-				elseif powerToken == pType and powerToken ~= mainPowerBar then
+				else
+					-- For Druids, showForms is the authoritative per-form filter for enabled secondary bars.
+					-- Gating ENERGY/RAGE/MANA on the active power token prevents bars from appearing in forms
+					-- that the user explicitly enabled in "Show in".
 					createPowerBar(pType, powerbar[lastBar] or ((specCfg and specCfg.HEALTH and specCfg.HEALTH.enabled == true) and EQOLHealthBar or nil))
 					lastBar = pType
 					showBar = true
@@ -5920,7 +6398,7 @@ function ResourceBars.Refresh()
 		local hTex = resolveTexture(hCfg2)
 		healthBar:SetStatusBarTexture(hTex)
 		configureSpecialTexture(healthBar, "HEALTH", hCfg2)
-		if healthBar.absorbBar then healthBar.absorbBar:SetStatusBarTexture(hTex) end
+		if healthBar.absorbBar then ResourceBars.SyncAbsorbBarAppearance(healthBar, hCfg2, true) end
 		healthBar:ClearAllPoints()
 		healthBar:SetPoint(a.point or "TOPLEFT", rel, a.relativePoint or a.point or "TOPLEFT", a.x or 0, a.y or 0)
 	end
@@ -6002,19 +6480,7 @@ function ResourceBars.Refresh()
 		if healthBar.text then applyFontToString(healthBar.text, hCfg) end
 		applyTextPosition(healthBar, hCfg, 3, 0)
 		configureBarBehavior(healthBar, hCfg, "HEALTH")
-		if healthBar.absorbBar then
-			local absorbBar = healthBar.absorbBar
-			absorbBar:SetStatusBarTexture(resolveTexture({ barTexture = hCfg.absorbTexture or hCfg.barTexture }))
-			if hCfg.verticalFill then
-				absorbBar:SetOrientation("VERTICAL")
-			else
-				absorbBar:SetOrientation("HORIZONTAL")
-			end
-			local reverseAbsorb = hCfg.absorbReverseFill == true
-			if hCfg.absorbOverfill then reverseAbsorb = false end
-			if absorbBar.SetReverseFill then absorbBar:SetReverseFill(reverseAbsorb) end
-			applyAbsorbLayout(healthBar, hCfg)
-		end
+		if healthBar.absorbBar then ResourceBars.SyncAbsorbBarAppearance(healthBar, hCfg, true) end
 	end
 
 	for pType, bar in pairs(powerbar) do
@@ -6281,6 +6747,16 @@ ResourceBars.THRESHOLD_THICKNESS = RB.THRESHOLD_THICKNESS
 ResourceBars.THRESHOLD_DEFAULT = RB.THRESHOLD_DEFAULT
 ResourceBars.DEFAULT_THRESHOLDS = RB.DEFAULT_THRESHOLDS
 ResourceBars.DEFAULT_THRESHOLD_COUNT = RB.DEFAULT_THRESHOLD_COUNT
+ResourceBars.ABSOLUTE_THRESHOLD_COLOR_MAX_POINTS = RB.ABSOLUTE_THRESHOLD_COLOR_MAX_POINTS
+ResourceBars.ABSOLUTE_THRESHOLD_COLOR_DEFAULT_COUNT = RB.ABSOLUTE_THRESHOLD_COLOR_DEFAULT_COUNT
+ResourceBars.ABSOLUTE_THRESHOLD_COLOR_VALUE_CAP = RB.ABSOLUTE_THRESHOLD_COLOR_VALUE_CAP
+ResourceBars.ABSOLUTE_THRESHOLD_COLOR_VALUE_CAP_VOID_METAMORPHOSIS = RB.ABSOLUTE_THRESHOLD_COLOR_VALUE_CAP_VOID_METAMORPHOSIS
+ResourceBars.ABSOLUTE_THRESHOLD_COLOR_VALUE_CAP_CONTINUOUS = RB.ABSOLUTE_THRESHOLD_COLOR_VALUE_CAP_CONTINUOUS
+ResourceBars.ABSOLUTE_THRESHOLD_COLOR_VALUE_CAP_PERCENT = RB.ABSOLUTE_THRESHOLD_COLOR_VALUE_CAP_PERCENT
+ResourceBars.ABSOLUTE_THRESHOLD_COLOR_DEFAULTS = RB.ABSOLUTE_THRESHOLD_COLOR_DEFAULTS
+ResourceBars.ABSOLUTE_THRESHOLD_COLOR_DEFAULTS_VOID_METAMORPHOSIS = RB.ABSOLUTE_THRESHOLD_COLOR_DEFAULTS_VOID_METAMORPHOSIS
+ResourceBars.ABSOLUTE_THRESHOLD_COLOR_DEFAULTS_CONTINUOUS = RB.ABSOLUTE_THRESHOLD_COLOR_DEFAULTS_CONTINUOUS
+ResourceBars.ABSOLUTE_THRESHOLD_COLOR_DEFAULTS_PERCENT = RB.ABSOLUTE_THRESHOLD_COLOR_DEFAULTS_PERCENT
 ResourceBars.STAGGER_EXTRA_THRESHOLD_HIGH = RB.STAGGER_EXTRA_THRESHOLD_HIGH
 ResourceBars.STAGGER_EXTRA_THRESHOLD_EXTREME = RB.STAGGER_EXTRA_THRESHOLD_EXTREME
 ResourceBars.STAGGER_EXTRA_COLORS = RB.STAGGER_EXTRA_COLORS

@@ -1,7 +1,6 @@
 
 CHATTYNATOR_CURRENT_PROFILE = "DEFAULT"
 CHATTYNATOR_COMMAND_HISTORY = {
-" ripp",
 " /ginvite Ninelight",
 " /ginvite Ninelight-Stormrage",
 " /ginvite Sogud-stormrade",
@@ -202,4 +201,11 @@ CHATTYNATOR_COMMAND_HISTORY = {
 " bro tries to hop into games with me, and alt f4s like insta",
 " dude runs back to Counter Strike like he has downs",
 " prey is pussy shit",
+"/s /edit",
+"/s /bbp",
+"/s /wa",
+"/s /dance",
+"/s /edit",
+"/s /shoo",
+"/s /bbf",
 }

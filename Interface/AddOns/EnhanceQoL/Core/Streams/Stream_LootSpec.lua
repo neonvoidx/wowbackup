@@ -128,7 +128,7 @@ end
 local function getCurrentSpecInfo()
 	local specIndex = C_SpecializationInfo.GetSpecialization()
 	if not specIndex then return nil end
-	local specID, specName, _, specIcon = GetSpecializationInfo(specIndex)
+	local specID, specName, _, specIcon = C_SpecializationInfo.GetSpecializationInfo(specIndex)
 	return specIndex, specID, specName, specIcon
 end
 
@@ -160,7 +160,7 @@ local function showLootSpecMenu(owner)
 		if inCombat then defaultRadio:SetEnabled(false) end
 
 		for i = 1, totalSpecs do
-			local sID, sName = GetSpecializationInfo(i)
+			local sID, sName = C_SpecializationInfo.GetSpecializationInfo(i)
 			if sID and sName then
 				local radio = rootDescription:CreateRadio(sName, function() return lootSpecID == sID end, function()
 					if InCombatLockdown and InCombatLockdown() then
@@ -178,7 +178,7 @@ local function showLootSpecMenu(owner)
 		rootDescription:CreateDivider()
 		rootDescription:CreateTitle(SPECIALIZATION or "Specialization")
 		for i = 1, totalSpecs do
-			local _, sName = GetSpecializationInfo(i)
+			local _, sName = C_SpecializationInfo.GetSpecializationInfo(i)
 			if sName then
 				local radio = rootDescription:CreateRadio(sName, function() return specIndex == i end, function()
 					if InCombatLockdown and InCombatLockdown() then

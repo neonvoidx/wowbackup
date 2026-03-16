@@ -147,7 +147,7 @@ local function getSourceName(sourceID)
 	if C_Spell and C_Spell.GetSpellName then name = C_Spell.GetSpellName(sourceID) end
 	if not name and GetSpellInfo then name = GetSpellInfo(sourceID) end
 	if not name and C_Item and C_Item.GetItemNameByID then name = C_Item.GetItemNameByID(sourceID) end
-	if not name and GetItemInfo then name = GetItemInfo(sourceID) end
+	if not name and C_Item and C_Item.GetItemInfo then name = C_Item.GetItemInfo(sourceID) end
 	return name
 end
 
@@ -161,8 +161,7 @@ end
 
 local function isSpellKnown(spellID)
 	if not spellID then return false end
-	if C_SpellBook and C_SpellBook.IsSpellKnown then return C_SpellBook.IsSpellKnown(spellID) == true end
-	if IsSpellKnown then return IsSpellKnown(spellID) == true end
+	if C_SpellBook and C_SpellBook.IsSpellInSpellBook then return C_SpellBook.IsSpellInSpellBook(spellID, Enum.SpellBookSpellBank.Player, false) == true end
 	return false
 end
 

@@ -171,3 +171,5 @@ MacroToolkitIcons: enabled
 tullaCTC: enabled
 tullaCTC_Config: enabled
 WorldQuestTab: enabled
+!Swatter: disabled
+!ImprovedErrorFrame: disabled

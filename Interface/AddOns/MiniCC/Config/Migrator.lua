@@ -11,6 +11,8 @@ local dbDefaults = {
 	GlowType = "Proc Glow",
 	FontScale = 1.0,
 	IconSpacing = 2,
+	ConfigureBlizzardNameplates = true,
+	CCNativeOrder = false,
 	Modules = {
 		---@class CrowdControlModuleOptions
 		CCModule = {

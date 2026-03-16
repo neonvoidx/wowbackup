@@ -34,6 +34,10 @@ L["vendorCraftShopperMissingGold"] = [=[金幣不足。
 缺少：%s]=]
 L["vendorCraftShopperMissingOnly"] = "只顯示缺少"
 L["vendorCraftShopperPurchaseFailed"] = "購買失敗，請再試一次。"
+L["vendorCraftShopperReagentQuality"] = "材料品質"
+L["vendorCraftShopperReagentQualityDesc"] = "選擇當配方有品質變化時，Craft Shopper 要追蹤可用的最低或最高材料品質。搜尋與直接購買會使用所選品質。"
+L["vendorCraftShopperReagentQualityHighest"] = "最高品質"
+L["vendorCraftShopperReagentQualityLowest"] = "最低品質"
 L["vendorCraftShopperSearchAH"] = "在拍賣行搜尋"
 L["vendorCraftShopperTimeRemaining"] = "剩餘時間：%d秒"
 L["vendorCraftShopperTitle"] = "Craft Shopper"

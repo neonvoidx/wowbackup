@@ -136,8 +136,8 @@ local function setItemButtonQualitySafe(button, quality, itemIDOrLink)
 	if not button or not button.IconBorder then return end
 
 	local minQuality = (Enum and Enum.ItemQuality and Enum.ItemQuality.Common) or 1
-	if quality and quality > minQuality and GetItemQualityColor then
-		local r, g, b = GetItemQualityColor(quality)
+	if quality and quality > minQuality and C_Item.GetItemQualityColor then
+		local r, g, b = C_Item.GetItemQualityColor(quality)
 		if r then
 			button.IconBorder:SetVertexColor(r, g, b)
 			button.IconBorder:Show()
@@ -172,7 +172,6 @@ end
 local function formatMoney(amount)
 	if not amount or amount <= 0 then return nil end
 	if C_CurrencyInfo and C_CurrencyInfo.GetCoinTextureString then return C_CurrencyInfo.GetCoinTextureString(amount) end
-	if GetCoinTextureString then return GetCoinTextureString(amount) end
 	if GetMoneyString then return GetMoneyString(amount) end
 	return tostring(amount)
 end
@@ -295,8 +294,8 @@ end
 
 local function colorizeItemName(name, quality)
 	if not name then return "" end
-	if quality and GetItemQualityColor then
-		local r, g, b = GetItemQualityColor(quality)
+	if quality and C_Item.GetItemQualityColor then
+		local r, g, b = C_Item.GetItemQualityColor(quality)
 		if r then return string.format("|cff%s%s%s%s|r", toHexByte(r), toHexByte(g), toHexByte(b), name) end
 	end
 	return name
@@ -437,11 +436,11 @@ local function setItemButtonData(button, item)
 	end
 	button.money = nil
 	local texture = item.texture
-	if not texture and item.itemID then texture = select(10, GetItemInfo(item.itemID)) end
+	if not texture and item.itemID then texture = select(10, C_Item.GetItemInfo(item.itemID)) end
 	setItemButtonTextureSafe(button, texture or "Interface\\Icons\\INV_Misc_QuestionMark")
 	setItemButtonCountSafe(button, item.count or 1)
 	local link = item.link
-	if not link and item.itemID then link = select(2, GetItemInfo(item.itemID)) end
+	if not link and item.itemID then link = select(2, C_Item.GetItemInfo(item.itemID)) end
 	if link or item.itemID then
 		setItemButtonQualitySafe(button, item.quality, link or item.itemID)
 	else
@@ -567,7 +566,7 @@ function TradeMailLog:CaptureSendMail()
 	for i = 1, maxAttach do
 		if HasSendMailItem and HasSendMailItem(i) then
 			local name, itemID, texture, count, quality = GetSendMailItem(i)
-			local link = itemID and select(2, GetItemInfo(itemID)) or nil
+			local link = itemID and select(2, C_Item.GetItemInfo(itemID)) or nil
 			items[#items + 1] = {
 				name = name,
 				link = link,
@@ -848,8 +847,8 @@ function TradeMailLog:ShowTradePreview(payload)
 			local itemName = item and (item.name or extractLinkName(item.link)) or nil
 			if item and itemName then
 				itemFrame.Name:SetText(itemName)
-				if item.quality and GetItemQualityColor then
-					local r, g, b = GetItemQualityColor(item.quality)
+				if item.quality and C_Item.GetItemQualityColor then
+					local r, g, b = C_Item.GetItemQualityColor(item.quality)
 					itemFrame.Name:SetTextColor(r, g, b)
 				else
 					itemFrame.Name:SetTextColor(NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b)
@@ -868,8 +867,8 @@ function TradeMailLog:ShowTradePreview(payload)
 			local itemName = item and (item.name or extractLinkName(item.link)) or nil
 			if item and itemName then
 				itemFrame.Name:SetText(itemName)
-				if item.quality and GetItemQualityColor then
-					local r, g, b = GetItemQualityColor(item.quality)
+				if item.quality and C_Item.GetItemQualityColor then
+					local r, g, b = C_Item.GetItemQualityColor(item.quality)
 					itemFrame.Name:SetTextColor(r, g, b)
 				else
 					itemFrame.Name:SetTextColor(NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b)

@@ -194,15 +194,24 @@ function M:Build(panel)
 
 	local columns = 2
 	local columnWidth = mini:ColumnWidth(columns, 0, 0)
-	local description = mini:TextBlock({
-		Parent = panel,
-		Lines = {
-			L["Addon is under ongoing development."],
-			L["Feel free to report any bugs/ideas on our discord."],
-		},
-	})
+	local contentWidth = mini.ContentWidth
 
-	description:SetPoint("TOPLEFT", panel, "TOPLEFT", 0, 0)
+	-- "MiniCC" splash title
+	local titleFont = GameFontNormalHuge:GetFont()
+	local titleText = panel:CreateFontString(nil, "ARTWORK")
+	titleText:SetFont(titleFont, 30)
+	titleText:SetText("MiniCC")
+	titleText:SetTextColor(0.9, 0.2, 0.2, 1)
+	titleText:SetPoint("TOPLEFT", panel, "TOPLEFT", 0, 0)
+	titleText:SetWidth(contentWidth)
+	titleText:SetJustifyH("CENTER")
+
+	local subtitleText = panel:CreateFontString(nil, "ARTWORK", "GameFontNormal")
+	subtitleText:SetText(L["Mini addon, massive awareness."])
+	subtitleText:SetTextColor(0.7, 0.7, 0.7, 1)
+	subtitleText:SetPoint("TOPLEFT", titleText, "BOTTOMLEFT", 0, -6)
+	subtitleText:SetWidth(contentWidth)
+	subtitleText:SetJustifyH("CENTER")
 
 	local discordBox = mini:EditBox({
 		Parent = panel,
@@ -214,85 +223,14 @@ function M:Build(panel)
 		Width = columnWidth,
 	})
 
-	discordBox.EditBox:SetPoint("TOPLEFT", description, "BOTTOMLEFT", 4, -verticalSpacing)
-
-	local glowTypeLabel = panel:CreateFontString(nil, "ARTWORK", "GameFontNormal")
-	glowTypeLabel:SetText(L["Glow Type"])
-	glowTypeLabel:SetPoint("TOPLEFT", discordBox.EditBox, "BOTTOMLEFT", -4, -verticalSpacing * 2)
-
-	local glowTypeDropdown = mini:Dropdown({
-		Parent = panel,
-		Items = { "Proc Glow", "Rotation Assist", "Pixel Glow", "Autocast Shine" },
-		GetValue = function()
-			return db.GlowType or "Proc Glow"
-		end,
-		SetValue = function(value)
-			db.GlowType = value
-			addon:Refresh()
-		end,
-	})
-
-	glowTypeDropdown:SetPoint("TOPLEFT", glowTypeLabel, "BOTTOMLEFT", 0, -4)
-	glowTypeDropdown:SetWidth(columnWidth)
-
-	local glowNote = mini:TextBlock({
-		Parent = panel,
-		Lines = {
-			L["The Proc Glow uses the least CPU."],
-			L["The others seem to use a non-trivial amount of CPU."],
-		},
-	})
-
-	glowNote:SetPoint("TOPLEFT", glowTypeDropdown, "BOTTOMLEFT", 0, -verticalSpacing)
-
-	local fontScaleSlider = mini:Slider({
-		Parent = panel,
-		LabelText = L["Font Scale"],
-		Min = 0.5,
-		Max = 1.5,
-		Step = 0.05,
-		GetValue = function()
-			return db.FontScale or 1.0
-		end,
-		SetValue = function(value)
-			local newValue = mini:ClampFloat(value, 0.5, 1.5, 1.0)
-
-			if db.FontScale ~= newValue then
-				db.FontScale = newValue
-				addon:Refresh()
-			end
-		end,
-		Width = columnWidth - horizontalSpacing,
-	})
-
-	fontScaleSlider.Slider:SetPoint("TOPLEFT", glowNote, "BOTTOMLEFT", 4, -verticalSpacing * 3)
-
-	local iconSpacingSlider = mini:Slider({
-		Parent = panel,
-		LabelText = L["Icon Padding"],
-		Min = 0,
-		Max = 20,
-		Step = 1,
-		GetValue = function()
-			return db.IconSpacing or 2
-		end,
-		SetValue = function(value)
-			local newValue = mini:ClampInt(value, 0, 20, 2)
-
-			if db.IconSpacing ~= newValue then
-				db.IconSpacing = newValue
-				addon:Refresh()
-			end
-		end,
-		Width = columnWidth - horizontalSpacing,
-	})
-
-	iconSpacingSlider.Slider:SetPoint("LEFT", fontScaleSlider.Slider, "RIGHT", horizontalSpacing, 0)
-	iconSpacingSlider.Slider:SetPoint("TOP", fontScaleSlider.Slider, "TOP", 0, 0)
+	discordBox.Label:SetPoint("TOP", subtitleText, "BOTTOM", 0, -verticalSpacing * 2)
+	discordBox.Label:SetWidth(columnWidth)
+	discordBox.Label:SetJustifyH("CENTER")
+	discordBox.EditBox:SetPoint("TOP", discordBox.Label, "BOTTOM", 0, -4)
 
 	local resetBtn = CreateFrame("Button", nil, panel, "UIPanelButtonTemplate")
 	resetBtn:SetSize(120, 26)
-	resetBtn:SetPoint("TOPLEFT", fontScaleSlider.Slider, "BOTTOMLEFT", 0, -verticalSpacing * 2)
+	resetBtn:SetPoint("TOPRIGHT", discordBox.EditBox, "BOTTOM", -horizontalSpacing / 2, -verticalSpacing * 2)
 	resetBtn:SetText(L["Reset"])
 	resetBtn:SetScript("OnClick", function()
 		if InCombatLockdown() then
@@ -336,7 +274,7 @@ function M:Build(panel)
 
 	local importExportBtn = CreateFrame("Button", nil, panel, "UIPanelButtonTemplate")
 	importExportBtn:SetSize(120, 26)
-	importExportBtn:SetPoint("LEFT", resetBtn, "RIGHT", horizontalSpacing, 0)
+	importExportBtn:SetPoint("TOPLEFT", discordBox.EditBox, "BOTTOM", horizontalSpacing / 2, -verticalSpacing * 2)
 	importExportBtn:SetText(L["Import/Export"])
 	importExportBtn:SetScript("OnClick", function()
 		if InCombatLockdown() then

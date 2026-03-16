@@ -474,7 +474,6 @@ end
 BattleGroundEnemies:RegisterEvent("PLAYER_TARGET_CHANGED")
 
 BattleGroundEnemies:SetScript("OnEvent", function(self, event, ...)
-  -- 12.0.0 Safety: Only call if function exists. Prevents crashes from deprecated events like UNIT_AURA.
   if self[event] then
     self[event](self, ...)
   end
@@ -789,7 +788,7 @@ BattleGroundEnemies:RegisterEvent("PLAYER_LOGIN") --Fired on reload UI and on in
 BattleGroundEnemies.GeneralEvents = {
   "LOSS_OF_CONTROL_ADDED",
   "LOSS_OF_CONTROL_UPDATE",
-  "UNIT_HEALTH_FREQUENT", -- 12.0.0 replacement for health tracking
+  "UNIT_HEALTH_FREQUENT",
   "UPDATE_MOUSEOVER_UNIT",
   "PLAYER_TARGET_CHANGED",
   "PLAYER_FOCUS_CHANGED",
@@ -1356,7 +1355,6 @@ function BattleGroundEnemies:SafeGetUnitName(unitID)
 
   local fullName
   local ok2 = pcall(function()
-    -- 12.0.0 Fix: Cleanse secret values using tostring() within pcall
     if name then
       name = tostring(name)
     end
@@ -1677,6 +1675,28 @@ do
       end
     end
 
+    -- Try name-based lookup (fast, reliable, bypasses PID ambiguity).
+    -- UnitName works for most tokens (nameplates, target, focus, arena, party, raid)
+    -- even when UnitGUID fails or the GUID isn't in our cache yet.
+    local playersTable = playerType == "Allies" and self.Allies and self.Allies.Players
+      or playerType == "Enemies" and self.Enemies and self.Enemies.Players
+    if playersTable then
+      local okName, unitName = pcall(GetUnitName, unitID, true)
+      if okName and unitName then
+        -- unitName may be a secret string (type()=="string" but crashes as table key).
+        -- pcall the table lookup itself to handle this safely.
+        local okLookup, nameButton = pcall(function()
+          return playersTable[unitName]
+        end)
+        if okLookup and nameButton then
+          if not ignoreExistingArena then
+            scanCycleCache[unitID] = nameButton
+          end
+          return nameButton
+        end
+      end
+    end
+
     -- Check cross-tick sticky cache (prevents PID oscillation between scan cycles).
     -- Only used when GUID lookup failed (combat taint, compound tokens, etc.).
     -- Validates that the cached button still exists in the roster and class still matches.
@@ -1715,9 +1735,7 @@ do
     local classGenderCandidates = {} -- fallback tier 3: race nil/mismatched but gender+class match
     local classCandidates = {} -- fallback tier 4: class only (broadest)
 
-    -- Search the appropriate Players table based on playerType
-    local playersTable = playerType == "Allies" and self.Allies and self.Allies.Players
-      or playerType == "Enemies" and self.Enemies and self.Enemies.Players
+    -- playersTable already resolved above (name-based lookup section)
 
     if targetClassPID > 0 then
       if playersTable then
@@ -2105,13 +2123,11 @@ function BattleGroundEnemies:ScanTargets()
       local ok, name, server = pcall(GetUnitName, targetUnitID, true)
       local targetName = nil
       if ok and name then
-        -- 12.0.0 Fix: Sanitize secret values before using as table index
         local ok2 = pcall(function()
           name = tostring(name)
           if server then
             server = tostring(server)
           end
-          -- Check if values are still secret after tostring
           if issecretvalue and (issecretvalue(name) or (server and issecretvalue(server))) then
             return
           end
@@ -2291,13 +2307,11 @@ function BattleGroundEnemies:ScanTargets()
       local ok, name, server = pcall(GetUnitName, targetUnitID, true)
       local targetName = nil
       if ok and name then
-        -- 12.0.0 Fix: Sanitize secret values before using as table index
         local ok2 = pcall(function()
           name = tostring(name)
           if server then
             server = tostring(server)
           end
-          -- Check if values are still secret after tostring
           if issecretvalue and (issecretvalue(name) or (server and issecretvalue(server))) then
             return
           end
@@ -2832,8 +2846,6 @@ function BattleGroundEnemies:UNIT_SPELL_DIMINISH_CATEGORY_STATE_UPDATED(unitToke
   end
 end
 
--- UNIT_AURA removed for 12.0 performance (Aura support deprecated)
-
 function BattleGroundEnemies:UNIT_HEALTH(unitID) --gets health of nameplates, player, target, focus, raid1 to raid40, partymember
   local playerButton = self:GetPlayerbuttonByUnitID(unitID, "Enemies")
 
@@ -2958,7 +2970,7 @@ function BattleGroundEnemies:UNIT_TARGET(unitID)
     playerButton:UpdateTarget()
   end
 
-  -- 12.0.0 Enhancement: Snapshot update for the unit being targeted
+  -- Enhancement: Snapshot update for the unit being targeted
   -- Restriction: Only check targets of friendly players (party/raid) to avoid secret value crashes for nameplates
   if string.find(unitID, "^party") or string.find(unitID, "^raid") or unitID == "player" then
     local targetUnitID = unitID .. "target"
@@ -2966,13 +2978,11 @@ function BattleGroundEnemies:UNIT_TARGET(unitID)
       local ok, name, server = pcall(GetUnitName, targetUnitID, true)
       local targetName = nil
       if ok and name then
-        -- 12.0.0 Fix: Sanitize secret values before using as table index
         local ok2 = pcall(function()
           name = tostring(name)
           if server then
             server = tostring(server)
           end
-          -- Check if values are still secret after tostring
           if issecretvalue and (issecretvalue(name) or (server and issecretvalue(server))) then
             return
           end

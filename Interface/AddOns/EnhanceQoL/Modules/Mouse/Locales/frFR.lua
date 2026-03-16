@@ -26,6 +26,7 @@ L["mouseCrosshairUseClassColor"] = "Utiliser la couleur de classe pour le rétic
 L["mouseRing"] = "Anneau de souris"
 L["mouseRingCastProgress"] = "Afficher la progression d'incantation sur l'anneau"
 L["mouseRingCastProgressColor"] = "Couleur de progression d'incantation"
+L["mouseRingCastProgressShowOutsideCombat"] = "Afficher la progression d'incantation hors combat"
 L["mouseRingCombatOverlay"] = "Afficher un anneau supplémentaire en combat"
 L["mouseRingCombatOverlayColor"] = "Couleur de l'anneau supplémentaire en combat"
 L["mouseRingCombatOverlaySize"] = "Taille de l'anneau supplémentaire en combat"

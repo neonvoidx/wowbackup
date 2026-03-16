@@ -783,7 +783,6 @@ local function CreateMainFrame(playerType)
     playerButton.unitID = nil
     playerButton.unit = nil
 
-    -- Fix for 11.0+ / 12.0.0 CompactUnitFrame compatibility
     playerButton.powerBarUsedHeight = 0
 
     playerButton.PlayerDetails = playerDetails
@@ -1070,7 +1069,6 @@ local function CreateMainFrame(playerType)
       local detailsChanged = false
 
       for k, v in pairs(playerDetails) do
-        -- Skip secret values — can't compare them (12.0.0)
         if not (issecretvalue and issecretvalue(v)) then
           if v ~= currentDetails[k] then
             detailsChanged = true
@@ -1589,6 +1587,10 @@ function BattleGroundEnemies.Enemies:NAME_PLATE_UNIT_ADDED(unitID)
   if not BattleGroundEnemies.IsEnemyFactionUnit(unitID) then
     return
   end
+  -- Clear stale sticky cache for this nameplate (may have been recycled from a different enemy)
+  BattleGroundEnemies:InvalidateStickyPID(unitID)
+  BattleGroundEnemies:InvalidateStickyPID(unitID .. "target")
+
   -- Track highest nameplate index for ScanTargets optimization
   local idx = unitID and tonumber(unitID:match("nameplate(%d+)"))
   if idx then
@@ -1615,6 +1617,11 @@ function BattleGroundEnemies.Enemies:NAME_PLATE_UNIT_ADDED(unitID)
 end
 
 function BattleGroundEnemies.Enemies:NAME_PLATE_UNIT_REMOVED(unitID)
+  -- Invalidate sticky PID cache for this nameplate token (and its compound tokens).
+  -- Without this, recycled nameplates would incorrectly map to the old enemy's button.
+  BattleGroundEnemies:InvalidateStickyPID(unitID)
+  BattleGroundEnemies:InvalidateStickyPID(unitID .. "target")
+
   -- Can't use GetPlayerbuttonByUnitID here because the unit may already be invalid
   -- (UnitExists returns false after nameplate removal). Instead, scan buttons directly
   -- to find which one has this nameplate stored.

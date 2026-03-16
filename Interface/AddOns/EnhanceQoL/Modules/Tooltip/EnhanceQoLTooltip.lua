@@ -296,8 +296,8 @@ EnsureUnitData = function(unit)
 			ilvl = eq and tonumber(string.format("%.1f", eq))
 		end
 		local specName
-		local si = GetSpecialization and GetSpecialization()
-		if si then specName = select(2, GetSpecializationInfo(si)) end
+		local si = C_SpecializationInfo and C_SpecializationInfo.GetSpecialization and C_SpecializationInfo.GetSpecialization()
+		if si then specName = select(2, C_SpecializationInfo.GetSpecializationInfo(si)) end
 		local score = C_ChallengeMode and C_ChallengeMode.GetOverallDungeonScore and C_ChallengeMode.GetOverallDungeonScore()
 		InspectCache[guid] = { ilvl = ilvl, specName = specName, score = score, last = now() }
 		return
@@ -995,7 +995,7 @@ local function checkItem(tooltip, id, name, guid)
 
 	if addon.db["TooltipShowItemIcon"] then
 		local icon = nil
-		if id then icon = select(5, GetItemInfoInstant(id)) end
+		if id then icon = select(5, C_Item.GetItemInfoInstant(id)) end
 		local line = tooltip and _G[tooltip:GetName() .. "TextLeft1"]
 		if line then
 			local current = line:GetText()
@@ -1162,27 +1162,12 @@ if TooltipDataProcessor then
 		if not data or not data.type then return end
 		if not IsTooltipMutable(tooltip) then return end
 
+		if issecretvalue and issecretvalue(data.type) then return end
+
 		local restricted = addon.functions.isRestrictedContent and addon.functions.isRestrictedContent(true)
 		local id, name, _, timeLimit, kind
 
-		if issecretvalue and issecretvalue(data.type) then
-			-- check for owner
-			local owner = tooltip.GetOwner and tooltip:GetOwner()
-			if owner then
-				if owner.auraInstanceID then kind = "aura" end
-			end
-			if not kind then
-				-- check for mouseover
-				if UnitIsEnemy("mouseover", "player") or UnitIsFriend("mouseover", "player") then
-					kind = "unit"
-				else
-					-- assume it's an aura?
-					kind = "aura"
-				end
-			end
-		else
-			kind = addon.Tooltip.variables.kindsByID[tonumber(data.type)]
-		end
+		kind = addon.Tooltip.variables.kindsByID[tonumber(data.type)]
 		if restricted and kind ~= "unit" then return end
 
 		if kind == "spell" then
@@ -1195,7 +1180,7 @@ if TooltipDataProcessor then
 			id = data.id
 			if ttInfo and ttInfo.getterArgs then
 				local actionSlot = ttInfo.getterArgs[1]
-				if actionSlot then id = GetActionText(actionSlot) end
+				if actionSlot then id = C_ActionBar.GetActionText(actionSlot) end
 			end
 			name = MACRO
 			checkSpell(tooltip, id, name)

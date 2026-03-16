@@ -47,6 +47,7 @@ function addon.Vendor.functions.InitDB()
 	init("vendorShowDestroyOverlay", true)
 	init("vendorDestroyShowMessages", true)
 	init("vendorCraftShopperEnable", false)
+	init("vendorCraftShopperReagentQuality", "highest")
 	local legacyIgnoreEquipmentSets = addon.db["vendorIgnoreEquipmentSets"]
 
 	for key, value in pairs(addon.Vendor.variables.tabNames) do

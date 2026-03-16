@@ -167,3 +167,5 @@ ColouredEnemyNameplates: enabled
 ItemLevelNameplate: enabled
 BattleGroundEnemiesFixed: enabled
 Collectionator: enabled
+!Swatter: disabled
+!ImprovedErrorFrame: disabled

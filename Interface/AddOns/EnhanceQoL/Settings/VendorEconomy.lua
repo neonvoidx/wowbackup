@@ -7,6 +7,8 @@ local mailboxContactsOrder = {}
 local moneyTrackerOrder = {}
 local warbandTargetOrder = {}
 
+local function getPrivateDB() return addon.functions.GetPrivateDB and addon.functions.GetPrivateDB() or addon.privateDB or {} end
+
 local function applyParentSection(entries, section)
 	for _, entry in ipairs(entries or {}) do
 		entry.parentSection = section
@@ -23,9 +25,12 @@ local function getClassColoredCharacterLabel(info)
 end
 
 local function listTrackedCharacters()
-	local tracker = addon.db and addon.db["moneyTracker"] or {}
+	local privateDB = getPrivateDB()
+	local tracker = privateDB["moneyTracker"] or {}
 	local entries = {}
 	local seen = {}
+	local playerGuid = UnitGUID("player")
+	local playerInfo
 
 	local function addEntry(guid, info)
 		if not guid or guid == "" or seen[guid] then return end
@@ -38,22 +43,35 @@ local function listTrackedCharacters()
 		}
 	end
 
+	if playerGuid then playerInfo = {
+		name = UnitName("player"),
+		realm = GetRealmName(),
+		class = select(2, UnitClass("player")),
+	} end
+
+	local function resolveCharacterInfo(guid)
+		if guid and playerGuid and guid == playerGuid and playerInfo then return playerInfo end
+		return tracker[guid] or {
+			name = UNKNOWNOBJECT or "?",
+			realm = GetRealmName(),
+		}
+	end
+
 	for guid, info in pairs(tracker) do
 		if type(info) == "table" then addEntry(guid, info) end
 	end
 
-	local selectedGuid = addon.db and addon.db["autoWarbandGoldTargetCharacter"]
-	if selectedGuid and selectedGuid ~= "" and not seen[selectedGuid] then addEntry(selectedGuid, tracker[selectedGuid] or {
-		name = UNKNOWNOBJECT or "?",
-		realm = GetRealmName(),
-	}) end
+	local selectedGuid = privateDB["autoWarbandGoldTargetCharacter"]
+	if selectedGuid and selectedGuid ~= "" and not seen[selectedGuid] then addEntry(selectedGuid, resolveCharacterInfo(selectedGuid)) end
 
-	local playerGuid = UnitGUID("player")
-	if playerGuid and not seen[playerGuid] then addEntry(playerGuid, {
-		name = UnitName("player"),
-		realm = GetRealmName(),
-		class = select(2, UnitClass("player")),
-	}) end
+	local ignoredCharacters = privateDB["autoWarbandGoldIgnoredCharacters"]
+	if type(ignoredCharacters) == "table" then
+		for guid, isIgnored in pairs(ignoredCharacters) do
+			if isIgnored then addEntry(guid, resolveCharacterInfo(guid)) end
+		end
+	end
+
+	if playerGuid and playerInfo and not seen[playerGuid] then addEntry(playerGuid, playerInfo) end
 
 	table.sort(entries, function(a, b)
 		if a.sortKey == b.sortKey then return a.key < b.key end
@@ -64,11 +82,12 @@ local function listTrackedCharacters()
 end
 
 local function getSelectedWarbandTargetCharacter()
-	local selected = addon.db and addon.db["autoWarbandGoldTargetCharacter"]
+	local privateDB = getPrivateDB()
+	local selected = privateDB["autoWarbandGoldTargetCharacter"]
 	if selected and selected ~= "" then return selected end
 
 	local playerGuid = UnitGUID("player")
-	if addon.db and playerGuid then addon.db["autoWarbandGoldTargetCharacter"] = playerGuid end
+	if playerGuid then privateDB["autoWarbandGoldTargetCharacter"] = playerGuid end
 	return playerGuid or ""
 end
 
@@ -123,15 +142,16 @@ data = {
 	{
 		var = "autoWarbandGold",
 		text = L["autoWarbandGold"],
-		func = function(v) addon.db["autoWarbandGold"] = v and true or false end,
+		get = function() return getPrivateDB()["autoWarbandGold"] == true end,
+		func = function(v) getPrivateDB()["autoWarbandGold"] = v and true or false end,
 		desc = L["autoWarbandGoldDesc"],
 		children = {
 			{
 				var = "autoWarbandGoldTargetGold",
 				text = L["autoWarbandGoldTargetDefaultGold"] or L["autoWarbandGoldTargetGold"],
 				desc = L["autoWarbandGoldTargetDefaultGoldDesc"] or L["autoWarbandGoldTargetGoldDesc"],
-				get = function() return addon.db and addon.db["autoWarbandGoldTargetGold"] or 10000 end,
-				set = function(value) addon.db["autoWarbandGoldTargetGold"] = value end,
+				get = function() return getPrivateDB()["autoWarbandGoldTargetGold"] or 10000 end,
+				set = function(value) getPrivateDB()["autoWarbandGoldTargetGold"] = value end,
 				min = 0,
 				max = 1000000,
 				step = 1000,
@@ -168,7 +188,7 @@ data = {
 				set = function(key, maybeKey)
 					local resolved = maybeKey or key
 					if not resolved or resolved == "" then resolved = UnitGUID("player") or "" end
-					addon.db["autoWarbandGoldTargetCharacter"] = resolved
+					getPrivateDB()["autoWarbandGoldTargetCharacter"] = resolved
 
 					local sliderEntry = addon.SettingsLayout and addon.SettingsLayout.elements and addon.SettingsLayout.elements["autoWarbandGoldTargetGoldPerCharacter"]
 					local sliderVariable = sliderEntry and sliderEntry.setting and sliderEntry.setting.GetVariable and sliderEntry.setting:GetVariable()
@@ -190,17 +210,19 @@ data = {
 				desc = L["autoWarbandGoldTargetGoldPerCharacterDesc"] or L["autoWarbandGoldTargetGoldDesc"],
 				get = function()
 					local guid = getSelectedWarbandTargetCharacter()
-					if not guid or guid == "" then return addon.db and addon.db["autoWarbandGoldTargetGold"] or 10000 end
-					local perChar = addon.db and addon.db["autoWarbandGoldPerCharacter"]
+					local privateDB = getPrivateDB()
+					if not guid or guid == "" then return privateDB["autoWarbandGoldTargetGold"] or 10000 end
+					local perChar = privateDB["autoWarbandGoldPerCharacter"]
 					local value = perChar and perChar[guid]
-					if value == nil then return addon.db and addon.db["autoWarbandGoldTargetGold"] or 10000 end
+					if value == nil then return privateDB["autoWarbandGoldTargetGold"] or 10000 end
 					return value
 				end,
 				set = function(value)
 					local guid = getSelectedWarbandTargetCharacter()
 					if not guid or guid == "" then return end
-					addon.db["autoWarbandGoldPerCharacter"] = addon.db["autoWarbandGoldPerCharacter"] or {}
-					addon.db["autoWarbandGoldPerCharacter"][guid] = value
+					local privateDB = getPrivateDB()
+					privateDB["autoWarbandGoldPerCharacter"] = privateDB["autoWarbandGoldPerCharacter"] or {}
+					privateDB["autoWarbandGoldPerCharacter"][guid] = value
 				end,
 				min = 0,
 				max = 1000000,
@@ -215,9 +237,37 @@ data = {
 				end,
 			},
 			{
+				var = "autoWarbandGoldIgnoredCharacters",
+				text = L["autoWarbandGoldIgnoredCharacters"] or "Ignored characters",
+				desc = L["autoWarbandGoldIgnoredCharactersDesc"],
+				optionfunc = function()
+					local options = {}
+					for _, entry in ipairs(listTrackedCharacters()) do
+						options[#options + 1] = { value = entry.key, text = entry.label }
+					end
+					return options
+				end,
+				getSelection = function()
+					local ignored = getPrivateDB()["autoWarbandGoldIgnoredCharacters"]
+					if type(ignored) ~= "table" then return {} end
+					return ignored
+				end,
+				setSelection = function(selection) getPrivateDB()["autoWarbandGoldIgnoredCharacters"] = type(selection) == "table" and selection or {} end,
+				db = getPrivateDB(),
+				customDefaultText = NONE,
+				sType = "multidropdown",
+				parent = true,
+				parentCheck = function()
+					return addon.SettingsLayout.elements["autoWarbandGold"]
+						and addon.SettingsLayout.elements["autoWarbandGold"].setting
+						and addon.SettingsLayout.elements["autoWarbandGold"].setting:GetValue() == true
+				end,
+			},
+			{
 				var = "autoWarbandGoldWithdraw",
 				text = L["autoWarbandGoldWithdraw"],
-				func = function(v) addon.db["autoWarbandGoldWithdraw"] = v and true or false end,
+				get = function() return getPrivateDB()["autoWarbandGoldWithdraw"] == true end,
+				func = function(v) getPrivateDB()["autoWarbandGoldWithdraw"] = v and true or false end,
 				desc = L["autoWarbandGoldWithdrawDesc"],
 				parentCheck = function()
 					return addon.SettingsLayout.elements["autoWarbandGold"]
@@ -332,9 +382,30 @@ addon.functions.SettingsCreateCheckboxes(cVendorEconomy, data)
 local craftTitle = (LVendor and LVendor["vendorCraftShopperTitle"]) or "Craft Shopper"
 local craftEnableText = (LVendor and LVendor["vendorCraftShopperEnable"]) or "Enable Craft Shopper"
 local craftEnableDesc = LVendor and LVendor["vendorCraftShopperEnableDesc"] or nil
+local craftQualityText = (LVendor and LVendor["vendorCraftShopperReagentQuality"]) or (_G["PROFESSIONS_QUALITY_DIALOG_TITLE"] or "Reagent Quality")
+local craftQualityDesc = LVendor and LVendor["vendorCraftShopperReagentQualityDesc"] or nil
+local craftQualityList = {
+	lowest = (LVendor and LVendor["vendorCraftShopperReagentQualityLowest"]) or "Lowest quality",
+	highest = (LVendor and LVendor["vendorCraftShopperReagentQualityHighest"]) or "Highest quality",
+}
+local craftQualityOrder = { "lowest", "highest" }
+
+local function getCraftShopperQualityValue()
+	if addon.db["vendorCraftShopperReagentQuality"] == "lowest" then return "lowest" end
+	return "highest"
+end
+
+local function setCraftShopperQualityValue(value)
+	local quality = value == "lowest" and "lowest" or "highest"
+	if addon.Vendor and addon.Vendor.CraftShopper and addon.Vendor.CraftShopper.SetReagentQualityMode then
+		addon.Vendor.CraftShopper.SetReagentQualityMode(quality)
+	else
+		addon.db["vendorCraftShopperReagentQuality"] = quality
+	end
+end
 
 addon.functions.SettingsCreateHeadline(cVendorEconomy, craftTitle, { parentSection = auctionHouseExpandable })
-addon.functions.SettingsCreateCheckbox(cVendorEconomy, {
+local craftEnable = addon.functions.SettingsCreateCheckbox(cVendorEconomy, {
 	var = "vendorCraftShopperEnable",
 	text = craftEnableText,
 	desc = craftEnableDesc,
@@ -351,6 +422,45 @@ addon.functions.SettingsCreateCheckbox(cVendorEconomy, {
 	default = false,
 	parentSection = auctionHouseExpandable,
 })
+
+local function craftShopperParentCheck() return craftEnable and craftEnable.setting and craftEnable.setting:GetValue() == true end
+
+addon.functions.SettingsCreateDropdown(cVendorEconomy, {
+	var = "vendorCraftShopperReagentQuality",
+	text = craftQualityText,
+	desc = craftQualityDesc,
+	list = craftQualityList,
+	order = craftQualityOrder,
+	default = "highest",
+	get = function() return getCraftShopperQualityValue() end,
+	set = function(key, maybeValue) setCraftShopperQualityValue(maybeValue or key) end,
+	parent = true,
+	element = craftEnable.element,
+	parentCheck = craftShopperParentCheck,
+	parentSection = auctionHouseExpandable,
+})
+
+local craftingOrdersExpandable = addon.functions.SettingsCreateExpandableSection(cVendorEconomy, {
+	name = _G["PLACE_CRAFTING_ORDERS"] or "Crafting Orders",
+	newTagID = "EconomyCraftingOrders",
+	expanded = false,
+	colorizeTitle = false,
+})
+
+data = {
+	{
+		text = (function()
+			local label = _G["AUCTION_HOUSE_FILTER_CURRENTEXPANSION_ONLY"] or "Current expansion"
+			return L["alwaysUserCurExpCraftingOrders"]:format(label)
+		end)(),
+		var = "alwaysUserCurExpCraftingOrders",
+		func = function(value) addon.db["alwaysUserCurExpCraftingOrders"] = value end,
+	},
+}
+
+applyParentSection(data, craftingOrdersExpandable)
+table.sort(data, function(a, b) return a.text < b.text end)
+addon.functions.SettingsCreateCheckboxes(cVendorEconomy, data)
 
 local mailboxExpandable = addon.functions.SettingsCreateExpandableSection(addon.SettingsLayout.rootSOCIAL, {
 	name = MINIMAP_TRACKING_MAILBOX,
@@ -496,7 +606,7 @@ function addon.functions.settingsAddGold()
 	addon.functions.SettingsCreateScrollDropdown(addon.SettingsLayout.rootGENERAL, {
 		parentSection = goldExpandable,
 		listFunc = function()
-			local tracker = addon.db["moneyTracker"] or {}
+			local tracker = getPrivateDB()["moneyTracker"] or {}
 			local entries = {}
 			local tList = { [""] = "" }
 			wipe(moneyTrackerOrder)
@@ -527,9 +637,10 @@ function addon.functions.settingsAddGold()
 		get = function() return "" end,
 		set = function(key)
 			if not key or key == "" then return end
-			if not addon.db or not addon.db["moneyTracker"] or not addon.db["moneyTracker"][key] then return end
+			local privateDB = getPrivateDB()
+			if not privateDB["moneyTracker"] or not privateDB["moneyTracker"][key] then return end
 
-			local contact = addon.db["moneyTracker"][key]
+			local contact = privateDB["moneyTracker"][key]
 			local classColor = (CUSTOM_CLASS_COLORS or RAID_CLASS_COLORS)[contact.class or ""] or { r = 1, g = 1, b = 1 }
 			local displayName = string.format("|cff%02x%02x%02x%s-%s|r", (classColor.r or 1) * 255, (classColor.g or 1) * 255, (classColor.b or 1) * 255, contact.name or "?", contact.realm or "?")
 
@@ -546,8 +657,9 @@ function addon.functions.settingsAddGold()
 				}
 
 			StaticPopupDialogs[dialogKey].OnAccept = function(_, guid)
-				if not guid or not addon.db or not addon.db["moneyTracker"] then return end
-				addon.db["moneyTracker"][guid] = nil
+				local confirmDB = getPrivateDB()
+				if not guid or not confirmDB["moneyTracker"] then return end
+				confirmDB["moneyTracker"][guid] = nil
 			end
 
 			StaticPopup_Show(dialogKey, displayName or key, nil, key)

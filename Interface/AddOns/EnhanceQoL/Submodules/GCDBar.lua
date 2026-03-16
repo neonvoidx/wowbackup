@@ -130,24 +130,31 @@ local function normalizeColor(value, fallback)
 	return d.r or 1, d.g or 1, d.b or 1, d.a
 end
 
+local function isLikelyFilePath(value)
+	if type(value) ~= "string" or value == "" then return false end
+	return string.find(value, "[/\\]") ~= nil
+end
+
 local function resolveTexture(key)
 	if key == "SOLID" then return "Interface\\Buttons\\WHITE8x8" end
-	if not key or key == "DEFAULT" then return DEFAULT_TEX end
+	if not key or key == "" or key == "DEFAULT" then return DEFAULT_TEX end
 	if LSM and LSM.Fetch then
 		local tex = LSM:Fetch("statusbar", key, true)
 		if tex then return tex end
 	end
-	return key
+	if isLikelyFilePath(key) then return key end
+	return DEFAULT_TEX
 end
 
 local function resolveBorderTexture(key)
 	if key == "SOLID" then return "Interface\\Buttons\\WHITE8x8" end
-	if not key or key == "DEFAULT" then return "Interface\\Buttons\\WHITE8x8" end
+	if not key or key == "" or key == "DEFAULT" then return "Interface\\Buttons\\WHITE8x8" end
 	if LSM and LSM.Fetch then
 		local tex = LSM:Fetch("border", key, true)
 		if tex then return tex end
 	end
-	return key
+	if isLikelyFilePath(key) then return key end
+	return "Interface\\Buttons\\WHITE8x8"
 end
 
 local function textureOptions()
@@ -546,6 +553,33 @@ function GCDBar:ApplyAppearance()
 			self.frame.border:Show()
 		end
 	end
+end
+
+function GCDBar:OnMediaRegistered(mediaType, mediaKey)
+	if type(mediaType) ~= "string" or type(mediaKey) ~= "string" or mediaKey == "" then return end
+	if not (addon and addon.db and addon.db[DB_ENABLED] == true) then return end
+	if not self.frame then return end
+
+	local shouldRefresh = false
+	if mediaType == "statusbar" then
+		local textureKey = self:GetTextureKey()
+		local bgTextureKey = self:GetBackgroundTextureKey()
+		shouldRefresh = mediaKey == textureKey or mediaKey == bgTextureKey
+	elseif mediaType == "border" then
+		shouldRefresh = mediaKey == self:GetBorderTextureKey()
+	end
+
+	if not shouldRefresh then return end
+
+	self:ApplyAppearance()
+	if self.previewing then
+		self.frame:SetMinMaxValues(0, 1)
+		self.frame:SetValue(1)
+		self.frame:Show()
+	elseif self._gcdActive then
+		self:UpdateTimer()
+	end
+	refreshSettingsUI()
 end
 
 function GCDBar:ApplySize()

@@ -84,7 +84,8 @@ VER 3 0100000000000045 " " "134400"
 /cast [mod:shift,@focus,exists,harm,nodead][] Psychic Horror
 END
 VER 3 0100000000000046 " " "134400"
-#showtoolip
+#showtooltip
+/cancelaura Dispersion
 /cast [mod:shift,@focus,exists,harm,nodead][] Silence
 END
 VER 3 0100000000000047 " " "134400"

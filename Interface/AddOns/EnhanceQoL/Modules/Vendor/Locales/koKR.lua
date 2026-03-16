@@ -34,6 +34,10 @@ L["vendorCraftShopperMissingGold"] = [=[골드가 부족합니다.
 부족액: %s]=]
 L["vendorCraftShopperMissingOnly"] = "부족한 것만"
 L["vendorCraftShopperPurchaseFailed"] = "구매 실패, 다시 시도하세요."
+L["vendorCraftShopperReagentQuality"] = "재료 품질"
+L["vendorCraftShopperReagentQualityDesc"] = "품질 단계가 있는 제작법에서 Craft Shopper가 사용 가능한 최저 또는 최고 재료 품질을 추적할지 선택합니다. 검색과 바로 구매는 선택한 품질을 사용합니다."
+L["vendorCraftShopperReagentQualityHighest"] = "최고 품질"
+L["vendorCraftShopperReagentQualityLowest"] = "최저 품질"
 L["vendorCraftShopperSearchAH"] = "경매장에서 검색"
 L["vendorCraftShopperTimeRemaining"] = "남은 시간: %d초"
 L["vendorCraftShopperTitle"] = "Craft Shopper"

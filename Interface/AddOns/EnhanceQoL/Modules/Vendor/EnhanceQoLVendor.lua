@@ -12,6 +12,7 @@ addon.Vendor.functions = addon.Vendor.functions or {}
 addon.Vendor.variables = addon.Vendor.variables or {}
 
 local L = LibStub("AceLocale-3.0"):GetLocale("EnhanceQoL_Vendor")
+local MainL = LibStub("AceLocale-3.0"):GetLocale(parentAddonName)
 local lastEbox = nil
 local sellMoreButton
 local hasMoreItems = false
@@ -41,9 +42,13 @@ local BAGANATOR_REGION_LABEL = "Enhance QoL"
 local BAGANATOR_REGION_ID = "enhanceqol_vendor_destroy_queue"
 local BAGANATOR_CORNER_WIDGET_LABEL = "EnhanceQoL Sell/Destroy"
 local BAGANATOR_CORNER_WIDGET_ID = "enhanceqol_vendor_mark"
+local BAGANATOR_UPGRADE_WIDGET_LABEL = "Enhance QoL " .. (MainL["showUpgradeArrowOnBagItems"] or "Upgrade arrow")
+local BAGANATOR_UPGRADE_WIDGET_ID = "enhanceqol_upgrade_arrow"
 local ICON_TEXTURE_SELL = "Interface\\buttons\\ui-grouploot-coin-up"
 local ICON_TEXTURE_DESTROY = "Interface\\Buttons\\UI-GroupLoot-DE-Up"
+local ICON_TEXTURE_UPGRADE = "Interface\\AddOns\\EnhanceQoL\\Icons\\upgradeilvl.tga"
 local baganatorCornerWidgetRegistered = false
+local baganatorUpgradeCornerWidgetRegistered = false
 local pendingBaganatorWidgetRefresh = false
 
 local function ensureDestroyListFrame()
@@ -174,6 +179,31 @@ local function requestBaganatorItemWidgetRefresh()
 		pendingBaganatorWidgetRefresh = false
 		api.RequestItemButtonsRefresh({ constants.RefreshReason.ItemWidgets })
 	end)
+end
+
+local function shouldShowBaganatorUpgradeCornerWidget(itemLocation)
+	if not (addon.db and addon.db["showUpgradeArrowOnBagItems"]) then return false end
+	if not (itemLocation and itemLocation.bagID ~= nil and itemLocation.slotIndex ~= nil and C_Item.DoesItemExist(itemLocation)) then return false end
+
+	local bag, slot = itemLocation.bagID, itemLocation.slotIndex
+	if bag < 0 or bag > NUM_TOTAL_EQUIPPED_BAG_SLOTS then return false end
+
+	local itemLink = C_Container.GetContainerItemLink(bag, slot)
+	if not itemLink then return false end
+
+	local _, _, _, itemEquipLoc, _, classID, subclassID = GetItemInfoInstant(itemLink)
+	if not addon.functions.IsItemRecommendedForSpec or not addon.functions.IsItemRecommendedForSpec(itemLink, itemEquipLoc, classID, subclassID) then return false end
+	if not addon.functions.IsBagItemUpgrade then return false end
+
+	local location = ItemLocation:CreateFromBagAndSlot(bag, slot)
+	local itemLevel = location and C_Item.GetCurrentItemLevel(location)
+	if not itemLevel or itemLevel <= 0 then itemLevel = C_Item.GetDetailedItemLevelInfo(itemLink) end
+	return addon.functions.IsBagItemUpgrade(itemLink, itemEquipLoc, itemLevel) == true
+end
+
+function addon.Vendor.functions.refreshBaganatorWidgets()
+	ensureBaganatorIntegration()
+	requestBaganatorItemWidgetRefresh()
 end
 
 local function getDestroyProtectionReason(itemID, bagInfo, quality)
@@ -570,6 +600,27 @@ ensureBaganatorIntegration = function(existingButton)
 		end, { corner = "bottom_left", priority = 2 }, true)
 		if ok then
 			baganatorCornerWidgetRegistered = true
+			requestBaganatorItemWidgetRefresh()
+		end
+	end
+
+	if not baganatorUpgradeCornerWidgetRegistered and api.RegisterCornerWidget then
+		local ok = pcall(api.RegisterCornerWidget, BAGANATOR_UPGRADE_WIDGET_LABEL, BAGANATOR_UPGRADE_WIDGET_ID, function(cornerFrame, details)
+			local itemLocation = details and details.itemLocation
+			if not shouldShowBaganatorUpgradeCornerWidget(itemLocation) then return false end
+			cornerFrame:SetTexture(ICON_TEXTURE_UPGRADE)
+			cornerFrame:SetVertexColor(0, 1, 0, 1)
+			return true
+		end, function(itemButton)
+			local icon = itemButton:CreateTexture(nil, "OVERLAY")
+			icon:SetSize(15, 15)
+			icon.padding = 0
+			icon:SetTexture(ICON_TEXTURE_UPGRADE)
+			icon:SetVertexColor(0, 1, 0, 1)
+			return icon
+		end, { corner = "bottom_right", priority = 2 }, true)
+		if ok then
+			baganatorUpgradeCornerWidgetRegistered = true
 			requestBaganatorItemWidgetRefresh()
 		end
 	end
@@ -1581,9 +1632,27 @@ local function addGeneralFrame(container)
 	end
 
 	-- Integrate Craft Shopper directly into Selling root
+	addon.Vendor.CraftShopper = addon.Vendor.CraftShopper or {}
 	local groupCS = addon.functions.createContainer("InlineGroup", "List")
 	groupCS:SetTitle(L["vendorCraftShopperTitle"])
 	wrapper:AddChild(groupCS)
+
+	local craftShopperQualityList = {
+		lowest = L["vendorCraftShopperReagentQualityLowest"],
+		highest = L["vendorCraftShopperReagentQualityHighest"],
+	}
+	local craftShopperQualityOrder = { "lowest", "highest" }
+	local function getCraftShopperQualityValue()
+		if addon.db["vendorCraftShopperReagentQuality"] == "lowest" then return "lowest" end
+		return "highest"
+	end
+
+	local dropCSQuality
+	local function refreshCraftShopperControls()
+		if not dropCSQuality then return end
+		dropCSQuality:SetDisabled(not addon.db["vendorCraftShopperEnable"])
+		if dropCSQuality:GetValue() ~= getCraftShopperQualityValue() then dropCSQuality:SetValue(getCraftShopperQualityValue()) end
+	end
 
 	local cbCS = addon.functions.createCheckboxAce(L["vendorCraftShopperEnable"], addon.db["vendorCraftShopperEnable"], function(_, _, checked)
 		addon.db["vendorCraftShopperEnable"] = checked
@@ -1592,8 +1661,22 @@ local function addGeneralFrame(container)
 		else
 			addon.Vendor.CraftShopper.DisableCraftShopper()
 		end
+		refreshCraftShopperControls()
 	end, L["vendorCraftShopperEnableDesc"])
 	groupCS:AddChild(cbCS)
+
+	dropCSQuality = addon.functions.createDropdownAce(L["vendorCraftShopperReagentQuality"], craftShopperQualityList, craftShopperQualityOrder, function(_, _, key)
+		local quality = key == "lowest" and "lowest" or "highest"
+		if addon.Vendor.CraftShopper and addon.Vendor.CraftShopper.SetReagentQualityMode then
+			addon.Vendor.CraftShopper.SetReagentQualityMode(quality)
+		else
+			addon.db["vendorCraftShopperReagentQuality"] = quality
+		end
+	end)
+	dropCSQuality:SetValue(getCraftShopperQualityValue())
+	groupCS:AddChild(dropCSQuality)
+	addon.Vendor.CraftShopper.settingsQualityDropdown = dropCSQuality
+	refreshCraftShopperControls()
 
 	scroll:DoLayout()
 end

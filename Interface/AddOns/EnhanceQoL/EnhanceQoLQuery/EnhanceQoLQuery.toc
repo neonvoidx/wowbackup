@@ -1,4 +1,4 @@
-## Interface: 110207, 120000, 120001
+## Interface: 120000, 120001, 120005
 ## Title: Query
 ## Notes: A simple addon to show item info
 ## Notes-deDE: Ein einfaches Addon, um Item-Infos anzuzeigen
@@ -12,7 +12,7 @@
 ## Notes-zhCN: 一个简单的物品信息显示插件
 ## Notes-zhTW: 一個簡單的物品資訊顯示插件
 ## Author: R41Z0R
-## Version: 8.8.1
+## Version: 9.1.0
 ## Dependencies: EnhanceQoL
 ## IconTexture: Interface\AddOns\EnhanceQoL\Icons\Icon.tga
 ## LoadOnDemand: 1

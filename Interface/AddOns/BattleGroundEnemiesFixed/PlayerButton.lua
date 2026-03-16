@@ -7,7 +7,6 @@ local Data = select(2, ...)
 local BattleGroundEnemies = BattleGroundEnemies
 local L = Data.L
 
--- 12.0: GetArenaCrowdControlInfo returns nil in BGs. Synthetic trinket cooldown as fallback.
 local FAKE_TRINKET = true
 local FAKE_TRINKET_DURATION = 120 -- DPS / Tank
 local FAKE_TRINKET_HEALER_DURATION = 90 -- Healer (30s reduction)
@@ -360,7 +359,6 @@ function BattleGroundEnemies:CreatePlayerButton(mainframe, num)
       if spellId then
         self.Trinket:SetTrinketCooldown(startTimeMs / 1000.0, durationMs / 1000.0)
       elseif FAKE_TRINKET then
-        -- 12.0: GetArenaCrowdControlInfo returns nil — use synthetic cooldown
         local duration = FAKE_TRINKET_DURATION
         local specData = self:GetSpecData()
         if specData and specData.roleID == "HEALER" then
@@ -954,46 +952,52 @@ function BattleGroundEnemies:CreatePlayerButton(mainframe, num)
     self:DispatchEvent("UpdateHealth", unitID, health, healthMissing, healthPercent, maxHealth)
   end
 
-  function playerButton:UNIT_HEALTH(unitID) --gets health of nameplates, player, target, focus, raid1 to raid40, partymember
-    -- For ALLIES: Always update if we have a valid party/raid unitID (unrestricted access)
-    -- For ENEMIES: Only update if button is shown (requires valid unitID token)
+  function playerButton:UNIT_HEALTH(unitID)
     local isAlly = not self.PlayerIsEnemy
 
     if not isAlly and not self.isShown then
-      -- Enemies: Skip if button is hidden (no valid unitID)
       return
     end
 
-    -- Allies: Always update (unrestricted party/raid access)
-    -- Enemies: Update only if shown (isShown check passed above)
-    local health
-    local healthMissing
-    local healthPercent
-    local maxHealth
+    -- For enemies: always query health from the button's primary unitID (self.unitID)
+    -- rather than whatever unitID triggered the event. Different tokens ("target",
+    -- "nameplate3", "raid5target") can return different display-health values for the
+    -- same enemy, causing jitter. The event is just a notification; read from one source.
+    local queryID = unitID
+    if not isAlly and self.unitID then
+      queryID = self.unitID
+    end
+
+    local health, healthMissing, healthPercent, maxHealth
     if self.PlayerDetails.isFakePlayer then
       health = self:FakeUnitHealth()
       healthMissing = self:FakeUnitHealthMissing()
       healthPercent = self:FakeUnitHealthPercent()
       maxHealth = self:FakeUnitHealthMax()
+    elseif isAlly then
+      health = UnitHealth(queryID)
+      healthMissing = UnitHealthMissing(queryID)
+      maxHealth = UnitHealthMax(queryID)
+      healthPercent = UnitHealthPercent(queryID)
     else
-      -- 12.0: Compound tokens (e.g. "raid1target") are rejected by UnitHealth.
-      local ok, h = pcall(UnitHealth, unitID, true)
+      local ok, h = pcall(UnitHealth, queryID, true)
       if not ok then
-        -- Token is tainted/restricted in combat — don't overwrite the health bar
-        -- with fake 1/1 (100%) values. Keep the last known good health from a
-        -- previous successful read (nameplate, arena, or earlier successful poll).
-        -- This prevents the bar from briefly flashing full every scan tick when a
-        -- compound token intermittently fails alongside a working direct token.
         return
-      else
-        health = h or 0
-        healthMissing = UnitHealthMissing(unitID, true) or 0
-        healthPercent = UnitHealthPercent(unitID, true, CurveConstants.ScaleTo100)
-        maxHealth = UnitHealthMax(unitID) or 1
       end
+      local ok2, hMissing = pcall(UnitHealthMissing, queryID, true)
+      local ok3, hMax = pcall(UnitHealthMax, queryID)
+      if not ok3 then
+        return
+      end
+      local ok4, hPct = pcall(UnitHealthPercent, queryID, true, CurveConstants.ScaleTo100)
+
+      health = h
+      healthMissing = (ok2 and hMissing) or nil
+      healthPercent = (ok4 and hPct) or nil
+      maxHealth = hMax
     end
 
-    self:UpdateHealth(unitID, health, healthMissing, healthPercent, maxHealth)
+    self:UpdateHealth(queryID, health, healthMissing, healthPercent, maxHealth)
   end
 
   function playerButton:ApplyRangeIndicatorSettings()
@@ -1094,7 +1098,6 @@ function BattleGroundEnemies:CreatePlayerButton(mainframe, num)
     local alphaMax = 1
     local alphaMin = self.config.RangeIndicator_Alpha
 
-    -- Check for secret value (12.0+)
     local isSecret = issecretvalue and issecretvalue(inRange)
 
     if isSecret and self.SetAlphaFromBoolean then
@@ -1208,11 +1211,13 @@ function BattleGroundEnemies:CreatePlayerButton(mainframe, num)
   playerButton.UNIT_ABSORB_AMOUNT_CHANGED = playerButton.UNIT_HEALTH
   playerButton.UNIT_HEAL_ABSORB_AMOUNT_CHANGED = playerButton.UNIT_HEALTH
 
-  function playerButton:UNIT_POWER_FREQUENT(unitID, powerToken) --gets power of nameplates, player, target, focus, raid1 to raid40, partymember
+  function playerButton:UNIT_POWER_FREQUENT(unitID, powerToken)
     if not self.isShown then
       return
     end
-    self:DispatchEvent("UpdatePower", unitID, powerToken)
+    -- Use primary unitID for consistency (same reason as UNIT_HEALTH)
+    local queryID = (self.PlayerIsEnemy and self.unitID) or unitID
+    self:DispatchEvent("UpdatePower", queryID, powerToken)
   end
 
   function playerButton:UpdateTargetedByEnemy(playerButton, targeted)

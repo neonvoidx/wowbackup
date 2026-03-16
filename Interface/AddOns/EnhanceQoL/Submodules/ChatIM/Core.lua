@@ -52,23 +52,21 @@ local function OpenChatIMForEditBox(editBox)
 	if not ChatIM.enabled or not editBox or not editBox:IsShown() then return end
 	local chatType = editBox.GetAttribute and editBox:GetAttribute("chatType")
 	if chatType == "WHISPER" then
-		local name = editBox:GetAttribute("tellTarget") or ChatEdit_GetLastTellTarget()
+		local name = editBox:GetAttribute("tellTarget") or ChatFrameUtil.GetLastTellTarget()
 		if name then
 			if not name:match("-") then name = name .. "-" .. (GetRealmName()):gsub("%s", "") end
 			ChatIM:StartWhisper(name)
-			local tab = ChatIM.tabs[name]
-			tab.edit:SetFocus()
+			ChatIM:FocusConversation(name, true)
 		end
 	elseif chatType == "BN_WHISPER" then
-		local target = editBox:GetAttribute("tellTarget") or ChatEdit_GetLastTellTarget()
+		local target = editBox:GetAttribute("tellTarget") or ChatFrameUtil.GetLastTellTarget()
 		if target then
 			local plain = BNTokenFindName and (BNTokenFindName(target) or target) or target
 			local bnetID = BNet_GetBNetIDAccount and BNet_GetBNetIDAccount(plain)
 			if bnetID then
 				local info = C_BattleNet.GetAccountInfoByID and C_BattleNet.GetAccountInfoByID(bnetID)
 				ChatIM:StartWhisper(plain, bnetID, info and info.battleTag)
-				local tab = ChatIM.tabs[target]
-				tab.edit:SetFocus()
+				ChatIM:FocusConversation(plain, true)
 			end
 		end
 	end
@@ -77,14 +75,7 @@ end
 local function focusTab(target)
 	if issecretvalue and issecretvalue(target) then return end
 	ChatIM:CreateTab(target)
-	if ChatIM.widget and ChatIM.widget.frame and not ChatIM.widget.frame:IsShown() then
-		UIFrameFlashStop(ChatIM.widget.frame)
-		ChatIM:ShowWindow()
-	end
-	local tab = ChatIM.tabs[target]
-	if tab and tab.edit then
-		ChatIM.tabGroup:SelectTab(target) -- tab.edit:SetFocus()
-	end
+	ChatIM:FocusConversation(target)
 end
 
 local frame = CreateFrame("Frame")
@@ -160,16 +151,14 @@ local function updateRegistration()
 			frame:UnregisterEvent("PLAYER_REGEN_ENABLED")
 		end
 
-		if ChatFrame_RemoveMessageEventFilter then
-			ChatFrame_RemoveMessageEventFilter("CHAT_MSG_WHISPER", whisperFilter)
-			ChatFrame_RemoveMessageEventFilter("CHAT_MSG_BN_WHISPER", whisperFilter)
-			ChatFrame_RemoveMessageEventFilter("CHAT_MSG_WHISPER_INFORM", whisperFilter)
-			ChatFrame_RemoveMessageEventFilter("CHAT_MSG_BN_WHISPER_INFORM", whisperFilter)
-		end
-		ChatFrame_AddMessageEventFilter("CHAT_MSG_WHISPER", whisperFilter)
-		ChatFrame_AddMessageEventFilter("CHAT_MSG_BN_WHISPER", whisperFilter)
-		ChatFrame_AddMessageEventFilter("CHAT_MSG_WHISPER_INFORM", whisperFilter)
-		ChatFrame_AddMessageEventFilter("CHAT_MSG_BN_WHISPER_INFORM", whisperFilter)
+		ChatFrameUtil.RemoveMessageEventFilter("CHAT_MSG_WHISPER", whisperFilter)
+		ChatFrameUtil.RemoveMessageEventFilter("CHAT_MSG_BN_WHISPER", whisperFilter)
+		ChatFrameUtil.RemoveMessageEventFilter("CHAT_MSG_WHISPER_INFORM", whisperFilter)
+		ChatFrameUtil.RemoveMessageEventFilter("CHAT_MSG_BN_WHISPER_INFORM", whisperFilter)
+		ChatFrameUtil.AddMessageEventFilter("CHAT_MSG_WHISPER", whisperFilter)
+		ChatFrameUtil.AddMessageEventFilter("CHAT_MSG_BN_WHISPER", whisperFilter)
+		ChatFrameUtil.AddMessageEventFilter("CHAT_MSG_WHISPER_INFORM", whisperFilter)
+		ChatFrameUtil.AddMessageEventFilter("CHAT_MSG_BN_WHISPER_INFORM", whisperFilter)
 
 		EnhanceQoL_IMHistory = EnhanceQoL_IMHistory or {}
 		ChatIM.history = EnhanceQoL_IMHistory
@@ -177,12 +166,10 @@ local function updateRegistration()
 		ChatIM:BuildSoundTable()
 	else
 		frame:UnregisterAllEvents()
-		if ChatFrame_RemoveMessageEventFilter then
-			ChatFrame_RemoveMessageEventFilter("CHAT_MSG_WHISPER", whisperFilter)
-			ChatFrame_RemoveMessageEventFilter("CHAT_MSG_BN_WHISPER", whisperFilter)
-			ChatFrame_RemoveMessageEventFilter("CHAT_MSG_WHISPER_INFORM", whisperFilter)
-			ChatFrame_RemoveMessageEventFilter("CHAT_MSG_BN_WHISPER_INFORM", whisperFilter)
-		end
+		ChatFrameUtil.RemoveMessageEventFilter("CHAT_MSG_WHISPER", whisperFilter)
+		ChatFrameUtil.RemoveMessageEventFilter("CHAT_MSG_BN_WHISPER", whisperFilter)
+		ChatFrameUtil.RemoveMessageEventFilter("CHAT_MSG_WHISPER_INFORM", whisperFilter)
+		ChatFrameUtil.RemoveMessageEventFilter("CHAT_MSG_BN_WHISPER_INFORM", whisperFilter)
 		if ChatIM.widget and ChatIM.widget.frame then ChatIM:HideWindow() end
 	end
 end
@@ -197,7 +184,7 @@ function ChatIM:SetEnabled(val)
 		self:SetMaxHistoryLines(addon.db and addon.db["chatIMMaxHistory"])
 		self:CreateUI()
 		if not self.whisperHooked then
-			hooksecurefunc("ChatFrame_SendTell", function(name)
+			hooksecurefunc(ChatFrameUtil, "SendTell", function(name)
 				if not ChatIM.enabled then return end
 				if name then
 					if nil == name:match("-") then
@@ -222,36 +209,21 @@ function ChatIM:SetEnabled(val)
 						if accountTag then ChatIM:StartWhisper(target, bnetID, accountTag) end
 					end
 				end)
-			else
-				--Todo Remove in 12.0
-				hooksecurefunc("ChatFrame_SendBNetTell", function(target)
-					if not ChatIM.enabled then return end
-					local bnetID = nil
-					local plain = BNTokenFindName(target) or target
-					bnetID = BNet_GetBNetIDAccount(plain)
-					target = plain
-					if bnetID then
-						local accountTag
-						local info = C_BattleNet.GetAccountInfoByID(bnetID)
-						if info then accountTag = info.battleTag end
-						if accountTag then ChatIM:StartWhisper(target, bnetID, accountTag) end
-					end
-				end)
 			end
-			hooksecurefunc("ChatFrame_ReplyTell2", function()
+			hooksecurefunc(ChatFrameUtil, "ReplyTell2", function()
 				if not ChatIM.enabled then return end
-				local name = ChatEdit_GetLastToldTarget() and ChatEdit_GetLastToldTarget()
+				local name = ChatFrameUtil.GetLastToldTarget()
 				if name then
 					if not name:match("-") then name = name .. "-" .. (GetRealmName()):gsub("%s", "") end
 					ChatIM:StartWhisper(name)
-					local tab = ChatIM.tabs[name]
-					if tab and tab.edit then
-						ChatIM.tabGroup:SelectTab(name)
-						C_Timer.After(0, function() tab.edit:SetFocus() end)
-						local eb = ChatEdit_ChooseBoxForSend()
-						if eb then ChatEdit_OnEscapePressed(eb) end
+						local tab = ChatIM.tabs[name]
+						if tab and tab.edit then
+							ChatIM.tabGroup:SelectTab(name)
+							C_Timer.After(0, function() tab.edit:SetFocus() end)
+							local eb = ChatFrameUtil.ChooseBoxForSend()
+							if eb then ChatEdit_OnEscapePressed(eb) end
+						end
 					end
-				end
 			end)
 			self.whisperHooked = true
 		end

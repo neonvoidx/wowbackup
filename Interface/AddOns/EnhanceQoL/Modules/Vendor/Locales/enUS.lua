@@ -34,6 +34,10 @@ L["vendorDestroyShowMessages"] = "Show chat messages for destroyed/protected ite
 L["vendorDestroyShowMessagesDesc"] = "When enabled, each destroyed item or blocked attempt prints a notice in chat."
 L["vendorCraftShopperEnable"] = "Enable Craft Shopper (Only works in Rested areas)"
 L["vendorCraftShopperEnableDesc"] = "Displays a shopping list next to the Auction House with all missing reagents from your tracked recipes. Search and buy each item with a single click."
+L["vendorCraftShopperReagentQuality"] = "Reagent Quality"
+L["vendorCraftShopperReagentQualityDesc"] = "Choose whether Craft Shopper tracks the lowest or highest available reagent quality for recipes with quality variants. Search and direct buy use the selected quality."
+L["vendorCraftShopperReagentQualityLowest"] = "Lowest quality"
+L["vendorCraftShopperReagentQualityHighest"] = "Highest quality"
 L["upgradeLevelHero"] = "Hero"
 L["upgradeLevelMythic"] = "Myth"
 

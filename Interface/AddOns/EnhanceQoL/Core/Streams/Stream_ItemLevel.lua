@@ -118,10 +118,6 @@ local function getEquippedItemLevel(slot, link)
 		local detailedLevel = C_Item.GetDetailedItemLevelInfo(link)
 		if detailedLevel and detailedLevel > 0 then return detailedLevel end
 	end
-	if GetDetailedItemLevelInfo then
-		local detailedLevel = GetDetailedItemLevelInfo(link)
-		if detailedLevel and detailedLevel > 0 then return detailedLevel end
-	end
 	return nil
 end
 

@@ -87,6 +87,13 @@ local nameplateCcKey = addonName .. "_CcContainer"
 local nameplateImportantKey = addonName .. "_ImportantContainer"
 local nameplateCombinedKey = addonName .. "_CombinedContainer"
 
+local function GetCCSortOptions()
+	if db.CCNativeOrder then
+		return Enum.UnitAuraSortRule.Default, Enum.UnitAuraSortDirection.Normal
+	end
+	return Enum.UnitAuraSortRule.Unsorted, Enum.UnitAuraSortDirection.Reverse
+end
+
 local function GrowToAnchor(grow)
 	if grow == "LEFT" then
 		return "RIGHT", "LEFT"
@@ -247,14 +254,12 @@ local function ApplyCombinedToNameplate(data, watcher, unitOptions)
 
 	-- Add CC spells (highest priority)
 	if ccSlots > 0 then
-		-- Each CC gets its own slot, iterate in reverse to show the most recent first
 		for i = 1, mathMin(ccSlots, #ccData) do
 			if slot >= container.Count then
 				break
 			end
 			slot = slot + 1
-			local reverseIndex = #ccData - i + 1
-			local entry = ccData[reverseIndex]
+			local entry = ccData[i]
 			layerScratch.Texture = entry.SpellIcon
 			layerScratch.StartTime = entry.StartTime
 			layerScratch.Duration = entry.TotalDuration
@@ -269,14 +274,12 @@ local function ApplyCombinedToNameplate(data, watcher, unitOptions)
 
 	-- Add Defensive spells (second priority)
 	if defensiveSlots > 0 then
-		-- Iterate in reverse to show the most recent first
 		for i = 1, mathMin(defensiveSlots, #defensivesData) do
 			if slot >= container.Count then
 				break
 			end
 			slot = slot + 1
-			local reverseIndex = #defensivesData - i + 1
-			local entry = defensivesData[reverseIndex]
+			local entry = defensivesData[i]
 			layerScratch.Texture = entry.SpellIcon
 			layerScratch.StartTime = entry.StartTime
 			layerScratch.Duration = entry.TotalDuration
@@ -291,14 +294,12 @@ local function ApplyCombinedToNameplate(data, watcher, unitOptions)
 
 	-- Add Important spells (third priority)
 	if importantSlots > 0 then
-		-- Each Important spell gets its own slot, iterate in reverse to show the most recent first
 		for i = 1, mathMin(importantSlots, #importantData) do
 			if slot >= container.Count then
 				break
 			end
 			slot = slot + 1
-			local reverseIndex = #importantData - i + 1
-			local entry = importantData[reverseIndex]
+			local entry = importantData[i]
 			layerScratch.Texture = entry.SpellIcon
 			layerScratch.StartTime = entry.StartTime
 			layerScratch.Duration = entry.TotalDuration
@@ -345,10 +346,8 @@ local function ApplyCcToNameplate(data, watcher, unitOptions)
 	local fontScale = db.FontScale
 	local limit = mathMin(ccDataCount, container.Count)
 
-	-- Iterate in reverse to show the most recent first
 	for i = 1, limit do
-		local reverseIndex = ccDataCount - i + 1
-		local entry = ccData[reverseIndex]
+		local entry = ccData[i]
 		layerScratch.Texture = entry.SpellIcon
 		layerScratch.StartTime = entry.StartTime
 		layerScratch.Duration = entry.TotalDuration
@@ -396,14 +395,12 @@ local function ApplyImportantSpellsToNameplate(data, watcher, unitOptions)
 
 	-- Add Important spells (highest priority)
 	if importantSlots > 0 then
-		-- Iterate in reverse to show the most recent first
 		for i = 1, mathMin(importantSlots, #importantData) do
 			if slot >= container.Count then
 				break
 			end
 			slot = slot + 1
-			local reverseIndex = #importantData - i + 1
-			local entry = importantData[reverseIndex]
+			local entry = importantData[i]
 			layerScratch.Texture = entry.SpellIcon
 			layerScratch.StartTime = entry.StartTime
 			layerScratch.Duration = entry.TotalDuration
@@ -418,14 +415,12 @@ local function ApplyImportantSpellsToNameplate(data, watcher, unitOptions)
 
 	-- Add Defensive spells (second priority)
 	if defensiveSlots > 0 then
-		-- Iterate in reverse to show the most recent first
 		for i = 1, mathMin(defensiveSlots, #defensivesData) do
 			if slot >= container.Count then
 				break
 			end
 			slot = slot + 1
-			local reverseIndex = #defensivesData - i + 1
-			local entry = defensivesData[reverseIndex]
+			local entry = defensivesData[i]
 			layerScratch.Texture = entry.SpellIcon
 			layerScratch.StartTime = entry.StartTime
 			layerScratch.Duration = entry.TotalDuration
@@ -713,7 +708,8 @@ local function OnNamePlateAdded(unitToken)
 	}
 
 	-- Create new watcher
-	watchers[unitToken] = unitWatcher:New(unitToken)
+	local sortRule, sortDirection = GetCCSortOptions()
+	watchers[unitToken] = unitWatcher:New(unitToken, nil, nil, sortRule, sortDirection)
 	watchers[unitToken]:RegisterCallback(function()
 		OnAuraDataChanged(unitToken)
 	end)
@@ -986,6 +982,30 @@ function M:StopTesting()
 	end
 end
 
+local function ApplyBlizzardNameplateSettings()
+	local configureEnabled = db.ConfigureBlizzardNameplates
+	if configureEnabled == nil then
+		configureEnabled = true
+	end
+
+	local anyEnemyEnabled = nmModule.Enemy.CC.Enabled
+		or nmModule.Enemy.Important.Enabled
+		or nmModule.Enemy.Combined.Enabled
+
+	local anyFriendlyEnabled = nmModule.Friendly.CC.Enabled
+		or nmModule.Friendly.Important.Enabled
+		or nmModule.Friendly.Combined.Enabled
+
+	if configureEnabled and anyEnemyEnabled then
+		C_CVar.SetCVarBitfield("nameplateEnemyPlayerAuraDisplay", Enum.NamePlateEnemyPlayerAuraDisplay.LossOfControl, false)
+		C_CVar.SetCVarBitfield("nameplateEnemyNpcAuraDisplay", Enum.NamePlateEnemyNpcAuraDisplay.CrowdControl, false)
+	end
+
+	if configureEnabled and anyFriendlyEnabled then
+		C_CVar.SetCVarBitfield("nameplateFriendlyPlayerAuraDisplay", Enum.NamePlateFriendlyPlayerAuraDisplay.LossOfControl, false)
+	end
+end
+
 function M:Refresh()
 	local moduleEnabled = moduleUtil:IsModuleEnabled(moduleName.Nameplates)
 
@@ -994,6 +1014,8 @@ function M:Refresh()
 		CacheEnabledModes()
 		return
 	end
+
+	ApplyBlizzardNameplateSettings()
 
 	-- Module is enabled, ensure watchers are enabled
 	EnableWatchers()
@@ -1005,6 +1027,11 @@ function M:Refresh()
 
 	CacheEnabledModes()
 	RefreshAnchorsAndSizes()
+
+	local sortRule, sortDirection = GetCCSortOptions()
+	for _, watcher in pairs(watchers) do
+		watcher:SetSort(sortRule, sortDirection)
+	end
 
 	if testModeActive then
 		-- update test icons

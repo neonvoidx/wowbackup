@@ -8,13 +8,14 @@ else
 end
 
 local UnitLevel = UnitLevel
-local GetNumSpecializationsForClassID = (C_SpecializationInfo and C_SpecializationInfo.GetNumSpecializationsForClassID) or GetNumSpecializationsForClassID
+local GetNumSpecializationsForClassIDFn = C_SpecializationInfo and C_SpecializationInfo.GetNumSpecializationsForClassID
 local GetSpecializationInfoForClassID = GetSpecializationInfoForClassID
 local tinsert = table.insert
 local tsort = table.sort
 local C_Item_GetItemInfo = C_Item and C_Item.GetItemInfo
 local C_Item_GetItemNameByID = C_Item and C_Item.GetItemNameByID
 local C_Item_RequestLoadItemDataByID = C_Item and C_Item.RequestLoadItemDataByID
+local CreateFrame = CreateFrame
 local STAT_HASTE_LABEL = _G.STAT_HASTE
 local STAT_CRIT_LABEL = _G.STAT_CRITICAL_STRIKE
 local STAT_MASTERY_LABEL = _G.STAT_MASTERY
@@ -28,6 +29,7 @@ local ROLE_MELEE_LABEL = _G.MELEE
 addon.Flasks = addon.Flasks or {}
 addon.Flasks.functions = addon.Flasks.functions or {}
 addon.Flasks.filteredFlasks = addon.Flasks.filteredFlasks or {}
+addon.Flasks.bagItemCountCache = addon.Flasks.bagItemCountCache or {}
 
 addon.Flasks.typeOrder = { "haste", "criticalStrike", "mastery", "versatility", "alchemicalChaos" }
 addon.Flasks.roleOrder = { "tank", "healer", "ranged", "melee" }
@@ -246,11 +248,8 @@ local function getClassInfoById(classId)
 	return nil, nil, nil
 end
 
-local function getDirectBagItemCount(itemId)
-	local targetId = tonumber(itemId)
-	if not targetId or targetId <= 0 then return 0 end
-
-	local count = 0
+local function rebuildBagItemCountCache()
+	local counts = {}
 	local maxBag = tonumber(NUM_TOTAL_EQUIPPED_BAG_SLOTS) or tonumber(NUM_BAG_SLOTS) or 4
 
 	if C_Container and C_Container.GetContainerNumSlots and C_Container.GetContainerItemInfo then
@@ -258,26 +257,39 @@ local function getDirectBagItemCount(itemId)
 			local slotCount = C_Container.GetContainerNumSlots(bag) or 0
 			for slot = 1, slotCount do
 				local info = C_Container.GetContainerItemInfo(bag, slot)
-				if info and tonumber(info.itemID) == targetId then count = count + (tonumber(info.stackCount) or 1) end
+				local itemId = info and tonumber(info.itemID) or nil
+				if itemId and itemId > 0 then counts[itemId] = (counts[itemId] or 0) + (tonumber(info.stackCount) or 1) end
 			end
 		end
-		return count
-	end
-
-	if GetContainerNumSlots and GetContainerItemID and GetContainerItemInfo then
+	elseif GetContainerNumSlots and GetContainerItemID and GetContainerItemInfo then
 		for bag = 0, maxBag do
 			local slotCount = GetContainerNumSlots(bag) or 0
 			for slot = 1, slotCount do
-				local slotItemId = GetContainerItemID(bag, slot)
-				if tonumber(slotItemId) == targetId then
+				local itemId = tonumber(GetContainerItemID(bag, slot))
+				if itemId and itemId > 0 then
 					local _, stackCount = GetContainerItemInfo(bag, slot)
-					count = count + (tonumber(stackCount) or 1)
+					counts[itemId] = (counts[itemId] or 0) + (tonumber(stackCount) or 1)
 				end
 			end
 		end
 	end
 
-	return count
+	addon.Flasks.bagItemCountCache = counts
+	addon.Flasks.bagItemCountCacheReady = true
+	return counts
+end
+
+local function getBagItemCountCache()
+	if addon.Flasks.bagItemCountCacheReady == true and type(addon.Flasks.bagItemCountCache) == "table" then return addon.Flasks.bagItemCountCache end
+	return rebuildBagItemCountCache()
+end
+
+local function getDirectBagItemCount(itemId)
+	local targetId = tonumber(itemId)
+	if not targetId or targetId <= 0 then return 0 end
+
+	local cache = getBagItemCountCache()
+	return tonumber(cache[targetId]) or 0
 end
 
 local function getBestItemCount(itemId)
@@ -286,13 +298,6 @@ local function getBestItemCount(itemId)
 
 	local countApi = 0
 	local countBag = getDirectBagItemCount(targetId)
-
-	if GetItemCount then
-		local direct = tonumber(GetItemCount(targetId, false, false)) or 0
-		local defaultArgs = tonumber(GetItemCount(targetId)) or 0
-		if direct > countApi then countApi = direct end
-		if defaultArgs > countApi then countApi = defaultArgs end
-	end
 
 	if C_Item and C_Item.GetItemCount then
 		local cNoBank = tonumber(C_Item.GetItemCount(targetId, false, false)) or 0
@@ -327,9 +332,9 @@ end
 function addon.Flasks.functions.getPlayerSpecs()
 	local specs = {}
 	local classID = addon.variables and addon.variables.unitClassID
-	if not classID or not GetNumSpecializationsForClassID or not GetSpecializationInfoForClassID then return specs end
+	if not classID or not GetNumSpecializationsForClassIDFn or not GetSpecializationInfoForClassID then return specs end
 
-	local specCount = GetNumSpecializationsForClassID(classID) or 0
+	local specCount = GetNumSpecializationsForClassIDFn(classID) or 0
 	for i = 1, specCount do
 		local specID, specName = GetSpecializationInfoForClassID(classID, i)
 		if specID then specs[#specs + 1] = {
@@ -343,7 +348,7 @@ end
 function addon.Flasks.functions.getAllSpecs()
 	local specs = {}
 	local roleBucketBySpec = {}
-	local getSpecCount = (C_SpecializationInfo and C_SpecializationInfo.GetNumSpecializationsForClassID) or GetNumSpecializationsForClassID
+	local getSpecCount = C_SpecializationInfo and C_SpecializationInfo.GetNumSpecializationsForClassID
 	if not getSpecCount or not GetSpecializationInfoForClassID or not GetNumClasses then return addon.Flasks.functions.getPlayerSpecs() end
 
 	local sex = UnitSex and UnitSex("player") or nil
@@ -519,3 +524,14 @@ function addon.Flasks.functions.updateAllowedFlasks(specID)
 	addon.Flasks.lastSelectedPreference = selectedPreference
 	return candidates, selectedType
 end
+
+addon.Flasks.functions.rebuildBagItemCountCache = rebuildBagItemCountCache
+
+local bagItemCountCacheFrame = addon.Flasks.bagItemCountCacheFrame or CreateFrame("Frame")
+addon.Flasks.bagItemCountCacheFrame = bagItemCountCacheFrame
+bagItemCountCacheFrame:RegisterEvent("PLAYER_LOGIN")
+bagItemCountCacheFrame:RegisterEvent("PLAYER_ENTERING_WORLD")
+bagItemCountCacheFrame:RegisterEvent("BAG_UPDATE_DELAYED")
+bagItemCountCacheFrame:SetScript("OnEvent", function(_, event)
+	if event == "PLAYER_LOGIN" or event == "PLAYER_ENTERING_WORLD" or event == "BAG_UPDATE_DELAYED" then rebuildBagItemCountCache() end
+end)

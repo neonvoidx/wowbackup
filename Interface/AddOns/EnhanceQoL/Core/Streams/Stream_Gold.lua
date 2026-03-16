@@ -14,6 +14,10 @@ local UnitGUID = UnitGUID
 local OpenAllBags = OpenAllBags
 local ToggleAllBags = ToggleAllBags
 
+local function getPrivateDB()
+	return addon.functions.GetPrivateDB and addon.functions.GetPrivateDB() or addon.privateDB or {}
+end
+
 local function getOptionsHint()
 	if addon.DataPanel and addon.DataPanel.GetOptionsHintText then
 		local text = addon.DataPanel.GetOptionsHintText()
@@ -183,8 +187,9 @@ end
 local function collectCharacterMoneyFromTracker()
 	local list, total, currentMoney = {}, 0, nil
 	local playerGUID = UnitGUID("player")
-	if addon.db and type(addon.db.moneyTracker) == "table" then
-		for guid, info in pairs(addon.db.moneyTracker) do
+	local privateDB = getPrivateDB()
+	if type(privateDB.moneyTracker) == "table" then
+		for guid, info in pairs(privateDB.moneyTracker) do
 			if type(info) == "table" and type(info.money) == "number" then
 				total = total + info.money
 				if guid == playerGUID then currentMoney = info.money end
@@ -263,8 +268,9 @@ end
 local function checkMoney(stream)
 	ensureDB()
 	if db.displayMode == "account" then db.displayMode = "warband" end
+	local privateDB = getPrivateDB()
 	local money = GetMoney() or 0
-	if db.displayMode == "warband" then money = addon.db and addon.db.warbandGold or 0 end
+	if db.displayMode == "warband" then money = privateDB.warbandGold or 0 end
 	if db.displayMode ~= "warband" then
 		local _, _, currentMoney = collectCharacterMoney()
 		if type(currentMoney) == "number" then money = currentMoney end
@@ -305,7 +311,7 @@ local provider = {
 		tip:ClearLines()
 		tip:SetOwner(btn, "ANCHOR_TOPLEFT")
 
-		local warband = addon.db and addon.db.warbandGold
+		local warband = getPrivateDB().warbandGold
 		if warband ~= nil then tip:AddDoubleLine(L["warbandGold"] or "Warband gold", formatMoney(warband)) end
 
 		local list, total = collectCharacterMoney()

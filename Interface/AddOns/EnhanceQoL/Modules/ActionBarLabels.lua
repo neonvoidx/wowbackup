@@ -537,6 +537,12 @@ RestoreTextColorOverride = function(region, originalKey, activeKey)
 	region[originalKey] = nil
 end
 
+local function ApplyImmediateTextColor(region, color, fallbackR, fallbackG, fallbackB, fallbackA)
+	if not region or not region.SetTextColor then return end
+	local r, g, b, a = NormalizeTextColor(color, fallbackR or 1, fallbackG or 1, fallbackB or 1, fallbackA or 1)
+	region:SetTextColor(r, g, b, a)
+end
+
 local function ApplyCountStyling(button)
 	if not addon.db then return end
 	local count = GetActionButtonCount(button)
@@ -726,6 +732,9 @@ local function ApplyHotkeyStyling(button, barNameOverride)
 		RestoreTextColorOverride(hotkey, "EQOL_OriginalHotkeyColor", "EQOL_UsingHotkeyColorOverride")
 	end
 
+	-- Preserve Blizzard's range color when the button is out of range.
+	if button.EQOL_RangeOutOfRange then ApplyImmediateTextColor(hotkey, RED_FONT_COLOR, 1, 0.1, 0.1, 1) end
+
 	if addon.db.actionBarShortHotkeys then
 		if not hotkey.EQOL_ShortApplied then hotkey.EQOL_OriginalHotkeyText = originalText end
 		local baseText = hotkey.EQOL_OriginalHotkeyText or originalText
@@ -828,7 +837,9 @@ local function RefreshHotkeyColorOverride(button)
 		RefreshHotkeyVisibility(button, barName)
 		return
 	end
-	if addon.db.actionBarHotkeyFontOverride then
+	if button.EQOL_RangeOutOfRange then
+		ApplyImmediateTextColor(hotkey, RED_FONT_COLOR, 1, 0.1, 0.1, 1)
+	elseif addon.db.actionBarHotkeyFontOverride then
 		local fontColor = addon.db.actionBarHotkeyFontColor
 		ApplyTextColorOverride(hotkey, fontColor, "EQOL_OriginalHotkeyColor", "EQOL_UsingHotkeyColorOverride")
 	elseif hotkey.EQOL_UsingHotkeyColorOverride then

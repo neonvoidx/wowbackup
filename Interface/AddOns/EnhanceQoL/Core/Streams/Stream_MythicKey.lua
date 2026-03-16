@@ -104,8 +104,8 @@ end
 local function getKeystoneIcon()
 	if C_MythicPlus and C_MythicPlus.GetOwnedKeystoneInfo then
 		local _, _, _, itemLink = C_MythicPlus.GetOwnedKeystoneInfo()
-		if itemLink and GetItemIcon then
-			local icon = GetItemIcon(itemLink)
+		if itemLink and C_Item and C_Item.GetItemIconByID then
+			local icon = C_Item.GetItemIconByID(itemLink)
 			if icon then return icon end
 		end
 	end
@@ -115,9 +115,11 @@ local function getKeystoneIcon()
 			if icon then return icon end
 		end
 	end
-	for _, id in ipairs(KEYSTONE_ITEM_IDS) do
-		local icon = select(5, GetItemInfoInstant(id))
-		if icon then return icon end
+	if C_Item and C_Item.GetItemInfoInstant then
+		for _, id in ipairs(KEYSTONE_ITEM_IDS) do
+			local icon = select(5, C_Item.GetItemInfoInstant(id))
+			if icon then return icon end
+		end
 	end
 	return DEFAULT_KEYSTONE_ICON
 end

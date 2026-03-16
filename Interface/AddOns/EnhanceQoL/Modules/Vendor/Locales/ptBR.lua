@@ -34,6 +34,10 @@ L["vendorCraftShopperMissingGold"] = [=[Ouro insuficiente.
 Faltam %s.]=]
 L["vendorCraftShopperMissingOnly"] = "Somente faltando"
 L["vendorCraftShopperPurchaseFailed"] = "Compra falhou, tente novamente."
+L["vendorCraftShopperReagentQuality"] = "Qualidade dos reagentes"
+L["vendorCraftShopperReagentQualityDesc"] = "Escolha se o Craft Shopper acompanha a qualidade de reagente disponível mais baixa ou mais alta em receitas com variantes de qualidade. A busca e a compra direta usam a qualidade selecionada."
+L["vendorCraftShopperReagentQualityHighest"] = "Qualidade mais alta"
+L["vendorCraftShopperReagentQualityLowest"] = "Qualidade mais baixa"
 L["vendorCraftShopperSearchAH"] = "Buscar na CL"
 L["vendorCraftShopperTimeRemaining"] = "Tempo restante: %ds"
 L["vendorCraftShopperTitle"] = "Craft Shopper"

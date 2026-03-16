@@ -33,11 +33,11 @@ end
 -- Cache some frequently used API
 local FirstOwnedItemID
 do
-	local GetItemCount = C_Item.GetItemCount
+	local GetItemCountFn = C_Item.GetItemCount
 	function FirstOwnedItemID(itemID)
 		if type(itemID) == "table" then
 			for _, id in ipairs(itemID) do
-				if GetItemCount(id) > 0 then return id end
+				if GetItemCountFn(id) > 0 then return id end
 			end
 			return itemID[1]
 		end
@@ -216,7 +216,7 @@ local function tryRestorePendingReequip()
 		local restoreItemID = state and state.restoreItemID or 0
 		local currentID = GetInventoryItemID("player", slot)
 		if restoreItemID > 0 then
-			if currentID ~= restoreItemID then EquipItemByName(restoreItemID, slot) end
+			if currentID ~= restoreItemID then C_Item.EquipItemByName(restoreItemID, slot) end
 		else
 			if currentID and currentID ~= 0 then moveItemFromSlotToBag(slot) end
 		end

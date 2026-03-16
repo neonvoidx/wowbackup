@@ -46,6 +46,23 @@ local function normalizeGradientColor(value)
 	return 1, 1, 1, 1
 end
 
+local function isSecretGradientComponent(value) return issecretvalue and issecretvalue(value) end
+
+local function hasSecretGradientColor(r, g, b, a) return isSecretGradientComponent(r) or isSecretGradientComponent(g) or isSecretGradientComponent(b) or isSecretGradientComponent(a) end
+
+local function resolveSolidGradientColors(baseR, baseG, baseB, baseA)
+	local br = baseR ~= nil and baseR or 1
+	local bg = baseG ~= nil and baseG or 1
+	local bb = baseB ~= nil and baseB or 1
+	local ba = baseA ~= nil and baseA or 1
+	return br, bg, bb, ba, br, bg, bb, ba
+end
+
+local function canCreateGradientColor(r, g, b, a)
+	if hasSecretGradientColor(r, g, b, a) then return false end
+	return type(r) == "number" and type(g) == "number" and type(b) == "number" and type(a or 1) == "number"
+end
+
 local function resolveDiscreteSegmentBackground(cfg, fallbackTexture, fallbackR, fallbackG, fallbackB, fallbackA)
 	local bd = cfg and cfg.backdrop
 	if bd and bd.enabled == false then return nil, 0, 0, 0, 0, false end
@@ -88,7 +105,10 @@ local function isGradientDebugEnabled()
 	return addon and addon.db and addon.db.debugResourceBarsGradient == true
 end
 
-local function formatColor(r, g, b, a) return string.format("%.2f/%.2f/%.2f/%.2f", r or 0, g or 0, b or 0, a or 1) end
+local function formatColor(r, g, b, a)
+	if hasSecretGradientColor(r, g, b, a) then return "<secret>" end
+	return string.format("%.2f/%.2f/%.2f/%.2f", r or 0, g or 0, b or 0, a or 1)
+end
 
 local function debugGradient(bar, reason, cfg, baseR, baseG, baseB, baseA, sr, sg, sb, sa, er, eg, eb, ea, force)
 	if not isGradientDebugEnabled() then return end
@@ -131,6 +151,7 @@ local function clearGradientState(bar)
 	bar._rbGradientEnabled = nil
 	bar._rbGradientTex = nil
 	bar._rbGradDir = nil
+	bar._rbGradUsesSecretBase = nil
 	bar._rbGradSR = nil
 	bar._rbGradSG = nil
 	bar._rbGradSB = nil
@@ -213,28 +234,74 @@ function ResourceBars.ComputeEssenceFraction(bar, current, maxPower, now, powerE
 	return fraction, tickDuration
 end
 
-function ResourceBars.LayoutEssences(bar, cfg, count, texturePath)
+local function hideEssenceSegments(bar)
 	if not bar then return end
-	if not count or count <= 0 then
-		if bar.essences then
-			for i = 1, #bar.essences do
-				if bar.essences[i] then bar.essences[i]:Hide() end
+	if bar.essences then
+		for i = 1, #bar.essences do
+			local sb = bar.essences[i]
+			if sb then
+				sb:Hide()
+				if sb._rbSegmentBg then sb._rbSegmentBg:Hide() end
+				if sb._rbSegmentBorder then sb._rbSegmentBorder:Hide() end
 			end
 		end
-		bar._essenceSegments = 0
+	end
+	if bar.essenceGapMarks then
+		for i = 1, #bar.essenceGapMarks do
+			local mark = bar.essenceGapMarks[i]
+			if mark then mark:Hide() end
+		end
+	end
+	bar._essenceSegments = 0
+	bar._essenceVertical = nil
+	bar._essenceGap = nil
+	bar._essenceGapRequested = nil
+	bar._essenceSegmentStyled = nil
+end
+
+function ResourceBars.LayoutEssences(bar, cfg, count, texturePath)
+	if not bar then return end
+	local separatedOffset = math.max(0, math.floor((tonumber(cfg and cfg.separatedOffset) or 0) + 0.5))
+	local useDiscreteLayout = separatedOffset > 0 and ResourceBars.LayoutDiscreteSegments ~= nil
+	if not count or count <= 0 then
+		hideEssenceSegments(bar)
+		if ResourceBars.HideDiscreteSegments then ResourceBars.HideDiscreteSegments(bar) end
 		return
 	end
 
+	if useDiscreteLayout then
+		hideEssenceSegments(bar)
+		ResourceBars.LayoutDiscreteSegments(bar, cfg, count, texturePath, (cfg and cfg.showSeparator == true and ((cfg and cfg.separatorThickness) or 1)) or 0, (cfg and cfg.separatorColor) or nil)
+		return
+	end
+
+	if ResourceBars.HideDiscreteSegments then ResourceBars.HideDiscreteSegments(bar) end
 	bar.essences = bar.essences or {}
 	local inner = bar._rbInner or bar
 	local w = math.max(1, inner:GetWidth() or (bar:GetWidth() or 0))
 	local h = math.max(1, inner:GetHeight() or (bar:GetHeight() or 0))
 	local vertical = cfg and cfg.verticalFill == true
+	local requestedGap = separatedOffset > 0 and ((ResourceBars.ResolveDiscreteSegmentGap and ResourceBars.ResolveDiscreteSegmentGap(cfg, (cfg and cfg.separatorThickness) or 0)) or separatedOffset)
+		or 0
+	local gap = requestedGap
+	local useSegmentStyling = separatedOffset > 0
+	local borderEnabled, borderTexture, borderEdgeSize, borderOutset, borderR, borderG, borderB, borderA = resolveDiscreteSegmentBorderStyle(cfg, useSegmentStyling)
+	local bgTexture, bgR, bgG, bgB, bgA, bgVisible
+	if useSegmentStyling then
+		bgTexture, bgR, bgG, bgB, bgA, bgVisible = resolveDiscreteSegmentBackground(cfg, texturePath, 0.35, 0.35, 0.35, 0.9)
+	end
+	local span = vertical and h or w
+	local maxGap = (count > 1) and math.max(0, math.floor((span - count) / (count - 1))) or 0
+	if gap > maxGap then gap = maxGap end
 	local segPrimary
 	if vertical then
-		segPrimary = math.max(1, math.floor(h / count + 0.5))
+		local available = h - (gap * (count - 1))
+		if available < count then available = count end
+		segPrimary = math.max(1, math.floor(available / count + 0.5))
 	else
-		segPrimary = math.max(1, math.floor(w / count + 0.5))
+		local available = w - (gap * (count - 1))
+		if available < count then available = count end
+		segPrimary = math.max(1, math.floor(available / count + 0.5))
 	end
 
 	for i = 1, count do
@@ -258,7 +325,7 @@ function ResourceBars.LayoutEssences(bar, cfg, count, texturePath)
 			if i == 1 then
 				sb:SetPoint("BOTTOM", inner, "BOTTOM", 0, 0)
 			else
-				sb:SetPoint("BOTTOM", bar.essences[i - 1], "TOP", 0, 0)
+				sb:SetPoint("BOTTOM", bar.essences[i - 1], "TOP", 0, gap)
 			end
 			if i == count then sb:SetPoint("TOP", inner, "TOP", 0, 0) end
 		else
@@ -267,7 +334,7 @@ function ResourceBars.LayoutEssences(bar, cfg, count, texturePath)
 			if i == 1 then
 				sb:SetPoint("LEFT", inner, "LEFT", 0, 0)
 			else
-				sb:SetPoint("LEFT", bar.essences[i - 1], "RIGHT", 0, 0)
+				sb:SetPoint("LEFT", bar.essences[i - 1], "RIGHT", gap, 0)
 			end
 			if i == count then
 				sb:SetPoint("RIGHT", inner, "RIGHT", 0, 0)
@@ -275,31 +342,134 @@ function ResourceBars.LayoutEssences(bar, cfg, count, texturePath)
 				sb:SetWidth(segPrimary)
 			end
 		end
+		if not sb._rbSegmentBg then
+			sb._rbSegmentBg = sb:CreateTexture(nil, "BACKGROUND")
+			sb._rbSegmentBg:SetAllPoints(sb)
+		end
+		if useSegmentStyling and bgVisible then
+			if sb._rbSegmentBgPath ~= bgTexture then
+				sb._rbSegmentBg:SetTexture(bgTexture)
+				sb._rbSegmentBgPath = bgTexture
+			end
+			local bgColorKey = tostring(bgR) .. ":" .. tostring(bgG) .. ":" .. tostring(bgB) .. ":" .. tostring(bgA)
+			if sb._rbSegmentBgColorKey ~= bgColorKey then
+				sb._rbSegmentBg:SetVertexColor(bgR, bgG, bgB, bgA)
+				sb._rbSegmentBgColorKey = bgColorKey
+			end
+			if not sb._rbSegmentBg:IsShown() then sb._rbSegmentBg:Show() end
+		else
+			if sb._rbSegmentBg:IsShown() then sb._rbSegmentBg:Hide() end
+			sb._rbSegmentBgPath = nil
+			sb._rbSegmentBgColorKey = nil
+		end
+		if ResourceBars.ApplyDiscreteSegmentBorder then
+			ResourceBars.ApplyDiscreteSegmentBorder(sb, bar, useSegmentStyling and borderEnabled, borderTexture, borderEdgeSize, borderOutset, borderR, borderG, borderB, borderA)
+		end
 		if not sb:IsShown() then sb:Show() end
 	end
 	for i = count + 1, #bar.essences do
-		if bar.essences[i] then bar.essences[i]:Hide() end
+		if bar.essences[i] then
+			bar.essences[i]:Hide()
+			if bar.essences[i]._rbSegmentBg then bar.essences[i]._rbSegmentBg:Hide() end
+			if bar.essences[i]._rbSegmentBorder then bar.essences[i]._rbSegmentBorder:Hide() end
+		end
+	end
+	local separatorSize = math.max(0, math.floor((tonumber(cfg and cfg.separatorThickness) or 1) + 0.5))
+	local markerThickness = math.min(separatorSize, gap)
+	local showSeparatorRequested = useSegmentStyling and cfg and cfg.showSeparator == true and markerThickness > 0 and count > 1
+	bar.essenceGapMarks = bar.essenceGapMarks or {}
+	local gapMarks = bar.essenceGapMarks
+	if showSeparatorRequested then
+		local sr, sg, sbc, sa = normalizeGradientColor((cfg and cfg.separatorColor) or { 1, 1, 1, 0.5 })
+		local markOffset = math.floor((gap - markerThickness) * 0.5)
+		local markParent = bar._rbTextOverlay or inner
+		local markLayer = markParent ~= inner and "ARTWORK" or "BACKGROUND"
+		for i = 1, count - 1 do
+			local mark = gapMarks[i]
+			if not mark then
+				mark = markParent:CreateTexture(nil, markLayer, nil, 1)
+				gapMarks[i] = mark
+			elseif mark:GetParent() ~= markParent then
+				mark:SetParent(markParent)
+			end
+			if mark.SetDrawLayer then mark:SetDrawLayer(markLayer, 1) end
+			mark:ClearAllPoints()
+			mark:SetColorTexture(sr, sg, sbc, sa)
+			if vertical then
+				mark:SetPoint("BOTTOM", bar.essences[i], "TOP", 0, markOffset)
+				mark:SetPoint("LEFT", inner, "LEFT", 0, 0)
+				mark:SetPoint("RIGHT", inner, "RIGHT", 0, 0)
+				mark:SetHeight(markerThickness)
+			else
+				mark:SetPoint("LEFT", bar.essences[i], "RIGHT", markOffset, 0)
+				mark:SetPoint("TOP", inner, "TOP", 0, 0)
+				mark:SetPoint("BOTTOM", inner, "BOTTOM", 0, 0)
+				mark:SetWidth(markerThickness)
+			end
+			if not mark:IsShown() then mark:Show() end
+		end
+		for i = count, #gapMarks do
+			if gapMarks[i] then gapMarks[i]:Hide() end
+		end
+	else
+		for i = 1, #gapMarks do
+			if gapMarks[i] then gapMarks[i]:Hide() end
+		end
 	end
 	bar._essenceSegments = count
 	bar._essenceVertical = vertical
+	bar._essenceGap = gap
+	bar._essenceGapRequested = requestedGap
+	bar._essenceSegmentStyled = useSegmentStyling
 end
 
 function ResourceBars.UpdateEssenceSegments(bar, cfg, current, maxPower, fraction, fallbackColor, layoutFunc, texturePath)
 	if not bar then return end
+	local separatedOffset = math.max(0, math.floor((tonumber(cfg and cfg.separatedOffset) or 0) + 0.5))
+	local useDiscreteLayout = separatedOffset > 0 and ResourceBars.UpdateDiscreteSegments ~= nil and ResourceBars.LayoutDiscreteSegments ~= nil
+	local base = bar._lastColor or bar._baseColor or fallbackColor or { 1, 1, 1, 1 }
 	if not maxPower or maxPower <= 0 then
-		if bar.essences then
-			for i = 1, #bar.essences do
-				if bar.essences[i] then bar.essences[i]:Hide() end
-			end
-		end
+		hideEssenceSegments(bar)
+		if ResourceBars.HideDiscreteSegments then ResourceBars.HideDiscreteSegments(bar) end
 		return
 	end
-	if not bar.essences or bar._essenceSegments ~= maxPower or bar._essenceVertical ~= (cfg and cfg.verticalFill == true) then
+
+	if useDiscreteLayout then
+		hideEssenceSegments(bar)
+		local displayValue = (tonumber(current) or 0) + (tonumber(fraction) or 0)
+		if displayValue < 0 then
+			displayValue = 0
+		elseif displayValue > maxPower then
+			displayValue = maxPower
+		end
+		ResourceBars.UpdateDiscreteSegments(
+			bar,
+			cfg,
+			maxPower,
+			displayValue,
+			base,
+			texturePath,
+			(cfg and cfg.showSeparator == true and ((cfg and cfg.separatorThickness) or 1)) or 0,
+			(cfg and cfg.separatorColor) or nil
+		)
+		return
+	end
+
+	if ResourceBars.HideDiscreteSegments then ResourceBars.HideDiscreteSegments(bar) end
+	local expectedGap = separatedOffset > 0 and ((ResourceBars.ResolveDiscreteSegmentGap and ResourceBars.ResolveDiscreteSegmentGap(cfg, (cfg and cfg.separatorThickness) or 0)) or separatedOffset)
+		or 0
+	local useSegmentStyling = separatedOffset > 0
+	if
+		not bar.essences
+		or bar._essenceSegments ~= maxPower
+		or bar._essenceVertical ~= (cfg and cfg.verticalFill == true)
+		or bar._essenceGapRequested ~= expectedGap
+		or bar._essenceSegmentStyled ~= useSegmentStyling
+	then
 		if layoutFunc then layoutFunc(bar, cfg, maxPower, texturePath) end
 	end
 	if not bar.essences then return end
 
-	local base = bar._lastColor or bar._baseColor or fallbackColor or { 1, 1, 1, 1 }
 	local fullR, fullG, fullB, fullA = base[1] or 1, base[2] or 1, base[3] or 1, base[4] or 1
 	local dimFactor = 0.5
 	local dimR, dimG, dimB, dimA = fullR * dimFactor, fullG * dimFactor, fullB * dimFactor, fullA
@@ -342,6 +512,27 @@ function ResourceBars.UpdateEssenceSegments(bar, cfg, current, maxPower, fractio
 				sb._rbColorInitialized = true
 			elseif ResourceBars.RefreshStatusBarGradient then
 				ResourceBars.RefreshStatusBarGradient(sb, cfg, wantR, wantG, wantB, wantA)
+			end
+			if sb._rbSegmentBg and useSegmentStyling then
+				local bgTexture, bgR, bgG, bgB, bgA, bgVisible = resolveDiscreteSegmentBackground(cfg, texturePath, dimR, dimG, dimB, dimA)
+				if bgVisible then
+					if sb._rbSegmentBgPath ~= bgTexture then
+						sb._rbSegmentBg:SetTexture(bgTexture)
+						sb._rbSegmentBgPath = bgTexture
+					end
+					local bgColorKey = tostring(bgR) .. ":" .. tostring(bgG) .. ":" .. tostring(bgB) .. ":" .. tostring(bgA)
+					if sb._rbSegmentBgColorKey ~= bgColorKey then
+						sb._rbSegmentBg:SetVertexColor(bgR, bgG, bgB, bgA)
+						sb._rbSegmentBgColorKey = bgColorKey
+					end
+					if not sb._rbSegmentBg:IsShown() then sb._rbSegmentBg:Show() end
+				else
+					if sb._rbSegmentBg:IsShown() then sb._rbSegmentBg:Hide() end
+					sb._rbSegmentBgPath = nil
+					sb._rbSegmentBgColorKey = nil
+				end
+			elseif sb._rbSegmentBg and sb._rbSegmentBg:IsShown() then
+				sb._rbSegmentBg:Hide()
 			end
 			if not sb:IsShown() then sb:Show() end
 		end
@@ -431,6 +622,16 @@ local function resolveDiscreteSegmentGap(cfg, separatorThickness)
 	if offset > 0 then return offset end
 	return resolveDiscreteSeparatorSize(cfg, separatorThickness)
 end
+
+function ResourceBars.ResolveDiscreteSegmentBackground(cfg, fallbackTexture, fallbackR, fallbackG, fallbackB, fallbackA)
+	return resolveDiscreteSegmentBackground(cfg, fallbackTexture, fallbackR, fallbackG, fallbackB, fallbackA)
+end
+
+function ResourceBars.ResolveDiscreteSegmentBorderStyle(cfg, forceSegmentBorders) return resolveDiscreteSegmentBorderStyle(cfg, forceSegmentBorders) end
+
+function ResourceBars.ApplyDiscreteSegmentBorder(sb, bar, enabled, texture, edgeSize, outset, r, g, b, a) return applyDiscreteSegmentBorder(sb, bar, enabled, texture, edgeSize, outset, r, g, b, a) end
+
+function ResourceBars.ResolveDiscreteSegmentGap(cfg, separatorThickness) return resolveDiscreteSegmentGap(cfg, separatorThickness) end
 
 local function resolveMaelstromCarryMode(bar, cfg, count, clamped)
 	if not (bar and cfg and cfg.useMaelstromCarryFill == true and cfg.useMaelstromTenStacks ~= true) then return false end
@@ -782,13 +983,23 @@ function ResourceBars.ApplyBarGradient(bar, cfg, baseR, baseG, baseB, baseA, for
 	if not bar or not cfg or cfg.useGradient ~= true then return false end
 	local tex = bar.GetStatusBarTexture and bar:GetStatusBarTexture()
 	if not tex or not tex.SetGradient then return false end
-	local sr, sg, sb, sa, er, eg, eb, ea = resolveGradientColors(cfg, baseR, baseG, baseB, baseA)
+	local usesSecretBase = hasSecretGradientColor(baseR, baseG, baseB, baseA)
+	local sr, sg, sb, sa, er, eg, eb, ea
+	if usesSecretBase then
+		-- Secret colors cannot be used in Lua arithmetic. Fall back to a solid fill instead of
+		-- multiplying the configured gradient against the protected color values.
+		sr, sg, sb, sa, er, eg, eb, ea = resolveSolidGradientColors(baseR, baseG, baseB, baseA)
+	else
+		sr, sg, sb, sa, er, eg, eb, ea = resolveGradientColors(cfg, baseR, baseG, baseB, baseA)
+	end
 	local direction = (cfg and cfg.gradientDirection) or "VERTICAL"
 	if type(direction) == "string" then direction = direction:upper() end
 	if direction ~= "HORIZONTAL" then direction = "VERTICAL" end
 	if
-		not force
+		not usesSecretBase
+		and not force
 		and bar._rbGradientEnabled
+		and not bar._rbGradUsesSecretBase
 		and bar._rbGradientTex == tex
 		and bar._rbGradDir == direction
 		and bar._rbGradSR == sr
@@ -802,13 +1013,33 @@ function ResourceBars.ApplyBarGradient(bar, cfg, baseR, baseG, baseB, baseA, for
 	then
 		return true
 	end
-	tex:SetGradient(direction, CreateColor(sr, sg, sb, sa), CreateColor(er, eg, eb, ea))
+	if usesSecretBase then
+		-- Retail can return protected status-bar colors here. Keep the already-applied solid/curve tint
+		-- and skip SetGradient entirely instead of rewrapping secret values through CreateColor.
+		debugGradient(bar, "skip-secret", cfg, baseR, baseG, baseB, baseA, sr, sg, sb, sa, er, eg, eb, ea, force)
+		clearGradientState(bar)
+		return false
+	end
+	if not canCreateGradientColor(sr, sg, sb, sa) or not canCreateGradientColor(er, eg, eb, ea) then
+		debugGradient(bar, "skip-invalid", cfg, baseR, baseG, baseB, baseA, sr, sg, sb, sa, er, eg, eb, ea, force)
+		clearGradientState(bar)
+		return false
+	end
+	local startColor = CreateColor(sr, sg, sb, sa)
+	local endColor = CreateColor(er, eg, eb, ea)
+	tex:SetGradient(direction, startColor, endColor)
 	debugGradient(bar, "apply", cfg, baseR, baseG, baseB, baseA, sr, sg, sb, sa, er, eg, eb, ea, force)
 	bar._rbGradientEnabled = true
 	bar._rbGradientTex = tex
 	bar._rbGradDir = direction
-	bar._rbGradSR, bar._rbGradSG, bar._rbGradSB, bar._rbGradSA = sr, sg, sb, sa
-	bar._rbGradER, bar._rbGradEG, bar._rbGradEB, bar._rbGradEA = er, eg, eb, ea
+	bar._rbGradUsesSecretBase = usesSecretBase or nil
+	if usesSecretBase then
+		bar._rbGradSR, bar._rbGradSG, bar._rbGradSB, bar._rbGradSA = nil, nil, nil, nil
+		bar._rbGradER, bar._rbGradEG, bar._rbGradEB, bar._rbGradEA = nil, nil, nil, nil
+	else
+		bar._rbGradSR, bar._rbGradSG, bar._rbGradSB, bar._rbGradSA = sr, sg, sb, sa
+		bar._rbGradER, bar._rbGradEG, bar._rbGradEB, bar._rbGradEA = er, eg, eb, ea
+	end
 	return true
 end
 

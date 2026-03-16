@@ -208,10 +208,12 @@ end
 ---------------------------------------------------------
 function addon.functions.SettingsCreateMultiDropdown(cat, cbData)
 	addon.db = addon.db or {}
-	addon.db[cbData.var] = addon.db[cbData.var] or {}
+	local storageDB = cbData.db or addon.db
+	if type(storageDB) ~= "table" then storageDB = addon.db end
+	storageDB[cbData.var] = storageDB[cbData.var] or {}
 
 	local function getSelection()
-		local container = addon.db[cbData.var]
+		local container = storageDB[cbData.var]
 		if cbData.subvar then
 			container = container[cbData.subvar]
 			if type(container) ~= "table" then container = {} end
@@ -221,21 +223,26 @@ function addon.functions.SettingsCreateMultiDropdown(cat, cbData)
 
 	local function setSelection(map)
 		if cbData.subvar then
-			addon.db[cbData.var] = addon.db[cbData.var] or {}
-			addon.db[cbData.var][cbData.subvar] = map
+			storageDB[cbData.var] = storageDB[cbData.var] or {}
+			storageDB[cbData.var][cbData.subvar] = map
 		else
-			addon.db[cbData.var] = map
+			storageDB[cbData.var] = map
 		end
 		if cbData.callback then cbData.callback(map) end
 	end
 
 	local initializer = SettingsLib:CreateMultiDropdown(cat, {
 		key = cbData.var,
+		db = storageDB,
 		name = cbData.text,
 		values = cbData.options or cbData.list,
 		optionfunc = cbData.optionfunc or cbData.listFunc,
+		desc = cbData.desc,
+		tooltip = cbData.tooltip,
 		height = cbData.menuHeight or 200,
 		order = cbData.order,
+		customText = cbData.customText,
+		customDefaultText = cbData.customDefaultText,
 		isSelected = cbData.isSelectedFunc,
 		setSelected = cbData.setSelectedFunc,
 		getSelection = cbData.getSelection or cbData.get or getSelection,
@@ -248,7 +255,7 @@ function addon.functions.SettingsCreateMultiDropdown(cat, cbData)
 		parentSection = cbData.parentSection,
 		isEnabled = cbData.isEnabled,
 		prefix = prefix,
-		hideSummary = true,
+		hideSummary = cbData.hideSummary == nil and true or cbData.hideSummary,
 	})
 
 	addon.SettingsLayout.elements = addon.SettingsLayout.elements or {}

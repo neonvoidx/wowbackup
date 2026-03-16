@@ -92,6 +92,7 @@ L["Position Persistence Reset Tooltip"] = "Speichert die Position, bis du sie zu
 L["Power Bar Widgets"] = "Energieleisten-Widgets (UI-Widgets)"
 L["Professions"] = "Berufe"
 L["Professions Book"] = "Berufsbuch"
+L["PvP Match Results"] = "PvP-Matchergebnisse"
 L["Quest"] = "NPC-Dialog (Quest)"
 L["Queue Status Button"] = "Warteschlangenstatus-Button"
 L["Raid Info"] = "Schlachtzuginfo"

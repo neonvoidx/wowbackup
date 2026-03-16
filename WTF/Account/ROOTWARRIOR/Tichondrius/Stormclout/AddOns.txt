@@ -404,7 +404,7 @@ HomeBound: enabled
 KeystonePolaris: enabled
 SenseiClassResourceBar: enabled
 TransmogLootHelper: enabled
-CooldownManagerCentered: disabled
+CooldownManagerCentered: enabled
 CooldownManagerKeybinds: disabled
 HandyNotes_Midnight: enabled
 Mapzeroth: enabled
@@ -422,3 +422,5 @@ Collectionator: enabled
 HandyNotes_Silvermoon: enabled
 MidnightRoutine: enabled
 WorldQuestTab: enabled
+!Swatter: disabled
+!ImprovedErrorFrame: disabled

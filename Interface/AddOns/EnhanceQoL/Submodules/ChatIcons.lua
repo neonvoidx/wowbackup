@@ -46,21 +46,14 @@ local ITEMLINK_EVENTS_FALLBACK = {
 
 local tonumber = tonumber
 local format = string.format
-local GetDetailedItemLevelInfo = GetDetailedItemLevelInfo or (C_Item and C_Item.GetDetailedItemLevelInfo)
-local GetItemInfo = C_Item and C_Item.GetItemInfo
+local GetDetailedItemLevelInfoFn = C_Item and C_Item.GetDetailedItemLevelInfo
+local GetItemInfoFn = C_Item and C_Item.GetItemInfo
 
 local function GetItemTexture(link)
 	if not link then return nil end
 
-	if GetItemIcon then
-		local ok, texture = pcall(GetItemIcon, link)
-		if ok and texture then return texture end
-	end
-
-	if C_Item and C_Item.GetItemIconByID then
-		local itemID = link:match("item:(%d+)")
-		if itemID then return C_Item.GetItemIconByID(tonumber(itemID)) end
-	end
+	local itemID = link:match("item:(%d+)")
+	if itemID then return C_Item.GetItemIconByID(tonumber(itemID)) end
 
 	return nil
 end
@@ -93,11 +86,11 @@ end
 
 local function GetItemLevelAndEquipLoc(link)
 	local level
-	if GetDetailedItemLevelInfo then level = GetDetailedItemLevelInfo(link) end
+	if GetDetailedItemLevelInfoFn then level = GetDetailedItemLevelInfoFn(link) end
 
 	local equipLoc
-	if GetItemInfo then
-		local _, _, _, baseLevel, _, _, _, _, itemEquipLoc = GetItemInfo(link)
+	if GetItemInfoFn then
+		local _, _, _, baseLevel, _, _, _, _, itemEquipLoc = GetItemInfoFn(link)
 		equipLoc = itemEquipLoc
 		if not level or level == 0 then level = baseLevel end
 	end
@@ -179,13 +172,13 @@ function ChatIcons:UpdateFilters()
 
 	for event in pairs(self.registeredEvents) do
 		if not needed[event] then
-			ChatFrame_RemoveMessageEventFilter(event, self.Filter)
+			ChatFrameUtil.RemoveMessageEventFilter(event, self.Filter)
 			self.registeredEvents[event] = nil
 		end
 	end
 	for event in pairs(needed) do
 		if not self.registeredEvents[event] then
-			ChatFrame_AddMessageEventFilter(event, self.Filter)
+			ChatFrameUtil.AddMessageEventFilter(event, self.Filter)
 			self.registeredEvents[event] = true
 		end
 	end

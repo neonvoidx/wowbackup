@@ -36,7 +36,14 @@ CooldownManagerCenteredDB = {
 ["cooldownStyleSettings"] = {
 ["spellSettings"] = {
 [1249625] = {
+["alwaysGlow"] = true,
 ["alwaysShowCooldownEdge"] = true,
+},
+[443294] = {
+["alwaysGlow"] = true,
+},
+[325202] = {
+["alwaysGlow"] = true,
 },
 },
 },

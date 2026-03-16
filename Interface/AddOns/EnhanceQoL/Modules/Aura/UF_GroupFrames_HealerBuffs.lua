@@ -17,6 +17,7 @@ local HB = UF.GroupFramesHealerBuffs
 
 local GFH = UF.GroupFramesHelper
 local AuraUtil = UF.AuraUtil
+local UFHelper = addon.Aura.UFHelper
 
 local floor = math.floor
 local max = math.max
@@ -172,14 +173,15 @@ HB.GROWTH_OPTIONS = GFH and GFH.auraGrowthOptions
 
 local FAMILY_DATA = {
 	-- Shared class buffs
-	{ id = "druid_mark_of_the_wild", classToken = "DRUID", spellIds = { 1126 }, fallbackName = "Mark of the Wild", ignoreForNpcUnits = true },
-	{ id = "mage_arcane_intellect", classToken = "MAGE", spellIds = { 1459 }, fallbackName = "Arcane Intellect", ignoreForNpcUnits = true },
-	{ id = "priest_power_word_fortitude", classToken = "PRIEST", spellIds = { 21562 }, fallbackName = "Power Word: Fortitude", ignoreForNpcUnits = true },
-	{ id = "warrior_battle_shout", classToken = "WARRIOR", spellIds = { 6673 }, fallbackName = "Battle Shout", ignoreForNpcUnits = true },
+	{ id = "druid_mark_of_the_wild", classToken = "DRUID", spellIds = { 1126 }, fallbackName = "Mark of the Wild", ignoreForNpcUnits = true, scanAllCasters = true },
+	{ id = "mage_arcane_intellect", classToken = "MAGE", spellIds = { 1459 }, fallbackName = "Arcane Intellect", ignoreForNpcUnits = true, scanAllCasters = true },
+	{ id = "priest_power_word_fortitude", classToken = "PRIEST", spellIds = { 21562 }, fallbackName = "Power Word: Fortitude", ignoreForNpcUnits = true, scanAllCasters = true },
+	{ id = "warrior_battle_shout", classToken = "WARRIOR", spellIds = { 6673 }, fallbackName = "Battle Shout", ignoreForNpcUnits = true, scanAllCasters = true },
 	{
 		id = "evoker_blessing_of_the_bronze",
 		classToken = "EVOKER",
 		ignoreForNpcUnits = true,
+		scanAllCasters = true,
 		spellIds = {
 			381732,
 			381741,
@@ -197,7 +199,7 @@ local FAMILY_DATA = {
 		},
 		fallbackName = "Blessing of the Bronze",
 	},
-	{ id = "shaman_skyfury", classToken = "SHAMAN", spellIds = { 462854 }, fallbackName = "Skyfury", ignoreForNpcUnits = true },
+	{ id = "shaman_skyfury", classToken = "SHAMAN", spellIds = { 462854 }, fallbackName = "Skyfury", ignoreForNpcUnits = true, scanAllCasters = true },
 
 	-- Preservation Evoker
 	{ id = "evoker_pres_dream_breath", classToken = "EVOKER", spec = "Preservation", spellIds = { 355941 }, fallbackName = "Dream Breath" },
@@ -289,11 +291,7 @@ local function getPlayerSpecId()
 	if sid and sid > 0 then return sid end
 
 	local specIndex = nil
-	if C_SpecializationInfo and C_SpecializationInfo.GetSpecialization then
-		specIndex = C_SpecializationInfo.GetSpecialization()
-	elseif GetSpecialization then
-		specIndex = GetSpecialization()
-	end
+	if C_SpecializationInfo and C_SpecializationInfo.GetSpecialization then specIndex = C_SpecializationInfo.GetSpecialization() end
 	if not specIndex then return nil end
 
 	if C_SpecializationInfo and C_SpecializationInfo.GetSpecializationInfo then
@@ -306,8 +304,8 @@ local function getPlayerSpecId()
 		if sid and sid > 0 then return sid end
 	end
 
-	if GetSpecializationInfo then
-		sid = tonumber(GetSpecializationInfo(specIndex))
+	if C_SpecializationInfo and C_SpecializationInfo.GetSpecializationInfo then
+		sid = tonumber(C_SpecializationInfo.GetSpecializationInfo(specIndex))
 		if sid and sid > 0 then return sid end
 	end
 
@@ -355,9 +353,7 @@ local function getPlayerFamilyProvisionMap()
 	specId = tonumber(specId) or 0
 
 	local cacheKey = tostring(classToken or "") .. "|" .. tostring(specId)
-	if _playerFamilyProvisionCache.key == cacheKey and _playerFamilyProvisionCache.map ~= nil then
-		return _playerFamilyProvisionCache.map
-	end
+	if _playerFamilyProvisionCache.key == cacheKey and _playerFamilyProvisionCache.map ~= nil then return _playerFamilyProvisionCache.map end
 
 	local map = {}
 	local specMap = classToken and PROVIDER_SPEC_IDS[classToken] or nil
@@ -442,6 +438,8 @@ local function normalizeOrientation(value)
 	if ORIENTATION_SET[orient] then return orient end
 	return ORIENT_HORIZONTAL
 end
+
+local function normalizeBarReverseFill(value) return value == true end
 
 local function normalizeRuleMatch(value)
 	local mode = tostring(value or RULE_MATCH_ANY):upper()
@@ -624,6 +622,13 @@ function HB.GetFamilyFromSpell(spellId)
 	return SPELL_TO_FAMILY[tonumber(spellId)]
 end
 
+local function getFamilyDefaultScanAllCasters(familyId)
+	local family = familyId and FAMILY_BY_ID[tostring(familyId)] or nil
+	return family and family.scanAllCasters == true or false
+end
+
+function HB.GetFamilyScanAllCasters(familyId, source) return getFamilyDefaultScanAllCasters(familyId) end
+
 function HB.MarkPlacementDirty(cfgOrPlacement)
 	if type(cfgOrPlacement) ~= "table" then return end
 	local placement = cfgOrPlacement.healerBuffPlacement
@@ -666,8 +671,15 @@ function HB.CreateDefaultGroup(id)
 		size = 16,
 		barOrientation = ORIENT_HORIZONTAL,
 		barThickness = 6,
+		barDrainAnimation = false,
+		barReverseFill = false,
 		inset = 0,
 		borderSize = 2,
+		indicatorBorderEnabled = false,
+		indicatorBorderTexture = "DEFAULT",
+		indicatorBorderSize = 1,
+		indicatorBorderOffset = 0,
+		indicatorBorderColor = { 0, 0, 0, 0.95 },
 		ruleMatch = RULE_MATCH_ANY,
 		iconMode = ICON_MODE_ALL,
 		showCooldownSwipe = true,
@@ -707,8 +719,21 @@ local function normalizeGroup(group, id)
 	group.size = roundInt(clamp(group.size, 4, 96, 16))
 	group.barOrientation = normalizeOrientation(group.barOrientation)
 	group.barThickness = roundInt(clamp(group.barThickness, 1, 96, 6))
+	group.barDrainAnimation = group.barDrainAnimation == true
+	group.barReverseFill = normalizeBarReverseFill(group.barReverseFill)
 	group.inset = roundInt(clamp(group.inset, 0, 60, 0))
 	group.borderSize = roundInt(clamp(group.borderSize, 1, 24, 2))
+	local indicatorBorderEnabled = group.indicatorBorderEnabled
+	if indicatorBorderEnabled == nil then indicatorBorderEnabled = group.iconBorderEnabled end
+	group.indicatorBorderEnabled = indicatorBorderEnabled == true
+	local indicatorBorderTexture = group.indicatorBorderTexture
+	if indicatorBorderTexture == nil then indicatorBorderTexture = group.iconBorderTexture end
+	indicatorBorderTexture = tostring(indicatorBorderTexture or "DEFAULT")
+	if indicatorBorderTexture == "" then indicatorBorderTexture = "DEFAULT" end
+	group.indicatorBorderTexture = indicatorBorderTexture
+	group.indicatorBorderSize = roundInt(clamp(group.indicatorBorderSize or group.iconBorderSize, 1, 24, 1))
+	group.indicatorBorderOffset = roundInt(clamp(group.indicatorBorderOffset or group.iconBorderOffset, -12, 12, 0))
+	group.indicatorBorderColor = normalizeColor(group.indicatorBorderColor or group.iconBorderColor, { 0, 0, 0, 0.95 })
 	group.ruleMatch = normalizeRuleMatch(group.ruleMatch or group.matchMode or group.ruleMode)
 	group.iconMode = normalizeIconMode(group.iconMode or group.iconDisplayMode or group.iconRuleMode)
 	local showCooldownSwipe = group.showCooldownSwipe
@@ -745,6 +770,11 @@ local function normalizeGroup(group, id)
 	group.chargeSize = nil
 	group.cooldownFontSizeOverride = nil
 	group.countFontSizeOverride = nil
+	group.iconBorderEnabled = nil
+	group.iconBorderTexture = nil
+	group.iconBorderSize = nil
+	group.iconBorderOffset = nil
+	group.iconBorderColor = nil
 	group.color = normalizeColor(group.color, { 1, 0.82, 0.1, 0.9 })
 	return group
 end
@@ -805,6 +835,7 @@ function HB.EnsureConfig(cfg)
 	end
 	placement.groupsById = normalizedGroups
 	placement.groupOrder = normalizeOrder(placement.groupOrder, normalizedGroups)
+	placement.familyScanAllCasters = nil
 
 	local normalizedRules = {}
 	for key, rule in pairs(placement.rulesById) do
@@ -900,6 +931,8 @@ local function compile(kind, cfg)
 		groupToRuleIds = {},
 		groupToEnabledRuleIds = {},
 		familyToRuleIds = {},
+		enabledFamilies = {},
+		familyScanAllCastersById = {},
 		suppressedFamilies = {},
 		groupOrderByStyle = {
 			[STYLE_ICON] = {},
@@ -945,6 +978,11 @@ local function compile(kind, cfg)
 				end
 				byGroup[#byGroup + 1] = ruleId
 				if rule.enabled ~= false then
+					compiled.enabledFamilies[familyId] = true
+					if HB.GetFamilyScanAllCasters(familyId) then
+						compiled.familyScanAllCastersById[familyId] = true
+						compiled.needsWideHelpfulScan = true
+					end
 					local byGroupEnabled = compiled.groupToEnabledRuleIds[groupId]
 					if not byGroupEnabled then
 						byGroupEnabled = {}
@@ -977,6 +1015,117 @@ local function getEffectiveScale(frame)
 	return 1
 end
 
+local function setFrameParentCached(frame, parent)
+	if not (frame and parent and frame.SetParent) then return false end
+	if frame._hbCachedParent == parent and (not frame.GetParent or frame:GetParent() == parent) then return false end
+	frame:SetParent(parent)
+	frame._hbCachedParent = parent
+	return true
+end
+
+local function setFrameStrataCached(frame, strata)
+	if not (frame and frame.SetFrameStrata and strata ~= nil) then return false end
+	if frame._hbCachedFrameStrata == strata then return false end
+	frame:SetFrameStrata(strata)
+	frame._hbCachedFrameStrata = strata
+	return true
+end
+
+local function setFrameLevelCached(frame, level)
+	if not (frame and frame.SetFrameLevel and level ~= nil) then return false end
+	level = max(0, tonumber(level) or 0)
+	if frame._hbCachedFrameLevel == level then return false end
+	frame:SetFrameLevel(level)
+	frame._hbCachedFrameLevel = level
+	return true
+end
+
+local function setAllPointsCached(frame, relativeTo)
+	if not (frame and relativeTo) then return false end
+	if frame._hbAllPointsTarget == relativeTo then return false end
+	frame._hbAllPointsTarget = relativeTo
+	frame._hbPointCache = nil
+	if frame.ClearAllPoints then frame:ClearAllPoints() end
+	if frame.SetAllPoints then
+		frame:SetAllPoints(relativeTo)
+	else
+		frame:SetPoint("TOPLEFT", relativeTo, "TOPLEFT", 0, 0)
+		frame:SetPoint("BOTTOMRIGHT", relativeTo, "BOTTOMRIGHT", 0, 0)
+	end
+	return true
+end
+
+local function setSinglePointCached(frame, point, relativeTo, relativePoint, x, y)
+	if not frame then return false end
+	local cache = frame._hbPointCache
+	if cache and cache.mode == 1 and cache.point == point and cache.relativeTo == relativeTo and cache.relativePoint == relativePoint and cache.x == x and cache.y == y then return false end
+	frame._hbAllPointsTarget = nil
+	cache = cache or {}
+	frame._hbPointCache = cache
+	if frame.ClearAllPoints then frame:ClearAllPoints() end
+	frame:SetPoint(point, relativeTo, relativePoint, x, y)
+	cache.mode = 1
+	cache.point = point
+	cache.relativeTo = relativeTo
+	cache.relativePoint = relativePoint
+	cache.x = x
+	cache.y = y
+	return true
+end
+
+local function setTwoPointsCached(frame, firstPoint, firstRelativeTo, firstRelativePoint, firstX, firstY, secondPoint, secondRelativeTo, secondRelativePoint, secondX, secondY)
+	if not frame then return false end
+	local cache = frame._hbPointCache
+	if
+		cache
+		and cache.mode == 2
+		and cache.firstPoint == firstPoint
+		and cache.firstRelativeTo == firstRelativeTo
+		and cache.firstRelativePoint == firstRelativePoint
+		and cache.firstX == firstX
+		and cache.firstY == firstY
+		and cache.secondPoint == secondPoint
+		and cache.secondRelativeTo == secondRelativeTo
+		and cache.secondRelativePoint == secondRelativePoint
+		and cache.secondX == secondX
+		and cache.secondY == secondY
+	then
+		return false
+	end
+	frame._hbAllPointsTarget = nil
+	cache = cache or {}
+	frame._hbPointCache = cache
+	if frame.ClearAllPoints then frame:ClearAllPoints() end
+	frame:SetPoint(firstPoint, firstRelativeTo, firstRelativePoint, firstX, firstY)
+	frame:SetPoint(secondPoint, secondRelativeTo, secondRelativePoint, secondX, secondY)
+	cache.mode = 2
+	cache.firstPoint = firstPoint
+	cache.firstRelativeTo = firstRelativeTo
+	cache.firstRelativePoint = firstRelativePoint
+	cache.firstX = firstX
+	cache.firstY = firstY
+	cache.secondPoint = secondPoint
+	cache.secondRelativeTo = secondRelativeTo
+	cache.secondRelativePoint = secondRelativePoint
+	cache.secondX = secondX
+	cache.secondY = secondY
+	return true
+end
+
+local function setSizeCached(frame, width, height)
+	if not (frame and frame.SetSize) then return false end
+	if frame._hbCachedWidth == width and frame._hbCachedHeight == height then return false end
+	frame:SetSize(width, height)
+	frame._hbCachedWidth = width
+	frame._hbCachedHeight = height
+	return true
+end
+
+local function getOffsetXY(offset)
+	if type(offset) ~= "table" then return nil, nil end
+	return offset.x, offset.y
+end
+
 local function getGrowthAxes(growth)
 	local axes = GROWTH_AXES[normalizeGrowth(growth)]
 	if axes then return axes[1], axes[2] end
@@ -986,9 +1135,22 @@ end
 local function clearHiddenAuraButton(btn)
 	if not btn then return end
 	btn._showTooltip = false
-	if btn.SetMouseClickEnabled then btn:SetMouseClickEnabled(false) end
-	if btn.SetMouseMotionEnabled then btn:SetMouseMotionEnabled(false) end
-	if btn.EnableMouse then btn:EnableMouse(false) end
+	btn._hbTooltipShown = false
+	btn._tooltipUseEditMode = nil
+	btn._tooltipAnchor = nil
+	if btn.SetMouseClickEnabled and btn._hbMouseClickEnabled ~= false then
+		btn:SetMouseClickEnabled(false)
+		btn._hbMouseClickEnabled = false
+	end
+	if btn.SetMouseMotionEnabled and btn._hbMouseMotionEnabled ~= false then
+		btn:SetMouseMotionEnabled(false)
+		btn._hbMouseMotionEnabled = false
+	end
+	if btn.EnableMouse then
+		if btn._hbMouseEnabled ~= false then btn:EnableMouse(false) end
+		btn._hbMouseEnabled = false
+	end
+	if GameTooltip and GameTooltip.IsOwned and GameTooltip.Hide and GameTooltip:IsOwned(btn) then GameTooltip:Hide() end
 	if btn.Hide then btn:Hide() end
 end
 
@@ -1002,10 +1164,19 @@ end
 local function setAuraTooltipState(btn, show)
 	if not btn then return end
 	btn._showTooltip = show == true
-	if btn.SetMouseClickEnabled then btn:SetMouseClickEnabled(show == true) end
-	if btn.SetMouseMotionEnabled then btn:SetMouseMotionEnabled(show == true) end
-	if btn.EnableMouse then btn:EnableMouse(show == true) end
-	if show ~= true and GameTooltip and GameTooltip.Hide then GameTooltip:Hide() end
+	if btn.SetMouseClickEnabled and btn._hbMouseClickEnabled ~= (show == true) then
+		btn:SetMouseClickEnabled(show == true)
+		btn._hbMouseClickEnabled = show == true
+	end
+	if btn.SetMouseMotionEnabled and btn._hbMouseMotionEnabled ~= (show == true) then
+		btn:SetMouseMotionEnabled(show == true)
+		btn._hbMouseMotionEnabled = show == true
+	end
+	if btn.EnableMouse and btn._hbMouseEnabled ~= (show == true) then
+		btn:EnableMouse(show == true)
+		btn._hbMouseEnabled = show == true
+	end
+	if show ~= true and GameTooltip and GameTooltip.IsOwned and GameTooltip.Hide and GameTooltip:IsOwned(btn) then GameTooltip:Hide() end
 end
 
 local function calcGridSize(shown, perRow, size, spacing, primary)
@@ -1050,8 +1221,7 @@ local function positionAuraButton(btn, container, primary, secondary, index, per
 	local scale = getEffectiveScale(container)
 	local x = roundToPixel(col * step * xSign, scale)
 	local y = roundToPixel(row * step * ySign, scale)
-	btn:ClearAllPoints()
-	btn:SetPoint(basePoint, container, basePoint, x, y)
+	setSinglePointCached(btn, basePoint, container, basePoint, x, y)
 end
 
 local function getState(btn)
@@ -1086,35 +1256,44 @@ local function getState(btn)
 	return state, st
 end
 
-local function ensureVisualLayers(btn, st)
+local function ensureVisualLayers(btn, st, forceLayout)
 	if not (btn and st) then return nil end
 	local parent = st.barGroup or btn
 	if not parent then return nil end
 
+	local layoutChanged = forceLayout == true
 	if not st.healerBuffRoot then
 		st.healerBuffRoot = CreateFrame("Frame", nil, parent)
 		st.healerBuffRoot:EnableMouse(false)
+		layoutChanged = true
 	end
 	local root = st.healerBuffRoot
-	if root.GetParent and root:GetParent() ~= parent then root:SetParent(parent) end
-	root:ClearAllPoints()
-	root:SetPoint("TOPLEFT", parent, "TOPLEFT", 0, 0)
-	root:SetPoint("BOTTOMRIGHT", parent, "BOTTOMRIGHT", 0, 0)
-	if root.SetFrameStrata and parent.GetFrameStrata then root:SetFrameStrata(parent:GetFrameStrata()) end
-	if root.SetFrameLevel and parent.GetFrameLevel then root:SetFrameLevel((parent:GetFrameLevel() or 0) + 12) end
+	if st._hbVisualParent ~= parent or (root.GetParent and root:GetParent() ~= parent) then
+		layoutChanged = true
+		st._hbVisualParent = parent
+	end
+	setFrameParentCached(root, parent)
+	if layoutChanged then
+		root._hbAllPointsTarget = nil
+		setAllPointsCached(root, parent)
+	end
+	if root.SetFrameStrata and parent.GetFrameStrata then setFrameStrataCached(root, parent:GetFrameStrata()) end
+	if root.SetFrameLevel and parent.GetFrameLevel then setFrameLevelCached(root, (parent:GetFrameLevel() or 0) + 12) end
 	root:Show()
 
 	if not st.healerBuffIconLayer then
 		st.healerBuffIconLayer = CreateFrame("Frame", nil, root)
 		st.healerBuffIconLayer:EnableMouse(false)
+		layoutChanged = true
 	end
 	local iconLayer = st.healerBuffIconLayer
-	if iconLayer.GetParent and iconLayer:GetParent() ~= root then iconLayer:SetParent(root) end
-	iconLayer:ClearAllPoints()
-	iconLayer:SetPoint("TOPLEFT", root, "TOPLEFT", 0, 0)
-	iconLayer:SetPoint("BOTTOMRIGHT", root, "BOTTOMRIGHT", 0, 0)
-	if iconLayer.SetFrameStrata and root.GetFrameStrata then iconLayer:SetFrameStrata(root:GetFrameStrata()) end
-	if iconLayer.SetFrameLevel and root.GetFrameLevel then iconLayer:SetFrameLevel((root:GetFrameLevel() or 0) + 30) end
+	setFrameParentCached(iconLayer, root)
+	if layoutChanged then
+		iconLayer._hbAllPointsTarget = nil
+		setAllPointsCached(iconLayer, root)
+	end
+	if iconLayer.SetFrameStrata and root.GetFrameStrata then setFrameStrataCached(iconLayer, root:GetFrameStrata()) end
+	if iconLayer.SetFrameLevel and root.GetFrameLevel then setFrameLevelCached(iconLayer, (root:GetFrameLevel() or 0) + 30) end
 
 	if not st.healerBuffTint then
 		st.healerBuffTint = root:CreateTexture(nil, "ARTWORK", nil, 2)
@@ -1125,23 +1304,44 @@ local function ensureVisualLayers(btn, st)
 	if st.healerBuffTint.SetDrawLayer then st.healerBuffTint:SetDrawLayer("ARTWORK", 2) end
 
 	if not st.healerBuffBar then
-		st.healerBuffBar = root:CreateTexture(nil, "ARTWORK", nil, 3)
-		st.healerBuffBar:SetColorTexture(0, 0, 0, 0)
+		st.healerBuffBar = CreateFrame("StatusBar", nil, root)
+		st.healerBuffBar:EnableMouse(false)
+		st.healerBuffBar:SetStatusBarTexture("Interface\\Buttons\\WHITE8x8")
+		st.healerBuffBar:SetMinMaxValues(0, 1)
+		st.healerBuffBar:SetValue(1)
 		st.healerBuffBar:Hide()
 	end
-	if st.healerBuffBar.GetParent and st.healerBuffBar:GetParent() ~= root then st.healerBuffBar:SetParent(root) end
-	if st.healerBuffBar.SetDrawLayer then st.healerBuffBar:SetDrawLayer("ARTWORK", 3) end
+	setFrameParentCached(st.healerBuffBar, root)
+	if st.healerBuffBar.SetFrameStrata and root.GetFrameStrata then setFrameStrataCached(st.healerBuffBar, root:GetFrameStrata()) end
+	if st.healerBuffBar.SetFrameLevel and root.GetFrameLevel then setFrameLevelCached(st.healerBuffBar, (root:GetFrameLevel() or 0) + 3) end
+	local barTex = st.healerBuffBar.GetStatusBarTexture and st.healerBuffBar:GetStatusBarTexture()
+	if barTex then
+		barTex:SetHorizTile(false)
+		barTex:SetVertTile(false)
+	end
 
 	if not st.healerBuffBorder then
 		st.healerBuffBorder = CreateFrame("Frame", nil, root, "BackdropTemplate")
 		st.healerBuffBorder:EnableMouse(false)
 		st.healerBuffBorder:Hide()
 	end
-	if st.healerBuffBorder.GetParent and st.healerBuffBorder:GetParent() ~= root then st.healerBuffBorder:SetParent(root) end
-	if st.healerBuffBorder.SetFrameStrata and root.GetFrameStrata then st.healerBuffBorder:SetFrameStrata(root:GetFrameStrata()) end
-	if st.healerBuffBorder.SetFrameLevel and root.GetFrameLevel then st.healerBuffBorder:SetFrameLevel((root:GetFrameLevel() or 0) + 4) end
+	setFrameParentCached(st.healerBuffBorder, root)
+	if st.healerBuffBorder.SetFrameStrata and root.GetFrameStrata then setFrameStrataCached(st.healerBuffBorder, root:GetFrameStrata()) end
+	if st.healerBuffBorder.SetFrameLevel and root.GetFrameLevel then setFrameLevelCached(st.healerBuffBorder, (root:GetFrameLevel() or 0) + 4) end
+
+	if layoutChanged then st._hbHealerBuffLayoutRevision = (st._hbHealerBuffLayoutRevision or 0) + 1 end
 
 	return root
+end
+
+local function ensureVisualLayersForUpdate(btn, st)
+	if not (btn and st) then return nil end
+	local parent = st.barGroup or btn
+	if not parent then return nil end
+	if not st.healerBuffRoot or not st.healerBuffIconLayer then return ensureVisualLayers(btn, st, false) end
+	if st._hbVisualParent ~= parent then return ensureVisualLayers(btn, st, false) end
+	if st.healerBuffRoot.GetParent and st.healerBuffRoot:GetParent() ~= parent then return ensureVisualLayers(btn, st, false) end
+	return st.healerBuffRoot
 end
 
 local function clearHealthTint(st)
@@ -1154,10 +1354,62 @@ local function clearHealthTint(st)
 	return changed
 end
 
+local BAR_UPDATE_INTERVAL = 0.05
+
+local function clearAnimatedBarState(bar)
+	if not bar then return end
+	bar._hbTrackedDuration = nil
+	bar._hbTrackedExpirationTime = nil
+	bar._hbBarUpdateElapsed = nil
+	if bar.SetScript then bar:SetScript("OnUpdate", nil) end
+end
+
+local function getTimedBarFill(duration, expirationTime, now)
+	duration = tonumber(duration)
+	expirationTime = tonumber(expirationTime)
+	if not (duration and duration > 0 and expirationTime and expirationTime > 0) then return nil end
+	now = tonumber(now) or ((GetTime and GetTime()) or 0)
+	return clamp((expirationTime - now) / duration, 0, 1, 0)
+end
+
+local function updateAnimatedBarValue(bar, now)
+	if not (bar and bar.SetValue) then return end
+	local fill = getTimedBarFill(bar._hbTrackedDuration, bar._hbTrackedExpirationTime, now)
+	bar:SetValue(fill ~= nil and fill or 1)
+end
+
+local function setAnimatedBarAura(bar, aura)
+	if not bar then return false end
+	local duration = aura and tonumber(aura.duration) or nil
+	local expirationTime = aura and tonumber(aura.expirationTime) or nil
+	if not (duration and duration > 0 and expirationTime and expirationTime > 0) then
+		clearAnimatedBarState(bar)
+		if bar.SetValue then bar:SetValue(1) end
+		return false
+	end
+	bar._hbTrackedDuration = duration
+	bar._hbTrackedExpirationTime = expirationTime
+	bar._hbBarUpdateElapsed = 0
+	updateAnimatedBarValue(bar)
+	if not bar._hbBarOnUpdate then
+		bar._hbBarOnUpdate = function(self, elapsed)
+			self._hbBarUpdateElapsed = (self._hbBarUpdateElapsed or 0) + (elapsed or 0)
+			if self._hbBarUpdateElapsed < BAR_UPDATE_INTERVAL then return end
+			self._hbBarUpdateElapsed = 0
+			updateAnimatedBarValue(self)
+		end
+	end
+	if bar.SetScript then bar:SetScript("OnUpdate", bar._hbBarOnUpdate) end
+	return true
+end
+
 local function hideAllVisuals(btn, st, state)
 	if not st then return end
 	if st.healerBuffTint then st.healerBuffTint:Hide() end
-	if st.healerBuffBar then st.healerBuffBar:Hide() end
+	if st.healerBuffBar then
+		clearAnimatedBarState(st.healerBuffBar)
+		st.healerBuffBar:Hide()
+	end
 	if st.healerBuffBorder then st.healerBuffBorder:Hide() end
 	local tintChanged = clearHealthTint(st)
 	if state and state.groupContainers then
@@ -1216,21 +1468,17 @@ local function isAuraFilteredByInstanceFilter(unit, aura, filter)
 	return not C_UnitAuras.IsAuraFilteredOutByInstanceID(unit, aura.auraInstanceID, filter)
 end
 
-local function isAuraFromPlayer(unit, aura, familyId)
+local function isAuraFromPlayer(unit, aura, familyId, compiled)
 	if aura == nil then return false end
-
-	local family = familyId and FAMILY_BY_ID[tostring(familyId)] or nil
-	if family and family.classToken ~= nil then
-		if not canPlayerProvideFamilyCached(familyId) then return false end
-		local isHarmful = aura.isHarmful
-		if issecretvalue and issecretvalue(isHarmful) then return false end
-		if not C_UnitAuras or not C_UnitAuras.IsAuraFilteredOutByInstanceID then return false end
-		return isAuraFilteredByInstanceFilter(unit, aura, isHarmful and HARMFUL_FILTER or HELPFUL_FILTER)
-	end
-
 	if not C_UnitAuras or not C_UnitAuras.IsAuraFilteredOutByInstanceID then return false end
+	local familyKey = familyId and tostring(familyId) or nil
+	local family = familyKey and FAMILY_BY_ID[familyKey] or nil
+	if family and family.classToken ~= nil and not canPlayerProvideFamilyCached(familyKey) then return false end
 	local isHarmful = aura.isHarmful
 	if issecretvalue and issecretvalue(isHarmful) then return false end
+	if familyKey and compiled and compiled.familyScanAllCastersById and compiled.familyScanAllCastersById[familyKey] == true then
+		return isAuraFilteredByInstanceFilter(unit, aura, isHarmful and HARMFUL_FILTER or HELPFUL_FILTER)
+	end
 	return isAuraFilteredByInstanceFilter(unit, aura, isHarmful and PLAYER_HARMFUL_FILTER or PLAYER_HELPFUL_FILTER)
 end
 
@@ -1241,8 +1489,9 @@ local function getFamilyForAura(compiled, aura, unit)
 	if issecretvalue and issecretvalue(spellId) then return nil end
 	local familyId = compiled.spellToFamily[tonumber(spellId)]
 	if familyId == nil then return nil end
+	if compiled.enabledFamilies and compiled.enabledFamilies[familyId] ~= true then return nil end
 	if shouldIgnoreFamilyForUnit(familyId, unit) then return nil end
-	if not isAuraFromPlayer(unit, aura, familyId) then return nil end
+	if not isAuraFromPlayer(unit, aura, familyId, compiled) then return nil end
 	return familyId
 end
 
@@ -1471,9 +1720,9 @@ local function ensureGroupContainer(state, st, groupId)
 		container:EnableMouse(false)
 		state.groupContainers[groupId] = container
 	end
-	if container.GetParent and container:GetParent() ~= st.healerBuffIconLayer then container:SetParent(st.healerBuffIconLayer) end
-	if container.SetFrameStrata and st.healerBuffIconLayer.GetFrameStrata then container:SetFrameStrata(st.healerBuffIconLayer:GetFrameStrata()) end
-	if container.SetFrameLevel and st.healerBuffIconLayer.GetFrameLevel then container:SetFrameLevel((st.healerBuffIconLayer:GetFrameLevel() or 0) + 1) end
+	setFrameParentCached(container, st.healerBuffIconLayer)
+	if container.SetFrameStrata and st.healerBuffIconLayer.GetFrameStrata then setFrameStrataCached(container, st.healerBuffIconLayer:GetFrameStrata()) end
+	if container.SetFrameLevel and st.healerBuffIconLayer.GetFrameLevel then setFrameLevelCached(container, (st.healerBuffIconLayer:GetFrameLevel() or 0) + 1) end
 	return container
 end
 
@@ -1484,73 +1733,104 @@ local function getAuraStyleForGroup(state, cfg, group)
 		state.groupStyleCache[group.id] = styleCache
 	end
 	local ac = cfg and cfg.auras and cfg.auras.buff or EMPTY
-	local key = table.concat({
-		group.size,
-		group.spacing,
-		ac.showTooltip == false and 0 or 1,
-		group.showCooldownSwipe == false and 0 or 1,
-		group.showCooldownEdge == false and 0 or 1,
-		group.showCooldownBling == false and 0 or 1,
-		group.hideCooldownText == true and 1 or 0,
-		group.hideChargeText == true and 1 or 0,
-		tostring(group.cooldownTextSize),
-		tostring(group.chargeTextSize),
-		ac.showCooldown == false and 0 or 1,
-		tostring(ac.showCooldownText),
-		tostring(ac.cooldownAnchor),
-		tostring(ac.cooldownFont),
-		tostring(ac.cooldownFontSize),
-		tostring(ac.cooldownFontOutline),
-		tostring(ac.showStacks),
-		tostring(ac.countAnchor),
-		tostring(ac.countFont),
-		tostring(ac.countFontSize),
-		tostring(ac.countFontOutline),
-	}, "|")
-	if styleCache._key == key then return styleCache end
+	local cooldownOffsetX, cooldownOffsetY = getOffsetXY(ac.cooldownOffset)
+	local countOffsetX, countOffsetY = getOffsetXY(ac.countOffset)
+	local showTooltip = ac.showTooltip ~= false
+	local showCooldownSwipe = group.showCooldownSwipe ~= false
+	local showCooldownEdge = group.showCooldownEdge ~= false
+	local showCooldownBling = group.showCooldownBling ~= false
+	local showCooldown = ac.showCooldown ~= false
+	local showCooldownText
+	if group.hideCooldownText == true then
+		showCooldownText = false
+	elseif ac.showCooldownText ~= nil then
+		showCooldownText = ac.showCooldownText
+	else
+		showCooldownText = nil
+	end
+	local showStacks
+	if group.hideChargeText == true then
+		showStacks = false
+	elseif ac.showStacks ~= nil then
+		showStacks = ac.showStacks
+	else
+		showStacks = nil
+	end
+	local cooldownFontSize = group.cooldownTextSize ~= nil and group.cooldownTextSize or ac.cooldownFontSize
+	local countFontSize = group.chargeTextSize ~= nil and group.chargeTextSize or ac.countFontSize
+	local changed = styleCache._cfgSize ~= group.size
+		or styleCache._cfgPadding ~= group.spacing
+		or styleCache._cfgShowTooltip ~= showTooltip
+		or styleCache._cfgShowCooldownSwipe ~= showCooldownSwipe
+		or styleCache._cfgShowCooldownEdge ~= showCooldownEdge
+		or styleCache._cfgShowCooldownBling ~= showCooldownBling
+		or styleCache._cfgShowCooldown ~= showCooldown
+		or styleCache._cfgShowCooldownText ~= showCooldownText
+		or styleCache._cfgShowStacks ~= showStacks
+		or styleCache._cfgCooldownAnchor ~= ac.cooldownAnchor
+		or styleCache._cfgCooldownOffsetX ~= cooldownOffsetX
+		or styleCache._cfgCooldownOffsetY ~= cooldownOffsetY
+		or styleCache._cfgCooldownFont ~= ac.cooldownFont
+		or styleCache._cfgCooldownFontSize ~= cooldownFontSize
+		or styleCache._cfgCooldownFontOutline ~= ac.cooldownFontOutline
+		or styleCache._cfgCountAnchor ~= ac.countAnchor
+		or styleCache._cfgCountOffsetX ~= countOffsetX
+		or styleCache._cfgCountOffsetY ~= countOffsetY
+		or styleCache._cfgCountFont ~= ac.countFont
+		or styleCache._cfgCountFontSize ~= countFontSize
+		or styleCache._cfgCountFontOutline ~= ac.countFontOutline
+	if not changed then return styleCache end
 
-	styleCache._key = key
+	styleCache._cfgSize = group.size
+	styleCache._cfgPadding = group.spacing
+	styleCache._cfgShowTooltip = showTooltip
+	styleCache._cfgShowCooldownSwipe = showCooldownSwipe
+	styleCache._cfgShowCooldownEdge = showCooldownEdge
+	styleCache._cfgShowCooldownBling = showCooldownBling
+	styleCache._cfgShowCooldown = showCooldown
+	styleCache._cfgShowCooldownText = showCooldownText
+	styleCache._cfgShowStacks = showStacks
+	styleCache._cfgCooldownAnchor = ac.cooldownAnchor
+	styleCache._cfgCooldownOffsetX = cooldownOffsetX
+	styleCache._cfgCooldownOffsetY = cooldownOffsetY
+	styleCache._cfgCooldownFont = ac.cooldownFont
+	if group.cooldownTextSize ~= nil then
+		styleCache._cfgCooldownFontSize = group.cooldownTextSize
+	else
+		styleCache._cfgCooldownFontSize = ac.cooldownFontSize
+	end
+	styleCache._cfgCooldownFontOutline = ac.cooldownFontOutline
+	styleCache._cfgCountAnchor = ac.countAnchor
+	styleCache._cfgCountOffsetX = countOffsetX
+	styleCache._cfgCountOffsetY = countOffsetY
+	styleCache._cfgCountFont = ac.countFont
+	if group.chargeTextSize ~= nil then
+		styleCache._cfgCountFontSize = group.chargeTextSize
+	else
+		styleCache._cfgCountFontSize = ac.countFontSize
+	end
+	styleCache._cfgCountFontOutline = ac.countFontOutline
 	styleCache.size = group.size
 	styleCache.padding = group.spacing
-	styleCache.showTooltip = ac.showTooltip ~= false
-	styleCache.showCooldownSwipe = group.showCooldownSwipe ~= false
-	styleCache.showCooldownEdge = group.showCooldownEdge ~= false
-	styleCache.showCooldownBling = group.showCooldownBling ~= false
-	styleCache.showCooldown = ac.showCooldown ~= false
-	if group.hideCooldownText == true then
-		styleCache.showCooldownText = false
-	elseif ac.showCooldownText ~= nil then
-		styleCache.showCooldownText = ac.showCooldownText
-	else
-		styleCache.showCooldownText = nil
-	end
-	if group.hideChargeText == true then
-		styleCache.showStacks = false
-	elseif ac.showStacks ~= nil then
-		styleCache.showStacks = ac.showStacks
-	else
-		styleCache.showStacks = nil
-	end
+	styleCache.showTooltip = showTooltip
+	styleCache.showCooldownSwipe = showCooldownSwipe
+	styleCache.showCooldownEdge = showCooldownEdge
+	styleCache.showCooldownBling = showCooldownBling
+	styleCache.showCooldown = showCooldown
+	styleCache.showCooldownText = showCooldownText
+	styleCache.showStacks = showStacks
 	styleCache.cooldownAnchor = ac.cooldownAnchor
 	styleCache.cooldownOffset = ac.cooldownOffset
 	styleCache.cooldownFont = ac.cooldownFont
-	if group.cooldownTextSize ~= nil then
-		styleCache.cooldownFontSize = group.cooldownTextSize
-	else
-		styleCache.cooldownFontSize = ac.cooldownFontSize
-	end
+	styleCache.cooldownFontSize = cooldownFontSize
 	styleCache.cooldownFontOutline = ac.cooldownFontOutline
 	styleCache.countAnchor = ac.countAnchor
 	styleCache.countOffset = ac.countOffset
 	styleCache.countFont = ac.countFont
-	if group.chargeTextSize ~= nil then
-		styleCache.countFontSize = group.chargeTextSize
-	else
-		styleCache.countFontSize = ac.countFontSize
-	end
+	styleCache.countFontSize = countFontSize
 	styleCache.countFontOutline = ac.countFontOutline
 	styleCache.showDR = false
-	styleCache._eqolStyleHash = key
+	styleCache._eqolStyleRevision = (styleCache._eqolStyleRevision or 0) + 1
 	return styleCache
 end
 
@@ -1559,10 +1839,9 @@ local function updateGroupContainerLayout(container, group, shown)
 	local scale = getEffectiveScale(container)
 	local ox = roundToPixel(group.x or 0, scale)
 	local oy = roundToPixel(group.y or 0, scale)
-	container:ClearAllPoints()
-	container:SetPoint(group.anchorPoint, container:GetParent(), group.anchorPoint, ox, oy)
+	setSinglePointCached(container, group.anchorPoint, container:GetParent(), group.anchorPoint, ox, oy)
 	local w, h = calcGridSize(shown, group.perRow, group.size, group.spacing, growthPrimary)
-	container:SetSize(w, h)
+	setSizeCached(container, w, h)
 	return growthPrimary, growthSecondary
 end
 
@@ -1586,6 +1865,65 @@ end
 local function styleIconButton(btn)
 	if not btn then return end
 	if btn.icon then btn.icon:SetVertexColor(1, 1, 1, 1) end
+end
+
+local function resolveBorderTexture(key)
+	if UFHelper and UFHelper.resolveBorderTexture then return UFHelper.resolveBorderTexture(key) end
+	if not key or key == "" or key == "DEFAULT" then return "Interface\\Buttons\\WHITE8x8" end
+	return key
+end
+
+local function ensureIndicatorBorderFrame(btn)
+	if not btn then return nil end
+	local border = btn._hbIndicatorBorder
+	if not border then
+		border = CreateFrame("Frame", nil, btn.overlay or btn, "BackdropTemplate")
+		border:EnableMouse(false)
+		btn._hbIndicatorBorder = border
+	end
+	local parent = btn.overlay or btn
+	setFrameParentCached(border, parent)
+	setFrameStrataCached(border, parent:GetFrameStrata() or btn:GetFrameStrata())
+	local baseLevel = parent:GetFrameLevel() or btn:GetFrameLevel() or 0
+	setFrameLevelCached(border, baseLevel + 2)
+	return border
+end
+
+local function applyIndicatorBorder(btn, group)
+	if not btn then return end
+	local style = tostring(group and group.style or ""):upper()
+	local enabled = (style == STYLE_ICON or style == STYLE_SQUARE) and group and group.indicatorBorderEnabled == true
+	local border = btn._hbIndicatorBorder
+	if not enabled then
+		if border then border:Hide() end
+		return
+	end
+	border = ensureIndicatorBorderFrame(btn)
+	if not border then return end
+	local size = max(1, roundInt(tonumber(group.indicatorBorderSize) or 1))
+	local offset = roundInt(tonumber(group.indicatorBorderOffset) or 0)
+	if offset > 12 then offset = 12 end
+	if offset < -12 then offset = -12 end
+	local texture = resolveBorderTexture(group.indicatorBorderTexture or "DEFAULT")
+	local key = tostring(texture) .. "|" .. tostring(size)
+	if border._hbBackdropKey ~= key then
+		border._hbBackdropKey = key
+		border:SetBackdrop({
+			bgFile = "Interface\\Buttons\\WHITE8x8",
+			edgeFile = texture,
+			tile = false,
+			edgeSize = size,
+			insets = { left = size, right = size, top = size, bottom = size },
+		})
+	end
+	if border._hbOffset ~= offset then
+		border._hbOffset = offset
+		setTwoPointsCached(border, "TOPLEFT", btn, "TOPLEFT", -offset, offset, "BOTTOMRIGHT", btn, "BOTTOMRIGHT", offset, -offset)
+	end
+	local br, bg, bb, ba = resolveColor(group.indicatorBorderColor)
+	border:SetBackdropColor(0, 0, 0, 0)
+	border:SetBackdropBorderColor(br, bg, bb, ba)
+	border:Show()
 end
 
 local function getPlaceholderAura(state, ruleId, familyId)
@@ -1624,16 +1962,185 @@ local function collectActiveRulesForGroup(state, compiled, groupId, outRules, ch
 	return force
 end
 
-local function buildRuleHash(compiled, ruleIds, familyAuraInstance, styleHash)
-	local hash = tostring(styleHash or "") .. "#" .. tostring(#ruleIds)
-	for i = 1, #ruleIds do
-		local ruleId = ruleIds[i]
+local function didGroupRenderStateChange(cache, compiled, group, activeRules, familyAuraInstance, styleRevision, layoutRevision)
+	local changed = cache.groupId ~= group.id
+		or cache.groupStyle ~= group.style
+		or cache.compiledGeneration ~= compiled.generation
+		or cache.styleRevision ~= styleRevision
+		or cache.layoutRevision ~= layoutRevision
+		or cache.ruleCount ~= #activeRules
+		or cache.indicatorBorderEnabled ~= group.indicatorBorderEnabled
+		or cache.indicatorBorderTexture ~= group.indicatorBorderTexture
+		or cache.indicatorBorderSize ~= group.indicatorBorderSize
+		or cache.indicatorBorderOffset ~= group.indicatorBorderOffset
+
+	local borderR, borderG, borderB, borderA = resolveColor(group.indicatorBorderColor)
+	changed = changed or cache.indicatorBorderR ~= borderR or cache.indicatorBorderG ~= borderG or cache.indicatorBorderB ~= borderB or cache.indicatorBorderA ~= borderA
+
+	if group.style == STYLE_SQUARE then
+		local groupR, groupG, groupB, groupA = resolveColor(group.color)
+		changed = changed or cache.squareGroupR ~= groupR or cache.squareGroupG ~= groupG or cache.squareGroupB ~= groupB or cache.squareGroupA ~= groupA
+		cache.squareGroupR = groupR
+		cache.squareGroupG = groupG
+		cache.squareGroupB = groupB
+		cache.squareGroupA = groupA
+	else
+		cache.squareGroupR = nil
+		cache.squareGroupG = nil
+		cache.squareGroupB = nil
+		cache.squareGroupA = nil
+	end
+
+	local cachedRuleIds = cache.ruleIds or {}
+	local cachedAuraIds = cache.auraIds or {}
+	cache.ruleIds = cachedRuleIds
+	cache.auraIds = cachedAuraIds
+	for i = 1, #activeRules do
+		local ruleId = activeRules[i]
 		local rule = compiled.ruleById[ruleId]
 		local familyId = rule and rule.spellFamilyId
 		local auraId = familyId and familyAuraInstance and familyAuraInstance[familyId] or 0
-		hash = hash .. "|" .. tostring(ruleId) .. ":" .. tostring(auraId)
+		if cachedRuleIds[i] ~= ruleId or cachedAuraIds[i] ~= auraId then changed = true end
+		cachedRuleIds[i] = ruleId
+		cachedAuraIds[i] = auraId
 	end
-	return hash
+	for i = #activeRules + 1, cache.ruleCount or 0 do
+		if cachedRuleIds[i] ~= nil or cachedAuraIds[i] ~= nil then changed = true end
+		cachedRuleIds[i] = nil
+		cachedAuraIds[i] = nil
+	end
+
+	cache.groupId = group.id
+	cache.groupStyle = group.style
+	cache.compiledGeneration = compiled.generation
+	cache.styleRevision = styleRevision
+	cache.layoutRevision = layoutRevision
+	cache.ruleCount = #activeRules
+	cache.indicatorBorderEnabled = group.indicatorBorderEnabled
+	cache.indicatorBorderTexture = group.indicatorBorderTexture
+	cache.indicatorBorderSize = group.indicatorBorderSize
+	cache.indicatorBorderOffset = group.indicatorBorderOffset
+	cache.indicatorBorderR = borderR
+	cache.indicatorBorderG = borderG
+	cache.indicatorBorderB = borderB
+	cache.indicatorBorderA = borderA
+	return changed
+end
+
+local function didBarRenderStateChange(cache, group, groupId, layoutRevision, trackedAura, trackedRuleId, trackedFamilyId)
+	if not (group and groupId) then
+		local changed = cache.active ~= false
+		wipeTable(cache)
+		cache.active = false
+		return changed
+	end
+	local r, g, b, a = resolveColor(group.color)
+	local trackedAuraInstance = trackedAura and trackedAura.auraInstanceID or nil
+	local trackedDuration = trackedAura and tonumber(trackedAura.duration) or nil
+	local trackedExpirationTime = trackedAura and tonumber(trackedAura.expirationTime) or nil
+	local changed = cache.active ~= true
+		or cache.groupId ~= groupId
+		or cache.layoutRevision ~= layoutRevision
+		or cache.barOrientation ~= group.barOrientation
+		or cache.barThickness ~= group.barThickness
+		or cache.barDrainAnimation ~= group.barDrainAnimation
+		or cache.barReverseFill ~= group.barReverseFill
+		or cache.inset ~= group.inset
+		or cache.anchorPoint ~= group.anchorPoint
+		or cache.x ~= group.x
+		or cache.y ~= group.y
+		or cache.r ~= r
+		or cache.g ~= g
+		or cache.b ~= b
+		or cache.a ~= a
+	cache.active = true
+	cache.groupId = groupId
+	cache.layoutRevision = layoutRevision
+	cache.barOrientation = group.barOrientation
+	cache.barThickness = group.barThickness
+	cache.barDrainAnimation = group.barDrainAnimation
+	cache.barReverseFill = group.barReverseFill
+	cache.inset = group.inset
+	cache.anchorPoint = group.anchorPoint
+	cache.x = group.x
+	cache.y = group.y
+	cache.r = r
+	cache.g = g
+	cache.b = b
+	cache.a = a
+	if group.barDrainAnimation == true then
+		changed = changed
+			or cache.trackedRuleId ~= trackedRuleId
+			or cache.trackedFamilyId ~= trackedFamilyId
+			or cache.trackedAuraInstance ~= trackedAuraInstance
+			or cache.trackedDuration ~= trackedDuration
+			or cache.trackedExpirationTime ~= trackedExpirationTime
+		cache.trackedRuleId = trackedRuleId
+		cache.trackedFamilyId = trackedFamilyId
+		cache.trackedAuraInstance = trackedAuraInstance
+		cache.trackedDuration = trackedDuration
+		cache.trackedExpirationTime = trackedExpirationTime
+	else
+		cache.trackedRuleId = nil
+		cache.trackedFamilyId = nil
+		cache.trackedAuraInstance = nil
+		cache.trackedDuration = nil
+		cache.trackedExpirationTime = nil
+	end
+	return changed
+end
+
+local function didBorderRenderStateChange(cache, group, groupId, layoutRevision)
+	if not (group and groupId) then
+		local changed = cache.active ~= false
+		wipeTable(cache)
+		cache.active = false
+		return changed
+	end
+	local r, g, b, a = resolveColor(group.color)
+	local changed = cache.active ~= true
+		or cache.groupId ~= groupId
+		or cache.layoutRevision ~= layoutRevision
+		or cache.borderSize ~= group.borderSize
+		or cache.inset ~= group.inset
+		or cache.anchorPoint ~= group.anchorPoint
+		or cache.x ~= group.x
+		or cache.y ~= group.y
+		or cache.r ~= r
+		or cache.g ~= g
+		or cache.b ~= b
+		or cache.a ~= a
+	cache.active = true
+	cache.groupId = groupId
+	cache.layoutRevision = layoutRevision
+	cache.borderSize = group.borderSize
+	cache.inset = group.inset
+	cache.anchorPoint = group.anchorPoint
+	cache.x = group.x
+	cache.y = group.y
+	cache.r = r
+	cache.g = g
+	cache.b = b
+	cache.a = a
+	return changed
+end
+
+local function didTintRenderStateChange(cache, group, groupId)
+	if not (group and groupId) then
+		local changed = cache.active ~= false
+		wipeTable(cache)
+		cache.active = false
+		return changed
+	end
+	local r, g, b, a = resolveColor(group.color)
+	local changed = cache.active ~= true or cache.groupId ~= groupId or cache.r ~= r or cache.g ~= g or cache.b ~= b or cache.a ~= a
+	cache.active = true
+	cache.groupId = groupId
+	cache.r = r
+	cache.g = g
+	cache.b = b
+	cache.a = a
+	return changed
 end
 
 local function renderIconStyleForGroup(btn, st, state, compiled, cfg, group, changedFamilies, renderHashes)
@@ -1648,19 +2155,17 @@ local function renderIconStyleForGroup(btn, st, state, compiled, cfg, group, cha
 	local maxRules = (group.iconMode == ICON_MODE_PRIORITY) and 1 or nil
 	local force = collectActiveRulesForGroup(state, compiled, group.id, activeRules, changedFamilies, maxRules)
 	local style = getAuraStyleForGroup(state, cfg, group)
-	local styleHash = tostring(style._eqolStyleHash or "") .. "|" .. tostring(group.style or STYLE_ICON)
-	if group.style == STYLE_SQUARE then
-		local cr, cg, cb, ca = resolveColor(group.color)
-		styleHash = table.concat({ styleHash, cr, cg, cb, ca }, ":")
-		for i = 1, #activeRules do
-			local rule = compiled.ruleById[activeRules[i]]
-			local rr, rg, rb, ra = resolveColor((rule and rule.color) or group.color)
-			styleHash = styleHash .. "|" .. table.concat({ rr, rg, rb, ra }, ",")
-		end
+	style.tooltipUseEditMode = st and st._tooltipUseEditMode == true
+	style.tooltipAnchor = "ANCHOR_RIGHT"
+	local styleRevision = style._eqolStyleRevision or 0
+	local layoutRevision = st._hbHealerBuffLayoutRevision or 0
+	local renderState = renderHashes[group.id]
+	if not renderState then
+		renderState = {}
+		renderHashes[group.id] = renderState
 	end
-	local hash = buildRuleHash(compiled, activeRules, state.familyAuraInstance, styleHash)
-	if not force and renderHashes[group.id] == hash then return end
-	renderHashes[group.id] = hash
+	local renderChanged = didGroupRenderStateChange(renderState, compiled, group, activeRules, state.familyAuraInstance, styleRevision, layoutRevision)
+	if not force and not renderChanged then return end
 
 	if #activeRules == 0 then
 		container:Hide()
@@ -1681,6 +2186,8 @@ local function renderIconStyleForGroup(btn, st, state, compiled, cfg, group, cha
 		local button = buttons[index]
 		if not button then button = AuraUtil.ensureAuraButton(container, buttons, index, style) end
 		if not button then break end
+		button._tooltipUseEditMode = style.tooltipUseEditMode == true
+		button._tooltipAnchor = style.tooltipAnchor or "ANCHOR_BOTTOMRIGHT"
 		local drawCooldownSwipe = style.showCooldownSwipe ~= false
 		if button.cd and button._hbDrawCooldownSwipe ~= drawCooldownSwipe then
 			button._hbDrawCooldownSwipe = drawCooldownSwipe
@@ -1697,19 +2204,48 @@ local function renderIconStyleForGroup(btn, st, state, compiled, cfg, group, cha
 			if button.cd.SetDrawBling then button.cd:SetDrawBling(drawCooldownBling) end
 		end
 		local familyChanged = changedFamilies and familyId and changedFamilies[familyId] == true
-		if familyChanged or button._hbAuraInstance ~= auraInstanceId or button._hbStyleKey ~= styleHash then
+		local auraApplied = false
+		if familyChanged or button._hbAuraInstance ~= auraInstanceId or button._hbStyleRevision ~= styleRevision or button._hbAppliedVisualMode ~= group.style then
 			AuraUtil.applyAuraToButton(button, aura, style, false, unitToken)
 			button._hbAuraInstance = auraInstanceId
-			button._hbStyleKey = styleHash
+			button._hbStyleRevision = styleRevision
+			button._hbAppliedVisualMode = group.style
+			auraApplied = true
 		end
 		if group.style == STYLE_SQUARE then
-			styleSquareButton(button, (rule and rule.color) or group.color)
-			setAuraTooltipState(button, false)
+			if auraApplied or button._hbVisualMode ~= STYLE_SQUARE or button._hbVisualRuleId ~= ruleId or button._hbVisualGeneration ~= compiled.generation then
+				styleSquareButton(button, (rule and rule.color) or group.color)
+				button._hbVisualMode = STYLE_SQUARE
+				button._hbVisualRuleId = ruleId
+				button._hbVisualGeneration = compiled.generation
+			end
+			if button._hbTooltipShown ~= false then
+				setAuraTooltipState(button, false)
+				button._hbTooltipShown = false
+			end
 		else
-			styleIconButton(button)
-			setAuraTooltipState(button, style.showTooltip == true and (auraInstanceId and auraInstanceId > 0))
+			if button._hbVisualMode ~= STYLE_ICON then
+				styleIconButton(button)
+				button._hbVisualMode = STYLE_ICON
+				button._hbVisualRuleId = nil
+				button._hbVisualGeneration = compiled.generation
+			end
+			local showTooltip = style.showTooltip == true and (auraInstanceId and auraInstanceId > 0)
+			if button._hbTooltipShown ~= showTooltip then
+				setAuraTooltipState(button, showTooltip)
+				button._hbTooltipShown = showTooltip
+			end
 		end
-		if button.SetSize then button:SetSize(group.size, group.size) end
+		if button._hbIndicatorRevision ~= compiled.generation or button._hbIndicatorGroupId ~= group.id or button._hbIndicatorStyle ~= group.style then
+			applyIndicatorBorder(button, group)
+			button._hbIndicatorRevision = compiled.generation
+			button._hbIndicatorGroupId = group.id
+			button._hbIndicatorStyle = group.style
+		end
+		if button.SetSize and button._hbButtonSize ~= group.size then
+			button:SetSize(group.size, group.size)
+			button._hbButtonSize = group.size
+		end
 		positionAuraButton(button, container, primary, secondary, index, group.perRow, group.size, group.spacing)
 		button:Show()
 	end
@@ -1735,6 +2271,29 @@ local function winnerForStyle(compiled, groupActive, style)
 	return nil
 end
 
+local function getTrackedAuraForBarGroup(state, compiled, groupId)
+	local ruleIds = compiled and compiled.groupToRuleIds and compiled.groupToRuleIds[groupId]
+	if not ruleIds then return nil, nil, nil end
+	local fallbackAura, fallbackRuleId, fallbackFamilyId
+	for i = 1, #ruleIds do
+		local ruleId = ruleIds[i]
+		if state.ruleActive[ruleId] then
+			local rule = compiled.ruleById[ruleId]
+			local familyId = rule and rule.spellFamilyId
+			if familyId then
+				local aura = state.familyAura[familyId]
+				if fallbackRuleId == nil then
+					fallbackAura = aura
+					fallbackRuleId = ruleId
+					fallbackFamilyId = familyId
+				end
+				if aura and getTimedBarFill(aura.duration, aura.expirationTime) ~= nil then return aura, ruleId, familyId end
+			end
+		end
+	end
+	return fallbackAura, fallbackRuleId, fallbackFamilyId
+end
+
 local function getStyleAnchoredOffsets(root, group, inset)
 	if not (root and group) then return 0, 0 end
 	local rootW = root.GetWidth and root:GetWidth() or 0
@@ -1745,10 +2304,11 @@ local function getStyleAnchoredOffsets(root, group, inset)
 	return roundToPixel(x or 0, scale), roundToPixel(y or 0, scale)
 end
 
-local function renderBar(st, group)
+local function renderBar(st, group, trackedAura)
 	local bar = st.healerBuffBar
 	if not bar then return end
 	if not group then
+		clearAnimatedBarState(bar)
 		bar:Hide()
 		return
 	end
@@ -1756,16 +2316,38 @@ local function renderBar(st, group)
 	local thickness = max(1, group.barThickness or 6)
 	local r, g, b, a = resolveColor(group.color)
 	local ox, oy = getStyleAnchoredOffsets(st.healerBuffRoot, group, inset)
-	bar:SetColorTexture(r, g, b, a)
-	bar:ClearAllPoints()
+	local orientation = group.barOrientation == ORIENT_VERTICAL and ORIENT_VERTICAL or ORIENT_HORIZONTAL
+	local reverseFill = group.barDrainAnimation == true and group.barReverseFill == true
+	if bar._hbOrientation ~= orientation then
+		bar:SetOrientation(orientation)
+		bar._hbOrientation = orientation
+	end
+	if bar._hbReverseFill ~= reverseFill then
+		if UFHelper and UFHelper.applyStatusBarReverseFill then UFHelper.applyStatusBarReverseFill(bar, reverseFill) end
+		bar._hbReverseFill = reverseFill
+	end
+	bar:SetStatusBarColor(r, g, b, a)
+	bar:SetMinMaxValues(0, 1)
 	if group.barOrientation == ORIENT_VERTICAL then
-		bar:SetPoint("TOP", st.healerBuffRoot, "TOP", ox, oy - inset)
-		bar:SetPoint("BOTTOM", st.healerBuffRoot, "BOTTOM", ox, oy + inset)
-		bar:SetWidth(thickness)
+		setTwoPointsCached(bar, "TOP", st.healerBuffRoot, "TOP", ox, oy - inset, "BOTTOM", st.healerBuffRoot, "BOTTOM", ox, oy + inset)
+		if bar._hbBarWidth ~= thickness then
+			bar:SetWidth(thickness)
+			bar._hbBarWidth = thickness
+		end
+		bar._hbBarHeight = nil
 	else
-		bar:SetPoint("LEFT", st.healerBuffRoot, "LEFT", ox + inset, oy)
-		bar:SetPoint("RIGHT", st.healerBuffRoot, "RIGHT", ox - inset, oy)
-		bar:SetHeight(thickness)
+		setTwoPointsCached(bar, "LEFT", st.healerBuffRoot, "LEFT", ox + inset, oy, "RIGHT", st.healerBuffRoot, "RIGHT", ox - inset, oy)
+		if bar._hbBarHeight ~= thickness then
+			bar:SetHeight(thickness)
+			bar._hbBarHeight = thickness
+		end
+		bar._hbBarWidth = nil
+	end
+	if group.barDrainAnimation == true then
+		setAnimatedBarAura(bar, trackedAura)
+	else
+		clearAnimatedBarState(bar)
+		bar:SetValue(1)
 	end
 	bar:Show()
 end
@@ -1781,9 +2363,7 @@ local function renderBorder(st, group)
 	local size = max(1, group.borderSize or 1)
 	local r, g, b, a = resolveColor(group.color)
 	local ox, oy = getStyleAnchoredOffsets(st.healerBuffRoot, group, inset)
-	border:ClearAllPoints()
-	border:SetPoint("TOPLEFT", st.healerBuffRoot, "TOPLEFT", ox + inset, oy - inset)
-	border:SetPoint("BOTTOMRIGHT", st.healerBuffRoot, "BOTTOMRIGHT", ox - inset, oy + inset)
+	setTwoPointsCached(border, "TOPLEFT", st.healerBuffRoot, "TOPLEFT", ox + inset, oy - inset, "BOTTOMRIGHT", st.healerBuffRoot, "BOTTOMRIGHT", ox - inset, oy + inset)
 	local key = tostring(size)
 	if border._hbBackdropKey ~= key then
 		border._hbBackdropKey = key
@@ -1834,6 +2414,10 @@ local function renderAll(btn, st, state, compiled, cfg, changedFamilies)
 	local renderHash = state.renderHashByStyle
 	renderHash[STYLE_ICON] = renderHash[STYLE_ICON] or {}
 	renderHash[STYLE_SQUARE] = renderHash[STYLE_SQUARE] or {}
+	renderHash[STYLE_BAR] = renderHash[STYLE_BAR] or {}
+	renderHash[STYLE_BORDER] = renderHash[STYLE_BORDER] or {}
+	renderHash[STYLE_TINT] = renderHash[STYLE_TINT] or {}
+	local layoutRevision = st._hbHealerBuffLayoutRevision or 0
 
 	local activeContainers = {}
 	for i = 1, #compiled.groupOrder do
@@ -1856,71 +2440,28 @@ local function renderAll(btn, st, state, compiled, cfg, changedFamilies)
 	local barGroup, barGroupId = winnerForStyle(compiled, state.groupActive, STYLE_BAR)
 	local borderGroup, borderGroupId = winnerForStyle(compiled, state.groupActive, STYLE_BORDER)
 	local tintGroup, tintGroupId = winnerForStyle(compiled, state.groupActive, STYLE_TINT)
-
-	local barHash = barGroupId
-			and table.concat({
-				barGroupId,
-				tostring(barGroup.barOrientation),
-				tostring(barGroup.barThickness),
-				tostring(barGroup.inset),
-				tostring(barGroup.anchorPoint),
-				tostring(barGroup.x),
-				tostring(barGroup.y),
-				tostring(barGroup.color and barGroup.color[1]),
-				tostring(barGroup.color and barGroup.color[2]),
-				tostring(barGroup.color and barGroup.color[3]),
-				tostring(barGroup.color and barGroup.color[4]),
-			}, ":")
-		or "none"
-	if renderHash[STYLE_BAR] ~= barHash then
-		renderHash[STYLE_BAR] = barHash
-		renderBar(st, barGroup)
+	local barTrackedAura, barTrackedRuleId, barTrackedFamilyId
+	if barGroup and barGroupId and barGroup.barDrainAnimation == true then
+		barTrackedAura, barTrackedRuleId, barTrackedFamilyId = getTrackedAuraForBarGroup(state, compiled, barGroupId)
 	end
 
-	local borderHash = borderGroupId
-			and table.concat({
-				borderGroupId,
-				tostring(borderGroup.borderSize),
-				tostring(borderGroup.inset),
-				tostring(borderGroup.anchorPoint),
-				tostring(borderGroup.x),
-				tostring(borderGroup.y),
-				tostring(borderGroup.color and borderGroup.color[1]),
-				tostring(borderGroup.color and borderGroup.color[2]),
-				tostring(borderGroup.color and borderGroup.color[3]),
-				tostring(borderGroup.color and borderGroup.color[4]),
-			}, ":")
-		or "none"
-	if renderHash[STYLE_BORDER] ~= borderHash then
-		renderHash[STYLE_BORDER] = borderHash
-		renderBorder(st, borderGroup)
-	end
+	if didBarRenderStateChange(renderHash[STYLE_BAR], barGroup, barGroupId, layoutRevision, barTrackedAura, barTrackedRuleId, barTrackedFamilyId) then renderBar(st, barGroup, barTrackedAura) end
 
-	local tintHash = tintGroupId
-			and table.concat({
-				tintGroupId,
-				tostring(tintGroup.color and tintGroup.color[1]),
-				tostring(tintGroup.color and tintGroup.color[2]),
-				tostring(tintGroup.color and tintGroup.color[3]),
-				tostring(tintGroup.color and tintGroup.color[4]),
-			}, ":")
-		or "none"
-	if renderHash[STYLE_TINT] ~= tintHash then
-		renderHash[STYLE_TINT] = tintHash
-		renderTint(btn, st, tintGroup)
-	end
+	if didBorderRenderStateChange(renderHash[STYLE_BORDER], borderGroup, borderGroupId, layoutRevision) then renderBorder(st, borderGroup) end
+
+	if didTintRenderStateChange(renderHash[STYLE_TINT], tintGroup, tintGroupId) then renderTint(btn, st, tintGroup) end
 end
 
 function HB.BuildButton(btn)
 	local state, st = getState(btn)
 	if not (state and st) then return end
-	ensureVisualLayers(btn, st)
+	ensureVisualLayers(btn, st, true)
 end
 
 function HB.LayoutButton(btn)
 	local state, st = getState(btn)
 	if not (state and st) then return end
-	ensureVisualLayers(btn, st)
+	ensureVisualLayers(btn, st, true)
 end
 
 function HB.ClearButton(btn)
@@ -1942,7 +2483,7 @@ function HB.UpdateFromAuras(btn, updateInfo, cache, changed, isFullUpdate, compi
 		return
 	end
 
-	ensureVisualLayers(btn, st)
+	ensureVisualLayersForUpdate(btn, st)
 	local unit = btn.unit
 
 	if isFullUpdate or not updateInfo then
@@ -2014,7 +2555,7 @@ function HB.UpdateSample(btn)
 		HB.ClearButton(btn)
 		return
 	end
-	ensureVisualLayers(btn, st)
+	ensureVisualLayersForUpdate(btn, st)
 
 	local sampleRuleActive, sampleGroupActive, sampleFamilyAura, sampleFamilyAuraInstance = buildSampleState(state, compiled)
 	state.ruleActive = sampleRuleActive
@@ -2071,3 +2612,5 @@ function HB.GetCompiled(kind, cfg)
 	if not cfg then return nil end
 	return compile(kind, cfg)
 end
+
+function HB.CompiledNeedsWideHelpfulScan(compiled) return compiled and compiled.needsWideHelpfulScan == true or false end

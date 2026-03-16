@@ -136,8 +136,8 @@ end
 
 local function isPetExpected()
 	local specIndex = C_SpecializationInfo and C_SpecializationInfo.GetSpecialization and C_SpecializationInfo.GetSpecialization()
-	if specIndex and GetSpecializationInfo then
-		local specID = GetSpecializationInfo(specIndex)
+	if specIndex and C_SpecializationInfo and C_SpecializationInfo.GetSpecializationInfo then
+		local specID = C_SpecializationInfo.GetSpecializationInfo(specIndex)
 		if specID == SPEC_FROST_MAGE then return C_SpellBook.IsSpellKnown(MAGE_PET_TALENT_ID) and true or false end
 		if specID == SPEC_MARKSMANSHIP then return C_SpellBook.IsSpellKnown(MARKS_PET_TALENT_ID) and true or false end
 		if PET_SPECS[specID] then return true end

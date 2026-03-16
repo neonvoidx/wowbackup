@@ -107,7 +107,7 @@ local function sanitizeProfileData(source)
 	if type(source) ~= "table" then return {} end
 	local filtered = {}
 	for key, value in pairs(source) do
-		if not EXPORT_BLACKLIST[key] then filtered[key] = value end
+		if not EXPORT_BLACKLIST[key] and not (addon.functions and addon.functions.IsPrivateProfileKey and addon.functions.IsPrivateProfileKey(key)) then filtered[key] = value end
 	end
 	return filtered
 end
@@ -271,7 +271,7 @@ data = {
 						if not source or source == "" then return end
 						local target = EnhanceQoLDB.profileKeys[UnitGUID("player")]
 						if not target then return end
-						local copied = CopyTable(EnhanceQoLDB.profiles[source])
+						local copied = sanitizeProfileData(CopyTable(EnhanceQoLDB.profiles[source]))
 						normalizeProfileStorage(copied)
 						EnhanceQoLDB.profiles[target] = copied
 						C_UI.Reload()

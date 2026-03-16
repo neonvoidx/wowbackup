@@ -77,6 +77,9 @@ L:SetStrings({
 	["Import Profile"] = "Importar perfil",
 	["Miscellaneous"] = "Diverso",
 	["Reset"] = "Redefinir",
+	["Mini addon, massive awareness."] = "Addon pequeno, grande percepção.",
+	["CC Native Order"] = "Ordem CC nativa",
+	["Instead of showing the latest CC applied (MiniCC behaviour), use Blizzard's default CC priority which usually shows the first CC applied (with some exceptions)."] = "Em vez de mostrar o último CC aplicado (comportamento MiniCC), usa a prioridade CC padrão da Blizzard que geralmente mostra o primeiro CC aplicado (com algumas exceções).",
 	["The others seem to use a non-trivial amount of CPU."] = "Os outros parecem usar uma quantidade considerável de CPU.",
 	["The Proc Glow uses the least CPU."] = "O brilho proc usa menos CPU.",
 
@@ -175,8 +178,8 @@ L:SetStrings({
 	["Ignore Friendly Pets"] = "Ignorar mascotes aliadas",
 	["Nameplates"] = "Placas de nome",
 	["Nameplates_Short"] = "Placas",
-	["Scale with Nameplate"] = "Scale with Nameplate",
-	["Icons scale along with the nameplate scale. Use this option if you have a different size for the target nameplate (e.g. in BBF's settings)."] = "Icons scale along with the nameplate scale. Use this option if you have a different size for the target nameplate (e.g. in BBF's settings).",
+	["Scale with Nameplate"] = "Escalar com placa de nome",
+	["Icons scale along with the nameplate scale. Use this option if you have a different size for the target nameplate (e.g. in BBF's settings)."] = "Os ícones escalam junto com a escala da placa de nome. Use esta opção se tiver um tamanho diferente para a placa de nome do alvo (ex: nas configurações do BBF).",
 	["Shows CC and important spells on nameplates (works with nameplate addons e.g. BBP, Platynator, and Plater)."] = "Mostra controle e feitiços importantes em placas de nome (funciona com addons de placas de nome como BBP, Platynator e Plater).",
 	["Spell colours"] = "Cores de feitiços",
 
@@ -209,6 +212,8 @@ L:SetStrings({
 	[" - shows markers above your team mates."] = " - mostra marcadores acima de seus companheiros de equipe.",
 	[" - shows overshields on frames and nameplates."] = " - mostra escudos excessivos em quadros e placas de nome.",
 	[" - shows your debuffs on enemy arena frames."] = " - mostra seus debuffs nos quadros de arena inimigos.",
+	[" - customize the cooldown timers."] = " - Personaliza os temporizadores de recarga.",
+	[" - powerful icon skinning tool."] = " - Poderosa ferramenta de personalização de ícones.",
 	["MiniArenaDebuffs"] = "MiniArenaDebuffs",
 	["MiniCombatNotifier"] = "MiniCombatNotifier",
 	["MiniKillingBlow"] = "MiniKillingBlow",
@@ -221,6 +226,7 @@ L:SetStrings({
 	["Other Mini Addons"] = "Outros Mini Addons",
 	["Other mini addons to enhance your PvP experience:"] = "Outros mini addons para melhorar sua experiência PvP:",
 	["Other Mini Addons_Short"] = "Outros",
+	["Miscellaneous_Short"] = "Variados",
 
 	-- What's New
 	[" - Added CC icons on pet party/raid frames (disabled by default)."] = " - Adicionados ícones de CC nos quadros de grupo/raide de mascotes (desativado por padrão).",

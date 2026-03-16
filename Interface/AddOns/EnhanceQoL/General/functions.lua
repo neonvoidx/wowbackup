@@ -6,10 +6,10 @@ local SharedMedia = LibStub("LibSharedMedia-3.0", true)
 local L = LibStub("AceLocale-3.0"):GetLocale("EnhanceQoL")
 
 local GetContainerItemInfo = C_Container.GetContainerItemInfo
-local GetItemInfoInstant = C_Item.GetItemInfoInstant
-local GetItemInfo = C_Item.GetItemInfo
+local GetItemInfoInstantFn = C_Item.GetItemInfoInstant
+local GetItemInfoFn = C_Item.GetItemInfo
 local GetBagItem = C_TooltipInfo.GetBagItem
-local IsEquippableItem = C_Item.IsEquippableItem
+local IsEquippableItemFn = C_Item.IsEquippableItem
 addon.functions = addon.functions or {}
 
 local UnitHealth, UnitHealthMax = UnitHealth, UnitHealthMax
@@ -68,9 +68,7 @@ local function rebuildLSMCache(mediaType)
 
 	local names = {}
 	for name in pairs(hash or EMPTY_TABLE) do
-		if type(name) == "string" and name ~= "" then
-			names[#names + 1] = name
-		end
+		if type(name) == "string" and name ~= "" then names[#names + 1] = name end
 	end
 	sortMediaNames(names)
 
@@ -93,9 +91,7 @@ end
 local function getLSMCache(mediaType)
 	local cache = ensureLSMCache(mediaType)
 	if not cache then return nil end
-	if cache.dirty then
-		cache = rebuildLSMCache(mediaType)
-	end
+	if cache.dirty then cache = rebuildLSMCache(mediaType) end
 	return cache
 end
 
@@ -114,9 +110,7 @@ function addon.functions.InvalidateLSMMediaCache(mediaType)
 	cache.dirty = true
 	cache.version = (cache.version or 0) + 1
 	for cacheKey in pairs(LSM_DROPDOWN_CACHE) do
-		if type(cacheKey) == "string" and cacheKey:find(key .. "|", 1, true) == 1 then
-			LSM_DROPDOWN_CACHE[cacheKey] = nil
-		end
+		if type(cacheKey) == "string" and cacheKey:find(key .. "|", 1, true) == 1 then LSM_DROPDOWN_CACHE[cacheKey] = nil end
 	end
 end
 
@@ -236,6 +230,63 @@ function addon.functions.ResolveFontFace(configured, fallback)
 	return addon.functions.ResolveLSMMedia("font", configured, fallbackFace, true) or fallbackFace
 end
 
+local PRIVATE_PROFILE_KEYS = {
+	autoWarbandGold = true,
+	autoWarbandGoldTargetGold = true,
+	autoWarbandGoldPerCharacter = true,
+	autoWarbandGoldTargetCharacter = true,
+	autoWarbandGoldIgnoredCharacters = true,
+	autoWarbandGoldWithdraw = true,
+	enableMoneyTracker = true,
+	showOnlyGoldOnMoney = true,
+	moneyTracker = true,
+	warbandGold = true,
+}
+
+function addon.functions.GetPrivateDB()
+	local privateDB = _G.EnhanceQoLDBPrivate
+	if type(privateDB) ~= "table" then
+		privateDB = {}
+		_G.EnhanceQoLDBPrivate = privateDB
+	end
+	addon.privateDB = privateDB
+	return privateDB
+end
+
+function addon.functions.InitPrivateDBValue(key, defaultValue)
+	local privateDB = addon.functions.GetPrivateDB()
+	if privateDB[key] == nil then privateDB[key] = defaultValue end
+end
+
+function addon.functions.IsPrivateProfileKey(key) return PRIVATE_PROFILE_KEYS[key] == true end
+
+function addon.functions.MigratePrivateProfileData(sourceProfile)
+	if type(sourceProfile) ~= "table" then return end
+	local privateDB = addon.functions.GetPrivateDB()
+	for key in pairs(PRIVATE_PROFILE_KEYS) do
+		if privateDB[key] == nil and sourceProfile[key] ~= nil then privateDB[key] = sourceProfile[key] end
+		sourceProfile[key] = nil
+	end
+end
+
+function addon.functions.CleanupPrivateProfileData()
+	local profileDB = _G.EnhanceQoLDB
+	if type(profileDB) ~= "table" then return end
+
+	for key in pairs(PRIVATE_PROFILE_KEYS) do
+		profileDB[key] = nil
+	end
+
+	if type(profileDB.profiles) ~= "table" then return end
+	for _, profile in pairs(profileDB.profiles) do
+		if type(profile) == "table" then
+			for key in pairs(PRIVATE_PROFILE_KEYS) do
+				profile[key] = nil
+			end
+		end
+	end
+end
+
 function addon.functions.InitDBValue(key, defaultValue)
 	if addon.db[key] == nil then addon.db[key] = defaultValue end
 end
@@ -327,6 +378,7 @@ local COPPER_ICON = "|TInterface\\MoneyFrame\\UI-CopperIcon:0:0:2:0|t"
 function addon.functions.formatMoney(copper, type)
 	local COPPER_PER_SILVER = 100
 	local COPPER_PER_GOLD = 10000
+	local privateDB = addon.functions.GetPrivateDB and addon.functions.GetPrivateDB() or addon.privateDB or {}
 
 	local gold = math.floor(copper / COPPER_PER_GOLD)
 	local silver = math.floor((copper % COPPER_PER_GOLD) / COPPER_PER_SILVER)
@@ -335,7 +387,7 @@ function addon.functions.formatMoney(copper, type)
 	local parts = {}
 
 	if gold > 0 then table.insert(parts, string.format("%s%s", BreakUpLargeNumbers(gold), GOLD_ICON)) end
-	if nil == type or (type and type == "tracker" and addon.db["showOnlyGoldOnMoney"] == false) then
+	if nil == type or (type and type == "tracker" and privateDB["showOnlyGoldOnMoney"] ~= true) then
 		if gold > 0 or silver > 0 then table.insert(parts, string.format("%02d%s", silver, SILVER_ICON)) end
 		table.insert(parts, string.format("%02d%s", bronze, COPPER_ICON))
 	end
@@ -847,12 +899,12 @@ local function getCurrentSpecFilters()
 	return cachedSpecFilters
 end
 
-local function isItemRecommendedForSpec(itemLink, itemEquipLoc, classID, subclassID)
+function addon.functions.IsItemRecommendedForSpec(itemLink, itemEquipLoc, classID, subclassID)
 	if not itemLink then return false end
-	if not IsEquippableItem(itemLink) then return false end
+	if not IsEquippableItemFn(itemLink) then return false end
 
 	if itemEquipLoc == nil or classID == nil or subclassID == nil then
-		local _, _, _, equipLoc, _, instantClassID, instantSubclassID = GetItemInfoInstant(itemLink)
+		local _, _, _, equipLoc, _, instantClassID, instantSubclassID = GetItemInfoInstantFn(itemLink)
 		itemEquipLoc = itemEquipLoc or equipLoc
 		if classID == nil then classID = instantClassID end
 		if subclassID == nil then subclassID = instantSubclassID end
@@ -894,6 +946,8 @@ local function isBagItemUpgrade(itemLink, itemEquipLoc, itemLevel)
 	return numericLevel > baseline
 end
 
+function addon.functions.IsBagItemUpgrade(itemLink, itemEquipLoc, itemLevel) return isBagItemUpgrade(itemLink, itemEquipLoc, itemLevel) end
+
 local function updateBagRarityGlow(itemButton, itemQuality, dimmed)
 	if not itemButton then return end
 	if not addon.db or addon.db["enhancedRarityGlow"] ~= true then
@@ -924,6 +978,43 @@ local function updateBagRarityGlow(itemButton, itemQuality, dimmed)
 	glow:Show()
 end
 
+local function clearBagButtonInfo(itemButton)
+	if not itemButton then return end
+	itemButton:SetAlpha(1)
+	if itemButton.EQOLFilterOverlay then
+		itemButton.EQOLFilterOverlay:SetAlpha(1)
+		itemButton.EQOLFilterOverlay:Hide()
+	end
+	if itemButton.ItemLevelText then
+		itemButton.ItemLevelText:SetAlpha(1)
+		itemButton.ItemLevelText:Hide()
+	end
+	if itemButton.ItemBoundType then
+		itemButton.ItemBoundType:SetAlpha(1)
+		itemButton.ItemBoundType:Hide()
+	end
+	if itemButton.ItemUpgradeArrow then
+		itemButton.ItemUpgradeArrow:SetAlpha(1)
+		itemButton.ItemUpgradeArrow:Hide()
+	end
+	if itemButton.ItemUpgradeIcon then
+		itemButton.ItemUpgradeIcon:SetAlpha(1)
+		itemButton.ItemUpgradeIcon:Hide()
+	end
+	if itemButton.ItemUpgradeIconGlow then
+		itemButton.ItemUpgradeIconGlow:SetAlpha(1)
+		itemButton.ItemUpgradeIconGlow:Hide()
+	end
+	if itemButton.ProfessionQualityOverlay and addon.db and addon.db["fadeBagQualityIcons"] then itemButton.ProfessionQualityOverlay:SetAlpha(1) end
+	updateBagRarityGlow(itemButton, nil, false)
+end
+
+local function shouldUpdateBagButtonInfo()
+	if addon.filterFrame then return true end
+	if not addon.db then return false end
+	return addon.db["showIlvlOnBagItems"] or addon.db["showBindOnBagItems"] or addon.db["showUpgradeArrowOnBagItems"] or addon.db["enhancedRarityGlow"]
+end
+
 local function updateButtonInfo(itemButton, bag, slot, frameName)
 	itemButton:SetAlpha(1)
 	if itemButton.EQOLFilterOverlay then
@@ -952,9 +1043,11 @@ local function updateButtonInfo(itemButton, bag, slot, frameName)
 		itemButton.ItemUpgradeIconGlow:SetAlpha(1)
 		itemButton.ItemUpgradeIconGlow:Hide()
 	end
+	local isBankFrame = frameName == "BankPanel" or frameName == "BankFrame"
+	local showItemLevel = isBankFrame and addon.db["showIlvlOnBankFrame"] or addon.db["showIlvlOnBagItems"]
 	local itemLink = C_Container.GetContainerItemLink(bag, slot)
 	if itemLink then
-		local _, _, itemQuality, _, _, _, _, _, itemEquipLoc, _, sellPrice, classID, subclassID, tBindType, expId = GetItemInfo(itemLink)
+		local _, _, itemQuality, _, _, _, _, _, itemEquipLoc, _, sellPrice, classID, subclassID, tBindType, expId = GetItemInfoFn(itemLink)
 		if itemQuality == nil and GetContainerItemInfo then
 			local containerInfo = GetContainerItemInfo(bag, slot)
 			if containerInfo and containerInfo.quality ~= nil then itemQuality = containerInfo.quality end
@@ -967,6 +1060,7 @@ local function updateButtonInfo(itemButton, bag, slot, frameName)
 		end
 		local setVisibility
 		local isUpgrade = nil
+		local isRecommended = nil
 
 		if addon.filterFrame then
 			if classID == 15 and subclassID == 0 then bAuc = true end -- ignore lockboxes etc.
@@ -985,8 +1079,13 @@ local function updateButtonInfo(itemButton, bag, slot, frameName)
 				if addon.itemBagFilters["currentExpension"] and LE_EXPANSION_LEVEL_CURRENT ~= expId then setVisibility = true end
 				if addon.itemBagFilters["equipment"] and (nil == itemEquipLoc or addon.variables.ignoredEquipmentTypes[itemEquipLoc]) then setVisibility = true end
 				if addon.itemBagFilters["upgradeOnly"] then
-					if isUpgrade == nil then isUpgrade = isBagItemUpgrade(itemLink, itemEquipLoc) end
-					if not isUpgrade then setVisibility = true end
+					if isRecommended == nil then isRecommended = addon.functions.IsItemRecommendedForSpec(itemLink, itemEquipLoc, classID, subclassID) end
+					if not isRecommended then
+						setVisibility = true
+					else
+						if isUpgrade == nil then isUpgrade = isBagItemUpgrade(itemLink, itemEquipLoc) end
+						if not isUpgrade then setVisibility = true end
+					end
 				end
 				if addon.itemBagFilters["bind"] then
 					if nil == addon.itemBagFiltersBound[bKey] or addon.itemBagFiltersBound[bKey] == false then setVisibility = true end
@@ -1003,7 +1102,7 @@ local function updateButtonInfo(itemButton, bag, slot, frameName)
 				if
 					addon.itemBagFilters["usableOnly"]
 					and (
-						IsEquippableItem(itemLink) == false
+						IsEquippableItemFn(itemLink) == false
 						or (
 							(
 								nil == addon.itemBagFilterTypes[addon.variables.unitClass]
@@ -1043,11 +1142,15 @@ local function updateButtonInfo(itemButton, bag, slot, frameName)
 				itemButton.ItemLevelText:SetFormattedText(itemLevelText)
 				addon.functions.ApplyItemLevelTextColor(itemButton.ItemLevelText, itemQuality)
 
-				itemButton.ItemLevelText:Show()
+				if showItemLevel then
+					itemButton.ItemLevelText:Show()
+				else
+					itemButton.ItemLevelText:Hide()
+				end
 
 				-- Upgrade arrow (bag): indicate if this item is higher ilvl than equipped
 				if addon.db["showUpgradeArrowOnBagItems"] then
-					local isRecommended = isItemRecommendedForSpec(itemLink, itemEquipLoc, classID, subclassID)
+					if isRecommended == nil then isRecommended = addon.functions.IsItemRecommendedForSpec(itemLink, itemEquipLoc, classID, subclassID) end
 					if isRecommended and isUpgrade == nil then isUpgrade = isBagItemUpgrade(itemLink, itemEquipLoc, itemLevelText) end
 					if isRecommended and isUpgrade then
 						addon.functions.EnsureBagUpgradeIcon(itemButton)
@@ -1120,7 +1223,7 @@ local function updateButtonInfo(itemButton, bag, slot, frameName)
 	end
 end
 
-function addon.functions.updateBank(itemButton, bag, slot) updateButtonInfo(itemButton, bag, slot) end
+function addon.functions.updateBank(itemButton, bag, slot) updateButtonInfo(itemButton, bag, slot, "BankFrame") end
 
 local filterData = {
 	{
@@ -1516,10 +1619,10 @@ function addon.functions.updateBags(frame)
 	else
 		for _, itemButton in frame:EnumerateValidItems() do
 			if itemButton then
-				if addon.db["showIlvlOnBagItems"] then
+				if shouldUpdateBagButtonInfo() then
 					updateButtonInfo(itemButton, itemButton:GetBagID(), itemButton:GetID(), frame:GetName())
-				elseif itemButton.ItemLevelText then
-					itemButton.ItemLevelText:Hide()
+				else
+					clearBagButtonInfo(itemButton)
 				end
 			end
 		end

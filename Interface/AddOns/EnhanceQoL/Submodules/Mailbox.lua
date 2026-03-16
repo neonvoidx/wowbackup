@@ -13,6 +13,8 @@ local MU = MenuUtil
 local Mailbox = addon.Mailbox or {}
 addon.Mailbox = Mailbox
 
+local function getPrivateDB() return addon.functions and addon.functions.GetPrivateDB and addon.functions.GetPrivateDB() or addon.privateDB or {} end
+
 Mailbox.enabled = Mailbox.enabled or false
 Mailbox.frame = Mailbox.frame or nil
 Mailbox.searchText = Mailbox.searchText or ""
@@ -73,9 +75,7 @@ local function buildRecipientForMail(name, realm, fallback)
 	local myRealm = select(2, UnitFullName("player")) or GetRealmName() or ""
 	local normalizedRecipientRealm = normalizeRealmForCompare(recipientRealm)
 	local normalizedMyRealm = normalizeRealmForCompare(myRealm)
-	if normalizedRecipientRealm == "" or normalizedRecipientRealm == normalizedMyRealm then
-		return recipientName
-	end
+	if normalizedRecipientRealm == "" or normalizedRecipientRealm == normalizedMyRealm then return recipientName end
 
 	return string.format("%s-%s", recipientName, recipientRealm or "")
 end
@@ -305,8 +305,9 @@ function Mailbox:SetEnabled(v)
 		-- Immediately add current character on enable
 		self:AddSelfToContacts()
 		-- Seed from moneyTracker if present and mailbox is empty
-		if addon.db and addon.db.mailboxContacts and next(addon.db.mailboxContacts) == nil and type(addon.db.moneyTracker) == "table" then
-			for guid, info in pairs(addon.db.moneyTracker) do
+		local privateDB = getPrivateDB()
+		if addon.db and addon.db.mailboxContacts and next(addon.db.mailboxContacts) == nil and type(privateDB.moneyTracker) == "table" then
+			for guid, info in pairs(privateDB.moneyTracker) do
 				if type(info) == "table" and info.name then
 					local name = info.name
 					local realm = info.realm or GetRealmName() or ""
@@ -338,8 +339,9 @@ local function BuildFiltered()
 	end
 	-- If contacts are empty but we have moneyTracker info, import once
 	if addon.db.mailboxContacts == nil then addon.db.mailboxContacts = {} end
-	if not Mailbox.seeded and next(addon.db.mailboxContacts) == nil and type(addon.db.moneyTracker) == "table" then
-		for _, info in pairs(addon.db.moneyTracker) do
+	local privateDB = getPrivateDB()
+	if not Mailbox.seeded and next(addon.db.mailboxContacts) == nil and type(privateDB.moneyTracker) == "table" then
+		for _, info in pairs(privateDB.moneyTracker) do
 			if type(info) == "table" and info.name then
 				local name = info.name
 				local realm = info.realm or GetRealmName() or ""

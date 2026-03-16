@@ -1,7 +1,7 @@
-## Interface: 110207, 120000, 120001
+## Interface: 120000, 120001, 120005
 ## Title: Enhance QoL Core
 ## Author: R41Z0R
-## Version: 8.8.1
+## Version: 9.1.0
 ## IconTexture: Interface\AddOns\EnhanceQoL\Icons\Icon.tga
 ## Category: Quality of Life
 ## X-Category: Quality of Life
@@ -16,17 +16,16 @@
 ## Notes-koKR: 사소한 편의 기능으로 게임 품질을 향상합니다
 ## Notes-zhCN: 一些小调整，以改善您的游戏体验
 ## Notes-zhTW: 一些小調整，以改善您的遊戲體驗
-## SavedVariables: EnhanceQoLDB, EnhanceQoL_IMHistory, EnhanceQoL_IgnoreDB, EnhanceQoL_ChannelHistory, EnhanceQoLMoverDB
+## SavedVariables: EnhanceQoLDB, EnhanceQoLDBPrivate, EnhanceQoL_IMHistory, EnhanceQoL_IgnoreDB, EnhanceQoL_ChannelHistory, EnhanceQoLMoverDB
 ## X-Wago-ID: aN0Ykv6j
 ## X-Curse-Project-ID: 1076354
 ## Retail: true
 ## X-Compatible-With: retail
 ## X-WoWI-ID: 26888
-## OptionalDeps: MidnightSimpleUnitFrames, UnhaltedUnitFrames, ElvUI, Baganator
+## OptionalDeps: MidnightSimpleUnitFrames, UnhaltedUnitFrames, ElvUI, Baganator, DragonRider
 
 libs\LibStub\LibStub.lua
 libs\AceLocale-3.0\AceLocale-3.0.xml
-libs\LibButtonGlow-1.0\LibButtonGlow-1.0.lua
 libs\LibCustomGlow-1.0\LibCustomGlow-1.0.lua
 locales\[TextLocale].lua
 Modules\MythicPlus\Locales\[TextLocale].lua
@@ -46,6 +45,7 @@ libs\LibEQOL\LibEQOL.xml
 Bindings\Slider.xml
 Sounds\sounds.lua
 General\functions.lua
+General\Glow.lua
 Core\EditModeLib.lua
 Core\EditMode.lua
 Modules\ActionBarLabels.lua
@@ -53,6 +53,7 @@ Core\Cleanup.lua
 EnhanceQoL.lua
 Core\DataHub.lua
 Core\DataPanel.lua
+Core\ChallengeMapLabels.lua
 Core\MovementSpeedStat.lua
 Core\CharacterStatsFormatting.lua
 Core\Streams\Streams.xml

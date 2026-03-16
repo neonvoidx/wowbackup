@@ -118,7 +118,10 @@ function power:AttachToPlayerButton(playerButton)
   end
 
   function playerButton.Power:CheckForNewPowerColor(powerToken)
-    --self:Debug("CheckForNewPowerColor", powerToken)
+    if not powerToken then return end
+    -- If we already have a class-confirmed power token, don't let scan results
+    -- override it (PID mismatch can feed us the wrong unit's power type)
+    if self.classConfirmedToken then return end
 
     if self.powerToken ~= powerToken then
       local color = PowerBarColor[powerToken]
@@ -187,6 +190,7 @@ function power:AttachToPlayerButton(playerButton)
     if not self.config then
       return
     end
+    self.classConfirmedToken = nil -- reset for fresh class lookup
     -- power
     self:SetHeight(self.config.Height or 0.01)
 
@@ -222,6 +226,9 @@ function power:AttachToPlayerButton(playerButton)
     end
 
     self:CheckForNewPowerColor(powerToken)
+    if powerToken then
+      self.classConfirmedToken = true
+    end
 
     -- Set presumptive fill: resources that regen passively start full, others start empty
     if powerToken and fullByDefault[powerToken] then

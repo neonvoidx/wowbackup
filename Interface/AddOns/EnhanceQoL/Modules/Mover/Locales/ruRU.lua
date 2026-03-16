@@ -92,6 +92,7 @@ L["Position Persistence Reset Tooltip"] = "Сохраняет позицию, п
 L["Power Bar Widgets"] = "Виджеты панели ресурса (UI-виджеты)"
 L["Professions"] = "Профессии"
 L["Professions Book"] = "Книга профессий"
+L["PvP Match Results"] = "Результаты PvP-матча"
 L["Quest"] = "Диалог НИП (Задание)"
 L["Queue Status Button"] = "Кнопка состояния очереди"
 L["Raid Info"] = "Информация о рейде"

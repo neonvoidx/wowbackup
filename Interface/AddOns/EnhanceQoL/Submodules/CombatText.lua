@@ -242,7 +242,7 @@ function CombatText:EnsureFrame()
 
 	local frame = CreateFrame("Frame", "EQOL_CombatText", UIParent)
 	frame:SetClampedToScreen(true)
-	frame:SetFrameStrata("HIGH")
+	frame:SetFrameStrata("LOW")
 	frame:Hide()
 
 	local bg = frame:CreateTexture(nil, "BACKGROUND")

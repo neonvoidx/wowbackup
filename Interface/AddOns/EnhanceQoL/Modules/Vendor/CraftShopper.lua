@@ -19,7 +19,6 @@ addon.Vendor.CraftShopper = addon.Vendor.CraftShopper or {}
 addon.Vendor.CraftShopper.items = addon.Vendor.CraftShopper.items or {}
 addon.Vendor.CraftShopper.multipliers = addon.Vendor.CraftShopper.multipliers or {}
 
-local RANK_TO_USE = 3 -- 1-3: gewünschter Qualitätsrang
 local isRecraftTbl = { false, true } -- erst normale, dann Recrafts
 
 local SCAN_DELAY = 0.3
@@ -40,7 +39,23 @@ local professionsFrameHooksInstalled = false
 local schematicFormHooksInstalled = false
 local schematicFormMixinHooksInstalled = false
 
+local CRAFT_SHOPPER_QUALITY_LOWEST = "lowest"
+local CRAFT_SHOPPER_QUALITY_HIGHEST = "highest"
+local craftShopperQualityOrder = {
+	CRAFT_SHOPPER_QUALITY_LOWEST,
+	CRAFT_SHOPPER_QUALITY_HIGHEST,
+}
+local craftShopperQualityList = {
+	[CRAFT_SHOPPER_QUALITY_LOWEST] = L["vendorCraftShopperReagentQualityLowest"],
+	[CRAFT_SHOPPER_QUALITY_HIGHEST] = L["vendorCraftShopperReagentQualityHighest"],
+}
+
 local function IsCraftShopperEnabled() return addon.db and addon.db["vendorCraftShopperEnable"] end
+
+local function GetCraftShopperReagentQualityMode()
+	if addon.db and addon.db["vendorCraftShopperReagentQuality"] == CRAFT_SHOPPER_QUALITY_LOWEST then return CRAFT_SHOPPER_QUALITY_LOWEST end
+	return CRAFT_SHOPPER_QUALITY_HIGHEST
+end
 
 local function GetTrackRecipeCheckbox()
 	if ProfessionsFrame and ProfessionsFrame.CraftingPage and ProfessionsFrame.CraftingPage.SchematicForm and ProfessionsFrame.CraftingPage.SchematicForm.TrackRecipeCheckbox then
@@ -317,6 +332,37 @@ local function getSchematic(recipeID, isRecraft)
 	return s
 end
 
+local function GetTrackedReagentItemID(slot)
+	if not slot or not slot.reagents then return nil end
+	local preferHighest = GetCraftShopperReagentQualityMode() == CRAFT_SHOPPER_QUALITY_HIGHEST
+
+	-- Profession quality variants are ordered ascending. Pick the configured end
+	-- first, then fall back to the opposite direction if a slot is sparse.
+	if preferHighest then
+		for index = #slot.reagents, 1, -1 do
+			local reagent = slot.reagents[index]
+			if reagent and reagent.itemID and reagent.itemID ~= 0 then return reagent.itemID end
+		end
+	else
+		for _, reagent in ipairs(slot.reagents) do
+			if reagent and reagent.itemID and reagent.itemID ~= 0 then return reagent.itemID end
+		end
+	end
+
+	if preferHighest then
+		for _, reagent in ipairs(slot.reagents) do
+			if reagent and reagent.itemID and reagent.itemID ~= 0 then return reagent.itemID end
+		end
+	else
+		for index = #slot.reagents, 1, -1 do
+			local reagent = slot.reagents[index]
+			if reagent and reagent.itemID and reagent.itemID ~= 0 then return reagent.itemID end
+		end
+	end
+
+	return nil
+end
+
 function BuildShoppingList()
 	local need = {} -- [itemID] = fehlende Menge
 	local multipliers = addon.Vendor.CraftShopper.multipliers or {}
@@ -328,23 +374,15 @@ function BuildShoppingList()
 			local mult = multipliers[recipeID] or 1
 			if schem and schem.reagentSlotSchematics then
 				for _, slot in ipairs(schem.reagentSlotSchematics) do
-					-- Nur Pflicht-Reagenzien, optional/finishing überspringen:
-					if slot.reagentType == Enum.CraftingReagentType.Basic then
+					-- Nur Pflicht-Reagenzien mit echter ItemID erfassen.
+					if slot.reagentType == Enum.CraftingReagentType.Basic and slot.required then
 						local reqQty = slot.quantityRequired * mult
-						-- gewünschte Qualitäts-ID holen:
-						local reagent = slot.reagents[RANK_TO_USE]
-						local id
-						if reagent and reagent.itemID ~= 0 then
-							id = reagent.itemID
+						local id = GetTrackedReagentItemID(slot)
+						if id then
 							need[id] = need[id] or {}
 							need[id].qty = (need[id].qty or 0) + reqQty
-						else
-							-- Fallback: Basis-ItemID (Qualität egal)
-							id = slot.reagents[1].itemID
-							need[id] = need[id] or {}
-							need[id].qty = (need[id].qty or 0) + reqQty
+							need[id].canAHBuy = isAHBuyable(id)
 						end
-						need[id].canAHBuy = isAHBuyable(id)
 					end
 				end
 			end
@@ -382,6 +420,44 @@ local function Rescan()
 	if addon.Vendor.CraftShopper.frame then addon.Vendor.CraftShopper.frame:Refresh() end
 	scanRunning = false
 	ShowCraftShopperFrameIfNeeded()
+end
+
+local function SyncCraftShopperQualityControls()
+	local mode = GetCraftShopperReagentQualityMode()
+	local frameDropdown = addon.Vendor.CraftShopper.frame and addon.Vendor.CraftShopper.frame.qualityPreference
+	if frameDropdown and frameDropdown.GetValue and frameDropdown:GetValue() ~= mode then frameDropdown:SetValue(mode) end
+
+	local settingsDropdown = addon.Vendor.CraftShopper.settingsQualityDropdown
+	if settingsDropdown and settingsDropdown.GetValue and settingsDropdown:GetValue() ~= mode then settingsDropdown:SetValue(mode) end
+end
+
+function addon.Vendor.CraftShopper.GetReagentQualityMode()
+	return GetCraftShopperReagentQualityMode()
+end
+
+function addon.Vendor.CraftShopper.RefreshShoppingList()
+	SyncCraftShopperQualityControls()
+	if not IsCraftShopperEnabled() then return end
+
+	if HasTrackedRecipes() then
+		RegisterHeavyEvents()
+		Rescan()
+	else
+		UnregisterHeavyEvents()
+		addon.Vendor.CraftShopper.items = {}
+		if addon.Vendor.CraftShopper.frame then
+			addon.Vendor.CraftShopper.frame:Refresh()
+			addon.Vendor.CraftShopper.frame.frame:Hide()
+		end
+	end
+
+	if RefreshMultiplyUIState then RefreshMultiplyUIState() end
+end
+
+function addon.Vendor.CraftShopper.SetReagentQualityMode(mode)
+	if not addon.db then return end
+	addon.db["vendorCraftShopperReagentQuality"] = mode == CRAFT_SHOPPER_QUALITY_LOWEST and CRAFT_SHOPPER_QUALITY_LOWEST or CRAFT_SHOPPER_QUALITY_HIGHEST
+	addon.Vendor.CraftShopper.RefreshShoppingList()
 end
 
 local function ScheduleRescan()
@@ -563,6 +639,19 @@ local function CreateCraftShopperFrame()
 	frame.ahBuyable = ahCheck
 	filterGroup:AddChild(ahCheck)
 
+	local qualityPreference = AceGUI:Create("Dropdown")
+	qualityPreference:SetLabel(L["vendorCraftShopperReagentQuality"])
+	qualityPreference:SetList(craftShopperQualityList, craftShopperQualityOrder)
+	qualityPreference:SetValue(GetCraftShopperReagentQualityMode())
+	qualityPreference:SetFullWidth(true)
+	qualityPreference:SetCallback("OnValueChanged", function(_, _, value)
+		if addon.Vendor and addon.Vendor.CraftShopper and addon.Vendor.CraftShopper.SetReagentQualityMode then
+			addon.Vendor.CraftShopper.SetReagentQualityMode(value)
+		end
+	end)
+	frame.qualityPreference = qualityPreference
+	frame:AddChild(qualityPreference)
+
 	local scroll = AceGUI:Create("ScrollFrame")
 	scroll:SetFullWidth(true)
 	scroll:SetFullHeight(true)
@@ -723,6 +812,7 @@ function ShowCraftShopperFrameIfNeeded()
 
 	if hasItems then
 		local ui = CreateCraftShopperFrame()
+		SyncCraftShopperQualityControls()
 		ui.frame:ClearAllPoints()
 		ui.frame:SetPoint("TOPLEFT", AuctionHouseFrame, "TOPRIGHT", 5, 0)
 		ui.frame:SetPoint("BOTTOMLEFT", AuctionHouseFrame, "BOTTOMRIGHT", 5, 0)

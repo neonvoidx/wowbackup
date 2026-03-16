@@ -6,6 +6,7 @@ HealthBarColorDB = {
 ["Mäñýfäçëð - Tichondrius"] = "Default",
 ["Thingreyline - Tichondrius"] = "Default",
 ["Crillessana - Mal'Ganis"] = "Default",
+["Starphage - Tichondrius"] = "Default",
 ["Auteist - Mal'Ganis"] = "Default",
 ["Ofpuss - Mal'Ganis"] = "Default",
 ["Starstypeshi - Tichondrius"] = "Default",
@@ -15,10 +16,10 @@ HealthBarColorDB = {
 ["Gehyo - Mal'Ganis"] = "Default",
 ["Choppiez - Tichondrius"] = "Default",
 ["Hellowalls - Mal'Ganis"] = "Default",
-["Hellavator - Tichondrius"] = "Default",
-["Auteist - Tichondrius"] = "Default",
 ["Ofpusstwo - Tichondrius"] = "Default",
+["Auteist - Tichondrius"] = "Default",
 ["Neonvoid - Tichondrius"] = "Default",
+["Hellavator - Tichondrius"] = "Default",
 ["Hellavator - Mal'Ganis"] = "Default",
 ["Cullnvoid - Tichondrius"] = "Default",
 ["Stormclout - Tichondrius"] = "Default",
@@ -38,7 +39,7 @@ HealthBarColorDB = {
 ["color"] = {
 ["a"] = 0.9405550956726074,
 },
-["texture"] = "Wglass (GladiusEx)",
+["texture"] = "WglassDark",
 ["enabled"] = true,
 },
 ["HealthBarColor_pet"] = {
@@ -63,8 +64,11 @@ HealthBarColorDB = {
 ["nameFont"] = "1",
 ["powerFont"] = "1",
 },
-["DebuffColor"] = {
-["enabled"] = true,
+["Font_targettarget"] = {
+["nameFontOutlineMode"] = 3,
+["healthFont"] = "1",
+["nameFont"] = "1",
+["powerFont"] = "1",
 },
 ["Font_party4"] = {
 ["nameFontOutlineMode"] = 3,
@@ -109,9 +113,9 @@ HealthBarColorDB = {
 ["enabled"] = true,
 },
 ["Textures"] = {
-["powerBarTexture"] = "Wglass",
+["powerBarTexture"] = "WglassDark",
 ["enabled"] = true,
-["healthBarTexture"] = "Wglass",
+["healthBarTexture"] = "WglassDark",
 },
 ["HealthBarColor_boss3"] = {
 },
@@ -127,11 +131,8 @@ HealthBarColorDB = {
 ["Font_party2"] = {
 ["nameFontOutlineMode"] = 3,
 },
-["Font_targettarget"] = {
-["nameFontOutlineMode"] = 3,
-["healthFont"] = "1",
-["nameFont"] = "1",
-["powerFont"] = "1",
+["DebuffColor"] = {
+["enabled"] = true,
 },
 ["Font_party3"] = {
 ["nameFontOutlineMode"] = 3,

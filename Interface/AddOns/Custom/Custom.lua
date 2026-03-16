@@ -20,17 +20,17 @@ local function OnEvent(self, event, ...)
 		--TargetFrameToT:Hide() -- Target of Target frame
 		-- Disable default cast bar
 		-- PlayerCastingBarFrame:UnregisterAllEvents()
-		-- Auto collapse buffs
-		BuffFrame.CollapseAndExpandButton:SetAlpha(0)
-		BuffFrame.CollapseAndExpandButton:SetChecked(false)
-		BuffFrame.CollapseAndExpandButton:UpdateOrientation()
-		BuffFrame:SetBuffsExpandedState()
-		BuffFrame.CollapseAndExpandButton:HookScript("OnEnter", function()
-			BuffFrame.CollapseAndExpandButton:SetAlpha(1)
-		end)
-		BuffFrame.CollapseAndExpandButton:HookScript("OnLeave", function()
-			BuffFrame.CollapseAndExpandButton:SetAlpha(0)
-		end)
+		-- Auto collapse buffs, currently causes errors if you do this
+		-- BuffFrame.CollapseAndExpandButton:SetAlpha(1)
+		-- BuffFrame.CollapseAndExpandButton:SetChecked(false)
+		-- BuffFrame.CollapseAndExpandButton:UpdateOrientation()
+		-- BuffFrame:SetBuffsExpandedState()
+		-- BuffFrame.CollapseAndExpandButton:HookScript("OnEnter", function()
+		-- 	BuffFrame.CollapseAndExpandButton:SetAlpha(1)
+		-- end)
+		-- BuffFrame.CollapseAndExpandButton:HookScript("OnLeave", function()
+		-- 	BuffFrame.CollapseAndExpandButton:SetAlpha(1)
+		-- end)
 		-- Hide micromenu
 		-- MicroMenuContainer:Hide()
 		-- -- Hide bag bar
@@ -86,7 +86,6 @@ local function OnEvent(self, event, ...)
 		SetCVar("UnitNameNPC", 1)
 		SetCVar("UnitNameFriendlyPlayerName", 1) -- Show friendly player names always
 		SetCVar("UnitNamePlayerGuild", 1) -- Show guild
-		SetCVar("UnitNamePlayerPVPTitle", 0) -- Show titles
 		SetCVar("UnitNameOwn", 1) -- Show own name
 		SetCVar("UnitNamePlayerPVPTitle", 1) -- Show character title
 
@@ -99,9 +98,13 @@ local function OnEvent(self, event, ...)
 		SetCVar("damageMeterEnabled", 1)
 		SetCVar("damageMeterResetOnNewInstance", 1)
 
+		-- Assisted rotation highlight
 		SetCVar("assistedCombatHighlight", 0)
+		-- Boss mods
 		SetCVar("combatWarningsEnabled", 1)
+		-- external defensives
 		SetCVar("externalDefensivesEnabled", 1)
+		-- CDM
 		SetCVar("cooldownViewerEnabled", 1)
 		SetCVar("spellDiminishPVPEnemiesEnabled", 1)
 
@@ -113,7 +116,16 @@ local function OnEvent(self, event, ...)
 		SetCVar("autoDismountFlying", 1)
 
 		-- Comparison tooltips, 0 = hold shift to show, 1 = always show
-		SetCVar("alwaysCompareItems", 0)
+		SetCVar("alwaysCompareItems", 1)
+
+		-- Loot
+		SetCVar("autoLootDefault", 1)
+
+		-- Secure ability toggle, prevents quick double presses
+		SetCVar("secureAbilityToggle", 1)
+
+		-- Targeting
+		SetCVar("SoftTargetEnemy", 0)
 
 		-- Audio
 		SetCVar("Sound_EnableEmoteSounds", 1) -- Allow emote sounds
@@ -121,23 +133,24 @@ local function OnEvent(self, event, ...)
 		-- This is default setting but want to make sure
 		SetCVar("SpellQueueWindow", 400)
 
-		-- If BetterBlizzPlates loaded
+		-- Just sets default nameplate stuff if not using a nameplate addon
 		local bbpLoaded, _ = C_AddOns.IsAddOnLoaded("BetterBlizzPlates")
 		local platynatorLoaded, _ = C_AddOns.IsAddOnLoaded("Platynator")
-		if not bbpLoaded and not platynatorLoaded then
-			SetCVar("NamePlateHorizontalScale", 1) -- reduce horizontal scale
-			SetCVar("NamePlateVerticalScale", 3) -- reduce horizontal scale
-			SetCVar("nameplateLargerScale", 1)
-			SetCVar("NamePlateClassificationScale", 1)
-			SetCVar("nameplateSelectedScale", 1.05)
-			SetCVar("nameplateMinScale", 1)
-			SetCVar("nameplateMaxScale", 1)
-			SetCVar("nameplateGlobalScale", 1.1)
-			SetCVar("nameplateOverlapV", 1.1) -- Vertical overlap
+		local platerLoaded, _ = C_AddOns.IsAddOnLoaded("Plater")
+		if not bbpLoaded and not platynatorLoaded and not platerLoaded then
+			-- SetCVar("NamePlateHorizontalScale", 1) -- reduce horizontal scale
+			-- SetCVar("NamePlateVerticalScale", 3) -- reduce horizontal scale
+			-- SetCVar("nameplateLargerScale", 1)
+			-- SetCVar("NamePlateClassificationScale", 1)
+			-- SetCVar("nameplateSelectedScale", 1.05)
+			-- SetCVar("nameplateMinScale", 1)
+			-- SetCVar("nameplateMaxScale", 1)
+			-- SetCVar("nameplateGlobalScale", 1.1)
+			SetCVar("nameplateOverlapV", 0.9) -- Vertical overlap
 			SetCVar("nameplateOverlapH", 0.8) -- Horizontal overlap
 			SetCVar("nameplateMaxAlpha", 1)
-			SetCVar("nameplateMinAlpha", 0.6)
-			SetCVar("nameplateOccludedAlphaMult", 1)
+			SetCVar("nameplateMinAlpha", 0.9)
+			SetCVar("nameplateOccludedAlphaMult", 0.4)
 			-- Show friendly plates for arena
 			local isInInstance, instanceType = IsInInstance()
 			-- check if we are entering or leaving an arena/bg
@@ -188,29 +201,6 @@ f:RegisterEvent("UPDATE_BINDINGS") -- Event for when keybindings are updated
 f:RegisterEvent("PLAYER_LOGIN") -- Happens only on login
 f:SetScript("OnEvent", OnEvent)
 -- #endregion
-
--- hooksecurefunc("CompactUnitFrame_UpdateRoleIcon", function(f)
--- 	if f.optionTable == DefaultCompactUnitFrameOptions then
--- 		if f.roleIcon:GetTexture() == 337497 then
--- 			f.roleIcon:Show()
--- 		end
--- 	end
--- end)
-
--- hooksecurefunc("CompactUnitFrame_UpdateAll", function(f)
--- 	local buffSize = 25
--- 	local debuffSize = 25
--- 	if f.buffFrames then
--- 		for _, d in ipairs(f.buffFrames) do
--- 			d:SetSize(buffSize, buffSize)
--- 		end
--- 	end
--- 	-- if f.debuffFrames then
--- 	-- 	for _, d in ipairs(f.debuffFrames) do
--- 	-- 		d:SetSize(debuffSize, debuffSize)
--- 	-- 	end
--- 	-- end
--- end)
 
 -- Slash commands
 SLASH_RELOAD1 = "/rl"

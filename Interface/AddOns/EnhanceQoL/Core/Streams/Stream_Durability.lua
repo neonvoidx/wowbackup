@@ -144,9 +144,9 @@ local floor = math.floor
 local GetInventoryItemDurability = GetInventoryItemDurability
 local GetInventoryItemLink = GetInventoryItemLink
 local GetInventoryItemID = GetInventoryItemID
-local GetItemInfo = GetItemInfo
-local GetItemInfoInstant = GetItemInfoInstant
 local C_Item = C_Item
+local GetItemInfoFn = C_Item and C_Item.GetItemInfo
+local GetItemInfoInstantFn = C_Item and C_Item.GetItemInfoInstant
 local GetItemQualityByID = C_Item and C_Item.GetItemQualityByID or nil
 local GetItemIconByID = C_Item and C_Item.GetItemIconByID or nil
 
@@ -216,8 +216,8 @@ local function getCachedItemInfo(itemID, link)
 		itemCache[key] = cached
 	end
 
-	if (not cached.name or cached.quality == nil or not cached.icon) and GetItemInfo then
-		local name, _, quality, _, _, _, _, _, _, icon = GetItemInfo(link or itemID)
+	if (not cached.name or cached.quality == nil or not cached.icon) and GetItemInfoFn then
+		local name, _, quality, _, _, _, _, _, _, icon = GetItemInfoFn(link or itemID)
 		if name then cached.name = name end
 		if quality ~= nil then cached.quality = quality end
 		if icon then cached.icon = icon end
@@ -229,8 +229,8 @@ local function getCachedItemInfo(itemID, link)
 	if not cached.icon and itemID then
 		if GetItemIconByID then
 			cached.icon = GetItemIconByID(itemID)
-		elseif GetItemInfoInstant then
-			local _, _, _, _, icon = GetItemInfoInstant(itemID)
+		elseif GetItemInfoInstantFn then
+			local _, _, _, _, icon = GetItemInfoInstantFn(itemID)
 			if icon then cached.icon = icon end
 		end
 	end

@@ -3333,10 +3333,10 @@ local SpellBook = _G.C_SpellBook
 local SpellBookItemType = Enum and Enum.SpellBookItemType
 local SpellBookSpellBank = Enum and Enum.SpellBookSpellBank
 local UnitClass = _G.UnitClass
-local GetSpecialization = _G.GetSpecialization
-local GetSpecializationInfo = _G.GetSpecializationInfo
+local GetSpecializationFn = C_SpecializationInfo and C_SpecializationInfo.GetSpecialization
+local GetSpecializationInfoFn = C_SpecializationInfo and C_SpecializationInfo.GetSpecializationInfo
 local GetSpecializationInfoForClassID = _G.GetSpecializationInfoForClassID
-local GetNumSpecializationsForClassID = _G.GetNumSpecializationsForClassID
+local GetNumSpecializationsForClassIDFn = C_SpecializationInfo and C_SpecializationInfo.GetNumSpecializationsForClassID
 local GetNumClasses = _G.GetNumClasses
 local GetClassInfo = _G.GetClassInfo
 local IsHelpfulSpell = _G.IsHelpfulSpell
@@ -3481,12 +3481,12 @@ local function buildRangeFadeSpecEntries()
 	local bySpecId = {}
 	local sex = UnitSex and UnitSex("player") or nil
 
-	if GetNumClasses and GetNumSpecializationsForClassID and GetSpecializationInfoForClassID then
+	if GetNumClasses and GetNumSpecializationsForClassIDFn and GetSpecializationInfoForClassID then
 		local numClasses = GetNumClasses() or 0
 		for classIndex = 1, numClasses do
 			local className, classToken, classID = getClassInfoById(classIndex)
 			if classID then
-				local specCount = GetNumSpecializationsForClassID(classID) or 0
+				local specCount = GetNumSpecializationsForClassIDFn(classID) or 0
 				for specIndex = 1, specCount do
 					local specID, specName = GetSpecializationInfoForClassID(classID, specIndex, sex)
 					if specID then
@@ -3540,10 +3540,10 @@ local function buildRangeFadeSpecEntries()
 end
 
 getCurrentSpecId = function()
-	if not (GetSpecialization and GetSpecializationInfo) then return nil end
-	local specIndex = GetSpecialization()
+	if not (GetSpecializationFn and GetSpecializationInfoFn) then return nil end
+	local specIndex = GetSpecializationFn()
 	if not specIndex then return nil end
-	local specID = GetSpecializationInfo(specIndex)
+	local specID = GetSpecializationInfoFn(specIndex)
 	if not specID or specID <= 0 then return nil end
 	return specID
 end

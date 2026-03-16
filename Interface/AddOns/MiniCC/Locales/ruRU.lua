@@ -77,6 +77,9 @@ L:SetStrings({
 	["Import Profile"] = "Импорт профиля",
 	["Miscellaneous"] = "Прочее",
 	["Reset"] = "Сброс",
+	["Mini addon, massive awareness."] = "Маленький аддон, полное осознание.",
+	["CC Native Order"] = "Стандартный порядок CC",
+	["Instead of showing the latest CC applied (MiniCC behaviour), use Blizzard's default CC priority which usually shows the first CC applied (with some exceptions)."] = "Вместо отображения последнего применённого CC (поведение MiniCC), использует стандартный приоритет CC Blizzard, который обычно показывает первый применённый CC (с некоторыми исключениями).",
 	["The others seem to use a non-trivial amount of CPU."] = "Остальные используют значительное количество ЦП.",
 	["The Proc Glow uses the least CPU."] = "Proc свечение использует меньше всего ЦП.",
 
@@ -175,8 +178,8 @@ L:SetStrings({
 	["Ignore Friendly Pets"] = "Игнорировать союзных питомцев",
 	["Nameplates"] = "Полоски здоровья",
 	["Nameplates_Short"] = "Полоски",
-	["Scale with Nameplate"] = "Scale with Nameplate",
-	["Icons scale along with the nameplate scale. Use this option if you have a different size for the target nameplate (e.g. in BBF's settings)."] = "Icons scale along with the nameplate scale. Use this option if you have a different size for the target nameplate (e.g. in BBF's settings).",
+	["Scale with Nameplate"] = "Масштабировать с табличкой",
+	["Icons scale along with the nameplate scale. Use this option if you have a different size for the target nameplate (e.g. in BBF's settings)."] = "Иконки масштабируются вместе с масштабом таблички с именем. Используйте этот параметр, если у вас другой размер для таблички с именем цели (например, в настройках BBF).",
 	["Shows CC and important spells on nameplates (works with nameplate addons e.g. BBP, Platynator, and Plater)."] = "Показывает контроль и важные заклинания на полосках здоровья (работает с аддонами полосок здоровья, например BBP, Platynator и Plater).",
 	["Spell colours"] = "Цвета заклинаний",
 
@@ -209,6 +212,8 @@ L:SetStrings({
 	[" - shows markers above your team mates."] = " - показывает метки над вашими союзниками.",
 	[" - shows overshields on frames and nameplates."] = " - показывает сверхщиты на рамках и полосках здоровья.",
 	[" - shows your debuffs on enemy arena frames."] = " - показывает ваши дебаффы на рамках врагов на арене.",
+	[" - customize the cooldown timers."] = " - Настраивает таймеры перезарядки.",
+	[" - powerful icon skinning tool."] = " - Мощный инструмент для оформления иконок.",
 	["MiniArenaDebuffs"] = "MiniArenaDebuffs",
 	["MiniCombatNotifier"] = "MiniCombatNotifier",
 	["MiniKillingBlow"] = "MiniKillingBlow",
@@ -221,6 +226,7 @@ L:SetStrings({
 	["Other Mini Addons"] = "Другие Mini аддоны",
 	["Other mini addons to enhance your PvP experience:"] = "Другие mini аддоны для улучшения вашего PvP опыта:",
 	["Other Mini Addons_Short"] = "Другие",
+	["Miscellaneous_Short"] = "Разное",
 
 	-- What's New
 	[" - Added CC icons on pet party/raid frames (disabled by default)."] = " - Добавлены иконки контроля на рамки групп/рейдов питомцев (отключено по умолчанию).",

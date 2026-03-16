@@ -26,6 +26,7 @@ L["mouseCrosshairUseClassColor"] = "Использовать цвет класс
 L["mouseRing"] = "Кольцо курсора"
 L["mouseRingCastProgress"] = "Показывать прогресс каста на кольце"
 L["mouseRingCastProgressColor"] = "Цвет прогресса каста"
+L["mouseRingCastProgressShowOutsideCombat"] = "Показывать прогресс произнесения вне боя"
 L["mouseRingCombatOverlay"] = "Показывать дополнительное кольцо в бою"
 L["mouseRingCombatOverlayColor"] = "Цвет дополнительного кольца в бою"
 L["mouseRingCombatOverlaySize"] = "Размер дополнительного кольца в бою"

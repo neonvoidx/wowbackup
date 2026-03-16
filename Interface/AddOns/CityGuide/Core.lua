@@ -63,6 +63,7 @@ local function FilterNPCsByDecor(npcList)
             end
             -- Clean the name (removes "Decor" from middle of names when setting is off)
             cleanedNPC.name = CityGuide_CleanDecorFromName(npc.name)
+            if npc.tooltip then cleanedNPC.tooltip = CityGuide_CleanDecorFromName(npc.tooltip) end
             table.insert(filtered, cleanedNPC)
         end
     end
@@ -190,7 +191,7 @@ function CityGuide_UpdateMapLabels()
             -- Tooltip mode: Show icons with tooltips instead of labels
             -- NO CLUSTERING - each icon gets its own individual tooltip
             for i, npc in ipairs(filteredNPCList) do
-                local icon = CityGuide_CreateIconOnly(canvas, npc.x, npc.y, npc.icon, nil, scale, finalIconSize, npc.name)
+                local icon = CityGuide_CreateIconOnly(canvas, npc.x, npc.y, npc.icon, nil, scale, finalIconSize, npc.tooltip or npc.name)
                 table.insert(activeLabels, icon)
             end
         else
@@ -246,7 +247,7 @@ function CityGuide_UpdateMapLabels()
             -- Tooltip mode: Show icons with tooltips instead of labels
             -- NO CLUSTERING - each icon gets its own individual tooltip
             for i, npc in ipairs(filteredNPCList) do
-                local icon = CityGuide_CreateIconOnly(canvas, npc.x, npc.y, npc.icon, npc.minimapIcon, scale, finalIconSize, npc.name)
+                local icon = CityGuide_CreateIconOnly(canvas, npc.x, npc.y, npc.icon, npc.minimapIcon, scale, finalIconSize, npc.tooltip or npc.name)
                 table.insert(activeLabels, icon)
             end
         else

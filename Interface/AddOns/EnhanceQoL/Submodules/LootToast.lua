@@ -29,11 +29,11 @@ end
 
 local function getItemLevelFromLink(link)
 	if not link then return nil end
-	if GetDetailedItemLevelInfo then
-		local level = GetDetailedItemLevelInfo(link)
+	if C_Item and C_Item.GetDetailedItemLevelInfo then
+		local level = C_Item.GetDetailedItemLevelInfo(link)
 		if level then return level end
 	end
-	return select(4, GetItemInfo(link))
+	return C_Item.GetCurrentItemLevel(link) or select(4, C_Item.GetItemInfo(link))
 end
 
 local EQUIP_LOC_TO_SLOTS = {
@@ -83,23 +83,6 @@ local function isPet(classID, subClassID)
 	return false
 end
 
-local function isItemAllowedForPlayer(classID, subclassID)
-	if not classID or not subclassID then return false end
-	if not addon.variables then return false end
-	local className = addon.variables.unitClass
-	local specIndex = addon.variables.unitSpec
-	if not className or not specIndex then return false end
-	local classFilters = addon.itemBagFilterTypes and addon.itemBagFilterTypes[className]
-	if not classFilters then return false end
-	local specFilters = classFilters[specIndex]
-	if not specFilters then return false end
-	local classEntry = specFilters[classID]
-	if not classEntry then return false end
-	if classEntry[subclassID] then return true end
-	if classEntry[0] then return true end
-	return false
-end
-
 local function getItemLevelSafe(item)
 	local level = item:GetCurrentItemLevel()
 	if not level or level == 0 then level = getItemLevelFromLink(item:GetItemLink()) end
@@ -110,7 +93,8 @@ local function isUpgradeForPlayer(item, itemEquipLoc, classID, subclassID)
 	if not itemEquipLoc or itemEquipLoc == "" then return false end
 	local slotsForLoc = EQUIP_LOC_TO_SLOTS[itemEquipLoc]
 	if not slotsForLoc or #slotsForLoc == 0 then return false end
-	if not isItemAllowedForPlayer(classID, subclassID) then return false end
+	if not addon.functions.IsItemRecommendedForSpec then return false end
+	if not addon.functions.IsItemRecommendedForSpec(item:GetItemLink(), itemEquipLoc, classID, subclassID) then return false end
 
 	local hasComparableItem = false
 	local lowestEquippedLevel

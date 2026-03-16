@@ -1,4 +1,4 @@
--- luacheck: globals EnhanceQoL UIParent GAMEMENU_OPTIONS FONT_SIZE C_Timer InCombatLockdown IsEncounterInProgress UnitExists UnitAffectingCombat
+-- luacheck: globals EnhanceQoL UIParent GAMEMENU_OPTIONS FONT_SIZE C_Timer InCombatLockdown UnitExists UnitAffectingCombat
 local addonName, addon = ...
 local L = addon.L
 
@@ -166,7 +166,7 @@ end
 
 local function refreshBossState()
 	if not combatActive then return end
-	local encounterInProgress = IsEncounterInProgress and IsEncounterInProgress() or false
+	local encounterInProgress = C_InstanceEncounter and C_InstanceEncounter.IsEncounterInProgress and C_InstanceEncounter.IsEncounterInProgress() or false
 	local bossInCombat = isBossInCombat()
 	if bossActive then
 		if not encounterInProgress and not bossInCombat then stopBoss() end

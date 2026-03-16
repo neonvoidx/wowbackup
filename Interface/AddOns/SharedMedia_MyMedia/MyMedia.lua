@@ -30,6 +30,7 @@ LSM:Register(
 	[[Interface\Addons\SharedMedia_MyMedia\statusbar\BlizzardCastBackground.tga]]
 )
 LSM:Register("statusbar", "MVQ", [[Interface\Addons\SharedMedia_MyMedia\statusbar\MVQ.tga]])
+LSM:Register("statusbar", "WglassDark", [[Interface\Addons\SharedMedia_MyMedia\statusbar\WglassDark.tga]])
 LSM:Register(
 	"statusbar",
 	"BlizzardCastBgRound",

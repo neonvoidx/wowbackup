@@ -231,10 +231,10 @@ H.RANGED_DPS_CLASSES = {
 local UnitSex = UnitSex
 local GetNumClasses = GetNumClasses
 local GetClassInfo = GetClassInfo
-local GetSpecializationInfo = GetSpecializationInfo
+local GetSpecializationInfoFn = C_SpecializationInfo and C_SpecializationInfo.GetSpecializationInfo
 local GetNumSpecializations = GetNumSpecializations
 local GetSpecializationInfoForClassID = GetSpecializationInfoForClassID
-local GetNumSpecializationsForClassID = GetNumSpecializationsForClassID
+local GetNumSpecializationsForClassIDFn = C_SpecializationInfo and C_SpecializationInfo.GetNumSpecializationsForClassID
 local GetInspectSpecialization = GetInspectSpecialization
 local NotifyInspect = NotifyInspect
 local ClearInspectPlayer = ClearInspectPlayer
@@ -287,8 +287,9 @@ function H.SnapPointOffsets(relativeFrame, relativePoint, x, y, scale)
 	return H.RoundToPixel(x, scale), H.RoundToPixel(y, scale)
 end
 
-function H.LayoutTexts(bar, leftFS, centerFS, rightFS, cfg, scale)
+function H.LayoutTexts(bar, leftFS, centerFS, rightFS, cfg, scale, anchorFrame)
 	if not bar then return end
+	anchorFrame = anchorFrame or bar
 	local leftCfg = (cfg and cfg.offsetLeft) or { x = 6, y = 0 }
 	local centerCfg = (cfg and cfg.offsetCenter) or { x = 0, y = 0 }
 	local rightCfg = (cfg and cfg.offsetRight) or { x = -6, y = 0 }
@@ -300,17 +301,17 @@ function H.LayoutTexts(bar, leftFS, centerFS, rightFS, cfg, scale)
 	local ry = H.RoundToPixel(rightCfg.y or 0, scale)
 	if leftFS then
 		leftFS:ClearAllPoints()
-		leftFS:SetPoint("LEFT", bar, "LEFT", lx, ly)
+		leftFS:SetPoint("LEFT", anchorFrame, "LEFT", lx, ly)
 		leftFS:SetJustifyH("LEFT")
 	end
 	if centerFS then
 		centerFS:ClearAllPoints()
-		centerFS:SetPoint("CENTER", bar, "CENTER", cx, cy)
+		centerFS:SetPoint("CENTER", anchorFrame, "CENTER", cx, cy)
 		centerFS:SetJustifyH("CENTER")
 	end
 	if rightFS then
 		rightFS:ClearAllPoints()
-		rightFS:SetPoint("RIGHT", bar, "RIGHT", rx, ry)
+		rightFS:SetPoint("RIGHT", anchorFrame, "RIGHT", rx, ry)
 		rightFS:SetJustifyH("RIGHT")
 	end
 end
@@ -853,6 +854,7 @@ function H.EnsureCustomSortConfig(cfg)
 	local custom = cfg.customSort
 	if custom.enabled == nil then custom.enabled = false end
 	if custom.separateMeleeRanged == nil then custom.separateMeleeRanged = false end
+	if custom.playerFirstInRole == nil then custom.playerFirstInRole = false end
 	if custom.separateMeleeRanged == true then
 		custom.roleOrder = H.ExpandRoleOrder(custom.roleOrder, true)
 	else
@@ -865,9 +867,9 @@ end
 function H.GetUnitSpecId(unit)
 	if not unit then return nil end
 	if UnitIsUnit and UnitIsUnit(unit, "player") then
-		local specIndex = GetSpecialization and GetSpecialization()
-		if specIndex and GetSpecializationInfo then
-			local specId = GetSpecializationInfo(specIndex)
+		local specIndex = C_SpecializationInfo and C_SpecializationInfo.GetSpecialization and C_SpecializationInfo.GetSpecialization()
+		if specIndex and GetSpecializationInfoFn then
+			local specId = GetSpecializationInfoFn(specIndex)
 			if specId and specId > 0 then return specId end
 		end
 	end
@@ -995,9 +997,9 @@ end
 
 function H.QueueInspectGroup()
 	if InCombatLockdown and InCombatLockdown() then return end
-	local playerSpec = GetSpecialization and GetSpecialization()
-	if playerSpec and GetSpecializationInfo then
-		local specId = GetSpecializationInfo(playerSpec)
+	local playerSpec = C_SpecializationInfo and C_SpecializationInfo.GetSpecialization and C_SpecializationInfo.GetSpecialization()
+	if playerSpec and GetSpecializationInfoFn then
+		local specId = GetSpecializationInfoFn(playerSpec)
 		if specId and specId > 0 then H.CacheUnitSpec("player", specId) end
 	end
 	if IsInRaid and IsInRaid() then
@@ -1030,11 +1032,29 @@ function H.GetUnitFullName(unit)
 	return name
 end
 
+local function isPlayerUnit(unit)
+	if not unit then return false end
+	if UnitIsUnit then return UnitIsUnit(unit, "player") == true end
+	return unit == "player"
+end
+
+local function compareCustomSortEntries(a, b, roleMap, classMap, playerFirstInRole)
+	local roleA = roleMap[a.sortRole or a.role] or 999
+	local roleB = roleMap[b.sortRole or b.role] or 999
+	if roleA ~= roleB then return roleA < roleB end
+	if playerFirstInRole and a.isPlayer ~= b.isPlayer then return a.isPlayer == true end
+	local classA = classMap[a.class] or 999
+	local classB = classMap[b.class] or 999
+	if classA ~= classB then return classA < classB end
+	return tostring(a.name or "") < tostring(b.name or "")
+end
+
 function H.BuildCustomSortNameList(cfg, mode)
 	local custom = H.EnsureCustomSortConfig(cfg)
 	if not custom then return "" end
 
 	local separate = custom.separateMeleeRanged == true
+	local playerFirstInRole = custom.playerFirstInRole == true
 	local roleOrder = H.ExpandRoleOrder(custom.roleOrder, separate)
 	local classOrder = custom.classOrder or H.CLASS_TOKENS
 	local roleMap = H.BuildOrderMapFromList(roleOrder)
@@ -1060,6 +1080,7 @@ function H.BuildCustomSortNameList(cfg, mode)
 				role = role,
 				sortRole = sortRole,
 				class = classToken,
+				isPlayer = isPlayerUnit(unit),
 			}
 		end
 		local showPlayer = cfg and cfg.showPlayer == true
@@ -1098,21 +1119,14 @@ function H.BuildCustomSortNameList(cfg, mode)
 						role = role,
 						sortRole = sortRole,
 						class = classToken,
+						isPlayer = isPlayerUnit(unit),
 					}
 				end
 			end
 		end
 	end
 
-	table.sort(entries, function(a, b)
-		local roleA = roleMap[a.sortRole or a.role] or 999
-		local roleB = roleMap[b.sortRole or b.role] or 999
-		if roleA ~= roleB then return roleA < roleB end
-		local classA = classMap[a.class] or 999
-		local classB = classMap[b.class] or 999
-		if classA ~= classB then return classA < classB end
-		return tostring(a.name or "") < tostring(b.name or "")
-	end)
+	table.sort(entries, function(a, b) return compareCustomSortEntries(a, b, roleMap, classMap, playerFirstInRole) end)
 
 	local names = {}
 	local seen = {}
@@ -1132,6 +1146,7 @@ function H.BuildCustomSortNameListsByGroup(cfg)
 	if not custom then return {} end
 
 	local separate = custom.separateMeleeRanged == true
+	local playerFirstInRole = custom.playerFirstInRole == true
 	local roleOrder = H.ExpandRoleOrder(custom.roleOrder, separate)
 	local classOrder = custom.classOrder or H.CLASS_TOKENS
 	local roleMap = H.BuildOrderMapFromList(roleOrder)
@@ -1164,20 +1179,13 @@ function H.BuildCustomSortNameListsByGroup(cfg)
 					role = role,
 					sortRole = sortRole,
 					class = classToken,
+					isPlayer = isPlayerUnit(unit),
 				}
 			end
 		end
 	end
 
-	local function compare(a, b)
-		local roleA = roleMap[a.sortRole or a.role] or 999
-		local roleB = roleMap[b.sortRole or b.role] or 999
-		if roleA ~= roleB then return roleA < roleB end
-		local classA = classMap[a.class] or 999
-		local classB = classMap[b.class] or 999
-		if classA ~= classB then return classA < classB end
-		return tostring(a.name or "") < tostring(b.name or "")
-	end
+	local function compare(a, b) return compareCustomSortEntries(a, b, roleMap, classMap, playerFirstInRole) end
 
 	local result = {}
 	for group = 1, 8 do
@@ -1315,6 +1323,25 @@ function H.BuildPreviewSampleList(kind, cfg, baseSamples, limit, quotaTanks, quo
 	local base = baseSamples or {}
 	if kind ~= "raid" and kind ~= "party" then return base end
 	local isParty = kind == "party"
+	if isParty then
+		local showPlayer = true
+		if cfg and cfg.showPlayer ~= nil then showPlayer = cfg.showPlayer == true end
+		if not showPlayer and #base > 0 then
+			local removeIndex = #base
+			for i = #base, 1, -1 do
+				if base[i] and base[i].role == "DAMAGER" then
+					removeIndex = i
+					break
+				end
+			end
+			local filtered = {}
+			-- Preserve tank/healer samples in the 4-unit preview and drop one DPS instead.
+			for i = 1, #base do
+				if i ~= removeIndex then filtered[#filtered + 1] = base[i] end
+			end
+			base = filtered
+		end
+	end
 
 	local groupFilter = cfg and cfg.groupFilter
 	local roleFilter = cfg and cfg.roleFilter
@@ -1540,7 +1567,7 @@ local function getClassInfoById(classId)
 end
 
 local function forEachSpec(callback)
-	local getSpecCount = (C_SpecializationInfo and C_SpecializationInfo.GetNumSpecializationsForClassID) or GetNumSpecializationsForClassID
+	local getSpecCount = C_SpecializationInfo and C_SpecializationInfo.GetNumSpecializationsForClassID
 	if not getSpecCount or not GetSpecializationInfoForClassID or not GetNumClasses then return false end
 	local sex = UnitSex and UnitSex("player") or nil
 	local numClasses = GetNumClasses() or 0
@@ -1576,9 +1603,9 @@ function H.BuildSpecOptions()
 			specName = specName or "",
 		}
 	end)
-	if not found and GetNumSpecializations and GetSpecializationInfo then
+	if not found and GetNumSpecializations and GetSpecializationInfoFn then
 		for i = 1, GetNumSpecializations() do
-			local specId, name = GetSpecializationInfo(i)
+			local specId, name = GetSpecializationInfoFn(i)
 			if specId and name then entries[#entries + 1] = { value = specId, label = name, className = "", specName = name } end
 		end
 	end
@@ -1601,9 +1628,9 @@ function H.DefaultSpecSelection()
 	local found = forEachSpec(function(specId)
 		if specId then sel[specId] = true end
 	end)
-	if not found and GetNumSpecializations and GetSpecializationInfo then
+	if not found and GetNumSpecializations and GetSpecializationInfoFn then
 		for i = 1, GetNumSpecializations() do
-			local specId = GetSpecializationInfo(i)
+			local specId = GetSpecializationInfoFn(i)
 			if specId then sel[specId] = true end
 		end
 	end

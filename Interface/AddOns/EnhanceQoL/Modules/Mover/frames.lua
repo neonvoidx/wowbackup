@@ -232,6 +232,14 @@ local frames = {
 		defaultEnabled = true,
 	},
 	{
+		id = "PVPMatchResults",
+		label = L["PvP Match Results"] or "PvP Match Results",
+		group = "activities",
+		names = { "PVPMatchResults" },
+		addon = "Blizzard_PVPMatch",
+		defaultEnabled = true,
+	},
+	{
 		id = "QueueStatusButton",
 		label = L["Queue Status Button"] or "Queue Status Button",
 		group = "activities",

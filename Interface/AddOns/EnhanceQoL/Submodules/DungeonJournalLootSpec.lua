@@ -25,7 +25,7 @@ local UnitClass = UnitClass
 local C_Timer_After = C_Timer and C_Timer.After
 
 local GetNumClasses = GetNumClasses
-local GetNumSpecializationsForClassID = GetNumSpecializationsForClassID
+local GetNumSpecializationsForClassIDFn = C_SpecializationInfo and C_SpecializationInfo.GetNumSpecializationsForClassID
 local GetSpecializationInfoForClassID = GetSpecializationInfoForClassID
 local GetClassInfo = C_CreatureInfo and C_CreatureInfo.GetClassInfo
 
@@ -94,7 +94,7 @@ local function BuildClassData()
 	for i = 1, GetNumClasses() do
 		local classInfo = GetClassInfo and GetClassInfo(i)
 		if classInfo and classInfo.classID then
-			classInfo.numSpecs = GetNumSpecializationsForClassID(classInfo.classID) or 0
+			classInfo.numSpecs = GetNumSpecializationsForClassIDFn(classInfo.classID) or 0
 			classInfo.specs = {}
 			classes[classInfo.classID] = classInfo
 

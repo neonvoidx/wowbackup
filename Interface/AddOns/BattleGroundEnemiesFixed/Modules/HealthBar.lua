@@ -166,59 +166,40 @@ local healthBarText = BattleGroundEnemies:NewButtonModule({
 function healthBar:AttachToPlayerButton(playerButton)
   playerButton.healthBar = CreateFrame("StatusBar", nil, playerButton)
   playerButton.healthBar:SetMinMaxValues(0, 1)
+  playerButton.healthBar:SetValue(1)
+  playerButton.healthBar:SetClipsChildren(true)
 
-  -- Changed to StatusBar to handle Secret/Restricted Health Values securely
-  playerButton.myHealPrediction = CreateFrame("StatusBar", nil, playerButton.healthBar)
-  playerButton.myHealPrediction:SetStatusBarTexture("Interface\\Buttons\\WHITE8x8")
-  playerButton.myHealPrediction:GetStatusBarTexture():SetVertexColor(0.0, 0.659, 0.608)
-  playerButton.myHealPrediction:SetFrameLevel(playerButton.healthBar:GetFrameLevel() + 1)
-
-  -- Gradient Logic on the StatusBarTexture
-  local predTex = playerButton.myHealPrediction:GetStatusBarTexture()
-  if predTex.SetGradientAlpha then
-    predTex:SetGradient("VERTICAL", 8 / 255, 93 / 255, 72 / 255, 11 / 255, 136 / 255, 105 / 255)
-  else
-    predTex:SetGradient(
-      "VERTICAL",
-      CreateColor(8 / 255, 93 / 255, 72 / 255, 1),
-      CreateColor(11 / 255, 136 / 255, 105 / 255, 1)
-    )
-  end
-
-  -- Fix for 11.0+ / 12.0.0 CompactUnitFrame compatibility
-  -- Blizzard's UpdateHealPrediction expects this value to exist for height calculations
+  -- Mix in Blizzard's SmoothStatusBarMixin for lerped health transitions.
   playerButton.powerBarUsedHeight = 0
 
-  playerButton.myHealAbsorb = playerButton.healthBar:CreateTexture(nil, "ARTWORK", nil, 3)
-  playerButton.myHealAbsorb:ClearAllPoints()
-  playerButton.myHealAbsorb:SetTexture("Interface\\RaidFrame\\Absorb-Fill", true, true)
-
-  playerButton.myHealAbsorbLeftShadow = playerButton.healthBar:CreateTexture(nil, "ARTWORK", nil, 3)
-  playerButton.myHealAbsorbLeftShadow:ClearAllPoints()
-
-  playerButton.myHealAbsorbRightShadow = playerButton.healthBar:CreateTexture(nil, "ARTWORK", nil, 3)
-  playerButton.myHealAbsorbRightShadow:ClearAllPoints()
-
-  playerButton.otherHealPrediction = playerButton.healthBar:CreateTexture(nil, "ARTWORK", nil, 2)
-  playerButton.otherHealPrediction:SetColorTexture(1, 1, 1)
-  if playerButton.otherHealPrediction.SetGradientAlpha then
-    playerButton.otherHealPrediction:SetGradient("VERTICAL", 11 / 255, 53 / 255, 43 / 255, 21 / 255, 89 / 255, 72 / 255)
-  else
-    playerButton.otherHealPrediction:SetGradient(
-      "VERTICAL",
-      CreateColor(11 / 255, 53 / 255, 43 / 255, 1),
-      CreateColor(21 / 255, 89 / 255, 72 / 255, 1)
-    )
+  if CreateUnitHealPredictionCalculator then
+    playerButton.healPredCalc = CreateUnitHealPredictionCalculator()
+    playerButton.healPredCalc:SetIncomingHealOverflowPercent(1.05)
   end
 
-  playerButton.totalAbsorbOverlay = playerButton.healthBar:CreateTexture(nil, "ARTWORK", nil, 4)
-  playerButton.totalAbsorbOverlay:SetTexture("Interface\\RaidFrame\\Shield-Overlay", true, true) --Tile both vertically and horizontally
-  playerButton.totalAbsorbOverlay.tileSize = 20
+  local hbLevel = playerButton.healthBar:GetFrameLevel()
+  local function CreatePredictionBar(level, r, g, b, a)
+    local bar = CreateFrame("StatusBar", nil, playerButton.healthBar)
+    bar:SetStatusBarTexture("Interface\\Buttons\\WHITE8x8")
+    bar:GetStatusBarTexture():SetVertexColor(r, g, b, a or 1)
+    bar:SetFrameLevel(hbLevel + (level or 1))
+    bar:Hide()
+    return bar
+  end
 
-  playerButton.totalAbsorb = playerButton.healthBar:CreateTexture(nil, "ARTWORK", nil, 3)
-  playerButton.totalAbsorb:SetTexture("Interface\\RaidFrame\\Shield-Fill")
-  playerButton.totalAbsorb.overlay = playerButton.totalAbsorbOverlay
-  playerButton.totalAbsorbOverlay:SetAllPoints(playerButton.totalAbsorb)
+  playerButton.myHealPrediction = CreatePredictionBar(1, 8 / 255, 93 / 255, 72 / 255)
+  playerButton.otherHealPrediction = CreatePredictionBar(1, 11 / 255, 53 / 255, 43 / 255)
+  playerButton.totalAbsorb = CreatePredictionBar(2, 1, 1, 1)
+  playerButton.totalAbsorb:SetStatusBarTexture("Interface\\RaidFrame\\Shield-Fill")
+
+  playerButton.totalAbsorbOverlay = playerButton.healthBar:CreateTexture(nil, "ARTWORK", nil, 4)
+  playerButton.totalAbsorbOverlay:SetTexture("Interface\\RaidFrame\\Shield-Overlay", true, true)
+  playerButton.totalAbsorbOverlay.tileSize = 20
+  playerButton.totalAbsorbOverlay:SetAllPoints(playerButton.totalAbsorb:GetStatusBarTexture())
+
+  playerButton.myHealAbsorb = CreatePredictionBar(2, 0.7, 0.0, 0.0, 0.7)
+  playerButton.myHealAbsorb:SetStatusBarTexture("Interface\\RaidFrame\\Absorb-Fill")
+  playerButton.myHealAbsorb:SetReverseFill(true)
 
   playerButton.overAbsorbGlow = playerButton.healthBar:CreateTexture(nil, "ARTWORK", nil, 2)
   playerButton.overAbsorbGlow:SetTexture("Interface\\RaidFrame\\Shield-Overshield")
@@ -236,81 +217,98 @@ function healthBar:AttachToPlayerButton(playerButton)
   playerButton.overHealAbsorbGlow:SetWidth(16)
   playerButton.overHealAbsorbGlow:Hide()
 
+  playerButton.myHealAbsorbLeftShadow = playerButton.healthBar:CreateTexture(nil, "ARTWORK", nil, 3)
+  playerButton.myHealAbsorbLeftShadow:ClearAllPoints()
+  playerButton.myHealAbsorbRightShadow = playerButton.healthBar:CreateTexture(nil, "ARTWORK", nil, 3)
+  playerButton.myHealAbsorbRightShadow:ClearAllPoints()
+
   playerButton.healthBar.Background = playerButton.healthBar:CreateTexture(nil, "BACKGROUND", nil, 2)
   playerButton.healthBar.Background:SetAllPoints()
   playerButton.healthBar.Background:SetTexture("Interface/Buttons/WHITE8X8")
 
   function playerButton.healthBar:UpdateHealth(unitID, health, healthMissing, healthPercent, maxHealth)
-    -- Safety for nil values (can happen with secret units or delayed rosters)
-    -- Safety: Fetch live health if arguments are missing (e.g. triggered by Absorb event)
+    -- Fetch live health if arguments are missing
     if not health and unitID then
       health = UnitHealth(unitID)
-    end
-    if not healthMissing and unitID then
-      healthMissing = UnitHealthMissing(unitID)
-    end
-    if not healthPercent and unitID then
-      healthPercent = UnitHealthPercent(unitID, true, CurveConstants.ScaleTo100)
     end
     if not maxHealth and unitID then
       maxHealth = UnitHealthMax(unitID)
     end
 
-    health = health or 0
-    healthMissing = healthMissing or 0
-    healthPercent = healthPercent or 0
-    maxHealth = maxHealth or 1
-
-    -- If we have marked this player as dead manually, force health to 0 and ignore update
+    -- Dead: force health to 0, hide prediction
     if playerButton.isDead then
-      self:SetMinMaxValues(0, maxHealth)
+      self:SetMinMaxValues(0, maxHealth or 1)
       self:SetValue(0)
-      if playerButton.myHealPrediction then
-        playerButton.myHealPrediction:Hide()
-      end
+      playerButton.myHealPrediction:Hide()
+      playerButton.otherHealPrediction:Hide()
+      playerButton.totalAbsorb:Hide()
+      playerButton.totalAbsorbOverlay:Hide()
+      playerButton.overAbsorbGlow:Hide()
+      playerButton.myHealAbsorb:Hide()
+      playerButton.overHealAbsorbGlow:Hide()
       return
     end
 
     self:SetMinMaxValues(0, maxHealth)
     self:SetValue(health)
 
-    -- Custom Secure Prediction Update
-    if unitID and playerButton.myHealPrediction then
-      local myIncomingHeal = 0
-      if UnitGetIncomingHeals then
-        local okH, val = pcall(UnitGetIncomingHeals, unitID, "player")
-        if okH and type(val) == "number" then
-          -- Validate it's not a secret impersonator (Restricted Number)
-          local okMath = pcall(function()
-            return val + 0
-          end)
-          if okMath then
-            myIncomingHeal = val
-          end
-        end
-      end
+    local calc = playerButton.healPredCalc
+    if unitID and calc and UnitGetDetailedHealPrediction then
+      UnitGetDetailedHealPrediction(unitID, "player", calc)
 
-      if myIncomingHeal > 0 then
-        playerButton.myHealPrediction:Show()
-        playerButton.myHealPrediction:SetMinMaxValues(0, maxHealth)
-        playerButton.myHealPrediction:SetValue(myIncomingHeal)
-        playerButton.myHealPrediction:SetWidth(self:GetWidth()) -- Allow it to scale up to full width
+      local max = calc:GetMaximumHealth()
+      local mainTex = self:GetStatusBarTexture()
+      local barWidth = self:GetWidth()
 
-        -- Anchor to the RIGHT edge of the current Health texture
-        playerButton.myHealPrediction:ClearAllPoints()
-        local mainTex = self:GetStatusBarTexture()
-        if mainTex then
-          playerButton.myHealPrediction:SetPoint("TOPLEFT", mainTex, "TOPRIGHT", 0, 0)
-          playerButton.myHealPrediction:SetPoint("BOTTOMLEFT", mainTex, "BOTTOMRIGHT", 0, 0)
-        else
-          -- Fallback if texture is missing (health=0)
-          playerButton.myHealPrediction:SetPoint("TOPLEFT", self, "TOPLEFT", 0, 0)
-          playerButton.myHealPrediction:SetPoint("BOTTOMLEFT", self, "BOTTOMLEFT", 0, 0)
-        end
-      else
-        playerButton.myHealPrediction:Hide()
-      end
-      -- Note: Skipping CompactUnitFrame_UpdateHealPrediction to avoid Secret Value crash
+      local allHeal, playerHeal, otherHeal, healClamped = calc:GetIncomingHeals()
+      playerButton.myHealPrediction:ClearAllPoints()
+      playerButton.myHealPrediction:SetPoint("TOPLEFT", mainTex, "TOPRIGHT", 0, 0)
+      playerButton.myHealPrediction:SetPoint("BOTTOMLEFT", mainTex, "BOTTOMRIGHT", 0, 0)
+      playerButton.myHealPrediction:SetWidth(barWidth)
+      playerButton.myHealPrediction:SetMinMaxValues(0, max)
+      playerButton.myHealPrediction:SetValue(playerHeal)
+      playerButton.myHealPrediction:Show()
+
+      local prevTex = playerButton.myHealPrediction:GetStatusBarTexture()
+      playerButton.otherHealPrediction:ClearAllPoints()
+      playerButton.otherHealPrediction:SetPoint("TOPLEFT", prevTex, "TOPRIGHT", 0, 0)
+      playerButton.otherHealPrediction:SetPoint("BOTTOMLEFT", prevTex, "BOTTOMRIGHT", 0, 0)
+      playerButton.otherHealPrediction:SetWidth(barWidth)
+      playerButton.otherHealPrediction:SetMinMaxValues(0, max)
+      playerButton.otherHealPrediction:SetValue(otherHeal)
+      playerButton.otherHealPrediction:Show()
+
+      local damageAbsorbAmount, damageAbsorbClamped = calc:GetDamageAbsorbs()
+      local prevAbsorbTex = playerButton.otherHealPrediction:GetStatusBarTexture()
+      playerButton.totalAbsorb:ClearAllPoints()
+      playerButton.totalAbsorb:SetPoint("TOPLEFT", prevAbsorbTex, "TOPRIGHT", 0, 0)
+      playerButton.totalAbsorb:SetPoint("BOTTOMLEFT", prevAbsorbTex, "BOTTOMRIGHT", 0, 0)
+      playerButton.totalAbsorb:SetWidth(barWidth)
+      playerButton.totalAbsorb:SetMinMaxValues(0, max)
+      playerButton.totalAbsorb:SetValue(damageAbsorbAmount)
+      playerButton.totalAbsorb:Show()
+      playerButton.totalAbsorbOverlay:Show()
+
+      playerButton.overAbsorbGlow:SetAlphaFromBoolean(damageAbsorbClamped, 1, 0)
+
+      local healAbsorbAmount, healAbsorbClamped = calc:GetHealAbsorbs()
+      playerButton.myHealAbsorb:ClearAllPoints()
+      playerButton.myHealAbsorb:SetPoint("TOPRIGHT", mainTex, "TOPRIGHT", 0, 0)
+      playerButton.myHealAbsorb:SetPoint("BOTTOMRIGHT", mainTex, "BOTTOMRIGHT", 0, 0)
+      playerButton.myHealAbsorb:SetWidth(barWidth)
+      playerButton.myHealAbsorb:SetMinMaxValues(0, max)
+      playerButton.myHealAbsorb:SetValue(healAbsorbAmount)
+      playerButton.myHealAbsorb:Show()
+
+      playerButton.overHealAbsorbGlow:SetAlphaFromBoolean(healAbsorbClamped, 1, 0)
+    else
+      playerButton.myHealPrediction:Hide()
+      playerButton.otherHealPrediction:Hide()
+      playerButton.totalAbsorb:Hide()
+      playerButton.totalAbsorbOverlay:Hide()
+      playerButton.overAbsorbGlow:Hide()
+      playerButton.myHealAbsorb:Hide()
+      playerButton.overHealAbsorbGlow:Hide()
     end
   end
 

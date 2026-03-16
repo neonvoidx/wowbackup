@@ -118,12 +118,9 @@ local function getHearthstoneIcon()
 	if C_Item and C_Item.GetItemIconByID then
 		hearthstoneIcon = C_Item.GetItemIconByID(HEARTHSTONE_ITEM_ID)
 	end
-	if not hearthstoneIcon and GetItemInfoInstant then
-		local icon = select(5, GetItemInfoInstant(HEARTHSTONE_ITEM_ID))
+	if not hearthstoneIcon and C_Item and C_Item.GetItemInfoInstant then
+		local icon = select(5, C_Item.GetItemInfoInstant(HEARTHSTONE_ITEM_ID))
 		if icon then hearthstoneIcon = icon end
-	end
-	if not hearthstoneIcon and GetItemIcon then
-		hearthstoneIcon = GetItemIcon(HEARTHSTONE_ITEM_ID)
 	end
 	if not hearthstoneIcon then hearthstoneIcon = DEFAULT_HEARTHSTONE_ICON end
 	return hearthstoneIcon

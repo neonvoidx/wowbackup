@@ -122,8 +122,18 @@ function addon.MythicPlus.functions.InitDB()
 	init("teleportsWorldMapEnabled", false)
 	-- Also show the classic current season list in the World Map panel
 	init("teleportsWorldMapShowSeason", false)
-	-- "random" keeps the legacy behavior; otherwise stores a hearthstone item/toy ID as string.
-	init("teleportsPreferredHearthstone", "random")
+	-- Empty selection keeps the legacy behavior; otherwise stores selected hearthstone item/toy IDs.
+	init("teleportsPreferredHearthstone", {})
+	if type(addon.db["teleportsPreferredHearthstone"]) ~= "table" then
+		local migrated = {}
+		local legacy = addon.db["teleportsPreferredHearthstone"]
+		if type(legacy) == "number" then
+			migrated[tostring(legacy)] = true
+		elseif type(legacy) == "string" and legacy ~= "" and legacy ~= "random" and legacy ~= "0" then
+			migrated[legacy] = true
+		end
+		addon.db["teleportsPreferredHearthstone"] = migrated
+	end
 	-- Favorites override is now always active in code
 	init("teleportFrameLocked", true)
 	init("teleportFrameData", {})
@@ -506,6 +516,7 @@ addon.MythicPlus.variables.portalCompendium = {
 			[1259190] = { text = "SMC", isClassTP = "MAGE", locID = 2393, x = 0.5279, y = 0.6556, zoneID = 2393 }, -- Teleport: Silvermoon City
 			[1259194] = { text = "SMC", isMagePortal = true, locID = 2393, x = 0.5279, y = 0.6556, zoneID = 2393 }, -- Portal: Silvermoon City
 			[1255801] = { text = "ARC", isToy = true, toyID = 253629, isHearthstone = true, icon = 7322718, locID = 2541, x = 0.50215210538362, y = 0.755379994799, zoneID = 2541 }, -- Personal Key to the Arcantina
+			[1247149] = { text = "ENGI", modern = "Quel'Thalas", isToy = true, toyID = 248485, isEngineering = true, zoneID = 2437 }, -- Wormhole Generator: Quel'Thalas
 			-- [1254569] = { text = "MR", mapID = 2433, locID = 2393, x = 0.5719, y = 0.6097, zoneID = 2433 },
 			-- [1254577] = { text = "TBV", mapID = 2500, locID = 2413, x = 0.2635, y = 0.7790, zoneID = 2500 },
 			-- [1254567] = { text = "VSA", mapID = 2572, locID = 2405, x = 0.5145, y = 0.1918, zoneID = 2572 },
@@ -1113,11 +1124,11 @@ local function getHearthstoneName(entry)
 		local toyLink = C_ToyBox.GetToyLink(entry.id)
 		if type(toyLink) == "string" then
 			name = normalizeHearthstoneName(toyLink:match("%[(.-)%]"))
-			if (not name or name == "") and GetItemInfo then name = normalizeHearthstoneName(GetItemInfo(toyLink)) end
+			if (not name or name == "") and C_Item and C_Item.GetItemInfo then name = normalizeHearthstoneName(C_Item.GetItemInfo(toyLink)) end
 		end
 	end
 	if (not name or name == "") and C_Item and C_Item.GetItemNameByID then name = normalizeHearthstoneName(C_Item.GetItemNameByID(entry.id)) end
-	if (not name or name == "") and GetItemInfo then name = normalizeHearthstoneName(GetItemInfo(entry.id)) end
+	if (not name or name == "") and C_Item and C_Item.GetItemInfo then name = normalizeHearthstoneName(C_Item.GetItemInfo(entry.id)) end
 	if (not name or name == "") and C_Item and C_Item.GetItemInfo then
 		local info = C_Item.GetItemInfo(entry.id)
 		if type(info) == "table" then
@@ -1134,55 +1145,80 @@ local function getHearthstoneName(entry)
 end
 
 function addon.MythicPlus.functions.GetHearthstoneDropdownOptions(forceRefresh)
+	local randomLabel = L["teleportsPreferredHearthstoneRandom"] or "All owned Hearthstones"
+	local list, order = { random = randomLabel }, { "random" }
+	local options = addon.MythicPlus.functions.GetHearthstoneSelectionOptions(forceRefresh)
+	for _, entry in ipairs(options) do
+		list[entry.value] = entry.text
+		table.insert(order, entry.value)
+	end
+	return list, order
+end
+
+function addon.MythicPlus.functions.GetHearthstoneSelectionOptions(forceRefresh)
 	if forceRefresh or #availableHearthstones == 0 then setAvailableHearthstone() end
 
-	local randomLabel = L["teleportsPreferredHearthstoneRandom"] or "Random (owned Hearthstones)"
-	local list, order = { random = randomLabel }, { "random" }
 	local seen = {}
 	local entries = {}
-
 	for _, entry in ipairs(availableHearthstones) do
 		local key = tostring(entry.id)
 		if not seen[key] then
 			seen[key] = true
 			table.insert(entries, {
-				key = key,
-				name = getHearthstoneName(entry),
+				value = key,
+				text = getHearthstoneName(entry),
 			})
 		end
 	end
 
 	table.sort(entries, function(a, b)
-		local aName = string.lower(a.name or "")
-		local bName = string.lower(b.name or "")
-		if aName == bName then return a.key < b.key end
+		local aName = string.lower(a.text or "")
+		local bName = string.lower(b.text or "")
+		if aName == bName then return a.value < b.value end
 		return aName < bName
 	end)
 
-	for _, entry in ipairs(entries) do
-		list[entry.key] = entry.name
-		table.insert(order, entry.key)
-	end
-
-	return list, order
+	return entries
 end
 
-local function getPreferredHearthstoneID()
-	local selected = addon.db and addon.db["teleportsPreferredHearthstone"]
-	if selected == nil or selected == "" then return nil end
-	if selected == "random" or selected == "0" then return nil end
-	return tonumber(selected) or selected
+local function getPreferredHearthstoneSelection()
+	local selection = addon.db and addon.db["teleportsPreferredHearthstone"]
+	local normalized = {}
+
+	if type(selection) == "table" then
+		for key, value in pairs(selection) do
+			if value then normalized[tostring(key)] = true end
+		end
+		return normalized
+	end
+
+	if type(selection) == "number" then
+		normalized[tostring(selection)] = true
+	elseif type(selection) == "string" and selection ~= "" and selection ~= "random" and selection ~= "0" then
+		normalized[selection] = true
+	end
+
+	return normalized
 end
 
 local function selectPreferredOrRandomHearthstone()
-	local preferredID = getPreferredHearthstoneID()
-	if preferredID ~= nil then
+	local preferredSelection = getPreferredHearthstoneSelection()
+	local preferredHearthstones = {}
+
+	if next(preferredSelection) ~= nil then
+		local seen = {}
 		for _, entry in ipairs(availableHearthstones) do
-			if entry.id == preferredID then return entry end
+			local key = tostring(entry.id)
+			if preferredSelection[key] and not seen[key] then
+				seen[key] = true
+				table.insert(preferredHearthstones, entry)
+			end
 		end
 	end
-	local randomIndex = math.random(1, #availableHearthstones)
-	return availableHearthstones[randomIndex]
+
+	local pool = (#preferredHearthstones > 0) and preferredHearthstones or availableHearthstones
+	local randomIndex = math.random(1, #pool)
+	return pool[randomIndex]
 end
 
 function addon.MythicPlus.functions.setRandomHearthstone(forceRefresh)
@@ -1262,7 +1298,7 @@ addon.MythicPlus.variables.collapseFrames = {
 	{ frame = WorldQuestObjectiveTracker, name = "WorldQuestObjectiveTracker" },
 }
 
-addon.MythicPlus.variables.challengeMapID = {
+local challengeMapIDDefaults = {
 	[560] = "MC",
 	[559] = "NPX",
 	[558] = "MT",
@@ -1335,3 +1371,6 @@ addon.MythicPlus.variables.challengeMapID = {
 	[456] = "TOTT",
 	[438] = "VP",
 }
+
+addon.MythicPlus.variables.challengeMapID = addon.functions and addon.functions.BuildChallengeMapLabelTable and addon.functions.BuildChallengeMapLabelTable(challengeMapIDDefaults)
+	or challengeMapIDDefaults

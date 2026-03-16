@@ -77,6 +77,9 @@ L:SetDefaultStrings({
 	["Pixel Glow"] = "Pixel Glow",
 	["Proc Glow"] = "Proc Glow",
 	["Reset"] = "Reset",
+	["Mini addon, massive awareness."] = "Mini addon, massive awareness.",
+	["CC Native Order"] = "CC Native Order",
+	["Instead of showing the latest CC applied (MiniCC behaviour), use Blizzard's default CC priority which usually shows the first CC applied (with some exceptions)."] = "Instead of showing the latest CC applied (MiniCC behaviour), use Blizzard's default CC priority which usually shows the first CC applied (with some exceptions).",
 	["The others seem to use a non-trivial amount of CPU."] = "The others seem to use a non-trivial amount of CPU.",
 	["The Proc Glow uses the least CPU."] = "The Proc Glow uses the least CPU.",
 
@@ -208,6 +211,8 @@ L:SetDefaultStrings({
 	[" - shows markers above your team mates."] = " - shows markers above your team mates.",
 	[" - shows overshields on frames and nameplates."] = " - shows overshields on frames and nameplates.",
 	[" - shows your debuffs on enemy arena frames."] = " - shows your debuffs on enemy arena frames.",
+	[" - customize the cooldown timers."] = " - customize the cooldown timers.",
+	[" - powerful icon skinning tool."] = " - powerful icon skinning tool.",
 	["MiniArenaDebuffs"] = "MiniArenaDebuffs",
 	["MiniCombatNotifier"] = "MiniCombatNotifier",
 	["MiniKillingBlow"] = "MiniKillingBlow",
@@ -220,6 +225,7 @@ L:SetDefaultStrings({
 	["Other Mini Addons"] = "Other Mini Addons",
 	["Other mini addons to enhance your PvP experience:"] = "Other mini addons to enhance your PvP experience:",
 	["Other Mini Addons_Short"] = "Other Addons",
+	["Miscellaneous_Short"] = "Misc",
 
 	-- What's New
 	[" - Added CC icons on pet party/raid frames (disabled by default)."] = " - Added CC icons on pet party/raid frames (disabled by default).",

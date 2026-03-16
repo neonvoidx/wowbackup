@@ -16,6 +16,7 @@ VER 3 010000000000001E " " "INV_MISC_QUESTIONMARK"
 /stopmacro [channeling:Spinning Crane Kick]
 /stopmacro [channeling:Celestial Conduit]
 /cast Tiger Palm
+/petattack
 END
 VER 3 0100000000000028 " " "134400"
 #showtooltip
@@ -24,7 +25,6 @@ END
 VER 3 0100000000000018 " " "134400"
 #showtooltip
 /cast [@mouseover,help,exists] Tiger's Lust; [@player] Tiger's Lust;
-/use Perpetual Purple Firework
 END
 VER 3 0100000000000015 " " "629534"
 #showtooltip Paralysis
@@ -94,8 +94,12 @@ VER 3 0100000000000041 " " "134400"
 END
 VER 3 0100000000000042 " " "134400"
 #showtooltip Zenith
-/use Saltwater Potion
 /cast Zenith
+/use Saltwater Potion
+/cast Blood Fury
+/cast Beserking
+/use Perpetual Purple Firework
+/use Winning Hand
 END
 VER 3 0100000000000045 " " "134400"
 #showtooltip
@@ -112,11 +116,25 @@ VER 3 0100000000000049 " " "INV_Misc_QuestionMark"
 /use Fire-Eater's Vial
 /cast Spinning Crane Kick
 END
+VER 3 010000000000004A " " "INV_Misc_QuestionMark"
+#showtooltip Disable
+/use [@target,exists] Disable
+END
 VER 3 010000000000003D "Black Ox" "134400"
 #showtooltip Provoke
 /targetexact Black Ox Statue
 /cast Provoke
 /targetlasttarget
+END
+VER 3 010000000000004B "Cancel" "Achievement_BG_interruptX_flagcapture_attempts_1game."
+/cancelaura Zen Flight
+/cancelaura Blessing of Protection
+/cancelaura Blessing of Freedom
+/cancelaura Slow Fall
+/cancelaura Flying Serpent Kick
+/cancelaura Parachute
+/dismount
+/stopcasting
 END
 VER 3 0100000000000047 "Dismiss" "615340"
 /run if not UnitAffectingCombat("player")then for i=1,4 do n="t"..i CreateFrame("Button",n,UIParent,"SecureUnitButtonTemplate")_G[n]:SetAttribute("type", "destroytotem")_G[n]:SetAttribute("totem-slot",i)end end
@@ -124,8 +142,4 @@ VER 3 0100000000000047 "Dismiss" "615340"
 /click t2
 /click t3
 /click t4
-END
-VER 3 0100000000000048 "Teleport Home" "7252953"
-#plumber:home
-/click PLMR_HOME1
 END

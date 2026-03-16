@@ -11,6 +11,8 @@ local DB_SHOW_PARTY = "classBuffReminderShowParty"
 local DB_SHOW_RAID = "classBuffReminderShowRaid"
 local DB_SHOW_SOLO = "classBuffReminderShowSolo"
 local DB_GLOW = "classBuffReminderGlow"
+local DB_GLOW_STYLE = "classBuffReminderGlowStyle"
+local DB_GLOW_INSET = "classBuffReminderGlowInset"
 local DB_SOUND_ON_MISSING = "classBuffReminderSoundOnMissing"
 local DB_MISSING_SOUND = "classBuffReminderMissingSound"
 local DB_DISPLAY_MODE = "classBuffReminderDisplayMode"
@@ -27,6 +29,9 @@ local DB_XY_TEXT_OUTLINE = "classBuffReminderXYTextOutline"
 local DB_XY_TEXT_COLOR = "classBuffReminderXYTextColor"
 local DB_XY_TEXT_OFFSET_X = "classBuffReminderXYTextOffsetX"
 local DB_XY_TEXT_OFFSET_Y = "classBuffReminderXYTextOffsetY"
+local LEGACY_DB_SOUND_DEBUG_TRACE = "classBuffReminderSoundDebugTrace"
+local LEGACY_DB_SHOW_ICON = "classBuffReminderShowIcon"
+local LEGACY_DB_ONLY_WHEN_MISSING = "classBuffReminderOnlyWhenMissing"
 
 local defaults = (Reminder and Reminder.defaults)
 	or {
@@ -35,6 +40,8 @@ local defaults = (Reminder and Reminder.defaults)
 		showRaid = true,
 		showSolo = false,
 		glow = true,
+		glowStyle = "MARCHING_ANTS",
+		glowInset = 0,
 		soundOnMissing = false,
 		missingSound = "",
 		displayMode = "ICON_ONLY",
@@ -52,27 +59,11 @@ local defaults = (Reminder and Reminder.defaults)
 		xyTextOffsetX = 0,
 		xyTextOffsetY = 0,
 	}
+if defaults.glowStyle == nil then defaults.glowStyle = "MARCHING_ANTS" end
+if defaults.glowInset == nil then defaults.glowInset = 0 end
 
 local function refreshReminder()
 	if Reminder and Reminder.OnSettingChanged then Reminder:OnSettingChanged() end
-end
-
-local function openFlaskSettings()
-	if addon.functions and addon.functions.OpenFlaskMacroSettings then
-		addon.functions.OpenFlaskMacroSettings()
-		return
-	end
-
-	if not (Settings and Settings.OpenToCategory) then return end
-	local gameplayCategory = addon.SettingsLayout and addon.SettingsLayout.rootGAMEPLAY
-	if not gameplayCategory then return end
-
-	if InCombatLockdown and InCombatLockdown() then
-		if UIErrorsFrame and ERR_NOT_IN_COMBAT then UIErrorsFrame:AddMessage(ERR_NOT_IN_COMBAT, 1, 0, 0) end
-		return
-	end
-
-	Settings.OpenToCategory(gameplayCategory:GetID(), "Flask Macro")
 end
 
 local expandable = addon.functions.SettingsCreateExpandableSection(cat, {
@@ -100,40 +91,6 @@ addon.functions.SettingsCreateCheckbox(cat, {
 	parentSection = expandable,
 })
 
-addon.functions.SettingsCreateCheckbox(cat, {
-	var = DB_TRACK_FLASKS,
-	text = L["ClassBuffReminderTrackFlasks"] or "Track missing flask buff",
-	desc = L["ClassBuffReminderTrackFlasksDesc"] or "Shows a flask reminder only when a matching flask is available in your bags.",
-	func = function(value)
-		addon.db[DB_TRACK_FLASKS] = value == true
-		refreshReminder()
-	end,
-	parentSection = expandable,
-})
-
-addon.functions.SettingsCreateCheckbox(cat, {
-	var = DB_TRACK_FLASKS_INSTANCE_ONLY,
-	text = L["ClassBuffReminderTrackFlasksInstanceOnly"] or "Only in dungeons/raids",
-	desc = L["ClassBuffReminderTrackFlasksInstanceOnlyDesc"] or "Limits flask reminder checks to dungeon and raid instances.",
-	func = function(value)
-		addon.db[DB_TRACK_FLASKS_INSTANCE_ONLY] = value == true
-		refreshReminder()
-	end,
-	parentSection = expandable,
-})
-
-addon.functions.SettingsCreateText(cat, L["ClassBuffReminderFlaskSharedHint"] or "Flask preferences are shared with Flask Macro (Gameplay -> Macros & Consumables).", {
-	parentSection = expandable,
-})
-
-addon.functions.SettingsCreateButton(cat, {
-	var = "classBuffReminderOpenFlaskSettings",
-	text = L["ClassBuffReminderOpenFlaskSettings"] or "Open Flask settings",
-	desc = L["ClassBuffReminderOpenFlaskSettingsDesc"] or "Jumps to Gameplay -> Macros & Consumables and focuses Flask Macro settings.",
-	func = openFlaskSettings,
-	parentSection = expandable,
-})
-
 function addon.functions.initClassBuffReminder()
 	if not addon.functions or not addon.functions.InitDBValue then return end
 	local init = addon.functions.InitDBValue
@@ -143,6 +100,8 @@ function addon.functions.initClassBuffReminder()
 	init(DB_SHOW_RAID, defaults.showRaid)
 	init(DB_SHOW_SOLO, defaults.showSolo)
 	init(DB_GLOW, defaults.glow)
+	init(DB_GLOW_STYLE, defaults.glowStyle)
+	init(DB_GLOW_INSET, defaults.glowInset)
 	init(DB_SOUND_ON_MISSING, defaults.soundOnMissing)
 	init(DB_MISSING_SOUND, defaults.missingSound)
 	init(DB_DISPLAY_MODE, defaults.displayMode)
@@ -159,6 +118,9 @@ function addon.functions.initClassBuffReminder()
 	init(DB_XY_TEXT_COLOR, defaults.xyTextColor)
 	init(DB_XY_TEXT_OFFSET_X, defaults.xyTextOffsetX)
 	init(DB_XY_TEXT_OFFSET_Y, defaults.xyTextOffsetY)
+	if addon.db then addon.db[LEGACY_DB_SOUND_DEBUG_TRACE] = nil end
+	if addon.db then addon.db[LEGACY_DB_SHOW_ICON] = nil end
+	if addon.db then addon.db[LEGACY_DB_ONLY_WHEN_MISSING] = nil end
 
 	refreshReminder()
 end

@@ -1142,9 +1142,6 @@ function ContainerActions:ShouldInspectTooltip(itemID)
 	if C_Item and C_Item.GetItemInfoInstant then
 		_, _, _, _, _, _, _, classID, subclassID = C_Item.GetItemInfoInstant(itemID)
 	end
-	if (not classID or not subclassID) and GetItemInfoInstant then
-		_, _, _, _, _, classID, subclassID = GetItemInfoInstant(itemID)
-	end
 
 	if not classID then return true end
 
@@ -1173,7 +1170,7 @@ function ContainerActions:IsTooltipOpenable(bag, slot, info)
 	if not tooltip or not tooltip.lines then return false end
 	for _, line in ipairs(tooltip.lines) do
 		if line and line.leftText then
-			if line.leftText == ITEM_COSMETIC_LEARN or line.leftText == ITEM_OPENABLE then
+			if line.leftText == ITEM_OPENABLE then
 				self.openableCache[itemID] = true
 				return true
 			end
@@ -1191,9 +1188,6 @@ function ContainerActions:IsCollectibleMount(info)
 	local classID, subclassID
 	if C_Item and C_Item.GetItemInfoInstant then
 		local _, _, _, _, _, classValue, subclassValue = C_Item.GetItemInfoInstant(itemID)
-		classID, subclassID = classValue, subclassValue
-	elseif GetItemInfoInstant then
-		local _, _, _, _, _, _, _, _, _, _, _, classValue, subclassValue = GetItemInfoInstant(itemID)
 		classID, subclassID = classValue, subclassValue
 	end
 	local miscClassID = (ITEM_CLASS and ITEM_CLASS.Miscellaneous) or (type(LE_ITEM_CLASS_MISCELLANEOUS) == "number" and LE_ITEM_CLASS_MISCELLANEOUS) or nil

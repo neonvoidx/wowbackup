@@ -77,6 +77,9 @@ L:SetStrings({
 	["Import Profile"] = "导入配置",
 	["Miscellaneous"] = "杂项",
 	["Reset"] = "重置",
+	["Mini addon, massive awareness."] = "小插件，超凡感知。",
+	["CC Native Order"] = "CC原生顺序",
+	["Instead of showing the latest CC applied (MiniCC behaviour), use Blizzard's default CC priority which usually shows the first CC applied (with some exceptions)."] = "不显示最新应用的控制效果（MiniCC行为），而是使用暴雪默认的CC优先级，通常显示最先应用的控制效果（有少数例外）。",
 	["The others seem to use a non-trivial amount of CPU."] = "其他的似乎使用了大量的CPU。",
 	["The Proc Glow uses the least CPU."] = "触发发光使用最少的CPU。",
 
@@ -176,7 +179,7 @@ L:SetStrings({
 	["Nameplates"] = "姓名板",
 	["Nameplates_Short"] = "姓名板",
 	["Scale with Nameplate"] = "Scale with Nameplate",
-	["Icons scale along with the nameplate scale. Use this option if you have a different size for the target nameplate (e.g. in BBF's settings)."] = "Icons scale along with the nameplate scale. Use this option if you have a different size for the target nameplate (e.g. in BBF's settings).",
+	["Icons scale along with the nameplate scale. Use this option if you have a different size for the target nameplate (e.g. in BBF's settings)."] = "图标随姓名板缩放一起缩放。如果你的目标姓名板有不同的大小（例如在BBF的设置中），请使用此选项。",
 	["Shows CC and important spells on nameplates (works with nameplate addons e.g. BBP, Platynator, and Plater)."] = "在姓名板上显示控制和重要法术（与姓名板插件一起工作，例如BBP、Platynator和Plater）。",
 	["Spell colours"] = "法术颜色",
 
@@ -209,6 +212,8 @@ L:SetStrings({
 	[" - shows markers above your team mates."] = " - 在队友上方显示标记。",
 	[" - shows overshields on frames and nameplates."] = " - 在框架和姓名板上显示超量护盾。",
 	[" - shows your debuffs on enemy arena frames."] = " - 在敌方竞技场框架上显示你的负面效果。",
+	[" - customize the cooldown timers."] = " - 自定义冷却计时器。",
+	[" - powerful icon skinning tool."] = " - 强大的图标美化工具。",
 	["MiniArenaDebuffs"] = "MiniArenaDebuffs",
 	["MiniCombatNotifier"] = "MiniCombatNotifier",
 	["MiniKillingBlow"] = "MiniKillingBlow",
@@ -221,6 +226,7 @@ L:SetStrings({
 	["Other Mini Addons"] = "其他Mini插件",
 	["Other mini addons to enhance your PvP experience:"] = "增强您PvP体验的其他mini插件：",
 	["Other Mini Addons_Short"] = "其他",
+	["Miscellaneous_Short"] = "杂项",
 
 	-- What's New
 	[" - Added CC icons on pet party/raid frames (disabled by default)."] = " - 为队伍/团队的宠物框架新增了CC图标（默认禁用）。",

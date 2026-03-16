@@ -778,7 +778,7 @@ data = {
 	{
 		var = "autoChooseDelvePower",
 		text = L["autoChooseDelvePower"],
-		func = function(self, _, value) addon.db["autoChooseDelvePower"] = value end,
+		func = function(value) addon.db["autoChooseDelvePower"] = value and true or false end,
 		parentSection = sectionDungeon,
 	},
 }

@@ -659,7 +659,7 @@ local function BuildAceWindow()
 		outer:SetLayout("List")
 		container:AddChild(outer)
 		local tip = AceGUI:Create("Label")
-		tip:SetText("Shift+Click an item link or use the cursor button to inspect via GetItemInfo().")
+		tip:SetText("Shift+Click an item link or use the cursor button to inspect via C_Item.GetItemInfo().")
 		tip:SetFullWidth(true)
 		outer:AddChild(tip)
 		local pick = AceGUI:Create("Button")
@@ -965,7 +965,7 @@ eventFrame:RegisterEvent("ITEM_PUSH")
 eventFrame:SetScript("OnEvent", onEvent)
 
 -- Handling Shift+Click to add item link to the EditBox and clear previous item
-hooksecurefunc("ChatEdit_InsertLink", function(itemLink)
+hooksecurefunc(ChatFrameUtil, "InsertLink", function(itemLink)
 	local shown = (addon.Query.ui and addon.Query.ui.window and addon.Query.ui.window.frame and addon.Query.ui.window.frame:IsShown())
 	if itemLink and shown then
 		if addon.Query.ui and addon.Query.ui.activeGroup == "inspector" and addon.Query.showItem then

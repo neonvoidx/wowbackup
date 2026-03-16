@@ -13,6 +13,7 @@ local UF = addon.Aura.UF
 local L = LibStub("AceLocale-3.0"):GetLocale("EnhanceQoL_Aura")
 local GF = UF.GroupFrames
 local HB = UF.GroupFramesHealerBuffs
+local UFHelper = addon.Aura.UFHelper
 if not (GF and HB) then return end
 
 UF.GroupFramesHealerBuffEditor = UF.GroupFramesHealerBuffEditor or {}
@@ -889,6 +890,36 @@ local function buildStyleOptionsForMenu()
 	return list
 end
 
+local function buildBorderOptionsForMenu()
+	local list = {}
+	local seen = {}
+	local function add(value, label)
+		local key = tostring(value or ""):lower()
+		if key == "" or seen[key] then return end
+		seen[key] = true
+		list[#list + 1] = { value = value, label = label }
+	end
+	add("DEFAULT", tr("UFGroupHealerBuffEditorIndicatorBorderTextureDefault", "Default (Border)"))
+	local names = addon.functions and addon.functions.GetLSMMediaNames and addon.functions.GetLSMMediaNames("border") or EMPTY
+	local hash = addon.functions and addon.functions.GetLSMMediaHash and addon.functions.GetLSMMediaHash("border") or EMPTY
+	for i = 1, #names do
+		local name = names[i]
+		local path = hash[name]
+		if type(path) == "string" and path ~= "" then add(name, tostring(name)) end
+	end
+	sort(list, function(a, b)
+		local av = tostring(a and a.value or "")
+		local bv = tostring(b and b.value or "")
+		if av == "DEFAULT" then return true end
+		if bv == "DEFAULT" then return false end
+		local al = tostring(a and a.label or av)
+		local bl = tostring(b and b.label or bv)
+		if al == bl then return av < bv end
+		return al < bl
+	end)
+	return list
+end
+
 local function getGroupLabel(placement, groupId)
 	if not placement or not groupId then return tostring(groupId or "") end
 	local group = placement.groupsById and placement.groupsById[groupId]
@@ -1347,8 +1378,11 @@ function Editor:EnsureFrame()
 
 	unitFrame.SampleBars = {}
 	for i = 1, 24 do
-		local bar = unitFrame:CreateTexture(nil, "ARTWORK", nil, 3)
-		bar:SetColorTexture(0, 0, 0, 0)
+		local bar = CreateFrame("StatusBar", nil, unitFrame)
+		bar:EnableMouse(false)
+		bar:SetStatusBarTexture("Interface\\Buttons\\WHITE8x8")
+		bar:SetMinMaxValues(0, 1)
+		bar:SetValue(1)
 		bar:Hide()
 		unitFrame.SampleBars[i] = bar
 	end
@@ -1473,17 +1507,37 @@ function Editor:EnsureFrame()
 	controls.ThicknessLabel, controls.Thickness, controls.ThicknessValue = createSettingSlider(controls.YLabel, tr("UFGroupHealerBuffEditorBarThickness", "Bar Thickness"), 1, 64, 1)
 	controls.InsetLabel, controls.Inset, controls.InsetValue = createSettingSlider(controls.ThicknessLabel, tr("UFGroupHealerBuffEditorInset", "Inset"), 0, 40, 1)
 	controls.BorderSizeLabel, controls.BorderSize, controls.BorderSizeValue = createSettingSlider(controls.InsetLabel, tr("UFGroupHealerBuffEditorBorderSize", "Border Size"), 1, 16, 1)
+	controls.IndicatorBorder = createCheck(groupControlParent, tr("UFGroupHealerBuffEditorIndicatorBorderEnabled", "Indicator Border"))
+	controls.IndicatorBorder:SetPoint("TOPLEFT", controls.BorderSizeLabel, "BOTTOMLEFT", -4, -8)
+	controls.IndicatorBorderTextureLabel = groupControlParent:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+	controls.IndicatorBorderTextureLabel:SetPoint("TOPLEFT", controls.IndicatorBorder, "BOTTOMLEFT", 4, -18)
+	controls.IndicatorBorderTextureLabel:SetText(tr("UFGroupHealerBuffEditorIndicatorBorderTexture", "Border Texture"))
+	controls.IndicatorBorderTexture = createDropdown(groupControlParent, 180)
+	controls.IndicatorBorderTexture:SetPoint("TOPLEFT", controls.IndicatorBorderTextureLabel, "TOPRIGHT", 0, 12)
+	controls.IndicatorBorderSizeLabel, controls.IndicatorBorderSize, controls.IndicatorBorderSizeValue =
+		createSettingSlider(controls.IndicatorBorderTextureLabel, tr("UFGroupHealerBuffEditorIndicatorBorderSize", "Border Size"), 1, 24, 1)
+	controls.IndicatorBorderOffsetLabel, controls.IndicatorBorderOffset, controls.IndicatorBorderOffsetValue =
+		createSettingSlider(controls.IndicatorBorderSizeLabel, tr("UFGroupHealerBuffEditorIndicatorBorderOffset", "Border Offset"), -12, 12, 1)
+	controls.IndicatorBorderColorLabel = groupControlParent:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+	controls.IndicatorBorderColorLabel:SetPoint("TOPLEFT", controls.IndicatorBorderOffsetLabel, "BOTTOMLEFT", 0, -22)
+	controls.IndicatorBorderColorLabel:SetText(tr("UFGroupHealerBuffEditorIndicatorBorderColor", "Border Color"))
+	controls.IndicatorBorderColorButton = createColorSwatchButton(groupControlParent, 26)
+	controls.IndicatorBorderColorButton:SetPoint("LEFT", controls.IndicatorBorderColorLabel, "RIGHT", 10, 0)
 
 	controls.ColorLabel = groupControlParent:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-	controls.ColorLabel:SetPoint("TOPLEFT", controls.BorderSizeLabel, "BOTTOMLEFT", 0, -22)
+	controls.ColorLabel:SetPoint("TOPLEFT", controls.IndicatorBorderColorLabel, "BOTTOMLEFT", 0, -22)
 	controls.ColorLabel:SetText(tr("UFGroupHealerBuffEditorColor", "Color"))
 	controls.ColorButton = createColorSwatchButton(groupControlParent, 26)
 	controls.ColorButton:SetPoint("LEFT", controls.ColorLabel, "RIGHT", 10, 0)
 	controls.ColorSwatch = controls.ColorButton.ColorSwatch
 	controls.ColorButton.ColorSwatch = controls.ColorSwatch
 	controls.ColorButton._eqolColorSwatch = controls.ColorSwatch
+	controls.BarDrainAnimation = createCheck(groupControlParent, tr("UFGroupHealerBuffEditorBarDrainAnimation", "Drain Animation (First Match)"))
+	controls.BarDrainAnimation:SetPoint("TOPLEFT", controls.ColorLabel, "BOTTOMLEFT", -4, -8)
+	controls.BarReverseFill = createCheck(groupControlParent, tr("UFGroupHealerBuffEditorBarReverseFill", "Reverse"))
+	controls.BarReverseFill:SetPoint("TOPLEFT", controls.BarDrainAnimation, "BOTTOMLEFT", 0, -4)
 	controls.CooldownSwipe = createCheck(groupControlParent, tr("UFGroupHealerBuffEditorCooldownSwipe", "Cooldown Swipe"))
-	controls.CooldownSwipe:SetPoint("TOPLEFT", controls.ColorLabel, "BOTTOMLEFT", -4, -8)
+	controls.CooldownSwipe:SetPoint("TOPLEFT", controls.BarReverseFill, "BOTTOMLEFT", 0, -4)
 	controls.CooldownEdge = createCheck(groupControlParent, tr("UFGroupHealerBuffEditorCooldownEdge", "Draw Edge"))
 	controls.CooldownEdge:SetPoint("TOPLEFT", controls.CooldownSwipe, "BOTTOMLEFT", 0, -4)
 	controls.CooldownBling = createCheck(groupControlParent, tr("UFGroupHealerBuffEditorCooldownBling", "Draw Bling"))
@@ -1583,17 +1637,42 @@ function Editor:EnsureFrame()
 		placeSlider(controls.ThicknessLabel, controls.Thickness, controls.ThicknessValue)
 		placeSlider(controls.InsetLabel, controls.Inset, controls.InsetValue)
 		placeSlider(controls.BorderSizeLabel, controls.BorderSize, controls.BorderSizeValue)
+		placeCheck(controls.IndicatorBorder, nil, -4, -8)
+		placeDropdown(controls.IndicatorBorderTextureLabel, controls.IndicatorBorderTexture)
+		placeSlider(controls.IndicatorBorderSizeLabel, controls.IndicatorBorderSize, controls.IndicatorBorderSizeValue)
+		placeSlider(controls.IndicatorBorderOffsetLabel, controls.IndicatorBorderOffset, controls.IndicatorBorderOffsetValue)
+		placeColor(controls.IndicatorBorderColorLabel, controls.IndicatorBorderColorButton)
 		placeColor(controls.ColorLabel, controls.ColorButton)
-		local cooldownAnchor = controls.ColorLabel
+		placeCheck(controls.BarDrainAnimation, controls.ColorLabel, -4, -8)
+		placeCheck(controls.BarReverseFill, controls.BarDrainAnimation, 0, -4)
+		local cooldownAnchor = controls.BarReverseFill
 		if not (cooldownAnchor and cooldownAnchor:IsShown()) then
-			if controls.YLabel and controls.YLabel:IsShown() then
-				cooldownAnchor = controls.YLabel
-			elseif controls.XLabel and controls.XLabel:IsShown() then
-				cooldownAnchor = controls.XLabel
-			elseif controls.YOffset and controls.YOffset:IsShown() then
-				cooldownAnchor = controls.YOffset
-			elseif controls.XOffset and controls.XOffset:IsShown() then
-				cooldownAnchor = controls.XOffset
+			cooldownAnchor = controls.BarDrainAnimation
+			if not (cooldownAnchor and cooldownAnchor:IsShown()) then
+				cooldownAnchor = controls.ColorLabel
+				if not (cooldownAnchor and cooldownAnchor:IsShown()) and controls.IndicatorBorderColorLabel and controls.IndicatorBorderColorLabel:IsShown() then
+					cooldownAnchor = controls.IndicatorBorderColorLabel
+				elseif controls.IndicatorBorderColorButton and controls.IndicatorBorderColorButton:IsShown() then
+					cooldownAnchor = controls.IndicatorBorderColorButton
+				elseif controls.IndicatorBorderOffsetLabel and controls.IndicatorBorderOffsetLabel:IsShown() then
+					cooldownAnchor = controls.IndicatorBorderOffsetLabel
+				elseif controls.IndicatorBorderOffset and controls.IndicatorBorderOffset:IsShown() then
+					cooldownAnchor = controls.IndicatorBorderOffset
+				elseif controls.IndicatorBorderSizeLabel and controls.IndicatorBorderSizeLabel:IsShown() then
+					cooldownAnchor = controls.IndicatorBorderSizeLabel
+				elseif controls.IndicatorBorderTextureLabel and controls.IndicatorBorderTextureLabel:IsShown() then
+					cooldownAnchor = controls.IndicatorBorderTextureLabel
+				elseif controls.IndicatorBorder and controls.IndicatorBorder:IsShown() then
+					cooldownAnchor = controls.IndicatorBorder
+				elseif controls.YLabel and controls.YLabel:IsShown() then
+					cooldownAnchor = controls.YLabel
+				elseif controls.XLabel and controls.XLabel:IsShown() then
+					cooldownAnchor = controls.XLabel
+				elseif controls.YOffset and controls.YOffset:IsShown() then
+					cooldownAnchor = controls.YOffset
+				elseif controls.XOffset and controls.XOffset:IsShown() then
+					cooldownAnchor = controls.XOffset
+				end
 			end
 		end
 		placeCheck(controls.CooldownSwipe, cooldownAnchor, -4, -8)
@@ -2203,6 +2282,8 @@ function Editor:EnsureFrame()
 	updateGroupFromSlider("barThickness", controls.Thickness, controls.ThicknessValue, 1, 64, 1)
 	updateGroupFromSlider("inset", controls.Inset, controls.InsetValue, 0, 40, 1)
 	updateGroupFromSlider("borderSize", controls.BorderSize, controls.BorderSizeValue, 1, 16, 1)
+	updateGroupFromSlider("indicatorBorderSize", controls.IndicatorBorderSize, controls.IndicatorBorderSizeValue, 1, 24, 1)
+	updateGroupFromSlider("indicatorBorderOffset", controls.IndicatorBorderOffset, controls.IndicatorBorderOffsetValue, -12, 12, 1)
 
 	controls.GroupName:SetScript("OnEnterPressed", function(self)
 		local group = groupFromSelection()
@@ -2257,6 +2338,35 @@ function Editor:EnsureFrame()
 		Editor:RefreshRuntimeNow()
 	end)
 
+	setDropdown(controls.IndicatorBorderTexture, buildBorderOptionsForMenu(), nil, function(value)
+		local group = groupFromSelection()
+		if not group then return end
+		local texture = tostring(value or "DEFAULT")
+		if texture == "" then texture = "DEFAULT" end
+		group.indicatorBorderTexture = texture
+		Editor:RefreshPreview()
+		Editor:QueueRuntimeRefresh()
+	end)
+
+	controls.IndicatorBorderColorButton:SetScript("OnClick", function(_, mouseButton)
+		local group = groupFromSelection()
+		if not group then return end
+		if mouseButton == "RightButton" then
+			group.indicatorBorderColor = { 0, 0, 0, 0.95 }
+			Editor:RefreshGroupControls()
+			Editor:RefreshPreview()
+			Editor:QueueRuntimeRefresh()
+			return
+		end
+		group.indicatorBorderColor = group.indicatorBorderColor or { 0, 0, 0, 0.95 }
+		showColorPicker(group.indicatorBorderColor, function(r, g, b, a)
+			group.indicatorBorderColor[1], group.indicatorBorderColor[2], group.indicatorBorderColor[3], group.indicatorBorderColor[4] = r, g, b, a
+			Editor:RefreshGroupControls()
+			Editor:RefreshPreview()
+			Editor:QueueRuntimeRefresh()
+		end)
+	end)
+
 	controls.ColorButton:SetScript("OnClick", function(_, mouseButton)
 		if mouseButton == "RightButton" then return end
 		local group = groupFromSelection()
@@ -2268,6 +2378,45 @@ function Editor:EnsureFrame()
 			Editor:RefreshPreview()
 			Editor:QueueRuntimeRefresh()
 		end)
+	end)
+
+	controls.IndicatorBorder:SetScript("OnClick", function(self)
+		if Editor._controlUpdateLock then return end
+		local group = groupFromSelection()
+		if not group then
+			self:SetChecked(false)
+			return
+		end
+		group.indicatorBorderEnabled = self:GetChecked() == true
+		Editor:RefreshGroupControls()
+		Editor:RefreshPreview()
+		Editor:QueueRuntimeRefresh()
+	end)
+
+	controls.BarDrainAnimation:SetScript("OnClick", function(self)
+		if Editor._controlUpdateLock then return end
+		local group = groupFromSelection()
+		if not group then
+			self:SetChecked(false)
+			return
+		end
+		group.barDrainAnimation = self:GetChecked() == true
+		Editor:RefreshGroupControls()
+		Editor:RefreshRuleControls()
+		Editor:RefreshPreview()
+		Editor:QueueRuntimeRefresh()
+	end)
+
+	controls.BarReverseFill:SetScript("OnClick", function(self)
+		if Editor._controlUpdateLock then return end
+		local group = groupFromSelection()
+		if not group then
+			self:SetChecked(false)
+			return
+		end
+		group.barReverseFill = self:GetChecked() == true
+		Editor:RefreshPreview()
+		Editor:QueueRuntimeRefresh()
 	end)
 
 	controls.CooldownSwipe:SetScript("OnClick", function(self)
@@ -2573,6 +2722,7 @@ function Editor:RefreshRuleControls()
 	local showIconRuleMode = selectedGroupStyle == "ICON" or selectedGroupStyle == "SQUARE"
 	local showTintRuleMatch = selectedGroupStyle == "TINT"
 	local showRuleColor = selectedGroupStyle == "SQUARE"
+	local showBarDrainInfo = selectedGroupStyle == "BAR" and selectedGroup and selectedGroup.barDrainAnimation == true
 	local iconModeOptions = HB.ICON_MODE_OPTIONS
 		or {
 			{ value = "ALL", label = tr("UFGroupHealerBuffIconModeAll", "Show All Active Spells") },
@@ -2658,6 +2808,13 @@ function Editor:RefreshRuleControls()
 			controls.RuleInfo:SetText(
 				string.format(tr("UFGroupHealerBuffEditorRuleInfoIcon", "Showing rules for %s. Scope is set per rule (Party/Raid). Priority follows the rule order in this list."), groupLabel)
 			)
+		elseif showBarDrainInfo then
+			controls.RuleInfo:SetText(
+				string.format(
+					tr("UFGroupHealerBuffEditorRuleInfoBarDrain", "Showing rules for %s. Scope is set per rule (Party/Raid). Drain animation follows the first active timed aura in this list."),
+					groupLabel
+				)
+			)
 		else
 			controls.RuleInfo:SetText(string.format(tr("UFGroupHealerBuffEditorRuleInfoDefault", "Showing rules for %s. Scope is set per rule (Party/Raid). Add via +, remove via x."), groupLabel))
 		end
@@ -2693,6 +2850,12 @@ function Editor:RefreshGroupControls()
 		setControlEnabled(controls.ColorButton, enabled and visible)
 	end
 
+	local function setIndicatorBorderColorState(visible, enabled)
+		setControlVisible(controls.IndicatorBorderColorLabel, visible)
+		setControlVisible(controls.IndicatorBorderColorButton, visible)
+		setControlEnabled(controls.IndicatorBorderColorButton, enabled and visible)
+	end
+
 	local function setCheckState(control, visible, enabled, checked)
 		setControlVisible(control, visible)
 		setControlEnabled(control, enabled and visible)
@@ -2703,7 +2866,7 @@ function Editor:RefreshGroupControls()
 	setControlVisible(controls.GroupStyleLabel, false)
 	setControlVisible(controls.GroupStyleValue, false)
 	if group then
-		local style = tostring(group.style or "ICON")
+		local style = tostring(group.style or "ICON"):upper()
 		group.iconMode = tostring(group.iconMode or "ALL"):upper()
 		local isPriorityIconMode = (style == "ICON" or style == "SQUARE") and group.iconMode == "PRIORITY"
 		local showAnchor = style ~= "TINT"
@@ -2715,9 +2878,12 @@ function Editor:RefreshGroupControls()
 		local showInset = style == "BAR" or style == "BORDER"
 		local showBorder = style == "BORDER"
 		local showColor = style == "SQUARE" or style == "BAR" or style == "BORDER" or style == "TINT"
+		local showBarDrainAnimation = style == "BAR"
+		local showBarReverseFill = style == "BAR" and group.barDrainAnimation == true
 		local showCooldownSwipe = style == "ICON" or style == "SQUARE"
 		local showCooldownDrawOptions = style == "ICON" or style == "SQUARE"
 		local showTextSizeOverrides = style == "ICON" or style == "SQUARE"
+		local showIndicatorBorder = style == "ICON" or style == "SQUARE"
 
 		controls.GroupName:SetText(group.name or "")
 		setDropdown(controls.GroupAnchor, HB.ANCHOR_OPTIONS, group.anchorPoint or "CENTER", controls.GroupAnchor._eqolOnSelect)
@@ -2737,6 +2903,7 @@ function Editor:RefreshGroupControls()
 		controls.SpacingValue:SetText(tostring(group.spacing or 0))
 		controls.Size:SetValue(group.size or 16)
 		controls.SizeValue:SetText(tostring(group.size or 16))
+
 		local cooldownTextSize = tonumber(group.cooldownTextSize)
 		if cooldownTextSize == nil then cooldownTextSize = tonumber(ac.cooldownFontSize) or 12 end
 		if cooldownTextSize < 6 then cooldownTextSize = 6 end
@@ -2744,6 +2911,7 @@ function Editor:RefreshGroupControls()
 		cooldownTextSize = roundInt(cooldownTextSize)
 		controls.CooldownTextSize:SetValue(cooldownTextSize)
 		controls.CooldownTextSizeValue:SetText(tostring(cooldownTextSize))
+
 		local chargeTextSize = tonumber(group.chargeTextSize)
 		if chargeTextSize == nil then chargeTextSize = tonumber(ac.countFontSize) or 14 end
 		if chargeTextSize < 6 then chargeTextSize = 6 end
@@ -2751,6 +2919,7 @@ function Editor:RefreshGroupControls()
 		chargeTextSize = roundInt(chargeTextSize)
 		controls.ChargeTextSize:SetValue(chargeTextSize)
 		controls.ChargeTextSizeValue:SetText(tostring(chargeTextSize))
+
 		controls.XOffset:SetValue(group.x or 0)
 		controls.XValue:SetText(tostring(group.x or 0))
 		controls.YOffset:SetValue(group.y or 0)
@@ -2762,7 +2931,36 @@ function Editor:RefreshGroupControls()
 		controls.BorderSize:SetValue(group.borderSize or 2)
 		controls.BorderSizeValue:SetText(tostring(group.borderSize or 2))
 
+		if group.indicatorBorderEnabled == nil then group.indicatorBorderEnabled = false end
+		local borderTexture = tostring(group.indicatorBorderTexture or "DEFAULT")
+		if borderTexture == "" then borderTexture = "DEFAULT" end
+		group.indicatorBorderTexture = borderTexture
+		local indicatorBorderSize = roundInt(tonumber(group.indicatorBorderSize) or 1)
+		if indicatorBorderSize < 1 then indicatorBorderSize = 1 end
+		if indicatorBorderSize > 24 then indicatorBorderSize = 24 end
+		group.indicatorBorderSize = indicatorBorderSize
+		local indicatorBorderOffset = roundInt(tonumber(group.indicatorBorderOffset) or 0)
+		if indicatorBorderOffset < -12 then indicatorBorderOffset = -12 end
+		if indicatorBorderOffset > 12 then indicatorBorderOffset = 12 end
+		group.indicatorBorderOffset = indicatorBorderOffset
+		local borderColor = group.indicatorBorderColor
+		if type(borderColor) ~= "table" then borderColor = { 0, 0, 0, 0.95 } end
+		group.indicatorBorderColor = {
+			tonumber(borderColor[1]) or 0,
+			tonumber(borderColor[2]) or 0,
+			tonumber(borderColor[3]) or 0,
+			tonumber(borderColor[4]) or 0.95,
+		}
+		setDropdown(controls.IndicatorBorderTexture, buildBorderOptionsForMenu(), group.indicatorBorderTexture, controls.IndicatorBorderTexture._eqolOnSelect)
+		controls.IndicatorBorderSize:SetValue(indicatorBorderSize)
+		controls.IndicatorBorderSizeValue:SetText(tostring(indicatorBorderSize))
+		controls.IndicatorBorderOffset:SetValue(indicatorBorderOffset)
+		controls.IndicatorBorderOffsetValue:SetText(tostring(indicatorBorderOffset))
+		setColorPreview(controls.IndicatorBorderColorButton, group.indicatorBorderColor)
+
 		group.color = group.color or { 1, 0.82, 0.1, 0.9 }
+		group.barDrainAnimation = group.barDrainAnimation == true
+		group.barReverseFill = group.barReverseFill == true
 		if group.showCooldownSwipe == nil then group.showCooldownSwipe = true end
 		if group.showCooldownEdge == nil then group.showCooldownEdge = true end
 		if group.showCooldownBling == nil then group.showCooldownBling = true end
@@ -2785,7 +2983,14 @@ function Editor:RefreshGroupControls()
 		setSliderState(controls.ThicknessLabel, controls.Thickness, controls.ThicknessValue, showBar, true)
 		setSliderState(controls.InsetLabel, controls.Inset, controls.InsetValue, showInset, true)
 		setSliderState(controls.BorderSizeLabel, controls.BorderSize, controls.BorderSizeValue, showBorder, true)
+		setCheckState(controls.IndicatorBorder, showIndicatorBorder, true, group.indicatorBorderEnabled == true)
+		setFieldState(controls.IndicatorBorderTextureLabel, controls.IndicatorBorderTexture, showIndicatorBorder, group.indicatorBorderEnabled == true)
+		setSliderState(controls.IndicatorBorderSizeLabel, controls.IndicatorBorderSize, controls.IndicatorBorderSizeValue, showIndicatorBorder, group.indicatorBorderEnabled == true)
+		setSliderState(controls.IndicatorBorderOffsetLabel, controls.IndicatorBorderOffset, controls.IndicatorBorderOffsetValue, showIndicatorBorder, group.indicatorBorderEnabled == true)
+		setIndicatorBorderColorState(showIndicatorBorder, group.indicatorBorderEnabled == true)
 		setColorState(showColor, true)
+		setCheckState(controls.BarDrainAnimation, showBarDrainAnimation, true, group.barDrainAnimation == true)
+		setCheckState(controls.BarReverseFill, showBarReverseFill, true, group.barReverseFill == true)
 		setCheckState(controls.CooldownSwipe, showCooldownSwipe, true, group.showCooldownSwipe ~= false)
 		setCheckState(controls.CooldownEdge, showCooldownDrawOptions, true, group.showCooldownEdge ~= false)
 		setCheckState(controls.CooldownBling, showCooldownDrawOptions, true, group.showCooldownBling ~= false)
@@ -2808,12 +3013,20 @@ function Editor:RefreshGroupControls()
 		setSliderState(controls.ThicknessLabel, controls.Thickness, controls.ThicknessValue, false, false)
 		setSliderState(controls.InsetLabel, controls.Inset, controls.InsetValue, false, false)
 		setSliderState(controls.BorderSizeLabel, controls.BorderSize, controls.BorderSizeValue, false, false)
+		setCheckState(controls.IndicatorBorder, false, false, false)
+		setFieldState(controls.IndicatorBorderTextureLabel, controls.IndicatorBorderTexture, false, false)
+		setSliderState(controls.IndicatorBorderSizeLabel, controls.IndicatorBorderSize, controls.IndicatorBorderSizeValue, false, false)
+		setSliderState(controls.IndicatorBorderOffsetLabel, controls.IndicatorBorderOffset, controls.IndicatorBorderOffsetValue, false, false)
+		setIndicatorBorderColorState(false, false)
 		setColorState(false, false)
+		setCheckState(controls.BarDrainAnimation, false, false, false)
+		setCheckState(controls.BarReverseFill, false, false, false)
 		setCheckState(controls.CooldownSwipe, false, false, false)
 		setCheckState(controls.CooldownEdge, false, false, false)
 		setCheckState(controls.CooldownBling, false, false, false)
 		setCheckState(controls.HideCooldownText, false, false, false)
 		setCheckState(controls.HideChargeText, false, false, false)
+		setColorPreview(controls.IndicatorBorderColorButton, { 0, 0, 0, 0.95 })
 		setColorPreview(controls.ColorButton, { 1, 1, 1, 1 })
 	end
 	self._controlUpdateLock = nil
@@ -2835,6 +3048,7 @@ local function clearPreview(unitFrame)
 		local icon = unitFrame.SampleIcons[i]
 		if icon then
 			icon:Hide()
+			if icon.IndicatorBorder then icon.IndicatorBorder:Hide() end
 			if icon.PreviewCooldown then
 				if icon.PreviewCooldown.Clear then icon.PreviewCooldown:Clear() end
 				icon.PreviewCooldown:Hide()
@@ -2853,7 +3067,11 @@ local function clearPreview(unitFrame)
 		unitFrame.SampleTints[i]:Hide()
 	end
 	for i = 1, #(unitFrame.SampleBars or {}) do
-		unitFrame.SampleBars[i]:Hide()
+		local bar = unitFrame.SampleBars[i]
+		bar:Hide()
+		bar._eqolPreviewGroup = nil
+		bar._eqolPreviewSampleIndex = nil
+		if bar.SetValue then bar:SetValue(1) end
 	end
 	for i = 1, #(unitFrame.SampleBorders or {}) do
 		unitFrame.SampleBorders[i]:Hide()
@@ -2908,6 +3126,17 @@ local function getPreviewCooldownTiming(sampleIndex, now, loopEnabled, loopOrigi
 	return duration, remaining
 end
 
+local function getPreviewTimedFill(sampleIndex, now, loopEnabled, loopOrigin)
+	local duration, remaining = getPreviewCooldownTiming(sampleIndex, now, loopEnabled, loopOrigin)
+	duration = tonumber(duration)
+	remaining = tonumber(remaining)
+	if not (duration and duration > 0 and remaining) then return 1 end
+	local fill = remaining / duration
+	if fill < 0 then fill = 0 end
+	if fill > 1 then fill = 1 end
+	return fill
+end
+
 local function applyPreviewCooldown(icon, group, ac, sampleIndex, now, loopEnabled, loopOrigin)
 	if not icon then return end
 	ensurePreviewAuraWidgets(icon)
@@ -2936,6 +3165,15 @@ local function applyPreviewCooldown(icon, group, ac, sampleIndex, now, loopEnabl
 		if size == nil and ac then size = ac.cooldownFontSize end
 		setPreviewFont(cooldownText, size or 12, ac and ac.cooldownFontOutline)
 	end
+end
+
+local function applyPreviewBarFill(bar, group, sampleIndex, now, loopEnabled, loopOrigin)
+	if not (bar and bar.SetValue) then return end
+	if not (group and group.barDrainAnimation == true) then
+		bar:SetValue(1)
+		return
+	end
+	bar:SetValue(getPreviewTimedFill(sampleIndex, now, loopEnabled, loopOrigin))
 end
 
 local function applyPreviewCharges(icon, group, ac, sampleIndex)
@@ -2997,6 +3235,10 @@ function Editor:TickPreviewLoop()
 			if group then applyPreviewCooldown(icon, group, icon._eqolPreviewAC or EMPTY, icon._eqolPreviewSampleIndex or 1, now, true, loopOrigin) end
 		end
 	end
+	for i = 1, #(preview.SampleBars or EMPTY) do
+		local bar = preview.SampleBars[i]
+		if bar and bar:IsShown() and bar._eqolPreviewGroup then applyPreviewBarFill(bar, bar._eqolPreviewGroup, bar._eqolPreviewSampleIndex or 1, now, true, loopOrigin) end
+	end
 end
 
 function Editor:UpdatePreviewLoopTicker()
@@ -3022,6 +3264,67 @@ end
 local function resolveColor(color)
 	if type(color) == "table" then return color[1] or 1, color[2] or 1, color[3] or 1, color[4] or 1 end
 	return 1, 1, 1, 1
+end
+
+local function resolveBorderTexture(key)
+	if UFHelper and UFHelper.resolveBorderTexture then return UFHelper.resolveBorderTexture(key) end
+	if not key or key == "" or key == "DEFAULT" then return "Interface\\Buttons\\WHITE8x8" end
+	return key
+end
+
+local function ensurePreviewIndicatorBorder(icon)
+	if not icon then return nil end
+	local border = icon.IndicatorBorder
+	if not border then
+		border = CreateFrame("Frame", nil, icon, "BackdropTemplate")
+		border:EnableMouse(false)
+		icon.IndicatorBorder = border
+	end
+	border:SetParent(icon)
+	if border.SetFrameStrata and icon.GetFrameStrata then border:SetFrameStrata(icon:GetFrameStrata()) end
+	if border.SetFrameLevel and icon.GetFrameLevel then border:SetFrameLevel((icon:GetFrameLevel() or 0) + 5) end
+	return border
+end
+
+local function applyPreviewIndicatorBorder(icon, group)
+	if not icon then return end
+	local style = tostring(group and group.style or ""):upper()
+	local enabled = (style == "ICON" or style == "SQUARE") and group and group.indicatorBorderEnabled == true
+	local border = icon.IndicatorBorder
+	if not enabled then
+		if border then border:Hide() end
+		return
+	end
+	border = ensurePreviewIndicatorBorder(icon)
+	if not border then return end
+	local size = roundInt(tonumber(group.indicatorBorderSize) or 1)
+	if size < 1 then size = 1 end
+	if size > 24 then size = 24 end
+	local offset = roundInt(tonumber(group.indicatorBorderOffset) or 0)
+	if offset < -12 then offset = -12 end
+	if offset > 12 then offset = 12 end
+	local texture = resolveBorderTexture(group.indicatorBorderTexture or "DEFAULT")
+	local key = tostring(texture) .. "|" .. tostring(size)
+	if border._eqolBackdropKey ~= key then
+		border._eqolBackdropKey = key
+		border:SetBackdrop({
+			bgFile = "Interface\\Buttons\\WHITE8x8",
+			edgeFile = texture,
+			tile = false,
+			edgeSize = size,
+			insets = { left = size, right = size, top = size, bottom = size },
+		})
+	end
+	if border._eqolOffset ~= offset then
+		border._eqolOffset = offset
+		border:ClearAllPoints()
+		border:SetPoint("TOPLEFT", icon, "TOPLEFT", -offset, offset)
+		border:SetPoint("BOTTOMRIGHT", icon, "BOTTOMRIGHT", offset, -offset)
+	end
+	local br, bg, bb, ba = resolveColor(group.indicatorBorderColor)
+	border:SetBackdropColor(0, 0, 0, 0)
+	border:SetBackdropBorderColor(br, bg, bb, ba)
+	border:Show()
 end
 
 local function applyPreviewHealthTint(unitFrame, tintR, tintG, tintB, tintA)
@@ -3199,7 +3502,8 @@ function Editor:RefreshPreview()
 						icon._eqolPreviewSampleIndex = i
 						applyPreviewCooldown(icon, group, ac, i, now, loopEnabled, loopOrigin)
 						applyPreviewCharges(icon, group, ac, i)
-						icon:SetBackdropBorderColor(selected and 0.95 or 0, selected and 0.8 or 0, selected and 0.25 or 0, selected and 1 or 0.8)
+						icon:SetBackdropBorderColor(0, 0, 0, 0)
+						applyPreviewIndicatorBorder(icon, group)
 						icon:Show()
 					end
 				end
@@ -3209,7 +3513,10 @@ function Editor:RefreshPreview()
 				if bar then
 					local r, g, b, a = resolveColor(group.color)
 					if not selected then a = min(a, 0.45) end
-					bar:SetColorTexture(r, g, b, a)
+					bar:SetStatusBarColor(r, g, b, a)
+					bar:SetMinMaxValues(0, 1)
+					bar:SetOrientation(tostring(group.barOrientation or "HORIZONTAL"):upper())
+					if UFHelper and UFHelper.applyStatusBarReverseFill then UFHelper.applyStatusBarReverseFill(bar, group.barDrainAnimation == true and group.barReverseFill == true) end
 					bar:ClearAllPoints()
 					local inset = max(0, tonumber(group.inset) or 0)
 					local thickness = max(1, tonumber(group.barThickness) or 6)
@@ -3222,6 +3529,9 @@ function Editor:RefreshPreview()
 						bar:SetPoint("RIGHT", preview, "RIGHT", baseX - inset, baseY)
 						bar:SetHeight(thickness)
 					end
+					bar._eqolPreviewGroup = group
+					bar._eqolPreviewSampleIndex = 1
+					applyPreviewBarFill(bar, group, 1, now, loopEnabled, loopOrigin)
 					bar:Show()
 				end
 			elseif style == "BORDER" then

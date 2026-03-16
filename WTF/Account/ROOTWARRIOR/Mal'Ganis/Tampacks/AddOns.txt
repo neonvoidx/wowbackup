@@ -58,3 +58,5 @@ WorldQuestTab: enabled
 Blizzard_ObjectiveTracker: enabled
 Blizzard_CompactRaidFrames: enabled
 OPie_Classic: disabled
+!Swatter: disabled
+!ImprovedErrorFrame: disabled

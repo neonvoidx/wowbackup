@@ -11,7 +11,7 @@ local L = LibStub("AceLocale-3.0"):GetLocale("EnhanceQoL_DrinkMacro")
 
 local UnitAffectingCombat = UnitAffectingCombat
 local InCombatLockdown = InCombatLockdown
-local GetItemCooldown = GetItemCooldown
+local GetItemCooldownFn = C_Item.GetItemCooldown
 local GetTime = GetTime
 local GetMacroInfo = GetMacroInfo
 local EditMacro = EditMacro
@@ -162,7 +162,7 @@ local function cooldownRemaining(entry)
 	if cached then
 		start, duration = cached.start, cached.duration
 	else
-		start, duration = GetItemCooldown(itemID)
+		start, duration = GetItemCooldownFn(itemID)
 		itemCooldownCache[itemID] = { start = start or 0, duration = duration or 0 }
 	end
 	if not start or start == 0 or not duration or duration == 0 then return 0 end
@@ -375,7 +375,7 @@ local function cooldownCheck(force, suppressRebuild)
 		local endsAt
 
 		if entry.kind == "item" then
-			local start, duration, enable = GetItemCooldown(entry.id)
+			local start, duration, enable = GetItemCooldownFn(entry.id)
 			if enable ~= 1 then
 				start, duration = 0, 0
 			end
