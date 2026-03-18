@@ -346,6 +346,8 @@ function BattleGroundEnemies:CreatePlayerButton(mainframe, num)
     self:DispatchEvent("UpdateRaidTargetIcon", self.RaidTargetIconIndex)
   end
 
+  -- Query the API for real trinket cooldown data and apply it.
+  -- Returns true if the API returned real data, false otherwise.
   function playerButton:UpdateCrowdControlCooldown(unitID)
     local spellId, itemID, startTimeMs, durationMs
     local one, two, three, four = C_PvP.GetArenaCrowdControlInfo(unitID)
@@ -355,21 +357,28 @@ function BattleGroundEnemies:CreatePlayerButton(mainframe, num)
       spellId, startTimeMs, durationMs = one, two, three
     end
 
-    if self.Trinket then
-      if spellId then
-        self.Trinket:SetTrinketCooldown(startTimeMs / 1000.0, durationMs / 1000.0)
-      elseif FAKE_TRINKET then
-        local duration = FAKE_TRINKET_DURATION
-        local specData = self:GetSpecData()
-        if specData and specData.roleID == "HEALER" then
-          duration = FAKE_TRINKET_HEALER_DURATION
-        end
-        self.Trinket:DisplayTrinket(FAKE_TRINKET_SPELL)
-        self.Trinket:SetTrinketCooldown(GetTime(), duration)
-      else
-        self.Trinket:SetTrinketCooldown(0, 0)
-      end
+    if self.Trinket and spellId then
+      self.Trinket:ResetFakeCooldown() -- real data supersedes fake
+      self.Trinket:SetTrinketCooldown(startTimeMs / 1000.0, durationMs / 1000.0)
+      return true
     end
+    return false
+  end
+
+  -- Called when the API is unavailable but we know a trinket was used
+  -- (e.g. ARENA_CROWD_CONTROL_SPELL_UPDATE fired but GetArenaCrowdControlInfo
+  -- returned no real cooldown data). Uses estimated durations.
+  function playerButton:ApplyFakeTrinketCooldown()
+    if not FAKE_TRINKET or not self.Trinket then
+      return
+    end
+    local duration = FAKE_TRINKET_DURATION
+    local specData = self:GetSpecData()
+    if specData and specData.roleID == "HEALER" then
+      duration = FAKE_TRINKET_HEALER_DURATION
+    end
+    self.Trinket:DisplayTrinket(FAKE_TRINKET_SPELL)
+    self.Trinket:StartFakeCooldown(duration)
   end
 
   function playerButton:UpdateGuild(unitID)
@@ -646,12 +655,16 @@ function BattleGroundEnemies:CreatePlayerButton(mainframe, num)
         self:Debug("something went wrong in ApplyModuleSettings")
       end
     until allModulesSet or i > 10 --maxium of 10 tries
-    self.MyTarget:SetParent(self.healthBar)
+    self.MyTarget:SetParent(self)
+    self.MyTarget:ClearAllPoints()
     self.MyTarget:SetPoint("TOPLEFT", self.healthBar, "TOPLEFT")
     self.MyTarget:SetPoint("BOTTOMRIGHT", self.Power, "BOTTOMRIGHT")
-    self.MyFocus:SetParent(self.healthBar)
+    self.MyTarget:SetFrameLevel(self.Power:GetFrameLevel() + 5)
+    self.MyFocus:SetParent(self)
+    self.MyFocus:ClearAllPoints()
     self.MyFocus:SetPoint("TOPLEFT", self.healthBar, "TOPLEFT")
     self.MyFocus:SetPoint("BOTTOMRIGHT", self.Power, "BOTTOMRIGHT")
+    self.MyFocus:SetFrameLevel(self.Power:GetFrameLevel() + 5)
   end
 
   function playerButton:ApplyModuleSettings()
@@ -858,23 +871,8 @@ function BattleGroundEnemies:CreatePlayerButton(mainframe, num)
       end
       self:DispatchEvent("UnitDied")
       self.isDead = true
-      self:UpdateRange(nil, true)
-      -- Visual feedback: gray out the frame
-      self:SetAlpha(0.4)
-      -- Set health bar to 0 and update text
-      if self.healthBar then
-        local maxHealth = select(2, self.healthBar:GetMinMaxValues()) or 1
-        self.healthBar:SetMinMaxValues(0, maxHealth)
-        self.healthBar:SetValue(0)
-        -- Hide heal predictions
-        if self.myHealPrediction then
-          self.myHealPrediction:Hide()
-        end
-      end
-      -- Update health text to show 0
-      if self.healthBarText then
-        local maxHealth = self.healthBar and select(2, self.healthBar:GetMinMaxValues()) or 1
-        self.healthBarText:UpdateHealthText(nil, 0, maxHealth, 0, maxHealth) -- health=0, healthMissing=maxHealth, healthPercent=0, maxHealth
+      if self.config and self.config.RangeIndicator_Enabled then
+        self:UpdateRange(nil, true)
       end
     end
   end
@@ -883,7 +881,11 @@ function BattleGroundEnemies:CreatePlayerButton(mainframe, num)
     if self.isDead then
       self:DispatchEvent("UnitRevived")
       self.isDead = false
-      self:UpdateRange(nil, true)
+      if self.config and self.config.RangeIndicator_Enabled then
+        self:UpdateRange(nil, true)
+      else
+        self:SetAlpha(1)
+      end
     end
   end
 
@@ -1412,12 +1414,12 @@ function BattleGroundEnemies:CreatePlayerButton(mainframe, num)
 
   --MyTarget, indicating the current target of the player
   playerButton.MyTarget =
-    CreateFrame("Frame", nil, playerButton.healthBar, BackdropTemplateMixin and "BackdropTemplate")
+    CreateFrame("Frame", nil, playerButton, BackdropTemplateMixin and "BackdropTemplate")
 
   playerButton.MyTarget:Hide()
 
   --MyFocus, indicating the current focus of the player
-  playerButton.MyFocus = CreateFrame("Frame", nil, playerButton.healthBar, BackdropTemplateMixin and "BackdropTemplate")
+  playerButton.MyFocus = CreateFrame("Frame", nil, playerButton, BackdropTemplateMixin and "BackdropTemplate")
   playerButton.MyFocus:SetBackdrop({
     bgFile = "Interface/Buttons/WHITE8X8", --drawlayer "BACKGROUND"
     edgeFile = "Interface/Buttons/WHITE8X8", --drawlayer "BORDER"

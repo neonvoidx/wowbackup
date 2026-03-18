@@ -38,6 +38,7 @@ LSM:Register(
 )
 LSM:Register("statusbar", "BlizzardCastLite", [[Interface\Addons\SharedMedia_MyMedia\statusbar\BlizzardCastLite.tga]])
 LSM:Register("statusbar", "BlizzardCastRound", [[Interface\Addons\SharedMedia_MyMedia\statusbar\BlizzardCastRound.tga]])
+LSM:Register("statusbar", "d1", [[Interface\Addons\SharedMedia_MyMedia\statusbar\d1.tga]])
 LSM:Register(
 	"statusbar",
 	"BlizzardCastUninterruptableRound",

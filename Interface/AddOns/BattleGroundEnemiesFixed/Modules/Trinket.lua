@@ -121,8 +121,27 @@ function trinket:AttachToPlayerButton(playerButton)
     end
   end
 
+  function frame:StartFakeCooldown(duration)
+    if self._fakeCdActive then return end
+    self._fakeCdActive = true
+    self.Cooldown:SetCooldown(GetTime(), duration)
+    if self._fakeTimer then self._fakeTimer:Cancel() end
+    self._fakeTimer = C_Timer.NewTimer(duration, function()
+      self._fakeCdActive = false
+    end)
+  end
+
+  function frame:ResetFakeCooldown()
+    self._fakeCdActive = false
+    if self._fakeTimer then
+      self._fakeTimer:Cancel()
+      self._fakeTimer = nil
+    end
+  end
+
   function frame:Reset()
     self.spellId = false
+    self:ResetFakeCooldown()
     self.Icon:SetTexture(nil)
     self.Cooldown:Clear()
   end

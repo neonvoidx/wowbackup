@@ -35,6 +35,7 @@ Api.GetSpellInfoFn = GetSpellInfo
 Api.GetSpellCooldownInfo = C_Spell and C_Spell.GetSpellCooldown or GetSpellCooldown
 Api.GetSpellCooldownDuration = C_Spell and C_Spell.GetSpellCooldownDuration
 Api.GetSpellChargesInfo = C_Spell and C_Spell.GetSpellCharges
+Api.GetAuraDuration = C_UnitAuras and C_UnitAuras.GetAuraDuration
 Api.GetBaseSpell = C_Spell and C_Spell.GetBaseSpell
 Api.GetOverrideSpell = C_Spell and C_Spell.GetOverrideSpell
 Api.GetSpellPowerCost = C_Spell and C_Spell.GetSpellPowerCost
@@ -105,6 +106,20 @@ Helper.FontStyleOptions = {
 	{ value = "MONOCHROMEOUTLINE", label = L["Monochrome Outline"] or "Monochrome Outline" },
 }
 
+-- need for static text hide on CD
+local curveFake = C_CurveUtil:CreateCurve()
+curveFake:SetType(Enum.LuaCurveType.Step)
+curveFake:AddPoint(0, 0)
+curveFake:AddPoint(0.5, 0)
+curveFake:AddPoint(0.51, 1)
+Helper.FakeCurve = curveFake
+
+local function normalizeCDMAuraAlwaysShowMode(value, fallback)
+	local mode = type(value) == "string" and string.upper(value) or nil
+	if mode == "SHOW" or mode == "DESATURATE" or mode == "HIDE" then return mode end
+	return fallback or "HIDE"
+end
+
 Helper.PANEL_LAYOUT_DEFAULTS = {
 	iconSize = 36,
 	spacing = 2,
@@ -123,6 +138,7 @@ Helper.PANEL_LAYOUT_DEFAULTS = {
 	rangeOverlayEnabled = false,
 	rangeOverlayColor = { 1, 0.1, 0.1, 0.35 },
 	procGlowEnabled = true,
+	hideGlowOutOfCombat = false,
 	readyGlowStyle = "MARCHING_ANTS",
 	readyGlowColor = { 1, 0.82, 0.2, 1 },
 	pandemicGlowColor = { 1, 0.82, 0.2, 1 },
@@ -130,6 +146,7 @@ Helper.PANEL_LAYOUT_DEFAULTS = {
 	readyGlowDuration = 0,
 	readyGlowCheckPower = false,
 	noDesaturation = false,
+	cdmAuraAlwaysShowMode = "HIDE",
 	checkPower = false,
 	powerTintColor = { 0.5, 0.5, 1, 1 },
 	unusableTintColor = { 0.6, 0.6, 0.6, 1 },
@@ -158,6 +175,7 @@ Helper.PANEL_LAYOUT_DEFAULTS = {
 	chargesFontSize = 12,
 	chargesFontStyle = "OUTLINE",
 	chargesColor = { 1, 1, 1, 1 },
+	chargesHideWhenZero = false,
 	keybindsEnabled = false,
 	keybindsIgnoreItems = false,
 	keybindAnchor = "TOPLEFT",
@@ -185,6 +203,8 @@ Helper.PANEL_LAYOUT_DEFAULTS = {
 
 Helper.ENTRY_DEFAULTS = {
 	alwaysShow = true,
+	cdmAuraAlwaysShowUseGlobal = true,
+	cdmAuraAlwaysShowMode = "HIDE",
 	hideIcon = false,
 	iconSizeUseGlobal = true,
 	iconSize = 36,
@@ -964,6 +984,21 @@ function Helper.CopyTableShallow(source)
 	return result
 end
 
+function Helper.CopyTableDeep(source, seen)
+	if type(source) ~= "table" then return source end
+	if addon.functions and addon.functions.copyTable then return addon.functions.copyTable(source) end
+	if CopyTable then return CopyTable(source) end
+	seen = seen or {}
+	if seen[source] then return seen[source] end
+	local result = {}
+	seen[source] = result
+	for key, value in pairs(source) do
+		local copiedKey = type(key) == "table" and Helper.CopyTableDeep(key, seen) or key
+		result[copiedKey] = Helper.CopyTableDeep(value, seen)
+	end
+	return result
+end
+
 function Helper.NormalizeBool(value, fallback)
 	if value == nil then return fallback end
 	return value and true or false
@@ -1052,6 +1087,7 @@ function Helper.NormalizePanel(panel, defaults)
 		layoutDefaults.radialArcDegrees or Helper.PANEL_LAYOUT_DEFAULTS.radialArcDegrees or 360
 	)
 	panel.layout.procGlowEnabled = panel.layout.procGlowEnabled ~= false
+	panel.layout.hideGlowOutOfCombat = panel.layout.hideGlowOutOfCombat == true
 	if panel.layout.procGlowStyle ~= nil then panel.layout.procGlowStyle = Helper.NormalizeGlowStyle(panel.layout.procGlowStyle, nil) end
 	if panel.layout.procGlowInset ~= nil then panel.layout.procGlowInset = Helper.NormalizeGlowInset(panel.layout.procGlowInset, nil) end
 	panel.layout.readyGlowStyle = Helper.NormalizeGlowStyle(panel.layout.readyGlowStyle, layoutDefaults.readyGlowStyle or Helper.PANEL_LAYOUT_DEFAULTS.readyGlowStyle)
@@ -1068,8 +1104,11 @@ function Helper.NormalizePanel(panel, defaults)
 	panel.layout.readyGlowDuration = 0
 	panel.layout.readyGlowCheckPower = panel.layout.readyGlowCheckPower == true
 	panel.layout.noDesaturation = panel.layout.noDesaturation == true
+	panel.layout.cdmAuraAlwaysShowMode =
+		normalizeCDMAuraAlwaysShowMode(panel.layout.cdmAuraAlwaysShowMode, layoutDefaults.cdmAuraAlwaysShowMode or Helper.PANEL_LAYOUT_DEFAULTS.cdmAuraAlwaysShowMode or "HIDE")
 	panel.layout.stackColor = Helper.NormalizeColor(panel.layout.stackColor, layoutDefaults.stackColor or Helper.PANEL_LAYOUT_DEFAULTS.stackColor or { 1, 1, 1, 1 })
 	panel.layout.chargesColor = Helper.NormalizeColor(panel.layout.chargesColor, layoutDefaults.chargesColor or Helper.PANEL_LAYOUT_DEFAULTS.chargesColor or { 1, 1, 1, 1 })
+	panel.layout.chargesHideWhenZero = panel.layout.chargesHideWhenZero == true
 	panel.layout.cooldownTextColor = Helper.NormalizeColor(panel.layout.cooldownTextColor, layoutDefaults.cooldownTextColor or Helper.PANEL_LAYOUT_DEFAULTS.cooldownTextColor)
 	if panel.layout.cooldownTextFont ~= nil and type(panel.layout.cooldownTextFont) ~= "string" then panel.layout.cooldownTextFont = nil end
 	if panel.layout.cooldownTextSize ~= nil then panel.layout.cooldownTextSize = Helper.ClampInt(panel.layout.cooldownTextSize, 6, 64, 12) end

@@ -678,6 +678,25 @@
 		</Scripts>
 	</Frame>
 
+	<Frame name="WQT_SettingSeparatorTemplate" mixin="WQT_SettingsBaseMixin" virtual="true">
+		<Size y="12"/>
+		<Layers>
+			<Layer level="ARTWORK">
+				<Texture parentKey="Texture" atlas="ChallengeMode-ThinDivider" texelSnappingBias="0.0" snapToPixelGrid="false">
+					<Size y="2"/>
+					<Anchors>
+						<Anchor point="LEFT" x="20"/>
+						<Anchor point="RIGHT" x="-14"/>
+					</Anchors>
+					<Color r="0.6" g="0.5" b="0.5"/>
+				</Texture>
+			</Layer>
+		</Layers>
+		<Scripts>
+			<OnLoad method="OnLoad"/>
+		</Scripts>
+	</Frame>
+
 	<Frame name="WQT_SettingsFrame" parent="WQT_WorldQuestFrame" parentKey="SettingsFrame" mixin="WQT_SettingsFrameMixin" parentArray="panels" hidden="true">
 		<Size x="257" y="462" />
 		<Anchors>

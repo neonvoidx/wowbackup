@@ -27,7 +27,7 @@ L["vendorCraftShopperBuyNow"] = "Acheter maintenant"
 L["vendorCraftShopperCancel"] = "Annuler"
 L["vendorCraftShopperCheckListPrint"] = "[%s] manquant : %d – acheter à l’HV"
 L["vendorCraftShopperConfirmPurchase"] = "Confirmer l’achat"
-L["vendorCraftShopperEnable"] = "Activer Craft Shopper (uniquement en zone de repos)"
+L["vendorCraftShopperEnable"] = "Activer Craft Shopper"
 L["vendorCraftShopperEnableDesc"] = "Affiche, à côté de l’hôtel des ventes, la liste des composants manquants pour vos recettes suivies. Recherchez et achetez chaque objet en un clic."
 L["vendorCraftShopperHideFromList"] = "Masquer de la liste"
 L["vendorCraftShopperMissingGold"] = [=[Pas assez d’or.

@@ -1359,9 +1359,17 @@ local function refreshCopySelectionDialog(dialog)
 end
 
 local function isPlayerScopedFrameVisibilityRule(key)
-	return key == "PLAYER_CASTING" or key == "PLAYER_MOUNTED" or key == "PLAYER_NOT_MOUNTED" or key == "PLAYER_HAS_TARGET"
-		or key == "PLAYER_IN_GROUP" or key == "PLAYER_IN_PARTY" or key == "PLAYER_IN_RAID" or key == "SKYRIDING_ACTIVE"
-		or key == "SKYRIDING_INACTIVE" or key == "FLYING_ACTIVE" or key == "FLYING_INACTIVE"
+	return key == "PLAYER_CASTING"
+		or key == "PLAYER_MOUNTED"
+		or key == "PLAYER_NOT_MOUNTED"
+		or key == "PLAYER_HAS_TARGET"
+		or key == "PLAYER_IN_GROUP"
+		or key == "PLAYER_IN_PARTY"
+		or key == "PLAYER_IN_RAID"
+		or key == "SKYRIDING_ACTIVE"
+		or key == "SKYRIDING_INACTIVE"
+		or key == "FLYING_ACTIVE"
+		or key == "FLYING_INACTIVE"
 end
 
 local function supportsPlayerScopedFrameVisibility(unitToken) return unitToken == "player" or unitToken == "target" or unitToken == "targettarget" or unitToken == "focus" or unitToken == "pet" end
@@ -2767,20 +2775,20 @@ local function buildUnitSettings(unit)
 	if not isPlayer then list[#list + 1] = checkbox(L["UFHideInPetBattle"] or "Hide in pet battles", isHideInPetBattleEnabled, setHideInPetBattleEnabled, def.hideInPetBattle == true, "frame") end
 	list[#list + 1] = checkbox(L["UFHideInClientScene"] or "Hide in client scenes", isHideInClientSceneEnabled, setHideInClientSceneEnabled, hideInClientSceneDefault(), "frame")
 
-		if #visibilityOptions > 0 then
-			list[#list + 1] = {
-				name = L["Show when"] or "Show when",
-				kind = settingType.MultiDropdown,
-				parentId = "frame",
-				height = 200,
-				hideSummary = true,
-				refreshOnSelect = false,
-				values = visibilityOptions,
-				get = function() return getVisibilityConfig() end,
-				set = function(_, selection) setVisibilitySelection(selection) end,
-				isSelected = function(_, value) return isVisibilityRuleSelected(value) end,
-				setSelected = function(_, value, state) setVisibilityRule(value, state) end,
-			}
+	if #visibilityOptions > 0 then
+		list[#list + 1] = {
+			name = L["Show when"] or "Show when",
+			kind = settingType.MultiDropdown,
+			parentId = "frame",
+			height = 200,
+			hideSummary = true,
+			refreshOnSelect = false,
+			values = visibilityOptions,
+			get = function() return getVisibilityConfig() end,
+			set = function(_, selection) setVisibilitySelection(selection) end,
+			isSelected = function(_, value) return isVisibilityRuleSelected(value) end,
+			setSelected = function(_, value, state) setVisibilityRule(value, state) end,
+		}
 		list[#list + 1] = slider(
 			OPACITY or "Opacity",
 			0,
@@ -6448,7 +6456,7 @@ local function buildUnitSettings(unit)
 		addDivider("dispelTint")
 	end
 
-	list[#list + 1] = checkbox("Show status text", function() return getValue(unit, { "status", "unitStatus", "enabled" }, usDef.enabled == true) == true end, function(val)
+	list[#list + 1] = checkbox(L["Show status text"] or "Show status text", function() return getValue(unit, { "status", "unitStatus", "enabled" }, usDef.enabled == true) == true end, function(val)
 		setValue(unit, { "status", "unitStatus", "enabled" }, val and true or false)
 		refresh()
 		refreshSettingsUI()

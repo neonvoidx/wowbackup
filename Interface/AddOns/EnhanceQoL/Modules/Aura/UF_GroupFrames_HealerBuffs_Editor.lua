@@ -95,6 +95,11 @@ local function indexOf(list, value)
 	return nil
 end
 
+local function styleSupportsRuleColor(style)
+	style = tostring(style or ""):upper()
+	return style == "SQUARE" or style == "BAR" or style == "BORDER" or style == "TINT"
+end
+
 local function roundInt(value)
 	local n = tonumber(value) or 0
 	if n >= 0 then return floor(n + 0.5) end
@@ -1696,8 +1701,12 @@ function Editor:EnsureFrame()
 	controls.RuleNot = createCheck(settingsPanel, tr("UFGroupHealerBuffEditorRuleNot", "NOT (active when missing)"))
 	controls.RuleNot:SetPoint("TOPLEFT", controls.RuleEnabled, "BOTTOMLEFT", 0, -6)
 
+	controls.RuleMissingDesaturate = createCheck(settingsPanel, tr("UFGroupHealerBuffEditorRuleMissingDesaturate", "Desaturate missing icon"))
+	controls.RuleMissingDesaturate:SetPoint("TOPLEFT", controls.RuleNot, "BOTTOMLEFT", 16, -6)
+	controls.RuleMissingDesaturate:Hide()
+
 	controls.RuleAppliesParty = createCheck(settingsPanel, tr("UFGroupHealerBuffEditorParty", "Party"))
-	controls.RuleAppliesParty:SetPoint("TOPLEFT", controls.RuleNot, "BOTTOMLEFT", 0, -6)
+	controls.RuleAppliesParty:SetPoint("TOPLEFT", controls.RuleMissingDesaturate, "BOTTOMLEFT", -16, -6)
 
 	controls.RuleAppliesRaid = createCheck(settingsPanel, tr("UFGroupHealerBuffEditorRaid", "Raid"))
 	controls.RuleAppliesRaid:SetPoint("TOPLEFT", controls.RuleAppliesParty, "BOTTOMLEFT", 0, -6)
@@ -2485,7 +2494,7 @@ function Editor:EnsureFrame()
 		local group = groupFromSelection()
 		local rule = ruleFromSelection()
 		if not (group and rule) then return end
-		if tostring(group.style or ""):upper() ~= "SQUARE" then return end
+		if not styleSupportsRuleColor(group.style) then return end
 		if mouseButton == "RightButton" then
 			rule.color = nil
 			Editor:RefreshRuleControls()
@@ -2515,7 +2524,16 @@ function Editor:EnsureFrame()
 		local rule = ruleFromSelection()
 		if not rule then return end
 		rule["not"] = self:GetChecked() == true
+		Editor:RefreshRuleControls()
 		Editor:RefreshRuleList()
+		Editor:RefreshPreview()
+		Editor:RefreshRuntimeNow()
+	end)
+
+	controls.RuleMissingDesaturate:SetScript("OnClick", function(self)
+		local rule = ruleFromSelection()
+		if not rule then return end
+		rule.desaturateMissing = self:GetChecked() == true
 		Editor:RefreshPreview()
 		Editor:RefreshRuntimeNow()
 	end)
@@ -2720,8 +2738,9 @@ function Editor:RefreshRuleControls()
 	local selectedGroup = placement and self.selectedGroupId and placement.groupsById and placement.groupsById[self.selectedGroupId] or nil
 	local selectedGroupStyle = tostring(selectedGroup and selectedGroup.style or "")
 	local showIconRuleMode = selectedGroupStyle == "ICON" or selectedGroupStyle == "SQUARE"
+	local showMissingDesaturate = selectedGroupStyle == "ICON" and rule ~= nil and rule["not"] == true
 	local showTintRuleMatch = selectedGroupStyle == "TINT"
-	local showRuleColor = selectedGroupStyle == "SQUARE"
+	local showRuleColor = styleSupportsRuleColor(selectedGroupStyle)
 	local showBarDrainInfo = selectedGroupStyle == "BAR" and selectedGroup and selectedGroup.barDrainAnimation == true
 	local iconModeOptions = HB.ICON_MODE_OPTIONS
 		or {
@@ -2743,6 +2762,17 @@ function Editor:RefreshRuleControls()
 	setControlVisible(controls.RuleMatch, showTintRuleMatch)
 	setControlEnabled(controls.RuleMatch, showTintRuleMatch)
 	if showTintRuleMatch then setDropdown(controls.RuleMatch, ruleMatchOptions, tostring(selectedGroup.ruleMatch or "ANY"):upper(), controls.RuleMatch._eqolOnSelect) end
+
+	controls.RuleMissingDesaturate:ClearAllPoints()
+	if showMissingDesaturate then controls.RuleMissingDesaturate:SetPoint("TOPLEFT", controls.RuleNot, "BOTTOMLEFT", 16, -6) end
+	controls.RuleAppliesParty:ClearAllPoints()
+	if showMissingDesaturate then
+		controls.RuleAppliesParty:SetPoint("TOPLEFT", controls.RuleMissingDesaturate, "BOTTOMLEFT", -16, -6)
+	else
+		controls.RuleAppliesParty:SetPoint("TOPLEFT", controls.RuleNot, "BOTTOMLEFT", 0, -6)
+	end
+	controls.RuleAppliesRaid:ClearAllPoints()
+	controls.RuleAppliesRaid:SetPoint("TOPLEFT", controls.RuleAppliesParty, "BOTTOMLEFT", 0, -6)
 
 	controls.RuleColorLabel:ClearAllPoints()
 	if showTintRuleMatch then
@@ -2781,16 +2811,39 @@ function Editor:RefreshRuleControls()
 
 	controls.RuleEnabled:SetChecked(rule and rule.enabled ~= false)
 	controls.RuleNot:SetChecked(rule and rule["not"] == true)
+	controls.RuleMissingDesaturate:SetChecked(rule and rule.desaturateMissing == true)
 	controls.RuleAppliesParty:SetChecked(rule and rule.appliesParty ~= false)
 	controls.RuleAppliesRaid:SetChecked(rule and rule.appliesRaid ~= false)
 	setControlEnabled(controls.RuleEnabled, rule ~= nil)
 	setControlEnabled(controls.RuleNot, rule ~= nil)
+	setControlVisible(controls.RuleMissingDesaturate, showMissingDesaturate)
+	setControlEnabled(controls.RuleMissingDesaturate, showMissingDesaturate and rule ~= nil)
 	setControlEnabled(controls.RuleAppliesParty, rule ~= nil)
 	setControlEnabled(controls.RuleAppliesRaid, rule ~= nil)
 	setControlEnabled(frame.RulePanel and frame.RulePanel.AddButton, self.selectedGroupId ~= nil)
 	if controls.RuleInfo then
 		local groupLabel = placement and self.selectedGroupId and getGroupLabel(placement, self.selectedGroupId) or tr("UFGroupHealerBuffEditorSelectedIndicator", "selected indicator")
-		if showTintRuleMatch then
+		if showTintRuleMatch and showRuleColor then
+			controls.RuleInfo:SetText(
+				string.format(
+					tr(
+						"UFGroupHealerBuffEditorRuleInfoTintColor",
+						"Showing rules for %s. Scope is set per rule (Party/Raid). Tint can require any or all active spells. When multiple rules are active, color follows the first matching rule in this list. Spell Color overrides are per rule (right click to reset)."
+					),
+					groupLabel
+				)
+			)
+		elseif showRuleColor and showBarDrainInfo then
+			controls.RuleInfo:SetText(
+				string.format(
+					tr(
+						"UFGroupHealerBuffEditorRuleInfoBarDrainColor",
+						"Showing rules for %s. Scope is set per rule (Party/Raid). Color follows the first active rule in this list. Drain animation follows the first active timed aura in this list. Spell Color overrides are per rule (right click to reset)."
+					),
+					groupLabel
+				)
+			)
+		elseif showTintRuleMatch then
 			controls.RuleInfo:SetText(
 				string.format(tr("UFGroupHealerBuffEditorRuleInfoTint", "Showing rules for %s. Scope is set per rule (Party/Raid). Tint can require any or all active spells."), groupLabel)
 			)
@@ -3387,6 +3440,15 @@ local function isPreviewGroupTintActive(placement, group, kind, classToken)
 	return false
 end
 
+local function getPreviewPriorityRuleForGroup(placement, groupId, kind, classToken)
+	local ruleIds = getRuleIdsForGroup(placement, groupId, kind, classToken)
+	for i = 1, #ruleIds do
+		local rule = placement.rulesById and placement.rulesById[ruleIds[i]]
+		if isPreviewRuleActive(rule) then return rule, ruleIds[i] end
+	end
+	return nil, nil
+end
+
 function Editor:RefreshPreview()
 	local frame = self:EnsureFrame()
 	local cfg, placement = self:GetContext()
@@ -3492,9 +3554,11 @@ function Editor:RefreshPreview()
 							local r, g, b, a = resolveColor(squareColor)
 							icon.Texture:SetTexture("Interface\\Buttons\\WHITE8x8")
 							icon.Texture:SetVertexColor(r, g, b, a)
+							if icon.Texture.SetDesaturated then icon.Texture:SetDesaturated(false) end
 						else
 							icon.Texture:SetTexture(iconTex or 134400)
 							icon.Texture:SetVertexColor(1, 1, 1, 1)
+							if icon.Texture.SetDesaturated then icon.Texture:SetDesaturated(HB.ShouldDesaturateRuleIcon and HB.ShouldDesaturateRuleIcon(group, rule) or false) end
 						end
 						icon._eqolPreviewAura = true
 						icon._eqolPreviewGroup = group
@@ -3511,7 +3575,8 @@ function Editor:RefreshPreview()
 				local bar = preview.SampleBars[barIndex]
 				barIndex = barIndex + 1
 				if bar then
-					local r, g, b, a = resolveColor(group.color)
+					local colorRule = getPreviewPriorityRuleForGroup(placement, group.id, self.kind)
+					local r, g, b, a = resolveColor((colorRule and colorRule.color) or group.color)
 					if not selected then a = min(a, 0.45) end
 					bar:SetStatusBarColor(r, g, b, a)
 					bar:SetMinMaxValues(0, 1)
@@ -3538,7 +3603,8 @@ function Editor:RefreshPreview()
 				local border = preview.SampleBorders[borderIndex]
 				borderIndex = borderIndex + 1
 				if border then
-					local r, g, b, a = resolveColor(group.color)
+					local colorRule = getPreviewPriorityRuleForGroup(placement, group.id, self.kind)
+					local r, g, b, a = resolveColor((colorRule and colorRule.color) or group.color)
 					if not selected then a = min(a, 0.6) end
 					local inset = max(0, tonumber(group.inset) or 0)
 					local size = max(1, tonumber(group.borderSize) or 1)
@@ -3559,7 +3625,8 @@ function Editor:RefreshPreview()
 			elseif style == "TINT" then
 				local active = isPreviewGroupTintActive(placement, group, self.kind)
 				if active or selected then
-					local r, g, b, a = resolveColor(group.color)
+					local colorRule = active and getPreviewPriorityRuleForGroup(placement, group.id, self.kind) or nil
+					local r, g, b, a = resolveColor((colorRule and colorRule.color) or group.color)
 					if not active and selected then a = min(a, 0.35) end
 					if selected then
 						tintR, tintG, tintB, tintA = r, g, b, a

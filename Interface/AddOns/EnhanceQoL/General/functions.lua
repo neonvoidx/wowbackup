@@ -1792,6 +1792,13 @@ local function toggleQuickKeybindMode()
 	frame:SetShown(not frame:IsShown())
 end
 
+local function toggleClickCastBindings()
+	if InCombatLockdown and InCombatLockdown() then return end
+	if C_GameRules and C_GameRules.IsPlunderstorm and C_GameRules.IsPlunderstorm() then return end
+	local toggleFrame = _G.ToggleClickBindingFrame
+	if toggleFrame then toggleFrame() end
+end
+
 function addon.functions.registerCooldownManagerSlashCommand()
 	if not SlashCmdList then return end
 	local isLoaded = (C_AddOns and C_AddOns.IsAddOnLoaded) or _G.IsAddOnLoaded
@@ -1839,6 +1846,18 @@ function addon.functions.registerQuickKeybindSlashCommand()
 	if not canClaim("/kb") then return end
 	_G.SLASH_EQOLKB1 = "/kb"
 	SlashCmdList["EQOLKB"] = function() toggleQuickKeybindMode() end
+end
+
+function addon.functions.registerClickCastSlashCommand()
+	if not SlashCmdList then return end
+	local commands = {}
+	local function canClaim(command) return isSlashCommandOwnedByEQOL(command, "EQOLCCB", "EQOLCCB", 2) or not isSlashCommandRegistered(command) end
+	if canClaim("/ccb") then commands[#commands + 1] = "/ccb" end
+	if canClaim("/clickcast") then commands[#commands + 1] = "/clickcast" end
+	if #commands == 0 then return end
+	_G.SLASH_EQOLCCB1 = commands[1]
+	_G.SLASH_EQOLCCB2 = commands[2]
+	SlashCmdList["EQOLCCB"] = function() toggleClickCastBindings() end
 end
 
 function addon.functions.registerReloadUISlashCommand()

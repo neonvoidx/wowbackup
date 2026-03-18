@@ -164,6 +164,10 @@ local bgMaxPlayerCorrections = {
 
 -- Helper function to get corrected max players from GetInstanceInfo()
 local function GetCorrectedMaxPlayers()
+  -- Blitz (Solo RBG) is always 8v8 regardless of map
+  if C_PvP and C_PvP.IsSoloRBG and C_PvP.IsSoloRBG() then
+    return 8
+  end
   local _, _, _, _, maxPlayers, _, _, instanceID = GetInstanceInfo()
   if instanceID and bgMaxPlayerCorrections[instanceID] then
     return bgMaxPlayerCorrections[instanceID]
@@ -2793,6 +2797,7 @@ function BattleGroundEnemies:ARENA_COOLDOWNS_UPDATE(unitID)
   local isObjectiveMap = states and IsObjectiveBG(states.currentMapId)
 
   if unitID then
+    -- Specific unit fired — this unit likely used their trinket
     local playerButton = nil
     local isArenaUnit = unitID and unitID:match("^arena%d")
 
@@ -2811,19 +2816,26 @@ function BattleGroundEnemies:ARENA_COOLDOWNS_UPDATE(unitID)
     end
 
     if playerButton then
-      playerButton:UpdateCrowdControlCooldown(unitID)
+      local gotRealData = playerButton:UpdateCrowdControlCooldown(unitID)
+      if not gotRealData then
+        -- API returned nothing (taint-restricted, not in arena, etc.)
+        -- Use a fake cooldown since we know THIS specific unit triggered the event.
+        -- StartFakeCooldown() guards against re-triggers internally.
+        playerButton:ApplyFakeTrinketCooldown()
+      end
     end
   else
+    -- No unitID: general refresh. Only apply real API data, never fake.
     for i = 1, 4 do
-      unitID = "arena" .. i
+      local arenaUnit = "arena" .. i
       -- Use ArenaIDToPlayerButton directly for arena units
-      local playerButton = self.ArenaIDToPlayerButton[unitID]
+      local playerButton = self.ArenaIDToPlayerButton[arenaUnit]
       -- Skip PID fallback in objective BGs (no objective = no trinket updates)
-      if not (unitID and isObjectiveMap) then
-        playerButton = self:GetPlayerbuttonByUnitID(unitID, "Enemies")
+      if not playerButton and not isObjectiveMap then
+        playerButton = self:GetPlayerbuttonByUnitID(arenaUnit, "Enemies")
       end
       if playerButton then
-        playerButton:UpdateCrowdControlCooldown(unitID)
+        playerButton:UpdateCrowdControlCooldown(arenaUnit)
       end
     end
   end

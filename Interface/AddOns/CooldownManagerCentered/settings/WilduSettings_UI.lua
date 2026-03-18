@@ -842,6 +842,191 @@ local function WilduSettings_BuildCooldown(category, layout)
             end
         end
     )
+    local customProcSection = SettingsLib:CreateExpandableSection(category, {
+        name = "Custom |cfffff100Glow|r Styles",
+        expanded = false,
+        colorizeTitle = true,
+    })
+
+    SettingsLib:CreateDropdown(category, {
+        parentSection = customProcSection,
+        prefix = "CMC_",
+        key = "cooldownManager_experimental_glow_style",
+        name = "Custom Glow Style",
+        searchtags = { "Experimental", "Glow", "Style", "Proc", "Auto Cast", "Pixel", "Default" },
+        default = "DEFAULT",
+        values = {
+            DEFAULT = "Default",
+            PROC = "Proc Glow",
+            AUTOCAST = "Auto Cast Glow",
+            PIXEL = "Pixel Glow",
+        },
+        order = { "DEFAULT", "PROC", "AUTOCAST", "PIXEL" },
+        get = function()
+            return ns.db.profile.cooldownManager_experimental_glow_style or "DEFAULT"
+        end,
+        set = function(value)
+            ns.db.profile.cooldownManager_experimental_glow_style = value
+            if not ns.db.profile.cooldownManager_experimental_disablePerSpellSettings then
+                if ns.CooldownStyle then
+                    ns.CooldownStyle:RefreshHooks()
+                end
+            end
+            ns.API:ShowReloadUIConfirmation()
+        end,
+        desc = "Set one global glow style used by cooldown style glows and glow overrides.",
+    })
+
+    SettingsLib:CreateCheckbox(category, {
+        parentSection = customProcSection,
+        prefix = "CMC_",
+        key = "cooldownManager_experimental_glow_custom_color",
+        name = "Custom Glow Color",
+        searchtags = { "Experimental", "Glow", "Color", "Auto Cast", "Pixel" },
+        default = false,
+        get = function()
+            return ns.db.profile.cooldownManager_experimental_glow_custom_color
+        end,
+        set = function(value)
+            ns.db.profile.cooldownManager_experimental_glow_custom_color = value
+            if not ns.db.profile.cooldownManager_experimental_disablePerSpellSettings then
+                if ns.CooldownStyle then
+                    ns.CooldownStyle:RefreshHooks()
+                end
+            end
+            ns.API:ShowReloadUIConfirmation()
+        end,
+    })
+
+    SettingsLib:CreateColorOverrides(category, {
+        parentSection = customProcSection,
+        key = "cooldownManager_experimental_glow_color",
+        entries = {
+            { key = "glow", label = "Glow Color" },
+        },
+        hasOpacity = true,
+        getColor = function()
+            return ns.db.profile.cooldownManager_experimental_glow_color_r or 0.95,
+                ns.db.profile.cooldownManager_experimental_glow_color_g or 0.95,
+                ns.db.profile.cooldownManager_experimental_glow_color_b or 0.32,
+                ns.db.profile.cooldownManager_experimental_glow_color_a or 1
+        end,
+        setColor = function(_, r, g, b, a)
+            ns.db.profile.cooldownManager_experimental_glow_color_r = r
+            ns.db.profile.cooldownManager_experimental_glow_color_g = g
+            ns.db.profile.cooldownManager_experimental_glow_color_b = b
+            ns.db.profile.cooldownManager_experimental_glow_color_a = a
+            if not ns.db.profile.cooldownManager_experimental_disablePerSpellSettings then
+                if ns.CooldownStyle then
+                    ns.CooldownStyle:RefreshHooks()
+                end
+            end
+            ns.API:ShowReloadUIConfirmation()
+        end,
+        getDefaultColor = function()
+            return 0.95, 0.95, 0.32, 1
+        end,
+    })
+
+    SettingsLib:CreateText(category, {
+        parentSection = customProcSection,
+        name = "Glow style & color applies to Proc Glows and Custom Glows set from Cooldown Settings\n\nAdditional settings for autocast and pixel glow: (set 0 for default)",
+    })
+
+    SettingsLib:CreateSlider(category, {
+        parentSection = customProcSection,
+        prefix = "CMC_",
+        key = "cooldownManager_experimental_glow_animation_speed",
+        name = "Animation Speed",
+        searchtags = { "Experimental", "Glow", "Animation", "Speed", "Frequency", "Auto Cast", "Pixel" },
+        default = 0,
+        min = -1,
+        max = 1,
+        step = 0.01,
+        formatter = function(value)
+            return string.format("%.2f", value)
+        end,
+        get = function()
+            return ns.db.profile.cooldownManager_experimental_glow_animation_speed or 0
+        end,
+        set = function(value)
+            local speed = tonumber(value) or 0
+            if speed > 2 then
+                speed = 2
+            elseif speed < -2 then
+                speed = -2
+            end
+            ns.db.profile.cooldownManager_experimental_glow_animation_speed = speed
+            if not ns.db.profile.cooldownManager_experimental_disablePerSpellSettings then
+                if ns.CooldownStyle then
+                    ns.CooldownStyle:RefreshHooks()
+                end
+            end
+            ns.API:ShowReloadUIConfirmation()
+        end,
+        desc = 'Controls glow animation speed (frequency) for Auto Cast and Pixel Glow.\n0 is not "zero", it\'s Default speed.',
+    })
+    SettingsLib:CreateSlider(category, {
+        parentSection = customProcSection,
+        prefix = "CMC_",
+        key = "cooldownManager_experimental_glow_animation_density",
+        name = "Animation Density",
+        searchtags = { "Experimental", "Glow", "Animation", "Density", "Frequency", "Auto Cast", "Pixel" },
+        default = 0,
+        min = 0,
+        max = 16,
+        step = 1,
+        formatter = function(value)
+            return string.format("%d", value)
+        end,
+        get = function()
+            return ns.db.profile.cooldownManager_experimental_glow_animation_density or 0
+        end,
+        set = function(value)
+            local density = tonumber(value) or 0
+            if density > 16 then
+                density = 16
+            elseif density < 0 then
+                density = 0
+            end
+            ns.db.profile.cooldownManager_experimental_glow_animation_density = density
+            if not ns.db.profile.cooldownManager_experimental_disablePerSpellSettings then
+                if ns.CooldownStyle then
+                    ns.CooldownStyle:RefreshHooks()
+                end
+            end
+            ns.API:ShowReloadUIConfirmation()
+        end,
+        desc = 'Controls glow animation density for Auto Cast and Pixel Glow.\n0 is not "zero", it\'s Default density.',
+    })
+
+    SettingsLib:CreateButton(category, {
+        parentSection = customProcSection,
+        text = "Restore Glows to Default",
+        searchtags = {
+            "Experimental",
+            "Glow",
+            "Animation",
+            "Speed",
+            "Density",
+            "Auto Cast",
+            "Pixel",
+            "Reset",
+            "Default",
+        },
+        func = function()
+            ns.db.profile.cooldownManager_experimental_glow_style = "DEFAULT"
+            ns.db.profile.cooldownManager_experimental_glow_custom_color = false
+            ns.db.profile.cooldownManager_experimental_glow_animation_speed = 0
+            ns.db.profile.cooldownManager_experimental_glow_animation_density = 0
+            if not ns.db.profile.cooldownManager_experimental_disablePerSpellSettings then
+                if ns.CooldownStyle then
+                    ns.CooldownStyle:RefreshHooks()
+                end
+            end
+            ns.API:ShowReloadUIConfirmation()
+        end,
+    })
 
     local stackNumberSection = SettingsLib:CreateExpandableSection(category, {
         name = "Ability |cffeeeeeeStacks|r Number Settings",
@@ -2290,7 +2475,7 @@ local function WilduSettings_BuildCooldown(category, layout)
     SettingsLib:CreateCheckbox(experimentalCategory, {
         prefix = "CMC_",
         key = "cooldownManager_experimental_disablePerSpellSettings",
-        name = "Disable Spell Overrides",
+        name = "Disable Per-Spell Options",
         searchtags = { "Cooldown", "Spell", "Overrides", "Experimental", "Optimization", "Performance" },
         default = false,
         get = function()
@@ -2300,201 +2485,27 @@ local function WilduSettings_BuildCooldown(category, layout)
             ns.db.profile.cooldownManager_experimental_disablePerSpellSettings = value
             ns.API:ShowReloadUIConfirmation()
         end,
-        desc = "Disable per-spell overrides for cooldown settings. |cffff0000Experimental feature, use with caution!|r",
+        desc = "Disable per-spell options for cooldown settings. Should improve performance. |cffff0000This disables all per-spell customizations!|r",
     })
 
     SettingsLib:CreateHeader(experimentalCategory, {
-        name = "Cooldown Style Glows",
+        name = "Glow Experiments",
         searchtags = { "Cooldown", "Style", "Glow", "Glows", "Experimental", "Customization" },
     })
-    SettingsLib:CreateCheckbox(experimentalCategory, {
-        prefix = "CMC_",
-        key = "cooldownManager_experimental_custom_glows",
-        name = "Custom Procs Glows",
-        searchtags = { "Cooldown", "Text", "Layout", "Experimental", "Glow", "Custom", "Performance" },
-        default = false,
-        get = function()
-            return ns.db.profile.cooldownManager_experimental_custom_glows
-        end,
-        set = function(value)
-            ns.db.profile.cooldownManager_experimental_custom_glows = value
-            ns.API:ShowReloadUIConfirmation()
-        end,
-        desc = "Enable custom glows for cooldowns. |cffff0000Experimental feature, use with caution!|r",
-    })
-
-    SettingsLib:CreateDropdown(experimentalCategory, {
-        prefix = "CMC_",
-        key = "cooldownManager_experimental_glow_style",
-        name = "Custom Glow Style",
-        searchtags = { "Experimental", "Glow", "Style", "Proc", "Auto Cast", "Pixel", "Default" },
-        default = "DEFAULT",
-        values = {
-            DEFAULT = "Default",
-            PROC = "Proc Glow",
-            AUTOCAST = "Auto Cast Glow",
-            PIXEL = "Pixel Glow",
-        },
-        order = { "DEFAULT", "PROC", "AUTOCAST", "PIXEL" },
-        get = function()
-            return ns.db.profile.cooldownManager_experimental_glow_style or "DEFAULT"
-        end,
-        set = function(value)
-            ns.db.profile.cooldownManager_experimental_glow_style = value
-            if not ns.db.profile.cooldownManager_experimental_disablePerSpellSettings then
-                if ns.CooldownStyle then
-                    ns.CooldownStyle:RefreshHooks()
-                end
-            end
-            ns.API:ShowReloadUIConfirmation()
-        end,
-        desc = "Set one global glow style used by cooldown style glows and glow overrides.",
-    })
 
     SettingsLib:CreateCheckbox(experimentalCategory, {
         prefix = "CMC_",
-        key = "cooldownManager_experimental_glow_custom_color",
-        name = "Custom Glow Color",
-        searchtags = { "Experimental", "Glow", "Color", "Auto Cast", "Pixel" },
+        key = "cooldownManager_hide_glow_on_active_aura",
+        name = "Hide custom glows when Aura is shown",
+        searchtags = { "Cooldown", "Glow", "Active Aura", "Buff", "Debuff", "Experimental", "Customization" },
         default = false,
         get = function()
-            return ns.db.profile.cooldownManager_experimental_glow_custom_color
+            return ns.db.profile.cooldownManager_hide_glow_on_active_aura or false
         end,
         set = function(value)
-            ns.db.profile.cooldownManager_experimental_glow_custom_color = value
-            if not ns.db.profile.cooldownManager_experimental_disablePerSpellSettings then
-                if ns.CooldownStyle then
-                    ns.CooldownStyle:RefreshHooks()
-                end
-            end
-            ns.API:ShowReloadUIConfirmation()
+            ns.db.profile.cooldownManager_hide_glow_on_active_aura = value
         end,
-    })
-
-    SettingsLib:CreateColorOverrides(experimentalCategory, {
-        key = "cooldownManager_experimental_glow_color",
-        entries = {
-            { key = "glow", label = "Glow Color" },
-        },
-        hasOpacity = true,
-        getColor = function()
-            return ns.db.profile.cooldownManager_experimental_glow_color_r or 0.95,
-                ns.db.profile.cooldownManager_experimental_glow_color_g or 0.95,
-                ns.db.profile.cooldownManager_experimental_glow_color_b or 0.32,
-                ns.db.profile.cooldownManager_experimental_glow_color_a or 1
-        end,
-        setColor = function(_, r, g, b, a)
-            ns.db.profile.cooldownManager_experimental_glow_color_r = r
-            ns.db.profile.cooldownManager_experimental_glow_color_g = g
-            ns.db.profile.cooldownManager_experimental_glow_color_b = b
-            ns.db.profile.cooldownManager_experimental_glow_color_a = a
-            if not ns.db.profile.cooldownManager_experimental_disablePerSpellSettings then
-                if ns.CooldownStyle then
-                    ns.CooldownStyle:RefreshHooks()
-                end
-            end
-            ns.API:ShowReloadUIConfirmation()
-        end,
-        getDefaultColor = function()
-            return 0.95, 0.95, 0.32, 1
-        end,
-    })
-
-    SettingsLib:CreateText(experimentalCategory, {
-        name = "Glow style & color applies to Proc Glows and Custom Glows set from Cooldown Settings\nAdditional settings for autocast and pixel glow: (set 0 for default)",
-    })
-
-    SettingsLib:CreateSlider(experimentalCategory, {
-        prefix = "CMC_",
-        key = "cooldownManager_experimental_glow_animation_speed",
-        name = "Animation Speed",
-        searchtags = { "Experimental", "Glow", "Animation", "Speed", "Frequency", "Auto Cast", "Pixel" },
-        default = 0,
-        min = -1,
-        max = 1,
-        step = 0.01,
-        formatter = function(value)
-            return string.format("%.2f", value)
-        end,
-        get = function()
-            return ns.db.profile.cooldownManager_experimental_glow_animation_speed or 0
-        end,
-        set = function(value)
-            local speed = tonumber(value) or 0
-            if speed > 2 then
-                speed = 2
-            elseif speed < -2 then
-                speed = -2
-            end
-            ns.db.profile.cooldownManager_experimental_glow_animation_speed = speed
-            if not ns.db.profile.cooldownManager_experimental_disablePerSpellSettings then
-                if ns.CooldownStyle then
-                    ns.CooldownStyle:RefreshHooks()
-                end
-            end
-            ns.API:ShowReloadUIConfirmation()
-        end,
-        desc = 'Controls glow animation speed (frequency) for Auto Cast and Pixel Glow.\n0 is not "zero", it\'s Default speed.',
-    })
-    SettingsLib:CreateSlider(experimentalCategory, {
-        prefix = "CMC_",
-        key = "cooldownManager_experimental_glow_animation_density",
-        name = "Animation Density",
-        searchtags = { "Experimental", "Glow", "Animation", "Density", "Frequency", "Auto Cast", "Pixel" },
-        default = 0,
-        min = 0,
-        max = 16,
-        step = 1,
-        formatter = function(value)
-            return string.format("%d", value)
-        end,
-        get = function()
-            return ns.db.profile.cooldownManager_experimental_glow_animation_density or 0
-        end,
-        set = function(value)
-            local density = tonumber(value) or 0
-            if density > 16 then
-                density = 16
-            elseif density < 0 then
-                density = 0
-            end
-            ns.db.profile.cooldownManager_experimental_glow_animation_density = density
-            if not ns.db.profile.cooldownManager_experimental_disablePerSpellSettings then
-                if ns.CooldownStyle then
-                    ns.CooldownStyle:RefreshHooks()
-                end
-            end
-            ns.API:ShowReloadUIConfirmation()
-        end,
-        desc = 'Controls glow animation density for Auto Cast and Pixel Glow.\n0 is not "zero", it\'s Default density.',
-    })
-
-    SettingsLib:CreateButton(experimentalCategory, {
-        text = "Restore Default Values",
-        searchtags = {
-            "Experimental",
-            "Glow",
-            "Animation",
-            "Speed",
-            "Density",
-            "Auto Cast",
-            "Pixel",
-            "Reset",
-            "Default",
-        },
-        func = function()
-            ns.db.profile.cooldownManager_experimental_glow_animation_speed = 0
-            ns.db.profile.cooldownManager_experimental_glow_animation_density = 0
-            if not ns.db.profile.cooldownManager_experimental_disablePerSpellSettings then
-                if ns.CooldownStyle then
-                    ns.CooldownStyle:RefreshHooks()
-                end
-            end
-            ns.API:ShowReloadUIConfirmation()
-        end,
-    })
-    SettingsLib:CreateText(experimentalCategory, {
-        name = "Use some GCD ability to refresh the glows and see the changes.",
+        desc = "Hide custom glows around cooldown icons when an Aura is active. |cffff0000Experimental feature, may not work!|r",
     })
 
     SettingsLib:CreateHeader(experimentalCategory, {
@@ -2612,7 +2623,7 @@ local function WilduSettings_BuildCooldown(category, layout)
     })
 
     SettingsLib:CreateText(experimentalCategory, {
-        name = "|cffff0000NO LONGER EXPERIMENT:|r\nTracker is configurable in main tab\n& Hide/Show Auras settings are now configurable within the Cooldown Settings 3rd tab",
+        name = "|cffff0000NO LONGER EXPERIMENT:|r\nTracker & Glows are configurable in main tab\n& Hide/Show Auras settings are now configurable within the Cooldown Settings 3rd tab",
     })
     SettingsLib:CreateButton(experimentalCategory, {
         text = "Open Cooldown Settings",

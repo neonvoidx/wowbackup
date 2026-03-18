@@ -912,31 +912,31 @@ function WQT_SettingsCategoryDataMixin:CreateText(tag, label, font, color, botto
 	return settingMixin;
 end
 
-local function UpdateColorID(id, r, g, b)
-	local color = WQT_Utils:UpdateColor(id, r, g, b);
-	if (color) then
-		WQT.settings.colors[id] = color:GenerateHexColor();
-		WQT_ListContainer:DisplayQuestList();
-		WQT_WorldQuestFrame.pinDataProvider:RefreshAllData();
+do
+	local function UpdateColorID(id, r, g, b)
+		local color = WQT_Utils:UpdateColor(id, r, g, b);
+		if (color) then
+			WQT.settings.colors[id] = color:GenerateHexColor();
+		end
 	end
-end
 
-local function GetColorByID(id)
-	return WQT_Utils:GetColor(id);
-end
+	local function GetColorByID(id)
+		return WQT_Utils:GetColor(id);
+	end
 
-function WQT_SettingsCategoryDataMixin:AddColorPicker(tag, label, tooltip, colorID, defaultColor)
-	if (type(tag) ~= "string") then error("'tag' must be a string value"); return; end
-	if (type(colorID) ~= "string") then error("'colorID' must be a string value"); return; end
-	if (type(defaultColor) ~= "table" or not defaultColor.GetRGB) then error("'defaultColor' must be a ColorMixin value"); return; end
-	local settingMixin = CreateAndInitFromMixin(WQT_SettingElementDataMixin, "WQT_SettingColorTemplate", label, tooltip, self.categoryID, tag);
-	settingMixin:SetValueToKey("colorID", colorID);
-	settingMixin:SetValueToKey("defaultColor", defaultColor);
-	settingMixin:SetValueChangedFunction(UpdateColorID);
-	settingMixin:SetGetValueFunction(GetColorByID);
+	function WQT_SettingsCategoryDataMixin:AddColorPicker(tag, label, tooltip, colorID, defaultColor)
+		if (type(tag) ~= "string") then error("'tag' must be a string value"); return; end
+		if (type(colorID) ~= "string") then error("'colorID' must be a string value"); return; end
+		if (type(defaultColor) ~= "table" or not defaultColor.GetRGB) then error("'defaultColor' must be a ColorMixin value"); return; end
+		local settingMixin = CreateAndInitFromMixin(WQT_SettingElementDataMixin, "WQT_SettingColorTemplate", label, tooltip, self.categoryID, tag);
+		settingMixin:SetValueToKey("colorID", colorID);
+		settingMixin:SetValueToKey("defaultColor", defaultColor);
+		settingMixin:SetValueChangedFunction(UpdateColorID);
+		settingMixin:SetGetValueFunction(GetColorByID);
 
-	table.insert(self.children, settingMixin);
-	return settingMixin;
+		table.insert(self.children, settingMixin);
+		return settingMixin;
+	end
 end
 
 function WQT_SettingsCategoryDataMixin:AddTextInput(tag, label, tooltip)
@@ -958,6 +958,14 @@ end
 function WQT_SettingsCategoryDataMixin:AddConfirmButton(tag, label, tooltip)
 	if (type(tag) ~= "string") then error("AddConfirmButton has invalid tag", tag); return; end
 	local settingMixin = CreateAndInitFromMixin(WQT_SettingElementDataMixin, "WQT_SettingConfirmButtonTemplate", label, tooltip, self.categoryID, tag);
+
+	table.insert(self.children, settingMixin);
+	return settingMixin;
+end
+
+function WQT_SettingsCategoryDataMixin:AddSeparator(tag)
+	if (type(tag) ~= "string") then error("AddSeparator has invalid tag", tag); return; end
+	local settingMixin = CreateAndInitFromMixin(WQT_SettingElementDataMixin, "WQT_SettingSeparatorTemplate", nil, nil, self.categoryID, tag);
 
 	table.insert(self.children, settingMixin);
 	return settingMixin;
@@ -1160,6 +1168,23 @@ function WQT_SettingsFrameMixin:Init()
 		-- 	AddSection(ChangelogSections.Changes, { });
 		-- 	AddSection(ChangelogSections.Fixes, { });
 		-- end
+
+		do -- 12.0.08
+			StartVersionCategory("12.0.08");
+			AddSection(ChangelogSections.New, {
+				"Added new label scale setting to scale just map pin labels. The existing scale setting will now only scale the icon";
+				"Added an option for pin ring colors to color by the quality of the main reward";
+			});
+			AddSection(ChangelogSections.Changes, {
+				"Changed the pin label colors setting to a dropdown with the same options as pin ring colors";
+				"Moved the pins for Voidstorm and Harandar to what I hope remains an empty area this time";
+				"Slightly tweaked pin label visuals";
+			});
+			AddSection(ChangelogSections.Fixes, {
+				"Fixed the world quest icon still showing up on quest hub map pins";
+				"Fixed Blizzard pins not properly showing the first time with pin changes disabled";
+			});
+		end
 
 		do -- 12.0.07
 			StartVersionCategory("12.0.07");
@@ -1503,7 +1528,6 @@ function WQT_SettingsFrameMixin:Init()
 			local data = category:AddDropdown("ZONE_QUESTS", _L:Get("ZONE_QUESTS"), _L:Get("ZONE_QUESTS_TT"), options);
 			data:SetGetValueFunction(function() return WQT.settings.general.zoneQuests; end);
 			data:SetValueChangedFunction(function(value) WQT.settings.general.zoneQuests = value; end);
-			data:MarkAsNew(); -- 11.2.5
 		end
 
 		do -- Old Expanpansions
@@ -1616,6 +1640,15 @@ function WQT_SettingsFrameMixin:Init()
 
 	do -- Map Pins
 		local category = self.dataContainer:AddCategory("MAPPINS", _L:Get("MAP_PINS"), not CATEGORY_DEFAULT_EXPANDED);
+		local enumPinColorType = addon.variables:GetPinColorType();
+
+		local colorOptions = {
+				CreateDropdownOption(enumPinColorType.default, _L:Get("PIN_RING_DEFAULT"), _L:Get("PIN_RING_DEFAULT_TT"));
+				CreateDropdownOption(enumPinColorType.reward, _L:Get("PIN_RING_COLOR"), _L:Get("PIN_RING_COLOR_TT"));
+				CreateDropdownOption(enumPinColorType.rewardQuality, _L:Get("PIN_RING_REWARDQUALITY"), _L:Get("PIN_RING_REWARDQUALITY_TT"));
+				CreateDropdownOption(enumPinColorType.time, _L:Get("PIN_RING_TIME"), _L:Get("PIN_RING_TIME_TT"));
+				CreateDropdownOption(enumPinColorType.rarity, _L:Get("PIN_RING_QUALITY"), _L:Get("PIN_RING_QUALITY_TT"));
+			};
 
 		do -- Disable Change
 			local data = category:AddCheckbox("PIN_DISABLE_CHANGES", _L:Get("PIN_DISABLE"), _L:Get("PIN_DISABLE_TT"));
@@ -1646,14 +1679,8 @@ function WQT_SettingsFrameMixin:Init()
 			data:MarkAsNew(); -- 12.0.0
 		end
 
-		do -- Pin Scale
-			local minValue = 0.8;
-			local maxValue = 1.5;
-			local valueStep = 0.01;
-			local data = category:AddSlider("PIN_SCALE", _L:Get("PIN_SCALE"), _L:Get("PIN_SCALE_TT"), minValue, maxValue, valueStep);
-			data:SetGetValueFunction(function() return WQT.settings.pin.scale; end);
-			data:SetValueChangedFunction(function(value) WQT.settings.pin.scale = value; end);
-			data:SetIsDisabledFunction(function() return WQT.settings.pin.disablePoI; end);
+		do
+			category:AddSeparator("PIN_ICON_SEPARATOR");
 		end
 
 		do -- Center Type
@@ -1670,19 +1697,25 @@ function WQT_SettingsFrameMixin:Init()
 			data:SetIsDisabledFunction(function() return WQT.settings.pin.disablePoI; end);
 		end
 
-		do -- Ring Type
-			local enumRingType = addon.variables:GetRingTypeEnum();
-			local options = {
-				CreateDropdownOption(enumRingType.default, _L:Get("PIN_RING_DEFAULT"), _L:Get("PIN_RING_DEFAULT_TT"));
-				CreateDropdownOption(enumRingType.reward, _L:Get("PIN_RING_COLOR"), _L:Get("PIN_RING_COLOR_TT"));
-				CreateDropdownOption(enumRingType.time, _L:Get("PIN_RING_TIME"), _L:Get("PIN_RIMG_TIME_TT"));
-				CreateDropdownOption(enumRingType.rarity, RARITY, _L:Get("PIN_RING_QUALITY_TT"));
-			};
-		
-			local data = category:AddDropdown("PIN_RING_TYPE", _L:Get("PIN_RING_TITLE"), _L:Get("PIN_RING_TT"), options);
+		do -- Ring Color
+			local data = category:AddDropdown("PIN_RING_TYPE", _L:Get("PIN_RING_TITLE"), _L:Get("PIN_RING_TT"), colorOptions);
 			data:SetGetValueFunction(function() return WQT.settings.pin.ringType; end);
 			data:SetValueChangedFunction(function(value) WQT.settings.pin.ringType = value; end);
 			data:SetIsDisabledFunction(function() return WQT.settings.pin.disablePoI; end);
+		end
+
+		do -- Pin Scale
+			local minValue = 0.8;
+			local maxValue = 1.5;
+			local valueStep = 0.01;
+			local data = category:AddSlider("PIN_SCALE", _L:Get("PIN_SCALE"), _L:Get("PIN_SCALE_TT"), minValue, maxValue, valueStep);
+			data:SetGetValueFunction(function() return WQT.settings.pin.scale; end);
+			data:SetValueChangedFunction(function(value) WQT.settings.pin.scale = value; end);
+			data:SetIsDisabledFunction(function() return WQT.settings.pin.disablePoI; end);
+		end
+
+		do
+			category:AddSeparator("PIN_LABEL_SEPARATOR");
 		end
 
 		local enumPinLabel = addon.variables:GetPinLabelEnum();
@@ -1697,15 +1730,28 @@ function WQT_SettingsFrameMixin:Init()
 			data:SetGetValueFunction(function() return WQT.settings.pin.label; end);
 			data:SetValueChangedFunction(function(value) WQT.settings.pin.label = value; end);
 			data:SetIsDisabledFunction(function() return WQT.settings.pin.disablePoI; end);
-			data:MarkAsNew(); -- 11.2.5
 		end
 
 		do -- Label Colors
-			local data = category:AddCheckbox("PIN_LABEL_COLORS", _L:Get("PIN_LABEL_COLORS"), _L:Get("PIN_LABEL_COLORS_TT"));
-			data:SetGetValueFunction(function() return WQT.settings.pin.labelColors; end);
-			data:SetValueChangedFunction(function(value) WQT.settings.pin.labelColors = value; end);
+			local data = category:AddDropdown("PIN_RING_TYPE", _L:Get("PIN_LABEL_COLOR"), _L:Get("PIN_LABEL_COLOR_TT"), colorOptions);
+			data:SetGetValueFunction(function() return WQT.settings.pin.labelColorType; end);
+			data:SetValueChangedFunction(function(value) WQT.settings.pin.labelColorType = value; end);
 			data:SetIsDisabledFunction(function() return WQT.settings.pin.label == enumPinLabel.none; end);
-			data:MarkAsNew(); -- 11.2.5
+		end
+
+		do -- Label Scale
+			local minValue = 0.8;
+			local maxValue = 1.5;
+			local valueStep = 0.1;
+			local data = category:AddSlider("PIN_LABEL_SCALE", _L:Get("PIN_LABEL_SCALE"), _L:Get("PIN_LABEL_SCALE_TT"), minValue, maxValue, valueStep);
+			data:SetGetValueFunction(function() return WQT.settings.pin.labelScale; end);
+			data:SetValueChangedFunction(function(value) WQT.settings.pin.labelScale = value; end);
+			data:SetIsDisabledFunction(function() return WQT.settings.pin.label == enumPinLabel.none; end);
+			data:MarkAsNew(); -- 12.0.1
+		end
+
+		do
+			category:AddSeparator("PIN_VISIBILITY_SEPARATOR");
 		end
 
 		do -- Zone Visibility

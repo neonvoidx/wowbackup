@@ -1,6 +1,7 @@
 ---@type string, Addon
 local _, addon = ...
 local mini = addon.Core.Framework
+local wowEx = addon.Utils.WoWEx
 local unitWatcher = addon.Core.UnitAuraWatcher
 local iconSlotContainer = addon.Core.IconSlotContainer
 local spellCache = addon.Utils.SpellCache
@@ -83,6 +84,11 @@ local function CreateContainer(unitFrame, portrait)
 	container.Frame:SetPoint("BOTTOMRIGHT", portrait, "BOTTOMRIGHT", -2, 2)
 	container.Frame:SetFrameLevel(math.max(0, (unitFrame:GetFrameLevel() or 0) - 1))
 
+	-- match the frame strata of the portrait parent
+	-- some addons like ClassicFrames adjust this from LOW to MEDIUM
+	-- so we want to follow it to ensure the icons are visible
+	container.Frame:SetFrameStrata(portrait:GetParent():GetFrameStrata())
+
 	-- inherit scale from portrait so icons scale with it
 	container.Frame:SetIgnoreParentScale(false)
 
@@ -119,8 +125,7 @@ local function OnAuraInfo(watcher, container)
 	for _, aura in ipairs(ccAuras) do
 		container:SetSlot(slotIndex, {
 			Texture = aura.SpellIcon,
-			StartTime = aura.StartTime,
-			Duration = aura.TotalDuration,
+			DurationObject = aura.DurationObject,
 			Alpha = aura.IsCC,
 			ReverseCooldown = db.Modules.PortraitModule.ReverseCooldown,
 			FontScale = db.FontScale,
@@ -132,8 +137,7 @@ local function OnAuraInfo(watcher, container)
 	for _, aura in ipairs(defensiveAuras) do
 		container:SetSlot(slotIndex, {
 			Texture = aura.SpellIcon,
-			StartTime = aura.StartTime,
-			Duration = aura.TotalDuration,
+			DurationObject = aura.DurationObject,
 			Alpha = aura.IsDefensive,
 			ReverseCooldown = db.Modules.PortraitModule.ReverseCooldown,
 			FontScale = db.FontScale,
@@ -145,8 +149,7 @@ local function OnAuraInfo(watcher, container)
 	for _, aura in ipairs(importantAuras) do
 		container:SetSlot(slotIndex, {
 			Texture = aura.SpellIcon,
-			StartTime = aura.StartTime,
-			Duration = aura.TotalDuration,
+			DurationObject = aura.DurationObject,
 			Alpha = aura.IsImportant,
 			ReverseCooldown = db.Modules.PortraitModule.ReverseCooldown,
 			FontScale = db.FontScale,
@@ -342,8 +345,7 @@ local function RefreshTestIcons()
 	for _, container in pairs(containers) do
 		container:SetSlot(1, {
 			Texture = tex,
-			StartTime = now,
-			Duration = 15, -- 15 second duration for test
+			DurationObject = wowEx:CreateDuration(now, 15),
 			Alpha = true,
 			Glow = false,
 			ReverseCooldown = db.Modules.PortraitModule.ReverseCooldown,

@@ -32,19 +32,43 @@ function addon:OnInitialize()
     end
 end
 local openCooldownViewerSettings = function()
-    if not InCombatLockdown() then
-        CooldownViewerSettings:ShowUIPanel(false)
+    if InCombatLockdown() then
+        CooldownViewerSettings:Show()
+        local frameName = CooldownViewerSettings:GetName()
+        if frameName and not tContains(UISpecialFrames, frameName) then
+            tinsert(UISpecialFrames, frameName)
+        end
     else
-        ns.Addon:Print("Cannot open Cooldown Viewer settings while in combat.")
+        CooldownViewerSettings:ShowUIPanel(false)
     end
 end
 
 SLASH_CMC_CVS1 = "/cds"
 SLASH_CMC_CVS2 = "/cdm"
 SlashCmdList["CMC_CVS"] = openCooldownViewerSettings
-SLASH_CMC_SETTINGS1 = "/cmc"
-SlashCmdList["CMC_SETTINGS"] = function()
-    addon:OpenSettings()
+SLASH_CMC_COMMAND1 = "/cmc"
+SlashCmdList["CMC_COMMAND"] = function(msg)
+    if not msg or msg == "" then
+        addon:OpenSettings()
+    end
+    local chunks = {}
+    for substring in msg:gmatch("%S+") do
+        table.insert(chunks, substring)
+    end
+    local command = chunks[1] and chunks[1]:lower()
+    local arg = chunks[2] and chunks[2]:lower()
+    if command == "track" and (arg == "spell" or arg == "item") and chunks[3] then
+        local ok, error = ns.API:AddToTracking(arg, chunks[3])
+        if not ok then
+            ns.Addon:Print(error)
+        end
+        return
+    end
+
+    ns.Addon:Print("Available commands:")
+    print("/cmc - Open the settings panel")
+    print("/cmc track spell {id} - Add a spell to the custom tracked list")
+    print("/cmc track item {id} - Add an item to the custom tracked list")
 end
 
 function addon:RefreshConfig()
@@ -163,6 +187,7 @@ local function _cleanup()
     ns.db.profile.CooldownSkinning = nil
     ns.db.profile.cooldownManager_customActiveColor_enabled = nil
     ns.db.profile.miscTracker_squareIcons = nil
+    -- ns.db.profile.cooldownManager_experimental_custom_glows = false,
 end
 
 function addon:OnEnable()

@@ -38,6 +38,8 @@ L:SetStrings({
 	["Notification"] = "Notifica",
 	["Offset X"] = "Offset X",
 	["Offset Y"] = "Offset Y",
+	["Disable Swipe Animation"] = "Disabilita animazione di scorrimento",
+	["Disables the cooldown swipe (pie chart) animation on all icons. The countdown timer text will still be shown."] = "Disabilita l'animazione di scorrimento (grafico a torta) della ricarica su tutte le icone. Il testo del timer del conto alla rovescia verrà comunque visualizzato.",
 	["Reverse swipe"] = "Scorrimento inverso",
 	["Reverses the direction of the cooldown swipe animation."] = "Inverte la direzione dell'animazione di scorrimento della ricarica.",
 	["Settings"] = "Impostazioni",
@@ -226,6 +228,7 @@ L:SetStrings({
 	["Other mini addons to enhance your PvP experience:"] = "Altri mini addon per migliorare la tua esperienza PvP:",
 	["Other Mini Addons_Short"] = "Altri",
 	["Miscellaneous_Short"] = "Varie",
+	["Configure Blizzard Nameplates"] = "Configura i segnaposto di Blizzard",
 
 	-- What's New
 	[" - Added CC icons on pet party/raid frames (disabled by default)."] = " - Aggiunte icone CC sui frame di gruppo/incursione degli animali da compagnia (disabilitato per impostazione predefinita).",

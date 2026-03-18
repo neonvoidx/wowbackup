@@ -27,7 +27,7 @@ L["vendorCraftShopperBuyNow"] = "Купить"
 L["vendorCraftShopperCancel"] = "Отмена"
 L["vendorCraftShopperCheckListPrint"] = "[%s] не хватает: %d – купить на Аукционе"
 L["vendorCraftShopperConfirmPurchase"] = "Подтвердить покупку"
-L["vendorCraftShopperEnable"] = "Включить Craft Shopper (только в местах отдыха)"
+L["vendorCraftShopperEnable"] = "Включить Craft Shopper"
 L["vendorCraftShopperEnableDesc"] = "Показывает рядом с аукционом список недостающих реагентов из отслеживаемых рецептов. Ищите и покупайте каждый предмет одним кликом."
 L["vendorCraftShopperHideFromList"] = "Скрыть из списка"
 L["vendorCraftShopperMissingGold"] = [=[Недостаточно золота.

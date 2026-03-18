@@ -27,7 +27,7 @@ L["vendorCraftShopperBuyNow"] = "Comprar ahora"
 L["vendorCraftShopperCancel"] = "Cancelar"
 L["vendorCraftShopperCheckListPrint"] = "[%s] faltan: %d – comprar en AH"
 L["vendorCraftShopperConfirmPurchase"] = "Confirmar compra"
-L["vendorCraftShopperEnable"] = "Activar Craft Shopper (solo en zonas de descanso)"
+L["vendorCraftShopperEnable"] = "Activar Craft Shopper"
 L["vendorCraftShopperEnableDesc"] = "Muestra junto a la Casa de Subastas una lista de materiales faltantes de tus recetas rastreadas. Busca y compra cada objeto con un solo clic."
 L["vendorCraftShopperHideFromList"] = "Ocultar de la lista"
 L["vendorCraftShopperMissingGold"] = [=[No hay oro suficiente.

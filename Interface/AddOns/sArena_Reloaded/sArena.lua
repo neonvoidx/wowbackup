@@ -629,7 +629,7 @@ function sArenaMixin:OnEvent(event, ...)
         self:UpdatePlayerSpec()
         self:SetupGrayTrinket()
         self:AddMasqueSupport()
-        --self:SetupCustomCD()
+
         if sArena_ReloadedDB.reOpenOptions then
             sArena_ReloadedDB.reOpenOptions = nil
             C_Timer.After(0.5, function()
@@ -662,10 +662,7 @@ function sArenaMixin:OnEvent(event, ...)
             self:InitializeDRFrames()
         end
 
-        if not self.customCDText then
-            self.customCDText = true
-            self:SetupCustomCD()
-        end
+        self:SetupCustomCD()
 
         if (instanceType == "arena") then
             if not isMidnight then
@@ -1016,6 +1013,9 @@ function sArenaMixin:CreateCustomCooldown(cooldown, showDecimals, isDR)
     local hideNumbers
     if isMidnight then
         hideNumbers = false
+        if showDecimals and cooldown.SetCountdownMillisecondsThreshold then
+            cooldown:SetCountdownMillisecondsThreshold(decimalThreshold)
+        end
     else
         hideNumbers = showDecimals
     end
@@ -1060,6 +1060,7 @@ end
 
 function sArenaMixin:SetupCustomCD()
     if C_AddOns.IsAddOnLoaded("OmniCC") then return end
+    if self.customCDText then return end
 
     for i = 1, sArenaMixin.maxArenaOpponents do
         local frame = self["arena" .. i]
@@ -1084,6 +1085,8 @@ function sArenaMixin:SetupCustomCD()
             end
         end
     end
+
+    self.customCDText = true
 end
 
 

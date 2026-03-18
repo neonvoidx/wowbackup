@@ -121,7 +121,7 @@ function SpecBisTooltip:InitSettings()
 			["pTab"] = {"CENTER"},
 			["sw"] = 600,
 			["sh"] = 600,
-			["title"] = format("|T136031:16:16:0:0|t S|cff3FC7EBpec|rB|cff3FC7EBis|rT|cff3FC7EBooltip|r v|cff3FC7EB%s", SpecBisTooltip:GetVersion())
+			["title"] = format("|T136031:16:16:0:0|t SpecBisTooltip v%s", SpecBisTooltip:GetVersion())
 		}
 	)
 
@@ -883,7 +883,7 @@ local function OnTooltipSetItem(tooltip, data)
 	if invType == "" then return end
 	local specId, icon = SpecBisTooltip:GetTalentInfo()
 	if SpecBisTooltip.DEBUG then
-		tooltip:AddDoubleLine("S|cff3FC7EBpec|rB|cff3FC7EBis|rT|cff3FC7EBooltip|r  ItemId: " .. id)
+		tooltip:AddDoubleLine("SpecBisTooltip  ItemId: " .. id)
 	end
 
 	if invalidEquipSlots[invType] then
@@ -1086,7 +1086,7 @@ SBTSetup:SetScript(
 			SBTTAB = SBTTAB or {}
 			SBTTABPC = SBTTABPC or {}
 			SpecBisTooltip:SetDbTab(SBTTAB)
-			SpecBisTooltip:SetVersion(136031, "0.13.39")
+			SpecBisTooltip:SetVersion(136031, "0.13.40")
 			SpecBisTooltip:AddSlash("sbt", SpecBisTooltip.ToggleSettings)
 			SpecBisTooltip:AddSlash("specbistooltip", SpecBisTooltip.ToggleSettings)
 			local mmbtn = nil
@@ -1096,7 +1096,7 @@ SBTSetup:SetScript(
 					["icon"] = 136031,
 					["var"] = mmbtn,
 					["dbtab"] = SBTTAB,
-					["vTT"] = {{"|T136031:16:16:0:0|t S|cff3FC7EBpec|rB|cff3FC7EBis|rT|cff3FC7EBooltip|r", "v|cff3FC7EB" .. SpecBisTooltip:GetVersion()}, {SpecBisTooltip:Trans("LID_LEFTCLICK"), SpecBisTooltip:Trans("LID_OPENSETTINGS")}, {SpecBisTooltip:Trans("LID_RIGHTCLICK"), SpecBisTooltip:Trans("LID_HIDEMINIMAPBUTTON")}},
+					["vTT"] = {{"|T136031:16:16:0:0|t SpecBisTooltip", "v" .. SpecBisTooltip:GetVersion()}, {SpecBisTooltip:Trans("LID_LEFTCLICK"), SpecBisTooltip:Trans("LID_OPENSETTINGS")}, {SpecBisTooltip:Trans("LID_RIGHTCLICK"), SpecBisTooltip:Trans("LID_HIDEMINIMAPBUTTON")}},
 					["funcL"] = function()
 						SpecBisTooltip:ToggleSettings()
 					end,

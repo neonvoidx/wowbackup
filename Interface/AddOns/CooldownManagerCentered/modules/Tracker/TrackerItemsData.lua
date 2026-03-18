@@ -386,6 +386,29 @@ local function IsTrackableWildcardSlot(slotID)
     return itemID ~= nil and IsTrackableItem(itemID) and not IGNORED_WILDCARD_TRINKETS[itemID]
 end
 
+local function IsSpellUsableForTracking(spellID)
+    if not (C_SpellBook and C_SpellBook.IsSpellInSpellBook) then
+        return false
+    end
+    return C_SpellBook.IsSpellInSpellBook(spellID) and true or false
+end
+
+local function CollectOwnedSpellsFromGeneralSpellBook(spells)
+    local generalSpells = GetSpellIDsFromGeneralSpellBook()
+    for spellID in pairs(generalSpells) do
+        spells[spellID] = true
+    end
+end
+
+local function CollectOwnedSpellsByUsability(spells)
+    local db = DB.GetDB()
+    for spellID in pairs(db.spellItemSettings or {}) do
+        if IsSpellUsableForTracking(spellID) then
+            spells[spellID] = true
+        end
+    end
+end
+
 function ItemsData:ScanOwnedItems()
     local owned = {
         items = {},
@@ -415,14 +438,18 @@ function ItemsData:ScanOwnedItems()
         end
     end
 
-    local generalSpells = GetSpellIDsFromGeneralSpellBook()
-    for spellID in pairs(generalSpells) do
-        owned.spells[spellID] = true
-    end
+    CollectOwnedSpellsByUsability(owned.spells)
 
     owned.wildcardSlots[WILDCARD_SLOT_TRINKET1] = true
     owned.wildcardSlots[WILDCARD_SLOT_TRINKET2] = true
 
+    return owned
+end
+
+function ItemsData:ScanOwnedItemsForMiscPanel()
+    local owned = self:ScanOwnedItems()
+    owned.spells = {}
+    CollectOwnedSpellsFromGeneralSpellBook(owned.spells)
     return owned
 end
 

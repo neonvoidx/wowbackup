@@ -10748,15 +10748,15 @@ local function buildEditModeSettings(kind, editModeId)
 	local raidKind = kind == "raid"
 	local specOptions = GFH.BuildSpecOptions()
 	local tooltipModeOptions = {
-		{ value = "OFF", label = "Off" },
-		{ value = "ALWAYS", label = "Always" },
-		{ value = "OUT_OF_COMBAT", label = "Out of combat" },
-		{ value = "MODIFIER", label = "Only with modifier" },
+		{ value = "OFF", label = L["Off"] or "Off" },
+		{ value = "ALWAYS", label = L["Always"] or "Always" },
+		{ value = "OUT_OF_COMBAT", label = L["Out of combat"] or "Out of combat" },
+		{ value = "MODIFIER", label = L["Only with modifier"] or "Only with modifier" },
 	}
 	local tooltipModifierOptions = {
-		{ value = "ALT", label = "Alt" },
-		{ value = "SHIFT", label = "Shift" },
-		{ value = "CTRL", label = "Ctrl" },
+		{ value = "ALT", label = L["Alt"] or "Alt" },
+		{ value = "SHIFT", label = L["Shift"] or "Shift" },
+		{ value = "CTRL", label = L["Ctrl"] or "Ctrl" },
 	}
 	local targetHighlightLayerOptions = {
 		{ value = "ABOVE_BORDER", label = L["UFTargetHighlightLayerAboveBorder"] or "Above border" },
@@ -10809,17 +10809,17 @@ local function buildEditModeSettings(kind, editModeId)
 		end
 	end
 	local sortGroupOptions = {
-		{ value = "GROUP", label = "Group" },
-		{ value = "ASSIGNEDROLE", label = "Role" },
+		{ value = "GROUP", label = L["Group"] or "Group" },
+		{ value = "ASSIGNEDROLE", label = L["Role"] or "Role" },
 	}
 	local sortMethodOptions = {
-		{ value = "INDEX", label = "Index" },
-		{ value = "NAME", label = "Name" },
-		{ value = "CUSTOM", label = "Custom" },
+		{ value = "INDEX", label = L["Index"] or "Index" },
+		{ value = "NAME", label = L["Name"] or "Name" },
+		{ value = "CUSTOM", label = L["Custom"] or "Custom" },
 	}
 	local sortDirOptions = {
-		{ value = "ASC", label = "Ascending" },
-		{ value = "DESC", label = "Descending" },
+		{ value = "ASC", label = L["Ascending"] or "Ascending" },
+		{ value = "DESC", label = L["Descending"] or "Descending" },
 	}
 	local privateAuraPointOptions = {
 		{ value = "LEFT", label = "Left", text = "Left" },
@@ -11306,7 +11306,7 @@ local function buildEditModeSettings(kind, editModeId)
 			end,
 		},
 		{
-			name = "Power height",
+			name = L["Power height"] or "Power height",
 			kind = SettingType.Slider,
 			allowInput = true,
 			field = "powerHeight",
@@ -11350,7 +11350,7 @@ local function buildEditModeSettings(kind, editModeId)
 			end,
 		},
 		{
-			name = "Tooltip",
+			name = L["Tooltip"] or "Tooltip",
 			kind = SettingType.Dropdown,
 			field = "tooltipMode",
 			parentId = "frame",
@@ -11394,7 +11394,7 @@ local function buildEditModeSettings(kind, editModeId)
 			end,
 		},
 		{
-			name = "Tooltip modifier",
+			name = L["Tooltip modifier"] or "Tooltip modifier",
 			kind = SettingType.Dropdown,
 			field = "tooltipModifier",
 			parentId = "frame",
@@ -11417,7 +11417,7 @@ local function buildEditModeSettings(kind, editModeId)
 			end,
 		},
 		{
-			name = "Show tooltip for auras",
+			name = L["Show tooltip for auras"] or "Show tooltip for auras",
 			kind = SettingType.Checkbox,
 			field = "tooltipAuras",
 			parentId = "frame",
@@ -11446,7 +11446,7 @@ local function buildEditModeSettings(kind, editModeId)
 			defaultCollapsed = true,
 		},
 		{
-			name = "Spacing",
+			name = L["Spacing"] or "Spacing",
 			kind = SettingType.Slider,
 			allowInput = true,
 			field = "spacing",
@@ -11469,7 +11469,7 @@ local function buildEditModeSettings(kind, editModeId)
 			end,
 		},
 		{
-			name = "Growth",
+			name = L["Growth"] or "Growth",
 			kind = SettingType.Dropdown,
 			field = "growth",
 			parentId = "layout",
@@ -11502,14 +11502,14 @@ local function buildEditModeSettings(kind, editModeId)
 			end,
 			generator = function(_, root)
 				local options = {
-					{ value = "DOWN", label = "Down" },
-					{ value = "RIGHT", label = "Right" },
-					{ value = "UP", label = "Up" },
-					{ value = "LEFT", label = "Left" },
+					{ value = "DOWN", label = L["Down"] or "Down" },
+					{ value = "RIGHT", label = L["Right"] or "Right" },
+					{ value = "UP", label = L["Up"] or "Up" },
+					{ value = "LEFT", label = L["Left"] or "Left" },
 				}
 				if GF.SupportsCenterGrowth(kind) then
-					options[#options + 1] = { value = "CENTER_VERTICAL", label = "Center vertical" }
-					options[#options + 1] = { value = "CENTER_HORIZONTAL", label = "Center horizontal" }
+					options[#options + 1] = { value = "CENTER_VERTICAL", label = L["Center vertical"] or "Center vertical" }
+					options[#options + 1] = { value = "CENTER_HORIZONTAL", label = L["Center horizontal"] or "Center horizontal" }
 				end
 				for _, option in ipairs(options) do
 					root:CreateRadio(option.label, function()
@@ -11629,7 +11629,7 @@ local function buildEditModeSettings(kind, editModeId)
 			end,
 		},
 		{
-			name = "Frame texture",
+			name = L["Frame texture"] or "Frame texture",
 			kind = SettingType.Dropdown,
 			field = "barTexture",
 			parentId = "layout",
@@ -11652,7 +11652,7 @@ local function buildEditModeSettings(kind, editModeId)
 				GF:ApplyHeaderAttributes(kind)
 			end,
 			generator = function(_, root)
-				root:CreateRadio("Use health/power textures", function()
+				root:CreateRadio(L["Use health/power textures"] or "Use health/power textures", function()
 					local cfg = getCfg(kind)
 					return not (cfg and cfg.barTexture)
 				end, function()
@@ -11683,7 +11683,7 @@ local function buildEditModeSettings(kind, editModeId)
 			defaultCollapsed = true,
 		},
 		{
-			name = "Show border",
+			name = L["Show border"] or "Show border",
 			kind = SettingType.Checkbox,
 			field = "borderEnabled",
 			parentId = "border",
@@ -11703,7 +11703,7 @@ local function buildEditModeSettings(kind, editModeId)
 			end,
 		},
 		{
-			name = "Border color",
+			name = L["Border color"] or "Border color",
 			kind = SettingType.Color,
 			field = "borderColor",
 			parentId = "border",
@@ -11731,7 +11731,7 @@ local function buildEditModeSettings(kind, editModeId)
 			end,
 		},
 		{
-			name = "Border texture",
+			name = L["Border texture"] or "Border texture",
 			kind = SettingType.Dropdown,
 			field = "borderTexture",
 			parentId = "border",
@@ -11772,7 +11772,7 @@ local function buildEditModeSettings(kind, editModeId)
 			end,
 		},
 		{
-			name = "Border strata",
+			name = L["Border strata"] or "Border strata",
 			kind = SettingType.Dropdown,
 			field = "borderStrata",
 			parentId = "border",
@@ -11886,7 +11886,7 @@ local function buildEditModeSettings(kind, editModeId)
 			end,
 		},
 		{
-			name = "Border frame level offset",
+			name = L["Border frame level offset"] or "Border frame level offset",
 			kind = SettingType.Slider,
 			allowInput = true,
 			field = "borderFrameLevelOffset",
@@ -11919,7 +11919,7 @@ local function buildEditModeSettings(kind, editModeId)
 			end,
 		},
 		{
-			name = "Border size",
+			name = L["Border size"] or "Border size",
 			kind = SettingType.Slider,
 			allowInput = true,
 			field = "borderSize",
@@ -11947,7 +11947,7 @@ local function buildEditModeSettings(kind, editModeId)
 			end,
 		},
 		{
-			name = "Border offset",
+			name = L["Border offset"] or "Border offset",
 			kind = SettingType.Slider,
 			allowInput = true,
 			field = "borderOffset",
@@ -12253,14 +12253,14 @@ local function buildEditModeSettings(kind, editModeId)
 			isEnabled = function() return isHighlightEnabled("highlightTarget") end,
 		},
 		{
-			name = "Portrait",
+			name = L["Portrait"] or "Portrait",
 			kind = SettingType.Collapsible,
 			id = "portrait",
 			defaultCollapsed = true,
 			isShown = function() return kind ~= "raid" end,
 		},
 		{
-			name = "Enable portrait",
+			name = L["Enable portrait"] or "Enable portrait",
 			kind = SettingType.Checkbox,
 			field = "portraitEnabled",
 			parentId = "portrait",
@@ -12276,7 +12276,7 @@ local function buildEditModeSettings(kind, editModeId)
 			end,
 		},
 		{
-			name = "Portrait side",
+			name = L["Portrait side"] or "Portrait side",
 			kind = SettingType.Dropdown,
 			field = "portraitSide",
 			parentId = "portrait",
@@ -12295,7 +12295,7 @@ local function buildEditModeSettings(kind, editModeId)
 			isEnabled = function() return isPortraitEnabled() end,
 		},
 		{
-			name = "Force square background",
+			name = L["Force square background"] or "Force square background",
 			kind = SettingType.Checkbox,
 			field = "portraitSquareBackground",
 			parentId = "portrait",
@@ -12319,7 +12319,7 @@ local function buildEditModeSettings(kind, editModeId)
 			isEnabled = function() return isPortraitEnabled() end,
 		},
 		{
-			name = "Extend border over portrait",
+			name = L["Extend border over portrait"] or "Extend border over portrait",
 			kind = SettingType.Checkbox,
 			field = "portraitBorderWithFrame",
 			parentId = "portrait",
@@ -12351,7 +12351,7 @@ local function buildEditModeSettings(kind, editModeId)
 			end,
 		},
 		{
-			name = "Show separator",
+			name = L["Show separator"] or "Show separator",
 			kind = SettingType.Checkbox,
 			field = "portraitSeparatorEnabled",
 			parentId = "portrait",
@@ -12379,7 +12379,7 @@ local function buildEditModeSettings(kind, editModeId)
 			isEnabled = function() return isPortraitEnabled() end,
 		},
 		{
-			name = "Separator size",
+			name = L["Separator size"] or "Separator size",
 			kind = SettingType.Slider,
 			allowInput = true,
 			field = "portraitSeparatorSize",
@@ -12427,7 +12427,7 @@ local function buildEditModeSettings(kind, editModeId)
 			end,
 		},
 		{
-			name = "Custom separator color",
+			name = L["Custom separator color"] or "Custom separator color",
 			kind = SettingType.Checkbox,
 			field = "portraitSeparatorUseCustomColor",
 			parentId = "portrait",
@@ -12465,7 +12465,7 @@ local function buildEditModeSettings(kind, editModeId)
 			end,
 		},
 		{
-			name = "Separator color",
+			name = L["Separator color"] or "Separator color",
 			kind = SettingType.Color,
 			field = "portraitSeparatorColor",
 			parentId = "portrait",
@@ -12522,7 +12522,7 @@ local function buildEditModeSettings(kind, editModeId)
 			defaultCollapsed = true,
 		},
 		{
-			name = "Show name",
+			name = L["Show name"] or "Show name",
 			kind = SettingType.Checkbox,
 			field = "showName",
 			parentId = "text",
@@ -12542,7 +12542,7 @@ local function buildEditModeSettings(kind, editModeId)
 			end,
 		},
 		{
-			name = "Name anchor",
+			name = L["Name anchor"] or "Name anchor",
 			kind = SettingType.Dropdown,
 			field = "nameAnchor",
 			parentId = "text",
@@ -12568,7 +12568,7 @@ local function buildEditModeSettings(kind, editModeId)
 			end,
 		},
 		{
-			name = "Name offset X",
+			name = L["Name offset X"] or "Name offset X",
 			kind = SettingType.Slider,
 			allowInput = true,
 			field = "nameOffsetX",
@@ -12597,7 +12597,7 @@ local function buildEditModeSettings(kind, editModeId)
 			end,
 		},
 		{
-			name = "Name offset Y",
+			name = L["Name offset Y"] or "Name offset Y",
 			kind = SettingType.Slider,
 			allowInput = true,
 			field = "nameOffsetY",
@@ -12626,7 +12626,7 @@ local function buildEditModeSettings(kind, editModeId)
 			end,
 		},
 		{
-			name = "Name class color",
+			name = L["Name class color"] or "Name class color",
 			kind = SettingType.Checkbox,
 			field = "nameClassColor",
 			parentId = "text",
@@ -12655,7 +12655,7 @@ local function buildEditModeSettings(kind, editModeId)
 			end,
 		},
 		{
-			name = "Name color",
+			name = L["Name color"] or "Name color",
 			kind = SettingType.Color,
 			field = "nameColor",
 			parentId = "text",
@@ -12694,7 +12694,7 @@ local function buildEditModeSettings(kind, editModeId)
 			end,
 		},
 		{
-			name = "Name max width",
+			name = L["Name max width"] or "Name max width",
 			kind = SettingType.Slider,
 			allowInput = true,
 			field = "nameMaxChars",
@@ -12724,7 +12724,7 @@ local function buildEditModeSettings(kind, editModeId)
 			end,
 		},
 		{
-			name = "Hide ellipsis",
+			name = L["Hide ellipsis"] or "Hide ellipsis",
 			kind = SettingType.Checkbox,
 			field = "nameNoEllipsis",
 			parentId = "text",
@@ -12752,7 +12752,7 @@ local function buildEditModeSettings(kind, editModeId)
 			end,
 		},
 		{
-			name = "Name font size",
+			name = L["Name font size"] or "Name font size",
 			kind = SettingType.Slider,
 			allowInput = true,
 			field = "nameFontSize",
@@ -12780,7 +12780,7 @@ local function buildEditModeSettings(kind, editModeId)
 			end,
 		},
 		{
-			name = "Name font",
+			name = L["Name font"] or "Name font",
 			kind = SettingType.Dropdown,
 			field = "nameFont",
 			height = FONT_DROPDOWN_SCROLL_HEIGHT,
@@ -12821,7 +12821,7 @@ local function buildEditModeSettings(kind, editModeId)
 			end,
 		},
 		{
-			name = "Name font outline",
+			name = L["Name font outline"] or "Name font outline",
 			kind = SettingType.Dropdown,
 			field = "nameFontOutline",
 			parentId = "text",
@@ -12867,7 +12867,7 @@ local function buildEditModeSettings(kind, editModeId)
 			defaultCollapsed = true,
 		},
 		{
-			name = "Use class color (players)",
+			name = L["Use class color (players)"] or "Use class color (players)",
 			kind = SettingType.Checkbox,
 			field = "healthClassColor",
 			parentId = "health",
@@ -12889,7 +12889,7 @@ local function buildEditModeSettings(kind, editModeId)
 			end,
 		},
 		{
-			name = "Custom health color",
+			name = L["Custom health color"] or "Custom health color",
 			kind = SettingType.Checkbox,
 			field = "healthUseCustomColor",
 			parentId = "health",
@@ -12911,7 +12911,7 @@ local function buildEditModeSettings(kind, editModeId)
 			end,
 		},
 		{
-			name = "Health color",
+			name = L["Health color"] or "Health color",
 			kind = SettingType.Color,
 			field = "healthColor",
 			parentId = "health",
@@ -12943,7 +12943,7 @@ local function buildEditModeSettings(kind, editModeId)
 			end,
 		},
 		{
-			name = "Left text",
+			name = L["Left text"] or "Left text",
 			kind = SettingType.Dropdown,
 			field = "healthTextLeft",
 			parentId = "health",
@@ -12978,7 +12978,7 @@ local function buildEditModeSettings(kind, editModeId)
 			end,
 		},
 		{
-			name = "Center text",
+			name = L["Center text"] or "Center text",
 			kind = SettingType.Dropdown,
 			field = "healthTextCenter",
 			parentId = "health",
@@ -13013,7 +13013,7 @@ local function buildEditModeSettings(kind, editModeId)
 			end,
 		},
 		{
-			name = "Right text",
+			name = L["Right text"] or "Right text",
 			kind = SettingType.Dropdown,
 			field = "healthTextRight",
 			parentId = "health",
@@ -13048,7 +13048,7 @@ local function buildEditModeSettings(kind, editModeId)
 			end,
 		},
 		{
-			name = "Health text color",
+			name = L["Health text color"] or "Health text color",
 			kind = SettingType.Color,
 			field = "healthTextColor",
 			parentId = "health",
@@ -13072,7 +13072,7 @@ local function buildEditModeSettings(kind, editModeId)
 			isEnabled = function() return anyHealthTextEnabled() end,
 		},
 		{
-			name = "Hide % symbol",
+			name = L["Hide % symbol"] or "Hide % symbol",
 			kind = SettingType.Checkbox,
 			field = "healthHidePercent",
 			parentId = "health",
@@ -13091,7 +13091,7 @@ local function buildEditModeSettings(kind, editModeId)
 			end,
 		},
 		{
-			name = "Font size",
+			name = L["Font size"] or "Font size",
 			kind = SettingType.Slider,
 			allowInput = true,
 			field = "healthFontSize",
@@ -13114,7 +13114,7 @@ local function buildEditModeSettings(kind, editModeId)
 			end,
 		},
 		{
-			name = "Font",
+			name = L["Font"] or "Font",
 			kind = SettingType.Dropdown,
 			field = "healthFont",
 			height = FONT_DROPDOWN_SCROLL_HEIGHT,
@@ -13150,7 +13150,7 @@ local function buildEditModeSettings(kind, editModeId)
 			end,
 		},
 		{
-			name = "Font outline",
+			name = L["Font outline"] or "Font outline",
 			kind = SettingType.Dropdown,
 			field = "healthFontOutline",
 			parentId = "health",
@@ -13185,7 +13185,7 @@ local function buildEditModeSettings(kind, editModeId)
 			end,
 		},
 		{
-			name = "Use short numbers",
+			name = L["Use short numbers"] or "Use short numbers",
 			kind = SettingType.Checkbox,
 			field = "healthShortNumbers",
 			parentId = "health",
@@ -13205,7 +13205,7 @@ local function buildEditModeSettings(kind, editModeId)
 			end,
 		},
 		{
-			name = "Health delimiter",
+			name = L["Health delimiter"] or "Health delimiter",
 			kind = SettingType.Dropdown,
 			field = "healthDelimiter",
 			parentId = "health",
@@ -13241,7 +13241,7 @@ local function buildEditModeSettings(kind, editModeId)
 			isShown = function() return healthDelimiterCount() >= 1 end,
 		},
 		{
-			name = "Health secondary delimiter",
+			name = L["Health secondary delimiter"] or "Health secondary delimiter",
 			kind = SettingType.Dropdown,
 			field = "healthDelimiterSecondary",
 			parentId = "health",
@@ -13279,7 +13279,7 @@ local function buildEditModeSettings(kind, editModeId)
 			isShown = function() return healthDelimiterCount() >= 2 end,
 		},
 		{
-			name = "Health tertiary delimiter",
+			name = L["Health tertiary delimiter"] or "Health tertiary delimiter",
 			kind = SettingType.Dropdown,
 			field = "healthDelimiterTertiary",
 			parentId = "health",
@@ -13319,7 +13319,7 @@ local function buildEditModeSettings(kind, editModeId)
 			isShown = function() return healthDelimiterCount() >= 3 end,
 		},
 		{
-			name = "Left text offset X",
+			name = L["Left text offset X"] or "Left text offset X",
 			kind = SettingType.Slider,
 			allowInput = true,
 			field = "healthLeftX",
@@ -13344,7 +13344,7 @@ local function buildEditModeSettings(kind, editModeId)
 			isEnabled = function() return isHealthTextEnabled("textLeft") end,
 		},
 		{
-			name = "Left text offset Y",
+			name = L["Left text offset Y"] or "Left text offset Y",
 			kind = SettingType.Slider,
 			allowInput = true,
 			field = "healthLeftY",
@@ -13369,7 +13369,7 @@ local function buildEditModeSettings(kind, editModeId)
 			isEnabled = function() return isHealthTextEnabled("textLeft") end,
 		},
 		{
-			name = "Center text offset X",
+			name = L["Center text offset X"] or "Center text offset X",
 			kind = SettingType.Slider,
 			allowInput = true,
 			field = "healthCenterX",
@@ -13394,7 +13394,7 @@ local function buildEditModeSettings(kind, editModeId)
 			isEnabled = function() return isHealthTextEnabled("textCenter") end,
 		},
 		{
-			name = "Center text offset Y",
+			name = L["Center text offset Y"] or "Center text offset Y",
 			kind = SettingType.Slider,
 			allowInput = true,
 			field = "healthCenterY",
@@ -13419,7 +13419,7 @@ local function buildEditModeSettings(kind, editModeId)
 			isEnabled = function() return isHealthTextEnabled("textCenter") end,
 		},
 		{
-			name = "Right text offset X",
+			name = L["Right text offset X"] or "Right text offset X",
 			kind = SettingType.Slider,
 			allowInput = true,
 			field = "healthRightX",
@@ -13444,7 +13444,7 @@ local function buildEditModeSettings(kind, editModeId)
 			isEnabled = function() return isHealthTextEnabled("textRight") end,
 		},
 		{
-			name = "Right text offset Y",
+			name = L["Right text offset Y"] or "Right text offset Y",
 			kind = SettingType.Slider,
 			allowInput = true,
 			field = "healthRightY",
@@ -13469,7 +13469,7 @@ local function buildEditModeSettings(kind, editModeId)
 			isEnabled = function() return isHealthTextEnabled("textRight") end,
 		},
 		{
-			name = "Bar texture",
+			name = L["Bar texture"] or "Bar texture",
 			kind = SettingType.Dropdown,
 			field = "healthTexture",
 			parentId = "health",
@@ -13509,7 +13509,7 @@ local function buildEditModeSettings(kind, editModeId)
 			end,
 		},
 		{
-			name = "Show bar backdrop",
+			name = L["Show bar backdrop"] or "Show bar backdrop",
 			kind = SettingType.Checkbox,
 			field = "healthBackdropEnabled",
 			parentId = "health",
@@ -13532,7 +13532,7 @@ local function buildEditModeSettings(kind, editModeId)
 			end,
 		},
 		{
-			name = "Backdrop texture",
+			name = L["Backdrop texture"] or "Backdrop texture",
 			kind = SettingType.Dropdown,
 			field = "healthBackdropTexture",
 			parentId = "health",
@@ -13584,7 +13584,7 @@ local function buildEditModeSettings(kind, editModeId)
 			end,
 		},
 		{
-			name = "Clamp backdrop to missing health",
+			name = L["Clamp backdrop to missing health"] or "Clamp backdrop to missing health",
 			kind = SettingType.Checkbox,
 			field = "healthBackdropClampToFill",
 			parentId = "health",
@@ -13614,7 +13614,7 @@ local function buildEditModeSettings(kind, editModeId)
 			end,
 		},
 		{
-			name = "Backdrop color",
+			name = L["Backdrop color"] or "Backdrop color",
 			kind = SettingType.Color,
 			field = "healthBackdropColor",
 			parentId = "health",
@@ -13766,7 +13766,7 @@ local function buildEditModeSettings(kind, editModeId)
 			defaultCollapsed = true,
 		},
 		{
-			name = "Show absorb bar",
+			name = L["Show absorb bar"] or "Show absorb bar",
 			kind = SettingType.Checkbox,
 			field = "absorbEnabled",
 			parentId = "absorb",
@@ -13785,7 +13785,7 @@ local function buildEditModeSettings(kind, editModeId)
 			end,
 		},
 		{
-			name = "Show sample absorb",
+			name = L["Show sample absorb"] or "Show sample absorb",
 			kind = SettingType.Checkbox,
 			field = "absorbSample",
 			parentId = "absorb",
@@ -13809,7 +13809,7 @@ local function buildEditModeSettings(kind, editModeId)
 			end,
 		},
 		{
-			name = "Absorb texture",
+			name = L["Absorb texture"] or "Absorb texture",
 			kind = SettingType.Dropdown,
 			field = "absorbTexture",
 			parentId = "absorb",
@@ -13850,7 +13850,7 @@ local function buildEditModeSettings(kind, editModeId)
 			end,
 		},
 		{
-			name = "Absorb reverse fill",
+			name = L["Absorb reverse fill"] or "Absorb reverse fill",
 			kind = SettingType.Checkbox,
 			field = "absorbReverse",
 			parentId = "absorb",
@@ -13874,7 +13874,7 @@ local function buildEditModeSettings(kind, editModeId)
 			end,
 		},
 		{
-			name = "Absorb overlay height",
+			name = L["Absorb overlay height"] or "Absorb overlay height",
 			kind = SettingType.Slider,
 			allowInput = true,
 			field = "absorbOverlayHeight",
@@ -13912,7 +13912,7 @@ local function buildEditModeSettings(kind, editModeId)
 			end,
 		},
 		{
-			name = "Custom absorb color",
+			name = L["Custom absorb color"] or "Custom absorb color",
 			kind = SettingType.Checkbox,
 			field = "absorbUseCustomColor",
 			parentId = "absorb",
@@ -13936,7 +13936,7 @@ local function buildEditModeSettings(kind, editModeId)
 			end,
 		},
 		{
-			name = "Absorb color",
+			name = L["Absorb color"] or "Absorb color",
 			kind = SettingType.Color,
 			field = "absorbColor",
 			parentId = "absorb",
@@ -13972,7 +13972,7 @@ local function buildEditModeSettings(kind, editModeId)
 			defaultCollapsed = true,
 		},
 		{
-			name = "Show heal absorb bar",
+			name = L["Show heal absorb bar"] or "Show heal absorb bar",
 			kind = SettingType.Checkbox,
 			field = "healAbsorbEnabled",
 			parentId = "healabsorb",
@@ -13991,7 +13991,7 @@ local function buildEditModeSettings(kind, editModeId)
 			end,
 		},
 		{
-			name = "Show sample heal absorb",
+			name = L["Show sample heal absorb"] or "Show sample heal absorb",
 			kind = SettingType.Checkbox,
 			field = "healAbsorbSample",
 			parentId = "healabsorb",
@@ -14015,7 +14015,7 @@ local function buildEditModeSettings(kind, editModeId)
 			end,
 		},
 		{
-			name = "Heal absorb texture",
+			name = L["Heal absorb texture"] or "Heal absorb texture",
 			kind = SettingType.Dropdown,
 			field = "healAbsorbTexture",
 			parentId = "healabsorb",
@@ -14056,7 +14056,7 @@ local function buildEditModeSettings(kind, editModeId)
 			end,
 		},
 		{
-			name = "Heal absorb reverse fill",
+			name = L["Heal absorb reverse fill"] or "Heal absorb reverse fill",
 			kind = SettingType.Checkbox,
 			field = "healAbsorbReverse",
 			parentId = "healabsorb",
@@ -14080,7 +14080,7 @@ local function buildEditModeSettings(kind, editModeId)
 			end,
 		},
 		{
-			name = "Heal absorb overlay height",
+			name = L["Heal absorb overlay height"] or "Heal absorb overlay height",
 			kind = SettingType.Slider,
 			allowInput = true,
 			field = "healAbsorbOverlayHeight",
@@ -14118,7 +14118,7 @@ local function buildEditModeSettings(kind, editModeId)
 			end,
 		},
 		{
-			name = "Custom heal absorb color",
+			name = L["Custom heal absorb color"] or "Custom heal absorb color",
 			kind = SettingType.Checkbox,
 			field = "healAbsorbUseCustomColor",
 			parentId = "healabsorb",
@@ -14142,7 +14142,7 @@ local function buildEditModeSettings(kind, editModeId)
 			end,
 		},
 		{
-			name = "Heal absorb color",
+			name = L["Heal absorb color"] or "Heal absorb color",
 			kind = SettingType.Color,
 			field = "healAbsorbColor",
 			parentId = "healabsorb",
@@ -14178,7 +14178,7 @@ local function buildEditModeSettings(kind, editModeId)
 			defaultCollapsed = true,
 		},
 		{
-			name = "Show level",
+			name = L["Show level"] or "Show level",
 			kind = SettingType.Checkbox,
 			field = "levelEnabled",
 			parentId = "level",
@@ -14197,7 +14197,7 @@ local function buildEditModeSettings(kind, editModeId)
 			end,
 		},
 		{
-			name = "Hide level at max",
+			name = L["Hide level at max"] or "Hide level at max",
 			kind = SettingType.Checkbox,
 			field = "hideLevelAtMax",
 			parentId = "level",
@@ -14221,7 +14221,7 @@ local function buildEditModeSettings(kind, editModeId)
 			end,
 		},
 		{
-			name = "Level class color",
+			name = L["Level class color"] or "Level class color",
 			kind = SettingType.Checkbox,
 			field = "levelClassColor",
 			parentId = "level",
@@ -14245,7 +14245,7 @@ local function buildEditModeSettings(kind, editModeId)
 			end,
 		},
 		{
-			name = "Level color",
+			name = L["Level color"] or "Level color",
 			kind = SettingType.Color,
 			field = "levelColor",
 			parentId = "level",
@@ -14275,7 +14275,7 @@ local function buildEditModeSettings(kind, editModeId)
 			end,
 		},
 		{
-			name = "Level font size",
+			name = L["Level font size"] or "Level font size",
 			kind = SettingType.Slider,
 			allowInput = true,
 			field = "levelFontSize",
@@ -14305,7 +14305,7 @@ local function buildEditModeSettings(kind, editModeId)
 			end,
 		},
 		{
-			name = "Level font",
+			name = L["Level font"] or "Level font",
 			kind = SettingType.Dropdown,
 			field = "levelFont",
 			height = FONT_DROPDOWN_SCROLL_HEIGHT,
@@ -14350,7 +14350,7 @@ local function buildEditModeSettings(kind, editModeId)
 			end,
 		},
 		{
-			name = "Level font outline",
+			name = L["Level font outline"] or "Level font outline",
 			kind = SettingType.Dropdown,
 			field = "levelFontOutline",
 			parentId = "level",
@@ -14394,7 +14394,7 @@ local function buildEditModeSettings(kind, editModeId)
 			end,
 		},
 		{
-			name = "Level anchor",
+			name = L["Level anchor"] or "Level anchor",
 			kind = SettingType.Dropdown,
 			field = "levelAnchor",
 			parentId = "level",
@@ -14420,7 +14420,7 @@ local function buildEditModeSettings(kind, editModeId)
 			end,
 		},
 		{
-			name = "Level offset X",
+			name = L["Level offset X"] or "Level offset X",
 			kind = SettingType.Slider,
 			allowInput = true,
 			field = "levelOffsetX",
@@ -14449,7 +14449,7 @@ local function buildEditModeSettings(kind, editModeId)
 			end,
 		},
 		{
-			name = "Level offset Y",
+			name = L["Level offset Y"] or "Level offset Y",
 			kind = SettingType.Slider,
 			allowInput = true,
 			field = "levelOffsetY",
@@ -14484,7 +14484,7 @@ local function buildEditModeSettings(kind, editModeId)
 			defaultCollapsed = true,
 		},
 		{
-			name = "Show status text",
+			name = L["Show status text"] or "Show status text",
 			kind = SettingType.Checkbox,
 			field = "statusTextEnabled",
 			parentId = "statustext",
@@ -14505,7 +14505,7 @@ local function buildEditModeSettings(kind, editModeId)
 			end,
 		},
 		{
-			name = "Show offline",
+			name = L["Show offline"] or "Show offline",
 			kind = SettingType.Checkbox,
 			field = "statusTextShowOffline",
 			parentId = "statustext",
@@ -14534,7 +14534,7 @@ local function buildEditModeSettings(kind, editModeId)
 			end,
 		},
 		{
-			name = "Show AFK",
+			name = L["Show AFK"] or "Show AFK",
 			kind = SettingType.Checkbox,
 			field = "statusTextShowAFK",
 			parentId = "statustext",
@@ -14563,7 +14563,7 @@ local function buildEditModeSettings(kind, editModeId)
 			end,
 		},
 		{
-			name = "Show DND",
+			name = L["Show DND"] or "Show DND",
 			kind = SettingType.Checkbox,
 			field = "statusTextShowDND",
 			parentId = "statustext",
@@ -14592,7 +14592,7 @@ local function buildEditModeSettings(kind, editModeId)
 			end,
 		},
 		{
-			name = "Hide health text when offline",
+			name = L["Hide health text when offline"] or "Hide health text when offline",
 			kind = SettingType.Checkbox,
 			field = "statusTextHideHealthTextOffline",
 			parentId = "statustext",
@@ -14652,7 +14652,7 @@ local function buildEditModeSettings(kind, editModeId)
 			end,
 		},
 		{
-			name = "Font size",
+			name = L["Font size"] or "Font size",
 			kind = SettingType.Slider,
 			allowInput = true,
 			field = "statusTextFontSize",
@@ -14685,7 +14685,7 @@ local function buildEditModeSettings(kind, editModeId)
 			end,
 		},
 		{
-			name = "Font",
+			name = L["Font"] or "Font",
 			kind = SettingType.Dropdown,
 			field = "statusTextFont",
 			height = FONT_DROPDOWN_SCROLL_HEIGHT,
@@ -14735,7 +14735,7 @@ local function buildEditModeSettings(kind, editModeId)
 			end,
 		},
 		{
-			name = "Font outline",
+			name = L["Font outline"] or "Font outline",
 			kind = SettingType.Dropdown,
 			field = "statusTextFontOutline",
 			parentId = "statustext",
@@ -14784,7 +14784,7 @@ local function buildEditModeSettings(kind, editModeId)
 			end,
 		},
 		{
-			name = "Anchor",
+			name = L["Anchor"] or "Anchor",
 			kind = SettingType.Dropdown,
 			field = "statusTextAnchor",
 			parentId = "statustext",
@@ -14813,7 +14813,7 @@ local function buildEditModeSettings(kind, editModeId)
 			end,
 		},
 		{
-			name = "Offset X",
+			name = L["Offset X"] or "Offset X",
 			kind = SettingType.Slider,
 			allowInput = true,
 			field = "statusTextOffsetX",
@@ -14845,7 +14845,7 @@ local function buildEditModeSettings(kind, editModeId)
 			end,
 		},
 		{
-			name = "Offset Y",
+			name = L["Offset Y"] or "Offset Y",
 			kind = SettingType.Slider,
 			allowInput = true,
 			field = "statusTextOffsetY",
@@ -14883,7 +14883,7 @@ local function buildEditModeSettings(kind, editModeId)
 			isShown = function() return kind == "raid" end,
 		},
 		{
-			name = "Show",
+			name = L["Show"] or "Show",
 			kind = SettingType.Checkbox,
 			field = "statusTextShowGroup",
 			parentId = "statustext",
@@ -14903,7 +14903,7 @@ local function buildEditModeSettings(kind, editModeId)
 			isShown = function() return kind == "raid" end,
 		},
 		{
-			name = "Format",
+			name = L["Format"] or "Format",
 			kind = SettingType.Dropdown,
 			field = "statusTextGroupFormat",
 			parentId = "statustext",
@@ -14971,7 +14971,7 @@ local function buildEditModeSettings(kind, editModeId)
 			isShown = function() return kind == "raid" end,
 		},
 		{
-			name = "Font size",
+			name = L["Font size"] or "Font size",
 			kind = SettingType.Slider,
 			allowInput = true,
 			field = "groupNumberFontSize",
@@ -14998,7 +14998,7 @@ local function buildEditModeSettings(kind, editModeId)
 			isShown = function() return kind == "raid" end,
 		},
 		{
-			name = "Font",
+			name = L["Font"] or "Font",
 			kind = SettingType.Dropdown,
 			field = "groupNumberFont",
 			height = FONT_DROPDOWN_SCROLL_HEIGHT,
@@ -15040,7 +15040,7 @@ local function buildEditModeSettings(kind, editModeId)
 			isShown = function() return kind == "raid" end,
 		},
 		{
-			name = "Font outline",
+			name = L["Font outline"] or "Font outline",
 			kind = SettingType.Dropdown,
 			field = "groupNumberFontOutline",
 			parentId = "statustext",
@@ -15081,7 +15081,7 @@ local function buildEditModeSettings(kind, editModeId)
 			isShown = function() return kind == "raid" end,
 		},
 		{
-			name = "Anchor",
+			name = L["Anchor"] or "Anchor",
 			kind = SettingType.Dropdown,
 			field = "groupNumberAnchor",
 			parentId = "statustext",
@@ -15106,7 +15106,7 @@ local function buildEditModeSettings(kind, editModeId)
 			isShown = function() return kind == "raid" end,
 		},
 		{
-			name = "Offset X",
+			name = L["Offset X"] or "Offset X",
 			kind = SettingType.Slider,
 			allowInput = true,
 			field = "groupNumberOffsetX",
@@ -15135,7 +15135,7 @@ local function buildEditModeSettings(kind, editModeId)
 			isShown = function() return kind == "raid" end,
 		},
 		{
-			name = "Offset Y",
+			name = L["Offset Y"] or "Offset Y",
 			kind = SettingType.Slider,
 			allowInput = true,
 			field = "groupNumberOffsetY",
@@ -15267,7 +15267,7 @@ local function buildEditModeSettings(kind, editModeId)
 			defaultCollapsed = true,
 		},
 		{
-			name = "Enable overlay",
+			name = L["Enable overlay"] or "Enable overlay",
 			kind = SettingType.Checkbox,
 			field = "dispelTintEnabled",
 			parentId = "dispeltint",
@@ -15291,7 +15291,7 @@ local function buildEditModeSettings(kind, editModeId)
 			end,
 		},
 		{
-			name = "Background color change",
+			name = L["Background color change"] or "Background color change",
 			kind = SettingType.Checkbox,
 			field = "dispelTintFillEnabled",
 			parentId = "dispeltint",
@@ -15323,7 +15323,7 @@ local function buildEditModeSettings(kind, editModeId)
 			end,
 		},
 		{
-			name = "Background color",
+			name = L["Background color"] or "Background color",
 			kind = SettingType.Color,
 			field = "dispelTintFillColor",
 			parentId = "dispeltint",
@@ -15360,7 +15360,7 @@ local function buildEditModeSettings(kind, editModeId)
 			end,
 		},
 		{
-			name = "Background alpha",
+			name = L["Background alpha"] or "Background alpha",
 			kind = SettingType.Slider,
 			allowInput = true,
 			field = "dispelTintFillAlpha",
@@ -15399,7 +15399,7 @@ local function buildEditModeSettings(kind, editModeId)
 			end,
 		},
 		{
-			name = "Tint alpha",
+			name = L["Tint alpha"] or "Tint alpha",
 			kind = SettingType.Slider,
 			allowInput = true,
 			field = "dispelTintAlpha",
@@ -15435,7 +15435,7 @@ local function buildEditModeSettings(kind, editModeId)
 			end,
 		},
 		{
-			name = "Show sample",
+			name = L["Show sample"] or "Show sample",
 			kind = SettingType.Checkbox,
 			field = "dispelTintSample",
 			parentId = "dispeltint",
@@ -15475,7 +15475,7 @@ local function buildEditModeSettings(kind, editModeId)
 			parentId = "dispeltint",
 		},
 		{
-			name = "Enable glow",
+			name = L["Enable glow"] or "Enable glow",
 			kind = SettingType.Checkbox,
 			field = "dispelTintGlowEnabled",
 			parentId = "dispeltint",
@@ -15499,7 +15499,7 @@ local function buildEditModeSettings(kind, editModeId)
 			end,
 		},
 		{
-			name = "Glow color",
+			name = L["Glow color"] or "Glow color",
 			kind = SettingType.Dropdown,
 			field = "dispelTintGlowColorMode",
 			parentId = "dispeltint",
@@ -15540,7 +15540,7 @@ local function buildEditModeSettings(kind, editModeId)
 			end,
 		},
 		{
-			name = "Custom glow color",
+			name = L["Custom glow color"] or "Custom glow color",
 			kind = SettingType.Color,
 			field = "dispelTintGlowColor",
 			parentId = "dispeltint",
@@ -15573,7 +15573,7 @@ local function buildEditModeSettings(kind, editModeId)
 			end,
 		},
 		{
-			name = "Glow effect",
+			name = L["Glow effect"] or "Glow effect",
 			kind = SettingType.Dropdown,
 			field = "dispelTintGlowEffect",
 			parentId = "dispeltint",
@@ -15617,7 +15617,7 @@ local function buildEditModeSettings(kind, editModeId)
 			end,
 		},
 		{
-			name = "Animation speed",
+			name = L["Animation speed"] or "Animation speed",
 			kind = SettingType.Slider,
 			allowInput = true,
 			field = "dispelTintGlowFrequency",
@@ -15652,7 +15652,7 @@ local function buildEditModeSettings(kind, editModeId)
 			end,
 		},
 		{
-			name = "X Offset",
+			name = L["X Offset"] or "X Offset",
 			kind = SettingType.Slider,
 			allowInput = true,
 			field = "dispelTintGlowX",
@@ -15687,7 +15687,7 @@ local function buildEditModeSettings(kind, editModeId)
 			end,
 		},
 		{
-			name = "Y Offset",
+			name = L["Y Offset"] or "Y Offset",
 			kind = SettingType.Slider,
 			allowInput = true,
 			field = "dispelTintGlowY",
@@ -15722,7 +15722,7 @@ local function buildEditModeSettings(kind, editModeId)
 			end,
 		},
 		{
-			name = "Number of lines",
+			name = L["Number of lines"] or "Number of lines",
 			kind = SettingType.Slider,
 			allowInput = true,
 			field = "dispelTintGlowLines",
@@ -15757,7 +15757,7 @@ local function buildEditModeSettings(kind, editModeId)
 			end,
 		},
 		{
-			name = "Thickness",
+			name = L["Thickness"] or "Thickness",
 			kind = SettingType.Slider,
 			allowInput = true,
 			field = "dispelTintGlowThickness",
@@ -15798,7 +15798,7 @@ local function buildEditModeSettings(kind, editModeId)
 			defaultCollapsed = true,
 		},
 		{
-			name = "Show leader icon",
+			name = L["Show leader icon"] or "Show leader icon",
 			kind = SettingType.Checkbox,
 			field = "leaderIconEnabled",
 			parentId = "groupicons",
@@ -15819,7 +15819,7 @@ local function buildEditModeSettings(kind, editModeId)
 			end,
 		},
 		{
-			name = "Leader icon size",
+			name = L["Leader icon size"] or "Leader icon size",
 			kind = SettingType.Slider,
 			allowInput = true,
 			field = "leaderIconSize",
@@ -15850,7 +15850,7 @@ local function buildEditModeSettings(kind, editModeId)
 			end,
 		},
 		{
-			name = "Leader icon anchor",
+			name = L["Leader icon anchor"] or "Leader icon anchor",
 			kind = SettingType.Dropdown,
 			field = "leaderIconPoint",
 			parentId = "groupicons",
@@ -15880,7 +15880,7 @@ local function buildEditModeSettings(kind, editModeId)
 			end,
 		},
 		{
-			name = "Leader icon offset X",
+			name = L["Leader icon offset X"] or "Leader icon offset X",
 			kind = SettingType.Slider,
 			allowInput = true,
 			field = "leaderIconOffsetX",
@@ -15911,7 +15911,7 @@ local function buildEditModeSettings(kind, editModeId)
 			end,
 		},
 		{
-			name = "Leader icon offset Y",
+			name = L["Leader icon offset Y"] or "Leader icon offset Y",
 			kind = SettingType.Slider,
 			allowInput = true,
 			field = "leaderIconOffsetY",
@@ -15942,7 +15942,7 @@ local function buildEditModeSettings(kind, editModeId)
 			end,
 		},
 		{
-			name = "Show assist icon",
+			name = L["Show assist icon"] or "Show assist icon",
 			kind = SettingType.Checkbox,
 			field = "assistIconEnabled",
 			parentId = "groupicons",
@@ -15964,7 +15964,7 @@ local function buildEditModeSettings(kind, editModeId)
 			isShown = function() return kind == "raid" end,
 		},
 		{
-			name = "Assist icon size",
+			name = L["Assist icon size"] or "Assist icon size",
 			kind = SettingType.Slider,
 			allowInput = true,
 			field = "assistIconSize",
@@ -15996,7 +15996,7 @@ local function buildEditModeSettings(kind, editModeId)
 			isShown = function() return kind == "raid" end,
 		},
 		{
-			name = "Assist icon anchor",
+			name = L["Assist icon anchor"] or "Assist icon anchor",
 			kind = SettingType.Dropdown,
 			field = "assistIconPoint",
 			parentId = "groupicons",
@@ -16027,7 +16027,7 @@ local function buildEditModeSettings(kind, editModeId)
 			isShown = function() return kind == "raid" end,
 		},
 		{
-			name = "Assist icon offset X",
+			name = L["Assist icon offset X"] or "Assist icon offset X",
 			kind = SettingType.Slider,
 			allowInput = true,
 			field = "assistIconOffsetX",
@@ -16059,7 +16059,7 @@ local function buildEditModeSettings(kind, editModeId)
 			isShown = function() return kind == "raid" end,
 		},
 		{
-			name = "Assist icon offset Y",
+			name = L["Assist icon offset Y"] or "Assist icon offset Y",
 			kind = SettingType.Slider,
 			allowInput = true,
 			field = "assistIconOffsetY",
@@ -16097,7 +16097,7 @@ local function buildEditModeSettings(kind, editModeId)
 			defaultCollapsed = true,
 		},
 		{
-			name = "Show raid marker",
+			name = L["Show raid marker"] or "Show raid marker",
 			kind = SettingType.Checkbox,
 			field = "raidIconEnabled",
 			parentId = "raidmarker",
@@ -16119,7 +16119,7 @@ local function buildEditModeSettings(kind, editModeId)
 			end,
 		},
 		{
-			name = "Raid marker size",
+			name = L["Raid marker size"] or "Raid marker size",
 			kind = SettingType.Slider,
 			allowInput = true,
 			field = "raidIconSize",
@@ -16151,7 +16151,7 @@ local function buildEditModeSettings(kind, editModeId)
 			end,
 		},
 		{
-			name = "Raid marker anchor",
+			name = L["Raid marker anchor"] or "Raid marker anchor",
 			kind = SettingType.Dropdown,
 			field = "raidIconPoint",
 			parentId = "raidmarker",
@@ -16182,7 +16182,7 @@ local function buildEditModeSettings(kind, editModeId)
 			end,
 		},
 		{
-			name = "Raid marker offset X",
+			name = L["Raid marker offset X"] or "Raid marker offset X",
 			kind = SettingType.Slider,
 			allowInput = true,
 			field = "raidIconOffsetX",
@@ -16214,7 +16214,7 @@ local function buildEditModeSettings(kind, editModeId)
 			end,
 		},
 		{
-			name = "Raid marker offset Y",
+			name = L["Raid marker offset Y"] or "Raid marker offset Y",
 			kind = SettingType.Slider,
 			allowInput = true,
 			field = "raidIconOffsetY",
@@ -16252,7 +16252,7 @@ local function buildEditModeSettings(kind, editModeId)
 			defaultCollapsed = true,
 		},
 		{
-			name = "Enable role icons",
+			name = L["Enable role icons"] or "Enable role icons",
 			kind = SettingType.Checkbox,
 			field = "roleIconEnabled",
 			parentId = "roleicons",
@@ -16271,7 +16271,7 @@ local function buildEditModeSettings(kind, editModeId)
 			end,
 		},
 		{
-			name = "Role icon size",
+			name = L["Role icon size"] or "Role icon size",
 			kind = SettingType.Slider,
 			allowInput = true,
 			field = "roleIconSize",
@@ -16299,7 +16299,7 @@ local function buildEditModeSettings(kind, editModeId)
 			end,
 		},
 		{
-			name = "Role icon anchor",
+			name = L["Role icon anchor"] or "Role icon anchor",
 			kind = SettingType.Dropdown,
 			field = "roleIconPoint",
 			parentId = "roleicons",
@@ -16326,7 +16326,7 @@ local function buildEditModeSettings(kind, editModeId)
 			end,
 		},
 		{
-			name = "Role icon offset X",
+			name = L["Role icon offset X"] or "Role icon offset X",
 			kind = SettingType.Slider,
 			allowInput = true,
 			field = "roleIconOffsetX",
@@ -16354,7 +16354,7 @@ local function buildEditModeSettings(kind, editModeId)
 			end,
 		},
 		{
-			name = "Role icon offset Y",
+			name = L["Role icon offset Y"] or "Role icon offset Y",
 			kind = SettingType.Slider,
 			allowInput = true,
 			field = "roleIconOffsetY",
@@ -16382,7 +16382,7 @@ local function buildEditModeSettings(kind, editModeId)
 			end,
 		},
 		{
-			name = "Role icon style",
+			name = L["Role icon style"] or "Role icon style",
 			kind = SettingType.Dropdown,
 			field = "roleIconStyle",
 			parentId = "roleicons",
@@ -16430,7 +16430,7 @@ local function buildEditModeSettings(kind, editModeId)
 			end,
 		},
 		{
-			name = "Show role icons for roles",
+			name = L["Show role icons for roles"] or "Show role icons for roles",
 			kind = SettingType.MultiDropdown,
 			field = "roleIconRoles",
 			height = 120,
@@ -16473,7 +16473,7 @@ local function buildEditModeSettings(kind, editModeId)
 			defaultCollapsed = true,
 		},
 		{
-			name = "Show power for roles",
+			name = L["Show power for roles"] or "Show power for roles",
 			kind = SettingType.MultiDropdown,
 			field = "powerRoles",
 			height = 140,
@@ -16505,7 +16505,7 @@ local function buildEditModeSettings(kind, editModeId)
 			end,
 		},
 		{
-			name = "Show power for specs",
+			name = L["Show power for specs"] or "Show power for specs",
 			kind = SettingType.MultiDropdown,
 			field = "powerSpecs",
 			height = 240,
@@ -16558,7 +16558,7 @@ local function buildEditModeSettings(kind, editModeId)
 			end,
 		},
 		{
-			name = "Power text left",
+			name = L["Power text left"] or "Power text left",
 			kind = SettingType.Dropdown,
 			field = "powerTextLeft",
 			parentId = "power",
@@ -16593,7 +16593,7 @@ local function buildEditModeSettings(kind, editModeId)
 			end,
 		},
 		{
-			name = "Power text center",
+			name = L["Power text center"] or "Power text center",
 			kind = SettingType.Dropdown,
 			field = "powerTextCenter",
 			parentId = "power",
@@ -16628,7 +16628,7 @@ local function buildEditModeSettings(kind, editModeId)
 			end,
 		},
 		{
-			name = "Power text right",
+			name = L["Power text right"] or "Power text right",
 			kind = SettingType.Dropdown,
 			field = "powerTextRight",
 			parentId = "power",
@@ -16663,7 +16663,7 @@ local function buildEditModeSettings(kind, editModeId)
 			end,
 		},
 		{
-			name = "Power delimiter",
+			name = L["Power delimiter"] or "Power delimiter",
 			kind = SettingType.Dropdown,
 			field = "powerDelimiter",
 			parentId = "power",
@@ -16699,7 +16699,7 @@ local function buildEditModeSettings(kind, editModeId)
 			isShown = function() return powerDelimiterCount() >= 1 end,
 		},
 		{
-			name = "Power secondary delimiter",
+			name = L["Power secondary delimiter"] or "Power secondary delimiter",
 			kind = SettingType.Dropdown,
 			field = "powerDelimiterSecondary",
 			parentId = "power",
@@ -16737,7 +16737,7 @@ local function buildEditModeSettings(kind, editModeId)
 			isShown = function() return powerDelimiterCount() >= 2 end,
 		},
 		{
-			name = "Power tertiary delimiter",
+			name = L["Power tertiary delimiter"] or "Power tertiary delimiter",
 			kind = SettingType.Dropdown,
 			field = "powerDelimiterTertiary",
 			parentId = "power",
@@ -16777,7 +16777,7 @@ local function buildEditModeSettings(kind, editModeId)
 			isShown = function() return powerDelimiterCount() >= 3 end,
 		},
 		{
-			name = "Short numbers",
+			name = L["Short numbers"] or "Short numbers",
 			kind = SettingType.Checkbox,
 			field = "powerShortNumbers",
 			parentId = "power",
@@ -16797,7 +16797,7 @@ local function buildEditModeSettings(kind, editModeId)
 			end,
 		},
 		{
-			name = "Hide percent symbol",
+			name = L["Hide percent symbol"] or "Hide percent symbol",
 			kind = SettingType.Checkbox,
 			field = "powerHidePercent",
 			parentId = "power",
@@ -16816,7 +16816,7 @@ local function buildEditModeSettings(kind, editModeId)
 			end,
 		},
 		{
-			name = "Font size",
+			name = L["Font size"] or "Font size",
 			kind = SettingType.Slider,
 			allowInput = true,
 			field = "powerFontSize",
@@ -16839,7 +16839,7 @@ local function buildEditModeSettings(kind, editModeId)
 			end,
 		},
 		{
-			name = "Font",
+			name = L["Font"] or "Font",
 			kind = SettingType.Dropdown,
 			field = "powerFont",
 			height = FONT_DROPDOWN_SCROLL_HEIGHT,
@@ -16875,7 +16875,7 @@ local function buildEditModeSettings(kind, editModeId)
 			end,
 		},
 		{
-			name = "Font outline",
+			name = L["Font outline"] or "Font outline",
 			kind = SettingType.Dropdown,
 			field = "powerFontOutline",
 			parentId = "power",
@@ -16910,7 +16910,7 @@ local function buildEditModeSettings(kind, editModeId)
 			end,
 		},
 		{
-			name = "Left text offset X",
+			name = L["Left text offset X"] or "Left text offset X",
 			kind = SettingType.Slider,
 			allowInput = true,
 			field = "powerLeftX",
@@ -16935,7 +16935,7 @@ local function buildEditModeSettings(kind, editModeId)
 			isEnabled = function() return isPowerTextEnabled("textLeft") end,
 		},
 		{
-			name = "Left text offset Y",
+			name = L["Left text offset Y"] or "Left text offset Y",
 			kind = SettingType.Slider,
 			allowInput = true,
 			field = "powerLeftY",
@@ -16960,7 +16960,7 @@ local function buildEditModeSettings(kind, editModeId)
 			isEnabled = function() return isPowerTextEnabled("textLeft") end,
 		},
 		{
-			name = "Center text offset X",
+			name = L["Center text offset X"] or "Center text offset X",
 			kind = SettingType.Slider,
 			allowInput = true,
 			field = "powerCenterX",
@@ -16985,7 +16985,7 @@ local function buildEditModeSettings(kind, editModeId)
 			isEnabled = function() return isPowerTextEnabled("textCenter") end,
 		},
 		{
-			name = "Center text offset Y",
+			name = L["Center text offset Y"] or "Center text offset Y",
 			kind = SettingType.Slider,
 			allowInput = true,
 			field = "powerCenterY",
@@ -17010,7 +17010,7 @@ local function buildEditModeSettings(kind, editModeId)
 			isEnabled = function() return isPowerTextEnabled("textCenter") end,
 		},
 		{
-			name = "Right text offset X",
+			name = L["Right text offset X"] or "Right text offset X",
 			kind = SettingType.Slider,
 			allowInput = true,
 			field = "powerRightX",
@@ -17035,7 +17035,7 @@ local function buildEditModeSettings(kind, editModeId)
 			isEnabled = function() return isPowerTextEnabled("textRight") end,
 		},
 		{
-			name = "Right text offset Y",
+			name = L["Right text offset Y"] or "Right text offset Y",
 			kind = SettingType.Slider,
 			allowInput = true,
 			field = "powerRightY",
@@ -17060,7 +17060,7 @@ local function buildEditModeSettings(kind, editModeId)
 			isEnabled = function() return isPowerTextEnabled("textRight") end,
 		},
 		{
-			name = "Power texture",
+			name = L["Power texture"] or "Power texture",
 			kind = SettingType.Dropdown,
 			field = "powerTexture",
 			parentId = "power",
@@ -17100,7 +17100,7 @@ local function buildEditModeSettings(kind, editModeId)
 			end,
 		},
 		{
-			name = "Show bar backdrop",
+			name = L["Show bar backdrop"] or "Show bar backdrop",
 			kind = SettingType.Checkbox,
 			field = "powerBackdropEnabled",
 			parentId = "power",
@@ -17123,7 +17123,7 @@ local function buildEditModeSettings(kind, editModeId)
 			end,
 		},
 		{
-			name = "Backdrop texture",
+			name = L["Backdrop texture"] or "Backdrop texture",
 			kind = SettingType.Dropdown,
 			field = "powerBackdropTexture",
 			parentId = "power",
@@ -17175,7 +17175,7 @@ local function buildEditModeSettings(kind, editModeId)
 			end,
 		},
 		{
-			name = "Backdrop color",
+			name = L["Backdrop color"] or "Backdrop color",
 			kind = SettingType.Color,
 			field = "powerBackdropColor",
 			parentId = "power",
@@ -17210,7 +17210,7 @@ local function buildEditModeSettings(kind, editModeId)
 			defaultCollapsed = true,
 		},
 		{
-			name = "Enable buffs",
+			name = L["Enable buffs"] or "Enable buffs",
 			kind = SettingType.Checkbox,
 			field = "buffsEnabled",
 			parentId = "buffs",
@@ -17260,7 +17260,7 @@ local function buildEditModeSettings(kind, editModeId)
 			end,
 		},
 		{
-			name = "Buff anchor",
+			name = L["Buff anchor"] or "Buff anchor",
 			kind = SettingType.Dropdown,
 			field = "buffAnchor",
 			parentId = "buffs",
@@ -17280,7 +17280,7 @@ local function buildEditModeSettings(kind, editModeId)
 			end,
 		},
 		{
-			name = "Buff growth direction",
+			name = L["Buff growth direction"] or "Buff growth direction",
 			kind = SettingType.Dropdown,
 			field = "buffGrowth",
 			parentId = "buffs",
@@ -17300,7 +17300,7 @@ local function buildEditModeSettings(kind, editModeId)
 			end,
 		},
 		{
-			name = "Buff offset X",
+			name = L["Buff offset X"] or "Buff offset X",
 			kind = SettingType.Slider,
 			allowInput = true,
 			field = "buffOffsetX",
@@ -17322,7 +17322,7 @@ local function buildEditModeSettings(kind, editModeId)
 			end,
 		},
 		{
-			name = "Buff offset Y",
+			name = L["Buff offset Y"] or "Buff offset Y",
 			kind = SettingType.Slider,
 			allowInput = true,
 			field = "buffOffsetY",
@@ -17344,7 +17344,7 @@ local function buildEditModeSettings(kind, editModeId)
 			end,
 		},
 		{
-			name = "Buff size",
+			name = L["Buff size"] or "Buff size",
 			kind = SettingType.Slider,
 			allowInput = true,
 			field = "buffSize",
@@ -17366,7 +17366,7 @@ local function buildEditModeSettings(kind, editModeId)
 			end,
 		},
 		{
-			name = "Buff per row",
+			name = L["Buff per row"] or "Buff per row",
 			kind = SettingType.Slider,
 			allowInput = true,
 			field = "buffPerRow",
@@ -17388,7 +17388,7 @@ local function buildEditModeSettings(kind, editModeId)
 			end,
 		},
 		{
-			name = "Buff max",
+			name = L["Buff max"] or "Buff max",
 			kind = SettingType.Slider,
 			allowInput = true,
 			field = "buffMax",
@@ -17410,7 +17410,7 @@ local function buildEditModeSettings(kind, editModeId)
 			end,
 		},
 		{
-			name = "Buff spacing",
+			name = L["Buff spacing"] or "Buff spacing",
 			kind = SettingType.Slider,
 			allowInput = true,
 			field = "buffSpacing",
@@ -17437,7 +17437,7 @@ local function buildEditModeSettings(kind, editModeId)
 			parentId = "buffs",
 		},
 		{
-			name = "Show cooldown text",
+			name = L["Show cooldown text"] or "Show cooldown text",
 			kind = SettingType.Checkbox,
 			field = "buffCooldownTextEnabled",
 			parentId = "buffs",
@@ -17458,7 +17458,7 @@ local function buildEditModeSettings(kind, editModeId)
 			end,
 		},
 		{
-			name = "Cooldown text anchor",
+			name = L["Cooldown text anchor"] or "Cooldown text anchor",
 			kind = SettingType.Dropdown,
 			field = "buffCooldownTextAnchor",
 			parentId = "buffs",
@@ -17479,7 +17479,7 @@ local function buildEditModeSettings(kind, editModeId)
 			end,
 		},
 		{
-			name = "Cooldown text offset X",
+			name = L["Cooldown text offset X"] or "Cooldown text offset X",
 			kind = SettingType.Slider,
 			allowInput = true,
 			field = "buffCooldownTextOffsetX",
@@ -17503,7 +17503,7 @@ local function buildEditModeSettings(kind, editModeId)
 			end,
 		},
 		{
-			name = "Cooldown text offset Y",
+			name = L["Cooldown text offset Y"] or "Cooldown text offset Y",
 			kind = SettingType.Slider,
 			allowInput = true,
 			field = "buffCooldownTextOffsetY",
@@ -17527,7 +17527,7 @@ local function buildEditModeSettings(kind, editModeId)
 			end,
 		},
 		{
-			name = "Cooldown text size",
+			name = L["Cooldown text size"] or "Cooldown text size",
 			kind = SettingType.Slider,
 			allowInput = true,
 			field = "buffCooldownTextSize",
@@ -17550,7 +17550,7 @@ local function buildEditModeSettings(kind, editModeId)
 			end,
 		},
 		{
-			name = "Cooldown text font",
+			name = L["Cooldown text font"] or "Cooldown text font",
 			kind = SettingType.Dropdown,
 			field = "buffCooldownTextFont",
 			height = FONT_DROPDOWN_SCROLL_HEIGHT,
@@ -17586,7 +17586,7 @@ local function buildEditModeSettings(kind, editModeId)
 			end,
 		},
 		{
-			name = "Cooldown text outline",
+			name = L["Cooldown text outline"] or "Cooldown text outline",
 			kind = SettingType.Dropdown,
 			field = "buffCooldownTextOutline",
 			parentId = "buffs",
@@ -17626,7 +17626,7 @@ local function buildEditModeSettings(kind, editModeId)
 			parentId = "buffs",
 		},
 		{
-			name = "Show stacks",
+			name = L["Show stacks"] or "Show stacks",
 			kind = SettingType.Checkbox,
 			field = "buffStackTextEnabled",
 			parentId = "buffs",
@@ -17647,7 +17647,7 @@ local function buildEditModeSettings(kind, editModeId)
 			end,
 		},
 		{
-			name = "Stack anchor",
+			name = L["Stack anchor"] or "Stack anchor",
 			kind = SettingType.Dropdown,
 			field = "buffStackAnchor",
 			parentId = "buffs",
@@ -17668,7 +17668,7 @@ local function buildEditModeSettings(kind, editModeId)
 			end,
 		},
 		{
-			name = "Stack offset X",
+			name = L["Stack offset X"] or "Stack offset X",
 			kind = SettingType.Slider,
 			allowInput = true,
 			field = "buffStackOffsetX",
@@ -17692,7 +17692,7 @@ local function buildEditModeSettings(kind, editModeId)
 			end,
 		},
 		{
-			name = "Stack offset Y",
+			name = L["Stack offset Y"] or "Stack offset Y",
 			kind = SettingType.Slider,
 			allowInput = true,
 			field = "buffStackOffsetY",
@@ -17716,7 +17716,7 @@ local function buildEditModeSettings(kind, editModeId)
 			end,
 		},
 		{
-			name = "Stack size",
+			name = L["Stack size"] or "Stack size",
 			kind = SettingType.Slider,
 			allowInput = true,
 			field = "buffStackSize",
@@ -17739,7 +17739,7 @@ local function buildEditModeSettings(kind, editModeId)
 			end,
 		},
 		{
-			name = "Stack font",
+			name = L["Stack font"] or "Stack font",
 			kind = SettingType.Dropdown,
 			field = "buffStackFont",
 			height = FONT_DROPDOWN_SCROLL_HEIGHT,
@@ -17775,7 +17775,7 @@ local function buildEditModeSettings(kind, editModeId)
 			end,
 		},
 		{
-			name = "Stack outline",
+			name = L["Stack outline"] or "Stack outline",
 			kind = SettingType.Dropdown,
 			field = "buffStackOutline",
 			parentId = "buffs",
@@ -17810,13 +17810,13 @@ local function buildEditModeSettings(kind, editModeId)
 			end,
 		},
 		{
-			name = "Debuffs",
+			name = L["Debuffs"] or "Debuffs",
 			kind = SettingType.Collapsible,
 			id = "debuffs",
 			defaultCollapsed = true,
 		},
 		{
-			name = "Enable debuffs",
+			name = L["Enable debuffs"] or "Enable debuffs",
 			kind = SettingType.Checkbox,
 			field = "debuffsEnabled",
 			parentId = "debuffs",
@@ -17835,7 +17835,7 @@ local function buildEditModeSettings(kind, editModeId)
 			end,
 		},
 		{
-			name = "Debuff anchor",
+			name = L["Debuff anchor"] or "Debuff anchor",
 			kind = SettingType.Dropdown,
 			field = "debuffAnchor",
 			parentId = "debuffs",
@@ -17855,7 +17855,7 @@ local function buildEditModeSettings(kind, editModeId)
 			end,
 		},
 		{
-			name = "Debuff growth direction",
+			name = L["Debuff growth direction"] or "Debuff growth direction",
 			kind = SettingType.Dropdown,
 			field = "debuffGrowth",
 			parentId = "debuffs",
@@ -17875,7 +17875,7 @@ local function buildEditModeSettings(kind, editModeId)
 			end,
 		},
 		{
-			name = "Debuff offset X",
+			name = L["Debuff offset X"] or "Debuff offset X",
 			kind = SettingType.Slider,
 			allowInput = true,
 			field = "debuffOffsetX",
@@ -17897,7 +17897,7 @@ local function buildEditModeSettings(kind, editModeId)
 			end,
 		},
 		{
-			name = "Debuff offset Y",
+			name = L["Debuff offset Y"] or "Debuff offset Y",
 			kind = SettingType.Slider,
 			allowInput = true,
 			field = "debuffOffsetY",
@@ -17919,7 +17919,7 @@ local function buildEditModeSettings(kind, editModeId)
 			end,
 		},
 		{
-			name = "Debuff size",
+			name = L["Debuff size"] or "Debuff size",
 			kind = SettingType.Slider,
 			allowInput = true,
 			field = "debuffSize",
@@ -17941,7 +17941,7 @@ local function buildEditModeSettings(kind, editModeId)
 			end,
 		},
 		{
-			name = "Debuff per row",
+			name = L["Debuff per row"] or "Debuff per row",
 			kind = SettingType.Slider,
 			allowInput = true,
 			field = "debuffPerRow",
@@ -17963,7 +17963,7 @@ local function buildEditModeSettings(kind, editModeId)
 			end,
 		},
 		{
-			name = "Debuff max",
+			name = L["Debuff max"] or "Debuff max",
 			kind = SettingType.Slider,
 			allowInput = true,
 			field = "debuffMax",
@@ -17985,7 +17985,7 @@ local function buildEditModeSettings(kind, editModeId)
 			end,
 		},
 		{
-			name = "Debuff spacing",
+			name = L["Debuff spacing"] or "Debuff spacing",
 			kind = SettingType.Slider,
 			allowInput = true,
 			field = "debuffSpacing",
@@ -18007,7 +18007,7 @@ local function buildEditModeSettings(kind, editModeId)
 			end,
 		},
 		{
-			name = "Show dispel icon",
+			name = L["Show dispel icon"] or "Show dispel icon",
 			kind = SettingType.Checkbox,
 			field = "debuffShowDispelIcon",
 			parentId = "debuffs",
@@ -18032,7 +18032,7 @@ local function buildEditModeSettings(kind, editModeId)
 			parentId = "debuffs",
 		},
 		{
-			name = "Show cooldown text",
+			name = L["Show cooldown text"] or "Show cooldown text",
 			kind = SettingType.Checkbox,
 			field = "debuffCooldownTextEnabled",
 			parentId = "debuffs",
@@ -18053,7 +18053,7 @@ local function buildEditModeSettings(kind, editModeId)
 			end,
 		},
 		{
-			name = "Cooldown text anchor",
+			name = L["Cooldown text anchor"] or "Cooldown text anchor",
 			kind = SettingType.Dropdown,
 			field = "debuffCooldownTextAnchor",
 			parentId = "debuffs",
@@ -18074,7 +18074,7 @@ local function buildEditModeSettings(kind, editModeId)
 			end,
 		},
 		{
-			name = "Cooldown text offset X",
+			name = L["Cooldown text offset X"] or "Cooldown text offset X",
 			kind = SettingType.Slider,
 			allowInput = true,
 			field = "debuffCooldownTextOffsetX",
@@ -18098,7 +18098,7 @@ local function buildEditModeSettings(kind, editModeId)
 			end,
 		},
 		{
-			name = "Cooldown text offset Y",
+			name = L["Cooldown text offset Y"] or "Cooldown text offset Y",
 			kind = SettingType.Slider,
 			allowInput = true,
 			field = "debuffCooldownTextOffsetY",
@@ -18122,7 +18122,7 @@ local function buildEditModeSettings(kind, editModeId)
 			end,
 		},
 		{
-			name = "Cooldown text size",
+			name = L["Cooldown text size"] or "Cooldown text size",
 			kind = SettingType.Slider,
 			allowInput = true,
 			field = "debuffCooldownTextSize",
@@ -18145,7 +18145,7 @@ local function buildEditModeSettings(kind, editModeId)
 			end,
 		},
 		{
-			name = "Cooldown text font",
+			name = L["Cooldown text font"] or "Cooldown text font",
 			kind = SettingType.Dropdown,
 			field = "debuffCooldownTextFont",
 			height = FONT_DROPDOWN_SCROLL_HEIGHT,
@@ -18181,7 +18181,7 @@ local function buildEditModeSettings(kind, editModeId)
 			end,
 		},
 		{
-			name = "Cooldown text outline",
+			name = L["Cooldown text outline"] or "Cooldown text outline",
 			kind = SettingType.Dropdown,
 			field = "debuffCooldownTextOutline",
 			parentId = "debuffs",
@@ -18221,7 +18221,7 @@ local function buildEditModeSettings(kind, editModeId)
 			parentId = "debuffs",
 		},
 		{
-			name = "Show stacks",
+			name = L["Show stacks"] or "Show stacks",
 			kind = SettingType.Checkbox,
 			field = "debuffStackTextEnabled",
 			parentId = "debuffs",
@@ -18242,7 +18242,7 @@ local function buildEditModeSettings(kind, editModeId)
 			end,
 		},
 		{
-			name = "Stack anchor",
+			name = L["Stack anchor"] or "Stack anchor",
 			kind = SettingType.Dropdown,
 			field = "debuffStackAnchor",
 			parentId = "debuffs",
@@ -18263,7 +18263,7 @@ local function buildEditModeSettings(kind, editModeId)
 			end,
 		},
 		{
-			name = "Stack offset X",
+			name = L["Stack offset X"] or "Stack offset X",
 			kind = SettingType.Slider,
 			allowInput = true,
 			field = "debuffStackOffsetX",
@@ -18287,7 +18287,7 @@ local function buildEditModeSettings(kind, editModeId)
 			end,
 		},
 		{
-			name = "Stack offset Y",
+			name = L["Stack offset Y"] or "Stack offset Y",
 			kind = SettingType.Slider,
 			allowInput = true,
 			field = "debuffStackOffsetY",
@@ -18311,7 +18311,7 @@ local function buildEditModeSettings(kind, editModeId)
 			end,
 		},
 		{
-			name = "Stack size",
+			name = L["Stack size"] or "Stack size",
 			kind = SettingType.Slider,
 			allowInput = true,
 			field = "debuffStackSize",
@@ -18334,7 +18334,7 @@ local function buildEditModeSettings(kind, editModeId)
 			end,
 		},
 		{
-			name = "Stack font",
+			name = L["Stack font"] or "Stack font",
 			kind = SettingType.Dropdown,
 			field = "debuffStackFont",
 			height = FONT_DROPDOWN_SCROLL_HEIGHT,
@@ -18370,7 +18370,7 @@ local function buildEditModeSettings(kind, editModeId)
 			end,
 		},
 		{
-			name = "Stack outline",
+			name = L["Stack outline"] or "Stack outline",
 			kind = SettingType.Dropdown,
 			field = "debuffStackOutline",
 			parentId = "debuffs",
@@ -18405,13 +18405,13 @@ local function buildEditModeSettings(kind, editModeId)
 			end,
 		},
 		{
-			name = "Externals",
+			name = L["Externals"] or "Externals",
 			kind = SettingType.Collapsible,
 			id = "externals",
 			defaultCollapsed = true,
 		},
 		{
-			name = "Enable externals",
+			name = L["Enable externals"] or "Enable externals",
 			kind = SettingType.Checkbox,
 			field = "externalsEnabled",
 			parentId = "externals",
@@ -18430,7 +18430,7 @@ local function buildEditModeSettings(kind, editModeId)
 			end,
 		},
 		{
-			name = "External anchor",
+			name = L["External anchor"] or "External anchor",
 			kind = SettingType.Dropdown,
 			field = "externalAnchor",
 			parentId = "externals",
@@ -18450,7 +18450,7 @@ local function buildEditModeSettings(kind, editModeId)
 			end,
 		},
 		{
-			name = "External growth direction",
+			name = L["External growth direction"] or "External growth direction",
 			kind = SettingType.Dropdown,
 			field = "externalGrowth",
 			parentId = "externals",
@@ -18470,7 +18470,7 @@ local function buildEditModeSettings(kind, editModeId)
 			end,
 		},
 		{
-			name = "External offset X",
+			name = L["External offset X"] or "External offset X",
 			kind = SettingType.Slider,
 			allowInput = true,
 			field = "externalOffsetX",
@@ -18492,7 +18492,7 @@ local function buildEditModeSettings(kind, editModeId)
 			end,
 		},
 		{
-			name = "External offset Y",
+			name = L["External offset Y"] or "External offset Y",
 			kind = SettingType.Slider,
 			allowInput = true,
 			field = "externalOffsetY",
@@ -18514,7 +18514,7 @@ local function buildEditModeSettings(kind, editModeId)
 			end,
 		},
 		{
-			name = "External size",
+			name = L["External size"] or "External size",
 			kind = SettingType.Slider,
 			allowInput = true,
 			field = "externalSize",
@@ -18536,7 +18536,7 @@ local function buildEditModeSettings(kind, editModeId)
 			end,
 		},
 		{
-			name = "External per row",
+			name = L["External per row"] or "External per row",
 			kind = SettingType.Slider,
 			allowInput = true,
 			field = "externalPerRow",
@@ -18558,7 +18558,7 @@ local function buildEditModeSettings(kind, editModeId)
 			end,
 		},
 		{
-			name = "External max",
+			name = L["External max"] or "External max",
 			kind = SettingType.Slider,
 			allowInput = true,
 			field = "externalMax",
@@ -18580,7 +18580,7 @@ local function buildEditModeSettings(kind, editModeId)
 			end,
 		},
 		{
-			name = "External spacing",
+			name = L["External spacing"] or "External spacing",
 			kind = SettingType.Slider,
 			allowInput = true,
 			field = "externalSpacing",
@@ -18607,7 +18607,7 @@ local function buildEditModeSettings(kind, editModeId)
 			parentId = "externals",
 		},
 		{
-			name = "Show cooldown text",
+			name = L["Show cooldown text"] or "Show cooldown text",
 			kind = SettingType.Checkbox,
 			field = "externalCooldownTextEnabled",
 			parentId = "externals",
@@ -18628,7 +18628,7 @@ local function buildEditModeSettings(kind, editModeId)
 			end,
 		},
 		{
-			name = "Cooldown text anchor",
+			name = L["Cooldown text anchor"] or "Cooldown text anchor",
 			kind = SettingType.Dropdown,
 			field = "externalCooldownTextAnchor",
 			parentId = "externals",
@@ -18649,7 +18649,7 @@ local function buildEditModeSettings(kind, editModeId)
 			end,
 		},
 		{
-			name = "Cooldown text offset X",
+			name = L["Cooldown text offset X"] or "Cooldown text offset X",
 			kind = SettingType.Slider,
 			allowInput = true,
 			field = "externalCooldownTextOffsetX",
@@ -18673,7 +18673,7 @@ local function buildEditModeSettings(kind, editModeId)
 			end,
 		},
 		{
-			name = "Cooldown text offset Y",
+			name = L["Cooldown text offset Y"] or "Cooldown text offset Y",
 			kind = SettingType.Slider,
 			allowInput = true,
 			field = "externalCooldownTextOffsetY",
@@ -18697,7 +18697,7 @@ local function buildEditModeSettings(kind, editModeId)
 			end,
 		},
 		{
-			name = "Cooldown text size",
+			name = L["Cooldown text size"] or "Cooldown text size",
 			kind = SettingType.Slider,
 			allowInput = true,
 			field = "externalCooldownTextSize",
@@ -18720,7 +18720,7 @@ local function buildEditModeSettings(kind, editModeId)
 			end,
 		},
 		{
-			name = "Cooldown text font",
+			name = L["Cooldown text font"] or "Cooldown text font",
 			kind = SettingType.Dropdown,
 			field = "externalCooldownTextFont",
 			height = FONT_DROPDOWN_SCROLL_HEIGHT,
@@ -18756,7 +18756,7 @@ local function buildEditModeSettings(kind, editModeId)
 			end,
 		},
 		{
-			name = "Cooldown text outline",
+			name = L["Cooldown text outline"] or "Cooldown text outline",
 			kind = SettingType.Dropdown,
 			field = "externalCooldownTextOutline",
 			parentId = "externals",
@@ -18796,7 +18796,7 @@ local function buildEditModeSettings(kind, editModeId)
 			parentId = "externals",
 		},
 		{
-			name = "Show stacks",
+			name = L["Show stacks"] or "Show stacks",
 			kind = SettingType.Checkbox,
 			field = "externalStackTextEnabled",
 			parentId = "externals",
@@ -18817,7 +18817,7 @@ local function buildEditModeSettings(kind, editModeId)
 			end,
 		},
 		{
-			name = "Stack anchor",
+			name = L["Stack anchor"] or "Stack anchor",
 			kind = SettingType.Dropdown,
 			field = "externalStackAnchor",
 			parentId = "externals",
@@ -18838,7 +18838,7 @@ local function buildEditModeSettings(kind, editModeId)
 			end,
 		},
 		{
-			name = "Stack offset X",
+			name = L["Stack offset X"] or "Stack offset X",
 			kind = SettingType.Slider,
 			allowInput = true,
 			field = "externalStackOffsetX",
@@ -18862,7 +18862,7 @@ local function buildEditModeSettings(kind, editModeId)
 			end,
 		},
 		{
-			name = "Stack offset Y",
+			name = L["Stack offset Y"] or "Stack offset Y",
 			kind = SettingType.Slider,
 			allowInput = true,
 			field = "externalStackOffsetY",
@@ -18886,7 +18886,7 @@ local function buildEditModeSettings(kind, editModeId)
 			end,
 		},
 		{
-			name = "Stack size",
+			name = L["Stack size"] or "Stack size",
 			kind = SettingType.Slider,
 			allowInput = true,
 			field = "externalStackSize",
@@ -18909,7 +18909,7 @@ local function buildEditModeSettings(kind, editModeId)
 			end,
 		},
 		{
-			name = "Stack font",
+			name = L["Stack font"] or "Stack font",
 			kind = SettingType.Dropdown,
 			field = "externalStackFont",
 			height = FONT_DROPDOWN_SCROLL_HEIGHT,
@@ -18945,7 +18945,7 @@ local function buildEditModeSettings(kind, editModeId)
 			end,
 		},
 		{
-			name = "Stack outline",
+			name = L["Stack outline"] or "Stack outline",
 			kind = SettingType.Dropdown,
 			field = "externalStackOutline",
 			parentId = "externals",
@@ -18980,7 +18980,7 @@ local function buildEditModeSettings(kind, editModeId)
 			end,
 		},
 		{
-			name = "Show DR %",
+			name = L["Show DR %"] or "Show DR %",
 			kind = SettingType.Checkbox,
 			field = "externalDrEnabled",
 			parentId = "externals",
@@ -18998,7 +18998,7 @@ local function buildEditModeSettings(kind, editModeId)
 			end,
 		},
 		{
-			name = "DR anchor",
+			name = L["DR anchor"] or "DR anchor",
 			kind = SettingType.Dropdown,
 			field = "externalDrAnchor",
 			parentId = "externals",
@@ -19019,7 +19019,7 @@ local function buildEditModeSettings(kind, editModeId)
 			isEnabled = isExternalDRShown,
 		},
 		{
-			name = "DR offset X",
+			name = L["DR offset X"] or "DR offset X",
 			kind = SettingType.Slider,
 			allowInput = true,
 			field = "externalDrOffsetX",
@@ -19043,7 +19043,7 @@ local function buildEditModeSettings(kind, editModeId)
 			isEnabled = isExternalDRShown,
 		},
 		{
-			name = "DR offset Y",
+			name = L["DR offset Y"] or "DR offset Y",
 			kind = SettingType.Slider,
 			allowInput = true,
 			field = "externalDrOffsetY",
@@ -19067,7 +19067,7 @@ local function buildEditModeSettings(kind, editModeId)
 			isEnabled = isExternalDRShown,
 		},
 		{
-			name = "DR color",
+			name = L["DR color"] or "DR color",
 			kind = SettingType.Color,
 			field = "externalDrColor",
 			parentId = "externals",
@@ -19089,7 +19089,7 @@ local function buildEditModeSettings(kind, editModeId)
 			isEnabled = isExternalDRShown,
 		},
 		{
-			name = "DR font size",
+			name = L["DR font size"] or "DR font size",
 			kind = SettingType.Slider,
 			allowInput = true,
 			field = "externalDrFontSize",
@@ -19112,7 +19112,7 @@ local function buildEditModeSettings(kind, editModeId)
 			isEnabled = isExternalDRShown,
 		},
 		{
-			name = "DR font",
+			name = L["DR font"] or "DR font",
 			kind = SettingType.Dropdown,
 			field = "externalDrFont",
 			height = FONT_DROPDOWN_SCROLL_HEIGHT,
@@ -19147,7 +19147,7 @@ local function buildEditModeSettings(kind, editModeId)
 			isEnabled = isExternalDRShown,
 		},
 		{
-			name = "DR font outline",
+			name = L["DR font outline"] or "DR font outline",
 			kind = SettingType.Dropdown,
 			field = "externalDrFontOutline",
 			parentId = "externals",
@@ -19181,13 +19181,13 @@ local function buildEditModeSettings(kind, editModeId)
 			isEnabled = isExternalDRShown,
 		},
 		{
-			name = "Private Auras",
+			name = L["Private Auras"] or "Private Auras",
 			kind = SettingType.Collapsible,
 			id = "privateAuras",
 			defaultCollapsed = true,
 		},
 		{
-			name = "Enable private auras",
+			name = L["Enable private auras"] or "Enable private auras",
 			kind = SettingType.Checkbox,
 			field = "privateAurasEnabled",
 			parentId = "privateAuras",
@@ -19202,7 +19202,7 @@ local function buildEditModeSettings(kind, editModeId)
 			end,
 		},
 		{
-			name = "Amount",
+			name = L["Amount"] or "Amount",
 			kind = SettingType.Slider,
 			allowInput = true,
 			field = "privateAurasAmount",
@@ -19228,7 +19228,7 @@ local function buildEditModeSettings(kind, editModeId)
 			isEnabled = isPrivateAurasEnabled,
 		},
 		{
-			name = "Icon size",
+			name = L["Icon size"] or "Icon size",
 			kind = SettingType.Slider,
 			allowInput = true,
 			field = "privateAurasSize",
@@ -19254,7 +19254,7 @@ local function buildEditModeSettings(kind, editModeId)
 			isEnabled = isPrivateAurasEnabled,
 		},
 		{
-			name = "Icon direction",
+			name = L["Icon direction"] or "Icon direction",
 			kind = SettingType.Dropdown,
 			field = "privateAurasPoint",
 			parentId = "privateAuras",
@@ -19278,7 +19278,7 @@ local function buildEditModeSettings(kind, editModeId)
 			isEnabled = isPrivateAurasEnabled,
 		},
 		{
-			name = "Icon spacing",
+			name = L["Icon spacing"] or "Icon spacing",
 			kind = SettingType.Slider,
 			allowInput = true,
 			field = "privateAurasOffset",
@@ -19304,7 +19304,7 @@ local function buildEditModeSettings(kind, editModeId)
 			isEnabled = isPrivateAurasEnabled,
 		},
 		{
-			name = "Anchor point",
+			name = L["Anchor point"] or "Anchor point",
 			kind = SettingType.Dropdown,
 			field = "privateAurasParentPoint",
 			parentId = "privateAuras",
@@ -19328,7 +19328,7 @@ local function buildEditModeSettings(kind, editModeId)
 			isEnabled = isPrivateAurasEnabled,
 		},
 		{
-			name = "Anchor offset X",
+			name = L["Anchor offset X"] or "Anchor offset X",
 			kind = SettingType.Slider,
 			allowInput = true,
 			field = "privateAurasParentOffsetX",
@@ -19354,7 +19354,7 @@ local function buildEditModeSettings(kind, editModeId)
 			isEnabled = isPrivateAurasEnabled,
 		},
 		{
-			name = "Anchor offset Y",
+			name = L["Anchor offset Y"] or "Anchor offset Y",
 			kind = SettingType.Slider,
 			allowInput = true,
 			field = "privateAurasParentOffsetY",
@@ -19380,7 +19380,7 @@ local function buildEditModeSettings(kind, editModeId)
 			isEnabled = isPrivateAurasEnabled,
 		},
 		{
-			name = "Show countdown frame",
+			name = L["Show countdown frame"] or "Show countdown frame",
 			kind = SettingType.Checkbox,
 			field = "privateAurasCountdownFrame",
 			parentId = "privateAuras",
@@ -19402,7 +19402,7 @@ local function buildEditModeSettings(kind, editModeId)
 			isEnabled = isPrivateAurasEnabled,
 		},
 		{
-			name = "Show countdown numbers",
+			name = L["Show countdown numbers"] or "Show countdown numbers",
 			kind = SettingType.Checkbox,
 			field = "privateAurasCountdownNumbers",
 			parentId = "privateAuras",
@@ -19424,7 +19424,7 @@ local function buildEditModeSettings(kind, editModeId)
 			isEnabled = isPrivateAurasEnabled,
 		},
 		{
-			name = "Show dispel type",
+			name = L["Show dispel type"] or "Show dispel type",
 			kind = SettingType.Checkbox,
 			field = "privateAurasShowDispelType",
 			parentId = "privateAuras",
@@ -19446,7 +19446,7 @@ local function buildEditModeSettings(kind, editModeId)
 			isEnabled = isPrivateAurasEnabled,
 		},
 		{
-			name = "Show duration",
+			name = L["Show duration"] or "Show duration",
 			kind = SettingType.Checkbox,
 			field = "privateAurasDurationEnabled",
 			parentId = "privateAuras",
@@ -19469,7 +19469,7 @@ local function buildEditModeSettings(kind, editModeId)
 			isEnabled = isPrivateAurasEnabled,
 		},
 		{
-			name = "Duration anchor",
+			name = L["Duration anchor"] or "Duration anchor",
 			kind = SettingType.Dropdown,
 			field = "privateAurasDurationPoint",
 			parentId = "privateAuras",
@@ -19495,7 +19495,7 @@ local function buildEditModeSettings(kind, editModeId)
 			end,
 		},
 		{
-			name = "Duration offset X",
+			name = L["Duration offset X"] or "Duration offset X",
 			kind = SettingType.Slider,
 			allowInput = true,
 			field = "privateAurasDurationOffsetX",
@@ -19523,7 +19523,7 @@ local function buildEditModeSettings(kind, editModeId)
 			end,
 		},
 		{
-			name = "Duration offset Y",
+			name = L["Duration offset Y"] or "Duration offset Y",
 			kind = SettingType.Slider,
 			allowInput = true,
 			field = "privateAurasDurationOffsetY",
@@ -19554,13 +19554,13 @@ local function buildEditModeSettings(kind, editModeId)
 
 	if kind == "party" then
 		settings[#settings + 1] = {
-			name = "Party",
+			name = L["Party"] or "Party",
 			kind = SettingType.Collapsible,
 			id = "party",
 			defaultCollapsed = true,
 		}
 		settings[#settings + 1] = {
-			name = "Show player",
+			name = L["Show player"] or "Show player",
 			kind = SettingType.Checkbox,
 			field = "showPlayer",
 			default = (DEFAULTS.party and DEFAULTS.party.showPlayer) or false,
@@ -19578,7 +19578,7 @@ local function buildEditModeSettings(kind, editModeId)
 			end,
 		}
 		settings[#settings + 1] = {
-			name = "Show solo",
+			name = L["Show solo"] or "Show solo",
 			kind = SettingType.Checkbox,
 			field = "showSolo",
 			default = (DEFAULTS.party and DEFAULTS.party.showSolo) or false,
@@ -19596,7 +19596,7 @@ local function buildEditModeSettings(kind, editModeId)
 			end,
 		}
 		settings[#settings + 1] = {
-			name = "Sort method",
+			name = L["Sort method"] or "Sort method",
 			kind = SettingType.Dropdown,
 			field = "sortMethod",
 			parentId = "party",
@@ -19660,7 +19660,7 @@ local function buildEditModeSettings(kind, editModeId)
 			end,
 		}
 		settings[#settings + 1] = {
-			name = "Sort direction",
+			name = L["Sort direction"] or "Sort direction",
 			kind = SettingType.Dropdown,
 			field = "sortDir",
 			parentId = "party",
@@ -19741,7 +19741,7 @@ local function buildEditModeSettings(kind, editModeId)
 			isShown = function() return kind == "mt" end,
 		}
 		settings[#settings + 1] = {
-			name = "Units per column",
+			name = L["Units per column"] or "Units per column",
 			kind = SettingType.Slider,
 			allowInput = true,
 			field = "unitsPerColumn",
@@ -19765,7 +19765,7 @@ local function buildEditModeSettings(kind, editModeId)
 			end,
 		}
 		settings[#settings + 1] = {
-			name = "Max columns",
+			name = L["Max columns"] or "Max columns",
 			kind = SettingType.Slider,
 			allowInput = true,
 			field = "maxColumns",
@@ -19789,7 +19789,7 @@ local function buildEditModeSettings(kind, editModeId)
 			end,
 		}
 		settings[#settings + 1] = {
-			name = "Column spacing",
+			name = L["Column spacing"] or "Column spacing",
 			kind = SettingType.Slider,
 			allowInput = true,
 			field = "columnSpacing",
@@ -19812,7 +19812,7 @@ local function buildEditModeSettings(kind, editModeId)
 			end,
 		}
 		settings[#settings + 1] = {
-			name = "Group by",
+			name = L["Group by"] or "Group by",
 			kind = SettingType.Dropdown,
 			field = "groupBy",
 			parentId = "raid",
@@ -19836,7 +19836,7 @@ local function buildEditModeSettings(kind, editModeId)
 			end,
 		}
 		settings[#settings + 1] = {
-			name = "Sort method",
+			name = L["Sort method"] or "Sort method",
 			kind = SettingType.Dropdown,
 			field = "sortMethod",
 			parentId = "raid",
@@ -19901,7 +19901,7 @@ local function buildEditModeSettings(kind, editModeId)
 			end,
 		}
 		settings[#settings + 1] = {
-			name = "Sort direction",
+			name = L["Sort direction"] or "Sort direction",
 			kind = SettingType.Dropdown,
 			field = "sortDir",
 			parentId = "raid",
@@ -19955,7 +19955,7 @@ local function buildEditModeSettings(kind, editModeId)
 			isEnabled = function() return isCustomSortingEnabled() end,
 		}
 		settings[#settings + 1] = {
-			name = "Separate Melee & Ranged DPS",
+			name = L["Separate Melee & Ranged DPS"] or "Separate Melee & Ranged DPS",
 			kind = SettingType.Checkbox,
 			field = "customSortSeparateMeleeRanged",
 			parentId = "raid",
@@ -19991,7 +19991,7 @@ local function buildEditModeSettings(kind, editModeId)
 			isShown = function() return isGroupIndicatorShown() end,
 		}
 		settings[#settings + 1] = {
-			name = "Show indicator",
+			name = L["Show indicator"] or "Show indicator",
 			kind = SettingType.Checkbox,
 			field = "groupIndicatorEnabled",
 			parentId = "raid",
@@ -20007,7 +20007,7 @@ local function buildEditModeSettings(kind, editModeId)
 			isShown = function() return isGroupIndicatorShown() end,
 		}
 		settings[#settings + 1] = {
-			name = "Hide Group number per Frame",
+			name = L["Hide Group number per Frame"] or "Hide Group number per Frame",
 			kind = SettingType.Checkbox,
 			field = "groupIndicatorHidePerFrame",
 			parentId = "raid",
@@ -20031,7 +20031,7 @@ local function buildEditModeSettings(kind, editModeId)
 			isShown = function() return isGroupIndicatorShown() end,
 		}
 		settings[#settings + 1] = {
-			name = "Format",
+			name = L["Format"] or "Format",
 			kind = SettingType.Dropdown,
 			field = "groupIndicatorFormat",
 			parentId = "raid",
@@ -20092,7 +20092,7 @@ local function buildEditModeSettings(kind, editModeId)
 			isShown = function() return isGroupIndicatorShown() end,
 		}
 		settings[#settings + 1] = {
-			name = "Font size",
+			name = L["Font size"] or "Font size",
 			kind = SettingType.Slider,
 			allowInput = true,
 			field = "groupIndicatorFontSize",
@@ -20118,7 +20118,7 @@ local function buildEditModeSettings(kind, editModeId)
 			isShown = function() return isGroupIndicatorShown() end,
 		}
 		settings[#settings + 1] = {
-			name = "Font",
+			name = L["Font"] or "Font",
 			kind = SettingType.Dropdown,
 			field = "groupIndicatorFont",
 			height = FONT_DROPDOWN_SCROLL_HEIGHT,
@@ -20158,7 +20158,7 @@ local function buildEditModeSettings(kind, editModeId)
 			isShown = function() return isGroupIndicatorShown() end,
 		}
 		settings[#settings + 1] = {
-			name = "Font outline",
+			name = L["Font outline"] or "Font outline",
 			kind = SettingType.Dropdown,
 			field = "groupIndicatorFontOutline",
 			parentId = "raid",
@@ -20197,7 +20197,7 @@ local function buildEditModeSettings(kind, editModeId)
 			isShown = function() return isGroupIndicatorShown() end,
 		}
 		settings[#settings + 1] = {
-			name = "Anchor",
+			name = L["Anchor"] or "Anchor",
 			kind = SettingType.Dropdown,
 			field = "groupIndicatorAnchor",
 			parentId = "raid",
@@ -20221,7 +20221,7 @@ local function buildEditModeSettings(kind, editModeId)
 			isShown = function() return isGroupIndicatorShown() end,
 		}
 		settings[#settings + 1] = {
-			name = "Offset X",
+			name = L["Offset X"] or "Offset X",
 			kind = SettingType.Slider,
 			allowInput = true,
 			field = "groupIndicatorOffsetX",
@@ -20249,7 +20249,7 @@ local function buildEditModeSettings(kind, editModeId)
 			isShown = function() return isGroupIndicatorShown() end,
 		}
 		settings[#settings + 1] = {
-			name = "Offset Y",
+			name = L["Offset Y"] or "Offset Y",
 			kind = SettingType.Slider,
 			allowInput = true,
 			field = "groupIndicatorOffsetY",
@@ -21877,10 +21877,12 @@ function GF:EnsureEditMode()
 						click = function() GF:ToggleGlobalAuraIgnoreEditor(kind) end,
 					})
 				end
-				if kind == "raid" then table.insert(buttons, 2, {
-					text = "Cycle sample size (10/20/30/40)",
-					click = function() GF:CycleEditModeSampleSize(kind) end,
-				}) end
+				if kind == "raid" then
+					table.insert(buttons, 2, {
+						text = L["Cycle sample size (10/20/30/40)"] or "Cycle sample size (10/20/30/40)",
+						click = function() GF:CycleEditModeSampleSize(kind) end,
+					})
+				end
 				EditMode:RegisterButtons(EDITMODE_IDS[kind], buttons)
 			end
 

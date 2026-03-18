@@ -123,23 +123,260 @@ MacroToolkitDB = {
 ["icon"] = "7554220",
 ["body"] = "#showtooltip void ray\n/cast [nochanneling] Void ray\n",
 },
-[146] = {
+[145] = {
 ["name"] = "Outfit Collection",
 ["icon"] = "2869702",
 ["body"] = "#plumber:outfit\n/click PLMR_OUTFIT\n",
 },
-[145] = {
-["name"] = "Full Combo",
-["icon"] = "134400",
-["body"] = "#showtooltip\n/castsequence reset=90 The Hunt, Hungering Slash, Vengeful Retreat, Voidblade, Hungering Slash, Vengeful Retreat\n",
-},
-[147] = {
-["name"] = "Teleport Home",
-["icon"] = "7252953",
-["body"] = "#plumber:home\n/click PLMR_HOME1\n",
-},
 },
 ["classFile"] = "DEMONHUNTER",
+["backups"] = {
+},
+},
+["Reedingo - Mal'Ganis"] = {
+["macros"] = {
+[122] = {
+["icon"] = "136013",
+["name"] = " ",
+["body"] = "#showtooltip Capacitor Totem\n/cast [@cursor] Capacitor Totem\n",
+},
+[126] = {
+["icon"] = "134400",
+["name"] = " ",
+["body"] = "#showtooltip\n/cast [@mouseover,exists,help,nodead][] Chain Heal\n",
+},
+[132] = {
+["icon"] = "134400",
+["name"] = " ",
+["body"] = "#showtooltip\n/cast [@cursor] Earthen wall totem\n",
+},
+[123] = {
+["icon"] = "136102",
+["name"] = " ",
+["body"] = "#showtooltip Earthbind Totem\n/cast [@cursor] Earthbind Totem\n",
+},
+[127] = {
+["icon"] = "134400",
+["name"] = " ",
+["body"] = "#showtooltip\n/cast [@mouseover,exists,help,nodead][] Earth Shield\n",
+},
+[134] = {
+["icon"] = "134400",
+["name"] = " ",
+["body"] = "#showtooltip\n/cast [@mouseover,exists,help,nodead][] Riptide\n",
+},
+[133] = {
+["icon"] = "134400",
+["name"] = " ",
+["body"] = "#showtooltip \n/cast [@cursor] Spirit Link Totem\n",
+},
+[124] = {
+["icon"] = "136108",
+["name"] = " ",
+["body"] = "#showtooltip Tremor Totem\n/cast [@cursor] Tremor Totem\n",
+},
+[128] = {
+["icon"] = "134400",
+["name"] = " ",
+["body"] = "#showtooltip\n/cast [@cursor] Totemic Projection\n",
+},
+[121] = {
+["icon"] = "136037",
+["name"] = " ",
+["body"] = "#showtooltip Healing Rain\n/cast [@cursor] Healing Rain\n",
+},
+[129] = {
+["icon"] = "134400",
+["name"] = " ",
+["body"] = "#showtooltip\n/cast [@mouseover,exists,help,nodead][] Healing Wave\n",
+},
+[125] = {
+["icon"] = "136044",
+["name"] = " ",
+["body"] = "#showtooltip\n/cast [@mouseover,exists,help,nodead][] Healing Surge\n",
+},
+[130] = {
+["icon"] = "134400",
+["name"] = " ",
+["body"] = "#showtooltip\n/cast [@cursor] Static Field Totem\n",
+},
+[131] = {
+["icon"] = "134400",
+["name"] = " ",
+["body"] = "#showtooltip\n/cast [@mouseover,exists,help,nodead][] Unleash Life\n",
+},
+},
+["classFile"] = "SHAMAN",
+},
+["Neonvoid - Tichondrius"] = {
+["macros"] = {
+[131] = {
+["icon"] = "134400",
+["name"] = " ",
+["body"] = "#showtooltip\n/cast [@mouseover,help,exists] Rapture;[] Rapture\n",
+},
+[135] = {
+["icon"] = "134400",
+["name"] = " ",
+["body"] = "#showtooltip\n/cast [@mouseover,help,exists][] Renew\n",
+},
+[139] = {
+["icon"] = "134400",
+["name"] = " ",
+["body"] = "#showtoolip\n/cast [mod:shift,@focus,exists,harm,nodead][] Psychic Horror\n",
+},
+[143] = {
+["icon"] = "134400",
+["name"] = " ",
+["body"] = "#showtooltip\n/cast [@mouseover,help,exists,nodead][] Void shift\n",
+},
+[122] = {
+["icon"] = "463835",
+["name"] = " ",
+["body"] = "#showtooltip\n/cast [@mouseover,help,exists,nodead][] Leap of Faith\n",
+},
+[124] = {
+["icon"] = "134400",
+["name"] = " ",
+["body"] = "#showtooltip [known: Void Eruption] Void Eruption; [known: Dark Ascension] Dark Ascension\n/use 13\n/use Tempered Potion\n/cast [known: Void Eruption] Void Eruption\n/cast [known: Dark Ascension] Dark Ascension\n",
+},
+[126] = {
+["icon"] = "135987",
+["name"] = " ",
+["body"] = "#showtooltip\n/cast [@player] Power Word: Fortitude\n/use Goblin Weather Machine - Prototype 01-B\n/use Thaumaturgist's Orb\n",
+},
+[128] = {
+["icon"] = "237563",
+["name"] = " ",
+["body"] = "#showtooltip Dispersion\n/use Thaumaturgist's Orb\n/cast Dispersion\n",
+},
+[132] = {
+["icon"] = "134400",
+["name"] = " ",
+["body"] = "#showtooltip\n/cast [@mouseover,help,exists][] Pain Suppression\n",
+},
+[136] = {
+["icon"] = "135907",
+["name"] = " ",
+["body"] = "#showtooltip\n/cast [@mouseover,help,exists][] Flash Heal\n",
+},
+[140] = {
+["icon"] = "458230",
+["name"] = " ",
+["body"] = "#showtooltip\n/cancelaura Dispersion\n/cast [mod:shift,@focus,exists,harm,nodead][] Silence\n",
+},
+[144] = {
+["icon"] = "1386548",
+["name"] = " ",
+["body"] = "#showtooltip Voidform\n/cast [@focus,exists,help,nodead] Power Infusion;[@mouseover,help,exists,nodead] Power Infusion;[] Power Infusion;\n/cast Voidform\n",
+},
+[129] = {
+["icon"] = "135928",
+["name"] = " ",
+["body"] = "#showtooltip\n/cast [@player] Levitate\n/cancelaura levitate\n",
+},
+[133] = {
+["icon"] = "134400",
+["name"] = " ",
+["body"] = "#showtooltip\n/cast [@mouseover,help,exists][] Power Word: Life\n",
+},
+[137] = {
+["icon"] = "134400",
+["name"] = " ",
+["body"] = "#showtooltip\n/cast [@cursor] Power Word: Barrier\n",
+},
+[141] = {
+["icon"] = "136206",
+["name"] = " ",
+["body"] = "#showtooltip Mind Control\n/cast [nochanneling: Mind Control,mod:shift,@focus,exists,harm,nodead][nochanneling: Mind Control] Mind Controll\n/stopcasting [channeling: Mind Control]\n",
+},
+[121] = {
+["icon"] = "642580",
+["name"] = " ",
+["body"] = "#showtooltip\n/cast [nomod,@player] Angelic Feather;[mod:shift,@cursor] Angelic Feather; [@player] Angelic Feather;\n/use prismatic bauble\n",
+},
+[123] = {
+["icon"] = "135940",
+["name"] = " ",
+["body"] = "#showtooltip\n/cast [@mouseover,help,exists][] Power Word: Shield\n",
+},
+[125] = {
+["icon"] = "135939",
+["name"] = " ",
+["body"] = "#showtooltip Power Infusion\n/cast [@focus,exists,help,nodead] Power Infusion;[@mouseover,help,exists,nodead] Power Infusion;[] Power Infusion;\n",
+},
+[127] = {
+["icon"] = "135978",
+["name"] = " ",
+["body"] = "#showtooltip\n/cast [@mouseover,harm,exists][] Vampiric Touch\n",
+},
+[130] = {
+["icon"] = "135739",
+["name"] = " ",
+["body"] = "#showtooltip\n/cast [@cursor] Mass Dispel\n",
+},
+[134] = {
+["icon"] = "136207",
+["name"] = " ",
+["body"] = "#showtooltip\n/cast [@mouseover,harm,exists][] Shadow Word: Pain\n",
+},
+[138] = {
+["icon"] = "134400",
+["name"] = " ",
+["body"] = "#showtooltip\n/cast [known:457042] Shadow Crash\n/cast [known:205385, @cursor] Shadow Crash\n",
+},
+[142] = {
+["icon"] = "136224",
+["name"] = " ",
+["body"] = "#showtooltip mind blast\n/cancelaura Dispersion\n/cast Mind Blast\n",
+},
+},
+["classFile"] = "PRIEST",
+["backups"] = {
+},
+},
+["Korahron - Tichondrius"] = {
+["classFile"] = "MONK",
+},
+["Tampacks - Mal'Ganis"] = {
+["macros"] = {
+[127] = {
+["name"] = " ",
+["icon"] = "136088",
+["body"] = "#showtooltip\n/cast [target=mouseover,exists] Dark Command; Dark Command\n",
+},
+[122] = {
+["name"] = " ",
+["icon"] = "136144",
+["body"] = "#showtooltip\n/cast [@cursor] Death and Decay\n",
+},
+[124] = {
+["name"] = " ",
+["icon"] = "136144",
+["body"] = "#showtooltip\n/cast [@player] Death and Decay\n",
+},
+[126] = {
+["name"] = " ",
+["icon"] = "237532",
+["body"] = "#showtooltip Death Grip\n/cast [@mouseover,exists,harm,nodead][] Death Grip\n",
+},
+[121] = {
+["name"] = " ",
+["icon"] = "134400",
+["body"] = "#showtooltip\n/cast [known: Dark Transformation] Dark Transformation\n/cast [known: Summon Gargoyle] Summon Gargoyle\n",
+},
+[123] = {
+["name"] = " ",
+["icon"] = "134400",
+["body"] = "#showtooltip Unholy Assault\n/use 13\n/cast [known: Unholy Assault] Unholy Assault\n",
+},
+[125] = {
+["name"] = " ",
+["icon"] = "136143",
+["body"] = "#showtooltip Raise Ally\n/cast [@mouseover,help][@target]Raise Ally\n",
+},
+},
+["classFile"] = "DEATHKNIGHT",
 },
 ["Stormclout - Tichondrius"] = {
 ["classFile"] = "MONK",
@@ -155,7 +392,7 @@ MacroToolkitDB = {
 ["body"] = "#showtooltip\n/cast [@cursor] Summon Jade Serpent Statue\n",
 },
 [139] = {
-["icon"] = "839107",
+["icon"] = "134400",
 ["name"] = " ",
 ["body"] = "#showtooltip\n/cast [known: Ring of peace, @cursor] Ring of Peace\n/cast [known: Song of chi-ji] Song of chi-ji\n",
 },
@@ -190,19 +427,24 @@ MacroToolkitDB = {
 ["body"] = "#showtooltip\n/cast Breath of fire\n/use Fire-eater's Vial\n",
 },
 [136] = {
-["icon"] = "988194",
+["icon"] = "134400",
 ["name"] = " ",
 ["body"] = "#showtooltip [known: Whirling Dragon Punch] Whirling Dragon Punch; [known: Strike of the Windlord] Strike of the Windlord\n/cast [known: Whirling Dragon Punch] Whirling Dragon Punch\n/cast [known: Strike of the Windlord] Strike of the Windlord\n",
 },
 [140] = {
 ["icon"] = "6035314",
 ["name"] = " ",
-["body"] = "#showtooltip Zenith\n/cast Zenith\n/use Saltwater Potion\n/cast Blood Fury\n/cast Beserking\n/use Perpetual Purple Firework\n/use Winning Hand\n",
+["body"] = "#showtooltip Zenith\n/cast Zenith\n/use 14\n/use Saltwater Potion\n/cast Blood Fury\n/use Perpetual Purple Firework\n/use Winning Hand\n",
 },
 [144] = {
-["icon"] = "134400",
+["icon"] = "132316",
 ["name"] = " ",
 ["body"] = "#showtooltip Disable\n/use [@target,exists] Disable\n",
+},
+[148] = {
+["icon"] = "7252953",
+["name"] = "Teleport Home",
+["body"] = "#plumber:home\n/click PLMR_HOME1\n",
 },
 [129] = {
 ["icon"] = "1360980",
@@ -283,161 +525,41 @@ MacroToolkitDB = {
 ["backups"] = {
 },
 },
-["Neonvoid - Tichondrius"] = {
-["macros"] = {
-[131] = {
-["name"] = " ",
-["icon"] = "134400",
-["body"] = "#showtooltip\n/cast [@mouseover,help,exists] Rapture;[] Rapture\n",
-},
-[135] = {
-["name"] = " ",
-["icon"] = "134400",
-["body"] = "#showtooltip\n/cast [@mouseover,help,exists][] Renew\n",
-},
-[139] = {
-["name"] = " ",
-["icon"] = "134400",
-["body"] = "#showtoolip\n/cast [mod:shift,@focus,exists,harm,nodead][] Psychic Horror\n",
-},
-[143] = {
-["name"] = " ",
-["icon"] = "134400",
-["body"] = "#showtooltip\n/cast [@mouseover,help,exists,nodead][] Void shift\n",
-},
-[122] = {
-["name"] = " ",
-["icon"] = "463835",
-["body"] = "#showtooltip\n/cast [@mouseover,help,exists,nodead][] Leap of Faith\n",
-},
-[124] = {
-["name"] = " ",
-["icon"] = "134400",
-["body"] = "#showtooltip [known: Void Eruption] Void Eruption; [known: Dark Ascension] Dark Ascension\n/use 13\n/use Tempered Potion\n/cast [known: Void Eruption] Void Eruption\n/cast [known: Dark Ascension] Dark Ascension\n",
-},
-[126] = {
-["name"] = " ",
-["icon"] = "135987",
-["body"] = "#showtooltip\n/cast [@player] Power Word: Fortitude\n/use Goblin Weather Machine - Prototype 01-B\n/use Thaumaturgist's Orb\n",
-},
-[128] = {
-["name"] = " ",
-["icon"] = "237563",
-["body"] = "#showtooltip Dispersion\n/use Thaumaturgist's Orb\n/cast Dispersion\n",
-},
-[132] = {
-["name"] = " ",
-["icon"] = "134400",
-["body"] = "#showtooltip\n/cast [@mouseover,help,exists][] Pain Suppression\n",
-},
-[136] = {
-["name"] = " ",
-["icon"] = "135907",
-["body"] = "#showtooltip\n/cast [@mouseover,help,exists][] Flash Heal\n",
-},
-[140] = {
-["name"] = " ",
-["icon"] = "458230",
-["body"] = "#showtooltip\n/cancelaura Dispersion\n/cast [mod:shift,@focus,exists,harm,nodead][] Silence\n",
-},
-[144] = {
-["name"] = " ",
-["icon"] = "1386548",
-["body"] = "#showtooltip Voidform\n/cast [@focus,exists,help,nodead] Power Infusion;[@mouseover,help,exists,nodead] Power Infusion;[] Power Infusion;\n/cast Voidform\n",
-},
-[129] = {
-["name"] = " ",
-["icon"] = "135928",
-["body"] = "#showtooltip\n/cast [@player] Levitate\n/cancelaura levitate\n",
-},
-[133] = {
-["name"] = " ",
-["icon"] = "134400",
-["body"] = "#showtooltip\n/cast [@mouseover,help,exists][] Power Word: Life\n",
-},
-[137] = {
-["name"] = " ",
-["icon"] = "134400",
-["body"] = "#showtooltip\n/cast [@cursor] Power Word: Barrier\n",
-},
-[141] = {
-["name"] = " ",
-["icon"] = "136206",
-["body"] = "#showtooltip Mind Control\n/cast [nochanneling: Mind Control,mod:shift,@focus,exists,harm,nodead][nochanneling: Mind Control] Mind Controll\n/stopcasting [channeling: Mind Control]\n",
-},
-[121] = {
-["name"] = " ",
-["icon"] = "642580",
-["body"] = "#showtooltip\n/cast [nomod,@player] Angelic Feather;[mod:shift,@cursor] Angelic Feather; [@player] Angelic Feather;\n/use prismatic bauble\n",
-},
-[123] = {
-["name"] = " ",
-["icon"] = "135940",
-["body"] = "#showtooltip\n/cast [@mouseover,help,exists][] Power Word: Shield\n",
-},
-[125] = {
-["name"] = " ",
-["icon"] = "135939",
-["body"] = "#showtooltip Power Infusion\n/cast [@focus,exists,help,nodead] Power Infusion;[@mouseover,help,exists,nodead] Power Infusion;[] Power Infusion;\n",
-},
-[127] = {
-["name"] = " ",
-["icon"] = "135978",
-["body"] = "#showtooltip\n/cast [@mouseover,harm,exists][] Vampiric Touch\n",
-},
-[130] = {
-["name"] = " ",
-["icon"] = "135739",
-["body"] = "#showtooltip\n/cast [@cursor] Mass Dispel\n",
-},
-[134] = {
-["name"] = " ",
-["icon"] = "136207",
-["body"] = "#showtooltip\n/cast [@mouseover,harm,exists][] Shadow Word: Pain\n",
-},
-[138] = {
-["name"] = " ",
-["icon"] = "134400",
-["body"] = "#showtooltip\n/cast [known:457042] Shadow Crash\n/cast [known:205385, @cursor] Shadow Crash\n",
-},
-[142] = {
-["name"] = " ",
-["icon"] = "136224",
-["body"] = "#showtooltip mind blast\n/cancelaura Dispersion\n/cast Mind Blast\n",
-},
-},
-["classFile"] = "PRIEST",
-["backups"] = {
-},
-},
-},
-["global"] = {
-["backups"] = {
-},
-["ebackups"] = {
+["Tainguk - Tichondrius"] = {
+["classFile"] = "MONK",
 },
 },
 ["profileKeys"] = {
 ["Starphage - Tichondrius"] = "profile",
-["Stormclout - Tichondrius"] = "profile",
+["Reedingo - Mal'Ganis"] = "profile",
 ["Neonvoid - Tichondrius"] = "profile",
+["Korahron - Tichondrius"] = "profile",
+["Tampacks - Mal'Ganis"] = "profile",
+["Stormclout - Tichondrius"] = "profile",
+["Tainguk - Tichondrius"] = "profile",
+},
+["global"] = {
+["ebackups"] = {
+},
+["backups"] = {
+},
 },
 ["profiles"] = {
 ["profile"] = {
-["x"] = 854.62353515625,
+["x"] = 395.6950073242188,
 ["height"] = 423.9999694824219,
 ["scale"] = 1.4,
 ["override"] = true,
 ["confirmdelete"] = false,
 ["visconditions"] = true,
-["width"] = 638.0001220703125,
+["width"] = 638,
 ["fonts"] = {
-["edfont"] = "1",
-["mifont"] = "1",
 ["mfont"] = "1",
+["mifont"] = "1",
+["edfont"] = "1",
 ["errfont"] = "1",
 },
-["y"] = 251.2262420654297,
+["y"] = 300.0357055664063,
 },
 },
 }

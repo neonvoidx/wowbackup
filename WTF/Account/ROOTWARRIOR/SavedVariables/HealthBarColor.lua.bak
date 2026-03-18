@@ -3,44 +3,42 @@ HealthBarColorDB = {
 ["namespaces"] = {
 },
 ["profileKeys"] = {
-["Mäñýfäçëð - Tichondrius"] = "Default",
-["Thingreyline - Tichondrius"] = "Default",
+["Clevagirl - Mal'Ganis"] = "Default",
 ["Crillessana - Mal'Ganis"] = "Default",
-["Starphage - Tichondrius"] = "Default",
-["Auteist - Mal'Ganis"] = "Default",
+["Mäñýfäçëð - Tichondrius"] = "Default",
+["Heilsatan - Tichondrius"] = "Default",
+["Gehyo - Tichondrius"] = "Default",
 ["Ofpuss - Mal'Ganis"] = "Default",
-["Starstypeshi - Tichondrius"] = "Default",
+["Smaugchamp - Tichondrius"] = "Default",
+["Auteist - Mal'Ganis"] = "Default",
+["Starphage - Tichondrius"] = "Default",
+["Gehyo - Mal'Ganis"] = "Default",
 ["Smaugchamp - Mal'Ganis"] = "Default",
 ["Choppiez - Mal'Ganis"] = "Default",
-["Gehyo - Tichondrius"] = "Default",
-["Gehyo - Mal'Ganis"] = "Default",
+["Starstypeshi - Tichondrius"] = "Default",
+["Tampacks - Mal'Ganis"] = "Default",
 ["Choppiez - Tichondrius"] = "Default",
 ["Hellowalls - Mal'Ganis"] = "Default",
-["Ofpusstwo - Tichondrius"] = "Default",
-["Auteist - Tichondrius"] = "Default",
 ["Neonvoid - Tichondrius"] = "Default",
+["Auteist - Tichondrius"] = "Default",
 ["Hellavator - Tichondrius"] = "Default",
+["Ofpusstwo - Tichondrius"] = "Default",
 ["Hellavator - Mal'Ganis"] = "Default",
 ["Cullnvoid - Tichondrius"] = "Default",
 ["Stormclout - Tichondrius"] = "Default",
 ["Reedingo - Mal'Ganis"] = "Default",
 ["Stormclout - Mal'Ganis"] = "Default",
 ["Rakeist - Mal'Ganis"] = "Default",
-["Smaugchamp - Tichondrius"] = "Default",
 ["Praisesun - Tichondrius"] = "Default",
+["Korahron - Tichondrius"] = "Default",
 ["Ofpuss - Tichondrius"] = "Default",
 ["Praisesun - Mal'Ganis"] = "Default",
-["Heilsatan - Tichondrius"] = "Default",
-["Clevagirl - Mal'Ganis"] = "Default",
+["Thingreyline - Tichondrius"] = "Default",
+["Tainguk - Tichondrius"] = "Default",
 },
 ["profiles"] = {
 ["Default"] = {
-["BackgroundTextures"] = {
-["color"] = {
-["a"] = 0.9405550956726074,
-},
-["texture"] = "WglassDark",
-["enabled"] = true,
+["HealthBarColor_boss3"] = {
 },
 ["HealthBarColor_pet"] = {
 },
@@ -64,11 +62,8 @@ HealthBarColorDB = {
 ["nameFont"] = "1",
 ["powerFont"] = "1",
 },
-["Font_targettarget"] = {
-["nameFontOutlineMode"] = 3,
-["healthFont"] = "1",
-["nameFont"] = "1",
-["powerFont"] = "1",
+["DebuffColor"] = {
+["enabled"] = true,
 },
 ["Font_party4"] = {
 ["nameFontOutlineMode"] = 3,
@@ -95,11 +90,7 @@ HealthBarColorDB = {
 },
 ["HealthBarColor_focus"] = {
 },
-["Font_focus"] = {
-["nameFontOutlineMode"] = 3,
-["healthFont"] = "1",
-["nameFont"] = "1",
-["powerFont"] = "1",
+["HealthBarColor_boss4"] = {
 },
 ["Font_boss5"] = {
 ["nameFontOutlineMode"] = 3,
@@ -107,7 +98,12 @@ HealthBarColorDB = {
 ["nameFont"] = "1",
 ["powerFont"] = "1",
 },
-["HealthBarColor_target"] = {
+["Font_player"] = {
+["nameFontOutlineMode"] = 3,
+["healthFont"] = "1",
+["nameFont"] = "1",
+["nameFontSize"] = 9,
+["powerFont"] = "1",
 },
 ["BiggerHealthBar"] = {
 ["enabled"] = true,
@@ -117,27 +113,37 @@ HealthBarColorDB = {
 ["enabled"] = true,
 ["healthBarTexture"] = "WglassDark",
 },
-["HealthBarColor_boss3"] = {
+["BackgroundTextures"] = {
+["color"] = {
+["a"] = 0.9405550956726074,
 },
-["HealthBarColor_boss4"] = {
+["texture"] = "WglassDark",
+["enabled"] = true,
 },
-["Font_player"] = {
+["Font_focus"] = {
 ["nameFontOutlineMode"] = 3,
 ["healthFont"] = "1",
 ["nameFont"] = "1",
-["nameFontSize"] = 9,
 ["powerFont"] = "1",
+},
+["HealthBarColor_target"] = {
 },
 ["Font_party2"] = {
 ["nameFontOutlineMode"] = 3,
 },
-["DebuffColor"] = {
-["enabled"] = true,
-},
-["Font_party3"] = {
-["nameFontOutlineMode"] = 3,
-},
 ["Font_boss3"] = {
+["nameFontOutlineMode"] = 3,
+["healthFont"] = "1",
+["nameFont"] = "1",
+["powerFont"] = "1",
+},
+["Font_focustarget"] = {
+["nameFontOutlineMode"] = 3,
+["healthFont"] = "1",
+["nameFont"] = "1",
+["powerFont"] = "1",
+},
+["Font_targettarget"] = {
 ["nameFontOutlineMode"] = 3,
 ["healthFont"] = "1",
 ["nameFont"] = "1",
@@ -147,11 +153,8 @@ HealthBarColorDB = {
 ["minimapPos"] = 69.587679475945,
 ["enabled"] = false,
 },
-["Font_focustarget"] = {
+["Font_party3"] = {
 ["nameFontOutlineMode"] = 3,
-["healthFont"] = "1",
-["nameFont"] = "1",
-["powerFont"] = "1",
 },
 },
 },

@@ -233,6 +233,21 @@ addon.functions.SettingsCreateCheckbox(cGeneral, {
 	parentSection = utilitiesExpandable,
 })
 addon.functions.SettingsCreateCheckbox(cGeneral, {
+	var = "enableClickCastSlashCommand",
+	text = L["enableClickCastSlashCommand"],
+	desc = L["enableClickCastSlashCommandDesc"],
+	func = function(value)
+		addon.db["enableClickCastSlashCommand"] = value
+		if value then
+			addon.functions.registerClickCastSlashCommand()
+		else
+			addon.variables.requireReload = true
+		end
+	end,
+	default = false,
+	parentSection = utilitiesExpandable,
+})
+addon.functions.SettingsCreateCheckbox(cGeneral, {
 	var = "enableReloadUISlashCommand",
 	text = L["enableReloadUISlashCommand"],
 	desc = L["enableReloadUISlashCommandDesc"],

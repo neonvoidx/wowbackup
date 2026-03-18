@@ -54,7 +54,7 @@ END
 VER 3 0000000000000235 "EnhanceQoLHealthMacro" "INV_Misc_QuestionMark"
 #showtooltip
 /cast [nocombat] Recuperate
-/castsequence [combat] reset=combat item:241305
+/castsequence [combat] reset=combat item:258138
 END
 VER 3 00000000000001FE "FOCUS" "Ability_Rogue_BloodyEye."
 /focus [@mouseover,nodead,exists]; [@target,exists]

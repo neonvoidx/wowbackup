@@ -278,8 +278,11 @@ function ActionTracker:RefreshIcons()
 			icon.texture:SetTexture(texture)
 			icon.spellID = entry.spellID
 
-			if entry.cooldownStart and entry.cooldownDuration then
-				icon.cooldown:SetCooldown(entry.cooldownStart, entry.cooldownDuration)
+			if entry.cooldownDuration then
+				icon.cooldown:SetCooldownFromDurationObject(entry.cooldownDuration)
+				icon.cooldown:SetDrawEdge(false)
+				icon.cooldown:SetDrawBling(false)
+				icon.cooldown:SetDrawSwipe(false)
 			else
 				icon.cooldown:Clear()
 			end
@@ -409,11 +412,8 @@ function ActionTracker:AddEntry(spellID)
 		time = GetTime(),
 	}
 
-	local start, duration, enabled = C_Spell.GetSpellCooldown(spellID)
-	if enabled == 1 and duration and duration > 1.5 then
-		entry.cooldownStart = start
-		entry.cooldownDuration = duration
-	end
+	local duration = C_Spell.GetSpellCooldownDuration(spellID)
+	entry.cooldownDuration = duration
 
 	self.entries[#self.entries + 1] = entry
 	local maxIcons = self:GetMaxIcons()

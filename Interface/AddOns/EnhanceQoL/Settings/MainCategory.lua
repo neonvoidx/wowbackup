@@ -62,6 +62,11 @@ local function createRootSlashCommandHints(category)
 					desc = L["rootSlashCommandQuickKeybindDesc"] or "Open Quick Keybind Mode.",
 					note = L["rootSlashCommandNoteSettingEnabled"] or "Only if enabled in settings.",
 				},
+				{
+					commands = { "/ccb", "/clickcast" },
+					desc = L["rootSlashCommandClickCastDesc"] or "Open Click Cast Bindings.",
+					note = L["rootSlashCommandNoteSettingEnabled"] or "Only if enabled in settings.",
+				},
 			},
 		},
 		{

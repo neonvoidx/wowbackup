@@ -39,6 +39,8 @@ L:SetStrings({
 	["Notification"] = "Notificación",
 	["Offset X"] = "Desplazamiento X",
 	["Offset Y"] = "Desplazamiento Y",
+	["Disable Swipe Animation"] = "Desactivar animación de barrido",
+	["Disables the cooldown swipe (pie chart) animation on all icons. The countdown timer text will still be shown."] = "Desactiva la animación de barrido (gráfico circular) del tiempo de reutilización en todos los íconos. El texto del temporizador seguirá mostrándose.",
 	["Reverse swipe"] = "Barrido inverso",
 	["Reverses the direction of the cooldown swipe animation."] = "Invierte la dirección de la animación de barrido del tiempo de reutilización.",
 	["Settings"] = "Configuración",
@@ -227,6 +229,7 @@ L:SetStrings({
 	["Other mini addons to enhance your PvP experience:"] = "Otros mini addons para mejorar tu experiencia PvP:",
 	["Other Mini Addons_Short"] = "Otros",
 	["Miscellaneous_Short"] = "Varios",
+	["Configure Blizzard Nameplates"] = "Configurar placas de nombre de Blizzard",
 
 	-- What's New
 	[" - Added CC icons on pet party/raid frames (disabled by default)."] = " - Añadidos iconos de CC en los marcos de grupo/banda de mascotas (desactivado por defecto).",

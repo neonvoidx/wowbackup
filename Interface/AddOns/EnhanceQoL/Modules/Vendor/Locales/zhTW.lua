@@ -27,7 +27,7 @@ L["vendorCraftShopperBuyNow"] = "立即購買"
 L["vendorCraftShopperCancel"] = "取消"
 L["vendorCraftShopperCheckListPrint"] = "［%s］ 缺少：%d — 去拍賣行購買"
 L["vendorCraftShopperConfirmPurchase"] = "確認購買"
-L["vendorCraftShopperEnable"] = "啟用 Craft Shopper（僅限休息區）"
+L["vendorCraftShopperEnable"] = "啟用 Craft Shopper"
 L["vendorCraftShopperEnableDesc"] = "在拍賣行旁顯示追蹤配方所缺材料的購物清單。點擊即可搜尋並購買。"
 L["vendorCraftShopperHideFromList"] = "從清單隱藏"
 L["vendorCraftShopperMissingGold"] = [=[金幣不足。

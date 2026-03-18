@@ -27,7 +27,7 @@ L["vendorCraftShopperBuyNow"] = "지금 구매"
 L["vendorCraftShopperCancel"] = "취소"
 L["vendorCraftShopperCheckListPrint"] = "[%s] 부족: %d – 경매장에서 구매"
 L["vendorCraftShopperConfirmPurchase"] = "구매 확인"
-L["vendorCraftShopperEnable"] = "Craft Shopper 활성화 (휴식 지역 전용)"
+L["vendorCraftShopperEnable"] = "Craft Shopper 활성화"
 L["vendorCraftShopperEnableDesc"] = "경매장 옆에 추적 중인 제작법에 필요한 재료 목록을 표시합니다. 한 번의 클릭으로 검색하고 구매하세요."
 L["vendorCraftShopperHideFromList"] = "목록에서 숨기기"
 L["vendorCraftShopperMissingGold"] = [=[골드가 부족합니다.

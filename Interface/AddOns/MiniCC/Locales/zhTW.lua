@@ -38,6 +38,8 @@ L:SetStrings({
 	["Notification"] = "通知",
 	["Offset X"] = "X偏移",
 	["Offset Y"] = "Y偏移",
+	["Disable Swipe Animation"] = "停用滑動動畫",
+	["Disables the cooldown swipe (pie chart) animation on all icons. The countdown timer text will still be shown."] = "停用所有圖示上的冷卻時間滑動（圓餅圖）動畫。倒數計時文字仍將顯示。",
 	["Reverse swipe"] = "反向滑動",
 	["Reverses the direction of the cooldown swipe animation."] = "反轉冷卻時間滑動動畫的方向。",
 	["Settings"] = "設定",
@@ -230,6 +232,7 @@ L:SetStrings({
 	["Other mini addons to enhance your PvP experience:"] = "增強您PvP體驗的其他mini插件：",
 	["Other Mini Addons_Short"] = "其他",
 	["Miscellaneous_Short"] = "雜項",
+	["Configure Blizzard Nameplates"] = "設定暴雪姓名板",
 
 	-- What's New
 	[" - Added CC icons on pet party/raid frames (disabled by default)."] = " - 為隊伍/團隊的寵物框架新增了CC圖示（預設停用）。",

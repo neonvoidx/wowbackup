@@ -1,6 +1,6 @@
 ## X-Flavor: retail
 ## X-Expansion: TWW
-## Interface: 120001
+## Interface: 120001, 120005
 ## Version: 1.8.9
 
 ## Title: Plumber
@@ -49,7 +49,7 @@ Modules\Lockpicking.lua
 Modules\TalkingHead.lua
 Modules\AzerothianArchives.lua
 Modules\MerchantPrice.lua
-#Modules\BossBanner.lua
+Modules\BossBanner.lua
 Modules\SoftTargetName.lua
 
 
@@ -94,7 +94,6 @@ Modules\BreakTime.xml
 #Modules\QuestSpecialItemCooldown.lua
 #Modules\SecretOfAzeroth.lua
 #Modules\AddonList.lua
-#Modules\BlizzFix_WardrobeTrackingHelpTip.lua
 #Modules\WoWAnniversary.lua
 #Modules\Navigator_Dreamseed.lua
 #Modules\AccountStore.lua

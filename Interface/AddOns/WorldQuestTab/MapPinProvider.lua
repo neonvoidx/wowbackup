@@ -85,6 +85,39 @@ local function GetPinType(mapType)
 	return _pinType.zone;
 end
 
+local function GetPinColorForQuest(questInfo, colorType, isText)
+	local baseColorID = isText and "fontWhite" or "rewardCurrency";
+	local color = _V:GetDefaultColor(baseColorID);
+	if (not questInfo or questInfo:IsDisliked()) then
+		return _V:GetDefaultColor("fontWhite");
+	end
+
+	local enumPinColorType = _V:GetPinColorType();
+	if (colorType == enumPinColorType.reward) then
+		local selectIndex = isText and 2 or 1;
+		color = select(selectIndex, WQT_Utils:GetRewardTypeColorIDs(questInfo:GetRewardType()));
+	elseif (colorType == enumPinColorType.time) then
+		color = select(3, WQT_Utils:GetQuestTimeString(questInfo));
+	elseif (colorType == enumPinColorType.rarity) then
+		local questQuality = questInfo:GetTagInfoQuality();
+		if (questQuality and questQuality > Enum.WorldQuestQuality.Common and WORLD_QUEST_QUALITY_COLORS[questQuality]) then
+			color = WORLD_QUEST_QUALITY_COLORS[questQuality].color;
+		end
+	elseif (colorType == enumPinColorType.rewardQuality) then
+		local rewardQuality = questInfo:GetRewardQuality();
+		if (rewardQuality > Enum.ItemQuality.Common) then
+			color = C_ColorOverrides.GetColorForQuality(rewardQuality)
+		end
+		local questQuality = questInfo:GetTagInfoQuality();
+		if (questQuality and questQuality > Enum.WorldQuestQuality.Common and WORLD_QUEST_QUALITY_COLORS[questQuality]) then
+			color = WORLD_QUEST_QUALITY_COLORS[questQuality].color;
+		end
+	end
+
+	return color;
+end
+
+
 ------------------------------------
 -- DataProvider
 ------------------------------------
@@ -113,13 +146,22 @@ function WQT_PinDataProvider:Init()
 			end,
 		self);
 
-	WQT_CallbackRegistry:RegisterCallback("WQT.SettingChanged",
+	WQT_CallbackRegistry:RegisterCallback(
+	"WQT.SettingChanged",
 		function(_, categoryID)
-			if (categoryID == "MAPPINS"
-				or categoryID == "MAPPINS_MINIICONS") then
-				self:RefreshAllData();
-			end
-		end,
+				if (categoryID == "CUSTOM_COLORS_TIME" or categoryID == "CUSTOM_COLORS_AMOUNT" or categoryID == "CUSTOM_COLORS_RING") then
+					self:UpdateAllVisuals();
+				elseif (categoryID == "MAPPINS" or categoryID == "MAPPINS_MINIICONS" or categoryID == "PROFILES") then
+					self:RefreshAllData();
+				end
+			end,
+		self);
+
+	WQT_CallbackRegistry:RegisterCallback(
+		"WQT.QuestListButtonMouseEnter",
+		function(_, questID, isEnter)
+				self:SetQuestIDPinged(questID, isEnter);
+			end,
 		self);
 
 	-- Remove pins on changing map. Quest info being processed will trigger showing them if they are needed.
@@ -139,12 +181,23 @@ function WQT_PinDataProvider:Init()
 			end,
 		self);
 
-	WQT_PinDataProvider:HookPinHidingToMapFrame(WorldMapFrame);
+	self:HookPinHidingToMapFrame(WorldMapFrame);
+
+	EventUtil.ContinueOnAddOnLoaded("Blizzard_FlightMap", function()
+			self:HookPinHidingToMapFrame(FlightMapFrame);
+		end);
 end
 
 local function HideOfficialPin(pin)
 	if (WQT.settings.pin.disablePoI) then return; end
 	pin:Hide();
+end
+
+local function TrackSuppressedPinHook(hubPin, otherPin)
+	if (WQT.settings.pin.disablePoI) then return; end
+	if (otherPin:MatchesAnyTag(MapPinTags.WorldQuest, MapPinTags.BonusObjective)) then
+		hubPin.suppressedPins[otherPin] = nil;
+	end
 end
 
 function WQT_PinDataProvider:HookPinHidingToMapFrame(mapFrame)
@@ -153,6 +206,8 @@ function WQT_PinDataProvider:HookPinHidingToMapFrame(mapFrame)
 	end
 
 	if (not mapFrame.RegisterPin) then return; end
+
+	if (WQT.settings.pin.disablePoI) then return; end
 
 	local templatedToSuppress = {
 		["BonusObjectivePinTemplate"] = true;
@@ -170,6 +225,13 @@ function WQT_PinDataProvider:HookPinHidingToMapFrame(mapFrame)
 				self.hookedPins[pin] = true;
 				pin:HookScript("OnShow", HideOfficialPin);
 				pin:Hide();
+			end
+		elseif (pin.pinTemplate == "QuestHubPinTemplate") then
+			local isHooked = self.hookedPins[pin];
+			if (not isHooked) then
+				self.hookedPins[pin] = true;
+				-- Hub pin suppresses world and bonus quests, but we wipe it from it's memory so it doesn't do anything with it's data
+				hooksecurefunc(pin, "TrackSuppressedPin", TrackSuppressedPinHook);
 			end
 		end
 	end);
@@ -310,7 +372,6 @@ end
 local PIN_CLUSTER_RANGE = 0.5;
 local PIN_REPOSITION_DISTANCE = 0.42;
 local COS_45_DEG = 0.7071;
-local TWO_PI = PI * 2;
 
 function WQT_PinDataProvider:FixOverlaps(canvas)
 	if (not canvas) then return; end
@@ -404,26 +465,9 @@ function WQT_PinDataProvider:FixOverlaps(canvas)
 					end
 
 					local numPassedPins = #validPins;
-					if (sourcePin.clusterData) then
-						local distance = sourcePin.clusterData.radius or 0.1;
-						local maxArc = sourcePin.clusterData.maxArc or 360;
-
-						local available = rad(maxArc) * distance;
-						local requested = numPassedPins * pinSizeToWindow;
-						local spacePerPin = (min(available, requested) / (TWO_PI * distance)) / numPassedPins;
-						local step = spacePerPin * 360;
-
-						local angle = sourcePin.clusterData.startAngle or 0;
-						angle = angle - (spacePerPin * 180 * (numPassedPins - 1));
-
-						for k, pin in ipairs(validPins) do
-							local offsetX = cos(angle) * distance * ratio;
-							local offsetY = sin(angle) * distance;
-							local x = centerX + offsetX;
-							local y = centerY + offsetY;
-							pin:SetNudge(x, y);
-							angle = angle + step;
-						end
+					local clusterData = sourcePin.clusterData;
+					if (clusterData and clusterData.NudgeFunction) then
+						clusterData:NudgeFunction(validPins, canvas);
 					elseif (numPassedPins >= 2) then
 						local numColumns = ceil(sqrt(numPassedPins));
 						local numRows = ceil(numPassedPins / numColumns);
@@ -557,9 +601,11 @@ function WQT_PinLabelMixin:GetLabelText()
 end
 
 function WQT_PinLabelMixin:UpdateVisuals(questInfo)
+	local scale = WQT_Utils:GetSetting("pin", "labelScale");
+	self:SetScale(scale);
+
 	-- Label
 	local settingPinTimeLabel = WQT_Utils:GetSetting("pin", "label");
-	local labelColor = _V:GetDefaultColor("fontWhite");
 	local labelFontString = self:GetLabelText();
 	local _, _, _, timeStringShort = WQT_Utils:GetQuestTimeString(questInfo);
 	
@@ -574,30 +620,29 @@ function WQT_PinLabelMixin:UpdateVisuals(questInfo)
 			local amountString, rawAmount = WQT_Utils:GetDisplayRewardAmount(mainReward, questCanWarmode);
 			showLabel = rawAmount > 1;
 			labelFontString:SetText(amountString);
-			if (WQT_Utils:GetSetting("pin", "labelColors")) then
-				local _, textColor = WQT_Utils:GetRewardTypeColorIDs(mainReward.type);
-				labelColor = textColor;
-			end
 		end
 	end
+
+	local labelColorType = WQT_Utils:GetSetting("pin", "labelColorType");
+	local isText = true;
+	local labelColor = GetPinColorForQuest(questInfo, labelColorType, isText);
 
 	labelFontString:SetVertexColor(labelColor:GetRGB());
 	self:SetShown(showLabel);
 end
 
 function WQT_PinLabelMixin:UpdateTime(timeString, color)
-	local enumPinLabel = _V:GetPinLabelEnum();
-	if (WQT_Utils:GetSetting("pin", "label") ~= enumPinLabel.time) then
-		return;
-	end
-
-	if (not WQT_Utils:GetSetting("pin", "labelColors")) then
-		color = _V:GetDefaultColor("fontWhite");
-	end
-
 	local labelFontString = self:GetLabelText();
-	labelFontString:SetText(timeString);
-	labelFontString:SetVertexColor(color:GetRGB());
+
+	local enumPinLabel = _V:GetPinLabelEnum();
+	if (WQT_Utils:GetSetting("pin", "label") == enumPinLabel.time) then
+	 	labelFontString:SetText(timeString);
+	end
+
+	local enumPinColorType = _V:GetPinColorType();
+	if (WQT_Utils:GetSetting("pin", "labelColorType") == enumPinColorType.time) then
+		labelFontString:SetVertexColor(color:GetRGB());
+	end
 end
 
 ------------------------------------
@@ -705,7 +750,7 @@ function WQT_PinButtonMixin:SetIconsDesaturated(desaturate)
 end
 
 function WQT_PinButtonMixin:GetIconBottomDifference()
-	local maxBottomDiff = 0;
+	local maxBottomDiff = 2;
 	local selfBottom = self:GetBottom();
 	for k, icon in self:IterateMiniIcons() do
 		local diff = selfBottom - icon:GetBottom();
@@ -715,8 +760,8 @@ function WQT_PinButtonMixin:GetIconBottomDifference()
 end
 
 function WQT_PinButtonMixin:UpdateTime(start, timeLeft, total, color, timeCategory)
-	local enumRingType = _V:GetRingTypeEnum();
-	if (WQT_Utils:GetSetting("pin", "ringType") ~= enumRingType.time) then
+	local enumPinColorType = _V:GetPinColorType();
+	if (WQT_Utils:GetSetting("pin", "ringType") ~= enumPinColorType.time) then
 		return;
 	end
 
@@ -759,6 +804,9 @@ local CUSTOM_ICONS_PATH = "Interface/Addons/WorldQuestTab/Images/CustomIcons";
 function WQT_PinButtonMixin:UpdateVisuals(questInfo)
 	if (not questInfo) then return; end
 
+	local scale = WQT_Utils:GetSetting("pin", "scale");
+	self:SetScale(scale);
+
 	self.questInfo = questInfo;
 	local questQuality = questInfo:GetTagInfoQuality();
 	local isDisliked = questInfo:IsDisliked();
@@ -777,36 +825,17 @@ function WQT_PinButtonMixin:UpdateVisuals(questInfo)
 	local ringBGTexture = self:GetRingBG();
 	local ringCooldown = self:GetRing();
 	local pointerTexture = self:GetPointer();
-	local r, g, b = _V:GetDefaultColor("rewardCurrency"):GetRGB();
-	local enumRingType = _V:GetRingTypeEnum();
-	ringBGTexture:SetShown(ringType == enumRingType.time and 1 or 0);
 	ringCooldown:SetCooldownUNIX(now, now);
 	pointerTexture:Hide();
-	ringCooldown:Show();
-	ringBGTexture:Show();
-	if (ringType == enumRingType.reward) then
-		r, g, b = questInfo:GetRewardColor():GetRGB();
-	elseif (questQuality and ringType == enumRingType.rarity) then
-		if (questQuality > Enum.WorldQuestQuality.Common and WORLD_QUEST_QUALITY_COLORS[questQuality]) then
-			r, g, b = WORLD_QUEST_QUALITY_COLORS[questQuality].color:GetRGB();
-		end
-	elseif (ringType == enumRingType.hide) then
-		ringCooldown:Hide();
-		ringBGTexture:Hide();
-	end
-	
-	if (isDisliked) then
-		r, g, b = 1, 1, 1;
-	end
-	
+	local color = GetPinColorForQuest(questInfo, ringType);
+	local r, g, b = color:GetRGB();
 	ringBGTexture:SetVertexColor(r, g, b);
 	ringCooldown:SetSwipeColor(r, g, b);
 
 	-- Elite indicator
 	local customUnderlayTexture = self:GetCustomUnderlay();
 	local isElite = tagInfo and tagInfo.isElite;
-	local settingEliteRing = WQT_Utils:GetSetting("pin", "eliteRing");
-	local useEliteRing = settingEliteRing and ringType ~= enumRingType.hide;
+	local useEliteRing = WQT_Utils:GetSetting("pin", "eliteRing");
 	ringBGTexture:SetTexture("Interface/Addons/WorldQuestTab/Images/PoIRingBG");
 	ringCooldown:SetSwipeTexture("Interface/Addons/WorldQuestTab/Images/PoIRingBar");
 	if (useEliteRing) then
@@ -1093,11 +1122,7 @@ function WQT_PinMixin:Setup(questInfo, index, x, y, pinType, parentMapFrame)
 	self.questInfo = questInfo;
 	self.questID = questInfo.questID;
 	
-	local scale = WQT_Utils:GetSetting("pin", "scale")
-
-	self.scale = scale
-	self:SetScale(scale);
-	self.currentScale = scale;
+	self.currentScale = 1;
 	self:SetAlpha(self.startAlpha);
 	self.currentAlpha = self.startAlpha;
 	self:ResetNudge();
@@ -1161,7 +1186,7 @@ end
 
 function WQT_PinMixin:UpdatePlacement(alpha)
 	local zoomPercent = self.parentMapFrame:GetCanvasZoomPercent();
-	local parentScaleFactor = self.scale / self.parentMapFrame:GetCanvasScale();
+	local parentScaleFactor = 1 / self.parentMapFrame:GetCanvasScale();
 	parentScaleFactor = parentScaleFactor * Lerp(self.startScale, self.endScale, Saturate(self.scaleFactor * zoomPercent));
 	self:SetScale(parentScaleFactor);
 	
@@ -1188,7 +1213,7 @@ end
 
 function WQT_PinMixin:ApplyScaledPosition(manualScale)
 	local canvas = self:GetParent();
-	local scale = manualScale or self.scale / self.parentMapFrame:GetCanvasScale();
+	local scale = manualScale or (1 / self.parentMapFrame:GetCanvasScale());
 	local posX, posY = self:GetNudgedPosition();
 	posX = (canvas:GetWidth() * posX)/scale;
 	posY = -(canvas:GetHeight() * posY)/scale;
@@ -1198,7 +1223,7 @@ end
 
 function WQT_PinMixin:Focus(playPing)
 	if (not self.questID) then return; end
-	local parentScaleFactor = self.scale / self.parentMapFrame:GetCanvasScale();
+	local parentScaleFactor = 1 / self.parentMapFrame:GetCanvasScale();
 	
 	local fadeInAnim = self:GetFadeInAnim();
 	local fadeOutAnim = self:GetFadeOutAnim();

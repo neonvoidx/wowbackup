@@ -7,10 +7,12 @@ HandyNotes_MidnightDB = {
 ["Reedingo - Mal'Ganis"] = "Default",
 ["Starphage - Tichondrius"] = "Default",
 ["Mäñýfäçëð - Tichondrius"] = "Default",
-["Ofpuss - Tichondrius"] = "Default",
-["Tampacks - Mal'Ganis"] = "Default",
 ["Hellavator - Tichondrius"] = "Default",
+["Korahron - Tichondrius"] = "Default",
 ["Gehyo - Tichondrius"] = "Default",
+["Tampacks - Mal'Ganis"] = "Default",
+["Ofpuss - Tichondrius"] = "Default",
+["Tainguk - Tichondrius"] = "Default",
 },
 ["profiles"] = {
 ["Default"] = {

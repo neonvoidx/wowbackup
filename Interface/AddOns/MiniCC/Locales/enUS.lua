@@ -35,6 +35,8 @@ L:SetDefaultStrings({
 	["Notification"] = "Notification",
 	["Offset X"] = "Offset X",
 	["Offset Y"] = "Offset Y",
+	["Disable Swipe Animation"] = "Disable Swipe Animation",
+	["Disables the cooldown swipe (pie chart) animation on all icons. The countdown timer text will still be shown."] = "Disables the cooldown swipe (pie chart) animation on all icons. The countdown timer text will still be shown.",
 	["Reverse swipe"] = "Reverse swipe",
 	["Reverses the direction of the cooldown swipe animation."] = "Reverses the direction of the cooldown swipe animation.",
 	["Settings"] = "Settings",
@@ -226,6 +228,7 @@ L:SetDefaultStrings({
 	["Other mini addons to enhance your PvP experience:"] = "Other mini addons to enhance your PvP experience:",
 	["Other Mini Addons_Short"] = "Other Addons",
 	["Miscellaneous_Short"] = "Misc",
+	["Configure Blizzard Nameplates"] = "Configure Blizzard Nameplates",
 
 	-- What's New
 	[" - Added CC icons on pet party/raid frames (disabled by default)."] = " - Added CC icons on pet party/raid frames (disabled by default).",

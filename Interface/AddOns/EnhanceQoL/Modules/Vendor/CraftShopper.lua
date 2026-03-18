@@ -23,6 +23,7 @@ local isRecraftTbl = { false, true } -- erst normale, dann Recrafts
 
 local SCAN_DELAY = 0.3
 local pendingScan
+local pendingAHShowScan
 local scanRunning
 local pendingPurchase -- data for a running AH commodities purchase
 local lastPurchaseItemID -- itemID of the last confirmed commodities purchase
@@ -408,11 +409,31 @@ function BuildShoppingList()
 	return items
 end
 
+local function CancelPendingAHShowScan()
+	if pendingAHShowScan then
+		pendingAHShowScan:Cancel()
+		pendingAHShowScan = nil
+	end
+end
+
+local function HideCraftShopperFrame()
+	if addon.Vendor.CraftShopper.frame then addon.Vendor.CraftShopper.frame.frame:Hide() end
+	f:UnregisterEvent("COMMODITY_PRICE_UPDATED")
+	f:UnregisterEvent("COMMODITY_PURCHASE_FAILED")
+	f:UnregisterEvent("COMMODITY_PURCHASE_SUCCEEDED")
+	f:UnregisterEvent("AUCTION_HOUSE_SHOW_ERROR")
+end
+
+local function CanRescanShoppingList()
+	if AuctionHouseFrame and AuctionHouseFrame:IsShown() then return true end
+	return IsResting and IsResting() or false
+end
+
 local function Rescan()
 	if scanRunning then return end
 	scanRunning = true
 	pendingScan = nil
-	if not IsResting() then
+	if not CanRescanShoppingList() then
 		scanRunning = false
 		return
 	end
@@ -461,6 +482,7 @@ function addon.Vendor.CraftShopper.SetReagentQualityMode(mode)
 end
 
 local function ScheduleRescan()
+	if not CanRescanShoppingList() then return end
 	if pendingScan or scanRunning then return end
 	pendingScan = C_Timer.NewTimer(SCAN_DELAY, Rescan)
 end
@@ -822,11 +844,7 @@ function ShowCraftShopperFrameIfNeeded()
 		ui.frame:Show()
 		ui:Refresh()
 	else
-		if addon.Vendor.CraftShopper.frame then addon.Vendor.CraftShopper.frame.frame:Hide() end
-		f:UnregisterEvent("COMMODITY_PRICE_UPDATED")
-		f:UnregisterEvent("COMMODITY_PURCHASE_FAILED")
-		f:UnregisterEvent("COMMODITY_PURCHASE_SUCCEEDED")
-		f:UnregisterEvent("AUCTION_HOUSE_SHOW_ERROR")
+		HideCraftShopperFrame()
 	end
 end
 
@@ -846,6 +864,7 @@ function addon.Vendor.CraftShopper.DisableCraftShopper()
 	f:UnregisterEvent("TRACKED_RECIPE_UPDATE")
 	f:UnregisterEvent("ADDON_LOADED")
 	UnregisterHeavyEvents()
+	CancelPendingAHShowScan()
 	if pendingScan then
 		pendingScan:Cancel()
 		pendingScan = nil
@@ -1040,15 +1059,15 @@ f:SetScript("OnEvent", function(_, event, arg1, arg2)
 		if arg1 == 0 and not scanRunning then Rescan() end
 	elseif event == "AUCTION_HOUSE_SHOW" then
 		Rescan()
-		ShowCraftShopperFrameIfNeeded()
+		CancelPendingAHShowScan()
+		-- AH open can race recipe tracking data settling; retry once shortly after show.
+		pendingAHShowScan = C_Timer.NewTimer(SCAN_DELAY, function()
+			pendingAHShowScan = nil
+			Rescan()
+		end)
 	elseif event == "AUCTION_HOUSE_CLOSED" then
-		if addon.Vendor.CraftShopper.frame then
-			addon.Vendor.CraftShopper.frame.frame:Hide()
-			f:UnregisterEvent("COMMODITY_PRICE_UPDATED")
-			f:UnregisterEvent("COMMODITY_PURCHASE_FAILED")
-			f:UnregisterEvent("COMMODITY_PURCHASE_SUCCEEDED")
-			f:UnregisterEvent("AUCTION_HOUSE_SHOW_ERROR")
-		end
+		CancelPendingAHShowScan()
+		HideCraftShopperFrame()
 	elseif event == "COMMODITY_PRICE_UPDATED" then
 		UpdatePurchasePopup(arg1, arg2)
 	elseif event == "COMMODITY_PURCHASE_FAILED" or (event == "AUCTION_HOUSE_SHOW_ERROR" and purchaseErrorCodes[arg1]) then

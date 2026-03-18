@@ -1,5 +1,116 @@
 # Changelog
 
+## [9.6.1] - 2026-03-18
+
+### 🐛 Fixed
+
+- Cooldown Panels (Static text): Wrongly showed static text when not on CD.
+- Cooldown Panels (Items/Slots): Item uses with delayed CD start (Healthstones) are not correctly shown.
+
+---
+
+## [9.6.0] - 2026-03-18
+
+### ✨ Added
+
+- Cooldown Panels (Tracked Auras): Added a new panel display option for tracked auras that keeps them visible even while inactive, with a dimmed look until they become active.
+
+### 🔄 Changed
+
+- Cooldown Panels (Panel Settings): Improved the panel-wide text styling for stacks and charges. Shared colors can now be adjusted more cleanly at panel level, which makes it easier to keep whole layouts visually consistent.
+- Cooldown Panels: Removed old legacy panel settings code that was no longer part of the active panel setup. This cleans up the feature and reduces duplicate behavior.
+
+### 🐛 Fixed
+
+- Unit Frames: Aura cooldown was missing when Cooldowntext was hidden
+
+---
+
+## [9.5.0] - 2026-03-18
+
+### 🔄 Changed
+
+- Action Tracker, World Map Teleport, Dungeon Teleport, CD Panels: Changed some API to newer API
+
+### 🐛 Fixed
+
+- Cooldown Panels (Edit Mode / Tooltips): Fixed panel selections becoming unclickable in Blizzard Edit Mode while `Show tooltips` was enabled. Panel selections now stay clickable even when the tooltip option is on.
+
+---
+
+## [9.4.0] - 2026-03-17
+
+### ✨ Added
+
+- Cooldown Panels (Editor): Added panel duplication from the panel-list right-click context menu. Duplicates keep their entries, layout, and group assignment.
+- Cooldown Panels (Editor): Added nested groups in the left panel list. Groups can now contain subgroups, and group context menus support creating subgroups and moving groups between parent groups.
+- Cooldown Panels (Glow): Added a `Hide glow out of combat` option, so glow can stay hidden outside combat while the icon remains visible between pulls.
+- Settings (Slash Commands): Added an optional Click Cast Bindings toggle that registers `/ccb` and `/clickcast` to open the Blizzard Click Cast Bindings UI when those aliases are not already claimed.
+
+### 🔄 Changed
+
+- Cooldown Panels (Charges): Added a panel-wide `Hide when 0` option for spell charge text. Charge numbers now fade out automatically when the current charge count reaches `0`.
+- Cooldown Panels (Spec Filter): Improved the panel spec selection menu with quick-select toggles for `All healers`, `All tanks`, `All melee`, and `All casters`.
+
+### 🐛 Fixed
+
+- Cooldown Panels (Items / Trinkets): Fixed GCD-only item cooldowns being treated as real cooldowns, so trinkets and other usable items no longer briefly react to the global cooldown.
+- Cooldown Panels (Stance): Fixed `Static text` being unavailable for stance entries in the editor and standalone entry settings.
+- Data Panels: Fixed panels breaking when one of their entries came from an addon that is no longer installed.
+- Food Macros (Drink / Health / Flask / Buff Food): Fixed hard Lua errors when the global macro limit (`120`) is already reached. EQoL now checks the limit before `CreateMacro()` and prints a one-time chat warning instead.
+- Minimap (Instance Difficulty Indicator): Fixed the difficulty label not using the configured Global Font.
+
+---
+
+## [9.3.0] - 2026-03-17
+
+### ✨ Added
+
+- Buff Food Macro: Added a new `EnhanceQoLBuffFoodMacro` for current Midnight buff food, including role/spec preference dropdowns, mixed-stat food categories, and a `Prefer Hearty food` toggle. The macro picks the best matching available buff food from your bags and prefers Hearty variants when configured.
+- Class Buff Reminder (Evoker / Augmentation): Added `Blistering Scales` to the reminder. It now also shows correctly while solo.
+- Group Frames (Healer Buff Placement / Spell Color): Added per-rule `Spell Color` overrides for `Border`, `Bar`, and `Tint` indicators. Preview and live rendering now follow the first active matching rule color, matching existing `Square` behavior.
+
+### 🐛 Fixed
+
+- Cooldown Panels (Items): Fixed item tracking so bank items are no longer counted, tracked `Healthstone` prefers `Demonic Healthstone` for Warlocks with `Pact of Gluttony`, and `No desaturation` no longer keeps empty items like potions fully colored.
+- Class Buff Reminder (Settings): Restored the missing Flask info text and `Open Flask settings` button in the Blizzard settings UI.
+- Unit Frames: Fixed `Always hide in party/raid` so it now only hides the frame while you are actually in a party or raid.
+
+---
+
+## [9.2.0] - 2026-03-17
+
+### ✨ Added
+
+- Shared Media: Added new Void texture (EQOL: Void)
+
+### 🐛 Fixed
+
+- Health Macro: Fixed `Potent Healing Potion` not being picked correctly in Midnight.
+- Cooldown Panels: Opening Edit Mode in Combat had stale panels showing
+- Cooldown Panels: Fixed `Show Tooltip` in Edit Mode so panel icons now show their tooltip correctly and are no longer click-through while the option is enabled.
+- Square Minimap Stats / SharedMedia: Fixed minimap stat texts (`Time`, `FPS`, `Latency`, `Location`, `Coordinates`) not using the configured Global Font on login/reload when SharedMedia fonts were registered after the stats initialized.
+- Minimap Buttons & Cluster: Fixed `Minimap elements to hide` not reflecting already hidden entries in the settings UI.
+- Economy (Craft Shopper): Fixed the Auction House helper not showing reliably for tracked recipes unless tracking was refreshed while the Auction House was already open.
+
+---
+
+## [9.1.2] - 2026-03-16
+
+### 🐛 Fixed
+
+- Cooldown Panels (Tracked Buffs / CDM): Fixed imported tracked auras disappearing after switching specialization. The same tracked spell now continues to work across specs.
+
+---
+
+## [9.1.1] - 2026-03-16
+
+### 🐛 Fixed
+
+- Cooldown Panels: glow had some secret errors
+
+---
+
 ## [9.1.0] - 2026-03-16
 
 ### 🔄 Changed

@@ -38,6 +38,8 @@ L:SetStrings({
 	["Notification"] = "Notificação",
 	["Offset X"] = "Deslocamento X",
 	["Offset Y"] = "Deslocamento Y",
+	["Disable Swipe Animation"] = "Desativar animação de deslize",
+	["Disables the cooldown swipe (pie chart) animation on all icons. The countdown timer text will still be shown."] = "Desativa a animação de deslize (gráfico de pizza) da recarga em todos os ícones. O texto do temporizador de contagem regressiva ainda será exibido.",
 	["Reverse swipe"] = "Deslize reverso",
 	["Reverses the direction of the cooldown swipe animation."] = "Inverte a direção da animação de deslize da recarga.",
 	["Settings"] = "Configurações",
@@ -227,6 +229,7 @@ L:SetStrings({
 	["Other mini addons to enhance your PvP experience:"] = "Outros mini addons para melhorar sua experiência PvP:",
 	["Other Mini Addons_Short"] = "Outros",
 	["Miscellaneous_Short"] = "Variados",
+	["Configure Blizzard Nameplates"] = "Configurar placas de nome da Blizzard",
 
 	-- What's New
 	[" - Added CC icons on pet party/raid frames (disabled by default)."] = " - Adicionados ícones de CC nos quadros de grupo/raide de mascotes (desativado por padrão).",

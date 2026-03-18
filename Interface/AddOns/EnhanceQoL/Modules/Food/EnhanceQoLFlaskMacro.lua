@@ -13,7 +13,6 @@ local UnitAffectingCombat = UnitAffectingCombat
 local InCombatLockdown = InCombatLockdown
 local GetMacroInfo = GetMacroInfo
 local EditMacro = EditMacro
-local CreateMacro = CreateMacro
 
 local flaskMacroName = "EnhanceQoLFlaskMacro"
 
@@ -36,16 +35,16 @@ local function getCurrentSpecID()
 end
 
 local function createMacroIfMissing()
-	if not addon.db.flaskMacroEnabled then return end
-	if InCombatLockdown and InCombatLockdown() then return end
-	if GetMacroInfo(flaskMacroName) == nil then
-		local macroId = CreateMacro(flaskMacroName, "INV_Misc_QuestionMark")
-		if not macroId then
-			print(L["flaskMacroLimitReached"] or "Flask Macro: Macro limit reached. Please free a slot.")
-			return
-		end
-		if not (InCombatLockdown and InCombatLockdown()) then EditMacro(flaskMacroName, flaskMacroName, nil, "#showtooltip") end
-	end
+	if not addon.db.flaskMacroEnabled then return false end
+	if GetMacroInfo(flaskMacroName) ~= nil then return true end
+	if InCombatLockdown and InCombatLockdown() then return false end
+	return addon.functions.EnsureGlobalMacro(
+		flaskMacroName,
+		"INV_Misc_QuestionMark",
+		"#showtooltip",
+		"flaskMacroLimitReached",
+		L["flaskMacroLimitReached"] or "Flask Macro: Macro limit reached. Please free a slot."
+	)
 end
 
 local function buildMacroString(itemID)
@@ -70,7 +69,7 @@ function addon.Flasks.functions.updateFlaskMacro(ignoreCombat)
 	if not addon.db.flaskMacroEnabled then return end
 	if UnitAffectingCombat("player") and ignoreCombat == false then return end
 
-	createMacroIfMissing()
+	if not createMacroIfMissing() then return end
 
 	local specID = getCurrentSpecID()
 	local best = getBestCandidate(specID)
@@ -80,7 +79,7 @@ function addon.Flasks.functions.updateFlaskMacro(ignoreCombat)
 
 	if macroToken ~= lastMacroToken or not macroExists then
 		if InCombatLockdown and InCombatLockdown() then return end
-		if not GetMacroInfo(flaskMacroName) then createMacroIfMissing() end
+		if not GetMacroInfo(flaskMacroName) and not createMacroIfMissing() then return end
 		if GetMacroInfo(flaskMacroName) then
 			local macroBody = buildMacroString(itemID)
 			EditMacro(flaskMacroName, flaskMacroName, nil, macroBody)
@@ -129,9 +128,7 @@ local pendingBagUpdate = false
 frame:SetScript("OnEvent", function(_, event, arg1)
 	if event == "PLAYER_LOGIN" then
 		syncEventRegistration()
-		if addon.db and addon.db.flaskMacroEnabled and addon.Flasks and addon.Flasks.functions and addon.Flasks.functions.updateFlaskMacro then
-			addon.Flasks.functions.updateFlaskMacro(false)
-		end
+		if addon.db and addon.db.flaskMacroEnabled and addon.Flasks and addon.Flasks.functions and addon.Flasks.functions.updateFlaskMacro then addon.Flasks.functions.updateFlaskMacro(false) end
 		return
 	end
 
@@ -144,14 +141,10 @@ frame:SetScript("OnEvent", function(_, event, arg1)
 		pendingBagUpdate = true
 		C_Timer.After(0.05, function()
 			pendingBagUpdate = false
-			if addon.db and addon.db.flaskMacroEnabled and addon.Flasks and addon.Flasks.functions and addon.Flasks.functions.updateFlaskMacro then
-				addon.Flasks.functions.updateFlaskMacro(false)
-			end
+			if addon.db and addon.db.flaskMacroEnabled and addon.Flasks and addon.Flasks.functions and addon.Flasks.functions.updateFlaskMacro then addon.Flasks.functions.updateFlaskMacro(false) end
 		end)
 	elseif event == "PLAYER_LEVEL_UP" then
-		if not UnitAffectingCombat("player") and addon.Flasks and addon.Flasks.functions and addon.Flasks.functions.updateFlaskMacro then
-			addon.Flasks.functions.updateFlaskMacro(false)
-		end
+		if not UnitAffectingCombat("player") and addon.Flasks and addon.Flasks.functions and addon.Flasks.functions.updateFlaskMacro then addon.Flasks.functions.updateFlaskMacro(false) end
 	elseif event == "PLAYER_SPECIALIZATION_CHANGED" then
 		if arg1 and arg1 ~= "player" then return end
 		if addon.Flasks and addon.Flasks.functions and addon.Flasks.functions.updateFlaskMacro then addon.Flasks.functions.updateFlaskMacro(false) end

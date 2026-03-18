@@ -57,10 +57,10 @@ local function InterestedIn(watcher, updateInfo)
 	local activeFilters = state.ActiveFilters
 
 	if updateInfo.addedAuras then
-		for _, aura in ipairs(updateInfo.addedAuras) do
+		for _, aura in pairs(updateInfo.addedAuras) do
 			local id = aura.auraInstanceID
 			if id then
-				for _, filter in ipairs(activeFilters) do
+				for _, filter in pairs(activeFilters) do
 					if not C_UnitAuras.IsAuraFilteredOutByInstanceID(unit, id, filter) then
 						return true
 					end
@@ -70,10 +70,10 @@ local function InterestedIn(watcher, updateInfo)
 	end
 
 	if updateInfo.updatedAuras then
-		for _, aura in ipairs(updateInfo.updatedAuras) do
+		for _, aura in pairs(updateInfo.updatedAuras) do
 			local id = aura.auraInstanceID
 			if id then
-				for _, filter in ipairs(activeFilters) do
+				for _, filter in pairs(activeFilters) do
 					if not C_UnitAuras.IsAuraFilteredOutByInstanceID(unit, id, filter) then
 						return true
 					end
@@ -84,9 +84,9 @@ local function InterestedIn(watcher, updateInfo)
 
 	-- Removed auras are already gone, so the filter API can't be used.
 	-- Instead check whether any removed ID matches one we were tracking.
-	if updateInfo.removedAuraInstanceIDs and #updateInfo.removedAuraInstanceIDs > 0 then
+	if updateInfo.removedAuraInstanceIDs and next(updateInfo.removedAuraInstanceIDs) ~= nil then
 		local states = { state.CcAuraState, state.DefensiveState, state.ImportantAuraState }
-		for _, id in ipairs(updateInfo.removedAuraInstanceIDs) do
+		for _, id in pairs(updateInfo.removedAuraInstanceIDs) do
 			for _, auraState in ipairs(states) do
 				for _, aura in ipairs(auraState) do
 					if aura.AuraInstanceID == id then
@@ -243,12 +243,10 @@ local function IterateAuras(unit, filter, sortRule, sortDirection, callback)
 
 	for _, auraData in ipairs(auras) do
 		local durationInfo = C_UnitAuras.GetAuraDuration(unit, auraData.auraInstanceID)
-		local start = durationInfo and durationInfo:GetStartTime()
-		local duration = durationInfo and durationInfo:GetTotalDuration()
 
-		if start and duration then
+		if durationInfo then
 			local dispelColor = C_UnitAuras.GetAuraDispelTypeColor(unit, auraData.auraInstanceID, dispelColorCurve)
-			callback(auraData, start, duration, dispelColor)
+			callback(auraData, durationInfo, dispelColor)
 		end
 	end
 end
@@ -290,7 +288,7 @@ function Watcher:RebuildStates()
 
 	-- process big defensives first so we can exclude duplicates from important
 	if interestedInDefensives then
-		IterateAuras(unit, "HELPFUL|BIG_DEFENSIVE", sortRule, sortDirection, function(auraData, start, duration, dispelColor)
+		IterateAuras(unit, "HELPFUL|BIG_DEFENSIVE", sortRule, sortDirection, function(auraData, durationInfo, dispelColor)
 			-- units out of range produce garbage data, so double check
 			local isDefensive = C_UnitAuras.AuraIsBigDefensive(auraData.spellId)
 
@@ -300,8 +298,7 @@ function Watcher:RebuildStates()
 					SpellId = auraData.spellId,
 					SpellName = auraData.name,
 					SpellIcon = auraData.icon,
-					StartTime = start,
-					TotalDuration = duration,
+					DurationObject = durationInfo,
 					DispelColor = dispelColor,
 					AuraInstanceID = auraData.auraInstanceID,
 				}
@@ -310,15 +307,14 @@ function Watcher:RebuildStates()
 			seen[auraData.auraInstanceID] = true
 		end)
 
-		IterateAuras(unit, "HELPFUL|EXTERNAL_DEFENSIVE", sortRule, sortDirection, function(auraData, start, duration, dispelColor)
+		IterateAuras(unit, "HELPFUL|EXTERNAL_DEFENSIVE", sortRule, sortDirection, function(auraData, durationInfo, dispelColor)
 			if not seen[auraData.auraInstanceID] then
 				defensivesSpellData[#defensivesSpellData + 1] = {
 					IsDefensive = true,
 					SpellId = auraData.spellId,
 					SpellName = auraData.name,
 					SpellIcon = auraData.icon,
-					StartTime = start,
-					TotalDuration = duration,
+					DurationObject = durationInfo,
 					DispelColor = dispelColor,
 					AuraInstanceID = auraData.auraInstanceID,
 				}
@@ -329,7 +325,7 @@ function Watcher:RebuildStates()
 	end
 
 	if interestedInCC then
-		IterateAuras(unit, "HARMFUL|CROWD_CONTROL", sortRule, sortDirection, function(auraData, start, duration, dispelColor)
+		IterateAuras(unit, "HARMFUL|CROWD_CONTROL", sortRule, sortDirection, function(auraData, durationInfo, dispelColor)
 			-- protect against garbage data
 			local isCC = C_Spell.IsSpellCrowdControl(auraData.spellId)
 
@@ -339,8 +335,7 @@ function Watcher:RebuildStates()
 					SpellId = auraData.spellId,
 					SpellName = auraData.name,
 					SpellIcon = auraData.icon,
-					StartTime = start,
-					TotalDuration = duration,
+					DurationObject = durationInfo,
 					DispelColor = dispelColor,
 					AuraInstanceID = auraData.auraInstanceID,
 				}
@@ -353,7 +348,7 @@ function Watcher:RebuildStates()
 	if interestedInImportant then
 		local importantFilter = (interestedIn and interestedIn.ImportantFilter) or "HELPFUL|IMPORTANT"
 
-		IterateAuras(unit, importantFilter, sortRule, sortDirection, function(auraData, start, duration, dispelColor)
+		IterateAuras(unit, importantFilter, sortRule, sortDirection, function(auraData, durationInfo, dispelColor)
 			if not seen[auraData.auraInstanceID] then
 				-- protect against garbage data
 				local isImportant = C_Spell.IsSpellImportant(auraData.spellId)
@@ -364,8 +359,7 @@ function Watcher:RebuildStates()
 						SpellId = auraData.spellId,
 						SpellName = auraData.name,
 						SpellIcon = auraData.icon,
-						StartTime = start,
-						TotalDuration = duration,
+						DurationObject = durationInfo,
 						DispelColor = dispelColor,
 						AuraInstanceID = auraData.auraInstanceID,
 					}
@@ -492,8 +486,7 @@ InitColourCurve()
 ---@field SpellId number?
 ---@field SpellIcon string?
 ---@field SpellName string?
----@field TotalDuration number?
----@field StartTime number?
+---@field DurationObject table?
 ---@field DispelColor table?
 ---@field AuraInstanceID number?
 

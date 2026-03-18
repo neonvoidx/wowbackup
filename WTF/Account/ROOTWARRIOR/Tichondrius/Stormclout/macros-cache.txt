@@ -86,6 +86,8 @@ END
 VER 3 0100000000000040 " " "134400"
 #showtooltip
 /cast [@cursor] Exploding Keg
+/use 13
+/cast Blood Fury
 END
 VER 3 0100000000000041 " " "134400"
 #showtooltip
@@ -95,9 +97,10 @@ END
 VER 3 0100000000000042 " " "134400"
 #showtooltip Zenith
 /cast Zenith
+/use 14
 /use Saltwater Potion
+/use Potion of recklessness
 /cast Blood Fury
-/cast Beserking
 /use Perpetual Purple Firework
 /use Winning Hand
 END
@@ -142,4 +145,8 @@ VER 3 0100000000000047 "Dismiss" "615340"
 /click t2
 /click t3
 /click t4
+END
+VER 3 010000000000004C "Teleport Home" "7252953"
+#plumber:home
+/click PLMR_HOME1
 END

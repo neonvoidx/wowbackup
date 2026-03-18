@@ -38,6 +38,8 @@ L:SetStrings({
 	["Notification"] = "Notification",
 	["Offset X"] = "Décalage X",
 	["Offset Y"] = "Décalage Y",
+	["Disable Swipe Animation"] = "Désactiver l'animation de balayage",
+	["Disables the cooldown swipe (pie chart) animation on all icons. The countdown timer text will still be shown."] = "Désactive l'animation de balayage (camembert) du temps de recharge sur toutes les icônes. Le texte du compte à rebours sera toujours affiché.",
 	["Reverse swipe"] = "Balayage inversé",
 	["Reverses the direction of the cooldown swipe animation."] = "Inverse la direction de l'animation de balayage du temps de recharge.",
 	["Settings"] = "Paramètres",
@@ -227,6 +229,7 @@ L:SetStrings({
 	["Other mini addons to enhance your PvP experience:"] = "Autres mini addons pour améliorer votre expérience PvP:",
 	["Other Mini Addons_Short"] = "Autres",
 	["Miscellaneous_Short"] = "Divers",
+	["Configure Blizzard Nameplates"] = "Configurer les plaques de nom Blizzard",
 
 	-- What's New
 	[" - Added CC icons on pet party/raid frames (disabled by default)."] = " - Ajout d'icônes CC sur les cadres de groupe/raid des familiers (désactivé par défaut).",

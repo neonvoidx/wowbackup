@@ -248,7 +248,12 @@ local function UpdateButtonGlowState(cdmFrame, value)
     if cooldownInfo.category == 0 or cooldownInfo.category == 1 then
         if cooldownInfo.charges and CooldownStyle.GetGlowOnFullCharges(cooldownInfo.spellID) then
             local glow = EnsureButtonGlowFrame(cdmFrame)
-
+            if ns.db.profile.cooldownManager_hide_glow_on_active_aura and cdmFrame.wasSetFromAura then
+                if glow then
+                    glow:SetAlpha(0)
+                end
+                return
+            end
             local spellID = cooldownInfo.overrideSpellID or cooldownInfo.spellID
             local cooldownDuration = C_Spell.GetSpellChargeDuration(spellID)
             local alpha = cooldownDuration:EvaluateRemainingDuration(notOnCDCurve)
@@ -263,6 +268,13 @@ local function UpdateButtonGlowState(cdmFrame, value)
         if issecretvalue(value) or value ~= nil then
             if glow then
                 glow:SetAlphaFromBoolean(value, 0, 1)
+            end
+            return
+        end
+
+        if ns.db.profile.cooldownManager_hide_glow_on_active_aura and cdmFrame.wasSetFromAura then
+            if glow then
+                glow:SetAlpha(0)
             end
             return
         end

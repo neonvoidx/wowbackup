@@ -11,8 +11,8 @@ MiniCCDB = {
 ["Enabled"] = {
 ["BattleGrounds"] = false,
 ["Arena"] = true,
-["World"] = true,
 ["PvE"] = true,
+["World"] = true,
 },
 ["Raid"] = {
 ["ExcludePlayer"] = false,
@@ -55,29 +55,17 @@ MiniCCDB = {
 ["Enabled"] = {
 ["BattleGrounds"] = true,
 ["Arena"] = true,
-["World"] = true,
 ["PvE"] = true,
+["World"] = true,
 },
 ["ScaleWithNameplate"] = false,
 ["Friendly"] = {
 ["Combined"] = {
 ["Grow"] = "RIGHT",
-["Enabled"] = false,
-["Icons"] = {
-["MaxIcons"] = 5,
-["Glow"] = true,
-["ColorByCategory"] = true,
-["ReverseCooldown"] = true,
-["Size"] = 50,
-},
 ["Offset"] = {
 ["Y"] = 0,
 ["X"] = 2,
 },
-},
-["Important"] = {
-["Enabled"] = false,
-["Grow"] = "LEFT",
 ["Icons"] = {
 ["MaxIcons"] = 5,
 ["Glow"] = true,
@@ -85,14 +73,29 @@ MiniCCDB = {
 ["ReverseCooldown"] = true,
 ["Size"] = 50,
 },
+["Enabled"] = false,
+},
+["Important"] = {
+["Enabled"] = false,
 ["Offset"] = {
 ["Y"] = 0,
 ["X"] = -2,
 },
+["Icons"] = {
+["MaxIcons"] = 5,
+["Glow"] = true,
+["ColorByCategory"] = true,
+["ReverseCooldown"] = true,
+["Size"] = 50,
+},
+["Grow"] = "LEFT",
 },
 ["CC"] = {
 ["Enabled"] = true,
-["Grow"] = "CENTER",
+["Offset"] = {
+["Y"] = 49,
+["X"] = 0,
+},
 ["Icons"] = {
 ["MaxIcons"] = 5,
 ["Glow"] = false,
@@ -100,17 +103,17 @@ MiniCCDB = {
 ["ReverseCooldown"] = true,
 ["Size"] = 30,
 },
-["Offset"] = {
-["Y"] = 49,
-["X"] = 0,
-},
+["Grow"] = "CENTER",
 },
 ["IgnorePets"] = true,
 },
 ["Enemy"] = {
 ["Combined"] = {
 ["Grow"] = "RIGHT",
-["Enabled"] = false,
+["Offset"] = {
+["Y"] = 0,
+["X"] = 2,
+},
 ["Icons"] = {
 ["MaxIcons"] = 5,
 ["Glow"] = true,
@@ -118,14 +121,14 @@ MiniCCDB = {
 ["ReverseCooldown"] = true,
 ["Size"] = 50,
 },
-["Offset"] = {
-["Y"] = 0,
-["X"] = 2,
-},
+["Enabled"] = false,
 },
 ["Important"] = {
 ["Enabled"] = true,
-["Grow"] = "LEFT",
+["Offset"] = {
+["Y"] = -6,
+["X"] = 10,
+},
 ["Icons"] = {
 ["MaxIcons"] = 5,
 ["Glow"] = true,
@@ -133,14 +136,14 @@ MiniCCDB = {
 ["ReverseCooldown"] = true,
 ["Size"] = 30,
 },
-["Offset"] = {
-["Y"] = -6,
-["X"] = 10,
-},
+["Grow"] = "LEFT",
 },
 ["CC"] = {
 ["Enabled"] = true,
-["Grow"] = "RIGHT",
+["Offset"] = {
+["Y"] = -5,
+["X"] = -10,
+},
 ["Icons"] = {
 ["MaxIcons"] = 5,
 ["Glow"] = false,
@@ -148,10 +151,7 @@ MiniCCDB = {
 ["ReverseCooldown"] = true,
 ["Size"] = 32,
 },
-["Offset"] = {
-["Y"] = -5,
-["X"] = -10,
-},
+["Grow"] = "RIGHT",
 },
 ["IgnorePets"] = true,
 },
@@ -160,13 +160,10 @@ MiniCCDB = {
 ["Enabled"] = {
 ["BattleGrounds"] = false,
 ["Arena"] = false,
-["World"] = false,
 ["PvE"] = false,
+["World"] = false,
 },
-["Offset"] = {
-["Y"] = 0,
-["X"] = 0,
-},
+["Grow"] = "CENTER",
 ["Icons"] = {
 ["Glow"] = false,
 ["Count"] = 3,
@@ -174,21 +171,21 @@ MiniCCDB = {
 ["ColorByDispelType"] = false,
 ["Size"] = 19,
 },
-["Grow"] = "CENTER",
+["Offset"] = {
+["Y"] = 0,
+["X"] = 0,
+},
 },
 ["CCModule"] = {
 ["Enabled"] = {
 ["BattleGrounds"] = false,
 ["Arena"] = true,
-["World"] = true,
 ["PvE"] = true,
+["World"] = true,
 },
 ["Raid"] = {
 ["Grow"] = "CENTER",
-["Offset"] = {
-["Y"] = 0,
-["X"] = 2,
-},
+["ExcludePlayer"] = false,
 ["Icons"] = {
 ["Glow"] = false,
 ["ColorByDispelType"] = false,
@@ -196,14 +193,14 @@ MiniCCDB = {
 ["Count"] = 3,
 ["Size"] = 26,
 },
-["ExcludePlayer"] = false,
+["Offset"] = {
+["Y"] = 0,
+["X"] = 2,
+},
 },
 ["Default"] = {
 ["Grow"] = "LEFT",
-["Offset"] = {
-["Y"] = 0,
-["X"] = 0,
-},
+["ExcludePlayer"] = false,
 ["Icons"] = {
 ["Glow"] = true,
 ["ColorByDispelType"] = true,
@@ -211,7 +208,10 @@ MiniCCDB = {
 ["Count"] = 2,
 ["Size"] = 42,
 },
-["ExcludePlayer"] = false,
+["Offset"] = {
+["Y"] = 0,
+["X"] = 0,
+},
 },
 },
 ["PortraitModule"] = {
@@ -220,42 +220,27 @@ MiniCCDB = {
 },
 ["ReverseCooldown"] = true,
 },
-["HealerCCModule"] = {
+["PrecogGuesserModule"] = {
 ["Enabled"] = {
-["BattleGrounds"] = false,
-["Arena"] = true,
-["World"] = false,
-["PvE"] = false,
+["Always"] = true,
 },
 ["RelativeTo"] = "UIParent",
 ["Point"] = "CENTER",
+["RelativePoint"] = "CENTER",
 ["Icons"] = {
 ["Glow"] = true,
 ["ReverseCooldown"] = true,
-["ColorByDispelType"] = true,
-["Size"] = 50,
-},
-["ShowWarningText"] = true,
-["Font"] = {
-["Flags"] = "OUTLINE",
-["File"] = "Fonts\\FRIZQT__.TTF",
-["Size"] = 32,
-},
-["RelativePoint"] = "CENTER",
-["Sound"] = {
-["Enabled"] = true,
-["File"] = "Sonar.ogg",
-["Channel"] = "Master",
+["Size"] = 55,
 },
 ["Offset"] = {
-["Y"] = 143.8666381835938,
-["X"] = -1.066765189170837,
+["Y"] = 70,
+["X"] = 0,
 },
 },
 ["AlertsModule"] = {
 ["Offset"] = {
-["Y"] = -140.3331146240234,
-["X"] = 2.133826732635498,
+["Y"] = -50.19978332519531,
+["X"] = -2.132878303527832,
 },
 ["RelativeTo"] = "UIParent",
 ["Point"] = "TOP",
@@ -267,8 +252,13 @@ MiniCCDB = {
 ["ColorByClass"] = true,
 ["Size"] = 48,
 },
+["Enabled"] = {
+["BattleGrounds"] = false,
+["Arena"] = true,
+["PvE"] = false,
+["World"] = false,
+},
 ["TargetFocusOnly"] = false,
-["RelativePoint"] = "TOP",
 ["TTS"] = {
 ["VoiceID"] = 2,
 ["Volume"] = 100,
@@ -293,12 +283,7 @@ MiniCCDB = {
 ["Channel"] = "Master",
 },
 },
-["Enabled"] = {
-["BattleGrounds"] = false,
-["Arena"] = true,
-["World"] = false,
-["PvE"] = false,
-},
+["RelativePoint"] = "TOP",
 },
 ["KickTimerModule"] = {
 ["Offset"] = {
@@ -315,8 +300,8 @@ MiniCCDB = {
 },
 ["Enabled"] = {
 ["Always"] = false,
-["Healer"] = true,
 ["Caster"] = true,
+["Healer"] = true,
 },
 },
 ["TrinketsModule"] = {
@@ -328,37 +313,53 @@ MiniCCDB = {
 },
 ["Point"] = "RIGHT",
 ["RelativePoint"] = "LEFT",
-["ExcludePlayer"] = false,
-["Icons"] = {
-["Glow"] = false,
-["ReverseCooldown"] = false,
-["ShowText"] = true,
-["Size"] = 17,
-},
 ["Offset"] = {
 ["Y"] = 0,
 ["X"] = 98,
 },
+["Icons"] = {
+["ReverseCooldown"] = false,
+["Glow"] = false,
+["ShowText"] = true,
+["Size"] = 17,
 },
-["PrecogGuesserModule"] = {
+["ExcludePlayer"] = false,
+},
+["HealerCCModule"] = {
 ["Enabled"] = {
-["Always"] = true,
+["BattleGrounds"] = false,
+["Arena"] = true,
+["PvE"] = false,
+["World"] = false,
 },
 ["RelativeTo"] = "UIParent",
-["Point"] = "CENTER",
-["RelativePoint"] = "CENTER",
+["Point"] = "TOP",
 ["Icons"] = {
-["Glow"] = true,
 ["ReverseCooldown"] = true,
-["Size"] = 55,
+["Glow"] = true,
+["ColorByDispelType"] = true,
+["Size"] = 50,
+},
+["ShowWarningText"] = true,
+["Font"] = {
+["Flags"] = "OUTLINE",
+["File"] = "Fonts\\FRIZQT__.TTF",
+["Size"] = 32,
+},
+["RelativePoint"] = "TOP",
+["Sound"] = {
+["Enabled"] = true,
+["File"] = "Sonar.ogg",
+["Channel"] = "Master",
 },
 ["Offset"] = {
-["Y"] = 70,
-["X"] = 0,
+["Y"] = -111.1333084106445,
+["X"] = -1.600118041038513,
 },
 },
 },
 ["Version"] = 33,
+["DisableSwipe"] = false,
 ["CCNativeOrder"] = false,
 ["NotifiedChanges"] = true,
 }

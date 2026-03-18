@@ -698,6 +698,7 @@ function HB.CreateDefaultRule(id, familyId, groupId)
 		spellFamilyId = familyId,
 		groupId = tostring(groupId or "1"),
 		["not"] = false,
+		desaturateMissing = false,
 		enabled = true,
 		appliesParty = true,
 		appliesRaid = true,
@@ -788,6 +789,10 @@ local function normalizeRule(rule, id)
 	rule.familyId = nil
 	rule.groupId = tostring(rule.groupId or "")
 	rule["not"] = rule["not"] == true
+	local desaturateMissing = rule.desaturateMissing
+	if desaturateMissing == nil then desaturateMissing = rule.missingDesaturate end
+	rule.desaturateMissing = desaturateMissing == true
+	rule.missingDesaturate = nil
 	if rule.enabled == nil then rule.enabled = true end
 	rule.enabled = rule.enabled ~= false
 	local appliesParty = rule.appliesParty
@@ -807,6 +812,14 @@ local function normalizeRule(rule, id)
 	rule.color = normalizeOptionalColor(rule.color or rule.spellColor)
 	rule.spellColor = nil
 	return rule
+end
+
+function HB.ShouldDesaturateRuleIcon(group, rule)
+	if not (group and rule) then return false end
+	if normalizeStyle(group.style) ~= STYLE_ICON then return false end
+	local desaturateMissing = rule.desaturateMissing
+	if desaturateMissing == nil then desaturateMissing = rule.missingDesaturate end
+	return rule["not"] == true and desaturateMissing == true
 end
 
 function HB.EnsureConfig(cfg)
@@ -1857,6 +1870,7 @@ local function styleSquareButton(btn, color)
 		btn.icon:SetTexture("Interface\\Buttons\\WHITE8x8")
 		btn.icon:SetTexCoord(0, 1, 0, 1)
 		btn.icon:SetVertexColor(r, g, b, a)
+		if btn.icon.SetDesaturated then btn.icon:SetDesaturated(false) end
 	end
 	if btn.border then btn.border:Hide() end
 	if btn.dispelIcon then btn.dispelIcon:Hide() end
@@ -1864,7 +1878,19 @@ end
 
 local function styleIconButton(btn)
 	if not btn then return end
-	if btn.icon then btn.icon:SetVertexColor(1, 1, 1, 1) end
+	if btn.icon then
+		btn.icon:SetVertexColor(1, 1, 1, 1)
+		if btn.icon.SetDesaturated then btn.icon:SetDesaturated(false) end
+	end
+end
+
+local function setButtonIconDesaturated(btn, enabled)
+	local icon = btn and btn.icon
+	if not (icon and icon.SetDesaturated) then return end
+	local shouldDesaturate = enabled == true
+	if icon._hbDesaturated == shouldDesaturate then return end
+	icon:SetDesaturated(shouldDesaturate)
+	icon._hbDesaturated = shouldDesaturate
 end
 
 local function resolveBorderTexture(key)
@@ -1962,6 +1988,18 @@ local function collectActiveRulesForGroup(state, compiled, groupId, outRules, ch
 	return force
 end
 
+local function getPriorityActiveRuleForGroup(state, compiled, groupId)
+	local byGroup = compiled and compiled.groupToRuleIds and compiled.groupToRuleIds[groupId]
+	if not byGroup then return nil, nil end
+	for i = 1, #byGroup do
+		local ruleId = byGroup[i]
+		if state.ruleActive[ruleId] then return compiled.ruleById[ruleId], ruleId end
+	end
+	return nil, nil
+end
+
+local function resolveDisplayColor(group, rule) return resolveColor((rule and rule.color) or (group and group.color)) end
+
 local function didGroupRenderStateChange(cache, compiled, group, activeRules, familyAuraInstance, styleRevision, layoutRevision)
 	local changed = cache.groupId ~= group.id
 		or cache.groupStyle ~= group.style
@@ -2027,14 +2065,14 @@ local function didGroupRenderStateChange(cache, compiled, group, activeRules, fa
 	return changed
 end
 
-local function didBarRenderStateChange(cache, group, groupId, layoutRevision, trackedAura, trackedRuleId, trackedFamilyId)
+local function didBarRenderStateChange(cache, group, groupId, layoutRevision, trackedAura, trackedRuleId, trackedFamilyId, colorRule, colorRuleId)
 	if not (group and groupId) then
 		local changed = cache.active ~= false
 		wipeTable(cache)
 		cache.active = false
 		return changed
 	end
-	local r, g, b, a = resolveColor(group.color)
+	local r, g, b, a = resolveDisplayColor(group, colorRule)
 	local trackedAuraInstance = trackedAura and trackedAura.auraInstanceID or nil
 	local trackedDuration = trackedAura and tonumber(trackedAura.duration) or nil
 	local trackedExpirationTime = trackedAura and tonumber(trackedAura.expirationTime) or nil
@@ -2049,6 +2087,7 @@ local function didBarRenderStateChange(cache, group, groupId, layoutRevision, tr
 		or cache.anchorPoint ~= group.anchorPoint
 		or cache.x ~= group.x
 		or cache.y ~= group.y
+		or cache.colorRuleId ~= colorRuleId
 		or cache.r ~= r
 		or cache.g ~= g
 		or cache.b ~= b
@@ -2064,6 +2103,7 @@ local function didBarRenderStateChange(cache, group, groupId, layoutRevision, tr
 	cache.anchorPoint = group.anchorPoint
 	cache.x = group.x
 	cache.y = group.y
+	cache.colorRuleId = colorRuleId
 	cache.r = r
 	cache.g = g
 	cache.b = b
@@ -2090,14 +2130,14 @@ local function didBarRenderStateChange(cache, group, groupId, layoutRevision, tr
 	return changed
 end
 
-local function didBorderRenderStateChange(cache, group, groupId, layoutRevision)
+local function didBorderRenderStateChange(cache, group, groupId, layoutRevision, colorRule, colorRuleId)
 	if not (group and groupId) then
 		local changed = cache.active ~= false
 		wipeTable(cache)
 		cache.active = false
 		return changed
 	end
-	local r, g, b, a = resolveColor(group.color)
+	local r, g, b, a = resolveDisplayColor(group, colorRule)
 	local changed = cache.active ~= true
 		or cache.groupId ~= groupId
 		or cache.layoutRevision ~= layoutRevision
@@ -2106,6 +2146,7 @@ local function didBorderRenderStateChange(cache, group, groupId, layoutRevision)
 		or cache.anchorPoint ~= group.anchorPoint
 		or cache.x ~= group.x
 		or cache.y ~= group.y
+		or cache.colorRuleId ~= colorRuleId
 		or cache.r ~= r
 		or cache.g ~= g
 		or cache.b ~= b
@@ -2118,6 +2159,7 @@ local function didBorderRenderStateChange(cache, group, groupId, layoutRevision)
 	cache.anchorPoint = group.anchorPoint
 	cache.x = group.x
 	cache.y = group.y
+	cache.colorRuleId = colorRuleId
 	cache.r = r
 	cache.g = g
 	cache.b = b
@@ -2125,17 +2167,18 @@ local function didBorderRenderStateChange(cache, group, groupId, layoutRevision)
 	return changed
 end
 
-local function didTintRenderStateChange(cache, group, groupId)
+local function didTintRenderStateChange(cache, group, groupId, colorRule, colorRuleId)
 	if not (group and groupId) then
 		local changed = cache.active ~= false
 		wipeTable(cache)
 		cache.active = false
 		return changed
 	end
-	local r, g, b, a = resolveColor(group.color)
-	local changed = cache.active ~= true or cache.groupId ~= groupId or cache.r ~= r or cache.g ~= g or cache.b ~= b or cache.a ~= a
+	local r, g, b, a = resolveDisplayColor(group, colorRule)
+	local changed = cache.active ~= true or cache.groupId ~= groupId or cache.colorRuleId ~= colorRuleId or cache.r ~= r or cache.g ~= g or cache.b ~= b or cache.a ~= a
 	cache.active = true
 	cache.groupId = groupId
+	cache.colorRuleId = colorRuleId
 	cache.r = r
 	cache.g = g
 	cache.b = b
@@ -2230,6 +2273,7 @@ local function renderIconStyleForGroup(btn, st, state, compiled, cfg, group, cha
 				button._hbVisualRuleId = nil
 				button._hbVisualGeneration = compiled.generation
 			end
+			setButtonIconDesaturated(button, HB.ShouldDesaturateRuleIcon(group, rule))
 			local showTooltip = style.showTooltip == true and (auraInstanceId and auraInstanceId > 0)
 			if button._hbTooltipShown ~= showTooltip then
 				setAuraTooltipState(button, showTooltip)
@@ -2304,7 +2348,7 @@ local function getStyleAnchoredOffsets(root, group, inset)
 	return roundToPixel(x or 0, scale), roundToPixel(y or 0, scale)
 end
 
-local function renderBar(st, group, trackedAura)
+local function renderBar(st, group, trackedAura, colorRule)
 	local bar = st.healerBuffBar
 	if not bar then return end
 	if not group then
@@ -2314,7 +2358,7 @@ local function renderBar(st, group, trackedAura)
 	end
 	local inset = group.inset or 0
 	local thickness = max(1, group.barThickness or 6)
-	local r, g, b, a = resolveColor(group.color)
+	local r, g, b, a = resolveDisplayColor(group, colorRule)
 	local ox, oy = getStyleAnchoredOffsets(st.healerBuffRoot, group, inset)
 	local orientation = group.barOrientation == ORIENT_VERTICAL and ORIENT_VERTICAL or ORIENT_HORIZONTAL
 	local reverseFill = group.barDrainAnimation == true and group.barReverseFill == true
@@ -2352,7 +2396,7 @@ local function renderBar(st, group, trackedAura)
 	bar:Show()
 end
 
-local function renderBorder(st, group)
+local function renderBorder(st, group, colorRule)
 	local border = st.healerBuffBorder
 	if not border then return end
 	if not group then
@@ -2361,7 +2405,7 @@ local function renderBorder(st, group)
 	end
 	local inset = group.inset or 0
 	local size = max(1, group.borderSize or 1)
-	local r, g, b, a = resolveColor(group.color)
+	local r, g, b, a = resolveDisplayColor(group, colorRule)
 	local ox, oy = getStyleAnchoredOffsets(st.healerBuffRoot, group, inset)
 	setTwoPointsCached(border, "TOPLEFT", st.healerBuffRoot, "TOPLEFT", ox + inset, oy - inset, "BOTTOMRIGHT", st.healerBuffRoot, "BOTTOMRIGHT", ox - inset, oy + inset)
 	local key = tostring(size)
@@ -2393,14 +2437,14 @@ function HB.ApplyHealthTint(st, r, g, b, a)
 	return (r * inv) + (tr * strength), (g * inv) + (tg * strength), (b * inv) + (tb * strength), a
 end
 
-local function renderTint(btn, st, group)
+local function renderTint(btn, st, group, colorRule)
 	local tint = st and st.healerBuffTint
 	local changed = false
 	if tint then tint:Hide() end
 	if not group then
 		changed = clearHealthTint(st)
 	else
-		local r, g, b, a = resolveColor(group.color)
+		local r, g, b, a = resolveDisplayColor(group, colorRule)
 		a = clamp(a, 0, 1, 1) or 1
 		if st._hbHealthTintR ~= r or st._hbHealthTintG ~= g or st._hbHealthTintB ~= b or st._hbHealthTintA ~= a then
 			st._hbHealthTintR, st._hbHealthTintG, st._hbHealthTintB, st._hbHealthTintA = r, g, b, a
@@ -2441,15 +2485,20 @@ local function renderAll(btn, st, state, compiled, cfg, changedFamilies)
 	local borderGroup, borderGroupId = winnerForStyle(compiled, state.groupActive, STYLE_BORDER)
 	local tintGroup, tintGroupId = winnerForStyle(compiled, state.groupActive, STYLE_TINT)
 	local barTrackedAura, barTrackedRuleId, barTrackedFamilyId
+	local barColorRule, barColorRuleId = getPriorityActiveRuleForGroup(state, compiled, barGroupId)
+	local borderColorRule, borderColorRuleId = getPriorityActiveRuleForGroup(state, compiled, borderGroupId)
+	local tintColorRule, tintColorRuleId = getPriorityActiveRuleForGroup(state, compiled, tintGroupId)
 	if barGroup and barGroupId and barGroup.barDrainAnimation == true then
 		barTrackedAura, barTrackedRuleId, barTrackedFamilyId = getTrackedAuraForBarGroup(state, compiled, barGroupId)
 	end
 
-	if didBarRenderStateChange(renderHash[STYLE_BAR], barGroup, barGroupId, layoutRevision, barTrackedAura, barTrackedRuleId, barTrackedFamilyId) then renderBar(st, barGroup, barTrackedAura) end
+	if didBarRenderStateChange(renderHash[STYLE_BAR], barGroup, barGroupId, layoutRevision, barTrackedAura, barTrackedRuleId, barTrackedFamilyId, barColorRule, barColorRuleId) then
+		renderBar(st, barGroup, barTrackedAura, barColorRule)
+	end
 
-	if didBorderRenderStateChange(renderHash[STYLE_BORDER], borderGroup, borderGroupId, layoutRevision) then renderBorder(st, borderGroup) end
+	if didBorderRenderStateChange(renderHash[STYLE_BORDER], borderGroup, borderGroupId, layoutRevision, borderColorRule, borderColorRuleId) then renderBorder(st, borderGroup, borderColorRule) end
 
-	if didTintRenderStateChange(renderHash[STYLE_TINT], tintGroup, tintGroupId) then renderTint(btn, st, tintGroup) end
+	if didTintRenderStateChange(renderHash[STYLE_TINT], tintGroup, tintGroupId, tintColorRule, tintColorRuleId) then renderTint(btn, st, tintGroup, tintColorRule) end
 end
 
 function HB.BuildButton(btn)

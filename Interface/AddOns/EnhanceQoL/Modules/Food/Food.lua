@@ -8,7 +8,6 @@ local UnitPowerMax = UnitPowerMax
 local UnitLevel = UnitLevel
 local GetMacroInfo = GetMacroInfo
 local EditMacro = EditMacro
-local CreateMacro = CreateMacro
 
 -- Recuperate info is shared via addon.Recuperate (Init.lua)
 
@@ -29,9 +28,16 @@ local function shouldUpdateRecuperateForDrinks() return isDrinkMacroEnabled() an
 
 local function createMacroIfMissing()
 	-- Respect enable toggle and guard against protected calls while in combat lockdown
-	if not addon.db.drinkMacroEnabled then return end
-	if InCombatLockdown and InCombatLockdown() then return end
-	if GetMacroInfo(drinkMacroName) == nil then CreateMacro(drinkMacroName, "INV_Misc_QuestionMark") end
+	if not addon.db.drinkMacroEnabled then return false end
+	if GetMacroInfo(drinkMacroName) ~= nil then return true end
+	if InCombatLockdown and InCombatLockdown() then return false end
+	return addon.functions.EnsureGlobalMacro(
+		drinkMacroName,
+		"INV_Misc_QuestionMark",
+		"#showtooltip",
+		"drinkMacroLimitReached",
+		L["drinkMacroLimitReached"] or "Drink Macro: Macro limit reached. Please free a slot."
+	)
 end
 
 -- Find first available mana potion from user-defined list (preserves user order)
@@ -96,6 +102,7 @@ local function addDrinks()
 	if foundItem ~= lastItemPlaced or manaItem ~= lastManaPotionPlaced or addon.db.allowRecuperate ~= lastAllowRecuperate or addon.db.allowRecuperate ~= lastUseRecuperate then
 		-- Avoid protected EditMacro during combat lockdown
 		if InCombatLockdown and InCombatLockdown() then return end
+		if GetMacroInfo(drinkMacroName) == nil then return end
 		EditMacro(drinkMacroName, drinkMacroName, nil, buildMacroString(foundItem, manaItem))
 		lastItemPlaced = foundItem
 		lastManaPotionPlaced = manaItem
@@ -108,7 +115,7 @@ function addon.functions.updateAvailableDrinks(ignoreCombat)
 	if not addon.db.drinkMacroEnabled then return end
 	if UnitAffectingCombat("player") and ignoreCombat == false then return end
 	if unitHasMana() == false and not addon.db.allowRecuperate then return end
-	createMacroIfMissing()
+	if not createMacroIfMissing() then return end
 	addDrinks()
 end
 

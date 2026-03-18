@@ -6,8 +6,15 @@ local function OnEvent(self, event, ...)
 			print("Custom tweaks loaded...")
 		end
 	elseif event == "PLAYER_LOGIN" then
-		-- EditModeManagerFrame:SelectLayout(3)
 	elseif event == "PLAYER_ENTERING_WORLD" then
+		-- Enable action bars 2,3,4,5 on reload
+		local bars = { 2, 3, 4, 5 }
+		local p = "PROXY_SHOW_ACTIONBAR_"
+		for k, v in pairs(bars) do
+			if not Settings.GetSetting(p .. v):GetValue() then
+				Settings.GetSetting(p .. v):SetValue(true)
+			end
+		end
 		-- This event is fired anytime you see a load screen, i.e on login, on UI reload, on new area etc
 		-- #region Hide/Show UI elements
 		-- Hide micromenu
@@ -41,6 +48,7 @@ local function OnEvent(self, event, ...)
 		-- #region CVARs
 		-- Player silhouette behind objects
 		SetCVar("cameraIndirectVisibility", 1)
+		SetCVar("showTutorials", 0)
 		-- Uber tooltip, 2 sets items/spells to cursor while rest to edit mode position
 		SetCVar("UberTooltips", 2)
 		-- Player camera weird shit inside buildings
@@ -166,7 +174,7 @@ local function OnEvent(self, event, ...)
 		--#endregion
 
 		-- Set edit mode profile to 1st custom profile by default
-		-- C_EditMode.SetActiveLayout(3)
+		C_EditMode.SetActiveLayout(3)
 	elseif event == "CHAT_MSG_CHANNEL" then
 		-- Chat Message event
 		local text, playerName, _, channelName = ...

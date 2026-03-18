@@ -1,7 +1,10 @@
 
 PlumberDB_PC = {
-["CurrencyCap:3286"] = 180,
 ["CurrencyCap:3284"] = 450,
+["CurrencyCap:2123"] = 1600,
+["CurrencyCap:3288"] = 360,
+["CurrencyCap:1602"] = 1600,
+["CurrencyCap:3286"] = 180,
 ["DelvesRecords"] = {
 {
 ["instanceID"] = 2684,
@@ -22,5 +25,4 @@ PlumberDB_PC = {
 ["tier"] = 11,
 },
 },
-["CurrencyCap:3288"] = 360,
 }

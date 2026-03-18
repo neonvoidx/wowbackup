@@ -150,6 +150,24 @@ local function ApplyVersionChanges(profile, version)
 			filters.misc = nil;
 		end
 	end
+
+	if (version < 120008) then
+		if (profile.pin.scale) then
+			profile.pin.labelScale = RoundToNearestMultiple(profile.pin.scale, 0.1);
+		end
+
+		local enumpinLabel = _V:GetPinLabelEnum();
+		if (profile.pin.labelColors and profile.pin.label ~= enumpinLabel.none) then
+			local enumPinColorType = _V:GetPinColorType();
+			local colorType = enumPinColorType.time;
+			if (profile.pin.label == enumpinLabel.amount) then
+				colorType = enumPinColorType.reward;
+			end
+			profile.pin.labelColorType = colorType;
+		end
+
+		profile.pin.labelColors = nil;
+	end
 end
 
 function WQT_Profiles:OnLoad()

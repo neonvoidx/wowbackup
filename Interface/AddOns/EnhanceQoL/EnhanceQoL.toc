@@ -1,7 +1,7 @@
 ## Interface: 120000, 120001, 120005
 ## Title: Enhance QoL Core
 ## Author: R41Z0R
-## Version: 9.1.0
+## Version: 9.6.1
 ## IconTexture: Interface\AddOns\EnhanceQoL\Icons\Icon.tga
 ## Category: Quality of Life
 ## X-Category: Quality of Life
