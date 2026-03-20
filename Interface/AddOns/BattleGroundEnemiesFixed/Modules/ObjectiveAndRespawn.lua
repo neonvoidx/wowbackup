@@ -115,35 +115,44 @@ end
 
 -- Module-level function to check orbs for all arena units
 -- In Kotmogu BG, WoW assigns arena tokens (arena1-5) to orb carriers
+local isCheckingOrbs = false
 local function CheckAllOrbs()
-  -- First: clear stale arena tokens for buttons that no longer have orbs
-  for i = 1, 4 do
-    local unitID = "arena" .. i
-    local button = BattleGroundEnemies.ArenaIDToPlayerButton[unitID]
-    if button then
-      if not UnitExists(unitID) then
-        BattleGroundEnemies.ArenaIDToPlayerButton[unitID] = nil
-        button:UpdateEnemyUnitID("Arena", false)
-        button:DispatchEvent("ArenaOpponentHidden")
-      end
-    end
-  end
+  if isCheckingOrbs then return end
+  isCheckingOrbs = true
 
-  -- Second: show orbs on players who have them
-  for i = 1, 4 do
-    local unitID = "arena" .. i
-    if UnitExists(unitID) then
-      local _, battleGroundDebuffs = BattleGroundEnemies:GetBattlegroundAuras()
-      local button = GetOrbCarrierButton(unitID)
-      if button and button.ObjectiveAndRespawn and battleGroundDebuffs then
-        local spellId = battleGroundDebuffs[i]
-        if spellId then
-          button.ObjectiveAndRespawn.Icon:SetTexture(GetSpellTexture(spellId))
-          button.ObjectiveAndRespawn:Show()
+  local ok, err = pcall(function()
+    -- First: clear stale arena tokens for buttons that no longer have orbs
+    for i = 1, 4 do
+      local unitID = "arena" .. i
+      local button = BattleGroundEnemies.ArenaIDToPlayerButton[unitID]
+      if button then
+        if not UnitExists(unitID) then
+          BattleGroundEnemies.ArenaIDToPlayerButton[unitID] = nil
+          button:UpdateEnemyUnitID("Arena", false)
+          button:DispatchEvent("ArenaOpponentHidden")
         end
       end
     end
-  end
+
+    -- Second: show orbs on players who have them
+    for i = 1, 4 do
+      local unitID = "arena" .. i
+      if UnitExists(unitID) then
+        local _, battleGroundDebuffs = BattleGroundEnemies:GetBattlegroundAuras()
+        local button = GetOrbCarrierButton(unitID)
+        if button and button.ObjectiveAndRespawn and battleGroundDebuffs then
+          local spellId = battleGroundDebuffs[i]
+          if spellId then
+            button.ObjectiveAndRespawn.Icon:SetTexture(GetSpellTexture(spellId))
+            button.ObjectiveAndRespawn:Show()
+          end
+        end
+      end
+    end
+  end)
+
+  isCheckingOrbs = false
+  if not ok then error(err) end
 end
 
 -- Helper: Find the correct button for a flag carrier
@@ -185,36 +194,45 @@ local function GetFlagCarrierButton(unitID)
 end
 
 -- Module-level function to check flags for all arena units (WSG, Twin Peaks, Deephaul Ravine)
+local isCheckingFlags = false
 local function CheckAllFlags()
-  -- First: clear stale arena tokens for buttons that no longer have flags
-  for i = 1, 2 do
-    local unitID = "arena" .. i
-    local button = BattleGroundEnemies.ArenaIDToPlayerButton[unitID]
-    if button then
-      if not UnitExists(unitID) then
-        -- This arena unit doesn't exist anymore (flag was dropped/captured)
-        BattleGroundEnemies.ArenaIDToPlayerButton[unitID] = nil
-        button:UpdateEnemyUnitID("Arena", false)
-        button:DispatchEvent("ArenaOpponentHidden")
-      end
-    end
-  end
+  if isCheckingFlags then return end
+  isCheckingFlags = true
 
-  -- Second: show flags on players who have them
-  for i = 1, 2 do
-    local unitID = "arena" .. i
-    if UnitExists(unitID) then
-      local battlegroundBuffs = BattleGroundEnemies:GetBattlegroundAuras()
-      local button = GetFlagCarrierButton(unitID)
-      if button and button.ObjectiveAndRespawn and battlegroundBuffs then
-        local spellId = battlegroundBuffs[i == 1 and 0 or 1]
-        if spellId then
-          button.ObjectiveAndRespawn.Icon:SetTexture(GetSpellTexture(spellId))
-          button.ObjectiveAndRespawn:Show()
+  local ok, err = pcall(function()
+    -- First: clear stale arena tokens for buttons that no longer have flags
+    for i = 1, 2 do
+      local unitID = "arena" .. i
+      local button = BattleGroundEnemies.ArenaIDToPlayerButton[unitID]
+      if button then
+        if not UnitExists(unitID) then
+          -- This arena unit doesn't exist anymore (flag was dropped/captured)
+          BattleGroundEnemies.ArenaIDToPlayerButton[unitID] = nil
+          button:UpdateEnemyUnitID("Arena", false)
+          button:DispatchEvent("ArenaOpponentHidden")
         end
       end
     end
-  end
+
+    -- Second: show flags on players who have them
+    for i = 1, 2 do
+      local unitID = "arena" .. i
+      if UnitExists(unitID) then
+        local battlegroundBuffs = BattleGroundEnemies:GetBattlegroundAuras()
+        local button = GetFlagCarrierButton(unitID)
+        if button and button.ObjectiveAndRespawn and battlegroundBuffs then
+          local spellId = battlegroundBuffs[i == 1 and 0 or 1]
+          if spellId then
+            button.ObjectiveAndRespawn.Icon:SetTexture(GetSpellTexture(spellId))
+            button.ObjectiveAndRespawn:Show()
+          end
+        end
+      end
+    end
+  end)
+
+  isCheckingFlags = false
+  if not ok then error(err) end
 end
 
 -- Module-level event frame for objective detection triggers

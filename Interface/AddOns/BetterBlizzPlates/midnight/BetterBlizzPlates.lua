@@ -6358,7 +6358,7 @@ local function HandleNamePlateAdded(unit)
         frame.HealthBarsContainer.healthBar.deselectedOverlay:SetAlpha(0)
     end
     if BetterBlizzPlatesDB.classicRetailNameplates or not config.useCustomTextureForBars then
-        if frame.HealthBarsContainer.healthBar.MaskTexture then
+        if frame.HealthBarsContainer.healthBar.MaskTexture and not frame.bbpMaskForceShow then
             frame.HealthBarsContainer.healthBar.MaskTexture:Hide()
         end
     end
@@ -7494,7 +7494,6 @@ Frame:SetScript("OnEvent", function(...)
     playerClassColor = RAID_CLASS_COLORS[playerClass]
 
     --BBP.ToggleSpellCastEventRegistration()
-    BBP.PersonalBarSettings()
 
     if db.enableNameplateAuraCustomisation then
         --BBP.RunAuraModule()
@@ -8002,6 +8001,7 @@ First:SetScript("OnEvent", function(_, event, addonName)
                 BBP.ColorPRD()
                 BBP.TexturePRD()
                 BBP.ResizePRD()
+                BBP.PersonalBarSettings()
                 if db.changeNameplateBorderSize then
                     ChangeHealthbarBorderSize(PersonalResourceDisplayFrame)
                 end

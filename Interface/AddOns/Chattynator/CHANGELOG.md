@@ -1,6 +1,7 @@
 # Chattynator
 
-## [197](https://github.com/TheMouseNest/Chattynator/tree/197) (2026-03-13)
-[Full Changelog](https://github.com/TheMouseNest/Chattynator/compare/196...197) 
+## [199](https://github.com/TheMouseNest/Chattynator/tree/199) (2026-03-20)
+[Full Changelog](https://github.com/TheMouseNest/Chattynator/compare/198...199) 
 
-- Add version slash command  
+- Fixes for tabs dropdown when overflowing  
+- Fix overflow tab button showing when not absolutely necessary  

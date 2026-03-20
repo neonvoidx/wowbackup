@@ -33,7 +33,7 @@ BWQDB = {
 },
 },
 ["global"] = {
-["versionCheck"] = 120007,
+["versionCheck"] = 120008,
 ["profiles"] = {
 [0] = {
 ["name"] = "Default",

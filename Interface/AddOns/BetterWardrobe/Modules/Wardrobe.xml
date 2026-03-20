@@ -1,0 +1,1039 @@
+<Ui xmlns="http://www.blizzard.com/wow/ui/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.blizzard.com/wow/ui/
+..\..\..\..\..\..\WoW\Data\Interface\AddOns\Blizzard_SharedXML\UI.xsd">
+
+	<Script file="Wardrobe.lua"/>
+
+	<Button name="BW_PanelTopTabButtonTemplate" inherits="PanelTabButtonTemplate" mixin="PanelTopTabButtonMixin" virtual="true"/>
+
+	<DressUpModel name="BetterWardrobeItemsModelTemplate" mixin="BetterWardrobeItemModelMixin" inherits="ContentTrackingElementTemplate" virtual="true">
+
+		<Size x="78" y="104"/>
+		<Layers>
+			<Layer level="BACKGROUND">
+				<Texture setAllPoints="true">
+					<Color r="0" g="0" b="0"/>
+				</Texture>
+			</Layer>
+			<Layer level="OVERLAY" textureSubLevel="-1">
+				<Texture parentKey="Border" atlas="transmog-wardrobe-border-collected" useAtlasSize="true">
+					<Anchors>
+						<Anchor point="CENTER" x="0" y="-3"/>
+					</Anchors>
+				</Texture>
+			</Layer>
+				<Layer level="OVERLAY">
+					<Texture parentKey="DisabledOverlay" atlas="transmog-wardrobe-border-selected" hidden="true" hWrapMode="CLAMPTOBLACKADDITIVE" vWrapMode="CLAMPTOBLACKADDITIVE">
+
+					<Color a="0.8"/>
+					<Size x="96" y="124"/>
+					<Anchors>
+						<Anchor point="CENTER" x="0" y="0"/>
+					</Anchors>
+				</Texture>
+			</Layer>
+			<Layer level="OVERLAY">
+				<Texture parentKey="TransmogStateTexture" atlas="transmog-wardrobe-border-selected" useAtlasSize="true" alphaMode="ADD" hidden="true">
+					<Anchors>
+						<Anchor point="CENTER"/>
+					</Anchors>
+				</Texture>
+				<Texture parentKey="SlotInvalidTexture" atlas="transmog-icon-unsupported" useAtlasSize="true" hidden="true">
+					<Anchors>
+						<Anchor point="CENTER"/>
+					</Anchors>
+				</Texture>
+			</Layer>
+			<Layer level="OVERLAY" textureSubLevel="1">
+				<FontString parentKey="NewString" inherits="GameFontHighlight" maxLines="1" justifyH="CENTER" text="NEW_CAPS" hidden="true">
+					<Shadow>
+						 <Color color="NEW_FEATURE_SHADOW_COLOR"/>
+					</Shadow>
+					<Anchors>
+						<Anchor point="TOP" x="0" y="8"/>
+					</Anchors>
+				</FontString>
+				<Texture parentKey="NewGlow" atlas="collections-newglow" hidden="true">
+					<Anchors>
+						<Anchor point="TOPLEFT" relativeKey="$parent.NewString" x="-20" y="10"/>
+						<Anchor point="BOTTOMRIGHT" relativeKey="$parent.NewString" x="20" y="-10"/>
+					</Anchors>
+				</Texture>
+			</Layer>
+			<Layer level="HIGHLIGHT">
+				<Texture atlas="transmog-wardrobe-border-highlighted" alphaMode="ADD" useAtlasSize="true">
+					<Anchors>
+						<Anchor point="CENTER" x="0" y="0"/>
+					</Anchors>
+				</Texture>			
+			</Layer>
+		</Layers>
+		<Frames>
+			<Frame parentKey="Favorite" setAllPoints="true">
+				<Layers>
+					<Layer level="ARTWORK">
+						<Texture parentKey="Icon" atlas="collections-icon-favorites" useAtlasSize="true" hidden="true">
+							<Anchors>
+								<Anchor point="TOPLEFT" x="-12" y="13" relativePoint="TOPLEFT"/>
+							</Anchors>
+						</Texture>
+					</Layer>
+				</Layers>
+			</Frame>
+			<Frame parentKey="HideVisual" setAllPoints="true">
+				<Layers>
+					<Layer level="ARTWORK">
+						<Texture parentKey="Icon" atlas="transmog-icon-hidden" useAtlasSize="true" hidden="true">
+							<Anchors>
+								<Anchor point="TOPLEFT" x="-12" y="13" relativePoint="TOPLEFT"/>
+							</Anchors>
+						</Texture>
+					</Layer>
+				</Layers>
+			</Frame>
+			<Frame inherits="BetterWardrobeSetInfoTemplate" hidden="false"/>
+			<Frame inherits="BetterWardrobeIconsTemplate" hidden="false"/>
+		</Frames>
+		<Scripts>
+			<OnLoad method="OnLoad"/>
+			<OnModelLoaded method="OnModelLoaded"/>
+			<OnMouseDown method="OnMouseDown"/>
+			<OnMouseUp method="OnMouseUp"/>
+			<OnEnter method="OnEnter"/>
+			<OnLeave method="OnLeave"/>
+			<OnShow method="OnShow"/>
+		</Scripts>
+	</DressUpModel>
+
+	<Button name="BetterWardrobeSlotButtonTemplate" parentArray="Buttons" mixin="BetterWardrobeItemsCollectionSlotButtonMixin" virtual="true">
+		<KeyValues>
+			<KeyValue key="transmogType" value="Enum.TransmogType.Appearance" type="global"/>
+			<KeyValue key="isSecondary" value="false" type="boolean"/>
+		</KeyValues>
+		<Size x="31" y="31"/>
+		<NormalTexture parentKey="NormalTexture">
+			<Anchors>
+				<Anchor point="CENTER"/>
+			</Anchors>
+		</NormalTexture>
+		<HighlightTexture parentKey="Highlight" atlas="bags-roundhighlight" alphaMode="ADD" hidden="true">
+			<Size x="31" y="31"/>
+			<Anchors>
+				<Anchor point="CENTER" x="0" y="1"/>
+			</Anchors>
+		</HighlightTexture>
+		<Layers>
+			<Layer level="OVERLAY">
+				<Texture parentKey="SelectedTexture" atlas="transmog-nav-slot-selected" useAtlasSize="true" hidden="true">
+					<Anchors>
+						<Anchor point="CENTER"/>
+					</Anchors>
+				</Texture>
+			</Layer>
+		</Layers>
+		<Scripts>
+			<OnClick method="OnClick"/>
+			<OnEnter method="OnEnter"/>
+			<OnLeave function="GameTooltip_Hide"/>
+		</Scripts>
+	</Button>
+
+	<Button name="BetterWardrobeSmallSlotButtonTemplate" parentArray="Buttons" mixin="BetterWardrobeItemsCollectionSlotButtonMixin" frameLevel="75" virtual="true">
+		<KeyValues>
+			<KeyValue key="isSmallButton" value="true" type="boolean"/>
+		</KeyValues>
+		<Size x="25" y="25"/>
+		<NormalTexture parentKey="NormalTexture" atlas="transmog-nav-slot-enchant" useAtlasSize="true">
+			<Anchors>
+				<Anchor point="CENTER"/>
+			</Anchors>
+		</NormalTexture>
+		<HighlightTexture parentKey="Highlight" atlas="bags-roundhighlight" alphaMode="ADD" hidden="true">
+			<Size x="21" y="21"/>
+			<Anchors>
+				<Anchor point="CENTER" x="0" y="2"/>
+			</Anchors>
+		</HighlightTexture>
+		<Layers>
+			<Layer level="OVERLAY">
+				<Texture parentKey="SelectedTexture" atlas="transmog-nav-slot-selected-small" useAtlasSize="true" hidden="true">
+					<Anchors>
+						<Anchor point="CENTER"/>
+					</Anchors>
+				</Texture>
+			</Layer>
+		</Layers>
+		<Scripts>
+			<OnClick method="OnClick"/>
+			<OnEnter method="OnEnter"/>
+			<OnLeave function="GameTooltip_Hide"/>
+		</Scripts>
+	</Button>
+
+	<Frame name="BW_TrackingInterfaceShortcutsFrame" hidden="true">
+		<Size x="226" y="40"/>
+		<Layers>
+			<Layer level="OVERLAY">
+				<FontString parentKey="HeaderText" inherits="GameFontHighlightLeft" text="WARDROBE_SHORTCUTS_TUTORIAL_2" justifyH="LEFT" justifyV="TOP">
+					<Size x="196" y="0"/>
+					<Anchors>
+						<Anchor point="TOPLEFT"/>
+					</Anchors>				
+				</FontString>
+				<FontString parentKey="Text" inherits="GameFontHighlightLeft" text="WARDROBE_SHORTCUTS_TUTORIAL_3" justifyH="LEFT" justifyV="TOP">
+					<Size x="196" y="0"/>
+					<Anchors>
+						<Anchor point="TOP" relativeKey="$parent.HeaderText" relativePoint="BOTTOM" y="-1"/>
+						<Anchor point="LEFT" relativeKey="$parent.HeaderText" relativePoint="LEFT"/>
+					</Anchors>
+				</FontString>
+			</Layer>
+		</Layers>
+	</Frame>
+
+	<Frame name="BetterWardrobeCollectionFrameTemplate" parent="CollectionsJournal" mixin="BetterWardrobeCollectionFrameMixin" setAllPoints="true" hidden="true" virtual="true" frameLevel="50">
+		<Frames>
+			<Button name="$parentTab1" parentKey="ItemsTab" inherits="BW_PanelTopTabButtonTemplate" text="WARDROBE_ITEMS" id="1" >
+				<KeyValues>
+					<KeyValue key="minWidth" value="57" type="number"/>
+				</KeyValues>
+				<Anchors>
+					<Anchor point="TOPLEFT" x="58" y="-28"/>
+				</Anchors>
+				<Scripts>
+					<OnClick>
+						BetterWardrobeCollectionFrame:ClickTab(self);
+					</OnClick>
+				</Scripts>
+			</Button>
+			<Button name="$parentTab2" parentKey="SetsTab" inherits="BW_PanelTopTabButtonTemplate" text="WARDROBE_SETS" id="2" frameLevel="75" >
+				<KeyValues>
+					<KeyValue key="minWidth" value="57" type="number"/>
+				</KeyValues>
+				<Anchors>
+					<Anchor point="LEFT" relativeTo="$parentTab1"  relativePoint="RIGHT" x="0" y="0"/>
+				</Anchors>
+				<Frames>
+					<Frame parentKey="FlashFrame" hidden="true">
+						<Anchors>
+							<Anchor point="TOPLEFT" relativeKey="$parent.SetsTab" relativePoint="TOPLEFT" x="0" y="-10"/>
+							<Anchor point="BOTTOMRIGHT" relativeKey="$parent.SetsTab" relativePoint="BOTTOMRIGHT" x="0" y="-5"/>
+						</Anchors>
+						<Layers>
+							<Layer level="ARTWORK">
+								<Texture file="Interface\PaperDollInfoFrame\UI-Character-Tab-Highlight-yellow" setAllPoints="true" alphaMode="ADD"/>
+							</Layer>
+						</Layers>
+						<Scripts>
+							<OnUpdate>
+								if self:IsMouseOver() then
+									self:SetAlpha(0);
+								else
+									self:SetAlpha(abs(mod(GetTime(), 2) - 1));
+								end
+							</OnUpdate>
+						</Scripts>
+					</Frame>
+				</Frames>
+				<Scripts>
+					<OnClick>
+						BetterWardrobeCollectionFrame:ClickTab(self);
+					</OnClick>
+				</Scripts>
+			</Button>
+			<Button name="$parentTab3" parentKey="ExtraSetsTab" inherits="BW_PanelTopTabButtonTemplate" text="Extra" id="3" frameLevel="75" >
+				<KeyValues>
+					<KeyValue key="minWidth" value="57" type="number"/>
+				</KeyValues>
+				<Anchors>
+					<Anchor point="LEFT" relativeKey="$parent.SetsTab" relativePoint="RIGHT" x="0" y="0"/>
+				</Anchors>
+				<Frames>
+					<Frame parentKey="FlashFrame" hidden="true">
+						<Anchors>
+							<Anchor point="TOPLEFT" relativeKey="$parent.ExtraSetsTab" relativePoint="TOPLEFT" x="0" y="-10"/>
+							<Anchor point="BOTTOMRIGHT" relativeKey="$parent.ExtraSetsTab" relativePoint="BOTTOMRIGHT" x="0" y="-5"/>
+						</Anchors>
+						<Layers>
+							<Layer level="ARTWORK">
+								<Texture file="Interface\PaperDollInfoFrame\UI-Character-Tab-Highlight-yellow" setAllPoints="true" alphaMode="ADD"/>
+							</Layer>
+						</Layers>
+						<Scripts>
+							<OnUpdate>
+								if self:IsMouseOver() then
+									self:SetAlpha(0);
+								else
+									self:SetAlpha(abs(mod(GetTime(), 2) - 1));
+								end
+							</OnUpdate>
+						</Scripts>
+					</Frame>
+				</Frames>
+				<Scripts>
+					<OnClick>
+						BetterWardrobeCollectionFrame:ClickTab(self);
+					</OnClick>
+				</Scripts>
+			</Button>
+			<Button name="$parentTab4" parentKey="SavedSetsTab" inherits="BW_PanelTopTabButtonTemplate" text="Custom Sets" id="4" frameLevel="75" >
+				<KeyValues>
+					<KeyValue key="minWidth" value="57" type="number"/>
+				</KeyValues>
+				<Anchors>
+					<Anchor point="LEFT" relativeKey="$parent.ExtraSetsTab"  relativePoint="RIGHT" x="0" y="0"/>
+				</Anchors>
+				<Frames>
+					<Frame parentKey="FlashFrame" hidden="true">
+						<Anchors>
+							<Anchor point="TOPLEFT" relativeKey="$parent.ExtraSetsTab" relativePoint="TOPLEFT" x="0" y="-10"/>
+							<Anchor point="BOTTOMRIGHT" relativeKey="$parent.ExtraSetsTab" relativePoint="BOTTOMRIGHT" x="0" y="-5"/>
+						</Anchors>
+						<Layers>
+							<Layer level="ARTWORK">
+								<Texture file="Interface\PaperDollInfoFrame\UI-Character-Tab-Highlight-yellow" setAllPoints="true" alphaMode="ADD"/>
+							</Layer>
+						</Layers>
+						<Scripts>
+							<OnUpdate>
+								if ( self:IsMouseOver() ) then
+									self:SetAlpha(0);
+								else
+									self:SetAlpha(abs(mod(GetTime(), 2) - 1));
+								end
+							</OnUpdate>
+						</Scripts>
+					</Frame>
+				</Frames>
+				<Scripts>
+					<OnClick>
+						BetterWardrobeCollectionFrame:ClickTab(self);
+					</OnClick>
+				</Scripts>
+			</Button>
+			<EditBox name="$parentSearchBox" parentKey="SearchBox" mixin="BetterWardrobeCollectionFrameSearchBoxMixin" inherits="SearchBoxTemplate" letters="40">
+				<Size x="115" y="20"/>
+				<Anchors>
+					<Anchor point="TOPRIGHT" x="-107" y="-35"/>
+				</Anchors>
+				<Scripts>
+					<OnLoad method="OnLoad"/>
+					<OnUpdate method="OnUpdate"/>
+					<OnHide method="OnHide"/>
+					<OnKeyDown method="OnKeyDown"/>
+					<OnTextChanged method="OnTextChanged"/>
+					<OnEnter method="OnEnter"/>
+					<OnLeave function="GameTooltip_Hide"/>
+				</Scripts>
+				<Frames>
+					<Frame parentKey="ProgressFrame" mixin="BetterWardrobeCollectionFrameSearchBoxProgressMixin" hidden="true">
+						<Size x="0" y="24"/>
+						<Anchors>
+							<Anchor point="TOPLEFT" relativePoint="BOTTOMLEFT" x="-7"/>
+							<Anchor point="TOPRIGHT" relativePoint="BOTTOMRIGHT" x="3"/>
+						</Anchors>
+						<Layers>
+							<Layer level="BACKGROUND">
+								<Texture parentKey="background" atlas="_search-rowbg">
+									<Anchors>
+										<Anchor point="TOPLEFT"/>
+										<Anchor point="BOTTOMRIGHT"/>
+									</Anchors>
+								</Texture>
+							</Layer>
+							<Layer level="ARTWORK">
+								<Texture parentKey="botLeftCorner" inherits="UI-Frame-BotCornerLeft">
+									<Anchors>
+										<Anchor point="LEFT" x="-7" y="0"/>
+										<Anchor point="BOTTOM" x="0" y="-5"/>
+									</Anchors>
+								</Texture>
+								<Texture parentKey="botRightCorner" inherits="UI-Frame-BotCornerRight">
+									<Anchors>
+										<Anchor point="BOTTOM" x="0" y="-5"/>
+										<Anchor point="RIGHT" x="4" y="0"/>
+									</Anchors>
+								</Texture>
+								<Texture parentKey="bottomBorder" inherits="_UI-Frame-Bot">
+									<Anchors>
+										<Anchor point="BOTTOMLEFT" relativeKey="$parent.botLeftCorner" relativePoint="BOTTOMRIGHT" y="0"/>
+										<Anchor point="BOTTOMRIGHT" relativeKey="$parent.botRightCorner" relativePoint="BOTTOMLEFT" y="0"/>
+									</Anchors>
+								</Texture>
+								<Texture parentKey="leftBorder" inherits="!UI-Frame-LeftTile">
+									<Anchors>
+										<Anchor point="TOP" x="0" y="1" />
+										<Anchor point="BOTTOMLEFT" relativeKey="$parent.botLeftCorner" relativePoint="TOPLEFT"/>
+									</Anchors>
+								</Texture>
+								<Texture parentKey="rightBorder" inherits="!UI-Frame-RightTile">
+									<Anchors>
+										<Anchor point="TOP" x="0" y="1" />
+										<Anchor point="BOTTOMRIGHT" relativeKey="$parent.botRightCorner" relativePoint="TOPRIGHT" x="1" y="0"/>
+									</Anchors>
+								</Texture>
+								<Texture parentKey="topBorder" inherits="_UI-Frame-Bot">
+									<Anchors>
+										<Anchor point="TOPLEFT" relativePoint="TOPLEFT" x="-2" y="3"/>
+										<Anchor point="BOTTOMRIGHT" relativePoint="TOPRIGHT" x="2" y="-3"/>
+									</Anchors>
+								</Texture>
+							</Layer>
+						</Layers>
+						<Frames>
+							<Frame parentKey="LoadingFrame">
+								<Anchors>
+									<Anchor point="TOPLEFT" relativePoint="TOPLEFT"/>
+									<Anchor point="BOTTOMRIGHT" relativePoint="BOTTOMRIGHT"/>
+								</Anchors>
+								<Layers>
+									<Layer level="OVERLAY">
+										<FontString name="$parentText" inherits="GameFontHighlight" justifyH="CENTER" parentKey="Text" text="SEARCH_LOADING_TEXT" hidden="false">
+											<Size x="0" y="0"/>
+											<Anchors>
+												<Anchor point="CENTER" x="14" y="1"/>
+											</Anchors>
+										</FontString>
+									</Layer>
+								</Layers>
+								<Frames>
+									<Frame parentKey="Spinner" inherits="SpinnerTemplate" hidden="false">
+										<Size x="20" y="20"/>
+										<Anchors>
+											<Anchor point="RIGHT" relativeKey="$parent.Text" relativePoint="LEFT" x="-5"/>
+										</Anchors>
+									</Frame>
+								</Frames>
+							</Frame>
+							<StatusBar parentKey="ProgressBar" hidden="false">
+								<Anchors>
+									<Anchor point="TOPLEFT" relativePoint="TOPLEFT" x="4" y="-4"/>
+									<Anchor point="BOTTOMRIGHT" relativePoint="BOTTOMRIGHT" x="-4" y="6"/>
+								</Anchors>
+								<Layers>
+									<Layer level="BACKGROUND">
+										<Texture parentKey="barBackground">
+											<Anchors>
+												<Anchor point="TOPLEFT"/>
+												<Anchor point="BOTTOMRIGHT"/>
+											</Anchors>
+											<Color r="0" g="0" b="0" a=".4"/>
+										</Texture>
+									</Layer>
+									<Layer level="OVERLAY">
+										<FontString parentKey="text" inherits="GameFontHighlightSmall" text="SEARCH_PROGRESS_BAR_TEXT" justifyV="TOP">
+											<Size x="0" y="0"/>
+											<Anchors>
+												<Anchor point="CENTER" x="0" y="0"/>
+											</Anchors>
+										</FontString>
+									</Layer>
+									<Layer level="ARTWORK">
+										<Texture parentKey="barBorderLeft" file="Interface\AchievementFrame\UI-Achievement-ProgressBar-Border">
+											<Size x="16" y="0"/>
+											<Anchors>
+												<Anchor point="TOPLEFT" x="-6" y="5"/>
+												<Anchor point="BOTTOMLEFT" x="-6" y="-5"/>
+											</Anchors>
+											<TexCoords left="0" right="0.0625" top="0" bottom="0.75"/>
+										</Texture>
+										<Texture parentKey="barBorderRight" file="Interface\AchievementFrame\UI-Achievement-ProgressBar-Border">
+											<Size x="16" y="0"/>
+											<Anchors>
+												<Anchor point="TOPRIGHT" x="6" y="5"/>
+												<Anchor point="BOTTOMRIGHT" x="6" y="-5"/>
+											</Anchors>
+											<TexCoords left="0.812" right="0.8745" top="0" bottom="0.75"/>
+										</Texture>
+										<Texture parentKey="barBorderCenter" file="Interface\AchievementFrame\UI-Achievement-ProgressBar-Border">
+											<Size x="16"/>
+											<Anchors>
+												<Anchor point="TOPLEFT" relativeKey="$parent.barBorderLeft" relativePoint="TOPRIGHT"/>
+												<Anchor point="BOTTOMRIGHT" relativeKey="$parent.barBorderRight" relativePoint="BOTTOMLEFT"/>
+											</Anchors>
+											<TexCoords left="0.0625" right="0.812" top="0" bottom="0.75"/>
+										</Texture>
+									</Layer>
+								</Layers>
+								<Scripts>
+
+								</Scripts>
+								<BarTexture file="Interface\TargetingFrame\UI-StatusBar"/>
+							</StatusBar>
+						</Frames>
+						<Scripts>
+							<OnLoad method="OnLoad"/>
+							<OnUpdate method="OnUpdate"/>
+							<OnHide method="OnHide"/>
+						</Scripts>
+					</Frame>
+				</Frames>
+			</EditBox>
+			<StatusBar parentKey="progressBar" inherits="BW_CollectionsProgressBarTemplate">
+				<Size x="110" y="13"/>
+				<Anchors>
+					<Anchor point="TOPLEFT" relativeKey="$parent.SavedSetsTab" relativePoint="TOPRIGHT" x="5" y="-11"/>
+				</Anchors>
+				<Scripts>
+					<OnLoad>
+						self.border:SetWidth(120)
+					</OnLoad>
+				</Scripts>
+			</StatusBar>
+			<Button name="BetterWardrobeVisualToggle" parentKey="VisualToggle" mixin="BetterWardrobeVisualToggleMixin" >
+				<Size x="30" y="30"/>
+				<Anchors>
+					<Anchor point="LEFT" relativeKey="$parent.progressBar" relativePoint="RIGHT"/>
+				</Anchors>
+				<Layers>
+					<Layer level="ARTWORK">
+						<Texture name="$parentTexture" setAllPoints="true" file="Interface\LFGFrame\LFG-Eye" parentKey="texture">
+							<TexCoords left="0.125" right="0.25" top="0.25" bottom="0.5"/>
+							<Size x="30" y="30"/>
+							<Anchors>
+								<Anchor point="CENTER" />
+							</Anchors>
+						</Texture>
+					</Layer>
+				</Layers>
+				<Scripts>
+					<OnClick method="OnClick"/>
+					<OnHide method="OnHide"/>
+					<OnEnter method="OnEnter"/>
+					<OnLeave method="OnLeave"/>
+				</Scripts>
+			</Button>
+			<Button parentKey="AlteredFormSwapButton" mixin="BetterWardrobeAlteredFormSwapButtonMixin" inherits = "BW_AlteredFormSwapButtonTemplate" ignoreParentScale="true" frameLevel="600">
+				<Size x="28" y="38"/>
+				<Anchors>
+					<Anchor point="TOPRIGHT" relativeKey="$parent" relativePoint="TOPRIGHT" x="-4" y="-25"/>
+				</Anchors>
+
+			</Button>
+
+
+			<DropdownButton parentKey="FilterButton" inherits="WowStyle1FilterDropdownTemplate">
+				<KeyValues>
+					<KeyValue key="resizeToText" type="boolean" value="false"/>
+				</KeyValues>
+				<Anchors>
+					<Anchor point="LEFT" relativeKey="$parent.SearchBox" relativePoint="RIGHT" x="7" y="0"/>
+				</Anchors>
+			</DropdownButton>
+
+			<DropdownButton parentKey="ClassDropdown" inherits="WowStyle1DropdownTemplate" mixin="BetterWardrobeCollectionClassDropdownMixin">
+				<Anchors>
+					<Anchor point="TOPLEFT" y="-20"/>
+				</Anchors>
+				<Scripts>
+					<OnLoad method="OnLoad"/>
+					<OnShow method="OnShow"/>
+					<OnHide method="OnHide"/>
+				</Scripts>
+			</DropdownButton>
+
+			<DropdownButton parentKey="SortDropdown" name = "BW_SortDropDown" inherits="WowStyle1DropdownTemplate" mixin="BetterWardrobeCollectionClassDropdownMixin">
+				<Anchors>
+					<Anchor point="TOPLEFT" y="-20"/>
+				</Anchors>
+				<Scripts>
+					<OnLoad method="OnLoad"/>
+					<OnShow method="OnShow"/>
+					<OnHide method="OnHide"/>
+				</Scripts>
+			</DropdownButton>
+
+			<DropdownButton parentKey="SavedOutfitDropDown" name = "BW_SavedOutfitDropDown" inherits="WowStyle1DropdownTemplate" mixin="BetterWardrobeCollectionClassDropdownMixin">
+				<Anchors>
+					<Anchor point="RIGHT" relativeKey="$parent.ClassDropdown" relativePoint="RIGHT" x="0" y="0"/>
+				</Anchors>
+				<Scripts>
+					<OnLoad method="OnLoad"/>
+					<OnShow method="OnShow"/>
+					<OnHide method="OnHide"/>
+				</Scripts>
+			</DropdownButton>
+
+			<DropdownButton parentKey="TransmogOptionsButton" name="BW_TransmogOptionsButton" inherits="WowStyle1FilterDropdownTemplate" text="Options" hidden="false" mixin="BetterWardrobeTransmogOptionsDropdownMixin" frameLevel="100">
+				<Size x="93" y="22"/>
+				<Anchors>
+					<Anchor point="BOTTOMRIGHT" x="-53" y="20"/>
+				</Anchors>
+				<Scripts>
+					<OnEnable>
+						self.Icon:SetDesaturated(false);
+					</OnEnable>
+					<OnDisable>
+						self.Icon:SetDesaturated(true);
+					</OnDisable>
+				</Scripts>
+			</DropdownButton>
+
+			<Frame parentKey="ItemsCollectionFrame" parentArray="ContentFrames" mixin="BetterWardrobeItemsCollectionMixin" inherits="BW_CollectionsBackgroundTemplate">
+				<KeyValues>
+					<KeyValue key="searchType" value="Enum.TransmogSearchType.Items" type="global"/>
+				</KeyValues>
+				<Layers>
+					<Layer level="ARTWORK">
+						<FontString parentKey="NoValidItemsLabel" inherits="GameFontNormalMed2" text="TRANSMOG_NO_VALID_ITEMS_EQUIPPED" hidden="true">
+							<Anchors>
+								<Anchor point="CENTER" y="15"/>
+							</Anchors>
+							<Color r="0.804" g="0.725" b="0.616"/>
+						</FontString>
+					</Layer>
+				</Layers>
+				<Frames>
+					<CheckButton parentKey="ApplyOnClickCheckbox" mixin="BW_ApplyOnClickCheckboxMixin" hidden="false">
+						<Size x="30" y="30"/>
+						<Anchors>
+							<Anchor point="BOTTOMLEFT" x="50" y="15"/>
+						</Anchors>
+						<Layers>
+							<Layer level="ARTWORK">
+               						<FontString parentKey="Label" inherits="GameFontHighlightSmall" justifyH="LEFT" text="Apply On Click">
+									<Anchors>
+										<Anchor point="LEFT" relativePoint="RIGHT" x="2" y="1"/>
+									</Anchors>
+								</FontString>
+							</Layer>
+						</Layers>
+						<Scripts>
+							<OnClick method="OnClick"/>
+							<OnLoad method="OnLoad"/>
+						</Scripts>
+						<NormalTexture file="Interface\Buttons\UI-CheckBox-Up"/>
+						<PushedTexture file="Interface\Buttons\UI-CheckBox-Down"/>
+						<HighlightTexture file="Interface\Buttons\UI-CheckBox-Highlight" alphaMode="ADD"/>
+						<CheckedTexture file="Interface\Buttons\UI-CheckBox-Check"/>
+						<DisabledCheckedTexture file="Interface\Buttons\UI-CheckBox-Check-Disabled"/>
+					</CheckButton>
+					<Frame parentKey="PagingFrame" inherits="BW_CollectionsPagingFrameTemplate">
+						<Anchors>
+							<Anchor point="BOTTOM" x="22" y="29"/>
+						</Anchors>
+					</Frame>
+					<DropdownButton parentKey="WeaponDropdown" inherits="WowStyle1DropdownTemplate" hidden="true">
+						<Anchors>
+							<Anchor point="TOPRIGHT" x="-25" y="-58"/>
+						</Anchors>
+					</DropdownButton>
+					<Frame parentKey="SlotsFrame">
+						<Size x="10" y="10"/>
+						<Anchors>
+							<Anchor point="TOPLEFT" x="180" y="-20"/>
+						</Anchors>
+					</Frame>
+					<DressUpModel parentArray="Models" parentKey="ModelR1C1" inherits="BetterWardrobeItemsModelTemplate">
+						<Anchors>
+							<Anchor point="TOP" x="-238" y="-92"/>
+						</Anchors>
+					</DressUpModel>
+					<DressUpModel parentArray="Models" parentKey="ModelR1C2" inherits="BetterWardrobeItemsModelTemplate">
+						<Anchors>
+							<Anchor point="TOPLEFT" relativeKey="$parent.ModelR1C1" relativePoint="TOPRIGHT" x="16" y="0"/>
+						</Anchors>
+					</DressUpModel>
+					<DressUpModel parentArray="Models" parentKey="ModelR1C3" inherits="BetterWardrobeItemsModelTemplate">
+						<Anchors>
+							<Anchor point="TOPLEFT" relativeKey="$parent.ModelR1C2" relativePoint="TOPRIGHT" x="16" y="0"/>
+						</Anchors>
+					</DressUpModel>
+					<DressUpModel parentArray="Models" parentKey="ModelR1C4" inherits="BetterWardrobeItemsModelTemplate">
+						<Anchors>
+							<Anchor point="TOPLEFT" relativeKey="$parent.ModelR1C3" relativePoint="TOPRIGHT" x="16" y="0"/>
+						</Anchors>
+					</DressUpModel>
+					<DressUpModel parentArray="Models" parentKey="ModelR1C5" inherits="BetterWardrobeItemsModelTemplate">
+						<Anchors>
+							<Anchor point="TOPLEFT" relativeKey="$parent.ModelR1C4" relativePoint="TOPRIGHT" x="16" y="0"/>
+						</Anchors>
+					</DressUpModel>
+					<DressUpModel parentArray="Models" parentKey="ModelR1C6" inherits="BetterWardrobeItemsModelTemplate">
+						<Anchors>
+							<Anchor point="TOPLEFT" relativeKey="$parent.ModelR1C5" relativePoint="TOPRIGHT" x="16" y="0"/>
+						</Anchors>
+					</DressUpModel>
+					<DressUpModel parentArray="Models" parentKey="ModelR2C1" inherits="BetterWardrobeItemsModelTemplate">
+						<Anchors>
+							<Anchor point="TOPLEFT" relativeKey="$parent.ModelR1C1" relativePoint="BOTTOMLEFT" x="0" y="-24"/>
+						</Anchors>
+					</DressUpModel>
+					<DressUpModel parentArray="Models" parentKey="ModelR2C2" inherits="BetterWardrobeItemsModelTemplate">
+						<Anchors>
+							<Anchor point="TOPLEFT" relativeKey="$parent.ModelR2C1" relativePoint="TOPRIGHT" x="16" y="0"/>
+						</Anchors>
+					</DressUpModel>
+					<DressUpModel parentArray="Models" parentKey="ModelR2C3" inherits="BetterWardrobeItemsModelTemplate">
+						<Anchors>
+							<Anchor point="TOPLEFT" relativeKey="$parent.ModelR2C2" relativePoint="TOPRIGHT" x="16" y="0"/>
+						</Anchors>
+					</DressUpModel>
+					<DressUpModel parentArray="Models" parentKey="ModelR2C4" inherits="BetterWardrobeItemsModelTemplate">
+						<Anchors>
+							<Anchor point="TOPLEFT" relativeKey="$parent.ModelR2C3" relativePoint="TOPRIGHT" x="16" y="0"/>
+						</Anchors>
+					</DressUpModel>
+					<DressUpModel parentArray="Models" parentKey="ModelR2C5" inherits="BetterWardrobeItemsModelTemplate">
+						<Anchors>
+							<Anchor point="TOPLEFT" relativeKey="$parent.ModelR2C4" relativePoint="TOPRIGHT" x="16" y="0"/>
+						</Anchors>
+					</DressUpModel>
+					<DressUpModel parentArray="Models" parentKey="ModelR2C6" inherits="BetterWardrobeItemsModelTemplate">
+						<Anchors>
+							<Anchor point="TOPLEFT" relativeKey="$parent.ModelR2C5" relativePoint="TOPRIGHT" x="16" y="0"/>
+						</Anchors>
+					</DressUpModel>
+					<DressUpModel parentArray="Models" parentKey="ModelR3C1" inherits="BetterWardrobeItemsModelTemplate">
+						<Anchors>
+							<Anchor point="TOPLEFT" relativeKey="$parent.ModelR2C1" relativePoint="BOTTOMLEFT" x="0" y="-24"/>
+						</Anchors>
+					</DressUpModel>
+					<DressUpModel parentArray="Models" parentKey="ModelR3C2" inherits="BetterWardrobeItemsModelTemplate">
+						<Anchors>
+							<Anchor point="TOPLEFT" relativeKey="$parent.ModelR3C1" relativePoint="TOPRIGHT" x="16" y="0"/>
+						</Anchors>
+					</DressUpModel>
+					<DressUpModel parentArray="Models" parentKey="ModelR3C3" inherits="BetterWardrobeItemsModelTemplate">
+						<Anchors>
+							<Anchor point="TOPLEFT" relativeKey="$parent.ModelR3C2" relativePoint="TOPRIGHT" x="16" y="0"/>
+						</Anchors>
+					</DressUpModel>
+					<DressUpModel parentArray="Models" parentKey="ModelR3C4" inherits="BetterWardrobeItemsModelTemplate">
+						<Anchors>
+							<Anchor point="TOPLEFT" relativeKey="$parent.ModelR3C3" relativePoint="TOPRIGHT" x="16" y="0"/>
+						</Anchors>
+					</DressUpModel>
+					<DressUpModel parentArray="Models" parentKey="ModelR3C5" inherits="BetterWardrobeItemsModelTemplate">
+						<Anchors>
+							<Anchor point="TOPLEFT" relativeKey="$parent.ModelR3C4" relativePoint="TOPRIGHT" x="16" y="0"/>
+						</Anchors>
+					</DressUpModel>
+					<DressUpModel parentArray="Models" parentKey="ModelR3C6" inherits="BetterWardrobeItemsModelTemplate">
+						<Anchors>
+							<Anchor point="TOPLEFT" relativeKey="$parent.ModelR3C5" relativePoint="TOPRIGHT" x="16" y="0"/>
+						</Anchors>
+					</DressUpModel>
+					<DressUpModel parentKey="HiddenModel" inherits="BetterWardrobeItemsModelTemplate" hidden="true">
+						<Anchors>
+							<Anchor point="BOTTOMLEFT"/>
+						</Anchors>
+					</DressUpModel>
+				</Frames>
+				<Scripts>
+					<OnLoad method="OnLoad"/>
+					<OnShow method="OnShow"/>
+					<OnHide method="OnHide"/>
+					<OnEvent method="OnEvent"/>
+					<OnMouseWheel method="OnMouseWheel"/>
+					<OnUpdate method="OnUpdate"/>
+
+				</Scripts>
+			</Frame>
+			<Frame parentKey="SetsCollectionFrame" parentArray="ContentFrames" mixin="BetterWardrobeSetsCollectionMixin" hidden="true">
+				<KeyValues>
+					<KeyValue key="searchType" value="Enum.TransmogSearchType.BaseSets" type="global"/>
+				</KeyValues>
+				<Anchors>
+					<Anchor point="TOPLEFT" relativePoint="TOPLEFT" y="-60" x="4"/>
+					<Anchor point="BOTTOMRIGHT" relativePoint="BOTTOMRIGHT" x="-6" y="5"/>
+				</Anchors>
+				<Frames>
+					<Frame parentKey="LeftInset" useParentLevel="true" inherits="InsetFrameTemplate">
+						<Size x="260" y="496"/>
+						<Anchors>
+							<Anchor point="TOPLEFT"/>
+							<Anchor point="BOTTOMLEFT"/>
+						</Anchors>
+					</Frame>
+					<Frame parentKey="RightInset" useParentLevel="true" inherits="BW_CollectionsBackgroundTemplate">
+						<Anchors>
+							<Anchor point="TOPLEFT" relativeKey="$parent.LeftInset" relativePoint="TOPRIGHT" x="22" y="0"/>
+							<Anchor point="BOTTOMRIGHT"/>
+						</Anchors>
+					</Frame>
+					<Frame parentKey="ListContainer" mixin="BetterWardrobeSetsCollectionContainerMixin" frameStrata="HIGH">
+
+						<Size x="255" y="499"/>
+						<Anchors>
+							<Anchor point="TOPLEFT" x="3" y="-36"/>
+						</Anchors>
+						<Frames>
+
+							<Frame parentKey="ScrollBox" setAllPoints="true" inherits="WowScrollBoxList"/>
+							<EventFrame parentKey="ScrollBar" inherits="MinimalScrollBar">
+								<Anchors>
+									<Anchor point="TOPLEFT" relativeKey="$parent.ScrollBox" relativePoint="TOPRIGHT" x="8" y="31"/>
+									<Anchor point="BOTTOMLEFT" relativeKey="$parent.ScrollBox" relativePoint="BOTTOMRIGHT" x="8" y="-1"/>
+								</Anchors>
+							</EventFrame>
+						</Frames>
+						<Scripts>
+							<OnLoad method="OnLoad"/>
+							<OnShow method="OnShow"/>
+							<OnHide method="OnHide"/>
+							<OnEvent method="OnEvent"/>
+						</Scripts>
+					</Frame>
+					<DressUpModel parentKey="Model" mixin="BetterWardrobeSetsDetailsModelMixin">
+						<Anchors>
+							<Anchor point="TOPLEFT" relativeKey="$parent.RightInset" x="3" y="-3"/>
+							<Anchor point="BOTTOMRIGHT" relativeKey="$parent.RightInset" x="-4" y="3"/>
+						</Anchors>
+						<Scripts>
+							<OnLoad method="OnLoad"/>
+							<OnShow method="OnShow"/>
+							<OnUpdate method="OnUpdate"/>
+							<OnMouseDown method="OnMouseDown"/>
+							<OnMouseUp method="OnMouseUp"/>
+							<OnMouseWheel method="OnMouseWheel"/>
+							<OnModelLoaded method="OnModelLoaded"/>
+						</Scripts>
+					</DressUpModel>
+					<Frame parentKey="DetailsFrame" frameLevel="75">
+						<Anchors>
+							<Anchor point="TOPLEFT" relativeKey="$parent.RightInset" x="0" y="-3"/>
+							<Anchor point="BOTTOMRIGHT" relativeKey="$parent.RightInset" x="-3" y="-20"/>
+						</Anchors>
+						<Layers>
+							<Layer level="BACKGROUND">
+								<Texture parentKey="ModelFadeTexture" atlas="transmog-set-model-cutoff-fade">
+									<Size x="0" y="178"/>
+									<Anchors>
+										<Anchor point="TOPLEFT" x="2"/>
+										<Anchor point="TOPRIGHT"/>
+									</Anchors>
+								</Texture>
+							</Layer>
+							<Layer level="BORDER">
+								<Texture parentKey="IconRowBackground" atlas="transmog-set-iconrow-background" useAtlasSize="true">
+									<Anchors>
+										<Anchor point="TOP" x="0" y="-78"/>
+									</Anchors>
+								</Texture>
+							</Layer>
+							<Layer level="ARTWORK">
+								<FontString parentKey="Name" inherits="Fancy24Font" maxLines="1" mixin="AutoScalingFontStringMixin">
+									<KeyValues>
+										<KeyValue key="minLineHeight" value="16" type="number"/>
+									</KeyValues>
+									<Size x="380" y="0"/>
+									<Anchors>
+										<Anchor point="TOP" x="0" y="-37"/>
+									</Anchors>
+									<Color r="1" g="0.82" b="0"/>
+									<Shadow>
+										<Offset x="1" y="-1" />
+										<Color r="0" g="0" b="0"/>
+									</Shadow>
+								</FontString>
+								<FontString parentKey="LongName" inherits="Fancy16Font" maxLines="2" hidden="true">
+									<Size x="380" y="0"/>
+									<Anchors>
+										<Anchor point="TOP" x="0" y="-30"/>
+									</Anchors>
+									<Color r="1" g="0.82" b="0"/>
+									<Shadow>
+										<Offset x="1" y="-1" />
+										<Color r="0" g="0" b="0"/>
+									</Shadow>
+								</FontString>
+								<FontString parentKey="Label" inherits="GameFontHighlight" maxLines="1">
+									<Size x="380" y="0"/>
+									<Anchors>
+										<Anchor point="TOP" x="0" y="-63"/>
+									</Anchors>
+								</FontString>
+								<FontString parentKey="HolidayLabel" inherits="GameFontHighlight" maxLines="1">
+									<Size x="380" y="0"/>
+									<Anchors>
+										<Anchor point="BOTTOM" x="0" y="50"/>
+									</Anchors>
+								</FontString>
+							</Layer>
+						</Layers>
+						<Frames>
+							<Frame parentKey="LimitedSet" inherits="ResizeLayoutFrame" frameLevel="80">
+								<Anchors>
+									<Anchor point="TOPLEFT" x="6" y="-6"/>
+								</Anchors>
+								<Layers>
+									<Layer level="ARTWORK">
+										<Texture parentKey="Icon" atlas="worldquest-icon-clock" useAtlasSize="true" scale="0.8">
+											<Anchors>
+												<Anchor point="TOPLEFT"/>
+											</Anchors>
+										</Texture>
+										<FontString parentKey="Text" font="GameFontHighlightSmall" text="TRANSMOG_SET_LIMITED_TIME_SET">
+											<Anchors>
+												<Anchor point="LEFT" relativeKey="$parent.Icon" relativePoint="RIGHT"/>
+											</Anchors>
+											<Color r="1.0" g="0.5" b="0.25"/>
+										</FontString>
+									</Layer>
+								</Layers>
+								<Scripts>
+									<OnEnter>
+										GameTooltip:SetOwner(self, "ANCHOR_RIGHT");
+										GameTooltip_SetTitle(GameTooltip, TRANSMOG_SET_LIMITED_TIME_SET_TOOLTIP, NORMAL_FONT_COLOR, true);
+										GameTooltip:Show();
+									</OnEnter>
+									<OnLeave function="GameTooltip_Hide"/>
+								</Scripts>
+							</Frame>
+							<Button parentKey="BW_LinkSetButton" inherits="SquareIconButtonTemplate" >
+								<Size x="32" y="32"/>
+								<Anchors>
+									<Anchor point="TOPRIGHT" x="-23" y="0"/>
+								</Anchors>					
+								<Layers>
+									<Layer level="ARTWORK" textureSubLevel="5">
+										<Texture parentKey="Icon" atlas="poi-transmogrifier" useAtlasSize="false">
+											<Size x="24" y="24"/>
+											<Anchors>
+												<Anchor point="CENTER" />
+											</Anchors>
+										</Texture>
+									</Layer>
+								</Layers>
+								<Scripts>
+									<OnShow> 
+									</OnShow>
+									<OnEnter>
+										GameTooltip:SetOwner(self, "ANCHOR_RIGHT");
+										GameTooltip_SetTitle(GameTooltip, TRANSMOG_OUTFIT_POST_IN_CHAT, NORMAL_FONT_COLOR, true);
+										GameTooltip:Show();
+									</OnEnter>
+									<OnLeave function="GameTooltip_Hide"/>
+									<OnClick>
+										self:GetParent():GetParent():LinkSet(self.setID)
+									</OnClick>
+								</Scripts>
+							</Button>
+							<Button parentKey="BW_SetsHideSlotButton" inherits="SquareIconButtonTemplate" >
+								<Size x="32" y="32"/>
+								<Anchors>
+									<Anchor point="TOPRIGHT" x="-49.5" y="0"/>
+								</Anchors>					
+								<Layers>
+									<Layer level="ARTWORK" textureSubLevel="5">
+										<Texture parentKey="Icon" file="Interface\PvPRankBadges\PvPRank12">
+											<Size x="16" y="16"/>
+											<Anchors>
+												<Anchor point="CENTER" />
+											</Anchors>
+										</Texture>
+									</Layer>
+								</Layers>
+								<Scripts>
+									<OnShow> 
+										self.buttonID = "HideSlot" 
+										--local level = self:GetParent().SetsCollectionFrame.Model:GetFrameLevel() + 5
+										--self:SetFrameLevel(level);
+									</OnShow>
+									<OnEnter>
+										BW_DressingRoomButtonMixin.OnEnter(self)  
+									</OnEnter>
+									<OnLeave>
+										BW_DressingRoomButtonMixin.OnLeave()
+									</OnLeave>
+									<OnClick>
+										BW_JournalHideSlotMenu_OnClick(self)
+									</OnClick>
+
+								</Scripts>
+							</Button>
+							<Button parentKey="BW_OpenDressingRoomButton" inherits="SquareIconButtonTemplate" >
+								<Size x="32" y="32"/>
+								<Anchors>
+									<Anchor point="TOPRIGHT" x="3" y="0"/>
+								</Anchors>					
+								<Layers>
+									<Layer level="ARTWORK" textureSubLevel="5">
+										<Texture parentKey="Icon" file="Interface\ICONS\Trade_Archaeology_HighborneSoulMirror">
+											<Size x="40" y="40"/>
+											<Anchors>
+												<Anchor point="CENTER" />
+											</Anchors>
+										</Texture>
+									</Layer>
+								</Layers>
+								<Scripts>
+									<OnShow> 
+									</OnShow>
+									<OnEnter>
+										GameTooltip:SetOwner(self, "ANCHOR_RIGHT");
+										GameTooltip_SetTitle(GameTooltip, VIEW_IN_DRESSUP_FRAME, NORMAL_FONT_COLOR, true);
+										GameTooltip:Show();
+									</OnEnter>
+									<OnLeave function="GameTooltip_Hide"/>
+									<OnClick>
+										self:GetParent():GetParent():OpenInDressingRoom(self:GetParent().BW_LinkSetButton.setID)
+									</OnClick>
+								</Scripts>
+							</Button>
+
+							<DropdownButton parentKey="VariantSetsDropdown" inherits="WowStyle1DropdownTemplate" frameLevel="80">
+								<Anchors>
+									<Anchor point="TOPRIGHT" x="-80" y="-3"/>
+								</Anchors>
+								<Layers>
+									<Layer level="ARTWORK">
+										<Texture parentKey="PrecedingVariantIcon" atlas="lootroll-icon-transmog" useAtlasSize="true" hidden="true">
+											<Anchors>
+												<Anchor point="RIGHT" relativePoint="LEFT" x="-4" y="0"/>
+											</Anchors>
+										</Texture>
+									</Layer>
+								</Layers>
+							</DropdownButton>
+							<Frame parentKey="Faction" hidden="false">
+								<Anchors>
+									<Anchor point="TOPLEFT" relativeKey="$parent" x="0" y = "-120"/>
+									<Anchor point="BOTTOMRIGHT" relativeKey="$parent" x="0" y = "10"/>
+								</Anchors>
+								<Layers>
+									<Layer level="ARTWORK">
+										<Texture parentKey="Horde" file="Interface\PvPRankBadges\PvPRankHorde" hidden="true">
+											<Anchors>
+												<Anchor point="TOPLEFT" relativeKey="$parent" x="0" y = "0"/>
+												<Anchor point="BOTTOMRIGHT" relativeKey="$parent" x="0" y = "0"/>
+											</Anchors>
+										</Texture>	
+									</Layer>									
+									<Layer level="ARTWORK">
+										<Texture parentKey="Alliance" file="Interface\PvPRankBadges\PvPRankAlliance" hidden="true">
+											<Anchors>
+												<Anchor point="TOPLEFT" relativeKey="$parent" x="0" y = "0"/>
+												<Anchor point="BOTTOMRIGHT" relativeKey="$parent" x="0" y = "0"/>
+											</Anchors>
+										</Texture>	
+									</Layer>
+								</Layers>
+								<Scripts>
+									<OnShow> 
+										local level = self:GetParent():GetParent().Model:GetFrameLevel()-1
+										self:SetFrameLevel(level);
+									</OnShow>
+								</Scripts>
+							</Frame>
+						</Frames>
+					</Frame>
+				</Frames>
+				<Scripts>
+					<OnLoad method="OnLoad"/>
+					<OnShow method="OnShow"/>
+					<OnHide method="OnHide"/>
+					<OnEvent method="OnEvent"/>
+				</Scripts>
+			</Frame>
+		</Frames>
+		<Scripts>
+			<OnLoad method="OnLoad"/>
+			<OnEvent method="OnEvent"/>
+			<OnShow method="OnShow"/>
+			<OnHide method="OnHide"/>
+			<OnKeyDown method="OnKeyDown"/>
+			<OnUpdate method="OnUpdate"/>
+		</Scripts>
+	</Frame>
+</Ui>

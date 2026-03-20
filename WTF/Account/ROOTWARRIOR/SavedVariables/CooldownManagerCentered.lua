@@ -37,14 +37,24 @@ CooldownManagerCenteredDB = {
 ["cooldownManager_squareIconsZoom_Utility"] = 0,
 ["cooldownStyleSettings"] = {
 ["spellSettings"] = {
+[325202] = {
+["alwaysGlow"] = true,
+},
+[443294] = {
+["alwaysGlow"] = true,
+["alwaysShowCooldownEdge"] = true,
+},
 [1249625] = {
 ["alwaysGlow"] = true,
 ["alwaysShowCooldownEdge"] = true,
 },
-[443294] = {
+[1241059] = {
 ["alwaysGlow"] = true,
 },
-[325202] = {
+[322507] = {
+["alwaysGlow"] = true,
+},
+[137384] = {
 ["alwaysGlow"] = true,
 },
 },

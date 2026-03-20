@@ -226,14 +226,10 @@ FrameColor4DB = {
 ["_ProfessionsFrame"] = {
 ["enabled"] = true,
 },
-["_AceGUI-3.0"] = {
+["_PlayerFrame"] = {
 ["colors"] = {
-["main"] = {
-["rgbaValues"] = {
-0.1882353127002716,
-0.1882353127002716,
-0.1882353127002716,
-},
+["class_power_bar"] = {
+["followClassColor"] = false,
 },
 },
 },
@@ -255,20 +251,6 @@ FrameColor4DB = {
 },
 },
 },
-["_Minimap"] = {
-["colors"] = {
-["main"] = {
-["rgbaValues"] = {
-0,
-0,
-0,
-},
-["lockedColor"] = true,
-["followClassColor"] = false,
-},
-},
-["enabled"] = true,
-},
 ["_BaganatorBlizzardTheme"] = {
 ["colors"] = {
 ["background"] = {
@@ -287,6 +269,31 @@ FrameColor4DB = {
 },
 },
 ["enabled"] = true,
+},
+["_Minimap"] = {
+["colors"] = {
+["main"] = {
+["rgbaValues"] = {
+0,
+0,
+0,
+},
+["lockedColor"] = true,
+["followClassColor"] = false,
+},
+},
+["enabled"] = true,
+},
+["_AceGUI-3.0"] = {
+["colors"] = {
+["main"] = {
+["rgbaValues"] = {
+0.1882353127002716,
+0.1882353127002716,
+0.1882353127002716,
+},
+},
+},
 },
 },
 },

@@ -204,6 +204,10 @@ local function GetSpellIDsFromGeneralSpellBook()
     return ids
 end
 
+function ItemsData:InvalidateSpellBookCache()
+    generalSpellBookCache = nil
+end
+
 function ItemsData:GetItemNameByID(itemID)
     if C_Item and C_Item.GetItemNameByID then
         return C_Item.GetItemNameByID(itemID)
@@ -387,9 +391,11 @@ local function IsTrackableWildcardSlot(slotID)
 end
 
 local function IsSpellUsableForTracking(spellID)
-    if not (C_SpellBook and C_SpellBook.IsSpellInSpellBook) then
+    local override = C_Spell.GetOverrideSpell(spellID)
+    if C_Spell.IsSpellPassive(override) then
         return false
     end
+
     return C_SpellBook.IsSpellInSpellBook(spellID) and true or false
 end
 

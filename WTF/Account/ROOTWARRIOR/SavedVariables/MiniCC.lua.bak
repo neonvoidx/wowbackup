@@ -46,7 +46,7 @@ MiniCCDB = {
 ["Glow"] = true,
 ["ColorByDispelType"] = true,
 ["ReverseCooldown"] = true,
-["Size"] = 27,
+["Size"] = 25,
 },
 ["ShowCC"] = false,
 },
@@ -199,14 +199,14 @@ MiniCCDB = {
 },
 },
 ["Default"] = {
-["Grow"] = "LEFT",
+["Grow"] = "RIGHT",
 ["ExcludePlayer"] = false,
 ["Icons"] = {
 ["Glow"] = true,
 ["ColorByDispelType"] = true,
 ["ReverseCooldown"] = true,
 ["Count"] = 2,
-["Size"] = 42,
+["Size"] = 40,
 },
 ["Offset"] = {
 ["Y"] = 0,
@@ -315,13 +315,13 @@ MiniCCDB = {
 ["RelativePoint"] = "LEFT",
 ["Offset"] = {
 ["Y"] = 0,
-["X"] = 98,
+["X"] = 0,
 },
 ["Icons"] = {
 ["ReverseCooldown"] = false,
 ["Glow"] = false,
 ["ShowText"] = true,
-["Size"] = 17,
+["Size"] = 37,
 },
 ["ExcludePlayer"] = false,
 },

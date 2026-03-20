@@ -48,6 +48,9 @@ END
 VER 3 0000000000000206 "BOW" "INV_Ability_MasterOfHarmonyMonk_AspectOfHarmony."
 /bow
 END
+VER 3 000000000000023A "EnhanceQoLBuffFoodMacro" "INV_Misc_QuestionMark"
+#showtooltip
+END
 VER 3 0000000000000236 "EnhanceQoLFlaskMacro" "INV_Misc_QuestionMark"
 #showtooltip
 END
@@ -59,9 +62,9 @@ END
 VER 3 00000000000001FE "FOCUS" "Ability_Rogue_BloodyEye."
 /focus [@mouseover,nodead,exists]; [@target,exists]
 END
-VER 3 0000000000000215 "ItemOnWeap" "463561"
-#showtooltip
-/use item:224107
+VER 3 0000000000000215 "ItemOnWeap" "INV_Misc_QuestionMark"
+#showtooltip item:243733
+/use item:243733
 /use [button:2] 17; 16
 /click StaticPopup1Button1
 END

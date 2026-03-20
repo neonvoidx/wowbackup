@@ -7085,11 +7085,11 @@ local function buildUnitSettings(unit)
 		list[#list + 1] = slider(
 			L["UFPrivateAurasSize"] or "Private aura size",
 			8,
-			30,
+			60,
 			1,
 			function() return getValue(unit, { "privateAuras", "icon", "size" }, (paDef.icon and paDef.icon.size) or 24) end,
 			function(val)
-				setValue(unit, { "privateAuras", "icon", "size" }, clampNumber(val or 24, 8, 30, 24))
+				setValue(unit, { "privateAuras", "icon", "size" }, clampNumber(val or 24, 8, 60, 24))
 				refresh()
 			end,
 			(paDef.icon and paDef.icon.size) or 24,
@@ -7780,6 +7780,16 @@ local function registerSettingsUI()
 		parentSection = expandable,
 	})
 
+	local function ensureStandalonePrivateAuraConfig()
+		addon.db = addon.db or {}
+		addon.db.standalonePrivateAuras = addon.db.standalonePrivateAuras or {}
+		local cfg = addon.db.standalonePrivateAuras
+		cfg.icon = cfg.icon or {}
+		cfg.layout = cfg.layout or {}
+		cfg.duration = cfg.duration or {}
+		return cfg
+	end
+
 	local function getDefaultClassColor(classTag)
 		local color = RAID_CLASS_COLORS and RAID_CLASS_COLORS[classTag]
 		if color then
@@ -7869,6 +7879,58 @@ local function registerSettingsUI()
 			return entry and entry.setting and entry.setting:GetValue() == true
 		end,
 		parentSection = expandable,
+	})
+
+	local standalonePrivateAuraExpandable = addon.SettingsLayout.expUFStandalonePrivateAuras
+	if not standalonePrivateAuraExpandable then
+		standalonePrivateAuraExpandable = addon.functions.SettingsCreateExpandableSection(cUF, {
+			name = L["UFStandalonePrivateAuras"] or "Standalone Private Auras",
+			expanded = false,
+			colorizeTitle = false,
+			parentSection = expandable,
+			newTagID = "ufStandalonePrivateAurasExpandable",
+		})
+		addon.SettingsLayout.expUFStandalonePrivateAuras = standalonePrivateAuraExpandable
+	end
+
+	addon.functions.SettingsCreateCheckbox(cUF, {
+		var = "ufStandalonePrivateAurasEnabled",
+		text = L["UFStandalonePrivateAurasEnable"] or "Enable standalone private aura anchor",
+		default = false,
+		get = function()
+			local cfg = ensureStandalonePrivateAuraConfig()
+			return cfg.enabled == true
+		end,
+		func = function(value)
+			local cfg = ensureStandalonePrivateAuraConfig()
+			cfg.enabled = value and true or false
+			local feature = addon.Aura and addon.Aura.StandalonePrivateAuras
+			if feature and feature.OnSettingChanged then
+				feature:OnSettingChanged(cfg.enabled == true)
+			elseif feature and feature.Refresh then
+				feature:Refresh()
+			end
+			if value == false then
+				addon.variables.requireReload = true
+				if addon.functions and addon.functions.checkReloadFrame then addon.functions.checkReloadFrame() end
+			end
+		end,
+		parentSection = standalonePrivateAuraExpandable,
+	})
+	addon.functions.SettingsCreateText(cUF, L["UFStandalonePrivateAurasHint"] or "Configure placement, size, wrapping, and display options in Edit Mode.", { parentSection = standalonePrivateAuraExpandable })
+	addon.functions.SettingsCreateButton(cUF, {
+		var = "ufStandalonePrivateAurasEditMode",
+		text = _G.HUD_EDIT_MODE_MENU or L["CooldownPanelEditModeButton"] or "Edit Mode",
+		func = function()
+			if EditModeManagerFrame and ShowUIPanel then
+				ShowUIPanel(EditModeManagerFrame)
+			elseif EditModeManagerFrame and EditModeManagerFrame.Show then
+				EditModeManagerFrame:Show()
+			end
+			local feature = addon.Aura and addon.Aura.StandalonePrivateAuras
+			if feature and feature.OpenEditMode then feature:OpenEditMode() end
+		end,
+		parentSection = standalonePrivateAuraExpandable,
 	})
 
 	do -- Profile management + export/import

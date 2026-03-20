@@ -5,6 +5,7 @@
 	<Script file="CooldownPanels.lua" />
 	<Script file="CooldownPanels_CDMAuras.lua" />
 	<Script file="UF_Helper.lua" />
+	<Script file="StandalonePrivateAuras.lua" />
 	<Script file="UF.lua" />
 	<Script file="UF_StandaloneCastbar.lua" />
 	<Include file="UF_GroupFrames.xml" />

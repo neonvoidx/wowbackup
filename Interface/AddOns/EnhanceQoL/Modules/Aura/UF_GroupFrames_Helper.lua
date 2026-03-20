@@ -106,6 +106,11 @@ H.STATUS_ICON_EDITMODE_META = {
 	{ key = "phaseIcon", name = "Phasing icon", defaultPoint = "TOPLEFT", defaultSize = 14 },
 }
 
+function H.IsArenaPartyActive()
+	if type(ShouldShowArenaParty) == "function" then return ShouldShowArenaParty() == true end
+	return (IsActiveBattlefieldArena and IsActiveBattlefieldArena()) and not (C_PvP and C_PvP.IsInBrawl and C_PvP.IsInBrawl())
+end
+
 function H.GetStatusIconCfg(kind, cfg, defaults, key)
 	local status = cfg and cfg.status
 	local iconCfg = status and status[key]
@@ -1086,8 +1091,9 @@ function H.BuildCustomSortNameList(cfg, mode)
 		local showPlayer = cfg and cfg.showPlayer == true
 		local showSolo = cfg and cfg.showSolo == true
 		local inRaid = IsInRaid and IsInRaid()
+		local arenaPartyActive = H.IsArenaPartyActive and H.IsArenaPartyActive()
 		local inGroup = IsInGroup and IsInGroup()
-		if inRaid then
+		if inRaid and not arenaPartyActive then
 			showPlayer = false
 			showSolo = false
 		end

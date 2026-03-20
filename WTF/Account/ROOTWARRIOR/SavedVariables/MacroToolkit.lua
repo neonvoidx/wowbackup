@@ -65,7 +65,7 @@ MacroToolkitDB = {
 },
 [129] = {
 ["name"] = " ",
-["icon"] = "425957",
+["icon"] = "7554219",
 ["body"] = "#showtooltip\n/cast Immolation Aura\n/use FIre-Eater's Vial\n",
 },
 [133] = {
@@ -382,12 +382,12 @@ MacroToolkitDB = {
 ["classFile"] = "MONK",
 ["macros"] = {
 [131] = {
-["icon"] = "134400",
+["icon"] = "606550",
 ["name"] = " ",
 ["body"] = "#showtooltip\n/cast [@mouseover, exists,help][] Soothing Mist\n",
 },
 [135] = {
-["icon"] = "134400",
+["icon"] = "620831",
 ["name"] = " ",
 ["body"] = "#showtooltip\n/cast [@cursor] Summon Jade Serpent Statue\n",
 },
@@ -407,7 +407,7 @@ MacroToolkitDB = {
 ["body"] = "#showtooltip\n/cancelaura Flying Serpent Kick\n/cancelaura Roll\n/cancelaura Chi Torpedo\n/cast Leg Sweep\n",
 },
 [124] = {
-["icon"] = "134400",
+["icon"] = "627485",
 ["name"] = " ",
 ["body"] = "#showtooltip\n/cast [@mouseover,help,exists][] Life Cocoon\n",
 },
@@ -417,7 +417,7 @@ MacroToolkitDB = {
 ["body"] = "#showtooltip Paralysis\n/cast [mod:shift,@focus,exists,harm,nodead][] Paralysis\n",
 },
 [128] = {
-["icon"] = "134400",
+["icon"] = "775461",
 ["name"] = " ",
 ["body"] = "#showtooltip\n/cast [@mouseover, exists,help][] Enveloping Mist\n",
 },
@@ -429,12 +429,12 @@ MacroToolkitDB = {
 [136] = {
 ["icon"] = "134400",
 ["name"] = " ",
-["body"] = "#showtooltip [known: Whirling Dragon Punch] Whirling Dragon Punch; [known: Strike of the Windlord] Strike of the Windlord\n/cast [known: Whirling Dragon Punch] Whirling Dragon Punch\n/cast [known: Strike of the Windlord] Strike of the Windlord\n",
+["body"] = "#showtooltip [known: Whirling Dragon Punch] Whirling Dragon Punch; [known: Strike of the Windlord] Strike of the Windlord\n/stopmacro [channeling:Fists of Fury]\n/cast [known: Whirling Dragon Punch] Whirling Dragon Punch\n/cast [known: Strike of the Windlord\n",
 },
 [140] = {
-["icon"] = "6035314",
+["icon"] = "134400",
 ["name"] = " ",
-["body"] = "#showtooltip Zenith\n/cast Zenith\n/use 14\n/use Saltwater Potion\n/cast Blood Fury\n/use Perpetual Purple Firework\n/use Winning Hand\n",
+["body"] = "#showtooltip Zenith\n/cast Zenith\n/use 14\n/use Saltwater Potion\n/use Potion of recklessness\n/cast Blood Fury\n/use Perpetual Purple Firework\n/use Winning Hand\n",
 },
 [144] = {
 ["icon"] = "132316",
@@ -442,12 +442,12 @@ MacroToolkitDB = {
 ["body"] = "#showtooltip Disable\n/use [@target,exists] Disable\n",
 },
 [148] = {
-["icon"] = "7252953",
-["name"] = "Teleport Home",
-["body"] = "#plumber:home\n/click PLMR_HOME1\n",
+["icon"] = "2869702",
+["name"] = "Outfit Collection",
+["body"] = "#plumber:outfit\n/click PLMR_OUTFIT\n",
 },
 [129] = {
-["icon"] = "1360980",
+["icon"] = "7439208",
 ["name"] = " ",
 ["body"] = "#showtooltip\n/cast [@mouseover, exists,help][] Vivify\n",
 },
@@ -462,14 +462,14 @@ MacroToolkitDB = {
 ["body"] = "#showtooltip\n/cast [@cursor] Summon Black Ox Statue\n",
 },
 [141] = {
-["icon"] = "574574",
+["icon"] = "607849",
 ["name"] = " ",
 ["body"] = "#showtooltip\n/cast roll\n/cast Prismatic Bauble\n",
 },
 [121] = {
-["icon"] = "642415",
+["icon"] = "7439207",
 ["name"] = " ",
-["body"] = "#showtooltip Rising Sun Kick\n/cast Rising Sun Kick\n",
+["body"] = "#showtooltip Rising Sun Kick\n/stopmacro [channeling:Fists of Fury]\n/stopmacro [channeling:Crackling Jade Lightning]\n/stopmacro [channeling:Spinning Crane Kick]\n/stopmacro [channeling:Celestial Conduit]\n/cast Rising Sun Kick\n",
 },
 [123] = {
 ["icon"] = "606551",
@@ -482,12 +482,12 @@ MacroToolkitDB = {
 ["body"] = "#showtooltip\n/cast [@mouseover,help,exists] Tiger's Lust; [@player] Tiger's Lust;\n",
 },
 [127] = {
-["icon"] = "608940",
+["icon"] = "134400",
 ["name"] = " ",
 ["body"] = "#showtooltip\n/cast  [@focus,exists,mod:shift,harm,nodead][] Spear Hand Strike\n/use Goblin Weather Machine - Prototype 01-B\n",
 },
 [130] = {
-["icon"] = "134400",
+["icon"] = "627487",
 ["name"] = " ",
 ["body"] = "#showtooltip\n/cast [@mouseover, exists,help][] Renewing Mist\n",
 },
@@ -499,7 +499,7 @@ MacroToolkitDB = {
 [138] = {
 ["icon"] = "134400",
 ["name"] = " ",
-["body"] = "#showtooltip\n/cast [@cursor] Exploding Keg\n",
+["body"] = "#showtooltip\n/cast [@cursor] Exploding Keg\n/use 13\n/cast Blood Fury\n",
 },
 [142] = {
 ["icon"] = "606552",
@@ -510,6 +510,11 @@ MacroToolkitDB = {
 ["icon"] = "236356",
 ["name"] = "Cancel",
 ["body"] = "/cancelaura Zen Flight\n/cancelaura Blessing of Protection\n/cancelaura Blessing of Freedom\n/cancelaura Slow Fall\n/cancelaura Flying Serpent Kick\n/cancelaura Parachute\n/dismount\n/stopcasting\n",
+},
+[149] = {
+["icon"] = "7252953",
+["name"] = "Teleport Home",
+["body"] = "#plumber:home\n/click PLMR_HOME1\n",
 },
 [147] = {
 ["icon"] = "615340",

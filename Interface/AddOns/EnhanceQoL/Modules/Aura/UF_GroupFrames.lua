@@ -84,6 +84,112 @@ local function formatSliderDecimal(value)
 	return text
 end
 
+function GF.GetDynamicContentScaleAmount(cfg)
+	if type(cfg) ~= "table" then return 0 end
+	local value = cfg.dynamicScaleMin
+	if value == nil then
+		if cfg.dynamicContentScale == true then return 1 end
+		return 0
+	end
+	return clampNumber(tonumber(value) or 0, 0, 1, 0)
+end
+
+function GF.IsDynamicContentScaleEnabled(kind, cfg) return kind == "raid" and GF.GetDynamicContentScaleAmount(cfg) > 0 end
+
+function GF.GetDynamicContentScale(self, cfg)
+	if not self then return 1 end
+	local kind = self._eqolGroupKind or "party"
+	cfg = cfg or self._eqolCfg or getCfg(kind)
+	local amount = GF.GetDynamicContentScaleAmount(cfg)
+	if kind ~= "raid" or amount <= 0 then return 1 end
+
+	local ownScale = self.GetScale and self:GetScale() or 1
+	ownScale = tonumber(ownScale) or 1
+
+	local parent = self.GetParent and self:GetParent() or nil
+	local parentScale = parent and parent.GetScale and parent:GetScale() or 1
+	parentScale = tonumber(parentScale) or 1
+	local inverseScale = 1
+	if ownScale > 0 and ownScale < 1 then
+		inverseScale = 1 / ownScale
+	elseif parentScale > 0 and parentScale < 1 then
+		inverseScale = 1 / parentScale
+	end
+	if inverseScale <= 1 then return 1 end
+	return 1 + ((inverseScale - 1) * amount)
+end
+
+function GF.ScaleContentValue(self, value, cfg, minimum)
+	local scaled = tonumber(value)
+	if not scaled then return value end
+	scaled = scaled * GF.GetDynamicContentScale(self, cfg)
+	if minimum and scaled < minimum then scaled = minimum end
+	return scaled
+end
+
+function GF.ScaleOffset(offset, factor)
+	if factor == nil or factor == 1 or type(offset) ~= "table" then return offset end
+	return {
+		x = (tonumber(offset.x) or 0) * factor,
+		y = (tonumber(offset.y) or 0) * factor,
+	}
+end
+
+function GF.GetScaledBarTextConfig(cfgSection, factor)
+	if factor == nil or factor == 1 or type(cfgSection) ~= "table" then return cfgSection end
+	return {
+		offsetLeft = GF.ScaleOffset(cfgSection.offsetLeft, factor),
+		offsetCenter = GF.ScaleOffset(cfgSection.offsetCenter, factor),
+		offsetRight = GF.ScaleOffset(cfgSection.offsetRight, factor),
+	}
+end
+
+function GF.ApplyScaledFont(self, fontString, font, size, outline, cfg)
+	if not (fontString and UFHelper and UFHelper.applyFont) then return end
+	UFHelper.applyFont(fontString, font, GF.ScaleContentValue(self, size, cfg, 1), outline)
+end
+
+function GF.GetScaledPrivateAuraConfig(self, cfg)
+	if type(cfg) ~= "table" then return cfg end
+	local factor = GF.GetDynamicContentScale(self, self and self._eqolCfg or nil)
+	if factor == 1 then return cfg end
+
+	local scaled = {}
+	for key, value in pairs(cfg) do
+		scaled[key] = value
+	end
+
+	local icon = {}
+	for key, value in pairs(cfg.icon or EMPTY) do
+		icon[key] = value
+	end
+	icon.size = GF.ScaleContentValue(self, icon.size or 24, nil, 1)
+	icon.minSize = GF.ScaleContentValue(self, icon.minSize or 4, nil, 1)
+	icon.maxSize = GF.ScaleContentValue(self, icon.maxSize or 60, nil, 1)
+	icon.offset = (tonumber(icon.offset or icon.spacing or 2) or 0) * factor
+	if icon.spacing ~= nil then icon.spacing = (tonumber(icon.spacing) or 0) * factor end
+	if icon.borderScale ~= nil then icon.borderScale = (tonumber(icon.borderScale) or 0) * factor end
+	scaled.icon = icon
+
+	local parentCfg = {}
+	for key, value in pairs(cfg.parent or EMPTY) do
+		parentCfg[key] = value
+	end
+	parentCfg.offsetX = (tonumber(parentCfg.offsetX) or 0) * factor
+	parentCfg.offsetY = (tonumber(parentCfg.offsetY) or 0) * factor
+	scaled.parent = parentCfg
+
+	local durationCfg = {}
+	for key, value in pairs(cfg.duration or EMPTY) do
+		durationCfg[key] = value
+	end
+	durationCfg.offsetX = (tonumber(durationCfg.offsetX) or 0) * factor
+	durationCfg.offsetY = (tonumber(durationCfg.offsetY) or 0) * factor
+	scaled.duration = durationCfg
+
+	return scaled
+end
+
 function GF.NormalizeBuffHelpfulFilterMode(value)
 	value = tostring(value or ""):upper()
 	if value == "RAID" then return "RAID" end
@@ -788,7 +894,8 @@ function GF.BuildPartyCenterGrowthNameList(cfg)
 
 		local showPlayer = cfg and cfg.showPlayer == true
 		local showSolo = cfg and cfg.showSolo == true
-		if IsInRaid and IsInRaid() then
+		local arenaPartyActive = GFH and GFH.IsArenaPartyActive and GFH.IsArenaPartyActive()
+		if IsInRaid and IsInRaid() and not arenaPartyActive then
 			showPlayer = false
 			showSolo = false
 		end
@@ -1894,6 +2001,8 @@ local DEFAULTS = {
 		sortDir = "ASC",
 		unitsPerColumn = 5,
 		maxColumns = 4,
+		dynamicScaleMin = 0,
+		dynamicContentScale = false,
 		growth = "RIGHT",
 		groupGrowth = "DOWN",
 		barTexture = "SOLID",
@@ -3447,6 +3556,7 @@ function GF:LayoutButton(self)
 	if healthBackdropClampToFill == nil then healthBackdropClampToFill = false end
 	local healthTexKey = getEffectiveBarTexture(cfg, hc)
 	local powerTexKey = getEffectiveBarTexture(cfg, pcfg)
+	local contentScale = GF.GetDynamicContentScale(self, cfg)
 
 	local scale = GFH.GetEffectiveScale(self)
 	if not scale or scale <= 0 then scale = (UIParent and UIParent.GetEffectiveScale and UIParent:GetEffectiveScale()) or 1 end
@@ -3588,35 +3698,35 @@ function GF:LayoutButton(self)
 	end
 
 	if UFHelper and UFHelper.applyFont then
-		UFHelper.applyFont(st.healthTextLeft, hc.font, hc.fontSize or 12, hc.fontOutline)
-		UFHelper.applyFont(st.healthTextCenter, hc.font, hc.fontSize or 12, hc.fontOutline)
-		UFHelper.applyFont(st.healthTextRight, hc.font, hc.fontSize or 12, hc.fontOutline)
+		GF.ApplyScaledFont(self, st.healthTextLeft, hc.font, hc.fontSize or 12, hc.fontOutline, cfg)
+		GF.ApplyScaledFont(self, st.healthTextCenter, hc.font, hc.fontSize or 12, hc.fontOutline, cfg)
+		GF.ApplyScaledFont(self, st.healthTextRight, hc.font, hc.fontSize or 12, hc.fontOutline, cfg)
 		local pcfgLocal = cfg.power or {}
-		UFHelper.applyFont(st.powerTextLeft, pcfgLocal.font, pcfgLocal.fontSize or 10, pcfgLocal.fontOutline)
-		UFHelper.applyFont(st.powerTextCenter, pcfgLocal.font, pcfgLocal.fontSize or 10, pcfgLocal.fontOutline)
-		UFHelper.applyFont(st.powerTextRight, pcfgLocal.font, pcfgLocal.fontSize or 10, pcfgLocal.fontOutline)
+		GF.ApplyScaledFont(self, st.powerTextLeft, pcfgLocal.font, pcfgLocal.fontSize or 10, pcfgLocal.fontOutline, cfg)
+		GF.ApplyScaledFont(self, st.powerTextCenter, pcfgLocal.font, pcfgLocal.fontSize or 10, pcfgLocal.fontOutline, cfg)
+		GF.ApplyScaledFont(self, st.powerTextRight, pcfgLocal.font, pcfgLocal.fontSize or 10, pcfgLocal.fontOutline, cfg)
 		if st.statusText then
 			local scfg = cfg.status or {}
 			local us = scfg.unitStatus or {}
-			UFHelper.applyFont(st.statusText, us.font or hc.font, us.fontSize or hc.fontSize or 12, us.fontOutline or hc.fontOutline)
+			GF.ApplyScaledFont(self, st.statusText, us.font or hc.font, us.fontSize or hc.fontSize or 12, us.fontOutline or hc.fontOutline, cfg)
 		end
 		if st.groupNumberText then
 			local style = resolveGroupNumberStyle(cfg, def, hc)
-			UFHelper.applyFont(st.groupNumberText, style.font, style.fontSize or 12, style.fontOutline)
+			GF.ApplyScaledFont(self, st.groupNumberText, style.font, style.fontSize or 12, style.fontOutline, cfg)
 		end
 	end
-	layoutTexts(st.health, st.healthTextLeft, st.healthTextCenter, st.healthTextRight, cfg.health, scale, layoutAnchor or st.health)
-	layoutTexts(st.power, st.powerTextLeft, st.powerTextCenter, st.powerTextRight, cfg.power, scale)
+	layoutTexts(st.health, st.healthTextLeft, st.healthTextCenter, st.healthTextRight, GF.GetScaledBarTextConfig(cfg.health, contentScale), scale, layoutAnchor or st.health)
+	layoutTexts(st.power, st.powerTextLeft, st.powerTextCenter, st.powerTextRight, GF.GetScaledBarTextConfig(cfg.power, contentScale), scale)
 	if st.statusText then
 		local scfg = cfg.status or {}
 		local us = scfg.unitStatus or {}
 		local defStatus = def.status or {}
 		local defUS = defStatus.unitStatus or {}
-		applyStatusTextAnchor(st, us.anchor or defUS.anchor or "CENTER", us.offset or defUS.offset or {}, scale, layoutAnchor)
+		applyStatusTextAnchor(st, us.anchor or defUS.anchor or "CENTER", GF.ScaleOffset(us.offset or defUS.offset or {}, contentScale), scale, layoutAnchor)
 	end
 	if st.groupNumberText then
 		local style = resolveGroupNumberStyle(cfg, def, hc)
-		applyStatusTextAnchor(st, style.anchor, style.offset, scale, layoutAnchor, st.groupNumberText)
+		applyStatusTextAnchor(st, style.anchor, GF.ScaleOffset(style.offset, contentScale), scale, layoutAnchor, st.groupNumberText)
 	end
 
 	if st.health.SetStatusBarTexture and UFHelper and UFHelper.resolveTexture then
@@ -3736,16 +3846,16 @@ function GF:LayoutButton(self)
 		if not st.roleIcon then st.roleIcon = indicatorLayer:CreateTexture(nil, "OVERLAY", nil, 7) end
 		if st.roleIcon.GetParent and st.roleIcon:GetParent() ~= indicatorLayer then st.roleIcon:SetParent(indicatorLayer) end
 		if st.roleIcon.SetDrawLayer then st.roleIcon:SetDrawLayer("OVERLAY", 7) end
-		local size = rc.size or 14
+		local size = GF.ScaleContentValue(self, rc.size or 14, cfg, 1)
 		local point = rc.point or "LEFT"
 		local relPoint = rc.relativePoint or "LEFT"
-		local ox = roundToPixel(rc.x or 2, scale)
-		local oy = roundToPixel(rc.y or 0, scale)
+		local ox = roundToPixel((rc.x or 2) * contentScale, scale)
+		local oy = roundToPixel((rc.y or 0) * contentScale, scale)
 		local roleAnchor = layoutAnchor or self or st.health
 		st.roleIcon:ClearAllPoints()
 		st.roleIcon:SetPoint(point, roleAnchor, relPoint, ox, oy)
 		st.roleIcon:SetSize(size, size)
-		rolePad = size + (rc.spacing or 2)
+		rolePad = size + ((rc.spacing or 2) * contentScale)
 	else
 		if st.roleIcon then st.roleIcon:Hide() end
 	end
@@ -3754,10 +3864,7 @@ function GF:LayoutButton(self)
 		if st.nameText.SetWordWrap then st.nameText:SetWordWrap(false) end
 		if st.nameText.SetNonSpaceWrap then st.nameText:SetNonSpaceWrap(false) end
 		if st.nameText.SetMaxLines then st.nameText:SetMaxLines(1) end
-		if UFHelper and UFHelper.applyFont then
-			local hc = cfg.health or {}
-			UFHelper.applyFont(st.nameText, tc.font or hc.font, tc.fontSize or hc.fontSize or 12, tc.fontOutline or hc.fontOutline)
-		end
+		GF.ApplyScaledFont(self, st.nameText, tc.font or hc.font, tc.fontSize or hc.fontSize or 12, tc.fontOutline or hc.fontOutline, cfg)
 		local nameAnchor = tc.nameAnchor or "LEFT"
 		local baseOffset = (cfg.health and cfg.health.offsetLeft) or {}
 		if nameAnchor and nameAnchor:find("RIGHT") then
@@ -3767,8 +3874,8 @@ function GF:LayoutButton(self)
 		end
 		local nameOffset = tc.nameOffset or {}
 		local namePad = (nameAnchor and nameAnchor:find("LEFT")) and rolePad or 0
-		local nameX = (nameOffset.x ~= nil and nameOffset.x or baseOffset.x or 6) + namePad
-		local nameY = nameOffset.y ~= nil and nameOffset.y or baseOffset.y or 0
+		local nameX = ((nameOffset.x ~= nil and nameOffset.x or baseOffset.x or 6) * contentScale) + namePad
+		local nameY = (nameOffset.y ~= nil and nameOffset.y or baseOffset.y or 0) * contentScale
 		local nameAnchorFrame = layoutAnchor or st.health
 		if nameAnchor and nameAnchor:find("BOTTOM") then nameAnchorFrame = st.health or nameAnchorFrame end
 		if GFH and GFH.SnapPointOffsets then
@@ -3791,10 +3898,10 @@ function GF:LayoutButton(self)
 			local rightX, rightY
 			if GFH and GFH.SnapPointOffsets then
 				leftX, leftY = GFH.SnapPointOffsets(nameAnchorFrame, leftPoint, nameX, nameY, scale)
-				rightX, rightY = GFH.SnapPointOffsets(nameAnchorFrame, rightPoint, -4, nameY, scale)
+				rightX, rightY = GFH.SnapPointOffsets(nameAnchorFrame, rightPoint, -4 * contentScale, nameY, scale)
 			else
 				leftX, leftY = roundToPixel(nameX, scale), roundToPixel(nameY, scale)
-				rightX, rightY = roundToPixel(-4, scale), roundToPixel(nameY, scale)
+				rightX, rightY = roundToPixel(-4 * contentScale, scale), roundToPixel(nameY, scale)
 			end
 			st.nameText:SetPoint(leftPoint, nameAnchorFrame, leftPoint, leftX, leftY)
 			st.nameText:SetPoint(rightPoint, nameAnchorFrame, rightPoint, rightX, rightY)
@@ -3818,7 +3925,7 @@ function GF:LayoutButton(self)
 			local nameCfg = st._nameLimitCfg or {}
 			nameCfg.nameMaxChars = tc.nameMaxChars
 			nameCfg.font = tc.font or hc.font
-			nameCfg.fontSize = tc.fontSize or hc.fontSize or 12
+			nameCfg.fontSize = GF.ScaleContentValue(self, tc.fontSize or hc.fontSize or 12, cfg, 1)
 			nameCfg.fontOutline = tc.fontOutline or hc.fontOutline
 			st._nameLimitCfg = nameCfg
 			UFHelper.applyNameCharLimit(st, nameCfg, nil)
@@ -3829,21 +3936,18 @@ function GF:LayoutButton(self)
 		if st.levelText.SetWordWrap then st.levelText:SetWordWrap(false) end
 		if st.levelText.SetNonSpaceWrap then st.levelText:SetNonSpaceWrap(false) end
 		if st.levelText.SetMaxLines then st.levelText:SetMaxLines(1) end
-		if UFHelper and UFHelper.applyFont then
-			local hc = cfg.health or {}
-			local levelFont = sc.levelFont or tc.font or hc.font
-			local levelFontSize = sc.levelFontSize or tc.fontSize or hc.fontSize or 12
-			local levelOutline = sc.levelFontOutline or tc.fontOutline or hc.fontOutline
-			UFHelper.applyFont(st.levelText, levelFont, levelFontSize, levelOutline)
-		end
+		local levelFont = sc.levelFont or tc.font or hc.font
+		local levelFontSize = GF.ScaleContentValue(self, sc.levelFontSize or tc.fontSize or hc.fontSize or 12, cfg, 1)
+		local levelOutline = sc.levelFontOutline or tc.fontOutline or hc.fontOutline
+		GF.ApplyScaledFont(self, st.levelText, levelFont, levelFontSize, levelOutline, cfg)
 		local anchor = sc.levelAnchor or "RIGHT"
 		local levelOffset = sc.levelOffset or {}
-		if st.levelText.SetWidth then st.levelText:SetWidth(roundToPixel((sc.levelWidth or 26), scale)) end
+		if st.levelText.SetWidth then st.levelText:SetWidth(roundToPixel((sc.levelWidth or 26) * contentScale, scale)) end
 		local levelX, levelY
 		if GFH and GFH.SnapPointOffsets then
-			levelX, levelY = GFH.SnapPointOffsets(st.health, anchor, levelOffset.x or 0, levelOffset.y or 0, scale)
+			levelX, levelY = GFH.SnapPointOffsets(st.health, anchor, (levelOffset.x or 0) * contentScale, (levelOffset.y or 0) * contentScale, scale)
 		else
-			levelX, levelY = roundToPixel(levelOffset.x or 0, scale), roundToPixel(levelOffset.y or 0, scale)
+			levelX, levelY = roundToPixel((levelOffset.x or 0) * contentScale, scale), roundToPixel((levelOffset.y or 0) * contentScale, scale)
 		end
 		st.levelText:ClearAllPoints()
 		st.levelText:SetPoint(anchor, st.health, anchor, levelX, levelY)
@@ -3862,9 +3966,15 @@ function GF:LayoutButton(self)
 		if st.raidIcon.GetParent and st.raidIcon:GetParent() ~= indicatorLayer then st.raidIcon:SetParent(indicatorLayer) end
 		if st.raidIcon.SetDrawLayer then st.raidIcon:SetDrawLayer("OVERLAY", 7) end
 		if ric.enabled ~= false then
-			local size = ric.size or 18
+			local size = GF.ScaleContentValue(self, ric.size or 18, cfg, 1)
 			st.raidIcon:ClearAllPoints()
-			st.raidIcon:SetPoint(ric.point or "TOP", layoutAnchor, ric.relativePoint or ric.point or "TOP", roundToPixel(ric.x or 0, scale), roundToPixel(ric.y or -2, scale))
+			st.raidIcon:SetPoint(
+				ric.point or "TOP",
+				layoutAnchor,
+				ric.relativePoint or ric.point or "TOP",
+				roundToPixel((ric.x or 0) * contentScale, scale),
+				roundToPixel((ric.y or -2) * contentScale, scale)
+			)
 			st.raidIcon:SetSize(size, size)
 		else
 			st.raidIcon:Hide()
@@ -3887,9 +3997,9 @@ function GF:LayoutButton(self)
 		if st.leaderIcon.GetParent and st.leaderIcon:GetParent() ~= indicatorLayer then st.leaderIcon:SetParent(indicatorLayer) end
 		if st.leaderIcon.SetDrawLayer then st.leaderIcon:SetDrawLayer("OVERLAY", 7) end
 		if lc.enabled ~= false then
-			local size = lc.size or 12
+			local size = GF.ScaleContentValue(self, lc.size or 12, cfg, 1)
 			st.leaderIcon:ClearAllPoints()
-			st.leaderIcon:SetPoint(lc.point or "TOPLEFT", st.health, lc.relativePoint or "TOPLEFT", roundToPixel(lc.x or 0, scale), roundToPixel(lc.y or 0, scale))
+			st.leaderIcon:SetPoint(lc.point or "TOPLEFT", st.health, lc.relativePoint or "TOPLEFT", roundToPixel((lc.x or 0) * contentScale, scale), roundToPixel((lc.y or 0) * contentScale, scale))
 			st.leaderIcon:SetSize(size, size)
 		else
 			st.leaderIcon:Hide()
@@ -3902,9 +4012,15 @@ function GF:LayoutButton(self)
 		if st.assistIcon.GetParent and st.assistIcon:GetParent() ~= indicatorLayer then st.assistIcon:SetParent(indicatorLayer) end
 		if st.assistIcon.SetDrawLayer then st.assistIcon:SetDrawLayer("OVERLAY", 7) end
 		if acfg.enabled ~= false then
-			local size = acfg.size or 12
+			local size = GF.ScaleContentValue(self, acfg.size or 12, cfg, 1)
 			st.assistIcon:ClearAllPoints()
-			st.assistIcon:SetPoint(acfg.point or "TOPLEFT", st.health, acfg.relativePoint or "TOPLEFT", roundToPixel(acfg.x or 0, scale), roundToPixel(acfg.y or 0, scale))
+			st.assistIcon:SetPoint(
+				acfg.point or "TOPLEFT",
+				st.health,
+				acfg.relativePoint or "TOPLEFT",
+				roundToPixel((acfg.x or 0) * contentScale, scale),
+				roundToPixel((acfg.y or 0) * contentScale, scale)
+			)
 			st.assistIcon:SetSize(size, size)
 		else
 			st.assistIcon:Hide()
@@ -3917,9 +4033,15 @@ function GF:LayoutButton(self)
 		if st.readyCheckIcon.GetParent and st.readyCheckIcon:GetParent() ~= indicatorLayer then st.readyCheckIcon:SetParent(indicatorLayer) end
 		if st.readyCheckIcon.SetDrawLayer then st.readyCheckIcon:SetDrawLayer("OVERLAY", 7) end
 		if rcfg.enabled ~= false then
-			local size = rcfg.size or 16
+			local size = GF.ScaleContentValue(self, rcfg.size or 16, cfg, 1)
 			st.readyCheckIcon:ClearAllPoints()
-			st.readyCheckIcon:SetPoint(rcfg.point or "CENTER", layoutAnchor, rcfg.relativePoint or rcfg.point or "CENTER", roundToPixel(rcfg.x or 0, scale), roundToPixel(rcfg.y or 0, scale))
+			st.readyCheckIcon:SetPoint(
+				rcfg.point or "CENTER",
+				layoutAnchor,
+				rcfg.relativePoint or rcfg.point or "CENTER",
+				roundToPixel((rcfg.x or 0) * contentScale, scale),
+				roundToPixel((rcfg.y or 0) * contentScale, scale)
+			)
 			st.readyCheckIcon:SetSize(size, size)
 		else
 			st.readyCheckIcon:Hide()
@@ -3932,9 +4054,15 @@ function GF:LayoutButton(self)
 		if st.summonIcon.GetParent and st.summonIcon:GetParent() ~= indicatorLayer then st.summonIcon:SetParent(indicatorLayer) end
 		if st.summonIcon.SetDrawLayer then st.summonIcon:SetDrawLayer("OVERLAY", 7) end
 		if scfg.enabled ~= false then
-			local size = scfg.size or 16
+			local size = GF.ScaleContentValue(self, scfg.size or 16, cfg, 1)
 			st.summonIcon:ClearAllPoints()
-			st.summonIcon:SetPoint(scfg.point or "CENTER", layoutAnchor, scfg.relativePoint or scfg.point or "CENTER", roundToPixel(scfg.x or 0, scale), roundToPixel(scfg.y or 0, scale))
+			st.summonIcon:SetPoint(
+				scfg.point or "CENTER",
+				layoutAnchor,
+				scfg.relativePoint or scfg.point or "CENTER",
+				roundToPixel((scfg.x or 0) * contentScale, scale),
+				roundToPixel((scfg.y or 0) * contentScale, scale)
+			)
 			st.summonIcon:SetSize(size, size)
 		else
 			st.summonIcon:Hide()
@@ -3947,9 +4075,15 @@ function GF:LayoutButton(self)
 		if st.resurrectIcon.GetParent and st.resurrectIcon:GetParent() ~= indicatorLayer then st.resurrectIcon:SetParent(indicatorLayer) end
 		if st.resurrectIcon.SetDrawLayer then st.resurrectIcon:SetDrawLayer("OVERLAY", 7) end
 		if rcfg.enabled ~= false then
-			local size = rcfg.size or 16
+			local size = GF.ScaleContentValue(self, rcfg.size or 16, cfg, 1)
 			st.resurrectIcon:ClearAllPoints()
-			st.resurrectIcon:SetPoint(rcfg.point or "CENTER", layoutAnchor, rcfg.relativePoint or rcfg.point or "CENTER", roundToPixel(rcfg.x or 0, scale), roundToPixel(rcfg.y or 0, scale))
+			st.resurrectIcon:SetPoint(
+				rcfg.point or "CENTER",
+				layoutAnchor,
+				rcfg.relativePoint or rcfg.point or "CENTER",
+				roundToPixel((rcfg.x or 0) * contentScale, scale),
+				roundToPixel((rcfg.y or 0) * contentScale, scale)
+			)
 			st.resurrectIcon:SetSize(size, size)
 		else
 			st.resurrectIcon:Hide()
@@ -3962,9 +4096,15 @@ function GF:LayoutButton(self)
 		if st.phaseIcon.GetParent and st.phaseIcon:GetParent() ~= indicatorLayer then st.phaseIcon:SetParent(indicatorLayer) end
 		if st.phaseIcon.SetDrawLayer then st.phaseIcon:SetDrawLayer("OVERLAY", 7) end
 		if pcfg.enabled ~= false then
-			local size = pcfg.size or 14
+			local size = GF.ScaleContentValue(self, pcfg.size or 14, cfg, 1)
 			st.phaseIcon:ClearAllPoints()
-			st.phaseIcon:SetPoint(pcfg.point or "TOPLEFT", layoutAnchor, pcfg.relativePoint or pcfg.point or "TOPLEFT", roundToPixel(pcfg.x or 0, scale), roundToPixel(pcfg.y or 0, scale))
+			st.phaseIcon:SetPoint(
+				pcfg.point or "TOPLEFT",
+				layoutAnchor,
+				pcfg.relativePoint or pcfg.point or "TOPLEFT",
+				roundToPixel((pcfg.x or 0) * contentScale, scale),
+				roundToPixel((pcfg.y or 0) * contentScale, scale)
+			)
 			st.phaseIcon:SetSize(size, size)
 		else
 			st.phaseIcon:Hide()
@@ -4820,6 +4960,7 @@ function GF:LayoutAuras(self)
 	local cfg = self._eqolCfg or getCfg(self._eqolGroupKind or "party")
 	local ac = cfg and cfg.auras
 	if not ac then return end
+	local contentScale = GF.GetDynamicContentScale(self, cfg)
 	GFH.SyncAurasEnabled(cfg)
 	local wantsAuras = (ac.buff and ac.buff.enabled) or (ac.debuff and ac.debuff.enabled) or (ac.externals and ac.externals.enabled)
 	if not wantsAuras then return end
@@ -4840,14 +4981,14 @@ function GF:LayoutAuras(self)
 			st._auraLayoutKey[kindKey] = nil
 		else
 			local anchorPoint, primary, secondary = resolveAuraGrowth(typeCfg.anchorPoint, typeCfg.growth, typeCfg.growthX, typeCfg.growthY)
-			local size = tonumber(typeCfg.size) or 16
-			local spacing = tonumber(typeCfg.spacing) or 2
+			local size = (tonumber(typeCfg.size) or 16) * contentScale
+			local spacing = (tonumber(typeCfg.spacing) or 2) * contentScale
 			local perRow = tonumber(typeCfg.perRow) or tonumber(typeCfg.max) or 6
 			if perRow < 1 then perRow = 1 end
 			local maxCount = tonumber(typeCfg.max) or perRow
 			if maxCount < 0 then maxCount = 0 end
-			local x = tonumber(typeCfg.x) or 0
-			local y = tonumber(typeCfg.y) or 0
+			local x = (tonumber(typeCfg.x) or 0) * contentScale
+			local y = (tonumber(typeCfg.y) or 0) * contentScale
 			local scale = GFH.GetEffectiveScale(parent)
 			size = roundToPixel(size, scale)
 			spacing = roundToPixel(spacing, scale)
@@ -4924,21 +5065,21 @@ function GF:LayoutAuras(self)
 			style.blizzardDispelBorder = typeCfg.showDispelIcon == true
 			if typeCfg.showCooldownText ~= nil then style.showCooldownText = typeCfg.showCooldownText end
 			style.cooldownAnchor = typeCfg.cooldownAnchor
-			style.cooldownOffset = typeCfg.cooldownOffset
+			style.cooldownOffset = GF.ScaleOffset(typeCfg.cooldownOffset, contentScale)
 			style.cooldownFont = typeCfg.cooldownFont
 			style.countFont = typeCfg.countFont
-			style.countFontSize = typeCfg.countFontSize
+			style.countFontSize = GF.ScaleContentValue(self, typeCfg.countFontSize, cfg, 1)
 			style.countFontOutline = typeCfg.countFontOutline
-			style.cooldownFontSize = typeCfg.cooldownFontSize
+			style.cooldownFontSize = GF.ScaleContentValue(self, typeCfg.cooldownFontSize, cfg, 1)
 			style.cooldownFontOutline = typeCfg.cooldownFontOutline
 			if typeCfg.showStacks ~= nil then style.showStacks = typeCfg.showStacks end
 			style.countAnchor = typeCfg.countAnchor
-			style.countOffset = typeCfg.countOffset
+			style.countOffset = GF.ScaleOffset(typeCfg.countOffset, contentScale)
 			style.showDR = typeCfg.showDR == true
 			style.drAnchor = typeCfg.drAnchor
-			style.drOffset = typeCfg.drOffset
+			style.drOffset = GF.ScaleOffset(typeCfg.drOffset, contentScale)
 			style.drFont = typeCfg.drFont
-			style.drFontSize = typeCfg.drFontSize
+			style.drFontSize = GF.ScaleContentValue(self, typeCfg.drFontSize, cfg, 1)
 			style.drFontOutline = typeCfg.drFontOutline
 			style.drColor = typeCfg.drColor
 			st._auraStyle[kindKey] = style
@@ -5773,12 +5914,13 @@ function GF:UpdateStatusText(self)
 	end
 	local scale = GFH.GetEffectiveScale(self)
 	if not scale or scale <= 0 then scale = (UIParent and UIParent.GetEffectiveScale and UIParent:GetEffectiveScale()) or 1 end
+	local contentScale = GF.GetDynamicContentScale(self, cfg)
 
 	if statusFs then
 		if statusTag then
 			local style = resolveStatusTextStyle(cfg, def, hc)
-			if UFHelper and UFHelper.applyFont then UFHelper.applyFont(statusFs, style.font, style.fontSize or 12, style.fontOutline) end
-			applyStatusTextAnchor(st, style.anchor, style.offset, scale, GF.GetLayoutAnchorFrame(st, self) or self, statusFs)
+			GF.ApplyScaledFont(self, statusFs, style.font, style.fontSize or 12, style.fontOutline, cfg)
+			applyStatusTextAnchor(st, style.anchor, GF.ScaleOffset(style.offset, contentScale), scale, GF.GetLayoutAnchorFrame(st, self) or self, statusFs)
 			local r, g, b, a = unpackColor(style.color, GFH.COLOR_WHITE)
 			statusFs:SetText(statusTag)
 			statusFs:SetTextColor(r, g, b, a)
@@ -5792,8 +5934,8 @@ function GF:UpdateStatusText(self)
 	if groupFs then
 		if groupTag then
 			local style = resolveGroupNumberStyle(cfg, def, hc)
-			if UFHelper and UFHelper.applyFont then UFHelper.applyFont(groupFs, style.font, style.fontSize or 12, style.fontOutline) end
-			applyStatusTextAnchor(st, style.anchor, style.offset, scale, GF.GetLayoutAnchorFrame(st, self) or self, groupFs)
+			GF.ApplyScaledFont(self, groupFs, style.font, style.fontSize or 12, style.fontOutline, cfg)
+			applyStatusTextAnchor(st, style.anchor, GF.ScaleOffset(style.offset, contentScale), scale, GF.GetLayoutAnchorFrame(st, self) or self, groupFs)
 			local r, g, b, a = unpackColor(style.color, GFH.COLOR_WHITE)
 			groupFs:SetText(groupTag)
 			groupFs:SetTextColor(r, g, b, a)
@@ -5968,10 +6110,12 @@ local function updateGroupIndicatorsForFrames(container, frames, cfg, def, isPre
 			local target = entry.frame
 			local anchorTarget = entry.anchorTarget or target
 			if anchorTarget then
+				local targetCfg = target._eqolCfg or getCfg(target._eqolGroupKind or "party")
+				local contentScale = GF.GetDynamicContentScale(target, targetCfg)
 				if fs.GetParent and fs:GetParent() ~= overlayParent then fs:SetParent(overlayParent) end
 				if fs.SetDrawLayer then fs:SetDrawLayer("OVERLAY", 7) end
-				if UFHelper and UFHelper.applyFont then UFHelper.applyFont(fs, style.font, style.fontSize or 12, style.fontOutline) end
-				applyGroupIndicatorAnchor(fs, style.anchor, style.offset, scale, anchorTarget)
+				GF.ApplyScaledFont(target, fs, style.font, style.fontSize or 12, style.fontOutline, targetCfg)
+				applyGroupIndicatorAnchor(fs, style.anchor, GF.ScaleOffset(style.offset, contentScale), scale, anchorTarget)
 				local r, g, b, a = unpackColor(style.color, GFH.COLOR_WHITE)
 				fs:SetText(formatGroupNumber(subgroup, format))
 				fs:SetTextColor(r, g, b, a)
@@ -6224,6 +6368,7 @@ function GF:UpdatePrivateAuras(self)
 	local cfg = self._eqolCfg or getCfg(kind)
 	local def = DEFAULTS[kind] or {}
 	local pcfg = (cfg and cfg.privateAuras) or def.privateAuras
+	local runtimePrivateCfg = GF.GetScaledPrivateAuraConfig(self, pcfg)
 	local privateAuraParent = GF.GetLayoutAnchorFrame(st, st.health or self) or self
 	local privateAuraLevelParent = st.statusIconLayer or st.healthTextLayer or privateAuraParent or st.health or st.barGroup or self
 	if not st.privateAuras then
@@ -6234,7 +6379,7 @@ function GF:UpdatePrivateAuras(self)
 	if st.privateAuras.GetParent and privateAuraParent and st.privateAuras:GetParent() ~= privateAuraParent then st.privateAuras:SetParent(privateAuraParent) end
 	if not (pcfg and pcfg.enabled == true) then
 		if UFHelper and UFHelper.RemovePrivateAuras then UFHelper.RemovePrivateAuras(st.privateAuras) end
-		if UFHelper and UFHelper.UpdatePrivateAuraSound then UFHelper.UpdatePrivateAuraSound(st.privateAuras, nil, pcfg or {}) end
+		if UFHelper and UFHelper.UpdatePrivateAuraSound then UFHelper.UpdatePrivateAuraSound(st.privateAuras, nil, runtimePrivateCfg or pcfg or {}) end
 		if st.privateAuras and st.privateAuras.Hide then st.privateAuras:Hide() end
 		return
 	end
@@ -6242,11 +6387,11 @@ function GF:UpdatePrivateAuras(self)
 	local showSample = inEditMode == true and GF._editModeSampleAuras ~= false
 	if inEditMode and showSample == false then
 		if UFHelper and UFHelper.RemovePrivateAuras then UFHelper.RemovePrivateAuras(st.privateAuras) end
-		if UFHelper and UFHelper.UpdatePrivateAuraSound then UFHelper.UpdatePrivateAuraSound(st.privateAuras, nil, pcfg or {}) end
+		if UFHelper and UFHelper.UpdatePrivateAuraSound then UFHelper.UpdatePrivateAuraSound(st.privateAuras, nil, runtimePrivateCfg or pcfg or {}) end
 		if st.privateAuras and st.privateAuras.Hide then st.privateAuras:Hide() end
 		return
 	end
-	UFHelper.ApplyPrivateAuras(st.privateAuras, self.unit, pcfg, privateAuraParent, privateAuraLevelParent, showSample)
+	UFHelper.ApplyPrivateAuras(st.privateAuras, self.unit, runtimePrivateCfg or pcfg, privateAuraParent, privateAuraLevelParent, showSample)
 end
 
 function GF:UpdateHealthValue(self, unit, st)
@@ -19789,6 +19934,36 @@ local function buildEditModeSettings(kind, editModeId)
 			end,
 		}
 		settings[#settings + 1] = {
+			name = L["Preserve content size"] or "Preserve content size",
+			kind = SettingType.Slider,
+			allowInput = true,
+			field = "dynamicScaleMin",
+			minValue = 0,
+			maxValue = 1,
+			valueStep = 0.05,
+			formatter = function(value)
+				if (tonumber(value) or 0) <= 0 then return L["Off"] or "Off" end
+				return formatSliderDecimal(value)
+			end,
+			default = (DEFAULTS.raid and DEFAULTS.raid.dynamicScaleMin) or 0,
+			parentId = "raid",
+			get = function()
+				local cfg = getCfg(kind)
+				return GF.GetDynamicContentScaleAmount(cfg or DEFAULTS.raid)
+			end,
+			set = function(_, value)
+				local cfg = getCfg(kind)
+				if not cfg then return end
+				cfg.dynamicScaleMin = clampNumber(value, 0, 1, cfg.dynamicScaleMin or 0)
+				if EditMode and EditMode.SetValue then EditMode:SetValue(editModeId, "dynamicScaleMin", cfg.dynamicScaleMin, nil, true) end
+				GF:ApplyHeaderAttributes(kind)
+				if GF._previewActive and GF._previewActive[kind] then GF:UpdatePreviewLayout(kind) end
+				refreshAllPrivateAuras()
+				GF:RefreshGroupIndicators()
+			end,
+			isShown = function() return kind == "raid" end,
+		}
+		settings[#settings + 1] = {
 			name = L["Column spacing"] or "Column spacing",
 			kind = SettingType.Slider,
 			allowInput = true,
@@ -21263,6 +21438,8 @@ local function applyEditModeData(kind, data)
 			local v = clampNumber(data.maxColumns, 1, 10, cfg.maxColumns or 8)
 			cfg.maxColumns = floor(v + 0.5)
 		end
+		if data.dynamicScaleMin ~= nil then cfg.dynamicScaleMin = clampNumber(data.dynamicScaleMin, 0, 1, cfg.dynamicScaleMin or 0) end
+		if data.dynamicContentScale ~= nil and data.dynamicScaleMin == nil then cfg.dynamicScaleMin = data.dynamicContentScale and 1 or 0 end
 		if data.columnSpacing ~= nil then cfg.columnSpacing = clampNumber(data.columnSpacing, 0, 40, cfg.columnSpacing or 0) end
 	end
 
@@ -21280,6 +21457,10 @@ local function applyEditModeData(kind, data)
 	local refreshRangeFade = data.rangeFadeEnabled ~= nil or data.rangeFadeAlpha ~= nil or data.rangeFadeOfflineAlpha ~= nil
 
 	GF:ApplyHeaderAttributes(kind)
+	if data.dynamicScaleMin ~= nil or data.dynamicContentScale ~= nil then
+		refreshAllPrivateAuras()
+		if kind == "raid" then GF:RefreshGroupIndicators() end
+	end
 	if data.hideInClientScene ~= nil then GF:RefreshClientSceneVisibility() end
 	if refreshNames then GF:RefreshNames() end
 	if refreshAuras then refreshAllAuras() end
@@ -21432,6 +21613,7 @@ function GF:EnsureEditMode()
 				hideInClientScene = (cfg.hideInClientScene ~= nil and cfg.hideInClientScene == true) or ((cfg.hideInClientScene == nil) and (def.hideInClientScene ~= false)),
 				unitsPerColumn = cfg.unitsPerColumn or (DEFAULTS[kind] and DEFAULTS[kind].unitsPerColumn) or (DEFAULTS.raid and DEFAULTS.raid.unitsPerColumn) or 5,
 				maxColumns = cfg.maxColumns or (DEFAULTS[kind] and DEFAULTS[kind].maxColumns) or (DEFAULTS.raid and DEFAULTS.raid.maxColumns) or 8,
+				dynamicScaleMin = GF.GetDynamicContentScaleAmount(cfg),
 				columnSpacing = cfg.columnSpacing or (DEFAULTS[kind] and DEFAULTS[kind].columnSpacing) or (DEFAULTS.raid and DEFAULTS.raid.columnSpacing) or 0,
 				customSortEnabled = resolveSortMethod(cfg) == "NAMELIST",
 				customSortSeparateMeleeRanged = (cfg.customSort and cfg.customSort.separateMeleeRanged) == true,

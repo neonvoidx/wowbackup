@@ -1,5 +1,39 @@
 # Changelog
 
+## [9.8.0] - 2026-03-19
+
+### ✨ Added
+
+- Private Auras (Standalone): Added a new standalone private aura anchor that can be enabled independently from unit and group frames.
+- Character Panel / Inventory (Upgrade Tracks): Added upgrade track text for equipped items and equippable bag items, including localized track abbreviations, `current/max` progress display, configurable placement, and bag-filter support for `Explorer`, `Adventurer`, `Veteran`, `Champion`, `Hero`, and `Myth`.
+- Group Frames (Raid / Dynamic Scaling): Added a `Preserve content size` slider for dynamically scaled raid frames. Raid frame scaling stays unchanged, while text, indicators, buffs/debuffs, and Private Auras can now compensate their size independently. Default is `Off`.
+
+### 🔄 Changed
+
+- Character Panel (Enchant Display): Reworked the enchant display dropdown into combined applied/missing/icon modes. The old separate missing-enchant overlay checkbox was removed, and overlay behavior is now selected directly from the dropdown.
+- Character Panel / Inventory (Upgrade Tracks): Switched upgrade track detection from tooltip parsing to `C_Item.GetItemUpgradeInfo()`, so track IDs, labels, and upgrade progress now come directly from the API instead of tooltip scans.
+
+### 🐛 Fixed
+
+- Cooldown Panels (Racial spell variants): Fixed multi-ID racials like `Arcane Torrent`, `Blood Fury`, and `Gift of the Naaru` so dragged/imported entries now resolve to the correct known variant on the current character, duplicate variants are no longer added, and existing duplicate entries are cleaned up automatically on the next load/editor refresh.
+
+---
+
+## [9.7.0] - 2026-03-19
+
+### 🔄 Changed
+
+- Private Auras: Increased the supported private aura icon size limit to `60`.
+- Private Auras: Improved large private aura rendering so the Blizzard border now scales with the configured icon size instead of staying visually too small on oversized icons.
+
+### 🐛 Fixed
+
+- Castbars: Fixed a bug with ghost casts
+- Unit Frames (Boss): Fixed boss frames not always appearing correctly when boss units became targetable after the initial encounter engage event.
+- Private Auras (Tooltip / Hover): Fixed private aura tooltips interfering with mouse hover and click-through behavior on unit and group frames.
+
+---
+
 ## [9.6.1] - 2026-03-18
 
 ### 🐛 Fixed

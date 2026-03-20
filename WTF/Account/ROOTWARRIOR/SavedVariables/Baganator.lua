@@ -26,13 +26,13 @@ BAGANATOR_CONFIG = {
 ["currencyID"] = 3028,
 },
 {
-["currencyID"] = 3341,
+["currencyID"] = 3345,
 },
 {
-["currencyID"] = 3383,
+["currencyID"] = 3343,
 },
 {
-["currencyID"] = 2123,
+["currencyID"] = 3347,
 },
 },
 ["Hellavator-Tichondrius"] = {
@@ -520,8 +520,8 @@ BAGANATOR_CONFIG = {
 },
 ["bank_view_position"] = {
 "BOTTOMLEFT",
-873.3334350585938,
-472.5000610351563,
+928.3333129882812,
+388.3335266113281,
 },
 ["sort_start_at_bottom"] = false,
 ["recent_include_owned"] = false,
@@ -552,8 +552,8 @@ BAGANATOR_CONFIG = {
 ["category_default_import"] = 3,
 ["bag_view_position"] = {
 "BOTTOMRIGHT",
--606.6611328125,
-231.6665649414063,
+-9.16064453125,
+16.66644477844238,
 },
 ["character_bank_current_tab"] = 0,
 ["sort_ignore_bank_slots_count"] = {
@@ -722,10 +722,8 @@ BAGANATOR_CONFIG = {
 ["13"] = {
 ["priority"] = 0,
 },
-["trash"] = {
-["addedItems"] = {
-["i:24999"] = true,
-},
+["3"] = {
+["priority"] = 0,
 },
 ["130"] = {
 ["priority"] = 0,
@@ -911,8 +909,64 @@ BAGANATOR_CONFIG = {
 ["129"] = {
 ["priority"] = 0,
 },
-["139"] = {
-["priority"] = 1,
+["190"] = {
+["priority"] = 0,
+["addedItems"] = {
+["i:229129"] = true,
+["i:224784"] = true,
+["i:228361"] = true,
+["i:232877"] = true,
+["i:225572"] = true,
+["i:226264"] = true,
+["i:139137"] = true,
+["i:226505"] = true,
+["i:228774"] = true,
+["i:217013"] = true,
+["i:217011"] = true,
+["i:224573"] = true,
+["i:226147"] = true,
+["i:232372"] = true,
+["i:132892"] = true,
+["i:233014"] = true,
+["i:220776"] = true,
+["i:226194"] = true,
+["i:226036"] = true,
+["i:220520"] = true,
+["i:213777"] = true,
+["i:228741"] = true,
+["i:225571"] = true,
+["i:208091"] = true,
+["i:226263"] = true,
+["i:225249"] = true,
+["i:227784"] = true,
+["i:226273"] = true,
+["i:221269"] = true,
+["i:89125"] = true,
+["i:224547"] = true,
+["i:232471"] = true,
+["i:209024"] = true,
+["i:225247"] = true,
+["i:225896"] = true,
+["i:226103"] = true,
+["i:217012"] = true,
+["i:227450"] = true,
+["i:226045"] = true,
+["i:225897"] = true,
+["i:201391"] = true,
+["i:220773"] = true,
+["i:225573"] = true,
+["i:229355"] = true,
+["i:226100"] = true,
+["i:227783"] = true,
+["i:227792"] = true,
+["i:229359"] = true,
+["i:226193"] = true,
+["i:235548"] = true,
+["i:226146"] = true,
+["i:116762"] = true,
+["i:225900"] = true,
+["i:220767"] = true,
+},
 },
 ["134"] = {
 ["priority"] = 0,
@@ -1031,8 +1085,10 @@ BAGANATOR_CONFIG = {
 ["i:203701"] = true,
 },
 },
-["3"] = {
-["priority"] = 0,
+["trash"] = {
+["addedItems"] = {
+["i:24999"] = true,
+},
 },
 ["2"] = {
 ["priority"] = 0,
@@ -1167,7 +1223,8 @@ BAGANATOR_CONFIG = {
 ["44"] = {
 ["priority"] = 0,
 },
-["214"] = {
+["195"] = {
+["showGroupPrefix"] = true,
 ["priority"] = 0,
 },
 ["189"] = {
@@ -1239,8 +1296,8 @@ BAGANATOR_CONFIG = {
 ["144"] = {
 ["priority"] = 0,
 },
-["default_profession"] = {
-["priority"] = -1,
+["191"] = {
+["priority"] = 0,
 },
 ["101"] = {
 ["priority"] = 3,
@@ -1330,14 +1387,14 @@ BAGANATOR_CONFIG = {
 ["194"] = {
 ["priority"] = 0,
 },
-["17"] = {
+["214"] = {
 ["priority"] = 0,
 },
 ["177"] = {
 ["showGroupPrefix"] = true,
 ["priority"] = 0,
 },
-["191"] = {
+["17"] = {
 ["priority"] = 0,
 },
 ["158"] = {
@@ -1406,9 +1463,8 @@ BAGANATOR_CONFIG = {
 ["priority"] = -1,
 ["showGroupPrefix"] = false,
 },
-["195"] = {
-["showGroupPrefix"] = true,
-["priority"] = 0,
+["default_profession"] = {
+["priority"] = -1,
 },
 ["178"] = {
 ["showGroupPrefix"] = true,
@@ -1857,64 +1913,8 @@ BAGANATOR_CONFIG = {
 ["78"] = {
 ["priority"] = 0,
 },
-["190"] = {
-["priority"] = 0,
-["addedItems"] = {
-["i:229129"] = true,
-["i:224784"] = true,
-["i:228361"] = true,
-["i:232877"] = true,
-["i:225572"] = true,
-["i:226264"] = true,
-["i:139137"] = true,
-["i:226505"] = true,
-["i:228774"] = true,
-["i:217013"] = true,
-["i:217011"] = true,
-["i:224573"] = true,
-["i:226147"] = true,
-["i:232372"] = true,
-["i:132892"] = true,
-["i:233014"] = true,
-["i:220776"] = true,
-["i:226194"] = true,
-["i:226036"] = true,
-["i:220520"] = true,
-["i:213777"] = true,
-["i:228741"] = true,
-["i:225571"] = true,
-["i:208091"] = true,
-["i:226263"] = true,
-["i:225249"] = true,
-["i:227784"] = true,
-["i:226273"] = true,
-["i:221269"] = true,
-["i:89125"] = true,
-["i:224547"] = true,
-["i:232471"] = true,
-["i:209024"] = true,
-["i:225247"] = true,
-["i:225896"] = true,
-["i:226103"] = true,
-["i:217012"] = true,
-["i:227450"] = true,
-["i:226045"] = true,
-["i:225897"] = true,
-["i:201391"] = true,
-["i:220773"] = true,
-["i:225573"] = true,
-["i:229355"] = true,
-["i:226100"] = true,
-["i:227783"] = true,
-["i:227792"] = true,
-["i:229359"] = true,
-["i:226193"] = true,
-["i:235548"] = true,
-["i:226146"] = true,
-["i:116762"] = true,
-["i:225900"] = true,
-["i:220767"] = true,
-},
+["139"] = {
+["priority"] = 1,
 },
 ["184"] = {
 ["priority"] = 0,
@@ -1986,7 +1986,7 @@ BAGANATOR_CONFIG = {
 },
 ["add_to_category_buttons_2"] = "drag+alt",
 ["view_type"] = "unset",
-["bank_current_tab"] = 2,
+["bank_current_tab"] = 1,
 ["icon_text_quality_colors"] = true,
 ["guild_current_tab"] = 0,
 ["icon_text_font_size"] = 14,

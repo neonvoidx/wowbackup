@@ -102,9 +102,12 @@ local function onToPlayerArt()
   local healthTextLeft = addonTable.globalUnitVariables.player.healthTextLeft
   local healthTextMiddle = addonTable.globalUnitVariables.player.healthTextMiddle
   local healthTextRight = addonTable.globalUnitVariables.player.healthTextRight
-  healthTextLeft:SetPoint("LEFT", healthBar, "LEFT")
-  healthTextMiddle:SetPoint("CENTER", healthBar, "CENTER")
-  healthTextRight:SetPoint("RIGHT", healthBar, "RIGHT")
+  local rel_region = PlayerFrame.PlayerFrameContent.PlayerFrameContentMain.HealthBarsContainer
+  --local point, rel_region, rel_point, off_x, off_y = text:GetPoint(1) -- offset is a secret value so no calculation here.
+  --print(point, rel_region:GetDebugName(), rel_point, off_x, off_y)
+  healthTextLeft:SetPoint("LEFT", rel_region, "LEFT", 2, -5)
+  healthTextMiddle:SetPoint("CENTER", rel_region, "CENTER", 0, -5)
+  healthTextRight:SetPoint("RIGHT", rel_region, "RIGHT", -2, -5)
 end
 
 local function onToVehicleArt()

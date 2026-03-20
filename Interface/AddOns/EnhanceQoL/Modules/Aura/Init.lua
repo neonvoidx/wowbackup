@@ -58,5 +58,39 @@ function addon.Aura.functions.InitDB()
 	addon.db["_cooldownPanelsDebugLog"] = nil
 	addon.db["debugCooldownPanelsSession"] = nil
 
+	init("standalonePrivateAuras", {
+		version = 1,
+		enabled = false,
+		anchor = {
+			point = "CENTER",
+			relativePoint = "CENTER",
+			x = 0,
+			y = -140,
+		},
+		icon = {
+			amount = 3,
+			size = 64,
+			minSize = 10,
+			maxSize = 256,
+			point = "RIGHT",
+			offset = 4,
+		},
+		layout = {
+			enabled = true,
+			direction = "RIGHT",
+			wrapCount = 0,
+			wrapDirection = "DOWN",
+		},
+		countdownFrame = true,
+		countdownNumbers = false,
+		showDispelType = false,
+		duration = {
+			enable = false,
+			point = "BOTTOM",
+			offsetX = 0,
+			offsetY = -1,
+		},
+	})
+
 	if addon.Aura and addon.Aura.CooldownPanels and addon.Aura.CooldownPanels.NormalizeAll then addon.Aura.CooldownPanels:NormalizeAll() end
 end

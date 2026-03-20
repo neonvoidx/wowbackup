@@ -174,7 +174,7 @@ local function OnEvent(self, event, ...)
 		--#endregion
 
 		-- Set edit mode profile to 1st custom profile by default
-		C_EditMode.SetActiveLayout(3)
+		-- C_EditMode.SetActiveLayout(3) -- 3 is 1 for some reason, probably because blizzard 1/2 default and legacy profiles
 	elseif event == "CHAT_MSG_CHANNEL" then
 		-- Chat Message event
 		local text, playerName, _, channelName = ...

@@ -36,6 +36,8 @@ function addonTable.Display.TabsBarMixin:OnLoad()
   self.active = false
 
   self.fadeInterpolator = CreateInterpolator(InterpolatorUtil.InterpolateEaseIn)
+
+  self.dropdownTabs = {}
 end
 
 function addonTable.Display.TabsBarMixin:Reset()
@@ -43,10 +45,25 @@ function addonTable.Display.TabsBarMixin:Reset()
 end
 
 function addonTable.Display.TabsBarMixin:PositionTabs()
+  self.dropdownTabs = {}
   local xOffset = 0
   for _, tab in ipairs(self.Tabs or {}) do
-    tab:SetPoint("BOTTOMLEFT", self, "TOPLEFT", xOffset, -22)
-    xOffset = xOffset + tab:GetWidth() + addonTable.Constants.TabSpacing
+    if tab ~= self.dropdownTabButton then
+      tab:SetPoint("BOTTOMLEFT", self, "TOPLEFT", xOffset, -22)
+      xOffset = xOffset + tab:GetWidth() + addonTable.Constants.TabSpacing
+    end
+  end
+  if xOffset - addonTable.Constants.TabSpacing > self.chatFrame:GetWidth() then
+    local index = #self.Tabs - 1
+    while xOffset + self.dropdownTabButton:GetWidth() > self.chatFrame:GetWidth() do
+      local tab = self.Tabs[index]
+      xOffset = xOffset - tab:GetWidth() - addonTable.Constants.TabSpacing
+      tab:Hide()
+      table.insert(self.dropdownTabs, 1, tab)
+      index = index - 1
+    end
+    self.dropdownTabButton:SetPoint("BOTTOMLEFT", self, "TOPLEFT", xOffset, -22)
+    self.dropdownTabButton:Show()
   end
 end
 
@@ -153,6 +170,9 @@ function addonTable.Display.TabsBarMixin:SetupPool()
       function tabButton:SetColor(r, g, b)
         self.color = {r = r, g = g, b = b}
       end
+      function tabButton:GetColor()
+        return self.color.r, self.color.g, self.color.b
+      end
       function tabButton:SetFlashing(state)
         self.flashing = state
       end
@@ -253,10 +273,6 @@ function addonTable.Display.GetTabNameFromName(name)
 end
 
 function addonTable.Display.TabsBarMixin:RefreshTabs()
-  local forceSelected = false
-  if not self.chatFrame.tabsPool then
-    forceSelected = true
-  end
   self.tabsPool:ReleaseAll()
   local allTabs = {}
   for index, tabData in ipairs(addonTable.Config.Get(addonTable.Config.Options.WINDOWS)[self.chatFrame:GetID()].tabs) do
@@ -280,6 +296,11 @@ function addonTable.Display.TabsBarMixin:RefreshTabs()
           otherTab:SetSelected(false)
         end
         tabButton:SetSelected(true)
+        if not tabButton:IsShown() then
+          self.dropdownTabButton:SetSelected(true)
+        else
+          self.dropdownTabButton:SetSelected(false)
+        end
 
         self.chatFrame:SetBackgroundColor(tabButton.bgColor.r, tabButton.bgColor.g, tabButton.bgColor.b)
 
@@ -298,7 +319,7 @@ function addonTable.Display.TabsBarMixin:RefreshTabs()
           self.chatFrame.ScrollingMessages:Render()
         end
       elseif mouseButton == "RightButton" then
-        MenuUtil.CreateContextMenu(tabButton, function(_, rootDescription)
+        MenuUtil.CreateContextMenu(self, function(_, rootDescription)
           if tabData.custom == "combat_log" then
             rootDescription:CreateButton(addonTable.Locales.BLIZZARD_SETTINGS, function()
               ShowUIPanel(ChatConfigFrame)
@@ -422,6 +443,30 @@ function addonTable.Display.TabsBarMixin:RefreshTabs()
     table.insert(allTabs, newTab)
   end
 
+  do
+    self.dropdownTabButton = self.tabsPool:Acquire()
+    self.dropdownTabButton.minWidth = true
+    self.dropdownTabButton.isDraggable = false
+    self.dropdownTabButton:SetText(addonTable.Constants.TabDropdownMarkup)
+    self.dropdownTabButton:SetScript("OnClick", function()
+      MenuUtil.CreateContextMenu(self, function(_, rootDescription)
+        for _, tab in ipairs(self.dropdownTabs) do
+          local button = rootDescription:CreateButton(CreateColor(tab:GetColor()):WrapTextInColorCode(tab:GetText()), function(_, details)
+            tab:Click(details.buttonName)
+          end)
+          button:SetFinalInitializer(function(b)
+            b:RegisterForClicks("LeftButtonUp", "RightButtonUp", "MiddleButtonUp")
+          end)
+        end
+        rootDescription:SetScrollMode(20 * 20)
+      end)
+    end)
+    self.dropdownTabButton:Show()
+    self.dropdownTabButton:SetColor(0.3, 0.3, 0.3)
+
+    table.insert(allTabs, self.dropdownTabButton)
+  end
+
   for _, tab in ipairs(allTabs) do
     tab:SetSelected(false)
   end
@@ -526,6 +571,7 @@ addonTable.CallbackRegistry:RegisterCallback("Render", function(_, newMessages)
           local groups = {[m.typeInfo.type] = true}
           local channels = {}
           local addons = {}
+          local any = false
           for _, tab in ipairs(window.tabs) do
             if tab.name == "WHISPER" or tCompare(tab.groups, groups) and tCompare(tab.channels, channels) and tCompare(tab.addons, addons) and not tab.invert then
               any = true

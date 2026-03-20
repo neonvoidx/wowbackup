@@ -853,7 +853,7 @@ local function WilduSettings_BuildCooldown(category, layout)
         prefix = "CMC_",
         key = "cooldownManager_experimental_glow_style",
         name = "Custom Glow Style",
-        searchtags = { "Experimental", "Glow", "Style", "Proc", "Auto Cast", "Pixel", "Default" },
+        searchtags = { "Glow", "Style", "Proc", "Auto Cast", "Pixel", "Default" },
         default = "DEFAULT",
         values = {
             DEFAULT = "Default",
@@ -882,7 +882,7 @@ local function WilduSettings_BuildCooldown(category, layout)
         prefix = "CMC_",
         key = "cooldownManager_experimental_glow_custom_color",
         name = "Custom Glow Color",
-        searchtags = { "Experimental", "Glow", "Color", "Auto Cast", "Pixel" },
+        searchtags = { "Glow", "Color", "Auto Cast", "Pixel" },
         default = false,
         get = function()
             return ns.db.profile.cooldownManager_experimental_glow_custom_color
@@ -938,7 +938,7 @@ local function WilduSettings_BuildCooldown(category, layout)
         prefix = "CMC_",
         key = "cooldownManager_experimental_glow_animation_speed",
         name = "Animation Speed",
-        searchtags = { "Experimental", "Glow", "Animation", "Speed", "Frequency", "Auto Cast", "Pixel" },
+        searchtags = { "Glow", "Animation", "Speed", "Frequency", "Auto Cast", "Pixel" },
         default = 0,
         min = -1,
         max = 1,
@@ -971,7 +971,7 @@ local function WilduSettings_BuildCooldown(category, layout)
         prefix = "CMC_",
         key = "cooldownManager_experimental_glow_animation_density",
         name = "Animation Density",
-        searchtags = { "Experimental", "Glow", "Animation", "Density", "Frequency", "Auto Cast", "Pixel" },
+        searchtags = { "Glow", "Animation", "Density", "Frequency", "Auto Cast", "Pixel" },
         default = 0,
         min = 0,
         max = 16,
@@ -1004,7 +1004,7 @@ local function WilduSettings_BuildCooldown(category, layout)
         parentSection = customProcSection,
         text = "Restore Glows to Default",
         searchtags = {
-            "Experimental",
+
             "Glow",
             "Animation",
             "Speed",
@@ -2242,7 +2242,7 @@ local function WilduSettings_BuildCooldown(category, layout)
         prefix = "CMC_",
         key = "cooldownManager_buttonPress",
         name = "Button Press overlay",
-        searchtags = { "Button", "Press", "Overlay", "Experimental", "Cooldowns", "Icons" },
+        searchtags = { "Button", "Press", "Overlay", "Cooldowns", "Icons" },
         default = false,
         get = function()
             return ns.db.profile.cooldownManager_buttonPress
@@ -2450,7 +2450,7 @@ local function WilduSettings_BuildCooldown(category, layout)
         name = "|cffccccccAddon version: " .. version .. "|r",
     })
 
-    local experimentalCategory = SettingsLib:CreateCategory(category, "Experimental", false)
+    local experimentalCategory = SettingsLib:CreateCategory(category, ns.L["Experimental"], false)
 
     SettingsLib:CreateHeader(experimentalCategory, {
         name = "|cffff0000Experimental performance features|r",

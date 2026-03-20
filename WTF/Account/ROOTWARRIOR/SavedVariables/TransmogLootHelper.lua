@@ -84,6 +84,12 @@ TransmogLootHelper_Cache = {
 "Starphage-Tichondrius",
 },
 },
+[443625] = {
+["learned"] = true,
+["knownBy"] = {
+"Stormclout-Tichondrius",
+},
+},
 [8334] = {
 ["learned"] = false,
 ["knownBy"] = {
@@ -239,7 +245,27 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
+[160979] = {
+["learned"] = false,
+["knownBy"] = {
+},
+},
 [338214] = {
+["learned"] = false,
+["knownBy"] = {
+},
+},
+[160983] = {
+["learned"] = false,
+["knownBy"] = {
+},
+},
+[160982] = {
+["learned"] = false,
+["knownBy"] = {
+},
+},
+[160981] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
@@ -274,20 +300,21 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[286864] = {
+[160984] = {
+["learned"] = false,
+["knownBy"] = {
+},
+},
+[1224887] = {
 ["learned"] = true,
 ["knownBy"] = {
-"Starphage-Tichondrius",
+"Neonvoid-Tichondrius",
 },
 },
-[66036] = {
-["learned"] = false,
+[1224891] = {
+["learned"] = true,
 ["knownBy"] = {
-},
-},
-[66037] = {
-["learned"] = false,
-["knownBy"] = {
+"Neonvoid-Tichondrius",
 },
 },
 [26416] = {
@@ -295,7 +322,7 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[66035] = {
+[1224897] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
@@ -315,17 +342,17 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[66034] = {
+[1259660] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
 },
-[180760] = {
+[1259673] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
 },
-[180762] = {
+[1224898] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
@@ -335,12 +362,13 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[180757] = {
-["learned"] = false,
+[1233129] = {
+["learned"] = true,
 ["knownBy"] = {
+"Neonvoid-Tichondrius",
 },
 },
-[180758] = {
+[3373] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
@@ -350,12 +378,12 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[338220] = {
+[160986] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
 },
-[180759] = {
+[338222] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
@@ -370,12 +398,14 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[180761] = {
-["learned"] = false,
+[1259654] = {
+["learned"] = true,
 ["knownBy"] = {
+"Starphage-Tichondrius",
+"Stormclout-Tichondrius",
 },
 },
-[3373] = {
+[1233135] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
@@ -390,14 +420,15 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[338222] = {
+[160987] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
 },
-[347176] = {
-["learned"] = false,
+[269123] = {
+["learned"] = true,
 ["knownBy"] = {
+"Starphage-Tichondrius",
 },
 },
 [39895] = {
@@ -428,22 +459,21 @@ TransmogLootHelper_Cache = {
 "Stormclout-Tichondrius",
 },
 },
-[382396] = {
+[116092] = {
 ["learned"] = true,
 ["knownBy"] = {
-"Ofpuss-Tichondrius",
-"Starphage-Tichondrius",
 "Stormclout-Tichondrius",
 },
 },
-[160979] = {
+[1233137] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
 },
-[56473] = {
-["learned"] = false,
+[451294] = {
+["learned"] = true,
 ["knownBy"] = {
+"Stormclout-Tichondrius",
 },
 },
 [54736] = {
@@ -453,22 +483,23 @@ TransmogLootHelper_Cache = {
 "Stormclout-Tichondrius",
 },
 },
-[160983] = {
+[6624] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
 },
-[160982] = {
+[1224893] = {
+["learned"] = true,
+["knownBy"] = {
+"Neonvoid-Tichondrius",
+},
+},
+[160989] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
 },
-[160981] = {
-["learned"] = false,
-["knownBy"] = {
-},
-},
-[190788] = {
+[3453] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
@@ -491,17 +522,18 @@ TransmogLootHelper_Cache = {
 "Stormclout-Tichondrius",
 },
 },
-[382329] = {
+[115450] = {
+["learned"] = true,
+["knownBy"] = {
+"Stormclout-Tichondrius",
+},
+},
+[19796] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
 },
-[160966] = {
-["learned"] = false,
-["knownBy"] = {
-},
-},
-[160958] = {
+[3569] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
@@ -511,10 +543,11 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[1225268] = {
+[1265686] = {
 ["learned"] = true,
 ["knownBy"] = {
 "Starphage-Tichondrius",
+"Stormclout-Tichondrius",
 },
 },
 [17557] = {
@@ -522,9 +555,11 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[160968] = {
-["learned"] = false,
+[453381] = {
+["learned"] = true,
 ["knownBy"] = {
+"Starphage-Tichondrius",
+"Stormclout-Tichondrius",
 },
 },
 [255408] = {
@@ -533,35 +568,39 @@ TransmogLootHelper_Cache = {
 "Starphage-Tichondrius",
 },
 },
-[160962] = {
-["learned"] = false,
-["knownBy"] = {
-},
-},
-[160984] = {
-["learned"] = false,
-["knownBy"] = {
-},
-},
-[160989] = {
-["learned"] = false,
-["knownBy"] = {
-},
-},
-[19796] = {
-["learned"] = false,
-["knownBy"] = {
-},
-},
-[445089] = {
+[301392] = {
 ["learned"] = true,
 ["knownBy"] = {
-"Stormclout-Tichondrius",
+"Ofpuss-Tichondrius",
+"Starphage-Tichondrius",
 },
 },
-[160987] = {
+[1257763] = {
+["learned"] = true,
+["knownBy"] = {
+"Starphage-Tichondrius",
+},
+},
+[1223151] = {
+["learned"] = true,
+["knownBy"] = {
+"Neonvoid-Tichondrius",
+},
+},
+[1259778] = {
 ["learned"] = false,
 ["knownBy"] = {
+},
+},
+[1261878] = {
+["learned"] = false,
+["knownBy"] = {
+},
+},
+[210086] = {
+["learned"] = true,
+["knownBy"] = {
+"Auteist-Tichondrius",
 },
 },
 [430345] = {
@@ -576,12 +615,14 @@ TransmogLootHelper_Cache = {
 "Starphage-Tichondrius",
 },
 },
-[160999] = {
-["learned"] = false,
+[1257796] = {
+["learned"] = true,
 ["knownBy"] = {
+"Starphage-Tichondrius",
+"Stormclout-Tichondrius",
 },
 },
-[160986] = {
+[21940] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
@@ -600,37 +641,36 @@ TransmogLootHelper_Cache = {
 "Stormclout-Tichondrius",
 },
 },
-[173979] = {
-["learned"] = false,
-["knownBy"] = {
-},
-},
-[383792] = {
-["learned"] = false,
-["knownBy"] = {
-},
-},
-[1266560] = {
-["learned"] = false,
-["knownBy"] = {
-},
-},
-[447873] = {
-["learned"] = false,
-["knownBy"] = {
-},
-},
-[447874] = {
-["learned"] = false,
-["knownBy"] = {
-},
-},
-[382386] = {
+[1261893] = {
 ["learned"] = true,
 ["knownBy"] = {
-"Ofpuss-Tichondrius",
 "Starphage-Tichondrius",
+},
+},
+[383793] = {
+["learned"] = true,
+["knownBy"] = {
 "Stormclout-Tichondrius",
+},
+},
+[1261913] = {
+["learned"] = false,
+["knownBy"] = {
+},
+},
+[247744] = {
+["learned"] = false,
+["knownBy"] = {
+},
+},
+[22967] = {
+["learned"] = false,
+["knownBy"] = {
+},
+},
+[1225275] = {
+["learned"] = false,
+["knownBy"] = {
 },
 },
 [26417] = {
@@ -643,14 +683,16 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[30575] = {
-["learned"] = false,
+[116095] = {
+["learned"] = true,
 ["knownBy"] = {
+"Stormclout-Tichondrius",
 },
 },
-[447870] = {
-["learned"] = false,
+[393061] = {
+["learned"] = true,
 ["knownBy"] = {
+"Starphage-Tichondrius",
 },
 },
 [389409] = {
@@ -658,17 +700,20 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[1245994] = {
-["learned"] = false,
+[305951] = {
+["learned"] = true,
 ["knownBy"] = {
+"Ofpuss-Tichondrius",
+"Starphage-Tichondrius",
 },
 },
-[1245995] = {
-["learned"] = false,
+[393065] = {
+["learned"] = true,
 ["knownBy"] = {
+"Starphage-Tichondrius",
 },
 },
-[1245993] = {
+[298257] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
@@ -678,22 +723,22 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[1266541] = {
+[471368] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
 },
-[445483] = {
+[8240] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
 },
-[445482] = {
+[1230891] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
 },
-[445484] = {
+[1230889] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
@@ -704,65 +749,65 @@ TransmogLootHelper_Cache = {
 "Stormclout-Tichondrius",
 },
 },
-[447871] = {
-["learned"] = false,
-["knownBy"] = {
-},
-},
-[445480] = {
-["learned"] = false,
-["knownBy"] = {
-},
-},
-[445479] = {
-["learned"] = false,
-["knownBy"] = {
-},
-},
-[453381] = {
+[1265687] = {
 ["learned"] = true,
 ["knownBy"] = {
 "Starphage-Tichondrius",
 "Stormclout-Tichondrius",
 },
 },
-[447875] = {
+[1225137] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
 },
-[445100] = {
-["learned"] = true,
+[291090] = {
+["learned"] = false,
 ["knownBy"] = {
-"Stormclout-Tichondrius",
 },
 },
-[301392] = {
+[7256] = {
+["learned"] = false,
+["knownBy"] = {
+},
+},
+[74537] = {
+["learned"] = false,
+["knownBy"] = {
+},
+},
+[56469] = {
 ["learned"] = true,
 ["knownBy"] = {
-"Ofpuss-Tichondrius",
 "Starphage-Tichondrius",
+"Stormclout-Tichondrius",
 },
 },
-[445112] = {
+[20916] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
 },
-[445111] = {
+[310536] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
 },
-[1229881] = {
-["learned"] = false,
+[427214] = {
+["learned"] = true,
 ["knownBy"] = {
+"Neonvoid-Tichondrius",
 },
 },
-[445106] = {
+[442719] = {
 ["learned"] = true,
 ["knownBy"] = {
 "Stormclout-Tichondrius",
+},
+},
+[17560] = {
+["learned"] = false,
+["knownBy"] = {
 },
 },
 [56465] = {
@@ -777,32 +822,32 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[445104] = {
-["learned"] = true,
-["knownBy"] = {
-"Stormclout-Tichondrius",
-},
-},
-[445105] = {
-["learned"] = true,
-["knownBy"] = {
-"Stormclout-Tichondrius",
-},
-},
-[18241] = {
+[1230873] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
 },
-[1218414] = {
+[265097] = {
+["learned"] = true,
+["knownBy"] = {
+"Starphage-Tichondrius",
+},
+},
+[19831] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
 },
-[445094] = {
+[56470] = {
 ["learned"] = true,
 ["knownBy"] = {
+"Starphage-Tichondrius",
 "Stormclout-Tichondrius",
+},
+},
+[22480] = {
+["learned"] = false,
+["knownBy"] = {
 },
 },
 [8607] = {
@@ -815,22 +860,22 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[445099] = {
+[1225182] = {
+["learned"] = true,
+["knownBy"] = {
+"Neonvoid-Tichondrius",
+},
+},
+[446260] = {
 ["learned"] = true,
 ["knownBy"] = {
 "Stormclout-Tichondrius",
 },
 },
-[445097] = {
+[265101] = {
 ["learned"] = true,
 ["knownBy"] = {
-"Stormclout-Tichondrius",
-},
-},
-[445102] = {
-["learned"] = true,
-["knownBy"] = {
-"Stormclout-Tichondrius",
+"Starphage-Tichondrius",
 },
 },
 [23507] = {
@@ -844,10 +889,10 @@ TransmogLootHelper_Cache = {
 "Stormclout-Tichondrius",
 },
 },
-[445103] = {
+[294784] = {
 ["learned"] = true,
 ["knownBy"] = {
-"Stormclout-Tichondrius",
+"Starphage-Tichondrius",
 },
 },
 [36955] = {
@@ -855,21 +900,22 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[445096] = {
+[256154] = {
 ["learned"] = true,
 ["knownBy"] = {
-"Stormclout-Tichondrius",
+"Starphage-Tichondrius",
 },
 },
-[442330] = {
-["learned"] = false,
-["knownBy"] = {
-},
-},
-[445095] = {
+[294785] = {
 ["learned"] = true,
 ["knownBy"] = {
-"Stormclout-Tichondrius",
+"Starphage-Tichondrius",
+},
+},
+[1265659] = {
+["learned"] = true,
+["knownBy"] = {
+"Neonvoid-Tichondrius",
 },
 },
 [282975] = {
@@ -878,22 +924,20 @@ TransmogLootHelper_Cache = {
 "Starphage-Tichondrius",
 },
 },
-[445098] = {
+[160958] = {
+["learned"] = false,
+["knownBy"] = {
+},
+},
+[40274] = {
+["learned"] = false,
+["knownBy"] = {
+},
+},
+[294788] = {
 ["learned"] = true,
 ["knownBy"] = {
-"Stormclout-Tichondrius",
-},
-},
-[445116] = {
-["learned"] = true,
-["knownBy"] = {
-"Stormclout-Tichondrius",
-},
-},
-[445093] = {
-["learned"] = true,
-["knownBy"] = {
-"Stormclout-Tichondrius",
+"Starphage-Tichondrius",
 },
 },
 [389420] = {
@@ -902,36 +946,37 @@ TransmogLootHelper_Cache = {
 "Starphage-Tichondrius",
 },
 },
-[298255] = {
-["learned"] = false,
-["knownBy"] = {
-},
-},
-[8895] = {
-["learned"] = false,
-["knownBy"] = {
-},
-},
-[1229914] = {
-["learned"] = false,
-["knownBy"] = {
-},
-},
-[21940] = {
-["learned"] = false,
-["knownBy"] = {
-},
-},
-[1261893] = {
+[288032] = {
 ["learned"] = true,
 ["knownBy"] = {
 "Starphage-Tichondrius",
 },
 },
-[445090] = {
+[347457] = {
+["learned"] = false,
+["knownBy"] = {
+},
+},
+[389462] = {
 ["learned"] = true,
 ["knownBy"] = {
+"Starphage-Tichondrius",
 "Stormclout-Tichondrius",
+},
+},
+[160999] = {
+["learned"] = false,
+["knownBy"] = {
+},
+},
+[383792] = {
+["learned"] = false,
+["knownBy"] = {
+},
+},
+[21143] = {
+["learned"] = false,
+["knownBy"] = {
 },
 },
 [1261895] = {
@@ -939,9 +984,11 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[46110] = {
-["learned"] = false,
+[389463] = {
+["learned"] = true,
 ["knownBy"] = {
+"Starphage-Tichondrius",
+"Stormclout-Tichondrius",
 },
 },
 [56466] = {
@@ -951,9 +998,11 @@ TransmogLootHelper_Cache = {
 "Stormclout-Tichondrius",
 },
 },
-[381420] = {
-["learned"] = false,
+[389464] = {
+["learned"] = true,
 ["knownBy"] = {
+"Starphage-Tichondrius",
+"Stormclout-Tichondrius",
 },
 },
 [115203] = {
@@ -967,21 +1016,20 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[56484] = {
+[255458] = {
 ["learned"] = true,
 ["knownBy"] = {
 "Starphage-Tichondrius",
 },
 },
-[447872] = {
+[26421] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
 },
-[445084] = {
-["learned"] = true,
+[30547] = {
+["learned"] = false,
 ["knownBy"] = {
-"Stormclout-Tichondrius",
 },
 },
 [26418] = {
@@ -994,9 +1042,10 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[430594] = {
-["learned"] = false,
+[288030] = {
+["learned"] = true,
 ["knownBy"] = {
+"Starphage-Tichondrius",
 },
 },
 [1249625] = {
@@ -1016,35 +1065,33 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[18244] = {
+[305941] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
 },
-[445119] = {
-["learned"] = true,
-["knownBy"] = {
-"Stormclout-Tichondrius",
-},
-},
-[445118] = {
-["learned"] = true,
-["knownBy"] = {
-"Stormclout-Tichondrius",
-},
-},
-[1261913] = {
+[2546] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
 },
-[445127] = {
+[6458] = {
+["learned"] = false,
+["knownBy"] = {
+},
+},
+[383797] = {
+["learned"] = false,
+["knownBy"] = {
+},
+},
+[1265724] = {
 ["learned"] = true,
 ["knownBy"] = {
-"Stormclout-Tichondrius",
+"Neonvoid-Tichondrius",
 },
 },
-[447869] = {
+[305940] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
@@ -1055,26 +1102,26 @@ TransmogLootHelper_Cache = {
 "Stormclout-Tichondrius",
 },
 },
-[445120] = {
+[160966] = {
+["learned"] = false,
+["knownBy"] = {
+},
+},
+[63750] = {
+["learned"] = false,
+["knownBy"] = {
+},
+},
+[123904] = {
 ["learned"] = true,
 ["knownBy"] = {
 "Stormclout-Tichondrius",
 },
 },
-[299105] = {
+[1265720] = {
 ["learned"] = true,
 ["knownBy"] = {
-"Starphage-Tichondrius",
-},
-},
-[247744] = {
-["learned"] = false,
-["knownBy"] = {
-},
-},
-[1224897] = {
-["learned"] = false,
-["knownBy"] = {
+"Neonvoid-Tichondrius",
 },
 },
 [101643] = {
@@ -1083,27 +1130,26 @@ TransmogLootHelper_Cache = {
 "Stormclout-Tichondrius",
 },
 },
-[1224887] = {
-["learned"] = true,
-["knownBy"] = {
-"Neonvoid-Tichondrius",
-},
-},
-[1224891] = {
-["learned"] = true,
-["knownBy"] = {
-"Neonvoid-Tichondrius",
-},
-},
-[1224893] = {
-["learned"] = true,
-["knownBy"] = {
-"Neonvoid-Tichondrius",
-},
-},
-[1224898] = {
+[45022] = {
 ["learned"] = false,
 ["knownBy"] = {
+},
+},
+[116849] = {
+["learned"] = true,
+["knownBy"] = {
+"Stormclout-Tichondrius",
+},
+},
+[2333] = {
+["learned"] = false,
+["knownBy"] = {
+},
+},
+[1265716] = {
+["learned"] = true,
+["knownBy"] = {
+"Neonvoid-Tichondrius",
 },
 },
 [5761] = {
@@ -1117,10 +1163,9 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[269123] = {
-["learned"] = true,
+[1225267] = {
+["learned"] = false,
 ["knownBy"] = {
-"Starphage-Tichondrius",
 },
 },
 [56467] = {
@@ -1229,14 +1274,16 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[383797] = {
-["learned"] = false,
+[269727] = {
+["learned"] = true,
 ["knownBy"] = {
+"Starphage-Tichondrius",
 },
 },
-[3453] = {
-["learned"] = false,
+[393059] = {
+["learned"] = true,
 ["knownBy"] = {
+"Starphage-Tichondrius",
 },
 },
 [255936] = {
@@ -1245,14 +1292,16 @@ TransmogLootHelper_Cache = {
 "Starphage-Tichondrius",
 },
 },
-[1259660] = {
-["learned"] = false,
-["knownBy"] = {
-},
-},
-[116092] = {
+[1225270] = {
 ["learned"] = true,
 ["knownBy"] = {
+"Starphage-Tichondrius",
+},
+},
+[1265711] = {
+["learned"] = true,
+["knownBy"] = {
+"Starphage-Tichondrius",
 "Stormclout-Tichondrius",
 },
 },
@@ -1261,9 +1310,10 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[1233137] = {
-["learned"] = false,
+[1265710] = {
+["learned"] = true,
 ["knownBy"] = {
+"Neonvoid-Tichondrius",
 },
 },
 [253122] = {
@@ -1273,26 +1323,26 @@ TransmogLootHelper_Cache = {
 "Stormclout-Tichondrius",
 },
 },
-[7256] = {
+[1221181] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
 },
-[6624] = {
-["learned"] = false,
-["knownBy"] = {
-},
-},
-[55252] = {
+[1225276] = {
 ["learned"] = true,
 ["knownBy"] = {
 "Starphage-Tichondrius",
 },
 },
-[1259654] = {
+[2658] = {
+["learned"] = false,
+["knownBy"] = {
+},
+},
+[115313] = {
 ["learned"] = true,
 ["knownBy"] = {
-"Starphage-Tichondrius",
+"Stormclout-Tichondrius",
 },
 },
 [56468] = {
@@ -1302,75 +1352,114 @@ TransmogLootHelper_Cache = {
 "Stormclout-Tichondrius",
 },
 },
-[1257796] = {
+[393062] = {
 ["learned"] = true,
 ["knownBy"] = {
 "Starphage-Tichondrius",
 },
 },
-[1233130] = {
+[1265704] = {
 ["learned"] = true,
 ["knownBy"] = {
-"Neonvoid-Tichondrius",
-},
-},
-[1233138] = {
-["learned"] = false,
-["knownBy"] = {
-},
-},
-[451294] = {
-["learned"] = true,
-["knownBy"] = {
+"Starphage-Tichondrius",
 "Stormclout-Tichondrius",
 },
 },
-[3397] = {
+[1225282] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
 },
-[1257763] = {
+[1225284] = {
+["learned"] = false,
+["knownBy"] = {
+},
+},
+[1263654] = {
+["learned"] = false,
+["knownBy"] = {
+},
+},
+[56479] = {
+["learned"] = false,
+["knownBy"] = {
+},
+},
+[17562] = {
+["learned"] = false,
+["knownBy"] = {
+},
+},
+[393068] = {
 ["learned"] = true,
 ["knownBy"] = {
 "Starphage-Tichondrius",
 },
 },
-[123904] = {
+[447316] = {
 ["learned"] = true,
 ["knownBy"] = {
 "Stormclout-Tichondrius",
 },
 },
-[457974] = {
+[277787] = {
 ["learned"] = true,
 ["knownBy"] = {
-"Stormclout-Tichondrius",
+"Auteist-Tichondrius",
 },
 },
-[116095] = {
-["learned"] = true,
-["knownBy"] = {
-"Stormclout-Tichondrius",
-},
-},
-[8238] = {
+[22808] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
 },
-[115450] = {
-["learned"] = true,
-["knownBy"] = {
-"Stormclout-Tichondrius",
-},
-},
-[8240] = {
+[382328] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
 },
 [1225128] = {
+["learned"] = false,
+["knownBy"] = {
+},
+},
+[447321] = {
+["learned"] = false,
+["knownBy"] = {
+},
+},
+[1265692] = {
+["learned"] = true,
+["knownBy"] = {
+"Neonvoid-Tichondrius",
+},
+},
+[82200] = {
+["learned"] = false,
+["knownBy"] = {
+},
+},
+[1225336] = {
+["learned"] = false,
+["knownBy"] = {
+},
+},
+[160962] = {
+["learned"] = false,
+["knownBy"] = {
+},
+},
+[1225337] = {
+["learned"] = false,
+["knownBy"] = {
+},
+},
+[298255] = {
+["learned"] = false,
+["knownBy"] = {
+},
+},
+[1230888] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
@@ -1381,50 +1470,10 @@ TransmogLootHelper_Cache = {
 "Starphage-Tichondrius",
 },
 },
-[17560] = {
-["learned"] = false,
-["knownBy"] = {
-},
-},
-[82200] = {
-["learned"] = false,
-["knownBy"] = {
-},
-},
-[22967] = {
-["learned"] = false,
-["knownBy"] = {
-},
-},
-[19799] = {
-["learned"] = false,
-["knownBy"] = {
-},
-},
-[12607] = {
-["learned"] = false,
-["knownBy"] = {
-},
-},
-[21144] = {
-["learned"] = false,
-["knownBy"] = {
-},
-},
-[26420] = {
-["learned"] = false,
-["knownBy"] = {
-},
-},
-[1225137] = {
-["learned"] = false,
-["knownBy"] = {
-},
-},
-[265101] = {
+[1230887] = {
 ["learned"] = true,
 ["knownBy"] = {
-"Starphage-Tichondrius",
+"Neonvoid-Tichondrius",
 },
 },
 [1282455] = {
@@ -1444,10 +1493,9 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[1223150] = {
-["learned"] = true,
+[7841] = {
+["learned"] = false,
 ["knownBy"] = {
-"Neonvoid-Tichondrius",
 },
 },
 [528] = {
@@ -1472,17 +1520,14 @@ TransmogLootHelper_Cache = {
 "Neonvoid-Tichondrius",
 },
 },
-[56469] = {
-["learned"] = true,
+[12590] = {
+["learned"] = false,
 ["knownBy"] = {
-"Starphage-Tichondrius",
-"Stormclout-Tichondrius",
 },
 },
-[2330] = {
-["learned"] = true,
+[359664] = {
+["learned"] = false,
 ["knownBy"] = {
-"Neonvoid-Tichondrius",
 },
 },
 [12622] = {
@@ -1495,24 +1540,6 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[389462] = {
-["learned"] = true,
-["knownBy"] = {
-"Starphage-Tichondrius",
-"Stormclout-Tichondrius",
-},
-},
-[278413] = {
-["learned"] = true,
-["knownBy"] = {
-"Starphage-Tichondrius",
-},
-},
-[74529] = {
-["learned"] = false,
-["knownBy"] = {
-},
-},
 [253152] = {
 ["learned"] = true,
 ["knownBy"] = {
@@ -1520,12 +1547,30 @@ TransmogLootHelper_Cache = {
 "Starphage-Tichondrius",
 },
 },
+[291089] = {
+["learned"] = true,
+["knownBy"] = {
+"Starphage-Tichondrius",
+},
+},
+[1225351] = {
+["learned"] = true,
+["knownBy"] = {
+"Starphage-Tichondrius",
+"Stormclout-Tichondrius",
+},
+},
+[310535] = {
+["learned"] = false,
+["knownBy"] = {
+},
+},
 [12718] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
 },
-[255458] = {
+[1225353] = {
 ["learned"] = true,
 ["knownBy"] = {
 "Starphage-Tichondrius",
@@ -1536,24 +1581,23 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[305951] = {
-["learned"] = true,
-["knownBy"] = {
-"Ofpuss-Tichondrius",
-"Starphage-Tichondrius",
-},
-},
-[2538] = {
+[1265678] = {
 ["learned"] = true,
 ["knownBy"] = {
 "Starphage-Tichondrius",
 "Stormclout-Tichondrius",
 },
 },
-[269724] = {
+[54793] = {
 ["learned"] = true,
 ["knownBy"] = {
 "Starphage-Tichondrius",
+"Stormclout-Tichondrius",
+},
+},
+[1230877] = {
+["learned"] = false,
+["knownBy"] = {
 },
 },
 [454442] = {
@@ -1566,14 +1610,16 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[41312] = {
+[1230876] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
 },
-[7257] = {
-["learned"] = false,
+[1225354] = {
+["learned"] = true,
 ["knownBy"] = {
+"Starphage-Tichondrius",
+"Stormclout-Tichondrius",
 },
 },
 [454443] = {
@@ -1581,56 +1627,53 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[393059] = {
+[1225355] = {
 ["learned"] = true,
 ["knownBy"] = {
-"Starphage-Tichondrius",
-},
-},
-[173309] = {
-["learned"] = true,
-["knownBy"] = {
-"Ofpuss-Tichondrius",
 "Starphage-Tichondrius",
 "Stormclout-Tichondrius",
 },
 },
-[1225273] = {
+[310533] = {
+["learned"] = false,
+["knownBy"] = {
+},
+},
+[17563] = {
+["learned"] = false,
+["knownBy"] = {
+},
+},
+[16153] = {
+["learned"] = false,
+["knownBy"] = {
+},
+},
+[41315] = {
+["learned"] = false,
+["knownBy"] = {
+},
+},
+[19799] = {
+["learned"] = false,
+["knownBy"] = {
+},
+},
+[462121] = {
 ["learned"] = true,
 ["knownBy"] = {
-"Starphage-Tichondrius",
+"Neonvoid-Tichondrius",
 },
 },
-[1225274] = {
+[235754] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
 },
-[1225275] = {
-["learned"] = false,
-["knownBy"] = {
-},
-},
-[265097] = {
+[1230868] = {
 ["learned"] = true,
 ["knownBy"] = {
-"Starphage-Tichondrius",
-},
-},
-[19831] = {
-["learned"] = false,
-["knownBy"] = {
-},
-},
-[1225276] = {
-["learned"] = true,
-["knownBy"] = {
-"Starphage-Tichondrius",
-},
-},
-[1225277] = {
-["learned"] = false,
-["knownBy"] = {
+"Neonvoid-Tichondrius",
 },
 },
 [265098] = {
@@ -1639,10 +1682,10 @@ TransmogLootHelper_Cache = {
 "Starphage-Tichondrius",
 },
 },
-[186091] = {
+[462122] = {
 ["learned"] = true,
 ["knownBy"] = {
-"Auteist-Tichondrius",
+"Neonvoid-Tichondrius",
 },
 },
 [46107] = {
@@ -1650,29 +1693,31 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[1225280] = {
-["learned"] = false,
-["knownBy"] = {
-},
-},
-[56470] = {
+[447328] = {
 ["learned"] = true,
 ["knownBy"] = {
-"Starphage-Tichondrius",
 "Stormclout-Tichondrius",
 },
 },
-[1225281] = {
+[265099] = {
+["learned"] = true,
+["knownBy"] = {
+"Ofpuss-Tichondrius",
+"Starphage-Tichondrius",
+},
+},
+[455005] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
 },
-[209645] = {
-["learned"] = false,
+[1225368] = {
+["learned"] = true,
 ["knownBy"] = {
+"Starphage-Tichondrius",
 },
 },
-[1225182] = {
+[1223135] = {
 ["learned"] = true,
 ["knownBy"] = {
 "Neonvoid-Tichondrius",
@@ -1696,10 +1741,9 @@ TransmogLootHelper_Cache = {
 "Neonvoid-Tichondrius",
 },
 },
-[1223139] = {
-["learned"] = true,
+[26420] = {
+["learned"] = false,
 ["knownBy"] = {
-"Neonvoid-Tichondrius",
 },
 },
 [6617] = {
@@ -1707,20 +1751,21 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[382318] = {
+[19792] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
 },
-[17562] = {
-["learned"] = false,
-["knownBy"] = {
-},
-},
-[447343] = {
+[1265662] = {
 ["learned"] = true,
 ["knownBy"] = {
+"Starphage-Tichondrius",
 "Stormclout-Tichondrius",
+},
+},
+[286478] = {
+["learned"] = false,
+["knownBy"] = {
 },
 },
 [265102] = {
@@ -1728,15 +1773,15 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[26422] = {
+[46113] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
 },
-[294784] = {
+[1223146] = {
 ["learned"] = true,
 ["knownBy"] = {
-"Starphage-Tichondrius",
+"Neonvoid-Tichondrius",
 },
 },
 [389458] = {
@@ -1756,13 +1801,13 @@ TransmogLootHelper_Cache = {
 "Neonvoid-Tichondrius",
 },
 },
-[294785] = {
+[1223150] = {
 ["learned"] = true,
 ["knownBy"] = {
-"Starphage-Tichondrius",
+"Neonvoid-Tichondrius",
 },
 },
-[1223151] = {
+[2330] = {
 ["learned"] = true,
 ["knownBy"] = {
 "Neonvoid-Tichondrius",
@@ -1793,14 +1838,15 @@ TransmogLootHelper_Cache = {
 "Stormclout-Tichondrius",
 },
 },
-[22808] = {
+[1230860] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
 },
-[22480] = {
-["learned"] = false,
+[115310] = {
+["learned"] = true,
 ["knownBy"] = {
+"Stormclout-Tichondrius",
 },
 },
 [294787] = {
@@ -1816,20 +1862,19 @@ TransmogLootHelper_Cache = {
 "Stormclout-Tichondrius",
 },
 },
-[11456] = {
+[1230858] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
 },
-[447321] = {
+[235755] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
 },
-[294788] = {
-["learned"] = true,
+[46108] = {
+["learned"] = false,
 ["knownBy"] = {
-"Starphage-Tichondrius",
 },
 },
 [287112] = {
@@ -1844,9 +1889,10 @@ TransmogLootHelper_Cache = {
 "Stormclout-Tichondrius",
 },
 },
-[7841] = {
-["learned"] = false,
+[445119] = {
+["learned"] = true,
 ["knownBy"] = {
+"Stormclout-Tichondrius",
 },
 },
 [294789] = {
@@ -1856,11 +1902,9 @@ TransmogLootHelper_Cache = {
 "Starphage-Tichondrius",
 },
 },
-[389463] = {
-["learned"] = true,
+[21175] = {
+["learned"] = false,
 ["knownBy"] = {
-"Starphage-Tichondrius",
-"Stormclout-Tichondrius",
 },
 },
 [432962] = {
@@ -1868,17 +1912,18 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[1225343] = {
+[1265654] = {
 ["learned"] = true,
 ["knownBy"] = {
 "Starphage-Tichondrius",
 "Stormclout-Tichondrius",
 },
 },
-[256154] = {
+[56476] = {
 ["learned"] = true,
 ["knownBy"] = {
 "Starphage-Tichondrius",
+"Stormclout-Tichondrius",
 },
 },
 [46684] = {
@@ -1898,10 +1943,9 @@ TransmogLootHelper_Cache = {
 "Neonvoid-Tichondrius",
 },
 },
-[1225350] = {
-["learned"] = true,
+[382338] = {
+["learned"] = false,
 ["knownBy"] = {
-"Starphage-Tichondrius",
 },
 },
 [389465] = {
@@ -1920,25 +1964,18 @@ TransmogLootHelper_Cache = {
 "Auteist-Tichondrius",
 },
 },
-[372610] = {
+[445118] = {
 ["learned"] = true,
 ["knownBy"] = {
-"Neonvoid-Tichondrius",
-"Starphage-Tichondrius",
 "Stormclout-Tichondrius",
-"Auteist-Tichondrius",
-"Hellavator-Tichondrius",
-"Mäñýfäçëð-Tichondrius",
-"Tampacks-Mal'Ganis",
-"Reedingo-Mal'Ganis",
 },
 },
-[235753] = {
+[10097] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
 },
-[40274] = {
+[26423] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
@@ -1963,43 +2000,41 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[1225355] = {
-["learned"] = true,
-["knownBy"] = {
-"Starphage-Tichondrius",
-"Stormclout-Tichondrius",
-},
-},
-[288032] = {
-["learned"] = true,
-["knownBy"] = {
-"Starphage-Tichondrius",
-},
-},
-[1225357] = {
-["learned"] = true,
-["knownBy"] = {
-"Stormclout-Tichondrius",
-},
-},
-[5938] = {
-["learned"] = true,
-["knownBy"] = {
-"Mäñýfäçëð-Tichondrius",
-},
-},
-[235754] = {
+[1272676] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
 },
-[1225368] = {
+[41316] = {
+["learned"] = false,
+["knownBy"] = {
+},
+},
+[1225392] = {
 ["learned"] = true,
 ["knownBy"] = {
 "Starphage-Tichondrius",
+"Stormclout-Tichondrius",
 },
 },
-[56476] = {
+[445320] = {
+["learned"] = true,
+["knownBy"] = {
+"Auteist-Tichondrius",
+},
+},
+[310526] = {
+["learned"] = false,
+["knownBy"] = {
+},
+},
+[445116] = {
+["learned"] = true,
+["knownBy"] = {
+"Stormclout-Tichondrius",
+},
+},
+[382376] = {
 ["learned"] = true,
 ["knownBy"] = {
 "Starphage-Tichondrius",
@@ -2012,9 +2047,11 @@ TransmogLootHelper_Cache = {
 "Stormclout-Tichondrius",
 },
 },
-[382338] = {
-["learned"] = false,
+[1265603] = {
+["learned"] = true,
 ["knownBy"] = {
+"Starphage-Tichondrius",
+"Stormclout-Tichondrius",
 },
 },
 [46109] = {
@@ -2022,7 +2059,7 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[10097] = {
+[310525] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
@@ -2034,10 +2071,11 @@ TransmogLootHelper_Cache = {
 "Stormclout-Tichondrius",
 },
 },
-[288030] = {
+[447338] = {
 ["learned"] = true,
 ["knownBy"] = {
 "Starphage-Tichondrius",
+"Stormclout-Tichondrius",
 },
 },
 [1225245] = {
@@ -2046,12 +2084,12 @@ TransmogLootHelper_Cache = {
 "Starphage-Tichondrius",
 },
 },
-[305941] = {
+[19791] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
 },
-[26423] = {
+[3230] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
@@ -2062,18 +2100,20 @@ TransmogLootHelper_Cache = {
 "Auteist-Tichondrius",
 },
 },
-[467293] = {
+[447344] = {
 ["learned"] = true,
 ["knownBy"] = {
 "Stormclout-Tichondrius",
 },
 },
-[26421] = {
-["learned"] = false,
+[2538] = {
+["learned"] = true,
 ["knownBy"] = {
+"Starphage-Tichondrius",
+"Stormclout-Tichondrius",
 },
 },
-[1235486] = {
+[2542] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
@@ -2083,41 +2123,40 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[1265724] = {
-["learned"] = true,
-["knownBy"] = {
-"Neonvoid-Tichondrius",
-},
-},
-[305940] = {
+[382354] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
 },
-[396162] = {
+[421244] = {
 ["learned"] = true,
 ["knownBy"] = {
-"Starphage-Tichondrius",
 "Stormclout-Tichondrius",
 },
 },
-[45022] = {
+[41318] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
 },
-[63750] = {
-["learned"] = false,
-["knownBy"] = {
-},
-},
-[1265720] = {
+[269724] = {
 ["learned"] = true,
 ["knownBy"] = {
-"Neonvoid-Tichondrius",
+"Starphage-Tichondrius",
 },
 },
-[382343] = {
+[62044] = {
+["learned"] = false,
+["knownBy"] = {
+},
+},
+[442747] = {
+["learned"] = true,
+["knownBy"] = {
+"Stormclout-Tichondrius",
+},
+},
+[438961] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
@@ -2127,24 +2166,21 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[116849] = {
-["learned"] = true,
+[444793] = {
+["learned"] = false,
 ["knownBy"] = {
-"Stormclout-Tichondrius",
 },
 },
-[173308] = {
+[41312] = {
+["learned"] = false,
+["knownBy"] = {
+},
+},
+[310522] = {
 ["learned"] = true,
 ["knownBy"] = {
-"Ofpuss-Tichondrius",
 "Starphage-Tichondrius",
 "Stormclout-Tichondrius",
-},
-},
-[1265692] = {
-["learned"] = true,
-["knownBy"] = {
-"Neonvoid-Tichondrius",
 },
 },
 [269726] = {
@@ -2152,10 +2188,9 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[1265716] = {
-["learned"] = true,
+[445112] = {
+["learned"] = false,
 ["knownBy"] = {
-"Neonvoid-Tichondrius",
 },
 },
 [1225266] = {
@@ -2163,12 +2198,12 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[1225267] = {
+[7257] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
 },
-[269727] = {
+[1225268] = {
 ["learned"] = true,
 ["knownBy"] = {
 "Starphage-Tichondrius",
@@ -2180,10 +2215,12 @@ TransmogLootHelper_Cache = {
 "Starphage-Tichondrius",
 },
 },
-[1225270] = {
+[173309] = {
 ["learned"] = true,
 ["knownBy"] = {
+"Ofpuss-Tichondrius",
 "Starphage-Tichondrius",
+"Stormclout-Tichondrius",
 },
 },
 [1225271] = {
@@ -2196,10 +2233,9 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[393060] = {
-["learned"] = true,
+[1221179] = {
+["learned"] = false,
 ["knownBy"] = {
-"Starphage-Tichondrius",
 },
 },
 [1221180] = {
@@ -2207,20 +2243,20 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[1221181] = {
+[56473] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
 },
-[269729] = {
-["learned"] = false,
-["knownBy"] = {
-},
-},
-[393061] = {
+[217832] = {
 ["learned"] = true,
 ["knownBy"] = {
 "Starphage-Tichondrius",
+},
+},
+[21144] = {
+["learned"] = false,
+["knownBy"] = {
 },
 },
 [471359] = {
@@ -2234,15 +2270,14 @@ TransmogLootHelper_Cache = {
 "Starphage-Tichondrius",
 },
 },
-[2658] = {
+[1225280] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
 },
-[393062] = {
-["learned"] = true,
+[1225281] = {
+["learned"] = false,
 ["knownBy"] = {
-"Starphage-Tichondrius",
 },
 },
 [198898] = {
@@ -2256,7 +2291,7 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[1225284] = {
+[209645] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
@@ -2272,11 +2307,9 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[56477] = {
-["learned"] = true,
+[15855] = {
+["learned"] = false,
 ["knownBy"] = {
-"Starphage-Tichondrius",
-"Stormclout-Tichondrius",
 },
 },
 [382317] = {
@@ -2290,7 +2323,7 @@ TransmogLootHelper_Cache = {
 "Starphage-Tichondrius",
 },
 },
-[6458] = {
+[359333] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
@@ -2302,12 +2335,12 @@ TransmogLootHelper_Cache = {
 "Stormclout-Tichondrius",
 },
 },
-[209646] = {
+[382318] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
 },
-[393065] = {
+[94748] = {
 ["learned"] = true,
 ["knownBy"] = {
 "Starphage-Tichondrius",
@@ -2335,7 +2368,7 @@ TransmogLootHelper_Cache = {
 "Starphage-Tichondrius",
 },
 },
-[382354] = {
+[15935] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
@@ -2379,11 +2412,9 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[1265686] = {
-["learned"] = true,
+[445111] = {
+["learned"] = false,
 ["knownBy"] = {
-"Starphage-Tichondrius",
-"Stormclout-Tichondrius",
 },
 },
 [447314] = {
@@ -2397,17 +2428,15 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[1265711] = {
+[447357] = {
 ["learned"] = true,
 ["knownBy"] = {
-"Starphage-Tichondrius",
 "Stormclout-Tichondrius",
 },
 },
-[1265710] = {
-["learned"] = true,
+[447869] = {
+["learned"] = false,
 ["knownBy"] = {
-"Neonvoid-Tichondrius",
 },
 },
 [447315] = {
@@ -2422,11 +2451,9 @@ TransmogLootHelper_Cache = {
 "Starphage-Tichondrius",
 },
 },
-[396169] = {
-["learned"] = true,
+[447870] = {
+["learned"] = false,
 ["knownBy"] = {
-"Starphage-Tichondrius",
-"Stormclout-Tichondrius",
 },
 },
 [117906] = {
@@ -2445,15 +2472,17 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[442747] = {
-["learned"] = true,
-["knownBy"] = {
-"Stormclout-Tichondrius",
-},
-},
-[444793] = {
+[444802] = {
 ["learned"] = false,
 ["knownBy"] = {
+},
+},
+[382367] = {
+["learned"] = true,
+["knownBy"] = {
+"Ofpuss-Tichondrius",
+"Starphage-Tichondrius",
+"Stormclout-Tichondrius",
 },
 },
 [447317] = {
@@ -2467,10 +2496,10 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[115313] = {
+[56480] = {
 ["learned"] = true,
 ["knownBy"] = {
-"Stormclout-Tichondrius",
+"Starphage-Tichondrius",
 },
 },
 [1225322] = {
@@ -2478,6 +2507,7 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 "Starphage-Tichondrius",
 "Neonvoid-Tichondrius",
+"Stormclout-Tichondrius",
 },
 },
 [447318] = {
@@ -2490,7 +2520,7 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[56479] = {
+[447874] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
@@ -2526,7 +2556,7 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[382328] = {
+[11456] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
@@ -2547,12 +2577,12 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[1225336] = {
+[382329] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
 },
-[1225337] = {
+[46112] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
@@ -2576,10 +2606,9 @@ TransmogLootHelper_Cache = {
 "Stormclout-Tichondrius",
 },
 },
-[1265704] = {
+[447363] = {
 ["learned"] = true,
 ["knownBy"] = {
-"Starphage-Tichondrius",
 "Stormclout-Tichondrius",
 },
 },
@@ -2589,9 +2618,10 @@ TransmogLootHelper_Cache = {
 "Starphage-Tichondrius",
 },
 },
-[447323] = {
+[1225343] = {
 ["learned"] = true,
 ["knownBy"] = {
+"Starphage-Tichondrius",
 "Stormclout-Tichondrius",
 },
 },
@@ -2633,18 +2663,18 @@ TransmogLootHelper_Cache = {
 ["learned"] = true,
 ["knownBy"] = {
 "Starphage-Tichondrius",
-},
-},
-[442719] = {
-["learned"] = true,
-["knownBy"] = {
 "Stormclout-Tichondrius",
 },
 },
-[1225351] = {
+[1225350] = {
 ["learned"] = true,
 ["knownBy"] = {
 "Starphage-Tichondrius",
+},
+},
+[447325] = {
+["learned"] = true,
+["knownBy"] = {
 "Stormclout-Tichondrius",
 },
 },
@@ -2654,17 +2684,22 @@ TransmogLootHelper_Cache = {
 "Stormclout-Tichondrius",
 },
 },
-[1225353] = {
+[372610] = {
 ["learned"] = true,
 ["knownBy"] = {
-"Starphage-Tichondrius",
-},
-},
-[1225354] = {
-["learned"] = true,
-["knownBy"] = {
+"Neonvoid-Tichondrius",
 "Starphage-Tichondrius",
 "Stormclout-Tichondrius",
+"Auteist-Tichondrius",
+"Hellavator-Tichondrius",
+"Mäñýfäçëð-Tichondrius",
+"Tampacks-Mal'Ganis",
+"Reedingo-Mal'Ganis",
+},
+},
+[235753] = {
+["learned"] = false,
+["knownBy"] = {
 },
 },
 [447326] = {
@@ -2678,14 +2713,16 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[17563] = {
-["learned"] = false,
+[1225357] = {
+["learned"] = true,
 ["knownBy"] = {
+"Stormclout-Tichondrius",
 },
 },
-[41315] = {
-["learned"] = false,
+[5938] = {
+["learned"] = true,
 ["knownBy"] = {
+"Mäñýfäçëð-Tichondrius",
 },
 },
 [447327] = {
@@ -2712,10 +2749,10 @@ TransmogLootHelper_Cache = {
 "Stormclout-Tichondrius",
 },
 },
-[447328] = {
+[1225363] = {
 ["learned"] = true,
 ["knownBy"] = {
-"Stormclout-Tichondrius",
+"Starphage-Tichondrius",
 },
 },
 [382336] = {
@@ -2727,6 +2764,7 @@ TransmogLootHelper_Cache = {
 ["learned"] = true,
 ["knownBy"] = {
 "Starphage-Tichondrius",
+"Stormclout-Tichondrius",
 },
 },
 [1225366] = {
@@ -2746,14 +2784,16 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[46113] = {
-["learned"] = false,
+[1225369] = {
+["learned"] = true,
 ["knownBy"] = {
+"Stormclout-Tichondrius",
 },
 },
-[235755] = {
-["learned"] = false,
+[1225370] = {
+["learned"] = true,
 ["knownBy"] = {
+"Starphage-Tichondrius",
 },
 },
 [447330] = {
@@ -2767,15 +2807,15 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[3450] = {
-["learned"] = false,
-["knownBy"] = {
-},
-},
-[447357] = {
+[1265614] = {
 ["learned"] = true,
 ["knownBy"] = {
-"Stormclout-Tichondrius",
+"Neonvoid-Tichondrius",
+},
+},
+[382369] = {
+["learned"] = false,
+["knownBy"] = {
 },
 },
 [447331] = {
@@ -2789,9 +2829,10 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[1263654] = {
-["learned"] = false,
+[447362] = {
+["learned"] = true,
 ["knownBy"] = {
+"Stormclout-Tichondrius",
 },
 },
 [235756] = {
@@ -2810,12 +2851,12 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[15855] = {
+[180759] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
 },
-[444802] = {
+[180760] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
@@ -2832,16 +2873,14 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[56480] = {
-["learned"] = true,
+[30551] = {
+["learned"] = false,
 ["knownBy"] = {
-"Starphage-Tichondrius",
 },
 },
-[447363] = {
-["learned"] = true,
+[28267] = {
+["learned"] = false,
 ["knownBy"] = {
-"Stormclout-Tichondrius",
 },
 },
 [447334] = {
@@ -2855,15 +2894,17 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[277787] = {
+[447368] = {
 ["learned"] = true,
 ["knownBy"] = {
-"Auteist-Tichondrius",
+"Starphage-Tichondrius",
+"Stormclout-Tichondrius",
 },
 },
-[41316] = {
-["learned"] = false,
+[467293] = {
+["learned"] = true,
 ["knownBy"] = {
+"Stormclout-Tichondrius",
 },
 },
 [447335] = {
@@ -2872,21 +2913,21 @@ TransmogLootHelper_Cache = {
 "Stormclout-Tichondrius",
 },
 },
-[1225392] = {
+[382343] = {
+["learned"] = false,
+["knownBy"] = {
+},
+},
+[464256] = {
 ["learned"] = true,
 ["knownBy"] = {
-"Starphage-Tichondrius",
 "Stormclout-Tichondrius",
 },
 },
-[30551] = {
-["learned"] = false,
+[119582] = {
+["learned"] = true,
 ["knownBy"] = {
-},
-},
-[400810] = {
-["learned"] = false,
-["knownBy"] = {
+"Stormclout-Tichondrius",
 },
 },
 [447336] = {
@@ -2908,12 +2949,12 @@ TransmogLootHelper_Cache = {
 "Stormclout-Tichondrius",
 },
 },
-[18238] = {
+[25146] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
 },
-[447337] = {
+[396162] = {
 ["learned"] = true,
 ["knownBy"] = {
 "Starphage-Tichondrius",
@@ -2932,12 +2973,13 @@ TransmogLootHelper_Cache = {
 "Stormclout-Tichondrius",
 },
 },
-[298256] = {
-["learned"] = false,
+[445106] = {
+["learned"] = true,
 ["knownBy"] = {
+"Stormclout-Tichondrius",
 },
 },
-[447338] = {
+[56477] = {
 ["learned"] = true,
 ["knownBy"] = {
 "Starphage-Tichondrius",
@@ -2957,10 +2999,9 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[447367] = {
-["learned"] = true,
+[180761] = {
+["learned"] = false,
 ["knownBy"] = {
-"Stormclout-Tichondrius",
 },
 },
 [447339] = {
@@ -2980,10 +3021,11 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[291091] = {
+[382378] = {
 ["learned"] = true,
 ["knownBy"] = {
 "Starphage-Tichondrius",
+"Stormclout-Tichondrius",
 },
 },
 [447340] = {
@@ -3001,16 +3043,15 @@ TransmogLootHelper_Cache = {
 "Stormclout-Tichondrius",
 },
 },
-[382375] = {
-["learned"] = true,
-["knownBy"] = {
-"Starphage-Tichondrius",
-"Stormclout-Tichondrius",
-},
-},
-[331007] = {
+[310507] = {
 ["learned"] = false,
 ["knownBy"] = {
+},
+},
+[1265599] = {
+["learned"] = true,
+["knownBy"] = {
+"Neonvoid-Tichondrius",
 },
 },
 [447341] = {
@@ -3024,10 +3065,9 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[1265687] = {
+[447373] = {
 ["learned"] = true,
 ["knownBy"] = {
-"Starphage-Tichondrius",
 "Stormclout-Tichondrius",
 },
 },
@@ -3057,9 +3097,10 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[3230] = {
-["learned"] = false,
+[447343] = {
+["learned"] = true,
 ["knownBy"] = {
+"Stormclout-Tichondrius",
 },
 },
 [382351] = {
@@ -3067,7 +3108,7 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[291090] = {
+[198939] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
@@ -3077,20 +3118,22 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[447344] = {
+[396169] = {
 ["learned"] = true,
 ["knownBy"] = {
+"Starphage-Tichondrius",
 "Stormclout-Tichondrius",
 },
 },
-[7258] = {
+[3966] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
 },
-[359664] = {
-["learned"] = false,
+[445104] = {
+["learned"] = true,
 ["knownBy"] = {
+"Stormclout-Tichondrius",
 },
 },
 [444786] = {
@@ -3098,9 +3141,10 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[464256] = {
+[447371] = {
 ["learned"] = true,
 ["knownBy"] = {
+"Starphage-Tichondrius",
 "Stormclout-Tichondrius",
 },
 },
@@ -3131,10 +3175,12 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[291089] = {
+[382384] = {
 ["learned"] = true,
 ["knownBy"] = {
+"Ofpuss-Tichondrius",
 "Starphage-Tichondrius",
+"Stormclout-Tichondrius",
 },
 },
 [444788] = {
@@ -3142,11 +3188,9 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[382378] = {
-["learned"] = true,
+[81714] = {
+["learned"] = false,
 ["knownBy"] = {
-"Starphage-Tichondrius",
-"Stormclout-Tichondrius",
 },
 },
 [382355] = {
@@ -3154,9 +3198,10 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[2545] = {
-["learned"] = false,
+[445103] = {
+["learned"] = true,
 ["knownBy"] = {
+"Stormclout-Tichondrius",
 },
 },
 [444789] = {
@@ -3174,22 +3219,20 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[81714] = {
+[6415] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
 },
-[442743] = {
-["learned"] = true,
+[444790] = {
+["learned"] = false,
 ["knownBy"] = {
-"Stormclout-Tichondrius",
 },
 },
-[1265678] = {
+[264960] = {
 ["learned"] = true,
 ["knownBy"] = {
 "Starphage-Tichondrius",
-"Stormclout-Tichondrius",
 },
 },
 [382357] = {
@@ -3219,14 +3262,12 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[54793] = {
-["learned"] = true,
+[1260349] = {
+["learned"] = false,
 ["knownBy"] = {
-"Starphage-Tichondrius",
-"Stormclout-Tichondrius",
 },
 },
-[41318] = {
+[444792] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
@@ -3243,7 +3284,7 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[443589] = {
+[445102] = {
 ["learned"] = true,
 ["knownBy"] = {
 "Stormclout-Tichondrius",
@@ -3306,9 +3347,10 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[1230876] = {
-["learned"] = false,
+[122470] = {
+["learned"] = true,
 ["knownBy"] = {
+"Stormclout-Tichondrius",
 },
 },
 [444796] = {
@@ -3327,10 +3369,10 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[439708] = {
+[32375] = {
 ["learned"] = true,
 ["knownBy"] = {
-"Stormclout-Tichondrius",
+"Neonvoid-Tichondrius",
 },
 },
 [444797] = {
@@ -3348,9 +3390,10 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[12897] = {
-["learned"] = false,
+[443566] = {
+["learned"] = true,
 ["knownBy"] = {
+"Stormclout-Tichondrius",
 },
 },
 [444798] = {
@@ -3375,10 +3418,9 @@ TransmogLootHelper_Cache = {
 "Stormclout-Tichondrius",
 },
 },
-[467316] = {
-["learned"] = true,
+[444799] = {
+["learned"] = false,
 ["knownBy"] = {
-"Stormclout-Tichondrius",
 },
 },
 [447358] = {
@@ -3402,12 +3444,7 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[30315] = {
-["learned"] = false,
-["knownBy"] = {
-},
-},
-[382367] = {
+[382387] = {
 ["learned"] = true,
 ["knownBy"] = {
 "Ofpuss-Tichondrius",
@@ -3415,7 +3452,12 @@ TransmogLootHelper_Cache = {
 "Stormclout-Tichondrius",
 },
 },
-[400807] = {
+[447871] = {
+["learned"] = false,
+["knownBy"] = {
+},
+},
+[26426] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
@@ -3425,10 +3467,9 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[447360] = {
-["learned"] = true,
+[180757] = {
+["learned"] = false,
 ["knownBy"] = {
-"Stormclout-Tichondrius",
 },
 },
 [382368] = {
@@ -3438,7 +3479,7 @@ TransmogLootHelper_Cache = {
 "Starphage-Tichondrius",
 },
 },
-[16153] = {
+[449938] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
@@ -3454,14 +3495,15 @@ TransmogLootHelper_Cache = {
 "Stormclout-Tichondrius",
 },
 },
-[382369] = {
+[447873] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
 },
-[456588] = {
-["learned"] = false,
+[439708] = {
+["learned"] = true,
 ["knownBy"] = {
+"Stormclout-Tichondrius",
 },
 },
 [444803] = {
@@ -3469,10 +3511,9 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[447362] = {
-["learned"] = true,
+[180758] = {
+["learned"] = false,
 ["knownBy"] = {
-"Stormclout-Tichondrius",
 },
 },
 [382370] = {
@@ -3480,15 +3521,16 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[1272676] = {
-["learned"] = false,
-["knownBy"] = {
-},
-},
-[1230868] = {
+[445100] = {
 ["learned"] = true,
 ["knownBy"] = {
-"Neonvoid-Tichondrius",
+"Stormclout-Tichondrius",
+},
+},
+[439707] = {
+["learned"] = true,
+["knownBy"] = {
+"Stormclout-Tichondrius",
 },
 },
 [10098] = {
@@ -3501,9 +3543,10 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[81715] = {
-["learned"] = false,
+[56483] = {
+["learned"] = true,
 ["knownBy"] = {
+"Starphage-Tichondrius",
 },
 },
 [26425] = {
@@ -3522,14 +3565,15 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[449938] = {
+[3922] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
 },
-[19792] = {
-["learned"] = false,
+[445099] = {
+["learned"] = true,
 ["knownBy"] = {
+"Stormclout-Tichondrius",
 },
 },
 [447365] = {
@@ -3538,16 +3582,16 @@ TransmogLootHelper_Cache = {
 "Stormclout-Tichondrius",
 },
 },
-[1265662] = {
+[388023] = {
 ["learned"] = true,
 ["knownBy"] = {
-"Starphage-Tichondrius",
 "Stormclout-Tichondrius",
 },
 },
-[286478] = {
-["learned"] = false,
+[439710] = {
+["learned"] = true,
 ["knownBy"] = {
+"Stormclout-Tichondrius",
 },
 },
 [416149] = {
@@ -3566,11 +3610,9 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[381364] = {
+[443294] = {
 ["learned"] = true,
 ["knownBy"] = {
-"Ofpuss-Tichondrius",
-"Starphage-Tichondrius",
 "Stormclout-Tichondrius",
 },
 },
@@ -3579,7 +3621,7 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[119582] = {
+[447367] = {
 ["learned"] = true,
 ["knownBy"] = {
 "Stormclout-Tichondrius",
@@ -3596,23 +3638,20 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[1230860] = {
+[445098] = {
+["learned"] = true,
+["knownBy"] = {
+"Stormclout-Tichondrius",
+},
+},
+[1245993] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
 },
-[447368] = {
-["learned"] = true,
+[1245994] = {
+["learned"] = false,
 ["knownBy"] = {
-"Starphage-Tichondrius",
-"Stormclout-Tichondrius",
-},
-},
-[382376] = {
-["learned"] = true,
-["knownBy"] = {
-"Starphage-Tichondrius",
-"Stormclout-Tichondrius",
 },
 },
 [446345] = {
@@ -3621,9 +3660,11 @@ TransmogLootHelper_Cache = {
 "Stormclout-Tichondrius",
 },
 },
-[115310] = {
+[382396] = {
 ["learned"] = true,
 ["knownBy"] = {
+"Ofpuss-Tichondrius",
+"Starphage-Tichondrius",
 "Stormclout-Tichondrius",
 },
 },
@@ -3650,10 +3691,9 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[56481] = {
-["learned"] = true,
+[180762] = {
+["learned"] = false,
 ["knownBy"] = {
-"Starphage-Tichondrius",
 },
 },
 [12609] = {
@@ -3661,7 +3701,7 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[1230858] = {
+[15856] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
@@ -3671,11 +3711,9 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[447371] = {
-["learned"] = true,
+[1260334] = {
+["learned"] = false,
 ["knownBy"] = {
-"Starphage-Tichondrius",
-"Stormclout-Tichondrius",
 },
 },
 [382379] = {
@@ -3685,7 +3723,7 @@ TransmogLootHelper_Cache = {
 "Stormclout-Tichondrius",
 },
 },
-[439710] = {
+[425139] = {
 ["learned"] = true,
 ["knownBy"] = {
 "Stormclout-Tichondrius",
@@ -3709,18 +3747,15 @@ TransmogLootHelper_Cache = {
 "Stormclout-Tichondrius",
 },
 },
-[382389] = {
+[445097] = {
 ["learned"] = true,
 ["knownBy"] = {
-"Ofpuss-Tichondrius",
-"Starphage-Tichondrius",
 "Stormclout-Tichondrius",
 },
 },
-[1265654] = {
+[116645] = {
 ["learned"] = true,
 ["knownBy"] = {
-"Starphage-Tichondrius",
 "Stormclout-Tichondrius",
 },
 },
@@ -3741,10 +3776,9 @@ TransmogLootHelper_Cache = {
 "Stormclout-Tichondrius",
 },
 },
-[439712] = {
-["learned"] = true,
+[3978] = {
+["learned"] = false,
 ["knownBy"] = {
-"Stormclout-Tichondrius",
 },
 },
 [445327] = {
@@ -3753,12 +3787,9 @@ TransmogLootHelper_Cache = {
 "Auteist-Tichondrius",
 },
 },
-[382391] = {
-["learned"] = true,
+[26427] = {
+["learned"] = false,
 ["knownBy"] = {
-"Ofpuss-Tichondrius",
-"Starphage-Tichondrius",
-"Stormclout-Tichondrius",
 },
 },
 [17566] = {
@@ -3802,24 +3833,19 @@ TransmogLootHelper_Cache = {
 "Stormclout-Tichondrius",
 },
 },
-[382384] = {
-["learned"] = true,
-["knownBy"] = {
-"Ofpuss-Tichondrius",
-"Starphage-Tichondrius",
-"Stormclout-Tichondrius",
-},
-},
-[93741] = {
+[400807] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
 },
-[382392] = {
+[456588] = {
+["learned"] = false,
+["knownBy"] = {
+},
+},
+[445096] = {
 ["learned"] = true,
 ["knownBy"] = {
-"Ofpuss-Tichondrius",
-"Starphage-Tichondrius",
 "Stormclout-Tichondrius",
 },
 },
@@ -3842,11 +3868,9 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[3918] = {
-["learned"] = true,
+[26443] = {
+["learned"] = false,
 ["knownBy"] = {
-"Starphage-Tichondrius",
-"Stormclout-Tichondrius",
 },
 },
 [447378] = {
@@ -3855,10 +3879,12 @@ TransmogLootHelper_Cache = {
 "Stormclout-Tichondrius",
 },
 },
-[32375] = {
+[382386] = {
 ["learned"] = true,
 ["knownBy"] = {
-"Neonvoid-Tichondrius",
+"Ofpuss-Tichondrius",
+"Starphage-Tichondrius",
+"Stormclout-Tichondrius",
 },
 },
 [456590] = {
@@ -3880,12 +3906,9 @@ TransmogLootHelper_Cache = {
 "Stormclout-Tichondrius",
 },
 },
-[382387] = {
-["learned"] = true,
+[400810] = {
+["learned"] = false,
 ["knownBy"] = {
-"Ofpuss-Tichondrius",
-"Starphage-Tichondrius",
-"Stormclout-Tichondrius",
 },
 },
 [456591] = {
@@ -3893,7 +3916,7 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[26426] = {
+[18238] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
@@ -3911,10 +3934,9 @@ TransmogLootHelper_Cache = {
 "Stormclout-Tichondrius",
 },
 },
-[445341] = {
-["learned"] = true,
+[354764] = {
+["learned"] = false,
 ["knownBy"] = {
-"Auteist-Tichondrius",
 },
 },
 [381365] = {
@@ -3931,9 +3953,10 @@ TransmogLootHelper_Cache = {
 "Auteist-Tichondrius",
 },
 },
-[439705] = {
+[382389] = {
 ["learned"] = true,
 ["knownBy"] = {
+"Ofpuss-Tichondrius",
 "Starphage-Tichondrius",
 "Stormclout-Tichondrius",
 },
@@ -3943,14 +3966,16 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[3950] = {
-["learned"] = false,
+[439715] = {
+["learned"] = true,
 ["knownBy"] = {
+"Stormclout-Tichondrius",
 },
 },
-[3966] = {
-["learned"] = false,
+[445095] = {
+["learned"] = true,
 ["knownBy"] = {
+"Stormclout-Tichondrius",
 },
 },
 [382390] = {
@@ -3961,12 +3986,10 @@ TransmogLootHelper_Cache = {
 "Stormclout-Tichondrius",
 },
 },
-[382397] = {
+[132157] = {
 ["learned"] = true,
 ["knownBy"] = {
-"Ofpuss-Tichondrius",
-"Starphage-Tichondrius",
-"Stormclout-Tichondrius",
+"Neonvoid-Tichondrius",
 },
 },
 [381367] = {
@@ -3975,14 +3998,17 @@ TransmogLootHelper_Cache = {
 "Stormclout-Tichondrius",
 },
 },
-[439714] = {
-["learned"] = false,
-["knownBy"] = {
-},
-},
-[439707] = {
+[100784] = {
 ["learned"] = true,
 ["knownBy"] = {
+"Korahron-Tichondrius",
+},
+},
+[382391] = {
+["learned"] = true,
+["knownBy"] = {
+"Ofpuss-Tichondrius",
+"Starphage-Tichondrius",
 "Stormclout-Tichondrius",
 },
 },
@@ -4008,7 +4034,7 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[310526] = {
+[1272707] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
@@ -4021,9 +4047,10 @@ TransmogLootHelper_Cache = {
 "Stormclout-Tichondrius",
 },
 },
-[381375] = {
-["learned"] = false,
+[445094] = {
+["learned"] = true,
 ["knownBy"] = {
+"Stormclout-Tichondrius",
 },
 },
 [382393] = {
@@ -4044,21 +4071,24 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[388023] = {
+[3918] = {
 ["learned"] = true,
 ["knownBy"] = {
+"Starphage-Tichondrius",
 "Stormclout-Tichondrius",
 },
 },
-[3922] = {
-["learned"] = false,
-["knownBy"] = {
-},
-},
-[132157] = {
+[382394] = {
 ["learned"] = true,
 ["knownBy"] = {
-"Neonvoid-Tichondrius",
+"Ofpuss-Tichondrius",
+"Starphage-Tichondrius",
+"Stormclout-Tichondrius",
+},
+},
+[30329] = {
+["learned"] = false,
+["knownBy"] = {
 },
 },
 [381371] = {
@@ -4079,7 +4109,7 @@ TransmogLootHelper_Cache = {
 "Stormclout-Tichondrius",
 },
 },
-[3942] = {
+[1266541] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
@@ -4089,10 +4119,10 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[443294] = {
+[445341] = {
 ["learned"] = true,
 ["knownBy"] = {
-"Stormclout-Tichondrius",
+"Auteist-Tichondrius",
 },
 },
 [3954] = {
@@ -4115,23 +4145,26 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[116645] = {
+[382397] = {
+["learned"] = true,
+["knownBy"] = {
+"Ofpuss-Tichondrius",
+"Starphage-Tichondrius",
+"Stormclout-Tichondrius",
+},
+},
+[354768] = {
 ["learned"] = true,
 ["knownBy"] = {
 "Stormclout-Tichondrius",
 },
 },
-[46697] = {
+[25659] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
 },
-[198939] = {
-["learned"] = false,
-["knownBy"] = {
-},
-},
-[310525] = {
+[1264527] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
@@ -4144,12 +4177,12 @@ TransmogLootHelper_Cache = {
 "Stormclout-Tichondrius",
 },
 },
-[1260425] = {
+[438952] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
 },
-[354764] = {
+[381375] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
@@ -4164,7 +4197,7 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[416689] = {
+[382404] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
@@ -4174,15 +4207,12 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[382402] = {
-["learned"] = true,
+[81720] = {
+["learned"] = false,
 ["knownBy"] = {
-"Ofpuss-Tichondrius",
-"Starphage-Tichondrius",
-"Stormclout-Tichondrius",
 },
 },
-[382400] = {
+[1266560] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
@@ -4197,9 +4227,10 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[1264523] = {
-["learned"] = false,
+[121253] = {
+["learned"] = true,
 ["knownBy"] = {
+"Stormclout-Tichondrius",
 },
 },
 [382401] = {
@@ -4210,12 +4241,13 @@ TransmogLootHelper_Cache = {
 "Stormclout-Tichondrius",
 },
 },
-[26427] = {
-["learned"] = false,
+[84408] = {
+["learned"] = true,
 ["knownBy"] = {
+"Starphage-Tichondrius",
 },
 },
-[1272707] = {
+[1260425] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
@@ -4226,21 +4258,22 @@ TransmogLootHelper_Cache = {
 "Auteist-Tichondrius",
 },
 },
-[84406] = {
+[382402] = {
 ["learned"] = true,
 ["knownBy"] = {
+"Ofpuss-Tichondrius",
 "Starphage-Tichondrius",
+"Stormclout-Tichondrius",
 },
 },
-[1264529] = {
+[62051] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
 },
-[354768] = {
-["learned"] = true,
+[1264523] = {
+["learned"] = false,
 ["knownBy"] = {
-"Stormclout-Tichondrius",
 },
 },
 [1264524] = {
@@ -4258,7 +4291,7 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[18239] = {
+[46697] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
@@ -4268,14 +4301,15 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[382404] = {
+[439720] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
 },
-[81720] = {
-["learned"] = false,
+[115175] = {
+["learned"] = true,
 ["knownBy"] = {
+"Stormclout-Tichondrius",
 },
 },
 [381381] = {
@@ -4295,10 +4329,9 @@ TransmogLootHelper_Cache = {
 "Stormclout-Tichondrius",
 },
 },
-[439709] = {
-["learned"] = true,
+[30313] = {
+["learned"] = false,
 ["knownBy"] = {
-"Stormclout-Tichondrius",
 },
 },
 [381382] = {
@@ -4307,19 +4340,19 @@ TransmogLootHelper_Cache = {
 "Stormclout-Tichondrius",
 },
 },
+[1246167] = {
+["learned"] = true,
+["knownBy"] = {
+"Starphage-Tichondrius",
+},
+},
 [439722] = {
 ["learned"] = true,
 ["knownBy"] = {
 "Stormclout-Tichondrius",
 },
 },
-[121253] = {
-["learned"] = true,
-["knownBy"] = {
-"Stormclout-Tichondrius",
-},
-},
-[1230859] = {
+[2331] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
@@ -4329,9 +4362,13 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[439726] = {
-["learned"] = false,
+[83958] = {
+["learned"] = true,
 ["knownBy"] = {
+"Neonvoid-Tichondrius",
+"Stormclout-Tichondrius",
+"Auteist-Tichondrius",
+"Hellavator-Tichondrius",
 },
 },
 [382407] = {
@@ -4342,11 +4379,10 @@ TransmogLootHelper_Cache = {
 "Stormclout-Tichondrius",
 },
 },
-[310522] = {
+[445368] = {
 ["learned"] = true,
 ["knownBy"] = {
-"Starphage-Tichondrius",
-"Stormclout-Tichondrius",
+"Auteist-Tichondrius",
 },
 },
 [62050] = {
@@ -4354,10 +4390,10 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[283399] = {
+[445090] = {
 ["learned"] = true,
 ["knownBy"] = {
-"Starphage-Tichondrius",
+"Stormclout-Tichondrius",
 },
 },
 [382408] = {
@@ -4367,10 +4403,9 @@ TransmogLootHelper_Cache = {
 "Starphage-Tichondrius",
 },
 },
-[84408] = {
-["learned"] = true,
+[15633] = {
+["learned"] = false,
 ["knownBy"] = {
-"Starphage-Tichondrius",
 },
 },
 [381385] = {
@@ -4405,10 +4440,9 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[100784] = {
-["learned"] = true,
+[439726] = {
+["learned"] = false,
 ["knownBy"] = {
-"Korahron-Tichondrius",
 },
 },
 [1229755] = {
@@ -4424,7 +4458,7 @@ TransmogLootHelper_Cache = {
 "Auteist-Tichondrius",
 },
 },
-[15856] = {
+[439743] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
@@ -4435,7 +4469,7 @@ TransmogLootHelper_Cache = {
 "Stormclout-Tichondrius",
 },
 },
-[15935] = {
+[1229891] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
@@ -4446,9 +4480,10 @@ TransmogLootHelper_Cache = {
 "Stormclout-Tichondrius",
 },
 },
-[3398] = {
-["learned"] = false,
+[445089] = {
+["learned"] = true,
 ["knownBy"] = {
+"Stormclout-Tichondrius",
 },
 },
 [439728] = {
@@ -4479,7 +4514,7 @@ TransmogLootHelper_Cache = {
 "Stormclout-Tichondrius",
 },
 },
-[19825] = {
+[423882] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
@@ -4513,20 +4548,20 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[447373] = {
+[1229903] = {
+["learned"] = false,
+["knownBy"] = {
+},
+},
+[30332] = {
+["learned"] = false,
+["knownBy"] = {
+},
+},
+[1229935] = {
 ["learned"] = true,
 ["knownBy"] = {
-"Stormclout-Tichondrius",
-},
-},
-[62051] = {
-["learned"] = false,
-["knownBy"] = {
-},
-},
-[381396] = {
-["learned"] = false,
-["knownBy"] = {
+"Starphage-Tichondrius",
 },
 },
 [381392] = {
@@ -4546,10 +4581,9 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[445368] = {
-["learned"] = true,
+[2547] = {
+["learned"] = false,
 ["knownBy"] = {
-"Auteist-Tichondrius",
 },
 },
 [381393] = {
@@ -4557,25 +4591,26 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[23070] = {
+[7179] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
 },
-[1250356] = {
-["learned"] = false,
-["knownBy"] = {
-},
-},
-[1265614] = {
+[1229866] = {
 ["learned"] = true,
 ["knownBy"] = {
-"Neonvoid-Tichondrius",
+"Starphage-Tichondrius",
 },
 },
-[171072] = {
+[381415] = {
 ["learned"] = false,
 ["knownBy"] = {
+},
+},
+[1229873] = {
+["learned"] = true,
+["knownBy"] = {
+"Starphage-Tichondrius",
 },
 },
 [4508] = {
@@ -4589,7 +4624,7 @@ TransmogLootHelper_Cache = {
 "Starphage-Tichondrius",
 },
 },
-[299015] = {
+[310496] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
@@ -4599,12 +4634,12 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[1229903] = {
+[381417] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
 },
-[1225820] = {
+[407005] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
@@ -4620,14 +4655,15 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[2539] = {
+[381418] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
 },
-[28267] = {
-["learned"] = false,
+[427174] = {
+["learned"] = true,
 ["knownBy"] = {
+"Neonvoid-Tichondrius",
 },
 },
 [299005] = {
@@ -4645,7 +4681,7 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[2547] = {
+[1250351] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
@@ -4660,10 +4696,9 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[233759] = {
-["learned"] = true,
+[407006] = {
+["learned"] = false,
 ["knownBy"] = {
-"Stormclout-Tichondrius",
 },
 },
 [84411] = {
@@ -4687,7 +4722,7 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[1229876] = {
+[3940] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
@@ -4721,7 +4756,7 @@ TransmogLootHelper_Cache = {
 "Starphage-Tichondrius",
 },
 },
-[407005] = {
+[1229886] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
@@ -4731,13 +4766,13 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[443059] = {
+[445084] = {
 ["learned"] = true,
 ["knownBy"] = {
 "Stormclout-Tichondrius",
 },
 },
-[15633] = {
+[23070] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
@@ -4768,7 +4803,7 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[84416] = {
+[1229888] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
@@ -4788,16 +4823,14 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[2659] = {
+[1229890] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
 },
-[55016] = {
-["learned"] = true,
+[439744] = {
+["learned"] = false,
 ["knownBy"] = {
-"Starphage-Tichondrius",
-"Stormclout-Tichondrius",
 },
 },
 [299013] = {
@@ -4811,14 +4844,15 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[1229890] = {
+[171072] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
 },
-[19791] = {
-["learned"] = false,
+[1229898] = {
+["learned"] = true,
 ["knownBy"] = {
+"Starphage-Tichondrius",
 },
 },
 [299014] = {
@@ -4826,7 +4860,7 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[1229891] = {
+[17570] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
@@ -4842,17 +4876,18 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[423882] = {
+[299015] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
 },
-[381407] = {
-["learned"] = false,
+[245013] = {
+["learned"] = true,
 ["knownBy"] = {
+"Stormclout-Tichondrius",
 },
 },
-[84417] = {
+[17634] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
@@ -4863,7 +4898,7 @@ TransmogLootHelper_Cache = {
 "Stormclout-Tichondrius",
 },
 },
-[12899] = {
+[37836] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
@@ -4874,17 +4909,17 @@ TransmogLootHelper_Cache = {
 "Starphage-Tichondrius",
 },
 },
-[1229906] = {
+[171074] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
 },
-[1229911] = {
+[11466] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
 },
-[1229913] = {
+[1225817] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
@@ -4894,12 +4929,12 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[84418] = {
+[198965] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
 },
-[6415] = {
+[1225820] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
@@ -4909,7 +4944,7 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[2795] = {
+[18242] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
@@ -4919,15 +4954,15 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[1261493] = {
+[442328] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
 },
-[122470] = {
+[205364] = {
 ["learned"] = true,
 ["knownBy"] = {
-"Stormclout-Tichondrius",
+"Neonvoid-Tichondrius",
 },
 },
 [381411] = {
@@ -4941,18 +4976,18 @@ TransmogLootHelper_Cache = {
 "Starphage-Tichondrius",
 },
 },
-[9269] = {
+[445399] = {
+["learned"] = true,
+["knownBy"] = {
+"Auteist-Tichondrius",
+},
+},
+[198968] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
 },
-[443566] = {
-["learned"] = true,
-["knownBy"] = {
-"Stormclout-Tichondrius",
-},
-},
-[381412] = {
+[18241] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
@@ -4980,7 +5015,7 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[7755] = {
+[1218414] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
@@ -4991,9 +5026,11 @@ TransmogLootHelper_Cache = {
 "Starphage-Tichondrius",
 },
 },
-[7179] = {
-["learned"] = false,
+[1229863] = {
+["learned"] = true,
 ["knownBy"] = {
+"Starphage-Tichondrius",
+"Stormclout-Tichondrius",
 },
 },
 [1229864] = {
@@ -5043,10 +5080,10 @@ TransmogLootHelper_Cache = {
 "Starphage-Tichondrius",
 },
 },
-[1229872] = {
+[233759] = {
 ["learned"] = true,
 ["knownBy"] = {
-"Starphage-Tichondrius",
+"Stormclout-Tichondrius",
 },
 },
 [7259] = {
@@ -5064,7 +5101,7 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[381417] = {
+[1229876] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
@@ -5090,12 +5127,12 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[12595] = {
+[1229881] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
 },
-[407006] = {
+[84416] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
@@ -5115,7 +5152,7 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[1229886] = {
+[1250356] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
@@ -5125,7 +5162,7 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[1229888] = {
+[381420] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
@@ -5177,15 +5214,15 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[1229898] = {
-["learned"] = true,
-["knownBy"] = {
-"Starphage-Tichondrius",
-},
-},
-[17570] = {
+[84417] = {
 ["learned"] = false,
 ["knownBy"] = {
+},
+},
+[80451] = {
+["learned"] = true,
+["knownBy"] = {
+"Stormclout-Tichondrius",
 },
 },
 [1229900] = {
@@ -5194,9 +5231,10 @@ TransmogLootHelper_Cache = {
 "Starphage-Tichondrius",
 },
 },
-[17634] = {
-["learned"] = false,
+[1229901] = {
+["learned"] = true,
 ["knownBy"] = {
+"Starphage-Tichondrius",
 },
 },
 [1229902] = {
@@ -5221,14 +5259,12 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[396777] = {
-["learned"] = true,
+[1229906] = {
+["learned"] = false,
 ["knownBy"] = {
-"Starphage-Tichondrius",
-"Stormclout-Tichondrius",
 },
 },
-[171074] = {
+[1229907] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
@@ -5248,7 +5284,7 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[1225817] = {
+[1229911] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
@@ -5263,7 +5299,7 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[30332] = {
+[84418] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
@@ -5283,7 +5319,7 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[198968] = {
+[11460] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
@@ -5293,7 +5329,7 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[198966] = {
+[2795] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
@@ -5334,16 +5370,14 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[1229928] = {
-["learned"] = true,
+[198967] = {
+["learned"] = false,
 ["knownBy"] = {
-"Starphage-Tichondrius",
 },
 },
-[205364] = {
-["learned"] = true,
+[9269] = {
+["learned"] = false,
 ["knownBy"] = {
-"Neonvoid-Tichondrius",
 },
 },
 [1229930] = {
@@ -5358,10 +5392,11 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[1229938] = {
+[384692] = {
 ["learned"] = true,
 ["knownBy"] = {
 "Starphage-Tichondrius",
+"Stormclout-Tichondrius",
 },
 },
 [161354] = {
@@ -5376,7 +5411,7 @@ TransmogLootHelper_Cache = {
 "Stormclout-Tichondrius",
 },
 },
-[178242] = {
+[442330] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
@@ -5393,7 +5428,13 @@ TransmogLootHelper_Cache = {
 "Starphage-Tichondrius",
 },
 },
-[11460] = {
+[1229938] = {
+["learned"] = true,
+["knownBy"] = {
+"Starphage-Tichondrius",
+},
+},
+[11476] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
@@ -5403,21 +5444,14 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[439715] = {
-["learned"] = true,
-["knownBy"] = {
-"Stormclout-Tichondrius",
-},
-},
-[2542] = {
+[444800] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
 },
-[94748] = {
-["learned"] = true,
+[3938] = {
+["learned"] = false,
 ["knownBy"] = {
-"Starphage-Tichondrius",
 },
 },
 [442332] = {
@@ -5445,20 +5479,17 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[426756] = {
-["learned"] = true,
+[1229877] = {
+["learned"] = false,
 ["knownBy"] = {
-"Starphage-Tichondrius",
 },
 },
-[1225340] = {
-["learned"] = true,
+[26442] = {
+["learned"] = false,
 ["knownBy"] = {
-"Starphage-Tichondrius",
-"Neonvoid-Tichondrius",
 },
 },
-[21175] = {
+[288029] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
@@ -5473,7 +5504,7 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[18242] = {
+[435865] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
@@ -5483,30 +5514,25 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[383359] = {
+[81716] = {
+["learned"] = false,
+["knownBy"] = {
+},
+},
+[439719] = {
 ["learned"] = true,
 ["knownBy"] = {
-"Neonvoid-Tichondrius",
+"Stormclout-Tichondrius",
+},
+},
+[396777] = {
+["learned"] = true,
+["knownBy"] = {
 "Starphage-Tichondrius",
 "Stormclout-Tichondrius",
-"Auteist-Tichondrius",
-"Hellavator-Tichondrius",
-"Mäñýfäçëð-Tichondrius",
-"Tampacks-Mal'Ganis",
-"Reedingo-Mal'Ganis",
 },
 },
-[25659] = {
-["learned"] = false,
-["knownBy"] = {
-},
-},
-[310534] = {
-["learned"] = false,
-["knownBy"] = {
-},
-},
-[198971] = {
+[30344] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
@@ -5518,16 +5544,14 @@ TransmogLootHelper_Cache = {
 "Stormclout-Tichondrius",
 },
 },
-[15906] = {
+[198971] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
 },
-[431280] = {
-["learned"] = true,
+[56514] = {
+["learned"] = false,
 ["knownBy"] = {
-"Tainguk-Tichondrius",
-"Korahron-Tichondrius",
 },
 },
 [456154] = {
@@ -5540,7 +5564,7 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[298257] = {
+[15906] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
@@ -5550,16 +5574,15 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[310507] = {
-["learned"] = false,
-["knownBy"] = {
-},
-},
-[265099] = {
+[439711] = {
 ["learned"] = true,
 ["knownBy"] = {
-"Ofpuss-Tichondrius",
-"Starphage-Tichondrius",
+"Stormclout-Tichondrius",
+},
+},
+[381412] = {
+["learned"] = false,
+["knownBy"] = {
 },
 },
 [198972] = {
@@ -5567,16 +5590,26 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[1229866] = {
+[1261414] = {
 ["learned"] = true,
 ["knownBy"] = {
 "Starphage-Tichondrius",
 },
 },
-[264960] = {
+[162217] = {
+["learned"] = false,
+["knownBy"] = {
+},
+},
+[62271] = {
 ["learned"] = true,
 ["knownBy"] = {
 "Starphage-Tichondrius",
+},
+},
+[408052] = {
+["learned"] = false,
+["knownBy"] = {
 },
 },
 [287279] = {
@@ -5586,19 +5619,10 @@ TransmogLootHelper_Cache = {
 "Stormclout-Tichondrius",
 },
 },
-[408052] = {
-["learned"] = false,
+[447329] = {
+["learned"] = true,
 ["knownBy"] = {
-},
-},
-[447374] = {
-["learned"] = false,
-["knownBy"] = {
-},
-},
-[444792] = {
-["learned"] = false,
-["knownBy"] = {
+"Stormclout-Tichondrius",
 },
 },
 [84038] = {
@@ -5612,14 +5636,16 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[1260349] = {
+[287110] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
 },
-[444800] = {
-["learned"] = false,
+[55002] = {
+["learned"] = true,
 ["knownBy"] = {
+"Starphage-Tichondrius",
+"Stormclout-Tichondrius",
 },
 },
 [218164] = {
@@ -5628,16 +5654,9 @@ TransmogLootHelper_Cache = {
 "Stormclout-Tichondrius",
 },
 },
-[1225369] = {
-["learned"] = true,
+[1260333] = {
+["learned"] = false,
 ["knownBy"] = {
-"Stormclout-Tichondrius",
-},
-},
-[447316] = {
-["learned"] = true,
-["knownBy"] = {
-"Stormclout-Tichondrius",
 },
 },
 [171073] = {
@@ -5645,19 +5664,15 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[288029] = {
+[12905] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
 },
-[198974] = {
-["learned"] = false,
+[84403] = {
+["learned"] = true,
 ["knownBy"] = {
-},
-},
-[1263643] = {
-["learned"] = false,
-["knownBy"] = {
+"Starphage-Tichondrius",
 },
 },
 [18243] = {
@@ -5665,20 +5680,33 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[26443] = {
-["learned"] = false,
-["knownBy"] = {
-},
-},
-[378302] = {
-["learned"] = false,
-["knownBy"] = {
-},
-},
-[1229899] = {
+[177054] = {
 ["learned"] = true,
 ["knownBy"] = {
+"Ofpuss-Tichondrius",
 "Starphage-Tichondrius",
+"Stormclout-Tichondrius",
+},
+},
+[198974] = {
+["learned"] = false,
+["knownBy"] = {
+},
+},
+[198966] = {
+["learned"] = false,
+["knownBy"] = {
+},
+},
+[338115] = {
+["learned"] = false,
+["knownBy"] = {
+},
+},
+[116705] = {
+["learned"] = true,
+["knownBy"] = {
+"Stormclout-Tichondrius",
 },
 },
 [325153] = {
@@ -5699,17 +5727,19 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[354766] = {
-["learned"] = false,
+[1225272] = {
+["learned"] = true,
 ["knownBy"] = {
+"Starphage-Tichondrius",
 },
 },
-[310533] = {
-["learned"] = false,
+[259445] = {
+["learned"] = true,
 ["knownBy"] = {
+"Starphage-Tichondrius",
 },
 },
-[310535] = {
+[8243] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
@@ -5720,39 +5750,45 @@ TransmogLootHelper_Cache = {
 "Stormclout-Tichondrius",
 },
 },
-[115175] = {
+[381378] = {
+["learned"] = false,
+["knownBy"] = {
+},
+},
+[310485] = {
+["learned"] = false,
+["knownBy"] = {
+},
+},
+[389413] = {
 ["learned"] = true,
 ["knownBy"] = {
+"Starphage-Tichondrius",
 "Stormclout-Tichondrius",
 },
 },
-[30313] = {
+[190788] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
 },
-[439713] = {
-["learned"] = false,
-["knownBy"] = {
-},
-},
-[198976] = {
-["learned"] = false,
-["knownBy"] = {
-},
-},
-[439724] = {
-["learned"] = false,
-["knownBy"] = {
-},
-},
-[83958] = {
+[383359] = {
 ["learned"] = true,
 ["knownBy"] = {
 "Neonvoid-Tichondrius",
+"Starphage-Tichondrius",
 "Stormclout-Tichondrius",
 "Auteist-Tichondrius",
 "Hellavator-Tichondrius",
+"Mäñýfäçëð-Tichondrius",
+"Tampacks-Mal'Ganis",
+"Reedingo-Mal'Ganis",
+},
+},
+[1225278] = {
+["learned"] = true,
+["knownBy"] = {
+"Starphage-Tichondrius",
 },
 },
 [471005] = {
@@ -5762,24 +5798,26 @@ TransmogLootHelper_Cache = {
 "Stormclout-Tichondrius",
 },
 },
-[3938] = {
+[3952] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
 },
-[1229877] = {
+[445418] = {
+["learned"] = true,
+["knownBy"] = {
+"Stormclout-Tichondrius",
+},
+},
+[438927] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
 },
-[81716] = {
-["learned"] = false,
+[388615] = {
+["learned"] = true,
 ["knownBy"] = {
-},
-},
-[84424] = {
-["learned"] = false,
-["knownBy"] = {
+"Stormclout-Tichondrius",
 },
 },
 [198977] = {
@@ -5794,10 +5832,9 @@ TransmogLootHelper_Cache = {
 "Stormclout-Tichondrius",
 },
 },
-[388615] = {
-["learned"] = true,
+[84424] = {
+["learned"] = false,
 ["knownBy"] = {
-"Stormclout-Tichondrius",
 },
 },
 [471007] = {
@@ -5807,15 +5844,14 @@ TransmogLootHelper_Cache = {
 "Stormclout-Tichondrius",
 },
 },
-[3175] = {
+[198976] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
 },
-[471008] = {
-["learned"] = true,
+[3175] = {
+["learned"] = false,
 ["knownBy"] = {
-"Starphage-Tichondrius",
 },
 },
 [3171] = {
@@ -5835,14 +5871,15 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[1260331] = {
+[438926] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
 },
-[447329] = {
+[1225347] = {
 ["learned"] = true,
 ["knownBy"] = {
+"Starphage-Tichondrius",
 "Stormclout-Tichondrius",
 },
 },
@@ -5857,11 +5894,14 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[55002] = {
-["learned"] = true,
+[1264525] = {
+["learned"] = false,
 ["knownBy"] = {
-"Starphage-Tichondrius",
-"Stormclout-Tichondrius",
+},
+},
+[3937] = {
+["learned"] = false,
+["knownBy"] = {
 },
 },
 [61483] = {
@@ -5871,20 +5911,16 @@ TransmogLootHelper_Cache = {
 "Stormclout-Tichondrius",
 },
 },
-[6412] = {
-["learned"] = false,
-["knownBy"] = {
-},
-},
 [198979] = {
 ["learned"] = true,
 ["knownBy"] = {
 "Stormclout-Tichondrius",
 },
 },
-[1264525] = {
-["learned"] = false,
+[438925] = {
+["learned"] = true,
 ["knownBy"] = {
+"Stormclout-Tichondrius",
 },
 },
 [84425] = {
@@ -5907,18 +5943,23 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[1225367] = {
+[178242] = {
+["learned"] = false,
+["knownBy"] = {
+},
+},
+[389406] = {
 ["learned"] = true,
 ["knownBy"] = {
 "Starphage-Tichondrius",
 },
 },
-[12591] = {
+[198980] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
 },
-[198980] = {
+[6500] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
@@ -5927,11 +5968,6 @@ TransmogLootHelper_Cache = {
 ["learned"] = true,
 ["knownBy"] = {
 "Reedingo-Mal'Ganis",
-},
-},
-[6500] = {
-["learned"] = false,
-["knownBy"] = {
 },
 },
 [471013] = {
@@ -5946,18 +5982,17 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[439719] = {
-["learned"] = true,
-["knownBy"] = {
-"Stormclout-Tichondrius",
-},
-},
-[1260333] = {
+[438924] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
 },
-[310496] = {
+[6412] = {
+["learned"] = false,
+["knownBy"] = {
+},
+},
+[46114] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
@@ -5967,10 +6002,9 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[439711] = {
-["learned"] = true,
+[1263643] = {
+["learned"] = false,
 ["knownBy"] = {
-"Stormclout-Tichondrius",
 },
 },
 [30334] = {
@@ -5978,15 +6012,17 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[1264528] = {
-["learned"] = false,
-["knownBy"] = {
-},
-},
-[427174] = {
+[259442] = {
 ["learned"] = true,
 ["knownBy"] = {
-"Neonvoid-Tichondrius",
+"Starphage-Tichondrius",
+"Stormclout-Tichondrius",
+},
+},
+[447370] = {
+["learned"] = true,
+["knownBy"] = {
+"Stormclout-Tichondrius",
 },
 },
 [353313] = {
@@ -5995,7 +6031,7 @@ TransmogLootHelper_Cache = {
 "Stormclout-Tichondrius",
 },
 },
-[3952] = {
+[381373] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
@@ -6015,28 +6051,32 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[1225272] = {
-["learned"] = true,
-["knownBy"] = {
-"Starphage-Tichondrius",
-},
-},
-[3940] = {
+[162209] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
 },
-[23129] = {
+[1261509] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
 },
-[381378] = {
+[435851] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
 },
-[8243] = {
+[173979] = {
+["learned"] = false,
+["knownBy"] = {
+},
+},
+[347176] = {
+["learned"] = false,
+["knownBy"] = {
+},
+},
+[24801] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
@@ -6046,13 +6086,7 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[430590] = {
-["learned"] = true,
-["knownBy"] = {
-"Neonvoid-Tichondrius",
-},
-},
-[287110] = {
+[11461] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
@@ -6062,7 +6096,7 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[3371] = {
+[430592] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
@@ -6073,22 +6107,24 @@ TransmogLootHelper_Cache = {
 "Neonvoid-Tichondrius",
 },
 },
-[24801] = {
+[78670] = {
+["learned"] = true,
+["knownBy"] = {
+"Stormclout-Tichondrius",
+},
+},
+[207684] = {
+["learned"] = true,
+["knownBy"] = {
+"Starphage-Tichondrius",
+},
+},
+[198985] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
 },
-[11461] = {
-["learned"] = false,
-["knownBy"] = {
-},
-},
-[37836] = {
-["learned"] = false,
-["knownBy"] = {
-},
-},
-[430592] = {
+[3371] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
@@ -6099,10 +6135,9 @@ TransmogLootHelper_Cache = {
 "Neonvoid-Tichondrius",
 },
 },
-[207684] = {
-["learned"] = true,
+[456180] = {
+["learned"] = false,
 ["knownBy"] = {
-"Starphage-Tichondrius",
 },
 },
 [11477] = {
@@ -6116,7 +6151,27 @@ TransmogLootHelper_Cache = {
 "Neonvoid-Tichondrius",
 },
 },
-[1261414] = {
+[305863] = {
+["learned"] = false,
+["knownBy"] = {
+},
+},
+[198988] = {
+["learned"] = false,
+["knownBy"] = {
+},
+},
+[3399] = {
+["learned"] = false,
+["knownBy"] = {
+},
+},
+[430594] = {
+["learned"] = false,
+["knownBy"] = {
+},
+},
+[259440] = {
 ["learned"] = true,
 ["knownBy"] = {
 "Starphage-Tichondrius",
@@ -6128,27 +6183,7 @@ TransmogLootHelper_Cache = {
 "Stormclout-Tichondrius",
 },
 },
-[3399] = {
-["learned"] = false,
-["knownBy"] = {
-},
-},
-[198985] = {
-["learned"] = false,
-["knownBy"] = {
-},
-},
-[3451] = {
-["learned"] = false,
-["knownBy"] = {
-},
-},
-[84428] = {
-["learned"] = false,
-["knownBy"] = {
-},
-},
-[11466] = {
+[430597] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
@@ -6163,17 +6198,7 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[198990] = {
-["learned"] = false,
-["knownBy"] = {
-},
-},
-[430598] = {
-["learned"] = false,
-["knownBy"] = {
-},
-},
-[430596] = {
+[198987] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
@@ -6184,7 +6209,18 @@ TransmogLootHelper_Cache = {
 "Stormclout-Tichondrius",
 },
 },
-[198994] = {
+[430596] = {
+["learned"] = false,
+["knownBy"] = {
+},
+},
+[383649] = {
+["learned"] = true,
+["knownBy"] = {
+"Stormclout-Tichondrius",
+},
+},
+[198989] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
@@ -6194,15 +6230,15 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[430597] = {
-["learned"] = false,
-["knownBy"] = {
-},
-},
-[446991] = {
+[446973] = {
 ["learned"] = true,
 ["knownBy"] = {
 "Auteist-Tichondrius",
+},
+},
+[430615] = {
+["learned"] = false,
+["knownBy"] = {
 },
 },
 [430604] = {
@@ -6210,20 +6246,21 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[435865] = {
-["learned"] = false,
-["knownBy"] = {
-},
-},
-[198987] = {
-["learned"] = false,
-["knownBy"] = {
-},
-},
-[446985] = {
+[259439] = {
 ["learned"] = true,
 ["knownBy"] = {
-"Auteist-Tichondrius",
+"Starphage-Tichondrius",
+},
+},
+[430598] = {
+["learned"] = false,
+["knownBy"] = {
+},
+},
+[125883] = {
+["learned"] = true,
+["knownBy"] = {
+"Stormclout-Tichondrius",
 },
 },
 [84429] = {
@@ -6246,13 +6283,12 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[125883] = {
-["learned"] = true,
+[305858] = {
+["learned"] = false,
 ["knownBy"] = {
-"Stormclout-Tichondrius",
 },
 },
-[162217] = {
+[397858] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
@@ -6262,16 +6298,14 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[56514] = {
+[305861] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
 },
-[384692] = {
-["learned"] = true,
+[198998] = {
+["learned"] = false,
 ["knownBy"] = {
-"Starphage-Tichondrius",
-"Stormclout-Tichondrius",
 },
 },
 [21923] = {
@@ -6284,7 +6318,7 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[397858] = {
+[12597] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
@@ -6301,7 +6335,7 @@ TransmogLootHelper_Cache = {
 "Stormclout-Tichondrius",
 },
 },
-[198989] = {
+[430602] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
@@ -6327,22 +6361,22 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[430623] = {
+[305860] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
 },
-[17574] = {
+[338100] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
 },
-[430615] = {
+[1248615] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
 },
-[18245] = {
+[198990] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
@@ -6352,9 +6386,10 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[26442] = {
-["learned"] = false,
+[117952] = {
+["learned"] = true,
 ["knownBy"] = {
+"Korahron-Tichondrius",
 },
 },
 [430093] = {
@@ -6367,16 +6402,15 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[1248615] = {
+[305859] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
 },
-[384690] = {
+[430614] = {
 ["learned"] = true,
 ["knownBy"] = {
-"Starphage-Tichondrius",
-"Stormclout-Tichondrius",
+"Neonvoid-Tichondrius",
 },
 },
 [430094] = {
@@ -6389,7 +6423,7 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[198996] = {
+[33277] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
@@ -6409,7 +6443,7 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[7828] = {
+[15863] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
@@ -6434,14 +6468,13 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[314962] = {
+[259437] = {
 ["learned"] = true,
 ["knownBy"] = {
 "Starphage-Tichondrius",
-"Stormclout-Tichondrius",
 },
 },
-[30344] = {
+[430616] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
@@ -6457,16 +6490,14 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[310485] = {
+[430618] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
 },
-[389192] = {
-["learned"] = true,
+[199001] = {
+["learned"] = false,
 ["knownBy"] = {
-"Starphage-Tichondrius",
-"Stormclout-Tichondrius",
 },
 },
 [198993] = {
@@ -6474,7 +6505,7 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[12597] = {
+[176732] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
@@ -6484,7 +6515,7 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[430620] = {
+[18246] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
@@ -6499,10 +6530,9 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[116705] = {
-["learned"] = true,
+[3376] = {
+["learned"] = false,
 ["knownBy"] = {
-"Stormclout-Tichondrius",
 },
 },
 [471040] = {
@@ -6511,18 +6541,12 @@ TransmogLootHelper_Cache = {
 "Neonvoid-Tichondrius",
 },
 },
-[117952] = {
-["learned"] = true,
-["knownBy"] = {
-"Korahron-Tichondrius",
-},
-},
-[343103] = {
+[430612] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
 },
-[430622] = {
+[343103] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
@@ -6532,15 +6556,19 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
+[198999] = {
+["learned"] = false,
+["knownBy"] = {
+},
+},
 [397861] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
 },
-[62271] = {
-["learned"] = true,
+[1248613] = {
+["learned"] = false,
 ["knownBy"] = {
-"Starphage-Tichondrius",
 },
 },
 [202577] = {
@@ -6549,10 +6577,10 @@ TransmogLootHelper_Cache = {
 "Stormclout-Tichondrius",
 },
 },
-[438811] = {
+[1248616] = {
 ["learned"] = true,
 ["knownBy"] = {
-"Neonvoid-Tichondrius",
+"Starphage-Tichondrius",
 },
 },
 [198995] = {
@@ -6560,7 +6588,7 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[199000] = {
+[66037] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
@@ -6572,36 +6600,35 @@ TransmogLootHelper_Cache = {
 "Stormclout-Tichondrius",
 },
 },
-[471043] = {
+[17574] = {
+["learned"] = false,
+["knownBy"] = {
+},
+},
+[446991] = {
 ["learned"] = true,
 ["knownBy"] = {
-"Starphage-Tichondrius",
+"Auteist-Tichondrius",
 },
 },
-[1226062] = {
+[449573] = {
+["learned"] = false,
+["knownBy"] = {
+},
+},
+[314960] = {
 ["learned"] = true,
 ["knownBy"] = {
 "Starphage-Tichondrius",
 "Stormclout-Tichondrius",
 },
 },
-[438812] = {
+[11478] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
 },
-[33277] = {
-["learned"] = false,
-["knownBy"] = {
-},
-},
-[152175] = {
-["learned"] = true,
-["knownBy"] = {
-"Stormclout-Tichondrius",
-},
-},
-[430616] = {
+[198996] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
@@ -6629,10 +6656,9 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[1232247] = {
-["learned"] = true,
+[23082] = {
+["learned"] = false,
 ["knownBy"] = {
-"Starphage-Tichondrius",
 },
 },
 [325197] = {
@@ -6641,9 +6667,11 @@ TransmogLootHelper_Cache = {
 "Stormclout-Tichondrius",
 },
 },
-[12905] = {
-["learned"] = false,
+[3919] = {
+["learned"] = true,
 ["knownBy"] = {
+"Starphage-Tichondrius",
+"Stormclout-Tichondrius",
 },
 },
 [198997] = {
@@ -6664,9 +6692,11 @@ TransmogLootHelper_Cache = {
 "Stormclout-Tichondrius",
 },
 },
-[7836] = {
-["learned"] = false,
+[1226167] = {
+["learned"] = true,
 ["knownBy"] = {
+"Starphage-Tichondrius",
+"Stormclout-Tichondrius",
 },
 },
 [430619] = {
@@ -6674,27 +6704,22 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[177054] = {
-["learned"] = true,
+[199003] = {
+["learned"] = false,
 ["knownBy"] = {
-"Ofpuss-Tichondrius",
-"Starphage-Tichondrius",
-"Stormclout-Tichondrius",
 },
 },
-[1226178] = {
-["learned"] = true,
+[185704] = {
+["learned"] = false,
 ["knownBy"] = {
-"Starphage-Tichondrius",
 },
 },
-[297078] = {
-["learned"] = true,
+[11465] = {
+["learned"] = false,
 ["knownBy"] = {
-"Starphage-Tichondrius",
 },
 },
-[198998] = {
+[430620] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
@@ -6704,12 +6729,12 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[338115] = {
+[11449] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
 },
-[7430] = {
+[3372] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
@@ -6724,18 +6749,25 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[185704] = {
+[115913] = {
+["learned"] = true,
+["knownBy"] = {
+"Ofpuss-Tichondrius",
+"Starphage-Tichondrius",
+"Neonvoid-Tichondrius",
+"Stormclout-Tichondrius",
+"Auteist-Tichondrius",
+"Reedingo-Mal'Ganis",
+"Tampacks-Mal'Ganis",
+"Gehyo-Tichondrius",
+},
+},
+[6413] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
 },
-[259445] = {
-["learned"] = true,
-["knownBy"] = {
-"Starphage-Tichondrius",
-},
-},
-[198999] = {
+[430622] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
@@ -6745,9 +6777,11 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[297080] = {
-["learned"] = false,
+[1226193] = {
+["learned"] = true,
 ["knownBy"] = {
+"Starphage-Tichondrius",
+"Stormclout-Tichondrius",
 },
 },
 [1248610] = {
@@ -6755,7 +6789,7 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[1248611] = {
+[430623] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
@@ -6776,44 +6810,41 @@ TransmogLootHelper_Cache = {
 "Starphage-Tichondrius",
 },
 },
-[430624] = {
+[438812] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
 },
-[1248616] = {
+[152175] = {
 ["learned"] = true,
 ["knownBy"] = {
-"Starphage-Tichondrius",
-},
-},
-[297079] = {
-["learned"] = true,
-["knownBy"] = {
-"Starphage-Tichondrius",
-},
-},
-[11478] = {
-["learned"] = false,
-["knownBy"] = {
-},
-},
-[1226201] = {
-["learned"] = true,
-["knownBy"] = {
-"Starphage-Tichondrius",
 "Stormclout-Tichondrius",
 },
 },
-[199006] = {
+[445479] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
 },
-[297081] = {
+[299105] = {
 ["learned"] = true,
 ["knownBy"] = {
 "Starphage-Tichondrius",
+},
+},
+[449574] = {
+["learned"] = false,
+["knownBy"] = {
+},
+},
+[66036] = {
+["learned"] = false,
+["knownBy"] = {
+},
+},
+[389700] = {
+["learned"] = false,
+["knownBy"] = {
 },
 },
 [299106] = {
@@ -6822,16 +6853,16 @@ TransmogLootHelper_Cache = {
 "Starphage-Tichondrius",
 },
 },
-[199001] = {
-["learned"] = false,
-["knownBy"] = {
-},
-},
-[3919] = {
+[1232247] = {
 ["learned"] = true,
 ["knownBy"] = {
 "Starphage-Tichondrius",
 "Stormclout-Tichondrius",
+},
+},
+[7836] = {
+["learned"] = false,
+["knownBy"] = {
 },
 },
 [3923] = {
@@ -6850,7 +6881,7 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[100687] = {
+[389701] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
@@ -6860,10 +6891,9 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[1226168] = {
-["learned"] = true,
+[445482] = {
+["learned"] = false,
 ["knownBy"] = {
-"Starphage-Tichondrius",
 },
 },
 [199002] = {
@@ -6871,9 +6901,11 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[438927] = {
-["learned"] = false,
+[1226169] = {
+["learned"] = true,
 ["knownBy"] = {
+"Starphage-Tichondrius",
+"Stormclout-Tichondrius",
 },
 },
 [3955] = {
@@ -6911,15 +6943,16 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[389701] = {
+[199009] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
 },
-[297077] = {
+[1226174] = {
 ["learned"] = true,
 ["knownBy"] = {
 "Starphage-Tichondrius",
+"Stormclout-Tichondrius",
 },
 },
 [17575] = {
@@ -6927,31 +6960,26 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[438926] = {
+[1226173] = {
+["learned"] = true,
+["knownBy"] = {
+"Starphage-Tichondrius",
+"Stormclout-Tichondrius",
+},
+},
+[30566] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
 },
-[115913] = {
+[1226175] = {
 ["learned"] = true,
 ["knownBy"] = {
-"Ofpuss-Tichondrius",
 "Starphage-Tichondrius",
-"Neonvoid-Tichondrius",
 "Stormclout-Tichondrius",
-"Auteist-Tichondrius",
-"Reedingo-Mal'Ganis",
-"Tampacks-Mal'Ganis",
-"Gehyo-Tichondrius",
 },
 },
-[1226179] = {
-["learned"] = true,
-["knownBy"] = {
-"Starphage-Tichondrius",
-},
-},
-[12758] = {
+[3304] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
@@ -6966,21 +6994,23 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[438925] = {
-["learned"] = true,
-["knownBy"] = {
-"Stormclout-Tichondrius",
-},
-},
-[389703] = {
-["learned"] = false,
-["knownBy"] = {
-},
-},
-[1226177] = {
+[1226178] = {
 ["learned"] = true,
 ["knownBy"] = {
 "Starphage-Tichondrius",
+"Stormclout-Tichondrius",
+},
+},
+[1226181] = {
+["learned"] = true,
+["knownBy"] = {
+"Starphage-Tichondrius",
+"Stormclout-Tichondrius",
+},
+},
+[185705] = {
+["learned"] = false,
+["knownBy"] = {
 },
 },
 [54197] = {
@@ -6996,13 +7026,13 @@ TransmogLootHelper_Cache = {
 "Gehyo-Tichondrius",
 },
 },
-[1226187] = {
+[256071] = {
 ["learned"] = true,
 ["knownBy"] = {
 "Starphage-Tichondrius",
 },
 },
-[438924] = {
+[66035] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
@@ -7023,22 +7053,25 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[17576] = {
+[30310] = {
+["learned"] = true,
+["knownBy"] = {
+"Starphage-Tichondrius",
+},
+},
+[1226186] = {
+["learned"] = true,
+["knownBy"] = {
+"Starphage-Tichondrius",
+"Stormclout-Tichondrius",
+},
+},
+[209502] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
 },
-[199011] = {
-["learned"] = false,
-["knownBy"] = {
-},
-},
-[199012] = {
-["learned"] = false,
-["knownBy"] = {
-},
-},
-[259442] = {
+[1226189] = {
 ["learned"] = true,
 ["knownBy"] = {
 "Starphage-Tichondrius",
@@ -7050,7 +7083,7 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[18247] = {
+[199006] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
@@ -7060,21 +7093,21 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
+[256072] = {
+["learned"] = false,
+["knownBy"] = {
+},
+},
 [19815] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
 },
-[1226197] = {
+[1226196] = {
 ["learned"] = true,
 ["knownBy"] = {
 "Starphage-Tichondrius",
-},
-},
-[256073] = {
-["learned"] = true,
-["knownBy"] = {
-"Starphage-Tichondrius",
+"Stormclout-Tichondrius",
 },
 },
 [449572] = {
@@ -7082,7 +7115,25 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[162209] = {
+[1226201] = {
+["learned"] = true,
+["knownBy"] = {
+"Starphage-Tichondrius",
+"Stormclout-Tichondrius",
+},
+},
+[308404] = {
+["learned"] = true,
+["knownBy"] = {
+"Stormclout-Tichondrius",
+},
+},
+[199007] = {
+["learned"] = false,
+["knownBy"] = {
+},
+},
+[100687] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
@@ -7094,36 +7145,18 @@ TransmogLootHelper_Cache = {
 "Stormclout-Tichondrius",
 },
 },
-[199007] = {
-["learned"] = false,
-["knownBy"] = {
-},
-},
-[449573] = {
-["learned"] = false,
-["knownBy"] = {
-},
-},
-[83951] = {
-["learned"] = true,
-["knownBy"] = {
-"Neonvoid-Tichondrius",
-"Stormclout-Tichondrius",
-"Auteist-Tichondrius",
-"Hellavator-Tichondrius",
-},
-},
 [1226157] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
 },
-[24357] = {
-["learned"] = false,
+[297085] = {
+["learned"] = true,
 ["knownBy"] = {
+"Starphage-Tichondrius",
 },
 },
-[449574] = {
+[1226159] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
@@ -7138,7 +7171,7 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[389700] = {
+[199008] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
@@ -7158,38 +7191,40 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[459299] = {
+[1226166] = {
 ["learned"] = true,
 ["knownBy"] = {
+"Starphage-Tichondrius",
 "Stormclout-Tichondrius",
 },
 },
-[1226167] = {
+[345179] = {
+["learned"] = false,
+["knownBy"] = {
+},
+},
+[1226168] = {
+["learned"] = true,
+["knownBy"] = {
+"Starphage-Tichondrius",
+"Stormclout-Tichondrius",
+},
+},
+[297075] = {
 ["learned"] = true,
 ["knownBy"] = {
 "Starphage-Tichondrius",
 },
 },
-[116680] = {
-["learned"] = true,
-["knownBy"] = {
-"Stormclout-Tichondrius",
-},
-},
-[23077] = {
-["learned"] = false,
-["knownBy"] = {
-},
-},
-[199009] = {
-["learned"] = false,
-["knownBy"] = {
-},
-},
-[1226171] = {
+[44155] = {
 ["learned"] = true,
 ["knownBy"] = {
 "Starphage-Tichondrius",
+},
+},
+[445483] = {
+["learned"] = false,
+["knownBy"] = {
 },
 },
 [12614] = {
@@ -7203,28 +7238,28 @@ TransmogLootHelper_Cache = {
 "Korahron-Tichondrius",
 },
 },
-[1226174] = {
-["learned"] = true,
+[389703] = {
+["learned"] = false,
 ["knownBy"] = {
-"Starphage-Tichondrius",
 },
 },
-[1226175] = {
-["learned"] = true,
+[445484] = {
+["learned"] = false,
 ["knownBy"] = {
-"Starphage-Tichondrius",
 },
 },
 [1226176] = {
 ["learned"] = true,
 ["knownBy"] = {
 "Starphage-Tichondrius",
+"Stormclout-Tichondrius",
 },
 },
-[256070] = {
+[1226177] = {
 ["learned"] = true,
 ["knownBy"] = {
 "Starphage-Tichondrius",
+"Stormclout-Tichondrius",
 },
 },
 [199010] = {
@@ -7232,18 +7267,21 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[209501] = {
-["learned"] = false,
+[1226179] = {
+["learned"] = true,
 ["knownBy"] = {
+"Starphage-Tichondrius",
+"Stormclout-Tichondrius",
 },
 },
 [1226180] = {
 ["learned"] = true,
 ["knownBy"] = {
 "Starphage-Tichondrius",
+"Stormclout-Tichondrius",
 },
 },
-[1226181] = {
+[297078] = {
 ["learned"] = true,
 ["knownBy"] = {
 "Starphage-Tichondrius",
@@ -7253,41 +7291,46 @@ TransmogLootHelper_Cache = {
 ["learned"] = true,
 ["knownBy"] = {
 "Starphage-Tichondrius",
+"Stormclout-Tichondrius",
 },
 },
 [1226183] = {
 ["learned"] = true,
 ["knownBy"] = {
 "Starphage-Tichondrius",
+"Stormclout-Tichondrius",
 },
 },
 [1226184] = {
 ["learned"] = true,
 ["knownBy"] = {
 "Starphage-Tichondrius",
+"Stormclout-Tichondrius",
 },
 },
-[1226185] = {
+[297079] = {
 ["learned"] = true,
 ["knownBy"] = {
 "Starphage-Tichondrius",
 },
 },
-[1226186] = {
-["learned"] = true,
-["knownBy"] = {
-"Starphage-Tichondrius",
-},
-},
-[209502] = {
+[199011] = {
 ["learned"] = false,
 ["knownBy"] = {
+},
+},
+[1226187] = {
+["learned"] = true,
+["knownBy"] = {
+"Starphage-Tichondrius",
+"Stormclout-Tichondrius",
 },
 },
 [1226188] = {
 ["learned"] = true,
 ["knownBy"] = {
 "Starphage-Tichondrius",
+"Stormclout-Tichondrius",
 },
 },
 [413759] = {
@@ -7295,57 +7338,60 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[1226190] = {
-["learned"] = true,
+[12902] = {
+["learned"] = false,
 ["knownBy"] = {
-"Starphage-Tichondrius",
 },
 },
 [1226191] = {
 ["learned"] = true,
 ["knownBy"] = {
 "Starphage-Tichondrius",
+"Stormclout-Tichondrius",
 },
 },
 [1226192] = {
 ["learned"] = true,
 ["knownBy"] = {
 "Starphage-Tichondrius",
+"Stormclout-Tichondrius",
 },
 },
-[256072] = {
-["learned"] = false,
-["knownBy"] = {
-},
-},
-[1226194] = {
+[297081] = {
 ["learned"] = true,
 ["knownBy"] = {
 "Starphage-Tichondrius",
+},
+},
+[199012] = {
+["learned"] = false,
+["knownBy"] = {
 },
 },
 [1226195] = {
 ["learned"] = true,
 ["knownBy"] = {
 "Starphage-Tichondrius",
+"Stormclout-Tichondrius",
 },
 },
-[1226196] = {
+[6501] = {
+["learned"] = false,
+["knownBy"] = {
+},
+},
+[1226197] = {
 ["learned"] = true,
 ["knownBy"] = {
 "Starphage-Tichondrius",
-},
-},
-[297082] = {
-["learned"] = true,
-["knownBy"] = {
-"Starphage-Tichondrius",
+"Stormclout-Tichondrius",
 },
 },
 [1226198] = {
 ["learned"] = true,
 ["knownBy"] = {
 "Starphage-Tichondrius",
+"Stormclout-Tichondrius",
 },
 },
 [1226199] = {
@@ -7397,10 +7443,9 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[256074] = {
-["learned"] = true,
+[24357] = {
+["learned"] = false,
 ["knownBy"] = {
-"Starphage-Tichondrius",
 },
 },
 [34433] = {
@@ -7409,7 +7454,7 @@ TransmogLootHelper_Cache = {
 "Neonvoid-Tichondrius",
 },
 },
-[297085] = {
+[256074] = {
 ["learned"] = true,
 ["knownBy"] = {
 "Starphage-Tichondrius",
@@ -7420,7 +7465,7 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[3968] = {
+[162206] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
@@ -7435,21 +7480,20 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[198984] = {
-["learned"] = false,
-["knownBy"] = {
-},
-},
-[447370] = {
-["learned"] = true,
-["knownBy"] = {
-"Stormclout-Tichondrius",
-},
-},
 [297087] = {
 ["learned"] = true,
 ["knownBy"] = {
 "Starphage-Tichondrius",
+},
+},
+[66034] = {
+["learned"] = false,
+["knownBy"] = {
+},
+},
+[25704] = {
+["learned"] = false,
+["knownBy"] = {
 },
 },
 [256075] = {
@@ -7462,10 +7506,9 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[297088] = {
-["learned"] = true,
+[169078] = {
+["learned"] = false,
 ["knownBy"] = {
-"Starphage-Tichondrius",
 },
 },
 [68067] = {
@@ -7476,9 +7519,10 @@ TransmogLootHelper_Cache = {
 "Stormclout-Tichondrius",
 },
 },
-[169078] = {
-["learned"] = false,
+[297088] = {
+["learned"] = true,
 ["knownBy"] = {
+"Starphage-Tichondrius",
 },
 },
 [2332] = {
@@ -7486,15 +7530,14 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[381373] = {
+[1225359] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
 },
-[259440] = {
-["learned"] = true,
+[360088] = {
+["learned"] = false,
 ["knownBy"] = {
-"Starphage-Tichondrius",
 },
 },
 [297089] = {
@@ -7509,10 +7552,9 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[1226172] = {
-["learned"] = true,
+[199016] = {
+["learned"] = false,
 ["knownBy"] = {
-"Starphage-Tichondrius",
 },
 },
 [1261027] = {
@@ -7525,23 +7567,20 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[1226189] = {
+[438897] = {
 ["learned"] = true,
 ["knownBy"] = {
-"Starphage-Tichondrius",
+"Auteist-Tichondrius",
 },
 },
-[44157] = {
+[435826] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
 },
-[162207] = {
-["learned"] = true,
+[272066] = {
+["learned"] = false,
 ["knownBy"] = {
-"Ofpuss-Tichondrius",
-"Starphage-Tichondrius",
-"Stormclout-Tichondrius",
 },
 },
 [23078] = {
@@ -7549,14 +7588,15 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[199017] = {
+[44157] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
 },
-[199018] = {
-["learned"] = false,
+[1269229] = {
+["learned"] = true,
 ["knownBy"] = {
+"Neonvoid-Tichondrius",
 },
 },
 [343661] = {
@@ -7572,9 +7612,10 @@ TransmogLootHelper_Cache = {
 "Stormclout-Tichondrius",
 },
 },
-[15861] = {
-["learned"] = false,
+[438896] = {
+["learned"] = true,
 ["knownBy"] = {
+"Auteist-Tichondrius",
 },
 },
 [1269226] = {
@@ -7595,10 +7636,9 @@ TransmogLootHelper_Cache = {
 "Neonvoid-Tichondrius",
 },
 },
-[1269229] = {
-["learned"] = true,
+[199018] = {
+["learned"] = false,
 ["knownBy"] = {
-"Neonvoid-Tichondrius",
 },
 },
 [1269230] = {
@@ -7607,10 +7647,10 @@ TransmogLootHelper_Cache = {
 "Neonvoid-Tichondrius",
 },
 },
-[1269231] = {
+[95703] = {
 ["learned"] = true,
 ["knownBy"] = {
-"Neonvoid-Tichondrius",
+"Starphage-Tichondrius",
 },
 },
 [1269232] = {
@@ -7625,10 +7665,9 @@ TransmogLootHelper_Cache = {
 "Neonvoid-Tichondrius",
 },
 },
-[1269234] = {
-["learned"] = true,
+[15861] = {
+["learned"] = false,
 ["knownBy"] = {
-"Neonvoid-Tichondrius",
 },
 },
 [1269235] = {
@@ -7637,21 +7676,21 @@ TransmogLootHelper_Cache = {
 "Neonvoid-Tichondrius",
 },
 },
-[1229882] = {
-["learned"] = false,
+[1269231] = {
+["learned"] = true,
 ["knownBy"] = {
+"Neonvoid-Tichondrius",
 },
 },
-[259439] = {
+[272065] = {
 ["learned"] = true,
 ["knownBy"] = {
 "Starphage-Tichondrius",
 },
 },
-[383649] = {
-["learned"] = true,
+[430624] = {
+["learned"] = false,
 ["knownBy"] = {
-"Stormclout-Tichondrius",
 },
 },
 [63732] = {
@@ -7664,7 +7703,24 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[447354] = {
+[438895] = {
+["learned"] = true,
+["knownBy"] = {
+"Auteist-Tichondrius",
+},
+},
+[259428] = {
+["learned"] = true,
+["knownBy"] = {
+"Starphage-Tichondrius",
+},
+},
+[12616] = {
+["learned"] = false,
+["knownBy"] = {
+},
+},
+[4942] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
@@ -7675,58 +7731,49 @@ TransmogLootHelper_Cache = {
 "Starphage-Tichondrius",
 },
 },
-[305861] = {
+[12584] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
 },
-[4942] = {
+[23081] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
 },
-[1225359] = {
+[83944] = {
+["learned"] = true,
+["knownBy"] = {
+"Neonvoid-Tichondrius",
+"Stormclout-Tichondrius",
+"Auteist-Tichondrius",
+"Hellavator-Tichondrius",
+},
+},
+[382381] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
 },
-[1261509] = {
-["learned"] = false,
+[438893] = {
+["learned"] = true,
 ["knownBy"] = {
+"Auteist-Tichondrius",
 },
 },
-[162206] = {
-["learned"] = false,
-["knownBy"] = {
-},
-},
-[305860] = {
-["learned"] = false,
-["knownBy"] = {
-},
-},
-[338100] = {
-["learned"] = false,
-["knownBy"] = {
-},
-},
-[19833] = {
-["learned"] = false,
-["knownBy"] = {
-},
-},
-[2544] = {
-["learned"] = false,
-["knownBy"] = {
-},
-},
-[196718] = {
+[282809] = {
 ["learned"] = true,
 ["knownBy"] = {
 "Starphage-Tichondrius",
 },
 },
-[305859] = {
+[286864] = {
+["learned"] = true,
+["knownBy"] = {
+"Starphage-Tichondrius",
+},
+},
+[43779] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
@@ -7742,7 +7789,7 @@ TransmogLootHelper_Cache = {
 "Stormclout-Tichondrius",
 },
 },
-[286865] = {
+[26277] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
@@ -7751,6 +7798,33 @@ TransmogLootHelper_Cache = {
 ["learned"] = true,
 ["knownBy"] = {
 "Stormclout-Tichondrius",
+},
+},
+[286865] = {
+["learned"] = false,
+["knownBy"] = {
+},
+},
+[30563] = {
+["learned"] = false,
+["knownBy"] = {
+},
+},
+[286866] = {
+["learned"] = false,
+["knownBy"] = {
+},
+},
+[2540] = {
+["learned"] = true,
+["knownBy"] = {
+"Starphage-Tichondrius",
+"Stormclout-Tichondrius",
+},
+},
+[2544] = {
+["learned"] = false,
+["knownBy"] = {
 },
 },
 [95705] = {
@@ -7763,44 +7837,15 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[256082] = {
+[119996] = {
 ["learned"] = true,
 ["knownBy"] = {
-"Starphage-Tichondrius",
-},
-},
-[2540] = {
-["learned"] = true,
-["knownBy"] = {
-"Starphage-Tichondrius",
 "Stormclout-Tichondrius",
 },
 },
-[30563] = {
+[22793] = {
 ["learned"] = false,
 ["knownBy"] = {
-},
-},
-[2548] = {
-["learned"] = false,
-["knownBy"] = {
-},
-},
-[286867] = {
-["learned"] = true,
-["knownBy"] = {
-"Starphage-Tichondrius",
-},
-},
-[15863] = {
-["learned"] = false,
-["knownBy"] = {
-},
-},
-[259437] = {
-["learned"] = true,
-["knownBy"] = {
-"Starphage-Tichondrius",
 },
 },
 [286868] = {
@@ -7813,11 +7858,10 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[1226203] = {
+[438891] = {
 ["learned"] = true,
 ["knownBy"] = {
-"Starphage-Tichondrius",
-"Stormclout-Tichondrius",
+"Auteist-Tichondrius",
 },
 },
 [361584] = {
@@ -7833,31 +7877,32 @@ TransmogLootHelper_Cache = {
 "Reedingo-Mal'Ganis",
 },
 },
-[2543] = {
-["learned"] = false,
-["knownBy"] = {
-},
-},
 [7213] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
 },
-[382381] = {
+[286869] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
 },
-[286870] = {
+[471008] = {
 ["learned"] = true,
 ["knownBy"] = {
 "Starphage-Tichondrius",
+"Stormclout-Tichondrius",
 },
 },
-[297105] = {
+[442990] = {
+["learned"] = false,
+["knownBy"] = {
+},
+},
+[438890] = {
 ["learned"] = true,
 ["knownBy"] = {
-"Starphage-Tichondrius",
+"Auteist-Tichondrius",
 },
 },
 [256084] = {
@@ -7867,26 +7912,27 @@ TransmogLootHelper_Cache = {
 "Starphage-Tichondrius",
 },
 },
-[119996] = {
+[184454] = {
 ["learned"] = true,
 ["knownBy"] = {
-"Stormclout-Tichondrius",
+"Reedingo-Mal'Ganis",
+},
+},
+[286870] = {
+["learned"] = true,
+["knownBy"] = {
+"Starphage-Tichondrius",
+},
+},
+[286871] = {
+["learned"] = false,
+["knownBy"] = {
 },
 },
 [297106] = {
 ["learned"] = true,
 ["knownBy"] = {
 "Starphage-Tichondrius",
-},
-},
-[23079] = {
-["learned"] = false,
-["knownBy"] = {
-},
-},
-[286871] = {
-["learned"] = false,
-["knownBy"] = {
 },
 },
 [259411] = {
@@ -7896,20 +7942,22 @@ TransmogLootHelper_Cache = {
 "Stormclout-Tichondrius",
 },
 },
-[1263338] = {
-["learned"] = false,
-["knownBy"] = {
-},
-},
-[1285660] = {
+[438889] = {
 ["learned"] = true,
 ["knownBy"] = {
-"Stormclout-Tichondrius",
+"Auteist-Tichondrius",
 },
 },
-[286872] = {
+[23079] = {
 ["learned"] = false,
 ["knownBy"] = {
+},
+},
+[297107] = {
+["learned"] = true,
+["knownBy"] = {
+"Ofpuss-Tichondrius",
+"Starphage-Tichondrius",
 },
 },
 [280732] = {
@@ -7940,12 +7988,12 @@ TransmogLootHelper_Cache = {
 "Starphage-Tichondrius",
 },
 },
-[23082] = {
+[84428] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
 },
-[1229879] = {
+[286874] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
@@ -7956,17 +8004,7 @@ TransmogLootHelper_Cache = {
 "Starphage-Tichondrius",
 },
 },
-[286874] = {
-["learned"] = false,
-["knownBy"] = {
-},
-},
-[12759] = {
-["learned"] = false,
-["knownBy"] = {
-},
-},
-[95707] = {
+[18247] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
@@ -7977,48 +8015,28 @@ TransmogLootHelper_Cache = {
 "Starphage-Tichondrius",
 },
 },
+[95707] = {
+["learned"] = false,
+["knownBy"] = {
+},
+},
+[12759] = {
+["learned"] = false,
+["knownBy"] = {
+},
+},
 [259413] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
 },
-[259414] = {
+[256073] = {
 ["learned"] = true,
 ["knownBy"] = {
 "Starphage-Tichondrius",
 },
 },
 [386667] = {
-["learned"] = false,
-["knownBy"] = {
-},
-},
-[11465] = {
-["learned"] = false,
-["knownBy"] = {
-},
-},
-[11449] = {
-["learned"] = false,
-["knownBy"] = {
-},
-},
-[398438] = {
-["learned"] = false,
-["knownBy"] = {
-},
-},
-[3372] = {
-["learned"] = false,
-["knownBy"] = {
-},
-},
-[17578] = {
-["learned"] = false,
-["knownBy"] = {
-},
-},
-[12903] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
@@ -8035,6 +8053,38 @@ TransmogLootHelper_Cache = {
 "Starphage-Tichondrius",
 },
 },
+[398438] = {
+["learned"] = false,
+["knownBy"] = {
+},
+},
+[30341] = {
+["learned"] = false,
+["knownBy"] = {
+},
+},
+[17578] = {
+["learned"] = false,
+["knownBy"] = {
+},
+},
+[12903] = {
+["learned"] = false,
+["knownBy"] = {
+},
+},
+[259414] = {
+["learned"] = true,
+["knownBy"] = {
+"Starphage-Tichondrius",
+},
+},
+[299010] = {
+["learned"] = true,
+["knownBy"] = {
+"Starphage-Tichondrius",
+},
+},
 [64054] = {
 ["learned"] = false,
 ["knownBy"] = {
@@ -8045,9 +8095,10 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[389704] = {
-["learned"] = false,
+[1225352] = {
+["learned"] = true,
 ["knownBy"] = {
+"Starphage-Tichondrius",
 },
 },
 [386670] = {
@@ -8055,10 +8106,9 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[299010] = {
-["learned"] = true,
+[405131] = {
+["learned"] = false,
 ["knownBy"] = {
-"Starphage-Tichondrius",
 },
 },
 [259415] = {
@@ -8067,13 +8117,7 @@ TransmogLootHelper_Cache = {
 "Starphage-Tichondrius",
 },
 },
-[1225352] = {
-["learned"] = true,
-["knownBy"] = {
-"Starphage-Tichondrius",
-},
-},
-[405131] = {
+[1263237] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
@@ -8082,16 +8126,6 @@ TransmogLootHelper_Cache = {
 ["learned"] = true,
 ["knownBy"] = {
 "Starphage-Tichondrius",
-},
-},
-[198992] = {
-["learned"] = false,
-["knownBy"] = {
-},
-},
-[30308] = {
-["learned"] = false,
-["knownBy"] = {
 },
 },
 [439716] = {
@@ -8106,7 +8140,7 @@ TransmogLootHelper_Cache = {
 "Stormclout-Tichondrius",
 },
 },
-[259416] = {
+[30308] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
@@ -8121,6 +8155,11 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
+[259416] = {
+["learned"] = false,
+["knownBy"] = {
+},
+},
 [26424] = {
 ["learned"] = false,
 ["knownBy"] = {
@@ -8131,13 +8170,7 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[120145] = {
-["learned"] = true,
-["knownBy"] = {
-"Auteist-Tichondrius",
-},
-},
-[30566] = {
+[209501] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
@@ -8147,16 +8180,30 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[1285705] = {
+[120145] = {
+["learned"] = true,
+["knownBy"] = {
+"Auteist-Tichondrius",
+},
+},
+[1226185] = {
 ["learned"] = true,
 ["knownBy"] = {
 "Starphage-Tichondrius",
 "Stormclout-Tichondrius",
 },
 },
-[3304] = {
-["learned"] = false,
+[435812] = {
+["learned"] = true,
 ["knownBy"] = {
+"Neonvoid-Tichondrius",
+},
+},
+[1285705] = {
+["learned"] = true,
+["knownBy"] = {
+"Starphage-Tichondrius",
+"Stormclout-Tichondrius",
 },
 },
 [1225348] = {
@@ -8166,16 +8213,21 @@ TransmogLootHelper_Cache = {
 "Stormclout-Tichondrius",
 },
 },
-[439718] = {
+[56574] = {
 ["learned"] = true,
 ["knownBy"] = {
-"Stormclout-Tichondrius",
+"Starphage-Tichondrius",
 },
 },
-[120146] = {
+[297105] = {
 ["learned"] = true,
 ["knownBy"] = {
-"Auteist-Tichondrius",
+"Starphage-Tichondrius",
+},
+},
+[19833] = {
+["learned"] = false,
+["knownBy"] = {
 },
 },
 [9273] = {
@@ -8183,15 +8235,15 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[7845] = {
+[1263338] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
 },
-[56574] = {
+[61305] = {
 ["learned"] = true,
 ["knownBy"] = {
-"Starphage-Tichondrius",
+"Auteist-Tichondrius",
 },
 },
 [259418] = {
@@ -8200,30 +8252,32 @@ TransmogLootHelper_Cache = {
 "Starphage-Tichondrius",
 },
 },
-[30310] = {
+[2543] = {
+["learned"] = false,
+["knownBy"] = {
+},
+},
+[198992] = {
+["learned"] = false,
+["knownBy"] = {
+},
+},
+[1285660] = {
 ["learned"] = true,
 ["knownBy"] = {
-"Starphage-Tichondrius",
+"Stormclout-Tichondrius",
 },
 },
-[12584] = {
-["learned"] = false,
+[438811] = {
+["learned"] = true,
 ["knownBy"] = {
+"Neonvoid-Tichondrius",
 },
 },
-[22793] = {
-["learned"] = false,
+[120146] = {
+["learned"] = true,
 ["knownBy"] = {
-},
-},
-[43779] = {
-["learned"] = false,
-["knownBy"] = {
-},
-},
-[11448] = {
-["learned"] = false,
-["knownBy"] = {
+"Auteist-Tichondrius",
 },
 },
 [11464] = {
@@ -8242,12 +8296,12 @@ TransmogLootHelper_Cache = {
 "Starphage-Tichondrius",
 },
 },
-[1263237] = {
+[162195] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
 },
-[30341] = {
+[7845] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
@@ -8274,9 +8328,10 @@ TransmogLootHelper_Cache = {
 "Stormclout-Tichondrius",
 },
 },
-[435826] = {
-["learned"] = false,
+[430590] = {
+["learned"] = true,
 ["knownBy"] = {
+"Neonvoid-Tichondrius",
 },
 },
 [259420] = {
@@ -8286,7 +8341,7 @@ TransmogLootHelper_Cache = {
 "Starphage-Tichondrius",
 },
 },
-[162195] = {
+[3968] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
@@ -8296,22 +8351,19 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[308404] = {
-["learned"] = true,
+[447354] = {
+["learned"] = false,
 ["knownBy"] = {
-"Stormclout-Tichondrius",
 },
 },
-[438889] = {
-["learned"] = true,
+[11448] = {
+["learned"] = false,
 ["knownBy"] = {
-"Auteist-Tichondrius",
 },
 },
-[438896] = {
-["learned"] = true,
+[389704] = {
+["learned"] = false,
 ["knownBy"] = {
-"Auteist-Tichondrius",
 },
 },
 [290473] = {
@@ -8319,16 +8371,15 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[184454] = {
-["learned"] = true,
+[1248611] = {
+["learned"] = false,
 ["knownBy"] = {
-"Reedingo-Mal'Ganis",
 },
 },
-[61305] = {
+[259421] = {
 ["learned"] = true,
 ["knownBy"] = {
-"Auteist-Tichondrius",
+"Starphage-Tichondrius",
 },
 },
 [377983] = {
@@ -8342,10 +8393,11 @@ TransmogLootHelper_Cache = {
 "Neonvoid-Tichondrius",
 },
 },
-[438890] = {
+[1226194] = {
 ["learned"] = true,
 ["knownBy"] = {
-"Auteist-Tichondrius",
+"Starphage-Tichondrius",
+"Stormclout-Tichondrius",
 },
 },
 [15910] = {
@@ -8353,16 +8405,16 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[438891] = {
+[439718] = {
 ["learned"] = true,
 ["knownBy"] = {
-"Auteist-Tichondrius",
+"Stormclout-Tichondrius",
 },
 },
-[435812] = {
+[286381] = {
 ["learned"] = true,
 ["knownBy"] = {
-"Neonvoid-Tichondrius",
+"Starphage-Tichondrius",
 },
 },
 [17579] = {
@@ -8395,24 +8447,25 @@ TransmogLootHelper_Cache = {
 "Stormclout-Tichondrius",
 },
 },
-[25704] = {
-["learned"] = false,
+[1226172] = {
+["learned"] = true,
 ["knownBy"] = {
+"Starphage-Tichondrius",
+"Stormclout-Tichondrius",
 },
 },
-[282809] = {
+[286867] = {
 ["learned"] = true,
 ["knownBy"] = {
 "Starphage-Tichondrius",
 },
 },
-[438893] = {
-["learned"] = true,
+[2548] = {
+["learned"] = false,
 ["knownBy"] = {
-"Auteist-Tichondrius",
 },
 },
-[360088] = {
+[199017] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
@@ -8429,13 +8482,9 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[83944] = {
-["learned"] = true,
+[7430] = {
+["learned"] = false,
 ["knownBy"] = {
-"Neonvoid-Tichondrius",
-"Stormclout-Tichondrius",
-"Auteist-Tichondrius",
-"Hellavator-Tichondrius",
 },
 },
 [1263239] = {
@@ -8472,10 +8521,10 @@ TransmogLootHelper_Cache = {
 "Stormclout-Tichondrius",
 },
 },
-[438897] = {
+[1269234] = {
 ["learned"] = true,
 ["knownBy"] = {
-"Auteist-Tichondrius",
+"Neonvoid-Tichondrius",
 },
 },
 [272057] = {
@@ -8484,9 +8533,10 @@ TransmogLootHelper_Cache = {
 "Starphage-Tichondrius",
 },
 },
-[23081] = {
-["learned"] = false,
+[196718] = {
+["learned"] = true,
 ["knownBy"] = {
+"Starphage-Tichondrius",
 },
 },
 [405121] = {
@@ -8506,7 +8556,7 @@ TransmogLootHelper_Cache = {
 "Starphage-Tichondrius",
 },
 },
-[442988] = {
+[286872] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
@@ -8517,7 +8567,7 @@ TransmogLootHelper_Cache = {
 "Starphage-Tichondrius",
 },
 },
-[442990] = {
+[442988] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
@@ -8541,7 +8591,7 @@ TransmogLootHelper_Cache = {
 "Starphage-Tichondrius",
 },
 },
-[12616] = {
+[1229879] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
@@ -8584,7 +8634,7 @@ TransmogLootHelper_Cache = {
 "Auteist-Tichondrius",
 },
 },
-[272065] = {
+[256082] = {
 ["learned"] = true,
 ["knownBy"] = {
 "Starphage-Tichondrius",
@@ -8615,10 +8665,9 @@ TransmogLootHelper_Cache = {
 "Stormclout-Tichondrius",
 },
 },
-[435823] = {
-["learned"] = true,
+[272063] = {
+["learned"] = false,
 ["knownBy"] = {
-"Neonvoid-Tichondrius",
 },
 },
 [282810] = {
@@ -8632,10 +8681,10 @@ TransmogLootHelper_Cache = {
 "Auteist-Tichondrius",
 },
 },
-[259428] = {
+[435823] = {
 ["learned"] = true,
 ["knownBy"] = {
-"Starphage-Tichondrius",
+"Neonvoid-Tichondrius",
 },
 },
 [272064] = {
@@ -8653,10 +8702,11 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[438895] = {
+[1226203] = {
 ["learned"] = true,
 ["knownBy"] = {
-"Auteist-Tichondrius",
+"Starphage-Tichondrius",
+"Stormclout-Tichondrius",
 },
 },
 [405120] = {
@@ -8681,7 +8731,7 @@ TransmogLootHelper_Cache = {
 "Stormclout-Tichondrius",
 },
 },
-[272066] = {
+[3188] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
@@ -8696,7 +8746,7 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[272063] = {
+[1260331] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
@@ -8772,9 +8822,10 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[3188] = {
-["learned"] = false,
+[297082] = {
+["learned"] = true,
 ["knownBy"] = {
+"Starphage-Tichondrius",
 },
 },
 [259431] = {
@@ -8790,16 +8841,16 @@ TransmogLootHelper_Cache = {
 "Stormclout-Tichondrius",
 },
 },
-[286381] = {
+[1226190] = {
 ["learned"] = true,
 ["knownBy"] = {
 "Starphage-Tichondrius",
+"Stormclout-Tichondrius",
 },
 },
-[259421] = {
-["learned"] = true,
+[17576] = {
+["learned"] = false,
 ["knownBy"] = {
-"Starphage-Tichondrius",
 },
 },
 [162199] = {
@@ -8829,14 +8880,15 @@ TransmogLootHelper_Cache = {
 "Starphage-Tichondrius",
 },
 },
-[39971] = {
+[12758] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
 },
-[1225818] = {
-["learned"] = false,
+[297077] = {
+["learned"] = true,
 ["knownBy"] = {
+"Starphage-Tichondrius",
 },
 },
 [15255] = {
@@ -8859,9 +8911,10 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[439717] = {
+[1226171] = {
 ["learned"] = true,
 ["knownBy"] = {
+"Starphage-Tichondrius",
 "Stormclout-Tichondrius",
 },
 },
@@ -8871,16 +8924,15 @@ TransmogLootHelper_Cache = {
 "Starphage-Tichondrius",
 },
 },
-[287108] = {
-["learned"] = true,
+[23077] = {
+["learned"] = false,
 ["knownBy"] = {
-"Starphage-Tichondrius",
 },
 },
-[389406] = {
+[116680] = {
 ["learned"] = true,
 ["knownBy"] = {
-"Starphage-Tichondrius",
+"Stormclout-Tichondrius",
 },
 },
 [1263319] = {
@@ -8888,10 +8940,9 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[1225347] = {
+[459299] = {
 ["learned"] = true,
 ["knownBy"] = {
-"Starphage-Tichondrius",
 "Stormclout-Tichondrius",
 },
 },
@@ -8907,7 +8958,7 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[3376] = {
+[445480] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
@@ -8924,15 +8975,15 @@ TransmogLootHelper_Cache = {
 "Stormclout-Tichondrius",
 },
 },
-[46114] = {
+[297080] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
 },
-[439723] = {
+[256070] = {
 ["learned"] = true,
 ["knownBy"] = {
-"Stormclout-Tichondrius",
+"Starphage-Tichondrius",
 },
 },
 [162202] = {
@@ -8952,9 +9003,11 @@ TransmogLootHelper_Cache = {
 "Neonvoid-Tichondrius",
 },
 },
-[3937] = {
-["learned"] = false,
+[389192] = {
+["learned"] = true,
 ["knownBy"] = {
+"Starphage-Tichondrius",
+"Stormclout-Tichondrius",
 },
 },
 [259435] = {
@@ -8970,10 +9023,9 @@ TransmogLootHelper_Cache = {
 "Stormclout-Tichondrius",
 },
 },
-[381380] = {
-["learned"] = true,
+[7828] = {
+["learned"] = false,
 ["knownBy"] = {
-"Starphage-Tichondrius",
 },
 },
 [3400] = {
@@ -8999,11 +9051,9 @@ TransmogLootHelper_Cache = {
 "Neonvoid-Tichondrius",
 },
 },
-[297107] = {
-["learned"] = true,
+[199000] = {
+["learned"] = false,
 ["knownBy"] = {
-"Ofpuss-Tichondrius",
-"Starphage-Tichondrius",
 },
 },
 [259436] = {
@@ -9038,14 +9088,18 @@ TransmogLootHelper_Cache = {
 "Stormclout-Tichondrius",
 },
 },
-[286869] = {
-["learned"] = false,
+[1226170] = {
+["learned"] = true,
 ["knownBy"] = {
+"Starphage-Tichondrius",
+"Stormclout-Tichondrius",
 },
 },
-[3452] = {
-["learned"] = false,
+[314962] = {
+["learned"] = true,
 ["knownBy"] = {
+"Starphage-Tichondrius",
+"Stormclout-Tichondrius",
 },
 },
 [3448] = {
@@ -9053,7 +9107,7 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[305858] = {
+[3452] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
@@ -9069,9 +9123,11 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[286866] = {
-["learned"] = false,
+[1226062] = {
+["learned"] = true,
 ["knownBy"] = {
+"Starphage-Tichondrius",
+"Stormclout-Tichondrius",
 },
 },
 [162205] = {
@@ -9080,9 +9136,10 @@ TransmogLootHelper_Cache = {
 "Stormclout-Tichondrius",
 },
 },
-[26277] = {
-["learned"] = false,
+[471043] = {
+["learned"] = true,
 ["knownBy"] = {
+"Starphage-Tichondrius",
 },
 },
 [66038] = {
@@ -9107,10 +9164,9 @@ TransmogLootHelper_Cache = {
 "Stormclout-Tichondrius",
 },
 },
-[1225278] = {
-["learned"] = true,
+[397859] = {
+["learned"] = false,
 ["knownBy"] = {
-"Starphage-Tichondrius",
 },
 },
 [338101] = {
@@ -9129,10 +9185,10 @@ TransmogLootHelper_Cache = {
 "Stormclout-Tichondrius",
 },
 },
-[421244] = {
+[446985] = {
 ["learned"] = true,
 ["knownBy"] = {
-"Stormclout-Tichondrius",
+"Auteist-Tichondrius",
 },
 },
 [338102] = {
@@ -9145,11 +9201,9 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[389413] = {
-["learned"] = true,
+[84431] = {
+["learned"] = false,
 ["knownBy"] = {
-"Starphage-Tichondrius",
-"Stormclout-Tichondrius",
 },
 },
 [83950] = {
@@ -9161,15 +9215,17 @@ TransmogLootHelper_Cache = {
 "Hellavator-Tichondrius",
 },
 },
-[95703] = {
-["learned"] = true,
-["knownBy"] = {
-"Starphage-Tichondrius",
-},
-},
-[305863] = {
+[18245] = {
 ["learned"] = false,
 ["knownBy"] = {
+},
+},
+[162207] = {
+["learned"] = true,
+["knownBy"] = {
+"Ofpuss-Tichondrius",
+"Starphage-Tichondrius",
+"Stormclout-Tichondrius",
 },
 },
 [30311] = {
@@ -9182,10 +9238,9 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[84403] = {
-["learned"] = true,
+[198994] = {
+["learned"] = false,
 ["knownBy"] = {
-"Starphage-Tichondrius",
 },
 },
 [24266] = {
@@ -9193,7 +9248,7 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[199016] = {
+[3451] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
@@ -9213,7 +9268,7 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[399034] = {
+[198984] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
@@ -9240,9 +9295,13 @@ TransmogLootHelper_Cache = {
 "Stormclout-Tichondrius",
 },
 },
-[435851] = {
-["learned"] = false,
+[83951] = {
+["learned"] = true,
 ["knownBy"] = {
+"Neonvoid-Tichondrius",
+"Stormclout-Tichondrius",
+"Auteist-Tichondrius",
+"Hellavator-Tichondrius",
 },
 },
 [338107] = {
@@ -9261,15 +9320,14 @@ TransmogLootHelper_Cache = {
 "Stormclout-Tichondrius",
 },
 },
-[6501] = {
+[18244] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
 },
-[1226193] = {
-["learned"] = true,
+[1229882] = {
+["learned"] = false,
 ["knownBy"] = {
-"Starphage-Tichondrius",
 },
 },
 [438923] = {
@@ -9278,7 +9336,7 @@ TransmogLootHelper_Cache = {
 "Stormclout-Tichondrius",
 },
 },
-[12902] = {
+[1225818] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
@@ -9288,7 +9346,7 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[6413] = {
+[39971] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
@@ -9298,9 +9356,10 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[185705] = {
-["learned"] = false,
+[287108] = {
+["learned"] = true,
 ["knownBy"] = {
+"Starphage-Tichondrius",
 },
 },
 [280282] = {
@@ -9319,22 +9378,21 @@ TransmogLootHelper_Cache = {
 "Starphage-Tichondrius",
 },
 },
-[1226173] = {
+[439717] = {
+["learned"] = true,
+["knownBy"] = {
+"Stormclout-Tichondrius",
+},
+},
+[381380] = {
 ["learned"] = true,
 ["knownBy"] = {
 "Starphage-Tichondrius",
 },
 },
-[44155] = {
-["learned"] = true,
+[12591] = {
+["learned"] = false,
 ["knownBy"] = {
-"Starphage-Tichondrius",
-},
-},
-[297075] = {
-["learned"] = true,
-["knownBy"] = {
-"Starphage-Tichondrius",
 },
 },
 [12585] = {
@@ -9342,9 +9400,10 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[345179] = {
-["learned"] = false,
+[439723] = {
+["learned"] = true,
 ["knownBy"] = {
+"Stormclout-Tichondrius",
 },
 },
 [12617] = {
@@ -9352,9 +9411,10 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[199008] = {
-["learned"] = false,
+[1229899] = {
+["learned"] = true,
 ["knownBy"] = {
+"Starphage-Tichondrius",
 },
 },
 [259444] = {
@@ -9362,9 +9422,11 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[1226159] = {
-["learned"] = false,
+[384690] = {
+["learned"] = true,
 ["knownBy"] = {
+"Starphage-Tichondrius",
+"Stormclout-Tichondrius",
 },
 },
 [435857] = {
@@ -9382,10 +9444,12 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[256071] = {
+[1225340] = {
 ["learned"] = true,
 ["knownBy"] = {
 "Starphage-Tichondrius",
+"Neonvoid-Tichondrius",
+"Stormclout-Tichondrius",
 },
 },
 [435858] = {
@@ -9394,10 +9458,9 @@ TransmogLootHelper_Cache = {
 "Neonvoid-Tichondrius",
 },
 },
-[1226170] = {
-["learned"] = true,
+[399034] = {
+["learned"] = false,
 ["knownBy"] = {
-"Starphage-Tichondrius",
 },
 },
 [438929] = {
@@ -9405,10 +9468,9 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[1226169] = {
-["learned"] = true,
+[23129] = {
+["learned"] = false,
 ["knownBy"] = {
-"Starphage-Tichondrius",
 },
 },
 [435859] = {
@@ -9421,13 +9483,12 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[1226166] = {
-["learned"] = true,
+[447374] = {
+["learned"] = false,
 ["knownBy"] = {
-"Starphage-Tichondrius",
 },
 },
-[199003] = {
+[354766] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
@@ -9468,9 +9529,10 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[1248613] = {
-["learned"] = false,
+[1225367] = {
+["learned"] = true,
 ["knownBy"] = {
+"Starphage-Tichondrius",
 },
 },
 [435862] = {
@@ -9521,7 +9583,7 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[430618] = {
+[1264528] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
@@ -9541,11 +9603,9 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[314960] = {
-["learned"] = true,
+[378302] = {
+["learned"] = false,
 ["knownBy"] = {
-"Starphage-Tichondrius",
-"Stormclout-Tichondrius",
 },
 },
 [162216] = {
@@ -9564,18 +9624,17 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[430614] = {
-["learned"] = true,
-["knownBy"] = {
-"Neonvoid-Tichondrius",
-},
-},
-[430612] = {
+[7827] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
 },
-[397859] = {
+[439724] = {
+["learned"] = false,
+["knownBy"] = {
+},
+},
+[439713] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
@@ -9585,9 +9644,10 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[18246] = {
-["learned"] = false,
+[468430] = {
+["learned"] = true,
 ["knownBy"] = {
+"Stormclout-Tichondrius",
 },
 },
 [100587] = {
@@ -9595,7 +9655,7 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[176732] = {
+[7755] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
@@ -9606,9 +9666,10 @@ TransmogLootHelper_Cache = {
 "Stormclout-Tichondrius",
 },
 },
-[84431] = {
-["learned"] = false,
+[1229928] = {
+["learned"] = true,
 ["knownBy"] = {
+"Starphage-Tichondrius",
 },
 },
 [22732] = {
@@ -9621,12 +9682,12 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[430602] = {
+[1229914] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
 },
-[198988] = {
+[1229913] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
@@ -9647,7 +9708,7 @@ TransmogLootHelper_Cache = {
 "Neonvoid-Tichondrius",
 },
 },
-[446973] = {
+[445393] = {
 ["learned"] = true,
 ["knownBy"] = {
 "Auteist-Tichondrius",
@@ -9669,7 +9730,7 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[456180] = {
+[12899] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
@@ -9752,9 +9813,10 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[291096] = {
-["learned"] = false,
+[1229872] = {
+["learned"] = true,
 ["knownBy"] = {
+"Starphage-Tichondrius",
 },
 },
 [445087] = {
@@ -9773,7 +9835,7 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[381415] = {
+[2539] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
@@ -9794,10 +9856,9 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[393068] = {
-["learned"] = true,
+[381407] = {
+["learned"] = false,
 ["knownBy"] = {
-"Starphage-Tichondrius",
 },
 },
 [19790] = {
@@ -9805,10 +9866,11 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[462121] = {
+[55016] = {
 ["learned"] = true,
 ["knownBy"] = {
-"Neonvoid-Tichondrius",
+"Starphage-Tichondrius",
+"Stormclout-Tichondrius",
 },
 },
 [435878] = {
@@ -9816,7 +9878,7 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[439744] = {
+[2659] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
@@ -9828,7 +9890,7 @@ TransmogLootHelper_Cache = {
 "Stormclout-Tichondrius",
 },
 },
-[442328] = {
+[12595] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
@@ -9838,7 +9900,7 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[310536] = {
+[26428] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
@@ -9859,9 +9921,10 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[381418] = {
-["learned"] = false,
+[56486] = {
+["learned"] = true,
 ["knownBy"] = {
+"Starphage-Tichondrius",
 },
 },
 [445092] = {
@@ -9870,10 +9933,9 @@ TransmogLootHelper_Cache = {
 "Stormclout-Tichondrius",
 },
 },
-[447333] = {
-["learned"] = true,
+[381396] = {
+["learned"] = false,
 ["knownBy"] = {
-"Stormclout-Tichondrius",
 },
 },
 [399035] = {
@@ -9881,15 +9943,15 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[445320] = {
-["learned"] = true,
-["knownBy"] = {
-"Auteist-Tichondrius",
-},
-},
-[438952] = {
+[1264529] = {
 ["learned"] = false,
 ["knownBy"] = {
+},
+},
+[445093] = {
+["learned"] = true,
+["knownBy"] = {
+"Stormclout-Tichondrius",
 },
 },
 [30569] = {
@@ -9897,14 +9959,16 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[1229907] = {
-["learned"] = false,
+[84406] = {
+["learned"] = true,
 ["knownBy"] = {
+"Starphage-Tichondrius",
 },
 },
-[1260334] = {
-["learned"] = false,
+[56484] = {
+["learned"] = true,
 ["knownBy"] = {
+"Starphage-Tichondrius",
 },
 },
 [438953] = {
@@ -9917,17 +9981,14 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[116847] = {
-["learned"] = true,
+[382400] = {
+["learned"] = false,
 ["knownBy"] = {
-"Stormclout-Tichondrius",
 },
 },
-[1229863] = {
-["learned"] = true,
+[62049] = {
+["learned"] = false,
 ["knownBy"] = {
-"Starphage-Tichondrius",
-"Stormclout-Tichondrius",
 },
 },
 [67839] = {
@@ -9948,7 +10009,7 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[30329] = {
+[439714] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
@@ -9981,10 +10042,11 @@ TransmogLootHelper_Cache = {
 "Starphage-Tichondrius",
 },
 },
-[425139] = {
+[431280] = {
 ["learned"] = true,
 ["knownBy"] = {
-"Stormclout-Tichondrius",
+"Tainguk-Tichondrius",
+"Korahron-Tichondrius",
 },
 },
 [399040] = {
@@ -9992,10 +10054,10 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[1229935] = {
+[439712] = {
 ["learned"] = true,
 ["knownBy"] = {
-"Starphage-Tichondrius",
+"Stormclout-Tichondrius",
 },
 },
 [264962] = {
@@ -10003,21 +10065,19 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[39973] = {
+[3950] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
 },
-[217832] = {
-["learned"] = true,
+[3942] = {
+["learned"] = false,
 ["knownBy"] = {
-"Starphage-Tichondrius",
 },
 },
-[1230887] = {
-["learned"] = true,
+[416689] = {
+["learned"] = false,
 ["knownBy"] = {
-"Neonvoid-Tichondrius",
 },
 },
 [12586] = {
@@ -10035,9 +10095,10 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[7827] = {
-["learned"] = false,
+[439709] = {
+["learned"] = true,
 ["knownBy"] = {
+"Stormclout-Tichondrius",
 },
 },
 [264964] = {
@@ -10051,9 +10112,11 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[11476] = {
-["learned"] = false,
+[439705] = {
+["learned"] = true,
 ["knownBy"] = {
+"Starphage-Tichondrius",
+"Stormclout-Tichondrius",
 },
 },
 [8604] = {
@@ -10087,12 +10150,12 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[438961] = {
+[1261493] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
 },
-[198967] = {
+[81715] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
@@ -10115,7 +10178,7 @@ TransmogLootHelper_Cache = {
 "Starphage-Tichondrius",
 },
 },
-[198965] = {
+[93741] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
@@ -10125,10 +10188,9 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[445393] = {
-["learned"] = true,
+[12897] = {
+["learned"] = false,
 ["knownBy"] = {
-"Auteist-Tichondrius",
 },
 },
 [12906] = {
@@ -10136,10 +10198,9 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[1229901] = {
-["learned"] = true,
+[18239] = {
+["learned"] = false,
 ["knownBy"] = {
-"Starphage-Tichondrius",
 },
 },
 [452269] = {
@@ -10153,10 +10214,10 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[1265599] = {
+[445105] = {
 ["learned"] = true,
 ["knownBy"] = {
-"Neonvoid-Tichondrius",
+"Stormclout-Tichondrius",
 },
 },
 [443570] = {
@@ -10172,15 +10233,15 @@ TransmogLootHelper_Cache = {
 "Stormclout-Tichondrius",
 },
 },
-[1250351] = {
-["learned"] = false,
-["knownBy"] = {
-},
-},
-[1265603] = {
+[56481] = {
 ["learned"] = true,
 ["knownBy"] = {
 "Starphage-Tichondrius",
+},
+},
+[443059] = {
+["learned"] = true,
+["knownBy"] = {
 "Stormclout-Tichondrius",
 },
 },
@@ -10190,10 +10251,9 @@ TransmogLootHelper_Cache = {
 "Stormclout-Tichondrius",
 },
 },
-[1229873] = {
-["learned"] = true,
+[1245995] = {
+["learned"] = false,
 ["knownBy"] = {
-"Starphage-Tichondrius",
 },
 },
 [184492] = {
@@ -10213,10 +10273,11 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[445399] = {
+[382375] = {
 ["learned"] = true,
 ["knownBy"] = {
-"Auteist-Tichondrius",
+"Starphage-Tichondrius",
+"Stormclout-Tichondrius",
 },
 },
 [169140] = {
@@ -10232,13 +10293,15 @@ TransmogLootHelper_Cache = {
 "Auteist-Tichondrius",
 },
 },
-[245013] = {
+[382392] = {
 ["learned"] = true,
 ["knownBy"] = {
+"Ofpuss-Tichondrius",
+"Starphage-Tichondrius",
 "Stormclout-Tichondrius",
 },
 },
-[439743] = {
+[447875] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
@@ -10265,9 +10328,12 @@ TransmogLootHelper_Cache = {
 "Stormclout-Tichondrius",
 },
 },
-[2331] = {
-["learned"] = false,
+[381364] = {
+["learned"] = true,
 ["knownBy"] = {
+"Ofpuss-Tichondrius",
+"Starphage-Tichondrius",
+"Stormclout-Tichondrius",
 },
 },
 [445110] = {
@@ -10277,19 +10343,18 @@ TransmogLootHelper_Cache = {
 "Auteist-Tichondrius",
 },
 },
-[1246167] = {
+[447872] = {
+["learned"] = false,
+["knownBy"] = {
+},
+},
+[447360] = {
 ["learned"] = true,
 ["knownBy"] = {
-"Starphage-Tichondrius",
+"Stormclout-Tichondrius",
 },
 },
-[56486] = {
-["learned"] = true,
-["knownBy"] = {
-"Starphage-Tichondrius",
-},
-},
-[26428] = {
+[62045] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
@@ -10306,9 +10371,10 @@ TransmogLootHelper_Cache = {
 "Auteist-Tichondrius",
 },
 },
-[46108] = {
-["learned"] = false,
+[467316] = {
+["learned"] = true,
 ["knownBy"] = {
+"Stormclout-Tichondrius",
 },
 },
 [2329] = {
@@ -10317,9 +10383,10 @@ TransmogLootHelper_Cache = {
 "Neonvoid-Tichondrius",
 },
 },
-[2333] = {
-["learned"] = false,
+[283399] = {
+["learned"] = true,
 ["knownBy"] = {
+"Starphage-Tichondrius",
 },
 },
 [2337] = {
@@ -10327,15 +10394,14 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[347457] = {
+[3450] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
 },
-[1225370] = {
-["learned"] = true,
+[3398] = {
+["learned"] = false,
 ["knownBy"] = {
-"Starphage-Tichondrius",
 },
 },
 [445113] = {
@@ -10354,9 +10420,10 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[439720] = {
-["learned"] = false,
+[442743] = {
+["learned"] = true,
 ["knownBy"] = {
+"Stormclout-Tichondrius",
 },
 },
 [283401] = {
@@ -10402,9 +10469,11 @@ TransmogLootHelper_Cache = {
 "Stormclout-Tichondrius",
 },
 },
-[62049] = {
-["learned"] = false,
+[298930] = {
+["learned"] = true,
 ["knownBy"] = {
+"Ofpuss-Tichondrius",
+"Starphage-Tichondrius",
 },
 },
 [283403] = {
@@ -10419,12 +10488,14 @@ TransmogLootHelper_Cache = {
 "Starphage-Tichondrius",
 },
 },
-[3978] = {
-["learned"] = false,
+[447337] = {
+["learned"] = true,
 ["knownBy"] = {
+"Starphage-Tichondrius",
+"Stormclout-Tichondrius",
 },
 },
-[1264527] = {
+[7258] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
@@ -10442,11 +10513,9 @@ TransmogLootHelper_Cache = {
 "Starphage-Tichondrius",
 },
 },
-[382394] = {
+[447333] = {
 ["learned"] = true,
 ["knownBy"] = {
-"Ofpuss-Tichondrius",
-"Starphage-Tichondrius",
 "Stormclout-Tichondrius",
 },
 },
@@ -10493,16 +10562,15 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[210086] = {
-["learned"] = true,
+[1230859] = {
+["learned"] = false,
 ["knownBy"] = {
-"Auteist-Tichondrius",
 },
 },
-[1265659] = {
+[445120] = {
 ["learned"] = true,
 ["knownBy"] = {
-"Neonvoid-Tichondrius",
+"Stormclout-Tichondrius",
 },
 },
 [1230861] = {
@@ -10571,7 +10639,7 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[1230873] = {
+[30315] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
@@ -10592,7 +10660,7 @@ TransmogLootHelper_Cache = {
 "Neonvoid-Tichondrius",
 },
 },
-[1230877] = {
+[310534] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
@@ -10612,10 +10680,9 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[427214] = {
-["learned"] = true,
+[2545] = {
+["learned"] = false,
 ["knownBy"] = {
-"Neonvoid-Tichondrius",
 },
 },
 [2549] = {
@@ -10628,9 +10695,10 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[25146] = {
-["learned"] = false,
+[447323] = {
+["learned"] = true,
 ["knownBy"] = {
+"Stormclout-Tichondrius",
 },
 },
 [1230885] = {
@@ -10650,12 +10718,13 @@ TransmogLootHelper_Cache = {
 "Neonvoid-Tichondrius",
 },
 },
-[1230888] = {
-["learned"] = false,
+[445127] = {
+["learned"] = true,
 ["knownBy"] = {
+"Stormclout-Tichondrius",
 },
 },
-[1230889] = {
+[331007] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
@@ -10665,9 +10734,10 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[1230891] = {
-["learned"] = false,
+[291091] = {
+["learned"] = true,
 ["knownBy"] = {
+"Starphage-Tichondrius",
 },
 },
 [1230892] = {
@@ -10675,7 +10745,7 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[1230893] = {
+[298256] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
@@ -10704,10 +10774,9 @@ TransmogLootHelper_Cache = {
 "Stormclout-Tichondrius",
 },
 },
-[56483] = {
-["learned"] = true,
+[26422] = {
+["learned"] = false,
 ["knownBy"] = {
-"Starphage-Tichondrius",
 },
 },
 [291093] = {
@@ -10716,12 +10785,12 @@ TransmogLootHelper_Cache = {
 "Starphage-Tichondrius",
 },
 },
-[62045] = {
+[209646] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
 },
-[444799] = {
+[46116] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
@@ -10758,7 +10827,7 @@ TransmogLootHelper_Cache = {
 "Starphage-Tichondrius",
 },
 },
-[46116] = {
+[1225277] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
@@ -10770,7 +10839,7 @@ TransmogLootHelper_Cache = {
 "Stormclout-Tichondrius",
 },
 },
-[62044] = {
+[1225274] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
@@ -10785,7 +10854,7 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[444790] = {
+[46110] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
@@ -10821,6 +10890,7 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 "Starphage-Tichondrius",
 "Neonvoid-Tichondrius",
+"Stormclout-Tichondrius",
 },
 },
 [1265718] = {
@@ -10830,11 +10900,12 @@ TransmogLootHelper_Cache = {
 "Stormclout-Tichondrius",
 },
 },
-[298930] = {
+[173308] = {
 ["learned"] = true,
 ["knownBy"] = {
 "Ofpuss-Tichondrius",
 "Starphage-Tichondrius",
+"Stormclout-Tichondrius",
 },
 },
 [288028] = {
@@ -10870,6 +10941,7 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 "Starphage-Tichondrius",
 "Neonvoid-Tichondrius",
+"Stormclout-Tichondrius",
 },
 },
 [1265726] = {
@@ -10897,7 +10969,7 @@ TransmogLootHelper_Cache = {
 "Stormclout-Tichondrius",
 },
 },
-[359333] = {
+[39973] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
@@ -10915,12 +10987,12 @@ TransmogLootHelper_Cache = {
 "Neonvoid-Tichondrius",
 },
 },
-[455005] = {
+[74529] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
 },
-[1225363] = {
+[278413] = {
 ["learned"] = true,
 ["knownBy"] = {
 "Starphage-Tichondrius",
@@ -10941,10 +11013,9 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[115315] = {
-["learned"] = true,
+[160968] = {
+["learned"] = false,
 ["knownBy"] = {
-"Stormclout-Tichondrius",
 },
 },
 [305944] = {
@@ -10957,9 +11028,10 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[447325] = {
+[389459] = {
 ["learned"] = true,
 ["knownBy"] = {
+"Starphage-Tichondrius",
 "Stormclout-Tichondrius",
 },
 },
@@ -10980,9 +11052,10 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[46112] = {
-["learned"] = false,
+[1223139] = {
+["learned"] = true,
 ["knownBy"] = {
+"Neonvoid-Tichondrius",
 },
 },
 [160969] = {
@@ -11000,9 +11073,10 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[471368] = {
-["learned"] = false,
+[186091] = {
+["learned"] = true,
 ["knownBy"] = {
+"Auteist-Tichondrius",
 },
 },
 [256155] = {
@@ -11021,7 +11095,7 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[1229376] = {
+[443589] = {
 ["learned"] = true,
 ["knownBy"] = {
 "Stormclout-Tichondrius",
@@ -11081,12 +11155,57 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[2546] = {
+[1230893] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
 },
-[30547] = {
+[1229376] = {
+["learned"] = true,
+["knownBy"] = {
+"Stormclout-Tichondrius",
+},
+},
+[269729] = {
+["learned"] = false,
+["knownBy"] = {
+},
+},
+[56459] = {
+["learned"] = true,
+["knownBy"] = {
+"Starphage-Tichondrius",
+"Stormclout-Tichondrius",
+},
+},
+[291096] = {
+["learned"] = false,
+["knownBy"] = {
+},
+},
+[393060] = {
+["learned"] = true,
+["knownBy"] = {
+"Starphage-Tichondrius",
+},
+},
+[55252] = {
+["learned"] = true,
+["knownBy"] = {
+"Starphage-Tichondrius",
+},
+},
+[7752] = {
+["learned"] = false,
+["knownBy"] = {
+},
+},
+[19825] = {
+["learned"] = false,
+["knownBy"] = {
+},
+},
+[1235486] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
@@ -11100,64 +11219,15 @@ TransmogLootHelper_Cache = {
 "Hellavator-Tichondrius",
 },
 },
-[56459] = {
-["learned"] = true,
-["knownBy"] = {
-"Starphage-Tichondrius",
-"Stormclout-Tichondrius",
-},
-},
-[389464] = {
-["learned"] = true,
-["knownBy"] = {
-"Starphage-Tichondrius",
-"Stormclout-Tichondrius",
-},
-},
-[74537] = {
+[8895] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
 },
-[21143] = {
-["learned"] = false,
-["knownBy"] = {
-},
-},
-[389459] = {
-["learned"] = true,
-["knownBy"] = {
-"Starphage-Tichondrius",
-"Stormclout-Tichondrius",
-},
-},
-[1223146] = {
-["learned"] = true,
-["knownBy"] = {
-"Neonvoid-Tichondrius",
-},
-},
-[446260] = {
+[115315] = {
 ["learned"] = true,
 ["knownBy"] = {
 "Stormclout-Tichondrius",
-},
-},
-[1223135] = {
-["learned"] = true,
-["knownBy"] = {
-"Neonvoid-Tichondrius",
-},
-},
-[1225282] = {
-["learned"] = false,
-["knownBy"] = {
-},
-},
-[462122] = {
-["learned"] = true,
-["knownBy"] = {
-"Neonvoid-Tichondrius",
 },
 },
 [1257589] = {
@@ -11171,7 +11241,7 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[1221179] = {
+[12589] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
@@ -11181,24 +11251,26 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[12590] = {
+[116847] = {
+["learned"] = true,
+["knownBy"] = {
+"Stormclout-Tichondrius",
+},
+},
+[12607] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
 },
-[20916] = {
+[30575] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
 },
-[12589] = {
-["learned"] = false,
+[1225273] = {
+["learned"] = true,
 ["knownBy"] = {
-},
-},
-[3569] = {
-["learned"] = false,
-["knownBy"] = {
+"Starphage-Tichondrius",
 },
 },
 [17555] = {
@@ -11206,9 +11278,10 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[7752] = {
-["learned"] = false,
+[426756] = {
+["learned"] = true,
 ["knownBy"] = {
+"Starphage-Tichondrius",
 },
 },
 [255392] = {
@@ -11218,18 +11291,18 @@ TransmogLootHelper_Cache = {
 "Stormclout-Tichondrius",
 },
 },
-[383793] = {
+[457974] = {
 ["learned"] = true,
 ["knownBy"] = {
 "Stormclout-Tichondrius",
 },
 },
-[1261878] = {
+[8238] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
 },
-[1233136] = {
+[1233138] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
@@ -11239,18 +11312,18 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[1259673] = {
+[3397] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
 },
-[1233129] = {
+[1233130] = {
 ["learned"] = true,
 ["knownBy"] = {
 "Neonvoid-Tichondrius",
 },
 },
-[1233135] = {
+[1233136] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
@@ -11273,7 +11346,7 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[1259778] = {
+[338220] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
@@ -11435,8 +11508,8 @@ TransmogLootHelper_Cache = {
 ["grantsXP"] = true,
 },
 [17460] = {
-["owned"] = 0,
-["xp"] = 0,
+["owned"] = 1,
+["xp"] = 10,
 ["grantsXP"] = false,
 },
 [4401] = {
@@ -11615,6 +11688,11 @@ TransmogLootHelper_Cache = {
 ["owned"] = 0,
 ["xp"] = 10,
 ["grantsXP"] = true,
+},
+[19252] = {
+["owned"] = 1,
+["grantsXP"] = false,
+["xp"] = 10,
 },
 [4841] = {
 ["owned"] = 0,
@@ -12651,8 +12729,8 @@ TransmogLootHelper_Cache = {
 ["placed"] = 1,
 },
 [20632] = {
-["owned"] = 0,
-["grantsXP"] = true,
+["owned"] = 1,
+["grantsXP"] = false,
 ["xp"] = 10,
 },
 [18617] = {
@@ -13277,13 +13355,13 @@ TransmogLootHelper_Cache = {
 ["placed"] = 0,
 },
 [837] = {
-["owned"] = 1,
+["owned"] = 0,
 ["grantsXP"] = false,
 ["xp"] = 0,
 ["placed"] = 0,
 },
 [838] = {
-["owned"] = 1,
+["owned"] = 0,
 ["grantsXP"] = false,
 ["xp"] = 0,
 ["placed"] = 0,
@@ -13317,9 +13395,9 @@ TransmogLootHelper_Cache = {
 ["placed"] = 0,
 },
 [15567] = {
-["owned"] = 0,
+["owned"] = 1,
 ["xp"] = 10,
-["grantsXP"] = true,
+["grantsXP"] = false,
 },
 [11489] = {
 ["owned"] = 0,
@@ -13484,6 +13562,11 @@ TransmogLootHelper_Cache = {
 ["xp"] = 10,
 ["grantsXP"] = true,
 },
+[19197] = {
+["owned"] = 1,
+["grantsXP"] = false,
+["xp"] = 10,
+},
 [922] = {
 ["owned"] = 0,
 ["grantsXP"] = true,
@@ -13617,7 +13700,7 @@ TransmogLootHelper_Cache = {
 ["placed"] = 0,
 },
 [944] = {
-["owned"] = 1,
+["owned"] = 0,
 ["grantsXP"] = false,
 ["xp"] = 0,
 ["placed"] = 0,
@@ -14229,7 +14312,7 @@ TransmogLootHelper_Cache = {
 ["grantsXP"] = false,
 },
 [1188] = {
-["owned"] = 1,
+["owned"] = 0,
 ["grantsXP"] = false,
 ["xp"] = 0,
 ["placed"] = 0,
@@ -15667,8 +15750,8 @@ TransmogLootHelper_Cache = {
 ["placed"] = 0,
 },
 [17522] = {
-["owned"] = 0,
-["xp"] = 0,
+["owned"] = 1,
+["xp"] = 10,
 ["grantsXP"] = false,
 },
 [10542] = {
@@ -16496,9 +16579,9 @@ TransmogLootHelper_Cache = {
 ["grantsXP"] = false,
 },
 [15761] = {
-["owned"] = 0,
+["owned"] = 1,
 ["xp"] = 10,
-["grantsXP"] = true,
+["grantsXP"] = false,
 },
 [5133] = {
 ["owned"] = 0,
@@ -17257,9 +17340,9 @@ TransmogLootHelper_Cache = {
 ["placed"] = 0,
 },
 [14806] = {
-["owned"] = 0,
+["owned"] = 1,
 ["xp"] = 10,
-["grantsXP"] = true,
+["grantsXP"] = false,
 },
 [14822] = {
 ["owned"] = 1,
@@ -18654,7 +18737,7 @@ TransmogLootHelper_Cache = {
 ["grantsXP"] = true,
 },
 [933] = {
-["owned"] = 1,
+["owned"] = 0,
 ["grantsXP"] = false,
 ["xp"] = 0,
 ["placed"] = 0,
@@ -18783,9 +18866,9 @@ TransmogLootHelper_Cache = {
 ["placed"] = 0,
 },
 [15064] = {
-["owned"] = 0,
+["owned"] = 1,
 ["xp"] = 10,
-["grantsXP"] = true,
+["grantsXP"] = false,
 },
 [17870] = {
 ["owned"] = 5,
@@ -19718,7 +19801,7 @@ TransmogLootHelper_Cache = {
 ["placed"] = 0,
 },
 [1191] = {
-["owned"] = 1,
+["owned"] = 0,
 ["grantsXP"] = false,
 ["xp"] = 0,
 ["placed"] = 0,
@@ -20229,8 +20312,8 @@ TransmogLootHelper_Cache = {
 ["grantsXP"] = true,
 },
 [15568] = {
-["owned"] = 1,
-["xp"] = 10,
+["owned"] = 2,
+["xp"] = 0,
 ["grantsXP"] = false,
 },
 [15502] = {

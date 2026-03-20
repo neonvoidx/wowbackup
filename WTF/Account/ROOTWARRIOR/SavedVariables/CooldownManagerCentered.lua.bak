@@ -37,14 +37,24 @@ CooldownManagerCenteredDB = {
 ["cooldownManager_centerEssential_growFromDirection"] = "BOTTOM",
 ["cooldownStyleSettings"] = {
 ["spellSettings"] = {
+[325202] = {
+["alwaysGlow"] = true,
+},
+[443294] = {
+["alwaysGlow"] = true,
+["alwaysShowCooldownEdge"] = true,
+},
 [1249625] = {
 ["alwaysGlow"] = true,
 ["alwaysShowCooldownEdge"] = true,
 },
-[443294] = {
+[1241059] = {
 ["alwaysGlow"] = true,
 },
-[325202] = {
+[137384] = {
+["alwaysGlow"] = true,
+},
+[322507] = {
 ["alwaysGlow"] = true,
 },
 },

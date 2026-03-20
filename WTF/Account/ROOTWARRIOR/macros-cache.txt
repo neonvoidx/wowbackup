@@ -48,6 +48,10 @@ END
 VER 3 0000000000000206 "BOW" "INV_Ability_MasterOfHarmonyMonk_AspectOfHarmony."
 /bow
 END
+VER 3 000000000000023A "EnhanceQoLBuffFoodMacro" "INV_Misc_QuestionMark"
+#showtooltip item:268679
+/use item:268679
+END
 VER 3 0000000000000236 "EnhanceQoLFlaskMacro" "INV_Misc_QuestionMark"
 #showtooltip item:241325
 /use item:241325

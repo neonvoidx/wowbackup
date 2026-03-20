@@ -609,6 +609,33 @@ local function resolvePrivateAuraOffset(point, offset)
 	return off, 0
 end
 
+function H.PrivateAuraNormalizeDirection(direction, fallback)
+	local value = tostring(direction or fallback or "RIGHT"):upper()
+	if value == "LEFT" or value == "RIGHT" or value == "UP" or value == "DOWN" then return value end
+	value = tostring(fallback or "RIGHT"):upper()
+	if value == "LEFT" or value == "RIGHT" or value == "UP" or value == "DOWN" then return value end
+	return "RIGHT"
+end
+
+function H.PrivateAuraGetGridDimensions(count, wrapCount, primaryHorizontal)
+	count = floor(tonumber(count) or 1)
+	if count < 1 then count = 1 end
+	wrapCount = floor(tonumber(wrapCount) or 0)
+	if wrapCount < 0 then wrapCount = 0 end
+	if wrapCount > 0 then
+		if primaryHorizontal then
+			local cols = math.min(count, wrapCount)
+			local rows = math.floor((count + wrapCount - 1) / wrapCount)
+			return cols, rows
+		end
+		local rows = math.min(count, wrapCount)
+		local cols = math.floor((count + wrapCount - 1) / wrapCount)
+		return cols, rows
+	end
+	if primaryHorizontal then return count, 1 end
+	return 1, count
+end
+
 local function resolvePrivateAuraUnitToken(unit)
 	if type(unit) ~= "string" then return unit end
 	if unit ~= "player" and UnitIsUnit then
@@ -668,7 +695,7 @@ local function removePrivateAuraAnchor(anchor)
 	end
 end
 
-local function buildPrivateAuraAnchor(anchor, unit, index, size, borderScale, showFrame, showNumbers, durationEnabled, durationPoint, durationOffsetX, durationOffsetY)
+local function buildPrivateAuraAnchor(anchor, unit, index, size, borderScale, showFrame, showNumbers, durationEnabled, durationPoint, durationOffsetX, durationOffsetY, durationRelativeTo)
 	if not (C_UnitAuras and C_UnitAuras.AddPrivateAuraAnchor and anchor and unit and index) then return nil end
 	privateAuraArgs.unitToken = unit
 	privateAuraArgs.parent = anchor
@@ -688,7 +715,7 @@ local function buildPrivateAuraAnchor(anchor, unit, index, size, borderScale, sh
 	iconAnchor.offsetY = 0
 
 	if durationEnabled then
-		privateAuraDuration.relativeTo = anchor
+		privateAuraDuration.relativeTo = durationRelativeTo or anchor
 		privateAuraDuration.point = inversePoint(durationPoint)
 		privateAuraDuration.relativePoint = tostring(durationPoint or "CENTER"):upper()
 		privateAuraDuration.offsetX = durationOffsetX or 0
@@ -756,72 +783,6 @@ local function stripCooldownEdge(anchor)
 	end
 end
 
-local function ensurePrivateAuraMousePassthrough(anchor)
-	if not anchor then return nil end
-	local blocker = anchor._eqolPrivateAuraBlocker
-	if not blocker then
-		blocker = CreateFrame("Frame", nil, anchor)
-		blocker:EnableMouse(true)
-		if blocker.SetMouseMotionEnabled then blocker:SetMouseMotionEnabled(true) end
-
-		local inCombat = InCombatLockdown and InCombatLockdown()
-		if not inCombat and blocker.SetPassThroughButtons then
-			blocker:SetPassThroughButtons("LeftButton", "RightButton", "MiddleButton", "Button4", "Button5")
-			blocker._eqolPassThroughConfigured = true
-		elseif not inCombat and blocker.SetPropagateMouseClicks then
-			blocker:SetPropagateMouseClicks(true)
-			blocker._eqolPassThroughConfigured = true
-		else
-			blocker:EnableMouse(false)
-			blocker._eqolPassThroughConfigured = false
-		end
-
-		if not (InCombatLockdown and InCombatLockdown()) and blocker.SetPropagateMouseMotion then blocker:SetPropagateMouseMotion(true) end
-		if blocker.SetScript then
-			blocker:SetScript("OnEnter", function()
-				if GameTooltip and GameTooltip.Hide then GameTooltip:Hide() end
-			end)
-			blocker:SetScript("OnLeave", function()
-				if GameTooltip and GameTooltip.Hide then GameTooltip:Hide() end
-			end)
-		end
-		if blocker.SetAllPoints then blocker:SetAllPoints(anchor) end
-		anchor._eqolPrivateAuraBlocker = blocker
-	end
-	if blocker.GetParent and blocker:GetParent() ~= anchor then blocker:SetParent(anchor) end
-	if blocker.SetFrameStrata and anchor.GetFrameStrata then blocker:SetFrameStrata(anchor:GetFrameStrata()) end
-	if blocker.SetFrameLevel and anchor.GetFrameLevel then blocker:SetFrameLevel((anchor:GetFrameLevel() or 0) + 30) end
-	local inCombat = InCombatLockdown and InCombatLockdown()
-	if not inCombat then
-		if blocker.SetMouseMotionEnabled then blocker:SetMouseMotionEnabled(true) end
-		if blocker.SetPassThroughButtons then
-			blocker:SetPassThroughButtons("LeftButton", "RightButton", "MiddleButton", "Button4", "Button5")
-			blocker._eqolPassThroughConfigured = true
-		elseif blocker.SetPropagateMouseClicks then
-			blocker:SetPropagateMouseClicks(true)
-			blocker._eqolPassThroughConfigured = true
-		end
-		if blocker.SetPropagateMouseMotion then blocker:SetPropagateMouseMotion(true) end
-	else
-		if not blocker._eqolPassThroughConfigured then blocker:EnableMouse(false) end
-	end
-	if blocker.SetScript then
-		blocker:SetScript("OnEnter", function()
-			if GameTooltip and GameTooltip.Hide then GameTooltip:Hide() end
-		end)
-		blocker:SetScript("OnLeave", function()
-			if GameTooltip and GameTooltip.Hide then GameTooltip:Hide() end
-		end)
-	end
-	if blocker.ClearAllPoints and blocker.SetPoint then
-		blocker:ClearAllPoints()
-		blocker:SetPoint("TOPLEFT", anchor, "TOPLEFT", 0, 0)
-		blocker:SetPoint("BOTTOMRIGHT", anchor, "BOTTOMRIGHT", 0, 0)
-	end
-	blocker:Show()
-	return blocker
-end
-
 function H.RemovePrivateAuras(container)
 	if not container then return end
 	updatePrivateAuraShowDispelType(container, false)
@@ -829,6 +790,15 @@ function H.RemovePrivateAuras(container)
 		for _, anchor in ipairs(container._eqolPrivateAuraFrames) do
 			removePrivateAuraAnchor(anchor)
 			if anchor._eqolPrivateAuraBlocker and anchor._eqolPrivateAuraBlocker.Hide then anchor._eqolPrivateAuraBlocker:Hide() end
+			if anchor._eqolPrivateAuraSample then anchor._eqolPrivateAuraSample:Hide() end
+			if anchor._eqolPrivateAuraSampleCooldown then anchor._eqolPrivateAuraSampleCooldown:Hide() end
+			if anchor._eqolPrivateAuraSampleDuration then anchor._eqolPrivateAuraSampleDuration:Hide() end
+			if anchor._eqolPrivateAuraLayout then
+				if anchor._eqolPrivateAuraLayout._eqolPrivateAuraSample then anchor._eqolPrivateAuraLayout._eqolPrivateAuraSample:Hide() end
+				if anchor._eqolPrivateAuraLayout._eqolPrivateAuraSampleCooldown then anchor._eqolPrivateAuraLayout._eqolPrivateAuraSampleCooldown:Hide() end
+				if anchor._eqolPrivateAuraLayout._eqolPrivateAuraSampleDuration then anchor._eqolPrivateAuraLayout._eqolPrivateAuraSampleDuration:Hide() end
+				if anchor._eqolPrivateAuraLayout.Hide then anchor._eqolPrivateAuraLayout:Hide() end
+			end
 			if anchor.Hide then anchor:Hide() end
 		end
 	end
@@ -862,16 +832,33 @@ function H.ApplyPrivateAuras(container, unit, cfg, parent, levelFrame, showSampl
 	local iconCfg = cfg.icon or {}
 	local parentCfg = cfg.parent or {}
 	local durationCfg = cfg.duration or {}
+	local layoutCfg = cfg.layout or {}
 
 	local amount = floor(tonumber(iconCfg.amount) or 1)
 	if amount < 1 then amount = 1 end
+	local minSize = floor(tonumber(iconCfg.minSize) or 4)
+	if minSize < 4 then minSize = 4 end
+	local maxSize = floor(tonumber(iconCfg.maxSize) or 60)
+	if maxSize < minSize then maxSize = minSize end
+	if maxSize > 256 then maxSize = 256 end
 	local size = floor(tonumber(iconCfg.size) or 24)
-	if size > 30 then size = 30 end
-	if size < 4 then size = 4 end
+	if size > maxSize then size = maxSize end
+	if size < minSize then size = minSize end
 	local iconPoint = tostring(iconCfg.point or "RIGHT"):upper()
 	local iconOffset = tonumber(iconCfg.offset or iconCfg.spacing or 2) or 0
 	local borderScale = tonumber(iconCfg.borderScale)
-	if borderScale == nil then borderScale = 1 end
+	if borderScale == nil then borderScale = (size / 32) * 2 end
+	local layoutEnabled = layoutCfg.enabled == true or layoutCfg.wrapCount ~= nil or layoutCfg.direction ~= nil or layoutCfg.wrapDirection ~= nil
+	local layoutDirection = H.PrivateAuraNormalizeDirection(layoutCfg.direction or iconCfg.direction or iconPoint, iconPoint)
+	local primaryHorizontal = layoutDirection == "LEFT" or layoutDirection == "RIGHT"
+	local wrapCount = floor(tonumber(layoutCfg.wrapCount) or 0)
+	if wrapCount < 0 then wrapCount = 0 end
+	local wrapDirection = H.PrivateAuraNormalizeDirection(layoutCfg.wrapDirection, primaryHorizontal and "DOWN" or "RIGHT")
+	if primaryHorizontal then
+		if wrapDirection ~= "UP" and wrapDirection ~= "DOWN" then wrapDirection = "DOWN" end
+	else
+		if wrapDirection ~= "LEFT" and wrapDirection ~= "RIGHT" then wrapDirection = "RIGHT" end
+	end
 
 	local showFrame = cfg.countdownFrame ~= false
 	local showNumbers = cfg.countdownNumbers ~= false
@@ -931,6 +918,20 @@ function H.ApplyPrivateAuras(container, unit, cfg, parent, levelFrame, showSampl
 	local anchors = container._eqolPrivateAuraFrames
 	local attachPoint = inversePoint(iconPoint)
 	local ox, oy = resolvePrivateAuraOffset(iconPoint, iconOffset)
+	local cols, rows = 1, 1
+	local layoutWidth, layoutHeight = size, size
+	if layoutEnabled then
+		cols, rows = H.PrivateAuraGetGridDimensions(amount, wrapCount, primaryHorizontal)
+		layoutWidth = (cols * size) + ((cols - 1) * iconOffset)
+		layoutHeight = (rows * size) + ((rows - 1) * iconOffset)
+		if layoutWidth < size then layoutWidth = size end
+		if layoutHeight < size then layoutHeight = size end
+		container:SetSize(layoutWidth, layoutHeight)
+	else
+		container:SetSize(size, size)
+	end
+	container._eqolPrivateAuraLayoutWidth = layoutWidth
+	container._eqolPrivateAuraLayoutHeight = layoutHeight
 
 	for i = 1, amount do
 		local anchor = anchors[i]
@@ -939,21 +940,58 @@ function H.ApplyPrivateAuras(container, unit, cfg, parent, levelFrame, showSampl
 			anchor:EnableMouse(false)
 			anchors[i] = anchor
 		end
-		anchor:ClearAllPoints()
-		if i == 1 then
-			anchor:SetPoint("CENTER", container, "CENTER", 0, 0)
-		else
-			anchor:SetPoint(attachPoint, anchors[i - 1], iconPoint, ox, oy)
+		local layout = anchor._eqolPrivateAuraLayout
+		if not layout then
+			layout = CreateFrame("Frame", nil, container)
+			layout:EnableMouse(false)
+			anchor._eqolPrivateAuraLayout = layout
+		elseif layout.GetParent and layout:GetParent() ~= container then
+			layout:SetParent(container)
 		end
-		anchor:SetSize(size, size)
+		layout:ClearAllPoints()
+		if layoutEnabled then
+			local col = 0
+			local row = 0
+			local primaryIndex = i - 1
+			local secondaryIndex = 0
+			if wrapCount > 0 then
+				primaryIndex = (i - 1) % wrapCount
+				secondaryIndex = math.floor((i - 1) / wrapCount)
+			end
+			if primaryHorizontal then
+				col = primaryIndex
+				row = secondaryIndex
+				if layoutDirection == "LEFT" then col = (cols - 1) - col end
+				if wrapDirection == "UP" then row = (rows - 1) - row end
+			else
+				row = primaryIndex
+				col = secondaryIndex
+				if layoutDirection == "UP" then row = (rows - 1) - row end
+				if wrapDirection == "LEFT" then col = (cols - 1) - col end
+			end
+			local step = size + iconOffset
+			local x = (-layoutWidth / 2) + (size / 2) + (col * step)
+			local y = (layoutHeight / 2) - (size / 2) - (row * step)
+			layout:SetPoint("CENTER", container, "CENTER", x, y)
+		elseif i == 1 then
+			layout:SetPoint("CENTER", container, "CENTER", 0, 0)
+		else
+			local prevLayout = (anchors[i - 1] and anchors[i - 1]._eqolPrivateAuraLayout) or anchors[i - 1]
+			layout:SetPoint(attachPoint, prevLayout, iconPoint, ox, oy)
+		end
+		layout:SetSize(size, size)
+		layout:Show()
+		anchor:ClearAllPoints()
+		anchor:SetPoint("CENTER", layout, "CENTER", 0, 0)
+		anchor:SetSize(0.001, 0.001)
 		anchor:Show()
-		ensurePrivateAuraMousePassthrough(anchor)
+		if anchor._eqolPrivateAuraBlocker and anchor._eqolPrivateAuraBlocker.Hide then anchor._eqolPrivateAuraBlocker:Hide() end
 		if showSample then
-			local tex = ensurePrivateAuraSampleTexture(anchor)
+			local tex = ensurePrivateAuraSampleTexture(layout)
 			if tex then tex:Show() end
-			local cd = ensurePrivateAuraSampleCooldown(anchor)
+			local cd = ensurePrivateAuraSampleCooldown(layout)
 			if cd then
-				cd:SetAllPoints(anchor)
+				cd:SetAllPoints(layout)
 				if cd.SetHideCountdownNumbers then cd:SetHideCountdownNumbers(not showNumbers) end
 				local start = (GetTime and GetTime() or 0) - 10
 				if CooldownFrame_Set then
@@ -963,31 +1001,43 @@ function H.ApplyPrivateAuras(container, unit, cfg, parent, levelFrame, showSampl
 				end
 				cd:SetShown(showFrame == true)
 			end
-			local dur = ensurePrivateAuraSampleDuration(anchor)
+			local dur = ensurePrivateAuraSampleDuration(layout)
 			if dur then
 				if durationEnabled then
 					dur:ClearAllPoints()
-					dur:SetPoint(inversePoint(durationPoint), anchor, durationPoint, durationOffsetX, durationOffsetY)
+					dur:SetPoint(inversePoint(durationPoint), layout, durationPoint, durationOffsetX, durationOffsetY)
 					dur:SetText("12s")
 					dur:Show()
 				else
 					dur:Hide()
 				end
 			end
-		elseif anchor._eqolPrivateAuraSample then
-			anchor._eqolPrivateAuraSample:Hide()
+		else
+			if anchor._eqolPrivateAuraSample then anchor._eqolPrivateAuraSample:Hide() end
 			if anchor._eqolPrivateAuraSampleCooldown then anchor._eqolPrivateAuraSampleCooldown:Hide() end
 			if anchor._eqolPrivateAuraSampleDuration then anchor._eqolPrivateAuraSampleDuration:Hide() end
+			if layout._eqolPrivateAuraSample then layout._eqolPrivateAuraSample:Hide() end
+			if layout._eqolPrivateAuraSampleCooldown then layout._eqolPrivateAuraSampleCooldown:Hide() end
+			if layout._eqolPrivateAuraSampleDuration then layout._eqolPrivateAuraSampleDuration:Hide() end
 		end
 		if changed or not anchor.anchorID then
 			removePrivateAuraAnchor(anchor)
-			anchor.anchorID = buildPrivateAuraAnchor(anchor, effectiveUnit, i, size, borderScale, showFrame, showNumbers, durationEnabled, durationPoint, durationOffsetX, durationOffsetY)
+			anchor.anchorID = buildPrivateAuraAnchor(anchor, effectiveUnit, i, size, borderScale, showFrame, showNumbers, durationEnabled, durationPoint, durationOffsetX, durationOffsetY, layout)
 		end
 		stripCooldownEdge(anchor)
 	end
 	for i = amount + 1, #anchors do
 		removePrivateAuraAnchor(anchors[i])
 		if anchors[i]._eqolPrivateAuraBlocker and anchors[i]._eqolPrivateAuraBlocker.Hide then anchors[i]._eqolPrivateAuraBlocker:Hide() end
+		if anchors[i]._eqolPrivateAuraSample then anchors[i]._eqolPrivateAuraSample:Hide() end
+		if anchors[i]._eqolPrivateAuraSampleCooldown then anchors[i]._eqolPrivateAuraSampleCooldown:Hide() end
+		if anchors[i]._eqolPrivateAuraSampleDuration then anchors[i]._eqolPrivateAuraSampleDuration:Hide() end
+		if anchors[i]._eqolPrivateAuraLayout then
+			if anchors[i]._eqolPrivateAuraLayout._eqolPrivateAuraSample then anchors[i]._eqolPrivateAuraLayout._eqolPrivateAuraSample:Hide() end
+			if anchors[i]._eqolPrivateAuraLayout._eqolPrivateAuraSampleCooldown then anchors[i]._eqolPrivateAuraLayout._eqolPrivateAuraSampleCooldown:Hide() end
+			if anchors[i]._eqolPrivateAuraLayout._eqolPrivateAuraSampleDuration then anchors[i]._eqolPrivateAuraLayout._eqolPrivateAuraSampleDuration:Hide() end
+			if anchors[i]._eqolPrivateAuraLayout.Hide then anchors[i]._eqolPrivateAuraLayout:Hide() end
+		end
 		if anchors[i].Hide then anchors[i]:Hide() end
 	end
 end

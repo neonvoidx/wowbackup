@@ -516,8 +516,8 @@ function TrackerInstance:Create()
     self.anchor:RegisterEvent("BAG_UPDATE_DELAYED")
     self.anchor:RegisterEvent("BAG_UPDATE_COOLDOWN")
     self.anchor:RegisterEvent("PLAYER_ENTERING_WORLD")
-    self.anchor:RegisterEvent("PLAYER_TALENT_UPDATE")
-    self.anchor:RegisterEvent("ACTIVE_TALENT_GROUP_CHANGED")
+    self.anchor:RegisterEvent("TRAIT_CONFIG_UPDATED")
+    self.anchor:RegisterEvent("PLAYER_SPECIALIZATION_CHANGED")
 
     self.anchor:SetScript("OnEvent", function(_, event, arg1)
         if event == "SPELL_UPDATE_COOLDOWN" or event == "SPELL_UPDATE_CHARGES" or event == "BAG_UPDATE_COOLDOWN" then
@@ -537,6 +537,19 @@ function TrackerInstance:Create()
             end)
         elseif event == "BAG_UPDATE_DELAYED" then
             C_Timer.After(0.2, function()
+                self:RefreshEntries()
+            end)
+        elseif
+            event == "TRAIT_CONFIG_UPDATED"
+            or event == "PLAYER_SPECIALIZATION_CHANGED"
+            or event == "PLAYER_TALENT_UPDATE"
+            or event == "ACTIVE_TALENT_GROUP_CHANGED"
+        then
+            if ItemsData and ItemsData.InvalidateSpellBookCache then
+                ItemsData:InvalidateSpellBookCache()
+            end
+            self:RefreshEntries()
+            C_Timer.After(0.3, function()
                 self:RefreshEntries()
             end)
         else

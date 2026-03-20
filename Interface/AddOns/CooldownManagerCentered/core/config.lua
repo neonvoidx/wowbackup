@@ -1,6 +1,8 @@
 local _, ns = ...
 CooldownManagerCentered = LibStub("AceAddon-3.0"):NewAddon("CooldownManagerCentered", "AceConsole-3.0")
 ns.Addon = CooldownManagerCentered
+local L = LibStub("AceLocale-3.0"):GetLocale("CooldownManagerCentered")
+ns.L = L
 
 -- Default Settings
 ns.DEFAULT_SETTINGS = {
