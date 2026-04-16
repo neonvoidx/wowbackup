@@ -7,7 +7,7 @@ else
 	error(parentAddonName .. " is not loaded")
 end
 
-local L = LibStub("AceLocale-3.0"):GetLocale("EnhanceQoL_Mover")
+local L = LibStub("AceLocale-3.0"):GetLocale("EnhanceQoL")
 local db
 
 local groupOrder = {
@@ -24,11 +24,11 @@ local groupOrder = {
 
 local groups = {
 	system = {
-		label = L["System"] or "System",
+		label = SETTING_GROUP_SYSTEM,
 		expanded = true,
 	},
 	character = {
-		label = L["Character"] or "Character",
+		label = CHARACTER,
 	},
 	housing = {
 		label = AUCTION_CATEGORY_HOUSING or "Housing",
@@ -186,7 +186,7 @@ local frames = {
 	},
 	{
 		id = "CharacterFrame",
-		label = L["Character"] or "Character",
+		label = CHARACTER,
 		group = "character",
 		names = { "CharacterFrame" },
 		defaultEnabled = true,
@@ -434,7 +434,7 @@ local frames = {
 	},
 	{
 		id = "MerchantFrame",
-		label = L["Merchant"] or "Merchant",
+		label = MERCHANT or "Merchant",
 		group = "vendors",
 		names = { "MerchantFrame" },
 		defaultEnabled = true,
@@ -601,7 +601,7 @@ local frames = {
 	},
 	{
 		id = "FriendsFriendsFrame",
-		label = L["Friends List"] or "Friends List",
+		label = FRIENDS_LIST,
 		group = "activities",
 		names = { "FriendsFriendsFrame" },
 		defaultEnabled = true,
@@ -630,7 +630,7 @@ local frames = {
 	},
 	{
 		id = "BankFrame",
-		label = L["Bank"] or "Bank",
+		label = BANK,
 		group = "bags",
 		names = { "BankFrame" },
 		defaultEnabled = true,
@@ -669,7 +669,7 @@ local frames = {
 	},
 	{
 		id = "QuestFrame",
-		label = L["Quest"] or "Quest",
+		label = L["MoverQuestDialog"] or "NPC Dialog (Quest)",
 		group = "world",
 		names = { "QuestFrame", "GossipFrame" },
 		defaultEnabled = true,

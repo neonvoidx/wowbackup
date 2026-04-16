@@ -526,7 +526,7 @@ local menuEntries = {
 	},
 	{
 		id = "social",
-		label = L["Social"] or "Social",
+		label = SOCIAL_LABEL,
 		iconSpec = { texture = "Interface\\FriendsFrame\\PlusManz-PlusManz" },
 		action = openSocial,
 	},
@@ -719,7 +719,7 @@ local function createAceWindow()
 	frame:AddChild(scroll)
 
 	local displayMode = AceGUI:Create("Dropdown")
-	displayMode:SetLabel(L["MicroBarDisplayModeTitle"] or "Display mode")
+	displayMode:SetLabel(DISPLAY_MODE)
 	displayMode:SetList({
 		menu = L["MicroBarDisplayModeMenu"] or "Show as menu",
 		inline = L["MicroBarDisplayModeInline"] or "Show icons in DataPanel",
@@ -732,13 +732,13 @@ local function createAceWindow()
 	scroll:AddChild(displayMode)
 
 	local iconSize = AceGUI:Create("Slider")
-	iconSize:SetLabel(L["MicroBarIconSize"] or "Icon size")
+	iconSize:SetLabel(L["Icon size"] or "Icon size")
 	iconSize:SetSliderValues(MIN_ICON_SIZE, MAX_ICON_SIZE, 1)
 	iconSize:SetValue(getIconSize())
 	scroll:AddChild(iconSize)
 
 	local iconGap = AceGUI:Create("Slider")
-	iconGap:SetLabel(L["MicroBarIconGap"] or "Icon gap")
+	iconGap:SetLabel(L["Icon gap"] or "Icon gap")
 	iconGap:SetSliderValues(MIN_ICON_GAP, MAX_ICON_GAP, 1)
 	iconGap:SetValue(getIconGap())
 	scroll:AddChild(iconGap)
@@ -754,7 +754,7 @@ local function createAceWindow()
 	scroll:AddChild(buttonBackdrop)
 
 	local buttonBorder = AceGUI:Create("CheckBox")
-	buttonBorder:SetLabel(L["MicroBarButtonBorder"] or "Show button border")
+	buttonBorder:SetLabel(L["Show button border"] or "Show button border")
 	buttonBorder:SetValue(hasButtonBorder())
 	scroll:AddChild(buttonBorder)
 

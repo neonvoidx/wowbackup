@@ -30,8 +30,11 @@ Glow.STYLE.PROC = "PROC"
 Glow.STYLE.AUTOCAST = Glow.STYLE.SHINE
 
 local BLIZZARD_GLOW_TEXTURE = [[Interface\SpellActivationOverlay\IconAlert]]
+local BLIZZARD_ANTS_TEXTURE = [[Interface\SpellActivationOverlay\IconAlertAnts]]
 local MARCHING_ANTS_ATLAS = "VisualAlert_Ants_Flipbook"
 local FLASH_GLOW_ATLAS = "UI-CooldownManager-VisualAlert-Glow"
+local BLIZZ_CONTAINER_RATIO = 66 / 45
+local FLASH_LEVEL_OFFSET = -2
 
 local VALID_STRATA = {
 	BACKGROUND = true,
@@ -83,6 +86,103 @@ local function normalizeInset(opts)
 	return roundOffset(opts.inset)
 end
 
+local function normalizeScalar(opts, key, fallback)
+	if type(opts) ~= "table" then return fallback end
+	local value = tonumber(opts[key])
+	if value == nil then return fallback end
+	return value
+end
+
+local function normalizeGlowThrottle(opts)
+	local frequency = normalizeScalar(opts, "frequency", nil)
+	if frequency and frequency > 0 then
+		return 0.25 / frequency * 0.01
+	end
+	return 0.01
+end
+
+local function getGlowAnchorRegion(host)
+	local target = host and (host._eqolGlowTarget or host) or nil
+	if not target then return host end
+	local region = target.Icon or target.icon or target.texture
+	if region and region.GetWidth and region.GetHeight then
+		local width = region:GetWidth() or 0
+		local height = region:GetHeight() or 0
+		if width > 0 and height > 0 then return region end
+	end
+	return target
+end
+
+local function resetSpellAlertTextures(frame)
+	if not frame then return end
+	if frame.spark then
+		frame.spark:SetTexture(BLIZZARD_GLOW_TEXTURE)
+		frame.spark:SetTexCoord(0.00781250, 0.61718750, 0.00390625, 0.26953125)
+	end
+	if frame.innerGlow then
+		frame.innerGlow:SetTexture(BLIZZARD_GLOW_TEXTURE)
+		frame.innerGlow:SetTexCoord(0.00781250, 0.50781250, 0.27734375, 0.52734375)
+	end
+	if frame.innerGlowOver then
+		frame.innerGlowOver:SetTexture(BLIZZARD_GLOW_TEXTURE)
+		frame.innerGlowOver:SetTexCoord(0.00781250, 0.50781250, 0.53515625, 0.78515625)
+	end
+	if frame.outerGlow then
+		frame.outerGlow:SetTexture(BLIZZARD_GLOW_TEXTURE)
+		frame.outerGlow:SetTexCoord(0.00781250, 0.50781250, 0.27734375, 0.52734375)
+	end
+	if frame.outerGlowOver then
+		frame.outerGlowOver:SetTexture(BLIZZARD_GLOW_TEXTURE)
+		frame.outerGlowOver:SetTexCoord(0.00781250, 0.50781250, 0.53515625, 0.78515625)
+	end
+	if frame.ants then frame.ants:SetTexture(BLIZZARD_ANTS_TEXTURE) end
+end
+
+local function resetMarchingAntsTexture(overlay)
+	if not (overlay and overlay.Texture) then return end
+	if overlay.Texture.SetAtlas then
+		overlay.Texture:SetAtlas(MARCHING_ANTS_ATLAS)
+	else
+		overlay.Texture:SetTexture(BLIZZARD_GLOW_TEXTURE)
+		overlay.Texture:SetTexCoord(0.00781250, 0.50781250, 0.27734375, 0.52734375)
+	end
+	if overlay.FlipAnim then
+		overlay.FlipAnim:SetFlipBookFrameWidth(0)
+		overlay.FlipAnim:SetFlipBookFrameHeight(0)
+	end
+end
+
+local function resetProcGlowTextures(frame)
+	if not frame then return end
+	if frame.ProcStart and frame.ProcStart.SetAtlas then frame.ProcStart:SetAtlas("UI-HUD-ActionBar-Proc-Start-Flipbook") end
+	if frame.ProcLoop and frame.ProcLoop.SetAtlas then frame.ProcLoop:SetAtlas("UI-HUD-ActionBar-Proc-Loop-Flipbook") end
+	if frame.ProcLoopAnim and frame.ProcLoopAnim.flipbookRepeat then
+		frame.ProcLoopAnim.flipbookRepeat:SetFlipBookFrameWidth(0)
+		frame.ProcLoopAnim.flipbookRepeat:SetFlipBookFrameHeight(0)
+	end
+	if frame.ProcStartAnim and frame.ProcStartAnim.flipbookStart then
+		frame.ProcStartAnim.flipbookStart:SetFlipBookFrameWidth(0)
+		frame.ProcStartAnim.flipbookStart:SetFlipBookFrameHeight(0)
+	end
+end
+
+local function copyOptions(opts)
+	if type(opts) ~= "table" then return opts end
+	local copy = {}
+	for key, value in pairs(opts) do
+		if type(value) == "table" then
+			local nested = {}
+			for nestedKey, nestedValue in pairs(value) do
+				nested[nestedKey] = nestedValue
+			end
+			copy[key] = nested
+		else
+			copy[key] = value
+		end
+	end
+	return copy
+end
+
 local function getState(target, key, create)
 	if not target then return nil end
 	local states = target._eqolGlowStates
@@ -106,6 +206,7 @@ local function configureHost(target, state, opts)
 	local host = state and state.host
 	if not host then return end
 	host:SetParent(target)
+	host._eqolGlowTarget = target
 	host:EnableMouse(false)
 	host:ClearAllPoints()
 	host:SetAllPoints(target)
@@ -161,7 +262,10 @@ local function ensureMarchingAntsOverlay(host)
 	overlay:EnableMouse(false)
 	overlay.Texture = overlay:CreateTexture(nil, "ARTWORK")
 	overlay.Texture:SetAllPoints()
-	if not (overlay.Texture.SetAtlas and overlay.Texture:SetAtlas(MARCHING_ANTS_ATLAS)) then
+	overlay.Texture:SetAlpha(0)
+	if overlay.Texture.SetAtlas then
+		overlay.Texture:SetAtlas(MARCHING_ANTS_ATLAS)
+	else
 		overlay.Texture:SetTexture(BLIZZARD_GLOW_TEXTURE)
 		overlay.Texture:SetTexCoord(0.00781250, 0.50781250, 0.27734375, 0.52734375)
 	end
@@ -195,8 +299,19 @@ local function ensureMarchingAntsOverlay(host)
 		overlay.FlipAnim = flipAnim
 	end
 
+	local function resumeMarchingAnts(self)
+		if not self then return end
+		if self.Texture then self.Texture:SetAlpha(1) end
+		if self.Anim and self.Anim.IsPlaying and not self.Anim:IsPlaying() then self.Anim:Play() end
+	end
+
+	overlay:SetScript("OnShow", function(self)
+		resumeMarchingAnts(self)
+	end)
+
 	overlay:SetScript("OnHide", function(self)
 		if self.Anim and self.Anim.IsPlaying and self.Anim:IsPlaying() then self.Anim:Stop() end
+		if self.Texture then self.Texture:SetAlpha(0) end
 	end)
 
 	host._eqolMarchingAntsOverlay = overlay
@@ -211,12 +326,14 @@ local function updateMarchingAntsOverlay(host, opts)
 	overlay:SetFrameLevel(max(0, (host:GetFrameLevel() or 0) + 3))
 	anchorCooldownViewerAlert(overlay, host, normalizeInset(opts))
 	overlay.Texture:SetVertexColor(color[1], color[2], color[3], color[4])
+	resetMarchingAntsTexture(overlay)
 	return overlay
 end
 
 local function startMarchingAnts(host, opts)
 	local overlay = updateMarchingAntsOverlay(host, opts)
 	if not overlay then return end
+	if overlay.Texture then overlay.Texture:SetAlpha(1) end
 	overlay:Show()
 	if overlay.Anim and overlay.Anim.IsPlaying and not overlay.Anim:IsPlaying() then overlay.Anim:Play() end
 end
@@ -236,7 +353,10 @@ local function ensureFlashOverlay(host)
 	overlay:EnableMouse(false)
 	overlay.Texture = overlay:CreateTexture(nil, "ARTWORK")
 	overlay.Texture:SetAllPoints()
-	if not (overlay.Texture.SetAtlas and overlay.Texture:SetAtlas(FLASH_GLOW_ATLAS)) then
+	overlay.Texture:SetAlpha(0)
+	if overlay.Texture.SetAtlas then
+		overlay.Texture:SetAtlas(FLASH_GLOW_ATLAS)
+	else
 		overlay.Texture:SetTexture(BLIZZARD_GLOW_TEXTURE)
 		overlay.Texture:SetTexCoord(0.00781250, 0.50781250, 0.27734375, 0.52734375)
 	end
@@ -255,8 +375,26 @@ local function ensureFlashOverlay(host)
 	alphaAnim:SetToAlpha(1)
 	overlay.AlphaAnim = alphaAnim
 
+	local function resumeFlashOverlay(self)
+		if not self then return end
+		if self.Texture then
+			local alpha = 1
+			if self.AlphaAnim and self.AlphaAnim.GetToAlpha then
+				local toAlpha = self.AlphaAnim:GetToAlpha()
+				if type(toAlpha) == "number" then alpha = toAlpha end
+			end
+			self.Texture:SetAlpha(alpha)
+		end
+		if self.Anim and self.Anim.IsPlaying and not self.Anim:IsPlaying() then self.Anim:Play() end
+	end
+
+	overlay:SetScript("OnShow", function(self)
+		resumeFlashOverlay(self)
+	end)
+
 	overlay:SetScript("OnHide", function(self)
 		if self.Anim and self.Anim.IsPlaying and self.Anim:IsPlaying() then self.Anim:Stop() end
+		if self.Texture then self.Texture:SetAlpha(0) end
 	end)
 
 	host._eqolFlashOverlay = overlay
@@ -265,15 +403,31 @@ end
 
 local function updateFlashOverlay(host, opts)
 	local overlay = ensureFlashOverlay(host)
+	local anchor = getGlowAnchorRegion(host)
+	local width = max(1, anchor:GetWidth() or 0)
+	local height = max(1, anchor:GetHeight() or 0)
+	local scale = normalizeScalar(opts, "scale", 1) or 1
+	local inset = normalizeInset(opts)
+	local xOffset = normalizeScalar(opts, "xOffset", 0)
+	local yOffset = normalizeScalar(opts, "yOffset", 0)
+	local frameLevel = roundOffset(normalizeScalar(opts, "frameLevel", FLASH_LEVEL_OFFSET))
+	local overlayWidth = max(1, (width * BLIZZ_CONTAINER_RATIO * scale) + (inset * 2))
+	local overlayHeight = max(1, (height * BLIZZ_CONTAINER_RATIO * scale) + (inset * 2))
 	local color = normalizeColor(type(opts) == "table" and opts.color or nil, { 1, 0.82, 0.2, 1 })
 	overlay:SetParent(host)
 	overlay:SetFrameStrata(host:GetFrameStrata())
-	overlay:SetFrameLevel(max(0, (host:GetFrameLevel() or 0) + 3))
-	anchorCooldownViewerAlert(overlay, host, normalizeInset(opts))
+	overlay:SetFrameLevel(max(0, (host:GetFrameLevel() or 0) + frameLevel))
+	overlay:ClearAllPoints()
+	overlay:SetSize(overlayWidth, overlayHeight)
+	overlay:SetPoint("CENTER", anchor, "CENTER", xOffset, yOffset)
+	if overlay.SetAlpha then overlay:SetAlpha(normalizeScalar(opts, "intensity", 1) or 1) end
+	local hasCustomColor = not (color[1] >= 0.99 and color[2] >= 0.99 and color[3] >= 0.99)
+	if overlay.Texture and overlay.Texture.SetDesaturated then overlay.Texture:SetDesaturated(hasCustomColor) end
 	overlay.Texture:SetVertexColor(color[1], color[2], color[3], color[4])
 	if overlay.AlphaAnim then
 		overlay.AlphaAnim:SetFromAlpha(color[4] * 0.25)
 		overlay.AlphaAnim:SetToAlpha(color[4])
+		overlay.AlphaAnim:SetDuration((normalizeScalar(opts, "frequency", 0.25) or 0.25) * 2)
 	end
 	return overlay
 end
@@ -281,6 +435,14 @@ end
 local function startFlash(host, opts)
 	local overlay = updateFlashOverlay(host, opts)
 	if not overlay then return end
+	if overlay.Texture then
+		local alpha = 1
+		if overlay.AlphaAnim and overlay.AlphaAnim.GetToAlpha then
+			local toAlpha = overlay.AlphaAnim:GetToAlpha()
+			if type(toAlpha) == "number" then alpha = toAlpha end
+		end
+		overlay.Texture:SetAlpha(alpha)
+	end
 	overlay:Show()
 	if overlay.Anim and overlay.Anim.IsPlaying and not overlay.Anim:IsPlaying() then overlay.Anim:Play() end
 end
@@ -360,7 +522,7 @@ end
 
 local function blizzardOverlayOnUpdate(self, elapsed)
 	if not (self and self.ants and self.ants:IsShown()) then return end
-	if AnimateTexCoords then AnimateTexCoords(self.ants, 256, 256, 48, 48, 22, elapsed, 0.01) end
+	if AnimateTexCoords then AnimateTexCoords(self.ants, 256, 256, 48, 48, 22, elapsed, self.throttle or 0.01) end
 end
 
 local function blizzardAnimInOnPlay(group)
@@ -448,6 +610,11 @@ local function ensureBlizzardOverlay(host)
 	createTargetAlphaAnim(overlay.animOut, overlay.outerGlow, 2, 0.2, 1, 0)
 	overlay.animOut:SetScript("OnFinished", blizzardAnimOutFinished)
 
+	overlay:SetScript("OnShow", function(self)
+		if self.animIn and self.animIn:IsPlaying() then return end
+		if self.animOut and self.animOut:IsPlaying() then return end
+		applyBlizzardOverlayRestState(self)
+	end)
 	overlay:SetScript("OnHide", blizzardOverlayOnHide)
 	overlay:SetScript("OnUpdate", blizzardOverlayOnUpdate)
 
@@ -460,6 +627,9 @@ local function updateBlizzardOverlay(host, opts)
 	local width = max(1, host:GetWidth() or 0)
 	local height = max(1, host:GetHeight() or 0)
 	local inset = normalizeInset(opts)
+	local xOffset = normalizeScalar(opts, "xOffset", 0)
+	local yOffset = normalizeScalar(opts, "yOffset", 0)
+	local frameLevel = roundOffset(normalizeScalar(opts, "frameLevel", 3))
 	local extraX = max(0, (width * 0.2) + inset)
 	local extraY = max(0, (height * 0.2) + inset)
 	local overlayWidth = max(1, width + (extraX * 2))
@@ -469,11 +639,13 @@ local function updateBlizzardOverlay(host, opts)
 
 	overlay:SetParent(host)
 	overlay:SetFrameStrata(host:GetFrameStrata())
-	overlay:SetFrameLevel(max(0, (host:GetFrameLevel() or 0) + 3))
+	overlay:SetFrameLevel(max(0, (host:GetFrameLevel() or 0) + frameLevel))
 	overlay:ClearAllPoints()
 	overlay:SetSize(overlayWidth, overlayHeight)
-	overlay:SetPoint("CENTER", host, "CENTER", 0, 0)
+	overlay:SetPoint("CENTER", host, "CENTER", xOffset, yOffset)
+	overlay.throttle = normalizeGlowThrottle(opts)
 
+	resetSpellAlertTextures(overlay)
 	overlay.spark:SetVertexColor(r, g, b, a)
 	overlay.innerGlow:SetVertexColor(r, g, b, a)
 	overlay.innerGlowOver:SetVertexColor(r, g, b, a)
@@ -497,7 +669,7 @@ local function startBlizzard(host, opts)
 		return
 	end
 	if overlay.animIn and overlay.animIn:IsPlaying() then return end
-	overlay.ants:SetAlpha(1)
+	applyBlizzardOverlayRestState(overlay)
 end
 
 local function stopBlizzard(host)
@@ -519,22 +691,33 @@ end
 local BACKENDS = {
 	[Glow.STYLE.BLIZZARD] = {
 		start = function(host, opts) startBlizzard(host, opts) end,
+		refresh = function(host, opts) updateBlizzardOverlay(host, opts) end,
 		stop = function(host) stopBlizzard(host) end,
 	},
 	[Glow.STYLE.MARCHING_ANTS] = {
 		start = function(host, opts) startMarchingAnts(host, opts) end,
+		refresh = function(host, opts) updateMarchingAntsOverlay(host, opts) end,
 		stop = function(host) stopMarchingAnts(host) end,
 	},
 	[Glow.STYLE.FLASH] = {
 		start = function(host, opts) startFlash(host, opts) end,
+		refresh = function(host, opts) updateFlashOverlay(host, opts) end,
 		stop = function(host) stopFlash(host) end,
 	},
 	[Glow.STYLE.BUTTON] = {
 		start = function(host, opts)
 			if LCG and LCG.ButtonGlow_Start then
 				LCG.ButtonGlow_Start(host, type(opts) == "table" and opts.color or nil, type(opts) == "table" and opts.frequency or nil, type(opts) == "table" and opts.frameLevel or nil)
+				resetSpellAlertTextures(host and host._ButtonGlow)
 			else
 				startBlizzard(host, opts)
+			end
+		end,
+		refresh = function(host, opts)
+			if LCG and host and host._ButtonGlow then
+				resetSpellAlertTextures(host._ButtonGlow)
+			else
+				updateBlizzardOverlay(host, opts)
 			end
 		end,
 		stop = function(host)
@@ -614,6 +797,9 @@ local BACKENDS = {
 				startBlizzard(host, opts)
 			end
 		end,
+		refresh = function(host, opts)
+			if not (LCG and host and host._ProcGlow) then updateBlizzardOverlay(host, opts) end
+		end,
 		stop = function(host)
 			if LCG and LCG.ProcGlow_Stop then
 				LCG.ProcGlow_Stop(host, "")
@@ -648,6 +834,7 @@ function Glow.Start(target, key, style, opts)
 	if state.style and state.style ~= style then stopBackend(state) end
 	state.style = style
 	state.active = true
+	state.opts = copyOptions(opts)
 	configureHost(target, state, opts)
 	local backend = BACKENDS[style] or BACKENDS[Glow.STYLE.BLIZZARD]
 	if backend and backend.start and state.host then backend.start(state.host, opts) end
@@ -669,6 +856,7 @@ function Glow.Stop(target, key)
 		state.host:SetAlpha(1)
 		state.host:Hide()
 	end
+	state.opts = nil
 end
 
 function Glow.StopAll(target)

@@ -73,6 +73,8 @@ addon.Health.healthList = {
 	{ key = "DemonicHealthstone", id = DEMONIC_HEALTHSTONE_ITEM_ID, requiredLevel = 5, healFunc = function(maxHP) return GetStoneHeal(maxHP) end, type = "stone" },
 
 	-- Midnight
+	{ key = "RefreshingSerum", id = 241306, requiredLevel = 81, heal = 202377, type = "potion", isCombatPotion = true },
+	{ key = "RefreshingSerum", id = 241307, requiredLevel = 81, heal = 156095, type = "potion", isCombatPotion = true },
 	{ key = "PotentHealingPotion", id = 258138, requiredLevel = 81, heal = 175000, type = "potion" },
 	{ key = "SilvermoonHealingPotion", id = 241305, requiredLevel = 81, heal = 205956, type = "potion" },
 	{ key = "SilvermoonHealingPotion", id = 241304, requiredLevel = 81, heal = 241303, type = "potion" },
@@ -257,6 +259,8 @@ function addon.Health.functions.resolveTrackedHealthstoneItem(itemID)
 	if not numericID then return nil end
 	if numericID ~= HEALTHSTONE_ITEM_ID and numericID ~= DEMONIC_HEALTHSTONE_ITEM_ID then return numericID end
 	if numericID ~= HEALTHSTONE_ITEM_ID then return numericID end
+	local normalCount = C_Item.GetItemCount(HEALTHSTONE_ITEM_ID, false, false) or 0
+	if normalCount > 0 then return numericID end
 	if not addon.Health.functions.isDemonicAvailable() then return numericID end
 	local demonicCount = C_Item.GetItemCount(DEMONIC_HEALTHSTONE_ITEM_ID, false, false) or 0
 	if demonicCount > 0 then return DEMONIC_HEALTHSTONE_ITEM_ID end

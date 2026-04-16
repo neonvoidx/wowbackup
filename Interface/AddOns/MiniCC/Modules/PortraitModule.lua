@@ -4,7 +4,6 @@ local mini = addon.Core.Framework
 local wowEx = addon.Utils.WoWEx
 local unitWatcher = addon.Core.UnitAuraWatcher
 local iconSlotContainer = addon.Core.IconSlotContainer
-local spellCache = addon.Utils.SpellCache
 local moduleUtil = addon.Utils.ModuleUtil
 local ModuleName = addon.Utils.ModuleName
 local testModeActive = false
@@ -77,7 +76,7 @@ end
 
 local function CreateContainer(unitFrame, portrait)
 	-- Only 1 slot, multiple layers; no border for portrait icons
-	local container = iconSlotContainer:New(unitFrame, 1, 0, 0, nil, true)
+	local container = iconSlotContainer:New(unitFrame, 1, 0, 0, nil, true, "Portraits")
 
 	-- Position the container over the portrait with inset
 	container.Frame:SetPoint("TOPLEFT", portrait, "TOPLEFT", 2, -2)
@@ -122,11 +121,11 @@ local function OnAuraInfo(watcher, container)
 	local slotIndex = 1
 
 	-- Show the latest CC aura
-	for _, aura in ipairs(ccAuras) do
+	if ccAuras[1] then
 		container:SetSlot(slotIndex, {
-			Texture = aura.SpellIcon,
-			DurationObject = aura.DurationObject,
-			Alpha = aura.IsCC,
+			Texture = ccAuras[1].SpellIcon,
+			DurationObject = ccAuras[1].DurationObject,
+			Alpha = ccAuras[1].IsCC,
 			ReverseCooldown = db.Modules.PortraitModule.ReverseCooldown,
 			FontScale = db.FontScale,
 		})
@@ -134,11 +133,11 @@ local function OnAuraInfo(watcher, container)
 	end
 
 	-- Show the latest defensive aura
-	for _, aura in ipairs(defensiveAuras) do
+	if defensiveAuras[1] then
 		container:SetSlot(slotIndex, {
-			Texture = aura.SpellIcon,
-			DurationObject = aura.DurationObject,
-			Alpha = aura.IsDefensive,
+			Texture = defensiveAuras[1].SpellIcon,
+			DurationObject = defensiveAuras[1].DurationObject,
+			Alpha = defensiveAuras[1].IsDefensive,
 			ReverseCooldown = db.Modules.PortraitModule.ReverseCooldown,
 			FontScale = db.FontScale,
 		})
@@ -146,11 +145,11 @@ local function OnAuraInfo(watcher, container)
 	end
 
 	-- Show the latest important aura
-	for _, aura in ipairs(importantAuras) do
+	if importantAuras[1] then
 		container:SetSlot(slotIndex, {
-			Texture = aura.SpellIcon,
-			DurationObject = aura.DurationObject,
-			Alpha = aura.IsImportant,
+			Texture = importantAuras[1].SpellIcon,
+			DurationObject = importantAuras[1].DurationObject,
+			Alpha = importantAuras[1].IsImportant,
 			ReverseCooldown = db.Modules.PortraitModule.ReverseCooldown,
 			FontScale = db.FontScale,
 		})
@@ -179,6 +178,30 @@ local function GetBlizzardFrame(unit)
 	elseif unit == "pet" then
 		if PetFrame and PetFrame.portrait then
 			return PetFrame, PetFrame.portrait
+		end
+	end
+
+	return nil
+end
+
+---@return table? unitFrame
+---@return table? portrait
+local function GetUUFFrame(unit)
+	if unit == "player" then
+		if UUF_Player and UUF_Player.Portrait then
+			return UUF_Player, UUF_Player.Portrait
+		end
+	elseif unit == "target" then
+		if UUF_Target and UUF_Target.Portrait then
+			return UUF_Target, UUF_Target.Portrait
+		end
+	elseif unit == "focus" then
+		if UUF_Focus and UUF_Focus.Portrait then
+			return UUF_Focus, UUF_Focus.Portrait
+		end
+	elseif unit == "pet" then
+		if UUF_Pet and UUF_Pet.Portrait then
+			return UUF_Pet, UUF_Pet.Portrait
 		end
 	end
 
@@ -338,8 +361,52 @@ local function AttachTPerlFrame(unit)
 	containers[#containers + 1] = container
 end
 
+---@param unit string
+local function AttachUUFFrame(unit)
+	local uufFrame, uufPortrait = GetUUFFrame(unit)
+
+	if not uufFrame or not uufPortrait then
+		return
+	end
+
+	local watcher = watchers[unit]
+
+	if not watcher then
+		return
+	end
+
+	-- Parent to HighLevelContainer (portrait's parent) so frame levels are consistent.
+	-- UUF renders portraits inside HighLevelContainer at level 999, so parenting to
+	-- uufFrame directly would leave the container far below in the level hierarchy.
+	local highLevelContainer = uufPortrait:GetParent()
+	local container = CreateContainer(highLevelContainer, uufPortrait)
+	local portraitLevel = uufPortrait.GetFrameLevel and uufPortrait:GetFrameLevel()
+		or highLevelContainer:GetFrameLevel()
+		or 0
+	container.Frame:SetFrameLevel(portraitLevel + 1)
+
+	local originalSetSlot = container.SetSlot
+	container.SetSlot = function(self, slotIndex, options)
+		originalSetSlot(self, slotIndex, options)
+		local slot = self.Slots[slotIndex]
+		if slot and slot.Container and slot.Container.Icon and slot.Container.Cooldown then
+			slot.Frame:SetAllPoints(uufPortrait)
+			slot.Container.Frame:SetAllPoints(uufPortrait)
+			slot.Container.Icon:SetAllPoints(uufPortrait)
+			slot.Container.Icon:SetTexCoord(0.07, 0.93, 0.07, 0.93)
+			slot.Container.Cooldown:SetAllPoints(uufPortrait)
+		end
+	end
+
+	watcher:RegisterCallback(function()
+		OnAuraInfo(watcher, container)
+	end)
+	containers[#containers + 1] = container
+end
+
 local function RefreshTestIcons()
-	local tex = spellCache:GetSpellTexture(testSpells[1].SpellId)
+	local spellId = testSpells[1].SpellId
+	local tex = C_Spell.GetSpellTexture(spellId)
 	local now = GetTime()
 
 	for _, container in pairs(containers) do
@@ -448,6 +515,10 @@ function M:Init()
 		AttachTPerlFrame("player")
 		AttachTPerlFrame("target")
 		AttachTPerlFrame("focus")
+		AttachUUFFrame("player")
+		AttachUUFFrame("target")
+		AttachUUFFrame("focus")
+		AttachUUFFrame("pet")
 	end)
 
 	M:Refresh()

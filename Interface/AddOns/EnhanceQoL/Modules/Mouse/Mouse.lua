@@ -7,7 +7,7 @@ else
 	error(parentAddonName .. " is not loaded")
 end
 
-local L = LibStub("AceLocale-3.0"):GetLocale("EnhanceQoL_Mouse")
+local L = LibStub("AceLocale-3.0"):GetLocale("EnhanceQoL")
 local EditMode = addon.EditMode
 local SettingType = EditMode and EditMode.lib and EditMode.lib.SettingType
 local GetVisibilityRuleMetadata = addon.functions and addon.functions.GetVisibilityRuleMetadata
@@ -82,14 +82,32 @@ if playerClass and GetClassColor then
 end
 local currentPreset = nil
 local lastTrailWanted = false
+local lastRingWanted = false
 local lastRingCombat = nil
+local lastRightClickActive = false
+local runnerCombatActive = false
 local ringStyleDirty = true
+local ringVisibilityDirty = true
+local ringProgressDirty = true
+local ringProgressAccumulator = 0
+local trailColorDirty = true
 local castInfo = nil
 local gcdActive = nil
 local gcdStart = nil
 local gcdDuration = nil
 local gcdRate = nil
 local crosshairEditModeRegistered = false
+local lastRingCursorX = nil
+local lastRingCursorY = nil
+local lastRingCursorScale = nil
+local cachedTrailColorR = 1
+local cachedTrailColorG = 1
+local cachedTrailColorB = 1
+local cachedTrailColorA = 1
+local RING_PROGRESS_UPDATE_INTERVAL = 1 / 45
+local markRingVisibilityDirty
+local markRingProgressDirty
+local setRunnerCombatActive
 
 local trailPresets = {
 	[1] = { -- LOW
@@ -124,6 +142,14 @@ local trailPresets = {
 	},
 }
 
+local function onTrailAnimationFinished(self)
+	local t = self and self:GetParent()
+	if not t then return end
+	t:Hide()
+	trailPool[#trailPool + 1] = t
+	activeCount = activeCount - 1
+end
+
 local function createTrailElement()
 	local tex = UIParent:CreateTexture(nil)
 	tex:SetTexture(TEX_TRAIL)
@@ -131,12 +157,7 @@ local function createTrailElement()
 	tex:SetSize(35, 35)
 
 	local ag = tex:CreateAnimationGroup()
-	ag:SetScript("OnFinished", function(self)
-		local t = self:GetParent()
-		t:Hide()
-		trailPool[#trailPool + 1] = t
-		activeCount = activeCount - 1
-	end)
+	ag:SetScript("OnFinished", onTrailAnimationFinished)
 	local fade = ag:CreateAnimation("Alpha")
 	fade:SetFromAlpha(1)
 	fade:SetToAlpha(0)
@@ -196,18 +217,18 @@ local crosshairVisibilityAllowedRules = {
 }
 
 local crosshairVisibilityFallbackOptions = {
-	{ value = CROSSHAIR_RULE_ALWAYS_IN_COMBAT, label = L["visibilityRule_inCombat"] or "Always in combat", order = 20 },
-	{ value = CROSSHAIR_RULE_ALWAYS_OUT_OF_COMBAT, label = L["visibilityRule_outCombat"] or "Always out of combat", order = 30 },
-	{ value = CROSSHAIR_RULE_PLAYER_CASTING, label = L["visibilityRule_playerCasting"] or "Player is casting", order = 35 },
-	{ value = CROSSHAIR_RULE_PLAYER_MOUNTED, label = L["visibilityRule_playerMounted"] or "Mounted", order = 36 },
-	{ value = CROSSHAIR_RULE_PLAYER_NOT_MOUNTED, label = L["visibilityRule_playerNotMounted"] or "Not mounted", order = 37 },
-	{ value = CROSSHAIR_RULE_PLAYER_HAS_TARGET, label = L["visibilityRule_playerHasTarget"] or "When I have a target", order = 45 },
-	{ value = CROSSHAIR_RULE_PLAYER_IN_GROUP, label = L["visibilityRule_inGroup"] or "In party/raid", order = 46 },
+	{ value = CROSSHAIR_RULE_ALWAYS_IN_COMBAT, label = L["Always in combat"] or "Always in combat", order = 20 },
+	{ value = CROSSHAIR_RULE_ALWAYS_OUT_OF_COMBAT, label = L["Always out of combat"] or "Always out of combat", order = 30 },
+	{ value = CROSSHAIR_RULE_PLAYER_CASTING, label = L["Player is casting"] or "Player is casting", order = 35 },
+	{ value = CROSSHAIR_RULE_PLAYER_MOUNTED, label = L["Mounted"] or "Mounted", order = 36 },
+	{ value = CROSSHAIR_RULE_PLAYER_NOT_MOUNTED, label = L["Not mounted"] or "Not mounted", order = 37 },
+	{ value = CROSSHAIR_RULE_PLAYER_HAS_TARGET, label = L["When I have a target"] or "When I have a target", order = 45 },
+	{ value = CROSSHAIR_RULE_PLAYER_IN_GROUP, label = L["In party/raid"] or "In party/raid", order = 46 },
 }
 
 local crosshairVisibilityCustomOptions = {
-	{ value = CROSSHAIR_RULE_PLAYER_IN_PARTY, label = L["mouseCrosshairRuleInParty"] or "In party", order = 47 },
-	{ value = CROSSHAIR_RULE_PLAYER_IN_RAID, label = L["mouseCrosshairRuleInRaid"] or "In raid", order = 48 },
+	{ value = CROSSHAIR_RULE_PLAYER_IN_PARTY, label = L["In party"] or "In party", order = 47 },
+	{ value = CROSSHAIR_RULE_PLAYER_IN_RAID, label = L["In raid"] or "In raid", order = 48 },
 	{ value = CROSSHAIR_RULE_PLAYER_IN_INSTANCE, label = L["mouseCrosshairRuleInAnyInstance"] or "In any instance", order = 49 },
 	{ value = CROSSHAIR_RULE_PLAYER_IN_PARTY_INSTANCE, label = L["mouseCrosshairRuleInPartyInstance"] or "In party instances (5-man)", order = 50 },
 	{ value = CROSSHAIR_RULE_PLAYER_IN_RAID_INSTANCE, label = L["mouseCrosshairRuleInRaidInstance"] or "In raid instances", order = 51 },
@@ -405,6 +426,11 @@ local function getTrailColor()
 	local c = addon.db["mouseTrailColor"]
 	if c then return c.r, c.g, c.b, c.a or 1 end
 	return 1, 1, 1, 1
+end
+
+local function refreshTrailColorCache()
+	cachedTrailColorR, cachedTrailColorG, cachedTrailColorB, cachedTrailColorA = getTrailColor()
+	trailColorDirty = false
 end
 
 local function getRingColor()
@@ -749,6 +775,7 @@ local function syncRingProgressState()
 		stopCastProgress()
 		stopGCDProgress()
 		hideProgressIndicators(addon.mousePointer)
+		markRingVisibilityDirty()
 		return
 	end
 	if shouldShowCastProgress(db) then
@@ -761,8 +788,17 @@ local function syncRingProgressState()
 	else
 		stopGCDProgress()
 	end
+	markRingVisibilityDirty()
 end
 addon.Mouse.functions.syncRingProgressState = syncRingProgressState
+
+local function isRingProgressUpdateWanted(db)
+	if ringProgressDirty then return true end
+	if not db or db["mouseRingEnabled"] ~= true then return false end
+	if shouldShowCastProgress(db) and castInfo then return true end
+	if shouldShowGCDProgress(db) and gcdActive == true and gcdStart and gcdDuration and gcdDuration > 0 then return true end
+	return false
+end
 
 local function getCastProgressValue(nowMs)
 	local info = castInfo
@@ -1019,6 +1055,7 @@ addon.Mouse.functions.applyRingStyle = applyRingStyle
 
 local function refreshRingStyle(inCombat)
 	ringStyleDirty = true
+	markRingProgressDirty()
 	if not addon.mousePointer then return end
 	if inCombat == nil and UnitAffectingCombat then inCombat = UnitAffectingCombat("player") and true or false end
 	applyRingStyle(inCombat)
@@ -1111,7 +1148,7 @@ local function registerCrosshairWithEditMode(frame)
 				defaultCollapsed = false,
 			},
 			{
-				name = L["mouseCrosshairShowWhen"] or "Show when",
+				name = L["Show when"] or "Show when",
 				kind = SettingType.MultiDropdown,
 				field = "showWhen",
 				parentId = "crosshairFrame",
@@ -1131,7 +1168,7 @@ local function registerCrosshairWithEditMode(frame)
 				isEnabled = function() return visibilityRuleOptions and #visibilityRuleOptions > 0 end,
 			},
 			{
-				name = L["mouseCrosshairAnchorPoint"] or "Anchor point",
+				name = L["Anchor point"] or "Anchor point",
 				kind = SettingType.Dropdown,
 				field = "point",
 				parentId = "crosshairFrame",
@@ -1140,7 +1177,7 @@ local function registerCrosshairWithEditMode(frame)
 				default = "CENTER",
 			},
 			{
-				name = L["mouseCrosshairRelativePoint"] or "Relative point",
+				name = L["Relative point"] or "Relative point",
 				kind = SettingType.Dropdown,
 				field = "relativePoint",
 				parentId = "crosshairFrame",
@@ -1149,7 +1186,7 @@ local function registerCrosshairWithEditMode(frame)
 				default = "CENTER",
 			},
 			{
-				name = L["mouseCrosshairOffsetX"] or "Offset X",
+				name = L["Offset X"] or "Offset X",
 				kind = SettingType.Slider,
 				field = "x",
 				parentId = "crosshairFrame",
@@ -1161,7 +1198,7 @@ local function registerCrosshairWithEditMode(frame)
 				formatter = function(value) return tostring(math.floor((tonumber(value) or 0) + 0.5)) end,
 			},
 			{
-				name = L["mouseCrosshairOffsetY"] or "Offset Y",
+				name = L["Offset Y"] or "Offset Y",
 				kind = SettingType.Slider,
 				field = "y",
 				parentId = "crosshairFrame",
@@ -1358,6 +1395,7 @@ local function UpdateMouseTrail(delta, cursorX, cursorY, effectiveScale)
 
 	local dx = PresentCursorX - PastCursorX
 	local dy = PresentCursorY - PastCursorY
+	if dx == 0 and dy == 0 then return end
 	local distanceSq = dx * dx + dy * dy
 
 	-- Neues Trail-Element anlegen?
@@ -1368,13 +1406,28 @@ local function UpdateMouseTrail(delta, cursorX, cursorY, effectiveScale)
 			local element = trailPool[#trailPool]
 			trailPool[#trailPool] = nil
 			activeCount = activeCount + 1
+			local scaleInv = 1 / effectiveScale
 
-			element:SetPoint("CENTER", UIParent, "BOTTOMLEFT", PresentCursorX / effectiveScale, PresentCursorY / effectiveScale)
+			element:SetPoint("CENTER", UIParent, "BOTTOMLEFT", PresentCursorX * scaleInv, PresentCursorY * scaleInv)
 
-			local r, g, b, a = getTrailColor()
-			element:SetVertexColor(r, g, b, a)
+			if trailColorDirty then refreshTrailColorCache() end
+			if
+				element._eqolColorR ~= cachedTrailColorR
+				or element._eqolColorG ~= cachedTrailColorG
+				or element._eqolColorB ~= cachedTrailColorB
+				or element._eqolColorA ~= cachedTrailColorA
+			then
+				element:SetVertexColor(cachedTrailColorR, cachedTrailColorG, cachedTrailColorB, cachedTrailColorA)
+				element._eqolColorR = cachedTrailColorR
+				element._eqolColorG = cachedTrailColorG
+				element._eqolColorB = cachedTrailColorB
+				element._eqolColorA = cachedTrailColorA
+			end
 
-			element.fade:SetDuration(duration)
+			if element._eqolFadeDuration ~= duration then
+				element.fade:SetDuration(duration)
+				element._eqolFadeDuration = duration
+			end
 			element.anim:Stop()
 			element.anim:Play()
 			element:Show()
@@ -1387,6 +1440,7 @@ local function createMouseRing(inCombat)
 		addon.mousePointer:Show()
 		if addon.Mouse.functions.refreshRingStyle then addon.Mouse.functions.refreshRingStyle(inCombat) end
 		updateRingProgressIndicators()
+		markRingProgressDirty()
 		return
 	end
 
@@ -1424,6 +1478,7 @@ local function createMouseRing(inCombat)
 	addon.mousePointer = imageFrame
 	if addon.Mouse.functions.refreshRingStyle then addon.Mouse.functions.refreshRingStyle(inCombat) end
 	updateRingProgressIndicators()
+	markRingProgressDirty()
 	imageFrame:Show()
 end
 addon.Mouse.functions.createMouseRing = createMouseRing
@@ -1433,6 +1488,8 @@ local function removeMouseRing()
 		hideProgressIndicators(addon.mousePointer)
 		addon.mousePointer:Hide()
 	end
+	lastRingWanted = false
+	lastRingCursorX, lastRingCursorY, lastRingCursorScale = nil, nil, nil
 end
 addon.Mouse.functions.removeMouseRing = removeMouseRing
 
@@ -1444,19 +1501,43 @@ local function updateRunnerState()
 		if addon.mouseTrailRunner:GetScript("OnUpdate") == nil then addon.mouseTrailRunner:SetScript("OnUpdate", addon.Mouse.functions.runMouseRunner) end
 	elseif addon.mouseTrailRunner:GetScript("OnUpdate") ~= nil then
 		addon.mouseTrailRunner:SetScript("OnUpdate", nil)
+		lastRingWanted = false
+		lastTrailWanted = false
+		lastRingCursorX, lastRingCursorY, lastRingCursorScale = nil, nil, nil
+		ringProgressAccumulator = 0
 	end
 end
 addon.Mouse.functions.updateRunnerState = updateRunnerState
 
-local function refreshRingVisibility()
+markRingVisibilityDirty = function()
+	ringVisibilityDirty = true
+	ringProgressDirty = true
+end
+
+markRingProgressDirty = function()
+	ringProgressDirty = true
+end
+
+setRunnerCombatActive = function(inCombat)
+	inCombat = inCombat and true or false
+	if runnerCombatActive ~= inCombat then
+		runnerCombatActive = inCombat
+		markRingVisibilityDirty()
+	end
+	return runnerCombatActive
+end
+
+local function refreshRingVisibility(inCombat, rightClickActive)
 	local db = addon.db
 	if not db then return false end
 	local ringOnly = db["mouseRingOnlyInCombat"]
 	local combatOverride = db["mouseRingCombatOverride"]
 	local combatOverlay = db["mouseRingCombatOverlay"]
-	local inCombat = false
-	if ringOnly or combatOverride or combatOverlay then inCombat = UnitAffectingCombat and UnitAffectingCombat("player") and true or false end
-	local rightClickActive = db["mouseRingOnlyOnRightClick"] and IsMouseButtonDown and IsMouseButtonDown("RightButton")
+	if inCombat == nil then
+		inCombat = false
+		if ringOnly or combatOverride or combatOverlay then inCombat = UnitAffectingCombat and UnitAffectingCombat("player") and true or false end
+	end
+	if rightClickActive == nil then rightClickActive = db["mouseRingOnlyOnRightClick"] and IsMouseButtonDown and IsMouseButtonDown("RightButton") end
 	local ringWanted = isRingDisplayWanted(db, inCombat, rightClickActive)
 
 	if ringWanted then
@@ -1471,8 +1552,13 @@ local function refreshRingVisibility()
 	elseif addon.mousePointer and addon.mousePointer:IsShown() then
 		hideProgressIndicators(addon.mousePointer)
 		addon.mousePointer:Hide()
+		lastRingCursorX, lastRingCursorY, lastRingCursorScale = nil, nil, nil
+		ringProgressAccumulator = 0
 	end
 
+	lastRingWanted = ringWanted == true
+	lastRightClickActive = rightClickActive == true
+	ringVisibilityDirty = false
 	return ringWanted
 end
 addon.Mouse.functions.refreshRingVisibility = refreshRingVisibility
@@ -1480,6 +1566,7 @@ addon.Mouse.functions.refreshRingVisibility = refreshRingVisibility
 function addon.Mouse.functions.InitState()
 	local db = addon.db
 	if not db then return end
+	setRunnerCombatActive(UnitAffectingCombat and UnitAffectingCombat(PLAYER_UNIT))
 	syncRingProgressState()
 	refreshRingVisibility()
 	refreshCrosshairVisibility()
@@ -1494,11 +1581,13 @@ local function handleProgressEvent(event, unit, ...)
 		else
 			stopGCDProgress()
 		end
+		markRingProgressDirty()
 		return
 	end
 
 	if not addon.db or addon.db["mouseRingEnabled"] ~= true or not shouldShowCastProgress(addon.db) then
 		stopCastProgress()
+		markRingVisibilityDirty()
 		return
 	end
 	if unit ~= PLAYER_UNIT then return end
@@ -1518,6 +1607,7 @@ local function handleProgressEvent(event, unit, ...)
 	elseif event == "UNIT_SPELLCAST_STOP" or event == "UNIT_SPELLCAST_CHANNEL_STOP" or event == "UNIT_SPELLCAST_EMPOWER_STOP" then
 		stopCastProgress()
 	end
+	markRingVisibilityDirty()
 end
 
 -- Manage visibility of the ring based on combat state
@@ -1578,12 +1668,14 @@ eventFrame:RegisterUnitEvent("UNIT_SPELLCAST_EMPOWER_STOP", PLAYER_UNIT)
 eventFrame:SetScript("OnEvent", function(_, event, unit, ...)
 	if not addon.db then return end
 	if event == "PLAYER_LOGIN" or event == "PLAYER_ENTERING_WORLD" then
+		setRunnerCombatActive(UnitAffectingCombat and UnitAffectingCombat(PLAYER_UNIT))
 		syncRingProgressState()
 		refreshRingVisibility()
 		refreshCrosshairVisibility()
 		return
 	end
 	if event == "PLAYER_REGEN_DISABLED" or event == "PLAYER_REGEN_ENABLED" or event == "ZONE_CHANGED_NEW_AREA" then
+		setRunnerCombatActive(UnitAffectingCombat and UnitAffectingCombat(PLAYER_UNIT))
 		refreshRingVisibility()
 		refreshCrosshairVisibility()
 		return
@@ -1611,17 +1703,22 @@ if not addon.mouseTrailRunner then
 		local combatOverride = db["mouseRingCombatOverride"]
 		local combatOverlay = db["mouseRingCombatOverlay"]
 		local inCombat = false
-		if ringOnly or trailOnly or combatOverride or combatOverlay then inCombat = UnitAffectingCombat and UnitAffectingCombat("player") and true or false end
-		local rightClickActive = rightClickOnly and IsMouseButtonDown and IsMouseButtonDown("RightButton")
-		local ringWanted = isRingDisplayWanted(db, inCombat, rightClickActive)
+		if ringOnly or trailOnly or combatOverride or combatOverlay then
+			inCombat = runnerCombatActive == true
+		end
+		local rightClickActive = rightClickOnly and IsMouseButtonDown and IsMouseButtonDown("RightButton") or false
+		if lastRightClickActive ~= rightClickActive then markRingVisibilityDirty() end
+		local ringWanted = lastRingWanted == true
 		local trailWanted = db["mouseTrailEnabled"] and (not trailOnly or inCombat)
 		if trailWanted and currentPreset ~= db["mouseTrailDensity"] then applyPreset(db["mouseTrailDensity"]) end
 		if trailWanted and not lastTrailWanted then
 			ensureTrailPool()
 			PresentCursorX, PresentCursorY = nil, nil
 			timeAccumulator = 0
+			trailColorDirty = true
 		end
 		lastTrailWanted = trailWanted
+		if ringVisibilityDirty then ringWanted = refreshRingVisibility(inCombat, rightClickActive) end
 
 		if ringWanted then
 			if not addon.mousePointer then createMouseRing(inCombat) end
@@ -1640,9 +1737,24 @@ if not addon.mouseTrailRunner then
 		local x, y = GetCursorPosition()
 		local scale = UIParent:GetEffectiveScale()
 		if ringWanted and addon.mousePointer and addon.mousePointer:IsShown() then
-			addon.mousePointer:ClearAllPoints()
-			addon.mousePointer:SetPoint("CENTER", UIParent, "BOTTOMLEFT", x / scale, y / scale)
-			updateRingProgressIndicators()
+			if lastRingCursorX ~= x or lastRingCursorY ~= y or lastRingCursorScale ~= scale then
+				addon.mousePointer:ClearAllPoints()
+				addon.mousePointer:SetPoint("CENTER", UIParent, "BOTTOMLEFT", x / scale, y / scale)
+				lastRingCursorX, lastRingCursorY, lastRingCursorScale = x, y, scale
+			end
+			if isRingProgressUpdateWanted(db) then
+				ringProgressAccumulator = ringProgressAccumulator + delta
+				if ringProgressDirty or ringProgressAccumulator >= RING_PROGRESS_UPDATE_INTERVAL then
+					updateRingProgressIndicators()
+					ringProgressDirty = false
+					ringProgressAccumulator = 0
+				end
+			else
+				ringProgressAccumulator = 0
+			end
+		else
+			ringProgressAccumulator = 0
+			lastRingCursorX, lastRingCursorY, lastRingCursorScale = nil, nil, nil
 		end
 		if trailWanted then UpdateMouseTrail(delta, x, y, scale) end
 	end

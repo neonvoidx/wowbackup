@@ -9,6 +9,7 @@ end
 
 local AceGUI = addon.AceGUI
 local L = LibStub("AceLocale-3.0"):GetLocale("EnhanceQoL")
+local canaccessvalue = _G.canaccessvalue
 
 local function colorWrap(hex, text) return "|cff" .. hex .. text .. "|r" end
 
@@ -133,6 +134,21 @@ ChatIM.wasOpenBeforeCombat = false
 ChatIM.soundQueue = {}
 ChatIM.inCombat = false
 
+function ChatIM:IsChatMessagingRestricted()
+	if C_ChatInfo and C_ChatInfo.InChatMessagingLockdown and C_ChatInfo.InChatMessagingLockdown() then return true end
+
+	local restrictionTypes = Enum and Enum.AddOnRestrictionType
+	local restrictionStates = Enum and Enum.AddOnRestrictionState
+	local restrictedActions = _G.C_RestrictedActions
+	if not (restrictionTypes and restrictedActions and restrictedActions.GetAddOnRestrictionState) then return false end
+
+	local chatRestriction = restrictionTypes.Chat
+	if not chatRestriction then return false end
+
+	local activeState = restrictionStates and restrictionStates.Active or 2
+	return restrictedActions.GetAddOnRestrictionState(chatRestriction) == activeState
+end
+
 function ChatIM:UpdateAlpha()
 	if not addon.db["enableChatIMFade"] then return end
 	if not self.frame then return end
@@ -163,6 +179,14 @@ function ChatIM:FormatURLs(text)
 	return text
 end
 
+local function canUpdateLastTellTarget(target, isBN)
+	if not target or not ChatFrameUtil then return false end
+	if issecretvalue and issecretvalue(target) then return false end
+	if canaccessvalue and not canaccessvalue(target) then return false end
+	if ChatIM.IsChatMessagingRestricted and ChatIM:IsChatMessagingRestricted() then return false end
+	return true
+end
+
 function ChatIM:HookInsertLink()
 	if self.insertLinkHooked then return end
 
@@ -180,9 +204,7 @@ function ChatIM:HookInsertLink()
 		return true
 	end
 
-	if ChatFrameUtil and type(ChatFrameUtil.InsertLink) == "function" then
-		hooksecurefunc(ChatFrameUtil, "InsertLink", tryInsertLink)
-	end
+	if ChatFrameUtil and type(ChatFrameUtil.InsertLink) == "function" then hooksecurefunc(ChatFrameUtil, "InsertLink", tryInsertLink) end
 	self.insertLinkHooked = true
 end
 
@@ -466,15 +488,19 @@ function ChatIM:CreateTab(sender, isBN, bnetID, battleTag)
 	end)
 	eb:SetScript("OnEnterPressed", function(self)
 		local txt = self:GetText()
-		self:SetText("")
 		local tgt = ChatIM.activeTab or sender
-		if txt ~= "" and tgt then
-			local tab = ChatIM.tabs[tgt]
-			if tab and tab.isBN and tab.bnetID then
-				C_BattleNet.SendWhisper(tab.bnetID, txt)
-			else
-				C_ChatInfo.SendChatMessage(txt, "WHISPER", nil, tgt)
-			end
+		if txt == "" or not tgt then
+			self:ClearFocus()
+			return
+		end
+		if ChatIM:IsChatMessagingRestricted() then return end
+
+		self:SetText("")
+		local tab = ChatIM.tabs[tgt]
+		if tab and tab.isBN and tab.bnetID then
+			C_BattleNet.SendWhisper(tab.bnetID, txt)
+		else
+			C_ChatInfo.SendChatMessage(txt, "WHISPER", nil, tgt)
 		end
 		self:ClearFocus()
 	end)
@@ -548,17 +574,19 @@ function ChatIM:AddMessage(partner, text, outbound, isBN, bnetID)
 	end
 	tab.msg:SetMaxLines(ChatIM.maxHistoryLines)
 
-	if outbound then
-		if isBN then
-			ChatFrameUtil.SetLastToldTarget(partner, "BN_WHISPER")
+	if canUpdateLastTellTarget(partner, isBN) then
+		if outbound then
+			if isBN then
+				ChatFrameUtil.SetLastToldTarget(partner, "BN_WHISPER")
+			else
+				ChatFrameUtil.SetLastToldTarget(partner, "WHISPER")
+			end
 		else
-			ChatFrameUtil.SetLastToldTarget(partner, "WHISPER")
-		end
-	else
-		if isBN then
-			ChatFrameUtil.SetLastTellTarget(partner, "BN_WHISPER")
-		else
-			ChatFrameUtil.SetLastTellTarget(partner, "WHISPER")
+			if isBN then
+				ChatFrameUtil.SetLastTellTarget(partner, "BN_WHISPER")
+			else
+				ChatFrameUtil.SetLastTellTarget(partner, "WHISPER")
+			end
 		end
 	end
 
@@ -700,12 +728,10 @@ function ChatIM:FocusConversation(sender, focusEdit)
 
 	if self.tabGroup then self.tabGroup:SelectTab(sender) end
 
-	if focusEdit then
-		C_Timer.After(0, function()
-			local tab = ChatIM.tabs and ChatIM.tabs[sender]
-			if tab and tab.edit and tab.edit:IsShown() then tab.edit:SetFocus() end
-		end)
-	end
+	if focusEdit then C_Timer.After(0, function()
+		local tab = ChatIM.tabs and ChatIM.tabs[sender]
+		if tab and tab.edit and tab.edit:IsShown() then tab.edit:SetFocus() end
+	end) end
 end
 
 function ChatIM:ClearEditFocus()
@@ -792,10 +818,12 @@ end
 
 function ChatIM:StartWhisper(target, bnetID, accountTag)
 	if not target then return end
+	if self:IsChatMessagingRestricted() then return false end
 	if bnetID then
 		self:CreateTab(target, true, bnetID, accountTag)
 	else
 		self:CreateTab(target)
 	end
 	self:FocusConversation(target)
+	return true
 end

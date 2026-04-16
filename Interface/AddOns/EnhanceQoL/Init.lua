@@ -800,7 +800,7 @@ addon.variables.unitFrameNames = {
 	{
 		name = "MicroMenu",
 		var = "unitframeSettingMicroMenu",
-		text = addon.L["MicroMenu"],
+		text = addon.L["Micro Menu"],
 		allowedVisibility = { "NONE", "MOUSEOVER", "HIDE" },
 		children = { MicroMenu:GetChildren() },
 		revealAllChilds = true,
@@ -808,7 +808,7 @@ addon.variables.unitFrameNames = {
 	{
 		name = "BagsBar",
 		var = "unitframeSettingBagsBar",
-		text = addon.L["BagsBar"],
+		text = addon.L["Bags Bar"],
 		allowedVisibility = { "NONE", "MOUSEOVER", "HIDE" },
 		children = { BagsBar:GetChildren() },
 		revealAllChilds = true,
@@ -823,7 +823,7 @@ addon.variables.unitFrameNames = {
 	{
 		name = "BuffFrame",
 		var = "unitframeSettingBuffFrame",
-		text = addon.L["BuffFrame"],
+		text = addon.L["Buff Frame"],
 		allowedVisibility = { "NONE", "MOUSEOVER", "HIDE" },
 		children = { BuffFrame:GetChildren() },
 		revealAllChilds = true,
@@ -831,7 +831,7 @@ addon.variables.unitFrameNames = {
 	{
 		name = "DebuffFrame",
 		var = "unitframeSettingDebuffFrame",
-		text = addon.L["DebuffFrame"],
+		text = addon.L["Debuff Frame"],
 		allowedVisibility = { "NONE", "MOUSEOVER", "HIDE" },
 		children = { DebuffFrame:GetChildren() },
 		revealAllChilds = true,
@@ -875,13 +875,6 @@ addon.variables.cvarOptions = {
 		falseValue = "0",
 		description = addon.L["WholeChatWindowClickable"],
 		category = "cvarCategoryMovementInput",
-	},
-	["enableMouseoverCast"] = {
-		trueValue = "1",
-		falseValue = "0",
-		description = addon.L["enableMouseoverCast"],
-		persistent = true,
-		category = "cvarCategoryUtility",
 	},
 	["ShowClassColorInNameplate"] = {
 		trueValue = "1",

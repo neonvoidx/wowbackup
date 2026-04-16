@@ -91,7 +91,7 @@ local provider = {
 		if lastRuns and #lastRuns > 0 then
 			tip:AddLine(" ")
 			for _, run in ipairs(lastRuns) do
-				addRunLine(tip, run, lastScore)
+				addRunLine(tip, run)
 			end
 		end
 

@@ -10,7 +10,7 @@ end
 addon.Aura = addon.Aura or {}
 addon.Aura.UF = addon.Aura.UF or {}
 local UF = addon.Aura.UF
-local L = LibStub("AceLocale-3.0"):GetLocale("EnhanceQoL_Aura")
+local L = LibStub("AceLocale-3.0"):GetLocale("EnhanceQoL")
 local GF = UF.GroupFrames
 local HB = UF.GroupFramesHealerBuffs
 local UFHelper = addon.Aura.UFHelper
@@ -47,6 +47,7 @@ local RULE_ROW_GAP = 2
 local GROUP_VISIBLE_ROWS = 9
 local RULE_VISIBLE_ROWS = 9
 local EMPTY = {}
+local BAR_DIMENSION_MAX = 512
 
 local ASSET_BG_DARK = "Interface\\AddOns\\EnhanceQoL\\Assets\\background_dark.tga"
 local ASSET_BG_GRAY = "Interface\\AddOns\\EnhanceQoL\\Assets\\background_gray.tga"
@@ -104,6 +105,40 @@ local function roundInt(value)
 	local n = tonumber(value) or 0
 	if n >= 0 then return floor(n + 0.5) end
 	return -floor(math.abs(n) + 0.5)
+end
+
+local function getBarControlDimensions(group, frameWidth, frameHeight)
+	frameWidth = tonumber(frameWidth) or 0
+	frameHeight = tonumber(frameHeight) or 0
+	if frameWidth <= 0 then frameWidth = 200 end
+	if frameHeight <= 0 then frameHeight = 100 end
+
+	local inset = max(0, roundInt(tonumber(group and group.inset) or 0))
+	local availableWidth = max(1, frameWidth - (inset * 2))
+	local availableHeight = max(1, frameHeight - (inset * 2))
+	local orientation = tostring(group and group.barOrientation or "HORIZONTAL"):upper()
+	local thickness = max(1, min(BAR_DIMENSION_MAX, roundInt(tonumber(group and group.barThickness) or 6)))
+	local width = tonumber(group and group.barWidth)
+	local height = tonumber(group and group.barHeight)
+
+	if width == nil then width = orientation == "VERTICAL" and thickness or availableWidth end
+	if height == nil then height = orientation == "VERTICAL" and availableHeight or thickness end
+
+	width = max(1, min(BAR_DIMENSION_MAX, roundInt(width)))
+	height = max(1, min(BAR_DIMENSION_MAX, roundInt(height)))
+	return width, height
+end
+
+local function clampGroupOffsetsForFrame(group, frameWidth, frameHeight)
+	if type(group) ~= "table" then return 0, 0 end
+	local style = tostring(group.style or ""):upper()
+	if style == "BAR" and HB and HB.GetBarDisplaySize and HB.ClampOffsetsForRegion then
+		local barWidth, barHeight, useSizedPlacement = HB.GetBarDisplaySize(group, frameWidth, frameHeight)
+		if useSizedPlacement then
+			return HB.ClampOffsetsForRegion(group.anchorPoint, group.x, group.y, frameWidth, frameHeight, barWidth, barHeight, max(0, tonumber(group.inset) or 0))
+		end
+	end
+	return HB.ClampOffsets(group.anchorPoint, group.x, group.y, frameWidth, frameHeight, 0)
 end
 
 local function applyPanelBorder(frame)
@@ -836,7 +871,7 @@ local function buildFamilyOptionsForEditor(classTokenFilter)
 end
 
 local function getClassDisplayName(classToken)
-	if classToken == nil then return tr("UFGroupHealerBuffEditorClassOther", "Other") end
+	if classToken == nil then return tr("Other", "Other") end
 	local token = tostring(classToken)
 	return tostring(LOCALIZED_CLASS_NAMES_MALE[token] or LOCALIZED_CLASS_NAMES_FEMALE[token] or token)
 end
@@ -1149,11 +1184,11 @@ function Editor:EnsureFrame()
 	setDangerButtonStyle(addGroup)
 	groupPanel.AddButton = addGroup
 
-	local groupUp = createButton(groupPanel, tr("UFGroupHealerBuffEditorUp", "Up"), 45, 20)
+	local groupUp = createButton(groupPanel, tr("Up", "Up"), 45, 20)
 	groupUp:SetPoint("TOPRIGHT", addGroup, "TOPLEFT", -6, 0)
 	groupPanel.UpButton = groupUp
 
-	local groupDown = createButton(groupPanel, tr("UFGroupHealerBuffEditorDown", "Down"), 45, 20)
+	local groupDown = createButton(groupPanel, tr("Down", "Down"), 45, 20)
 	groupDown:SetPoint("TOPRIGHT", groupUp, "TOPLEFT", -6, 0)
 	groupPanel.DownButton = groupDown
 
@@ -1229,11 +1264,11 @@ function Editor:EnsureFrame()
 	setDangerButtonStyle(addRule)
 	rulePanel.AddButton = addRule
 
-	local ruleUp = createButton(rulePanel, tr("UFGroupHealerBuffEditorUp", "Up"), 45, 20)
+	local ruleUp = createButton(rulePanel, tr("Up", "Up"), 45, 20)
 	ruleUp:SetPoint("TOPRIGHT", addRule, "TOPLEFT", -6, 0)
 	rulePanel.UpButton = ruleUp
 
-	local ruleDown = createButton(rulePanel, tr("UFGroupHealerBuffEditorDown", "Down"), 45, 20)
+	local ruleDown = createButton(rulePanel, tr("Down", "Down"), 45, 20)
 	ruleDown:SetPoint("TOPRIGHT", ruleUp, "TOPLEFT", -6, 0)
 	rulePanel.DownButton = ruleDown
 
@@ -1456,7 +1491,7 @@ function Editor:EnsureFrame()
 
 	controls.GroupNameLabel = groupControlParent:CreateFontString(nil, "OVERLAY", "GameFontNormal")
 	controls.GroupNameLabel:SetPoint("TOPLEFT", groupControlParent, "TOPLEFT", 0, 0)
-	controls.GroupNameLabel:SetText(tr("UFGroupHealerBuffEditorName", "Name"))
+	controls.GroupNameLabel:SetText(tr("Name", "Name"))
 	controls.GroupName = createEditBox(groupControlParent, 220)
 	controls.GroupName:SetPoint("TOPLEFT", controls.GroupNameLabel, "TOPRIGHT", 12, 0)
 
@@ -1471,13 +1506,13 @@ function Editor:EnsureFrame()
 
 	controls.GroupAnchorLabel = groupControlParent:CreateFontString(nil, "OVERLAY", "GameFontNormal")
 	controls.GroupAnchorLabel:SetPoint("TOPLEFT", controls.GroupStyleLabel, "BOTTOMLEFT", 0, -18)
-	controls.GroupAnchorLabel:SetText(tr("UFGroupHealerBuffEditorAnchor", "Anchor"))
+	controls.GroupAnchorLabel:SetText(tr("Anchor", "Anchor"))
 	controls.GroupAnchor = createDropdown(groupControlParent, 160)
 	controls.GroupAnchor:SetPoint("TOPLEFT", controls.GroupAnchorLabel, "TOPRIGHT", 0, 12)
 
 	controls.GroupGrowthLabel = groupControlParent:CreateFontString(nil, "OVERLAY", "GameFontNormal")
 	controls.GroupGrowthLabel:SetPoint("TOPLEFT", controls.GroupAnchorLabel, "BOTTOMLEFT", 0, -18)
-	controls.GroupGrowthLabel:SetText(tr("UFGroupHealerBuffEditorGrowth", "Growth"))
+	controls.GroupGrowthLabel:SetText(tr("Growth", "Growth"))
 	controls.GroupGrowth = createDropdown(groupControlParent, 160)
 	controls.GroupGrowth:SetPoint("TOPLEFT", controls.GroupGrowthLabel, "TOPRIGHT", 0, 12)
 
@@ -1500,18 +1535,20 @@ function Editor:EnsureFrame()
 	end
 
 	controls.PerRowLabel, controls.PerRow, controls.PerRowValue = createSettingSlider(controls.GroupBarOrientationLabel, tr("UFGroupHealerBuffEditorPerRow", "Per Row"), 1, 20, 1)
-	controls.MaxLabel, controls.MaxCount, controls.MaxValue = createSettingSlider(controls.PerRowLabel, tr("UFGroupHealerBuffEditorMax", "Max"), 0, 40, 1)
-	controls.SpacingLabel, controls.Spacing, controls.SpacingValue = createSettingSlider(controls.MaxLabel, tr("UFGroupHealerBuffEditorSpacing", "Spacing"), 0, 20, 1)
+	controls.MaxLabel, controls.MaxCount, controls.MaxValue = createSettingSlider(controls.PerRowLabel, tr("Max", "Max"), 0, 40, 1)
+	controls.SpacingLabel, controls.Spacing, controls.SpacingValue = createSettingSlider(controls.MaxLabel, tr("Spacing", "Spacing"), 0, 20, 1)
 	controls.SizeLabel, controls.Size, controls.SizeValue = createSettingSlider(controls.SpacingLabel, tr("UFGroupHealerBuffEditorIconSize", "Icon Size"), 4, 64, 1)
 	controls.CooldownTextSizeLabel, controls.CooldownTextSize, controls.CooldownTextSizeValue =
 		createSettingSlider(controls.SizeLabel, tr("UFGroupHealerBuffEditorCooldownTextSize", "Cooldown Size"), 6, 64, 1)
 	controls.ChargeTextSizeLabel, controls.ChargeTextSize, controls.ChargeTextSizeValue =
 		createSettingSlider(controls.CooldownTextSizeLabel, tr("UFGroupHealerBuffEditorChargeTextSize", "Charge Size"), 6, 64, 1)
-	controls.XLabel, controls.XOffset, controls.XValue = createSettingSlider(controls.ChargeTextSizeLabel, tr("UFGroupHealerBuffEditorXOffset", "X Offset"), -200, 200, 1)
-	controls.YLabel, controls.YOffset, controls.YValue = createSettingSlider(controls.XLabel, tr("UFGroupHealerBuffEditorYOffset", "Y Offset"), -200, 200, 1)
-	controls.ThicknessLabel, controls.Thickness, controls.ThicknessValue = createSettingSlider(controls.YLabel, tr("UFGroupHealerBuffEditorBarThickness", "Bar Thickness"), 1, 64, 1)
-	controls.InsetLabel, controls.Inset, controls.InsetValue = createSettingSlider(controls.ThicknessLabel, tr("UFGroupHealerBuffEditorInset", "Inset"), 0, 40, 1)
-	controls.BorderSizeLabel, controls.BorderSize, controls.BorderSizeValue = createSettingSlider(controls.InsetLabel, tr("UFGroupHealerBuffEditorBorderSize", "Border Size"), 1, 16, 1)
+	controls.XLabel, controls.XOffset, controls.XValue = createSettingSlider(controls.ChargeTextSizeLabel, tr("X Offset", "X Offset"), -200, 200, 1)
+	controls.YLabel, controls.YOffset, controls.YValue = createSettingSlider(controls.XLabel, tr("Y Offset", "Y Offset"), -200, 200, 1)
+	controls.BarWidthLabel, controls.BarWidth, controls.BarWidthValue = createSettingSlider(controls.YLabel, tr("Bar width", "Bar width"), 1, BAR_DIMENSION_MAX, 1)
+	controls.BarHeightLabel, controls.BarHeight, controls.BarHeightValue = createSettingSlider(controls.BarWidthLabel, tr("Bar height", "Bar height"), 1, BAR_DIMENSION_MAX, 1)
+	controls.BarAlphaLabel, controls.BarAlpha, controls.BarAlphaValue = createSettingSlider(controls.BarHeightLabel, tr("Alpha", "Alpha"), 0, 1, 0.01)
+	controls.InsetLabel, controls.Inset, controls.InsetValue = createSettingSlider(controls.BarAlphaLabel, tr("UFGroupHealerBuffEditorInset", "Inset"), 0, 40, 1)
+	controls.BorderSizeLabel, controls.BorderSize, controls.BorderSizeValue = createSettingSlider(controls.InsetLabel, tr("Border Size", "Border Size"), 1, 16, 1)
 	controls.IndicatorBorder = createCheck(groupControlParent, tr("UFGroupHealerBuffEditorIndicatorBorderEnabled", "Indicator Border"))
 	controls.IndicatorBorder:SetPoint("TOPLEFT", controls.BorderSizeLabel, "BOTTOMLEFT", -4, -8)
 	controls.IndicatorBorderTextureLabel = groupControlParent:CreateFontString(nil, "OVERLAY", "GameFontNormal")
@@ -1520,7 +1557,7 @@ function Editor:EnsureFrame()
 	controls.IndicatorBorderTexture = createDropdown(groupControlParent, 180)
 	controls.IndicatorBorderTexture:SetPoint("TOPLEFT", controls.IndicatorBorderTextureLabel, "TOPRIGHT", 0, 12)
 	controls.IndicatorBorderSizeLabel, controls.IndicatorBorderSize, controls.IndicatorBorderSizeValue =
-		createSettingSlider(controls.IndicatorBorderTextureLabel, tr("UFGroupHealerBuffEditorIndicatorBorderSize", "Border Size"), 1, 24, 1)
+		createSettingSlider(controls.IndicatorBorderTextureLabel, tr("Border Size", "Border Size"), 1, 24, 1)
 	controls.IndicatorBorderOffsetLabel, controls.IndicatorBorderOffset, controls.IndicatorBorderOffsetValue =
 		createSettingSlider(controls.IndicatorBorderSizeLabel, tr("UFGroupHealerBuffEditorIndicatorBorderOffset", "Border Offset"), -12, 12, 1)
 	controls.IndicatorBorderColorLabel = groupControlParent:CreateFontString(nil, "OVERLAY", "GameFontNormal")
@@ -1531,14 +1568,16 @@ function Editor:EnsureFrame()
 
 	controls.ColorLabel = groupControlParent:CreateFontString(nil, "OVERLAY", "GameFontNormal")
 	controls.ColorLabel:SetPoint("TOPLEFT", controls.IndicatorBorderColorLabel, "BOTTOMLEFT", 0, -22)
-	controls.ColorLabel:SetText(tr("UFGroupHealerBuffEditorColor", "Color"))
+	controls.ColorLabel:SetText(COLOR)
 	controls.ColorButton = createColorSwatchButton(groupControlParent, 26)
 	controls.ColorButton:SetPoint("LEFT", controls.ColorLabel, "RIGHT", 10, 0)
 	controls.ColorSwatch = controls.ColorButton.ColorSwatch
 	controls.ColorButton.ColorSwatch = controls.ColorSwatch
 	controls.ColorButton._eqolColorSwatch = controls.ColorSwatch
+	controls.BarFillFrame = createCheck(groupControlParent, tr("UFGroupHealerBuffEditorBarFillFrame", "Fill Full Frame"))
+	controls.BarFillFrame:SetPoint("TOPLEFT", controls.ColorLabel, "BOTTOMLEFT", -4, -8)
 	controls.BarDrainAnimation = createCheck(groupControlParent, tr("UFGroupHealerBuffEditorBarDrainAnimation", "Drain Animation (First Match)"))
-	controls.BarDrainAnimation:SetPoint("TOPLEFT", controls.ColorLabel, "BOTTOMLEFT", -4, -8)
+	controls.BarDrainAnimation:SetPoint("TOPLEFT", controls.BarFillFrame, "BOTTOMLEFT", 0, -4)
 	controls.BarReverseFill = createCheck(groupControlParent, tr("UFGroupHealerBuffEditorBarReverseFill", "Reverse"))
 	controls.BarReverseFill:SetPoint("TOPLEFT", controls.BarDrainAnimation, "BOTTOMLEFT", 0, -4)
 	controls.CooldownSwipe = createCheck(groupControlParent, tr("UFGroupHealerBuffEditorCooldownSwipe", "Cooldown Swipe"))
@@ -1639,7 +1678,9 @@ function Editor:EnsureFrame()
 		placeSlider(controls.ChargeTextSizeLabel, controls.ChargeTextSize, controls.ChargeTextSizeValue)
 		placeSlider(controls.XLabel, controls.XOffset, controls.XValue)
 		placeSlider(controls.YLabel, controls.YOffset, controls.YValue)
-		placeSlider(controls.ThicknessLabel, controls.Thickness, controls.ThicknessValue)
+		placeSlider(controls.BarWidthLabel, controls.BarWidth, controls.BarWidthValue)
+		placeSlider(controls.BarHeightLabel, controls.BarHeight, controls.BarHeightValue)
+		placeSlider(controls.BarAlphaLabel, controls.BarAlpha, controls.BarAlphaValue)
 		placeSlider(controls.InsetLabel, controls.Inset, controls.InsetValue)
 		placeSlider(controls.BorderSizeLabel, controls.BorderSize, controls.BorderSizeValue)
 		placeCheck(controls.IndicatorBorder, nil, -4, -8)
@@ -1648,13 +1689,15 @@ function Editor:EnsureFrame()
 		placeSlider(controls.IndicatorBorderOffsetLabel, controls.IndicatorBorderOffset, controls.IndicatorBorderOffsetValue)
 		placeColor(controls.IndicatorBorderColorLabel, controls.IndicatorBorderColorButton)
 		placeColor(controls.ColorLabel, controls.ColorButton)
-		placeCheck(controls.BarDrainAnimation, controls.ColorLabel, -4, -8)
+		placeCheck(controls.BarFillFrame, controls.ColorLabel, -4, -8)
+		placeCheck(controls.BarDrainAnimation, controls.BarFillFrame, 0, -4)
 		placeCheck(controls.BarReverseFill, controls.BarDrainAnimation, 0, -4)
 		local cooldownAnchor = controls.BarReverseFill
 		if not (cooldownAnchor and cooldownAnchor:IsShown()) then
 			cooldownAnchor = controls.BarDrainAnimation
 			if not (cooldownAnchor and cooldownAnchor:IsShown()) then
-				cooldownAnchor = controls.ColorLabel
+				cooldownAnchor = controls.BarFillFrame
+				if not (cooldownAnchor and cooldownAnchor:IsShown()) then cooldownAnchor = controls.ColorLabel end
 				if not (cooldownAnchor and cooldownAnchor:IsShown()) and controls.IndicatorBorderColorLabel and controls.IndicatorBorderColorLabel:IsShown() then
 					cooldownAnchor = controls.IndicatorBorderColorLabel
 				elseif controls.IndicatorBorderColorButton and controls.IndicatorBorderColorButton:IsShown() then
@@ -1705,10 +1748,10 @@ function Editor:EnsureFrame()
 	controls.RuleMissingDesaturate:SetPoint("TOPLEFT", controls.RuleNot, "BOTTOMLEFT", 16, -6)
 	controls.RuleMissingDesaturate:Hide()
 
-	controls.RuleAppliesParty = createCheck(settingsPanel, tr("UFGroupHealerBuffEditorParty", "Party"))
+	controls.RuleAppliesParty = createCheck(settingsPanel, tr("Party", "Party"))
 	controls.RuleAppliesParty:SetPoint("TOPLEFT", controls.RuleMissingDesaturate, "BOTTOMLEFT", -16, -6)
 
-	controls.RuleAppliesRaid = createCheck(settingsPanel, tr("UFGroupHealerBuffEditorRaid", "Raid"))
+	controls.RuleAppliesRaid = createCheck(settingsPanel, tr("Raid", "Raid"))
 	controls.RuleAppliesRaid:SetPoint("TOPLEFT", controls.RuleAppliesParty, "BOTTOMLEFT", 0, -6)
 
 	controls.RuleIconModeLabel = settingsPanel:CreateFontString(nil, "OVERLAY", "GameFontNormal")
@@ -2214,6 +2257,31 @@ function Editor:EnsureFrame()
 		return tostring(roundInt(value or 0))
 	end
 
+	local function getPreviewUnitFrame()
+		return frame.PreviewPanel and frame.PreviewPanel.Frame and frame.PreviewPanel.Frame.UnitFrame
+	end
+
+	local function clampSelectedGroupToPreview(group)
+		local preview = getPreviewUnitFrame()
+		if not (group and preview) then return end
+		group.x, group.y = clampGroupOffsetsForFrame(group, preview:GetWidth(), preview:GetHeight())
+	end
+
+	local function syncSliderValue(slider, valueInput, value, step)
+		if slider and slider:GetValue() ~= value then
+			slider._eqolSliderSync = true
+			slider:SetValue(value)
+			slider._eqolSliderSync = nil
+		end
+		if valueInput then valueInput:SetText(formatSliderValue(value, step)) end
+	end
+
+	local function syncOffsetControls(group)
+		if not group then return end
+		syncSliderValue(controls.XOffset, controls.XValue, group.x or 0, 1)
+		syncSliderValue(controls.YOffset, controls.YValue, group.y or 0, 1)
+	end
+
 	local function updateGroupFromSlider(field, slider, valueInput, minValue, maxValue, step)
 		local function applyValue(rawValue)
 			if Editor._controlUpdateLock then return end
@@ -2224,19 +2292,19 @@ function Editor:EnsureFrame()
 			end
 			local value = normalizeSliderValue(rawValue, minValue, maxValue, step)
 			group[field] = value
-			if field == "x" or field == "y" then
-				local preview = Editor.frame and Editor.frame.PreviewPanel and Editor.frame.PreviewPanel.Frame and Editor.frame.PreviewPanel.Frame.UnitFrame
-				if preview then
-					group.x, group.y = HB.ClampOffsets(group.anchorPoint, group.x, group.y, preview:GetWidth(), preview:GetHeight(), 0)
+			if field == "barAlpha" then
+				group.color = group.color or { 1, 0.82, 0.1, 0.9 }
+				group.color[4] = value
+			end
+			if field == "x" or field == "y" or field == "barWidth" or field == "barHeight" or field == "inset" then
+				clampSelectedGroupToPreview(group)
+				if field == "x" or field == "y" then
+					value = field == "x" and group.x or group.y
+				else
+					syncOffsetControls(group)
 				end
-				value = field == "x" and group.x or group.y
 			end
-			if slider and slider:GetValue() ~= value then
-				slider._eqolSliderSync = true
-				slider:SetValue(value)
-				slider._eqolSliderSync = nil
-			end
-			if valueInput then valueInput:SetText(formatSliderValue(value, step)) end
+			syncSliderValue(slider, valueInput, value, step)
 			Editor:RefreshPreview()
 			Editor:QueueRuntimeRefresh()
 		end
@@ -2253,6 +2321,17 @@ function Editor:EnsureFrame()
 					local group = groupFromSelection()
 					if group then
 						local current = field == "x" and group.x or (field == "y" and group.y or group[field])
+						if current == nil and field == "barWidth" then
+							local preview = getPreviewUnitFrame()
+							local width = getBarControlDimensions(group, preview and preview:GetWidth() or 0, preview and preview:GetHeight() or 0)
+							current = width
+						elseif current == nil and field == "barHeight" then
+							local preview = getPreviewUnitFrame()
+							local _, height = getBarControlDimensions(group, preview and preview:GetWidth() or 0, preview and preview:GetHeight() or 0)
+							current = height
+						elseif current == nil and field == "barAlpha" then
+							current = group.barAlpha or (group.color and group.color[4]) or 0.9
+						end
 						self:SetText(formatSliderValue(current, step))
 					else
 						self:SetText("")
@@ -2271,6 +2350,17 @@ function Editor:EnsureFrame()
 				local group = groupFromSelection()
 				if group then
 					local current = field == "x" and group.x or (field == "y" and group.y or group[field])
+					if current == nil and field == "barWidth" then
+						local preview = getPreviewUnitFrame()
+						local width = getBarControlDimensions(group, preview and preview:GetWidth() or 0, preview and preview:GetHeight() or 0)
+						current = width
+					elseif current == nil and field == "barHeight" then
+						local preview = getPreviewUnitFrame()
+						local _, height = getBarControlDimensions(group, preview and preview:GetWidth() or 0, preview and preview:GetHeight() or 0)
+						current = height
+					elseif current == nil and field == "barAlpha" then
+						current = group.barAlpha or (group.color and group.color[4]) or 0.9
+					end
 					self:SetText(formatSliderValue(current, step))
 				else
 					self:SetText("")
@@ -2288,7 +2378,9 @@ function Editor:EnsureFrame()
 	updateGroupFromSlider("chargeTextSize", controls.ChargeTextSize, controls.ChargeTextSizeValue, 6, 64, 1)
 	updateGroupFromSlider("x", controls.XOffset, controls.XValue, -200, 200, 1)
 	updateGroupFromSlider("y", controls.YOffset, controls.YValue, -200, 200, 1)
-	updateGroupFromSlider("barThickness", controls.Thickness, controls.ThicknessValue, 1, 64, 1)
+	updateGroupFromSlider("barWidth", controls.BarWidth, controls.BarWidthValue, 1, BAR_DIMENSION_MAX, 1)
+	updateGroupFromSlider("barHeight", controls.BarHeight, controls.BarHeightValue, 1, BAR_DIMENSION_MAX, 1)
+	updateGroupFromSlider("barAlpha", controls.BarAlpha, controls.BarAlphaValue, 0, 1, 0.01)
 	updateGroupFromSlider("inset", controls.Inset, controls.InsetValue, 0, 40, 1)
 	updateGroupFromSlider("borderSize", controls.BorderSize, controls.BorderSizeValue, 1, 16, 1)
 	updateGroupFromSlider("indicatorBorderSize", controls.IndicatorBorderSize, controls.IndicatorBorderSizeValue, 1, 24, 1)
@@ -2322,10 +2414,7 @@ function Editor:EnsureFrame()
 		local group = groupFromSelection()
 		if not group then return end
 		group.anchorPoint = value
-		local preview = frame.PreviewPanel and frame.PreviewPanel.Frame and frame.PreviewPanel.Frame.UnitFrame
-		if preview then
-			group.x, group.y = HB.ClampOffsets(group.anchorPoint, group.x, group.y, preview:GetWidth(), preview:GetHeight(), 0)
-		end
+		clampSelectedGroupToPreview(group)
 		Editor:RefreshGroupControls()
 		Editor:RefreshPreview()
 		Editor:RefreshRuntimeNow()
@@ -2343,6 +2432,8 @@ function Editor:EnsureFrame()
 		local group = groupFromSelection()
 		if not group then return end
 		group.barOrientation = value
+		clampSelectedGroupToPreview(group)
+		Editor:RefreshGroupControls()
 		Editor:RefreshPreview()
 		Editor:RefreshRuntimeNow()
 	end)
@@ -2383,6 +2474,7 @@ function Editor:EnsureFrame()
 		group.color = group.color or { 1, 0.82, 0.1, 0.9 }
 		showColorPicker(group.color, function(r, g, b, a)
 			group.color[1], group.color[2], group.color[3], group.color[4] = r, g, b, a
+			if tostring(group.style or ""):upper() == "BAR" then group.barAlpha = a end
 			Editor:RefreshGroupControls()
 			Editor:RefreshPreview()
 			Editor:QueueRuntimeRefresh()
@@ -2397,6 +2489,20 @@ function Editor:EnsureFrame()
 			return
 		end
 		group.indicatorBorderEnabled = self:GetChecked() == true
+		Editor:RefreshGroupControls()
+		Editor:RefreshPreview()
+		Editor:QueueRuntimeRefresh()
+	end)
+
+	controls.BarFillFrame:SetScript("OnClick", function(self)
+		if Editor._controlUpdateLock then return end
+		local group = groupFromSelection()
+		if not group then
+			self:SetChecked(false)
+			return
+		end
+		group.barFillFrame = self:GetChecked() == true
+		clampSelectedGroupToPreview(group)
 		Editor:RefreshGroupControls()
 		Editor:RefreshPreview()
 		Editor:QueueRuntimeRefresh()
@@ -2922,15 +3028,18 @@ function Editor:RefreshGroupControls()
 		local style = tostring(group.style or "ICON"):upper()
 		group.iconMode = tostring(group.iconMode or "ALL"):upper()
 		local isPriorityIconMode = (style == "ICON" or style == "SQUARE") and group.iconMode == "PRIORITY"
-		local showAnchor = style ~= "TINT"
+		local showBar = style == "BAR"
+		local showBarFillFrame = showBar
+		local showBarDimensions = showBar and group.barFillFrame ~= true
+		local showAnchor = style ~= "TINT" and not (showBar and group.barFillFrame == true)
 		local showGrowth = (style == "ICON" or style == "SQUARE") and not isPriorityIconMode
 		local showGrid = showGrowth
 		local showSize = style == "ICON" or style == "SQUARE"
-		local showOffsets = style ~= "TINT"
-		local showBar = style == "BAR"
+		local showOffsets = style ~= "TINT" and not (showBar and group.barFillFrame == true)
 		local showInset = style == "BAR" or style == "BORDER"
 		local showBorder = style == "BORDER"
 		local showColor = style == "SQUARE" or style == "BAR" or style == "BORDER" or style == "TINT"
+		local showBarAlpha = showBar
 		local showBarDrainAnimation = style == "BAR"
 		local showBarReverseFill = style == "BAR" and group.barDrainAnimation == true
 		local showCooldownSwipe = style == "ICON" or style == "SQUARE"
@@ -2945,7 +3054,7 @@ function Editor:RefreshGroupControls()
 
 		local preview = frame.PreviewPanel and frame.PreviewPanel.Frame and frame.PreviewPanel.Frame.UnitFrame
 		if preview then
-			group.x, group.y = HB.ClampOffsets(group.anchorPoint, group.x, group.y, preview:GetWidth(), preview:GetHeight(), 0)
+			group.x, group.y = clampGroupOffsetsForFrame(group, preview:GetWidth(), preview:GetHeight())
 		end
 
 		controls.PerRow:SetValue(group.perRow or 3)
@@ -2977,8 +3086,16 @@ function Editor:RefreshGroupControls()
 		controls.XValue:SetText(tostring(group.x or 0))
 		controls.YOffset:SetValue(group.y or 0)
 		controls.YValue:SetText(tostring(group.y or 0))
-		controls.Thickness:SetValue(group.barThickness or 6)
-		controls.ThicknessValue:SetText(tostring(group.barThickness or 6))
+		local barWidth, barHeight = getBarControlDimensions(group, preview and preview:GetWidth() or 0, preview and preview:GetHeight() or 0)
+		controls.BarWidth:SetValue(barWidth)
+		controls.BarWidthValue:SetText(tostring(barWidth))
+		controls.BarHeight:SetValue(barHeight)
+		controls.BarHeightValue:SetText(tostring(barHeight))
+		local barAlpha = tonumber(group.barAlpha)
+		if barAlpha == nil then barAlpha = tonumber(group.color and group.color[4]) or 0.9 end
+		if barAlpha < 0 then barAlpha = 0 elseif barAlpha > 1 then barAlpha = 1 end
+		controls.BarAlpha:SetValue(barAlpha)
+		controls.BarAlphaValue:SetText(string.format("%.2f", barAlpha))
 		controls.Inset:SetValue(group.inset or 0)
 		controls.InsetValue:SetText(tostring(group.inset or 0))
 		controls.BorderSize:SetValue(group.borderSize or 2)
@@ -3013,13 +3130,19 @@ function Editor:RefreshGroupControls()
 
 		group.color = group.color or { 1, 0.82, 0.1, 0.9 }
 		group.barDrainAnimation = group.barDrainAnimation == true
+		group.barFillFrame = group.barFillFrame == true
 		group.barReverseFill = group.barReverseFill == true
 		if group.showCooldownSwipe == nil then group.showCooldownSwipe = true end
 		if group.showCooldownEdge == nil then group.showCooldownEdge = true end
 		if group.showCooldownBling == nil then group.showCooldownBling = true end
 		if group.hideCooldownText == nil then group.hideCooldownText = false end
 		if group.hideChargeText == nil then group.hideChargeText = false end
-		setColorPreview(controls.ColorButton, group.color)
+		setColorPreview(controls.ColorButton, {
+			group.color[1] or 1,
+			group.color[2] or 1,
+			group.color[3] or 1,
+			group.barAlpha ~= nil and barAlpha or (group.color[4] or 0.9),
+		})
 
 		setControlEnabled(controls.GroupName, true)
 		setFieldState(controls.GroupAnchorLabel, controls.GroupAnchor, showAnchor, true)
@@ -3033,7 +3156,9 @@ function Editor:RefreshGroupControls()
 		setSliderState(controls.ChargeTextSizeLabel, controls.ChargeTextSize, controls.ChargeTextSizeValue, showTextSizeOverrides, true)
 		setSliderState(controls.XLabel, controls.XOffset, controls.XValue, showOffsets, true)
 		setSliderState(controls.YLabel, controls.YOffset, controls.YValue, showOffsets, true)
-		setSliderState(controls.ThicknessLabel, controls.Thickness, controls.ThicknessValue, showBar, true)
+		setSliderState(controls.BarWidthLabel, controls.BarWidth, controls.BarWidthValue, showBarDimensions, true)
+		setSliderState(controls.BarHeightLabel, controls.BarHeight, controls.BarHeightValue, showBarDimensions, true)
+		setSliderState(controls.BarAlphaLabel, controls.BarAlpha, controls.BarAlphaValue, showBarAlpha, true)
 		setSliderState(controls.InsetLabel, controls.Inset, controls.InsetValue, showInset, true)
 		setSliderState(controls.BorderSizeLabel, controls.BorderSize, controls.BorderSizeValue, showBorder, true)
 		setCheckState(controls.IndicatorBorder, showIndicatorBorder, true, group.indicatorBorderEnabled == true)
@@ -3042,6 +3167,7 @@ function Editor:RefreshGroupControls()
 		setSliderState(controls.IndicatorBorderOffsetLabel, controls.IndicatorBorderOffset, controls.IndicatorBorderOffsetValue, showIndicatorBorder, group.indicatorBorderEnabled == true)
 		setIndicatorBorderColorState(showIndicatorBorder, group.indicatorBorderEnabled == true)
 		setColorState(showColor, true)
+		setCheckState(controls.BarFillFrame, showBarFillFrame, true, group.barFillFrame == true)
 		setCheckState(controls.BarDrainAnimation, showBarDrainAnimation, true, group.barDrainAnimation == true)
 		setCheckState(controls.BarReverseFill, showBarReverseFill, true, group.barReverseFill == true)
 		setCheckState(controls.CooldownSwipe, showCooldownSwipe, true, group.showCooldownSwipe ~= false)
@@ -3063,7 +3189,9 @@ function Editor:RefreshGroupControls()
 		setSliderState(controls.ChargeTextSizeLabel, controls.ChargeTextSize, controls.ChargeTextSizeValue, false, false)
 		setSliderState(controls.XLabel, controls.XOffset, controls.XValue, false, false)
 		setSliderState(controls.YLabel, controls.YOffset, controls.YValue, false, false)
-		setSliderState(controls.ThicknessLabel, controls.Thickness, controls.ThicknessValue, false, false)
+		setSliderState(controls.BarWidthLabel, controls.BarWidth, controls.BarWidthValue, false, false)
+		setSliderState(controls.BarHeightLabel, controls.BarHeight, controls.BarHeightValue, false, false)
+		setSliderState(controls.BarAlphaLabel, controls.BarAlpha, controls.BarAlphaValue, false, false)
 		setSliderState(controls.InsetLabel, controls.Inset, controls.InsetValue, false, false)
 		setSliderState(controls.BorderSizeLabel, controls.BorderSize, controls.BorderSizeValue, false, false)
 		setCheckState(controls.IndicatorBorder, false, false, false)
@@ -3072,6 +3200,7 @@ function Editor:RefreshGroupControls()
 		setSliderState(controls.IndicatorBorderOffsetLabel, controls.IndicatorBorderOffset, controls.IndicatorBorderOffsetValue, false, false)
 		setIndicatorBorderColorState(false, false)
 		setColorState(false, false)
+		setCheckState(controls.BarFillFrame, false, false, false)
 		setCheckState(controls.BarDrainAnimation, false, false, false)
 		setCheckState(controls.BarReverseFill, false, false, false)
 		setCheckState(controls.CooldownSwipe, false, false, false)
@@ -3487,7 +3616,7 @@ function Editor:RefreshPreview()
 			local anchorY = (anchor[2] or 0) * h
 			local x = group.x or 0
 			local y = group.y or 0
-			x, y = HB.ClampOffsets(anchorPoint, x, y, w, h, 0)
+			x, y = clampGroupOffsetsForFrame(group, w, h)
 			group.x, group.y = x, y
 			local baseX = anchorX + x
 			local baseY = anchorY + y
@@ -3577,6 +3706,7 @@ function Editor:RefreshPreview()
 				if bar then
 					local colorRule = getPreviewPriorityRuleForGroup(placement, group.id, self.kind)
 					local r, g, b, a = resolveColor((colorRule and colorRule.color) or group.color)
+					if group.barAlpha ~= nil then a = max(0, min(1, tonumber(group.barAlpha) or a)) end
 					if not selected then a = min(a, 0.45) end
 					bar:SetStatusBarColor(r, g, b, a)
 					bar:SetMinMaxValues(0, 1)
@@ -3584,12 +3714,18 @@ function Editor:RefreshPreview()
 					if UFHelper and UFHelper.applyStatusBarReverseFill then UFHelper.applyStatusBarReverseFill(bar, group.barDrainAnimation == true and group.barReverseFill == true) end
 					bar:ClearAllPoints()
 					local inset = max(0, tonumber(group.inset) or 0)
-					local thickness = max(1, tonumber(group.barThickness) or 6)
-					if tostring(group.barOrientation or "HORIZONTAL") == "VERTICAL" then
+					local barWidth, barHeight, useSizedPlacement = 0, 0, false
+					if HB.GetBarDisplaySize then barWidth, barHeight, useSizedPlacement = HB.GetBarDisplaySize(group, w, h) end
+					if useSizedPlacement then
+						bar:SetSize(barWidth, barHeight)
+						bar:SetPoint(anchorPoint, preview, anchorPoint, x, y)
+					elseif tostring(group.barOrientation or "HORIZONTAL") == "VERTICAL" then
+						local thickness = max(1, tonumber(group.barThickness) or 6)
 						bar:SetPoint("TOP", preview, "TOP", baseX, baseY - inset)
 						bar:SetPoint("BOTTOM", preview, "BOTTOM", baseX, baseY + inset)
 						bar:SetWidth(thickness)
 					else
+						local thickness = max(1, tonumber(group.barThickness) or 6)
 						bar:SetPoint("LEFT", preview, "LEFT", baseX + inset, baseY)
 						bar:SetPoint("RIGHT", preview, "RIGHT", baseX - inset, baseY)
 						bar:SetHeight(thickness)

@@ -72,9 +72,9 @@ for _, anchor in ipairs(CONTENT_ANCHOR_ORDER) do
 	VALID_CONTENT_ANCHOR[anchor] = true
 end
 local CONTENT_ANCHOR_OPTIONS = {
-	{ value = "LEFT", label = L["LEFT"] or "Left" },
-	{ value = "CENTER", label = L["CENTER"] or "Center" },
-	{ value = "RIGHT", label = L["RIGHT"] or "Right" },
+	{ value = "LEFT", label = L["Left"] or "Left" },
+	{ value = "CENTER", label = L["Center"] or "Center" },
+	{ value = "RIGHT", label = L["Right"] or "Right" },
 }
 
 local function normalizePercent(value, fallback)
@@ -891,7 +891,7 @@ local function registerEditModePanel(panel)
 				valueStep = 1,
 			},
 			{
-				name = L["DataPanelBackgroundTexture"] or "Background texture",
+				name = L["Background texture"] or "Background texture",
 				kind = SettingType.Dropdown,
 				field = "backgroundTexture",
 				default = defaults.backgroundTexture,
@@ -917,7 +917,7 @@ local function registerEditModePanel(panel)
 				end,
 			},
 			{
-				name = L["DataPanelBackgroundColor"] or "Background color",
+				name = L["Background color"] or "Background color",
 				kind = SettingType.Color,
 				field = "backgroundColor",
 				default = defaults.backgroundColor,
@@ -936,13 +936,13 @@ local function registerEditModePanel(panel)
 				end,
 			},
 			{
-				name = L["DataPanelHideBorder"],
+				name = L["Hide border"],
 				kind = SettingType.Checkbox,
 				field = "hideBorder",
 				default = defaults.hideBorder,
 			},
 			{
-				name = L["DataPanelBorderTexture"] or "Border texture",
+				name = L["Border texture"] or "Border texture",
 				kind = SettingType.Dropdown,
 				field = "borderTexture",
 				default = defaults.borderTexture,
@@ -969,7 +969,7 @@ local function registerEditModePanel(panel)
 				isEnabled = isBorderVisible,
 			},
 			{
-				name = L["DataPanelBorderSize"] or "Border size",
+				name = L["Border size"] or "Border size",
 				kind = SettingType.Slider,
 				field = "borderSize",
 				default = defaults.borderSize,
@@ -980,7 +980,7 @@ local function registerEditModePanel(panel)
 				isEnabled = isBorderVisible,
 			},
 			{
-				name = L["DataPanelBorderOffset"] or "Border offset",
+				name = L["Border offset"] or "Border offset",
 				kind = SettingType.Slider,
 				field = "borderOffset",
 				default = defaults.borderOffset,
@@ -991,7 +991,7 @@ local function registerEditModePanel(panel)
 				isEnabled = isBorderVisible,
 			},
 			{
-				name = L["DataPanelBorderColor"] or "Border color",
+				name = EMBLEM_BORDER_COLOR,
 				kind = SettingType.Color,
 				field = "borderColor",
 				default = defaults.borderColor,
@@ -1011,7 +1011,7 @@ local function registerEditModePanel(panel)
 				isEnabled = isBorderVisible,
 			},
 			{
-				name = L["DataPanelClickThrough"] or "Click-through",
+				name = L["Click-through"] or "Click-through",
 				kind = SettingType.Checkbox,
 				field = "clickThrough",
 				default = defaults.clickThrough,
@@ -1024,7 +1024,7 @@ local function registerEditModePanel(panel)
 				isEnabled = function(layoutName) return not isClickThrough(layoutName) end,
 			},
 			{
-				name = L["DataPanelStrata"],
+				name = L["Frame strata"],
 				kind = SettingType.Dropdown,
 				field = "strata",
 				default = defaults.strata,
@@ -1090,7 +1090,7 @@ local function registerEditModePanel(panel)
 				end,
 			},
 			{
-				name = L["DataPanelFontFace"] or "Font",
+				name = L["Font"] or "Font",
 				kind = SettingType.Dropdown,
 				field = "fontFace",
 				default = defaults.fontFace,
@@ -1116,7 +1116,7 @@ local function registerEditModePanel(panel)
 				end,
 			},
 			{
-				name = L["DataPanelTextOutline"] or "Text outline",
+				name = L["Text outline"] or "Text outline",
 				kind = SettingType.Checkbox,
 				field = "fontOutline",
 				default = defaults.fontOutline,
@@ -1128,7 +1128,7 @@ local function registerEditModePanel(panel)
 				default = defaults.fontShadow,
 			},
 			{
-				name = L["DataPanelTextScale"] or "Text scale",
+				name = L["Text scale"] or "Text scale",
 				kind = SettingType.Slider,
 				field = "streamFontScale",
 				default = defaults.streamFontScale,
@@ -2071,7 +2071,12 @@ function DataPanel.Create(id, name, existingOnly)
 				if partSpacing < 0 then partSpacing = 0 end
 				local spacingChanged = data.partsSpacing ~= partSpacing
 				if spacingChanged then data.partsSpacing = partSpacing end
+				local partsLayout = payload.partsLayout == "vertical" and "vertical" or "horizontal"
+				local layoutChanged = data.partsLayout ~= partsLayout
+				if layoutChanged then data.partsLayout = partsLayout end
 				local totalWidth = 0
+				local totalHeight = 0
+				local partsPositionChanged = layoutChanged or spacingChanged
 				for i, part in ipairs(payload.parts) do
 					local secureSpec = part and part.secure
 					local isSecure = secureSpec ~= nil
@@ -2134,12 +2139,15 @@ function DataPanel.Create(id, name, existingOnly)
 						data.parts[i] = child
 						isNew = true
 					end
-					if isNew or spacingChanged then
+					if isNew then partsPositionChanged = true end
+					if isNew or spacingChanged or layoutChanged then
 						child:ClearAllPoints()
-						if i == 1 then
-							child:SetPoint("LEFT", button, "LEFT", 0, 0)
-						else
-							child:SetPoint("LEFT", data.parts[i - 1], "RIGHT", partSpacing, 0)
+						if partsLayout ~= "vertical" then
+							if i == 1 then
+								child:SetPoint("LEFT", button, "LEFT", 0, 0)
+							else
+								child:SetPoint("LEFT", data.parts[i - 1], "RIGHT", partSpacing, 0)
+							end
 						end
 					end
 					child.slot = data
@@ -2208,12 +2216,14 @@ function DataPanel.Create(id, name, existingOnly)
 					end
 					local partHeight = tonumber(part.height)
 					if not partHeight then partHeight = tonumber(part.iconHeight) or tonumber(part.iconSize) or tonumber(part.iconWidth) or buttonHeight end
-					if partHeight < buttonHeight then partHeight = buttonHeight end
+					if partsLayout ~= "vertical" and partHeight < buttonHeight then partHeight = buttonHeight end
 					if isNew or heightChanged or child.lastHeight ~= partHeight then
 						child.lastHeight = partHeight
 						child:SetHeight(partHeight)
+						if partsLayout == "vertical" then partsPositionChanged = true end
 					end
 					if isNew or partsFontChanged then panel:ApplyFontStyle(child.text, font, size) end
+					if isNew or layoutChanged then child.text:SetJustifyH(partsLayout == "vertical" and "CENTER" or "LEFT") end
 					local iconSpec = part.icon
 					local overlaySpec = part.iconOverlay
 					local useIcons = iconSpec ~= nil or overlaySpec ~= nil
@@ -2304,11 +2314,35 @@ function DataPanel.Create(id, name, existingOnly)
 						if (isNew or textChanged or partsFontChanged) and hasInlineTexture(rawText) then panel:ScheduleTextReflow() end
 					end
 					child.currencyID = part.id
-					totalWidth = totalWidth + (child.lastWidth or 0) + (i > 1 and partSpacing or 0)
+					if partsLayout == "vertical" then
+						totalWidth = math.max(totalWidth, child.lastWidth or 0)
+						totalHeight = totalHeight + (child.lastHeight or 0) + (i > 1 and partSpacing or 0)
+					else
+						totalWidth = totalWidth + (child.lastWidth or 0) + (i > 1 and partSpacing or 0)
+					end
 				end
 				if data.parts then
 					for i = #payload.parts + 1, #data.parts do
 						data.parts[i]:Hide()
+					end
+				end
+				if partsLayout == "vertical" then
+					local stackChanged = partsPositionChanged or data.partsStackHeight ~= totalHeight or data.partsStackWidth ~= totalWidth
+					if stackChanged then
+						data.partsStackHeight = totalHeight
+						data.partsStackWidth = totalWidth
+						local topOffset = totalHeight / 2
+						for i = 1, #payload.parts do
+							local child = data.parts[i]
+							if child then
+								child:ClearAllPoints()
+								if i == 1 then
+									child:SetPoint("TOP", button, "CENTER", 0, topOffset)
+								else
+									child:SetPoint("TOP", data.parts[i - 1], "BOTTOM", 0, -partSpacing)
+								end
+							end
+						end
 					end
 				end
 				if totalWidth ~= data.lastWidth then

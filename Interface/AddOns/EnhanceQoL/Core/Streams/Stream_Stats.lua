@@ -78,6 +78,11 @@ local SECONDARY_STATS = {
 	"speed",
 }
 
+local SUPPORTS_SECONDARY_PERCENT = {
+	mastery = true,
+	versatility = true,
+}
+
 local function normalizeMode(mode)
 	if VALID_DISPLAY_MODE[mode] then return mode end
 	return "percent"
@@ -108,11 +113,11 @@ local function formatPercent(value)
 	return txt .. "%"
 end
 
-local function formatStatText(label, mode, ratingValue, percentValue, secondaryPercent)
+local function formatStatText(label, mode, ratingValue, percentValue, secondaryPercent, showSecondaryPercent)
 	mode = normalizeMode(mode)
 	local ratingText = ratingValue and formatNumber(ratingValue)
 	local percentText = percentValue and formatPercent(percentValue)
-	local secondaryPercentText = secondaryPercent and formatPercent(secondaryPercent)
+	local secondaryPercentText = showSecondaryPercent ~= false and secondaryPercent and formatPercent(secondaryPercent)
 
 	if not ratingText and not percentText and not secondaryPercentText then return nil end
 
@@ -203,7 +208,7 @@ local function getOptionsHint()
 	return L["Right-Click for options"]
 end
 
-local function ensureStatEntry(key, supportsMode)
+local function ensureStatEntry(key, supportsMode, supportsSecondaryPercent)
 	db[key] = db[key] or {}
 	local entry = db[key]
 	if entry.enabled == nil then entry.enabled = true end
@@ -219,6 +224,11 @@ local function ensureStatEntry(key, supportsMode)
 	else
 		entry.mode = nil
 	end
+	if supportsSecondaryPercent then
+		if entry.showSecondaryPercent == nil then entry.showSecondaryPercent = true end
+	else
+		entry.showSecondaryPercent = nil
+	end
 	entry.rating = nil
 	entry.color = entry.color or { r = 1, g = 1, b = 1 }
 end
@@ -232,10 +242,10 @@ local function ensureDB()
 	db.primary = db.primary or {}
 	if db.primary.enabled == nil then db.primary.enabled = true end
 	db.primary.color = db.primary.color or { r = 1, g = 1, b = 1 }
-	ensureStatEntry("primary", false)
+	ensureStatEntry("primary", false, false)
 
 	for _, key in ipairs(SECONDARY_STATS) do
-		ensureStatEntry(key, true)
+		ensureStatEntry(key, true, SUPPORTS_SECONDARY_PERCENT[key] == true)
 	end
 end
 
@@ -247,7 +257,7 @@ local function RestorePosition(frame)
 end
 
 local aceWindow
-local function addStatOptions(frame, key, label, supportsMode)
+local function addStatOptions(frame, key, label, supportsMode, supportsSecondaryPercent)
 	local group = AceGUI:Create("InlineGroup")
 	group:SetTitle(label)
 	group:SetFullWidth(true)
@@ -264,7 +274,7 @@ local function addStatOptions(frame, key, label, supportsMode)
 
 	if supportsMode ~= false then
 		local mode = AceGUI:Create("Dropdown")
-		mode:SetLabel(L["StatDisplayMode"] or "Display mode")
+		mode:SetLabel(DISPLAY_MODE)
 		mode:SetList(DISPLAY_MODE_LABELS, DISPLAY_MODE_ORDER)
 		mode:SetValue(db[key].mode or "percent")
 		mode:SetCallback("OnValueChanged", function(_, _, val)
@@ -272,6 +282,17 @@ local function addStatOptions(frame, key, label, supportsMode)
 			addon.DataHub:RequestUpdate(stream)
 		end)
 		group:AddChild(mode)
+	end
+
+	if supportsSecondaryPercent then
+		local showSecondaryPercent = AceGUI:Create("CheckBox")
+		showSecondaryPercent:SetLabel(L["StatDisplayShowSecondaryPercent"] or "Show second percent value")
+		showSecondaryPercent:SetValue(db[key].showSecondaryPercent ~= false)
+		showSecondaryPercent:SetCallback("OnValueChanged", function(_, _, val)
+			db[key].showSecondaryPercent = val and true or false
+			addon.DataHub:RequestUpdate(stream)
+		end)
+		group:AddChild(showSecondaryPercent)
 	end
 
 	local color = AceGUI:Create("ColorPicker")
@@ -341,8 +362,8 @@ local function createAceWindow()
 	local primaryLabel = select(3, GetPlayerPrimaryStat())
 	addStatOptions(groupCore, "primary", primaryLabel or "Primary", false)
 	addStatOptions(groupCore, "haste", STAT_HASTE or "Haste")
-	addStatOptions(groupCore, "mastery", STAT_MASTERY or "Mastery")
-	addStatOptions(groupCore, "versatility", STAT_VERSATILITY or "Versatility")
+	addStatOptions(groupCore, "mastery", STAT_MASTERY or "Mastery", true, true)
+	addStatOptions(groupCore, "versatility", STAT_VERSATILITY or "Versatility", true, true)
 	addStatOptions(groupCore, "crit", STAT_CRITICAL_STRIKE or "Crit")
 	addStatOptions(groupCore, "lifesteal", STAT_LIFESTEAL or "Leech")
 	addStatOptions(groupCore, "block", STAT_BLOCK or "Block")
@@ -382,7 +403,7 @@ local function checkStats(stream)
 	local function emitStat(key, token, label, ratingValue, percentValue, extraPercentValue)
 		local cfg = db[key]
 		if not cfg or not cfg.enabled then return end
-		local text = formatStatText(label, cfg.mode or "percent", ratingValue, percentValue, extraPercentValue)
+		local text = formatStatText(label, cfg.mode or "percent", ratingValue, percentValue, extraPercentValue, cfg.showSecondaryPercent)
 		push(key, token, text, cfg.color)
 	end
 
@@ -427,7 +448,7 @@ end
 
 local provider = {
 	id = "stats",
-	version = 2,
+	version = 3,
 	title = PET_BATTLE_STATS_LABEL,
 	update = checkStats,
 	events = {

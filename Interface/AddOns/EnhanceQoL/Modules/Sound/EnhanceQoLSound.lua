@@ -7,7 +7,7 @@ else
 	error(parentAddonName .. " is not loaded")
 end
 
-local L = LibStub("AceLocale-3.0"):GetLocale("EnhanceQoL_Sound")
+local L = LibStub("AceLocale-3.0"):GetLocale("EnhanceQoL")
 local LSM = LibStub("LibSharedMedia-3.0", true)
 
 local function toggleSounds(sounds, state)

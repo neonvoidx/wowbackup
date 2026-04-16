@@ -118,6 +118,9 @@ ns.DEFAULT_SETTINGS = {
         cooldownManager_customCDSwipeColor_b = 0,
         cooldownManager_customCDSwipeColor_a = 0.69,
 
+        cooldownManager_desaturate_under_aura = false,
+        cooldownManager_hide_gcd = false,
+
         cooldownManager_experimental_layoutOptimizations = false,
         cooldownManager_experimental_disablePerSpellSettings = false,
 

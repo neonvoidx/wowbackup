@@ -7,11 +7,13 @@ local growOptions = {
 	"LEFT",
 	"RIGHT",
 	"CENTER",
+	"DOWN",
 }
 local verticalSpacing = mini.VerticalSpacing
 local horizontalSpacing = mini.HorizontalSpacing
 local columns = 4
 local columnWidth
+local enabledColumnWidth
 local config = addon.Config
 
 ---@class FriendlyIndicatorConfig
@@ -88,15 +90,14 @@ local function BuildAnchorSettings(parent, options)
 
 	containerY.Slider:SetPoint("LEFT", containerX.Slider, "RIGHT", horizontalSpacing, 0)
 
-	panel:SetHeight(containerX.Slider:GetHeight() + growDdl:GetHeight() + growDdlLbl:GetHeight() + verticalSpacing * 3)
+	panel:SetHeight(containerX.Slider:GetHeight() + growDdl:GetHeight() + growDdlLbl:GetHeight() + verticalSpacing * 3 + 8)
 
 	return panel
 end
 
 ---@param panel table
 ---@param options FriendlyIndicatorInstanceOptions
----@param addTestButton boolean?
-local function BuildInstance(panel, options, addTestButton)
+local function BuildInstance(panel, options)
 	local parent = CreateFrame("Frame", nil, panel)
 	local anchorPanel = BuildAnchorSettings(parent, options)
 
@@ -210,6 +211,22 @@ local function BuildInstance(panel, options, addTestButton)
 	showCCChk:SetPoint("LEFT", parent, "LEFT", columnWidth * 2, 0)
 	showCCChk:SetPoint("TOP", showDefensivesChk, "TOP", 0, 0)
 
+	local showTooltipsChk = mini:Checkbox({
+		Parent = parent,
+		LabelText = L["Show tooltips"],
+		Tooltip = L["Shows a spell tooltip when hovering over an icon."],
+		GetValue = function()
+			return options.ShowTooltips ~= false
+		end,
+		SetValue = function(value)
+			options.ShowTooltips = value
+			config:Apply()
+		end,
+	})
+
+	showTooltipsChk:SetPoint("LEFT", parent, "LEFT", columnWidth * 3, 0)
+	showTooltipsChk:SetPoint("TOP", showDefensivesChk, "TOP", 0, 0)
+
 	local iconSize = mini:Slider({
 		Parent = parent,
 		Min = 10,
@@ -255,16 +272,6 @@ local function BuildInstance(panel, options, addTestButton)
 	anchorPanel:SetPoint("TOPLEFT", iconSize.Slider, "BOTTOMLEFT", 0, -verticalSpacing * 2)
 	anchorPanel:SetPoint("TOPRIGHT", iconSize.Slider, "BOTTOMRIGHT", 0, -verticalSpacing * 2)
 
-	if addTestButton then
-		local testBtn = CreateFrame("Button", nil, panel, "UIPanelButtonTemplate")
-		testBtn:SetSize(160, 26)
-		testBtn:SetPoint("TOPLEFT", anchorPanel, "BOTTOMLEFT", 0, -verticalSpacing * 2)
-		testBtn:SetText(L["Test these settings"])
-		testBtn:SetScript("OnClick", function()
-			addon:TestWithOptions(true)
-		end)
-	end
-
 	parent.OnMiniRefresh = function()
 		anchorPanel:MiniRefresh()
 	end
@@ -277,6 +284,7 @@ end
 ---@param raid FriendlyIndicatorInstanceOptions
 function M:Build(panel, default, raid)
 	columnWidth = mini:ColumnWidth(columns, 0, 0)
+	enabledColumnWidth = mini:ColumnWidth(5, 0, 0)
 	local db = mini:GetSavedVars()
 
 	local lines = mini:TextBlock({
@@ -326,7 +334,7 @@ function M:Build(panel, default, raid)
 		end,
 	})
 
-	enabledArena:SetPoint("LEFT", panel, "LEFT", columnWidth, 0)
+	enabledArena:SetPoint("LEFT", panel, "LEFT", enabledColumnWidth, 0)
 	enabledArena:SetPoint("TOP", enabledEverywhere, "TOP", 0, 0)
 
 	local enabledBattleGrounds = mini:Checkbox({
@@ -342,54 +350,80 @@ function M:Build(panel, default, raid)
 		end,
 	})
 
-	enabledBattleGrounds:SetPoint("LEFT", panel, "LEFT", columnWidth * 2, 0)
+	enabledBattleGrounds:SetPoint("LEFT", panel, "LEFT", enabledColumnWidth * 2, 0)
 	enabledBattleGrounds:SetPoint("TOP", enabledEverywhere, "TOP", 0, 0)
 
-	local enabledPvE = mini:Checkbox({
+	local enabledDungeons = mini:Checkbox({
 		Parent = panel,
-		LabelText = L["PvE"],
-		Tooltip = L["Enable this module in PvE."],
+		LabelText = L["Dungeons"],
+		Tooltip = L["Enable this module in dungeons."],
 		GetValue = function()
-			return db.Modules.FriendlyIndicatorModule.Enabled.PvE
+			return db.Modules.FriendlyIndicatorModule.Enabled.Dungeons
 		end,
 		SetValue = function(value)
-			db.Modules.FriendlyIndicatorModule.Enabled.PvE = value
+			db.Modules.FriendlyIndicatorModule.Enabled.Dungeons = value
 			config:Apply()
 		end,
 	})
 
-	enabledPvE:SetPoint("LEFT", panel, "LEFT", columnWidth * 3, 0)
-	enabledPvE:SetPoint("TOP", enabledEverywhere, "TOP", 0, 0)
+	enabledDungeons:SetPoint("LEFT", panel, "LEFT", enabledColumnWidth * 3, 0)
+	enabledDungeons:SetPoint("TOP", enabledEverywhere, "TOP", 0, 0)
 
-	local defaultDivider = mini:Divider({
+	local enabledRaid = mini:Checkbox({
 		Parent = panel,
-		Text = L["Less than 5 members (arena/dungeons)"],
+		LabelText = L["Raid"],
+		Tooltip = L["Enable this module in raids."],
+		GetValue = function()
+			return db.Modules.FriendlyIndicatorModule.Enabled.Raid
+		end,
+		SetValue = function(value)
+			db.Modules.FriendlyIndicatorModule.Enabled.Raid = value
+			config:Apply()
+		end,
 	})
 
-	defaultDivider:SetPoint("LEFT", panel, "LEFT")
-	defaultDivider:SetPoint("RIGHT", panel, "RIGHT")
-	defaultDivider:SetPoint("TOP", enabledEverywhere, "BOTTOM", 0, -verticalSpacing)
+	enabledRaid:SetPoint("LEFT", panel, "LEFT", enabledColumnWidth * 4, 0)
+	enabledRaid:SetPoint("TOP", enabledEverywhere, "TOP", 0, 0)
 
-	local subPanelHeight = 320
-	local defaultPanel = BuildInstance(panel, default)
+	local subPanelHeight = 316
+	local tabContainer = CreateFrame("Frame", nil, panel)
+	tabContainer:SetPoint("TOPLEFT",  enabledEverywhere, "BOTTOMLEFT",  0, -verticalSpacing)
+	tabContainer:SetPoint("TOPRIGHT", panel,             "TOPRIGHT",    0, 0)
+	tabContainer:SetHeight(subPanelHeight + 34)
 
-	defaultPanel:SetPoint("TOPLEFT", defaultDivider, "BOTTOMLEFT", 0, -verticalSpacing)
-	defaultPanel:SetPoint("TOPRIGHT", defaultDivider, "BOTTOMRIGHT", 0, -verticalSpacing)
+	local tabIsRaid = { default = false, raid = true }
+
+	local tabCtrl = mini:CreateTabs({
+		Parent = tabContainer,
+		TabHeight = 28,
+		StripHeight = 34,
+		TabFitToParent = true,
+		ContentInsets = { Top = verticalSpacing },
+		Tabs = {
+			{ Key = "default", Title = L["World/Arena/Dungeons"] },
+			{ Key = "raid",    Title = L["Raids/Battlegrounds"] },
+		},
+		OnTabChanged = function(key)
+			local isRaid = tabIsRaid[key]
+			if isRaid ~= nil then
+				addon.CurrentTestIsRaid = isRaid
+				if addon:IsTestActive() then
+					addon:TestWithOptions(isRaid)
+				end
+			end
+		end,
+	})
+
+	local defaultContent = tabCtrl:GetContent("default")
+	local defaultPanel = BuildInstance(defaultContent, default)
+	defaultPanel:SetPoint("TOPLEFT",  defaultContent, "TOPLEFT",  0, 0)
+	defaultPanel:SetPoint("TOPRIGHT", defaultContent, "TOPRIGHT", 0, 0)
 	defaultPanel:SetHeight(subPanelHeight)
 
-	local raidDivider = mini:Divider({
-		Parent = panel,
-		Text = L["Greater than 5 members (raids/bgs)"],
-	})
-
-	raidDivider:SetPoint("LEFT", panel, "LEFT")
-	raidDivider:SetPoint("RIGHT", panel, "RIGHT")
-	raidDivider:SetPoint("TOP", defaultPanel, "BOTTOM")
-
-	local raidPanel = BuildInstance(panel, raid, true)
-
-	raidPanel:SetPoint("TOPLEFT", raidDivider, "BOTTOMLEFT", 0, -verticalSpacing)
-	raidPanel:SetPoint("TOPRIGHT", raidDivider, "TOPRIGHT")
+	local raidContent = tabCtrl:GetContent("raid")
+	local raidPanel = BuildInstance(raidContent, raid)
+	raidPanel:SetPoint("TOPLEFT",  raidContent, "TOPLEFT",  0, 0)
+	raidPanel:SetPoint("TOPRIGHT", raidContent, "TOPRIGHT", 0, 0)
 	raidPanel:SetHeight(subPanelHeight)
 
 	panel.OnMiniRefresh = function()

@@ -462,7 +462,14 @@ local function SetArenaName(frame, unit, textObject)
     if UnitIsUnit(unit, "player") then return end
     local specName = GetSpecName(unit)
     local nameText
-    local partyID = UnitIsUnit(unit, "party1") and " 1" or " 2"
+    local isParty1 = UnitIsUnit(unit, "party1")
+    local partyID
+    if not issecretvalue(isParty1) then
+        partyID = isParty1 and " 1" or " 2"
+    else
+        partyID = " ?"
+    end
+
 
     if specName then
         if showSpecName and showArenaID then
@@ -531,6 +538,7 @@ end)
 
 
 local function CompactPartyFrameNameChanges(frame)
+    if issecretvalue(frame) then return end --???
     if not frame or not frame.unit then return end
     if frame.unit:find("nameplate") then return end
     if partyArenaNames and IsActiveBattlefieldArena() and UnitIsFriend(frame.unit, "player") then
@@ -573,11 +581,13 @@ end
 
 local function HideRoleIcon(frame)
     if not hidePartyRoles then return end
+    if issecretvalue(frame) then return end
     if not frame.roleIcon then return end
     frame.roleIcon:SetAlpha(0)
 end
 local function HideRoleIconDefault(frame)
     if not hidePartyRoles then return end
+    if issecretvalue(frame) then return end
     frame.PartyMemberOverlay.RoleIcon:SetAlpha(0)
 end
 hooksecurefunc("CompactUnitFrame_UpdateRoleIcon", HideRoleIcon)
@@ -784,9 +794,6 @@ end
 -- Run the function to initialize font strings on all specified frames
 InitializeFontStringsForFrames()
 
-
-
-
 local function UpdateFontStringPosition(frame)
     local name = frame.name or frame.Name
     if not name or not name:GetParent() then return end
@@ -915,6 +922,7 @@ local function SetUnitFramesFont(font, size, outline)
     if outline == "NONE" then
         outline = nil
     end
+    local anyFailed = false
     for _, frame in ipairs(frames) do
         local newSize = size
         if frame == PetFrame or frame == TargetFrameToT or frame == FocusFrameToT then
@@ -926,7 +934,9 @@ local function SetUnitFramesFont(font, size, outline)
                 newSize = size -2
             end
         end
-        frame.bbfName:SetFont(font, newSize, outline)
+        if not frame.bbfName:SetFont(font, newSize, outline) then
+            anyFailed = true
+        end
         if frame.TargetFrameContent and frame.TargetFrameContent.TargetFrameContentMain.LevelText then
             local _, lvlSize = frame.TargetFrameContent.TargetFrameContentMain.LevelText:GetFont()
             frame.TargetFrameContent.TargetFrameContentMain.LevelText:SetFont(font, lvlSize, outline)
@@ -937,6 +947,7 @@ local function SetUnitFramesFont(font, size, outline)
     PlayerCastingBarFrame.Text:SetFont(font, size, outline)
     TargetFrameSpellBar.Text:SetFont(font, size, outline)
     FocusFrameSpellBar.Text:SetFont(font, size, outline)
+    return not anyFailed
 end
 
 
@@ -1048,6 +1059,9 @@ local function SetUnitFramesValuesFont(font, size, outline)
 
         textObject:SetFont(newFont, newSize, newOutline)
     end
+
+    local verifyFont = playerHealthBar.TextString:GetFont()
+    return verifyFont == font
 end
 
 
@@ -1128,6 +1142,13 @@ local function SetActionBarFonts(font, size, kbSize, outline, kbOutline, chargeS
             end
         end
     end
+
+    local verifyButton = _G["ActionButton1Name"]
+    if verifyButton then
+        local verifyFont = verifyButton:GetFont()
+        return verifyFont == font
+    end
+    return true
 end
 
 
@@ -1266,6 +1287,7 @@ function BBF.SetCustomFonts()
             if C_CVar.GetCVar("raidOptionDisplayPets") == "1" or C_CVar.GetCVar("raidOptionDisplayMainTankAndAssist") == "1" then
                 hooksecurefunc("DefaultCompactMiniFrameSetup", SetRaidFramePetFont)
                 hooksecurefunc("CompactUnitFrame_SetUnit", function(frame)
+                    if issecretvalue(frame) then return end
                     if frame.unit and (frame.unit:match("raidpet") or frame.unit:match("target")) then
                         SetRaidFramePetFont(frame)
                     end
@@ -1275,13 +1297,17 @@ function BBF.SetCustomFonts()
         end
     end
 
+    local needsRetry = false
+
     if db.changeUnitFrameFont then
         local fontName = db.unitFrameFont
         local fontPath = LSM:Fetch(LSM.MediaType.FONT, fontName)
         local fontSize = db.unitFrameFontSize or 10
         local outline = db.unitFrameFontOutline or "THINOUTLINE"
 
-        SetUnitFramesFont(fontPath, fontSize, outline)
+        if not SetUnitFramesFont(fontPath, fontSize, outline) then
+            needsRetry = true
+        end
     end
 
     if db.changeActionBarFont then
@@ -1292,7 +1318,9 @@ function BBF.SetCustomFonts()
         local outline = db.actionBarFontOutline or "THINOUTLINE"
         local kbOutline = db.actionBarKeyFontOutline or "THINOUTLINE"
         local chargeSize = db.actionBarChargeFontSize or 14
-        SetActionBarFonts(fontPath, fontSize, kbSize, outline, kbOutline, chargeSize)
+        if not SetActionBarFonts(fontPath, fontSize, kbSize, outline, kbOutline, chargeSize) then
+            needsRetry = true
+        end
     end
 
     if db.changeUnitFrameValueFont then
@@ -1301,7 +1329,24 @@ function BBF.SetCustomFonts()
         local fontSize = db.unitFrameValueFontSize or 10
         local outline = db.unitFrameValueFontOutline or "THINOUTLINE"
 
-        SetUnitFramesValuesFont(fontPath, fontSize, outline)
+        if not SetUnitFramesValuesFont(fontPath, fontSize, outline) then
+            needsRetry = true
+        end
+    end
+
+    -- Font files from SharedMedia may not be loaded into the VFS yet on first login.
+    -- SetFont() silently fails in that case. Retry with increasing delays until it works.
+    if needsRetry then
+        local retryCount = BBF.fontRetryCount or 0
+        if retryCount < 10 then
+            BBF.fontRetryCount = retryCount + 1
+            local delay = min(retryCount + 1, 5)
+            C_Timer.After(delay, function()
+                BBF.SetCustomFonts()
+            end)
+        end
+    else
+        BBF.fontRetryCount = 0
     end
 
     if BetterBlizzFramesDB.noPortraitModes then
@@ -1450,7 +1495,7 @@ end
 C_Timer.After(1, function()
     PlayerFrameNameChanges(PlayerFrame)
 end)
-C_Timer.After(2, function() --lol idk deal with it later
+C_Timer.After(2, function() --lol idk deal with it later (rp name/text/iforget)
     PlayerFrameNameChanges(PlayerFrame)
 end)
 

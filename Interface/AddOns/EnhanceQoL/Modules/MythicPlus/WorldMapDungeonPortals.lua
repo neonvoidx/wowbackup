@@ -11,7 +11,7 @@ addon.MythicPlus = addon.MythicPlus or {}
 addon.MythicPlus.functions = addon.MythicPlus.functions or {}
 addon.MythicPlus.variables = addon.MythicPlus.variables or {}
 
-local L = LibStub("AceLocale-3.0"):GetLocale("EnhanceQoL_MythicPlus")
+local L = LibStub("AceLocale-3.0"):GetLocale("EnhanceQoL")
 
 -- Lightweight World Map side-panel for Dungeon Portals, with a small tab
 -- that sits together with the default Map Legend / Quest tabs. The panel

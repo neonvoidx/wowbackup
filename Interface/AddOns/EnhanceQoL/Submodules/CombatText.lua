@@ -14,6 +14,7 @@ local L = LibStub("AceLocale-3.0"):GetLocale(parentAddonName)
 local EditMode = addon.EditMode
 local SettingType = EditMode and EditMode.lib and EditMode.lib.SettingType
 local LSM = LibStub("LibSharedMedia-3.0", true)
+local SharedAnchors = addon.SharedAnchors
 
 local EDITMODE_ID = "combatText"
 local PREVIEW_PADDING_X = 20
@@ -66,6 +67,25 @@ local DB_FONT_SIZE = "combatTextFontSize"
 local DB_COLOR = "combatTextColor"
 local DB_ENTER_COLOR = "combatTextEnterColor"
 local DB_LEAVE_COLOR = "combatTextLeaveColor"
+local DB_ANCHOR_TARGET = "combatTextAnchorTarget"
+
+local function onCombatTextHideTimer()
+	CombatText.hideTimer = nil
+	CombatText:HideText()
+end
+
+local function refreshCombatTextDisplayState()
+	if CombatText.previewing then return end
+	if addon.db and addon.db[DB_ENABLED] then
+		CombatText:RefreshDisplayMode()
+	else
+		CombatText:HideText()
+	end
+end
+
+local function onCombatTextEvent(_, event)
+	CombatText:OnEvent(event)
+end
 
 local function getCachedMediaNames(mediaType)
 	if addon.functions and addon.functions.GetLSMMediaNames then
@@ -88,6 +108,37 @@ local function getValue(key, fallback)
 	local value = addon.db[key]
 	if value == nil then return fallback end
 	return value
+end
+
+local function normalizeAnchorTarget(value, current)
+	if SharedAnchors and SharedAnchors.ValidateTarget then return SharedAnchors:ValidateTarget(value, current, { includeCursor = false }) end
+	if type(value) ~= "string" or value == "" then return "UIParent" end
+	return value
+end
+
+local function getAnchorTargetEntries(current)
+	if SharedAnchors and SharedAnchors.GetEntries then return SharedAnchors:GetEntries(current, { includeCursor = false }) end
+	return {
+		{ key = "UIParent", label = "UIParent" },
+	}
+end
+
+local function getAnchorDefaults(target)
+	if SharedAnchors and SharedAnchors.GetDefaultAnchorData then return SharedAnchors:GetDefaultAnchorData(target) end
+	return {
+		point = "CENTER",
+		relativePoint = "CENTER",
+		x = 0,
+		y = 0,
+	}
+end
+
+local function getEditModeLayoutValue(field, fallback)
+	if EditMode and EditMode.GetValue then
+		local value = EditMode:GetValue(EDITMODE_ID, field)
+		if value ~= nil then return value end
+	end
+	return fallback
 end
 
 local function clamp(value, minValue, maxValue)
@@ -176,6 +227,23 @@ function CombatText:GetFontFaceSetting()
 	return face
 end
 
+function CombatText:GetAnchorTarget()
+	local current = getValue(DB_ANCHOR_TARGET, "UIParent")
+	return normalizeAnchorTarget(current, current)
+end
+
+function CombatText:ResolveAnchorFrame()
+	local target = self:GetAnchorTarget()
+	if SharedAnchors and SharedAnchors.ResolveFrame then return SharedAnchors:ResolveFrame(target) end
+	return UIParent
+end
+
+function CombatText:AnchorUsesUIParent()
+	local target = self:GetAnchorTarget()
+	if SharedAnchors and SharedAnchors.IsUIParentTarget then return SharedAnchors:IsUIParentTarget(target) end
+	return target == "UIParent"
+end
+
 function CombatText:GetFontFace()
 	local face = self:GetFontFaceSetting()
 	if addon.functions and addon.functions.ResolveFontFace then return addon.functions.ResolveFontFace(face, defaultFontFace()) end
@@ -237,6 +305,33 @@ function CombatText:UpdateFrameSize()
 	if self.frame.bg then self.frame.bg:SetAllPoints(self.frame) end
 end
 
+function CombatText:ApplyAnchorPosition(data)
+	if not self.frame then return end
+
+	local point = getEditModeLayoutValue("point", "CENTER")
+	if type(point) ~= "string" or point == "" then point = "CENTER" end
+	point = SharedAnchors and SharedAnchors.NormalizePoint and SharedAnchors:NormalizePoint(point, "CENTER") or point
+
+	local relativePoint = getEditModeLayoutValue("relativePoint", point)
+	if type(relativePoint) ~= "string" or relativePoint == "" then relativePoint = point end
+	relativePoint = SharedAnchors and SharedAnchors.NormalizePoint and SharedAnchors:NormalizePoint(relativePoint, point) or relativePoint
+
+	local x = getEditModeLayoutValue("x", 0)
+	local y = getEditModeLayoutValue("y", 0)
+	if type(data) == "table" then
+		if data.point ~= nil then point = SharedAnchors and SharedAnchors.NormalizePoint and SharedAnchors:NormalizePoint(data.point, point) or data.point end
+		if data.relativePoint ~= nil then
+			relativePoint = SharedAnchors and SharedAnchors.NormalizePoint and SharedAnchors:NormalizePoint(data.relativePoint, point) or data.relativePoint
+		end
+		if data.x ~= nil then x = data.x end
+		if data.y ~= nil then y = data.y end
+	end
+
+	if self.frame.SetClampedToScreen then self.frame:SetClampedToScreen(true) end
+	self.frame:ClearAllPoints()
+	self.frame:SetPoint(point, self:ResolveAnchorFrame(), relativePoint, tonumber(x) or 0, tonumber(y) or 0)
+end
+
 function CombatText:EnsureFrame()
 	if self.frame then return self.frame end
 
@@ -260,6 +355,7 @@ function CombatText:EnsureFrame()
 	self.frame = frame
 	self:ApplyStyle()
 	self:UpdateFrameSize()
+	self:ApplyAnchorPosition()
 
 	return frame
 end
@@ -276,10 +372,7 @@ function CombatText:RefreshHideTimer()
 	if self.previewing or self:IsAlwaysVisible() then return end
 	if not self.frame or not self.frame:IsShown() then return end
 	local duration = self:GetDuration()
-	if duration > 0 then self.hideTimer = C_Timer.NewTimer(duration, function()
-		CombatText.hideTimer = nil
-		CombatText:HideText()
-	end) end
+	if duration > 0 then self.hideTimer = C_Timer.NewTimer(duration, onCombatTextHideTimer) end
 end
 
 function CombatText:RefreshDisplayMode()
@@ -346,14 +439,7 @@ function CombatText:ShowEditModeHint(show)
 		if self.frame.bg then self.frame.bg:Hide() end
 		if addon.db and addon.db[DB_ENABLED] then
 			if C_Timer and C_Timer.After then
-				C_Timer.After(0, function()
-					if CombatText.previewing then return end
-					if addon.db and addon.db[DB_ENABLED] then
-						CombatText:RefreshDisplayMode()
-					else
-						CombatText:HideText()
-					end
-				end)
+				C_Timer.After(0, refreshCombatTextDisplayState)
 			else
 				self:RefreshDisplayMode()
 			end
@@ -371,9 +457,7 @@ function CombatText:OnEvent(event)
 	elseif event == "PLAYER_ENTERING_WORLD" then
 		-- Delay one frame so the display state is applied after login/loading transitions.
 		if C_Timer and C_Timer.After then
-			C_Timer.After(0, function()
-				if addon.db and addon.db[DB_ENABLED] then CombatText:RefreshDisplayMode() end
-			end)
+			C_Timer.After(0, refreshCombatTextDisplayState)
 		elseif addon.db and addon.db[DB_ENABLED] then
 			self:RefreshDisplayMode()
 		end
@@ -386,7 +470,7 @@ function CombatText:RegisterEvents()
 	frame:RegisterEvent("PLAYER_REGEN_DISABLED")
 	frame:RegisterEvent("PLAYER_REGEN_ENABLED")
 	frame:RegisterEvent("PLAYER_ENTERING_WORLD")
-	frame:SetScript("OnEvent", function(_, event) CombatText:OnEvent(event) end)
+	frame:SetScript("OnEvent", onCombatTextEvent)
 	self.eventsRegistered = true
 end
 
@@ -400,17 +484,27 @@ function CombatText:UnregisterEvents()
 end
 
 function CombatText:ApplyLayoutData(data)
-	if not data or not addon.db then return end
+	if not addon.db then return end
+	data = type(data) == "table" and data or {}
 	self:_debugTrace("ApplyLayoutData:begin")
 
-	local duration = clamp(data.duration or defaults.duration, 0.5, 10)
-	local alwaysVisible = data.alwaysVisible == true
-	local alwaysVisibleMode = normalizeAlwaysVisibleMode(data.alwaysVisibleMode)
-	local fontSize = clamp(data.fontSize or defaults.fontSize, 8, 96)
-	local fontFace = normalizeFontFace(data.fontFace) or defaults.fontFace
-	local enterR, enterG, enterB, enterA = normalizeColor(data.enterColor or data.color or defaults.enterColor, defaults.enterColor)
-	local leaveR, leaveG, leaveB, leaveA = normalizeColor(data.leaveColor or data.enterColor or data.color or defaults.leaveColor, defaults.leaveColor)
+	local currentAnchorTarget = self:GetAnchorTarget()
+	local anchorTarget = normalizeAnchorTarget(data.anchorTarget or currentAnchorTarget, currentAnchorTarget)
+	local duration = clamp(data.duration ~= nil and data.duration or self:GetDuration(), 0.5, 10)
+	local alwaysVisible = data.alwaysVisible ~= nil and data.alwaysVisible == true or self:IsAlwaysVisible()
+	local alwaysVisibleMode = normalizeAlwaysVisibleMode(data.alwaysVisibleMode ~= nil and data.alwaysVisibleMode or self:GetAlwaysVisibleMode())
+	local fontSize = clamp(data.fontSize ~= nil and data.fontSize or self:GetFontSize(), 8, 96)
+	local fontFace = normalizeFontFace(data.fontFace) or self:GetFontFaceSetting() or defaults.fontFace
+	local enterR, enterG, enterB, enterA = normalizeColor(
+		data.enterColor or data.color or getValue(DB_ENTER_COLOR, getValue(DB_COLOR, defaults.enterColor)),
+		defaults.enterColor
+	)
+	local leaveR, leaveG, leaveB, leaveA = normalizeColor(
+		data.leaveColor or data.enterColor or data.color or getValue(DB_LEAVE_COLOR, getValue(DB_COLOR, defaults.leaveColor)),
+		defaults.leaveColor
+	)
 
+	addon.db[DB_ANCHOR_TARGET] = anchorTarget
 	addon.db[DB_DURATION] = duration
 	addon.db[DB_ALWAYS_VISIBLE] = alwaysVisible
 	addon.db[DB_ALWAYS_VISIBLE_MODE] = alwaysVisibleMode
@@ -422,6 +516,7 @@ function CombatText:ApplyLayoutData(data)
 
 	self:ApplyStyle()
 	self:UpdateFrameSize()
+	self:ApplyAnchorPosition(data)
 	self:RefreshDisplayMode()
 	self:_debugTrace("ApplyLayoutData:end")
 end
@@ -477,6 +572,36 @@ local function applySetting(field, value)
 	CombatText:_debugTrace("applySetting:end", { field = tostring(field) })
 end
 
+local function refreshEditModeSettingValues()
+	if addon.EditModeLib and addon.EditModeLib.internal and addon.EditModeLib.internal.RefreshSettingValues then
+		addon.EditModeLib.internal:RefreshSettingValues()
+	end
+end
+
+local function setAnchorTarget(value)
+	if not addon.db then return end
+	local current = CombatText:GetAnchorTarget()
+	local target = normalizeAnchorTarget(value, current)
+	local defaults = getAnchorDefaults(target)
+	addon.db[DB_ANCHOR_TARGET] = target
+	if EditMode and EditMode.SetValue then
+		EditMode:SetValue(EDITMODE_ID, "anchorTarget", target, nil, true)
+		EditMode:SetValue(EDITMODE_ID, "point", defaults.point, nil, true)
+		EditMode:SetValue(EDITMODE_ID, "relativePoint", defaults.relativePoint, nil, true)
+		EditMode:SetValue(EDITMODE_ID, "x", defaults.x, nil, true)
+		EditMode:SetValue(EDITMODE_ID, "y", defaults.y, nil, true)
+	end
+	CombatText:ApplyLayoutData({
+		anchorTarget = target,
+		point = defaults.point,
+		relativePoint = defaults.relativePoint,
+		x = defaults.x,
+		y = defaults.y,
+	})
+	refreshEditModeSettingValues()
+	if EditMode and EditMode.RefreshFrame then EditMode:RefreshFrame(EDITMODE_ID) end
+end
+
 local editModeRegistered = false
 
 function CombatText:RegisterEditMode()
@@ -485,6 +610,121 @@ function CombatText:RegisterEditMode()
 	local settings
 	if SettingType then
 		settings = {
+			{
+				name = L["Anchor to"] or "Anchor to",
+				kind = SettingType.Dropdown,
+				field = "anchorTarget",
+				height = 220,
+				default = CombatText:GetAnchorTarget(),
+				get = function() return CombatText:GetAnchorTarget() end,
+				set = function(_, value) setAnchorTarget(value) end,
+				generator = function(_, root)
+					local entries = getAnchorTargetEntries(CombatText:GetAnchorTarget())
+					local current = CombatText:GetAnchorTarget()
+					for i = 1, #entries do
+						local option = entries[i]
+						root:CreateRadio(option.label, function() return current == option.key end, function() setAnchorTarget(option.key) end)
+					end
+				end,
+			},
+			{
+				name = L["Anchor point"] or "Anchor point",
+				kind = SettingType.Dropdown,
+				field = "point",
+				height = 180,
+				default = "CENTER",
+				get = function() return getEditModeLayoutValue("point", "CENTER") end,
+				generator = function(_, root)
+					local options = SharedAnchors and SharedAnchors.GetAnchorPointOptions and SharedAnchors:GetAnchorPointOptions() or {
+						{ value = "TOPLEFT", label = "TOPLEFT" },
+						{ value = "TOP", label = "TOP" },
+						{ value = "TOPRIGHT", label = "TOPRIGHT" },
+						{ value = "LEFT", label = "LEFT" },
+						{ value = "CENTER", label = "CENTER" },
+						{ value = "RIGHT", label = "RIGHT" },
+						{ value = "BOTTOMLEFT", label = "BOTTOMLEFT" },
+						{ value = "BOTTOM", label = "BOTTOM" },
+						{ value = "BOTTOMRIGHT", label = "BOTTOMRIGHT" },
+					}
+					for i = 1, #options do
+						local option = options[i]
+						root:CreateRadio(option.label, function() return getEditModeLayoutValue("point", "CENTER") == option.value end, function()
+							if EditMode and EditMode.SetValue then EditMode:SetValue(EDITMODE_ID, "point", option.value, nil, true) end
+							CombatText:ApplyLayoutData({ point = option.value })
+							refreshEditModeSettingValues()
+						end)
+					end
+				end,
+			},
+			{
+				name = L["Relative point"] or "Relative point",
+				kind = SettingType.Dropdown,
+				field = "relativePoint",
+				height = 180,
+				default = "CENTER",
+				get = function() return getEditModeLayoutValue("relativePoint", getEditModeLayoutValue("point", "CENTER")) end,
+				generator = function(_, root)
+					local options = SharedAnchors and SharedAnchors.GetAnchorPointOptions and SharedAnchors:GetAnchorPointOptions() or {
+						{ value = "TOPLEFT", label = "TOPLEFT" },
+						{ value = "TOP", label = "TOP" },
+						{ value = "TOPRIGHT", label = "TOPRIGHT" },
+						{ value = "LEFT", label = "LEFT" },
+						{ value = "CENTER", label = "CENTER" },
+						{ value = "RIGHT", label = "RIGHT" },
+						{ value = "BOTTOMLEFT", label = "BOTTOMLEFT" },
+						{ value = "BOTTOM", label = "BOTTOM" },
+						{ value = "BOTTOMRIGHT", label = "BOTTOMRIGHT" },
+					}
+					for i = 1, #options do
+						local option = options[i]
+						root:CreateRadio(
+							option.label,
+							function() return getEditModeLayoutValue("relativePoint", getEditModeLayoutValue("point", "CENTER")) == option.value end,
+							function()
+								if EditMode and EditMode.SetValue then EditMode:SetValue(EDITMODE_ID, "relativePoint", option.value, nil, true) end
+								CombatText:ApplyLayoutData({ relativePoint = option.value })
+								refreshEditModeSettingValues()
+							end
+						)
+					end
+				end,
+			},
+			{
+				name = L["X Offset"] or "X Offset",
+				kind = SettingType.Slider,
+				field = "x",
+				default = 0,
+				minValue = -1000,
+				maxValue = 1000,
+				valueStep = 1,
+				allowInput = true,
+				get = function() return tonumber(getEditModeLayoutValue("x", 0)) or 0 end,
+				set = function(_, value)
+					local x = tonumber(value) or 0
+					if EditMode and EditMode.SetValue then EditMode:SetValue(EDITMODE_ID, "x", x, nil, true) end
+					CombatText:ApplyLayoutData({ x = x })
+				end,
+			},
+			{
+				name = L["Y Offset"] or "Y Offset",
+				kind = SettingType.Slider,
+				field = "y",
+				default = 0,
+				minValue = -1000,
+				maxValue = 1000,
+				valueStep = 1,
+				allowInput = true,
+				get = function() return tonumber(getEditModeLayoutValue("y", 0)) or 0 end,
+				set = function(_, value)
+					local y = tonumber(value) or 0
+					if EditMode and EditMode.SetValue then EditMode:SetValue(EDITMODE_ID, "y", y, nil, true) end
+					CombatText:ApplyLayoutData({ y = y })
+				end,
+			},
+			{
+				name = "",
+				kind = SettingType.Divider,
+			},
 			{
 				name = L["combatTextDuration"] or "Display duration",
 				kind = SettingType.Slider,
@@ -527,7 +767,7 @@ function CombatText:RegisterEditMode()
 				end,
 			},
 			{
-				name = L["combatTextFontSize"] or "Font size",
+				name = FONT_SIZE,
 				kind = SettingType.Slider,
 				field = "fontSize",
 				default = defaults.fontSize,
@@ -539,7 +779,7 @@ function CombatText:RegisterEditMode()
 				formatter = function(value) return tostring(math.floor((tonumber(value) or 0) + 0.5)) end,
 			},
 			{
-				name = L["combatTextFont"] or "Font",
+				name = L["Font"] or "Font",
 				kind = SettingType.Dropdown,
 				field = "fontFace",
 				height = 200,
@@ -584,20 +824,22 @@ function CombatText:RegisterEditMode()
 		layoutDefaults = {
 			point = "CENTER",
 			relativePoint = "CENTER",
+			anchorTarget = self:GetAnchorTarget(),
 			x = 0,
 			y = 120,
 		},
-		onApply = function()
+		onApply = function(_, _, data)
 			CombatText:_debugCheckExternal("onApply:before")
-			CombatText:ApplyStyle()
-			CombatText:UpdateFrameSize()
-			CombatText:RefreshDisplayMode()
+			CombatText:ApplyLayoutData(data)
 			CombatText:_debugCheckExternal("onApply:after")
 		end,
 		onEnter = function() CombatText:ShowEditModeHint(true) end,
 		onExit = function() CombatText:ShowEditModeHint(false) end,
 		isEnabled = function() return addon.db and addon.db[DB_ENABLED] end,
 		settings = settings,
+		relativeTo = function() return CombatText:ResolveAnchorFrame() end,
+		allowDrag = function() return CombatText:AnchorUsesUIParent() end,
+		managePosition = false,
 		showOutsideEditMode = false,
 		showReset = false,
 		showSettingsReset = false,
@@ -632,6 +874,19 @@ function CombatText:OnSettingChanged(enabled)
 	if EditMode and EditMode.RefreshFrame then EditMode:RefreshFrame(EDITMODE_ID) end
 	self:_debugCheckExternal("OnSettingChanged:end")
 	self:_debugTrace("OnSettingChanged:end", { enabled = enabled == true })
+end
+
+function CombatText:RefreshAnchor()
+	if not addon.db or addon.db[DB_ENABLED] ~= true then return end
+
+	self:EnsureFrame()
+	if self.frame and self.frame.SetClampedToScreen then self.frame:SetClampedToScreen(true) end
+
+	if EditMode and EditMode.RefreshFrame then
+		EditMode:RefreshFrame(EDITMODE_ID)
+	else
+		self:ApplyAnchorPosition()
+	end
 end
 
 return CombatText

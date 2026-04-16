@@ -6401,7 +6401,7 @@ local function guiPositionAndScale()
     -- Extended Settings Frame
     anchorSubHealthNumbers.extendedSettings = CreateFrame("Frame", nil, BetterBlizzPlatesSubPanel, "DefaultPanelFlatTemplate")
     -- anchorSubHealthNumbers.extendedSettings:SetAllPoints(anchorSubHealthNumbers.border)
-    anchorSubHealthNumbers.extendedSettings:SetSize(anchorSubHealthNumbers.border:GetHeight()+40, 335)
+    anchorSubHealthNumbers.extendedSettings:SetSize(anchorSubHealthNumbers.border:GetHeight()+40, 360)
     anchorSubHealthNumbers.extendedSettings:SetPoint("BOTTOMRIGHT", anchorSubHealthNumbers.border, "BOTTOMLEFT", 87, -125)
     anchorSubHealthNumbers.extendedSettings:SetFrameStrata("DIALOG")
     anchorSubHealthNumbers.extendedSettings:SetIgnoreParentAlpha(true)
@@ -6427,12 +6427,30 @@ local function guiPositionAndScale()
         contentFrame:SetAlpha(anchorSubHealthNumbers.extendedSettings:IsShown() and 0.5 or 1)
     end)
 
-    local healthNumbersUseMillions = CreateCheckbox("healthNumbersUseMillions", "Format Million", anchorSubHealthNumbers.extendedSettings)
-    healthNumbersUseMillions:SetPoint("TOPLEFT", anchorSubHealthNumbers.extendedSettings, "TOPLEFT", 10, -23)
-    CreateTooltipTwo(healthNumbersUseMillions, "Format Million", "Display health values above 1million as 1m instead of 1000k")
+    anchorSubHealthNumbers.healthNumbersRawNumbers = CreateCheckbox("healthNumbersRawNumbers", "Raw Numbers", anchorSubHealthNumbers.extendedSettings)
+    anchorSubHealthNumbers.healthNumbersRawNumbers:SetPoint("TOPLEFT", anchorSubHealthNumbers.extendedSettings, "TOPLEFT", 10, -23)
+    CreateTooltipTwo(anchorSubHealthNumbers.healthNumbersRawNumbers, "Raw Numbers", "Show the full unformatted health number with no abbreviation.")
+
+    anchorSubHealthNumbers.healthNumbersUseMillions = CreateCheckbox("healthNumbersUseMillions", "Format Million", anchorSubHealthNumbers.extendedSettings)
+    anchorSubHealthNumbers.healthNumbersUseMillions:SetPoint("TOPLEFT", anchorSubHealthNumbers.healthNumbersRawNumbers, "BOTTOMLEFT", 0, pixelsBetweenBoxes)
+    CreateTooltipTwo(anchorSubHealthNumbers.healthNumbersUseMillions, "Format Million", "Display health values above 1million as 1m instead of 1000k")
+
+    anchorSubHealthNumbers.healthNumbersRawNumbers:HookScript("OnClick", function(self)
+        if self:GetChecked() then
+            BetterBlizzPlatesDB.healthNumbersUseMillions = false
+            anchorSubHealthNumbers.healthNumbersUseMillions:SetChecked(false)
+        end
+    end)
+
+    anchorSubHealthNumbers.healthNumbersUseMillions:HookScript("OnClick", function(self)
+        if self:GetChecked() then
+            BetterBlizzPlatesDB.healthNumbersRawNumbers = false
+            anchorSubHealthNumbers.healthNumbersRawNumbers:SetChecked(false)
+        end
+    end)
 
     local healthNumbersCurrentFull = CreateCheckbox("healthNumbersCurrentFull", "Current / Max", anchorSubHealthNumbers.extendedSettings)
-    healthNumbersCurrentFull:SetPoint("TOPLEFT", healthNumbersUseMillions, "BOTTOMLEFT", 0, pixelsBetweenBoxes)
+    healthNumbersCurrentFull:SetPoint("TOPLEFT", anchorSubHealthNumbers.healthNumbersUseMillions, "BOTTOMLEFT", 0, pixelsBetweenBoxes)
     CreateTooltipTwo(healthNumbersCurrentFull, "Current / Max", "Show current health and max health.\nFor example 69k/420k")
 
     local healthNumbersCombined = CreateCheckbox("healthNumbersCombined", "Health - Percent", anchorSubHealthNumbers.extendedSettings)
@@ -9156,38 +9174,6 @@ local function guiSupport()
     boxTwoTex:SetPoint("BOTTOM", boxTwo, "TOP", 0, 1)
 end
 
-local function guiMidnight()
-    local guiMidnight = CreateFrame("Frame")
-    guiMidnight.name = "|T136221:12:12|t |cffcc66ffWoW: Midnight|r"
-    guiMidnight.parent = BetterBlizzPlates.name
-    --InterfaceOptions_AddCategory(guiMidnight)
-    local guiMidnightCategory = Settings.RegisterCanvasLayoutSubcategory(BBP.category, guiMidnight, guiMidnight.name, guiMidnight.name)
-    BBP.guiMidnight = guiMidnight.name
-    BBP.category.guiMidnightCategory = guiMidnightCategory.ID
-    CreateTitle(guiMidnight)
-
-    local titleText = guiMidnight:CreateFontString(nil, "OVERLAY", "GameFontNormalHuge")
-    titleText:SetPoint("TOPLEFT", guiMidnight, "TOPLEFT", 20, -10)
-    titleText:SetText("|cffcc66ffWorld of Warcraft: Midnight Plans|r")
-    local titleIcon = guiMidnight:CreateTexture(nil, "ARTWORK")
-    titleIcon:SetTexture(136221)
-    titleIcon:SetSize(23, 23)
-    titleIcon:SetPoint("RIGHT", titleText, "LEFT", -3, 0.5)
-
-    local midnightInfo = guiMidnight:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    midnightInfo:SetPoint("TOPLEFT", titleIcon, "BOTTOMLEFT", 2, -5)
-    midnightInfo:SetText("|cff00ff00UPDATE: All now available on Midnight.|r |cffffffffEarly versions and work in progress.\n\nI'm planning to continue developing all my addons for Midnight as well.\n\nSome features will need to be adjusted or removed but the addons should stick around.\nMidnight is still in early Alpha and I haven't started preparing yet (14th Oct), but I will soon.\n\nPlans might change, but I'm confident |A:gmchat-icon-blizz:16:16|aBetter|cff00c0ffBlizz|rPlates and my other addons\n|A:gmchat-icon-blizz:16:16|aBetter|cff00c0ffBlizz|rFrames & |cffffffffsArena |cffff8000Reloaded|r |T135884:13:13|t will stick around for Midnight (with changes/removals).\n\nI have a lot of work ahead of me and any support is greatly appreciated |A:GarrisonTroops-Health:10:10|a (|cff00c0ff@bodify|r)\nI'll update this section with more detailed information as I know more in some weeks/months.")
-    midnightInfo:SetTextColor(1,1,1,1)
-    midnightInfo:SetJustifyH("LEFT")
-
-    local bgImg = guiMidnight:CreateTexture(nil, "BACKGROUND")
-    bgImg:SetAtlas("professions-recipe-background")
-    bgImg:SetPoint("CENTER", guiMidnight, "CENTER", -8, 4)
-    bgImg:SetSize(680, 610)
-    bgImg:SetAlpha(0.4)
-    bgImg:SetVertexColor(0,0,0)
-end
-
 local function guiImportAndExport()
     local guiImportAndExport = CreateFrame("Frame")
     guiImportAndExport.name = "Import & Export"--"|A:GarrMission_CurrencyIcon-Material:19:19|a Misc"
@@ -9304,7 +9290,6 @@ function BBP.LoadGUI()
     guiImportAndExport()
     guiTotemList()
     guiSupport()
-    guiMidnight()
     BetterBlizzPlates.guiLoaded = true
 
     if SettingsPanel:IsShown() then

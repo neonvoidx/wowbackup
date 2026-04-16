@@ -72,9 +72,22 @@ layout.defaultSettings = {
             useBorderWithIcon = false,
         },
         partyTargetIndicators = {
-            posX = 0,
-            posY = 0,
-            scale = 0.7,
+            partyOnArena = {
+                enabled = true,
+                posX = 0,
+                posY = 0,
+                scale = 0.7,
+                direction = "LEFT",
+                spacing = 0,
+            },
+            arenaOnParty = {
+                enabled = true,
+                posX = 0,
+                posY = 0,
+                scale = 1,
+                direction = "LEFT",
+                spacing = 0,
+            },
         },
     },
 
@@ -106,11 +119,11 @@ end
 local function setSetting(info, val)
     layout.db[info[#info]] = val
 
-    for i = 1, sArenaMixin.maxArenaOpponents do
+    for i = 1, info.handler.maxArenaOpponents do
         local frame = info.handler["arena" .. i]
         layout:UpdateOrientation(frame)
     end
-    sArenaMixin:RefreshConfig()
+    info.handler:RefreshConfig()
 end
 
 local function setupOptionsTable(self)
@@ -143,7 +156,7 @@ function layout:Initialize(frame)
         setupOptionsTable(frame.parent)
     end
 
-    if (frame:GetID() == sArenaMixin.maxArenaOpponents) then
+    if (frame:GetID() == frame.parent.maxArenaOpponents) then
         frame.parent:UpdateCastBarSettings(self.db.castBar)
         frame.parent:UpdateDRSettings(self.db.dr)
         frame.parent:UpdateFrameSettings(self.db)
@@ -181,11 +194,19 @@ function layout:Initialize(frame)
     f.Texture:AddMaskTexture(f.Mask)
     f.Mask:SetAllPoints(f.Texture)
 
+    if not f.bgTexture then
+        f.bgTexture = f:CreateTexture(nil, "BORDER", nil, -1)
+    end
+    f.bgTexture:SetAllPoints(f.Texture)
+    f.bgTexture:SetColorTexture(0.1, 0.1, 0.1, 1)
+    f.bgTexture:AddMaskTexture(f.Mask)
+    f.bgTexture:Show()
+
     local trinket = frame.Trinket
 
 
     if self.db.trinketCircleBorder then
-        sArenaMixin.showTrinketCircleBorder = true
+        frame.parent.showTrinketCircleBorder = true
         if not trinket.Mask then
             trinket.Mask = trinket:CreateMaskTexture()
         end
@@ -210,7 +231,7 @@ function layout:Initialize(frame)
 
         if not trinket.TrinketCircleBorderHook then
             hooksecurefunc(trinket.Texture, "SetTexture", function(self, t)
-                if not t or not sArenaMixin.showTrinketCircleBorder then
+                if not t or not frame.parent.showTrinketCircleBorder then
                     trinketCircleBorder:Hide()
                 else
                     trinketCircleBorder:Show()
@@ -321,17 +342,21 @@ function layout:UpdateOrientation(frame)
         end
 
         -- Party Target Indicators
-        if w.partyTargetIndicators then
+        if w.partyTargetIndicators and w.partyTargetIndicators.partyOnArena then
+            local poa = w.partyTargetIndicators.partyOnArena
+            local direction = poa.direction or "LEFT"
             frame.WidgetOverlay.partyTarget1:ClearAllPoints()
             frame.WidgetOverlay.partyTarget1:SetSize(15, 15)
-            frame.WidgetOverlay.partyTarget1:SetScale(w.partyTargetIndicators.scale or 1)
+            frame.WidgetOverlay.partyTarget1:SetScale(poa.scale or 1)
             frame.WidgetOverlay.partyTarget1:SetPoint("TOPLEFT", frame.HealthBar, "TOPRIGHT",
-                (w.partyTargetIndicators.posX or 0) - 11, (w.partyTargetIndicators.posY or 0) - 17)
+                (poa.posX or 0) - 11, (poa.posY or 0) - 17)
 
-            frame.WidgetOverlay.partyTarget2:ClearAllPoints()
-            frame.WidgetOverlay.partyTarget2:SetSize(15, 15)
-            frame.WidgetOverlay.partyTarget2:SetScale(w.partyTargetIndicators.scale or 1)
-            frame.WidgetOverlay.partyTarget2:SetPoint("RIGHT", frame.WidgetOverlay.partyTarget1, "LEFT", 3, 0)
+            for i = 2, 4 do
+                local indicator = frame.WidgetOverlay["partyTarget" .. i]
+                indicator:SetSize(15, 15)
+                indicator:SetScale(poa.scale or 1)
+                sArenaMixin:ChainIndicator(indicator, frame.WidgetOverlay["partyTarget" .. (i - 1)], direction, poa.spacing or 3)
+            end
         end
     end
 
@@ -394,6 +419,12 @@ function layout:UpdateOrientation(frame)
             castbarText:SetPoint("RIGHT", frame.CastBar, "RIGHT", -3 + (txt.castbarOffsetX or 0), (modernCastbar and (simpleCastbar and 0 or -11) or 0) + (txt.castbarOffsetY or 0))
         else
             castbarText:SetPoint("CENTER", frame.CastBar, "CENTER", (txt.castbarOffsetX or 0), (modernCastbar and (simpleCastbar and 0 or -11) or 0) + (txt.castbarOffsetY or 0))
+        end
+
+        if txt.forceCastbarTextWidth then
+            castbarText:SetWidth(self.db.castBar.width or frame.CastBar:GetWidth())
+        else
+            castbarText:SetWidth(0)
         end
     end
 

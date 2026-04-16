@@ -17,7 +17,7 @@ else
 	error(parentAddonName .. " is not loaded")
 end
 
-local L = LibStub("AceLocale-3.0"):GetLocale("EnhanceQoL_DrinkMacro")
+local L = LibStub("AceLocale-3.0"):GetLocale("EnhanceQoL")
 local LSM = LibStub("LibSharedMedia-3.0")
 
 local function isDrinkMacroEnabled() return addon.db and addon.db.drinkMacroEnabled == true end

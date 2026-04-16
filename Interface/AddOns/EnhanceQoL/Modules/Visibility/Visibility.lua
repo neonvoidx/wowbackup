@@ -259,11 +259,11 @@ local KNOWN_FRAME_LABEL_FALLBACKS = {
 	FocusFrame = _G.HUD_EDIT_MODE_FOCUS_FRAME_LABEL or "Focus Frame",
 	PetFrame = _G.HUD_EDIT_MODE_PET_FRAME_LABEL or "Pet Frame",
 	BossTargetFrameContainer = HUD_EDIT_MODE_BOSS_FRAMES_LABEL or "Boss Frames",
-	MicroMenu = L["MicroMenu"] or "Micro Menu",
-	BagsBar = L["BagsBar"] or "Bags Bar",
+	MicroMenu = L["Micro Menu"] or "Micro Menu",
+	BagsBar = L["Bags Bar"] or "Bags Bar",
 	MinimapCluster = _G.MINIMAP_LABEL or "Minimap",
-	BuffFrame = L["BuffFrame"] or "Buff Frame",
-	DebuffFrame = L["DebuffFrame"] or "Debuff Frame",
+	BuffFrame = L["Buff Frame"] or "Buff Frame",
+	DebuffFrame = L["Debuff Frame"] or "Debuff Frame",
 	DamageMeter = L["VisibilityDamageMeter"] or "Damage Meter",
 	EssentialCooldownViewer = L["cooldownViewerEssential"] or "Essential Cooldown Viewer",
 	UtilityCooldownViewer = L["cooldownViewerUtility"] or "Utility Cooldown Viewer",
@@ -475,6 +475,32 @@ local function resolveFrameByName(name)
 	return obj
 end
 
+local function runPendingVisibilityUpdate()
+	local state = Visibility.runtime
+	if not state then return end
+	state.pendingUpdate = nil
+	Visibility:ApplyAll()
+end
+
+local function visibilityMouseoverOnUpdate(self, elapsed)
+	local state = Visibility.runtime
+	if not state or not state.mouseoverActive then return end
+	self.elapsed = (self.elapsed or 0) + (elapsed or 0)
+	if self.elapsed < 0.05 then return end
+	self.elapsed = 0
+	local changed = false
+	for _, entry in ipairs(state.mouseoverStates or {}) do
+		local frame = entry and entry.frame
+		local over = false
+		if frame and frame.IsShown and frame:IsShown() then over = MouseIsOver and MouseIsOver(frame) or false end
+		if over ~= entry.isMouseOver then
+			entry.isMouseOver = over
+			changed = true
+		end
+	end
+	if changed then Visibility:RequestUpdate() end
+end
+
 function Visibility:AddFrame(configId, name)
 	local root = ensureRoot()
 	if not root then return false, "missing" end
@@ -496,36 +522,14 @@ function Visibility:RequestUpdate()
 	local runtime = self.runtime
 	if runtime.pendingUpdate then return end
 	runtime.pendingUpdate = true
-	C_Timer.After(0, function()
-		local state = Visibility.runtime
-		if not state then return end
-		state.pendingUpdate = nil
-		Visibility:ApplyAll()
-	end)
+	C_Timer.After(0, runPendingVisibilityUpdate)
 end
 
 local function ensureMouseoverWatcher(runtime)
 	if runtime.mouseoverWatcher then return end
 	local watcher = CreateFrame("Frame")
 	watcher.elapsed = 0
-	watcher:SetScript("OnUpdate", function(self, elapsed)
-		local state = Visibility.runtime
-		if not state or not state.mouseoverActive then return end
-		self.elapsed = (self.elapsed or 0) + (elapsed or 0)
-		if self.elapsed < 0.05 then return end
-		self.elapsed = 0
-		local changed = false
-		for _, entry in ipairs(state.mouseoverStates or {}) do
-			local frame = entry and entry.frame
-			local over = false
-			if frame and frame.IsShown and frame:IsShown() then over = MouseIsOver and MouseIsOver(frame) or false end
-			if over ~= entry.isMouseOver then
-				entry.isMouseOver = over
-				changed = true
-			end
-		end
-		if changed then Visibility:RequestUpdate() end
-	end)
+	watcher:SetScript("OnUpdate", visibilityMouseoverOnUpdate)
 	runtime.mouseoverWatcher = watcher
 end
 
@@ -637,9 +641,9 @@ local function ensureSkyridingDriver()
 
 	local expr
 	if addon.variables.unitClass == "DRUID" then
-		expr = "[advflyable, mounted] show; [advflyable, stance:3] show; hide"
+		expr = "[nodead,advflyable,flyable,mounted,flying] show; [nodead,advflyable,flyable,stance:3,flying] show; hide"
 	else
-		expr = "[advflyable, mounted] show; hide"
+		expr = "[nodead,advflyable,flyable,mounted,flying] show; hide"
 	end
 	local function registerDriver()
 		if runtime.skyridingDriverRegistered then return end
@@ -934,8 +938,8 @@ local function showModeMenu(owner, current, onSelect)
 	if not MenuUtil or not MenuUtil.CreateContextMenu then return end
 	MenuUtil.CreateContextMenu(owner, function(_, root)
 		root:SetTag("MENU_EQOL_VISIBILITY_MODE")
-		root:CreateTitle(L["VisibilityMode"] or "Mode")
-		root:CreateRadio(L["VisibilityModeShow"] or "Show when", function() return current == Helper.MODES.SHOW end, function() onSelect(Helper.MODES.SHOW) end)
+		root:CreateTitle(L["Mode"] or "Mode")
+		root:CreateRadio(L["Show when"] or "Show when", function() return current == Helper.MODES.SHOW end, function() onSelect(Helper.MODES.SHOW) end)
 		root:CreateRadio(L["VisibilityModeHide"] or "Hide when", function() return current == Helper.MODES.HIDE end, function() onSelect(Helper.MODES.HIDE) end)
 	end)
 end
@@ -944,7 +948,7 @@ local function showJoinMenu(owner, current, onSelect)
 	if not MenuUtil or not MenuUtil.CreateContextMenu then return end
 	MenuUtil.CreateContextMenu(owner, function(_, root)
 		root:SetTag("MENU_EQOL_VISIBILITY_JOIN")
-		root:CreateTitle(L["VisibilityGroup"] or "Group")
+		root:CreateTitle(L["Group"] or "Group")
 		root:CreateRadio(QUEST_LOGIC_AND, function() return current == "AND" end, function() onSelect("AND") end)
 		root:CreateRadio(QUEST_LOGIC_OR, function() return current == "OR" end, function() onSelect("OR") end)
 	end)
@@ -1046,11 +1050,11 @@ local function showKnownFramesMenu(owner)
 		root:SetTag("MENU_EQOL_VISIBILITY_KNOWN")
 		root:CreateTitle(L["VisibilityKnownFrames"] or "Known frames")
 		addGroup(root, L["visibilityKindActionBars"] or "Action Bars", L["VisibilityAllActionBars"] or "All Action Bars", getActionBarFrameEntries())
-		addGroup(root, L["VisibilityKnownUnitFrames"] or "Unit Frames", L["VisibilityAllUnitFrames"] or "All Unit Frames", getUnitFrameEntries())
+		addGroup(root, L["Unit Frames"] or "Unit Frames", L["VisibilityAllUnitFrames"] or "All Unit Frames", getUnitFrameEntries())
 		addGroup(root, L["VisibilityKnownUIFrames"] or "UI Frames", L["VisibilityAllUIFrames"] or "All UI Frames", getUIFrameEntries())
-		addGroup(root, L["VisibilityKnownResourceBars"] or "Resource Bars", L["VisibilityAllResourceBars"] or "All Resource Bars", getResourceBarEntries())
+		addGroup(root, L["Resource Bars"] or "Resource Bars", L["VisibilityAllResourceBars"] or "All Resource Bars", getResourceBarEntries())
 		addGroup(root, L["VisibilityKnownCooldownViewer"] or "Cooldown Viewer", L["VisibilityAllCooldownViewers"] or "All Cooldown Viewers", getCooldownViewerEntries())
-		addGroup(root, L["VisibilityKnownCooldownPanels"] or "Cooldown Panels", L["VisibilityAllCooldownPanels"] or "All Cooldown Panels", getCooldownPanelEntries())
+		addGroup(root, L["Cooldown Panels"] or "Cooldown Panels", L["VisibilityAllCooldownPanels"] or "All Cooldown Panels", getCooldownPanelEntries())
 	end)
 end
 
@@ -1058,7 +1062,7 @@ local function showAddMenu(owner, canAddGroup, onAddGroup, onAddCondition)
 	if not MenuUtil or not MenuUtil.CreateContextMenu then return end
 	MenuUtil.CreateContextMenu(owner, function(_, root)
 		root:SetTag("MENU_EQOL_VISIBILITY_ADD")
-		local groupButton = root:CreateButton(L["VisibilityGroup"] or "Group", function()
+		local groupButton = root:CreateButton(L["Group"] or "Group", function()
 			if canAddGroup and onAddGroup then onAddGroup() end
 		end)
 		if not canAddGroup and groupButton.SetEnabled then groupButton:SetEnabled(false) end
@@ -1453,17 +1457,17 @@ local function ensureEditor()
 	local configNameBox = createEditBox(right, 200, 20)
 	configNameBox:SetPoint("TOPLEFT", configNameLabel, "BOTTOMLEFT", -2, -4)
 
-	local enabledCheck = createCheck(right, L["VisibilityEnabled"] or "Enabled")
+	local enabledCheck = createCheck(right, L["Enabled"] or "Enabled")
 	enabledCheck:SetPoint("TOPLEFT", configNameBox, "BOTTOMLEFT", -2, -6)
 
-	local modeLabel = createLabel(right, L["VisibilityMode"] or "Mode", 11, "OUTLINE")
+	local modeLabel = createLabel(right, L["Mode"] or "Mode", 11, "OUTLINE")
 	modeLabel:SetPoint("TOPLEFT", enabledCheck, "BOTTOMLEFT", 2, -8)
 	modeLabel:SetTextColor(0.9, 0.9, 0.9, 1)
 
-	local modeButton = createButton(right, L["VisibilityModeShow"] or "Show when", 160, 20)
+	local modeButton = createButton(right, L["Show when"] or "Show when", 160, 20)
 	modeButton:SetPoint("TOPLEFT", modeLabel, "BOTTOMLEFT", -2, -4)
 
-	local fadeLabel = createLabel(right, L["VisibilityFadeAmount"] or "Fade amount", 11, "OUTLINE")
+	local fadeLabel = createLabel(right, L["Fade amount"] or "Fade amount", 11, "OUTLINE")
 	fadeLabel:SetPoint("TOPLEFT", modeButton, "BOTTOMLEFT", 2, -10)
 	fadeLabel:SetTextColor(0.9, 0.9, 0.9, 1)
 
@@ -1489,7 +1493,7 @@ local function ensureEditor()
 	applyInsetBorder(middle, -4)
 	frame.middle = middle
 
-	local framesTitle = createLabel(middle, L["VisibilityFrames"] or "Frames", 12, "OUTLINE")
+	local framesTitle = createLabel(middle, L["Frames"] or "Frames", 12, "OUTLINE")
 	framesTitle:SetPoint("TOPLEFT", middle, "TOPLEFT", 12, -12)
 
 	local frameScroll = CreateFrame("ScrollFrame", nil, middle, "UIPanelScrollFrameTemplate")
@@ -1763,7 +1767,7 @@ function Visibility:RefreshEditor()
 		if editor.addKnownFrames then editor.addKnownFrames:Enable() end
 		editor.enabledCheck:SetChecked(cfg.enabled == true)
 		editor.enabledCheck:Enable()
-		local modeLabel = cfg.mode == Helper.MODES.HIDE and (L["VisibilityModeHide"] or "Hide when") or (L["VisibilityModeShow"] or "Show when")
+		local modeLabel = cfg.mode == Helper.MODES.HIDE and (L["VisibilityModeHide"] or "Hide when") or (L["Show when"] or "Show when")
 		editor.modeButton:SetText(modeLabel)
 		editor.modeButton:Enable()
 		local fadePct = 100 - math.floor((cfg.fadeAlpha or 0) * 100 + 0.5)
@@ -1789,7 +1793,7 @@ function Visibility:RefreshEditor()
 		if editor.addKnownFrames then editor.addKnownFrames:Enable() end
 		editor.enabledCheck:SetChecked(false)
 		editor.enabledCheck:Disable()
-		editor.modeButton:SetText(L["VisibilityModeShow"] or "Show when")
+		editor.modeButton:SetText(L["Show when"] or "Show when")
 		editor.modeButton:Disable()
 		editor.fadeSlider:SetValue(0)
 		editor.fadeSlider:Disable()
@@ -1920,7 +1924,7 @@ function Visibility:RefreshEditor()
 		row.removeButton:Hide()
 
 		if entry.kind == "group" then
-			row.groupLabel:SetText(L["VisibilityGroup"] or "Group")
+			row.groupLabel:SetText(L["Group"] or "Group")
 			row.groupLabel:ClearAllPoints()
 			row.groupLabel:SetPoint("LEFT", row.notCheck.Text or row.notCheck, "RIGHT", 8, 0)
 			row.groupLabel:Show()

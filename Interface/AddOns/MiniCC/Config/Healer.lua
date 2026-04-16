@@ -6,6 +6,7 @@ local verticalSpacing = mini.VerticalSpacing
 local horizontalSpacing = mini.HorizontalSpacing
 local columns = 4
 local columnWidth
+local enabledColumnWidth
 local config = addon.Config
 
 ---@class HealerCrowdControlConfig
@@ -17,6 +18,7 @@ config.Healer = M
 ---@param options HealerCrowdControlModuleOptions
 function M:Build(panel, options)
 	columnWidth = mini:ColumnWidth(columns, 0, 0)
+	enabledColumnWidth = mini:ColumnWidth(5, 0, 0)
 	local db = mini:GetSavedVars()
 
 	local lines = mini:TextBlock({
@@ -64,7 +66,7 @@ function M:Build(panel, options)
 		end,
 	})
 
-	enabledArena:SetPoint("LEFT", panel, "LEFT", columnWidth, 0)
+	enabledArena:SetPoint("LEFT", panel, "LEFT", enabledColumnWidth, 0)
 	enabledArena:SetPoint("TOP", enabledEverywhere, "TOP", 0, 0)
 
 	local enabledBattleGrounds = mini:Checkbox({
@@ -80,24 +82,40 @@ function M:Build(panel, options)
 		end,
 	})
 
-	enabledBattleGrounds:SetPoint("LEFT", panel, "LEFT", columnWidth * 2, 0)
+	enabledBattleGrounds:SetPoint("LEFT", panel, "LEFT", enabledColumnWidth * 2, 0)
 	enabledBattleGrounds:SetPoint("TOP", enabledEverywhere, "TOP", 0, 0)
 
-	local enabledPvE = mini:Checkbox({
+	local enabledDungeons = mini:Checkbox({
 		Parent = panel,
-		LabelText = L["PvE"],
-		Tooltip = L["Enable this module in PvE."],
+		LabelText = L["Dungeons"],
+		Tooltip = L["Enable this module in dungeons."],
 		GetValue = function()
-			return db.Modules.HealerCCModule.Enabled.PvE
+			return db.Modules.HealerCCModule.Enabled.Dungeons
 		end,
 		SetValue = function(value)
-			db.Modules.HealerCCModule.Enabled.PvE = value
+			db.Modules.HealerCCModule.Enabled.Dungeons = value
 			config:Apply()
 		end,
 	})
 
-	enabledPvE:SetPoint("LEFT", panel, "LEFT", columnWidth * 3, 0)
-	enabledPvE:SetPoint("TOP", enabledEverywhere, "TOP", 0, 0)
+	enabledDungeons:SetPoint("LEFT", panel, "LEFT", enabledColumnWidth * 3, 0)
+	enabledDungeons:SetPoint("TOP", enabledEverywhere, "TOP", 0, 0)
+
+	local enabledRaid = mini:Checkbox({
+		Parent = panel,
+		LabelText = L["Raid"],
+		Tooltip = L["Enable this module in raids."],
+		GetValue = function()
+			return db.Modules.HealerCCModule.Enabled.Raid
+		end,
+		SetValue = function(value)
+			db.Modules.HealerCCModule.Enabled.Raid = value
+			config:Apply()
+		end,
+	})
+
+	enabledRaid:SetPoint("LEFT", panel, "LEFT", enabledColumnWidth * 4, 0)
+	enabledRaid:SetPoint("TOP", enabledEverywhere, "TOP", 0, 0)
 
 	local settingsDivider = mini:Divider({
 		Parent = panel,
@@ -106,6 +124,21 @@ function M:Build(panel, options)
 	settingsDivider:SetPoint("LEFT", panel, "LEFT")
 	settingsDivider:SetPoint("RIGHT", panel, "RIGHT")
 	settingsDivider:SetPoint("TOP", enabledEverywhere, "BOTTOM", 0, -verticalSpacing)
+
+	local showIconsChk = mini:Checkbox({
+		Parent = panel,
+		LabelText = L["Show icons"],
+		Tooltip = L["Show CC icons when healer is CC'd."],
+		GetValue = function()
+			return options.Icons.Enabled
+		end,
+		SetValue = function(value)
+			options.Icons.Enabled = value
+			config:Apply()
+		end,
+	})
+
+	showIconsChk:SetPoint("TOPLEFT", settingsDivider, "BOTTOMLEFT", 0, -verticalSpacing)
 
 	local glowChk = mini:Checkbox({
 		Parent = panel,
@@ -120,7 +153,8 @@ function M:Build(panel, options)
 		end,
 	})
 
-	glowChk:SetPoint("TOPLEFT", settingsDivider, "BOTTOMLEFT", 0, -verticalSpacing)
+	glowChk:SetPoint("LEFT", panel, "LEFT", columnWidth, 0)
+	glowChk:SetPoint("TOP", showIconsChk, "TOP", 0, 0)
 
 	local showTextChk = mini:Checkbox({
 		Parent = panel,
@@ -135,7 +169,7 @@ function M:Build(panel, options)
 		end,
 	})
 
-	showTextChk:SetPoint("LEFT", panel, "LEFT", columnWidth, 0)
+	showTextChk:SetPoint("LEFT", panel, "LEFT", columnWidth * 2, 0)
 	showTextChk:SetPoint("TOP", glowChk, "TOP", 0, 0)
 
 	local reverseChk = mini:Checkbox({
@@ -151,7 +185,7 @@ function M:Build(panel, options)
 		end,
 	})
 
-	reverseChk:SetPoint("LEFT", panel, "LEFT", columnWidth * 2, 0)
+	reverseChk:SetPoint("LEFT", panel, "LEFT", columnWidth * 3, 0)
 	reverseChk:SetPoint("TOP", glowChk, "TOP", 0, 0)
 
 	local dispelColoursChk = mini:Checkbox({
@@ -167,8 +201,23 @@ function M:Build(panel, options)
 		end,
 	})
 
-	dispelColoursChk:SetPoint("LEFT", panel, "LEFT", columnWidth * 3, 0)
-	dispelColoursChk:SetPoint("TOP", glowChk, "TOP", 0, 0)
+	dispelColoursChk:SetPoint("TOPLEFT", showIconsChk, "BOTTOMLEFT", 0, -verticalSpacing)
+
+	local showTooltipsChk = mini:Checkbox({
+		Parent = panel,
+		LabelText = L["Show tooltips"],
+		Tooltip = L["Shows a spell tooltip when hovering over an icon."],
+		GetValue = function()
+			return options.ShowTooltips ~= false
+		end,
+		SetValue = function(value)
+			options.ShowTooltips = value
+			config:Apply()
+		end,
+	})
+
+	showTooltipsChk:SetPoint("LEFT", panel, "LEFT", columnWidth, 0)
+	showTooltipsChk:SetPoint("TOP", dispelColoursChk, "TOP", 0, 0)
 
 	local soundChk = mini:Checkbox({
 		Parent = panel,
@@ -189,7 +238,7 @@ function M:Build(panel, options)
 		end,
 	})
 
-	soundChk:SetPoint("TOPLEFT", glowChk, "BOTTOMLEFT", 0, -verticalSpacing)
+	soundChk:SetPoint("TOPLEFT", dispelColoursChk, "BOTTOMLEFT", 0, -verticalSpacing)
 
 	local soundFileDropdown = mini:Dropdown({
 		Parent = panel,

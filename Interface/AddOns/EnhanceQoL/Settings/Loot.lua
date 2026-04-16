@@ -325,7 +325,7 @@ for i = 3, 5 do
 				and addon.SettingsLayout.elements["enableLootToastFilter"].setting:GetValue() == true
 		end,
 		options = {
-			{ value = "mounts", text = L["lootToastAlwaysShowMounts"] },
+			{ value = "mounts", text = L["Mounts"] },
 			{ value = "pets", text = L["lootToastAlwaysShowPets"] },
 			{ value = "upgrade", text = L["lootToastAlwaysShowUpgrades"] },
 		},
@@ -451,7 +451,7 @@ end
 local includeRemoveDialogKey = "EQOL_LOOT_INCLUDE_REMOVE"
 StaticPopupDialogs[includeRemoveDialogKey] = StaticPopupDialogs[includeRemoveDialogKey]
 	or {
-		text = L["lootToastIncludeRemoveConfirm"],
+		text = L["Remove %s from the include list?"],
 		button1 = ACCEPT,
 		button2 = CANCEL,
 		timeout = 0,
@@ -497,8 +497,8 @@ data = {
 		children = {
 			{
 				list = {
-					[1] = L["dungeonJournalLootSpecAnchorTop"],
-					[2] = L["dungeonJournalLootSpecAnchorBottom"],
+					[1] = L["Top right"],
+					[2] = L["Bottom right"],
 				},
 				text = L["dungeonJournalLootSpecAnchor"],
 				get = function() return addon.db["dungeonJournalLootSpecAnchor"] end,
@@ -520,7 +520,7 @@ data = {
 			},
 			{
 				var = "dungeonJournalLootSpecOffsetX",
-				text = L["dungeonJournalLootSpecOffsetX"],
+				text = L["Horizontal offset"],
 				parentCheck = function()
 					return addon.SettingsLayout.elements["dungeonJournalLootSpecIcons"]
 						and addon.SettingsLayout.elements["dungeonJournalLootSpecIcons"].setting
@@ -541,7 +541,7 @@ data = {
 			},
 			{
 				var = "dungeonJournalLootSpecOffsetY",
-				text = L["dungeonJournalLootSpecOffsetY"],
+				text = L["Vertical offset"],
 				parentCheck = function()
 					return addon.SettingsLayout.elements["dungeonJournalLootSpecIcons"]
 						and addon.SettingsLayout.elements["dungeonJournalLootSpecIcons"].setting
@@ -562,7 +562,7 @@ data = {
 			},
 			{
 				var = "dungeonJournalLootSpecSpacing",
-				text = L["dungeonJournalLootSpecSpacing"],
+				text = L["Icon spacing"],
 				parentCheck = function()
 					return addon.SettingsLayout.elements["dungeonJournalLootSpecIcons"]
 						and addon.SettingsLayout.elements["dungeonJournalLootSpecIcons"].setting
@@ -608,7 +608,7 @@ data = {
 			},
 			{
 				var = "dungeonJournalLootSpecIconPadding",
-				text = L["dungeonJournalLootSpecIconPadding"],
+				text = L["Icon zoom"],
 				parentCheck = function()
 					return addon.SettingsLayout.elements["dungeonJournalLootSpecIcons"]
 						and addon.SettingsLayout.elements["dungeonJournalLootSpecIcons"].setting

@@ -103,11 +103,19 @@ function trinket:AttachToPlayerButton(playerButton)
 
   function frame:DisplayTrinket(spellId, itemID)
     local texture
-    if itemID and itemID ~= 0 then
+    local spellIdSecret = issecretvalue and spellId and issecretvalue(spellId)
+    local itemIdSecret = issecretvalue and itemID and issecretvalue(itemID)
+    if itemID and itemID ~= 0 and not itemIdSecret then
       texture = GetItemIcon(itemID)
-    else
+    elseif spellId and not spellIdSecret then
+      -- Guard: GetSpellTexture crashes on nil input
       local spellTexture, spellTextureNoOverride = GetSpellTexture(spellId)
       texture = spellTextureNoOverride
+    end
+    -- Fallback: spellId/itemID are secret (arena Midnight restriction) — use generic medallion icon
+    if not texture then
+      local fallback = GetSpellTexture(208683) -- Gladiator's Medallion
+      texture = fallback
     end
     self.spellId = spellId
     self.Icon:SetTexture(texture)
@@ -122,10 +130,14 @@ function trinket:AttachToPlayerButton(playerButton)
   end
 
   function frame:StartFakeCooldown(duration)
-    if self._fakeCdActive then return end
+    if self._fakeCdActive then
+      return
+    end
     self._fakeCdActive = true
     self.Cooldown:SetCooldown(GetTime(), duration)
-    if self._fakeTimer then self._fakeTimer:Cancel() end
+    if self._fakeTimer then
+      self._fakeTimer:Cancel()
+    end
     self._fakeTimer = C_Timer.NewTimer(duration, function()
       self._fakeCdActive = false
     end)
@@ -153,6 +165,14 @@ function trinket:AttachToPlayerButton(playerButton)
   end
 
   function frame:ApplyAllSettings()
+    -- Hide in BGs: ARENA_COOLDOWNS_UPDATE never fires there so cooldowns would
+    -- never track. Icons would show but timers would never start. Show everywhere else.
+    local _, instanceType = IsInInstance()
+    if instanceType == "pvp" then
+      self:Hide()
+      return
+    end
+    self:Show()
     local moduleSettings = self.config
     self.Cooldown:ApplyCooldownSettings(moduleSettings.Cooldown, false, { 0, 0, 0, 0.5 })
   end

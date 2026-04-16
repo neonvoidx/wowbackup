@@ -694,7 +694,11 @@ local function CreateMainFrame(playerType)
 
   function mainframe:SetRealPlayerCount(realCount)
     self:Debug("SetRealPlayerCount", realCount)
+    local oldCount = self.RealPlayerCount
     self.RealPlayerCount = realCount
+    if not oldCount or oldCount ~= realCount then
+      self:SelectPlayerCountProfile()
+    end
     self:UpdatePlayerCountText()
   end
 
@@ -769,6 +773,10 @@ local function CreateMainFrame(playerType)
         end
       end
 
+      -- Reset isDead before DeleteActiveUnitID so the health bar resets to
+      -- full (value 1) instead of empty (value 0) for the new player.
+      playerButton.isDead = false
+
       if playerButton.UnitIDs then
         wipe(playerButton.UnitIDs.TargetedByEnemy)
         playerButton:UpdateTargetIndicators()
@@ -782,6 +790,7 @@ local function CreateMainFrame(playerType)
     playerButton.UnitIDs = { TargetedByEnemy = {}, HasAllyUnitID = false }
     playerButton.unitID = nil
     playerButton.unit = nil
+    playerButton.RaidTargetIconIndex = nil
 
     playerButton.powerBarUsedHeight = 0
 
@@ -805,7 +814,7 @@ local function CreateMainFrame(playerType)
         playerButton:SetScript("OnUpdate", function(self, elapsed)
           TimeSinceLastOnUpdate = TimeSinceLastOnUpdate + elapsed
           if TimeSinceLastOnUpdate > UpdatePeroid then
-            if BattleGroundEnemies.states.userIsAlive then
+            if BattleGroundEnemies.states.userIsAlive and not BattleGroundEnemies.betweenRounds then
               playerButton:UpdateAll()
             end
             TimeSinceLastOnUpdate = 0
@@ -820,7 +829,7 @@ local function CreateMainFrame(playerType)
         playerButton:SetScript("OnUpdate", function(self, elapsed)
           TimeSinceLastOnUpdate = TimeSinceLastOnUpdate + elapsed
           if TimeSinceLastOnUpdate > UpdatePeroid then
-            if BattleGroundEnemies.states.userIsAlive then
+            if BattleGroundEnemies.states.userIsAlive and not BattleGroundEnemies.betweenRounds then
               -- Call UpdateAll() for allies to ensure UNIT_HEALTH gets called
               -- (UpdateAll handles health, power, range, guild, target updates)
               playerButton:UpdateAll()
@@ -848,7 +857,12 @@ local function CreateMainFrame(playerType)
       playerButton:IsNoLongerTarging(targetEnemyButton)
     end
 
-    playerButton:Hide()
+    if InCombatLockdown() then
+      playerButton.pendingHide = true
+      BattleGroundEnemies:RegisterEvent("PLAYER_REGEN_ENABLED")
+    else
+      playerButton:Hide()
+    end
 
     table_insert(self.InactivePlayerButtons, playerButton)
     self.Players[playerButton.PlayerDetails.PlayerName] = nil
@@ -1040,7 +1054,7 @@ local function CreateMainFrame(playerType)
       PlayerName = name,
       PlayerClass = string.upper(classToken), --apparently it can happen that we get a lowercase "druid" from GetBattlefieldScore() in TBCC, IsTBCC
       PlayerClassColor = (CUSTOM_CLASS_COLORS or RAID_CLASS_COLORS)[classToken],
-      PlayerRace = race and LibRaces:GetRaceToken(race) or "Unknown", --delivers a locale independent token for relentless check
+      PlayerRace = race or "Unknown", -- store localized race name directly (merc-mode safe)
       PlayerSpecName = spec, --set to false since we use Mixin() and Mixin doesnt mixin nil values and therefore we dont overwrite values with nil
       PlayerRole = (specData and specData.roleID) -- 1st priority: spec-based role
         or (additionalData and additionalData.groupRole) -- 2nd priority: group role (allies only)
@@ -1054,6 +1068,24 @@ local function CreateMainFrame(playerType)
     }
     if additionalData then
       Mixin(playerDetails, additionalData)
+    end
+
+    -- Resolve gender from GUID (available in lobby, tainted in combat, lost on reload)
+    if playerDetails.guid then
+      local _, _, _, _, genderID = GetPlayerInfoByGUID(playerDetails.guid)
+      if genderID then
+        playerDetails.gender = genderID
+      end
+    end
+    -- Preserve gender from previous details if we couldn't resolve it this time
+    local existingButton = self.Players[name]
+    if
+      not playerDetails.gender
+      and existingButton
+      and existingButton.PlayerDetails
+      and existingButton.PlayerDetails.gender
+    then
+      playerDetails.gender = existingButton.PlayerDetails.gender
     end
 
     -- Populate PlayerGUIDs for GUID fast-path lookup
@@ -1368,7 +1400,7 @@ BattleGroundEnemies.Enemies = CreateMainFrame(BattleGroundEnemies.consts.PlayerT
 BattleGroundEnemies.Enemies.Counter = {}
 
 function BattleGroundEnemies.Allies:GroupInSpecT_Update(event, GUID, unitID, info)
-  if not GUID or not info.class then
+  if not GUID or type(GUID) ~= "string" or not info.class then
     return
   end
 
@@ -1381,12 +1413,17 @@ function BattleGroundEnemies.Allies:AddGroupMember(name, isLeader, isAssistant, 
   local raceName, raceFile, raceID = UnitRace(unitID)
   local GUID = UnitGUID(unitID)
 
-  if not GUID then
+  if not GUID or type(GUID) ~= "string" or (issecretvalue and issecretvalue(GUID)) then
     return
   end
 
   if name and raceName and classToken then
-    local specName = BattleGroundEnemies.specCache[GUID]
+    local ok, specName = pcall(function()
+      return BattleGroundEnemies.specCache[GUID]
+    end)
+    if not ok then
+      specName = nil
+    end
     local groupRole = UnitGroupRolesAssigned(unitID) -- Get assigned role from group
 
     self:AddPlayerToSource(BattleGroundEnemies.consts.PlayerSources.GroupMembers, {
@@ -1454,6 +1491,16 @@ function BattleGroundEnemies.Allies:UpdateAllUnitIDs()
           end
 
           allyButton:UpdateUnitID(unitID, targetUnitID)
+          -- Request the trinket/CC-break spell so ARENA_CROWD_CONTROL_SPELL_UPDATE fires.
+          if C_PvP.RequestCrowdControlSpell and unitID then
+            C_PvP.RequestCrowdControlSpell(unitID)
+          end
+          -- Also check the cache: ARENA_CROWD_CONTROL_SPELL_UPDATE may have already fired
+          -- for this unit before the button was ready (race condition, common for "player").
+          local cached = BattleGroundEnemies._ccSpellCache and BattleGroundEnemies._ccSpellCache[unitID]
+          if cached and allyButton.Trinket then
+            allyButton.Trinket:DisplayTrinket(cached.spellId, cached.itemID)
+          end
         end
         -- If unit is nil, we simply skip to the next iteration
       else
@@ -1488,6 +1535,13 @@ function BattleGroundEnemies.Allies:UpdateAllUnitIDs()
         end
 
         allyButton:UpdateUnitID(unitID, targetUnitID)
+        if C_PvP.RequestCrowdControlSpell and unitID then
+          C_PvP.RequestCrowdControlSpell(unitID)
+        end
+        local cached = BattleGroundEnemies._ccSpellCache and BattleGroundEnemies._ccSpellCache[unitID]
+        if cached and allyButton.Trinket then
+          allyButton.Trinket:DisplayTrinket(cached.spellId, cached.itemID)
+        end
       end
     end
   end
@@ -1583,8 +1637,7 @@ end
 function BattleGroundEnemies.Enemies:NAME_PLATE_UNIT_ADDED(unitID)
   -- Only process enemy nameplates — friendly nameplates must be ignored
   -- or they can PID-match to enemy buttons and cause false in-range.
-  -- Uses faction check instead of UnitIsEnemy (which returns secret values in 12.0).
-  if not BattleGroundEnemies.IsEnemyFactionUnit(unitID) then
+  if not BattleGroundEnemies.IsEnemyUnit(unitID) then
     return
   end
   -- Clear stale sticky cache for this nameplate (may have been recycled from a different enemy)
@@ -1605,7 +1658,7 @@ function BattleGroundEnemies.Enemies:NAME_PLATE_UNIT_ADDED(unitID)
     -- but this gets us there faster.
     local enemies = self
     C_Timer.After(0.1, function()
-      if UnitExists(unitID) and BattleGroundEnemies.IsEnemyFactionUnit(unitID) then
+      if UnitExists(unitID) and BattleGroundEnemies.IsEnemyUnit(unitID) then
         BattleGroundEnemies:ClearScanCycleCache()
         local btn = enemies:GetPlayerbuttonByUnitID(unitID, "Enemies")
         if btn then
@@ -1645,7 +1698,6 @@ local function UpdateUnitIDForToken(self, tokenKey, unitID)
 
   -- local name = GetUnitName(unitID, true) or "nil"
   -- local found = button and button.PlayerDetails.PlayerName or "nil"
-  -- print("BGE Debug:", tokenKey, unitID, "Name:", name, "=> Button:", found)
 
   local previousButtonKey = tokenKey .. "Button" -- e.g. FocusButton
 

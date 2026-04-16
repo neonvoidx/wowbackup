@@ -15,9 +15,11 @@ local modules = {
 	addon.Modules.AlertsModule,
 	addon.Modules.NameplatesModule,
 	addon.Modules.KickTimerModule,
-	addon.Modules.TrinketsModule,
 	addon.Modules.FriendlyIndicatorModule,
 	addon.Modules.PrecogGuesserModule,
+	addon.Core.FriendlyCooldownTalents,
+	addon.Core.TrinketsTracker,
+	addon.Modules.FriendlyCooldownTrackerModule,
 }
 local eventsFrame
 local db
@@ -103,6 +105,7 @@ local function OnAddonLoaded()
 	scheduler:Init()
 	frames:Init()
 	addon.Utils.ModuleUtil:Init()
+	addon.Core.ProfileManager:Init()
 
 	for _, module in ipairs(modules) do
 		module:Init()
@@ -133,11 +136,13 @@ function addon:Refresh()
 end
 
 ---@param isRaid boolean?
+addon.CurrentTestIsRaid = false
+
 function addon:ToggleTest(isRaid)
 	if testModeManager:IsActive() then
 		testModeManager:StopTesting()
 	else
-		testModeManager:StartTesting(isRaid)
+		testModeManager:StartTesting(isRaid ~= nil and isRaid or self.CurrentTestIsRaid)
 	end
 
 	addon:Refresh()
@@ -154,6 +159,10 @@ function addon:TestWithOptions(isRaid)
 	addon:Refresh()
 end
 
+function addon:IsTestActive()
+	return testModeManager:IsActive()
+end
+
 mini:WaitForAddonLoad(OnAddonLoaded)
 
 ---@class Addon
@@ -165,23 +174,35 @@ mini:WaitForAddonLoad(OnAddonLoaded)
 ---@field Refresh fun(self: table)
 ---@field ToggleTest fun(self: table, isRaid: boolean?)
 ---@field TestWithOptions fun(self: table, isRaid: boolean?)
+---@field IsTestActive fun(self: table): boolean
 
 ---@class Utils
 ---@field Scheduler SchedulerUtil
 ---@field Units UnitUtil
 ---@field Array ArrayUtil
----@field SpellCache SpellCache
 ---@field FontUtil FontUtil
 ---@field ModuleUtil ModuleUtil
 ---@field ModuleName ModuleName
 ---@field WoWEx WoWEx
+---@field PvPTalentSync PvPTalentSync
 
 ---@class Core
 ---@field Framework MiniFramework
 ---@field Frames Frames
 ---@field UnitAuraWatcher UnitAuraWatcher
+---@field Inspector Inspector
 ---@field IconSlotContainer IconSlotContainer
 ---@field InstanceOptions InstanceOptions
+---@field FriendlyCooldownTalents FriendlyCooldownTalents
+---@field TrinketsTracker TrinketsTracker
+
+---@class FriendlyCooldowns
+---@field Talents FriendlyCooldownTalents
+---@field Rules FriendlyCooldownRules
+---@field Observer FriendlyCooldownObserver
+---@field Brain FriendlyCooldownBrain
+---@field Display FriendlyCooldownDisplay
+---@field Module FriendlyCooldownTrackerModule
 
 ---@class Modules
 ---@field TestModeManager TestModeManager
@@ -191,9 +212,10 @@ mini:WaitForAddonLoad(OnAddonLoaded)
 ---@field KickTimerModule KickTimerModule
 ---@field AlertsModule AlertsModule
 ---@field CrowdControlModule CrowdControlModule
----@field TrinketsModule TrinketsModule
 ---@field FriendlyIndicatorModule FriendlyIndicatorModule
 ---@field PrecogGuesserModule PrecogGuesserModule
+---@field FriendlyCooldownTrackerModule FriendlyCooldownTrackerModule
+---@field FriendlyCooldowns FriendlyCooldowns
 
 ---@class IModule
 ---@field Init fun(self: IModule) Initialises the module to be ready for use.

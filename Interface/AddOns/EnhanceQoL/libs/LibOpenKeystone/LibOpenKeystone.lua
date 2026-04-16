@@ -4,7 +4,7 @@ local lib = LibStub:NewLibrary(MAJOR, MINOR)
 if not lib then return end
 
 -- forward declarations for luacheck/lint friendliness
-local ReadOwnKeystone, SendLogged, BuildKPayload
+local ReadOwnKeystone, SendLogged, BuildKPayload, EnsureAceReceiver, UpdateRegistrations
 
 -- Storage
 lib.UnitData = lib.UnitData or {} -- [ "Name" or "Name-Realm" ] = { challengeMapID=..., level=..., lastSeen=... }
@@ -19,6 +19,7 @@ lib._pendingRequestParty = lib._pendingRequestParty or false
 -- M+ gating
 lib._mplusActive = lib._mplusActive or false
 lib._eligible = lib._eligible or true -- assume true until we can evaluate
+lib._enabled = lib._enabled or false
 
 -- Outgoing messages use a custom prefix; incoming accepts both LibOpenRaid
 -- and LibOpenKeystone prefixes
@@ -87,7 +88,26 @@ local function QueueSendMyData() lib._pendingSendMyData = true end
 
 local function QueueRequestParty() lib._pendingRequestParty = true end
 
+function lib.IsEnabled() return lib._enabled == true end
+
+function lib.SetEnabled(enabled)
+	local newState = enabled == true
+	if lib._enabled == newState then return end
+	lib._enabled = newState
+	if UpdateRegistrations then UpdateRegistrations(newState) end
+	if newState then return end
+
+	lib._pendingAnnounce = false
+	lib._pendingSendMyData = false
+	lib._pendingRequestParty = false
+	lib._bagPending = false
+	lib._lastRequestAt = 0
+
+	if lib.WipeKeystoneData then lib.WipeKeystoneData() end
+end
+
 local function FlushPending()
+	if not lib.IsEnabled() then return end
 	if lib._pendingRequestParty and lib._eligible and not InCombat() and not lib._mplusActive then
 		lib._pendingRequestParty = false
 		-- Anfrage nach OOC
@@ -150,6 +170,7 @@ end
 
 -- Safe/logged send (uses our custom send prefix only)
 function SendLogged(text, channel)
+	if not lib.IsEnabled() then return end
 	-- Zielkanal ermitteln
 	local ch = channel
 	if not ch then
@@ -206,6 +227,7 @@ end
 
 -- Common processor for decoded data (either from LOGGED-safe or AceComm-compressed)
 local function ProcessData(sender, channel, data)
+	if not lib.IsEnabled() then return end
 	if lib._mplusActive then return end -- no processing during active M+
 	local dtype = data:sub(1, 1)
 	if dtype == KREQ_PREFIX then
@@ -260,6 +282,7 @@ local function HandleCompleteLogged(sender, channel, msg)
 end
 
 local function OnLogged(self, event, prefix, text, channel, sender)
+	if not lib.IsEnabled() then return end
 	if lib._mplusActive then return end -- ignore inbound during M+
 	if not RECV_PREFIXES_LOGGED[prefix] then return end
 	sender = Ambiguate(sender, "none")
@@ -296,32 +319,32 @@ local function OnLogged(self, event, prefix, text, channel, sender)
 end
 
 -- Also accept compressed AceComm traffic on LibOpenRaid and our prefix
-do
+EnsureAceReceiver = function()
 	local AceComm = LibStub:GetLibrary("AceComm-3.0", true)
 	local LibDeflate = LibStub:GetLibrary("LibDeflate", true)
-	if AceComm and LibDeflate then
-		lib._ace = lib._ace or {}
-		function lib._ace:OnReceiveComm(prefix, text, channel, sender)
-			if lib._mplusActive then return end -- ignore inbound during M+
-			if not RECV_PREFIXES[prefix] then return end
-			sender = Ambiguate(sender, "none")
-			-- ignore self (short or full)
-			local meShort = UnitName("player")
-			local meFull = FullName("player")
-			local senderShort = sender and sender:match("^[^-]+")
-			if sender == meShort or sender == meFull or (senderShort and senderShort == meShort) then return end
+	if not (AceComm and LibDeflate) then return end
+	if lib._ace then return end
 
-			local decoded = LibDeflate:DecodeForWoWAddonChannel(text)
-			if not decoded then return end
-			local data = LibDeflate:DecompressDeflate(decoded)
-			if type(data) ~= "string" or #data < 1 then return end
-			ProcessData(sender, channel, data)
-		end
-		AceComm:Embed(lib._ace)
-		for p in pairs(RECV_PREFIXES) do
-			lib._ace:RegisterComm(p, "OnReceiveComm")
-		end
+	lib._ace = {}
+	function lib._ace:OnReceiveComm(prefix, text, channel, sender)
+		if not lib.IsEnabled() then return end
+		if lib._mplusActive then return end -- ignore inbound during M+
+		if not RECV_PREFIXES[prefix] then return end
+		sender = Ambiguate(sender, "none")
+		-- ignore self (short or full)
+		local meShort = UnitName("player")
+		local meFull = FullName("player")
+		local senderShort = sender and sender:match("^[^-]+")
+		if sender == meShort or sender == meFull or (senderShort and senderShort == meShort) then return end
+
+		local decoded = LibDeflate:DecodeForWoWAddonChannel(text)
+		if not decoded then return end
+		local data = LibDeflate:DecompressDeflate(decoded)
+		if type(data) ~= "string" or #data < 1 then return end
+		ProcessData(sender, channel, data)
 	end
+
+	AceComm:Embed(lib._ace)
 end
 
 -- Register for logged comms
@@ -330,19 +353,53 @@ if C_ChatInfo then
 		C_ChatInfo.RegisterAddonMessagePrefix(p)
 	end
 end
+
+local EVENT_NAMES = {
+	"CHAT_MSG_ADDON_LOGGED",
+	"GROUP_ROSTER_UPDATE",
+	"PLAYER_ENTERING_WORLD",
+	"BAG_UPDATE_DELAYED",
+	"PLAYER_REGEN_ENABLED",
+	"CHALLENGE_MODE_START",
+	"CHALLENGE_MODE_COMPLETED",
+	"CHALLENGE_MODE_RESET",
+	"PLAYER_LEVEL_UP",
+}
+
 local f = lib._frame or CreateFrame("Frame")
 lib._frame = f
-f:RegisterEvent("CHAT_MSG_ADDON_LOGGED")
-f:RegisterEvent("GROUP_ROSTER_UPDATE")
-f:RegisterEvent("PLAYER_ENTERING_WORLD")
-f:RegisterEvent("BAG_UPDATE_DELAYED")
-f:RegisterEvent("PLAYER_REGEN_ENABLED")
-f:RegisterEvent("CHALLENGE_MODE_START")
-f:RegisterEvent("CHALLENGE_MODE_COMPLETED")
-f:RegisterEvent("CHALLENGE_MODE_RESET")
-f:RegisterEvent("PLAYER_LEVEL_UP")
+UpdateRegistrations = function(enabled)
+	if enabled then
+		EnsureAceReceiver()
+		if lib._ace and not lib._aceRegistered then
+			for p in pairs(RECV_PREFIXES) do
+				lib._ace:RegisterComm(p, "OnReceiveComm")
+			end
+			lib._aceRegistered = true
+		end
+		if not lib._eventsRegistered then
+			for _, eventName in ipairs(EVENT_NAMES) do
+				f:RegisterEvent(eventName)
+			end
+			lib._eventsRegistered = true
+		end
+	else
+		if lib._ace and lib._aceRegistered then
+			for p in pairs(RECV_PREFIXES) do
+				lib._ace:UnregisterComm(p)
+			end
+			lib._aceRegistered = false
+		end
+		if lib._eventsRegistered then
+			f:UnregisterAllEvents()
+			lib._eventsRegistered = false
+		end
+	end
+end
+
 f:SetScript("OnEvent", function(_, ev, ...)
 	if ev == "CHAT_MSG_ADDON_LOGGED" then return OnLogged(_, ev, ...) end
+	if not lib.IsEnabled() then return end
 	if ev == "PLAYER_ENTERING_WORLD" or ev == "GROUP_ROSTER_UPDATE" then
 		-- Update initial M+ state on zone/load
 		lib._mplusActive = IsMPlusActive()
@@ -422,8 +479,11 @@ f:SetScript("OnEvent", function(_, ev, ...)
 	end
 end)
 
+UpdateRegistrations(lib.IsEnabled())
+
 -- Public: request from party/raid + send own key proactively
 function lib.RequestKeystoneDataFromParty()
+	if not lib.IsEnabled() then return end
 	if not (IsInGroup() or IsInRaid()) then return end
 	-- simple cooldown to avoid burst storms
 	local t = GetTime()

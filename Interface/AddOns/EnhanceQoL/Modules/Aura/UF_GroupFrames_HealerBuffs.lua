@@ -10,7 +10,7 @@ end
 addon.Aura = addon.Aura or {}
 addon.Aura.UF = addon.Aura.UF or {}
 local UF = addon.Aura.UF
-local L = LibStub("AceLocale-3.0"):GetLocale("EnhanceQoL_Aura")
+local L = LibStub("AceLocale-3.0"):GetLocale("EnhanceQoL")
 
 UF.GroupFramesHealerBuffs = UF.GroupFramesHealerBuffs or {}
 local HB = UF.GroupFramesHealerBuffs
@@ -18,6 +18,7 @@ local HB = UF.GroupFramesHealerBuffs
 local GFH = UF.GroupFramesHelper
 local AuraUtil = UF.AuraUtil
 local UFHelper = addon.Aura.UFHelper
+local Pixel = GFH and GFH.Pixel
 
 local floor = math.floor
 local max = math.max
@@ -67,6 +68,8 @@ local ORIENTATION_SET = {
 	[ORIENT_HORIZONTAL] = true,
 	[ORIENT_VERTICAL] = true,
 }
+
+local BAR_SIZE_MAX = 512
 
 local RULE_MATCH_SET = {
 	[RULE_MATCH_ANY] = true,
@@ -124,16 +127,16 @@ local function tr(key, fallback)
 end
 
 HB.STYLE_OPTIONS = {
-	{ value = STYLE_ICON, label = tr("UFGroupHealerBuffStyleIcon", "Icon") },
-	{ value = STYLE_SQUARE, label = tr("UFGroupHealerBuffStyleSquare", "Square") },
-	{ value = STYLE_BAR, label = tr("UFGroupHealerBuffStyleBar", "Bar") },
-	{ value = STYLE_BORDER, label = tr("UFGroupHealerBuffStyleBorder", "Border") },
+	{ value = STYLE_ICON, label = tr("Icon", "Icon") },
+	{ value = STYLE_SQUARE, label = tr("Square", "Square") },
+	{ value = STYLE_BAR, label = tr("Bar", "Bar") },
+	{ value = STYLE_BORDER, label = tr("Border", "Border") },
 	{ value = STYLE_TINT, label = tr("UFGroupHealerBuffStyleTint", "Tint") },
 }
 
 HB.ORIENTATION_OPTIONS = {
-	{ value = ORIENT_HORIZONTAL, label = tr("UFGroupHealerBuffOrientationHorizontal", "Horizontal") },
-	{ value = ORIENT_VERTICAL, label = tr("UFGroupHealerBuffOrientationVertical", "Vertical") },
+	{ value = ORIENT_HORIZONTAL, label = tr("Horizontal", "Horizontal") },
+	{ value = ORIENT_VERTICAL, label = tr("Vertical", "Vertical") },
 }
 
 HB.RULE_MATCH_OPTIONS = {
@@ -148,15 +151,15 @@ HB.ICON_MODE_OPTIONS = {
 
 HB.ANCHOR_OPTIONS = GFH and GFH.anchorOptions9
 	or {
-		{ value = "TOPLEFT", label = tr("UFGroupHealerBuffAnchorTopLeft", "Top Left") },
-		{ value = "TOP", label = tr("UFGroupHealerBuffAnchorTop", "Top") },
-		{ value = "TOPRIGHT", label = tr("UFGroupHealerBuffAnchorTopRight", "Top Right") },
-		{ value = "LEFT", label = tr("UFGroupHealerBuffAnchorLeft", "Left") },
-		{ value = "CENTER", label = tr("UFGroupHealerBuffAnchorCenter", "Center") },
-		{ value = "RIGHT", label = tr("UFGroupHealerBuffAnchorRight", "Right") },
-		{ value = "BOTTOMLEFT", label = tr("UFGroupHealerBuffAnchorBottomLeft", "Bottom Left") },
-		{ value = "BOTTOM", label = tr("UFGroupHealerBuffAnchorBottom", "Bottom") },
-		{ value = "BOTTOMRIGHT", label = tr("UFGroupHealerBuffAnchorBottomRight", "Bottom Right") },
+		{ value = "TOPLEFT", label = tr("Top Left", "Top Left") },
+		{ value = "TOP", label = tr("Top", "Top") },
+		{ value = "TOPRIGHT", label = tr("Top Right", "Top Right") },
+		{ value = "LEFT", label = tr("Left", "Left") },
+		{ value = "CENTER", label = tr("Center", "Center") },
+		{ value = "RIGHT", label = tr("Right", "Right") },
+		{ value = "BOTTOMLEFT", label = tr("Bottom Left", "Bottom Left") },
+		{ value = "BOTTOM", label = tr("Bottom", "Bottom") },
+		{ value = "BOTTOMRIGHT", label = tr("Bottom Right", "Bottom Right") },
 	}
 
 HB.GROWTH_OPTIONS = GFH and GFH.auraGrowthOptions
@@ -211,7 +214,7 @@ local FAMILY_DATA = {
 	{ id = "evoker_pres_echo_dream_breath", classToken = "EVOKER", spec = "Preservation", spellIds = { 376788 }, fallbackName = "Echo Dream Breath" },
 	-- Augmentation Evoker
 	{ id = "evoker_aug_blistering_scales", classToken = "EVOKER", spec = "Augmentation", spellIds = { 360827 }, fallbackName = "Blistering Scales" },
-	{ id = "evoker_aug_ebon_might", classToken = "EVOKER", spec = "Augmentation", spellIds = { 395152 }, fallbackName = "Ebon Might" },
+	{ id = "evoker_aug_ebon_might", classToken = "EVOKER", spec = "Augmentation", spellIds = { 395152, 395296 }, fallbackName = "Ebon Might" },
 	{ id = "evoker_aug_prescience", classToken = "EVOKER", spec = "Augmentation", spellIds = { 410089 }, fallbackName = "Prescience" },
 	{ id = "evoker_aug_infernos_blessing", classToken = "EVOKER", spec = "Augmentation", spellIds = { 410263 }, fallbackName = "Inferno's Blessing" },
 	{ id = "evoker_aug_symbiotic_bloom", classToken = "EVOKER", spec = "Augmentation", spellIds = { 410686 }, fallbackName = "Symbiotic Bloom" },
@@ -235,6 +238,7 @@ local FAMILY_DATA = {
 	{ id = "monk_renewing_mist", classToken = "MONK", spec = "Mistweaver", spellIds = { 119611 }, fallbackName = "Renewing Mist" },
 	{ id = "monk_enveloping_mist", classToken = "MONK", spec = "Mistweaver", spellIds = { 124682 }, fallbackName = "Enveloping Mist" },
 	{ id = "monk_aspect_of_harmony", classToken = "MONK", spec = "Mistweaver", spellIds = { 450769 }, fallbackName = "Aspect of Harmony" },
+	{ id = "monk_coalescence", classToken = "MONK", spec = "Mistweaver", spellIds = { 1292922 }, fallbackName = "Coalescence", fallbackIcon = 1360977 },
 	-- Restoration Shaman
 	{ id = "shaman_earth_shield", classToken = "SHAMAN", spec = "Restoration", spellIds = { 974, 383648 }, fallbackName = "Earth Shield" },
 	{ id = "shaman_riptide", classToken = "SHAMAN", spec = "Restoration", spellIds = { 61295 }, fallbackName = "Riptide" },
@@ -244,6 +248,7 @@ local FAMILY_DATA = {
 	-- Holy Paladin
 	{ id = "paladin_beacon_of_light", classToken = "PALADIN", spec = "Holy", spellIds = { 53563 }, fallbackName = "Beacon of Light" },
 	{ id = "paladin_eternal_flame", classToken = "PALADIN", spec = "Holy", spellIds = { 156322 }, fallbackName = "Eternal Flame" },
+	{ id = "paladin_dawnlight", classToken = "PALADIN", spec = "Holy", spellIds = { 431381 }, fallbackName = "Dawnlight" },
 	{ id = "paladin_beacon_of_faith", classToken = "PALADIN", spec = "Holy", spellIds = { 156910 }, fallbackName = "Beacon of Faith" },
 	{ id = "paladin_beacon_of_the_savior", classToken = "PALADIN", spec = "Holy", spellIds = { 1244893 }, fallbackName = "Beacon of the Savior" },
 	{ id = "paladin_beacon_of_virtue", classToken = "PALADIN", spec = "Holy", spellIds = { 200025 }, fallbackName = "Beacon of Virtue" },
@@ -574,7 +579,7 @@ end
 local function ensureFamilyPresentation(family)
 	if not family then return nil, nil end
 	if not family._resolvedName then family._resolvedName = getSpellName(family.spellIds and family.spellIds[1]) or family.fallbackName or family.id end
-	if not family._resolvedIcon then family._resolvedIcon = getSpellTexture(family.spellIds and family.spellIds[1]) or 134400 end
+	if not family._resolvedIcon then family._resolvedIcon = getSpellTexture(family.spellIds and family.spellIds[1]) or family.fallbackIcon or 134400 end
 	return family._resolvedName, family._resolvedIcon
 end
 
@@ -671,7 +676,9 @@ function HB.CreateDefaultGroup(id)
 		size = 16,
 		barOrientation = ORIENT_HORIZONTAL,
 		barThickness = 6,
+		barAlpha = 0.9,
 		barDrainAnimation = false,
+		barFillFrame = false,
 		barReverseFill = false,
 		inset = 0,
 		borderSize = 2,
@@ -720,7 +727,15 @@ local function normalizeGroup(group, id)
 	group.size = roundInt(clamp(group.size, 4, 96, 16))
 	group.barOrientation = normalizeOrientation(group.barOrientation)
 	group.barThickness = roundInt(clamp(group.barThickness, 1, 96, 6))
+	local barWidth = clamp(group.barWidth, 1, BAR_SIZE_MAX, nil)
+	if barWidth ~= nil then barWidth = roundInt(barWidth) end
+	group.barWidth = barWidth
+	local barHeight = clamp(group.barHeight, 1, BAR_SIZE_MAX, nil)
+	if barHeight ~= nil then barHeight = roundInt(barHeight) end
+	group.barHeight = barHeight
+	group.barAlpha = clamp(group.barAlpha, 0, 1, nil)
 	group.barDrainAnimation = group.barDrainAnimation == true
+	group.barFillFrame = group.barFillFrame == true
 	group.barReverseFill = normalizeBarReverseFill(group.barReverseFill)
 	group.inset = roundInt(clamp(group.inset, 0, 60, 0))
 	group.borderSize = roundInt(clamp(group.borderSize, 1, 24, 2))
@@ -1070,6 +1085,12 @@ end
 
 local function setSinglePointCached(frame, point, relativeTo, relativePoint, x, y)
 	if not frame then return false end
+	x = x or 0
+	y = y or 0
+	if Pixel and Pixel.Round then
+		x = Pixel.Round(x, frame)
+		y = Pixel.Round(y, frame)
+	end
 	local cache = frame._hbPointCache
 	if cache and cache.mode == 1 and cache.point == point and cache.relativeTo == relativeTo and cache.relativePoint == relativePoint and cache.x == x and cache.y == y then return false end
 	frame._hbAllPointsTarget = nil
@@ -1088,6 +1109,16 @@ end
 
 local function setTwoPointsCached(frame, firstPoint, firstRelativeTo, firstRelativePoint, firstX, firstY, secondPoint, secondRelativeTo, secondRelativePoint, secondX, secondY)
 	if not frame then return false end
+	firstX = firstX or 0
+	firstY = firstY or 0
+	secondX = secondX or 0
+	secondY = secondY or 0
+	if Pixel and Pixel.Round then
+		firstX = Pixel.Round(firstX, frame)
+		firstY = Pixel.Round(firstY, frame)
+		secondX = Pixel.Round(secondX, frame)
+		secondY = Pixel.Round(secondY, frame)
+	end
 	local cache = frame._hbPointCache
 	if
 		cache
@@ -1127,6 +1158,12 @@ end
 
 local function setSizeCached(frame, width, height)
 	if not (frame and frame.SetSize) then return false end
+	width = width or 0
+	height = height or 0
+	if Pixel and Pixel.Round then
+		width = Pixel.Round(width, frame)
+		height = Pixel.Round(height, frame)
+	end
 	if frame._hbCachedWidth == width and frame._hbCachedHeight == height then return false end
 	frame:SetSize(width, height)
 	frame._hbCachedWidth = width
@@ -1309,8 +1346,12 @@ local function ensureVisualLayers(btn, st, forceLayout)
 	if iconLayer.SetFrameLevel and root.GetFrameLevel then setFrameLevelCached(iconLayer, (root:GetFrameLevel() or 0) + 30) end
 
 	if not st.healerBuffTint then
-		st.healerBuffTint = root:CreateTexture(nil, "ARTWORK", nil, 2)
-		st.healerBuffTint:SetColorTexture(0, 0, 0, 0)
+		st.healerBuffTint = (Pixel and Pixel.CreateTexture and Pixel.CreateTexture(root, nil, "ARTWORK", nil, 2)) or root:CreateTexture(nil, "ARTWORK", nil, 2)
+		if Pixel and Pixel.SetColorTexture then
+			Pixel.SetColorTexture(st.healerBuffTint, 0, 0, 0, 0)
+		else
+			st.healerBuffTint:SetColorTexture(0, 0, 0, 0)
+		end
 		st.healerBuffTint:Hide()
 	end
 	if st.healerBuffTint.GetParent and st.healerBuffTint:GetParent() ~= root then st.healerBuffTint:SetParent(root) end
@@ -1319,9 +1360,17 @@ local function ensureVisualLayers(btn, st, forceLayout)
 	if not st.healerBuffBar then
 		st.healerBuffBar = CreateFrame("StatusBar", nil, root)
 		st.healerBuffBar:EnableMouse(false)
-		st.healerBuffBar:SetStatusBarTexture("Interface\\Buttons\\WHITE8x8")
+		if Pixel and Pixel.SetStatusBarTexture then
+			Pixel.SetStatusBarTexture(st.healerBuffBar, "Interface\\Buttons\\WHITE8x8")
+		else
+			st.healerBuffBar:SetStatusBarTexture("Interface\\Buttons\\WHITE8x8")
+		end
 		st.healerBuffBar:SetMinMaxValues(0, 1)
-		st.healerBuffBar:SetValue(1)
+		if Pixel and Pixel.SetStatusBarValue then
+			Pixel.SetStatusBarValue(st.healerBuffBar, 1, false, true)
+		else
+			st.healerBuffBar:SetValue(1)
+		end
 		st.healerBuffBar:Hide()
 	end
 	setFrameParentCached(st.healerBuffBar, root)
@@ -1388,7 +1437,11 @@ end
 local function updateAnimatedBarValue(bar, now)
 	if not (bar and bar.SetValue) then return end
 	local fill = getTimedBarFill(bar._hbTrackedDuration, bar._hbTrackedExpirationTime, now)
-	bar:SetValue(fill ~= nil and fill or 1)
+	if Pixel and Pixel.SetStatusBarValue then
+		Pixel.SetStatusBarValue(bar, fill ~= nil and fill or 1, false, true)
+	else
+		bar:SetValue(fill ~= nil and fill or 1)
+	end
 end
 
 local function setAnimatedBarAura(bar, aura)
@@ -1397,7 +1450,11 @@ local function setAnimatedBarAura(bar, aura)
 	local expirationTime = aura and tonumber(aura.expirationTime) or nil
 	if not (duration and duration > 0 and expirationTime and expirationTime > 0) then
 		clearAnimatedBarState(bar)
-		if bar.SetValue then bar:SetValue(1) end
+		if Pixel and Pixel.SetStatusBarValue then
+			Pixel.SetStatusBarValue(bar, 1, false, true)
+		elseif bar.SetValue then
+			bar:SetValue(1)
+		end
 		return false
 	end
 	bar._hbTrackedDuration = duration
@@ -1477,7 +1534,7 @@ local PLAYER_HARMFUL_FILTER = "HARMFUL|PLAYER"
 local HELPFUL_FILTER = "HELPFUL"
 local HARMFUL_FILTER = "HARMFUL"
 local function isAuraFilteredByInstanceFilter(unit, aura, filter)
-	if aura == nil or filter == nil then return false end
+	if unit == nil or unit == "" or aura == nil or aura.auraInstanceID == nil or filter == nil then return false end
 	return not C_UnitAuras.IsAuraFilteredOutByInstanceID(unit, aura.auraInstanceID, filter)
 end
 
@@ -1867,7 +1924,11 @@ local function styleSquareButton(btn, color)
 	if not btn then return end
 	local r, g, b, a = resolveColor(color)
 	if btn.icon then
-		btn.icon:SetTexture("Interface\\Buttons\\WHITE8x8")
+		if Pixel and Pixel.SetTexture then
+			Pixel.SetTexture(btn.icon, "Interface\\Buttons\\WHITE8x8")
+		else
+			btn.icon:SetTexture("Interface\\Buttons\\WHITE8x8")
+		end
 		btn.icon:SetTexCoord(0, 1, 0, 1)
 		btn.icon:SetVertexColor(r, g, b, a)
 		if btn.icon.SetDesaturated then btn.icon:SetDesaturated(false) end
@@ -1998,7 +2059,11 @@ local function getPriorityActiveRuleForGroup(state, compiled, groupId)
 	return nil, nil
 end
 
-local function resolveDisplayColor(group, rule) return resolveColor((rule and rule.color) or (group and group.color)) end
+local function resolveDisplayColor(group, rule)
+	local r, g, b, a = resolveColor((rule and rule.color) or (group and group.color))
+	if group and normalizeStyle(group.style) == STYLE_BAR and group.barAlpha ~= nil then a = clamp(group.barAlpha, 0, 1, a) or a end
+	return r, g, b, a
+end
 
 local function didGroupRenderStateChange(cache, compiled, group, activeRules, familyAuraInstance, styleRevision, layoutRevision)
 	local changed = cache.groupId ~= group.id
@@ -2080,8 +2145,12 @@ local function didBarRenderStateChange(cache, group, groupId, layoutRevision, tr
 		or cache.groupId ~= groupId
 		or cache.layoutRevision ~= layoutRevision
 		or cache.barOrientation ~= group.barOrientation
+		or cache.barWidth ~= group.barWidth
+		or cache.barHeight ~= group.barHeight
+		or cache.barAlpha ~= group.barAlpha
 		or cache.barThickness ~= group.barThickness
 		or cache.barDrainAnimation ~= group.barDrainAnimation
+		or cache.barFillFrame ~= group.barFillFrame
 		or cache.barReverseFill ~= group.barReverseFill
 		or cache.inset ~= group.inset
 		or cache.anchorPoint ~= group.anchorPoint
@@ -2096,8 +2165,12 @@ local function didBarRenderStateChange(cache, group, groupId, layoutRevision, tr
 	cache.groupId = groupId
 	cache.layoutRevision = layoutRevision
 	cache.barOrientation = group.barOrientation
+	cache.barWidth = group.barWidth
+	cache.barHeight = group.barHeight
+	cache.barAlpha = group.barAlpha
 	cache.barThickness = group.barThickness
 	cache.barDrainAnimation = group.barDrainAnimation
+	cache.barFillFrame = group.barFillFrame
 	cache.barReverseFill = group.barReverseFill
 	cache.inset = group.inset
 	cache.anchorPoint = group.anchorPoint
@@ -2286,10 +2359,15 @@ local function renderIconStyleForGroup(btn, st, state, compiled, cfg, group, cha
 			button._hbIndicatorGroupId = group.id
 			button._hbIndicatorStyle = group.style
 		end
-		if button.SetSize and button._hbButtonSize ~= group.size then
-			button:SetSize(group.size, group.size)
-			button._hbButtonSize = group.size
-		end
+			if button.SetSize and button._hbButtonSize ~= group.size then
+				if AuraUtil and AuraUtil.setAuraButtonSize then
+					AuraUtil.setAuraButtonSize(button, group.size)
+				else
+					setSizeCached(button, group.size, group.size)
+					button._eqolAuraButtonSize = group.size
+				end
+				button._hbButtonSize = group.size
+			end
 		positionAuraButton(button, container, primary, secondary, index, group.perRow, group.size, group.spacing)
 		button:Show()
 	end
@@ -2356,12 +2434,16 @@ local function renderBar(st, group, trackedAura, colorRule)
 		bar:Hide()
 		return
 	end
+	local scale = getEffectiveScale(st.healerBuffRoot or bar)
 	local inset = group.inset or 0
-	local thickness = max(1, group.barThickness or 6)
+	inset = max(0, roundToPixel(inset, scale))
 	local r, g, b, a = resolveDisplayColor(group, colorRule)
-	local ox, oy = getStyleAnchoredOffsets(st.healerBuffRoot, group, inset)
 	local orientation = group.barOrientation == ORIENT_VERTICAL and ORIENT_VERTICAL or ORIENT_HORIZONTAL
 	local reverseFill = group.barDrainAnimation == true and group.barReverseFill == true
+	local root = st.healerBuffRoot
+	local rootWidth = root and root.GetWidth and root:GetWidth() or 0
+	local rootHeight = root and root.GetHeight and root:GetHeight() or 0
+	local barWidth, barHeight, useSizedPlacement = HB.GetBarDisplaySize(group, rootWidth, rootHeight)
 	if bar._hbOrientation ~= orientation then
 		bar:SetOrientation(orientation)
 		bar._hbOrientation = orientation
@@ -2372,17 +2454,45 @@ local function renderBar(st, group, trackedAura, colorRule)
 	end
 	bar:SetStatusBarColor(r, g, b, a)
 	bar:SetMinMaxValues(0, 1)
-	if group.barOrientation == ORIENT_VERTICAL then
+	if useSizedPlacement then
+		local ox, oy = HB.ClampOffsetsForRegion(group.anchorPoint, group.x, group.y, rootWidth, rootHeight, barWidth, barHeight, inset)
+		setSinglePointCached(bar, group.anchorPoint or "CENTER", st.healerBuffRoot, group.anchorPoint or "CENTER", ox, oy)
+		setSizeCached(bar, barWidth, barHeight)
+		bar._hbBarWidth = nil
+		bar._hbBarHeight = nil
+	elseif group.barOrientation == ORIENT_VERTICAL then
+		local thickness
+		if Pixel and Pixel.Round then
+			thickness = Pixel.Round(max(1, group.barThickness or 6), bar, 1)
+		else
+			thickness = max(1, roundToPixel(group.barThickness or 6, scale))
+		end
+		local ox, oy = getStyleAnchoredOffsets(st.healerBuffRoot, group, inset)
 		setTwoPointsCached(bar, "TOP", st.healerBuffRoot, "TOP", ox, oy - inset, "BOTTOM", st.healerBuffRoot, "BOTTOM", ox, oy + inset)
 		if bar._hbBarWidth ~= thickness then
-			bar:SetWidth(thickness)
+			if Pixel and Pixel.SetWidth then
+				Pixel.SetWidth(bar, thickness, 1)
+			else
+				bar:SetWidth(thickness)
+			end
 			bar._hbBarWidth = thickness
 		end
 		bar._hbBarHeight = nil
 	else
+		local thickness
+		if Pixel and Pixel.Round then
+			thickness = Pixel.Round(max(1, group.barThickness or 6), bar, 1)
+		else
+			thickness = max(1, roundToPixel(group.barThickness or 6, scale))
+		end
+		local ox, oy = getStyleAnchoredOffsets(st.healerBuffRoot, group, inset)
 		setTwoPointsCached(bar, "LEFT", st.healerBuffRoot, "LEFT", ox + inset, oy, "RIGHT", st.healerBuffRoot, "RIGHT", ox - inset, oy)
 		if bar._hbBarHeight ~= thickness then
-			bar:SetHeight(thickness)
+			if Pixel and Pixel.SetHeight then
+				Pixel.SetHeight(bar, thickness, 1)
+			else
+				bar:SetHeight(thickness)
+			end
 			bar._hbBarHeight = thickness
 		end
 		bar._hbBarWidth = nil
@@ -2391,7 +2501,11 @@ local function renderBar(st, group, trackedAura, colorRule)
 		setAnimatedBarAura(bar, trackedAura)
 	else
 		clearAnimatedBarState(bar)
-		bar:SetValue(1)
+		if Pixel and Pixel.SetStatusBarValue then
+			Pixel.SetStatusBarValue(bar, 1, false, true)
+		else
+			bar:SetValue(1)
+		end
 	end
 	bar:Show()
 end
@@ -2534,6 +2648,10 @@ function HB.UpdateFromAuras(btn, updateInfo, cache, changed, isFullUpdate, compi
 
 	ensureVisualLayersForUpdate(btn, st)
 	local unit = btn.unit
+	if unit == nil or unit == "" then
+		HB.ClearButton(btn)
+		return
+	end
 
 	if isFullUpdate or not updateInfo then
 		rebuildFamilyStateFromCache(state, compiled, cache, unit)
@@ -2650,6 +2768,63 @@ function HB.ClampOffsets(anchorPoint, x, y, frameW, frameH, inset)
 	x = clamp(x, minX, maxX, 0) or 0
 	y = clamp(y, minY, maxY, 0) or 0
 	return roundInt(x), roundInt(y)
+end
+
+function HB.ClampOffsetsForRegion(anchorPoint, x, y, frameW, frameH, regionW, regionH, inset)
+	anchorPoint = normalizeAnchor(anchorPoint)
+	frameW = tonumber(frameW) or 0
+	frameH = tonumber(frameH) or 0
+	if frameW <= 0 then frameW = 200 end
+	if frameH <= 0 then frameH = 100 end
+	inset = clamp(inset, 0, min(frameW, frameH) * 0.5, 0) or 0
+
+	local maxRegionW = max(1, frameW - (inset * 2))
+	local maxRegionH = max(1, frameH - (inset * 2))
+	regionW = clamp(regionW, 1, maxRegionW, maxRegionW) or maxRegionW
+	regionH = clamp(regionH, 1, maxRegionH, maxRegionH) or maxRegionH
+
+	local anchor = ANCHOR_COORDS[anchorPoint] or ANCHOR_COORDS.CENTER
+	local fx = (anchor[1] or 0) + 0.5
+	local fy = (anchor[2] or 0) + 0.5
+
+	local minX = inset + (fx * (regionW - frameW))
+	local maxX = ((1 - fx) * (frameW - regionW)) - inset
+	local minY = inset + (fy * (regionH - frameH))
+	local maxY = ((1 - fy) * (frameH - regionH)) - inset
+
+	x = clamp(x, minX, maxX, 0) or 0
+	y = clamp(y, minY, maxY, 0) or 0
+	return roundInt(x), roundInt(y)
+end
+
+function HB.GetBarDisplaySize(group, rootWidth, rootHeight)
+	if type(group) ~= "table" then return 0, 0, false, false end
+	rootWidth = tonumber(rootWidth) or 0
+	rootHeight = tonumber(rootHeight) or 0
+	if rootWidth <= 0 then rootWidth = 200 end
+	if rootHeight <= 0 then rootHeight = 100 end
+
+	local inset = clamp(group.inset, 0, min(rootWidth, rootHeight) * 0.5, 0) or 0
+	local availableWidth = max(1, rootWidth - (inset * 2))
+	local availableHeight = max(1, rootHeight - (inset * 2))
+	local orientation = normalizeOrientation(group.barOrientation)
+	local thickness = roundInt(clamp(group.barThickness, 1, BAR_SIZE_MAX, 6))
+	local fillFrame = group.barFillFrame == true
+	local useSizedPlacement = fillFrame or group.barWidth ~= nil or group.barHeight ~= nil
+	local width = clamp(group.barWidth, 1, BAR_SIZE_MAX, nil)
+	local height = clamp(group.barHeight, 1, BAR_SIZE_MAX, nil)
+
+	if fillFrame then
+		width = availableWidth
+		height = availableHeight
+	else
+		if width == nil then width = orientation == ORIENT_VERTICAL and thickness or availableWidth end
+		if height == nil then height = orientation == ORIENT_VERTICAL and availableHeight or thickness end
+	end
+
+	width = roundInt(clamp(width, 1, availableWidth, availableWidth))
+	height = roundInt(clamp(height, 1, availableHeight, availableHeight))
+	return width, height, useSizedPlacement, fillFrame
 end
 
 function HB.GetGrowthAxes(growth)

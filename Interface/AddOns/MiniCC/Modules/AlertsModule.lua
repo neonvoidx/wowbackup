@@ -4,7 +4,6 @@ local mini = addon.Core.Framework
 local wowEx = addon.Utils.WoWEx
 local unitWatcher = addon.Core.UnitAuraWatcher
 local iconSlotContainer = addon.Core.IconSlotContainer
-local spellCache = addon.Utils.SpellCache
 local moduleUtil = addon.Utils.ModuleUtil
 local moduleName = addon.Utils.ModuleName
 local units = addon.Utils.Units
@@ -15,6 +14,14 @@ local eventsFrame
 local soundFile
 ---@type Db
 local db
+
+local function GetDefaultVoiceID()
+	local voices = C_VoiceChat and C_VoiceChat.GetTtsVoices and C_VoiceChat.GetTtsVoices() or nil
+	if voices and #voices > 0 and voices[1].voiceID ~= nil then
+		return voices[1].voiceID
+	end
+	return C_TTSSettings.GetVoiceOptionID(0)
+end
 
 ---@type table<number, boolean>
 local previousImportantAuras = {}
@@ -99,7 +106,7 @@ local function AnnounceTTS(spellName, spellType)
 	end)
 end
 
-local function ProcessWatcherData(watcher, slot, iconsEnabled, iconsGlow, iconsReverse, colorByClass, includeDefensives)
+local function ProcessWatcherData(watcher, slot, iconsEnabled, iconsGlow, iconsReverse, colorByClass, includeDefensives, showTooltips)
 	local unit = watcher:GetUnit()
 
 	-- when units go stealth, we can't get their aura data anymore
@@ -144,6 +151,7 @@ local function ProcessWatcherData(watcher, slot, iconsEnabled, iconsGlow, iconsR
 			slotOptionsScratch.ReverseCooldown = iconsReverse
 			slotOptionsScratch.Color = color
 			slotOptionsScratch.FontScale = fontScale
+			slotOptionsScratch.SpellId = showTooltips and data.SpellId or nil
 			container:SetSlot(slot, slotOptionsScratch)
 		end
 
@@ -167,6 +175,7 @@ local function ProcessWatcherData(watcher, slot, iconsEnabled, iconsGlow, iconsR
 			slotOptionsScratch.ReverseCooldown = iconsReverse
 			slotOptionsScratch.Color = color
 			slotOptionsScratch.FontScale = fontScale
+			slotOptionsScratch.SpellId = showTooltips and data.SpellId or nil
 			container:SetSlot(slot, slotOptionsScratch)
 		end
 
@@ -202,6 +211,7 @@ local function OnAuraDataChanged()
 	local iconsReverse = db.Modules.AlertsModule.Icons.ReverseCooldown
 	local colorByClass = db.Modules.AlertsModule.Icons.ColorByClass
 	local includeDefensives = db.Modules.AlertsModule.IncludeDefensives
+	local showTooltips = db.Modules.AlertsModule.ShowTooltips ~= false
 	local slot = 0
 	local hasImportantAlerts
 	local hasDefensiveAlerts
@@ -220,7 +230,8 @@ local function OnAuraDataChanged()
 				iconsGlow,
 				iconsReverse,
 				colorByClass,
-				includeDefensives
+				includeDefensives,
+				showTooltips
 			)
 		end
 	end
@@ -374,10 +385,11 @@ local function RefreshTestAlerts()
 	local now = GetTime()
 	local colorByClass = db.Modules.AlertsModule.Icons.ColorByClass
 	local iconsGlow = db.Modules.AlertsModule.Icons.Glow
+	local showTooltips = db.Modules.AlertsModule.ShowTooltips ~= false
 
 	for i = 1, count do
 		local spellId = testAlertSpellIds[i]
-		local tex = spellCache:GetSpellTexture(spellId)
+		local tex = C_Spell.GetSpellTexture(spellId)
 
 		if tex then
 			local duration = 12 + (i - 1) * 3
@@ -399,6 +411,7 @@ local function RefreshTestAlerts()
 				ReverseCooldown = db.Modules.AlertsModule.Icons.ReverseCooldown,
 				Color = glowColor,
 				FontScale = db.FontScale,
+				SpellId = showTooltips and spellId or nil,
 			})
 		end
 	end
@@ -642,7 +655,7 @@ end
 function M:Refresh()
 	local options = db.Modules.AlertsModule
 
-	cachedVoiceID = (options.TTS and options.TTS.VoiceID) or C_TTSSettings.GetVoiceOptionID(0)
+	cachedVoiceID = (options.TTS and options.TTS.VoiceID) or GetDefaultVoiceID()
 	cachedTTSVolume = options.TTS and options.TTS.Volume or 100
 	cachedTTSSpeechRate = options.TTS and options.TTS.SpeechRate or 0
 	cachedTTSImportantEnabled = options.TTS and options.TTS.Important and options.TTS.Important.Enabled or false
@@ -675,13 +688,13 @@ function M:Init()
 	local count = options.Icons.MaxIcons or 8
 	local size = options.Icons.Size
 
-	cachedVoiceID = (options.TTS and options.TTS.VoiceID) or C_TTSSettings.GetVoiceOptionID(0)
+	cachedVoiceID = (options.TTS and options.TTS.VoiceID) or GetDefaultVoiceID()
 	cachedTTSVolume = options.TTS and options.TTS.Volume or 100
 	cachedTTSSpeechRate = options.TTS and options.TTS.SpeechRate or 0
 	cachedTTSImportantEnabled = options.TTS and options.TTS.Important and options.TTS.Important.Enabled or false
 	cachedTTSDefensiveEnabled = options.TTS and options.TTS.Defensive and options.TTS.Defensive.Enabled or false
 
-	container = iconSlotContainer:New(UIParent, count, size, db.IconSpacing or 2, "Alerts")
+	container = iconSlotContainer:New(UIParent, count, size, db.IconSpacing or 2, "Alerts", nil, "Alerts")
 
 	local initialRelativeTo = _G[options.RelativeTo] or UIParent
 	container.Frame:SetPoint(

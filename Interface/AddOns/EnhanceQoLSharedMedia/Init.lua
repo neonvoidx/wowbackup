@@ -60,4 +60,12 @@ LSM:Register("statusbar", "EQOL: Absorb", "Interface\\AddOns\\" .. addonName .. 
 LSM:Register("statusbar", "EQOL: Void", "Interface\\AddOns\\" .. addonName .. "\\Assets\\Void.tga")
 LSM:Register("statusbar", "EQOL: Blizzard cropped", "Interface\\AddOns\\" .. addonName .. "\\Assets\\BlizzardRetailBarCrop2.tga")
 
+LSM:Register("border", "EQOL: Midnight", "Interface\\AddOns\\" .. addonName .. "\\Assets\\border-midnight.tga")
+LSM:Register("border", "EQOL: Midnight 12px", "Interface\\AddOns\\" .. addonName .. "\\Assets\\border-midnight-12px.tga")
+LSM:Register("border", "EQOL: Midnight 18px", "Interface\\AddOns\\" .. addonName .. "\\Assets\\border-midnight-18px.tga")
+LSM:Register("border", "EQOL: Midnight white", "Interface\\AddOns\\" .. addonName .. "\\Assets\\border-midnight-white.tga")
+LSM:Register("border", "EQOL: Midnight white 12px", "Interface\\AddOns\\" .. addonName .. "\\Assets\\border-midnight-white-12px.tga")
+LSM:Register("border", "EQOL: Midnight white 18px", "Interface\\AddOns\\" .. addonName .. "\\Assets\\border-midnight-white-18px.tga")
+
+
 LSM:Register("font", "EQOL: Expressway", "Interface\\AddOns\\" .. addonName .. "\\Fonts\\ExpresswayRegular.ttf")

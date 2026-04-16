@@ -1,6 +1,5 @@
-### Changes in 120000.67-Release:
+### Changes in 120000.68-Release:
 
 - Changed: Update quest database
-- Changed: Update embeds
-- Fixed: Any potential collisions with other addons using Edit Mode
+- Changed: Update Interface version
 

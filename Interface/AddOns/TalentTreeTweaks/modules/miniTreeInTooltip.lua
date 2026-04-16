@@ -394,7 +394,7 @@ function Module:AddBuildToTooltip(tooltip, exportString)
                         end
                     end
                 end
-                local diff = calculateDiff and self:GetDiffForNode(nodeID, entryID, rank) or nil;
+                local diff = calculateDiff and self:GetDiffForNode(nodeID, entryID, rank, nodeSelectionInfo.isChoiceNode) or nil;
 
                 local dot = container:MakeDot(column, row, style, spellIcon, isAtlas, diff);
                 dots[nodeID] = dot;
@@ -428,16 +428,16 @@ function Module:AddBuildToTooltip(tooltip, exportString)
     tooltip:Show();
 end
 
-function Module:GetDiffForNode(nodeID, targetEntry, targetRank)
+function Module:GetDiffForNode(nodeID, targetEntry, targetRank, isChoiceNode)
     local selfNodeInfo = C_Traits.GetNodeInfo(C_ClassTalents.GetActiveConfigID(), nodeID);
     local selfEntry = selfNodeInfo and selfNodeInfo.activeEntry and selfNodeInfo.activeEntry.entryID;
-    local selfRank = selfNodeInfo and selfNodeInfo.activeEntry and selfNodeInfo.activeEntry.rank or 0;
+    local selfRank = selfNodeInfo and (selfNodeInfo.activeRank or selfNodeInfo.activeEntry and selfNodeInfo.activeEntry.rank) or 0;
 
     local diff;
     if targetRank == selfRank then
         if selfRank == 0 and targetRank == 0 then
             diff = nil; -- both empty
-        elseif targetEntry == selfEntry then
+        elseif targetEntry == selfEntry or not isChoiceNode then
             diff = DIFF_DEFAULT_YELLOW; -- same entry, same rank
         else
             diff = DIFF_DEFAULT_ORANGE; -- different entry
@@ -608,6 +608,11 @@ function containerMixin:MakeLine(dot1, dot2, isActive)
     return line;
 end
 
+function containerMixin:GetWidth()
+    -- blizzard is too incompetent to prevent the widget API spitting secrets
+    return self.baseWidth * self:GetScale();
+end
+
 function containerMixin:ReleaseAllDots()
     self.dotPool:ReleaseAll();
 end
@@ -621,7 +626,7 @@ function containerMixin:Reset()
     self:ClearAllPoints();
     self:ReleaseAllLines();
     self:ReleaseAllDots();
-    self:SetSize(self.expectedMaxCols * self.spacing, self.expectedMaxRows * self.spacing);
+    self:SetSize(self.baseWidth, self.baseHeight);
 end
 
 --- @return TTT_TreeInMinimapContainerMixin

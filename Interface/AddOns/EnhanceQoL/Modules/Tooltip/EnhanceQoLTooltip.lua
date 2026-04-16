@@ -7,7 +7,8 @@ else
 	error(parentAddonName .. " is not loaded")
 end
 
-local L = LibStub("AceLocale-3.0"):GetLocale("EnhanceQoL_Tooltip")
+local L = LibStub("AceLocale-3.0"):GetLocale("EnhanceQoL")
+local WHITE_FONT_COLOR = _G.WHITE_FONT_COLOR
 
 local frameLoad = CreateFrame("Frame")
 
@@ -1035,15 +1036,14 @@ local function checkItem(tooltip, id, name, guid)
 	end
 	if addon.db["TooltipShowItemCount"] then
 		if id then
-			local bagCount = C_Item.GetItemCount(id)
-			local bankCount = C_Item.GetItemCount(id, true) - bagCount
-			local accountCount = C_Item.GetItemCount(id, true, false, false, true) - bankCount - bagCount -- last true = AccountBank
-			local totalCount = bagCount + bankCount + accountCount
-
 			if addon.db["TooltipShowSeperateItemCount"] then
-				if bagCount > 0 then
-					bankCount = bankCount - bagCount
+				local bagCount = C_Item.GetItemCount(id) or 0
+				local totalWithoutAccountBank = C_Item.GetItemCount(id, true) or bagCount
+				local totalCount = C_Item.GetItemCount(id, true, false, false, true) or totalWithoutAccountBank
+				local bankCount = math.max(0, totalWithoutAccountBank - bagCount)
+				local accountCount = math.max(0, totalCount - totalWithoutAccountBank)
 
+				if bagCount > 0 then
 					if first then
 						tooltip:AddLine(" ")
 						first = false
@@ -1055,7 +1055,7 @@ local function checkItem(tooltip, id, name, guid)
 						tooltip:AddLine(" ")
 						first = false
 					end
-					tooltip:AddDoubleLine(L["Bank"], bankCount)
+					tooltip:AddDoubleLine(BANK, bankCount)
 				end
 				if accountCount > 0 then
 					if first then
@@ -1065,6 +1065,7 @@ local function checkItem(tooltip, id, name, guid)
 					tooltip:AddDoubleLine(ACCOUNT_BANK_PANEL_TITLE, accountCount)
 				end
 			else
+				local totalCount = C_Item.GetItemCount(id, true, false, false, true) or 0
 				tooltip:AddDoubleLine(L["Itemcount"], totalCount)
 			end
 		end
@@ -1157,6 +1158,11 @@ local function checkAdditionalUnit(tt)
 end
 
 if TooltipDataProcessor then
+	TooltipDataProcessor.AddLinePreCall(Enum.TooltipDataLineType.SellPrice, function(tooltip, lineData)
+		tooltip:AddLine(SELL_PRICE .. ": " .. GetMoneyString(lineData.price), WHITE_FONT_COLOR:GetRGB())
+		return true
+	end)
+
 	TooltipDataProcessor.AddTooltipPostCall(TooltipDataProcessor.AllTypes, function(tooltip, data)
 		if not addon.db then return end
 		if not data or not data.type then return end

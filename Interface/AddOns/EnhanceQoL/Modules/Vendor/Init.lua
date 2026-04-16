@@ -7,7 +7,6 @@ else
 end
 
 addon.Vendor = addon.Vendor or {}
-addon.LVendor = addon.LVendor or {} -- Locales for MythicPlus
 addon.Vendor.functions = addon.Vendor.functions or {}
 
 addon.Vendor.variables = addon.Vendor.variables or {}

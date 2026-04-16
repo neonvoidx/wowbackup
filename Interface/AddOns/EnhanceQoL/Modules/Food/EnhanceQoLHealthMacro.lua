@@ -7,7 +7,7 @@ else
 	error(parentAddonName .. " is not loaded")
 end
 
-local L = LibStub("AceLocale-3.0"):GetLocale("EnhanceQoL_DrinkMacro")
+local L = LibStub("AceLocale-3.0"):GetLocale("EnhanceQoL")
 
 local UnitAffectingCombat = UnitAffectingCombat
 local InCombatLockdown = InCombatLockdown

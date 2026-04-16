@@ -162,7 +162,7 @@ local challengeMapIDDefaults = {
 	[234] = "KARA",
 	[164] = "AUCH",
 	[163] = "BSM",
-	[239] = "SOT",
+	[239] = "SEAT",
 	[168] = "EB",
 	[166] = "GD",
 	[169] = "ID",
@@ -182,10 +182,10 @@ local challengeMapIDDefaults = {
 	[456] = "TOTT",
 	[438] = "VP",
 	[556] = "POS",
-	[557] = "WRS",
+	[557] = "WS",
 	[558] = "MT",
 	[559] = "NPX",
-	[560] = "MAIS",
+	[560] = "MC",
 }
 
 addon.Tooltip.variables.challengeMapID = addon.functions and addon.functions.BuildChallengeMapLabelTable and addon.functions.BuildChallengeMapLabelTable(challengeMapIDDefaults) or challengeMapIDDefaults

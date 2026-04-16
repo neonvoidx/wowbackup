@@ -7,10 +7,16 @@ local DEFAULT_ACTION_BUTTON_COUNT = _G.NUM_ACTIONBAR_BUTTONS or 12
 local PET_ACTION_BUTTON_COUNT = _G.NUM_PET_ACTION_SLOTS or 10
 local STANCE_ACTION_BUTTON_COUNT = _G.NUM_STANCE_SLOTS or _G.NUM_SHAPESHIFT_SLOTS or 10
 local DEFAULT_BORDER_STYLE = "DEFAULT"
+local BORDER_COLOR_MODE_DEFAULT = "DEFAULT"
+local BORDER_COLOR_MODE_CUSTOM = "CUSTOM"
+local BORDER_COLOR_MODE_CLASS = "CLASS"
 local QUICK_SLOT_BORDER = "Interface\\Buttons\\UI-Quickslot2"
 local DEFAULT_BORDER_EDGE_SIZE = 16
 local DEFAULT_BORDER_PADDING = 0
+local EXTRA_ACTION_BAR_NAME = "ExtraActionBar"
+local ZONE_ABILITY_BAR_NAME = "ZoneAbilityBar"
 local LSM = LibStub("LibSharedMedia-3.0", true)
+local UnitClass = UnitClass
 
 local function getDefaultFontFace()
 	if addon.functions and addon.functions.GetGlobalDefaultFontFace then return addon.functions.GetGlobalDefaultFontFace() end
@@ -43,8 +49,35 @@ local function EnsureActionBarNameLookup()
 	return ACTION_BAR_NAME_LOOKUP
 end
 
+local function IsExtraActionButton(button)
+	if not button then return false end
+	if button.isExtra == true then return true end
+	if _G.ExtraActionButton1 and button == _G.ExtraActionButton1 then return true end
+	return button.GetName and button:GetName() == "ExtraActionButton1"
+end
+
+local function IsZoneAbilityButton(button)
+	if not button then return false end
+	if button.EQOL_ActionBarName == ZONE_ABILITY_BAR_NAME then return true end
+	local zoneAbilityFrame = _G.ZoneAbilityFrame
+	local container = zoneAbilityFrame and zoneAbilityFrame.SpellButtonContainer
+	if container and button.GetParent and button:GetParent() == container then
+		button.EQOL_ActionBarName = ZONE_ABILITY_BAR_NAME
+		return true
+	end
+	return false
+end
+
 local function DetermineButtonBarName(button)
 	if not button then return nil end
+	if IsExtraActionButton(button) then
+		button.EQOL_ActionBarName = EXTRA_ACTION_BAR_NAME
+		return EXTRA_ACTION_BAR_NAME
+	end
+	if IsZoneAbilityButton(button) then
+		button.EQOL_ActionBarName = ZONE_ABILITY_BAR_NAME
+		return ZONE_ABILITY_BAR_NAME
+	end
 	if button.EQOL_ActionBarName then return button.EQOL_ActionBarName end
 	local lookup = EnsureActionBarNameLookup()
 	local parent = button:GetParent()
@@ -81,6 +114,50 @@ local function ForEachActionButton(callback)
 	end
 end
 
+local function ForEachZoneAbilityButton(callback)
+	if type(callback) ~= "function" then return end
+	local zoneAbilityFrame = _G.ZoneAbilityFrame
+	local container = zoneAbilityFrame and zoneAbilityFrame.SpellButtonContainer
+	if not container or not container.EnumerateActive then return end
+	for spellButton in container:EnumerateActive() do
+		if spellButton then
+			spellButton.EQOL_ActionBarName = ZONE_ABILITY_BAR_NAME
+			callback(spellButton)
+		end
+	end
+end
+
+local function ForEachHotkeyButton(callback)
+	if type(callback) ~= "function" then return end
+	local seen = {}
+	ForEachActionButton(function(button, info, index)
+		seen[button] = true
+		callback(button, info, index)
+	end)
+
+	local extraActionButton = _G.ExtraActionButton1
+	if extraActionButton and not seen[extraActionButton] then
+		callback(extraActionButton, {
+			name = EXTRA_ACTION_BAR_NAME,
+			text = (addon.L and addon.L["actionBarExtraActionButton"]) or "Extra Action Button",
+		}, 1)
+	end
+end
+
+local function ForEachActionButtonBorderTarget(callback)
+	if type(callback) ~= "function" then return end
+	local seen = {}
+	local function visit(button)
+		if not button or seen[button] then return end
+		seen[button] = true
+		callback(button)
+	end
+
+	ForEachActionButton(function(button) visit(button) end)
+	visit(_G.ExtraActionButton1)
+	ForEachZoneAbilityButton(visit)
+end
+
 local function GetNormalTexture(button)
 	if not button then return nil end
 	if button.NormalTexture then return button.NormalTexture end
@@ -106,8 +183,35 @@ local function GetBorderPadding()
 	return value
 end
 
+local function GetBorderColorMode()
+	if not addon.db then return BORDER_COLOR_MODE_DEFAULT end
+	local mode = addon.db.actionBarBorderColorMode
+	if mode == nil then
+		if addon.db.actionBarBorderColoring then return BORDER_COLOR_MODE_CUSTOM end
+		return BORDER_COLOR_MODE_DEFAULT
+	end
+	if mode ~= BORDER_COLOR_MODE_CUSTOM and mode ~= BORDER_COLOR_MODE_CLASS then return BORDER_COLOR_MODE_DEFAULT end
+	return mode
+end
+
+local function GetPlayerClassBorderColor()
+	local classToken = UnitClass and select(2, UnitClass("player")) or nil
+	if not classToken then return 1, 1, 1, 1 end
+
+	local colorObj = C_ClassColor and C_ClassColor.GetClassColor and C_ClassColor.GetClassColor(classToken)
+	if colorObj and colorObj.r and colorObj.g and colorObj.b then return colorObj.r, colorObj.g, colorObj.b, 1 end
+
+	local color = (CUSTOM_CLASS_COLORS and CUSTOM_CLASS_COLORS[classToken]) or (RAID_CLASS_COLORS and RAID_CLASS_COLORS[classToken])
+	if color and color.r and color.g and color.b then return color.r, color.g, color.b, color.a or 1 end
+
+	return 1, 1, 1, 1
+end
+
 local function GetBorderColor()
-	if not addon.db or not addon.db.actionBarBorderColoring then return 1, 1, 1, 1 end
+	local mode = GetBorderColorMode()
+	if mode == BORDER_COLOR_MODE_CLASS then return GetPlayerClassBorderColor() end
+	if mode ~= BORDER_COLOR_MODE_CUSTOM then return 1, 1, 1, 1 end
+
 	local col = addon.db.actionBarBorderColor or {}
 	local r = tonumber(col.r) or 1
 	local g = tonumber(col.g) or 1
@@ -304,7 +408,8 @@ end
 
 function Labels.RefreshActionButtonBorders()
 	if Labels.EnsureActionButtonArtHook then Labels.EnsureActionButtonArtHook() end
-	ForEachActionButton(function(button) RefreshButtonBorder(button) end)
+	if Labels.EnsureZoneAbilityBorderHook then Labels.EnsureZoneAbilityBorderHook() end
+	ForEachActionButtonBorderTarget(function(button) RefreshButtonBorder(button) end)
 end
 
 function Labels.RefreshActionButtonBorder(button) RefreshButtonBorder(button) end
@@ -479,6 +584,88 @@ local function GetActionButtonCount(button)
 	return nil
 end
 
+local VALID_TEXT_ANCHORS = {
+	TOPLEFT = true,
+	TOP = true,
+	TOPRIGHT = true,
+	LEFT = true,
+	CENTER = true,
+	RIGHT = true,
+	BOTTOMLEFT = true,
+	BOTTOM = true,
+	BOTTOMRIGHT = true,
+}
+
+local function NormalizeTextAnchor(anchor, fallback)
+	local value = type(anchor) == "string" and string.upper(anchor) or nil
+	if VALID_TEXT_ANCHORS[value] then return value end
+	return fallback
+end
+
+local function NormalizeTextOffset(value, fallback)
+	local number = tonumber(value)
+	if number == nil then number = fallback or 0 end
+	if number < -50 then
+		number = -50
+	elseif number > 50 then
+		number = 50
+	end
+	return math.floor(number + 0.5)
+end
+
+local function StoreRegionAnchorPoints(region, key)
+	if not region then return end
+	local numPoints = region.GetNumPoints and region:GetNumPoints() or 0
+	local points = {}
+	for index = 1, numPoints do
+		local point, relativeTo, relativePoint, xOfs, yOfs = region:GetPoint(index)
+		points[#points + 1] = {
+			point = point,
+			relativeTo = relativeTo,
+			relativePoint = relativePoint,
+			xOfs = xOfs,
+			yOfs = yOfs,
+		}
+	end
+	region[key] = points
+end
+
+local function RestoreRegionAnchorPoints(region, key)
+	if not region then return end
+	local points = region[key]
+	region:ClearAllPoints()
+	if type(points) == "table" and #points > 0 then
+		for _, info in ipairs(points) do
+			region:SetPoint(info.point, info.relativeTo, info.relativePoint, info.xOfs, info.yOfs)
+		end
+	end
+	region[key] = nil
+end
+
+local function GetActionButtonAnchorTarget(button)
+	if not button then return nil end
+	return button.icon or button.Icon or button
+end
+
+local function ApplyRegionPositionOverride(region, button, enabled, anchor, offsetX, offsetY, stateKey, originalKey)
+	if not (region and button) then return end
+	if enabled then
+		if not region[stateKey] then StoreRegionAnchorPoints(region, originalKey) end
+		local target = GetActionButtonAnchorTarget(button)
+		local point = NormalizeTextAnchor(anchor, "CENTER")
+		region:ClearAllPoints()
+		region:SetPoint(point, target, point, NormalizeTextOffset(offsetX, 0), NormalizeTextOffset(offsetY, 0))
+		region[stateKey] = true
+	else
+		if region[stateKey] then
+			RestoreRegionAnchorPoints(region, originalKey)
+			region[stateKey] = nil
+		else
+			StoreRegionAnchorPoints(region, originalKey)
+		end
+	end
+end
+
 local function NormalizeFontSize(size, minValue, maxValue)
 	local value = tonumber(size) or minValue
 	if value < minValue then value = minValue end
@@ -547,6 +734,17 @@ local function ApplyCountStyling(button)
 	if not addon.db then return end
 	local count = GetActionButtonCount(button)
 	if not count then return end
+	local positionOverride = addon.db.actionBarCountFontOverride == true
+	ApplyRegionPositionOverride(
+		count,
+		button,
+		positionOverride,
+		addon.db.actionBarCountAnchor,
+		addon.db.actionBarCountOffsetX,
+		addon.db.actionBarCountOffsetY,
+		"EQOL_UsingCountPositionOverride",
+		"EQOL_OriginalCountPoints"
+	)
 	local face = resolveFontFace(addon.db.actionBarCountFontFace)
 	local size = NormalizeFontSize(addon.db.actionBarCountFontSize, 6, 32)
 	local outline = addon.db.actionBarCountFontOutline or "OUTLINE"
@@ -573,8 +771,9 @@ local function ApplyCountStyling(button)
 	end
 end
 
-local function ShouldHideHotkey(barName)
-	if not addon.db or not barName then return false end
+local function ShouldHideHotkey(barName, button)
+	if not addon.db then return false end
+	if not barName then return false end
 	local overrides = addon.db.actionBarHiddenHotkeys
 	if type(overrides) ~= "table" then return false end
 	return overrides[barName] == true
@@ -601,7 +800,7 @@ local function RefreshHotkeyVisibility(button, barNameOverride)
 	local hotkey = GetActionButtonHotkey(button)
 	if not hotkey then return end
 	local barName = barNameOverride or DetermineButtonBarName(button)
-	UpdateHotkeyVisibility(hotkey, ShouldHideHotkey(barName))
+	UpdateHotkeyVisibility(hotkey, ShouldHideHotkey(barName, button))
 end
 
 local HOTKEY_SHORT_REPLACEMENTS = {
@@ -666,6 +865,19 @@ local function EnsureModifierShortcutPatterns()
 	return modifierShortcutPatterns
 end
 
+local keyShortcutPatterns
+local function EnsureKeyShortcutPatterns()
+	if keyShortcutPatterns then return keyShortcutPatterns end
+	keyShortcutPatterns = {}
+	local function addKeyShortcut(globalKey, replacement, fallback)
+		local text = GetGlobalUpper(globalKey, fallback)
+		if text and text ~= "" then table.insert(keyShortcutPatterns, { pattern = EscapePattern(text), replacement = replacement }) end
+	end
+	addKeyShortcut("KEY_SPACE", "SP", "SPACEBAR")
+	addKeyShortcut("KEY_BACKSPACE", "BS", "BACKSPACE")
+	return keyShortcutPatterns
+end
+
 local function ShortenHotkeyText(text)
 	if type(text) ~= "string" or text == "" then return text end
 	local isMinusKeybind
@@ -676,6 +888,9 @@ local function ShortenHotkeyText(text)
 		short = short:gsub(data.pattern, data.replacement)
 	end
 	for _, data in ipairs(EnsureModifierShortcutPatterns()) do
+		short = short:gsub(data.pattern, data.replacement)
+	end
+	for _, data in ipairs(EnsureKeyShortcutPatterns()) do
 		short = short:gsub(data.pattern, data.replacement)
 	end
 	for _, repl in ipairs(HOTKEY_SHORT_REPLACEMENTS) do
@@ -701,6 +916,17 @@ local function ApplyHotkeyStyling(button, barNameOverride)
 	if not addon.db then return end
 	local hotkey = GetActionButtonHotkey(button)
 	if not hotkey then return end
+	local positionOverride = addon.db.actionBarHotkeyFontOverride == true
+	ApplyRegionPositionOverride(
+		hotkey,
+		button,
+		positionOverride,
+		addon.db.actionBarHotkeyAnchor,
+		addon.db.actionBarHotkeyOffsetX,
+		addon.db.actionBarHotkeyOffsetY,
+		"EQOL_UsingHotkeyPositionOverride",
+		"EQOL_OriginalHotkeyPoints"
+	)
 	local originalText = hotkey:GetText()
 	if hotkey.EQOL_ShortApplied and originalText ~= hotkey.EQOL_ShortValue then
 		hotkey.EQOL_ShortApplied = nil
@@ -786,11 +1012,11 @@ if not Labels.hotkeyHookInstalled then
 end
 
 function Labels.RefreshAllHotkeyStyles()
-	ForEachActionButton(function(button, info) ApplyHotkeyStyling(button, info and info.name) end)
+	ForEachHotkeyButton(function(button, info) ApplyHotkeyStyling(button, info and info.name) end)
 end
 
 function Labels.RefreshAllHotkeyVisibility()
-	ForEachActionButton(function(button, info) RefreshHotkeyVisibility(button, info and info.name) end)
+	ForEachHotkeyButton(function(button, info) RefreshHotkeyVisibility(button, info and info.name) end)
 end
 
 local function InstallCountHook()
@@ -833,7 +1059,7 @@ local function RefreshHotkeyColorOverride(button)
 	local hotkey = GetActionButtonHotkey(button)
 	if not hotkey then return end
 	local barName = DetermineButtonBarName(button)
-	if ShouldHideHotkey(barName) then
+	if ShouldHideHotkey(barName, button) then
 		RefreshHotkeyVisibility(button, barName)
 		return
 	end
@@ -846,6 +1072,15 @@ local function RefreshHotkeyColorOverride(button)
 		RestoreTextColorOverride(hotkey, "EQOL_OriginalHotkeyColor", "EQOL_UsingHotkeyColorOverride")
 	end
 	RefreshHotkeyVisibility(button, barName)
+end
+
+function Labels.GetAdditionalHotkeyBarOptions()
+	return {
+		{
+			value = EXTRA_ACTION_BAR_NAME,
+			text = (addon.L and addon.L["actionBarExtraActionButton"]) or "Extra Action Button",
+		},
+	}
 end
 
 hooksecurefunc("ActionButton_UpdateRangeIndicator", function(self, checksRange, inRange)
@@ -966,6 +1201,38 @@ function Labels.EnsureActionButtonArtHook()
 		if Labels.RefreshActionButtonBorder then Labels.RefreshActionButtonBorder(button) end
 	end)
 	Labels._actionBarArtHooked = true
+end
+
+function Labels.EnsureZoneAbilityBorderHook()
+	if Labels._zoneAbilityBorderHooked then return true end
+
+	local mixin = _G.ZoneAbilityFrameSpellButtonMixin
+	if mixin and type(mixin.Refresh) == "function" then
+		hooksecurefunc(mixin, "Refresh", function(button)
+			if Labels.RefreshActionButtonBorder then Labels.RefreshActionButtonBorder(button) end
+		end)
+		Labels._zoneAbilityBorderHooked = true
+		if Labels._zoneAbilityBorderLoadWatcher then
+			Labels._zoneAbilityBorderLoadWatcher:UnregisterEvent("ADDON_LOADED")
+			Labels._zoneAbilityBorderLoadWatcher:SetScript("OnEvent", nil)
+			Labels._zoneAbilityBorderLoadWatcher = nil
+		end
+		return true
+	end
+
+	if not Labels._zoneAbilityBorderLoadWatcher then
+		local frame = CreateFrame("Frame")
+		frame:RegisterEvent("ADDON_LOADED")
+		frame:SetScript("OnEvent", function(self, _, loadedAddonName)
+			if loadedAddonName ~= "Blizzard_ZoneAbility" then return end
+			if Labels.EnsureZoneAbilityBorderHook and Labels.EnsureZoneAbilityBorderHook() then
+				if Labels.RefreshActionButtonBorders then Labels.RefreshActionButtonBorders() end
+			end
+		end)
+		Labels._zoneAbilityBorderLoadWatcher = frame
+	end
+
+	return false
 end
 
 local initFrame = CreateFrame("Frame")

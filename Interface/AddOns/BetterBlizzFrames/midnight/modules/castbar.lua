@@ -46,6 +46,21 @@ castbarColors.colorDefaultStandard = CreateColor(1.0, 0.7, 0.0, 1)
 castbarColors.colorDefaultChannel = CreateColor(0.0, 1.0, 0.0, 1)
 castbarColors.colorDefaultUninterruptable = CreateColor(0.7, 0.7, 0.7, 1)
 
+local CastStopEvents = {
+    UNIT_SPELLCAST_STOP             = true,
+    UNIT_SPELLCAST_CHANNEL_STOP     = true,
+    UNIT_SPELLCAST_INTERRUPTED      = true,
+    UNIT_SPELLCAST_EMPOWER_STOP     = true,
+}
+
+local CastStartEvents = {
+    UNIT_SPELLCAST_START            = true,
+    UNIT_SPELLCAST_CHANNEL_START    = true,
+    UNIT_SPELLCAST_EMPOWER_START    = true,
+    PLAYER_TARGET_CHANGED           = true,
+    PLAYER_FOCUS_CHANGED            = true,
+}
+
 local function CreateBorder(frame, r, g, b, a)
     local border
     if frame.CreateTexture then
@@ -513,6 +528,7 @@ function BBF.ClassicCastbar(castBar, unitType)
             end)
         end
 
+        BBF.CastbarColorHooks()
 
 
         castBar.textureChangedNeedsColor = true
@@ -1032,71 +1048,6 @@ function BBF.CastBarTimerCaller()
     CastBarTimer(FocusFrameSpellBar)
 end
 
-
-local interruptSpells = {
-    1766,  -- Kick (Rogue)
-    2139,  -- Counterspell (Mage)
-    6552,  -- Pummel (Warrior)
-    19647, -- Spell Lock (Warlock)
-    47528, -- Mind Freeze (Death Knight)
-    57994, -- Wind Shear (Shaman)
-    --91802, -- Shambling Rush (Death Knight)
-    96231, -- Rebuke (Paladin)
-    106839,-- Skull Bash (Feral)
-    115781,-- Optical Blast (Warlock)
-    116705,-- Spear Hand Strike (Monk)
-    132409,-- Spell Lock (Warlock)
-    119910,-- Spell Lock (Warlock Pet)
-    89766, -- Axe Toss (Warlock Pet)
-    171138,-- Shadow Lock (Warlock)
-    147362,-- Countershot (Hunter)
-    183752,-- Disrupt (Demon Hunter)
-    187707,-- Muzzle (Hunter)
-    212619,-- Call Felhunter (Warlock)
-    --231665,-- Avengers Shield (Paladin)
-    351338,-- Quell (Evoker)
-    97547, -- Solar Beam
-    78675, -- Solar Beam
-    15487, -- Silence
-    --47482, -- Leap (DK Transform)
-}
-
--- Local variable to store the known interrupt spell ID
-local knownInterruptSpellID = nil
-
--- Function to find and return the interrupt spell the player knows
-local function GetInterruptSpell()
-    for _, spellID in ipairs(interruptSpells) do
-        if IsSpellKnownOrOverridesKnown(spellID) or (UnitExists("pet") and IsSpellKnownOrOverridesKnown(spellID, true)) then
-            knownInterruptSpellID = spellID
-            return spellID
-        end
-    end
-    knownInterruptSpellID = nil
-end
--- Recheck interrupt spells when lock resummons/sacrifices pet
-local petSummonSpells = {
-    [30146] = true,  -- Summon Demonic Tyrant (Demonology)
-    [691]    = true,  -- Summon Felhunter (for Spell Lock)
-    [108503] = true,  -- Grimoire of Sacrifice
-}
-
-local function OnEvent(self, event, unit, _, spellID)
-    if event == "UNIT_SPELLCAST_SUCCEEDED" then -- BBFMIDNIGHT i think this should be freed up from secrets soonTM, currently errors.
-        if not petSummonSpells[spellID] then return end
-    end
-    C_Timer.After(0.1, GetInterruptSpell)
-end
-
-local interruptSpellUpdate = CreateFrame("Frame")
-if select(2, UnitClass("player")) == "WARLOCK" then
-    --interruptSpellUpdate:RegisterUnitEvent("UNIT_SPELLCAST_SUCCEEDED", "player")
-end
-interruptSpellUpdate:RegisterEvent("TRAIT_CONFIG_UPDATED")
-interruptSpellUpdate:RegisterEvent("PLAYER_TALENT_UPDATE")
-interruptSpellUpdate:SetScript("OnEvent", OnEvent)
-
-
 local function HideChargeTiers(castBar)
     for _, child in ipairs({castBar:GetChildren()}) do
         if child.BasePip or (child.Normal and child.Disabled) then
@@ -1105,22 +1056,6 @@ local function HideChargeTiers(castBar)
         end
     end
 end
-
-local function ColorOldCastbar(castBar)
-    castBar:SetStatusBarColor(1, 0.7, 0, 1)
-    if castBar.barType == "channel" then
-        castBar:SetStatusBarColor(0, 1, 0, 1)
-    elseif castBar.barType == "interrupted" then
-        castBar:SetStatusBarColor(1, 0, 0, 1)
-    elseif castBar.barType == "uninterruptable" then
-        castBar:SetStatusBarColor(0.7, 0.7, 0.7, 1)
-        HideChargeTiers(castBar)
-    elseif castBar.barType == "empowered" then
-        castBar:SetStatusBarColor(1, 0.7, 0, 1)
-        HideChargeTiers(castBar)
-    end
-end
-
 
 function BBF.CastbarRecolorWidgets()
     if (BetterBlizzFramesDB.castBarRecolorInterrupt or BetterBlizzFramesDB.recolorCastbars or BetterBlizzFramesDB.classicFrames) then
@@ -1433,44 +1368,30 @@ end
 
 function BBF.HookCastbars()
     if BetterBlizzFramesDB.quickHideCastbars then
-        local hideEvents = {
-            ["UNIT_SPELLCAST_STOP"] = true,
-            ["UNIT_SPELLCAST_CHANNEL_STOP"] = true,
-            ["UNIT_SPELLCAST_INTERRUPTED"] = true,
-            ["UNIT_SPELLCAST_EMPOWER_STOP"] = true,
-        }
-        TargetFrameSpellBar:HookScript("OnEvent", function(self, event, ...)
-            if hideEvents[event] then
-                self:Hide()
+        TargetFrameSpellBar:HookScript("OnEvent", function(self, event, unitTarget, castGUID, spellID, interruptedByOrCastBarID)
+            if CastStopEvents[event] then
+                if event == "UNIT_SPELLCAST_INTERRUPTED" and interruptedByOrCastBarID ~= nil then
+                    self.wasKicked = true
+                end
+                if not self.wasKicked and event ~= "UNIT_SPELLCAST_CHANNEL_STOP" then
+                    self:Hide()
+                end
+            elseif CastStartEvents[event] then
+                self.wasKicked = nil
             end
         end)
-        FocusFrameSpellBar:HookScript("OnEvent", function(self, event, ...)
-            if hideEvents[event] then
-                self:Hide()
+        FocusFrameSpellBar:HookScript("OnEvent", function(self, event, unitTarget, castGUID, spellID, interruptedByOrCastBarID)
+            if CastStopEvents[event] then
+                if event == "UNIT_SPELLCAST_INTERRUPTED" and interruptedByOrCastBarID ~= nil then
+                    self.wasKicked = true
+                end
+                if not self.wasKicked and event ~= "UNIT_SPELLCAST_CHANNEL_STOP" then
+                    self:Hide()
+                end
+            elseif CastStartEvents[event] then
+                self.wasKicked = nil
             end
         end)
-
-        for i = 1, 3 do
-            local sArenaFrame = _G["sArenaEnemyFrame"..i]
-            if sArenaFrame then
-                local spellBar = sArenaFrame.CastBar
-                spellBar:HookScript("OnEvent", function(self, event, ...)
-                    if hideEvents[event] then
-                        self:Hide()
-                    end
-                end)
-            end
-
-            local bArenaFrame = _G["bArenaEnemyFrame"..i]
-            if bArenaFrame then
-                local spellBar = bArenaFrame.CastBar
-                spellBar:HookScript("OnEvent", function(self, event, ...)
-                    if hideEvents[event] then
-                        self:Hide()
-                    end
-                end)
-            end
-        end
     end
 
     if BetterBlizzFramesDB.petCastbar then
@@ -1482,30 +1403,26 @@ function BBF.HookCastbars()
     end
 end
 
-local function CastbarOnEvent(self, event)
+local function CastbarOnEvent(self, event, unitTarget, castGUID, spellID, interruptedByOrCastBarID)
     local colors = castbarColors
     local unitToken = self.unit
     local castBarTexture = self:GetStatusBarTexture()
     local notInterruptible
+    local isAttackable
 
-    if event == "UNIT_SPELLCAST_INTERRUPTED" then
-        self.lastEvent = event
-        if self.textureChangedNeedsColor then
-            self:SetStatusBarColor(1, 0, 0, 1)
-        else
-            castBarTexture:SetDesaturated(false)
-            self:SetStatusBarColor(1, 1, 1, 1)
+    if CastStopEvents[event] then
+        if event == "UNIT_SPELLCAST_INTERRUPTED" then
+            self.stoppedCast = true
+            if interruptedByOrCastBarID ~= nil then
+                self.wasKicked = true
+            end
         end
-        return
-    elseif (event == "UNIT_SPELLCAST_STOP" or event == "UNIT_SPELLCAST_CHANNEL_STOP" or event == "UNIT_SPELLCAST_EMPOWER_STOP") and self.lastEvent == "UNIT_SPELLCAST_INTERRUPTED" then
-        if self.textureChangedNeedsColor then
-            self:SetStatusBarColor(1, 0, 0, 1)
-        else
-            castBarTexture:SetDesaturated(false)
-            self:SetStatusBarColor(1, 1, 1, 1)
-        end
-        return
+    elseif CastStartEvents[event] then
+        self.wasKicked = nil
+        self.stoppedCast = nil
     end
+
+    local stoppedCast = self.stoppedCast
 
     if unitToken then
         if self.casting then
@@ -1513,14 +1430,20 @@ local function CastbarOnEvent(self, event)
         elseif self.channeling then
             _, _, _, _, _, _, notInterruptible = UnitChannelInfo(unitToken)
         end
+        isAttackable = UnitCanAttack("player", unitToken)
     end
 
     if not self.textureChangedNeedsColor then
+        if stoppedCast then
+            castBarTexture:SetDesaturated(false)
+            self:SetStatusBarColor(1, 1, 1, 1)
+            return
+        end
         if colors.enabled then
             if castBarTexture then
                 castBarTexture:SetDesaturated(true)
             end
-            if castBarRecolorInterrupt and not BBF.playerKickReady then
+            if castBarRecolorInterrupt and BBF.interruptReady == false and isAttackable then
                 if colors.colorInterruptNotReady and (self.casting or self.channeling) and notInterruptible ~= nil then
                     castBarTexture:SetVertexColorFromBoolean(
                         notInterruptible,
@@ -1562,7 +1485,7 @@ local function CastbarOnEvent(self, event)
                 self:SetStatusBarColor(unpack(colors.standard or {1.0, 0.7, 0.0, 1}))
             end
             self.changedBarColor = true
-        elseif castBarRecolorInterrupt and not BBF.playerKickReady then
+        elseif castBarRecolorInterrupt and BBF.interruptReady == false and isAttackable then
             if castBarTexture then
                 castBarTexture:SetDesaturated(true)
             end
@@ -1585,8 +1508,12 @@ local function CastbarOnEvent(self, event)
         end
     else
         self:SetStatusBarTexture(classicCastbarTexture)
+        if stoppedCast then
+            self:SetStatusBarColor(1, 0, 0, 1)
+            return
+        end
         if colors.enabled then
-            if castBarRecolorInterrupt and not BBF.playerKickReady then
+            if castBarRecolorInterrupt and BBF.interruptReady == false and isAttackable then
                 if notInterruptible ~= nil then
                     castBarTexture:SetVertexColorFromBoolean(
                         notInterruptible,
@@ -1620,7 +1547,7 @@ local function CastbarOnEvent(self, event)
                 self:SetStatusBarColor(unpack(colors.standard or {1.0, 0.7, 0.0, 1}))
             end
         else
-            if castBarRecolorInterrupt and not BBF.playerKickReady then
+            if castBarRecolorInterrupt and BBF.interruptReady == false and isAttackable then
                 if (self.casting or self.channeling) and notInterruptible ~= nil then
                     castBarTexture:SetVertexColorFromBoolean(
                         notInterruptible,
@@ -1702,19 +1629,21 @@ function BBF.CastbarColorHooks()
     local playerCastBarTexture = PlayerCastingBarFrame:GetStatusBarTexture()
     if not BBF.RecolorCastbarHooked and not BetterBlizzFramesDB.disableCastbarTweaks then
         BBF.RecolorCastbarHooked = true
-        PlayerCastingBarFrame:HookScript("OnEvent", function(self, event)
-            if recolorCastbars or self.textureChangedNeedsColor then
-
+        PlayerCastingBarFrame:HookScript("OnEvent", function(self, event, unitTarget, castGUID, spellID, interruptedByOrCastBarID)
+            if CastStopEvents[event] then
                 if event == "UNIT_SPELLCAST_INTERRUPTED" then
-                    self.lastEvent = event
-                    if self.textureChangedNeedsColor then
-                        self:SetStatusBarColor(1, 0, 0, 1)
-                    else
-                        playerCastBarTexture:SetDesaturated(false)
-                        self:SetStatusBarColor(1, 1, 1, 1)
+                    self.stoppedCast = true
+                    if interruptedByOrCastBarID ~= nil then
+                        self.wasKicked = true
                     end
-                    return
-                elseif (event == "UNIT_SPELLCAST_STOP" or event == "UNIT_SPELLCAST_CHANNEL_STOP" or event == "UNIT_SPELLCAST_EMPOWER_STOP") and self.lastEvent == "UNIT_SPELLCAST_INTERRUPTED" then
+                end
+            elseif CastStartEvents[event] then
+                self.wasKicked = nil
+                self.stoppedCast = nil
+            end
+
+            if recolorCastbars or self.textureChangedNeedsColor then
+                if self.stoppedCast then
                     if self.textureChangedNeedsColor then
                         self:SetStatusBarColor(1, 0, 0, 1)
                     else
@@ -1728,9 +1657,9 @@ function BBF.CastbarColorHooks()
                 local unitToken = self.unit
                 if unitToken then
                     if self.casting then
-                        _, _, _, _, _, _, _, notInterruptible = UnitCastingInfo(unitToken)
+                        notInterruptible = select(8, UnitCastingInfo(unitToken))
                     elseif self.channeling then
-                        _, _, _, _, _, _, notInterruptible = UnitChannelInfo(unitToken)
+                        notInterruptible = select(7, UnitChannelInfo(unitToken))
                     end
                 end
                 playerCastBarTexture:SetDesaturated(true)

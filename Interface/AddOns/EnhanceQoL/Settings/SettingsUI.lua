@@ -141,6 +141,43 @@ function addon.functions.SettingsCreateSlider(cat, cbData)
 end
 
 ---------------------------------------------------------
+-- Input
+---------------------------------------------------------
+function addon.functions.SettingsCreateInput(cat, cbData)
+	local element, setting = SettingsLib:CreateInput(cat, {
+		key = cbData.var,
+		name = cbData.text,
+		default = cbData.default,
+		get = cbData.get or function() return addon.db[cbData.var] or cbData.default end,
+		set = cbData.set or function(v) addon.db[cbData.var] = v end,
+		desc = cbData.desc,
+		searchtags = cbData.searchtags,
+		parent = cbData.element or cbData.parent,
+		parentCheck = cbData.parentCheck,
+		parentSection = cbData.parentSection,
+		prefix = prefix,
+		numeric = cbData.numeric,
+		formatter = cbData.formatter,
+		maxChars = cbData.maxChars,
+		inputWidth = cbData.inputWidth,
+		readOnly = cbData.readOnly,
+		selectAllOnFocus = cbData.selectAllOnFocus,
+		placeholder = cbData.placeholder,
+		justifyH = cbData.justifyH,
+		min = cbData.min,
+		max = cbData.max,
+		clampToRange = cbData.clampToRange,
+		height = cbData.height,
+		multiline = cbData.multiline,
+		multilineHeight = cbData.multilineHeight,
+	})
+	addon.SettingsLayout.elements = addon.SettingsLayout.elements or {}
+	addon.SettingsLayout.elements[cbData.var] = { setting = setting, element = element }
+	if cbData.notify then SettingsLib:AttachNotify(setting, cbData.notify) end
+	return addon.SettingsLayout.elements[cbData.var]
+end
+
+---------------------------------------------------------
 -- Dropdown
 ---------------------------------------------------------
 function addon.functions.SettingsCreateDropdown(cat, cbData)

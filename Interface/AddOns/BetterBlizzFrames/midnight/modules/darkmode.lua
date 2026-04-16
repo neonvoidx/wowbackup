@@ -72,37 +72,36 @@ local function StylePartyBuffs(frame, colorValue)
     if BetterBlizzFramesDB.enableMasque and C_AddOns.IsAddOnLoaded("Masque") then return end
     if (BetterBlizzFramesDB.darkModeUi and BetterBlizzFramesDB.darkModeUiAura) then
         if not BBF.auraBorders[frame] then
-            local border = CreateFrame("Frame", nil, frame, "BackdropTemplate")
-            border:SetBackdrop({
-                edgeFile = "Interface/Tooltips/UI-Tooltip-Border",
-                tileEdge = true,
-                edgeSize = 9,
-            })
-
             local icon = frame.icon or frame.Icon
             if not icon then return end
             icon:SetTexCoord(0.08, 0.92, 0.08, 0.92)
 
-            border:SetPoint("TOPLEFT", icon, "TOPLEFT", -1.5, 1.5)
-            border:SetPoint("BOTTOMRIGHT", icon, "BOTTOMRIGHT", 1.5, -1.5)
-            border:SetBackdropBorderColor(colorValue, colorValue, colorValue)
-            -- border:SetIgnoreParentAlpha(true)
-            -- border:SetAlpha(1)
+            local border = frame:CreateTexture(nil, "OVERLAY", nil, 7)
+            if pixelBorderAuras then
+                border:SetAtlas("communities-create-avatar-border-hover")
+                border:SetDesaturated(true)
+                border:SetPoint("TOPLEFT", icon, "TOPLEFT", -0.5, 0.5)
+                border:SetPoint("BOTTOMRIGHT", icon, "BOTTOMRIGHT", 0.5, -0.5)
+            else
+                border:SetAtlas("Adventures-Spell-Border")
+                border:SetPoint("TOPLEFT", icon, "TOPLEFT", -1.5, 1.5)
+                border:SetPoint("BOTTOMRIGHT", icon, "BOTTOMRIGHT", 1.5, -1.5)
+            end
+            border:SetVertexColor(colorValue, colorValue, colorValue)
 
             BBF.auraBorders[frame] = border
         else
             local border = BBF.auraBorders[frame]
             if border then
-                border:SetBackdropBorderColor(colorValue, colorValue, colorValue)
+                border:SetVertexColor(colorValue, colorValue, colorValue)
             end
         end
     else
         if BBF.auraBorders[frame] then
             BBF.auraBorders[frame]:Hide()
-            BBF.auraBorders[frame]:SetParent(nil)
             BBF.auraBorders[frame] = nil
 
-            local icon = frame.icon
+            local icon = frame.icon or frame.Icon
             if icon then
                 icon:SetTexCoord(0, 1, 0, 1)
             end
@@ -176,52 +175,40 @@ local function UpdateUnitFrameDarkModeBorderColors(color)
     end
 end
 
-local buffIconScale = BuffFrame.AuraContainer.iconScale
-local borderSize = buffIconScale < 1 and 10 or buffIconScale < 1.1 and 9 or 8
-
 BBF.auraBorders = {}  -- BuffFrame aura borders for darkmode
 local function createOrUpdateBorders(frame, colorValue, textureName, bypass)
     --if not twwrdy then return end
     if BetterBlizzFramesDB.enableMasque and C_AddOns.IsAddOnLoaded("Masque") then return end
     if (BetterBlizzFramesDB.darkModeUi and BetterBlizzFramesDB.darkModeUiAura) or bypass then
         if not BBF.auraBorders[frame] then
-            buffIconScale = BuffFrame.AuraContainer.iconScale
-            borderSize = buffIconScale < 1 and 10 or buffIconScale < 1.1 and 9 or 8
-            -- Create borders
-            local border = CreateFrame("Frame", nil, frame, "BackdropTemplate")
-            if not bypass then
-                border:SetBackdrop({
-                    edgeFile = "Interface/Tooltips/UI-Tooltip-Border",
-                    tileEdge = true,
-                    edgeSize = borderSize,
-                })
-            else
-                border:SetBackdrop({
-                    edgeFile = "Interface/Tooltips/UI-Tooltip-Border",
-                    tileEdge = true,
-                    edgeSize = 10,
-                })
-            end
-
             local icon = frame.Icon or frame.icon
             if textureName then
                 icon = frame[textureName]
             end
             if not icon then return end
-            icon:SetTexCoord(0.08, 0.92, 0.08, 0.92) -- Adjust the icon
+            icon:SetTexCoord(0.08, 0.92, 0.08, 0.92)
 
-            if not bypass then
-                border:SetPoint("TOPLEFT", icon, "TOPLEFT", -1.5, 2)
-                border:SetPoint("BOTTOMRIGHT", icon, "BOTTOMRIGHT", 1.5, -1.5)
+            local border = frame:CreateTexture(nil, "OVERLAY", nil, 7)
+            if pixelBorderAuras then
+                border:SetAtlas("communities-create-avatar-border-hover")
+                border:SetDesaturated(true)
+                border:SetPoint("TOPLEFT", icon, "TOPLEFT", -0.5, 0.5)
+                border:SetPoint("BOTTOMRIGHT", icon, "BOTTOMRIGHT", 0.5, -0.5)
             else
-                border:SetPoint("TOPLEFT", icon, "TOPLEFT", -2, 2)
-                border:SetPoint("BOTTOMRIGHT", icon, "BOTTOMRIGHT", 2, -2)
+                border:SetAtlas("Adventures-Spell-Border")
+                if bypass then
+                    border:SetPoint("TOPLEFT", icon, "TOPLEFT", -2, 2)
+                    border:SetPoint("BOTTOMRIGHT", icon, "BOTTOMRIGHT", 2, -2)
+                else
+                    border:SetPoint("TOPLEFT", icon, "TOPLEFT", -3.5, 3.5)
+                    border:SetPoint("BOTTOMRIGHT", icon, "BOTTOMRIGHT", 3.5, -3.5)
+                end
             end
-            border:SetBackdropBorderColor(colorValue, colorValue, colorValue)
+            border:SetVertexColor(colorValue, colorValue, colorValue)
 
             BBF.auraBorders[frame] = border -- Store the border
             if frame.ImportantGlow then
-                frame.ImportantGlow:SetParent(border)
+                frame.ImportantGlow:SetParent(frame)
                 frame.ImportantGlow:SetPoint("TOPLEFT", frame, "TOPLEFT", -15, 16)
                 frame.ImportantGlow:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", 15, -6)
             end
@@ -229,21 +216,22 @@ local function createOrUpdateBorders(frame, colorValue, textureName, bypass)
             -- Update border colors
             local border = BBF.auraBorders[frame]
             if border then
-                border:SetBackdropBorderColor(colorValue, colorValue, colorValue)
+                border:SetVertexColor(colorValue, colorValue, colorValue)
             end
         end
     else
         -- Remove custom borders if they exist and revert the icon
         if BBF.auraBorders[frame] then
             BBF.auraBorders[frame]:Hide()
-            BBF.auraBorders[frame]:SetParent(nil) -- Unparent the border
             BBF.auraBorders[frame] = nil -- Remove the reference
 
             local icon = frame.Icon
             if textureName then
                 icon = frame[textureName]
             end
-            icon:SetTexCoord(0, 1, 0, 1) -- Revert the icon to the original state
+            if icon then
+                icon:SetTexCoord(0, 1, 0, 1)
+            end
         end
     end
 end
@@ -350,29 +338,68 @@ function BBF.DarkmodeFrames(bypass)
         end
     end
 
-    for key, region in pairs(GameTooltip.NineSlice) do
-        if key ~= "Center" and type(region) == "table" and (region.SetDesaturated or region.SetVertexColor) then
-            applySettings(region, tooltipSat, tooltipColor)
-        end
-    end
-    if BetterBlizzFramesDB.darkModeUi and BetterBlizzFramesDB.darkModeGameTooltip and not BBF.hookedTip then
-        GameTooltip:HookScript("OnShow", function()
-            for key, region in pairs(GameTooltip.NineSlice) do
-                if key == "Center" then
-                    applySettings(region, tooltipSat, 0)
+    if (BetterBlizzFramesDB.darkModeUi and BetterBlizzFramesDB.darkModeGameTooltip) or BBF.darkModeTooltips then
+        local tooltipsToSkin = {
+            GameTooltip,
+            ShoppingTooltip1,
+            ShoppingTooltip2,
+            ItemRefTooltip,
+            ItemRefShoppingTooltip1,
+            ItemRefShoppingTooltip2,
+            EmbeddedItemTooltip,
+        }
+        for _, tip in pairs(tooltipsToSkin) do
+            if tip and tip.NineSlice then
+                for key, region in pairs(tip.NineSlice) do
+                    if key ~= "Center" and type(region) == "table" and (region.SetDesaturated or region.SetVertexColor) then
+                        applySettings(region, tooltipSat, tooltipColor)
+                    end
                 end
             end
-        end)
-        BBF.hookedTip = true
-    end
+        end
 
-    local aceTooltip = AceConfigDialogTooltip
-    if aceTooltip then
-        for key, region in pairs(aceTooltip.NineSlice) do
-            if key ~= "Center" and type(region) == "table" and (region.SetDesaturated or region.SetVertexColor) then
-                applySettings(region, tooltipSat, tooltipColor)
+        for _, tip in ipairs({ ShoppingTooltip1, ShoppingTooltip2, ItemRefShoppingTooltip1, ItemRefShoppingTooltip2 }) do
+            if tip and tip.CompareHeader then
+                local regions = { tip.CompareHeader:GetRegions() }
+                for _, region in ipairs(regions) do
+                    if region:GetObjectType() ~= "FontString" and (region.SetDesaturated or region.SetVertexColor) then
+                        applySettings(region, tooltipSat, tooltipColor)
+                    end
+                end
             end
         end
+
+        if not BBF.hookedTip then
+            for _, tip in pairs(tooltipsToSkin) do
+                if tip and tip.NineSlice then
+                    tip:HookScript("OnShow", function()
+                        for key, region in pairs(tip.NineSlice) do
+                            if key == "Center" then
+                                applySettings(region, tooltipSat, 0)
+                                region:SetDrawLayer("BACKGROUND", -8)
+                            end
+                        end
+                    end)
+                end
+            end
+            hooksecurefunc("SharedTooltip_SetBackdropStyle", function(self)
+                if self and self.NineSlice then
+                    self.NineSlice:SetCenterColor(0, 0, 0, 1)
+                end
+            end)
+            BBF.hookedTip = true
+        end
+
+        local aceTooltip = AceConfigDialogTooltip
+        if aceTooltip then
+            for key, region in pairs(aceTooltip.NineSlice) do
+                if key ~= "Center" and type(region) == "table" and (region.SetDesaturated or region.SetVertexColor) then
+                    applySettings(region, tooltipSat, tooltipColor)
+                end
+            end
+        end
+
+        BBF.darkModeTooltips = true
     end
 
     local function RecolorVigor()
@@ -427,6 +454,28 @@ function BBF.DarkmodeFrames(bypass)
     if BuffFrame then
         for _, frame in pairs({_G.BuffFrame.AuraContainer:GetChildren()}) do
             createOrUpdateBorders(frame, vertexColor)
+            if frame.Duration and frame.Icon then
+                frame.Duration:ClearAllPoints()
+                if BuffFrame.AuraContainer.addIconsToTop then
+                    frame.Duration:SetPoint("BOTTOM", frame.Icon, "TOP", 0, 3)
+                else
+                    frame.Duration:SetPoint("TOP", frame.Icon, "BOTTOM", 0, -3)
+                end
+                if not frame.Duration.bbfSetPointHook then
+                    frame.Duration.bbfSetPointHook = true
+                    hooksecurefunc(frame.Duration, "SetPoint", function(self)
+                        if self.changingPoint then return end
+                        self.changingPoint = true
+                        self:ClearAllPoints()
+                        if BuffFrame.AuraContainer.addIconsToTop then
+                            self:SetPoint("BOTTOM", frame.Icon, "TOP", 0, 3)
+                        else
+                            self:SetPoint("TOP", frame.Icon, "BOTTOM", 0, -3)
+                        end
+                        self.changingPoint = false
+                    end)
+                end
+            end
         end
     end
 

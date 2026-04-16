@@ -424,3 +424,14 @@ MidnightRoutine: enabled
 WorldQuestTab: enabled
 !Swatter: disabled
 !ImprovedErrorFrame: disabled
+VukolakEnhancedDamageMeter: disabled
+CityGuide: enabled
+DamageMeterFormatting: enabled
+KeystoneLoot: enabled
+MidnightCheatSheet: enabled
+MiniHealerRange: enabled
+MiniTabTarget: enabled
+ProcGlows: enabled
+NemPetAlerts: enabled
+CDMx: enabled
+FrameSort: enabled

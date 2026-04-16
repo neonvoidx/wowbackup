@@ -4,8 +4,14 @@ local _, addon = ...
 local mini = addon.Core.Framework
 local L = addon.L
 ---@class Db
+---@field SpecCache table<string, {SpecId: number?, LastSeen: number?, LastAttempt: number?}>
+---@field TalentCache table<string, {SpecId: number, TalentString: string, Time: number}>
+---@field PvPTalentCache table<string, {Ids: number[], Time: number}>
 local dbDefaults = {
-	Version = 33,
+	Version = 40,
+	Profiles = {},
+	ActiveProfile = "Default",
+	AutoSwitch = {},
 	WhatsNew = {},
 	NotifiedChanges = true,
 	GlowType = "Proc Glow",
@@ -21,7 +27,8 @@ local dbDefaults = {
 				World = true,
 				Arena = true,
 				BattleGrounds = false,
-				PvE = true,
+				Dungeons = true,
+				Raid = false,
 			},
 
 			---@class CrowdControlInstanceOptions
@@ -40,6 +47,8 @@ local dbDefaults = {
 					ColorByDispelType = true,
 					Count = 3,
 				},
+
+				ShowTooltips = false,
 			},
 
 			---@type CrowdControlInstanceOptions
@@ -58,6 +67,8 @@ local dbDefaults = {
 					ColorByDispelType = true,
 					Count = 3,
 				},
+
+				ShowTooltips = false,
 			},
 		},
 
@@ -67,7 +78,8 @@ local dbDefaults = {
 				World = false,
 				Arena = false,
 				BattleGrounds = false,
-				PvE = false,
+				Dungeons = false,
+				Raid = false,
 			},
 
 			Grow = "CENTER",
@@ -83,6 +95,8 @@ local dbDefaults = {
 				ReverseCooldown = true,
 				ColorByDispelType = true,
 			},
+
+			ShowTooltips = false,
 		},
 
 		---@class HealerCrowdControlModuleOptions
@@ -91,7 +105,8 @@ local dbDefaults = {
 				World = true,
 				Arena = true,
 				BattleGrounds = false,
-				PvE = true,
+				Dungeons = true,
+				Raid = false,
 			},
 
 			Sound = {
@@ -109,6 +124,7 @@ local dbDefaults = {
 			},
 
 			Icons = {
+				Enabled = true,
 				Size = 50,
 				Glow = true,
 				ReverseCooldown = true,
@@ -122,6 +138,7 @@ local dbDefaults = {
 			},
 
 			ShowWarningText = true,
+			ShowTooltips = false,
 		},
 		---@class PortraitModuleOptions
 		PortraitModule = {
@@ -137,7 +154,8 @@ local dbDefaults = {
 				World = true,
 				Arena = true,
 				BattleGrounds = false,
-				PvE = false,
+				Dungeons = false,
+				Raid = false,
 			},
 
 			IncludeDefensives = true,
@@ -184,6 +202,8 @@ local dbDefaults = {
 				ColorByClass = true,
 				MaxIcons = 8,
 			},
+
+			ShowTooltips = false,
 		},
 		---@class NameplateModuleOptions
 		NameplatesModule = {
@@ -191,7 +211,8 @@ local dbDefaults = {
 				World = true,
 				Arena = true,
 				BattleGrounds = true,
-				PvE = true,
+				Dungeons = true,
+				Raid = true,
 			},
 			ScaleWithNameplate = true,
 
@@ -214,6 +235,8 @@ local dbDefaults = {
 						ColorByCategory = true,
 						MaxIcons = 5,
 					},
+
+					ShowTooltips = false,
 				},
 				Important = {
 					Enabled = false,
@@ -230,6 +253,8 @@ local dbDefaults = {
 						ColorByCategory = true,
 						MaxIcons = 5,
 					},
+
+					ShowTooltips = false,
 				},
 				Combined = {
 					Enabled = false,
@@ -246,6 +271,8 @@ local dbDefaults = {
 						ColorByCategory = true,
 						MaxIcons = 5,
 					},
+
+					ShowTooltips = false,
 				},
 			},
 			Enemy = {
@@ -265,6 +292,8 @@ local dbDefaults = {
 						ColorByCategory = true,
 						MaxIcons = 5,
 					},
+
+					ShowTooltips = false,
 				},
 				Important = {
 					Enabled = true,
@@ -281,6 +310,8 @@ local dbDefaults = {
 						ColorByCategory = true,
 						MaxIcons = 5,
 					},
+
+					ShowTooltips = false,
 				},
 				Combined = {
 					Enabled = false,
@@ -297,6 +328,8 @@ local dbDefaults = {
 						ColorByCategory = true,
 						MaxIcons = 5,
 					},
+
+					ShowTooltips = false,
 				},
 			},
 		},
@@ -322,6 +355,8 @@ local dbDefaults = {
 				ReverseCooldown = true,
 			},
 		},
+		-- keeping this just in case we need to revert back for some reason
+		-- might remove it in a future release
 		---@class TrinketsModuleOptions
 		TrinketsModule = {
 			Enabled = {
@@ -354,7 +389,8 @@ local dbDefaults = {
 				World = true,
 				Arena = true,
 				BattleGrounds = true,
-				PvE = true,
+				Dungeons = true,
+				Raid = false,
 			},
 
 			---@class FriendlyIndicatorInstanceOptions
@@ -372,6 +408,7 @@ local dbDefaults = {
 					MaxIcons = 1,
 					ColorByDispelType = true,
 				},
+				ShowTooltips = false,
 			},
 
 			---@type FriendlyIndicatorInstanceOptions
@@ -389,8 +426,62 @@ local dbDefaults = {
 					MaxIcons = 1,
 					ColorByDispelType = true,
 				},
+				ShowTooltips = false,
 			},
 		},
+		---@class FriendlyCooldownTrackerModuleOptions
+		---@field DisabledSpells table<number, boolean> SpellIds excluded from the static-ability display; keyed by SpellId, value true. Treated as an opaque user hash — CleanTable must not recurse into it.
+		FriendlyCooldownTrackerModule = {
+			Enabled = {
+				World = true,
+				Arena = true,
+				BattleGrounds = false,
+				Dungeons = true,
+				Raid = false,
+			},
+			DisabledSpells = {},
+
+			---@class FriendlyCooldownTrackerAnchorOptions
+			---@field IconSpacing number
+			---@field Predictive boolean When true, icons glow and show a countdown while a buff is active before the cooldown timer is committed.
+			Default = {
+				Grow = "LEFT",
+				Offset = { X = -2, Y = 0 },
+				ExcludeSelf = false,
+				ShowTooltips = true,
+				ShowTrinket = true,
+				Predictive = true,
+				IconSpacing = 2,
+				Icons = {
+					Size = 40,
+					ReverseCooldown = true,
+					DesaturateOnCooldown = false,
+					MaxIcons = 10,
+					Rows = 1,
+					Columns = 1,
+				},
+			},
+
+			---@type FriendlyCooldownTrackerAnchorOptions
+			Raid = {
+				Grow = "CENTER",
+				Offset = { X = -2, Y = 0 },
+				ExcludeSelf = false,
+				ShowTooltips = true,
+				ShowTrinket = true,
+				Predictive = true,
+				IconSpacing = 2,
+				Icons = {
+					Size = 20,
+					ReverseCooldown = true,
+					DesaturateOnCooldown = false,
+					MaxIcons = 5,
+					Rows = 1,
+					Columns = 1,
+				},
+			},
+		},
+
 		---@class PrecogGuesserModuleOptions
 		PrecogGuesserModule = {
 			Enabled = {
@@ -1881,7 +1972,6 @@ function M:UpgradeToVersion30(vars)
 	return true
 end
 
-
 function M:UpgradeToVersion31(vars)
 	if vars.Version ~= 30 then
 		return false
@@ -1938,6 +2028,154 @@ function M:UpgradeToVersion33(vars)
 	return true
 end
 
+function M:UpgradeToVersion34(vars)
+	if vars.Version ~= 33 then
+		return false
+	end
+
+	table.insert(vars.WhatsNew, L[" - Added friendly cooldown guessing module. You can now somewhat track your team mates cooldowns!"])
+
+	vars.NotifiedChanges = false
+	vars.Version = 34
+	return true
+end
+
+function M:UpgradeToVersion35(vars)
+	if vars.Version ~= 34 then
+		return false
+	end
+
+	-- Split PvE into Dungeons + Raid for all modules
+	local moduleNames = {
+		"CCModule", "PetCCModule", "HealerCCModule",
+		"AlertsModule", "NameplatesModule", "FriendlyIndicatorModule",
+		"FriendlyCooldownTrackerModule",
+	}
+	if vars.Modules then
+		for _, moduleName in ipairs(moduleNames) do
+			local m = vars.Modules[moduleName]
+			if m and m.Enabled and m.Enabled.PvE ~= nil then
+				m.Enabled.Dungeons = m.Enabled.PvE
+				m.Enabled.Raid = m.Enabled.PvE
+				m.Enabled.PvE = nil
+			end
+		end
+	end
+
+	vars.Version = 35
+	return true
+end
+
+function M:UpgradeToVersion36(vars)
+	if vars.Version ~= 35 then
+		return false
+	end
+
+	local fcdModule = vars.Modules and vars.Modules.FriendlyCooldownTrackerModule
+	if fcdModule then
+		local spacing = vars.IconSpacing or 2
+		if fcdModule.Default then
+			fcdModule.Default.IconSpacing = spacing
+		end
+		if fcdModule.Raid then
+			fcdModule.Raid.IconSpacing = spacing
+		end
+	end
+
+	vars.Version = 36
+	return true
+end
+
+function M:UpgradeToVersion37(vars)
+	if vars.Version ~= 36 then return false end
+
+	vars.Profiles = vars.Profiles or {}
+	vars.ActiveProfile = vars.ActiveProfile or "Default"
+	vars.AutoSwitch = vars.AutoSwitch or {}
+
+	-- Snapshot the current settings into the "Default" profile slot so existing
+	-- users don't lose their configuration after upgrading.
+	if not vars.Profiles["Default"] then
+		local payloadKeys = addon.Core.ProfileManager.PayloadKeys
+		local snapshot = {}
+		for _, k in ipairs(payloadKeys) do
+			if vars[k] ~= nil then
+				snapshot[k] = mini:CopyValueOrTable(vars[k])
+			end
+		end
+		vars.Profiles["Default"] = snapshot
+	end
+
+	vars.Version = 37
+	return true
+end
+
+function M:UpgradeToVersion38(vars)
+	if vars.Version ~= 37 then return false end
+
+	-- Add ShowTooltips to each NameplateSpellTypeOptions section. Existing installs default to true.
+	if vars.Modules and vars.Modules.NameplatesModule then
+		local nm = vars.Modules.NameplatesModule
+		for _, faction in ipairs({ nm.Friendly, nm.Enemy }) do
+			if faction then
+				for _, section in ipairs({ faction.CC, faction.Important, faction.Combined }) do
+					if section and section.ShowTooltips == nil then
+						section.ShowTooltips = false
+					end
+				end
+			end
+		end
+	end
+
+	vars.Version = 38
+	return true
+end
+
+function M:UpgradeToVersion39(vars)
+	if vars.Version ~= 38 then return false end
+
+	table.insert(vars.WhatsNew, L["HEADS UP: Blizzard is making changes in patch 12.0.5 (April 21st) that will severely reduce the accuracy of friendly CD tracking, kill cooldown glow on press, and completely remove PvP enemy kick tracking. We will look for workarounds, but please be aware that tracking will lose accuracy."])
+
+	vars.NotifiedChanges = false
+	vars.Version = 39
+	return true
+end
+
+function M:UpgradeToVersion40(vars)
+	if vars.Version ~= 39 then return false end
+
+	-- Rename "夏一可.ogg" → "XiaYike.ogg" in the three known Sound.File locations.
+	local function RenameSound(modules)
+		if not modules then return end
+
+		local healer = modules.HealerCCModule
+		if healer and healer.Sound and healer.Sound.File == "夏一可.ogg" then
+			healer.Sound.File = "XiaYike.ogg"
+		end
+
+		local alerts = modules.AlertsModule
+		if alerts and alerts.Sound then
+			if alerts.Sound.Important and alerts.Sound.Important.File == "夏一可.ogg" then
+				alerts.Sound.Important.File = "XiaYike.ogg"
+			end
+			if alerts.Sound.Defensive and alerts.Sound.Defensive.File == "夏一可.ogg" then
+				alerts.Sound.Defensive.File = "XiaYike.ogg"
+			end
+		end
+	end
+
+	RenameSound(vars.Modules)
+
+	if vars.Profiles then
+		for _, profile in pairs(vars.Profiles) do
+			RenameSound(profile.Modules)
+		end
+	end
+
+	vars.Version = 40
+	return true
+end
+
 ---@return boolean true if any deferred migrations were applied
 function M:RunDeferredMigrations(vars)
 	local applied = false
@@ -1964,6 +2202,35 @@ function M:RunDeferredMigrations(vars)
 	end
 
 	return applied
+end
+
+-- Opaque per-player caches that CleanTable must not recurse into.
+-- "Profiles", "ActiveProfile", and "AutoSwitch" are included here because CleanTable
+-- would otherwise wipe all stored profile snapshots (profile names are unknown keys
+-- relative to the dbDefaults.Profiles = {} template).
+local opaqueCacheKeys = { "SpecCache", "TalentCache", "PvPTalentCache", "WhatsNew", "NotifiedChanges", "Profiles", "ActiveProfile", "AutoSwitch" }
+
+local function SaveOpaqueCaches(vars)
+	local saved = {}
+	for _, key in ipairs(opaqueCacheKeys) do
+		saved[key] = mini:CopyValueOrTable(vars[key])
+	end
+	-- DisabledSpells is a user-edited hash (spellId -> true) nested inside the module options.
+	-- CleanTable would strip all SpellId keys because none are in the empty-table schema, so
+	-- we save and restore it the same way as the top-level opaque caches above.
+	local fcdModule = vars.Modules and vars.Modules.FriendlyCooldownTrackerModule
+	saved._FcdDisabledSpells = fcdModule and mini:CopyValueOrTable(fcdModule.DisabledSpells) or {}
+	return saved
+end
+
+local function RestoreOpaqueCaches(vars, saved)
+	for _, key in ipairs(opaqueCacheKeys) do
+		vars[key] = saved[key]
+	end
+	local fcdModule = vars.Modules and vars.Modules.FriendlyCooldownTrackerModule
+	if fcdModule then
+		fcdModule.DisabledSpells = saved._FcdDisabledSpells or {}
+	end
 end
 
 ---@return Db
@@ -2011,10 +2278,24 @@ function M:GetAndUpgradeDb()
 
 	if vars.Version == dbDefaults.Version then
 		-- if we are running the latest version, clean up any garbage that may have been left over from old versions
+		local caches = SaveOpaqueCaches(vars)
 		mini:CleanTable(vars, dbDefaults, true, true)
+		RestoreOpaqueCaches(vars, caches)
 	end
 
 	return vars
+end
+
+---Fills any missing keys in the live db from dbDefaults without overwriting existing values.
+---Call this after a profile switch to ensure all settings have a value.
+function M:FillDefaults()
+	mini:GetSavedVars(dbDefaults)
+end
+
+---Returns a deep copy of the Modules portion of dbDefaults.
+---Used by ProfileManager to reset a profile while preserving live table identities.
+function M:GetModuleDefaults()
+	return mini:CopyTable(dbDefaults.Modules, {})
 end
 
 ---@return Db
@@ -2027,7 +2308,9 @@ function M:SoftReset()
 	local vars = mini:GetSavedVars(dbDefaults)
 
 	-- clean up any garbage
+	local caches = SaveOpaqueCaches(vars)
 	mini:CleanTable(vars, dbDefaults, true, true)
+	RestoreOpaqueCaches(vars, caches)
 
 	return vars
 end

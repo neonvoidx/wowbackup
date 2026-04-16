@@ -14,33 +14,37 @@ FrameColor4DB = {
 ["Praisesun - Mal'Ganis"] = "Default",
 ["Thingreyline - Tichondrius"] = "Default",
 ["Crillessana - Mal'Ganis"] = "Default",
+["Tampacks - Tichondrius"] = "Default",
 ["Auteist - Mal'Ganis"] = "Default",
 ["Ofpuss - Mal'Ganis"] = "Default",
-["Smaugchamp - Mal'Ganis"] = "Default",
+["Clevagirl - Mal'Ganis"] = "Default",
+["Reedingo - Tichondrius"] = "Default",
 ["Choppiez - Mal'Ganis"] = "Default",
 ["Gehyo - Tichondrius"] = "Default",
 ["Tampacks - Mal'Ganis"] = "Default",
+["Manyfaced - Tichondrius"] = "Default",
+["Praisesun - Tichondrius"] = "Default",
 ["Mäñýfäçëð - Mal'Ganis"] = "Default",
 ["Hellavator - Mal'Ganis"] = "Default",
-["Tainguk - Tichondrius"] = "Default",
+["Neonvoid - Mal'Ganis"] = "Default",
 ["Hellavator - Tichondrius"] = "Default",
-["Gehyo - Mal'Ganis"] = "Default",
-["Hellowalls - Mal'Ganis"] = "Default",
+["Mäñýfäçëð - Tichondrius"] = "Default",
+["Neonvoid - Tichondrius"] = "Default",
 ["Stormclout - Tichondrius"] = "Default",
 ["Reedingo - Mal'Ganis"] = "Default",
-["Mäñýfäçëð - Tichondrius"] = "Default",
 ["Starstypeshi - Tichondrius"] = "Default",
 ["Smaugchamp - Tichondrius"] = "Default",
+["Strathmoan - Tichondrius"] = "Default",
 ["Korahron - Tichondrius"] = "Default",
-["Neonvoid - Tichondrius"] = "Default",
-["Neonvoid - Mal'Ganis"] = "Default",
-["Praisesun - Tichondrius"] = "Default",
-["Clevagirl - Mal'Ganis"] = "Default",
+["Hellowalls - Mal'Ganis"] = "Default",
+["Gehyo - Mal'Ganis"] = "Default",
+["Smaugchamp - Mal'Ganis"] = "Default",
+["Tainguk - Tichondrius"] = "Default",
 },
 ["profiles"] = {
 ["Default"] = {
 ["_WorldQuestTab"] = {
-["enabled"] = false,
+["enabled"] = true,
 },
 ["_SettingsPanel"] = {
 ["colors"] = {
@@ -53,10 +57,10 @@ FrameColor4DB = {
 ["background"] = {
 ["followClassColor"] = false,
 },
-["main"] = {
+["borders"] = {
 ["followClassColor"] = false,
 },
-["borders"] = {
+["main"] = {
 ["followClassColor"] = false,
 },
 },
@@ -96,14 +100,6 @@ FrameColor4DB = {
 ["background"] = {
 ["followClassColor"] = false,
 },
-["main"] = {
-["rgbaValues"] = {
-0.05098039656877518,
-0.05098039656877518,
-0.05098039656877518,
-},
-["followClassColor"] = false,
-},
 ["borders"] = {
 ["rgbaValues"] = {
 0.05098039656877518,
@@ -112,49 +108,13 @@ FrameColor4DB = {
 },
 ["followClassColor"] = false,
 },
-},
-},
-["UnitFrames"] = {
-["colors"] = {
 ["main"] = {
 ["rgbaValues"] = {
-0.06666667014360428,
-0.06666667014360428,
-0.06666667014360428,
+0.05098039656877518,
+0.05098039656877518,
+0.05098039656877518,
 },
 ["followClassColor"] = false,
-},
-},
-},
-["HUD"] = {
-["colors"] = {
-["main"] = {
-["rgbaValues"] = {
-0.2784313857555389,
-0.2784313857555389,
-0.2784313857555389,
-},
-},
-["borders"] = {
-["rgbaValues"] = {
-0.2000000178813934,
-0.2000000178813934,
-0.2000000178813934,
-},
-},
-["tabs"] = {
-["rgbaValues"] = {
-0.1803921610116959,
-0.1803921610116959,
-0.1803921610116959,
-},
-},
-["fallback"] = {
-["rgbaValues"] = {
-0.2196078598499298,
-0.2196078598499298,
-0.2196078598499298,
-},
 },
 },
 },
@@ -175,6 +135,50 @@ FrameColor4DB = {
 0.2784313857555389,
 0.2784313857555389,
 0.2784313857555389,
+},
+["followClassColor"] = false,
+},
+},
+},
+["HUD"] = {
+["colors"] = {
+["tabs"] = {
+["rgbaValues"] = {
+0.1803921610116959,
+0.1803921610116959,
+0.1803921610116959,
+},
+},
+["borders"] = {
+["rgbaValues"] = {
+0.2000000178813934,
+0.2000000178813934,
+0.2000000178813934,
+},
+},
+["fallback"] = {
+["rgbaValues"] = {
+0.2196078598499298,
+0.2196078598499298,
+0.2196078598499298,
+},
+},
+["main"] = {
+["rgbaValues"] = {
+0.2784313857555389,
+0.2784313857555389,
+0.2784313857555389,
+},
+},
+},
+},
+["UnitFrames"] = {
+["colors"] = {
+["main"] = {
+["rgbaValues"] = {
+0.06666667014360428,
+0.06666667014360428,
+0.06666667014360428,
 },
 ["followClassColor"] = false,
 },
@@ -251,6 +255,20 @@ FrameColor4DB = {
 },
 },
 },
+["_Minimap"] = {
+["colors"] = {
+["main"] = {
+["rgbaValues"] = {
+0,
+0,
+0,
+},
+["lockedColor"] = true,
+["followClassColor"] = false,
+},
+},
+["enabled"] = true,
+},
 ["_BaganatorBlizzardTheme"] = {
 ["colors"] = {
 ["background"] = {
@@ -266,20 +284,6 @@ FrameColor4DB = {
 0.1176470667123795,
 0.1176470667123795,
 },
-},
-},
-["enabled"] = true,
-},
-["_Minimap"] = {
-["colors"] = {
-["main"] = {
-["rgbaValues"] = {
-0,
-0,
-0,
-},
-["lockedColor"] = true,
-["followClassColor"] = false,
 },
 },
 ["enabled"] = true,

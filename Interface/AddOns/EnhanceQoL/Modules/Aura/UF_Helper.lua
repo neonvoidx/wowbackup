@@ -122,7 +122,7 @@ local npcColorUnits = {
 	focus = true,
 	boss = true,
 }
-for i = 1, (MAX_BOSS_FRAMES or 5) do
+for i = 1, 8 do
 	npcColorUnits["boss" .. i] = true
 end
 
@@ -401,15 +401,21 @@ function H.setupAbsorbOverShift(healthBar, overAbsorbBar, height, maxHeight)
 	clip:ClearAllPoints()
 
 	if healthBar:GetReverseFill() then
-		clip:SetPoint("TOPLEFT", htex, "TOPLEFT", 0, 0)
-		clip:SetPoint("BOTTOMLEFT", htex, "BOTTOMLEFT", 0, 0)
 		clip:SetPoint("TOPRIGHT", healthBar, "TOPRIGHT", 0, 0)
 		clip:SetPoint("BOTTOMRIGHT", healthBar, "BOTTOMRIGHT", 0, 0)
+		if htex then
+			clip:SetPoint("LEFT", htex, "LEFT", 0, 0)
+		else
+			clip:SetPoint("LEFT", healthBar, "LEFT", 0, 0)
+		end
 	else
 		clip:SetPoint("TOPLEFT", healthBar, "TOPLEFT", 0, 0)
 		clip:SetPoint("BOTTOMLEFT", healthBar, "BOTTOMLEFT", 0, 0)
-		clip:SetPoint("TOPRIGHT", htex, "TOPRIGHT", 0, 0)
-		clip:SetPoint("BOTTOMRIGHT", htex, "BOTTOMRIGHT", 0, 0)
+		if htex then
+			clip:SetPoint("RIGHT", htex, "RIGHT", 0, 0)
+		else
+			clip:SetPoint("RIGHT", healthBar, "RIGHT", 0, 0)
+		end
 	end
 
 	overAbsorbBar:SetParent(clip)
@@ -540,6 +546,7 @@ function H.resolveBorderTexture(key)
 end
 
 function H.resolveAuraBorderTexture(key)
+	if type(key) == "string" and key:upper() == "SOLID" then return "Interface\\Buttons\\WHITE8x8", nil, true end
 	if not key or key == "" or key == "DEFAULT" then return DEFAULT_AURA_BORDER_TEX, DEFAULT_AURA_BORDER_COORDS, false end
 	if LSM then
 		local tex = LSM:Fetch("border", key)
@@ -687,6 +694,73 @@ local privateAuraDuration = {
 
 local privateAuraShowDispelType = false
 local privateAuraShowDispelCount = 0
+H._privateAuraDeferred = H._privateAuraDeferred or { containers = {} }
+
+function H.UpdatePrivateAuraDeferredEvent()
+	local frame = H._privateAuraDeferred and H._privateAuraDeferred.frame
+	if not frame then return end
+	if next(H._privateAuraDeferred.containers) then
+		frame:RegisterEvent("PLAYER_REGEN_ENABLED")
+	else
+		frame:UnregisterEvent("PLAYER_REGEN_ENABLED")
+	end
+end
+
+function H.ClearDeferredPrivateAuraMutation(container)
+	if not container then return end
+	container._eqolPrivateAuraDeferred = nil
+	H._privateAuraDeferred.containers[container] = nil
+	H.UpdatePrivateAuraDeferredEvent()
+end
+
+function H.FlushDeferredPrivateAuraMutations()
+	local queued = {}
+	for container in pairs(H._privateAuraDeferred.containers) do
+		queued[#queued + 1] = container
+	end
+	for i = 1, #queued do
+		local container = queued[i]
+		local pending = container and container._eqolPrivateAuraDeferred
+		H.ClearDeferredPrivateAuraMutation(container)
+		if pending then
+			if pending.action == "remove" then
+				H.RemovePrivateAuras(container)
+			elseif pending.action == "apply" then
+				H.ApplyPrivateAuras(container, pending.unit, pending.cfg, pending.parent, pending.levelFrame, pending.showSample, pending.inverseAnchor)
+			end
+		end
+	end
+end
+
+function H.QueueDeferredPrivateAuraMutation(container, action, payload)
+	if not container then return end
+	if not H._privateAuraDeferred.frame then
+		H._privateAuraDeferred.frame = CreateFrame("Frame")
+		H._privateAuraDeferred.frame:SetScript("OnEvent", function(_, event)
+			if event == "PLAYER_REGEN_ENABLED" then H.FlushDeferredPrivateAuraMutations() end
+		end)
+	end
+	local pending = container._eqolPrivateAuraDeferred or {}
+	pending.action = action
+	if action == "apply" and payload then
+		pending.unit = payload.unit
+		pending.cfg = payload.cfg
+		pending.parent = payload.parent
+		pending.levelFrame = payload.levelFrame
+		pending.showSample = payload.showSample
+		pending.inverseAnchor = payload.inverseAnchor
+	else
+		pending.unit = nil
+		pending.cfg = nil
+		pending.parent = nil
+		pending.levelFrame = nil
+		pending.showSample = nil
+		pending.inverseAnchor = nil
+	end
+	container._eqolPrivateAuraDeferred = pending
+	H._privateAuraDeferred.containers[container] = true
+	H.UpdatePrivateAuraDeferredEvent()
+end
 
 local function removePrivateAuraAnchor(anchor)
 	if anchor and anchor.anchorID and C_UnitAuras and C_UnitAuras.RemovePrivateAuraAnchor then
@@ -785,6 +859,14 @@ end
 
 function H.RemovePrivateAuras(container)
 	if not container then return end
+	if InCombatLockdown and InCombatLockdown() then
+		updatePrivateAuraShowDispelType(container, false)
+		H.QueueDeferredPrivateAuraMutation(container, "remove")
+		container._eqolPrivateAuraState = nil
+		if container.Hide then container:Hide() end
+		return
+	end
+	H.ClearDeferredPrivateAuraMutation(container)
 	updatePrivateAuraShowDispelType(container, false)
 	if container._eqolPrivateAuraFrames then
 		for _, anchor in ipairs(container._eqolPrivateAuraFrames) do
@@ -825,6 +907,18 @@ function H.ApplyPrivateAuras(container, unit, cfg, parent, levelFrame, showSampl
 		if container.Hide then container:Hide() end
 		return
 	end
+	if InCombatLockdown and InCombatLockdown() then
+		H.QueueDeferredPrivateAuraMutation(container, "apply", {
+			unit = unit,
+			cfg = cfg,
+			parent = parent,
+			levelFrame = levelFrame,
+			showSample = showSample,
+			inverseAnchor = inverseAnchor,
+		})
+		return
+	end
+	H.ClearDeferredPrivateAuraMutation(container)
 
 	local effectiveUnit = resolvePrivateAuraUnitToken(unit)
 	local cacheState = unit == "player" or unit == "focus"
@@ -838,16 +932,25 @@ function H.ApplyPrivateAuras(container, unit, cfg, parent, levelFrame, showSampl
 	if amount < 1 then amount = 1 end
 	local minSize = floor(tonumber(iconCfg.minSize) or 4)
 	if minSize < 4 then minSize = 4 end
-	local maxSize = floor(tonumber(iconCfg.maxSize) or 60)
+	local maxSize = floor(tonumber(iconCfg.maxSize) or 100)
 	if maxSize < minSize then maxSize = minSize end
-	if maxSize > 256 then maxSize = 256 end
+	if maxSize > 100 then maxSize = 100 end
 	local size = floor(tonumber(iconCfg.size) or 24)
 	if size > maxSize then size = maxSize end
 	if size < minSize then size = minSize end
+	local textScale = tonumber(cfg.textScale) or 1
+	if textScale < 0.5 then
+		textScale = 0.5
+	elseif textScale > 3 then
+		textScale = 3
+	end
+	-- Keep the icon's visual size unchanged while letting the private aura frame scale its text.
+	local logicalSize = size / textScale
 	local iconPoint = tostring(iconCfg.point or "RIGHT"):upper()
 	local iconOffset = tonumber(iconCfg.offset or iconCfg.spacing or 2) or 0
 	local borderScale = tonumber(iconCfg.borderScale)
 	if borderScale == nil then borderScale = (size / 32) * 2 end
+	borderScale = borderScale / textScale
 	local layoutEnabled = layoutCfg.enabled == true or layoutCfg.wrapCount ~= nil or layoutCfg.direction ~= nil or layoutCfg.wrapDirection ~= nil
 	local layoutDirection = H.PrivateAuraNormalizeDirection(layoutCfg.direction or iconCfg.direction or iconPoint, iconPoint)
 	local primaryHorizontal = layoutDirection == "LEFT" or layoutDirection == "RIGHT"
@@ -890,6 +993,7 @@ function H.ApplyPrivateAuras(container, unit, cfg, parent, levelFrame, showSampl
 		or state.countdownFrame ~= showFrame
 		or state.countdownNumbers ~= showNumbers
 		or state.borderScale ~= borderScale
+		or state.textScale ~= textScale
 		or state.durationEnabled ~= durationEnabled
 		or state.durationPoint ~= durationPoint
 		or state.durationOffsetX ~= durationOffsetX
@@ -903,6 +1007,7 @@ function H.ApplyPrivateAuras(container, unit, cfg, parent, levelFrame, showSampl
 		state.countdownFrame = showFrame
 		state.countdownNumbers = showNumbers
 		state.borderScale = borderScale
+		state.textScale = textScale
 		state.durationEnabled = durationEnabled
 		state.durationPoint = durationPoint
 		state.durationOffsetX = durationOffsetX
@@ -979,7 +1084,8 @@ function H.ApplyPrivateAuras(container, unit, cfg, parent, levelFrame, showSampl
 			local prevLayout = (anchors[i - 1] and anchors[i - 1]._eqolPrivateAuraLayout) or anchors[i - 1]
 			layout:SetPoint(attachPoint, prevLayout, iconPoint, ox, oy)
 		end
-		layout:SetSize(size, size)
+		layout:SetScale(textScale)
+		layout:SetSize(logicalSize, logicalSize)
 		layout:Show()
 		anchor:ClearAllPoints()
 		anchor:SetPoint("CENTER", layout, "CENTER", 0, 0)
@@ -1022,7 +1128,8 @@ function H.ApplyPrivateAuras(container, unit, cfg, parent, levelFrame, showSampl
 		end
 		if changed or not anchor.anchorID then
 			removePrivateAuraAnchor(anchor)
-			anchor.anchorID = buildPrivateAuraAnchor(anchor, effectiveUnit, i, size, borderScale, showFrame, showNumbers, durationEnabled, durationPoint, durationOffsetX, durationOffsetY, layout)
+			anchor.anchorID =
+				buildPrivateAuraAnchor(anchor, effectiveUnit, i, logicalSize, borderScale, showFrame, showNumbers, durationEnabled, durationPoint, durationOffsetX, durationOffsetY, layout)
 		end
 		stripCooldownEdge(anchor)
 	end
@@ -1059,6 +1166,12 @@ local function ensureHighlightFrame(frame)
 	return highlight
 end
 
+local function getHighlightHostFrame(st)
+	if not st then return nil end
+	-- Unit frame borders are applied to the bar wrapper, not the outer frame.
+	return st.barGroup or st.frame
+end
+
 function H.buildHighlightConfig(cfg, def)
 	local hcfg = (cfg and cfg.highlight) or {}
 	local hdef = (def and def.highlight) or {}
@@ -1068,9 +1181,15 @@ function H.buildHighlightConfig(cfg, def)
 	local mouseover = hcfg.mouseover
 	if mouseover == nil then mouseover = hdef.mouseover end
 	if mouseover == nil then mouseover = true end
+	local target = hcfg.target
+	if target == nil then target = hdef.target end
+	if target == nil then target = false end
 	local aggro = hcfg.aggro
 	if aggro == nil then aggro = hdef.aggro end
 	if aggro == nil then aggro = true end
+	local combat = hcfg.combat
+	if combat == nil then combat = hdef.combat end
+	if combat == nil then combat = false end
 	local texture = hcfg.texture or hdef.texture or "DEFAULT"
 	local size = hcfg.size
 	if size == nil then size = hdef.size end
@@ -1079,20 +1198,39 @@ function H.buildHighlightConfig(cfg, def)
 	local color = hcfg.color
 	if type(color) ~= "table" then color = hdef.color end
 	if type(color) ~= "table" then color = { 1, 0, 0, 1 } end
+	local mouseoverColor = hcfg.mouseoverColor
+	if type(mouseoverColor) ~= "table" then mouseoverColor = hdef.mouseoverColor end
+	if type(mouseoverColor) ~= "table" then mouseoverColor = color end
+	local combatColor = hcfg.combatColor
+	if type(combatColor) ~= "table" then combatColor = hdef.combatColor end
+	if type(combatColor) ~= "table" then combatColor = color end
 	return {
 		enabled = true,
 		mouseover = mouseover == true,
+		target = target == true,
 		aggro = aggro == true,
+		combat = combat == true,
 		texture = texture,
 		size = size,
 		color = color,
+		mouseoverColor = mouseoverColor,
+		combatColor = combatColor,
 	}
 end
 
 function H.applyHighlightStyle(st, highlightCfg)
-	if not st or not st.barGroup then return end
+	local host = getHighlightHostFrame(st)
+	if not host then return end
+	local highlight = host._ufHighlight
+	if not highlight then
+		highlight = st and st._highlightFrame or nil
+		if highlight and highlight.GetParent and highlight:GetParent() ~= host then
+			highlight:Hide()
+			highlight = nil
+		end
+	end
 	if not highlightCfg or highlightCfg.enabled ~= true then
-		local highlight = st.barGroup._ufHighlight
+		if st._highlightFrame and st._highlightFrame ~= highlight then st._highlightFrame:Hide() end
 		if highlight then
 			highlight:SetBackdrop(nil)
 			highlight:Hide()
@@ -1100,7 +1238,8 @@ function H.applyHighlightStyle(st, highlightCfg)
 		st._highlightFrame = nil
 		return
 	end
-	local highlight = ensureHighlightFrame(st.barGroup)
+	if st._highlightFrame and st._highlightFrame.GetParent and st._highlightFrame:GetParent() ~= host then st._highlightFrame:Hide() end
+	highlight = ensureHighlightFrame(host)
 	if not highlight then return end
 	st._highlightFrame = highlight
 	local size = highlightCfg.size or 1
@@ -1127,26 +1266,40 @@ local function hasAggro(unit)
 end
 
 function H.updateHighlight(st, unit, playerUnit)
-	if not st or not st.barGroup then return end
+	local host = getHighlightHostFrame(st)
+	if not host then return end
 	local cfg = st._highlightCfg
-	local highlight = st.barGroup._ufHighlight
+	local highlight = host._ufHighlight
+	if not highlight then
+		highlight = st and st._highlightFrame or nil
+		if highlight and highlight.GetParent and highlight:GetParent() ~= host then
+			highlight:Hide()
+			highlight = nil
+		end
+	end
 	if not cfg or cfg.enabled ~= true then
 		if highlight then highlight:Hide() end
 		return
 	end
 	if not highlight then
 		H.applyHighlightStyle(st, cfg)
-		highlight = st.barGroup._ufHighlight
+		highlight = host._ufHighlight or st._highlightFrame
 		if not highlight then return end
 	end
 	local show = false
+	local color = cfg.color or { 1, 0, 0, 1 }
 	if cfg.mouseover and st._hovered then
+		show = true
+		color = cfg.mouseoverColor or color
+	elseif cfg.target and UnitIsUnit and UnitExists and UnitExists("target") and UnitExists(unit) and UnitIsUnit(unit, "target") then
 		show = true
 	elseif cfg.aggro and (unit == (playerUnit or "player") or unit == "pet") and hasAggro(unit) then
 		show = true
+	elseif cfg.combat and unit == (playerUnit or "player") and UnitAffectingCombat and UnitExists and UnitExists(unit) and UnitAffectingCombat(unit) then
+		show = true
+		color = cfg.combatColor or color
 	end
 	if show then
-		local color = cfg.color or { 1, 0, 0, 1 }
 		highlight:SetBackdropBorderColor(color[1] or 1, color[2] or 0, color[3] or 0, color[4] or 1)
 		highlight:Show()
 	else
@@ -1662,7 +1815,7 @@ end
 
 function H.GetSecondaryPowerTokenOptions(includeNone)
 	local options = {}
-	if includeNone == true then options[#options + 1] = { value = "NONE", label = _G.NONE or "None" } end
+	if includeNone == true then options[#options + 1] = { value = "NONE", label = _G.NONE } end
 	for _, token in ipairs(getSecondaryPowerTokens()) do
 		options[#options + 1] = { value = token, label = H.getPowerLabel(token) }
 	end
@@ -2767,13 +2920,27 @@ function H.applyNameCharLimit(st, scfg, defStatus)
 	if maxChars <= 0 then
 		if st.nameText.SetMaxLines then st.nameText:SetMaxLines(1) end
 		if st.nameText.SetWordWrap then st.nameText:SetWordWrap(false) end
-		st.nameText:SetWidth(0)
+		if st._eqolNameTextWidth ~= 0 then
+			st.nameText:SetWidth(0)
+			st._eqolNameTextWidth = 0
+		end
 		return
 	end
 	if st.nameText.SetMaxLines then st.nameText:SetMaxLines(1) end
 	if st.nameText.SetWordWrap then st.nameText:SetWordWrap(false) end
 	local width = H.getNameLimitWidth(scfg and scfg.font, scfg and scfg.fontSize or 14, scfg and scfg.fontOutline or "OUTLINE", maxChars)
-	if width and width > 0 then st.nameText:SetWidth(width) end
+	if width and width > 0 then
+		local snappedWidth = width
+		local scale = (st.nameText.GetEffectiveScale and st.nameText:GetEffectiveScale()) or (UIParent and UIParent.GetEffectiveScale and UIParent:GetEffectiveScale()) or 1
+		if _G.PixelUtil and _G.PixelUtil.GetNearestPixelSize then
+			-- Centered name regions blur easily on odd pixel widths; keep the width on an even pixel count.
+			snappedWidth = _G.PixelUtil.GetNearestPixelSize(width * 0.5, scale, 1) * 2
+		end
+		if st._eqolNameTextWidth ~= snappedWidth then
+			st.nameText:SetWidth(snappedWidth)
+			st._eqolNameTextWidth = snappedWidth
+		end
+	end
 end
 
 function H.truncateTextToWidth(fontPath, fontSize, fontOutline, text, maxWidth)

@@ -1,0 +1,67 @@
+
+NemPetAlertsSV = {
+["fontSize"] = 25,
+["point"] = "CENTER",
+["scale"] = 1,
+["petNotAttackingEnabled"] = true,
+["flash"] = true,
+["relativePoint"] = "CENTER",
+["notAttackingEnabled"] = true,
+["enabled"] = true,
+["relativeTo"] = "UIParent",
+["notAttackingSoundName"] = "Sonarr",
+["petDeadEnabled"] = false,
+["tauntAutoEnabled"] = false,
+["notAttackingSoundEnabled"] = true,
+["fontName"] = "Gotham Narrow Ultra",
+["fakeDeathEnabled"] = false,
+["y"] = 140,
+["x"] = 0,
+["noPetEnabled"] = true,
+["healPetThreshold"] = 30,
+["healPetEnabled"] = true,
+["alertColors"] = {
+["healPet"] = {
+["r"] = 0.1882,
+["g"] = 1,
+["b"] = 0.3098,
+},
+["petPassive"] = {
+["r"] = 1,
+["g"] = 0.5843,
+["b"] = 0.1333,
+},
+["tauntAuto"] = {
+["r"] = 0.9059,
+["g"] = 0.2667,
+["b"] = 1,
+},
+["petNotAttacking"] = {
+["r"] = 1,
+["g"] = 0.8588,
+["b"] = 0,
+},
+["petDead"] = {
+["r"] = 1,
+["g"] = 0.2039,
+["b"] = 0.1569,
+},
+["fakeDeath"] = {
+["r"] = 0.698,
+["g"] = 0.3333,
+["b"] = 1,
+},
+["noPet"] = {
+["r"] = 0.9098,
+["g"] = 0.4118,
+["b"] = 0,
+},
+["notAttacking"] = {
+["r"] = 0.2824,
+["g"] = 0.6549,
+["b"] = 1,
+},
+},
+["ver"] = 2,
+["petPassiveEnabled"] = true,
+}

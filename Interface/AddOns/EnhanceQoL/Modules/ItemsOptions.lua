@@ -187,7 +187,7 @@ local function addLootFrame(container, d)
 				tabContainer:AddChild(slider)
 
 				local alwaysList = {
-					mounts = L["lootToastAlwaysShowMounts"],
+					mounts = L["Mounts"],
 					pets = L["lootToastAlwaysShowPets"],
 					upgrade = L["lootToastAlwaysShowUpgrades"],
 				}

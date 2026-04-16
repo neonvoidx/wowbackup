@@ -11,8 +11,7 @@ addon.Vendor = addon.Vendor or {}
 addon.Vendor.functions = addon.Vendor.functions or {}
 addon.Vendor.variables = addon.Vendor.variables or {}
 
-local L = LibStub("AceLocale-3.0"):GetLocale("EnhanceQoL_Vendor")
-local LMain = LibStub("AceLocale-3.0"):GetLocale(parentAddonName)
+local L = LibStub("AceLocale-3.0"):GetLocale("EnhanceQoL")
 local wipe = wipe
 local listOrders = {
 	vendorIncludeSellList = {},
@@ -183,8 +182,8 @@ local function buildSettings()
 	local generalCheckboxes = {
 		{
 			var = "sellAllJunk",
-			text = (LMain and LMain["sellAllJunk"]) or "Automatically sell all junk items",
-			desc = (LMain and LMain["sellAllJunkDesc"]) or "Sells all poor-quality items whenever a merchant window opens",
+			text = L["sellAllJunk"] or "Automatically sell all junk items",
+			desc = L["sellAllJunkDesc"] or "Sells all poor-quality items whenever a merchant window opens",
 			func = function(value)
 				addon.db["sellAllJunk"] = value and true or false
 				if value then addon.functions.checkBagIgnoreJunk() end
@@ -448,7 +447,7 @@ local function buildSettings()
 			if not id then return end
 			addon.db.vendorIncludeSellList = addon.db.vendorIncludeSellList or {}
 			local label = addon.db.vendorIncludeSellList[id] or tostring(id)
-			showRemovePopup("EQOL_VENDOR_INCLUDE_REMOVE", L["vendorIncludeRemoveConfirm"], "vendorIncludeSellList", label, id)
+			showRemovePopup("EQOL_VENDOR_INCLUDE_REMOVE", L["Remove %s from the include list?"], "vendorIncludeSellList", label, id)
 			clearDropdownSelection("vendorIncludeRemove")
 		end,
 		parentSection = includeExcludeExpandable,

@@ -4,20 +4,33 @@ PersonalResourceReskinDB = {
 },
 ["profileKeys"] = {
 ["Stormclout - Tichondrius"] = "Default",
+["Starphage - Tichondrius"] = "Default",
 },
 ["profiles"] = {
 ["Default"] = {
-["altPowerGradientEnabled"] = {
-["MONK"] = true,
-},
-["MonkOrbTracker_enabled"] = false,
+["powerBgTexture"] = "d1",
+["altTexture"] = "d1",
+["healthBgTexture"] = "d1",
 ["prdGradientEnabled"] = {
-["MONK"] = false,
+["DEMONHUNTER"] = false,
+},
+["frameWidth"] = 299,
+["absorbTexture"] = "d1",
+["texture"] = "d1",
+["altPowerBgTexture"] = "d1",
+["altPowerGradientEnabled"] = {
+["DEMONHUNTER"] = false,
 },
 },
 },
 }
-DevourTextDB = nil
+DevourTextDB = {
+["devourStrata"] = "HIGH",
+["devourFontSize"] = 20,
+["devourAnchorPoint"] = "CENTER",
+["devourLocked"] = false,
+["devourFont"] = "Friz Quadrata TT",
+}
 PlayerPowerTextDB = {
 ["fontSize"] = 14,
 ["color"] = {
@@ -25,7 +38,7 @@ PlayerPowerTextDB = {
 1,
 1,
 },
-["snapToPRD"] = true,
+["visibleAlpha"] = 1,
 ["textFormat"] = "currentmax",
 ["hidden"] = false,
 ["fadeWhenFull"] = true,
@@ -35,8 +48,8 @@ PlayerPowerTextDB = {
 ["fontOutline"] = "OUTLINE",
 ["locked"] = true,
 ["offsetY"] = 0,
-["visibleAlpha"] = 1,
 ["anchorToPlayerFrame"] = false,
+["snapToPRD"] = true,
 }
 PlayerHealthTextDB = {
 ["fontSize"] = 14,
@@ -103,11 +116,8 @@ PRDRightClickMenuConfig = nil
 CustomDruidComboBarDB = nil
 CustomRogueComboBarDB = nil
 CustomMageArcaneOrbDB = {
-["anchorPosition"] = "BELOW",
-["gradientColoringEnabled"] = false,
-["anchorOffset"] = 10,
-["locked"] = false,
 ["arcaneOrbWidth"] = 24,
+["anchorPosition"] = "BELOW",
 ["gradientColorEnd"] = {
 1,
 1,
@@ -116,17 +126,6 @@ CustomMageArcaneOrbDB = {
 },
 ["anchorTarget"] = "HEALTH",
 ["enabled"] = true,
-["y"] = -120,
-["x"] = 0,
-["debug"] = false,
-["anchorToPRD"] = false,
-["arcaneOrbHeight"] = 24,
-["gradientColorStart"] = {
-0,
-0,
-1,
-1,
-},
 ["arcaneOrbFillColors"] = {
 {
 0.2,
@@ -159,38 +158,53 @@ CustomMageArcaneOrbDB = {
 0,
 0.5,
 },
+["locked"] = false,
+["gradientColoringEnabled"] = false,
+["anchorOffset"] = 10,
+["debug"] = false,
+["anchorToPRD"] = false,
+["arcaneOrbHeight"] = 24,
+["x"] = 0,
+["y"] = -120,
+["gradientColorStart"] = {
+0,
+0,
+1,
+1,
+},
 }
 CustomWindwalkerMonkOrbBarDB = {
 ["enabled"] = false,
 ["orbWidth"] = 24,
 ["anchorTarget"] = "HEALTH",
-["anchorOffset"] = 10,
 ["anchorPosition"] = "BELOW",
-["anchorToPRD"] = false,
-["y"] = -120,
-["x"] = 0,
-["gradientColor2"] = {
-0,
-1,
-0.8,
-1,
-},
 ["gradientColor1"] = {
 0,
 0.8,
 0.6,
 1,
 },
+["orbSpacing"] = 0,
+["y"] = -120,
+["anchorOffset"] = 10,
+["gradientColor2"] = {
+0,
+1,
+0.8,
+1,
+},
+["anchorToPRD"] = false,
 ["locked"] = false,
+["x"] = 0,
+["orbHeight"] = 24,
 ["orbBgColor"] = {
 0,
 0,
 0,
 0.5,
 },
-["orbHeight"] = 24,
-["orbSpacing"] = 0,
 }
 CustomDruidComboBar = nil
 GuardianIronfurTrackerDB = {
 }
+CustomBrewmasterStaggerBarDB = nil

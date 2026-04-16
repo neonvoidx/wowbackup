@@ -85,7 +85,7 @@ local function createAceWindow()
 	display:SetLabel(L["bagSpaceDisplay"] or "Bag space display")
 	display:SetList({
 		freeMax = L["bagSpaceDisplayFreeMax"] or "Free/Max",
-		currentMax = L["bagSpaceDisplayCurrentMax"] or L["Current/Max"] or "Current/Max",
+		currentMax = L["Current/Max"] or "Current/Max",
 		free = L["bagSpaceDisplayFree"] or "Free",
 	})
 	display:SetValue(db.displayMode)

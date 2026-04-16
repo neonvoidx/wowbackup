@@ -107,3 +107,20 @@ VER 3 010000000000004A " " "INV_Misc_QuestionMark"
 /cast [@focus,exists,help,nodead] Power Infusion;[@mouseover,help,exists,nodead] Power Infusion;[] Power Infusion;
 /cast Voidform
 END
+VER 3 010000000000004B " " "134400"
+#showtooltip
+/cast [known: Halo] Halo
+/cast [known: void torrent] void torrent
+END
+VER 3 010000000000004C " " "134400"
+#showtooltip
+/cast [@mouseover,help,exists][] Evangelism
+END
+VER 3 010000000000004D " " "134400"
+#showtooltip
+/cast [@mouseover,help,exists][] Plea
+END
+VER 3 010000000000004E " " "134400"
+#showtooltip
+/cast [@mouseover,help,exists][] Power Word: Radiance
+END

@@ -6,7 +6,6 @@ local frames = addon.Core.Frames
 local units = addon.Utils.Units
 local iconSlotContainer = addon.Core.IconSlotContainer
 local UnitAuraWatcher = addon.Core.UnitAuraWatcher
-local spellCache = addon.Utils.SpellCache
 local moduleUtil = addon.Utils.ModuleUtil
 local moduleName = addon.Utils.ModuleName
 local slotDistribution = addon.Utils.SlotDistribution
@@ -74,6 +73,7 @@ local function UpdateWatcherAuras(entry)
 	local maxIcons = options.Icons.MaxIcons or 1
 	local container = entry.Container
 	local colorByDispelType = options.Icons.ColorByDispelType
+	local showTooltips = options.ShowTooltips ~= false
 
 	-- Get aura states
 	local ccState = entry.Watcher:GetCcState()
@@ -104,6 +104,7 @@ local function UpdateWatcherAuras(entry)
 			Glow = iconsGlow,
 			Color = colorByDispelType and aura.DispelColor,
 			FontScale = db.FontScale,
+			SpellId = showTooltips and aura.SpellId or nil,
 		})
 		slotIndex = slotIndex + 1
 	end
@@ -120,6 +121,7 @@ local function UpdateWatcherAuras(entry)
 			ReverseCooldown = iconsReverse,
 			Glow = iconsGlow,
 			FontScale = db.FontScale,
+			SpellId = showTooltips and aura.SpellId or nil,
 		})
 		slotIndex = slotIndex + 1
 	end
@@ -136,6 +138,7 @@ local function UpdateWatcherAuras(entry)
 			ReverseCooldown = iconsReverse,
 			Glow = iconsGlow,
 			FontScale = db.FontScale,
+			SpellId = showTooltips and aura.SpellId or nil,
 		})
 		slotIndex = slotIndex + 1
 	end
@@ -169,8 +172,13 @@ local function AnchorContainer(header, anchor, options)
 	elseif options.Grow == "RIGHT" then
 		anchorPoint = "LEFT"
 		relativeToPoint = "RIGHT"
+	elseif options.Grow == "DOWN" then
+		anchorPoint = "TOP"
+		relativeToPoint = "BOTTOM"
 	end
 
+	header:SetGrowDown(options.Grow == "DOWN")
+	header:SetColumns(nil)
 	frame:SetPoint(anchorPoint, anchor, relativeToPoint, options.Offset.X, options.Offset.Y)
 end
 
@@ -186,7 +194,7 @@ local function EnsureWatcher(anchor, unit)
 		return nil
 	end
 
-	if units:IsPet(unit) then
+	if units:IsPetOrMinion(unit) then
 		return nil
 	end
 
@@ -202,7 +210,7 @@ local function EnsureWatcher(anchor, unit)
 		local maxIcons = tonumber(options.Icons.MaxIcons) or 1
 		local size = tonumber(options.Icons.Size) or 32
 		local spacing = db.IconSpacing or 2
-		local container = iconSlotContainer:New(UIParent, maxIcons, size, spacing, "Friendly Indicators")
+		local container = iconSlotContainer:New(UIParent, maxIcons, size, spacing, "Friendly Indicators", nil, "Friendly Indicators")
 		local watcher = UnitAuraWatcher:New(unit, nil, { Defensives = true, Important = true, CC = true })
 
 		entry = {
@@ -320,6 +328,7 @@ local function RefreshTestIcons()
 		local iconsReverse = options.Icons.ReverseCooldown
 		local iconsGlow = options.Icons.Glow
 		local colorByDispelType = options.Icons.ColorByDispelType
+		local showTooltips = options.ShowTooltips ~= false
 
 		local ccSlots, defensiveSlots, importantSlots =
 			slotDistribution.Calculate(maxIcons, ccCount, defensiveCount, importantCount)
@@ -331,7 +340,7 @@ local function RefreshTestIcons()
 				break
 			end
 			local spell = testCcSpells[i]
-			local texture = spellCache:GetSpellTexture(spell.SpellId)
+			local texture = C_Spell.GetSpellTexture(spell.SpellId)
 			if texture then
 				container:SetSlot(slotIndex, {
 					Texture = texture,
@@ -341,6 +350,7 @@ local function RefreshTestIcons()
 					Glow = iconsGlow,
 					Color = colorByDispelType and spell.DispelColor,
 					FontScale = db.FontScale,
+					SpellId = showTooltips and spell.SpellId or nil,
 				})
 				slotIndex = slotIndex + 1
 			end
@@ -351,7 +361,7 @@ local function RefreshTestIcons()
 				break
 			end
 			local spell = testDefensiveSpells[i]
-			local texture = spellCache:GetSpellTexture(spell.SpellId)
+			local texture = C_Spell.GetSpellTexture(spell.SpellId)
 			if texture then
 				container:SetSlot(slotIndex, {
 					Texture = texture,
@@ -360,6 +370,7 @@ local function RefreshTestIcons()
 					ReverseCooldown = iconsReverse,
 					Glow = iconsGlow,
 					FontScale = db.FontScale,
+					SpellId = showTooltips and spell.SpellId or nil,
 				})
 				slotIndex = slotIndex + 1
 			end
@@ -370,7 +381,7 @@ local function RefreshTestIcons()
 				break
 			end
 			local spell = testImportantSpells[i]
-			local texture = spellCache:GetSpellTexture(spell.SpellId)
+			local texture = C_Spell.GetSpellTexture(spell.SpellId)
 			if texture then
 				container:SetSlot(slotIndex, {
 					Texture = texture,
@@ -379,6 +390,7 @@ local function RefreshTestIcons()
 					ReverseCooldown = iconsReverse,
 					Glow = iconsGlow,
 					FontScale = db.FontScale,
+					SpellId = showTooltips and spell.SpellId or nil,
 				})
 				slotIndex = slotIndex + 1
 			end
@@ -513,6 +525,18 @@ function M:Init()
 	if fs and fs.Sorting and fs.Sorting.RegisterPostSortCallback then
 		fs.Sorting:RegisterPostSortCallback(OnFrameSortSorted)
 	end
+
+	frames:HookCellSpotlightVisibility(function()
+		if moduleUtil:IsModuleEnabled(moduleName.FriendlyIndicator) then
+			EnsureWatchers()
+		end
+	end)
+
+	frames:HookNDuiVisibility(function()
+		if moduleUtil:IsModuleEnabled(moduleName.FriendlyIndicator) then
+			EnsureWatchers()
+		end
+	end)
 
 	local moduleEnabled = moduleUtil:IsModuleEnabled(moduleName.FriendlyIndicator)
 

@@ -1,7 +1,7 @@
 ## Interface: 120000, 120001, 120005
 ## Title: Enhance QoL Core
 ## Author: R41Z0R
-## Version: 9.8.0
+## Version: 10.2.0
 ## IconTexture: Interface\AddOns\EnhanceQoL\Icons\Icon.tga
 ## Category: Quality of Life
 ## X-Category: Quality of Life
@@ -22,13 +22,12 @@
 ## Retail: true
 ## X-Compatible-With: retail
 ## X-WoWI-ID: 26888
-## OptionalDeps: MidnightSimpleUnitFrames, UnhaltedUnitFrames, ElvUI, Baganator, DragonRider
+## OptionalDeps: MidnightSimpleUnitFrames, UnhaltedUnitFrames, ElvUI, Baganator, DragonRider, FarmHud
 
 libs\LibStub\LibStub.lua
 libs\AceLocale-3.0\AceLocale-3.0.xml
 libs\LibCustomGlow-1.0\LibCustomGlow-1.0.lua
 locales\[TextLocale].lua
-Modules\MythicPlus\Locales\[TextLocale].lua
 Init.lua
 NewSettingsTable.lua
 
@@ -48,6 +47,7 @@ General\functions.lua
 General\Glow.lua
 Core\EditModeLib.lua
 Core\EditMode.lua
+Core\SharedAnchors.lua
 Modules\ActionBarLabels.lua
 Core\Cleanup.lua
 EnhanceQoL.lua
@@ -81,11 +81,11 @@ Submodules\Merchant.lua
 Submodules\HealthText.lua
 Submodules\Mailbox.lua
 Submodules\Mailbox.xml
-Modules\Aura\Locales\[TextLocale].lua
 Modules\Aura\Init.lua
 Modules\Aura\ResourceBars.lua
 Modules\Aura\ResourceBarsHelpers.lua
 Modules\Aura\ExperienceBar.lua
+Modules\Aura\TotalAbsorbTracker.lua
 Modules\Skinner\Init.lua
 Settings\SettingsUI.xml
 
@@ -93,19 +93,15 @@ Settings\SettingsUI.xml
 Modules\Aura\Aura.xml
 
 # Mouse
-Modules\Mouse\Locales\[TextLocale].lua
 Modules\Mouse\Mouse.xml
 
 # Mover
-Modules\Mover\Locales\[TextLocale].lua
 Modules\Mover\Mover.xml
 
 # Sound
-Modules\Sound\Locales\[TextLocale].lua
 Modules\Sound\Sound.xml
 
 # Tooltip
-Modules\Tooltip\Locales\[TextLocale].lua
 Modules\Tooltip\Tooltip.xml
 
 
@@ -113,9 +109,7 @@ Modules\Tooltip\Tooltip.xml
 Modules\MythicPlus\MythicPlus.xml
 
 # Vendor
-Modules\Vendor\Locales\[TextLocale].lua
 Modules\Vendor\Vendor.xml
 
 # Food
-Modules\Food\Locales\[TextLocale].lua
 Modules\Food\Food.xml

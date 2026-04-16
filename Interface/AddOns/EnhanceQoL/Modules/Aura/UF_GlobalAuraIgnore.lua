@@ -10,7 +10,7 @@ end
 addon.Aura = addon.Aura or {}
 addon.Aura.UF = addon.Aura.UF or {}
 local UF = addon.Aura.UF
-local L = LibStub("AceLocale-3.0"):GetLocale("EnhanceQoL_Aura")
+local L = LibStub("AceLocale-3.0"):GetLocale("EnhanceQoL")
 
 UF.GlobalAuraIgnore = UF.GlobalAuraIgnore or {}
 local GAI = UF.GlobalAuraIgnore
@@ -131,7 +131,7 @@ local function getClassLabel(classToken)
 		if LOCALIZED_CLASS_NAMES_FEMALE[classToken] then return LOCALIZED_CLASS_NAMES_FEMALE[classToken] end
 		return tostring(classToken)
 	end
-	return tr("UFGroupHealerBuffEditorClassOther", "Other")
+	return tr("Other", "Other")
 end
 
 local function getUnitContextLabel(context)
@@ -515,7 +515,8 @@ local function requestAuraRefresh()
 		UF.FullScanTargetAuras("player")
 		UF.FullScanTargetAuras("target")
 		UF.FullScanTargetAuras("focus")
-		for i = 1, 5 do
+		local bossCount = (UF.GetBossFrameCount and UF.GetBossFrameCount()) or (UF.GetSupportedBossFrameCount and UF.GetSupportedBossFrameCount()) or 8
+		for i = 1, bossCount do
 			UF.FullScanTargetAuras("boss" .. tostring(i))
 		end
 	end
@@ -686,7 +687,7 @@ local function buildEditor()
 
 	local contextLabel = frame:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
 	contextLabel:SetPoint("TOPLEFT", enabledCheck, "BOTTOMLEFT", 4, -12)
-	contextLabel:SetText(tr("UFGlobalAuraIgnoreEditorContext", "Frame"))
+	contextLabel:SetText(tr("Frame", "Frame"))
 	frame.ContextLabel = contextLabel
 
 	frame.ContextButtons = {}

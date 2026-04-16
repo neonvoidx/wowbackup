@@ -58,7 +58,6 @@ addon.functions.SettingsCreateCheckbox(cGeneral, {
 local function isDialogConfirmSelected(key)
 	if key == "patron" then return addon.db["confirmPatronOrderDialog"] == true end
 	if key == "trade" then return addon.db["confirmTimerRemovalTrade"] == true end
-	if key == "enchant" then return addon.db["confirmReplaceEnchant"] == true end
 	if key == "socket" then return addon.db["confirmSocketReplace"] == true end
 	if key == "token" then return addon.db["confirmPurchaseTokenItem"] == true end
 	if key == "highcost" then return addon.db["confirmHighCostItem"] == true end
@@ -71,8 +70,6 @@ local function setDialogConfirmOption(key, value)
 		addon.db["confirmPatronOrderDialog"] = enabled
 	elseif key == "trade" then
 		addon.db["confirmTimerRemovalTrade"] = enabled
-	elseif key == "enchant" then
-		addon.db["confirmReplaceEnchant"] = enabled
 	elseif key == "socket" then
 		addon.db["confirmSocketReplace"] = enabled
 	elseif key == "token" then
@@ -86,7 +83,6 @@ local function applyDialogConfirmSelection(selection)
 	selection = selection or {}
 	addon.db["confirmPatronOrderDialog"] = selection.patron == true
 	addon.db["confirmTimerRemovalTrade"] = selection.trade == true
-	addon.db["confirmReplaceEnchant"] = selection.enchant == true
 	addon.db["confirmSocketReplace"] = selection.socket == true
 	addon.db["confirmPurchaseTokenItem"] = selection.token == true
 	addon.db["confirmHighCostItem"] = selection.highcost == true
@@ -105,11 +101,6 @@ addon.functions.SettingsCreateMultiDropdown(cGeneral, {
 			value = "trade",
 			text = L["confirmTimerRemovalTrade"],
 			tooltip = L["confirmTimerRemovalTradeDesc"],
-		},
-		{
-			value = "enchant",
-			text = L["confirmReplaceEnchant"],
-			tooltip = L["confirmReplaceEnchantDesc"],
 		},
 		{
 			value = "socket",

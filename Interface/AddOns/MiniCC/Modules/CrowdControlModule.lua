@@ -6,7 +6,6 @@ local frames = addon.Core.Frames
 local units = addon.Utils.Units
 local iconSlotContainer = addon.Core.IconSlotContainer
 local unitAuraWatcher = addon.Core.UnitAuraWatcher
-local spellCache = addon.Utils.SpellCache
 local moduleUtil = addon.Utils.ModuleUtil
 local moduleName = addon.Utils.ModuleName
 local wowEx = addon.Utils.WoWEx
@@ -45,7 +44,7 @@ local function UpdateWatcherAuras(entry)
 		return
 	end
 
-	local isPet = units:IsPet(entry.Unit)
+	local isPet = units:IsPetOrMinion(entry.Unit)
 	local options
 
 	if isPet then
@@ -67,6 +66,7 @@ local function UpdateWatcherAuras(entry)
 	local container = entry.Container
 	local ccState = entry.Watcher:GetCcState()
 	local slotIndex = 1
+	local showTooltips = options.ShowTooltips ~= false
 
 	for _, aura in ipairs(ccState) do
 		if slotIndex > container.Count then
@@ -81,6 +81,7 @@ local function UpdateWatcherAuras(entry)
 			Glow = options.Icons.Glow,
 			Color = options.Icons.ColorByDispelType and aura.DispelColor,
 			FontScale = db.FontScale,
+			SpellId = showTooltips and aura.SpellId or nil,
 		})
 		slotIndex = slotIndex + 1
 	end
@@ -115,7 +116,12 @@ local function AnchorContainer(header, anchor, options)
 	elseif options.Grow == "RIGHT" then
 		anchorPoint = "LEFT"
 		relativeToPoint = "RIGHT"
+	elseif options.Grow == "DOWN" then
+		anchorPoint = "TOP"
+		relativeToPoint = "BOTTOM"
 	end
+	header:SetGrowDown(options.Grow == "DOWN")
+	header:SetColumns(nil)
 	frame:SetPoint(anchorPoint, anchor, relativeToPoint, options.Offset.X, options.Offset.Y)
 end
 
@@ -133,7 +139,7 @@ local function EnsureWatcher(anchor, unit)
 		return nil
 	end
 
-	local isPet = units:IsPet(unit)
+	local isPet = units:IsPetOrMinion(unit)
 
 	if isPet and not testModeActive and not moduleUtil:IsModuleEnabled(moduleName.PetCC) then
 		local existing = watchers[anchor]
@@ -159,7 +165,7 @@ local function EnsureWatcher(anchor, unit)
 		local count = options.Icons.Count or 5
 		local size = tonumber(options.Icons.Size) or (isPet and 24 or 32)
 		local spacing = db.IconSpacing or 2
-		local container = iconSlotContainer:New(UIParent, count, size, spacing, "CC")
+		local container = iconSlotContainer:New(UIParent, count, size, spacing, "CC", nil, "CC")
 		local watcher = unitAuraWatcher:New(unit, nil, { CC = true })
 
 		entry = {
@@ -229,7 +235,7 @@ local function OnCufUpdateVisible(frame)
 		return
 	end
 
-	local isPet = units:IsPet(entry.Unit)
+	local isPet = units:IsPetOrMinion(entry.Unit)
 
 	-- If this is a pet frame and pet CC is disabled, keep it hidden
 	if isPet and not moduleUtil:IsModuleEnabled(moduleName.PetCC) then
@@ -283,7 +289,7 @@ local function RefreshTestIcons()
 	local petOptions = db.Modules.PetCCModule
 
 	for anchor, entry in pairs(watchers) do
-		local isPet = units:IsPet(entry.Unit)
+		local isPet = units:IsPetOrMinion(entry.Unit)
 		local entryEnabled
 		if isPet then
 			entryEnabled = petEnabled
@@ -311,12 +317,13 @@ local function RefreshTestIcons()
 					break
 				end
 
-				local texture = spellCache:GetSpellTexture(spell.SpellId)
+				local texture = C_Spell.GetSpellTexture(spell.SpellId)
 
 				if texture then
 					local duration = 15 + (i - 1) * 3
 					local startTime = now - (i - 1) * 0.5
 
+					local showTooltips = entryOptions.ShowTooltips ~= false
 					container:SetSlot(i, {
 						Texture = texture,
 						DurationObject = wowEx:CreateDuration(startTime, duration),
@@ -325,6 +332,7 @@ local function RefreshTestIcons()
 						Glow = entryOptions.Icons.Glow,
 						Color = entryOptions.Icons.ColorByDispelType and spell.DispelColor,
 						FontScale = db.FontScale,
+						SpellId = showTooltips and spell.SpellId or nil,
 					})
 				end
 			end
@@ -371,7 +379,7 @@ local function EnableWatchers()
 
 	for _, entry in pairs(watchers) do
 		if entry.Watcher then
-			local isPet = units:IsPet(entry.Unit)
+			local isPet = units:IsPetOrMinion(entry.Unit)
 			if (isPet and petEnabled) or (not isPet and ccEnabled) then
 				entry.Watcher:Enable()
 			end
@@ -419,7 +427,7 @@ function M:Refresh()
 	local petOptions = db.Modules.PetCCModule
 
 	for anchor, entry in pairs(watchers) do
-		local isPet = units:IsPet(entry.Unit)
+		local isPet = units:IsPetOrMinion(entry.Unit)
 		local entryOptions = isPet and petOptions or options
 		local entryEnabled
 
@@ -488,6 +496,18 @@ function M:Init()
 	if fs and fs.Sorting and fs.Sorting.RegisterPostSortCallback then
 		fs.Sorting:RegisterPostSortCallback(OnFrameSortSorted)
 	end
+
+	frames:HookCellSpotlightVisibility(function()
+		if moduleUtil:IsModuleEnabled(moduleName.CrowdControl) or moduleUtil:IsModuleEnabled(moduleName.PetCC) then
+			EnsureWatchers()
+		end
+	end)
+
+	frames:HookNDuiVisibility(function()
+		if moduleUtil:IsModuleEnabled(moduleName.CrowdControl) or moduleUtil:IsModuleEnabled(moduleName.PetCC) then
+			EnsureWatchers()
+		end
+	end)
 
 	local moduleEnabled = moduleUtil:IsModuleEnabled(moduleName.CrowdControl)
 

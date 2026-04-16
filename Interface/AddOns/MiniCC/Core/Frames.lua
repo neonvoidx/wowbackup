@@ -103,6 +103,27 @@ function M:BlizzardFrames(visibleOnly)
 	return frames
 end
 
+---Retrieves a list of Blizzard standard (non-compact) party frames.
+---@param visibleOnly boolean
+---@return table
+function M:BlizzardPartyFrames(visibleOnly)
+	if not PartyFrame then
+		return {}
+	end
+
+	local frames = {}
+
+	for i = 1, maxParty + 1 do
+		local frame = PartyFrame["MemberFrame" .. i]
+
+		if frame and (frame:IsVisible() or not visibleOnly) then
+			frames[#frames + 1] = frame
+		end
+	end
+
+	return frames
+end
+
 ---Retrieves a list of visible DandersFrames frames.
 ---@return table
 function M:DandersFrames()
@@ -231,21 +252,6 @@ function M:ShadowedUFFrames(visibleOnly)
 		end
 	end
 
-	local unitNames = {
-		"player",
-		"pet",
-		"pettarget",
-		"target",
-		"targettarget",
-		"targettargettarget",
-		"focus",
-		"focustarget",
-	}
-
-	for _, unitName in ipairs(unitNames) do
-		Add(_G["SUFUnit" .. unitName])
-	end
-
 	-- Party / Raid header buttons (SUFHeaderpartyUnitButton# / SUFHeaderraidUnitButton#) :contentReference[oaicite:2]{index=2}
 	for i = 1, maxParty do
 		Add(_G["SUFHeaderpartyUnitButton" .. i])
@@ -317,6 +323,42 @@ function M:PlexusFrames(visibleOnly)
 	return frames
 end
 
+---Retrieves a list of VuhDo unit frames.
+---VuhDo panel frames are globals named Vd1, Vd2, … up to 10.
+---Unit buttons are direct children; the unit token is in :GetAttribute("unit") or button.raidid.
+---@param visibleOnly boolean
+---@return table
+function M:VuhDoFrames(visibleOnly)
+	if not _G["Vd1"] then
+		return {}
+	end
+
+	local frames = {}
+	local seen = {}
+
+	local panelNum = 1
+	while true do
+		local panel = _G["Vd" .. panelNum]
+		if not panel then break end
+
+		for _, child in ipairs({ panel:GetChildren() }) do
+			if not seen[child] then
+				local unit = (child.GetAttribute and child:GetAttribute("unit")) or child.raidid
+				if unit and unit ~= "" then
+					if (not child.IsForbidden or not child:IsForbidden()) and (child:IsVisible() or not visibleOnly) then
+						seen[child] = true
+						frames[#frames + 1] = child
+					end
+				end
+			end
+		end
+
+		panelNum = panelNum + 1
+	end
+
+	return frames
+end
+
 ---Retrieves a list of Cell party/raid unit frames.
 ---@param visibleOnly boolean
 ---@return table
@@ -341,13 +383,34 @@ function M:CellFrames(visibleOnly)
 				local unit = child.unit or (child.GetAttribute and child:GetAttribute("unit"))
 
 				if unit and unit ~= "" then
-					if child.IsForbidden and child:IsForbidden() then
-						-- skip
-					elseif child:IsVisible() or not visibleOnly then
+					if (not child.IsForbidden or not child:IsForbidden()) and (child:IsVisible() or not visibleOnly) then
 						frames[#frames + 1] = child
 					end
 				end
 			end
+		end
+	end
+
+	return frames
+end
+
+---Retrieves a list of Cell spotlight unit frames.
+---@param visibleOnly boolean
+---@return table
+function M:CellSpotlightFrames(visibleOnly)
+	if not _G["CellSpotlightFrameUnitButton1"] then
+		return {}
+	end
+
+	local frames = {}
+
+	for i = 1, 15 do
+		local frame = _G["CellSpotlightFrameUnitButton" .. i]
+		if not frame then
+			break
+		end
+		if not frame.IsForbidden or not frame:IsForbidden() then
+			frames[#frames + 1] = frame
 		end
 	end
 
@@ -368,10 +431,178 @@ function M:TPerlFrames(visibleOnly)
 		local unit = child.unit or (child.GetAttribute and child:GetAttribute("unit"))
 
 		if unit and unit ~= "" then
-			if child.IsForbidden and child:IsForbidden() then
-				-- skip
-			elseif child:IsVisible() or not visibleOnly then
+			if (not child.IsForbidden or not child:IsForbidden()) and (child:IsVisible() or not visibleOnly) then
 				frames[#frames + 1] = child
+			end
+		end
+	end
+
+	return frames
+end
+
+---Retrieves a list of Enhanced QoL party unit frames.
+---@param visibleOnly boolean
+---@return table
+function M:EnhancedQoLFrames(visibleOnly)
+	local hasAny = EQOLUFPartyHeader
+	for i = 1, 8 do
+		if _G["EQOLUFRaidGroupHeader" .. i] then
+			hasAny = true
+			break
+		end
+	end
+
+	if not hasAny then
+		return {}
+	end
+
+	local frames = {}
+	local headers = { EQOLUFPartyHeader }
+
+	for i = 1, 8 do
+		local header = _G["EQOLUFRaidGroupHeader" .. i]
+		if header then
+			headers[#headers + 1] = header
+		end
+	end
+
+	for _, header in ipairs(headers) do
+		if header then
+			for _, child in ipairs({ header:GetChildren() }) do
+				local unit = child.unit or (child.GetAttribute and child:GetAttribute("unit"))
+
+				if unit and unit ~= "" then
+					if (not child.IsForbidden or not child:IsForbidden()) and (child:IsVisible() or not visibleOnly) then
+						frames[#frames + 1] = child
+					end
+				end
+			end
+		end
+	end
+
+	return frames
+end
+
+---Retrieves a list of BuzzardFrames unit frames.
+---@param visibleOnly boolean
+---@return table
+function M:BuzzardFrames(visibleOnly)
+	local BF = _G["BuzzardFrames"]
+	if not BF or not BF.GetUnitFrames then
+		return {}
+	end
+
+	local frames = {}
+	local playerSuccess, playerFrames = pcall(BF.GetUnitFrames, BF, "player")
+	local playerFrame = playerSuccess and playerFrames and next(playerFrames)
+
+	if playerFrame and (playerFrame:IsVisible() or not visibleOnly) then
+		frames[#frames + 1] = playerFrame
+	end
+
+	for i = 1, maxParty do
+		local partySuccess, partyFrames = pcall(BF.GetUnitFrames, BF, "party" .. i)
+		local frame = partySuccess and partyFrames and next(partyFrames)
+
+		if not frame then
+			break
+		end
+
+		if frame:IsVisible() or not visibleOnly then
+			frames[#frames + 1] = frame
+		end
+	end
+
+	for i = 1, maxRaid do
+		local raidSuccess, raidFrames = pcall(BF.GetUnitFrames, BF, "raid" .. i)
+		local frame = raidSuccess and raidFrames and next(raidFrames)
+
+		if frame and (frame:IsVisible() or not visibleOnly) then
+			frames[#frames + 1] = frame
+		end
+	end
+
+	return frames
+end
+
+---Retrieves a list of NDui unit frames.
+---NDui uses oUF. Party/raid frames are spawned as secure headers whose children are the actual unit buttons.
+---Boss and arena frames are spawned directly as named globals.
+---@param visibleOnly boolean
+---@return table
+function M:NDuiFrames(visibleOnly)
+	if not NDuiDB then
+		return {}
+	end
+
+	local frames = {}
+	local seen = {}
+
+	local function Add(frame)
+		if not frame or seen[frame] then return end
+		if frame.IsForbidden and frame:IsForbidden() then return end
+		if visibleOnly and not frame:IsVisible() then return end
+		seen[frame] = true
+		frames[#frames + 1] = frame
+	end
+
+	local function AddHeader(header)
+		if not header then return end
+		for _, child in ipairs({ header:GetChildren() }) do
+			local unit = child.unit or (child.GetAttribute and child:GetAttribute("unit"))
+			if unit and unit ~= "" then
+				Add(child)
+			end
+		end
+	end
+
+	-- Party header
+	AddHeader(_G["oUF_Party"])
+
+	-- Raid: simple mode uses oUF_Raid; per-group mode uses oUF_Raid1..8
+	AddHeader(_G["oUF_Raid"])
+	for i = 1, 8 do
+		AddHeader(_G["oUF_Raid" .. i])
+	end
+
+	return frames
+end
+
+---Retrieves a list of GW2 UI unit frames.
+---GW2 UI stores all spawned oUF headers in GW.GridHeaders. Each header's direct
+---children are either unit buttons (have .unit) or sub-group frames (when groupingOrder
+---is set), whose children are the actual unit buttons.
+---@param visibleOnly boolean
+---@return table
+function M:GW2UIFrames(visibleOnly)
+	if not GW2_ADDON or not GW2_ADDON.GridHeaders then
+		return {}
+	end
+
+	local frames = {}
+	local seen = {}
+
+	local function Add(frame)
+		if not frame or seen[frame] then return end
+		if frame.IsForbidden and frame:IsForbidden() then return end
+		if visibleOnly and not frame:IsVisible() then return end
+		seen[frame] = true
+		frames[#frames + 1] = frame
+	end
+
+	for _, header in ipairs(GW2_ADDON.GridHeaders) do
+		for _, child in ipairs({ header:GetChildren() }) do
+			local unit = child.unit or (child.GetAttribute and child:GetAttribute("unit"))
+			if unit and unit ~= "" then
+				Add(child)
+			else
+				-- sub-group frame — walk one level deeper
+				for _, grandchild in ipairs({ child:GetChildren() }) do
+					local gcUnit = grandchild.unit or (grandchild.GetAttribute and grandchild:GetAttribute("unit"))
+					if gcUnit and gcUnit ~= "" then
+						Add(grandchild)
+					end
+				end
 			end
 		end
 	end
@@ -417,20 +648,34 @@ function M:GetAll(visibleOnly, includeTestFrames)
 	local grid2 = M:Grid2Frames(visibleOnly)
 	local danders = M:DandersFrames()
 	local blizzard = not wowEx:IsDandersEnabled() and M:BlizzardFrames(visibleOnly) or {}
+	local blizzardParty = not wowEx:IsDandersEnabled() and M:BlizzardPartyFrames(visibleOnly) or {}
 	local suf = M:ShadowedUFFrames(visibleOnly)
 	local plexus = M:PlexusFrames(visibleOnly)
 	local cell = M:CellFrames(visibleOnly)
+	local cellSpotlight = M:CellSpotlightFrames(visibleOnly)
+	local vuhdo = M:VuhDoFrames(visibleOnly)
 	local tperl = M:TPerlFrames(visibleOnly)
+	local eqol = M:EnhancedQoLFrames(visibleOnly)
+	local buzzard = M:BuzzardFrames(visibleOnly)
+	local ndui = M:NDuiFrames(visibleOnly)
+	local gw2ui = M:GW2UIFrames(visibleOnly)
 	local custom = M:CustomFrames(visibleOnly)
 
 	array:Append(blizzard, anchors)
+	array:Append(blizzardParty, anchors)
 	array:Append(elvui, anchors)
 	array:Append(grid2, anchors)
 	array:Append(danders, anchors)
 	array:Append(suf, anchors)
 	array:Append(plexus, anchors)
 	array:Append(cell, anchors)
+	array:Append(cellSpotlight, anchors)
+	array:Append(vuhdo, anchors)
 	array:Append(tperl, anchors)
+	array:Append(eqol, anchors)
+	array:Append(buzzard, anchors)
+	array:Append(ndui, anchors)
+	array:Append(gw2ui, anchors)
 	array:Append(custom, anchors)
 
 	if includeTestFrames then
@@ -452,7 +697,50 @@ function M:GetNextStrata(strata)
 	return strataOrder[math.min((strataIndex[strata] or 1) + 1, #strataOrder)]
 end
 
+
+---Returns true if the frame is a VuhDo unit button.
+---Used to decide whether to bump strata so FCD icons render above VuhDo frame elements.
+---@param frame table
+---@return boolean
+function M:IsVuhDoFrame(frame)
+	if not frame or issecretvalue(frame) then
+		return false
+	end
+	if frame:IsForbidden() then
+		return false
+	end
+	local name = frame:GetName()
+	return name ~= nil and string.find(name, "^Vd%d+H%d+") ~= nil
+end
+
+---Returns true if the frame is a Blizzard compact or standard party frame (not a raid frame).
+---Used to decide whether to bump strata so FCD icons render above party frame elements.
+---@param frame table
+---@return boolean
+function M:IsBlizzardPartyFrame(frame)
+	if not frame or issecretvalue(frame) then
+		return false
+	end
+	if frame:IsForbidden() then
+		return false
+	end
+
+	local name = frame:GetName()
+	if name and string.find(name, "CompactPartyFrame") ~= nil then
+		return true
+	end
+
+	if PartyFrame and frame:GetParent() == PartyFrame then
+		return true
+	end
+
+	return false
+end
+
 function M:IsFriendlyCuf(frame)
+	if not frame or issecretvalue(frame) then
+		return false
+	end
 	if frame:IsForbidden() then
 		return false
 	end
@@ -462,7 +750,16 @@ function M:IsFriendlyCuf(frame)
 		return false
 	end
 
-	return string.find(name, "CompactParty") ~= nil or string.find(name, "CompactRaid") ~= nil
+	if string.find(name, "CompactParty") ~= nil or string.find(name, "CompactRaid") ~= nil then
+		return true
+	end
+
+	-- Standard (non-compact) Blizzard party frames: PartyFrameMemberFrame#
+	if PartyFrame and frame:GetParent() == PartyFrame then
+		return true
+	end
+
+	return false
 end
 
 ---@param frame table
@@ -491,6 +788,36 @@ function M:ShowHideFrame(frame, anchor, isTest, excludePlayer)
 		frame:Show()
 	else
 		frame:Hide()
+	end
+end
+
+---Registers a callback via NDui's internal oUF:RegisterInitCallback, called once per frame as NDui spawns it.
+---Safe to call even if NDui is not loaded.
+---@param callback fun()
+function M:HookNDuiVisibility(callback)
+	if not NDuiDB then return end
+
+	local ndui = _G["NDui"]
+	local ouf = ndui and ndui.oUF
+	if ouf and ouf.RegisterInitCallback then
+		ouf:RegisterInitCallback(function(frame)
+			if frame.unit and frame.unit ~= "" then
+				callback()
+			end
+		end)
+	end
+end
+
+---Hooks OnShow/OnHide on all 15 Cell spotlight unit buttons, calling callback() on each change.
+---Safe to call even if Cell is not loaded (buttons simply won't exist).
+---@param callback fun()
+function M:HookCellSpotlightVisibility(callback)
+	for i = 1, 15 do
+		local btn = _G["CellSpotlightFrameUnitButton" .. i]
+		if btn then
+			btn:HookScript("OnShow", callback)
+			btn:HookScript("OnHide", callback)
+		end
 	end
 end
 

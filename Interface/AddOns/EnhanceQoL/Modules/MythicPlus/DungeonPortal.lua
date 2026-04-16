@@ -11,8 +11,8 @@ addon.MythicPlus = addon.MythicPlus or {}
 addon.MythicPlus.functions = addon.MythicPlus.functions or {}
 addon.MythicPlus.variables = addon.MythicPlus.variables or {}
 
-local openRaidLib = LibStub:GetLibrary("LibOpenKeystone-1.0", true) or LibStub:GetLibrary("LibOpenRaid-1.0", true)
-local L = LibStub("AceLocale-3.0"):GetLocale("EnhanceQoL_MythicPlus")
+local openRaidLib = LibStub:GetLibrary("LibOpenKeystone-1.0", true)
+local L = LibStub("AceLocale-3.0"):GetLocale("EnhanceQoL")
 
 local cModeIDs
 local portalSpells = {}
@@ -22,6 +22,7 @@ local mapIDInfo = {} -- TODO 11.2: remove mapIDInfo after new mapID from GetMapU
 local selectedMapId
 local faction = select(2, UnitFactionGroup("player"))
 local checkCooldown
+local issecretvalue = _G.issecretvalue
 
 local minFrameSize = 0
 
@@ -1094,6 +1095,67 @@ end
 local textList = {}
 local textListUsed = 0
 local gFrameAnchorScore
+local measureFontString
+local EnsureMeasureFontString
+
+local function TryGetSafeNumber(getter)
+	local ok, value = pcall(getter)
+	if not ok or type(value) ~= "number" then return nil end
+	if issecretvalue and issecretvalue(value) then return nil end
+	return value
+end
+
+local function TryGetSafeAnchorMetric(getter)
+	local ok, value = pcall(getter)
+	if not ok or type(value) ~= "number" then return nil end
+	if issecretvalue and issecretvalue(value) then return nil end
+	return value
+end
+
+local function ConfigureMeasureFont(fontString, fontObject, fontPath, fontSize, fontFlags)
+	if not fontString then return end
+	if fontObject then
+		fontString:SetFontObject(fontObject)
+	elseif fontPath and fontSize then
+		fontString:SetFont(fontPath, fontSize, fontFlags)
+	else
+		fontString:SetFontObject(GameFontNormal)
+	end
+end
+
+local function MeasureTextWidth(text, fontObject, fontPath, fontSize, fontFlags)
+	local fontString = EnsureMeasureFontString and EnsureMeasureFontString()
+	if not fontString then return 0 end
+	ConfigureMeasureFont(fontString, fontObject, fontPath, fontSize, fontFlags)
+	fontString:SetText(text and tostring(text) or "")
+	return TryGetSafeNumber(function() return fontString:GetStringWidth() end) or 0
+end
+
+local function MeasureTextHeight(text, fontObject, fontPath, fontSize, fontFlags)
+	local fontString = EnsureMeasureFontString and EnsureMeasureFontString()
+	if not fontString then return 0 end
+	ConfigureMeasureFont(fontString, fontObject, fontPath, fontSize, fontFlags)
+	fontString:SetText(text and tostring(text) or "")
+	return TryGetSafeNumber(function() return fontString:GetStringHeight() end) or 0
+end
+
+local function GetSafeFrameWidth(frame)
+	if not (frame and frame.GetWidth) then return 0 end
+	return TryGetSafeNumber(function() return frame:GetWidth() end) or 0
+end
+
+local function GetSafeElementBottomOffset(element)
+	if not (element and element.GetPoint and element.GetHeight) then return nil end
+	local ok, pointY = pcall(function()
+		local _, _, _, _, y = element:GetPoint()
+		return y
+	end)
+	if not ok then return nil end
+	local yOffset = TryGetSafeAnchorMetric(function() return pointY end)
+	local height = TryGetSafeAnchorMetric(function() return element:GetHeight() end)
+	if yOffset == nil or height == nil then return nil end
+	return yOffset - height
+end
 
 local function acquireRioText(index)
 	local fs = textList[index]
@@ -1120,12 +1182,22 @@ local function hideUnusedRioText()
 	end
 end
 
-local function createString(textLeft, textRight, colorLeft, colorRight, anchor, selected)
+local function createString(textLeft, textRight, colorLeft, colorRight, anchor, selected, fallbackY)
+	local yOffset = fallbackY
+	if yOffset == nil then
+		yOffset = GetSafeElementBottomOffset(anchor)
+		if yOffset then
+			yOffset = yOffset - 10
+		else
+			yOffset = -30
+		end
+	end
+
 	textListUsed = textListUsed + 1
 	local titleScore1 = acquireRioText(textListUsed)
 	titleScore1:SetFormattedText(textLeft)
 	titleScore1:ClearAllPoints()
-	titleScore1:SetPoint("TOPLEFT", 7, (addon.functions.getHeightOffset(anchor) - 10))
+	titleScore1:SetPoint("TOPLEFT", 7, yOffset)
 	if selected then
 		titleScore1:SetTextColor(0, 1, 0, 1)
 	elseif colorLeft then
@@ -1139,14 +1211,14 @@ local function createString(textLeft, textRight, colorLeft, colorRight, anchor, 
 	local titleScoreValue = acquireRioText(textListUsed)
 	titleScoreValue:SetFormattedText(textRight)
 	titleScoreValue:ClearAllPoints()
-	titleScoreValue:SetPoint("TOPRIGHT", -7, (addon.functions.getHeightOffset(anchor) - 10))
+	titleScoreValue:SetPoint("TOPRIGHT", -7, yOffset)
 	if colorRight then
 		titleScoreValue:SetTextColor(colorRight.r, colorRight.g, colorRight.b, 1)
 	else
 		titleScoreValue:SetTextColor(1, 1, 1, 1)
 	end
 	titleScoreValue:Show()
-	return titleScore1
+	return titleScore1, yOffset
 end
 
 local function ensureRioScoreFrame()
@@ -1224,16 +1296,18 @@ local function updateRioScoreFrame()
 
 	local frameAnchorScore = gFrameAnchorScore
 	local titleScore = frameAnchorScore.titleScore
+	local scoreTitleWidth = MeasureTextWidth(DUNGEON_SCORE, GameFontNormalLarge) + 20
+	local portalTitleWidth = MeasureTextWidth(CHALLENGES, GameFontNormalLarge) + 20
 	updateRioLockButton(frameAnchorScore.btnDockScore)
 	titleScore:SetFormattedText(DUNGEON_SCORE)
 
-	minFrameSize = max(titleScore:GetStringWidth() + 20, title:GetStringWidth() + 20, 205, minFrameSize)
+	minFrameSize = max(scoreTitleWidth, portalTitleWidth, 205, minFrameSize)
 	SafeSetSize(frameAnchorScore, minFrameSize, 170)
 	if addon.db["teleportFrame"] then
 		frameAnchorScore:ClearAllPoints()
 		frameAnchorScore:SetPoint("TOPLEFT", DungeonTeleportFrame, "BOTTOMLEFT", 0, 0)
 	elseif nil ~= RaiderIO_ProfileTooltip then
-		local offsetX = RaiderIO_ProfileTooltip:GetSize()
+		local offsetX = GetSafeFrameWidth(RaiderIO_ProfileTooltip)
 		frameAnchorScore:ClearAllPoints()
 		frameAnchorScore:SetPoint("TOPLEFT", parentFrame, "TOPRIGHT", offsetX, 0)
 	else
@@ -1257,8 +1331,12 @@ local function updateRioScoreFrame()
 		end
 
 		local r, g, b = C_ChallengeMode.GetDungeonScoreRarityColor(rating.currentSeasonScore):GetRGB()
-		local l1 = createString(BATTLEGROUND_RATING, rating.currentSeasonScore, nil, { r = r, g = g, b = b }, titleScore)
-		local nWidth = l1:GetStringWidth() + 60
+		local titleHeight = max(MeasureTextHeight(DUNGEON_SCORE, GameFontNormalLarge), 16)
+		local rowHeight = max(MeasureTextHeight("A", nil, addon.variables.defaultFont, 14, "OUTLINE"), 14)
+		local nextRowY = -(titleHeight + 20)
+		local l1, lastRowY = createString(BATTLEGROUND_RATING, rating.currentSeasonScore, nil, { r = r, g = g, b = b }, titleScore, nil, nextRowY)
+		local nWidth = MeasureTextWidth(BATTLEGROUND_RATING, nil, addon.variables.defaultFont, 14, "OUTLINE") + 60
+		nextRowY = lastRowY - (rowHeight + 10)
 		local dungeonList = {}
 
 		for _, key in pairs(C_ChallengeMode.GetMapTable()) do
@@ -1319,12 +1397,12 @@ local function updateRioScoreFrame()
 
 		local lastElement = l1
 		for _, dungeon in ipairs(dungeonList) do
-			lastElement = createString(dungeon.text, dungeon.stars, nil, { r = dungeon.r, g = dungeon.g, b = dungeon.b }, lastElement, dungeon.select)
+			lastElement, lastRowY = createString(dungeon.text, dungeon.stars, nil, { r = dungeon.r, g = dungeon.g, b = dungeon.b }, lastElement, dungeon.select, nextRowY)
+			nextRowY = lastRowY - (rowHeight + 10)
 		end
 
-		local _, _, _, _, lp = lastElement:GetPoint()
-		minFrameSize = max(nWidth + 20, 205, title:GetStringWidth() + 20, minFrameSize)
-		SafeSetSize(frameAnchorScore, minFrameSize, max(lp * -1 + 30, 170))
+		minFrameSize = max(nWidth + 20, 205, portalTitleWidth, minFrameSize)
+		SafeSetSize(frameAnchorScore, minFrameSize, max(lastRowY * -1 + 30, 170))
 		SafeSetSize(frameAnchor, minFrameSize, 170)
 	end
 
@@ -1351,8 +1429,7 @@ local function CreateRioScore()
 end
 
 local keyStoneFrame
-local measureFontString
-local function EnsureMeasureFontString()
+EnsureMeasureFontString = function()
 	if measureFontString then return measureFontString end
 	if not UIParent or not UIParent.CreateFontString then return nil end
 	measureFontString = UIParent:CreateFontString(nil, "OVERLAY", "GameFontNormal")
@@ -1527,10 +1604,13 @@ end
 
 local isRegistered = false
 function addon.MythicPlus.functions.togglePartyKeystone()
+	local shouldEnable = addon.db["groupfinderShowPartyKeystone"] and not IsInRaid()
+	if openRaidLib and openRaidLib.SetEnabled then openRaidLib.SetEnabled(shouldEnable) end
+
 	if InCombatLockdown() then
 		doAfterCombat = true
 	else
-		if addon.db["groupfinderShowPartyKeystone"] and not IsInRaid() then
+		if shouldEnable then
 			if not isRegistered then
 				isRegistered = true
 				EnsureMeasureFontString()
@@ -1593,7 +1673,7 @@ function addon.MythicPlus.functions.toggleFrame()
 						doAfterCombat = true
 					else
 						CreateRioScore()
-						local offsetX = RaiderIO_ProfileTooltip:GetSize()
+						local offsetX = GetSafeFrameWidth(RaiderIO_ProfileTooltip)
 						if addon.db.teleportFrameLocked then
 							frameAnchor:ClearAllPoints()
 							frameAnchor:SetPoint("TOPLEFT", parentFrame, "TOPRIGHT", offsetX, 0)
@@ -1723,7 +1803,7 @@ function addon.MythicPlus.functions.InitDungeonPortal()
 					end
 					CreateRioScore()
 					local offsetX = 0
-					if nil ~= RaiderIO_ProfileTooltip then offsetX = RaiderIO_ProfileTooltip:GetSize() end
+					if nil ~= RaiderIO_ProfileTooltip then offsetX = GetSafeFrameWidth(RaiderIO_ProfileTooltip) end
 					if gFrameAnchorScore and addon.db["dungeonScoreFrameLocked"] then gFrameAnchorScore:SetPoint("TOPLEFT", GameTooltip, "TOPRIGHT", offsetX, 0) end
 
 					if addon.db["teleportFrame"] then frameAnchor:SetAlpha(0) end

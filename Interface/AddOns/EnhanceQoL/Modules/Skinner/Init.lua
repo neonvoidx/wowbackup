@@ -438,46 +438,10 @@ local function applyCharacterSidebarTabsFlatSkin()
 	local tabsFrame = _G.PaperDollSidebarTabs
 	if not tabsFrame then return end
 
-	local insetRight = _G.CharacterFrameInsetRight
-	tabsFrame:SetParent(insetRight or _G.CharacterFrame or tabsFrame:GetParent())
-	tabsFrame:ClearAllPoints()
-	if insetRight then
-		tabsFrame:SetPoint("BOTTOMRIGHT", insetRight, "TOPRIGHT", -6, -1)
-	else
-		tabsFrame:SetPoint("TOPRIGHT", _G.CharacterFrame, "TOPRIGHT", -36, -(FLAT_HEADER_TOP + FLAT_HEADER_HEIGHT + 8))
-	end
-	tabsFrame:SetFrameStrata(((_G.CharacterFrame and _G.CharacterFrame:GetFrameStrata()) or tabsFrame:GetFrameStrata()))
-	tabsFrame:SetFrameLevel(((_G.CharacterFrame and _G.CharacterFrame:GetFrameLevel()) or 1) + 12)
-	tabsFrame.eqolReparent = true
-
 	hideSlotTexture(tabsFrame.DecorLeft)
 	hideSlotTexture(tabsFrame.DecorRight)
 
 	local count = (type(_G.PAPERDOLL_SIDEBARS) == "table") and #_G.PAPERDOLL_SIDEBARS or 3
-	tabsFrame:SetSize(DEFAULT_SIDEBAR_TABS_WIDTH, DEFAULT_SIDEBAR_TABS_HEIGHT)
-	local tab3 = _G.PaperDollSidebarTab3
-	local tab2 = _G.PaperDollSidebarTab2
-	local tab1 = _G.PaperDollSidebarTab1
-	if tab3 then
-		tab3:ClearAllPoints()
-		tab3:SetPoint("BOTTOMRIGHT", tabsFrame, "BOTTOMRIGHT", -30, 0)
-	end
-	if tab2 then
-		tab2:ClearAllPoints()
-		if tab3 then
-			tab2:SetPoint("RIGHT", tab3, "LEFT", -4, 0)
-		else
-			tab2:SetPoint("BOTTOMRIGHT", tabsFrame, "BOTTOMRIGHT", -30, 0)
-		end
-	end
-	if tab1 then
-		tab1:ClearAllPoints()
-		if tab2 then
-			tab1:SetPoint("RIGHT", tab2, "LEFT", -4, 0)
-		else
-			tab1:SetPoint("BOTTOMRIGHT", tabsFrame, "BOTTOMRIGHT", -30, 0)
-		end
-	end
 	for i = 1, count do
 		local tab = _G["PaperDollSidebarTab" .. i]
 		if tab then
@@ -486,8 +450,6 @@ local function applyCharacterSidebarTabsFlatSkin()
 			updateSidebarTabState(tab, sideFrame and sideFrame:IsShown())
 		end
 	end
-
-	tabsFrame:Show()
 
 	if addon.variables and addon.variables.eqolSidebarTabHooks then return end
 	addon.variables = addon.variables or {}

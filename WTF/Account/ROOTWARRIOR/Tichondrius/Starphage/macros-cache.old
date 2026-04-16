@@ -6,11 +6,6 @@ VER 3 0100000000000010 " " "INV_MISC_QUESTIONMARK"
 #showtooltip Consume Magic
 /cast  [@mouseover,exists,harm,nodead][] Consume Magic
 END
-VER 3 0100000000000014 " " "INV_MISC_QUESTIONMARK"
-#showtooltip Demon's Bite
-/startattack
-/cast Demon's Bite
-END
 VER 3 0100000000000017 " " "INV_MISC_QUESTIONMARK"
 #showtooltip 
 /stopcasting 
@@ -18,6 +13,7 @@ VER 3 0100000000000017 " " "INV_MISC_QUESTIONMARK"
 END
 VER 3 010000000000001E " " "INV_MISC_QUESTIONMARK"
 #showtooltip Chaos Strike
+/stopmacro [channeling:Void Ray]
 /cast [nochanneling] Chaos Strike
 END
 VER 3 010000000000001C " " "INV_MISC_QUESTIONMARK"
@@ -60,18 +56,6 @@ VER 3 010000000000002D " " "134400"
 #showtooltip The Hunt
 /castsequence reset=2 the hunt
 END
-VER 3 0100000000000029 " " "134400"
-#showtooltip 
-/cast [@cursor] Sigil of Chains
-END
-VER 3 0100000000000034 " " "134400"
-#showtooltip 
-/cast [@cursor] Sigil of Flame
-END
-VER 3 0100000000000035 " " "134400"
-#showtooltip 
-/cast [@cursor] Sigil of Spite
-END
 VER 3 0100000000000036 " " "134400"
 /run SetView(5)
 /run SetView(5)
@@ -83,32 +67,47 @@ VER 3 0100000000000038 " " "134400"
 END
 VER 3 0100000000000039 " " "134400"
 #showtooltip Consume
-/cast [nochanneling] Consume
+/stopmacro [channeling:Void Ray]
+/cast Consume
 END
 VER 3 010000000000003A " " "134400"
 #showtooltip Reap
-/cast [nochanneling] Reap
-END
-VER 3 010000000000003B " " "134400"
-#showtooltip void ray
-/cast [nochanneling] Void ray
+/stopmacro [channeling:Void Ray]
+/cast Reap
 END
 VER 3 010000000000003D " " "134400"
 #showtooltip Vengeful Retreat
 /castsequence reset=1 Vengeful Retreat, Glide
 END
+VER 3 0100000000000043 " " "828455"
+/cast [target=focus] Consume Magic
+END
+VER 3 0100000000000040 " " "7554162"
+/cast [target=focus] disrupt
+END
+VER 3 0100000000000041 " " "INV_Misc_QuestionMark"
+#showtooltip disrupt
+/cast immolation aura
+END
+VER 3 0100000000000044 " " "134400"
+#showtooltip Void Metamorphosis
+/use Potion of Recklessness
+/use Saltwater Potion
+/cast Void Metamorphosis
+END
+VER 3 0100000000000045 " " "134400"
+#showtooltip Darkness
+/say Darkness down
+/cast Darkness
+END
 VER 3 010000000000003C " STOP" "1345086"
 /stopcasting
-END
-VER 3 010000000000003E "Full Combo" "134400"
-#showtooltip
-/castsequence reset=90 The Hunt, Hungering Slash, Vengeful Retreat, Voidblade, Hungering Slash, Vengeful Retreat
 END
 VER 3 010000000000003F "Outfit Collection" "2869702"
 #plumber:outfit
 /click PLMR_OUTFIT
 END
-VER 3 0100000000000037 "Teleport Home" "7252953"
+VER 3 0100000000000046 "Teleport Home" "7252953"
 #plumber:home
 /click PLMR_HOME1
 END

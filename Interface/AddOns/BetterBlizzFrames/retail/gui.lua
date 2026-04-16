@@ -8809,15 +8809,7 @@ local function guiMisc()
     fixActionBarCDs:SetPoint("TOPLEFT", hideActionBarActiveOverlay, "BOTTOMLEFT", 0, pixelsBetweenBoxes)
     CreateTooltipTwo(fixActionBarCDs, L["Fix_ActionBar_Cooldowns_CC"], L["Tooltip_Fix_ActionBar_CDs_Desc"])
 
-    local fixActionBarCDsAlwaysHideCD = CreateCheckbox("fixActionBarCDsAlwaysHideCD", L["Hide_CC_Duration"], fixActionBarCDs, nil, BBF.ShowCooldownDuringCC)
-    fixActionBarCDsAlwaysHideCD:SetPoint("LEFT", fixActionBarCDs.text, "RIGHT", 0, 0)
-    CreateTooltipTwo(fixActionBarCDsAlwaysHideCD, L["Always_Hide_CC_Duration"], L["Tooltip_Always_Hide_CC_Duration_Desc"])
-    fixActionBarCDsAlwaysHideCD:HookScript("OnClick", function(self)
-        StaticPopup_Show("BBF_CONFIRM_RELOAD")
-    end)
-
     fixActionBarCDs:HookScript("OnClick", function(self)
-        CheckAndToggleCheckboxes(self)
         if not self:GetChecked() then
             StaticPopup_Show("BBF_CONFIRM_RELOAD")
         end
@@ -8960,7 +8952,7 @@ local function guiMisc()
 
     local moveResource = CreateCheckbox("moveResource", L["Move_Resource"], guiMisc)
     moveResource:SetPoint("TOPLEFT", instantComboPoints, "BOTTOMLEFT", 0, pixelsBetweenBoxes)
-    CreateTooltipTwo(moveResource, L["Move_Resource"], L["Tooltip_Move_Resource_Desc"] .. playerClass, L["Tooltip_Move_Resource_SubText"])
+    CreateTooltipTwo(moveResource, L["Move_Resource"], string.format(L["Tooltip_Move_Resource_Desc"], playerClass), L["Tooltip_Move_Resource_SubText"])
     moveResource:HookScript("OnClick", function(self)
         if self:GetChecked() then
             BBF.EnableResourceMovement()

@@ -20,6 +20,9 @@ local PREVIEW_ICON = "Interface\\Icons\\INV_Misc_Bag_10"
 local DEFAULT_ANCHOR = { point = "CENTER", relativePoint = "CENTER", x = 0, y = -200 }
 local DEFAULT_ICON_TEXCOORD = { 0.08, 0.92, 0.08, 0.92 }
 local FULL_ICON_TEXCOORD = { 0, 1, 0, 1 }
+local PERMANENT_ITEM_BLACKLIST = {
+	[240175] = true, -- Crystallized Ethereal Voidsplinter
+}
 
 local ITEM_CLASS = Enum and Enum.ItemClass
 local MISC_SUBCLASS = Enum and Enum.ItemMiscellaneousSubclass
@@ -412,7 +415,7 @@ function ContainerActions:EnsureAnchor()
 		if settingType then
 			settings = {
 				{
-					name = L["containerActionsShowBorder"] or "Show button border",
+					name = L["Show button border"] or "Show button border",
 					kind = settingType.Checkbox,
 					default = true,
 					get = function() return ContainerActions:GetButtonBorderEnabled() end,
@@ -557,6 +560,7 @@ end
 function ContainerActions:Init()
 	if self.initialized then return end
 	self.initialized = true
+	self:SanitizeBlacklistTable()
 	self.itemCache = self.itemCache or {}
 	self.secureItems = {}
 	self.openableCache = self.openableCache or {}
@@ -700,14 +704,30 @@ end
 
 function ContainerActions:IsItemEnabled(itemID) return not self:IsItemBlacklisted(itemID) end
 
+function ContainerActions:IsPermanentlyBlacklisted(itemID)
+	itemID = tonumber(itemID)
+	return itemID ~= nil and PERMANENT_ITEM_BLACKLIST[itemID] == true or false
+end
+
+function ContainerActions:SanitizeBlacklistTable()
+	if not addon.db then return nil end
+	local disabled = addon.db.containerAutoOpenDisabled
+	if type(disabled) ~= "table" then return disabled end
+	for itemID in pairs(PERMANENT_ITEM_BLACKLIST) do
+		disabled[itemID] = nil
+	end
+	return disabled
+end
+
 function ContainerActions:IsItemBlacklisted(itemID)
-	local disabled = addon.db and addon.db.containerAutoOpenDisabled
+	if self:IsPermanentlyBlacklisted(itemID) then return true end
+	local disabled = self:SanitizeBlacklistTable()
 	return disabled and disabled[itemID] and true or false
 end
 
 function ContainerActions:EnsureBlacklistTable()
 	addon.db.containerAutoOpenDisabled = addon.db.containerAutoOpenDisabled or {}
-	return addon.db.containerAutoOpenDisabled
+	return self:SanitizeBlacklistTable()
 end
 
 function ContainerActions:GetItemDisplayName(itemID)
@@ -738,6 +758,7 @@ function ContainerActions:AddItemToBlacklist(itemID, quiet)
 	itemID = tonumber(itemID)
 	if not itemID then return false, "invalid" end
 	if InCombat() then return false, "combat" end
+	if self:IsPermanentlyBlacklisted(itemID) then return false, "exists" end
 	local tbl = self:EnsureBlacklistTable()
 	if tbl[itemID] then return false, "exists" end
 	tbl[itemID] = true
@@ -758,7 +779,8 @@ function ContainerActions:RemoveItemFromBlacklist(itemID, quiet)
 	itemID = tonumber(itemID)
 	if not itemID then return false, "invalid" end
 	if InCombat() then return false, "combat" end
-	local tbl = addon.db and addon.db.containerAutoOpenDisabled
+	if self:IsPermanentlyBlacklisted(itemID) then return false, "missing" end
+	local tbl = self:SanitizeBlacklistTable()
 	if not tbl or not tbl[itemID] then return false, "missing" end
 	tbl[itemID] = nil
 	if not quiet then
@@ -814,7 +836,7 @@ end
 
 function ContainerActions:GetBlacklistEntries()
 	local entries = {}
-	local tbl = addon.db and addon.db.containerAutoOpenDisabled
+	local tbl = self:SanitizeBlacklistTable()
 	if not tbl then return entries end
 	for itemID in pairs(tbl) do
 		local cache = self:RememberItemInfo(itemID)

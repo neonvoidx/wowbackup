@@ -11,6 +11,8 @@ sArenaMixin.interruptList = {
     [115781] = 5,     -- Optical Blast (Warlock)
     [116705] = 3,     -- Spear Hand Strike (Monk)
     [132409] = 5,     -- Spell Lock (Warlock)
+    [119910] = 5,     -- Spell Lock (Warlock Pet)
+    [89766]  = 4,     -- Axe Toss (Warlock Pet)
     [147362] = 3,     -- Countershot (Hunter)
     [171138] = 5,     -- Shadow Lock (Warlock)
     [183752] = 3,     -- Consume Magic (Demon Hunter)
@@ -19,4 +21,6 @@ sArenaMixin.interruptList = {
     [231665] = 3,     -- Avengers Shield (Paladin)
     [351338] = 4,     -- Quell (Evoker)
     [97547]  = 4,     -- Solar Beam
+    [78675]  = 4,     -- Solar Beam
+    [15487]  = 5,     -- Silence (Not an interrupt, but used for interrupt color. Irrelevant on Retail for now)
 }

@@ -60,6 +60,12 @@ local function CreateLayer(parentFrame, level, iconSize, noBorder)
 	cd:SetDrawBling(false)
 	cd:SetHideCountdownNumbers(false)
 	cd:SetSwipeColor(0, 0, 0, 0.8)
+	-- When the cooldown expires naturally the frame hides itself via OnCooldownDone without
+	-- any external code calling SetSlot again. Clear desaturation immediately so the icon
+	-- doesn't stay grey until the next UpdateDisplay (e.g. the delayed ARENA_COOLDOWNS_UPDATE).
+	cd:SetScript("OnCooldownDone", function()
+		icon:SetDesaturated(false)
+	end)
 
 	local border
 	if not noBorder then
@@ -392,8 +398,9 @@ end
 ---@param spacing number between slots (default: 2)
 ---@param groupName string? Masque sub-group name (e.g. "CC", "Trinkets"). Omit to skip Masque.
 ---@param noBorder boolean? When true, skips creating the border texture on each layer.
+---@param moduleName string? Overrides the MiniCCModule label set on Frame. Defaults to groupName.
 ---@return IconSlotContainer
-function M:New(parent, count, size, spacing, groupName, noBorder)
+function M:New(parent, count, size, spacing, groupName, noBorder, moduleName)
 	local instance = setmetatable({}, M)
 
 	count = count or 3
@@ -407,7 +414,12 @@ function M:New(parent, count, size, spacing, groupName, noBorder)
 	instance.Count = 0
 	instance.Size = size
 	instance.Spacing = spacing
+	instance.NumRows = nil
+	instance.RowAlignment = nil
+	instance.InvertLayout = false
+	instance.Columns = nil
 	instance.NoBorder = noBorder or false
+	instance.Frame.MiniCCModule = moduleName or nil
 	instance.MasqueGroup = Masque and groupName and Masque:Group("MiniCC", groupName) or nil
 
 	instance:SetCount(count)
@@ -425,10 +437,12 @@ function M:Layout()
 		end
 	end
 
-	-- Build a cheap signature from the current size and used slot indices.
+	-- Build a cheap signature from the current size, row settings, and used slot indices.
 	-- If it matches the last run, the visual result would be identical so we
 	-- can skip all the SetPoint/SetSize/Show/Hide calls.
-	local sig = self.Size .. ":" .. table.concat(layoutScratch, ",", 1, n)
+	local numRows = (not self.GrowDown and self.NumRows and self.NumRows > 1) and self.NumRows or nil
+	local columnsPerRow = (self.GrowDown and self.Columns and self.Columns > 1) and self.Columns or nil
+	local sig = self.Size .. ":" .. (numRows or 1) .. ":" .. (self.RowAlignment or "C") .. ":" .. (self.OverflowRowAlignment or "C") .. ":" .. (self.InvertLayout and "1" or "0") .. ":" .. (self.GrowDown and "D" or "H") .. ":" .. (columnsPerRow or 1) .. ":" .. table.concat(layoutScratch, ",", 1, n)
 	if self.LayoutSignature == sig then
 		return
 	end
@@ -440,22 +454,109 @@ function M:Layout()
 	end
 
 	local usedCount = n
-	local totalWidth = (usedCount * self.Size) + ((usedCount - 1) * self.Spacing)
-	self.Frame:SetSize((usedCount > 0) and totalWidth or self.Size, self.Size)
 
-	-- Ensure container alpha is 1 when showing icons
-	if usedCount > 0 then
+	if usedCount == 0 then
+		self.Frame:SetSize(self.Size, self.Size)
+	elseif numRows then
+		-- Multi-row layout: divide active icons across the requested number of rows
+		local iconsPerRow = math.max(1, math.ceil(usedCount / numRows))
+		local actualRows = math.ceil(usedCount / iconsPerRow)
+		local rowWidth = iconsPerRow * self.Size + (iconsPerRow - 1) * self.Spacing
+		local totalHeight = actualRows * self.Size + (actualRows - 1) * self.Spacing
+		self.Frame:SetSize(rowWidth, totalHeight)
 		self.Frame:SetAlpha(1)
-	end
 
-	-- Position used slots contiguously
-	for displayIndex = 1, usedCount do
-		local slot = self.Slots[layoutScratch[displayIndex]]
-		local x = (displayIndex - 1) * (self.Size + self.Spacing) - (totalWidth / 2) + (self.Size / 2)
-		slot.Frame:ClearAllPoints()
-		slot.Frame:SetPoint("CENTER", self.Frame, "CENTER", x, 0)
-		slot.Frame:SetSize(self.Size, self.Size)
-		slot.Frame:Show()
+		local row1Alignment = self.RowAlignment or "CENTER"
+		local overflowAlignment = self.OverflowRowAlignment or row1Alignment
+
+		for displayIndex = 1, usedCount do
+			local slot = self.Slots[layoutScratch[displayIndex]]
+			local rowIndex = math.floor((displayIndex - 1) / iconsPerRow) -- 0-based
+			-- When InvertLayout is set, reverse the column order so slot 1 lands at the
+			-- rightmost position of every row instead of the leftmost.
+			local rawCol = (displayIndex - 1) % iconsPerRow -- 0-based
+			local colIndex = self.InvertLayout and (iconsPerRow - 1 - rawCol) or rawCol
+			local rowIcons = (rowIndex == actualRows - 1) and (usedCount - (actualRows - 1) * iconsPerRow) or iconsPerRow
+
+			local x
+			if self.InvertLayout then
+				-- Inverted: use simple LEFT formula; column reversal already handles right-to-left
+				-- fill, so partial rows are naturally right-aligned without an extra shift.
+				x = colIndex * (self.Size + self.Spacing) - (rowWidth / 2) + (self.Size / 2)
+			else
+				local alignment = rowIndex == 0 and row1Alignment or overflowAlignment
+				if alignment == "LEFT" then
+					x = colIndex * (self.Size + self.Spacing) - (rowWidth / 2) + (self.Size / 2)
+				elseif alignment == "RIGHT" then
+					local shift = (iconsPerRow - rowIcons) * (self.Size + self.Spacing)
+					x = colIndex * (self.Size + self.Spacing) - (rowWidth / 2) + (self.Size / 2) + shift
+				else -- CENTER
+					local thisRowWidth = rowIcons * self.Size + (rowIcons - 1) * self.Spacing
+					x = colIndex * (self.Size + self.Spacing) - (thisRowWidth / 2) + (self.Size / 2)
+				end
+			end
+			local y = (totalHeight / 2) - (self.Size / 2) - rowIndex * (self.Size + self.Spacing)
+
+			slot.Frame:ClearAllPoints()
+			slot.Frame:SetPoint("CENTER", self.Frame, "CENTER", x, y)
+			slot.Frame:SetSize(self.Size, self.Size)
+			slot.Frame:Show()
+		end
+	elseif self.GrowDown and columnsPerRow then
+		-- Grid grow-down: icons fill left-to-right up to columnsPerRow per row, then wrap down
+		local cols = columnsPerRow
+		local actualRows = math.ceil(usedCount / cols)
+		local rowWidth = cols * self.Size + (cols - 1) * self.Spacing
+		local totalHeight = actualRows * self.Size + (actualRows - 1) * self.Spacing
+		self.Frame:SetSize(rowWidth, totalHeight)
+		self.Frame:SetAlpha(1)
+
+		for displayIndex = 1, usedCount do
+			local slot = self.Slots[layoutScratch[displayIndex]]
+			local rowIndex = math.floor((displayIndex - 1) / cols) -- 0-based
+			local colIndex = (displayIndex - 1) % cols             -- 0-based
+			-- Number of icons in this row (may be less than cols on the last row)
+			local rowIcons = math.min(cols, usedCount - rowIndex * cols)
+			-- Center this row within the full grid width
+			local thisRowWidth = rowIcons * self.Size + (rowIcons - 1) * self.Spacing
+			local rowOffsetX = (rowWidth - thisRowWidth) / 2
+			local x = rowOffsetX + colIndex * (self.Size + self.Spacing) - (rowWidth / 2) + (self.Size / 2)
+			local y = (totalHeight / 2) - (self.Size / 2) - rowIndex * (self.Size + self.Spacing)
+			slot.Frame:ClearAllPoints()
+			slot.Frame:SetPoint("CENTER", self.Frame, "CENTER", x, y)
+			slot.Frame:SetSize(self.Size, self.Size)
+			slot.Frame:Show()
+		end
+	elseif self.GrowDown then
+		-- Vertical single column, growing downward
+		local totalHeight = usedCount * self.Size + (usedCount - 1) * self.Spacing
+		self.Frame:SetSize(self.Size, totalHeight)
+		self.Frame:SetAlpha(1)
+
+		for displayIndex = 1, usedCount do
+			local slot = self.Slots[layoutScratch[displayIndex]]
+			local y = (totalHeight / 2) - (self.Size / 2) - (displayIndex - 1) * (self.Size + self.Spacing)
+			slot.Frame:ClearAllPoints()
+			slot.Frame:SetPoint("CENTER", self.Frame, "CENTER", 0, y)
+			slot.Frame:SetSize(self.Size, self.Size)
+			slot.Frame:Show()
+		end
+	else
+		-- Single row
+		local totalWidth = usedCount * self.Size + (usedCount - 1) * self.Spacing
+		self.Frame:SetSize(totalWidth, self.Size)
+		self.Frame:SetAlpha(1)
+
+		for displayIndex = 1, usedCount do
+			local slot = self.Slots[layoutScratch[displayIndex]]
+			-- When InvertLayout is set, mirror the position so slot 1 is rightmost.
+			local effIndex = self.InvertLayout and (usedCount - displayIndex + 1) or displayIndex
+			local x = (effIndex - 1) * (self.Size + self.Spacing) - (totalWidth / 2) + (self.Size / 2)
+			slot.Frame:ClearAllPoints()
+			slot.Frame:SetPoint("CENTER", self.Frame, "CENTER", x, 0)
+			slot.Frame:SetSize(self.Size, self.Size)
+			slot.Frame:Show()
+		end
 	end
 
 	-- Hide unused active slots
@@ -492,6 +593,61 @@ function M:SetSpacing(newSpacing)
 	end
 
 	self.Spacing = newSpacing
+	self.LayoutSignature = nil
+	self:Layout()
+end
+
+---Sets the number of rows to distribute icons across, and the alignment of partial rows.
+---Rows 2+ automatically use the opposite alignment (LEFT<->RIGHT) so that overflow icons
+---hug the edge the container grows from.
+---@param numRows number? 1 or nil means single row (no multi-row layout)
+---@param alignment string? "LEFT", "RIGHT", or "CENTER" (default)
+---@param invertLayout boolean? When true, slot 1 is placed at the rightmost position and the layout fills right-to-left. Use this instead of reversing the slots array so multi-row behaves consistently.
+function M:SetRows(numRows, alignment, invertLayout)
+	numRows = (numRows and numRows > 1) and math.floor(numRows) or nil
+	alignment = alignment or "CENTER"
+	local overflowAlignment
+	if alignment == "LEFT" then
+		overflowAlignment = "RIGHT"
+	elseif alignment == "RIGHT" then
+		overflowAlignment = "LEFT"
+	else
+		overflowAlignment = alignment
+	end
+	invertLayout = invertLayout and true or false
+	if self.NumRows == numRows and self.RowAlignment == alignment and self.OverflowRowAlignment == overflowAlignment and self.InvertLayout == invertLayout then
+		return
+	end
+	self.NumRows = numRows
+	self.RowAlignment = alignment
+	self.OverflowRowAlignment = overflowAlignment
+	self.InvertLayout = invertLayout
+	self.LayoutSignature = nil
+	self:Layout()
+end
+
+---Switches the container to a vertical single-column layout, growing downward.
+---When enabled, multi-row settings are ignored.
+---@param enabled boolean
+function M:SetGrowDown(enabled)
+	enabled = enabled and true or false
+	if self.GrowDown == enabled then
+		return
+	end
+	self.GrowDown = enabled
+	self.LayoutSignature = nil
+	self:Layout()
+end
+
+---Sets the maximum number of icons per row when growing downward.
+---Only effective when GrowDown is true; a value of 1 or nil reverts to a single column.
+---@param n number? Maximum icons per row; nil or 1 means single column
+function M:SetColumns(n)
+	n = (n and n > 1) and math.floor(n) or nil
+	if self.Columns == n then
+		return
+	end
+	self.Columns = n
 	self.LayoutSignature = nil
 	self:Layout()
 end
@@ -550,6 +706,9 @@ end
 ---@param newCount number of slots to maintain
 function M:SetCount(newCount)
 	newCount = math.max(0, newCount or 0)
+	if newCount == self.Count then
+		return
+	end
 
 	-- If shrinking, disable anything beyond newCount (pooled slots)
 	if newCount < self.Count then
@@ -594,12 +753,13 @@ end
 ---@field Color table? RGBA color table {r, g, b, a} for glow and border color
 ---@field FontScale number? Font scale multiplier for cooldown text (default: 1.0)
 ---@field Layer number? Which layer to render on (1 = base, 2+ = stacked above; default: 1)
+---@field SpellId number? Spell ID for tooltip on hover
 function M:SetSlot(slotIndex, options)
 	if slotIndex < 1 or slotIndex > self.Count then
 		return
 	end
 
-	if not options.Texture or not options.DurationObject then
+	if not options.Texture then
 		return
 	end
 
@@ -614,6 +774,29 @@ function M:SetSlot(slotIndex, options)
 		self:Layout()
 	end
 
+	slot.SpellId = options.SpellId
+	if options.SpellId then
+		if not slot.MouseEnabled then
+			slot.MouseEnabled = true
+			slot.Frame:EnableMouse(true)
+			slot.Frame:SetScript("OnEnter", function(f)
+				if slot.SpellId then
+					GameTooltip:SetOwner(f, "ANCHOR_RIGHT")
+					GameTooltip:SetSpellByID(slot.SpellId)
+					GameTooltip:Show()
+				end
+			end)
+			slot.Frame:SetScript("OnLeave", function()
+				GameTooltip:Hide()
+			end)
+		end
+	elseif slot.MouseEnabled then
+		slot.MouseEnabled = false
+		slot.Frame:EnableMouse(false)
+		slot.Frame:SetScript("OnEnter", nil)
+		slot.Frame:SetScript("OnLeave", nil)
+	end
+
 	local layerIndex = options.Layer or 1
 	local layer
 
@@ -626,8 +809,16 @@ function M:SetSlot(slotIndex, options)
 	local db = GetDb()
 	layer.Icon:SetTexture(options.Texture)
 	layer.Cooldown:SetReverse(options.ReverseCooldown)
-	layer.Cooldown:SetCooldownFromDurationObject(options.DurationObject)
-	layer.Cooldown:SetDrawSwipe(not (db and db.DisableSwipe))
+	if options.DurationObject then
+		layer.Cooldown:SetCooldownFromDurationObject(options.DurationObject)
+		layer.Cooldown:SetDrawSwipe(not (db and db.DisableSwipe))
+	else
+		layer.Cooldown:Clear()
+		layer.Cooldown:SetDrawSwipe(false)
+	end
+	-- Query IsShown() AFTER setting the cooldown — the frame hides itself when the
+	-- duration is zero or expired, so this is the authoritative "on cooldown" check.
+	layer.Icon:SetDesaturated(options.Desaturate and layer.Cooldown:IsShown() or false)
 
 	ApplyAlpha(layer.Frame, options.Alpha)
 
@@ -663,6 +854,7 @@ function M:ClearSlot(slotIndex)
 		return
 	end
 
+	slot.SpellId = nil
 	ClearLayerData(slot.Container, slot.Container.Frame)
 
 	if slot.ExtraLayers then
@@ -741,9 +933,17 @@ end
 ---@field Count number
 ---@field Size number
 ---@field Spacing number
+---@field NumRows number?
+---@field RowAlignment string?
+---@field OverflowRowAlignment string?
+---@field InvertLayout boolean
+---@field Columns number?
 ---@field NoBorder boolean
 ---@field SetCount fun(self: IconSlotContainer, count: number)
 ---@field SetSpacing fun(self: IconSlotContainer, spacing: number)
+---@field SetRows fun(self: IconSlotContainer, iconsPerRow: number?, alignment: string?, invertLayout: boolean?)
+---@field SetGrowDown fun(self: IconSlotContainer, enabled: boolean)
+---@field SetColumns fun(self: IconSlotContainer, n: number?)
 ---@field SetIconSize fun(self: IconSlotContainer, size: number)
 ---@field SetSlot fun(self: IconSlotContainer, slotIndex: number, options: IconLayerOptions)
 ---@field ClearSlot fun(self: IconSlotContainer, slotIndex: number)

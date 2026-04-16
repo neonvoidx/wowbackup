@@ -301,7 +301,7 @@ data = {
 			{
 
 				var = "chatIMUseCustomSound",
-				text = L["chatIMUseCustomSound"],
+				text = L["Use custom whisper sound"],
 				func = function(v) addon.db["chatIMUseCustomSound"] = v end,
 				parentCheck = function()
 					return addon.SettingsLayout.elements["enableChatIM"]
@@ -405,7 +405,7 @@ data = {
 		end
 		return tList
 	end,
-	text = L["ChatIMHistoryDelete"],
+	text = L["Delete history"],
 	get = function() return "" end,
 	set = function(key)
 		StaticPopupDialogs["EQOL_DELETE_IM_HISTORY"] = StaticPopupDialogs["EQOL_DELETE_IM_HISTORY"]

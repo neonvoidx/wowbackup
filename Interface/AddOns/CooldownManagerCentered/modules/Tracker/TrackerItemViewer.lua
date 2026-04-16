@@ -14,7 +14,7 @@ local UPDATE_THROTTLE_DELAY = 0.25
 local DEFAULT_ICON_SIZE = 50
 local DEFAULT_ICON_PADDING = 2
 local BASE_SQUARE_MASK = "Interface\\AddOns\\CooldownManagerCentered\\Media\\Art\\Square"
-local DEFAULT_MASK_TEXTURE = 6707800
+local DEFAULT_MASK_TEXTURE = "Interface\\AddOns\\CooldownManagerCentered\\Media\\Art\\CooldownManager"
 local DEFAULT_FONT_PATH = "Fonts\\FRIZQT__.TTF"
 
 local ORIENTATION_ANCHORS = {
@@ -31,6 +31,11 @@ local OPPOSITE_ANCHOR = {
     TOP = "BOTTOM",
     BOTTOM = "TOP",
     CENTER = "BOTTOM",
+}
+
+local CONFIG_KEY_TO_NAME = {
+    ["tracker1"] = "|cff008945Cool|r|cff1e9a4e|r|cff3faa4fdown Ma|r|cff5fb64anag|r|cff7ac243er Ce|r|cff8ccd00ntered|r 1",
+    ["tracker2"] = "|cff008945Cool|r|cff1e9a4e|r|cff3faa4fdown Ma|r|cff5fb64anag|r|cff7ac243er Ce|r|cff8ccd00ntered|r 2",
 }
 
 local function IsSquareIconsEnabled()
@@ -209,13 +214,24 @@ local function RestoreDefaultStyle(frame)
     if frame.cmcBorder then
         frame.cmcBorder:Hide()
     end
+    frame._CMC_SquareStyle = nil
 end
 
 local function ApplyStyleToFrame(frame)
-    if IsSquareIconsEnabled() then
+    local isSquare = IsSquareIconsEnabled()
+
+    if isSquare then
         ApplySquareStyle(frame)
     else
         RestoreDefaultStyle(frame)
+    end
+
+    if frame.IconOverlay then
+        if isSquare then
+            frame.IconOverlay:Hide()
+        else
+            frame.IconOverlay:Show()
+        end
     end
 end
 
@@ -248,10 +264,20 @@ end
 
 function ItemViewerFrame:Initialize()
     local frame = self.frame
+    frame.showGCD = false
     if not frame.Icon then
         frame.Icon = frame:CreateTexture(nil, "ARTWORK")
         frame.Icon:SetAllPoints()
         frame.Icon:SetTexCoord(0.08, 0.92, 0.08, 0.92)
+    end
+    local width, height = frame:GetSize()
+    if not frame.IconOverlay and frame.Icon then
+        frame.IconOverlay = frame:CreateTexture(nil, "OVERLAY", nil, 1)
+        frame.IconOverlay:SetAtlas("UI-HUD-CoolDownManager-IconOverlay")
+        frame.IconOverlay:SetSize(width*1.5, height*1.5)
+        frame.IconOverlay:SetPoint("Center", frame.Icon, "CENTER")
+
+        frame.IconOverlay:Hide()
     end
     if not frame.Cooldown then
         frame.Cooldown = CreateFrame("Cooldown", nil, frame, "CooldownFrameTemplate")
@@ -359,6 +385,7 @@ function TrackerInstance:New(configKey, frameName, getEntriesFn)
     local instance = setmetatable({
         configKey = configKey,
         frameName = frameName,
+        editModeName = CONFIG_KEY_TO_NAME[configKey] or frameName,
         getEntriesFn = getEntriesFn,
         anchor = nil,
         iconFrames = {},
@@ -377,6 +404,10 @@ end
 
 function TrackerInstance:GetOrientation()
     return GetConfigValue(self.configKey, "orientation", "Horizontal Right")
+end
+
+function TrackerInstance:GetShowGCD()
+    return GetConfigValue(self.configKey, "showGCD", false)
 end
 
 function TrackerInstance:UpdateIconPosition(frame, visibleIndex)
@@ -428,6 +459,7 @@ function TrackerInstance:RefreshEntries()
     local iconSize = self:GetIconSize()
     local padding = self:GetIconPadding()
     local orientation = self:GetOrientation()
+    local showGCD = self:GetShowGCD()
     local count = #entries
 
     for i = 1, count do
@@ -436,12 +468,10 @@ function TrackerInstance:RefreshEntries()
         end
         local ivf = self.iconFrames[i]
         ivf.frame:SetSize(iconSize, iconSize)
+        ivf.frame.IconOverlay:SetSize(iconSize*1.5, iconSize*1.5)
+        ivf.frame.showGCD = showGCD
 
         local db = DB.GetDB()
-        if ivf.frame.Cooldown then
-            ivf.frame.Cooldown:SetSwipeColor(unpack(GetCooldownSwipeColor()))
-            ivf.frame.Cooldown:SetDrawEdge(false)
-        end
 
         ivf:UpdateEntry(entries[i])
         self:UpdateIconPosition(ivf.frame, i)
@@ -479,6 +509,7 @@ function TrackerInstance:UpdateIconLayout()
     local iconSize = self:GetIconSize()
     for _, ivf in ipairs(self.iconFrames) do
         ivf.frame:SetSize(iconSize, iconSize)
+        ivf.frame.IconOverlay:SetSize(iconSize*1.5, iconSize*1.5)
     end
     self:RefreshEntries()
 end
@@ -506,6 +537,9 @@ function TrackerInstance:Create()
     local iconSize = self:GetIconSize()
 
     self.anchor = CreateFrame("Frame", self.frameName, UIParent, "BackdropTemplate")
+
+    self.anchor.editModeName = self.editModeName
+
     self.anchor:SetSize(iconSize, iconSize)
     self.anchor:SetClampedToScreen(true)
 
@@ -718,6 +752,350 @@ function TrackerInstance:Create()
                 return string.format("%.2f", value)
             end,
         },
+        {
+            name = "Show GCD",
+            kind = LEM.SettingType.Checkbox,
+            default = false,
+            get = function()
+                return ns.db.profile.editMode[configKey].showGCD or false
+            end,
+            set = function(layoutName, value)
+                ns.db.profile.editMode[configKey].showGCD = value
+                instance:RefreshEntries()
+            end,
+        },
+        {
+            name = "Styling",
+            kind = LEM.SettingType.Divider,
+        },
+        {
+            name = "Square Icons",
+            kind = LEM.SettingType.Checkbox,
+            default = false,
+            get = function()
+                return ns.db.profile.trinketRacialTracker_squareIcons or false
+            end,
+            set = function(layoutName, value)
+                ns.db.profile.trinketRacialTracker_squareIcons = value
+                if ns.TrackerItemViewer then
+                    ns.TrackerItemViewer:RefreshStyling()
+                end
+            end,
+        },
+        {
+            name = "Border Thickness",
+            kind = LEM.SettingType.Slider,
+            default = 1,
+            get = function()
+                return ns.db.profile.trinketRacialTracker_borderThickness or 1
+            end,
+            set = function(layoutName, value)
+                ns.db.profile.trinketRacialTracker_borderThickness = value
+                if ns.TrackerItemViewer then
+                    ns.TrackerItemViewer:RefreshStyling()
+                end
+            end,
+            minValue = 0,
+            maxValue = 6,
+            valueStep = 1,
+            formatter = function(value)
+                return string.format("%dpx", value)
+            end,
+        },
+        {
+            name = "Icon Zoom",
+            kind = LEM.SettingType.Slider,
+            default = 0.3,
+            get = function()
+                return ns.db.profile.trinketRacialTracker_iconZoom or 0.3
+            end,
+            set = function(layoutName, value)
+                ns.db.profile.trinketRacialTracker_iconZoom = value
+                if ns.TrackerItemViewer then
+                    ns.TrackerItemViewer:RefreshStyling()
+                end
+            end,
+            minValue = 0,
+            maxValue = 0.5,
+            valueStep = 0.01,
+            formatter = function(value)
+                return string.format("%.2f", value)
+            end,
+        },
+        {
+            name = "Stack Number",
+            kind = LEM.SettingType.Divider,
+        },
+        {
+            name = "Stack Anchor",
+            kind = LEM.SettingType.Dropdown,
+            default = "BOTTOMRIGHT",
+            get = function()
+                return ns.db.profile.trinketRacialTracker_stackAnchor or "BOTTOMRIGHT"
+            end,
+            set = function(layoutName, value)
+                ns.db.profile.trinketRacialTracker_stackAnchor = value
+                if ns.TrackerItemViewer then
+                    ns.TrackerItemViewer:RefreshStyling()
+                end
+            end,
+            values = {
+                { text = "Top Left", value = "TOPLEFT" },
+                { text = "Top", value = "TOP" },
+                { text = "Top Right", value = "TOPRIGHT" },
+                { text = "Left", value = "LEFT" },
+                { text = "Center", value = "CENTER" },
+                { text = "Right", value = "RIGHT" },
+                { text = "Bottom Left", value = "BOTTOMLEFT" },
+                { text = "Bottom", value = "BOTTOM" },
+                { text = "Bottom Right", value = "BOTTOMRIGHT" },
+            },
+        },
+        {
+            name = "Stack Font Size",
+            kind = LEM.SettingType.Slider,
+            default = 14,
+            get = function()
+                return ns.db.profile.trinketRacialTracker_stackFontSize or 14
+            end,
+            set = function(layoutName, value)
+                ns.db.profile.trinketRacialTracker_stackFontSize = value
+                if ns.TrackerItemViewer then
+                    ns.TrackerItemViewer:RefreshStyling()
+                end
+            end,
+            minValue = 8,
+            maxValue = 32,
+            valueStep = 1,
+            formatter = function(value)
+                return string.format("%d", value)
+            end,
+        },
+        {
+            name = "Stack X Offset",
+            kind = LEM.SettingType.Slider,
+            default = -1,
+            get = function()
+                return ns.db.profile.trinketRacialTracker_stackOffsetX or -1
+            end,
+            set = function(layoutName, value)
+                ns.db.profile.trinketRacialTracker_stackOffsetX = value
+                if ns.TrackerItemViewer then
+                    ns.TrackerItemViewer:RefreshStyling()
+                end
+            end,
+            minValue = -40,
+            maxValue = 40,
+            valueStep = 1,
+            formatter = function(value)
+                return string.format("%d", value)
+            end,
+        },
+        {
+            name = "Stack Y Offset",
+            kind = LEM.SettingType.Slider,
+            default = 1,
+            get = function()
+                return ns.db.profile.trinketRacialTracker_stackOffsetY or 1
+            end,
+            set = function(layoutName, value)
+                ns.db.profile.trinketRacialTracker_stackOffsetY = value
+                if ns.TrackerItemViewer then
+                    ns.TrackerItemViewer:RefreshStyling()
+                end
+            end,
+            minValue = -40,
+            maxValue = 40,
+            valueStep = 1,
+            formatter = function(value)
+                return string.format("%d", value)
+            end,
+        },
+        {
+            name = "Cooldown Numbers",
+            kind = LEM.SettingType.Divider,
+        },
+        {
+            name = "Override Cooldown Number Size",
+            kind = LEM.SettingType.Checkbox,
+            default = false,
+            get = function()
+                return ns.db.profile.cooldownManager_cooldownFontSizeTracker_enabled
+            end,
+            set = function(layoutName, value)
+                ns.db.profile.cooldownManager_cooldownFontSizeTracker_enabled = value
+                if not value and ns.API and ns.API.ShowReloadUIConfirmation then
+                    ns.API:ShowReloadUIConfirmation()
+                end
+                if ns.TrackerItemViewer then
+                    ns.TrackerItemViewer:RefreshStyling()
+                end
+            end,
+        },
+        {
+            name = "Number Size",
+            kind = LEM.SettingType.Dropdown,
+            default = "NIL",
+            get = function()
+                return ns.db.profile.cooldownManager_cooldownFontSizeTracker ~= nil
+                        and tostring(ns.db.profile.cooldownManager_cooldownFontSizeTracker)
+                    or "NIL"
+            end,
+            set = function(layoutName, value)
+                if value == "NIL" then
+                    ns.db.profile.cooldownManager_cooldownFontSizeTracker = "NIL"
+                else
+                    local n = tonumber(value)
+                    ns.db.profile.cooldownManager_cooldownFontSizeTracker = n
+                end
+                if ns.TrackerItemViewer then
+                    ns.TrackerItemViewer:RefreshStyling()
+                end
+            end,
+            values = {
+                { text = "Default", value = "NIL" },
+                { text = "Hide", value = "0" },
+                { text = "10", value = "10" },
+                { text = "12", value = "12" },
+                { text = "14", value = "14" },
+                { text = "16", value = "16" },
+                { text = "18", value = "18" },
+                { text = "20", value = "20" },
+                { text = "22", value = "22" },
+                { text = "24", value = "24" },
+                { text = "26", value = "26" },
+                { text = "28", value = "28" },
+                { text = "30", value = "30" },
+                { text = "32", value = "32" },
+                { text = "34", value = "34" },
+                { text = "36", value = "36" },
+                { text = "38", value = "38" },
+            },
+        },
+        {
+            name = "Keybinds",
+            kind = LEM.SettingType.Divider,
+        },
+        {
+            name = "Show Keybinds",
+            kind = LEM.SettingType.Checkbox,
+            default = false,
+            get = function()
+                return ns.db.profile.cooldownManager_showKeybinds_CMCTracker
+            end,
+            set = function(layoutName, value)
+                ns.db.profile.cooldownManager_showKeybinds_CMCTracker = value
+                if ns.Keybinds then
+                    ns.Keybinds:OnSettingChanged("CMCTracker1")
+                    ns.Keybinds:OnSettingChanged("CMCTracker2")
+                end
+                if not value and ns.API and ns.API.ShowReloadUIConfirmation then
+                    ns.API:ShowReloadUIConfirmation()
+                end
+            end,
+        },
+        {
+            name = "Keybind Anchor",
+            kind = LEM.SettingType.Dropdown,
+            default = "TOPRIGHT",
+            get = function()
+                return ns.db.profile.cooldownManager_keybindAnchor_CMCTracker or "TOPRIGHT"
+            end,
+            set = function(layoutName, value)
+                ns.db.profile.cooldownManager_keybindAnchor_CMCTracker = value
+                if ns.Keybinds then
+                    ns.Keybinds:ApplyKeybindSettings("CMCTracker1")
+                    ns.Keybinds:ApplyKeybindSettings("CMCTracker2")
+                end
+            end,
+            values = {
+                { text = "Top Left", value = "TOPLEFT" },
+                { text = "Top", value = "TOP" },
+                { text = "Top Right", value = "TOPRIGHT" },
+                { text = "Left", value = "LEFT" },
+                { text = "Center", value = "CENTER" },
+                { text = "Right", value = "RIGHT" },
+                { text = "Bottom Left", value = "BOTTOMLEFT" },
+                { text = "Bottom", value = "BOTTOM" },
+                { text = "Bottom Right", value = "BOTTOMRIGHT" },
+            },
+        },
+        {
+            name = "Keybind Font Size",
+            kind = LEM.SettingType.Dropdown,
+            default = "10",
+            get = function()
+                return tostring(ns.db.profile.cooldownManager_keybindFontSize_CMCTracker or 10)
+            end,
+            set = function(layoutName, value)
+                local n = tonumber(value)
+                ns.db.profile.cooldownManager_keybindFontSize_CMCTracker = n and math.floor(n + 0.5) or 14
+                if ns.Keybinds then
+                    ns.Keybinds:ApplyKeybindSettings("CMCTracker1")
+                    ns.Keybinds:ApplyKeybindSettings("CMCTracker2")
+                end
+            end,
+            values = {
+                { text = "6", value = "6" },
+                { text = "8", value = "8" },
+                { text = "10", value = "10" },
+                { text = "12", value = "12" },
+                { text = "14", value = "14" },
+                { text = "16", value = "16" },
+                { text = "18", value = "18" },
+                { text = "20", value = "20" },
+                { text = "22", value = "22" },
+                { text = "24", value = "24" },
+                { text = "26", value = "26" },
+                { text = "28", value = "28" },
+                { text = "30", value = "30" },
+                { text = "32", value = "32" },
+            },
+        },
+        {
+            name = "Keybind X Offset",
+            kind = LEM.SettingType.Slider,
+            default = -3,
+            get = function()
+                return ns.db.profile.cooldownManager_keybindOffsetX_CMCTracker or -3
+            end,
+            set = function(layoutName, value)
+                local v = math.floor((value or 0) + 0.5)
+                ns.db.profile.cooldownManager_keybindOffsetX_CMCTracker = v
+                if ns.Keybinds then
+                    ns.Keybinds:ApplyKeybindSettings("CMCTracker1")
+                    ns.Keybinds:ApplyKeybindSettings("CMCTracker2")
+                end
+            end,
+            minValue = -40,
+            maxValue = 40,
+            valueStep = 1,
+            formatter = function(value)
+                return string.format("%d", value)
+            end,
+        },
+        {
+            name = "Keybind Y Offset",
+            kind = LEM.SettingType.Slider,
+            default = -3,
+            get = function()
+                return ns.db.profile.cooldownManager_keybindOffsetY_CMCTracker or -3
+            end,
+            set = function(layoutName, value)
+                local v = math.floor((value or 0) + 0.5)
+                ns.db.profile.cooldownManager_keybindOffsetY_CMCTracker = v
+                if ns.Keybinds then
+                    ns.Keybinds:ApplyKeybindSettings("CMCTracker1")
+                    ns.Keybinds:ApplyKeybindSettings("CMCTracker2")
+                end
+            end,
+            minValue = -40,
+            maxValue = 40,
+            valueStep = 1,
+            formatter = function(value)
+                return string.format("%d", value)
+            end,
+        },
     }
     if configKey == "tracker2" then
         tinsert(additionalSettings, {
@@ -771,6 +1149,33 @@ local tracker2 = TrackerInstance:New("tracker2", "CMCTracker2", function(owned)
 end)
 
 local trackers = { tracker1, tracker2 }
+local spellCastEventFrame = nil
+
+local function EnsureSpellCastListener()
+    if spellCastEventFrame then
+        return
+    end
+
+    spellCastEventFrame = CreateFrame("Frame")
+    spellCastEventFrame:RegisterUnitEvent("UNIT_SPELLCAST_SUCCEEDED", "player")
+    spellCastEventFrame:SetScript("OnEvent", function(_, _event, unitTarget, _castGUID, spellID)
+        if unitTarget ~= "player" or not spellID then
+            return
+        end
+
+        local matched = false
+        if ItemVisuals and ItemVisuals.MarkSpellCastActive and ItemVisuals:MarkSpellCastActive(spellID) then
+            matched = true
+        end
+        if ItemVisuals and ItemVisuals.MarkItemCastActive and ItemVisuals:MarkItemCastActive(spellID) then
+            matched = true
+        end
+
+        if matched then
+            ItemViewer:RefreshItemViewerFrames()
+        end
+    end)
+end
 
 function ItemViewer:RefreshItemViewerFrames()
     for _, tracker in ipairs(trackers) do
@@ -788,6 +1193,9 @@ function ItemViewer:Initialize()
     if not ns.db.profile.tracker_enabled then
         return
     end
+
+    EnsureSpellCastListener()
+
     for _, tracker in ipairs(trackers) do
         tracker:Create()
     end

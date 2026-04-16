@@ -7,7 +7,7 @@ else
 	error(parentAddonName .. " is not loaded")
 end
 
-local L = LibStub("AceLocale-3.0"):GetLocale("EnhanceQoL_Aura")
+local L = LibStub("AceLocale-3.0"):GetLocale("EnhanceQoL")
 local EditMode = addon.EditMode
 
 local ResourceBars = addon.Aura and addon.Aura.ResourceBars
@@ -51,8 +51,25 @@ local ROGUE_CHARGED_COMBO_DEFAULTS = (ResourceBars and ResourceBars.ROGUE_CHARGE
 		backgroundAlphaBoost = 0.10,
 	}
 local STAGGER_EXTRA_THRESHOLD_HIGH = (ResourceBars and ResourceBars.STAGGER_EXTRA_THRESHOLD_HIGH) or 200
+local STAGGER_EXTRA_THRESHOLD_VERY_HIGH = (ResourceBars and ResourceBars.STAGGER_EXTRA_THRESHOLD_VERY_HIGH) or 250
 local STAGGER_EXTRA_THRESHOLD_EXTREME = (ResourceBars and ResourceBars.STAGGER_EXTRA_THRESHOLD_EXTREME) or 300
-local STAGGER_EXTRA_COLORS = (ResourceBars and ResourceBars.STAGGER_EXTRA_COLORS) or { high = { 0.62, 0.2, 1, 1 }, extreme = { 1, 0.2, 0.8, 1 } }
+local STAGGER_EXTRA_THRESHOLD_CRITICAL = (ResourceBars and ResourceBars.STAGGER_EXTRA_THRESHOLD_CRITICAL) or 350
+local STAGGER_LOW_THRESHOLD = (ResourceBars and ResourceBars.STAGGER_LOW_THRESHOLD) or 30
+local STAGGER_MEDIUM_THRESHOLD = (ResourceBars and ResourceBars.STAGGER_MEDIUM_THRESHOLD) or 60
+local STAGGER_THRESHOLD_MAX = (ResourceBars and ResourceBars.STAGGER_THRESHOLD_MAX) or 1000
+local STAGGER_EXTRA_COLORS = (ResourceBars and ResourceBars.STAGGER_EXTRA_COLORS)
+	or {
+		high = { 0.62, 0.2, 1, 1 },
+		veryHigh = { 0.85, 0.2, 1, 1 },
+		extreme = { 1, 0.2, 0.8, 1 },
+		critical = { 1, 0.1, 0.45, 1 },
+	}
+local STAGGER_FALLBACK_COLORS = (ResourceBars and ResourceBars.STAGGER_FALLBACK_COLORS)
+	or {
+		green = { 0.52, 1.0, 0.52, 1 },
+		yellow = { 1.0, 0.98, 0.72, 1 },
+		red = { 1.0, 0.42, 0.42, 1 },
+	}
 local SMF = addon.SharedMedia and addon.SharedMedia.functions
 local EQOL_RUNES_BORDER = (ResourceBars and ResourceBars.RUNE_BORDER_ID) or "EQOL_BORDER_RUNES"
 local EQOL_RUNES_BORDER_LABEL = (ResourceBars and ResourceBars.RUNE_BORDER_LABEL) or (SMF and SMF.GetCustomBorder and (SMF.GetCustomBorder(EQOL_RUNES_BORDER) or {}).label) or "EQOL: Runes"
@@ -62,11 +79,20 @@ local function customBorderOptions()
 	return nil
 end
 local AUTO_ENABLE_OPTIONS = {
-	HEALTH = L["AutoEnableHealth"] or "Health",
+	HEALTH = L["Health"] or "Health",
 	MAIN = L["AutoEnableMain"] or "Main resource",
 	SECONDARY = L["AutoEnableSecondary"] or "Secondary resources",
 }
 local AUTO_ENABLE_ORDER = { "HEALTH", "MAIN", "SECONDARY" }
+local FRAME_STRATA_ORDER = (ResourceBars and ResourceBars.STRATA_ORDER)
+	or { "BACKGROUND", "LOW", "MEDIUM", "HIGH", "DIALOG", "FULLSCREEN", "FULLSCREEN_DIALOG", "TOOLTIP" }
+local MAX_FRAME_LEVEL_OFFSET = (ResourceBars and ResourceBars.MAX_FRAME_LEVEL_OFFSET) or 50
+local VALID_FRAME_STRATA = {}
+local FRAME_STRATA_VALUES = { { value = "", text = DEFAULT or "Default" } }
+for _, strata in ipairs(FRAME_STRATA_ORDER) do
+	VALID_FRAME_STRATA[strata] = true
+	FRAME_STRATA_VALUES[#FRAME_STRATA_VALUES + 1] = { value = strata, text = strata }
+end
 
 local function getCachedLSMMedia(mediaType)
 	local names = addon.functions and addon.functions.GetLSMMediaNames and addon.functions.GetLSMMediaNames(mediaType)
@@ -282,6 +308,13 @@ local function setIfChanged(tbl, key, value)
 	if tbl[key] == value then return false end
 	tbl[key] = value
 	return true
+end
+
+local function normalizeFrameStrataValue(value)
+	if type(value) ~= "string" or value == "" then return "" end
+	local upper = string.upper(value)
+	if VALID_FRAME_STRATA[upper] then return upper end
+	return ""
 end
 
 local function notifyResourceBarSettings()
@@ -552,12 +585,23 @@ local function registerEditModeBars()
 			local a = ensureAnchorTable()
 			if not a or (a.relativeFrame or "UIParent") ~= "UIParent" then return end
 			local layout = EditMode:GetActiveLayoutName()
+			local point = a.point or "CENTER"
+			local relativePoint = a.relativePoint or point
+			local x = a.x or 0
+			local y = a.y or 0
+			if EditMode.SetValue then
+				EditMode:SetValue(frameId, "point", point, layout, true)
+				EditMode:SetValue(frameId, "relativePoint", relativePoint, layout, true)
+				EditMode:SetValue(frameId, "x", x, layout, true)
+				EditMode:SetValue(frameId, "y", y, layout, true)
+				return
+			end
 			local data = EditMode:EnsureLayoutData(frameId, layout)
 			if not data then return end
-			data.point = a.point or "CENTER"
-			data.relativePoint = a.relativePoint or data.point
-			data.x = a.x or 0
-			data.y = a.y or 0
+			data.point = point
+			data.relativePoint = relativePoint
+			data.x = x
+			data.y = y
 		end
 		local function anchorUsesUIParent()
 			local a = ensureAnchorTable()
@@ -625,6 +669,12 @@ local function registerEditModeBars()
 					["Interface\\DialogFrame\\UI-DialogBox-Background"] = "Dialog Background",
 					["Interface\\Buttons\\WHITE8x8"] = "Solid (tintable)",
 				}
+				local statusbarNames, statusbarHash = getCachedLSMMedia("statusbar")
+				for i = 1, #statusbarNames do
+					local name = statusbarNames[i]
+					local path = statusbarHash[name]
+					if type(path) == "string" and path ~= "" then map[path] = tostring(name) end
+				end
 				local names, hash = getCachedLSMMedia("background")
 				for i = 1, #names do
 					local name = names[i]
@@ -708,6 +758,62 @@ local function registerEditModeBars()
 					end,
 				},
 				{
+					name = L["Frame strata"] or "Frame strata",
+					kind = settingType.Dropdown,
+					height = 180,
+					field = "strata",
+					parentId = "frame",
+					values = FRAME_STRATA_VALUES,
+					default = "",
+					get = function()
+						local c = curSpecCfg()
+						return normalizeFrameStrataValue((c and c.strata) or (cfg and cfg.strata))
+					end,
+					set = function(_, value)
+						local c = curSpecCfg()
+						if not c then return end
+						local normalized = normalizeFrameStrataValue(value)
+						if not setIfChanged(c, "strata", normalized ~= "" and normalized or nil) then return end
+						queueRefresh()
+					end,
+				},
+				{
+					name = L["UFDetachedPowerLevelOffset"] or "Frame level offset",
+					kind = settingType.Slider,
+					allowInput = true,
+					field = "frameLevelOffset",
+					minValue = 0,
+					maxValue = MAX_FRAME_LEVEL_OFFSET,
+					valueStep = 1,
+					default = 0,
+					parentId = "frame",
+					get = function()
+						local c = curSpecCfg()
+						local value = (c and c.frameLevelOffset)
+						if value == nil then value = cfg and cfg.frameLevelOffset end
+						value = tonumber(value) or 0
+						if value < 0 then
+							value = 0
+						elseif value > MAX_FRAME_LEVEL_OFFSET then
+							value = MAX_FRAME_LEVEL_OFFSET
+						end
+						return math.floor(value + 0.5)
+					end,
+					set = function(_, value)
+						local c = curSpecCfg()
+						if not c then return end
+						local normalized = tonumber(value) or 0
+						if normalized < 0 then
+							normalized = 0
+						elseif normalized > MAX_FRAME_LEVEL_OFFSET then
+							normalized = MAX_FRAME_LEVEL_OFFSET
+						end
+						normalized = math.floor(normalized + 0.5)
+						if not setIfChanged(c, "frameLevelOffset", normalized > 0 and normalized or nil) then return end
+						queueRefresh()
+					end,
+				},
+				{
 					name = L["Click-through"] or "Click-through",
 					kind = settingType.Checkbox,
 					field = "clickThrough",
@@ -739,25 +845,6 @@ local function registerEditModeBars()
 						return selection and selection[value] == true or false
 					end,
 					setSelected = function(_, value, state) setBarVisibilityRule(value, state and true or false) end,
-					isShown = function() return visibilityRuleOptions and #visibilityRuleOptions > 0 end,
-					isEnabled = function() return visibilityRuleOptions and #visibilityRuleOptions > 0 end,
-				},
-				{
-					name = L["Combine Show when rules with AND"] or "Combine Show when rules with AND",
-					kind = settingType.Checkbox,
-					field = "visibilityMatchAll",
-					parentId = "frame",
-					default = false,
-					get = function()
-						local c = curSpecCfg()
-						return c and c.visibilityMatchAll == true
-					end,
-					set = function(_, value)
-						local c = curSpecCfg()
-						if not c then return end
-						c.visibilityMatchAll = value and true or false
-						queueRefresh()
-					end,
 					isShown = function() return visibilityRuleOptions and #visibilityRuleOptions > 0 end,
 					isEnabled = function() return visibilityRuleOptions and #visibilityRuleOptions > 0 end,
 				},
@@ -1236,9 +1323,7 @@ local function registerEditModeBars()
 							cfg.smoothFill = nil
 						end
 					end
-					if swapped then
-						syncEditModeSizeValues(cfg.width or widthDefault or 200, cfg.height or heightDefault or 20)
-					end
+					if swapped then syncEditModeSizeValues(cfg.width or widthDefault or 200, cfg.height or heightDefault or 20) end
 					queueRefresh()
 					if swapped then refreshSettingsUI() end
 				end
@@ -1781,7 +1866,7 @@ local function registerEditModeBars()
 			end
 
 			settingsList[#settingsList + 1] = {
-				name = LOCALE_TEXT_LABEL or L["Text"] or STATUS_TEXT,
+				name = LOCALE_TEXT_LABEL,
 				kind = settingType.Collapsible,
 				id = "textsettings",
 				defaultCollapsed = true,
@@ -1964,7 +2049,7 @@ local function registerEditModeBars()
 					{ key = "NONE", label = NONE },
 				}
 				settingsList[#settingsList + 1] = {
-					name = L["Text"] or STATUS_TEXT,
+					name = LOCALE_TEXT_LABEL,
 					kind = settingType.Dropdown,
 					height = 220,
 					field = "textStyle",
@@ -2983,11 +3068,198 @@ local function registerEditModeBars()
 			end
 
 			if barType == "STAGGER" then
+				local staggerLowDefaultColor = (STAGGER_FALLBACK_COLORS and STAGGER_FALLBACK_COLORS.green) or { 0.52, 1.0, 0.52, 1 }
+				local staggerMediumDefaultColor = (STAGGER_FALLBACK_COLORS and STAGGER_FALLBACK_COLORS.yellow) or { 1.0, 0.98, 0.72, 1 }
+				local staggerHighDefaultColor = (STAGGER_FALLBACK_COLORS and STAGGER_FALLBACK_COLORS.red) or { 1.0, 0.42, 0.42, 1 }
+
 				settingsList[#settingsList + 1] = {
-					name = L["Stagger colors"] or "Stagger colors",
+					name = L["Colors"] or "Stagger colors",
 					kind = settingType.Collapsible,
 					id = "staggercolors",
 					defaultCollapsed = true,
+				}
+
+				settingsList[#settingsList + 1] = {
+					name = L["Use stagger max override"] or "Use stagger max override (200%+)",
+					kind = settingType.Checkbox,
+					field = "useStaggerMaxOverride",
+					parentId = "staggercolors",
+					get = function()
+						local c = curSpecCfg()
+						return c and c.useStaggerMaxOverride == true
+					end,
+					set = function(_, value)
+						local c = curSpecCfg()
+						if not c then return end
+						c.useStaggerMaxOverride = value and true or false
+						if c.useStaggerMaxOverride == true and tonumber(c.staggerMaxPercent) == nil then c.staggerMaxPercent = 200 end
+						queueRefresh()
+					end,
+					default = false,
+				}
+
+				settingsList[#settingsList + 1] = {
+					name = L["Stagger bar max value"] or "Stagger bar max value (%)",
+					kind = settingType.Slider,
+					allowInput = true,
+					field = "staggerMaxPercent",
+					minValue = 100,
+					maxValue = 400,
+					valueStep = 10,
+					parentId = "staggercolors",
+					get = function()
+						local c = curSpecCfg()
+						return (c and c.staggerMaxPercent) or 200
+					end,
+					set = function(_, value)
+						local c = curSpecCfg()
+						if not c then return end
+						c.staggerMaxPercent = value
+						queueRefresh()
+					end,
+					default = 200,
+					isEnabled = function()
+						local c = curSpecCfg()
+						return c and c.useStaggerMaxOverride == true
+					end,
+				}
+
+				settingsList[#settingsList + 1] = {
+					name = L["Stagger low threshold"] or "Stagger low threshold (%)",
+					kind = settingType.Slider,
+					allowInput = true,
+					field = "staggerLowThreshold",
+					minValue = 0,
+					maxValue = STAGGER_THRESHOLD_MAX,
+					valueStep = 1,
+					parentId = "staggercolors",
+					get = function()
+						local c = curSpecCfg()
+						return (c and c.staggerLowThreshold) or STAGGER_LOW_THRESHOLD
+					end,
+					set = function(_, value)
+						local c = curSpecCfg()
+						if not c then return end
+						local low = math.max(0, math.min(STAGGER_THRESHOLD_MAX, tonumber(value) or STAGGER_LOW_THRESHOLD))
+						c.staggerLowThreshold = low
+						local medium = tonumber(c.staggerMediumThreshold) or STAGGER_MEDIUM_THRESHOLD
+						if medium < low then
+							medium = low
+							c.staggerMediumThreshold = medium
+						end
+						local high = tonumber(c.staggerHighThreshold) or STAGGER_EXTRA_THRESHOLD_HIGH
+						if high < medium then c.staggerHighThreshold = medium end
+						queueRefresh()
+					end,
+					default = STAGGER_LOW_THRESHOLD,
+				}
+
+				settingsList[#settingsList + 1] = {
+					name = L["Stagger low color"] or "Stagger low color",
+					kind = settingType.Color,
+					parentId = "staggercolors",
+					get = function()
+						local c = curSpecCfg()
+						return toUIColor((c and c.staggerLowColor) or staggerLowDefaultColor, staggerLowDefaultColor)
+					end,
+					set = function(_, value)
+						local c = curSpecCfg()
+						if not c then return end
+						c.staggerLowColor = toColorArray(value, staggerLowDefaultColor)
+						queueRefresh()
+					end,
+					default = { r = 0.52, g = 1.0, b = 0.52, a = 1 },
+					hasOpacity = true,
+				}
+
+				settingsList[#settingsList + 1] = {
+					name = L["Stagger medium threshold"] or "Stagger medium threshold (%)",
+					kind = settingType.Slider,
+					allowInput = true,
+					field = "staggerMediumThreshold",
+					minValue = 0,
+					maxValue = STAGGER_THRESHOLD_MAX,
+					valueStep = 1,
+					parentId = "staggercolors",
+					get = function()
+						local c = curSpecCfg()
+						return (c and c.staggerMediumThreshold) or STAGGER_MEDIUM_THRESHOLD
+					end,
+					set = function(_, value)
+						local c = curSpecCfg()
+						if not c then return end
+						local low = tonumber(c.staggerLowThreshold) or STAGGER_LOW_THRESHOLD
+						low = math.max(0, math.min(STAGGER_THRESHOLD_MAX, low))
+						local medium = math.max(low, math.min(STAGGER_THRESHOLD_MAX, tonumber(value) or STAGGER_MEDIUM_THRESHOLD))
+						c.staggerMediumThreshold = medium
+						local high = tonumber(c.staggerHighThreshold) or STAGGER_EXTRA_THRESHOLD_HIGH
+						if high < medium then c.staggerHighThreshold = medium end
+						queueRefresh()
+					end,
+					default = STAGGER_MEDIUM_THRESHOLD,
+				}
+
+				settingsList[#settingsList + 1] = {
+					name = L["Stagger medium color"] or "Stagger medium color",
+					kind = settingType.Color,
+					parentId = "staggercolors",
+					get = function()
+						local c = curSpecCfg()
+						return toUIColor((c and c.staggerMediumColor) or staggerMediumDefaultColor, staggerMediumDefaultColor)
+					end,
+					set = function(_, value)
+						local c = curSpecCfg()
+						if not c then return end
+						c.staggerMediumColor = toColorArray(value, staggerMediumDefaultColor)
+						queueRefresh()
+					end,
+					default = { r = 1.0, g = 0.98, b = 0.72, a = 1 },
+					hasOpacity = true,
+				}
+
+				settingsList[#settingsList + 1] = {
+					name = L["Stagger high threshold"] or "Stagger high threshold (%)",
+					kind = settingType.Slider,
+					allowInput = true,
+					field = "staggerHighThreshold",
+					minValue = 100,
+					maxValue = STAGGER_THRESHOLD_MAX,
+					valueStep = 10,
+					parentId = "staggercolors",
+					get = function()
+						local c = curSpecCfg()
+						return (c and c.staggerHighThreshold) or STAGGER_EXTRA_THRESHOLD_HIGH
+					end,
+					set = function(_, value)
+						local c = curSpecCfg()
+						if not c then return end
+						local medium = tonumber(c.staggerMediumThreshold) or STAGGER_MEDIUM_THRESHOLD
+						medium = math.max(0, math.min(STAGGER_THRESHOLD_MAX, medium))
+						local high = math.max(medium, math.min(STAGGER_THRESHOLD_MAX, tonumber(value) or STAGGER_EXTRA_THRESHOLD_HIGH))
+						c.staggerHighThreshold = high
+						local veryHigh = tonumber(c.staggerVeryHighThreshold) or STAGGER_EXTRA_THRESHOLD_VERY_HIGH
+						if veryHigh < high then c.staggerVeryHighThreshold = high end
+						queueRefresh()
+					end,
+					default = STAGGER_EXTRA_THRESHOLD_HIGH,
+				}
+
+				settingsList[#settingsList + 1] = {
+					name = L["Stagger high color"] or "Stagger high color",
+					kind = settingType.Color,
+					parentId = "staggercolors",
+					get = function()
+						local c = curSpecCfg()
+						return toUIColor((c and c.staggerBaseHighColor) or staggerHighDefaultColor, staggerHighDefaultColor)
+					end,
+					set = function(_, value)
+						local c = curSpecCfg()
+						if not c then return end
+						c.staggerBaseHighColor = toColorArray(value, staggerHighDefaultColor)
+						queueRefresh()
+					end,
+					default = { r = 1.0, g = 0.42, b = 0.42, a = 1 },
+					hasOpacity = true,
 				}
 
 				settingsList[#settingsList + 1] = {
@@ -3009,25 +3281,30 @@ local function registerEditModeBars()
 				}
 
 				settingsList[#settingsList + 1] = {
-					name = L["Stagger high threshold"] or "Stagger high threshold (%)",
+					name = L["Stagger very high threshold"] or "Stagger very high threshold (%)",
 					kind = settingType.Slider,
 					allowInput = true,
-					field = "staggerHighThreshold",
+					field = "staggerVeryHighThreshold",
 					minValue = 100,
-					maxValue = 1000,
+					maxValue = STAGGER_THRESHOLD_MAX,
 					valueStep = 10,
 					parentId = "staggercolors",
 					get = function()
 						local c = curSpecCfg()
-						return (c and c.staggerHighThreshold) or STAGGER_EXTRA_THRESHOLD_HIGH
+						return (c and c.staggerVeryHighThreshold) or STAGGER_EXTRA_THRESHOLD_VERY_HIGH
 					end,
 					set = function(_, value)
 						local c = curSpecCfg()
 						if not c then return end
-						c.staggerHighThreshold = value
+						local high = tonumber(c.staggerHighThreshold) or STAGGER_EXTRA_THRESHOLD_HIGH
+						high = math.max(0, math.min(STAGGER_THRESHOLD_MAX, high))
+						local veryHigh = math.max(high, math.min(STAGGER_THRESHOLD_MAX, tonumber(value) or STAGGER_EXTRA_THRESHOLD_VERY_HIGH))
+						c.staggerVeryHighThreshold = veryHigh
+						local extreme = tonumber(c.staggerExtremeThreshold) or STAGGER_EXTRA_THRESHOLD_EXTREME
+						if extreme < veryHigh then c.staggerExtremeThreshold = veryHigh end
 						queueRefresh()
 					end,
-					default = STAGGER_EXTRA_THRESHOLD_HIGH,
+					default = STAGGER_EXTRA_THRESHOLD_VERY_HIGH,
 					isEnabled = function()
 						local c = curSpecCfg()
 						return c and c.staggerHighColors == true
@@ -3035,7 +3312,7 @@ local function registerEditModeBars()
 				}
 
 				settingsList[#settingsList + 1] = {
-					name = L["Stagger high color"] or "Stagger high color",
+					name = L["Stagger very high color"] or "Stagger very high color",
 					kind = settingType.Color,
 					parentId = "staggercolors",
 					get = function()
@@ -3062,7 +3339,7 @@ local function registerEditModeBars()
 					allowInput = true,
 					field = "staggerExtremeThreshold",
 					minValue = 100,
-					maxValue = 1000,
+					maxValue = STAGGER_THRESHOLD_MAX,
 					valueStep = 10,
 					parentId = "staggercolors",
 					get = function()
@@ -3072,7 +3349,12 @@ local function registerEditModeBars()
 					set = function(_, value)
 						local c = curSpecCfg()
 						if not c then return end
-						c.staggerExtremeThreshold = value
+						local veryHigh = tonumber(c.staggerVeryHighThreshold) or STAGGER_EXTRA_THRESHOLD_VERY_HIGH
+						veryHigh = math.max(0, math.min(STAGGER_THRESHOLD_MAX, veryHigh))
+						local extreme = math.max(veryHigh, math.min(STAGGER_THRESHOLD_MAX, tonumber(value) or STAGGER_EXTRA_THRESHOLD_EXTREME))
+						c.staggerExtremeThreshold = extreme
+						local critical = tonumber(c.staggerCriticalThreshold) or STAGGER_EXTRA_THRESHOLD_CRITICAL
+						if critical < extreme then c.staggerCriticalThreshold = extreme end
 						queueRefresh()
 					end,
 					default = STAGGER_EXTRA_THRESHOLD_EXTREME,
@@ -3088,6 +3370,57 @@ local function registerEditModeBars()
 					parentId = "staggercolors",
 					get = function()
 						local c = curSpecCfg()
+						return toUIColor((c and c.staggerVeryHighColor) or (STAGGER_EXTRA_COLORS and STAGGER_EXTRA_COLORS.veryHigh) or { 0.85, 0.2, 1, 1 }, { 0.85, 0.2, 1, 1 })
+					end,
+					set = function(_, value)
+						local c = curSpecCfg()
+						if not c then return end
+						c.staggerVeryHighColor = toColorArray(value, (STAGGER_EXTRA_COLORS and STAGGER_EXTRA_COLORS.veryHigh) or { 0.85, 0.2, 1, 1 })
+						queueRefresh()
+					end,
+					default = { r = 0.85, g = 0.2, b = 1, a = 1 },
+					hasOpacity = true,
+					isEnabled = function()
+						local c = curSpecCfg()
+						return c and c.staggerHighColors == true
+					end,
+				}
+
+				settingsList[#settingsList + 1] = {
+					name = L["Stagger critical threshold"] or "Stagger critical threshold (%)",
+					kind = settingType.Slider,
+					allowInput = true,
+					field = "staggerCriticalThreshold",
+					minValue = 100,
+					maxValue = STAGGER_THRESHOLD_MAX,
+					valueStep = 10,
+					parentId = "staggercolors",
+					get = function()
+						local c = curSpecCfg()
+						return (c and c.staggerCriticalThreshold) or STAGGER_EXTRA_THRESHOLD_CRITICAL
+					end,
+					set = function(_, value)
+						local c = curSpecCfg()
+						if not c then return end
+						local extreme = tonumber(c.staggerExtremeThreshold) or STAGGER_EXTRA_THRESHOLD_EXTREME
+						extreme = math.max(0, math.min(STAGGER_THRESHOLD_MAX, extreme))
+						local critical = math.max(extreme, math.min(STAGGER_THRESHOLD_MAX, tonumber(value) or STAGGER_EXTRA_THRESHOLD_CRITICAL))
+						c.staggerCriticalThreshold = critical
+						queueRefresh()
+					end,
+					default = STAGGER_EXTRA_THRESHOLD_CRITICAL,
+					isEnabled = function()
+						local c = curSpecCfg()
+						return c and c.staggerHighColors == true
+					end,
+				}
+
+				settingsList[#settingsList + 1] = {
+					name = L["Stagger critical color"] or "Stagger critical color",
+					kind = settingType.Color,
+					parentId = "staggercolors",
+					get = function()
+						local c = curSpecCfg()
 						return toUIColor((c and c.staggerExtremeColor) or (STAGGER_EXTRA_COLORS and STAGGER_EXTRA_COLORS.extreme) or { 1, 0.2, 0.8, 1 }, { 1, 0.2, 0.8, 1 })
 					end,
 					set = function(_, value)
@@ -3097,6 +3430,28 @@ local function registerEditModeBars()
 						queueRefresh()
 					end,
 					default = { r = 1, g = 0.2, b = 0.8, a = 1 },
+					hasOpacity = true,
+					isEnabled = function()
+						local c = curSpecCfg()
+						return c and c.staggerHighColors == true
+					end,
+				}
+
+				settingsList[#settingsList + 1] = {
+					name = L["Stagger deadly color"] or "Stagger deadly color",
+					kind = settingType.Color,
+					parentId = "staggercolors",
+					get = function()
+						local c = curSpecCfg()
+						return toUIColor((c and c.staggerCriticalColor) or (STAGGER_EXTRA_COLORS and STAGGER_EXTRA_COLORS.critical) or { 1, 0.1, 0.45, 1 }, { 1, 0.1, 0.45, 1 })
+					end,
+					set = function(_, value)
+						local c = curSpecCfg()
+						if not c then return end
+						c.staggerCriticalColor = toColorArray(value, (STAGGER_EXTRA_COLORS and STAGGER_EXTRA_COLORS.critical) or { 1, 0.1, 0.45, 1 })
+						queueRefresh()
+					end,
+					default = { r = 1, g = 0.1, b = 0.45, a = 1 },
 					hasOpacity = true,
 					isEnabled = function()
 						local c = curSpecCfg()
@@ -3306,7 +3661,7 @@ local function registerEditModeBars()
 					}
 
 					settingsList[#settingsList + 1] = {
-						name = string.format(L["Threshold point %d color"] or "Point %d color", i),
+						name = string.format(L["Point %d color"] or "Point %d color", i),
 						kind = settingType.Color,
 						parentId = "absolutethresholdcolors",
 						default = { r = defaultColor[1] or 1, g = defaultColor[2] or 1, b = defaultColor[3] or 1, a = defaultColor[4] or 1 },
@@ -3560,6 +3915,8 @@ local function registerEditModeBars()
 			title = titleLabel,
 			enableOverlayToggle = true,
 			allowDrag = function() return anchorUsesUIParent() end,
+			managePosition = false,
+			persistPosition = false,
 			layoutDefaults = {
 				point = anchor and anchor.point or "CENTER",
 				relativePoint = anchor and anchor.relativePoint or "CENTER",
@@ -3578,8 +3935,9 @@ local function registerEditModeBars()
 				specCfg[barType] = specCfg[barType] or {}
 				local bcfg = specCfg[barType]
 				bcfg.anchor = bcfg.anchor or {}
-				if not frame._eqolEditModeHydrated then
-					frame._eqolEditModeHydrated = true
+				local hydrationToken = tostring(addon.db) .. ":" .. tostring(frameId)
+				if frame._eqolEditModeHydratedToken ~= hydrationToken then
+					frame._eqolEditModeHydratedToken = hydrationToken
 					local seedAnchor = bcfg.anchor or {}
 					local seedRelativeFrame = seedAnchor.relativeFrame or "UIParent"
 					if seedRelativeFrame == "UIParent" then
@@ -3587,6 +3945,7 @@ local function registerEditModeBars()
 						data.relativePoint = seedAnchor.relativePoint or data.relativePoint or anchor and anchor.relativePoint or data.point
 						data.x = seedAnchor.x ~= nil and seedAnchor.x or (data.x ~= nil and data.x or (anchor and anchor.x or 0))
 						data.y = seedAnchor.y ~= nil and seedAnchor.y or (data.y ~= nil and data.y or (anchor and anchor.y or 0))
+						syncEditModeLayoutFromAnchor()
 					end
 					data.width = bcfg.width or data.width or widthDefault or frame:GetWidth() or 200
 					data.height = bcfg.height or data.height or heightDefault or frame:GetHeight() or 20

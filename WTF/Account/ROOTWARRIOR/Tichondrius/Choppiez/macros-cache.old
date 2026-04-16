@@ -1,0 +1,67 @@
+VER 3 01000000000000D1 " " "134400"
+#showtooltip [known: Ravager] Ravager; [known:bladestorm] Bladestorm
+/cast [@player, known:Ravager] Ravager
+/cast [known:Bladestorm] Bladestorm
+END
+VER 3 01000000000000D2 " " "135358"
+#showtooltip Execute
+/cancelaura Bladestorm
+/cast Execute
+END
+VER 3 01000000000000D4 " " "134400"
+#showtooltip 
+/cancelaura Bladestorm
+/cast [@mouseover,help,nodead]Intervene;[@mouseover,harm,nodead][]Charge
+END
+VER 3 01000000000000D5 " " "613535"
+#showtooltip Storm Bolt
+/cast [mod:shift, @focus][] Storm Bolt
+END
+VER 3 01000000000000D6 " " "236171"
+#showtooltip
+/cancelaura Bladestorm
+/cast [@cursor] Heroic Leap
+END
+VER 3 01000000000000D7 " " "132154"
+#showtooltip
+/cancelaura Bladestorm
+/cast Intimidating Shout
+END
+VER 3 01000000000000D8 " " "134400"
+#showtooltip [known: Bloodthirst] bloodthirst; [known: Die by the sword] die by the sword
+/cast die by the sword
+/cast Enraged Regeneration
+/cast Bloodthirst
+END
+VER 3 01000000000000D9 " " "132938"
+#showtooltip
+/cast Pummel
+END
+VER 3 01000000000000DA " " "132333"
+#showtooltip
+/cast Battle Shout
+/use Goblin Weather Machine - Prototype 01-B
+END
+VER 3 01000000000000E3 " " "134400"
+#showtooltip [known: Recklessness] Recklessness; [known: warbreaker] warbreaker
+/cast Blood Fury
+/cast Warbreaker
+/cast Recklessness
+/cast Avatar
+END
+VER 3 01000000000000E4 " " "134400"
+#showtooltip
+/cast [stance:2]!Defensive Stance;!Battle Stance
+END
+VER 3 01000000000000E5 " " "134400"
+#showtooltip
+/cast [@mouseover,harm,exists,nodead][] Taunt
+END
+VER 3 01000000000000E6 " " "134400"
+#showtooltip
+/cast [@player] Ravager
+END
+VER 3 01000000000000E7 " " "134400"
+#showtooltip
+/cast [stance:2]!Defensive Stance;!Berserker stance
+END

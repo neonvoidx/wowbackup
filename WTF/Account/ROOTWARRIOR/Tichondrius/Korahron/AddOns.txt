@@ -58,3 +58,15 @@ Blizzard_CompactRaidFrames: enabled
 !Swatter: disabled
 !ImprovedErrorFrame: disabled
 OPie_Classic: disabled
+Blizzard_CombatText: enabled
+DamageMeterFormatting: enabled
+HideButtonGlow: enabled
+KeystoneLoot: enabled
+MidnightCheatSheet: enabled
+MountJournalEnhanced: enabled
+ProcGlows: enabled
+Myslot: enabled
+MythicDungeonTools: enabled
+NemPetAlerts: enabled
+Platynator: enabled
+TextureAtlasViewer: enabled

@@ -86,9 +86,22 @@ layout.defaultSettings = {
         },
         partyTargetIndicators = {
             enabled = true,
-            posX = 0,
-            posY = 0,
-            scale = 1,
+            partyOnArena = {
+                enabled = true,
+                posX = 0,
+                posY = 0,
+                scale = 1,
+                direction = "LEFT",
+                spacing = 0,
+            },
+            arenaOnParty = {
+                enabled = true,
+                posX = 0,
+                posY = 0,
+                scale = 1,
+                direction = "LEFT",
+                spacing = 0,
+            },
         },
     },
 
@@ -108,6 +121,7 @@ layout.defaultSettings = {
     changeFont = true,
     mirrored = true,
     showSpecManaText = true,
+    keepHealerManabar = true,
     replaceClassIcon = true,
 
     textSettings = {
@@ -124,7 +138,7 @@ end
 local function setSetting(info, val)
     layout.db[info[#info]] = val
 
-    for i = 1, sArenaMixin.maxArenaOpponents do
+    for i = 1, info.handler.maxArenaOpponents do
         local frame = info.handler["arena" .. i]
         layout:UpdateOrientation(frame)
     end
@@ -141,7 +155,7 @@ local function setSetting(info, val)
         end
     end
 
-    sArenaMixin:RefreshConfig()
+    info.handler:RefreshConfig()
 end
 
 local function setupOptionsTable(self)
@@ -164,7 +178,7 @@ function layout:Initialize(frame)
         setupOptionsTable(frame.parent)
     end
 
-    if (frame:GetID() == sArenaMixin.maxArenaOpponents) then
+    if (frame:GetID() == frame.parent.maxArenaOpponents) then
         frame.parent:UpdateCastBarSettings(self.db.castBar)
         frame.parent:UpdateDRSettings(self.db.dr)
         frame.parent:UpdateFrameSettings(self.db)
@@ -395,7 +409,7 @@ function layout:Initialize(frame)
     frameTexture:SetTexCoord(0, 1, 0, 1)
     frameTexture:Show()
 
-    if not sArenaMixin.isRetail then
+    if not frame.parent.isRetail then
         trinket.Cooldown:SetUseCircularEdge(true)
         racial.Cooldown:SetUseCircularEdge(true)
         frame.ClassIcon.Cooldown:SetUseCircularEdge(true)
@@ -403,6 +417,57 @@ function layout:Initialize(frame)
     end
 
     self:UpdateOrientation(frame)
+end
+
+function layout:UpdateHealthbarOrientation(frame)
+    local healthBar = frame.HealthBar
+    local shouldHide = self.db.hideManabars and not (self.db.keepHealerManabar and frame.isHealer)
+    local normalHeight = 30
+    local hiddenHeight = 39
+
+    healthBar:SetSize(127, shouldHide and hiddenHeight or normalHeight)
+    frame.PowerBar:SetAlpha(shouldHide and 0 or 1)
+    frame.PowerText:SetAlpha((shouldHide or frame.parent.db.profile.hidePowerText) and 0 or 1)
+
+    if shouldHide then
+        frame.frameTexture:SetTexture("Interface\\AddOns\\sArena_Reloaded\\Textures\\UI-HUD-UnitFrame-Player-PortraitOff-Large-ManaOff.tga")
+    else
+        frame.frameTexture:SetTexture("Interface\\AddOns\\sArena_Reloaded\\Textures\\UI-HUD-UnitFrame-Player-PortraitOff-Large.tga")
+    end
+
+    if not self.db.textSettings then return end
+    local txt = self.db.textSettings
+    local hideOffset = (shouldHide and not self.db.moveStatusbarText) and (hiddenHeight - normalHeight) / 2 or 0
+    local name = frame.Name
+    local healthText = frame.HealthText
+    local specName = frame.SpecNameText
+
+    name:ClearAllPoints()
+    if (txt.nameAnchor or "CENTER") == "LEFT" then
+        name:SetPoint("BOTTOMLEFT", healthBar, "TOPLEFT", 3 + (txt.nameOffsetX or 0), 1.5 + (txt.nameOffsetY or 0))
+    elseif (txt.nameAnchor or "CENTER") == "RIGHT" then
+        name:SetPoint("BOTTOMRIGHT", healthBar, "TOPRIGHT", -3 + (txt.nameOffsetX or 0), 1.5 + (txt.nameOffsetY or 0))
+    else
+        name:SetPoint("BOTTOM", healthBar, "TOP", -1 + (txt.nameOffsetX or 0), 1.5 + (txt.nameOffsetY or 0))
+    end
+
+    healthText:ClearAllPoints()
+    if (txt.healthAnchor or "CENTER") == "LEFT" then
+        healthText:SetPoint("LEFT", healthBar, "LEFT", 4 + (txt.healthOffsetX or 0), (txt.healthOffsetY or 0) + hideOffset)
+    elseif (txt.healthAnchor or "CENTER") == "RIGHT" then
+        healthText:SetPoint("RIGHT", healthBar, "RIGHT", -3 + (txt.healthOffsetX or 0), (txt.healthOffsetY or 0) + hideOffset)
+    else
+        healthText:SetPoint("CENTER", healthBar, "CENTER", -1 + (txt.healthOffsetX or 0), (txt.healthOffsetY or 0) + hideOffset)
+    end
+
+    specName:ClearAllPoints()
+    if (txt.specNameAnchor or "CENTER") == "LEFT" then
+        specName:SetPoint("LEFT", healthBar, "TOPLEFT", 4 + (txt.specNameOffsetX or 0), -41 + (txt.specNameOffsetY or 0))
+    elseif (txt.specNameAnchor or "CENTER") == "RIGHT" then
+        specName:SetPoint("RIGHT", healthBar, "TOPRIGHT", -3 + (txt.specNameOffsetX or 0), -41 + (txt.specNameOffsetY or 0))
+    else
+        specName:SetPoint("CENTER", healthBar, "TOP", -1 + (txt.specNameOffsetX or 0), -41 + (txt.specNameOffsetY or 0))
+    end
 end
 
 function layout:UpdateOrientation(frame)
@@ -415,9 +480,6 @@ function layout:UpdateOrientation(frame)
     local healthText = frame.HealthText
     local powerText = frame.PowerText
     local castbarText = frame.CastBar.Text
-
-    name:ClearAllPoints()
-    healthBar:ClearAllPoints()
     powerBar:ClearAllPoints()
     frame.ClassIcon:ClearAllPoints()
     specName:ClearAllPoints()
@@ -454,49 +516,34 @@ function layout:UpdateOrientation(frame)
         end
 
         -- Party Target Indicators
-        if w.partyTargetIndicators then
+        if w.partyTargetIndicators and w.partyTargetIndicators.partyOnArena then
+            local poa = w.partyTargetIndicators.partyOnArena
+            local direction = poa.direction or "LEFT"
             frame.WidgetOverlay.partyTarget1:ClearAllPoints()
             frame.WidgetOverlay.partyTarget1:SetSize(15, 15)
-            frame.WidgetOverlay.partyTarget1:SetScale(w.partyTargetIndicators.scale or 1)
+            frame.WidgetOverlay.partyTarget1:SetScale(poa.scale or 1)
             frame.WidgetOverlay.partyTarget1:SetPoint("BOTTOMRIGHT", frame.HealthBar, "TOPRIGHT",
-                (w.partyTargetIndicators.posX or 0) + 2, (w.partyTargetIndicators.posY or 0) - 2)
+                (poa.posX or 0) + 2, (poa.posY or 0) - 2)
 
-            frame.WidgetOverlay.partyTarget2:ClearAllPoints()
-            frame.WidgetOverlay.partyTarget2:SetSize(15, 15)
-            frame.WidgetOverlay.partyTarget2:SetScale(w.partyTargetIndicators.scale or 1)
-            frame.WidgetOverlay.partyTarget2:SetPoint("RIGHT", frame.WidgetOverlay.partyTarget1, "LEFT", 3, 0)
+            for i = 2, 4 do
+                local indicator = frame.WidgetOverlay["partyTarget" .. i]
+                indicator:SetSize(15, 15)
+                indicator:SetScale(poa.scale or 1)
+                sArenaMixin:ChainIndicator(indicator, frame.WidgetOverlay["partyTarget" .. (i - 1)], direction, poa.spacing or 3)
+            end
         end
     end
 
     if self.db.textSettings then
         local txt = self.db.textSettings
         local modernCastbar = self.db.castBar.useModernCastbars
-
         name:SetScale(txt.nameSize or 1)
         healthText:SetScale(txt.healthSize or 1)
         specName:SetScale(txt.specNameSize or 1)
         castbarText:SetScale(txt.castbarSize or 1)
         powerText:SetScale(txt.powerSize or 1)
 
-        -- Name
-        name:ClearAllPoints()
-        if (txt.nameAnchor or "CENTER") == "LEFT" then
-            name:SetPoint("BOTTOMLEFT", frame.HealthBar, "TOPLEFT", 3 + (txt.nameOffsetX or 0), 1.5 + (txt.nameOffsetY or 0))
-        elseif (txt.nameAnchor or "CENTER") == "RIGHT" then
-            name:SetPoint("BOTTOMRIGHT", frame.HealthBar, "TOPRIGHT", -3 + (txt.nameOffsetX or 0), 1.5 + (txt.nameOffsetY or 0))
-        else
-            name:SetPoint("BOTTOM", frame.HealthBar, "TOP", -1 + (txt.nameOffsetX or 0), 1.5 + (txt.nameOffsetY or 0))
-        end
-
-        -- Health Text
-        healthText:ClearAllPoints()
-        if (txt.healthAnchor or "CENTER") == "LEFT" then
-            healthText:SetPoint("LEFT", healthBar, "LEFT", 4 + (txt.healthOffsetX or 0), (txt.healthOffsetY or 0))
-        elseif (txt.healthAnchor or "CENTER") == "RIGHT" then
-            healthText:SetPoint("RIGHT", healthBar, "RIGHT", -3 + (txt.healthOffsetX or 0), (txt.healthOffsetY or 0))
-        else
-            healthText:SetPoint("CENTER", healthBar, "CENTER", -1 + (txt.healthOffsetX or 0), (txt.healthOffsetY or 0))
-        end
+        self:UpdateHealthbarOrientation(frame)
 
         -- Power Text
         powerText:ClearAllPoints()
@@ -506,16 +553,6 @@ function layout:UpdateOrientation(frame)
             powerText:SetPoint("RIGHT", frame.PowerBar, "RIGHT", 0 + (txt.powerOffsetX or 0), (txt.powerOffsetY or 0))
         else
             powerText:SetPoint("CENTER", frame.PowerBar, "CENTER", (txt.powerOffsetX or 0), (txt.powerOffsetY or 0))
-        end
-
-        -- Spec Text
-        specName:ClearAllPoints()
-        if (txt.specNameAnchor or "CENTER") == "LEFT" then
-            specName:SetPoint("LEFT", healthBar, "LEFT", 4 + (txt.specNameOffsetX or 0), -23 + (txt.specNameOffsetY or 0))
-        elseif (txt.specNameAnchor or "CENTER") == "RIGHT" then
-            specName:SetPoint("RIGHT", healthBar, "RIGHT", -3 + (txt.specNameOffsetX or 0), -23 + (txt.specNameOffsetY or 0))
-        else
-            specName:SetPoint("CENTER", healthBar, "CENTER", -1 + (txt.specNameOffsetX or 0), -23 + (txt.specNameOffsetY or 0))
         end
 
         -- Castbar Text
@@ -528,12 +565,17 @@ function layout:UpdateOrientation(frame)
         else
             castbarText:SetPoint("CENTER", frame.CastBar, "CENTER", (txt.castbarOffsetX or 0), (modernCastbar and (simpleCastbar and 0 or -11) or 0) + (txt.castbarOffsetY or 0))
         end
+
+        if txt.forceCastbarTextWidth then
+            castbarText:SetWidth(self.db.castBar.width or frame.CastBar:GetWidth())
+        else
+            castbarText:SetWidth(0)
+        end
     end
 
     if (self.db.mirrored) then
         frameTexture:SetPoint("TOPLEFT", frame, "TOPLEFT", 0, -3)
         frameTexture:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", 68, 3)
-        healthBar:SetSize(127, 30)
     	healthBar:GetStatusBarTexture():SetDrawLayer("BORDER", 1)
     	healthBar:SetPoint("TOPRIGHT", -4, -16)
         powerBar:SetSize(127, 10.5)
@@ -542,13 +584,14 @@ function layout:UpdateOrientation(frame)
     else
     	frameTexture:SetPoint("TOPLEFT", frame, "TOPLEFT", -48, -3)
         frameTexture:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", 20, 3)
-    	healthBar:SetSize(127, 30)
     	healthBar:GetStatusBarTexture():SetDrawLayer("BORDER", 1)
     	healthBar:SetPoint("TOPLEFT", 16, -16)
     	powerBar:SetSize(127, 10.5)
     	powerBar:SetPoint("TOPLEFT", healthBar, "BOTTOMLEFT", 0, 1.5)
     	frame.ClassIcon:SetPoint("TOPRIGHT", -3, -14.5)
     end
+
+    self:UpdateHealthbarOrientation(frame)
 end
 
 sArenaMixin.layouts[layoutName] = layout

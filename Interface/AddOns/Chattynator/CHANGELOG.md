@@ -1,7 +1,7 @@
 # Chattynator
 
-## [199](https://github.com/TheMouseNest/Chattynator/tree/199) (2026-03-20)
-[Full Changelog](https://github.com/TheMouseNest/Chattynator/compare/198...199) 
+## [202](https://github.com/TheMouseNest/Chattynator/tree/202) (2026-04-06)
+[Full Changelog](https://github.com/TheMouseNest/Chattynator/compare/201...202) 
 
-- Fixes for tabs dropdown when overflowing  
-- Fix overflow tab button showing when not absolutely necessary  
+- Make sure font in copy chat box is the same as the chat font  
+- Add hidden option `/chatty c force_tab_overflow true` to disable hiding overflow  

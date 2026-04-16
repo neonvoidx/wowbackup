@@ -103,11 +103,52 @@ local EXPORT_BLACKLIST = {
 	containerActionLayouts = true,
 }
 
+local SERIALIZABLE_KEY_TYPES = {
+	boolean = true,
+	number = true,
+	string = true,
+}
+
+local SERIALIZABLE_VALUE_TYPES = {
+	boolean = true,
+	number = true,
+	string = true,
+}
+
+local function sanitizeSerializableValue(value, activeTables)
+	local valueType = type(value)
+	if SERIALIZABLE_VALUE_TYPES[valueType] then return value end
+	if valueType ~= "table" then return nil end
+	if activeTables[value] then return nil end
+
+	activeTables[value] = true
+
+	local clone = {}
+	for rawKey, rawValue in pairs(value) do
+		local keyType = type(rawKey)
+		if SERIALIZABLE_KEY_TYPES[keyType] then
+			local sanitizedValue = sanitizeSerializableValue(rawValue, activeTables)
+			if sanitizedValue ~= nil then clone[rawKey] = sanitizedValue end
+		end
+	end
+
+	activeTables[value] = nil
+	return clone
+end
+
 local function sanitizeProfileData(source)
 	if type(source) ~= "table" then return {} end
 	local filtered = {}
+	local activeTables = {
+		[source] = true,
+	}
 	for key, value in pairs(source) do
-		if not EXPORT_BLACKLIST[key] and not (addon.functions and addon.functions.IsPrivateProfileKey and addon.functions.IsPrivateProfileKey(key)) then filtered[key] = value end
+		if SERIALIZABLE_KEY_TYPES[type(key)] and not EXPORT_BLACKLIST[key]
+			and not (addon.functions and addon.functions.IsPrivateProfileKey and addon.functions.IsPrivateProfileKey(key))
+		then
+			local sanitizedValue = sanitizeSerializableValue(value, activeTables)
+			if sanitizedValue ~= nil then filtered[key] = sanitizedValue end
+		end
 	end
 	return filtered
 end
@@ -121,6 +162,13 @@ end
 local function resolveExportProfileName(profileName)
 	if type(profileName) == "string" and profileName ~= "" then return profileName end
 	return getActiveProfileName()
+end
+
+local function resolveImportProfileName(meta)
+	if type(meta) ~= "table" then return nil end
+	local profileName = meta.profile
+	if type(profileName) == "string" and profileName ~= "" then return profileName end
+	return nil
 end
 
 local function exportActiveProfile(profileName)
@@ -142,15 +190,16 @@ local function exportActiveProfile(profileName)
 		data = sanitizeProfileData(source),
 	}
 
-	local serialized = serializer:Serialize(payload)
-	if not serialized or serialized == "" then return nil, "SERIALIZE" end
+	local ok, serialized = pcall(serializer.Serialize, serializer, payload)
+	if not ok or type(serialized) ~= "string" or serialized == "" then return nil, "SERIALIZE" end
 	local compressed = deflate:CompressDeflate(serialized)
 	if not compressed then return nil, "COMPRESS" end
 	return deflate:EncodeForPrint(compressed)
 end
 
-local function importActiveProfile(encoded)
+local function importProfile(encoded, options)
 	if not serializer or not deflate then return false, "NO_LIB" end
+	options = options or {}
 	encoded = tostring(encoded or "")
 	encoded = encoded:gsub("^%s+", ""):gsub("%s+$", "")
 	if encoded == "" then return false, "NO_INPUT" end
@@ -167,7 +216,10 @@ local function importActiveProfile(encoded)
 	if type(meta) ~= "table" or meta.addon ~= addonName or meta.kind ~= PROFILE_EXPORT_KIND then return false, "INVALID" end
 	if type(data) ~= "table" then return false, "NO_DATA" end
 
-	local target = getActiveProfileName()
+	local activeTarget = getActiveProfileName()
+	local importedTarget = resolveImportProfileName(meta)
+	local useImportedTarget = options.preferImportedProfileName == true and importedTarget ~= nil
+	local target = useImportedTarget and importedTarget or activeTarget
 	if not target then return false, "NO_ACTIVE" end
 
 	if not EnhanceQoLDB or type(EnhanceQoLDB.profiles) ~= "table" then return false, "NO_DB" end
@@ -175,14 +227,34 @@ local function importActiveProfile(encoded)
 	local sanitized = sanitizeProfileData(data)
 	normalizeProfileStorage(sanitized)
 	EnhanceQoLDB.profiles[target] = sanitized
-	addon.db = EnhanceQoLDB.profiles[target]
+
+	if useImportedTarget then
+		if options.setImportedProfileActive == true then
+			local guid = UnitGUID("player")
+			EnhanceQoLDB.profileKeys = EnhanceQoLDB.profileKeys or {}
+			if guid then EnhanceQoLDB.profileKeys[guid] = target end
+		end
+		if options.setImportedProfileGlobal == true then EnhanceQoLDB.profileGlobal = target end
+	end
+
+	if target == activeTarget or (useImportedTarget and options.setImportedProfileActive == true) then addon.db = EnhanceQoLDB.profiles[target] end
 
 	return true
 end
 
+local function importActiveProfile(encoded) return importProfile(encoded) end
+
+local function importExternalProfile(encoded)
+	return importProfile(encoded, {
+		preferImportedProfileName = true,
+		setImportedProfileActive = true,
+		setImportedProfileGlobal = true,
+	})
+end
+
 -- Public API for external installers (e.g. WagoInstaller).
 addon.exportProfile = exportActiveProfile
-addon.importProfile = importActiveProfile
+addon.importProfile = importExternalProfile
 
 local function exportErrorMessage(reason)
 	if reason == "NO_ACTIVE" then return L["ProfileExportNoActive"] or "No active profile found." end
@@ -192,7 +264,7 @@ end
 
 local function importErrorMessage(reason)
 	if reason == "NO_INPUT" then return L["ProfileImportEmpty"] or "Please paste a code to import." end
-	if reason == "INVALID" or reason == "DECODE" or reason == "DECOMPRESS" or reason == "DESERIALIZE" then return L["ProfileImportInvalid"] or "The code could not be read." end
+	if reason == "INVALID" or reason == "DECODE" or reason == "DECOMPRESS" or reason == "DESERIALIZE" then return L["The code could not be read."] or "The code could not be read." end
 	if reason == "NO_ACTIVE" or reason == "NO_DB" then return L["ProfileExportNoActive"] or "No active profile found." end
 	return L["ProfileImportFailed"] or "Profile import failed."
 end
@@ -200,7 +272,7 @@ end
 local data = {
 	listFunc = function() return buildSortedProfileList(profileOrderActive) end,
 	order = profileOrderActive,
-	text = L["ProfileActive"],
+	text = L["Active profile"],
 	get = function() return EnhanceQoLDB.profileKeys[UnitGUID("player")] or EnhanceQoLDB.profileGlobal end,
 	set = function(value)
 		EnhanceQoLDB.profileKeys[UnitGUID("player")] = value
@@ -217,7 +289,7 @@ addon.functions.SettingsCreateDropdown(cProfiles, data)
 data = {
 	listFunc = function() return buildSortedProfileList(profileOrderGlobal) end,
 	order = profileOrderGlobal,
-	text = L["ProfileUseGlobal"],
+	text = L["Global profile"],
 	get = function() return EnhanceQoLDB.profileGlobal end,
 	set = function(value) EnhanceQoLDB.profileGlobal = value end,
 	default = "",
@@ -253,7 +325,7 @@ data = {
 		return buildSortedProfileList(profileOrderCopy, function(name) return name == currentProfile end, true)
 	end,
 	order = profileOrderCopy,
-	text = L["ProfileCopy"],
+	text = L["Copy settings from profile"],
 	get = function() return "" end,
 	set = function(value)
 		if value ~= "" then
@@ -271,7 +343,7 @@ data = {
 						if not source or source == "" then return end
 						local target = EnhanceQoLDB.profileKeys[UnitGUID("player")]
 						if not target then return end
-						local copied = sanitizeProfileData(CopyTable(EnhanceQoLDB.profiles[source]))
+						local copied = sanitizeProfileData(EnhanceQoLDB.profiles[source])
 						normalizeProfileStorage(copied)
 						EnhanceQoLDB.profiles[target] = copied
 						C_UI.Reload()
@@ -295,7 +367,7 @@ data = {
 		return buildSortedProfileList(profileOrderDelete, function(name) return name == currentProfile or name == globalProfile end, true)
 	end,
 	order = profileOrderDelete,
-	text = L["ProfileDelete"],
+	text = L["Delete profile"],
 	get = function() return "" end,
 	set = function(value)
 		if value ~= "" then
@@ -333,11 +405,11 @@ data = {
 }
 addon.functions.SettingsCreateButton(cProfiles, data)
 
-addon.functions.SettingsCreateHeadline(cProfiles, L["ProfileShareHeader"] or "Export / Import", { parentSection = expandable })
+addon.functions.SettingsCreateHeadline(cProfiles, L["Export / Import"] or "Export / Import", { parentSection = expandable })
 
 addon.functions.SettingsCreateButton(cProfiles, {
 	var = "profileExport",
-	text = L["ProfileExport"] or (L["Export"] or "Export"),
+	text = L["Export profile"] or (L["Export"] or "Export"),
 	func = function()
 		local code, reason = exportActiveProfile()
 		if not code then
@@ -346,7 +418,7 @@ addon.functions.SettingsCreateButton(cProfiles, {
 		end
 		StaticPopupDialogs["EQOL_PROFILE_EXPORT"] = StaticPopupDialogs["EQOL_PROFILE_EXPORT"]
 			or {
-				text = L["ProfileExportTitle"] or "Export profile",
+				text = L["Export profile"] or "Export profile",
 				button1 = CLOSE,
 				hasEditBox = true,
 				editBoxWidth = 320,
@@ -369,7 +441,7 @@ addon.functions.SettingsCreateButton(cProfiles, {
 
 addon.functions.SettingsCreateButton(cProfiles, {
 	var = "profileImport",
-	text = L["ProfileImport"] or (L["Import"] or "Import"),
+	text = L["Import profile"] or (L["Import"] or "Import"),
 	func = function()
 		StaticPopupDialogs["EQOL_PROFILE_IMPORT"] = StaticPopupDialogs["EQOL_PROFILE_IMPORT"]
 			or {

@@ -55,7 +55,7 @@ local function showOptions()
 	frame:SetLayout("List")
 
 	local iconSize = AceGUI:Create("Slider")
-	iconSize:SetLabel(L["MarkBarIconSize"] or "Icon size")
+	iconSize:SetLabel(L["Icon size"] or "Icon size")
 	iconSize:SetSliderValues(10, 18, 1)
 	iconSize:SetValue(db.iconSize or 14)
 	iconSize:SetCallback("OnValueChanged", function(_, _, val)

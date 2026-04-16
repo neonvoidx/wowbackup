@@ -7,7 +7,7 @@ else
 	error(parentAddonName .. " is not loaded")
 end
 
-local L = LibStub("AceLocale-3.0"):GetLocale("EnhanceQoL_Tooltip")
+local L = LibStub("AceLocale-3.0"):GetLocale("EnhanceQoL")
 
 local cTooltip = addon.SettingsLayout.rootUI
 
@@ -37,7 +37,7 @@ addon.functions.SettingsCreateDropdown(cTooltip, data)
 data = {
 	{
 		var = "TooltipBuffHideInCombat",
-		text = L["TooltipBuffHideInCombat"],
+		text = L["TooltipHideInCombat"],
 		func = function(v) addon.db["TooltipBuffHideInCombat"] = v end,
 		default = false,
 		type = Settings.VarType.Boolean,
@@ -52,7 +52,7 @@ data = {
 	},
 	{
 		var = "TooltipBuffHideInDungeon",
-		text = L["TooltipBuffHideInDungeon"],
+		text = L["TooltipHideInDungeon"],
 		func = function(v) addon.db["TooltipBuffHideInDungeon"] = v end,
 		default = false,
 		type = Settings.VarType.Boolean,
@@ -89,7 +89,7 @@ addon.functions.SettingsCreateDropdown(cTooltip, data)
 data = {
 	{
 		var = "TooltipItemHideInCombat",
-		text = L["TooltipItemHideInCombat"],
+		text = L["TooltipHideInCombat"],
 		func = function(v) addon.db["TooltipItemHideInCombat"] = v end,
 		default = false,
 		type = Settings.VarType.Boolean,
@@ -104,7 +104,7 @@ data = {
 	},
 	{
 		var = "TooltipItemHideInDungeon",
-		text = L["TooltipItemHideInDungeon"],
+		text = L["TooltipHideInDungeon"],
 		func = function(v) addon.db["TooltipItemHideInDungeon"] = v end,
 		default = false,
 		type = Settings.VarType.Boolean,
@@ -223,7 +223,7 @@ addon.functions.SettingsCreateDropdown(cTooltip, data)
 data = {
 	{
 		var = "TooltipSpellHideInCombat",
-		text = L["TooltipSpellHideInCombat"],
+		text = L["TooltipHideInCombat"],
 		func = function(v) addon.db["TooltipSpellHideInCombat"] = v end,
 		default = false,
 		type = Settings.VarType.Boolean,
@@ -238,7 +238,7 @@ data = {
 	},
 	{
 		var = "TooltipSpellHideInDungeon",
-		text = L["TooltipSpellHideInDungeon"],
+		text = L["TooltipHideInDungeon"],
 		func = function(v) addon.db["TooltipSpellHideInDungeon"] = v end,
 		default = false,
 		type = Settings.VarType.Boolean,
@@ -320,7 +320,7 @@ addon.functions.SettingsCreateHeadline(cTooltip, {
 })
 
 data = {
-	list = { [1] = NONE, [2] = L["Enemies"], [3] = L["Friendly"], [4] = L["Both"] },
+	list = { [1] = _G.NONE, [2] = L["Enemies"], [3] = L["Friendly"], [4] = _G.STATUS_TEXT_BOTH },
 	text = L["TooltipUnitHideType"],
 	get = function() return addon.db.TooltipUnitHideType or 1 end,
 	set = function(key) addon.db.TooltipUnitHideType = key end,
@@ -334,7 +334,7 @@ addon.functions.SettingsCreateDropdown(cTooltip, data)
 data = {
 	{
 		var = "TooltipUnitHideInCombat",
-		text = L["TooltipUnitHideInCombat"],
+		text = L["TooltipHideInCombat"],
 		func = function(v) addon.db["TooltipUnitHideInCombat"] = v end,
 		default = false,
 		type = Settings.VarType.Boolean,
@@ -349,7 +349,7 @@ data = {
 	},
 	{
 		var = "TooltipUnitHideInDungeon",
-		text = L["TooltipUnitHideInDungeon"],
+		text = L["TooltipHideInDungeon"],
 		func = function(v) addon.db["TooltipUnitHideInDungeon"] = v end,
 		default = false,
 		type = Settings.VarType.Boolean,

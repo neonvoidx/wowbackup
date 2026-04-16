@@ -1,8 +1,9 @@
 # Baganator
 
-## [793](https://github.com/TheMouseNest/Baganator/tree/793) (2026-03-13)
-[Full Changelog](https://github.com/TheMouseNest/Baganator/compare/792...793) [Previous Releases](https://github.com/TheMouseNest/Baganator/releases)
+## [796](https://github.com/TheMouseNest/Baganator/tree/796) (2026-04-08)
+[Full Changelog](https://github.com/TheMouseNest/Baganator/compare/795...796) 
 
-- Add version slash command  
-- [Fixes #631] Retail: Fix currencies not tracking if a removed currency involved  
-- Remove no longer valid comment  
+- Fix guild bank item auto ungrouping not applying properly on guild bank close  
+- Support spaces in `/bgr search [query]` slash command  
+- Keep analytics gone  
+- Restore Wago to build script  

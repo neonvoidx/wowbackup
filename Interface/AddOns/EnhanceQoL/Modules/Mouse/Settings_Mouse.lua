@@ -7,27 +7,15 @@ else
 	error(parentAddonName .. " is not loaded")
 end
 
-local L = LibStub("AceLocale-3.0"):GetLocale("EnhanceQoL_Mouse")
-local LMain = LibStub("AceLocale-3.0"):GetLocale(parentAddonName)
-local getCVarOptionState = addon.functions.GetCVarOptionState or function() return false end
-local setCVarOptionState = addon.functions.SetCVarOptionState or function() end
+local L = LibStub("AceLocale-3.0"):GetLocale("EnhanceQoL")
 
 local cMouse = addon.SettingsLayout.rootGENERAL
 
 local expandable = addon.functions.SettingsCreateExpandableSection(cMouse, {
-	name = (LMain and LMain["MouseAndAccessibility"]) or "Mouse & Accessibility",
+	name = L["MouseAndAccessibility"] or "Mouse & Accessibility",
 	newTagID = "MouseAndAccessibility",
 	expanded = false,
 	colorizeTitle = false,
-})
-
-addon.functions.SettingsCreateCheckbox(cMouse, {
-	var = "enableMouseoverCast",
-	text = (LMain and LMain["enableMouseoverCast"]) or "Enable Mouseover Cast",
-	get = function() return getCVarOptionState("enableMouseoverCast") end,
-	func = function(value) setCVarOptionState("enableMouseoverCast", value) end,
-	default = false,
-	parentSection = expandable,
 })
 
 addon.functions.SettingsCreateHeadline(cMouse, L["mouseRing"], { parentSection = expandable })
@@ -470,8 +458,8 @@ local data = {
 					},
 					{
 						list = {
-							REMAINING = L["mouseRingProgressModeRemaining"],
-							ELAPSED = L["mouseRingProgressModeElapsed"],
+							REMAINING = L["Deplete (remaining time)"],
+							ELAPSED = L["Fill (elapsed time)"],
 						},
 						order = { "REMAINING", "ELAPSED" },
 						text = L["mouseRingGCDProgressMode"],

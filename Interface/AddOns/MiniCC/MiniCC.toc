@@ -2,15 +2,16 @@
 ## Title: MiniCC
 ## Notes: Shows CC and important spells on frames/nameplates/alerts in PvP.
 ## Author: Verz
-## Version: 2.36.0
+## Version: 3.8.0
 ## SavedVariables: MiniCCDB
-## OptionalDeps: ElvUI, Grid2, DandersFrames, FrameSort, Masque, TPerl
+## OptionalDeps: ElvUI, Grid2, DandersFrames, FrameSort, Masque, TPerl, TidyPlates_ThreatPlates, VuhDo, BuzzardFrames, NDui
 ## IconTexture: Interface\AddOns\MiniCC\Icon.blp
 ## X-Curse-Project-ID: 1439482
 
 Libs\LibStub\LibStub.lua
 Libs\LibCustomGlow-1.0\LibCustomGlow-1.0.xml
 Libs\LibRangeCheck-3.0\LibRangeCheck-3.0.lua
+Libs\LibSpecialization\LibSpecialization.lua
 
 Namespace.lua
 
@@ -30,7 +31,6 @@ Locales\zhTW.lua
 Utils\Scheduler.lua
 Utils\Units.lua
 Utils\Array.lua
-Utils\SpellCache.lua
 Utils\FontUtil.lua
 Utils\ModuleUtil.lua
 Utils\SlotDistribution.lua
@@ -40,7 +40,10 @@ Core\MiniFramework.lua
 Core\InstanceOptions.lua
 Core\IconSlotContainer.lua
 Core\UnitAuraWatcher.lua
+Core\Inspector.lua
 Core\Frames.lua
+Core\TrinketsTracker.lua
+Core\ProfileManager.lua
 
 Modules\CrowdControlModule.lua
 Modules\HealerCrowdControlModule.lua
@@ -48,10 +51,18 @@ Modules\PortraitModule.lua
 Modules\AlertsModule.lua
 Modules\NameplatesModule.lua
 Modules\KickTimerModule.lua
-Modules\TrinketsModule.lua
 Modules\FriendlyIndicatorModule.lua
 Modules\PrecogGuesserModule.lua
+Modules\FriendlyCooldowns\PvPTalentSync.lua
+Modules\FriendlyCooldowns\Talents.lua
+Modules\FriendlyCooldowns\Rules.lua
+Modules\FriendlyCooldowns\Observer.lua
+Modules\FriendlyCooldowns\Brain.lua
+Modules\FriendlyCooldowns\Display.lua
+Modules\FriendlyCooldowns\Module.lua
 Modules\TestModeManager.lua
+
+Api\v1.lua
 
 Config\Migrator.lua
 Config\Config.lua
@@ -62,10 +73,11 @@ Config\Healer.lua
 Config\Alerts.lua
 Config\Nameplates.lua
 Config\KickTimer.lua
-Config\Trinkets.lua
 Config\PrecogGuesser.lua
 Config\FriendlyIndicator.lua
+Config\FriendlyCooldownTracker.lua
 Config\OtherAddons.lua
 Config\Miscellaneous.lua
+Config\Profiles.lua
 
 MiniCC.lua

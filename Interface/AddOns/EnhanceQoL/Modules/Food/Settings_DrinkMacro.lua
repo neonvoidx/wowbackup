@@ -7,8 +7,7 @@ else
 	error(parentAddonName .. " is not loaded")
 end
 
-local L = LibStub("AceLocale-3.0"):GetLocale("EnhanceQoL_DrinkMacro")
-local LCore = LibStub("AceLocale-3.0"):GetLocale(parentAddonName)
+local L = LibStub("AceLocale-3.0"):GetLocale("EnhanceQoL")
 local wipe = wipe
 
 local function isCheckboxEnabled(var)
@@ -38,6 +37,10 @@ end
 local function refreshBuffFoodMacro()
 	if addon.BuffFoods and addon.BuffFoods.functions and addon.BuffFoods.functions.syncEventRegistration then addon.BuffFoods.functions.syncEventRegistration() end
 	if addon.BuffFoods and addon.BuffFoods.functions and addon.BuffFoods.functions.updateBuffFoodMacro then addon.BuffFoods.functions.updateBuffFoodMacro(false) end
+	if addon.ClassBuffReminder then
+		if addon.ClassBuffReminder.InvalidateFoodCache then addon.ClassBuffReminder:InvalidateFoodCache() end
+		if addon.ClassBuffReminder.RequestUpdate then addon.ClassBuffReminder:RequestUpdate(true) end
+	end
 end
 
 local function buildDrinkMacroSettings()
@@ -47,7 +50,7 @@ local function buildDrinkMacroSettings()
 	local convenienceSection = addon.SettingsLayout.gameplayConvenienceSection
 	if not convenienceSection then
 		convenienceSection = addon.functions.SettingsCreateExpandableSection(cDrink, {
-			name = (LCore and LCore["MacrosAndConsumables"]) or "Macros & Consumables",
+			name = L["MacrosAndConsumables"] or "Macros & Consumables",
 			newTagID = "MacrosAndConsumables",
 			expanded = false,
 			colorizeTitle = false,
@@ -278,7 +281,7 @@ local function buildDrinkMacroSettings()
 	})
 
 	local priorityLabels = {
-		spell = L["CategoryCustomSpells"] or (L["Custom Spells"] or "Custom Spells"),
+		spell = L["Custom Spells"] or (L["Custom Spells"] or "Custom Spells"),
 		stone = L["CategoryHealthstones"] or (L["Prefer Healthstone first"] or "Healthstones"),
 		potion = L["CategoryPotions"] or "Potions",
 		combatpotion = L["CategoryCombatPotions"] or (L["Use Combat potions for health macro"] or "Combat potions"),
@@ -490,7 +493,7 @@ local function buildDrinkMacroSettings()
 		}
 	)
 
-	addon.functions.SettingsCreateText(cDrink, string.format(L["healthMacroPlaceOnBar"], "EnhanceQoLHealthMacro"), { parentSection = convenienceSection })
+	addon.functions.SettingsCreateText(cDrink, string.format(L["%s - place on your bar (updates outside combat)"], "EnhanceQoLHealthMacro"), { parentSection = convenienceSection })
 	if addon.variables and addon.variables.unitClass == "WARLOCK" then addon.functions.SettingsCreateText(cDrink, L["healthMacroTipReset"], { parentSection = convenienceSection }) end
 
 	addon.functions.SettingsCreateHeadline(cDrink, L["Flask Macro"] or "Flask Macro", { parentSection = convenienceSection })
@@ -639,7 +642,7 @@ local function buildDrinkMacroSettings()
 
 	addon.functions.SettingsCreateText(
 		cDrink,
-		string.format(L["flaskMacroPlaceOnBar"] or "%s - place on your bar (updates outside combat)", "EnhanceQoLFlaskMacro"),
+		string.format(L["%s - place on your bar (updates outside combat)"] or "%s - place on your bar (updates outside combat)", "EnhanceQoLFlaskMacro"),
 		{ parentSection = convenienceSection }
 	)
 
@@ -817,7 +820,7 @@ local function buildDrinkMacroSettings()
 
 	addon.functions.SettingsCreateText(
 		cDrink,
-		string.format(L["buffFoodMacroPlaceOnBar"] or "%s - place on your bar (updates outside combat)", "EnhanceQoLBuffFoodMacro"),
+		string.format(L["%s - place on your bar (updates outside combat)"] or "%s - place on your bar (updates outside combat)", "EnhanceQoLBuffFoodMacro"),
 		{ parentSection = convenienceSection }
 	)
 end
@@ -846,4 +849,22 @@ function addon.functions.OpenFlaskMacroSettings()
 	if convenienceSection and convenienceSection.data then convenienceSection.data.expanded = true end
 
 	Settings.OpenToCategory(gameplayCategory:GetID(), L["Flask Macro"] or "Flask Macro")
+end
+
+function addon.functions.OpenBuffFoodMacroSettings()
+	if not (Settings and Settings.OpenToCategory) then return end
+	if InCombatLockdown and InCombatLockdown() then
+		if UIErrorsFrame and ERR_NOT_IN_COMBAT then UIErrorsFrame:AddMessage(ERR_NOT_IN_COMBAT, 1, 0, 0) end
+		return
+	end
+
+	if addon.functions and addon.functions.initDrinkMacro then addon.functions.initDrinkMacro() end
+
+	local gameplayCategory = addon.SettingsLayout and addon.SettingsLayout.rootGAMEPLAY
+	if not gameplayCategory then return end
+
+	local convenienceSection = addon.SettingsLayout and addon.SettingsLayout.gameplayConvenienceSection
+	if convenienceSection and convenienceSection.data then convenienceSection.data.expanded = true end
+
+	Settings.OpenToCategory(gameplayCategory:GetID(), L["Buff Food Macro"] or "Buff Food Macro")
 end

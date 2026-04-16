@@ -49,6 +49,8 @@ local defaultSettings = {
     queueTimerWarning = false,
     queueTimerAudio = true,
     queueTimerWarningTime = 6,
+    kickPopupSoundName = "Lossa Countered",
+    kickPopupFontShadow = true,
     minimizeObjectiveTracker = true,
     fadeMicroMenuExceptQueue = true,
     surrenderArena = true,
@@ -66,6 +68,7 @@ local defaultSettings = {
     hideObjectiveTracker = true,
     cdManagerBlacklist = {},
     cdManagerPriorityList = {},
+    kickPopupFontOutline = "OUTLINE",
 
     rpNames = true,
     rpNamesFirst = true,
@@ -149,7 +152,7 @@ local defaultSettings = {
     petCastBarWidth = 103,
     petCastBarHeight = 10,
     showPetCastBarIcon = true,
-    showPetCastBarTimer = false,
+    petCastBarTimer = false,
 
     --Castbar edge highlight
     castBarInterruptHighlighterStartTime = 0.8,
@@ -189,7 +192,7 @@ local defaultSettings = {
     playerCastBarWidth = 208,
     playerCastBarHeight = 11,
     playerCastBarTimer = false,
-    playerCastBarTimerCenter = false,
+    playerCastBarTimerCentered = false,
 
     --Auras
     --playerAuraMaxBuffsPerRow = 10,
@@ -351,6 +354,12 @@ local defaultSettings = {
     partyFrameRangeAlphaSolidBackground = true,
     changePartyFrameRangeAlpha = true,
     auraCdTextOnlyMine = true,
+
+    -- Better Target Highlight
+    betterTargetHighlight = false,
+    betterTargetHighlightAtlas = "RaidFrame-TargetFrame",
+    betterTargetHighlightColor = {0, 1, 0, 1},
+    betterTargetHighlightDesaturate = true,
 }
 BBF.defaultSettings = defaultSettings
 
@@ -1093,6 +1102,7 @@ end
 function BBF.ModernRoleIcons()
     if not BetterBlizzFramesDB.newRaidFrameRoleIcons then return end
     hooksecurefunc("CompactUnitFrame_UpdateRoleIcon", function(frame)
+        if issecretvalue(frame) then return end
         if not frame.roleIcon then return end
         local role = UnitGroupRolesAssigned(frame.unit);
         if ( frame.optionTable.displayRoleIcon and (role == "TANK" or role == "HEALER" or role == "DAMAGER") ) then
@@ -1347,12 +1357,14 @@ end
 function BBF.HideAbsorbGlow()
     if not BetterBlizzFramesDB.hideAllAbsorbGlow then return end
     hooksecurefunc("CompactUnitFrame_UpdateHealPrediction", function(frame)
+        if issecretvalue(frame) then return end
         if not frame or frame:IsForbidden() then return end
         if frame.overAbsorbGlow then
             frame.overAbsorbGlow:SetAlpha(0)
         end
     end)
     hooksecurefunc("UnitFrameHealPredictionBars_Update", function(frame)
+        if issecretvalue(frame) then return end
         if not frame or frame:IsForbidden() then return end
         if frame.overAbsorbGlow then
             frame.overAbsorbGlow:SetAlpha(0)
@@ -1374,7 +1386,7 @@ function BBF.ZoomDefaultActionbarIcons(enableZoom)
             end
         end
     end
-    
+
     local function zoomButtons(prefix, count)
         for i = 1, count do
             local btn = _G[prefix .. i]
@@ -1383,7 +1395,7 @@ function BBF.ZoomDefaultActionbarIcons(enableZoom)
             end
         end
     end
-    
+
     zoomButtons("ActionButton", 12)
     zoomButtons("MultiBarBottomLeftButton", 12)
     zoomButtons("MultiBarBottomRightButton", 12)
@@ -1395,7 +1407,24 @@ function BBF.ZoomDefaultActionbarIcons(enableZoom)
     zoomButtons("PetActionButton", 10)
     zoomButtons("StanceButton", 12)
     zoomButtons("PossessButton", 2)
-    
+
+    -- Dominos actionbars
+    if C_AddOns.IsAddOnLoaded("Dominos") then
+        local NUM_ACTIONBAR_BUTTONS = NUM_ACTIONBAR_BUTTONS
+        local DOMINOS_NUM_MAX_BUTTONS = 14 * NUM_ACTIONBAR_BUTTONS
+        print(DominosActionButton1)
+        zoomButtons("DominosActionButton", DOMINOS_NUM_MAX_BUTTONS)
+        zoomButtons("DominosPetActionButton", 12)
+        zoomButtons("DominosStanceButton", 12)
+        zoomButtons("MultiBarLeftActionButton", 12)
+        zoomButtons("MultiBarBottomLeftActionButton", 12)
+        zoomButtons("MultiBarBottomRightActionButton", 12)
+        zoomButtons("MultiBarRightActionButton", 12)
+        zoomButtons("MultiBar5ActionButton", 12)
+        zoomButtons("MultiBar6ActionButton", 12)
+        zoomButtons("MultiBar7ActionButton", 12)
+    end
+
     if ExtraActionButton1 and ExtraActionButton1.icon then
         zoom(ExtraActionButton1.icon)
     end
@@ -2091,6 +2120,7 @@ end
 function BBF.HookAndUpdatePartyFrameRangeAlpha(toggle)
     if not BetterBlizzFramesDB.changePartyFrameRangeAlpha then return end
     local function UpdateRangeAlpha(frame)
+        if issecretvalue(frame) then return end
         if not frame or not frame.displayedUnit then return end
         if frame:IsForbidden() or string.match(frame.displayedUnit, "nameplate") then return end
         if BBF.SoloPartyFrame then
@@ -2160,7 +2190,7 @@ function BBF.MiniFrame(frame)
 
         if not compactRing then
             if frame.ClassicFrame then
-                compactRing = frame.TargetFrameContainer:CreateTexture(nil, "ARTWORK")
+                compactRing = frame.TargetFrameContainer:CreateTexture(frame:GetName().."CompactRing", "ARTWORK")
                 compactRing:SetTexture("Interface\\TargetingFrame\\playerframe")
                 compactRing:SetSize(99,99)
                 compactRing:SetPoint("CENTER", frame.TargetFrameContainer.Portrait, "CENTER", 13, -14)
@@ -2173,7 +2203,7 @@ function BBF.MiniFrame(frame)
                 compactRing:AddMaskTexture(mask)
                 name:SetParent(frame)
             else
-                compactRing = frame.TargetFrameContainer:CreateTexture(nil, "ARTWORK")
+                compactRing = frame.TargetFrameContainer:CreateTexture(frame:GetName().."CompactRing", "ARTWORK")
                 compactRing:SetAtlas("Map_Faction_Ring")
                 compactRing:SetSize(71, 70)
                 compactRing:SetPoint("CENTER", frame.TargetFrameContainer.Portrait, "CENTER", 1, -2)
@@ -2237,7 +2267,7 @@ function BBF.MiniFrame(frame)
 
         if not compactRing then
             if frame.ClassicFrame then
-                compactRing = frame.PlayerFrameContainer:CreateTexture(nil, "ARTWORK")
+                compactRing = frame.PlayerFrameContainer:CreateTexture(frame:GetName().."CompactRing", "ARTWORK")
                 compactRing:SetTexture("Interface\\TargetingFrame\\playerframe")
                 compactRing:SetSize(99,99)
                 compactRing:SetPoint("CENTER", frame.PlayerFrameContainer.PlayerPortrait, "CENTER", 13, -14)
@@ -2257,7 +2287,7 @@ function BBF.MiniFrame(frame)
                 end
 
             else
-                compactRing = frame.PlayerFrameContainer:CreateTexture(nil, "ARTWORK")
+                compactRing = frame.PlayerFrameContainer:CreateTexture(frame:GetName().."CompactRing", "ARTWORK")
                 compactRing:SetAtlas("Map_Faction_Ring")
                 compactRing:SetSize(71, 70)
                 compactRing:SetPoint("CENTER", frame.PlayerFrameContainer.PlayerPortrait, "CENTER", 0, -2)
@@ -2270,6 +2300,15 @@ function BBF.MiniFrame(frame)
             end
         end
         compactRing:Show()
+
+        if db.classColorFrameTexture then
+            local _, class = UnitClass("player")
+            local classColor = RAID_CLASS_COLORS[class]
+            if classColor then
+                compactRing:SetDesaturated(true)
+                compactRing:SetVertexColor(classColor.r, classColor.g, classColor.b)
+            end
+        end
 
         name:SetScale(1.4)
         name:ClearAllPoints()
@@ -2873,21 +2912,21 @@ function BBF.InstantComboPoints()
 
     if class == "MONK" then
         hooksecurefunc(MonkHarmonyBarFrame, "UpdatePower", UpdateMonkChi)
-        if not BBP then hooksecurefunc(ClassNameplateBarWindwalkerMonkFrame, "UpdatePower", UpdateMonkChi) end
+        if not BBP then hooksecurefunc(prdClassFrame, "UpdatePower", UpdateMonkChi) end
     elseif class == "ROGUE" then
         hooksecurefunc(RogueComboPointBarFrame, "UpdatePower", UpdateRogueComboPoints)
-        if not BBP then hooksecurefunc(ClassNameplateBarRogueFrame, "UpdatePower", UpdateRogueComboPoints) end
+        if not BBP then hooksecurefunc(prdClassFrame, "UpdatePower", UpdateRogueComboPoints) end
         if C_CVar.GetCVar("comboPointLocation") == "1" and ComboFrame then hooksecurefunc("ComboFrame_Update", UpdateLegacyComboFrame) end
     elseif class == "DRUID" then
         hooksecurefunc(DruidComboPointBarFrame, "UpdatePower", UpdateDruidComboPoints)
-        if not BBP then hooksecurefunc(ClassNameplateBarFeralDruidFrame, "UpdatePower", UpdateDruidComboPoints) end
+        if not BBP then hooksecurefunc(prdClassFrame, "UpdatePower", UpdateDruidComboPoints) end
         if C_CVar.GetCVar("comboPointLocation") == "1" and ComboFrame then hooksecurefunc("ComboFrame_Update", UpdateLegacyComboFrame) end
     elseif class == "MAGE" then
         hooksecurefunc(MageArcaneChargesFrame, "UpdatePower", UpdateArcaneCharges)
-        if not BBP then hooksecurefunc(ClassNameplateBarMageFrame, "UpdatePower", UpdateArcaneCharges) end
+        if not BBP then hooksecurefunc(prdClassFrame, "UpdatePower", UpdateArcaneCharges) end
     elseif class == "PALADIN" then
         hooksecurefunc(PaladinPowerBarFrame, "UpdatePower", UpdatePaladinHolyPower)
-        if not BBP then hooksecurefunc(ClassNameplateBarPaladinFrame, "UpdatePower", UpdatePaladinHolyPower) end
+        if not BBP then hooksecurefunc(prdClassFrame, "UpdatePower", UpdatePaladinHolyPower) end
     end
     BBF.InstantComboPointsActive = true
 end
@@ -2984,115 +3023,23 @@ end
 
 
 function BBF.ShowCooldownDuringCC()
-    if BBF.isMidnight then return end
     if not BetterBlizzFramesDB.fixActionBarCDs then return end
     if BBF.ShowCooldownDuringCCActive then return end
-    local usingOmniCC = C_AddOns.IsAddOnLoaded("OmniCC")
-    local alwaysHideCCDuration = BetterBlizzFramesDB.fixActionBarCDsAlwaysHideCD
+    local blizzPrefixes = {
+        "ActionButton", "MultiBarBottomLeftButton", "MultiBarBottomRightButton",
+        "MultiBarRightButton", "MultiBarLeftButton", "MultiBar5Button",
+        "MultiBar6Button", "MultiBar7Button", "PetActionButton"
+    }
 
-    local OmniCCTextUpdater = CreateFrame("Frame")
-    local trackedButtons = {}
-
-    local function StopTracking(button)
-        if trackedButtons[button] then
-            trackedButtons[button] = nil
-        end
-        if not next(trackedButtons) then
-            OmniCCTextUpdater:SetScript("OnUpdate", nil)
-        end
-    end
-
-    local function TrackButton(button)
-        if not trackedButtons[button] then
-            trackedButtons[button] = true
-            OmniCCTextUpdater:SetScript("OnUpdate", function()
-                for button in pairs(trackedButtons) do
-                    if button.chargeCooldown and button.chargeCooldown._occ_display then
-                        local occText = button.chargeCooldown._occ_display.text
-                        if occText and not occText:IsShown() then
-                            occText:Show()
-                        end
-                    end
-                end
-            end)
-        end
-    end
-
-    local function UpdateCooldown(self)
-        if BBF.isMidnight then return end
-        if self.cooldown.currentCooldownType ~= 1 then return end
-        if not self:IsVisible() or not self.action then return end
-
-        local start, duration, enable, modRate = 0, 0
-        local actionType, actionID = GetActionInfo(self.action)
-        local locStart, locDuration = 0, 0
-        local chargeInfo
-
-        if (actionType == "spell" or actionType == "macro") and actionID then
-            chargeInfo = C_Spell.GetSpellCharges(actionID)
-            if chargeInfo and chargeInfo.currentCharges ~= chargeInfo.maxCharges then
-                start, duration, modRate = chargeInfo.cooldownStartTime, chargeInfo.cooldownDuration, chargeInfo.chargeModRate
-            else
-                locStart, locDuration = C_Spell.GetSpellLossOfControlCooldown(actionID);
-                local spellCooldownInfo = C_Spell.GetSpellCooldown(actionID)
-                if spellCooldownInfo then
-                    start, duration, modRate = spellCooldownInfo.startTime, spellCooldownInfo.duration, spellCooldownInfo.modRate
-                else
-                    start, duration, enable, modRate = GetActionCooldown(self.action)
-                end
-            end
-        else
-            local charges, maxCharges, chargeStart, chargeDuration, chargeModRate = GetActionCharges(self.action)
-            if charges then
-                start, duration, modRate = chargeStart, chargeDuration, chargeModRate
-            else
-                start, duration, enable, modRate = GetActionCooldown(self.action)
-            end
-
-            locStart, locDuration = GetActionLossOfControlCooldown(self.action);
-        end
-        -- BBF.isMidnight
-        if duration == 0 then
-            if alwaysHideCCDuration then
-                self.cooldown:SetHideCountdownNumbers(true)
-                self.cooldown:SetCooldown(0, 0)
-            end
-            return
-        end
-
-        if not chargeInfo then
-            local now = GetTime()
-            local cdRemaining = (start and duration and duration > 0) and ((start + duration) - now) or 0
-            local locRemaining = (locStart and locDuration and locDuration > 0) and ((locStart + locDuration) - now) or 0
-            if locRemaining <= cdRemaining then
-                return
-            end
-        end
-
-        self.cooldown:SetHideCountdownNumbers(false)
-        self.cooldown:SetCooldown(start, duration, modRate)
-
-        -- Ensure OmniCC properly shows the cooldown text
-        if usingOmniCC then
-            if self.cooldown._occ_display then
-                local occText = self.cooldown._occ_display.text
-                C_Timer.After(0, function()
-                    occText:Show()
-                end)
-            end
-
-            if self.chargeCooldown then
-                self.chargeCooldown:SetHideCountdownNumbers(false)
-                self.chargeCooldown:SetCooldown(start, duration, modRate)
-                TrackButton(self)
-                C_Timer.After(0.15, function()
-                    StopTracking(self)
-                end)
+    for _, prefix in ipairs(blizzPrefixes) do
+        for i = 1, 12 do
+            local btn = _G[prefix .. i]
+            if btn and btn.lossOfControlCooldown then
+                btn.lossOfControlCooldown:SetParent(BBF.hiddenFrame)
             end
         end
     end
-
-    hooksecurefunc("ActionButton_UpdateCooldown", UpdateCooldown)
+    BBF.ShowCooldownDuringCCActive = true
 end
 
 
@@ -3145,6 +3092,13 @@ function BBF.ReduceEditModeAlpha(disable)
         UtilityCooldownViewer,
         BuffIconCooldownViewer,
         BuffBarCooldownViewer,
+        EncounterTimeline,
+        ExternalDefensivesFrame,
+        CriticalEncounterWarnings,
+        MediumEncounterWarnings,
+        MinorEncounterWarnings,
+        PlayerCastingBarFrame,
+        PersonalResourceDisplayFrame,
     }
 
     for _, frame in pairs(frames) do
@@ -3209,6 +3163,7 @@ LSM:Register("statusbar", "Blizzard Retail Bar", [[Interface\AddOns\BetterBlizzF
 LSM:Register("statusbar", "Blizzard Retail Bar Crop", [[Interface\AddOns\BetterBlizzFrames\media\blizzTex\BlizzardRetailBarCrop]])
 LSM:Register("statusbar", "Blizzard Retail Bar Crop 2", [[Interface\AddOns\BetterBlizzFrames\media\blizzTex\BlizzardRetailBarCrop2]])
 LSM:Register("statusbar", "Smooth", [[Interface\Addons\BetterBlizzFrames\media\smooth]])
+LSM:Register("sound", "Lossa Countered", [[Interface\AddOns\BetterBlizzFrames\media\LossaCountered.ogg]])
 
 
 local texture = "Interface\\Addons\\BetterBlizzPlates\\media\\DragonflightTextureHD"
@@ -3814,6 +3769,9 @@ function BBF.HookUnitFrameTextures()
                 ApplyCastbarTexture(TargetFrameSpellBar)
                 ApplyCastbarTexture(FocusFrameSpellBar)
             end
+            if db.classicCastbars or db.classicCastbarsPlayer then
+                BBF.CastbarColorHooks()
+            end
 
             if db.showPartyCastbar and not db.classicCastbarsParty then
                 C_Timer.After(1, function()
@@ -3918,6 +3876,7 @@ local function HookRaidFrameTextures()
     if C_CVar.GetCVar("raidOptionDisplayPets") == "1" or C_CVar.GetCVar("raidOptionDisplayMainTankAndAssist") == "1" then
         hooksecurefunc("DefaultCompactMiniFrameSetup", SetRaidFramePetTextures)
         hooksecurefunc("CompactUnitFrame_SetUnit", function(frame)
+            if issecretvalue(frame) then return end
             if frame.unit and (frame.unit:match("raidpet") or frame.unit:match("target")) then
                 SetRaidFramePetTextures(frame)
             end
@@ -4571,8 +4530,76 @@ end
 function BBF.FixStupidBlizzPTRShit()
     --if BBF.isMidnight then return end
     if InCombatLockdown() then return end
-    if isAddonLoaded("ClassicFrames") or isAddonLoaded("EasyFrames") or BetterBlizzFramesDB.classicFrames or BetterBlizzFramesDB.noPortraitModes then return end
     if BBF.ocdFixActive then return end
+    BBF.ocdFixActive = true
+
+    local function FixCastbarBackground(bg)
+        bg:ClearAllPoints()
+        bg:SetPoint("TOPLEFT", bg:GetParent(), "TOPLEFT", -1, 1)
+        bg:SetPoint("BOTTOMRIGHT", bg:GetParent(), "BOTTOMRIGHT", 1, -1)
+    end
+
+    FixCastbarBackground(TargetFrameSpellBar.Background)
+    FixCastbarBackground(FocusFrameSpellBar.Background)
+    FixCastbarBackground(PlayerCastingBarFrame.Background)
+
+    if not BetterBlizzFramesDB.darkModeUi and not BetterBlizzFramesDB.darkModeUiAura then
+        if BuffFrame then
+            for _, frame in pairs({_G.BuffFrame.AuraContainer:GetChildren()}) do
+                if frame.Duration and frame.Icon then
+                    frame.Duration:ClearAllPoints()
+                    if BuffFrame.AuraContainer.addIconsToTop then
+                        frame.Duration:SetPoint("BOTTOM", frame.Icon, "TOP", 0, 1.5)
+                    else
+                        frame.Duration:SetPoint("TOP", frame.Icon, "BOTTOM", 0, -1.5)
+                    end
+                    if not frame.Duration.bbfSetPointHook then
+                        frame.Duration.bbfSetPointHook = true
+                        hooksecurefunc(frame.Duration, "SetPoint", function(self)
+                            if self.changingPoint then return end
+                            self.changingPoint = true
+                            self:ClearAllPoints()
+                            if BuffFrame.AuraContainer.addIconsToTop then
+                                self:SetPoint("BOTTOM", frame.Icon, "TOP", 0, 1.5)
+                            else
+                                self:SetPoint("TOP", frame.Icon, "BOTTOM", 0, -1.5)
+                            end
+                            self.changingPoint = false
+                        end)
+                    end
+                end
+            end
+        end
+    end
+
+    if DebuffFrame then
+        for _, frame in pairs({_G.DebuffFrame.AuraContainer:GetChildren()}) do
+            if frame.Duration and frame.Icon then
+                frame.Duration:ClearAllPoints()
+                if DebuffFrame.AuraContainer.addIconsToTop then
+                    frame.Duration:SetPoint("BOTTOM", frame.Icon, "TOP", 0, 2)
+                else
+                    frame.Duration:SetPoint("TOP", frame.Icon, "BOTTOM", 0, -2)
+                end
+                if not frame.Duration.bbfSetPointHook then
+                    frame.Duration.bbfSetPointHook = true
+                    hooksecurefunc(frame.Duration, "SetPoint", function(self)
+                        if self.changingPoint then return end
+                        self.changingPoint = true
+                        self:ClearAllPoints()
+                        if DebuffFrame.AuraContainer.addIconsToTop then
+                            self:SetPoint("BOTTOM", frame.Icon, "TOP", 0, 2)
+                        else
+                            self:SetPoint("TOP", frame.Icon, "BOTTOM", 0, -2)
+                        end
+                        self.changingPoint = false
+                    end)
+                end
+            end
+        end
+    end
+
+    if isAddonLoaded("ClassicFrames") or isAddonLoaded("EasyFrames") or BetterBlizzFramesDB.classicFrames or (BetterBlizzFramesDB.noPortraitModes or BetterBlizzFramesDB.noPortraitPixelBorder) then return end
     -- For god knows what reason PTR has a gap between Portrait and PlayerFrame. This fixes it + other gaps.
     --PlayerFrame.PlayerFrameContainer.PlayerPortrait:SetScale(1.02)
     PlayerFrame.PlayerFrameContainer.PlayerPortrait:SetSize(61,61)
@@ -4597,16 +4624,6 @@ function BBF.FixStupidBlizzPTRShit()
     FocusFrame.TargetFrameContainer.PortraitMask:ClearAllPoints()
     FocusFrame.TargetFrameContainer.PortraitMask:SetPoint("CENTER", FocusFrame.TargetFrameContainer.Portrait, "CENTER", 0, 0)
     FocusFrame.TargetFrameContainer.PortraitMask:SetSize(56,56)
-
-    local function FixCastbarBackground(bg)
-        bg:ClearAllPoints()
-        bg:SetPoint("TOPLEFT", bg:GetParent(), "TOPLEFT", -1, 1)
-        bg:SetPoint("BOTTOMRIGHT", bg:GetParent(), "BOTTOMRIGHT", 1, -1)
-    end
-
-    FixCastbarBackground(TargetFrameSpellBar.Background)
-    FixCastbarBackground(FocusFrameSpellBar.Background)
-    FixCastbarBackground(PlayerCastingBarFrame.Background)
 
     for i = 1, 4 do
         local memberFrame = PartyFrame["MemberFrame" .. i]
@@ -4723,8 +4740,6 @@ function BBF.FixStupidBlizzPTRShit()
         PlayerFrame.ocdLine3:SetColorTexture(v, v, v, 1)
         PlayerFrame.ocdLine3:SetPoint("BOTTOMLEFT", PlayerFrame.healthbar, "TOPLEFT", 0, 0)
         PlayerFrame.ocdLine3:SetPoint("BOTTOMRIGHT", PlayerFrame.manabar, "TOPRIGHT", -4, 0.5)
-
-        BBF.ocdFixActive = true
 
 
 
@@ -4897,9 +4912,10 @@ function BBF.SpecPortraits()
 end
 
 local function TurnTestModesOff()
-    BetterBlizzFramesDB.absorbIndicatorTestMode = false
-    BetterBlizzFramesDB.partyCastBarTestMode = false
-    BetterBlizzFramesDB.petCastBarTestMode = false
+    BetterBlizzFramesDB.absorbIndicatorTestMode = nil
+    BetterBlizzFramesDB.partyCastBarTestMode = nil
+    BetterBlizzFramesDB.petCastBarTestMode = nil
+    BetterBlizzFramesDB.kickPopupTestMode = nil
 end
 
 local function executeCustomCode()
@@ -4999,6 +5015,7 @@ Frame:SetScript("OnEvent", function(...)
                 end
                 BBF.SetCenteredNamesCaller()
                 BBF.ToggleCastbarInterruptIcon()
+                BBF.ToggleKickPopup()
                 BBF.DarkmodeFrames()
                 --BBF.PlayerReputationColor()
                 --BBF.ClassColorPlayerName()--bodify
@@ -5031,7 +5048,9 @@ Frame:SetScript("OnEvent", function(...)
             --Settings.OpenToCategory(BBF.category:GetID())
         else
             C_Timer.After(1, function()
-                Settings.OpenToCategory(BBF.category:GetID())
+                if not InCombatLockdown() then
+                    Settings.OpenToCategory(BBF.category:GetID())
+                end
             end)
         end
         BetterBlizzFramesDB.reopenOptions = false
@@ -5156,6 +5175,9 @@ First:SetScript("OnEvent", function(_, event, addonName)
             BetterBlizzFramesDB.hideFocusDebuffs = true
             BetterBlizzFramesDB.hideFocusAuras = nil
         end
+        if BetterBlizzFramesDB.noPortraitPixelBorder then
+            BetterBlizzFramesDB.noPortraitModes = true
+        end
         FetchAndSaveValuesOnFirstLogin()
         TurnTestModesOff()
         BBF.FixLegacyComboPointsLocation()
@@ -5165,8 +5187,8 @@ First:SetScript("OnEvent", function(_, event, addonName)
         BBF.RaiseTargetCastbarStratas()
         BBF.RaidFramePixelBorder()
         BBF.ModernRoleIcons()
+        BBF.BetterTargetHighlight()
         BBF.HideAbsorbGlow()
-        BBF.ZoomDefaultActionbarIcons()
         BBF.ClassColorFriendlist()
         BBF.HookAndUpdatePartyFrameRangeAlpha()
         --BBF.DisableAddOnProfiling()
@@ -5198,6 +5220,7 @@ First:SetScript("OnEvent", function(_, event, addonName)
         BBF.ActionBarMods()
         BBF.GladTracker()
         C_Timer.After(0.5, function()
+            BBF.ZoomDefaultActionbarIcons()
             BBF.HookStatusBarText()
             BBF.UnitFrameBackgroundTexture()
             BBF.DarkModeUnitframeBorders()
@@ -5214,6 +5237,7 @@ First:SetScript("OnEvent", function(_, event, addonName)
         end
 
         C_Timer.After(1, function()
+            BBF.ActionBarCDNumberSize()
             BBF.CreateBigDebuffs()
             if BetterBlizzFramesDB.tempOmniCCFix then
                 BetterBlizzFramesDB.tempOmniCCFix = nil
@@ -5373,7 +5397,7 @@ function BBF.CreateBigDebuffs()
         end
         return
     end
-    if C_AddOns.IsAddOnLoaded("MiniCC") or BetterBlizzFramesDB.noPortraitModes then return end
+    if C_AddOns.IsAddOnLoaded("MiniCC") or C_AddOns.IsAddOnLoaded("MvqUI") or BetterBlizzFramesDB.noPortraitModes then return end
 
     local function CreateDebuffFrame(unitFrame, portraitMask)
         local frame = CreateFrame("Frame", nil, unitFrame)
@@ -5420,7 +5444,7 @@ function BBF.CreateBigDebuffs()
         if not updateInfo then return true end
         if updateInfo.isFullUpdate then return true end
         if (updateInfo.addedAuras and #updateInfo.addedAuras > 0)
-            or (updateInfo.updatedAuras and #updateInfo.updatedAuras > 0)
+            or (updateInfo.updatedAuraInstanceIDs and #updateInfo.updatedAuraInstanceIDs > 0)
             or (updateInfo.removedAuraInstanceIDs and #updateInfo.removedAuraInstanceIDs > 0)
         then
             return true
@@ -5428,66 +5452,67 @@ function BBF.CreateBigDebuffs()
         return false
     end
 
-    local function IterateAuras(filter, validateDefensive, unit)
-        local spellID, start, duration, icon, applications
+    local function IterateAuras(filter, validateAura, unit, seen)
+        local spellID, icon, applications, auraInstanceID
+        local auras = C_UnitAuras.GetUnitAuras(unit, filter)
 
-        for i = 1, 40 do
-            local auraData = C_UnitAuras.GetAuraDataByIndex(unit, i, filter)
-            if not auraData then break end
-
-            local durationInfo = C_UnitAuras.GetAuraDuration(unit, auraData.auraInstanceID)
-            local auraStart = durationInfo and durationInfo:GetStartTime()
-            local auraDuration = durationInfo and durationInfo:GetTotalDuration()
-
-            if auraStart and auraDuration then
+        for _, auraData in ipairs(auras) do
+            if not seen[auraData.auraInstanceID] then
                 local garbageAuraData = false
 
-                if validateDefensive then -- units out of range produce garbage data, so double check
-                    local isDefensive = C_UnitAuras.AuraIsBigDefensive(auraData.spellId)
-                    if not (issecretvalue(isDefensive) or isDefensive) then
+                if validateAura then -- units out of range produce garbage data, so double check
+                    local isValid = validateAura(auraData.spellId)
+                    if not (issecretvalue(isValid) or isValid) then
                         garbageAuraData = true
                     end
                 end
 
                 if not garbageAuraData then
                     spellID = auraData.spellId
-                    start = auraStart
-                    duration = auraDuration
                     icon = auraData.icon
                     applications = auraData.applications
+                    auraInstanceID = auraData.auraInstanceID
                 end
             end
+
+            seen[auraData.auraInstanceID] = true
         end
 
-        return spellID, start, duration, icon, applications
+        return spellID, icon, auraInstanceID, applications
     end
 
     local function FindAura(unit, debuffFrame, updateInfo)
         if updateInfo and not AurasChanged(updateInfo) then return end
 
-        local spellID, startTime, duration, texture, applications
+        local spellID, texture, auraInstanceID
+        local seen = {}
 
         -- Crowd Control
-        spellID, startTime, duration, texture, applications = IterateAuras("HARMFUL|CROWD_CONTROL", false, unit)
+        spellID, texture, auraInstanceID = IterateAuras("HARMFUL|CROWD_CONTROL", C_Spell.IsSpellCrowdControl, unit, seen)
 
         -- Big Defensives
         if not spellID then
-            spellID, startTime, duration, texture, applications = IterateAuras("HELPFUL|BIG_DEFENSIVE", true, unit)
+            spellID, texture, auraInstanceID = IterateAuras("HELPFUL|BIG_DEFENSIVE", C_UnitAuras.AuraIsBigDefensive, unit, seen)
         end
 
         -- External Defensives
         if not spellID then
-            spellID, startTime, duration, texture, applications = IterateAuras("HELPFUL|EXTERNAL_DEFENSIVE", false, unit)
+            spellID, texture, auraInstanceID = IterateAuras("HELPFUL|EXTERNAL_DEFENSIVE", nil, unit, seen)
         end
 
         -- Important buffs
         if not spellID then
-            spellID, startTime, duration, texture, applications = IterateAuras("HELPFUL|IMPORTANT", false, unit)
+            spellID, texture, auraInstanceID = IterateAuras("HELPFUL|IMPORTANT", C_Spell.IsSpellImportant, unit, seen)
         end
 
         if spellID then
+            local durationObj = C_UnitAuras.GetAuraDuration(unit, auraInstanceID)
             debuffFrame.icon:SetTexture(texture)
-            debuffFrame.cooldown:SetCooldown(startTime, duration)
+            if durationObj then
+                debuffFrame.cooldown:SetCooldownFromDurationObject(durationObj)
+            else
+                debuffFrame.cooldown:Clear()
+            end
             debuffFrame:Show()
         else
             debuffFrame.icon:SetTexture(nil)

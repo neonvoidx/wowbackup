@@ -5,7 +5,6 @@ local wowEx = addon.Utils.WoWEx
 local units = addon.Utils.Units
 local unitWatcher = addon.Core.UnitAuraWatcher
 local iconSlotContainer = addon.Core.IconSlotContainer
-local spellCache = addon.Utils.SpellCache
 local moduleUtil = addon.Utils.ModuleUtil
 local moduleName = addon.Utils.ModuleName
 local slotDistribution = addon.Utils.SlotDistribution
@@ -100,6 +99,8 @@ local function GrowToAnchor(grow)
 		return "RIGHT", "LEFT"
 	elseif grow == "RIGHT" then
 		return "LEFT", "RIGHT"
+	elseif grow == "DOWN" then
+		return "TOP", "BOTTOM"
 	else
 		return "CENTER", "CENTER"
 	end
@@ -127,11 +128,29 @@ end
 ---@param relativeToPoint string
 ---@param offsetX number
 ---@param offsetY number
+---Returns the effective anchor frame for a nameplate.
+---For ThreatPlates, anchors to TPFrame (or its GetAnchor result) so that
+---icons scale and move with TP's target-highlight scaling, not the raw base frame.
+local function GetNameplateAnchorFrame(nameplate)
+	if nameplate.TPFrame then
+		if nameplate.TPFrame.GetAnchor then
+			local anchor = nameplate.TPFrame:GetAnchor()
+			-- GetAnchor may return a FontString or other non-Frame object that lacks GetFrameLevel
+			if anchor and anchor.GetFrameLevel then
+				return anchor
+			end
+		end
+		return nameplate.TPFrame
+	end
+	return nameplate
+end
+
 local function SetupContainerFrame(container, nameplate, anchorPoint, relativeToPoint, offsetX, offsetY)
+	local anchorFrame = GetNameplateAnchorFrame(nameplate)
 	local frame = container.Frame
 	frame:ClearAllPoints()
-	frame:SetPoint(anchorPoint, nameplate, relativeToPoint, offsetX, offsetY)
-	frame:SetFrameLevel(nameplate:GetFrameLevel() + 10)
+	frame:SetPoint(anchorPoint, anchorFrame, relativeToPoint, offsetX, offsetY)
+	frame:SetFrameLevel(anchorFrame:GetFrameLevel() + 10)
 	frame:EnableMouse(false)
 	frame:SetIgnoreParentScale(not nmModule.ScaleWithNameplate)
 	frame:Show()
@@ -153,7 +172,7 @@ local function EnsureContainersForNameplate(nameplate, unitToken, unitOptions)
 
 		local combinedContainer = nameplate[nameplateCombinedKey]
 		if not combinedContainer then
-			combinedContainer = iconSlotContainer:New(nameplate, maxIcons, size, db.IconSpacing or 2, "Nameplates")
+			combinedContainer = iconSlotContainer:New(nameplate, maxIcons, size, db.IconSpacing or 2, "Nameplates", nil, "Nameplates")
 			nameplate[nameplateCombinedKey] = combinedContainer
 		else
 			combinedContainer:SetIconSize(size)
@@ -184,7 +203,7 @@ local function EnsureContainersForNameplate(nameplate, unitToken, unitOptions)
 
 		ccContainer = nameplate[nameplateCcKey]
 		if not ccContainer then
-			ccContainer = iconSlotContainer:New(nameplate, maxIcons, size, db.IconSpacing or 2, "Nameplates")
+			ccContainer = iconSlotContainer:New(nameplate, maxIcons, size, db.IconSpacing or 2, "Nameplates", nil, "Nameplates")
 			nameplate[nameplateCcKey] = ccContainer
 		else
 			ccContainer:SetIconSize(size)
@@ -207,7 +226,7 @@ local function EnsureContainersForNameplate(nameplate, unitToken, unitOptions)
 
 		importantContainer = nameplate[nameplateImportantKey]
 		if not importantContainer then
-			importantContainer = iconSlotContainer:New(nameplate, maxIcons, size, db.IconSpacing or 2, "Nameplates")
+			importantContainer = iconSlotContainer:New(nameplate, maxIcons, size, db.IconSpacing or 2, "Nameplates", nil, "Nameplates")
 			nameplate[nameplateImportantKey] = importantContainer
 		else
 			importantContainer:SetIconSize(size)
@@ -245,6 +264,7 @@ local function ApplyCombinedToNameplate(data, watcher, unitOptions)
 	local iconsGlow = combinedOptions.Icons.Glow
 	local iconsReverse = combinedOptions.Icons.ReverseCooldown
 	local colorByCategory = combinedOptions.Icons.ColorByCategory
+	local showTooltips = combinedOptions.ShowTooltips ~= false
 	local fontScale = db.FontScale
 
 	-- Calculate slot distribution
@@ -268,6 +288,7 @@ local function ApplyCombinedToNameplate(data, watcher, unitOptions)
 			layerScratch.ReverseCooldown = iconsReverse
 			layerScratch.FontScale = fontScale
 			layerScratch.Color = colorByCategory and entry.DispelColor or nil
+			layerScratch.SpellId = showTooltips and entry.SpellId or nil
 			container:SetSlot(slot, layerScratch)
 		end
 	end
@@ -287,6 +308,7 @@ local function ApplyCombinedToNameplate(data, watcher, unitOptions)
 			layerScratch.ReverseCooldown = iconsReverse
 			layerScratch.FontScale = fontScale
 			layerScratch.Color = colorByCategory and defensiveColor or nil
+			layerScratch.SpellId = showTooltips and entry.SpellId or nil
 			container:SetSlot(slot, layerScratch)
 		end
 	end
@@ -306,6 +328,7 @@ local function ApplyCombinedToNameplate(data, watcher, unitOptions)
 			layerScratch.ReverseCooldown = iconsReverse
 			layerScratch.FontScale = fontScale
 			layerScratch.Color = colorByCategory and importantColor or nil
+			layerScratch.SpellId = showTooltips and entry.SpellId or nil
 			container:SetSlot(slot, layerScratch)
 		end
 	end
@@ -341,6 +364,7 @@ local function ApplyCcToNameplate(data, watcher, unitOptions)
 	local iconsGlow = options.Icons.Glow
 	local iconsReverse = options.Icons.ReverseCooldown
 	local colorByCategory = options.Icons.ColorByCategory
+	local showTooltips = options.ShowTooltips ~= false
 	local fontScale = db.FontScale
 	local limit = mathMin(ccDataCount, container.Count)
 
@@ -353,6 +377,7 @@ local function ApplyCcToNameplate(data, watcher, unitOptions)
 		layerScratch.ReverseCooldown = iconsReverse
 		layerScratch.FontScale = fontScale
 		layerScratch.Color = colorByCategory and entry.DispelColor or nil
+		layerScratch.SpellId = showTooltips and entry.SpellId or nil
 		container:SetSlot(i, layerScratch)
 	end
 
@@ -379,6 +404,7 @@ local function ApplyImportantSpellsToNameplate(data, watcher, unitOptions)
 	local iconsGlow = options.Icons.Glow
 	local iconsReverse = options.Icons.ReverseCooldown
 	local colorByCategory = options.Icons.ColorByCategory
+	local showTooltips = options.ShowTooltips ~= false
 	local fontScale = db.FontScale
 	local defensivesData = watcher:GetDefensiveState()
 	local importantData = watcher:GetImportantState()
@@ -405,6 +431,7 @@ local function ApplyImportantSpellsToNameplate(data, watcher, unitOptions)
 			layerScratch.ReverseCooldown = iconsReverse
 			layerScratch.FontScale = fontScale
 			layerScratch.Color = colorByCategory and importantColor or nil
+			layerScratch.SpellId = showTooltips and entry.SpellId or nil
 			container:SetSlot(slot, layerScratch)
 		end
 	end
@@ -424,6 +451,7 @@ local function ApplyImportantSpellsToNameplate(data, watcher, unitOptions)
 			layerScratch.ReverseCooldown = iconsReverse
 			layerScratch.FontScale = fontScale
 			layerScratch.Color = colorByCategory and defensiveColor or nil
+			layerScratch.SpellId = showTooltips and entry.SpellId or nil
 			container:SetSlot(slot, layerScratch)
 		end
 	end
@@ -472,6 +500,7 @@ local function ShowCombinedTestIcons(combinedContainer, combinedOptions, now)
 	local iconsGlow = combinedOptions.Icons.Glow
 	local iconsReverse = combinedOptions.Icons.ReverseCooldown
 	local colorByCategory = combinedOptions.Icons.ColorByCategory
+	local showTooltips = combinedOptions.ShowTooltips ~= false
 	local fontScale = db.FontScale
 	local slot = 0
 
@@ -483,7 +512,7 @@ local function ShowCombinedTestIcons(combinedContainer, combinedOptions, now)
 		slot = slot + 1
 
 		local spellId = testCcNameplateSpellIds[i]
-		local tex = spellCache:GetSpellTexture(spellId)
+		local tex = C_Spell.GetSpellTexture(spellId)
 		if tex then
 			layerScratch.Texture = tex
 			layerScratch.DurationObject = wowEx:CreateDuration(now - (i - 1) * 0.5, 15 + (i - 1) * 3)
@@ -492,6 +521,7 @@ local function ShowCombinedTestIcons(combinedContainer, combinedOptions, now)
 			layerScratch.ReverseCooldown = iconsReverse
 			layerScratch.FontScale = fontScale
 			layerScratch.Color = colorByCategory and testCcDispelColors[spellId] or nil
+			layerScratch.SpellId = showTooltips and spellId or nil
 			combinedContainer:SetSlot(slot, layerScratch)
 		end
 	end
@@ -504,7 +534,7 @@ local function ShowCombinedTestIcons(combinedContainer, combinedOptions, now)
 		slot = slot + 1
 
 		local spellId = testDefensiveNameplateSpellIds[i]
-		local tex = spellCache:GetSpellTexture(spellId)
+		local tex = C_Spell.GetSpellTexture(spellId)
 		if tex then
 			layerScratch.Texture = tex
 			layerScratch.DurationObject = wowEx:CreateDuration(now - (i - 1) * 0.5, 15 + (i - 1) * 3)
@@ -513,6 +543,7 @@ local function ShowCombinedTestIcons(combinedContainer, combinedOptions, now)
 			layerScratch.ReverseCooldown = iconsReverse
 			layerScratch.FontScale = fontScale
 			layerScratch.Color = colorByCategory and defensiveColor or nil
+			layerScratch.SpellId = showTooltips and spellId or nil
 			combinedContainer:SetSlot(slot, layerScratch)
 		end
 	end
@@ -525,7 +556,7 @@ local function ShowCombinedTestIcons(combinedContainer, combinedOptions, now)
 		slot = slot + 1
 
 		local spellId = testImportantNameplateSpellIds[i]
-		local tex = spellCache:GetSpellTexture(spellId)
+		local tex = C_Spell.GetSpellTexture(spellId)
 		if tex then
 			layerScratch.Texture = tex
 			layerScratch.DurationObject = wowEx:CreateDuration(now - (i - 1) * 0.5, 15 + (i - 1) * 3)
@@ -534,6 +565,7 @@ local function ShowCombinedTestIcons(combinedContainer, combinedOptions, now)
 			layerScratch.ReverseCooldown = iconsReverse
 			layerScratch.FontScale = fontScale
 			layerScratch.Color = colorByCategory and importantColor or nil
+			layerScratch.SpellId = showTooltips and spellId or nil
 			combinedContainer:SetSlot(slot, layerScratch)
 		end
 	end
@@ -549,13 +581,14 @@ local function ShowSeparateModeTestIcons(ccContainer, ccOptions, importantContai
 		local iconsGlow = ccOptions.Icons.Glow
 		local iconsReverse = ccOptions.Icons.ReverseCooldown
 		local colorByCategory = ccOptions.Icons.ColorByCategory
+		local showTooltips = ccOptions.ShowTooltips ~= false
 		local fontScale = db.FontScale
 		local limit = mathMin(testCcCount, ccContainer.Count)
 
 		-- Show CC test spells (limited to container count)
 		for i = 1, limit do
 			local spellId = testCcNameplateSpellIds[i]
-			local tex = spellCache:GetSpellTexture(spellId)
+			local tex = C_Spell.GetSpellTexture(spellId)
 
 			if tex then
 				layerScratch.Texture = tex
@@ -565,6 +598,7 @@ local function ShowSeparateModeTestIcons(ccContainer, ccOptions, importantContai
 				layerScratch.ReverseCooldown = iconsReverse
 				layerScratch.FontScale = fontScale
 				layerScratch.Color = colorByCategory and testCcDispelColors[spellId] or nil
+				layerScratch.SpellId = showTooltips and spellId or nil
 				ccContainer:SetSlot(i, layerScratch)
 			end
 		end
@@ -579,6 +613,7 @@ local function ShowSeparateModeTestIcons(ccContainer, ccOptions, importantContai
 		local iconsGlow = importantOptions.Icons.Glow
 		local iconsReverse = importantOptions.Icons.ReverseCooldown
 		local colorByCategory = importantOptions.Icons.ColorByCategory
+		local showTooltips = importantOptions.ShowTooltips ~= false
 		local fontScale = db.FontScale
 
 		-- Calculate slot distribution (Important has higher priority than Defensive)
@@ -596,7 +631,7 @@ local function ShowSeparateModeTestIcons(ccContainer, ccOptions, importantContai
 				slot = slot + 1
 
 				local spellId = testImportantNameplateSpellIds[i]
-				local tex = spellCache:GetSpellTexture(spellId)
+				local tex = C_Spell.GetSpellTexture(spellId)
 
 				if tex then
 					layerScratch.Texture = tex
@@ -606,6 +641,7 @@ local function ShowSeparateModeTestIcons(ccContainer, ccOptions, importantContai
 					layerScratch.ReverseCooldown = iconsReverse
 					layerScratch.FontScale = fontScale
 					layerScratch.Color = colorByCategory and importantColor or nil
+					layerScratch.SpellId = showTooltips and spellId or nil
 					importantContainer:SetSlot(slot, layerScratch)
 				end
 			end
@@ -620,7 +656,7 @@ local function ShowSeparateModeTestIcons(ccContainer, ccOptions, importantContai
 				slot = slot + 1
 
 				local spellId = testDefensiveNameplateSpellIds[i]
-				local tex = spellCache:GetSpellTexture(spellId)
+				local tex = C_Spell.GetSpellTexture(spellId)
 
 				if tex then
 					layerScratch.Texture = tex
@@ -630,6 +666,7 @@ local function ShowSeparateModeTestIcons(ccContainer, ccOptions, importantContai
 					layerScratch.ReverseCooldown = iconsReverse
 					layerScratch.FontScale = fontScale
 					layerScratch.Color = colorByCategory and defensiveColor or nil
+					layerScratch.SpellId = showTooltips and spellId or nil
 					importantContainer:SetSlot(slot, layerScratch)
 				end
 			end
@@ -675,7 +712,7 @@ local function OnNamePlateAdded(unitToken)
 
 	-- Check if we should ignore pets
 	local unitOptions = M:GetUnitOptions(unitToken)
-	if unitOptions.IgnorePets and units:IsPet(unitToken) then
+	if unitOptions.IgnorePets and units:IsPetOrMinion(unitToken) then
 		return
 	end
 
@@ -849,6 +886,7 @@ local function RefreshAnchorsAndSizes()
 	for _, data in pairs(nameplateAnchors) do
 		if data.Nameplate and data.UnitToken then
 			local unitOptions = M:GetUnitOptions(data.UnitToken)
+			local anchorFrame = GetNameplateAnchorFrame(data.Nameplate)
 
 			if unitOptions.Combined.Enabled then
 				-- Handle combined container
@@ -860,15 +898,16 @@ local function RefreshAnchorsAndSizes()
 						combinedContainer.Frame:ClearAllPoints()
 						combinedContainer.Frame:SetPoint(
 							combinedAnchorPoint,
-							data.Nameplate,
+							anchorFrame,
 							combinedRelativeToPoint,
 							combinedOptions.Offset.X,
 							combinedOptions.Offset.Y
 						)
+						combinedContainer:SetGrowDown(combinedOptions.Grow == "DOWN")
 						combinedContainer:SetIconSize(combinedOptions.Icons.Size)
 						combinedContainer:SetSpacing(db.IconSpacing or 2)
 						combinedContainer:SetCount(combinedOptions.Icons.MaxIcons)
-						combinedContainer.Frame:SetFrameLevel(data.Nameplate:GetFrameLevel() + 10)
+						combinedContainer.Frame:SetFrameLevel(anchorFrame:GetFrameLevel() + 10)
 						combinedContainer.Frame:SetIgnoreParentScale(ignoreParentScale)
 					end
 				end
@@ -884,15 +923,16 @@ local function RefreshAnchorsAndSizes()
 						local ccAnchorPoint, ccRelativeToPoint = GrowToAnchor(ccOptions.Grow)
 						ccContainer.Frame:SetPoint(
 							ccAnchorPoint,
-							data.Nameplate,
+							anchorFrame,
 							ccRelativeToPoint,
 							ccOptions.Offset.X,
 							ccOptions.Offset.Y
 						)
+						ccContainer:SetGrowDown(ccOptions.Grow == "DOWN")
 						ccContainer:SetIconSize(ccOptions.Icons.Size)
 						ccContainer:SetSpacing(db.IconSpacing or 2)
 						ccContainer:SetCount(ccOptions.Icons.MaxIcons)
-						ccContainer.Frame:SetFrameLevel(data.Nameplate:GetFrameLevel() + 10)
+						ccContainer.Frame:SetFrameLevel(anchorFrame:GetFrameLevel() + 10)
 					end
 					ccContainer.Frame:SetIgnoreParentScale(ignoreParentScale)
 				end
@@ -907,15 +947,16 @@ local function RefreshAnchorsAndSizes()
 						local importantAnchorPoint, importantRelativeToPoint = GrowToAnchor(importantOptions.Grow)
 						importantContainer.Frame:SetPoint(
 							importantAnchorPoint,
-							data.Nameplate,
+							anchorFrame,
 							importantRelativeToPoint,
 							importantOptions.Offset.X,
 							importantOptions.Offset.Y
 						)
+						importantContainer:SetGrowDown(importantOptions.Grow == "DOWN")
 						importantContainer:SetIconSize(importantOptions.Icons.Size)
 						importantContainer:SetSpacing(db.IconSpacing or 2)
 						importantContainer:SetCount(importantOptions.Icons.MaxIcons)
-						importantContainer.Frame:SetFrameLevel(data.Nameplate:GetFrameLevel() + 10)
+						importantContainer.Frame:SetFrameLevel(anchorFrame:GetFrameLevel() + 10)
 					end
 					importantContainer.Frame:SetIgnoreParentScale(ignoreParentScale)
 				end

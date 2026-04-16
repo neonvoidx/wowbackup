@@ -1,7 +1,6 @@
 local addonName, addon = ...
 
 local L = LibStub("AceLocale-3.0"):GetLocale(addonName)
-local LVendor = LibStub("AceLocale-3.0"):GetLocale("EnhanceQoL_Vendor", true)
 local wipe = wipe
 local mailboxContactsOrder = {}
 local moneyTrackerOrder = {}
@@ -132,7 +131,7 @@ table.sort(data, function(a, b) return a.text < b.text end)
 addon.functions.SettingsCreateCheckboxes(cVendorEconomy, data)
 
 local bankExpandable = addon.functions.SettingsCreateExpandableSection(cVendorEconomy, {
-	name = _G.BANK or BANK or "Bank",
+	name = BANK,
 	newTagID = "Bank",
 	expanded = false,
 	colorizeTitle = false,
@@ -379,14 +378,14 @@ applyParentSection(data, auctionHouseExpandable)
 table.sort(data, function(a, b) return a.text < b.text end)
 addon.functions.SettingsCreateCheckboxes(cVendorEconomy, data)
 
-local craftTitle = (LVendor and LVendor["vendorCraftShopperTitle"]) or "Craft Shopper"
-local craftEnableText = (LVendor and LVendor["vendorCraftShopperEnable"]) or "Enable Craft Shopper"
-local craftEnableDesc = LVendor and LVendor["vendorCraftShopperEnableDesc"] or nil
-local craftQualityText = (LVendor and LVendor["vendorCraftShopperReagentQuality"]) or (_G["PROFESSIONS_QUALITY_DIALOG_TITLE"] or "Reagent Quality")
-local craftQualityDesc = LVendor and LVendor["vendorCraftShopperReagentQualityDesc"] or nil
+local craftTitle = L["vendorCraftShopperTitle"] or "Craft Shopper"
+local craftEnableText = L["vendorCraftShopperEnable"] or "Enable Craft Shopper"
+local craftEnableDesc = L["vendorCraftShopperEnableDesc"]
+local craftQualityText = L["vendorCraftShopperReagentQuality"] or (_G["PROFESSIONS_QUALITY_DIALOG_TITLE"] or "Reagent Quality")
+local craftQualityDesc = L["vendorCraftShopperReagentQualityDesc"]
 local craftQualityList = {
-	lowest = (LVendor and LVendor["vendorCraftShopperReagentQualityLowest"]) or "Lowest quality",
-	highest = (LVendor and LVendor["vendorCraftShopperReagentQualityHighest"]) or "Highest quality",
+	lowest = L["vendorCraftShopperReagentQualityLowest"] or "Lowest quality",
+	highest = L["vendorCraftShopperReagentQualityHighest"] or "Highest quality",
 }
 local craftQualityOrder = { "lowest", "highest" }
 

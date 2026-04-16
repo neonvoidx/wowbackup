@@ -303,8 +303,8 @@ frame:RegisterEvent("PLAYER_LOGIN")
 frame:SetScript("OnEvent", function(self, event)
     print("City Guide addon loaded! Type /cg for commands")
 
-    WorldMapFrame:HookScript("OnShow", CityGuide_UpdateMapLabels)
-    WorldMapFrame:HookScript("OnHide", ClearLabels)
+    WorldMapFrame:HookScript("OnShow", function() C_Timer.After(0, CityGuide_UpdateMapLabels) end)
+    WorldMapFrame:HookScript("OnHide", function() C_Timer.After(0, ClearLabels) end)
 
-    hooksecurefunc(WorldMapFrame, "OnMapChanged", CityGuide_UpdateMapLabels)
+    hooksecurefunc(WorldMapFrame, "OnMapChanged", function() C_Timer.After(0, CityGuide_UpdateMapLabels) end)
 end)

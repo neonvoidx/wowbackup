@@ -162,6 +162,69 @@ local function clearGradientState(bar)
 	bar._rbGradEA = nil
 end
 
+local function getStatusBarTextureVisualState(bar)
+	if not (bar and bar.GetStatusBarTexture) then return nil, nil, nil end
+	local tex = bar:GetStatusBarTexture()
+	if not tex then return nil, nil, nil end
+	local currentPath = tex.GetTexture and tex:GetTexture() or nil
+	if (currentPath == nil or currentPath == "") and tex.GetAtlas then currentPath = tex:GetAtlas() end
+	local alpha = tex.GetAlpha and tex:GetAlpha() or nil
+	return tex, currentPath, alpha
+end
+
+local function ensureStatusBarTexturePath(bar, texturePath)
+	if not (bar and texturePath and bar.SetStatusBarTexture) then return false end
+	local tex, currentPath, alpha = getStatusBarTextureVisualState(bar)
+	local needsReset = bar._rb_tex ~= texturePath or currentPath ~= texturePath
+	if not needsReset and tex and alpha ~= nil and alpha <= 0 then needsReset = true end
+	if not needsReset then return false end
+	bar:SetStatusBarTexture(texturePath)
+	bar._rb_tex = texturePath
+	return true
+end
+
+local function resetSegmentVisualCache(sb)
+	if not sb then return end
+	sb._rb_tex = nil
+	sb._rbColorInitialized = nil
+	sb._essenceState = nil
+	sb._essenceColorKey = nil
+	sb._rbSegmentFillColorKey = nil
+	sb._rbSegmentBgPath = nil
+	sb._rbSegmentBgColorKey = nil
+	clearGradientState(sb)
+end
+
+function ResourceBars.InvalidateEssenceSegmentCaches(bar)
+	if not bar then return end
+	if bar.essences then
+		for i = 1, #bar.essences do
+			resetSegmentVisualCache(bar.essences[i])
+		end
+	end
+	if bar._rbDiscreteSegments then
+		for i = 1, #bar._rbDiscreteSegments do
+			resetSegmentVisualCache(bar._rbDiscreteSegments[i])
+		end
+	end
+	bar._essenceSegments = nil
+	bar._essenceVertical = nil
+	bar._essenceGap = nil
+	bar._essenceGapRequested = nil
+	bar._essenceSegmentStyled = nil
+	bar._rbDiscreteCount = nil
+	bar._rbDiscreteVertical = nil
+	bar._rbDiscreteGapRequested = nil
+	bar._rbDiscreteGap = nil
+	bar._rbDiscreteSeparatorSize = nil
+	bar._rbDiscreteShowSeparatorRequested = nil
+	bar._rbDiscreteReverse = nil
+	bar._essenceNextTick = nil
+	bar._essenceFraction = 0
+	bar._essenceLastPower = nil
+	bar._essenceTickDuration = nil
+end
+
 function ResourceBars.DeactivateEssenceTicker(bar)
 	if not bar then return end
 	if bar:GetScript("OnUpdate") == bar._essenceUpdater then bar:SetScript("OnUpdate", nil) end
@@ -311,12 +374,10 @@ function ResourceBars.LayoutEssences(bar, cfg, count, texturePath)
 			sb:SetMinMaxValues(0, 1)
 			bar.essences[i] = sb
 		end
-		if texturePath and sb._rb_tex ~= texturePath then
-			sb:SetStatusBarTexture(texturePath)
-			sb._rb_tex = texturePath
-		end
+		ensureStatusBarTexturePath(sb, texturePath)
 		sb:ClearAllPoints()
 		if sb:GetParent() ~= inner then sb:SetParent(inner) end
+		if sb.SetFrameStrata then sb:SetFrameStrata(bar:GetFrameStrata()) end
 		sb:SetFrameLevel((bar:GetFrameLevel() or 1) + 1)
 		if vertical then
 			sb:SetWidth(w)
@@ -478,6 +539,7 @@ function ResourceBars.UpdateEssenceSegments(bar, cfg, current, maxPower, fractio
 	for i = 1, maxPower do
 		local sb = bar.essences[i]
 		if sb then
+			local textureReset = ensureStatusBarTexturePath(sb, texturePath)
 			local state
 			local value
 			if i <= current then
@@ -500,7 +562,7 @@ function ResourceBars.UpdateEssenceSegments(bar, cfg, current, maxPower, fractio
 				wantR, wantG, wantB, wantA = dimR, dimG, dimB, dimA
 			end
 
-			local needsColor = sb._essenceState ~= state or sb._essenceColorKey ~= colorKey
+			local needsColor = textureReset or not sb._rbColorInitialized or sb._essenceState ~= state or sb._essenceColorKey ~= colorKey
 			sb._essenceState = state
 			sb._essenceColorKey = colorKey
 			if needsColor then
@@ -713,11 +775,9 @@ function ResourceBars.LayoutDiscreteSegments(bar, cfg, count, texturePath, separ
 			segments[i] = sb
 		end
 		if sb:GetParent() ~= inner then sb:SetParent(inner) end
+		if sb.SetFrameStrata then sb:SetFrameStrata(bar:GetFrameStrata()) end
 		sb:SetFrameLevel((bar:GetFrameLevel() or 1) + 1)
-		if sb._rb_tex ~= texPath then
-			sb:SetStatusBarTexture(texPath)
-			sb._rb_tex = texPath
-		end
+		ensureStatusBarTexturePath(sb, texPath)
 		if sb.SetReverseFill then sb:SetReverseFill(reverse) end
 		if not sb._rbSegmentBg then
 			sb._rbSegmentBg = sb:CreateTexture(nil, "BACKGROUND")
@@ -901,10 +961,7 @@ function ResourceBars.UpdateDiscreteSegments(bar, cfg, count, value, color, text
 				segmentValue = 1
 			end
 
-			if sb._rb_tex ~= texPath then
-				sb:SetStatusBarTexture(texPath)
-				sb._rb_tex = texPath
-			end
+			local textureReset = ensureStatusBarTexturePath(sb, texPath)
 			if sb.SetReverseFill then sb:SetReverseFill(reverse) end
 			applyDiscreteSegmentBorder(sb, bar, borderEnabled, borderTexture, borderEdgeSize, borderOutset, borderR, borderG, borderB, borderA)
 			if sb._rbSegmentBg then
@@ -954,7 +1011,7 @@ function ResourceBars.UpdateDiscreteSegments(bar, cfg, count, value, color, text
 				end
 			end
 			segmentColorKey = segmentR .. ":" .. segmentG .. ":" .. segmentB .. ":" .. segmentA
-			if sb._rbSegmentFillColorKey ~= segmentColorKey then
+			if textureReset or sb._rbSegmentFillColorKey ~= segmentColorKey then
 				if ResourceBars.SetStatusBarColorWithGradient then
 					ResourceBars.SetStatusBarColorWithGradient(sb, cfg, segmentR, segmentG, segmentB, segmentA)
 				else

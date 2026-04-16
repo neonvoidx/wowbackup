@@ -88,7 +88,7 @@ local function createAceWindow()
 	local displayMode = AceGUI:Create("Dropdown")
 	displayMode:SetLabel(L["goldPanelDisplay"] or "Gold display")
 	displayMode:SetList({
-		character = L["goldPanelDisplayCharacter"] or "Character",
+		character = CHARACTER,
 		warband = L["warbandGold"] or "Warband gold",
 	})
 	displayMode:SetValue(db.displayMode or "character")
@@ -99,7 +99,7 @@ local function createAceWindow()
 	frame:AddChild(displayMode)
 
 	local clickAction = AceGUI:Create("Dropdown")
-	clickAction:SetLabel(L["goldPanelLeftClickAction"] or "Left-click action")
+	clickAction:SetLabel(L["Left-click action"] or "Left-click action")
 	clickAction:SetList({
 		toggleDisplay = L["goldPanelLeftClickToggleDisplay"] or "Toggle gold display",
 		openBags = L["goldPanelLeftClickOpenBags"] or "Open bags",
@@ -121,7 +121,7 @@ local function createAceWindow()
 	frame:AddChild(showSilverCopper)
 
 	local useColor = AceGUI:Create("CheckBox")
-	useColor:SetLabel(L["goldPanelUseTextColor"] or "Use custom text color")
+	useColor:SetLabel(L["Use custom text color"] or "Use custom text color")
 	useColor:SetValue(db.useTextColor)
 	useColor:SetCallback("OnValueChanged", function(_, _, val)
 		db.useTextColor = val and true or false
@@ -234,7 +234,7 @@ end
 
 local function getDisplayLabel()
 	if db and db.displayMode == "warband" then return L["warbandGold"] or "Warband gold" end
-	return L["goldPanelDisplayCharacter"] or "Character"
+	return CHARACTER
 end
 
 local function getLeftClickAction()
@@ -244,7 +244,7 @@ end
 
 local function getLeftClickHint()
 	if getLeftClickAction() == "openBags" then return L["goldPanelClickHintOpenBags"] or "Left-click to open bags" end
-	return L["goldPanelClickHintToggleDisplay"] or L["goldPanelClickHint"] or "Left-click to toggle warband/character gold"
+	return L["Left-click to toggle warband/character gold"] or "Left-click to toggle warband/character gold"
 end
 
 local function toggleDisplayMode()
@@ -317,7 +317,7 @@ local provider = {
 		local list, total = collectCharacterMoney()
 		if #list > 0 then
 			if warband ~= nil then tip:AddLine(" ") end
-			tip:AddLine((L["goldPanelDisplayCharacter"] or "Character") .. ":")
+			tip:AddLine((CHARACTER) .. ":")
 			for _, info in ipairs(list) do
 				local name = info.name or UNKNOWN
 				local color = resolveClassColor(info.class)

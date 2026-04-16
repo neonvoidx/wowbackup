@@ -1,3 +1,136 @@
+# BetterBlizzPlates 2.0.0e
+## Midnight
+### Bugfix
+- Fix test code left in by accident force showing all aura categories.
+
+# BetterBlizzPlates 2.0.0d
+## Midnight
+### New
+- Name Reposition (Advanced Settings) now has a "Max Name Width" setting you can enable and set a width for.
+- Nameplate Aura settings (in the new temporary section) now has a horizontal X slider for debuffs as well.
+### Tweak
+- Channeled casts no longer insta hidden with Quick Hide Castbar due to buggy Blizzard events not working on channeled casts (so cant avoid also insta hiding interrupted castbars)
+- Add more textures to "Overbars" for texture replacements.
+### Bugfix
+- Fix Execute Color getting stuck on nameplates.
+- Fix nil error related to FrameSort ID + Arena Names on shuffle round swaps.
+- Fix error caused by having no arena names setting set and some new unintended Midnight changes causing secret errors.
+
+# BetterBlizzPlates 2.0.0c
+## Midnight
+### Tweak
+- Fix the health numbers "dont show on full hp" setting for Midnight.
+## Titan Reforged
+- Change Titan Reforged to load TBC files instead as a temporary solution because of new API changes. Very difficult for me to do any testing here so please report any errors with BugSack and BugGrabber.
+
+# BetterBlizzPlates 2.0.0b
+## Midnight
+### Tweak
+- Nameplate Auras: Fix player CC icon being a little bit larger than other aura icons. You may have to tweak your settings a little bit for it now.
+### Bugfix
+- Fix Quickhide Castbar always being active and also accidentally quick-hiding interrupted castbars due to a mistake.
+
+# BetterBlizzPlates 2.0.0
+## Midnight
+### New
+- The movers and position settings for nameplate buffs & cc are now functional. Settings have been reset to default here to avoid crazy stuff happening. I still recommend MiniCC instead of the default nameplate auras for this (which BBP uses) due to how bad the defaults are (showing Arcane Intellect over Combustion for example). GG Blizz.
+- New "Scale names with the nameplates" setting. This setting just makes the name on the nameplate scale up/down with the nameplate size. This is how it by default works now in Midnight but wasnt before. I had some hardcoded stuff turning it off and now at this point I don't think I want to change it back either to avoid messing with ppls ui's. Here is a setting to chose for yourself at least.
+- Nameplate Simplified Scale setting in CVar Control. Controls the scale of Blizzards new "Simplified Nameplates".
+- Nameplate Clickable Area is now adjustable again (was hardcoded and sliders did nothing). Bottom right in Misc.
+- New "Use PvP Title Names" setting in Misc. Thanks to DanteCrestfallen @ GitHub.
+- New "Also hide Buffs & CC aura timers" right-click option for "Hide cooldown text for debuffs" in the new settings temp section.
+- New Execute Indicator: Hide Text setting that disables the text and lets you just color the healthbar when below threshold without the text.
+### Tweak
+- Fix Castbar Quick Hide interrupt detection so it now again in Midnight no longer immediately hides a castbar thats been kicked but fades it out slowly showing who interrupted it on it.
+- Default nameplate clickable area has been adjusted a little bit, less clickable room underneath the healthbar. This can be adjusted in Misc again now. The hardcoded clickable area before this patch was identical to pre-Midnight values but due to new shitty Midnight nameplates people are having click issues. Nothing I can do about that but at least being able to tweak the clickable box again now should help you a bit.
+- Arena ID/Spec names have been improved and should be more consistent and hopefully also faster in some cases.
+- Fix some issues with pixel border auras in PvP and in general other issues with auras in pvp.
+- Fix Nameplate/PRD instant combo points setting.
+### Bugfix
+- Fix Name Repositon's "Scale name with nameplate" setting. Related to the other new setting mentioned above too but fixed up.
+- Fix strange CVar value collected for "Min Alpha Distance" sometimes, correct it to default value.
+- Add some temporary secret checks for nameplate alpha checks that could error. Idk why they are secret sometimes atm.
+
+# BetterBlizzPlates 1.9.9m-o
+- Quickfix for errors on Midnight due to Blizzard hotfix. Bigger patch soonTM and if anything error related was missed in this patch.
+
+# BetterBlizzPlates 1.9.9l
+## Midnight
+### Tweak
+- Update Dissonance profile (www.twitch.tv/dissonancewow). Thank you for sharing.
+- Add missing CVar listener for nameplateShowFriendlyNPCs (so it updates in BBP if changed elsewhere).
+### Bugfix
+- Add some secret checks to avoid potential errors.
+
+# BetterBlizzPlates 1.9.9k
+## All
+### New
+- "Health Numbers: Raw numbers" setting in Advanced Settings section. Shows the entire number instead of the default formatting to thousands.
+### Tweak
+- Update Saul profile (www.twitch.tv/saul). Ty for sharing.
+- Update Jazggz profile (www.twitch.tv/jazggz). Ty for sharing.
+- Update my own profile with some minor tweaks (despite not playing still >.<)
+## Midnight
+### New
+- Class Indicator: "Change Enemy Healer Icon" now also has a setting to not show a cross at all but just default to class/spec.
+
+# BetterBlizzPlates 1.9.9j
+## Midnight
+### Fix
+- Execute Indicator now works again on Midnight.
+### Tweak
+- Tiny tweaks to border position for Classic Nameplates setting.
+
+# BetterBlizzPlates 1.9.9i
+## Midnight
+### Tweak
+- Update Aeghis profile (www.twitch.tv/aeghis). Thank you for sharing.
+- Update Magnusz profile (www.twitch.tv/magnusz). Thank you for sharing.
+### Bugfix
+- Fix castbar interrupt coloring issues /pray
+
+# BetterBlizzPlates 1.9.9h
+## Midnight
+### New
+- Add Dissonance profile (www.twitch.tv/dissonancewow). Ty for sharing.
+### Tweak
+- Update "Show target underneath castbar" setting with new true target API. Thanks to Geopard for the headsup and helpful info on it.
+- Update profiles: Pmake, Magnusz, Mysticall, Nahj, Venruki and Wolf. Ty all for sharing.
+### Bugfix
+- Add secret check for potential secret error.
+- Fix issues with the kick tracking/coloring. Should be better now hopefully.
+
+# BetterBlizzPlates 1.9.9g
+## Midnight
+### Tweak
+- Update Nahj & Snupy profile. Thank you both for sharing <3
+
+# BetterBlizzPlates 1.9.9f
+## Midnight
+### Tweak
+- Fix cooldown API stuff ahead of new Blizzard changes.
+### Bugfix
+- Fix healthbar texture mask being enabled on classic/"old-retail" nameplates with for example Target Indicator's texture swap.
+
+# BetterBlizzPlates 1.9.9d+e
+## Midnight
+### New
+- Add Jazggz profile (www.twitch.tv/jazggz). Thank you for sharing <3
+### Tweak
+- Updated Mmarkers profile. (www.twitch.tv/mmarkers). Thank you for sharing <3
+#### Bugfix
+- Remove old target workaround causing some issues
+- Fix nameplate health visibility issue on pets/class indicator logic sometimes.
+- 1.9.9e: Fix PRD being clickable (was used for debugging and left in by accident)
+## TBC
+### Tweak
+- Totem List finally updated properly thanks to Hydra (www.twitch.tv/hydramist). Thank you <3
+- Totem Indicator now has support for Pulse Timer for Totem effect (Tremor etc).
+- Fix for Class Indicator + Show CC causing normal debuff auras to be hidden as well. This is only meant to happen if healthbar is hidden and thats this way now.
+## MoP
+- Totem Indicator now has support for Pulse Timer for Totem effects (but no updates with data on this here atm but you can edit it yourself in the Totem Indicator List section of /bbp, if you want to contribute that data pls lmk).
+- Fix for Class Indicator + Show CC causing normal debuff auras to be hidden as well. This is only meant to happen if healthbar is hidden and thats this way now.
+
 # BetterBlizzPlates 1.9.9c
 ## Midnight
 ### Tweak

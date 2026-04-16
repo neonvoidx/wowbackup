@@ -48,6 +48,12 @@ local function isStreamAllowed(stream)
 	return true
 end
 
+local function runRegisteredHandler(binding, ...)
+	local handler = binding and binding.handler
+	if not handler then return end
+	return handler(binding.stream, binding.event, ...)
+end
+
 local function getUnitFrame(unitToken)
 	local frames = DataHub.unitFrames
 	local frame = frames[unitToken]
@@ -62,6 +68,8 @@ local function getUnitFrame(unitToken)
 		for stream, handler in pairs(streams) do
 			if handler == true then
 				DataHub:RequestUpdate(stream.name)
+			elseif type(handler) == "table" then
+				pcall(runRegisteredHandler, handler, ...)
 			else
 				pcall(handler, ...)
 			end
@@ -110,6 +118,8 @@ eventFrame:SetScript("OnEvent", function(_, event, ...)
 		for stream, handler in pairs(streams) do
 			if handler == true then
 				DataHub:RequestUpdate(stream.name)
+			elseif type(handler) == "table" then
+				pcall(runRegisteredHandler, handler, ...)
 			else
 				pcall(handler, ...)
 			end
@@ -204,6 +214,12 @@ function DataHub:RegisterStream(name, opts)
 		nextPoll = GetTime(),
 		meta = provider, -- keep original provider for UI/metadata
 	}
+	stream._throttleCallback = function()
+		local key = stream.throttleKey or stream.name
+		DataHub.throttleTimers[key] = nil
+		stream.pending = nil
+		runUpdate(stream)
+	end
 	if provider and provider.classFilter then stream.classFilter = provider.classFilter end
 	if provider and provider.OnClick then stream.snapshot.OnClick = provider.OnClick end
 	if provider and provider.OnMouseEnter then stream.snapshot.OnMouseEnter = provider.OnMouseEnter end
@@ -222,7 +238,11 @@ function DataHub:RegisterStream(name, opts)
 			local ev = event
 			local handler = fn
 			-- store handler without registering yet
-			hub:RegisterEvent(stream, ev, function(...) handler(stream, ev, ...) end)
+			hub:RegisterEvent(stream, ev, {
+				stream = stream,
+				event = ev,
+				handler = handler,
+			})
 		end
 	end
 	if provider and provider.eventsUnit then
@@ -237,7 +257,11 @@ function DataHub:RegisterStream(name, opts)
 						local ev = event
 						local handler
 						if type(fn) == "function" then
-							handler = function(...) fn(stream, ev, ...) end
+							handler = {
+								stream = stream,
+								event = ev,
+								handler = fn,
+							}
 						else
 							handler = true
 						end
@@ -386,11 +410,7 @@ function DataHub:RequestUpdate(name, throttleKey)
 	local key = throttleKey or stream.throttleKey or stream.name
 	if self.throttleTimers[key] then return end
 	stream.pending = true
-	self.throttleTimers[key] = C_Timer.NewTimer(stream.throttle, function()
-		self.throttleTimers[key] = nil
-		stream.pending = nil
-		runUpdate(stream)
-	end)
+	self.throttleTimers[key] = C_Timer.NewTimer(stream.throttle, stream._throttleCallback)
 end
 
 function DataHub:Publish(name, payload)

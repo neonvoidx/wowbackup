@@ -10,7 +10,7 @@ local function AurasChanged(updateInfo)
     if not updateInfo then return true end
     if updateInfo.isFullUpdate then return true end
     if (updateInfo.addedAuras and #updateInfo.addedAuras > 0)
-        or (updateInfo.updatedAuras and #updateInfo.updatedAuras > 0)
+        or (updateInfo.updatedAuraInstanceIDs and #updateInfo.updatedAuraInstanceIDs > 0)
         or (updateInfo.removedAuraInstanceIDs and #updateInfo.removedAuraInstanceIDs > 0)
     then
         return true
@@ -18,38 +18,34 @@ local function AurasChanged(updateInfo)
     return false
 end
 
-local function IterateAuras(filter, validateDefensive, unit)
-    local spellID, start, duration, icon, applications
+local function IterateAuras(filter, validateAura, unit, seen)
+    local spellID, icon, applications, auraInstanceID
+    local auras = C_UnitAuras.GetUnitAuras(unit, filter)
 
-    for i = 1, 40 do
-        local auraData = C_UnitAuras.GetAuraDataByIndex(unit, i, filter)
-        if not auraData then break end
-
-        local durationInfo = C_UnitAuras.GetAuraDuration(unit, auraData.auraInstanceID)
-        local auraStart = durationInfo and durationInfo:GetStartTime()
-        local auraDuration = durationInfo and durationInfo:GetTotalDuration()
-
-        if auraStart and auraDuration then
+    for _, auraData in ipairs(auras) do
+        if not seen[auraData.auraInstanceID] then
             local garbageAuraData = false
 
-            if validateDefensive then -- units out of range produce garbage data, so double check
-                local isDefensive = C_UnitAuras.AuraIsBigDefensive(auraData.spellId)
-                if not (issecretvalue(isDefensive) or isDefensive) then
+            if validateAura then -- units out of range produce garbage data, so double check
+                local isValid = validateAura(auraData.spellId)
+                if not (issecretvalue(isValid) or isValid) then
                     garbageAuraData = true
                 end
             end
 
             if not garbageAuraData then
                 spellID = auraData.spellId
-                start = auraStart
-                duration = auraDuration
                 icon = auraData.icon
+                applications = auraData.applications
+                auraInstanceID = auraData.auraInstanceID
                 applications = auraData.applications
             end
         end
+
+        seen[auraData.auraInstanceID] = true
     end
 
-    return spellID, start, duration, icon, applications
+    return spellID, icon, auraInstanceID, applications
 end
 
 local prioImportant
@@ -60,56 +56,63 @@ function sArenaMixin:UpdateAuraPrioImportant()
 end
 
 function sArenaFrameMixin:FindAura(updateInfo)
+    if not UnitExists(self.unit) then
+        self.currentAuraSpellID = nil
+        self.currentAuraDurationObj = nil
+        self.currentAuraTexture = nil
+        self.currentAuraApplications = nil
+        self:UpdateClassIcon(true)
+        return
+    end
     if updateInfo and not AurasChanged(updateInfo) then return end
 
     local unit = self.unit
-    local spellID, startTime, duration, texture, applications
+    local spellID, texture, auraInstanceID, applications
+    local seen = {}
 
     -- Crowd Control
-    spellID, startTime, duration, texture, applications = IterateAuras("HARMFUL|CROWD_CONTROL", false, unit)
+    spellID, texture, auraInstanceID = IterateAuras("HARMFUL|CROWD_CONTROL", C_Spell.IsSpellCrowdControl, unit, seen)
 
     if prioImportant then
         -- Important buffs
         if not spellID then
-            spellID, startTime, duration, texture, applications = IterateAuras("HELPFUL|IMPORTANT", false, unit)
+            spellID, texture, auraInstanceID, applications = IterateAuras("HELPFUL|IMPORTANT", C_Spell.IsSpellImportant, unit, seen)
         end
 
         -- Big Defensives
         if not spellID then
-            spellID, startTime, duration, texture, applications = IterateAuras("HELPFUL|BIG_DEFENSIVE", true, unit)
+            spellID, texture, auraInstanceID, applications = IterateAuras("HELPFUL|BIG_DEFENSIVE", C_UnitAuras.AuraIsBigDefensive, unit, seen)
         end
 
         -- External Defensives
         if not spellID then
-            spellID, startTime, duration, texture, applications = IterateAuras("HELPFUL|EXTERNAL_DEFENSIVE", false, unit)
+            spellID, texture, auraInstanceID, applications = IterateAuras("HELPFUL|EXTERNAL_DEFENSIVE", nil, unit, seen)
         end
     else
         -- Big Defensives
         if not spellID then
-            spellID, startTime, duration, texture, applications = IterateAuras("HELPFUL|BIG_DEFENSIVE", true, unit)
+            spellID, texture, auraInstanceID, applications = IterateAuras("HELPFUL|BIG_DEFENSIVE", C_UnitAuras.AuraIsBigDefensive, unit, seen)
         end
 
         -- External Defensives
         if not spellID then
-            spellID, startTime, duration, texture, applications = IterateAuras("HELPFUL|EXTERNAL_DEFENSIVE", false, unit)
+            spellID, texture, auraInstanceID, applications = IterateAuras("HELPFUL|EXTERNAL_DEFENSIVE", nil, unit, seen)
         end
 
         -- Important buffs
         if not spellID then
-            spellID, startTime, duration, texture, applications = IterateAuras("HELPFUL|IMPORTANT", false, unit)
+            spellID, texture, auraInstanceID, applications = IterateAuras("HELPFUL|IMPORTANT", C_Spell.IsSpellImportant, unit, seen)
         end
     end
 
     if spellID then
         self.currentAuraSpellID = spellID
-        self.currentAuraStartTime = startTime
-        self.currentAuraDuration = duration
+        self.currentAuraDurationObj = C_UnitAuras.GetAuraDuration(unit, auraInstanceID)
         self.currentAuraTexture = texture
         self.currentAuraApplications = applications
     else
         self.currentAuraSpellID = nil
-        self.currentAuraStartTime = nil
-        self.currentAuraDuration = nil
+        self.currentAuraDurationObj = nil
         self.currentAuraTexture = nil
         self.currentAuraApplications = nil
     end

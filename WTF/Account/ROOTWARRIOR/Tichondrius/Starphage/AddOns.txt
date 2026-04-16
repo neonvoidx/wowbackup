@@ -169,3 +169,12 @@ BattleGroundEnemiesFixed: enabled
 Collectionator: enabled
 !Swatter: disabled
 !ImprovedErrorFrame: disabled
+CityGuide: enabled
+KeystoneLoot: enabled
+MidnightCheatSheet: enabled
+MiniHealerRange: enabled
+MiniTabTarget: enabled
+ProcGlows: enabled
+Myslot: enabled
+NemPetAlerts: enabled
+TextureAtlasViewer: enabled

@@ -1,4 +1,4 @@
-VER 3 0100000000000020 " " "INV_MISC_QUESTIONMARK"
+VER 3 0100000000000069 " " "INV_Misc_QuestionMark"
 #showtooltip Rising Sun Kick
 /stopmacro [channeling:Fists of Fury]
 /stopmacro [channeling:Crackling Jade Lightning]
@@ -6,14 +6,14 @@ VER 3 0100000000000020 " " "INV_MISC_QUESTIONMARK"
 /stopmacro [channeling:Celestial Conduit]
 /cast Rising Sun Kick
 END
-VER 3 0100000000000017 " " "INV_MISC_QUESTIONMARK"
+VER 3 010000000000006A " " "INV_Misc_QuestionMark"
 #showtooltip
 /cancelaura Flying Serpent Kick
 /cancelaura Roll
 /cancelaura Chi Torpedo
 /cast Leg Sweep
 END
-VER 3 010000000000001E " " "INV_MISC_QUESTIONMARK"
+VER 3 010000000000006B " " "INV_Misc_QuestionMark"
 #showtooltip Tiger Palm
 /stopmacro [channeling:Fists of Fury]
 /stopmacro [channeling:Crackling Jade Lightning]
@@ -22,45 +22,45 @@ VER 3 010000000000001E " " "INV_MISC_QUESTIONMARK"
 /cast Tiger Palm
 /petattack
 END
-VER 3 0100000000000028 " " "134400"
+VER 3 010000000000006C " " "INV_Misc_QuestionMark"
 #showtooltip
 /cast [@mouseover,help,exists][] Life Cocoon
 END
-VER 3 0100000000000018 " " "134400"
+VER 3 010000000000006D " " "INV_Misc_QuestionMark"
 #showtooltip
 /cast [@mouseover,help,exists] Tiger's Lust; [@player] Tiger's Lust;
 END
-VER 3 0100000000000015 " " "629534"
+VER 3 010000000000006E " " "INV_Misc_QuestionMark"
 #showtooltip Paralysis
 /cast [mod:shift,@focus,exists,harm,nodead][] Paralysis
 END
-VER 3 010000000000002E " " "134400"
+VER 3 010000000000006F " " "INV_Misc_QuestionMark"
 #showtooltip
 /cast  [@focus,exists,mod:shift,harm,nodead][] Spear Hand Strike
 /use Goblin Weather Machine - Prototype 01-B
 END
-VER 3 0100000000000031 " " "134400"
+VER 3 0100000000000070 " " "INV_Misc_QuestionMark"
 #showtooltip
 /cast [@mouseover, exists,help][] Enveloping Mist
 END
-VER 3 0100000000000030 " " "134400"
+VER 3 0100000000000071 " " "INV_Misc_QuestionMark"
 #showtooltip
 /cast [@mouseover, exists,help][] Vivify
 END
-VER 3 010000000000002F " " "134400"
+VER 3 0100000000000072 " " "INV_Misc_QuestionMark"
 #showtooltip
 /cast [@mouseover, exists,help][] Renewing Mist
 END
-VER 3 0100000000000033 " " "134400"
+VER 3 0100000000000073 " " "INV_Misc_QuestionMark"
 #showtooltip
 /cast [@mouseover, exists,help][] Soothing Mist
 END
-VER 3 0100000000000034 " " "134400"
+VER 3 0100000000000074 " " "INV_Misc_QuestionMark"
 #showtooltip
 /cast Breath of fire
 /use Fire-eater's Vial
 END
-VER 3 0100000000000037 " " "134400"
+VER 3 0100000000000075 " " "INV_Misc_QuestionMark"
 #showtooltip Blackout Kick
 /stopmacro [channeling:Fists of Fury]
 /stopmacro [channeling:Crackling Jade Lightning]
@@ -68,73 +68,82 @@ VER 3 0100000000000037 " " "134400"
 /stopmacro [channeling:Celestial Conduit]
 /cast Blackout Kick
 END
-VER 3 010000000000003A " " "135734"
+VER 3 0100000000000076 " " "INV_Misc_QuestionMark"
 #showtooltip [known:Chi burst] Chi Burst;[known: chi wave] Chi wave;
 /cast [known:Chi Burst] Chi burst;
 /cast [known:Chi Wave] Chi wave
 /use Goblin Weather Machine - Prototype 01-B
 END
-VER 3 010000000000003B " " "134400"
+VER 3 0100000000000077 " " "INV_Misc_QuestionMark"
 #showtooltip
 /cast [@cursor] Summon Jade Serpent Statue
 END
-VER 3 010000000000003C " " "134400"
+VER 3 0100000000000078 " " "INV_Misc_QuestionMark"
 #showtooltip [known: Whirling Dragon Punch] Whirling Dragon Punch; [known: Strike of the Windlord] Strike of the Windlord
 /stopmacro [channeling:Fists of Fury]
 /cast [known: Whirling Dragon Punch] Whirling Dragon Punch
 /cast [known: Strike of the Windlord
 END
-VER 3 010000000000003E " " "134400"
+VER 3 0100000000000079 " " "INV_Misc_QuestionMark"
 #showtooltip
 /cast [@cursor] Summon Black Ox Statue
 END
-VER 3 0100000000000040 " " "134400"
+VER 3 010000000000007A " " "INV_Misc_QuestionMark"
 #showtooltip
 /cast [@cursor] Exploding Keg
 /use 13
 /cast Blood Fury
 END
-VER 3 0100000000000041 " " "134400"
+VER 3 010000000000007B " " "INV_Misc_QuestionMark"
 #showtooltip
 /cast [known: Ring of peace, @cursor] Ring of Peace
 /cast [known: Song of chi-ji] Song of chi-ji
 END
-VER 3 0100000000000042 " " "134400"
+VER 3 010000000000007C " " "INV_Misc_QuestionMark"
 #showtooltip Zenith
 /cast Zenith
-/use 14
 /use Saltwater Potion
 /use Potion of recklessness
 /cast Blood Fury
 /use Perpetual Purple Firework
 /use Winning Hand
 END
-VER 3 0100000000000045 " " "134400"
+VER 3 010000000000007D " " "INV_Misc_QuestionMark"
 #showtooltip
 /cast roll
 /cast Prismatic Bauble
 END
-VER 3 0100000000000044 " " "134400"
+VER 3 010000000000007E " " "INV_Misc_QuestionMark"
 #showtooltip
 /cast [@mouseover, exists, harm][] Touch of Death
 /use Seafarer's Slidewhistle
 END
-VER 3 0100000000000049 " " "INV_Misc_QuestionMark"
+VER 3 010000000000007F " " "INV_Misc_QuestionMark"
 #showtooltip Spinning Crane Kick
 /use Fire-Eater's Vial
 /cast Spinning Crane Kick
 END
-VER 3 010000000000004A " " "INV_Misc_QuestionMark"
+VER 3 0100000000000080 " " "INV_Misc_QuestionMark"
 #showtooltip Disable
 /use [@target,exists] Disable
 END
-VER 3 010000000000003D "Black Ox" "134400"
+VER 3 0100000000000084 " " "INV_Misc_QuestionMark"
+#showtooltip
+/cast Fortifying Brew
+/use Kang's Bindstone
+END
+VER 3 0100000000000085 " " "134400"
+#showtooltip Fists of Fury
+/use Fire-Eater's Vial
+/cast Fists of Fury
+END
+VER 3 0100000000000081 "Black Ox" "INV_Misc_QuestionMark"
 #showtooltip Provoke
 /targetexact Black Ox Statue
 /cast Provoke
 /targetlasttarget
 END
-VER 3 010000000000004B "Cancel" "Achievement_BG_interruptX_flagcapture_attempts_1game."
+VER 3 0100000000000082 "Cancel" "236356"
 /cancelaura Zen Flight
 /cancelaura Blessing of Protection
 /cancelaura Blessing of Freedom
@@ -144,14 +153,10 @@ VER 3 010000000000004B "Cancel" "Achievement_BG_interruptX_flagcapture_attempts_
 /dismount
 /stopcasting
 END
-VER 3 0100000000000047 "Dismiss" "615340"
+VER 3 0100000000000083 "Dismiss" "615340"
 /run if not UnitAffectingCombat("player")then for i=1,4 do n="t"..i CreateFrame("Button",n,UIParent,"SecureUnitButtonTemplate")_G[n]:SetAttribute("type", "destroytotem")_G[n]:SetAttribute("totem-slot",i)end end
 /click t1
 /click t2
 /click t3
 /click t4
-END
-VER 3 010000000000004C "Teleport Home" "7252953"
-#plumber:home
-/click PLMR_HOME1
 END

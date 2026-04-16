@@ -15,7 +15,7 @@ local Castbar = addon.Aura.Castbar
 local UFHelper = addon.Aura.UFHelper
 if not UFHelper then return end
 
-local L = LibStub("AceLocale-3.0"):GetLocale("EnhanceQoL_Aura")
+local L = LibStub("AceLocale-3.0"):GetLocale("EnhanceQoL")
 local After = C_Timer and C_Timer.After
 local issecretvalue = _G.issecretvalue
 local UNIT = "player"
@@ -95,6 +95,13 @@ local fallbackCastDefaults = {
 	showIcon = true,
 	iconSize = 22,
 	iconOffset = { x = -4, y = 0 },
+	iconBorder = {
+		enabled = false,
+		color = { 0, 0, 0, 0.8 },
+		texture = "DEFAULT",
+		edgeSize = 1,
+		offset = 1,
+	},
 	texture = "DEFAULT",
 	reverseFill = false,
 	color = { 0.9, 0.7, 0.2, 1 },
@@ -246,9 +253,44 @@ local function resolveRelativeFrame(anchor)
 	return resolveRelativeFrameByName(relativeName)
 end
 
+local function shouldShowCastIcon(castCfg, castDefaults)
+	local showIcon = castCfg and castCfg.showIcon
+	if showIcon == nil and castDefaults then showIcon = castDefaults.showIcon end
+	if showIcon == nil then showIcon = true end
+	return showIcon ~= false
+end
+
+local function getCastIconBorderConfig(castCfg, castDefaults)
+	local borderCfg = castCfg and castCfg.iconBorder
+	local borderDef = castDefaults and castDefaults.iconBorder
+	local enabled = type(borderCfg) == "table" and borderCfg.enabled
+	if enabled == nil and type(borderDef) == "table" then enabled = borderDef.enabled end
+	return enabled == true, borderCfg, borderDef
+end
+
+local function getCastIconBorderMetrics(borderCfg, borderDef)
+	local size = type(borderCfg) == "table" and tonumber(borderCfg.edgeSize) or nil
+	if size == nil and type(borderDef) == "table" then size = tonumber(borderDef.edgeSize) end
+	if size == nil then size = 1 end
+	if size < 1 then size = 1 end
+
+	local offset = type(borderCfg) == "table" and borderCfg.offset or nil
+	if offset == nil and type(borderDef) == "table" then offset = borderDef.offset end
+	if offset == nil then offset = size end
+	offset = math.max(0, tonumber(offset) or 0)
+
+	return size, offset
+end
+
+local function getCastIconBorderOutset(castCfg, castDefaults)
+	local enabled, borderCfg, borderDef = getCastIconBorderConfig(castCfg, castDefaults)
+	if not enabled then return 0 end
+	local size, offset = getCastIconBorderMetrics(borderCfg, borderDef)
+	return size + offset
+end
+
 local function getIconLayoutInfo(castCfg, castDefaults, barHeight)
-	local showIcon = castCfg.showIcon
-	if showIcon == nil then showIcon = castDefaults.showIcon ~= false end
+	local showIcon = shouldShowCastIcon(castCfg, castDefaults)
 	local iconSize = tonumber(castCfg.iconSize or castDefaults.iconSize or barHeight or 22) or 22
 	if iconSize < 1 then iconSize = 1 end
 	local iconOffset = castCfg.iconOffset or castDefaults.iconOffset or { x = -4, y = 0 }
@@ -258,16 +300,21 @@ local function getIconLayoutInfo(castCfg, castDefaults, barHeight)
 	else
 		iconOffsetX = tonumber(iconOffset) or -4
 	end
-	return showIcon == true, iconSize, iconOffsetX
+	return showIcon, iconSize, iconOffsetX
+end
+
+local function getIconHorizontalBounds(castCfg, castDefaults, barHeight)
+	local showIcon, iconSize, iconOffsetX = getIconLayoutInfo(castCfg, castDefaults, barHeight)
+	if not showIcon then return false, 0, 0, iconSize, iconOffsetX end
+	local borderOutset = getCastIconBorderOutset(castCfg, castDefaults)
+	return true, iconOffsetX - iconSize - borderOutset, iconOffsetX + borderOutset, iconSize, iconOffsetX
 end
 
 local function getIconOverlapWithBar(castCfg, castDefaults, barHeight, barWidth)
-	local showIcon, iconSize, iconOffsetX = getIconLayoutInfo(castCfg, castDefaults, barHeight)
+	local showIcon, iconLeft, iconRight = getIconHorizontalBounds(castCfg, castDefaults, barHeight)
 	if not showIcon then return 0 end
 	local width = tonumber(barWidth) or 0
 	if width <= 0 then return 0 end
-	local iconLeft = iconOffsetX - iconSize
-	local iconRight = iconOffsetX
 	local overlap = math.min(width, iconRight) - math.max(0, iconLeft)
 	if overlap < 0 then overlap = 0 end
 	return overlap
@@ -327,10 +374,8 @@ local function getVisualHorizontalBounds(castCfg, castDefaults, barHeight, barWi
 	local barLeftOutset, barRightOutset = getBarHorizontalOutsets(castCfg, castDefaults)
 	local minX = -barLeftOutset
 	local maxX = width + barRightOutset
-	local showIcon, iconSize, iconOffsetX = getIconLayoutInfo(castCfg, castDefaults, barHeight)
+	local showIcon, iconLeft, iconRight = getIconHorizontalBounds(castCfg, castDefaults, barHeight)
 	if showIcon then
-		local iconLeft = iconOffsetX - iconSize
-		local iconRight = iconOffsetX
 		if iconLeft < minX then minX = iconLeft end
 		if iconRight > maxX then maxX = iconRight end
 	end
@@ -352,11 +397,10 @@ local function computeBarWidthForAnchorMatch(targetWidth, castCfg, castDefaults,
 	local leftOutset, rightOutset = 0, 0
 	local minX = -leftOutset
 	local iconRight
-	local showIcon, iconSize, iconOffsetX = getIconLayoutInfo(castCfg, castDefaults, barHeight)
+	local showIcon, iconLeft, resolvedIconRight = getIconHorizontalBounds(castCfg, castDefaults, barHeight)
 	if showIcon then
-		local iconLeft = iconOffsetX - iconSize
 		if iconLeft < minX then minX = iconLeft end
-		iconRight = iconOffsetX
+		iconRight = resolvedIconRight
 	end
 
 	local barWidth = desiredTotal + minX - rightOutset
@@ -371,10 +415,8 @@ local function computeAnchorMatchXAdjustment(castCfg, castDefaults, barHeight, b
 	local leftOutset, rightOutset = 0, 0
 	local minX = -leftOutset
 	local maxX = width + rightOutset
-	local showIcon, iconSize, iconOffsetX = getIconLayoutInfo(castCfg, castDefaults, barHeight)
+	local showIcon, iconLeft, iconRight = getIconHorizontalBounds(castCfg, castDefaults, barHeight)
 	if showIcon then
-		local iconLeft = iconOffsetX - iconSize
-		local iconRight = iconOffsetX
 		if iconLeft < minX then minX = iconLeft end
 		if iconRight > maxX then maxX = iconRight end
 	end
@@ -542,6 +584,50 @@ local function applyCastBorder(castCfg, castDefaults)
 	end
 end
 
+local function ensureCastIconBorderFrame()
+	if not state.castBar or not state.castIcon or not state.castIconLayer then return nil end
+	local border = state.castIconBorder
+	if not border then
+		border = CreateFrame("Frame", nil, state.castIconLayer, "BackdropTemplate")
+		border:EnableMouse(false)
+		state.castIconBorder = border
+	end
+	border:SetFrameStrata(state.castBar:GetFrameStrata())
+	local baseLevel = state.castBar:GetFrameLevel() or 0
+	border:SetFrameLevel(baseLevel + 4)
+	return border
+end
+
+local function applyCastIconBorder(castCfg, castDefaults)
+	if not state.castIcon then return end
+	local enabled, borderCfg, borderDef = getCastIconBorderConfig(castCfg, castDefaults)
+
+	if enabled and state.castIcon:IsShown() then
+		local border = ensureCastIconBorderFrame()
+		if not border then return end
+		local size, offset = getCastIconBorderMetrics(borderCfg, borderDef)
+		border:ClearAllPoints()
+		border:SetPoint("TOPLEFT", state.castIcon, "TOPLEFT", -offset, offset)
+		border:SetPoint("BOTTOMRIGHT", state.castIcon, "BOTTOMRIGHT", offset, -offset)
+		border:SetBackdrop({
+			bgFile = "Interface\\Buttons\\WHITE8x8",
+			edgeFile = UFHelper.resolveBorderTexture((type(borderCfg) == "table" and borderCfg.texture) or (type(borderDef) == "table" and borderDef.texture)),
+			edgeSize = size,
+			insets = { left = size, right = size, top = size, bottom = size },
+		})
+		border:SetBackdropColor(0, 0, 0, 0)
+		local color = (type(borderCfg) == "table" and borderCfg.color) or (type(borderDef) == "table" and borderDef.color) or { 0, 0, 0, 0.8 }
+		border:SetBackdropBorderColor(color[1] or 0, color[2] or 0, color[3] or 0, color[4] or 1)
+		border:Show()
+	else
+		local border = state.castIconBorder
+		if border then
+			border:SetBackdrop(nil)
+			border:Hide()
+		end
+	end
+end
+
 local function ensureFrame()
 	if state.castBar then return end
 	state.frame = CreateFrame("Frame", "EQOLPlayerCastFrame", UIParent)
@@ -624,7 +710,7 @@ local function ensureEditModeRegistration()
 
 	editMode:RegisterFrame(EDITMODE_FRAME_ID, {
 		frame = state.castBar,
-		title = L["UFStandaloneCastbar"] or L["CastBar"] or "Castbar",
+		title = L["Castbar"] or L["Castbar"] or "Castbar",
 		enableOverlayToggle = true,
 		allowDrag = function()
 			local cfg, defs = ensureCastConfig()
@@ -920,6 +1006,7 @@ local function applyCastLayout(castCfg, castDefaults)
 		if state.castDuration.SetWordWrap then state.castDuration:SetWordWrap(false) end
 		if state.castDuration.SetJustifyH then state.castDuration:SetJustifyH("RIGHT") end
 	end
+	local showIcon = shouldShowCastIcon(castCfg, castDefaults)
 	if state.castIcon then
 		local size = castCfg.iconSize or castDefaults.iconSize or height
 		local iconOff = castCfg.iconOffset or castDefaults.iconOffset or { x = -4, y = 0 }
@@ -927,7 +1014,7 @@ local function applyCastLayout(castCfg, castDefaults)
 		state.castIcon:SetSize(size, size)
 		state.castIcon:ClearAllPoints()
 		state.castIcon:SetPoint("RIGHT", state.castBar, "LEFT", iconOff.x or -4, iconOff.y or 0)
-		state.castIcon:SetShown(castCfg.showIcon ~= false)
+		state.castIcon:SetShown(showIcon)
 	end
 
 	local texKey = castCfg.texture or castDefaults.texture or "DEFAULT"
@@ -966,6 +1053,7 @@ local function applyCastLayout(castCfg, castDefaults)
 		end
 	end
 	applyCastBorder(castCfg, castDefaults)
+	applyCastIconBorder(castCfg, castDefaults)
 
 	if state.castName then
 		local iconSpace = getIconOverlapWithBar(castCfg, castDefaults, height, width)
@@ -1083,13 +1171,14 @@ local function configureCastStatic(castCfg, castDefaults)
 	end
 	if state.castIcon then
 		local iconTexture = UFHelper.resolveCastIconTexture(state.castInfo.texture)
-		local showIcon = castCfg.showIcon ~= false
+		local showIcon = shouldShowCastIcon(castCfg, castDefaults)
 		state.castIcon:SetShown(showIcon)
 		if showIcon then
 			state.castIcon:SetTexture(iconTexture)
 			state.castIconTexture = iconTexture
 		end
 	end
+	applyCastIconBorder(castCfg, castDefaults)
 	if state.castDuration then state.castDuration:SetShown(castCfg.showDuration ~= false) end
 	state.castBar:Show()
 end
@@ -1315,13 +1404,14 @@ local function showCastInterrupt(event)
 	end
 	if state.castIcon then
 		local iconTexture = UFHelper.resolveCastIconTexture((state.castInfo and state.castInfo.texture) or state.castIconTexture)
-		local showIcon = castCfg.showIcon ~= false
+		local showIcon = shouldShowCastIcon(castCfg, castDefaults)
 		state.castIcon:SetShown(showIcon)
 		if showIcon then
 			state.castIcon:SetTexture(iconTexture)
 			state.castIconTexture = iconTexture
 		end
 	end
+	applyCastIconBorder(castCfg, castDefaults)
 
 	local showInterruptFeedbackGlow = state.castInterruptFeedbackGlow
 	if showInterruptFeedbackGlow == nil then

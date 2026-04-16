@@ -150,6 +150,9 @@ else
 		[69041] = 120, -- Rocket Barrage
 		[68992] = 120, -- Darkflight
 		[107079] = 120, -- Quaking Palm
+
+		-- Trinkets
+		[42292] = 0, -- PvP Trinket
 	}
 	racialData = {
 		["Human"] = { texture = GetSpellTexture(59752), sharedCD = 120, spellID = 59752 },
@@ -179,14 +182,12 @@ end
 sArenaMixin.racialSpells = racialSpells
 sArenaMixin.racialData = racialData
 
--- Helper function to get racial cooldown duration for a given race
 function sArenaFrameMixin:GetRacialDuration()
 	if not self.race or not racialData[self.race] then return nil end
 	local spellID = racialData[self.race].spellID
 	if not spellID then return nil end
 	return racialSpells[spellID]
 end
-
 
 local function GetRemainingCD(frame)
     local startTime, duration = frame:GetCooldownTimes()
@@ -199,7 +200,7 @@ end
 
 function sArenaFrameMixin:GetSharedCD()
     -- Human healers have Will to Survive Shared CD reduced from 90 to 60 sec on Retail.
-    if self.race == "Human" and self.isHealer and isRetail and self.Trinket.spellID == sArenaMixin.trinketID then
+    if self.race == "Human" and self.isHealer and isRetail then
         return 60
     end
     return racialData[self.race] and racialData[self.race].sharedCD
@@ -214,7 +215,7 @@ function sArenaFrameMixin:FindRacial(spellID)
 		-- Check if we're using replaceHumanRacialWithTrinket (MoP specific)
 		if not isRetail and self.race == "Human" and (self.parent.db.profile.replaceHumanRacialWithTrinket or self.parent.db.profile.forceShowTrinketOnHuman) then
 			if self.parent.db.profile.forceShowTrinketOnHuman then
-				if self.Trinket.spellID and (self.Trinket.Texture:GetTexture() ~= sArenaMixin.noTrinketTexture) then
+			if self.Trinket.spellID and (self.Trinket.Texture:GetTexture() ~= self.parent.noTrinketTexture) then
 					self.Trinket.Cooldown:SetCooldown(currTime, duration)
 				end
 				self.Racial.Cooldown:SetCooldown(currTime, duration)
@@ -228,7 +229,7 @@ function sArenaFrameMixin:FindRacial(spellID)
 		-- Check if we're using swapRacialTrinket and racial is displayed on trinket slot
 		elseif self.updateRacialOnTrinketSlot then
 			-- Apply racial cooldown to trinket slot instead (only if spellID exists)
-			if self.Trinket.spellID and (self.Trinket.Texture:GetTexture() ~= sArenaMixin.noTrinketTexture) then
+			if self.Trinket.spellID and (self.Trinket.Texture:GetTexture() ~= self.parent.noTrinketTexture) then
 				self.Trinket.Cooldown:SetCooldown(currTime, duration)
 			end
 			self:UpdateTrinketIcon(false)
@@ -240,16 +241,22 @@ function sArenaFrameMixin:FindRacial(spellID)
 		end
 
 		-- Handle shared CD from racial -> trinket (only if not using swapped display)
-		if not self.updateRacialOnTrinketSlot and self.Trinket.spellID == sArenaMixin.trinketID then
+		if not self.updateRacialOnTrinketSlot and self.Trinket.spellID == self.parent.trinketID then
 			local remainingCD = GetRemainingCD(self.Trinket.Cooldown)
 			local sharedCD = self:GetSharedCD()
 
 			if sharedCD and remainingCD < sharedCD then
-				if self.Trinket.spellID and (self.Trinket.Texture:GetTexture() ~= sArenaMixin.noTrinketTexture) then
+				if self.Trinket.spellID and (self.Trinket.Texture:GetTexture() ~= self.parent.noTrinketTexture) then
 					self.Trinket.Cooldown:SetCooldown(currTime, sharedCD)
 				end
 				if self.parent.db.profile.colorTrinket then
-					self.Trinket.Texture:SetColorTexture(1, 0, 0)
+					local colors = self.parent.db.profile.trinketColors
+					if self.parent.db.profile.colorTrinketKeepTexture then
+						self.Trinket.Texture:SetDesaturated(true)
+					else
+						self.Trinket.Texture:SetTexture("Interface\\Buttons\\WHITE8X8")
+					end
+					self.Trinket.Texture:SetVertexColor(unpack(colors.used))
 				else
 					self.Trinket.Texture:SetDesaturated(self.parent.db.profile.desaturateTrinketCD)
 				end
@@ -292,15 +299,27 @@ function sArenaFrameMixin:UpdateRacial()
 				if not self.updateRacialOnTrinketSlot then
 					self.Racial.Texture:SetTexture(racialData[self.race].texture)
 				else
-					if not trinketTexture or (trinketTexture == sArenaMixin.noTrinketTexture) or (racialData[self.race] and trinketTexture == racialData[self.race].texture) then
+					if not trinketTexture or (trinketTexture == self.parent.noTrinketTexture) or (racialData[self.race] and trinketTexture == racialData[self.race].texture) then
 						self.Racial.Texture:SetTexture(nil)
 
 						if self.parent.db.profile.colorTrinket then
-							local start, duration = self.Racial.Cooldown:GetCooldownTimes()
-							if duration and duration > 0 and (start > 0) then
-								self.Trinket.Texture:SetColorTexture(1, 0, 0)
+							if not self.Trinket.spellID then
+								-- No trinket known, restore racial to its slot and leave trinket empty
+								self.Racial.Texture:SetTexture(racialData[self.race].texture)
+								self.Trinket.Texture:SetTexture(nil)
 							else
-								self.Trinket.Texture:SetColorTexture(0, 1, 0)
+								local colors = self.parent.db.profile.trinketColors
+								local start, duration = self.Racial.Cooldown:GetCooldownTimes()
+							if self.parent.db.profile.colorTrinketKeepTexture then
+								self.Trinket.Texture:SetDesaturated(true)
+							else
+								self.Trinket.Texture:SetTexture("Interface\\Buttons\\WHITE8X8")
+							end
+							if duration and duration > 0 and (start > 0) then
+								self.Trinket.Texture:SetVertexColor(unpack(colors.used))
+							else
+									self.Trinket.Texture:SetVertexColor(unpack(colors.available))
+								end
 							end
 						else
 							self.Trinket.Texture:SetTexture(racialData[self.race].texture)
@@ -309,7 +328,7 @@ function sArenaFrameMixin:UpdateRacial()
 
 						local start, duration = self.Racial.Cooldown:GetCooldownTimes()
 						if duration and duration > 0 and (start > 0) then
-							if self.Trinket.spellID and (self.Trinket.Texture:GetTexture() ~= sArenaMixin.noTrinketTexture)then
+							if self.Trinket.spellID and (self.Trinket.Texture:GetTexture() ~= self.parent.noTrinketTexture)then
 								self.Trinket.Cooldown:SetCooldown(start / 1000.0, duration / 1000.0)
 							end
 						end
@@ -333,5 +352,8 @@ function sArenaFrameMixin:ResetRacial()
     self.Racial.Texture:SetTexture(nil)
     self.Racial.Cooldown:Clear()
     self.updateRacialOnTrinketSlot = nil
+    self.sharedRacialCDActive = nil
+    if self.racialDetectTimer then self.racialDetectTimer:Cancel(); self.racialDetectTimer = nil end
+    if self.racialDetectConfirmTimer then self.racialDetectConfirmTimer:Cancel(); self.racialDetectConfirmTimer = nil end
     self:UpdateRacial()
 end

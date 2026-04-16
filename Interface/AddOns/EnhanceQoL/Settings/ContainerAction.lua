@@ -117,7 +117,7 @@ data = {
 		return list
 	end,
 	parentSection = expandable,
-	text = L["containerActionsBlacklistLabel"],
+	text = L["Blacklisted Items"],
 	parentCheck = function() return addon.SettingsLayout.elements["automaticallyOpenContainer"].setting and addon.SettingsLayout.elements["automaticallyOpenContainer"].setting:GetValue() == true end,
 	element = addon.SettingsLayout.elements["automaticallyOpenContainer"].element,
 	get = function() return "" end,

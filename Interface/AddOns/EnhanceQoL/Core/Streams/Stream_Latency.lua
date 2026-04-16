@@ -218,8 +218,8 @@ local function createAceWindow()
 	mode:SetLabel(L["Ping display"] or "Ping display")
 	mode:SetList({
 		max = L["Max(home, world)"] or "Max(home, world)",
-		split = L["home|world"] or "Home + World",
-		split_vertical = L["latencyPingModeVertical"] or "Home + World (vertical)",
+		split = L["Home + World"] or "Home + World",
+		split_vertical = L["Home + World (vertical)"] or "Home + World (vertical)",
 		home = _G["HOME"] or "Home",
 		world = _G["WORLD"] or "World",
 	})
@@ -241,7 +241,7 @@ local function createAceWindow()
 	local midThreshold
 
 	local lowThreshold = AceGUI:Create("Slider")
-	lowThreshold:SetLabel(L["latencyPingLowThreshold"] or "Low threshold (ms)")
+	lowThreshold:SetLabel(L["Low threshold (ms)"] or "Low threshold (ms)")
 	lowThreshold:SetSliderValues(0, 1000, 1)
 	lowThreshold:SetValue(db.pingThresholdLow)
 	lowThreshold:SetCallback("OnValueChanged", function(_, _, val)

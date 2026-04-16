@@ -1,0 +1,204 @@
+
+muleyoProcGlowDB = {
+["profileKeys"] = {
+["Auteist - Tichondrius"] = "Default",
+["Mäñýfäçëð - Tichondrius"] = "Default",
+["Neonvoid - Tichondrius"] = "Default",
+["Praisesun - Tichondrius"] = "Default",
+["Starstypeshi - Tichondrius"] = "Default",
+["Strathmoan - Tichondrius"] = "Default",
+["Gehyo - Tichondrius"] = "Default",
+["Starphage - Tichondrius"] = "Default",
+["Manyfaced - Tichondrius"] = "Default",
+["Reedingo - Tichondrius"] = "Default",
+["Korahron - Tichondrius"] = "Default",
+["Smaugchamp - Tichondrius"] = "Default",
+["Choppiez - Tichondrius"] = "Default",
+["Stormclout - Tichondrius"] = "Default",
+["Hellavator - Tichondrius"] = "Default",
+},
+["profiles"] = {
+["Default"] = {
+["items"] = {
+["188152"] = {
+["color"] = {
+["b"] = 1,
+["g"] = 0.5,
+["r"] = 0.5,
+},
+},
+["249346"] = {
+["color"] = {
+["r"] = 0.01568627543747425,
+["g"] = 1,
+["b"] = 0.2705882489681244,
+},
+["useDefaultColor"] = false,
+["procSound"] = "None",
+["glowType"] = "Default",
+},
+},
+["combatOnly"] = true,
+["spells"] = {
+["DEATHKNIGHT"] = {
+["1233448"] = {
+["useDefaultColor"] = false,
+["glowType"] = "Default",
+["color"] = {
+["r"] = 0,
+["g"] = 1,
+["b"] = 0.2745098173618317,
+},
+["procSound"] = "None",
+["glowCooldownManager"] = false,
+},
+["42650"] = {
+["useDefaultColor"] = false,
+["glowType"] = "Default",
+["color"] = {
+["r"] = 0,
+["g"] = 1,
+["b"] = 0,
+},
+["procSound"] = "None",
+["glowCooldownManager"] = false,
+},
+},
+["ROGUE"] = {
+["315341"] = {
+["useDefaultColor"] = true,
+["glowType"] = "Default",
+["color"] = {
+["b"] = 0,
+["g"] = 1,
+["r"] = 0,
+},
+["procSound"] = "None",
+["glowCooldownManager"] = false,
+},
+["13750"] = {
+["useDefaultColor"] = true,
+["glowType"] = "Default",
+["color"] = {
+["b"] = 0,
+["g"] = 1,
+["r"] = 0,
+},
+["procSound"] = "None",
+["glowCooldownManager"] = false,
+},
+["271877"] = {
+["useDefaultColor"] = true,
+["glowType"] = "Default",
+["color"] = {
+["b"] = 0,
+["g"] = 1,
+["r"] = 0,
+},
+["procSound"] = "None",
+["glowCooldownManager"] = false,
+},
+},
+["MONK"] = {
+["113656"] = {
+["useDefaultColor"] = false,
+["glowType"] = "Default",
+["color"] = {
+["r"] = 0.2117647230625153,
+["g"] = 1,
+["b"] = 0.6666666865348816,
+},
+["procSound"] = "None",
+["glowCooldownManager"] = false,
+},
+},
+["DEMONHUNTER"] = {
+["1217605"] = {
+["useDefaultColor"] = false,
+["glowType"] = "Default",
+["color"] = {
+["b"] = 1,
+["g"] = 0,
+["r"] = 0.6705882549285889,
+},
+["procSound"] = "None",
+["glowCooldownManager"] = false,
+},
+["473728"] = {
+["useDefaultColor"] = false,
+["glowType"] = "Default",
+["color"] = {
+["b"] = 1,
+["g"] = 0,
+["r"] = 0.6941176652908325,
+},
+["procSound"] = "None",
+["glowCooldownManager"] = false,
+},
+["1225826"] = {
+["useDefaultColor"] = false,
+["glowType"] = "Default",
+["color"] = {
+["b"] = 1,
+["g"] = 0,
+["r"] = 0.6941176652908325,
+},
+["procSound"] = "None",
+["glowCooldownManager"] = false,
+},
+},
+},
+["auras"] = {
+["DEATHKNIGHT"] = {
+["49530_47541"] = {
+["anchorSpellID"] = 47541,
+["color"] = {
+["r"] = 0,
+["g"] = 1,
+["b"] = 0.2745098173618317,
+},
+["glowCooldownManager"] = false,
+["shouldShow"] = true,
+["glowIcon"] = false,
+["buffSpellID"] = 49530,
+["procSound"] = "None",
+["useDefaultColor"] = false,
+["showStacks"] = false,
+},
+["49530_207317"] = {
+["anchorSpellID"] = 207317,
+["color"] = {
+["r"] = 0,
+["g"] = 1,
+["b"] = 0.2745098173618317,
+},
+["glowCooldownManager"] = false,
+["shouldShow"] = true,
+["glowIcon"] = false,
+["buffSpellID"] = 49530,
+["procSound"] = "None",
+["useDefaultColor"] = false,
+["showStacks"] = false,
+},
+},
+["MONK"] = {
+["137384_100784"] = {
+["anchorSpellID"] = 100784,
+["color"] = {
+["b"] = 0,
+["g"] = 1,
+["r"] = 1,
+},
+["glowCooldownManager"] = false,
+["shouldShow"] = true,
+["glowIcon"] = false,
+["buffSpellID"] = 137384,
+["procSound"] = "None",
+["showStacks"] = false,
+["useDefaultColor"] = true,
+},
+},
+},
+},
+},
+}

@@ -19,10 +19,10 @@ Helper.MODES = {
 }
 
 Helper.RULE_DEFINITIONS = {
-	{ key = "IN_COMBAT", label = L["VisibilityCondInCombat"] or "In combat", order = 10 },
+	{ key = "IN_COMBAT", label = L["In combat"] or "In combat", order = 10 },
 	{ key = "IN_GROUP", label = L["VisibilityCondInGroup"] or "In group", order = 20 },
-	{ key = "IN_PARTY", label = L["VisibilityCondInParty"] or "In party", order = 30 },
-	{ key = "IN_RAID", label = L["VisibilityCondInRaid"] or "In raid", order = 40 },
+	{ key = "IN_PARTY", label = L["In party"] or "In party", order = 30 },
+	{ key = "IN_RAID", label = L["In raid"] or "In raid", order = 40 },
 	{ key = "SOLO", label = L["VisibilityCondSolo"] or "Solo", order = 50 },
 	{ key = "IN_INSTANCE", label = L["VisibilityCondInInstance"] or "In instance", order = 60 },
 	{ key = "INSTANCE_PARTY", label = L["VisibilityCondInstanceParty"] or "Instance: Party", order = 70 },
@@ -30,14 +30,14 @@ Helper.RULE_DEFINITIONS = {
 	{ key = "INSTANCE_PVP", label = L["VisibilityCondInstancePvp"] or "Instance: PvP", order = 90 },
 	{ key = "INSTANCE_ARENA", label = L["VisibilityCondInstanceArena"] or "Instance: Arena", order = 100 },
 	{ key = "INSTANCE_SCENARIO", label = L["VisibilityCondInstanceScenario"] or "Instance: Scenario", order = 110 },
-	{ key = "MOUNTED", label = L["VisibilityCondMounted"] or "Mounted", order = 120 },
+	{ key = "MOUNTED", label = L["Mounted"] or "Mounted", order = 120 },
 	{ key = "IN_VEHICLE", label = L["VisibilityCondInVehicle"] or "In vehicle", order = 130 },
 	{ key = "IN_PET_BATTLE", label = L["VisibilityCondInPetBattle"] or "During pet battle", order = 140 },
 	{ key = "SKYRIDING", label = L["VisibilityCondSkyriding"] or "Skyriding", order = 150 },
 	{ key = "FLYING", label = L["VisibilityCondFlying"] or "Flying", order = 155 },
 	{ key = "HAS_TARGET", label = L["VisibilityCondHasTarget"] or "Has target", order = 160 },
 	{ key = "CASTING", label = L["VisibilityCondCasting"] or "Casting", order = 170 },
-	{ key = "MOUSEOVER", label = L["VisibilityCondMouseover"] or "Mouseover", order = 180 },
+	{ key = "MOUSEOVER", label = L["Mouseover"] or "Mouseover", order = 180 },
 }
 
 Helper.RULE_LABELS = Helper.RULE_LABELS or {}

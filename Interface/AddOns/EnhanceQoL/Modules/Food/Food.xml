@@ -6,6 +6,8 @@
 	<Script file="Health.lua" />
 	<Script file="Flasks.lua" />
 	<Script file="BuffFoods.lua" />
+	<Script file="Runes.lua" />
+	<Script file="WeaponBuffs.lua" />
 	<Script file="EnhanceQoLHealthMacro.lua" />
 	<Script file="EnhanceQoLFlaskMacro.lua" />
 	<Script file="EnhanceQoLBuffFoodMacro.lua" />

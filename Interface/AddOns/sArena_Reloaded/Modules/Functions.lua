@@ -6,7 +6,14 @@
 local isRetail = sArenaMixin.isRetail
 local isMidnight = sArenaMixin.isMidnight
 local isTBC = sArenaMixin.isTBC
+local L = sArenaMixin.L
+local LSM = LibStub("LibSharedMedia-3.0")
 local noEarlyFrames = sArenaMixin.isTBC or sArenaMixin.isWrath
+
+function sArenaMixin:GetPartyFrame(i)
+    --EditModeManagerFrame:UseRaidStylePartyFrames()
+    return _G["CompactPartyFrameMember" .. i] or _G["CompactRaidFrame" .. i]
+end
 
 function sArenaMixin:GetSpecNameByID(specId)
     if GetSpecializationInfoByID then
@@ -49,39 +56,8 @@ function sArenaFrameMixin:RegisterFrameEvents()
     end
 end
 
-function sArenaFrameMixin:HookMidnightTrinket()
-    local blizzArenaFrame = _G["CompactArenaFrameMember" .. self:GetID()]
-    local trinketFrame = blizzArenaFrame.CcRemoverFrame
-    if trinketFrame then
-        trinketFrame:SetParent(self)
-        trinketFrame:SetAlpha(0)
-        hooksecurefunc(trinketFrame.Cooldown, "SetCooldown", function(_, start, duration)
-            local db = self.parent and self.parent.db
-            self.Trinket.Cooldown:SetCooldown(start, duration)
-            self.Trinket.Texture:SetDesaturated(db and db.profile.desaturateTrinketCD and not db.profile.colorTrinket)
-            if db and db.profile.colorTrinket then
-                self.Trinket.Texture:SetColorTexture(1, 0, 0)
-            end
-        end)
-
-        hooksecurefunc(trinketFrame.Icon, "SetTexture", function(_, texture)
-            local db = self.parent and self.parent.db
-            if db and db.profile.colorTrinket then
-                self.Trinket.Texture:SetColorTexture(0, 1, 0)
-            else
-                if texture ~= "INTERFACE\\ICONS\\INV_MISC_QUESTIONMARK.BLP" then
-                    self.Trinket.Texture:SetTexture(texture)
-                end
-            end
-        end)
-
-        trinketFrame.Cooldown:HookScript("OnCooldownDone", function()
-            local db = self.parent and self.parent.db
-            if db and db.profile.colorTrinket then
-                self.Trinket.Texture:SetColorTexture(0, 1, 0)
-            end
-        end)
-    end
+function sArenaMixin:UpdateStealthAlpha()
+    self.stealthAlpha = self.db and self.db.profile.stealthAlpha or 0.4
 end
 
 function sArenaMixin:UpdateBlizzArenaFrameVisibility(instanceType)
@@ -162,6 +138,36 @@ function sArenaMixin:UpdateBlizzArenaFrameVisibility(instanceType)
     end
 end
 
+function sArenaMixin:CheckMatchStatus(event)
+    local state = C_PvP.GetActiveMatchState()
+
+    if state == Enum.PvPMatchState.Engaged then
+        self.waitingForMatch = nil
+        self.engagedInMatch = true
+        -- Small delay on UpdatePlayer because UnitExists return false for all immediately if not
+        C_Timer.After(0.3, function()
+            for i = 1, self.maxArenaOpponents do
+                local frame = self["arena" .. i]
+                frame:UpdatePlayer(UnitExists(frame.unit) and "seen" or "unseen")
+            end
+         end)
+
+         -- Delay reset of this flag so Blizzards SetCooldown doesnt put a CD on Trinket on round start when there isn't a cooldown
+         -- from equip swapping in spawn, or potentially accidentally trinketing I suppose.
+         C_Timer.After(0.5, function() self.waitingForMatchDelayedReset = nil end)
+    else
+        self.engagedInMatch = nil
+        self.waitingForMatch = true
+        self.waitingForMatchDelayedReset = true
+        if event == "PVP_MATCH_ACTIVE" then
+            for i = 1, self.maxArenaOpponents do
+                local frame = self["arena" .. i]
+                frame:UpdatePlayer(UnitExists(frame.unit) and "seen" or "unseen")
+            end
+        end
+    end
+end
+
 function sArenaMixin:UpdateCDTextVisibility()
     local db = self.db
     if not db then return end
@@ -170,9 +176,8 @@ function sArenaMixin:UpdateCDTextVisibility()
     local hideDR = db.profile.disableCDTextDR
     local hideTrinket = db.profile.disableCDTextTrinket
     local hideRacial = db.profile.disableCDTextRacial
-    local isMidnight = sArenaMixin.isMidnight
 
-    for i = 1, sArenaMixin.maxArenaOpponents do
+    for i = 1, self.maxArenaOpponents do
         local frame = self["arena" .. i]
         if not frame then break end
 
@@ -209,7 +214,7 @@ function sArenaMixin:UpdateCDTextVisibility()
 
         -- DRs
         local useDrFrames = frame.drFrames ~= nil
-        local drList = frame.drFrames or sArenaMixin.drCategories
+        local drList = frame.drFrames or self.drCategories
         if drList then
             for j = 1, #drList do
                 local drFrame = useDrFrames and drList[j] or frame[drList[j]]
@@ -226,187 +231,6 @@ function sArenaMixin:UpdateCDTextVisibility()
             end
         end
     end
-end
-
-function sArenaMixin:EnsureArenaFramesEnabled()
-    local accountSettings = EditModeManagerFrame and EditModeManagerFrame.AccountSettings
-    if not accountSettings then return end
-
-    local arenaFramesEnabled = EditModeManagerFrame:GetAccountSettingValueBool(Enum.EditModeAccountSetting.ShowArenaFrames)
-    if not arenaFramesEnabled then
-        EditModeManagerFrame:OnAccountSettingChanged(Enum.EditModeAccountSetting.ShowArenaFrames, true)
-        EditModeManagerFrame.AccountSettings:RefreshArenaFrames()
-    end
-end
-
-function sArenaFrameMixin:NormalEmpoweredCastbar()
-    local castBar = self.CastBar
-
-    if castBar.empoweredFix then return end
-
-    local empowerEvents = {
-        ["UNIT_SPELLCAST_EMPOWER_START"] = true,
-        ["UNIT_SPELLCAST_EMPOWER_UPDATE"] = true,
-        ["UNIT_SPELLCAST_EMPOWER_STOP"] = true,
-    }
-
-    local function HideChargeTiers(castBar)
-        for _, child in ipairs({castBar:GetChildren()}) do
-            if child.BasePip or (child.Normal and child.Disabled) then
-                child:SetAlpha(0)
-                castBar.empowerHidden = true
-            end
-        end
-    end
-
-    if not castBar.empowerSpark then
-        castBar.empowerSpark = castBar:CreateTexture(nil, "OVERLAY")
-        castBar.empowerSpark:SetAtlas("UI-CastingBar-Pip")
-        castBar.empowerSpark:SetSize(3, 20)
-        castBar.empowerSpark:SetPoint("CENTER", castBar.Spark, "CENTER", 0, -4.5)
-        castBar.empowerSpark:Hide()
-    end
-
-    castBar:HookScript("OnEvent", function(self, event)
-        if empowerEvents[event] then
-            if not self.empowerHidden then
-                HideChargeTiers(castBar)
-            end
-            if not self.textureChangedNeedsColor then
-                self:SetStatusBarTexture("UI-CastingBar-Filling-Standard")
-            end
-            self.Spark:Hide()
-            self.empowerSparkShown = true
-            self.empowerSpark:Show()
-        else
-            if self.empowerSparkShown then
-                self.empowerSpark:Hide()
-                self.Spark:Show()
-                self.empowerSparkShown = false
-            end
-        end
-    end)
-
-    castBar.empoweredFix = true
-end
-
-function sArenaMixin:InitializeDRFrames()
-    if not sArenaMixin.isMidnight then return end
-
-    if not sArena_ReloadedDB.skipEMDR then
-        if EditModeManagerFrame and EditModeManagerFrame.AccountSettings then
-            ShowUIPanel(EditModeManagerFrame)
-        end
-    end
-
-    for i = 1, sArenaMixin.maxArenaOpponents do
-        local blizzArenaFrame = _G["CompactArenaFrameMember" .. i]
-        local arenaFrame = self["arena" .. i]
-
-        if not blizzArenaFrame or not arenaFrame then return end
-
-        local drTray = blizzArenaFrame.SpellDiminishStatusTray
-        if not drTray then return end
-
-        local blizzDRFrames = {drTray:GetChildren()}
-        local NUM_DR_FRAMES = #blizzDRFrames
-
-        if not arenaFrame.drFrames then
-            drTray:SetParent(arenaFrame)
-            drTray:SetAlpha(0)
-            drTray:EnableMouse(false)
-            arenaFrame.drFrames = {}
-
-            for drIndex = 1, NUM_DR_FRAMES do
-                local name = "sArenaEnemyFrame" .. i .. "_DR" .. drIndex
-                local sArenaDrFrame = CreateFrame("Frame", name, arenaFrame, "sArenaDRFrameTemplate")
-                sArenaDrFrame:SetFrameStrata("MEDIUM")
-                sArenaDrFrame:SetFrameLevel(11)
-                arenaFrame.drFrames[drIndex] = sArenaDrFrame
-
-                local drTextFrame = sArenaDrFrame.DRTextFrame
-                local drText = drTextFrame.DRText
-                drText:SetText("½")
-                drText:SetVertexColor(0, 1, 0)
-                local fontFile, fontHeight, fontFlags = drText:GetFont()
-                local drTextImmune = drTextFrame:CreateFontString(nil, "OVERLAY")
-                drTextImmune:SetFont(fontFile, fontHeight, fontFlags)
-                drTextImmune:SetJustifyH("RIGHT")
-                drTextImmune:SetJustifyV("BOTTOM")
-                drTextImmune:SetPoint("BOTTOMRIGHT", 4, -4)
-                drTextImmune:SetText("%")
-                drTextImmune:SetTextColor(1, 0, 0)
-                drTextImmune:SetAlpha(0)
-                drTextFrame.DRTextImmune = drTextImmune
-
-                local blizzDRFrame = blizzDRFrames[drIndex]
-                if blizzDRFrame and blizzDRFrame.Icon then
-                    sArenaDrFrame.blizzFrame = blizzDRFrame
-
-                    hooksecurefunc(blizzDRFrame.Icon, "SetTexture", function(_, texture)
-                        sArenaDrFrame.Icon:SetTexture(texture)
-                    end)
-
-                    hooksecurefunc(blizzDRFrame, "Show", function()
-                        sArenaDrFrame:Show()
-                        arenaFrame:UpdateDRPositions()
-                    end)
-
-                    hooksecurefunc(blizzDRFrame, "Hide", function()
-                        sArenaDrFrame.Icon:SetTexture(nil)
-                        sArenaDrFrame:Hide()
-                        arenaFrame:UpdateDRPositions()
-                    end)
-
-                    hooksecurefunc(blizzDRFrame.Cooldown, "SetCooldown", function(_, start, duration)
-                        sArenaDrFrame.Cooldown:SetCooldown(start, duration)
-                    end)
-
-                    local green = CreateColor(0, 1, 0, 1)
-                    local red = CreateColor(1, 0, 0, 1)
-
-                    hooksecurefunc(blizzDRFrame.ImmunityIndicator, "SetShown", function(_, shown)
-                        local layout = self.db.profile.layoutSettings[self.db.profile.currentLayout]
-                        local blackBorder = layout and layout.dr and layout.dr.blackDRBorder
-                        local borderHidden = layout and layout.dr and layout.dr.disableDRBorder
-
-                        if not blackBorder and not borderHidden then
-                            sArenaDrFrame.Border:SetVertexColorFromBoolean(shown, red, green)
-                            if sArenaDrFrame.PixelBorder then
-                                sArenaDrFrame.PixelBorder:SetVertexColorFromBoolean(shown, red, green)
-                            end
-                        end
-
-                        if self.db and self.db.profile.colorDRCooldownText then
-                            if sArenaDrFrame.Cooldown.sArenaText then
-                                sArenaDrFrame.Cooldown.sArenaText:SetTextColorFromBoolean(shown, red, green)
-                            end
-                        end
-
-                        local drText = sArenaDrFrame.DRTextFrame.DRText
-                        local drTextImmune = sArenaDrFrame.DRTextFrame.DRTextImmune
-                        drText:SetAlphaFromBoolean(shown, 0, 1)
-                        drTextImmune:SetAlphaFromBoolean(shown, 1, 0)
-                    end)
-                end
-            end
-
-            self:SetupDrag(arenaFrame.drFrames[1], arenaFrame.drFrames[1], "dr", "UpdateDRSettings")
-        end
-    end
-
-    -- Apply DR settings after all frames are initialized
-    if self.layoutdb and self.layoutdb.dr then
-        self:UpdateDRSettings(self.layoutdb.dr)
-    end
-
-
-    if not sArena_ReloadedDB.skipEMDR then
-        if EditModeManagerFrame and EditModeManagerFrame.AccountSettings then
-            HideUIPanel(EditModeManagerFrame)
-        end
-    end
-
 end
 
 function sArenaMixin:DatabaseCleanup(db)
@@ -546,29 +370,727 @@ function sArenaMixin:DatabaseCleanup(db)
             end
         end
 
-        local currentLayout = db.profile.currentLayout
-        local currentSettings = currentLayout and db.profile.layoutSettings[currentLayout]
-        if currentSettings and currentSettings.dr and currentSettings.dr.growthDirection == 3 then
-            local addonVersion = C_AddOns.GetAddOnMetadata("sArena_Reloaded", "Version") or ""
-            StaticPopupDialogs["SARENA_DR_RIGHT_FIX"] = {
-                text = "|T135884:16:16|t sArena |cffff8000Reloaded|r " .. addonVersion .. ":\n\n"
-                    .. "Test Mode was showing the position of DR frames incorrectly with grow direction set to right. This is now fixed.\n\n"
-                    .. "Please verify your arena frames DR are set up correctly in test mode.",
-                button1 = "Test sArena",
-                button2 = "Close",
-                OnAccept = function()
-                    self:Test()
-                    LibStub("AceConfigDialog-3.0"):Open("sArena")
-                end,
-                timeout = 0,
-                whileDead = true,
-                hideOnEscape = true,
-            }
-            C_Timer.After(6, function()
-                StaticPopup_Show("SARENA_DR_RIGHT_FIX")
-            end)
-        end
-
         db.profile.dbClean1 = true
     end
+
+    if db.profile.layoutSettings and not db.profile.dbClean2 then
+        for _, layoutSettings in pairs(db.profile.layoutSettings) do
+            if layoutSettings.widgets then
+                local pti = layoutSettings.widgets.partyTargetIndicators
+                if pti then
+                    local flatKeys = {"posX", "posY", "scale", "direction", "spacing"}
+                    local hasFlat = false
+                    for _, key in ipairs(flatKeys) do
+                        if pti[key] ~= nil then
+                            hasFlat = true
+                            break
+                        end
+                    end
+
+                    if hasFlat then
+                        if not pti.partyOnArena then
+                            pti.partyOnArena = {}
+                        end
+                        for _, key in ipairs(flatKeys) do
+                            if pti[key] ~= nil then
+                                if pti.partyOnArena[key] == nil then
+                                    pti.partyOnArena[key] = pti[key]
+                                end
+                                pti[key] = nil
+                            end
+                        end
+                    end
+                end
+            end
+        end
+        db.profile.dbClean2 = true
+    end
+end
+
+-- function sArenaMixin:ToggleObjectivesFrame(instanceType)
+--     local ObjectiveTracker = ObjectiveTracker or ObjectiveTrackerFrame
+--     if not ObjectiveTracker then return end
+
+--     local inArena = instanceType == "arena"
+
+--     if not ObjectiveTracker.ogParent then
+--         ObjectiveTracker.ogParent = ObjectiveTracker:GetParent()
+--         ObjectiveTracker:HookScript("OnShow", function()
+--             local _, instanceType = GetInstanceInfo()
+--             local inArena = instanceType == "arena"
+
+--             if inArena then
+--                 ObjectiveTracker:SetParent(self.hiddenFrame)
+--             end
+--         end)
+--     end
+--     if inArena then
+--         ObjectiveTracker:SetParent(self.hiddenFrame)
+--     else
+--         ObjectiveTracker:SetParent(ObjectiveTracker.ogParent)
+--     end
+-- end
+
+function sArenaFrameMixin:StopStealthHealthTicker()
+    if self.stealthHealthTicker then
+        self.stealthHealthTicker:Cancel()
+        self.stealthHealthTicker = nil
+    end
+end
+
+function sArenaFrameMixin:StartStealthHealthTicker()
+    self:StopStealthHealthTicker()
+
+    local hp = self.HealthBar
+
+    if isMidnight then
+        self.stealthHealthTicker = C_Timer.NewTimer(16, function()
+            hp:SetMinMaxValues(0, 100)
+            hp:SetValue(100)
+            self.stealthHealthTicker = nil
+        end)
+    else
+        local _, maxHealth = hp:GetMinMaxValues()
+        if maxHealth <= 0 then return end
+
+        local totalTicks = 30
+        local currentValue = hp:GetValue()
+        local incrementPerTick = (maxHealth - currentValue) / totalTicks
+
+        self.stealthHealthTicker = C_Timer.NewTicker(1, function()
+            hp:SetValue(hp:GetValue() + incrementPerTick)
+        end, totalTicks)
+    end
+end
+
+function sArenaFrameMixin:SetupTrinketCooldownDone()
+    self.Trinket.Cooldown:HookScript("OnCooldownDone", function()
+        local db = self.parent and self.parent.db
+        if db and db.profile.colorTrinket then
+            local colors = db.profile.trinketColors
+            if db.profile.colorTrinketKeepTexture then
+                self.Trinket.Texture:SetDesaturated(true)
+            else
+                self.Trinket.Texture:SetTexture("Interface\\Buttons\\WHITE8X8")
+            end
+            self.Trinket.Texture:SetVertexColor(unpack(colors.available))
+        end
+    end)
+end
+
+function sArenaFrameMixin:CreatePixelTextureBorder(parent, target, key, size, offset, setFrameLevel)
+    offset = offset or 0
+    size = size or 1
+    if setFrameLevel == nil then setFrameLevel = true end
+
+    if not parent[key] then
+        local holder = CreateFrame("Frame", nil, parent)
+        if setFrameLevel then
+            holder:SetFrameLevel(parent:GetFrameLevel() + 5)
+        end
+        holder:SetIgnoreParentScale(true)
+        parent[key] = holder
+
+        local edges = {}
+        for i = 1, 4 do
+            local tex = holder:CreateTexture(nil, "BORDER", nil, 7)
+            tex:SetColorTexture(0,0,0,1)
+            tex:SetIgnoreParentScale(true)
+            edges[i] = tex
+        end
+        holder.edges = edges
+
+        function holder:SetVertexColor(r, g, b, a)
+            for _, tex in ipairs(self.edges) do
+                tex:SetColorTexture(r, g, b, a or 1)
+            end
+        end
+    end
+
+    local holder = parent[key]
+    local edges = holder.edges
+
+    local spacing = offset
+
+    holder:ClearAllPoints()
+    holder:SetPoint("TOPLEFT", target, "TOPLEFT", -spacing - size, spacing + size)
+    holder:SetPoint("BOTTOMRIGHT", target, "BOTTOMRIGHT", spacing + size, -spacing - size)
+
+    -- Top
+    edges[1]:ClearAllPoints()
+    edges[1]:SetPoint("TOPLEFT", holder, "TOPLEFT")
+    edges[1]:SetPoint("TOPRIGHT", holder, "TOPRIGHT")
+    edges[1]:SetHeight(size)
+
+    -- Right
+    edges[2]:ClearAllPoints()
+    edges[2]:SetPoint("TOPRIGHT", holder, "TOPRIGHT")
+    edges[2]:SetPoint("BOTTOMRIGHT", holder, "BOTTOMRIGHT")
+    edges[2]:SetWidth(size)
+
+    -- Bottom
+    edges[3]:ClearAllPoints()
+    edges[3]:SetPoint("BOTTOMLEFT", holder, "BOTTOMLEFT")
+    edges[3]:SetPoint("BOTTOMRIGHT", holder, "BOTTOMRIGHT")
+    edges[3]:SetHeight(size)
+
+    -- Left
+    edges[4]:ClearAllPoints()
+    edges[4]:SetPoint("TOPLEFT", holder, "TOPLEFT")
+    edges[4]:SetPoint("BOTTOMLEFT", holder, "BOTTOMLEFT")
+    edges[4]:SetWidth(size)
+
+    holder:Show()
+end
+
+function sArenaFrameMixin:AddPixelBorderToFrame()
+    local currentLayout = self.parent.db.profile.currentLayout
+    local size = self.parent.db.profile.layoutSettings[currentLayout].pixelBorderSize or 1.5
+    local drSize = self.parent.db.profile.layoutSettings[currentLayout].drPixelBorderSize or 1.5
+    local offset = self.parent.db.profile.layoutSettings[currentLayout].pixelBorderOffset or 0
+
+    if not self.PixelBorders then
+        self.PixelBorders = CreateFrame("Frame", nil, self)
+        self.PixelBorders:SetAllPoints()
+        self.PixelBorders:SetFrameLevel(self:GetFrameLevel() - 1)
+    end
+
+    local borders = self.PixelBorders
+    self.PixelBorders.hide = nil
+
+    if self.HealthBar and self.PowerBar then
+        local wrapper = borders.mainWrapper
+        if not wrapper then
+            wrapper = CreateFrame("Frame", nil, borders)
+            borders.mainWrapper = wrapper
+        end
+        wrapper:ClearAllPoints()
+        wrapper:SetPoint("TOPLEFT", self.HealthBar, "TOPLEFT")
+        wrapper:SetPoint("BOTTOMRIGHT", self.PowerBar, "BOTTOMRIGHT")
+        self:CreatePixelTextureBorder(borders, wrapper, "main", size, offset)
+    end
+
+    self:CreatePixelTextureBorder(borders, self.ClassIcon, "classIcon", size, offset)
+    self:CreatePixelTextureBorder(borders, self.Trinket, "trinket", size, offset)
+    self:CreatePixelTextureBorder(borders, self.Racial, "racial", size, offset)
+    self:CreatePixelTextureBorder(borders, self.Dispel, "dispel", size, offset)
+
+    if not self.parent.db.profile.showDispels then
+        borders.dispel:Hide()
+    end
+
+    self:CreatePixelTextureBorder(self.SpecIcon, self.SpecIcon, "specIcon", size, offset)
+    self:CreatePixelTextureBorder(self.CastBar, self.CastBar, "castBar", size, offset)
+    self:CreatePixelTextureBorder(self.CastBar, self.CastBar.Icon, "castBarIcon", size, offset)
+    self:SetTextureCrop(self.CastBar.Icon, true)
+
+    if size == 0 then
+        borders:Hide()
+        self.PixelBorders.hide = true
+        if self.CastBar.castBar then self.CastBar.castBar:Hide() end
+        if self.CastBar.castBarIcon then self.CastBar.castBarIcon:Hide() end
+        if self.SpecIcon.specIcon then self.SpecIcon.specIcon:Hide() end
+        return
+    end
+
+    borders:Show()
+end
+
+function sArenaMixin:RemovePixelBorders()
+    for i = 1, self.maxArenaOpponents do
+        local frame = self["arena" .. i]
+        if not frame.PixelBorders then
+            return
+        end
+
+        if frame.PixelBorders then
+            frame.PixelBorders:Hide()
+            frame.PixelBorders.hide = true
+        end
+
+        local function hideBorder(parent, key)
+            if parent and parent[key] then
+                parent[key]:Hide()
+            end
+        end
+
+        local borders = frame.PixelBorders
+        if borders and borders.mainWrapper then
+            hideBorder(borders, "main")
+        end
+
+        hideBorder(borders, "classIcon")
+        hideBorder(borders, "trinket")
+        hideBorder(borders, "dispel")
+        hideBorder(borders, "racial")
+        hideBorder(frame.SpecIcon, "specIcon")
+        hideBorder(frame.CastBar, "castBar")
+        hideBorder(frame.CastBar, "castBarIcon")
+
+        frame.ClassIcon:SetScale(1)
+        frame.CastBar.Icon:ClearAllPoints()
+        frame.CastBar.Icon:SetPoint("RIGHT", frame.CastBar, "LEFT", -5, 0)
+        local newLayout = self.db and self.db.profile and self.db.profile.currentLayout
+        local newLayoutSettings = self.db and self.db.profile and self.db.profile.layoutSettings and self.db.profile.layoutSettings[newLayout]
+        local newCropIcons = newLayoutSettings and newLayoutSettings.cropIcons or false
+        frame:SetTextureCrop(frame.CastBar.Icon, newCropIcons)
+
+        for n = 1, #self.drCategories do
+            local drFrame = frame[self.drCategories[n]]
+            if drFrame and drFrame.PixelBorder then
+                drFrame.PixelBorder:Hide()
+                if drFrame.Border then
+                    drFrame.Border:Show()
+                end
+            end
+        end
+    end
+
+    if self.UpdateCastBarPixelBorders then
+        self:UpdateCastBarPixelBorders()
+    end
+end
+
+function sArenaMixin:UpdateCastbarVisibility()
+    local hide = self.layoutdb.castBar.hideCastbars
+    if hide then
+        self.hiddenCastbars = true
+        for i = 1, self.maxArenaOpponents do
+            local frame = isMidnight and _G["sArenaEnemyFrame" .. i] or self["arena" .. i]
+            if frame and frame.CastBar then
+                frame.CastBar:SetParent(self.hiddenFrame)
+                if isMidnight and frame.midnightCastBarMoveFrame then
+                    frame.midnightCastBarMoveFrame:Hide()
+                end
+            end
+        end
+    else
+        if not self.hiddenCastbars then return end
+        self.hiddenCastbars = nil
+        for i = 1, self.maxArenaOpponents do
+            local frame = isMidnight and _G["sArenaEnemyFrame" .. i] or self["arena" .. i]
+            if frame and frame.CastBar then
+                frame.CastBar:SetParent(frame)
+                if isMidnight and frame.midnightCastBarMoveFrame then
+                    frame.midnightCastBarMoveFrame:Show()
+                end
+            end
+        end
+    end
+end
+
+-- Midnight only
+if not isMidnight then return end
+
+function sArenaMixin:RegisterCVarListener()
+    if self.cvarListenerRegistered then return end
+    self.cvarListenerRegistered = true
+
+    local frame = CreateFrame("Frame")
+    frame:RegisterEvent("CVAR_UPDATE")
+    frame:SetScript("OnEvent", function(_, _, cvarName)
+        if cvarName == "spellDiminishPVPOnlyTriggerableByMe" then
+            LibStub("AceConfigRegistry-3.0"):NotifyChange("sArena")
+        end
+    end)
+end
+
+function sArenaMixin:InitializeMidnightDRFrames()
+    if self.drFramesInitialized then return end
+    if self.db and self.db.profile.hideMidnightDRs then return end
+
+    if not sArena_ReloadedDB.skipEMDR then
+        if EditModeManagerFrame and EditModeManagerFrame.AccountSettings then
+            ShowUIPanel(EditModeManagerFrame)
+        end
+    end
+
+    for i = 1, self.maxArenaOpponents do
+        local blizzArenaFrame = _G["CompactArenaFrameMember" .. i]
+        local arenaFrame = self["arena" .. i]
+
+        if not blizzArenaFrame or not arenaFrame then return end
+
+        local drTray = blizzArenaFrame.SpellDiminishStatusTray
+        if not drTray then return end
+
+        local blizzDRFrames = {drTray:GetChildren()}
+        local NUM_DR_FRAMES = #blizzDRFrames
+
+        if not arenaFrame.drFrames then
+            drTray:SetParent(arenaFrame)
+            drTray:SetAlpha(0)
+            drTray:EnableMouse(false)
+            arenaFrame.drFrames = {}
+
+            for drIndex = 1, NUM_DR_FRAMES do
+                local name = "sArenaEnemyFrame" .. i .. "_DR" .. drIndex
+                local sArenaDRFrame = CreateFrame("Frame", name, arenaFrame, "sArenaDRFrameTemplate")
+                sArenaDRFrame:SetFrameStrata("MEDIUM")
+                sArenaDRFrame:SetFrameLevel(11)
+                arenaFrame.drFrames[drIndex] = sArenaDRFrame
+
+                local drTextFrame = sArenaDRFrame.DRTextFrame
+                local drText = drTextFrame.DRText
+                drText:SetText("½")
+                drText:SetVertexColor(0, 1, 0)
+                local fontFile, fontHeight, fontFlags = drText:GetFont()
+                local drTextImmune = drTextFrame:CreateFontString(nil, "OVERLAY")
+                drTextImmune:SetFont(fontFile, fontHeight, fontFlags)
+                drTextImmune:SetJustifyH("RIGHT")
+                drTextImmune:SetJustifyV("BOTTOM")
+                drTextImmune:SetPoint("BOTTOMRIGHT", 4, -4)
+                drTextImmune:SetText("%")
+                drTextImmune:SetTextColor(1, 0, 0)
+                drTextImmune:SetAlpha(0)
+                drTextFrame.DRTextImmune = drTextImmune
+
+                sArenaDRFrame.DRSeverity = 1
+
+                local blizzDRFrame = blizzDRFrames[drIndex]
+                if blizzDRFrame and blizzDRFrame.Icon then
+                    sArenaDRFrame.blizzFrame = blizzDRFrame
+
+                    hooksecurefunc(blizzDRFrame.Icon, "SetTexture", function(_, texture)
+                        sArenaDRFrame.Icon:SetTexture(texture)
+                    end)
+
+                    hooksecurefunc(blizzDRFrame, "Show", function()
+                        sArenaDRFrame:Show()
+                        arenaFrame:UpdateDRPositions()
+                        sArenaDRFrame.DRSeverity = sArenaDRFrame.DRSeverity + 1
+                    end)
+
+                    hooksecurefunc(blizzDRFrame, "Hide", function()
+                        sArenaDRFrame.Icon:SetTexture(nil)
+                        sArenaDRFrame.Cooldown:Clear()
+                        sArenaDRFrame:Hide()
+                        sArenaDRFrame.DRSeverity = 1
+                        arenaFrame:UpdateDRPositions()
+                    end)
+
+                    hooksecurefunc(blizzDRFrame.Cooldown, "SetCooldown", function(_, start, duration)
+                        sArenaDRFrame:Show()
+                        sArenaDRFrame.Cooldown:SetCooldown(GetTime(), 16.1)
+                        sArenaDRFrame.Cooldown.durationObj = C_DurationUtil.CreateDuration()
+                        sArenaDRFrame.Cooldown.durationObj:SetTimeFromStart(GetTime(), 16.1)
+                    end)
+
+                    local green = CreateColor(0, 1, 0, 1)
+                    local red = CreateColor(1, 0, 0, 1)
+
+                    hooksecurefunc(blizzDRFrame.ImmunityIndicator, "SetShown", function(_, shown)
+                        local layout = self.db.profile.layoutSettings[self.db.profile.currentLayout]
+                        local blackBorder = layout and layout.dr and layout.dr.blackDRBorder
+                        local borderHidden = layout and layout.dr and layout.dr.disableDRBorder
+
+                        sArenaDRFrame.Cooldown:Clear()
+                        sArenaDRFrame:Show()
+
+                        if not self.db.profile.disableInstantDRCooldown then
+                            if sArenaDRFrame.DRSeverity == 1 then
+                                sArenaDRFrame.Cooldown:SetCooldown(GetTime(), 20)
+                                sArenaDRFrame.Cooldown.durationObj = C_DurationUtil.CreateDuration()
+                                sArenaDRFrame.Cooldown.durationObj:SetTimeFromStart(GetTime(), 20)
+                            else
+                                sArenaDRFrame.Cooldown:SetCooldown(GetTime(), 18)
+                                sArenaDRFrame.Cooldown.durationObj = C_DurationUtil.CreateDuration()
+                                sArenaDRFrame.Cooldown.durationObj:SetTimeFromStart(GetTime(), 18)
+                            end
+                        end
+
+                        if not borderHidden then
+                            if blackBorder then
+                                sArenaDRFrame.Border:SetVertexColor(0, 0, 0)
+                                if sArenaDRFrame.PixelBorder then
+                                    sArenaDRFrame.PixelBorder:SetVertexColor(sArenaDRFrame.Border:GetVertexColor())
+                                end
+                            else
+                                sArenaDRFrame.Border:SetVertexColorFromBoolean(shown, red, green)
+                                if sArenaDRFrame.PixelBorder then
+                                    sArenaDRFrame.PixelBorder:SetVertexColor(sArenaDRFrame.Border:GetVertexColor())
+                                end
+                            end
+                        end
+
+                        if self.db and self.db.profile.colorDRCooldownText then
+                            sArenaDRFrame.Cooldown.Text:SetVertexColorFromBoolean(shown, red, green)
+                        end
+
+                        local drText = sArenaDRFrame.DRTextFrame.DRText
+                        local drTextImmune = sArenaDRFrame.DRTextFrame.DRTextImmune
+                        drText:SetAlphaFromBoolean(shown, 0, 1)
+                        drTextImmune:SetAlphaFromBoolean(shown, 1, 0)
+                    end)
+                end
+            end
+
+            if arenaFrame.drFrames[1] then
+                self:SetupDrag(arenaFrame.drFrames[1], arenaFrame.drFrames[1], "dr", "UpdateDRSettings")
+            end
+        end
+    end
+
+    -- Apply DR settings after all frames are initialized
+    if self.layoutdb and self.layoutdb.dr then
+        self:UpdateDRSettings(self.layoutdb.dr)
+    end
+
+
+    if not sArena_ReloadedDB.skipEMDR then
+        if EditModeManagerFrame and EditModeManagerFrame.AccountSettings then
+            HideUIPanel(EditModeManagerFrame)
+        end
+    end
+
+    self.drFramesInitialized = true
+end
+
+function sArenaFrameMixin:HookMidnightTrinket()
+    local blizzArenaFrame = _G["CompactArenaFrameMember" .. self:GetID()]
+    local trinketFrame = blizzArenaFrame.CcRemoverFrame
+    if trinketFrame then
+        trinketFrame:SetParent(self)
+        trinketFrame:SetAlpha(0)
+
+        hooksecurefunc(trinketFrame.Cooldown, "SetCooldown", function()
+            if not self.Trinket.Texture:GetTexture() then return end
+            if self.parent.waitingForMatchDelayedReset then return end
+
+            local db = self.parent and self.parent.db
+            local colors = db.profile.trinketColors
+
+            if not self.Trinket.Cooldown:IsShown() then
+
+                if db and db.profile.playTrinketSound then
+                    local isHealer = self.isHealer
+                    local fileID = isHealer and db.profile.healerTrinketSoundFileID or db.profile.trinketSoundFileID
+                    local soundName = isHealer and (db.profile.healerTrinketSoundName or "Lossa Trinket") or (db.profile.trinketSoundName or "Lossa Trinket")
+                    local channel = db.profile.trinketSoundChannel or "Master"
+                    if fileID and fileID ~= 0 then
+                        PlaySound(fileID, channel)
+                    else
+                        local soundPath = LSM:Fetch(LSM.MediaType.SOUND, soundName)
+                        if soundPath then
+                            PlaySoundFile(soundPath, channel)
+                        end
+                    end
+                end
+
+                -- Update shared Racial CD
+                if self.Racial.Texture:GetTexture() then
+                    local sharedCD = self:GetSharedCD()
+                    if sharedCD and sharedCD ~= 0 and not self.Racial.Cooldown:IsShown() then
+                        self.sharedRacialCDActive = true
+                        self.Racial.Cooldown:SetCooldown(GetTime(), sharedCD)
+                        if self.racialDetectTimer then self.racialDetectTimer:Cancel() end
+                        if self.racialDetectConfirmTimer then self.racialDetectConfirmTimer:Cancel() end
+                        -- Detect if racial was actually used first by checking trinket CD
+                        -- before and after the shared CD expires
+                        self.racialDetectTimer = C_Timer.NewTimer(math.max(sharedCD - 0.2, 0.2), function()
+                            self.racialDetectTimer = nil
+                            local trinketWasOnCD = self.Trinket.Cooldown:IsShown()
+                            self.racialDetectConfirmTimer = C_Timer.NewTimer(0.4, function()
+                                self.racialDetectConfirmTimer = nil
+                                self.sharedRacialCDActive = nil
+                                -- If trinket was on CD before shared CD ended and is now off,
+                                -- both CDs ended together - meaning the racial was used first
+                                -- and the trinket only had the shared CD on it
+                                if trinketWasOnCD and not self.Trinket.Cooldown:IsShown() then
+                                    local racialDuration = self:GetRacialDuration()
+                                    if racialDuration and racialDuration > sharedCD then
+                                        self.Racial.Cooldown:SetCooldown(GetTime(), racialDuration - sharedCD)
+                                    end
+                                end
+                            end)
+                        end)
+                    elseif not self.sharedRacialCDActive then
+                        self.Racial.Cooldown:Clear()
+                    end
+                end
+
+            end
+
+            local durationObj = C_PvP.GetArenaCrowdControlDuration(self.unit)
+            self.Trinket.Cooldown:SetCooldownFromDurationObject(durationObj)
+            if db and db.profile.colorTrinket and db.profile.colorTrinketKeepTexture then
+                self.Trinket.Texture:SetDesaturated(true)
+            else
+                self.Trinket.Texture:SetDesaturated(db and db.profile.desaturateTrinketCD and not db.profile.colorTrinket)
+            end
+
+            if db and db.profile.colorTrinket then
+                self.Trinket.Texture:SetVertexColor(unpack(colors.used))
+            end
+        end)
+
+        hooksecurefunc(trinketFrame.Icon, "SetTexture", function(_, texture)
+            local db = self.parent and self.parent.db
+            if not issecretvalue(texture) then
+                if texture ~= "INTERFACE\\ICONS\\INV_MISC_QUESTIONMARK.BLP" then
+                    if db and db.profile.colorTrinket then
+                        local colors = db.profile.trinketColors
+                        if db.profile.colorTrinketKeepTexture then
+                            self.Trinket.Texture:SetTexture(texture)
+                            self.Trinket.Texture:SetDesaturated(true)
+                        else
+                            self.Trinket.Texture:SetTexture("Interface\\Buttons\\WHITE8X8")
+                        end
+                        self.Trinket.Texture:SetVertexColor(unpack(colors.available))
+                    else
+                        self.Trinket.Texture:SetTexture(texture)
+                    end
+                end
+            else
+                if db and db.profile.colorTrinket then
+                    local colors = db.profile.trinketColors
+                    if db.profile.colorTrinketKeepTexture then
+                        self.Trinket.Texture:SetTexture(texture)
+                        self.Trinket.Texture:SetDesaturated(true)
+                    else
+                        self.Trinket.Texture:SetTexture("Interface\\Buttons\\WHITE8X8")
+                    end
+                    self.Trinket.Texture:SetVertexColor(unpack(colors.available))
+                else
+                    self.Trinket.Texture:SetTexture(texture)
+                end
+            end
+        end)
+
+    end
+end
+
+function sArenaMixin:EnsureArenaFramesEnabled(attempt)
+    attempt = attempt or 1
+    local accountSettings = EditModeManagerFrame and EditModeManagerFrame.AccountSettings and EditModeManagerFrame.accountSettingMap
+    if not accountSettings then
+        if attempt >= 5 then
+            self:Print(L["Error_EditModeAccountSettings"])
+            return
+        end
+        C_Timer.After(0.5, function() self:EnsureArenaFramesEnabled(attempt + 1) end)
+        return
+    end
+
+    local fixedElvUI = self:IsElvUIActive()
+    if fixedElvUI then
+        C_Timer.After(5, function()
+            self:Print(L["ElvUI_ArenaFrames_Fix"])
+        end)
+    end
+
+    local arenaFramesEnabled = EditModeManagerFrame:GetAccountSettingValueBool(Enum.EditModeAccountSetting.ShowArenaFrames)
+    if not arenaFramesEnabled then
+        EditModeManagerFrame:OnAccountSettingChanged(Enum.EditModeAccountSetting.ShowArenaFrames, true)
+        EditModeManagerFrame.AccountSettings:RefreshArenaFrames()
+        self.arenaFramesEnabledNeedReload = true
+        self:ReloadRequiredUI()
+    end
+end
+
+function sArenaMixin:ReloadRequiredUI()
+    self.optionsTable = {
+        type = "group",
+        name = self.addonTitle,
+        childGroups = "tab",
+        args = {
+            reloadRequired = {
+                order = 1,
+                name = L["Reload_Warning"],
+                type = "group",
+                args = {
+                    warningTitle = {
+                        order = 1,
+                        type = "description",
+                        name = L["Reload_Warning"],
+                        fontSize = "large",
+                    },
+                    spacer1 = {
+                        order = 1.1,
+                        type = "description",
+                        name = " ",
+                    },
+                    explanation = {
+                        order = 2,
+                        type = "description",
+                        name = L["Reload_Explanation"],
+                        fontSize = "medium",
+                    },
+                    spacer2 = {
+                        order = 2.1,
+                        type = "description",
+                        name = " ",
+                    },
+                    reloadButton = {
+                        order = 3,
+                        type = "execute",
+                        name = L["Button_ReloadUI"],
+                        func = function()
+                            sArena_ReloadedDB.reOpenOptions = true
+                            ReloadUI()
+                        end,
+                        width = "full",
+                    },
+                },
+            },
+        },
+    }
+    LibStub("AceConfig-3.0"):RegisterOptionsTable("sArena", self.optionsTable)
+    LibStub("AceConfigDialog-3.0"):SetDefaultSize("sArena", 400, 270)
+    LibStub("AceConfigRegistry-3.0"):NotifyChange("sArena")
+    C_Timer.After(4, function()
+        LibStub("AceConfigDialog-3.0"):Open("sArena")
+        self:Print(L["Reload_Explanation"])
+    end)
+end
+
+function sArenaFrameMixin:NormalEmpoweredCastbar()
+    local castBar = self.CastBar
+
+    if castBar.empoweredFix then return end
+
+    local empowerEvents = {
+        ["UNIT_SPELLCAST_EMPOWER_START"] = true,
+        ["UNIT_SPELLCAST_EMPOWER_UPDATE"] = true,
+        ["UNIT_SPELLCAST_EMPOWER_STOP"] = true,
+    }
+
+    local function HideChargeTiers(castBar)
+        for _, child in ipairs({castBar:GetChildren()}) do
+            if child.BasePip or (child.Normal and child.Disabled) then
+                child:SetAlpha(0)
+                castBar.empowerHidden = true
+            end
+        end
+    end
+
+    if not castBar.empowerSpark then
+        castBar.empowerSpark = castBar:CreateTexture(nil, "OVERLAY")
+        castBar.empowerSpark:SetAtlas("UI-CastingBar-Pip")
+        castBar.empowerSpark:SetSize(3, 20)
+        castBar.empowerSpark:SetPoint("CENTER", castBar.Spark, "CENTER", 0, -4.5)
+        castBar.empowerSpark:Hide()
+    end
+
+    castBar:HookScript("OnEvent", function(self, event)
+        if empowerEvents[event] then
+            if not self.empowerHidden then
+                HideChargeTiers(castBar)
+            end
+            if not self.textureChangedNeedsColor then
+                self:SetStatusBarTexture("UI-CastingBar-Filling-Standard")
+            end
+            self.Spark:Hide()
+            self.empowerSparkShown = true
+            self.empowerSpark:Show()
+        else
+            if self.empowerSparkShown then
+                self.empowerSpark:Hide()
+                self.Spark:Show()
+                self.empowerSparkShown = false
+            end
+        end
+    end)
+
+    castBar.empoweredFix = true
 end

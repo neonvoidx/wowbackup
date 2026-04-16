@@ -13,7 +13,7 @@ local CastbarSettings = addon.Aura.SettingsCastbar
 
 function CastbarSettings.BuildStandaloneCastbarSettings(ctx)
 	ctx = type(ctx) == "table" and ctx or {}
-	local L = ctx.L or LibStub("AceLocale-3.0"):GetLocale("EnhanceQoL_Aura")
+	local L = ctx.L or LibStub("AceLocale-3.0"):GetLocale("EnhanceQoL")
 	local settingType = ctx.settingType
 	local getCastbarModule = ctx.getCastbarModule
 	local toRGBA = ctx.toRGBA
@@ -421,6 +421,75 @@ function CastbarSettings.BuildStandaloneCastbarSettings(ctx)
 	castIconOffsetX.isEnabled = isCastIconEnabled
 	list[#list + 1] = castIconOffsetX
 
+	local function isCastIconBorderEnabled() return isCastIconEnabled() and getCast({ "cast", "iconBorder", "enabled" }, (castDef.iconBorder and castDef.iconBorder.enabled) == true) == true end
+	list[#list + 1] = checkboxColor({
+		name = L["Cast icon border"] or "Cast icon border",
+		parentId = section.icon,
+		defaultChecked = (castDef.iconBorder and castDef.iconBorder.enabled) == true,
+		isChecked = function() return isCastIconBorderEnabled() end,
+		onChecked = function(val)
+			setCast({ "cast", "iconBorder", "enabled" }, val and true or false)
+			if val and not getCast({ "cast", "iconBorder", "color" }) then setCast({ "cast", "iconBorder", "color" }, (castDef.iconBorder and castDef.iconBorder.color) or { 0, 0, 0, 0.8 }) end
+			refreshCastbar()
+			refreshSettingsUI()
+		end,
+		getColor = function()
+			local fallback = (castDef.iconBorder and castDef.iconBorder.color) or { 0, 0, 0, 0.8 }
+			return toRGBA(getCast({ "cast", "iconBorder", "color" }, castDef.iconBorder and castDef.iconBorder.color), fallback)
+		end,
+		onColor = function(color)
+			setCastColor({ "cast", "iconBorder", "color" }, color.r, color.g, color.b, color.a)
+			setCast({ "cast", "iconBorder", "enabled" }, true)
+			refreshCastbar()
+		end,
+		colorDefault = {
+			r = (castDef.iconBorder and castDef.iconBorder.color and castDef.iconBorder.color[1]) or 0,
+			g = (castDef.iconBorder and castDef.iconBorder.color and castDef.iconBorder.color[2]) or 0,
+			b = (castDef.iconBorder and castDef.iconBorder.color and castDef.iconBorder.color[3]) or 0,
+			a = (castDef.iconBorder and castDef.iconBorder.color and castDef.iconBorder.color[4]) or 0.8,
+		},
+		isEnabled = isCastIconEnabled,
+	})
+
+	local castIconBorderTexture = checkboxDropdown(
+		L["Border texture"] or "Border texture",
+		borderOptions,
+		function() return getCast({ "cast", "iconBorder", "texture" }, (castDef.iconBorder and castDef.iconBorder.texture) or "DEFAULT") end,
+		function(val)
+			setCast({ "cast", "iconBorder", "texture" }, val or "DEFAULT")
+			refreshCastbar()
+		end,
+		(castDef.iconBorder and castDef.iconBorder.texture) or "DEFAULT",
+		section.icon
+	)
+	castIconBorderTexture.isEnabled = isCastIconBorderEnabled
+	list[#list + 1] = castIconBorderTexture
+
+	local castIconBorderSize = slider(L["Border size"] or "Border size", 1, 64, 1, function()
+		local border = getCast({ "cast", "iconBorder" }, castDef.iconBorder or {})
+		return border.edgeSize or 1
+	end, function(val)
+		local border = getCast({ "cast", "iconBorder" }, castDef.iconBorder or {})
+		border.edgeSize = val or 1
+		setCast({ "cast", "iconBorder" }, border)
+		refreshCastbar()
+	end, (castDef.iconBorder and castDef.iconBorder.edgeSize) or 1, section.icon, true)
+	castIconBorderSize.isEnabled = isCastIconBorderEnabled
+	list[#list + 1] = castIconBorderSize
+
+	local castIconBorderOffset = slider(L["Border offset"] or "Border offset", 0, 64, 1, function()
+		local border = getCast({ "cast", "iconBorder" }, castDef.iconBorder or {})
+		if border.offset == nil then return border.edgeSize or 1 end
+		return border.offset
+	end, function(val)
+		local border = getCast({ "cast", "iconBorder" }, castDef.iconBorder or {})
+		border.offset = val or 0
+		setCast({ "cast", "iconBorder" }, border)
+		refreshCastbar()
+	end, (castDef.iconBorder and castDef.iconBorder.offset) or (castDef.iconBorder and castDef.iconBorder.edgeSize) or 1, section.icon, true)
+	castIconBorderOffset.isEnabled = isCastIconBorderEnabled
+	list[#list + 1] = castIconBorderOffset
+
 	list[#list + 1] = { name = L["Spell name"] or "Spell Name", kind = settingType.Collapsible, id = section.spellName, defaultCollapsed = true }
 
 	list[#list + 1] = checkbox(L["Show spell name"] or "Show spell name", function() return getCast({ "cast", "showName" }, castDef.showName ~= false) ~= false end, function(val)
@@ -519,7 +588,7 @@ function CastbarSettings.BuildStandaloneCastbarSettings(ctx)
 	castNameFontOutline.isEnabled = isCastNameEnabled
 	list[#list + 1] = castNameFontOutline
 
-	local castNameFontSize = slider(L["FontSize"] or "Font size", 8, 30, 1, function() return getCast({ "cast", "fontSize" }, castDef.fontSize or 12) end, function(val)
+	local castNameFontSize = slider(FONT_SIZE, 8, 30, 1, function() return getCast({ "cast", "fontSize" }, castDef.fontSize or 12) end, function(val)
 		setCast({ "cast", "fontSize" }, val or 12)
 		refreshCastbar()
 	end, castDef.fontSize or 12, section.spellName, true)
@@ -621,7 +690,7 @@ function CastbarSettings.BuildStandaloneCastbarSettings(ctx)
 	list[#list + 1] = { name = L["Border & backdrop"] or "Border & Backdrop", kind = settingType.Collapsible, id = section.frameAppearance, defaultCollapsed = true }
 
 	local castBackdrop = checkboxColor({
-		name = L["UFBarBackdrop"] or "Show bar backdrop",
+		name = L["Show bar backdrop"] or "Show bar backdrop",
 		parentId = section.frameAppearance,
 		defaultChecked = (castDef.backdrop and castDef.backdrop.enabled) ~= false,
 		isChecked = function() return getCast({ "cast", "backdrop", "enabled" }, (castDef.backdrop and castDef.backdrop.enabled) ~= false) ~= false end,

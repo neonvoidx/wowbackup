@@ -553,7 +553,9 @@ local function HookPowerBarColors()
 
     if customColorsRaidFrames and not BBF.powerColorsRaidFramesHooked then
         hooksecurefunc("CompactUnitFrame_UpdatePowerColor", function(frame)
+            if issecretvalue(frame) then return end
             if not frame or not frame.unit or frame.unit:find("nameplate") or frame:IsForbidden() then return end
+            if not frame.powerBar then return end
 
             local _, powerToken = UnitPowerType(frame.unit)
             if powerToken then
@@ -978,6 +980,7 @@ function BBF.HookHealthbarColors()
 
         if (rpNamesHealthbarColor and TRP3_API) or customHealthbarColors then
             local function UpdateHealthColorUnified(frame)
+                if issecretvalue(frame) then return end
                 if not frame or not frame.unit or frame.unit:find("nameplate") or frame:IsForbidden() then return end
 
                 if TRP3_API and rpNamesHealthbarColor then
@@ -1230,6 +1233,17 @@ function BBF.HookFrameTextureColor()
         texture.changing = true
         texture:SetVertexColor(r, g, b)
         texture.changing = false
+
+        if TargetFrameCompactRing and unit == "target" then
+            TargetFrameCompactRing:SetDesaturated(desaturate)
+            TargetFrameCompactRing:SetVertexColor(r, g, b)
+        elseif FocusFrameCompactRing and unit == "focus" then
+            FocusFrameCompactRing:SetDesaturated(desaturate)
+            FocusFrameCompactRing:SetVertexColor(r, g, b)
+        elseif PlayerFrameCompactRing and unit == "player" then
+            PlayerFrameCompactRing:SetDesaturated(desaturate)
+            PlayerFrameCompactRing:SetVertexColor(r, g, b)
+        end
     end
 
 

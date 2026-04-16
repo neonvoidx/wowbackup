@@ -7,6 +7,12 @@ local function OnEvent(self, event, ...)
 		end
 	elseif event == "PLAYER_LOGIN" then
 	elseif event == "PLAYER_ENTERING_WORLD" then
+		-- fix chat navigation
+		local editBox = ChatFrame1EditBox
+		if editBox and editBox.SetAltArrowKeyMode then
+			editBox:SetAltArrowKeyMode(false)
+		end
+
 		-- Enable action bars 2,3,4,5 on reload
 		local bars = { 2, 3, 4, 5 }
 		local p = "PROXY_SHOW_ACTIONBAR_"
@@ -98,10 +104,11 @@ local function OnEvent(self, event, ...)
 		SetCVar("UnitNamePlayerPVPTitle", 1) -- Show character title
 
 		-- Personal Resource Display
-		SetCVar("nameplateShowSelf", 1)
+		local personalResource = 0
+		SetCVar("nameplateShowSelf", personalResource)
 		SetCVar("NameplatePersonalShowAlways", 0)
-		SetCVar("NameplatePersonalShowInCombat", 1)
-		SetCVar("NameplatePersonalShowWithTarget", 1)
+		SetCVar("NameplatePersonalShowInCombat", personalResource)
+		SetCVar("NameplatePersonalShowWithTarget", personalResource)
 
 		SetCVar("damageMeterEnabled", 1)
 		SetCVar("damageMeterResetOnNewInstance", 1)
@@ -174,7 +181,7 @@ local function OnEvent(self, event, ...)
 		--#endregion
 
 		-- Set edit mode profile to 1st custom profile by default
-		-- C_EditMode.SetActiveLayout(3) -- 3 is 1 for some reason, probably because blizzard 1/2 default and legacy profiles
+		C_EditMode.SetActiveLayout(3) -- 3 is 1 for some reason, probably because blizzard 1/2 default and legacy profiles
 	elseif event == "CHAT_MSG_CHANNEL" then
 		-- Chat Message event
 		local text, playerName, _, channelName = ...

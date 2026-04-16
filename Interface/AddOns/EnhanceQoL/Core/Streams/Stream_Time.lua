@@ -118,7 +118,7 @@ local function createAceWindow()
 	frame:AddChild(showSeconds)
 
 	local clickAction = AceGUI:Create("Dropdown")
-	clickAction:SetLabel(L["Time left-click action"] or "Left-click action")
+	clickAction:SetLabel(L["Left-click action"] or "Left-click action")
 	clickAction:SetList({
 		clock = L["Time left-click opens stopwatch"] or "Open stopwatch",
 		calendar = L["Time left-click opens calendar"] or "Open calendar",

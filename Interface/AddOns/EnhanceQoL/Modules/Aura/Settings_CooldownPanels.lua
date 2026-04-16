@@ -7,13 +7,13 @@ else
 	error(parentAddonName .. " is not loaded")
 end
 
-local L = LibStub("AceLocale-3.0"):GetLocale("EnhanceQoL_Aura")
+local L = LibStub("AceLocale-3.0"):GetLocale("EnhanceQoL")
 
 local cat = addon.SettingsLayout and addon.SettingsLayout.rootUI
 if not (cat and addon.functions and addon.functions.SettingsCreateExpandableSection) then return end
 
 local expandable = addon.functions.SettingsCreateExpandableSection(cat, {
-	name = L["CooldownPanels"] or "Cooldown Panels",
+	name = L["Cooldown Panels"] or "Cooldown Panels",
 	expanded = false,
 	colorizeTitle = false,
 })
@@ -39,7 +39,7 @@ addon.functions.SettingsCreateButton(cat, {
 })
 
 addon.functions.SettingsCreateButton(cat, {
-	text = L["CooldownPanelAddPanel"] or "Add Panel",
+	text = L["Add Panel"] or "Add Panel",
 	func = function()
 		withCooldownPanels(function(panels)
 			local panelId = panels:CreatePanel(L["CooldownPanelNewPanel"] or "New Panel")

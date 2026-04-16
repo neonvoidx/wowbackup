@@ -12,8 +12,12 @@ addon.Aura.CooldownPanels = addon.Aura.CooldownPanels or {}
 local CooldownPanels = addon.Aura.CooldownPanels
 CooldownPanels.helper = CooldownPanels.helper or {}
 local Helper = CooldownPanels.helper
-local L = LibStub("AceLocale-3.0"):GetLocale("EnhanceQoL_Aura")
+local L = LibStub("AceLocale-3.0"):GetLocale("EnhanceQoL")
 local LSM = LibStub("LibSharedMedia-3.0", true)
+local DIRECTION_LEFT_LABEL = HUD_EDIT_MODE_SETTING_ENCOUNTER_EVENTS_ICON_DIRECTION_LEFT
+local DIRECTION_RIGHT_LABEL = HUD_EDIT_MODE_SETTING_ENCOUNTER_EVENTS_ICON_DIRECTION_RIGHT
+local DIRECTION_TOP_LABEL = HUD_EDIT_MODE_SETTING_ENCOUNTER_EVENTS_ICON_DIRECTION_TOP
+local DIRECTION_BOTTOM_LABEL = HUD_EDIT_MODE_SETTING_ENCOUNTER_EVENTS_ICON_DIRECTION_BOTTOM
 
 Helper.Api = Helper.Api or {}
 local Api = Helper.Api
@@ -27,6 +31,7 @@ Api.GetInventoryItemCooldown = GetInventoryItemCooldown
 Api.GetInventorySlotInfo = GetInventorySlotInfo
 Api.GetActionInfo = GetActionInfo
 Api.GetActionText = C_ActionBar and C_ActionBar.GetActionText
+Api.IsAssistedCombatAction = C_ActionBar and C_ActionBar.IsAssistedCombatAction
 Api.GetCursorInfo = GetCursorInfo
 Api.GetCursorPosition = GetCursorPosition
 Api.ClearCursor = ClearCursor
@@ -40,6 +45,13 @@ Api.GetBaseSpell = C_Spell and C_Spell.GetBaseSpell
 Api.GetOverrideSpell = C_Spell and C_Spell.GetOverrideSpell
 Api.GetSpellPowerCost = C_Spell and C_Spell.GetSpellPowerCost
 Api.EnableSpellRangeCheck = C_Spell and C_Spell.EnableSpellRangeCheck
+Api.GetActiveTalentConfigID = C_ClassTalents and C_ClassTalents.GetActiveConfigID
+Api.GetTraitConfigInfo = C_Traits and C_Traits.GetConfigInfo
+Api.GetTraitTreeNodes = C_Traits and C_Traits.GetTreeNodes
+Api.GetTraitNodeInfo = C_Traits and C_Traits.GetNodeInfo
+Api.GetTraitEntryInfo = C_Traits and C_Traits.GetEntryInfo
+Api.GetTraitDefinitionInfo = C_Traits and C_Traits.GetDefinitionInfo
+Api.TraitNodeTypeSelection = Enum and Enum.TraitNodeType and Enum.TraitNodeType.Selection
 Api.IsSpellUsableFn = C_Spell and C_Spell.IsSpellUsable or IsUsableSpell
 Api.IsSpellPassiveFn = C_Spell and C_Spell.IsSpellPassive or IsPassiveSpell
 Api.GetAssistedCombatNextSpell = C_AssistedCombat and C_AssistedCombat.GetNextCastSpell
@@ -85,22 +97,30 @@ Helper.LayoutModeOptions = {
 }
 Helper.AnchorOptions = {
 	{ value = "TOPLEFT", label = L["Top Left"] or "Top Left" },
-	{ value = "TOP", label = L["Top"] or "Top" },
+	{ value = "TOP", label = DIRECTION_TOP_LABEL },
 	{ value = "TOPRIGHT", label = L["Top Right"] or "Top Right" },
-	{ value = "LEFT", label = L["Left"] or "Left" },
+	{ value = "LEFT", label = DIRECTION_LEFT_LABEL },
 	{ value = "CENTER", label = L["Center"] or "Center" },
-	{ value = "RIGHT", label = L["Right"] or "Right" },
+	{ value = "RIGHT", label = DIRECTION_RIGHT_LABEL },
 	{ value = "BOTTOMLEFT", label = L["Bottom Left"] or "Bottom Left" },
-	{ value = "BOTTOM", label = L["Bottom"] or "Bottom" },
+	{ value = "BOTTOM", label = DIRECTION_BOTTOM_LABEL },
 	{ value = "BOTTOMRIGHT", label = L["Bottom Right"] or "Bottom Right" },
 }
 Helper.GrowthPointOptions = {
-	{ value = "TOPLEFT", label = L["Left"] or "Left" },
+	{ value = "TOPLEFT", label = DIRECTION_LEFT_LABEL },
 	{ value = "TOP", label = L["Center"] or "Center" },
-	{ value = "TOPRIGHT", label = L["Right"] or "Right" },
+	{ value = "TOPRIGHT", label = DIRECTION_RIGHT_LABEL },
+}
+Helper.FixedGroupStartPointOptions = {
+	{ value = "TOPLEFT", label = L["Top Left"] or "Top Left" },
+	{ value = "TOP", label = DIRECTION_TOP_LABEL },
+	{ value = "TOPRIGHT", label = L["Top Right"] or "Top Right" },
+	{ value = "BOTTOMLEFT", label = L["Bottom Left"] or "Bottom Left" },
+	{ value = "BOTTOM", label = DIRECTION_BOTTOM_LABEL },
+	{ value = "BOTTOMRIGHT", label = L["Bottom Right"] or "Bottom Right" },
 }
 Helper.FontStyleOptions = {
-	{ value = "NONE", label = L["None"] or "None" },
+	{ value = "NONE", label = _G.NONE },
 	{ value = "OUTLINE", label = L["Outline"] or "Outline" },
 	{ value = "THICKOUTLINE", label = L["Thick Outline"] or "Thick Outline" },
 	{ value = "MONOCHROMEOUTLINE", label = L["Monochrome Outline"] or "Monochrome Outline" },
@@ -148,6 +168,7 @@ Helper.PANEL_LAYOUT_DEFAULTS = {
 	noDesaturation = false,
 	cdmAuraAlwaysShowMode = "HIDE",
 	checkPower = false,
+	hideWhenNoResource = false,
 	powerTintColor = { 0.5, 0.5, 1, 1 },
 	unusableTintColor = { 0.6, 0.6, 0.6, 1 },
 	opacityOutOfCombat = 1,
@@ -212,6 +233,9 @@ Helper.ENTRY_DEFAULTS = {
 	iconOffsetY = 0,
 	showCooldown = true,
 	showCooldownText = true,
+	cooldownVisibilityUseGlobal = true,
+	hideOnCooldown = false,
+	showOnCooldown = false,
 	showCharges = false,
 	showStacks = false,
 	stackStyleUseGlobal = true,
@@ -249,6 +273,8 @@ Helper.ENTRY_DEFAULTS = {
 	noDesaturation = false,
 	checkPowerUseGlobal = true,
 	checkPower = false,
+	hideWhenNoResourceUseGlobal = true,
+	hideWhenNoResource = false,
 	glowReady = false,
 	readyGlowCheckPower = false,
 	pandemicGlow = false,
@@ -277,6 +303,8 @@ Helper.ENTRY_DEFAULTS = {
 	stateTextureDouble = false,
 	stateTextureMirror = false,
 	stateTextureMirrorSecond = true,
+	stateTextureMirrorVertical = false,
+	stateTextureMirrorVerticalSecond = false,
 	stateTextureSpacingX = 0,
 	stateTextureSpacingY = 0,
 }
@@ -296,9 +324,9 @@ Helper.RADIAL_ARC_DEGREES_MIN = 15
 Helper.RADIAL_ARC_DEGREES_MAX = 360
 Helper.EXAMPLE_COOLDOWN_PERCENT = 0.55
 Helper.GLOW_STYLE_OPTIONS = {
-	{ value = "MARCHING_ANTS", labelKey = "CooldownPanelGlowStyleMarchingAnts", fallback = "Marching ants" },
-	{ value = "FLASH", labelKey = "CooldownPanelGlowStyleFlash", fallback = "Flash" },
-	{ value = "BLIZZARD", labelKey = "CooldownPanelGlowStyleBlizzard", fallback = "Blizzard" },
+	{ value = "MARCHING_ANTS", labelKey = "Marching ants", fallback = "Marching ants" },
+	{ value = "FLASH", labelKey = "Flash", fallback = "Flash" },
+	{ value = "BLIZZARD", labelKey = "Blizzard", fallback = "Blizzard" },
 }
 Helper.VALID_DIRECTIONS = {
 	RIGHT = true,
@@ -306,6 +334,37 @@ Helper.VALID_DIRECTIONS = {
 	UP = true,
 	DOWN = true,
 }
+Helper.VALID_FIXED_GROUP_START_POINTS = {
+	TOPLEFT = true,
+	TOP = true,
+	TOPRIGHT = true,
+	BOTTOMLEFT = true,
+	BOTTOM = true,
+	BOTTOMRIGHT = true,
+}
+Helper.FIXED_GROUP_DYNAMIC_DIRECTIONS_BY_START_POINT = {
+	TOPLEFT = { RIGHT = true, DOWN = true },
+	TOP = { CENTER = true },
+	TOPRIGHT = { LEFT = true, DOWN = true },
+	BOTTOMLEFT = { RIGHT = true, UP = true },
+	BOTTOM = { CENTER = true },
+	BOTTOMRIGHT = { LEFT = true, UP = true },
+}
+Helper.FIXED_GROUP_DIRECTION_OPTIONS_BY_START_POINT = {}
+local fixedGroupDirectionOptionByValue = {
+	CENTER = { value = "CENTER", label = L["Center"] or "Center" },
+}
+for _, option in ipairs(Helper.DirectionOptions) do
+	if option and option.value then fixedGroupDirectionOptionByValue[option.value] = option end
+end
+for startPoint, validDirections in pairs(Helper.FIXED_GROUP_DYNAMIC_DIRECTIONS_BY_START_POINT) do
+	local options = {}
+	for _, direction in ipairs({ "LEFT", "RIGHT", "UP", "DOWN", "CENTER" }) do
+		local option = validDirections[direction] and fixedGroupDirectionOptionByValue[direction] or nil
+		if option then options[#options + 1] = option end
+	end
+	Helper.FIXED_GROUP_DIRECTION_OPTIONS_BY_START_POINT[startPoint] = options
+end
 
 function Helper.NormalizeGlowStyle(style, fallback)
 	local normalized = type(style) == "string" and strupper(style) or nil
@@ -325,6 +384,13 @@ function Helper.NormalizeTextureInput(value)
 	if type(value) ~= "string" then return "" end
 	if strtrim then return strtrim(value) end
 	return (value:gsub("^%s+", ""):gsub("%s+$", ""))
+end
+
+function Helper.NormalizeFileDataID(value)
+	local numeric = tonumber(value)
+	if not numeric or numeric <= 0 then return nil end
+	if math.floor(numeric) ~= numeric then return nil end
+	return numeric
 end
 
 function Helper.ResolveTextureInput(value)
@@ -458,6 +524,36 @@ function Helper.NormalizeDirection(direction, fallback)
 	return "RIGHT"
 end
 
+function Helper.NormalizeFixedGroupStartPoint(value, fallback)
+	local upperValue = type(value) == "string" and strupper(value) or nil
+	if upperValue and Helper.VALID_FIXED_GROUP_START_POINTS[upperValue] then return upperValue end
+	local upperFallback = type(fallback) == "string" and strupper(fallback) or nil
+	if upperFallback and Helper.VALID_FIXED_GROUP_START_POINTS[upperFallback] then return upperFallback end
+	return "TOPLEFT"
+end
+
+function Helper.GetDefaultFixedGroupDynamicDirection(startPoint)
+	startPoint = Helper.NormalizeFixedGroupStartPoint(startPoint, "TOPLEFT")
+	if startPoint == "TOP" or startPoint == "BOTTOM" then return "CENTER" end
+	if startPoint == "TOPRIGHT" or startPoint == "BOTTOMRIGHT" then return "LEFT" end
+	return "RIGHT"
+end
+
+function Helper.NormalizeFixedGroupDynamicDirection(startPoint, value, fallback)
+	startPoint = Helper.NormalizeFixedGroupStartPoint(startPoint, "TOPLEFT")
+	local validDirections = Helper.FIXED_GROUP_DYNAMIC_DIRECTIONS_BY_START_POINT[startPoint] or {}
+	local upperValue = type(value) == "string" and strupper(value) or nil
+	if upperValue and validDirections[upperValue] then return upperValue end
+	local upperFallback = type(fallback) == "string" and strupper(fallback) or nil
+	if upperFallback and validDirections[upperFallback] then return upperFallback end
+	return Helper.GetDefaultFixedGroupDynamicDirection(startPoint)
+end
+
+function Helper.GetFixedGroupDynamicDirectionOptions(startPoint)
+	startPoint = Helper.NormalizeFixedGroupStartPoint(startPoint, "TOPLEFT")
+	return Helper.FIXED_GROUP_DIRECTION_OPTIONS_BY_START_POINT[startPoint] or {}
+end
+
 function Helper.NormalizeLayoutMode(value, fallback)
 	if type(value) == "string" then
 		local upper = string.upper(value)
@@ -496,6 +592,51 @@ function Helper.NormalizeFixedGridSize(value, fallback)
 	return num
 end
 
+function Helper.NormalizeFixedGroupMode(value, fallback)
+	local mode = type(value) == "string" and string.upper(value) or nil
+	if mode == "STATIC" or mode == "DYNAMIC" then return mode end
+	return fallback or "DYNAMIC"
+end
+
+function Helper.GetFixedGroupMode(group)
+	if type(group) ~= "table" then return "DYNAMIC" end
+	return Helper.NormalizeFixedGroupMode(group.mode, "DYNAMIC")
+end
+
+function Helper.FixedGroupUsesStaticSlots(group)
+	if type(group) == "table" and type(group._eqolIsStatic) == "boolean" then return group._eqolIsStatic == true end
+	return Helper.GetFixedGroupMode(group) == "STATIC"
+end
+
+function Helper.NormalizeFixedGroupIconSize(value)
+	local size = Helper.ClampInt(value, 12, 128, nil)
+	if size == nil then return nil end
+	return size
+end
+
+function Helper.NormalizeFixedGroupLayoutOverrides(value)
+	if type(value) ~= "table" then return nil end
+	local normalized = {}
+	if value.spacing ~= nil then normalized.spacing = Helper.ClampInt(value.spacing, 0, Helper.SPACING_RANGE or 200, Helper.PANEL_LAYOUT_DEFAULTS.spacing or 2) end
+	if value.iconOffsetX ~= nil then normalized.iconOffsetX = Helper.ClampInt(value.iconOffsetX, -Helper.OFFSET_RANGE, Helper.OFFSET_RANGE, 0) end
+	if value.iconOffsetY ~= nil then normalized.iconOffsetY = Helper.ClampInt(value.iconOffsetY, -Helper.OFFSET_RANGE, Helper.OFFSET_RANGE, 0) end
+	if type(value.procGlowEnabled) == "boolean" then normalized.procGlowEnabled = value.procGlowEnabled == true end
+	if type(value.hideGlowOutOfCombat) == "boolean" then normalized.hideGlowOutOfCombat = value.hideGlowOutOfCombat == true end
+	if value.procGlowStyle ~= nil then normalized.procGlowStyle = Helper.NormalizeGlowStyle(value.procGlowStyle, Helper.PANEL_LAYOUT_DEFAULTS.readyGlowStyle) end
+	if value.procGlowInset ~= nil then normalized.procGlowInset = Helper.NormalizeGlowInset(value.procGlowInset, Helper.PANEL_LAYOUT_DEFAULTS.readyGlowInset or 0) end
+	if type(value.readyGlowCheckPower) == "boolean" then normalized.readyGlowCheckPower = value.readyGlowCheckPower == true end
+	if value.readyGlowStyle ~= nil then normalized.readyGlowStyle = Helper.NormalizeGlowStyle(value.readyGlowStyle, Helper.PANEL_LAYOUT_DEFAULTS.readyGlowStyle) end
+	if value.readyGlowInset ~= nil then normalized.readyGlowInset = Helper.NormalizeGlowInset(value.readyGlowInset, Helper.PANEL_LAYOUT_DEFAULTS.readyGlowInset or 0) end
+	if value.readyGlowColor ~= nil then normalized.readyGlowColor = Helper.NormalizeColor(value.readyGlowColor, Helper.PANEL_LAYOUT_DEFAULTS.readyGlowColor) end
+	if value.pandemicGlowStyle ~= nil then normalized.pandemicGlowStyle = Helper.NormalizeGlowStyle(value.pandemicGlowStyle, Helper.PANEL_LAYOUT_DEFAULTS.readyGlowStyle) end
+	if value.pandemicGlowInset ~= nil then normalized.pandemicGlowInset = Helper.NormalizeGlowInset(value.pandemicGlowInset, Helper.PANEL_LAYOUT_DEFAULTS.readyGlowInset or 0) end
+	if value.pandemicGlowColor ~= nil then
+		normalized.pandemicGlowColor = Helper.NormalizeColor(value.pandemicGlowColor, Helper.PANEL_LAYOUT_DEFAULTS.pandemicGlowColor or Helper.PANEL_LAYOUT_DEFAULTS.readyGlowColor)
+	end
+	if not next(normalized) then return nil end
+	return normalized
+end
+
 local function getFixedGridDefaultColumns(panel)
 	if type(panel) ~= "table" then return 4 end
 	local layout = type(panel.layout) == "table" and panel.layout or nil
@@ -509,75 +650,679 @@ local function getFixedGridDefaultColumns(panel)
 	return math.min(math.max(math.ceil(math.sqrt(entryCount)), 4), 12)
 end
 
-function Helper.EnsureFixedSlotAssignments(panel)
-	if type(panel) ~= "table" or type(panel.entries) ~= "table" or type(panel.order) ~= "table" then return 0, 0 end
+local function getFixedCellKey(column, row) return tostring(column) .. ":" .. tostring(row) end
+
+local function fixedLayoutCacheHasMissingDynamicTargets(candidate)
+	local groups = candidate and candidate.groups or nil
+	if type(groups) ~= "table" then return false end
+	for i = 1, #groups do
+		local group = groups[i]
+		if group and Helper.FixedGroupUsesStaticSlots(group) ~= true and type(group._eqolDynamicTargetIndices) ~= "table" then return true end
+	end
+	return false
+end
+
+local function isWithinConfiguredFixedGrid(column, row, configuredColumns, configuredRows)
+	if not (column and row) then return false end
+	if configuredColumns > 0 and column > configuredColumns then return false end
+	if configuredRows > 0 and row > configuredRows then return false end
+	return true
+end
+
+local function claimNextFreeFixedCell(nextIndex, columns, configuredColumns, configuredRows, used)
+	while true do
+		local column = ((nextIndex - 1) % columns) + 1
+		local row = math.floor((nextIndex - 1) / columns) + 1
+		if configuredRows > 0 and row > configuredRows then return nil, nil, nextIndex end
+		nextIndex = nextIndex + 1
+		local key = getFixedCellKey(column, row)
+		if isWithinConfiguredFixedGrid(column, row, configuredColumns, configuredRows) and not used[key] then return column, row, nextIndex end
+	end
+end
+
+local function claimNextFreeFixedGroupCell(groupState, configuredColumns, configuredRows)
+	local group = groupState and groupState.group or nil
+	if not group then return nil end
+	for groupRow = group.row, group.row + group.rows - 1 do
+		for groupColumn = group.column, group.column + group.columns - 1 do
+			local key = getFixedCellKey(groupColumn, groupRow)
+			if isWithinConfiguredFixedGrid(groupColumn, groupRow, configuredColumns, configuredRows) and not groupState.used[key] then return groupColumn, groupRow end
+		end
+	end
+	return nil
+end
+
+local function appendFixedGroupRange(target, firstValue, count, ascending)
+	if count <= 0 then return target end
+	if ascending then
+		for offset = 0, count - 1 do
+			target[#target + 1] = firstValue + offset
+		end
+	else
+		for offset = count - 1, 0, -1 do
+			target[#target + 1] = firstValue + offset
+		end
+	end
+	return target
+end
+
+local fixedGroupOrderedCellsCache = setmetatable({}, { __mode = "k" })
+local fixedGroupDynamicPlacementCache = setmetatable({}, { __mode = "k" })
+
+local function getFixedGroupPlacementSignature(columns, rows, originColumn, originRow, startPoint, direction)
+	return table.concat({
+		tostring(columns),
+		tostring(rows),
+		tostring(originColumn),
+		tostring(originRow),
+		tostring(startPoint),
+		tostring(direction),
+	}, ":")
+end
+
+function Helper.GetFixedGroupOrderedCells(group)
+	local cells = {}
+	if type(group) ~= "table" then return cells end
+	local columns = Helper.NormalizeFixedGridSize(group.columns, 0)
+	local rows = Helper.NormalizeFixedGridSize(group.rows, 0)
+	local originColumn = Helper.NormalizeSlotCoordinate(group.column)
+	local originRow = Helper.NormalizeSlotCoordinate(group.row)
+	if not (originColumn and originRow) or columns <= 0 or rows <= 0 then return cells end
+
+	local startPoint = Helper.NormalizeFixedGroupStartPoint(group.dynamicStartPoint, "TOPLEFT")
+	local direction = Helper.NormalizeFixedGroupDynamicDirection(startPoint, group.dynamicDirection, nil)
+	local signature = getFixedGroupPlacementSignature(columns, rows, originColumn, originRow, startPoint, direction)
+	local cached = fixedGroupOrderedCellsCache[group]
+	if cached and cached.signature == signature and type(cached.cells) == "table" then return cached.cells end
+	local centerGrowth = direction == "CENTER"
+	local horizontalFirst = centerGrowth or direction == "RIGHT" or direction == "LEFT"
+	local topToBottom = centerGrowth and startPoint ~= "BOTTOM" or direction == "DOWN" or (horizontalFirst and (startPoint == "TOPLEFT" or startPoint == "TOPRIGHT"))
+	local leftToRight = direction == "RIGHT" or ((not horizontalFirst) and (startPoint == "TOPLEFT" or startPoint == "BOTTOMLEFT"))
+	local orderedColumns = centerGrowth and appendFixedGroupRange({}, originColumn, columns, true) or appendFixedGroupRange({}, originColumn, columns, leftToRight)
+	local orderedRows = appendFixedGroupRange({}, originRow, rows, topToBottom)
+
+	if horizontalFirst then
+		for rowIndex = 1, #orderedRows do
+			local row = orderedRows[rowIndex]
+			for columnIndex = 1, #orderedColumns do
+				cells[#cells + 1] = {
+					column = orderedColumns[columnIndex],
+					row = row,
+				}
+			end
+		end
+	else
+		for columnIndex = 1, #orderedColumns do
+			local column = orderedColumns[columnIndex]
+			for rowIndex = 1, #orderedRows do
+				cells[#cells + 1] = {
+					column = column,
+					row = orderedRows[rowIndex],
+				}
+			end
+		end
+	end
+
+	fixedGroupOrderedCellsCache[group] = {
+		signature = signature,
+		cells = cells,
+	}
+	return cells
+end
+
+function Helper.IsFixedGroupCenterGrowth(group)
+	if type(group) ~= "table" or Helper.FixedGroupUsesStaticSlots(group) == true then return false end
+	local startPoint = Helper.NormalizeFixedGroupStartPoint(group.dynamicStartPoint, "TOPLEFT")
+	local direction = Helper.NormalizeFixedGroupDynamicDirection(startPoint, group.dynamicDirection, nil)
+	return direction == "CENTER" and (startPoint == "TOP" or startPoint == "BOTTOM")
+end
+
+function Helper.GetFixedGroupDynamicPlacement(group, localIndex, itemCount)
+	if type(group) ~= "table" then return nil end
+	local columns = Helper.NormalizeFixedGridSize(group.columns, 0)
+	local rows = Helper.NormalizeFixedGridSize(group.rows, 0)
+	local originColumn = Helper.NormalizeSlotCoordinate(group.column)
+	local originRow = Helper.NormalizeSlotCoordinate(group.row)
+	if not (originColumn and originRow) or columns <= 0 or rows <= 0 then return nil end
+
+	local count = math.floor(tonumber(itemCount) or 0)
+	local index = math.floor(tonumber(localIndex) or 0)
+	local capacity = columns * rows
+	if count < 1 or index < 1 then return nil end
+	if count > capacity then count = capacity end
+	if index > count then return nil end
+
+	local startPoint = Helper.NormalizeFixedGroupStartPoint(group.dynamicStartPoint, "TOPLEFT")
+	local direction = Helper.NormalizeFixedGroupDynamicDirection(startPoint, group.dynamicDirection, nil)
+	local signature = getFixedGroupPlacementSignature(columns, rows, originColumn, originRow, startPoint, direction)
+	local dynamicCache = fixedGroupDynamicPlacementCache[group]
+	if not dynamicCache or dynamicCache.signature ~= signature then
+		dynamicCache = {
+			signature = signature,
+			counts = {},
+		}
+		fixedGroupDynamicPlacementCache[group] = dynamicCache
+	end
+	local countCache = dynamicCache.counts[count]
+	if type(countCache) ~= "table" then
+		countCache = {}
+		dynamicCache.counts[count] = countCache
+	end
+	local cached = countCache[index]
+	if cached ~= nil then
+		if cached == false then return nil end
+		return cached
+	end
+	if direction == "CENTER" and (startPoint == "TOP" or startPoint == "BOTTOM") then
+		local zeroIndex = index - 1
+		local rowIndex = math.floor(zeroIndex / columns)
+		if rowIndex >= rows then return nil end
+		local rowCount = math.min(columns, count - (rowIndex * columns))
+		if rowCount <= 0 then return nil end
+		local columnIndex = zeroIndex % columns
+		local startOffset = (columns - rowCount) / 2
+		local baseStart = math.floor(startOffset)
+		local fractionalStart = startOffset - baseStart
+		local row = startPoint == "BOTTOM" and (originRow + rows - 1 - rowIndex) or (originRow + rowIndex)
+		local placement = {
+			column = originColumn + baseStart + columnIndex,
+			row = row,
+			offsetSlotsX = fractionalStart,
+			offsetSlotsY = 0,
+			rowCount = rowCount,
+			rowIndex = rowIndex,
+			columnIndex = columnIndex,
+			count = count,
+			index = index,
+		}
+		countCache[index] = placement
+		return placement
+	end
+
+	local orderedCells = Helper.GetFixedGroupOrderedCells(group)
+	local cell = orderedCells[index]
+	if not cell then
+		countCache[index] = false
+		return nil
+	end
+	local placement = {
+		column = cell.column,
+		row = cell.row,
+		offsetSlotsX = 0,
+		offsetSlotsY = 0,
+		count = count,
+		index = index,
+	}
+	countCache[index] = placement
+	return placement
+end
+
+function Helper.NormalizeFixedGroupId(value)
+	if type(value) == "number" then value = tostring(math.floor(value)) end
+	if type(value) ~= "string" then return nil end
+	if strtrim then
+		value = strtrim(value)
+	else
+		value = value:match("^%s*(.-)%s*$")
+	end
+	if value == "" then return nil end
+	return value
+end
+
+function Helper.NormalizeFixedGroups(layout)
+	if type(layout) ~= "table" then return {} end
+	local source = layout.fixedGroups
+	if type(source) ~= "table" then
+		source = {}
+		layout.fixedGroups = source
+		return source
+	end
+	local seen = {}
+	local fallbackIndex = 1
+	local writeIndex = 1
+	for i = 1, #source do
+		local group = source[i]
+		if type(group) == "table" then
+			local id = Helper.NormalizeFixedGroupId(group.id)
+			if not id then id = "group" .. tostring(fallbackIndex) end
+			while seen[id] do
+				fallbackIndex = fallbackIndex + 1
+				id = "group" .. tostring(fallbackIndex)
+			end
+			local column = Helper.NormalizeSlotCoordinate(group.column)
+			local row = Helper.NormalizeSlotCoordinate(group.row)
+			local columns = Helper.NormalizeFixedGridSize(group.columns, 0)
+			local rows = Helper.NormalizeFixedGridSize(group.rows, 0)
+			if column and row and columns > 0 and rows > 0 then
+				local name = type(group.name) == "string" and group.name or ""
+				if strtrim then
+					name = strtrim(name)
+				else
+					name = name:match("^%s*(.-)%s*$")
+				end
+				if name == "" then name = "Group " .. tostring(fallbackIndex) end
+				if writeIndex ~= i then
+					source[writeIndex] = group
+					source[i] = nil
+				end
+				group.id = id
+				group.name = name
+				group.column = column
+				group.row = row
+				group.columns = columns
+				group.rows = rows
+				group.mode = Helper.NormalizeFixedGroupMode(group.mode, "DYNAMIC")
+				group._eqolIsStatic = group.mode == "STATIC"
+				group._eqolCapacity = columns * rows
+				group.dynamicStartPoint = Helper.NormalizeFixedGroupStartPoint(group.dynamicStartPoint, "TOPLEFT")
+				group.dynamicDirection = Helper.NormalizeFixedGroupDynamicDirection(group.dynamicStartPoint, group.dynamicDirection, nil)
+				group.iconSize = Helper.NormalizeFixedGroupIconSize(group.iconSize)
+				group.layoutOverrides = Helper.NormalizeFixedGroupLayoutOverrides(group.layoutOverrides)
+				seen[id] = true
+				writeIndex = writeIndex + 1
+			end
+			fallbackIndex = fallbackIndex + 1
+		end
+	end
+	for i = writeIndex, #source do
+		source[i] = nil
+	end
+	layout.fixedGroups = source
+	return source
+end
+
+function Helper.InvalidateFixedLayoutCache(panel)
+	if type(panel) ~= "table" then return end
+	panel._eqolFixedLayoutCache = nil
+end
+
+function Helper.GetFixedGroupById(panelOrLayout, groupId)
+	groupId = Helper.NormalizeFixedGroupId(groupId)
+	if not groupId then return nil end
+	if type(panelOrLayout) == "table" and type(panelOrLayout.entries) == "table" and type(panelOrLayout.order) == "table" then
+		local cache = Helper.GetFixedLayoutCache and Helper.GetFixedLayoutCache(panelOrLayout) or nil
+		local group = cache and cache.groupById and cache.groupById[groupId] or nil
+		if group then return group, cache and cache.groupIndexById and cache.groupIndexById[groupId] or nil end
+	end
+	local layout = panelOrLayout
+	if type(panelOrLayout) == "table" and type(panelOrLayout.layout) == "table" then layout = panelOrLayout.layout end
+	local groups = Helper.NormalizeFixedGroups(layout)
+	for i = 1, #groups do
+		local group = groups[i]
+		if group and group.id == groupId then return group, i end
+	end
+	return nil
+end
+
+function Helper.GetFixedGroupCapacity(group)
+	if type(group) ~= "table" then return 0 end
+	if type(group._eqolCapacity) == "number" then return group._eqolCapacity end
+	local columns = Helper.NormalizeFixedGridSize(group.columns, 0)
+	local rows = Helper.NormalizeFixedGridSize(group.rows, 0)
+	if columns <= 0 or rows <= 0 then return 0 end
+	return columns * rows
+end
+
+function Helper.GetFixedGridCapacity(panel)
+	if type(panel) ~= "table" then return 0 end
+	local layout = type(panel.layout) == "table" and panel.layout or nil
+	local columns = Helper.NormalizeFixedGridSize(layout and layout.fixedGridColumns, 0)
+	local rows = Helper.NormalizeFixedGridSize(layout and layout.fixedGridRows, 0)
+	if columns <= 0 or rows <= 0 then return 0 end
+	return columns * rows
+end
+
+function Helper.GetFixedGroupAtCell(panelOrLayout, column, row, ignoreGroupId)
+	column = Helper.NormalizeSlotCoordinate(column)
+	row = Helper.NormalizeSlotCoordinate(row)
+	ignoreGroupId = Helper.NormalizeFixedGroupId(ignoreGroupId)
+	if not (column and row) then return nil end
+	if type(panelOrLayout) == "table" and type(panelOrLayout.entries) == "table" and type(panelOrLayout.order) == "table" and ignoreGroupId == nil then
+		local cache = Helper.GetFixedLayoutCache and Helper.GetFixedLayoutCache(panelOrLayout) or nil
+		local group = cache and cache.groupAtCell and cache.groupAtCell[getFixedCellKey(column, row)] or nil
+		if group then
+			local groupId = group and group.id or nil
+			return group, groupId and cache and cache.groupIndexById and cache.groupIndexById[groupId] or nil
+		end
+	end
+	local layout = panelOrLayout
+	if type(panelOrLayout) == "table" and type(panelOrLayout.layout) == "table" then layout = panelOrLayout.layout end
+	local groups = Helper.NormalizeFixedGroups(layout)
+	for i = 1, #groups do
+		local group = groups[i]
+		if group and group.id ~= ignoreGroupId then
+			local right = group.column + group.columns - 1
+			local bottom = group.row + group.rows - 1
+			if column >= group.column and column <= right and row >= group.row and row <= bottom then return group, i end
+		end
+	end
+	return nil
+end
+
+function Helper.GetFixedGroupLocalIndex(group, column, row)
+	if type(group) ~= "table" then return nil end
+	column = Helper.NormalizeSlotCoordinate(column)
+	row = Helper.NormalizeSlotCoordinate(row)
+	if not (column and row) then return nil end
+	if Helper.FixedGroupUsesStaticSlots(group) ~= true then
+		local orderedCells = Helper.GetFixedGroupOrderedCells(group)
+		for index = 1, #orderedCells do
+			local cell = orderedCells[index]
+			if cell and cell.column == column and cell.row == row then return index end
+		end
+		return nil
+	end
+	local relativeColumn = column - group.column + 1
+	local relativeRow = row - group.row + 1
+	if relativeColumn < 1 or relativeRow < 1 or relativeColumn > group.columns or relativeRow > group.rows then return nil end
+	return ((relativeRow - 1) * group.columns) + relativeColumn
+end
+
+function Helper.SyncEntryFixedGroupIconState(panelOrLayout, entry, resolvedGroup)
+	if type(entry) ~= "table" then return nil end
+	local group = type(resolvedGroup) == "table" and resolvedGroup or Helper.GetFixedGroupById(panelOrLayout, entry.fixedGroupId)
+	local groupIconSize = group and Helper.NormalizeFixedGroupIconSize(group.iconSize) or nil
+	if group and groupIconSize ~= nil then
+		if entry.fixedGroupIconSizeInherited ~= true then
+			entry.fixedGroupIconSizePrevUseGlobal = entry.iconSizeUseGlobal
+			entry.fixedGroupIconSizePrev = entry.iconSize
+		end
+		entry.iconSizeUseGlobal = false
+		entry.iconSize = groupIconSize
+		entry.fixedGroupIconSizeInherited = true
+	elseif entry.fixedGroupIconSizeInherited == true then
+		local previousUseGlobal = entry.fixedGroupIconSizePrevUseGlobal
+		if type(previousUseGlobal) == "boolean" then
+			entry.iconSizeUseGlobal = previousUseGlobal
+		else
+			entry.iconSizeUseGlobal = true
+		end
+		entry.iconSize = entry.fixedGroupIconSizePrev
+		entry.fixedGroupIconSizeInherited = nil
+		entry.fixedGroupIconSizePrevUseGlobal = nil
+		entry.fixedGroupIconSizePrev = nil
+	else
+		entry.fixedGroupIconSizeInherited = nil
+		entry.fixedGroupIconSizePrevUseGlobal = nil
+		entry.fixedGroupIconSizePrev = nil
+	end
+	return group
+end
+
+function Helper.GetFixedLayoutCache(panel)
+	if type(panel) ~= "table" or type(panel.entries) ~= "table" or type(panel.order) ~= "table" then return nil end
 	panel.layout = type(panel.layout) == "table" and panel.layout or {}
 	local layout = panel.layout
+	local cache = panel._eqolFixedLayoutCache
+	local groupsRef = type(layout.fixedGroups) == "table" and layout.fixedGroups or nil
+	if
+		cache
+		and cache.layoutRef == layout
+		and cache.groupsRef == groupsRef
+		and cache.entriesRef == panel.entries
+		and cache.orderRef == panel.order
+		and cache.orderCount == #panel.order
+		and cache.groupCount == (groupsRef and #groupsRef or 0)
+		and cache.fixedGridColumns == layout.fixedGridColumns
+		and cache.fixedGridRows == layout.fixedGridRows
+		and cache.wrapCount == layout.wrapCount
+		and not fixedLayoutCacheHasMissingDynamicTargets(cache)
+	then
+		return cache
+	end
+
+	local fixedGroups = Helper.NormalizeFixedGroups(layout)
+	local fixedGroupById = {}
+	local fixedGroupIndexById = {}
+	local fixedGroupAtCell = {}
+	local groupEntryIds = {}
+	local dynamicGroupEntries = {}
+	local entryAtUngroupedCell = {}
+	local entryAtStaticGroupCell = {}
+	local placedEntries = {}
+	local configuredColumns = Helper.NormalizeFixedGridSize(layout.fixedGridColumns, 0)
+	local configuredRows = Helper.NormalizeFixedGridSize(layout.fixedGridRows, 0)
 	local used = {}
+	local groupStates = {}
 	local columns = getFixedGridDefaultColumns(panel)
 	local nextIndex = 1
 	local maxColumn = 0
 	local maxRow = 0
 
-	local function makeKey(column, row) return tostring(column) .. ":" .. tostring(row) end
-	local function claimNextFreeCell()
-		while true do
-			local column = ((nextIndex - 1) % columns) + 1
-			local row = math.floor((nextIndex - 1) / columns) + 1
-			nextIndex = nextIndex + 1
-			local key = makeKey(column, row)
-			if not used[key] then return column, row end
+	for i = 1, #fixedGroups do
+		local group = fixedGroups[i]
+		if group then
+			local right = group.column + group.columns - 1
+			local bottom = group.row + group.rows - 1
+			fixedGroupById[group.id] = group
+			fixedGroupIndexById[group.id] = i
+			groupEntryIds[group.id] = {}
+			entryAtStaticGroupCell[group.id] = {}
+			if right > columns then columns = right end
+			if right > maxColumn then maxColumn = right end
+			if bottom > maxRow then maxRow = bottom end
+			groupStates[group.id] = {
+				group = group,
+				used = {},
+			}
+			for groupRow = group.row, bottom do
+				for groupColumn = group.column, right do
+					local key = getFixedCellKey(groupColumn, groupRow)
+					fixedGroupAtCell[key] = group
+					used[key] = true
+				end
+			end
 		end
 	end
 
 	for _, entryId in ipairs(panel.order) do
 		local entry = panel.entries[entryId]
 		if entry then
-			local column = Helper.NormalizeSlotCoordinate(entry.slotColumn)
-			local row = Helper.NormalizeSlotCoordinate(entry.slotRow)
-			local key = (column and row) and makeKey(column, row) or nil
-			if key and used[key] then
-				column = nil
-				row = nil
-				key = nil
-			end
-			if not (column and row) then
-				local slot = Helper.NormalizeSlotIndex(entry.slotIndex)
-				if slot then
-					local derivedColumn = ((slot - 1) % columns) + 1
-					local derivedRow = math.floor((slot - 1) / columns) + 1
-					local derivedKey = makeKey(derivedColumn, derivedRow)
-					if not used[derivedKey] then
-						column = derivedColumn
-						row = derivedRow
-						key = derivedKey
+			local groupId = Helper.NormalizeFixedGroupId(entry.fixedGroupId)
+			local group = groupId and fixedGroupById[groupId] or nil
+			if group then
+				entry.fixedGroupId = group.id
+				Helper.SyncEntryFixedGroupIconState(layout, entry, group)
+				groupEntryIds[group.id][#groupEntryIds[group.id] + 1] = entryId
+				if Helper.FixedGroupUsesStaticSlots(group) then
+					local groupState = groupStates[group.id]
+					local column = Helper.NormalizeSlotCoordinate(entry.slotColumn)
+					local row = Helper.NormalizeSlotCoordinate(entry.slotRow)
+					local key = (column and row) and getFixedCellKey(column, row) or nil
+					local withinGroup = key ~= nil
+						and column >= group.column
+						and column <= (group.column + group.columns - 1)
+						and row >= group.row
+						and row <= (group.row + group.rows - 1)
+						and isWithinConfiguredFixedGrid(column, row, configuredColumns, configuredRows)
+						and not groupState.used[key]
+					if not withinGroup then
+						column = nil
+						row = nil
+						key = nil
+					end
+					if not (column and row) then
+						column, row = claimNextFreeFixedGroupCell(groupState, configuredColumns, configuredRows)
+						key = (column and row) and getFixedCellKey(column, row) or nil
+					end
+					if key then
+						groupState.used[key] = true
+						entry.slotColumn = column
+						entry.slotRow = row
+						entry.slotIndex = nil
+						entryAtStaticGroupCell[group.id][key] = entryId
+						placedEntries[#placedEntries + 1] = {
+							entryId = entryId,
+							column = column,
+							row = row,
+						}
+					else
+						entry.slotColumn = nil
+						entry.slotRow = nil
+						entry.slotIndex = nil
+					end
+				else
+					entry.slotIndex = nil
+					local dynamicEntries = dynamicGroupEntries[group.id]
+					if not dynamicEntries then
+						dynamicEntries = {}
+						dynamicGroupEntries[group.id] = dynamicEntries
+					end
+					dynamicEntries[#dynamicEntries + 1] = entryId
+				end
+			else
+				entry.fixedGroupId = nil
+				Helper.SyncEntryFixedGroupIconState(layout, entry, nil)
+				local column = Helper.NormalizeSlotCoordinate(entry.slotColumn)
+				local row = Helper.NormalizeSlotCoordinate(entry.slotRow)
+				local key = (column and row) and getFixedCellKey(column, row) or nil
+				if key and (used[key] or not isWithinConfiguredFixedGrid(column, row, configuredColumns, configuredRows)) then
+					column = nil
+					row = nil
+					key = nil
+				end
+				if not (column and row) then
+					local slot = Helper.NormalizeSlotIndex(entry.slotIndex)
+					if slot then
+						local derivedColumn = ((slot - 1) % columns) + 1
+						local derivedRow = math.floor((slot - 1) / columns) + 1
+						local derivedKey = getFixedCellKey(derivedColumn, derivedRow)
+						if isWithinConfiguredFixedGrid(derivedColumn, derivedRow, configuredColumns, configuredRows) and not used[derivedKey] then
+							column = derivedColumn
+							row = derivedRow
+							key = derivedKey
+						end
 					end
 				end
+				if not (column and row) then
+					column, row, nextIndex = claimNextFreeFixedCell(nextIndex, columns, configuredColumns, configuredRows, used)
+					key = (column and row) and getFixedCellKey(column, row) or nil
+				end
+				if key then
+					used[key] = true
+					entry.slotColumn = column
+					entry.slotRow = row
+					entry.slotIndex = ((row - 1) * columns) + column
+					entryAtUngroupedCell[key] = entryId
+					placedEntries[#placedEntries + 1] = {
+						entryId = entryId,
+						column = column,
+						row = row,
+					}
+					if entry.slotColumn > maxColumn then maxColumn = entry.slotColumn end
+					if entry.slotRow > maxRow then maxRow = entry.slotRow end
+					if entry.slotIndex >= nextIndex then nextIndex = entry.slotIndex + 1 end
+				else
+					entry.slotColumn = nil
+					entry.slotRow = nil
+					entry.slotIndex = nil
+				end
 			end
-			if not (column and row) then
-				column, row = claimNextFreeCell()
-				key = makeKey(column, row)
-			end
-			used[key] = true
-			entry.slotColumn = column
-			entry.slotRow = row
-			entry.slotIndex = ((row - 1) * columns) + column
-			if entry.slotColumn > maxColumn then maxColumn = entry.slotColumn end
-			if entry.slotRow > maxRow then maxRow = entry.slotRow end
-			if entry.slotIndex >= nextIndex then nextIndex = entry.slotIndex + 1 end
 		end
 	end
 
-	local configuredColumns = Helper.NormalizeFixedGridSize(layout.fixedGridColumns, 0)
-	local configuredRows = Helper.NormalizeFixedGridSize(layout.fixedGridRows, 0)
-	layout.fixedGridColumns = math.max(configuredColumns, maxColumn, columns)
-	layout.fixedGridRows = math.max(configuredRows, maxRow)
-	return maxColumn, maxRow
+	local boundsColumns = configuredColumns > 0 and configuredColumns or maxColumn
+	local boundsRows = configuredRows > 0 and configuredRows or maxRow
+	local slotCount = 0
+	local slotEntryIds = {}
+	local staticTargetIndexByEntryId = {}
+	if not (boundsColumns <= 0 and boundsRows <= 0) then
+		if boundsColumns <= 0 then boundsColumns = 1 end
+		if boundsRows <= 0 then boundsRows = 1 end
+		slotCount = boundsColumns * boundsRows
+		for i = 1, #fixedGroups do
+			local group = fixedGroups[i]
+			if group and not Helper.FixedGroupUsesStaticSlots(group) then
+				local list = dynamicGroupEntries[group.id] or nil
+				local capacity = Helper.GetFixedGroupCapacity(group)
+				local dynamicCount = list and #list or 0
+				local targetCount = Helper.IsFixedGroupCenterGrowth(group) and dynamicCount or capacity
+				local targetIndices = group._eqolDynamicTargetIndices or {}
+				for groupIndex = 1, targetCount do
+					local placement = Helper.GetFixedGroupDynamicPlacement(group, groupIndex, targetCount)
+					local column = placement and placement.column or nil
+					local row = placement and placement.row or nil
+					if column and row and column <= boundsColumns and row <= boundsRows then
+						targetIndices[groupIndex] = ((row - 1) * boundsColumns) + column
+					else
+						targetIndices[groupIndex] = nil
+					end
+				end
+				for groupIndex = targetCount + 1, #targetIndices do
+					targetIndices[groupIndex] = nil
+				end
+				group._eqolDynamicTargetIndices = targetIndices
+			elseif group then
+				group._eqolDynamicTargetIndices = nil
+			end
+		end
+		for i = 1, #placedEntries do
+			local placed = placedEntries[i]
+			local column = placed.column
+			local row = placed.row
+			if column and row and column <= boundsColumns and row <= boundsRows then
+				local targetIndex = ((row - 1) * boundsColumns) + column
+				slotEntryIds[targetIndex] = placed.entryId
+				staticTargetIndexByEntryId[placed.entryId] = targetIndex
+			end
+		end
+		for i = 1, #fixedGroups do
+			local group = fixedGroups[i]
+			local list = group and not Helper.FixedGroupUsesStaticSlots(group) and dynamicGroupEntries[group.id] or nil
+			if list then
+				local targetIndices = group._eqolDynamicTargetIndices
+				local limit = math.min(targetIndices and #targetIndices or 0, #list)
+				for groupIndex = 1, limit do
+					local targetIndex = targetIndices[groupIndex]
+					if targetIndex then slotEntryIds[targetIndex] = list[groupIndex] end
+				end
+			end
+		end
+	end
+
+	cache = {
+		layoutRef = layout,
+		groupsRef = layout.fixedGroups,
+		entriesRef = panel.entries,
+		orderRef = panel.order,
+		orderCount = #panel.order,
+		groupCount = #fixedGroups,
+		fixedGridColumns = layout.fixedGridColumns,
+		fixedGridRows = layout.fixedGridRows,
+		wrapCount = layout.wrapCount,
+		groups = fixedGroups,
+		groupById = fixedGroupById,
+		groupIndexById = fixedGroupIndexById,
+		groupAtCell = fixedGroupAtCell,
+		groupEntryIds = groupEntryIds,
+		dynamicGroupEntries = dynamicGroupEntries,
+		entryAtUngroupedCell = entryAtUngroupedCell,
+		entryAtStaticGroupCell = entryAtStaticGroupCell,
+		placedEntries = placedEntries,
+		maxColumn = maxColumn,
+		maxRow = maxRow,
+		boundsColumns = boundsColumns,
+		boundsRows = boundsRows,
+		slotCount = slotCount,
+		slotEntryIds = slotEntryIds,
+		staticTargetIndexByEntryId = staticTargetIndexByEntryId,
+	}
+	panel._eqolFixedLayoutCache = cache
+	return cache
+end
+
+function Helper.EnsureFixedSlotAssignments(panel)
+	local cache = Helper.GetFixedLayoutCache(panel)
+	if not cache then return 0, 0 end
+	return cache.maxColumn or 0, cache.maxRow or 0
 end
 
 function Helper.GetAssignedFixedSlotCount(panel)
 	if type(panel) ~= "table" then return 0 end
-	local maxColumn, maxRow = Helper.EnsureFixedSlotAssignments(panel)
+	local cache = Helper.GetFixedLayoutCache(panel)
+	if not cache then return 0 end
+	local maxColumn = cache.maxColumn or 0
+	local maxRow = cache.maxRow or 0
 	local columns = Helper.NormalizeFixedGridSize(panel.layout and panel.layout.fixedGridColumns, 0)
 	if columns <= 0 then columns = math.max(maxColumn, 1) end
 	if maxRow <= 0 then return 0 end
@@ -586,10 +1331,9 @@ end
 
 function Helper.GetFixedGridBounds(panel, includePreviewPadding)
 	if type(panel) ~= "table" then return 0, 0 end
-	local maxColumn, maxRow = Helper.EnsureFixedSlotAssignments(panel)
-	local layout = type(panel.layout) == "table" and panel.layout or nil
-	local columns = math.max(Helper.NormalizeFixedGridSize(layout and layout.fixedGridColumns, 0), maxColumn)
-	local rows = math.max(Helper.NormalizeFixedGridSize(layout and layout.fixedGridRows, 0), maxRow)
+	local cache = Helper.GetFixedLayoutCache(panel)
+	local columns = cache and cache.boundsColumns or 0
+	local rows = cache and cache.boundsRows or 0
 	if columns <= 0 and rows <= 0 then return 0, 0 end
 	if columns <= 0 then columns = 1 end
 	if rows <= 0 then rows = 1 end
@@ -621,16 +1365,90 @@ end
 
 function Helper.BuildFixedSlotEntryIds(panel, filterFn, includePreviewPadding)
 	if type(panel) ~= "table" or type(panel.entries) ~= "table" or type(panel.order) ~= "table" then return nil, 0, 0, 0 end
-	local columns, rows = Helper.GetFixedGridBounds(panel, includePreviewPadding == true)
+	local previewPadding = includePreviewPadding == true
+	local cache = Helper.GetFixedLayoutCache(panel)
+	if type(filterFn) ~= "function" and not previewPadding and cache then return cache.slotEntryIds or {}, cache.slotCount or 0, cache.boundsColumns or 0, cache.boundsRows or 0 end
+	local columns = cache and cache.boundsColumns or 0
+	local rows = cache and cache.boundsRows or 0
+	if previewPadding or not cache then
+		columns, rows = Helper.GetFixedGridBounds(panel, previewPadding)
+	end
 	local count = columns * rows
+	if count <= 0 then return {}, 0, columns, rows end
 	local slotEntryIds = {}
-	if count <= 0 then return slotEntryIds, 0, columns, rows end
-	for _, entryId in ipairs(panel.order) do
-		local entry = panel.entries[entryId]
-		if entry and (type(filterFn) ~= "function" or filterFn(entry, entryId) ~= false) then
-			local column = Helper.NormalizeSlotCoordinate(entry.slotColumn)
-			local row = Helper.NormalizeSlotCoordinate(entry.slotRow)
-			if column and row and column <= columns and row <= rows then slotEntryIds[((row - 1) * columns) + column] = entryId end
+	local groups = cache and cache.groups or Helper.NormalizeFixedGroups(panel.layout)
+	local groupById = cache and cache.groupById or nil
+	local dynamicGroupEntries = {}
+	if type(filterFn) ~= "function" and cache and cache.dynamicGroupEntries then
+		dynamicGroupEntries = cache.dynamicGroupEntries
+		for i = 1, #(cache.placedEntries or {}) do
+			local placed = cache.placedEntries[i]
+			local column = placed and placed.column or nil
+			local row = placed and placed.row or nil
+			if column and row and column <= columns and row <= rows then slotEntryIds[((row - 1) * columns) + column] = placed.entryId end
+		end
+	else
+		for _, entryId in ipairs(panel.order) do
+			local entry = panel.entries[entryId]
+			if entry and (type(filterFn) ~= "function" or filterFn(entry, entryId) ~= false) then
+				local groupId = Helper.NormalizeFixedGroupId(entry.fixedGroupId)
+				local group = groupId and ((groupById and groupById[groupId]) or Helper.GetFixedGroupById(panel, groupId)) or nil
+				if group then
+					if Helper.FixedGroupUsesStaticSlots(group) then
+						local column = Helper.NormalizeSlotCoordinate(entry.slotColumn)
+						local row = Helper.NormalizeSlotCoordinate(entry.slotRow)
+						if
+							column
+							and row
+							and column <= columns
+							and row <= rows
+							and column >= group.column
+							and column <= (group.column + group.columns - 1)
+							and row >= group.row
+							and row <= (group.row + group.rows - 1)
+						then
+							slotEntryIds[((row - 1) * columns) + column] = entryId
+						end
+					else
+						local list = dynamicGroupEntries[group.id]
+						if not list then
+							list = {}
+							dynamicGroupEntries[group.id] = list
+						end
+						list[#list + 1] = entryId
+					end
+				else
+					local column = Helper.NormalizeSlotCoordinate(entry.slotColumn)
+					local row = Helper.NormalizeSlotCoordinate(entry.slotRow)
+					if column and row and column <= columns and row <= rows then slotEntryIds[((row - 1) * columns) + column] = entryId end
+				end
+			end
+		end
+	end
+	for i = 1, #groups do
+		local group = groups[i]
+		local list = group and not Helper.FixedGroupUsesStaticSlots(group) and dynamicGroupEntries[group.id] or nil
+		if list then
+			local useCenterGrowth = Helper.IsFixedGroupCenterGrowth(group)
+			local usePreparedTargets = cache and cache.boundsColumns == columns and cache.boundsRows == rows and group._eqolDynamicTargetIndices and not useCenterGrowth
+			if usePreparedTargets then
+				local targetIndices = group._eqolDynamicTargetIndices
+				local limit = math.min(targetIndices and #targetIndices or 0, #list)
+				for groupIndex = 1, limit do
+					local targetIndex = targetIndices[groupIndex]
+					if targetIndex and targetIndex <= count then slotEntryIds[targetIndex] = list[groupIndex] end
+				end
+			else
+				local capacity = Helper.GetFixedGroupCapacity(group)
+				local placementCount = useCenterGrowth and #list or capacity
+				local limit = math.min(placementCount, #list)
+				for groupIndex = 1, limit do
+					local placement = Helper.GetFixedGroupDynamicPlacement(group, groupIndex, placementCount)
+					local column = placement and placement.column or nil
+					local row = placement and placement.row or nil
+					if column and row and column <= columns and row <= rows then slotEntryIds[((row - 1) * columns) + column] = list[groupIndex] end
+				end
+			end
 		end
 	end
 	return slotEntryIds, count, columns, rows
@@ -964,12 +1782,8 @@ local function spellHasCharges(spellId)
 	local info = C_Spell.GetSpellCharges(spellId)
 	if type(info) ~= "table" then return false end
 	local issecretvalue = _G.issecretvalue
-	if issecretvalue then
-		if issecretvalue(info) then return false end
-		if info.currentCharges ~= nil and issecretvalue(info.currentCharges) then return false end
-		if info.maxCharges ~= nil and issecretvalue(info.maxCharges) then return false end
-	end
 	local maxCharges = info.maxCharges
+	if issecretvalue and issecretvalue(maxCharges) then return false end
 	if type(maxCharges) ~= "number" then return false end
 	return maxCharges > 1
 end
@@ -1051,6 +1865,9 @@ function Helper.NormalizeRoot(root)
 	root.defaults.entry.alwaysShow = Helper.ENTRY_DEFAULTS.alwaysShow
 	root.defaults.entry.showCooldown = Helper.ENTRY_DEFAULTS.showCooldown
 	root.defaults.entry.showCooldownText = Helper.ENTRY_DEFAULTS.showCooldownText
+	root.defaults.entry.cooldownVisibilityUseGlobal = Helper.ENTRY_DEFAULTS.cooldownVisibilityUseGlobal
+	root.defaults.entry.hideOnCooldown = Helper.ENTRY_DEFAULTS.hideOnCooldown
+	root.defaults.entry.showOnCooldown = Helper.ENTRY_DEFAULTS.showOnCooldown
 	root.defaults.entry.showCharges = Helper.ENTRY_DEFAULTS.showCharges
 	root.defaults.entry.showStacks = Helper.ENTRY_DEFAULTS.showStacks
 	root.defaults.entry.glowReady = Helper.ENTRY_DEFAULTS.glowReady
@@ -1058,6 +1875,8 @@ function Helper.NormalizeRoot(root)
 	root.defaults.entry.pandemicGlow = Helper.ENTRY_DEFAULTS.pandemicGlow
 	root.defaults.entry.checkPower = Helper.ENTRY_DEFAULTS.checkPower
 	root.defaults.entry.checkPowerUseGlobal = Helper.ENTRY_DEFAULTS.checkPowerUseGlobal
+	root.defaults.entry.hideWhenNoResource = Helper.ENTRY_DEFAULTS.hideWhenNoResource
+	root.defaults.entry.hideWhenNoResourceUseGlobal = Helper.ENTRY_DEFAULTS.hideWhenNoResourceUseGlobal
 	root.defaults.entry.procGlowEnabled = Helper.ENTRY_DEFAULTS.procGlowEnabled
 	root.defaults.entry.procGlowUseGlobal = Helper.ENTRY_DEFAULTS.procGlowUseGlobal
 	root.defaults.entry.glowDuration = Helper.ENTRY_DEFAULTS.glowDuration
@@ -1071,6 +1890,7 @@ function Helper.NormalizePanel(panel, defaults)
 	defaults = defaults or {}
 	local layoutDefaults = defaults.layout or Helper.PANEL_LAYOUT_DEFAULTS
 	if type(panel.layout) ~= "table" then panel.layout = {} end
+	Helper.InvalidateFixedLayoutCache(panel)
 	local hadKeybindsEnabled = panel.layout.keybindsEnabled
 	local hadChargesCooldown = panel.layout.showChargesCooldown
 	for key, value in pairs(layoutDefaults) do
@@ -1079,6 +1899,7 @@ function Helper.NormalizePanel(panel, defaults)
 	panel.layout.fixedSlotCount = Helper.NormalizeFixedSlotCount(panel.layout.fixedSlotCount, layoutDefaults.fixedSlotCount or Helper.PANEL_LAYOUT_DEFAULTS.fixedSlotCount or 0)
 	panel.layout.fixedGridColumns = Helper.NormalizeFixedGridSize(panel.layout.fixedGridColumns, layoutDefaults.fixedGridColumns or Helper.PANEL_LAYOUT_DEFAULTS.fixedGridColumns or 0)
 	panel.layout.fixedGridRows = Helper.NormalizeFixedGridSize(panel.layout.fixedGridRows, layoutDefaults.fixedGridRows or Helper.PANEL_LAYOUT_DEFAULTS.fixedGridRows or 0)
+	Helper.NormalizeFixedGroups(panel.layout)
 	panel.layout.spacing = Helper.ClampInt(panel.layout.spacing, 0, Helper.SPACING_RANGE or 200, layoutDefaults.spacing or Helper.PANEL_LAYOUT_DEFAULTS.spacing or 2)
 	panel.layout.radialArcDegrees = Helper.ClampInt(
 		panel.layout.radialArcDegrees,
@@ -1104,6 +1925,7 @@ function Helper.NormalizePanel(panel, defaults)
 	panel.layout.readyGlowDuration = 0
 	panel.layout.readyGlowCheckPower = panel.layout.readyGlowCheckPower == true
 	panel.layout.noDesaturation = panel.layout.noDesaturation == true
+	panel.layout.hideWhenNoResource = panel.layout.hideWhenNoResource == true
 	panel.layout.cdmAuraAlwaysShowMode =
 		normalizeCDMAuraAlwaysShowMode(panel.layout.cdmAuraAlwaysShowMode, layoutDefaults.cdmAuraAlwaysShowMode or Helper.PANEL_LAYOUT_DEFAULTS.cdmAuraAlwaysShowMode or "HIDE")
 	panel.layout.stackColor = Helper.NormalizeColor(panel.layout.stackColor, layoutDefaults.stackColor or Helper.PANEL_LAYOUT_DEFAULTS.stackColor or { 1, 1, 1, 1 })
@@ -1139,7 +1961,11 @@ function Helper.NormalizePanel(panel, defaults)
 	if type(panel.order) ~= "table" then panel.order = {} end
 	if panel.enabled == nil then panel.enabled = true end
 	if type(panel.name) ~= "string" or panel.name == "" then panel.name = "Cooldown Panel" end
-	if Helper.IsFixedLayout(panel.layout) then Helper.EnsureFixedSlotAssignments(panel) end
+	if Helper.IsFixedLayout(panel.layout) then
+		local maxColumn, maxRow = Helper.EnsureFixedSlotAssignments(panel)
+		if panel.layout.fixedGridColumns <= 0 and maxColumn > 0 then panel.layout.fixedGridColumns = math.max(panel.layout.fixedGridColumns, maxColumn) end
+		if panel.layout.fixedGridRows <= 0 and maxRow > 0 then panel.layout.fixedGridRows = math.max(panel.layout.fixedGridRows, maxRow) end
+	end
 	if hadKeybindsEnabled == nil or hadChargesCooldown == nil then
 		for _, entry in pairs(panel.entries) do
 			if entry then
@@ -1194,6 +2020,7 @@ function Helper.NormalizeEntry(entry, defaults)
 	if entry.procGlowInset ~= nil then entry.procGlowInset = Helper.NormalizeGlowInset(entry.procGlowInset, nil) end
 	if type(entry.pandemicGlow) ~= "boolean" then entry.pandemicGlow = Helper.ENTRY_DEFAULTS.pandemicGlow end
 	if type(entry.hideIcon) ~= "boolean" then entry.hideIcon = Helper.ENTRY_DEFAULTS.hideIcon end
+	entry.customIconID = nil
 	if type(entry.iconSizeUseGlobal) ~= "boolean" then entry.iconSizeUseGlobal = true end
 	entry.iconSize = Helper.ClampInt(entry.iconSize, 12, 128, Helper.ENTRY_DEFAULTS.iconSize or Helper.PANEL_LAYOUT_DEFAULTS.iconSize or 36)
 	entry.iconOffsetX = Helper.ClampInt(entry.iconOffsetX, -Helper.OFFSET_RANGE, Helper.OFFSET_RANGE, Helper.ENTRY_DEFAULTS.iconOffsetX or 0)
@@ -1216,6 +2043,10 @@ function Helper.NormalizeEntry(entry, defaults)
 	entry.chargesFontStyle = Helper.NormalizeFontStyleChoice(entry.chargesFontStyle, Helper.ENTRY_DEFAULTS.chargesFontStyle or Helper.PANEL_LAYOUT_DEFAULTS.chargesFontStyle or "OUTLINE")
 	entry.chargesColor = Helper.NormalizeColor(entry.chargesColor, Helper.ENTRY_DEFAULTS.chargesColor or Helper.PANEL_LAYOUT_DEFAULTS.chargesColor or { 1, 1, 1, 1 })
 	if type(entry.cooldownVisualsUseGlobal) ~= "boolean" then entry.cooldownVisualsUseGlobal = true end
+	if type(entry.cooldownVisibilityUseGlobal) ~= "boolean" then entry.cooldownVisibilityUseGlobal = Helper.ENTRY_DEFAULTS.cooldownVisibilityUseGlobal end
+	if type(entry.hideOnCooldown) ~= "boolean" then entry.hideOnCooldown = Helper.ENTRY_DEFAULTS.hideOnCooldown end
+	if type(entry.showOnCooldown) ~= "boolean" then entry.showOnCooldown = Helper.ENTRY_DEFAULTS.showOnCooldown end
+	if entry.showOnCooldown == true then entry.hideOnCooldown = false end
 	if type(entry.showChargesCooldown) ~= "boolean" then entry.showChargesCooldown = Helper.ENTRY_DEFAULTS.showChargesCooldown end
 	if type(entry.cooldownDrawEdge) ~= "boolean" then entry.cooldownDrawEdge = Helper.ENTRY_DEFAULTS.cooldownDrawEdge end
 	if type(entry.cooldownDrawBling) ~= "boolean" then entry.cooldownDrawBling = Helper.ENTRY_DEFAULTS.cooldownDrawBling end
@@ -1228,6 +2059,8 @@ function Helper.NormalizeEntry(entry, defaults)
 	if type(entry.noDesaturation) ~= "boolean" then entry.noDesaturation = Helper.ENTRY_DEFAULTS.noDesaturation end
 	if type(entry.checkPowerUseGlobal) ~= "boolean" then entry.checkPowerUseGlobal = Helper.ENTRY_DEFAULTS.checkPowerUseGlobal end
 	if type(entry.checkPower) ~= "boolean" then entry.checkPower = Helper.ENTRY_DEFAULTS.checkPower end
+	if type(entry.hideWhenNoResourceUseGlobal) ~= "boolean" then entry.hideWhenNoResourceUseGlobal = Helper.ENTRY_DEFAULTS.hideWhenNoResourceUseGlobal end
+	if type(entry.hideWhenNoResource) ~= "boolean" then entry.hideWhenNoResource = Helper.ENTRY_DEFAULTS.hideWhenNoResource end
 	if type(entry.readyGlowCheckPower) ~= "boolean" then entry.readyGlowCheckPower = Helper.ENTRY_DEFAULTS.readyGlowCheckPower end
 	if type(entry.procGlowEnabled) ~= "boolean" then entry.procGlowEnabled = Helper.ENTRY_DEFAULTS.procGlowEnabled end
 	if type(entry.procGlowUseGlobal) ~= "boolean" then
@@ -1279,6 +2112,8 @@ function Helper.NormalizeEntry(entry, defaults)
 	entry.stateTextureDouble = entry.stateTextureDouble == true
 	entry.stateTextureMirror = entry.stateTextureMirror == true
 	if type(entry.stateTextureMirrorSecond) ~= "boolean" then entry.stateTextureMirrorSecond = Helper.ENTRY_DEFAULTS.stateTextureMirrorSecond == true end
+	entry.stateTextureMirrorVertical = entry.stateTextureMirrorVertical == true
+	if type(entry.stateTextureMirrorVerticalSecond) ~= "boolean" then entry.stateTextureMirrorVerticalSecond = Helper.ENTRY_DEFAULTS.stateTextureMirrorVerticalSecond == true end
 	entry.stateTextureSpacingX = Helper.ClampInt(entry.stateTextureSpacingX, 0, Helper.STATE_TEXTURE_SPACING_RANGE or 2000, Helper.ENTRY_DEFAULTS.stateTextureSpacingX or 0)
 	entry.stateTextureSpacingY = Helper.ClampInt(entry.stateTextureSpacingY, 0, Helper.STATE_TEXTURE_SPACING_RANGE or 2000, Helper.ENTRY_DEFAULTS.stateTextureSpacingY or 0)
 	if entry.stateTextureInput == "" then
@@ -1312,6 +2147,7 @@ function Helper.NormalizeEntry(entry, defaults)
 	entry.slotIndex = Helper.NormalizeSlotIndex(entry.slotIndex)
 	entry.slotColumn = Helper.NormalizeSlotCoordinate(entry.slotColumn)
 	entry.slotRow = Helper.NormalizeSlotCoordinate(entry.slotRow)
+	entry.fixedGroupId = Helper.NormalizeFixedGroupId(entry.fixedGroupId)
 end
 
 function Helper.SyncOrder(order, map)
@@ -1338,6 +2174,14 @@ end
 function Helper.CreatePanel(name, defaults)
 	defaults = defaults or {}
 	local layoutDefaults = defaults.layout or Helper.PANEL_LAYOUT_DEFAULTS
+	local layout = Helper.CopyTableShallow(layoutDefaults)
+	local globalFontKey = addon.functions and addon.functions.GetGlobalFontConfigKey and addon.functions.GetGlobalFontConfigKey() or "__EQOL_GLOBAL_FONT__"
+	if layout.stackFont == nil or layout.stackFont == "" then layout.stackFont = globalFontKey end
+	if layout.chargesFont == nil or layout.chargesFont == "" then layout.chargesFont = globalFontKey end
+	if layout.keybindFont == nil or layout.keybindFont == "" then layout.keybindFont = globalFontKey end
+	if layout.cooldownTextFont == nil or layout.cooldownTextFont == "" then layout.cooldownTextFont = globalFontKey end
+	if layout.staticTextFont == nil or layout.staticTextFont == "" then layout.staticTextFont = globalFontKey end
+	layout.fixedGroups = {}
 	return {
 		name = (type(name) == "string" and name ~= "" and name) or "Cooldown Panel",
 		enabled = true,
@@ -1351,7 +2195,7 @@ function Helper.CreatePanel(name, defaults)
 			x = 0,
 			y = 0,
 		},
-		layout = Helper.CopyTableShallow(layoutDefaults),
+		layout = layout,
 		entries = {},
 		order = {},
 	}
@@ -1514,24 +2358,29 @@ local function getButtonActionSlot(button)
 	return nil
 end
 
-local function eachActionButton(callback)
-	if type(callback) ~= "function" then return end
+local function getCachedActionButtons()
+	local runtime = CooldownPanels.runtime or {}
+	if runtime._eqolActionButtons then return runtime._eqolActionButtons end
+	local buttons = {}
 	local seen = {}
-	local function visit(button)
-		if not button or seen[button] then return end
-		seen[button] = true
-		callback(button)
-	end
 
 	for _, info in ipairs(THIRD_PARTY_ACTION_BUTTON_PREFIXES) do
 		for i = 1, info.count do
-			visit(_G[info.prefix .. i])
+			local button = _G[info.prefix .. i]
+			if button and not seen[button] then
+				seen[button] = true
+				buttons[#buttons + 1] = button
+			end
 		end
 	end
 
 	for bar = 1, ELVUI_ACTION_BARS do
 		for buttonIndex = 1, ELVUI_ACTION_BUTTONS do
-			visit(_G["ElvUI_Bar" .. bar .. "Button" .. buttonIndex])
+			local button = _G["ElvUI_Bar" .. bar .. "Button" .. buttonIndex]
+			if button and not seen[button] then
+				seen[button] = true
+				buttons[#buttons + 1] = button
+			end
 		end
 	end
 
@@ -1539,8 +2388,24 @@ local function eachActionButton(callback)
 	local buttonCount = NUM_ACTIONBAR_BUTTONS or 12
 	for _, prefix in ipairs(buttonNames) do
 		for i = 1, buttonCount do
-			visit(_G[prefix .. i])
+			local button = _G[prefix .. i]
+			if button and not seen[button] then
+				seen[button] = true
+				buttons[#buttons + 1] = button
+			end
 		end
+	end
+
+	runtime._eqolActionButtons = buttons
+	CooldownPanels.runtime = runtime
+	return buttons
+end
+
+local function eachActionButton(callback)
+	if type(callback) ~= "function" then return end
+	local buttons = getCachedActionButtons()
+	for i = 1, #buttons do
+		callback(buttons[i])
 	end
 end
 
@@ -1710,10 +2575,27 @@ local function getBindingTextForSpell(spellId)
 	return nil
 end
 
+local function addSpellBindingLookup(lookup, spellId, keyText)
+	spellId = tonumber(spellId)
+	if not (lookup and lookup.spell and spellId and keyText) then return end
+	local current = lookup.spell[spellId]
+	if current == nil then
+		lookup.spell[spellId] = keyText
+	elseif current ~= keyText then
+		lookup.spell[spellId] = false
+	end
+end
+
+local function getLookupSpellBindingText(lookup, spellId)
+	local text = lookup and lookup.spell and spellId and lookup.spell[spellId] or nil
+	return type(text) == "string" and text or nil
+end
+
 local function buildKeybindLookup()
 	local runtime = CooldownPanels.runtime or {}
 	if runtime._eqolKeybindLookup then return runtime._eqolKeybindLookup end
 	local lookup = {
+		spell = {},
 		item = {},
 		macro = {},
 		macroName = {},
@@ -1733,7 +2615,13 @@ local function buildKeybindLookup()
 		end
 		if not (keyText and GetActionInfo) then return end
 		local actionType, actionId = GetActionInfo(slot)
-		if actionType == "item" and actionId then
+		if actionType == "spell" and actionId then
+			local spellId = tonumber(actionId)
+			if spellId then
+				addSpellBindingLookup(lookup, spellId, keyText)
+				addSpellBindingLookup(lookup, getEffectiveSpellId(spellId), keyText)
+			end
+		elseif actionType == "item" and actionId then
 			if not lookup.item[actionId] then lookup.item[actionId] = keyText end
 		elseif actionType == "macro" and actionId then
 			if not lookup.macro[actionId] then lookup.macro[actionId] = keyText end
@@ -1768,6 +2656,12 @@ function Keybinds.InvalidateCache()
 	CooldownPanels.runtime._eqolKeybindCache = nil
 end
 
+function Keybinds.InvalidateButtonList()
+	if not CooldownPanels.runtime then return end
+	CooldownPanels.runtime._eqolActionButtons = nil
+	CooldownPanels.runtime._eqolActionButtonSlotMap = nil
+end
+
 function Keybinds.MarkPanelsDirty()
 	CooldownPanels.runtime = CooldownPanels.runtime or {}
 	CooldownPanels.runtime.keybindPanelsDirty = true
@@ -1795,17 +2689,62 @@ function Keybinds.HasPanels()
 	return panels ~= nil and next(panels) ~= nil
 end
 
+local function refreshPanelKeybindsOnly(panelId)
+	if not panelId then return false end
+	if not (CooldownPanels and CooldownPanels.GetPanel) then return false end
+	if CooldownPanels.IsInEditMode and CooldownPanels:IsInEditMode() == true then return false end
+	if CooldownPanels.IsPanelLayoutEditActive and CooldownPanels:IsPanelLayoutEditActive(panelId) then return false end
+
+	local panel = CooldownPanels:GetPanel(panelId)
+	if not (panel and panel.layout and panel.layout.keybindsEnabled == true) then return true end
+
+	local runtimePanel = getRuntime(panelId)
+	local frame = runtimePanel and runtimePanel.frame or nil
+	local icons = frame and frame.icons or nil
+	local visible = runtimePanel and runtimePanel.visibleEntries or nil
+	if not (icons and visible) then return true end
+
+	for i = 1, #icons do
+		local icon = icons[i]
+		local keybind = icon and icon.keybind or nil
+		local data = visible[i]
+		if keybind then
+			local show = data and data.layout and data.layout.keybindsEnabled == true and data.entry ~= nil
+			local text = show and Keybinds.GetEntryKeybindText(data.entry, data.layout) or nil
+			if data then
+				data.showKeybinds = show == true
+				data.keybindText = text
+			end
+			if text then
+				if keybind.GetText and keybind:GetText() ~= text then keybind:SetText(text) end
+				if keybind.IsShown and not keybind:IsShown() then keybind:Show() end
+			else
+				if keybind.IsShown and keybind:IsShown() then keybind:Hide() end
+			end
+		end
+	end
+
+	return true
+end
+
 function Keybinds.RefreshPanels()
 	local runtime = CooldownPanels.runtime
 	if not runtime then return false end
 	local panels = (runtime.keybindPanelsDirty or not runtime.keybindPanels) and Keybinds.RebuildPanels() or runtime.keybindPanels
 	if not panels or not next(panels) then return false end
+	local refreshed = false
+	local enabledPanels = runtime.enabledPanels
 	for panelId in pairs(panels) do
-		if CooldownPanels.GetPanel and CooldownPanels.RefreshPanel then
-			if CooldownPanels:GetPanel(panelId) then CooldownPanels:RefreshPanel(panelId) end
+		if not enabledPanels or enabledPanels[panelId] == true then
+			local ok = refreshPanelKeybindsOnly(panelId)
+			if not ok and CooldownPanels.GetPanel and CooldownPanels.RefreshPanel and CooldownPanels:GetPanel(panelId) then
+				CooldownPanels:RefreshPanel(panelId)
+				ok = true
+			end
+			refreshed = ok or refreshed
 		end
 	end
-	return true
+	return refreshed
 end
 
 function Keybinds.RequestRefresh(cause)
@@ -1841,8 +2780,11 @@ function Keybinds.GetEntryKeybindText(entry, layout)
 
 	local text = nil
 	if entry.type == "SPELL" and entry.spellID then
+		local lookup = buildKeybindLookup()
 		local spellId = effectiveSpellId or entry.spellID
-		text = getBindingTextForSpell(spellId)
+		text = getLookupSpellBindingText(lookup, spellId)
+		if not text and effectiveSpellId and effectiveSpellId ~= entry.spellID then text = getLookupSpellBindingText(lookup, entry.spellID) end
+		if not text then text = getBindingTextForSpell(spellId) end
 		if not text and effectiveSpellId and effectiveSpellId ~= entry.spellID then text = getBindingTextForSpell(entry.spellID) end
 	elseif entry.type == "ITEM" and entry.itemID then
 		local lookup = buildKeybindLookup()
@@ -1887,9 +2829,17 @@ function CooldownPanels:RequestPanelRefresh(panelId)
 		local q = runtime._eqolPanelRefreshQueue
 		if not q then return end
 
+		local startedRuntimeQueryBatch = false
+		if CooldownPanels.IsRuntimeQueryBatchActive and CooldownPanels.BeginRuntimeQueryBatch and not CooldownPanels:IsRuntimeQueryBatchActive() then
+			CooldownPanels:BeginRuntimeQueryBatch()
+			startedRuntimeQueryBatch = true
+		end
+
 		for id in pairs(q) do
 			q[id] = nil
 			if CooldownPanels:GetPanel(id) then CooldownPanels:RefreshPanel(id) end
 		end
+
+		if startedRuntimeQueryBatch and CooldownPanels.EndRuntimeQueryBatch then CooldownPanels:EndRuntimeQueryBatch() end
 	end)
 end

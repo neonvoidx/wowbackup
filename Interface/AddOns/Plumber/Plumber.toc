@@ -1,7 +1,7 @@
 ## X-Flavor: retail
 ## X-Expansion: TWW
 ## Interface: 120001, 120005
-## Version: 1.8.9
+## Version: 1.9.0
 
 ## Title: Plumber
 
@@ -84,8 +84,12 @@ Modules\TransmogUtil.lua
 Modules\QuestWatchCycle.lua
 Modules\CraftSearchExtended.lua
 Modules\SourceAchievementLink.lua
-Modules\OutfitSelect.lua
+Modules\OutfitSelect.xml
 Modules\BreakTime.xml
+Modules\CatalystUI.lua
+Modules\HuntTable.lua
+Modules\PreyQuestSuperTrack.lua
+
 
 #Modules\MerchantUI\MerchantUI.xml
 

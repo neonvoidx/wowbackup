@@ -15,6 +15,10 @@ local IsInGroup = IsInGroup
 local math = math
 local TooltipUtil = _G.TooltipUtil
 local GetTime = GetTime
+local DIRECTION_TOP_LABEL = HUD_EDIT_MODE_SETTING_ENCOUNTER_EVENTS_ICON_DIRECTION_TOP
+local DIRECTION_LEFT_LABEL = HUD_EDIT_MODE_SETTING_ENCOUNTER_EVENTS_ICON_DIRECTION_LEFT
+local DIRECTION_RIGHT_LABEL = HUD_EDIT_MODE_SETTING_ENCOUNTER_EVENTS_ICON_DIRECTION_RIGHT
+local DIRECTION_BOTTOM_LABEL = HUD_EDIT_MODE_SETTING_ENCOUNTER_EVENTS_ICON_DIRECTION_BOTTOM
 
 ---- REGION Functions
 
@@ -197,6 +201,14 @@ local charIlvlAnchors = {
 }
 
 local function isCharIlvlOutsidePosition() return (addon.db["charIlvlPosition"] or "TOPRIGHT") == "OUTSIDE" end
+
+local function getFlyoutIlvlPosition()
+	local pos = addon.db and addon.db["flyoutIlvlPosition"]
+	if type(pos) == "string" and pos ~= "" and pos ~= "OUTSIDE" then return pos end
+	local fallback = (addon.db and addon.db["charIlvlPosition"]) or (addon.db and addon.db["bagIlvlPosition"]) or "TOPRIGHT"
+	if fallback == "OUTSIDE" then fallback = "TOPRIGHT" end
+	return fallback
+end
 
 local function hideIlvlBackground(element)
 	if not element or not element.ilvlBackground then return end
@@ -1227,8 +1239,7 @@ local function updateFlyoutButtonInfo(button)
 
 					if not button.ItemLevelText then button.ItemLevelText = button:CreateFontString(nil, "OVERLAY") end
 					addon.functions.ApplyItemLevelTextStyle(button.ItemLevelText)
-					local compareIlvlPosition = addon.db["charIlvlPosition"] or addon.db["bagIlvlPosition"] or "TOPRIGHT"
-					addon.functions.ApplyBagItemLevelPosition(button.ItemLevelText, button, compareIlvlPosition)
+					addon.functions.ApplyBagItemLevelPosition(button.ItemLevelText, button, getFlyoutIlvlPosition())
 
 					-- Setze den Text und die Farbe
 					button.ItemLevelText:SetText(itemLevel)
@@ -1905,6 +1916,7 @@ function addon.functions.initItemInventory()
 	addon.functions.InitDBValue("bagIlvlPosition", "TOPRIGHT")
 	addon.functions.InitDBValue("bagUpgradeIconPosition", "BOTTOMRIGHT")
 	addon.functions.InitDBValue("charIlvlPosition", "TOPRIGHT")
+	addon.functions.InitDBValue("flyoutIlvlPosition", getFlyoutIlvlPosition())
 	addon.functions.InitDBValue("bagTrackPosition", "OUTSIDE")
 	addon.functions.InitDBValue("charTrackPosition", "LEFT")
 	addon.functions.InitDBValue("ilvlUseItemQualityColor", true)
@@ -2161,18 +2173,18 @@ local bagDisplayDropdown = addon.functions.SettingsCreateMultiDropdown(cInventor
 
 addon.functions.SettingsCreateDropdown(cInventory, {
 	list = {
-		TOPLEFT = L["topLeft"],
-		TOP = L["top"],
-		TOPRIGHT = L["topRight"],
-		LEFT = L["left"],
+		TOPLEFT = L["Top Left"],
+		TOP = DIRECTION_TOP_LABEL,
+		TOPRIGHT = L["Top Right"],
+		LEFT = DIRECTION_LEFT_LABEL,
 		CENTER = L["center"],
-		RIGHT = L["right"],
-		BOTTOMLEFT = L["bottomLeft"],
-		BOTTOM = L["bottom"],
-		BOTTOMRIGHT = L["bottomRight"],
-		OUTSIDE = L["outside"] or "Outside",
+		RIGHT = DIRECTION_RIGHT_LABEL,
+		BOTTOMLEFT = L["Bottom Left"],
+		BOTTOM = DIRECTION_BOTTOM_LABEL,
+		BOTTOMRIGHT = L["Bottom Right"],
+		OUTSIDE = L["Outside"] or "Outside",
 	},
-	text = L["bagIlvlPosition"],
+	text = L["Item level position"],
 	get = function() return addon.db["bagIlvlPosition"] or "TOPLEFT" end,
 	set = function(key)
 		addon.db["bagIlvlPosition"] = key
@@ -2188,13 +2200,13 @@ addon.functions.SettingsCreateDropdown(cInventory, {
 
 addon.functions.SettingsCreateDropdown(cInventory, {
 	list = {
-		LEFT = L["left"],
-		TOP = L["top"],
-		RIGHT = L["right"],
-		BOTTOM = L["bottom"],
-		OUTSIDE = L["outside"] or "Outside",
+		LEFT = DIRECTION_LEFT_LABEL,
+		TOP = DIRECTION_TOP_LABEL,
+		RIGHT = DIRECTION_RIGHT_LABEL,
+		BOTTOM = DIRECTION_BOTTOM_LABEL,
+		OUTSIDE = L["Outside"] or "Outside",
 	},
-	text = L["bagTrackPosition"] or "Upgrade track position",
+	text = L["Upgrade track position"] or "Upgrade track position",
 	get = function() return addon.db["bagTrackPosition"] or "OUTSIDE" end,
 	set = function(key)
 		addon.db["bagTrackPosition"] = key
@@ -2210,10 +2222,10 @@ addon.functions.SettingsCreateDropdown(cInventory, {
 
 addon.functions.SettingsCreateDropdown(cInventory, {
 	list = {
-		TOPLEFT = L["topLeft"],
-		TOPRIGHT = L["topRight"],
-		BOTTOMLEFT = L["bottomLeft"],
-		BOTTOMRIGHT = L["bottomRight"],
+		TOPLEFT = L["Top Left"],
+		TOPRIGHT = L["Top Right"],
+		BOTTOMLEFT = L["Bottom Left"],
+		BOTTOMRIGHT = L["Bottom Right"],
 	},
 	text = L["bagUpgradeIconPosition"],
 	get = function() return addon.db["bagUpgradeIconPosition"] or "TOPLEFT" end,
@@ -2269,8 +2281,8 @@ addon.functions.SettingsCreateMultiDropdown(cInventory, {
 	var = "bagItemLevelTargets",
 	text = L["bagItemLevelTargets"] or "Item level targets",
 	options = {
-		{ value = "bank", text = L["showIlvlOnBankFrame"], tooltip = L["showIlvlOnBankFrameDesc"] },
-		{ value = "merchant", text = L["showIlvlOnMerchantframe"], tooltip = L["showIlvlOnMerchantframeDesc"] },
+		{ value = "bank", text = BANK, tooltip = L["showIlvlOnBankFrameDesc"] },
+		{ value = "merchant", text = MERCHANT, tooltip = L["showIlvlOnMerchantframeDesc"] },
 	},
 	isSelectedFunc = function(key) return isBagItemLevelTargetSelected(key) end,
 	setSelectedFunc = function(key, selected) setBagItemLevelTarget(key, selected) end,

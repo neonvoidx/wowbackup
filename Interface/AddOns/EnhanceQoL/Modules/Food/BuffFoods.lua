@@ -29,6 +29,7 @@ addon.BuffFoods = addon.BuffFoods or {}
 addon.BuffFoods.functions = addon.BuffFoods.functions or {}
 addon.BuffFoods.filteredBuffFoods = addon.BuffFoods.filteredBuffFoods or {}
 addon.BuffFoods.bagItemCountCache = addon.BuffFoods.bagItemCountCache or {}
+addon.BuffFoods.candidateCache = addon.BuffFoods.candidateCache or {}
 
 addon.BuffFoods.typeOrder = {
 	"highestSecondary",
@@ -239,38 +240,12 @@ local function getCurrentSpecID()
 end
 
 local function rebuildBagItemCountCache()
-	local counts = {}
-	local maxBag = tonumber(NUM_TOTAL_EQUIPPED_BAG_SLOTS) or tonumber(NUM_BAG_SLOTS) or 4
-
-	if C_Container and C_Container.GetContainerNumSlots and C_Container.GetContainerItemInfo then
-		for bag = 0, maxBag do
-			local slotCount = C_Container.GetContainerNumSlots(bag) or 0
-			for slot = 1, slotCount do
-				local info = C_Container.GetContainerItemInfo(bag, slot)
-				local itemId = info and tonumber(info.itemID) or nil
-				if itemId and itemId > 0 then counts[itemId] = (counts[itemId] or 0) + (tonumber(info.stackCount) or 1) end
-			end
-		end
-	elseif GetContainerNumSlots and GetContainerItemID and GetContainerItemInfo then
-		for bag = 0, maxBag do
-			local slotCount = GetContainerNumSlots(bag) or 0
-			for slot = 1, slotCount do
-				local itemId = tonumber(GetContainerItemID(bag, slot))
-				if itemId and itemId > 0 then
-					local _, stackCount = GetContainerItemInfo(bag, slot)
-					counts[itemId] = (counts[itemId] or 0) + (tonumber(stackCount) or 1)
-				end
-			end
-		end
-	end
-
-	addon.BuffFoods.bagItemCountCache = counts
-	addon.BuffFoods.bagItemCountCacheReady = true
-	return counts
+	if addon.functions and addon.functions.rebuildFoodBagItemCountCache then return addon.functions.rebuildFoodBagItemCountCache() end
+	return {}
 end
 
 local function getBagItemCountCache()
-	if addon.BuffFoods.bagItemCountCacheReady == true and type(addon.BuffFoods.bagItemCountCache) == "table" then return addon.BuffFoods.bagItemCountCache end
+	if addon.functions and addon.functions.getFoodBagItemCountCache then return addon.functions.getFoodBagItemCountCache() end
 	return rebuildBagItemCountCache()
 end
 
@@ -286,19 +261,8 @@ local function getBestItemCount(itemId)
 	local targetId = tonumber(itemId)
 	if not targetId or targetId <= 0 then return 0, 0, 0 end
 
-	local countApi = 0
 	local countBag = getDirectBagItemCount(targetId)
-
-	if C_Item and C_Item.GetItemCount then
-		local cNoBank = tonumber(C_Item.GetItemCount(targetId, false, false)) or 0
-		local cDefault = tonumber(C_Item.GetItemCount(targetId)) or 0
-		if cNoBank > countApi then countApi = cNoBank end
-		if cDefault > countApi then countApi = cDefault end
-	end
-
-	local best = countApi
-	if countBag > best then best = countBag end
-	return best, countApi, countBag
+	return countBag, countBag, countBag
 end
 
 local function isEntryAvailable(entry, playerLevel)
@@ -357,9 +321,21 @@ function addon.BuffFoods.functions.normalizeTypeKey(value) return normalizeTypeK
 function addon.BuffFoods.functions.getCurrentSpecID() return getCurrentSpecID() end
 function addon.BuffFoods.functions.rebuildBagItemCountCache() return rebuildBagItemCountCache() end
 
+local function buildCandidateCacheKey(specID, playerLevel, bagVersion, selectedType, selectedRoleKey, selectedPreference)
+	local db = addon.db or {}
+	return table.concat({
+		tostring(tonumber(specID) or 0),
+		tostring(tonumber(playerLevel) or 0),
+		tostring(tonumber(bagVersion) or 0),
+		tostring(selectedType or "none"),
+		tostring(selectedRoleKey or "none"),
+		tostring(selectedPreference or "useRole"),
+		db.buffFoodPreferHearty == false and "standard" or "hearty",
+	}, "|")
+end
+
 function addon.BuffFoods.functions.getAvailableCandidatesForSpec(specID)
 	local playerLevel = UnitLevel("player") or 0
-	local candidates = {}
 	local selectedType = "none"
 	local selectedPreference = "useRole"
 	local selectedRoleKey = nil
@@ -375,6 +351,15 @@ function addon.BuffFoods.functions.getAvailableCandidatesForSpec(specID)
 		selectedType = normalizeTypeKey(selectedPreference)
 	end
 
+	getBagItemCountCache()
+	local bagVersion = addon.functions and addon.functions.getFoodBagItemCountCacheVersion and addon.functions.getFoodBagItemCountCacheVersion() or 0
+	local cacheKey = buildCandidateCacheKey(specID, playerLevel, bagVersion, selectedType, selectedRoleKey, selectedPreference)
+	local cache = addon.BuffFoods.candidateCache
+	if cache and cache.key == cacheKey and type(cache.list) == "table" then
+		return cache.list, cache.selectedType, cache.selectedRoleKey, cache.selectedPreference
+	end
+
+	local candidates = {}
 	if selectedType ~= "none" then
 		local list = addon.BuffFoods.typeFoods and addon.BuffFoods.typeFoods[selectedType]
 		if db.buffFoodPreferHearty ~= false then
@@ -386,25 +371,25 @@ function addon.BuffFoods.functions.getAvailableCandidatesForSpec(specID)
 		end
 	end
 
+	addon.BuffFoods.candidateCache = {
+		key = cacheKey,
+		list = candidates,
+		selectedType = selectedType,
+		selectedRoleKey = selectedRoleKey,
+		selectedPreference = selectedPreference,
+	}
 	return candidates, selectedType, selectedRoleKey, selectedPreference
 end
 
 function addon.BuffFoods.functions.updateAllowedBuffFoods(specID)
 	local resolvedSpecID = specID or getCurrentSpecID()
 	local candidates, selectedType, selectedRoleKey, selectedPreference = addon.BuffFoods.functions.getAvailableCandidatesForSpec(resolvedSpecID)
+	local bagVersion = addon.functions and addon.functions.getFoodBagItemCountCacheVersion and addon.functions.getFoodBagItemCountCacheVersion() or 0
 	addon.BuffFoods.filteredBuffFoods = candidates
 	addon.BuffFoods.lastSpecID = resolvedSpecID
+	addon.BuffFoods.lastBagVersion = bagVersion
 	addon.BuffFoods.lastSelectedType = selectedType
 	addon.BuffFoods.lastSelectedRole = selectedRoleKey
 	addon.BuffFoods.lastSelectedPreference = selectedPreference
 	return candidates, selectedType
 end
-
-local bagItemCountCacheFrame = addon.BuffFoods.bagItemCountCacheFrame or CreateFrame("Frame")
-addon.BuffFoods.bagItemCountCacheFrame = bagItemCountCacheFrame
-bagItemCountCacheFrame:RegisterEvent("PLAYER_LOGIN")
-bagItemCountCacheFrame:RegisterEvent("PLAYER_ENTERING_WORLD")
-bagItemCountCacheFrame:RegisterEvent("BAG_UPDATE_DELAYED")
-bagItemCountCacheFrame:SetScript("OnEvent", function(_, event)
-	if event == "PLAYER_LOGIN" or event == "PLAYER_ENTERING_WORLD" or event == "BAG_UPDATE_DELAYED" then rebuildBagItemCountCache() end
-end)

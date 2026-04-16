@@ -1,7 +1,7 @@
 local addonName, addon = ...
 
 local L = LibStub("AceLocale-3.0"):GetLocale(addonName)
-local LMP = LibStub("AceLocale-3.0"):GetLocale("EnhanceQoL_MythicPlus")
+local issecretvalue = _G.issecretvalue
 
 ---- REGION Functions
 local timeoutReleaseDifficultyLookup = {}
@@ -27,6 +27,49 @@ local combatLogInstanceMap = {
 	arena = "pvp",
 	scenario = "scenario",
 	delve = "delve",
+}
+local LEGACY_NAMEPLATE_AURA_CLICKTHROUGH_DB_KEY = "experimentalNameplateAuraClickthrough"
+local NAMEPLATE_AURA_CLICKTHROUGH_DB_KEY = "nameplateAuraClickthrough"
+local NAMEPLATE_MOB_COLORS_DB_KEY = "nameplateMobColors"
+local NAMEPLATE_MOB_COLORS_DUNGEONS_DB_KEY = "nameplateMobColorsInDungeons"
+local NAMEPLATE_MOB_COLORS_OUTSIDE_DUNGEONS_DB_KEY = "nameplateMobColorsOutsideDungeons"
+local NAMEPLATE_MOB_COLOR_BOSS_DB_KEY = "nameplateMobColorBoss"
+local NAMEPLATE_MOB_COLOR_MINIBOSS_DB_KEY = "nameplateMobColorMiniboss"
+local NAMEPLATE_MOB_COLOR_CASTER_DB_KEY = "nameplateMobColorCaster"
+local NAMEPLATE_MOB_COLOR_MELEE_DB_KEY = "nameplateMobColorMelee"
+local NAMEPLATE_MOB_COLOR_TRIVIAL_DB_KEY = "nameplateMobColorTrivial"
+local nameplateAuraClickthroughFrame
+local nameplateAuraClickthroughHookedBuffPools = setmetatable({}, { __mode = "k" })
+local nameplateAuraClickthroughHookedAuraFrames = setmetatable({}, { __mode = "k" })
+local nameplateAuraClickthroughActive = false
+local nameplateMobColorFrame
+local nameplateMobColorHooksInstalled = false
+local nameplateMobColorsActive = false
+local nameplateMobColorState = {
+	isActive = false,
+	contextKey = nil,
+	lastLFGInstanceID = nil,
+	referenceLevel = nil,
+	lieutenantLevel = nil,
+}
+local NAMEPLATE_MOB_COLOR_DEFAULTS = {
+	[NAMEPLATE_MOB_COLOR_BOSS_DB_KEY] = { r = 188 / 255, g = 28 / 255, b = 0 / 255, a = 1 },
+	[NAMEPLATE_MOB_COLOR_MINIBOSS_DB_KEY] = { r = 144 / 255, g = 0 / 255, b = 188 / 255, a = 1 },
+	[NAMEPLATE_MOB_COLOR_CASTER_DB_KEY] = { r = 0 / 255, g = 116 / 255, b = 188 / 255, a = 1 },
+	[NAMEPLATE_MOB_COLOR_MELEE_DB_KEY] = { r = 252 / 255, g = 252 / 255, b = 252 / 255, a = 1 },
+	[NAMEPLATE_MOB_COLOR_TRIVIAL_DB_KEY] = { r = 178 / 255, g = 142 / 255, b = 85 / 255, a = 1 },
+}
+addon.constants = addon.constants or {}
+addon.constants.DEFAULT_NAMEPLATE_FEATURE_KEYS = {
+	auraClickthrough = NAMEPLATE_AURA_CLICKTHROUGH_DB_KEY,
+	mobColors = NAMEPLATE_MOB_COLORS_DB_KEY,
+	mobColorsInDungeons = NAMEPLATE_MOB_COLORS_DUNGEONS_DB_KEY,
+	mobColorsOutsideDungeons = NAMEPLATE_MOB_COLORS_OUTSIDE_DUNGEONS_DB_KEY,
+	mobColorBoss = NAMEPLATE_MOB_COLOR_BOSS_DB_KEY,
+	mobColorMiniboss = NAMEPLATE_MOB_COLOR_MINIBOSS_DB_KEY,
+	mobColorCaster = NAMEPLATE_MOB_COLOR_CASTER_DB_KEY,
+	mobColorMelee = NAMEPLATE_MOB_COLOR_MELEE_DB_KEY,
+	mobColorTrivial = NAMEPLATE_MOB_COLOR_TRIVIAL_DB_KEY,
 }
 local DIFFICULTY_IDS = (_G.DifficultyUtil and _G.DifficultyUtil.ID) or {}
 local COMBAT_LOG_DIFFICULTY_GROUPS = {
@@ -218,6 +261,419 @@ end
 
 addon.functions.UpdateCombatLogState = updateCombatLogState
 
+local function isNameplateAuraClickthroughActive() return nameplateAuraClickthroughActive == true end
+
+local function isSecretValue(value) return issecretvalue and issecretvalue(value) end
+
+local function isNameplateUnitToken(unit)
+	if type(unit) ~= "string" or isSecretValue(unit) then return false end
+	return unit:match("^nameplate%d+$") ~= nil
+end
+
+local function isNeutralUnit(unit)
+	if not isNameplateUnitToken(unit) then return false end
+
+	if type(UnitSelectionType) == "function" then
+		local selectionType = UnitSelectionType(unit)
+		if not isSecretValue(selectionType) then return selectionType == 2 end
+	end
+
+	local reaction = UnitReaction(unit, "player")
+	if isSecretValue(reaction) then return false end
+	return reaction == 4
+end
+
+local function isNameplateMobColorsActive() return nameplateMobColorsActive == true end
+
+local function isNameplateMobColorScopeEnabled(dbKey, defaultValue)
+	if not addon.db then return defaultValue and true or false end
+	local value = addon.db[dbKey]
+	if value == nil then return defaultValue and true or false end
+	return value == true
+end
+
+local function isNameplateMobColorPvpContext(instanceType, zonePvpType)
+	if instanceType == "pvp" or instanceType == "arena" then return true end
+	return zonePvpType == "arena" or zonePvpType == "combat" or zonePvpType == "ffapvp"
+end
+
+local function getNameplateMobColorContext()
+	local _, instanceType, _, _, _, _, _, _, _, lfgDungeonID = GetInstanceInfo()
+	if isSecretValue(instanceType) then instanceType = nil end
+	if isSecretValue(lfgDungeonID) then lfgDungeonID = nil end
+	if type(instanceType) ~= "string" or instanceType == "" then instanceType = "none" end
+
+	local zonePvpType
+	if C_PvP and type(C_PvP.GetZonePVPInfo) == "function" then
+		zonePvpType = C_PvP.GetZonePVPInfo()
+		if isSecretValue(zonePvpType) then zonePvpType = nil end
+	end
+
+	local allowInDungeons = isNameplateMobColorScopeEnabled(NAMEPLATE_MOB_COLORS_DUNGEONS_DB_KEY, true)
+	local allowOutsideDungeons = isNameplateMobColorScopeEnabled(NAMEPLATE_MOB_COLORS_OUTSIDE_DUNGEONS_DB_KEY, false)
+	local isDungeon = instanceType == "party"
+	local isPvp = isNameplateMobColorPvpContext(instanceType, zonePvpType)
+	local isAllowedByScope = (isDungeon and allowInDungeons) or ((not isDungeon) and allowOutsideDungeons)
+
+	return {
+		instanceType = instanceType,
+		lfgDungeonID = lfgDungeonID,
+		zonePvpType = zonePvpType,
+		isDungeon = isDungeon,
+		isPvp = isPvp,
+		isAllowed = isAllowedByScope and not isPvp,
+	}
+end
+
+local function isPlayerControlledNameplateUnit(unit)
+	if not isNameplateUnitToken(unit) then return false end
+
+	local isPlayerUnit = type(UnitIsPlayer) == "function" and UnitIsPlayer(unit) or false
+	if isSecretValue(isPlayerUnit) then isPlayerUnit = false end
+	if isPlayerUnit then return true end
+
+	local isPlayerControlled = type(UnitPlayerControlled) == "function" and UnitPlayerControlled(unit) or false
+	if isSecretValue(isPlayerControlled) then isPlayerControlled = false end
+	return isPlayerControlled == true
+end
+
+local function updateNameplateMobColorContext(forceRefresh)
+	local isFeatureEnabled = isNameplateMobColorsActive()
+	local context = getNameplateMobColorContext()
+	local contextKey = table.concat({
+		context.instanceType or "none",
+		tostring(context.lfgDungeonID or 0),
+		context.zonePvpType or "",
+		context.isAllowed and "1" or "0",
+	}, "|")
+
+	if not isFeatureEnabled or not context.isAllowed then
+		nameplateMobColorState.isActive = false
+		nameplateMobColorState.contextKey = contextKey
+		nameplateMobColorState.lastLFGInstanceID = context.lfgDungeonID
+		nameplateMobColorState.referenceLevel = nil
+		nameplateMobColorState.lieutenantLevel = nil
+		return
+	end
+
+	if not forceRefresh and nameplateMobColorState.contextKey == contextKey and nameplateMobColorState.isActive == true then return end
+
+	nameplateMobColorState.isActive = true
+	nameplateMobColorState.contextKey = contextKey
+	nameplateMobColorState.lastLFGInstanceID = context.lfgDungeonID
+	nameplateMobColorState.lieutenantLevel = nil
+
+	local referenceLevel
+	if context.lfgDungeonID and context.isDungeon and type(_G.GetMaximumExpansionLevel) == "function" and type(_G.GetMaxLevelForExpansionLevel) == "function" then
+		local maximumExpansionLevel = _G.GetMaximumExpansionLevel()
+		if not isSecretValue(maximumExpansionLevel) then
+			referenceLevel = _G.GetMaxLevelForExpansionLevel(maximumExpansionLevel)
+			if isSecretValue(referenceLevel) then referenceLevel = nil end
+		end
+	end
+
+	if type(referenceLevel) ~= "number" then
+		referenceLevel = UnitEffectiveLevel and UnitEffectiveLevel("player")
+		if isSecretValue(referenceLevel) then referenceLevel = nil end
+	end
+	if type(referenceLevel) ~= "number" and type(UnitLevel) == "function" then
+		referenceLevel = UnitLevel("player")
+		if isSecretValue(referenceLevel) then referenceLevel = nil end
+	end
+
+	nameplateMobColorState.referenceLevel = type(referenceLevel) == "number" and referenceLevel or nil
+end
+
+local function getNameplateHealthBar(unitFrame)
+	if not unitFrame or isSecretValue(unitFrame) then return nil end
+
+	local healthBar = unitFrame.healthBar
+	if not healthBar and unitFrame.HealthBarsContainer and not isSecretValue(unitFrame.HealthBarsContainer) then healthBar = unitFrame.HealthBarsContainer.healthBar end
+	if not healthBar and unitFrame.HealthBar then healthBar = unitFrame.HealthBar end
+	if isSecretValue(healthBar) then return nil end
+	if healthBar and healthBar.IsForbidden and healthBar:IsForbidden() then return nil end
+	return healthBar
+end
+
+local function getNameplateMobColor(dbKey)
+	local color = addon.db and addon.db[dbKey]
+	if type(color) ~= "table" then color = NAMEPLATE_MOB_COLOR_DEFAULTS[dbKey] end
+	if type(color) ~= "table" then return nil end
+	return color
+end
+
+local function computeNameplateMobColor(unit)
+	updateNameplateMobColorContext()
+	if not nameplateMobColorState.isActive then return nil end
+	if not isNameplateUnitToken(unit) then return nil end
+	if isNeutralUnit(unit) then return nil end
+	if isPlayerControlledNameplateUnit(unit) then return nil end
+
+	local canAttack = UnitCanAttack("player", unit)
+	if isSecretValue(canAttack) or not canAttack then return nil end
+
+	local classification = UnitClassification and UnitClassification(unit)
+	if isSecretValue(classification) then classification = nil end
+	if classification == "elite" then
+		local mobLevel = UnitEffectiveLevel and UnitEffectiveLevel(unit)
+		if isSecretValue(mobLevel) then mobLevel = nil end
+		if type(mobLevel) ~= "number" and type(UnitLevel) == "function" then
+			mobLevel = UnitLevel(unit)
+			if isSecretValue(mobLevel) then mobLevel = nil end
+		end
+
+		local isLieutenant = type(_G.UnitIsLieutenant) == "function" and _G.UnitIsLieutenant(unit) or false
+		if isSecretValue(isLieutenant) then isLieutenant = false end
+
+		local referenceLevel = nameplateMobColorState.referenceLevel
+		local lieutenantLevel = nameplateMobColorState.lieutenantLevel
+		if type(mobLevel) == "number" and (mobLevel == (referenceLevel and referenceLevel + 1) or isLieutenant) then
+			nameplateMobColorState.lieutenantLevel = mobLevel
+			return getNameplateMobColor(NAMEPLATE_MOB_COLOR_MINIBOSS_DB_KEY)
+		elseif mobLevel == -1 or (type(mobLevel) == "number" and ((referenceLevel and mobLevel == (referenceLevel + 2)) or (lieutenantLevel and mobLevel == (lieutenantLevel + 1)))) then
+			return getNameplateMobColor(NAMEPLATE_MOB_COLOR_BOSS_DB_KEY)
+		end
+
+		local classToken = UnitClassBase and UnitClassBase(unit)
+		if isSecretValue(classToken) then classToken = nil end
+		if classToken == "PALADIN" then
+			return getNameplateMobColor(NAMEPLATE_MOB_COLOR_CASTER_DB_KEY)
+		else
+			return getNameplateMobColor(NAMEPLATE_MOB_COLOR_MELEE_DB_KEY)
+		end
+	elseif classification == "normal" or classification == "trivial" or classification == "minus" then
+		return getNameplateMobColor(NAMEPLATE_MOB_COLOR_TRIVIAL_DB_KEY)
+	end
+
+	return nil
+end
+
+local function applyNameplateMobColor(unitFrame)
+	if not unitFrame or isSecretValue(unitFrame) then return end
+
+	local unit = unitFrame.unit
+	if not isNameplateUnitToken(unit) then return end
+
+	local color = computeNameplateMobColor(unit)
+	if not color then return end
+
+	local healthBar = getNameplateHealthBar(unitFrame)
+	if not healthBar then return end
+
+	local currentR, currentG, currentB = healthBar:GetStatusBarColor()
+	local targetR = isSecretValue(color.r) and nil or color.r
+	local targetG = isSecretValue(color.g) and nil or color.g
+	local targetB = isSecretValue(color.b) and nil or color.b
+	if type(targetR) ~= "number" or type(targetG) ~= "number" or type(targetB) ~= "number" then return end
+	if currentR == targetR and currentG == targetG and currentB == targetB then return end
+	healthBar:SetStatusBarColor(targetR, targetG, targetB)
+end
+
+local function refreshNameplateMobColorUnitFrame(unitFrame)
+	if not unitFrame or isSecretValue(unitFrame) then return end
+	if not isNameplateUnitToken(unitFrame.unit) then return end
+
+	if type(_G.CompactUnitFrame_UpdateHealthColor) == "function" then
+		_G.CompactUnitFrame_UpdateHealthColor(unitFrame)
+		return
+	end
+
+	applyNameplateMobColor(unitFrame)
+end
+
+local function refreshAllNameplateMobColors()
+	if not (C_NamePlate and C_NamePlate.GetNamePlates) then return end
+	for _, namePlate in pairs(C_NamePlate.GetNamePlates() or {}) do
+		local unitFrame = namePlate and namePlate.UnitFrame
+		if unitFrame then refreshNameplateMobColorUnitFrame(unitFrame) end
+	end
+end
+
+local function ensureNameplateMobColorHooks()
+	if nameplateMobColorHooksInstalled then return end
+	if type(hooksecurefunc) ~= "function" then return end
+	local installedAnyHook = false
+
+	if type(_G.CompactUnitFrame_UpdateHealthColor) == "function" then
+		hooksecurefunc("CompactUnitFrame_UpdateHealthColor", function(unitFrame) applyNameplateMobColor(unitFrame) end)
+		installedAnyHook = true
+	end
+
+	if type(_G.CompactUnitFrame_UpdateAll) == "function" then
+		hooksecurefunc("CompactUnitFrame_UpdateAll", function(unitFrame) applyNameplateMobColor(unitFrame) end)
+		installedAnyHook = true
+	end
+
+	nameplateMobColorHooksInstalled = installedAnyHook
+end
+
+local function ensureNameplateMobColorWatcher()
+	ensureNameplateMobColorHooks()
+	if nameplateMobColorFrame then return end
+
+	nameplateMobColorFrame = CreateFrame("Frame")
+	nameplateMobColorFrame:RegisterEvent("PLAYER_ENTERING_WORLD")
+	nameplateMobColorFrame:RegisterEvent("ZONE_CHANGED_NEW_AREA")
+	nameplateMobColorFrame:RegisterEvent("PLAYER_LEVEL_UP")
+	nameplateMobColorFrame:RegisterEvent("INSTANCE_GROUP_SIZE_CHANGED")
+	nameplateMobColorFrame:RegisterEvent("NAME_PLATE_UNIT_ADDED")
+	nameplateMobColorFrame:SetScript("OnEvent", function(_, event, unit)
+		ensureNameplateMobColorHooks()
+		local forceRefresh = event ~= "NAME_PLATE_UNIT_ADDED"
+		updateNameplateMobColorContext(forceRefresh)
+		if event == "NAME_PLATE_UNIT_ADDED" and unit and C_NamePlate and C_NamePlate.GetNamePlateForUnit then
+			local namePlate = C_NamePlate.GetNamePlateForUnit(unit)
+			local unitFrame = namePlate and namePlate.UnitFrame
+			if unitFrame then refreshNameplateMobColorUnitFrame(unitFrame) end
+			return
+		end
+
+		refreshAllNameplateMobColors()
+	end)
+end
+
+local function syncNameplateMobColors()
+	if not isNameplateMobColorsActive() then return end
+	ensureNameplateMobColorWatcher()
+	updateNameplateMobColorContext()
+	refreshAllNameplateMobColors()
+end
+
+local function safeSetNameplateAuraButtonClicks(button, enabled)
+	if not button or type(button.SetMouseClickEnabled) ~= "function" then return false end
+	local ok = pcall(button.SetMouseClickEnabled, button, enabled and true or false)
+	return ok == true
+end
+
+local function applyNameplateAuraClickthroughToBuffPool(pool)
+	if not pool or type(pool.EnumerateActive) ~= "function" then return end
+	local allowClicks = not isNameplateAuraClickthroughActive()
+	for button in pool:EnumerateActive() do
+		safeSetNameplateAuraButtonClicks(button, allowClicks)
+	end
+end
+
+local function applyNameplateAuraClickthroughToAurasFrame(aurasFrame)
+	if not aurasFrame then return end
+
+	local allowClicks = not isNameplateAuraClickthroughActive()
+	local pool = aurasFrame.auraItemFramePool
+	if pool and type(pool.EnumerateActive) == "function" then
+		for auraItem in pool:EnumerateActive() do
+			safeSetNameplateAuraButtonClicks(auraItem, allowClicks)
+		end
+	end
+
+	local lossOfControlAura = aurasFrame.LossOfControlFrame and aurasFrame.LossOfControlFrame.AuraItemFrame
+	if lossOfControlAura then safeSetNameplateAuraButtonClicks(lossOfControlAura, allowClicks) end
+end
+
+local function hookNameplateAuraClickthroughOnBuffFrame(buffFrame)
+	if not buffFrame then return end
+
+	local pool = buffFrame.buffPool
+	if pool and not nameplateAuraClickthroughHookedBuffPools[pool] and type(pool.resetterFunc) == "function" then
+		hooksecurefunc(pool, "resetterFunc", function(_, button)
+			local allowClicks = not isNameplateAuraClickthroughActive()
+			safeSetNameplateAuraButtonClicks(button, allowClicks)
+		end)
+		nameplateAuraClickthroughHookedBuffPools[pool] = true
+	end
+
+	if not buffFrame._eqolNameplateAuraClickthroughHooked and type(buffFrame.UpdateBuffs) == "function" then
+		hooksecurefunc(buffFrame, "UpdateBuffs", function(self) applyNameplateAuraClickthroughToBuffPool(self.buffPool) end)
+		buffFrame._eqolNameplateAuraClickthroughHooked = true
+	end
+
+	applyNameplateAuraClickthroughToBuffPool(pool)
+end
+
+local function hookNameplateAuraClickthroughOnAurasFrame(aurasFrame)
+	if not aurasFrame or nameplateAuraClickthroughHookedAuraFrames[aurasFrame] then return end
+
+	if type(aurasFrame.RefreshAuras) == "function" then hooksecurefunc(aurasFrame, "RefreshAuras", function(self) applyNameplateAuraClickthroughToAurasFrame(self) end) end
+
+	if type(aurasFrame.RefreshLossOfControl) == "function" then hooksecurefunc(aurasFrame, "RefreshLossOfControl", function(self) applyNameplateAuraClickthroughToAurasFrame(self) end) end
+
+	nameplateAuraClickthroughHookedAuraFrames[aurasFrame] = true
+	applyNameplateAuraClickthroughToAurasFrame(aurasFrame)
+end
+
+local function hookNameplateAuraClickthroughOnUnitFrame(unitFrame)
+	if not unitFrame then return end
+	hookNameplateAuraClickthroughOnBuffFrame(unitFrame.BuffFrame)
+	hookNameplateAuraClickthroughOnAurasFrame(unitFrame.AurasFrame)
+end
+
+local function applyNameplateAuraClickthroughToNameplate(namePlate)
+	if not namePlate or not namePlate.UnitFrame then return end
+	hookNameplateAuraClickthroughOnUnitFrame(namePlate.UnitFrame)
+end
+
+local function applyNameplateAuraClickthroughToAllNameplates()
+	if not (C_NamePlate and C_NamePlate.GetNamePlates) then return end
+	for _, namePlate in pairs(C_NamePlate.GetNamePlates() or {}) do
+		applyNameplateAuraClickthroughToNameplate(namePlate)
+	end
+end
+
+local function ensureNameplateAuraClickthroughWatcher()
+	if nameplateAuraClickthroughFrame then return end
+
+	nameplateAuraClickthroughFrame = CreateFrame("Frame")
+	nameplateAuraClickthroughFrame:RegisterEvent("PLAYER_ENTERING_WORLD")
+	nameplateAuraClickthroughFrame:RegisterEvent("NAME_PLATE_UNIT_ADDED")
+	nameplateAuraClickthroughFrame:SetScript("OnEvent", function(_, event, unit)
+		if event == "NAME_PLATE_UNIT_ADDED" and unit and C_NamePlate and C_NamePlate.GetNamePlateForUnit then
+			local namePlate = C_NamePlate.GetNamePlateForUnit(unit)
+			if namePlate then applyNameplateAuraClickthroughToNameplate(namePlate) end
+			return
+		end
+
+		applyNameplateAuraClickthroughToAllNameplates()
+	end)
+end
+
+local function syncNameplateAuraClickthrough()
+	if not isNameplateAuraClickthroughActive() then return end
+	ensureNameplateAuraClickthroughWatcher()
+	applyNameplateAuraClickthroughToAllNameplates()
+end
+
+local function requestFeatureReload()
+	addon.variables = addon.variables or {}
+	addon.variables.requireReload = true
+	if addon.functions.checkReloadFrame then addon.functions.checkReloadFrame() end
+end
+
+function addon.functions.SetDefaultNameplateAuraClickthroughEnabled(value)
+	local wasActive = isNameplateAuraClickthroughActive()
+	local enabled = value and true or false
+	addon.db[NAMEPLATE_AURA_CLICKTHROUGH_DB_KEY] = enabled
+	if enabled then
+		nameplateAuraClickthroughActive = true
+		syncNameplateAuraClickthrough()
+	elseif wasActive then
+		requestFeatureReload()
+	end
+end
+
+function addon.functions.SetDefaultNameplateMobColorsEnabled(value)
+	local wasActive = isNameplateMobColorsActive()
+	local enabled = value and true or false
+	addon.db[NAMEPLATE_MOB_COLORS_DB_KEY] = enabled
+	if enabled then
+		nameplateMobColorsActive = true
+		syncNameplateMobColors()
+	elseif wasActive then
+		requestFeatureReload()
+	end
+end
+
+function addon.functions.RefreshDefaultNameplateMobColors()
+	if isNameplateMobColorsActive() then syncNameplateMobColors() end
+end
+
 local function shouldUseTimeoutReleaseForCurrentContext()
 	if not addon.db or not addon.db["timeoutRelease"] then return false end
 
@@ -308,22 +764,26 @@ function addon.functions.hideTimeoutReleaseHint(popup)
 end
 
 local function toggleGroupApplication(value)
+	if addon.functions and addon.functions.isRestrictedContent and addon.functions.isRestrictedContent(true) then return end
+	local viewer = _G.LFGListFrame and _G.LFGListFrame.ApplicationViewer
+	local cover = viewer and viewer.UnempoweredCover
+	if not (cover and cover.Label and cover.Background and cover.Waitdot1 and cover.Waitdot2 and cover.Waitdot3) then return end
 	if value then
 		-- Hide overlay and text label
-		_G.LFGListFrame.ApplicationViewer.UnempoweredCover.Label:Hide()
-		_G.LFGListFrame.ApplicationViewer.UnempoweredCover.Background:Hide()
+		cover.Label:Hide()
+		cover.Background:Hide()
 		-- Hide the 3 animated texture icons
-		_G.LFGListFrame.ApplicationViewer.UnempoweredCover.Waitdot1:Hide()
-		_G.LFGListFrame.ApplicationViewer.UnempoweredCover.Waitdot2:Hide()
-		_G.LFGListFrame.ApplicationViewer.UnempoweredCover.Waitdot3:Hide()
+		cover.Waitdot1:Hide()
+		cover.Waitdot2:Hide()
+		cover.Waitdot3:Hide()
 	else
 		-- Hide overlay and text label
-		_G.LFGListFrame.ApplicationViewer.UnempoweredCover.Label:Show()
-		_G.LFGListFrame.ApplicationViewer.UnempoweredCover.Background:Show()
+		cover.Label:Show()
+		cover.Background:Show()
 		-- Hide the 3 animated texture icons
-		_G.LFGListFrame.ApplicationViewer.UnempoweredCover.Waitdot1:Show()
-		_G.LFGListFrame.ApplicationViewer.UnempoweredCover.Waitdot2:Show()
-		_G.LFGListFrame.ApplicationViewer.UnempoweredCover.Waitdot3:Show()
+		cover.Waitdot1:Show()
+		cover.Waitdot2:Show()
+		cover.Waitdot3:Show()
 	end
 end
 
@@ -342,10 +802,23 @@ local function toggleLFGFilterPosition()
 end
 
 function addon.functions.initDungeonFrame()
+	if addon.db and addon.db[NAMEPLATE_AURA_CLICKTHROUGH_DB_KEY] == nil and addon.db[LEGACY_NAMEPLATE_AURA_CLICKTHROUGH_DB_KEY] ~= nil then
+		addon.db[NAMEPLATE_AURA_CLICKTHROUGH_DB_KEY] = addon.db[LEGACY_NAMEPLATE_AURA_CLICKTHROUGH_DB_KEY] and true or false
+	end
+
 	addon.functions.InitDBValue("autoChooseDelvePower", false)
 	addon.functions.InitDBValue("lfgSortByRio", false)
 	addon.functions.InitDBValue("groupfinderSkipRoleSelect", false)
 	addon.functions.InitDBValue("enableChatIMRaiderIO", false)
+	addon.functions.InitDBValue(NAMEPLATE_AURA_CLICKTHROUGH_DB_KEY, false)
+	addon.functions.InitDBValue(NAMEPLATE_MOB_COLORS_DB_KEY, false)
+	addon.functions.InitDBValue(NAMEPLATE_MOB_COLORS_DUNGEONS_DB_KEY, true)
+	addon.functions.InitDBValue(NAMEPLATE_MOB_COLORS_OUTSIDE_DUNGEONS_DB_KEY, false)
+	addon.functions.InitDBValue(NAMEPLATE_MOB_COLOR_BOSS_DB_KEY, NAMEPLATE_MOB_COLOR_DEFAULTS[NAMEPLATE_MOB_COLOR_BOSS_DB_KEY])
+	addon.functions.InitDBValue(NAMEPLATE_MOB_COLOR_MINIBOSS_DB_KEY, NAMEPLATE_MOB_COLOR_DEFAULTS[NAMEPLATE_MOB_COLOR_MINIBOSS_DB_KEY])
+	addon.functions.InitDBValue(NAMEPLATE_MOB_COLOR_CASTER_DB_KEY, NAMEPLATE_MOB_COLOR_DEFAULTS[NAMEPLATE_MOB_COLOR_CASTER_DB_KEY])
+	addon.functions.InitDBValue(NAMEPLATE_MOB_COLOR_MELEE_DB_KEY, NAMEPLATE_MOB_COLOR_DEFAULTS[NAMEPLATE_MOB_COLOR_MELEE_DB_KEY])
+	addon.functions.InitDBValue(NAMEPLATE_MOB_COLOR_TRIVIAL_DB_KEY, NAMEPLATE_MOB_COLOR_DEFAULTS[NAMEPLATE_MOB_COLOR_TRIVIAL_DB_KEY])
 	addon.functions.InitDBValue("timeoutReleaseDifficulties", {})
 	addon.functions.InitDBValue("autoCombatLog", false)
 	addon.functions.InitDBValue("combatLogDungeonDifficulties", {})
@@ -354,6 +827,11 @@ function addon.functions.initDungeonFrame()
 	addon.functions.InitDBValue("combatLogScenario", false)
 	addon.functions.InitDBValue("combatLogDelve", false)
 	addon.functions.InitDBValue("combatLogDelayedStop", false)
+
+	nameplateAuraClickthroughActive = addon.db and addon.db[NAMEPLATE_AURA_CLICKTHROUGH_DB_KEY] == true
+	nameplateMobColorsActive = addon.db and addon.db[NAMEPLATE_MOB_COLORS_DB_KEY] == true
+	if nameplateAuraClickthroughActive then syncNameplateAuraClickthrough() end
+	if nameplateMobColorsActive then syncNameplateMobColors() end
 
 	local combatLogSection = addon.functions.SettingsCreateExpandableSection(cChar, {
 		name = L["combatLogSection"] or "Combat logging",
@@ -401,7 +879,7 @@ function addon.functions.initDungeonFrame()
 		})
 	end
 
-	createCombatLogToggle("combatLogPvp", L["combatLogPvp"] or "PvP", L["combatLogPvpDesc"] or "Automatically toggle combat logging in PvP instances.")
+	createCombatLogToggle("combatLogPvp", L["PvP"] or "PvP", L["combatLogPvpDesc"] or "Automatically toggle combat logging in PvP instances.")
 	createCombatLogToggle("combatLogScenario", L["combatLogScenario"] or "Scenarios", L["combatLogScenarioDesc"] or "Automatically toggle combat logging in scenarios.")
 	createCombatLogToggle("combatLogDelve", L["combatLogDelve"] or "Delves", L["combatLogDelveDesc"] or "Automatically toggle combat logging in delves.")
 
@@ -467,24 +945,34 @@ function addon.functions.initDungeonFrame()
 	-- Add Raider.IO URL to LFG applicant member context menu
 	if Menu and Menu.ModifyMenu then
 		local regionTable = { "US", "KR", "EU", "TW", "CN" }
+		local function trimNamePart(value)
+			if issecretvalue and issecretvalue(value) then return nil end
+			if type(value) ~= "string" then return nil end
+			value = value:gsub("^%s+", ""):gsub("%s+$", "")
+			if value == "" then return nil end
+			return value
+		end
+
 		local function AddLFGApplicantRIO(owner, root, ctx)
 			if not addon.db["enableChatIMRaiderIO"] then return end
 
-			local appID = owner and owner._eqolApplicantID or (ctx and (ctx.applicantID or ctx.appID))
-			local memberIdx = owner and owner._eqolMemberIdx or (ctx and (ctx.memberIdx or ctx.memberIndex))
+			local ownerParent = owner and owner.GetParent and owner:GetParent() or nil
+			local appID = (ownerParent and ownerParent.applicantID) or (ctx and (ctx.applicantID or ctx.appID))
+			local memberIdx = (owner and owner.memberIdx) or (ctx and (ctx.memberIdx or ctx.memberIndex))
+			if issecretvalue and (issecretvalue(appID) or issecretvalue(memberIdx)) then return end
 			if not appID or not memberIdx then return end
 
 			local name = C_LFGList and C_LFGList.GetApplicantMemberInfo and C_LFGList.GetApplicantMemberInfo(appID, memberIdx)
+			if issecretvalue and issecretvalue(name) then return end
 			if type(name) ~= "string" or name == "" then return end
 
-			local targetName = name
-			if not targetName:find(" -", 1, true) then targetName = targetName .. " -" .. (GetRealmName() or ""):gsub("%s", "") end
-
-			local char, realm = targetName:match("^([^%-]+)%-(.+)$")
+			local char, realm = name:match("^%s*([^%-]+)%s*%-%s*(.-)%s*$")
+			char = trimNamePart(char) or trimNamePart(name)
+			realm = trimNamePart(realm) or trimNamePart(GetRealmName() or "")
 			if not char or not realm then return end
 
 			local regionKey = regionTable[GetCurrentRegion()] or "EU"
-			local realmSlug = string.lower((realm or ""):gsub("%s+", " -"))
+			local realmSlug = realm:gsub("%s+", "-"):lower()
 			local riolink = "https://raider.io/characters/" .. string.lower(regionKey) .. "/" .. realmSlug .. "/" .. char
 
 			root:CreateDivider()
@@ -621,8 +1109,8 @@ if cChar and sectionDungeon then
 	-- Keystone Helper
 	keystoneEnable = addon.functions.SettingsCreateCheckbox(cChar, {
 		var = "enableKeystoneHelper",
-		text = LMP["enableKeystoneHelper"],
-		desc = LMP["enableKeystoneHelperDesc"],
+		text = L["enableKeystoneHelper"],
+		desc = L["enableKeystoneHelperDesc"],
 		func = function(v)
 			addon.db["enableKeystoneHelper"] = v
 			if addon.MythicPlus and addon.MythicPlus.functions and addon.MythicPlus.functions.toggleFrame then addon.MythicPlus.functions.toggleFrame() end
@@ -631,13 +1119,13 @@ if cChar and sectionDungeon then
 	})
 
 	local keystoneChildren = {
-		{ var = "autoInsertKeystone", text = LMP["Automatically insert keystone"], func = function(v) addon.db["autoInsertKeystone"] = v end, parentSection = sectionDungeon },
-		{ var = "closeBagsOnKeyInsert", text = LMP["Close all bags on keystone insert"], func = function(v) addon.db["closeBagsOnKeyInsert"] = v end, parentSection = sectionDungeon },
-		{ var = "autoKeyStart", text = LMP["autoKeyStart"], func = function(v) addon.db["autoKeyStart"] = v end, parentSection = sectionDungeon },
+		{ var = "autoInsertKeystone", text = L["Automatically insert keystone"], func = function(v) addon.db["autoInsertKeystone"] = v end, parentSection = sectionDungeon },
+		{ var = "closeBagsOnKeyInsert", text = L["Close all bags on keystone insert"], func = function(v) addon.db["closeBagsOnKeyInsert"] = v end, parentSection = sectionDungeon },
+		{ var = "autoKeyStart", text = L["autoKeyStart"], func = function(v) addon.db["autoKeyStart"] = v end, parentSection = sectionDungeon },
 		{
 			var = "mythicPlusShowChestTimers",
-			text = LMP["mythicPlusShowChestTimers"],
-			desc = LMP["mythicPlusShowChestTimersDesc"],
+			text = L["mythicPlusShowChestTimers"],
+			desc = L["mythicPlusShowChestTimersDesc"],
 			func = function(v) addon.db["mythicPlusShowChestTimers"] = v end,
 			parentSection = sectionDungeon,
 		},
@@ -650,14 +1138,14 @@ if cChar and sectionDungeon then
 	end
 
 	local listPull, orderPull = addon.functions.prepareListForDropdown({
-		[1] = LMP["None"],
-		[2] = LMP["Blizzard Pull Timer"],
-		[3] = LMP["DBM / BigWigs Pull Timer"],
-		[4] = LMP["Both"],
+		[1] = _G.NONE,
+		[2] = L["Blizzard Pull Timer"],
+		[3] = L["DBM / BigWigs Pull Timer"],
+		[4] = _G.STATUS_TEXT_BOTH,
 	})
 	addon.functions.SettingsCreateDropdown(cChar, {
 		var = "PullTimerType",
-		text = LMP["PullTimer"],
+		text = L["Pull Timer"],
 		type = Settings.VarType.Number,
 		default = 2,
 		list = listPull,
@@ -672,7 +1160,7 @@ if cChar and sectionDungeon then
 
 	addon.functions.SettingsCreateCheckbox(cChar, {
 		var = "noChatOnPullTimer",
-		text = LMP["noChatOnPullTimer"],
+		text = L["noChatOnPullTimer"],
 		func = function(v) addon.db["noChatOnPullTimer"] = v end,
 		parent = true,
 		element = keystoneEnable.element,
@@ -682,7 +1170,7 @@ if cChar and sectionDungeon then
 
 	addon.functions.SettingsCreateSlider(cChar, {
 		var = "pullTimerLongTime",
-		text = LMP["sliderLongTime"],
+		text = L["Pull Timer"],
 		min = 0,
 		max = 60,
 		step = 1,
@@ -697,7 +1185,7 @@ if cChar and sectionDungeon then
 
 	addon.functions.SettingsCreateSlider(cChar, {
 		var = "pullTimerShortTime",
-		text = LMP["sliderShortTime"],
+		text = L["sliderShortTime"],
 		min = 0,
 		max = 60,
 		step = 1,
@@ -713,8 +1201,8 @@ if cChar and sectionDungeon then
 	-- Objective Tracker
 	local objEnable = addon.functions.SettingsCreateCheckbox(cChar, {
 		var = "mythicPlusEnableObjectiveTracker",
-		text = LMP["mythicPlusEnableObjectiveTracker"],
-		desc = LMP["mythicPlusEnableObjectiveTrackerDesc"],
+		text = L["mythicPlusEnableObjectiveTracker"],
+		desc = L["mythicPlusEnableObjectiveTrackerDesc"],
 		func = function(v)
 			addon.db["mythicPlusEnableObjectiveTracker"] = v
 			if addon.MythicPlus and addon.MythicPlus.functions and addon.MythicPlus.functions.setObjectiveFrames then addon.MythicPlus.functions.setObjectiveFrames() end
@@ -723,10 +1211,10 @@ if cChar and sectionDungeon then
 	})
 	local function isObjectiveEnabled() return objEnable and objEnable.setting and objEnable.setting:GetValue() == true end
 
-	local listObj, orderObj = addon.functions.prepareListForDropdown({ [1] = LMP["HideTracker"], [2] = LMP["collapse"] })
+	local listObj, orderObj = addon.functions.prepareListForDropdown({ [1] = L["HideTracker"], [2] = L["collapse"] })
 	addon.functions.SettingsCreateDropdown(cChar, {
 		var = "mythicPlusObjectiveTrackerSetting",
-		text = LMP["mythicPlusObjectiveTrackerSetting"],
+		text = L["Behavior"],
 		type = Settings.VarType.Number,
 		default = (addon.db and addon.db["mythicPlusObjectiveTrackerSetting"]) or 1,
 		list = listObj,
@@ -745,8 +1233,8 @@ if cChar and sectionDungeon then
 	-- BR Tracker
 	addon.functions.SettingsCreateCheckbox(cChar, {
 		var = "mythicPlusBRTrackerEnabled",
-		text = LMP["mythicPlusBRTrackerEnabled"],
-		desc = LMP["mythicPlusBRTrackerEditModeHint"],
+		text = L["mythicPlusBRTrackerEnabled"],
+		desc = L["mythicPlusBRTrackerEditModeHint"],
 		func = function(v)
 			addon.db["mythicPlusBRTrackerEnabled"] = v
 			if addon.MythicPlus and addon.MythicPlus.functions and addon.MythicPlus.functions.createBRFrame then
@@ -760,8 +1248,8 @@ if cChar and sectionDungeon then
 
 	addon.functions.SettingsCreateCheckbox(cChar, {
 		var = "mythicPlusBloodlustTrackerEnabled",
-		text = LMP["mythicPlusBloodlustTrackerEnabled"],
-		desc = LMP["mythicPlusBloodlustTrackerEditModeHint"],
+		text = L["mythicPlusBloodlustTrackerEnabled"],
+		desc = L["mythicPlusBloodlustTrackerEditModeHint"],
 		func = function(v)
 			addon.db["mythicPlusBloodlustTrackerEnabled"] = v
 			if addon.MythicPlus and addon.MythicPlus.functions and addon.MythicPlus.functions.syncBloodlustUnitAuraRegistration then addon.MythicPlus.functions.syncBloodlustUnitAuraRegistration() end
@@ -791,7 +1279,7 @@ addon.functions.SettingsCreateCheckboxes(cChar, data)
 local sectionGroupFinder = addon.SettingsLayout.gameplayGroupFinderSection
 if not sectionGroupFinder then
 	sectionGroupFinder = addon.functions.SettingsCreateExpandableSection(cChar, {
-		name = L["GroupFinder"],
+		name = L["Group Finder"],
 		expanded = false,
 		colorizeTitle = false,
 	})
@@ -872,8 +1360,8 @@ data = {
 if keystoneEnable then
 	table.insert(data, {
 		var = "groupfinderShowPartyKeystone",
-		text = LMP["groupfinderShowPartyKeystone"],
-		desc = LMP["groupfinderShowPartyKeystoneDesc"],
+		text = L["groupfinderShowPartyKeystone"],
+		desc = L["groupfinderShowPartyKeystoneDesc"],
 		func = function(v)
 			addon.db["groupfinderShowPartyKeystone"] = v
 			if addon.MythicPlus and addon.MythicPlus.functions and addon.MythicPlus.functions.togglePartyKeystone then addon.MythicPlus.functions.togglePartyKeystone() end
@@ -887,7 +1375,7 @@ end
 
 table.insert(data, {
 	var = "groupfinderShowDungeonScoreFrame",
-	text = LMP["groupfinderShowDungeonScoreFrame"]:format(DUNGEON_SCORE),
+	text = L["groupfinderShowDungeonScoreFrame"]:format(DUNGEON_SCORE),
 	func = function(v)
 		addon.db["groupfinderShowDungeonScoreFrame"] = v
 		if addon.MythicPlus and addon.MythicPlus.functions and addon.MythicPlus.functions.toggleFrame then addon.MythicPlus.functions.toggleFrame() end
@@ -897,8 +1385,8 @@ table.insert(data, {
 
 table.insert(data, {
 	var = "mythicPlusEnableDungeonFilter",
-	text = LMP["mythicPlusEnableDungeonFilter"],
-	desc = LMP["mythicPlusEnableDungeonFilterDesc"]:format(REPORT_GROUP_FINDER_ADVERTISEMENT),
+	text = L["mythicPlusEnableDungeonFilter"],
+	desc = L["mythicPlusEnableDungeonFilterDesc"]:format(REPORT_GROUP_FINDER_ADVERTISEMENT),
 	func = function(v)
 		addon.db["mythicPlusEnableDungeonFilter"] = v
 		if addon.MythicPlus and addon.MythicPlus.functions then
@@ -913,7 +1401,7 @@ table.insert(data, {
 	children = {
 		{
 			var = "mythicPlusEnableDungeonFilterClearReset",
-			text = LMP["mythicPlusEnableDungeonFilterClearReset"],
+			text = L["mythicPlusEnableDungeonFilterClearReset"],
 			func = function(v) addon.db["mythicPlusEnableDungeonFilterClearReset"] = v end,
 			parentCheck = function()
 				return addon.SettingsLayout.elements["mythicPlusEnableDungeonFilter"]
@@ -1233,7 +1721,7 @@ addon.functions.SettingsCreateCheckbox(cChar, {
 local eventHandlers = {
 
 	["LFG_LIST_APPLICANT_UPDATED"] = function()
-		if PVEFrame:IsShown() and addon.db["lfgSortByRio"] then C_LFGList.RefreshApplicants() end
+		if PVEFrame:IsShown() and addon.db["lfgSortByRio"] and not addon.functions.isRestrictedContent() then C_LFGList.RefreshApplicants() end
 		if InCombatLockdown() then return end
 		if addon.db["groupfinderAppText"] then toggleGroupApplication(true) end
 	end,

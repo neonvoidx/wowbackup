@@ -347,6 +347,7 @@ L["ModuleName Delves_Automation"] = "구렁: 능력 자동 선택";
 L["ModuleDescription Delves_Automation"] = "보물이나 희귀 몬스터가 드롭한 능력을 자동으로 선택합니다.";
 L["Delve Crest Stash No Info"] = "현재 위치에서는 이 정보를 확인할 수 없습니다.";
 L["Delve Crest Stash Requirement"] = "11단계 풍요로운 구렁에서 나타납니다.";
+L["Delve Crest Stash Old Data"] = "현재 위치에서는 이 정보가 정확하지 않을 수 있습니다. Delves 난이도 선택기를 참고하세요.";
 L["Overcharged Delve"] = "과충전된 구렁";
 L["Delves History Requires AddOn"] = "구렁 기록은 Plumber 애드온에 의해 로컬에 저장.";
 L["Auto Select"] = "자동 선택";
@@ -668,6 +669,7 @@ L["Item Upgrade"] = ITEM_UPGRADE or "아이템 업그레이드";
 L["Resources"] = WORLD_QUEST_REWARD_FILTERS_RESOURCES or "자원";
 L["Plumber Experimental Feature Tooltip"] = "Plumber 애드온의 실험적 기능입니다.";
 L["Bountiful Delves Rep Tooltip"] = "풍성한 상자를 열면 이 진영의 평판이 오를 수도 있어요.";
+L["Bountiful Delves Rep Tooltip"] = "풍요로운 탐험을 완료한 후 풍요로운 상자를 열면 무작위 영예와의 평판이 증가하며, 각 영예당 한 번만 적용됩니다.";
 L["Warband Weekly Reward Tooltip"] = "이 보상은 전투부대 기준으로 주간 1회만 획득 가능합니다.";
 L["Completed"] = CRITERIA_COMPLETED or "완료";
 L["Filter Hide Completed Format"] = "완료한 항목 숨기기 (%d)";
@@ -717,6 +719,9 @@ L["Click To Queue"] = "대기열에 참여하려면 클릭 |cffffffff%s|r";
 L["Click to Open Format"] = "%s 클릭 열기";
 L["List Is Empty"] = "목록이 비어 있습니다.";
 L["Prey No Data"] = "사냥 진행 불가";
+L["Abundance No Data"] = "활성화된 풍요 이벤트 없음";
+L["Defeated Prey"] = "처치된 사냥감 대상";
+L["Item Expire Alert Weekly"] = "이 아이템은 주간 초기화 후 사라집니다.";
 
 
 --ExpansionSummaryMinimapButton
@@ -734,7 +739,7 @@ L["LandingButtonOption UseLibDBIcon NoBorder Tooltip"] = "버튼의 금색 테�
 L["LandingButtonOption PrimaryUI"] = "좌클릭으로 열기";   --좌클릭 시 열 UI 제어
 L["LandingButtonOption PrimaryUI Tooltip"] = "미니맵 버튼을 좌클릭했을 때 열릴 UI를 선택하세요.";
 L["LandingButtonOption SmartExpansion"] = "확장 자동 선택";
-L["LandingButtonOption SmartExpansion Tooltip 1"] = "활성화 시: 미니맵 버튼을 좌클릭하면 현재 위치에 맞는 게임 UI가 열립니다. 예: 어둠땅에 있을 때는 성약의 성소 보고서가 열립니다.";
+L["LandingButtonOption SmartExpansion Tooltip 1"] = "활성화 시: 미니맵 버튼을 왼쪽 클릭하면 현재 위치에 맞는 게임 UI가 열립니다. 예를 들어, 어둠땅에 있을 때는 성약의 성소 보고서가 열립니다.";
 L["LandingButtonOption SmartExpansion Tooltip 2"] = "비활성화 시: 미니맵 버튼을 좌클릭하면 항상 %s가 열립니다.";
 L["LandingButtonOption ReduceSize"] = "버튼 크기 줄이기";
 L["LandingButtonOption DarkColor"] = "어두운 테마 사용";
@@ -869,6 +874,17 @@ L["BreakTime AFK Pause"] = "당신이 자리 비움 상태이므로 카운트다
 L["BreakTime Reset Cancellation"] = "취소된 휴식 초기화";
 L["BreakTime Annouce Timer Deferred Combat"] = "전투 후 휴식을 잊지 마세요!";
 L["BreakTime Shared Countdown Tooltip Format"] = "|cffffffff%d|r분 후 예정된 휴식.";
+
+
+--CatalystUI
+L["ModuleName CatalystUI"] = "Catalyst: 드레스룸에서 아이템 보기";
+L["ModuleDescription CatalystUI"] = "Ctrl-클릭으로 결과 아이템을 드레스룸에서 확인하거나, Shift-클릭으로 채팅에 링크할 수 있습니다.";
+
+
+--HuntTable
+L["ModuleName HuntTable"] = "Prey: 사냥 테이블";
+L["ModuleDescription HuntTable"] = "- 일반적인 파란색 퀘스트 아이콘을 난이도 표시로 교체합니다.\n\n- Prey 대상이 아직 획득하지 못한 업적의 조건일 경우 표시기를 보여줍니다.";
+L["Prey Target Has Achievement"] = "이 Prey 대상은 아직 획득하지 못한 업적의 조건입니다.";
 
 
 --Generic

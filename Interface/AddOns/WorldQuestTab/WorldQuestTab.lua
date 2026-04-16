@@ -22,7 +22,6 @@ local WQT_Profiles = addon.WQT_Profiles;
 local _; -- local trash 
 
 local _playerFaction = GetPlayerFactionGroup();
-local _playerName = UnitName("player");
 WQT_ActiveGameTooltip = GameTooltip;
 
 WQT_PanelID = EnumUtil.MakeEnum("Quests", "Settings");
@@ -412,8 +411,8 @@ function WQT:PassesFactionFilter(questInfo, checkPrecise)
 	local enumFilterType = _V:GetFilterTypeEnum();
 	local filter = WQT.settings.filters[enumFilterType.faction];
 	local flags = filter.flags
-	local factionNone = filter.None;
-	local factionOther = filter.Other;
+	local factionNone = flags.None;
+	local factionOther = flags.Other;
 	local factionInfo = _V:GetFactionData(questInfo.factionID);
 
 	-- Specific filters (matches all)
@@ -669,8 +668,8 @@ function WQT:OnInitialize()
 	end
 	do -- zone
 		local func = function(a, b)
-			local mapInfoA = WQT_Utils:GetCachedMapInfo(a.mapID);
-			local mapInfoB = WQT_Utils:GetCachedMapInfo(b.mapID);
+			local mapInfoA = _V:GetCachedMapInfo(a.mapID);
+			local mapInfoB = _V:GetCachedMapInfo(b.mapID);
 			if (not mapInfoA or not mapInfoB) then
 				return mapInfoA;
 			end
@@ -1301,7 +1300,7 @@ function WQT_ListButtonMixin:Update(questInfo, shouldShowZone)
 	local showingZone = false;
 	local zoneName = "";
 	if (shouldShowZone and WQT.settings.list.showZone) then
-		local mapInfo = WQT_Utils:GetCachedMapInfo(questInfo.mapID)
+		local mapInfo = _V:GetCachedMapInfo(questInfo.mapID)
 		if (mapInfo) then
 			showingZone = true;
 			zoneName = mapInfo.name;
@@ -1839,10 +1838,12 @@ end
 
 -- Mimics hovering over a zone or continent, based on the zone the map is in
 function WQT_CoreMixin:ShowWorldmapHighlight(questInfo)
+	if (not WorldMapFrame:IsShown()) then return; end
+	
 	local zoneID = questInfo.mapID;
 	local areaId = WorldMapFrame.mapID;
 
-	local mapInfo = WQT_Utils:GetCachedMapInfo(zoneID);
+	local mapInfo = _V:GetCachedMapInfo(zoneID);
 	
 	if (not mapInfo) then return; end;
 	

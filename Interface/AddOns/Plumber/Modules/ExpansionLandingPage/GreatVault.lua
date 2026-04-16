@@ -45,8 +45,20 @@ do
 		self.Text:SetText("0/0");
 	end
 
+	local ActivityMaxLevels = {
+		-- [TEMPFIX] Hardcode Delves level because GetNextActivitiesIncrease return false
+		[196] = 8,
+		[197] = 8,
+		[198] = 8,
+	};
+
 	function GreatVaultButtonMixin:IsRewardAtHighestTier()
 		if not self.info then return end;
+
+		local maxLevel = ActivityMaxLevels[self.info.id];
+		if maxLevel then
+			return self.info.level >= maxLevel
+		end
 
 		local itemLink, upgradeItemLink = C_WeeklyRewards.GetExampleRewardItemHyperlinks(self.info.id);
 		local upgradeItemLevel;
@@ -156,7 +168,7 @@ do
 						itemLevel, upgradeItemLevel, itemLink = nil, nil, nil;
 
 						if row == 3 then
-							--itemLevel = API.GetDelvesGreatVaultItemLevel(activityInfo.level); --[TEMP] disabled because we don't have S1 Data yet
+							itemLevel = API.GetDelvesGreatVaultItemLevel(activityInfo.level);
 						end
 
 						if not itemLevel then

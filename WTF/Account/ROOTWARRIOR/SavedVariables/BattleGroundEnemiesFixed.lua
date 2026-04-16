@@ -1,30 +1,35 @@
 
 BattleGroundEnemiesDB = {
 ["profileKeys"] = {
-["Auteist - Tichondrius"] = "Default",
 ["Mäñýfäçëð - Tichondrius"] = "Default",
-["Stormclout - Tichondrius"] = "Default",
-["Reedingo - Mal'Ganis"] = "Default",
+["Tampacks - Tichondrius"] = "Default",
 ["Starphage - Tichondrius"] = "Default",
+["Reedingo - Tichondrius"] = "Default",
+["Manyfaced - Tichondrius"] = "Default",
+["Starstypeshi - Tichondrius"] = "Default",
+["Tampacks - Mal'Ganis"] = "Default",
+["Auteist - Tichondrius"] = "Default",
+["Hellavator - Tichondrius"] = "Default",
+["Strathmoan - Tichondrius"] = "Default",
+["Reedingo - Mal'Ganis"] = "Default",
+["Gehyo - Tichondrius"] = "Default",
+["Praisesun - Tichondrius"] = "Default",
+["Stormclout - Tichondrius"] = "Default",
 ["Korahron - Tichondrius"] = "Default",
 ["Neonvoid - Tichondrius"] = "Default",
-["Tampacks - Mal'Ganis"] = "Default",
-["Hellavator - Tichondrius"] = "Default",
+["Smaugchamp - Tichondrius"] = "Default",
+["Choppiez - Tichondrius"] = "Default",
 ["Tainguk - Tichondrius"] = "Default",
 },
 ["profiles"] = {
 ["Default"] = {
+["DisableArenaFramesInBattleground"] = true,
 ["DisableRoleCheckWarning"] = true,
-["Allies"] = {
-["Enabled"] = false,
-},
-["dbVersion"] = 2,
-["Text"] = {
-["Font"] = "1",
-},
 ["Enemies"] = {
 ["playerCountConfigs"] = {
-nil,
+{
+["Enabled"] = true,
+},
 {
 ["ButtonModules"] = {
 ["Name"] = {
@@ -37,14 +42,33 @@ nil,
 ["Height"] = false,
 },
 },
-["Position_Y"] = 564.2665498876595,
-["Position_X"] = 1527.199028364441,
+["Position_Y"] = 514.666277558812,
+["Position_X"] = 1487.727154246706,
 },
 {
-["Position_Y"] = 463.4669595134983,
-["Position_X"] = 1345.068188887308,
+["Enabled"] = false,
+["Position_Y"] = 467.2002409408196,
+["Position_X"] = 1326.934688026013,
 },
 },
+},
+["dbVersion"] = 2,
+["DisableRaidFramesInBattleground"] = true,
+["Text"] = {
+["Font"] = "1",
+},
+["Allies"] = {
+["playerCountConfigs"] = {
+{
+["Enabled"] = true,
+},
+{
+["Enabled"] = true,
+["Position_Y"] = 460.7999897003174,
+["Position_X"] = 233.3333736908426,
+},
+},
+["Enabled"] = false,
 },
 },
 },

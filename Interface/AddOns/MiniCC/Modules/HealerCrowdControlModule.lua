@@ -7,7 +7,6 @@ local L = addon.L
 local iconSlotContainer = addon.Core.IconSlotContainer
 local unitWatcher = addon.Core.UnitAuraWatcher
 local units = addon.Utils.Units
-local spellCache = addon.Utils.SpellCache
 local moduleUtil = addon.Utils.ModuleUtil
 local ModuleName = addon.Utils.ModuleName
 local rc = LibStub("LibRangeCheck-3.0")
@@ -86,9 +85,11 @@ local function OnAuraStateUpdated()
 	end
 
 	local options = db.Modules.HealerCCModule
+	local iconsEnabled = options.Icons.Enabled
 	local iconsReverse = options.Icons.ReverseCooldown
 	local iconsGlow = options.Icons.Glow
 	local colorByDispelType = options.Icons.ColorByDispelType
+	local showTooltips = options.ShowTooltips ~= false
 
 	UpdateAnchorSize()
 
@@ -102,17 +103,20 @@ local function OnAuraStateUpdated()
 			local ccState = watcher.Watcher:GetCcState()
 			array:Append(ccState, allCcAuraData)
 
-			for _, aura in ipairs(ccState) do
-				slot = slot + 1
-				iconsContainer:SetSlot(slot, {
-					Texture = aura.SpellIcon,
-					DurationObject = aura.DurationObject,
-					Alpha = aura.IsCC,
-					ReverseCooldown = iconsReverse,
-					Glow = iconsGlow,
-					Color = colorByDispelType and aura.DispelColor,
-					FontScale = db.FontScale,
-				})
+			if iconsEnabled then
+				for _, aura in ipairs(ccState) do
+					slot = slot + 1
+					iconsContainer:SetSlot(slot, {
+						Texture = aura.SpellIcon,
+						DurationObject = aura.DurationObject,
+						Alpha = aura.IsCC,
+						ReverseCooldown = iconsReverse,
+						Glow = iconsGlow,
+						Color = colorByDispelType and aura.DispelColor,
+						FontScale = db.FontScale,
+						SpellId = showTooltips and aura.SpellId or nil,
+					})
+				end
 			end
 		end
 	end
@@ -228,28 +232,33 @@ local function RefreshTestFrame()
 
 	iconsContainer:SetIconSize(size)
 
-	for i, spell in ipairs(testSpells) do
-		local texture = spellCache:GetSpellTexture(spell.SpellId)
+	if not options.Icons.Enabled then
+		iconsContainer:ResetAllSlots()
+	else
+		for i, spell in ipairs(testSpells) do
+			local texture = C_Spell.GetSpellTexture(spell.SpellId)
 
-		if texture then
-			local duration = 15 + (i - 1) * 3
-			local startTime = now - (i - 1) * 0.5
+			if texture then
+				local duration = 15 + (i - 1) * 3
+				local startTime = now - (i - 1) * 0.5
 
-			iconsContainer:SetSlot(i, {
-				Texture = texture,
-				DurationObject = wowEx:CreateDuration(startTime, duration),
-				Alpha = true,
-				ReverseCooldown = options.Icons.ReverseCooldown,
-				Glow = options.Icons.Glow,
-				Color = options.Icons.ColorByDispelType and spell.DispelColor,
-				FontScale = db.FontScale,
-			})
+				iconsContainer:SetSlot(i, {
+					Texture = texture,
+					DurationObject = wowEx:CreateDuration(startTime, duration),
+					Alpha = true,
+					ReverseCooldown = options.Icons.ReverseCooldown,
+					Glow = options.Icons.Glow,
+					Color = options.Icons.ColorByDispelType and spell.DispelColor,
+					FontScale = db.FontScale,
+					SpellId = options.ShowTooltips ~= false and spell.SpellId or nil,
+				})
+			end
 		end
-	end
 
-	-- Clear any unused slots beyond the test spell count
-	for i = #testSpells + 1, iconsContainer.Count do
-		iconsContainer:SetSlotUnused(i)
+		-- Clear any unused slots beyond the test spell count
+		for i = #testSpells + 1, iconsContainer.Count do
+			iconsContainer:SetSlotUnused(i)
+		end
 	end
 
 	UpdateAnchorSize()
@@ -417,7 +426,7 @@ function M:Init()
 	UpdateAnchorSize()
 
 	-- Icons sit at the bottom of the anchor, text sits at the top.
-	iconsContainer = iconSlotContainer:New(healerAnchor, 5, tonumber(options.Icons.Size) or 32, db.IconSpacing or 2, "Healer CC")
+	iconsContainer = iconSlotContainer:New(healerAnchor, 5, tonumber(options.Icons.Size) or 32, db.IconSpacing or 2, "Healer CC", nil, "Healer CC")
 	iconsContainer.Frame:SetPoint("BOTTOM", healerAnchor, "BOTTOM", 0, 0)
 	iconsContainer.Frame:Show()
 

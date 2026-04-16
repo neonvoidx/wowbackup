@@ -167,6 +167,11 @@ function addon.functions.initActionTracker()
 	addon.functions.InitDBValue("actionTrackerDirection", defaults.direction or "RIGHT")
 	addon.functions.InitDBValue("actionTrackerFadeDuration", defaults.fadeDuration or 0)
 	addon.functions.InitDBValue("actionTrackerShowElapsed", defaults.showElapsed or false)
+	addon.functions.InitDBValue("actionTrackerBorderEnabled", defaults.borderEnabled == true)
+	addon.functions.InitDBValue("actionTrackerBorderTexture", defaults.borderTexture or "DEFAULT")
+	addon.functions.InitDBValue("actionTrackerBorderColor", defaults.borderColor or { r = 1, g = 1, b = 1, a = 1 })
+	addon.functions.InitDBValue("actionTrackerBorderSize", defaults.borderSize or 1)
+	addon.functions.InitDBValue("actionTrackerBorderOffset", defaults.borderOffset or 0)
 
 	if addon.ActionTracker and addon.ActionTracker.OnSettingChanged then addon.ActionTracker:OnSettingChanged(addon.db["actionTrackerEnabled"]) end
 end

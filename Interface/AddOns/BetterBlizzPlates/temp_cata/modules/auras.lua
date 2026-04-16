@@ -3612,7 +3612,7 @@ local function ShouldShowBuff(unit, aura, BlizzardShouldShow, filterAllOverride,
             local filterBlizzard = db["friendlyNpdeBuffFilterBlizzard"]
             local filterLessMinite = db["friendlyNpdeBuffFilterLessMinite"]
             local filterOnlyMe = db["friendlyNpdeBuffFilterOnlyMe"]
-            local filterCC = db["friendlyNpdeBuffFilterCC"] or (db["classIndicator"] and db["classIndicatorCCAuras"])
+            local filterCC = db["friendlyNpdeBuffFilterCC"] or (db["classIndicator"] and db["classIndicatorCCAuras"] and db["friendlyHideHealthBar"])
 
             local anyFilter = filterBlizzard or filterLessMinite or filterOnlyMe or filterCC
 
@@ -4214,11 +4214,6 @@ function BBP.UpdateBuffs(self, unit, unitAuraUpdateInfo, auraSettings, UnitFrame
                 end
                 buff.pinIcon = true
             end
-        end
-
-        if opBarriersOn and opBarriers[spellId] and auraData.duration ~= 5 then
-            isImportant = nil
-            isEnlarged = nil
         end
 
         if isPlayerUnit then

@@ -1,6 +1,7 @@
 # Cooldown Manager Centered
 
-## [v2.4.3](https://github.com/lemieszek/CooldownManagerCentered/tree/v2.4.3) (2026-03-20)
-[Full Changelog](https://github.com/lemieszek/CooldownManagerCentered/compare/v2.4.2...v2.4.3) 
+## [v2.6.5](https://github.com/lemieszek/CooldownManagerCentered/tree/v2.6.5) (2026-04-15)
+[Full Changelog](https://github.com/lemieszek/CooldownManagerCentered/compare/v2.6.3...v2.6.5) 
 
-- v2.4.3 fix passives & spec change for custom trackers  
+- v2.6.5 fix desaturation on charges auras  
+- v2.6.4  

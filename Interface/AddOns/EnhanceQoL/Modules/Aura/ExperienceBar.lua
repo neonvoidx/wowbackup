@@ -15,6 +15,8 @@ local L = LibStub("AceLocale-3.0"):GetLocale(parentAddonName)
 local EditMode = addon.EditMode
 local SettingType = EditMode and EditMode.lib and EditMode.lib.SettingType
 local LSM = LibStub("LibSharedMedia-3.0", true)
+local BORDER_LABEL = EMBLEM_BORDER
+local TEXT_LABEL = LOCALE_TEXT_LABEL
 
 local EDITMODE_ID = "xpBar"
 local ANCHOR_TARGET_UI = "UIParent"
@@ -345,6 +347,7 @@ local function normalizeTextContentMode(value)
 	if value == "NONE" then return "NONE" end
 	if value == "LEVEL" then return "LEVEL" end
 	if value == "CURMAX" then return "CURMAX" end
+	if value == "CURMAX_NEEDED" then return "CURMAX_NEEDED" end
 	if value == "PERCENT" then return "PERCENT" end
 	if value == "CURMAXPERCENT" then return "CURMAXPERCENT" end
 	if value == "RESTED" then return "RESTED" end
@@ -360,18 +363,19 @@ end
 
 local function textModeOptions()
 	return {
-		{ value = "NONE", label = L["xpBarTextTypeNone"] or "None" },
-		{ value = "LEVEL", label = L["xpBarTextTypeLevel"] or "Level" },
+		{ value = "NONE", label = NONE },
+		{ value = "LEVEL", label = L["Level"] or "Level" },
 		{ value = "CURMAX", label = L["xpBarTextTypeCurMax"] or "Current / Max" },
-		{ value = "PERCENT", label = L["xpBarTextTypePercent"] or "Percent" },
+		{ value = "CURMAX_NEEDED", label = L["xpBarTextTypeCurMaxNeeded"] or "Current / Max (needed)" },
+		{ value = "PERCENT", label = L["Percent"] or "Percent" },
 		{ value = "CURMAXPERCENT", label = L["xpBarTextTypeCurMaxPercent"] or "Current / Max (percent)" },
 		{ value = "RESTED", label = L["xpBarTextTypeRested"] or "Rested XP" },
 		{ value = "RESTEDPERCENT", label = L["xpBarTextTypeRestedPercent"] or "Rested %" },
 		{ value = "PERCENT_RESTED", label = L["xpBarTextTypePercentRested"] or "Percent (+rested)" },
 		{ value = "CURMAX_RESTED", label = L["xpBarTextTypeCurMaxRested"] or "Current / Max (+rested)" },
-		{ value = "TIME_THIS_LEVEL", label = L["xpBarTextTypeTimeThisLevel"] or "Time this level" },
+		{ value = "TIME_THIS_LEVEL", label = L["Time this level"] or "Time this level" },
 		{ value = "XP_PER_HOUR", label = L["xpBarTextTypeXPPerHour"] or "XP per hour" },
-		{ value = "ETA_LEVEL", label = L["xpBarTextTypeETA"] or "Leveling in" },
+		{ value = "ETA_LEVEL", label = L["Leveling in"] or "Leveling in" },
 		{ value = "ETA_LEVEL_XPH", label = L["xpBarTextTypeETAXPH"] or "Leveling in (+XP/h)" },
 	}
 end
@@ -656,6 +660,9 @@ local function formatXPText(mode, ctx, abbreviateNumbers)
 	if mode == "NONE" then return nil end
 	if mode == "LEVEL" then return (L["xpBarTextLevelFmt"] or "Level %d"):format(ctx.level or 0) end
 	if mode == "CURMAX" then return formatNumber(ctx.current, abbreviateNumbers) .. " / " .. formatNumber(ctx.max, abbreviateNumbers) end
+	if mode == "CURMAX_NEEDED" then
+		return string.format("%s / %s (%s)", formatNumber(ctx.current, abbreviateNumbers), formatNumber(ctx.max, abbreviateNumbers), formatNumber(ctx.remaining or 0, abbreviateNumbers))
+	end
 	if mode == "PERCENT" then return string.format("%.1f%%", ctx.currentPercent or 0) end
 	if mode == "CURMAXPERCENT" then return string.format("%s / %s (%.1f%%)", formatNumber(ctx.current, abbreviateNumbers), formatNumber(ctx.max, abbreviateNumbers), ctx.currentPercent or 0) end
 	if mode == "RESTED" then return string.format("+%s", formatNumber(ctx.rested or 0, abbreviateNumbers)) end
@@ -664,23 +671,23 @@ local function formatXPText(mode, ctx, abbreviateNumbers)
 	if mode == "CURMAX_RESTED" then
 		return string.format("%s / %s (+%s)", formatNumber(ctx.current, abbreviateNumbers), formatNumber(ctx.max, abbreviateNumbers), formatNumber(ctx.rested or 0, abbreviateNumbers))
 	end
-	if mode == "TIME_THIS_LEVEL" then return string.format("%s: %s", L["xpBarTextTimeThisLevelLabel"] or "Time this level", formatDurationShort(ctx.timeThisLevelSeconds or 0)) end
+	if mode == "TIME_THIS_LEVEL" then return string.format("%s: %s", L["Time this level"] or "Time this level", formatDurationShort(ctx.timeThisLevelSeconds or 0)) end
 	if mode == "XP_PER_HOUR" then
 		if (ctx.xpPerHour or 0) <= 0 then return nil end
-		return string.format("%s: %s", L["xpBarTextXPPerHourLabel"] or "XP/hour", formatRateNumber(ctx.xpPerHour, abbreviateNumbers))
+		return string.format("%s: %s", L["XP/hour"] or "XP/hour", formatRateNumber(ctx.xpPerHour, abbreviateNumbers))
 	end
 	if mode == "ETA_LEVEL" then
 		if not ctx.etaLevelSeconds then return nil end
-		return string.format("%s: %s", L["xpBarTextETAFormattingLabel"] or "Leveling in", formatDurationShort(ctx.etaLevelSeconds))
+		return string.format("%s: %s", L["Leveling in"] or "Leveling in", formatDurationShort(ctx.etaLevelSeconds))
 	end
 	if mode == "ETA_LEVEL_XPH" then
 		if not ctx.etaLevelSeconds or (ctx.xpPerHour or 0) <= 0 then return nil end
 		return string.format(
 			"%s: %s (%s %s)",
-			L["xpBarTextETAFormattingLabel"] or "Leveling in",
+			L["Leveling in"] or "Leveling in",
 			formatDurationShort(ctx.etaLevelSeconds),
 			formatRateNumber(ctx.xpPerHour, abbreviateNumbers),
-			L["xpBarTextXPPerHourSuffix"] or "XP/hour"
+			L["XP/hour"] or "XP/hour"
 		)
 	end
 	return nil
@@ -1807,8 +1814,8 @@ function ExperienceBar:RegisterEditMode(frame)
 				entries[#entries + 1] = { key = key, label = label or key }
 			end
 
-			add(ANCHOR_TARGET_UI, L["xpBarAnchorScreen"] or "Screen (UIParent)", true)
-			add(ANCHOR_TARGET_PLAYER_CASTBAR, L["xpBarAnchorPlayerCastbar"] or "Player Castbar", true)
+			add(ANCHOR_TARGET_UI, L["Screen (UIParent)"] or "Screen (UIParent)", true)
+			add(ANCHOR_TARGET_PLAYER_CASTBAR, L["Player Castbar"] or "Player Castbar", true)
 			add("EQOL_GCDBar", L["GCDBar"] or "GCD Bar")
 
 			add("PlayerFrame", _G.HUD_EDIT_MODE_PLAYER_FRAME_LABEL or PLAYER or "Player Frame")
@@ -1873,7 +1880,7 @@ function ExperienceBar:RegisterEditMode(frame)
 				defaultCollapsed = false,
 			},
 			{
-				name = L["xpBarAnchor"] or "Anchor to",
+				name = L["Anchor to"] or "Anchor to",
 				kind = SettingType.Dropdown,
 				field = "anchorRelativeFrame",
 				parentId = "xpBarAnchor",
@@ -1887,7 +1894,7 @@ function ExperienceBar:RegisterEditMode(frame)
 				end,
 			},
 			{
-				name = L["xpBarAnchorPoint"] or "Anchor point",
+				name = L["Anchor point"] or "Anchor point",
 				kind = SettingType.Dropdown,
 				field = "anchorPoint",
 				parentId = "xpBarAnchor",
@@ -1901,7 +1908,7 @@ function ExperienceBar:RegisterEditMode(frame)
 				end,
 			},
 			{
-				name = L["xpBarAnchorRelativePoint"] or "Relative point",
+				name = L["Relative point"] or "Relative point",
 				kind = SettingType.Dropdown,
 				field = "anchorRelativePoint",
 				parentId = "xpBarAnchor",
@@ -1915,7 +1922,7 @@ function ExperienceBar:RegisterEditMode(frame)
 				end,
 			},
 			{
-				name = L["xpBarAnchorOffsetX"] or "X Offset",
+				name = L["X Offset"] or "X Offset",
 				kind = SettingType.Slider,
 				field = "anchorOffsetX",
 				parentId = "xpBarAnchor",
@@ -1927,7 +1934,7 @@ function ExperienceBar:RegisterEditMode(frame)
 				set = function(_, value) applySetting("anchorOffsetX", value) end,
 			},
 			{
-				name = L["xpBarAnchorOffsetY"] or "Y Offset",
+				name = L["Y Offset"] or "Y Offset",
 				kind = SettingType.Slider,
 				field = "anchorOffsetY",
 				parentId = "xpBarAnchor",
@@ -1939,7 +1946,7 @@ function ExperienceBar:RegisterEditMode(frame)
 				set = function(_, value) applySetting("anchorOffsetY", value) end,
 			},
 			{
-				name = L["xpBarAnchorMatchWidth"] or "Match relative frame width",
+				name = L["Match relative frame width"] or "Match relative frame width",
 				kind = SettingType.Checkbox,
 				field = "anchorMatchWidth",
 				parentId = "xpBarAnchor",
@@ -1955,7 +1962,7 @@ function ExperienceBar:RegisterEditMode(frame)
 				defaultCollapsed = true,
 			},
 			{
-				name = L["xpBarHideInPetBattle"] or "Hide in pet battles",
+				name = L["Hide in pet battles"] or "Hide in pet battles",
 				kind = SettingType.Checkbox,
 				field = "hideInPetBattle",
 				parentId = "xpBarVisibility",
@@ -1979,7 +1986,7 @@ function ExperienceBar:RegisterEditMode(frame)
 				defaultCollapsed = true,
 			},
 			{
-				name = L["xpBarWidth"] or "Bar width",
+				name = L["Bar width"] or "Bar width",
 				kind = SettingType.Slider,
 				field = "width",
 				parentId = "xpBarFrame",
@@ -1994,7 +2001,7 @@ function ExperienceBar:RegisterEditMode(frame)
 				isEnabled = function() return not ExperienceBar:AnchorUsesMatchedWidth() end,
 			},
 			{
-				name = L["xpBarHeight"] or "Bar height",
+				name = L["Bar height"] or "Bar height",
 				kind = SettingType.Slider,
 				field = "height",
 				parentId = "xpBarFrame",
@@ -2008,7 +2015,7 @@ function ExperienceBar:RegisterEditMode(frame)
 				formatter = function(value) return tostring(math.floor((tonumber(value) or 0) + 0.5)) end,
 			},
 			{
-				name = L["xpBarFillDirection"] or "Fill direction",
+				name = L["Fill direction"] or "Fill direction",
 				kind = SettingType.Dropdown,
 				field = "fillDirection",
 				parentId = "xpBarFrame",
@@ -2017,10 +2024,10 @@ function ExperienceBar:RegisterEditMode(frame)
 				set = function(_, value) applySetting("fillDirection", value) end,
 				generator = function(_, root)
 					local opts = {
-						{ value = "LEFT", label = L["xpBarFillLeft"] or "Left to right" },
-						{ value = "RIGHT", label = L["xpBarFillRight"] or "Right to left" },
-						{ value = "UP", label = L["xpBarFillUp"] or "Bottom to top" },
-						{ value = "DOWN", label = L["xpBarFillDown"] or "Top to bottom" },
+						{ value = "LEFT", label = L["Left to right"] or "Left to right" },
+						{ value = "RIGHT", label = L["Right to left"] or "Right to left" },
+						{ value = "UP", label = L["Bottom to top"] or "Bottom to top" },
+						{ value = "DOWN", label = L["Top to bottom"] or "Top to bottom" },
 					}
 					for _, option in ipairs(opts) do
 						root:CreateRadio(option.label, function() return ExperienceBar:GetFillDirection() == option.value end, function() applySetting("fillDirection", option.value) end)
@@ -2034,7 +2041,7 @@ function ExperienceBar:RegisterEditMode(frame)
 				defaultCollapsed = true,
 			},
 			{
-				name = L["xpBarTexture"] or "Bar texture",
+				name = L["Bar texture"] or "Bar texture",
 				kind = SettingType.Dropdown,
 				field = "texture",
 				parentId = "xpBarBar",
@@ -2089,7 +2096,7 @@ function ExperienceBar:RegisterEditMode(frame)
 				defaultCollapsed = true,
 			},
 			{
-				name = L["xpBarBackgroundEnabled"] or "Use background",
+				name = L["Use background"] or "Use background",
 				kind = SettingType.Checkbox,
 				field = "bgEnabled",
 				parentId = "xpBarBackground",
@@ -2098,7 +2105,7 @@ function ExperienceBar:RegisterEditMode(frame)
 				set = function(_, value) applySetting("bgEnabled", value) end,
 			},
 			{
-				name = L["xpBarBackgroundTexture"] or "Background texture",
+				name = L["Background texture"] or "Background texture",
 				kind = SettingType.Dropdown,
 				field = "bgTexture",
 				parentId = "xpBarBackground",
@@ -2113,7 +2120,7 @@ function ExperienceBar:RegisterEditMode(frame)
 				isEnabled = function() return ExperienceBar:GetBackgroundEnabled() end,
 			},
 			{
-				name = L["xpBarBackgroundColor"] or "Background color",
+				name = L["Background color"] or "Background color",
 				kind = SettingType.Color,
 				field = "bgColor",
 				parentId = "xpBarBackground",
@@ -2127,13 +2134,13 @@ function ExperienceBar:RegisterEditMode(frame)
 				isEnabled = function() return ExperienceBar:GetBackgroundEnabled() end,
 			},
 			{
-				name = L["Border"] or "Border",
+				name = BORDER_LABEL,
 				kind = SettingType.Collapsible,
 				id = "xpBarBorder",
 				defaultCollapsed = true,
 			},
 			{
-				name = L["xpBarBorderEnabled"] or "Use border",
+				name = L["Use border"] or "Use border",
 				kind = SettingType.Checkbox,
 				field = "borderEnabled",
 				parentId = "xpBarBorder",
@@ -2142,7 +2149,7 @@ function ExperienceBar:RegisterEditMode(frame)
 				set = function(_, value) applySetting("borderEnabled", value) end,
 			},
 			{
-				name = L["xpBarBorderTexture"] or "Border texture",
+				name = L["Border texture"] or "Border texture",
 				kind = SettingType.Dropdown,
 				field = "borderTexture",
 				parentId = "xpBarBorder",
@@ -2157,7 +2164,7 @@ function ExperienceBar:RegisterEditMode(frame)
 				isEnabled = function() return ExperienceBar:GetBorderEnabled() end,
 			},
 			{
-				name = L["xpBarBorderSize"] or "Border size",
+				name = L["Border size"] or "Border size",
 				kind = SettingType.Slider,
 				field = "borderSize",
 				parentId = "xpBarBorder",
@@ -2171,7 +2178,7 @@ function ExperienceBar:RegisterEditMode(frame)
 				isEnabled = function() return ExperienceBar:GetBorderEnabled() end,
 			},
 			{
-				name = L["xpBarBorderOffset"] or "Border offset",
+				name = L["Border offset"] or "Border offset",
 				kind = SettingType.Slider,
 				field = "borderOffset",
 				parentId = "xpBarBorder",
@@ -2185,7 +2192,7 @@ function ExperienceBar:RegisterEditMode(frame)
 				isEnabled = function() return ExperienceBar:GetBorderEnabled() end,
 			},
 			{
-				name = L["xpBarBorderColor"] or "Border color",
+				name = EMBLEM_BORDER_COLOR,
 				kind = SettingType.Color,
 				field = "borderColor",
 				parentId = "xpBarBorder",
@@ -2199,7 +2206,7 @@ function ExperienceBar:RegisterEditMode(frame)
 				isEnabled = function() return ExperienceBar:GetBorderEnabled() end,
 			},
 			{
-				name = L["Text"] or "Text",
+				name = TEXT_LABEL,
 				kind = SettingType.Collapsible,
 				id = "xpBarText",
 				defaultCollapsed = true,
@@ -2214,7 +2221,7 @@ function ExperienceBar:RegisterEditMode(frame)
 				set = function(_, value) applySetting("textEnabled", value) end,
 			},
 			{
-				name = L["xpBarTextAbbreviateNumbers"] or "Use short numbers",
+				name = L["Use short numbers"] or "Use short numbers",
 				kind = SettingType.Checkbox,
 				field = "abbreviateNumbers",
 				parentId = "xpBarText",
@@ -2224,7 +2231,7 @@ function ExperienceBar:RegisterEditMode(frame)
 				isEnabled = function() return ExperienceBar:GetTextEnabled() end,
 			},
 			{
-				name = L["xpBarTextLeft"] or "Left text",
+				name = L["Left text"] or "Left text",
 				kind = SettingType.Dropdown,
 				field = "textLeftMode",
 				parentId = "xpBarText",
@@ -2235,7 +2242,7 @@ function ExperienceBar:RegisterEditMode(frame)
 				isEnabled = function() return ExperienceBar:GetTextEnabled() end,
 			},
 			{
-				name = L["xpBarTextCenter"] or "Center text",
+				name = L["Center text"] or "Center text",
 				kind = SettingType.Dropdown,
 				field = "textCenterMode",
 				parentId = "xpBarText",
@@ -2246,7 +2253,7 @@ function ExperienceBar:RegisterEditMode(frame)
 				isEnabled = function() return ExperienceBar:GetTextEnabled() end,
 			},
 			{
-				name = L["xpBarTextRight"] or "Right text",
+				name = L["Right text"] or "Right text",
 				kind = SettingType.Dropdown,
 				field = "textRightMode",
 				parentId = "xpBarText",
@@ -2257,7 +2264,7 @@ function ExperienceBar:RegisterEditMode(frame)
 				isEnabled = function() return ExperienceBar:GetTextEnabled() end,
 			},
 			{
-				name = L["xpBarTextSize"] or "Text size",
+				name = L["Text size"] or "Text size",
 				kind = SettingType.Slider,
 				field = "textSize",
 				parentId = "xpBarText",
@@ -2272,7 +2279,7 @@ function ExperienceBar:RegisterEditMode(frame)
 				isEnabled = function() return ExperienceBar:GetTextEnabled() end,
 			},
 			{
-				name = L["xpBarTextFont"] or "Text font",
+				name = L["Text font"] or "Text font",
 				kind = SettingType.Dropdown,
 				field = "textFont",
 				parentId = "xpBarText",
@@ -2287,7 +2294,7 @@ function ExperienceBar:RegisterEditMode(frame)
 				isEnabled = function() return ExperienceBar:GetTextEnabled() end,
 			},
 			{
-				name = L["xpBarTextOutline"] or "Text outline",
+				name = L["Text outline"] or "Text outline",
 				kind = SettingType.Dropdown,
 				field = "textOutline",
 				parentId = "xpBarText",
@@ -2296,9 +2303,9 @@ function ExperienceBar:RegisterEditMode(frame)
 				set = function(_, value) applySetting("textOutline", value) end,
 				generator = function(_, root)
 					local options = {
-						{ value = "NONE", label = L["xpBarTextOutlineNone"] or NONE or "None" },
-						{ value = "OUTLINE", label = L["xpBarTextOutlineNormal"] or "Outline" },
-						{ value = "THICKOUTLINE", label = L["xpBarTextOutlineThick"] or "Thick outline" },
+						{ value = "NONE", label = NONE },
+						{ value = "OUTLINE", label = L["Outline"] or "Outline" },
+						{ value = "THICKOUTLINE", label = L["Thick outline"] or "Thick outline" },
 						{ value = "MONOCHROME", label = L["xpBarTextOutlineMono"] or "Monochrome" },
 					}
 					for _, option in ipairs(options) do
@@ -2308,7 +2315,7 @@ function ExperienceBar:RegisterEditMode(frame)
 				isEnabled = function() return ExperienceBar:GetTextEnabled() end,
 			},
 			{
-				name = L["xpBarTextColor"] or "Text color",
+				name = L["Text color"] or "Text color",
 				kind = SettingType.Color,
 				field = "textColor",
 				parentId = "xpBarText",

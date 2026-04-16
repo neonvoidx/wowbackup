@@ -1,0 +1,26 @@
+
+AveUIenhancementsDB = {
+["prd"] = {
+["editMode"] = false,
+["scale"] = 1,
+["classScale"] = 1,
+["powerAlpha"] = 1,
+["hideOutOfCombat"] = false,
+["hideClass"] = false,
+["healthAlpha"] = 1,
+["classOffsetX"] = 0,
+["devourerThickness"] = 1,
+["hideHealth"] = false,
+["classOffsetY"] = 1,
+["classAlpha"] = 1,
+["healthThickness"] = 1,
+["y"] = -246.6665344238281,
+["x"] = -1.6666259765625,
+["healthLength"] = 1,
+["hidePower"] = false,
+["powerLength"] = 1,
+["powerThickness"] = 1,
+["classSpacing"] = 0,
+["devourerLength"] = 1,
+},
+}

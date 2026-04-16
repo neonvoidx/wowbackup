@@ -119,12 +119,14 @@ local defaultSettings = {
     petCastbar = false,
     petCastBarScale = 0.92,
     petCastBarIconScale = 1,
+    petCastbarIconXPos = 0,
+    petCastbarIconYPos = 0,
     petCastBarXPos = 0,
     petCastBarYPos = 0,
     petCastBarWidth = 137,
     petCastBarHeight = 10,
     showPetCastBarIcon = true,
-    showPetCastBarTimer = false,
+    petCastBarTimer = false,
     petCastBarShowText = true,
     petCastBarShowBorder = true,
 
@@ -168,7 +170,7 @@ local defaultSettings = {
     playerCastBarWidth = 195,
     playerCastBarHeight = 13,
     playerCastBarTimer = false,
-    playerCastBarTimerCenter = false,
+    playerCastBarTimerCentered = false,
     playerCastBarShowText = true,
     playerCastBarShowBorder = true,
     targetAndFocusArenaNamePartyOverride = true,
@@ -786,10 +788,15 @@ function BBF.ActionBarIconZoom()
             _G["PetActionButton" .. i .. "Icon"],
             _G["StanceButton" .. i .. "Icon"]
         }
-        for _, icon in ipairs(icons) do
+        for _, icon in pairs(icons) do
             applyTexCoord(icon)
         end
     end
+
+    for i = 0, 3 do
+        applyTexCoord(_G["CharacterBag" .. i .. "SlotIconTexture"])
+    end
+    applyTexCoord(MainMenuBarBackpackButtonIconTexture)
 end
 
 
@@ -1250,6 +1257,18 @@ function BBF.FixStupidBlizzPTRShit()
 
         local a,b,c,d,e = TargetFrameToTPortrait:GetPoint()
         TargetFrameToTPortrait:SetPoint(a,b,c,4.5,-5.5)
+
+        -- Center the pet action button "selected" highlight on the button
+        for i = 1, NUM_PET_ACTION_SLOTS do
+            local btn = _G["PetActionButton"..i]
+            if btn then
+                local checked = btn:GetCheckedTexture()
+                local icon = btn.icon
+                checked:ClearAllPoints()
+                checked:SetPoint("CENTER", btn, "CENTER", -0.5, -0.5)
+                checked:SetSize(icon:GetSize())
+            end
+        end
 
         --if C_AddOns.IsAddOnLoaded("Bartender4") then return end
         --if C_AddOns.IsAddOnLoaded("Dominos") then return end

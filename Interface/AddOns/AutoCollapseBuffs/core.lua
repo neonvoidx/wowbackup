@@ -1,0 +1,2 @@
+-- BuffFrame.CollapseAndExpandButton:Click()
+BuffFrame.CollapseAndExpandButton:SetAlpha(0) BuffFrame.CollapseAndExpandButton:SetChecked(false) BuffFrame.CollapseAndExpandButton:UpdateOrientation() BuffFrame:SetBuffsExpandedState() BuffFrame.CollapseAndExpandButton:HookScript("OnEnter",function()BuffFrame.CollapseAndExpandButton:SetAlpha(1) end) BuffFrame.CollapseAndExpandButton:HookScript("OnLeave",function()BuffFrame.CollapseAndExpandButton:SetAlpha(0) end)

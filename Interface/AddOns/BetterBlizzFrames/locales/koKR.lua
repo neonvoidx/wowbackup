@@ -49,7 +49,7 @@ L["Yes"] = "예"
 ---------------------------------------
 
 L["Profile_Core"] = "기본"
-L["Profile_Description"] = "\n\n구성된 프로필"
+L["Profile_Description"] = "\n구성된 프로필"
 L["Profile_Info_Message"] = "여기 없는데 여기에 있고 싶다면 알려주세요 :)"
 L["Profile_Streamers"] = "스트리머"
 
@@ -57,12 +57,10 @@ L["Profile_Streamers"] = "스트리머"
 -- Module Names & General Settings
 ---------------------------------------
 
-L["Always_Hide_CC_Duration"] = "CC 지속시간 항상 숨기기"
 L["CC_Scale"] = "CC 크기"
 L["Elite_Texture"] = "정예 텍스처"
 L["General_Settings"] = "일반 설정"
 L["Hide_CC_Background"] = "CC 배경 숨기기"
-L["Hide_CC_Duration"] = "시간 X"
 L["Hide_CC_Red_Lines"] = "CC 선 숨기기"
 L["Module_Name_Advanced"] = "고급 설정"
 L["Module_Name_CD_Manager"] = "재사용 대기시간 관리"
@@ -518,7 +516,6 @@ L["Print_ActionBar1_Hide_Combat"] = "전투 중이라 ActionBar1을 숨길 수 �
 L["Print_ActionBar1_Show_Combat"] = "전투 중이라 ActionBar1을 표시할 수 없습니다. 전투에서 벗어나 편집 모드를 다시 열어 표시하세요."
 L["Tooltip_ActionBar_Font_Color"] = "행동 단축바의 글꼴 색상을 변경합니다.\n\n우클릭으로 색상을 변경하세요."
 L["Tooltip_ActionBar_Font_Color_Desc"] = "행동 단축바 폰트 색상"
-L["Tooltip_Always_Hide_CC_Duration_Desc"] = "항상 행동 단축바에서 CC 지속 시간을 숨기고 실제 재사용 대기시간만 표시하며 대신 바를 어둡게 처리합니다."
 L["Tooltip_Change_ActionBar_Font"] = "플레이어, 대상 & 주시 대상 등의 글꼴을 변경합니다."
 L["Tooltip_Fix_ActionBar_CDs_Desc"] = "제어 불가 중에도 항상 스킬 재사용 대기시간을 표시합니다.\n\n기본적으로 제어 불가가 스킬 재사용 대기시간보다 길면 숨겨집니다. 차단하려고 장신구를 사용했는데 차단이 아직 몇 초 재사용 대기시간이 남아있는 상황을 겪어보셨을 것입니다. 이제 그런 일이 없습니다!"
 L["Tooltip_Hide_ActionBar1"] = "행동 단축바1을 숨깁니다. 기본 UI에서는 이를 허용하지 않으므로 설정을 제공합니다."
@@ -534,7 +531,7 @@ L["Delete_From_Blacklist"] = "차단 목록에서 삭제"
 L["Dialog_Duplicate_Blacklist"] = "이 이름 또는 주문 ID는 이미\n\"내 것만 표시\" 태그와 함께 차단 목록에 있습니다.\n\n태그를 업데이트하거나\n차단 목록에서 삭제하시겠습니까?"
 L["Import_PvP_Blacklist"] = "PvP 차단 목록"
 L["Import_PvP_Whitelist"] = "PvP 허용 목록"
-L["Print_Bartender4_Conflict"] = "이 설정은 Bartender4에서 비활성화되었습니다. Bartender4로 이미 이동할 수 있습니다."
+L["Print_Bartender4_Conflict"] = "Move Status Queue Eye: 이 설정은 Bartender4에서 비활성화되었습니다. Bartender4로 이미 이동할 수 있습니다."
 L["Print_Surrender_Failed"] = "항복할 수 없습니다. 떠나려면 /afk를 다시 입력하세요."
 L["Print_Error_Importing_Blacklist"] = "차단 목록 가져오기 오류:"
 L["Print_Error_Importing_Whitelist"] = "허용 목록 가져오기 오류:"

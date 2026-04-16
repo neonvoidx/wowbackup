@@ -1,4 +1,4 @@
--- luacheck: globals EnhanceQoL UnitClass UnitExists UnitIsDeadOrGhost C_SpecializationInfo GetSpecializationInfo NORMAL_FONT_COLOR GAMEMENU_OPTIONS FONT_SIZE UIParent GetTime UnitOnTaxi UnitInVehicle UnitHasVehicleUI IsMounted C_SpellBook C_Timer
+-- luacheck: globals EnhanceQoL UnitClass UnitExists UnitIsDeadOrGhost C_SpecializationInfo GetSpecializationInfo NORMAL_FONT_COLOR GAMEMENU_OPTIONS FONT_SIZE UIParent GetTime UnitOnTaxi UnitInVehicle UnitHasVehicleUI IsMounted C_SpellBook C_Timer C_Spell GetSpellTexture IsResting IsFlying
 local addonName, addon = ...
 local L = addon.L
 
@@ -27,11 +27,23 @@ local SPEC_MARKSMANSHIP = 254
 local MARKS_PET_TALENT_ID = 1223323
 local SPEC_FROST_MAGE = 64
 local MAGE_PET_TALENT_ID = 31687
+local CALL_PET_SPELL_ID = 883
+local RAISE_DEAD_SPELL_ID = 46584
+local SUMMON_IMP_SPELL_ID = 688
+local DEFAULT_PET_ICON = "Interface\\Icons\\Ability_Hunter_BeastCall"
 
 local PET_CLASSES = {
 	HUNTER = true,
 	WARLOCK = true,
 }
+
+local LAYOUT_LABELS = {
+	inline = L["petTrackerLayoutInline"] or "Icon left of text",
+	textAbove = L["petTrackerLayoutTextAbove"] or "Text above icon",
+	textBelow = L["petTrackerLayoutTextBelow"] or "Text below icon",
+}
+
+local LAYOUT_ORDER = { "inline", "textAbove", "textBelow" }
 
 local function getOptionsHint()
 	if addon.DataPanel and addon.DataPanel.GetOptionsHintText then
@@ -54,6 +66,9 @@ local function ensureDB()
 		end
 		db.textColor = { r = r, g = g, b = b }
 	end
+	if db.showIcon == nil then db.showIcon = true end
+	if db.hideWhileRested == nil then db.hideWhileRested = false end
+	if db.layoutMode ~= "textAbove" and db.layoutMode ~= "textBelow" then db.layoutMode = "inline" end
 	if db.blinkEnabled == nil then db.blinkEnabled = false end
 	db.blinkRate = db.blinkRate or 0.7
 end
@@ -76,8 +91,8 @@ local function createAceWindow()
 	local frame = AceGUI:Create("Window")
 	aceWindow = frame.frame
 	frame:SetTitle((addon.DataPanel and addon.DataPanel.GetStreamOptionsTitle and addon.DataPanel.GetStreamOptionsTitle(stream and stream.meta and stream.meta.title)) or GAMEMENU_OPTIONS)
-	frame:SetWidth(300)
-	frame:SetHeight(240)
+	frame:SetWidth(320)
+	frame:SetHeight(340)
 	frame:SetLayout("List")
 
 	frame.frame:SetScript("OnShow", function(self) RestorePosition(self) end)
@@ -107,6 +122,31 @@ local function createAceWindow()
 	end)
 	frame:AddChild(textColor)
 
+	local showIcon = AceGUI:Create("CheckBox")
+	showIcon:SetLabel(L["Show icon"] or "Show icon")
+	showIcon:SetValue(db.showIcon and true or false)
+	frame:AddChild(showIcon)
+
+	local layout = AceGUI:Create("Dropdown")
+	layout:SetLabel(L["petTrackerLayout"] or "Reminder layout")
+	layout:SetList(LAYOUT_LABELS, LAYOUT_ORDER)
+	layout:SetValue(db.layoutMode or "inline")
+	layout:SetDisabled(not db.showIcon)
+	layout:SetCallback("OnValueChanged", function(_, _, key)
+		db.layoutMode = (key == "textAbove" or key == "textBelow") and key or "inline"
+		addon.DataHub:RequestUpdate(stream)
+	end)
+	frame:AddChild(layout)
+
+	local hideWhileRested = AceGUI:Create("CheckBox")
+	hideWhileRested:SetLabel(L["petTrackerHideWhileRested"] or "Hide while rested")
+	hideWhileRested:SetValue(db.hideWhileRested and true or false)
+	hideWhileRested:SetCallback("OnValueChanged", function(_, _, val)
+		db.hideWhileRested = val and true or false
+		addon.DataHub:RequestUpdate(stream)
+	end)
+	frame:AddChild(hideWhileRested)
+
 	local blinkToggle = AceGUI:Create("CheckBox")
 	blinkToggle:SetLabel(L["Blink"] or "Blink")
 	blinkToggle:SetValue(db.blinkEnabled and true or false)
@@ -128,6 +168,12 @@ local function createAceWindow()
 		db.blinkEnabled = val and true or false
 		blinkRate:SetDisabled(not db.blinkEnabled)
 		blinkStartAt = nil
+		addon.DataHub:RequestUpdate(stream)
+	end)
+
+	showIcon:SetCallback("OnValueChanged", function(_, _, val)
+		db.showIcon = val and true or false
+		layout:SetDisabled(not db.showIcon)
 		addon.DataHub:RequestUpdate(stream)
 	end)
 
@@ -169,12 +215,93 @@ end
 
 local floor = math.floor
 local format = string.format
+local max = math.max
 
 local function colorToHex(color)
 	local r = (color and color.r) or 1
 	local g = (color and color.g) or 1
 	local b = (color and color.b) or 1
 	return format("%02x%02x%02x", floor(r * 255 + 0.5), floor(g * 255 + 0.5), floor(b * 255 + 0.5))
+end
+
+local function getPlayerClassAndSpec()
+	local class = UnitClass and select(2, UnitClass("player"))
+	local specIndex = C_SpecializationInfo and C_SpecializationInfo.GetSpecialization and C_SpecializationInfo.GetSpecialization()
+	local specID
+	if specIndex and C_SpecializationInfo and C_SpecializationInfo.GetSpecializationInfo then specID = C_SpecializationInfo.GetSpecializationInfo(specIndex) end
+	return class, specID
+end
+
+local function getReminderIconTexture()
+	local class, specID = getPlayerClassAndSpec()
+	local spellID
+
+	if specID == SPEC_FROST_MAGE or class == "MAGE" then
+		spellID = MAGE_PET_TALENT_ID
+	elseif specID == 252 or class == "DEATHKNIGHT" then
+		spellID = RAISE_DEAD_SPELL_ID
+	elseif specID == 253 or specID == 255 or specID == SPEC_MARKSMANSHIP or class == "HUNTER" then
+		spellID = CALL_PET_SPELL_ID
+	elseif specID == 265 or specID == 266 or specID == 267 or class == "WARLOCK" then
+		spellID = SUMMON_IMP_SPELL_ID
+	end
+
+	if spellID and C_Spell and C_Spell.GetSpellTexture then
+		local texture = C_Spell.GetSpellTexture(spellID)
+		if texture then return texture end
+	end
+	if spellID and GetSpellTexture then
+		local texture = GetSpellTexture(spellID)
+		if texture then return texture end
+	end
+	return DEFAULT_PET_ICON
+end
+
+local function isPlayerResting()
+	if IsResting then return IsResting() and true or false end
+	return false
+end
+
+local function hideSnapshot(snapshot)
+	snapshot.hidden = true
+	snapshot.text = nil
+	snapshot.parts = nil
+	snapshot.textAlpha = nil
+	snapshot.tooltip = nil
+end
+
+local function buildReminderParts(text, iconTexture, fontSize)
+	local iconSize = max(floor((fontSize or 14) + 0.5), 14)
+	local textHeight = max(floor((fontSize or 14) + 4 + 0.5), 16)
+	local iconPart = {
+		icon = { texture = iconTexture, size = iconSize },
+		iconSize = iconSize,
+		iconWidth = iconSize,
+		height = iconSize,
+	}
+	local textPart = {
+		text = text,
+		height = textHeight,
+	}
+
+	if db.layoutMode == "textAbove" then
+		return {
+			partsLayout = "vertical",
+			partSpacing = 1,
+			parts = { textPart, iconPart },
+		}
+	elseif db.layoutMode == "textBelow" then
+		return {
+			partsLayout = "vertical",
+			partSpacing = 1,
+			parts = { iconPart, textPart },
+		}
+	end
+
+	return {
+		partSpacing = 4,
+		parts = { iconPart, textPart },
+	}
 end
 
 local function stopBlinkTicker()
@@ -247,19 +374,19 @@ local function update(stream)
 	local editModeActive = addon.EditModeLib and addon.EditModeLib:IsInEditMode()
 	local needsPet = editModeActive or isPetExpected()
 	if not needsPet then
-		stream.snapshot.hidden = true
-		stream.snapshot.text = nil
-		stream.snapshot.textAlpha = nil
-		stream.snapshot.tooltip = nil
+		hideSnapshot(stream.snapshot)
+		resetBlink(stream)
+		return
+	end
+
+	if not editModeActive and db.hideWhileRested and isPlayerResting() then
+		hideSnapshot(stream.snapshot)
 		resetBlink(stream)
 		return
 	end
 
 	if not editModeActive and (hasActivePet() or isPetSuppressed()) then
-		stream.snapshot.hidden = true
-		stream.snapshot.text = nil
-		stream.snapshot.textAlpha = nil
-		stream.snapshot.tooltip = nil
+		hideSnapshot(stream.snapshot)
 		resetBlink(stream)
 		return
 	end
@@ -267,6 +394,8 @@ local function update(stream)
 	stream.snapshot.hidden = nil
 	stream.snapshot.fontSize = db.fontSize or 14
 	stream.snapshot.tooltip = getOptionsHint()
+	stream.snapshot.text = nil
+	stream.snapshot.parts = nil
 
 	local alpha = 1
 	if db.blinkEnabled and not editModeActive then
@@ -280,7 +409,17 @@ local function update(stream)
 
 	local text = L["Pet Missing"] or "Pet Missing"
 	local hex = colorToHex(db.textColor)
-	stream.snapshot.text = format("|cff%s%s|r", hex, text)
+	local coloredText = format("|cff%s%s|r", hex, text)
+	if db.showIcon then
+		local partsPayload = buildReminderParts(coloredText, getReminderIconTexture(), db.fontSize or 14)
+		stream.snapshot.parts = partsPayload.parts
+		stream.snapshot.partsLayout = partsPayload.partsLayout
+		stream.snapshot.partSpacing = partsPayload.partSpacing
+	else
+		stream.snapshot.partsLayout = nil
+		stream.snapshot.partSpacing = nil
+		stream.snapshot.text = coloredText
+	end
 	stream.snapshot.textAlpha = alpha
 end
 
@@ -309,6 +448,7 @@ local provider = {
 		SPELLS_CHANGED = function(s) addon.DataHub:RequestUpdate(s) end,
 		TRAIT_CONFIG_UPDATED = function(s) addon.DataHub:RequestUpdate(s) end,
 		PLAYER_MOUNT_DISPLAY_CHANGED = function(s) addon.DataHub:RequestUpdate(s) end,
+		PLAYER_UPDATE_RESTING = function(s) addon.DataHub:RequestUpdate(s) end,
 	},
 	eventsUnit = {
 		player = {

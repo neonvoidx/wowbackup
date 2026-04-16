@@ -5,8 +5,13 @@ function sArenaFrameMixin:ResetDRCooldownTextColors()
 	local frames = self.drFrames or drCategories
 	for i = 1, #frames do
 		local drFrame = useDrFrames and frames[i] or self[frames[i]]
-		if drFrame and drFrame.Cooldown and drFrame.Cooldown.sArenaText then
-			drFrame.Cooldown.sArenaText:SetTextColor(1, 1, 1, 1)
+		if drFrame and drFrame.Cooldown then
+			if drFrame.Cooldown.sArenaText then
+				drFrame.Cooldown.sArenaText:SetTextColor(1, 1, 1, 1)
+			end
+			if drFrame.Cooldown.Text then
+				drFrame.Cooldown.Text:SetTextColor(1, 1, 1, 1)
+			end
 		end
 	end
 end
@@ -25,7 +30,7 @@ function sArenaFrameMixin:UpdateDRPositions()
 		if frame and frame:IsShown() then
 			frame:ClearAllPoints()
 			if numActive == 0 then
-				local offset = (sArenaMixin.drBaseSize or 28) / 2
+				local offset = (self.parent.drBaseSize or 28) / 2
 				if growthDirection == 4 then
 					frame:SetPoint("RIGHT", self, "CENTER", layoutdb.dr.posX + offset, layoutdb.dr.posY)
 				elseif growthDirection == 3 then
@@ -97,7 +102,7 @@ function sArenaFrameMixin:FindDR(combatEvent, spellID)
 	local db = self.parent.db.profile
 
 	if db.drCategoriesPerSpec then
-		local specKey = sArenaMixin.playerSpecID or 0
+		local specKey = self.parent.playerSpecID or 0
 		local perSpec = db.drCategoriesSpec or {}
 		local specCategories = perSpec[specKey]
 		if specCategories ~= nil and specCategories[category] ~= nil then
@@ -106,7 +111,7 @@ function sArenaFrameMixin:FindDR(combatEvent, spellID)
 			categoryEnabled = db.drCategories[category]
 		end
 	elseif db.drCategoriesPerClass then
-		local classKey = sArenaMixin.playerClass
+		local classKey = self.parent.playerClass
 		local perClass = db.drCategoriesClass or {}
 		local classCategories = perClass[classKey]
 		if classCategories ~= nil and classCategories[category] ~= nil then
@@ -165,14 +170,14 @@ function sArenaFrameMixin:FindDR(combatEvent, spellID)
 
 	if usePerSpec and useStatic then
 		local perSpec = self.parent.db.profile.drIconsPerSpec
-		local specKey = sArenaMixin.playerSpecID or 0
+		local specKey = self.parent.playerSpecID or 0
 		if perSpec and perSpec[specKey] and perSpec[specKey][category] then
 			textureID = perSpec[specKey][category]
 		end
 	elseif usePerClass and useStatic then
 		local perClass = self.parent.db.profile.drIconsPerClass
-		if perClass and perClass[sArenaMixin.playerClass] and perClass[sArenaMixin.playerClass][category] then
-			textureID = perClass[sArenaMixin.playerClass][category]
+		if perClass and perClass[self.parent.playerClass] and perClass[self.parent.playerClass][category] then
+			textureID = perClass[self.parent.playerClass][category]
 		end
 	end
 
@@ -223,8 +228,13 @@ function sArenaFrameMixin:FindDR(combatEvent, spellID)
 		drText:SetTextColor(unpack(severityColor[frame.severity]))
 	end
 
-	if self.parent.db.profile.colorDRCooldownText and frame.Cooldown.sArenaText then
-		frame.Cooldown.sArenaText:SetTextColor(unpack(severityColor[frame.severity]))
+	if self.parent.db.profile.colorDRCooldownText then
+		if frame.Cooldown.Text then
+			frame.Cooldown.Text:SetTextColor(unpack(severityColor[frame.severity]))
+		end
+		if frame.Cooldown.sArenaText then
+			frame.Cooldown.sArenaText:SetTextColor(unpack(severityColor[frame.severity]))
+		end
 	end
 
 	frame.severity = frame.severity + 1
@@ -236,8 +246,8 @@ end
 
 function sArenaFrameMixin:UpdateDRCooldownReverse()
     local reverse = self.parent.db.profile.invertDRCooldown
-    for i = 1, #sArenaMixin.drCategories do
-        local category = sArenaMixin.drCategories[i]
+    for i = 1, #self.parent.drCategories do
+        local category = self.parent.drCategories[i]
         local frame = self[category]
         if frame and frame.Cooldown then
             frame.Cooldown:SetReverse(reverse)

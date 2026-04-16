@@ -1,5 +1,5 @@
-local VERSION_TEXT = "1.8.9 f";
-local VERSION_DATE = 1774000000;
+local VERSION_TEXT = "1.9.0 e";
+local VERSION_DATE = 1775800000;
 
 
 local addonName, addon = ...
@@ -16,8 +16,11 @@ addon.API = API;
 addon.VERSION_TEXT = VERSION_TEXT;
 
 
+local EL = CreateFrame("Frame");
+
 local CallbackRegistry = {};
 CallbackRegistry.events = {};
+CallbackRegistry.addonLoadedCallbacks = {};
 addon.CallbackRegistry = CallbackRegistry;
 
 local tinsert = table.insert;
@@ -116,7 +119,28 @@ do  --CallbackRegistry
 			end
 		end
 	end
+
+	function CallbackRegistry:RegisterAddOnLoadedCallback(name, callback)
+		if C_AddOns.IsAddOnLoaded(name) then
+			callback();
+			return
+		end
+
+		if not self.addonLoadedCallbacks[name] then
+			self.addonLoadedCallbacks[name] = {};
+			EL:RegisterEvent("ADDON_LOADED");
+		end
+
+		self.addonLoadedCallbacks[name][callback] = true;
+	end
+
+	function CallbackRegistry:UnregisterAddOnLoadedCallback(name, callback)
+		if self.addonLoadedCallbacks[name] then
+			self.addonLoadedCallbacks[name][callback] = nil;
+		end
+	end
 end
+
 
 local function GetDBValue(dbKey)
 	return DB[dbKey]
@@ -219,6 +243,9 @@ local DefaultValues = {
 	CraftSearchExtended = false,        --Show more search result, custom keywords
 	SourceAchievementLink = true,       --Make Achievement name in MountJournal, DecorCatalog interactable
 	TransmogOutfitSelect = true,        --Show Minimized Transmog Outfit Collection
+	CatalystUI = true,					--Allow Ctrl-Click to preview items in Dressing Room for UIs that don't natively support this action
+	HuntTable = true,					--Replace generic quest icons with difficulties and add achievement indicators.
+	PreyQuestSuperTrack = true,			--During the final stage, clicking the Prey widget also super track the target location.
 
 
 	--Tooltip
@@ -445,17 +472,26 @@ local function LoadDatabase()
 end
 
 
-local EL = CreateFrame("Frame");
 EL:RegisterEvent("ADDON_LOADED");
 EL:RegisterEvent("PLAYER_ENTERING_WORLD");
 EL:RegisterEvent("PLAYER_LOGOUT");
+EL:RegisterEvent("LOADING_SCREEN_DISABLED");
 
 EL:SetScript("OnEvent", function(self, event, ...)
 	if event == "ADDON_LOADED" then
 		local name = ...
 		if name == addonName then
+			self.plumberLoaded = true;
 			self:UnregisterEvent(event);
 			LoadDatabase();
+		elseif self.plumberLoaded then
+			if CallbackRegistry.addonLoadedCallbacks[name] then
+				local tbl = CallbackRegistry.addonLoadedCallbacks[name];
+				CallbackRegistry.addonLoadedCallbacks[name] = nil;
+				for callback in pairs(tbl) do
+					callback();
+				end
+			end
 		end
 	elseif event == "PLAYER_ENTERING_WORLD" then
 		self:UnregisterEvent(event);
@@ -486,8 +522,35 @@ EL:SetScript("OnEvent", function(self, event, ...)
 
 	elseif event == "PLAYER_LOGOUT" then
 		DB.lastLogoutTime = time();
+
+	elseif event == "LOADING_SCREEN_DISABLED" then
+		self:QueueEvent(event);
 	end
 end);
+
+function EL:OnUpdate(elapsed)
+	self.t = self.t + elapsed;
+	if self.t > 2 then
+		self.t = nil;
+		self:SetScript("OnUpdate", nil);
+		if self.eventQueue then
+			local tbl = self.eventQueue;
+			self.eventQueue = nil;
+			for event in pairs(tbl) do
+				CallbackRegistry:Trigger(event);
+			end
+		end
+	end
+end
+
+function EL:QueueEvent(event)
+	if not self.eventQueue then
+		self.eventQueue = {};
+	end
+	self.eventQueue[event] = true;
+	self.t = 0;
+	self:SetScript("OnUpdate", self.OnUpdate);
+end
 
 
 do

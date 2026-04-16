@@ -19,6 +19,8 @@ local POSITION_FIELDS = {
 	y = true,
 }
 
+local function usesStoredPosition(entry) return not (entry and entry.persistPosition == false) end
+
 local function getSelection(lib, frame)
 	if not lib or not lib.frameSelections then return nil end
 	return lib.frameSelections[frame]
@@ -172,6 +174,13 @@ function EditMode:_ensureDB()
 	return addon.db[SHARED_STORAGE_KEY]
 end
 
+function EditMode:ClearStoredPosition(id)
+	if not id then return end
+	id = tostring(id)
+	local data = addon and addon.db and addon.db[SHARED_STORAGE_KEY]
+	if type(data) == "table" then data[id] = nil end
+end
+
 function EditMode:GetActiveLayoutName()
 	if self:IsAvailable() then
 		local layoutName = self.lib:GetActiveLayoutName()
@@ -322,25 +331,32 @@ end
 function EditMode:EnsureLayoutData(id, layoutName)
 	local entry = self.frames[id]
 	if not entry then return nil end
+	local record
+	local hadStoredPoint, hadStoredRelativePoint, hadStoredX, hadStoredY
+	local storePosition = usesStoredPosition(entry)
 
-	local container = self:_ensureDB()
-	if not container then
-		entry._fallback = entry._fallback or {}
-		copyDefaults(entry._fallback, entry.defaults)
-		return entry._fallback
-	end
+	if storePosition then
+		local container = self:_ensureDB()
+		if not container then
+			entry._fallback = entry._fallback or {}
+			copyDefaults(entry._fallback, entry.defaults)
+			return entry._fallback
+		end
 
-	local record = container[id]
-	if type(record) ~= "table" then
-		record = {}
-		container[id] = record
+		record = container[id]
+		if type(record) ~= "table" then
+			record = {}
+			container[id] = record
+		end
+		hadStoredPoint = record.point ~= nil
+		hadStoredRelativePoint = record.relativePoint ~= nil
+		hadStoredX = record.x ~= nil
+		hadStoredY = record.y ~= nil
+		pruneRecordToPositionOnly(record)
+		self:_seedStoredPosition(record, entry)
+	else
+		self:ClearStoredPosition(id)
 	end
-	local hadStoredPoint = record.point ~= nil
-	local hadStoredRelativePoint = record.relativePoint ~= nil
-	local hadStoredX = record.x ~= nil
-	local hadStoredY = record.y ~= nil
-	pruneRecordToPositionOnly(record)
-	self:_seedStoredPosition(record, entry)
 
 	self.runtimeLayoutData = self.runtimeLayoutData or {}
 	local runtime = self.runtimeLayoutData[id]
@@ -356,30 +372,32 @@ function EditMode:EnsureLayoutData(id, layoutName)
 		self.runtimeLayoutData[id] = runtime
 	end
 
-	-- Persisted position must always win; for legacy migration, keep runtime values
-	-- when no stored position existed yet.
-	if hadStoredPoint then
-		runtime.point = record.point
-	elseif runtime.point == nil then
-		runtime.point = record.point or (entry.defaults and entry.defaults.point) or "CENTER"
-	end
+	if storePosition then
+		-- Persisted position must always win; for legacy migration, keep runtime values
+		-- when no stored position existed yet.
+		if hadStoredPoint then
+			runtime.point = record.point
+		elseif runtime.point == nil then
+			runtime.point = record.point or (entry.defaults and entry.defaults.point) or "CENTER"
+		end
 
-	if hadStoredRelativePoint then
-		runtime.relativePoint = record.relativePoint
-	elseif runtime.relativePoint == nil then
-		runtime.relativePoint = record.relativePoint or runtime.point
-	end
+		if hadStoredRelativePoint then
+			runtime.relativePoint = record.relativePoint
+		elseif runtime.relativePoint == nil then
+			runtime.relativePoint = record.relativePoint or runtime.point
+		end
 
-	if hadStoredX then
-		runtime.x = record.x
-	elseif runtime.x == nil then
-		runtime.x = record.x
-	end
+		if hadStoredX then
+			runtime.x = record.x
+		elseif runtime.x == nil then
+			runtime.x = record.x
+		end
 
-	if hadStoredY then
-		runtime.y = record.y
-	elseif runtime.y == nil then
-		runtime.y = record.y
+		if hadStoredY then
+			runtime.y = record.y
+		elseif runtime.y == nil then
+			runtime.y = record.y
+		end
 	end
 
 	if runtime.point == nil then runtime.point = (entry.defaults and entry.defaults.point) or "CENTER" end
@@ -387,7 +405,7 @@ function EditMode:EnsureLayoutData(id, layoutName)
 	if runtime.x == nil then runtime.x = (entry.defaults and entry.defaults.x) or 0 end
 	if runtime.y == nil then runtime.y = (entry.defaults and entry.defaults.y) or 0 end
 
-	if record.point ~= runtime.point or record.relativePoint ~= runtime.relativePoint or record.x ~= runtime.x or record.y ~= runtime.y then
+	if storePosition and (record.point ~= runtime.point or record.relativePoint ~= runtime.relativePoint or record.x ~= runtime.x or record.y ~= runtime.y) then
 		self:_writeStoredPosition(id, entry, runtime.point, runtime.relativePoint, runtime.x, runtime.y)
 	end
 
@@ -405,7 +423,7 @@ function EditMode:SetFramePosition(id, point, x, y, layoutName, skipApply)
 	data.relativePoint = point
 	data.x = x
 	data.y = y
-	self:_writeStoredPosition(id, entry, data.point, data.relativePoint, data.x, data.y)
+	if usesStoredPosition(entry) then self:_writeStoredPosition(id, entry, data.point, data.relativePoint, data.x, data.y) end
 
 	if not skipApply then self:ApplyLayout(id, layoutName) end
 end
@@ -416,7 +434,7 @@ function EditMode:SetValue(id, field, value, layoutName, skipApply)
 	local entry = self.frames[id]
 
 	data[field] = value
-	if POSITION_FIELDS[field] then self:_writeStoredPosition(id, entry, data.point, data.relativePoint, data.x, data.y) end
+	if POSITION_FIELDS[field] and usesStoredPosition(entry) then self:_writeStoredPosition(id, entry, data.point, data.relativePoint, data.x, data.y) end
 	if not skipApply then self:ApplyLayout(id, layoutName) end
 end
 
@@ -482,7 +500,7 @@ function EditMode:ApplyLayout(id, layoutName)
 	layoutName = self:_resolveLayoutName(layoutName)
 	local data = self:EnsureLayoutData(id, layoutName)
 	if not data then return end
-	self:_writeStoredPosition(id, entry, data.point, data.relativePoint, data.x, data.y)
+	if usesStoredPosition(entry) then self:_writeStoredPosition(id, entry, data.point, data.relativePoint, data.x, data.y) end
 
 	if entry.managePosition ~= false then
 		local position = {
@@ -617,6 +635,7 @@ function EditMode:RegisterButtons(id, buttons)
 					if not ok then geterrorhandler()(err) end
 				end,
 			}
+			if source.layout ~= nil then prepared.layout = source.layout end
 			self.lib:AddFrameSettingsButton(entry.frame, prepared)
 			entry.buttons[#entry.buttons + 1] = prepared
 		elseif source and source.text then
@@ -624,6 +643,7 @@ function EditMode:RegisterButtons(id, buttons)
 				text = source.text,
 				click = function() end,
 			}
+			if source.layout ~= nil then prepared.layout = source.layout end
 			self.lib:AddFrameSettingsButton(entry.frame, prepared)
 			entry.buttons[#entry.buttons + 1] = prepared
 		end
@@ -651,6 +671,7 @@ function EditMode:RegisterFrame(id, opts)
 		legacy = opts.legacyKeys,
 		isEnabled = opts.isEnabled,
 		managePosition = opts.managePosition,
+		persistPosition = opts.persistPosition,
 		relativeTo = opts.relativeTo,
 		showOutsideEditMode = not not opts.showOutsideEditMode,
 		onApply = opts.onApply,

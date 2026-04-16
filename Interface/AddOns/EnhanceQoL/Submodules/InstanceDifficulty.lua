@@ -1,4 +1,4 @@
--- luacheck: globals MinimapCluster
+-- luacheck: globals MinimapCluster C_DelvesUI Minimap
 local parentAddonName = "EnhanceQoL"
 local addonName, addon = ...
 if _G[parentAddonName] then
@@ -13,40 +13,54 @@ InstanceDifficulty.enabled = InstanceDifficulty.enabled or false
 
 InstanceDifficulty.frame = InstanceDifficulty.frame or CreateFrame("Frame")
 
-local indicator = MinimapCluster.InstanceDifficulty
+local function getIndicator() return MinimapCluster and MinimapCluster.InstanceDifficulty end
+local validAnchors = {
+	TOPLEFT = true,
+	TOP = true,
+	TOPRIGHT = true,
+	LEFT = true,
+	CENTER = true,
+	RIGHT = true,
+	BOTTOMLEFT = true,
+	BOTTOM = true,
+	BOTTOMRIGHT = true,
+}
 
-indicator:SetAlpha(1)
-if indicator.Default then
-	indicator.Default:Hide()
-	indicator.Default:SetScript("OnShow", indicator.Default.Hide)
-end
-if indicator.ChallengeMode then
-	indicator.ChallengeMode:Hide()
-	indicator.ChallengeMode:SetScript("OnShow", indicator.ChallengeMode.Hide)
-end
-if indicator.Guild then
-	indicator.Guild:Hide()
-	indicator.Guild:SetScript("OnShow", indicator.Guild.Hide)
+local function normalizeAnchor(anchor)
+	if type(anchor) == "string" then
+		anchor = string.upper(anchor)
+		if validAnchors[anchor] then return anchor end
+	end
+	return "CENTER"
 end
 
-indicator:HookScript("OnShow", function() InstanceDifficulty:Update() end)
+local function resolveAnchorTarget(indicator, anchor)
+	if anchor ~= "CENTER" and Minimap then return Minimap, anchor end
+	return indicator, "CENTER"
+end
 
 local function defaultFontFace()
 	if addon.functions and addon.functions.GetGlobalDefaultFontFace then return addon.functions.GetGlobalDefaultFontFace() end
 	return (addon.variables and addon.variables.defaultFont) or STANDARD_TEXT_FONT
 end
 
+function InstanceDifficulty:EnsureText()
+	local indicator = getIndicator()
+	if not indicator then return nil end
+	if not self.text or self.text:GetParent() ~= indicator then
+		self.text = indicator:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+		self.text:Hide()
+	end
+	return self.text
+end
+
 function InstanceDifficulty:ApplyTextStyle()
-	if not self.text then return end
+	if not self:EnsureText() then return end
 	local fontSize = (addon.db and addon.db["instanceDifficultyFontSize"]) or 14
 	local font = defaultFontFace()
 	local ok = self.text:SetFont(font, fontSize, "OUTLINE")
 	if ok == false then self.text:SetFont((addon.variables and addon.variables.defaultFont) or STANDARD_TEXT_FONT, fontSize, "OUTLINE") end
 end
-
-InstanceDifficulty.text = InstanceDifficulty.text or indicator:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-InstanceDifficulty:ApplyTextStyle()
-InstanceDifficulty.text:Hide()
 
 local nmNames = {
 	[RAID_DIFFICULTY1] = true,
@@ -64,6 +78,19 @@ local hcNames = {
 	[RAID_DIFFICULTY_25PLAYER_HEROIC] = true,
 }
 
+local function getActiveDelveTier()
+	if not C_DelvesUI or not C_GossipInfo then return nil end
+
+	local _, _, _, mapID = UnitPosition("player")
+	if not C_DelvesUI.HasActiveDelve(mapID) then return nil end
+
+	local gossipInfo = C_GossipInfo.GetActiveDelveGossip()
+	local orderIndex = gossipInfo and gossipInfo.orderIndex
+	if type(orderIndex) == "number" and orderIndex >= 0 then return orderIndex + 1 end
+
+	return nil
+end
+
 local function getShortLabel(difficultyID, difficultyName)
 	if difficultyID == 1 or difficultyID == 3 or difficultyID == 4 or difficultyID == 14 or difficultyID == 33 or difficultyID == 150 or nmNames[difficultyName] or difficultyID == 12 then
 		return "NM"
@@ -79,12 +106,18 @@ local function getShortLabel(difficultyID, difficultyName)
 		return "LFR"
 	elseif difficultyID == 24 then
 		return "TW"
+	elseif difficultyID == 208 then
+		local tier = getActiveDelveTier()
+		if tier then return "D" .. tier end
+		return "D"
 	end
 	return difficultyName
 end
 
 function InstanceDifficulty:Update()
-	if not self.enabled or not addon.db then return end
+	local indicator = getIndicator()
+	if not self.enabled or not addon.db or not indicator then return end
+	if not self:EnsureText() then return end
 	if not IsInInstance() then
 		self.text:Hide()
 		return
@@ -114,12 +147,12 @@ function InstanceDifficulty:Update()
 	else
 		text = short
 	end
-	-- Apply anchor (fixed center) and offsets
-	local anchor = "CENTER"
+	local anchor = normalizeAnchor(addon.db and addon.db["instanceDifficultyAnchor"])
 	local offX = (addon.db and addon.db["instanceDifficultyOffsetX"]) or 0
 	local offY = (addon.db and addon.db["instanceDifficultyOffsetY"]) or 0
+	local anchorTarget, relativePoint = resolveAnchorTarget(indicator, anchor)
 	self.text:ClearAllPoints()
-	self.text:SetPoint(anchor, indicator, anchor, offX, offY)
+	self.text:SetPoint(anchor, anchorTarget, relativePoint, offX, offY)
 
 	self.text:SetText(text)
 	self:ApplyTextStyle()
@@ -134,27 +167,59 @@ function InstanceDifficulty:Update()
 	self.text:Show()
 end
 
+function InstanceDifficulty:ApplyIndicatorOverride(enabled)
+	local indicator = getIndicator()
+	if not indicator then return end
+	indicator:SetAlpha(1)
+	for _, key in ipairs({ "Default", "ChallengeMode", "Guild" }) do
+		local child = indicator[key]
+		if child then
+			if enabled then
+				child:Hide()
+				child:SetScript("OnShow", child.Hide)
+			else
+				if child:GetScript("OnShow") == child.Hide then child:SetScript("OnShow", nil) end
+			end
+		end
+	end
+	if enabled and not self._indicatorOnShowHooked then
+		self._indicatorOnShowHooked = true
+		indicator:HookScript("OnShow", function() InstanceDifficulty:Update() end)
+	end
+end
+
 function InstanceDifficulty:SetEnabled(value)
 	self.enabled = value
 	if value then
+		self:ApplyIndicatorOverride(true)
+		self:EnsureText()
 		self.frame:RegisterEvent("PLAYER_ENTERING_WORLD")
 		self.frame:RegisterEvent("ZONE_CHANGED_NEW_AREA")
 		self.frame:RegisterEvent("PLAYER_DIFFICULTY_CHANGED")
 		self.frame:RegisterEvent("CHALLENGE_MODE_START")
-		if indicator.Default then
-			indicator.Default:Hide()
-			indicator.Default:SetScript("OnShow", indicator.Default.Hide)
-		end
+		self.frame:RegisterEvent("ACTIVE_DELVE_DATA_UPDATE")
 		self:Update()
 	else
 		self.frame:UnregisterEvent("PLAYER_ENTERING_WORLD")
 		self.frame:UnregisterEvent("ZONE_CHANGED_NEW_AREA")
 		self.frame:UnregisterEvent("PLAYER_DIFFICULTY_CHANGED")
 		self.frame:UnregisterEvent("CHALLENGE_MODE_START")
-		self.text:Hide()
-		if indicator.Default then
-			indicator.Default:SetScript("OnShow", nil)
-			if IsInInstance() then indicator.Default:Show() end
+		self.frame:UnregisterEvent("ACTIVE_DELVE_DATA_UPDATE")
+		if self.text then self.text:Hide() end
+		self:ApplyIndicatorOverride(false)
+		local indicator = getIndicator()
+		if indicator then
+			indicator:Show()
+			local miniMapInstanceDifficultyUpdate = _G.MiniMapInstanceDifficulty_Update
+			if miniMapInstanceDifficultyUpdate then
+				pcall(miniMapInstanceDifficultyUpdate)
+			elseif indicator.Default then
+				indicator.Default:Show()
+			elseif indicator.ChallengeMode then
+				indicator.ChallengeMode:Show()
+			elseif indicator.Guild then
+				indicator.Guild:Show()
+			end
 		end
 	end
 end

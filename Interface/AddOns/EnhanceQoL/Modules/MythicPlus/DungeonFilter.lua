@@ -6,7 +6,7 @@ else
 	error(parentAddonName .. " is not loaded")
 end
 
-local L = LibStub("AceLocale-3.0"):GetLocale("EnhanceQoL_MythicPlus")
+local L = LibStub("AceLocale-3.0"):GetLocale("EnhanceQoL")
 
 addon.MythicPlus = addon.MythicPlus or {}
 addon.MythicPlus.functions = addon.MythicPlus.functions or {}

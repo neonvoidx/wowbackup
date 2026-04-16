@@ -75,7 +75,7 @@ local function createAceWindow()
 	frame:AddChild(fontSize)
 
 	local showIcon = AceGUI:Create("CheckBox")
-	showIcon:SetLabel(L["durabilityShowIcon"] or "Show icon")
+	showIcon:SetLabel(L["Show icon"] or "Show icon")
 	showIcon:SetValue(db.showIcon)
 	showIcon:SetCallback("OnValueChanged", function(_, _, val)
 		db.showIcon = val and true or false
@@ -93,7 +93,7 @@ local function createAceWindow()
 	frame:AddChild(showCritical)
 
 	local useColor = AceGUI:Create("CheckBox")
-	useColor:SetLabel(L["durabilityUseTextColor"] or "Use custom text color")
+	useColor:SetLabel(L["Use custom text color"] or "Use custom text color")
 	useColor:SetValue(db.useTextColor)
 	useColor:SetCallback("OnValueChanged", function(_, _, val)
 		db.useTextColor = val and true or false

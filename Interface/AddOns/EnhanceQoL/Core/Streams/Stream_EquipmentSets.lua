@@ -197,7 +197,7 @@ local function createAceWindow()
 	frame:AddChild(useClassColor)
 
 	local useTextColor = AceGUI:Create("CheckBox")
-	useTextColor:SetLabel(L["goldPanelUseTextColor"] or "Use custom text color")
+	useTextColor:SetLabel(L["Use custom text color"] or "Use custom text color")
 	useTextColor:SetValue(db.useTextColor and true or false)
 	useTextColor:SetCallback("OnValueChanged", function(_, _, val)
 		db.useTextColor = val and true or false

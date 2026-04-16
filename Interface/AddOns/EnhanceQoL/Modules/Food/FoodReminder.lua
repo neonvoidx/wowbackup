@@ -16,7 +16,7 @@ else
 	error(parentAddonName .. " is not loaded")
 end
 
-local L = LibStub("AceLocale-3.0"):GetLocale("EnhanceQoL_DrinkMacro")
+local L = LibStub("AceLocale-3.0"):GetLocale("EnhanceQoL")
 local EditMode = addon.EditMode
 local SettingType = EditMode and EditMode.lib and EditMode.lib.SettingType
 local DEFAULT_SOUND_SENTINEL = "__DEFAULT_SOUND__"
@@ -453,7 +453,7 @@ local function createSoundDropdownSetting(labelKey, dbKey)
 		end,
 		generator = function(_, rootDescription)
 			if rootDescription.SetScrollMode then rootDescription:SetScrollMode(260) end
-			local noneLabel = NONE or L["None"] or "None"
+			local noneLabel = _G.NONE
 			rootDescription:CreateRadio(noneLabel, function() return addon.db[dbKey] == NONE_SOUND_SENTINEL end, function() addon.db[dbKey] = NONE_SOUND_SENTINEL end)
 			local defaultLabel = L["mageFoodReminderDefaultSound"] or DEFAULT
 			rootDescription:CreateRadio(defaultLabel, function() return addon.db[dbKey] == nil end, function()

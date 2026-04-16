@@ -46,7 +46,18 @@ local COOLDOWN_VIEWER_VISIBILITY_MODES = constants.COOLDOWN_VIEWER_VISIBILITY_MO
 local wipe = wipe
 local fontOrder = {}
 local borderOrder = {}
+local focusInterruptSoundOrder = {}
 local QUICK_SLOT_BORDER = "Interface\\Buttons\\UI-Quickslot2"
+local DEFAULT_NAMEPLATE_FEATURE_KEYS = constants.DEFAULT_NAMEPLATE_FEATURE_KEYS
+	or {
+		auraClickthrough = "nameplateAuraClickthrough",
+		mobColors = "nameplateMobColors",
+		mobColorBoss = "nameplateMobColorBoss",
+		mobColorMiniboss = "nameplateMobColorMiniboss",
+		mobColorCaster = "nameplateMobColorCaster",
+		mobColorMelee = "nameplateMobColorMelee",
+		mobColorTrivial = "nameplateMobColorTrivial",
+	}
 
 local function getCachedLSMMedia(mediaType)
 	local names = addon.functions and addon.functions.GetLSMMediaNames and addon.functions.GetLSMMediaNames(mediaType)
@@ -168,6 +179,57 @@ local function buildBorderDropdown()
 	return map
 end
 
+local function buildFocusInterruptSoundDropdown()
+	local list, order
+	if addon.functions and addon.functions.GetLSMMediaDropdown then
+		list, order = addon.functions.GetLSMMediaDropdown("sound", true, "")
+	else
+		list = { [""] = "" }
+		order = { "" }
+		local names = addon.functions and addon.functions.GetLSMMediaNames and addon.functions.GetLSMMediaNames("sound") or {}
+		for i = 1, #names do
+			local name = names[i]
+			if type(name) == "string" and name ~= "" then
+				list[name] = name
+				order[#order + 1] = name
+			end
+		end
+	end
+
+	wipe(focusInterruptSoundOrder)
+	for i = 1, #(order or {}) do
+		focusInterruptSoundOrder[i] = order[i]
+	end
+
+	return list or {}
+end
+
+local function previewFocusInterruptSound(value)
+	if type(value) ~= "string" or value == "" then return end
+
+	local numeric = tonumber(value)
+	if numeric and PlaySound then
+		PlaySound(numeric, "Master")
+		return
+	end
+
+	local soundHash = addon.functions and addon.functions.GetLSMMediaHash and addon.functions.GetLSMMediaHash("sound")
+	local file = type(soundHash) == "table" and soundHash[value] or nil
+	if type(file) == "string" and file ~= "" and PlaySoundFile then PlaySoundFile(file, "Master") end
+end
+
+local function getNormalizedFocusInterruptSoundValue()
+	local cfg = addon.db and addon.db.focusInterruptTracker
+	local sound = cfg and cfg.sound
+	local value = sound and sound.file
+	if type(value) ~= "string" or value == "" then return "" end
+
+	local soundHash = addon.functions and addon.functions.GetLSMMediaHash and addon.functions.GetLSMMediaHash("sound")
+	if type(soundHash) == "table" and type(soundHash[value]) == "string" and soundHash[value] ~= "" then return value end
+
+	return ""
+end
+
 local function createActionBarVisibility(category, expandable)
 	if #ACTIONBAR_RULE_OPTIONS == 0 then return end
 
@@ -243,7 +305,7 @@ local function createActionBarVisibility(category, expandable)
 
 	addon.functions.SettingsCreateSlider(category, {
 		var = "actionBarFadeStrength",
-		text = L["actionBarFadeStrength"] or "Fade amount",
+		text = L["Fade amount"] or "Fade amount",
 		desc = L["actionBarFadeStrengthDesc"],
 		min = 0,
 		max = 100,
@@ -285,10 +347,10 @@ local function createAnchorControls(category, expandable)
 	addon.functions.SettingsCreateText(category, "|cffff0000" .. warning .. "|r", { parentSection = expandable })
 
 	local anchorOptions = {
-		TOPLEFT = L["topLeft"] or "Top Left",
-		TOPRIGHT = L["topRight"] or "Top Right",
-		BOTTOMLEFT = L["bottomLeft"] or "Bottom Left",
-		BOTTOMRIGHT = L["bottomRight"] or "Bottom Right",
+		TOPLEFT = L["Top Left"] or "Top Left",
+		TOPRIGHT = L["Top Right"] or "Top Right",
+		BOTTOMLEFT = L["Bottom Left"] or "Bottom Left",
+		BOTTOMRIGHT = L["Bottom Right"] or "Bottom Right",
 	}
 	local anchorOrder = ACTION_BAR_ANCHOR_ORDER
 
@@ -332,6 +394,12 @@ local function createButtonAppearanceControls(category, expandable)
 	addon.functions.SettingsCreateHeadline(category, L["actionBarAppearanceHeader"] or "Button appearance", { parentSection = expandable })
 
 	local hideBorders
+	local borderColorModeOptions = {
+		DEFAULT = L["actionBarBorderDefault"] or "Default (Blizzard)",
+		CUSTOM = L["Use custom color"] or "Use custom color",
+		CLASS = L["Use class color"] or "Use class color",
+	}
+	local borderColorModeOrder = { "DEFAULT", "CUSTOM", "CLASS" }
 	local function getBorderStyle()
 		local current = addon.db.actionBarBorderStyle or "DEFAULT"
 		local list = buildBorderDropdown()
@@ -339,6 +407,12 @@ local function createButtonAppearanceControls(category, expandable)
 		return current
 	end
 	local function isDefaultBorderStyle() return getBorderStyle() == "DEFAULT" end
+	local function getBorderColorMode()
+		local current = addon.db.actionBarBorderColorMode
+		if current == nil then current = addon.db.actionBarBorderColoring and "CUSTOM" or "DEFAULT" end
+		if not borderColorModeOptions[current] then current = "DEFAULT" end
+		return current
+	end
 
 	addon.functions.SettingsCreateScrollDropdown(category, {
 		var = "actionBarBorderStyle",
@@ -383,7 +457,7 @@ local function createButtonAppearanceControls(category, expandable)
 
 	addon.functions.SettingsCreateSlider(category, {
 		var = "actionBarBorderEdgeSize",
-		text = L["actionBarBorderEdgeSize"] or "Border size",
+		text = L["Border size"] or "Border size",
 		desc = L["actionBarBorderEdgeSizeDesc"] or "Edge size for SharedMedia borders (e.g., Blizzard Tooltip).",
 		min = 1,
 		max = 32,
@@ -431,12 +505,18 @@ local function createButtonAppearanceControls(category, expandable)
 		parentSection = expandable,
 	})
 
-	local borderColorToggle = addon.functions.SettingsCreateCheckbox(category, {
-		var = "actionBarBorderColoring",
-		text = L["actionBarBorderColoring"] or "Custom border color",
-		desc = L["actionBarBorderColoringDesc"] or "Use a custom color for action button borders.",
-		func = function(value)
-			addon.db.actionBarBorderColoring = value and true or false
+	local borderColorMode = addon.functions.SettingsCreateDropdown(category, {
+		var = "actionBarBorderColorMode",
+		text = L["actionBarBorderColoring"] or "Border coloring",
+		desc = L["actionBarBorderColoringDesc"] or "Choose how custom action button borders are colored.",
+		list = borderColorModeOptions,
+		order = borderColorModeOrder,
+		default = "DEFAULT",
+		get = getBorderColorMode,
+		set = function(key)
+			if not borderColorModeOptions[key] then key = "DEFAULT" end
+			addon.db.actionBarBorderColorMode = key
+			addon.db.actionBarBorderColoring = key == "CUSTOM"
 			if ActionBarLabels and ActionBarLabels.RefreshActionButtonBorders then ActionBarLabels.RefreshActionButtonBorders() end
 		end,
 		parentSection = expandable,
@@ -444,13 +524,12 @@ local function createButtonAppearanceControls(category, expandable)
 
 	addon.functions.SettingsCreateColorPicker(category, {
 		var = "actionBarBorderColor",
-		text = L["actionBarBorderColor"] or "Border color",
+		text = EMBLEM_BORDER_COLOR,
 		callback = function()
 			if ActionBarLabels and ActionBarLabels.RefreshActionButtonBorders then ActionBarLabels.RefreshActionButtonBorders() end
 		end,
-		parent = true,
-		element = borderColorToggle.element,
-		parentCheck = function() return borderColorToggle.setting and borderColorToggle.setting:GetValue() == true end,
+		element = borderColorMode.element,
+		parentCheck = function() return getBorderColorMode() == "CUSTOM" end,
 		colorizeLabel = false,
 		parentSection = expandable,
 	})
@@ -484,10 +563,22 @@ local function createLabelControls(category, expandable)
 
 	local outlineOrder = { "NONE", "OUTLINE", "THICKOUTLINE", "MONOCHROMEOUTLINE" }
 	local outlineOptions = {
-		NONE = L["fontOutlineNone"] or NONE,
-		OUTLINE = L["fontOutlineThin"] or "Outline",
-		THICKOUTLINE = L["fontOutlineThick"] or "Thick Outline",
-		MONOCHROMEOUTLINE = L["fontOutlineMono"] or "Monochrome Outline",
+		NONE = NONE,
+		OUTLINE = L["Outline"] or "Outline",
+		THICKOUTLINE = L["Thick Outline"] or "Thick Outline",
+		MONOCHROMEOUTLINE = L["Monochrome Outline"] or "Monochrome Outline",
+	}
+	local textAnchorOrder = { "TOPLEFT", "TOP", "TOPRIGHT", "LEFT", "CENTER", "RIGHT", "BOTTOMLEFT", "BOTTOM", "BOTTOMRIGHT" }
+	local textAnchorOptions = {
+		TOPLEFT = L["Top Left"] or "Top Left",
+		TOP = L["Top"] or "Top",
+		TOPRIGHT = L["Top Right"] or "Top Right",
+		LEFT = L["Left"] or "Left",
+		CENTER = L["Center"] or "Center",
+		RIGHT = L["Right"] or "Right",
+		BOTTOMLEFT = L["Bottom Left"] or "Bottom Left",
+		BOTTOM = L["Bottom"] or "Bottom",
+		BOTTOMRIGHT = L["Bottom Right"] or "Bottom Right",
 	}
 
 	local macroOverride
@@ -548,7 +639,7 @@ local function createLabelControls(category, expandable)
 
 	addon.functions.SettingsCreateDropdown(category, {
 		var = "actionBarMacroFontOutline",
-		text = L["actionBarFontOutlineLabel"] or "Font outline",
+		text = L["Font outline"] or "Font outline",
 		list = outlineOptions,
 		order = outlineOrder,
 		default = "OUTLINE",
@@ -642,7 +733,7 @@ local function createLabelControls(category, expandable)
 
 	addon.functions.SettingsCreateDropdown(category, {
 		var = "actionBarHotkeyFontOutline",
-		text = L["actionBarFontOutlineLabel"] or "Font outline",
+		text = L["Font outline"] or "Font outline",
 		list = outlineOptions,
 		order = outlineOrder,
 		default = "OUTLINE",
@@ -698,6 +789,59 @@ local function createLabelControls(category, expandable)
 		parentSection = expandable,
 	})
 
+	addon.functions.SettingsCreateDropdown(category, {
+		var = "actionBarHotkeyAnchor",
+		text = L["actionBarHotkeyAnchor"] or "Keybind anchor",
+		list = textAnchorOptions,
+		order = textAnchorOrder,
+		default = "TOPRIGHT",
+		get = function() return addon.db.actionBarHotkeyAnchor or "TOPRIGHT" end,
+		set = function(key)
+			addon.db.actionBarHotkeyAnchor = key
+			if ActionBarLabels and ActionBarLabels.RefreshAllHotkeyStyles then ActionBarLabels.RefreshAllHotkeyStyles() end
+		end,
+		parent = true,
+		element = hotkeyOverride.element,
+		parentCheck = hotkeyParentCheck,
+		parentSection = expandable,
+	})
+
+	addon.functions.SettingsCreateSlider(category, {
+		var = "actionBarHotkeyOffsetX",
+		text = L["actionBarHotkeyOffsetX"] or "Keybind offset X",
+		min = -50,
+		max = 50,
+		step = 1,
+		default = -2,
+		get = function() return tonumber(addon.db.actionBarHotkeyOffsetX) or -2 end,
+		set = function(val)
+			addon.db.actionBarHotkeyOffsetX = math.floor(val + 0.5)
+			if ActionBarLabels and ActionBarLabels.RefreshAllHotkeyStyles then ActionBarLabels.RefreshAllHotkeyStyles() end
+		end,
+		parent = true,
+		element = hotkeyOverride.element,
+		parentCheck = hotkeyParentCheck,
+		parentSection = expandable,
+	})
+
+	addon.functions.SettingsCreateSlider(category, {
+		var = "actionBarHotkeyOffsetY",
+		text = L["actionBarHotkeyOffsetY"] or "Keybind offset Y",
+		min = -50,
+		max = 50,
+		step = 1,
+		default = -3,
+		get = function() return tonumber(addon.db.actionBarHotkeyOffsetY) or -3 end,
+		set = function(val)
+			addon.db.actionBarHotkeyOffsetY = math.floor(val + 0.5)
+			if ActionBarLabels and ActionBarLabels.RefreshAllHotkeyStyles then ActionBarLabels.RefreshAllHotkeyStyles() end
+		end,
+		parent = true,
+		element = hotkeyOverride.element,
+		parentCheck = hotkeyParentCheck,
+		parentSection = expandable,
+	})
+
 	local countOverride = addon.functions.SettingsCreateCheckbox(category, {
 		var = "actionBarCountFontOverride",
 		text = L["actionBarCountFontOverride"] or "Change charge/stack font",
@@ -734,7 +878,7 @@ local function createLabelControls(category, expandable)
 
 	addon.functions.SettingsCreateDropdown(category, {
 		var = "actionBarCountFontOutline",
-		text = L["actionBarFontOutlineLabel"] or "Font outline",
+		text = L["Font outline"] or "Font outline",
 		list = outlineOptions,
 		order = outlineOrder,
 		default = "OUTLINE",
@@ -788,11 +932,69 @@ local function createLabelControls(category, expandable)
 		parentSection = expandable,
 	})
 
+	addon.functions.SettingsCreateDropdown(category, {
+		var = "actionBarCountAnchor",
+		text = L["actionBarCountAnchor"] or "Charge/stack anchor",
+		list = textAnchorOptions,
+		order = textAnchorOrder,
+		default = "BOTTOMRIGHT",
+		get = function() return addon.db.actionBarCountAnchor or "BOTTOMRIGHT" end,
+		set = function(key)
+			addon.db.actionBarCountAnchor = key
+			if ActionBarLabels and ActionBarLabels.RefreshAllCountStyles then ActionBarLabels.RefreshAllCountStyles() end
+		end,
+		parent = true,
+		element = countOverride.element,
+		parentCheck = countParentCheck,
+		parentSection = expandable,
+	})
+
+	addon.functions.SettingsCreateSlider(category, {
+		var = "actionBarCountOffsetX",
+		text = L["actionBarCountOffsetX"] or "Charge/stack offset X",
+		min = -50,
+		max = 50,
+		step = 1,
+		default = -2,
+		get = function() return tonumber(addon.db.actionBarCountOffsetX) or -2 end,
+		set = function(val)
+			addon.db.actionBarCountOffsetX = math.floor(val + 0.5)
+			if ActionBarLabels and ActionBarLabels.RefreshAllCountStyles then ActionBarLabels.RefreshAllCountStyles() end
+		end,
+		parent = true,
+		element = countOverride.element,
+		parentCheck = countParentCheck,
+		parentSection = expandable,
+	})
+
+	addon.functions.SettingsCreateSlider(category, {
+		var = "actionBarCountOffsetY",
+		text = L["actionBarCountOffsetY"] or "Charge/stack offset Y",
+		min = -50,
+		max = 50,
+		step = 1,
+		default = 2,
+		get = function() return tonumber(addon.db.actionBarCountOffsetY) or 2 end,
+		set = function(val)
+			addon.db.actionBarCountOffsetY = math.floor(val + 0.5)
+			if ActionBarLabels and ActionBarLabels.RefreshAllCountStyles then ActionBarLabels.RefreshAllCountStyles() end
+		end,
+		parent = true,
+		element = countOverride.element,
+		parentCheck = countParentCheck,
+		parentSection = expandable,
+	})
+
 	addon.functions.SettingsCreateHeadline(category, L["actionBarKeybindVisibilityHeader"] or "Keybind label visibility", { parentSection = expandable })
 
 	local barOptions = {}
 	for _, info in ipairs(addon.variables.actionBarNames or {}) do
 		if info.name then table.insert(barOptions, { value = info.name, text = info.text or info.name }) end
+	end
+	if ActionBarLabels and ActionBarLabels.GetAdditionalHotkeyBarOptions then
+		for _, info in ipairs(ActionBarLabels.GetAdditionalHotkeyBarOptions() or {}) do
+			if info and info.value then table.insert(barOptions, info) end
+		end
 	end
 	table.sort(barOptions, function(a, b) return tostring(a.text) < tostring(b.text) end)
 
@@ -927,19 +1129,19 @@ end
 local function createCooldownViewerDropdowns(category, expandable)
 	if not category or #COOLDOWN_VIEWER_FRAMES == 0 then return end
 
-	addon.functions.SettingsCreateHeadline(category, L["cooldownManagerHeader"] or "Show when", { parentSection = expandable })
+	addon.functions.SettingsCreateHeadline(category, L["Show when"] or "Show when", { parentSection = expandable })
 
 	local options = {
-		{ value = COOLDOWN_VIEWER_VISIBILITY_MODES.IN_COMBAT, text = L["cooldownManagerShowCombat"] or "In combat" },
+		{ value = COOLDOWN_VIEWER_VISIBILITY_MODES.IN_COMBAT, text = L["In combat"] or "In combat" },
 		{ value = COOLDOWN_VIEWER_VISIBILITY_MODES.WHILE_MOUNTED, text = L["cooldownManagerShowMounted"] or "Mounted" },
-		{ value = COOLDOWN_VIEWER_VISIBILITY_MODES.WHILE_NOT_MOUNTED, text = L["cooldownManagerShowNotMounted"] or "Not mounted" },
+		{ value = COOLDOWN_VIEWER_VISIBILITY_MODES.WHILE_NOT_MOUNTED, text = L["Not mounted"] or "Not mounted" },
 		{
 			value = COOLDOWN_VIEWER_VISIBILITY_MODES.SKYRIDING_ACTIVE,
-			text = L["cooldownManagerShowSkyriding"] or (L["visibilityRule_skyriding"] or "While skyriding"),
+			text = L["While skyriding"] or (L["While skyriding"] or "While skyriding"),
 		},
 		{
 			value = COOLDOWN_VIEWER_VISIBILITY_MODES.SKYRIDING_INACTIVE,
-			text = L["cooldownManagerHideSkyriding"] or (L["visibilityRule_hideSkyriding"] or "Hide while skyriding"),
+			text = L["Hide while skyriding"] or (L["Hide while skyriding"] or "Hide while skyriding"),
 		},
 		{
 			value = COOLDOWN_VIEWER_VISIBILITY_MODES.FLYING_ACTIVE,
@@ -949,12 +1151,12 @@ local function createCooldownViewerDropdowns(category, expandable)
 			value = COOLDOWN_VIEWER_VISIBILITY_MODES.FLYING_INACTIVE,
 			text = L["visibilityRule_hideFlying"] or "Hide while flying",
 		},
-		{ value = COOLDOWN_VIEWER_VISIBILITY_MODES.PLAYER_CASTING, text = L["cooldownManagerShowCasting"] or "Player is casting" },
-		{ value = COOLDOWN_VIEWER_VISIBILITY_MODES.PLAYER_IN_GROUP, text = L["cooldownManagerShowGrouped"] or "In party/raid" },
+		{ value = COOLDOWN_VIEWER_VISIBILITY_MODES.PLAYER_CASTING, text = L["Player is casting"] or "Player is casting" },
+		{ value = COOLDOWN_VIEWER_VISIBILITY_MODES.PLAYER_IN_GROUP, text = L["In party/raid"] or "In party/raid" },
 		{ value = COOLDOWN_VIEWER_VISIBILITY_MODES.MOUSEOVER, text = L["cooldownManagerShowMouseover"] or "On mouseover" },
 		{
 			value = COOLDOWN_VIEWER_VISIBILITY_MODES.PLAYER_HAS_TARGET,
-			text = L["cooldownManagerShowTarget"] or L["visibilityRule_playerHasTarget"] or "When I have a target",
+				text = L["When I have a target"] or "When I have a target",
 		},
 		{
 			value = COOLDOWN_VIEWER_VISIBILITY_MODES.ALWAYS_HIDDEN,
@@ -1005,7 +1207,7 @@ local function createCooldownViewerDropdowns(category, expandable)
 
 	addon.functions.SettingsCreateSlider(category, {
 		var = "cooldownViewerFadeStrength",
-		text = L["cooldownViewerFadeStrength"] or "Fade amount",
+		text = L["Fade amount"] or "Fade amount",
 		desc = L["cooldownViewerFadeStrengthDesc"],
 		min = 0,
 		max = 100,
@@ -1043,15 +1245,15 @@ local function createSpellActivationOverlayDropdown(category, expandable)
 
 	local options = {
 		{ value = COOLDOWN_VIEWER_VISIBILITY_MODES.WHILE_MOUNTED, text = L["cooldownManagerShowMounted"] or "Mounted" },
-		{ value = COOLDOWN_VIEWER_VISIBILITY_MODES.WHILE_NOT_MOUNTED, text = L["cooldownManagerShowNotMounted"] or "Not mounted" },
-		{ value = COOLDOWN_VIEWER_VISIBILITY_MODES.SKYRIDING_ACTIVE, text = L["cooldownManagerShowSkyriding"] or "While skyriding" },
+		{ value = COOLDOWN_VIEWER_VISIBILITY_MODES.WHILE_NOT_MOUNTED, text = L["Not mounted"] or "Not mounted" },
+		{ value = COOLDOWN_VIEWER_VISIBILITY_MODES.SKYRIDING_ACTIVE, text = L["While skyriding"] or "While skyriding" },
 		{ value = COOLDOWN_VIEWER_VISIBILITY_MODES.SKYRIDING_INACTIVE, text = L["VisibilityCondNotSkyriding"] or "Not skyriding" },
 		{ value = COOLDOWN_VIEWER_VISIBILITY_MODES.FLYING_ACTIVE, text = L["visibilityRule_flying"] or "While flying" },
 		{ value = COOLDOWN_VIEWER_VISIBILITY_MODES.FLYING_INACTIVE, text = L["VisibilityCondNotFlying"] or "Not flying" },
-		{ value = COOLDOWN_VIEWER_VISIBILITY_MODES.PLAYER_CASTING, text = L["cooldownManagerShowCasting"] or "Player is casting" },
+		{ value = COOLDOWN_VIEWER_VISIBILITY_MODES.PLAYER_CASTING, text = L["Player is casting"] or "Player is casting" },
 		{
 			value = COOLDOWN_VIEWER_VISIBILITY_MODES.PLAYER_HAS_TARGET,
-			text = L["cooldownManagerShowTarget"] or L["visibilityRule_playerHasTarget"] or "When I have a target",
+				text = L["When I have a target"] or "When I have a target",
 		},
 	}
 
@@ -1148,7 +1350,7 @@ local function createFrameCategory()
 	})
 	addon.SettingsLayout.uiFramesExpandable = expandable
 
-	addon.functions.SettingsCreateHeadline(category, L["visibilityScenarioGroupTitle"] or (L["ActionBarVisibilityLabel"] or "Visibility"), { parentSection = expandable })
+	addon.functions.SettingsCreateHeadline(category, L["visibilityScenarioGroupTitle"] or (L["Visibility"] or "Visibility"), { parentSection = expandable })
 	if L["visibilityFrameExplain2"] then addon.functions.SettingsCreateText(category, L["visibilityFrameExplain2"], { parentSection = expandable }) end
 
 	local frames = {}
@@ -1194,7 +1396,7 @@ local function createFrameCategory()
 
 	addon.functions.SettingsCreateSlider(category, {
 		var = "frameVisibilityFadeStrength",
-		text = L["frameFadeStrength"] or "Fade amount",
+		text = L["Fade amount"] or "Fade amount",
 		desc = L["frameFadeStrengthDesc"],
 		min = 0,
 		max = 100,
@@ -1211,7 +1413,6 @@ local function createFrameCategory()
 		end,
 		parentSection = expandable,
 	})
-
 end
 
 function addon.functions.initUIOptions()
@@ -1222,6 +1423,7 @@ function addon.functions.initUIOptions()
 	addon.functions.InitDBValue("gcdBarHeight", defaults.height or 18)
 	addon.functions.InitDBValue("gcdBarTexture", defaults.texture or "DEFAULT")
 	addon.functions.InitDBValue("gcdBarColor", defaults.color or { r = 1, g = 0.82, b = 0.2, a = 1 })
+	addon.functions.InitDBValue("gcdBarSparkEnabled", defaults.sparkEnabled == true)
 	addon.functions.InitDBValue("gcdBarBackgroundEnabled", defaults.bgEnabled == true)
 	addon.functions.InitDBValue("gcdBarBackgroundTexture", defaults.bgTexture or "SOLID")
 	addon.functions.InitDBValue("gcdBarBackgroundColor", defaults.bgColor or { r = 0, g = 0, b = 0, a = 0 })
@@ -1280,6 +1482,15 @@ function addon.functions.initUIOptions()
 	if addon.db then addon.db["xpBarDebugLast"] = nil end
 
 	if addon.Aura and addon.Aura.ExperienceBar and addon.Aura.ExperienceBar.OnSettingChanged then addon.Aura.ExperienceBar:OnSettingChanged(addon.db["xpBarEnabled"]) end
+	addon.functions.InitDBValue("totalAbsorbTrackerEnabled", false)
+	addon.functions.InitDBValue("totalAbsorbTrackerTextOnly", false)
+	addon.functions.InitDBValue("totalAbsorbTrackerRelativeFrame", "UIParent")
+	if addon.Aura and addon.Aura.TotalAbsorbTracker and addon.Aura.TotalAbsorbTracker.OnSettingChanged then addon.Aura.TotalAbsorbTracker:OnSettingChanged(addon.db["totalAbsorbTrackerEnabled"]) end
+	addon.db.focusInterruptTracker = type(addon.db.focusInterruptTracker) == "table" and addon.db.focusInterruptTracker or {}
+	if addon.db.focusInterruptTracker.enabled == nil then addon.db.focusInterruptTracker.enabled = false end
+	if addon.Aura and addon.Aura.FocusInterruptTracker and addon.Aura.FocusInterruptTracker.OnSettingChanged then
+		addon.Aura.FocusInterruptTracker:OnSettingChanged(addon.db.focusInterruptTracker.enabled)
+	end
 
 	local combatDefaults = (addon.CombatText and addon.CombatText.defaults) or {}
 	local combatAlwaysModeCombatOnly = addon.CombatText and addon.CombatText.ALWAYS_VISIBLE_MODE_COMBAT_ONLY or "COMBAT_ONLY"
@@ -1303,6 +1514,7 @@ function addon.functions.initUIOptions()
 	addon.functions.InitDBValue("combatTextAlwaysVisibleMode", alwaysVisibleMode)
 	addon.functions.InitDBValue("combatTextFont", combatFont)
 	addon.functions.InitDBValue("combatTextFontSize", combatDefaults.fontSize or 32)
+	addon.functions.InitDBValue("combatTextAnchorTarget", "UIParent")
 	local defaultCombatColor = cloneColor(addon.db["combatTextColor"], combatDefaults.enterColor or combatDefaults.color or { r = 1, g = 1, b = 1, a = 1 })
 	addon.functions.InitDBValue("combatTextColor", cloneColor(defaultCombatColor, defaultCombatColor))
 	addon.functions.InitDBValue("combatTextEnterColor", cloneColor(defaultCombatColor, defaultCombatColor))
@@ -1324,6 +1536,7 @@ local function createNameplatesCategory()
 		name = label,
 		expanded = false,
 		colorizeTitle = false,
+		newTagID = "Nameplates",
 	})
 	addon.SettingsLayout.uiNameplatesExpandable = expandable
 
@@ -1356,6 +1569,118 @@ local function createNameplatesCategory()
 
 	table.sort(nameplateData, function(a, b) return a.text < b.text end)
 	addon.functions.SettingsCreateCheckboxes(category, nameplateData)
+
+	addon.functions.SettingsCreateHeadline(category, _G.STAT_CATEGORY_ENHANCEMENTS, {
+		parentSection = expandable,
+	})
+
+	addon.functions.SettingsCreateCheckbox(category, {
+		var = DEFAULT_NAMEPLATE_FEATURE_KEYS.auraClickthrough,
+		text = L["nameplateAuraClickthrough"] or "Make nameplate auras click-through",
+		desc = L["nameplateAuraClickthroughDesc"],
+		func = function(value)
+			if addon.functions.SetDefaultNameplateAuraClickthroughEnabled then
+				addon.functions.SetDefaultNameplateAuraClickthroughEnabled(value)
+			else
+				addon.db[DEFAULT_NAMEPLATE_FEATURE_KEYS.auraClickthrough] = value and true or false
+			end
+		end,
+		parentSection = expandable,
+	})
+
+	local mobColorsToggle = addon.functions.SettingsCreateCheckbox(category, {
+		var = DEFAULT_NAMEPLATE_FEATURE_KEYS.mobColors,
+		text = L["nameplateMobColors"] or "Color default nameplates",
+		desc = L["nameplateMobColorsDesc"],
+		func = function(value)
+			if addon.functions.SetDefaultNameplateMobColorsEnabled then
+				addon.functions.SetDefaultNameplateMobColorsEnabled(value)
+			else
+				addon.db[DEFAULT_NAMEPLATE_FEATURE_KEYS.mobColors] = value and true or false
+			end
+		end,
+		parentSection = expandable,
+	})
+
+	local function areMobColorsEnabled() return mobColorsToggle and mobColorsToggle.setting and mobColorsToggle.setting:GetValue() == true end
+
+	local function refreshNameplateMobColorScope()
+		if addon.functions.RefreshDefaultNameplateMobColors then addon.functions.RefreshDefaultNameplateMobColors() end
+	end
+
+	addon.functions.SettingsCreateCheckbox(category, {
+		var = DEFAULT_NAMEPLATE_FEATURE_KEYS.mobColorsInDungeons,
+		text = L["nameplateMobColorsInDungeons"] or "Apply in dungeons",
+		desc = L["nameplateMobColorsInDungeonsDesc"],
+		func = function(value)
+			addon.db[DEFAULT_NAMEPLATE_FEATURE_KEYS.mobColorsInDungeons] = value and true or false
+			refreshNameplateMobColorScope()
+		end,
+		parent = true,
+		element = mobColorsToggle.element,
+		parentCheck = areMobColorsEnabled,
+		parentSection = expandable,
+	})
+
+	addon.functions.SettingsCreateCheckbox(category, {
+		var = DEFAULT_NAMEPLATE_FEATURE_KEYS.mobColorsOutsideDungeons,
+		text = L["nameplateMobColorsOutsideDungeons"] or "Also apply outside dungeons",
+		desc = L["nameplateMobColorsOutsideDungeonsDesc"],
+		func = function(value)
+			addon.db[DEFAULT_NAMEPLATE_FEATURE_KEYS.mobColorsOutsideDungeons] = value and true or false
+			refreshNameplateMobColorScope()
+		end,
+		parent = true,
+		element = mobColorsToggle.element,
+		parentCheck = areMobColorsEnabled,
+		parentSection = expandable,
+	})
+
+	local function createNameplateMobColorPicker(var, text)
+		addon.functions.SettingsCreateColorPicker(category, {
+			var = var,
+			text = text,
+			callback = function()
+				if addon.functions.RefreshDefaultNameplateMobColors then addon.functions.RefreshDefaultNameplateMobColors() end
+			end,
+			parent = true,
+			element = mobColorsToggle.element,
+			parentCheck = areMobColorsEnabled,
+			colorizeLabel = false,
+			parentSection = expandable,
+		})
+	end
+
+	createNameplateMobColorPicker(DEFAULT_NAMEPLATE_FEATURE_KEYS.mobColorBoss, L["nameplateMobColorBoss"] or "Boss color")
+	createNameplateMobColorPicker(DEFAULT_NAMEPLATE_FEATURE_KEYS.mobColorMiniboss, L["nameplateMobColorMiniboss"] or "Mini-boss color")
+	createNameplateMobColorPicker(DEFAULT_NAMEPLATE_FEATURE_KEYS.mobColorCaster, L["nameplateMobColorCaster"] or "Caster color")
+	createNameplateMobColorPicker(DEFAULT_NAMEPLATE_FEATURE_KEYS.mobColorMelee, L["nameplateMobColorMelee"] or "Melee color")
+	createNameplateMobColorPicker(DEFAULT_NAMEPLATE_FEATURE_KEYS.mobColorTrivial, L["nameplateMobColorTrivial"] or "Trivial color")
+end
+
+local function createTotalAbsorbTrackerSettings(category, expandable)
+	if not category or not expandable then return end
+	if addon.SettingsLayout._eqolTotalAbsorbTrackerSettingsBuilt then return end
+	addon.SettingsLayout._eqolTotalAbsorbTrackerSettingsBuilt = true
+
+	addon.functions.SettingsCreateHeadline(category, L["TotalAbsorbTracker"] or "Total Absorb Tracker", {
+		parentSection = expandable,
+	})
+	addon.functions.SettingsCreateCheckbox(category, {
+		var = "totalAbsorbTrackerEnabled",
+		text = L["totalAbsorbTrackerEnabled"] or "Enable Total Absorb tracker",
+		desc = L["totalAbsorbTrackerDesc"] or "Shows your current player absorb amount in a standalone icon tracker.",
+		func = function(value)
+			addon.db["totalAbsorbTrackerEnabled"] = value and true or false
+			if addon.Aura and addon.Aura.TotalAbsorbTracker and addon.Aura.TotalAbsorbTracker.OnSettingChanged then
+				addon.Aura.TotalAbsorbTracker:OnSettingChanged(addon.db["totalAbsorbTrackerEnabled"])
+			end
+		end,
+		parentSection = expandable,
+	})
+	addon.functions.SettingsCreateText(category, "|cffffd700" .. (L["totalAbsorbTrackerEditModeHint"] or "Configure icon, text, text-only mode, anchor, and offsets in Edit Mode.") .. "|r", {
+		parentSection = expandable,
+	})
 end
 
 local function createCastbarCategory()
@@ -1403,6 +1728,84 @@ local function createCastbarCategory()
 	})
 
 	addon.functions.SettingsCreateText(category, "|cffffd700" .. (L["xpBarEditModeHint"] or "Configure anchor, style, and text in Edit Mode.") .. "|r", {
+		parentSection = expandable,
+	})
+
+	addon.functions.SettingsCreateHeadline(category, L["FocusInterruptTracker"] or "Focus Interrupt Tracker", {
+		parentSection = expandable,
+	})
+	local focusInterruptTrackerEnabled = addon.functions.SettingsCreateCheckbox(category, {
+		var = "focusInterruptTrackerEnabled",
+		text = L["focusInterruptTrackerEnabled"] or "Enable Focus interrupt tracker",
+		desc = L["focusInterruptTrackerDesc"] or "Shows an interrupt indicator near the focus frame when your interrupt is ready and the focus cast can be interrupted.",
+		get = function()
+			local cfg = addon.db and addon.db.focusInterruptTracker
+			return cfg and cfg.enabled == true or false
+		end,
+		func = function(value)
+			addon.db.focusInterruptTracker = type(addon.db.focusInterruptTracker) == "table" and addon.db.focusInterruptTracker or {}
+			addon.db.focusInterruptTracker.enabled = value and true or false
+			local tracker = addon.Aura and addon.Aura.FocusInterruptTracker
+			if tracker and tracker.OnSettingChanged then tracker:OnSettingChanged(addon.db.focusInterruptTracker.enabled) end
+		end,
+		parentSection = expandable,
+	})
+	local focusInterruptSound = addon.functions.SettingsCreateCheckbox(category, {
+		var = "focusInterruptTrackerSoundEnabled",
+		text = L["focusInterruptTrackerSoundEnabled"] or "Play sound on focus cast",
+		desc = L["focusInterruptTrackerSoundEnabledDesc"]
+			or "Plays a sound when your focus starts casting while your interrupt is ready.",
+		get = function()
+			local cfg = addon.db and addon.db.focusInterruptTracker
+			local sound = cfg and cfg.sound
+			return sound and sound.enabled == true or false
+		end,
+		func = function(value)
+			addon.db.focusInterruptTracker = type(addon.db.focusInterruptTracker) == "table" and addon.db.focusInterruptTracker or {}
+			addon.db.focusInterruptTracker.sound = type(addon.db.focusInterruptTracker.sound) == "table" and addon.db.focusInterruptTracker.sound or {}
+			addon.db.focusInterruptTracker.sound.enabled = value and true or false
+		end,
+		parent = true,
+		element = focusInterruptTrackerEnabled and focusInterruptTrackerEnabled.element,
+		parentCheck = function()
+			local cfg = addon.db and addon.db.focusInterruptTracker
+			return cfg and cfg.enabled == true or false
+		end,
+		parentSection = expandable,
+	})
+	addon.functions.SettingsCreateSoundDropdown(category, {
+		var = "focusInterruptTrackerSoundFile",
+		text = SOUND,
+		desc = L["focusInterruptTrackerSoundFileDesc"] or "SharedMedia sound to play for new focus casts.",
+		listFunc = buildFocusInterruptSoundDropdown,
+		order = focusInterruptSoundOrder,
+		default = "",
+		get = function()
+			return getNormalizedFocusInterruptSoundValue()
+		end,
+		set = function(value)
+			addon.db.focusInterruptTracker = type(addon.db.focusInterruptTracker) == "table" and addon.db.focusInterruptTracker or {}
+			addon.db.focusInterruptTracker.sound = type(addon.db.focusInterruptTracker.sound) == "table" and addon.db.focusInterruptTracker.sound or {}
+			addon.db.focusInterruptTracker.sound.file = type(value) == "string" and value or ""
+		end,
+		callback = function(value)
+			previewFocusInterruptSound(value)
+		end,
+		parent = true,
+		element = focusInterruptSound and focusInterruptSound.element,
+		parentCheck = function()
+			local cfg = addon.db and addon.db.focusInterruptTracker
+			local sound = cfg and cfg.sound
+			return cfg and cfg.enabled == true and sound and sound.enabled == true or false
+		end,
+		parentSection = expandable,
+		placeholderText = NONE,
+		playbackChannel = "Master",
+	})
+	addon.functions.SettingsCreateText(category, "|cffffd700" .. (L["focusInterruptTrackerEditModeHint"] or "Configure display mode, icon, font, anchor, and border in Edit Mode.") .. "|r", {
+		parentSection = expandable,
+	})
+	addon.functions.SettingsCreateText(category, "|cffffd700" .. (L["focusInterruptTrackerSoundWarning"] or "Sound also plays for non-interruptible casts because the interruptibility flag is secret.") .. "|r", {
 		parentSection = expandable,
 	})
 
@@ -1559,15 +1962,17 @@ end
 local function ensureBarsResourcesCategory()
 	local category = addon.SettingsLayout.rootUI
 	local expandable = addon.SettingsLayout.uiBarsResourcesExpandable
-	if expandable then return end
+	if not expandable then
+		expandable = addon.functions.SettingsCreateExpandableSection(category, {
+			name = L["BarsAndResources"] or "Bars & Resources",
+			expanded = false,
+			colorizeTitle = false,
+			newTagID = "ResourceBars",
+		})
+		addon.SettingsLayout.uiBarsResourcesExpandable = expandable
+	end
 
-	expandable = addon.functions.SettingsCreateExpandableSection(category, {
-		name = L["BarsAndResources"] or "Bars & Resources",
-		expanded = false,
-		colorizeTitle = false,
-		newTagID = "ResourceBars",
-	})
-	addon.SettingsLayout.uiBarsResourcesExpandable = expandable
+	createTotalAbsorbTrackerSettings(category, expandable)
 end
 
 createActionBarCategory()

@@ -19,6 +19,7 @@ local function ensureDB()
 	addon.db.datapanel.itemlevel = addon.db.datapanel.itemlevel or {}
 	db = addon.db.datapanel.itemlevel
 	db.fontSize = db.fontSize or 14
+	if db.showAverage == nil then db.showAverage = true end
 end
 
 local function RestorePosition(frame)
@@ -40,7 +41,7 @@ local function createAceWindow()
 	aceWindow = frame.frame
 	frame:SetTitle((addon.DataPanel and addon.DataPanel.GetStreamOptionsTitle and addon.DataPanel.GetStreamOptionsTitle(stream and stream.meta and stream.meta.title)) or GAMEMENU_OPTIONS)
 	frame:SetWidth(300)
-	frame:SetHeight(200)
+	frame:SetHeight(230)
 	frame:SetLayout("List")
 
 	frame.frame:SetScript("OnShow", function(self) RestorePosition(self) end)
@@ -60,6 +61,15 @@ local function createAceWindow()
 		addon.DataHub:RequestUpdate(stream)
 	end)
 	frame:AddChild(fontSize)
+
+	local showAverage = AceGUI:Create("CheckBox")
+	showAverage:SetLabel(L["itemLevelShowAverage"] or "Show average item level")
+	showAverage:SetValue(db.showAverage ~= false)
+	showAverage:SetCallback("OnValueChanged", function(_, _, val)
+		db.showAverage = val and true or false
+		addon.DataHub:RequestUpdate(stream)
+	end)
+	frame:AddChild(showAverage)
 
 	frame.frame:Show()
 end
@@ -135,7 +145,7 @@ local function updateItemLevel(s)
 	local r, g, b = getItemLevelColor()
 	local label = ITEM_LEVEL_ABBR or "iLvl"
 	local equippedText = colorizeNumber(equipped or avg, r, g, b)
-	if equipped and avg and math.abs(avg - equipped) > 0.005 then
+	if db.showAverage ~= false and equipped and avg and math.abs(avg - equipped) > 0.005 then
 		local avgText = colorizeNumber(avg, r, g, b)
 		s.snapshot.text = format("%s: %s / %s", label, equippedText, avgText)
 	else
@@ -146,8 +156,8 @@ end
 
 local provider = {
 	id = "itemlevel",
-	version = 1,
-	title = L["Item Level"] or "Item Level",
+	version = 2,
+	title = ITEM_UPGRADE_STAT_AVERAGE_ITEM_LEVEL,
 	update = updateItemLevel,
 	events = {
 		PLAYER_AVG_ITEM_LEVEL_UPDATE = function(s) addon.DataHub:RequestUpdate(s) end,
@@ -178,7 +188,7 @@ local provider = {
 		local pvpText = format("%.2f", lastPvp or 0)
 
 		local r, g, b = getItemLevelColor()
-		tip:AddDoubleLine(STAT_AVERAGE_ITEM_LEVEL or (L["Item Level"] or "Item Level"), avgText, 1, 1, 1, r, g, b)
+		tip:AddDoubleLine(ITEM_UPGRADE_STAT_AVERAGE_ITEM_LEVEL, avgText, 1, 1, 1, r, g, b)
 		if lastEquipped then
 			local cr, cg, cb = diffColor(lastEquipped - lastAvg)
 			tip:AddDoubleLine(EQUIPPED or "Equipped", eqText, 1, 1, 1, cr, cg, cb)

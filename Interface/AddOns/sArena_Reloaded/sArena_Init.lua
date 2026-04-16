@@ -8,6 +8,10 @@ sArenaMixin.isMoP = gameVersion:match("^5%.")
 sArenaMixin.isWrath = gameVersion:match("^3%.")
 sArenaMixin.isTBC = gameVersion:match("^2%.")
 
+sArenaMixin.addonName = "|T135884:13:13|t sArena |cffff8000Reloaded|r"
+sArenaMixin.addonTitle = sArenaMixin.addonName.. " " .. (C_AddOns.GetAddOnMetadata("sArena_Reloaded", "Version") or "")
+sArenaMixin.popupHeader = "\n"..sArenaMixin.addonName.."\n\n"
+
 sArenaMixin.layouts = {}
 sArenaMixin.defaultSettings = {
     profile = {
@@ -23,6 +27,11 @@ sArenaMixin.defaultSettings = {
         --darkMode = (BetterBlizzFramesDB and BetterBlizzFramesDB.darkModeUi) or C_AddOns.IsAddOnLoaded("FrameColor") or nil,
         forceShowTrinketOnHuman = not sArenaMixin.isRetail and true or nil,
         shadowSightTimer = (sArenaMixin.isTBC or sArenaMixin.isWrath) and true or nil,
+        trinketSoundName = "Lossa Trinket",
+        trinketSoundFileID = 0,
+        healerTrinketSoundName = "Lossa Trinket",
+        healerTrinketSoundFileID = 0,
+        trinketSoundChannel = "Master",
         darkModeValue = 0.2,
         desaturateTrinketCD = true,
         desaturateDispelCD = true,
@@ -30,6 +39,10 @@ sArenaMixin.defaultSettings = {
         statusText = {
             alwaysShow = true,
             formatNumbers = true,
+        },
+        trinketColors = {
+            available = { 0, 1, 0 },
+            used = { 1, 0, 0 },
         },
         castBarColors = {
             standard = { 1.0, 0.7, 0.0, 1 },
@@ -39,5 +52,30 @@ sArenaMixin.defaultSettings = {
         },
         layoutSettings = {},
         invertClassIconCooldown = true,
+        stealthAlpha = 0.4,
+        rangeCheckSpellsPerSpec = {},
+        rangeCheck = {
+            enabled = false,
+            mode = "both",
+            notInRangeAlpha = 0.7,
+            inRangeAtlas = "common-icon-checkmark-yellow",
+            inRangeCustomAtlas = "",
+            inRangeColorEnabled = true,
+            inRangeColor = { 0, 1, 0, 1 },
+            inRangeScale = 1,
+            inRangePosX = 0,
+            inRangePosY = 0,
+            notInRangeAtlas = "common-icon-redx",
+            notInRangeCustomAtlas = "",
+            notInRangeColorEnabled = false,
+            notInRangeColor = { 1, 0.2, 0.2, 1 },
+            notInRangeScale = 1,
+            notInRangePosX = 0,
+            notInRangePosY = 0,
+        },
+        clickAttributes = {
+            ["Left"] = { button = "1", action = "target" },
+            ["Right"] = { button = "2", action = "focus" },
+        },
     }
 }

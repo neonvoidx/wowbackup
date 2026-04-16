@@ -58,6 +58,10 @@ local function normalizeRealmForCompare(realm)
 	return realm:gsub("[%s%-']", ""):lower()
 end
 
+local function lowerNoSpaces(value)
+	return (value or ""):lower():gsub("%s", "")
+end
+
 local function buildRecipientForMail(name, realm, fallback)
 	local recipientName = name
 	local recipientRealm = realm
@@ -104,6 +108,12 @@ local function restoreRememberedRecipient()
 		SendMailNameEditBox:SetText(name)
 		SendMailNameEditBox:HighlightText(0, 0)
 	end
+end
+
+local mailboxFilteredSort
+
+local function mailboxDisplayContactSort(a, b)
+	return (a.sortKey or "") < (b.sortKey or "")
 end
 
 function Mailbox:EnsureRememberRecipientHooks()
@@ -188,8 +198,12 @@ local function filteredContacts()
 			})
 		end
 	end
-	table.sort(list, function(a, b) return a.sortKey < b.sortKey end)
+	table.sort(list, mailboxDisplayContactSort)
 	return list
+end
+
+local function onMailboxRowClick(button, mouseButton)
+	button:OnClick(mouseButton)
 end
 
 -- HybridScroll row mixin
@@ -212,7 +226,7 @@ function RowMixin:OnAcquired()
 	end
 	self:SetHighlightTexture("Interface/QuestFrame/UI-QuestTitleHighlight")
 	self:RegisterForClicks("LeftButtonUp", "RightButtonUp")
-	self:SetScript("OnClick", function(btn, mouseButton) btn:OnClick(mouseButton) end)
+	self:SetScript("OnClick", onMailboxRowClick)
 	self.initialized = true
 end
 
@@ -275,22 +289,26 @@ end
 local function ensureHooks()
 	if Mailbox.hooked then return end
 	Mailbox.hooked = true
-	-- Events for show/hide
-	Mailbox.eventFrame = Mailbox.eventFrame or CreateFrame("Frame")
-	Mailbox.eventFrame:RegisterEvent("MAIL_SHOW")
-	Mailbox.eventFrame:RegisterEvent("MAIL_CLOSED")
-	Mailbox.eventFrame:RegisterEvent("MAIL_SEND_INFO_UPDATE")
-	Mailbox.eventFrame:SetScript("OnEvent", function(_, event)
+	local function updateMailboxVisibilityDeferred()
+		if addon.Mailbox then addon.Mailbox:UpdateVisibility() end
+	end
+
+	local function onMailboxEvent(_, event)
 		if event == "MAIL_SHOW" then
-			C_Timer.After(0, function()
-				if addon.Mailbox then addon.Mailbox:UpdateVisibility() end
-			end)
+			C_Timer.After(0, updateMailboxVisibilityDeferred)
 		elseif event == "MAIL_SEND_INFO_UPDATE" then
 			if addon.Mailbox then addon.Mailbox:RefreshList() end
 		else -- MAIL_CLOSED
 			if addon.Mailbox and addon.Mailbox.frame then addon.Mailbox.frame:Hide() end
 		end
-	end)
+	end
+
+	-- Events for show/hide
+	Mailbox.eventFrame = Mailbox.eventFrame or CreateFrame("Frame")
+	Mailbox.eventFrame:RegisterEvent("MAIL_SHOW")
+	Mailbox.eventFrame:RegisterEvent("MAIL_CLOSED")
+	Mailbox.eventFrame:RegisterEvent("MAIL_SEND_INFO_UPDATE")
+	Mailbox.eventFrame:SetScript("OnEvent", onMailboxEvent)
 
 	-- Also watch tab changes to update visibility
 	hooksecurefunc("MailFrameTab_OnClick", function()
@@ -331,6 +349,30 @@ function Mailbox:SetEnabled(v)
 	end
 end
 
+mailboxFilteredSort = function(a, b)
+	local sk = Mailbox.sortKey
+	local av, bv
+	if sk == "name" then
+		av = a.name:lower()
+		bv = b.name:lower()
+		if av == bv then
+			av = a.realm:lower()
+			bv = b.realm:lower()
+		end
+	elseif sk == "realm" then
+		av = (a.realm or ""):lower()
+		bv = (b.realm or ""):lower()
+	else
+		av = a.name:lower()
+		bv = b.name:lower()
+	end
+	if Mailbox.sortAsc then
+		return av < bv
+	else
+		return av > bv
+	end
+end
+
 -- Build filtered + sorted table from saved contacts
 local function BuildFiltered()
 	if not addon or not addon.db then
@@ -364,7 +406,6 @@ local function BuildFiltered()
 	end
 	wipe(Mailbox.filtered)
 	-- determine own character to hide from list (normalize realms by removing spaces)
-	local function lowerNoSpaces(s) return (s or ""):lower():gsub("%s", "") end
 	local meName, meRealm = UnitFullName("player")
 	meRealm = meRealm or (GetRealmName() or "")
 	local myKeyLower = meName and string.format("%s-%s", meName, meRealm):lower() or nil
@@ -411,29 +452,41 @@ local function BuildFiltered()
 		end
 	end
 
-	table.sort(Mailbox.filtered, function(a, b)
-		local sk = Mailbox.sortKey
-		local av, bv
-		if sk == "name" then
-			av = a.name:lower()
-			bv = b.name:lower()
-			if av == bv then
-				av = a.realm:lower()
-				bv = b.realm:lower()
-			end
-		elseif sk == "realm" then
-			av = (a.realm or ""):lower()
-			bv = (b.realm or ""):lower()
-		else -- default
-			av = a.name:lower()
-			bv = b.name:lower()
-		end
-		if Mailbox.sortAsc then
-			return av < bv
-		else
-			return av > bv
-		end
-	end)
+	table.sort(Mailbox.filtered, mailboxFilteredSort)
+end
+
+local function mailboxHeaderOnClick(self)
+	if Mailbox.sortKey ~= self.sortKey then
+		Mailbox.sortKey = self.sortKey
+		Mailbox.sortAsc = true
+	else
+		Mailbox.sortAsc = not Mailbox.sortAsc
+	end
+	BuildFiltered()
+	Mailbox:UpdateRows()
+end
+
+local function mailboxScrollFrameUpdate()
+	Mailbox:UpdateRows()
+end
+
+local function mailboxSearchBoxOnTextChanged(self)
+	Mailbox.searchText = self:GetText() or ""
+	BuildFiltered()
+	Mailbox:UpdateRows()
+end
+
+local function mailboxEnsureRowsAndRefresh()
+	Mailbox:EnsureRows()
+	Mailbox:UpdateRows()
+end
+
+local function mailboxLoginOnEvent()
+	ensureDB()
+	if addon.db.enableMailboxAddressBook then Mailbox:AddSelfToContacts() end
+	-- Apply enable state once UI exists
+	Mailbox:SetEnabled(addon.db.enableMailboxAddressBook)
+	if addon.db.mailboxRememberLastRecipient then Mailbox:EnsureRememberRecipientHooks() end
 end
 
 function Mailbox:UpdateRows()
@@ -493,16 +546,7 @@ function EQOLMailboxFrame_OnLoad(frame)
 			if middle then middle:SetWidth(col.width - 9) end
 			btn:SetText(col.text)
 			btn.sortKey = col.key
-			btn:SetScript("OnClick", function(self)
-				if Mailbox.sortKey ~= self.sortKey then
-					Mailbox.sortKey = self.sortKey
-					Mailbox.sortAsc = true
-				else
-					Mailbox.sortAsc = not Mailbox.sortAsc
-				end
-				BuildFiltered()
-				Mailbox:UpdateRows()
-			end)
+			btn:SetScript("OnClick", mailboxHeaderOnClick)
 		end
 		c = c + 1
 	end
@@ -526,24 +570,17 @@ function EQOLMailboxFrame_OnLoad(frame)
 			Mixin(row, RowMixin)
 			row:OnAcquired()
 		end
-		self.scrollFrame.update = function() self:UpdateRows() end
+		self.scrollFrame.update = mailboxScrollFrameUpdate
 	end
 	Mailbox:EnsureRows()
 
 	-- Search box handler
-	if Mailbox.searchBox then Mailbox.searchBox:SetScript("OnTextChanged", function(self)
-		Mailbox.searchText = self:GetText() or ""
-		BuildFiltered()
-		Mailbox:UpdateRows()
-	end) end
+	if Mailbox.searchBox then Mailbox.searchBox:SetScript("OnTextChanged", mailboxSearchBoxOnTextChanged) end
 
 	-- Initial build
 	BuildFiltered()
 	-- Ensure rows even if OnLoad sizing was 0
-	if not Mailbox.rows or #Mailbox.rows == 0 then C_Timer.After(0, function()
-		Mailbox:EnsureRows()
-		Mailbox:UpdateRows()
-	end) end
+	if not Mailbox.rows or #Mailbox.rows == 0 then C_Timer.After(0, mailboxEnsureRowsAndRefresh) end
 	Mailbox:UpdateRows()
 	Mailbox:UpdateVisibility()
 end
@@ -560,11 +597,5 @@ end
 if not Mailbox.loginFrame then
 	Mailbox.loginFrame = CreateFrame("Frame")
 	Mailbox.loginFrame:RegisterEvent("PLAYER_LOGIN")
-	Mailbox.loginFrame:SetScript("OnEvent", function()
-		ensureDB()
-		if addon.db.enableMailboxAddressBook then Mailbox:AddSelfToContacts() end
-		-- Apply enable state once UI exists
-		Mailbox:SetEnabled(addon.db.enableMailboxAddressBook)
-		if addon.db.mailboxRememberLastRecipient then Mailbox:EnsureRememberRecipientHooks() end
-	end)
+	Mailbox.loginFrame:SetScript("OnEvent", mailboxLoginOnEvent)
 end

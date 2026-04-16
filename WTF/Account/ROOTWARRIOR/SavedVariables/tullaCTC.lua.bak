@@ -1,33 +1,35 @@
 
 tullaCTCDB = {
 ["profileKeys"] = {
+["Auteist - Tichondrius"] = "Default",
+["Hellavator - Tichondrius"] = "Default",
+["Tampacks - Tichondrius"] = "Default",
 ["Stormclout - Tichondrius"] = "Default",
+["Starphage - Tichondrius"] = "Default",
+["Strathmoan - Tichondrius"] = "Default",
+["Starstypeshi - Tichondrius"] = "Default",
 ["Neonvoid - Tichondrius"] = "Default",
+["Mäñýfäçëð - Tichondrius"] = "Default",
+["Choppiez - Tichondrius"] = "Default",
 },
 ["profiles"] = {
 ["Default"] = {
 ["themes"] = {
 ["default"] = {
-["fontSize"] = 23,
-["themeCooldown"] = true,
+["fontSize"] = 22,
+["abbrevThreshold"] = 60,
+["minDuration"] = 2,
 ["fontFlags"] = "THICKOUTLINE",
-["defaultTextColor"] = "847F807E",
-["themeSwipeColor"] = true,
-["swipeColor"] = "000000C2",
 ["font"] = "1",
 ["textColors"] = {
 {
-["color"] = "FF1000FF",
+["color"] = "FF001DFF",
 },
 {
-["threshold"] = 15,
-},
-{
-["color"] = "FFF8F8FF",
+["threshold"] = 20,
+["color"] = "FFD605FF",
 },
 },
-["reverse"] = "never",
-["shadowColor"] = "000000FF",
 },
 },
 },

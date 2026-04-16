@@ -32,6 +32,7 @@ GCDBar.defaults = GCDBar.defaults
 		height = 18,
 		texture = "DEFAULT",
 		color = { r = 1, g = 0.82, b = 0.2, a = 1 },
+		sparkEnabled = false,
 		bgEnabled = false,
 		bgTexture = "SOLID",
 		bgColor = { r = 0, g = 0, b = 0, a = 0 },
@@ -49,6 +50,7 @@ GCDBar.defaults = GCDBar.defaults
 		anchorOffsetX = 0,
 		anchorOffsetY = -120,
 		hideInPetBattle = false,
+		strata = nil,
 	}
 
 local defaults = GCDBar.defaults
@@ -58,6 +60,7 @@ local DB_WIDTH = "gcdBarWidth"
 local DB_HEIGHT = "gcdBarHeight"
 local DB_TEXTURE = "gcdBarTexture"
 local DB_COLOR = "gcdBarColor"
+local DB_SPARK_ENABLED = "gcdBarSparkEnabled"
 local DB_BG_ENABLED = "gcdBarBackgroundEnabled"
 local DB_BG_TEXTURE = "gcdBarBackgroundTexture"
 local DB_BG_COLOR = "gcdBarBackgroundColor"
@@ -75,12 +78,20 @@ local DB_ANCHOR_RELATIVE_POINT = "gcdBarAnchorRelativePoint"
 local DB_ANCHOR_OFFSET_X = "gcdBarAnchorOffsetX"
 local DB_ANCHOR_OFFSET_Y = "gcdBarAnchorOffsetY"
 local DB_HIDE_IN_PET_BATTLE = "gcdBarHideInPetBattle"
+local DB_STRATA = "gcdBarStrata"
 
 local DEFAULT_TEX = "Interface\\TargetingFrame\\UI-StatusBar"
+local SPARK_ATLAS = "XPBarAnim-OrangeSpark"
 local GetSpellCooldownInfo = (C_Spell and C_Spell.GetSpellCooldown) or GetSpellCooldown
 local GetTime = GetTime
-local BAR_SIZE_MIN = 6
+local BAR_WIDTH_MIN = 6
+local BAR_HEIGHT_MIN = 1
 local BAR_SIZE_MAX = 2000
+local STRATA_ORDER = { "BACKGROUND", "LOW", "MEDIUM", "HIGH", "DIALOG", "FULLSCREEN", "FULLSCREEN_DIALOG", "TOOLTIP" }
+local VALID_STRATA = {}
+for _, strata in ipairs(STRATA_ORDER) do
+	VALID_STRATA[strata] = true
+end
 
 local function getCachedMediaNames(mediaType)
 	if addon.functions and addon.functions.GetLSMMediaNames then
@@ -216,6 +227,8 @@ local function isVerticalFillDirection(value) return value == "UP" or value == "
 
 local function isReverseFillDirection(value) return value == "RIGHT" or value == "DOWN" end
 
+local function clamp01(value) return clamp(tonumber(value) or 0, 0, 1) end
+
 local function normalizeAnchorPoint(value, fallback)
 	if value and VALID_ANCHOR_POINTS[value] then return value end
 	if fallback and VALID_ANCHOR_POINTS[fallback] then return fallback end
@@ -226,6 +239,21 @@ local function normalizeAnchorRelativeFrame(value)
 	if value == ANCHOR_TARGET_PLAYER_CASTBAR or value == "PlayerCastingBarFrame" or value == EQOL_PLAYER_CASTBAR then return ANCHOR_TARGET_PLAYER_CASTBAR end
 	if type(value) == "string" and value ~= "" then return value end
 	return ANCHOR_TARGET_UI
+end
+
+local function normalizeStrataToken(value)
+	if type(value) ~= "string" or value == "" then return nil end
+	local token = string.upper(value)
+	if VALID_STRATA[token] then return token end
+	return nil
+end
+
+local function strataOptionsWithDefault()
+	local options = { { value = "", label = _G.DEFAULT or "Default" } }
+	for _, strata in ipairs(STRATA_ORDER) do
+		options[#options + 1] = { value = strata, label = strata }
+	end
+	return options
 end
 
 local function normalizeAnchorOffset(value, fallback)
@@ -266,9 +294,9 @@ local function resolvePlayerCastbarFrame()
 	return UIParent, false, wantsCustom
 end
 
-function GCDBar:GetWidth() return clamp(getValue(DB_WIDTH, defaults.width), BAR_SIZE_MIN, BAR_SIZE_MAX) end
+function GCDBar:GetWidth() return clamp(getValue(DB_WIDTH, defaults.width), BAR_WIDTH_MIN, BAR_SIZE_MAX) end
 
-function GCDBar:GetHeight() return clamp(getValue(DB_HEIGHT, defaults.height), BAR_SIZE_MIN, BAR_SIZE_MAX) end
+function GCDBar:GetHeight() return clamp(getValue(DB_HEIGHT, defaults.height), BAR_HEIGHT_MIN, BAR_SIZE_MAX) end
 
 function GCDBar:GetTextureKey()
 	local key = getValue(DB_TEXTURE, defaults.texture)
@@ -277,6 +305,8 @@ function GCDBar:GetTextureKey()
 end
 
 function GCDBar:GetColor() return normalizeColor(getValue(DB_COLOR, defaults.color), defaults.color) end
+
+function GCDBar:GetSparkEnabled() return getValue(DB_SPARK_ENABLED, defaults.sparkEnabled) == true end
 
 function GCDBar:GetBackgroundEnabled() return getValue(DB_BG_ENABLED, defaults.bgEnabled) == true end
 
@@ -326,6 +356,8 @@ function GCDBar:GetAnchorOffsetY() return normalizeAnchorOffset(getValue(DB_ANCH
 
 function GCDBar:GetHideInPetBattle() return shouldHideInPetBattleForGCD() end
 
+function GCDBar:GetStrata() return normalizeStrataToken(getValue(DB_STRATA, defaults.strata)) end
+
 function GCDBar:AnchorUsesUIParent() return self:GetAnchorRelativeFrame() == ANCHOR_TARGET_UI end
 
 function GCDBar:AnchorUsesMatchedWidth() return self:GetAnchorMatchWidth() and not self:AnchorUsesUIParent() end
@@ -360,6 +392,42 @@ function GCDBar:ResolveAnchorFrame()
 	return UIParent
 end
 
+local function cancelAnchorRefreshTicker()
+	if GCDBar._anchorRefreshTicker then GCDBar._anchorRefreshTicker:Cancel() end
+	GCDBar._anchorRefreshTicker = nil
+	GCDBar._anchorRefreshTarget = nil
+	GCDBar._anchorRefreshPasses = nil
+end
+
+local function onAnchorRefreshTick()
+	local desired = GCDBar._anchorRefreshTarget
+	if not desired then
+		cancelAnchorRefreshTicker()
+		return
+	end
+
+	GCDBar._anchorRefreshPasses = (GCDBar._anchorRefreshPasses or 0) + 1
+	if GCDBar:GetAnchorRelativeFrame() ~= desired then
+		cancelAnchorRefreshTicker()
+		return
+	end
+
+	if desired == ANCHOR_TARGET_PLAYER_CASTBAR then
+		local frame, usingCustom, wantsCustom = resolvePlayerCastbarFrame()
+		if frame and (not wantsCustom or usingCustom) then
+			cancelAnchorRefreshTicker()
+			GCDBar:RefreshAnchor()
+			return
+		end
+	elseif _G and _G[desired] then
+		cancelAnchorRefreshTicker()
+		GCDBar:RefreshAnchor()
+		return
+	end
+
+	if (GCDBar._anchorRefreshPasses or 0) >= 25 then cancelAnchorRefreshTicker() end
+end
+
 function GCDBar:ScheduleAnchorRefresh(target)
 	if not (C_Timer and C_Timer.NewTicker) then return end
 	local desired = normalizeAnchorRelativeFrame(target or self:GetAnchorRelativeFrame())
@@ -367,54 +435,18 @@ function GCDBar:ScheduleAnchorRefresh(target)
 
 	if self._anchorRefreshTicker then
 		if self._anchorRefreshTarget == desired then return end
-		self._anchorRefreshTicker:Cancel()
-		self._anchorRefreshTicker = nil
+		cancelAnchorRefreshTicker()
 	end
 
 	self._anchorRefreshTarget = desired
-	local tries = 0
-	self._anchorRefreshTicker = C_Timer.NewTicker(0.2, function()
-		tries = tries + 1
-		if self:GetAnchorRelativeFrame() ~= desired then
-			if self._anchorRefreshTicker then self._anchorRefreshTicker:Cancel() end
-			self._anchorRefreshTicker = nil
-			self._anchorRefreshTarget = nil
-			return
-		end
-
-		if desired == ANCHOR_TARGET_PLAYER_CASTBAR then
-			local frame, usingCustom, wantsCustom = resolvePlayerCastbarFrame()
-			if frame and (not wantsCustom or usingCustom) then
-				if self._anchorRefreshTicker then self._anchorRefreshTicker:Cancel() end
-				self._anchorRefreshTicker = nil
-				self._anchorRefreshTarget = nil
-				self:RefreshAnchor()
-				return
-			end
-		elseif _G and _G[desired] then
-			if self._anchorRefreshTicker then self._anchorRefreshTicker:Cancel() end
-			self._anchorRefreshTicker = nil
-			self._anchorRefreshTarget = nil
-			self:RefreshAnchor()
-			return
-		end
-
-		if tries >= 25 then
-			if self._anchorRefreshTicker then self._anchorRefreshTicker:Cancel() end
-			self._anchorRefreshTicker = nil
-			self._anchorRefreshTarget = nil
-		end
-	end)
+	self._anchorRefreshPasses = 0
+	self._anchorRefreshTicker = C_Timer.NewTicker(0.2, onAnchorRefreshTick)
 end
 
 function GCDBar:RefreshAnchor()
 	if self._refreshingAnchor then return end
 	local target = self:GetAnchorRelativeFrame()
-	if self._anchorRefreshTicker and (target == ANCHOR_TARGET_UI or self._anchorRefreshTarget ~= target) then
-		self._anchorRefreshTicker:Cancel()
-		self._anchorRefreshTicker = nil
-		self._anchorRefreshTarget = nil
-	end
+	if self._anchorRefreshTicker and (target == ANCHOR_TARGET_UI or self._anchorRefreshTarget ~= target) then cancelAnchorRefreshTicker() end
 	self._refreshingAnchor = true
 	if EditMode and EditMode.RefreshFrame then EditMode:RefreshFrame(EDITMODE_ID) end
 	self._refreshingAnchor = nil
@@ -444,7 +476,30 @@ end
 
 local widthMatchHookedFrames = {}
 local pendingWidthHookRetries = {}
+local widthHookRetryTimer
 local widthSyncQueued = false
+
+local function runDelayedMatchedWidthSync()
+	widthSyncQueued = false
+	if not (addon and addon.db and addon.db[DB_ENABLED] == true) then return end
+	GCDBar:ApplySize()
+	if EditMode and EditMode.RefreshFrame then EditMode:RefreshFrame(EDITMODE_ID) end
+end
+
+local function processPendingWidthHookRetries()
+	widthHookRetryTimer = nil
+	local pending = pendingWidthHookRetries
+	pendingWidthHookRetries = {}
+	for frameName in pairs(pending) do
+		if GCDBar and GCDBar.EnsureWidthSyncHook then GCDBar:EnsureWidthSyncHook(frameName) end
+	end
+end
+
+local function onWidthMatchGeometryChanged()
+	if GCDBar and GCDBar.AnchorUsesMatchedWidth and GCDBar:AnchorUsesMatchedWidth() then GCDBar:ScheduleMatchedWidthSync() end
+end
+
+local function onGCDBarEvent(_, event, ...) GCDBar:OnEvent(event, ...) end
 
 function GCDBar:ScheduleMatchedWidthSync()
 	if widthSyncQueued then return end
@@ -453,12 +508,7 @@ function GCDBar:ScheduleMatchedWidthSync()
 		return
 	end
 	widthSyncQueued = true
-	C_Timer.After(0, function()
-		widthSyncQueued = false
-		if not (addon and addon.db and addon.db[DB_ENABLED] == true) then return end
-		GCDBar:ApplySize()
-		if EditMode and EditMode.RefreshFrame then EditMode:RefreshFrame(EDITMODE_ID) end
-	end)
+	C_Timer.After(0, runDelayedMatchedWidthSync)
 end
 
 function GCDBar:EnsureWidthSyncHook(frameName)
@@ -468,20 +518,14 @@ function GCDBar:EnsureWidthSyncHook(frameName)
 	if not frame then
 		if C_Timer and C_Timer.After and not pendingWidthHookRetries[frameName] then
 			pendingWidthHookRetries[frameName] = true
-			C_Timer.After(1, function()
-				pendingWidthHookRetries[frameName] = nil
-				if GCDBar and GCDBar.EnsureWidthSyncHook then GCDBar:EnsureWidthSyncHook(frameName) end
-			end)
+			if not widthHookRetryTimer then widthHookRetryTimer = C_Timer.NewTimer(1, processPendingWidthHookRetries) end
 		end
 		return
 	end
 	if frame.HookScript then
-		local function onGeometryChanged()
-			if GCDBar and GCDBar.AnchorUsesMatchedWidth and GCDBar:AnchorUsesMatchedWidth() then GCDBar:ScheduleMatchedWidthSync() end
-		end
-		local okSize = pcall(frame.HookScript, frame, "OnSizeChanged", onGeometryChanged)
-		local okShow = pcall(frame.HookScript, frame, "OnShow", onGeometryChanged)
-		local okHide = pcall(frame.HookScript, frame, "OnHide", onGeometryChanged)
+		local okSize = pcall(frame.HookScript, frame, "OnSizeChanged", onWidthMatchGeometryChanged)
+		local okShow = pcall(frame.HookScript, frame, "OnShow", onWidthMatchGeometryChanged)
+		local okHide = pcall(frame.HookScript, frame, "OnHide", onWidthMatchGeometryChanged)
 		if okSize or okShow or okHide then widthMatchHookedFrames[frameName] = true end
 	end
 end
@@ -504,7 +548,88 @@ function GCDBar:GetResolvedWidth()
 	if not (relativeFrame and relativeFrame.GetWidth) then return width end
 	local relativeWidth = tonumber(relativeFrame:GetWidth()) or 0
 	if relativeWidth <= 0 then return width end
-	return math.max(BAR_SIZE_MIN, relativeWidth)
+	return math.max(BAR_WIDTH_MIN, relativeWidth)
+end
+
+function GCDBar:HideSpark()
+	if self.frame and self.frame.spark then self.frame.spark:Hide() end
+end
+
+function GCDBar:UpdateSpark(value)
+	if not (self.frame and self.frame.spark) then return end
+	local spark = self.frame.spark
+	if not self:GetSparkEnabled() then
+		spark:Hide()
+		return
+	end
+	if not (self.previewing or self._gcdActive) then
+		spark:Hide()
+		return
+	end
+
+	local width = tonumber(self.frame:GetWidth()) or 0
+	local height = tonumber(self.frame:GetHeight()) or 0
+	if width <= 0 or height <= 0 then
+		spark:Hide()
+		return
+	end
+
+	local progress = value
+	if progress == nil then
+		if self.previewing then
+			progress = 0.5
+		elseif self.frame.GetValue then
+			progress = self.frame:GetValue()
+		end
+	end
+	progress = clamp01(progress)
+
+	local fillDirection = self:GetFillDirection()
+	local x = width * 0.5
+	local y = height * 0.5
+	if isVerticalFillDirection(fillDirection) then
+		if fillDirection == "DOWN" then
+			y = height * progress
+		else
+			y = height * (1 - progress)
+		end
+	else
+		if fillDirection == "RIGHT" then
+			x = width * (1 - progress)
+		else
+			x = width * progress
+		end
+	end
+	spark:ClearAllPoints()
+	spark:SetPoint("CENTER", self.frame, "TOPLEFT", x, -y)
+	spark:Show()
+end
+
+function GCDBar:ApplySparkAppearance()
+	if not (self.frame and self.frame.spark) then return end
+	local spark = self.frame.spark
+	if not self:GetSparkEnabled() then
+		spark:Hide()
+		return
+	end
+	if spark.SetAtlas then
+		local ok = spark:SetAtlas(SPARK_ATLAS, true)
+		if ok == false then
+			spark:Hide()
+			return
+		end
+	end
+	spark:SetBlendMode("ADD")
+	spark:SetAlpha(1)
+	self:UpdateSpark()
+end
+
+function GCDBar:ApplyStrata()
+	if not self.frame then return end
+	local strata = self:GetStrata()
+		or ((self.frame.GetParent and self.frame:GetParent() and self.frame:GetParent().GetFrameStrata and self.frame:GetParent():GetFrameStrata()) or self.frame:GetFrameStrata() or "MEDIUM")
+	if self.frame.GetFrameStrata and self.frame.SetFrameStrata and self.frame:GetFrameStrata() ~= strata then self.frame:SetFrameStrata(strata) end
+	if self.frame.border and self.frame.border.GetFrameStrata and self.frame.border.SetFrameStrata and self.frame.border:GetFrameStrata() ~= strata then self.frame.border:SetFrameStrata(strata) end
 end
 
 function GCDBar:ApplyAppearance()
@@ -553,6 +678,8 @@ function GCDBar:ApplyAppearance()
 			self.frame.border:Show()
 		end
 	end
+
+	self:ApplySparkAppearance()
 end
 
 function GCDBar:OnMediaRegistered(mediaType, mediaKey)
@@ -588,9 +715,11 @@ function GCDBar:ApplySize()
 	local width = self:GetResolvedWidth()
 	local height = self:GetHeight()
 	self.frame:SetSize(width, height)
+	self:ApplyStrata()
 	if self.frame.bg then self.frame.bg:SetAllPoints(self.frame) end
 	if self.frame.editBg then self.frame.editBg:SetAllPoints(self.frame) end
 	if self.frame.border then self.frame.border:SetAllPoints(self.frame) end
+	self:UpdateSpark()
 end
 
 function GCDBar:EnsureFrame()
@@ -610,6 +739,11 @@ function GCDBar:EnsureFrame()
 	editBg:SetColorTexture(0.1, 0.6, 0.6, 0.2)
 	editBg:Hide()
 	bar.editBg = editBg
+
+	local spark = bar:CreateTexture(nil, "OVERLAY")
+	spark:SetBlendMode("ADD")
+	spark:Hide()
+	bar.spark = spark
 
 	local border = CreateFrame("Frame", nil, bar, "BackdropTemplate")
 	border:SetAllPoints(bar)
@@ -639,10 +773,12 @@ function GCDBar:ShowEditModeHint(show)
 		self.frame:SetMinMaxValues(0, 1)
 		self.frame:SetValue(1)
 		self.frame:Show()
+		self:UpdateSpark(0.5)
 	else
 		if self.frame.editBg then self.frame.editBg:Hide() end
 		self.frame.label:Hide()
 		self.previewing = nil
+		self:HideSpark()
 		self:UpdateGCD()
 	end
 end
@@ -654,6 +790,7 @@ function GCDBar:StopTimer()
 	self._gcdDuration = nil
 	self._gcdRate = nil
 	if self.frame then self.frame:Hide() end
+	self:HideSpark()
 end
 
 function GCDBar:UpdateTimer()
@@ -681,6 +818,7 @@ function GCDBar:UpdateTimer()
 	self.frame:SetMinMaxValues(0, 1)
 	self.frame:SetValue(value)
 	self.frame:Show()
+	self:UpdateSpark(value)
 end
 
 function GCDBar:UpdateGCD()
@@ -726,7 +864,7 @@ function GCDBar:RegisterEvents()
 	frame:RegisterEvent("SPELL_UPDATE_COOLDOWN")
 	frame:RegisterEvent("PET_BATTLE_OPENING_START")
 	frame:RegisterEvent("PET_BATTLE_CLOSE")
-	frame:SetScript("OnEvent", function(_, event, ...) GCDBar:OnEvent(event, ...) end)
+	frame:SetScript("OnEvent", onGCDBarEvent)
 	self.eventsRegistered = true
 end
 
@@ -744,10 +882,12 @@ local editModeRegistered = false
 function GCDBar:ApplyLayoutData(data)
 	if not data or not addon.db then return end
 
-	local width = clamp(data.width or defaults.width, BAR_SIZE_MIN, BAR_SIZE_MAX)
-	local height = clamp(data.height or defaults.height, BAR_SIZE_MIN, BAR_SIZE_MAX)
+	local width = clamp(data.width or defaults.width, BAR_WIDTH_MIN, BAR_SIZE_MAX)
+	local height = clamp(data.height or defaults.height, BAR_HEIGHT_MIN, BAR_SIZE_MAX)
 	local texture = data.texture or defaults.texture
 	local r, g, b, a = normalizeColor(data.color or defaults.color, defaults.color)
+	local sparkEnabled = addon.db[DB_SPARK_ENABLED] == true
+	if data.sparkEnabled ~= nil then sparkEnabled = data.sparkEnabled == true end
 	local bgEnabled = data.bgEnabled == true
 	local bgTexture = data.bgTexture or defaults.bgTexture
 	local bgr, bgg, bgb, bga = normalizeColor(data.bgColor or defaults.bgColor, defaults.bgColor)
@@ -771,11 +911,13 @@ function GCDBar:ApplyLayoutData(data)
 	local anchorOffsetY = normalizeAnchorOffset(data.y ~= nil and data.y or addon.db[DB_ANCHOR_OFFSET_Y], defaults.anchorOffsetY)
 	local hideInPetBattle = addon.db[DB_HIDE_IN_PET_BATTLE] == true
 	if data.hideInPetBattle ~= nil then hideInPetBattle = data.hideInPetBattle == true end
+	local strata = normalizeStrataToken(data.strata or addon.db[DB_STRATA] or defaults.strata)
 
 	addon.db[DB_WIDTH] = width
 	addon.db[DB_HEIGHT] = height
 	addon.db[DB_TEXTURE] = texture
 	addon.db[DB_COLOR] = { r = r, g = g, b = b, a = a }
+	addon.db[DB_SPARK_ENABLED] = sparkEnabled and true or false
 	addon.db[DB_BG_ENABLED] = bgEnabled
 	addon.db[DB_BG_TEXTURE] = bgTexture
 	addon.db[DB_BG_COLOR] = { r = bgr, g = bgg, b = bgb, a = bga }
@@ -794,6 +936,7 @@ function GCDBar:ApplyLayoutData(data)
 	addon.db[DB_ANCHOR_OFFSET_X] = anchorOffsetX
 	addon.db[DB_ANCHOR_OFFSET_Y] = anchorOffsetY
 	addon.db[DB_HIDE_IN_PET_BATTLE] = hideInPetBattle and true or false
+	addon.db[DB_STRATA] = strata
 
 	self:ApplySize()
 	self:ApplyAppearance()
@@ -807,11 +950,11 @@ local function applySetting(field, value)
 	local skipEditValue
 
 	if field == "width" then
-		local width = clamp(value, BAR_SIZE_MIN, BAR_SIZE_MAX)
+		local width = clamp(value, BAR_WIDTH_MIN, BAR_SIZE_MAX)
 		addon.db[DB_WIDTH] = width
 		value = width
 	elseif field == "height" then
-		local height = clamp(value, BAR_SIZE_MIN, BAR_SIZE_MAX)
+		local height = clamp(value, BAR_HEIGHT_MIN, BAR_SIZE_MAX)
 		addon.db[DB_HEIGHT] = height
 		value = height
 	elseif field == "texture" then
@@ -822,6 +965,10 @@ local function applySetting(field, value)
 		local r, g, b, a = normalizeColor(value, defaults.color)
 		addon.db[DB_COLOR] = { r = r, g = g, b = b, a = a }
 		value = addon.db[DB_COLOR]
+	elseif field == "sparkEnabled" then
+		local enabled = value == true
+		addon.db[DB_SPARK_ENABLED] = enabled and true or false
+		value = enabled
 	elseif field == "bgEnabled" then
 		local enabled = value == true
 		addon.db[DB_BG_ENABLED] = enabled
@@ -918,6 +1065,10 @@ local function applySetting(field, value)
 		local enabled = value == true
 		addon.db[DB_HIDE_IN_PET_BATTLE] = enabled and true or false
 		value = enabled
+	elseif field == "strata" then
+		local strata = normalizeStrataToken(value)
+		addon.db[DB_STRATA] = strata
+		value = strata or ""
 	end
 
 	if not skipEditValue and EditMode and EditMode.SetValue then EditMode:SetValue(EDITMODE_ID, editField, value, nil, true) end
@@ -946,8 +1097,8 @@ function GCDBar:RegisterEditMode()
 				entries[#entries + 1] = { key = key, label = label or key }
 			end
 
-			add(ANCHOR_TARGET_UI, L["gcdBarAnchorScreen"] or "Screen (UIParent)", true)
-			add(ANCHOR_TARGET_PLAYER_CASTBAR, L["gcdBarAnchorPlayerCastbar"] or "Player Castbar", true)
+			add(ANCHOR_TARGET_UI, L["Screen (UIParent)"] or "Screen (UIParent)", true)
+			add(ANCHOR_TARGET_PLAYER_CASTBAR, L["Player Castbar"] or "Player Castbar", true)
 
 			add("PlayerFrame", _G.HUD_EDIT_MODE_PLAYER_FRAME_LABEL or PLAYER or "Player Frame")
 			add("TargetFrame", _G.HUD_EDIT_MODE_TARGET_FRAME_LABEL or TARGET or "Target Frame")
@@ -997,7 +1148,7 @@ function GCDBar:RegisterEditMode()
 
 		settings = {
 			{
-				name = L["gcdBarAnchor"] or "Anchor to",
+				name = L["Anchor to"] or "Anchor to",
 				kind = SettingType.Dropdown,
 				field = "anchorRelativeFrame",
 				height = 180,
@@ -1010,7 +1161,7 @@ function GCDBar:RegisterEditMode()
 				end,
 			},
 			{
-				name = L["gcdBarAnchorPoint"] or "Anchor point",
+				name = L["Anchor point"] or "Anchor point",
 				kind = SettingType.Dropdown,
 				field = "anchorPoint",
 				height = 180,
@@ -1023,7 +1174,7 @@ function GCDBar:RegisterEditMode()
 				end,
 			},
 			{
-				name = L["gcdBarAnchorRelativePoint"] or "Relative point",
+				name = L["Relative point"] or "Relative point",
 				kind = SettingType.Dropdown,
 				field = "anchorRelativePoint",
 				height = 180,
@@ -1036,7 +1187,7 @@ function GCDBar:RegisterEditMode()
 				end,
 			},
 			{
-				name = L["gcdBarAnchorOffsetX"] or "X Offset",
+				name = L["X Offset"] or "X Offset",
 				kind = SettingType.Slider,
 				field = "anchorOffsetX",
 				minValue = -1000,
@@ -1047,7 +1198,7 @@ function GCDBar:RegisterEditMode()
 				set = function(_, value) applySetting("anchorOffsetX", value) end,
 			},
 			{
-				name = L["gcdBarAnchorOffsetY"] or "Y Offset",
+				name = L["Y Offset"] or "Y Offset",
 				kind = SettingType.Slider,
 				field = "anchorOffsetY",
 				minValue = -1000,
@@ -1058,7 +1209,7 @@ function GCDBar:RegisterEditMode()
 				set = function(_, value) applySetting("anchorOffsetY", value) end,
 			},
 			{
-				name = L["gcdBarAnchorMatchWidth"] or "Match relative frame width",
+				name = L["Match relative frame width"] or "Match relative frame width",
 				kind = SettingType.Checkbox,
 				field = "anchorMatchWidth",
 				default = defaults.anchorMatchRelativeWidth == true,
@@ -1067,7 +1218,7 @@ function GCDBar:RegisterEditMode()
 				isEnabled = function() return not GCDBar:AnchorUsesUIParent() end,
 			},
 			{
-				name = L["gcdBarHideInPetBattle"] or "Hide in pet battles",
+				name = L["Hide in pet battles"] or "Hide in pet battles",
 				kind = SettingType.Checkbox,
 				field = "hideInPetBattle",
 				default = defaults.hideInPetBattle == true,
@@ -1075,11 +1226,25 @@ function GCDBar:RegisterEditMode()
 				set = function(_, value) applySetting("hideInPetBattle", value) end,
 			},
 			{
-				name = L["gcdBarWidth"] or "Bar width",
+				name = L["Frame strata"] or "Frame strata",
+				kind = SettingType.Dropdown,
+				field = "strata",
+				height = 180,
+				default = defaults.strata or "",
+				get = function() return GCDBar:GetStrata() or "" end,
+				set = function(_, value) applySetting("strata", value) end,
+				generator = function(_, root)
+					for _, option in ipairs(strataOptionsWithDefault()) do
+						root:CreateRadio(option.label, function() return (GCDBar:GetStrata() or "") == option.value end, function() applySetting("strata", option.value) end)
+					end
+				end,
+			},
+			{
+				name = L["Bar width"] or "Bar width",
 				kind = SettingType.Slider,
 				field = "width",
 				default = defaults.width,
-				minValue = BAR_SIZE_MIN,
+				minValue = BAR_WIDTH_MIN,
 				maxValue = BAR_SIZE_MAX,
 				valueStep = 1,
 				allowInput = true,
@@ -1089,11 +1254,11 @@ function GCDBar:RegisterEditMode()
 				isEnabled = function() return not GCDBar:AnchorUsesMatchedWidth() end,
 			},
 			{
-				name = L["gcdBarHeight"] or "Bar height",
+				name = L["Bar height"] or "Bar height",
 				kind = SettingType.Slider,
 				field = "height",
 				default = defaults.height,
-				minValue = BAR_SIZE_MIN,
+				minValue = BAR_HEIGHT_MIN,
 				maxValue = BAR_SIZE_MAX,
 				valueStep = 1,
 				allowInput = true,
@@ -1102,7 +1267,7 @@ function GCDBar:RegisterEditMode()
 				formatter = function(value) return tostring(math.floor((tonumber(value) or 0) + 0.5)) end,
 			},
 			{
-				name = L["gcdBarTexture"] or "Bar texture",
+				name = L["Bar texture"] or "Bar texture",
 				kind = SettingType.Dropdown,
 				field = "texture",
 				height = 180,
@@ -1115,7 +1280,7 @@ function GCDBar:RegisterEditMode()
 				end,
 			},
 			{
-				name = L["gcdBarColor"] or "Bar color",
+				name = L["Bar color"] or "Bar color",
 				kind = SettingType.Color,
 				field = "color",
 				default = defaults.color,
@@ -1127,7 +1292,15 @@ function GCDBar:RegisterEditMode()
 				set = function(_, value) applySetting("color", value) end,
 			},
 			{
-				name = L["gcdBarBackgroundEnabled"] or "Use background",
+				name = L["gcdBarSparkEnabled"] or "Show spark",
+				kind = SettingType.Checkbox,
+				field = "sparkEnabled",
+				default = defaults.sparkEnabled == true,
+				get = function() return GCDBar:GetSparkEnabled() end,
+				set = function(_, value) applySetting("sparkEnabled", value) end,
+			},
+			{
+				name = L["Use background"] or "Use background",
 				kind = SettingType.Checkbox,
 				field = "bgEnabled",
 				default = defaults.bgEnabled == true,
@@ -1135,7 +1308,7 @@ function GCDBar:RegisterEditMode()
 				set = function(_, value) applySetting("bgEnabled", value) end,
 			},
 			{
-				name = L["gcdBarBackgroundTexture"] or "Background texture",
+				name = L["Background texture"] or "Background texture",
 				kind = SettingType.Dropdown,
 				field = "bgTexture",
 				height = 180,
@@ -1149,7 +1322,7 @@ function GCDBar:RegisterEditMode()
 				isEnabled = function() return GCDBar:GetBackgroundEnabled() end,
 			},
 			{
-				name = L["gcdBarBackgroundColor"] or "Background color",
+				name = L["Background color"] or "Background color",
 				kind = SettingType.Color,
 				field = "bgColor",
 				default = defaults.bgColor,
@@ -1162,7 +1335,7 @@ function GCDBar:RegisterEditMode()
 				isEnabled = function() return GCDBar:GetBackgroundEnabled() end,
 			},
 			{
-				name = L["gcdBarBorderEnabled"] or "Use border",
+				name = L["Use border"] or "Use border",
 				kind = SettingType.Checkbox,
 				field = "borderEnabled",
 				default = defaults.borderEnabled == true,
@@ -1170,7 +1343,7 @@ function GCDBar:RegisterEditMode()
 				set = function(_, value) applySetting("borderEnabled", value) end,
 			},
 			{
-				name = L["gcdBarBorderTexture"] or "Border texture",
+				name = L["Border texture"] or "Border texture",
 				kind = SettingType.Dropdown,
 				field = "borderTexture",
 				height = 180,
@@ -1184,7 +1357,7 @@ function GCDBar:RegisterEditMode()
 				isEnabled = function() return GCDBar:GetBorderEnabled() end,
 			},
 			{
-				name = L["gcdBarBorderSize"] or "Border size",
+				name = L["Border size"] or "Border size",
 				kind = SettingType.Slider,
 				field = "borderSize",
 				default = defaults.borderSize,
@@ -1197,7 +1370,7 @@ function GCDBar:RegisterEditMode()
 				isEnabled = function() return GCDBar:GetBorderEnabled() end,
 			},
 			{
-				name = L["gcdBarBorderOffset"] or "Border offset",
+				name = L["Border offset"] or "Border offset",
 				kind = SettingType.Slider,
 				field = "borderOffset",
 				default = defaults.borderOffset,
@@ -1210,7 +1383,7 @@ function GCDBar:RegisterEditMode()
 				isEnabled = function() return GCDBar:GetBorderEnabled() end,
 			},
 			{
-				name = L["gcdBarBorderColor"] or "Border color",
+				name = EMBLEM_BORDER_COLOR,
 				kind = SettingType.Color,
 				field = "borderColor",
 				default = defaults.borderColor,
@@ -1231,8 +1404,8 @@ function GCDBar:RegisterEditMode()
 				set = function(_, value) applySetting("progressMode", value) end,
 				generator = function(_, root)
 					local opts = {
-						{ value = "REMAINING", label = L["gcdBarProgressDeplete"] or "Deplete (remaining time)" },
-						{ value = "ELAPSED", label = L["gcdBarProgressFill"] or "Fill (elapsed time)" },
+						{ value = "REMAINING", label = L["Deplete (remaining time)"] or "Deplete (remaining time)" },
+						{ value = "ELAPSED", label = L["Fill (elapsed time)"] or "Fill (elapsed time)" },
 					}
 					for _, option in ipairs(opts) do
 						root:CreateRadio(option.label, function() return GCDBar:GetProgressMode() == option.value end, function() applySetting("progressMode", option.value) end)
@@ -1240,7 +1413,7 @@ function GCDBar:RegisterEditMode()
 				end,
 			},
 			{
-				name = L["gcdBarFillDirection"] or "Fill direction",
+				name = L["Fill direction"] or "Fill direction",
 				kind = SettingType.Dropdown,
 				field = "fillDirection",
 				height = 140,
@@ -1248,10 +1421,10 @@ function GCDBar:RegisterEditMode()
 				set = function(_, value) applySetting("fillDirection", value) end,
 				generator = function(_, root)
 					local opts = {
-						{ value = "LEFT", label = L["gcdBarFillLeft"] or "Left to right" },
-						{ value = "RIGHT", label = L["gcdBarFillRight"] or "Right to left" },
-						{ value = "UP", label = L["gcdBarFillUp"] or "Bottom to top" },
-						{ value = "DOWN", label = L["gcdBarFillDown"] or "Top to bottom" },
+						{ value = "LEFT", label = L["Left to right"] or "Left to right" },
+						{ value = "RIGHT", label = L["Right to left"] or "Right to left" },
+						{ value = "UP", label = L["Bottom to top"] or "Bottom to top" },
+						{ value = "DOWN", label = L["Top to bottom"] or "Top to bottom" },
 					}
 					for _, option in ipairs(opts) do
 						root:CreateRadio(option.label, function() return GCDBar:GetFillDirection() == option.value end, function() applySetting("fillDirection", option.value) end)
@@ -1270,6 +1443,7 @@ function GCDBar:RegisterEditMode()
 		record.width = self:GetWidth()
 		record.height = self:GetHeight()
 		record.texture = self:GetTextureKey()
+		record.sparkEnabled = self:GetSparkEnabled()
 		record.bgEnabled = self:GetBackgroundEnabled()
 		record.bgTexture = self:GetBackgroundTextureKey()
 		do
@@ -1289,6 +1463,7 @@ function GCDBar:RegisterEditMode()
 		record.anchorRelativeFrame = self:GetAnchorRelativeFrame()
 		record.anchorMatchWidth = self:GetAnchorMatchWidth()
 		record.hideInPetBattle = self:GetHideInPetBattle()
+		record.strata = self:GetStrata() or ""
 		do
 			local r, g, b, a = self:GetColor()
 			record.color = { r = r, g = g, b = b, a = a }
@@ -1306,6 +1481,7 @@ function GCDBar:RegisterEditMode()
 			width = self:GetWidth(),
 			height = self:GetHeight(),
 			texture = self:GetTextureKey(),
+			sparkEnabled = self:GetSparkEnabled(),
 			bgEnabled = self:GetBackgroundEnabled(),
 			bgTexture = self:GetBackgroundTextureKey(),
 			bgColor = (function()
@@ -1325,6 +1501,7 @@ function GCDBar:RegisterEditMode()
 			anchorRelativeFrame = self:GetAnchorRelativeFrame(),
 			anchorMatchWidth = self:GetAnchorMatchWidth(),
 			hideInPetBattle = self:GetHideInPetBattle(),
+			strata = self:GetStrata() or "",
 			color = (function()
 				local r, g, b, a = self:GetColor()
 				return { r = r, g = g, b = b, a = a }
@@ -1367,10 +1544,7 @@ function GCDBar:OnSettingChanged(enabled)
 		self:UnregisterEvents()
 		self:StopTimer()
 		if self.frame then self.frame:Hide() end
-		if self._anchorRefreshTicker then
-			self._anchorRefreshTicker:Cancel()
-			self._anchorRefreshTicker = nil
-		end
+		cancelAnchorRefreshTicker()
 	end
 
 	if EditMode and EditMode.RefreshFrame then EditMode:RefreshFrame(EDITMODE_ID) end

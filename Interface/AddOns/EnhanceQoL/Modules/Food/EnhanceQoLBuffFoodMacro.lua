@@ -7,7 +7,7 @@ else
 	error(parentAddonName .. " is not loaded")
 end
 
-local L = LibStub("AceLocale-3.0"):GetLocale("EnhanceQoL_DrinkMacro")
+local L = LibStub("AceLocale-3.0"):GetLocale("EnhanceQoL")
 
 local UnitAffectingCombat = UnitAffectingCombat
 local InCombatLockdown = InCombatLockdown
@@ -98,11 +98,15 @@ local function syncEventRegistration()
 	if addon.db.buffFoodMacroEnabled then
 		frame:RegisterEvent("BAG_UPDATE_DELAYED")
 		frame:RegisterEvent("PLAYER_LEVEL_UP")
+		frame:RegisterEvent("PLAYER_ROLES_ASSIGNED")
+		frame:RegisterEvent("ROLE_CHANGED_INFORM")
 		frame:RegisterEvent("PLAYER_SPECIALIZATION_CHANGED")
 		frame:RegisterEvent("ACTIVE_PLAYER_SPECIALIZATION_CHANGED")
 	else
 		frame:UnregisterEvent("BAG_UPDATE_DELAYED")
 		frame:UnregisterEvent("PLAYER_LEVEL_UP")
+		frame:UnregisterEvent("PLAYER_ROLES_ASSIGNED")
+		frame:UnregisterEvent("ROLE_CHANGED_INFORM")
 		frame:UnregisterEvent("PLAYER_SPECIALIZATION_CHANGED")
 		frame:UnregisterEvent("ACTIVE_PLAYER_SPECIALIZATION_CHANGED")
 	end
@@ -138,6 +142,8 @@ frame:SetScript("OnEvent", function(_, event, arg1)
 		if not UnitAffectingCombat("player") and addon.BuffFoods and addon.BuffFoods.functions and addon.BuffFoods.functions.updateBuffFoodMacro then
 			addon.BuffFoods.functions.updateBuffFoodMacro(false)
 		end
+	elseif event == "PLAYER_ROLES_ASSIGNED" or event == "ROLE_CHANGED_INFORM" then
+		if addon.BuffFoods and addon.BuffFoods.functions and addon.BuffFoods.functions.updateBuffFoodMacro then addon.BuffFoods.functions.updateBuffFoodMacro(false) end
 	elseif event == "PLAYER_SPECIALIZATION_CHANGED" then
 		if arg1 and arg1 ~= "player" then return end
 		if addon.BuffFoods and addon.BuffFoods.functions and addon.BuffFoods.functions.updateBuffFoodMacro then addon.BuffFoods.functions.updateBuffFoodMacro(false) end

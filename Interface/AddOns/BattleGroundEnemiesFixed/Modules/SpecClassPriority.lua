@@ -26,6 +26,63 @@ local locTypePriority = {
   POSSESS = 9,
 }
 
+-- Early-out filter for UNIT_AURA: checks whether the aura update contains
+-- any crowd-control-related changes worth rebuilding for. Skips irrelevant
+-- aura churn (food buffs, procs, HoTs, etc.) to avoid unnecessary work.
+-- Returns true to proceed with UpdateLossOfControl, false to skip.
+local function IsInterestedInUpdate(unitID, updateInfo, existingPriorityAuras)
+  if not updateInfo or updateInfo.isFullUpdate then
+    return true
+  end
+
+  -- Added auras: pass the CC filter?
+  -- IsAuraFilteredOutByInstanceID may return secret booleans, so pcall it.
+  -- On any failure, assume we're interested (safe fallback).
+  if updateInfo.addedAuras then
+    for _, aura in pairs(updateInfo.addedAuras) do
+      local id = aura.auraInstanceID
+      if id then
+        if not C_UnitAuras.IsAuraFilteredOutByInstanceID then
+          return true
+        end
+        local ok, filtered = pcall(C_UnitAuras.IsAuraFilteredOutByInstanceID, unitID, id, "HARMFUL|CROWD_CONTROL")
+        if not ok or not filtered then
+          return true
+        end
+      end
+    end
+  end
+
+  -- Updated auras: pass the CC filter?
+  if updateInfo.updatedAuraInstanceIDs then
+    for _, id in pairs(updateInfo.updatedAuraInstanceIDs) do
+      if id then
+        if not C_UnitAuras.IsAuraFilteredOutByInstanceID then
+          return true
+        end
+        local ok, filtered = pcall(C_UnitAuras.IsAuraFilteredOutByInstanceID, unitID, id, "HARMFUL|CROWD_CONTROL")
+        if not ok or not filtered then
+          return true
+        end
+      end
+    end
+  end
+
+  -- Removed auras: was any of them a CC we were tracking?
+  -- (Removed auras are already gone so the filter API can't be used — match by ID instead.)
+  if updateInfo.removedAuraInstanceIDs and next(updateInfo.removedAuraInstanceIDs) ~= nil then
+    for _, id in pairs(updateInfo.removedAuraInstanceIDs) do
+      for _, entry in ipairs(existingPriorityAuras) do
+        if entry.auraInstanceID == id then
+          return true
+        end
+      end
+    end
+  end
+
+  return false
+end
+
 local generalDefaults = {
   showSpecIfExists = true,
   showHighestPriority = true,
@@ -121,9 +178,15 @@ local function attachToPlayerButton(playerButton)
   frame.PriorityIcon = frame:CreateTexture(nil, "BORDER", nil, 3)
   frame.PriorityIcon:SetAllPoints()
   frame.Cooldown = BattleGroundEnemies.MyCreateCooldown(frame)
-  frame.Cooldown:SetScript("OnCooldownDone", function(self)
-    frame:Update()
-  end)
+  -- Aura display timing adjusts the countdown to be appropriate for buff/debuff
+  -- durations rather than ability cooldowns (matches Blizzard's arena CC debuff display).
+  if frame.Cooldown.SetUseAuraDisplayTime then
+    frame.Cooldown:SetUseAuraDisplayTime(true)
+  end
+  -- No OnCooldownDone handler — matches MiniCC's approach. CC cleanup is
+  -- driven by UNIT_AURA events (which fire when the aura is removed) and
+  -- the polling ticker as a safety net. OnCooldownDone can fire prematurely
+  -- with DurationObjects and race with SetCooldownFromDurationObject.
 
   frame:HookScript("OnLeave", function(self)
     if GameTooltip:IsOwned(self) then
@@ -190,13 +253,13 @@ local function attachToPlayerButton(playerButton)
     local highestPrioritySpell
     local currentTime = GetTime()
 
+    -- PriorityAuras are rebuilt from C_UnitAuras.GetUnitAuras each time
+    -- UpdateLossOfControl runs, so any entry in the list is currently active.
     local priorityAuras = self.PriorityAuras
     for i = 1, #priorityAuras do
       local priorityAura = priorityAuras[i]
-      if priorityAura.expirationTime > currentTime then
-        if not highestPrioritySpell or (priorityAura.Priority > highestPrioritySpell.Priority) then
-          highestPrioritySpell = priorityAura
-        end
+      if not highestPrioritySpell or (priorityAura.Priority > highestPrioritySpell.Priority) then
+        highestPrioritySpell = priorityAura
       end
     end
     if frame.ActiveInterrupt then
@@ -213,17 +276,27 @@ local function attachToPlayerButton(playerButton)
       frame.SpecClassIcon:Hide()
       frame.DisplayedAura = highestPrioritySpell
       frame.PriorityIcon:Show()
-      frame.PriorityIcon:SetTexture(highestPrioritySpell.icon)
-      frame.Cooldown:SetCooldown(
-        highestPrioritySpell.expirationTime - highestPrioritySpell.duration,
-        highestPrioritySpell.duration
-      )
+      local iconToShow = highestPrioritySpell.icon or GetSpellTexture(118)
+      frame.PriorityIcon:SetTexture(iconToShow)
+      if highestPrioritySpell.durationObject and frame.Cooldown.SetCooldownFromDurationObject then
+        frame.Cooldown:SetCooldownFromDurationObject(highestPrioritySpell.durationObject)
+      else
+        -- Fallback for interrupts which still use expirationTime/duration
+        frame.Cooldown:SetCooldown(
+          highestPrioritySpell.expirationTime - highestPrioritySpell.duration,
+          highestPrioritySpell.duration
+        )
+      end
     else
       frame.SpecClassIcon:Show()
       frame.DisplayedAura = false
       frame.PriorityIcon:Hide()
       frame.Cooldown:Clear()
     end
+  end
+
+  function frame:Reset()
+    self:ResetPriorityData()
   end
 
   function frame:ResetPriorityData()
@@ -247,114 +320,88 @@ local function attachToPlayerButton(playerButton)
     self:Update()
   end
 
-  function frame:UpdateLossOfControl(unitID)
+  function frame:UpdateLossOfControl(unitID, updateInfo)
     if not self.config or not self.config.showHighestPriority then
       return
     end
+    -- Dead units can't be CC'd — clear immediately so icons don't linger after death.
+    if UnitIsDeadOrGhost(unitID) then
+      if self._locExpiryTimer then
+        self._locExpiryTimer:Cancel()
+        self._locExpiryTimer = nil
+      end
+      wipe(self.PriorityAuras)
+      self:Update()
+      return
+    end
+
+    -- No dead-player guard — MiniCC doesn't have one either. Let C_UnitAuras
+    -- try to detect CC on living allies even when the local player is dead.
+    -- If it returns empty, PriorityAuras will simply be empty (same as before).
+
+    -- Skip full rebuild if updateInfo tells us nothing CC-related changed.
+    -- Critical in BGs: UNIT_AURA fires constantly for food buffs, procs, heals, etc.
+    if not IsInterestedInUpdate(unitID, updateInfo, self.PriorityAuras) then
+      return
+    end
+
     wipe(self.PriorityAuras)
-    local highestRemaining = 0
-    local hasSecretTiming = false
-    local count = C_LossOfControl.GetActiveLossOfControlDataCountByUnit(unitID) or 0
-    for i = 1, count do
-      local data = C_LossOfControl.GetActiveLossOfControlDataByUnit(unitID, i)
-      if data and data.locType and not issecretvalue(data.locType) and data.locType ~= "SCHOOL_INTERRUPT" then
-        local priority = locTypePriority[data.locType]
-        if priority then
-          -- 12.0: timeRemaining/duration/spellID/iconTexture can be secret values.
-          -- Use auraInstanceID (NeverSecret) to get non-secret aura data.
-          local icon, duration, expirationTime
-          if data.auraInstanceID then
-            local auraData = C_UnitAuras.GetAuraDataByAuraInstanceID(unitID, data.auraInstanceID)
-            if auraData then
-              icon = auraData.icon
-              -- 12.0: auraData fields can also be secret — guard before arithmetic
-              if auraData.expirationTime and auraData.duration
-                and not issecretvalue(auraData.expirationTime)
-                and not issecretvalue(auraData.duration) then
-                duration = auraData.duration
-                expirationTime = auraData.expirationTime
-              else
-                hasSecretTiming = true
-              end
-            end
-          end
-          -- Fallback: try LoC fields directly if auraInstanceID didn't work
-          if not expirationTime and not hasSecretTiming then
-            local ok, remaining, dur = pcall(function()
-              local r = data.timeRemaining or 0
-              local d = data.duration or r
-              return r + 0, d + 0
-            end)
-            if ok and remaining and remaining > 0 then
-              local currentTime = GetTime()
-              expirationTime = currentTime + remaining
-              duration = dur
-              icon = icon or data.iconTexture or GetSpellTexture(data.spellID)
-            else
-              hasSecretTiming = true
-            end
-          end
-          if not icon then
-            icon = data.iconTexture or GetSpellTexture(data.spellID)
-          end
-          if expirationTime and duration then
-            local remaining = expirationTime - GetTime()
-            if remaining > 0 then
-              if remaining > highestRemaining then
-                highestRemaining = remaining
-              end
-              self.PriorityAuras[#self.PriorityAuras + 1] = {
-                spellId = data.spellID,
-                icon = icon,
-                expirationTime = expirationTime,
-                duration = duration,
-                Priority = priority,
-              }
-            end
-          elseif hasSecretTiming then
-            -- Secret values prevented timing — add with dummy timing so icon shows
-            self.PriorityAuras[#self.PriorityAuras + 1] = {
-              spellId = data.spellID,
-              icon = icon,
-              expirationTime = GetTime() + 30,
-              duration = 30,
-              Priority = priority,
-            }
-          end
+
+    -- C_UnitAuras for detection (works for allies and enemies):
+    -- 1. GetAuraDuration first (skip aura if no duration object)
+    -- 2. IsSpellCrowdControl to verify, with simple issecretvalue(x) or x
+    -- NOTE: Do NOT pass sort params — SecretArguments="AllowedWhenUntainted"
+    -- means they fail silently from tainted addon code.
+    local auras = C_UnitAuras.GetUnitAuras(unitID, "HARMFUL|CROWD_CONTROL")
+    for _, aura in ipairs(auras) do
+      local durationObj = C_UnitAuras.GetAuraDuration(unitID, aura.auraInstanceID)
+      if durationObj then
+        local isCC = C_Spell.IsSpellCrowdControl(aura.spellId)
+        if issecretvalue(isCC) or isCC then
+          self.PriorityAuras[#self.PriorityAuras + 1] = {
+            icon = aura.icon,
+            Priority = 5,
+            durationObject = durationObj,
+            auraInstanceID = aura.auraInstanceID,
+          }
         end
       end
     end
 
-    -- Cancel any pending expiry timer
+    -- Cancel any pending expiry timer before possibly starting a new one.
     if self._locExpiryTimer then
       self._locExpiryTimer:Cancel()
       self._locExpiryTimer = nil
     end
 
-    if hasSecretTiming and #self.PriorityAuras > 0 then
-      -- Can't compute exact expiry — poll every second until CC clears
+    if #self.PriorityAuras > 0 then
+      -- Poll every second as a safety net in case UNIT_AURA misses the expiry.
       self._locExpiryTimer = C_Timer.NewTicker(1, function(ticker)
-        local activeCount = C_LossOfControl.GetActiveLossOfControlDataCountByUnit(unitID) or 0
-        local stillActive = false
-        for j = 1, activeCount do
-          local d = C_LossOfControl.GetActiveLossOfControlDataByUnit(unitID, j)
-          if d and d.locType and not issecretvalue(d.locType) and d.locType ~= "SCHOOL_INTERRUPT" and locTypePriority[d.locType] then
-            stillActive = true
-            break
-          end
+        if UnitIsDeadOrGhost(unitID) then
+          ticker:Cancel()
+          self._locExpiryTimer = nil
+          wipe(self.PriorityAuras)
+          self:Update()
+          return
         end
-        if not stillActive then
+        local checkAuras = C_UnitAuras.GetUnitAuras(unitID, "HARMFUL|CROWD_CONTROL")
+        if #checkAuras == 0 then
+          -- If the local player is a ghost, GetUnitAuras returns empty for living
+          -- units due to phase separation — use C_LossOfControl as backup check.
+          if UnitIsDeadOrGhost("player") then
+            local locCount = C_LossOfControl
+                and C_LossOfControl.GetActiveLossOfControlDataCountByUnit
+                and C_LossOfControl.GetActiveLossOfControlDataCountByUnit(unitID)
+              or 0
+            if locCount > 0 then
+              return -- still CC'd per LoC, don't clear
+            end
+          end
           ticker:Cancel()
           self._locExpiryTimer = nil
           wipe(self.PriorityAuras)
           self:Update()
         end
-      end)
-    elseif highestRemaining > 0 then
-      -- Schedule re-check after the longest CC should expire
-      self._locExpiryTimer = C_Timer.NewTimer(highestRemaining + 0.1, function()
-        self._locExpiryTimer = nil
-        self:Update()
       end)
     end
 

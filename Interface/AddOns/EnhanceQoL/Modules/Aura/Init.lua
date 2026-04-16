@@ -71,7 +71,7 @@ function addon.Aura.functions.InitDB()
 			amount = 3,
 			size = 64,
 			minSize = 10,
-			maxSize = 256,
+			maxSize = 60,
 			point = "RIGHT",
 			offset = 4,
 		},
@@ -90,6 +90,42 @@ function addon.Aura.functions.InitDB()
 			offsetX = 0,
 			offsetY = -1,
 		},
+	})
+
+	init("focusInterruptTracker", {
+		version = 1,
+		enabled = false,
+		displayMode = "TEXT",
+		text = "INTERRUPT",
+		textFont = addon.functions and addon.functions.GetGlobalFontConfigKey and addon.functions.GetGlobalFontConfigKey() or "__EQOL_GLOBAL_FONT__",
+		textSize = 24,
+		textOutline = "THICKOUTLINE",
+		textColor = { 1, 0.15, 0.15, 1 },
+		iconSize = 28,
+		customIcon = nil,
+		background = {
+			enabled = false,
+			color = { 0, 0, 0, 0.35 },
+		},
+		sound = {
+			enabled = false,
+			file = "",
+		},
+		border = {
+			enabled = false,
+			texture = "DEFAULT",
+			size = 1,
+			offset = 0,
+			color = { 0, 0, 0, 0.9 },
+		},
+		anchor = {
+			point = "TOP",
+			relativePoint = "BOTTOM",
+			relativeFrame = "AUTO",
+			x = 0,
+			y = -10,
+		},
+		strata = "HIGH",
 	})
 
 	if addon.Aura and addon.Aura.CooldownPanels and addon.Aura.CooldownPanels.NormalizeAll then addon.Aura.CooldownPanels:NormalizeAll() end

@@ -2029,6 +2029,10 @@ function addon.functions.registerPullTimerSlashCommand()
 	_G.SLASH_EQOLPULL1 = "/pull"
 	SlashCmdList["EQOLPULL"] = function(msg)
 		local seconds = getPullCountdownSeconds(msg)
+		if InCombatLockdown and InCombatLockdown() then
+			if UIErrorsFrame and UIErrorsFrame.AddMessage then UIErrorsFrame:AddMessage(L["pullSlashUnavailableInCombat"], 1, 0.1, 0.1) end
+			return
+		end
 		if C_PartyInfo and C_PartyInfo.DoCountdown then C_PartyInfo.DoCountdown(seconds) end
 	end
 end

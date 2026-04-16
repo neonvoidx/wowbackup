@@ -21,9 +21,7 @@ local function getSoundTable()
 	return {}
 end
 
-function ChatIM:BuildSoundTable()
-	ChatIM.availableSounds = getSoundTable()
-end
+function ChatIM:BuildSoundTable() ChatIM.availableSounds = getSoundTable() end
 
 local function shouldPlaySound(sender)
 	if not ChatIM.widget or not ChatIM.widget.frame:IsShown() then return true end
@@ -55,8 +53,7 @@ local function OpenChatIMForEditBox(editBox)
 		local name = editBox:GetAttribute("tellTarget") or ChatFrameUtil.GetLastTellTarget()
 		if name then
 			if not name:match("-") then name = name .. "-" .. (GetRealmName()):gsub("%s", "") end
-			ChatIM:StartWhisper(name)
-			ChatIM:FocusConversation(name, true)
+			if ChatIM:StartWhisper(name) then ChatIM:FocusConversation(name, true) end
 		end
 	elseif chatType == "BN_WHISPER" then
 		local target = editBox:GetAttribute("tellTarget") or ChatFrameUtil.GetLastTellTarget()
@@ -65,8 +62,7 @@ local function OpenChatIMForEditBox(editBox)
 			local bnetID = BNet_GetBNetIDAccount and BNet_GetBNetIDAccount(plain)
 			if bnetID then
 				local info = C_BattleNet.GetAccountInfoByID and C_BattleNet.GetAccountInfoByID(bnetID)
-				ChatIM:StartWhisper(plain, bnetID, info and info.battleTag)
-				ChatIM:FocusConversation(plain, true)
+				if ChatIM:StartWhisper(plain, bnetID, info and info.battleTag) then ChatIM:FocusConversation(plain, true) end
 			end
 		end
 	end
@@ -215,7 +211,7 @@ function ChatIM:SetEnabled(val)
 				local name = ChatFrameUtil.GetLastToldTarget()
 				if name then
 					if not name:match("-") then name = name .. "-" .. (GetRealmName()):gsub("%s", "") end
-					ChatIM:StartWhisper(name)
+					if ChatIM:StartWhisper(name) then
 						local tab = ChatIM.tabs[name]
 						if tab and tab.edit then
 							ChatIM.tabGroup:SelectTab(name)
@@ -224,6 +220,7 @@ function ChatIM:SetEnabled(val)
 							if eb then ChatEdit_OnEscapePressed(eb) end
 						end
 					end
+				end
 			end)
 			self.whisperHooked = true
 		end

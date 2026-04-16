@@ -1,6 +1,7 @@
 # Talent Tree Tweaks
 
-## [v1.13.20](https://github.com/NumyAddon/TalentTreeTweaks/tree/v1.13.20) (2026-03-02)
-[Full Changelog](https://github.com/NumyAddon/TalentTreeTweaks/compare/v1.13.19...v1.13.20) [Previous Releases](https://github.com/NumyAddon/TalentTreeTweaks/releases)
+## [v1.13.22](https://github.com/NumyAddon/TalentTreeTweaks/tree/v1.13.22) (2026-04-03)
+[Full Changelog](https://github.com/NumyAddon/TalentTreeTweaks/compare/v1.13.21...v1.13.22) [Previous Releases](https://github.com/NumyAddon/TalentTreeTweaks/releases)
 
-- Made some changes that should prevent talent tooltips from flickering (fixes #95 and #98)  
+- PTR TOC Bump  
+- Implement a workaround for blizzard's continued incompetence (closes #103)  

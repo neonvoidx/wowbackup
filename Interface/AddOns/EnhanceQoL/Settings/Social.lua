@@ -40,7 +40,7 @@ local privacyData = {
 	},
 	{
 		var = "enableIgnore",
-		text = L["EnableAdvancedIgnore"],
+		text = L["Enable advanced ignore list"],
 		type = "CheckBox",
 		func = function(value)
 			addon.db["enableIgnore"] = value
@@ -50,7 +50,7 @@ local privacyData = {
 			{
 
 				var = "ignoreAttachFriendsFrame",
-				text = L["IgnoreAttachFriends"],
+				text = L["Open with Friends list"],
 				desc = L["IgnoreAttachFriendsDesc"],
 				func = function(v) addon.db["ignoreAttachFriendsFrame"] = v end,
 				parentCheck = function()
@@ -66,7 +66,7 @@ local privacyData = {
 			{
 
 				var = "ignoreAnchorFriendsFrame",
-				text = L["IgnoreAnchorFriends"],
+				text = L["Anchor to Friends list"],
 				desc = L["IgnoreAnchorFriendsDesc"],
 				func = function(v)
 					addon.db["ignoreAnchorFriendsFrame"] = v
@@ -85,7 +85,7 @@ local privacyData = {
 			{
 
 				var = "ignoreTooltipNote",
-				text = L["ignoreTooltipNote"],
+				text = L["Show ignore note in tooltip"],
 				func = function(v) addon.db["ignoreTooltipNote"] = v end,
 				parentCheck = function()
 					return addon.SettingsLayout.elements["enableIgnore"]
@@ -165,7 +165,7 @@ local privacyData = {
 			{
 
 				var = "autoAcceptGroupInviteFriendOnly",
-				text = L["autoAcceptGroupInviteFriendOnly"],
+				text = L["Friends"],
 				func = function(v) addon.db["autoAcceptGroupInviteFriendOnly"] = v end,
 				parentCheck = function()
 					return addon.SettingsLayout.elements["autoAcceptGroupInvite"]
@@ -282,10 +282,10 @@ local friendsData = {
 		children = {
 			{
 				var = "communityChatPrivacyMode",
-				text = L["communityChatPrivacyMode"],
+				text = L["Behavior"],
 				list = {
 					[1] = {
-						label = L["communityChatPrivacyModeAlways"],
+						label = L["Always"],
 						tooltip = L["communityChatPrivacyModeAlwaysDesc"],
 					},
 					[2] = {

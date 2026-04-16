@@ -2960,7 +2960,7 @@ function ChannelHistory:CreateFilterUI()
 			self:RequestLogRefresh()
 		end
 		topBar.allBtn = makeBtn(ALL or "All", function() setAll(true) end)
-		topBar.noneBtn = makeBtn(NONE or "None", function() setAll(false) end)
+		topBar.noneBtn = makeBtn(NONE, function() setAll(false) end)
 		local invertLabel = (L and L["CH_FILTER_INVERT"]) or (_G and _G.INVERT) or "Invert"
 		topBar.invertBtn = makeBtn(invertLabel, invert)
 		topBar.allBtn:SetPoint("LEFT", topBar, "LEFT", 0, 0)
@@ -3005,9 +3005,9 @@ function ChannelHistory:CreateFilterUI()
 	end
 
 	local filterGroups = {
-		{ title = L["CH_FILTER_CAT_CHAT"] or CHAT or "Chat", keys = { "SAY", "YELL", "WHISPER", "BN_WHISPER", "PARTY", "INSTANCE", "RAID", "GUILD", "OFFICER", "GENERAL" } },
+		{ title = L["Chat"] or CHAT or "Chat", keys = { "SAY", "YELL", "WHISPER", "BN_WHISPER", "PARTY", "INSTANCE", "RAID", "GUILD", "OFFICER", "GENERAL" } },
 		{ title = L["CH_FILTER_CAT_SYSTEM"] or SYSTEM_MESSAGES or "System", keys = { "LOOT", "MONEY", "CURRENCY", "ACHIEVEMENT", "SYSTEM", "OPENING" } },
-		{ title = L["CH_FILTER_CAT_MISC"] or OTHER or "Other", keys = { "MONSTER", "TRADE", "MAIL" } },
+		{ title = L["Other"] or OTHER or "Other", keys = { "MONSTER", "TRADE", "MAIL" } },
 	}
 	local hideUnlogged = addon.db and addon.db.chatHistoryHideUnlogged
 	local loggingEnabled = addon.db and addon.db.chatChannelFiltersEnable or {}
@@ -3141,12 +3141,12 @@ function ChannelHistory:RefreshLogView()
 	local scopeLabel = ALL
 	if scope == "faction" then
 		if factionKey then
-			scopeLabel = string.format("%s: %s (%s)", L["IgnoreServer"] or REALM, realmKey or (self.keys and self.keys.realmKey) or "", factionKey)
+			scopeLabel = string.format("%s: %s (%s)", L["Realm"] or REALM, realmKey or (self.keys and self.keys.realmKey) or "", factionKey)
 		else
 			scopeLabel = ALL
 		end
 	elseif scope == "realm" and realmKey then
-		scopeLabel = (L["IgnoreServer"] or REALM) .. ": " .. realmKey
+		scopeLabel = (L["Realm"] or REALM) .. ": " .. realmKey
 	elseif scope == "character" and charKey then
 		scopeLabel = CHARACTER .. ": " .. charKey
 	end
@@ -3460,7 +3460,7 @@ function ChannelHistory:CreateDebugFrame(showImmediately)
 		editBox:SetJustifyH("LEFT")
 		editBox:SetJustifyV("TOP")
 		editBox:SetTextColor(1, 1, 1, 1)
-		editBox:SetMaxLetters(100000)
+		editBox:SetMaxLetters(0)
 		editBox:ClearAllPoints()
 		editBox:SetPoint("TOPLEFT", scroll, "TOPLEFT", 0, -10)
 		editBox:SetPoint("TOPRIGHT", scroll, "TOPRIGHT", 0, -10)
@@ -3484,6 +3484,9 @@ function ChannelHistory:CreateDebugFrame(showImmediately)
 			if self.scrollBar and ChannelHistory and ChannelHistory.UpdateThinScrollFrameBar then ChannelHistory:UpdateThinScrollFrameBar(self.scrollBar, self.scroll) end
 		end
 
+		editBox:SetScript("OnTextChanged", function()
+			if popup.RefreshScrollHeight then popup:RefreshScrollHeight() end
+		end)
 		scroll:SetScript("OnSizeChanged", function() popup:RefreshScrollHeight() end)
 
 		copyPopup = popup
@@ -3525,20 +3528,18 @@ function ChannelHistory:CreateDebugFrame(showImmediately)
 		popup:Show()
 
 		local text = sanitizeCopyText(buildCopyTextFromData())
-		local maxLetters = 15000
-		if text and #text > maxLetters then text = string.sub(text, -maxLetters) end
-		popup.editBox._justSet = true
 		popup.editBox:SetText(text or "")
-
-		-- C_Timer.After(0, function()
-		-- 	if popup.RefreshScrollHeight then popup:RefreshScrollHeight() end
-		-- 	if popup.scroll then popup.scroll:SetVerticalScroll(0) end
-		-- 	if popup.scrollBar and ChannelHistory and ChannelHistory.UpdateThinScrollFrameBar then ChannelHistory:UpdateThinScrollFrameBar(popup.scrollBar, popup.scroll) end
-
-		-- 	popup.editBox:SetCursorPosition(0)
-		-- 	popup.editBox:SetFocus()
-		-- 	popup.editBox:HighlightText()
-		-- end)
+		C_Timer.After(0, function()
+			if not popup or not popup:IsShown() then return end
+			if popup.RefreshScrollHeight then popup:RefreshScrollHeight() end
+			if popup.scroll then popup.scroll:SetVerticalScroll(0) end
+			if popup.scrollBar and ChannelHistory and ChannelHistory.UpdateThinScrollFrameBar then ChannelHistory:UpdateThinScrollFrameBar(popup.scrollBar, popup.scroll) end
+			if popup.editBox then
+				popup.editBox:SetCursorPosition(0)
+				popup.editBox:SetFocus()
+				popup.editBox:HighlightText()
+			end
+		end)
 	end
 
 	copyBtn:SetScript("OnClick", function() copyVisibleLines() end)

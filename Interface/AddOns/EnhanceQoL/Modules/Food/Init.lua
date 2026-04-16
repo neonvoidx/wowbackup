@@ -5,6 +5,7 @@ local GetMacroInfo = GetMacroInfo
 local GetNumMacros = GetNumMacros
 local CreateMacro = CreateMacro
 local EditMacro = EditMacro
+local CreateFrame = CreateFrame
 local print = print
 if _G[parentAddonName] then
 	addon = _G[parentAddonName]
@@ -27,6 +28,19 @@ addon.BuffFoods = addon.BuffFoods or {}
 addon.BuffFoods.functions = addon.BuffFoods.functions or {}
 addon.BuffFoods.filteredBuffFoods = addon.BuffFoods.filteredBuffFoods or {}
 
+-- Augment rune reminder scaffolding
+addon.Runes = addon.Runes or {}
+addon.Runes.functions = addon.Runes.functions or {}
+addon.Runes.filteredRunes = addon.Runes.filteredRunes or {}
+
+-- Weapon buff reminder scaffolding
+addon.WeaponBuffs = addon.WeaponBuffs or {}
+addon.WeaponBuffs.functions = addon.WeaponBuffs.functions or {}
+addon.WeaponBuffs.filteredWeaponBuffs = addon.WeaponBuffs.filteredWeaponBuffs or {}
+addon.foodBagItemCountCache = addon.foodBagItemCountCache or {}
+addon.foodBagItemCountCacheReady = addon.foodBagItemCountCacheReady == true
+addon.foodBagItemCountCacheVersion = tonumber(addon.foodBagItemCountCacheVersion) or 0
+
 -- Health macro module scaffolding
 addon.Health = addon.Health or {}
 addon.Health.functions = addon.Health.functions or {}
@@ -39,6 +53,99 @@ addon.Recuperate = addon.Recuperate or {
 	known = false,
 }
 addon.macroWarnings = addon.macroWarnings or {}
+
+local function syncSharedFoodBagItemCountCache(counts)
+	addon.foodBagItemCountCache = counts
+	addon.foodBagItemCountCacheReady = true
+	addon.foodBagItemCountCacheVersion = (tonumber(addon.foodBagItemCountCacheVersion) or 0) + 1
+	addon.Flasks.bagItemCountCache = counts
+	addon.Flasks.bagItemCountCacheReady = true
+	addon.BuffFoods.bagItemCountCache = counts
+	addon.BuffFoods.bagItemCountCacheReady = true
+	addon.Runes.bagItemCountCache = counts
+	addon.Runes.bagItemCountCacheReady = true
+	addon.WeaponBuffs.bagItemCountCache = counts
+	addon.WeaponBuffs.bagItemCountCacheReady = true
+	return counts
+end
+
+local function invalidateSharedFoodBagItemCountCache()
+	addon.foodBagItemCountCacheReady = false
+	addon.Flasks.bagItemCountCacheReady = false
+	addon.BuffFoods.bagItemCountCacheReady = false
+	addon.Runes.bagItemCountCacheReady = false
+	addon.WeaponBuffs.bagItemCountCacheReady = false
+end
+
+function addon.functions.shouldMaintainFoodBagItemCountCache()
+	local db = addon.db
+	if db and (db.flaskMacroEnabled == true or db.buffFoodMacroEnabled == true) then return true end
+
+	local reminder = addon.ClassBuffReminder
+	if not reminder then return false end
+	if not reminder.IsEnabled or reminder:IsEnabled() ~= true then return false end
+	if reminder.IsFlaskTrackingEnabled and reminder:IsFlaskTrackingEnabled() then return true end
+	if reminder.IsFoodTrackingEnabled and reminder:IsFoodTrackingEnabled() then return true end
+	if reminder.IsRuneTrackingEnabled and reminder:IsRuneTrackingEnabled() then return true end
+	if reminder.IsWeaponBuffTrackingEnabled and reminder:IsWeaponBuffTrackingEnabled() then return true end
+	return false
+end
+
+function addon.functions.rebuildFoodBagItemCountCache()
+	local counts = {}
+	local maxBag = tonumber(NUM_TOTAL_EQUIPPED_BAG_SLOTS) or tonumber(NUM_BAG_SLOTS) or 4
+
+	if C_Container and C_Container.GetContainerNumSlots and C_Container.GetContainerItemInfo then
+		for bag = 0, maxBag do
+			local slotCount = C_Container.GetContainerNumSlots(bag) or 0
+			for slot = 1, slotCount do
+				local info = C_Container.GetContainerItemInfo(bag, slot)
+				local itemId = info and tonumber(info.itemID) or nil
+				if itemId and itemId > 0 then counts[itemId] = (counts[itemId] or 0) + (tonumber(info.stackCount) or 1) end
+			end
+		end
+	elseif GetContainerNumSlots and GetContainerItemID and GetContainerItemInfo then
+		for bag = 0, maxBag do
+			local slotCount = GetContainerNumSlots(bag) or 0
+			for slot = 1, slotCount do
+				local itemId = tonumber(GetContainerItemID(bag, slot))
+				if itemId and itemId > 0 then
+					local _, stackCount = GetContainerItemInfo(bag, slot)
+					counts[itemId] = (counts[itemId] or 0) + (tonumber(stackCount) or 1)
+				end
+			end
+		end
+	end
+
+	return syncSharedFoodBagItemCountCache(counts)
+end
+
+function addon.functions.getFoodBagItemCountCache()
+	if addon.foodBagItemCountCacheReady == true and type(addon.foodBagItemCountCache) == "table" then return addon.foodBagItemCountCache end
+	return addon.functions.rebuildFoodBagItemCountCache()
+end
+
+function addon.functions.getFoodBagItemCountCacheVersion()
+	if addon.foodBagItemCountCacheReady ~= true then addon.functions.getFoodBagItemCountCache() end
+	return tonumber(addon.foodBagItemCountCacheVersion) or 0
+end
+
+function addon.functions.getFoodBagItemCount(itemId)
+	local targetId = tonumber(itemId)
+	if not targetId or targetId <= 0 then return 0 end
+	local cache = addon.functions.getFoodBagItemCountCache()
+	return tonumber(cache[targetId]) or 0
+end
+
+local sharedFoodBagItemCountCacheFrame = addon.sharedFoodBagItemCountCacheFrame or CreateFrame("Frame")
+addon.sharedFoodBagItemCountCacheFrame = sharedFoodBagItemCountCacheFrame
+sharedFoodBagItemCountCacheFrame:RegisterEvent("PLAYER_LOGIN")
+sharedFoodBagItemCountCacheFrame:RegisterEvent("PLAYER_ENTERING_WORLD")
+sharedFoodBagItemCountCacheFrame:RegisterEvent("BAG_UPDATE_DELAYED")
+sharedFoodBagItemCountCacheFrame:SetScript("OnEvent", function(_, event)
+	if event ~= "PLAYER_LOGIN" and event ~= "PLAYER_ENTERING_WORLD" and event ~= "BAG_UPDATE_DELAYED" then return end
+	invalidateSharedFoodBagItemCountCache()
+end)
 
 function addon.Recuperate.Update()
 	local spellInfo = C_Spell.GetSpellInfo(addon.Recuperate.id)

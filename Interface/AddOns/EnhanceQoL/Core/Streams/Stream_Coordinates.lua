@@ -5,6 +5,7 @@ local L = addon.L
 local AceGUI = addon.AceGUI
 local db
 local stream
+local coordinateFormatCache = {}
 
 local function getOptionsHint()
 	if addon.DataPanel and addon.DataPanel.GetOptionsHintText then
@@ -15,12 +16,23 @@ local function getOptionsHint()
 	return L["Right-Click for options"]
 end
 
+local function clampDecimals(value)
+	local decimals = tonumber(value) or 2
+	if decimals < 0 then
+		decimals = 0
+	elseif decimals > 2 then
+		decimals = 2
+	end
+	return math.floor(decimals + 0.5)
+end
+
 local function ensureDB()
 	addon.db.datapanel = addon.db.datapanel or {}
 	addon.db.datapanel.coordinates = addon.db.datapanel.coordinates or {}
 	db = addon.db.datapanel.coordinates
 	db.fontSize = db.fontSize or 14
 	db.updateInterval = db.updateInterval or 0.2
+	db.decimals = clampDecimals(db.decimals)
 	if db.hideInInstance == nil then db.hideInInstance = true end
 end
 
@@ -43,7 +55,7 @@ local function createAceWindow()
 	aceWindow = frame.frame
 	frame:SetTitle((addon.DataPanel and addon.DataPanel.GetStreamOptionsTitle and addon.DataPanel.GetStreamOptionsTitle(stream and stream.meta and stream.meta.title)) or GAMEMENU_OPTIONS)
 	frame:SetWidth(320)
-	frame:SetHeight(260)
+	frame:SetHeight(310)
 	frame:SetLayout("List")
 
 	frame.frame:SetScript("OnShow", function(self) RestorePosition(self) end)
@@ -84,6 +96,16 @@ local function createAceWindow()
 	end)
 	frame:AddChild(interval)
 
+	local decimals = AceGUI:Create("Slider")
+	decimals:SetLabel(L["squareMinimapStatsCoordinatesDecimals"] or "Precision (decimals)")
+	decimals:SetSliderValues(0, 2, 1)
+	decimals:SetValue(db.decimals)
+	decimals:SetCallback("OnValueChanged", function(_, _, val)
+		db.decimals = clampDecimals(val)
+		scheduleUpdate()
+	end)
+	frame:AddChild(decimals)
+
 	local hideInstance = AceGUI:Create("CheckBox")
 	hideInstance:SetLabel(L["Hide coordinates in instances"] or "Hide coordinates in instances")
 	hideInstance:SetValue(db.hideInInstance and true or false)
@@ -98,9 +120,19 @@ end
 
 local format = string.format
 
+local function getCoordinateFormat(decimals)
+	local fmt = coordinateFormatCache[decimals]
+	if not fmt then
+		fmt = ("%%.%df, %%.%df"):format(decimals, decimals)
+		coordinateFormatCache[decimals] = fmt
+	end
+	return fmt
+end
+
 local function formatCoords(x, y)
 	if not x or not y then return nil end
-	return format("%.2f, %.2f", x * 100, y * 100)
+	local decimals = db and db.decimals or 2
+	return format(getCoordinateFormat(clampDecimals(decimals)), x * 100, y * 100)
 end
 
 local function getPlayerCoords()

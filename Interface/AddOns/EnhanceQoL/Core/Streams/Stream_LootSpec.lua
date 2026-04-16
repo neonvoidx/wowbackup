@@ -148,7 +148,7 @@ local function showLootSpecMenu(owner)
 		rootDescription:SetTag("MENU_EQOL_LOOTSPEC")
 		rootDescription:CreateTitle(LOOT_SPECIALIZATION or "Loot Specialization")
 
-		local defaultText = (LOOT_SPECIALIZATION_DEFAULT and specName) and LOOT_SPECIALIZATION_DEFAULT:format(specName) or (L["Default loot spec"] or "Default")
+		local defaultText = (LOOT_SPECIALIZATION_DEFAULT and specName) and LOOT_SPECIALIZATION_DEFAULT:format(specName) or (L["Default"] or "Default")
 		local defaultRadio = rootDescription:CreateRadio(defaultText, function() return lootSpecID == 0 end, function()
 			if InCombatLockdown and InCombatLockdown() then
 				if UIErrorsFrame and ERR_NOT_IN_COMBAT then UIErrorsFrame:AddMessage(ERR_NOT_IN_COMBAT) end

@@ -3,7 +3,6 @@ local addonName, addon = ...
 local dbMigrator = addon.Config.Migrator
 local mini = addon.Core.Framework
 local L = addon.L
-local verticalSpacing = mini.VerticalSpacing
 ---@type Db
 local db
 local M = addon.Config
@@ -27,7 +26,7 @@ M.SoundFiles = {
 local locale = GetLocale()
 
 if locale == "zhCN" or locale == "zhTW" then
-	table.insert(M.SoundFiles, "夏一可.ogg")
+	table.insert(M.SoundFiles, "XiaYike.ogg")
 end
 
 function M:Apply()
@@ -66,7 +65,7 @@ function M:Init()
 	-- Standalone config window
 	local version = C_AddOns.GetAddOnMetadata(addonName, "Version")
 	local windowWidth = 1000
-	local windowHeight = 600
+	local windowHeight = 620
 
 	local window = mini:CreateStandaloneWindow({
 		Name = addonName .. "ConfigFrame",
@@ -83,11 +82,11 @@ function M:Init()
 	window:HookScript("OnHide", function()
 		windowPreviouslyHidden = true
 	end)
-	window:HookScript("OnShow", function(self)
+	window:HookScript("OnShow", function(w)
 		if windowPreviouslyHidden then
 			windowPreviouslyHidden = false
-			self:ClearAllPoints()
-			self:SetPoint("CENTER", UIParent, "CENTER", 0, 0)
+			w:ClearAllPoints()
+			w:SetPoint("CENTER", UIParent, "CENTER", 0, 0)
 		end
 	end)
 
@@ -106,7 +105,7 @@ function M:Init()
 	local tabs = {
 		{
 			Key = "General",
-			Title = L["General"],
+			Title = L["Home"],
 			Build = function(content)
 				M.General:Build(content)
 			end,
@@ -123,6 +122,14 @@ function M:Init()
 			Title = L["Auras"],
 			Build = function(content)
 				M.FriendlyIndicator:Build(content, db.Modules.FriendlyIndicatorModule.Default, db.Modules.FriendlyIndicatorModule.Raid)
+			end,
+		},
+		{
+			Key = "FriendlyCooldowns",
+			Title = L["Friendly Cooldowns_Short"] or L["Friendly Cooldowns"],
+			Build = function(content)
+				local m = db.Modules.FriendlyCooldownTrackerModule
+			M.FriendlyCooldownTracker:Build(content, m.Default, m.Raid)
 			end,
 		},
 		{
@@ -161,24 +168,10 @@ function M:Init()
 			end,
 		},
 		{
-			Key = "Trinkets",
-			Title = L["Party Trinkets_Short"] or L["Party Trinkets"],
-			Build = function(content)
-				M.Trinkets:Build(content)
-			end,
-		},
-		{
 			Key = "Precog",
 			Title = L["Precognition"],
 			Build = function(content)
 				M.PrecogGuesser:Build(content)
-			end,
-		},
-		{
-			Key = "OtherAddons",
-			Title = L["Other Mini Addons_Short"] or L["Other Mini Addons"],
-			Build = function(content)
-				M.OtherAddons:Build(content)
 			end,
 		},
 		{
@@ -188,10 +181,24 @@ function M:Init()
 				M.Miscellaneous:Build(content)
 			end,
 		},
+		{
+			Key = "Profiles",
+			Title = L["Profiles"],
+			Build = function(content)
+				M.Profiles:Build(content)
+			end,
+		},
+		{
+			Key = "OtherAddons",
+			Title = L["Other Mini Addons_Short"] or L["Other Mini Addons"],
+			Build = function(content)
+				M.OtherAddons:Build(content)
+			end,
+		},
 	}
 
 	local contentPadding = 12
-	local windowInset = 2 + contentPadding * 2 + 8 -- border, padding, and small right margin
+	local windowInset = 2 + contentPadding * 2 + 14 -- border (2), padding (24), scrollbar (14)
 	local tabStripWidth = 130
 	local tabHorizontalPadding = 12
 	local contentWidth = windowWidth - windowInset - tabStripWidth - tabHorizontalPadding
@@ -270,8 +277,8 @@ end
 ---@field Alerts AlertsConfig
 ---@field Nameplates NameplatesConfig
 ---@field KickTimer KickTimerConfig
----@field Trinkets TrinketsConfig
 ---@field PrecogGuesser PrecogGuesserConfig
 ---@field OtherAddons OtherAddonsConfig
 ---@field FriendlyIndicator FriendlyIndicatorConfig
+---@field FriendlyCooldownTracker FriendlyCooldownTrackerConfig
 ---@field Miscellaneous MiscellaneousConfig

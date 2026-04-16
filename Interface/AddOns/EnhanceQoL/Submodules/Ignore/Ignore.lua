@@ -191,8 +191,8 @@ local ROW_HEIGHT = 20
 
 local widths = { 130, 150, 60, 60, 210 }
 local titles = {
-	L["IgnorePlayer"],
-	L["IgnoreServer"],
+	PLAYER,
+	L["Realm"],
 	L["IgnoreListed"],
 	L["IgnoreExpires"],
 	L["IgnoreNote"],
@@ -412,8 +412,8 @@ function EQOLIgnoreFrame_OnLoad(frame)
 	local x = 0
 	local c = 1
 	for idx, col in ipairs({
-		{ text = L["IgnorePlayer"], width = widths[1], key = "player" },
-		{ text = L["IgnoreServer"], width = widths[2], key = "server" },
+		{ text = PLAYER, width = widths[1], key = "player" },
+		{ text = L["Realm"], width = widths[2], key = "server" },
 		{ text = L["IgnoreListed"], width = widths[3], key = "listed" },
 		{ text = L["IgnoreExpires"], width = widths[4], key = "expire" },
 		{ text = L["IgnoreNote"], width = widths[5], key = "note" },

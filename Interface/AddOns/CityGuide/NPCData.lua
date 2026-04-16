@@ -897,6 +897,16 @@ CityGuideNPCData = {
         noCluster = true, 
         textDirection = "top", 
     },
+    {
+        x = 52.87 / 100, 
+        y = 57.44 / 100,
+        name = "Tmog", 
+        tooltip = "Transmogrifier", 
+        icon = "Interface\\Icons\\Ui_transmog_showequippedgear",
+        minimapIcon = MINIMAP_ICONS.TRANSMOGRIFIER,
+        noCluster = true, 
+        textDirection = "right"
+    },
 
     -- Horde Only
         {

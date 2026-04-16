@@ -174,6 +174,108 @@ addon.Sounds.soundFiles = {
 			5858897,
 			5858898,
 		},
+		["murder_row_belath_dawnblade"] = {
+			7238841, -- Belath Dawnblade (Murder Row), SoundID 299127
+			7238805, -- Belath Dawnblade (Murder Row), SoundID 299115
+			7238845, -- Belath Dawnblade (Murder Row), SoundID 299129
+			1407468, -- Belath Dawnblade (Murder Row), SoundID 67186
+			7238808, -- Belath Dawnblade (Murder Row), SoundID 299116
+			1407465, -- Belath Dawnblade (Murder Row), SoundID 67183
+			1407466, -- Belath Dawnblade (Murder Row), SoundID 67184
+			1407463, -- Belath Dawnblade (Murder Row), SoundID 67181
+			1406999, -- Belath Dawnblade (Murder Row), SoundID 66955
+			1407010, -- Belath Dawnblade (Murder Row), SoundID 66966
+			1407462, -- Belath Dawnblade (Murder Row), SoundID 67180
+			7236595, -- Belath Dawnblade (Murder Row), SoundID 298621, PlayKit 323032
+			7236676, -- Belath Dawnblade (Murder Row), SoundID 298700, PlayKit 323033
+			7236705, -- Belath Dawnblade (Murder Row), SoundID 298729, PlayKit 323033
+			1401438, -- Belath Dawnblade (Murder Row), SoundID 64689
+			1406995, -- Belath Dawnblade (Murder Row), SoundID 66951
+			1407009, -- Belath Dawnblade (Murder Row), SoundID 66965
+			1407464, -- Belath Dawnblade (Murder Row), SoundID 67182
+			1281203, -- Belath Dawnblade (Murder Row), SoundID 55053
+			1281205, -- Belath Dawnblade (Murder Row), SoundID 55054
+			7236564, -- Belath Dawnblade (Murder Row), SoundID 298595, PlayKit 323032
+			7236621, -- Belath Dawnblade (Murder Row), SoundID 298647, PlayKit 323032
+			7236735, -- Belath Dawnblade (Murder Row), SoundID 298759, PlayKit 323033
+			7238811, -- Belath Dawnblade (Murder Row), SoundID 299117
+			7238844, -- Belath Dawnblade (Murder Row), SoundID 299128
+			7238846, -- Belath Dawnblade (Murder Row), SoundID 299130
+			7238853, -- Belath Dawnblade (Murder Row), SoundID 299131
+			1406998, -- Belath Dawnblade (Murder Row), SoundID 66954
+			1407029, -- Belath Dawnblade (Murder Row), SoundID 66985
+			1407031, -- Belath Dawnblade (Murder Row), SoundID 66987
+			1407460, -- Belath Dawnblade (Murder Row), SoundID 67178
+			1407461, -- Belath Dawnblade (Murder Row), SoundID 67179
+			1407467, -- Belath Dawnblade (Murder Row), SoundID 67185
+			1281201, -- Belath Dawnblade (Murder Row), SoundID 55052
+		},
+		["windrunner_spire_lirath_windrunner"] = {
+			7236598, -- Lirath Windrunner (Windrunner Spire), SoundID 298624, PlayKit 323717
+			7236624, -- Lirath Windrunner (Windrunner Spire), SoundID 298650, PlayKit 323717
+			7238319, -- Lirath Windrunner (Windrunner Spire), SoundID 298936
+			7238330, -- Lirath Windrunner (Windrunner Spire), SoundID 298947
+			7238316, -- Lirath Windrunner (Windrunner Spire), SoundID 298933
+			7238318, -- Lirath Windrunner (Windrunner Spire), SoundID 298935
+			7238325, -- Lirath Windrunner (Windrunner Spire), SoundID 298942
+			7236569, -- Lirath Windrunner (Windrunner Spire), SoundID 298598, PlayKit 323717
+			7236683, -- Lirath Windrunner (Windrunner Spire), SoundID 298707, PlayKit 323716
+			7236712, -- Lirath Windrunner (Windrunner Spire), SoundID 298736, PlayKit 323716
+			7236742, -- Lirath Windrunner (Windrunner Spire), SoundID 298766, PlayKit 323716
+			7238309, -- Lirath Windrunner (Windrunner Spire), SoundID 298926
+			7238310, -- Lirath Windrunner (Windrunner Spire), SoundID 298927
+			7238311, -- Lirath Windrunner (Windrunner Spire), SoundID 298928
+			7238312, -- Lirath Windrunner (Windrunner Spire), SoundID 298929
+			7238313, -- Lirath Windrunner (Windrunner Spire), SoundID 298930
+			7238314, -- Lirath Windrunner (Windrunner Spire), SoundID 298931
+			7238315, -- Lirath Windrunner (Windrunner Spire), SoundID 298932
+			7238317, -- Lirath Windrunner (Windrunner Spire), SoundID 298934
+			7238320, -- Lirath Windrunner (Windrunner Spire), SoundID 298937
+			7238321, -- Lirath Windrunner (Windrunner Spire), SoundID 298938
+			7238322, -- Lirath Windrunner (Windrunner Spire), SoundID 298939
+			7238323, -- Lirath Windrunner (Windrunner Spire), SoundID 298940
+			7238324, -- Lirath Windrunner (Windrunner Spire), SoundID 298941
+			7238326, -- Lirath Windrunner (Windrunner Spire), SoundID 298943
+			7238327, -- Lirath Windrunner (Windrunner Spire), SoundID 298944
+			7238328, -- Lirath Windrunner (Windrunner Spire), SoundID 298945
+			7238329, -- Lirath Windrunner (Windrunner Spire), SoundID 298946
+		},
+		["den_of_nalorakk_zuljarra"] = {
+			7271224, -- Zul'Jarra (Den of Nalorakk), Greeting, PlayKit 324473
+			7271225, -- Zul'Jarra (Den of Nalorakk), Greeting, PlayKit 324473
+			7271226, -- Zul'Jarra (Den of Nalorakk), Greeting, PlayKit 324473
+			7271227, -- Zul'Jarra (Den of Nalorakk), Greeting, PlayKit 324473
+			7271228, -- Zul'Jarra (Den of Nalorakk), Greeting, PlayKit 324473
+			7271229, -- Zul'Jarra (Den of Nalorakk), Greeting, PlayKit 324473
+			7271230, -- Zul'Jarra (Den of Nalorakk), Greeting, PlayKit 324473
+			7271231, -- Zul'Jarra (Den of Nalorakk), Greeting, PlayKit 324473
+			7271250, -- Zul'Jarra (Den of Nalorakk), Greeting, PlayKit 324473
+			7271251, -- Zul'Jarra (Den of Nalorakk), Greeting, PlayKit 324473
+			7271252, -- Zul'Jarra (Den of Nalorakk), Greeting, PlayKit 324473
+			7271253, -- Zul'Jarra (Den of Nalorakk), Greeting, PlayKit 324473
+			7271254, -- Zul'Jarra (Den of Nalorakk), Greeting, PlayKit 324473
+			7271255, -- Zul'Jarra (Den of Nalorakk), Greeting, PlayKit 324473
+			7271256, -- Zul'Jarra (Den of Nalorakk), Greeting, PlayKit 324473
+			7271257, -- Zul'Jarra (Den of Nalorakk), Greeting, PlayKit 324473
+			7271232, -- Zul'Jarra (Den of Nalorakk), Farewell, PlayKit 324472
+			7271233, -- Zul'Jarra (Den of Nalorakk), Farewell, PlayKit 324472
+			7271234, -- Zul'Jarra (Den of Nalorakk), Farewell, PlayKit 324472
+			7271235, -- Zul'Jarra (Den of Nalorakk), Farewell, PlayKit 324472
+			7271236, -- Zul'Jarra (Den of Nalorakk), Farewell, PlayKit 324472
+			7271237, -- Zul'Jarra (Den of Nalorakk), Farewell, PlayKit 324472
+			7271238, -- Zul'Jarra (Den of Nalorakk), Farewell, PlayKit 324472
+			7271239, -- Zul'Jarra (Den of Nalorakk), Farewell, PlayKit 324472
+			7271242, -- Zul'Jarra (Den of Nalorakk), Farewell, PlayKit 324472
+			7271243, -- Zul'Jarra (Den of Nalorakk), Farewell, PlayKit 324472
+			7271244, -- Zul'Jarra (Den of Nalorakk), Farewell, PlayKit 324472
+			7271245, -- Zul'Jarra (Den of Nalorakk), Farewell, PlayKit 324472
+			7271246, -- Zul'Jarra (Den of Nalorakk), Farewell, PlayKit 324472
+			7271247, -- Zul'Jarra (Den of Nalorakk), Farewell, PlayKit 324472
+			7271248, -- Zul'Jarra (Den of Nalorakk), Farewell, PlayKit 324472
+			7271249, -- Zul'Jarra (Den of Nalorakk), Farewell, PlayKit 324472
+			7271240, -- Zul'Jarra (Den of Nalorakk), Angry, PlayKit 324474
+			7271241, -- Zul'Jarra (Den of Nalorakk), Angry, PlayKit 324474
+		},
 		["mechagon_npc"] = {
 			-- Prince Erazmin
 			2931350,
@@ -469,6 +571,13 @@ addon.Sounds.soundFiles = {
 			4575217, -- Fury of the Aspects
 			4575219, -- Fury of the Aspects
 			4575221, -- Fury of the Aspects
+		},
+	},
+	["trinkets"] = {
+		["soundMuteGazeOfTheAlnseer"] = {
+			2144789, -- Gaze of the Alnseer (Item 249343)
+			2144790, -- Gaze of the Alnseer (Item 249343)
+			2144791, -- Gaze of the Alnseer (Item 249343)
 		},
 	},
 	["emotes"] = {

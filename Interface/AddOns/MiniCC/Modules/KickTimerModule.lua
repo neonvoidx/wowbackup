@@ -2,7 +2,6 @@
 local _, addon = ...
 local mini = addon.Core.Framework
 local wowEx = addon.Utils.WoWEx
-local spellCache = addon.Utils.SpellCache
 local iconSlotContainer = addon.Core.IconSlotContainer
 local paused = false
 local testModeActive = false
@@ -11,7 +10,7 @@ local enabled = false
 local db
 
 -- fallback icon (rogue Kick)
-local kickIcon = spellCache:GetSpellTexture(1766)
+local kickIcon = C_Spell.GetSpellTexture(1766)
 
 ---@type { string: boolean }
 local kickedByUnits = {}
@@ -61,7 +60,7 @@ local kickDurationsByUnit = {} ---@type table<string, number?>
 local kickIconsByUnit = {} ---@type table<string, any?>
 
 local function KI(spellId)
-	return spellId and spellCache:GetSpellTexture(spellId) or nil
+	return spellId and C_Spell.GetSpellTexture(spellId) or nil
 end
 
 ---@class SpecKickInfo
@@ -114,13 +113,13 @@ local specInfoBySpecId = {
 	[255] = { KickCd = 15, IsCaster = false, IsHealer = false, KickIcon = KI(147362) }, -- Survival
 
 	-- Mage — Counterspell
-	[62] = { KickCd = 24, IsCaster = true, IsHealer = false, KickIcon = KI(2139) }, -- Arcane
-	[63] = { KickCd = 24, IsCaster = true, IsHealer = false, KickIcon = KI(2139) }, -- Fire
-	[64] = { KickCd = 24, IsCaster = true, IsHealer = false, KickIcon = KI(2139) }, -- Frost
+	[62] = { KickCd = 20, IsCaster = true, IsHealer = false, KickIcon = KI(2139) }, -- Arcane
+	[63] = { KickCd = 20, IsCaster = true, IsHealer = false, KickIcon = KI(2139) }, -- Fire
+	[64] = { KickCd = 20, IsCaster = true, IsHealer = false, KickIcon = KI(2139) }, -- Frost
 
 	-- Warlock — Spell Lock (Felhunter)
 	[265] = { KickCd = 24, IsCaster = true, IsHealer = false, KickIcon = KI(19647) }, -- Affliction
-	[266] = { KickCd = 24, IsCaster = true, IsHealer = false, KickIcon = KI(19647) }, -- Demonology
+	[266] = { KickCd = 30, IsCaster = true, IsHealer = false, KickIcon = KI(89766) }, -- Demonology
 	[267] = { KickCd = 24, IsCaster = true, IsHealer = false, KickIcon = KI(19647) }, -- Destruction
 
 	-- Shaman — Wind Shear
@@ -167,7 +166,7 @@ local function CreateKickBar()
 	local size = tonumber(iconOptions.Size) or 50
 	local spacing = db.IconSpacing or 2
 
-	local container = iconSlotContainer:New(UIParent, kickBar.MaxSlots, size, spacing, "Kick Timer")
+	local container = iconSlotContainer:New(UIParent, kickBar.MaxSlots, size, spacing, "Kick Timer", nil, "Kick Timer")
 	container.Frame:SetClampedToScreen(true)
 	container.Frame:SetMovable(false)
 	container.Frame:EnableMouse(false)

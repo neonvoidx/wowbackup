@@ -60,3 +60,4 @@ Blizzard_CompactRaidFrames: enabled
 OPie_Classic: disabled
 !Swatter: disabled
 !ImprovedErrorFrame: disabled
+Blizzard_CombatText: enabled

@@ -1,10 +1,11 @@
 
 NarcissusDB_PC = {
-["UseAlias"] = false,
-["PlayerAlias"] = "Starphage",
-["ClassSetAcquired_Karesh"] = true,
 ["EquipmentSetDB"] = {
 },
+["ClassSetAcquired_Karesh"] = true,
+["PlayerAlias"] = "Starphage",
+["ClassSetAcquired_MidnightS1"] = true,
+["UseAlias"] = false,
 }
 NarciStatisticsDB_PC = {
 }

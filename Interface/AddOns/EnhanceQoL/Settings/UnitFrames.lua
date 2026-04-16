@@ -3,6 +3,7 @@ local addonName, addon = ...
 local L = LibStub("AceLocale-3.0"):GetLocale(addonName)
 local getCVarOptionState = addon.functions.GetCVarOptionState or function() return false end
 local setCVarOptionState = addon.functions.SetCVarOptionState or function() end
+local CompactRaidFrameContainer = _G.CompactRaidFrameContainer
 
 local cUnitFrame = addon.SettingsLayout.rootUI
 
@@ -187,7 +188,12 @@ data = {
 		func = function(v)
 			addon.db["unitFrameScaleEnabled"] = v
 			addon.functions.updatePartyFrameScale()
-			if not v then CompactPartyFrame:SetScale(1) end
+			if not v then
+				if CompactPartyFrame and CompactPartyFrame.SetScale then CompactPartyFrame:SetScale(1) end
+				if CompactRaidFrameContainer and CompactRaidFrameContainer.SetScale then
+					CompactRaidFrameContainer:SetScale(1)
+				end
+			end
 		end,
 		parentSection = expandable,
 		children = {
