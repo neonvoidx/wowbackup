@@ -44,14 +44,74 @@ MythicDungeonToolsDB = {
 ["Clevagirl - Mal'Ganis"] = "Clevagirl - Mal'Ganis",
 },
 ["global"] = {
-["scale"] = 1.288893581081081,
+["colorPaletteInfo"] = {
+["colorPaletteIdx"] = 1,
+["customPaletteValues"] = {
+{
+1,
+1,
+1,
+},
+{
+1,
+1,
+1,
+},
+{
+1,
+1,
+1,
+},
+{
+1,
+1,
+1,
+},
+{
+1,
+1,
+1,
+},
+{
+1,
+1,
+1,
+},
+{
+1,
+1,
+1,
+},
+{
+1,
+1,
+1,
+},
+{
+1,
+1,
+1,
+},
+{
+1,
+1,
+1,
+},
+{
+1,
+1,
+1,
+},
+{
+1,
+1,
+1,
+},
+},
+},
 ["hasSeenAssignmentWarning"] = true,
 ["currentDifficulty"] = 2,
-["minimap"] = {
-["minimapPos"] = 113.4399240989313,
-["lock"] = true,
-["showInCompartment"] = true,
-},
+["latestDungeonSeen"] = 150,
 ["currentPreset"] = {
 [19] = 2,
 [30] = 2,
@@ -4235,15 +4295,15 @@ false,
 27,
 },
 ["color"] = "3eff3e",
-[16] = {
-4,
-},
 [9] = {
 6,
 7,
 },
 [5] = {
 33,
+},
+[16] = {
+4,
 },
 },
 {
@@ -5084,78 +5144,18 @@ nil,
 },
 },
 },
-["latestDungeonSeen"] = 150,
+["scale"] = 1.288893581081081,
 ["toolbarExpanded"] = false,
 ["maximized"] = false,
-["colorPaletteInfo"] = {
-["colorPaletteIdx"] = 1,
-["customPaletteValues"] = {
-{
-1,
-1,
-1,
-},
-{
-1,
-1,
-1,
-},
-{
-1,
-1,
-1,
-},
-{
-1,
-1,
-1,
-},
-{
-1,
-1,
-1,
-},
-{
-1,
-1,
-1,
-},
-{
-1,
-1,
-1,
-},
-{
-1,
-1,
-1,
-},
-{
-1,
-1,
-1,
-},
-{
-1,
-1,
-1,
-},
-{
-1,
-1,
-1,
-},
-{
-1,
-1,
-1,
-},
-},
-},
+["nonFullscreenScale"] = 1.288893581081081,
 ["version"] = 6011,
 ["xoffset"] = -81.0216293334961,
 ["currentDungeonIdx"] = 155,
-["nonFullscreenScale"] = 1.288893581081081,
+["minimap"] = {
+["minimapPos"] = 113.4399240989313,
+["lock"] = true,
+["showInCompartment"] = true,
+},
 ["yoffset"] = -116.6889266967773,
 },
 }

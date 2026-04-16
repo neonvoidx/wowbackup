@@ -1,10 +1,10 @@
 
 ATVDB = {
 ["profileKeys"] = {
-["Hellavator - Tichondrius"] = "Default",
+["Mäñýfäçëð - Tichondrius"] = "Default",
 ["Auteist - Tichondrius"] = "Default",
 ["Strathmoan - Tichondrius"] = "Default",
-["Mäñýfäçëð - Tichondrius"] = "Default",
+["Neonvoid - Tichondrius"] = "Default",
 ["Gehyo - Tichondrius"] = "Default",
 ["Tampacks - Tichondrius"] = "Default",
 ["Stormclout - Tichondrius"] = "Default",
@@ -13,9 +13,9 @@ ATVDB = {
 ["Manyfaced - Tichondrius"] = "Default",
 ["Reedingo - Tichondrius"] = "Default",
 ["Korahron - Tichondrius"] = "Default",
+["Choppiez - Tichondrius"] = "Default",
 ["Smaugchamp - Tichondrius"] = "Default",
 ["Starstypeshi - Tichondrius"] = "Default",
-["Choppiez - Tichondrius"] = "Default",
-["Neonvoid - Tichondrius"] = "Default",
+["Hellavator - Tichondrius"] = "Default",
 },
 }

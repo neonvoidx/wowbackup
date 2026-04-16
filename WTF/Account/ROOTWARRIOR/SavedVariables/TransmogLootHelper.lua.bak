@@ -11911,6 +11911,12 @@ TransmogLootHelper_Cache = {
 "Choppiez-Tichondrius",
 },
 },
+[115399] = {
+["learned"] = true,
+["knownBy"] = {
+"Stormclout-Tichondrius",
+},
+},
 [451294] = {
 ["learned"] = true,
 ["knownBy"] = {
@@ -18183,7 +18189,7 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[13931] = {
+[1225284] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
@@ -18291,7 +18297,7 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[1225284] = {
+[19669] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
@@ -21693,7 +21699,7 @@ TransmogLootHelper_Cache = {
 "Stormclout-Tichondrius",
 },
 },
-[19669] = {
+[13931] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
@@ -30083,7 +30089,7 @@ TransmogLootHelper_Cache = {
 ["placed"] = 0,
 },
 [16094] = {
-["owned"] = 3,
+["owned"] = 4,
 ["xp"] = 0,
 ["grantsXP"] = false,
 },
@@ -30538,10 +30544,10 @@ TransmogLootHelper_Cache = {
 ["xp"] = 0,
 ["grantsXP"] = false,
 },
-[10537] = {
-["owned"] = 0,
+[14631] = {
+["owned"] = 1,
 ["xp"] = 10,
-["grantsXP"] = true,
+["grantsXP"] = false,
 },
 [14583] = {
 ["owned"] = 3,
@@ -30558,9 +30564,9 @@ TransmogLootHelper_Cache = {
 ["xp"] = 10,
 ["grantsXP"] = true,
 },
-[14631] = {
-["owned"] = 1,
-["xp"] = 10,
+[16972] = {
+["owned"] = 0,
+["xp"] = 0,
 ["grantsXP"] = false,
 },
 [1294] = {
@@ -31673,10 +31679,10 @@ TransmogLootHelper_Cache = {
 ["xp"] = 10,
 ["placed"] = 0,
 },
-[16972] = {
+[10537] = {
 ["owned"] = 0,
-["xp"] = 0,
-["grantsXP"] = false,
+["xp"] = 10,
+["grantsXP"] = true,
 },
 [11874] = {
 ["owned"] = 1,

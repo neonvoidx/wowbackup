@@ -18090,7 +18090,7 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[19669] = {
+[13931] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
@@ -18197,7 +18197,7 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[13931] = {
+[1225284] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
@@ -21599,7 +21599,7 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[1225284] = {
+[19669] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
@@ -30572,10 +30572,10 @@ TransmogLootHelper_Cache = {
 ["xp"] = 0,
 ["grantsXP"] = false,
 },
-[16972] = {
+[10537] = {
 ["owned"] = 0,
-["xp"] = 0,
-["grantsXP"] = false,
+["xp"] = 10,
+["grantsXP"] = true,
 },
 [14583] = {
 ["owned"] = 3,
@@ -30592,10 +30592,10 @@ TransmogLootHelper_Cache = {
 ["xp"] = 10,
 ["grantsXP"] = true,
 },
-[10537] = {
-["owned"] = 0,
+[14631] = {
+["owned"] = 1,
 ["xp"] = 10,
-["grantsXP"] = true,
+["grantsXP"] = false,
 },
 [8241] = {
 ["owned"] = 3,
@@ -31707,9 +31707,9 @@ TransmogLootHelper_Cache = {
 ["grantsXP"] = false,
 ["xp"] = 0,
 },
-[14631] = {
-["owned"] = 1,
-["xp"] = 10,
+[16972] = {
+["owned"] = 0,
+["xp"] = 0,
 ["grantsXP"] = false,
 },
 [3985] = {

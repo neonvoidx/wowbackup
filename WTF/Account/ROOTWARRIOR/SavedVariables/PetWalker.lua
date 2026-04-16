@@ -14,6 +14,6 @@ PetWalkerDB = {
 ["favsOnly"] = true,
 ["numRecents"] = 4,
 ["newPetTimer"] = 2700,
-["remainingTimer"] = 778,
+["remainingTimer"] = 356,
 ["debugMode"] = false,
 }

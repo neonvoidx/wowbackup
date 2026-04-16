@@ -585,8 +585,8 @@ BAGANATOR_CONFIG = {
 ["category_default_import"] = 3,
 ["bag_view_position"] = {
 "BOTTOMRIGHT",
--51.657958984375,
-52.49943161010742,
+-3.323974609375,
+3.332807540893555,
 },
 ["character_bank_current_tab"] = 0,
 ["sort_ignore_bank_slots_count"] = {
@@ -1132,10 +1132,10 @@ BAGANATOR_CONFIG = {
 ["i:158075"] = true,
 ["i:134553"] = true,
 ["i:128870"] = true,
-["i:128821"] = true,
+["i:128869"] = true,
 ["i:128476"] = true,
 ["i:128938"] = true,
-["i:128869"] = true,
+["i:128808"] = true,
 ["i:127830"] = true,
 ["i:128825"] = true,
 ["i:128940"] = true,
@@ -1149,7 +1149,7 @@ BAGANATOR_CONFIG = {
 ["i:139621"] = true,
 ["i:128937"] = true,
 ["i:137246"] = true,
-["i:128808"] = true,
+["i:128821"] = true,
 ["i:128402"] = true,
 ["i:128942"] = true,
 ["i:128908"] = true,
@@ -3121,8 +3121,8 @@ BAGANATOR_CONFIG = {
 ["i:250722"] = true,
 ["i:242529"] = true,
 ["i:243050"] = true,
+["i:244274"] = true,
 ["i:232432"] = true,
-["i:238194"] = true,
 ["i:239455"] = true,
 ["i:243500"] = true,
 ["i:244516"] = true,
@@ -3171,9 +3171,9 @@ BAGANATOR_CONFIG = {
 ["i:235862"] = true,
 ["i:244488"] = true,
 ["i:244525"] = true,
-["i:239459"] = true,
-["i:244283"] = true,
 ["i:237866"] = true,
+["i:244283"] = true,
+["i:244269"] = true,
 ["i:239473"] = true,
 ["i:247690"] = true,
 ["i:245732"] = true,
@@ -3216,11 +3216,11 @@ BAGANATOR_CONFIG = {
 ["i:250287"] = true,
 ["i:246244"] = true,
 ["i:244507"] = true,
-["i:238061"] = true,
+["i:250298"] = true,
 ["i:229901"] = true,
 ["i:243504"] = true,
 ["i:243498"] = true,
-["i:250298"] = true,
+["i:243511"] = true,
 ["i:229892"] = true,
 ["i:230907"] = true,
 ["i:237860"] = true,
@@ -3252,15 +3252,15 @@ BAGANATOR_CONFIG = {
 ["i:243534"] = true,
 ["i:239464"] = true,
 ["i:237880"] = true,
+["i:234457"] = true,
 ["i:247700"] = true,
-["i:245731"] = true,
 ["i:245269"] = true,
 ["i:244497"] = true,
 ["i:231163"] = true,
 ["i:250285"] = true,
 ["i:248998"] = true,
 ["i:248917"] = true,
-["i:234457"] = true,
+["i:245731"] = true,
 ["i:245715"] = true,
 ["i:244267"] = true,
 ["i:240171"] = true,
@@ -3278,7 +3278,7 @@ BAGANATOR_CONFIG = {
 ["i:244291"] = true,
 ["i:233009"] = true,
 ["i:237938"] = true,
-["i:243511"] = true,
+["i:238061"] = true,
 ["i:242371"] = true,
 ["i:243548"] = true,
 ["i:237030"] = true,
@@ -3299,7 +3299,7 @@ BAGANATOR_CONFIG = {
 ["i:232609"] = true,
 ["i:233334"] = true,
 ["i:237012"] = true,
-["i:244269"] = true,
+["i:239459"] = true,
 ["i:238191"] = true,
 ["i:239458"] = true,
 ["i:233794"] = true,
@@ -3325,7 +3325,7 @@ BAGANATOR_CONFIG = {
 ["i:245976"] = true,
 ["i:244910"] = true,
 ["i:244487"] = true,
-["i:244274"] = true,
+["i:238194"] = true,
 ["i:244042"] = true,
 ["i:244501"] = true,
 ["i:239153"] = true,
@@ -3516,16 +3516,13 @@ BAGANATOR_CONFIG = {
 ["hideIn"] = {
 },
 },
+["260"] = {
+["priority"] = 1,
+},
 ["18"] = {
 ["showGroupPrefix"] = true,
 ["priority"] = 0,
 ["addedItems"] = {
-},
-},
-["549"] = {
-["showGroupPrefix"] = true,
-["priority"] = 0,
-["hideIn"] = {
 },
 },
 ["449"] = {
@@ -4034,12 +4031,10 @@ BAGANATOR_CONFIG = {
 },
 ["showGroupPrefix"] = false,
 },
-["313"] = {
-["group"] = "expansion",
-["priority"] = 0,
-["hideIn"] = {
+["95"] = {
+["addedItems"] = {
 },
-["showGroupPrefix"] = true,
+["priority"] = -1,
 },
 ["522"] = {
 ["showGroupPrefix"] = true,
@@ -4116,7 +4111,7 @@ BAGANATOR_CONFIG = {
 ["addedItems"] = {
 },
 },
-["117"] = {
+["75"] = {
 ["priority"] = 0,
 },
 ["113"] = {
@@ -4153,18 +4148,18 @@ BAGANATOR_CONFIG = {
 ["addedItems"] = {
 ["i:163790"] = true,
 ["i:163796"] = true,
-["i:163791"] = true,
+["i:163789"] = true,
 ["i:163699"] = true,
 ["i:165852"] = true,
 ["i:166732"] = true,
 ["i:166734"] = true,
 ["i:166737"] = true,
-["i:163789"] = true,
+["i:158698"] = true,
 ["i:80313"] = true,
 ["i:166733"] = true,
 ["i:166242"] = true,
 ["i:163780"] = true,
-["i:158698"] = true,
+["i:163791"] = true,
 ["i:166735"] = true,
 ["i:166738"] = true,
 },
@@ -4189,8 +4184,8 @@ BAGANATOR_CONFIG = {
 ["hideIn"] = {
 },
 },
-["74"] = {
-["priority"] = -1,
+["127"] = {
+["priority"] = 0,
 },
 ["217"] = {
 ["showGroupPrefix"] = true,
@@ -4199,17 +4194,23 @@ BAGANATOR_CONFIG = {
 ["i:13505"] = true,
 },
 },
-["95"] = {
-["addedItems"] = {
+["317"] = {
+["group"] = "expansion",
+["priority"] = 0,
+["hideIn"] = {
 },
-["priority"] = -1,
+["showGroupPrefix"] = true,
 },
 ["613"] = {
 ["showGroupPrefix"] = true,
 ["priority"] = 0,
 },
-["75"] = {
+["513"] = {
+["group"] = "slot",
 ["priority"] = 0,
+["hideIn"] = {
+},
+["showGroupPrefix"] = false,
 },
 ["65"] = {
 ["priority"] = -1,
@@ -4217,97 +4218,10 @@ BAGANATOR_CONFIG = {
 ["55"] = {
 ["priority"] = 0,
 },
-["213"] = {
+["417"] = {
+["showGroupPrefix"] = true,
 ["priority"] = 0,
-["addedItems"] = {
-["i:217989"] = true,
-["i:212361"] = true,
-["i:216630"] = true,
-["i:221982"] = true,
-["i:212749"] = true,
-["i:212694"] = true,
-["i:218044"] = true,
-["i:211108"] = true,
-["i:211102"] = true,
-["i:216695"] = true,
-["i:212362"] = true,
-["i:216711"] = true,
-["i:217964"] = true,
-["i:220371"] = true,
-["i:216640"] = true,
-["i:216628"] = true,
-["i:212759"] = true,
-["i:216648"] = true,
-["i:217907"] = true,
-["i:219801"] = true,
-["i:210718"] = true,
-["i:218005"] = true,
-["i:221977"] = true,
-["i:217927"] = true,
-["i:220120"] = true,
-["i:219527"] = true,
-["i:218003"] = true,
-["i:211106"] = true,
-["i:211101"] = true,
-["i:216641"] = true,
-["i:216631"] = true,
-["i:216650"] = true,
-["i:219523"] = true,
-["i:219818"] = true,
-["i:217983"] = true,
-["i:216651"] = true,
-["i:219516"] = true,
-["i:218043"] = true,
-["i:218110"] = true,
-["i:220368"] = true,
-["i:216627"] = true,
-["i:211103"] = true,
-["i:216663"] = true,
-["i:211107"] = true,
-["i:216643"] = true,
-["i:216632"] = true,
-["i:218004"] = true,
-["i:210681"] = true,
-["i:217903"] = true,
-["i:210714"] = true,
-["i:220372"] = true,
-["i:211123"] = true,
-["i:210716"] = true,
-["i:216625"] = true,
-["i:220367"] = true,
-["i:220211"] = true,
-["i:212916"] = true,
-["i:210715"] = true,
-["i:218045"] = true,
-["i:220370"] = true,
-["i:219944"] = true,
-["i:216649"] = true,
-["i:216671"] = true,
-["i:220369"] = true,
-["i:217957"] = true,
-["i:219452"] = true,
-["i:220374"] = true,
-["i:218082"] = true,
-["i:210717"] = true,
-["i:219817"] = true,
-["i:211110"] = true,
-["i:211124"] = true,
-["i:212366"] = true,
-["i:216647"] = true,
-["i:216644"] = true,
-["i:212760"] = true,
-["i:217961"] = true,
-["i:219878"] = true,
-["i:218109"] = true,
-["i:220373"] = true,
-["i:220117"] = true,
-["i:216629"] = true,
-["i:218108"] = true,
-["i:219386"] = true,
-["i:219389"] = true,
-["i:219777"] = true,
-["i:218046"] = true,
-["i:216639"] = true,
+["hideIn"] = {
 },
 },
 ["517"] = {
@@ -4452,18 +4366,19 @@ BAGANATOR_CONFIG = {
 ["i:175241"] = true,
 },
 },
-["523"] = {
-["group"] = "expansion",
-["priority"] = 0,
-["hideIn"] = {
+["94"] = {
+["addedItems"] = {
 },
-["showGroupPrefix"] = true,
+["priority"] = 3,
 },
 ["227"] = {
 ["priority"] = 0,
 },
-["127"] = {
+["323"] = {
+["showGroupPrefix"] = false,
 ["priority"] = 0,
+["hideIn"] = {
+},
 },
 ["84"] = {
 ["priority"] = 3,
@@ -4504,10 +4419,10 @@ BAGANATOR_CONFIG = {
 ["hideIn"] = {
 },
 ["addedItems"] = {
-["i:222781"] = true,
 ["i:222735"] = true,
-["i:222776"] = true,
 ["i:222728"] = true,
+["i:222776"] = true,
+["i:222781"] = true,
 },
 },
 ["126"] = {
@@ -4903,13 +4818,13 @@ BAGANATOR_CONFIG = {
 },
 ["addedItems"] = {
 ["i:212451"] = true,
-["i:159622"] = true,
 ["i:178772"] = true,
+["i:219303"] = true,
 ["i:219321"] = true,
 ["i:133304"] = true,
 ["i:219312"] = true,
 ["i:219317"] = true,
-["i:219303"] = true,
+["i:159622"] = true,
 },
 },
 ["187"] = {
@@ -4939,10 +4854,10 @@ BAGANATOR_CONFIG = {
 ["i:226270"] = true,
 ["i:227662"] = true,
 ["i:225670"] = true,
-["i:225230"] = true,
+["i:224835"] = true,
 ["i:226301"] = true,
 ["i:225232"] = true,
-["i:224835"] = true,
+["i:225671"] = true,
 ["i:224838"] = true,
 ["i:228773"] = true,
 ["i:226271"] = true,
@@ -4960,7 +4875,7 @@ BAGANATOR_CONFIG = {
 ["i:224656"] = true,
 ["i:224647"] = true,
 ["i:225672"] = true,
-["i:225671"] = true,
+["i:225230"] = true,
 ["i:226266"] = true,
 ["i:226306"] = true,
 ["i:227659"] = true,
@@ -5038,17 +4953,15 @@ BAGANATOR_CONFIG = {
 ["hideIn"] = {
 },
 },
-["323"] = {
-["showGroupPrefix"] = false,
+["74"] = {
+["priority"] = -1,
+},
+["523"] = {
+["group"] = "expansion",
 ["priority"] = 0,
 ["hideIn"] = {
 },
-},
-["327"] = {
 ["showGroupPrefix"] = true,
-["priority"] = 0,
-["hideIn"] = {
-},
 },
 ["600"] = {
 ["showGroupPrefix"] = true,
@@ -5093,36 +5006,120 @@ BAGANATOR_CONFIG = {
 ["hideIn"] = {
 },
 },
-["45"] = {
-["priority"] = 3,
-},
-["513"] = {
-["group"] = "slot",
+["213"] = {
 ["priority"] = 0,
-["hideIn"] = {
+["addedItems"] = {
+["i:217989"] = true,
+["i:212361"] = true,
+["i:216630"] = true,
+["i:221982"] = true,
+["i:212749"] = true,
+["i:212694"] = true,
+["i:218044"] = true,
+["i:211108"] = true,
+["i:211102"] = true,
+["i:216695"] = true,
+["i:212362"] = true,
+["i:216711"] = true,
+["i:217964"] = true,
+["i:220371"] = true,
+["i:216640"] = true,
+["i:216628"] = true,
+["i:212759"] = true,
+["i:216648"] = true,
+["i:217907"] = true,
+["i:219801"] = true,
+["i:210718"] = true,
+["i:218005"] = true,
+["i:221977"] = true,
+["i:217927"] = true,
+["i:220120"] = true,
+["i:219527"] = true,
+["i:218003"] = true,
+["i:211106"] = true,
+["i:211101"] = true,
+["i:216641"] = true,
+["i:216631"] = true,
+["i:216650"] = true,
+["i:219523"] = true,
+["i:219818"] = true,
+["i:217983"] = true,
+["i:216651"] = true,
+["i:219516"] = true,
+["i:218043"] = true,
+["i:218110"] = true,
+["i:220368"] = true,
+["i:216627"] = true,
+["i:211103"] = true,
+["i:216663"] = true,
+["i:211107"] = true,
+["i:216643"] = true,
+["i:216632"] = true,
+["i:218004"] = true,
+["i:210681"] = true,
+["i:217903"] = true,
+["i:210714"] = true,
+["i:220372"] = true,
+["i:211123"] = true,
+["i:210716"] = true,
+["i:216625"] = true,
+["i:220367"] = true,
+["i:220211"] = true,
+["i:212916"] = true,
+["i:210715"] = true,
+["i:218045"] = true,
+["i:220370"] = true,
+["i:219944"] = true,
+["i:216649"] = true,
+["i:216671"] = true,
+["i:220369"] = true,
+["i:217957"] = true,
+["i:219452"] = true,
+["i:220374"] = true,
+["i:218082"] = true,
+["i:210717"] = true,
+["i:219817"] = true,
+["i:211110"] = true,
+["i:211124"] = true,
+["i:212366"] = true,
+["i:216647"] = true,
+["i:216644"] = true,
+["i:212760"] = true,
+["i:217961"] = true,
+["i:219878"] = true,
+["i:218109"] = true,
+["i:220373"] = true,
+["i:220117"] = true,
+["i:216629"] = true,
+["i:218108"] = true,
+["i:219386"] = true,
+["i:219389"] = true,
+["i:219777"] = true,
+["i:218046"] = true,
+["i:216639"] = true,
 },
-["showGroupPrefix"] = false,
 },
-["317"] = {
+["117"] = {
+["priority"] = 0,
+},
+["313"] = {
 ["group"] = "expansion",
 ["priority"] = 0,
 ["hideIn"] = {
 },
 ["showGroupPrefix"] = true,
 },
-["94"] = {
-["addedItems"] = {
-},
-["priority"] = 3,
-},
-["35"] = {
-["priority"] = 0,
-},
-["417"] = {
+["327"] = {
 ["showGroupPrefix"] = true,
 ["priority"] = 0,
 ["hideIn"] = {
 },
+},
+["35"] = {
+["priority"] = 0,
+},
+["45"] = {
+["priority"] = 3,
 },
 ["322"] = {
 ["showGroupPrefix"] = true,
@@ -5295,10 +5292,10 @@ BAGANATOR_CONFIG = {
 ["i:207728"] = true,
 ["i:22736"] = true,
 ["i:19019"] = true,
-["i:137225"] = true,
-["i:30316"] = true,
 ["i:206448"] = true,
+["i:30316"] = true,
 ["i:151137"] = true,
+["i:137225"] = true,
 ["i:216906"] = true,
 ["i:22632"] = true,
 ["i:204177"] = true,
@@ -5384,8 +5381,11 @@ BAGANATOR_CONFIG = {
 },
 ["showGroupPrefix"] = false,
 },
-["260"] = {
-["priority"] = 1,
+["549"] = {
+["showGroupPrefix"] = true,
+["priority"] = 0,
+["hideIn"] = {
+},
 },
 ["560"] = {
 ["showGroupPrefix"] = true,
@@ -5463,9 +5463,14 @@ BAGANATOR_CONFIG = {
 ["guild_current_tab"] = 0,
 ["icon_text_font_size"] = 14,
 ["show_buttons_on_alt"] = false,
-["setting_anchors"] = false,
-["view_alpha"] = 1,
 ["bag_view_width"] = 14,
+["view_alpha"] = 1,
+["sort_ignore_slots_count_2"] = {
+["Ofpuss-Mal'Ganis"] = 0,
+["Mäñýfäçëð-Mal'Ganis"] = 0,
+["Neonvoid-Mal'Ganis"] = 0,
+["Auteist-Mal'Ganis"] = 0,
+},
 ["currencies_tracked_imported"] = {
 },
 ["currencies_tracked"] = {
@@ -5564,19 +5569,6 @@ BAGANATOR_CONFIG = {
 },
 },
 },
-["skins"] = {
-["blizzard"] = {
-["no_frame_borders"] = false,
-["view_transparency"] = 0,
-["empty_slot_background"] = false,
-},
-["dark"] = {
-["no_frame_borders"] = false,
-["square_icons"] = false,
-["view_transparency"] = 0.3,
-["empty_slot_background"] = false,
-},
-},
 ["recent_characters_main_view"] = {
 "Smaugchamp-Tichondrius",
 "Stormclout-Tichondrius",
@@ -5590,14 +5582,22 @@ BAGANATOR_CONFIG = {
 "Praisesun-Tichondrius",
 },
 ["debug_keywords"] = false,
+["skins"] = {
+["blizzard"] = {
+["no_frame_borders"] = false,
+["view_transparency"] = 0,
+["empty_slot_background"] = false,
+},
+["dark"] = {
+["no_frame_borders"] = false,
+["square_icons"] = false,
+["view_transparency"] = 0.3,
+["empty_slot_background"] = false,
+},
+},
 ["auto_sort_on_open"] = false,
 ["sort_ignore_slots_at_end"] = false,
-["sort_ignore_slots_count_2"] = {
-["Ofpuss-Mal'Ganis"] = 0,
-["Mäñýfäçëð-Mal'Ganis"] = 0,
-["Neonvoid-Mal'Ganis"] = 0,
-["Auteist-Mal'Ganis"] = 0,
-},
+["setting_anchors"] = false,
 ["disabled_skins"] = {
 },
 ["guild_view_position"] = {
@@ -7234,9 +7234,9 @@ BAGANATOR_CONFIG = {
 ["name"] = "Cape",
 ["search"] = "#armor&#back",
 },
-["327"] = {
-["name"] = "Dye",
-["search"] = "#housing dye",
+["94"] = {
+["name"] = "Main",
+["search"] = "hearthstone",
 },
 ["217"] = {
 ["name"] = "Time Walking Gear",
@@ -7290,9 +7290,9 @@ BAGANATOR_CONFIG = {
 ["name"] = "Delve",
 ["search"] = "delve",
 },
-["75"] = {
-["name"] = "Quest",
-["search"] = "#quest",
+["513"] = {
+["name"] = "Armor",
+["search"] = "#armor&#battle for azeroth&#mail",
 },
 ["121"] = {
 ["name"] = "Ore",
@@ -7306,9 +7306,9 @@ BAGANATOR_CONFIG = {
 ["name"] = "Remix",
 ["search"] = "",
 },
-["517"] = {
-["name"] = "Leather",
-["search"] = "#armor&#leather&#midnight",
+["35"] = {
+["name"] = "Cloth",
+["search"] = "!gear & (#cloth || #tailoring || #first aid)",
 },
 ["316"] = {
 ["name"] = "Cloth",
@@ -7318,9 +7318,9 @@ BAGANATOR_CONFIG = {
 ["name"] = "Exterior",
 ["search"] = "#exterior customization",
 },
-["74"] = {
-["name"] = "Consumable",
-["search"] = "#consumable",
+["127"] = {
+["name"] = "Manuscript",
+["search"] = "drakewatcher manuscript",
 },
 ["25"] = {
 ["name"] = "Toys",
@@ -7330,9 +7330,9 @@ BAGANATOR_CONFIG = {
 ["name"] = "Reputation",
 ["search"] = "reputation",
 },
-["523"] = {
-["name"] = "Potion",
-["search"] = "#potions",
+["327"] = {
+["name"] = "Dye",
+["search"] = "#housing dye",
 },
 ["413"] = {
 ["name"] = "Reagent",
@@ -7346,9 +7346,9 @@ BAGANATOR_CONFIG = {
 ["name"] = "Perma",
 ["search"] = "",
 },
-["513"] = {
-["name"] = "Armor",
-["search"] = "#armor&#battle for azeroth&#mail",
+["117"] = {
+["name"] = "Reputation",
+["search"] = "reputation",
 },
 ["65"] = {
 ["name"] = "Reagents",
@@ -7362,9 +7362,9 @@ BAGANATOR_CONFIG = {
 ["name"] = "Junk",
 ["search"] = "#junk",
 },
-["35"] = {
-["name"] = "Cloth",
-["search"] = "!gear & (#cloth || #tailoring || #first aid)",
+["113"] = {
+["name"] = "Mats",
+["search"] = "#tradeskill || #reagent",
 },
 ["532"] = {
 ["name"] = "Consumables",
@@ -7406,9 +7406,9 @@ BAGANATOR_CONFIG = {
 ["name"] = "Parts",
 ["search"] = "#parts&#reagent",
 },
-["323"] = {
-["name"] = "Recipes",
-["search"] = "#recipe&#classic",
+["74"] = {
+["name"] = "Consumable",
+["search"] = "#consumable",
 },
 ["531"] = {
 ["name"] = "Reagent",
@@ -7462,17 +7462,17 @@ BAGANATOR_CONFIG = {
 ["name"] = "Training Stones",
 ["search"] = "pet&xp",
 },
-["94"] = {
-["name"] = "Main",
-["search"] = "hearthstone",
+["523"] = {
+["name"] = "Potion",
+["search"] = "#potions",
 },
 ["227"] = {
 ["name"] = "Reagents",
 ["search"] = "#reagent",
 },
-["127"] = {
-["name"] = "Manuscript",
-["search"] = "drakewatcher manuscript",
+["323"] = {
+["name"] = "Recipes",
+["search"] = "#recipe&#classic",
 },
 ["84"] = {
 ["name"] = "PvP",
@@ -7910,17 +7910,17 @@ BAGANATOR_CONFIG = {
 ["name"] = "Cloth",
 ["search"] = "!gear & (#cloth || #tailoring || #first aid)",
 },
-["113"] = {
-["name"] = "Mats",
-["search"] = "#tradeskill || #reagent",
+["517"] = {
+["name"] = "Leather",
+["search"] = "#armor&#leather&#midnight",
 },
 ["150"] = {
 ["name"] = "Cloth",
 ["search"] = "!gear & (#cloth || #tailoring || #first aid)",
 },
-["117"] = {
-["name"] = "Reputation",
-["search"] = "reputation",
+["75"] = {
+["name"] = "Quest",
+["search"] = "#quest",
 },
 ["313"] = {
 ["name"] = "Drink",

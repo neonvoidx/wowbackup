@@ -1,0 +1,12 @@
+## Interface: 120000, 110207
+## Title: BetterUpgradeTooltip
+## Notes: Enhances item upgrade tooltips with ilvl ranges and crest info
+## Author: Boneshock
+## Version: 1.0.0
+## IconAtlas: Garr_LevelUpgradeArrow
+
+## SavedVariables: BetterUpgradeTooltipDB
+
+VersionedData.lua
+Core.lua
+Options.lua

@@ -1,6 +1,6 @@
 
 MapPinEnhancedDB = {
-["trackerVisible"] = true,
+["trackerVisible"] = false,
 ["minimapIcon"] = {
 ["minimapPos"] = 163.5128158652648,
 ["lock"] = false,
@@ -538,17 +538,6 @@ MapPinEnhancedDB = {
 ["autoVisibility"] = "both",
 },
 ["storedPins"] = {
-{
-["mapID"] = 2413,
-["setTracked"] = true,
-["color"] = "Custom",
-["usesAtlas"] = true,
-["x"] = 0.6059670055791098,
-["title"] = "The Dreamrift",
-["order"] = 1,
-["y"] = 0.6354572423759417,
-["texture"] = "Raid",
-},
 },
 ["general"] = {
 ["autoTrackNearestPin"] = true,

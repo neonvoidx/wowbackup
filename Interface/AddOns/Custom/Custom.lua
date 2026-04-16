@@ -14,7 +14,7 @@ local function OnEvent(self, event, ...)
 		end
 
 		-- Enable action bars 2,3,4,5 on reload
-		local bars = { 2, 3, 4, 5 }
+		local bars = { 2, 3, 4, 5, 6 }
 		local p = "PROXY_SHOW_ACTIONBAR_"
 		for k, v in pairs(bars) do
 			if not Settings.GetSetting(p .. v):GetValue() then

@@ -49,18 +49,18 @@ sArena_ReloadedDB = {
 },
 ["BlizzTarget"] = {
 ["dr"] = {
-["blackDRBorder"] = true,
+["blackDRBorder"] = false,
 ["posY"] = 1,
-["brightDRBorder"] = false,
+["brightDRBorder"] = true,
 ["drCategorySizeOffsets"] = {
 },
 ["drBorderGlowOff"] = false,
 ["posX"] = -126,
 ["thickPixelBorder"] = false,
-["showDRText"] = true,
+["showDRText"] = false,
 ["disableDRBorder"] = false,
 ["thinPixelBorder"] = false,
-["size"] = 52,
+["size"] = 48,
 },
 ["racial"] = {
 ["scale"] = 2,
@@ -70,7 +70,12 @@ sArena_ReloadedDB = {
 ["scale"] = 1.17,
 ["changeFont"] = true,
 ["frameFont"] = "1",
-["fontOutline"] = "OUTLINE",
+["textSettings"] = {
+["drTextOffsetY"] = -15,
+["drTextAnchor"] = "CENTER",
+["drTextOffsetX"] = 0,
+["drTextSize"] = 1.12,
+},
 ["textures"] = {
 ["castbarUninterruptibleTexture"] = "WglassDark",
 ["bgTexture"] = "d1",
@@ -78,26 +83,25 @@ sArena_ReloadedDB = {
 ["healStatusBarTexture"] = "d1",
 ["generalStatusBarTexture"] = "d1",
 },
-["posY"] = 152.6,
+["posY"] = 199.6,
 ["trinket"] = {
 ["scale"] = 2,
 ["posY"] = 1,
 ["posX"] = 60,
 },
-["posX"] = 552.1,
+["fontOutline"] = "OUTLINE",
 ["replaceClassIcon"] = true,
 ["cdFont"] = "1",
 ["spacing"] = 22,
 ["castBar"] = {
-["iconScale"] = 1.06,
+["simpleCastbar"] = false,
 ["interruptStatusColorOn"] = true,
 ["hideCastbarSpark"] = false,
 ["keepDefaultModernTextures"] = false,
 ["useModernCastbars"] = true,
-["posX"] = -25.2,
-["posY"] = -37.6,
-["simpleCastbar"] = false,
-["width"] = 109,
+["posX"] = -44,
+["iconScale"] = 1.06,
+["width"] = 138,
 },
 ["widgets"] = {
 ["targetIndicator"] = {
@@ -113,12 +117,7 @@ sArena_ReloadedDB = {
 ["enabled"] = true,
 },
 },
-["textSettings"] = {
-["drTextOffsetY"] = -15,
-["drTextAnchor"] = "CENTER",
-["drTextOffsetX"] = 0,
-["drTextSize"] = 1.12,
-},
+["posX"] = 451,
 },
 ["BlizzRetail"] = {
 ["dr"] = {

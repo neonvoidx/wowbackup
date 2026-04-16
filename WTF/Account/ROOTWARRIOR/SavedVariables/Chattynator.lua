@@ -152,40 +152,6 @@ CHATTYNATOR_CONFIG = {
 ["filters"] = {
 },
 },
-{
-["tabColor"] = "FF80FF",
-["channels"] = {
-},
-["whispersTemp"] = {
-},
-["name"] = "WHISPER",
-["isTemporary"] = true,
-["groups"] = {
-["WHISPER"] = true,
-},
-["addons"] = {
-},
-["backgroundColor"] = "1a1a1a",
-["filters"] = {
-},
-},
-{
-["tabColor"] = "00FFF6",
-["channels"] = {
-},
-["whispersTemp"] = {
-["|Kj15|k"] = true,
-},
-["name"] = "|Kj15|k",
-["isTemporary"] = true,
-["groups"] = {
-},
-["addons"] = {
-},
-["backgroundColor"] = "1a1a1a",
-["filters"] = {
-},
-},
 },
 ["size"] = {
 500.0007019042969,
@@ -730,7 +696,7 @@ CHATTYNATOR_CONFIG = {
 },
 }
 CHATTYNATOR_MESSAGE_LOG = {
-["cleanIndex"] = 2556,
+["cleanIndex"] = 3453,
 ["current"] = {
 {
 ["recordedBy"] = "Stormclout-Tichondrius",
@@ -48858,8 +48824,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Arasod-Tichondrius",
 ["sex"] = 2,
 },
-["type"] = "GUILD_ACHIEVEMENT",
 ["event"] = "CHAT_MSG_GUILD_ACHIEVEMENT",
+["type"] = "GUILD_ACHIEVEMENT",
 },
 ["color"] = {
 ["b"] = 0.250980406999588,
@@ -48879,8 +48845,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Elphie-Tichondrius",
 ["sex"] = 3,
 },
-["type"] = "GUILD_ACHIEVEMENT",
 ["event"] = "CHAT_MSG_GUILD_ACHIEVEMENT",
+["type"] = "GUILD_ACHIEVEMENT",
 },
 ["color"] = {
 ["b"] = 0.250980406999588,
@@ -48897,8 +48863,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["player"] = {
 ["name"] = "Baa'lial",
 },
-["type"] = "MONSTER_WHISPER",
 ["event"] = "CHAT_MSG_MONSTER_WHISPER",
+["type"] = "MONSTER_WHISPER",
 },
 ["color"] = {
 ["b"] = 0.9215686917304993,
@@ -48918,8 +48884,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Valeriav-Tichondrius",
 ["sex"] = 3,
 },
-["type"] = "GUILD_ACHIEVEMENT",
 ["event"] = "CHAT_MSG_GUILD_ACHIEVEMENT",
+["type"] = "GUILD_ACHIEVEMENT",
 },
 ["color"] = {
 ["b"] = 0.250980406999588,
@@ -48936,8 +48902,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["player"] = {
 ["name"] = "Ethereal Warpweaver",
 },
-["type"] = "MONSTER_SAY",
 ["event"] = "CHAT_MSG_MONSTER_SAY",
+["type"] = "MONSTER_SAY",
 },
 ["color"] = {
 ["b"] = 0.6235294342041016,
@@ -48957,8 +48923,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Ceevipw-Tichondrius",
 ["sex"] = 3,
 },
-["type"] = "GUILD_ACHIEVEMENT",
 ["event"] = "CHAT_MSG_GUILD_ACHIEVEMENT",
+["type"] = "GUILD_ACHIEVEMENT",
 },
 ["color"] = {
 ["b"] = 0.250980406999588,
@@ -48978,8 +48944,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Arasod-Tichondrius",
 ["sex"] = 2,
 },
-["type"] = "GUILD_ACHIEVEMENT",
 ["event"] = "CHAT_MSG_GUILD_ACHIEVEMENT",
+["type"] = "GUILD_ACHIEVEMENT",
 },
 ["color"] = {
 ["b"] = 0.250980406999588,
@@ -48999,8 +48965,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Elphie-Tichondrius",
 ["sex"] = 3,
 },
-["type"] = "GUILD_ACHIEVEMENT",
 ["event"] = "CHAT_MSG_GUILD_ACHIEVEMENT",
+["type"] = "GUILD_ACHIEVEMENT",
 },
 ["color"] = {
 ["b"] = 0.250980406999588,
@@ -49017,8 +48983,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["player"] = {
 ["name"] = "Baa'lial",
 },
-["type"] = "MONSTER_WHISPER",
 ["event"] = "CHAT_MSG_MONSTER_WHISPER",
+["type"] = "MONSTER_WHISPER",
 },
 ["color"] = {
 ["b"] = 0.9215686917304993,
@@ -49038,8 +49004,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Rommulis-Tichondrius",
 ["sex"] = 2,
 },
-["type"] = "PARTY",
 ["event"] = "CHAT_MSG_PARTY",
+["type"] = "PARTY",
 },
 ["color"] = {
 ["b"] = 1,
@@ -49059,8 +49025,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Zylos-Mal'Ganis",
 ["sex"] = 3,
 },
-["type"] = "PARTY_LEADER",
 ["event"] = "CHAT_MSG_PARTY_LEADER",
+["type"] = "PARTY_LEADER",
 },
 ["color"] = {
 ["b"] = 1,
@@ -49080,8 +49046,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Arasod-Tichondrius",
 ["sex"] = 2,
 },
-["type"] = "GUILD_ACHIEVEMENT",
 ["event"] = "CHAT_MSG_GUILD_ACHIEVEMENT",
+["type"] = "GUILD_ACHIEVEMENT",
 },
 ["color"] = {
 ["b"] = 0.250980406999588,
@@ -49101,8 +49067,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Elphie-Tichondrius",
 ["sex"] = 3,
 },
-["type"] = "GUILD_ACHIEVEMENT",
 ["event"] = "CHAT_MSG_GUILD_ACHIEVEMENT",
+["type"] = "GUILD_ACHIEVEMENT",
 },
 ["color"] = {
 ["b"] = 0.250980406999588,
@@ -49122,8 +49088,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Getajoblul-MoonGuard",
 ["sex"] = 2,
 },
-["type"] = "GUILD_ACHIEVEMENT",
 ["event"] = "CHAT_MSG_GUILD_ACHIEVEMENT",
+["type"] = "GUILD_ACHIEVEMENT",
 },
 ["color"] = {
 ["b"] = 0.250980406999588,
@@ -49143,8 +49109,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Dogofwar-Tichondrius",
 ["sex"] = 2,
 },
-["type"] = "GUILD_ACHIEVEMENT",
 ["event"] = "CHAT_MSG_GUILD_ACHIEVEMENT",
+["type"] = "GUILD_ACHIEVEMENT",
 },
 ["color"] = {
 ["b"] = 0.250980406999588,
@@ -49164,8 +49130,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Dogofwar-Tichondrius",
 ["sex"] = 2,
 },
-["type"] = "GUILD_ACHIEVEMENT",
 ["event"] = "CHAT_MSG_GUILD_ACHIEVEMENT",
+["type"] = "GUILD_ACHIEVEMENT",
 },
 ["color"] = {
 ["b"] = 0.250980406999588,
@@ -49185,8 +49151,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Packyouabowl-Tichondrius",
 ["sex"] = 3,
 },
-["type"] = "GUILD_ACHIEVEMENT",
 ["event"] = "CHAT_MSG_GUILD_ACHIEVEMENT",
+["type"] = "GUILD_ACHIEVEMENT",
 },
 ["color"] = {
 ["b"] = 0.250980406999588,
@@ -49206,8 +49172,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Dogofwar-Tichondrius",
 ["sex"] = 2,
 },
-["type"] = "GUILD_ACHIEVEMENT",
 ["event"] = "CHAT_MSG_GUILD_ACHIEVEMENT",
+["type"] = "GUILD_ACHIEVEMENT",
 },
 ["color"] = {
 ["b"] = 0.250980406999588,
@@ -49227,8 +49193,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Arasod-Tichondrius",
 ["sex"] = 2,
 },
-["type"] = "GUILD_ACHIEVEMENT",
 ["event"] = "CHAT_MSG_GUILD_ACHIEVEMENT",
+["type"] = "GUILD_ACHIEVEMENT",
 },
 ["color"] = {
 ["b"] = 0.250980406999588,
@@ -49248,8 +49214,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Elphie-Tichondrius",
 ["sex"] = 3,
 },
-["type"] = "GUILD_ACHIEVEMENT",
 ["event"] = "CHAT_MSG_GUILD_ACHIEVEMENT",
+["type"] = "GUILD_ACHIEVEMENT",
 },
 ["color"] = {
 ["b"] = 0.250980406999588,
@@ -49269,8 +49235,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Fryedeggs-Tichondrius",
 ["sex"] = 2,
 },
-["type"] = "GUILD_ACHIEVEMENT",
 ["event"] = "CHAT_MSG_GUILD_ACHIEVEMENT",
+["type"] = "GUILD_ACHIEVEMENT",
 },
 ["color"] = {
 ["b"] = 0.250980406999588,
@@ -49290,8 +49256,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Herpules-Daggerspine",
 ["sex"] = 2,
 },
-["type"] = "GUILD_ACHIEVEMENT",
 ["event"] = "CHAT_MSG_GUILD_ACHIEVEMENT",
+["type"] = "GUILD_ACHIEVEMENT",
 },
 ["color"] = {
 ["b"] = 0.250980406999588,
@@ -49311,8 +49277,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Herpules-Daggerspine",
 ["sex"] = 2,
 },
-["type"] = "GUILD_ACHIEVEMENT",
 ["event"] = "CHAT_MSG_GUILD_ACHIEVEMENT",
+["type"] = "GUILD_ACHIEVEMENT",
 },
 ["color"] = {
 ["b"] = 0.250980406999588,
@@ -49332,8 +49298,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Arasod-Tichondrius",
 ["sex"] = 2,
 },
-["type"] = "GUILD_ACHIEVEMENT",
 ["event"] = "CHAT_MSG_GUILD_ACHIEVEMENT",
+["type"] = "GUILD_ACHIEVEMENT",
 },
 ["color"] = {
 ["b"] = 0.250980406999588,
@@ -49353,8 +49319,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Elphie-Tichondrius",
 ["sex"] = 3,
 },
-["type"] = "GUILD_ACHIEVEMENT",
 ["event"] = "CHAT_MSG_GUILD_ACHIEVEMENT",
+["type"] = "GUILD_ACHIEVEMENT",
 },
 ["color"] = {
 ["b"] = 0.250980406999588,
@@ -49374,8 +49340,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Mommysjuicbx-Stormrage",
 ["sex"] = 2,
 },
-["type"] = "GUILD_ACHIEVEMENT",
 ["event"] = "CHAT_MSG_GUILD_ACHIEVEMENT",
+["type"] = "GUILD_ACHIEVEMENT",
 },
 ["color"] = {
 ["b"] = 0.250980406999588,
@@ -49395,8 +49361,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Andyslaps-Tichondrius",
 ["sex"] = 3,
 },
-["type"] = "GUILD_ACHIEVEMENT",
 ["event"] = "CHAT_MSG_GUILD_ACHIEVEMENT",
+["type"] = "GUILD_ACHIEVEMENT",
 },
 ["color"] = {
 ["b"] = 0.250980406999588,
@@ -49416,8 +49382,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Egotistic-Tichondrius",
 ["sex"] = 3,
 },
-["type"] = "GUILD_ACHIEVEMENT",
 ["event"] = "CHAT_MSG_GUILD_ACHIEVEMENT",
+["type"] = "GUILD_ACHIEVEMENT",
 },
 ["color"] = {
 ["b"] = 0.250980406999588,
@@ -49437,8 +49403,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Elphie-Tichondrius",
 ["sex"] = 3,
 },
-["type"] = "GUILD_ACHIEVEMENT",
 ["event"] = "CHAT_MSG_GUILD_ACHIEVEMENT",
+["type"] = "GUILD_ACHIEVEMENT",
 },
 ["color"] = {
 ["b"] = 0.250980406999588,
@@ -49458,8 +49424,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Arasod-Tichondrius",
 ["sex"] = 2,
 },
-["type"] = "GUILD_ACHIEVEMENT",
 ["event"] = "CHAT_MSG_GUILD_ACHIEVEMENT",
+["type"] = "GUILD_ACHIEVEMENT",
 },
 ["color"] = {
 ["b"] = 0.250980406999588,
@@ -49479,8 +49445,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Öwö-Tichondrius",
 ["sex"] = 3,
 },
-["type"] = "GUILD_ACHIEVEMENT",
 ["event"] = "CHAT_MSG_GUILD_ACHIEVEMENT",
+["type"] = "GUILD_ACHIEVEMENT",
 },
 ["color"] = {
 ["b"] = 0.250980406999588,
@@ -49500,8 +49466,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Öwö-Tichondrius",
 ["sex"] = 3,
 },
-["type"] = "GUILD_ACHIEVEMENT",
 ["event"] = "CHAT_MSG_GUILD_ACHIEVEMENT",
+["type"] = "GUILD_ACHIEVEMENT",
 },
 ["color"] = {
 ["b"] = 0.250980406999588,
@@ -49521,8 +49487,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Öwö-Tichondrius",
 ["sex"] = 3,
 },
-["type"] = "GUILD_ACHIEVEMENT",
 ["event"] = "CHAT_MSG_GUILD_ACHIEVEMENT",
+["type"] = "GUILD_ACHIEVEMENT",
 },
 ["color"] = {
 ["b"] = 0.250980406999588,
@@ -49542,8 +49508,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Öwö-Tichondrius",
 ["sex"] = 3,
 },
-["type"] = "GUILD_ACHIEVEMENT",
 ["event"] = "CHAT_MSG_GUILD_ACHIEVEMENT",
+["type"] = "GUILD_ACHIEVEMENT",
 },
 ["color"] = {
 ["b"] = 0.250980406999588,
@@ -49563,8 +49529,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Egotistic-Tichondrius",
 ["sex"] = 3,
 },
-["type"] = "GUILD_ACHIEVEMENT",
 ["event"] = "CHAT_MSG_GUILD_ACHIEVEMENT",
+["type"] = "GUILD_ACHIEVEMENT",
 },
 ["color"] = {
 ["b"] = 0.250980406999588,
@@ -49584,8 +49550,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Egotistic-Tichondrius",
 ["sex"] = 3,
 },
-["type"] = "GUILD_ACHIEVEMENT",
 ["event"] = "CHAT_MSG_GUILD_ACHIEVEMENT",
+["type"] = "GUILD_ACHIEVEMENT",
 },
 ["color"] = {
 ["b"] = 0.250980406999588,
@@ -49602,8 +49568,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["player"] = {
 ["name"] = "Xal'atath",
 },
-["type"] = "MONSTER_WHISPER",
 ["event"] = "CHAT_MSG_MONSTER_WHISPER",
+["type"] = "MONSTER_WHISPER",
 },
 ["color"] = {
 ["b"] = 0.9215686917304993,
@@ -49617,8 +49583,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 {
 ["recordedBy"] = "Stormclout-Tichondrius",
 ["typeInfo"] = {
-["type"] = "LOOT",
 ["event"] = "CHAT_MSG_LOOT",
+["type"] = "LOOT",
 },
 ["color"] = {
 ["b"] = -0,
@@ -49632,8 +49598,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 {
 ["recordedBy"] = "Stormclout-Tichondrius",
 ["typeInfo"] = {
-["type"] = "CURRENCY",
 ["event"] = "CHAT_MSG_CURRENCY",
+["type"] = "CURRENCY",
 },
 ["color"] = {
 ["b"] = -0,
@@ -49653,8 +49619,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Depressedbtw-Mal'Ganis",
 ["sex"] = 2,
 },
-["type"] = "LOOT",
 ["event"] = "CHAT_MSG_LOOT",
+["type"] = "LOOT",
 },
 ["color"] = {
 ["b"] = -0,
@@ -49668,8 +49634,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 {
 ["recordedBy"] = "Stormclout-Tichondrius",
 ["typeInfo"] = {
-["type"] = "MONEY",
 ["event"] = "CHAT_MSG_MONEY",
+["type"] = "MONEY",
 },
 ["color"] = {
 ["b"] = -0,
@@ -49689,8 +49655,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Zylos-Mal'Ganis",
 ["sex"] = 3,
 },
-["type"] = "LOOT",
 ["event"] = "CHAT_MSG_LOOT",
+["type"] = "LOOT",
 },
 ["color"] = {
 ["b"] = -0,
@@ -49710,8 +49676,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Zylos-Mal'Ganis",
 ["sex"] = 3,
 },
-["type"] = "LOOT",
 ["event"] = "CHAT_MSG_LOOT",
+["type"] = "LOOT",
 },
 ["color"] = {
 ["b"] = -0,
@@ -49725,8 +49691,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 {
 ["recordedBy"] = "Stormclout-Tichondrius",
 ["typeInfo"] = {
-["type"] = "LOOT",
 ["event"] = "CHAT_MSG_LOOT",
+["type"] = "LOOT",
 },
 ["color"] = {
 ["b"] = -0,
@@ -49743,8 +49709,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["player"] = {
 ["name"] = "Headteacher Doragosa",
 },
-["type"] = "MONSTER_YELL",
 ["event"] = "CHAT_MSG_MONSTER_YELL",
+["type"] = "MONSTER_YELL",
 },
 ["color"] = {
 ["b"] = 0.250980406999588,
@@ -49764,8 +49730,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Rommulis-Tichondrius",
 ["sex"] = 2,
 },
-["type"] = "PARTY",
 ["event"] = "CHAT_MSG_PARTY",
+["type"] = "PARTY",
 },
 ["color"] = {
 ["b"] = 1,
@@ -49785,8 +49751,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Kloei-Mal'Ganis",
 ["sex"] = 3,
 },
-["type"] = "PARTY",
 ["event"] = "CHAT_MSG_PARTY",
+["type"] = "PARTY",
 },
 ["color"] = {
 ["b"] = 1,
@@ -49800,8 +49766,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 {
 ["recordedBy"] = "Stormclout-Tichondrius",
 ["typeInfo"] = {
-["type"] = "LOOT",
 ["event"] = "CHAT_MSG_LOOT",
+["type"] = "LOOT",
 },
 ["color"] = {
 ["b"] = -0,
@@ -49815,8 +49781,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 {
 ["recordedBy"] = "Stormclout-Tichondrius",
 ["typeInfo"] = {
-["type"] = "LOOT",
 ["event"] = "CHAT_MSG_LOOT",
+["type"] = "LOOT",
 },
 ["color"] = {
 ["b"] = -0,
@@ -49836,8 +49802,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Kloei-Mal'Ganis",
 ["sex"] = 3,
 },
-["type"] = "LOOT",
 ["event"] = "CHAT_MSG_LOOT",
+["type"] = "LOOT",
 },
 ["color"] = {
 ["b"] = -0,
@@ -49857,8 +49823,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Herpules-Daggerspine",
 ["sex"] = 2,
 },
-["type"] = "GUILD",
 ["event"] = "CHAT_MSG_GUILD",
+["type"] = "GUILD",
 },
 ["color"] = {
 ["b"] = 0.250980406999588,
@@ -49878,8 +49844,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Snekelz-Mal'Ganis",
 ["sex"] = 3,
 },
-["type"] = "GUILD",
 ["event"] = "CHAT_MSG_GUILD",
+["type"] = "GUILD",
 },
 ["color"] = {
 ["b"] = 0.250980406999588,
@@ -49899,8 +49865,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Egotistic-Tichondrius",
 ["sex"] = 3,
 },
-["type"] = "GUILD_ACHIEVEMENT",
 ["event"] = "CHAT_MSG_GUILD_ACHIEVEMENT",
+["type"] = "GUILD_ACHIEVEMENT",
 },
 ["color"] = {
 ["b"] = 0.250980406999588,
@@ -49920,8 +49886,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Getajoblul-MoonGuard",
 ["sex"] = 2,
 },
-["type"] = "GUILD",
 ["event"] = "CHAT_MSG_GUILD",
+["type"] = "GUILD",
 },
 ["color"] = {
 ["b"] = 0.250980406999588,
@@ -49938,8 +49904,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["player"] = {
 ["name"] = "Ethereal Warpweaver",
 },
-["type"] = "MONSTER_SAY",
 ["event"] = "CHAT_MSG_MONSTER_SAY",
+["type"] = "MONSTER_SAY",
 },
 ["color"] = {
 ["b"] = 0.6235294342041016,
@@ -49959,8 +49925,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Partydude-Tichondrius",
 ["sex"] = 2,
 },
-["type"] = "GUILD_ACHIEVEMENT",
 ["event"] = "CHAT_MSG_GUILD_ACHIEVEMENT",
+["type"] = "GUILD_ACHIEVEMENT",
 },
 ["color"] = {
 ["b"] = 0.250980406999588,
@@ -49980,8 +49946,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Stormclout-Tichondrius",
 ["sex"] = 3,
 },
-["type"] = "PARTY_LEADER",
 ["event"] = "CHAT_MSG_PARTY_LEADER",
+["type"] = "PARTY_LEADER",
 },
 ["color"] = {
 ["b"] = 1,
@@ -50001,8 +49967,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Stormclout-Tichondrius",
 ["sex"] = 3,
 },
-["type"] = "PARTY_LEADER",
 ["event"] = "CHAT_MSG_PARTY_LEADER",
+["type"] = "PARTY_LEADER",
 },
 ["color"] = {
 ["b"] = 1,
@@ -50016,8 +49982,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 {
 ["recordedBy"] = "Stormclout-Tichondrius",
 ["typeInfo"] = {
-["type"] = "PING",
 ["event"] = "CHAT_MSG_PING",
+["type"] = "PING",
 },
 ["color"] = {
 ["b"] = 1,
@@ -50037,8 +50003,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Ceevipw-Tichondrius",
 ["sex"] = 3,
 },
-["type"] = "GUILD_ACHIEVEMENT",
 ["event"] = "CHAT_MSG_GUILD_ACHIEVEMENT",
+["type"] = "GUILD_ACHIEVEMENT",
 },
 ["color"] = {
 ["b"] = 0.250980406999588,
@@ -50055,8 +50021,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["player"] = {
 ["name"] = "High Sage Viryx",
 },
-["type"] = "MONSTER_YELL",
 ["event"] = "CHAT_MSG_MONSTER_YELL",
+["type"] = "MONSTER_YELL",
 },
 ["color"] = {
 ["b"] = 0.250980406999588,
@@ -50073,8 +50039,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["player"] = {
 ["name"] = "Xal'atath",
 },
-["type"] = "MONSTER_WHISPER",
 ["event"] = "CHAT_MSG_MONSTER_WHISPER",
+["type"] = "MONSTER_WHISPER",
 },
 ["color"] = {
 ["b"] = 0.9215686917304993,
@@ -50094,8 +50060,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Depressedbtw-Mal'Ganis",
 ["sex"] = 2,
 },
-["type"] = "ACHIEVEMENT",
 ["event"] = "CHAT_MSG_ACHIEVEMENT",
+["type"] = "ACHIEVEMENT",
 },
 ["color"] = {
 ["b"] = -0,
@@ -50115,8 +50081,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Zylos-Mal'Ganis",
 ["sex"] = 3,
 },
-["type"] = "ACHIEVEMENT",
 ["event"] = "CHAT_MSG_ACHIEVEMENT",
+["type"] = "ACHIEVEMENT",
 },
 ["color"] = {
 ["b"] = -0,
@@ -50130,8 +50096,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 {
 ["recordedBy"] = "Stormclout-Tichondrius",
 ["typeInfo"] = {
-["type"] = "CURRENCY",
 ["event"] = "CHAT_MSG_CURRENCY",
+["type"] = "CURRENCY",
 },
 ["color"] = {
 ["b"] = -0,
@@ -50145,8 +50111,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 {
 ["recordedBy"] = "Stormclout-Tichondrius",
 ["typeInfo"] = {
-["type"] = "LOOT",
 ["event"] = "CHAT_MSG_LOOT",
+["type"] = "LOOT",
 },
 ["color"] = {
 ["b"] = -0,
@@ -50160,8 +50126,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 {
 ["recordedBy"] = "Stormclout-Tichondrius",
 ["typeInfo"] = {
-["type"] = "MONEY",
 ["event"] = "CHAT_MSG_MONEY",
+["type"] = "MONEY",
 },
 ["color"] = {
 ["b"] = -0,
@@ -50181,8 +50147,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Knotweed-Mal'Ganis",
 ["sex"] = 3,
 },
-["type"] = "LOOT",
 ["event"] = "CHAT_MSG_LOOT",
+["type"] = "LOOT",
 },
 ["color"] = {
 ["b"] = -0,
@@ -50202,8 +50168,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Zylos-Mal'Ganis",
 ["sex"] = 3,
 },
-["type"] = "LOOT",
 ["event"] = "CHAT_MSG_LOOT",
+["type"] = "LOOT",
 },
 ["color"] = {
 ["b"] = -0,
@@ -50223,8 +50189,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Kloei-Mal'Ganis",
 ["sex"] = 3,
 },
-["type"] = "LOOT",
 ["event"] = "CHAT_MSG_LOOT",
+["type"] = "LOOT",
 },
 ["color"] = {
 ["b"] = -0,
@@ -50238,8 +50204,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 {
 ["recordedBy"] = "Stormclout-Tichondrius",
 ["typeInfo"] = {
-["type"] = "LOOT",
 ["event"] = "CHAT_MSG_LOOT",
+["type"] = "LOOT",
 },
 ["color"] = {
 ["b"] = -0,
@@ -50253,8 +50219,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 {
 ["recordedBy"] = "Stormclout-Tichondrius",
 ["typeInfo"] = {
-["type"] = "CURRENCY",
 ["event"] = "CHAT_MSG_CURRENCY",
+["type"] = "CURRENCY",
 },
 ["color"] = {
 ["b"] = -0,
@@ -50274,8 +50240,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Stormclout",
 ["sex"] = 3,
 },
-["type"] = "MONSTER_EMOTE",
 ["event"] = "CHAT_MSG_MONSTER_EMOTE",
+["type"] = "MONSTER_EMOTE",
 },
 ["color"] = {
 ["b"] = 0.250980406999588,
@@ -50292,8 +50258,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["player"] = {
 ["name"] = "Shul'ka Seila",
 },
-["type"] = "MONSTER_YELL",
 ["event"] = "CHAT_MSG_MONSTER_YELL",
+["type"] = "MONSTER_YELL",
 },
 ["color"] = {
 ["b"] = 0.250980406999588,
@@ -50310,8 +50276,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["player"] = {
 ["name"] = "Shul'ka Seila",
 },
-["type"] = "MONSTER_YELL",
 ["event"] = "CHAT_MSG_MONSTER_YELL",
+["type"] = "MONSTER_YELL",
 },
 ["color"] = {
 ["b"] = 0.250980406999588,
@@ -50328,8 +50294,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["player"] = {
 ["name"] = "Amarakk",
 },
-["type"] = "MONSTER_SAY",
 ["event"] = "CHAT_MSG_MONSTER_SAY",
+["type"] = "MONSTER_SAY",
 },
 ["color"] = {
 ["b"] = 0.6235294342041016,
@@ -50346,8 +50312,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["player"] = {
 ["name"] = "Amarakk",
 },
-["type"] = "MONSTER_SAY",
 ["event"] = "CHAT_MSG_MONSTER_SAY",
+["type"] = "MONSTER_SAY",
 },
 ["color"] = {
 ["b"] = 0.6235294342041016,
@@ -50361,8 +50327,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 {
 ["recordedBy"] = "Stormclout-Tichondrius",
 ["typeInfo"] = {
-["type"] = "PING",
 ["event"] = "CHAT_MSG_PING",
+["type"] = "PING",
 },
 ["color"] = {
 ["b"] = 1,
@@ -50376,8 +50342,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 {
 ["recordedBy"] = "Stormclout-Tichondrius",
 ["typeInfo"] = {
-["type"] = "PING",
 ["event"] = "CHAT_MSG_PING",
+["type"] = "PING",
 },
 ["color"] = {
 ["b"] = 1,
@@ -50397,8 +50363,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Upgrades-Mal'Ganis",
 ["sex"] = 2,
 },
-["type"] = "RAID",
 ["event"] = "CHAT_MSG_RAID",
+["type"] = "RAID",
 },
 ["color"] = {
 ["b"] = -0,
@@ -50412,8 +50378,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 {
 ["recordedBy"] = "Stormclout-Tichondrius",
 ["typeInfo"] = {
-["type"] = "PING",
 ["event"] = "CHAT_MSG_PING",
+["type"] = "PING",
 },
 ["color"] = {
 ["b"] = 1,
@@ -50427,8 +50393,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 {
 ["recordedBy"] = "Stormclout-Tichondrius",
 ["typeInfo"] = {
-["type"] = "PING",
 ["event"] = "CHAT_MSG_PING",
+["type"] = "PING",
 },
 ["color"] = {
 ["b"] = 1,
@@ -50442,8 +50408,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 {
 ["recordedBy"] = "Stormclout-Tichondrius",
 ["typeInfo"] = {
-["type"] = "PING",
 ["event"] = "CHAT_MSG_PING",
+["type"] = "PING",
 },
 ["color"] = {
 ["b"] = 1,
@@ -50460,8 +50426,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["player"] = {
 ["name"] = "Ethereal Warpweaver",
 },
-["type"] = "MONSTER_SAY",
 ["event"] = "CHAT_MSG_MONSTER_SAY",
+["type"] = "MONSTER_SAY",
 },
 ["color"] = {
 ["b"] = 0.6235294342041016,
@@ -50481,8 +50447,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Delibash-Mal'Ganis",
 ["sex"] = 2,
 },
-["type"] = "LOOT",
 ["event"] = "CHAT_MSG_LOOT",
+["type"] = "LOOT",
 },
 ["color"] = {
 ["b"] = -0,
@@ -50502,8 +50468,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Delibash-Mal'Ganis",
 ["sex"] = 2,
 },
-["type"] = "LOOT",
 ["event"] = "CHAT_MSG_LOOT",
+["type"] = "LOOT",
 },
 ["color"] = {
 ["b"] = -0,
@@ -50523,8 +50489,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Delibash-Mal'Ganis",
 ["sex"] = 2,
 },
-["type"] = "LOOT",
 ["event"] = "CHAT_MSG_LOOT",
+["type"] = "LOOT",
 },
 ["color"] = {
 ["b"] = -0,
@@ -50541,8 +50507,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["player"] = {
 ["name"] = "Chimaerus",
 },
-["type"] = "MONSTER_YELL",
 ["event"] = "CHAT_MSG_MONSTER_YELL",
+["type"] = "MONSTER_YELL",
 },
 ["color"] = {
 ["b"] = 0.250980406999588,
@@ -50562,8 +50528,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Smileclap-Mal'Ganis",
 ["sex"] = 3,
 },
-["type"] = "LOOT",
 ["event"] = "CHAT_MSG_LOOT",
+["type"] = "LOOT",
 },
 ["color"] = {
 ["b"] = -0,
@@ -50583,8 +50549,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Smileclap-Mal'Ganis",
 ["sex"] = 3,
 },
-["type"] = "LOOT",
 ["event"] = "CHAT_MSG_LOOT",
+["type"] = "LOOT",
 },
 ["color"] = {
 ["b"] = -0,
@@ -50601,8 +50567,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["player"] = {
 ["name"] = "Amarakk",
 },
-["type"] = "MONSTER_SAY",
 ["event"] = "CHAT_MSG_MONSTER_SAY",
+["type"] = "MONSTER_SAY",
 },
 ["color"] = {
 ["b"] = 0.6235294342041016,
@@ -50619,8 +50585,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["player"] = {
 ["name"] = "Amarakk",
 },
-["type"] = "MONSTER_SAY",
 ["event"] = "CHAT_MSG_MONSTER_SAY",
+["type"] = "MONSTER_SAY",
 },
 ["color"] = {
 ["b"] = 0.6235294342041016,
@@ -50640,8 +50606,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Ravenmockr-Thrall",
 ["sex"] = 2,
 },
-["type"] = "GUILD_ACHIEVEMENT",
 ["event"] = "CHAT_MSG_GUILD_ACHIEVEMENT",
+["type"] = "GUILD_ACHIEVEMENT",
 },
 ["color"] = {
 ["b"] = 0.250980406999588,
@@ -50661,8 +50627,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Mcblazzle-Area52",
 ["sex"] = 2,
 },
-["type"] = "GUILD_ACHIEVEMENT",
 ["event"] = "CHAT_MSG_GUILD_ACHIEVEMENT",
+["type"] = "GUILD_ACHIEVEMENT",
 },
 ["color"] = {
 ["b"] = 0.250980406999588,
@@ -50682,8 +50648,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Kharnedge-Illidan",
 ["sex"] = 2,
 },
-["type"] = "GUILD_ACHIEVEMENT",
 ["event"] = "CHAT_MSG_GUILD_ACHIEVEMENT",
+["type"] = "GUILD_ACHIEVEMENT",
 },
 ["color"] = {
 ["b"] = 0.250980406999588,
@@ -50703,8 +50669,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Kharnedge-Illidan",
 ["sex"] = 2,
 },
-["type"] = "GUILD_ACHIEVEMENT",
 ["event"] = "CHAT_MSG_GUILD_ACHIEVEMENT",
+["type"] = "GUILD_ACHIEVEMENT",
 },
 ["color"] = {
 ["b"] = 0.250980406999588,
@@ -50724,8 +50690,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Mcblazzle-Area52",
 ["sex"] = 2,
 },
-["type"] = "GUILD_ACHIEVEMENT",
 ["event"] = "CHAT_MSG_GUILD_ACHIEVEMENT",
+["type"] = "GUILD_ACHIEVEMENT",
 },
 ["color"] = {
 ["b"] = 0.250980406999588,
@@ -50745,8 +50711,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Mcblazzle-Area52",
 ["sex"] = 2,
 },
-["type"] = "GUILD_ACHIEVEMENT",
 ["event"] = "CHAT_MSG_GUILD_ACHIEVEMENT",
+["type"] = "GUILD_ACHIEVEMENT",
 },
 ["color"] = {
 ["b"] = 0.250980406999588,
@@ -50760,8 +50726,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 {
 ["recordedBy"] = "Stormclout-Tichondrius",
 ["typeInfo"] = {
-["type"] = "PING",
 ["event"] = "CHAT_MSG_PING",
+["type"] = "PING",
 },
 ["color"] = {
 ["b"] = 1,
@@ -50781,8 +50747,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Abíde-Illidan",
 ["sex"] = 3,
 },
-["type"] = "GUILD_ACHIEVEMENT",
 ["event"] = "CHAT_MSG_GUILD_ACHIEVEMENT",
+["type"] = "GUILD_ACHIEVEMENT",
 },
 ["color"] = {
 ["b"] = 0.250980406999588,
@@ -50802,8 +50768,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Totemism-Mal'Ganis",
 ["sex"] = 2,
 },
-["type"] = "RAID",
 ["event"] = "CHAT_MSG_RAID",
+["type"] = "RAID",
 },
 ["color"] = {
 ["b"] = -0,
@@ -50823,8 +50789,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Critvoid-Thrall",
 ["sex"] = 3,
 },
-["type"] = "RAID",
 ["event"] = "CHAT_MSG_RAID",
+["type"] = "RAID",
 },
 ["color"] = {
 ["b"] = -0,
@@ -50844,8 +50810,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Magicz",
 ["sex"] = 3,
 },
-["type"] = "MONSTER_EMOTE",
 ["event"] = "CHAT_MSG_MONSTER_EMOTE",
+["type"] = "MONSTER_EMOTE",
 },
 ["color"] = {
 ["b"] = 0.250980406999588,
@@ -50865,8 +50831,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Smileclap-Mal'Ganis",
 ["sex"] = 3,
 },
-["type"] = "RAID_WARNING",
 ["event"] = "CHAT_MSG_RAID_WARNING",
+["type"] = "RAID_WARNING",
 },
 ["color"] = {
 ["b"] = -0,
@@ -50886,8 +50852,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Smileclap-Mal'Ganis",
 ["sex"] = 3,
 },
-["type"] = "RAID_WARNING",
 ["event"] = "CHAT_MSG_RAID_WARNING",
+["type"] = "RAID_WARNING",
 },
 ["color"] = {
 ["b"] = -0,
@@ -50901,8 +50867,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 {
 ["recordedBy"] = "Stormclout-Tichondrius",
 ["typeInfo"] = {
-["type"] = "PING",
 ["event"] = "CHAT_MSG_PING",
+["type"] = "PING",
 },
 ["color"] = {
 ["b"] = 1,
@@ -50916,8 +50882,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 {
 ["recordedBy"] = "Stormclout-Tichondrius",
 ["typeInfo"] = {
-["type"] = "PING",
 ["event"] = "CHAT_MSG_PING",
+["type"] = "PING",
 },
 ["color"] = {
 ["b"] = 1,
@@ -50931,8 +50897,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 {
 ["recordedBy"] = "Stormclout-Tichondrius",
 ["typeInfo"] = {
-["type"] = "PING",
 ["event"] = "CHAT_MSG_PING",
+["type"] = "PING",
 },
 ["color"] = {
 ["b"] = 1,
@@ -50946,8 +50912,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 {
 ["recordedBy"] = "Stormclout-Tichondrius",
 ["typeInfo"] = {
-["type"] = "PING",
 ["event"] = "CHAT_MSG_PING",
+["type"] = "PING",
 },
 ["color"] = {
 ["b"] = 1,
@@ -50967,8 +50933,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Delibash-Mal'Ganis",
 ["sex"] = 2,
 },
-["type"] = "LOOT",
 ["event"] = "CHAT_MSG_LOOT",
+["type"] = "LOOT",
 },
 ["color"] = {
 ["b"] = -0,
@@ -50988,8 +50954,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Gutless-Mal'Ganis",
 ["sex"] = 2,
 },
-["type"] = "LOOT",
 ["event"] = "CHAT_MSG_LOOT",
+["type"] = "LOOT",
 },
 ["color"] = {
 ["b"] = -0,
@@ -51009,8 +50975,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Theeohgee-Mal'Ganis",
 ["sex"] = 3,
 },
-["type"] = "LOOT",
 ["event"] = "CHAT_MSG_LOOT",
+["type"] = "LOOT",
 },
 ["color"] = {
 ["b"] = -0,
@@ -51030,8 +50996,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Critvoid-Thrall",
 ["sex"] = 3,
 },
-["type"] = "LOOT",
 ["event"] = "CHAT_MSG_LOOT",
+["type"] = "LOOT",
 },
 ["color"] = {
 ["b"] = -0,
@@ -51051,8 +51017,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Gutless-Mal'Ganis",
 ["sex"] = 2,
 },
-["type"] = "LOOT",
 ["event"] = "CHAT_MSG_LOOT",
+["type"] = "LOOT",
 },
 ["color"] = {
 ["b"] = -0,
@@ -51072,8 +51038,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Delibash-Mal'Ganis",
 ["sex"] = 2,
 },
-["type"] = "LOOT",
 ["event"] = "CHAT_MSG_LOOT",
+["type"] = "LOOT",
 },
 ["color"] = {
 ["b"] = -0,
@@ -51093,8 +51059,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Wildyn-Mal'Ganis",
 ["sex"] = 3,
 },
-["type"] = "LOOT",
 ["event"] = "CHAT_MSG_LOOT",
+["type"] = "LOOT",
 },
 ["color"] = {
 ["b"] = -0,
@@ -51114,8 +51080,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Critvoid-Thrall",
 ["sex"] = 3,
 },
-["type"] = "LOOT",
 ["event"] = "CHAT_MSG_LOOT",
+["type"] = "LOOT",
 },
 ["color"] = {
 ["b"] = -0,
@@ -51135,8 +51101,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Upgrades-Mal'Ganis",
 ["sex"] = 2,
 },
-["type"] = "LOOT",
 ["event"] = "CHAT_MSG_LOOT",
+["type"] = "LOOT",
 },
 ["color"] = {
 ["b"] = -0,
@@ -51156,8 +51122,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Theeohgee-Mal'Ganis",
 ["sex"] = 3,
 },
-["type"] = "LOOT",
 ["event"] = "CHAT_MSG_LOOT",
+["type"] = "LOOT",
 },
 ["color"] = {
 ["b"] = -0,
@@ -51177,8 +51143,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Zylos-Mal'Ganis",
 ["sex"] = 3,
 },
-["type"] = "LOOT",
 ["event"] = "CHAT_MSG_LOOT",
+["type"] = "LOOT",
 },
 ["color"] = {
 ["b"] = -0,
@@ -51198,8 +51164,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Wildyn-Mal'Ganis",
 ["sex"] = 3,
 },
-["type"] = "LOOT",
 ["event"] = "CHAT_MSG_LOOT",
+["type"] = "LOOT",
 },
 ["color"] = {
 ["b"] = -0,
@@ -51219,8 +51185,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Gutless-Mal'Ganis",
 ["sex"] = 2,
 },
-["type"] = "LOOT",
 ["event"] = "CHAT_MSG_LOOT",
+["type"] = "LOOT",
 },
 ["color"] = {
 ["b"] = -0,
@@ -51240,8 +51206,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Stormclout-Tichondrius",
 ["sex"] = 3,
 },
-["type"] = "LOOT",
 ["event"] = "CHAT_MSG_LOOT",
+["type"] = "LOOT",
 },
 ["color"] = {
 ["b"] = -0,
@@ -51261,8 +51227,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Gravia-Mal'Ganis",
 ["sex"] = 3,
 },
-["type"] = "LOOT",
 ["event"] = "CHAT_MSG_LOOT",
+["type"] = "LOOT",
 },
 ["color"] = {
 ["b"] = -0,
@@ -51282,8 +51248,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Delibash-Mal'Ganis",
 ["sex"] = 2,
 },
-["type"] = "LOOT",
 ["event"] = "CHAT_MSG_LOOT",
+["type"] = "LOOT",
 },
 ["color"] = {
 ["b"] = -0,
@@ -51303,8 +51269,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Upgrades-Mal'Ganis",
 ["sex"] = 2,
 },
-["type"] = "LOOT",
 ["event"] = "CHAT_MSG_LOOT",
+["type"] = "LOOT",
 },
 ["color"] = {
 ["b"] = -0,
@@ -51318,8 +51284,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 {
 ["recordedBy"] = "Stormclout-Tichondrius",
 ["typeInfo"] = {
-["type"] = "PING",
 ["event"] = "CHAT_MSG_PING",
+["type"] = "PING",
 },
 ["color"] = {
 ["b"] = 1,
@@ -51339,8 +51305,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Zylos-Mal'Ganis",
 ["sex"] = 3,
 },
-["type"] = "LOOT",
 ["event"] = "CHAT_MSG_LOOT",
+["type"] = "LOOT",
 },
 ["color"] = {
 ["b"] = -0,
@@ -51360,8 +51326,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Upgrades-Mal'Ganis",
 ["sex"] = 2,
 },
-["type"] = "LOOT",
 ["event"] = "CHAT_MSG_LOOT",
+["type"] = "LOOT",
 },
 ["color"] = {
 ["b"] = -0,
@@ -51381,8 +51347,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Smileclap-Mal'Ganis",
 ["sex"] = 3,
 },
-["type"] = "LOOT",
 ["event"] = "CHAT_MSG_LOOT",
+["type"] = "LOOT",
 },
 ["color"] = {
 ["b"] = -0,
@@ -51402,8 +51368,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Goatussy-Illidan",
 ["sex"] = 3,
 },
-["type"] = "LOOT",
 ["event"] = "CHAT_MSG_LOOT",
+["type"] = "LOOT",
 },
 ["color"] = {
 ["b"] = -0,
@@ -51423,8 +51389,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Kloei-Mal'Ganis",
 ["sex"] = 3,
 },
-["type"] = "LOOT",
 ["event"] = "CHAT_MSG_LOOT",
+["type"] = "LOOT",
 },
 ["color"] = {
 ["b"] = -0,
@@ -51444,8 +51410,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Totemism-Mal'Ganis",
 ["sex"] = 2,
 },
-["type"] = "LOOT",
 ["event"] = "CHAT_MSG_LOOT",
+["type"] = "LOOT",
 },
 ["color"] = {
 ["b"] = -0,
@@ -51465,8 +51431,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Kloei-Mal'Ganis",
 ["sex"] = 3,
 },
-["type"] = "LOOT",
 ["event"] = "CHAT_MSG_LOOT",
+["type"] = "LOOT",
 },
 ["color"] = {
 ["b"] = -0,
@@ -51486,8 +51452,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Smileclap-Mal'Ganis",
 ["sex"] = 3,
 },
-["type"] = "LOOT",
 ["event"] = "CHAT_MSG_LOOT",
+["type"] = "LOOT",
 },
 ["color"] = {
 ["b"] = -0,
@@ -51507,8 +51473,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Zylos-Mal'Ganis",
 ["sex"] = 3,
 },
-["type"] = "LOOT",
 ["event"] = "CHAT_MSG_LOOT",
+["type"] = "LOOT",
 },
 ["color"] = {
 ["b"] = -0,
@@ -51528,8 +51494,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Smileclap-Mal'Ganis",
 ["sex"] = 3,
 },
-["type"] = "RAID_LEADER",
 ["event"] = "CHAT_MSG_RAID_LEADER",
+["type"] = "RAID_LEADER",
 },
 ["color"] = {
 ["b"] = 0.03921568766236305,
@@ -51549,8 +51515,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Theeohgee",
 ["sex"] = 3,
 },
-["type"] = "EMOTE",
 ["event"] = "CHAT_MSG_TEXT_EMOTE",
+["type"] = "EMOTE",
 },
 ["color"] = {
 ["b"] = 0.250980406999588,
@@ -51570,8 +51536,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Theeohgee",
 ["sex"] = 3,
 },
-["type"] = "EMOTE",
 ["event"] = "CHAT_MSG_TEXT_EMOTE",
+["type"] = "EMOTE",
 },
 ["color"] = {
 ["b"] = 0.250980406999588,
@@ -51591,8 +51557,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Dodeyparton-Mal'Ganis",
 ["sex"] = 3,
 },
-["type"] = "LOOT",
 ["event"] = "CHAT_MSG_LOOT",
+["type"] = "LOOT",
 },
 ["color"] = {
 ["b"] = -0,
@@ -51606,8 +51572,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 {
 ["recordedBy"] = "Stormclout-Tichondrius",
 ["typeInfo"] = {
-["type"] = "PING",
 ["event"] = "CHAT_MSG_PING",
+["type"] = "PING",
 },
 ["color"] = {
 ["b"] = 1,
@@ -51621,8 +51587,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 {
 ["recordedBy"] = "Stormclout-Tichondrius",
 ["typeInfo"] = {
-["type"] = "PING",
 ["event"] = "CHAT_MSG_PING",
+["type"] = "PING",
 },
 ["color"] = {
 ["b"] = 1,
@@ -51642,8 +51608,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Critvoid",
 ["sex"] = 3,
 },
-["type"] = "MONSTER_EMOTE",
 ["event"] = "CHAT_MSG_MONSTER_EMOTE",
+["type"] = "MONSTER_EMOTE",
 },
 ["color"] = {
 ["b"] = 0.250980406999588,
@@ -51657,8 +51623,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 {
 ["recordedBy"] = "Stormclout-Tichondrius",
 ["typeInfo"] = {
-["type"] = "PING",
 ["event"] = "CHAT_MSG_PING",
+["type"] = "PING",
 },
 ["color"] = {
 ["b"] = 1,
@@ -51672,8 +51638,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 {
 ["recordedBy"] = "Stormclout-Tichondrius",
 ["typeInfo"] = {
-["type"] = "PING",
 ["event"] = "CHAT_MSG_PING",
+["type"] = "PING",
 },
 ["color"] = {
 ["b"] = 1,
@@ -51687,8 +51653,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 {
 ["recordedBy"] = "Stormclout-Tichondrius",
 ["typeInfo"] = {
-["type"] = "PING",
 ["event"] = "CHAT_MSG_PING",
+["type"] = "PING",
 },
 ["color"] = {
 ["b"] = 1,
@@ -51702,8 +51668,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 {
 ["recordedBy"] = "Stormclout-Tichondrius",
 ["typeInfo"] = {
-["type"] = "PING",
 ["event"] = "CHAT_MSG_PING",
+["type"] = "PING",
 },
 ["color"] = {
 ["b"] = 1,
@@ -51717,8 +51683,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 {
 ["recordedBy"] = "Stormclout-Tichondrius",
 ["typeInfo"] = {
-["type"] = "PING",
 ["event"] = "CHAT_MSG_PING",
+["type"] = "PING",
 },
 ["color"] = {
 ["b"] = 1,
@@ -51738,8 +51704,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Delibash-Mal'Ganis",
 ["sex"] = 2,
 },
-["type"] = "LOOT",
 ["event"] = "CHAT_MSG_LOOT",
+["type"] = "LOOT",
 },
 ["color"] = {
 ["b"] = -0,
@@ -51759,8 +51725,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Dodeyparton-Mal'Ganis",
 ["sex"] = 3,
 },
-["type"] = "LOOT",
 ["event"] = "CHAT_MSG_LOOT",
+["type"] = "LOOT",
 },
 ["color"] = {
 ["b"] = -0,
@@ -51780,8 +51746,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Dodeyparton-Mal'Ganis",
 ["sex"] = 3,
 },
-["type"] = "LOOT",
 ["event"] = "CHAT_MSG_LOOT",
+["type"] = "LOOT",
 },
 ["color"] = {
 ["b"] = -0,
@@ -51801,8 +51767,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Dodeyparton-Mal'Ganis",
 ["sex"] = 3,
 },
-["type"] = "LOOT",
 ["event"] = "CHAT_MSG_LOOT",
+["type"] = "LOOT",
 },
 ["color"] = {
 ["b"] = -0,
@@ -51822,8 +51788,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Magicz",
 ["sex"] = 3,
 },
-["type"] = "MONSTER_YELL",
 ["event"] = "CHAT_MSG_MONSTER_YELL",
+["type"] = "MONSTER_YELL",
 },
 ["color"] = {
 ["b"] = 0.250980406999588,
@@ -51840,8 +51806,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["player"] = {
 ["name"] = "Chimaerus",
 },
-["type"] = "MONSTER_YELL",
 ["event"] = "CHAT_MSG_MONSTER_YELL",
+["type"] = "MONSTER_YELL",
 },
 ["color"] = {
 ["b"] = 0.250980406999588,
@@ -51855,8 +51821,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 {
 ["recordedBy"] = "Stormclout-Tichondrius",
 ["typeInfo"] = {
-["type"] = "PING",
 ["event"] = "CHAT_MSG_PING",
+["type"] = "PING",
 },
 ["color"] = {
 ["b"] = 1,
@@ -51870,8 +51836,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 {
 ["recordedBy"] = "Stormclout-Tichondrius",
 ["typeInfo"] = {
-["type"] = "PING",
 ["event"] = "CHAT_MSG_PING",
+["type"] = "PING",
 },
 ["color"] = {
 ["b"] = 1,
@@ -51885,8 +51851,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 {
 ["recordedBy"] = "Stormclout-Tichondrius",
 ["typeInfo"] = {
-["type"] = "PING",
 ["event"] = "CHAT_MSG_PING",
+["type"] = "PING",
 },
 ["color"] = {
 ["b"] = 1,
@@ -51906,8 +51872,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Magicz-Mal'Ganis",
 ["sex"] = 3,
 },
-["type"] = "RAID",
 ["event"] = "CHAT_MSG_RAID",
+["type"] = "RAID",
 },
 ["color"] = {
 ["b"] = -0,
@@ -51927,8 +51893,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Critvoid",
 ["sex"] = 3,
 },
-["type"] = "MONSTER_EMOTE",
 ["event"] = "CHAT_MSG_MONSTER_EMOTE",
+["type"] = "MONSTER_EMOTE",
 },
 ["color"] = {
 ["b"] = 0.250980406999588,
@@ -51948,8 +51914,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Andyslaps-Tichondrius",
 ["sex"] = 3,
 },
-["type"] = "GUILD_ACHIEVEMENT",
 ["event"] = "CHAT_MSG_GUILD_ACHIEVEMENT",
+["type"] = "GUILD_ACHIEVEMENT",
 },
 ["color"] = {
 ["b"] = 0.250980406999588,
@@ -51969,8 +51935,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Abíde-Illidan",
 ["sex"] = 3,
 },
-["type"] = "GUILD_ACHIEVEMENT",
 ["event"] = "CHAT_MSG_GUILD_ACHIEVEMENT",
+["type"] = "GUILD_ACHIEVEMENT",
 },
 ["color"] = {
 ["b"] = 0.250980406999588,
@@ -51990,8 +51956,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Bruhface-Tichondrius",
 ["sex"] = 3,
 },
-["type"] = "GUILD_ACHIEVEMENT",
 ["event"] = "CHAT_MSG_GUILD_ACHIEVEMENT",
+["type"] = "GUILD_ACHIEVEMENT",
 },
 ["color"] = {
 ["b"] = 0.250980406999588,
@@ -52011,8 +51977,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Bruhface-Tichondrius",
 ["sex"] = 3,
 },
-["type"] = "GUILD_ACHIEVEMENT",
 ["event"] = "CHAT_MSG_GUILD_ACHIEVEMENT",
+["type"] = "GUILD_ACHIEVEMENT",
 },
 ["color"] = {
 ["b"] = 0.250980406999588,
@@ -52032,8 +51998,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Vendhen-Arthas",
 ["sex"] = 2,
 },
-["type"] = "GUILD_ACHIEVEMENT",
 ["event"] = "CHAT_MSG_GUILD_ACHIEVEMENT",
+["type"] = "GUILD_ACHIEVEMENT",
 },
 ["color"] = {
 ["b"] = 0.250980406999588,
@@ -52050,8 +52016,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["player"] = {
 ["name"] = "Chimaerus",
 },
-["type"] = "MONSTER_YELL",
 ["event"] = "CHAT_MSG_MONSTER_YELL",
+["type"] = "MONSTER_YELL",
 },
 ["color"] = {
 ["b"] = 0.250980406999588,
@@ -52071,8 +52037,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Theeohgee-Mal'Ganis",
 ["sex"] = 3,
 },
-["type"] = "ACHIEVEMENT",
 ["event"] = "CHAT_MSG_ACHIEVEMENT",
+["type"] = "ACHIEVEMENT",
 },
 ["color"] = {
 ["b"] = -0,
@@ -52092,8 +52058,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Kloei-Mal'Ganis",
 ["sex"] = 3,
 },
-["type"] = "ACHIEVEMENT",
 ["event"] = "CHAT_MSG_ACHIEVEMENT",
+["type"] = "ACHIEVEMENT",
 },
 ["color"] = {
 ["b"] = -0,
@@ -52113,8 +52079,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Kloei-Mal'Ganis",
 ["sex"] = 3,
 },
-["type"] = "ACHIEVEMENT",
 ["event"] = "CHAT_MSG_ACHIEVEMENT",
+["type"] = "ACHIEVEMENT",
 },
 ["color"] = {
 ["b"] = -0,
@@ -52134,8 +52100,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Kloei-Mal'Ganis",
 ["sex"] = 3,
 },
-["type"] = "ACHIEVEMENT",
 ["event"] = "CHAT_MSG_ACHIEVEMENT",
+["type"] = "ACHIEVEMENT",
 },
 ["color"] = {
 ["b"] = -0,
@@ -52149,8 +52115,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 {
 ["recordedBy"] = "Stormclout-Tichondrius",
 ["typeInfo"] = {
-["type"] = "LOOT",
 ["event"] = "CHAT_MSG_LOOT",
+["type"] = "LOOT",
 },
 ["color"] = {
 ["b"] = -0,
@@ -52164,8 +52130,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 {
 ["recordedBy"] = "Stormclout-Tichondrius",
 ["typeInfo"] = {
-["type"] = "LOOT",
 ["event"] = "CHAT_MSG_LOOT",
+["type"] = "LOOT",
 },
 ["color"] = {
 ["b"] = -0,
@@ -52179,8 +52145,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 {
 ["recordedBy"] = "Stormclout-Tichondrius",
 ["typeInfo"] = {
-["type"] = "LOOT",
 ["event"] = "CHAT_MSG_LOOT",
+["type"] = "LOOT",
 },
 ["color"] = {
 ["b"] = -0,
@@ -52197,8 +52163,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["player"] = {
 ["name"] = "Chimaerus",
 },
-["type"] = "MONSTER_YELL",
 ["event"] = "CHAT_MSG_MONSTER_YELL",
+["type"] = "MONSTER_YELL",
 },
 ["color"] = {
 ["b"] = 0.250980406999588,
@@ -52218,8 +52184,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Delibash-Mal'Ganis",
 ["sex"] = 2,
 },
-["type"] = "LOOT",
 ["event"] = "CHAT_MSG_LOOT",
+["type"] = "LOOT",
 },
 ["color"] = {
 ["b"] = -0,
@@ -52239,8 +52205,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Upgrades-Mal'Ganis",
 ["sex"] = 2,
 },
-["type"] = "LOOT",
 ["event"] = "CHAT_MSG_LOOT",
+["type"] = "LOOT",
 },
 ["color"] = {
 ["b"] = -0,
@@ -52254,8 +52220,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 {
 ["recordedBy"] = "Stormclout-Tichondrius",
 ["typeInfo"] = {
-["type"] = "CURRENCY",
 ["event"] = "CHAT_MSG_CURRENCY",
+["type"] = "CURRENCY",
 },
 ["color"] = {
 ["b"] = -0,
@@ -52269,8 +52235,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 {
 ["recordedBy"] = "Stormclout-Tichondrius",
 ["typeInfo"] = {
-["type"] = "MONEY",
 ["event"] = "CHAT_MSG_MONEY",
+["type"] = "MONEY",
 },
 ["color"] = {
 ["b"] = -0,
@@ -52290,8 +52256,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Upgrades-Mal'Ganis",
 ["sex"] = 2,
 },
-["type"] = "LOOT",
 ["event"] = "CHAT_MSG_LOOT",
+["type"] = "LOOT",
 },
 ["color"] = {
 ["b"] = -0,
@@ -52305,8 +52271,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 {
 ["recordedBy"] = "Stormclout-Tichondrius",
 ["typeInfo"] = {
-["type"] = "LOOT",
 ["event"] = "CHAT_MSG_LOOT",
+["type"] = "LOOT",
 },
 ["color"] = {
 ["b"] = -0,
@@ -52326,8 +52292,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Totemism-Mal'Ganis",
 ["sex"] = 2,
 },
-["type"] = "LOOT",
 ["event"] = "CHAT_MSG_LOOT",
+["type"] = "LOOT",
 },
 ["color"] = {
 ["b"] = -0,
@@ -52344,8 +52310,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["player"] = {
 ["name"] = "Amarakk",
 },
-["type"] = "MONSTER_SAY",
 ["event"] = "CHAT_MSG_MONSTER_SAY",
+["type"] = "MONSTER_SAY",
 },
 ["color"] = {
 ["b"] = 0.6235294342041016,
@@ -52365,8 +52331,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Gutless-Mal'Ganis",
 ["sex"] = 2,
 },
-["type"] = "LOOT",
 ["event"] = "CHAT_MSG_LOOT",
+["type"] = "LOOT",
 },
 ["color"] = {
 ["b"] = -0,
@@ -52383,8 +52349,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["player"] = {
 ["name"] = "Amarakk",
 },
-["type"] = "MONSTER_SAY",
 ["event"] = "CHAT_MSG_MONSTER_SAY",
+["type"] = "MONSTER_SAY",
 },
 ["color"] = {
 ["b"] = 0.6235294342041016,
@@ -52404,8 +52370,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Stormclout",
 ["sex"] = 3,
 },
-["type"] = "MONSTER_EMOTE",
 ["event"] = "CHAT_MSG_MONSTER_EMOTE",
+["type"] = "MONSTER_EMOTE",
 },
 ["color"] = {
 ["b"] = 0.250980406999588,
@@ -52422,8 +52388,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["player"] = {
 ["name"] = "Arator",
 },
-["type"] = "MONSTER_YELL",
 ["event"] = "CHAT_MSG_MONSTER_YELL",
+["type"] = "MONSTER_YELL",
 },
 ["color"] = {
 ["b"] = 0.250980406999588,
@@ -52440,8 +52406,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["player"] = {
 ["name"] = "Arator",
 },
-["type"] = "MONSTER_YELL",
 ["event"] = "CHAT_MSG_MONSTER_YELL",
+["type"] = "MONSTER_YELL",
 },
 ["color"] = {
 ["b"] = 0.250980406999588,
@@ -52458,8 +52424,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["player"] = {
 ["name"] = "Ethereal Warpweaver",
 },
-["type"] = "MONSTER_SAY",
 ["event"] = "CHAT_MSG_MONSTER_SAY",
+["type"] = "MONSTER_SAY",
 },
 ["color"] = {
 ["b"] = 0.6235294342041016,
@@ -52479,8 +52445,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Reagthar-Tichondrius",
 ["sex"] = 2,
 },
-["type"] = "GUILD_ACHIEVEMENT",
 ["event"] = "CHAT_MSG_GUILD_ACHIEVEMENT",
+["type"] = "GUILD_ACHIEVEMENT",
 },
 ["color"] = {
 ["b"] = 0.250980406999588,
@@ -52494,8 +52460,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 {
 ["recordedBy"] = "Stormclout-Tichondrius",
 ["typeInfo"] = {
-["type"] = "PING",
 ["event"] = "CHAT_MSG_PING",
+["type"] = "PING",
 },
 ["color"] = {
 ["b"] = 1,
@@ -52509,8 +52475,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 {
 ["recordedBy"] = "Stormclout-Tichondrius",
 ["typeInfo"] = {
-["type"] = "PING",
 ["event"] = "CHAT_MSG_PING",
+["type"] = "PING",
 },
 ["color"] = {
 ["b"] = 1,
@@ -52524,8 +52490,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 {
 ["recordedBy"] = "Stormclout-Tichondrius",
 ["typeInfo"] = {
-["type"] = "PING",
 ["event"] = "CHAT_MSG_PING",
+["type"] = "PING",
 },
 ["color"] = {
 ["b"] = 1,
@@ -52545,8 +52511,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Smileclap-Mal'Ganis",
 ["sex"] = 3,
 },
-["type"] = "RAID_LEADER",
 ["event"] = "CHAT_MSG_RAID_LEADER",
+["type"] = "RAID_LEADER",
 },
 ["color"] = {
 ["b"] = 0.03921568766236305,
@@ -52560,8 +52526,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 {
 ["recordedBy"] = "Stormclout-Tichondrius",
 ["typeInfo"] = {
-["type"] = "PING",
 ["event"] = "CHAT_MSG_PING",
+["type"] = "PING",
 },
 ["color"] = {
 ["b"] = 1,
@@ -52581,8 +52547,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Notmagicz-Mal'Ganis",
 ["sex"] = 3,
 },
-["type"] = "LOOT",
 ["event"] = "CHAT_MSG_LOOT",
+["type"] = "LOOT",
 },
 ["color"] = {
 ["b"] = -0,
@@ -52596,8 +52562,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 {
 ["recordedBy"] = "Stormclout-Tichondrius",
 ["typeInfo"] = {
-["type"] = "PING",
 ["event"] = "CHAT_MSG_PING",
+["type"] = "PING",
 },
 ["color"] = {
 ["b"] = 1,
@@ -52611,8 +52577,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 {
 ["recordedBy"] = "Stormclout-Tichondrius",
 ["typeInfo"] = {
-["type"] = "PING",
 ["event"] = "CHAT_MSG_PING",
+["type"] = "PING",
 },
 ["color"] = {
 ["b"] = 1,
@@ -52632,8 +52598,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Stormclout-Tichondrius",
 ["sex"] = 3,
 },
-["type"] = "LOOT",
 ["event"] = "CHAT_MSG_LOOT",
+["type"] = "LOOT",
 },
 ["color"] = {
 ["b"] = -0,
@@ -52650,8 +52616,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["player"] = {
 ["name"] = "Belo'ren",
 },
-["type"] = "MONSTER_EMOTE",
 ["event"] = "CHAT_MSG_MONSTER_EMOTE",
+["type"] = "MONSTER_EMOTE",
 },
 ["color"] = {
 ["b"] = 0.250980406999588,
@@ -52665,8 +52631,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 {
 ["recordedBy"] = "Stormclout-Tichondrius",
 ["typeInfo"] = {
-["type"] = "PING",
 ["event"] = "CHAT_MSG_PING",
+["type"] = "PING",
 },
 ["color"] = {
 ["b"] = 1,
@@ -52686,8 +52652,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Stormclout",
 ["sex"] = 3,
 },
-["type"] = "MONSTER_EMOTE",
 ["event"] = "CHAT_MSG_MONSTER_EMOTE",
+["type"] = "MONSTER_EMOTE",
 },
 ["color"] = {
 ["b"] = 0.250980406999588,
@@ -52704,8 +52670,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["player"] = {
 ["name"] = "Arator",
 },
-["type"] = "MONSTER_YELL",
 ["event"] = "CHAT_MSG_MONSTER_YELL",
+["type"] = "MONSTER_YELL",
 },
 ["color"] = {
 ["b"] = 0.250980406999588,
@@ -52722,8 +52688,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["player"] = {
 ["name"] = "Arator",
 },
-["type"] = "MONSTER_YELL",
 ["event"] = "CHAT_MSG_MONSTER_YELL",
+["type"] = "MONSTER_YELL",
 },
 ["color"] = {
 ["b"] = 0.250980406999588,
@@ -52737,8 +52703,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 {
 ["recordedBy"] = "Stormclout-Tichondrius",
 ["typeInfo"] = {
-["type"] = "PING",
 ["event"] = "CHAT_MSG_PING",
+["type"] = "PING",
 },
 ["color"] = {
 ["b"] = 1,
@@ -52755,8 +52721,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["player"] = {
 ["name"] = "Vereesa Windrunner",
 },
-["type"] = "MONSTER_YELL",
 ["event"] = "CHAT_MSG_MONSTER_YELL",
+["type"] = "MONSTER_YELL",
 },
 ["color"] = {
 ["b"] = 0.250980406999588,
@@ -52773,8 +52739,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["player"] = {
 ["name"] = "Arator",
 },
-["type"] = "MONSTER_YELL",
 ["event"] = "CHAT_MSG_MONSTER_YELL",
+["type"] = "MONSTER_YELL",
 },
 ["color"] = {
 ["b"] = 0.250980406999588,
@@ -52794,8 +52760,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Delibash-Mal'Ganis",
 ["sex"] = 2,
 },
-["type"] = "LOOT",
 ["event"] = "CHAT_MSG_LOOT",
+["type"] = "LOOT",
 },
 ["color"] = {
 ["b"] = -0,
@@ -52815,8 +52781,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Notmagicz-Mal'Ganis",
 ["sex"] = 3,
 },
-["type"] = "LOOT",
 ["event"] = "CHAT_MSG_LOOT",
+["type"] = "LOOT",
 },
 ["color"] = {
 ["b"] = -0,
@@ -52836,8 +52802,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Notmagicz-Mal'Ganis",
 ["sex"] = 3,
 },
-["type"] = "LOOT",
 ["event"] = "CHAT_MSG_LOOT",
+["type"] = "LOOT",
 },
 ["color"] = {
 ["b"] = -0,
@@ -52857,8 +52823,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Gravia-Mal'Ganis",
 ["sex"] = 3,
 },
-["type"] = "LOOT",
 ["event"] = "CHAT_MSG_LOOT",
+["type"] = "LOOT",
 },
 ["color"] = {
 ["b"] = -0,
@@ -52875,8 +52841,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["player"] = {
 ["name"] = "Arator",
 },
-["type"] = "MONSTER_YELL",
 ["event"] = "CHAT_MSG_MONSTER_YELL",
+["type"] = "MONSTER_YELL",
 },
 ["color"] = {
 ["b"] = 0.250980406999588,
@@ -52893,8 +52859,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["player"] = {
 ["name"] = "Vereesa Windrunner",
 },
-["type"] = "MONSTER_YELL",
 ["event"] = "CHAT_MSG_MONSTER_YELL",
+["type"] = "MONSTER_YELL",
 },
 ["color"] = {
 ["b"] = 0.250980406999588,
@@ -52914,8 +52880,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Smileclap-Mal'Ganis",
 ["sex"] = 3,
 },
-["type"] = "LOOT",
 ["event"] = "CHAT_MSG_LOOT",
+["type"] = "LOOT",
 },
 ["color"] = {
 ["b"] = -0,
@@ -52929,8 +52895,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 {
 ["recordedBy"] = "Stormclout-Tichondrius",
 ["typeInfo"] = {
-["type"] = "MONEY",
 ["event"] = "CHAT_MSG_MONEY",
+["type"] = "MONEY",
 },
 ["color"] = {
 ["b"] = -0,
@@ -52947,8 +52913,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["player"] = {
 ["name"] = "Vereesa Windrunner",
 },
-["type"] = "MONSTER_YELL",
 ["event"] = "CHAT_MSG_MONSTER_YELL",
+["type"] = "MONSTER_YELL",
 },
 ["color"] = {
 ["b"] = 0.250980406999588,
@@ -52968,8 +52934,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Trixxtaa-Tichondrius",
 ["sex"] = 3,
 },
-["type"] = "GUILD_ACHIEVEMENT",
 ["event"] = "CHAT_MSG_GUILD_ACHIEVEMENT",
+["type"] = "GUILD_ACHIEVEMENT",
 },
 ["color"] = {
 ["b"] = 0.250980406999588,
@@ -52989,8 +52955,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Delibash-Mal'Ganis",
 ["sex"] = 2,
 },
-["type"] = "LOOT",
 ["event"] = "CHAT_MSG_LOOT",
+["type"] = "LOOT",
 },
 ["color"] = {
 ["b"] = -0,
@@ -53010,8 +52976,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Delibash-Mal'Ganis",
 ["sex"] = 2,
 },
-["type"] = "LOOT",
 ["event"] = "CHAT_MSG_LOOT",
+["type"] = "LOOT",
 },
 ["color"] = {
 ["b"] = -0,
@@ -53031,8 +52997,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Delibash-Mal'Ganis",
 ["sex"] = 2,
 },
-["type"] = "LOOT",
 ["event"] = "CHAT_MSG_LOOT",
+["type"] = "LOOT",
 },
 ["color"] = {
 ["b"] = -0,
@@ -53049,8 +53015,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["player"] = {
 ["name"] = "Vereesa Windrunner",
 },
-["type"] = "MONSTER_YELL",
 ["event"] = "CHAT_MSG_MONSTER_YELL",
+["type"] = "MONSTER_YELL",
 },
 ["color"] = {
 ["b"] = 0.250980406999588,
@@ -53067,8 +53033,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["player"] = {
 ["name"] = "Belo'ren",
 },
-["type"] = "MONSTER_EMOTE",
 ["event"] = "CHAT_MSG_MONSTER_EMOTE",
+["type"] = "MONSTER_EMOTE",
 },
 ["color"] = {
 ["b"] = 0.250980406999588,
@@ -53088,8 +53054,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Delibash-Mal'Ganis",
 ["sex"] = 2,
 },
-["type"] = "LOOT",
 ["event"] = "CHAT_MSG_LOOT",
+["type"] = "LOOT",
 },
 ["color"] = {
 ["b"] = -0,
@@ -53109,8 +53075,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Zylos-Mal'Ganis",
 ["sex"] = 3,
 },
-["type"] = "LOOT",
 ["event"] = "CHAT_MSG_LOOT",
+["type"] = "LOOT",
 },
 ["color"] = {
 ["b"] = -0,
@@ -53124,8 +53090,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 {
 ["recordedBy"] = "Stormclout-Tichondrius",
 ["typeInfo"] = {
-["type"] = "PING",
 ["event"] = "CHAT_MSG_PING",
+["type"] = "PING",
 },
 ["color"] = {
 ["b"] = 1,
@@ -53145,8 +53111,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Upgrades-Mal'Ganis",
 ["sex"] = 2,
 },
-["type"] = "LOOT",
 ["event"] = "CHAT_MSG_LOOT",
+["type"] = "LOOT",
 },
 ["color"] = {
 ["b"] = -0,
@@ -53166,8 +53132,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Upgrades-Mal'Ganis",
 ["sex"] = 2,
 },
-["type"] = "LOOT",
 ["event"] = "CHAT_MSG_LOOT",
+["type"] = "LOOT",
 },
 ["color"] = {
 ["b"] = -0,
@@ -53187,8 +53153,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Upgrades-Mal'Ganis",
 ["sex"] = 2,
 },
-["type"] = "LOOT",
 ["event"] = "CHAT_MSG_LOOT",
+["type"] = "LOOT",
 },
 ["color"] = {
 ["b"] = -0,
@@ -53205,8 +53171,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["player"] = {
 ["name"] = "Arator",
 },
-["type"] = "MONSTER_YELL",
 ["event"] = "CHAT_MSG_MONSTER_YELL",
+["type"] = "MONSTER_YELL",
 },
 ["color"] = {
 ["b"] = 0.250980406999588,
@@ -53226,8 +53192,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Totemism-Mal'Ganis",
 ["sex"] = 2,
 },
-["type"] = "LOOT",
 ["event"] = "CHAT_MSG_LOOT",
+["type"] = "LOOT",
 },
 ["color"] = {
 ["b"] = -0,
@@ -53244,8 +53210,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["player"] = {
 ["name"] = "Lady Liadrin",
 },
-["type"] = "MONSTER_YELL",
 ["event"] = "CHAT_MSG_MONSTER_YELL",
+["type"] = "MONSTER_YELL",
 },
 ["color"] = {
 ["b"] = 0.250980406999588,
@@ -53259,8 +53225,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 {
 ["recordedBy"] = "Stormclout-Tichondrius",
 ["typeInfo"] = {
-["type"] = "PING",
 ["event"] = "CHAT_MSG_PING",
+["type"] = "PING",
 },
 ["color"] = {
 ["b"] = 1,
@@ -53274,8 +53240,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 {
 ["recordedBy"] = "Stormclout-Tichondrius",
 ["typeInfo"] = {
-["type"] = "PING",
 ["event"] = "CHAT_MSG_PING",
+["type"] = "PING",
 },
 ["color"] = {
 ["b"] = 1,
@@ -53295,8 +53261,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Stormclout",
 ["sex"] = 3,
 },
-["type"] = "MONSTER_EMOTE",
 ["event"] = "CHAT_MSG_MONSTER_EMOTE",
+["type"] = "MONSTER_EMOTE",
 },
 ["color"] = {
 ["b"] = 0.250980406999588,
@@ -53316,8 +53282,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Notmagicz-Mal'Ganis",
 ["sex"] = 3,
 },
-["type"] = "LOOT",
 ["event"] = "CHAT_MSG_LOOT",
+["type"] = "LOOT",
 },
 ["color"] = {
 ["b"] = -0,
@@ -53337,8 +53303,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Notmagicz-Mal'Ganis",
 ["sex"] = 3,
 },
-["type"] = "LOOT",
 ["event"] = "CHAT_MSG_LOOT",
+["type"] = "LOOT",
 },
 ["color"] = {
 ["b"] = -0,
@@ -53358,8 +53324,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Delibash-Mal'Ganis",
 ["sex"] = 2,
 },
-["type"] = "LOOT",
 ["event"] = "CHAT_MSG_LOOT",
+["type"] = "LOOT",
 },
 ["color"] = {
 ["b"] = -0,
@@ -53379,8 +53345,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Critvoid-Thrall",
 ["sex"] = 3,
 },
-["type"] = "LOOT",
 ["event"] = "CHAT_MSG_LOOT",
+["type"] = "LOOT",
 },
 ["color"] = {
 ["b"] = -0,
@@ -53400,8 +53366,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Smileclap-Mal'Ganis",
 ["sex"] = 3,
 },
-["type"] = "LOOT",
 ["event"] = "CHAT_MSG_LOOT",
+["type"] = "LOOT",
 },
 ["color"] = {
 ["b"] = -0,
@@ -53421,8 +53387,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Smileclap-Mal'Ganis",
 ["sex"] = 3,
 },
-["type"] = "LOOT",
 ["event"] = "CHAT_MSG_LOOT",
+["type"] = "LOOT",
 },
 ["color"] = {
 ["b"] = -0,
@@ -53442,8 +53408,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Zylos-Mal'Ganis",
 ["sex"] = 3,
 },
-["type"] = "LOOT",
 ["event"] = "CHAT_MSG_LOOT",
+["type"] = "LOOT",
 },
 ["color"] = {
 ["b"] = -0,
@@ -53463,8 +53429,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Dodeyparton-Mal'Ganis",
 ["sex"] = 3,
 },
-["type"] = "LOOT",
 ["event"] = "CHAT_MSG_LOOT",
+["type"] = "LOOT",
 },
 ["color"] = {
 ["b"] = -0,
@@ -53484,8 +53450,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Totemism-Mal'Ganis",
 ["sex"] = 2,
 },
-["type"] = "LOOT",
 ["event"] = "CHAT_MSG_LOOT",
+["type"] = "LOOT",
 },
 ["color"] = {
 ["b"] = -0,
@@ -53505,8 +53471,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Totemism-Mal'Ganis",
 ["sex"] = 2,
 },
-["type"] = "LOOT",
 ["event"] = "CHAT_MSG_LOOT",
+["type"] = "LOOT",
 },
 ["color"] = {
 ["b"] = -0,
@@ -53520,8 +53486,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 {
 ["recordedBy"] = "Stormclout-Tichondrius",
 ["typeInfo"] = {
-["type"] = "PING",
 ["event"] = "CHAT_MSG_PING",
+["type"] = "PING",
 },
 ["color"] = {
 ["b"] = 1,
@@ -53541,8 +53507,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Upgrades-Mal'Ganis",
 ["sex"] = 2,
 },
-["type"] = "LOOT",
 ["event"] = "CHAT_MSG_LOOT",
+["type"] = "LOOT",
 },
 ["color"] = {
 ["b"] = -0,
@@ -53562,8 +53528,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Upgrades-Mal'Ganis",
 ["sex"] = 2,
 },
-["type"] = "LOOT",
 ["event"] = "CHAT_MSG_LOOT",
+["type"] = "LOOT",
 },
 ["color"] = {
 ["b"] = -0,
@@ -53583,8 +53549,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Critvoid-Thrall",
 ["sex"] = 3,
 },
-["type"] = "YELL",
 ["event"] = "CHAT_MSG_YELL",
+["type"] = "YELL",
 },
 ["color"] = {
 ["b"] = 0.250980406999588,
@@ -53604,8 +53570,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Delibash-Mal'Ganis",
 ["sex"] = 2,
 },
-["type"] = "RAID",
 ["event"] = "CHAT_MSG_RAID",
+["type"] = "RAID",
 },
 ["color"] = {
 ["b"] = -0,
@@ -53625,8 +53591,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Stormclout",
 ["sex"] = 3,
 },
-["type"] = "EMOTE",
 ["event"] = "CHAT_MSG_TEXT_EMOTE",
+["type"] = "EMOTE",
 },
 ["color"] = {
 ["b"] = 0.250980406999588,
@@ -53646,8 +53612,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Stormclout",
 ["sex"] = 3,
 },
-["type"] = "EMOTE",
 ["event"] = "CHAT_MSG_TEXT_EMOTE",
+["type"] = "EMOTE",
 },
 ["color"] = {
 ["b"] = 0.250980406999588,
@@ -53667,8 +53633,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Mcblazzle-Area52",
 ["sex"] = 2,
 },
-["type"] = "GUILD_ACHIEVEMENT",
 ["event"] = "CHAT_MSG_GUILD_ACHIEVEMENT",
+["type"] = "GUILD_ACHIEVEMENT",
 },
 ["color"] = {
 ["b"] = 0.250980406999588,
@@ -53682,8 +53648,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 {
 ["recordedBy"] = "Stormclout-Tichondrius",
 ["typeInfo"] = {
-["type"] = "PING",
 ["event"] = "CHAT_MSG_PING",
+["type"] = "PING",
 },
 ["color"] = {
 ["b"] = 1,
@@ -53697,8 +53663,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 {
 ["recordedBy"] = "Stormclout-Tichondrius",
 ["typeInfo"] = {
-["type"] = "PING",
 ["event"] = "CHAT_MSG_PING",
+["type"] = "PING",
 },
 ["color"] = {
 ["b"] = 1,
@@ -53712,8 +53678,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 {
 ["recordedBy"] = "Stormclout-Tichondrius",
 ["typeInfo"] = {
-["type"] = "PING",
 ["event"] = "CHAT_MSG_PING",
+["type"] = "PING",
 },
 ["color"] = {
 ["b"] = 1,
@@ -53727,8 +53693,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 {
 ["recordedBy"] = "Stormclout-Tichondrius",
 ["typeInfo"] = {
-["type"] = "PING",
 ["event"] = "CHAT_MSG_PING",
+["type"] = "PING",
 },
 ["color"] = {
 ["b"] = 1,
@@ -53742,8 +53708,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 {
 ["recordedBy"] = "Stormclout-Tichondrius",
 ["typeInfo"] = {
-["type"] = "PING",
 ["event"] = "CHAT_MSG_PING",
+["type"] = "PING",
 },
 ["color"] = {
 ["b"] = 1,
@@ -53757,8 +53723,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 {
 ["recordedBy"] = "Stormclout-Tichondrius",
 ["typeInfo"] = {
-["type"] = "PING",
 ["event"] = "CHAT_MSG_PING",
+["type"] = "PING",
 },
 ["color"] = {
 ["b"] = 1,
@@ -53778,8 +53744,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Sheesh-Feathermoon",
 ["sex"] = 2,
 },
-["type"] = "GUILD_ACHIEVEMENT",
 ["event"] = "CHAT_MSG_GUILD_ACHIEVEMENT",
+["type"] = "GUILD_ACHIEVEMENT",
 },
 ["color"] = {
 ["b"] = 0.250980406999588,
@@ -53793,8 +53759,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 {
 ["recordedBy"] = "Stormclout-Tichondrius",
 ["typeInfo"] = {
-["type"] = "PING",
 ["event"] = "CHAT_MSG_PING",
+["type"] = "PING",
 },
 ["color"] = {
 ["b"] = 1,
@@ -53808,8 +53774,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 {
 ["recordedBy"] = "Stormclout-Tichondrius",
 ["typeInfo"] = {
-["type"] = "PING",
 ["event"] = "CHAT_MSG_PING",
+["type"] = "PING",
 },
 ["color"] = {
 ["b"] = 1,
@@ -53823,8 +53789,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 {
 ["recordedBy"] = "Stormclout-Tichondrius",
 ["typeInfo"] = {
-["type"] = "PING",
 ["event"] = "CHAT_MSG_PING",
+["type"] = "PING",
 },
 ["color"] = {
 ["b"] = 1,
@@ -53838,8 +53804,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 {
 ["recordedBy"] = "Stormclout-Tichondrius",
 ["typeInfo"] = {
-["type"] = "PING",
 ["event"] = "CHAT_MSG_PING",
+["type"] = "PING",
 },
 ["color"] = {
 ["b"] = 1,
@@ -53853,8 +53819,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 {
 ["recordedBy"] = "Stormclout-Tichondrius",
 ["typeInfo"] = {
-["type"] = "PING",
 ["event"] = "CHAT_MSG_PING",
+["type"] = "PING",
 },
 ["color"] = {
 ["b"] = 1,
@@ -53868,8 +53834,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 {
 ["recordedBy"] = "Stormclout-Tichondrius",
 ["typeInfo"] = {
-["type"] = "PING",
 ["event"] = "CHAT_MSG_PING",
+["type"] = "PING",
 },
 ["color"] = {
 ["b"] = 1,
@@ -53889,8 +53855,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Geospawn-Tichondrius",
 ["sex"] = 2,
 },
-["type"] = "GUILD_ACHIEVEMENT",
 ["event"] = "CHAT_MSG_GUILD_ACHIEVEMENT",
+["type"] = "GUILD_ACHIEVEMENT",
 },
 ["color"] = {
 ["b"] = 0.250980406999588,
@@ -53907,8 +53873,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["player"] = {
 ["name"] = "Arator",
 },
-["type"] = "MONSTER_YELL",
 ["event"] = "CHAT_MSG_MONSTER_YELL",
+["type"] = "MONSTER_YELL",
 },
 ["color"] = {
 ["b"] = 0.250980406999588,
@@ -53922,8 +53888,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 {
 ["recordedBy"] = "Stormclout-Tichondrius",
 ["typeInfo"] = {
-["type"] = "PING",
 ["event"] = "CHAT_MSG_PING",
+["type"] = "PING",
 },
 ["color"] = {
 ["b"] = 1,
@@ -53937,8 +53903,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 {
 ["recordedBy"] = "Stormclout-Tichondrius",
 ["typeInfo"] = {
-["type"] = "PING",
 ["event"] = "CHAT_MSG_PING",
+["type"] = "PING",
 },
 ["color"] = {
 ["b"] = 1,
@@ -53952,8 +53918,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 {
 ["recordedBy"] = "Stormclout-Tichondrius",
 ["typeInfo"] = {
-["type"] = "PING",
 ["event"] = "CHAT_MSG_PING",
+["type"] = "PING",
 },
 ["color"] = {
 ["b"] = 1,
@@ -53967,8 +53933,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 {
 ["recordedBy"] = "Stormclout-Tichondrius",
 ["typeInfo"] = {
-["type"] = "PING",
 ["event"] = "CHAT_MSG_PING",
+["type"] = "PING",
 },
 ["color"] = {
 ["b"] = 1,
@@ -53988,8 +53954,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Critvoid",
 ["sex"] = 3,
 },
-["type"] = "MONSTER_EMOTE",
 ["event"] = "CHAT_MSG_MONSTER_EMOTE",
+["type"] = "MONSTER_EMOTE",
 },
 ["color"] = {
 ["b"] = 0.250980406999588,
@@ -54003,8 +53969,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 {
 ["recordedBy"] = "Stormclout-Tichondrius",
 ["typeInfo"] = {
-["type"] = "PING",
 ["event"] = "CHAT_MSG_PING",
+["type"] = "PING",
 },
 ["color"] = {
 ["b"] = 1,
@@ -54018,8 +53984,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 {
 ["recordedBy"] = "Stormclout-Tichondrius",
 ["typeInfo"] = {
-["type"] = "PING",
 ["event"] = "CHAT_MSG_PING",
+["type"] = "PING",
 },
 ["color"] = {
 ["b"] = 1,
@@ -54033,8 +53999,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 {
 ["recordedBy"] = "Stormclout-Tichondrius",
 ["typeInfo"] = {
-["type"] = "PING",
 ["event"] = "CHAT_MSG_PING",
+["type"] = "PING",
 },
 ["color"] = {
 ["b"] = 1,
@@ -54054,8 +54020,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Upgrades-Mal'Ganis",
 ["sex"] = 2,
 },
-["type"] = "RAID",
 ["event"] = "CHAT_MSG_RAID",
+["type"] = "RAID",
 },
 ["color"] = {
 ["b"] = -0,
@@ -54069,8 +54035,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 {
 ["recordedBy"] = "Stormclout-Tichondrius",
 ["typeInfo"] = {
-["type"] = "PING",
 ["event"] = "CHAT_MSG_PING",
+["type"] = "PING",
 },
 ["color"] = {
 ["b"] = 1,
@@ -54084,8 +54050,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 {
 ["recordedBy"] = "Stormclout-Tichondrius",
 ["typeInfo"] = {
-["type"] = "PING",
 ["event"] = "CHAT_MSG_PING",
+["type"] = "PING",
 },
 ["color"] = {
 ["b"] = 1,
@@ -54105,8 +54071,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Critvoid-Thrall",
 ["sex"] = 3,
 },
-["type"] = "RAID",
 ["event"] = "CHAT_MSG_RAID",
+["type"] = "RAID",
 },
 ["color"] = {
 ["b"] = -0,
@@ -54126,8 +54092,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Critvoid-Thrall",
 ["sex"] = 3,
 },
-["type"] = "RAID",
 ["event"] = "CHAT_MSG_RAID",
+["type"] = "RAID",
 },
 ["color"] = {
 ["b"] = -0,
@@ -54147,8 +54113,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Critvoid-Thrall",
 ["sex"] = 3,
 },
-["type"] = "RAID",
 ["event"] = "CHAT_MSG_RAID",
+["type"] = "RAID",
 },
 ["color"] = {
 ["b"] = -0,
@@ -54168,8 +54134,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Kloei-Mal'Ganis",
 ["sex"] = 3,
 },
-["type"] = "RAID",
 ["event"] = "CHAT_MSG_RAID",
+["type"] = "RAID",
 },
 ["color"] = {
 ["b"] = -0,
@@ -54189,8 +54155,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Critvoid-Thrall",
 ["sex"] = 3,
 },
-["type"] = "RAID",
 ["event"] = "CHAT_MSG_RAID",
+["type"] = "RAID",
 },
 ["color"] = {
 ["b"] = -0,
@@ -54210,8 +54176,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Kloei-Mal'Ganis",
 ["sex"] = 3,
 },
-["type"] = "RAID",
 ["event"] = "CHAT_MSG_RAID",
+["type"] = "RAID",
 },
 ["color"] = {
 ["b"] = -0,
@@ -54231,8 +54197,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Nightnighty-Tichondrius",
 ["sex"] = 2,
 },
-["type"] = "GUILD_ACHIEVEMENT",
 ["event"] = "CHAT_MSG_GUILD_ACHIEVEMENT",
+["type"] = "GUILD_ACHIEVEMENT",
 },
 ["color"] = {
 ["b"] = 0.250980406999588,
@@ -54252,8 +54218,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Kharnedge-Illidan",
 ["sex"] = 2,
 },
-["type"] = "GUILD_ACHIEVEMENT",
 ["event"] = "CHAT_MSG_GUILD_ACHIEVEMENT",
+["type"] = "GUILD_ACHIEVEMENT",
 },
 ["color"] = {
 ["b"] = 0.250980406999588,
@@ -54267,8 +54233,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 {
 ["recordedBy"] = "Stormclout-Tichondrius",
 ["typeInfo"] = {
-["type"] = "PING",
 ["event"] = "CHAT_MSG_PING",
+["type"] = "PING",
 },
 ["color"] = {
 ["b"] = 1,
@@ -54288,8 +54254,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Nightnighty-Tichondrius",
 ["sex"] = 2,
 },
-["type"] = "GUILD_ACHIEVEMENT",
 ["event"] = "CHAT_MSG_GUILD_ACHIEVEMENT",
+["type"] = "GUILD_ACHIEVEMENT",
 },
 ["color"] = {
 ["b"] = 0.250980406999588,
@@ -54309,8 +54275,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Notmagicz",
 ["sex"] = 3,
 },
-["type"] = "MONSTER_EMOTE",
 ["event"] = "CHAT_MSG_MONSTER_EMOTE",
+["type"] = "MONSTER_EMOTE",
 },
 ["color"] = {
 ["b"] = 0.250980406999588,
@@ -54330,8 +54296,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Notmagicz",
 ["sex"] = 3,
 },
-["type"] = "MONSTER_YELL",
 ["event"] = "CHAT_MSG_MONSTER_YELL",
+["type"] = "MONSTER_YELL",
 },
 ["color"] = {
 ["b"] = 0.250980406999588,
@@ -54351,8 +54317,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Critvoid",
 ["sex"] = 3,
 },
-["type"] = "MONSTER_YELL",
 ["event"] = "CHAT_MSG_MONSTER_YELL",
+["type"] = "MONSTER_YELL",
 },
 ["color"] = {
 ["b"] = 0.250980406999588,
@@ -54372,8 +54338,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Upgrades",
 ["sex"] = 2,
 },
-["type"] = "MONSTER_YELL",
 ["event"] = "CHAT_MSG_MONSTER_YELL",
+["type"] = "MONSTER_YELL",
 },
 ["color"] = {
 ["b"] = 0.250980406999588,
@@ -54387,8 +54353,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 {
 ["recordedBy"] = "Stormclout-Tichondrius",
 ["typeInfo"] = {
-["type"] = "PING",
 ["event"] = "CHAT_MSG_PING",
+["type"] = "PING",
 },
 ["color"] = {
 ["b"] = 1,
@@ -54402,8 +54368,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 {
 ["recordedBy"] = "Stormclout-Tichondrius",
 ["typeInfo"] = {
-["type"] = "PING",
 ["event"] = "CHAT_MSG_PING",
+["type"] = "PING",
 },
 ["color"] = {
 ["b"] = 1,
@@ -54417,8 +54383,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 {
 ["recordedBy"] = "Stormclout-Tichondrius",
 ["typeInfo"] = {
-["type"] = "PING",
 ["event"] = "CHAT_MSG_PING",
+["type"] = "PING",
 },
 ["color"] = {
 ["b"] = 1,
@@ -54432,8 +54398,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 {
 ["recordedBy"] = "Stormclout-Tichondrius",
 ["typeInfo"] = {
-["type"] = "PING",
 ["event"] = "CHAT_MSG_PING",
+["type"] = "PING",
 },
 ["color"] = {
 ["b"] = 1,
@@ -54453,8 +54419,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Kloei",
 ["sex"] = 3,
 },
-["type"] = "MONSTER_YELL",
 ["event"] = "CHAT_MSG_MONSTER_YELL",
+["type"] = "MONSTER_YELL",
 },
 ["color"] = {
 ["b"] = 0.250980406999588,
@@ -54474,8 +54440,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Critvoid",
 ["sex"] = 3,
 },
-["type"] = "MONSTER_EMOTE",
 ["event"] = "CHAT_MSG_MONSTER_EMOTE",
+["type"] = "MONSTER_EMOTE",
 },
 ["color"] = {
 ["b"] = 0.250980406999588,
@@ -54495,8 +54461,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Critvoid",
 ["sex"] = 3,
 },
-["type"] = "MONSTER_YELL",
 ["event"] = "CHAT_MSG_MONSTER_YELL",
+["type"] = "MONSTER_YELL",
 },
 ["color"] = {
 ["b"] = 0.250980406999588,
@@ -54510,8 +54476,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 {
 ["recordedBy"] = "Stormclout-Tichondrius",
 ["typeInfo"] = {
-["type"] = "PING",
 ["event"] = "CHAT_MSG_PING",
+["type"] = "PING",
 },
 ["color"] = {
 ["b"] = 1,
@@ -54525,8 +54491,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 {
 ["recordedBy"] = "Stormclout-Tichondrius",
 ["typeInfo"] = {
-["type"] = "PING",
 ["event"] = "CHAT_MSG_PING",
+["type"] = "PING",
 },
 ["color"] = {
 ["b"] = 1,
@@ -54546,8 +54512,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Notmagicz-Mal'Ganis",
 ["sex"] = 3,
 },
-["type"] = "RAID",
 ["event"] = "CHAT_MSG_RAID",
+["type"] = "RAID",
 },
 ["color"] = {
 ["b"] = -0,
@@ -54567,8 +54533,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Smileclap-Mal'Ganis",
 ["sex"] = 3,
 },
-["type"] = "RAID_LEADER",
 ["event"] = "CHAT_MSG_RAID_LEADER",
+["type"] = "RAID_LEADER",
 },
 ["color"] = {
 ["b"] = 0.03921568766236305,
@@ -54588,8 +54554,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Upgrades",
 ["sex"] = 2,
 },
-["type"] = "MONSTER_YELL",
 ["event"] = "CHAT_MSG_MONSTER_YELL",
+["type"] = "MONSTER_YELL",
 },
 ["color"] = {
 ["b"] = 0.250980406999588,
@@ -54603,8 +54569,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 {
 ["recordedBy"] = "Stormclout-Tichondrius",
 ["typeInfo"] = {
-["type"] = "PING",
 ["event"] = "CHAT_MSG_PING",
+["type"] = "PING",
 },
 ["color"] = {
 ["b"] = 1,
@@ -54618,8 +54584,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 {
 ["recordedBy"] = "Stormclout-Tichondrius",
 ["typeInfo"] = {
-["type"] = "PING",
 ["event"] = "CHAT_MSG_PING",
+["type"] = "PING",
 },
 ["color"] = {
 ["b"] = 1,
@@ -54633,8 +54599,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 {
 ["recordedBy"] = "Stormclout-Tichondrius",
 ["typeInfo"] = {
-["type"] = "PING",
 ["event"] = "CHAT_MSG_PING",
+["type"] = "PING",
 },
 ["color"] = {
 ["b"] = 1,
@@ -54648,8 +54614,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 {
 ["recordedBy"] = "Stormclout-Tichondrius",
 ["typeInfo"] = {
-["type"] = "PING",
 ["event"] = "CHAT_MSG_PING",
+["type"] = "PING",
 },
 ["color"] = {
 ["b"] = 1,
@@ -54663,8 +54629,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 {
 ["recordedBy"] = "Stormclout-Tichondrius",
 ["typeInfo"] = {
-["type"] = "PING",
 ["event"] = "CHAT_MSG_PING",
+["type"] = "PING",
 },
 ["color"] = {
 ["b"] = 1,
@@ -54678,8 +54644,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 {
 ["recordedBy"] = "Stormclout-Tichondrius",
 ["typeInfo"] = {
-["type"] = "PING",
 ["event"] = "CHAT_MSG_PING",
+["type"] = "PING",
 },
 ["color"] = {
 ["b"] = 1,
@@ -54699,8 +54665,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Critvoid",
 ["sex"] = 3,
 },
-["type"] = "MONSTER_EMOTE",
 ["event"] = "CHAT_MSG_MONSTER_EMOTE",
+["type"] = "MONSTER_EMOTE",
 },
 ["color"] = {
 ["b"] = 0.250980406999588,
@@ -54720,8 +54686,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Pandalumix-Daggerspine",
 ["sex"] = 2,
 },
-["type"] = "GUILD_ACHIEVEMENT",
 ["event"] = "CHAT_MSG_GUILD_ACHIEVEMENT",
+["type"] = "GUILD_ACHIEVEMENT",
 },
 ["color"] = {
 ["b"] = 0.250980406999588,
@@ -54741,8 +54707,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Mcblazzle-Area52",
 ["sex"] = 2,
 },
-["type"] = "GUILD_ACHIEVEMENT",
 ["event"] = "CHAT_MSG_GUILD_ACHIEVEMENT",
+["type"] = "GUILD_ACHIEVEMENT",
 },
 ["color"] = {
 ["b"] = 0.250980406999588,
@@ -54762,8 +54728,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Upgrades",
 ["sex"] = 2,
 },
-["type"] = "MONSTER_YELL",
 ["event"] = "CHAT_MSG_MONSTER_YELL",
+["type"] = "MONSTER_YELL",
 },
 ["color"] = {
 ["b"] = 0.250980406999588,
@@ -54783,8 +54749,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Critvoid",
 ["sex"] = 3,
 },
-["type"] = "MONSTER_EMOTE",
 ["event"] = "CHAT_MSG_MONSTER_EMOTE",
+["type"] = "MONSTER_EMOTE",
 },
 ["color"] = {
 ["b"] = 0.250980406999588,
@@ -54804,8 +54770,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Bangaranng-Tichondrius",
 ["sex"] = 2,
 },
-["type"] = "GUILD_ACHIEVEMENT",
 ["event"] = "CHAT_MSG_GUILD_ACHIEVEMENT",
+["type"] = "GUILD_ACHIEVEMENT",
 },
 ["color"] = {
 ["b"] = 0.250980406999588,
@@ -54825,8 +54791,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Upgrades",
 ["sex"] = 2,
 },
-["type"] = "MONSTER_YELL",
 ["event"] = "CHAT_MSG_MONSTER_YELL",
+["type"] = "MONSTER_YELL",
 },
 ["color"] = {
 ["b"] = 0.250980406999588,
@@ -54846,8 +54812,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Stormclout-Tichondrius",
 ["sex"] = 3,
 },
-["type"] = "LOOT",
 ["event"] = "CHAT_MSG_LOOT",
+["type"] = "LOOT",
 },
 ["color"] = {
 ["b"] = -0,
@@ -54867,8 +54833,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Critvoid-Thrall",
 ["sex"] = 3,
 },
-["type"] = "LOOT",
 ["event"] = "CHAT_MSG_LOOT",
+["type"] = "LOOT",
 },
 ["color"] = {
 ["b"] = -0,
@@ -54888,8 +54854,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Critvoid",
 ["sex"] = 3,
 },
-["type"] = "MONSTER_EMOTE",
 ["event"] = "CHAT_MSG_MONSTER_EMOTE",
+["type"] = "MONSTER_EMOTE",
 },
 ["color"] = {
 ["b"] = 0.250980406999588,
@@ -54903,8 +54869,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 {
 ["recordedBy"] = "Stormclout-Tichondrius",
 ["typeInfo"] = {
-["type"] = "PING",
 ["event"] = "CHAT_MSG_PING",
+["type"] = "PING",
 },
 ["color"] = {
 ["b"] = 1,
@@ -54918,8 +54884,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 {
 ["recordedBy"] = "Stormclout-Tichondrius",
 ["typeInfo"] = {
-["type"] = "PING",
 ["event"] = "CHAT_MSG_PING",
+["type"] = "PING",
 },
 ["color"] = {
 ["b"] = 1,
@@ -54933,8 +54899,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 {
 ["recordedBy"] = "Stormclout-Tichondrius",
 ["typeInfo"] = {
-["type"] = "PING",
 ["event"] = "CHAT_MSG_PING",
+["type"] = "PING",
 },
 ["color"] = {
 ["b"] = 1,
@@ -54948,8 +54914,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 {
 ["recordedBy"] = "Stormclout-Tichondrius",
 ["typeInfo"] = {
-["type"] = "PING",
 ["event"] = "CHAT_MSG_PING",
+["type"] = "PING",
 },
 ["color"] = {
 ["b"] = 1,
@@ -54963,8 +54929,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 {
 ["recordedBy"] = "Stormclout-Tichondrius",
 ["typeInfo"] = {
-["type"] = "PING",
 ["event"] = "CHAT_MSG_PING",
+["type"] = "PING",
 },
 ["color"] = {
 ["b"] = 1,
@@ -54978,8 +54944,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 {
 ["recordedBy"] = "Stormclout-Tichondrius",
 ["typeInfo"] = {
-["type"] = "PING",
 ["event"] = "CHAT_MSG_PING",
+["type"] = "PING",
 },
 ["color"] = {
 ["b"] = 1,
@@ -54993,8 +54959,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 {
 ["recordedBy"] = "Stormclout-Tichondrius",
 ["typeInfo"] = {
-["type"] = "PING",
 ["event"] = "CHAT_MSG_PING",
+["type"] = "PING",
 },
 ["color"] = {
 ["b"] = 1,
@@ -55008,8 +54974,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 {
 ["recordedBy"] = "Stormclout-Tichondrius",
 ["typeInfo"] = {
-["type"] = "PING",
 ["event"] = "CHAT_MSG_PING",
+["type"] = "PING",
 },
 ["color"] = {
 ["b"] = 1,
@@ -55029,8 +54995,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Stormclout",
 ["sex"] = 3,
 },
-["type"] = "EMOTE",
 ["event"] = "CHAT_MSG_TEXT_EMOTE",
+["type"] = "EMOTE",
 },
 ["color"] = {
 ["b"] = 0.250980406999588,
@@ -55044,8 +55010,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 {
 ["recordedBy"] = "Stormclout-Tichondrius",
 ["typeInfo"] = {
-["type"] = "PING",
 ["event"] = "CHAT_MSG_PING",
+["type"] = "PING",
 },
 ["color"] = {
 ["b"] = 1,
@@ -55059,8 +55025,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 {
 ["recordedBy"] = "Stormclout-Tichondrius",
 ["typeInfo"] = {
-["type"] = "PING",
 ["event"] = "CHAT_MSG_PING",
+["type"] = "PING",
 },
 ["color"] = {
 ["b"] = 1,
@@ -55074,8 +55040,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 {
 ["recordedBy"] = "Stormclout-Tichondrius",
 ["typeInfo"] = {
-["type"] = "PING",
 ["event"] = "CHAT_MSG_PING",
+["type"] = "PING",
 },
 ["color"] = {
 ["b"] = 1,
@@ -55095,8 +55061,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Ceevipw-Tichondrius",
 ["sex"] = 3,
 },
-["type"] = "GUILD_ACHIEVEMENT",
 ["event"] = "CHAT_MSG_GUILD_ACHIEVEMENT",
+["type"] = "GUILD_ACHIEVEMENT",
 },
 ["color"] = {
 ["b"] = 0.250980406999588,
@@ -55116,8 +55082,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Mommysjuicbx-Stormrage",
 ["sex"] = 2,
 },
-["type"] = "GUILD_ACHIEVEMENT",
 ["event"] = "CHAT_MSG_GUILD_ACHIEVEMENT",
+["type"] = "GUILD_ACHIEVEMENT",
 },
 ["color"] = {
 ["b"] = 0.250980406999588,
@@ -55137,8 +55103,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Mommysjuicbx-Stormrage",
 ["sex"] = 2,
 },
-["type"] = "GUILD_ACHIEVEMENT",
 ["event"] = "CHAT_MSG_GUILD_ACHIEVEMENT",
+["type"] = "GUILD_ACHIEVEMENT",
 },
 ["color"] = {
 ["b"] = 0.250980406999588,
@@ -55158,8 +55124,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Reagthar-Tichondrius",
 ["sex"] = 2,
 },
-["type"] = "GUILD_ACHIEVEMENT",
 ["event"] = "CHAT_MSG_GUILD_ACHIEVEMENT",
+["type"] = "GUILD_ACHIEVEMENT",
 },
 ["color"] = {
 ["b"] = 0.250980406999588,
@@ -55179,8 +55145,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Mommysjuicbx-Stormrage",
 ["sex"] = 2,
 },
-["type"] = "GUILD_ACHIEVEMENT",
 ["event"] = "CHAT_MSG_GUILD_ACHIEVEMENT",
+["type"] = "GUILD_ACHIEVEMENT",
 },
 ["color"] = {
 ["b"] = 0.250980406999588,
@@ -55200,8 +55166,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Mommysjuicbx-Stormrage",
 ["sex"] = 2,
 },
-["type"] = "GUILD_ACHIEVEMENT",
 ["event"] = "CHAT_MSG_GUILD_ACHIEVEMENT",
+["type"] = "GUILD_ACHIEVEMENT",
 },
 ["color"] = {
 ["b"] = 0.250980406999588,
@@ -55215,8 +55181,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 {
 ["recordedBy"] = "Stormclout-Tichondrius",
 ["typeInfo"] = {
-["type"] = "PING",
 ["event"] = "CHAT_MSG_PING",
+["type"] = "PING",
 },
 ["color"] = {
 ["b"] = 1,
@@ -55236,8 +55202,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Kloei",
 ["sex"] = 3,
 },
-["type"] = "MONSTER_YELL",
 ["event"] = "CHAT_MSG_MONSTER_YELL",
+["type"] = "MONSTER_YELL",
 },
 ["color"] = {
 ["b"] = 0.250980406999588,
@@ -55257,8 +55223,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Goatussy-Illidan",
 ["sex"] = 3,
 },
-["type"] = "RAID",
 ["event"] = "CHAT_MSG_RAID",
+["type"] = "RAID",
 },
 ["color"] = {
 ["b"] = -0,
@@ -55278,8 +55244,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Delibash",
 ["sex"] = 2,
 },
-["type"] = "MONSTER_YELL",
 ["event"] = "CHAT_MSG_MONSTER_YELL",
+["type"] = "MONSTER_YELL",
 },
 ["color"] = {
 ["b"] = 0.250980406999588,
@@ -55299,8 +55265,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Critvoid",
 ["sex"] = 3,
 },
-["type"] = "MONSTER_YELL",
 ["event"] = "CHAT_MSG_MONSTER_YELL",
+["type"] = "MONSTER_YELL",
 },
 ["color"] = {
 ["b"] = 0.250980406999588,
@@ -55320,8 +55286,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Tmborn-Tichondrius",
 ["sex"] = 3,
 },
-["type"] = "GUILD_ACHIEVEMENT",
 ["event"] = "CHAT_MSG_GUILD_ACHIEVEMENT",
+["type"] = "GUILD_ACHIEVEMENT",
 },
 ["color"] = {
 ["b"] = 0.250980406999588,
@@ -55341,8 +55307,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Totemism-Mal'Ganis",
 ["sex"] = 2,
 },
-["type"] = "ACHIEVEMENT",
 ["event"] = "CHAT_MSG_ACHIEVEMENT",
+["type"] = "ACHIEVEMENT",
 },
 ["color"] = {
 ["b"] = -0,
@@ -55356,8 +55322,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 {
 ["recordedBy"] = "Stormclout-Tichondrius",
 ["typeInfo"] = {
-["type"] = "LOOT",
 ["event"] = "CHAT_MSG_LOOT",
+["type"] = "LOOT",
 },
 ["color"] = {
 ["b"] = -0,
@@ -55371,8 +55337,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 {
 ["recordedBy"] = "Stormclout-Tichondrius",
 ["typeInfo"] = {
-["type"] = "LOOT",
 ["event"] = "CHAT_MSG_LOOT",
+["type"] = "LOOT",
 },
 ["color"] = {
 ["b"] = -0,
@@ -55386,8 +55352,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 {
 ["recordedBy"] = "Stormclout-Tichondrius",
 ["typeInfo"] = {
-["type"] = "LOOT",
 ["event"] = "CHAT_MSG_LOOT",
+["type"] = "LOOT",
 },
 ["color"] = {
 ["b"] = -0,
@@ -55401,8 +55367,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 {
 ["recordedBy"] = "Stormclout-Tichondrius",
 ["typeInfo"] = {
-["type"] = "LOOT",
 ["event"] = "CHAT_MSG_LOOT",
+["type"] = "LOOT",
 },
 ["color"] = {
 ["b"] = -0,
@@ -55422,8 +55388,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Delibash-Mal'Ganis",
 ["sex"] = 2,
 },
-["type"] = "LOOT",
 ["event"] = "CHAT_MSG_LOOT",
+["type"] = "LOOT",
 },
 ["color"] = {
 ["b"] = -0,
@@ -55437,8 +55403,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 {
 ["recordedBy"] = "Stormclout-Tichondrius",
 ["typeInfo"] = {
-["type"] = "CURRENCY",
 ["event"] = "CHAT_MSG_CURRENCY",
+["type"] = "CURRENCY",
 },
 ["color"] = {
 ["b"] = -0,
@@ -55458,8 +55424,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Totemism-Mal'Ganis",
 ["sex"] = 2,
 },
-["type"] = "LOOT",
 ["event"] = "CHAT_MSG_LOOT",
+["type"] = "LOOT",
 },
 ["color"] = {
 ["b"] = -0,
@@ -55473,8 +55439,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 {
 ["recordedBy"] = "Stormclout-Tichondrius",
 ["typeInfo"] = {
-["type"] = "CURRENCY",
 ["event"] = "CHAT_MSG_CURRENCY",
+["type"] = "CURRENCY",
 },
 ["color"] = {
 ["b"] = -0,
@@ -55488,8 +55454,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 {
 ["recordedBy"] = "Stormclout-Tichondrius",
 ["typeInfo"] = {
-["type"] = "MONEY",
 ["event"] = "CHAT_MSG_MONEY",
+["type"] = "MONEY",
 },
 ["color"] = {
 ["b"] = -0,
@@ -55509,8 +55475,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Wildyn-Mal'Ganis",
 ["sex"] = 3,
 },
-["type"] = "LOOT",
 ["event"] = "CHAT_MSG_LOOT",
+["type"] = "LOOT",
 },
 ["color"] = {
 ["b"] = -0,
@@ -55524,8 +55490,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 {
 ["recordedBy"] = "Stormclout-Tichondrius",
 ["typeInfo"] = {
-["type"] = "LOOT",
 ["event"] = "CHAT_MSG_LOOT",
+["type"] = "LOOT",
 },
 ["color"] = {
 ["b"] = -0,
@@ -55539,8 +55505,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 {
 ["recordedBy"] = "Stormclout-Tichondrius",
 ["typeInfo"] = {
-["type"] = "LOOT",
 ["event"] = "CHAT_MSG_LOOT",
+["type"] = "LOOT",
 },
 ["color"] = {
 ["b"] = -0,
@@ -55554,8 +55520,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 {
 ["recordedBy"] = "Stormclout-Tichondrius",
 ["typeInfo"] = {
-["type"] = "LOOT",
 ["event"] = "CHAT_MSG_LOOT",
+["type"] = "LOOT",
 },
 ["color"] = {
 ["b"] = -0,
@@ -55572,8 +55538,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["player"] = {
 ["name"] = "Vereesa Windrunner",
 },
-["type"] = "MONSTER_SAY",
 ["event"] = "CHAT_MSG_MONSTER_SAY",
+["type"] = "MONSTER_SAY",
 },
 ["color"] = {
 ["b"] = 0.6235294342041016,
@@ -55587,8 +55553,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 {
 ["recordedBy"] = "Stormclout-Tichondrius",
 ["typeInfo"] = {
-["type"] = "LOOT",
 ["event"] = "CHAT_MSG_LOOT",
+["type"] = "LOOT",
 },
 ["color"] = {
 ["b"] = -0,
@@ -55605,8 +55571,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["player"] = {
 ["name"] = "Arator",
 },
-["type"] = "MONSTER_SAY",
 ["event"] = "CHAT_MSG_MONSTER_SAY",
+["type"] = "MONSTER_SAY",
 },
 ["color"] = {
 ["b"] = 0.6235294342041016,
@@ -55623,8 +55589,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["player"] = {
 ["name"] = "Lady Liadrin",
 },
-["type"] = "MONSTER_YELL",
 ["event"] = "CHAT_MSG_MONSTER_YELL",
+["type"] = "MONSTER_YELL",
 },
 ["color"] = {
 ["b"] = 0.250980406999588,
@@ -55641,8 +55607,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["player"] = {
 ["name"] = "Arator",
 },
-["type"] = "MONSTER_YELL",
 ["event"] = "CHAT_MSG_MONSTER_YELL",
+["type"] = "MONSTER_YELL",
 },
 ["color"] = {
 ["b"] = 0.250980406999588,
@@ -55656,8 +55622,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 {
 ["recordedBy"] = "Stormclout-Tichondrius",
 ["typeInfo"] = {
-["type"] = "LOOT",
 ["event"] = "CHAT_MSG_LOOT",
+["type"] = "LOOT",
 },
 ["color"] = {
 ["b"] = -0,
@@ -55671,8 +55637,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 {
 ["recordedBy"] = "Stormclout-Tichondrius",
 ["typeInfo"] = {
-["type"] = "LOOT",
 ["event"] = "CHAT_MSG_LOOT",
+["type"] = "LOOT",
 },
 ["color"] = {
 ["b"] = -0,
@@ -55692,8 +55658,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Goatussy-Illidan",
 ["sex"] = 3,
 },
-["type"] = "LOOT",
 ["event"] = "CHAT_MSG_LOOT",
+["type"] = "LOOT",
 },
 ["color"] = {
 ["b"] = -0,
@@ -55707,8 +55673,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 {
 ["recordedBy"] = "Stormclout-Tichondrius",
 ["typeInfo"] = {
-["type"] = "LOOT",
 ["event"] = "CHAT_MSG_LOOT",
+["type"] = "LOOT",
 },
 ["color"] = {
 ["b"] = -0,
@@ -55728,8 +55694,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Upgrades-Mal'Ganis",
 ["sex"] = 2,
 },
-["type"] = "LOOT",
 ["event"] = "CHAT_MSG_LOOT",
+["type"] = "LOOT",
 },
 ["color"] = {
 ["b"] = -0,
@@ -55743,8 +55709,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 {
 ["recordedBy"] = "Stormclout-Tichondrius",
 ["typeInfo"] = {
-["type"] = "LOOT",
 ["event"] = "CHAT_MSG_LOOT",
+["type"] = "LOOT",
 },
 ["color"] = {
 ["b"] = -0,
@@ -55761,8 +55727,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["player"] = {
 ["name"] = "Riftblade Maella",
 },
-["type"] = "MONSTER_SAY",
 ["event"] = "CHAT_MSG_MONSTER_SAY",
+["type"] = "MONSTER_SAY",
 },
 ["color"] = {
 ["b"] = 0.6235294342041016,
@@ -55779,8 +55745,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["player"] = {
 ["name"] = "Imperator Averzian",
 },
-["type"] = "MONSTER_YELL",
 ["event"] = "CHAT_MSG_MONSTER_YELL",
+["type"] = "MONSTER_YELL",
 },
 ["color"] = {
 ["b"] = 0.250980406999588,
@@ -55797,8 +55763,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["player"] = {
 ["name"] = "Reforged",
 },
-["type"] = "ACHIEVEMENT",
 ["event"] = "CHAT_MSG_ACHIEVEMENT",
+["type"] = "ACHIEVEMENT",
 },
 ["color"] = {
 ["b"] = -0,
@@ -55818,8 +55784,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Notmagicz-Mal'Ganis",
 ["sex"] = 3,
 },
-["type"] = "RAID",
 ["event"] = "CHAT_MSG_RAID",
+["type"] = "RAID",
 },
 ["color"] = {
 ["b"] = -0,
@@ -55833,8 +55799,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 {
 ["recordedBy"] = "Stormclout-Tichondrius",
 ["typeInfo"] = {
-["type"] = "PING",
 ["event"] = "CHAT_MSG_PING",
+["type"] = "PING",
 },
 ["color"] = {
 ["b"] = 1,
@@ -55848,8 +55814,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 {
 ["recordedBy"] = "Stormclout-Tichondrius",
 ["typeInfo"] = {
-["type"] = "PING",
 ["event"] = "CHAT_MSG_PING",
+["type"] = "PING",
 },
 ["color"] = {
 ["b"] = 1,
@@ -55866,8 +55832,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["player"] = {
 ["name"] = "Imperator Averzian",
 },
-["type"] = "MONSTER_YELL",
 ["event"] = "CHAT_MSG_MONSTER_YELL",
+["type"] = "MONSTER_YELL",
 },
 ["color"] = {
 ["b"] = 0.250980406999588,
@@ -55881,8 +55847,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 {
 ["recordedBy"] = "Stormclout-Tichondrius",
 ["typeInfo"] = {
-["type"] = "PING",
 ["event"] = "CHAT_MSG_PING",
+["type"] = "PING",
 },
 ["color"] = {
 ["b"] = 1,
@@ -55896,8 +55862,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 {
 ["recordedBy"] = "Stormclout-Tichondrius",
 ["typeInfo"] = {
-["type"] = "PING",
 ["event"] = "CHAT_MSG_PING",
+["type"] = "PING",
 },
 ["color"] = {
 ["b"] = 1,
@@ -55911,8 +55877,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 {
 ["recordedBy"] = "Stormclout-Tichondrius",
 ["typeInfo"] = {
-["type"] = "PING",
 ["event"] = "CHAT_MSG_PING",
+["type"] = "PING",
 },
 ["color"] = {
 ["b"] = 1,
@@ -55929,8 +55895,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["player"] = {
 ["name"] = "Arator",
 },
-["type"] = "MONSTER_YELL",
 ["event"] = "CHAT_MSG_MONSTER_YELL",
+["type"] = "MONSTER_YELL",
 },
 ["color"] = {
 ["b"] = 0.250980406999588,
@@ -55950,8 +55916,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Delibash",
 ["sex"] = 2,
 },
-["type"] = "MONSTER_YELL",
 ["event"] = "CHAT_MSG_MONSTER_YELL",
+["type"] = "MONSTER_YELL",
 },
 ["color"] = {
 ["b"] = 0.250980406999588,
@@ -55971,8 +55937,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Holddeez-Stormrage",
 ["sex"] = 2,
 },
-["type"] = "GUILD",
 ["event"] = "CHAT_MSG_GUILD",
+["type"] = "GUILD",
 },
 ["color"] = {
 ["b"] = 0.250980406999588,
@@ -55989,8 +55955,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["player"] = {
 ["name"] = "Arator",
 },
-["type"] = "MONSTER_YELL",
 ["event"] = "CHAT_MSG_MONSTER_YELL",
+["type"] = "MONSTER_YELL",
 },
 ["color"] = {
 ["b"] = 0.250980406999588,
@@ -56010,8 +55976,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Amaragos-Tichondrius",
 ["sex"] = 3,
 },
-["type"] = "GUILD_ACHIEVEMENT",
 ["event"] = "CHAT_MSG_GUILD_ACHIEVEMENT",
+["type"] = "GUILD_ACHIEVEMENT",
 },
 ["color"] = {
 ["b"] = 0.250980406999588,
@@ -56025,8 +55991,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 {
 ["recordedBy"] = "Stormclout-Tichondrius",
 ["typeInfo"] = {
-["type"] = "PING",
 ["event"] = "CHAT_MSG_PING",
+["type"] = "PING",
 },
 ["color"] = {
 ["b"] = 1,
@@ -56040,8 +56006,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 {
 ["recordedBy"] = "Stormclout-Tichondrius",
 ["typeInfo"] = {
-["type"] = "PING",
 ["event"] = "CHAT_MSG_PING",
+["type"] = "PING",
 },
 ["color"] = {
 ["b"] = 1,
@@ -56061,8 +56027,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Quasistellar-Sargeras",
 ["sex"] = 2,
 },
-["type"] = "GUILD",
 ["event"] = "CHAT_MSG_GUILD",
+["type"] = "GUILD",
 },
 ["color"] = {
 ["b"] = 0.250980406999588,
@@ -56079,8 +56045,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["player"] = {
 ["name"] = "High Exarch Turalyon",
 },
-["type"] = "MONSTER_YELL",
 ["event"] = "CHAT_MSG_MONSTER_YELL",
+["type"] = "MONSTER_YELL",
 },
 ["color"] = {
 ["b"] = 0.250980406999588,
@@ -56097,8 +56063,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["player"] = {
 ["name"] = "High Exarch Turalyon",
 },
-["type"] = "MONSTER_YELL",
 ["event"] = "CHAT_MSG_MONSTER_YELL",
+["type"] = "MONSTER_YELL",
 },
 ["color"] = {
 ["b"] = 0.250980406999588,
@@ -56118,8 +56084,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Edjmm-Korgath",
 ["sex"] = 2,
 },
-["type"] = "GUILD_ACHIEVEMENT",
 ["event"] = "CHAT_MSG_GUILD_ACHIEVEMENT",
+["type"] = "GUILD_ACHIEVEMENT",
 },
 ["color"] = {
 ["b"] = 0.250980406999588,
@@ -56139,8 +56105,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Stormclout",
 ["sex"] = 3,
 },
-["type"] = "MONSTER_EMOTE",
 ["event"] = "CHAT_MSG_MONSTER_EMOTE",
+["type"] = "MONSTER_EMOTE",
 },
 ["color"] = {
 ["b"] = 0.250980406999588,
@@ -56160,8 +56126,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Upgrades-Mal'Ganis",
 ["sex"] = 2,
 },
-["type"] = "LOOT",
 ["event"] = "CHAT_MSG_LOOT",
+["type"] = "LOOT",
 },
 ["color"] = {
 ["b"] = -0,
@@ -56181,8 +56147,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Critvoid",
 ["sex"] = 3,
 },
-["type"] = "MONSTER_YELL",
 ["event"] = "CHAT_MSG_MONSTER_YELL",
+["type"] = "MONSTER_YELL",
 },
 ["color"] = {
 ["b"] = 0.250980406999588,
@@ -56202,8 +56168,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Kloei-Mal'Ganis",
 ["sex"] = 3,
 },
-["type"] = "LOOT",
 ["event"] = "CHAT_MSG_LOOT",
+["type"] = "LOOT",
 },
 ["color"] = {
 ["b"] = -0,
@@ -56223,8 +56189,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Smileclap-Mal'Ganis",
 ["sex"] = 3,
 },
-["type"] = "LOOT",
 ["event"] = "CHAT_MSG_LOOT",
+["type"] = "LOOT",
 },
 ["color"] = {
 ["b"] = -0,
@@ -56244,8 +56210,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Critvoid-Thrall",
 ["sex"] = 3,
 },
-["type"] = "LOOT",
 ["event"] = "CHAT_MSG_LOOT",
+["type"] = "LOOT",
 },
 ["color"] = {
 ["b"] = -0,
@@ -56265,8 +56231,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Upgrades-Mal'Ganis",
 ["sex"] = 2,
 },
-["type"] = "LOOT",
 ["event"] = "CHAT_MSG_LOOT",
+["type"] = "LOOT",
 },
 ["color"] = {
 ["b"] = -0,
@@ -56286,8 +56252,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Upgrades-Mal'Ganis",
 ["sex"] = 2,
 },
-["type"] = "LOOT",
 ["event"] = "CHAT_MSG_LOOT",
+["type"] = "LOOT",
 },
 ["color"] = {
 ["b"] = -0,
@@ -56307,8 +56273,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Totemism-Mal'Ganis",
 ["sex"] = 2,
 },
-["type"] = "LOOT",
 ["event"] = "CHAT_MSG_LOOT",
+["type"] = "LOOT",
 },
 ["color"] = {
 ["b"] = -0,
@@ -56328,8 +56294,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Raqcityboom-Area52",
 ["sex"] = 3,
 },
-["type"] = "GUILD_ACHIEVEMENT",
 ["event"] = "CHAT_MSG_GUILD_ACHIEVEMENT",
+["type"] = "GUILD_ACHIEVEMENT",
 },
 ["color"] = {
 ["b"] = 0.250980406999588,
@@ -56343,8 +56309,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 {
 ["recordedBy"] = "Stormclout-Tichondrius",
 ["typeInfo"] = {
-["type"] = "PING",
 ["event"] = "CHAT_MSG_PING",
+["type"] = "PING",
 },
 ["color"] = {
 ["b"] = 1,
@@ -56364,8 +56330,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Andyslaps-Tichondrius",
 ["sex"] = 3,
 },
-["type"] = "GUILD_ACHIEVEMENT",
 ["event"] = "CHAT_MSG_GUILD_ACHIEVEMENT",
+["type"] = "GUILD_ACHIEVEMENT",
 },
 ["color"] = {
 ["b"] = 0.250980406999588,
@@ -56385,8 +56351,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Magicz",
 ["sex"] = 3,
 },
-["type"] = "MONSTER_YELL",
 ["event"] = "CHAT_MSG_MONSTER_YELL",
+["type"] = "MONSTER_YELL",
 },
 ["color"] = {
 ["b"] = 0.250980406999588,
@@ -56400,8 +56366,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 {
 ["recordedBy"] = "Stormclout-Tichondrius",
 ["typeInfo"] = {
-["type"] = "PING",
 ["event"] = "CHAT_MSG_PING",
+["type"] = "PING",
 },
 ["color"] = {
 ["b"] = 1,
@@ -56415,8 +56381,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 {
 ["recordedBy"] = "Stormclout-Tichondrius",
 ["typeInfo"] = {
-["type"] = "PING",
 ["event"] = "CHAT_MSG_PING",
+["type"] = "PING",
 },
 ["color"] = {
 ["b"] = 1,
@@ -56436,8 +56402,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Andyslaps-Tichondrius",
 ["sex"] = 3,
 },
-["type"] = "GUILD_ACHIEVEMENT",
 ["event"] = "CHAT_MSG_GUILD_ACHIEVEMENT",
+["type"] = "GUILD_ACHIEVEMENT",
 },
 ["color"] = {
 ["b"] = 0.250980406999588,
@@ -56457,8 +56423,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Wroot-Zuluhed",
 ["sex"] = 2,
 },
-["type"] = "GUILD_ACHIEVEMENT",
 ["event"] = "CHAT_MSG_GUILD_ACHIEVEMENT",
+["type"] = "GUILD_ACHIEVEMENT",
 },
 ["color"] = {
 ["b"] = 0.250980406999588,
@@ -56478,8 +56444,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Suñtzu-Area52",
 ["sex"] = 3,
 },
-["type"] = "GUILD_ACHIEVEMENT",
 ["event"] = "CHAT_MSG_GUILD_ACHIEVEMENT",
+["type"] = "GUILD_ACHIEVEMENT",
 },
 ["color"] = {
 ["b"] = 0.250980406999588,
@@ -56499,8 +56465,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Totemism",
 ["sex"] = 2,
 },
-["type"] = "EMOTE",
 ["event"] = "CHAT_MSG_TEXT_EMOTE",
+["type"] = "EMOTE",
 },
 ["color"] = {
 ["b"] = 0.250980406999588,
@@ -56514,8 +56480,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 {
 ["recordedBy"] = "Stormclout-Tichondrius",
 ["typeInfo"] = {
-["type"] = "PING",
 ["event"] = "CHAT_MSG_PING",
+["type"] = "PING",
 },
 ["color"] = {
 ["b"] = 1,
@@ -56535,8 +56501,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Smileclap-Mal'Ganis",
 ["sex"] = 3,
 },
-["type"] = "RAID_LEADER",
 ["event"] = "CHAT_MSG_RAID_LEADER",
+["type"] = "RAID_LEADER",
 },
 ["color"] = {
 ["b"] = 0.03921568766236305,
@@ -56550,8 +56516,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 {
 ["recordedBy"] = "Stormclout-Tichondrius",
 ["typeInfo"] = {
-["type"] = "PING",
 ["event"] = "CHAT_MSG_PING",
+["type"] = "PING",
 },
 ["color"] = {
 ["b"] = 1,
@@ -56565,8 +56531,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 {
 ["recordedBy"] = "Stormclout-Tichondrius",
 ["typeInfo"] = {
-["type"] = "PING",
 ["event"] = "CHAT_MSG_PING",
+["type"] = "PING",
 },
 ["color"] = {
 ["b"] = 1,
@@ -56580,8 +56546,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 {
 ["recordedBy"] = "Stormclout-Tichondrius",
 ["typeInfo"] = {
-["type"] = "PING",
 ["event"] = "CHAT_MSG_PING",
+["type"] = "PING",
 },
 ["color"] = {
 ["b"] = 1,
@@ -56595,8 +56561,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 {
 ["recordedBy"] = "Stormclout-Tichondrius",
 ["typeInfo"] = {
-["type"] = "PING",
 ["event"] = "CHAT_MSG_PING",
+["type"] = "PING",
 },
 ["color"] = {
 ["b"] = 1,
@@ -56613,8 +56579,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["player"] = {
 ["name"] = "Ethereal Warpweaver",
 },
-["type"] = "MONSTER_SAY",
 ["event"] = "CHAT_MSG_MONSTER_SAY",
+["type"] = "MONSTER_SAY",
 },
 ["color"] = {
 ["b"] = 0.6235294342041016,
@@ -56628,8 +56594,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 {
 ["recordedBy"] = "Stormclout-Tichondrius",
 ["typeInfo"] = {
-["type"] = "PING",
 ["event"] = "CHAT_MSG_PING",
+["type"] = "PING",
 },
 ["color"] = {
 ["b"] = 1,
@@ -56643,8 +56609,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 {
 ["recordedBy"] = "Stormclout-Tichondrius",
 ["typeInfo"] = {
-["type"] = "PING",
 ["event"] = "CHAT_MSG_PING",
+["type"] = "PING",
 },
 ["color"] = {
 ["b"] = 1,
@@ -56658,8 +56624,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 {
 ["recordedBy"] = "Stormclout-Tichondrius",
 ["typeInfo"] = {
-["type"] = "PING",
 ["event"] = "CHAT_MSG_PING",
+["type"] = "PING",
 },
 ["color"] = {
 ["b"] = 1,
@@ -56679,8 +56645,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Totemism",
 ["sex"] = 2,
 },
-["type"] = "EMOTE",
 ["event"] = "CHAT_MSG_TEXT_EMOTE",
+["type"] = "EMOTE",
 },
 ["color"] = {
 ["b"] = 0.250980406999588,
@@ -56700,8 +56666,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Andyslaps-Tichondrius",
 ["sex"] = 3,
 },
-["type"] = "GUILD_ACHIEVEMENT",
 ["event"] = "CHAT_MSG_GUILD_ACHIEVEMENT",
+["type"] = "GUILD_ACHIEVEMENT",
 },
 ["color"] = {
 ["b"] = 0.250980406999588,
@@ -56715,8 +56681,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 {
 ["recordedBy"] = "Stormclout-Tichondrius",
 ["typeInfo"] = {
-["type"] = "PING",
 ["event"] = "CHAT_MSG_PING",
+["type"] = "PING",
 },
 ["color"] = {
 ["b"] = 1,
@@ -56730,8 +56696,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 {
 ["recordedBy"] = "Stormclout-Tichondrius",
 ["typeInfo"] = {
-["type"] = "PING",
 ["event"] = "CHAT_MSG_PING",
+["type"] = "PING",
 },
 ["color"] = {
 ["b"] = 1,
@@ -56745,8 +56711,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 {
 ["recordedBy"] = "Stormclout-Tichondrius",
 ["typeInfo"] = {
-["type"] = "PING",
 ["event"] = "CHAT_MSG_PING",
+["type"] = "PING",
 },
 ["color"] = {
 ["b"] = 1,
@@ -56760,8 +56726,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 {
 ["recordedBy"] = "Stormclout-Tichondrius",
 ["typeInfo"] = {
-["type"] = "PING",
 ["event"] = "CHAT_MSG_PING",
+["type"] = "PING",
 },
 ["color"] = {
 ["b"] = 1,
@@ -56781,8 +56747,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Thighcology-Area52",
 ["sex"] = 3,
 },
-["type"] = "GUILD_ACHIEVEMENT",
 ["event"] = "CHAT_MSG_GUILD_ACHIEVEMENT",
+["type"] = "GUILD_ACHIEVEMENT",
 },
 ["color"] = {
 ["b"] = 0.250980406999588,
@@ -56802,8 +56768,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Totemism-Mal'Ganis",
 ["sex"] = 2,
 },
-["type"] = "RAID",
 ["event"] = "CHAT_MSG_RAID",
+["type"] = "RAID",
 },
 ["color"] = {
 ["b"] = -0,
@@ -56823,8 +56789,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Sxmi-Tichondrius",
 ["sex"] = 2,
 },
-["type"] = "GUILD_ACHIEVEMENT",
 ["event"] = "CHAT_MSG_GUILD_ACHIEVEMENT",
+["type"] = "GUILD_ACHIEVEMENT",
 },
 ["color"] = {
 ["b"] = 0.250980406999588,
@@ -56844,8 +56810,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Critvoid",
 ["sex"] = 3,
 },
-["type"] = "MONSTER_EMOTE",
 ["event"] = "CHAT_MSG_MONSTER_EMOTE",
+["type"] = "MONSTER_EMOTE",
 },
 ["color"] = {
 ["b"] = 0.250980406999588,
@@ -56859,8 +56825,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 {
 ["recordedBy"] = "Stormclout-Tichondrius",
 ["typeInfo"] = {
-["type"] = "PING",
 ["event"] = "CHAT_MSG_PING",
+["type"] = "PING",
 },
 ["color"] = {
 ["b"] = 1,
@@ -56877,8 +56843,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["player"] = {
 ["name"] = "Rewind",
 },
-["type"] = "ACHIEVEMENT",
 ["event"] = "CHAT_MSG_ACHIEVEMENT",
+["type"] = "ACHIEVEMENT",
 },
 ["color"] = {
 ["b"] = -0,
@@ -56892,8 +56858,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 {
 ["recordedBy"] = "Stormclout-Tichondrius",
 ["typeInfo"] = {
-["type"] = "PING",
 ["event"] = "CHAT_MSG_PING",
+["type"] = "PING",
 },
 ["color"] = {
 ["b"] = 1,
@@ -56907,8 +56873,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 {
 ["recordedBy"] = "Stormclout-Tichondrius",
 ["typeInfo"] = {
-["type"] = "PING",
 ["event"] = "CHAT_MSG_PING",
+["type"] = "PING",
 },
 ["color"] = {
 ["b"] = 1,
@@ -56928,8 +56894,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Smileclap-Mal'Ganis",
 ["sex"] = 3,
 },
-["type"] = "RAID_LEADER",
 ["event"] = "CHAT_MSG_RAID_LEADER",
+["type"] = "RAID_LEADER",
 },
 ["color"] = {
 ["b"] = 0.03921568766236305,
@@ -56943,8 +56909,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 {
 ["recordedBy"] = "Stormclout-Tichondrius",
 ["typeInfo"] = {
-["type"] = "PING",
 ["event"] = "CHAT_MSG_PING",
+["type"] = "PING",
 },
 ["color"] = {
 ["b"] = 1,
@@ -56958,8 +56924,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 {
 ["recordedBy"] = "Stormclout-Tichondrius",
 ["typeInfo"] = {
-["type"] = "PING",
 ["event"] = "CHAT_MSG_PING",
+["type"] = "PING",
 },
 ["color"] = {
 ["b"] = 1,
@@ -56973,8 +56939,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 {
 ["recordedBy"] = "Stormclout-Tichondrius",
 ["typeInfo"] = {
-["type"] = "PING",
 ["event"] = "CHAT_MSG_PING",
+["type"] = "PING",
 },
 ["color"] = {
 ["b"] = 1,
@@ -56988,8 +56954,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 {
 ["recordedBy"] = "Stormclout-Tichondrius",
 ["typeInfo"] = {
-["type"] = "PING",
 ["event"] = "CHAT_MSG_PING",
+["type"] = "PING",
 },
 ["color"] = {
 ["b"] = 1,
@@ -57003,8 +56969,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 {
 ["recordedBy"] = "Stormclout-Tichondrius",
 ["typeInfo"] = {
-["type"] = "PING",
 ["event"] = "CHAT_MSG_PING",
+["type"] = "PING",
 },
 ["color"] = {
 ["b"] = 1,
@@ -57024,8 +56990,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Smileclap-Mal'Ganis",
 ["sex"] = 3,
 },
-["type"] = "RAID_LEADER",
 ["event"] = "CHAT_MSG_RAID_LEADER",
+["type"] = "RAID_LEADER",
 },
 ["color"] = {
 ["b"] = 0.03921568766236305,
@@ -57045,8 +57011,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Sxmi-Tichondrius",
 ["sex"] = 2,
 },
-["type"] = "GUILD_ACHIEVEMENT",
 ["event"] = "CHAT_MSG_GUILD_ACHIEVEMENT",
+["type"] = "GUILD_ACHIEVEMENT",
 },
 ["color"] = {
 ["b"] = 0.250980406999588,
@@ -57060,8 +57026,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 {
 ["recordedBy"] = "Stormclout-Tichondrius",
 ["typeInfo"] = {
-["type"] = "PING",
 ["event"] = "CHAT_MSG_PING",
+["type"] = "PING",
 },
 ["color"] = {
 ["b"] = 1,
@@ -57075,8 +57041,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 {
 ["recordedBy"] = "Stormclout-Tichondrius",
 ["typeInfo"] = {
-["type"] = "PING",
 ["event"] = "CHAT_MSG_PING",
+["type"] = "PING",
 },
 ["color"] = {
 ["b"] = 1,
@@ -57096,8 +57062,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Dodeyparton-Mal'Ganis",
 ["sex"] = 3,
 },
-["type"] = "RAID",
 ["event"] = "CHAT_MSG_RAID",
+["type"] = "RAID",
 },
 ["color"] = {
 ["b"] = -0,
@@ -57111,8 +57077,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 {
 ["recordedBy"] = "Stormclout-Tichondrius",
 ["typeInfo"] = {
-["type"] = "TARGETICONS",
 ["event"] = "CHAT_MSG_TARGETICONS",
+["type"] = "TARGETICONS",
 },
 ["color"] = {
 ["b"] = -0,
@@ -57126,8 +57092,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 {
 ["recordedBy"] = "Stormclout-Tichondrius",
 ["typeInfo"] = {
-["type"] = "PING",
 ["event"] = "CHAT_MSG_PING",
+["type"] = "PING",
 },
 ["color"] = {
 ["b"] = 1,
@@ -57141,8 +57107,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 {
 ["recordedBy"] = "Stormclout-Tichondrius",
 ["typeInfo"] = {
-["type"] = "PING",
 ["event"] = "CHAT_MSG_PING",
+["type"] = "PING",
 },
 ["color"] = {
 ["b"] = 1,
@@ -57156,8 +57122,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 {
 ["recordedBy"] = "Stormclout-Tichondrius",
 ["typeInfo"] = {
-["type"] = "PING",
 ["event"] = "CHAT_MSG_PING",
+["type"] = "PING",
 },
 ["color"] = {
 ["b"] = 1,
@@ -57171,8 +57137,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 {
 ["recordedBy"] = "Stormclout-Tichondrius",
 ["typeInfo"] = {
-["type"] = "PING",
 ["event"] = "CHAT_MSG_PING",
+["type"] = "PING",
 },
 ["color"] = {
 ["b"] = 1,
@@ -57192,8 +57158,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Theodosiâ-Area52",
 ["sex"] = 3,
 },
-["type"] = "GUILD_ACHIEVEMENT",
 ["event"] = "CHAT_MSG_GUILD_ACHIEVEMENT",
+["type"] = "GUILD_ACHIEVEMENT",
 },
 ["color"] = {
 ["b"] = 0.250980406999588,
@@ -57207,8 +57173,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 {
 ["recordedBy"] = "Stormclout-Tichondrius",
 ["typeInfo"] = {
-["type"] = "PING",
 ["event"] = "CHAT_MSG_PING",
+["type"] = "PING",
 },
 ["color"] = {
 ["b"] = 1,
@@ -57228,8 +57194,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Suñtzu-Area52",
 ["sex"] = 3,
 },
-["type"] = "GUILD_ACHIEVEMENT",
 ["event"] = "CHAT_MSG_GUILD_ACHIEVEMENT",
+["type"] = "GUILD_ACHIEVEMENT",
 },
 ["color"] = {
 ["b"] = 0.250980406999588,
@@ -57249,8 +57215,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Suñtzu-Area52",
 ["sex"] = 3,
 },
-["type"] = "GUILD_ACHIEVEMENT",
 ["event"] = "CHAT_MSG_GUILD_ACHIEVEMENT",
+["type"] = "GUILD_ACHIEVEMENT",
 },
 ["color"] = {
 ["b"] = 0.250980406999588,
@@ -57270,8 +57236,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Bittérs-Tichondrius",
 ["sex"] = 2,
 },
-["type"] = "GUILD_ACHIEVEMENT",
 ["event"] = "CHAT_MSG_GUILD_ACHIEVEMENT",
+["type"] = "GUILD_ACHIEVEMENT",
 },
 ["color"] = {
 ["b"] = 0.250980406999588,
@@ -57288,8 +57254,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["player"] = {
 ["name"] = "General Amias Bellamy",
 },
-["type"] = "MONSTER_YELL",
 ["event"] = "CHAT_MSG_MONSTER_YELL",
+["type"] = "MONSTER_YELL",
 },
 ["color"] = {
 ["b"] = 0.250980406999588,
@@ -57303,8 +57269,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 {
 ["recordedBy"] = "Stormclout-Tichondrius",
 ["typeInfo"] = {
-["type"] = "LOOT",
 ["event"] = "CHAT_MSG_LOOT",
+["type"] = "LOOT",
 },
 ["color"] = {
 ["b"] = -0,
@@ -57318,8 +57284,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 {
 ["recordedBy"] = "Stormclout-Tichondrius",
 ["typeInfo"] = {
-["type"] = "LOOT",
 ["event"] = "CHAT_MSG_LOOT",
+["type"] = "LOOT",
 },
 ["color"] = {
 ["b"] = -0,
@@ -57333,8 +57299,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 {
 ["recordedBy"] = "Stormclout-Tichondrius",
 ["typeInfo"] = {
-["type"] = "LOOT",
 ["event"] = "CHAT_MSG_LOOT",
+["type"] = "LOOT",
 },
 ["color"] = {
 ["b"] = -0,
@@ -57354,8 +57320,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Critvoid-Thrall",
 ["sex"] = 3,
 },
-["type"] = "LOOT",
 ["event"] = "CHAT_MSG_LOOT",
+["type"] = "LOOT",
 },
 ["color"] = {
 ["b"] = -0,
@@ -57375,8 +57341,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Theeohgee-Mal'Ganis",
 ["sex"] = 3,
 },
-["type"] = "LOOT",
 ["event"] = "CHAT_MSG_LOOT",
+["type"] = "LOOT",
 },
 ["color"] = {
 ["b"] = -0,
@@ -57393,8 +57359,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["player"] = {
 ["name"] = "Xal'atath",
 },
-["type"] = "MONSTER_YELL",
 ["event"] = "CHAT_MSG_MONSTER_YELL",
+["type"] = "MONSTER_YELL",
 },
 ["color"] = {
 ["b"] = 0.250980406999588,
@@ -57414,8 +57380,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Stormclout-Tichondrius",
 ["sex"] = 3,
 },
-["type"] = "LOOT",
 ["event"] = "CHAT_MSG_LOOT",
+["type"] = "LOOT",
 },
 ["color"] = {
 ["b"] = -0,
@@ -57435,8 +57401,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Theeohgee-Mal'Ganis",
 ["sex"] = 3,
 },
-["type"] = "LOOT",
 ["event"] = "CHAT_MSG_LOOT",
+["type"] = "LOOT",
 },
 ["color"] = {
 ["b"] = -0,
@@ -57456,8 +57422,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Delibash-Mal'Ganis",
 ["sex"] = 2,
 },
-["type"] = "LOOT",
 ["event"] = "CHAT_MSG_LOOT",
+["type"] = "LOOT",
 },
 ["color"] = {
 ["b"] = -0,
@@ -57477,8 +57443,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Dodeyparton-Mal'Ganis",
 ["sex"] = 3,
 },
-["type"] = "LOOT",
 ["event"] = "CHAT_MSG_LOOT",
+["type"] = "LOOT",
 },
 ["color"] = {
 ["b"] = -0,
@@ -57498,8 +57464,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Goatussy-Illidan",
 ["sex"] = 3,
 },
-["type"] = "LOOT",
 ["event"] = "CHAT_MSG_LOOT",
+["type"] = "LOOT",
 },
 ["color"] = {
 ["b"] = -0,
@@ -57519,8 +57485,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Delibash-Mal'Ganis",
 ["sex"] = 2,
 },
-["type"] = "LOOT",
 ["event"] = "CHAT_MSG_LOOT",
+["type"] = "LOOT",
 },
 ["color"] = {
 ["b"] = -0,
@@ -57540,8 +57506,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Dodeyparton-Mal'Ganis",
 ["sex"] = 3,
 },
-["type"] = "LOOT",
 ["event"] = "CHAT_MSG_LOOT",
+["type"] = "LOOT",
 },
 ["color"] = {
 ["b"] = -0,
@@ -57561,8 +57527,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Goatussy-Illidan",
 ["sex"] = 3,
 },
-["type"] = "LOOT",
 ["event"] = "CHAT_MSG_LOOT",
+["type"] = "LOOT",
 },
 ["color"] = {
 ["b"] = -0,
@@ -57576,8 +57542,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 {
 ["recordedBy"] = "Stormclout-Tichondrius",
 ["typeInfo"] = {
-["type"] = "CURRENCY",
 ["event"] = "CHAT_MSG_CURRENCY",
+["type"] = "CURRENCY",
 },
 ["color"] = {
 ["b"] = -0,
@@ -57591,8 +57557,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 {
 ["recordedBy"] = "Stormclout-Tichondrius",
 ["typeInfo"] = {
-["type"] = "MONEY",
 ["event"] = "CHAT_MSG_MONEY",
+["type"] = "MONEY",
 },
 ["color"] = {
 ["b"] = -0,
@@ -57612,8 +57578,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Dodeyparton-Mal'Ganis",
 ["sex"] = 3,
 },
-["type"] = "LOOT",
 ["event"] = "CHAT_MSG_LOOT",
+["type"] = "LOOT",
 },
 ["color"] = {
 ["b"] = -0,
@@ -57627,8 +57593,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 {
 ["recordedBy"] = "Stormclout-Tichondrius",
 ["typeInfo"] = {
-["type"] = "LOOT",
 ["event"] = "CHAT_MSG_LOOT",
+["type"] = "LOOT",
 },
 ["color"] = {
 ["b"] = -0,
@@ -57648,8 +57614,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Gravia-Mal'Ganis",
 ["sex"] = 3,
 },
-["type"] = "LOOT",
 ["event"] = "CHAT_MSG_LOOT",
+["type"] = "LOOT",
 },
 ["color"] = {
 ["b"] = -0,
@@ -57669,8 +57635,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Gravia-Mal'Ganis",
 ["sex"] = 3,
 },
-["type"] = "LOOT",
 ["event"] = "CHAT_MSG_LOOT",
+["type"] = "LOOT",
 },
 ["color"] = {
 ["b"] = -0,
@@ -57690,8 +57656,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Zylos-Mal'Ganis",
 ["sex"] = 3,
 },
-["type"] = "LOOT",
 ["event"] = "CHAT_MSG_LOOT",
+["type"] = "LOOT",
 },
 ["color"] = {
 ["b"] = -0,
@@ -57711,8 +57677,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Totemism-Mal'Ganis",
 ["sex"] = 2,
 },
-["type"] = "LOOT",
 ["event"] = "CHAT_MSG_LOOT",
+["type"] = "LOOT",
 },
 ["color"] = {
 ["b"] = -0,
@@ -57732,8 +57698,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Gutless-Mal'Ganis",
 ["sex"] = 2,
 },
-["type"] = "LOOT",
 ["event"] = "CHAT_MSG_LOOT",
+["type"] = "LOOT",
 },
 ["color"] = {
 ["b"] = -0,
@@ -57753,8 +57719,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Totemism-Mal'Ganis",
 ["sex"] = 2,
 },
-["type"] = "LOOT",
 ["event"] = "CHAT_MSG_LOOT",
+["type"] = "LOOT",
 },
 ["color"] = {
 ["b"] = -0,
@@ -57774,8 +57740,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Smileclap-Mal'Ganis",
 ["sex"] = 3,
 },
-["type"] = "LOOT",
 ["event"] = "CHAT_MSG_LOOT",
+["type"] = "LOOT",
 },
 ["color"] = {
 ["b"] = -0,
@@ -57792,8 +57758,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["player"] = {
 ["name"] = "Xal'atath",
 },
-["type"] = "MONSTER_YELL",
 ["event"] = "CHAT_MSG_MONSTER_YELL",
+["type"] = "MONSTER_YELL",
 },
 ["color"] = {
 ["b"] = 0.250980406999588,
@@ -57807,8 +57773,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 {
 ["recordedBy"] = "Stormclout-Tichondrius",
 ["typeInfo"] = {
-["type"] = "LOOT",
 ["event"] = "CHAT_MSG_LOOT",
+["type"] = "LOOT",
 },
 ["color"] = {
 ["b"] = -0,
@@ -57822,8 +57788,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 {
 ["recordedBy"] = "Stormclout-Tichondrius",
 ["typeInfo"] = {
-["type"] = "LOOT",
 ["event"] = "CHAT_MSG_LOOT",
+["type"] = "LOOT",
 },
 ["color"] = {
 ["b"] = -0,
@@ -57840,8 +57806,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["player"] = {
 ["name"] = "Alleria Windrunner",
 },
-["type"] = "MONSTER_YELL",
 ["event"] = "CHAT_MSG_MONSTER_YELL",
+["type"] = "MONSTER_YELL",
 },
 ["color"] = {
 ["b"] = 0.250980406999588,
@@ -57858,8 +57824,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["player"] = {
 ["name"] = "Arator",
 },
-["type"] = "MONSTER_YELL",
 ["event"] = "CHAT_MSG_MONSTER_YELL",
+["type"] = "MONSTER_YELL",
 },
 ["color"] = {
 ["b"] = 0.250980406999588,
@@ -57876,8 +57842,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["player"] = {
 ["name"] = "High Exarch Turalyon",
 },
-["type"] = "MONSTER_YELL",
 ["event"] = "CHAT_MSG_MONSTER_YELL",
+["type"] = "MONSTER_YELL",
 },
 ["color"] = {
 ["b"] = 0.250980406999588,
@@ -57891,8 +57857,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 {
 ["recordedBy"] = "Stormclout-Tichondrius",
 ["typeInfo"] = {
-["type"] = "LOOT",
 ["event"] = "CHAT_MSG_LOOT",
+["type"] = "LOOT",
 },
 ["color"] = {
 ["b"] = -0,
@@ -57912,8 +57878,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Theeohgee-Mal'Ganis",
 ["sex"] = 3,
 },
-["type"] = "LOOT",
 ["event"] = "CHAT_MSG_LOOT",
+["type"] = "LOOT",
 },
 ["color"] = {
 ["b"] = -0,
@@ -57927,8 +57893,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 {
 ["recordedBy"] = "Stormclout-Tichondrius",
 ["typeInfo"] = {
-["type"] = "LOOT",
 ["event"] = "CHAT_MSG_LOOT",
+["type"] = "LOOT",
 },
 ["color"] = {
 ["b"] = -0,
@@ -57948,8 +57914,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Magicz-Mal'Ganis",
 ["sex"] = 3,
 },
-["type"] = "LOOT",
 ["event"] = "CHAT_MSG_LOOT",
+["type"] = "LOOT",
 },
 ["color"] = {
 ["b"] = -0,
@@ -57969,8 +57935,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Theeohgee-Mal'Ganis",
 ["sex"] = 3,
 },
-["type"] = "LOOT",
 ["event"] = "CHAT_MSG_LOOT",
+["type"] = "LOOT",
 },
 ["color"] = {
 ["b"] = -0,
@@ -57984,8 +57950,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 {
 ["recordedBy"] = "Stormclout-Tichondrius",
 ["typeInfo"] = {
-["type"] = "LOOT",
 ["event"] = "CHAT_MSG_LOOT",
+["type"] = "LOOT",
 },
 ["color"] = {
 ["b"] = -0,
@@ -58005,8 +57971,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Kloei-Mal'Ganis",
 ["sex"] = 3,
 },
-["type"] = "LOOT",
 ["event"] = "CHAT_MSG_LOOT",
+["type"] = "LOOT",
 },
 ["color"] = {
 ["b"] = -0,
@@ -58026,8 +57992,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Magicz-Mal'Ganis",
 ["sex"] = 3,
 },
-["type"] = "ACHIEVEMENT",
 ["event"] = "CHAT_MSG_ACHIEVEMENT",
+["type"] = "ACHIEVEMENT",
 },
 ["color"] = {
 ["b"] = -0,
@@ -58047,8 +58013,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Magicz-Mal'Ganis",
 ["sex"] = 3,
 },
-["type"] = "LOOT",
 ["event"] = "CHAT_MSG_LOOT",
+["type"] = "LOOT",
 },
 ["color"] = {
 ["b"] = -0,
@@ -58068,8 +58034,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Theeohgee-Mal'Ganis",
 ["sex"] = 3,
 },
-["type"] = "RAID",
 ["event"] = "CHAT_MSG_RAID",
+["type"] = "RAID",
 },
 ["color"] = {
 ["b"] = -0,
@@ -58089,8 +58055,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Kloei-Mal'Ganis",
 ["sex"] = 3,
 },
-["type"] = "LOOT",
 ["event"] = "CHAT_MSG_LOOT",
+["type"] = "LOOT",
 },
 ["color"] = {
 ["b"] = -0,
@@ -58110,8 +58076,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Kloei-Mal'Ganis",
 ["sex"] = 3,
 },
-["type"] = "LOOT",
 ["event"] = "CHAT_MSG_LOOT",
+["type"] = "LOOT",
 },
 ["color"] = {
 ["b"] = -0,
@@ -58128,8 +58094,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["player"] = {
 ["name"] = "Magister Umbric",
 },
-["type"] = "MONSTER_SAY",
 ["event"] = "CHAT_MSG_MONSTER_SAY",
+["type"] = "MONSTER_SAY",
 },
 ["color"] = {
 ["b"] = 0.6235294342041016,
@@ -58146,8 +58112,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["player"] = {
 ["name"] = "Imperator Averzian",
 },
-["type"] = "MONSTER_YELL",
 ["event"] = "CHAT_MSG_MONSTER_YELL",
+["type"] = "MONSTER_YELL",
 },
 ["color"] = {
 ["b"] = 0.250980406999588,
@@ -58164,8 +58130,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["player"] = {
 ["name"] = "Magister Umbric",
 },
-["type"] = "MONSTER_SAY",
 ["event"] = "CHAT_MSG_MONSTER_SAY",
+["type"] = "MONSTER_SAY",
 },
 ["color"] = {
 ["b"] = 0.6235294342041016,
@@ -58182,8 +58148,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["player"] = {
 ["name"] = "Magister Umbric",
 },
-["type"] = "MONSTER_SAY",
 ["event"] = "CHAT_MSG_MONSTER_SAY",
+["type"] = "MONSTER_SAY",
 },
 ["color"] = {
 ["b"] = 0.6235294342041016,
@@ -58200,8 +58166,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["player"] = {
 ["name"] = "Arator",
 },
-["type"] = "MONSTER_YELL",
 ["event"] = "CHAT_MSG_MONSTER_YELL",
+["type"] = "MONSTER_YELL",
 },
 ["color"] = {
 ["b"] = 0.250980406999588,
@@ -58218,8 +58184,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["player"] = {
 ["name"] = "High Exarch Turalyon",
 },
-["type"] = "MONSTER_YELL",
 ["event"] = "CHAT_MSG_MONSTER_YELL",
+["type"] = "MONSTER_YELL",
 },
 ["color"] = {
 ["b"] = 0.250980406999588,
@@ -58236,8 +58202,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["player"] = {
 ["name"] = "Xal'atath",
 },
-["type"] = "MONSTER_YELL",
 ["event"] = "CHAT_MSG_MONSTER_YELL",
+["type"] = "MONSTER_YELL",
 },
 ["color"] = {
 ["b"] = 0.250980406999588,
@@ -58254,8 +58220,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["player"] = {
 ["name"] = "Xal'atath",
 },
-["type"] = "MONSTER_YELL",
 ["event"] = "CHAT_MSG_MONSTER_YELL",
+["type"] = "MONSTER_YELL",
 },
 ["color"] = {
 ["b"] = 0.250980406999588,
@@ -58272,8 +58238,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["player"] = {
 ["name"] = "Alleria Windrunner",
 },
-["type"] = "MONSTER_EMOTE",
 ["event"] = "CHAT_MSG_MONSTER_EMOTE",
+["type"] = "MONSTER_EMOTE",
 },
 ["color"] = {
 ["b"] = 0.250980406999588,
@@ -58290,8 +58256,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["player"] = {
 ["name"] = "Arator",
 },
-["type"] = "MONSTER_YELL",
 ["event"] = "CHAT_MSG_MONSTER_YELL",
+["type"] = "MONSTER_YELL",
 },
 ["color"] = {
 ["b"] = 0.250980406999588,
@@ -58308,8 +58274,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["player"] = {
 ["name"] = "Xal'atath",
 },
-["type"] = "MONSTER_YELL",
 ["event"] = "CHAT_MSG_MONSTER_YELL",
+["type"] = "MONSTER_YELL",
 },
 ["color"] = {
 ["b"] = 0.250980406999588,
@@ -58329,8 +58295,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Ceevipw-Tichondrius",
 ["sex"] = 3,
 },
-["type"] = "GUILD_ACHIEVEMENT",
 ["event"] = "CHAT_MSG_GUILD_ACHIEVEMENT",
+["type"] = "GUILD_ACHIEVEMENT",
 },
 ["color"] = {
 ["b"] = 0.250980406999588,
@@ -58350,8 +58316,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Notmagicz-Mal'Ganis",
 ["sex"] = 3,
 },
-["type"] = "LOOT",
 ["event"] = "CHAT_MSG_LOOT",
+["type"] = "LOOT",
 },
 ["color"] = {
 ["b"] = -0,
@@ -58371,8 +58337,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Stormclout-Tichondrius",
 ["sex"] = 3,
 },
-["type"] = "LOOT",
 ["event"] = "CHAT_MSG_LOOT",
+["type"] = "LOOT",
 },
 ["color"] = {
 ["b"] = -0,
@@ -58392,8 +58358,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Theeohgee",
 ["sex"] = 3,
 },
-["type"] = "EMOTE",
 ["event"] = "CHAT_MSG_TEXT_EMOTE",
+["type"] = "EMOTE",
 },
 ["color"] = {
 ["b"] = 0.250980406999588,
@@ -58407,8 +58373,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 {
 ["recordedBy"] = "Stormclout-Tichondrius",
 ["typeInfo"] = {
-["type"] = "PING",
 ["event"] = "CHAT_MSG_PING",
+["type"] = "PING",
 },
 ["color"] = {
 ["b"] = 1,
@@ -58422,8 +58388,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 {
 ["recordedBy"] = "Stormclout-Tichondrius",
 ["typeInfo"] = {
-["type"] = "PING",
 ["event"] = "CHAT_MSG_PING",
+["type"] = "PING",
 },
 ["color"] = {
 ["b"] = 1,
@@ -58437,8 +58403,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 {
 ["recordedBy"] = "Stormclout-Tichondrius",
 ["typeInfo"] = {
-["type"] = "PING",
 ["event"] = "CHAT_MSG_PING",
+["type"] = "PING",
 },
 ["color"] = {
 ["b"] = 1,
@@ -58452,8 +58418,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 {
 ["recordedBy"] = "Stormclout-Tichondrius",
 ["typeInfo"] = {
-["type"] = "PING",
 ["event"] = "CHAT_MSG_PING",
+["type"] = "PING",
 },
 ["color"] = {
 ["b"] = 1,
@@ -58467,8 +58433,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 {
 ["recordedBy"] = "Stormclout-Tichondrius",
 ["typeInfo"] = {
-["type"] = "PING",
 ["event"] = "CHAT_MSG_PING",
+["type"] = "PING",
 },
 ["color"] = {
 ["b"] = 1,
@@ -58482,8 +58448,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 {
 ["recordedBy"] = "Stormclout-Tichondrius",
 ["typeInfo"] = {
-["type"] = "TARGETICONS",
 ["event"] = "CHAT_MSG_TARGETICONS",
+["type"] = "TARGETICONS",
 },
 ["color"] = {
 ["b"] = -0,
@@ -58503,8 +58469,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Stormclout",
 ["sex"] = 3,
 },
-["type"] = "MONSTER_EMOTE",
 ["event"] = "CHAT_MSG_MONSTER_EMOTE",
+["type"] = "MONSTER_EMOTE",
 },
 ["color"] = {
 ["b"] = 0.250980406999588,
@@ -58524,8 +58490,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Stormclout",
 ["sex"] = 3,
 },
-["type"] = "MONSTER_EMOTE",
 ["event"] = "CHAT_MSG_MONSTER_EMOTE",
+["type"] = "MONSTER_EMOTE",
 },
 ["color"] = {
 ["b"] = 0.250980406999588,
@@ -58545,8 +58511,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Stormclout",
 ["sex"] = 3,
 },
-["type"] = "MONSTER_YELL",
 ["event"] = "CHAT_MSG_MONSTER_YELL",
+["type"] = "MONSTER_YELL",
 },
 ["color"] = {
 ["b"] = 0.250980406999588,
@@ -58566,8 +58532,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Delibash",
 ["sex"] = 2,
 },
-["type"] = "MONSTER_YELL",
 ["event"] = "CHAT_MSG_MONSTER_YELL",
+["type"] = "MONSTER_YELL",
 },
 ["color"] = {
 ["b"] = 0.250980406999588,
@@ -58581,8 +58547,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 {
 ["recordedBy"] = "Stormclout-Tichondrius",
 ["typeInfo"] = {
-["type"] = "PING",
 ["event"] = "CHAT_MSG_PING",
+["type"] = "PING",
 },
 ["color"] = {
 ["b"] = 1,
@@ -58596,8 +58562,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 {
 ["recordedBy"] = "Stormclout-Tichondrius",
 ["typeInfo"] = {
-["type"] = "PING",
 ["event"] = "CHAT_MSG_PING",
+["type"] = "PING",
 },
 ["color"] = {
 ["b"] = 1,
@@ -58617,8 +58583,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Delibash-Mal'Ganis",
 ["sex"] = 2,
 },
-["type"] = "RAID",
 ["event"] = "CHAT_MSG_RAID",
+["type"] = "RAID",
 },
 ["color"] = {
 ["b"] = -0,
@@ -58638,8 +58604,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Suñtzu-Area52",
 ["sex"] = 3,
 },
-["type"] = "GUILD_ACHIEVEMENT",
 ["event"] = "CHAT_MSG_GUILD_ACHIEVEMENT",
+["type"] = "GUILD_ACHIEVEMENT",
 },
 ["color"] = {
 ["b"] = 0.250980406999588,
@@ -58659,8 +58625,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Wreegaretta-Proudmoore",
 ["sex"] = 3,
 },
-["type"] = "GUILD_ACHIEVEMENT",
 ["event"] = "CHAT_MSG_GUILD_ACHIEVEMENT",
+["type"] = "GUILD_ACHIEVEMENT",
 },
 ["color"] = {
 ["b"] = 0.250980406999588,
@@ -58680,8 +58646,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Dracofury-Azralon",
 ["sex"] = 2,
 },
-["type"] = "GUILD_ACHIEVEMENT",
 ["event"] = "CHAT_MSG_GUILD_ACHIEVEMENT",
+["type"] = "GUILD_ACHIEVEMENT",
 },
 ["color"] = {
 ["b"] = 0.250980406999588,
@@ -58701,8 +58667,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Dracofury-Azralon",
 ["sex"] = 2,
 },
-["type"] = "GUILD_ACHIEVEMENT",
 ["event"] = "CHAT_MSG_GUILD_ACHIEVEMENT",
+["type"] = "GUILD_ACHIEVEMENT",
 },
 ["color"] = {
 ["b"] = 0.250980406999588,
@@ -58722,8 +58688,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Dracofury-Azralon",
 ["sex"] = 2,
 },
-["type"] = "GUILD_ACHIEVEMENT",
 ["event"] = "CHAT_MSG_GUILD_ACHIEVEMENT",
+["type"] = "GUILD_ACHIEVEMENT",
 },
 ["color"] = {
 ["b"] = 0.250980406999588,
@@ -58740,8 +58706,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["player"] = {
 ["name"] = "Alleria Windrunner",
 },
-["type"] = "MONSTER_YELL",
 ["event"] = "CHAT_MSG_MONSTER_YELL",
+["type"] = "MONSTER_YELL",
 },
 ["color"] = {
 ["b"] = 0.250980406999588,
@@ -58755,8 +58721,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 {
 ["recordedBy"] = "Stormclout-Tichondrius",
 ["typeInfo"] = {
-["type"] = "PING",
 ["event"] = "CHAT_MSG_PING",
+["type"] = "PING",
 },
 ["color"] = {
 ["b"] = 1,
@@ -58770,8 +58736,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 {
 ["recordedBy"] = "Stormclout-Tichondrius",
 ["typeInfo"] = {
-["type"] = "PING",
 ["event"] = "CHAT_MSG_PING",
+["type"] = "PING",
 },
 ["color"] = {
 ["b"] = 1,
@@ -58785,8 +58751,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 {
 ["recordedBy"] = "Stormclout-Tichondrius",
 ["typeInfo"] = {
-["type"] = "PING",
 ["event"] = "CHAT_MSG_PING",
+["type"] = "PING",
 },
 ["color"] = {
 ["b"] = 1,
@@ -58800,8 +58766,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 {
 ["recordedBy"] = "Stormclout-Tichondrius",
 ["typeInfo"] = {
-["type"] = "PING",
 ["event"] = "CHAT_MSG_PING",
+["type"] = "PING",
 },
 ["color"] = {
 ["b"] = 1,
@@ -58815,8 +58781,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 {
 ["recordedBy"] = "Stormclout-Tichondrius",
 ["typeInfo"] = {
-["type"] = "PING",
 ["event"] = "CHAT_MSG_PING",
+["type"] = "PING",
 },
 ["color"] = {
 ["b"] = 1,
@@ -58830,8 +58796,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 {
 ["recordedBy"] = "Stormclout-Tichondrius",
 ["typeInfo"] = {
-["type"] = "PING",
 ["event"] = "CHAT_MSG_PING",
+["type"] = "PING",
 },
 ["color"] = {
 ["b"] = 1,
@@ -58845,8 +58811,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 {
 ["recordedBy"] = "Stormclout-Tichondrius",
 ["typeInfo"] = {
-["type"] = "PING",
 ["event"] = "CHAT_MSG_PING",
+["type"] = "PING",
 },
 ["color"] = {
 ["b"] = 1,
@@ -58860,8 +58826,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 {
 ["recordedBy"] = "Stormclout-Tichondrius",
 ["typeInfo"] = {
-["type"] = "PING",
 ["event"] = "CHAT_MSG_PING",
+["type"] = "PING",
 },
 ["color"] = {
 ["b"] = 1,
@@ -58875,8 +58841,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 {
 ["recordedBy"] = "Stormclout-Tichondrius",
 ["typeInfo"] = {
-["type"] = "PING",
 ["event"] = "CHAT_MSG_PING",
+["type"] = "PING",
 },
 ["color"] = {
 ["b"] = 1,
@@ -58890,8 +58856,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 {
 ["recordedBy"] = "Stormclout-Tichondrius",
 ["typeInfo"] = {
-["type"] = "PING",
 ["event"] = "CHAT_MSG_PING",
+["type"] = "PING",
 },
 ["color"] = {
 ["b"] = 1,
@@ -58905,8 +58871,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 {
 ["recordedBy"] = "Stormclout-Tichondrius",
 ["typeInfo"] = {
-["type"] = "PING",
 ["event"] = "CHAT_MSG_PING",
+["type"] = "PING",
 },
 ["color"] = {
 ["b"] = 1,
@@ -58920,8 +58886,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 {
 ["recordedBy"] = "Stormclout-Tichondrius",
 ["typeInfo"] = {
-["type"] = "PING",
 ["event"] = "CHAT_MSG_PING",
+["type"] = "PING",
 },
 ["color"] = {
 ["b"] = 1,
@@ -58935,8 +58901,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 {
 ["recordedBy"] = "Stormclout-Tichondrius",
 ["typeInfo"] = {
-["type"] = "PING",
 ["event"] = "CHAT_MSG_PING",
+["type"] = "PING",
 },
 ["color"] = {
 ["b"] = 1,
@@ -58956,8 +58922,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Quasistellar-Sargeras",
 ["sex"] = 2,
 },
-["type"] = "GUILD_ACHIEVEMENT",
 ["event"] = "CHAT_MSG_GUILD_ACHIEVEMENT",
+["type"] = "GUILD_ACHIEVEMENT",
 },
 ["color"] = {
 ["b"] = 0.250980406999588,
@@ -58977,8 +58943,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Stimpycheese-Tichondrius",
 ["sex"] = 2,
 },
-["type"] = "GUILD_ACHIEVEMENT",
 ["event"] = "CHAT_MSG_GUILD_ACHIEVEMENT",
+["type"] = "GUILD_ACHIEVEMENT",
 },
 ["color"] = {
 ["b"] = 0.250980406999588,
@@ -58998,8 +58964,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Getajoblul-MoonGuard",
 ["sex"] = 2,
 },
-["type"] = "GUILD_ACHIEVEMENT",
 ["event"] = "CHAT_MSG_GUILD_ACHIEVEMENT",
+["type"] = "GUILD_ACHIEVEMENT",
 },
 ["color"] = {
 ["b"] = 0.250980406999588,
@@ -59019,8 +58985,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Stimpycheese-Tichondrius",
 ["sex"] = 2,
 },
-["type"] = "GUILD_ACHIEVEMENT",
 ["event"] = "CHAT_MSG_GUILD_ACHIEVEMENT",
+["type"] = "GUILD_ACHIEVEMENT",
 },
 ["color"] = {
 ["b"] = 0.250980406999588,
@@ -59040,8 +59006,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Quasistellar-Sargeras",
 ["sex"] = 2,
 },
-["type"] = "GUILD_ACHIEVEMENT",
 ["event"] = "CHAT_MSG_GUILD_ACHIEVEMENT",
+["type"] = "GUILD_ACHIEVEMENT",
 },
 ["color"] = {
 ["b"] = 0.250980406999588,
@@ -59061,8 +59027,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Getajoblul-MoonGuard",
 ["sex"] = 2,
 },
-["type"] = "GUILD_ACHIEVEMENT",
 ["event"] = "CHAT_MSG_GUILD_ACHIEVEMENT",
+["type"] = "GUILD_ACHIEVEMENT",
 },
 ["color"] = {
 ["b"] = 0.250980406999588,
@@ -59082,8 +59048,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Evoyuya-Tichondrius",
 ["sex"] = 3,
 },
-["type"] = "GUILD_ACHIEVEMENT",
 ["event"] = "CHAT_MSG_GUILD_ACHIEVEMENT",
+["type"] = "GUILD_ACHIEVEMENT",
 },
 ["color"] = {
 ["b"] = 0.250980406999588,
@@ -59103,8 +59069,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Søvêreign-Tichondrius",
 ["sex"] = 2,
 },
-["type"] = "GUILD_ACHIEVEMENT",
 ["event"] = "CHAT_MSG_GUILD_ACHIEVEMENT",
+["type"] = "GUILD_ACHIEVEMENT",
 },
 ["color"] = {
 ["b"] = 0.250980406999588,
@@ -59124,8 +59090,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Ppoonlock-Tichondrius",
 ["sex"] = 2,
 },
-["type"] = "GUILD_ACHIEVEMENT",
 ["event"] = "CHAT_MSG_GUILD_ACHIEVEMENT",
+["type"] = "GUILD_ACHIEVEMENT",
 },
 ["color"] = {
 ["b"] = 0.250980406999588,
@@ -59142,8 +59108,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["player"] = {
 ["name"] = "Alleria Windrunner",
 },
-["type"] = "MONSTER_YELL",
 ["event"] = "CHAT_MSG_MONSTER_YELL",
+["type"] = "MONSTER_YELL",
 },
 ["color"] = {
 ["b"] = 0.250980406999588,
@@ -59163,8 +59129,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Theeohgee-Mal'Ganis",
 ["sex"] = 3,
 },
-["type"] = "ACHIEVEMENT",
 ["event"] = "CHAT_MSG_ACHIEVEMENT",
+["type"] = "ACHIEVEMENT",
 },
 ["color"] = {
 ["b"] = -0,
@@ -59184,8 +59150,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Gravia-Mal'Ganis",
 ["sex"] = 3,
 },
-["type"] = "ACHIEVEMENT",
 ["event"] = "CHAT_MSG_ACHIEVEMENT",
+["type"] = "ACHIEVEMENT",
 },
 ["color"] = {
 ["b"] = -0,
@@ -59205,8 +59171,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Kloei-Mal'Ganis",
 ["sex"] = 3,
 },
-["type"] = "ACHIEVEMENT",
 ["event"] = "CHAT_MSG_ACHIEVEMENT",
+["type"] = "ACHIEVEMENT",
 },
 ["color"] = {
 ["b"] = -0,
@@ -59226,8 +59192,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Stormclout-Tichondrius",
 ["sex"] = 3,
 },
-["type"] = "ACHIEVEMENT",
 ["event"] = "CHAT_MSG_ACHIEVEMENT",
+["type"] = "ACHIEVEMENT",
 },
 ["color"] = {
 ["b"] = -0,
@@ -59247,8 +59213,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Totemism-Mal'Ganis",
 ["sex"] = 2,
 },
-["type"] = "ACHIEVEMENT",
 ["event"] = "CHAT_MSG_ACHIEVEMENT",
+["type"] = "ACHIEVEMENT",
 },
 ["color"] = {
 ["b"] = -0,
@@ -59268,8 +59234,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Stormclout-Tichondrius",
 ["sex"] = 3,
 },
-["type"] = "GUILD_ACHIEVEMENT",
 ["event"] = "CHAT_MSG_GUILD_ACHIEVEMENT",
+["type"] = "GUILD_ACHIEVEMENT",
 },
 ["color"] = {
 ["b"] = 0.250980406999588,
@@ -59289,8 +59255,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Kloei-Mal'Ganis",
 ["sex"] = 3,
 },
-["type"] = "ACHIEVEMENT",
 ["event"] = "CHAT_MSG_ACHIEVEMENT",
+["type"] = "ACHIEVEMENT",
 },
 ["color"] = {
 ["b"] = -0,
@@ -59304,8 +59270,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 {
 ["recordedBy"] = "Stormclout-Tichondrius",
 ["typeInfo"] = {
-["type"] = "CURRENCY",
 ["event"] = "CHAT_MSG_CURRENCY",
+["type"] = "CURRENCY",
 },
 ["color"] = {
 ["b"] = -0,
@@ -59319,8 +59285,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 {
 ["recordedBy"] = "Stormclout-Tichondrius",
 ["typeInfo"] = {
-["type"] = "CURRENCY",
 ["event"] = "CHAT_MSG_CURRENCY",
+["type"] = "CURRENCY",
 },
 ["color"] = {
 ["b"] = -0,
@@ -59340,8 +59306,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Upgrades-Mal'Ganis",
 ["sex"] = 2,
 },
-["type"] = "RAID",
 ["event"] = "CHAT_MSG_RAID",
+["type"] = "RAID",
 },
 ["color"] = {
 ["b"] = -0,
@@ -59361,8 +59327,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Amyrabelle-MoonGuard",
 ["sex"] = 3,
 },
-["type"] = "GUILD_ACHIEVEMENT",
 ["event"] = "CHAT_MSG_GUILD_ACHIEVEMENT",
+["type"] = "GUILD_ACHIEVEMENT",
 },
 ["color"] = {
 ["b"] = 0.250980406999588,
@@ -59376,8 +59342,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 {
 ["recordedBy"] = "Stormclout-Tichondrius",
 ["typeInfo"] = {
-["type"] = "LOOT",
 ["event"] = "CHAT_MSG_LOOT",
+["type"] = "LOOT",
 },
 ["color"] = {
 ["b"] = -0,
@@ -59391,8 +59357,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 {
 ["recordedBy"] = "Stormclout-Tichondrius",
 ["typeInfo"] = {
-["type"] = "LOOT",
 ["event"] = "CHAT_MSG_LOOT",
+["type"] = "LOOT",
 },
 ["color"] = {
 ["b"] = -0,
@@ -59406,8 +59372,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 {
 ["recordedBy"] = "Stormclout-Tichondrius",
 ["typeInfo"] = {
-["type"] = "LOOT",
 ["event"] = "CHAT_MSG_LOOT",
+["type"] = "LOOT",
 },
 ["color"] = {
 ["b"] = -0,
@@ -59427,8 +59393,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Goatussy-Illidan",
 ["sex"] = 3,
 },
-["type"] = "LOOT",
 ["event"] = "CHAT_MSG_LOOT",
+["type"] = "LOOT",
 },
 ["color"] = {
 ["b"] = -0,
@@ -59448,8 +59414,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Smileclap-Mal'Ganis",
 ["sex"] = 3,
 },
-["type"] = "LOOT",
 ["event"] = "CHAT_MSG_LOOT",
+["type"] = "LOOT",
 },
 ["color"] = {
 ["b"] = -0,
@@ -59469,8 +59435,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Dodeyparton-Mal'Ganis",
 ["sex"] = 3,
 },
-["type"] = "LOOT",
 ["event"] = "CHAT_MSG_LOOT",
+["type"] = "LOOT",
 },
 ["color"] = {
 ["b"] = -0,
@@ -59490,8 +59456,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Goatussy-Illidan",
 ["sex"] = 3,
 },
-["type"] = "RAID",
 ["event"] = "CHAT_MSG_RAID",
+["type"] = "RAID",
 },
 ["color"] = {
 ["b"] = -0,
@@ -59511,8 +59477,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Upgrades-Mal'Ganis",
 ["sex"] = 2,
 },
-["type"] = "RAID",
 ["event"] = "CHAT_MSG_RAID",
+["type"] = "RAID",
 },
 ["color"] = {
 ["b"] = -0,
@@ -59532,8 +59498,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Critvoid-Thrall",
 ["sex"] = 3,
 },
-["type"] = "LOOT",
 ["event"] = "CHAT_MSG_LOOT",
+["type"] = "LOOT",
 },
 ["color"] = {
 ["b"] = -0,
@@ -59550,8 +59516,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["player"] = {
 ["name"] = "Imperator Averzian",
 },
-["type"] = "MONSTER_YELL",
 ["event"] = "CHAT_MSG_MONSTER_YELL",
+["type"] = "MONSTER_YELL",
 },
 ["color"] = {
 ["b"] = 0.250980406999588,
@@ -59565,8 +59531,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 {
 ["recordedBy"] = "Stormclout-Tichondrius",
 ["typeInfo"] = {
-["type"] = "LOOT",
 ["event"] = "CHAT_MSG_LOOT",
+["type"] = "LOOT",
 },
 ["color"] = {
 ["b"] = -0,
@@ -59583,8 +59549,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["player"] = {
 ["name"] = "Magister Umbric",
 },
-["type"] = "MONSTER_SAY",
 ["event"] = "CHAT_MSG_MONSTER_SAY",
+["type"] = "MONSTER_SAY",
 },
 ["color"] = {
 ["b"] = 0.6235294342041016,
@@ -59604,8 +59570,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Theeohgee-Mal'Ganis",
 ["sex"] = 3,
 },
-["type"] = "RAID",
 ["event"] = "CHAT_MSG_RAID",
+["type"] = "RAID",
 },
 ["color"] = {
 ["b"] = -0,
@@ -59625,8 +59591,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Delibash-Mal'Ganis",
 ["sex"] = 2,
 },
-["type"] = "LOOT",
 ["event"] = "CHAT_MSG_LOOT",
+["type"] = "LOOT",
 },
 ["color"] = {
 ["b"] = -0,
@@ -59643,8 +59609,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["player"] = {
 ["name"] = "Magister Umbric",
 },
-["type"] = "MONSTER_SAY",
 ["event"] = "CHAT_MSG_MONSTER_SAY",
+["type"] = "MONSTER_SAY",
 },
 ["color"] = {
 ["b"] = 0.6235294342041016,
@@ -59658,8 +59624,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 {
 ["recordedBy"] = "Stormclout-Tichondrius",
 ["typeInfo"] = {
-["type"] = "LOOT",
 ["event"] = "CHAT_MSG_LOOT",
+["type"] = "LOOT",
 },
 ["color"] = {
 ["b"] = -0,
@@ -59673,8 +59639,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 {
 ["recordedBy"] = "Stormclout-Tichondrius",
 ["typeInfo"] = {
-["type"] = "LOOT",
 ["event"] = "CHAT_MSG_LOOT",
+["type"] = "LOOT",
 },
 ["color"] = {
 ["b"] = -0,
@@ -59691,8 +59657,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["player"] = {
 ["name"] = "Magister Umbric",
 },
-["type"] = "MONSTER_SAY",
 ["event"] = "CHAT_MSG_MONSTER_SAY",
+["type"] = "MONSTER_SAY",
 },
 ["color"] = {
 ["b"] = 0.6235294342041016,
@@ -59706,8 +59672,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 {
 ["recordedBy"] = "Stormclout-Tichondrius",
 ["typeInfo"] = {
-["type"] = "LOOT",
 ["event"] = "CHAT_MSG_LOOT",
+["type"] = "LOOT",
 },
 ["color"] = {
 ["b"] = -0,
@@ -59724,8 +59690,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["player"] = {
 ["name"] = "Magister Umbric",
 },
-["type"] = "MONSTER_SAY",
 ["event"] = "CHAT_MSG_MONSTER_SAY",
+["type"] = "MONSTER_SAY",
 },
 ["color"] = {
 ["b"] = 0.6235294342041016,
@@ -59745,8 +59711,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Søvêreign-Tichondrius",
 ["sex"] = 2,
 },
-["type"] = "GUILD",
 ["event"] = "CHAT_MSG_GUILD",
+["type"] = "GUILD",
 },
 ["color"] = {
 ["b"] = 0.250980406999588,
@@ -59766,8 +59732,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Søvêreign-Tichondrius",
 ["sex"] = 2,
 },
-["type"] = "GUILD",
 ["event"] = "CHAT_MSG_GUILD",
+["type"] = "GUILD",
 },
 ["color"] = {
 ["b"] = 0.250980406999588,
@@ -59784,8 +59750,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["player"] = {
 ["name"] = "Riftblade Maella",
 },
-["type"] = "MONSTER_SAY",
 ["event"] = "CHAT_MSG_MONSTER_SAY",
+["type"] = "MONSTER_SAY",
 },
 ["color"] = {
 ["b"] = 0.6235294342041016,
@@ -59805,8 +59771,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Herpules-Daggerspine",
 ["sex"] = 2,
 },
-["type"] = "GUILD_ACHIEVEMENT",
 ["event"] = "CHAT_MSG_GUILD_ACHIEVEMENT",
+["type"] = "GUILD_ACHIEVEMENT",
 },
 ["color"] = {
 ["b"] = 0.250980406999588,
@@ -59826,8 +59792,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Nnethir-Stormrage",
 ["sex"] = 3,
 },
-["type"] = "GUILD",
 ["event"] = "CHAT_MSG_GUILD",
+["type"] = "GUILD",
 },
 ["color"] = {
 ["b"] = 0.250980406999588,
@@ -59844,8 +59810,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["player"] = {
 ["name"] = "Riftblade Maella",
 },
-["type"] = "MONSTER_SAY",
 ["event"] = "CHAT_MSG_MONSTER_SAY",
+["type"] = "MONSTER_SAY",
 },
 ["color"] = {
 ["b"] = 0.6235294342041016,
@@ -59865,8 +59831,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Søvêreign-Tichondrius",
 ["sex"] = 2,
 },
-["type"] = "GUILD",
 ["event"] = "CHAT_MSG_GUILD",
+["type"] = "GUILD",
 },
 ["color"] = {
 ["b"] = 0.250980406999588,
@@ -59886,8 +59852,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Gorillashot-Tichondrius",
 ["sex"] = 3,
 },
-["type"] = "GUILD",
 ["event"] = "CHAT_MSG_GUILD",
+["type"] = "GUILD",
 },
 ["color"] = {
 ["b"] = 0.250980406999588,
@@ -59904,8 +59870,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["player"] = {
 ["name"] = "Riftblade Maella",
 },
-["type"] = "MONSTER_SAY",
 ["event"] = "CHAT_MSG_MONSTER_SAY",
+["type"] = "MONSTER_SAY",
 },
 ["color"] = {
 ["b"] = 0.6235294342041016,
@@ -59925,8 +59891,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Critvoid-Thrall",
 ["sex"] = 3,
 },
-["type"] = "RAID",
 ["event"] = "CHAT_MSG_RAID",
+["type"] = "RAID",
 },
 ["color"] = {
 ["b"] = -0,
@@ -59946,8 +59912,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Søvêreign-Tichondrius",
 ["sex"] = 2,
 },
-["type"] = "GUILD",
 ["event"] = "CHAT_MSG_GUILD",
+["type"] = "GUILD",
 },
 ["color"] = {
 ["b"] = 0.250980406999588,
@@ -59967,8 +59933,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Spetznaz-Tichondrius",
 ["sex"] = 3,
 },
-["type"] = "GUILD",
 ["event"] = "CHAT_MSG_GUILD",
+["type"] = "GUILD",
 },
 ["color"] = {
 ["b"] = 0.250980406999588,
@@ -59988,8 +59954,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Fortitude-Korialstrasz",
 ["sex"] = 2,
 },
-["type"] = "GUILD_ACHIEVEMENT",
 ["event"] = "CHAT_MSG_GUILD_ACHIEVEMENT",
+["type"] = "GUILD_ACHIEVEMENT",
 },
 ["color"] = {
 ["b"] = 0.250980406999588,
@@ -60009,8 +59975,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Stormclout-Tichondrius",
 ["sex"] = 3,
 },
-["type"] = "LOOT",
 ["event"] = "CHAT_MSG_LOOT",
+["type"] = "LOOT",
 },
 ["color"] = {
 ["b"] = -0,
@@ -60025,17 +59991,17 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["recordedBy"] = "Stormclout-Tichondrius",
 ["typeInfo"] = {
 ["player"] = {
-["name"] = "|Kj15|k",
+["name"] = "UNKNOWN",
 },
-["type"] = "BN_WHISPER",
 ["event"] = "CHAT_MSG_BN_WHISPER",
+["type"] = "BN_WHISPER",
 },
 ["color"] = {
 ["b"] = 0.8509804606437683,
 ["g"] = -0,
 ["r"] = 1,
 },
-["text"] = "|HBNplayer:|Kj15|k:7:1853:BN_WHISPER:|Kj15|k|h[|Kj15|k]|h whispers: inv",
+["text"] = "[???] whispers: inv",
 ["id"] = "s46_3155",
 ["timestamp"] = 1776309366,
 },
@@ -60048,8 +60014,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Stormclout-Tichondrius",
 ["sex"] = 3,
 },
-["type"] = "PARTY_LEADER",
 ["event"] = "CHAT_MSG_PARTY_LEADER",
+["type"] = "PARTY_LEADER",
 },
 ["color"] = {
 ["b"] = 1,
@@ -60069,8 +60035,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Smileclap-Mal'Ganis",
 ["sex"] = 3,
 },
-["type"] = "PARTY",
 ["event"] = "CHAT_MSG_PARTY",
+["type"] = "PARTY",
 },
 ["color"] = {
 ["b"] = 1,
@@ -60090,8 +60056,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Ppoonlock-Tichondrius",
 ["sex"] = 2,
 },
-["type"] = "GUILD_ACHIEVEMENT",
 ["event"] = "CHAT_MSG_GUILD_ACHIEVEMENT",
+["type"] = "GUILD_ACHIEVEMENT",
 },
 ["color"] = {
 ["b"] = 0.250980406999588,
@@ -60105,8 +60071,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 {
 ["recordedBy"] = "Stormclout-Tichondrius",
 ["typeInfo"] = {
-["type"] = "PING",
 ["event"] = "CHAT_MSG_PING",
+["type"] = "PING",
 },
 ["color"] = {
 ["b"] = 1,
@@ -60126,8 +60092,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Clariity-Tichondrius",
 ["sex"] = 3,
 },
-["type"] = "GUILD_ACHIEVEMENT",
 ["event"] = "CHAT_MSG_GUILD_ACHIEVEMENT",
+["type"] = "GUILD_ACHIEVEMENT",
 },
 ["color"] = {
 ["b"] = 0.250980406999588,
@@ -60147,8 +60113,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Mcmlxix-Tichondrius",
 ["sex"] = 2,
 },
-["type"] = "GUILD_ACHIEVEMENT",
 ["event"] = "CHAT_MSG_GUILD_ACHIEVEMENT",
+["type"] = "GUILD_ACHIEVEMENT",
 },
 ["color"] = {
 ["b"] = 0.250980406999588,
@@ -60168,8 +60134,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Mcmlxix-Tichondrius",
 ["sex"] = 2,
 },
-["type"] = "GUILD_ACHIEVEMENT",
 ["event"] = "CHAT_MSG_GUILD_ACHIEVEMENT",
+["type"] = "GUILD_ACHIEVEMENT",
 },
 ["color"] = {
 ["b"] = 0.250980406999588,
@@ -60189,8 +60155,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Brickedup-Kel'Thuzad",
 ["sex"] = 2,
 },
-["type"] = "GUILD_ACHIEVEMENT",
 ["event"] = "CHAT_MSG_GUILD_ACHIEVEMENT",
+["type"] = "GUILD_ACHIEVEMENT",
 },
 ["color"] = {
 ["b"] = 0.250980406999588,
@@ -60210,8 +60176,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Sxmi-Tichondrius",
 ["sex"] = 2,
 },
-["type"] = "GUILD_ACHIEVEMENT",
 ["event"] = "CHAT_MSG_GUILD_ACHIEVEMENT",
+["type"] = "GUILD_ACHIEVEMENT",
 },
 ["color"] = {
 ["b"] = 0.250980406999588,
@@ -60231,8 +60197,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Dragmaa-Stormrage",
 ["sex"] = 2,
 },
-["type"] = "GUILD_ACHIEVEMENT",
 ["event"] = "CHAT_MSG_GUILD_ACHIEVEMENT",
+["type"] = "GUILD_ACHIEVEMENT",
 },
 ["color"] = {
 ["b"] = 0.250980406999588,
@@ -60252,8 +60218,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Herpules-Daggerspine",
 ["sex"] = 2,
 },
-["type"] = "GUILD_ACHIEVEMENT",
 ["event"] = "CHAT_MSG_GUILD_ACHIEVEMENT",
+["type"] = "GUILD_ACHIEVEMENT",
 },
 ["color"] = {
 ["b"] = 0.250980406999588,
@@ -60273,8 +60239,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Pandalumix-Daggerspine",
 ["sex"] = 2,
 },
-["type"] = "GUILD_ACHIEVEMENT",
 ["event"] = "CHAT_MSG_GUILD_ACHIEVEMENT",
+["type"] = "GUILD_ACHIEVEMENT",
 },
 ["color"] = {
 ["b"] = 0.250980406999588,
@@ -60294,8 +60260,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Sneakieweave-Ysondre",
 ["sex"] = 3,
 },
-["type"] = "GUILD_ACHIEVEMENT",
 ["event"] = "CHAT_MSG_GUILD_ACHIEVEMENT",
+["type"] = "GUILD_ACHIEVEMENT",
 },
 ["color"] = {
 ["b"] = 0.250980406999588,
@@ -60315,8 +60281,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Crðñïc-Tichondrius",
 ["sex"] = 3,
 },
-["type"] = "GUILD_ACHIEVEMENT",
 ["event"] = "CHAT_MSG_GUILD_ACHIEVEMENT",
+["type"] = "GUILD_ACHIEVEMENT",
 },
 ["color"] = {
 ["b"] = 0.250980406999588,
@@ -60336,8 +60302,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Ppoonlock-Tichondrius",
 ["sex"] = 2,
 },
-["type"] = "GUILD_ACHIEVEMENT",
 ["event"] = "CHAT_MSG_GUILD_ACHIEVEMENT",
+["type"] = "GUILD_ACHIEVEMENT",
 },
 ["color"] = {
 ["b"] = 0.250980406999588,
@@ -60357,8 +60323,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Spetznaz-Tichondrius",
 ["sex"] = 3,
 },
-["type"] = "GUILD_ACHIEVEMENT",
 ["event"] = "CHAT_MSG_GUILD_ACHIEVEMENT",
+["type"] = "GUILD_ACHIEVEMENT",
 },
 ["color"] = {
 ["b"] = 0.250980406999588,
@@ -60378,8 +60344,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Depressedbtw-Mal'Ganis",
 ["sex"] = 2,
 },
-["type"] = "ACHIEVEMENT",
 ["event"] = "CHAT_MSG_ACHIEVEMENT",
+["type"] = "ACHIEVEMENT",
 },
 ["color"] = {
 ["b"] = -0,
@@ -60399,8 +60365,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Depressedbtw-Mal'Ganis",
 ["sex"] = 2,
 },
-["type"] = "LOOT",
 ["event"] = "CHAT_MSG_LOOT",
+["type"] = "LOOT",
 },
 ["color"] = {
 ["b"] = -0,
@@ -60414,8 +60380,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 {
 ["recordedBy"] = "Stormclout-Tichondrius",
 ["typeInfo"] = {
-["type"] = "CURRENCY",
 ["event"] = "CHAT_MSG_CURRENCY",
+["type"] = "CURRENCY",
 },
 ["color"] = {
 ["b"] = -0,
@@ -60429,8 +60395,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 {
 ["recordedBy"] = "Stormclout-Tichondrius",
 ["typeInfo"] = {
-["type"] = "LOOT",
 ["event"] = "CHAT_MSG_LOOT",
+["type"] = "LOOT",
 },
 ["color"] = {
 ["b"] = -0,
@@ -60450,8 +60416,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Stormclout-Tichondrius",
 ["sex"] = 3,
 },
-["type"] = "LOOT",
 ["event"] = "CHAT_MSG_LOOT",
+["type"] = "LOOT",
 },
 ["color"] = {
 ["b"] = -0,
@@ -60465,8 +60431,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 {
 ["recordedBy"] = "Stormclout-Tichondrius",
 ["typeInfo"] = {
-["type"] = "MONEY",
 ["event"] = "CHAT_MSG_MONEY",
+["type"] = "MONEY",
 },
 ["color"] = {
 ["b"] = -0,
@@ -60486,8 +60452,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Kloei-Mal'Ganis",
 ["sex"] = 3,
 },
-["type"] = "LOOT",
 ["event"] = "CHAT_MSG_LOOT",
+["type"] = "LOOT",
 },
 ["color"] = {
 ["b"] = -0,
@@ -60504,8 +60470,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["player"] = {
 ["name"] = "Kul'amara the Fierce",
 },
-["type"] = "MONSTER_SAY",
 ["event"] = "CHAT_MSG_MONSTER_SAY",
+["type"] = "MONSTER_SAY",
 },
 ["color"] = {
 ["b"] = 0.6235294342041016,
@@ -60525,8 +60491,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Depressedbtw-Mal'Ganis",
 ["sex"] = 2,
 },
-["type"] = "LOOT",
 ["event"] = "CHAT_MSG_LOOT",
+["type"] = "LOOT",
 },
 ["color"] = {
 ["b"] = -0,
@@ -60546,8 +60512,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Gravia-Mal'Ganis",
 ["sex"] = 3,
 },
-["type"] = "LOOT",
 ["event"] = "CHAT_MSG_LOOT",
+["type"] = "LOOT",
 },
 ["color"] = {
 ["b"] = -0,
@@ -60567,8 +60533,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Smileclap-Mal'Ganis",
 ["sex"] = 3,
 },
-["type"] = "LOOT",
 ["event"] = "CHAT_MSG_LOOT",
+["type"] = "LOOT",
 },
 ["color"] = {
 ["b"] = -0,
@@ -60585,8 +60551,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["player"] = {
 ["name"] = "Kul'amara the Fierce",
 },
-["type"] = "MONSTER_SAY",
 ["event"] = "CHAT_MSG_MONSTER_SAY",
+["type"] = "MONSTER_SAY",
 },
 ["color"] = {
 ["b"] = 0.6235294342041016,
@@ -60600,8 +60566,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 {
 ["recordedBy"] = "Stormclout-Tichondrius",
 ["typeInfo"] = {
-["type"] = "LOOT",
 ["event"] = "CHAT_MSG_LOOT",
+["type"] = "LOOT",
 },
 ["color"] = {
 ["b"] = -0,
@@ -60615,8 +60581,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 {
 ["recordedBy"] = "Stormclout-Tichondrius",
 ["typeInfo"] = {
-["type"] = "LOOT",
 ["event"] = "CHAT_MSG_LOOT",
+["type"] = "LOOT",
 },
 ["color"] = {
 ["b"] = -0,
@@ -60636,8 +60602,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Stormclout-Tichondrius",
 ["sex"] = 3,
 },
-["type"] = "LOOT",
 ["event"] = "CHAT_MSG_LOOT",
+["type"] = "LOOT",
 },
 ["color"] = {
 ["b"] = -0,
@@ -60657,8 +60623,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Herpules-Daggerspine",
 ["sex"] = 2,
 },
-["type"] = "GUILD_ACHIEVEMENT",
 ["event"] = "CHAT_MSG_GUILD_ACHIEVEMENT",
+["type"] = "GUILD_ACHIEVEMENT",
 },
 ["color"] = {
 ["b"] = 0.250980406999588,
@@ -60678,8 +60644,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Herpules-Daggerspine",
 ["sex"] = 2,
 },
-["type"] = "GUILD_ACHIEVEMENT",
 ["event"] = "CHAT_MSG_GUILD_ACHIEVEMENT",
+["type"] = "GUILD_ACHIEVEMENT",
 },
 ["color"] = {
 ["b"] = 0.250980406999588,
@@ -60699,8 +60665,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Stormclout-Tichondrius",
 ["sex"] = 3,
 },
-["type"] = "LOOT",
 ["event"] = "CHAT_MSG_LOOT",
+["type"] = "LOOT",
 },
 ["color"] = {
 ["b"] = -0,
@@ -60714,8 +60680,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 {
 ["recordedBy"] = "Stormclout-Tichondrius",
 ["typeInfo"] = {
-["type"] = "PING",
 ["event"] = "CHAT_MSG_PING",
+["type"] = "PING",
 },
 ["color"] = {
 ["b"] = 1,
@@ -60732,8 +60698,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["player"] = {
 ["name"] = "Alleria Windrunner",
 },
-["type"] = "MONSTER_YELL",
 ["event"] = "CHAT_MSG_MONSTER_YELL",
+["type"] = "MONSTER_YELL",
 },
 ["color"] = {
 ["b"] = 0.250980406999588,
@@ -60753,8 +60719,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Ceevipw-Tichondrius",
 ["sex"] = 3,
 },
-["type"] = "GUILD_ACHIEVEMENT",
 ["event"] = "CHAT_MSG_GUILD_ACHIEVEMENT",
+["type"] = "GUILD_ACHIEVEMENT",
 },
 ["color"] = {
 ["b"] = 0.250980406999588,
@@ -60774,8 +60740,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Shadz-Skullcrusher",
 ["sex"] = 2,
 },
-["type"] = "GUILD_ACHIEVEMENT",
 ["event"] = "CHAT_MSG_GUILD_ACHIEVEMENT",
+["type"] = "GUILD_ACHIEVEMENT",
 },
 ["color"] = {
 ["b"] = 0.250980406999588,
@@ -60795,8 +60761,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Theodosiâ-Area52",
 ["sex"] = 3,
 },
-["type"] = "GUILD_ACHIEVEMENT",
 ["event"] = "CHAT_MSG_GUILD_ACHIEVEMENT",
+["type"] = "GUILD_ACHIEVEMENT",
 },
 ["color"] = {
 ["b"] = 0.250980406999588,
@@ -60816,8 +60782,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Sxmi-Tichondrius",
 ["sex"] = 2,
 },
-["type"] = "GUILD_ACHIEVEMENT",
 ["event"] = "CHAT_MSG_GUILD_ACHIEVEMENT",
+["type"] = "GUILD_ACHIEVEMENT",
 },
 ["color"] = {
 ["b"] = 0.250980406999588,
@@ -60837,8 +60803,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Gorillashot-Tichondrius",
 ["sex"] = 3,
 },
-["type"] = "GUILD_ACHIEVEMENT",
 ["event"] = "CHAT_MSG_GUILD_ACHIEVEMENT",
+["type"] = "GUILD_ACHIEVEMENT",
 },
 ["color"] = {
 ["b"] = 0.250980406999588,
@@ -60858,8 +60824,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Andyslaps-Tichondrius",
 ["sex"] = 3,
 },
-["type"] = "GUILD_ACHIEVEMENT",
 ["event"] = "CHAT_MSG_GUILD_ACHIEVEMENT",
+["type"] = "GUILD_ACHIEVEMENT",
 },
 ["color"] = {
 ["b"] = 0.250980406999588,
@@ -60879,8 +60845,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Mommysjuicbx-Stormrage",
 ["sex"] = 2,
 },
-["type"] = "GUILD_ACHIEVEMENT",
 ["event"] = "CHAT_MSG_GUILD_ACHIEVEMENT",
+["type"] = "GUILD_ACHIEVEMENT",
 },
 ["color"] = {
 ["b"] = 0.250980406999588,
@@ -60900,8 +60866,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Getajoblul-MoonGuard",
 ["sex"] = 2,
 },
-["type"] = "GUILD_ACHIEVEMENT",
 ["event"] = "CHAT_MSG_GUILD_ACHIEVEMENT",
+["type"] = "GUILD_ACHIEVEMENT",
 },
 ["color"] = {
 ["b"] = 0.250980406999588,
@@ -60921,8 +60887,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Theodosiâ-Area52",
 ["sex"] = 3,
 },
-["type"] = "GUILD_ACHIEVEMENT",
 ["event"] = "CHAT_MSG_GUILD_ACHIEVEMENT",
+["type"] = "GUILD_ACHIEVEMENT",
 },
 ["color"] = {
 ["b"] = 0.250980406999588,
@@ -60942,8 +60908,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Pandalumix-Daggerspine",
 ["sex"] = 2,
 },
-["type"] = "GUILD_ACHIEVEMENT",
 ["event"] = "CHAT_MSG_GUILD_ACHIEVEMENT",
+["type"] = "GUILD_ACHIEVEMENT",
 },
 ["color"] = {
 ["b"] = 0.250980406999588,
@@ -60963,8 +60929,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Kloei-Mal'Ganis",
 ["sex"] = 3,
 },
-["type"] = "ACHIEVEMENT",
 ["event"] = "CHAT_MSG_ACHIEVEMENT",
+["type"] = "ACHIEVEMENT",
 },
 ["color"] = {
 ["b"] = -0,
@@ -60984,8 +60950,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Kloei-Mal'Ganis",
 ["sex"] = 3,
 },
-["type"] = "ACHIEVEMENT",
 ["event"] = "CHAT_MSG_ACHIEVEMENT",
+["type"] = "ACHIEVEMENT",
 },
 ["color"] = {
 ["b"] = -0,
@@ -61005,8 +60971,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Depressedbtw-Mal'Ganis",
 ["sex"] = 2,
 },
-["type"] = "ACHIEVEMENT",
 ["event"] = "CHAT_MSG_ACHIEVEMENT",
+["type"] = "ACHIEVEMENT",
 },
 ["color"] = {
 ["b"] = -0,
@@ -61026,8 +60992,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Depressedbtw-Mal'Ganis",
 ["sex"] = 2,
 },
-["type"] = "ACHIEVEMENT",
 ["event"] = "CHAT_MSG_ACHIEVEMENT",
+["type"] = "ACHIEVEMENT",
 },
 ["color"] = {
 ["b"] = -0,
@@ -61047,8 +61013,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Depressedbtw-Mal'Ganis",
 ["sex"] = 2,
 },
-["type"] = "ACHIEVEMENT",
 ["event"] = "CHAT_MSG_ACHIEVEMENT",
+["type"] = "ACHIEVEMENT",
 },
 ["color"] = {
 ["b"] = -0,
@@ -61065,8 +61031,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["player"] = {
 ["name"] = "Xal'atath",
 },
-["type"] = "MONSTER_WHISPER",
 ["event"] = "CHAT_MSG_MONSTER_WHISPER",
+["type"] = "MONSTER_WHISPER",
 },
 ["color"] = {
 ["b"] = 0.9215686917304993,
@@ -61086,8 +61052,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Depressedbtw-Mal'Ganis",
 ["sex"] = 2,
 },
-["type"] = "ACHIEVEMENT",
 ["event"] = "CHAT_MSG_ACHIEVEMENT",
+["type"] = "ACHIEVEMENT",
 },
 ["color"] = {
 ["b"] = -0,
@@ -61107,8 +61073,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Knotweed-Mal'Ganis",
 ["sex"] = 3,
 },
-["type"] = "ACHIEVEMENT",
 ["event"] = "CHAT_MSG_ACHIEVEMENT",
+["type"] = "ACHIEVEMENT",
 },
 ["color"] = {
 ["b"] = -0,
@@ -61128,8 +61094,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Kloei-Mal'Ganis",
 ["sex"] = 3,
 },
-["type"] = "ACHIEVEMENT",
 ["event"] = "CHAT_MSG_ACHIEVEMENT",
+["type"] = "ACHIEVEMENT",
 },
 ["color"] = {
 ["b"] = -0,
@@ -61149,8 +61115,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Kloei-Mal'Ganis",
 ["sex"] = 3,
 },
-["type"] = "ACHIEVEMENT",
 ["event"] = "CHAT_MSG_ACHIEVEMENT",
+["type"] = "ACHIEVEMENT",
 },
 ["color"] = {
 ["b"] = -0,
@@ -61164,8 +61130,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 {
 ["recordedBy"] = "Stormclout-Tichondrius",
 ["typeInfo"] = {
-["type"] = "CURRENCY",
 ["event"] = "CHAT_MSG_CURRENCY",
+["type"] = "CURRENCY",
 },
 ["color"] = {
 ["b"] = -0,
@@ -61179,8 +61145,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 {
 ["recordedBy"] = "Stormclout-Tichondrius",
 ["typeInfo"] = {
-["type"] = "CURRENCY",
 ["event"] = "CHAT_MSG_CURRENCY",
+["type"] = "CURRENCY",
 },
 ["color"] = {
 ["b"] = -0,
@@ -61194,8 +61160,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 {
 ["recordedBy"] = "Stormclout-Tichondrius",
 ["typeInfo"] = {
-["type"] = "CURRENCY",
 ["event"] = "CHAT_MSG_CURRENCY",
+["type"] = "CURRENCY",
 },
 ["color"] = {
 ["b"] = -0,
@@ -61209,8 +61175,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 {
 ["recordedBy"] = "Stormclout-Tichondrius",
 ["typeInfo"] = {
-["type"] = "LOOT",
 ["event"] = "CHAT_MSG_LOOT",
+["type"] = "LOOT",
 },
 ["color"] = {
 ["b"] = -0,
@@ -61230,8 +61196,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Gravia-Mal'Ganis",
 ["sex"] = 3,
 },
-["type"] = "LOOT",
 ["event"] = "CHAT_MSG_LOOT",
+["type"] = "LOOT",
 },
 ["color"] = {
 ["b"] = -0,
@@ -61251,8 +61217,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Gravia-Mal'Ganis",
 ["sex"] = 3,
 },
-["type"] = "LOOT",
 ["event"] = "CHAT_MSG_LOOT",
+["type"] = "LOOT",
 },
 ["color"] = {
 ["b"] = -0,
@@ -61272,8 +61238,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Stormclout-Tichondrius",
 ["sex"] = 3,
 },
-["type"] = "LOOT",
 ["event"] = "CHAT_MSG_LOOT",
+["type"] = "LOOT",
 },
 ["color"] = {
 ["b"] = -0,
@@ -61287,8 +61253,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 {
 ["recordedBy"] = "Stormclout-Tichondrius",
 ["typeInfo"] = {
-["type"] = "MONEY",
 ["event"] = "CHAT_MSG_MONEY",
+["type"] = "MONEY",
 },
 ["color"] = {
 ["b"] = -0,
@@ -61308,8 +61274,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Kloei-Mal'Ganis",
 ["sex"] = 3,
 },
-["type"] = "LOOT",
 ["event"] = "CHAT_MSG_LOOT",
+["type"] = "LOOT",
 },
 ["color"] = {
 ["b"] = -0,
@@ -61323,8 +61289,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 {
 ["recordedBy"] = "Stormclout-Tichondrius",
 ["typeInfo"] = {
-["type"] = "LOOT",
 ["event"] = "CHAT_MSG_LOOT",
+["type"] = "LOOT",
 },
 ["color"] = {
 ["b"] = -0,
@@ -61338,8 +61304,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 {
 ["recordedBy"] = "Stormclout-Tichondrius",
 ["typeInfo"] = {
-["type"] = "LOOT",
 ["event"] = "CHAT_MSG_LOOT",
+["type"] = "LOOT",
 },
 ["color"] = {
 ["b"] = -0,
@@ -61359,8 +61325,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Kloei-Mal'Ganis",
 ["sex"] = 3,
 },
-["type"] = "LOOT",
 ["event"] = "CHAT_MSG_LOOT",
+["type"] = "LOOT",
 },
 ["color"] = {
 ["b"] = -0,
@@ -61380,8 +61346,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Herpules-Daggerspine",
 ["sex"] = 2,
 },
-["type"] = "GUILD_ACHIEVEMENT",
 ["event"] = "CHAT_MSG_GUILD_ACHIEVEMENT",
+["type"] = "GUILD_ACHIEVEMENT",
 },
 ["color"] = {
 ["b"] = 0.250980406999588,
@@ -61401,8 +61367,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Kloei-Mal'Ganis",
 ["sex"] = 3,
 },
-["type"] = "ACHIEVEMENT",
 ["event"] = "CHAT_MSG_ACHIEVEMENT",
+["type"] = "ACHIEVEMENT",
 },
 ["color"] = {
 ["b"] = -0,
@@ -61422,8 +61388,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Herpules-Daggerspine",
 ["sex"] = 2,
 },
-["type"] = "GUILD_ACHIEVEMENT",
 ["event"] = "CHAT_MSG_GUILD_ACHIEVEMENT",
+["type"] = "GUILD_ACHIEVEMENT",
 },
 ["color"] = {
 ["b"] = 0.250980406999588,
@@ -61443,8 +61409,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Herpules-Daggerspine",
 ["sex"] = 2,
 },
-["type"] = "GUILD_ACHIEVEMENT",
 ["event"] = "CHAT_MSG_GUILD_ACHIEVEMENT",
+["type"] = "GUILD_ACHIEVEMENT",
 },
 ["color"] = {
 ["b"] = 0.250980406999588,
@@ -61464,8 +61430,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Herpules-Daggerspine",
 ["sex"] = 2,
 },
-["type"] = "GUILD_ACHIEVEMENT",
 ["event"] = "CHAT_MSG_GUILD_ACHIEVEMENT",
+["type"] = "GUILD_ACHIEVEMENT",
 },
 ["color"] = {
 ["b"] = 0.250980406999588,
@@ -61485,8 +61451,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Herpules-Daggerspine",
 ["sex"] = 2,
 },
-["type"] = "GUILD_ACHIEVEMENT",
 ["event"] = "CHAT_MSG_GUILD_ACHIEVEMENT",
+["type"] = "GUILD_ACHIEVEMENT",
 },
 ["color"] = {
 ["b"] = 0.250980406999588,
@@ -61506,8 +61472,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Herpules-Daggerspine",
 ["sex"] = 2,
 },
-["type"] = "GUILD_ACHIEVEMENT",
 ["event"] = "CHAT_MSG_GUILD_ACHIEVEMENT",
+["type"] = "GUILD_ACHIEVEMENT",
 },
 ["color"] = {
 ["b"] = 0.250980406999588,
@@ -61527,8 +61493,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Herpules-Daggerspine",
 ["sex"] = 2,
 },
-["type"] = "GUILD_ACHIEVEMENT",
 ["event"] = "CHAT_MSG_GUILD_ACHIEVEMENT",
+["type"] = "GUILD_ACHIEVEMENT",
 },
 ["color"] = {
 ["b"] = 0.250980406999588,
@@ -61548,8 +61514,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["name"] = "Stormclout-Tichondrius",
 ["sex"] = 3,
 },
-["type"] = "LOOT",
 ["event"] = "CHAT_MSG_LOOT",
+["type"] = "LOOT",
 },
 ["color"] = {
 ["b"] = -0,
@@ -61559,6 +61525,4590 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["text"] = "Your |cnIQ4:|T7430729:12|t|Hitem:250017::::::::90:268::35:3:6652:13440:12805::::::|h[Storm Crashers of Ra-den's Chosen (Feet 285)]|h|r was changed to |cnIQ4:|T7430729:12|t|Hitem:250017::::::::90:268::35:3:6652:13440:12806::::::|h[Storm Crashers of Ra-den's Chosen (Feet 289)]|h|r.",
 ["id"] = "s46_3232",
 ["timestamp"] = 1776313046,
+},
+{
+["recordedBy"] = "Stormclout-Tichondrius",
+["typeInfo"] = {
+["player"] = {
+["class"] = "DEATHKNIGHT",
+["race"] = "Orc",
+["name"] = "Spaceknight-Tichondrius",
+["sex"] = 2,
+},
+["event"] = "CHAT_MSG_GUILD_ACHIEVEMENT",
+["type"] = "GUILD_ACHIEVEMENT",
+},
+["color"] = {
+["r"] = 0.250980406999588,
+["g"] = 1,
+["b"] = 0.250980406999588,
+},
+["text"] = "|Hplayer:Spaceknight-Tichondrius|h[|cffc41e3aSpaceknight|r]|h has earned the achievement |cffffff00|Hachievement:61683:Player-11-0EB4E69B:1:4:16:26:4294967295:4294967295:4294967295:4294967295|h[Entering Battle]|h|r!",
+["timestamp"] = 1776351001,
+["id"] = "s46_3233",
+},
+{
+["recordedBy"] = "Stormclout-Tichondrius",
+["typeInfo"] = {
+["player"] = {
+["class"] = "WARRIOR",
+["race"] = "DarkIronDwarf",
+["name"] = "Stangin-Tichondrius",
+["sex"] = 2,
+},
+["event"] = "CHAT_MSG_GUILD_ACHIEVEMENT",
+["type"] = "GUILD_ACHIEVEMENT",
+},
+["color"] = {
+["r"] = 0.250980406999588,
+["g"] = 1,
+["b"] = 0.250980406999588,
+},
+["text"] = "|Hplayer:Stangin-Tichondrius|h[|cffc69b6dStangin|r]|h has earned the achievement |cffffff00|Hachievement:61709:Player-11-0EB3EFF5:1:4:16:26:4294967295:4294967295:4294967295:4294967295|h[Delver of the Depths III: Midnight]|h|r!",
+["timestamp"] = 1776351291,
+["id"] = "s46_3234",
+},
+{
+["recordedBy"] = "Stormclout-Tichondrius",
+["typeInfo"] = {
+["player"] = {
+["class"] = "WARRIOR",
+["race"] = "DarkIronDwarf",
+["name"] = "Stangin-Tichondrius",
+["sex"] = 2,
+},
+["event"] = "CHAT_MSG_GUILD_ACHIEVEMENT",
+["type"] = "GUILD_ACHIEVEMENT",
+},
+["color"] = {
+["r"] = 0.250980406999588,
+["g"] = 1,
+["b"] = 0.250980406999588,
+},
+["text"] = "|Hplayer:Stangin-Tichondrius|h[|cffc69b6dStangin|r]|h has earned the achievement |cffffff00|Hachievement:61718:Player-11-0EB3EFF5:1:4:16:26:4294967295:4294967295:4294967295:4294967295|h[Midnight Delver Tank II]|h|r!",
+["timestamp"] = 1776351291,
+["id"] = "s46_3235",
+},
+{
+["recordedBy"] = "Stormclout-Tichondrius",
+["typeInfo"] = {
+["player"] = {
+["race"] = "Orc",
+["class"] = "DEATHKNIGHT",
+["name"] = "Spaceknight-Tichondrius",
+["sex"] = 2,
+},
+["event"] = "CHAT_MSG_GUILD_ACHIEVEMENT",
+["type"] = "GUILD_ACHIEVEMENT",
+},
+["color"] = {
+["b"] = 0.250980406999588,
+["g"] = 1,
+["r"] = 0.250980406999588,
+},
+["text"] = "|Hplayer:Spaceknight-Tichondrius|h[|cffc41e3aSpaceknight|r]|h has earned the achievement |cffffff00|Hachievement:545:Player-11-0EB4E69B:1:4:16:26:4294967295:4294967295:4294967295:4294967295|h[Shave and a Haircut]|h|r!",
+["id"] = "s46_3236",
+["timestamp"] = 1776351320,
+},
+{
+["recordedBy"] = "Stormclout-Tichondrius",
+["typeInfo"] = {
+["player"] = {
+["race"] = "NightElf",
+["class"] = "DRUID",
+["name"] = "Evohsx-Stormrage",
+["sex"] = 3,
+},
+["event"] = "CHAT_MSG_GUILD_ACHIEVEMENT",
+["type"] = "GUILD_ACHIEVEMENT",
+},
+["color"] = {
+["b"] = 0.250980406999588,
+["g"] = 1,
+["r"] = 0.250980406999588,
+},
+["text"] = "|Hplayer:Evohsx-Stormrage|h[|cffff7c0aEvohsx-Stormrage|r]|h has earned the achievement |cffffff00|Hachievement:61637:Player-60-0F286FF8:1:4:16:26:4294967295:4294967295:4294967295:4294967295|h[Voidspire: Crown of the Cosmos]|h|r!",
+["id"] = "s46_3237",
+["timestamp"] = 1776351981,
+},
+{
+["recordedBy"] = "Stormclout-Tichondrius",
+["typeInfo"] = {
+["player"] = {
+["race"] = "Orc",
+["class"] = "HUNTER",
+["name"] = "Stimpycheese-Tichondrius",
+["sex"] = 2,
+},
+["event"] = "CHAT_MSG_GUILD_ACHIEVEMENT",
+["type"] = "GUILD_ACHIEVEMENT",
+},
+["color"] = {
+["b"] = 0.250980406999588,
+["g"] = 1,
+["r"] = 0.250980406999588,
+},
+["text"] = "|Hplayer:Stimpycheese-Tichondrius|h[|cffaad372Stimpycheese|r]|h has earned the achievement |cffffff00|Hachievement:61267:Player-11-0B1AF294:1:4:16:26:4294967295:4294967295:4294967295:4294967295|h[Keystone Hero: Magisters' Terrace]|h|r!",
+["id"] = "s46_3238",
+["timestamp"] = 1776352989,
+},
+{
+["recordedBy"] = "Stormclout-Tichondrius",
+["typeInfo"] = {
+["player"] = {
+["race"] = "Human",
+["class"] = "MONK",
+["name"] = "Stormclout",
+["sex"] = 3,
+},
+["event"] = "CHAT_MSG_MONSTER_EMOTE",
+["type"] = "MONSTER_EMOTE",
+},
+["color"] = {
+["b"] = 0.250980406999588,
+["g"] = 0.501960813999176,
+["r"] = 1,
+},
+["text"] = "Stormclout just won a game of Hearthstone!",
+["id"] = "s46_3239",
+["timestamp"] = 1776353321,
+},
+{
+["recordedBy"] = "Stormclout-Tichondrius",
+["typeInfo"] = {
+["player"] = {
+["class"] = "PALADIN",
+["race"] = "BloodElf",
+["name"] = "Honeysuckles-Zul'jin",
+["sex"] = 3,
+},
+["event"] = "CHAT_MSG_GUILD_ACHIEVEMENT",
+["type"] = "GUILD_ACHIEVEMENT",
+},
+["color"] = {
+["r"] = 0.250980406999588,
+["g"] = 1,
+["b"] = 0.250980406999588,
+},
+["text"] = "|Hplayer:Honeysuckles-Zul'jin|h[|cfff48cbaHoneysuckles-Zul'jin|r]|h has earned the achievement |cffffff00|Hachievement:61270:Player-61-0EED5C27:1:4:16:26:4294967295:4294967295:4294967295:4294967295|h[Keystone Hero: Seat of the Triumvirate]|h|r!",
+["timestamp"] = 1776353490,
+["id"] = "s46_3240",
+},
+{
+["recordedBy"] = "Stormclout-Tichondrius",
+["typeInfo"] = {
+["player"] = {
+["class"] = "WARLOCK",
+["race"] = "Scourge",
+["name"] = "Skellycurse-Illidan",
+["sex"] = 2,
+},
+["event"] = "CHAT_MSG_GUILD_ACHIEVEMENT",
+["type"] = "GUILD_ACHIEVEMENT",
+},
+["color"] = {
+["r"] = 0.250980406999588,
+["g"] = 1,
+["b"] = 0.250980406999588,
+},
+["text"] = "|Hplayer:Skellycurse-Illidan|h[|cff8788eeSkellycurse-Illidan|r]|h has earned the achievement |cffffff00|Hachievement:61912:Player-57-0E18E530:1:4:16:26:4294967295:4294967295:4294967295:4294967295|h[Anchoring the Defense]|h|r!",
+["timestamp"] = 1776353519,
+["id"] = "s46_3241",
+},
+{
+["recordedBy"] = "Stormclout-Tichondrius",
+["typeInfo"] = {
+["player"] = {
+["class"] = "MONK",
+["race"] = "Human",
+["name"] = "Stormclout",
+["sex"] = 3,
+},
+["event"] = "CHAT_MSG_MONSTER_EMOTE",
+["type"] = "MONSTER_EMOTE",
+},
+["color"] = {
+["r"] = 1,
+["g"] = 0.501960813999176,
+["b"] = 0.250980406999588,
+},
+["text"] = "Stormclout just won a game of Hearthstone!",
+["timestamp"] = 1776353890,
+["id"] = "s46_3242",
+},
+{
+["recordedBy"] = "Stormclout-Tichondrius",
+["typeInfo"] = {
+["player"] = {
+["race"] = "Human",
+["class"] = "MONK",
+["name"] = "Stormclout",
+["sex"] = 3,
+},
+["event"] = "CHAT_MSG_MONSTER_EMOTE",
+["type"] = "MONSTER_EMOTE",
+},
+["color"] = {
+["b"] = 0.250980406999588,
+["g"] = 0.501960813999176,
+["r"] = 1,
+},
+["text"] = "Stormclout just won a game of Hearthstone!",
+["id"] = "s46_3243",
+["timestamp"] = 1776354669,
+},
+{
+["recordedBy"] = "Stormclout-Tichondrius",
+["typeInfo"] = {
+["player"] = {
+["race"] = "Human",
+["class"] = "MONK",
+["name"] = "Stormclout",
+["sex"] = 3,
+},
+["event"] = "CHAT_MSG_MONSTER_EMOTE",
+["type"] = "MONSTER_EMOTE",
+},
+["color"] = {
+["b"] = 0.250980406999588,
+["g"] = 0.501960813999176,
+["r"] = 1,
+},
+["text"] = "Stormclout just won a game of Hearthstone!",
+["id"] = "s46_3244",
+["timestamp"] = 1776354805,
+},
+{
+["recordedBy"] = "Stormclout-Tichondrius",
+["typeInfo"] = {
+["player"] = {
+["race"] = "NightElf",
+["class"] = "DRUID",
+["name"] = "Evohsx-Stormrage",
+["sex"] = 3,
+},
+["event"] = "CHAT_MSG_GUILD_ACHIEVEMENT",
+["type"] = "GUILD_ACHIEVEMENT",
+},
+["color"] = {
+["b"] = 0.250980406999588,
+["g"] = 1,
+["r"] = 0.250980406999588,
+},
+["text"] = "|Hplayer:Evohsx-Stormrage|h[|cffff7c0aEvohsx-Stormrage|r]|h has earned the achievement |cffffff00|Hachievement:62262:Player-60-0F286FF8:1:4:16:26:4294967295:4294967295:4294967295:4294967295|h[Silvermoon Court Champion]|h|r!",
+["id"] = "s46_3245",
+["timestamp"] = 1776354915,
+},
+{
+["recordedBy"] = "Stormclout-Tichondrius",
+["typeInfo"] = {
+["player"] = {
+["class"] = "MONK",
+["race"] = "Human",
+["name"] = "Stormclout",
+["sex"] = 3,
+},
+["event"] = "CHAT_MSG_MONSTER_EMOTE",
+["type"] = "MONSTER_EMOTE",
+},
+["color"] = {
+["r"] = 1,
+["g"] = 0.501960813999176,
+["b"] = 0.250980406999588,
+},
+["text"] = "Stormclout just won a game of Hearthstone!",
+["timestamp"] = 1776355031,
+["id"] = "s46_3246",
+},
+{
+["recordedBy"] = "Stormclout-Tichondrius",
+["typeInfo"] = {
+["player"] = {
+["race"] = "Human",
+["class"] = "MONK",
+["name"] = "Stormclout",
+["sex"] = 3,
+},
+["event"] = "CHAT_MSG_MONSTER_EMOTE",
+["type"] = "MONSTER_EMOTE",
+},
+["color"] = {
+["b"] = 0.250980406999588,
+["g"] = 0.501960813999176,
+["r"] = 1,
+},
+["text"] = "Stormclout just won a game of Hearthstone!",
+["id"] = "s46_3247",
+["timestamp"] = 1776355185,
+},
+{
+["recordedBy"] = "Stormclout-Tichondrius",
+["typeInfo"] = {
+["player"] = {
+["class"] = "MONK",
+["race"] = "NightElf",
+["name"] = "Lydris-Tichondrius",
+["sex"] = 3,
+},
+["event"] = "CHAT_MSG_GUILD_ACHIEVEMENT",
+["type"] = "GUILD_ACHIEVEMENT",
+},
+["color"] = {
+["r"] = 0.250980406999588,
+["g"] = 1,
+["b"] = 0.250980406999588,
+},
+["text"] = "|Hplayer:Lydris-Tichondrius|h[|cff00ff98Lydris|r]|h has earned the achievement |cffffff00|Hachievement:15543:Player-11-0EA3EAAA:1:4:16:26:4294967295:4294967295:4294967295:4294967295|h[Successful Solos]|h|r!",
+["timestamp"] = 1776355260,
+["id"] = "s46_3248",
+},
+{
+["recordedBy"] = "Stormclout-Tichondrius",
+["typeInfo"] = {
+["player"] = {
+["class"] = "DEMONHUNTER",
+["race"] = "BloodElf",
+["name"] = "Yalton-Tichondrius",
+["sex"] = 2,
+},
+["event"] = "CHAT_MSG_YELL",
+["type"] = "YELL",
+},
+["color"] = {
+["r"] = 1,
+["g"] = 0.250980406999588,
+["b"] = 0.250980406999588,
+},
+["text"] = "|Hplayer:Yalton-Tichondrius:67:YELL:|h[|cffa330c9Yalton|r]|h yells: [Orcish] Osh'kava Grom!!!",
+["timestamp"] = 1776355527,
+["id"] = "s46_3249",
+},
+{
+["recordedBy"] = "Stormclout-Tichondrius",
+["typeInfo"] = {
+["player"] = {
+["class"] = "PALADIN",
+["race"] = "BloodElf",
+["name"] = "Honeysuckles-Zul'jin",
+["sex"] = 3,
+},
+["event"] = "CHAT_MSG_GUILD_ACHIEVEMENT",
+["type"] = "GUILD_ACHIEVEMENT",
+},
+["color"] = {
+["r"] = 0.250980406999588,
+["g"] = 1,
+["b"] = 0.250980406999588,
+},
+["text"] = "|Hplayer:Honeysuckles-Zul'jin|h[|cfff48cbaHoneysuckles-Zul'jin|r]|h has earned the achievement |cffffff00|Hachievement:61233:Player-61-0EED5C27:1:4:16:26:4294967295:4294967295:4294967295:4294967295|h[Midnight Season 1: Resilient Keystone 12]|h|r!",
+["timestamp"] = 1776355580,
+["id"] = "s46_3250",
+},
+{
+["recordedBy"] = "Stormclout-Tichondrius",
+["typeInfo"] = {
+["player"] = {
+["class"] = "MONK",
+["race"] = "Human",
+["name"] = "Stormclout-Tichondrius",
+["sex"] = 3,
+},
+["event"] = "CHAT_MSG_SAY",
+["type"] = "SAY",
+},
+["color"] = {
+["r"] = 1,
+["g"] = 1,
+["b"] = 1,
+},
+["text"] = "|Hplayer:Stormclout-Tichondrius:74:SAY:|h[|cff00ff98Stormclout|r]|h says: edit",
+["timestamp"] = 1776355833,
+["id"] = "s46_3251",
+},
+{
+["recordedBy"] = "Stormclout-Tichondrius",
+["typeInfo"] = {
+["player"] = {
+["class"] = "MONK",
+["race"] = "Human",
+["name"] = "Stormclout",
+["sex"] = 3,
+},
+["event"] = "CHAT_MSG_MONSTER_EMOTE",
+["type"] = "MONSTER_EMOTE",
+},
+["color"] = {
+["r"] = 1,
+["g"] = 0.501960813999176,
+["b"] = 0.250980406999588,
+},
+["text"] = "Stormclout just won a game of Hearthstone!",
+["timestamp"] = 1776357356,
+["id"] = "s46_3252",
+},
+{
+["recordedBy"] = "Stormclout-Tichondrius",
+["typeInfo"] = {
+["player"] = {
+["class"] = "MONK",
+["race"] = "Human",
+["name"] = "Søvêreign-Tichondrius",
+["sex"] = 2,
+},
+["event"] = "CHAT_MSG_GUILD_ACHIEVEMENT",
+["type"] = "GUILD_ACHIEVEMENT",
+},
+["color"] = {
+["r"] = 0.250980406999588,
+["g"] = 1,
+["b"] = 0.250980406999588,
+},
+["text"] = "|Hplayer:Søvêreign-Tichondrius|h[|cff00ff98Søvêreign|r]|h has earned the achievement |cffffff00|Hachievement:42778:Player-11-0EB5C1EE:1:4:16:26:4294967295:4294967295:4294967295:4294967295|h[A Flicker in the Dark]|h|r!",
+["timestamp"] = 1776357359,
+["id"] = "s46_3253",
+},
+{
+["recordedBy"] = "Stormclout-Tichondrius",
+["typeInfo"] = {
+["player"] = {
+["race"] = "BloodElf",
+["class"] = "MONK",
+["name"] = "Ceevipw-Tichondrius",
+["sex"] = 3,
+},
+["event"] = "CHAT_MSG_GUILD_ACHIEVEMENT",
+["type"] = "GUILD_ACHIEVEMENT",
+},
+["color"] = {
+["b"] = 0.250980406999588,
+["g"] = 1,
+["r"] = 0.250980406999588,
+},
+["text"] = "|Hplayer:Ceevipw-Tichondrius|h[|cff00ff98Ceevipw|r]|h has earned the achievement |cffffff00|Hachievement:62184:Player-11-0E604D54:1:4:16:26:4294967295:4294967295:4294967295:4294967295|h[Prey: Breaking the Blade (Nightmare)]|h|r!",
+["id"] = "s46_3254",
+["timestamp"] = 1776357917,
+},
+{
+["recordedBy"] = "Stormclout-Tichondrius",
+["typeInfo"] = {
+["player"] = {
+["race"] = "NightElf",
+["class"] = "DRUID",
+["name"] = "Dragmaa-Stormrage",
+["sex"] = 2,
+},
+["event"] = "CHAT_MSG_GUILD_ACHIEVEMENT",
+["type"] = "GUILD_ACHIEVEMENT",
+},
+["color"] = {
+["b"] = 0.250980406999588,
+["g"] = 1,
+["r"] = 0.250980406999588,
+},
+["text"] = "|Hplayer:Dragmaa-Stormrage|h[|cffff7c0aDragmaa-Stormrage|r]|h has earned the achievement |cffffff00|Hachievement:16270:Player-60-0F72EDC7:1:4:16:26:4294967295:4294967295:4294967295:4294967295|h[Heroic: Algeth'ar Academy]|h|r!",
+["id"] = "s46_3255",
+["timestamp"] = 1776357982,
+},
+{
+["recordedBy"] = "Stormclout-Tichondrius",
+["typeInfo"] = {
+["player"] = {
+["race"] = "NightElf",
+["class"] = "DRUID",
+["name"] = "Dragmaa-Stormrage",
+["sex"] = 2,
+},
+["event"] = "CHAT_MSG_GUILD_ACHIEVEMENT",
+["type"] = "GUILD_ACHIEVEMENT",
+},
+["color"] = {
+["b"] = 0.250980406999588,
+["g"] = 1,
+["r"] = 0.250980406999588,
+},
+["text"] = "|Hplayer:Dragmaa-Stormrage|h[|cffff7c0aDragmaa-Stormrage|r]|h has earned the achievement |cffffff00|Hachievement:16271:Player-60-0F72EDC7:1:4:16:26:4294967295:4294967295:4294967295:4294967295|h[Mythic: Algeth'ar Academy]|h|r!",
+["id"] = "s46_3256",
+["timestamp"] = 1776357982,
+},
+{
+["recordedBy"] = "Stormclout-Tichondrius",
+["typeInfo"] = {
+["player"] = {
+["race"] = "BloodElf",
+["class"] = "PALADIN",
+["name"] = "Honeysuckles-Zul'jin",
+["sex"] = 3,
+},
+["event"] = "CHAT_MSG_GUILD_ACHIEVEMENT",
+["type"] = "GUILD_ACHIEVEMENT",
+},
+["color"] = {
+["b"] = 0.250980406999588,
+["g"] = 1,
+["r"] = 0.250980406999588,
+},
+["text"] = "|Hplayer:Honeysuckles-Zul'jin|h[|cfff48cbaHoneysuckles-Zul'jin|r]|h has earned the achievement |cffffff00|Hachievement:61258:Player-61-0EED5C27:1:4:16:26:4294967295:4294967295:4294967295:4294967295|h[Midnight Keystone Legend: Season One]|h|r!",
+["id"] = "s46_3257",
+["timestamp"] = 1776358015,
+},
+{
+["recordedBy"] = "Stormclout-Tichondrius",
+["typeInfo"] = {
+["player"] = {
+["race"] = "NightElf",
+["class"] = "DRUID",
+["name"] = "Dragmaa-Stormrage",
+["sex"] = 2,
+},
+["event"] = "CHAT_MSG_GUILD_ACHIEVEMENT",
+["type"] = "GUILD_ACHIEVEMENT",
+},
+["color"] = {
+["b"] = 0.250980406999588,
+["g"] = 1,
+["r"] = 0.250980406999588,
+},
+["text"] = "|Hplayer:Dragmaa-Stormrage|h[|cffff7c0aDragmaa-Stormrage|r]|h has earned the achievement |cffffff00|Hachievement:11185:Player-60-0F72EDC7:1:4:16:26:4294967295:4294967295:4294967295:4294967295|h[Keystone Conqueror]|h|r!",
+["id"] = "s46_3258",
+["timestamp"] = 1776358021,
+},
+{
+["recordedBy"] = "Stormclout-Tichondrius",
+["typeInfo"] = {
+["player"] = {
+["race"] = "Human",
+["class"] = "MONK",
+["name"] = "Søvêreign-Tichondrius",
+["sex"] = 2,
+},
+["event"] = "CHAT_MSG_GUILD",
+["type"] = "GUILD",
+},
+["color"] = {
+["b"] = 0.250980406999588,
+["g"] = 1,
+["r"] = 0.250980406999588,
+},
+["text"] = "|Hchannel:GUILD|h[Guild]|h |Hplayer:Søvêreign-Tichondrius:16:GUILD:|h[|cff00ff98Søvêreign|r]|h: why can i not find the veteran mobs in Parhelion Plaza",
+["id"] = "s46_3259",
+["timestamp"] = 1776358088,
+},
+{
+["recordedBy"] = "Stormclout-Tichondrius",
+["typeInfo"] = {
+["player"] = {
+["race"] = "Pandaren",
+["class"] = "DEATHKNIGHT",
+["name"] = "Frostyfries-Tichondrius",
+["sex"] = 3,
+},
+["event"] = "CHAT_MSG_GUILD",
+["type"] = "GUILD",
+},
+["color"] = {
+["b"] = 0.250980406999588,
+["g"] = 1,
+["r"] = 0.250980406999588,
+},
+["text"] = "|Hchannel:GUILD|h[Guild]|h |Hplayer:Frostyfries-Tichondrius:18:GUILD:|h[|cffc41e3aFrostyfries|r]|h: idk not sure where that is located lol",
+["id"] = "s46_3260",
+["timestamp"] = 1776358188,
+},
+{
+["recordedBy"] = "Stormclout-Tichondrius",
+["typeInfo"] = {
+["player"] = {
+["race"] = "NightElf",
+["class"] = "DRUID",
+["name"] = "Evohsx-Stormrage",
+["sex"] = 3,
+},
+["event"] = "CHAT_MSG_GUILD",
+["type"] = "GUILD",
+},
+["color"] = {
+["b"] = 0.250980406999588,
+["g"] = 1,
+["r"] = 0.250980406999588,
+},
+["text"] = "|Hchannel:GUILD|h[Guild]|h |Hplayer:Evohsx-Stormrage:30:GUILD:|h[|cffff7c0aEvohsx|r]|h: eh",
+["id"] = "s46_3261",
+["timestamp"] = 1776358222,
+},
+{
+["recordedBy"] = "Stormclout-Tichondrius",
+["typeInfo"] = {
+["player"] = {
+["race"] = "Pandaren",
+["class"] = "DEATHKNIGHT",
+["name"] = "Frostyfries-Tichondrius",
+["sex"] = 3,
+},
+["event"] = "CHAT_MSG_GUILD",
+["type"] = "GUILD",
+},
+["color"] = {
+["b"] = 0.250980406999588,
+["g"] = 1,
+["r"] = 0.250980406999588,
+},
+["text"] = "|Hchannel:GUILD|h[Guild]|h |Hplayer:Frostyfries-Tichondrius:32:GUILD:|h[|cffc41e3aFrostyfries|r]|h: are u lving in a dark cave  maybe thats why u cant see em Turn on a light lmao",
+["id"] = "s46_3262",
+["timestamp"] = 1776358253,
+},
+{
+["recordedBy"] = "Stormclout-Tichondrius",
+["typeInfo"] = {
+["player"] = {
+["race"] = "Pandaren",
+["class"] = "DEATHKNIGHT",
+["name"] = "Frostyfries-Tichondrius",
+["sex"] = 3,
+},
+["event"] = "CHAT_MSG_GUILD",
+["type"] = "GUILD",
+},
+["color"] = {
+["b"] = 0.250980406999588,
+["g"] = 1,
+["r"] = 0.250980406999588,
+},
+["text"] = "|Hchannel:GUILD|h[Guild]|h |Hplayer:Frostyfries-Tichondrius:33:GUILD:|h[|cffc41e3aFrostyfries|r]|h: that was a joke",
+["id"] = "s46_3263",
+["timestamp"] = 1776358295,
+},
+{
+["recordedBy"] = "Stormclout-Tichondrius",
+["typeInfo"] = {
+["player"] = {
+["race"] = "Human",
+["class"] = "MONK",
+["name"] = "Stormclout",
+["sex"] = 3,
+},
+["event"] = "CHAT_MSG_MONSTER_EMOTE",
+["type"] = "MONSTER_EMOTE",
+},
+["color"] = {
+["b"] = 0.250980406999588,
+["g"] = 0.501960813999176,
+["r"] = 1,
+},
+["text"] = "Stormclout just won a game of Hearthstone!",
+["id"] = "s46_3264",
+["timestamp"] = 1776358389,
+},
+{
+["recordedBy"] = "Stormclout-Tichondrius",
+["typeInfo"] = {
+["player"] = {
+["race"] = "Human",
+["class"] = "MONK",
+["name"] = "Stormclout-Tichondrius",
+["sex"] = 3,
+},
+["event"] = "CHAT_MSG_SAY",
+["type"] = "SAY",
+},
+["color"] = {
+["b"] = 1,
+["g"] = 1,
+["r"] = 1,
+},
+["text"] = "|Hplayer:Stormclout-Tichondrius:42:SAY:|h[|cff00ff98Stormclout|r]|h says: played like a girl",
+["id"] = "s46_3265",
+["timestamp"] = 1776358486,
+},
+{
+["recordedBy"] = "Stormclout-Tichondrius",
+["typeInfo"] = {
+["player"] = {
+["race"] = "Human",
+["class"] = "MONK",
+["name"] = "Stormclout-Tichondrius",
+["sex"] = 3,
+},
+["event"] = "CHAT_MSG_SAY",
+["type"] = "SAY",
+},
+["color"] = {
+["b"] = 1,
+["g"] = 1,
+["r"] = 1,
+},
+["text"] = "|Hplayer:Stormclout-Tichondrius:43:SAY:|h[|cff00ff98Stormclout|r]|h says: lol",
+["id"] = "s46_3266",
+["timestamp"] = 1776358486,
+},
+{
+["recordedBy"] = "Stormclout-Tichondrius",
+["typeInfo"] = {
+["player"] = {
+["race"] = "NightElf",
+["class"] = "ROGUE",
+["name"] = "Asensi-Tichondrius",
+["sex"] = 3,
+},
+["event"] = "CHAT_MSG_SAY",
+["type"] = "SAY",
+},
+["color"] = {
+["b"] = 1,
+["g"] = 1,
+["r"] = 1,
+},
+["text"] = "|Hplayer:Asensi-Tichondrius:44:SAY:|h[|cfffff468Asensi|r]|h says: WELL",
+["id"] = "s46_3267",
+["timestamp"] = 1776358492,
+},
+{
+["recordedBy"] = "Stormclout-Tichondrius",
+["typeInfo"] = {
+["player"] = {
+["race"] = "NightElf",
+["class"] = "ROGUE",
+["name"] = "Asensi-Tichondrius",
+["sex"] = 3,
+},
+["event"] = "CHAT_MSG_SAY",
+["type"] = "SAY",
+},
+["color"] = {
+["b"] = 1,
+["g"] = 1,
+["r"] = 1,
+},
+["text"] = "|Hplayer:Asensi-Tichondrius:46:SAY:|h[|cfffff468Asensi|r]|h says: start was a lil scuffed ",
+["id"] = "s46_3268",
+["timestamp"] = 1776358505,
+},
+{
+["recordedBy"] = "Stormclout-Tichondrius",
+["typeInfo"] = {
+["player"] = {
+["race"] = "NightElf",
+["class"] = "ROGUE",
+["name"] = "Asensi-Tichondrius",
+["sex"] = 3,
+},
+["event"] = "CHAT_MSG_SAY",
+["type"] = "SAY",
+},
+["color"] = {
+["b"] = 1,
+["g"] = 1,
+["r"] = 1,
+},
+["text"] = "|Hplayer:Asensi-Tichondrius:47:SAY:|h[|cfffff468Asensi|r]|h says: i had to",
+["id"] = "s46_3269",
+["timestamp"] = 1776358506,
+},
+{
+["recordedBy"] = "Stormclout-Tichondrius",
+["typeInfo"] = {
+["player"] = {
+["class"] = "PRIEST",
+["race"] = "Scourge",
+["name"] = "Theirondruid-Tichondrius",
+["sex"] = 3,
+},
+["event"] = "CHAT_MSG_GUILD",
+["type"] = "GUILD",
+},
+["color"] = {
+["r"] = 0.250980406999588,
+["g"] = 1,
+["b"] = 0.250980406999588,
+},
+["text"] = "|Hchannel:GUILD|h[Guild]|h |Hplayer:Theirondruid-Tichondrius:3:GUILD:|h[|cffffffffTheirondruid|r]|h: this is so demoralizing playing shadow priest, :( ( please dont say re roll, i enjoy the class just once every 10 years we have a good season ) ",
+["timestamp"] = 1776361071,
+["id"] = "s46_3270",
+},
+{
+["recordedBy"] = "Stormclout-Tichondrius",
+["typeInfo"] = {
+["player"] = {
+["class"] = "PRIEST",
+["race"] = "Scourge",
+["name"] = "Theirondruid-Tichondrius",
+["sex"] = 3,
+},
+["event"] = "CHAT_MSG_GUILD",
+["type"] = "GUILD",
+},
+["color"] = {
+["r"] = 0.250980406999588,
+["g"] = 1,
+["b"] = 0.250980406999588,
+},
+["text"] = "|Hchannel:GUILD|h[Guild]|h |Hplayer:Theirondruid-Tichondrius:5:GUILD:|h[|cffffffffTheirondruid|r]|h: i dont have anyone else to qq about this ",
+["timestamp"] = 1776361080,
+["id"] = "s46_3271",
+},
+{
+["recordedBy"] = "Stormclout-Tichondrius",
+["typeInfo"] = {
+["player"] = {
+["class"] = "DEATHKNIGHT",
+["race"] = "Pandaren",
+["name"] = "Frostyfries-Tichondrius",
+["sex"] = 3,
+},
+["event"] = "CHAT_MSG_GUILD",
+["type"] = "GUILD",
+},
+["color"] = {
+["r"] = 0.250980406999588,
+["g"] = 1,
+["b"] = 0.250980406999588,
+},
+["text"] = "|Hchannel:GUILD|h[Guild]|h |Hplayer:Frostyfries-Tichondrius:6:GUILD:|h[|cffc41e3aFrostyfries|r]|h: play what u want ☻",
+["timestamp"] = 1776361099,
+["id"] = "s46_3272",
+},
+{
+["recordedBy"] = "Stormclout-Tichondrius",
+["typeInfo"] = {
+["player"] = {
+["class"] = "DEATHKNIGHT",
+["race"] = "Pandaren",
+["name"] = "Frostyfries-Tichondrius",
+["sex"] = 3,
+},
+["event"] = "CHAT_MSG_GUILD",
+["type"] = "GUILD",
+},
+["color"] = {
+["r"] = 0.250980406999588,
+["g"] = 1,
+["b"] = 0.250980406999588,
+},
+["text"] = "|Hchannel:GUILD|h[Guild]|h |Hplayer:Frostyfries-Tichondrius:8:GUILD:|h[|cffc41e3aFrostyfries|r]|h: we not saying anything i think priests are pretty good",
+["timestamp"] = 1776361136,
+["id"] = "s46_3273",
+},
+{
+["recordedBy"] = "Stormclout-Tichondrius",
+["typeInfo"] = {
+["player"] = {
+["class"] = "PRIEST",
+["race"] = "Scourge",
+["name"] = "Theirondruid-Tichondrius",
+["sex"] = 3,
+},
+["event"] = "CHAT_MSG_GUILD",
+["type"] = "GUILD",
+},
+["color"] = {
+["r"] = 0.250980406999588,
+["g"] = 1,
+["b"] = 0.250980406999588,
+},
+["text"] = "|Hchannel:GUILD|h[Guild]|h |Hplayer:Theirondruid-Tichondrius:9:GUILD:|h[|cffffffffTheirondruid|r]|h: shadow? no no no bro, no. disc / holy yeah theyr ok, not like monks but theyr ok they have a place in arena ",
+["timestamp"] = 1776361163,
+["id"] = "s46_3274",
+},
+{
+["recordedBy"] = "Stormclout-Tichondrius",
+["typeInfo"] = {
+["player"] = {
+["class"] = "DEATHKNIGHT",
+["race"] = "Pandaren",
+["name"] = "Frostyfries-Tichondrius",
+["sex"] = 3,
+},
+["event"] = "CHAT_MSG_GUILD",
+["type"] = "GUILD",
+},
+["color"] = {
+["r"] = 0.250980406999588,
+["g"] = 1,
+["b"] = 0.250980406999588,
+},
+["text"] = "|Hchannel:GUILD|h[Guild]|h |Hplayer:Frostyfries-Tichondrius:10:GUILD:|h[|cffc41e3aFrostyfries|r]|h: this season is bitchin",
+["timestamp"] = 1776361181,
+["id"] = "s46_3275",
+},
+{
+["recordedBy"] = "Stormclout-Tichondrius",
+["typeInfo"] = {
+["player"] = {
+["class"] = "PRIEST",
+["race"] = "Scourge",
+["name"] = "Theirondruid-Tichondrius",
+["sex"] = 3,
+},
+["event"] = "CHAT_MSG_GUILD",
+["type"] = "GUILD",
+},
+["color"] = {
+["r"] = 0.250980406999588,
+["g"] = 1,
+["b"] = 0.250980406999588,
+},
+["text"] = "|Hchannel:GUILD|h[Guild]|h |Hplayer:Theirondruid-Tichondrius:11:GUILD:|h[|cffffffffTheirondruid|r]|h: but shadow, dude, you put 2 mele vs a shadow priest, there is no hope",
+["timestamp"] = 1776361183,
+["id"] = "s46_3276",
+},
+{
+["recordedBy"] = "Stormclout-Tichondrius",
+["typeInfo"] = {
+["player"] = {
+["class"] = "PRIEST",
+["race"] = "Scourge",
+["name"] = "Theirondruid-Tichondrius",
+["sex"] = 3,
+},
+["event"] = "CHAT_MSG_GUILD",
+["type"] = "GUILD",
+},
+["color"] = {
+["r"] = 0.250980406999588,
+["g"] = 1,
+["b"] = 0.250980406999588,
+},
+["text"] = "|Hchannel:GUILD|h[Guild]|h |Hplayer:Theirondruid-Tichondrius:12:GUILD:|h[|cffffffffTheirondruid|r]|h: its only matter of time before sp dies. ",
+["timestamp"] = 1776361198,
+["id"] = "s46_3277",
+},
+{
+["recordedBy"] = "Stormclout-Tichondrius",
+["typeInfo"] = {
+["player"] = {
+["class"] = "PRIEST",
+["race"] = "Scourge",
+["name"] = "Theirondruid-Tichondrius",
+["sex"] = 3,
+},
+["event"] = "CHAT_MSG_GUILD",
+["type"] = "GUILD",
+},
+["color"] = {
+["r"] = 0.250980406999588,
+["g"] = 1,
+["b"] = 0.250980406999588,
+},
+["text"] = "|Hchannel:GUILD|h[Guild]|h |Hplayer:Theirondruid-Tichondrius:13:GUILD:|h[|cffffffffTheirondruid|r]|h: 100%",
+["timestamp"] = 1776361200,
+["id"] = "s46_3278",
+},
+{
+["recordedBy"] = "Stormclout-Tichondrius",
+["typeInfo"] = {
+["player"] = {
+["class"] = "DEATHKNIGHT",
+["race"] = "Pandaren",
+["name"] = "Frostyfries-Tichondrius",
+["sex"] = 3,
+},
+["event"] = "CHAT_MSG_GUILD",
+["type"] = "GUILD",
+},
+["color"] = {
+["r"] = 0.250980406999588,
+["g"] = 1,
+["b"] = 0.250980406999588,
+},
+["text"] = "|Hchannel:GUILD|h[Guild]|h |Hplayer:Frostyfries-Tichondrius:14:GUILD:|h[|cffc41e3aFrostyfries|r]|h: there is hope  just gotta out play em as best as u can",
+["timestamp"] = 1776361211,
+["id"] = "s46_3279",
+},
+{
+["recordedBy"] = "Stormclout-Tichondrius",
+["typeInfo"] = {
+["player"] = {
+["class"] = "PRIEST",
+["race"] = "Scourge",
+["name"] = "Theirondruid-Tichondrius",
+["sex"] = 3,
+},
+["event"] = "CHAT_MSG_GUILD",
+["type"] = "GUILD",
+},
+["color"] = {
+["r"] = 0.250980406999588,
+["g"] = 1,
+["b"] = 0.250980406999588,
+},
+["text"] = "|Hchannel:GUILD|h[Guild]|h |Hplayer:Theirondruid-Tichondrius:15:GUILD:|h[|cffffffffTheirondruid|r]|h: imagine warr with ms and slow, and a dk with grips and slow on a shadow priest",
+["timestamp"] = 1776361232,
+["id"] = "s46_3280",
+},
+{
+["recordedBy"] = "Stormclout-Tichondrius",
+["typeInfo"] = {
+["player"] = {
+["class"] = "DEATHKNIGHT",
+["race"] = "Pandaren",
+["name"] = "Frostyfries-Tichondrius",
+["sex"] = 3,
+},
+["event"] = "CHAT_MSG_GUILD",
+["type"] = "GUILD",
+},
+["color"] = {
+["r"] = 0.250980406999588,
+["g"] = 1,
+["b"] = 0.250980406999588,
+},
+["text"] = "|Hchannel:GUILD|h[Guild]|h |Hplayer:Frostyfries-Tichondrius:16:GUILD:|h[|cffc41e3aFrostyfries|r]|h: that be some class",
+["timestamp"] = 1776361251,
+["id"] = "s46_3281",
+},
+{
+["recordedBy"] = "Stormclout-Tichondrius",
+["typeInfo"] = {
+["player"] = {
+["class"] = "DEATHKNIGHT",
+["race"] = "Pandaren",
+["name"] = "Frostyfries-Tichondrius",
+["sex"] = 3,
+},
+["event"] = "CHAT_MSG_GUILD",
+["type"] = "GUILD",
+},
+["color"] = {
+["r"] = 0.250980406999588,
+["g"] = 1,
+["b"] = 0.250980406999588,
+},
+["text"] = "|Hchannel:GUILD|h[Guild]|h |Hplayer:Frostyfries-Tichondrius:17:GUILD:|h[|cffc41e3aFrostyfries|r]|h: lol",
+["timestamp"] = 1776361253,
+["id"] = "s46_3282",
+},
+{
+["recordedBy"] = "Stormclout-Tichondrius",
+["typeInfo"] = {
+["player"] = {
+["class"] = "PRIEST",
+["race"] = "Scourge",
+["name"] = "Theirondruid-Tichondrius",
+["sex"] = 3,
+},
+["event"] = "CHAT_MSG_GUILD",
+["type"] = "GUILD",
+},
+["color"] = {
+["r"] = 0.250980406999588,
+["g"] = 1,
+["b"] = 0.250980406999588,
+},
+["text"] = "|Hchannel:GUILD|h[Guild]|h |Hplayer:Theirondruid-Tichondrius:18:GUILD:|h[|cffffffffTheirondruid|r]|h: all kicks stuns every cc on shadow priest, they will cycle though 2 rotations of their cds before a shadow priest is able to cast anything ",
+["timestamp"] = 1776361260,
+["id"] = "s46_3283",
+},
+{
+["recordedBy"] = "Stormclout-Tichondrius",
+["typeInfo"] = {
+["player"] = {
+["class"] = "PRIEST",
+["race"] = "Scourge",
+["name"] = "Theirondruid-Tichondrius",
+["sex"] = 3,
+},
+["event"] = "CHAT_MSG_GUILD",
+["type"] = "GUILD",
+},
+["color"] = {
+["r"] = 0.250980406999588,
+["g"] = 1,
+["b"] = 0.250980406999588,
+},
+["text"] = "|Hchannel:GUILD|h[Guild]|h |Hplayer:Theirondruid-Tichondrius:19:GUILD:|h[|cffffffffTheirondruid|r]|h: and juke? omg juke what / when . no way to tell now ",
+["timestamp"] = 1776361291,
+["id"] = "s46_3284",
+},
+{
+["recordedBy"] = "Stormclout-Tichondrius",
+["typeInfo"] = {
+["player"] = {
+["class"] = "DEATHKNIGHT",
+["race"] = "Pandaren",
+["name"] = "Frostyfries-Tichondrius",
+["sex"] = 3,
+},
+["event"] = "CHAT_MSG_GUILD",
+["type"] = "GUILD",
+},
+["color"] = {
+["r"] = 0.250980406999588,
+["g"] = 1,
+["b"] = 0.250980406999588,
+},
+["text"] = "|Hchannel:GUILD|h[Guild]|h |Hplayer:Frostyfries-Tichondrius:20:GUILD:|h[|cffc41e3aFrostyfries|r]|h: maybe u have to figure out where ya instances are  in your talents",
+["timestamp"] = 1776361307,
+["id"] = "s46_3285",
+},
+{
+["recordedBy"] = "Stormclout-Tichondrius",
+["typeInfo"] = {
+["player"] = {
+["class"] = "PRIEST",
+["race"] = "Scourge",
+["name"] = "Theirondruid-Tichondrius",
+["sex"] = 3,
+},
+["event"] = "CHAT_MSG_GUILD",
+["type"] = "GUILD",
+},
+["color"] = {
+["r"] = 0.250980406999588,
+["g"] = 1,
+["b"] = 0.250980406999588,
+},
+["text"] = "|Hchannel:GUILD|h[Guild]|h |Hplayer:Theirondruid-Tichondrius:21:GUILD:|h[|cffffffffTheirondruid|r]|h: vs a mele, life is fkin sweet, no need to worry about juke, rush in pop cds and keep people slow / stunned ",
+["timestamp"] = 1776361316,
+["id"] = "s46_3286",
+},
+{
+["recordedBy"] = "Stormclout-Tichondrius",
+["typeInfo"] = {
+["player"] = {
+["class"] = "PRIEST",
+["race"] = "Scourge",
+["name"] = "Theirondruid-Tichondrius",
+["sex"] = 3,
+},
+["event"] = "CHAT_MSG_GUILD",
+["type"] = "GUILD",
+},
+["color"] = {
+["r"] = 0.250980406999588,
+["g"] = 1,
+["b"] = 0.250980406999588,
+},
+["text"] = "|Hchannel:GUILD|h[Guild]|h |Hplayer:Theirondruid-Tichondrius:22:GUILD:|h[|cffffffffTheirondruid|r]|h: out of 1000 solo games, maybe there is me and 1 other shadow priest ",
+["timestamp"] = 1776361357,
+["id"] = "s46_3287",
+},
+{
+["recordedBy"] = "Stormclout-Tichondrius",
+["typeInfo"] = {
+["player"] = {
+["class"] = "DEATHKNIGHT",
+["race"] = "Pandaren",
+["name"] = "Frostyfries-Tichondrius",
+["sex"] = 3,
+},
+["event"] = "CHAT_MSG_GUILD",
+["type"] = "GUILD",
+},
+["color"] = {
+["r"] = 0.250980406999588,
+["g"] = 1,
+["b"] = 0.250980406999588,
+},
+["text"] = "|Hchannel:GUILD|h[Guild]|h |Hplayer:Frostyfries-Tichondrius:23:GUILD:|h[|cffc41e3aFrostyfries|r]|h: melt em down with everything u have ",
+["timestamp"] = 1776361373,
+["id"] = "s46_3288",
+},
+{
+["recordedBy"] = "Stormclout-Tichondrius",
+["typeInfo"] = {
+["player"] = {
+["class"] = "DEATHKNIGHT",
+["race"] = "Pandaren",
+["name"] = "Frostyfries-Tichondrius",
+["sex"] = 3,
+},
+["event"] = "CHAT_MSG_GUILD",
+["type"] = "GUILD",
+},
+["color"] = {
+["r"] = 0.250980406999588,
+["g"] = 1,
+["b"] = 0.250980406999588,
+},
+["text"] = "|Hchannel:GUILD|h[Guild]|h |Hplayer:Frostyfries-Tichondrius:24:GUILD:|h[|cffc41e3aFrostyfries|r]|h: maybe should be played more",
+["timestamp"] = 1776361398,
+["id"] = "s46_3289",
+},
+{
+["recordedBy"] = "Stormclout-Tichondrius",
+["typeInfo"] = {
+["player"] = {
+["class"] = "DEATHKNIGHT",
+["race"] = "Pandaren",
+["name"] = "Frostyfries-Tichondrius",
+["sex"] = 3,
+},
+["event"] = "CHAT_MSG_GUILD",
+["type"] = "GUILD",
+},
+["color"] = {
+["r"] = 0.250980406999588,
+["g"] = 1,
+["b"] = 0.250980406999588,
+},
+["text"] = "|Hchannel:GUILD|h[Guild]|h |Hplayer:Frostyfries-Tichondrius:25:GUILD:|h[|cffc41e3aFrostyfries|r]|h: dont see hardly any",
+["timestamp"] = 1776361410,
+["id"] = "s46_3290",
+},
+{
+["recordedBy"] = "Stormclout-Tichondrius",
+["typeInfo"] = {
+["player"] = {
+["class"] = "DEATHKNIGHT",
+["race"] = "Pandaren",
+["name"] = "Frostyfries-Tichondrius",
+["sex"] = 3,
+},
+["event"] = "CHAT_MSG_GUILD",
+["type"] = "GUILD",
+},
+["color"] = {
+["r"] = 0.250980406999588,
+["g"] = 1,
+["b"] = 0.250980406999588,
+},
+["text"] = "|Hchannel:GUILD|h[Guild]|h |Hplayer:Frostyfries-Tichondrius:27:GUILD:|h[|cffc41e3aFrostyfries|r]|h: see alot of monks and rogues this season",
+["timestamp"] = 1776361447,
+["id"] = "s46_3291",
+},
+{
+["recordedBy"] = "Stormclout-Tichondrius",
+["typeInfo"] = {
+["player"] = {
+["class"] = "DEATHKNIGHT",
+["race"] = "Pandaren",
+["name"] = "Frostyfries-Tichondrius",
+["sex"] = 3,
+},
+["event"] = "CHAT_MSG_GUILD",
+["type"] = "GUILD",
+},
+["color"] = {
+["r"] = 0.250980406999588,
+["g"] = 1,
+["b"] = 0.250980406999588,
+},
+["text"] = "|Hchannel:GUILD|h[Guild]|h |Hplayer:Frostyfries-Tichondrius:28:GUILD:|h[|cffc41e3aFrostyfries|r]|h: outlaw ftw  MW ftw",
+["timestamp"] = 1776361483,
+["id"] = "s46_3292",
+},
+{
+["recordedBy"] = "Stormclout-Tichondrius",
+["typeInfo"] = {
+["player"] = {
+["class"] = "DEATHKNIGHT",
+["race"] = "Pandaren",
+["name"] = "Frostyfries-Tichondrius",
+["sex"] = 3,
+},
+["event"] = "CHAT_MSG_GUILD",
+["type"] = "GUILD",
+},
+["color"] = {
+["r"] = 0.250980406999588,
+["g"] = 1,
+["b"] = 0.250980406999588,
+},
+["text"] = "|Hchannel:GUILD|h[Guild]|h |Hplayer:Frostyfries-Tichondrius:30:GUILD:|h[|cffc41e3aFrostyfries|r]|h: AWC seen alot of em monks ",
+["timestamp"] = 1776361511,
+["id"] = "s46_3293",
+},
+{
+["recordedBy"] = "Stormclout-Tichondrius",
+["typeInfo"] = {
+["player"] = {
+["class"] = "DRUID",
+["race"] = "NightElf",
+["name"] = "Evohsx-Stormrage",
+["sex"] = 3,
+},
+["event"] = "CHAT_MSG_GUILD",
+["type"] = "GUILD",
+},
+["color"] = {
+["r"] = 0.250980406999588,
+["g"] = 1,
+["b"] = 0.250980406999588,
+},
+["text"] = "|Hchannel:GUILD|h[Guild]|h |Hplayer:Evohsx-Stormrage:31:GUILD:|h[|cffff7c0aEvohsx|r]|h: brews best tanks, mist godly healer, wind godly dmg",
+["timestamp"] = 1776361522,
+["id"] = "s46_3294",
+},
+{
+["recordedBy"] = "Stormclout-Tichondrius",
+["typeInfo"] = {
+["player"] = {
+["class"] = "DRUID",
+["race"] = "NightElf",
+["name"] = "Evohsx-Stormrage",
+["sex"] = 3,
+},
+["event"] = "CHAT_MSG_GUILD",
+["type"] = "GUILD",
+},
+["color"] = {
+["r"] = 0.250980406999588,
+["g"] = 1,
+["b"] = 0.250980406999588,
+},
+["text"] = "|Hchannel:GUILD|h[Guild]|h |Hplayer:Evohsx-Stormrage:32:GUILD:|h[|cffff7c0aEvohsx|r]|h: thats why they're in every piece of content",
+["timestamp"] = 1776361538,
+["id"] = "s46_3295",
+},
+{
+["recordedBy"] = "Stormclout-Tichondrius",
+["typeInfo"] = {
+["player"] = {
+["class"] = "DEATHKNIGHT",
+["race"] = "Pandaren",
+["name"] = "Frostyfries-Tichondrius",
+["sex"] = 3,
+},
+["event"] = "CHAT_MSG_GUILD",
+["type"] = "GUILD",
+},
+["color"] = {
+["r"] = 0.250980406999588,
+["g"] = 1,
+["b"] = 0.250980406999588,
+},
+["text"] = "|Hchannel:GUILD|h[Guild]|h |Hplayer:Frostyfries-Tichondrius:34:GUILD:|h[|cffc41e3aFrostyfries|r]|h: everytime i go to do a raid or dungeon i see a Dk Tank",
+["timestamp"] = 1776361579,
+["id"] = "s46_3296",
+},
+{
+["recordedBy"] = "Stormclout-Tichondrius",
+["typeInfo"] = {
+["player"] = {
+["class"] = "WARRIOR",
+["race"] = "Orc",
+["name"] = "Shockkwave-Tichondrius",
+["sex"] = 3,
+},
+["event"] = "CHAT_MSG_GUILD_ACHIEVEMENT",
+["type"] = "GUILD_ACHIEVEMENT",
+},
+["color"] = {
+["r"] = 0.250980406999588,
+["g"] = 1,
+["b"] = 0.250980406999588,
+},
+["text"] = "|Hplayer:Shockkwave-Tichondrius|h[|cffc69b6dShockkwave|r]|h has earned the achievement |cffffff00|Hachievement:61269:Player-11-0E2835EC:1:4:16:26:4294967295:4294967295:4294967295:4294967295|h[Keystone Hero: Maisara Caverns]|h|r!",
+["timestamp"] = 1776361610,
+["id"] = "s46_3297",
+},
+{
+["recordedBy"] = "Stormclout-Tichondrius",
+["typeInfo"] = {
+["player"] = {
+["class"] = "DEATHKNIGHT",
+["race"] = "Pandaren",
+["name"] = "Frostyfries-Tichondrius",
+["sex"] = 3,
+},
+["event"] = "CHAT_MSG_GUILD",
+["type"] = "GUILD",
+},
+["color"] = {
+["r"] = 0.250980406999588,
+["g"] = 1,
+["b"] = 0.250980406999588,
+},
+["text"] = "|Hchannel:GUILD|h[Guild]|h |Hplayer:Frostyfries-Tichondrius:47:GUILD:|h[|cffc41e3aFrostyfries|r]|h: those can absorb alot of damage  dont take much to heal em ",
+["timestamp"] = 1776361615,
+["id"] = "s46_3298",
+},
+{
+["recordedBy"] = "Stormclout-Tichondrius",
+["typeInfo"] = {
+["player"] = {
+["class"] = "PRIEST",
+["race"] = "Scourge",
+["name"] = "Theirondruid-Tichondrius",
+["sex"] = 3,
+},
+["event"] = "CHAT_MSG_GUILD",
+["type"] = "GUILD",
+},
+["color"] = {
+["r"] = 0.250980406999588,
+["g"] = 1,
+["b"] = 0.250980406999588,
+},
+["text"] = "|Hchannel:GUILD|h[Guild]|h |Hplayer:Theirondruid-Tichondrius:49:GUILD:|h[|cffffffffTheirondruid|r]|h: i re rolled a sub rogue, rogues are SOO FUCKING FUN, i pretend to be hurt and slowly run behind a piller, and u know them dumb dumbs wana \"finish the job\" , full kidney and pop cds and erase people. its so fun ",
+["timestamp"] = 1776361631,
+["id"] = "s46_3299",
+},
+{
+["recordedBy"] = "Stormclout-Tichondrius",
+["typeInfo"] = {
+["player"] = {
+["class"] = "MONK",
+["race"] = "Human",
+["name"] = "Stormclout-Tichondrius",
+["sex"] = 3,
+},
+["event"] = "CHAT_MSG_GUILD",
+["type"] = "GUILD",
+},
+["color"] = {
+["r"] = 0.250980406999588,
+["g"] = 1,
+["b"] = 0.250980406999588,
+},
+["text"] = "|Hchannel:GUILD|h[Guild]|h |Hplayer:Stormclout-Tichondrius:50:GUILD:|h[|cff00ff98Stormclout|r]|h: sub rogue went from one of the most complex specs to the most braindead in one patch",
+["timestamp"] = 1776361685,
+["id"] = "s46_3300",
+},
+{
+["recordedBy"] = "Stormclout-Tichondrius",
+["typeInfo"] = {
+["player"] = {
+["class"] = "PRIEST",
+["race"] = "Scourge",
+["name"] = "Theirondruid-Tichondrius",
+["sex"] = 3,
+},
+["event"] = "CHAT_MSG_GUILD",
+["type"] = "GUILD",
+},
+["color"] = {
+["r"] = 0.250980406999588,
+["g"] = 1,
+["b"] = 0.250980406999588,
+},
+["text"] = "|Hchannel:GUILD|h[Guild]|h |Hplayer:Theirondruid-Tichondrius:51:GUILD:|h[|cffffffffTheirondruid|r]|h: but i like shadow priest, i wish i \" matter \" in arena, if you just leave a shadow priest alone and go on the other target, there is nothing i can do to make a difference in outcome ouf the game",
+["timestamp"] = 1776361688,
+["id"] = "s46_3301",
+},
+{
+["recordedBy"] = "Stormclout-Tichondrius",
+["typeInfo"] = {
+["player"] = {
+["class"] = "MONK",
+["race"] = "Human",
+["name"] = "Stormclout-Tichondrius",
+["sex"] = 3,
+},
+["event"] = "CHAT_MSG_GUILD",
+["type"] = "GUILD",
+},
+["color"] = {
+["r"] = 0.250980406999588,
+["g"] = 1,
+["b"] = 0.250980406999588,
+},
+["text"] = "|Hchannel:GUILD|h[Guild]|h |Hplayer:Stormclout-Tichondrius:52:GUILD:|h[|cff00ff98Stormclout|r]|h: pretty wild",
+["timestamp"] = 1776361689,
+["id"] = "s46_3302",
+},
+{
+["recordedBy"] = "Stormclout-Tichondrius",
+["typeInfo"] = {
+["player"] = {
+["class"] = "DRUID",
+["race"] = "NightElf",
+["name"] = "Evohsx-Stormrage",
+["sex"] = 3,
+},
+["event"] = "CHAT_MSG_GUILD",
+["type"] = "GUILD",
+},
+["color"] = {
+["r"] = 0.250980406999588,
+["g"] = 1,
+["b"] = 0.250980406999588,
+},
+["text"] = "|Hchannel:GUILD|h[Guild]|h |Hplayer:Evohsx-Stormrage:53:GUILD:|h[|cffff7c0aEvohsx|r]|h: i rolled char number 8 last night, demo warlock, lots of fun to play as well.  Very satisfying watching so many pets just blast",
+["timestamp"] = 1776361698,
+["id"] = "s46_3303",
+},
+{
+["recordedBy"] = "Stormclout-Tichondrius",
+["typeInfo"] = {
+["player"] = {
+["class"] = "MONK",
+["race"] = "NightElf",
+["name"] = "Lydris-Tichondrius",
+["sex"] = 3,
+},
+["event"] = "CHAT_MSG_GUILD_ACHIEVEMENT",
+["type"] = "GUILD_ACHIEVEMENT",
+},
+["color"] = {
+["r"] = 0.250980406999588,
+["g"] = 1,
+["b"] = 0.250980406999588,
+},
+["text"] = "|Hplayer:Lydris-Tichondrius|h[|cff00ff98Lydris|r]|h has earned the achievement |cffffff00|Hachievement:61490:Player-11-0EA3EAAA:1:4:16:26:4294967295:4294967295:4294967295:4294967295|h[Midnight Season 1: Champion of the Dawn]|h|r!",
+["timestamp"] = 1776361700,
+["id"] = "s46_3304",
+},
+{
+["recordedBy"] = "Stormclout-Tichondrius",
+["typeInfo"] = {
+["player"] = {
+["class"] = "MONK",
+["race"] = "NightElf",
+["name"] = "Lydris-Tichondrius",
+["sex"] = 3,
+},
+["event"] = "CHAT_MSG_GUILD_ACHIEVEMENT",
+["type"] = "GUILD_ACHIEVEMENT",
+},
+["color"] = {
+["r"] = 0.250980406999588,
+["g"] = 1,
+["b"] = 0.250980406999588,
+},
+["text"] = "|Hplayer:Lydris-Tichondrius|h[|cff00ff98Lydris|r]|h has earned the achievement |cffffff00|Hachievement:61256:Player-11-0EA3EAAA:1:4:16:26:4294967295:4294967295:4294967295:4294967295|h[Midnight Keystone Master: Season One]|h|r!",
+["timestamp"] = 1776361700,
+["id"] = "s46_3305",
+},
+{
+["recordedBy"] = "Stormclout-Tichondrius",
+["typeInfo"] = {
+["player"] = {
+["class"] = "DEATHKNIGHT",
+["race"] = "Pandaren",
+["name"] = "Frostyfries-Tichondrius",
+["sex"] = 3,
+},
+["event"] = "CHAT_MSG_GUILD",
+["type"] = "GUILD",
+},
+["color"] = {
+["r"] = 0.250980406999588,
+["g"] = 1,
+["b"] = 0.250980406999588,
+},
+["text"] = "|Hchannel:GUILD|h[Guild]|h |Hplayer:Frostyfries-Tichondrius:56:GUILD:|h[|cffc41e3aFrostyfries|r]|h: Any spec a rogue can do really well",
+["timestamp"] = 1776361701,
+["id"] = "s46_3306",
+},
+{
+["recordedBy"] = "Stormclout-Tichondrius",
+["typeInfo"] = {
+["player"] = {
+["class"] = "MONK",
+["race"] = "Human",
+["name"] = "Stormclout-Tichondrius",
+["sex"] = 3,
+},
+["event"] = "CHAT_MSG_GUILD",
+["type"] = "GUILD",
+},
+["color"] = {
+["r"] = 0.250980406999588,
+["g"] = 1,
+["b"] = 0.250980406999588,
+},
+["text"] = "|Hchannel:GUILD|h[Guild]|h |Hplayer:Stormclout-Tichondrius:57:GUILD:|h[|cff00ff98Stormclout|r]|h: outlaw isn't that great tbh",
+["timestamp"] = 1776361714,
+["id"] = "s46_3307",
+},
+{
+["recordedBy"] = "Stormclout-Tichondrius",
+["typeInfo"] = {
+["player"] = {
+["class"] = "MONK",
+["race"] = "Human",
+["name"] = "Stormclout-Tichondrius",
+["sex"] = 3,
+},
+["event"] = "CHAT_MSG_GUILD",
+["type"] = "GUILD",
+},
+["color"] = {
+["r"] = 0.250980406999588,
+["g"] = 1,
+["b"] = 0.250980406999588,
+},
+["text"] = "|Hchannel:GUILD|h[Guild]|h |Hplayer:Stormclout-Tichondrius:58:GUILD:|h[|cff00ff98Stormclout|r]|h: it was in AWC a lot because tourney realms they can have like 40% vers lol",
+["timestamp"] = 1776361725,
+["id"] = "s46_3308",
+},
+{
+["recordedBy"] = "Stormclout-Tichondrius",
+["typeInfo"] = {
+["player"] = {
+["class"] = "DRUID",
+["race"] = "NightElf",
+["name"] = "Evohsx-Stormrage",
+["sex"] = 3,
+},
+["event"] = "CHAT_MSG_GUILD",
+["type"] = "GUILD",
+},
+["color"] = {
+["r"] = 0.250980406999588,
+["g"] = 1,
+["b"] = 0.250980406999588,
+},
+["text"] = "|Hchannel:GUILD|h[Guild]|h |Hplayer:Evohsx-Stormrage:60:GUILD:|h[|cffff7c0aEvohsx|r]|h: have you watched pika play outlaw?",
+["timestamp"] = 1776361742,
+["id"] = "s46_3309",
+},
+{
+["recordedBy"] = "Stormclout-Tichondrius",
+["typeInfo"] = {
+["player"] = {
+["class"] = "DEATHKNIGHT",
+["race"] = "Pandaren",
+["name"] = "Frostyfries-Tichondrius",
+["sex"] = 3,
+},
+["event"] = "CHAT_MSG_GUILD",
+["type"] = "GUILD",
+},
+["color"] = {
+["r"] = 0.250980406999588,
+["g"] = 1,
+["b"] = 0.250980406999588,
+},
+["text"] = "|Hchannel:GUILD|h[Guild]|h |Hplayer:Frostyfries-Tichondrius:61:GUILD:|h[|cffc41e3aFrostyfries|r]|h: whaazz plays outlaw  #1 rogue",
+["timestamp"] = 1776361743,
+["id"] = "s46_3310",
+},
+{
+["recordedBy"] = "Stormclout-Tichondrius",
+["typeInfo"] = {
+["player"] = {
+["class"] = "MONK",
+["race"] = "Human",
+["name"] = "Stormclout-Tichondrius",
+["sex"] = 3,
+},
+["event"] = "CHAT_MSG_GUILD",
+["type"] = "GUILD",
+},
+["color"] = {
+["r"] = 0.250980406999588,
+["g"] = 1,
+["b"] = 0.250980406999588,
+},
+["text"] = "|Hchannel:GUILD|h[Guild]|h |Hplayer:Stormclout-Tichondrius:62:GUILD:|h[|cff00ff98Stormclout|r]|h: yes, r1 players...",
+["timestamp"] = 1776361752,
+["id"] = "s46_3311",
+},
+{
+["recordedBy"] = "Stormclout-Tichondrius",
+["typeInfo"] = {
+["player"] = {
+["class"] = "MONK",
+["race"] = "Human",
+["name"] = "Stormclout-Tichondrius",
+["sex"] = 3,
+},
+["event"] = "CHAT_MSG_GUILD",
+["type"] = "GUILD",
+},
+["color"] = {
+["r"] = 0.250980406999588,
+["g"] = 1,
+["b"] = 0.250980406999588,
+},
+["text"] = "|Hchannel:GUILD|h[Guild]|h |Hplayer:Stormclout-Tichondrius:63:GUILD:|h[|cff00ff98Stormclout|r]|h: lol",
+["timestamp"] = 1776361754,
+["id"] = "s46_3312",
+},
+{
+["recordedBy"] = "Stormclout-Tichondrius",
+["typeInfo"] = {
+["player"] = {
+["class"] = "DRUID",
+["race"] = "NightElf",
+["name"] = "Evohsx-Stormrage",
+["sex"] = 3,
+},
+["event"] = "CHAT_MSG_GUILD",
+["type"] = "GUILD",
+},
+["color"] = {
+["r"] = 0.250980406999588,
+["g"] = 1,
+["b"] = 0.250980406999588,
+},
+["text"] = "|Hchannel:GUILD|h[Guild]|h |Hplayer:Evohsx-Stormrage:64:GUILD:|h[|cffff7c0aEvohsx|r]|h: well you can't say its not good lol",
+["timestamp"] = 1776361762,
+["id"] = "s46_3313",
+},
+{
+["recordedBy"] = "Stormclout-Tichondrius",
+["typeInfo"] = {
+["player"] = {
+["class"] = "PRIEST",
+["race"] = "Scourge",
+["name"] = "Theirondruid-Tichondrius",
+["sex"] = 3,
+},
+["event"] = "CHAT_MSG_GUILD",
+["type"] = "GUILD",
+},
+["color"] = {
+["r"] = 0.250980406999588,
+["g"] = 1,
+["b"] = 0.250980406999588,
+},
+["text"] = "|Hchannel:GUILD|h[Guild]|h |Hplayer:Theirondruid-Tichondrius:65:GUILD:|h[|cffffffffTheirondruid|r]|h: did you guys see the new boni video? ",
+["timestamp"] = 1776361782,
+["id"] = "s46_3314",
+},
+{
+["recordedBy"] = "Stormclout-Tichondrius",
+["typeInfo"] = {
+["player"] = {
+["class"] = "MONK",
+["race"] = "Human",
+["name"] = "Stormclout-Tichondrius",
+["sex"] = 3,
+},
+["event"] = "CHAT_MSG_GUILD",
+["type"] = "GUILD",
+},
+["color"] = {
+["r"] = 0.250980406999588,
+["g"] = 1,
+["b"] = 0.250980406999588,
+},
+["text"] = "|Hchannel:GUILD|h[Guild]|h |Hplayer:Stormclout-Tichondrius:66:GUILD:|h[|cff00ff98Stormclout|r]|h: AWC is on tourney realms though? where they can max gear out and have 40% vers, you cant do that rn",
+["timestamp"] = 1776361783,
+["id"] = "s46_3315",
+},
+{
+["recordedBy"] = "Stormclout-Tichondrius",
+["typeInfo"] = {
+["player"] = {
+["class"] = "DEATHKNIGHT",
+["race"] = "Pandaren",
+["name"] = "Frostyfries-Tichondrius",
+["sex"] = 3,
+},
+["event"] = "CHAT_MSG_GUILD",
+["type"] = "GUILD",
+},
+["color"] = {
+["r"] = 0.250980406999588,
+["g"] = 1,
+["b"] = 0.250980406999588,
+},
+["text"] = "|Hchannel:GUILD|h[Guild]|h |Hplayer:Frostyfries-Tichondrius:67:GUILD:|h[|cffc41e3aFrostyfries|r]|h: dont tell me outlaw is shit when whaazz shits in cereals asks how it tastes",
+["timestamp"] = 1776361784,
+["id"] = "s46_3316",
+},
+{
+["recordedBy"] = "Stormclout-Tichondrius",
+["typeInfo"] = {
+["player"] = {
+["class"] = "DRUID",
+["race"] = "NightElf",
+["name"] = "Evohsx-Stormrage",
+["sex"] = 3,
+},
+["event"] = "CHAT_MSG_GUILD",
+["type"] = "GUILD",
+},
+["color"] = {
+["r"] = 0.250980406999588,
+["g"] = 1,
+["b"] = 0.250980406999588,
+},
+["text"] = "|Hchannel:GUILD|h[Guild]|h |Hplayer:Evohsx-Stormrage:68:GUILD:|h[|cffff7c0aEvohsx|r]|h: It might not be good for you, or whoever you're  referring to but its definitely strong",
+["timestamp"] = 1776361785,
+["id"] = "s46_3317",
+},
+{
+["recordedBy"] = "Stormclout-Tichondrius",
+["typeInfo"] = {
+["player"] = {
+["class"] = "PRIEST",
+["race"] = "Scourge",
+["name"] = "Theirondruid-Tichondrius",
+["sex"] = 3,
+},
+["event"] = "CHAT_MSG_GUILD",
+["type"] = "GUILD",
+},
+["color"] = {
+["r"] = 0.250980406999588,
+["g"] = 1,
+["b"] = 0.250980406999588,
+},
+["text"] = "|Hchannel:GUILD|h[Guild]|h |Hplayer:Theirondruid-Tichondrius:69:GUILD:|h[|cffffffffTheirondruid|r]|h: about shadow priests? ",
+["timestamp"] = 1776361786,
+["id"] = "s46_3318",
+},
+{
+["recordedBy"] = "Stormclout-Tichondrius",
+["typeInfo"] = {
+["player"] = {
+["class"] = "MONK",
+["race"] = "Human",
+["name"] = "Stormclout-Tichondrius",
+["sex"] = 3,
+},
+["event"] = "CHAT_MSG_GUILD",
+["type"] = "GUILD",
+},
+["color"] = {
+["r"] = 0.250980406999588,
+["g"] = 1,
+["b"] = 0.250980406999588,
+},
+["text"] = "|Hchannel:GUILD|h[Guild]|h |Hplayer:Stormclout-Tichondrius:70:GUILD:|h[|cff00ff98Stormclout|r]|h: well for most people its not good, comparing yourself to a R1 player isnt a good comparison",
+["timestamp"] = 1776361808,
+["id"] = "s46_3319",
+},
+{
+["recordedBy"] = "Stormclout-Tichondrius",
+["typeInfo"] = {
+["player"] = {
+["class"] = "DEATHKNIGHT",
+["race"] = "Pandaren",
+["name"] = "Frostyfries-Tichondrius",
+["sex"] = 3,
+},
+["event"] = "CHAT_MSG_GUILD",
+["type"] = "GUILD",
+},
+["color"] = {
+["r"] = 0.250980406999588,
+["g"] = 1,
+["b"] = 0.250980406999588,
+},
+["text"] = "|Hchannel:GUILD|h[Guild]|h |Hplayer:Frostyfries-Tichondrius:71:GUILD:|h[|cffc41e3aFrostyfries|r]|h: most are playing outlaw",
+["timestamp"] = 1776361809,
+["id"] = "s46_3320",
+},
+{
+["recordedBy"] = "Stormclout-Tichondrius",
+["typeInfo"] = {
+["player"] = {
+["class"] = "MONK",
+["race"] = "Human",
+["name"] = "Stormclout-Tichondrius",
+["sex"] = 3,
+},
+["event"] = "CHAT_MSG_GUILD",
+["type"] = "GUILD",
+},
+["color"] = {
+["r"] = 0.250980406999588,
+["g"] = 1,
+["b"] = 0.250980406999588,
+},
+["text"] = "|Hchannel:GUILD|h[Guild]|h |Hplayer:Stormclout-Tichondrius:72:GUILD:|h[|cff00ff98Stormclout|r]|h: pika and whaaz can play any spec of rogue and murk people ",
+["timestamp"] = 1776361828,
+["id"] = "s46_3321",
+},
+{
+["recordedBy"] = "Stormclout-Tichondrius",
+["typeInfo"] = {
+["player"] = {
+["class"] = "PRIEST",
+["race"] = "Scourge",
+["name"] = "Theirondruid-Tichondrius",
+["sex"] = 3,
+},
+["event"] = "CHAT_MSG_GUILD",
+["type"] = "GUILD",
+},
+["color"] = {
+["r"] = 0.250980406999588,
+["g"] = 1,
+["b"] = 0.250980406999588,
+},
+["text"] = "|Hchannel:GUILD|h[Guild]|h |Hplayer:Theirondruid-Tichondrius:73:GUILD:|h[|cffffffffTheirondruid|r]|h: yes Stormclout, the trolls will just reply well l2p but your right",
+["timestamp"] = 1776361838,
+["id"] = "s46_3322",
+},
+{
+["recordedBy"] = "Stormclout-Tichondrius",
+["typeInfo"] = {
+["player"] = {
+["class"] = "MONK",
+["race"] = "Human",
+["name"] = "Stormclout-Tichondrius",
+["sex"] = 3,
+},
+["event"] = "CHAT_MSG_GUILD",
+["type"] = "GUILD",
+},
+["color"] = {
+["r"] = 0.250980406999588,
+["g"] = 1,
+["b"] = 0.250980406999588,
+},
+["text"] = "|Hchannel:GUILD|h[Guild]|h |Hplayer:Stormclout-Tichondrius:75:GUILD:|h[|cff00ff98Stormclout|r]|h: and its not good in shuffle imo, its a good 3s spec because of coordination and length of game",
+["timestamp"] = 1776361877,
+["id"] = "s46_3323",
+},
+{
+["recordedBy"] = "Stormclout-Tichondrius",
+["typeInfo"] = {
+["player"] = {
+["class"] = "DEATHKNIGHT",
+["race"] = "Pandaren",
+["name"] = "Frostyfries-Tichondrius",
+["sex"] = 3,
+},
+["event"] = "CHAT_MSG_GUILD",
+["type"] = "GUILD",
+},
+["color"] = {
+["r"] = 0.250980406999588,
+["g"] = 1,
+["b"] = 0.250980406999588,
+},
+["text"] = "|Hchannel:GUILD|h[Guild]|h |Hplayer:Frostyfries-Tichondrius:76:GUILD:|h[|cffc41e3aFrostyfries|r]|h: maybe u didnt watch AWC  ",
+["timestamp"] = 1776361878,
+["id"] = "s46_3324",
+},
+{
+["recordedBy"] = "Stormclout-Tichondrius",
+["typeInfo"] = {
+["player"] = {
+["class"] = "DEATHKNIGHT",
+["race"] = "Pandaren",
+["name"] = "Frostyfries-Tichondrius",
+["sex"] = 3,
+},
+["event"] = "CHAT_MSG_GUILD",
+["type"] = "GUILD",
+},
+["color"] = {
+["r"] = 0.250980406999588,
+["g"] = 1,
+["b"] = 0.250980406999588,
+},
+["text"] = "|Hchannel:GUILD|h[Guild]|h |Hplayer:Frostyfries-Tichondrius:78:GUILD:|h[|cffc41e3aFrostyfries|r]|h: Most played outlaw ",
+["timestamp"] = 1776361898,
+["id"] = "s46_3325",
+},
+{
+["recordedBy"] = "Stormclout-Tichondrius",
+["typeInfo"] = {
+["player"] = {
+["class"] = "MONK",
+["race"] = "Human",
+["name"] = "Stormclout-Tichondrius",
+["sex"] = 3,
+},
+["event"] = "CHAT_MSG_GUILD",
+["type"] = "GUILD",
+},
+["color"] = {
+["r"] = 0.250980406999588,
+["g"] = 1,
+["b"] = 0.250980406999588,
+},
+["text"] = "|Hchannel:GUILD|h[Guild]|h |Hplayer:Stormclout-Tichondrius:79:GUILD:|h[|cff00ff98Stormclout|r]|h: i did watch awc... which again, is on a tourney realm with R1 players, and max conq gear (40% vers stacked outlaws)",
+["timestamp"] = 1776361899,
+["id"] = "s46_3326",
+},
+{
+["recordedBy"] = "Stormclout-Tichondrius",
+["typeInfo"] = {
+["player"] = {
+["class"] = "MONK",
+["race"] = "Human",
+["name"] = "Stormclout-Tichondrius",
+["sex"] = 3,
+},
+["event"] = "CHAT_MSG_GUILD",
+["type"] = "GUILD",
+},
+["color"] = {
+["r"] = 0.250980406999588,
+["g"] = 1,
+["b"] = 0.250980406999588,
+},
+["text"] = "|Hchannel:GUILD|h[Guild]|h |Hplayer:Stormclout-Tichondrius:80:GUILD:|h[|cff00ff98Stormclout|r]|h: maybe you didnt read my previous statements",
+["timestamp"] = 1776361909,
+["id"] = "s46_3327",
+},
+{
+["recordedBy"] = "Stormclout-Tichondrius",
+["typeInfo"] = {
+["player"] = {
+["class"] = "DEATHKNIGHT",
+["race"] = "Pandaren",
+["name"] = "Frostyfries-Tichondrius",
+["sex"] = 3,
+},
+["event"] = "CHAT_MSG_GUILD",
+["type"] = "GUILD",
+},
+["color"] = {
+["r"] = 0.250980406999588,
+["g"] = 1,
+["b"] = 0.250980406999588,
+},
+["text"] = "|Hchannel:GUILD|h[Guild]|h |Hplayer:Frostyfries-Tichondrius:82:GUILD:|h[|cffc41e3aFrostyfries|r]|h: i read what u said Storm",
+["timestamp"] = 1776361935,
+["id"] = "s46_3328",
+},
+{
+["recordedBy"] = "Stormclout-Tichondrius",
+["typeInfo"] = {
+["player"] = {
+["class"] = "MONK",
+["race"] = "Human",
+["name"] = "Stormclout-Tichondrius",
+["sex"] = 3,
+},
+["event"] = "CHAT_MSG_GUILD",
+["type"] = "GUILD",
+},
+["color"] = {
+["r"] = 0.250980406999588,
+["g"] = 1,
+["b"] = 0.250980406999588,
+},
+["text"] = "|Hchannel:GUILD|h[Guild]|h |Hplayer:Stormclout-Tichondrius:83:GUILD:|h[|cff00ff98Stormclout|r]|h: just chose to ignore it? xd",
+["timestamp"] = 1776361946,
+["id"] = "s46_3329",
+},
+{
+["recordedBy"] = "Stormclout-Tichondrius",
+["typeInfo"] = {
+["player"] = {
+["class"] = "DEATHKNIGHT",
+["race"] = "Pandaren",
+["name"] = "Frostyfries-Tichondrius",
+["sex"] = 3,
+},
+["event"] = "CHAT_MSG_GUILD",
+["type"] = "GUILD",
+},
+["color"] = {
+["r"] = 0.250980406999588,
+["g"] = 1,
+["b"] = 0.250980406999588,
+},
+["text"] = "|Hchannel:GUILD|h[Guild]|h |Hplayer:Frostyfries-Tichondrius:85:GUILD:|h[|cffc41e3aFrostyfries|r]|h: both take out people",
+["timestamp"] = 1776361950,
+["id"] = "s46_3330",
+},
+{
+["recordedBy"] = "Stormclout-Tichondrius",
+["typeInfo"] = {
+["player"] = {
+["class"] = "MONK",
+["race"] = "Human",
+["name"] = "Stormclout-Tichondrius",
+["sex"] = 3,
+},
+["event"] = "CHAT_MSG_GUILD",
+["type"] = "GUILD",
+},
+["color"] = {
+["r"] = 0.250980406999588,
+["g"] = 1,
+["b"] = 0.250980406999588,
+},
+["text"] = "|Hchannel:GUILD|h[Guild]|h |Hplayer:Stormclout-Tichondrius:86:GUILD:|h[|cff00ff98Stormclout|r]|h: hey man i mean, if its so good just spin one up and hit 1800+ in it in shuffle",
+["timestamp"] = 1776361971,
+["id"] = "s46_3331",
+},
+{
+["recordedBy"] = "Stormclout-Tichondrius",
+["typeInfo"] = {
+["player"] = {
+["class"] = "MONK",
+["race"] = "Human",
+["name"] = "Stormclout-Tichondrius",
+["sex"] = 3,
+},
+["event"] = "CHAT_MSG_GUILD",
+["type"] = "GUILD",
+},
+["color"] = {
+["r"] = 0.250980406999588,
+["g"] = 1,
+["b"] = 0.250980406999588,
+},
+["text"] = "|Hchannel:GUILD|h[Guild]|h |Hplayer:Stormclout-Tichondrius:88:GUILD:|h[|cff00ff98Stormclout|r]|h: surely the stat distribution of sub vs outlaws in shuffle will back that up",
+["timestamp"] = 1776361995,
+["id"] = "s46_3332",
+},
+{
+["recordedBy"] = "Stormclout-Tichondrius",
+["typeInfo"] = {
+["player"] = {
+["name"] = "Ban-Lu",
+},
+["event"] = "CHAT_MSG_MONSTER_SAY",
+["type"] = "MONSTER_SAY",
+},
+["color"] = {
+["r"] = 1,
+["g"] = 1,
+["b"] = 0.6235294342041016,
+},
+["text"] = "Ban-Lu says: Good to see you again, Grandmaster.",
+["timestamp"] = 1776362000,
+["id"] = "s46_3333",
+},
+{
+["recordedBy"] = "Stormclout-Tichondrius",
+["typeInfo"] = {
+["player"] = {
+["class"] = "DEATHKNIGHT",
+["race"] = "Pandaren",
+["name"] = "Frostyfries-Tichondrius",
+["sex"] = 3,
+},
+["event"] = "CHAT_MSG_GUILD",
+["type"] = "GUILD",
+},
+["color"] = {
+["r"] = 0.250980406999588,
+["g"] = 1,
+["b"] = 0.250980406999588,
+},
+["text"] = "|Hchannel:GUILD|h[Guild]|h |Hplayer:Frostyfries-Tichondrius:91:GUILD:|h[|cffc41e3aFrostyfries|r]|h: i say play whatever u want   im just saying outlaw is been really good so far",
+["timestamp"] = 1776362004,
+["id"] = "s46_3334",
+},
+{
+["recordedBy"] = "Stormclout-Tichondrius",
+["typeInfo"] = {
+["player"] = {
+["class"] = "MONK",
+["race"] = "Human",
+["name"] = "Stormclout-Tichondrius",
+["sex"] = 3,
+},
+["event"] = "CHAT_MSG_GUILD",
+["type"] = "GUILD",
+},
+["color"] = {
+["r"] = 0.250980406999588,
+["g"] = 1,
+["b"] = 0.250980406999588,
+},
+["text"] = "|Hchannel:GUILD|h[Guild]|h |Hplayer:Stormclout-Tichondrius:94:GUILD:|h[|cff00ff98Stormclout|r]|h: in a vacuum, of r1 players in coordinated 3s and max gear, i agree",
+["timestamp"] = 1776362020,
+["id"] = "s46_3335",
+},
+{
+["recordedBy"] = "Stormclout-Tichondrius",
+["typeInfo"] = {
+["player"] = {
+["class"] = "MONK",
+["race"] = "Human",
+["name"] = "Stormclout-Tichondrius",
+["sex"] = 3,
+},
+["event"] = "CHAT_MSG_GUILD",
+["type"] = "GUILD",
+},
+["color"] = {
+["r"] = 0.250980406999588,
+["g"] = 1,
+["b"] = 0.250980406999588,
+},
+["text"] = "|Hchannel:GUILD|h[Guild]|h |Hplayer:Stormclout-Tichondrius:95:GUILD:|h[|cff00ff98Stormclout|r]|h: can you hit 1800 with it as a decent or normal player? maybe, can you do it 3x easier at least with sub? yes",
+["timestamp"] = 1776362058,
+["id"] = "s46_3336",
+},
+{
+["recordedBy"] = "Stormclout-Tichondrius",
+["typeInfo"] = {
+["player"] = {
+["name"] = "Ban-Lu",
+},
+["event"] = "CHAT_MSG_MONSTER_SAY",
+["type"] = "MONSTER_SAY",
+},
+["color"] = {
+["r"] = 1,
+["g"] = 1,
+["b"] = 0.6235294342041016,
+},
+["text"] = "Ban-Lu says: The lazy yak never gets washed.",
+["timestamp"] = 1776362116,
+["id"] = "s46_3337",
+},
+{
+["recordedBy"] = "Stormclout-Tichondrius",
+["typeInfo"] = {
+["player"] = {
+["name"] = "Ban-Lu",
+},
+["event"] = "CHAT_MSG_MONSTER_SAY",
+["type"] = "MONSTER_SAY",
+},
+["color"] = {
+["r"] = 1,
+["g"] = 1,
+["b"] = 0.6235294342041016,
+},
+["text"] = "Ban-Lu says: The wise brewmaster recognizes the importance of taking a drink... and the importance of stopping before the drink takes the brewmaster.",
+["timestamp"] = 1776362179,
+["id"] = "s46_3338",
+},
+{
+["recordedBy"] = "Stormclout-Tichondrius",
+["typeInfo"] = {
+["player"] = {
+["class"] = "PALADIN",
+["race"] = "Tauren",
+["name"] = "Xzanep-Illidan",
+["sex"] = 2,
+},
+["event"] = "CHAT_MSG_GUILD_ACHIEVEMENT",
+["type"] = "GUILD_ACHIEVEMENT",
+},
+["color"] = {
+["r"] = 0.250980406999588,
+["g"] = 1,
+["b"] = 0.250980406999588,
+},
+["text"] = "|Hplayer:Xzanep-Illidan|h[|cfff48cbaXzanep-Illidan|r]|h has earned the achievement |cffffff00|Hachievement:9102:Player-57-0CD599C3:1:4:16:26:4294967295:4294967295:4294967295:4294967295|h[Ashran Victory]|h|r!",
+["timestamp"] = 1776362214,
+["id"] = "s46_3339",
+},
+{
+["recordedBy"] = "Stormclout-Tichondrius",
+["typeInfo"] = {
+["player"] = {
+["name"] = "Ban-Lu",
+},
+["event"] = "CHAT_MSG_MONSTER_SAY",
+["type"] = "MONSTER_SAY",
+},
+["color"] = {
+["r"] = 1,
+["g"] = 1,
+["b"] = 0.6235294342041016,
+},
+["text"] = "Ban-Lu says: Good luck, Grandmaster!",
+["timestamp"] = 1776362225,
+["id"] = "s46_3340",
+},
+{
+["recordedBy"] = "Stormclout-Tichondrius",
+["typeInfo"] = {
+["player"] = {
+["race"] = "Scourge",
+["class"] = "WARLOCK",
+["name"] = "Brickedup-Kel'Thuzad",
+["sex"] = 2,
+},
+["event"] = "CHAT_MSG_GUILD_ACHIEVEMENT",
+["type"] = "GUILD_ACHIEVEMENT",
+},
+["color"] = {
+["b"] = 0.250980406999588,
+["g"] = 1,
+["r"] = 0.250980406999588,
+},
+["text"] = "|Hplayer:Brickedup-Kel'Thuzad|h[|cff8788eeBrickedup-Kel'Thuzad|r]|h has earned the achievement |cffffff00|Hachievement:11183:Player-3693-0EDA3D70:1:4:16:26:4294967295:4294967295:4294967295:4294967295|h[Keystone Initiate]|h|r!",
+["id"] = "s46_3341",
+["timestamp"] = 1776362596,
+},
+{
+["recordedBy"] = "Stormclout-Tichondrius",
+["typeInfo"] = {
+["player"] = {
+["race"] = "NightElf",
+["class"] = "DRUID",
+["name"] = "Dragmaa-Stormrage",
+["sex"] = 2,
+},
+["event"] = "CHAT_MSG_GUILD_ACHIEVEMENT",
+["type"] = "GUILD_ACHIEVEMENT",
+},
+["color"] = {
+["b"] = 0.250980406999588,
+["g"] = 1,
+["r"] = 0.250980406999588,
+},
+["text"] = "|Hplayer:Dragmaa-Stormrage|h[|cffff7c0aDragmaa-Stormrage|r]|h has earned the achievement |cffffff00|Hachievement:11162:Player-60-0F72EDC7:1:4:16:26:4294967295:4294967295:4294967295:4294967295|h[Keystone Master]|h|r!",
+["id"] = "s46_3342",
+["timestamp"] = 1776362613,
+},
+{
+["recordedBy"] = "Stormclout-Tichondrius",
+["typeInfo"] = {
+["player"] = {
+["race"] = "NightElf",
+["class"] = "DRUID",
+["name"] = "Dragmaa-Stormrage",
+["sex"] = 2,
+},
+["event"] = "CHAT_MSG_GUILD_ACHIEVEMENT",
+["type"] = "GUILD_ACHIEVEMENT",
+},
+["color"] = {
+["b"] = 0.250980406999588,
+["g"] = 1,
+["r"] = 0.250980406999588,
+},
+["text"] = "|Hplayer:Dragmaa-Stormrage|h[|cffff7c0aDragmaa-Stormrage|r]|h has earned the achievement |cffffff00|Hachievement:61267:Player-60-0F72EDC7:1:4:16:26:4294967295:4294967295:4294967295:4294967295|h[Keystone Hero: Magisters' Terrace]|h|r!",
+["id"] = "s46_3343",
+["timestamp"] = 1776362613,
+},
+{
+["recordedBy"] = "Stormclout-Tichondrius",
+["typeInfo"] = {
+["player"] = {
+["race"] = "Tauren",
+["class"] = "PALADIN",
+["name"] = "Xzanep-Illidan",
+["sex"] = 2,
+},
+["event"] = "CHAT_MSG_GUILD_ACHIEVEMENT",
+["type"] = "GUILD_ACHIEVEMENT",
+},
+["color"] = {
+["b"] = 0.250980406999588,
+["g"] = 1,
+["r"] = 0.250980406999588,
+},
+["text"] = "|Hplayer:Xzanep-Illidan|h[|cfff48cbaXzanep-Illidan|r]|h has earned the achievement |cffffff00|Hachievement:61686:Player-57-0CD599C3:1:4:16:26:4294967295:4294967295:4294967295:4294967295|h[Expert in Battle]|h|r!",
+["id"] = "s46_3344",
+["timestamp"] = 1776365268,
+},
+{
+["recordedBy"] = "Starphage-Tichondrius",
+["typeInfo"] = {
+["player"] = {
+["name"] = "Silvermoon Guard",
+},
+["event"] = "CHAT_MSG_MONSTER_EMOTE",
+["type"] = "MONSTER_EMOTE",
+},
+["color"] = {
+["r"] = 1,
+["g"] = 0.501960813999176,
+["b"] = 0.250980406999588,
+},
+["text"] = "The nearby guard glares at you and the void energy that you surround yourself with.",
+["timestamp"] = 1776365611,
+["id"] = "s46_3345",
+},
+{
+["recordedBy"] = "Starphage-Tichondrius",
+["typeInfo"] = {
+["player"] = {
+["class"] = "DEMONHUNTER",
+["race"] = "VoidElf",
+["name"] = "Starphage",
+["sex"] = 3,
+},
+["event"] = "CHAT_MSG_MONSTER_EMOTE",
+["type"] = "MONSTER_EMOTE",
+},
+["color"] = {
+["r"] = 1,
+["g"] = 0.501960813999176,
+["b"] = 0.250980406999588,
+},
+["text"] = "You sense a nearby Skyriding Glyph.",
+["timestamp"] = 1776365688,
+["id"] = "s46_3346",
+},
+{
+["recordedBy"] = "Starphage-Tichondrius",
+["typeInfo"] = {
+["player"] = {
+["class"] = "HUNTER",
+["race"] = "NightElf",
+["name"] = "Kachiko-Korialstrasz",
+["sex"] = 3,
+},
+["event"] = "CHAT_MSG_LOOT",
+["type"] = "LOOT",
+},
+["color"] = {
+["r"] = -0,
+["g"] = 0.6666666865348816,
+["b"] = -0,
+},
+["text"] = "Kachiko-Korialstrasz receives loot: |cnIQ1:|T7549241:12|t|Hitem:238511::::::::90:1480::::1:38:13:::::|h[Void-Tempered Leather |A:Professions-ChatIcon-Quality-12-Tier1:17:15::1|a]|h|r.",
+["timestamp"] = 1776365709,
+["id"] = "s46_3347",
+},
+{
+["recordedBy"] = "Starphage-Tichondrius",
+["typeInfo"] = {
+["player"] = {
+["class"] = "HUNTER",
+["race"] = "NightElf",
+["name"] = "Kachiko-Korialstrasz",
+["sex"] = 3,
+},
+["event"] = "CHAT_MSG_LOOT",
+["type"] = "LOOT",
+},
+["color"] = {
+["r"] = -0,
+["g"] = 0.6666666865348816,
+["b"] = -0,
+},
+["text"] = "Kachiko-Korialstrasz receives loot: |cnIQ3:|T5931379:12|t|Hitem:238625::::::::90:1480:::::::::|h[Fine Void-Tempered Hide]|h|r.",
+["timestamp"] = 1776365709,
+["id"] = "s46_3348",
+},
+{
+["recordedBy"] = "Starphage-Tichondrius",
+["typeInfo"] = {
+["player"] = {
+["class"] = "EVOKER",
+["race"] = "Dracthyr",
+["name"] = "Iloani-Illidan",
+["sex"] = 3,
+},
+["event"] = "CHAT_MSG_LOOT",
+["type"] = "LOOT",
+},
+["color"] = {
+["r"] = -0,
+["g"] = 0.6666666865348816,
+["b"] = -0,
+},
+["text"] = "Iloani-Illidan receives loot: |cnIQ0:|T134339:12|t|Hitem:260614::::::::90:1480:::::::::|h[Unrecognizable Organ]|h|r.",
+["timestamp"] = 1776365710,
+["id"] = "s46_3349",
+},
+{
+["recordedBy"] = "Starphage-Tichondrius",
+["typeInfo"] = {
+["player"] = {
+["class"] = "HUNTER",
+["race"] = "NightElf",
+["name"] = "Kachiko-Korialstrasz",
+["sex"] = 3,
+},
+["event"] = "CHAT_MSG_LOOT",
+["type"] = "LOOT",
+},
+["color"] = {
+["r"] = -0,
+["g"] = 0.6666666865348816,
+["b"] = -0,
+},
+["text"] = "Kachiko-Korialstrasz receives loot: |cnIQ1:|T7549241:12|t|Hitem:238511::::::::90:1480::::1:38:13:::::|h[Void-Tempered Leather |A:Professions-ChatIcon-Quality-12-Tier1:17:15::1|a]|h|rx2.",
+["timestamp"] = 1776365711,
+["id"] = "s46_3350",
+},
+{
+["recordedBy"] = "Starphage-Tichondrius",
+["typeInfo"] = {
+["player"] = {
+["class"] = "MAGE",
+["race"] = "Human",
+["name"] = "Xica-Dalaran",
+["sex"] = 3,
+},
+["event"] = "CHAT_MSG_RAID",
+["type"] = "RAID",
+},
+["color"] = {
+["r"] = 1,
+["g"] = 0.4980392456054688,
+["b"] = -0,
+},
+["text"] = "|Hchannel:RAID|h[Raid]|h |Hplayer:Xica-Dalaran:67:RAID:|h[|cff3fc7ebXica-Dalaran|r]|h: gotta repair",
+["timestamp"] = 1776365713,
+["id"] = "s46_3351",
+},
+{
+["recordedBy"] = "Starphage-Tichondrius",
+["typeInfo"] = {
+["player"] = {
+["class"] = "HUNTER",
+["race"] = "NightElf",
+["name"] = "Kachiko-Korialstrasz",
+["sex"] = 3,
+},
+["event"] = "CHAT_MSG_LOOT",
+["type"] = "LOOT",
+},
+["color"] = {
+["r"] = -0,
+["g"] = 0.6666666865348816,
+["b"] = -0,
+},
+["text"] = "Kachiko-Korialstrasz receives loot: |cnIQ1:|T7549241:12|t|Hitem:238511::::::::90:1480::::1:38:13:::::|h[Void-Tempered Leather |A:Professions-ChatIcon-Quality-12-Tier1:17:15::1|a]|h|rx2.",
+["timestamp"] = 1776365714,
+["id"] = "s46_3352",
+},
+{
+["recordedBy"] = "Starphage-Tichondrius",
+["typeInfo"] = {
+["player"] = {
+["class"] = "HUNTER",
+["race"] = "NightElf",
+["name"] = "Kachiko-Korialstrasz",
+["sex"] = 3,
+},
+["event"] = "CHAT_MSG_LOOT",
+["type"] = "LOOT",
+},
+["color"] = {
+["r"] = -0,
+["g"] = 0.6666666865348816,
+["b"] = -0,
+},
+["text"] = "Kachiko-Korialstrasz receives loot: |cnIQ1:|T7549241:12|t|Hitem:238511::::::::90:1480::::1:38:13:::::|h[Void-Tempered Leather |A:Professions-ChatIcon-Quality-12-Tier1:17:15::1|a]|h|r.",
+["timestamp"] = 1776365716,
+["id"] = "s46_3353",
+},
+{
+["recordedBy"] = "Starphage-Tichondrius",
+["typeInfo"] = {
+["player"] = {
+["class"] = "HUNTER",
+["race"] = "NightElf",
+["name"] = "Kachiko-Korialstrasz",
+["sex"] = 3,
+},
+["event"] = "CHAT_MSG_LOOT",
+["type"] = "LOOT",
+},
+["color"] = {
+["r"] = -0,
+["g"] = 0.6666666865348816,
+["b"] = -0,
+},
+["text"] = "Kachiko-Korialstrasz receives loot: |cnIQ1:|T7549241:12|t|Hitem:238511::::::::90:1480::::1:38:13:::::|h[Void-Tempered Leather |A:Professions-ChatIcon-Quality-12-Tier1:17:15::1|a]|h|rx2.",
+["timestamp"] = 1776365719,
+["id"] = "s46_3354",
+},
+{
+["recordedBy"] = "Starphage-Tichondrius",
+["typeInfo"] = {
+["player"] = {
+["class"] = "DEMONHUNTER",
+["race"] = "BloodElf",
+["name"] = "Errìs-WyrmrestAccord",
+["sex"] = 3,
+},
+["event"] = "CHAT_MSG_LOOT",
+["type"] = "LOOT",
+},
+["color"] = {
+["r"] = -0,
+["g"] = 0.6666666865348816,
+["b"] = -0,
+},
+["text"] = "Errìs-WyrmrestAccord receives loot: |cnIQ0:|T134339:12|t|Hitem:260614::::::::90:1480:::::::::|h[Unrecognizable Organ]|h|r.",
+["timestamp"] = 1776365719,
+["id"] = "s46_3355",
+},
+{
+["recordedBy"] = "Starphage-Tichondrius",
+["typeInfo"] = {
+["player"] = {
+["class"] = "DEMONHUNTER",
+["race"] = "BloodElf",
+["name"] = "Errìs-WyrmrestAccord",
+["sex"] = 3,
+},
+["event"] = "CHAT_MSG_LOOT",
+["type"] = "LOOT",
+},
+["color"] = {
+["r"] = -0,
+["g"] = 0.6666666865348816,
+["b"] = -0,
+},
+["text"] = "Errìs-WyrmrestAccord receives loot: |cnIQ0:|T237376:12|t|Hitem:260636::::::::90:1480:::::::::|h[Algae Covered Stone]|h|r.",
+["timestamp"] = 1776365719,
+["id"] = "s46_3356",
+},
+{
+["recordedBy"] = "Starphage-Tichondrius",
+["typeInfo"] = {
+["player"] = {
+["class"] = "DEATHKNIGHT",
+["race"] = "Troll",
+["name"] = "Nexdemise-Mal'Ganis",
+["sex"] = 3,
+},
+["event"] = "CHAT_MSG_RAID",
+["type"] = "RAID",
+},
+["color"] = {
+["r"] = 1,
+["g"] = 0.4980392456054688,
+["b"] = -0,
+},
+["text"] = "|Hchannel:RAID|h[Raid]|h |Hplayer:Nexdemise-Mal'Ganis:73:RAID:|h[|cffc41e3aNexdemise-Mal'Ganis|r]|h: i have hammer",
+["timestamp"] = 1776365721,
+["id"] = "s46_3357",
+},
+{
+["recordedBy"] = "Starphage-Tichondrius",
+["typeInfo"] = {
+["player"] = {
+["class"] = "DEMONHUNTER",
+["race"] = "BloodElf",
+["name"] = "Errìs-WyrmrestAccord",
+["sex"] = 3,
+},
+["event"] = "CHAT_MSG_LOOT",
+["type"] = "LOOT",
+},
+["color"] = {
+["r"] = -0,
+["g"] = 0.6666666865348816,
+["b"] = -0,
+},
+["text"] = "Errìs-WyrmrestAccord receives loot: |cnIQ1:|T7549241:12|t|Hitem:238511::::::::90:1480::::1:38:13:::::|h[Void-Tempered Leather |A:Professions-ChatIcon-Quality-12-Tier1:17:15::1|a]|h|r.",
+["timestamp"] = 1776365723,
+["id"] = "s46_3358",
+},
+{
+["recordedBy"] = "Starphage-Tichondrius",
+["typeInfo"] = {
+["player"] = {
+["class"] = "DEMONHUNTER",
+["race"] = "BloodElf",
+["name"] = "Errìs-WyrmrestAccord",
+["sex"] = 3,
+},
+["event"] = "CHAT_MSG_LOOT",
+["type"] = "LOOT",
+},
+["color"] = {
+["r"] = -0,
+["g"] = 0.6666666865348816,
+["b"] = -0,
+},
+["text"] = "Errìs-WyrmrestAccord receives loot: |cnIQ1:|T7549241:12|t|Hitem:238511::::::::90:1480::::1:38:13:::::|h[Void-Tempered Leather |A:Professions-ChatIcon-Quality-12-Tier1:17:15::1|a]|h|rx2.",
+["timestamp"] = 1776365725,
+["id"] = "s46_3359",
+},
+{
+["recordedBy"] = "Starphage-Tichondrius",
+["typeInfo"] = {
+["player"] = {
+["class"] = "DEMONHUNTER",
+["race"] = "BloodElf",
+["name"] = "Errìs-WyrmrestAccord",
+["sex"] = 3,
+},
+["event"] = "CHAT_MSG_LOOT",
+["type"] = "LOOT",
+},
+["color"] = {
+["r"] = -0,
+["g"] = 0.6666666865348816,
+["b"] = -0,
+},
+["text"] = "Errìs-WyrmrestAccord receives loot: |cnIQ1:|T7549241:12|t|Hitem:238511::::::::90:1480::::1:38:13:::::|h[Void-Tempered Leather |A:Professions-ChatIcon-Quality-12-Tier1:17:15::1|a]|h|rx2.",
+["timestamp"] = 1776365728,
+["id"] = "s46_3360",
+},
+{
+["recordedBy"] = "Starphage-Tichondrius",
+["typeInfo"] = {
+["player"] = {
+["class"] = "MONK",
+["race"] = "NightElf",
+["name"] = "Modani-MoonGuard",
+["sex"] = 3,
+},
+["event"] = "CHAT_MSG_LOOT",
+["type"] = "LOOT",
+},
+["color"] = {
+["r"] = -0,
+["g"] = 0.6666666865348816,
+["b"] = -0,
+},
+["text"] = "Modani-MoonGuard receives loot: |cnIQ0:|T7137505:12|t|Hitem:260659::::::::90:1480:::::::::|h[Stellar Vortex Residue]|h|r.",
+["timestamp"] = 1776365731,
+["id"] = "s46_3361",
+},
+{
+["recordedBy"] = "Starphage-Tichondrius",
+["typeInfo"] = {
+["player"] = {
+["class"] = "PALADIN",
+["race"] = "DarkIronDwarf",
+["name"] = "Holygrease-Area52",
+["sex"] = 2,
+},
+["event"] = "CHAT_MSG_RAID",
+["type"] = "RAID",
+},
+["color"] = {
+["r"] = 1,
+["g"] = 0.4980392456054688,
+["b"] = -0,
+},
+["text"] = "|Hchannel:RAID|h[Raid]|h |Hplayer:Holygrease-Area52:78:RAID:|h[|cfff48cbaHolygrease-Area52|r]|h: can just mount up outside",
+["timestamp"] = 1776365732,
+["id"] = "s46_3362",
+},
+{
+["recordedBy"] = "Starphage-Tichondrius",
+["typeInfo"] = {
+["player"] = {
+["class"] = "DEMONHUNTER",
+["race"] = "BloodElf",
+["name"] = "Errìs-WyrmrestAccord",
+["sex"] = 3,
+},
+["event"] = "CHAT_MSG_LOOT",
+["type"] = "LOOT",
+},
+["color"] = {
+["r"] = -0,
+["g"] = 0.6666666865348816,
+["b"] = -0,
+},
+["text"] = "Errìs-WyrmrestAccord receives loot: |cnIQ1:|T7549241:12|t|Hitem:238511::::::::90:1480::::1:38:13:::::|h[Void-Tempered Leather |A:Professions-ChatIcon-Quality-12-Tier1:17:15::1|a]|h|rx2.",
+["timestamp"] = 1776365733,
+["id"] = "s46_3363",
+},
+{
+["recordedBy"] = "Starphage-Tichondrius",
+["typeInfo"] = {
+["player"] = {
+["class"] = "DEMONHUNTER",
+["race"] = "BloodElf",
+["name"] = "Errìs-WyrmrestAccord",
+["sex"] = 3,
+},
+["event"] = "CHAT_MSG_LOOT",
+["type"] = "LOOT",
+},
+["color"] = {
+["r"] = -0,
+["g"] = 0.6666666865348816,
+["b"] = -0,
+},
+["text"] = "Errìs-WyrmrestAccord receives loot: |cnIQ1:|T7549241:12|t|Hitem:238512::::::::90:1480::::1:38:14:::::|h[Void-Tempered Leather |A:Professions-ChatIcon-Quality-12-Tier2:17:15::1|a]|h|rx2.",
+["timestamp"] = 1776365736,
+["id"] = "s46_3364",
+},
+{
+["recordedBy"] = "Starphage-Tichondrius",
+["typeInfo"] = {
+["player"] = {
+["class"] = "DEMONHUNTER",
+["race"] = "BloodElf",
+["name"] = "Errìs-WyrmrestAccord",
+["sex"] = 3,
+},
+["event"] = "CHAT_MSG_LOOT",
+["type"] = "LOOT",
+},
+["color"] = {
+["r"] = -0,
+["g"] = 0.6666666865348816,
+["b"] = -0,
+},
+["text"] = "Errìs-WyrmrestAccord receives loot: |cnIQ4:|T2032172:12|t|Hitem:238626::::::::90:1480:::::::::|h[Mana-Infused Bone]|h|r.",
+["timestamp"] = 1776365736,
+["id"] = "s46_3365",
+},
+{
+["recordedBy"] = "Starphage-Tichondrius",
+["typeInfo"] = {
+["player"] = {
+["class"] = "DEMONHUNTER",
+["race"] = "BloodElf",
+["name"] = "Errìs-WyrmrestAccord",
+["sex"] = 3,
+},
+["event"] = "CHAT_MSG_LOOT",
+["type"] = "LOOT",
+},
+["color"] = {
+["r"] = -0,
+["g"] = 0.6666666865348816,
+["b"] = -0,
+},
+["text"] = "Errìs-WyrmrestAccord receives loot: |cnIQ1:|T7549241:12|t|Hitem:238512::::::::90:1480::::1:38:14:::::|h[Void-Tempered Leather |A:Professions-ChatIcon-Quality-12-Tier2:17:15::1|a]|h|r.",
+["timestamp"] = 1776365740,
+["id"] = "s46_3366",
+},
+{
+["recordedBy"] = "Starphage-Tichondrius",
+["typeInfo"] = {
+["player"] = {
+["class"] = "DEMONHUNTER",
+["race"] = "VoidElf",
+["name"] = "Starphage-Tichondrius",
+["sex"] = 3,
+},
+["event"] = "CHAT_MSG_LOOT",
+["type"] = "LOOT",
+},
+["color"] = {
+["r"] = -0,
+["g"] = 0.6666666865348816,
+["b"] = -0,
+},
+["text"] = "You receive item: |cnIQ1:|T538745:12|t|Hitem:5512::::::::90:1480::3:::::::|h[Healthstone]|h|r",
+["timestamp"] = 1776365740,
+["id"] = "s46_3367",
+},
+{
+["recordedBy"] = "Starphage-Tichondrius",
+["typeInfo"] = {
+["player"] = {
+["class"] = "DEMONHUNTER",
+["race"] = "BloodElf",
+["name"] = "Errìs-WyrmrestAccord",
+["sex"] = 3,
+},
+["event"] = "CHAT_MSG_LOOT",
+["type"] = "LOOT",
+},
+["color"] = {
+["r"] = -0,
+["g"] = 0.6666666865348816,
+["b"] = -0,
+},
+["text"] = "Errìs-WyrmrestAccord receives loot: |cnIQ1:|T7549241:12|t|Hitem:238512::::::::90:1480::::1:38:14:::::|h[Void-Tempered Leather |A:Professions-ChatIcon-Quality-12-Tier2:17:15::1|a]|h|rx2.",
+["timestamp"] = 1776365742,
+["id"] = "s46_3368",
+},
+{
+["recordedBy"] = "Starphage-Tichondrius",
+["typeInfo"] = {
+["player"] = {
+["class"] = "MAGE",
+["race"] = "Human",
+["name"] = "Xica-Dalaran",
+["sex"] = 3,
+},
+["event"] = "CHAT_MSG_RAID",
+["type"] = "RAID",
+},
+["color"] = {
+["r"] = 1,
+["g"] = 0.4980392456054688,
+["b"] = -0,
+},
+["text"] = "|Hchannel:RAID|h[Raid]|h |Hplayer:Xica-Dalaran:85:RAID:|h[|cff3fc7ebXica-Dalaran|r]|h: k ready",
+["timestamp"] = 1776365744,
+["id"] = "s46_3369",
+},
+{
+["recordedBy"] = "Starphage-Tichondrius",
+["typeInfo"] = {
+["player"] = {
+["class"] = "DEMONHUNTER",
+["race"] = "BloodElf",
+["name"] = "Errìs-WyrmrestAccord",
+["sex"] = 3,
+},
+["event"] = "CHAT_MSG_LOOT",
+["type"] = "LOOT",
+},
+["color"] = {
+["r"] = -0,
+["g"] = 0.6666666865348816,
+["b"] = -0,
+},
+["text"] = "Errìs-WyrmrestAccord receives loot: |cnIQ1:|T7549241:12|t|Hitem:238511::::::::90:1480::::1:38:13:::::|h[Void-Tempered Leather |A:Professions-ChatIcon-Quality-12-Tier1:17:15::1|a]|h|r.",
+["timestamp"] = 1776365745,
+["id"] = "s46_3370",
+},
+{
+["recordedBy"] = "Starphage-Tichondrius",
+["typeInfo"] = {
+["player"] = {
+["class"] = "DEMONHUNTER",
+["race"] = "BloodElf",
+["name"] = "Errìs-WyrmrestAccord",
+["sex"] = 3,
+},
+["event"] = "CHAT_MSG_LOOT",
+["type"] = "LOOT",
+},
+["color"] = {
+["r"] = -0,
+["g"] = 0.6666666865348816,
+["b"] = -0,
+},
+["text"] = "Errìs-WyrmrestAccord receives loot: |cnIQ1:|T7549241:12|t|Hitem:238511::::::::90:1480::::1:38:13:::::|h[Void-Tempered Leather |A:Professions-ChatIcon-Quality-12-Tier1:17:15::1|a]|h|r.",
+["timestamp"] = 1776365747,
+["id"] = "s46_3371",
+},
+{
+["recordedBy"] = "Starphage-Tichondrius",
+["typeInfo"] = {
+["player"] = {
+["class"] = "DEMONHUNTER",
+["race"] = "BloodElf",
+["name"] = "Errìs-WyrmrestAccord",
+["sex"] = 3,
+},
+["event"] = "CHAT_MSG_LOOT",
+["type"] = "LOOT",
+},
+["color"] = {
+["r"] = -0,
+["g"] = 0.6666666865348816,
+["b"] = -0,
+},
+["text"] = "Errìs-WyrmrestAccord receives loot: |cnIQ1:|T7549241:12|t|Hitem:238511::::::::90:1480::::1:38:13:::::|h[Void-Tempered Leather |A:Professions-ChatIcon-Quality-12-Tier1:17:15::1|a]|h|r.",
+["timestamp"] = 1776365749,
+["id"] = "s46_3372",
+},
+{
+["recordedBy"] = "Starphage-Tichondrius",
+["typeInfo"] = {
+["player"] = {
+["class"] = "DEMONHUNTER",
+["race"] = "BloodElf",
+["name"] = "Errìs-WyrmrestAccord",
+["sex"] = 3,
+},
+["event"] = "CHAT_MSG_LOOT",
+["type"] = "LOOT",
+},
+["color"] = {
+["r"] = -0,
+["g"] = 0.6666666865348816,
+["b"] = -0,
+},
+["text"] = "Errìs-WyrmrestAccord receives loot: |cnIQ1:|T7549241:12|t|Hitem:238511::::::::90:1480::::1:38:13:::::|h[Void-Tempered Leather |A:Professions-ChatIcon-Quality-12-Tier1:17:15::1|a]|h|rx2.",
+["timestamp"] = 1776365753,
+["id"] = "s46_3373",
+},
+{
+["recordedBy"] = "Starphage-Tichondrius",
+["typeInfo"] = {
+["player"] = {
+["class"] = "DEMONHUNTER",
+["race"] = "BloodElf",
+["name"] = "Errìs-WyrmrestAccord",
+["sex"] = 3,
+},
+["event"] = "CHAT_MSG_LOOT",
+["type"] = "LOOT",
+},
+["color"] = {
+["r"] = -0,
+["g"] = 0.6666666865348816,
+["b"] = -0,
+},
+["text"] = "Errìs-WyrmrestAccord receives loot: |cnIQ1:|T7549241:12|t|Hitem:238512::::::::90:1480::::1:38:14:::::|h[Void-Tempered Leather |A:Professions-ChatIcon-Quality-12-Tier2:17:15::1|a]|h|r.",
+["timestamp"] = 1776365756,
+["id"] = "s46_3374",
+},
+{
+["recordedBy"] = "Starphage-Tichondrius",
+["typeInfo"] = {
+["player"] = {
+["class"] = "DEMONHUNTER",
+["race"] = "BloodElf",
+["name"] = "Errìs-WyrmrestAccord",
+["sex"] = 3,
+},
+["event"] = "CHAT_MSG_LOOT",
+["type"] = "LOOT",
+},
+["color"] = {
+["r"] = -0,
+["g"] = 0.6666666865348816,
+["b"] = -0,
+},
+["text"] = "Errìs-WyrmrestAccord receives loot: |cnIQ1:|T7549241:12|t|Hitem:238511::::::::90:1480::::1:38:13:::::|h[Void-Tempered Leather |A:Professions-ChatIcon-Quality-12-Tier1:17:15::1|a]|h|rx3.",
+["timestamp"] = 1776365760,
+["id"] = "s46_3375",
+},
+{
+["recordedBy"] = "Starphage-Tichondrius",
+["typeInfo"] = {
+["player"] = {
+["class"] = "DEMONHUNTER",
+["race"] = "BloodElf",
+["name"] = "Errìs-WyrmrestAccord",
+["sex"] = 3,
+},
+["event"] = "CHAT_MSG_LOOT",
+["type"] = "LOOT",
+},
+["color"] = {
+["r"] = -0,
+["g"] = 0.6666666865348816,
+["b"] = -0,
+},
+["text"] = "Errìs-WyrmrestAccord receives loot: |cnIQ1:|T7549241:12|t|Hitem:238512::::::::90:1480::::1:38:14:::::|h[Void-Tempered Leather |A:Professions-ChatIcon-Quality-12-Tier2:17:15::1|a]|h|r.",
+["timestamp"] = 1776365763,
+["id"] = "s46_3376",
+},
+{
+["recordedBy"] = "Starphage-Tichondrius",
+["typeInfo"] = {
+["player"] = {
+["class"] = "PALADIN",
+["race"] = "DarkIronDwarf",
+["name"] = "Holygrease-Area52",
+["sex"] = 2,
+},
+["event"] = "CHAT_MSG_LOOT",
+["type"] = "LOOT",
+},
+["color"] = {
+["r"] = -0,
+["g"] = 0.6666666865348816,
+["b"] = -0,
+},
+["text"] = "Holygrease-Area52 receives loot: |cnIQ0:|T237376:12|t|Hitem:260636::::::::90:1480:::::::::|h[Algae Covered Stone]|h|r.",
+["timestamp"] = 1776365766,
+["id"] = "s46_3377",
+},
+{
+["recordedBy"] = "Starphage-Tichondrius",
+["typeInfo"] = {
+["player"] = {
+["class"] = "DEMONHUNTER",
+["race"] = "BloodElf",
+["name"] = "Errìs-WyrmrestAccord",
+["sex"] = 3,
+},
+["event"] = "CHAT_MSG_LOOT",
+["type"] = "LOOT",
+},
+["color"] = {
+["r"] = -0,
+["g"] = 0.6666666865348816,
+["b"] = -0,
+},
+["text"] = "Errìs-WyrmrestAccord receives loot: |cnIQ1:|T7549241:12|t|Hitem:238511::::::::90:1480::::1:38:13:::::|h[Void-Tempered Leather |A:Professions-ChatIcon-Quality-12-Tier1:17:15::1|a]|h|rx2.",
+["timestamp"] = 1776365766,
+["id"] = "s46_3378",
+},
+{
+["recordedBy"] = "Starphage-Tichondrius",
+["typeInfo"] = {
+["player"] = {
+["class"] = "DEMONHUNTER",
+["race"] = "BloodElf",
+["name"] = "Errìs-WyrmrestAccord",
+["sex"] = 3,
+},
+["event"] = "CHAT_MSG_LOOT",
+["type"] = "LOOT",
+},
+["color"] = {
+["r"] = -0,
+["g"] = 0.6666666865348816,
+["b"] = -0,
+},
+["text"] = "Errìs-WyrmrestAccord receives loot: |cnIQ1:|T7549241:12|t|Hitem:238512::::::::90:1480::::1:38:14:::::|h[Void-Tempered Leather |A:Professions-ChatIcon-Quality-12-Tier2:17:15::1|a]|h|r.",
+["timestamp"] = 1776365770,
+["id"] = "s46_3379",
+},
+{
+["recordedBy"] = "Starphage-Tichondrius",
+["typeInfo"] = {
+["player"] = {
+["class"] = "DEATHKNIGHT",
+["race"] = "Troll",
+["name"] = "Nexdemise",
+["sex"] = 3,
+},
+["event"] = "CHAT_MSG_MONSTER_EMOTE",
+["type"] = "MONSTER_EMOTE",
+},
+["color"] = {
+["r"] = 1,
+["g"] = 0.501960813999176,
+["b"] = 0.250980406999588,
+},
+["text"] = "Nexdemise places a cozy Silvermoon Parade for everyone to enjoy!",
+["timestamp"] = 1776365809,
+["id"] = "s46_3380",
+},
+{
+["recordedBy"] = "Starphage-Tichondrius",
+["typeInfo"] = {
+["player"] = {
+["class"] = "MONK",
+["race"] = "Pandaren",
+["name"] = "Monkamongus-Illidan",
+["sex"] = 2,
+},
+["event"] = "CHAT_MSG_RAID",
+["type"] = "RAID",
+},
+["color"] = {
+["r"] = 1,
+["g"] = 0.4980392456054688,
+["b"] = -0,
+},
+["text"] = "|Hchannel:RAID|h[Raid]|h |Hplayer:Monkamongus-Illidan:98:RAID:|h[|cff00ff98Monkamongus-Illidan|r]|h: tanks will be facing boss towards entrance",
+["timestamp"] = 1776365820,
+["id"] = "s46_3381",
+},
+{
+["recordedBy"] = "Starphage-Tichondrius",
+["typeInfo"] = {
+["player"] = {
+["class"] = "MONK",
+["race"] = "Pandaren",
+["name"] = "Monkamongus-Illidan",
+["sex"] = 2,
+},
+["event"] = "CHAT_MSG_RAID",
+["type"] = "RAID",
+},
+["color"] = {
+["r"] = 1,
+["g"] = 0.4980392456054688,
+["b"] = -0,
+},
+["text"] = "|Hchannel:RAID|h[Raid]|h |Hplayer:Monkamongus-Illidan:99:RAID:|h[|cff00ff98Monkamongus-Illidan|r]|h: gl",
+["timestamp"] = 1776365828,
+["id"] = "s46_3382",
+},
+{
+["recordedBy"] = "Starphage-Tichondrius",
+["typeInfo"] = {
+["player"] = {
+["name"] = "L'ura",
+},
+["event"] = "CHAT_MSG_MONSTER_YELL",
+["type"] = "MONSTER_YELL",
+},
+["color"] = {
+["r"] = 1,
+["g"] = 0.250980406999588,
+["b"] = 0.250980406999588,
+},
+["text"] = "L'ura yells: This was the only outcome.",
+["timestamp"] = 1776365951,
+["id"] = "s46_3383",
+},
+{
+["recordedBy"] = "Starphage-Tichondrius",
+["typeInfo"] = {
+["player"] = {
+["class"] = "MONK",
+["race"] = "NightElf",
+["name"] = "Modani-MoonGuard",
+["sex"] = 3,
+},
+["event"] = "CHAT_MSG_RAID",
+["type"] = "RAID",
+},
+["color"] = {
+["r"] = 1,
+["g"] = 0.4980392456054688,
+["b"] = -0,
+},
+["text"] = "|Hchannel:RAID|h[Raid]|h |Hplayer:Modani-MoonGuard:119:RAID:|h[|cff00ff98Modani-MoonGuard|r]|h: genuienly why would they make this mechanic for pugs",
+["timestamp"] = 1776365953,
+["id"] = "s46_3384",
+},
+{
+["recordedBy"] = "Starphage-Tichondrius",
+["typeInfo"] = {
+["player"] = {
+["class"] = "WARRIOR",
+["race"] = "Orc",
+["name"] = "Chograa-Area52",
+["sex"] = 2,
+},
+["event"] = "CHAT_MSG_RAID",
+["type"] = "RAID",
+},
+["color"] = {
+["r"] = 1,
+["g"] = 0.4980392456054688,
+["b"] = -0,
+},
+["text"] = "|Hchannel:RAID|h[Raid]|h |Hplayer:Chograa-Area52:120:RAID:|h[|cffc69b6dChograa-Area52|r]|h: kid aggro got me distracted",
+["timestamp"] = 1776365957,
+["id"] = "s46_3385",
+},
+{
+["recordedBy"] = "Starphage-Tichondrius",
+["typeInfo"] = {
+["player"] = {
+["class"] = "DEATHKNIGHT",
+["race"] = "Human",
+["name"] = "Ultorém-Proudmoore",
+["sex"] = 2,
+},
+["event"] = "CHAT_MSG_RAID_LEADER",
+["type"] = "RAID_LEADER",
+},
+["color"] = {
+["r"] = 1,
+["g"] = 0.2784313857555389,
+["b"] = 0.03921568766236305,
+},
+["text"] = "|Hchannel:RAID|h[Raid Leader]|h |Hplayer:Ultorém-Proudmoore:121:RAID:|h[|cffc41e3aUltorém-Proudmoore|r]|h: that wasnt on u tank",
+["timestamp"] = 1776365967,
+["id"] = "s46_3386",
+},
+{
+["recordedBy"] = "Starphage-Tichondrius",
+["typeInfo"] = {
+["player"] = {
+["class"] = "DEATHKNIGHT",
+["race"] = "Human",
+["name"] = "Ultorém-Proudmoore",
+["sex"] = 2,
+},
+["event"] = "CHAT_MSG_RAID_LEADER",
+["type"] = "RAID_LEADER",
+},
+["color"] = {
+["r"] = 1,
+["g"] = 0.2784313857555389,
+["b"] = 0.03921568766236305,
+},
+["text"] = "|Hchannel:RAID|h[Raid Leader]|h |Hplayer:Ultorém-Proudmoore:122:RAID:|h[|cffc41e3aUltorém-Proudmoore|r]|h: unless u fucked up the symbol then it was 100% u lol",
+["timestamp"] = 1776365981,
+["id"] = "s46_3387",
+},
+{
+["recordedBy"] = "Starphage-Tichondrius",
+["typeInfo"] = {
+["player"] = {
+["class"] = "MONK",
+["race"] = "Pandaren",
+["name"] = "Monkamongus-Illidan",
+["sex"] = 2,
+},
+["event"] = "CHAT_MSG_RAID",
+["type"] = "RAID",
+},
+["color"] = {
+["r"] = 1,
+["g"] = 0.4980392456054688,
+["b"] = -0,
+},
+["text"] = "|Hchannel:RAID|h[Raid]|h |Hplayer:Monkamongus-Illidan:123:RAID:|h[|cff00ff98Monkamongus-Illidan|r]|h: if u have a symbol line up clockwise and not counterclock wise",
+["timestamp"] = 1776366000,
+["id"] = "s46_3388",
+},
+{
+["recordedBy"] = "Starphage-Tichondrius",
+["typeInfo"] = {
+["player"] = {
+["class"] = "MONK",
+["race"] = "Pandaren",
+["name"] = "Monkamongus-Illidan",
+["sex"] = 2,
+},
+["event"] = "CHAT_MSG_RAID",
+["type"] = "RAID",
+},
+["color"] = {
+["r"] = 1,
+["g"] = 0.4980392456054688,
+["b"] = -0,
+},
+["text"] = "|Hchannel:RAID|h[Raid]|h |Hplayer:Monkamongus-Illidan:124:RAID:|h[|cff00ff98Monkamongus-Illidan|r]|h: in the order the boss shows",
+["timestamp"] = 1776366006,
+["id"] = "s46_3389",
+},
+{
+["recordedBy"] = "Starphage-Tichondrius",
+["typeInfo"] = {
+["player"] = {
+["class"] = "DEMONHUNTER",
+["race"] = "VoidElf",
+["name"] = "Starphage-Tichondrius",
+["sex"] = 3,
+},
+["event"] = "CHAT_MSG_RAID",
+["type"] = "RAID",
+},
+["color"] = {
+["r"] = 1,
+["g"] = 0.4980392456054688,
+["b"] = -0,
+},
+["text"] = "|Hchannel:RAID|h[Raid]|h |Hplayer:Starphage-Tichondrius:125:RAID:|h[|cffa330c9Starphage|r]|h: first symbols i stood in right order but the 3rd guy was running around and then stood in wrong spot",
+["timestamp"] = 1776366009,
+["id"] = "s46_3390",
+},
+{
+["recordedBy"] = "Starphage-Tichondrius",
+["typeInfo"] = {
+["player"] = {
+["class"] = "PALADIN",
+["race"] = "DarkIronDwarf",
+["name"] = "Holygrease-Area52",
+["sex"] = 2,
+},
+["event"] = "CHAT_MSG_RAID",
+["type"] = "RAID",
+},
+["color"] = {
+["r"] = 1,
+["g"] = 0.4980392456054688,
+["b"] = -0,
+},
+["text"] = "|Hchannel:RAID|h[Raid]|h |Hplayer:Holygrease-Area52:126:RAID:|h[|cfff48cbaHolygrease-Area52|r]|h: yeah I griefed the first symbols ",
+["timestamp"] = 1776366025,
+["id"] = "s46_3391",
+},
+{
+["recordedBy"] = "Starphage-Tichondrius",
+["typeInfo"] = {
+["player"] = {
+["class"] = "PALADIN",
+["race"] = "DarkIronDwarf",
+["name"] = "Holygrease-Area52",
+["sex"] = 2,
+},
+["event"] = "CHAT_MSG_RAID",
+["type"] = "RAID",
+},
+["color"] = {
+["r"] = 1,
+["g"] = 0.4980392456054688,
+["b"] = -0,
+},
+["text"] = "|Hchannel:RAID|h[Raid]|h |Hplayer:Holygrease-Area52:127:RAID:|h[|cfff48cbaHolygrease-Area52|r]|h: was my bad ",
+["timestamp"] = 1776366026,
+["id"] = "s46_3392",
+},
+{
+["recordedBy"] = "Starphage-Tichondrius",
+["typeInfo"] = {
+["player"] = {
+["race"] = "Pandaren",
+["class"] = "MONK",
+["name"] = "Monkamongus-Illidan",
+["sex"] = 2,
+},
+["event"] = "CHAT_MSG_RAID",
+["type"] = "RAID",
+},
+["color"] = {
+["b"] = -0,
+["g"] = 0.4980392456054688,
+["r"] = 1,
+},
+["text"] = "|Hchannel:RAID|h[Raid]|h |Hplayer:Monkamongus-Illidan:128:RAID:|h[|cff00ff98Monkamongus-Illidan|r]|h: tanks will be facing boss towards entrance so u guys should all be to the LEFT side ",
+["id"] = "s46_3393",
+["timestamp"] = 1776366034,
+},
+{
+["recordedBy"] = "Starphage-Tichondrius",
+["typeInfo"] = {
+["event"] = "CHAT_MSG_PING",
+["type"] = "PING",
+},
+["color"] = {
+["b"] = 1,
+["g"] = 0.6666666865348816,
+["r"] = 0.6666666865348816,
+},
+["text"] = "[Tank] |Hplayer:Monkamongus|h[Monkamongus]: |h|A:ping_chat_nonthreat:0:0:0:0|aLook here",
+["id"] = "s46_3394",
+["timestamp"] = 1776366034,
+},
+{
+["recordedBy"] = "Starphage-Tichondrius",
+["typeInfo"] = {
+["event"] = "CHAT_MSG_PING",
+["type"] = "PING",
+},
+["color"] = {
+["b"] = 1,
+["g"] = 0.6666666865348816,
+["r"] = 0.6666666865348816,
+},
+["text"] = "[Tank] |Hplayer:Monkamongus|h[Monkamongus]: |h|A:ping_chat_nonthreat:0:0:0:0|aLook here",
+["id"] = "s46_3395",
+["timestamp"] = 1776366034,
+},
+{
+["recordedBy"] = "Starphage-Tichondrius",
+["typeInfo"] = {
+["player"] = {
+["race"] = "DarkIronDwarf",
+["class"] = "PALADIN",
+["name"] = "Holygrease-Area52",
+["sex"] = 2,
+},
+["event"] = "CHAT_MSG_RAID",
+["type"] = "RAID",
+},
+["color"] = {
+["b"] = -0,
+["g"] = 0.4980392456054688,
+["r"] = 1,
+},
+["text"] = "|Hchannel:RAID|h[Raid]|h |Hplayer:Holygrease-Area52:131:RAID:|h[|cfff48cbaHolygrease-Area52|r]|h: popped healer cds to try and keep people alive ",
+["id"] = "s46_3396",
+["timestamp"] = 1776366042,
+},
+{
+["recordedBy"] = "Starphage-Tichondrius",
+["typeInfo"] = {
+["player"] = {
+["race"] = "Pandaren",
+["class"] = "MONK",
+["name"] = "Monkamongus-Illidan",
+["sex"] = 2,
+},
+["event"] = "CHAT_MSG_RAID",
+["type"] = "RAID",
+},
+["color"] = {
+["b"] = -0,
+["g"] = 0.4980392456054688,
+["r"] = 1,
+},
+["text"] = "|Hchannel:RAID|h[Raid]|h |Hplayer:Monkamongus-Illidan:132:RAID:|h[|cff00ff98Monkamongus-Illidan|r]|h: honestly doesnt matter where you stand if u have a symbol but make sure you're in the correct position counter clock wise",
+["id"] = "s46_3397",
+["timestamp"] = 1776366070,
+},
+{
+["recordedBy"] = "Starphage-Tichondrius",
+["typeInfo"] = {
+["player"] = {
+["class"] = "DEATHKNIGHT",
+["race"] = "Human",
+["name"] = "Ultorém-Proudmoore",
+["sex"] = 2,
+},
+["event"] = "CHAT_MSG_RAID_LEADER",
+["type"] = "RAID_LEADER",
+},
+["color"] = {
+["r"] = 1,
+["g"] = 0.2784313857555389,
+["b"] = 0.03921568766236305,
+},
+["text"] = "|Hchannel:RAID|h[Raid Leader]|h |Hplayer:Ultorém-Proudmoore:133:RAID:|h[|cffc41e3aUltorém-Proudmoore|r]|h: yea i immediately threw down the amz on those first symbols lol",
+["timestamp"] = 1776366077,
+["id"] = "s46_3398",
+},
+{
+["recordedBy"] = "Starphage-Tichondrius",
+["typeInfo"] = {
+["player"] = {
+["class"] = "MONK",
+["race"] = "Pandaren",
+["name"] = "Monkamongus-Illidan",
+["sex"] = 2,
+},
+["event"] = "CHAT_MSG_RAID",
+["type"] = "RAID",
+},
+["color"] = {
+["r"] = 1,
+["g"] = 0.4980392456054688,
+["b"] = -0,
+},
+["text"] = "|Hchannel:RAID|h[Raid]|h |Hplayer:Monkamongus-Illidan:134:RAID:|h[|cff00ff98Monkamongus-Illidan|r]|h: its just the order that matters ",
+["timestamp"] = 1776366077,
+["id"] = "s46_3399",
+},
+{
+["recordedBy"] = "Starphage-Tichondrius",
+["typeInfo"] = {
+["player"] = {
+["class"] = "PALADIN",
+["race"] = "DarkIronDwarf",
+["name"] = "Holygrease-Area52",
+["sex"] = 2,
+},
+["event"] = "CHAT_MSG_RAID",
+["type"] = "RAID",
+},
+["color"] = {
+["r"] = 1,
+["g"] = 0.4980392456054688,
+["b"] = -0,
+},
+["text"] = "|Hchannel:RAID|h[Raid]|h |Hplayer:Holygrease-Area52:135:RAID:|h[|cfff48cbaHolygrease-Area52|r]|h: yeah hit AM and wings for it too ",
+["timestamp"] = 1776366090,
+["id"] = "s46_3400",
+},
+{
+["recordedBy"] = "Starphage-Tichondrius",
+["typeInfo"] = {
+["player"] = {
+["class"] = "MONK",
+["race"] = "Pandaren",
+["name"] = "Monkamongus-Illidan",
+["sex"] = 2,
+},
+["event"] = "CHAT_MSG_RAID",
+["type"] = "RAID",
+},
+["color"] = {
+["r"] = 1,
+["g"] = 0.4980392456054688,
+["b"] = -0,
+},
+["text"] = "|Hchannel:RAID|h[Raid]|h |Hplayer:Monkamongus-Illidan:136:RAID:|h[|cff00ff98Monkamongus-Illidan|r]|h: tanks will not be moving and just facing boss towards entrance ",
+["timestamp"] = 1776366093,
+["id"] = "s46_3401",
+},
+{
+["recordedBy"] = "Starphage-Tichondrius",
+["typeInfo"] = {
+["player"] = {
+["class"] = "MONK",
+["race"] = "Pandaren",
+["name"] = "Monkamongus-Illidan",
+["sex"] = 2,
+},
+["event"] = "CHAT_MSG_RAID",
+["type"] = "RAID",
+},
+["color"] = {
+["r"] = 1,
+["g"] = 0.4980392456054688,
+["b"] = -0,
+},
+["text"] = "|Hchannel:RAID|h[Raid]|h |Hplayer:Monkamongus-Illidan:137:RAID:|h[|cff00ff98Monkamongus-Illidan|r]|h: so u guys gotta figure out where to stand",
+["timestamp"] = 1776366100,
+["id"] = "s46_3402",
+},
+{
+["recordedBy"] = "Starphage-Tichondrius",
+["typeInfo"] = {
+["player"] = {
+["class"] = "WARLOCK",
+["race"] = "BloodElf",
+["name"] = "Kelbrasa-Area52",
+["sex"] = 3,
+},
+["event"] = "CHAT_MSG_RAID",
+["type"] = "RAID",
+},
+["color"] = {
+["r"] = 1,
+["g"] = 0.4980392456054688,
+["b"] = -0,
+},
+["text"] = "|Hchannel:RAID|h[Raid]|h |Hplayer:Kelbrasa-Area52:138:RAID:|h[|cff8788eeKelbrasa-Area52|r]|h: how do i know what symbol is where",
+["timestamp"] = 1776366109,
+["id"] = "s46_3403",
+},
+{
+["recordedBy"] = "Starphage-Tichondrius",
+["typeInfo"] = {
+["player"] = {
+["class"] = "WARLOCK",
+["race"] = "BloodElf",
+["name"] = "Kelbrasa-Area52",
+["sex"] = 3,
+},
+["event"] = "CHAT_MSG_RAID",
+["type"] = "RAID",
+},
+["color"] = {
+["r"] = 1,
+["g"] = 0.4980392456054688,
+["b"] = -0,
+},
+["text"] = "|Hchannel:RAID|h[Raid]|h |Hplayer:Kelbrasa-Area52:139:RAID:|h[|cff8788eeKelbrasa-Area52|r]|h: the order",
+["timestamp"] = 1776366113,
+["id"] = "s46_3404",
+},
+{
+["recordedBy"] = "Starphage-Tichondrius",
+["typeInfo"] = {
+["player"] = {
+["class"] = "DRUID",
+["race"] = "Harronir",
+["name"] = "Crazyjoker-DemonSoul",
+["sex"] = 3,
+},
+["event"] = "CHAT_MSG_RAID",
+["type"] = "RAID",
+},
+["color"] = {
+["r"] = 1,
+["g"] = 0.4980392456054688,
+["b"] = -0,
+},
+["text"] = "|Hchannel:RAID|h[Raid]|h |Hplayer:Crazyjoker-DemonSoul:140:RAID:|h[|cffff7c0aCrazyjoker-DemonSoul|r]|h: on boss",
+["timestamp"] = 1776366116,
+["id"] = "s46_3405",
+},
+{
+["recordedBy"] = "Starphage-Tichondrius",
+["typeInfo"] = {
+["player"] = {
+["class"] = "MONK",
+["race"] = "Pandaren",
+["name"] = "Monkamongus-Illidan",
+["sex"] = 2,
+},
+["event"] = "CHAT_MSG_RAID",
+["type"] = "RAID",
+},
+["color"] = {
+["r"] = 1,
+["g"] = 0.4980392456054688,
+["b"] = -0,
+},
+["text"] = "|Hchannel:RAID|h[Raid]|h |Hplayer:Monkamongus-Illidan:141:RAID:|h[|cff00ff98Monkamongus-Illidan|r]|h: he has a pop up on his body",
+["timestamp"] = 1776366117,
+["id"] = "s46_3406",
+},
+{
+["recordedBy"] = "Starphage-Tichondrius",
+["typeInfo"] = {
+["player"] = {
+["class"] = "DEMONHUNTER",
+["race"] = "BloodElf",
+["name"] = "Tyrannia-Ragnaros",
+["sex"] = 3,
+},
+["event"] = "CHAT_MSG_RAID",
+["type"] = "RAID",
+},
+["color"] = {
+["r"] = 1,
+["g"] = 0.4980392456054688,
+["b"] = -0,
+},
+["text"] = "|Hchannel:RAID|h[Raid]|h |Hplayer:Tyrannia-Ragnaros:142:RAID:|h[|cffa330c9Tyrannia-Ragnaros|r]|h: the boss tells you",
+["timestamp"] = 1776366121,
+["id"] = "s46_3407",
+},
+{
+["recordedBy"] = "Starphage-Tichondrius",
+["typeInfo"] = {
+["player"] = {
+["class"] = "MONK",
+["race"] = "Pandaren",
+["name"] = "Monkamongus-Illidan",
+["sex"] = 2,
+},
+["event"] = "CHAT_MSG_RAID",
+["type"] = "RAID",
+},
+["color"] = {
+["r"] = 1,
+["g"] = 0.4980392456054688,
+["b"] = -0,
+},
+["text"] = "|Hchannel:RAID|h[Raid]|h |Hplayer:Monkamongus-Illidan:143:RAID:|h[|cff00ff98Monkamongus-Illidan|r]|h: i can try call out",
+["timestamp"] = 1776366125,
+["id"] = "s46_3408",
+},
+{
+["recordedBy"] = "Starphage-Tichondrius",
+["typeInfo"] = {
+["player"] = {
+["class"] = "DEMONHUNTER",
+["race"] = "VoidElf",
+["name"] = "Starphage-Tichondrius",
+["sex"] = 3,
+},
+["event"] = "CHAT_MSG_RAID",
+["type"] = "RAID",
+},
+["color"] = {
+["r"] = 1,
+["g"] = 0.4980392456054688,
+["b"] = -0,
+},
+["text"] = "|Hchannel:RAID|h[Raid]|h |Hplayer:Starphage-Tichondrius:144:RAID:|h[|cffa330c9Starphage|r]|h: Boss projects 3 symbols in an order, youll put those clockwise from the marked tank in order they appeared",
+["timestamp"] = 1776366126,
+["id"] = "s46_3409",
+},
+{
+["recordedBy"] = "Starphage-Tichondrius",
+["typeInfo"] = {
+["player"] = {
+["class"] = "WARLOCK",
+["race"] = "BloodElf",
+["name"] = "Kelbrasa-Area52",
+["sex"] = 3,
+},
+["event"] = "CHAT_MSG_RAID",
+["type"] = "RAID",
+},
+["color"] = {
+["r"] = 1,
+["g"] = 0.4980392456054688,
+["b"] = -0,
+},
+["text"] = "|Hchannel:RAID|h[Raid]|h |Hplayer:Kelbrasa-Area52:145:RAID:|h[|cff8788eeKelbrasa-Area52|r]|h: ook",
+["timestamp"] = 1776366126,
+["id"] = "s46_3410",
+},
+{
+["recordedBy"] = "Starphage-Tichondrius",
+["typeInfo"] = {
+["player"] = {
+["class"] = "DEATHKNIGHT",
+["race"] = "Troll",
+["name"] = "Nexdemise-Mal'Ganis",
+["sex"] = 3,
+},
+["event"] = "CHAT_MSG_RAID",
+["type"] = "RAID",
+},
+["color"] = {
+["r"] = 1,
+["g"] = 0.4980392456054688,
+["b"] = -0,
+},
+["text"] = "|Hchannel:RAID|h[Raid]|h |Hplayer:Nexdemise-Mal'Ganis:146:RAID:|h[|cffc41e3aNexdemise-Mal'Ganis|r]|h: I can try to type it out too",
+["timestamp"] = 1776366133,
+["id"] = "s46_3411",
+},
+{
+["recordedBy"] = "Starphage-Tichondrius",
+["typeInfo"] = {
+["player"] = {
+["class"] = "MAGE",
+["race"] = "Human",
+["name"] = "Xica-Dalaran",
+["sex"] = 3,
+},
+["event"] = "CHAT_MSG_RAID",
+["type"] = "RAID",
+},
+["color"] = {
+["r"] = 1,
+["g"] = 0.4980392456054688,
+["b"] = -0,
+},
+["text"] = "|Hchannel:RAID|h[Raid]|h |Hplayer:Xica-Dalaran:148:RAID:|h[|cff3fc7ebXica-Dalaran|r]|h: try to remember at least the 1st 2",
+["timestamp"] = 1776366152,
+["id"] = "s46_3412",
+},
+{
+["recordedBy"] = "Starphage-Tichondrius",
+["typeInfo"] = {
+["player"] = {
+["class"] = "MAGE",
+["race"] = "Human",
+["name"] = "Xica-Dalaran",
+["sex"] = 3,
+},
+["event"] = "CHAT_MSG_RAID",
+["type"] = "RAID",
+},
+["color"] = {
+["r"] = 1,
+["g"] = 0.4980392456054688,
+["b"] = -0,
+},
+["text"] = "|Hchannel:RAID|h[Raid]|h |Hplayer:Xica-Dalaran:149:RAID:|h[|cff3fc7ebXica-Dalaran|r]|h: it helps me",
+["timestamp"] = 1776366157,
+["id"] = "s46_3413",
+},
+{
+["recordedBy"] = "Starphage-Tichondrius",
+["typeInfo"] = {
+["player"] = {
+["class"] = "DEATHKNIGHT",
+["race"] = "Human",
+["name"] = "Ultorém-Proudmoore",
+["sex"] = 2,
+},
+["event"] = "CHAT_MSG_RAID_LEADER",
+["type"] = "RAID_LEADER",
+},
+["color"] = {
+["r"] = 1,
+["g"] = 0.2784313857555389,
+["b"] = 0.03921568766236305,
+},
+["text"] = "|Hchannel:RAID|h[Raid Leader]|h |Hplayer:Ultorém-Proudmoore:150:RAID:|h[|cffc41e3aUltorém-Proudmoore|r]|h: ^",
+["timestamp"] = 1776366157,
+["id"] = "s46_3414",
+},
+{
+["recordedBy"] = "Starphage-Tichondrius",
+["typeInfo"] = {
+["player"] = {
+["class"] = "DEMONHUNTER",
+["race"] = "VoidElf",
+["name"] = "Starphage-Tichondrius",
+["sex"] = 3,
+},
+["event"] = "CHAT_MSG_RAID",
+["type"] = "RAID",
+},
+["color"] = {
+["r"] = 1,
+["g"] = 0.4980392456054688,
+["b"] = -0,
+},
+["text"] = "|Hchannel:RAID|h[Raid]|h |Hplayer:Starphage-Tichondrius:151:RAID:|h[|cffa330c9Starphage|r]|h: or the second 2",
+["timestamp"] = 1776366159,
+["id"] = "s46_3415",
+},
+{
+["recordedBy"] = "Starphage-Tichondrius",
+["typeInfo"] = {
+["player"] = {
+["class"] = "DEMONHUNTER",
+["race"] = "VoidElf",
+["name"] = "Starphage-Tichondrius",
+["sex"] = 3,
+},
+["event"] = "CHAT_MSG_RAID",
+["type"] = "RAID",
+},
+["color"] = {
+["r"] = 1,
+["g"] = 0.4980392456054688,
+["b"] = -0,
+},
+["text"] = "|Hchannel:RAID|h[Raid]|h |Hplayer:Starphage-Tichondrius:152:RAID:|h[|cffa330c9Starphage|r]|h: xd",
+["timestamp"] = 1776366160,
+["id"] = "s46_3416",
+},
+{
+["recordedBy"] = "Starphage-Tichondrius",
+["typeInfo"] = {
+["player"] = {
+["class"] = "DEATHKNIGHT",
+["race"] = "Human",
+["name"] = "Ultorém-Proudmoore",
+["sex"] = 2,
+},
+["event"] = "CHAT_MSG_RAID_LEADER",
+["type"] = "RAID_LEADER",
+},
+["color"] = {
+["r"] = 1,
+["g"] = 0.2784313857555389,
+["b"] = 0.03921568766236305,
+},
+["text"] = "|Hchannel:RAID|h[Raid Leader]|h |Hplayer:Ultorém-Proudmoore:153:RAID:|h[|cffc41e3aUltorém-Proudmoore|r]|h: or just pray u dont have a symbol on u",
+["timestamp"] = 1776366174,
+["id"] = "s46_3417",
+},
+{
+["recordedBy"] = "Starphage-Tichondrius",
+["typeInfo"] = {
+["event"] = "CHAT_MSG_TARGETICONS",
+["type"] = "TARGETICONS",
+},
+["color"] = {
+["r"] = 1,
+["g"] = 1,
+["b"] = -0,
+},
+["text"] = "|Hplayer:Chograa|h[Chograa]|h sets |TInterface\\TargetingFrame\\UI-RaidTargetingIcon_3:0|t on Chograa.",
+["timestamp"] = 1776366179,
+["id"] = "s46_3418",
+},
+{
+["recordedBy"] = "Starphage-Tichondrius",
+["typeInfo"] = {
+["player"] = {
+["class"] = "MONK",
+["race"] = "NightElf",
+["name"] = "Sneakieweave-Ysondre",
+["sex"] = 3,
+},
+["event"] = "CHAT_MSG_GUILD_ACHIEVEMENT",
+["type"] = "GUILD_ACHIEVEMENT",
+},
+["color"] = {
+["r"] = 0.250980406999588,
+["g"] = 1,
+["b"] = 0.250980406999588,
+},
+["text"] = "|Hplayer:Sneakieweave-Ysondre|h[|cff00ff98Sneakieweave-Ysondre|r]|h has earned the achievement |cffffff00|Hachievement:61796:Player-78-0FA70AE4:1:4:16:26:4294967295:4294967295:4294967295:4294967295|h[Midnight: Journey's End (Season 1)]|h|r!",
+["timestamp"] = 1776366543,
+["id"] = "s46_3419",
+},
+{
+["recordedBy"] = "Starphage-Tichondrius",
+["typeInfo"] = {
+["player"] = {
+["class"] = "WARLOCK",
+["race"] = "BloodElf",
+["name"] = "Kelbrasa-Area52",
+["sex"] = 3,
+},
+["event"] = "CHAT_MSG_ACHIEVEMENT",
+["type"] = "ACHIEVEMENT",
+},
+["color"] = {
+["r"] = 1,
+["g"] = 1,
+["b"] = -0,
+},
+["text"] = "|Hplayer:Kelbrasa-Area52|h[|cff8788eeKelbrasa-Area52|r]|h has earned the achievement |cffffff00|Hachievement:61367:Player-3676-0EB3D85B:1:4:16:26:4294967295:4294967295:4294967295:4294967295|h[March on Quel'Danas]|h|r!",
+["timestamp"] = 1776366562,
+["id"] = "s46_3420",
+},
+{
+["recordedBy"] = "Starphage-Tichondrius",
+["typeInfo"] = {
+["event"] = "CHAT_MSG_LOOT",
+["type"] = "LOOT",
+},
+["color"] = {
+["r"] = -0,
+["g"] = 0.6666666865348816,
+["b"] = -0,
+},
+["text"] = "|HlootHistory:3183|h[Loot]|h: |cnIQ4:|T7390185:12|t|Hitem:249296::::::::90:1480::3:3:6652:13333:12788::::::|h[Alah'endal, the Dawnsong (Two-Hand 256)]|h|r",
+["timestamp"] = 1776366563,
+["id"] = "s46_3421",
+},
+{
+["recordedBy"] = "Starphage-Tichondrius",
+["typeInfo"] = {
+["event"] = "CHAT_MSG_LOOT",
+["type"] = "LOOT",
+},
+["color"] = {
+["r"] = -0,
+["g"] = 0.6666666865348816,
+["b"] = -0,
+},
+["text"] = "|HlootHistory:3183|h[Loot]|h: |cnIQ4:|T7636700:12|t|Hitem:249811::::::::90:1480::3:3:6652:13333:12788::::::|h[Light of the Cosmic Crescendo (Trinket 256)]|h|r",
+["timestamp"] = 1776366563,
+["id"] = "s46_3422",
+},
+{
+["recordedBy"] = "Starphage-Tichondrius",
+["typeInfo"] = {
+["event"] = "CHAT_MSG_LOOT",
+["type"] = "LOOT",
+},
+["color"] = {
+["r"] = -0,
+["g"] = 0.6666666865348816,
+["b"] = -0,
+},
+["text"] = "|HlootHistory:3183|h[Loot]|h: |cnIQ4:|T7446695:12|t|Hitem:249913::::::::90:1480::3:6:40:12667:13577:13333:12788:41::::::|h[Mask of Darkest Intent (Head 256)]|h|r",
+["timestamp"] = 1776366563,
+["id"] = "s46_3423",
+},
+{
+["recordedBy"] = "Starphage-Tichondrius",
+["typeInfo"] = {
+["event"] = "CHAT_MSG_LOOT",
+["type"] = "LOOT",
+},
+["color"] = {
+["r"] = -0,
+["g"] = 0.6666666865348816,
+["b"] = -0,
+},
+["text"] = "|HlootHistory:3183|h[Loot]|h: |cnIQ4:|T7382331:12|t|Hitem:249915::::::::90:1480::3:5:6652:13577:13333:12788:41::::::|h[Extinction Guards (Legs 256)]|h|r",
+["timestamp"] = 1776366563,
+["id"] = "s46_3424",
+},
+{
+["recordedBy"] = "Starphage-Tichondrius",
+["typeInfo"] = {
+["event"] = "CHAT_MSG_LOOT",
+["type"] = "LOOT",
+},
+["color"] = {
+["r"] = -0,
+["g"] = 0.6666666865348816,
+["b"] = -0,
+},
+["text"] = "|HlootHistory:3183|h[Loot]|h: |cnIQ4:|T458245:12|t|Hitem:249367::::::::90:1480::3:2:13347:13333::::::|h[Chiming Void Curio]|h|r",
+["timestamp"] = 1776366563,
+["id"] = "s46_3425",
+},
+{
+["recordedBy"] = "Starphage-Tichondrius",
+["typeInfo"] = {
+["event"] = "CHAT_MSG_LOOT",
+["type"] = "LOOT",
+},
+["color"] = {
+["r"] = -0,
+["g"] = 0.6666666865348816,
+["b"] = -0,
+},
+["text"] = "|HlootHistory:3183|h[Loot]|h: |cnIQ4:|T458245:12|t|Hitem:249367::::::::90:1480::3:2:13347:13333::::::|h[Chiming Void Curio]|h|r",
+["timestamp"] = 1776366563,
+["id"] = "s46_3426",
+},
+{
+["recordedBy"] = "Starphage-Tichondrius",
+["typeInfo"] = {
+["player"] = {
+["name"] = "Vereesa Windrunner",
+},
+["event"] = "CHAT_MSG_MONSTER_SAY",
+["type"] = "MONSTER_SAY",
+},
+["color"] = {
+["r"] = 1,
+["g"] = 1,
+["b"] = 0.6235294342041016,
+},
+["text"] = "Vereesa Windrunner says: We've won, but the Darkwell remains.",
+["timestamp"] = 1776366565,
+["id"] = "s46_3427",
+},
+{
+["recordedBy"] = "Starphage-Tichondrius",
+["typeInfo"] = {
+["player"] = {
+["class"] = "DEMONHUNTER",
+["race"] = "BloodElf",
+["name"] = "Hellabron-Hyjal",
+["sex"] = 3,
+},
+["event"] = "CHAT_MSG_RAID",
+["type"] = "RAID",
+},
+["color"] = {
+["r"] = 1,
+["g"] = 0.4980392456054688,
+["b"] = -0,
+},
+["text"] = "|Hchannel:RAID|h[Raid]|h |Hplayer:Hellabron-Hyjal:250:RAID:|h[|cffa330c9Hellabron-Hyjal|r]|h: gg",
+["timestamp"] = 1776366567,
+["id"] = "s46_3428",
+},
+{
+["recordedBy"] = "Starphage-Tichondrius",
+["typeInfo"] = {
+["player"] = {
+["class"] = "PALADIN",
+["race"] = "DarkIronDwarf",
+["name"] = "Holygrease-Area52",
+["sex"] = 2,
+},
+["event"] = "CHAT_MSG_RAID",
+["type"] = "RAID",
+},
+["color"] = {
+["r"] = 1,
+["g"] = 0.4980392456054688,
+["b"] = -0,
+},
+["text"] = "|Hchannel:RAID|h[Raid]|h |Hplayer:Holygrease-Area52:251:RAID:|h[|cfff48cbaHolygrease-Area52|r]|h: clean ",
+["timestamp"] = 1776366568,
+["id"] = "s46_3429",
+},
+{
+["recordedBy"] = "Starphage-Tichondrius",
+["typeInfo"] = {
+["event"] = "CHAT_MSG_LOOT",
+["type"] = "LOOT",
+},
+["color"] = {
+["r"] = -0,
+["g"] = 0.6666666865348816,
+["b"] = -0,
+},
+["text"] = "|HlootHistory:3183|h[Loot]|h: You passed on: |cnIQ4:|T7382331:12|t|Hitem:249915::::::::90:1480::3:5:6652:13577:13333:12788:41::::::|h[Extinction Guards (Legs 256)]|h|r |HlootHistory:3183|h|cnLOOT_LINK_COLOR:[View Loot Rolls]|r|h",
+["timestamp"] = 1776366569,
+["id"] = "s46_3430",
+},
+{
+["recordedBy"] = "Starphage-Tichondrius",
+["typeInfo"] = {
+["player"] = {
+["class"] = "DEATHKNIGHT",
+["race"] = "Human",
+["name"] = "Ultorém-Proudmoore",
+["sex"] = 2,
+},
+["event"] = "CHAT_MSG_RAID_LEADER",
+["type"] = "RAID_LEADER",
+},
+["color"] = {
+["r"] = 1,
+["g"] = 0.2784313857555389,
+["b"] = 0.03921568766236305,
+},
+["text"] = "|Hchannel:RAID|h[Raid Leader]|h |Hplayer:Ultorém-Proudmoore:253:RAID:|h[|cffc41e3aUltorém-Proudmoore|r]|h: 2 fuckin ez",
+["timestamp"] = 1776366569,
+["id"] = "s46_3431",
+},
+{
+["recordedBy"] = "Starphage-Tichondrius",
+["typeInfo"] = {
+["player"] = {
+["class"] = "MONK",
+["race"] = "Pandaren",
+["name"] = "Monkamongus-Illidan",
+["sex"] = 2,
+},
+["event"] = "CHAT_MSG_RAID",
+["type"] = "RAID",
+},
+["color"] = {
+["r"] = 1,
+["g"] = 0.4980392456054688,
+["b"] = -0,
+},
+["text"] = "|Hchannel:RAID|h[Raid]|h |Hplayer:Monkamongus-Illidan:254:RAID:|h[|cff00ff98Monkamongus-Illidan|r]|h: ggs everyone",
+["timestamp"] = 1776366570,
+["id"] = "s46_3432",
+},
+{
+["recordedBy"] = "Starphage-Tichondrius",
+["typeInfo"] = {
+["event"] = "CHAT_MSG_LOOT",
+["type"] = "LOOT",
+},
+["color"] = {
+["r"] = -0,
+["g"] = 0.6666666865348816,
+["b"] = -0,
+},
+["text"] = "|HlootHistory:3183|h[Loot]|h: You passed on: |cnIQ4:|T458245:12|t|Hitem:249367::::::::90:1480::3:2:13347:13333::::::|h[Chiming Void Curio]|h|r |HlootHistory:3183|h|cnLOOT_LINK_COLOR:[View Loot Rolls]|r|h",
+["timestamp"] = 1776366572,
+["id"] = "s46_3433",
+},
+{
+["recordedBy"] = "Starphage-Tichondrius",
+["typeInfo"] = {
+["event"] = "CHAT_MSG_LOOT",
+["type"] = "LOOT",
+},
+["color"] = {
+["r"] = -0,
+["g"] = 0.6666666865348816,
+["b"] = -0,
+},
+["text"] = "|HlootHistory:3183|h[Loot]|h: You passed on: |cnIQ4:|T458245:12|t|Hitem:249367::::::::90:1480::3:2:13347:13333::::::|h[Chiming Void Curio]|h|r |HlootHistory:3183|h|cnLOOT_LINK_COLOR:[View Loot Rolls]|r|h",
+["timestamp"] = 1776366573,
+["id"] = "s46_3434",
+},
+{
+["recordedBy"] = "Starphage-Tichondrius",
+["typeInfo"] = {
+["player"] = {
+["name"] = "Lady Liadrin",
+},
+["event"] = "CHAT_MSG_MONSTER_SAY",
+["type"] = "MONSTER_SAY",
+},
+["color"] = {
+["r"] = 1,
+["g"] = 1,
+["b"] = 0.6235294342041016,
+},
+["text"] = "Lady Liadrin says: What was wrought here cannot simply be undone. The Light is all but consumed. I barely feel the well's power.",
+["timestamp"] = 1776366578,
+["id"] = "s46_3435",
+},
+{
+["recordedBy"] = "Starphage-Tichondrius",
+["typeInfo"] = {
+["event"] = "CHAT_MSG_LOOT",
+["type"] = "LOOT",
+},
+["color"] = {
+["r"] = -0,
+["g"] = 0.6666666865348816,
+["b"] = -0,
+},
+["text"] = "|HlootHistory:3183|h[Loot]|h: You passed on: |cnIQ4:|T7636700:12|t|Hitem:249811::::::::90:1480::3:3:6652:13333:12788::::::|h[Light of the Cosmic Crescendo (Trinket 256)]|h|r |HlootHistory:3183|h|cnLOOT_LINK_COLOR:[View Loot Rolls]|r|h",
+["timestamp"] = 1776366579,
+["id"] = "s46_3436",
+},
+{
+["recordedBy"] = "Starphage-Tichondrius",
+["typeInfo"] = {
+["player"] = {
+["name"] = "Arator",
+},
+["event"] = "CHAT_MSG_MONSTER_SAY",
+["type"] = "MONSTER_SAY",
+},
+["color"] = {
+["r"] = 1,
+["g"] = 1,
+["b"] = 0.6235294342041016,
+},
+["text"] = "Arator says: We can't leave it like this--the wounds the Void left behind must be healed.",
+["timestamp"] = 1776366581,
+["id"] = "s46_3437",
+},
+{
+["recordedBy"] = "Starphage-Tichondrius",
+["typeInfo"] = {
+["player"] = {
+["class"] = "MAGE",
+["race"] = "Human",
+["name"] = "Xica-Dalaran",
+["sex"] = 3,
+},
+["event"] = "CHAT_MSG_LOOT",
+["type"] = "LOOT",
+},
+["color"] = {
+["r"] = -0,
+["g"] = 0.6666666865348816,
+["b"] = -0,
+},
+["text"] = "Xica-Dalaran receives loot: |cnIQ1:|T610613:12|t|Hitem:265695::::::::90:1480:::::::::|h[Elementary Voidcore Shard]|h|r.",
+["timestamp"] = 1776366581,
+["id"] = "s46_3438",
+},
+{
+["recordedBy"] = "Starphage-Tichondrius",
+["typeInfo"] = {
+["player"] = {
+["class"] = "DEMONHUNTER",
+["race"] = "BloodElf",
+["name"] = "Espur-BurningBlade",
+["sex"] = 3,
+},
+["event"] = "CHAT_MSG_RAID",
+["type"] = "RAID",
+},
+["color"] = {
+["r"] = 1,
+["g"] = 0.4980392456054688,
+["b"] = -0,
+},
+["text"] = "|Hchannel:RAID|h[Raid]|h |Hplayer:Espur-BurningBlade:262:RAID:|h[|cffa330c9Espur-BurningBlade|r]|h: gg guys ty",
+["timestamp"] = 1776366584,
+["id"] = "s46_3439",
+},
+{
+["recordedBy"] = "Starphage-Tichondrius",
+["typeInfo"] = {
+["player"] = {
+["class"] = "DEMONHUNTER",
+["race"] = "BloodElf",
+["name"] = "Tyrannia-Ragnaros",
+["sex"] = 3,
+},
+["event"] = "CHAT_MSG_RAID",
+["type"] = "RAID",
+},
+["color"] = {
+["r"] = 1,
+["g"] = 0.4980392456054688,
+["b"] = -0,
+},
+["text"] = "|Hchannel:RAID|h[Raid]|h |Hplayer:Tyrannia-Ragnaros:263:RAID:|h[|cffa330c9Tyrannia-Ragnaros|r]|h: gg",
+["timestamp"] = 1776366588,
+["id"] = "s46_3440",
+},
+{
+["recordedBy"] = "Starphage-Tichondrius",
+["typeInfo"] = {
+["player"] = {
+["class"] = "MAGE",
+["race"] = "Human",
+["name"] = "Xica-Dalaran",
+["sex"] = 3,
+},
+["event"] = "CHAT_MSG_RAID",
+["type"] = "RAID",
+},
+["color"] = {
+["r"] = 1,
+["g"] = 0.4980392456054688,
+["b"] = -0,
+},
+["text"] = "|Hchannel:RAID|h[Raid]|h |Hplayer:Xica-Dalaran:264:RAID:|h[|cff3fc7ebXica-Dalaran|r]|h: gg",
+["timestamp"] = 1776366589,
+["id"] = "s46_3441",
+},
+{
+["recordedBy"] = "Starphage-Tichondrius",
+["typeInfo"] = {
+["player"] = {
+["class"] = "DEATHKNIGHT",
+["race"] = "Troll",
+["name"] = "Nexdemise-Mal'Ganis",
+["sex"] = 3,
+},
+["event"] = "CHAT_MSG_RAID",
+["type"] = "RAID",
+},
+["color"] = {
+["r"] = 1,
+["g"] = 0.4980392456054688,
+["b"] = -0,
+},
+["text"] = "|Hchannel:RAID|h[Raid]|h |Hplayer:Nexdemise-Mal'Ganis:265:RAID:|h[|cffc41e3aNexdemise-Mal'Ganis|r]|h: That was easy kill",
+["timestamp"] = 1776366590,
+["id"] = "s46_3442",
+},
+{
+["recordedBy"] = "Starphage-Tichondrius",
+["typeInfo"] = {
+["event"] = "CHAT_MSG_CURRENCY",
+["type"] = "CURRENCY",
+},
+["color"] = {
+["r"] = -0,
+["g"] = 0.6666666865348816,
+["b"] = -0,
+},
+["text"] = "You receive currency: |cnIQ4:|T7639519:12|t|Hcurrency:3343:0|h[Champion Dawncrest]|h|rx20",
+["timestamp"] = 1776366592,
+["id"] = "s46_3443",
+},
+{
+["recordedBy"] = "Starphage-Tichondrius",
+["typeInfo"] = {
+["event"] = "CHAT_MSG_CURRENCY",
+["type"] = "CURRENCY",
+},
+["color"] = {
+["r"] = -0,
+["g"] = 0.6666666865348816,
+["b"] = -0,
+},
+["text"] = "You receive currency: |cnIQ4:|T7639521:12|t|Hcurrency:3345:0|h[Hero Dawncrest]|h|rx10",
+["timestamp"] = 1776366592,
+["id"] = "s46_3444",
+},
+{
+["recordedBy"] = "Starphage-Tichondrius",
+["typeInfo"] = {
+["event"] = "CHAT_MSG_MONEY",
+["type"] = "MONEY",
+},
+["color"] = {
+["r"] = 1,
+["g"] = 1,
+["b"] = -0,
+},
+["text"] = "You loot 562 Gold, 24 Silver, 27 Copper",
+["timestamp"] = 1776366592,
+["id"] = "s46_3445",
+},
+{
+["recordedBy"] = "Starphage-Tichondrius",
+["typeInfo"] = {
+["event"] = "CHAT_MSG_LOOT",
+["type"] = "LOOT",
+},
+["color"] = {
+["r"] = -0,
+["g"] = 0.6666666865348816,
+["b"] = -0,
+},
+["text"] = "|HlootHistory:3183|h[Loot]|h: You have selected Need for: |cnIQ4:|T7446695:12|t|Hitem:249913::::::::90:1480::3:6:40:12667:13577:13333:12788:41::::::|h[Mask of Darkest Intent (Head 256)]|h|r |HlootHistory:3183|h|cnLOOT_LINK_COLOR:[View Loot Rolls]|r|h",
+["timestamp"] = 1776366595,
+["id"] = "s46_3446",
+},
+{
+["recordedBy"] = "Starphage-Tichondrius",
+["typeInfo"] = {
+["player"] = {
+["class"] = "DEMONHUNTER",
+["race"] = "BloodElf",
+["name"] = "Espur-BurningBlade",
+["sex"] = 3,
+},
+["event"] = "CHAT_MSG_RAID",
+["type"] = "RAID",
+},
+["color"] = {
+["r"] = 1,
+["g"] = 0.4980392456054688,
+["b"] = -0,
+},
+["text"] = "|Hchannel:RAID|h[Raid]|h |Hplayer:Espur-BurningBlade:276:RAID:|h[|cffa330c9Espur-BurningBlade|r]|h: great job healers you the mvp",
+["timestamp"] = 1776366611,
+["id"] = "s46_3447",
+},
+{
+["recordedBy"] = "Starphage-Tichondrius",
+["typeInfo"] = {
+["player"] = {
+["name"] = "Silvermoon Guard",
+},
+["event"] = "CHAT_MSG_MONSTER_EMOTE",
+["type"] = "MONSTER_EMOTE",
+},
+["color"] = {
+["r"] = 1,
+["g"] = 0.501960813999176,
+["b"] = 0.250980406999588,
+},
+["text"] = "The nearby guard glares at you and the void energy that you surround yourself with.",
+["timestamp"] = 1776366643,
+["id"] = "s46_3448",
+},
+{
+["recordedBy"] = "Starphage-Tichondrius",
+["typeInfo"] = {
+["player"] = {
+["class"] = "DEMONHUNTER",
+["race"] = "VoidElf",
+["name"] = "Nøv-Tichondrius",
+["sex"] = 2,
+},
+["event"] = "CHAT_MSG_GUILD_ACHIEVEMENT",
+["type"] = "GUILD_ACHIEVEMENT",
+},
+["color"] = {
+["r"] = 0.250980406999588,
+["g"] = 1,
+["b"] = 0.250980406999588,
+},
+["text"] = "|Hplayer:Nøv-Tichondrius|h[|cffa330c9Nøv|r]|h|1이;가; 업적을 달성했습니다! |cffffff00|Hachievement:5333:Player-11-0E3ABFF9:1:4:16:26:4294967295:4294967295:4294967295:4294967295|h[Master Sergeant]|h|r!",
+["timestamp"] = 1776366834,
+["id"] = "s46_3449",
+},
+{
+["recordedBy"] = "Starphage-Tichondrius",
+["typeInfo"] = {
+["player"] = {
+["class"] = "DEMONHUNTER",
+["race"] = "VoidElf",
+["name"] = "Nøv-Tichondrius",
+["sex"] = 2,
+},
+["event"] = "CHAT_MSG_GUILD_ACHIEVEMENT",
+["type"] = "GUILD_ACHIEVEMENT",
+},
+["color"] = {
+["r"] = 0.250980406999588,
+["g"] = 1,
+["b"] = 0.250980406999588,
+},
+["text"] = "|Hplayer:Nøv-Tichondrius|h[|cffa330c9Nøv|r]|h|1이;가; 업적을 달성했습니다! |cffffff00|Hachievement:5332:Player-11-0E3ABFF9:1:4:16:26:4294967295:4294967295:4294967295:4294967295|h[Sergeant]|h|r!",
+["timestamp"] = 1776366834,
+["id"] = "s46_3450",
+},
+{
+["recordedBy"] = "Starphage-Tichondrius",
+["typeInfo"] = {
+["player"] = {
+["class"] = "MONK",
+["race"] = "NightElf",
+["name"] = "Thulchi-Tichondrius",
+["sex"] = 3,
+},
+["event"] = "CHAT_MSG_GUILD_ACHIEVEMENT",
+["type"] = "GUILD_ACHIEVEMENT",
+},
+["color"] = {
+["r"] = 0.250980406999588,
+["g"] = 1,
+["b"] = 0.250980406999588,
+},
+["text"] = "|Hplayer:Thulchi-Tichondrius|h[|cff00ff98Thulchi|r]|h has earned the achievement |cffffff00|Hachievement:61508:Player-11-0E87E688:1:4:16:26:4294967295:4294967295:4294967295:4294967295|h[Voidscar Arena]|h|r!",
+["timestamp"] = 1776366852,
+["id"] = "s46_3451",
+},
+{
+["recordedBy"] = "Starphage-Tichondrius",
+["typeInfo"] = {
+["player"] = {
+["name"] = "Silvermoon Guard",
+},
+["event"] = "CHAT_MSG_MONSTER_EMOTE",
+["type"] = "MONSTER_EMOTE",
+},
+["color"] = {
+["r"] = 1,
+["g"] = 0.501960813999176,
+["b"] = 0.250980406999588,
+},
+["text"] = "The nearby guard glares at you and the void energy that you surround yourself with.",
+["timestamp"] = 1776367190,
+["id"] = "s46_3452",
+},
+{
+["recordedBy"] = "Starphage-Tichondrius",
+["typeInfo"] = {
+["player"] = {
+["class"] = "DEMONHUNTER",
+["race"] = "BloodElf",
+["name"] = "Hemondunter-Trollbane",
+["sex"] = 3,
+},
+["event"] = "CHAT_MSG_GUILD_ACHIEVEMENT",
+["type"] = "GUILD_ACHIEVEMENT",
+},
+["color"] = {
+["r"] = 0.250980406999588,
+["g"] = 1,
+["b"] = 0.250980406999588,
+},
+["text"] = "|Hplayer:Hemondunter-Trollbane|h[|cffa330c9Hemondunter-Trollbane|r]|h has earned the achievement |cffffff00|Hachievement:61219:Player-1175-0BF76D75:1:4:16:26:4294967295:4294967295:4294967295:4294967295|h[No Time to Paws]|h|r!",
+["timestamp"] = 1776367381,
+["id"] = "s46_3453",
+},
+{
+["recordedBy"] = "Stormclout-Tichondrius",
+["typeInfo"] = {
+["player"] = {
+["name"] = "Ban-Lu",
+},
+["type"] = "MONSTER_SAY",
+["event"] = "CHAT_MSG_MONSTER_SAY",
+},
+["color"] = {
+["b"] = 0.6235294342041016,
+["g"] = 1,
+["r"] = 1,
+},
+["text"] = "Ban-Lu says: Where are we going today, Grandmaster?",
+["id"] = "s46_3454",
+["timestamp"] = 1776367760,
+},
+{
+["recordedBy"] = "Stormclout-Tichondrius",
+["typeInfo"] = {
+["player"] = {
+["race"] = "HighmountainTauren",
+["class"] = "DEATHKNIGHT",
+["name"] = "Herpules-Daggerspine",
+["sex"] = 2,
+},
+["type"] = "GUILD_ACHIEVEMENT",
+["event"] = "CHAT_MSG_GUILD_ACHIEVEMENT",
+},
+["color"] = {
+["b"] = 0.250980406999588,
+["g"] = 1,
+["r"] = 0.250980406999588,
+},
+["text"] = "|Hplayer:Herpules-Daggerspine|h[|cffc41e3aHerpules-Daggerspine|r]|h has earned the achievement |cffffff00|Hachievement:5351:Player-1136-098D2A9B:1:4:16:26:4294967295:4294967295:4294967295:4294967295|h[Blood Guard]|h|r!",
+["id"] = "s46_3455",
+["timestamp"] = 1776367832,
+},
+{
+["recordedBy"] = "Stormclout-Tichondrius",
+["typeInfo"] = {
+["player"] = {
+["name"] = "Chen Stormstout",
+},
+["type"] = "MONSTER_SAY",
+["event"] = "CHAT_MSG_MONSTER_SAY",
+},
+["color"] = {
+["b"] = 0.6235294342041016,
+["g"] = 1,
+["r"] = 1,
+},
+["text"] = "Chen Stormstout says: Good day to you, Grandmaster. Is there anything I can help with?",
+["id"] = "s46_3456",
+["timestamp"] = 1776367834,
+},
+{
+["recordedBy"] = "Stormclout-Tichondrius",
+["typeInfo"] = {
+["player"] = {
+["race"] = "Scourge",
+["class"] = "MONK",
+["name"] = "Lowiebowie-Tichondrius",
+["sex"] = 3,
+},
+["type"] = "GUILD_ACHIEVEMENT",
+["event"] = "CHAT_MSG_GUILD_ACHIEVEMENT",
+},
+["color"] = {
+["b"] = 0.250980406999588,
+["g"] = 1,
+["r"] = 0.250980406999588,
+},
+["text"] = "|Hplayer:Lowiebowie-Tichondrius|h[|cff00ff98Lowiebowie|r]|h has earned the achievement |cffffff00|Hachievement:61438:Player-11-0E253983:1:4:16:26:4294967295:4294967295:4294967295:4294967295|h[Thalassian Profession Master]|h|r!",
+["id"] = "s46_3457",
+["timestamp"] = 1776367908,
 },
 },
 ["version"] = 1,
