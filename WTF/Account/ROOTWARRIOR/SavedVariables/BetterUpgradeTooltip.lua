@@ -1,12 +1,12 @@
 
 BetterUpgradeTooltipDB = {
-["colorRange"] = true,
-["showUpgradeCurrency"] = true,
 ["colorRank"] = true,
+["showUpgradeCurrency"] = true,
 ["ilvlRangeColor"] = {
 1,
 1,
 1,
 1,
 },
+["colorRange"] = true,
 }

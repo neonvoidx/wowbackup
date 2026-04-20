@@ -30,11 +30,11 @@ FrameColor4DB = {
 ["Hellavator - Tichondrius"] = "Default",
 ["Mäñýfäçëð - Tichondrius"] = "Default",
 ["Neonvoid - Tichondrius"] = "Default",
-["Stormclout - Tichondrius"] = "Default",
+["Strathmoan - Tichondrius"] = "Default",
 ["Reedingo - Mal'Ganis"] = "Default",
 ["Starstypeshi - Tichondrius"] = "Default",
 ["Smaugchamp - Tichondrius"] = "Default",
-["Strathmoan - Tichondrius"] = "Default",
+["Stormclout - Tichondrius"] = "Default",
 ["Korahron - Tichondrius"] = "Default",
 ["Hellowalls - Mal'Ganis"] = "Default",
 ["Gehyo - Mal'Ganis"] = "Default",
@@ -142,18 +142,11 @@ FrameColor4DB = {
 },
 ["HUD"] = {
 ["colors"] = {
-["tabs"] = {
+["main"] = {
 ["rgbaValues"] = {
-0.1803921610116959,
-0.1803921610116959,
-0.1803921610116959,
-},
-},
-["borders"] = {
-["rgbaValues"] = {
-0.2000000178813934,
-0.2000000178813934,
-0.2000000178813934,
+0.2784313857555389,
+0.2784313857555389,
+0.2784313857555389,
 },
 },
 ["fallback"] = {
@@ -163,11 +156,18 @@ FrameColor4DB = {
 0.2196078598499298,
 },
 },
-["main"] = {
+["borders"] = {
 ["rgbaValues"] = {
-0.2784313857555389,
-0.2784313857555389,
-0.2784313857555389,
+0.2000000178813934,
+0.2000000178813934,
+0.2000000178813934,
+},
+},
+["tabs"] = {
+["rgbaValues"] = {
+0.1803921610116959,
+0.1803921610116959,
+0.1803921610116959,
 },
 },
 },

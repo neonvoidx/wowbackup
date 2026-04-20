@@ -19,9 +19,9 @@ MythicDungeonToolsDB = {
 ["Praisesun - Tichondrius"] = "Praisesun - Tichondrius",
 ["Auteist - Mal'Ganis"] = "Auteist - Mal'Ganis",
 ["Ofpuss - Mal'Ganis"] = "Ofpuss - Mal'Ganis",
-["Choppiez - Mal'Ganis"] = "Choppiez - Mal'Ganis",
-["Reedingo - Tichondrius"] = "Reedingo - Tichondrius",
 ["Manyfaced - Tichondrius"] = "Manyfaced - Tichondrius",
+["Smaugchamp - Mal'Ganis"] = "Smaugchamp - Mal'Ganis",
+["Choppiez - Mal'Ganis"] = "Choppiez - Mal'Ganis",
 ["Smaugchamp - Tichondrius"] = "Smaugchamp - Tichondrius",
 ["Gehyo - Mal'Ganis"] = "Gehyo - Mal'Ganis",
 ["Neonvoid - Tichondrius"] = "Neonvoid - Tichondrius",
@@ -31,8 +31,8 @@ MythicDungeonToolsDB = {
 ["Charizhard - Mal'Ganis"] = "Charizhard - Mal'Ganis",
 ["Hellavator - Tichondrius"] = "Hellavator - Tichondrius",
 ["Crillessana - Mal'Ganis"] = "Crillessana - Mal'Ganis",
-["Strathmoan - Tichondrius"] = "Strathmoan - Tichondrius",
 ["Stormclout - Tichondrius"] = "Stormclout - Tichondrius",
+["Strathmoan - Tichondrius"] = "Strathmoan - Tichondrius",
 ["Reedingo - Mal'Ganis"] = "Reedingo - Mal'Ganis",
 ["Thickshape - Mal'Ganis"] = "Thickshape - Mal'Ganis",
 ["Auteist - Tichondrius"] = "Auteist - Tichondrius",
@@ -40,11 +40,75 @@ MythicDungeonToolsDB = {
 ["Korahron - Tichondrius"] = "Korahron - Tichondrius",
 ["Starstypeshi - Tichondrius"] = "Starstypeshi - Tichondrius",
 ["Hellowalls - Mal'Ganis"] = "Hellowalls - Mal'Ganis",
-["Smaugchamp - Mal'Ganis"] = "Smaugchamp - Mal'Ganis",
+["Reedingo - Tichondrius"] = "Reedingo - Tichondrius",
 ["Clevagirl - Mal'Ganis"] = "Clevagirl - Mal'Ganis",
 },
 ["global"] = {
-["currentDungeonIdx"] = 155,
+["colorPaletteInfo"] = {
+["colorPaletteIdx"] = 1,
+["customPaletteValues"] = {
+{
+1,
+1,
+1,
+},
+{
+1,
+1,
+1,
+},
+{
+1,
+1,
+1,
+},
+{
+1,
+1,
+1,
+},
+{
+1,
+1,
+1,
+},
+{
+1,
+1,
+1,
+},
+{
+1,
+1,
+1,
+},
+{
+1,
+1,
+1,
+},
+{
+1,
+1,
+1,
+},
+{
+1,
+1,
+1,
+},
+{
+1,
+1,
+1,
+},
+{
+1,
+1,
+1,
+},
+},
+},
 ["hasSeenAssignmentWarning"] = true,
 ["currentDifficulty"] = 2,
 ["minimap"] = {
@@ -52,7 +116,19 @@ MythicDungeonToolsDB = {
 ["lock"] = true,
 ["showInCompartment"] = true,
 },
-["nonFullscreenScale"] = 1.288893581081081,
+["currentPreset"] = {
+[19] = 2,
+[30] = 2,
+[37] = 2,
+[38] = 2,
+[111] = 2,
+[113] = 2,
+[114] = 2,
+[115] = 2,
+[119] = 2,
+[123] = 2,
+[150] = 2,
+},
 ["maximized"] = false,
 ["presets"] = {
 [11] = {
@@ -370,12 +446,12 @@ nil,
 },
 {
 ["color"] = "fffb3e",
-[17] = {
-2,
-3,
-},
 [15] = {
 4,
+3,
+},
+[17] = {
+2,
 3,
 },
 [18] = {
@@ -525,6 +601,10 @@ nil,
 ["difficulty"] = 10,
 ["uid"] = "i8o4G59N2zg",
 ["addonVersion"] = 554,
+["colorPaletteInfo"] = {
+["autoColoring"] = true,
+["colorPaletteIdx"] = 4,
+},
 ["value"] = {
 ["pulls"] = {
 {
@@ -890,10 +970,6 @@ nil,
 {
 },
 },
-},
-["colorPaletteInfo"] = {
-["autoColoring"] = true,
-["colorPaletteIdx"] = 4,
 },
 ["text"] = "Halls || Simple",
 ["objects"] = {
@@ -1297,10 +1373,6 @@ nil,
 },
 ["uid"] = "gN6Nv)StbSh",
 ["addonVersion"] = 550,
-["colorPaletteInfo"] = {
-["autoColoring"] = true,
-["colorPaletteIdx"] = 4,
-},
 ["value"] = {
 ["pulls"] = {
 {
@@ -1539,6 +1611,10 @@ nil,
 },
 },
 },
+["colorPaletteInfo"] = {
+["autoColoring"] = true,
+["colorPaletteIdx"] = 4,
+},
 ["text"] = "Streets || Simple",
 ["difficulty"] = 10,
 ["week"] = 1,
@@ -1576,10 +1652,6 @@ nil,
 },
 ["uid"] = "0)m5sk60lH)",
 ["addonVersion"] = 550,
-["colorPaletteInfo"] = {
-["autoColoring"] = true,
-["colorPaletteIdx"] = 4,
-},
 ["value"] = {
 ["pulls"] = {
 {
@@ -1803,12 +1875,12 @@ nil,
 [18] = {
 1,
 },
-[12] = {
-1,
-},
 [20] = {
 1,
 2,
+},
+[12] = {
+1,
 },
 },
 {
@@ -1896,6 +1968,10 @@ nil,
 },
 },
 },
+["colorPaletteInfo"] = {
+["autoColoring"] = true,
+["colorPaletteIdx"] = 4,
+},
 ["text"] = "Gambit || Simple",
 ["difficulty"] = 10,
 ["week"] = 1,
@@ -1975,6 +2051,10 @@ nil,
 ["difficulty"] = 20,
 ["uid"] = "00Zt0fk1b9Z",
 ["addonVersion"] = 550,
+["colorPaletteInfo"] = {
+["autoColoring"] = true,
+["colorPaletteIdx"] = 4,
+},
 ["value"] = {
 ["selection"] = {
 10,
@@ -2200,10 +2280,6 @@ nil,
 },
 },
 },
-["colorPaletteInfo"] = {
-["autoColoring"] = true,
-["colorPaletteIdx"] = 4,
-},
 ["text"] = "Dawnbreaker || Simple",
 ["objects"] = {
 },
@@ -2265,6 +2341,10 @@ nil,
 ["difficulty"] = 10,
 ["uid"] = "EKGsA5cA8dl",
 ["addonVersion"] = 550,
+["colorPaletteInfo"] = {
+["autoColoring"] = true,
+["colorPaletteIdx"] = 4,
+},
 ["value"] = {
 ["selection"] = {
 1,
@@ -2620,10 +2700,6 @@ nil,
 },
 },
 },
-["colorPaletteInfo"] = {
-["autoColoring"] = true,
-["colorPaletteIdx"] = 4,
-},
 ["text"] = "Ara'kara, City of Echoes || Simple",
 ["objects"] = {
 },
@@ -2867,11 +2943,6 @@ true,
 ["freeholdJoined"] = false,
 ["beguiling"] = 1,
 },
-["colorPaletteInfo"] = {
-["autoColoring"] = true,
-["colorPaletteIdx"] = 4,
-},
-["text"] = "TWW S1 City of Threads",
 ["value"] = {
 ["currentPull"] = 1,
 ["currentSublevel"] = 1,
@@ -3121,11 +3192,11 @@ true,
 7,
 8,
 },
-[17] = {
-1,
-},
 [15] = {
 3,
+},
+[17] = {
+1,
 },
 ["color"] = "ff3e9e",
 },
@@ -3149,6 +3220,11 @@ true,
 ["color"] = "ff9b3e",
 },
 },
+},
+["text"] = "TWW S1 City of Threads",
+["colorPaletteInfo"] = {
+["autoColoring"] = true,
+["colorPaletteIdx"] = 4,
 },
 ["uid"] = "2)joMBoG5)z",
 },
@@ -3184,6 +3260,10 @@ true,
 ["difficulty"] = 20,
 ["uid"] = "NJMxWsWo1uG",
 ["addonVersion"] = 550,
+["colorPaletteInfo"] = {
+["autoColoring"] = true,
+["colorPaletteIdx"] = 4,
+},
 ["value"] = {
 ["selection"] = {
 10,
@@ -3339,10 +3419,6 @@ true,
 2,
 },
 ["color"] = "a1ff3e",
-[20] = {
-2,
-1,
-},
 [4] = {
 4,
 6,
@@ -3352,6 +3428,10 @@ true,
 1,
 5,
 7,
+},
+[20] = {
+2,
+1,
 },
 },
 {
@@ -3513,10 +3593,6 @@ true,
 },
 },
 },
-["colorPaletteInfo"] = {
-["autoColoring"] = true,
-["colorPaletteIdx"] = 4,
-},
 ["text"] = "Priory of the Sacred Flame || Simple",
 ["objects"] = {
 },
@@ -3526,6 +3602,10 @@ true,
 ["difficulty"] = 20,
 ["uid"] = "xhDZJSWi6jA",
 ["addonVersion"] = 550,
+["colorPaletteInfo"] = {
+["autoColoring"] = true,
+["colorPaletteIdx"] = 4,
+},
 ["value"] = {
 ["selection"] = {
 19,
@@ -3660,10 +3740,6 @@ true,
 2,
 },
 ["color"] = "ff9b3e",
-[20] = {
-2,
-1,
-},
 [4] = {
 5,
 6,
@@ -3673,6 +3749,10 @@ true,
 1,
 4,
 7,
+},
+[20] = {
+2,
+1,
 },
 },
 {
@@ -3835,10 +3915,6 @@ true,
 },
 },
 },
-["colorPaletteInfo"] = {
-["autoColoring"] = true,
-["colorPaletteIdx"] = 4,
-},
 ["text"] = "Priory || Simple Left",
 ["objects"] = {
 },
@@ -3900,6 +3976,10 @@ true,
 ["difficulty"] = 10,
 ["uid"] = "Mh1leZ32YFM",
 ["addonVersion"] = 550,
+["colorPaletteInfo"] = {
+["autoColoring"] = true,
+["colorPaletteIdx"] = 4,
+},
 ["value"] = {
 ["selection"] = {
 6,
@@ -3952,14 +4032,17 @@ true,
 ["color"] = "3eff9e",
 },
 {
-[25] = {
-4,
-},
 [10] = {
 6,
 5,
 },
-["color"] = "ff3e3e",
+[25] = {
+4,
+},
+[12] = {
+8,
+12,
+},
 [14] = {
 6,
 },
@@ -3967,10 +4050,7 @@ true,
 24,
 23,
 },
-[12] = {
-8,
-12,
-},
+["color"] = "ff3e3e",
 },
 {
 {
@@ -4170,15 +4250,15 @@ true,
 27,
 },
 ["color"] = "3eff3e",
-[9] = {
-6,
-7,
-},
 [5] = {
 33,
 },
 [16] = {
 4,
+},
+[9] = {
+6,
+7,
 },
 },
 {
@@ -4193,12 +4273,12 @@ true,
 1,
 },
 ["color"] = "3effff",
+[12] = {
+},
 [26] = {
 1,
 2,
 3,
-},
-[12] = {
 },
 },
 },
@@ -4209,10 +4289,6 @@ true,
 {
 },
 },
-},
-["colorPaletteInfo"] = {
-["autoColoring"] = true,
-["colorPaletteIdx"] = 4,
 },
 ["text"] = "Floodgate || Simple",
 ["objects"] = {
@@ -4290,10 +4366,6 @@ false,
 },
 ["uid"] = "grVA8DFual4",
 ["addonVersion"] = 550,
-["colorPaletteInfo"] = {
-["autoColoring"] = true,
-["colorPaletteIdx"] = 4,
-},
 ["value"] = {
 ["selection"] = {
 4,
@@ -4605,6 +4677,10 @@ false,
 },
 },
 },
+["colorPaletteInfo"] = {
+["autoColoring"] = true,
+["colorPaletteIdx"] = 4,
+},
 ["text"] = "Eco-Dome || Simple",
 ["difficulty"] = 10,
 ["week"] = 1,
@@ -4652,11 +4728,6 @@ true,
 ["freeholdJoined"] = false,
 ["beguiling"] = 1,
 },
-["colorPaletteInfo"] = {
-["autoColoring"] = true,
-["colorPaletteIdx"] = 1,
-},
-["text"] = "Tactyks PUG Friendly",
 ["value"] = {
 ["currentPull"] = 1,
 ["currentSublevel"] = 1,
@@ -4707,11 +4778,11 @@ true,
 7,
 },
 ["color"] = "3eff9e",
-[5] = {
-21,
+[9] = {
 22,
 },
-[9] = {
+[5] = {
+21,
 22,
 },
 [13] = {
@@ -4992,9 +5063,6 @@ nil,
 [14] = {
 5,
 },
-[15] = {
-1,
-},
 [9] = {
 27,
 28,
@@ -5003,6 +5071,9 @@ nil,
 31,
 32,
 33,
+},
+[15] = {
+1,
 },
 ["color"] = "3e3eff",
 },
@@ -5025,6 +5096,11 @@ nil,
 ["color"] = "9e9eff",
 },
 },
+},
+["text"] = "Tactyks PUG Friendly",
+["colorPaletteInfo"] = {
+["autoColoring"] = true,
+["colorPaletteIdx"] = 1,
 },
 ["uid"] = "ZVXlr5CetIJ",
 },
@@ -5072,90 +5148,14 @@ nil,
 },
 },
 },
-["colorPaletteInfo"] = {
-["colorPaletteIdx"] = 1,
-["customPaletteValues"] = {
-{
-1,
-1,
-1,
-},
-{
-1,
-1,
-1,
-},
-{
-1,
-1,
-1,
-},
-{
-1,
-1,
-1,
-},
-{
-1,
-1,
-1,
-},
-{
-1,
-1,
-1,
-},
-{
-1,
-1,
-1,
-},
-{
-1,
-1,
-1,
-},
-{
-1,
-1,
-1,
-},
-{
-1,
-1,
-1,
-},
-{
-1,
-1,
-1,
-},
-{
-1,
-1,
-1,
-},
-},
-},
+["nonFullscreenScale"] = 1.288893581081081,
 ["toolbarExpanded"] = false,
 ["latestSeenDungeonList"] = 8,
-["currentPreset"] = {
-[19] = 2,
-[30] = 2,
-[37] = 2,
-[38] = 2,
-[111] = 2,
-[113] = 2,
-[114] = 2,
-[115] = 2,
-[119] = 2,
-[123] = 2,
-[150] = 2,
-},
+["latestDungeonSeen"] = 150,
 ["version"] = 6011,
 ["xoffset"] = -81.0216293334961,
 ["scale"] = 1.288893581081081,
-["latestDungeonSeen"] = 150,
+["currentDungeonIdx"] = 155,
 ["yoffset"] = -116.6889266967773,
 },
 }

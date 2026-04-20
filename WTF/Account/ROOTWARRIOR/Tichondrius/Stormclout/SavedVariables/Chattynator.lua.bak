@@ -1,16 +1,6 @@
 
 CHATTYNATOR_CURRENT_PROFILE = "DEFAULT"
 CHATTYNATOR_COMMAND_HISTORY = {
-"/s zz",
-"/s should give me 8 charges of zenith for this",
-"/s prot warr",
-"/s the fuck",
-"/s go dh",
-"/s /cdm",
-"/s /cmc",
-"/s /rl",
-"/s /bge",
-"/i what happened to alliance, last 2-3 weeks ally have been ass at bgs",
 "/i which is so odd",
 "/i winnable",
 "/i i assume bear carrying",
@@ -209,5 +199,11 @@ CHATTYNATOR_COMMAND_HISTORY = {
 "/s /sarena",
 "/s /edit",
 "/s /sarena",
+"/s /rl",
+"/s /hbc",
+"/s /rl",
+"/s /bbf",
+"/s /bbp",
+"/s /minicc",
 "/s /rl",
 }

@@ -9159,2209 +9159,2209 @@ FrameSortDB = {
 ["Timestamp"] = 84.99305269999968,
 },
 {
-["Message"] = "Event: ARENA_OPPONENT_UPDATE arenapet2, cleared.",
-["Level"] = 1,
-["Timestamp"] = 9.057809300000372,
-},
-{
-["Message"] = "Provider 'Blizzard' requested sort due to 'ARENA_OPPONENT_UPDATE'.",
-["Level"] = 1,
-["Timestamp"] = 9.057869300002494,
-},
-{
-["Message"] = "Provider 'sArena' requested sort due to 'ARENA_OPPONENT_UPDATE'.",
-["Level"] = 1,
-["Timestamp"] = 9.057895500001905,
-},
-{
-["Message"] = "Event: ARENA_OPPONENT_UPDATE arena3, cleared.",
-["Level"] = 1,
-["Timestamp"] = 9.065851300001668,
-},
-{
-["Message"] = "Provider 'Blizzard' requested sort due to 'ARENA_OPPONENT_UPDATE'.",
-["Level"] = 1,
-["Timestamp"] = 9.065907700001844,
-},
-{
-["Message"] = "Provider 'sArena' requested sort due to 'ARENA_OPPONENT_UPDATE'.",
-["Level"] = 1,
-["Timestamp"] = 9.065927400002693,
-},
-{
-["Message"] = "Event: ARENA_OPPONENT_UPDATE arenapet3, cleared.",
-["Level"] = 1,
-["Timestamp"] = 9.073979600001621,
-},
-{
-["Message"] = "Provider 'Blizzard' requested sort due to 'ARENA_OPPONENT_UPDATE'.",
-["Level"] = 1,
-["Timestamp"] = 9.074035500001628,
-},
-{
-["Message"] = "Provider 'sArena' requested sort due to 'ARENA_OPPONENT_UPDATE'.",
-["Level"] = 1,
-["Timestamp"] = 9.074055700002646,
-},
-{
-["Message"] = "Event: ARENA_OPPONENT_UPDATE arena4, cleared.",
-["Level"] = 1,
-["Timestamp"] = 9.08185240000239,
-},
-{
-["Message"] = "Provider 'Blizzard' requested sort due to 'ARENA_OPPONENT_UPDATE'.",
-["Level"] = 1,
-["Timestamp"] = 9.081904800001212,
-},
-{
-["Message"] = "Provider 'sArena' requested sort due to 'ARENA_OPPONENT_UPDATE'.",
-["Level"] = 1,
-["Timestamp"] = 9.081923300000199,
-},
-{
-["Message"] = "Event: ARENA_OPPONENT_UPDATE arenapet4, cleared.",
-["Level"] = 1,
-["Timestamp"] = 9.088765899999999,
-},
-{
-["Message"] = "Provider 'Blizzard' requested sort due to 'ARENA_OPPONENT_UPDATE'.",
-["Level"] = 1,
-["Timestamp"] = 9.088815200000681,
-},
-{
-["Message"] = "Provider 'sArena' requested sort due to 'ARENA_OPPONENT_UPDATE'.",
-["Level"] = 1,
-["Timestamp"] = 9.088837200000853,
-},
-{
-["Message"] = "Event: ARENA_OPPONENT_UPDATE arena5, cleared.",
-["Level"] = 1,
-["Timestamp"] = 9.096210300001985,
-},
-{
-["Message"] = "Provider 'Blizzard' requested sort due to 'ARENA_OPPONENT_UPDATE'.",
-["Level"] = 1,
-["Timestamp"] = 9.09626290000233,
-},
-{
-["Message"] = "Provider 'sArena' requested sort due to 'ARENA_OPPONENT_UPDATE'.",
-["Level"] = 1,
-["Timestamp"] = 9.096282500002417,
-},
-{
-["Message"] = "Event: ARENA_OPPONENT_UPDATE arenapet5, cleared.",
-["Level"] = 1,
-["Timestamp"] = 9.103163800002221,
-},
-{
-["Message"] = "Provider 'Blizzard' requested sort due to 'ARENA_OPPONENT_UPDATE'.",
-["Level"] = 1,
-["Timestamp"] = 9.103210000001127,
-},
-{
-["Message"] = "Provider 'sArena' requested sort due to 'ARENA_OPPONENT_UPDATE'.",
-["Level"] = 1,
-["Timestamp"] = 9.103226800001721,
-},
-{
-["Message"] = "Event: ARENA_OPPONENT_UPDATE arena6, cleared.",
-["Level"] = 1,
-["Timestamp"] = 9.110934700001962,
-},
-{
-["Message"] = "Provider 'Blizzard' requested sort due to 'ARENA_OPPONENT_UPDATE'.",
-["Level"] = 1,
-["Timestamp"] = 9.110982500002137,
-},
-{
-["Message"] = "Provider 'sArena' requested sort due to 'ARENA_OPPONENT_UPDATE'.",
-["Level"] = 1,
-["Timestamp"] = 9.110999900000024,
-},
-{
-["Message"] = "Event: ARENA_OPPONENT_UPDATE arenapet6, cleared.",
-["Level"] = 1,
-["Timestamp"] = 9.116702800001804,
-},
-{
-["Message"] = "Provider 'Blizzard' requested sort due to 'ARENA_OPPONENT_UPDATE'.",
-["Level"] = 1,
-["Timestamp"] = 9.116751600002317,
-},
-{
-["Message"] = "Provider 'sArena' requested sort due to 'ARENA_OPPONENT_UPDATE'.",
-["Level"] = 1,
-["Timestamp"] = 9.116766400002234,
-},
-{
-["Message"] = "Event: ARENA_OPPONENT_UPDATE arena7, cleared.",
-["Level"] = 1,
-["Timestamp"] = 9.122768900000665,
-},
-{
-["Message"] = "Provider 'Blizzard' requested sort due to 'ARENA_OPPONENT_UPDATE'.",
-["Level"] = 1,
-["Timestamp"] = 9.122831300002872,
-},
-{
-["Message"] = "Provider 'sArena' requested sort due to 'ARENA_OPPONENT_UPDATE'.",
-["Level"] = 1,
-["Timestamp"] = 9.122856900001352,
-},
-{
-["Message"] = "Event: ARENA_OPPONENT_UPDATE arenapet7, cleared.",
-["Level"] = 1,
-["Timestamp"] = 9.130623300003208,
-},
-{
-["Message"] = "Provider 'Blizzard' requested sort due to 'ARENA_OPPONENT_UPDATE'.",
-["Level"] = 1,
-["Timestamp"] = 9.130668100002367,
-},
-{
-["Message"] = "Provider 'sArena' requested sort due to 'ARENA_OPPONENT_UPDATE'.",
-["Level"] = 1,
-["Timestamp"] = 9.13068640000347,
-},
-{
-["Message"] = "Event: ARENA_OPPONENT_UPDATE arena8, cleared.",
-["Level"] = 1,
-["Timestamp"] = 9.136930900000152,
-},
-{
-["Message"] = "Provider 'Blizzard' requested sort due to 'ARENA_OPPONENT_UPDATE'.",
-["Level"] = 1,
-["Timestamp"] = 9.136974800003372,
-},
-{
-["Message"] = "Provider 'sArena' requested sort due to 'ARENA_OPPONENT_UPDATE'.",
-["Level"] = 1,
-["Timestamp"] = 9.13699390000329,
-},
-{
-["Message"] = "Event: ARENA_OPPONENT_UPDATE arenapet8, cleared.",
-["Level"] = 1,
-["Timestamp"] = 9.143827800002327,
-},
-{
-["Message"] = "Provider 'Blizzard' requested sort due to 'ARENA_OPPONENT_UPDATE'.",
-["Level"] = 1,
-["Timestamp"] = 9.143870500000048,
-},
-{
-["Message"] = "Provider 'sArena' requested sort due to 'ARENA_OPPONENT_UPDATE'.",
-["Level"] = 1,
-["Timestamp"] = 9.143886300000304,
-},
-{
-["Message"] = "Event: ARENA_OPPONENT_UPDATE arena9, cleared.",
-["Level"] = 1,
-["Timestamp"] = 9.151363700002548,
-},
-{
-["Message"] = "Provider 'Blizzard' requested sort due to 'ARENA_OPPONENT_UPDATE'.",
-["Level"] = 1,
-["Timestamp"] = 9.151412300001539,
-},
-{
-["Message"] = "Provider 'sArena' requested sort due to 'ARENA_OPPONENT_UPDATE'.",
-["Level"] = 1,
-["Timestamp"] = 9.151431300000695,
-},
-{
-["Message"] = "Event: ARENA_OPPONENT_UPDATE arenapet9, cleared.",
-["Level"] = 1,
-["Timestamp"] = 9.15848510000069,
-},
-{
-["Message"] = "Provider 'Blizzard' requested sort due to 'ARENA_OPPONENT_UPDATE'.",
-["Level"] = 1,
-["Timestamp"] = 9.158534900001541,
-},
-{
-["Message"] = "Provider 'sArena' requested sort due to 'ARENA_OPPONENT_UPDATE'.",
-["Level"] = 1,
-["Timestamp"] = 9.158553300003405,
-},
-{
-["Message"] = "Event: ARENA_OPPONENT_UPDATE arena10, cleared.",
-["Level"] = 1,
-["Timestamp"] = 9.164529500001663,
-},
-{
-["Message"] = "Provider 'Blizzard' requested sort due to 'ARENA_OPPONENT_UPDATE'.",
-["Level"] = 1,
-["Timestamp"] = 9.164568600001076,
-},
-{
-["Message"] = "Provider 'sArena' requested sort due to 'ARENA_OPPONENT_UPDATE'.",
-["Level"] = 1,
-["Timestamp"] = 9.164582100002008,
-},
-{
-["Message"] = "Event: ARENA_OPPONENT_UPDATE arenapet10, cleared.",
-["Level"] = 1,
-["Timestamp"] = 9.169242200001463,
-},
-{
-["Message"] = "Provider 'Blizzard' requested sort due to 'ARENA_OPPONENT_UPDATE'.",
-["Level"] = 1,
-["Timestamp"] = 9.169280699999945,
-},
-{
-["Message"] = "Provider 'sArena' requested sort due to 'ARENA_OPPONENT_UPDATE'.",
-["Level"] = 1,
-["Timestamp"] = 9.169293700000708,
-},
-{
-["Message"] = "Event: ARENA_OPPONENT_UPDATE arena11, cleared.",
-["Level"] = 1,
-["Timestamp"] = 9.17392800000016,
-},
-{
-["Message"] = "Provider 'Blizzard' requested sort due to 'ARENA_OPPONENT_UPDATE'.",
-["Level"] = 1,
-["Timestamp"] = 9.173965200003295,
-},
-{
-["Message"] = "Provider 'sArena' requested sort due to 'ARENA_OPPONENT_UPDATE'.",
-["Level"] = 1,
-["Timestamp"] = 9.173978300001181,
-},
-{
-["Message"] = "Event: ARENA_OPPONENT_UPDATE arenapet11, cleared.",
-["Level"] = 1,
-["Timestamp"] = 9.178621900002327,
-},
-{
-["Message"] = "Provider 'Blizzard' requested sort due to 'ARENA_OPPONENT_UPDATE'.",
-["Level"] = 1,
-["Timestamp"] = 9.178659300003346,
-},
-{
-["Message"] = "Provider 'sArena' requested sort due to 'ARENA_OPPONENT_UPDATE'.",
-["Level"] = 1,
-["Timestamp"] = 9.178672300000471,
-},
-{
-["Message"] = "Event: ARENA_OPPONENT_UPDATE arena12, cleared.",
-["Level"] = 1,
-["Timestamp"] = 9.183343100001366,
-},
-{
-["Message"] = "Provider 'Blizzard' requested sort due to 'ARENA_OPPONENT_UPDATE'.",
-["Level"] = 1,
-["Timestamp"] = 9.183380800001032,
-},
-{
-["Message"] = "Provider 'sArena' requested sort due to 'ARENA_OPPONENT_UPDATE'.",
-["Level"] = 1,
-["Timestamp"] = 9.183393800001795,
-},
-{
-["Message"] = "Event: ARENA_OPPONENT_UPDATE arenapet12, cleared.",
-["Level"] = 1,
-["Timestamp"] = 9.18808060000083,
-},
-{
-["Message"] = "Provider 'Blizzard' requested sort due to 'ARENA_OPPONENT_UPDATE'.",
-["Level"] = 1,
-["Timestamp"] = 9.18811850000202,
-},
-{
-["Message"] = "Provider 'sArena' requested sort due to 'ARENA_OPPONENT_UPDATE'.",
-["Level"] = 1,
-["Timestamp"] = 9.188131700000667,
-},
-{
-["Message"] = "Event: ARENA_OPPONENT_UPDATE arena13, cleared.",
-["Level"] = 1,
-["Timestamp"] = 9.192829100000381,
-},
-{
-["Message"] = "Provider 'Blizzard' requested sort due to 'ARENA_OPPONENT_UPDATE'.",
-["Level"] = 1,
-["Timestamp"] = 9.192866900000809,
-},
-{
-["Message"] = "Provider 'sArena' requested sort due to 'ARENA_OPPONENT_UPDATE'.",
-["Level"] = 1,
-["Timestamp"] = 9.192879900001572,
-},
-{
-["Message"] = "Event: ARENA_OPPONENT_UPDATE arenapet13, cleared.",
-["Level"] = 1,
-["Timestamp"] = 9.19756320000306,
-},
-{
-["Message"] = "Provider 'Blizzard' requested sort due to 'ARENA_OPPONENT_UPDATE'.",
-["Level"] = 1,
-["Timestamp"] = 9.197600300001795,
-},
-{
-["Message"] = "Provider 'sArena' requested sort due to 'ARENA_OPPONENT_UPDATE'.",
-["Level"] = 1,
-["Timestamp"] = 9.197613500000443,
-},
-{
-["Message"] = "Event: ARENA_OPPONENT_UPDATE arena14, cleared.",
-["Level"] = 1,
-["Timestamp"] = 9.202326800001174,
-},
-{
-["Message"] = "Provider 'Blizzard' requested sort due to 'ARENA_OPPONENT_UPDATE'.",
-["Level"] = 1,
-["Timestamp"] = 9.202364400000079,
-},
-{
-["Message"] = "Provider 'sArena' requested sort due to 'ARENA_OPPONENT_UPDATE'.",
-["Level"] = 1,
-["Timestamp"] = 9.202377600002364,
-},
-{
-["Message"] = "Event: ARENA_OPPONENT_UPDATE arenapet14, cleared.",
-["Level"] = 1,
-["Timestamp"] = 9.20721560000311,
-},
-{
-["Message"] = "Provider 'Blizzard' requested sort due to 'ARENA_OPPONENT_UPDATE'.",
-["Level"] = 1,
-["Timestamp"] = 9.207253300002776,
-},
-{
-["Message"] = "Provider 'sArena' requested sort due to 'ARENA_OPPONENT_UPDATE'.",
-["Level"] = 1,
-["Timestamp"] = 9.207266299999901,
-},
-{
-["Message"] = "Event: ARENA_OPPONENT_UPDATE arena15, cleared.",
-["Level"] = 1,
-["Timestamp"] = 9.212001300002157,
-},
-{
-["Message"] = "Provider 'Blizzard' requested sort due to 'ARENA_OPPONENT_UPDATE'.",
-["Level"] = 1,
-["Timestamp"] = 9.212038600002415,
-},
-{
-["Message"] = "Provider 'sArena' requested sort due to 'ARENA_OPPONENT_UPDATE'.",
-["Level"] = 1,
-["Timestamp"] = 9.212051600003178,
-},
-{
-["Message"] = "Event: ARENA_OPPONENT_UPDATE arenapet15, cleared.",
-["Level"] = 1,
-["Timestamp"] = 9.21677550000095,
-},
-{
-["Message"] = "Provider 'Blizzard' requested sort due to 'ARENA_OPPONENT_UPDATE'.",
-["Level"] = 1,
-["Timestamp"] = 9.216812200000277,
-},
-{
-["Message"] = "Provider 'sArena' requested sort due to 'ARENA_OPPONENT_UPDATE'.",
-["Level"] = 1,
-["Timestamp"] = 9.216825100000278,
-},
-{
-["Message"] = "Event: CVAR_UPDATE nameplateOverlapV, 0.85.",
-["Level"] = 1,
-["Timestamp"] = 9.402165200001036,
-},
-{
-["Message"] = "Event: CVAR_UPDATE nameplateAuraScale, 1.",
-["Level"] = 1,
-["Timestamp"] = 9.40271230000144,
-},
-{
-["Message"] = "Event: CVAR_UPDATE nameplateMaxScale, 1.",
-["Level"] = 1,
-["Timestamp"] = 9.404238900002383,
-},
-{
-["Message"] = "Event: CVAR_UPDATE nameplateShowFriendlyNpcs, 1.",
-["Level"] = 1,
-["Timestamp"] = 9.404892800001107,
-},
-{
-["Message"] = "Event: CVAR_UPDATE nameplateSelectedScale, 1.05.",
-["Level"] = 1,
-["Timestamp"] = 9.406419100003404,
-},
-{
-["Message"] = "Event: CVAR_UPDATE nameplateMinAlpha, 0.6.",
-["Level"] = 1,
-["Timestamp"] = 9.407993900000292,
-},
-{
-["Message"] = "Event: CVAR_UPDATE nameplateMinAlphaDistance, 10.1.",
-["Level"] = 1,
-["Timestamp"] = 9.409520500001236,
-},
-{
-["Message"] = "Event: CVAR_UPDATE nameplateShowEnemyMinus, 0.",
-["Level"] = 1,
-["Timestamp"] = 9.410084300001472,
-},
-{
-["Message"] = "Event: CVAR_UPDATE nameplateMinScale, 1.",
-["Level"] = 1,
-["Timestamp"] = 9.411579500003427,
-},
-{
-["Message"] = "Event: CVAR_UPDATE nameplateOccludedAlphaMult, 1.",
-["Level"] = 1,
-["Timestamp"] = 9.41312200000175,
-},
-{
-["Message"] = "Event: CVAR_UPDATE nameplateEnemyPlayerAuraDisplay, C.",
-["Level"] = 1,
-["Timestamp"] = 9.414661500002694,
-},
-{
-["Message"] = "Event: CVAR_UPDATE nameplateEnemyPlayerAuraDisplay, G.",
-["Level"] = 1,
-["Timestamp"] = 9.41618020000169,
-},
-{
-["Message"] = "Event: CVAR_UPDATE nameplateSimplifiedTypes, B.",
-["Level"] = 1,
-["Timestamp"] = 9.417700800000603,
-},
-{
-["Message"] = "Event: CVAR_UPDATE nameplateFriendlyPlayerAuraDisplay, A.",
-["Level"] = 1,
-["Timestamp"] = 9.419194200003403,
-},
-{
-["Message"] = "Event: CVAR_UPDATE nameplateFriendlyPlayerAuraDisplay, E.",
-["Level"] = 1,
-["Timestamp"] = 9.420680200000788,
-},
-{
-["Message"] = "Event: CVAR_UPDATE nameplateFriendlyPlayerAuraDisplay, G.",
-["Level"] = 1,
-["Timestamp"] = 9.422200600001815,
-},
-{
-["Message"] = "Event: CVAR_UPDATE nameplateEnemyNpcAuraDisplay, C.",
-["Level"] = 1,
-["Timestamp"] = 9.423692800002755,
-},
-{
-["Message"] = "Event: CVAR_UPDATE nameplateEnemyNpcAuraDisplay, G.",
-["Level"] = 1,
-["Timestamp"] = 9.42518580000251,
-},
-{
-["Message"] = "Event: CVAR_UPDATE nameplateInfoDisplay, F.",
-["Level"] = 1,
-["Timestamp"] = 9.426778600001853,
-},
-{
-["Message"] = "Event: CVAR_UPDATE cameraSavedPitch, 21.849831.",
-["Level"] = 1,
-["Timestamp"] = 9.455325000002631,
-},
-{
 ["Message"] = "--- Initialising ---",
 ["Level"] = 1,
-["Timestamp"] = 0.01666210000257706,
+["Timestamp"] = 0.02575179999985267,
 },
 {
 ["Message"] = "Loading saved variables.",
 ["Level"] = 1,
-["Timestamp"] = 0.01667000000088592,
+["Timestamp"] = 0.02576720000070054,
 },
 {
-["Message"] = "We are version 7.13.3 running on Midnight build 12.0.1.",
+["Message"] = "We are version 7.13.4 running on Midnight build 12.0.1.",
 ["Level"] = 1,
-["Timestamp"] = 0.01678950000132318,
+["Timestamp"] = 0.0258838999998261,
 },
 {
 ["Message"] = "Initialised the sorted units caching module.",
 ["Level"] = 1,
-["Timestamp"] = 0.07057170000189217,
+["Timestamp"] = 0.08365459999913583,
 },
 {
 ["Message"] = "Initialised the auto leader module.",
 ["Level"] = 1,
-["Timestamp"] = 0.07059380000282545,
+["Timestamp"] = 0.08367829999951937,
 },
 {
 ["Message"] = "Initialised the hide player module.",
 ["Level"] = 1,
-["Timestamp"] = 0.07060430000274209,
+["Timestamp"] = 0.08368899999913992,
 },
 {
 ["Message"] = "Initialised the secure sorting module.",
 ["Level"] = 1,
-["Timestamp"] = 0.07185350000145263,
+["Timestamp"] = 0.08452550000038173,
 },
 {
 ["Message"] = "Initialised the targeting module.",
 ["Level"] = 1,
-["Timestamp"] = 0.07272200000079465,
+["Timestamp"] = 0.08521629999995639,
 },
 {
 ["Message"] = "Initialised the macro module.",
 ["Level"] = 1,
-["Timestamp"] = 0.07275330000265967,
+["Timestamp"] = 0.08523570000033942,
 },
 {
 ["Message"] = "Initialised the spec inspector module.",
 ["Level"] = 1,
-["Timestamp"] = 0.07320270000127493,
+["Timestamp"] = 0.08571329999904265,
 },
 {
 ["Message"] = "Initialised the unit tracker module.",
 ["Level"] = 1,
-["Timestamp"] = 0.07321919999958482,
+["Timestamp"] = 0.08572509999976319,
 },
 {
 ["Message"] = "Initialised the nameplates module.",
 ["Level"] = 1,
-["Timestamp"] = 0.07323600000017905,
+["Timestamp"] = 0.08573710000018764,
 },
 {
 ["Message"] = "Initialised the providers module.",
 ["Level"] = 1,
-["Timestamp"] = 0.07332099999985076,
+["Timestamp"] = 0.08580729999994219,
 },
 {
 ["Message"] = "--- Initialisation finished ---",
 ["Level"] = 1,
-["Timestamp"] = 0.07336729999951785,
-},
-{
-["Message"] = "Event: CVAR_UPDATE bodyQuota, 100.",
-["Level"] = 1,
-["Timestamp"] = 1.021132500001841,
-},
-{
-["Message"] = "Event: CVAR_UPDATE MaxObservedPetBattles, 4.",
-["Level"] = 1,
-["Timestamp"] = 1.024317900002643,
-},
-{
-["Message"] = "Event: CVAR_UPDATE pvpSelectedRoles, 8.",
-["Level"] = 1,
-["Timestamp"] = 7.421252100000856,
-},
-{
-["Message"] = "Event: CVAR_UPDATE latestSplashScreen, 91.",
-["Level"] = 1,
-["Timestamp"] = 7.42255490000025,
-},
-{
-["Message"] = "Event: CVAR_UPDATE autoQuestPopUps, v21.",
-["Level"] = 1,
-["Timestamp"] = 7.42379400000209,
-},
-{
-["Message"] = "Event: CVAR_UPDATE damageMeterEnabled, 1.",
-["Level"] = 1,
-["Timestamp"] = 7.42509820000123,
-},
-{
-["Message"] = "Event: CVAR_UPDATE collapsedCurrencyCategoryDefaults, v21###t##$U##%s###%##%^##$O###$##%m##$S###&##%j###8###'##$K###9###:##%c.",
-["Level"] = 1,
-["Timestamp"] = 7.426312400002644,
-},
-{
-["Message"] = "Event: CVAR_UPDATE nameplateSelectedScale, 1.05.",
-["Level"] = 1,
-["Timestamp"] = 7.427527600000758,
-},
-{
-["Message"] = "Event: CVAR_UPDATE EJRaidDifficulty, 15.",
-["Level"] = 1,
-["Timestamp"] = 7.428729700000986,
-},
-{
-["Message"] = "Event: CVAR_UPDATE trackedProfessionRecipes, v21.",
-["Level"] = 1,
-["Timestamp"] = 7.429943099999946,
-},
-{
-["Message"] = "Event: CVAR_UPDATE trackedInitiativeTasks, v21.",
-["Level"] = 1,
-["Timestamp"] = 7.431151000000682,
-},
-{
-["Message"] = "Event: CVAR_UPDATE lastRenownForCovenant3, 52.",
-["Level"] = 1,
-["Timestamp"] = 7.432355700002518,
-},
-{
-["Message"] = "Event: CVAR_UPDATE cooldownViewerEnabled, 1.",
-["Level"] = 1,
-["Timestamp"] = 7.43358260000241,
-},
-{
-["Message"] = "Event: CVAR_UPDATE newPvpSeason, 41.",
-["Level"] = 1,
-["Timestamp"] = 7.434789800001454,
-},
-{
-["Message"] = "Event: CVAR_UPDATE hardTrackedWorldQuests, v21.",
-["Level"] = 1,
-["Timestamp"] = 7.435998200002359,
-},
-{
-["Message"] = "Event: CVAR_UPDATE currencyCategoriesCollapsed, v21###&###8##$O##%m##%^##$K##$S##%j##%c###'###t###:##$U.",
-["Level"] = 1,
-["Timestamp"] = 7.437208600000304,
-},
-{
-["Message"] = "Event: CVAR_UPDATE nameplateMaxDistance, 60.",
-["Level"] = 1,
-["Timestamp"] = 7.43841170000087,
-},
-{
-["Message"] = "Event: CVAR_UPDATE lastRenownForCovenant2, 80.",
-["Level"] = 1,
-["Timestamp"] = 7.439615400002367,
-},
-{
-["Message"] = "Event: CVAR_UPDATE eventSchedulerLastUpdate, 1775104569.",
-["Level"] = 1,
-["Timestamp"] = 7.44082089999938,
-},
-{
-["Message"] = "Event: CVAR_UPDATE trackedProfessionRecraftRecipes, v21.",
-["Level"] = 1,
-["Timestamp"] = 7.442023999999947,
-},
-{
-["Message"] = "Event: CVAR_UPDATE seenPurchasableClassCapstone, 1.",
-["Level"] = 1,
-["Timestamp"] = 7.443224500002543,
-},
-{
-["Message"] = "Event: CVAR_UPDATE professionToolSlotsExampleShown, 1.",
-["Level"] = 1,
-["Timestamp"] = 7.444423900000402,
-},
-{
-["Message"] = "Event: CVAR_UPDATE nameplateSelectedAlpha, 1.",
-["Level"] = 1,
-["Timestamp"] = 7.44562600000063,
-},
-{
-["Message"] = "Event: CVAR_UPDATE raidFramesDisplayClassColor, 1.",
-["Level"] = 1,
-["Timestamp"] = 7.446831400000519,
-},
-{
-["Message"] = "Event: CVAR_UPDATE lfgSelectedRoles, 3.",
-["Level"] = 1,
-["Timestamp"] = 7.448047900001257,
-},
-{
-["Message"] = "Event: CVAR_UPDATE raidFramesHealthText, perc.",
-["Level"] = 1,
-["Timestamp"] = 7.4492519000014,
-},
-{
-["Message"] = "Event: CVAR_UPDATE nameplateGameObjectMaxDistance, 60.",
-["Level"] = 1,
-["Timestamp"] = 7.450828200002434,
-},
-{
-["Message"] = "Event: CVAR_UPDATE autoLootDefault, 1.",
-["Level"] = 1,
-["Timestamp"] = 7.452030300002662,
-},
-{
-["Message"] = "Event: CVAR_UPDATE trackedWorldQuests, v21.",
-["Level"] = 1,
-["Timestamp"] = 7.453234399999928,
-},
-{
-["Message"] = "Event: CVAR_UPDATE minimapShapeshiftTracking, v21.",
-["Level"] = 1,
-["Timestamp"] = 7.454438100001426,
-},
-{
-["Message"] = "Event: CVAR_UPDATE reputationsCollapsed, v21##@0##>]##>|##={##<|##9]##6f##2T##/Q##.m##-U##/%##/X####.",
-["Level"] = 1,
-["Timestamp"] = 7.455641000000469,
-},
-{
-["Message"] = "Event: CVAR_UPDATE closedExtraAbiltyTutorials, @F@@@@PDD@BP@@d.",
-["Level"] = 1,
-["Timestamp"] = 7.456839000002219,
-},
-{
-["Message"] = "Event: CVAR_UPDATE covenantMissionTutorial, K@H@@B@@@@@@@@@@@@@@@B@@@@@@@@@@@@@@@@@@@@H@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@B@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@H.",
-["Level"] = 1,
-["Timestamp"] = 7.458054700000503,
+["Timestamp"] = 0.08584239999981946,
 },
 {
 ["Message"] = "Event: CVAR_UPDATE cameraSavedPetBattleDistance, 15.000062.",
 ["Level"] = 1,
-["Timestamp"] = 7.459259300001577,
+["Timestamp"] = 0.718779099999665,
 },
 {
-["Message"] = "Event: CVAR_UPDATE clubFinderPlayerSettings, 262145.",
+["Message"] = "Event: CVAR_UPDATE cameraSavedPitch, 19.450344.",
 ["Level"] = 1,
-["Timestamp"] = 7.460458800000197,
-},
-{
-["Message"] = "Event: CVAR_UPDATE nameplateMinScale, 1.",
-["Level"] = 1,
-["Timestamp"] = 7.461654500002624,
-},
-{
-["Message"] = "Event: CVAR_UPDATE numReputationHeaders, 28.",
-["Level"] = 1,
-["Timestamp"] = 7.462856800000736,
-},
-{
-["Message"] = "Event: CVAR_UPDATE lfdCollapsedHeaders, @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@A.",
-["Level"] = 1,
-["Timestamp"] = 7.464060599999357,
-},
-{
-["Message"] = "Event: CVAR_UPDATE garrisonCompleteTalentType, 111.",
-["Level"] = 1,
-["Timestamp"] = 7.465262300000177,
-},
-{
-["Message"] = "Event: CVAR_UPDATE mapFade, 0.",
-["Level"] = 1,
-["Timestamp"] = 7.466460200001166,
-},
-{
-["Message"] = "Event: CVAR_UPDATE nameplateShowDebuffsOnFriendly, 0.",
-["Level"] = 1,
-["Timestamp"] = 7.467658500001562,
-},
-{
-["Message"] = "Event: CVAR_UPDATE raidFramesCenterBigDefensive, 0.",
-["Level"] = 1,
-["Timestamp"] = 7.468861500001367,
-},
-{
-["Message"] = "Event: CVAR_UPDATE collapsedReputationHeaderDefaults, v21##/X##>]##>|##6f##.m##-U##9]##0G##<|##={##2T##/Q##/%##@0.",
-["Level"] = 1,
-["Timestamp"] = 7.470073300002696,
-},
-{
-["Message"] = "Event: CVAR_UPDATE pvpFramesHealthText, perc.",
-["Level"] = 1,
-["Timestamp"] = 7.471277100001316,
-},
-{
-["Message"] = "Event: CVAR_UPDATE cameraSavedPitch, 19.900257.",
-["Level"] = 1,
-["Timestamp"] = 7.472482400000445,
-},
-{
-["Message"] = "Event: CVAR_UPDATE raidFramesDispelIndicatorType, 1.",
-["Level"] = 1,
-["Timestamp"] = 7.473679900002026,
-},
-{
-["Message"] = "Event: CVAR_UPDATE nameplateMaxAlphaDistance, 60.",
-["Level"] = 1,
-["Timestamp"] = 7.474876200001745,
-},
-{
-["Message"] = "Event: CVAR_UPDATE damageMeterResetOnNewInstance, 1.",
-["Level"] = 1,
-["Timestamp"] = 7.476078300001973,
-},
-{
-["Message"] = "Event: CVAR_UPDATE professionAccessorySlotsExampleShown, 1.",
-["Level"] = 1,
-["Timestamp"] = 7.477277800000593,
-},
-{
-["Message"] = "Event: CVAR_UPDATE EJLootClass, 10.",
-["Level"] = 1,
-["Timestamp"] = 7.478479100002005,
-},
-{
-["Message"] = "Event: CVAR_UPDATE soulbindsViewedTutorial, x.",
-["Level"] = 1,
-["Timestamp"] = 7.479675300000963,
-},
-{
-["Message"] = "Event: CVAR_UPDATE lastRenownForCovenant4, 40.",
-["Level"] = 1,
-["Timestamp"] = 7.480872800002544,
-},
-{
-["Message"] = "Event: CVAR_UPDATE externalDefensivesEnabled, 1.",
-["Level"] = 1,
-["Timestamp"] = 7.48208650000015,
-},
-{
-["Message"] = "Event: CVAR_UPDATE enableMultiActionBars, 31.",
-["Level"] = 1,
-["Timestamp"] = 7.483298400002241,
-},
-{
-["Message"] = "Event: CVAR_UPDATE nameplateOccludedAlphaMult, 1.",
-["Level"] = 1,
-["Timestamp"] = 7.484524999999849,
-},
-{
-["Message"] = "Event: CVAR_UPDATE raidFramesDisplayOnlyHealerPowerBars, 1.",
-["Level"] = 1,
-["Timestamp"] = 7.48574809999991,
-},
-{
-["Message"] = "Event: CVAR_UPDATE EJDungeonDifficulty, 23.",
-["Level"] = 1,
-["Timestamp"] = 7.486958299999969,
-},
-{
-["Message"] = "Event: CVAR_UPDATE numCurrencyCategories, 23.",
-["Level"] = 1,
-["Timestamp"] = 7.488156100000197,
-},
-{
-["Message"] = "Event: CVAR_UPDATE hardTrackedQuests, v21.",
-["Level"] = 1,
-["Timestamp"] = 7.489352500000678,
-},
-{
-["Message"] = "Event: CVAR_UPDATE transmogCurrentSpecOnly, 1.",
-["Level"] = 1,
-["Timestamp"] = 7.490663600001426,
-},
-{
-["Message"] = "Event: CVAR_UPDATE garrisonCompleteTalent, 2174.",
-["Level"] = 1,
-["Timestamp"] = 7.491859900001145,
-},
-{
-["Message"] = "Event: CVAR_UPDATE newMythicPlusSeason, 17.",
-["Level"] = 1,
-["Timestamp"] = 7.493057800002134,
-},
-{
-["Message"] = "Event: CVAR_UPDATE EJSelectedTier, 505.",
-["Level"] = 1,
-["Timestamp"] = 7.494255400000839,
-},
-{
-["Message"] = "Event: CVAR_UPDATE unlockedMajorFactions, v21##?r##?t##=x##>|##@*##>b##>^##?K##>X##@<##@J##@f##?T##>###=##>v##@P##>r##?##=|##?w##?Y##@%##@0.",
-["Level"] = 1,
-["Timestamp"] = 7.495455700001912,
-},
-{
-["Message"] = "Event: CVAR_UPDATE maxLevelSpecsUsed, G.",
-["Level"] = 1,
-["Timestamp"] = 7.496657100000448,
+["Timestamp"] = 0.720107499999358,
 },
 {
 ["Message"] = "Event: CVAR_UPDATE cameraSavedVehicleDistance, 50.000000.",
 ["Level"] = 1,
-["Timestamp"] = 7.497879099999409,
-},
-{
-["Message"] = "Event: CVAR_UPDATE newDelvesSeason, 3.",
-["Level"] = 1,
-["Timestamp"] = 7.499107400002686,
-},
-{
-["Message"] = "Event: CVAR_UPDATE soulbindsActivatedTutorial, xV.",
-["Level"] = 1,
-["Timestamp"] = 7.500307000002067,
-},
-{
-["Message"] = "Event: CVAR_UPDATE highestUnlockedTieredEntranceTier, ohjqCxi7Cw==.",
-["Level"] = 1,
-["Timestamp"] = 7.501503300001787,
+["Timestamp"] = 0.7213962000005267,
 },
 {
 ["Message"] = "Event: CVAR_UPDATE cameraSavedDistance, 23.299896.",
 ["Level"] = 1,
-["Timestamp"] = 7.502701699999307,
-},
-{
-["Message"] = "Event: CVAR_UPDATE minimapTrackedInfov4, 3137263.",
-["Level"] = 1,
-["Timestamp"] = 7.506034000001819,
-},
-{
-["Message"] = "Event: CVAR_UPDATE raidFramesDisplayPowerBars, 1.",
-["Level"] = 1,
-["Timestamp"] = 7.507237900001201,
-},
-{
-["Message"] = "Event: CVAR_UPDATE nameplateTargetBehindMaxDistance, 30.",
-["Level"] = 1,
-["Timestamp"] = 7.508444000002783,
-},
-{
-["Message"] = "Event: CVAR_UPDATE latestTransmogSetSource, 300842.",
-["Level"] = 1,
-["Timestamp"] = 7.509641900000133,
-},
-{
-["Message"] = "Event: CVAR_UPDATE characterNeedsTurnStrafeDialog, 0.",
-["Level"] = 1,
-["Timestamp"] = 7.510842499999853,
-},
-{
-["Message"] = "Event: CVAR_UPDATE closedInfoFrames, @erArA^QPTnU[O}_N~_]{OA.",
-["Level"] = 1,
-["Timestamp"] = 7.512044700000843,
-},
-{
-["Message"] = "Event: CVAR_UPDATE showTokenFrame, 1.",
-["Level"] = 1,
-["Timestamp"] = 7.51324680000107,
-},
-{
-["Message"] = "Event: CVAR_UPDATE nameplateMinAlpha, 0.6.",
-["Level"] = 1,
-["Timestamp"] = 7.514446900000621,
-},
-{
-["Message"] = "Event: CVAR_UPDATE nameplateMaxAlpha, 1.",
-["Level"] = 1,
-["Timestamp"] = 7.515640900001017,
-},
-{
-["Message"] = "Event: CVAR_UPDATE nameplateMinAlphaDistance, 10.1.",
-["Level"] = 1,
-["Timestamp"] = 7.516836200000398,
-},
-{
-["Message"] = "Event: CVAR_UPDATE lastSelectedClubId, 349613761.",
-["Level"] = 1,
-["Timestamp"] = 7.518042400002742,
-},
-{
-["Message"] = "Event: CVAR_UPDATE nameplateMaxScale, 1.",
-["Level"] = 1,
-["Timestamp"] = 7.519243300001108,
-},
-{
-["Message"] = "Event: CVAR_UPDATE soulbindsLandingPageTutorial, 1.",
-["Level"] = 1,
-["Timestamp"] = 7.520443299999897,
-},
-{
-["Message"] = "Event: CVAR_UPDATE trackedAchievements, v21#%FM#'c{#'hE##qN.",
-["Level"] = 1,
-["Timestamp"] = 7.521643700001732,
+["Timestamp"] = 0.7226516999999149,
 },
 {
 ["Message"] = "Event: CVAR_UPDATE SoftTargetEnemy, 0.",
 ["Level"] = 1,
-["Timestamp"] = 7.522838299999421,
-},
-{
-["Message"] = "Event: CVAR_UPDATE raidOptionIsShown, 0.",
-["Level"] = 1,
-["Timestamp"] = 7.524039100000664,
+["Timestamp"] = 0.7239143999995576,
 },
 {
 ["Message"] = "Event: CVAR_UPDATE latestSplashScreen, 0.",
 ["Level"] = 1,
-["Timestamp"] = 7.525919800002157,
+["Timestamp"] = 0.72760290000042,
 },
 {
 ["Message"] = "Event: CVAR_UPDATE trackedPerksActivities, .",
 ["Level"] = 1,
-["Timestamp"] = 9.543929800001933,
+["Timestamp"] = 1.337256499999057,
 },
 {
 ["Message"] = "Event: CVAR_UPDATE perksActivitiesLastPoints, 0.",
 ["Level"] = 1,
-["Timestamp"] = 9.545341100001679,
+["Timestamp"] = 1.338604500000656,
 },
 {
 ["Message"] = "Event: CVAR_UPDATE perksActivitiesCurrentMonth, 0.",
 ["Level"] = 1,
-["Timestamp"] = 9.546629000000394,
+["Timestamp"] = 1.339878900000258,
 },
 {
 ["Message"] = "Event: CVAR_UPDATE perksActivitiesPendingCompletion, .",
 ["Level"] = 1,
-["Timestamp"] = 9.547888500001136,
+["Timestamp"] = 1.341138300000239,
 },
 {
 ["Message"] = "Event: CVAR_UPDATE AutoPushSpellToActionBar, 1.",
 ["Level"] = 1,
-["Timestamp"] = 9.575180300002103,
+["Timestamp"] = 1.367514699999447,
 },
 {
-["Message"] = "Event: CVAR_UPDATE nameplateOverlapV, 1.",
+["Message"] = "Event: CVAR_UPDATE nameplateOverlapV, 1.1.",
 ["Level"] = 1,
-["Timestamp"] = 10.0473985000026,
+["Timestamp"] = 1.812455699999191,
 },
 {
 ["Message"] = "Event: CVAR_UPDATE nameplateSelectedScale, 1.4.",
 ["Level"] = 1,
-["Timestamp"] = 10.04874310000014,
+["Timestamp"] = 1.813808799999606,
 },
 {
 ["Message"] = "Event: CVAR_UPDATE nameplateMinScale, 1.3.",
 ["Level"] = 1,
-["Timestamp"] = 10.05002020000029,
+["Timestamp"] = 1.815096099999209,
 },
 {
 ["Message"] = "Event: CVAR_UPDATE nameplateMaxScale, 1.3.",
 ["Level"] = 1,
-["Timestamp"] = 10.05129149999993,
+["Timestamp"] = 1.816369800000757,
 },
 {
 ["Message"] = "Event: CVAR_UPDATE nameplateMinAlpha, 0.90135484.",
 ["Level"] = 1,
-["Timestamp"] = 10.05257080000229,
+["Timestamp"] = 1.817665399999896,
 },
 {
 ["Message"] = "Event: CVAR_UPDATE nameplateMinAlphaDistance, 10.",
 ["Level"] = 1,
-["Timestamp"] = 10.05384650000269,
+["Timestamp"] = 1.818969800000559,
 },
 {
 ["Message"] = "Event: CVAR_UPDATE nameplateMaxAlphaDistance, 40.",
 ["Level"] = 1,
-["Timestamp"] = 10.05512269999963,
+["Timestamp"] = 1.820273100000122,
 },
 {
 ["Message"] = "Event: CVAR_UPDATE nameplateOccludedAlphaMult, 0.3.",
 ["Level"] = 1,
-["Timestamp"] = 10.05638270000054,
+["Timestamp"] = 1.821553300000232,
 },
 {
 ["Message"] = "Event: CVAR_UPDATE nameplateAuraScale, 1.2999999523163.",
 ["Level"] = 1,
-["Timestamp"] = 10.05774880000172,
+["Timestamp"] = 1.822922199999084,
 },
 {
 ["Message"] = "Event: CVAR_UPDATE nameplateShowEnemyMinus, 1.",
 ["Level"] = 1,
-["Timestamp"] = 10.05907060000027,
+["Timestamp"] = 1.824260699999286,
 },
 {
 ["Message"] = "Event: CVAR_UPDATE nameplateShowFriendlyNpcs, 0.",
 ["Level"] = 1,
-["Timestamp"] = 10.06040440000288,
-},
-{
-["Message"] = "Event: CVAR_UPDATE nameplateSimplifiedTypes, .",
-["Level"] = 1,
-["Timestamp"] = 10.06169969999974,
+["Timestamp"] = 1.825618299999405,
 },
 {
 ["Message"] = "Event: CVAR_UPDATE nameplateFriendlyPlayerAuraDisplay, F.",
 ["Level"] = 1,
-["Timestamp"] = 10.06293899999946,
+["Timestamp"] = 1.826940700000705,
 },
 {
 ["Message"] = "Event: CVAR_UPDATE nameplateFriendlyPlayerAuraDisplay, B.",
 ["Level"] = 1,
-["Timestamp"] = 10.06418090000079,
+["Timestamp"] = 1.828215400000772,
 },
 {
 ["Message"] = "Event: CVAR_UPDATE nameplateFriendlyPlayerAuraDisplay, .",
 ["Level"] = 1,
-["Timestamp"] = 10.0654362000023,
+["Timestamp"] = 1.829481400000077,
 },
 {
-["Message"] = "Event: CVAR_UPDATE nameplateEnemyPlayerAuraDisplay, F.",
+["Message"] = "Event: CVAR_UPDATE nameplateSimplifiedTypes, .",
 ["Level"] = 1,
-["Timestamp"] = 10.06667179999931,
-},
-{
-["Message"] = "Event: CVAR_UPDATE nameplateEnemyPlayerAuraDisplay, B.",
-["Level"] = 1,
-["Timestamp"] = 10.06791359999988,
-},
-{
-["Message"] = "Event: CVAR_UPDATE nameplateInfoDisplay, D.",
-["Level"] = 1,
-["Timestamp"] = 10.06916099999944,
+["Timestamp"] = 1.830754299999171,
 },
 {
 ["Message"] = "Event: CVAR_UPDATE nameplateEnemyNpcAuraDisplay, F.",
 ["Level"] = 1,
-["Timestamp"] = 10.07043170000179,
+["Timestamp"] = 1.8320291,
 },
 {
 ["Message"] = "Event: CVAR_UPDATE nameplateEnemyNpcAuraDisplay, B.",
 ["Level"] = 1,
-["Timestamp"] = 10.07167169999957,
+["Timestamp"] = 1.833296499999051,
+},
+{
+["Message"] = "Event: CVAR_UPDATE nameplateInfoDisplay, D.",
+["Level"] = 1,
+["Timestamp"] = 1.834587400000601,
+},
+{
+["Message"] = "Event: CVAR_UPDATE nameplateEnemyPlayerAuraDisplay, F.",
+["Level"] = 1,
+["Timestamp"] = 1.835888199999317,
+},
+{
+["Message"] = "Event: CVAR_UPDATE nameplateEnemyPlayerAuraDisplay, B.",
+["Level"] = 1,
+["Timestamp"] = 1.837161899999046,
 },
 {
 ["Message"] = "Event: CVAR_UPDATE calendarShowWeeklyHolidays, 0.",
 ["Level"] = 1,
-["Timestamp"] = 10.48704139999973,
+["Timestamp"] = 2.206789399999252,
 },
 {
 ["Message"] = "Event: CVAR_UPDATE calendarShowBattlegrounds, 0.",
 ["Level"] = 1,
-["Timestamp"] = 10.4888463999996,
+["Timestamp"] = 2.208204500000647,
 },
 {
 ["Message"] = "Event: CVAR_UPDATE calendarShowLockouts, 0.",
 ["Level"] = 1,
-["Timestamp"] = 10.49032860000079,
+["Timestamp"] = 2.209629099999802,
 },
 {
 ["Message"] = "Event: CVAR_UPDATE calendarShowBattlegrounds, 1.",
 ["Level"] = 1,
-["Timestamp"] = 10.49705600000016,
+["Timestamp"] = 2.216091099999176,
 },
 {
 ["Message"] = "Event: CVAR_UPDATE calendarShowWeeklyHolidays, 1.",
 ["Level"] = 1,
-["Timestamp"] = 10.49848480000219,
+["Timestamp"] = 2.217499099999259,
 },
 {
 ["Message"] = "Event: CVAR_UPDATE calendarShowLockouts, 1.",
 ["Level"] = 1,
-["Timestamp"] = 10.49986990000252,
+["Timestamp"] = 2.218908999999258,
 },
 {
 ["Message"] = "Event: CVAR_UPDATE EJSelectedTier, 68.",
 ["Level"] = 1,
-["Timestamp"] = 10.5015424000012,
+["Timestamp"] = 2.220653899999888,
 },
 {
 ["Message"] = "Event: CVAR_UPDATE EJSelectedTier, 70.",
 ["Level"] = 1,
-["Timestamp"] = 10.50292510000145,
+["Timestamp"] = 2.222025900000517,
 },
 {
 ["Message"] = "Event: CVAR_UPDATE EJSelectedTier, 72.",
 ["Level"] = 1,
-["Timestamp"] = 10.5042899,
+["Timestamp"] = 2.223350700000083,
 },
 {
 ["Message"] = "Event: CVAR_UPDATE EJSelectedTier, 73.",
 ["Level"] = 1,
-["Timestamp"] = 10.50562440000067,
+["Timestamp"] = 2.224699899999905,
 },
 {
 ["Message"] = "Event: CVAR_UPDATE EJSelectedTier, 74.",
 ["Level"] = 1,
-["Timestamp"] = 10.50696130000142,
+["Timestamp"] = 2.226024899999175,
 },
 {
 ["Message"] = "Event: CVAR_UPDATE EJSelectedTier, 124.",
 ["Level"] = 1,
-["Timestamp"] = 10.50828349999938,
+["Timestamp"] = 2.227333499999077,
 },
 {
 ["Message"] = "Event: CVAR_UPDATE EJSelectedTier, 395.",
 ["Level"] = 1,
-["Timestamp"] = 10.50959549999971,
+["Timestamp"] = 2.228638200000205,
 },
 {
 ["Message"] = "Event: CVAR_UPDATE EJSelectedTier, 396.",
 ["Level"] = 1,
-["Timestamp"] = 10.51094390000071,
+["Timestamp"] = 2.229966099999729,
 },
 {
 ["Message"] = "Event: CVAR_UPDATE EJSelectedTier, 499.",
 ["Level"] = 1,
-["Timestamp"] = 10.51228249999986,
+["Timestamp"] = 2.231314500000735,
 },
 {
 ["Message"] = "Event: CVAR_UPDATE EJSelectedTier, 503.",
 ["Level"] = 1,
-["Timestamp"] = 10.51362090000112,
+["Timestamp"] = 2.232618899999579,
 },
 {
 ["Message"] = "Event: CVAR_UPDATE EJSelectedTier, 514.",
 ["Level"] = 1,
-["Timestamp"] = 10.51495390000127,
+["Timestamp"] = 2.233927100000074,
 },
 {
 ["Message"] = "Event: CVAR_UPDATE EJSelectedTier, 516.",
 ["Level"] = 1,
-["Timestamp"] = 10.51630250000017,
+["Timestamp"] = 2.235241299998961,
 },
 {
 ["Message"] = "Event: CVAR_UPDATE EJSelectedTier, 505.",
 ["Level"] = 1,
-["Timestamp"] = 10.51762610000151,
+["Timestamp"] = 2.2365391000003,
 },
 {
 ["Message"] = "Event: CVAR_UPDATE mountJournalGeneralFilters, 3.",
 ["Level"] = 1,
-["Timestamp"] = 10.8993083000023,
+["Timestamp"] = 2.62502510000013,
 },
 {
 ["Message"] = "Event: CVAR_UPDATE mountJournalGeneralFilters, 7.",
 ["Level"] = 1,
-["Timestamp"] = 10.93254590000288,
+["Timestamp"] = 2.660560599999371,
 },
 {
 ["Message"] = "Event: CVAR_UPDATE nameplateMaxAlphaDistance, 60.",
 ["Level"] = 1,
-["Timestamp"] = 11.09591809999984,
+["Timestamp"] = 2.819470799999181,
 },
 {
-["Message"] = "Event: PLAYER_ENTERING_WORLD true, false.",
+["Message"] = "Event: PLAYER_ENTERING_WORLD false, true.",
 ["Level"] = 1,
-["Timestamp"] = 11.18121550000069,
+["Timestamp"] = 2.910683500000232,
 },
 {
 ["Message"] = "Detected the 'Blizzard' addon is enabled.",
 ["Level"] = 1,
-["Timestamp"] = 11.18198640000264,
+["Timestamp"] = 2.911459499999182,
 },
 {
 ["Message"] = "Detected the 'sArena' addon is enabled.",
 ["Level"] = 1,
-["Timestamp"] = 11.18200160000197,
+["Timestamp"] = 2.911474599999565,
 },
 {
 ["Message"] = "Scheduling sort after loading screen.",
 ["Level"] = 1,
-["Timestamp"] = 11.18205380000291,
+["Timestamp"] = 2.91152669999974,
 },
 {
 ["Message"] = "Group frame 'CompactRaidGroup1' has no position.",
 ["Level"] = 3,
-["Timestamp"] = 11.43878210000185,
+["Timestamp"] = 3.04242449999947,
 },
 {
 ["Message"] = "Group frame 'CompactRaidGroup1' has no position.",
 ["Level"] = 3,
-["Timestamp"] = 11.44853440000225,
+["Timestamp"] = 3.052034500000445,
 },
 {
 ["Message"] = "Group frame 'CompactRaidGroup2' has no position.",
 ["Level"] = 3,
-["Timestamp"] = 11.44856970000183,
+["Timestamp"] = 3.052065300000322,
 },
 {
 ["Message"] = "Group frame 'CompactRaidGroup1' has no position.",
 ["Level"] = 3,
-["Timestamp"] = 11.45796530000007,
+["Timestamp"] = 3.061534599999504,
 },
 {
 ["Message"] = "Group frame 'CompactRaidGroup2' has no position.",
 ["Level"] = 3,
-["Timestamp"] = 11.45799370000168,
+["Timestamp"] = 3.061564499999804,
 },
 {
 ["Message"] = "Group frame 'CompactRaidGroup3' has no position.",
 ["Level"] = 3,
-["Timestamp"] = 11.45800660000168,
+["Timestamp"] = 3.061578000000736,
 },
 {
 ["Message"] = "Group frame 'CompactRaidGroup1' has no position.",
 ["Level"] = 3,
-["Timestamp"] = 11.46757079999952,
+["Timestamp"] = 3.070830999999089,
 },
 {
 ["Message"] = "Group frame 'CompactRaidGroup2' has no position.",
 ["Level"] = 3,
-["Timestamp"] = 11.46759039999961,
+["Timestamp"] = 3.070851000000403,
 },
 {
 ["Message"] = "Group frame 'CompactRaidGroup3' has no position.",
 ["Level"] = 3,
-["Timestamp"] = 11.46760329999961,
+["Timestamp"] = 3.070864199999051,
 },
 {
 ["Message"] = "Group frame 'CompactRaidGroup4' has no position.",
 ["Level"] = 3,
-["Timestamp"] = 11.46761569999944,
+["Timestamp"] = 3.070876899999348,
 },
 {
 ["Message"] = "Group frame 'CompactRaidGroup1' has no position.",
 ["Level"] = 3,
-["Timestamp"] = 11.47708700000294,
+["Timestamp"] = 3.080128999999943,
 },
 {
 ["Message"] = "Group frame 'CompactRaidGroup2' has no position.",
 ["Level"] = 3,
-["Timestamp"] = 11.47710619999998,
+["Timestamp"] = 3.080147700000453,
 },
 {
 ["Message"] = "Group frame 'CompactRaidGroup3' has no position.",
 ["Level"] = 3,
-["Timestamp"] = 11.4771189000021,
+["Timestamp"] = 3.080160100000285,
 },
 {
 ["Message"] = "Group frame 'CompactRaidGroup4' has no position.",
 ["Level"] = 3,
-["Timestamp"] = 11.47713080000176,
+["Timestamp"] = 3.080174200000329,
 },
 {
 ["Message"] = "Group frame 'CompactRaidGroup5' has no position.",
 ["Level"] = 3,
-["Timestamp"] = 11.47714350000024,
+["Timestamp"] = 3.080186400000457,
 },
 {
 ["Message"] = "Provider 'Blizzard' requested sort due to 'Edit mode exited'.",
 ["Level"] = 1,
-["Timestamp"] = 11.72462319999977,
+["Timestamp"] = 3.309935100000075,
 },
 {
-["Message"] = "Event: CVAR_UPDATE lastLockedTieredEntranceCompanionAbilities, ohkBi6EaAAGkEgEZAYyhGgABrZcB.",
+["Message"] = "Event: CVAR_UPDATE latestSplashScreen, 0.",
 ["Level"] = 1,
-["Timestamp"] = 14.00327770000149,
-},
-{
-["Message"] = "Provider 'Blizzard' requested sort due to 'CVar raidFramesDisplayPowerBars changed'.",
-["Level"] = 1,
-["Timestamp"] = 14.05730170000243,
-},
-{
-["Message"] = "Provider 'Blizzard' requested sort due to 'CVar raidFramesDisplayOnlyHealerPowerBars changed'.",
-["Level"] = 1,
-["Timestamp"] = 14.05733420000252,
-},
-{
-["Message"] = "Provider 'Blizzard' requested sort due to 'CVar raidFramesDispelIndicatorType changed'.",
-["Level"] = 1,
-["Timestamp"] = 14.05734990000201,
-},
-{
-["Message"] = "Provider 'Blizzard' requested sort due to 'CVar pvpFramesHealthText changed'.",
-["Level"] = 1,
-["Timestamp"] = 14.05736470000193,
-},
-{
-["Message"] = "Provider 'Blizzard' requested sort due to 'CVar raidFramesCenterBigDefensive changed'.",
-["Level"] = 1,
-["Timestamp"] = 14.05738140000176,
-},
-{
-["Message"] = "Provider 'Blizzard' requested sort due to 'CVar raidFramesHealthText changed'.",
-["Level"] = 1,
-["Timestamp"] = 14.05739549999998,
-},
-{
-["Message"] = "Provider 'Blizzard' requested sort due to 'CVar raidFramesDisplayClassColor changed'.",
-["Level"] = 1,
-["Timestamp"] = 14.05741050000142,
+["Timestamp"] = 3.342365900000004,
 },
 {
 ["Message"] = "--- Starting run ---",
 ["Level"] = 1,
-["Timestamp"] = 14.10777620000226,
+["Timestamp"] = 3.435791699999754,
 },
 {
 ["Message"] = "Container CompactPartyFrame is not visible so not sorting it.",
 ["Level"] = 1,
-["Timestamp"] = 14.10801130000255,
+["Timestamp"] = 3.436019999999189,
 },
 {
 ["Message"] = "Container CompactRaidFrameContainer is not visible so not sorting it.",
 ["Level"] = 1,
-["Timestamp"] = 14.10802850000255,
+["Timestamp"] = 3.436035299999276,
 },
 {
 ["Message"] = "Container PartyFrame has no frames to sort.",
 ["Level"] = 1,
-["Timestamp"] = 14.10809140000129,
+["Timestamp"] = 3.436097800000425,
 },
 {
 ["Message"] = "Container PartyFrame for provider Blizzard was not sorted.",
 ["Level"] = 1,
-["Timestamp"] = 14.10810440000205,
+["Timestamp"] = 3.436111099999835,
 },
 {
-["Message"] = "Sort for Blizzard took 0.118000ms, result: not sorted.",
+["Message"] = "Sort for Blizzard took 0.116900ms, result: not sorted.",
 ["Level"] = 1,
-["Timestamp"] = 14.10812010000154,
+["Timestamp"] = 3.436126799999329,
 },
 {
-["Message"] = "Friendly units table.sort() took 0.003300ms.",
+["Message"] = "Friendly units table.sort() took 0.004100ms.",
 ["Level"] = 1,
-["Timestamp"] = 14.10827860000063,
-},
-{
-["Message"] = "Friendly units table.sort() took 0.001600ms.",
-["Level"] = 1,
-["Timestamp"] = 14.10829590000139,
-},
-{
-["Message"] = "Update targets took 0.227800ms, 0 updated.",
-["Level"] = 1,
-["Timestamp"] = 14.1083787000025,
-},
-{
-["Message"] = "Friendly units table.sort() took 0.004200ms.",
-["Level"] = 1,
-["Timestamp"] = 14.10953280000103,
+["Timestamp"] = 3.436274100000446,
 },
 {
 ["Message"] = "Friendly units table.sort() took 0.002400ms.",
 ["Level"] = 1,
-["Timestamp"] = 14.10955620000095,
+["Timestamp"] = 3.436290600000575,
 },
 {
-["Message"] = "Update macros took 1.486100ms, 0 updated.",
+["Message"] = "Update targets took 0.199300ms, 0 updated.",
 ["Level"] = 1,
-["Timestamp"] = 14.10987860000023,
+["Timestamp"] = 3.436357900000076,
 },
 {
-["Message"] = "Run time took 2.119400ms.",
+["Message"] = "Friendly units table.sort() took 0.002700ms.",
 ["Level"] = 1,
-["Timestamp"] = 14.1098942000026,
+["Timestamp"] = 3.436466600000131,
+},
+{
+["Message"] = "Friendly units table.sort() took 0.002700ms.",
+["Level"] = 1,
+["Timestamp"] = 3.436481400000048,
+},
+{
+["Message"] = "Update macros took 0.435600ms, 0 updated.",
+["Level"] = 1,
+["Timestamp"] = 3.436807000000044,
+},
+{
+["Message"] = "Run time took 1.034000ms.",
+["Level"] = 1,
+["Timestamp"] = 3.436823500000173,
 },
 {
 ["Message"] = "--- Finished run ---",
 ["Level"] = 1,
-["Timestamp"] = 14.10990360000142,
+["Timestamp"] = 3.436833899999328,
 },
 {
-["Message"] = "Friendly units table.sort() took 0.005600ms.",
+["Message"] = "Friendly units table.sort() took 0.004100ms.",
 ["Level"] = 1,
-["Timestamp"] = 14.5538575999999,
-},
-{
-["Message"] = "Friendly units table.sort() took 0.002200ms.",
-["Level"] = 1,
-["Timestamp"] = 14.55389640000067,
-},
-{
-["Message"] = "Friendly units table.sort() took 0.003800ms.",
-["Level"] = 1,
-["Timestamp"] = 14.55506969999988,
+["Timestamp"] = 3.597145499999897,
 },
 {
 ["Message"] = "Friendly units table.sort() took 0.001700ms.",
 ["Level"] = 1,
-["Timestamp"] = 14.55510069999946,
+["Timestamp"] = 3.59717339999952,
 },
 {
-["Message"] = "Event: INSPECT_READY Player-11-0E8B7C57.",
+["Message"] = "Friendly units table.sort() took 0.001900ms.",
 ["Level"] = 1,
-["Timestamp"] = 26.57754589999968,
+["Timestamp"] = 3.598071099999288,
+},
+{
+["Message"] = "Friendly units table.sort() took 0.001700ms.",
+["Level"] = 1,
+["Timestamp"] = 3.598088000000644,
+},
+{
+["Message"] = "Event: INSPECT_READY Player-11-0EB55FA5.",
+["Level"] = 1,
+["Timestamp"] = 8.3929248000004,
 },
 {
 ["Message"] = "Failed to determine spec for unit 'mouseover'.",
 ["Level"] = 1,
-["Timestamp"] = 26.57763479999994,
+["Timestamp"] = 8.393034799999441,
 },
 {
-["Message"] = "Event: ARENA_OPPONENT_UPDATE arena1, cleared.",
+["Message"] = "Event: INSPECT_READY Player-11-0E9F1A0D.",
 ["Level"] = 1,
-["Timestamp"] = 59.32645680000132,
+["Timestamp"] = 23.32470060000014,
 },
 {
-["Message"] = "Provider 'Blizzard' requested sort due to 'ARENA_OPPONENT_UPDATE'.",
+["Message"] = "Failed to determine spec for unit 'mouseover'.",
 ["Level"] = 1,
-["Timestamp"] = 59.32654090000142,
+["Timestamp"] = 23.32480860000032,
 },
 {
-["Message"] = "Provider 'sArena' requested sort due to 'ARENA_OPPONENT_UPDATE'.",
+["Message"] = "Event: INSPECT_READY Player-11-0EA11828.",
 ["Level"] = 1,
-["Timestamp"] = 59.32656130000032,
+["Timestamp"] = 25.44127920000028,
 },
 {
-["Message"] = "Event: ARENA_OPPONENT_UPDATE arenapet1, cleared.",
+["Message"] = "Failed to determine spec for unit 'mouseover'.",
 ["Level"] = 1,
-["Timestamp"] = 59.33172019999984,
+["Timestamp"] = 25.44138860000021,
 },
 {
-["Message"] = "Provider 'Blizzard' requested sort due to 'ARENA_OPPONENT_UPDATE'.",
+["Message"] = "Event: INSPECT_READY Player-11-0EB55FA5.",
 ["Level"] = 1,
-["Timestamp"] = 59.33177020000221,
+["Timestamp"] = 27.3155870999999,
 },
 {
-["Message"] = "Provider 'sArena' requested sort due to 'ARENA_OPPONENT_UPDATE'.",
+["Message"] = "Found spec information for unit 'target' spec id 266.",
 ["Level"] = 1,
-["Timestamp"] = 59.33178810000027,
+["Timestamp"] = 27.31569149999996,
 },
 {
-["Message"] = "Event: ARENA_OPPONENT_UPDATE arena2, cleared.",
+["Message"] = "Event: INSPECT_READY Player-11-0EB55FA5.",
 ["Level"] = 1,
-["Timestamp"] = 59.33708839999963,
+["Timestamp"] = 29.46781809999993,
 },
 {
-["Message"] = "Provider 'Blizzard' requested sort due to 'ARENA_OPPONENT_UPDATE'.",
+["Message"] = "Event: INSPECT_READY Player-11-0EB55FA5.",
 ["Level"] = 1,
-["Timestamp"] = 59.33713709999938,
+["Timestamp"] = 31.51698340000075,
 },
 {
-["Message"] = "Provider 'sArena' requested sort due to 'ARENA_OPPONENT_UPDATE'.",
+["Message"] = "Event: INSPECT_READY Player-11-0B0DDD99.",
 ["Level"] = 1,
-["Timestamp"] = 59.33715289999964,
+["Timestamp"] = 41.69661710000037,
 },
 {
-["Message"] = "Event: ARENA_OPPONENT_UPDATE arenapet2, cleared.",
+["Message"] = "Failed to determine spec for unit 'mouseover'.",
 ["Level"] = 1,
-["Timestamp"] = 59.34228830000211,
+["Timestamp"] = 41.69673139999941,
 },
 {
-["Message"] = "Provider 'Blizzard' requested sort due to 'ARENA_OPPONENT_UPDATE'.",
+["Message"] = "Event: INSPECT_READY Player-11-0EB55FA5.",
 ["Level"] = 1,
-["Timestamp"] = 59.34233230000245,
+["Timestamp"] = 43.73156079999899,
 },
 {
-["Message"] = "Provider 'sArena' requested sort due to 'ARENA_OPPONENT_UPDATE'.",
+["Message"] = "Event: INSPECT_READY Player-11-0EB55FA5.",
 ["Level"] = 1,
-["Timestamp"] = 59.34234750000178,
+["Timestamp"] = 51.68124360000002,
 },
 {
-["Message"] = "Event: ARENA_OPPONENT_UPDATE arena3, cleared.",
+["Message"] = "Event: INSPECT_READY Player-11-0EB55FA5.",
 ["Level"] = 1,
-["Timestamp"] = 59.34763860000021,
+["Timestamp"] = 53.61296249999941,
 },
 {
-["Message"] = "Provider 'Blizzard' requested sort due to 'ARENA_OPPONENT_UPDATE'.",
+["Message"] = "Event: INSPECT_READY Player-57-0DB762EE.",
 ["Level"] = 1,
-["Timestamp"] = 59.34768140000233,
+["Timestamp"] = 71.24073569999928,
 },
 {
-["Message"] = "Provider 'sArena' requested sort due to 'ARENA_OPPONENT_UPDATE'.",
+["Message"] = "Failed to determine spec for unit 'mouseover'.",
 ["Level"] = 1,
-["Timestamp"] = 59.34769640000013,
+["Timestamp"] = 71.2408402000001,
 },
 {
-["Message"] = "Event: ARENA_OPPONENT_UPDATE arenapet3, cleared.",
+["Message"] = "Event: INSPECT_READY Player-11-0EB55FA5.",
 ["Level"] = 1,
-["Timestamp"] = 59.35280760000023,
+["Timestamp"] = 73.24809559999994,
 },
 {
-["Message"] = "Provider 'Blizzard' requested sort due to 'ARENA_OPPONENT_UPDATE'.",
+["Message"] = "Event: INSPECT_READY Player-11-0E7658FD.",
 ["Level"] = 1,
-["Timestamp"] = 59.35285049999948,
+["Timestamp"] = 83.63712040000064,
 },
 {
-["Message"] = "Provider 'sArena' requested sort due to 'ARENA_OPPONENT_UPDATE'.",
+["Message"] = "Found spec information for unit 'mouseover' spec id 260.",
 ["Level"] = 1,
-["Timestamp"] = 59.35286610000185,
+["Timestamp"] = 83.63736099999915,
 },
 {
-["Message"] = "Event: ARENA_OPPONENT_UPDATE arena4, cleared.",
+["Message"] = "Event: INSPECT_READY Player-11-0E7658FD.",
 ["Level"] = 1,
-["Timestamp"] = 59.35818040000231,
+["Timestamp"] = 85.63971999999922,
 },
 {
-["Message"] = "Provider 'Blizzard' requested sort due to 'ARENA_OPPONENT_UPDATE'.",
+["Message"] = "Event: INSPECT_READY Player-11-0E7658FD.",
 ["Level"] = 1,
-["Timestamp"] = 59.35822530000223,
+["Timestamp"] = 87.5145154999991,
 },
 {
-["Message"] = "Provider 'sArena' requested sort due to 'ARENA_OPPONENT_UPDATE'.",
+["Message"] = "Event: INSPECT_READY Player-11-0E7658FD.",
 ["Level"] = 1,
-["Timestamp"] = 59.35824010000215,
+["Timestamp"] = 100.4345788999999,
 },
 {
-["Message"] = "Event: ARENA_OPPONENT_UPDATE arenapet4, cleared.",
+["Message"] = "Provider 'Blizzard' requested sort due to 'Edit mode exited'.",
 ["Level"] = 1,
-["Timestamp"] = 59.36331470000005,
-},
-{
-["Message"] = "Provider 'Blizzard' requested sort due to 'ARENA_OPPONENT_UPDATE'.",
-["Level"] = 1,
-["Timestamp"] = 59.36336060000031,
-},
-{
-["Message"] = "Provider 'sArena' requested sort due to 'ARENA_OPPONENT_UPDATE'.",
-["Level"] = 1,
-["Timestamp"] = 59.36337570000251,
-},
-{
-["Message"] = "Event: ARENA_OPPONENT_UPDATE arena5, cleared.",
-["Level"] = 1,
-["Timestamp"] = 59.36854710000262,
-},
-{
-["Message"] = "Provider 'Blizzard' requested sort due to 'ARENA_OPPONENT_UPDATE'.",
-["Level"] = 1,
-["Timestamp"] = 59.36859000000186,
-},
-{
-["Message"] = "Provider 'sArena' requested sort due to 'ARENA_OPPONENT_UPDATE'.",
-["Level"] = 1,
-["Timestamp"] = 59.36860449999949,
-},
-{
-["Message"] = "Event: ARENA_OPPONENT_UPDATE arenapet5, cleared.",
-["Level"] = 1,
-["Timestamp"] = 59.37370670000018,
-},
-{
-["Message"] = "Provider 'Blizzard' requested sort due to 'ARENA_OPPONENT_UPDATE'.",
-["Level"] = 1,
-["Timestamp"] = 59.37375030000112,
-},
-{
-["Message"] = "Provider 'sArena' requested sort due to 'ARENA_OPPONENT_UPDATE'.",
-["Level"] = 1,
-["Timestamp"] = 59.37376589999985,
-},
-{
-["Message"] = "Event: ARENA_OPPONENT_UPDATE arena6, cleared.",
-["Level"] = 1,
-["Timestamp"] = 59.37888100000055,
-},
-{
-["Message"] = "Provider 'Blizzard' requested sort due to 'ARENA_OPPONENT_UPDATE'.",
-["Level"] = 1,
-["Timestamp"] = 59.37892389999979,
-},
-{
-["Message"] = "Provider 'sArena' requested sort due to 'ARENA_OPPONENT_UPDATE'.",
-["Level"] = 1,
-["Timestamp"] = 59.37893880000047,
-},
-{
-["Message"] = "Event: ARENA_OPPONENT_UPDATE arenapet6, cleared.",
-["Level"] = 1,
-["Timestamp"] = 59.38408060000074,
-},
-{
-["Message"] = "Provider 'Blizzard' requested sort due to 'ARENA_OPPONENT_UPDATE'.",
-["Level"] = 1,
-["Timestamp"] = 59.38412340000286,
-},
-{
-["Message"] = "Provider 'sArena' requested sort due to 'ARENA_OPPONENT_UPDATE'.",
-["Level"] = 1,
-["Timestamp"] = 59.38413820000278,
-},
-{
-["Message"] = "Event: ARENA_OPPONENT_UPDATE arena7, cleared.",
-["Level"] = 1,
-["Timestamp"] = 59.38918349999949,
-},
-{
-["Message"] = "Provider 'Blizzard' requested sort due to 'ARENA_OPPONENT_UPDATE'.",
-["Level"] = 1,
-["Timestamp"] = 59.38922640000237,
-},
-{
-["Message"] = "Provider 'sArena' requested sort due to 'ARENA_OPPONENT_UPDATE'.",
-["Level"] = 1,
-["Timestamp"] = 59.38924120000229,
-},
-{
-["Message"] = "Event: ARENA_OPPONENT_UPDATE arenapet7, cleared.",
-["Level"] = 1,
-["Timestamp"] = 59.39430220000213,
-},
-{
-["Message"] = "Provider 'Blizzard' requested sort due to 'ARENA_OPPONENT_UPDATE'.",
-["Level"] = 1,
-["Timestamp"] = 59.39434370000163,
-},
-{
-["Message"] = "Provider 'sArena' requested sort due to 'ARENA_OPPONENT_UPDATE'.",
-["Level"] = 1,
-["Timestamp"] = 59.39435860000231,
-},
-{
-["Message"] = "Event: ARENA_OPPONENT_UPDATE arena8, cleared.",
-["Level"] = 1,
-["Timestamp"] = 59.39948809999987,
-},
-{
-["Message"] = "Provider 'Blizzard' requested sort due to 'ARENA_OPPONENT_UPDATE'.",
-["Level"] = 1,
-["Timestamp"] = 59.39953220000098,
-},
-{
-["Message"] = "Provider 'sArena' requested sort due to 'ARENA_OPPONENT_UPDATE'.",
-["Level"] = 1,
-["Timestamp"] = 59.39954729999954,
-},
-{
-["Message"] = "Event: ARENA_OPPONENT_UPDATE arenapet8, cleared.",
-["Level"] = 1,
-["Timestamp"] = 59.40551720000076,
-},
-{
-["Message"] = "Provider 'Blizzard' requested sort due to 'ARENA_OPPONENT_UPDATE'.",
-["Level"] = 1,
-["Timestamp"] = 59.40559270000085,
-},
-{
-["Message"] = "Provider 'sArena' requested sort due to 'ARENA_OPPONENT_UPDATE'.",
-["Level"] = 1,
-["Timestamp"] = 59.40561320000052,
-},
-{
-["Message"] = "Event: ARENA_OPPONENT_UPDATE arena9, cleared.",
-["Level"] = 1,
-["Timestamp"] = 59.41095240000141,
-},
-{
-["Message"] = "Provider 'Blizzard' requested sort due to 'ARENA_OPPONENT_UPDATE'.",
-["Level"] = 1,
-["Timestamp"] = 59.41100270000243,
-},
-{
-["Message"] = "Provider 'sArena' requested sort due to 'ARENA_OPPONENT_UPDATE'.",
-["Level"] = 1,
-["Timestamp"] = 59.41101960000015,
-},
-{
-["Message"] = "Event: ARENA_OPPONENT_UPDATE arenapet9, cleared.",
-["Level"] = 1,
-["Timestamp"] = 59.4166753999998,
-},
-{
-["Message"] = "Provider 'Blizzard' requested sort due to 'ARENA_OPPONENT_UPDATE'.",
-["Level"] = 1,
-["Timestamp"] = 59.41673000000083,
-},
-{
-["Message"] = "Provider 'sArena' requested sort due to 'ARENA_OPPONENT_UPDATE'.",
-["Level"] = 1,
-["Timestamp"] = 59.416747700001,
-},
-{
-["Message"] = "Event: ARENA_OPPONENT_UPDATE arena10, cleared.",
-["Level"] = 1,
-["Timestamp"] = 59.42209759999969,
-},
-{
-["Message"] = "Provider 'Blizzard' requested sort due to 'ARENA_OPPONENT_UPDATE'.",
-["Level"] = 1,
-["Timestamp"] = 59.42214160000003,
-},
-{
-["Message"] = "Provider 'sArena' requested sort due to 'ARENA_OPPONENT_UPDATE'.",
-["Level"] = 1,
-["Timestamp"] = 59.42215770000257,
-},
-{
-["Message"] = "Event: ARENA_OPPONENT_UPDATE arenapet10, cleared.",
-["Level"] = 1,
-["Timestamp"] = 59.42730410000149,
-},
-{
-["Message"] = "Provider 'Blizzard' requested sort due to 'ARENA_OPPONENT_UPDATE'.",
-["Level"] = 1,
-["Timestamp"] = 59.42734800000108,
-},
-{
-["Message"] = "Provider 'sArena' requested sort due to 'ARENA_OPPONENT_UPDATE'.",
-["Level"] = 1,
-["Timestamp"] = 59.42736359999981,
-},
-{
-["Message"] = "Event: ARENA_OPPONENT_UPDATE arena11, cleared.",
-["Level"] = 1,
-["Timestamp"] = 59.43260210000153,
-},
-{
-["Message"] = "Provider 'Blizzard' requested sort due to 'ARENA_OPPONENT_UPDATE'.",
-["Level"] = 1,
-["Timestamp"] = 59.43264560000171,
-},
-{
-["Message"] = "Provider 'sArena' requested sort due to 'ARENA_OPPONENT_UPDATE'.",
-["Level"] = 1,
-["Timestamp"] = 59.43266070000027,
-},
-{
-["Message"] = "Event: ARENA_OPPONENT_UPDATE arenapet11, cleared.",
-["Level"] = 1,
-["Timestamp"] = 59.43807849999939,
-},
-{
-["Message"] = "Provider 'Blizzard' requested sort due to 'ARENA_OPPONENT_UPDATE'.",
-["Level"] = 1,
-["Timestamp"] = 59.43812869999965,
-},
-{
-["Message"] = "Provider 'sArena' requested sort due to 'ARENA_OPPONENT_UPDATE'.",
-["Level"] = 1,
-["Timestamp"] = 59.43814500000008,
-},
-{
-["Message"] = "Event: ARENA_OPPONENT_UPDATE arena12, cleared.",
-["Level"] = 1,
-["Timestamp"] = 59.44351340000139,
-},
-{
-["Message"] = "Provider 'Blizzard' requested sort due to 'ARENA_OPPONENT_UPDATE'.",
-["Level"] = 1,
-["Timestamp"] = 59.44355930000165,
-},
-{
-["Message"] = "Provider 'sArena' requested sort due to 'ARENA_OPPONENT_UPDATE'.",
-["Level"] = 1,
-["Timestamp"] = 59.44357510000191,
-},
-{
-["Message"] = "Event: ARENA_OPPONENT_UPDATE arenapet12, cleared.",
-["Level"] = 1,
-["Timestamp"] = 59.44941050000125,
-},
-{
-["Message"] = "Provider 'Blizzard' requested sort due to 'ARENA_OPPONENT_UPDATE'.",
-["Level"] = 1,
-["Timestamp"] = 59.4494732000021,
-},
-{
-["Message"] = "Provider 'sArena' requested sort due to 'ARENA_OPPONENT_UPDATE'.",
-["Level"] = 1,
-["Timestamp"] = 59.44949149999957,
-},
-{
-["Message"] = "Event: ARENA_OPPONENT_UPDATE arena13, cleared.",
-["Level"] = 1,
-["Timestamp"] = 59.45488090000072,
-},
-{
-["Message"] = "Provider 'Blizzard' requested sort due to 'ARENA_OPPONENT_UPDATE'.",
-["Level"] = 1,
-["Timestamp"] = 59.45492510000258,
-},
-{
-["Message"] = "Provider 'sArena' requested sort due to 'ARENA_OPPONENT_UPDATE'.",
-["Level"] = 1,
-["Timestamp"] = 59.45494049999979,
-},
-{
-["Message"] = "Event: ARENA_OPPONENT_UPDATE arenapet13, cleared.",
-["Level"] = 1,
-["Timestamp"] = 59.46025460000237,
-},
-{
-["Message"] = "Provider 'Blizzard' requested sort due to 'ARENA_OPPONENT_UPDATE'.",
-["Level"] = 1,
-["Timestamp"] = 59.46030450000035,
-},
-{
-["Message"] = "Provider 'sArena' requested sort due to 'ARENA_OPPONENT_UPDATE'.",
-["Level"] = 1,
-["Timestamp"] = 59.4603199000012,
-},
-{
-["Message"] = "Event: ARENA_OPPONENT_UPDATE arena14, cleared.",
-["Level"] = 1,
-["Timestamp"] = 59.4655445999997,
-},
-{
-["Message"] = "Provider 'Blizzard' requested sort due to 'ARENA_OPPONENT_UPDATE'.",
-["Level"] = 1,
-["Timestamp"] = 59.46559110000089,
-},
-{
-["Message"] = "Provider 'sArena' requested sort due to 'ARENA_OPPONENT_UPDATE'.",
-["Level"] = 1,
-["Timestamp"] = 59.46560600000157,
-},
-{
-["Message"] = "Event: ARENA_OPPONENT_UPDATE arenapet14, cleared.",
-["Level"] = 1,
-["Timestamp"] = 59.47085680000237,
-},
-{
-["Message"] = "Provider 'Blizzard' requested sort due to 'ARENA_OPPONENT_UPDATE'.",
-["Level"] = 1,
-["Timestamp"] = 59.47090030000254,
-},
-{
-["Message"] = "Provider 'sArena' requested sort due to 'ARENA_OPPONENT_UPDATE'.",
-["Level"] = 1,
-["Timestamp"] = 59.4709154000011,
-},
-{
-["Message"] = "Event: ARENA_OPPONENT_UPDATE arena15, cleared.",
-["Level"] = 1,
-["Timestamp"] = 59.47597990000213,
-},
-{
-["Message"] = "Provider 'Blizzard' requested sort due to 'ARENA_OPPONENT_UPDATE'.",
-["Level"] = 1,
-["Timestamp"] = 59.47602069999994,
-},
-{
-["Message"] = "Provider 'sArena' requested sort due to 'ARENA_OPPONENT_UPDATE'.",
-["Level"] = 1,
-["Timestamp"] = 59.47603530000197,
-},
-{
-["Message"] = "Event: ARENA_OPPONENT_UPDATE arenapet15, cleared.",
-["Level"] = 1,
-["Timestamp"] = 59.48175420000189,
-},
-{
-["Message"] = "Provider 'Blizzard' requested sort due to 'ARENA_OPPONENT_UPDATE'.",
-["Level"] = 1,
-["Timestamp"] = 59.48179879999952,
-},
-{
-["Message"] = "Provider 'sArena' requested sort due to 'ARENA_OPPONENT_UPDATE'.",
-["Level"] = 1,
-["Timestamp"] = 59.4818148000013,
+["Timestamp"] = 111.6184775999991,
 },
 {
 ["Message"] = "--- Starting run ---",
 ["Level"] = 1,
-["Timestamp"] = 59.66449030000149,
+["Timestamp"] = 111.6458143,
 },
 {
 ["Message"] = "Container CompactPartyFrame is not visible so not sorting it.",
 ["Level"] = 1,
-["Timestamp"] = 59.66469490000236,
+["Timestamp"] = 111.6459830999993,
 },
 {
 ["Message"] = "Container CompactRaidFrameContainer is not visible so not sorting it.",
 ["Level"] = 1,
-["Timestamp"] = 59.66471060000185,
+["Timestamp"] = 111.6459978999992,
 },
 {
 ["Message"] = "Container PartyFrame has no frames to sort.",
 ["Level"] = 1,
-["Timestamp"] = 59.66477429999941,
+["Timestamp"] = 111.6460585999994,
 },
 {
 ["Message"] = "Container PartyFrame for provider Blizzard was not sorted.",
 ["Level"] = 1,
-["Timestamp"] = 59.66478719999941,
+["Timestamp"] = 111.6460712999997,
 },
 {
-["Message"] = "Sort for Blizzard took 0.119400ms, result: not sorted.",
+["Message"] = "Sort for Blizzard took 0.111900ms, result: not sorted.",
 ["Level"] = 1,
-["Timestamp"] = 59.66480140000203,
+["Timestamp"] = 111.6460846999999,
 },
 {
-["Message"] = "Friendly units table.sort() took 0.003900ms.",
+["Message"] = "Friendly units table.sort() took 0.003100ms.",
 ["Level"] = 1,
-["Timestamp"] = 59.66498610000053,
+["Timestamp"] = 111.6462236999996,
 },
 {
 ["Message"] = "Friendly units table.sort() took 0.001700ms.",
 ["Level"] = 1,
-["Timestamp"] = 59.66500319999977,
+["Timestamp"] = 111.6462403000005,
 },
 {
-["Message"] = "Update targets took 0.213400ms, 0 updated.",
+["Message"] = "Update targets took 0.193600ms, 0 updated.",
 ["Level"] = 1,
-["Timestamp"] = 59.66507579999961,
-},
-{
-["Message"] = "Friendly units table.sort() took 0.001800ms.",
-["Level"] = 1,
-["Timestamp"] = 59.66518830000132,
+["Timestamp"] = 111.6463065000007,
 },
 {
 ["Message"] = "Friendly units table.sort() took 0.001600ms.",
 ["Level"] = 1,
-["Timestamp"] = 59.66520310000124,
-},
-{
-["Message"] = "Update macros took 0.365000ms, 0 updated.",
-["Level"] = 1,
-["Timestamp"] = 59.66545410000254,
-},
-{
-["Message"] = "Run time took 0.980600ms.",
-["Level"] = 1,
-["Timestamp"] = 59.66546910000034,
-},
-{
-["Message"] = "--- Finished run ---",
-["Level"] = 1,
-["Timestamp"] = 59.66547920000085,
-},
-{
-["Message"] = "Event: CVAR_UPDATE trackedPerksActivities, .",
-["Level"] = 1,
-["Timestamp"] = 60.19499070000165,
-},
-{
-["Message"] = "Event: CVAR_UPDATE perksActivitiesLastPoints, 0.",
-["Level"] = 1,
-["Timestamp"] = 60.1966702000027,
-},
-{
-["Message"] = "Event: CVAR_UPDATE perksActivitiesCurrentMonth, 0.",
-["Level"] = 1,
-["Timestamp"] = 60.19826699999976,
-},
-{
-["Message"] = "Event: CVAR_UPDATE perksActivitiesPendingCompletion, .",
-["Level"] = 1,
-["Timestamp"] = 60.19997110000259,
-},
-{
-["Message"] = "Event: CVAR_UPDATE AutoPushSpellToActionBar, 1.",
-["Level"] = 1,
-["Timestamp"] = 60.22696780000115,
-},
-{
-["Message"] = "Event: PLAYER_ENTERING_WORLD false, false.",
-["Level"] = 1,
-["Timestamp"] = 60.32945180000024,
-},
-{
-["Message"] = "Scheduling sort after loading screen.",
-["Level"] = 1,
-["Timestamp"] = 60.32953199999975,
-},
-{
-["Message"] = "--- Starting run ---",
-["Level"] = 1,
-["Timestamp"] = 60.63848850000068,
-},
-{
-["Message"] = "Container CompactPartyFrame is not visible so not sorting it.",
-["Level"] = 1,
-["Timestamp"] = 60.63870490000045,
-},
-{
-["Message"] = "Container CompactRaidFrameContainer is not visible so not sorting it.",
-["Level"] = 1,
-["Timestamp"] = 60.6387203000013,
-},
-{
-["Message"] = "Container PartyFrame has no frames to sort.",
-["Level"] = 1,
-["Timestamp"] = 60.63878400000249,
-},
-{
-["Message"] = "Container PartyFrame for provider Blizzard was not sorted.",
-["Level"] = 1,
-["Timestamp"] = 60.63879760000054,
-},
-{
-["Message"] = "Sort for Blizzard took 0.116100ms, result: not sorted.",
-["Level"] = 1,
-["Timestamp"] = 60.63881060000131,
-},
-{
-["Message"] = "Friendly units table.sort() took 0.003300ms.",
-["Level"] = 1,
-["Timestamp"] = 60.63895840000259,
-},
-{
-["Message"] = "Friendly units table.sort() took 0.001700ms.",
-["Level"] = 1,
-["Timestamp"] = 60.63897480000014,
-},
-{
-["Message"] = "Update targets took 0.199700ms, 0 updated.",
-["Level"] = 1,
-["Timestamp"] = 60.63904170000023,
-},
-{
-["Message"] = "Friendly units table.sort() took 0.001700ms.",
-["Level"] = 1,
-["Timestamp"] = 60.63914620000287,
+["Timestamp"] = 111.6464075999993,
 },
 {
 ["Message"] = "Friendly units table.sort() took 0.001500ms.",
 ["Level"] = 1,
-["Timestamp"] = 60.63916059999974,
+["Timestamp"] = 111.6464216000004,
 },
 {
-["Message"] = "Update macros took 0.150800ms, 0 updated.",
+["Message"] = "Update macros took 0.377800ms, 0 updated.",
 ["Level"] = 1,
-["Timestamp"] = 60.63920630000212,
+["Timestamp"] = 111.6466977,
 },
 {
-["Message"] = "Run time took 0.734900ms.",
+["Message"] = "Run time took 0.915700ms.",
 ["Level"] = 1,
-["Timestamp"] = 60.63922129999992,
+["Timestamp"] = 111.6467281000005,
 },
 {
 ["Message"] = "--- Finished run ---",
 ["Level"] = 1,
-["Timestamp"] = 60.63923120000254,
+["Timestamp"] = 111.6467381999992,
 },
 {
-["Message"] = "Event: INSPECT_READY Player-113-0A1F89E3.",
+["Message"] = "Event: INSPECT_READY Player-11-0E7658FD.",
 ["Level"] = 1,
-["Timestamp"] = 91.58314220000102,
+["Timestamp"] = 112.6864908999996,
 },
 {
-["Message"] = "Failed to determine spec for unit 'mouseover'.",
+["Message"] = "Event: INSPECT_READY Player-11-0E7658FD.",
 ["Level"] = 1,
-["Timestamp"] = 91.58324410000205,
+["Timestamp"] = 114.7182515000004,
 },
 {
-["Message"] = "Event: INSPECT_READY Player-113-0A1F89E3.",
+["Message"] = "Event: INSPECT_READY Player-11-0E96C37D.",
 ["Level"] = 1,
-["Timestamp"] = 93.6180983000013,
+["Timestamp"] = 117.1210589000002,
 },
 {
-["Message"] = "Found spec information for unit 'nameplate5' spec id 269.",
+["Message"] = "Found spec information for unit 'mouseover' spec id 267.",
 ["Level"] = 1,
-["Timestamp"] = 93.61820360000274,
+["Timestamp"] = 117.1212185999993,
 },
 {
-["Message"] = "Event: INSPECT_READY Player-113-0A1F89E3.",
+["Message"] = "Event: INSPECT_READY Player-11-0E96C37D.",
 ["Level"] = 1,
-["Timestamp"] = 104.162473700002,
+["Timestamp"] = 119.2443031999992,
 },
 {
-["Message"] = "Event: INSPECT_READY Player-113-0A1F89E3.",
+["Message"] = "Event: INSPECT_READY Player-11-0E7658FD.",
 ["Level"] = 1,
-["Timestamp"] = 106.1850350999994,
+["Timestamp"] = 121.2664387999994,
 },
 {
-["Message"] = "Event: INSPECT_READY Player-113-0A1F89E3.",
+["Message"] = "Event: CVAR_UPDATE nameplateMinScale, 1.78.",
 ["Level"] = 1,
-["Timestamp"] = 109.9748714000016,
+["Timestamp"] = 218.0195227999993,
 },
 {
-["Message"] = "Event: INSPECT_READY Player-113-0A1F89E3.",
+["Message"] = "Event: CVAR_UPDATE nameplateMaxScale, 1.78.",
 ["Level"] = 1,
-["Timestamp"] = 111.9754568999997,
+["Timestamp"] = 218.0215246999997,
 },
 {
-["Message"] = "Event: INSPECT_READY Player-121-0AF4BA3B.",
+["Message"] = "Event: CVAR_UPDATE nameplateMinScale, 1.4.",
 ["Level"] = 1,
-["Timestamp"] = 113.9845139000026,
+["Timestamp"] = 219.7165530000002,
 },
 {
-["Message"] = "Found spec information for unit 'nameplate1' spec id 270.",
+["Message"] = "Event: CVAR_UPDATE nameplateMaxScale, 1.4.",
 ["Level"] = 1,
-["Timestamp"] = 113.9846260000013,
+["Timestamp"] = 219.7183354999997,
 },
 {
-["Message"] = "Event: INSPECT_READY Player-113-0A1F89E3.",
+["Message"] = "Event: CVAR_UPDATE nameplateSelectedScale, 2.79.",
 ["Level"] = 1,
-["Timestamp"] = 116.0208146000005,
+["Timestamp"] = 221.6039777999995,
 },
 {
-["Message"] = "Event: INSPECT_READY Player-11-0DC9DE34.",
+["Message"] = "Event: CVAR_UPDATE nameplateSelectedScale, 1.5.",
 ["Level"] = 1,
-["Timestamp"] = 117.9928719000018,
+["Timestamp"] = 222.8590005000006,
 },
 {
-["Message"] = "Found spec information for unit 'target' spec id 268.",
+["Message"] = "Event: INSPECT_READY Player-11-0E2916DB.",
 ["Level"] = 1,
-["Timestamp"] = 117.9929718000021,
+["Timestamp"] = 245.1288521999995,
 },
 {
-["Message"] = "Event: INSPECT_READY Player-113-0A1F89E3.",
+["Message"] = "Found spec information for unit 'mouseover' spec id 268.",
 ["Level"] = 1,
-["Timestamp"] = 119.9776105000019,
+["Timestamp"] = 245.1289787999995,
 },
 {
-["Message"] = "Event: INSPECT_READY Player-113-0A1F89E3.",
+["Message"] = "Provider 'Blizzard' requested sort due to 'Edit mode exited'.",
 ["Level"] = 1,
-["Timestamp"] = 121.9766982000001,
+["Timestamp"] = 261.6005593999998,
 },
 {
-["Message"] = "Event: INSPECT_READY Player-11-0DC9DE34.",
+["Message"] = "--- Starting run ---",
 ["Level"] = 1,
-["Timestamp"] = 123.9967515999997,
+["Timestamp"] = 261.6299605999993,
 },
 {
-["Message"] = "Event: INSPECT_READY Player-11-0DC9DE34.",
+["Message"] = "Container CompactPartyFrame is not visible so not sorting it.",
 ["Level"] = 1,
-["Timestamp"] = 128.377150100001,
+["Timestamp"] = 261.6301289999992,
 },
 {
-["Message"] = "Event: INSPECT_READY Player-11-0DC9DE34.",
+["Message"] = "Container CompactRaidFrameContainer is not visible so not sorting it.",
 ["Level"] = 1,
-["Timestamp"] = 130.3770910000021,
+["Timestamp"] = 261.6301444000001,
 },
 {
-["Message"] = "Event: INSPECT_READY Player-11-0DC9DE34.",
+["Message"] = "Container PartyFrame has no frames to sort.",
 ["Level"] = 1,
-["Timestamp"] = 132.377114400002,
+["Timestamp"] = 261.6302068000005,
+},
+{
+["Message"] = "Container PartyFrame for provider Blizzard was not sorted.",
+["Level"] = 1,
+["Timestamp"] = 261.6302195999997,
+},
+{
+["Message"] = "Sort for Blizzard took 0.114900ms, result: not sorted.",
+["Level"] = 1,
+["Timestamp"] = 261.6302326000005,
+},
+{
+["Message"] = "Friendly units table.sort() took 0.003300ms.",
+["Level"] = 1,
+["Timestamp"] = 261.6303814999992,
+},
+{
+["Message"] = "Friendly units table.sort() took 0.001800ms.",
+["Level"] = 1,
+["Timestamp"] = 261.6303982999998,
+},
+{
+["Message"] = "Update targets took 0.199300ms, 0 updated.",
+["Level"] = 1,
+["Timestamp"] = 261.6304650999991,
+},
+{
+["Message"] = "Friendly units table.sort() took 0.002300ms.",
+["Level"] = 1,
+["Timestamp"] = 261.6305744000001,
+},
+{
+["Message"] = "Friendly units table.sort() took 0.002000ms.",
+["Level"] = 1,
+["Timestamp"] = 261.6305888000006,
+},
+{
+["Message"] = "Update macros took 0.158200ms, 0 updated.",
+["Level"] = 1,
+["Timestamp"] = 261.6306368999994,
+},
+{
+["Message"] = "Run time took 0.705300ms.",
+["Level"] = 1,
+["Timestamp"] = 261.6306647999991,
+},
+{
+["Message"] = "--- Finished run ---",
+["Level"] = 1,
+["Timestamp"] = 261.6306748999996,
+},
+{
+["Message"] = "Provider 'Blizzard' requested sort due to 'Edit mode exited'.",
+["Level"] = 1,
+["Timestamp"] = 353.9588703999998,
+},
+{
+["Message"] = "--- Starting run ---",
+["Level"] = 1,
+["Timestamp"] = 353.9861512999996,
+},
+{
+["Message"] = "Container CompactPartyFrame is not visible so not sorting it.",
+["Level"] = 1,
+["Timestamp"] = 353.9863144999999,
+},
+{
+["Message"] = "Container CompactRaidFrameContainer is not visible so not sorting it.",
+["Level"] = 1,
+["Timestamp"] = 353.9863296000003,
+},
+{
+["Message"] = "Container PartyFrame has no frames to sort.",
+["Level"] = 1,
+["Timestamp"] = 353.9863910000004,
+},
+{
+["Message"] = "Container PartyFrame for provider Blizzard was not sorted.",
+["Level"] = 1,
+["Timestamp"] = 353.9864037000007,
+},
+{
+["Message"] = "Sort for Blizzard took 0.113100ms, result: not sorted.",
+["Level"] = 1,
+["Timestamp"] = 353.9864166999996,
+},
+{
+["Message"] = "Friendly units table.sort() took 0.003200ms.",
+["Level"] = 1,
+["Timestamp"] = 353.9865642999994,
+},
+{
+["Message"] = "Friendly units table.sort() took 0.001700ms.",
+["Level"] = 1,
+["Timestamp"] = 353.9865811,
+},
+{
+["Message"] = "Update targets took 0.198600ms, 0 updated.",
+["Level"] = 1,
+["Timestamp"] = 353.9866450999998,
+},
+{
+["Message"] = "Friendly units table.sort() took 0.001700ms.",
+["Level"] = 1,
+["Timestamp"] = 353.9867584999993,
+},
+{
+["Message"] = "Friendly units table.sort() took 0.001500ms.",
+["Level"] = 1,
+["Timestamp"] = 353.9867734,
+},
+{
+["Message"] = "Update macros took 0.161300ms, 0 updated.",
+["Level"] = 1,
+["Timestamp"] = 353.9868198000004,
+},
+{
+["Message"] = "Run time took 0.698000ms.",
+["Level"] = 1,
+["Timestamp"] = 353.9868475000003,
+},
+{
+["Message"] = "--- Finished run ---",
+["Level"] = 1,
+["Timestamp"] = 353.9868580999992,
+},
+{
+["Message"] = "Event: CVAR_UPDATE nameplateOverlapV, 0.85.",
+["Level"] = 1,
+["Timestamp"] = 355.7076959999995,
+},
+{
+["Message"] = "Event: CVAR_UPDATE nameplateAuraScale, 1.",
+["Level"] = 1,
+["Timestamp"] = 355.7092142999991,
+},
+{
+["Message"] = "Event: CVAR_UPDATE nameplateMaxScale, 1.",
+["Level"] = 1,
+["Timestamp"] = 355.7109196999991,
+},
+{
+["Message"] = "Event: CVAR_UPDATE nameplateOccludedAlphaMult, 1.",
+["Level"] = 1,
+["Timestamp"] = 355.7125949000001,
+},
+{
+["Message"] = "Event: CVAR_UPDATE nameplateShowFriendlyNpcs, 1.",
+["Level"] = 1,
+["Timestamp"] = 355.7144661999992,
+},
+{
+["Message"] = "Event: CVAR_UPDATE nameplateSelectedScale, 1.05.",
+["Level"] = 1,
+["Timestamp"] = 355.7160710999997,
+},
+{
+["Message"] = "Event: CVAR_UPDATE nameplateMinAlpha, 0.6.",
+["Level"] = 1,
+["Timestamp"] = 355.7177044,
+},
+{
+["Message"] = "Event: CVAR_UPDATE nameplateMinAlphaDistance, 10.1.",
+["Level"] = 1,
+["Timestamp"] = 355.7193038000005,
+},
+{
+["Message"] = "Event: CVAR_UPDATE nameplateMinScale, 1.",
+["Level"] = 1,
+["Timestamp"] = 355.7209449000002,
+},
+{
+["Message"] = "Event: CVAR_UPDATE nameplateShowEnemyMinus, 0.",
+["Level"] = 1,
+["Timestamp"] = 355.7215142000005,
+},
+{
+["Message"] = "Event: CVAR_UPDATE nameplateFriendlyPlayerAuraDisplay, A.",
+["Level"] = 1,
+["Timestamp"] = 355.7232490999995,
+},
+{
+["Message"] = "Event: CVAR_UPDATE nameplateFriendlyPlayerAuraDisplay, E.",
+["Level"] = 1,
+["Timestamp"] = 355.7248734999994,
+},
+{
+["Message"] = "Event: CVAR_UPDATE nameplateFriendlyPlayerAuraDisplay, G.",
+["Level"] = 1,
+["Timestamp"] = 355.7265351999995,
+},
+{
+["Message"] = "Event: CVAR_UPDATE nameplateSimplifiedTypes, B.",
+["Level"] = 1,
+["Timestamp"] = 355.7282011000007,
+},
+{
+["Message"] = "Event: CVAR_UPDATE nameplateEnemyNpcAuraDisplay, C.",
+["Level"] = 1,
+["Timestamp"] = 355.729886699999,
+},
+{
+["Message"] = "Event: CVAR_UPDATE nameplateEnemyNpcAuraDisplay, G.",
+["Level"] = 1,
+["Timestamp"] = 355.7315653999995,
+},
+{
+["Message"] = "Event: CVAR_UPDATE nameplateInfoDisplay, F.",
+["Level"] = 1,
+["Timestamp"] = 355.7342805000008,
+},
+{
+["Message"] = "Event: CVAR_UPDATE nameplateEnemyPlayerAuraDisplay, C.",
+["Level"] = 1,
+["Timestamp"] = 355.7359519999991,
+},
+{
+["Message"] = "Event: CVAR_UPDATE nameplateEnemyPlayerAuraDisplay, G.",
+["Level"] = 1,
+["Timestamp"] = 355.7375799999991,
+},
+{
+["Message"] = "Event: CVAR_UPDATE cameraSavedPitch, 22.150335.",
+["Level"] = 1,
+["Timestamp"] = 355.7757154999999,
+},
+{
+["Message"] = "--- Initialising ---",
+["Level"] = 1,
+["Timestamp"] = 0.02614700000049197,
+},
+{
+["Message"] = "Loading saved variables.",
+["Level"] = 1,
+["Timestamp"] = 0.02615309999964666,
+},
+{
+["Message"] = "We are version 7.13.4 running on Midnight build 12.0.1.",
+["Level"] = 1,
+["Timestamp"] = 0.02627240000038,
+},
+{
+["Message"] = "Initialised the sorted units caching module.",
+["Level"] = 1,
+["Timestamp"] = 0.08349490000000515,
+},
+{
+["Message"] = "Initialised the auto leader module.",
+["Level"] = 1,
+["Timestamp"] = 0.08351860000038869,
+},
+{
+["Message"] = "Initialised the hide player module.",
+["Level"] = 1,
+["Timestamp"] = 0.08352920000106678,
+},
+{
+["Message"] = "Initialised the secure sorting module.",
+["Level"] = 1,
+["Timestamp"] = 0.08447259999957168,
+},
+{
+["Message"] = "Initialised the targeting module.",
+["Level"] = 1,
+["Timestamp"] = 0.0851715000007971,
+},
+{
+["Message"] = "Initialised the macro module.",
+["Level"] = 1,
+["Timestamp"] = 0.08519209999940358,
+},
+{
+["Message"] = "Initialised the spec inspector module.",
+["Level"] = 1,
+["Timestamp"] = 0.08563570000114851,
+},
+{
+["Message"] = "Initialised the unit tracker module.",
+["Level"] = 1,
+["Timestamp"] = 0.08564819999992324,
+},
+{
+["Message"] = "Initialised the nameplates module.",
+["Level"] = 1,
+["Timestamp"] = 0.08566000000064378,
+},
+{
+["Message"] = "Initialised the providers module.",
+["Level"] = 1,
+["Timestamp"] = 0.08572699999967881,
+},
+{
+["Message"] = "--- Initialisation finished ---",
+["Level"] = 1,
+["Timestamp"] = 0.08576080000057118,
+},
+{
+["Message"] = "Event: CVAR_UPDATE cameraSavedPetBattleDistance, 15.000062.",
+["Level"] = 1,
+["Timestamp"] = 0.7250662999995257,
+},
+{
+["Message"] = "Event: CVAR_UPDATE cameraSavedPitch, 22.150335.",
+["Level"] = 1,
+["Timestamp"] = 0.72639590000108,
+},
+{
+["Message"] = "Event: CVAR_UPDATE cameraSavedVehicleDistance, 50.000000.",
+["Level"] = 1,
+["Timestamp"] = 0.7276813999997103,
+},
+{
+["Message"] = "Event: CVAR_UPDATE cameraSavedDistance, 23.299896.",
+["Level"] = 1,
+["Timestamp"] = 0.7289426999996067,
+},
+{
+["Message"] = "Event: CVAR_UPDATE SoftTargetEnemy, 0.",
+["Level"] = 1,
+["Timestamp"] = 0.73020440000073,
+},
+{
+["Message"] = "Event: CVAR_UPDATE latestSplashScreen, 0.",
+["Level"] = 1,
+["Timestamp"] = 0.733945699999822,
+},
+{
+["Message"] = "Event: CVAR_UPDATE trackedPerksActivities, .",
+["Level"] = 1,
+["Timestamp"] = 1.341829099999814,
+},
+{
+["Message"] = "Event: CVAR_UPDATE perksActivitiesLastPoints, 0.",
+["Level"] = 1,
+["Timestamp"] = 1.343181800000821,
+},
+{
+["Message"] = "Event: CVAR_UPDATE perksActivitiesCurrentMonth, 0.",
+["Level"] = 1,
+["Timestamp"] = 1.344455599999492,
+},
+{
+["Message"] = "Event: CVAR_UPDATE perksActivitiesPendingCompletion, .",
+["Level"] = 1,
+["Timestamp"] = 1.3457185999996,
+},
+{
+["Message"] = "Event: CVAR_UPDATE AutoPushSpellToActionBar, 1.",
+["Level"] = 1,
+["Timestamp"] = 1.372215400000641,
+},
+{
+["Message"] = "Event: CVAR_UPDATE nameplateOverlapV, 1.1.",
+["Level"] = 1,
+["Timestamp"] = 1.825846499999898,
+},
+{
+["Message"] = "Event: CVAR_UPDATE nameplateSelectedScale, 1.5.",
+["Level"] = 1,
+["Timestamp"] = 1.827209400000356,
+},
+{
+["Message"] = "Event: CVAR_UPDATE nameplateMinScale, 1.4.",
+["Level"] = 1,
+["Timestamp"] = 1.828521900000851,
+},
+{
+["Message"] = "Event: CVAR_UPDATE nameplateMaxScale, 1.4.",
+["Level"] = 1,
+["Timestamp"] = 1.829808500000581,
+},
+{
+["Message"] = "Event: CVAR_UPDATE nameplateMinAlpha, 0.90135484.",
+["Level"] = 1,
+["Timestamp"] = 1.831093799999508,
+},
+{
+["Message"] = "Event: CVAR_UPDATE nameplateMinAlphaDistance, 10.",
+["Level"] = 1,
+["Timestamp"] = 1.832376700000168,
+},
+{
+["Message"] = "Event: CVAR_UPDATE nameplateMaxAlphaDistance, 40.",
+["Level"] = 1,
+["Timestamp"] = 1.833670300000449,
+},
+{
+["Message"] = "Event: CVAR_UPDATE nameplateOccludedAlphaMult, 0.3.",
+["Level"] = 1,
+["Timestamp"] = 1.834944800000812,
+},
+{
+["Message"] = "Event: CVAR_UPDATE nameplateAuraScale, 1.2999999523163.",
+["Level"] = 1,
+["Timestamp"] = 1.836304000000382,
+},
+{
+["Message"] = "Event: CVAR_UPDATE nameplateShowEnemyMinus, 1.",
+["Level"] = 1,
+["Timestamp"] = 1.837638900000457,
+},
+{
+["Message"] = "Event: CVAR_UPDATE nameplateShowFriendlyNpcs, 0.",
+["Level"] = 1,
+["Timestamp"] = 1.838966400000572,
+},
+{
+["Message"] = "Event: CVAR_UPDATE nameplateEnemyPlayerAuraDisplay, F.",
+["Level"] = 1,
+["Timestamp"] = 1.840273100000559,
+},
+{
+["Message"] = "Event: CVAR_UPDATE nameplateEnemyPlayerAuraDisplay, B.",
+["Level"] = 1,
+["Timestamp"] = 1.841533599999821,
+},
+{
+["Message"] = "Event: CVAR_UPDATE nameplateSimplifiedTypes, .",
+["Level"] = 1,
+["Timestamp"] = 1.842792200000986,
+},
+{
+["Message"] = "Event: CVAR_UPDATE nameplateFriendlyPlayerAuraDisplay, F.",
+["Level"] = 1,
+["Timestamp"] = 1.84404480000012,
+},
+{
+["Message"] = "Event: CVAR_UPDATE nameplateFriendlyPlayerAuraDisplay, B.",
+["Level"] = 1,
+["Timestamp"] = 1.845316799999637,
+},
+{
+["Message"] = "Event: CVAR_UPDATE nameplateFriendlyPlayerAuraDisplay, .",
+["Level"] = 1,
+["Timestamp"] = 1.84657309999966,
+},
+{
+["Message"] = "Event: CVAR_UPDATE nameplateEnemyNpcAuraDisplay, F.",
+["Level"] = 1,
+["Timestamp"] = 1.847831999999471,
+},
+{
+["Message"] = "Event: CVAR_UPDATE nameplateEnemyNpcAuraDisplay, B.",
+["Level"] = 1,
+["Timestamp"] = 1.84908440000072,
+},
+{
+["Message"] = "Event: CVAR_UPDATE nameplateInfoDisplay, D.",
+["Level"] = 1,
+["Timestamp"] = 1.850336999999854,
+},
+{
+["Message"] = "Event: CVAR_UPDATE calendarShowWeeklyHolidays, 0.",
+["Level"] = 1,
+["Timestamp"] = 2.228097000001071,
+},
+{
+["Message"] = "Event: CVAR_UPDATE calendarShowBattlegrounds, 0.",
+["Level"] = 1,
+["Timestamp"] = 2.229517400000987,
+},
+{
+["Message"] = "Event: CVAR_UPDATE calendarShowLockouts, 0.",
+["Level"] = 1,
+["Timestamp"] = 2.230953600001158,
+},
+{
+["Message"] = "Event: CVAR_UPDATE calendarShowBattlegrounds, 1.",
+["Level"] = 1,
+["Timestamp"] = 2.237468299999819,
+},
+{
+["Message"] = "Event: CVAR_UPDATE calendarShowWeeklyHolidays, 1.",
+["Level"] = 1,
+["Timestamp"] = 2.238871600000493,
+},
+{
+["Message"] = "Event: CVAR_UPDATE calendarShowLockouts, 1.",
+["Level"] = 1,
+["Timestamp"] = 2.240274699999645,
+},
+{
+["Message"] = "Event: CVAR_UPDATE EJSelectedTier, 68.",
+["Level"] = 1,
+["Timestamp"] = 2.242037600000913,
+},
+{
+["Message"] = "Event: CVAR_UPDATE EJSelectedTier, 70.",
+["Level"] = 1,
+["Timestamp"] = 2.243550600000162,
+},
+{
+["Message"] = "Event: CVAR_UPDATE EJSelectedTier, 72.",
+["Level"] = 1,
+["Timestamp"] = 2.244881300000998,
+},
+{
+["Message"] = "Event: CVAR_UPDATE EJSelectedTier, 73.",
+["Level"] = 1,
+["Timestamp"] = 2.246232299999974,
+},
+{
+["Message"] = "Event: CVAR_UPDATE EJSelectedTier, 74.",
+["Level"] = 1,
+["Timestamp"] = 2.247573900000134,
+},
+{
+["Message"] = "Event: CVAR_UPDATE EJSelectedTier, 124.",
+["Level"] = 1,
+["Timestamp"] = 2.248886600000333,
+},
+{
+["Message"] = "Event: CVAR_UPDATE EJSelectedTier, 395.",
+["Level"] = 1,
+["Timestamp"] = 2.250193800000488,
+},
+{
+["Message"] = "Event: CVAR_UPDATE EJSelectedTier, 396.",
+["Level"] = 1,
+["Timestamp"] = 2.251577400000315,
+},
+{
+["Message"] = "Event: CVAR_UPDATE EJSelectedTier, 499.",
+["Level"] = 1,
+["Timestamp"] = 2.253216500001145,
+},
+{
+["Message"] = "Event: CVAR_UPDATE EJSelectedTier, 503.",
+["Level"] = 1,
+["Timestamp"] = 2.254528299999947,
+},
+{
+["Message"] = "Event: CVAR_UPDATE EJSelectedTier, 514.",
+["Level"] = 1,
+["Timestamp"] = 2.255829800000356,
+},
+{
+["Message"] = "Event: CVAR_UPDATE EJSelectedTier, 516.",
+["Level"] = 1,
+["Timestamp"] = 2.257135400001062,
+},
+{
+["Message"] = "Event: CVAR_UPDATE EJSelectedTier, 505.",
+["Level"] = 1,
+["Timestamp"] = 2.258430600000793,
+},
+{
+["Message"] = "Event: CVAR_UPDATE mountJournalGeneralFilters, 3.",
+["Level"] = 1,
+["Timestamp"] = 2.647850299999845,
+},
+{
+["Message"] = "Event: CVAR_UPDATE mountJournalGeneralFilters, 7.",
+["Level"] = 1,
+["Timestamp"] = 2.684540600001128,
+},
+{
+["Message"] = "Event: CVAR_UPDATE nameplateMaxAlphaDistance, 60.",
+["Level"] = 1,
+["Timestamp"] = 2.837258600000496,
+},
+{
+["Message"] = "Event: PLAYER_ENTERING_WORLD false, true.",
+["Level"] = 1,
+["Timestamp"] = 2.92672119999952,
+},
+{
+["Message"] = "Detected the 'Blizzard' addon is enabled.",
+["Level"] = 1,
+["Timestamp"] = 2.927514500001053,
+},
+{
+["Message"] = "Detected the 'sArena' addon is enabled.",
+["Level"] = 1,
+["Timestamp"] = 2.927529900000081,
+},
+{
+["Message"] = "Scheduling sort after loading screen.",
+["Level"] = 1,
+["Timestamp"] = 2.927581400001145,
+},
+{
+["Message"] = "Group frame 'CompactRaidGroup1' has no position.",
+["Level"] = 3,
+["Timestamp"] = 3.062006899999687,
+},
+{
+["Message"] = "Group frame 'CompactRaidGroup1' has no position.",
+["Level"] = 3,
+["Timestamp"] = 3.071629399999438,
+},
+{
+["Message"] = "Group frame 'CompactRaidGroup2' has no position.",
+["Level"] = 3,
+["Timestamp"] = 3.071654200000921,
+},
+{
+["Message"] = "Group frame 'CompactRaidGroup1' has no position.",
+["Level"] = 3,
+["Timestamp"] = 3.08086540000113,
+},
+{
+["Message"] = "Group frame 'CompactRaidGroup2' has no position.",
+["Level"] = 3,
+["Timestamp"] = 3.080885400000625,
+},
+{
+["Message"] = "Group frame 'CompactRaidGroup3' has no position.",
+["Level"] = 3,
+["Timestamp"] = 3.080898800000796,
+},
+{
+["Message"] = "Group frame 'CompactRaidGroup1' has no position.",
+["Level"] = 3,
+["Timestamp"] = 3.090013700000782,
+},
+{
+["Message"] = "Group frame 'CompactRaidGroup2' has no position.",
+["Level"] = 3,
+["Timestamp"] = 3.090032500000234,
+},
+{
+["Message"] = "Group frame 'CompactRaidGroup3' has no position.",
+["Level"] = 3,
+["Timestamp"] = 3.090045700000701,
+},
+{
+["Message"] = "Group frame 'CompactRaidGroup4' has no position.",
+["Level"] = 3,
+["Timestamp"] = 3.090058300000237,
+},
+{
+["Message"] = "Group frame 'CompactRaidGroup1' has no position.",
+["Level"] = 3,
+["Timestamp"] = 3.099147700000685,
+},
+{
+["Message"] = "Group frame 'CompactRaidGroup2' has no position.",
+["Level"] = 3,
+["Timestamp"] = 3.099165699999503,
+},
+{
+["Message"] = "Group frame 'CompactRaidGroup3' has no position.",
+["Level"] = 3,
+["Timestamp"] = 3.099178599999505,
+},
+{
+["Message"] = "Group frame 'CompactRaidGroup4' has no position.",
+["Level"] = 3,
+["Timestamp"] = 3.099190599999929,
+},
+{
+["Message"] = "Group frame 'CompactRaidGroup5' has no position.",
+["Level"] = 3,
+["Timestamp"] = 3.099202700001115,
+},
+{
+["Message"] = "Provider 'Blizzard' requested sort due to 'Edit mode exited'.",
+["Level"] = 1,
+["Timestamp"] = 3.332547300000442,
+},
+{
+["Message"] = "Event: CVAR_UPDATE latestSplashScreen, 0.",
+["Level"] = 1,
+["Timestamp"] = 3.365672400001131,
+},
+{
+["Message"] = "--- Starting run ---",
+["Level"] = 1,
+["Timestamp"] = 3.459275999999591,
+},
+{
+["Message"] = "Container CompactPartyFrame is not visible so not sorting it.",
+["Level"] = 1,
+["Timestamp"] = 3.459548000000723,
+},
+{
+["Message"] = "Container CompactRaidFrameContainer is not visible so not sorting it.",
+["Level"] = 1,
+["Timestamp"] = 3.459565099999963,
+},
+{
+["Message"] = "Container PartyFrame has no frames to sort.",
+["Level"] = 1,
+["Timestamp"] = 3.459632399999464,
+},
+{
+["Message"] = "Container PartyFrame for provider Blizzard was not sorted.",
+["Level"] = 1,
+["Timestamp"] = 3.459646600000269,
+},
+{
+["Message"] = "Sort for Blizzard took 0.124600ms, result: not sorted.",
+["Level"] = 1,
+["Timestamp"] = 3.459661799999594,
+},
+{
+["Message"] = "Friendly units table.sort() took 0.003900ms.",
+["Level"] = 1,
+["Timestamp"] = 3.459820300000501,
+},
+{
+["Message"] = "Friendly units table.sort() took 0.001600ms.",
+["Level"] = 1,
+["Timestamp"] = 3.459844299999531,
+},
+{
+["Message"] = "Update targets took 0.223300ms, 0 updated.",
+["Level"] = 1,
+["Timestamp"] = 3.459919799999625,
+},
+{
+["Message"] = "Friendly units table.sort() took 0.001700ms.",
+["Level"] = 1,
+["Timestamp"] = 3.460049700001036,
+},
+{
+["Message"] = "Friendly units table.sort() took 0.001600ms.",
+["Level"] = 1,
+["Timestamp"] = 3.460064099999727,
+},
+{
+["Message"] = "Update macros took 0.476000ms, 0 updated.",
+["Level"] = 1,
+["Timestamp"] = 3.460409499999514,
+},
+{
+["Message"] = "Run time took 1.153000ms.",
+["Level"] = 1,
+["Timestamp"] = 3.460426300000108,
+},
+{
+["Message"] = "--- Finished run ---",
+["Level"] = 1,
+["Timestamp"] = 3.460436000001209,
+},
+{
+["Message"] = "Friendly units table.sort() took 0.003900ms.",
+["Level"] = 1,
+["Timestamp"] = 3.644108000000415,
+},
+{
+["Message"] = "Friendly units table.sort() took 0.001600ms.",
+["Level"] = 1,
+["Timestamp"] = 3.644138900001053,
+},
+{
+["Message"] = "Friendly units table.sort() took 0.001900ms.",
+["Level"] = 1,
+["Timestamp"] = 3.645099900000787,
+},
+{
+["Message"] = "Friendly units table.sort() took 0.001600ms.",
+["Level"] = 1,
+["Timestamp"] = 3.645116900001085,
+},
+{
+["Message"] = "Event: INSPECT_READY Player-11-0E2916DB.",
+["Level"] = 1,
+["Timestamp"] = 28.3074901,
+},
+{
+["Message"] = "Event: UNIT_PET target.",
+["Level"] = 1,
+["Timestamp"] = 28.51371339999969,
+},
+{
+["Message"] = "Provider 'Blizzard' requested sort due to 'UNIT_PET'.",
+["Level"] = 1,
+["Timestamp"] = 28.51381279999987,
+},
+{
+["Message"] = "--- Starting run ---",
+["Level"] = 1,
+["Timestamp"] = 28.52034620000086,
+},
+{
+["Message"] = "Container CompactPartyFrame is not visible so not sorting it.",
+["Level"] = 1,
+["Timestamp"] = 28.52052550000008,
+},
+{
+["Message"] = "Container CompactRaidFrameContainer is not visible so not sorting it.",
+["Level"] = 1,
+["Timestamp"] = 28.52054020000105,
+},
+{
+["Message"] = "Container PartyFrame has no frames to sort.",
+["Level"] = 1,
+["Timestamp"] = 28.52060270000038,
+},
+{
+["Message"] = "Container PartyFrame for provider Blizzard was not sorted.",
+["Level"] = 1,
+["Timestamp"] = 28.52061510000021,
+},
+{
+["Message"] = "Sort for Blizzard took 0.114100ms, result: not sorted.",
+["Level"] = 1,
+["Timestamp"] = 28.52062930000102,
+},
+{
+["Message"] = "Friendly units table.sort() took 0.003200ms.",
+["Level"] = 1,
+["Timestamp"] = 28.5207704000004,
+},
+{
+["Message"] = "Friendly units table.sort() took 0.001700ms.",
+["Level"] = 1,
+["Timestamp"] = 28.52078670000083,
+},
+{
+["Message"] = "Update targets took 0.201700ms, 0 updated.",
+["Level"] = 1,
+["Timestamp"] = 28.52086050000071,
+},
+{
+["Message"] = "Friendly units table.sort() took 0.001700ms.",
+["Level"] = 1,
+["Timestamp"] = 28.52097570000115,
+},
+{
+["Message"] = "Friendly units table.sort() took 0.001700ms.",
+["Level"] = 1,
+["Timestamp"] = 28.52099009999984,
+},
+{
+["Message"] = "Update macros took 0.394800ms, 0 updated.",
+["Level"] = 1,
+["Timestamp"] = 28.52127120000114,
+},
+{
+["Message"] = "Run time took 0.954100ms.",
+["Level"] = 1,
+["Timestamp"] = 28.5212991999997,
+},
+{
+["Message"] = "--- Finished run ---",
+["Level"] = 1,
+["Timestamp"] = 28.52130930000021,
+},
+{
+["Message"] = "Event: ARENA_OPPONENT_UPDATE arena1, cleared.",
+["Level"] = 1,
+["Timestamp"] = 33.10866619999979,
+},
+{
+["Message"] = "Provider 'Blizzard' requested sort due to 'ARENA_OPPONENT_UPDATE'.",
+["Level"] = 1,
+["Timestamp"] = 33.10875420000048,
+},
+{
+["Message"] = "Provider 'sArena' requested sort due to 'ARENA_OPPONENT_UPDATE'.",
+["Level"] = 1,
+["Timestamp"] = 33.10877389999951,
+},
+{
+["Message"] = "Event: ARENA_OPPONENT_UPDATE arenapet1, cleared.",
+["Level"] = 1,
+["Timestamp"] = 33.113877400001,
+},
+{
+["Message"] = "Provider 'Blizzard' requested sort due to 'ARENA_OPPONENT_UPDATE'.",
+["Level"] = 1,
+["Timestamp"] = 33.11392680000063,
+},
+{
+["Message"] = "Provider 'sArena' requested sort due to 'ARENA_OPPONENT_UPDATE'.",
+["Level"] = 1,
+["Timestamp"] = 33.11394250000012,
+},
+{
+["Message"] = "Event: ARENA_OPPONENT_UPDATE arena2, cleared.",
+["Level"] = 1,
+["Timestamp"] = 33.11910770000031,
+},
+{
+["Message"] = "Provider 'Blizzard' requested sort due to 'ARENA_OPPONENT_UPDATE'.",
+["Level"] = 1,
+["Timestamp"] = 33.11915500000032,
+},
+{
+["Message"] = "Provider 'sArena' requested sort due to 'ARENA_OPPONENT_UPDATE'.",
+["Level"] = 1,
+["Timestamp"] = 33.11917060000087,
+},
+{
+["Message"] = "Event: ARENA_OPPONENT_UPDATE arenapet2, cleared.",
+["Level"] = 1,
+["Timestamp"] = 33.12411109999994,
+},
+{
+["Message"] = "Provider 'Blizzard' requested sort due to 'ARENA_OPPONENT_UPDATE'.",
+["Level"] = 1,
+["Timestamp"] = 33.12415680000049,
+},
+{
+["Message"] = "Provider 'sArena' requested sort due to 'ARENA_OPPONENT_UPDATE'.",
+["Level"] = 1,
+["Timestamp"] = 33.12417170000117,
+},
+{
+["Message"] = "Event: ARENA_OPPONENT_UPDATE arena3, cleared.",
+["Level"] = 1,
+["Timestamp"] = 33.12949780000054,
+},
+{
+["Message"] = "Provider 'Blizzard' requested sort due to 'ARENA_OPPONENT_UPDATE'.",
+["Level"] = 1,
+["Timestamp"] = 33.12954220000029,
+},
+{
+["Message"] = "Provider 'sArena' requested sort due to 'ARENA_OPPONENT_UPDATE'.",
+["Level"] = 1,
+["Timestamp"] = 33.12955909999982,
+},
+{
+["Message"] = "Event: ARENA_OPPONENT_UPDATE arenapet3, cleared.",
+["Level"] = 1,
+["Timestamp"] = 33.13462439999967,
+},
+{
+["Message"] = "Provider 'Blizzard' requested sort due to 'ARENA_OPPONENT_UPDATE'.",
+["Level"] = 1,
+["Timestamp"] = 33.13466870000048,
+},
+{
+["Message"] = "Provider 'sArena' requested sort due to 'ARENA_OPPONENT_UPDATE'.",
+["Level"] = 1,
+["Timestamp"] = 33.13468719999946,
+},
+{
+["Message"] = "Event: ARENA_OPPONENT_UPDATE arena4, cleared.",
+["Level"] = 1,
+["Timestamp"] = 33.13986710000063,
+},
+{
+["Message"] = "Provider 'Blizzard' requested sort due to 'ARENA_OPPONENT_UPDATE'.",
+["Level"] = 1,
+["Timestamp"] = 33.13991180000085,
+},
+{
+["Message"] = "Provider 'sArena' requested sort due to 'ARENA_OPPONENT_UPDATE'.",
+["Level"] = 1,
+["Timestamp"] = 33.13992669999971,
+},
+{
+["Message"] = "Event: ARENA_OPPONENT_UPDATE arenapet4, cleared.",
+["Level"] = 1,
+["Timestamp"] = 33.14492930000051,
+},
+{
+["Message"] = "Provider 'Blizzard' requested sort due to 'ARENA_OPPONENT_UPDATE'.",
+["Level"] = 1,
+["Timestamp"] = 33.14497300000039,
+},
+{
+["Message"] = "Provider 'sArena' requested sort due to 'ARENA_OPPONENT_UPDATE'.",
+["Level"] = 1,
+["Timestamp"] = 33.14498790000107,
+},
+{
+["Message"] = "Event: ARENA_OPPONENT_UPDATE arena5, cleared.",
+["Level"] = 1,
+["Timestamp"] = 33.15019179999945,
+},
+{
+["Message"] = "Provider 'Blizzard' requested sort due to 'ARENA_OPPONENT_UPDATE'.",
+["Level"] = 1,
+["Timestamp"] = 33.15023909999945,
+},
+{
+["Message"] = "Provider 'sArena' requested sort due to 'ARENA_OPPONENT_UPDATE'.",
+["Level"] = 1,
+["Timestamp"] = 33.15025380000043,
+},
+{
+["Message"] = "Event: ARENA_OPPONENT_UPDATE arenapet5, cleared.",
+["Level"] = 1,
+["Timestamp"] = 33.15526859999955,
+},
+{
+["Message"] = "Provider 'Blizzard' requested sort due to 'ARENA_OPPONENT_UPDATE'.",
+["Level"] = 1,
+["Timestamp"] = 33.15531139999985,
+},
+{
+["Message"] = "Provider 'sArena' requested sort due to 'ARENA_OPPONENT_UPDATE'.",
+["Level"] = 1,
+["Timestamp"] = 33.15532580000036,
+},
+{
+["Message"] = "Event: ARENA_OPPONENT_UPDATE arena6, cleared.",
+["Level"] = 1,
+["Timestamp"] = 33.16029739999976,
+},
+{
+["Message"] = "Provider 'Blizzard' requested sort due to 'ARENA_OPPONENT_UPDATE'.",
+["Level"] = 1,
+["Timestamp"] = 33.16034159999981,
+},
+{
+["Message"] = "Provider 'sArena' requested sort due to 'ARENA_OPPONENT_UPDATE'.",
+["Level"] = 1,
+["Timestamp"] = 33.16035600000032,
+},
+{
+["Message"] = "Event: ARENA_OPPONENT_UPDATE arenapet6, cleared.",
+["Level"] = 1,
+["Timestamp"] = 33.16541859999961,
+},
+{
+["Message"] = "Provider 'Blizzard' requested sort due to 'ARENA_OPPONENT_UPDATE'.",
+["Level"] = 1,
+["Timestamp"] = 33.16546159999962,
+},
+{
+["Message"] = "Provider 'sArena' requested sort due to 'ARENA_OPPONENT_UPDATE'.",
+["Level"] = 1,
+["Timestamp"] = 33.16547730000093,
+},
+{
+["Message"] = "Event: ARENA_OPPONENT_UPDATE arena7, cleared.",
+["Level"] = 1,
+["Timestamp"] = 33.17043139999987,
+},
+{
+["Message"] = "Provider 'Blizzard' requested sort due to 'ARENA_OPPONENT_UPDATE'.",
+["Level"] = 1,
+["Timestamp"] = 33.17047409999941,
+},
+{
+["Message"] = "Provider 'sArena' requested sort due to 'ARENA_OPPONENT_UPDATE'.",
+["Level"] = 1,
+["Timestamp"] = 33.17048900000009,
+},
+{
+["Message"] = "Event: ARENA_OPPONENT_UPDATE arenapet7, cleared.",
+["Level"] = 1,
+["Timestamp"] = 33.1755033999998,
+},
+{
+["Message"] = "Provider 'Blizzard' requested sort due to 'ARENA_OPPONENT_UPDATE'.",
+["Level"] = 1,
+["Timestamp"] = 33.17554580000069,
+},
+{
+["Message"] = "Provider 'sArena' requested sort due to 'ARENA_OPPONENT_UPDATE'.",
+["Level"] = 1,
+["Timestamp"] = 33.1755604000009,
+},
+{
+["Message"] = "Event: ARENA_OPPONENT_UPDATE arena8, cleared.",
+["Level"] = 1,
+["Timestamp"] = 33.18061549999948,
+},
+{
+["Message"] = "Provider 'Blizzard' requested sort due to 'ARENA_OPPONENT_UPDATE'.",
+["Level"] = 1,
+["Timestamp"] = 33.18066069999986,
+},
+{
+["Message"] = "Provider 'sArena' requested sort due to 'ARENA_OPPONENT_UPDATE'.",
+["Level"] = 1,
+["Timestamp"] = 33.18067520000113,
+},
+{
+["Message"] = "Event: ARENA_OPPONENT_UPDATE arenapet8, cleared.",
+["Level"] = 1,
+["Timestamp"] = 33.18569220000063,
+},
+{
+["Message"] = "Provider 'Blizzard' requested sort due to 'ARENA_OPPONENT_UPDATE'.",
+["Level"] = 1,
+["Timestamp"] = 33.18573479999941,
+},
+{
+["Message"] = "Provider 'sArena' requested sort due to 'ARENA_OPPONENT_UPDATE'.",
+["Level"] = 1,
+["Timestamp"] = 33.18575199999941,
+},
+{
+["Message"] = "Event: ARENA_OPPONENT_UPDATE arena9, cleared.",
+["Level"] = 1,
+["Timestamp"] = 33.1906983000008,
+},
+{
+["Message"] = "Provider 'Blizzard' requested sort due to 'ARENA_OPPONENT_UPDATE'.",
+["Level"] = 1,
+["Timestamp"] = 33.19074730000102,
+},
+{
+["Message"] = "Provider 'sArena' requested sort due to 'ARENA_OPPONENT_UPDATE'.",
+["Level"] = 1,
+["Timestamp"] = 33.19076230000064,
+},
+{
+["Message"] = "Event: ARENA_OPPONENT_UPDATE arenapet9, cleared.",
+["Level"] = 1,
+["Timestamp"] = 33.19579270000031,
+},
+{
+["Message"] = "Provider 'Blizzard' requested sort due to 'ARENA_OPPONENT_UPDATE'.",
+["Level"] = 1,
+["Timestamp"] = 33.19583430000057,
+},
+{
+["Message"] = "Provider 'sArena' requested sort due to 'ARENA_OPPONENT_UPDATE'.",
+["Level"] = 1,
+["Timestamp"] = 33.19584860000032,
+},
+{
+["Message"] = "Event: ARENA_OPPONENT_UPDATE arena10, cleared.",
+["Level"] = 1,
+["Timestamp"] = 33.20088270000088,
+},
+{
+["Message"] = "Provider 'Blizzard' requested sort due to 'ARENA_OPPONENT_UPDATE'.",
+["Level"] = 1,
+["Timestamp"] = 33.20092240000122,
+},
+{
+["Message"] = "Provider 'sArena' requested sort due to 'ARENA_OPPONENT_UPDATE'.",
+["Level"] = 1,
+["Timestamp"] = 33.20093660000021,
+},
+{
+["Message"] = "Event: ARENA_OPPONENT_UPDATE arenapet10, cleared.",
+["Level"] = 1,
+["Timestamp"] = 33.20605650000107,
+},
+{
+["Message"] = "Provider 'Blizzard' requested sort due to 'ARENA_OPPONENT_UPDATE'.",
+["Level"] = 1,
+["Timestamp"] = 33.20610149999993,
+},
+{
+["Message"] = "Provider 'sArena' requested sort due to 'ARENA_OPPONENT_UPDATE'.",
+["Level"] = 1,
+["Timestamp"] = 33.20611660000031,
+},
+{
+["Message"] = "Event: ARENA_OPPONENT_UPDATE arena11, cleared.",
+["Level"] = 1,
+["Timestamp"] = 33.21123590000025,
+},
+{
+["Message"] = "Provider 'Blizzard' requested sort due to 'ARENA_OPPONENT_UPDATE'.",
+["Level"] = 1,
+["Timestamp"] = 33.21127859999979,
+},
+{
+["Message"] = "Provider 'sArena' requested sort due to 'ARENA_OPPONENT_UPDATE'.",
+["Level"] = 1,
+["Timestamp"] = 33.2112932,
+},
+{
+["Message"] = "Event: ARENA_OPPONENT_UPDATE arenapet11, cleared.",
+["Level"] = 1,
+["Timestamp"] = 33.21638080000048,
+},
+{
+["Message"] = "Provider 'Blizzard' requested sort due to 'ARENA_OPPONENT_UPDATE'.",
+["Level"] = 1,
+["Timestamp"] = 33.2164216000001,
+},
+{
+["Message"] = "Provider 'sArena' requested sort due to 'ARENA_OPPONENT_UPDATE'.",
+["Level"] = 1,
+["Timestamp"] = 33.21643600000061,
+},
+{
+["Message"] = "Event: ARENA_OPPONENT_UPDATE arena12, cleared.",
+["Level"] = 1,
+["Timestamp"] = 33.22150730000067,
+},
+{
+["Message"] = "Provider 'Blizzard' requested sort due to 'ARENA_OPPONENT_UPDATE'.",
+["Level"] = 1,
+["Timestamp"] = 33.22154760000012,
+},
+{
+["Message"] = "Provider 'sArena' requested sort due to 'ARENA_OPPONENT_UPDATE'.",
+["Level"] = 1,
+["Timestamp"] = 33.2215612,
+},
+{
+["Message"] = "Event: ARENA_OPPONENT_UPDATE arenapet12, cleared.",
+["Level"] = 1,
+["Timestamp"] = 33.22681580000062,
+},
+{
+["Message"] = "Provider 'Blizzard' requested sort due to 'ARENA_OPPONENT_UPDATE'.",
+["Level"] = 1,
+["Timestamp"] = 33.22685810000075,
+},
+{
+["Message"] = "Provider 'sArena' requested sort due to 'ARENA_OPPONENT_UPDATE'.",
+["Level"] = 1,
+["Timestamp"] = 33.22687260000021,
+},
+{
+["Message"] = "Event: ARENA_OPPONENT_UPDATE arena13, cleared.",
+["Level"] = 1,
+["Timestamp"] = 33.23204199999964,
+},
+{
+["Message"] = "Provider 'Blizzard' requested sort due to 'ARENA_OPPONENT_UPDATE'.",
+["Level"] = 1,
+["Timestamp"] = 33.23208499999964,
+},
+{
+["Message"] = "Provider 'sArena' requested sort due to 'ARENA_OPPONENT_UPDATE'.",
+["Level"] = 1,
+["Timestamp"] = 33.23209959999986,
+},
+{
+["Message"] = "Event: ARENA_OPPONENT_UPDATE arenapet13, cleared.",
+["Level"] = 1,
+["Timestamp"] = 33.23729280000043,
+},
+{
+["Message"] = "Provider 'Blizzard' requested sort due to 'ARENA_OPPONENT_UPDATE'.",
+["Level"] = 1,
+["Timestamp"] = 33.23733569999968,
+},
+{
+["Message"] = "Provider 'sArena' requested sort due to 'ARENA_OPPONENT_UPDATE'.",
+["Level"] = 1,
+["Timestamp"] = 33.23735060000035,
+},
+{
+["Message"] = "Event: ARENA_OPPONENT_UPDATE arena14, cleared.",
+["Level"] = 1,
+["Timestamp"] = 33.24259720000009,
+},
+{
+["Message"] = "Provider 'Blizzard' requested sort due to 'ARENA_OPPONENT_UPDATE'.",
+["Level"] = 1,
+["Timestamp"] = 33.24264080000103,
+},
+{
+["Message"] = "Provider 'sArena' requested sort due to 'ARENA_OPPONENT_UPDATE'.",
+["Level"] = 1,
+["Timestamp"] = 33.24265620000006,
+},
+{
+["Message"] = "Event: ARENA_OPPONENT_UPDATE arenapet14, cleared.",
+["Level"] = 1,
+["Timestamp"] = 33.2478957000003,
+},
+{
+["Message"] = "Provider 'Blizzard' requested sort due to 'ARENA_OPPONENT_UPDATE'.",
+["Level"] = 1,
+["Timestamp"] = 33.24793959999988,
+},
+{
+["Message"] = "Provider 'sArena' requested sort due to 'ARENA_OPPONENT_UPDATE'.",
+["Level"] = 1,
+["Timestamp"] = 33.24795590000031,
+},
+{
+["Message"] = "Event: ARENA_OPPONENT_UPDATE arena15, cleared.",
+["Level"] = 1,
+["Timestamp"] = 33.25319459999992,
+},
+{
+["Message"] = "Provider 'Blizzard' requested sort due to 'ARENA_OPPONENT_UPDATE'.",
+["Level"] = 1,
+["Timestamp"] = 33.25323750000098,
+},
+{
+["Message"] = "Provider 'sArena' requested sort due to 'ARENA_OPPONENT_UPDATE'.",
+["Level"] = 1,
+["Timestamp"] = 33.25325210000119,
+},
+{
+["Message"] = "Event: ARENA_OPPONENT_UPDATE arenapet15, cleared.",
+["Level"] = 1,
+["Timestamp"] = 33.25831459999972,
+},
+{
+["Message"] = "Provider 'Blizzard' requested sort due to 'ARENA_OPPONENT_UPDATE'.",
+["Level"] = 1,
+["Timestamp"] = 33.25835519999964,
+},
+{
+["Message"] = "Provider 'sArena' requested sort due to 'ARENA_OPPONENT_UPDATE'.",
+["Level"] = 1,
+["Timestamp"] = 33.25836909999998,
+},
+{
+["Message"] = "Event: CVAR_UPDATE nameplateOverlapV, 0.85.",
+["Level"] = 1,
+["Timestamp"] = 33.42785720000029,
+},
+{
+["Message"] = "Event: CVAR_UPDATE nameplateAuraScale, 1.",
+["Level"] = 1,
+["Timestamp"] = 33.42851569999948,
+},
+{
+["Message"] = "Event: CVAR_UPDATE nameplateMaxScale, 1.",
+["Level"] = 1,
+["Timestamp"] = 33.43003940000017,
+},
+{
+["Message"] = "Event: CVAR_UPDATE nameplateShowFriendlyNpcs, 1.",
+["Level"] = 1,
+["Timestamp"] = 33.4307129000008,
+},
+{
+["Message"] = "Event: CVAR_UPDATE nameplateSelectedScale, 1.05.",
+["Level"] = 1,
+["Timestamp"] = 33.43223039999975,
+},
+{
+["Message"] = "Event: CVAR_UPDATE nameplateMinAlpha, 0.6.",
+["Level"] = 1,
+["Timestamp"] = 33.43379170000117,
+},
+{
+["Message"] = "Event: CVAR_UPDATE nameplateMinAlphaDistance, 10.1.",
+["Level"] = 1,
+["Timestamp"] = 33.43531220000114,
+},
+{
+["Message"] = "Event: CVAR_UPDATE nameplateShowEnemyMinus, 0.",
+["Level"] = 1,
+["Timestamp"] = 33.43587330000082,
+},
+{
+["Message"] = "Event: CVAR_UPDATE nameplateMinScale, 1.",
+["Level"] = 1,
+["Timestamp"] = 33.43738119999944,
+},
+{
+["Message"] = "Event: CVAR_UPDATE nameplateOccludedAlphaMult, 1.",
+["Level"] = 1,
+["Timestamp"] = 33.43893650000064,
+},
+{
+["Message"] = "Event: CVAR_UPDATE nameplateEnemyPlayerAuraDisplay, C.",
+["Level"] = 1,
+["Timestamp"] = 33.44049389999964,
+},
+{
+["Message"] = "Event: CVAR_UPDATE nameplateEnemyPlayerAuraDisplay, G.",
+["Level"] = 1,
+["Timestamp"] = 33.44201090000024,
+},
+{
+["Message"] = "Event: CVAR_UPDATE nameplateSimplifiedTypes, B.",
+["Level"] = 1,
+["Timestamp"] = 33.44352410000101,
+},
+{
+["Message"] = "Event: CVAR_UPDATE nameplateFriendlyPlayerAuraDisplay, A.",
+["Level"] = 1,
+["Timestamp"] = 33.44503260000056,
+},
+{
+["Message"] = "Event: CVAR_UPDATE nameplateFriendlyPlayerAuraDisplay, E.",
+["Level"] = 1,
+["Timestamp"] = 33.44654380000065,
+},
+{
+["Message"] = "Event: CVAR_UPDATE nameplateFriendlyPlayerAuraDisplay, G.",
+["Level"] = 1,
+["Timestamp"] = 33.44805100000122,
+},
+{
+["Message"] = "Event: CVAR_UPDATE nameplateEnemyNpcAuraDisplay, C.",
+["Level"] = 1,
+["Timestamp"] = 33.44955990000017,
+},
+{
+["Message"] = "Event: CVAR_UPDATE nameplateEnemyNpcAuraDisplay, G.",
+["Level"] = 1,
+["Timestamp"] = 33.45107339999959,
+},
+{
+["Message"] = "Event: CVAR_UPDATE nameplateInfoDisplay, F.",
+["Level"] = 1,
+["Timestamp"] = 33.45278150000013,
+},
+{
+["Message"] = "Event: CVAR_UPDATE cameraSavedPitch, 27.700319.",
+["Level"] = 1,
+["Timestamp"] = 33.48512549999941,
 },
 {
 ["Message"] = "Event: INSPECT_READY Player-11-0DC9DE34.",
@@ -25005,7 +25005,7 @@ FrameSortDB = {
 },
 },
 ["Size"] = 5000,
-["Head"] = 1832,
+["Head"] = 2273,
 },
 ["Options"] = {
 ["Locale"] = "",
@@ -25137,36 +25137,18 @@ FrameSortDB = {
 },
 },
 ["SpecCache"] = {
-["Player-1425-0EDE69D1"] = {
-["SpecId"] = 577,
-["LastSeen"] = 21595.1182505,
+["Player-5-0E7745E9"] = {
+["SpecId"] = 251,
+["LastSeen"] = 22939.3201331,
 },
 ["Player-11-0E937770"] = {
 ["SpecId"] = 265,
 ["LastAttempt"] = 20940.507279,
 ["LastSeen"] = 20940.908959,
 },
-["Player-3675-0AA7E886"] = {
-["SpecId"] = 260,
-["LastSeen"] = 10083.052409,
-},
 ["Player-3676-0EDE5AA6"] = {
 ["SpecId"] = 64,
 ["LastSeen"] = 54959.6816245,
-},
-["Player-1168-09493B11"] = {
-["SpecId"] = 262,
-["LastSeen"] = 14515.3142584,
-["LastAttempt"] = 14515.0300158,
-},
-["Player-5-0EA16E5B"] = {
-["LastSeen"] = 19224.4889515,
-["SpecId"] = 252,
-},
-["Player-1427-08236FFA"] = {
-["SpecId"] = 65,
-["LastAttempt"] = 18367.4580451,
-["LastSeen"] = 18368.0849359,
 },
 ["Player-57-0E1D1AE4"] = {
 ["SpecId"] = 70,
@@ -25177,88 +25159,39 @@ FrameSortDB = {
 ["LastSeen"] = 18531.5597821,
 ["SpecId"] = 103,
 },
-["Player-11-0BA32D75"] = {
-["LastSeen"] = 14264.3600309,
-["SpecId"] = 252,
+["Player-11-0E9F8051"] = {
+["SpecId"] = 257,
+["LastAttempt"] = 16954.2439158,
+["LastSeen"] = 16954.5449144,
 },
 ["Player-11-0E6F65BA"] = {
 ["SpecId"] = 64,
 ["LastAttempt"] = 18048.6736271,
 ["LastSeen"] = 18048.7929923,
 },
-["Player-60-0F30DBE4"] = {
-["SpecId"] = 581,
-["LastSeen"] = 6641.923863900001,
-["LastAttempt"] = 6540.490087800001,
-},
-["Player-3721-0C4CCF11"] = {
-["SpecId"] = 64,
-["LastSeen"] = 35117.0292322,
-},
-["Player-5-0E7745E9"] = {
-["SpecId"] = 251,
-["LastSeen"] = 22939.3201331,
-},
-["Player-5-0E34E754"] = {
-["SpecId"] = 70,
-["LastSeen"] = 37549.7254552,
-["LastAttempt"] = 37549.52181380001,
+["Player-60-0FEA6998"] = {
+["SpecId"] = 265,
+["LastSeen"] = 29490.491562,
+["LastAttempt"] = 29490.2144306,
 },
 ["Player-57-0DE55642"] = {
 ["SpecId"] = 262,
 ["LastAttempt"] = 45013.8734283,
 ["LastSeen"] = 45013.6020432,
 },
-["Player-11-0E9203B3"] = {
-["SpecId"] = 71,
-["LastSeen"] = 16689.3711273,
-["LastAttempt"] = 16689.074988,
-},
-["Player-60-0BFDF757"] = {
-["SpecId"] = 102,
-["LastSeen"] = 37564.7282348,
-["LastAttempt"] = 37564.3036015,
-},
-["Player-71-0D55AB0F"] = {
-["SpecId"] = 258,
-["LastSeen"] = 20930.8419176,
-["LastAttempt"] = 20930.2243515,
-},
-["Player-11-0E9AD847"] = {
-["SpecId"] = 102,
-["LastSeen"] = 47696.31941410001,
-},
-["Player-57-0CB83F35"] = {
-["LastSeen"] = 15834.0360244,
+["Player-3676-0EBE2DD5"] = {
 ["SpecId"] = 70,
+["LastAttempt"] = 24048.9864528,
+["LastSeen"] = 24049.3273948,
 },
-["Player-3676-0E27E588"] = {
-["SpecId"] = 264,
-["LastAttempt"] = 9872.7859897,
-["LastSeen"] = 6359.506440800001,
-},
-["Player-60-0FE9A47D"] = {
-["SpecId"] = 1468,
-["LastSeen"] = 25741.6958036,
-["LastAttempt"] = 25741.3537116,
-},
-["Player-3684-0EDAE0A1"] = {
-["SpecId"] = 102,
-["LastAttempt"] = 41426.5657462,
-["LastSeen"] = 41498.7170558,
-},
-["Player-3661-09801E8A"] = {
-["LastSeen"] = 2312.7777008,
-["SpecId"] = 1480,
+["Player-120-05002C94"] = {
+["SpecId"] = 254,
+["LastSeen"] = 17178.5579979,
+["LastAttempt"] = 17178.2675442,
 },
 ["Player-1168-0AA5EE97"] = {
 ["SpecId"] = 1467,
 ["LastSeen"] = 10083.0525688,
-},
-["Player-3684-0CCC003E"] = {
-["SpecId"] = 262,
-["LastSeen"] = 48892.5774811,
-["LastAttempt"] = 48820.000366,
 },
 ["Player-3661-095F6EBA"] = {
 ["SpecId"] = 1473,
@@ -25274,101 +25207,62 @@ FrameSortDB = {
 ["LastAttempt"] = 24061.1451841,
 ["LastSeen"] = 24061.4846764,
 },
-["Player-1185-084AA434"] = {
-["SpecId"] = 70,
-["LastAttempt"] = 22945.892393,
-["LastSeen"] = 22946.3005301,
-},
-["Player-60-0FEB255B"] = {
-["SpecId"] = 261,
-["LastAttempt"] = 17188.8225944,
-["LastSeen"] = 17189.1590406,
-},
-["Player-84-0AB47D17"] = {
-["SpecId"] = 268,
-["LastAttempt"] = 54947.19734570001,
-["LastSeen"] = 54946.56455130001,
+["Player-3684-0CC4A7EC"] = {
+["SpecId"] = 262,
+["LastAttempt"] = 43895.2448538,
+["LastSeen"] = 43895.3994882,
 },
 ["Player-1171-0ACF51E1"] = {
 ["LastSeen"] = 20079.3818067,
 ["SpecId"] = 64,
 },
-["Player-11-0E6D8CFA"] = {
-["SpecId"] = 64,
-["LastSeen"] = 3280.9382057,
+["Player-76-042439B1"] = {
+["SpecId"] = 105,
+["LastAttempt"] = 14514.5217503,
+["LastSeen"] = 14514.8472098,
 },
 ["Player-61-0FD34383"] = {
 ["SpecId"] = 264,
 ["LastSeen"] = 13270.9328709,
 ["LastAttempt"] = 13270.6747354,
 },
-["Player-3684-0CC4A7EC"] = {
-["SpecId"] = 262,
-["LastAttempt"] = 43895.2448538,
-["LastSeen"] = 43895.3994882,
+["Player-47-06982D2F"] = {
+["SpecId"] = 267,
+["LastSeen"] = 19698.9003854,
 },
-["Player-3676-0EDBA923"] = {
-["SpecId"] = 1480,
-["LastSeen"] = 2769.6025709,
-["LastAttempt"] = 2769.2986963,
-},
-["Player-11-0E4402F4"] = {
-["SpecId"] = 253,
-["LastSeen"] = 47927.97882800001,
-},
-["Player-3693-0EDB22F6"] = {
-["SpecId"] = 261,
-["LastSeen"] = 29290.2018863,
-["LastAttempt"] = 29289.8914333,
+["Player-60-0FE9A47D"] = {
+["SpecId"] = 1468,
+["LastSeen"] = 25741.6958036,
+["LastAttempt"] = 25741.3537116,
 },
 ["Player-3675-0ACD1857"] = {
 ["SpecId"] = 64,
 ["LastSeen"] = 25729.5679899,
 ["LastAttempt"] = 25729.1709642,
 },
-["Player-11-0E91B81A"] = {
-["LastSeen"] = 22308.3175656,
-["SpecId"] = 268,
-},
-["Player-11-0BC93B4A"] = {
-["LastSeen"] = 16559.1351553,
-["SpecId"] = 105,
-},
-["Player-61-0EAAC26E"] = {
-["SpecId"] = 269,
-["LastSeen"] = 16431.7160811,
-["LastAttempt"] = 15817.2260726,
-},
-["Player-11-0EA825BD"] = {
-["LastSeen"] = 13492.3160174,
-["SpecId"] = 64,
-},
-["Player-3675-0AD81551"] = {
-["SpecId"] = 261,
-["LastSeen"] = 43002.0289783,
-},
-["Player-76-0B95A8DE"] = {
-["SpecId"] = 265,
-["LastSeen"] = 2484.6170426,
-["LastAttempt"] = 2484.3288087,
-},
-["Player-11-0E91E59B"] = {
-["LastSeen"] = 16234.5747998,
-["SpecId"] = 262,
-},
-["Player-1171-0906E396"] = {
-["SpecId"] = 73,
-["LastSeen"] = 29276.6102668,
-["LastAttempt"] = 29276.2351713,
-},
 ["Player-1428-0E8F5FB3"] = {
 ["SpecId"] = 102,
 ["LastSeen"] = 42852.37390290001,
 },
-["Player-3684-0E4D4F2F"] = {
+["Player-63-018A51D2"] = {
+["SpecId"] = 64,
+["LastSeen"] = 20952.8551393,
+},
+["Player-5-0ABA749C"] = {
+["LastSeen"] = 9362.8357727,
+["SpecId"] = 254,
+},
+["Player-76-0B1A785C"] = {
 ["SpecId"] = 1480,
-["LastAttempt"] = 55408.4269875,
-["LastSeen"] = 55408.77537610001,
+["LastSeen"] = 42852.37419230001,
+},
+["Player-11-0E91B81A"] = {
+["LastSeen"] = 22308.3175656,
+["SpecId"] = 268,
+},
+["Player-11-0E4BF114"] = {
+["LastSeen"] = 9218.975149900001,
+["SpecId"] = 268,
 },
 ["Player-3209-0A12C59B"] = {
 ["SpecId"] = 581,
@@ -25380,333 +25274,83 @@ FrameSortDB = {
 ["LastAttempt"] = 35183.23092720001,
 ["LastSeen"] = 35259.2133847,
 },
-["Player-120-0B054AA6"] = {
-["SpecId"] = 261,
-["LastSeen"] = 42295.7764661,
+["Player-11-0DE03630"] = {
+["SpecId"] = 269,
+["LastSeen"] = 11513.4097628,
 },
-["Player-5-0ABA749C"] = {
-["LastSeen"] = 9362.8357727,
-["SpecId"] = 254,
-},
-["Player-76-0B1A785C"] = {
-["SpecId"] = 1480,
-["LastSeen"] = 42852.37419230001,
-},
-["Player-1138-0978B29E"] = {
-["SpecId"] = 65,
-["LastSeen"] = 16745.0064264,
-["LastAttempt"] = 16744.775658,
-},
-["Player-3661-09571934"] = {
-["LastSeen"] = 24511.8386577,
-["SpecId"] = 253,
-},
-["Player-11-0E2FF184"] = {
-["LastSeen"] = 12025.1580067,
+["Player-11-0EA74D25"] = {
 ["SpecId"] = 70,
+["LastSeen"] = 54894.6845689,
 },
 ["Player-11-0E9AC4D0"] = {
 ["SpecId"] = 70,
 ["LastAttempt"] = 46044.68510410001,
 ["LastSeen"] = 46045.0106776,
 },
-["Player-11-0E4BF114"] = {
-["LastSeen"] = 9218.975149900001,
-["SpecId"] = 268,
-},
-["Player-3694-0A98E0D0"] = {
-["SpecId"] = 73,
-["LastSeen"] = 24329.7767032,
-},
-["Player-60-0FE00CE2"] = {
-["SpecId"] = 1480,
-["LastAttempt"] = 6243.1474686,
-["LastSeen"] = 6243.5258322,
-},
-["Player-3693-0EDE90C9"] = {
-["SpecId"] = 258,
-["LastSeen"] = 18270.3335557,
-},
-["Player-11-0BCFCC6F"] = {
-["SpecId"] = 577,
-["LastSeen"] = 11630.8885447,
-},
-["Player-60-0541DAB4"] = {
-["SpecId"] = 263,
-["LastSeen"] = 37661.83049730001,
-["LastAttempt"] = 37661.5776925,
-},
-["Player-11-0E75DE02"] = {
-["LastSeen"] = 21774.0986853,
-["SpecId"] = 72,
-},
-["Player-113-07E2C3D5"] = {
-["SpecId"] = 270,
-["LastSeen"] = 15859.916377,
-["LastAttempt"] = 15859.603589,
-},
-["Player-11-0E9F1530"] = {
-["LastSeen"] = 9225.003857700001,
-["SpecId"] = 256,
-},
-["Player-1427-0DE5451F"] = {
-["SpecId"] = 262,
-["LastSeen"] = 15914.1478321,
-["LastAttempt"] = 15815.2217151,
-},
-["Player-3675-0B02A7FF"] = {
-["SpecId"] = 253,
-["LastAttempt"] = 23891.6992571,
-["LastSeen"] = 23892.0638578,
-},
-["Player-3675-0A79F47E"] = {
-["SpecId"] = 1473,
-["LastSeen"] = 21412.0870356,
-},
-["Player-11-0DE03630"] = {
-["SpecId"] = 269,
-["LastSeen"] = 11513.4097628,
-},
-["Player-76-042439B1"] = {
-["SpecId"] = 105,
-["LastAttempt"] = 14514.5217503,
-["LastSeen"] = 14514.8472098,
-},
-["Player-1428-0E81BD13"] = {
-["SpecId"] = 250,
-["LastAttempt"] = 35304.2009936,
-["LastSeen"] = 35304.4977365,
-},
-["Player-11-0EA74D25"] = {
-["SpecId"] = 70,
-["LastSeen"] = 54894.6845689,
-},
-["Player-57-0E0B298C"] = {
-["SpecId"] = 253,
-["LastSeen"] = 3187.0595687,
-["LastAttempt"] = 3186.7775919,
-},
-["Player-57-0DAA8BDF"] = {
-["LastSeen"] = 14507.6599433,
-["SpecId"] = 65,
+["Player-5-0E43DBA4"] = {
+["SpecId"] = 102,
+["LastSeen"] = 2315.6321982,
+["LastAttempt"] = 2315.2860344,
 },
 ["Player-3725-0C3B6903"] = {
 ["SpecId"] = 1467,
 ["LastAttempt"] = 20530.110073,
 ["LastSeen"] = 20530.6805486,
 },
-["Player-11-0E99C483"] = {
-["LastSeen"] = 22508.8916169,
-["SpecId"] = 1468,
-},
-["Player-5-0E43DBA4"] = {
-["SpecId"] = 102,
-["LastSeen"] = 2315.6321982,
-["LastAttempt"] = 2315.2860344,
-},
-["Player-3725-0C389F8B"] = {
-["SpecId"] = 1480,
-["LastSeen"] = 29290.936383,
-["LastAttempt"] = 29290.4017752,
-},
-["Player-61-0CBA1DA9"] = {
-["SpecId"] = 577,
-["LastAttempt"] = 17492.8801544,
-["LastSeen"] = 17493.2192667,
-},
-["Player-57-0D9EFAE5"] = {
-["SpecId"] = 254,
-["LastSeen"] = 25717.2442302,
-["LastAttempt"] = 25717.0236524,
-},
-["Player-1136-09448B14"] = {
-["SpecId"] = 1480,
-["LastSeen"] = 21229.1798379,
-["LastAttempt"] = 20105.5332004,
-},
-["Player-11-0EAED7F6"] = {
-["SpecId"] = 64,
-["LastAttempt"] = 19793.3708182,
-["LastSeen"] = 19794.372402,
-},
-["Player-11-0EAF45C7"] = {
-["SpecId"] = 65,
-["LastSeen"] = 2038.0183195,
-},
-["Player-3725-0C5EDA4F"] = {
-["SpecId"] = 71,
-["LastAttempt"] = 20725.8927544,
-["LastSeen"] = 20726.3210162,
-},
-["Player-11-0E590AA3"] = {
-["LastSeen"] = 3290.1110377,
-["SpecId"] = 577,
-},
 ["Player-11-0EAF4CDA"] = {
 ["SpecId"] = 263,
 ["LastSeen"] = 2757.7478322,
 ["LastAttempt"] = 2757.5858165,
 },
-["Player-5-0E439E36"] = {
-["LastSeen"] = 19224.4887507,
-["SpecId"] = 262,
-},
-["Player-5-0BC986DD"] = {
-["SpecId"] = 102,
-["LastSeen"] = 48239.44696920001,
-},
-["Player-11-0EB56E23"] = {
-["LastSeen"] = 17061.8089195,
-["SpecId"] = 266,
-},
-["Player-61-0AAD01C9"] = {
-["SpecId"] = 72,
-["LastSeen"] = 54988.7162773,
-},
-["Player-1175-0F621970"] = {
-["SpecId"] = 258,
-["LastSeen"] = 29289.6805082,
-["LastAttempt"] = 29289.3732012,
-},
-["Player-1428-0E61FC38"] = {
-["SpecId"] = 65,
-["LastSeen"] = 20402.2219887,
-["LastAttempt"] = 20155.8886892,
-},
-["Player-11-0EB4DF91"] = {
-["LastSeen"] = 16686.0272974,
-["SpecId"] = 255,
-},
 ["Player-11-087DF12D"] = {
 ["LastSeen"] = 7111.208494,
 ["SpecId"] = 66,
 },
-["Player-1168-0ABED20C"] = {
-["LastSeen"] = 37535.7122981,
-["SpecId"] = 105,
-},
 ["Player-54-0DED6B3E"] = {
 ["SpecId"] = 65,
 ["LastSeen"] = 18272.5053772,
-},
-["Player-11-0E79BF8F"] = {
-["SpecId"] = 71,
-["LastSeen"] = 7960.432501200001,
-},
-["Player-11-0E87F9EC"] = {
-["SpecId"] = 259,
-["LastSeen"] = 48292.84898330001,
 },
 ["Player-5-0ABEA662"] = {
 ["SpecId"] = 252,
 ["LastSeen"] = 22589.0642206,
 ["LastAttempt"] = 22588.8071587,
 },
-["Player-11-0EAFE689"] = {
-["LastSeen"] = 15088.4118239,
-["SpecId"] = 1473,
-},
-["Player-1136-096EDEE3"] = {
-["SpecId"] = 251,
-["LastAttempt"] = 2099.1783271,
-["LastSeen"] = 2099.4006079,
-},
-["Player-76-0C17484F"] = {
-["SpecId"] = 255,
-["LastSeen"] = 42852.3740612,
-},
-["Player-96-0652D4B5"] = {
-["SpecId"] = 265,
-["LastSeen"] = 21594.6182239,
-},
-["Player-11-0EAB18F0"] = {
-["LastSeen"] = 21356.1447263,
-["SpecId"] = 66,
+["Player-11-0E99C483"] = {
+["LastSeen"] = 22508.8916169,
+["SpecId"] = 1468,
 },
 ["Player-11-0E799CF2"] = {
 ["LastSeen"] = 15027.2321281,
 ["SpecId"] = 105,
 },
-["Player-3725-0C58534A"] = {
-["SpecId"] = 265,
-["LastAttempt"] = 13244.6683977,
-["LastSeen"] = 13245.1971545,
+["Player-60-0F953A7E"] = {
+["LastSeen"] = 25717.2446538,
+["SpecId"] = 64,
 },
-["Player-76-0C0C093F"] = {
-["SpecId"] = 581,
-["LastSeen"] = 53592.5950574,
-["LastAttempt"] = 51548.07219000001,
-},
-["Player-11-0E34FF5E"] = {
-["LastSeen"] = 14040.4781807,
-["SpecId"] = 581,
-},
-["Player-60-0EC94A98"] = {
-["SpecId"] = 269,
-["LastSeen"] = 37551.34552990001,
-["LastAttempt"] = 37551.06467840001,
-},
-["Player-57-0DF78DB9"] = {
-["SpecId"] = 1473,
-["LastSeen"] = 22586.587424,
-["LastAttempt"] = 22586.28076,
-},
-["Player-3675-0AFFAB70"] = {
-["SpecId"] = 261,
-["LastAttempt"] = 20966.2696974,
-["LastSeen"] = 20966.594246,
-},
-["Player-1071-0DE7041A"] = {
-["SpecId"] = 254,
-["LastAttempt"] = 20793.5599339,
-["LastSeen"] = 20793.7064527,
-},
-["Player-76-0C180250"] = {
-["LastSeen"] = 25216.9390417,
+["Player-11-0E4AE684"] = {
 ["SpecId"] = 104,
+["LastSeen"] = 42839.5478098,
 },
 ["Player-1168-0AD1FB36"] = {
 ["SpecId"] = 254,
 ["LastSeen"] = 19698.9005365,
 },
-["Player-60-0FE04F4E"] = {
-["LastSeen"] = 2165.5023858,
-["SpecId"] = 104,
+["Player-86-09CEC491"] = {
+["SpecId"] = 70,
+["LastSeen"] = 18271.4394369,
 },
-["Player-11-0EB5251A"] = {
-["LastSeen"] = 13468.260759,
-["SpecId"] = 255,
+["Player-11-0EAFE689"] = {
+["LastSeen"] = 15088.4118239,
+["SpecId"] = 1473,
 },
-["Player-5-0E04C25A"] = {
-["LastSeen"] = 18623.6524844,
-["SpecId"] = 261,
+["Player-11-0E4D3DEE"] = {
+["LastSeen"] = 21942.3434919,
+["SpecId"] = 581,
 },
-["Player-77-0FED3CD5"] = {
-["SpecId"] = 1455,
-["LastSeen"] = 17844.6854177,
-["LastAttempt"] = 17844.3163143,
-},
-["Player-57-0DF30604"] = {
-["SpecId"] = 64,
-["LastSeen"] = 18286.7136211,
-},
-["Player-3209-0B7E2303"] = {
-["SpecId"] = 266,
-["LastSeen"] = 16067.9898623,
-["LastAttempt"] = 15814.7826212,
-},
-["Player-1185-0D28BEB1"] = {
-["SpecId"] = 257,
-["LastSeen"] = 18270.3334974,
-},
-["Player-1427-08EA987A"] = {
-["SpecId"] = 577,
-["LastSeen"] = 54894.6845055,
-},
-["Player-3725-0C55A265"] = {
-["SpecId"] = 270,
-["LastSeen"] = 2643.987905,
-["LastAttempt"] = 2643.6075924,
+["Player-3725-0C5EDA4F"] = {
+["SpecId"] = 71,
+["LastAttempt"] = 20725.8927544,
+["LastSeen"] = 20726.3210162,
 },
 ["Player-1171-0ADEAA79"] = {
 ["SpecId"] = 253,
@@ -25718,54 +25362,14 @@ FrameSortDB = {
 ["LastSeen"] = 22562.898611,
 ["LastAttempt"] = 22562.6071495,
 },
-["Player-1427-0857E1C3"] = {
-["SpecId"] = 65,
-["LastSeen"] = 45106.4562315,
-["LastAttempt"] = 45106.08469990001,
+["Player-60-0FE04F4E"] = {
+["LastSeen"] = 2165.5023858,
+["SpecId"] = 104,
 },
 ["Player-3675-0AACF90F"] = {
 ["SpecId"] = 254,
 ["LastAttempt"] = 23013.9525007,
 ["LastSeen"] = 23014.4169139,
-},
-["Player-11-0ACB664E"] = {
-["LastSeen"] = 21378.3755814,
-["SpecId"] = 253,
-},
-["Player-11-0EB4E61B"] = {
-["LastSeen"] = 21328.4908897,
-["SpecId"] = 250,
-},
-["Player-1138-061852E3"] = {
-["SpecId"] = 64,
-["LastAttempt"] = 20725.3886805,
-["LastSeen"] = 20725.7500681,
-},
-["Player-1168-0A99376B"] = {
-["SpecId"] = 267,
-["LastSeen"] = 40840.4590143,
-},
-["Player-1136-060D82F9"] = {
-["LastSeen"] = 19224.4886565,
-["SpecId"] = 267,
-},
-["Player-11-0E687E5E"] = {
-["LastSeen"] = 22216.2817042,
-["SpecId"] = 266,
-},
-["Player-3684-0DFECFC0"] = {
-["LastSeen"] = 57201.2573649,
-["SpecId"] = 1473,
-},
-["Player-1171-068B7E6D"] = {
-["SpecId"] = 71,
-["LastSeen"] = 43826.8893359,
-["LastAttempt"] = 43826.56635260001,
-},
-["Player-52-0E220171"] = {
-["SpecId"] = 71,
-["LastSeen"] = 25728.9897151,
-["LastAttempt"] = 25728.6607474,
 },
 ["Player-3684-0DC42AE3"] = {
 ["SpecId"] = 269,
@@ -25777,72 +25381,34 @@ FrameSortDB = {
 ["LastSeen"] = 37603.974423,
 ["LastAttempt"] = 37604.8005014,
 },
-["Player-11-0CE9BA3D"] = {
-["SpecId"] = 65,
-["LastAttempt"] = 48305.9470804,
-["LastSeen"] = 48306.2634421,
-},
-["Player-127-0AFC9AEA"] = {
-["SpecId"] = 254,
-["LastSeen"] = 2483.5394786,
-["LastAttempt"] = 2483.3285057,
-},
-["Player-3676-0E823586"] = {
-["SpecId"] = 70,
-["LastSeen"] = 18863.2478193,
-["LastAttempt"] = 18863.4924014,
-},
-["Player-11-0E725115"] = {
-["LastSeen"] = 2312.7776213,
-["SpecId"] = 266,
-},
 ["Player-61-0E4D1A8D"] = {
 ["SpecId"] = 266,
 ["LastSeen"] = 46235.0444527,
-},
-["Player-96-0BFBDF5F"] = {
-["SpecId"] = 65,
-["LastSeen"] = 15817.0761854,
-["LastAttempt"] = 15816.7258084,
 },
 ["Player-84-098A4A82"] = {
 ["SpecId"] = 254,
 ["LastAttempt"] = 17340.0356943,
 ["LastSeen"] = 17339.8223115,
 },
-["Player-5-0E3B96F7"] = {
-["SpecId"] = 252,
-["LastSeen"] = 2313.9973131,
-["LastAttempt"] = 2313.7828818,
+["Player-11-0CE9BA3D"] = {
+["SpecId"] = 65,
+["LastAttempt"] = 48305.9470804,
+["LastSeen"] = 48306.2634421,
 },
-["Player-86-0AF2994C"] = {
-["SpecId"] = 257,
-["LastSeen"] = 14875.769826,
-["LastAttempt"] = 14875.4369297,
-},
-["Player-11-0DC9DE34"] = {
-["SpecId"] = 268,
-["LastSeen"] = 24692.1405853,
+["Player-1171-068B7E6D"] = {
+["SpecId"] = 71,
+["LastSeen"] = 43826.8893359,
+["LastAttempt"] = 43826.56635260001,
 },
 ["Player-60-0F060777"] = {
 ["SpecId"] = 262,
 ["LastSeen"] = 54921.293503,
 ["LastAttempt"] = 54921.16012450001,
 },
-["Player-1427-0E9C8CFC"] = {
+["Player-3684-0E8BD090"] = {
 ["SpecId"] = 64,
-["LastAttempt"] = 55005.4441148,
-["LastSeen"] = 55005.67638780001,
-},
-["Player-60-0BE3D826"] = {
-["SpecId"] = 257,
-["LastSeen"] = 25742.1797821,
-["LastAttempt"] = 25741.8631188,
-},
-["Player-1168-099CD3D8"] = {
-["SpecId"] = 71,
-["LastSeen"] = 14888.7137693,
-["LastAttempt"] = 14879.0169335,
+["LastAttempt"] = 38202.35091240001,
+["LastSeen"] = 46166.904857,
 },
 ["Player-5-0EB037EE"] = {
 ["SpecId"] = 71,
@@ -25862,133 +25428,55 @@ FrameSortDB = {
 ["LastSeen"] = 9227.7521215,
 ["LastAttempt"] = 9227.6141969,
 },
-["Player-60-0FD056AA"] = {
-["SpecId"] = 254,
-["LastSeen"] = 16849.689345,
-},
-["Player-1138-0980505E"] = {
-["SpecId"] = 253,
-["LastAttempt"] = 39311.3474051,
-["LastSeen"] = 39311.5783842,
-},
-["Player-3683-0C112C95"] = {
-["SpecId"] = 252,
-["LastSeen"] = 51715.3823017,
-["LastAttempt"] = 51623.8761047,
-},
 ["Player-5-0EB266EE"] = {
 ["SpecId"] = 252,
 ["LastAttempt"] = 24146.740998,
 ["LastSeen"] = 24146.9734332,
-},
-["Player-1428-069E5798"] = {
-["SpecId"] = 253,
-["LastAttempt"] = 20794.0609147,
-["LastSeen"] = 20794.3068902,
 },
 ["Player-3678-08C05CC4"] = {
 ["SpecId"] = 265,
 ["LastAttempt"] = 13254.2016499,
 ["LastSeen"] = 13254.4746515,
 },
-["Player-3661-085D5B38"] = {
-["SpecId"] = 270,
-["LastSeen"] = 55863.6436082,
-},
-["Player-125-0AFE62F1"] = {
+["Player-3207-0551A3EF"] = {
 ["SpecId"] = 253,
-["LastSeen"] = 19698.9010081,
+["LastSeen"] = 37649.3097348,
+["LastAttempt"] = 37649.4771771,
 },
-["Player-120-0A420226"] = {
-["SpecId"] = 251,
-["LastAttempt"] = 20531.1457366,
-["LastSeen"] = 20531.4615449,
+["Player-60-0FD056AA"] = {
+["SpecId"] = 254,
+["LastSeen"] = 16849.689345,
 },
-["Player-1171-0AF1C395"] = {
-["SpecId"] = 253,
-["LastSeen"] = 23917.0822169,
-},
-["Player-3684-0E6DDBD9"] = {
-["SpecId"] = 64,
-["LastSeen"] = 37550.91898420001,
-["LastAttempt"] = 37550.5278883,
-},
-["Player-5-0E78A3DE"] = {
-["LastSeen"] = 9224.607630100001,
-["SpecId"] = 64,
+["Player-86-0AF2994C"] = {
+["SpecId"] = 257,
+["LastSeen"] = 14875.769826,
+["LastAttempt"] = 14875.4369297,
 },
 ["Player-5-0E8F61E0"] = {
 ["SpecId"] = 269,
 ["LastSeen"] = 13246.9098462,
 },
-["Player-3675-0AA85CD4"] = {
-["SpecId"] = 255,
-["LastSeen"] = 20129.9242118,
-["LastAttempt"] = 20132.1983211,
-},
-["Player-9-0E962FE5"] = {
-["SpecId"] = 70,
-["LastSeen"] = 38042.81938,
-["LastAttempt"] = 37047.6777091,
-},
-["Player-3684-0DDA9A8C"] = {
-["SpecId"] = 64,
-["LastAttempt"] = 50427.67722870001,
-["LastSeen"] = 50428.0470578,
-},
-["Player-11-0EA07A2E"] = {
-["LastSeen"] = 10578.6618054,
-["SpecId"] = 72,
-},
-["Player-1185-0EA8A70F"] = {
-["SpecId"] = 252,
-["LastAttempt"] = 17299.1666349,
-["LastSeen"] = 17298.9794947,
-},
-["Player-57-0DF37A7B"] = {
-["SpecId"] = 265,
-["LastSeen"] = 37833.0564556,
-["LastAttempt"] = 37834.3699022,
+["Player-60-0F9E9A67"] = {
+["SpecId"] = 256,
+["LastSeen"] = 18286.7137914,
 },
 ["Player-11-0EAA25A7"] = {
 ["SpecId"] = 256,
 ["LastSeen"] = 19918.3311436,
 },
-["Player-3683-0C2297FB"] = {
-["LastSeen"] = 18623.6523843,
-["SpecId"] = 262,
+["Player-1138-093F791D"] = {
+["SpecId"] = 254,
+["LastAttempt"] = 11311.0726455,
+["LastSeen"] = 11311.3747312,
 },
-["Player-5-0E4AD2DC"] = {
-["SpecId"] = 256,
-["LastSeen"] = 17165.5107614,
-["LastAttempt"] = 17165.2049163,
-},
-["Player-3684-0CC2891E"] = {
-["SpecId"] = 1480,
-["LastSeen"] = 48508.31857120001,
-},
-["Player-11-033DAAEE"] = {
-["LastSeen"] = 29576.1242016,
-["SpecId"] = 65,
-},
-["Player-115-0883B437"] = {
-["SpecId"] = 64,
-["LastAttempt"] = 29265.0632587,
-["LastSeen"] = 29263.4077331,
-},
-["Player-1168-0AFE2235"] = {
-["SpecId"] = 103,
-["LastSeen"] = 13241.3025998,
+["Player-3676-0EA44A09"] = {
+["SpecId"] = 270,
+["LastSeen"] = 18659.2792972,
 },
 ["Player-121-0AB5B18B"] = {
 ["SpecId"] = 71,
 ["LastAttempt"] = 43000.08832710001,
 ["LastSeen"] = 43000.2352961,
-},
-["Player-113-0A89059E"] = {
-["SpecId"] = 258,
-["LastSeen"] = 37563.1502998,
-["LastAttempt"] = 37562.78616020001,
 },
 ["Player-11-0A7D9FF2"] = {
 ["LastSeen"] = 3928.8408861,
@@ -25998,73 +25486,32 @@ FrameSortDB = {
 ["LastSeen"] = 25717.2447055,
 ["SpecId"] = 262,
 },
-["Player-11-0AAD8EFA"] = {
-["LastSeen"] = 7418.054609600001,
-["SpecId"] = 581,
-},
 ["Player-11-0EB3094D"] = {
 ["LastSeen"] = 11894.8384412,
 ["SpecId"] = 253,
 },
-["Player-127-0AB04221"] = {
-["LastSeen"] = 23051.4917568,
-["SpecId"] = 253,
+["Player-3684-0E5C044E"] = {
+["SpecId"] = 250,
+["LastAttempt"] = 41824.2995156,
+["LastSeen"] = 41824.74698110001,
 },
-["Player-11-0E4BC43D"] = {
-["LastSeen"] = 22490.1275741,
-["SpecId"] = 70,
-},
-["Player-3209-0B1CE41A"] = {
-["SpecId"] = 267,
-["LastSeen"] = 41784.80258510001,
-["LastAttempt"] = 41784.4365238,
-},
-["Player-113-0A26AC33"] = {
-["SpecId"] = 102,
-["LastSeen"] = 9238.9920399,
-["LastAttempt"] = 9238.699314000001,
-},
-["Player-76-0BE8D090"] = {
-["SpecId"] = 257,
-["LastAttempt"] = 43190.49727540001,
-["LastSeen"] = 43190.7238423,
-},
-["Player-11-0E3530B7"] = {
-["SpecId"] = 577,
-["LastSeen"] = 47691.21789370001,
-},
-["Player-1136-088FD7AA"] = {
-["SpecId"] = 105,
-["LastSeen"] = 43000.5737879,
+["Player-3683-0C112C95"] = {
+["SpecId"] = 252,
+["LastSeen"] = 51715.3823017,
+["LastAttempt"] = 51623.8761047,
 },
 ["Player-1427-0CF31DF7"] = {
 ["SpecId"] = 102,
 ["LastAttempt"] = 13241.1323371,
 ["LastSeen"] = 13241.3023886,
 },
-["Player-1136-0792E5A9"] = {
-["SpecId"] = 577,
-["LastAttempt"] = 25790.5916863,
-["LastSeen"] = 25790.6970711,
+["Player-60-0F84D153"] = {
+["SpecId"] = 256,
+["LastSeen"] = 19698.9016344,
 },
-["Player-3684-0966F61A"] = {
-["SpecId"] = 253,
-["LastAttempt"] = 46448.8301941,
-["LastSeen"] = 46449.16492620001,
-},
-["Player-57-0E1DF2FC"] = {
+["Player-5-0E78A3DE"] = {
+["LastSeen"] = 9224.607630100001,
 ["SpecId"] = 64,
-["LastSeen"] = 4870.8473457,
-["LastAttempt"] = 4870.704837,
-},
-["Player-3684-0E4DC31C"] = {
-["SpecId"] = 63,
-["LastAttempt"] = 55786.4557195,
-["LastSeen"] = 55786.7983441,
-},
-["Player-60-0C61C19F"] = {
-["SpecId"] = 71,
-["LastSeen"] = 19698.9003396,
 },
 ["Player-5-0E9FF89A"] = {
 ["SpecId"] = 263,
@@ -26075,15 +25522,6 @@ FrameSortDB = {
 ["LastSeen"] = 25760.458357,
 ["LastAttempt"] = 25760.1599997,
 },
-["Player-3676-0ED18AC8"] = {
-["SpecId"] = 62,
-["LastSeen"] = 25777.1943228,
-},
-["Player-76-0BDB217F"] = {
-["SpecId"] = 254,
-["LastSeen"] = 45425.91578520001,
-["LastAttempt"] = 45347.8477035,
-},
 ["Player-9-0EA8945D"] = {
 ["SpecId"] = 256,
 ["LastSeen"] = 17470.8881078,
@@ -26093,61 +25531,23 @@ FrameSortDB = {
 ["SpecId"] = 269,
 ["LastSeen"] = 10949.7723803,
 },
-["Player-60-0F9E9A67"] = {
-["SpecId"] = 256,
-["LastSeen"] = 18286.7137914,
-},
-["Player-57-0E1E988D"] = {
-["LastSeen"] = 29576.1244654,
-["SpecId"] = 269,
-},
-["Player-113-0A1F89E3"] = {
-["SpecId"] = 269,
-["LastSeen"] = 24659.9809307,
-},
-["Player-5-0E62BA36"] = {
-["SpecId"] = 253,
-["LastSeen"] = 19698.9015897,
-},
-["Player-60-0FBFB625"] = {
-["SpecId"] = 581,
-["LastSeen"] = 33192.1346025,
-["LastAttempt"] = 32982.9326012,
-},
-["Player-3675-0AFF3DE7"] = {
-["SpecId"] = 270,
-["LastAttempt"] = 18285.7281019,
-["LastSeen"] = 18286.7130764,
-},
-["Player-11-0E96178C"] = {
-["LastSeen"] = 11082.5725229,
-["SpecId"] = 251,
-},
-["Player-3676-0EA44A09"] = {
-["SpecId"] = 270,
-["LastSeen"] = 18659.2792972,
-},
 ["Player-3675-0ADCB0C6"] = {
 ["SpecId"] = 256,
 ["LastAttempt"] = 10223.9178628,
 ["LastSeen"] = 10224.2091327,
 },
-["Player-11-0E918F74"] = {
-["SpecId"] = 64,
-["LastSeen"] = 19698.9013662,
+["Player-113-0A1F89E3"] = {
+["SpecId"] = 269,
+["LastSeen"] = 24659.9809307,
 },
 ["Player-11-0EB5F2E3"] = {
 ["LastSeen"] = 22405.1502974,
 ["SpecId"] = 1473,
 },
-["Player-84-0A69F335"] = {
-["SpecId"] = 253,
-["LastSeen"] = 22561.5061727,
-["LastAttempt"] = 22561.0911768,
-},
-["Player-3209-0C12D1D0"] = {
-["LastSeen"] = 20079.3621575,
+["Player-11-0E6811A4"] = {
 ["SpecId"] = 105,
+["LastSeen"] = 18904.0520035,
+["LastAttempt"] = 18903.7092743,
 },
 ["Player-5-0B602082"] = {
 ["SpecId"] = 261,
@@ -26159,39 +25559,19 @@ FrameSortDB = {
 ["LastSeen"] = 16227.5575566,
 ["LastAttempt"] = 15827.9004868,
 },
-["Player-11-0EB2E4C9"] = {
-["LastSeen"] = 3401.8168844,
-["SpecId"] = 261,
-},
-["Player-12-004F6648"] = {
-["SpecId"] = 256,
-["LastSeen"] = 22988.6452221,
-},
 ["Player-11-0E131D41"] = {
 ["SpecId"] = 262,
 ["LastSeen"] = 10932.8655225,
 },
-["Player-157-0C0C9658"] = {
-["LastSeen"] = 14515.3147549,
-["SpecId"] = 269,
-},
-["Player-3675-0AB30E84"] = {
-["SpecId"] = 1467,
-["LastSeen"] = 20532.4097014,
-},
-["Player-3725-0C14ADE1"] = {
-["SpecId"] = 1467,
-["LastSeen"] = 19697.9148436,
+["Player-57-0E102D1C"] = {
+["SpecId"] = 581,
+["LastSeen"] = 4862.2334923,
+["LastAttempt"] = 4849.2076542,
 },
 ["Player-61-0AA41A02"] = {
 ["SpecId"] = 252,
 ["LastAttempt"] = 20753.418575,
 ["LastSeen"] = 20753.6966517,
-},
-["Player-3234-0A8D682C"] = {
-["SpecId"] = 70,
-["LastSeen"] = 37635.9407306,
-["LastAttempt"] = 37636.3150551,
 },
 ["Player-3678-0D609EB6"] = {
 ["SpecId"] = 1468,
@@ -26203,76 +25583,14 @@ FrameSortDB = {
 ["LastSeen"] = 29302.391562,
 ["LastAttempt"] = 29302.0984862,
 },
-["Player-120-05002C94"] = {
-["SpecId"] = 254,
-["LastSeen"] = 17178.5579979,
-["LastAttempt"] = 17178.2675442,
-},
-["Player-73-0C5E87A9"] = {
-["SpecId"] = 253,
-["LastAttempt"] = 24036.8546201,
-["LastSeen"] = 24037.0095024,
-},
 ["Player-11-0EAF8C7A"] = {
 ["LastSeen"] = 10746.2396162,
 ["SpecId"] = 581,
-},
-["Player-1185-0E29AFDF"] = {
-["SpecId"] = 72,
-["LastAttempt"] = 17284.9911184,
-["LastSeen"] = 17285.3032594,
-},
-["Player-73-0F678590"] = {
-["SpecId"] = 72,
-["LastAttempt"] = 24063.1842345,
-["LastSeen"] = 24063.5183301,
-},
-["Player-120-04FA1E6B"] = {
-["SpecId"] = 70,
-["LastAttempt"] = 42153.70851980001,
-["LastSeen"] = 42154.008609,
-},
-["Player-3676-0EBE2DD5"] = {
-["SpecId"] = 70,
-["LastAttempt"] = 24048.9864528,
-["LastSeen"] = 24049.3273948,
 },
 ["Player-5-0B1D787A"] = {
 ["SpecId"] = 104,
 ["LastAttempt"] = 17243.6693467,
 ["LastSeen"] = 17243.9717055,
-},
-["Player-57-0D85D524"] = {
-["SpecId"] = 254,
-["LastAttempt"] = 18327.4165567,
-["LastSeen"] = 18328.0011125,
-},
-["Player-125-0767302E"] = {
-["SpecId"] = 261,
-["LastSeen"] = 21594.6177503,
-},
-["Player-11-0E4F7624"] = {
-["SpecId"] = 261,
-["LastSeen"] = 42295.1801942,
-["LastAttempt"] = 42294.95333220001,
-},
-["Player-11-0E356AEB"] = {
-["LastSeen"] = 7188.6429355,
-["SpecId"] = 577,
-},
-["Player-3683-0E1E6F3D"] = {
-["SpecId"] = 70,
-["LastSeen"] = 7689.2772371,
-},
-["Player-162-0B1D20BF"] = {
-["SpecId"] = 103,
-["LastSeen"] = 37562.6872374,
-["LastAttempt"] = 37562.2718431,
-},
-["Player-11-0E442B33"] = {
-["SpecId"] = 65,
-["LastSeen"] = 17178.0681763,
-["LastAttempt"] = 17177.7672726,
 },
 ["Player-84-0AF3BA62"] = {
 ["SpecId"] = 261,
@@ -26282,24 +25600,10 @@ FrameSortDB = {
 ["LastSeen"] = 25717.2449828,
 ["SpecId"] = 268,
 },
-["Player-86-05DAF98C"] = {
-["SpecId"] = 104,
-["LastSeen"] = 45300.0349424,
-["LastAttempt"] = 44872.6595276,
-},
-["Player-60-0B7BCB2D"] = {
-["LastSeen"] = 14515.3152376,
-["SpecId"] = 73,
-},
 ["Player-157-0C13F683"] = {
 ["SpecId"] = 102,
 ["LastSeen"] = 22972.2867489,
 ["LastAttempt"] = 22575.7517232,
-},
-["Player-3675-0AEF8C17"] = {
-["SpecId"] = 254,
-["LastAttempt"] = 47800.7059266,
-["LastSeen"] = 47800.8184383,
 },
 ["Player-67-0FC3A230"] = {
 ["LastSeen"] = 4167.0442943,
@@ -26309,43 +25613,6 @@ FrameSortDB = {
 ["SpecId"] = 252,
 ["LastSeen"] = 42852.3737368,
 },
-["Player-69-00676E71"] = {
-["SpecId"] = 260,
-["LastAttempt"] = 20846.1262521,
-["LastSeen"] = 20846.4819609,
-},
-["Player-86-09CEC491"] = {
-["SpecId"] = 70,
-["LastSeen"] = 18271.4394369,
-},
-["Player-5-0868627B"] = {
-["SpecId"] = 70,
-["LastSeen"] = 42455.2288702,
-},
-["Player-1427-092095C9"] = {
-["SpecId"] = 1480,
-["LastSeen"] = 5138.269090700001,
-["LastAttempt"] = 5018.1664462,
-},
-["Player-3684-0E8BD090"] = {
-["SpecId"] = 64,
-["LastAttempt"] = 38202.35091240001,
-["LastSeen"] = 46166.904857,
-},
-["Player-5-0AFAEB0C"] = {
-["SpecId"] = 267,
-["LastAttempt"] = 17493.384231,
-["LastSeen"] = 17493.7375315,
-},
-["Player-11-0EB50EEA"] = {
-["LastSeen"] = 2135.4972623,
-["SpecId"] = 261,
-},
-["Player-3675-0AAF8C09"] = {
-["SpecId"] = 259,
-["LastAttempt"] = 17163.194177,
-["LastSeen"] = 17163.3381202,
-},
 ["Player-11-0E960CC1"] = {
 ["LastSeen"] = 14581.3810843,
 ["SpecId"] = 104,
@@ -26354,214 +25621,49 @@ FrameSortDB = {
 ["LastSeen"] = 13475.8939279,
 ["SpecId"] = 270,
 },
-["Player-76-0BE7F432"] = {
-["LastSeen"] = 2482.8274861,
-["SpecId"] = 253,
-},
-["Player-76-05A96CD3"] = {
-["SpecId"] = 257,
-["LastAttempt"] = 42851.9877579,
-["LastSeen"] = 42852.3730254,
-},
-["Player-1138-064E1CDF"] = {
-["SpecId"] = 270,
-["LastAttempt"] = 16955.2463334,
-["LastSeen"] = 16955.5481361,
-},
-["Player-11-0E4D3DEE"] = {
-["LastSeen"] = 21942.3434919,
-["SpecId"] = 581,
-},
-["Player-1129-0BE4E4FD"] = {
-["SpecId"] = 258,
-["LastSeen"] = 29288.6609197,
-["LastAttempt"] = 29288.3625329,
-},
-["Player-3675-0AD672C9"] = {
-["SpecId"] = 71,
-["LastAttempt"] = 23007.9767864,
-["LastSeen"] = 23008.36809,
-},
-["Player-1138-093F791D"] = {
-["SpecId"] = 254,
-["LastAttempt"] = 11311.0726455,
-["LastSeen"] = 11311.3747312,
-},
-["Player-3725-0C4CB386"] = {
-["SpecId"] = 66,
-["LastSeen"] = 2277.4640328,
-["LastAttempt"] = 2073.7904826,
-},
-["Player-5-06F6766B"] = {
-["LastSeen"] = 29576.1248254,
-["SpecId"] = 253,
+["Player-86-05DAF98C"] = {
+["SpecId"] = 104,
+["LastSeen"] = 45300.0349424,
+["LastAttempt"] = 44872.6595276,
 },
 ["Player-1168-09F45D1A"] = {
 ["LastSeen"] = 17463.6615948,
 ["SpecId"] = 267,
-},
-["Player-60-0FE66E0F"] = {
-["SpecId"] = 266,
-["LastSeen"] = 20131.0446669,
-["LastAttempt"] = 20130.6945548,
-},
-["Player-3661-09818675"] = {
-["LastSeen"] = 9396.655898,
-["SpecId"] = 253,
-},
-["Player-3676-06D502A3"] = {
-["SpecId"] = 73,
-["LastSeen"] = 22562.4431159,
-["LastAttempt"] = 22562.0983674,
-},
-["Player-11-0E9F8051"] = {
-["SpecId"] = 257,
-["LastAttempt"] = 16954.2439158,
-["LastSeen"] = 16954.5449144,
-},
-["Player-11-0DF280BB"] = {
-["SpecId"] = 104,
-["LastSeen"] = 7853.810522500001,
-},
-["Player-11-0EB453B1"] = {
-["SpecId"] = 64,
-["LastAttempt"] = 47733.65960940001,
-["LastSeen"] = 47734.01444000001,
-},
-["Player-3209-0B79D72F"] = {
-["SpecId"] = 66,
-["LastAttempt"] = 35390.1166953,
-["LastSeen"] = 35390.42514940001,
-},
-["Player-3725-0C01501F"] = {
-["SpecId"] = 105,
-["LastSeen"] = 18293.524423,
-["LastAttempt"] = 18293.0608667,
-},
-["Player-3675-0AD7153F"] = {
-["LastSeen"] = 21272.4741614,
-["SpecId"] = 62,
 },
 ["Player-3678-0DCF65F2"] = {
 ["SpecId"] = 1480,
 ["LastSeen"] = 3569.8868643,
 ["LastAttempt"] = 3569.5586511,
 },
-["Player-84-0A47C6DE"] = {
-["SpecId"] = 103,
-["LastSeen"] = 2349.6533641,
-["LastAttempt"] = 2349.3517527,
-},
-["Player-3723-0C585157"] = {
-["SpecId"] = 266,
-["LastSeen"] = 23665.0240981,
-["LastAttempt"] = 23661.4067581,
-},
-["Player-11-0E3F5AF4"] = {
-["LastSeen"] = 10681.57289,
-["SpecId"] = 1473,
-},
-["Player-11-0DCA6060"] = {
-["SpecId"] = 252,
-["LastSeen"] = 13592.6194667,
-["LastAttempt"] = 13592.2186656,
-},
-["Player-61-0FC5D8C8"] = {
-["SpecId"] = 71,
-["LastAttempt"] = 13249.665238,
-["LastSeen"] = 13250.0115188,
-},
-["Player-5-0E3FF155"] = {
-["SpecId"] = 264,
-["LastSeen"] = 2312.7773487,
-["LastAttempt"] = 2312.4852759,
-},
-["Player-1168-066EB14D"] = {
-["SpecId"] = 257,
-["LastAttempt"] = 17281.9566501,
-["LastSeen"] = 17282.4173038,
-},
-["Player-3723-0414D26D"] = {
-["SpecId"] = 70,
-["LastSeen"] = 2591.5444748,
-["LastAttempt"] = 2591.2118997,
-},
-["Player-3661-09616071"] = {
-["SpecId"] = 270,
-["LastSeen"] = 22986.2603421,
-["LastAttempt"] = 22985.9705421,
-},
-["Player-3678-0D511E5B"] = {
-["SpecId"] = 72,
-["LastAttempt"] = 24062.1687288,
-["LastSeen"] = 24062.5366117,
-},
-["Player-11-0EB52C09"] = {
-["LastSeen"] = 10878.5407116,
-["SpecId"] = 105,
-},
-["Player-3676-0EDE3C11"] = {
-["LastSeen"] = 18623.6526356,
-["SpecId"] = 269,
-},
-["Player-69-0EB717DC"] = {
-["SpecId"] = 258,
-["LastAttempt"] = 20766.8838091,
-["LastSeen"] = 20767.1218814,
-},
-["Player-11-0E63ADDE"] = {
-["LastSeen"] = 14115.8704411,
-["SpecId"] = 252,
-},
-["Player-3676-0CD6A356"] = {
-["SpecId"] = 252,
-["LastSeen"] = 47214.3677632,
-["LastAttempt"] = 47214.5990584,
-},
-["Player-1425-0E4BEA7D"] = {
-["SpecId"] = 253,
-["LastSeen"] = 19698.9016753,
+["Player-3676-06D502A3"] = {
+["SpecId"] = 73,
+["LastSeen"] = 22562.4431159,
+["LastAttempt"] = 22562.0983674,
 },
 ["Player-60-0E6FE74D"] = {
 ["SpecId"] = 65,
 ["LastSeen"] = 55059.44609120001,
 },
+["Player-47-07149CA1"] = {
+["SpecId"] = 270,
+["LastSeen"] = 19698.9008468,
+},
+["Player-3676-0EDE3C11"] = {
+["LastSeen"] = 18623.6526356,
+["SpecId"] = 269,
+},
+["Player-11-0E63ADDE"] = {
+["LastSeen"] = 14115.8704411,
+["SpecId"] = 252,
+},
+["Player-1425-0E4BEA7D"] = {
+["SpecId"] = 253,
+["LastSeen"] = 19698.9016753,
+},
 ["Player-3675-0A4F75D7"] = {
 ["SpecId"] = 70,
 ["LastAttempt"] = 19362.0587462,
 ["LastSeen"] = 19362.6363634,
-},
-["Player-1428-0E421972"] = {
-["SpecId"] = 70,
-["LastSeen"] = 2591.0513438,
-["LastAttempt"] = 2590.7038696,
-},
-["Player-1190-0C017795"] = {
-["SpecId"] = 71,
-["LastAttempt"] = 24110.5357012,
-["LastSeen"] = 24110.6684561,
-},
-["Player-3683-09281F89"] = {
-["LastSeen"] = 2482.8281384,
-["SpecId"] = 63,
-},
-["Player-5-0EA34284"] = {
-["LastSeen"] = 29576.1246707,
-["SpecId"] = 72,
-},
-["Player-121-09AF4F20"] = {
-["SpecId"] = 64,
-["LastAttempt"] = 24361.6418809,
-["LastSeen"] = 24361.9217431,
-},
-["Player-11-0E7B890C"] = {
-["LastSeen"] = 14947.4009889,
-["SpecId"] = 66,
-},
-["Player-3676-0E9C4C06"] = {
-["SpecId"] = 1468,
-["LastSeen"] = 2671.5815048,
-["LastAttempt"] = 2671.2817538,
 },
 ["Player-11-0EB0F0F0"] = {
 ["LastSeen"] = 21387.0070397,
@@ -26572,141 +25674,37 @@ FrameSortDB = {
 ["LastAttempt"] = 17177.263156,
 ["LastSeen"] = 17177.5945367,
 },
-["Player-1427-0EC80FE3"] = {
-["SpecId"] = 73,
-["LastAttempt"] = 54910.5492241,
-["LastSeen"] = 54910.3593658,
-},
-["Player-76-0BE06116"] = {
-["SpecId"] = 71,
-["LastSeen"] = 26220.8207537,
-["LastAttempt"] = 26220.5190945,
-},
-["Player-1171-0A4F1179"] = {
-["SpecId"] = 254,
-["LastSeen"] = 29291.7770799,
-["LastAttempt"] = 29291.4292919,
-},
-["Player-11-0EB4CC31"] = {
-["LastSeen"] = 11927.0384605,
-["SpecId"] = 70,
-},
-["Player-11-0E41B2E9"] = {
-["SpecId"] = 105,
-["LastSeen"] = 25809.0685405,
-},
 ["Player-76-06F57558"] = {
 ["SpecId"] = 266,
 ["LastSeen"] = 42852.3740216,
-},
-["Player-3684-0E5C044E"] = {
-["SpecId"] = 250,
-["LastAttempt"] = 41824.2995156,
-["LastSeen"] = 41824.74698110001,
-},
-["Player-1129-0B27A2F4"] = {
-["SpecId"] = 70,
-["LastSeen"] = 20545.4971723,
-},
-["Player-60-0C9628D1"] = {
-["SpecId"] = 105,
-["LastSeen"] = 20132.1052485,
-["LastAttempt"] = 20131.6956724,
 },
 ["Player-11-0EB35EB6"] = {
 ["LastSeen"] = 2166.4495455,
 ["SpecId"] = 65,
 },
-["Player-1426-0DF42790"] = {
-["LastSeen"] = 22928.3644542,
-["SpecId"] = 269,
-},
-["Player-57-0DEEEC91"] = {
-["SpecId"] = 73,
-["LastAttempt"] = 24529.4384973,
-["LastSeen"] = 24529.7468886,
-},
-["Player-3675-0AF5B4A8"] = {
-["SpecId"] = 1468,
-["LastSeen"] = 10083.0526406,
-},
-["Player-127-0B015870"] = {
-["LastSeen"] = 25717.2448755,
-["SpecId"] = 266,
+["Player-1129-0B27A2F4"] = {
+["SpecId"] = 70,
+["LastSeen"] = 20545.4971723,
 },
 ["Player-1138-093A06AF"] = {
 ["LastSeen"] = 23059.9708492,
 ["SpecId"] = 256,
 },
-["Player-3676-0E17A024"] = {
-["SpecId"] = 65,
-["LastSeen"] = 22586.9546318,
-["LastAttempt"] = 22586.7861616,
-},
-["Player-3693-08CDF679"] = {
-["LastSeen"] = 18623.6525394,
-["SpecId"] = 1480,
-},
 ["Player-1151-068D2E66"] = {
 ["SpecId"] = 65,
 ["LastSeen"] = 24329.8359435,
 },
-["Player-11-0EB23B00"] = {
-["LastSeen"] = 13956.4328591,
-["SpecId"] = 267,
-},
-["Player-3675-0AF51222"] = {
-["SpecId"] = 72,
-["LastAttempt"] = 18712.0515155,
-["LastSeen"] = 18712.4605037,
+["Player-84-0A3A7B93"] = {
+["LastSeen"] = 21269.6595904,
+["SpecId"] = 250,
 },
 ["Player-5-0E717B39"] = {
 ["LastSeen"] = 25717.2445361,
 ["SpecId"] = 268,
 },
-["Player-3675-0AF8789A"] = {
-["SpecId"] = 270,
-["LastSeen"] = 22560.9588524,
-["LastAttempt"] = 22560.5755213,
-},
-["Player-11-0EB469DA"] = {
-["SpecId"] = 252,
-["LastSeen"] = 7945.110313100001,
-},
 ["Player-1185-0D68D62C"] = {
 ["LastSeen"] = 19237.3284263,
 ["SpecId"] = 262,
-},
-["Player-3683-0E136EC9"] = {
-["SpecId"] = 577,
-["LastSeen"] = 25697.1729588,
-},
-["Player-3683-0CEF9B54"] = {
-["SpecId"] = 252,
-["LastAttempt"] = 18368.9621358,
-["LastSeen"] = 18369.0773925,
-},
-["Player-3725-0C1E5367"] = {
-["SpecId"] = 71,
-["LastAttempt"] = 25703.5206674,
-["LastSeen"] = 25703.8844535,
-},
-["Player-3676-0E1EAEF0"] = {
-["LastSeen"] = 14515.3153417,
-["SpecId"] = 64,
-},
-["Player-1136-05EBC0B1"] = {
-["SpecId"] = 253,
-["LastSeen"] = 24355.2791689,
-},
-["Player-1185-0EA39E39"] = {
-["LastSeen"] = 16893.7356535,
-["SpecId"] = 1468,
-},
-["Player-1171-08433C3B"] = {
-["SpecId"] = 257,
-["LastAttempt"] = 23770.8308115,
-["LastSeen"] = 23905.8020117,
 },
 ["Player-3675-0AE02181"] = {
 ["SpecId"] = 577,
@@ -26725,10 +25723,6 @@ FrameSortDB = {
 ["SpecId"] = 70,
 ["LastSeen"] = 42852.37367740001,
 },
-["Player-11-0EB4689E"] = {
-["SpecId"] = 64,
-["LastSeen"] = 17350.4707467,
-},
 ["Player-3725-0C49CAA3"] = {
 ["SpecId"] = 70,
 ["LastSeen"] = 19698.901145,
@@ -26746,41 +25740,6 @@ FrameSortDB = {
 ["LastSeen"] = 38068.2062326,
 ["SpecId"] = 104,
 },
-["Player-11-0E78188F"] = {
-["LastSeen"] = 15888.3407221,
-["SpecId"] = 103,
-},
-["Player-3676-0ED48542"] = {
-["LastSeen"] = 14515.3152012,
-["SpecId"] = 1480,
-},
-["Player-1171-0A96AF02"] = {
-["SpecId"] = 1467,
-["LastSeen"] = 37604.4608028,
-["LastAttempt"] = 37604.3006687,
-},
-["Player-1129-0BA6B15F"] = {
-["SpecId"] = 1473,
-["LastAttempt"] = 24110.9580908,
-["LastSeen"] = 24111.26085,
-},
-["Player-96-0ED93978"] = {
-["SpecId"] = 1480,
-["LastSeen"] = 19698.9007453,
-},
-["Player-77-0FD504E9"] = {
-["SpecId"] = 265,
-["LastSeen"] = 25721.3368223,
-},
-["Player-11-0E5875DD"] = {
-["SpecId"] = 102,
-["LastAttempt"] = 42167.2366128,
-["LastSeen"] = 42167.4657839,
-},
-["Player-11-0E6E30A1"] = {
-["LastSeen"] = 14989.0704171,
-["SpecId"] = 577,
-},
 ["Player-11-0A912F71"] = {
 ["SpecId"] = 253,
 ["LastSeen"] = 15816.1208087,
@@ -26790,9 +25749,9 @@ FrameSortDB = {
 ["SpecId"] = 257,
 ["LastSeen"] = 42852.3735814,
 },
-["Player-3684-0EE1710F"] = {
-["SpecId"] = 103,
-["LastSeen"] = 25802.3217616,
+["Player-11-0E6E30A1"] = {
+["LastSeen"] = 14989.0704171,
+["SpecId"] = 577,
 },
 ["Player-9-0DD7E7E8"] = {
 ["SpecId"] = 252,
@@ -26804,41 +25763,10 @@ FrameSortDB = {
 ["LastAttempt"] = 35304.7027508,
 ["LastSeen"] = 35320.4858592,
 },
-["Player-60-0BAD7DD5"] = {
-["LastSeen"] = 25717.2447891,
-["SpecId"] = 64,
-},
-["Player-11-0EB58766"] = {
-["SpecId"] = 268,
-["LastSeen"] = 9531.7964665,
-},
-["Player-1428-0ECA9A19"] = {
-["SpecId"] = 252,
-["LastSeen"] = 3772.074580900001,
-["LastAttempt"] = 3771.7211308,
-},
-["Player-57-0E1DF2A5"] = {
-["SpecId"] = 268,
-["LastSeen"] = 23033.0768495,
-["LastAttempt"] = 22589.3093142,
-},
-["Player-11-0EA5BD65"] = {
-["SpecId"] = 70,
-["LastSeen"] = 47927.9789022,
-},
-["Player-3694-0B04A670"] = {
-["SpecId"] = 65,
-["LastSeen"] = 37791.7532048,
-["LastAttempt"] = 37791.39553820001,
-},
 ["Player-127-0900B687"] = {
 ["SpecId"] = 105,
 ["LastAttempt"] = 10082.8930492,
 ["LastSeen"] = 10083.0520914,
-},
-["Player-114-05AF8EED"] = {
-["SpecId"] = 254,
-["LastSeen"] = 20529.4660333,
 },
 ["Player-11-0E5EA908"] = {
 ["SpecId"] = 72,
@@ -26848,99 +25776,32 @@ FrameSortDB = {
 ["SpecId"] = 71,
 ["LastSeen"] = 19698.9010594,
 },
-["Player-11-0AF2448B"] = {
-["SpecId"] = 64,
-["LastAttempt"] = 19700.4626087,
-["LastSeen"] = 19700.5839172,
-},
-["Player-58-0BB0F0E1"] = {
-["SpecId"] = 266,
-["LastSeen"] = 19698.9011939,
-},
-["Player-11-0E8E81BD"] = {
-["SpecId"] = 577,
-["LastSeen"] = 17511.4099255,
-["LastAttempt"] = 17511.657294,
-},
-["Player-73-0FAAFD8E"] = {
-["SpecId"] = 264,
-["LastSeen"] = 47643.2788235,
-},
-["Player-11-0EB5393F"] = {
-["LastSeen"] = 14555.0813061,
-["SpecId"] = 268,
-},
-["Player-60-0F931FF1"] = {
-["SpecId"] = 258,
-["LastSeen"] = 37538.6039543,
-["LastAttempt"] = 37538.2481329,
-},
 ["Player-84-0AB03274"] = {
 ["SpecId"] = 1480,
 ["LastAttempt"] = 17257.8633346,
 ["LastSeen"] = 17258.0330268,
-},
-["Player-1136-0978BDB9"] = {
-["SpecId"] = 71,
-["LastAttempt"] = 11301.5499541,
-["LastSeen"] = 11301.679863,
 },
 ["Player-3684-0EABBAE2"] = {
 ["SpecId"] = 102,
 ["LastAttempt"] = 48665.8782202,
 ["LastSeen"] = 48666.2787485,
 },
-["Player-1136-0971AB19"] = {
-["SpecId"] = 254,
-["LastSeen"] = 3176.0288026,
-["LastAttempt"] = 3175.7459754,
-},
 ["Player-3675-0AFCBB39"] = {
 ["LastSeen"] = 16686.0272046,
 ["SpecId"] = 103,
-},
-["Player-1136-09213637"] = {
-["LastSeen"] = 20848.0830165,
-["SpecId"] = 64,
-},
-["Player-1184-0B339488"] = {
-["SpecId"] = 267,
-["LastAttempt"] = 39313.8545552,
-["LastSeen"] = 39314.2303275,
 },
 ["Player-5-093288D1"] = {
 ["SpecId"] = 102,
 ["LastSeen"] = 47691.9318386,
 },
-["Player-3676-0E472AFD"] = {
-["LastSeen"] = 19224.4887011,
-["SpecId"] = 1480,
-},
-["Player-5-0E1A8615"] = {
-["LastSeen"] = 29576.1247487,
-["SpecId"] = 261,
+["Player-60-0BAD7DD5"] = {
+["LastSeen"] = 25717.2447891,
+["SpecId"] = 64,
 },
 ["Player-5-0EB043ED"] = {
 ["SpecId"] = 261,
 ["LastSeen"] = 3569.4109709,
 ["LastAttempt"] = 3569.0554394,
-},
-["Player-154-05185D74"] = {
-["SpecId"] = 62,
-["LastSeen"] = 18286.7135805,
-},
-["Player-1136-083909FB"] = {
-["SpecId"] = 254,
-["LastSeen"] = 25777.4953547,
-},
-["Player-11-0EB564B4"] = {
-["SpecId"] = 252,
-["LastAttempt"] = 48298.3616865,
-["LastSeen"] = 48298.57350470001,
-},
-["Player-3675-0AC124EC"] = {
-["SpecId"] = 1467,
-["LastSeen"] = 22939.3198843,
 },
 ["Player-1427-0DAE2930"] = {
 ["SpecId"] = 1480,
@@ -26952,198 +25813,61 @@ FrameSortDB = {
 ["LastAttempt"] = 3239.483263,
 ["LastSeen"] = 3239.593175,
 },
-["Player-11-0EB2E274"] = {
-["LastSeen"] = 14906.1004157,
-["SpecId"] = 70,
-},
-["Player-11-0B5B41D5"] = {
-["SpecId"] = 262,
-["LastSeen"] = 19698.9004902,
-},
-["Player-120-06D30F1A"] = {
-["SpecId"] = 72,
-["LastAttempt"] = 39312.3484304,
-["LastSeen"] = 39312.68590690001,
-},
-["Player-3208-0AF424E5"] = {
-["SpecId"] = 253,
-["LastAttempt"] = 35389.61314250001,
-["LastSeen"] = 35464.8263164,
-},
-["Player-5-0E55F6DE"] = {
-["SpecId"] = 1480,
-["LastSeen"] = 47691.9322905,
-},
-["Player-58-062E4839"] = {
-["SpecId"] = 266,
-["LastSeen"] = 49228.2104258,
-["LastAttempt"] = 43973.0131219,
-},
-["Player-11-0E82BB6F"] = {
-["LastSeen"] = 11141.3393468,
-["SpecId"] = 254,
-},
 ["Player-3725-0ABE8D1F"] = {
 ["SpecId"] = 270,
 ["LastAttempt"] = 17168.3736051,
 ["LastSeen"] = 17168.8508799,
-},
-["Player-11-0EB2627B"] = {
-["SpecId"] = 1480,
-["LastAttempt"] = 54896.82282720001,
-["LastSeen"] = 54897.0877779,
-},
-["Player-60-0FED13D0"] = {
-["SpecId"] = 64,
-["LastSeen"] = 25728.4023661,
-["LastAttempt"] = 25728.164579,
 },
 ["Player-11-0E3EEE39"] = {
 ["SpecId"] = 1473,
 ["LastAttempt"] = 55006.4509314,
 ["LastSeen"] = 55006.8947962,
 },
-["Player-11-0EB55038"] = {
-["LastSeen"] = 22497.1239876,
-["SpecId"] = 259,
-},
-["Player-3725-0C476569"] = {
-["LastSeen"] = 14515.3151623,
-["SpecId"] = 253,
-},
 ["Player-3678-0D94186B"] = {
 ["SpecId"] = 262,
 ["LastAttempt"] = 18308.6854235,
 ["LastSeen"] = 18308.9531409,
 },
-["Player-5-0E9B091D"] = {
-["LastSeen"] = 2345.0974202,
-["SpecId"] = 263,
+["Player-5-0E1A8615"] = {
+["LastSeen"] = 29576.1247487,
+["SpecId"] = 261,
 },
-["Player-11-0DBA61D9"] = {
-["SpecId"] = 1480,
-["LastAttempt"] = 25396.8341824,
-["LastSeen"] = 25397.2158574,
-},
-["Player-11-0E91522C"] = {
-["LastSeen"] = 17477.6217519,
-["SpecId"] = 254,
-},
-["Player-57-0DE431E8"] = {
-["SpecId"] = 269,
-["LastSeen"] = 42852.3738214,
-},
-["Player-1171-0ADCCCC3"] = {
-["SpecId"] = 64,
-["LastAttempt"] = 54894.78550480001,
-["LastSeen"] = 54894.9207251,
-},
-["Player-64-06750E05"] = {
-["SpecId"] = 270,
-["LastAttempt"] = 42840.40886880001,
-["LastSeen"] = 42840.7177718,
-},
-["Player-86-09F27B72"] = {
-["SpecId"] = 71,
-["LastSeen"] = 37577.3783916,
-["LastAttempt"] = 37577.03553440001,
-},
-["Player-11-0EB5D2F1"] = {
-["LastSeen"] = 11494.2722633,
-["SpecId"] = 71,
-},
-["Player-3725-0AE07805"] = {
-["SpecId"] = 269,
-["LastSeen"] = 37565.1786711,
-["LastAttempt"] = 37564.810445,
+["Player-3675-0AC124EC"] = {
+["SpecId"] = 1467,
+["LastSeen"] = 22939.3198843,
 },
 ["Player-11-0E8AD5B5"] = {
 ["SpecId"] = 266,
 ["LastSeen"] = 22363.5267175,
 },
-["Player-11-0E090EEA"] = {
-["LastSeen"] = 2165.5019895,
-["SpecId"] = 254,
-},
-["Player-11-0EB4DE53"] = {
-["SpecId"] = 269,
-["LastAttempt"] = 11328.1140326,
-["LastSeen"] = 11328.4073275,
-},
 ["Player-60-0CBDDBF7"] = {
 ["SpecId"] = 105,
 ["LastSeen"] = 22940.8706749,
 },
-["Player-11-0E7F3CE2"] = {
-["LastSeen"] = 13974.0739197,
-["SpecId"] = 64,
-},
-["Player-11-0EB11881"] = {
-["LastSeen"] = 19224.4888507,
-["SpecId"] = 72,
-},
-["Player-11-0EB3A84D"] = {
-["SpecId"] = 103,
-["LastSeen"] = 47691.9322431,
-},
-["Player-64-0FEE19F2"] = {
-["SpecId"] = 64,
-["LastSeen"] = 2672.0800256,
-["LastAttempt"] = 2671.791804,
-},
-["Player-3694-06E51F40"] = {
-["SpecId"] = 265,
-["LastAttempt"] = 39320.39651760001,
-["LastSeen"] = 39320.6308177,
+["Player-3725-0C476569"] = {
+["LastSeen"] = 14515.3151623,
+["SpecId"] = 253,
 },
 ["Player-64-0FC77AC4"] = {
 ["SpecId"] = 269,
 ["LastAttempt"] = 42839.90290640001,
 ["LastSeen"] = 42840.1158205,
 },
-["Player-5-0EB1B0D3"] = {
-["SpecId"] = 261,
-["LastSeen"] = 47691.9315031,
-},
-["Player-117-00418BF4"] = {
-["SpecId"] = 65,
-["LastSeen"] = 25725.7016311,
-},
-["Player-11-0E972F93"] = {
-["LastSeen"] = 11563.8059252,
-["SpecId"] = 266,
-},
 ["Player-5-0E5D1FB7"] = {
 ["LastSeen"] = 19224.4889009,
 ["SpecId"] = 64,
 },
-["Player-11-0EB23145"] = {
-["SpecId"] = 264,
-["LastSeen"] = 2137.2008502,
-},
 ["Player-162-0C1B0A07"] = {
 ["LastSeen"] = 3174.2851191,
-["SpecId"] = 261,
-},
-["Player-11-0EA3F911"] = {
-["LastSeen"] = 10498.9667236,
-["SpecId"] = 72,
-},
-["Player-57-0DEADC9F"] = {
-["LastSeen"] = 4348.981892700001,
-["SpecId"] = 65,
-},
-["Player-1138-0987BC59"] = {
-["LastSeen"] = 2166.4496359,
 ["SpecId"] = 261,
 },
 ["Player-60-0C8970D8"] = {
 ["LastSeen"] = 22813.8834511,
 ["SpecId"] = 258,
 },
-["Player-11-0E9C4066"] = {
-["LastSeen"] = 2166.4495001,
-["SpecId"] = 70,
+["Player-57-0DE431E8"] = {
+["SpecId"] = 269,
+["LastSeen"] = 42852.3738214,
 },
 ["Player-60-0C5B26E7"] = {
 ["SpecId"] = 64,
@@ -27159,55 +25883,19 @@ FrameSortDB = {
 ["LastAttempt"] = 23892.1919337,
 ["LastSeen"] = 23892.5536412,
 },
-["Player-1136-09700801"] = {
-["SpecId"] = 70,
-["LastSeen"] = 10083.0526835,
-},
-["Player-11-0AB0FF61"] = {
-["LastSeen"] = 22492.8382883,
-["SpecId"] = 66,
-},
-["Player-60-0F461D6B"] = {
-["SpecId"] = 254,
-["LastSeen"] = 20952.8550844,
-},
-["Player-104-0D863651"] = {
-["SpecId"] = 1480,
-["LastSeen"] = 22986.3899049,
-["LastAttempt"] = 22587.2916401,
-},
-["Player-162-0B94AD22"] = {
-["SpecId"] = 255,
-["LastSeen"] = 37760.093295,
-["LastAttempt"] = 37759.5690589,
+["Player-11-0EB4DE53"] = {
+["SpecId"] = 269,
+["LastAttempt"] = 11328.1140326,
+["LastSeen"] = 11328.4073275,
 },
 ["Player-5-0E86AF89"] = {
 ["SpecId"] = 71,
 ["LastAttempt"] = 18369.4640042,
 ["LastSeen"] = 18369.8250748,
 },
-["Player-3676-0E9B91E2"] = {
-["SpecId"] = 251,
-["LastSeen"] = 19698.9014121,
-},
-["Player-5-0E980157"] = {
-["SpecId"] = 102,
-["LastAttempt"] = 47927.15832610001,
-["LastSeen"] = 47927.47540790001,
-},
-["Player-3725-0C49A49F"] = {
-["SpecId"] = 266,
-["LastSeen"] = 7762.8108897,
-},
-["Player-3207-092ADB8F"] = {
-["SpecId"] = 252,
-["LastSeen"] = 29697.7593592,
-["LastAttempt"] = 29697.4402269,
-},
-["Player-11-0E891A4E"] = {
-["SpecId"] = 252,
-["LastSeen"] = 42783.23001550001,
-["LastAttempt"] = 42782.9327653,
+["Player-11-0E090EEA"] = {
+["LastSeen"] = 2165.5019895,
+["SpecId"] = 254,
 },
 ["Player-1427-05494CCD"] = {
 ["SpecId"] = 256,
@@ -27218,69 +25906,26 @@ FrameSortDB = {
 ["LastSeen"] = 16686.0273391,
 ["SpecId"] = 255,
 },
-["Player-11-067E3B81"] = {
-["LastSeen"] = 10979.9392114,
-["SpecId"] = 65,
-},
-["Player-3678-0D853F50"] = {
-["SpecId"] = 250,
-["LastAttempt"] = 3888.3557662,
-["LastSeen"] = 3888.6987986,
-},
-["Player-11-0E558A54"] = {
-["SpecId"] = 105,
-["LastSeen"] = 16942.6086702,
-["LastAttempt"] = 16942.4028633,
-},
-["Player-67-0920F2EA"] = {
-["SpecId"] = 269,
-["LastAttempt"] = 20916.4174163,
-["LastSeen"] = 20916.7528091,
-},
-["Player-3694-0AE38EF7"] = {
-["SpecId"] = 262,
-["LastAttempt"] = 24401.0476776,
-["LastSeen"] = 24401.2865496,
-},
-["Player-1175-0FE20647"] = {
-["LastSeen"] = 14515.3152707,
-["SpecId"] = 65,
-},
-["Player-57-0D5E810C"] = {
-["SpecId"] = 1473,
-["LastAttempt"] = 45667.0791183,
-["LastSeen"] = 45776.5635577,
-},
-["Player-47-06A4C9E1"] = {
-["LastSeen"] = 29576.1244236,
+["Player-60-0F461D6B"] = {
 ["SpecId"] = 254,
+["LastSeen"] = 20952.8550844,
 },
-["Player-11-0E7E600F"] = {
-["SpecId"] = 263,
-["LastAttempt"] = 54964.5363937,
-["LastSeen"] = 54964.81084210001,
+["Player-5-0E980157"] = {
+["SpecId"] = 102,
+["LastAttempt"] = 47927.15832610001,
+["LastSeen"] = 47927.47540790001,
 },
 ["Player-11-0A788F9C"] = {
 ["SpecId"] = 64,
 ["LastSeen"] = 17626.4283026,
 },
-["Player-11-0E99B2A4"] = {
-["SpecId"] = 270,
-["LastSeen"] = 17190.6334034,
-["LastAttempt"] = 17190.3314301,
-},
 ["Player-160-0C1B2E7E"] = {
 ["SpecId"] = 265,
 ["LastSeen"] = 42295.7764165,
 },
-["Player-3725-0C5E8C7E"] = {
-["SpecId"] = 270,
-["LastSeen"] = 22560.176195,
-["LastAttempt"] = 22559.6440807,
-},
-["Player-3207-05817772"] = {
-["LastSeen"] = 19224.4885393,
+["Player-1136-09700801"] = {
 ["SpecId"] = 70,
+["LastSeen"] = 10083.0526835,
 },
 ["Player-1136-0936B978"] = {
 ["LastSeen"] = 23035.687579,
@@ -27291,113 +25936,51 @@ FrameSortDB = {
 ["LastSeen"] = 37759.40667600001,
 ["LastAttempt"] = 37760.5717973,
 },
-["Player-11-0DE8B074"] = {
-["SpecId"] = 70,
-["LastSeen"] = 47927.97872740001,
+["Player-11-0E7F3CE2"] = {
+["LastSeen"] = 13974.0739197,
+["SpecId"] = 64,
 },
-["Player-3725-0B20CE9E"] = {
-["SpecId"] = 72,
-["LastSeen"] = 2227.1764969,
-["LastAttempt"] = 2074.2926084,
-},
-["Player-3234-0EA75D58"] = {
-["SpecId"] = 70,
-["LastSeen"] = 13241.3026601,
-},
-["Player-86-05E8651B"] = {
-["SpecId"] = 253,
-["LastAttempt"] = 23895.2102289,
-["LastSeen"] = 23895.5228434,
-},
-["Player-11-0EA7CA1D"] = {
-["SpecId"] = 105,
-["LastSeen"] = 9515.9993909,
-},
-["Player-12-0E4A3FAC"] = {
-["LastSeen"] = 2166.4495932,
-["SpecId"] = 1467,
-},
-["Player-125-0A9D9491"] = {
-["SpecId"] = 269,
-["LastAttempt"] = 20557.9868926,
-["LastSeen"] = 20558.2097357,
+["Player-3678-0D853F50"] = {
+["SpecId"] = 250,
+["LastAttempt"] = 3888.3557662,
+["LastSeen"] = 3888.6987986,
 },
 ["Player-3661-095628D6"] = {
 ["LastSeen"] = 23630.5336287,
 ["SpecId"] = 64,
-},
-["Player-114-05AFA914"] = {
-["SpecId"] = 256,
-["LastAttempt"] = 20607.3556763,
-["LastSeen"] = 20607.8283441,
-},
-["Player-1425-0EDEBFF9"] = {
-["SpecId"] = 268,
-["LastAttempt"] = 22551.6435906,
-["LastSeen"] = 22885.1805918,
 },
 ["Player-3676-0D9D33D8"] = {
 ["SpecId"] = 64,
 ["LastAttempt"] = 24161.4921762,
 ["LastSeen"] = 24161.8381926,
 },
-["Player-11-0E7C94CC"] = {
-["LastSeen"] = 14520.6480082,
-["SpecId"] = 102,
+["Player-11-0EABFD64"] = {
+["SpecId"] = 64,
+["LastSeen"] = 10083.052603,
 },
 ["Player-1129-0AD7F663"] = {
 ["SpecId"] = 253,
 ["LastSeen"] = 18286.5749212,
-},
-["Player-11-0DCA88CB"] = {
-["SpecId"] = 263,
-["LastSeen"] = 26738.9043886,
 },
 ["Player-3675-0A8C1138"] = {
 ["SpecId"] = 252,
 ["LastSeen"] = 2550.078801,
 ["LastAttempt"] = 2659.1961705,
 },
-["Player-11-0E88FB70"] = {
-["SpecId"] = 254,
-["LastSeen"] = 17761.1695,
-},
-["Player-3683-0DA5DB9F"] = {
-["SpecId"] = 264,
-["LastSeen"] = 42167.1774767,
-},
 ["Player-3693-0ED9E7DD"] = {
 ["SpecId"] = 268,
 ["LastSeen"] = 51170.9626231,
 ["LastAttempt"] = 51170.4792232,
 },
-["Player-76-0B94D303"] = {
-["SpecId"] = 254,
-["LastSeen"] = 25697.1729127,
-},
-["Player-11-0EB5A4E6"] = {
-["SpecId"] = 105,
-["LastSeen"] = 17566.7908865,
-["LastAttempt"] = 17566.4999921,
-},
-["Player-3676-0E5D05C1"] = {
-["SpecId"] = 70,
-["LastAttempt"] = 19432.0895874,
-["LastSeen"] = 19432.7820502,
-},
-["Player-3675-0AA966D7"] = {
-["LastSeen"] = 15433.1162965,
-["SpecId"] = 251,
+["Player-3721-0B005D7D"] = {
+["SpecId"] = 72,
+["LastSeen"] = 2671.2795407,
+["LastAttempt"] = 2670.770411,
 },
 ["Player-1136-098D2A3A"] = {
 ["SpecId"] = 64,
 ["LastSeen"] = 17477.6215062,
 ["LastAttempt"] = 17477.364926,
-},
-["Player-60-0F86F076"] = {
-["SpecId"] = 270,
-["LastAttempt"] = 17283.4772372,
-["LastSeen"] = 17284.50476,
 },
 ["Player-3725-0A322DB0"] = {
 ["LastSeen"] = 14515.3150221,
@@ -27413,60 +25996,24 @@ FrameSortDB = {
 ["LastAttempt"] = 20739.5872851,
 ["LastSeen"] = 20739.8654891,
 },
-["Player-120-0892CDAD"] = {
-["SpecId"] = 256,
-["LastAttempt"] = 43001.0129633,
-["LastSeen"] = 43001.2333728,
-},
-["Player-11-0E2A4386"] = {
-["SpecId"] = 266,
-["LastAttempt"] = 42182.972691,
-["LastSeen"] = 42182.5992991,
-},
-["Player-11-0EB3BA07"] = {
-["LastSeen"] = 21930.1944472,
-["SpecId"] = 259,
-},
-["Player-11-0E968C15"] = {
-["LastSeen"] = 2326.4049417,
-["SpecId"] = 577,
-},
-["Player-163-0BEFF082"] = {
-["SpecId"] = 64,
-["LastSeen"] = 37577.9622756,
-["LastAttempt"] = 37577.5480767,
-},
-["Player-11-0E6EA27D"] = {
-["SpecId"] = 1480,
-["LastSeen"] = 19698.9009407,
-},
-["Player-1136-0914799B"] = {
-["SpecId"] = 72,
-["LastSeen"] = 29489.7535211,
-["LastAttempt"] = 29488.6968956,
-},
-["Player-11-0EADCD8E"] = {
-["SpecId"] = 62,
-["LastAttempt"] = 17350.1492553,
-["LastSeen"] = 17350.4701597,
-},
-["Player-60-0FC51F34"] = {
-["LastSeen"] = 14515.3148326,
-["SpecId"] = 102,
-},
-["Player-57-0D4D674A"] = {
-["SpecId"] = 254,
-["LastSeen"] = 3632.4283514,
-["LastAttempt"] = 3632.0047574,
-},
-["Player-11-0E67339F"] = {
-["LastSeen"] = 21348.7301165,
+["Player-86-05E8651B"] = {
 ["SpecId"] = 253,
+["LastAttempt"] = 23895.2102289,
+["LastSeen"] = 23895.5228434,
 },
-["Player-5-0EB03EBB"] = {
-["SpecId"] = 256,
-["LastSeen"] = 29576.1238274,
-["LastAttempt"] = 29575.7855448,
+["Player-11-0EA7CA1D"] = {
+["SpecId"] = 105,
+["LastSeen"] = 9515.9993909,
+},
+["Player-58-00E784F6"] = {
+["SpecId"] = 253,
+["LastAttempt"] = 25783.1279643,
+["LastSeen"] = 25783.3824011,
+},
+["Player-1427-0ECB426B"] = {
+["SpecId"] = 268,
+["LastAttempt"] = 9872.2857311,
+["LastSeen"] = 9872.651961700001,
 },
 ["Player-52-0CA8F5B1"] = {
 ["SpecId"] = 254,
@@ -27480,11 +26027,6 @@ FrameSortDB = {
 ["Player-3676-0DE52B73"] = {
 ["SpecId"] = 261,
 ["LastSeen"] = 25783.4225169,
-},
-["Player-11-0EAAADCA"] = {
-["SpecId"] = 258,
-["LastAttempt"] = 10091.1952823,
-["LastSeen"] = 10091.3953405,
 },
 ["Player-3684-0EA9EC5F"] = {
 ["SpecId"] = 73,
@@ -27501,73 +26043,45 @@ FrameSortDB = {
 ["LastAttempt"] = 18269.0812129,
 ["LastSeen"] = 18269.6020245,
 },
-["Player-57-0E01FB56"] = {
-["LastSeen"] = 20752.1078,
-["SpecId"] = 268,
+["Player-12-0E4A3FAC"] = {
+["LastSeen"] = 2166.4495932,
+["SpecId"] = 1467,
 },
-["Player-1171-0812C441"] = {
-["SpecId"] = 1480,
-["LastSeen"] = 22863.8285232,
-["LastAttempt"] = 22575.2520891,
+["Player-11-0E88FB70"] = {
+["SpecId"] = 254,
+["LastSeen"] = 17761.1695,
 },
-["Player-1151-098C9F3B"] = {
-["SpecId"] = 72,
-["LastSeen"] = 2484.0931383,
-["LastAttempt"] = 2483.828948,
-},
-["Player-1071-0964CDAA"] = {
-["SpecId"] = 577,
-["LastAttempt"] = 20532.1660195,
-["LastSeen"] = 20532.4093903,
-},
-["Player-3725-0A6C94B5"] = {
-["SpecId"] = 70,
-["LastSeen"] = 22939.3203005,
-},
-["Player-11-0E6A1981"] = {
-["LastSeen"] = 7621.265012500001,
-["SpecId"] = 64,
+["Player-76-0B94D303"] = {
+["SpecId"] = 254,
+["LastSeen"] = 25697.1729127,
 },
 ["Player-3678-0D6B18EF"] = {
 ["SpecId"] = 266,
 ["LastAttempt"] = 18669.1540585,
 ["LastSeen"] = 18669.3874649,
 },
-["Player-60-0FC1D5D8"] = {
-["SpecId"] = 261,
-["LastSeen"] = 2670.5650311,
-["LastAttempt"] = 2670.2697085,
+["Player-3207-05817772"] = {
+["LastSeen"] = 19224.4885393,
+["SpecId"] = 70,
 },
-["Player-3208-0E218844"] = {
-["SpecId"] = 268,
-["LastSeen"] = 20565.0098412,
-},
-["Player-3693-0DEB8676"] = {
-["LastSeen"] = 3174.5635805,
-["SpecId"] = 71,
-},
-["Player-3661-07BE9728"] = {
-["LastSeen"] = 23499.9205553,
-["SpecId"] = 64,
-},
-["Player-121-0AF43408"] = {
+["Player-11-0EB5A4E6"] = {
 ["SpecId"] = 105,
-["LastAttempt"] = 3570.5716807,
-["LastSeen"] = 3570.9425481,
+["LastSeen"] = 17566.7908865,
+["LastAttempt"] = 17566.4999921,
 },
-["Player-11-0E7B2A5E"] = {
-["SpecId"] = 258,
-["LastSeen"] = 10044.0240587,
-},
-["Player-3725-0C580DF2"] = {
-["SpecId"] = 105,
-["LastSeen"] = 2132.108201,
-["LastAttempt"] = 2132.1726811,
-},
-["Player-77-0F9AF48A"] = {
+["Player-163-0BEFF082"] = {
 ["SpecId"] = 64,
-["LastAttempt"] = 20552.4497932,
-["LastSeen"] = 20552.6871899,
+["LastSeen"] = 37577.9622756,
+["LastAttempt"] = 37577.5480767,
+},
+["Player-11-0E67339F"] = {
+["LastSeen"] = 21348.7301165,
+["SpecId"] = 253,
+},
+["Player-11-0E2A4386"] = {
+["SpecId"] = 266,
+["LastAttempt"] = 42182.972691,
+["LastSeen"] = 42182.5992991,
 },
 ["Player-11-0E9939A1"] = {
 ["LastSeen"] = 11649.572085,
@@ -27592,73 +26106,33 @@ FrameSortDB = {
 ["LastSeen"] = 47211.6309578,
 ["LastAttempt"] = 47224.9496336,
 },
-["Player-3676-0E95797B"] = {
-["SpecId"] = 1480,
-["LastSeen"] = 26221.2022325,
-["LastAttempt"] = 26221.0210115,
-},
 ["Player-104-0EA2A464"] = {
 ["SpecId"] = 103,
 ["LastSeen"] = 19698.9006896,
 },
-["Player-11-0EAC2B43"] = {
-["LastSeen"] = 3178.4893578,
-["SpecId"] = 1480,
+["Player-57-0E01FB56"] = {
+["LastSeen"] = 20752.1078,
+["SpecId"] = 268,
 },
-["Player-76-0C1BF1BC"] = {
-["SpecId"] = 71,
-["LastAttempt"] = 20561.2396339,
-["LastSeen"] = 20561.6884348,
+["Player-1071-0964CDAA"] = {
+["SpecId"] = 577,
+["LastAttempt"] = 20532.1660195,
+["LastSeen"] = 20532.4093903,
 },
-["Player-162-0C0FB712"] = {
-["SpecId"] = 260,
-["LastSeen"] = 15917.4810416,
-["LastAttempt"] = 15857.5895789,
-},
-["Player-60-0E862A97"] = {
-["SpecId"] = 1480,
-["LastSeen"] = 25730.4957585,
-["LastAttempt"] = 25730.1828055,
+["Player-5-0EB03EBB"] = {
+["SpecId"] = 256,
+["LastSeen"] = 29576.1238274,
+["LastAttempt"] = 29575.7855448,
 },
 ["Player-1151-068D461F"] = {
 ["SpecId"] = 70,
 ["LastSeen"] = 37770.852301,
 ["LastAttempt"] = 37770.640542,
 },
-["Player-3676-0E8BC825"] = {
+["Player-1185-0EB5C75E"] = {
 ["SpecId"] = 270,
-["LastAttempt"] = 42840.9129533,
-["LastSeen"] = 42841.2262845,
-},
-["Player-1428-0DB9E9D2"] = {
-["SpecId"] = 102,
-["LastSeen"] = 3570.4164379,
-["LastAttempt"] = 3570.0650772,
-},
-["Player-3675-0AE9D346"] = {
-["LastSeen"] = 14515.3149471,
-["SpecId"] = 102,
-},
-["Player-1185-0E446959"] = {
-["SpecId"] = 251,
-["LastSeen"] = 17191.1781992,
-["LastAttempt"] = 17190.8336839,
-},
-["Player-1171-0AE7F58E"] = {
-["LastSeen"] = 18623.6524384,
-["SpecId"] = 65,
-},
-["Player-3675-0AD8852B"] = {
-["SpecId"] = 252,
-["LastSeen"] = 19697.9144347,
-},
-["Player-86-0A39C342"] = {
-["LastSeen"] = 19237.3284786,
-["SpecId"] = 256,
-},
-["Player-3725-0C5E3EF8"] = {
-["LastSeen"] = 14507.6481008,
-["SpecId"] = 1480,
+["LastSeen"] = 29277.4841345,
+["LastAttempt"] = 29277.2524753,
 },
 ["Player-3684-0E27B001"] = {
 ["SpecId"] = 70,
@@ -27675,132 +26149,57 @@ FrameSortDB = {
 ["LastAttempt"] = 1814.4425971,
 ["LastSeen"] = 1814.7348946,
 },
-["Player-11-0B687377"] = {
-["LastSeen"] = 14499.8146572,
-["SpecId"] = 70,
-},
-["Player-11-0EA1357E"] = {
-["SpecId"] = 1480,
-["LastSeen"] = 9500.6704162,
-},
 ["Player-86-09F25340"] = {
 ["SpecId"] = 71,
 ["LastSeen"] = 2334.6696812,
 ["LastAttempt"] = 2334.3127986,
-},
-["Player-11-0E645737"] = {
-["LastSeen"] = 22163.2106498,
-["SpecId"] = 258,
-},
-["Player-1427-0ECB426B"] = {
-["SpecId"] = 268,
-["LastAttempt"] = 9872.2857311,
-["LastSeen"] = 9872.651961700001,
-},
-["Player-3676-0EB79893"] = {
-["LastSeen"] = 37047.5992378,
-["SpecId"] = 66,
-},
-["Player-1428-0DA14A63"] = {
-["SpecId"] = 256,
-["LastSeen"] = 18698.4909098,
 },
 ["Player-3684-0D016BD6"] = {
 ["SpecId"] = 258,
 ["LastSeen"] = 22575.1507284,
 ["LastAttempt"] = 22574.7523471,
 },
-["Player-11-0EA2DC4E"] = {
-["LastSeen"] = 25201.2290245,
-["SpecId"] = 268,
-},
-["Player-3207-05567D09"] = {
-["SpecId"] = 254,
-["LastSeen"] = 2669.9387097,
-["LastAttempt"] = 2669.7677897,
-},
-["Player-3675-0AE69D09"] = {
-["LastSeen"] = 14515.3151272,
-["SpecId"] = 254,
-},
-["Player-1168-0970F162"] = {
-["SpecId"] = 262,
-["LastSeen"] = 35188.0842885,
-},
 ["Player-125-00C490F3"] = {
 ["SpecId"] = 267,
 ["LastSeen"] = 16920.059282,
 ["LastAttempt"] = 16919.6686762,
-},
-["Player-73-0F662250"] = {
-["SpecId"] = 254,
-["LastAttempt"] = 21142.8326794,
-["LastSeen"] = 21143.8907004,
 },
 ["Player-117-0AEC3529"] = {
 ["SpecId"] = 251,
 ["LastAttempt"] = 23420.43,
 ["LastSeen"] = 23420.254343,
 },
-["Player-52-0E0824D5"] = {
-["SpecId"] = 64,
-["LastAttempt"] = 21212.9610399,
-["LastSeen"] = 21213.6206461,
-},
-["Player-3661-098D3439"] = {
-["SpecId"] = 254,
-["LastSeen"] = 15844.7971528,
-["LastAttempt"] = 15844.4859864,
-},
-["Player-11-0EB5D9F7"] = {
-["LastSeen"] = 21499.9437521,
-["SpecId"] = 64,
-},
-["Player-3675-079159FF"] = {
-["SpecId"] = 73,
-["LastAttempt"] = 37688.8854,
-["LastSeen"] = 37689.2427054,
-},
-["Player-3678-0CEF06FB"] = {
-["SpecId"] = 269,
-["LastAttempt"] = 54946.69839010001,
-["LastSeen"] = 55359.09750700001,
-},
-["Player-57-0DDBF1F1"] = {
-["SpecId"] = 72,
-["LastSeen"] = 20160.7848906,
-["LastAttempt"] = 20156.3894649,
-},
-["Player-11-0EAEDF3A"] = {
-["LastSeen"] = 2165.5012173,
+["Player-1428-0DA14A63"] = {
 ["SpecId"] = 256,
+["LastSeen"] = 18698.4909098,
+},
+["Player-1168-0970F162"] = {
+["SpecId"] = 262,
+["LastSeen"] = 35188.0842885,
 },
 ["Player-3676-0EB908CC"] = {
 ["LastSeen"] = 29576.1242869,
 ["SpecId"] = 72,
-},
-["Player-1147-096AE25D"] = {
-["SpecId"] = 254,
-["LastSeen"] = 47691.9321485,
 },
 ["Player-1168-0ADC559D"] = {
 ["SpecId"] = 251,
 ["LastAttempt"] = 39316.86193090001,
 ["LastSeen"] = 39316.9730952,
 },
+["Player-60-0EA956E6"] = {
+["SpecId"] = 105,
+["LastSeen"] = 37834.13248730001,
+["LastAttempt"] = 37833.8675395,
+},
 ["Player-60-0FE642F6"] = {
 ["SpecId"] = 261,
 ["LastAttempt"] = 20049.0732895,
 ["LastSeen"] = 20049.2689306,
 },
-["Player-11-0EB59CA5"] = {
-["SpecId"] = 577,
-["LastSeen"] = 10015.9728641,
-},
-["Player-60-0EA956E6"] = {
-["SpecId"] = 105,
-["LastSeen"] = 37834.13248730001,
-["LastAttempt"] = 37833.8675395,
+["Player-3676-0E4B3079"] = {
+["SpecId"] = 1480,
+["LastAttempt"] = 24033.9766211,
+["LastSeen"] = 24034.8397275,
 },
 ["Player-1136-09213469"] = {
 ["LastSeen"] = 22394.7396075,
@@ -27811,29 +26210,6 @@ FrameSortDB = {
 ["LastSeen"] = 4385.3423885,
 ["LastAttempt"] = 4385.2217713,
 },
-["Player-11-0E4933D3"] = {
-["SpecId"] = 253,
-["LastSeen"] = 3674.538921,
-},
-["Player-3676-0E4B3079"] = {
-["SpecId"] = 1480,
-["LastAttempt"] = 24033.9766211,
-["LastSeen"] = 24034.8397275,
-},
-["Player-3721-0C56270F"] = {
-["SpecId"] = 254,
-["LastAttempt"] = 17202.3898016,
-["LastSeen"] = 17202.9616097,
-},
-["Player-11-0EB4F77F"] = {
-["LastSeen"] = 11559.9386757,
-["SpecId"] = 258,
-},
-["Player-11-0EB489D5"] = {
-["SpecId"] = 256,
-["LastSeen"] = 19224.4882792,
-["LastAttempt"] = 19224.159162,
-},
 ["Player-11-0EB2EA87"] = {
 ["LastSeen"] = 2316.5233131,
 ["SpecId"] = 261,
@@ -27842,52 +26218,1840 @@ FrameSortDB = {
 ["SpecId"] = 269,
 ["LastSeen"] = 17765.5122696,
 },
-["Player-1138-09304758"] = {
-["SpecId"] = 258,
-["LastAttempt"] = 11301.0474641,
-["LastSeen"] = 11301.167187,
-},
-["Player-11-0EB5C781"] = {
-["SpecId"] = 70,
-["LastSeen"] = 16924.1125497,
-["LastAttempt"] = 16923.8386579,
-},
-["Player-104-0EAB45C0"] = {
-["SpecId"] = 257,
-["LastSeen"] = 21553.2167849,
-["LastAttempt"] = 21378.9373199,
-},
 ["Player-11-0EAE04DB"] = {
 ["SpecId"] = 70,
 ["LastSeen"] = 18286.7134451,
-},
-["Player-11-0EB56DE4"] = {
-["SpecId"] = 261,
-["LastAttempt"] = 21050.7958644,
-["LastSeen"] = 21051.5053734,
-},
-["Player-60-0FABA6CD"] = {
-["SpecId"] = 252,
-["LastSeen"] = 35379.4576185,
 },
 ["Player-3209-09CAD65F"] = {
 ["SpecId"] = 105,
 ["LastAttempt"] = 45653.5586529,
 ["LastSeen"] = 45651.40242280001,
 },
-["Player-76-0B29FBD4"] = {
-["SpecId"] = 102,
-["LastSeen"] = 42852.37362850001,
-},
-["Player-60-0EAB12A4"] = {
-["SpecId"] = 65,
-["LastAttempt"] = 32982.4187217,
-["LastSeen"] = 33194.85254360001,
+["Player-76-0C1A6653"] = {
+["SpecId"] = 1480,
+["LastSeen"] = 37576.31360820001,
+["LastAttempt"] = 37576.0172286,
 },
 ["Player-73-09AA86F6"] = {
 ["SpecId"] = 252,
 ["LastAttempt"] = 24060.6297651,
 ["LastSeen"] = 24060.9400991,
+},
+["Player-11-0EB489D5"] = {
+["SpecId"] = 256,
+["LastSeen"] = 19224.4882792,
+["LastAttempt"] = 19224.159162,
+},
+["Player-3675-0AF7ADC8"] = {
+["LastSeen"] = 21281.4726818,
+["SpecId"] = 262,
+},
+["Player-11-0E58A2A1"] = {
+["LastSeen"] = 11038.5059526,
+["SpecId"] = 253,
+},
+["Player-53-0E090795"] = {
+["SpecId"] = 102,
+["LastSeen"] = 42852.3738628,
+},
+["Player-1428-0ED708F9"] = {
+["LastSeen"] = 20090.2844062,
+["SpecId"] = 64,
+},
+["Player-1175-0FBD82D4"] = {
+["SpecId"] = 577,
+["LastSeen"] = 20528.9433391,
+},
+["Player-3726-0BF39CA7"] = {
+["SpecId"] = 103,
+["LastAttempt"] = 17243.167021,
+["LastSeen"] = 17243.5335089,
+},
+["Player-3684-0E92E5AD"] = {
+["SpecId"] = 72,
+["LastAttempt"] = 40537.2155843,
+["LastSeen"] = 40537.5678532,
+},
+["Player-5-0EB506BE"] = {
+["SpecId"] = 65,
+["LastSeen"] = 29276.0701537,
+["LastAttempt"] = 29275.7245466,
+},
+["Player-1185-0EB36ADE"] = {
+["SpecId"] = 270,
+["LastSeen"] = 43806.1679469,
+},
+["Player-77-0FCC433B"] = {
+["LastSeen"] = 2312.3762721,
+["SpecId"] = 267,
+},
+["Player-76-0C109AD6"] = {
+["SpecId"] = 72,
+["LastSeen"] = 42852.3739823,
+},
+["Player-3675-0AFB5CF3"] = {
+["LastSeen"] = 16686.0272488,
+["SpecId"] = 253,
+},
+["Player-11-0E483976"] = {
+["SpecId"] = 70,
+["LastAttempt"] = 46840.34105900001,
+["LastSeen"] = 46840.6107873,
+},
+["Player-11-0DB3BE30"] = {
+["LastSeen"] = 16893.7355869,
+["SpecId"] = 254,
+},
+["Player-3678-0D61AF54"] = {
+["SpecId"] = 1467,
+["LastSeen"] = 41676.3779291,
+},
+["Player-11-0E8DF654"] = {
+["SpecId"] = 254,
+["LastSeen"] = 19698.9015437,
+},
+["Player-47-098E8B79"] = {
+["LastSeen"] = 16893.7357115,
+["SpecId"] = 71,
+},
+["Player-76-0A24008D"] = {
+["LastSeen"] = 14515.3148716,
+["SpecId"] = 1480,
+},
+["Player-11-0E65DEA6"] = {
+["SpecId"] = 250,
+["LastAttempt"] = 17231.939939,
+["LastSeen"] = 17231.7722085,
+},
+["Player-57-0DC5FD11"] = {
+["SpecId"] = 261,
+["LastAttempt"] = 2672.2881367,
+["LastSeen"] = 2617.9318898,
+},
+["Player-73-0E90B607"] = {
+["SpecId"] = 264,
+["LastAttempt"] = 24147.2436418,
+["LastSeen"] = 24147.5407348,
+},
+["Player-11-0EB50BD8"] = {
+["SpecId"] = 577,
+["LastSeen"] = 17479.274657,
+},
+["Player-5-0BBF357C"] = {
+["LastSeen"] = 29576.1248604,
+["SpecId"] = 103,
+},
+["Player-3725-0C221DAC"] = {
+["SpecId"] = 1473,
+["LastSeen"] = 37549.3775326,
+["LastAttempt"] = 37548.9410847,
+},
+["Player-86-09E979E4"] = {
+["SpecId"] = 103,
+["LastAttempt"] = 47799.694341,
+["LastSeen"] = 47799.9301103,
+},
+["Player-60-0F4F5CC5"] = {
+["SpecId"] = 256,
+["LastSeen"] = 18286.713503,
+},
+["Player-11-0EB5A93C"] = {
+["SpecId"] = 63,
+["LastAttempt"] = 26523.8212348,
+["LastSeen"] = 26524.1420812,
+},
+["Player-3676-0E7BC1DA"] = {
+["SpecId"] = 251,
+["LastAttempt"] = 40819.7032148,
+["LastSeen"] = 40819.5050563,
+},
+["Player-57-0D76A348"] = {
+["SpecId"] = 1480,
+["LastSeen"] = 20131.4476773,
+["LastAttempt"] = 20131.1964029,
+},
+["Player-3676-0D6F025E"] = {
+["SpecId"] = 258,
+["LastSeen"] = 15816.5937725,
+["LastAttempt"] = 15816.2238484,
+},
+["Player-3675-08F5E35B"] = {
+["SpecId"] = 70,
+["LastSeen"] = 43006.4058883,
+},
+["Player-60-003A12E8"] = {
+["SpecId"] = 253,
+["LastAttempt"] = 20794.5644741,
+["LastSeen"] = 20794.7376041,
+},
+["Player-11-0EA0B823"] = {
+["SpecId"] = 252,
+["LastSeen"] = 2897.8182869,
+},
+["Player-11-0AD499EA"] = {
+["SpecId"] = 64,
+["LastSeen"] = 42167.1777479,
+},
+["Player-73-0FBEA0EE"] = {
+["SpecId"] = 268,
+["LastAttempt"] = 24047.4683299,
+["LastSeen"] = 24047.7777908,
+},
+["Player-86-09EE2FB0"] = {
+["SpecId"] = 70,
+["LastSeen"] = 54949.61196350001,
+},
+["Player-76-0BE4C1F5"] = {
+["SpecId"] = 104,
+["LastAttempt"] = 25719.6427363,
+["LastSeen"] = 25719.9358245,
+},
+["Player-67-0FA17C4C"] = {
+["SpecId"] = 264,
+["LastSeen"] = 49431.8096182,
+["LastAttempt"] = 49431.3838495,
+},
+["Player-3678-095E6918"] = {
+["SpecId"] = 1480,
+["LastAttempt"] = 42536.9201565,
+["LastSeen"] = 42537.31925740001,
+},
+["Player-3725-08E2CD68"] = {
+["SpecId"] = 264,
+["LastSeen"] = 29277.2483011,
+["LastAttempt"] = 29276.7453829,
+},
+["Player-11-0E648712"] = {
+["SpecId"] = 251,
+["LastAttempt"] = 2757.0737352,
+["LastSeen"] = 2757.4201916,
+},
+["Player-3676-0EDD44D8"] = {
+["SpecId"] = 70,
+["LastSeen"] = 20079.5636178,
+["LastAttempt"] = 20078.3330797,
+},
+["Player-3693-07629945"] = {
+["SpecId"] = 258,
+["LastSeen"] = 18880.7962674,
+},
+["Player-5-0BBBEA7A"] = {
+["SpecId"] = 66,
+["LastAttempt"] = 29575.2857701,
+["LastSeen"] = 29575.6406874,
+},
+["Player-60-0EC4037D"] = {
+["LastSeen"] = 37535.7121113,
+["SpecId"] = 250,
+},
+["Player-60-0E30D303"] = {
+["SpecId"] = 264,
+["LastSeen"] = 22666.4103648,
+["LastAttempt"] = 22576.2513153,
+},
+["Player-12-0E8947EE"] = {
+["SpecId"] = 70,
+["LastSeen"] = 43057.35565110001,
+},
+["Player-155-0C0A4E33"] = {
+["SpecId"] = 64,
+["LastAttempt"] = 42841.4114483,
+["LastSeen"] = 42841.7227351,
+},
+["Player-3694-0AEAE297"] = {
+["SpecId"] = 265,
+["LastSeen"] = 42294.49448340001,
+},
+["Player-121-09645612"] = {
+["SpecId"] = 103,
+["LastSeen"] = 54909.8486974,
+["LastAttempt"] = 54909.5292197,
+},
+["Player-5-0E20AD10"] = {
+["SpecId"] = 253,
+["LastSeen"] = 2318.6654785,
+["LastAttempt"] = 2318.2935361,
+},
+["Player-11-0E4B48B2"] = {
+["SpecId"] = 70,
+["LastSeen"] = 47691.9323946,
+},
+["Player-162-0C07DA40"] = {
+["SpecId"] = 65,
+["LastSeen"] = 37564.1584514,
+["LastAttempt"] = 37563.7934065,
+},
+["Player-3676-0E8F6F2D"] = {
+["LastSeen"] = 2482.828029,
+["SpecId"] = 71,
+},
+["Player-1171-0ADD5000"] = {
+["SpecId"] = 71,
+["LastAttempt"] = 54893.1633263,
+["LastSeen"] = 54894.6842221,
+},
+["Player-115-04CE3F25"] = {
+["SpecId"] = 268,
+["LastAttempt"] = 23835.2238075,
+["LastSeen"] = 25193.9336921,
+},
+["Player-73-0F07DF5F"] = {
+["SpecId"] = 269,
+["LastSeen"] = 24516.4061113,
+},
+["Player-11-0E3E5694"] = {
+["SpecId"] = 270,
+["LastAttempt"] = 17830.7276702,
+["LastSeen"] = 17830.9573084,
+},
+["Player-3675-0A22E6A0"] = {
+["SpecId"] = 64,
+["LastSeen"] = 10083.0525297,
+},
+["Player-77-0FD43E4D"] = {
+["SpecId"] = 250,
+["LastAttempt"] = 18387.6214518,
+["LastSeen"] = 18387.9944631,
+},
+["Player-113-07B47DD6"] = {
+["SpecId"] = 264,
+["LastSeen"] = 42295.7765177,
+},
+["Player-11-0EAA9BFB"] = {
+["LastSeen"] = 10977.5059757,
+["SpecId"] = 73,
+},
+["Player-11-0E552D5C"] = {
+["LastSeen"] = 23053.546763,
+["SpecId"] = 64,
+},
+["Player-60-0FABA6CD"] = {
+["SpecId"] = 252,
+["LastSeen"] = 35379.4576185,
+},
+["Player-11-0E4874E9"] = {
+["SpecId"] = 264,
+["LastAttempt"] = 55199.6793689,
+["LastSeen"] = 55199.9212578,
+},
+["Player-3676-090DF1A7"] = {
+["SpecId"] = 263,
+["LastSeen"] = 16440.2563285,
+["LastAttempt"] = 15880.0163789,
+},
+["Player-3675-0A781040"] = {
+["SpecId"] = 70,
+["LastSeen"] = 10083.0527619,
+},
+["Player-61-0ECDE749"] = {
+["SpecId"] = 258,
+["LastSeen"] = 20762.153363,
+["LastAttempt"] = 20103.5305933,
+},
+["Player-11-0EB55FA5"] = {
+["SpecId"] = 266,
+["LastSeen"] = 11787.9863043,
+},
+["Player-11-0EB5D9F7"] = {
+["LastSeen"] = 21499.9437521,
+["SpecId"] = 64,
+},
+["Player-11-0E645737"] = {
+["LastSeen"] = 22163.2106498,
+["SpecId"] = 258,
+},
+["Player-57-0DD54D20"] = {
+["SpecId"] = 66,
+["LastSeen"] = 48932.5511018,
+["LastAttempt"] = 48826.91626280001,
+},
+["Player-5-0EB62624"] = {
+["LastSeen"] = 3203.4769291,
+["SpecId"] = 270,
+},
+["Player-1175-0D69F2D1"] = {
+["SpecId"] = 103,
+["LastSeen"] = 2758.380444,
+["LastAttempt"] = 2758.0807718,
+},
+["Player-3676-0E95797B"] = {
+["SpecId"] = 1480,
+["LastSeen"] = 26221.2022325,
+["LastAttempt"] = 26221.0210115,
+},
+["Player-3675-0AF454D6"] = {
+["SpecId"] = 65,
+["LastSeen"] = 54894.6846901,
+},
+["Player-3675-0AFF14A3"] = {
+["SpecId"] = 1473,
+["LastAttempt"] = 24049.4892073,
+["LastSeen"] = 24049.8409826,
+},
+["Player-86-0130C80D"] = {
+["SpecId"] = 65,
+["LastSeen"] = 24329.7772378,
+},
+["Player-3684-0EC27A4D"] = {
+["SpecId"] = 70,
+["LastAttempt"] = 48238.5657271,
+["LastSeen"] = 48238.4448486,
+},
+["Player-5-036C6EC1"] = {
+["LastSeen"] = 29576.1247874,
+["SpecId"] = 62,
+},
+["Player-1138-09672958"] = {
+["SpecId"] = 254,
+["LastAttempt"] = 12340.7955261,
+["LastSeen"] = 12341.0697194,
+},
+["Player-11-0B61DD0A"] = {
+["SpecId"] = 265,
+["LastSeen"] = 19698.9006372,
+},
+["Player-86-09EE0510"] = {
+["SpecId"] = 64,
+["LastAttempt"] = 20559.5488579,
+["LastSeen"] = 20559.7803244,
+},
+["Player-57-0DD77D1C"] = {
+["SpecId"] = 258,
+["LastSeen"] = 20105.3966156,
+["LastAttempt"] = 20106.0350277,
+},
+["Player-11-0E99B2A4"] = {
+["SpecId"] = 270,
+["LastSeen"] = 17190.6334034,
+["LastAttempt"] = 17190.3314301,
+},
+["Player-3675-09FF3229"] = {
+["LastSeen"] = 2314.4234258,
+["SpecId"] = 258,
+},
+["Player-3693-0733DE46"] = {
+["SpecId"] = 252,
+["LastSeen"] = 40395.5714728,
+["LastAttempt"] = 40330.22235030001,
+},
+["Player-11-0EB2A0D9"] = {
+["SpecId"] = 103,
+["LastAttempt"] = 17391.5932046,
+["LastSeen"] = 17391.8674646,
+},
+["Player-104-0D863651"] = {
+["SpecId"] = 1480,
+["LastSeen"] = 22986.3899049,
+["LastAttempt"] = 22587.2916401,
+},
+["Player-3725-0AE07805"] = {
+["SpecId"] = 269,
+["LastSeen"] = 37565.1786711,
+["LastAttempt"] = 37564.810445,
+},
+["Player-3661-09641512"] = {
+["SpecId"] = 64,
+["LastAttempt"] = 18271.960856,
+["LastSeen"] = 18272.5050503,
+},
+["Player-64-0FEE19F2"] = {
+["SpecId"] = 64,
+["LastSeen"] = 2672.0800256,
+["LastAttempt"] = 2671.791804,
+},
+["Player-158-042983BB"] = {
+["SpecId"] = 254,
+["LastSeen"] = 37716.8659578,
+["LastAttempt"] = 37716.7195594,
+},
+["Player-11-0E39B752"] = {
+["LastSeen"] = 2367.0764129,
+["SpecId"] = 264,
+},
+["Player-3725-072413B2"] = {
+["SpecId"] = 102,
+["LastSeen"] = 47691.9323451,
+},
+["Player-3684-0E6BE8FA"] = {
+["SpecId"] = 103,
+["LastAttempt"] = 42726.5032131,
+["LastSeen"] = 42727.5835175,
+},
+["Player-3675-0AF91D3A"] = {
+["SpecId"] = 1480,
+["LastSeen"] = 10083.0523674,
+},
+["Player-1168-0ACB5855"] = {
+["LastSeen"] = 14515.3149848,
+["SpecId"] = 72,
+},
+["Player-1185-0D589032"] = {
+["SpecId"] = 104,
+["LastSeen"] = 16917.4501162,
+["LastAttempt"] = 16917.1496061,
+},
+["Player-11-0AA66BD0"] = {
+["SpecId"] = 265,
+["LastAttempt"] = 13253.1790933,
+["LastSeen"] = 13253.6408705,
+},
+["Player-11-0E5875DD"] = {
+["SpecId"] = 102,
+["LastAttempt"] = 42167.2366128,
+["LastSeen"] = 42167.4657839,
+},
+["Player-120-0A8C147E"] = {
+["SpecId"] = 64,
+["LastAttempt"] = 47927.67407050001,
+["LastSeen"] = 47927.97836060001,
+},
+["Player-1185-0EA39E39"] = {
+["LastSeen"] = 16893.7356535,
+["SpecId"] = 1468,
+},
+["Player-11-0E655E61"] = {
+["SpecId"] = 263,
+["LastSeen"] = 17350.4705331,
+},
+["Player-73-0FD4553A"] = {
+["SpecId"] = 102,
+["LastAttempt"] = 24097.6188164,
+["LastSeen"] = 24097.9567017,
+},
+["Player-61-0FC5D8C8"] = {
+["SpecId"] = 71,
+["LastAttempt"] = 13249.665238,
+["LastSeen"] = 13250.0115188,
+},
+["Player-3684-0EB7FF61"] = {
+["SpecId"] = 252,
+["LastSeen"] = 48524.6853218,
+["LastAttempt"] = 48545.43149320001,
+},
+["Player-60-0F2F2FE9"] = {
+["SpecId"] = 577,
+["LastAttempt"] = 54960.02573430001,
+["LastSeen"] = 54960.6598329,
+},
+["Player-3209-0B79D72F"] = {
+["SpecId"] = 66,
+["LastAttempt"] = 35390.1166953,
+["LastSeen"] = 35390.42514940001,
+},
+["Player-11-0EA5AC7F"] = {
+["LastSeen"] = 15578.125834,
+["SpecId"] = 1480,
+},
+["Player-11-0EB41D2E"] = {
+["LastSeen"] = 22016.9767366,
+["SpecId"] = 105,
+},
+["Player-5-06F6766B"] = {
+["LastSeen"] = 29576.1248254,
+["SpecId"] = 253,
+},
+["Player-57-0E1172E4"] = {
+["LastSeen"] = 4256.676374000001,
+["SpecId"] = 253,
+},
+["Player-1138-0987D139"] = {
+["SpecId"] = 64,
+["LastSeen"] = 10083.0524562,
+},
+["Player-1427-092095C9"] = {
+["SpecId"] = 1480,
+["LastSeen"] = 5138.269090700001,
+["LastAttempt"] = 5018.1664462,
+},
+["Player-1171-0AD5BE77"] = {
+["SpecId"] = 252,
+["LastAttempt"] = 24435.9739065,
+["LastSeen"] = 24436.323365,
+},
+["Player-3675-0A43E46F"] = {
+["SpecId"] = 269,
+["LastAttempt"] = 47799.1738043,
+["LastSeen"] = 47799.4986539,
+},
+["Player-1136-096BEFFA"] = {
+["SpecId"] = 64,
+["LastAttempt"] = 12298.0396032,
+["LastSeen"] = 12298.4061626,
+},
+["Player-157-0C0C9658"] = {
+["LastSeen"] = 14515.3147549,
+["SpecId"] = 269,
+},
+["Player-84-0A69F335"] = {
+["SpecId"] = 253,
+["LastSeen"] = 22561.5061727,
+["LastAttempt"] = 22561.0911768,
+},
+["Player-11-0E96178C"] = {
+["LastSeen"] = 11082.5725229,
+["SpecId"] = 251,
+},
+["Player-57-0E1DF2FC"] = {
+["SpecId"] = 64,
+["LastSeen"] = 4870.8473457,
+["LastAttempt"] = 4870.704837,
+},
+["Player-3678-0962E87D"] = {
+["LastSeen"] = 29576.1243817,
+["SpecId"] = 577,
+},
+["Player-3676-0ED86B45"] = {
+["SpecId"] = 64,
+["LastAttempt"] = 23702.6758205,
+["LastSeen"] = 23921.4792924,
+},
+["Player-3209-0B1CE41A"] = {
+["SpecId"] = 267,
+["LastSeen"] = 41784.80258510001,
+["LastAttempt"] = 41784.4365238,
+},
+["Player-5-0E4AD2DC"] = {
+["SpecId"] = 256,
+["LastSeen"] = 17165.5107614,
+["LastAttempt"] = 17165.2049163,
+},
+["Player-60-0FE9F03A"] = {
+["SpecId"] = 266,
+["LastAttempt"] = 21079.5691707,
+["LastSeen"] = 21080.5580668,
+},
+["Player-3675-0AA85CD4"] = {
+["SpecId"] = 255,
+["LastSeen"] = 20129.9242118,
+["LastAttempt"] = 20132.1983211,
+},
+["Player-158-056476CD"] = {
+["SpecId"] = 102,
+["LastAttempt"] = 20767.8895597,
+["LastSeen"] = 20768.2445596,
+},
+["Player-3208-0CF7E32C"] = {
+["SpecId"] = 70,
+["LastSeen"] = 35436.3649679,
+},
+["Player-3693-0DCD02C4"] = {
+["SpecId"] = 262,
+["LastAttempt"] = 29264.0530359,
+["LastSeen"] = 29264.3822852,
+},
+["Player-1171-0ACA0F2B"] = {
+["SpecId"] = 270,
+["LastSeen"] = 16686.7035544,
+["LastAttempt"] = 16686.5517597,
+},
+["Player-11-0E6C174E"] = {
+["SpecId"] = 66,
+["LastAttempt"] = 47993.42079130001,
+["LastSeen"] = 47993.7067293,
+},
+["Player-1136-060D82F9"] = {
+["LastSeen"] = 19224.4886565,
+["SpecId"] = 267,
+},
+["Player-118-091A266E"] = {
+["SpecId"] = 253,
+["LastSeen"] = 20528.9433916,
+},
+["Player-11-0EB4E61B"] = {
+["LastSeen"] = 21328.4908897,
+["SpecId"] = 250,
+},
+["Player-11-0E7615CB"] = {
+["SpecId"] = 64,
+["LastSeen"] = 8227.0280392,
+},
+["Player-57-0DF78DB9"] = {
+["SpecId"] = 1473,
+["LastSeen"] = 22586.587424,
+["LastAttempt"] = 22586.28076,
+},
+["Player-3725-0C58534A"] = {
+["SpecId"] = 265,
+["LastAttempt"] = 13244.6683977,
+["LastSeen"] = 13245.1971545,
+},
+["Player-76-0C17484F"] = {
+["SpecId"] = 255,
+["LastSeen"] = 42852.3740612,
+},
+["Player-11-0EB4DF91"] = {
+["LastSeen"] = 16686.0272974,
+["SpecId"] = 255,
+},
+["Player-5-0BC986DD"] = {
+["SpecId"] = 102,
+["LastSeen"] = 48239.44696920001,
+},
+["Player-11-0E30A337"] = {
+["SpecId"] = 105,
+["LastSeen"] = 16390.3812179,
+},
+["Player-11-0E5ED260"] = {
+["SpecId"] = 105,
+["LastSeen"] = 17649.7031857,
+},
+["Player-11-0E75DE02"] = {
+["LastSeen"] = 21774.0986853,
+["SpecId"] = 72,
+},
+["Player-5-0EB210E6"] = {
+["SpecId"] = 104,
+["LastAttempt"] = 5979.8880611,
+["LastSeen"] = 6379.076413000001,
+},
+["Player-3675-0AE019A2"] = {
+["SpecId"] = 269,
+["LastAttempt"] = 12312.1329604,
+["LastSeen"] = 12312.3619307,
+},
+["Player-104-0C70DDF6"] = {
+["SpecId"] = 268,
+["LastSeen"] = 15846.8309366,
+["LastAttempt"] = 15846.5012387,
+},
+["Player-3661-097050E8"] = {
+["LastSeen"] = 24159.9818942,
+["SpecId"] = 268,
+},
+["Player-11-0EB5DE44"] = {
+["LastSeen"] = 13901.4312174,
+["SpecId"] = 250,
+},
+["Player-5-0DE23006"] = {
+["SpecId"] = 253,
+["LastSeen"] = 12297.3782912,
+},
+["Player-3676-0E4C9A31"] = {
+["LastSeen"] = 14507.8166776,
+["SpecId"] = 1468,
+},
+["Player-3684-0CCC003E"] = {
+["SpecId"] = 262,
+["LastSeen"] = 48892.5774811,
+["LastAttempt"] = 48820.000366,
+},
+["Player-3661-09801E8A"] = {
+["LastSeen"] = 2312.7777008,
+["SpecId"] = 1480,
+},
+["Player-3725-03F09238"] = {
+["LastSeen"] = 18623.6526776,
+["SpecId"] = 64,
+},
+["Player-77-0EF687BD"] = {
+["LastSeen"] = 29097.5287075,
+["SpecId"] = 581,
+},
+["Player-3675-0AA7E886"] = {
+["SpecId"] = 260,
+["LastSeen"] = 10083.052409,
+},
+["Player-5-0E62BA36"] = {
+["SpecId"] = 253,
+["LastSeen"] = 19698.9015897,
+},
+["Player-1168-09493B11"] = {
+["SpecId"] = 262,
+["LastSeen"] = 14515.3142584,
+["LastAttempt"] = 14515.0300158,
+},
+["Player-52-07FE7F1C"] = {
+["SpecId"] = 254,
+["LastSeen"] = 19698.9012794,
+},
+["Player-11-0BA32D75"] = {
+["LastSeen"] = 14264.3600309,
+["SpecId"] = 252,
+},
+["Player-3721-0C4CCF11"] = {
+["SpecId"] = 64,
+["LastSeen"] = 35117.0292322,
+},
+["Player-5-0E34E754"] = {
+["SpecId"] = 70,
+["LastSeen"] = 37549.7254552,
+["LastAttempt"] = 37549.52181380001,
+},
+["Player-60-0BFDF757"] = {
+["SpecId"] = 102,
+["LastSeen"] = 37564.7282348,
+["LastAttempt"] = 37564.3036015,
+},
+["Player-71-0D55AB0F"] = {
+["SpecId"] = 258,
+["LastSeen"] = 20930.8419176,
+["LastAttempt"] = 20930.2243515,
+},
+["Player-11-0E9AD847"] = {
+["SpecId"] = 102,
+["LastSeen"] = 47696.31941410001,
+},
+["Player-11-0E4F7624"] = {
+["SpecId"] = 261,
+["LastSeen"] = 42295.1801942,
+["LastAttempt"] = 42294.95333220001,
+},
+["Player-3676-0E27E588"] = {
+["SpecId"] = 264,
+["LastAttempt"] = 9872.7859897,
+["LastSeen"] = 6359.506440800001,
+},
+["Player-3684-0EDAE0A1"] = {
+["SpecId"] = 102,
+["LastAttempt"] = 41426.5657462,
+["LastSeen"] = 41498.7170558,
+},
+["Player-3676-0ED18AC8"] = {
+["SpecId"] = 62,
+["LastSeen"] = 25777.1943228,
+},
+["Player-57-0D85D524"] = {
+["SpecId"] = 254,
+["LastAttempt"] = 18327.4165567,
+["LastSeen"] = 18328.0011125,
+},
+["Player-11-0EB389B0"] = {
+["SpecId"] = 254,
+["LastAttempt"] = 19433.1230898,
+["LastSeen"] = 19433.4876012,
+},
+["Player-60-0FEB255B"] = {
+["SpecId"] = 261,
+["LastAttempt"] = 17188.8225944,
+["LastSeen"] = 17189.1590406,
+},
+["Player-11-0BB10BB8"] = {
+["LastSeen"] = 21408.0498054,
+["SpecId"] = 70,
+},
+["Player-76-0B29FBD4"] = {
+["SpecId"] = 102,
+["LastSeen"] = 42852.37362850001,
+},
+["Player-11-0E6D8CFA"] = {
+["SpecId"] = 64,
+["LastSeen"] = 3280.9382057,
+},
+["Player-11-0E4402F4"] = {
+["SpecId"] = 253,
+["LastSeen"] = 47927.97882800001,
+},
+["Player-3693-0EDB22F6"] = {
+["SpecId"] = 261,
+["LastSeen"] = 29290.2018863,
+["LastAttempt"] = 29289.8914333,
+},
+["Player-1185-0E29AFDF"] = {
+["SpecId"] = 72,
+["LastAttempt"] = 17284.9911184,
+["LastSeen"] = 17285.3032594,
+},
+["Player-11-0EA825BD"] = {
+["LastSeen"] = 13492.3160174,
+["SpecId"] = 64,
+},
+["Player-11-0E91E59B"] = {
+["LastSeen"] = 16234.5747998,
+["SpecId"] = 262,
+},
+["Player-76-0BE06116"] = {
+["SpecId"] = 71,
+["LastSeen"] = 26220.8207537,
+["LastAttempt"] = 26220.5190945,
+},
+["Player-3684-0E4D4F2F"] = {
+["SpecId"] = 1480,
+["LastAttempt"] = 55408.4269875,
+["LastSeen"] = 55408.77537610001,
+},
+["Player-11-0E2FF184"] = {
+["LastSeen"] = 12025.1580067,
+["SpecId"] = 70,
+},
+["Player-3675-0AD81551"] = {
+["SpecId"] = 261,
+["LastSeen"] = 43002.0289783,
+},
+["Player-11-0BCFCC6F"] = {
+["SpecId"] = 577,
+["LastSeen"] = 11630.8885447,
+},
+["Player-60-0541DAB4"] = {
+["SpecId"] = 263,
+["LastSeen"] = 37661.83049730001,
+["LastAttempt"] = 37661.5776925,
+},
+["Player-3684-08CDA8A1"] = {
+["SpecId"] = 1480,
+["LastAttempt"] = 25476.3214872,
+["LastSeen"] = 25477.7699237,
+},
+["Player-1427-0DE5451F"] = {
+["SpecId"] = 262,
+["LastSeen"] = 15914.1478321,
+["LastAttempt"] = 15815.2217151,
+},
+["Player-3675-0B02A7FF"] = {
+["SpecId"] = 253,
+["LastAttempt"] = 23891.6992571,
+["LastSeen"] = 23892.0638578,
+},
+["Player-3675-0A79F47E"] = {
+["SpecId"] = 1473,
+["LastSeen"] = 21412.0870356,
+},
+["Player-11-0E747D33"] = {
+["SpecId"] = 105,
+["LastAttempt"] = 12297.0346345,
+["LastSeen"] = 12297.3780852,
+},
+["Player-1428-0E81BD13"] = {
+["SpecId"] = 250,
+["LastAttempt"] = 35304.2009936,
+["LastSeen"] = 35304.4977365,
+},
+["Player-57-0E0B298C"] = {
+["SpecId"] = 253,
+["LastSeen"] = 3187.0595687,
+["LastAttempt"] = 3186.7775919,
+},
+["Player-57-0DAA8BDF"] = {
+["LastSeen"] = 14507.6599433,
+["SpecId"] = 65,
+},
+["Player-1136-0971AA4B"] = {
+["SpecId"] = 71,
+["LastSeen"] = 10083.0524931,
+},
+["Player-3725-0C389F8B"] = {
+["SpecId"] = 1480,
+["LastSeen"] = 29290.936383,
+["LastAttempt"] = 29290.4017752,
+},
+["Player-61-0CBA1DA9"] = {
+["SpecId"] = 577,
+["LastAttempt"] = 17492.8801544,
+["LastSeen"] = 17493.2192667,
+},
+["Player-1136-09448B14"] = {
+["SpecId"] = 1480,
+["LastSeen"] = 21229.1798379,
+["LastAttempt"] = 20105.5332004,
+},
+["Player-11-0EAED7F6"] = {
+["SpecId"] = 64,
+["LastAttempt"] = 19793.3708182,
+["LastSeen"] = 19794.372402,
+},
+["Player-11-0EAF45C7"] = {
+["SpecId"] = 65,
+["LastSeen"] = 2038.0183195,
+},
+["Player-5-0E439E36"] = {
+["LastSeen"] = 19224.4887507,
+["SpecId"] = 262,
+},
+["Player-1175-0F621970"] = {
+["SpecId"] = 258,
+["LastSeen"] = 29289.6805082,
+["LastAttempt"] = 29289.3732012,
+},
+["Player-151-06B57704"] = {
+["SpecId"] = 256,
+["LastSeen"] = 17256.6423031,
+["LastAttempt"] = 17258.3793858,
+},
+["Player-1168-0ABED20C"] = {
+["LastSeen"] = 37535.7122981,
+["SpecId"] = 105,
+},
+["Player-11-0E79BF8F"] = {
+["SpecId"] = 71,
+["LastSeen"] = 7960.432501200001,
+},
+["Player-11-0E87F9EC"] = {
+["SpecId"] = 259,
+["LastSeen"] = 48292.84898330001,
+},
+["Player-1136-096EDEE3"] = {
+["SpecId"] = 251,
+["LastAttempt"] = 2099.1783271,
+["LastSeen"] = 2099.4006079,
+},
+["Player-11-0EAB18F0"] = {
+["LastSeen"] = 21356.1447263,
+["SpecId"] = 66,
+},
+["Player-11-0E590AA3"] = {
+["LastSeen"] = 3290.1110377,
+["SpecId"] = 577,
+},
+["Player-76-0C0C093F"] = {
+["SpecId"] = 581,
+["LastSeen"] = 53592.5950574,
+["LastAttempt"] = 51548.07219000001,
+},
+["Player-11-0E34FF5E"] = {
+["LastSeen"] = 14040.4781807,
+["SpecId"] = 581,
+},
+["Player-60-0EC94A98"] = {
+["SpecId"] = 269,
+["LastSeen"] = 37551.34552990001,
+["LastAttempt"] = 37551.06467840001,
+},
+["Player-1071-0DE7041A"] = {
+["SpecId"] = 254,
+["LastAttempt"] = 20793.5599339,
+["LastSeen"] = 20793.7064527,
+},
+["Player-76-0C180250"] = {
+["LastSeen"] = 25216.9390417,
+["SpecId"] = 104,
+},
+["Player-11-0EB56E23"] = {
+["LastSeen"] = 17061.8089195,
+["SpecId"] = 266,
+},
+["Player-1185-0D28BEB1"] = {
+["SpecId"] = 257,
+["LastSeen"] = 18270.3334974,
+},
+["Player-3725-0C55A265"] = {
+["SpecId"] = 270,
+["LastSeen"] = 2643.987905,
+["LastAttempt"] = 2643.6075924,
+},
+["Player-1427-0857E1C3"] = {
+["SpecId"] = 65,
+["LastSeen"] = 45106.4562315,
+["LastAttempt"] = 45106.08469990001,
+},
+["Player-1168-0A99376B"] = {
+["SpecId"] = 267,
+["LastSeen"] = 40840.4590143,
+},
+["Player-3676-0E823586"] = {
+["SpecId"] = 70,
+["LastSeen"] = 18863.2478193,
+["LastAttempt"] = 18863.4924014,
+},
+["Player-11-0E725115"] = {
+["LastSeen"] = 2312.7776213,
+["SpecId"] = 266,
+},
+["Player-11-0ACB664E"] = {
+["LastSeen"] = 21378.3755814,
+["SpecId"] = 253,
+},
+["Player-5-0E3B96F7"] = {
+["SpecId"] = 252,
+["LastSeen"] = 2313.9973131,
+["LastAttempt"] = 2313.7828818,
+},
+["Player-11-0DC9DE34"] = {
+["SpecId"] = 268,
+["LastSeen"] = 24692.1405853,
+},
+["Player-11-0EB4CC31"] = {
+["LastSeen"] = 11927.0384605,
+["SpecId"] = 70,
+},
+["Player-60-0BE3D826"] = {
+["SpecId"] = 257,
+["LastSeen"] = 25742.1797821,
+["LastAttempt"] = 25741.8631188,
+},
+["Player-60-0A5F828E"] = {
+["SpecId"] = 71,
+["LastAttempt"] = 21594.8688837,
+["LastSeen"] = 21595.1179971,
+},
+["Player-1428-069E5798"] = {
+["SpecId"] = 253,
+["LastAttempt"] = 20794.0609147,
+["LastSeen"] = 20794.3068902,
+},
+["Player-3661-085D5B38"] = {
+["SpecId"] = 270,
+["LastSeen"] = 55863.6436082,
+},
+["Player-125-0AFE62F1"] = {
+["SpecId"] = 253,
+["LastSeen"] = 19698.9010081,
+},
+["Player-3684-0E6DDBD9"] = {
+["SpecId"] = 64,
+["LastSeen"] = 37550.91898420001,
+["LastAttempt"] = 37550.5278883,
+},
+["Player-11-0EA07A2E"] = {
+["LastSeen"] = 10578.6618054,
+["SpecId"] = 72,
+},
+["Player-57-0DF37A7B"] = {
+["SpecId"] = 265,
+["LastSeen"] = 37833.0564556,
+["LastAttempt"] = 37834.3699022,
+},
+["Player-3683-0C2297FB"] = {
+["LastSeen"] = 18623.6523843,
+["SpecId"] = 262,
+},
+["Player-11-033DAAEE"] = {
+["LastSeen"] = 29576.1242016,
+["SpecId"] = 65,
+},
+["Player-115-0883B437"] = {
+["SpecId"] = 64,
+["LastAttempt"] = 29265.0632587,
+["LastSeen"] = 29263.4077331,
+},
+["Player-1168-0AFE2235"] = {
+["SpecId"] = 103,
+["LastSeen"] = 13241.3025998,
+},
+["Player-3675-0AFF3DE7"] = {
+["SpecId"] = 270,
+["LastAttempt"] = 18285.7281019,
+["LastSeen"] = 18286.7130764,
+},
+["Player-113-0A89059E"] = {
+["SpecId"] = 258,
+["LastSeen"] = 37563.1502998,
+["LastAttempt"] = 37562.78616020001,
+},
+["Player-11-0AAD8EFA"] = {
+["LastSeen"] = 7418.054609600001,
+["SpecId"] = 581,
+},
+["Player-76-0BE8D090"] = {
+["SpecId"] = 257,
+["LastAttempt"] = 43190.49727540001,
+["LastSeen"] = 43190.7238423,
+},
+["Player-11-0E3530B7"] = {
+["SpecId"] = 577,
+["LastSeen"] = 47691.21789370001,
+},
+["Player-1136-088FD7AA"] = {
+["SpecId"] = 105,
+["LastSeen"] = 43000.5737879,
+},
+["Player-11-0E70BDA5"] = {
+["SpecId"] = 71,
+["LastSeen"] = 16849.6902476,
+},
+["Player-73-0C5E87A9"] = {
+["SpecId"] = 253,
+["LastAttempt"] = 24036.8546201,
+["LastSeen"] = 24037.0095024,
+},
+["Player-3684-0E4DC31C"] = {
+["SpecId"] = 63,
+["LastAttempt"] = 55786.4557195,
+["LastSeen"] = 55786.7983441,
+},
+["Player-60-0C61C19F"] = {
+["SpecId"] = 71,
+["LastSeen"] = 19698.9003396,
+},
+["Player-3725-0B5DFF68"] = {
+["LastSeen"] = 14515.3153065,
+["SpecId"] = 102,
+},
+["Player-76-0BDB217F"] = {
+["SpecId"] = 254,
+["LastSeen"] = 45425.91578520001,
+["LastAttempt"] = 45347.8477035,
+},
+["Player-113-0A26AC33"] = {
+["SpecId"] = 102,
+["LastSeen"] = 9238.9920399,
+["LastAttempt"] = 9238.699314000001,
+},
+["Player-57-0E1E988D"] = {
+["LastSeen"] = 29576.1244654,
+["SpecId"] = 269,
+},
+["Player-60-0FBFB625"] = {
+["SpecId"] = 581,
+["LastSeen"] = 33192.1346025,
+["LastAttempt"] = 32982.9326012,
+},
+["Player-11-0E918F74"] = {
+["SpecId"] = 64,
+["LastSeen"] = 19698.9013662,
+},
+["Player-3209-0C12D1D0"] = {
+["LastSeen"] = 20079.3621575,
+["SpecId"] = 105,
+},
+["Player-12-004F6648"] = {
+["SpecId"] = 256,
+["LastSeen"] = 22988.6452221,
+},
+["Player-3675-0AB30E84"] = {
+["SpecId"] = 1467,
+["LastSeen"] = 20532.4097014,
+},
+["Player-3725-0C14ADE1"] = {
+["SpecId"] = 1467,
+["LastSeen"] = 19697.9148436,
+},
+["Player-73-0F678590"] = {
+["SpecId"] = 72,
+["LastAttempt"] = 24063.1842345,
+["LastSeen"] = 24063.5183301,
+},
+["Player-120-04FA1E6B"] = {
+["SpecId"] = 70,
+["LastAttempt"] = 42153.70851980001,
+["LastSeen"] = 42154.008609,
+},
+["Player-76-0A6771FB"] = {
+["SpecId"] = 105,
+["LastSeen"] = 18285.4947417,
+},
+["Player-3675-0B019192"] = {
+["SpecId"] = 270,
+["LastSeen"] = 42295.7765835,
+},
+["Player-3683-0E1E6F3D"] = {
+["SpecId"] = 70,
+["LastSeen"] = 7689.2772371,
+},
+["Player-60-0B7BCB2D"] = {
+["LastSeen"] = 14515.3152376,
+["SpecId"] = 73,
+},
+["Player-125-0767302E"] = {
+["SpecId"] = 261,
+["LastSeen"] = 21594.6177503,
+},
+["Player-5-0868627B"] = {
+["SpecId"] = 70,
+["LastSeen"] = 42455.2288702,
+},
+["Player-3675-0AAF8C09"] = {
+["SpecId"] = 259,
+["LastAttempt"] = 17163.194177,
+["LastSeen"] = 17163.3381202,
+},
+["Player-11-0EB50EEA"] = {
+["LastSeen"] = 2135.4972623,
+["SpecId"] = 261,
+},
+["Player-76-05A96CD3"] = {
+["SpecId"] = 257,
+["LastAttempt"] = 42851.9877579,
+["LastSeen"] = 42852.3730254,
+},
+["Player-1138-064E1CDF"] = {
+["SpecId"] = 270,
+["LastAttempt"] = 16955.2463334,
+["LastSeen"] = 16955.5481361,
+},
+["Player-1129-0BE4E4FD"] = {
+["SpecId"] = 258,
+["LastSeen"] = 29288.6609197,
+["LastAttempt"] = 29288.3625329,
+},
+["Player-3725-0C4CB386"] = {
+["SpecId"] = 66,
+["LastSeen"] = 2277.4640328,
+["LastAttempt"] = 2073.7904826,
+},
+["Player-3661-09818675"] = {
+["LastSeen"] = 9396.655898,
+["SpecId"] = 253,
+},
+["Player-11-0EB453B1"] = {
+["SpecId"] = 64,
+["LastAttempt"] = 47733.65960940001,
+["LastSeen"] = 47734.01444000001,
+},
+["Player-3725-0C01501F"] = {
+["SpecId"] = 105,
+["LastSeen"] = 18293.524423,
+["LastAttempt"] = 18293.0608667,
+},
+["Player-84-0A47C6DE"] = {
+["SpecId"] = 103,
+["LastSeen"] = 2349.6533641,
+["LastAttempt"] = 2349.3517527,
+},
+["Player-5-0E3FF155"] = {
+["SpecId"] = 264,
+["LastSeen"] = 2312.7773487,
+["LastAttempt"] = 2312.4852759,
+},
+["Player-1168-066EB14D"] = {
+["SpecId"] = 257,
+["LastAttempt"] = 17281.9566501,
+["LastSeen"] = 17282.4173038,
+},
+["Player-3661-09616071"] = {
+["SpecId"] = 270,
+["LastSeen"] = 22986.2603421,
+["LastAttempt"] = 22985.9705421,
+},
+["Player-3678-0D511E5B"] = {
+["SpecId"] = 72,
+["LastAttempt"] = 24062.1687288,
+["LastSeen"] = 24062.5366117,
+},
+["Player-11-0EB52C09"] = {
+["LastSeen"] = 10878.5407116,
+["SpecId"] = 105,
+},
+["Player-86-09D18E6B"] = {
+["SpecId"] = 263,
+["LastSeen"] = 10083.0523271,
+},
+["Player-69-0EB717DC"] = {
+["SpecId"] = 258,
+["LastAttempt"] = 20766.8838091,
+["LastSeen"] = 20767.1218814,
+},
+["Player-3676-0CD6A356"] = {
+["SpecId"] = 252,
+["LastSeen"] = 47214.3677632,
+["LastAttempt"] = 47214.5990584,
+},
+["Player-3683-09281F89"] = {
+["LastSeen"] = 2482.8281384,
+["SpecId"] = 63,
+},
+["Player-1428-0E421972"] = {
+["SpecId"] = 70,
+["LastSeen"] = 2591.0513438,
+["LastAttempt"] = 2590.7038696,
+},
+["Player-5-0EA34284"] = {
+["LastSeen"] = 29576.1246707,
+["SpecId"] = 72,
+},
+["Player-121-09AF4F20"] = {
+["SpecId"] = 64,
+["LastAttempt"] = 24361.6418809,
+["LastSeen"] = 24361.9217431,
+},
+["Player-1427-0EC80FE3"] = {
+["SpecId"] = 73,
+["LastAttempt"] = 54910.5492241,
+["LastSeen"] = 54910.3593658,
+},
+["Player-11-0E41B2E9"] = {
+["SpecId"] = 105,
+["LastSeen"] = 25809.0685405,
+},
+["Player-60-0C9628D1"] = {
+["SpecId"] = 105,
+["LastSeen"] = 20132.1052485,
+["LastAttempt"] = 20131.6956724,
+},
+["Player-3676-0E9C4C06"] = {
+["SpecId"] = 1468,
+["LastSeen"] = 2671.5815048,
+["LastAttempt"] = 2671.2817538,
+},
+["Player-3675-0AF5B4A8"] = {
+["SpecId"] = 1468,
+["LastSeen"] = 10083.0526406,
+},
+["Player-3676-0E17A024"] = {
+["SpecId"] = 65,
+["LastSeen"] = 22586.9546318,
+["LastAttempt"] = 22586.7861616,
+},
+["Player-3675-0AF51222"] = {
+["SpecId"] = 72,
+["LastAttempt"] = 18712.0515155,
+["LastSeen"] = 18712.4605037,
+},
+["Player-3675-0AF8789A"] = {
+["SpecId"] = 270,
+["LastSeen"] = 22560.9588524,
+["LastAttempt"] = 22560.5755213,
+},
+["Player-3683-0E136EC9"] = {
+["SpecId"] = 577,
+["LastSeen"] = 25697.1729588,
+},
+["Player-3725-0C1E5367"] = {
+["SpecId"] = 71,
+["LastAttempt"] = 25703.5206674,
+["LastSeen"] = 25703.8844535,
+},
+["Player-1136-05EBC0B1"] = {
+["SpecId"] = 253,
+["LastSeen"] = 24355.2791689,
+},
+["Player-11-0E9870BB"] = {
+["LastSeen"] = 14972.8359552,
+["SpecId"] = 260,
+},
+["Player-3683-0CEF9B54"] = {
+["SpecId"] = 252,
+["LastAttempt"] = 18368.9621358,
+["LastSeen"] = 18369.0773925,
+},
+["Player-11-0EB4689E"] = {
+["SpecId"] = 64,
+["LastSeen"] = 17350.4707467,
+},
+["Player-11-0E78188F"] = {
+["LastSeen"] = 15888.3407221,
+["SpecId"] = 103,
+},
+["Player-1171-0A96AF02"] = {
+["SpecId"] = 1467,
+["LastSeen"] = 37604.4608028,
+["LastAttempt"] = 37604.3006687,
+},
+["Player-1129-0BA6B15F"] = {
+["SpecId"] = 1473,
+["LastAttempt"] = 24110.9580908,
+["LastSeen"] = 24111.26085,
+},
+["Player-96-0ED93978"] = {
+["SpecId"] = 1480,
+["LastSeen"] = 19698.9007453,
+},
+["Player-77-0FD504E9"] = {
+["SpecId"] = 265,
+["LastSeen"] = 25721.3368223,
+},
+["Player-3684-0EE1710F"] = {
+["SpecId"] = 103,
+["LastSeen"] = 25802.3217616,
+},
+["Player-11-0EA5BD65"] = {
+["SpecId"] = 70,
+["LastSeen"] = 47927.9789022,
+},
+["Player-3694-0B04A670"] = {
+["SpecId"] = 65,
+["LastSeen"] = 37791.7532048,
+["LastAttempt"] = 37791.39553820001,
+},
+["Player-114-05AF8EED"] = {
+["SpecId"] = 254,
+["LastSeen"] = 20529.4660333,
+},
+["Player-73-0FAAFD8E"] = {
+["SpecId"] = 264,
+["LastSeen"] = 47643.2788235,
+},
+["Player-60-0F931FF1"] = {
+["SpecId"] = 258,
+["LastSeen"] = 37538.6039543,
+["LastAttempt"] = 37538.2481329,
+},
+["Player-1136-0978BDB9"] = {
+["SpecId"] = 71,
+["LastAttempt"] = 11301.5499541,
+["LastSeen"] = 11301.679863,
+},
+["Player-1136-0971AB19"] = {
+["SpecId"] = 254,
+["LastSeen"] = 3176.0288026,
+["LastAttempt"] = 3175.7459754,
+},
+["Player-1184-0B339488"] = {
+["SpecId"] = 267,
+["LastAttempt"] = 39313.8545552,
+["LastSeen"] = 39314.2303275,
+},
+["Player-76-0BAF4FD7"] = {
+["SpecId"] = 258,
+["LastSeen"] = 42852.3742368,
+},
+["Player-154-05185D74"] = {
+["SpecId"] = 62,
+["LastSeen"] = 18286.7135805,
+},
+["Player-11-0EB564B4"] = {
+["SpecId"] = 252,
+["LastAttempt"] = 48298.3616865,
+["LastSeen"] = 48298.57350470001,
+},
+["Player-57-0E1DF2A5"] = {
+["SpecId"] = 268,
+["LastSeen"] = 23033.0768495,
+["LastAttempt"] = 22589.3093142,
+},
+["Player-11-0B5B41D5"] = {
+["SpecId"] = 262,
+["LastSeen"] = 19698.9004902,
+},
+["Player-58-062E4839"] = {
+["SpecId"] = 266,
+["LastSeen"] = 49228.2104258,
+["LastAttempt"] = 43973.0131219,
+},
+["Player-11-0E82BB6F"] = {
+["LastSeen"] = 11141.3393468,
+["SpecId"] = 254,
+},
+["Player-3725-0C40AC63"] = {
+["SpecId"] = 263,
+["LastAttempt"] = 40851.07783240001,
+["LastSeen"] = 40851.46570920001,
+},
+["Player-11-0EB55038"] = {
+["LastSeen"] = 22497.1239876,
+["SpecId"] = 259,
+},
+["Player-1168-09A90318"] = {
+["SpecId"] = 102,
+["LastSeen"] = 16701.985799,
+["LastAttempt"] = 16701.6231937,
+},
+["Player-86-09F27B72"] = {
+["SpecId"] = 71,
+["LastSeen"] = 37577.3783916,
+["LastAttempt"] = 37577.03553440001,
+},
+["Player-11-0B3FD50A"] = {
+["LastSeen"] = 15084.728781,
+["SpecId"] = 266,
+},
+["Player-54-0DC0559A"] = {
+["SpecId"] = 577,
+["LastAttempt"] = 37853.0922159,
+["LastSeen"] = 37853.4292944,
+},
+["Player-11-0EB11881"] = {
+["LastSeen"] = 19224.4888507,
+["SpecId"] = 72,
+},
+["Player-11-0EB3A84D"] = {
+["SpecId"] = 103,
+["LastSeen"] = 47691.9322431,
+},
+["Player-5-0EB1B0D3"] = {
+["SpecId"] = 261,
+["LastSeen"] = 47691.9315031,
+},
+["Player-117-00418BF4"] = {
+["SpecId"] = 65,
+["LastSeen"] = 25725.7016311,
+},
+["Player-11-0EB23145"] = {
+["SpecId"] = 264,
+["LastSeen"] = 2137.2008502,
+},
+["Player-3684-0EAA00D1"] = {
+["SpecId"] = 70,
+["LastSeen"] = 48254.1011984,
+["LastAttempt"] = 48253.6598871,
+},
+["Player-57-0DEADC9F"] = {
+["LastSeen"] = 4348.981892700001,
+["SpecId"] = 65,
+},
+["Player-11-0E91522C"] = {
+["LastSeen"] = 17477.6217519,
+["SpecId"] = 254,
+},
+["Player-3684-0E214351"] = {
+["SpecId"] = 252,
+["LastSeen"] = 23238.6364771,
+["LastAttempt"] = 22573.2514186,
+},
+["Player-162-0B94AD22"] = {
+["SpecId"] = 255,
+["LastSeen"] = 37760.093295,
+["LastAttempt"] = 37759.5690589,
+},
+["Player-64-06750E05"] = {
+["SpecId"] = 270,
+["LastAttempt"] = 42840.40886880001,
+["LastSeen"] = 42840.7177718,
+},
+["Player-3208-0AF424E5"] = {
+["SpecId"] = 253,
+["LastAttempt"] = 35389.61314250001,
+["LastSeen"] = 35464.8263164,
+},
+["Player-11-0E972F93"] = {
+["LastSeen"] = 11563.8059252,
+["SpecId"] = 266,
+},
+["Player-57-0D7DA206"] = {
+["SpecId"] = 70,
+["LastSeen"] = 40813.0514935,
+["LastAttempt"] = 40812.678907,
+},
+["Player-3694-06E51F40"] = {
+["SpecId"] = 265,
+["LastAttempt"] = 39320.39651760001,
+["LastSeen"] = 39320.6308177,
+},
+["Player-3694-0AE38EF7"] = {
+["SpecId"] = 262,
+["LastAttempt"] = 24401.0476776,
+["LastSeen"] = 24401.2865496,
+},
+["Player-57-0D5E810C"] = {
+["SpecId"] = 1473,
+["LastAttempt"] = 45667.0791183,
+["LastSeen"] = 45776.5635577,
+},
+["Player-11-0E7E600F"] = {
+["SpecId"] = 263,
+["LastAttempt"] = 54964.5363937,
+["LastSeen"] = 54964.81084210001,
+},
+["Player-1138-0987BC59"] = {
+["LastSeen"] = 2166.4496359,
+["SpecId"] = 261,
+},
+["Player-3725-0C5E8C7E"] = {
+["SpecId"] = 270,
+["LastSeen"] = 22560.176195,
+["LastAttempt"] = 22559.6440807,
+},
+["Player-11-0E891A4E"] = {
+["SpecId"] = 252,
+["LastSeen"] = 42783.23001550001,
+["LastAttempt"] = 42782.9327653,
+},
+["Player-11-0AB0FF61"] = {
+["LastSeen"] = 22492.8382883,
+["SpecId"] = 66,
+},
+["Player-11-0DE8B074"] = {
+["SpecId"] = 70,
+["LastSeen"] = 47927.97872740001,
+},
+["Player-11-067E3B81"] = {
+["LastSeen"] = 10979.9392114,
+["SpecId"] = 65,
+},
+["Player-3234-0EA75D58"] = {
+["SpecId"] = 70,
+["LastSeen"] = 13241.3026601,
+},
+["Player-1425-0EDEBFF9"] = {
+["SpecId"] = 268,
+["LastAttempt"] = 22551.6435906,
+["LastSeen"] = 22885.1805918,
+},
+["Player-11-0E7C94CC"] = {
+["LastSeen"] = 14520.6480082,
+["SpecId"] = 102,
+},
+["Player-47-06A4C9E1"] = {
+["LastSeen"] = 29576.1244236,
+["SpecId"] = 254,
+},
+["Player-3683-0DA5DB9F"] = {
+["SpecId"] = 264,
+["LastSeen"] = 42167.1774767,
+},
+["Player-3676-0E5D05C1"] = {
+["SpecId"] = 70,
+["LastAttempt"] = 19432.0895874,
+["LastSeen"] = 19432.7820502,
+},
+["Player-3675-0AA966D7"] = {
+["LastSeen"] = 15433.1162965,
+["SpecId"] = 251,
+},
+["Player-60-0F86F076"] = {
+["SpecId"] = 270,
+["LastAttempt"] = 17283.4772372,
+["LastSeen"] = 17284.50476,
+},
+["Player-3676-0ED4B882"] = {
+["SpecId"] = 1473,
+["LastSeen"] = 42852.3737802,
+},
+["Player-120-0892CDAD"] = {
+["SpecId"] = 256,
+["LastAttempt"] = 43001.0129633,
+["LastSeen"] = 43001.2333728,
+},
+["Player-1136-0914799B"] = {
+["SpecId"] = 72,
+["LastSeen"] = 29489.7535211,
+["LastAttempt"] = 29488.6968956,
+},
+["Player-11-0EADCD8E"] = {
+["SpecId"] = 62,
+["LastAttempt"] = 17350.1492553,
+["LastSeen"] = 17350.4701597,
+},
+["Player-60-0FC51F34"] = {
+["LastSeen"] = 14515.3148326,
+["SpecId"] = 102,
+},
+["Player-57-0D4D674A"] = {
+["SpecId"] = 254,
+["LastSeen"] = 3632.4283514,
+["LastAttempt"] = 3632.0047574,
+},
+["Player-1171-0812C441"] = {
+["SpecId"] = 1480,
+["LastSeen"] = 22863.8285232,
+["LastAttempt"] = 22575.2520891,
+},
+["Player-1151-098C9F3B"] = {
+["SpecId"] = 72,
+["LastSeen"] = 2484.0931383,
+["LastAttempt"] = 2483.828948,
+},
+["Player-11-0E6A1981"] = {
+["LastSeen"] = 7621.265012500001,
+["SpecId"] = 64,
+},
+["Player-3675-0A4A69F2"] = {
+["SpecId"] = 1480,
+["LastSeen"] = 22939.3203921,
+},
+["Player-60-0FC1D5D8"] = {
+["SpecId"] = 261,
+["LastSeen"] = 2670.5650311,
+["LastAttempt"] = 2670.2697085,
+},
+["Player-3208-0E218844"] = {
+["SpecId"] = 268,
+["LastSeen"] = 20565.0098412,
+},
+["Player-121-0AF43408"] = {
+["SpecId"] = 105,
+["LastAttempt"] = 3570.5716807,
+["LastSeen"] = 3570.9425481,
+},
+["Player-11-0E7B2A5E"] = {
+["SpecId"] = 258,
+["LastSeen"] = 10044.0240587,
+},
+["Player-77-0F9AF48A"] = {
+["SpecId"] = 64,
+["LastAttempt"] = 20552.4497932,
+["LastSeen"] = 20552.6871899,
+},
+["Player-67-0F7C1CB7"] = {
+["SpecId"] = 1467,
+["LastAttempt"] = 21490.9320928,
+["LastSeen"] = 21491.479766,
+},
+["Player-11-0EAAADCA"] = {
+["SpecId"] = 258,
+["LastAttempt"] = 10091.1952823,
+["LastSeen"] = 10091.3953405,
+},
+["Player-11-0EAC2B43"] = {
+["LastSeen"] = 3178.4893578,
+["SpecId"] = 1480,
+},
+["Player-162-0C0FB712"] = {
+["SpecId"] = 260,
+["LastSeen"] = 15917.4810416,
+["LastAttempt"] = 15857.5895789,
+},
+["Player-60-0E862A97"] = {
+["SpecId"] = 1480,
+["LastSeen"] = 25730.4957585,
+["LastAttempt"] = 25730.1828055,
+},
+["Player-3693-0DEB8676"] = {
+["LastSeen"] = 3174.5635805,
+["SpecId"] = 71,
+},
+["Player-3675-0AE9D346"] = {
+["LastSeen"] = 14515.3149471,
+["SpecId"] = 102,
+},
+["Player-3675-0AD8852B"] = {
+["SpecId"] = 252,
+["LastSeen"] = 19697.9144347,
+},
+["Player-3725-0C5E3EF8"] = {
+["LastSeen"] = 14507.6481008,
+["SpecId"] = 1480,
+},
+["Player-3725-0C5F42A6"] = {
+["SpecId"] = 70,
+["LastAttempt"] = 17141.2442623,
+["LastSeen"] = 17141.8710581,
+},
+["Player-11-0B687377"] = {
+["LastSeen"] = 14499.8146572,
+["SpecId"] = 70,
+},
+["Player-11-0EA1357E"] = {
+["SpecId"] = 1480,
+["LastSeen"] = 9500.6704162,
+},
+["Player-3676-0EB79893"] = {
+["LastSeen"] = 37047.5992378,
+["SpecId"] = 66,
+},
+["Player-11-0EA2DC4E"] = {
+["LastSeen"] = 25201.2290245,
+["SpecId"] = 268,
+},
+["Player-3675-0AE69D09"] = {
+["LastSeen"] = 14515.3151272,
+["SpecId"] = 254,
+},
+["Player-60-0F868519"] = {
+["SpecId"] = 71,
+["LastSeen"] = 25729.9782847,
+["LastAttempt"] = 25729.6764954,
+},
+["Player-3208-0E0AC173"] = {
+["SpecId"] = 266,
+["LastAttempt"] = 32981.9093752,
+["LastSeen"] = 33201.7350584,
+},
+["Player-73-0F662250"] = {
+["SpecId"] = 254,
+["LastAttempt"] = 21142.8326794,
+["LastSeen"] = 21143.8907004,
+},
+["Player-3675-079159FF"] = {
+["SpecId"] = 73,
+["LastAttempt"] = 37688.8854,
+["LastSeen"] = 37689.2427054,
+},
+["Player-11-0EAEDF3A"] = {
+["LastSeen"] = 2165.5012173,
+["SpecId"] = 256,
+},
+["Player-11-0EB59CA5"] = {
+["SpecId"] = 577,
+["LastSeen"] = 10015.9728641,
+},
+["Player-3721-0C56270F"] = {
+["SpecId"] = 254,
+["LastAttempt"] = 17202.3898016,
+["LastSeen"] = 17202.9616097,
+},
+["Player-11-0EB5C781"] = {
+["SpecId"] = 70,
+["LastSeen"] = 16924.1125497,
+["LastAttempt"] = 16923.8386579,
+},
+["Player-11-0EB56DE4"] = {
+["SpecId"] = 261,
+["LastAttempt"] = 21050.7958644,
+["LastSeen"] = 21051.5053734,
+},
+["Player-1138-09304758"] = {
+["SpecId"] = 258,
+["LastAttempt"] = 11301.0474641,
+["LastSeen"] = 11301.167187,
 },
 ["Player-120-07BB54A1"] = {
 ["SpecId"] = 261,
@@ -27898,9 +28062,10 @@ FrameSortDB = {
 ["LastSeen"] = 14515.3147119,
 ["SpecId"] = 70,
 },
-["Player-3675-0AF7ADC8"] = {
-["LastSeen"] = 21281.4726818,
-["SpecId"] = 262,
+["Player-121-09BCE899"] = {
+["SpecId"] = 266,
+["LastAttempt"] = 17250.9606843,
+["LastSeen"] = 17251.1471063,
 },
 ["Player-3661-0952D8F0"] = {
 ["LastSeen"] = 24196.9372272,
@@ -27910,94 +28075,32 @@ FrameSortDB = {
 ["SpecId"] = 268,
 ["LastSeen"] = 18701.7346756,
 },
-["Player-11-0EB16732"] = {
-["SpecId"] = 267,
-["LastSeen"] = 13944.574596,
-},
-["Player-3678-0E209998"] = {
-["SpecId"] = 261,
-["LastSeen"] = 19698.9005845,
-},
-["Player-3678-0DE27D20"] = {
-["LastSeen"] = 19237.3281296,
-["SpecId"] = 64,
-},
-["Player-11-0EAA9BFB"] = {
-["LastSeen"] = 10977.5059757,
+["Player-3208-0A40E3F6"] = {
+["LastSeen"] = 29523.8441774,
 ["SpecId"] = 73,
-},
-["Player-11-0E305240"] = {
-["SpecId"] = 259,
-["LastSeen"] = 23837.5123148,
-["LastAttempt"] = 23837.2289336,
-},
-["Player-76-0BF1B506"] = {
-["SpecId"] = 270,
-["LastSeen"] = 18286.7137484,
 },
 ["Player-1136-0962F503"] = {
 ["SpecId"] = 258,
 ["LastAttempt"] = 25777.3707418,
 ["LastSeen"] = 25777.4948681,
 },
-["Player-3208-0A40E3F6"] = {
-["LastSeen"] = 29523.8441774,
-["SpecId"] = 73,
-},
-["Player-77-0FB9D815"] = {
-["SpecId"] = 71,
-["LastAttempt"] = 47706.4173625,
-["LastSeen"] = 47706.76436430001,
-},
-["Player-60-0F2E98D9"] = {
-["LastSeen"] = 25717.2447467,
-["SpecId"] = 261,
-},
-["Player-53-0E090795"] = {
-["SpecId"] = 102,
-["LastSeen"] = 42852.3738628,
-},
-["Player-67-0F7C1CB7"] = {
-["SpecId"] = 1467,
-["LastAttempt"] = 21490.9320928,
-["LastSeen"] = 21491.479766,
+["Player-3678-0DE27D20"] = {
+["LastSeen"] = 19237.3281296,
+["SpecId"] = 64,
 },
 ["Player-3676-0ED9147A"] = {
 ["SpecId"] = 257,
 ["LastSeen"] = 38444.962742,
-},
-["Player-1428-0ED708F9"] = {
-["LastSeen"] = 20090.2844062,
-["SpecId"] = 64,
 },
 ["Player-1428-04993178"] = {
 ["SpecId"] = 65,
 ["LastAttempt"] = 19262.5795276,
 ["LastSeen"] = 19266.3662433,
 },
-["Player-60-0FC1E02F"] = {
-["SpecId"] = 253,
-["LastSeen"] = 37551.82536610001,
-["LastAttempt"] = 37551.5800908,
-},
 ["Player-11-0EB32FBD"] = {
 ["SpecId"] = 577,
 ["LastAttempt"] = 17479.2767826,
 ["LastSeen"] = 17479.6050482,
-},
-["Player-1175-0FBD82D4"] = {
-["SpecId"] = 577,
-["LastSeen"] = 20528.9433391,
-},
-["Player-57-0E1E2BC5"] = {
-["SpecId"] = 250,
-["LastAttempt"] = 18388.1313016,
-["LastSeen"] = 18388.441447,
-},
-["Player-3726-0BF39CA7"] = {
-["SpecId"] = 103,
-["LastAttempt"] = 17243.167021,
-["LastSeen"] = 17243.5335089,
 },
 ["Player-115-000F51F1"] = {
 ["SpecId"] = 260,
@@ -28008,101 +28111,25 @@ FrameSortDB = {
 ["LastSeen"] = 19224.4888073,
 ["SpecId"] = 262,
 },
-["Player-11-0EB381EA"] = {
-["LastSeen"] = 11388.2401452,
-["SpecId"] = 62,
-},
-["Player-3675-0B019192"] = {
-["SpecId"] = 270,
-["LastSeen"] = 42295.7765835,
-},
-["Player-104-0DBA5656"] = {
-["SpecId"] = 65,
-["LastSeen"] = 15846.1716645,
-["LastAttempt"] = 15846.0042261,
-},
 ["Player-57-09BCACEB"] = {
 ["SpecId"] = 104,
 ["LastSeen"] = 16102.8200063,
 ["LastAttempt"] = 15860.1149833,
 },
-["Player-11-0E79AB24"] = {
-["LastSeen"] = 14024.6628127,
-["SpecId"] = 105,
-},
-["Player-73-0F07DF5F"] = {
-["SpecId"] = 269,
-["LastSeen"] = 24516.4061113,
-},
-["Player-3684-0E92E5AD"] = {
-["SpecId"] = 72,
-["LastAttempt"] = 40537.2155843,
-["LastSeen"] = 40537.5678532,
-},
-["Player-3676-0EB3D85B"] = {
-["SpecId"] = 267,
-["LastSeen"] = 22561.9827946,
-["LastAttempt"] = 22561.5950088,
+["Player-60-0FC1E02F"] = {
+["SpecId"] = 253,
+["LastSeen"] = 37551.82536610001,
+["LastAttempt"] = 37551.5800908,
 },
 ["Player-3661-093CBDCD"] = {
 ["SpecId"] = 257,
 ["LastSeen"] = 47733.4642661,
 ["LastAttempt"] = 47733.1290868,
 },
-["Player-115-04CE3F25"] = {
-["SpecId"] = 268,
-["LastAttempt"] = 23835.2238075,
-["LastSeen"] = 25193.9336921,
-},
-["Player-47-07149CA1"] = {
-["SpecId"] = 270,
-["LastSeen"] = 19698.9008468,
-},
-["Player-1171-0ADD5000"] = {
-["SpecId"] = 71,
-["LastAttempt"] = 54893.1633263,
-["LastSeen"] = 54894.6842221,
-},
-["Player-11-0EB17C57"] = {
-["SpecId"] = 64,
-["LastAttempt"] = 54895.7845575,
-["LastSeen"] = 54896.1264133,
-},
-["Player-11-0E483976"] = {
-["SpecId"] = 70,
-["LastAttempt"] = 46840.34105900001,
-["LastSeen"] = 46840.6107873,
-},
-["Player-3676-0EDD022A"] = {
-["SpecId"] = 261,
-["LastSeen"] = 3571.512598,
-["LastAttempt"] = 3571.1027399,
-},
-["Player-1185-0EB36ADE"] = {
-["SpecId"] = 270,
-["LastSeen"] = 43806.1679469,
-},
-["Player-77-0FCC433B"] = {
-["LastSeen"] = 2312.3762721,
-["SpecId"] = 267,
-},
-["Player-160-0ABA03A7"] = {
-["SpecId"] = 252,
-["LastAttempt"] = 54895.283389,
-["LastSeen"] = 54895.5928623,
-},
-["Player-11-0DB3BE30"] = {
-["LastSeen"] = 16893.7355869,
-["SpecId"] = 254,
-},
 ["Player-3675-0A7532C7"] = {
 ["SpecId"] = 70,
 ["LastSeen"] = 17164.8891681,
 ["LastAttempt"] = 17164.700316,
-},
-["Player-3678-0D61AF54"] = {
-["SpecId"] = 1467,
-["LastSeen"] = 41676.3779291,
 },
 ["Player-76-0A1929A0"] = {
 ["SpecId"] = 258,
@@ -28113,9 +28140,10 @@ FrameSortDB = {
 ["LastSeen"] = 7160.765074700001,
 ["SpecId"] = 263,
 },
-["Player-76-0C109AD6"] = {
-["SpecId"] = 72,
-["LastSeen"] = 42852.3739823,
+["Player-160-0ABA03A7"] = {
+["SpecId"] = 252,
+["LastAttempt"] = 54895.283389,
+["LastSeen"] = 54895.5928623,
 },
 ["Player-3675-0AFDA356"] = {
 ["SpecId"] = 105,
@@ -28126,11 +28154,6 @@ FrameSortDB = {
 ["SpecId"] = 72,
 ["LastSeen"] = 13253.6411421,
 },
-["Player-3726-0BE590D6"] = {
-["SpecId"] = 70,
-["LastSeen"] = 37550.3573072,
-["LastAttempt"] = 37550.025232,
-},
 ["Player-3683-07D01949"] = {
 ["LastSeen"] = 14515.3147953,
 ["SpecId"] = 251,
@@ -28140,107 +28163,102 @@ FrameSortDB = {
 ["LastSeen"] = 17463.6613866,
 ["LastAttempt"] = 17463.4767737,
 },
-["Player-60-0FBE1AFC"] = {
-["SpecId"] = 105,
-["LastAttempt"] = 40319.1650487,
-["LastSeen"] = 40319.0584341,
+["Player-1138-0978B29E"] = {
+["SpecId"] = 65,
+["LastSeen"] = 16745.0064264,
+["LastAttempt"] = 16744.775658,
 },
-["Player-11-0E83CD25"] = {
-["SpecId"] = 261,
-["LastAttempt"] = 19388.7023703,
-["LastSeen"] = 19392.0728327,
+["Player-3684-0DFECFC0"] = {
+["LastSeen"] = 57201.2573649,
+["SpecId"] = 1473,
 },
-["Player-57-0DC5FD11"] = {
-["SpecId"] = 261,
-["LastAttempt"] = 2672.2881367,
-["LastSeen"] = 2617.9318898,
+["Player-9-0E962FE5"] = {
+["SpecId"] = 70,
+["LastSeen"] = 38042.81938,
+["LastAttempt"] = 37047.6777091,
 },
-["Player-1185-03B6FCE2"] = {
-["SpecId"] = 261,
-["LastSeen"] = 25741.034322,
-["LastAttempt"] = 25740.8493393,
-},
-["Player-121-09645612"] = {
-["SpecId"] = 103,
-["LastSeen"] = 54909.8486974,
-["LastAttempt"] = 54909.5292197,
+["Player-11-0E7658FD"] = {
+["SpecId"] = 260,
+["LastSeen"] = 11836.0046196,
 },
 ["Player-11-0EB6021E"] = {
 ["LastSeen"] = 20275.8927943,
 ["SpecId"] = 269,
 },
-["Player-3693-0CD3405E"] = {
-["SpecId"] = 63,
-["LastSeen"] = 29304.4357019,
-["LastAttempt"] = 29304.1165296,
+["Player-3726-0BE590D6"] = {
+["SpecId"] = 70,
+["LastSeen"] = 37550.3573072,
+["LastAttempt"] = 37550.025232,
 },
-["Player-11-0E8DF654"] = {
-["SpecId"] = 254,
-["LastSeen"] = 19698.9015437,
+["Player-3234-0A8D682C"] = {
+["SpecId"] = 70,
+["LastSeen"] = 37635.9407306,
+["LastAttempt"] = 37636.3150551,
 },
 ["Player-120-0AEDB720"] = {
 ["SpecId"] = 71,
 ["LastSeen"] = 2769.1297949,
 ["LastAttempt"] = 2768.7909277,
 },
-["Player-47-098E8B79"] = {
-["LastSeen"] = 16893.7357115,
+["Player-3675-0AD672C9"] = {
 ["SpecId"] = 71,
+["LastAttempt"] = 23007.9767864,
+["LastSeen"] = 23008.36809,
 },
-["Player-76-0A24008D"] = {
-["LastSeen"] = 14515.3148716,
-["SpecId"] = 1480,
+["Player-11-0EB1100D"] = {
+["SpecId"] = 64,
+["LastSeen"] = 15219.2703262,
 },
-["Player-11-0E959769"] = {
-["LastSeen"] = 11434.1387493,
-["SpecId"] = 269,
+["Player-1175-0FE20647"] = {
+["LastSeen"] = 14515.3152707,
+["SpecId"] = 65,
 },
-["Player-3661-094AE752"] = {
-["SpecId"] = 105,
-["LastSeen"] = 47691.9321938,
+["Player-11-0E8AE17F"] = {
+["SpecId"] = 261,
+["LastSeen"] = 2166.4492702,
+["LastAttempt"] = 2166.189634,
 },
-["Player-11-0E65DEA6"] = {
-["SpecId"] = 250,
-["LastAttempt"] = 17231.939939,
-["LastSeen"] = 17231.7722085,
+["Player-3725-0A6C94B5"] = {
+["SpecId"] = 70,
+["LastSeen"] = 22939.3203005,
 },
-["Player-60-0FC85C43"] = {
-["SpecId"] = 105,
-["LastAttempt"] = 35391.1210453,
-["LastSeen"] = 35390.9409151,
+["Player-3661-098D3439"] = {
+["SpecId"] = 254,
+["LastSeen"] = 15844.7971528,
+["LastAttempt"] = 15844.4859864,
 },
-["Player-86-09E979E4"] = {
-["SpecId"] = 103,
-["LastAttempt"] = 47799.694341,
-["LastSeen"] = 47799.9301103,
+["Player-1070-0D0ACAAD"] = {
+["SpecId"] = 270,
+["LastSeen"] = 29605.3620767,
+["LastAttempt"] = 29605.0536179,
 },
 ["Player-55-06A919BA"] = {
 ["SpecId"] = 269,
 ["LastAttempt"] = 20061.8709234,
 ["LastSeen"] = 20062.1804995,
 },
-["Player-73-0E90B607"] = {
-["SpecId"] = 264,
-["LastAttempt"] = 24147.2436418,
-["LastSeen"] = 24147.5407348,
+["Player-57-0CB83F35"] = {
+["LastSeen"] = 15834.0360244,
+["SpecId"] = 70,
 },
 ["Player-3209-0BA712A1"] = {
 ["SpecId"] = 64,
 ["LastSeen"] = 24210.9485145,
 },
-["Player-3694-0AEAE297"] = {
+["Player-1136-0957D27A"] = {
+["SpecId"] = 256,
+["LastAttempt"] = 24048.4771878,
+["LastSeen"] = 24048.6382548,
+},
+["Player-76-0B95A8DE"] = {
 ["SpecId"] = 265,
-["LastSeen"] = 42294.49448340001,
+["LastSeen"] = 2484.6170426,
+["LastAttempt"] = 2484.3288087,
 },
-["Player-86-0AE63C73"] = {
-["SpecId"] = 254,
-["LastSeen"] = 37048.9552051,
-["LastAttempt"] = 37049.1894387,
-},
-["Player-73-00E2D71F"] = {
-["SpecId"] = 65,
-["LastAttempt"] = 24061.6661705,
-["LastSeen"] = 24349.006585,
+["Player-5-0AB94C60"] = {
+["SpecId"] = 252,
+["LastAttempt"] = 17282.4583793,
+["LastSeen"] = 17282.8385507,
 },
 ["Player-3721-0C151AB0"] = {
 ["SpecId"] = 253,
@@ -28261,19 +28279,19 @@ FrameSortDB = {
 ["LastSeen"] = 37757.5852753,
 ["LastAttempt"] = 37757.0547882,
 },
-["Player-3725-0C221DAC"] = {
-["SpecId"] = 1473,
-["LastSeen"] = 37549.3775326,
-["LastAttempt"] = 37548.9410847,
-},
-["Player-1168-06989C90"] = {
-["SpecId"] = 72,
-["LastAttempt"] = 24338.5871029,
-["LastSeen"] = 24338.8579136,
-},
-["Player-113-07B47DD6"] = {
+["Player-121-0AE910E6"] = {
 ["SpecId"] = 264,
-["LastSeen"] = 42295.7765177,
+["LastSeen"] = 2655.3495393,
+["LastAttempt"] = 2655.1737648,
+},
+["Player-5-0E58C504"] = {
+["SpecId"] = 103,
+["LastSeen"] = 15845.760039,
+["LastAttempt"] = 15845.498569,
+},
+["Player-3693-072C1590"] = {
+["LastSeen"] = 29528.1785044,
+["SpecId"] = 70,
 },
 ["Player-3684-0E03D1D8"] = {
 ["SpecId"] = 64,
@@ -28285,32 +28303,31 @@ FrameSortDB = {
 ["LastAttempt"] = 13257.2063263,
 ["LastSeen"] = 13257.5524009,
 },
-["Player-121-0AF4BA3B"] = {
-["SpecId"] = 270,
-["LastSeen"] = 24651.9887541,
+["Player-1168-0B0069B2"] = {
+["LastSeen"] = 29576.1245071,
+["SpecId"] = 266,
 },
 ["Player-1185-0E8C72EB"] = {
 ["SpecId"] = 269,
 ["LastSeen"] = 42852.3741496,
 },
-["Player-5-0BBF357C"] = {
-["LastSeen"] = 29576.1248604,
-["SpecId"] = 103,
+["Player-11-0BA3E09D"] = {
+["SpecId"] = 102,
+["LastAttempt"] = 47929.7135167,
+["LastSeen"] = 47929.9508298,
 },
-["Player-121-0AE910E6"] = {
-["SpecId"] = 264,
-["LastSeen"] = 2655.3495393,
-["LastAttempt"] = 2655.1737648,
+["Player-1185-0A8FF50F"] = {
+["LastSeen"] = 25717.2449421,
+["SpecId"] = 577,
 },
-["Player-11-09CF6301"] = {
-["SpecId"] = 263,
-["LastAttempt"] = 37617.95946960001,
-["LastSeen"] = 37618.2706274,
+["Player-121-0AF4BA3B"] = {
+["SpecId"] = 270,
+["LastSeen"] = 24651.9887541,
 },
-["Player-5-0E58C504"] = {
-["SpecId"] = 103,
-["LastSeen"] = 15845.760039,
-["LastAttempt"] = 15845.498569,
+["Player-60-0FE00CE2"] = {
+["SpecId"] = 1480,
+["LastAttempt"] = 6243.1474686,
+["LastSeen"] = 6243.5258322,
 },
 ["Player-3675-0AEFA696"] = {
 ["SpecId"] = 577,
@@ -28326,61 +28343,59 @@ FrameSortDB = {
 ["LastSeen"] = 25717.2446072,
 ["SpecId"] = 270,
 },
-["Player-11-0EB50BD8"] = {
-["SpecId"] = 577,
-["LastSeen"] = 17479.274657,
+["Player-1168-06989C90"] = {
+["SpecId"] = 72,
+["LastAttempt"] = 24338.5871029,
+["LastSeen"] = 24338.8579136,
+},
+["Player-3693-0EDE90C9"] = {
+["SpecId"] = 258,
+["LastSeen"] = 18270.3335557,
+},
+["Player-11-0E959769"] = {
+["LastSeen"] = 11434.1387493,
+["SpecId"] = 269,
+},
+["Player-3676-0EDBA923"] = {
+["SpecId"] = 1480,
+["LastSeen"] = 2769.6025709,
+["LastAttempt"] = 2769.2986963,
 },
 ["Player-3675-0ADC7484"] = {
 ["SpecId"] = 70,
 ["LastSeen"] = 37578.41563310001,
 ["LastAttempt"] = 37578.0494227,
 },
-["Player-1185-0A8FF50F"] = {
-["LastSeen"] = 25717.2449421,
-["SpecId"] = 577,
+["Player-73-00E2D71F"] = {
+["SpecId"] = 65,
+["LastAttempt"] = 24061.6661705,
+["LastSeen"] = 24349.006585,
 },
-["Player-11-0EB5A93C"] = {
-["SpecId"] = 63,
-["LastAttempt"] = 26523.8212348,
-["LastSeen"] = 26524.1420812,
+["Player-57-0D9EFAE5"] = {
+["SpecId"] = 254,
+["LastSeen"] = 25717.2442302,
+["LastAttempt"] = 25717.0236524,
 },
-["Player-3676-0E7BC1DA"] = {
-["SpecId"] = 251,
-["LastAttempt"] = 40819.7032148,
-["LastSeen"] = 40819.5050563,
+["Player-120-0B054AA6"] = {
+["SpecId"] = 261,
+["LastSeen"] = 42295.7764661,
+},
+["Player-60-0FDAF293"] = {
+["SpecId"] = 258,
+["LastSeen"] = 19698.9014989,
+},
+["Player-11-0E9F1530"] = {
+["LastSeen"] = 9225.003857700001,
+["SpecId"] = 256,
+},
+["Player-11-0B05CCAC"] = {
+["SpecId"] = 72,
+["LastSeen"] = 9359.6242614,
 },
 ["Player-3684-0E591024"] = {
 ["SpecId"] = 266,
 ["LastAttempt"] = 46846.4591732,
 ["LastSeen"] = 46846.8594821,
-},
-["Player-60-0E30D303"] = {
-["SpecId"] = 264,
-["LastSeen"] = 22666.4103648,
-["LastAttempt"] = 22576.2513153,
-},
-["Player-1168-0B0069B2"] = {
-["LastSeen"] = 29576.1245071,
-["SpecId"] = 266,
-},
-["Player-73-0FBEA0EE"] = {
-["SpecId"] = 268,
-["LastAttempt"] = 24047.4683299,
-["LastSeen"] = 24047.7777908,
-},
-["Player-3676-0D6F025E"] = {
-["SpecId"] = 258,
-["LastSeen"] = 15816.5937725,
-["LastAttempt"] = 15816.2238484,
-},
-["Player-1136-06765C64"] = {
-["SpecId"] = 72,
-["LastAttempt"] = 44942.6323697,
-["LastSeen"] = 45421.9982393,
-},
-["Player-3675-08F5E35B"] = {
-["SpecId"] = 70,
-["LastSeen"] = 43006.4058883,
 },
 ["Player-11-0E35470B"] = {
 ["SpecId"] = 1480,
@@ -28392,33 +28407,32 @@ FrameSortDB = {
 ["LastSeen"] = 54921.0265632,
 ["LastAttempt"] = 54921.66041010001,
 },
-["Player-5-0AB94C60"] = {
-["SpecId"] = 252,
-["LastAttempt"] = 17282.4583793,
-["LastSeen"] = 17282.8385507,
+["Player-11-0E0632F7"] = {
+["SpecId"] = 102,
+["LastSeen"] = 17499.1743429,
+["LastAttempt"] = 17499.0095074,
 },
-["Player-1136-0957D27A"] = {
-["SpecId"] = 256,
-["LastAttempt"] = 24048.4771878,
-["LastSeen"] = 24048.6382548,
+["Player-3676-0ED5B246"] = {
+["SpecId"] = 1480,
+["LastAttempt"] = 35183.7336966,
+["LastSeen"] = 35285.9674558,
 },
 ["Player-76-0A566962"] = {
 ["SpecId"] = 257,
 ["LastSeen"] = 19697.9151749,
 },
-["Player-60-003A12E8"] = {
-["SpecId"] = 253,
-["LastAttempt"] = 20794.5644741,
-["LastSeen"] = 20794.7376041,
+["Player-3661-094AE752"] = {
+["SpecId"] = 105,
+["LastSeen"] = 47691.9321938,
 },
 ["Player-3693-0E04F882"] = {
 ["SpecId"] = 1480,
 ["LastSeen"] = 3174.5633737,
 ["LastAttempt"] = 3174.4062213,
 },
-["Player-11-0AD499EA"] = {
-["SpecId"] = 64,
-["LastSeen"] = 42167.1777479,
+["Player-121-09B72440"] = {
+["SpecId"] = 254,
+["LastSeen"] = 39315.6225256,
 },
 ["Player-1185-0D6875B2"] = {
 ["SpecId"] = 261,
@@ -28430,134 +28444,135 @@ FrameSortDB = {
 ["LastSeen"] = 17283.1024908,
 ["LastAttempt"] = 17282.9811086,
 },
-["Player-11-0E648712"] = {
-["SpecId"] = 251,
-["LastAttempt"] = 2757.0737352,
-["LastSeen"] = 2757.4201916,
+["Player-3676-0EABF535"] = {
+["LastSeen"] = 21288.4737671,
+["SpecId"] = 103,
 },
 ["Player-3683-0D5E7293"] = {
 ["SpecId"] = 1467,
 ["LastSeen"] = 29302.9066447,
 ["LastAttempt"] = 29302.6006129,
 },
-["Player-86-09EE2FB0"] = {
-["SpecId"] = 70,
-["LastSeen"] = 54949.61196350001,
+["Player-3694-0A98E0D0"] = {
+["SpecId"] = 73,
+["LastSeen"] = 24329.7767032,
 },
 ["Player-96-0E69C684"] = {
 ["SpecId"] = 1480,
 ["LastSeen"] = 22832.9159992,
 ["LastAttempt"] = 22552.6606779,
 },
-["Player-67-0FA17C4C"] = {
-["SpecId"] = 264,
-["LastSeen"] = 49431.8096182,
-["LastAttempt"] = 49431.3838495,
+["Player-1136-06765C64"] = {
+["SpecId"] = 72,
+["LastAttempt"] = 44942.6323697,
+["LastSeen"] = 45421.9982393,
 },
 ["Player-11-0E529CA5"] = {
 ["SpecId"] = 270,
 ["LastAttempt"] = 12306.1088801,
 ["LastSeen"] = 12306.2295201,
 },
-["Player-3678-095E6918"] = {
+["Player-5-0E04C25A"] = {
+["LastSeen"] = 18623.6524844,
+["SpecId"] = 261,
+},
+["Player-11-0EB5C092"] = {
 ["SpecId"] = 1480,
-["LastAttempt"] = 42536.9201565,
-["LastSeen"] = 42537.31925740001,
+["LastAttempt"] = 17164.1970357,
+["LastSeen"] = 17164.5418667,
 },
-["Player-3725-0C40AC63"] = {
-["SpecId"] = 263,
-["LastAttempt"] = 40851.07783240001,
-["LastSeen"] = 40851.46570920001,
-},
-["Player-1136-096E21B8"] = {
-["LastSeen"] = 14515.3149097,
-["SpecId"] = 267,
+["Player-3693-0CD3405E"] = {
+["SpecId"] = 63,
+["LastSeen"] = 29304.4357019,
+["LastAttempt"] = 29304.1165296,
 },
 ["Player-5-0BDE6688"] = {
 ["SpecId"] = 1480,
 ["LastAttempt"] = 55006.95395040001,
 ["LastSeen"] = 55007.35261610001,
 },
-["Player-3725-08E2CD68"] = {
-["SpecId"] = 264,
-["LastSeen"] = 29277.2483011,
-["LastAttempt"] = 29276.7453829,
+["Player-3675-0AED515E"] = {
+["SpecId"] = 252,
+["LastAttempt"] = 24345.0488859,
+["LastSeen"] = 24345.2999185,
 },
-["Player-73-0F60137D"] = {
-["SpecId"] = 577,
-["LastSeen"] = 41676.41677320001,
+["Player-1185-03B6FCE2"] = {
+["SpecId"] = 261,
+["LastSeen"] = 25741.034322,
+["LastAttempt"] = 25740.8493393,
 },
 ["Player-1136-09732E71"] = {
 ["SpecId"] = 577,
 ["LastAttempt"] = 12304.604504,
 ["LastSeen"] = 12304.9182277,
 },
-["Player-3676-0EDD44D8"] = {
-["SpecId"] = 70,
-["LastSeen"] = 20079.5636178,
-["LastAttempt"] = 20078.3330797,
+["Player-11-0E83CD25"] = {
+["SpecId"] = 261,
+["LastAttempt"] = 19388.7023703,
+["LastSeen"] = 19392.0728327,
 },
 ["Player-11-0EA647C1"] = {
 ["LastSeen"] = 3174.2820325,
 ["SpecId"] = 65,
 },
-["Player-11-0EA0B823"] = {
-["SpecId"] = 252,
-["LastSeen"] = 2897.8182869,
+["Player-60-0FBE1AFC"] = {
+["SpecId"] = 105,
+["LastAttempt"] = 40319.1650487,
+["LastSeen"] = 40319.0584341,
 },
-["Player-3693-07629945"] = {
-["SpecId"] = 258,
-["LastSeen"] = 18880.7962674,
+["Player-11-0EB17C57"] = {
+["SpecId"] = 64,
+["LastAttempt"] = 54895.7845575,
+["LastSeen"] = 54896.1264133,
 },
-["Player-76-0BE4C1F5"] = {
-["SpecId"] = 104,
-["LastAttempt"] = 25719.6427363,
-["LastSeen"] = 25719.9358245,
+["Player-77-0FED3CD5"] = {
+["SpecId"] = 1455,
+["LastSeen"] = 17844.6854177,
+["LastAttempt"] = 17844.3163143,
 },
-["Player-5-0BBBEA7A"] = {
-["SpecId"] = 66,
-["LastAttempt"] = 29575.2857701,
-["LastSeen"] = 29575.6406874,
+["Player-1136-096E21B8"] = {
+["LastSeen"] = 14515.3149097,
+["SpecId"] = 267,
 },
-["Player-3675-0AED515E"] = {
-["SpecId"] = 252,
-["LastAttempt"] = 24345.0488859,
-["LastSeen"] = 24345.2999185,
+["Player-3684-0EDC6855"] = {
+["SpecId"] = 1480,
+["LastSeen"] = 41796.2936109,
+["LastAttempt"] = 41795.9743041,
 },
-["Player-1070-0D0ACAAD"] = {
-["SpecId"] = 270,
-["LastSeen"] = 29605.3620767,
-["LastAttempt"] = 29605.0536179,
+["Player-11-0E6D71C2"] = {
+["SpecId"] = 70,
+["LastSeen"] = 22939.3199637,
+},
+["Player-3676-0EB3D85B"] = {
+["SpecId"] = 267,
+["LastSeen"] = 22561.9827946,
+["LastAttempt"] = 22561.5950088,
+},
+["Player-127-0AFC9AEA"] = {
+["SpecId"] = 254,
+["LastSeen"] = 2483.5394786,
+["LastAttempt"] = 2483.3285057,
+},
+["Player-11-0E79AB24"] = {
+["LastSeen"] = 14024.6628127,
+["SpecId"] = 105,
+},
+["Player-52-0E220171"] = {
+["SpecId"] = 71,
+["LastSeen"] = 25728.9897151,
+["LastAttempt"] = 25728.6607474,
+},
+["Player-11-0AFC94D1"] = {
+["LastSeen"] = 20468.1565587,
+["SpecId"] = 261,
 },
 ["Player-76-0BACD58B"] = {
 ["SpecId"] = 253,
 ["LastSeen"] = 42852.3741051,
 },
-["Player-60-0EC4037D"] = {
-["LastSeen"] = 37535.7121113,
-["SpecId"] = 250,
-},
-["Player-57-0D76A348"] = {
-["SpecId"] = 1480,
-["LastSeen"] = 20131.4476773,
-["LastAttempt"] = 20131.1964029,
-},
-["Player-3693-072C1590"] = {
-["LastSeen"] = 29528.1785044,
-["SpecId"] = 70,
-},
-["Player-60-0F4F5CC5"] = {
-["SpecId"] = 256,
-["LastSeen"] = 18286.713503,
-},
-["Player-11-0BA3E09D"] = {
-["SpecId"] = 102,
-["LastAttempt"] = 47929.7135167,
-["LastSeen"] = 47929.9508298,
-},
-["Player-3675-0AFB5CF3"] = {
-["LastSeen"] = 16686.0272488,
-["SpecId"] = 253,
+["Player-1427-08EA987A"] = {
+["SpecId"] = 577,
+["LastSeen"] = 54894.6845055,
 },
 ["Player-11-0EB4307F"] = {
 ["LastSeen"] = 11190.6393997,
@@ -28578,52 +28593,50 @@ FrameSortDB = {
 ["LastSeen"] = 29304.978199,
 ["LastAttempt"] = 29304.6275973,
 },
-["Player-12-0E8947EE"] = {
-["SpecId"] = 70,
-["LastSeen"] = 43057.35565110001,
+["Player-104-0DBA5656"] = {
+["SpecId"] = 65,
+["LastSeen"] = 15846.1716645,
+["LastAttempt"] = 15846.0042261,
 },
 ["Player-11-0E451BD5"] = {
 ["SpecId"] = 253,
 ["LastSeen"] = 16182.6678386,
 },
-["Player-11-0E8AE17F"] = {
-["SpecId"] = 261,
-["LastSeen"] = 2166.4492702,
-["LastAttempt"] = 2166.189634,
+["Player-3725-0C17CFA8"] = {
+["LastSeen"] = 2165.5017707,
+["SpecId"] = 1467,
 },
-["Player-155-0C0A4E33"] = {
-["SpecId"] = 64,
-["LastAttempt"] = 42841.4114483,
-["LastSeen"] = 42841.7227351,
-},
-["Player-11-0B05CCAC"] = {
-["SpecId"] = 72,
-["LastSeen"] = 9359.6242614,
-},
-["Player-11-0E0632F7"] = {
-["SpecId"] = 102,
-["LastSeen"] = 17499.1743429,
-["LastAttempt"] = 17499.0095074,
-},
-["Player-3661-083E889C"] = {
-["SpecId"] = 577,
-["LastSeen"] = 22574.6181897,
-["LastAttempt"] = 22574.2515432,
-},
-["Player-11-0EB5C092"] = {
-["SpecId"] = 1480,
-["LastAttempt"] = 17164.1970357,
-["LastSeen"] = 17164.5418667,
-},
-["Player-1136-09595E4C"] = {
-["SpecId"] = 254,
-["LastSeen"] = 17464.4604594,
-["LastAttempt"] = 17464.2128259,
-},
-["Player-5-0E20AD10"] = {
+["Player-1171-0AF1C395"] = {
 ["SpecId"] = 253,
-["LastSeen"] = 2318.6654785,
-["LastAttempt"] = 2318.2935361,
+["LastSeen"] = 23917.0822169,
+},
+["Player-86-0AE63C73"] = {
+["SpecId"] = 254,
+["LastSeen"] = 37048.9552051,
+["LastAttempt"] = 37049.1894387,
+},
+["Player-57-0E1E2BC5"] = {
+["SpecId"] = 250,
+["LastAttempt"] = 18388.1313016,
+["LastSeen"] = 18388.441447,
+},
+["Player-1138-0980505E"] = {
+["SpecId"] = 253,
+["LastAttempt"] = 39311.3474051,
+["LastSeen"] = 39311.5783842,
+},
+["Player-11-0EB5B487"] = {
+["LastSeen"] = 15082.577861,
+["SpecId"] = 262,
+},
+["Player-73-0F60137D"] = {
+["SpecId"] = 577,
+["LastSeen"] = 41676.41677320001,
+},
+["Player-77-0FB9D815"] = {
+["SpecId"] = 71,
+["LastAttempt"] = 47706.4173625,
+["LastSeen"] = 47706.76436430001,
 },
 ["Player-76-0BFE2944"] = {
 ["SpecId"] = 73,
@@ -28634,28 +28647,28 @@ FrameSortDB = {
 ["SpecId"] = 105,
 ["LastSeen"] = 54969.1953606,
 },
-["Player-11-0E4B48B2"] = {
-["SpecId"] = 70,
-["LastSeen"] = 47691.9323946,
+["Player-3678-0E209998"] = {
+["SpecId"] = 261,
+["LastSeen"] = 19698.9005845,
 },
-["Player-162-0C07DA40"] = {
-["SpecId"] = 65,
-["LastSeen"] = 37564.1584514,
-["LastAttempt"] = 37563.7934065,
+["Player-11-09CF6301"] = {
+["SpecId"] = 263,
+["LastAttempt"] = 37617.95946960001,
+["LastSeen"] = 37618.2706274,
 },
 ["Player-1428-0908B06A"] = {
 ["SpecId"] = 269,
 ["LastAttempt"] = 18719.3254163,
 ["LastSeen"] = 18720.1791396,
 },
-["Player-3676-0E8F6F2D"] = {
-["LastSeen"] = 2482.828029,
-["SpecId"] = 71,
+["Player-3676-0EDD022A"] = {
+["SpecId"] = 261,
+["LastSeen"] = 3571.512598,
+["LastAttempt"] = 3571.1027399,
 },
-["Player-5-0EB506BE"] = {
-["SpecId"] = 65,
-["LastSeen"] = 29276.0701537,
-["LastAttempt"] = 29275.7245466,
+["Player-76-0BF1B506"] = {
+["SpecId"] = 270,
+["LastSeen"] = 18286.7137484,
 },
 ["Player-11-0EA18DDC"] = {
 ["LastSeen"] = 22510.4934771,
@@ -28688,31 +28701,9 @@ FrameSortDB = {
 ["LastSeen"] = 25762.4427201,
 ["LastAttempt"] = 25762.2763798,
 },
-["Player-3725-0C17CFA8"] = {
-["LastSeen"] = 2165.5017707,
-["SpecId"] = 1467,
-},
-["Player-11-0E3E5694"] = {
-["SpecId"] = 270,
-["LastAttempt"] = 17830.7276702,
-["LastSeen"] = 17830.9573084,
-},
-["Player-11-0EB5B487"] = {
-["LastSeen"] = 15082.577861,
-["SpecId"] = 262,
-},
-["Player-11-0E58A2A1"] = {
-["LastSeen"] = 11038.5059526,
-["SpecId"] = 253,
-},
-["Player-3675-0A22E6A0"] = {
-["SpecId"] = 64,
-["LastSeen"] = 10083.0525297,
-},
-["Player-77-0FD43E4D"] = {
-["SpecId"] = 250,
-["LastAttempt"] = 18387.6214518,
-["LastSeen"] = 18387.9944631,
+["Player-11-0EB381EA"] = {
+["LastSeen"] = 11388.2401452,
+["SpecId"] = 62,
 },
 ["Player-1168-0B0022B5"] = {
 ["LastSeen"] = 37535.71225690001,
@@ -28723,70 +28714,90 @@ FrameSortDB = {
 ["LastAttempt"] = 24047.9770548,
 ["LastSeen"] = 24048.2803876,
 },
+["Player-11-0E5568D9"] = {
+["LastSeen"] = 10935.0062039,
+["SpecId"] = 268,
+},
+["Player-127-0AB04221"] = {
+["LastSeen"] = 23051.4917568,
+["SpecId"] = 253,
+},
 ["Player-121-0AD00FAA"] = {
 ["SpecId"] = 265,
 ["LastAttempt"] = 24401.8317394,
 ["LastSeen"] = 24402.0696946,
 },
-["Player-76-0C1A6653"] = {
-["SpecId"] = 1480,
-["LastSeen"] = 37576.31360820001,
-["LastAttempt"] = 37576.0172286,
+["Player-11-0E305240"] = {
+["SpecId"] = 259,
+["LastSeen"] = 23837.5123148,
+["LastAttempt"] = 23837.2289336,
 },
-["Player-11-0E552D5C"] = {
-["LastSeen"] = 23053.546763,
-["SpecId"] = 64,
+["Player-11-0EB16732"] = {
+["SpecId"] = 267,
+["LastSeen"] = 13944.574596,
 },
-["Player-121-09BCE899"] = {
-["SpecId"] = 266,
-["LastAttempt"] = 17250.9606843,
-["LastSeen"] = 17251.1471063,
+["Player-1136-0792E5A9"] = {
+["SpecId"] = 577,
+["LastAttempt"] = 25790.5916863,
+["LastSeen"] = 25790.6970711,
+},
+["Player-60-0EAB12A4"] = {
+["SpecId"] = 65,
+["LastAttempt"] = 32982.4187217,
+["LastSeen"] = 33194.85254360001,
 },
 ["Player-60-0FE56225"] = {
 ["SpecId"] = 105,
 ["LastSeen"] = 37576.71913760001,
 ["LastAttempt"] = 37576.5283084,
 },
-["Player-11-0E4874E9"] = {
-["SpecId"] = 264,
-["LastAttempt"] = 55199.6793689,
-["LastSeen"] = 55199.9212578,
-},
-["Player-11-0EB4EADA"] = {
-["LastSeen"] = 3650.9039003,
-["SpecId"] = 265,
+["Player-1427-0DB7067A"] = {
+["SpecId"] = 102,
+["LastSeen"] = 4078.8024606,
+["LastAttempt"] = 4078.4819598,
 },
 ["Player-3684-0E0E36F5"] = {
 ["SpecId"] = 270,
 ["LastSeen"] = 52217.44435780001,
 },
-["Player-3676-090DF1A7"] = {
-["SpecId"] = 263,
-["LastSeen"] = 16440.2563285,
-["LastAttempt"] = 15880.0163789,
+["Player-11-0EB4F77F"] = {
+["LastSeen"] = 11559.9386757,
+["SpecId"] = 258,
 },
-["Player-3675-0A781040"] = {
-["SpecId"] = 70,
-["LastSeen"] = 10083.0527619,
+["Player-11-0EB4EADA"] = {
+["LastSeen"] = 3650.9039003,
+["SpecId"] = 265,
+},
+["Player-11-0EAD3F90"] = {
+["LastSeen"] = 14270.4139299,
+["SpecId"] = 72,
+},
+["Player-11-0E4933D3"] = {
+["SpecId"] = 253,
+["LastSeen"] = 3674.538921,
+},
+["Player-1147-096AE25D"] = {
+["SpecId"] = 254,
+["LastSeen"] = 47691.9321485,
 },
 ["Player-100-08320E3C"] = {
 ["SpecId"] = 254,
 ["LastSeen"] = 2683.4295065,
 ["LastAttempt"] = 2682.9360705,
 },
-["Player-61-0ECDE749"] = {
-["SpecId"] = 258,
-["LastSeen"] = 20762.153363,
-["LastAttempt"] = 20103.5305933,
+["Player-57-0DDBF1F1"] = {
+["SpecId"] = 72,
+["LastSeen"] = 20160.7848906,
+["LastAttempt"] = 20156.3894649,
 },
 ["Player-11-0EA1CF12"] = {
 ["LastSeen"] = 15380.7423252,
 ["SpecId"] = 1467,
 },
-["Player-3208-0E0AC173"] = {
-["SpecId"] = 266,
-["LastAttempt"] = 32981.9093752,
-["LastSeen"] = 33201.7350584,
+["Player-11-0E6C2810"] = {
+["SpecId"] = 260,
+["LastAttempt"] = 47800.2104772,
+["LastSeen"] = 47800.5187051,
 },
 ["Player-154-060AB8E2"] = {
 ["SpecId"] = 256,
@@ -28797,169 +28808,170 @@ FrameSortDB = {
 ["LastSeen"] = 37575.8602741,
 ["SpecId"] = 70,
 },
-["Player-60-0F868519"] = {
-["SpecId"] = 71,
-["LastSeen"] = 25729.9782847,
-["LastAttempt"] = 25729.6764954,
+["Player-52-0E0824D5"] = {
+["SpecId"] = 64,
+["LastAttempt"] = 21212.9610399,
+["LastSeen"] = 21213.6206461,
+},
+["Player-3207-05567D09"] = {
+["SpecId"] = 254,
+["LastSeen"] = 2669.9387097,
+["LastAttempt"] = 2669.7677897,
+},
+["Player-3675-0AEF8C17"] = {
+["SpecId"] = 254,
+["LastAttempt"] = 47800.7059266,
+["LastSeen"] = 47800.8184383,
 },
 ["Player-1428-0960C251"] = {
 ["SpecId"] = 105,
 ["LastSeen"] = 18077.3152821,
 ["LastAttempt"] = 18076.9619573,
 },
+["Player-11-0E9AEE32"] = {
+["LastSeen"] = 2324.4918892,
+["SpecId"] = 260,
+},
+["Player-86-0A39C342"] = {
+["LastSeen"] = 19237.3284786,
+["SpecId"] = 256,
+},
 ["Player-1168-0B05E7AB"] = {
 ["SpecId"] = 257,
 ["LastSeen"] = 2590.5261376,
 ["LastAttempt"] = 2590.2003442,
 },
-["Player-57-0DD54D20"] = {
-["SpecId"] = 66,
-["LastSeen"] = 48932.5511018,
-["LastAttempt"] = 48826.91626280001,
+["Player-1185-0E446959"] = {
+["SpecId"] = 251,
+["LastSeen"] = 17191.1781992,
+["LastAttempt"] = 17190.8336839,
 },
-["Player-11-0E9AEE32"] = {
-["LastSeen"] = 2324.4918892,
-["SpecId"] = 260,
+["Player-1171-0AE7F58E"] = {
+["LastSeen"] = 18623.6524384,
+["SpecId"] = 65,
+},
+["Player-1428-0DB9E9D2"] = {
+["SpecId"] = 102,
+["LastSeen"] = 3570.4164379,
+["LastAttempt"] = 3570.0650772,
+},
+["Player-3676-0E8BC825"] = {
+["SpecId"] = 270,
+["LastAttempt"] = 42840.9129533,
+["LastSeen"] = 42841.2262845,
+},
+["Player-3661-07BE9728"] = {
+["LastSeen"] = 23499.9205553,
+["SpecId"] = 64,
+},
+["Player-5-0E7A2EA1"] = {
+["LastSeen"] = 29576.1248979,
+["SpecId"] = 259,
 },
 ["Player-11-0E8A0F8A"] = {
 ["SpecId"] = 103,
 ["LastSeen"] = 21594.6184038,
 },
-["Player-3725-0C5F42A6"] = {
-["SpecId"] = 70,
-["LastAttempt"] = 17141.2442623,
-["LastSeen"] = 17141.8710581,
-},
-["Player-5-0EB62624"] = {
-["LastSeen"] = 3203.4769291,
+["Player-11-0A31B065"] = {
 ["SpecId"] = 270,
+["LastSeen"] = 47927.9787774,
 },
 ["Player-11-0DEC4718"] = {
 ["SpecId"] = 270,
 ["LastSeen"] = 20130.3683734,
 ["LastAttempt"] = 20130.1941657,
 },
-["Player-1185-0EB5C75E"] = {
-["SpecId"] = 270,
-["LastSeen"] = 29277.4841345,
-["LastAttempt"] = 29277.2524753,
+["Player-3675-0A77F50B"] = {
+["SpecId"] = 262,
+["LastSeen"] = 23015.4915673,
+["LastAttempt"] = 23015.1693709,
 },
-["Player-1175-0D69F2D1"] = {
-["SpecId"] = 103,
-["LastSeen"] = 2758.380444,
-["LastAttempt"] = 2758.0807718,
+["Player-11-0E442B33"] = {
+["SpecId"] = 65,
+["LastSeen"] = 17178.0681763,
+["LastAttempt"] = 17177.7672726,
+},
+["Player-11-0E968C15"] = {
+["LastSeen"] = 2326.4049417,
+["SpecId"] = 577,
 },
 ["Player-120-0AC56744"] = {
 ["SpecId"] = 256,
 ["LastAttempt"] = 39315.3586788,
 ["LastSeen"] = 39315.62224010001,
 },
-["Player-5-0E7A2EA1"] = {
-["LastSeen"] = 29576.1248979,
+["Player-11-0EB3BA07"] = {
+["LastSeen"] = 21930.1944472,
 ["SpecId"] = 259,
 },
-["Player-3675-0AF454D6"] = {
-["SpecId"] = 65,
-["LastSeen"] = 54894.6846901,
+["Player-11-0DCA88CB"] = {
+["SpecId"] = 263,
+["LastSeen"] = 26738.9043886,
 },
-["Player-11-0A31B065"] = {
-["SpecId"] = 270,
-["LastSeen"] = 47927.9787774,
-},
-["Player-3675-0AFF14A3"] = {
-["SpecId"] = 1473,
-["LastAttempt"] = 24049.4892073,
-["LastSeen"] = 24049.8409826,
-},
-["Player-73-0C5C4DF1"] = {
-["SpecId"] = 267,
-["LastSeen"] = 24060.9404039,
-},
-["Player-86-0130C80D"] = {
-["SpecId"] = 65,
-["LastSeen"] = 24329.7772378,
-},
-["Player-3684-0EC27A4D"] = {
+["Player-1168-0935C3F0"] = {
 ["SpecId"] = 70,
-["LastAttempt"] = 48238.5657271,
-["LastSeen"] = 48238.4448486,
+["LastSeen"] = 10228.113855,
 },
-["Player-5-036C6EC1"] = {
-["LastSeen"] = 29576.1247874,
-["SpecId"] = 62,
-},
-["Player-1138-09672958"] = {
-["SpecId"] = 254,
-["LastAttempt"] = 12340.7955261,
-["LastSeen"] = 12341.0697194,
-},
-["Player-1136-09896322"] = {
-["SpecId"] = 70,
-["LastSeen"] = 9817.4278775,
-},
-["Player-3675-0A4A69F2"] = {
-["SpecId"] = 1480,
-["LastSeen"] = 22939.3203921,
-},
-["Player-11-0B61DD0A"] = {
-["SpecId"] = 265,
-["LastSeen"] = 19698.9006372,
+["Player-125-0A9D9491"] = {
+["SpecId"] = 269,
+["LastAttempt"] = 20557.9868926,
+["LastSeen"] = 20558.2097357,
 },
 ["Player-76-0B7CEAF8"] = {
 ["SpecId"] = 63,
 ["LastAttempt"] = 20915.9214192,
 ["LastSeen"] = 20916.3430154,
 },
+["Player-76-0C1BF1BC"] = {
+["SpecId"] = 71,
+["LastAttempt"] = 20561.2396339,
+["LastSeen"] = 20561.6884348,
+},
+["Player-114-05AFA914"] = {
+["SpecId"] = 256,
+["LastAttempt"] = 20607.3556763,
+["LastSeen"] = 20607.8283441,
+},
+["Player-73-0C5C4DF1"] = {
+["SpecId"] = 267,
+["LastSeen"] = 24060.9404039,
+},
+["Player-3723-0414D26D"] = {
+["SpecId"] = 70,
+["LastSeen"] = 2591.5444748,
+["LastAttempt"] = 2591.2118997,
+},
+["Player-1190-0C017795"] = {
+["SpecId"] = 71,
+["LastAttempt"] = 24110.5357012,
+["LastSeen"] = 24110.6684561,
+},
+["Player-1136-09896322"] = {
+["SpecId"] = 70,
+["LastSeen"] = 9817.4278775,
+},
 ["Player-3685-0ED91587"] = {
 ["SpecId"] = 64,
 ["LastSeen"] = 16000.9292434,
 ["LastAttempt"] = 15847.0017768,
-},
-["Player-86-09EE0510"] = {
-["SpecId"] = 64,
-["LastAttempt"] = 20559.5488579,
-["LastSeen"] = 20559.7803244,
 },
 ["Player-53-0E220145"] = {
 ["SpecId"] = 253,
 ["LastAttempt"] = 20739.0893598,
 ["LastSeen"] = 20739.4273772,
 },
-["Player-58-00E784F6"] = {
-["SpecId"] = 253,
-["LastAttempt"] = 25783.1279643,
-["LastSeen"] = 25783.3824011,
-},
-["Player-57-0DD77D1C"] = {
-["SpecId"] = 258,
-["LastSeen"] = 20105.3966156,
-["LastAttempt"] = 20106.0350277,
-},
-["Player-3676-0ED4B882"] = {
-["SpecId"] = 1473,
-["LastSeen"] = 42852.3737802,
-},
-["Player-3721-0B005D7D"] = {
-["SpecId"] = 72,
-["LastSeen"] = 2671.2795407,
-["LastAttempt"] = 2670.770411,
+["Player-11-0E6EA27D"] = {
+["SpecId"] = 1480,
+["LastSeen"] = 19698.9009407,
 },
 ["Player-60-0FE06A22"] = {
 ["SpecId"] = 270,
 ["LastSeen"] = 19698.9004277,
 },
-["Player-3675-09FF3229"] = {
-["LastSeen"] = 2314.4234258,
-["SpecId"] = 258,
-},
-["Player-11-0EABFD64"] = {
-["SpecId"] = 64,
-["LastSeen"] = 10083.052603,
-},
-["Player-3693-0733DE46"] = {
-["SpecId"] = 252,
-["LastSeen"] = 40395.5714728,
-["LastAttempt"] = 40330.22235030001,
+["Player-67-0920F2EA"] = {
+["SpecId"] = 269,
+["LastAttempt"] = 20916.4174163,
+["LastSeen"] = 20916.7528091,
 },
 ["Player-118-07E369B0"] = {
 ["SpecId"] = 66,
@@ -28981,10 +28993,9 @@ FrameSortDB = {
 ["LastAttempt"] = 18269.9524529,
 ["LastSeen"] = 18270.3332599,
 },
-["Player-11-0EB2A0D9"] = {
-["SpecId"] = 103,
-["LastAttempt"] = 17391.5932046,
-["LastSeen"] = 17391.8674646,
+["Player-3676-0E9B91E2"] = {
+["SpecId"] = 251,
+["LastSeen"] = 19698.9014121,
 },
 ["Player-1427-058EE5D8"] = {
 ["SpecId"] = 261,
@@ -28994,28 +29005,76 @@ FrameSortDB = {
 ["LastSeen"] = 4334.0637219,
 ["SpecId"] = 263,
 },
+["Player-3725-0B20CE9E"] = {
+["SpecId"] = 72,
+["LastSeen"] = 2227.1764969,
+["LastAttempt"] = 2074.2926084,
+},
+["Player-11-0EB5393F"] = {
+["LastSeen"] = 14555.0813061,
+["SpecId"] = 268,
+},
 ["Player-3678-0E02119C"] = {
 ["LastSeen"] = 14515.3150938,
 ["SpecId"] = 252,
+},
+["Player-11-0EA3F911"] = {
+["LastSeen"] = 10498.9667236,
+["SpecId"] = 72,
 },
 ["Player-77-0FCC8B53"] = {
 ["SpecId"] = 72,
 ["LastAttempt"] = 45650.5130741,
 ["LastSeen"] = 45748.6388205,
 },
-["Player-57-0D7DA206"] = {
-["SpecId"] = 70,
-["LastSeen"] = 40813.0514935,
-["LastAttempt"] = 40812.678907,
+["Player-11-0EB469DA"] = {
+["SpecId"] = 252,
+["LastSeen"] = 7945.110313100001,
+},
+["Player-1171-0ADCCCC3"] = {
+["SpecId"] = 64,
+["LastAttempt"] = 54894.78550480001,
+["LastSeen"] = 54894.9207251,
+},
+["Player-60-0FC5D5B5"] = {
+["LastSeen"] = 29576.1245469,
+["SpecId"] = 71,
 },
 ["Player-3684-0E9817E1"] = {
 ["LastSeen"] = 43925.721746,
 ["SpecId"] = 64,
 },
-["Player-3661-09641512"] = {
-["SpecId"] = 64,
-["LastAttempt"] = 18271.960856,
-["LastSeen"] = 18272.5050503,
+["Player-11-0E558A54"] = {
+["SpecId"] = 105,
+["LastSeen"] = 16942.6086702,
+["LastAttempt"] = 16942.4028633,
+},
+["Player-86-002D7905"] = {
+["SpecId"] = 265,
+["LastAttempt"] = 43093.2090206,
+["LastSeen"] = 43093.4308637,
+},
+["Player-11-0EB2627B"] = {
+["SpecId"] = 1480,
+["LastAttempt"] = 54896.82282720001,
+["LastSeen"] = 54897.0877779,
+},
+["Player-1175-0D8CFDE0"] = {
+["LastSeen"] = 29576.1243317,
+["SpecId"] = 270,
+},
+["Player-5-0E9B091D"] = {
+["LastSeen"] = 2345.0974202,
+["SpecId"] = 263,
+},
+["Player-11-0DBA61D9"] = {
+["SpecId"] = 1480,
+["LastAttempt"] = 25396.8341824,
+["LastSeen"] = 25397.2158574,
+},
+["Player-11-0E7B890C"] = {
+["LastSeen"] = 14947.4009889,
+["SpecId"] = 66,
 },
 ["Player-11-0E5897C6"] = {
 ["SpecId"] = 261,
@@ -29025,151 +29084,99 @@ FrameSortDB = {
 ["SpecId"] = 102,
 ["LastSeen"] = 20530.680909,
 },
-["Player-60-0FC5D5B5"] = {
-["LastSeen"] = 29576.1245469,
-["SpecId"] = 71,
-},
-["Player-158-042983BB"] = {
-["SpecId"] = 254,
-["LastSeen"] = 37716.8659578,
-["LastAttempt"] = 37716.7195594,
-},
-["Player-61-0FECA62D"] = {
-["SpecId"] = 266,
-["LastSeen"] = 9760.3243965,
-["LastAttempt"] = 9759.9581196,
-},
-["Player-11-0E39B752"] = {
-["LastSeen"] = 2367.0764129,
-["SpecId"] = 264,
-},
-["Player-3684-0E214351"] = {
+["Player-3207-092ADB8F"] = {
 ["SpecId"] = 252,
-["LastSeen"] = 23238.6364771,
-["LastAttempt"] = 22573.2514186,
+["LastSeen"] = 29697.7593592,
+["LastAttempt"] = 29697.4402269,
 },
-["Player-1175-0D8CFDE0"] = {
-["LastSeen"] = 29576.1243317,
-["SpecId"] = 270,
-},
-["Player-11-0EAC26DB"] = {
-["SpecId"] = 270,
-["LastSeen"] = 29303.9921054,
-["LastAttempt"] = 29303.608939,
-},
-["Player-3684-0EAA00D1"] = {
-["SpecId"] = 70,
-["LastSeen"] = 48254.1011984,
-["LastAttempt"] = 48253.6598871,
-},
-["Player-11-0B3FD50A"] = {
-["LastSeen"] = 15084.728781,
-["SpecId"] = 266,
-},
-["Player-3676-0E6C041E"] = {
-["SpecId"] = 105,
-["LastSeen"] = 21594.6180401,
-},
-["Player-11-0EB2419B"] = {
-["LastSeen"] = 14679.1478147,
-["SpecId"] = 266,
-},
-["Player-54-0DC0559A"] = {
+["Player-11-0E8E81BD"] = {
 ["SpecId"] = 577,
-["LastAttempt"] = 37853.0922159,
-["LastSeen"] = 37853.4292944,
-},
-["Player-3676-0A03D793"] = {
-["LastSeen"] = 14515.3150597,
-["SpecId"] = 1480,
+["LastSeen"] = 17511.4099255,
+["LastAttempt"] = 17511.657294,
 },
 ["Player-57-0DEE614A"] = {
 ["SpecId"] = 70,
 ["LastAttempt"] = 24035.8424863,
 ["LastSeen"] = 24036.1362485,
 },
-["Player-3725-072413B2"] = {
-["SpecId"] = 102,
-["LastSeen"] = 47691.9323451,
+["Player-11-0EB2E274"] = {
+["LastSeen"] = 14906.1004157,
+["SpecId"] = 70,
 },
-["Player-1136-091F8B10"] = {
-["LastSeen"] = 19224.488606,
-["SpecId"] = 577,
+["Player-11-0EB2419B"] = {
+["LastSeen"] = 14679.1478147,
+["SpecId"] = 266,
 },
 ["Player-3684-0E8F2FE3"] = {
 ["SpecId"] = 64,
 ["LastAttempt"] = 45652.1237511,
 ["LastSeen"] = 45652.5421465,
 },
-["Player-3207-0551A3EF"] = {
-["SpecId"] = 253,
-["LastSeen"] = 37649.3097348,
-["LastAttempt"] = 37649.4771771,
+["Player-60-0FED13D0"] = {
+["SpecId"] = 64,
+["LastSeen"] = 25728.4023661,
+["LastAttempt"] = 25728.164579,
 },
-["Player-3684-0E6BE8FA"] = {
-["SpecId"] = 103,
-["LastAttempt"] = 42726.5032131,
-["LastSeen"] = 42727.5835175,
+["Player-5-0E55F6DE"] = {
+["SpecId"] = 1480,
+["LastSeen"] = 47691.9322905,
 },
-["Player-86-002D7905"] = {
-["SpecId"] = 265,
-["LastAttempt"] = 43093.2090206,
-["LastSeen"] = 43093.4308637,
+["Player-3725-0C49A49F"] = {
+["SpecId"] = 266,
+["LastSeen"] = 7762.8108897,
 },
-["Player-1168-09A90318"] = {
-["SpecId"] = 102,
-["LastSeen"] = 16701.985799,
-["LastAttempt"] = 16701.6231937,
+["Player-11-0EB23B00"] = {
+["LastSeen"] = 13956.4328591,
+["SpecId"] = 267,
 },
 ["Player-3675-0ADC2138"] = {
 ["SpecId"] = 252,
 ["LastSeen"] = 24561.8348413,
 },
-["Player-76-0BAF4FD7"] = {
-["SpecId"] = 258,
-["LastSeen"] = 42852.3742368,
+["Player-11-0EB58766"] = {
+["SpecId"] = 268,
+["LastSeen"] = 9531.7964665,
 },
-["Player-3675-0AF91D3A"] = {
-["SpecId"] = 1480,
-["LastSeen"] = 10083.0523674,
+["Player-61-0FECA62D"] = {
+["SpecId"] = 266,
+["LastSeen"] = 9760.3243965,
+["LastAttempt"] = 9759.9581196,
 },
-["Player-1168-0ACB5855"] = {
-["LastSeen"] = 14515.3149848,
-["SpecId"] = 72,
+["Player-11-0E9C4066"] = {
+["LastSeen"] = 2166.4495001,
+["SpecId"] = 70,
 },
 ["Player-1185-0EB5C549"] = {
 ["SpecId"] = 70,
 ["LastSeen"] = 29278.1130749,
 ["LastAttempt"] = 29277.7566897,
 },
-["Player-1185-0D589032"] = {
-["SpecId"] = 104,
-["LastSeen"] = 16917.4501162,
-["LastAttempt"] = 16917.1496061,
+["Player-3676-0E1EAEF0"] = {
+["LastSeen"] = 14515.3153417,
+["SpecId"] = 64,
 },
-["Player-11-0AA66BD0"] = {
-["SpecId"] = 265,
-["LastAttempt"] = 13253.1790933,
-["LastSeen"] = 13253.6408705,
+["Player-1171-08433C3B"] = {
+["SpecId"] = 257,
+["LastAttempt"] = 23770.8308115,
+["LastSeen"] = 23905.8020117,
 },
 ["Player-1185-0B6252AA"] = {
 ["SpecId"] = 265,
 ["LastAttempt"] = 20547.8851934,
 ["LastSeen"] = 20548.3171559,
 },
-["Player-120-0A8C147E"] = {
-["SpecId"] = 64,
-["LastAttempt"] = 47927.67407050001,
-["LastSeen"] = 47927.97836060001,
+["Player-3676-0ED48542"] = {
+["LastSeen"] = 14515.3152012,
+["SpecId"] = 1480,
 },
 ["Player-11-0E78D310"] = {
 ["SpecId"] = 1480,
 ["LastSeen"] = 47691.2175923,
 },
-["Player-11-0E889055"] = {
-["SpecId"] = 64,
-["LastAttempt"] = 12908.5155582,
-["LastSeen"] = 12908.7449907,
+["Player-120-06D30F1A"] = {
+["SpecId"] = 72,
+["LastAttempt"] = 39312.3484304,
+["LastSeen"] = 39312.68590690001,
 },
 ["Player-11-0EB57A4B"] = {
 ["SpecId"] = 70,
@@ -29185,28 +29192,28 @@ FrameSortDB = {
 ["LastSeen"] = 9362.6951443,
 ["LastAttempt"] = 9362.578143100001,
 },
-["Player-11-0E9870BB"] = {
-["LastSeen"] = 14972.8359552,
-["SpecId"] = 260,
+["Player-11-0EAC26DB"] = {
+["SpecId"] = 270,
+["LastSeen"] = 29303.9921054,
+["LastAttempt"] = 29303.608939,
 },
 ["Player-76-0BBCF9B8"] = {
 ["SpecId"] = 64,
 ["LastSeen"] = 22574.1175963,
 ["LastAttempt"] = 22573.7516838,
 },
-["Player-60-0F88E502"] = {
-["SpecId"] = 268,
-["LastAttempt"] = 55866.8469389,
-["LastSeen"] = 55867.15284,
+["Player-3693-08CDF679"] = {
+["LastSeen"] = 18623.6525394,
+["SpecId"] = 1480,
 },
-["Player-84-0A3A7B93"] = {
-["LastSeen"] = 21269.6595904,
-["SpecId"] = 250,
+["Player-1428-0ECA9A19"] = {
+["SpecId"] = 252,
+["LastSeen"] = 3772.074580900001,
+["LastAttempt"] = 3771.7211308,
 },
-["Player-3683-0E213B83"] = {
-["SpecId"] = 264,
-["LastAttempt"] = 20767.3682496,
-["LastSeen"] = 20767.8423683,
+["Player-3676-0E6C041E"] = {
+["SpecId"] = 105,
+["LastSeen"] = 21594.6180401,
 },
 ["Player-162-08771519"] = {
 ["SpecId"] = 253,
@@ -29222,19 +29229,17 @@ FrameSortDB = {
 ["SpecId"] = 250,
 ["LastSeen"] = 13932.4234199,
 },
-["Player-1171-0ACA0F2B"] = {
-["SpecId"] = 270,
-["LastSeen"] = 16686.7035544,
-["LastAttempt"] = 16686.5517597,
+["Player-3676-0A03D793"] = {
+["LastSeen"] = 14515.3150597,
+["SpecId"] = 1480,
 },
-["Player-11-0E655E61"] = {
-["SpecId"] = 263,
-["LastSeen"] = 17350.4705331,
+["Player-11-0EB5D2F1"] = {
+["LastSeen"] = 11494.2722633,
+["SpecId"] = 71,
 },
-["Player-57-0DD65F6B"] = {
-["SpecId"] = 266,
-["LastAttempt"] = 59121.6694576,
-["LastSeen"] = 59121.4917662,
+["Player-1136-091F8B10"] = {
+["LastSeen"] = 19224.488606,
+["SpecId"] = 577,
 },
 ["Player-5-0E3BF2AA"] = {
 ["LastSeen"] = 11583.4055822,
@@ -29245,10 +29250,9 @@ FrameSortDB = {
 ["LastAttempt"] = 25713.0526763,
 ["LastSeen"] = 25713.3471792,
 },
-["Player-73-0FD4553A"] = {
-["SpecId"] = 102,
-["LastAttempt"] = 24097.6188164,
-["LastSeen"] = 24097.9567017,
+["Player-58-0BB0F0E1"] = {
+["SpecId"] = 266,
+["LastSeen"] = 19698.9011939,
 },
 ["Player-3683-0D74CAC2"] = {
 ["LastSeen"] = 29576.124591,
@@ -29259,70 +29263,126 @@ FrameSortDB = {
 ["LastAttempt"] = 21601.5003683,
 ["LastSeen"] = 21601.637372,
 },
-["Player-86-09D18E6B"] = {
-["SpecId"] = 263,
-["LastSeen"] = 10083.0523271,
-},
-["Player-3684-0EBF39AA"] = {
-["SpecId"] = 64,
-["LastSeen"] = 19698.9012382,
-},
-["Player-1168-0935C3F0"] = {
-["SpecId"] = 70,
-["LastSeen"] = 10228.113855,
-},
-["Player-3684-0EB7FF61"] = {
-["SpecId"] = 252,
-["LastSeen"] = 48524.6853218,
-["LastAttempt"] = 48545.43149320001,
-},
-["Player-60-0F2F2FE9"] = {
-["SpecId"] = 577,
-["LastAttempt"] = 54960.02573430001,
-["LastSeen"] = 54960.6598329,
-},
-["Player-3678-0E220F97"] = {
-["SpecId"] = 72,
-["LastSeen"] = 19698.9002921,
-},
-["Player-11-0EA5AC7F"] = {
-["LastSeen"] = 15578.125834,
+["Player-3676-0E472AFD"] = {
+["LastSeen"] = 19224.4887011,
 ["SpecId"] = 1480,
 },
-["Player-11-0EB41D2E"] = {
-["LastSeen"] = 22016.9767366,
-["SpecId"] = 105,
-},
-["Player-3684-08CDA8A1"] = {
-["SpecId"] = 1480,
-["LastAttempt"] = 25476.3214872,
-["LastSeen"] = 25477.7699237,
-},
-["Player-3675-0A77F50B"] = {
-["SpecId"] = 262,
-["LastSeen"] = 23015.4915673,
-["LastAttempt"] = 23015.1693709,
-},
-["Player-57-0E1172E4"] = {
-["LastSeen"] = 4256.676374000001,
-["SpecId"] = 253,
-},
-["Player-1138-0987D139"] = {
+["Player-1136-09213637"] = {
+["LastSeen"] = 20848.0830165,
 ["SpecId"] = 64,
-["LastSeen"] = 10083.0524562,
 },
-["Player-11-0E4AE684"] = {
-["SpecId"] = 104,
-["LastSeen"] = 42839.5478098,
+["Player-11-0AF2448B"] = {
+["SpecId"] = 64,
+["LastAttempt"] = 19700.4626087,
+["LastSeen"] = 19700.5839172,
 },
-["Player-76-0A6771FB"] = {
-["SpecId"] = 105,
-["LastSeen"] = 18285.4947417,
+["Player-3723-0C585157"] = {
+["SpecId"] = 266,
+["LastSeen"] = 23665.0240981,
+["LastAttempt"] = 23661.4067581,
+},
+["Player-127-0B015870"] = {
+["LastSeen"] = 25717.2448755,
+["SpecId"] = 266,
+},
+["Player-1426-0DF42790"] = {
+["LastSeen"] = 22928.3644542,
+["SpecId"] = 269,
+},
+["Player-11-0E889055"] = {
+["SpecId"] = 64,
+["LastAttempt"] = 12908.5155582,
+["LastSeen"] = 12908.7449907,
+},
+["Player-1136-083909FB"] = {
+["SpecId"] = 254,
+["LastSeen"] = 25777.4953547,
+},
+["Player-60-0F88E502"] = {
+["SpecId"] = 268,
+["LastAttempt"] = 55866.8469389,
+["LastSeen"] = 55867.15284,
+},
+["Player-3683-0E213B83"] = {
+["SpecId"] = 264,
+["LastAttempt"] = 20767.3682496,
+["LastSeen"] = 20767.8423683,
+},
+["Player-57-0DEEEC91"] = {
+["SpecId"] = 73,
+["LastAttempt"] = 24529.4384973,
+["LastSeen"] = 24529.7468886,
+},
+["Player-1171-0A4F1179"] = {
+["SpecId"] = 254,
+["LastSeen"] = 29291.7770799,
+["LastAttempt"] = 29291.4292919,
+},
+["Player-57-0DD65F6B"] = {
+["SpecId"] = 266,
+["LastAttempt"] = 59121.6694576,
+["LastSeen"] = 59121.4917662,
+},
+["Player-11-0E96C37D"] = {
+["SpecId"] = 267,
+["LastSeen"] = 11833.9824932,
 },
 ["Player-3676-0E5DD8AC"] = {
 ["SpecId"] = 257,
 ["LastAttempt"] = 24062.6775324,
 ["LastSeen"] = 24063.0059332,
+},
+["Player-11-0E3F5AF4"] = {
+["LastSeen"] = 10681.57289,
+["SpecId"] = 1473,
+},
+["Player-3684-0EBF39AA"] = {
+["SpecId"] = 64,
+["LastSeen"] = 19698.9012382,
+},
+["Player-11-0DCA6060"] = {
+["SpecId"] = 252,
+["LastSeen"] = 13592.6194667,
+["LastAttempt"] = 13592.2186656,
+},
+["Player-11-0EB3EA06"] = {
+["SpecId"] = 1467,
+["LastSeen"] = 19698.9013225,
+},
+["Player-3678-0E220F97"] = {
+["SpecId"] = 72,
+["LastSeen"] = 19698.9002921,
+},
+["Player-3675-0AD7153F"] = {
+["LastSeen"] = 21272.4741614,
+["SpecId"] = 62,
+},
+["Player-11-0DF280BB"] = {
+["SpecId"] = 104,
+["LastSeen"] = 7853.810522500001,
+},
+["Player-125-08A986C7"] = {
+["SpecId"] = 261,
+["LastAttempt"] = 20545.269417,
+["LastSeen"] = 20545.4967499,
+},
+["Player-5-0E909FD7"] = {
+["LastSeen"] = 2312.777573,
+["SpecId"] = 270,
+},
+["Player-60-0FE66E0F"] = {
+["SpecId"] = 266,
+["LastSeen"] = 20131.0446669,
+["LastAttempt"] = 20130.6945548,
+},
+["Player-69-00676E71"] = {
+["SpecId"] = 260,
+["LastAttempt"] = 20846.1262521,
+["LastSeen"] = 20846.4819609,
+},
+["Player-76-0BE7F432"] = {
+["LastSeen"] = 2482.8274861,
+["SpecId"] = 253,
 },
 ["Player-3676-0EDE7228"] = {
 ["SpecId"] = 577,
@@ -29337,167 +29397,117 @@ FrameSortDB = {
 ["LastSeen"] = 22331.537764,
 ["SpecId"] = 64,
 },
-["Player-11-0EB3EA06"] = {
-["SpecId"] = 1467,
-["LastSeen"] = 19698.9013225,
-},
-["Player-11-0E70BDA5"] = {
-["SpecId"] = 71,
-["LastSeen"] = 16849.6902476,
-},
-["Player-1171-0AD5BE77"] = {
-["SpecId"] = 252,
-["LastAttempt"] = 24435.9739065,
-["LastSeen"] = 24436.323365,
-},
-["Player-60-0FEA6998"] = {
-["SpecId"] = 265,
-["LastSeen"] = 29490.491562,
-["LastAttempt"] = 29490.2144306,
-},
-["Player-125-08A986C7"] = {
-["SpecId"] = 261,
-["LastAttempt"] = 20545.269417,
-["LastSeen"] = 20545.4967499,
-},
-["Player-5-0E909FD7"] = {
-["LastSeen"] = 2312.777573,
-["SpecId"] = 270,
-},
-["Player-3675-0A43E46F"] = {
-["SpecId"] = 269,
-["LastAttempt"] = 47799.1738043,
-["LastSeen"] = 47799.4986539,
-},
-["Player-11-0BB10BB8"] = {
-["LastSeen"] = 21408.0498054,
-["SpecId"] = 70,
-},
-["Player-151-06B57704"] = {
-["SpecId"] = 256,
-["LastSeen"] = 17256.6423031,
-["LastAttempt"] = 17258.3793858,
-},
-["Player-60-0F84D153"] = {
-["SpecId"] = 256,
-["LastSeen"] = 19698.9016344,
-},
-["Player-11-0E6C2810"] = {
-["SpecId"] = 260,
-["LastAttempt"] = 47800.2104772,
-["LastSeen"] = 47800.5187051,
-},
-["Player-1136-096BEFFA"] = {
-["SpecId"] = 64,
-["LastAttempt"] = 12298.0396032,
-["LastSeen"] = 12298.4061626,
-},
-["Player-57-0E102D1C"] = {
-["SpecId"] = 581,
-["LastSeen"] = 4862.2334923,
-["LastAttempt"] = 4849.2076542,
+["Player-5-0AFAEB0C"] = {
+["SpecId"] = 267,
+["LastAttempt"] = 17493.384231,
+["LastSeen"] = 17493.7375315,
 },
 ["Player-1428-0DF29946"] = {
 ["SpecId"] = 71,
 ["LastSeen"] = 18496.8037521,
 ["LastAttempt"] = 18411.4865441,
 },
-["Player-11-0E6811A4"] = {
-["SpecId"] = 105,
-["LastSeen"] = 18904.0520035,
-["LastAttempt"] = 18903.7092743,
+["Player-11-0E356AEB"] = {
+["LastSeen"] = 7188.6429355,
+["SpecId"] = 577,
 },
-["Player-11-0E440392"] = {
-["SpecId"] = 270,
-["LastSeen"] = 17760.8562089,
+["Player-162-0B1D20BF"] = {
+["SpecId"] = 103,
+["LastSeen"] = 37562.6872374,
+["LastAttempt"] = 37562.2718431,
 },
 ["Player-11-0EA939E2"] = {
 ["SpecId"] = 254,
 ["LastSeen"] = 20859.714201,
 ["LastAttempt"] = 20859.9226375,
 },
+["Player-11-0E440392"] = {
+["SpecId"] = 270,
+["LastSeen"] = 17760.8562089,
+},
+["Player-11-0EB2E4C9"] = {
+["LastSeen"] = 3401.8168844,
+["SpecId"] = 261,
+},
 ["Player-61-0FE4794D"] = {
 ["SpecId"] = 70,
 ["LastAttempt"] = 24034.8973886,
 ["LastSeen"] = 24035.1524361,
-},
-["Player-11-0EAD3F90"] = {
-["LastSeen"] = 14270.4139299,
-["SpecId"] = 72,
-},
-["Player-11-0EB549A5"] = {
-["LastSeen"] = 7542.883096500001,
-["SpecId"] = 1468,
 },
 ["Player-11-0E3C3936"] = {
 ["SpecId"] = 253,
 ["LastAttempt"] = 48068.9428055,
 ["LastSeen"] = 48069.2177221,
 },
-["Player-47-06982D2F"] = {
-["SpecId"] = 267,
-["LastSeen"] = 19698.9003854,
+["Player-11-0EB549A5"] = {
+["LastSeen"] = 7542.883096500001,
+["SpecId"] = 1468,
 },
-["Player-11-0EB389B0"] = {
-["SpecId"] = 254,
-["LastAttempt"] = 19433.1230898,
-["LastSeen"] = 19433.4876012,
+["Player-3684-0DDA9A8C"] = {
+["SpecId"] = 64,
+["LastAttempt"] = 50427.67722870001,
+["LastSeen"] = 50428.0470578,
 },
 ["Player-3684-0E847C9D"] = {
 ["SpecId"] = 264,
 ["LastAttempt"] = 46767.6032675,
 ["LastSeen"] = 46767.94336210001,
 },
-["Player-3676-0ED86B45"] = {
-["SpecId"] = 64,
-["LastAttempt"] = 23702.6758205,
-["LastSeen"] = 23921.4792924,
+["Player-104-0EAB45C0"] = {
+["SpecId"] = 257,
+["LastSeen"] = 21553.2167849,
+["LastAttempt"] = 21378.9373199,
 },
-["Player-1427-0DB7067A"] = {
-["SpecId"] = 102,
-["LastSeen"] = 4078.8024606,
-["LastAttempt"] = 4078.4819598,
+["Player-3684-0966F61A"] = {
+["SpecId"] = 253,
+["LastAttempt"] = 46448.8301941,
+["LastSeen"] = 46449.16492620001,
 },
 ["Player-57-0DDF1236"] = {
 ["SpecId"] = 250,
 ["LastSeen"] = 8303.9700706,
 ["LastAttempt"] = 8187.474261200001,
 },
-["Player-3678-0962E87D"] = {
-["LastSeen"] = 29576.1243817,
-["SpecId"] = 577,
-},
-["Player-3725-0B5DFF68"] = {
-["LastSeen"] = 14515.3153065,
-["SpecId"] = 102,
+["Player-120-0A420226"] = {
+["SpecId"] = 251,
+["LastAttempt"] = 20531.1457366,
+["LastSeen"] = 20531.4615449,
 },
 ["Player-1136-097665A2"] = {
 ["SpecId"] = 265,
 ["LastSeen"] = 42294.49464970001,
 },
-["Player-11-0E5568D9"] = {
-["LastSeen"] = 10935.0062039,
-["SpecId"] = 268,
+["Player-11-0E4BC43D"] = {
+["LastSeen"] = 22490.1275741,
+["SpecId"] = 70,
+},
+["Player-3684-0CC2891E"] = {
+["SpecId"] = 1480,
+["LastSeen"] = 48508.31857120001,
 },
 ["Player-60-0FE39D27"] = {
 ["SpecId"] = 64,
 ["LastSeen"] = 39309.5683045,
 ["LastAttempt"] = 39309.2966909,
 },
+["Player-1185-0EA8A70F"] = {
+["SpecId"] = 252,
+["LastAttempt"] = 17299.1666349,
+["LastSeen"] = 17298.9794947,
+},
 ["Player-3675-0AAF5E6B"] = {
 ["SpecId"] = 257,
 ["LastAttempt"] = 22942.4299001,
 ["LastSeen"] = 22942.7652519,
 },
-["Player-60-0FE9F03A"] = {
-["SpecId"] = 266,
-["LastAttempt"] = 21079.5691707,
-["LastSeen"] = 21080.5580668,
-},
 ["Player-1425-0EDDA7AF"] = {
 ["SpecId"] = 256,
 ["LastAttempt"] = 22552.1589594,
 ["LastSeen"] = 22552.4773102,
+},
+["Player-60-0F2E98D9"] = {
+["LastSeen"] = 25717.2447467,
+["SpecId"] = 261,
 },
 ["Player-11-0EB57BC2"] = {
 ["SpecId"] = 64,
@@ -29508,33 +29518,29 @@ FrameSortDB = {
 ["LastAttempt"] = 38697.44720700001,
 ["LastSeen"] = 38698.6462521,
 },
+["Player-3675-0A46A079"] = {
+["SpecId"] = 577,
+["LastSeen"] = 19698.901104,
+},
 ["Player-5-07F36A1C"] = {
 ["SpecId"] = 70,
 ["LastSeen"] = 37563.5966046,
 ["LastAttempt"] = 37563.2886582,
 },
-["Player-3675-0A46A079"] = {
-["SpecId"] = 577,
-["LastSeen"] = 19698.901104,
-},
-["Player-158-056476CD"] = {
-["SpecId"] = 102,
-["LastAttempt"] = 20767.8895597,
-["LastSeen"] = 20768.2445596,
-},
-["Player-3208-0CF7E32C"] = {
-["SpecId"] = 70,
-["LastSeen"] = 35436.3649679,
-},
-["Player-60-0A5F828E"] = {
+["Player-1168-099CD3D8"] = {
 ["SpecId"] = 71,
-["LastAttempt"] = 21594.8688837,
-["LastSeen"] = 21595.1179971,
+["LastSeen"] = 14888.7137693,
+["LastAttempt"] = 14879.0169335,
 },
-["Player-3693-0DCD02C4"] = {
-["SpecId"] = 262,
-["LastAttempt"] = 29264.0530359,
-["LastSeen"] = 29264.3822852,
+["Player-1427-0E9C8CFC"] = {
+["SpecId"] = 64,
+["LastAttempt"] = 55005.4441148,
+["LastSeen"] = 55005.67638780001,
+},
+["Player-96-0BFBDF5F"] = {
+["SpecId"] = 65,
+["LastSeen"] = 15817.0761854,
+["LastAttempt"] = 15816.7258084,
 },
 ["Player-1168-0AEAF94E"] = {
 ["SpecId"] = 265,
@@ -29551,61 +29557,63 @@ FrameSortDB = {
 ["LastSeen"] = 37771.46571590001,
 ["LastAttempt"] = 37771.1408248,
 },
-["Player-11-0AFC94D1"] = {
-["LastSeen"] = 20468.1565587,
-["SpecId"] = 261,
-},
-["Player-11-0E6C174E"] = {
-["SpecId"] = 66,
-["LastAttempt"] = 47993.42079130001,
-["LastSeen"] = 47993.7067293,
-},
 ["Player-11-0E782A9D"] = {
 ["SpecId"] = 251,
 ["LastSeen"] = 48286.3936475,
+},
+["Player-11-0E687E5E"] = {
+["LastSeen"] = 22216.2817042,
+["SpecId"] = 266,
+},
+["Player-3661-083E889C"] = {
+["SpecId"] = 577,
+["LastSeen"] = 22574.6181897,
+["LastAttempt"] = 22574.2515432,
 },
 ["Player-3723-05F322C9"] = {
 ["SpecId"] = 266,
 ["LastAttempt"] = 23895.7128204,
 ["LastSeen"] = 23894.7213502,
 },
-["Player-118-091A266E"] = {
-["SpecId"] = 253,
-["LastSeen"] = 20528.9433916,
+["Player-1138-061852E3"] = {
+["SpecId"] = 64,
+["LastAttempt"] = 20725.3886805,
+["LastSeen"] = 20725.7500681,
 },
 ["Player-1136-0890F038"] = {
 ["SpecId"] = 105,
 ["LastSeen"] = 25777.4952485,
 },
-["Player-52-07FE7F1C"] = {
+["Player-3209-0B7E2303"] = {
+["SpecId"] = 266,
+["LastSeen"] = 16067.9898623,
+["LastAttempt"] = 15814.7826212,
+},
+["Player-61-0AAD01C9"] = {
+["SpecId"] = 72,
+["LastSeen"] = 54988.7162773,
+},
+["Player-60-0FC85C43"] = {
+["SpecId"] = 105,
+["LastAttempt"] = 35391.1210453,
+["LastSeen"] = 35390.9409151,
+},
+["Player-11-0E6018CD"] = {
+["LastSeen"] = 21374.3421204,
+["SpecId"] = 268,
+},
+["Player-1136-09595E4C"] = {
 ["SpecId"] = 254,
-["LastSeen"] = 19698.9012794,
-},
-["Player-3676-0ED5B246"] = {
-["SpecId"] = 1480,
-["LastAttempt"] = 35183.7336966,
-["LastSeen"] = 35285.9674558,
-},
-["Player-11-0E6D71C2"] = {
-["SpecId"] = 70,
-["LastSeen"] = 22939.3199637,
-},
-["Player-3684-0EDC6855"] = {
-["SpecId"] = 1480,
-["LastSeen"] = 41796.2936109,
-["LastAttempt"] = 41795.9743041,
-},
-["Player-11-0E7615CB"] = {
-["SpecId"] = 64,
-["LastSeen"] = 8227.0280392,
+["LastSeen"] = 17464.4604594,
+["LastAttempt"] = 17464.2128259,
 },
 ["Player-1426-0A1ECA9B"] = {
 ["SpecId"] = 72,
 ["LastSeen"] = 18668.9502726,
 },
-["Player-11-0E6018CD"] = {
-["LastSeen"] = 21374.3421204,
-["SpecId"] = 268,
+["Player-57-0DF30604"] = {
+["SpecId"] = 64,
+["LastSeen"] = 18286.7136211,
 },
 ["Player-57-0DD3EF24"] = {
 ["SpecId"] = 252,
@@ -29622,21 +29630,23 @@ FrameSortDB = {
 ["LastAttempt"] = 29264.5618358,
 ["LastSeen"] = 29264.9495044,
 },
-["Player-3676-0EABF535"] = {
-["LastSeen"] = 21288.4737671,
-["SpecId"] = 103,
+["Player-11-0EB5251A"] = {
+["LastSeen"] = 13468.260759,
+["SpecId"] = 255,
 },
-["Player-121-09B72440"] = {
-["SpecId"] = 254,
-["LastSeen"] = 39315.6225256,
+["Player-1428-0E61FC38"] = {
+["SpecId"] = 65,
+["LastSeen"] = 20402.2219887,
+["LastAttempt"] = 20155.8886892,
 },
-["Player-11-0E30A337"] = {
-["SpecId"] = 105,
-["LastSeen"] = 16390.3812179,
+["Player-3675-0AFFAB70"] = {
+["SpecId"] = 261,
+["LastAttempt"] = 20966.2696974,
+["LastSeen"] = 20966.594246,
 },
-["Player-60-0F953A7E"] = {
-["LastSeen"] = 25717.2446538,
-["SpecId"] = 64,
+["Player-96-0652D4B5"] = {
+["SpecId"] = 265,
+["LastSeen"] = 21594.6182239,
 },
 ["Player-1175-0D07A98D"] = {
 ["SpecId"] = 105,
@@ -29656,120 +29666,126 @@ FrameSortDB = {
 ["SpecId"] = 258,
 ["LastSeen"] = 42418.0085472,
 },
-["Player-60-0FDAF293"] = {
-["SpecId"] = 258,
-["LastSeen"] = 19698.9014989,
+["Player-3207-0E192C41"] = {
+["SpecId"] = 266,
+["LastAttempt"] = 54932.01854880001,
+["LastSeen"] = 54932.1808794,
 },
 ["Player-76-0B9F1B7C"] = {
 ["SpecId"] = 264,
 ["LastSeen"] = 25727.9786049,
 ["LastAttempt"] = 25727.6483273,
 },
-["Player-1136-0971AA4B"] = {
-["SpecId"] = 71,
-["LastSeen"] = 10083.0524931,
-},
-["Player-11-0E5ED260"] = {
-["SpecId"] = 105,
-["LastSeen"] = 17649.7031857,
-},
-["Player-3207-0E192C41"] = {
-["SpecId"] = 266,
-["LastAttempt"] = 54932.01854880001,
-["LastSeen"] = 54932.1808794,
-},
-["Player-3675-0A80831B"] = {
-["SpecId"] = 258,
-["LastAttempt"] = 29275.2190697,
-["LastSeen"] = 29275.5951858,
-},
 ["Player-5-0B93B99B"] = {
 ["SpecId"] = 64,
 ["LastAttempt"] = 21238.0219128,
 ["LastSeen"] = 21238.3088459,
 },
-["Player-5-0EB210E6"] = {
-["SpecId"] = 104,
-["LastAttempt"] = 5979.8880611,
-["LastSeen"] = 6379.076413000001,
-},
-["Player-11-0E747D33"] = {
-["SpecId"] = 105,
-["LastAttempt"] = 12297.0346345,
-["LastSeen"] = 12297.3780852,
-},
-["Player-3675-0AE019A2"] = {
-["SpecId"] = 269,
-["LastAttempt"] = 12312.1329604,
-["LastSeen"] = 12312.3619307,
-},
-["Player-104-0C70DDF6"] = {
-["SpecId"] = 268,
-["LastSeen"] = 15846.8309366,
-["LastAttempt"] = 15846.5012387,
+["Player-113-07E2C3D5"] = {
+["SpecId"] = 270,
+["LastSeen"] = 15859.916377,
+["LastAttempt"] = 15859.603589,
 },
 ["Player-3725-0A9AC8F9"] = {
 ["SpecId"] = 261,
 ["LastAttempt"] = 17182.4799808,
 ["LastSeen"] = 17182.8389946,
 },
+["Player-3675-0A80831B"] = {
+["SpecId"] = 258,
+["LastAttempt"] = 29275.2190697,
+["LastSeen"] = 29275.5951858,
+},
+["Player-1171-0906E396"] = {
+["SpecId"] = 73,
+["LastSeen"] = 29276.6102668,
+["LastAttempt"] = 29276.2351713,
+},
+["Player-84-0AB47D17"] = {
+["SpecId"] = 268,
+["LastAttempt"] = 54947.19734570001,
+["LastSeen"] = 54946.56455130001,
+},
+["Player-61-0EAAC26E"] = {
+["SpecId"] = 269,
+["LastSeen"] = 16431.7160811,
+["LastAttempt"] = 15817.2260726,
+},
+["Player-3661-09571934"] = {
+["LastSeen"] = 24511.8386577,
+["SpecId"] = 253,
+},
+["Player-1185-084AA434"] = {
+["SpecId"] = 70,
+["LastAttempt"] = 22945.892393,
+["LastSeen"] = 22946.3005301,
+},
+["Player-11-0BC93B4A"] = {
+["LastSeen"] = 16559.1351553,
+["SpecId"] = 105,
+},
 ["Player-106-0EE0725E"] = {
 ["LastSeen"] = 29576.1242448,
 ["SpecId"] = 65,
-},
-["Player-3661-097050E8"] = {
-["LastSeen"] = 24159.9818942,
-["SpecId"] = 268,
-},
-["Player-11-0E597ADA"] = {
-["SpecId"] = 70,
-["LastSeen"] = 9270.1660745,
-},
-["Player-63-018A51D2"] = {
-["SpecId"] = 64,
-["LastSeen"] = 20952.8551393,
-},
-["Player-11-0EB5DE44"] = {
-["LastSeen"] = 13901.4312174,
-["SpecId"] = 250,
-},
-["Player-5-0DE23006"] = {
-["SpecId"] = 253,
-["LastSeen"] = 12297.3782912,
-},
-["Player-3676-0E4C9A31"] = {
-["LastSeen"] = 14507.8166776,
-["SpecId"] = 1468,
-},
-["Player-1171-0A4FF980"] = {
-["SpecId"] = 102,
-["LastAttempt"] = 39328.4150899,
-["LastSeen"] = 39328.7764818,
 },
 ["Player-162-0BEFF19E"] = {
 ["SpecId"] = 105,
 ["LastSeen"] = 19698.9008958,
 },
-["Player-3725-03F09238"] = {
-["LastSeen"] = 18623.6526776,
-["SpecId"] = 64,
-},
-["Player-77-0EF687BD"] = {
-["LastSeen"] = 29097.5287075,
-["SpecId"] = 581,
+["Player-11-0E597ADA"] = {
+["SpecId"] = 70,
+["LastSeen"] = 9270.1660745,
 },
 ["Player-1184-0B75E493"] = {
 ["SpecId"] = 254,
 ["LastAttempt"] = 17163.6960305,
 ["LastSeen"] = 17164.0370947,
 },
+["Player-1427-08236FFA"] = {
+["SpecId"] = 65,
+["LastAttempt"] = 18367.4580451,
+["LastSeen"] = 18368.0849359,
+},
+["Player-60-0F30DBE4"] = {
+["SpecId"] = 581,
+["LastSeen"] = 6641.923863900001,
+["LastAttempt"] = 6540.490087800001,
+},
 ["Player-11-0E883E29"] = {
 ["LastSeen"] = 2312.7777468,
 ["SpecId"] = 71,
 },
-["Player-11-0EB1100D"] = {
-["SpecId"] = 64,
-["LastSeen"] = 15219.2703262,
+["Player-1171-0A4FF980"] = {
+["SpecId"] = 102,
+["LastAttempt"] = 39328.4150899,
+["LastSeen"] = 39328.7764818,
+},
+["Player-5-0EA16E5B"] = {
+["LastSeen"] = 19224.4889515,
+["SpecId"] = 252,
+},
+["Player-3678-0CEF06FB"] = {
+["SpecId"] = 269,
+["LastAttempt"] = 54946.69839010001,
+["LastSeen"] = 55359.09750700001,
+},
+["Player-11-0E9203B3"] = {
+["SpecId"] = 71,
+["LastSeen"] = 16689.3711273,
+["LastAttempt"] = 16689.074988,
+},
+["Player-1425-0EDE69D1"] = {
+["SpecId"] = 577,
+["LastSeen"] = 21595.1182505,
+},
+["Player-3725-0C580DF2"] = {
+["SpecId"] = 105,
+["LastSeen"] = 2132.108201,
+["LastAttempt"] = 2132.1726811,
+},
+["Player-11-0E2916DB"] = {
+["SpecId"] = 268,
+["LastSeen"] = 12101.4249466,
 },
 },
 }

@@ -10,8 +10,8 @@ NemPetAlertsSV = {
 ["enabled"] = true,
 ["relativeTo"] = "UIParent",
 ["petPassiveEnabled"] = true,
-["ver"] = 2,
-["petDeadEnabled"] = false,
+["y"] = 140,
+["tauntAutoEnabled"] = false,
 ["alertColors"] = {
 ["notAttacking"] = {
 ["b"] = 1,
@@ -56,12 +56,12 @@ NemPetAlertsSV = {
 },
 ["fontName"] = "Gotham Narrow Ultra",
 ["fakeDeathEnabled"] = false,
-["y"] = 140,
+["ver"] = 2,
 ["x"] = 0,
 ["healPetEnabled"] = true,
 ["healPetThreshold"] = 30,
 ["noPetEnabled"] = true,
 ["notAttackingSoundEnabled"] = true,
-["tauntAutoEnabled"] = false,
+["petDeadEnabled"] = false,
 ["notAttackingSoundName"] = "Sonarr",
 }

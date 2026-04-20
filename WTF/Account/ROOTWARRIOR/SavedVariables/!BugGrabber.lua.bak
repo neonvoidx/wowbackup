@@ -1,7 +1,7 @@
 
 BugGrabberDB = {
 ["lastSanitation"] = 3,
-["session"] = 12,
+["session"] = 14,
 ["errors"] = {
 {
 ["message"] = "Interface/AddOns/Blizzard_SharedXML/Backdrop.lua:226: attempt to perform arithmetic on local 'width' (a secret number value tainted by 'FrameColor')",
@@ -22,6 +22,14 @@ BugGrabberDB = {
 ["time"] = 1776699773,
 ["session"] = 12,
 ["counter"] = 3,
+},
+{
+["message"] = "attempted to iterate a forbidden table",
+["time"] = 1776699795,
+["locals"] = "self = StatusBar {\n showTradeSkills = false\n ArenaTargetHighlight = Texture {\n }\n HoldFadeOutAnim = AnimationGroup {\n }\n BorderShield = Texture {\n }\n ArenaTargetTextFrame = Frame {\n }\n showShield = true\n unit = \"player\"\n StagePoints = <table> {\n }\n StagePips = <table> {\n }\n Icon = Texture {\n }\n FadeOutAnim = AnimationGroup {\n }\n Border = Texture {\n }\n Flash = Texture {\n }\n MaskTexture = MaskTexture {\n }\n empoweredFix = true\n Spark = Texture {\n }\n changedBarColor = true\n ArenaTargetText = FontString {\n }\n __modernHooked = true\n dragSetup = true\n isSArena = true\n empowerSpark = Texture {\n }\n ArenaIDText = FontString {\n }\n showIcon = true\n StageTiers = <table> {\n }\n showCastbar = true\n Background = Texture {\n }\n isInEditMode = true\n Text = FontString {\n }\n TextBorder = Texture {\n }\n}\n(for state) = <forbidden table>\n(for control) = nil\n",
+["stack"] = "[Interface/AddOns/Blizzard_UIPanels_Game/Mainline/CastingBarFrame.lua]:722: in function 'StopFinishAnims'\n[Interface/AddOns/Blizzard_UIPanels_Game/Mainline/CastingBarFrame.lua]:86: in function 'UpdateShownState'\n[Interface/AddOns/Blizzard_EditMode/Shared/EditModeSystemTemplates.lua]:1641: in function 'SetIsInEditMode'\n[Interface/AddOns/Blizzard_EditMode/Shared/EditModeManager.lua]:2355: in function 'RefreshArenaFrames'\n[Interface/AddOns/Blizzard_EditMode/Mainline/EditModeManagerOverrides.lua]:27: in function 'EditModeFrameSetup'\n[Interface/AddOns/Blizzard_EditMode/Shared/EditModeManager.lua]:1840: in function 'OnEditModeEnter'\n[Interface/AddOns/Blizzard_EditMode/Shared/EditModeManager.lua]:88: in function 'EnterEditMode'\n[Interface/AddOns/Blizzard_EditMode/Shared/EditModeManager.lua]:114: in function <.../AddOns/Blizzard_EditMode/Shared/EditModeManager.lua:112>\n[C]: ?\n[C]: ?\n[C]: in function 'Show'\n[Interface/AddOns/Blizzard_UIParentPanelManager/Shared/UIParentPanelManager.lua]:461: in function 'SetUIPanel'\n[Interface/AddOns/Blizzard_UIParentPanelManager/Shared/UIParentPanelManager.lua]:263: in function 'ShowUIPanel'\n[Interface/AddOns/Blizzard_UIParentPanelManager/Shared/UIParentPanelManager.lua]:133: in function <...UIParentPanelManager/Shared/UIParentPanelManager.lua:128>\n[C]: in function 'SetAttribute'\n[Interface/AddOns/Blizzard_UIParentPanelManager/Shared/UIParentPanelManager.lua]:850: in function 'ShowUIPanel'\n[Interface/AddOns/sArena_Reloaded/Modules/Functions.lua]:1154: in function 'InitializeMidnightDRFrames'\n[Interface/AddOns/sArena_Reloaded/sArena.lua]:657: in function <Interface/AddOns/sArena_Reloaded/sArena.lua:488>\n",
+["session"] = 13,
+["counter"] = 1,
 },
 },
 }

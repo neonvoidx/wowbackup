@@ -3,6 +3,44 @@ MJEGlobalSettings = {
 ["trackUsageStats"] = false,
 ["notes"] = {
 },
+["filterProfile"] = {
+{
+["search"] = "",
+["sort"] = {
+},
+["filter"] = {
+},
+},
+{
+["search"] = "",
+["sort"] = {
+},
+["filter"] = {
+},
+},
+{
+["search"] = "",
+["sort"] = {
+},
+["filter"] = {
+},
+},
+{
+["search"] = "",
+["sort"] = {
+},
+["filter"] = {
+},
+},
+{
+["search"] = "",
+["sort"] = {
+},
+["filter"] = {
+},
+},
+},
+["personalFilter"] = false,
 ["ui"] = {
 ["showMountspecialButton"] = true,
 ["enableCursorKeys"] = true,
@@ -44,48 +82,9 @@ MJEGlobalSettings = {
 ["unlockDisplayCamera"] = false,
 ["displayAnimation"] = "stand",
 },
-["personalFilter"] = false,
-["filterProfile"] = {
-{
-["search"] = "",
-["sort"] = {
-},
-["filter"] = {
-},
-},
-{
-["search"] = "",
-["sort"] = {
-},
-["filter"] = {
-},
-},
-{
-["search"] = "",
-["sort"] = {
-},
-["filter"] = {
-},
-},
-{
-["search"] = "",
-["sort"] = {
-},
-["filter"] = {
-},
-},
-{
-["search"] = "",
-["sort"] = {
-},
-["filter"] = {
-},
-},
-},
-["summonPreviousPetAgain"] = true,
-["hiddenMounts"] = {
-},
 ["personalUi"] = false,
+["searchInFamilyName"] = true,
+["searchInNotes"] = true,
 ["pets"] = {
 ["assignments"] = {
 },
@@ -213,18 +212,11 @@ true,
 ["Promotion"] = true,
 ["Unavailable"] = true,
 },
-["hiddenIngame"] = false,
+["color"] = {
+},
 ["notCollected"] = false,
 ["hidden"] = false,
-["mountType"] = {
-["rideAlong"] = true,
-["transform"] = true,
-["underwater"] = false,
-["repair"] = true,
-["passenger"] = true,
-["ground"] = true,
-["flying"] = false,
-},
+["onlyUsable"] = false,
 ["family"] = {
 ["Drakes"] = {
 ["Drakes"] = true,
@@ -299,13 +291,13 @@ true,
 ["Mana Wyrm"] = true,
 ["N'Zoth Serpents"] = true,
 ["Snapdragons"] = true,
-["Crocolisks"] = true,
+["Turtles"] = true,
 ["Kodos"] = true,
 ["Shardhides"] = true,
 ["Thunder Lizard"] = true,
 ["Basilisks"] = true,
 ["Sea Serpents"] = true,
-["Turtles"] = true,
+["Crocolisks"] = true,
 },
 ["Crabs"] = true,
 ["Sporebat"] = true,
@@ -335,10 +327,10 @@ true,
 ["Broom"] = true,
 ["Kites"] = true,
 ["Rockets"] = true,
-["Mechanical Animals"] = true,
+["Carpets"] = true,
 ["Spider Tanks"] = true,
 ["Motorcycles"] = true,
-["Carpets"] = true,
+["Mechanical Animals"] = true,
 ["Mecha-suits"] = true,
 ["Hover Board"] = true,
 ["Hands"] = true,
@@ -373,10 +365,10 @@ true,
 },
 ["Rays"] = {
 ["Nether Rays"] = true,
-["Stingrays"] = true,
 ["Fathom Rays"] = true,
-["Mana Rays"] = true,
+["Stingrays"] = true,
 ["Shalewing"] = true,
+["Mana Rays"] = true,
 },
 ["Plant"] = true,
 ["Bovids"] = {
@@ -384,9 +376,9 @@ true,
 ["Yaks"] = true,
 ["Talbuks"] = true,
 ["Rams"] = true,
-["Clefthooves"] = true,
 ["Ruinstriders"] = true,
 ["Slateback"] = true,
+["Clefthooves"] = true,
 ["Goats"] = true,
 },
 ["Wolves"] = {
@@ -466,21 +458,29 @@ true,
 },
 },
 ["onlyFavorites"] = false,
+["mountType"] = {
+["rideAlong"] = true,
+["transform"] = true,
+["underwater"] = false,
+["repair"] = true,
+["passenger"] = true,
+["ground"] = true,
+["flying"] = false,
+},
 ["faction"] = {
 ["horde"] = true,
 ["alliance"] = true,
 ["noFaction"] = true,
 },
-["onlyUsable"] = false,
 ["onlyTradable"] = false,
 ["collected"] = true,
 ["onlyRecent"] = false,
-["color"] = {
-},
+["hiddenIngame"] = false,
 },
 ["personalHiddenMounts"] = false,
-["searchInNotes"] = true,
-["searchInFamilyName"] = true,
+["summonPreviousPetAgain"] = true,
+["hiddenMounts"] = {
+},
 ["searchInDescription"] = true,
 }
 MJETrackingData = {

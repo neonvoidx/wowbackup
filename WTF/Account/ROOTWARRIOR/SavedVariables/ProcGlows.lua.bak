@@ -2,20 +2,20 @@
 muleyoProcGlowDB = {
 ["profileKeys"] = {
 ["Auteist - Tichondrius"] = "Default",
-["Hellavator - Tichondrius"] = "Default",
 ["Mäñýfäçëð - Tichondrius"] = "Default",
-["Gehyo - Tichondrius"] = "Default",
+["Neonvoid - Tichondrius"] = "Default",
 ["Praisesun - Tichondrius"] = "Default",
-["Strathmoan - Tichondrius"] = "Default",
 ["Starstypeshi - Tichondrius"] = "Default",
+["Stormclout - Tichondrius"] = "Default",
+["Gehyo - Tichondrius"] = "Default",
 ["Starphage - Tichondrius"] = "Default",
 ["Manyfaced - Tichondrius"] = "Default",
 ["Reedingo - Tichondrius"] = "Default",
 ["Korahron - Tichondrius"] = "Default",
-["Smaugchamp - Tichondrius"] = "Default",
 ["Choppiez - Tichondrius"] = "Default",
-["Stormclout - Tichondrius"] = "Default",
-["Neonvoid - Tichondrius"] = "Default",
+["Smaugchamp - Tichondrius"] = "Default",
+["Strathmoan - Tichondrius"] = "Default",
+["Hellavator - Tichondrius"] = "Default",
 },
 ["profiles"] = {
 ["Default"] = {

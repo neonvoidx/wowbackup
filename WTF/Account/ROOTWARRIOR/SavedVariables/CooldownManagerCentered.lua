@@ -266,9 +266,9 @@ CooldownManagerCenteredDB = {
 ["state"] = "tracker1",
 ["order"] = 32,
 },
-[312411] = {
-["state"] = "tracker1",
-["order"] = 13,
+[403216] = {
+["state"] = "hidden",
+["order"] = 82,
 },
 [69070] = {
 ["state"] = "tracker1",
@@ -354,9 +354,9 @@ CooldownManagerCenteredDB = {
 ["state"] = "hidden",
 ["order"] = 28,
 },
-[403216] = {
-["state"] = "hidden",
-["order"] = 82,
+[312411] = {
+["state"] = "tracker1",
+["order"] = 13,
 },
 [68992] = {
 ["state"] = "tracker1",
@@ -630,17 +630,17 @@ CooldownManagerCenteredDB = {
 ["state"] = "hidden",
 ["order"] = 48,
 },
-[241304] = {
+[81413] = {
 ["state"] = "hidden",
-["order"] = 22,
+["order"] = 93,
 },
 [250225] = {
 ["state"] = "hidden",
 ["order"] = 105,
 },
-[40772] = {
+[241304] = {
 ["state"] = "hidden",
-["order"] = 102,
+["order"] = 22,
 },
 [191393] = {
 ["state"] = "hidden",
@@ -658,9 +658,9 @@ CooldownManagerCenteredDB = {
 ["state"] = "hidden",
 ["order"] = 92,
 },
-[81413] = {
+[40772] = {
 ["state"] = "hidden",
-["order"] = 93,
+["order"] = 102,
 },
 [243733] = {
 ["state"] = "hidden",
@@ -753,8 +753,8 @@ CooldownManagerCenteredDB = {
 ["BuffIconCooldownViewer"] = false,
 ["BuffBarCooldownViewer"] = false,
 ["EssentialCooldownViewer"] = false,
-["CMCTracker1"] = false,
 ["UtilityCooldownViewer"] = false,
+["CMCTracker1"] = false,
 ["CMCTracker2"] = false,
 },
 ["cooldownStyleSettings"] = {
@@ -784,10 +784,10 @@ CooldownManagerCenteredDB = {
 [79684] = {
 ["alwaysGlow"] = true,
 },
-[1253304] = {
-},
 [1241059] = {
 ["alwaysGlow"] = true,
+},
+[1253304] = {
 },
 [1249625] = {
 ["alwaysGlow"] = true,

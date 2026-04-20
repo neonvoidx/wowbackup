@@ -60,7 +60,7 @@ BWQDB = {
 },
 },
 ["global"] = {
-["versionCheck"] = 120010,
+["versionCheck"] = 120011,
 ["profiles"] = {
 [0] = {
 ["colors"] = {
@@ -70,9 +70,9 @@ BWQDB = {
 },
 ["general"] = {
 },
-["external"] = {
-},
 ["pin"] = {
+},
+["external"] = {
 },
 ["filters"] = {
 },

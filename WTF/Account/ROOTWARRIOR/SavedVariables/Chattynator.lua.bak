@@ -139,12 +139,12 @@ CHATTYNATOR_CONFIG = {
 ["isTemporary"] = false,
 ["groups"] = {
 ["COMBAT_FACTION_CHANGE"] = true,
-["COMBAT_XP_GAIN"] = true,
-["SKILL"] = true,
 ["COMBAT_HONOR_GAIN"] = true,
+["LOOT"] = true,
+["COMBAT_XP_GAIN"] = true,
 ["MONEY"] = true,
 ["CURRENCY"] = true,
-["LOOT"] = true,
+["SKILL"] = true,
 },
 ["addons"] = {
 },
@@ -386,14 +386,14 @@ CHATTYNATOR_CONFIG = {
 ["g"] = 0.7490196228027344,
 ["r"] = 1,
 },
-["GUILD_ITEM_LOOTED"] = {
-["b"] = 0.250980406999588,
-["g"] = 1,
-["r"] = 0.250980406999588,
+["CHANNEL9"] = {
+["b"] = 0.7529412508010864,
+["g"] = 0.7529412508010864,
+["r"] = 1,
 },
-["BG_SYSTEM_NEUTRAL"] = {
-["b"] = 0.03921568766236305,
-["g"] = 0.4705882668495178,
+["CHANNEL_Trade"] = {
+["b"] = 0.7529412508010864,
+["g"] = 0.7529412508010864,
 ["r"] = 1,
 },
 ["FILTERED"] = {
@@ -411,10 +411,10 @@ CHATTYNATOR_CONFIG = {
 ["g"] = 0.501960813999176,
 ["r"] = 1,
 },
-["CHANNEL9"] = {
-["b"] = 0.7529412508010864,
-["g"] = 0.7529412508010864,
-["r"] = 1,
+["GUILD_ITEM_LOOTED"] = {
+["b"] = 0.250980406999588,
+["g"] = 1,
+["r"] = 0.250980406999588,
 },
 ["CHANNEL16"] = {
 ["b"] = 0.7529412508010864,
@@ -466,12 +466,12 @@ CHATTYNATOR_CONFIG = {
 ["g"] = 0.501960813999176,
 ["r"] = 0.7529412508010864,
 },
-["CHANNEL18"] = {
+["CHANNEL_Services"] = {
 ["b"] = 0.7529412508010864,
 ["g"] = 0.7529412508010864,
 ["r"] = 1,
 },
-["CHANNEL_Services"] = {
+["CHANNEL18"] = {
 ["b"] = 0.7529412508010864,
 ["g"] = 0.7529412508010864,
 ["r"] = 1,
@@ -496,8 +496,8 @@ CHATTYNATOR_CONFIG = {
 ["g"] = 0.7529412508010864,
 ["r"] = 1,
 },
-["ARENA_POINTS"] = {
-["b"] = 1,
+["ACHIEVEMENT"] = {
+["b"] = -0,
 ["g"] = 1,
 ["r"] = 1,
 },
@@ -581,8 +581,8 @@ CHATTYNATOR_CONFIG = {
 ["g"] = 1,
 ["r"] = 1,
 },
-["ACHIEVEMENT"] = {
-["b"] = -0,
+["ARENA_POINTS"] = {
+["b"] = 1,
 ["g"] = 1,
 ["r"] = 1,
 },
@@ -611,9 +611,9 @@ CHATTYNATOR_CONFIG = {
 ["g"] = 0.7725490927696228,
 ["r"] = 0.5098039507865906,
 },
-["CHANNEL_Trade"] = {
-["b"] = 0.7529412508010864,
-["g"] = 0.7529412508010864,
+["BG_SYSTEM_NEUTRAL"] = {
+["b"] = 0.03921568766236305,
+["g"] = 0.4705882668495178,
 ["r"] = 1,
 },
 ["BN_INLINE_TOAST_BROADCAST"] = {
@@ -658,8 +658,8 @@ CHATTYNATOR_CONFIG = {
 ["show_font_shadow"] = true,
 ["disabled_skins"] = {
 },
-["show_buttons"] = "hover",
 ["whisper_sounds"] = "all",
+["show_buttons"] = "hover",
 ["keep_edit_box_visible"] = false,
 ["applied_player_table_5"] = true,
 ["skins"] = {

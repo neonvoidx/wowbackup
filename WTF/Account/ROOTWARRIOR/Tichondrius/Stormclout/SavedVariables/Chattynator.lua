@@ -1,12 +1,6 @@
 
 CHATTYNATOR_CURRENT_PROFILE = "DEFAULT"
 CHATTYNATOR_COMMAND_HISTORY = {
-"/s /bge",
-"/i what happened to alliance, last 2-3 weeks ally have been ass at bgs",
-"/i which is so odd",
-"/i winnable",
-"/i i assume bear carrying",
-"/i /m",
 "/i lol",
 "/i man i love wsg",
 "/i truly the best bg",
@@ -203,5 +197,9 @@ CHATTYNATOR_COMMAND_HISTORY = {
 "/s /sarena",
 "/s /rl",
 "/s /hbc",
+"/s /rl",
+"/s /bbf",
+"/s /bbp",
+"/s /minicc",
 "/s /rl",
 }

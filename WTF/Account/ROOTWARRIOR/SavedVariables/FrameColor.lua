@@ -29,8 +29,8 @@ FrameColor4DB = {
 ["Hellowalls - Mal'Ganis"] = "Default",
 ["Hellavator - Tichondrius"] = "Default",
 ["Mäñýfäçëð - Tichondrius"] = "Default",
-["Strathmoan - Tichondrius"] = "Default",
 ["Stormclout - Tichondrius"] = "Default",
+["Strathmoan - Tichondrius"] = "Default",
 ["Reedingo - Mal'Ganis"] = "Default",
 ["Smaugchamp - Tichondrius"] = "Default",
 ["Starstypeshi - Tichondrius"] = "Default",
@@ -132,20 +132,6 @@ FrameColor4DB = {
 },
 ["HUD"] = {
 ["colors"] = {
-["tabs"] = {
-["rgbaValues"] = {
-0.1803921610116959,
-0.1803921610116959,
-0.1803921610116959,
-},
-},
-["fallback"] = {
-["rgbaValues"] = {
-0.2196078598499298,
-0.2196078598499298,
-0.2196078598499298,
-},
-},
 ["main"] = {
 ["rgbaValues"] = {
 0.2784313857555389,
@@ -158,6 +144,20 @@ FrameColor4DB = {
 0.2000000178813934,
 0.2000000178813934,
 0.2000000178813934,
+},
+},
+["tabs"] = {
+["rgbaValues"] = {
+0.1803921610116959,
+0.1803921610116959,
+0.1803921610116959,
+},
+},
+["fallback"] = {
+["rgbaValues"] = {
+0.2196078598499298,
+0.2196078598499298,
+0.2196078598499298,
 },
 },
 },
