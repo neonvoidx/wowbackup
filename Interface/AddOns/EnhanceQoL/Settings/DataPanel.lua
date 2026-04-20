@@ -6,6 +6,7 @@ local cDataPanel = addon.SettingsLayout.rootUI
 
 local expandable = addon.functions.SettingsCreateExpandableSection(cDataPanel, {
 	name = L["DataPanel"],
+	newTagID = "DataPanel",
 	expanded = false,
 	colorizeTitle = false,
 })

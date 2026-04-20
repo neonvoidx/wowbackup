@@ -45,8 +45,7 @@ local function isCharDisplaySelected(key)
 	if key == "gemtip" then return t.gemtip == true end
 	if key == "durability" then return addon.db["showDurabilityOnCharframe"] == true end
 	if key == "catalyst" then return addon.db["showCatalystChargesOnCharframe"] == true end
-	if key == "movementspeed" then return addon.db["movementSpeedStatEnabled"] == true end
-	if key == "statsformat" then return addon.db["characterStatsFormattingEnabled"] == true end
+	if key == "movementspeed" or key == "statsformat" then return false end
 	return false
 end
 
@@ -62,15 +61,11 @@ local function setCharDisplayOption(key, value)
 	elseif key == "catalyst" then
 		addon.db["showCatalystChargesOnCharframe"] = enabled
 	elseif key == "movementspeed" then
-		addon.db["movementSpeedStatEnabled"] = enabled
-		if enabled then
-			if addon.MovementSpeedStat and addon.MovementSpeedStat.Refresh then addon.MovementSpeedStat.Refresh() end
-		else
-			addon.MovementSpeedStat.Disable()
-		end
+		addon.db["movementSpeedStatEnabled"] = false
+		if addon.MovementSpeedStat and addon.MovementSpeedStat.Disable then addon.MovementSpeedStat.Disable() end
 	elseif key == "statsformat" then
-		addon.db["characterStatsFormattingEnabled"] = enabled
-		if addon.CharacterStatsFormatting and addon.CharacterStatsFormatting.Refresh then addon.CharacterStatsFormatting.Refresh() end
+		addon.db["characterStatsFormattingEnabled"] = false
+		if addon.CharacterStatsFormatting and addon.CharacterStatsFormatting.Disable then addon.CharacterStatsFormatting.Disable() end
 	end
 end
 
@@ -84,26 +79,27 @@ local function applyCharDisplaySelection(selection)
 	addon.db.charDisplayOptions.gemtip = selection.gemtip == true
 	addon.db["showDurabilityOnCharframe"] = selection.durability == true
 	addon.db["showCatalystChargesOnCharframe"] = selection.catalyst == true
-	addon.db["movementSpeedStatEnabled"] = selection.movementspeed == true
-	addon.db["characterStatsFormattingEnabled"] = selection.statsformat == true
+	addon.db["movementSpeedStatEnabled"] = false
+	addon.db["characterStatsFormattingEnabled"] = false
 	addon.functions.setCharFrame()
 	addon.functions.calculateDurability()
-	if addon.db["movementSpeedStatEnabled"] then
-		if addon.MovementSpeedStat and addon.MovementSpeedStat.Refresh then addon.MovementSpeedStat.Refresh() end
-	else
-		addon.MovementSpeedStat.Disable()
-	end
-	if addon.CharacterStatsFormatting and addon.CharacterStatsFormatting.Refresh then addon.CharacterStatsFormatting.Refresh() end
+	if addon.MovementSpeedStat and addon.MovementSpeedStat.Disable then addon.MovementSpeedStat.Disable() end
+	if addon.CharacterStatsFormatting and addon.CharacterStatsFormatting.Disable then addon.CharacterStatsFormatting.Disable() end
 end
 
 local ilvlFontOrder = {}
-local ilvlOutlineOrder = { "NONE", "OUTLINE", "THICKOUTLINE", "MONOCHROMEOUTLINE" }
-local ilvlOutlineOptions = {
+local ilvlGlobalFontStyleKey = addon.functions.GetGlobalFontStyleConfigKey and addon.functions.GetGlobalFontStyleConfigKey() or "__EQOL_GLOBAL_FONT_STYLE__"
+local ilvlOutlineOptions, ilvlOutlineOrder = addon.functions.GetFontStyleOptions and addon.functions.GetFontStyleOptions(true) or {
 	NONE = NONE,
 	OUTLINE = L["Outline"] or "Outline",
-	THICKOUTLINE = L["Thick Outline"] or "Thick Outline",
-	MONOCHROMEOUTLINE = L["Monochrome Outline"] or "Monochrome Outline",
-}
+}, { "NONE", "OUTLINE" }
+local function normalizeIlvlFontStyle(value, fallback)
+	if addon.functions and addon.functions.NormalizeFontStyleChoice then
+		return addon.functions.NormalizeFontStyleChoice(value, fallback, true)
+	end
+	if value ~= nil then return value end
+	return fallback or "OUTLINE"
+end
 local ENCHANT_DISPLAY_MODE_FULL = "FULL"
 local ENCHANT_DISPLAY_MODE_FULL_ICON = "FULL_ICON"
 local ENCHANT_DISPLAY_MODE_BADGE = "BADGE"
@@ -188,8 +184,6 @@ local charDisplayDropdown = addon.functions.SettingsCreateMultiDropdown(cGearUpg
 		{ value = "gemtip", text = L["Gem slot tooltip"], tooltip = L["gearDisplayOptionGemTooltipDesc"] },
 		{ value = "durability", text = DURABILITY, tooltip = L["gearDisplayOptionDurabilityDesc"] },
 		{ value = "catalyst", text = L["Catalyst Charges"], tooltip = L["gearDisplayOptionCatalystDesc"] },
-		{ value = "movementspeed", text = STAT_MOVEMENT_SPEED, tooltip = L["gearDisplayOptionMovementSpeedDesc"] },
-		{ value = "statsformat", text = L["gearDisplayOptionStatsFormat"] or "Stat formatting", tooltip = L["gearDisplayOptionStatsFormatDesc"] },
 	},
 	isSelectedFunc = function(key) return isCharDisplaySelected(key) end,
 	setSelectedFunc = function(key, selected) setCharDisplayOption(key, selected) end,
@@ -373,10 +367,10 @@ addon.functions.SettingsCreateDropdown(cGearUpgrade, {
 	text = L["ilvlFontOutline"] or "Item level font outline",
 	list = ilvlOutlineOptions,
 	order = ilvlOutlineOrder,
-	default = "OUTLINE",
-	get = function() return addon.db.ilvlFontOutline or "OUTLINE" end,
+	default = ilvlGlobalFontStyleKey,
+	get = function() return normalizeIlvlFontStyle(addon.db.ilvlFontOutline, ilvlGlobalFontStyleKey) end,
 	set = function(key)
-		addon.db.ilvlFontOutline = key
+		addon.db.ilvlFontOutline = normalizeIlvlFontStyle(key, ilvlGlobalFontStyleKey)
 		refreshItemLevelDisplays()
 	end,
 	parentSection = expandable,
@@ -501,7 +495,7 @@ function addon.functions.initGearUpgrade()
 	addon.functions.InitDBValue("ilvlTextColor", { r = 1, g = 1, b = 1, a = 1 })
 	addon.functions.InitDBValue("ilvlFontFace", addon.functions.GetGlobalFontConfigKey and addon.functions.GetGlobalFontConfigKey() or "__EQOL_GLOBAL_FONT__")
 	addon.functions.InitDBValue("ilvlFontSize", 14)
-	addon.functions.InitDBValue("ilvlFontOutline", "OUTLINE")
+	addon.functions.InitDBValue("ilvlFontOutline", ilvlGlobalFontStyleKey)
 end
 
 local eventHandlers = {}

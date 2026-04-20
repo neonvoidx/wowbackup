@@ -888,12 +888,6 @@ addon.variables.cvarOptions = {
 		description = addon.L["ShowClassColorInNameplate"],
 		category = "cvarCategoryDisplay",
 	},
-	["ShowTargetCastbar"] = {
-		trueValue = "1",
-		falseValue = "0",
-		description = addon.L["ShowTargetCastbar"],
-		category = "cvarCategoryDisplay",
-	},
 	["raidFramesDisplayClassColor"] = {
 		trueValue = "1",
 		falseValue = "0",

@@ -585,10 +585,10 @@ local function applyCastBorder(castCfg, castDefaults)
 end
 
 local function ensureCastIconBorderFrame()
-	if not state.castBar or not state.castIcon or not state.castIconLayer then return nil end
+	if not state.castBar or not state.castIconHolder or not state.castIcon then return nil end
 	local border = state.castIconBorder
 	if not border then
-		border = CreateFrame("Frame", nil, state.castIconLayer, "BackdropTemplate")
+		border = CreateFrame("Frame", nil, state.castIconHolder, "BackdropTemplate")
 		border:EnableMouse(false)
 		state.castIconBorder = border
 	end
@@ -599,16 +599,17 @@ local function ensureCastIconBorderFrame()
 end
 
 local function applyCastIconBorder(castCfg, castDefaults)
-	if not state.castIcon then return end
+	local iconAnchor = state.castIconHolder or state.castIcon
+	if not iconAnchor then return end
 	local enabled, borderCfg, borderDef = getCastIconBorderConfig(castCfg, castDefaults)
 
-	if enabled and state.castIcon:IsShown() then
+	if enabled and iconAnchor:IsShown() then
 		local border = ensureCastIconBorderFrame()
 		if not border then return end
 		local size, offset = getCastIconBorderMetrics(borderCfg, borderDef)
 		border:ClearAllPoints()
-		border:SetPoint("TOPLEFT", state.castIcon, "TOPLEFT", -offset, offset)
-		border:SetPoint("BOTTOMRIGHT", state.castIcon, "BOTTOMRIGHT", offset, -offset)
+		border:SetPoint("TOPLEFT", iconAnchor, "TOPLEFT", -offset, offset)
+		border:SetPoint("BOTTOMRIGHT", iconAnchor, "BOTTOMRIGHT", offset, -offset)
 		border:SetBackdrop({
 			bgFile = "Interface\\Buttons\\WHITE8x8",
 			edgeFile = UFHelper.resolveBorderTexture((type(borderCfg) == "table" and borderCfg.texture) or (type(borderDef) == "table" and borderDef.texture)),
@@ -650,10 +651,14 @@ local function ensureFrame()
 	state.castIconLayer = CreateFrame("Frame", nil, state.castBar)
 	state.castIconLayer:SetAllPoints(state.castBar)
 	state.castIconLayer:EnableMouse(false)
+	state.castIconHolder = CreateFrame("Frame", nil, state.castIconLayer)
+	state.castIconHolder:EnableMouse(false)
+	state.castIconHolder:Hide()
 
 	state.castName = state.castTextLayer:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
 	state.castDuration = state.castTextLayer:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
-	state.castIcon = state.castIconLayer:CreateTexture(nil, "ARTWORK")
+	state.castIcon = state.castIconHolder:CreateTexture(nil, "ARTWORK")
+	state.castIcon:SetAllPoints(state.castIconHolder)
 	state.castIcon:SetTexCoord(0.08, 0.92, 0.08, 0.92)
 end
 
@@ -775,11 +780,10 @@ local function normalizeGradientColor(value)
 	return 1, 1, 1, 1
 end
 
-local function resolveCastbarGradientColors(castCfg, baseR, baseG, baseB, baseA)
+local function resolveCastbarGradientColors(castCfg, _baseR, _baseG, _baseB, _baseA)
 	local sr, sg, sb, sa = normalizeGradientColor(castCfg and castCfg.gradientStartColor)
 	local er, eg, eb, ea = normalizeGradientColor(castCfg and castCfg.gradientEndColor)
-	local br, bg, bb, ba = baseR or 1, baseG or 1, baseB or 1, baseA or 1
-	return br * sr, bg * sg, bb * sb, ba * sa, br * er, bg * eg, bb * eb, ba * ea
+	return sr, sg, sb, sa, er, eg, eb, ea
 end
 
 local function normalizeCastbarGradientMode(value)
@@ -835,11 +839,11 @@ local function clearCastbarGradientState(bar)
 	bar._eqolGradEA = nil
 end
 
-local function applyCastbarGradient(bar, castCfg, baseR, baseG, baseB, baseA, progressOverride)
+local function applyCastbarGradient(bar, castCfg, _baseR, _baseG, _baseB, _baseA, progressOverride)
 	if not bar or not isCastbarGradientEnabled(castCfg) then return false end
 	local tex = bar.GetStatusBarTexture and bar:GetStatusBarTexture()
 	if not tex or not tex.SetGradient then return false end
-	local sr, sg, sb, sa, er, eg, eb, ea = resolveCastbarGradientColors(castCfg, baseR, baseG, baseB, baseA)
+	local sr, sg, sb, sa, er, eg, eb, ea = resolveCastbarGradientColors(castCfg, _baseR, _baseG, _baseB, _baseA)
 	if normalizeCastbarGradientMode(castCfg.gradientMode) == "BAR_END" then
 		local progress = resolveCastbarGradientProgress(bar, progressOverride)
 		if progress then
@@ -879,10 +883,27 @@ end
 local function setCastbarColorWithGradient(bar, castCfg, r, g, b, a, progressOverride)
 	if not bar then return end
 	local br, bg, bb, ba = r or 1, g or 1, b or 1, a or 1
+	local renderR, renderG, renderB, renderA = br, bg, bb, ba
+	if isCastbarGradientEnabled(castCfg) then
+		-- Keep the status bar neutral so the configured gradient colors render without a base tint.
+		renderR, renderG, renderB, renderA = 1, 1, 1, 1
+	end
 	local lastColor = bar._eqolLastColor
-	if not lastColor or lastColor[1] ~= br or lastColor[2] ~= bg or lastColor[3] ~= bb or lastColor[4] ~= ba then bar:SetStatusBarColor(br, bg, bb, ba) end
+	if
+		not lastColor
+		or lastColor[1] ~= renderR
+		or lastColor[2] ~= renderG
+		or lastColor[3] ~= renderB
+		or lastColor[4] ~= renderA
+	then
+		bar:SetStatusBarColor(renderR, renderG, renderB, renderA)
+	end
 	bar._eqolLastColor = bar._eqolLastColor or {}
-	bar._eqolLastColor[1], bar._eqolLastColor[2], bar._eqolLastColor[3], bar._eqolLastColor[4] = br, bg, bb, ba
+	bar._eqolLastColor[1], bar._eqolLastColor[2], bar._eqolLastColor[3], bar._eqolLastColor[4] =
+		renderR,
+		renderG,
+		renderB,
+		renderA
 	if isCastbarGradientEnabled(castCfg) then
 		if not applyCastbarGradient(bar, castCfg, br, bg, bb, ba, progressOverride) then clearCastbarGradientState(bar) end
 	elseif bar._eqolGradientEnabled then
@@ -932,6 +953,7 @@ local function stopCast()
 	state.castBar:Hide()
 	if state.castName then state.castName:SetText("") end
 	if state.castDuration then state.castDuration:SetText("") end
+	if state.castIconHolder then state.castIconHolder:Hide() end
 	if state.castIcon then state.castIcon:Hide() end
 	state.castIconTexture = nil
 	state.castTarget = nil
@@ -974,6 +996,13 @@ local function applyCastLayout(castCfg, castDefaults)
 			if state.castIconLayer:GetFrameLevel() ~= castIconLevel then state.castIconLayer:SetFrameLevel(castIconLevel) end
 		end
 	end
+	if state.castIconHolder then
+		if state.castIconHolder.GetFrameStrata and state.castIconHolder.SetFrameStrata and state.castIconHolder:GetFrameStrata() ~= castStrata then state.castIconHolder:SetFrameStrata(castStrata) end
+		if state.castIconHolder.GetFrameLevel and state.castIconHolder.SetFrameLevel then
+			local castIconLevel = ((state.castIconLayer and state.castIconLayer.GetFrameLevel and state.castIconLayer:GetFrameLevel()) or castFrameLevel + 4)
+			if state.castIconHolder:GetFrameLevel() ~= castIconLevel then state.castIconHolder:SetFrameLevel(castIconLevel) end
+		end
+	end
 
 	local anchor = ensureAnchorConfig(castCfg, castDefaults)
 	if (anchor.relativeFrame or "UIParent") ~= "UIParent" then ensureRelativeFrameHooks(anchor.relativeFrame) end
@@ -1007,13 +1036,24 @@ local function applyCastLayout(castCfg, castDefaults)
 		if state.castDuration.SetJustifyH then state.castDuration:SetJustifyH("RIGHT") end
 	end
 	local showIcon = shouldShowCastIcon(castCfg, castDefaults)
-	if state.castIcon then
+	if state.castIconHolder then
 		local size = castCfg.iconSize or castDefaults.iconSize or height
 		local iconOff = castCfg.iconOffset or castDefaults.iconOffset or { x = -4, y = 0 }
 		if type(iconOff) ~= "table" then iconOff = { x = iconOff, y = 0 } end
-		state.castIcon:SetSize(size, size)
-		state.castIcon:ClearAllPoints()
-		state.castIcon:SetPoint("RIGHT", state.castBar, "LEFT", iconOff.x or -4, iconOff.y or 0)
+		state.castIconHolder:SetSize(size, size)
+		state.castIconHolder:ClearAllPoints()
+		state.castIconHolder:SetPoint("RIGHT", state.castBar, "LEFT", iconOff.x or -4, iconOff.y or 0)
+		state.castIconHolder:SetShown(showIcon)
+	end
+	if state.castIcon then
+		if not state.castIconHolder then
+			local size = castCfg.iconSize or castDefaults.iconSize or height
+			local iconOff = castCfg.iconOffset or castDefaults.iconOffset or { x = -4, y = 0 }
+			if type(iconOff) ~= "table" then iconOff = { x = iconOff, y = 0 } end
+			state.castIcon:SetSize(size, size)
+			state.castIcon:ClearAllPoints()
+			state.castIcon:SetPoint("RIGHT", state.castBar, "LEFT", iconOff.x or -4, iconOff.y or 0)
+		end
 		state.castIcon:SetShown(showIcon)
 	end
 
@@ -1172,6 +1212,7 @@ local function configureCastStatic(castCfg, castDefaults)
 	if state.castIcon then
 		local iconTexture = UFHelper.resolveCastIconTexture(state.castInfo.texture)
 		local showIcon = shouldShowCastIcon(castCfg, castDefaults)
+		if state.castIconHolder then state.castIconHolder:SetShown(showIcon) end
 		state.castIcon:SetShown(showIcon)
 		if showIcon then
 			state.castIcon:SetTexture(iconTexture)
@@ -1405,6 +1446,7 @@ local function showCastInterrupt(event)
 	if state.castIcon then
 		local iconTexture = UFHelper.resolveCastIconTexture((state.castInfo and state.castInfo.texture) or state.castIconTexture)
 		local showIcon = shouldShowCastIcon(castCfg, castDefaults)
+		if state.castIconHolder then state.castIconHolder:SetShown(showIcon) end
 		state.castIcon:SetShown(showIcon)
 		if showIcon then
 			state.castIcon:SetTexture(iconTexture)

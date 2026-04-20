@@ -69,3 +69,7 @@ HideButtonGlow: enabled
 ProcGlows: enabled
 Myslot: enabled
 Platynator: enabled
+M33kAurasCompanion: enabled
+M33kAurasArchive: enabled
+M33Auras: disabled
+WeakAuras: disabled

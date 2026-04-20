@@ -458,10 +458,49 @@ local function checkCurrency(tooltip, id)
 	end
 end
 
+local spellTooltipIconIDCache = {}
+
+local function GetTooltipSpellIconID(id)
+	if not IsValidSpellIdentifier(id) then return nil end
+
+	local key = id
+	if type(id) == "string" then key = "s:" .. id end
+
+	local cached = spellTooltipIconIDCache[key]
+	if cached ~= nil then
+		if cached == false then return nil end
+		return cached
+	end
+
+	local spellInfo = C_Spell.GetSpellInfo(id)
+	local iconID = spellInfo and spellInfo.iconID or false
+	spellTooltipIconIDCache[key] = iconID
+	if iconID == false then return nil end
+	return iconID
+end
+
+local function ShouldRunSpellTooltipWork(id, isSpell)
+	local db = addon.db
+	if not db then return false end
+	if db["TooltipShowSpellID"] then return true end
+	if isSpell and IsValidSpellIdentifier(id) and (db["TooltipShowSpellIconInline"] or db["TooltipShowSpellIcon"]) then return true end
+	return db["TooltipSpellHideType"] ~= 1
+end
+
 local function checkSpell(tooltip, id, name, isSpell)
 	if not IsTooltipMutable(tooltip) then return end
+	local db = addon.db
+	if not db then return end
+
 	local first = true
-	if addon.db["TooltipShowSpellID"] then
+	local showSpellID = db["TooltipShowSpellID"]
+	local canResolveSpellIcon = isSpell and IsValidSpellIdentifier(id)
+	local showSpellIconInline = canResolveSpellIcon and db["TooltipShowSpellIconInline"]
+	local showSpellIcon = canResolveSpellIcon and db["TooltipShowSpellIcon"]
+	local spellIconID
+	if showSpellIconInline or showSpellIcon then spellIconID = GetTooltipSpellIconID(id) end
+
+	if showSpellID then
 		if id then
 			if first then
 				tooltip:AddLine(" ")
@@ -471,40 +510,34 @@ local function checkSpell(tooltip, id, name, isSpell)
 		end
 	end
 
-	if addon.db["TooltipShowSpellIconInline"] and isSpell and IsValidSpellIdentifier(id) then
-		local spellInfo = C_Spell.GetSpellInfo(id)
-		if spellInfo and spellInfo.iconID then
-			local line = tooltip and _G[tooltip:GetName() .. "TextLeft1"]
-			if line then
-				local current = line:GetText()
-				if current and not isSecret(current) and not safeFind(current, "|T", true) then
-					local size = addon.db and addon.db["TooltipItemIconSize"] or 16
-					if size < 10 then
-						size = 10
-					elseif size > 30 then
-						size = 30
-					end
-					local tex = string.format("|T%d:%d:%d:0:0|t ", spellInfo.iconID, size, size)
-					line:SetText(tex .. current)
+	if showSpellIconInline and spellIconID then
+		local line = tooltip and _G[tooltip:GetName() .. "TextLeft1"]
+		if line then
+			local current = line:GetText()
+			if current and not isSecret(current) and not safeFind(current, "|T", true) then
+				local size = db["TooltipItemIconSize"] or 16
+				if size < 10 then
+					size = 10
+				elseif size > 30 then
+					size = 30
 				end
+				local tex = string.format("|T%d:%d:%d:0:0|t ", spellIconID, size, size)
+				line:SetText(tex .. current)
 			end
 		end
 	end
 
-	if addon.db["TooltipShowSpellIcon"] and isSpell and IsValidSpellIdentifier(id) then
-		local spellInfo = C_Spell.GetSpellInfo(id)
-		if spellInfo and spellInfo.iconID then
-			if first then
-				tooltip:AddLine(" ")
-				first = false
-			end
-			tooltip:AddDoubleLine(L["IconID"], spellInfo.iconID)
+	if showSpellIcon and spellIconID then
+		if first then
+			tooltip:AddLine(" ")
+			first = false
 		end
+		tooltip:AddDoubleLine(L["IconID"], spellIconID)
 	end
 
-	if addon.db["TooltipSpellHideType"] == 1 then return end -- only hide when ON
-	if addon.db["TooltipSpellHideInDungeon"] and select(1, IsInInstance()) == false then return end -- only hide in dungeons
-	if addon.db["TooltipSpellHideInCombat"] and UnitAffectingCombat("player") == false then return end -- only hide in combat
+	if db["TooltipSpellHideType"] == 1 then return end -- only hide when ON
+	if db["TooltipSpellHideInDungeon"] and select(1, IsInInstance()) == false then return end -- only hide in dungeons
+	if db["TooltipSpellHideInCombat"] and UnitAffectingCombat("player") == false then return end -- only hide in combat
 	if IsTooltipHideOverrideActive() then return end
 	tooltip:Hide()
 end
@@ -1178,6 +1211,7 @@ if TooltipDataProcessor then
 
 		if kind == "spell" then
 			id = data.id
+			if not ShouldRunSpellTooltipWork(id, true) then return end
 			name = L["SpellID"]
 			checkSpell(tooltip, id, name, true)
 			return
@@ -1188,6 +1222,7 @@ if TooltipDataProcessor then
 				local actionSlot = ttInfo.getterArgs[1]
 				if actionSlot then id = C_ActionBar.GetActionText(actionSlot) end
 			end
+			if not ShouldRunSpellTooltipWork(id, false) then return end
 			name = MACRO
 			checkSpell(tooltip, id, name)
 			return

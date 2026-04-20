@@ -78,3 +78,7 @@ Platynator: enabled
 TextureAtlasViewer: enabled
 tullaRange: enabled
 tullaRange_Config: enabled
+M33kAurasCompanion: enabled
+M33kAurasArchive: enabled
+M33Auras: disabled
+WeakAuras: disabled

@@ -22,8 +22,10 @@ local POSITION_FIELDS = {
 local function usesStoredPosition(entry) return not (entry and entry.persistPosition == false) end
 
 local function getSelection(lib, frame)
-	if not lib or not lib.frameSelections then return nil end
-	return lib.frameSelections[frame]
+	if not lib then return nil end
+	if lib.selectionRegistry and lib.selectionRegistry[frame] then return lib.selectionRegistry[frame] end
+	if lib.frameSelections and lib.frameSelections[frame] then return lib.frameSelections[frame] end
+	return nil
 end
 
 local function copyDefaults(target, defaults)
@@ -741,17 +743,32 @@ function EditMode:UnregisterFrame(id, purgeData)
 	if self:IsAvailable() and entry.frame and self.lib then
 		local frame = entry.frame
 		local lib = self.lib
-		local selection = lib.frameSelections and lib.frameSelections[frame]
+		local selection = getSelection(lib, frame)
 		if selection then
 			if lib.internal and lib.internal.magnetismManager and lib.internal.magnetismManager.UnregisterFrame then lib.internal.magnetismManager:UnregisterFrame(selection) end
 			selection:Hide()
 			selection:SetParent(nil)
-			lib.frameSelections[frame] = nil
+			if lib.selectionRegistry then lib.selectionRegistry[frame] = nil end
+			if lib.frameSelections then lib.frameSelections[frame] = nil end
 		end
+		if lib.frameHandlers then lib.frameHandlers[frame] = nil end
 		if lib.frameCallbacks then lib.frameCallbacks[frame] = nil end
+		if lib.defaultPositions then lib.defaultPositions[frame] = nil end
 		if lib.frameDefaults then lib.frameDefaults[frame] = nil end
+		if lib.settingSheets then lib.settingSheets[frame] = nil end
 		if lib.frameSettings then lib.frameSettings[frame] = nil end
+		if lib.buttonSpecs then lib.buttonSpecs[frame] = nil end
 		if lib.frameButtons then lib.frameButtons[frame] = nil end
+		if lib.overlayToggleFlags then lib.overlayToggleFlags[frame] = nil end
+		if lib.dragPredicates then lib.dragPredicates[frame] = nil end
+		if lib.collapseFlags then lib.collapseFlags[frame] = nil end
+		if lib.collapseExclusiveFlags then lib.collapseExclusiveFlags[frame] = nil end
+		if lib.resetToggles then lib.resetToggles[frame] = nil end
+		if lib.settingsResetToggles then lib.settingsResetToggles[frame] = nil end
+		if lib.settingsSpacingOverrides then lib.settingsSpacingOverrides[frame] = nil end
+		if lib.settingsMaxHeightOverrides then lib.settingsMaxHeightOverrides[frame] = nil end
+		if lib.sliderHeightOverrides then lib.sliderHeightOverrides[frame] = nil end
+		if lib.rowHeightOverrides then lib.rowHeightOverrides[frame] = nil end
 	end
 
 	local data = addon.db and addon.db[SHARED_STORAGE_KEY]

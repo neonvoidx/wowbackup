@@ -93,11 +93,6 @@ local function createMacroIfMissing()
 	)
 end
 
-local function buildMacroString(item)
-	if item == nil then return "#showtooltip" end
-	return "#showtooltip\n/use " .. item
-end
-
 local lastMacroKey
 local wipe = table and table.wipe or nil
 local function clearTable(tbl)
@@ -123,7 +118,9 @@ local function resetCooldownCaches()
 end
 
 local function numericId(v)
-	if not v or not v.getId then return nil end
+	if not v then return nil end
+	if v.id then return tonumber(v.id) end
+	if not v.getId then return nil end
 	local s = v.getId()
 	if not s then return nil end
 	return tonumber(string.match(s, "%d+"))
@@ -263,25 +260,6 @@ local function ensurePriorityOrder()
 	addon.db.healthPriorityOrder = normalizeOrder(order)
 end
 
-local function preferCat(cat)
-	local prefs = addon.db.healthPreferFirstPrefs
-	if prefs == nil then
-		-- migrate legacy single checkbox
-		prefs = { stones = addon.db.healthPreferStoneFirst == true, spells = false }
-		addon.db.healthPreferFirstPrefs = prefs
-	end
-	return prefs and prefs[cat] == true
-end
-
-local function getBestAvailableByType(t)
-	local list = addon.Health.filteredHealth
-	if not list or #list == 0 then return nil end
-	for _, v in ipairs(list) do
-		if v.type == t and v.getCount() > 0 then return v end
-	end
-	return nil
-end
-
 -- Helpers to distinguish combat vs non-combat potions
 local function isCombatPotionItem(v)
 	local id = numericId(v)
@@ -289,31 +267,50 @@ local function isCombatPotionItem(v)
 	return addon.Health._combatPotionByID[id] == true
 end
 
-local function getBestCombatPotion()
-	local list = addon.Health.filteredHealth
-	if not list or #list == 0 then return nil end
-	for _, v in ipairs(list) do
-		if v.type == "potion" and v.getCount() > 0 and isCombatPotionItem(v) then return v end
-	end
-	return nil
+local function isBetterMacroCandidate(candidate, current, candidateRemain, currentRemain)
+	if not current then return true end
+	if candidateRemain ~= currentRemain then return candidateRemain < currentRemain end
+	local candidateHeal = candidate and candidate.heal or 0
+	local currentHeal = current and current.heal or 0
+	return candidateHeal > currentHeal
 end
 
-local function getBestNonCombatPotion()
-	local list = addon.Health.filteredHealth
-	if not list or #list == 0 then return nil end
-	for _, v in ipairs(list) do
-		if v.type == "potion" and v.getCount() > 0 and not isCombatPotionItem(v) then return v end
-	end
-	return nil
-end
+local function collectBestMacroCandidates(spells)
+	local bestByCategory = {}
+	local bestRemainByCategory = {}
 
-local function getBestAvailableAny()
-	local list = addon.Health.filteredHealth
-	if not list or #list == 0 then return nil end
-	for _, v in ipairs(list) do
-		if v.getCount() > 0 then return v end
+	local function assignBest(category, candidate)
+		if not category or not candidate then return end
+		local candidateRemain = cooldownRemaining(candidate)
+		local current = bestByCategory[category]
+		local currentRemain = bestRemainByCategory[category]
+		if isBetterMacroCandidate(candidate, current, candidateRemain, currentRemain) then
+			bestByCategory[category] = candidate
+			bestRemainByCategory[category] = candidateRemain
+		end
 	end
-	return nil
+
+	if addon.db.healthUseCustomSpells and spells and #spells > 0 then
+		for i = 1, #spells do
+			assignBest("spell", spells[i])
+		end
+	end
+
+	local list = addon.Health.filteredHealth
+	if list and #list > 0 then
+		for i = 1, #list do
+			local item = list[i]
+			if item.getCount() > 0 then
+				if item.type == "stone" then
+					assignBest("stone", item)
+				elseif item.type == "potion" then
+					assignBest(isCombatPotionItem(item) and "combatpotion" or "potion", item)
+				end
+			end
+		end
+	end
+
+	return bestByCategory
 end
 
 addon.Health.cooldownWatch = addon.Health.cooldownWatch or {}
@@ -485,42 +482,11 @@ end
 local function buildMacro()
 	resetCooldownCaches()
 	local spells = getKnownCustomSpells()
+	local bestByCategory = collectBestMacroCandidates(spells)
 
 	-- Priority-based sequence (always)
 	local seqCandidates = {}
 	local macroEntries = {}
-
-	local function bestOf(list)
-		if not list or #list == 0 then return nil end
-		local best, bestRem, bestHeal = nil, math.huge, -1
-		for i = 1, #list do
-			local v = list[i]
-			local rem = cooldownRemaining(v)
-			local heal = v.heal or 0
-			if (rem < bestRem) or (rem == bestRem and heal > bestHeal) then
-				best, bestRem, bestHeal = v, rem, heal
-			end
-		end
-		return best
-	end
-
-	local function getCatList(cat)
-		if cat == "spell" then
-			if addon.db.healthUseCustomSpells then return spells end
-			return {}
-		end
-		local ret = {}
-		local list = addon.Health.filteredHealth
-		if not list or #list == 0 then return ret end
-		for _, v in ipairs(list) do
-			if v.getCount() > 0 then
-				if cat == "stone" and v.type == "stone" then table.insert(ret, v) end
-				if cat == "potion" and v.type == "potion" and not isCombatPotionItem(v) then table.insert(ret, v) end
-				if cat == "combatpotion" and v.type == "potion" and isCombatPotionItem(v) then table.insert(ret, v) end
-			end
-		end
-		return ret
-	end
 
 	local order = addon.db.healthPriorityOrder
 	if not order or #order == 0 then
@@ -533,16 +499,13 @@ local function buildMacro()
 	for i = 1, 4 do
 		local cat = order[i]
 		if cat and cat ~= "none" then
-			if cat == "combatpotion" then
-				if addon.db.healthUseCombatPotions then
-					local cand = bestOf(getCatList(cat))
-					if cand then table.insert(seqCandidates, cand) end
-				end
-			else
-				local cand = bestOf(getCatList(cat))
-				if cat == "spell" and not addon.db.healthUseCustomSpells then cand = nil end
-				if cand then table.insert(seqCandidates, cand) end
+			local cand = bestByCategory[cat]
+			if cat == "combatpotion" and not addon.db.healthUseCombatPotions then
+				cand = nil
+			elseif cat == "spell" and not addon.db.healthUseCustomSpells then
+				cand = nil
 			end
+			if cand then table.insert(seqCandidates, cand) end
 		end
 	end
 

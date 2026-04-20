@@ -204,6 +204,7 @@ local data = {
 							if addon.Mouse.functions.refreshRingStyle then addon.Mouse.functions.refreshRingStyle() end
 						end,
 						parent = true,
+						hasOpacity = true,
 						sType = "colorpicker",
 						parentSection = expandable,
 					},
@@ -266,6 +267,7 @@ local data = {
 							if addon.Mouse.functions.refreshRingStyle then addon.Mouse.functions.refreshRingStyle() end
 						end,
 						parent = true,
+						hasOpacity = true,
 						sType = "colorpicker",
 						parentSection = expandable,
 					},
@@ -307,8 +309,37 @@ local data = {
 				end,
 				parent = true,
 				default = false,
-				headerText = "Test",
+				hasOpacity = true,
 				sType = "colorpicker",
+				parentSection = expandable,
+			},
+			{
+				var = "mouseRingClassColorAlpha",
+				text = _G.OPACITY or "Opacity",
+				get = function()
+					local color = addon.db and addon.db["mouseRingColor"]
+					if color and color.a ~= nil then return color.a end
+					return 1
+				end,
+				set = function(v)
+					addon.db["mouseRingColor"] = addon.db["mouseRingColor"] or { r = 1, g = 1, b = 1, a = 1 }
+					addon.db["mouseRingColor"].a = v
+					if addon.Mouse.functions.refreshRingStyle then addon.Mouse.functions.refreshRingStyle() end
+				end,
+				parentCheck = function()
+					return addon.SettingsLayout.elements["mouseRingEnabled"]
+						and addon.SettingsLayout.elements["mouseRingEnabled"].setting
+						and addon.SettingsLayout.elements["mouseRingEnabled"].setting:GetValue() == true
+						and addon.SettingsLayout.elements["mouseRingUseClassColor"]
+						and addon.SettingsLayout.elements["mouseRingUseClassColor"].setting
+						and addon.SettingsLayout.elements["mouseRingUseClassColor"].setting:GetValue() == true
+				end,
+				min = 0,
+				max = 1,
+				step = 0.05,
+				parent = true,
+				default = 1,
+				sType = "slider",
 				parentSection = expandable,
 			},
 			{
@@ -416,6 +447,7 @@ local data = {
 					if addon.Mouse.functions.refreshRingStyle then addon.Mouse.functions.refreshRingStyle() end
 				end,
 				parent = true,
+				hasOpacity = true,
 				sType = "colorpicker",
 				parentSection = expandable,
 			},
@@ -453,6 +485,7 @@ local data = {
 							if addon.Mouse.functions.refreshRingStyle then addon.Mouse.functions.refreshRingStyle() end
 						end,
 						parent = true,
+						hasOpacity = true,
 						sType = "colorpicker",
 						parentSection = expandable,
 					},
@@ -548,7 +581,10 @@ data = {
 
 				var = "mouseTrailUseClassColor",
 				text = L["mouseTrailUseClassColor"],
-				func = function(v) addon.db["mouseTrailUseClassColor"] = v end,
+				func = function(v)
+					addon.db["mouseTrailUseClassColor"] = v
+					if addon.Mouse.functions.refreshTrailStyle then addon.Mouse.functions.refreshTrailStyle() end
+				end,
 				parentCheck = function()
 					return addon.SettingsLayout.elements["mouseTrailEnabled"]
 						and addon.SettingsLayout.elements["mouseTrailEnabled"].setting
@@ -574,6 +610,9 @@ data = {
 				end,
 				parent = true,
 				default = false,
+				callback = function(r, g, b, a)
+					if addon.Mouse.functions.refreshTrailStyle then addon.Mouse.functions.refreshTrailStyle() end
+				end,
 				sType = "colorpicker",
 				parentSection = expandable,
 			},

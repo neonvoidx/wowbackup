@@ -84,6 +84,11 @@ local AUTO_ENABLE_OPTIONS = {
 	SECONDARY = L["AutoEnableSecondary"] or "Secondary resources",
 }
 local AUTO_ENABLE_ORDER = { "HEALTH", "MAIN", "SECONDARY" }
+local RESOURCE_MODE_OPTIONS = {
+	SPEC = L["ResourceBarsModeSpec"] or "Classic",
+	SHARED = L["ResourceBarsModeShared"] or "Shared",
+}
+local RESOURCE_MODE_ORDER = { "SPEC", "SHARED" }
 local FRAME_STRATA_ORDER = (ResourceBars and ResourceBars.STRATA_ORDER)
 	or { "BACKGROUND", "LOW", "MEDIUM", "HIGH", "DIALOG", "FULLSCREEN", "FULLSCREEN_DIALOG", "TOOLTIP" }
 local MAX_FRAME_LEVEL_OFFSET = (ResourceBars and ResourceBars.MAX_FRAME_LEVEL_OFFSET) or 50
@@ -102,11 +107,32 @@ local function getCachedLSMMedia(mediaType)
 end
 
 local specSettingVars = {}
+local specModeSettingVars = {}
 local function getActiveSpecIndex()
 	local apiSpec = C_SpecializationInfo and C_SpecializationInfo.GetSpecialization and C_SpecializationInfo.GetSpecialization()
 	if apiSpec and apiSpec > 0 then return apiSpec end
 	return addon.variables and addon.variables.unitSpec
 end
+
+local function getSpecMode(specIndex)
+	if ResourceBars and ResourceBars.GetSpecMode then return ResourceBars.GetSpecMode(specIndex) end
+	return "SPEC"
+end
+
+local function setSpecMode(specIndex, mode)
+	if not (ResourceBars and ResourceBars.SetSpecMode) then return false end
+	return ResourceBars.SetSpecMode(specIndex, mode)
+end
+
+local function setSpecModeForClass(classTag, specIndex, mode)
+	if ResourceBars and ResourceBars.SetClassMode then return ResourceBars.SetClassMode(classTag, mode) end
+	if not classTag then return false end
+	addon.db.personalResourceBarSettings = addon.db.personalResourceBarSettings or {}
+	addon.db.personalResourceBarSettings[classTag] = addon.db.personalResourceBarSettings[classTag] or {}
+	addon.db.personalResourceBarSettings[classTag]._mode = (ResourceBars and ResourceBars.NormalizeSpecMode and ResourceBars.NormalizeSpecMode(mode)) or mode or "SPEC"
+	return true
+end
+
 local function autoEnableSelection()
 	addon.db.resourceBarsAutoEnable = addon.db.resourceBarsAutoEnable or {}
 	-- Migrate legacy boolean flag into the new selection map
@@ -127,6 +153,7 @@ end
 
 local function maybeAutoEnableBars(specIndex, specCfg)
 	if not specCfg or specCfg._autoEnabled then return end
+	if getSpecMode(specIndex) == "SHARED" then return end
 	local selection = autoEnableSelection()
 	if not selection or not (selection.HEALTH or selection.MAIN or selection.SECONDARY) then return end
 
@@ -272,6 +299,29 @@ local function globalFontConfigLabel()
 	return "Use global font config"
 end
 
+local function normalizeFontStyleChoice(value, fallback)
+	if addon.functions and addon.functions.NormalizeFontStyleChoice then
+		return addon.functions.NormalizeFontStyleChoice(value, fallback, true)
+	end
+	if value ~= nil then return value end
+	return fallback or "OUTLINE"
+end
+
+local function getFontStyleEntries()
+	local list = addon.functions and addon.functions.GetFontStyleOptionList and addon.functions.GetFontStyleOptionList(true) or {
+		{ value = "NONE", label = NONE },
+		{ value = "OUTLINE", label = L["Outline"] or "Outline" },
+	}
+	local entries = {}
+	for i = 1, #list do
+		entries[#entries + 1] = {
+			key = list[i].value,
+			label = list[i].label,
+		}
+	end
+	return entries
+end
+
 local function resolveStatusbarPreviewPath(key)
 	if not key then return nil end
 	if key == "DEFAULT" then return (ResourceBars and ResourceBars.DEFAULT_RB_TEX) or "Interface\\Buttons\\WHITE8x8" end
@@ -320,12 +370,16 @@ end
 local function notifyResourceBarSettings()
 	if not Settings or not Settings.NotifyUpdate then return end
 	Settings.NotifyUpdate("EQOL_enableResourceFrame")
+	Settings.NotifyUpdate("EQOL_resourceBarsSharedEnabled")
 	Settings.NotifyUpdate("EQOL_resourceBarsHideOutOfCombat")
 	Settings.NotifyUpdate("EQOL_resourceBarsHideMounted")
 	Settings.NotifyUpdate("EQOL_resourceBarsHideVehicle")
 	Settings.NotifyUpdate("EQOL_resourceBarsHidePetBattle")
 	Settings.NotifyUpdate("EQOL_resourceBarsHideClientScene")
 	for var in pairs(specSettingVars) do
+		Settings.NotifyUpdate("EQOL_" .. var)
+	end
+	for var in pairs(specModeSettingVars) do
 		Settings.NotifyUpdate("EQOL_" .. var)
 	end
 end
@@ -340,6 +394,7 @@ local function ensureSpecCfg(specIndex)
 	addon.db.personalResourceBarSettings[class] = addon.db.personalResourceBarSettings[class] or {}
 	addon.db.personalResourceBarSettings[class][specIndex] = addon.db.personalResourceBarSettings[class][specIndex] or {}
 	local specCfg = addon.db.personalResourceBarSettings[class][specIndex]
+	specCfg._mode = (ResourceBars and ResourceBars.GetSpecMode and ResourceBars.GetSpecMode(specIndex)) or specCfg._mode or "SHARED"
 	maybeAutoEnableBars(specIndex, specCfg)
 	return specCfg
 end
@@ -348,6 +403,51 @@ local function refreshSettingsUI()
 	local lib = addon.EditModeLib
 	if lib and lib.internal and lib.internal.RefreshSettings then lib.internal:RefreshSettings() end
 	if lib and lib.internal and lib.internal.RefreshSettingValues then lib.internal:RefreshSettingValues() end
+end
+
+local registerEditModeBars
+local unregisterEditModeBars
+
+local function hideSharedSlotProxyFrames()
+	if not (ResourceBars and ResourceBars.GetSharedSlotFrameName) then return end
+	for _, slot in ipairs(ResourceBars.SHARED_SLOT_ORDER or {}) do
+		local frameName = ResourceBars.GetSharedSlotFrameName(slot)
+		local frame = frameName and _G[frameName]
+		if frame then
+			frame._rbDesiredVisible = false
+			frame._rbManualVisibilityHidden = nil
+			frame:Hide()
+		end
+	end
+end
+
+unregisterEditModeBars = function()
+	local registeredFrames = ResourceBars and ResourceBars._editModeRegisteredFrames or {}
+	local registeredByBar = ResourceBars and ResourceBars._editModeRegisteredFrameByBar or {}
+	local registeredFrameNameByBar = ResourceBars and ResourceBars._editModeRegisteredFrameNameByBar or {}
+
+	if EditMode and EditMode.UnregisterFrame then
+		local seen = {}
+		for _, frameId in pairs(registeredByBar) do
+			if frameId and not seen[frameId] then
+				EditMode:UnregisterFrame(frameId, false)
+				seen[frameId] = true
+			end
+		end
+	end
+
+	for key in pairs(registeredFrames) do
+		registeredFrames[key] = nil
+	end
+	for key in pairs(registeredByBar) do
+		registeredByBar[key] = nil
+	end
+	for key in pairs(registeredFrameNameByBar) do
+		registeredFrameNameByBar[key] = nil
+	end
+
+	if ResourceBars then ResourceBars._editModeRegistered = false end
+	hideSharedSlotProxyFrames()
 end
 
 local function setBarEnabled(specIndex, barType, enabled)
@@ -389,35 +489,101 @@ local function setBarEnabled(specIndex, barType, enabled)
 	end
 end
 
-local function registerEditModeBars()
+local function isSharedSlotEnabled(slot)
+	if not ResourceBars or not ResourceBars.EnsureSharedSlotStore then return true end
+	local cfg = ResourceBars.EnsureSharedSlotStore(slot)
+	return cfg and cfg.enabled == true or false
+end
+
+local function setSharedSlotEnabled(slot, enabled)
+	if not ResourceBars or not ResourceBars.EnsureSharedSlotStore then return end
+	local cfg = ResourceBars.EnsureSharedSlotStore(slot)
+	if not cfg then return end
+	cfg.enabled = enabled and true or false
+
+	local specIndex = getActiveSpecIndex()
+	if specIndex then
+		if ResourceBars.QueueRefresh then ResourceBars.QueueRefresh(specIndex) end
+		if ResourceBars.MaybeRefreshActive then ResourceBars.MaybeRefreshActive(specIndex) end
+		if specIndex == addon.variables.unitSpec and ResourceBars.Refresh then ResourceBars.Refresh() end
+		if EditMode and EditMode.RefreshFrame then
+			local frameId = (ResourceBars.GetEditModeFrameId and ResourceBars.GetEditModeFrameId(slot, addon.variables.unitClass, specIndex))
+				or ("resourceBar_" .. tostring(addon.variables.unitClass or "UNKNOWN") .. "_" .. tostring(specIndex) .. "_" .. tostring(slot))
+			local layout = EditMode.GetActiveLayoutName and EditMode:GetActiveLayoutName()
+			EditMode:RefreshFrame(frameId, layout)
+		end
+	end
+
+	if EditMode and EditMode:IsInEditMode() then
+		if ResourceBars.Refresh then ResourceBars.Refresh() end
+		if ResourceBars.ReanchorAll then ResourceBars.ReanchorAll() end
+	end
+
+	refreshSettingsUI()
+	registerEditModeBars()
+end
+
+registerEditModeBars = function()
 	if not EditMode or not EditMode.RegisterFrame then return end
+	if addon and addon.db and addon.db.enableResourceFrame == false then
+		unregisterEditModeBars()
+		return
+	end
 	local registered = 0
 	local registeredFrames = ResourceBars._editModeRegisteredFrames or {}
 	local registeredByBar = ResourceBars._editModeRegisteredFrameByBar or {}
+	local registeredFrameNameByBar = ResourceBars._editModeRegisteredFrameNameByBar or {}
 	ResourceBars._editModeRegisteredFrames = registeredFrames
 	ResourceBars._editModeRegisteredFrameByBar = registeredByBar
+	ResourceBars._editModeRegisteredFrameNameByBar = registeredFrameNameByBar
 
-	local function registerBar(idSuffix, frameName, barType, widthDefault, heightDefault)
-		local frame = _G[frameName]
+	local function registerBar(idSuffix, frameName, barType, widthDefault, heightDefault, opts)
+		opts = opts or {}
+		local sharedSlot = opts.sharedSlot
+		local genericSharedPowerEditor = sharedSlot and sharedSlot ~= "HEALTH"
+		local frame
+		if sharedSlot and sharedSlot ~= "HEALTH" and ResourceBars and ResourceBars.SyncSharedSlotProxyFrame then
+			ResourceBars.SyncSharedSlotProxyFrame(sharedSlot, getActiveSpecIndex())
+		end
+		if sharedSlot and sharedSlot ~= "HEALTH" and ResourceBars and ResourceBars.EnsureSharedSlotProxyFrame then
+			frame = ResourceBars.EnsureSharedSlotProxyFrame(sharedSlot)
+		else
+			frame = _G[frameName]
+		end
 		if not frame then return end
+		local actualFrameName = (frame.GetName and frame:GetName()) or frameName
 		local curSpec = tonumber(getActiveSpecIndex()) or 0
 		local registeredSpec = curSpec
 		local frameId = (ResourceBars.GetEditModeFrameId and ResourceBars.GetEditModeFrameId(idSuffix, addon.variables.unitClass, registeredSpec))
 			or ("resourceBar_" .. tostring(addon.variables.unitClass or "UNKNOWN") .. "_" .. tostring(curSpec) .. "_" .. tostring(idSuffix))
 		local prevId = registeredByBar[idSuffix]
+		local prevFrameName = registeredFrameNameByBar[idSuffix]
+		local existingEntry = EditMode and EditMode.frames and EditMode.frames[frameId] or nil
+		local existingFrame = existingEntry and existingEntry.frame or nil
 		if prevId and prevId ~= frameId and EditMode and EditMode.UnregisterFrame then
 			EditMode:UnregisterFrame(prevId, false)
 			registeredFrames[prevId] = nil
 		end
-		if registeredFrames[frameId] then return end
-		registeredFrames[frameId] = true
+		if prevId == frameId and EditMode and EditMode.UnregisterFrame and ((prevFrameName and prevFrameName ~= actualFrameName) or (existingFrame and existingFrame ~= frame)) then
+			EditMode:UnregisterFrame(frameId, false)
+			registeredFrames[frameId] = nil
+		end
+		if registeredFrames[frameId] and existingFrame == frame then return end
 		registeredByBar[idSuffix] = frameId
+		registeredFrameNameByBar[idSuffix] = actualFrameName
+		local function currentLiveBarType()
+			local spec = registeredSpec or getActiveSpecIndex()
+			if sharedSlot and ResourceBars and ResourceBars.GetResolvedBarTypeForSharedSlot then return ResourceBars.GetResolvedBarTypeForSharedSlot(sharedSlot, spec) end
+			return barType
+		end
 		local specCfg = ensureSpecCfg(registeredSpec) or {}
-		local cfg = specCfg[barType]
+		local cfg = sharedSlot and ResourceBars and ResourceBars.EnsureSharedSlotStore and ResourceBars.EnsureSharedSlotStore(sharedSlot) or specCfg[barType]
 		if not cfg and ResourceBars and ResourceBars.getBarSettings then cfg = ResourceBars.getBarSettings(barType) end
 		if not cfg and ResourceBars and ResourceBars.GetBarSettings then cfg = ResourceBars.GetBarSettings(barType) end
-		local anchor = ResourceBars and ResourceBars.getAnchor and ResourceBars.getAnchor(barType, registeredSpec)
-		local titleLabel = (barType == "HEALTH") and (HEALTH or "Health") or (ResourceBars.PowerLabels and ResourceBars.PowerLabels[barType]) or _G["POWER_TYPE_" .. barType] or _G[barType] or barType
+		local anchorTargetType = sharedSlot or currentLiveBarType() or barType
+		local anchor = ResourceBars and ResourceBars.getAnchor and ResourceBars.getAnchor(anchorTargetType, registeredSpec)
+		local titleLabel = opts.titleLabel
+			or ((barType == "HEALTH") and (HEALTH or "Health") or (ResourceBars.PowerLabels and ResourceBars.PowerLabels[barType]) or _G["POWER_TYPE_" .. barType] or _G[barType] or barType)
 		local function currentSpecInfo()
 			local uc = addon.variables.unitClass
 			local us = registeredSpec or getActiveSpecIndex()
@@ -439,8 +605,159 @@ local function registerEditModeBars()
 			local spec = registeredSpec or getActiveSpecIndex()
 			local specCfg = ensureSpecCfg(spec)
 			if not specCfg then return nil end
+			if sharedSlot and ResourceBars and ResourceBars.EnsureSharedSlotStore then return ResourceBars.EnsureSharedSlotStore(sharedSlot) end
 			specCfg[barType] = specCfg[barType] or {}
 			return specCfg[barType]
+		end
+		local selectedSharedPowerType
+		local function powerTypeLabel(pType)
+			if pType == "HEALTH" then return HEALTH or "Health" end
+			local label = (ResourceBars.PowerLabels and ResourceBars.PowerLabels[pType]) or _G["POWER_TYPE_" .. tostring(pType or "")] or _G[pType]
+			if type(label) == "string" and label ~= "" then return label end
+			return tostring(pType or "")
+		end
+		local function sharedPowerTypeBaseColor(pType)
+			if ResourceBars and ResourceBars.GetBasePowerColor then return ResourceBars.GetBasePowerColor(pType) end
+			return { 1, 1, 1, 1 }
+		end
+		local function collectSharedPowerTypes()
+			local liveType = currentLiveBarType()
+			if not genericSharedPowerEditor then return liveType and { liveType } or {} end
+			if ResourceBars and ResourceBars.GetSharedSlotPossibleTypes then
+				local wanted = {}
+				local out = {}
+				local seen = {}
+				for _, pType in ipairs(ResourceBars.GetSharedSlotPossibleTypes(sharedSlot, addon.variables.unitClass) or {}) do
+					if pType then wanted[pType] = true end
+				end
+				if liveType then wanted[liveType] = true end
+				for _, pType in ipairs(ResourceBars.classPowerTypes or {}) do
+					if wanted[pType] and not seen[pType] then
+						out[#out + 1] = pType
+						seen[pType] = true
+					end
+				end
+				for pType in pairs(wanted) do
+					if not seen[pType] then out[#out + 1] = pType end
+				end
+				return out
+			end
+
+			local class = addon.variables.unitClass
+			local specTable = ResourceBars and ResourceBars.powertypeClasses and ResourceBars.powertypeClasses[class] or {}
+			local wanted = {}
+			if sharedSlot == "MAIN" then
+				if class == "DRUID" then
+					wanted.LUNAR_POWER = true
+					wanted.MANA = true
+					wanted.RAGE = true
+					wanted.ENERGY = true
+				else
+					for _, info in pairs(specTable) do
+						if info and info.MAIN then wanted[info.MAIN] = true end
+					end
+				end
+			else
+				if class == "DRUID" then
+					wanted.MANA = true
+					wanted.COMBO_POINTS = true
+				end
+				for _, info in pairs(specTable) do
+					for _, pType in ipairs(ResourceBars.classPowerTypes or {}) do
+						if info and pType ~= info.MAIN and info[pType] then wanted[pType] = true end
+					end
+				end
+			end
+			if liveType then wanted[liveType] = true end
+
+			local out = {}
+			local seen = {}
+			for _, pType in ipairs(ResourceBars.classPowerTypes or {}) do
+				if wanted[pType] and not seen[pType] then
+					out[#out + 1] = pType
+					seen[pType] = true
+				end
+			end
+			for pType in pairs(wanted) do
+				if not seen[pType] then out[#out + 1] = pType end
+			end
+			return out
+		end
+		local function selectedSharedPowerTypeTarget()
+			local options = collectSharedPowerTypes()
+			if not options[1] then
+				selectedSharedPowerType = currentLiveBarType() or barType
+				return selectedSharedPowerType
+			end
+			for _, pType in ipairs(options) do
+				if pType == selectedSharedPowerType then return pType end
+			end
+			local liveType = currentLiveBarType()
+			for _, pType in ipairs(options) do
+				if pType == liveType then
+					selectedSharedPowerType = pType
+					return pType
+				end
+			end
+			selectedSharedPowerType = options[1]
+			return selectedSharedPowerType
+		end
+		local function getPowerTypeOverrideEntry(pType)
+			local c = curSpecCfg()
+			return c and c.powerTypeOverrides and pType and c.powerTypeOverrides[pType] or nil
+		end
+		local function ensurePowerTypeOverrideEntry(pType)
+			local c = curSpecCfg()
+			if not c or not pType then return nil end
+			c.powerTypeOverrides = c.powerTypeOverrides or {}
+			c.powerTypeOverrides[pType] = c.powerTypeOverrides[pType] or {}
+			return c.powerTypeOverrides[pType]
+		end
+		local function getDefaultPowerColorEntry(pType)
+			local c = curSpecCfg()
+			return c and c.defaultPowerColors and pType and c.defaultPowerColors[pType] or nil
+		end
+		local function ensureDefaultPowerColorEntry(pType)
+			local c = curSpecCfg()
+			if not c or not pType then return nil end
+			c.defaultPowerColors = c.defaultPowerColors or {}
+			if type(c.defaultPowerColors[pType]) ~= "table" then c.defaultPowerColors[pType] = {} end
+			return c.defaultPowerColors[pType]
+		end
+		local function clearDefaultPowerColorEntry(pType)
+			local c = curSpecCfg()
+			if not c or not c.defaultPowerColors or not pType then return end
+			c.defaultPowerColors[pType] = nil
+			if not next(c.defaultPowerColors) then c.defaultPowerColors = nil end
+		end
+		local function isPowerTypeOverrideEnabled()
+			local pType = selectedSharedPowerTypeTarget()
+			local entry = getPowerTypeOverrideEntry(pType)
+			return entry and entry.enabled == true or false
+		end
+			local function currentEditorPowerType()
+				if genericSharedPowerEditor then return selectedSharedPowerTypeTarget() end
+				return currentLiveBarType() or barType
+			end
+			local function currentEditorSupportsSeparators()
+				local pType = currentEditorPowerType()
+				return ResourceBars and ResourceBars.separatorEligible and pType and ResourceBars.separatorEligible[pType] == true
+			end
+			local function currentPowerConfigTarget()
+			if genericSharedPowerEditor and isPowerTypeOverrideEnabled() then
+				return ensurePowerTypeOverrideEntry(selectedSharedPowerTypeTarget())
+			end
+			return curSpecCfg()
+		end
+		local function readPowerConfigField(field, fallback)
+			if genericSharedPowerEditor then
+				local entry = getPowerTypeOverrideEntry(selectedSharedPowerTypeTarget())
+				if entry and entry.enabled == true and entry[field] ~= nil then return entry[field] end
+			end
+			local c = curSpecCfg()
+			if c and c[field] ~= nil then return c[field] end
+			if cfg and cfg[field] ~= nil then return cfg[field] end
+			return fallback
 		end
 		local function queueRefresh()
 			local targetSpec = registeredSpec or getActiveSpecIndex()
@@ -535,11 +852,13 @@ local function registerEditModeBars()
 		local function applyBarSize()
 			local c = curSpecCfg()
 			if not c then return end
-			if barType == "HEALTH" then
+			local liveBarType = currentLiveBarType()
+			if liveBarType == "HEALTH" then
 				ResourceBars.SetHealthBarSize(c.width or widthDefault, c.height or heightDefault)
-			else
-				ResourceBars.SetPowerBarSize(c.width or widthDefault, c.height or heightDefault, barType)
+			elseif liveBarType then
+				ResourceBars.SetPowerBarSize(c.width or widthDefault, c.height or heightDefault, liveBarType)
 			end
+			if sharedSlot and ResourceBars and ResourceBars.SyncSharedSlotProxyFrame then ResourceBars.SyncSharedSlotProxyFrame(sharedSlot, registeredSpec) end
 		end
 		local function syncEditModeSizeValues(width, height)
 			if not (EditMode and EditMode.SetValue and frameId) then return end
@@ -900,13 +1219,20 @@ local function registerEditModeBars()
 
 			do -- Anchoring
 				local points = { "TOPLEFT", "TOP", "TOPRIGHT", "LEFT", "CENTER", "RIGHT", "BOTTOMLEFT", "BOTTOM", "BOTTOMRIGHT" }
+				local logicalBarToken = sharedSlot or barType
 				local function displayNameForBarType(pType)
+					if pType == "MAIN" then return L["AutoEnableMain"] or "Main resource" end
+					if pType == "SECONDARY" then return L["AutoEnableSecondary"] or "Secondary" end
 					if pType == "HEALTH" then return HEALTH or "Health" end
 					local s = (ResourceBars.PowerLabels and ResourceBars.PowerLabels[pType]) or _G["POWER_TYPE_" .. pType] or _G[pType]
 					if type(s) == "string" and s ~= "" then return s end
 					return pType
 				end
 				local function frameNameToBarType(fname)
+					if ResourceBars and ResourceBars.GetSharedSlotFromFrameName then
+						local slot = ResourceBars.GetSharedSlotFromFrameName(fname)
+						if slot then return slot end
+					end
 					if fname == "EQOLHealthBar" then return "HEALTH" end
 					return type(fname) == "string" and fname:match("^EQOL(.+)Bar$") or nil
 				end
@@ -915,7 +1241,8 @@ local function registerEditModeBars()
 					local candType = frameNameToBarType(candidateName)
 					if not candType then return false end
 					if candType == fromType then return true end
-					local targetFrameName = (fromType == "HEALTH") and "EQOLHealthBar" or ("EQOL" .. fromType .. "Bar")
+					local targetFrameName = (sharedSlot and ResourceBars and ResourceBars.GetSharedSlotFrameName and ResourceBars.GetSharedSlotFrameName(fromType))
+						or ((fromType == "HEALTH") and "EQOLHealthBar" or ("EQOL" .. fromType .. "Bar"))
 					local seen = {}
 					local name = candidateName
 					local spec = addon.variables.unitSpec
@@ -926,14 +1253,24 @@ local function registerEditModeBars()
 						if name == targetFrameName then return true end
 						local bt = frameNameToBarType(name)
 						if not bt then break end
-						local specCfg = ensureSpecCfg(spec)
-						local anch = specCfg and specCfg[bt] and specCfg[bt].anchor
+						local anch
+						if ResourceBars and ResourceBars.GetSharedSlotFrameName and ResourceBars.GetSharedSlotFrameName(bt) then
+							local slotCfg = ResourceBars.EnsureSharedSlotStore and ResourceBars.EnsureSharedSlotStore(bt)
+							anch = slotCfg and slotCfg.anchor
+						else
+							local specCfg = ensureSpecCfg(spec)
+							anch = specCfg and specCfg[bt] and specCfg[bt].anchor
+						end
 						name = anch and anch.relativeFrame or "UIParent"
 						limit = limit - 1
 					end
 					return false
 				end
 				local function isBarEnabled(pType)
+					if ResourceBars and ResourceBars.GetSharedSlotFrameName and ResourceBars.GetSharedSlotFrameName(pType) then
+						local cfg = ResourceBars.EnsureSharedSlotStore and ResourceBars.EnsureSharedSlotStore(pType)
+						return cfg and cfg.enabled == true
+					end
 					local spec = addon.variables.unitSpec
 					local specCfg = ensureSpecCfg(spec)
 					return specCfg and specCfg[pType] and specCfg[pType].enabled == true
@@ -996,17 +1333,25 @@ local function registerEditModeBars()
 						end
 					end
 
-					if isBarEnabled("HEALTH") then add("EQOLHealthBar", displayNameForBarType("HEALTH")) end
-					for _, pType in ipairs(ResourceBars.classPowerTypes or {}) do
-						if isBarEnabled(pType) then
-							local fname = "EQOL" .. pType .. "Bar"
-							add(fname, displayNameForBarType(pType))
+					if sharedSlot then
+						local sharedOrder = ResourceBars.SHARED_SLOT_ORDER or { "HEALTH", "MAIN", "SECONDARY" }
+						for _, slotKey in ipairs(sharedOrder) do
+							local fname = ResourceBars.GetSharedSlotFrameName and ResourceBars.GetSharedSlotFrameName(slotKey)
+							if fname and isBarEnabled(slotKey) then add(fname, displayNameForBarType(slotKey)) end
+						end
+					else
+						if isBarEnabled("HEALTH") then add("EQOLHealthBar", displayNameForBarType("HEALTH")) end
+						for _, pType in ipairs(ResourceBars.classPowerTypes or {}) do
+							if isBarEnabled(pType) then
+								local fname = "EQOL" .. pType .. "Bar"
+								add(fname, displayNameForBarType(pType))
+							end
 						end
 					end
 
 					local a = ensureAnchorTable()
 					local cur = a and a.relativeFrame
-					if cur and not seen[cur] and not wouldCauseLoop(barType, cur) then add(cur, cur) end
+					if cur and not seen[cur] and not wouldCauseLoop(logicalBarToken, cur) then add(cur, cur) end
 
 					return entries
 				end
@@ -1060,7 +1405,7 @@ local function registerEditModeBars()
 								local a = ensureAnchorTable()
 								if not a then return end
 								local target = entry.key
-								if wouldCauseLoop(barType, target) then target = "UIParent" end
+								if wouldCauseLoop(logicalBarToken, target) then target = "UIParent" end
 								a.relativeFrame = target
 								applyAnchorDefaults(a, target)
 								if target ~= "UIParent" and a.matchRelativeWidth == true then enforceMinWidth() end
@@ -1078,7 +1423,7 @@ local function registerEditModeBars()
 						local a = ensureAnchorTable()
 						if not a then return end
 						local target = value or "UIParent"
-						if wouldCauseLoop(barType, target) then target = "UIParent" end
+						if wouldCauseLoop(logicalBarToken, target) then target = "UIParent" end
 						a.relativeFrame = target
 						applyAnchorDefaults(a, target)
 						if target ~= "UIParent" and a.matchRelativeWidth == true then enforceMinWidth() end
@@ -1280,24 +1625,25 @@ local function registerEditModeBars()
 			}
 
 			do -- Behavior
-				local behaviorValues = ResourceBars.BehaviorOptionsForType and ResourceBars.BehaviorOptionsForType(barType)
+				local behaviorBarType = genericSharedPowerEditor and "MANA" or currentLiveBarType()
+				local behaviorValues = ResourceBars.BehaviorOptionsForType and ResourceBars.BehaviorOptionsForType(behaviorBarType)
 				if not behaviorValues then
 					behaviorValues = {
 						{ value = "reverseFill", text = L["Reverse fill"] or "Reverse fill" },
 					}
-					if barType ~= "RUNES" then
+					if behaviorBarType ~= "RUNES" then
 						behaviorValues[#behaviorValues + 1] = { value = "verticalFill", text = L["Vertical orientation"] or "Vertical orientation" }
 						behaviorValues[#behaviorValues + 1] = { value = "smoothFill", text = L["Smooth fill"] or "Smooth fill" }
 					end
 				end
 
 				local function currentBehaviorSelection()
-					if ResourceBars and ResourceBars.BehaviorSelectionFromConfig then return ResourceBars.BehaviorSelectionFromConfig(curSpecCfg(), barType) end
+					if ResourceBars and ResourceBars.BehaviorSelectionFromConfig then return ResourceBars.BehaviorSelectionFromConfig(curSpecCfg(), behaviorBarType) end
 					local c = curSpecCfg()
 					local map = {}
 					if c then
 						if c.reverseFill == true then map.reverseFill = true end
-						if barType ~= "RUNES" then
+						if behaviorBarType ~= "RUNES" then
 							if c.verticalFill == true then map.verticalFill = true end
 							if c.smoothFill == true then map.smoothFill = true end
 						end
@@ -1312,10 +1658,10 @@ local function registerEditModeBars()
 					if key then selection[key] = enabled and true or nil end
 					local swapped = false
 					if ResourceBars and ResourceBars.ApplyBehaviorSelection then
-						swapped = ResourceBars.ApplyBehaviorSelection(cfg, selection, barType, addon.variables.unitSpec) and true or false
+						swapped = ResourceBars.ApplyBehaviorSelection(cfg, selection, behaviorBarType, addon.variables.unitSpec) and true or false
 					else
 						cfg.reverseFill = selection.reverseFill == true
-						if barType ~= "RUNES" then
+						if behaviorBarType ~= "RUNES" then
 							cfg.verticalFill = selection.verticalFill == true
 							cfg.smoothFill = selection.smoothFill == true
 						else
@@ -1348,7 +1694,7 @@ local function registerEditModeBars()
 			end
 
 			-- Separator controls (eligible bars only)
-			if ResourceBars.separatorEligible and ResourceBars.separatorEligible[barType] then
+			if (ResourceBars.separatorEligible and ResourceBars.separatorEligible[barType]) or genericSharedPowerEditor then
 				settingsList[#settingsList + 1] = {
 					name = L["Show separator"] or "Show separator",
 					kind = settingType.CheckboxColor,
@@ -1371,15 +1717,18 @@ local function registerEditModeBars()
 						local r, g, b, a = toColorComponents(col, SEP_DEFAULT)
 						return { r = r, g = g, b = b, a = a }
 					end,
-					colorSet = function(_, value)
-						local c = curSpecCfg()
-						if not c then return end
-						c.separatorColor = toColorArray(value, SEP_DEFAULT)
-						queueRefresh()
-					end,
-					hasOpacity = true,
-					parentId = "frame",
-				}
+						colorSet = function(_, value)
+							local c = curSpecCfg()
+							if not c then return end
+							c.separatorColor = toColorArray(value, SEP_DEFAULT)
+							queueRefresh()
+						end,
+						isShown = function()
+							return not genericSharedPowerEditor or currentEditorSupportsSeparators()
+						end,
+						hasOpacity = true,
+						parentId = "frame",
+					}
 
 				settingsList[#settingsList + 1] = {
 					name = L["Separator thickness"] or "Separator thickness",
@@ -1402,12 +1751,15 @@ local function registerEditModeBars()
 						queueRefresh()
 					end,
 					default = (cfg and cfg.separatorThickness) or SEPARATOR_THICKNESS,
-					isEnabled = function()
-						local c = curSpecCfg()
-						return c and c.showSeparator == true
-					end,
-					parentId = "frame",
-				}
+						isEnabled = function()
+							local c = curSpecCfg()
+							return c and c.showSeparator == true
+						end,
+						isShown = function()
+							return not genericSharedPowerEditor or currentEditorSupportsSeparators()
+						end,
+						parentId = "frame",
+					}
 
 				settingsList[#settingsList + 1] = {
 					name = L["Separated offset"] or "Separated offset",
@@ -1431,11 +1783,13 @@ local function registerEditModeBars()
 						c.separatedOffset = new
 						queueRefresh()
 					end,
-					default = (cfg and cfg.separatedOffset) or 0,
-					isShown = function() return true end,
-					isEnabled = function()
-						local c = curSpecCfg()
-						if not c then return false end
+						default = (cfg and cfg.separatedOffset) or 0,
+						isShown = function()
+							return not genericSharedPowerEditor or currentEditorSupportsSeparators()
+						end,
+						isEnabled = function()
+							local c = curSpecCfg()
+							if not c then return false end
 						return c.showSeparator == true or c.useGradient == true
 					end,
 					parentId = "frame",
@@ -1615,8 +1969,8 @@ local function registerEditModeBars()
 				end
 			end
 
-			-- Druid: Show in (forms), exclude Health and enforced Cat-only Combo Points
-			if addon.variables.unitClass == "DRUID" and barType ~= "HEALTH" and barType ~= "COMBO_POINTS" then
+			-- Druid: Show in (forms) is only available for classic/spec bars, not shared slots.
+			if addon.variables.unitClass == "DRUID" and not sharedSlot and barType ~= "HEALTH" and barType ~= "COMBO_POINTS" then
 				local forms = { "HUMANOID", "BEAR", "CAT", "TRAVEL", "MOONKIN", "STAG" }
 				local formLabels = {
 					HUMANOID = L["Humanoid"] or "Humanoid",
@@ -1993,12 +2347,7 @@ local function registerEditModeBars()
 					default = globalFontConfigKey(),
 				}
 
-				local outlineOptions = {
-					{ key = "NONE", label = NONE },
-					{ key = "OUTLINE", label = "Outline" },
-					{ key = "THICKOUTLINE", label = "Thick Outline" },
-					{ key = "MONOCHROMEOUTLINE", label = "Mono Outline" },
-				}
+				local outlineOptions = getFontStyleEntries()
 				settingsList[#settingsList + 1] = {
 					name = L["Outline"],
 					kind = settingType.Dropdown,
@@ -2009,26 +2358,26 @@ local function registerEditModeBars()
 						for _, entry in ipairs(outlineOptions) do
 							root:CreateCheckbox(entry.label, function()
 								local c = curSpecCfg()
-								local cur = (c and c.fontOutline) or cfg.fontOutline or "OUTLINE"
+								local cur = normalizeFontStyleChoice((c and c.fontOutline) or cfg.fontOutline, "OUTLINE")
 								return cur == entry.key
 							end, function()
 								local c = curSpecCfg()
 								if not c then return end
-								local cur = (c and c.fontOutline) or cfg.fontOutline or "OUTLINE"
+								local cur = normalizeFontStyleChoice((c and c.fontOutline) or cfg.fontOutline, "OUTLINE")
 								if cur == entry.key then return end
-								c.fontOutline = entry.key
+								c.fontOutline = normalizeFontStyleChoice(entry.key, "OUTLINE")
 								queueRefresh()
 							end)
 						end
 					end,
 					get = function()
 						local c = curSpecCfg()
-						return (c and c.fontOutline) or cfg.fontOutline or "OUTLINE"
+						return normalizeFontStyleChoice((c and c.fontOutline) or cfg.fontOutline, "OUTLINE")
 					end,
 					set = function(_, value)
 						local c = curSpecCfg()
 						if not c then return end
-						c.fontOutline = value
+						c.fontOutline = normalizeFontStyleChoice(value, "OUTLINE")
 						queueRefresh()
 					end,
 					default = "OUTLINE",
@@ -2303,12 +2652,7 @@ local function registerEditModeBars()
 					default = globalFontConfigKey(),
 				}
 
-				local outlineOptions = {
-					{ key = "NONE", label = NONE },
-					{ key = "OUTLINE", label = "Outline" },
-					{ key = "THICKOUTLINE", label = "Thick Outline" },
-					{ key = "MONOCHROMEOUTLINE", label = "Mono Outline" },
-				}
+				local outlineOptions = getFontStyleEntries()
 				settingsList[#settingsList + 1] = {
 					name = L["Outline"],
 					kind = settingType.Dropdown,
@@ -2319,32 +2663,33 @@ local function registerEditModeBars()
 						for _, entry in ipairs(outlineOptions) do
 							root:CreateCheckbox(entry.label, function()
 								local c = curSpecCfg()
-								local cur = (c and c.fontOutline) or cfg.fontOutline or "OUTLINE"
+								local cur = normalizeFontStyleChoice((c and c.fontOutline) or cfg.fontOutline, "OUTLINE")
 								return cur == entry.key
 							end, function()
 								local c = curSpecCfg()
 								if not c then return end
-								local cur = (c and c.fontOutline) or cfg.fontOutline or "OUTLINE"
+								local cur = normalizeFontStyleChoice((c and c.fontOutline) or cfg.fontOutline, "OUTLINE")
 								if cur == entry.key then return end
-								c.fontOutline = entry.key
+								c.fontOutline = normalizeFontStyleChoice(entry.key, "OUTLINE")
 								queueRefresh()
 							end)
 						end
 					end,
 					get = function()
 						local c = curSpecCfg()
-						return (c and c.fontOutline) or cfg.fontOutline or "OUTLINE"
+						return normalizeFontStyleChoice((c and c.fontOutline) or cfg.fontOutline, "OUTLINE")
 					end,
 					set = function(_, value)
 						local c = curSpecCfg()
 						if not c then return end
-						c.fontOutline = value
+						c.fontOutline = normalizeFontStyleChoice(value, "OUTLINE")
 						queueRefresh()
 					end,
 					default = "OUTLINE",
 				}
 			end
 
+			if not sharedSlot then
 			do -- Global profile helpers
 				local function syncSizeFromConfig()
 					local c = curSpecCfg()
@@ -2435,14 +2780,129 @@ local function registerEditModeBars()
 					end,
 				})
 			end
+			end
 
 			if barType ~= "STAGGER" then
-				settingsList[#settingsList + 1] = {
-					name = COLOR,
-					kind = settingType.Collapsible,
-					id = "colorsetting",
-					defaultCollapsed = true,
-				}
+				local powerColorParentId = "colorsetting"
+
+				if genericSharedPowerEditor then
+					powerColorParentId = "powercolorsetting"
+
+					settingsList[#settingsList + 1] = {
+						name = L["ResourceBarsPowerColor"] or "Power color",
+						kind = settingType.Collapsible,
+						id = powerColorParentId,
+						defaultCollapsed = true,
+					}
+
+					settingsList[#settingsList + 1] = {
+						name = L["ResourceBarsPowerColorType"] or "Power type",
+						kind = settingType.Dropdown,
+						height = 180,
+						field = "powerTypeOverrideType",
+						parentId = powerColorParentId,
+						generator = function(_, root)
+							for _, pType in ipairs(collectSharedPowerTypes()) do
+								root:CreateRadio(powerTypeLabel(pType), function()
+									return selectedSharedPowerTypeTarget() == pType
+								end, function()
+									if selectedSharedPowerType == pType then return end
+									selectedSharedPowerType = pType
+									if addon.EditModeLib and addon.EditModeLib.internal then addon.EditModeLib.internal:RefreshSettings() end
+								end)
+							end
+						end,
+						get = function() return selectedSharedPowerTypeTarget() end,
+						set = function(_, value)
+							selectedSharedPowerType = value
+							if addon.EditModeLib and addon.EditModeLib.internal then addon.EditModeLib.internal:RefreshSettings() end
+						end,
+						default = currentEditorPowerType() or barType,
+					}
+
+					settingsList[#settingsList + 1] = {
+						name = L["ResourceBarsOverridePowerColor"] or "Override power type styling",
+						kind = settingType.Checkbox,
+						field = "powerTypeOverrideEnabled",
+						parentId = powerColorParentId,
+						get = function()
+							return isPowerTypeOverrideEnabled()
+						end,
+						set = function(_, value)
+							local base = curSpecCfg()
+							local entry = ensurePowerTypeOverrideEntry(selectedSharedPowerTypeTarget())
+							if not entry then return end
+							entry.enabled = value and true or false
+							if value and base then
+								local hasStoredFields = false
+								for _, key in ipairs((ResourceBars and ResourceBars.POWER_TYPE_STYLE_OVERRIDE_KEYS) or {}) do
+									if entry[key] ~= nil then
+										hasStoredFields = true
+										break
+									end
+								end
+								if not hasStoredFields then
+									for _, key in ipairs((ResourceBars and ResourceBars.POWER_TYPE_STYLE_OVERRIDE_KEYS) or {}) do
+										if entry[key] == nil and base[key] ~= nil then
+											entry[key] = type(base[key]) == "table" and CopyTable(base[key]) or base[key]
+										end
+									end
+								end
+							end
+							queueRefresh()
+							if addon.EditModeLib and addon.EditModeLib.internal then addon.EditModeLib.internal:RefreshSettings() end
+						end,
+					}
+
+					settingsList[#settingsList + 1] = {
+						name = L["ResourceBarsDefaultPowerColor"] or "Default power color",
+						kind = settingType.CheckboxColor,
+						field = "defaultPowerColor",
+						parentId = powerColorParentId,
+						default = false,
+						get = function()
+							local pType = selectedSharedPowerTypeTarget()
+							return getDefaultPowerColorEntry(pType) ~= nil
+						end,
+						set = function(_, value)
+							local pType = selectedSharedPowerTypeTarget()
+							if not pType then return end
+							if value then
+								local baseColor = getDefaultPowerColorEntry(pType) or sharedPowerTypeBaseColor(pType) or { 1, 1, 1, 1 }
+								local entry = ensureDefaultPowerColorEntry(pType)
+								if not entry then return end
+								entry[1], entry[2], entry[3], entry[4] = baseColor[1] or 1, baseColor[2] or 1, baseColor[3] or 1, baseColor[4] or 1
+							else
+								clearDefaultPowerColorEntry(pType)
+							end
+							queueRefresh()
+							refreshSettingsUI()
+						end,
+						colorDefault = { r = 1, g = 1, b = 1, a = 1 },
+						colorGet = function()
+							local pType = selectedSharedPowerTypeTarget()
+							local col = getDefaultPowerColorEntry(pType) or sharedPowerTypeBaseColor(pType) or { 1, 1, 1, 1 }
+							return toUIColor(col, { 1, 1, 1, 1 })
+						end,
+						colorSet = function(_, value)
+							local pType = selectedSharedPowerTypeTarget()
+							local fallback = sharedPowerTypeBaseColor(pType) or { 1, 1, 1, 1 }
+							local entry = ensureDefaultPowerColorEntry(pType)
+							if not entry then return end
+							local col = toColorArray(value, fallback)
+							entry[1], entry[2], entry[3], entry[4] = col[1] or 1, col[2] or 1, col[3] or 1, col[4] or 1
+							queueRefresh()
+						end,
+							hasOpacity = true,
+						}
+				else
+					settingsList[#settingsList + 1] = {
+						name = COLOR,
+						kind = settingType.Collapsible,
+						id = "colorsetting",
+						defaultCollapsed = true,
+					}
+				end
 
 				settingsList[#settingsList + 1] = {
 					name = L["Custom bar color"] or "Custom bar color",
@@ -2450,62 +2910,60 @@ local function registerEditModeBars()
 					field = "useBarColor",
 					default = false,
 					get = function()
-						local c = curSpecCfg()
-						return c and c.useBarColor == true
+						return readPowerConfigField("useBarColor", false) == true
 					end,
 					set = function(_, value)
-						local c = curSpecCfg()
+						local c = currentPowerConfigTarget()
 						if not c then return end
 						c.useBarColor = value and true or false
-						if c.useBarColor and c.useClassColor then c.useClassColor = false end
+						if c.useBarColor then c.useClassColor = false end
 						queueRefresh()
-						addon.EditModeLib.internal:RefreshSettings()
+						if addon.EditModeLib and addon.EditModeLib.internal then addon.EditModeLib.internal:RefreshSettings() end
 					end,
-					colorDefault = toUIColor(cfg and cfg.barColor, { 1, 1, 1, 1 }),
+					colorDefault = toUIColor(readPowerConfigField("barColor", { 1, 1, 1, 1 }), { 1, 1, 1, 1 }),
 					colorGet = function()
-						local c = curSpecCfg()
-						local col = (c and c.barColor) or (cfg and cfg.barColor) or { 1, 1, 1, 1 }
+						local col = readPowerConfigField("barColor", { 1, 1, 1, 1 })
 						local r, g, b, a = toColorComponents(col, { 1, 1, 1, 1 })
 						return { r = r, g = g, b = b, a = a }
 					end,
 					colorSet = function(_, value)
-						local c = curSpecCfg()
+						local c = currentPowerConfigTarget()
 						if not c then return end
 						c.barColor = toColorArray(value, { 1, 1, 1, 1 })
 						queueRefresh()
 					end,
 					isEnabled = function()
-						local c = curSpecCfg()
-						return not (c and c.useClassColor == true)
+						return readPowerConfigField("useClassColor", false) ~= true
 					end,
 					hasOpacity = true,
-					parentId = "colorsetting",
+					parentId = powerColorParentId,
 				}
 
-				if barType ~= "RUNES" then
+				if barType ~= "RUNES" or genericSharedPowerEditor then
 					settingsList[#settingsList + 1] = {
 						name = L["Use class color"] or "Use class color",
 						kind = settingType.Checkbox,
 						field = "useClassColor",
 						get = function()
-							local c = curSpecCfg()
-							return c and c.useClassColor == true
+							return readPowerConfigField("useClassColor", false) == true
 						end,
 						set = function(_, value)
-							local c = curSpecCfg()
+							local c = currentPowerConfigTarget()
 							if not c then return end
 							c.useClassColor = value and true or false
-							if c.useClassColor and c.useBarColor then c.useBarColor = false end
+							if c.useClassColor then c.useBarColor = false end
 							queueRefresh()
-							addon.EditModeLib.internal:RefreshSettings()
+							if addon.EditModeLib and addon.EditModeLib.internal then addon.EditModeLib.internal:RefreshSettings() end
 						end,
 						isEnabled = function()
-							local c = curSpecCfg()
-							return not (c and c.useBarColor == true)
+							return readPowerConfigField("useBarColor", false) ~= true
+						end,
+						isShown = function()
+							return not genericSharedPowerEditor or currentEditorPowerType() ~= "RUNES"
 						end,
 						hasOpacity = true,
 						default = false,
-						parentId = "colorsetting",
+						parentId = powerColorParentId,
 					}
 				end
 
@@ -2514,30 +2972,28 @@ local function registerEditModeBars()
 					kind = settingType.Checkbox,
 					field = "useGradient",
 					get = function()
-						local c = curSpecCfg()
-						return c and c.useGradient == true
+						return readPowerConfigField("useGradient", false) == true
 					end,
 					set = function(_, value)
-						local c = curSpecCfg()
+						local c = currentPowerConfigTarget()
 						if not c then return end
 						c.useGradient = value and true or false
 						queueRefresh()
 						refreshSettingsUI()
 					end,
 					default = false,
-					parentId = "colorsetting",
+					parentId = powerColorParentId,
 				}
 
 				settingsList[#settingsList + 1] = {
 					name = L["Gradient start color"] or "Gradient start color",
 					kind = settingType.Color,
-					parentId = "colorsetting",
+					parentId = powerColorParentId,
 					get = function()
-						local c = curSpecCfg()
-						return toUIColor((c and c.gradientStartColor) or (cfg and cfg.gradientStartColor) or { 1, 1, 1, 1 }, { 1, 1, 1, 1 })
+						return toUIColor(readPowerConfigField("gradientStartColor", { 1, 1, 1, 1 }), { 1, 1, 1, 1 })
 					end,
 					set = function(_, value)
-						local c = curSpecCfg()
+						local c = currentPowerConfigTarget()
 						if not c then return end
 						c.gradientStartColor = toColorArray(value, { 1, 1, 1, 1 })
 						queueRefresh()
@@ -2545,21 +3001,19 @@ local function registerEditModeBars()
 					default = { r = 1, g = 1, b = 1, a = 1 },
 					hasOpacity = true,
 					isEnabled = function()
-						local c = curSpecCfg()
-						return c and c.useGradient == true
+						return readPowerConfigField("useGradient", false) == true
 					end,
 				}
 
 				settingsList[#settingsList + 1] = {
 					name = L["Gradient end color"] or "Gradient end color",
 					kind = settingType.Color,
-					parentId = "colorsetting",
+					parentId = powerColorParentId,
 					get = function()
-						local c = curSpecCfg()
-						return toUIColor((c and c.gradientEndColor) or (cfg and cfg.gradientEndColor) or { 1, 1, 1, 1 }, { 1, 1, 1, 1 })
+						return toUIColor(readPowerConfigField("gradientEndColor", { 1, 1, 1, 1 }), { 1, 1, 1, 1 })
 					end,
 					set = function(_, value)
-						local c = curSpecCfg()
+						local c = currentPowerConfigTarget()
 						if not c then return end
 						c.gradientEndColor = toColorArray(value, { 1, 1, 1, 1 })
 						queueRefresh()
@@ -2567,8 +3021,7 @@ local function registerEditModeBars()
 					default = { r = 1, g = 1, b = 1, a = 1 },
 					hasOpacity = true,
 					isEnabled = function()
-						local c = curSpecCfg()
-						return c and c.useGradient == true
+						return readPowerConfigField("useGradient", false) == true
 					end,
 				}
 
@@ -2577,16 +3030,15 @@ local function registerEditModeBars()
 					kind = settingType.Dropdown,
 					height = 80,
 					field = "gradientDirection",
-					parentId = "colorsetting",
+					parentId = powerColorParentId,
 					generator = function(_, root)
 						local function getDir()
-							local c = curSpecCfg()
-							local v = (c and c.gradientDirection) or (cfg and cfg.gradientDirection) or "VERTICAL"
+							local v = readPowerConfigField("gradientDirection", "VERTICAL")
 							if type(v) == "string" then v = v:upper() end
 							return v == "HORIZONTAL" and "HORIZONTAL" or "VERTICAL"
 						end
 						local function setDir(value)
-							local c = curSpecCfg()
+							local c = currentPowerConfigTarget()
 							if not c then return end
 							c.gradientDirection = value == "HORIZONTAL" and "HORIZONTAL" or "VERTICAL"
 							queueRefresh()
@@ -2595,13 +3047,12 @@ local function registerEditModeBars()
 						root:CreateRadio(L["Horizontal"] or "Horizontal", function() return getDir() == "HORIZONTAL" end, function() setDir("HORIZONTAL") end)
 					end,
 					get = function()
-						local c = curSpecCfg()
-						local v = (c and c.gradientDirection) or (cfg and cfg.gradientDirection) or "VERTICAL"
+						local v = readPowerConfigField("gradientDirection", "VERTICAL")
 						if type(v) == "string" then v = v:upper() end
 						return v == "HORIZONTAL" and "HORIZONTAL" or "VERTICAL"
 					end,
 					set = function(_, value)
-						local c = curSpecCfg()
+						local c = currentPowerConfigTarget()
 						if not c then return end
 						if type(value) == "string" then value = value:upper() end
 						c.gradientDirection = value == "HORIZONTAL" and "HORIZONTAL" or "VERTICAL"
@@ -2609,71 +3060,76 @@ local function registerEditModeBars()
 					end,
 					default = "VERTICAL",
 					isEnabled = function()
-						local c = curSpecCfg()
-						return c and c.useGradient == true
+						return readPowerConfigField("useGradient", false) == true
 					end,
 				}
 
-				if barType == "RUNES" then
+				if barType == "RUNES" or genericSharedPowerEditor then
 					settingsList[#settingsList + 1] = {
 						name = L["Rune cooldown color"] or "Rune cooldown color",
 						kind = settingType.Color,
-						parentId = "colorsetting",
+						parentId = powerColorParentId,
 						get = function()
-							local c = curSpecCfg()
-							return toUIColor((c and c.runeCooldownColor) or (cfg and cfg.runeCooldownColor) or { 0.35, 0.35, 0.35, 1 }, { 0.35, 0.35, 0.35, 1 })
+							return toUIColor(readPowerConfigField("runeCooldownColor", { 0.35, 0.35, 0.35, 1 }), { 0.35, 0.35, 0.35, 1 })
 						end,
 						set = function(_, value)
-							local c = curSpecCfg()
+							local c = currentPowerConfigTarget()
 							if not c then return end
 							c.runeCooldownColor = toColorArray(value, { 0.35, 0.35, 0.35, 1 })
 							queueRefresh()
 						end,
 						default = { r = 0.35, g = 0.35, b = 0.35, a = 1 },
 						hasOpacity = true,
+						isShown = function()
+							return not genericSharedPowerEditor or currentEditorPowerType() == "RUNES"
+						end,
 					}
 				end
 
-				if barType == "HOLY_POWER" then
+				if barType == "HOLY_POWER" or genericSharedPowerEditor then
 					settingsList[#settingsList + 1] = {
 						name = L["Use 3 HP color"] or "Use custom color at 3 Holy Power",
 						kind = settingType.CheckboxColor,
 						field = "useHolyThreeColor",
 						default = false,
 						get = function()
-							local c = curSpecCfg()
-							return c and c.useHolyThreeColor == true
+							return readPowerConfigField("useHolyThreeColor", false) == true
 						end,
 						set = function(_, value)
-							local c = curSpecCfg()
+							local c = currentPowerConfigTarget()
 							if not c then return end
 							c.useHolyThreeColor = value and true or false
 							queueRefresh()
 						end,
-						colorDefault = toUIColor(cfg and cfg.holyThreeColor, { 1, 0.8, 0.2, 1 }),
+						colorDefault = toUIColor(readPowerConfigField("holyThreeColor", { 1, 0.8, 0.2, 1 }), { 1, 0.8, 0.2, 1 }),
 						colorGet = function()
-							local c = curSpecCfg()
-							local col = (c and c.holyThreeColor) or (cfg and cfg.holyThreeColor) or { 1, 0.8, 0.2, 1 }
+							local col = readPowerConfigField("holyThreeColor", { 1, 0.8, 0.2, 1 })
 							local r, g, b, a = toColorComponents(col, { 1, 0.8, 0.2, 1 })
 							return { r = r, g = g, b = b, a = a }
 						end,
 						colorSet = function(_, value)
-							local c = curSpecCfg()
+							local c = currentPowerConfigTarget()
 							if not c then return end
 							c.holyThreeColor = toColorArray(value, { 1, 0.8, 0.2, 1 })
 							queueRefresh()
 						end,
 						hasOpacity = true,
-						parentId = "colorsetting",
+						parentId = powerColorParentId,
+						isShown = function()
+							return not genericSharedPowerEditor or currentEditorPowerType() == "HOLY_POWER"
+						end,
 					}
 				end
 
-				if addon.variables.unitClass == "ROGUE" and barType == "COMBO_POINTS" then
+				if addon.variables.unitClass == "ROGUE" and (barType == "COMBO_POINTS" or genericSharedPowerEditor) then
 					local function chargedCfg()
-						local c = curSpecCfg()
+						local c = currentPowerConfigTarget()
 						if not c then return nil end
-						if ResourceBars and ResourceBars.EnsureRogueChargedComboDefaults then ResourceBars.EnsureRogueChargedComboDefaults(c, "COMBO_POINTS") end
+						if ResourceBars and ResourceBars.EnsureRogueChargedComboDefaults then ResourceBars.EnsureRogueChargedComboDefaults(c, currentEditorPowerType() or "COMBO_POINTS") end
 						return c
+					end
+					local function isChargedComboEditorShown()
+						return not genericSharedPowerEditor or currentEditorPowerType() == "COMBO_POINTS"
 					end
 
 					local function percentFromUnit(value, fallback)
@@ -2715,7 +3171,8 @@ local function registerEditModeBars()
 							queueRefresh()
 							refreshSettingsUI()
 						end,
-						parentId = "colorsetting",
+						parentId = powerColorParentId,
+						isShown = isChargedComboEditorShown,
 					}
 
 					settingsList[#settingsList + 1] = {
@@ -2738,7 +3195,8 @@ local function registerEditModeBars()
 							local c = chargedCfg()
 							return c and c.useChargedComboStyling ~= false
 						end,
-						parentId = "colorsetting",
+						parentId = powerColorParentId,
+						isShown = isChargedComboEditorShown,
 					}
 
 					settingsList[#settingsList + 1] = {
@@ -2775,7 +3233,8 @@ local function registerEditModeBars()
 							local c = chargedCfg()
 							return c and c.useChargedComboStyling ~= false and c.chargedComboAffectFill ~= false
 						end,
-						parentId = "colorsetting",
+						parentId = powerColorParentId,
+						isShown = isChargedComboEditorShown,
 					}
 
 					settingsList[#settingsList + 1] = {
@@ -2801,7 +3260,8 @@ local function registerEditModeBars()
 							local c = chargedCfg()
 							return c and c.useChargedComboStyling ~= false and c.chargedComboAffectFill ~= false and c.chargedComboUseCustomFillColor ~= true
 						end,
-						parentId = "colorsetting",
+						parentId = powerColorParentId,
+						isShown = isChargedComboEditorShown,
 					}
 
 					settingsList[#settingsList + 1] = {
@@ -2827,7 +3287,8 @@ local function registerEditModeBars()
 							local c = chargedCfg()
 							return c and c.useChargedComboStyling ~= false and c.chargedComboAffectFill ~= false and c.chargedComboUseCustomFillColor ~= true
 						end,
-						parentId = "colorsetting",
+						parentId = powerColorParentId,
+						isShown = isChargedComboEditorShown,
 					}
 
 					settingsList[#settingsList + 1] = {
@@ -2850,7 +3311,8 @@ local function registerEditModeBars()
 							local c = chargedCfg()
 							return c and c.useChargedComboStyling ~= false
 						end,
-						parentId = "colorsetting",
+						parentId = powerColorParentId,
+						isShown = isChargedComboEditorShown,
 					}
 
 					settingsList[#settingsList + 1] = {
@@ -2887,7 +3349,8 @@ local function registerEditModeBars()
 							local c = chargedCfg()
 							return c and c.useChargedComboStyling ~= false and c.chargedComboAffectBackground ~= false
 						end,
-						parentId = "colorsetting",
+						parentId = powerColorParentId,
+						isShown = isChargedComboEditorShown,
 					}
 
 					settingsList[#settingsList + 1] = {
@@ -2913,7 +3376,8 @@ local function registerEditModeBars()
 							local c = chargedCfg()
 							return c and c.useChargedComboStyling ~= false and c.chargedComboAffectBackground ~= false and c.chargedComboUseCustomBackgroundColor ~= true
 						end,
-						parentId = "colorsetting",
+						parentId = powerColorParentId,
+						isShown = isChargedComboEditorShown,
 					}
 
 					settingsList[#settingsList + 1] = {
@@ -2939,41 +3403,43 @@ local function registerEditModeBars()
 							local c = chargedCfg()
 							return c and c.useChargedComboStyling ~= false and c.chargedComboAffectBackground ~= false and c.chargedComboUseCustomBackgroundColor ~= true
 						end,
-						parentId = "colorsetting",
+						parentId = powerColorParentId,
+						isShown = isChargedComboEditorShown,
 					}
 				end
 
-				if barType == "MAELSTROM_WEAPON" then
+				if barType == "MAELSTROM_WEAPON" or genericSharedPowerEditor then
 					settingsList[#settingsList + 1] = {
 						name = "Use stack-threshold color",
 						kind = settingType.CheckboxColor,
 						field = "useMaelstromFiveColor",
 						default = true,
 						get = function()
-							local c = curSpecCfg()
-							return c and c.useMaelstromFiveColor ~= false
+							return readPowerConfigField("useMaelstromFiveColor", true) ~= false
 						end,
 						set = function(_, value)
-							local c = curSpecCfg()
+							local c = currentPowerConfigTarget()
 							if not c then return end
 							c.useMaelstromFiveColor = value and true or false
 							queueRefresh()
 						end,
-						colorDefault = toUIColor(cfg and cfg.maelstromFiveColor, { 0.2, 0.7, 1, 1 }),
+						colorDefault = toUIColor(readPowerConfigField("maelstromFiveColor", { 0.2, 0.7, 1, 1 }), { 0.2, 0.7, 1, 1 }),
 						colorGet = function()
-							local c = curSpecCfg()
-							local col = (c and c.maelstromFiveColor) or (cfg and cfg.maelstromFiveColor) or { 0.2, 0.7, 1, 1 }
+							local col = readPowerConfigField("maelstromFiveColor", { 0.2, 0.7, 1, 1 })
 							local r, g, b, a = toColorComponents(col, { 0.2, 0.7, 1, 1 })
 							return { r = r, g = g, b = b, a = a }
 						end,
 						colorSet = function(_, value)
-							local c = curSpecCfg()
+							local c = currentPowerConfigTarget()
 							if not c then return end
 							c.maelstromFiveColor = toColorArray(value, { 0.2, 0.7, 1, 1 })
 							queueRefresh()
 						end,
 						hasOpacity = true,
-						parentId = "colorsetting",
+						parentId = powerColorParentId,
+						isShown = function()
+							return not genericSharedPowerEditor or currentEditorPowerType() == "MAELSTROM_WEAPON"
+						end,
 					}
 
 					settingsList[#settingsList + 1] = {
@@ -2985,9 +3451,9 @@ local function registerEditModeBars()
 						maxValue = MAELSTROM_MID_STACK_MAX,
 						valueStep = 1,
 						default = MAELSTROM_MID_STACK_DEFAULT,
-						parentId = "colorsetting",
+						parentId = powerColorParentId,
 						get = function()
-							local c = curSpecCfg()
+							local c = currentPowerConfigTarget()
 							local cur = tonumber(c and c.maelstromMidStack) or MAELSTROM_MID_STACK_DEFAULT
 							cur = math.floor(cur + 0.5)
 							if cur < 1 then cur = 1 end
@@ -2995,7 +3461,7 @@ local function registerEditModeBars()
 							return cur
 						end,
 						set = function(_, value)
-							local c = curSpecCfg()
+							local c = currentPowerConfigTarget()
 							if not c then return end
 							local new = tonumber(value) or MAELSTROM_MID_STACK_DEFAULT
 							new = math.floor(new + 0.5)
@@ -3006,8 +3472,10 @@ local function registerEditModeBars()
 							queueRefresh()
 						end,
 						isEnabled = function()
-							local c = curSpecCfg()
-							return c and c.useMaelstromFiveColor ~= false
+							return readPowerConfigField("useMaelstromFiveColor", true) ~= false
+						end,
+						isShown = function()
+							return not genericSharedPowerEditor or currentEditorPowerType() == "MAELSTROM_WEAPON"
 						end,
 					}
 
@@ -3016,20 +3484,21 @@ local function registerEditModeBars()
 						kind = settingType.Checkbox,
 						field = "useMaelstromCarryFill",
 						default = false,
-						parentId = "colorsetting",
+						parentId = powerColorParentId,
 						get = function()
-							local c = curSpecCfg()
-							return c and c.useMaelstromCarryFill == true
+							return readPowerConfigField("useMaelstromCarryFill", false) == true
 						end,
 						set = function(_, value)
-							local c = curSpecCfg()
+							local c = currentPowerConfigTarget()
 							if not c then return end
 							c.useMaelstromCarryFill = value and true or false
 							queueRefresh()
 						end,
 						isEnabled = function()
-							local c = curSpecCfg()
-							return c and c.useMaelstromFiveColor ~= false
+							return readPowerConfigField("useMaelstromFiveColor", true) ~= false
+						end,
+						isShown = function()
+							return not genericSharedPowerEditor or currentEditorPowerType() == "MAELSTROM_WEAPON"
 						end,
 					}
 				end
@@ -3040,30 +3509,28 @@ local function registerEditModeBars()
 					field = "useMaxColor",
 					default = barType == "MAELSTROM_WEAPON",
 					get = function()
-						local c = curSpecCfg()
-						return c and c.useMaxColor == true
+						return readPowerConfigField("useMaxColor", barType == "MAELSTROM_WEAPON") == true
 					end,
 					set = function(_, value)
-						local c = curSpecCfg()
+						local c = currentPowerConfigTarget()
 						if not c then return end
 						c.useMaxColor = value and true or false
 						queueRefresh()
 					end,
-					colorDefault = toUIColor(cfg and cfg.maxColor, { 0, 1, 0, 1 }),
+					colorDefault = toUIColor(readPowerConfigField("maxColor", { 0, 1, 0, 1 }), { 0, 1, 0, 1 }),
 					colorGet = function()
-						local c = curSpecCfg()
-						local col = (c and c.maxColor) or (cfg and cfg.maxColor) or { 0, 1, 0, 1 }
+						local col = readPowerConfigField("maxColor", { 0, 1, 0, 1 })
 						local r, g, b, a = toColorComponents(col, { 0, 1, 0, 1 })
 						return { r = r, g = g, b = b, a = a }
 					end,
 					colorSet = function(_, value)
-						local c = curSpecCfg()
+						local c = currentPowerConfigTarget()
 						if not c then return end
 						c.maxColor = toColorArray(value, { 0, 1, 0, 1 })
 						queueRefresh()
 					end,
 					hasOpacity = true,
-					parentId = "colorsetting",
+					parentId = powerColorParentId,
 				}
 			end
 
@@ -3930,11 +4397,16 @@ local function registerEditModeBars()
 				local spec = registeredSpec or addon.variables.unitSpec
 				local activeSpec = getActiveSpecIndex()
 				if activeSpec and spec and spec ~= activeSpec then return end
-				local specCfg = ensureSpecCfg(spec)
-				if not specCfg then return end
-				specCfg[barType] = specCfg[barType] or {}
-				local bcfg = specCfg[barType]
+				local bcfg = curSpecCfg()
+				if not bcfg then return end
 				bcfg.anchor = bcfg.anchor or {}
+				local oldPoint = bcfg.anchor.point
+				local oldRelativePoint = bcfg.anchor.relativePoint
+				local oldX = bcfg.anchor.x
+				local oldY = bcfg.anchor.y
+				local oldRelativeFrame = bcfg.anchor.relativeFrame
+				local oldWidth = bcfg.width
+				local oldHeight = bcfg.height
 				local hydrationToken = tostring(addon.db) .. ":" .. tostring(frameId)
 				if frame._eqolEditModeHydratedToken ~= hydrationToken then
 					frame._eqolEditModeHydratedToken = hydrationToken
@@ -3963,20 +4435,33 @@ local function registerEditModeBars()
 				end
 				bcfg.width = data.width or bcfg.width
 				bcfg.height = data.height or bcfg.height
+				local anchorChanged = oldPoint ~= bcfg.anchor.point
+					or oldRelativePoint ~= bcfg.anchor.relativePoint
+					or oldRelativeFrame ~= bcfg.anchor.relativeFrame
+					or oldX ~= bcfg.anchor.x
+					or oldY ~= bcfg.anchor.y
+				local sizeChanged = (oldWidth ~= nil or bcfg.width ~= nil) and math.abs((tonumber(oldWidth) or 0) - (tonumber(bcfg.width) or 0)) >= 0.5
+					or (oldHeight ~= nil or bcfg.height ~= nil) and math.abs((tonumber(oldHeight) or 0) - (tonumber(bcfg.height) or 0)) >= 0.5
+				local liveLayoutChanged = anchorChanged or sizeChanged
+				local isBarEnabled = addon.db["enableResourceFrame"] == true and bcfg.enabled == true
 				if spec == addon.variables.unitSpec then
-					if barType == "HEALTH" then
+					local liveBarType = currentLiveBarType()
+					if liveLayoutChanged and isBarEnabled and liveBarType == "HEALTH" then
 						ResourceBars.SetHealthBarSize(bcfg.width, bcfg.height)
-					else
-						ResourceBars.SetPowerBarSize(bcfg.width, bcfg.height, barType)
+					elseif liveLayoutChanged and isBarEnabled and liveBarType then
+						ResourceBars.SetPowerBarSize(bcfg.width, bcfg.height, liveBarType)
 					end
-					if ResourceBars.ReanchorAll then ResourceBars.ReanchorAll() end
-					if ResourceBars.Refresh then ResourceBars.Refresh() end
-					if addon.EditModeLib and addon.EditModeLib.internal and addon.EditModeLib.internal.RefreshSettingValues then addon.EditModeLib.internal:RefreshSettingValues() end
+					if liveLayoutChanged and isBarEnabled then
+						if ResourceBars.ReanchorAll then ResourceBars.ReanchorAll() end
+						if ResourceBars.Refresh then ResourceBars.Refresh() end
+						if sharedSlot and ResourceBars and ResourceBars.SyncSharedSlotProxyFrame then ResourceBars.SyncSharedSlotProxyFrame(sharedSlot, spec) end
+						if addon.EditModeLib and addon.EditModeLib.internal and addon.EditModeLib.internal.RefreshSettingValues then addon.EditModeLib.internal:RefreshSettingValues() end
+					end
 				end
 			end,
 			isEnabled = function()
 				local c = curSpecCfg()
-				return c and c.enabled == true
+				return addon.db["enableResourceFrame"] == true and c and c.enabled == true
 			end,
 			settings = settingsList,
 			buttons = buttons,
@@ -3988,17 +4473,64 @@ local function registerEditModeBars()
 		registered = registered + 1
 	end
 
-	registerBar("HEALTH", "EQOLHealthBar", "HEALTH", ResourceBars.DEFAULT_HEALTH_WIDTH, ResourceBars.DEFAULT_HEALTH_HEIGHT)
-	local classTypes = (ResourceBars.GetClassPowerTypes and ResourceBars.GetClassPowerTypes(addon.variables.unitClass)) or ResourceBars.classPowerTypes or {}
-	for _, pType in ipairs(classTypes) do
-		local frameName = "EQOL" .. pType .. "Bar"
-		registerBar(pType, frameName, pType, ResourceBars.DEFAULT_POWER_WIDTH, ResourceBars.DEFAULT_POWER_HEIGHT)
+	local activeSpec = tonumber(getActiveSpecIndex()) or tonumber(addon.variables.unitSpec) or 0
+	local sharedMode = getSpecMode(activeSpec) == "SHARED"
+	local function clearUnusedRegistrations(allowed)
+		for key, oldId in pairs(registeredByBar) do
+			if not allowed[key] then
+				if oldId and EditMode and EditMode.UnregisterFrame then EditMode:UnregisterFrame(oldId, false) end
+				if oldId then registeredFrames[oldId] = nil end
+				registeredByBar[key] = nil
+				registeredFrameNameByBar[key] = nil
+			end
+		end
+	end
+	if sharedMode then
+		local assignments = ResourceBars.ResolveSharedSlotAssignments and ResourceBars.ResolveSharedSlotAssignments(activeSpec) or {}
+		if ResourceBars and ResourceBars.SyncSharedSlotProxyFrames then ResourceBars.SyncSharedSlotProxyFrames(activeSpec) end
+		local allowed = { HEALTH = true, MAIN = true, SECONDARY = true }
+		clearUnusedRegistrations(allowed)
+		registerBar("HEALTH", "EQOLHealthBar", "HEALTH", ResourceBars.DEFAULT_HEALTH_WIDTH, ResourceBars.DEFAULT_HEALTH_HEIGHT, {
+			sharedSlot = "HEALTH",
+			titleLabel = HEALTH or "Health",
+		})
+		local sharedEntries = {
+			{ slot = "MAIN", label = L["AutoEnableMain"] or "Main resource" },
+			{ slot = "SECONDARY", label = L["AutoEnableSecondary"] or "Secondary" },
+		}
+		for _, entry in ipairs(sharedEntries) do
+			local resolvedType = assignments and assignments[entry.slot]
+			registerBar(
+				entry.slot,
+				ResourceBars.GetSharedSlotFrameName and ResourceBars.GetSharedSlotFrameName(entry.slot) or ("EQOLShared" .. entry.slot .. "Bar"),
+				resolvedType or "MANA",
+				ResourceBars.DEFAULT_POWER_WIDTH,
+				ResourceBars.DEFAULT_POWER_HEIGHT,
+				{
+					sharedSlot = entry.slot,
+					titleLabel = entry.label,
+				}
+			)
+		end
+	else
+		local allowed = { HEALTH = true }
+		local classTypes = (ResourceBars.GetClassPowerTypes and ResourceBars.GetClassPowerTypes(addon.variables.unitClass)) or ResourceBars.classPowerTypes or {}
+		for _, pType in ipairs(classTypes) do
+			allowed[pType] = true
+		end
+		clearUnusedRegistrations(allowed)
+		registerBar("HEALTH", "EQOLHealthBar", "HEALTH", ResourceBars.DEFAULT_HEALTH_WIDTH, ResourceBars.DEFAULT_HEALTH_HEIGHT)
+		for _, pType in ipairs(classTypes) do
+			local frameName = "EQOL" .. pType .. "Bar"
+			registerBar(pType, frameName, pType, ResourceBars.DEFAULT_POWER_WIDTH, ResourceBars.DEFAULT_POWER_HEIGHT)
+		end
 	end
 
-	if registered > 0 then ResourceBars._editModeRegistered = true end
+	ResourceBars._editModeRegistered = registered > 0
 end
 
 ResourceBars.RegisterEditModeFrames = registerEditModeBars
+ResourceBars.UnregisterEditModeFrames = unregisterEditModeBars
 
 local function buildSpecToggles(specIndex, specName, available, expandable)
 	local specCfg = ensureSpecCfg(specIndex)
@@ -4067,7 +4599,7 @@ local function buildSpecToggles(specIndex, specName, available, expandable)
 			setBarEnabled(specIndex, key, shouldSelect)
 		end,
 		parent = true,
-		parentCheck = function() return addon.db["enableResourceFrame"] == true end,
+		parentCheck = function() return addon.db["enableResourceFrame"] == true and getSpecMode(specIndex) ~= "SHARED" end,
 		parentSection = expandable,
 	}
 end
@@ -4085,6 +4617,7 @@ local function buildSettings()
 	settingsBuilt = true
 
 	addon.functions.SettingsCreateHeadline(cat, L["Resource Bars"], { parentSection = expandable })
+	local specRows = {}
 
 	local data = {
 		{
@@ -4099,47 +4632,18 @@ local function buildSettings()
 				elseif ResourceBars.DisableResourceBars then
 					ResourceBars.DisableResourceBars()
 				end
+				notifyResourceBarSettings()
+				refreshSettingsUI()
+				if val then
+					registerEditModeBars()
+				elseif ResourceBars and ResourceBars.UnregisterEditModeFrames then
+					ResourceBars.UnregisterEditModeFrames()
+				end
 			end,
 			parentSection = expandable,
-			default = false,
-			children = {
-				{
-					var = "resourceBarsAutoEnable",
-					text = L["AutoEnableAllBars"] or "Auto-enable bars for new characters",
-					sType = "multidropdown",
-					options = AUTO_ENABLE_OPTIONS,
-					order = AUTO_ENABLE_ORDER,
-					isSelectedFunc = function(key)
-						local selection = autoEnableSelection()
-						return selection and selection[key] == true
-					end,
-					setSelectedFunc = function(key, shouldSelect)
-						local selection = autoEnableSelection()
-						if shouldSelect then
-							selection[key] = true
-						else
-							selection[key] = nil
-						end
-						local spec = addon.variables.unitSpec
-						if spec then
-							local cfg = ensureSpecCfg(spec)
-							if cfg then addon.Aura.functions.requestActiveRefresh(spec) end
-						end
-					end,
-					parent = true,
-					parentCheck = function() return addon.db["enableResourceFrame"] == true end,
-					parentSection = expandable,
-				},
-				{
-					sType = "hint",
-					text = "|cff99e599" .. L["ResourceBarsSpecHint"] .. "|r",
-					parent = true,
-					parentCheck = function() return addon.db["enableResourceFrame"] == true end,
-					parentSection = expandable,
-				},
+				default = false,
 			},
-		},
-	}
+		}
 
 	local classID = addon.variables and addon.variables.unitClassID
 	local classTag = addon.variables and addon.variables.unitClass
@@ -4155,13 +4659,176 @@ local function buildSettings()
 			local specID, specName = GetSpecializationInfoForClassID(classID, specIndex)
 			local available = ResourceBars.powertypeClasses[classTag][specIndex] or {}
 			if specID and specName then
-				local entry = buildSpecToggles(specIndex, specName, available, expandable)
-				if entry then table.insert(data[1].children, entry) end
+				specRows[#specRows + 1] = { index = specIndex, name = specName, available = available }
 			end
 		end
 	end
 
-	addon.functions.SettingsCreateCheckboxes(cat, data)
+	local function currentClassMode()
+		local activeSpec = tonumber(getActiveSpecIndex()) or tonumber(addon.variables and addon.variables.unitSpec) or 0
+		if activeSpec > 0 then return getSpecMode(activeSpec) end
+		return "SPEC"
+	end
+	local resourceBarSettings = addon.functions.SettingsCreateCheckboxes(cat, data)
+	local resourceBarsParent = resourceBarSettings and resourceBarSettings.enableResourceFrame and resourceBarSettings.enableResourceFrame.element or nil
+	local function sharedModeParentCheck()
+		return addon.db["enableResourceFrame"] == true and currentClassMode() == "SHARED"
+	end
+	local function specModeParentCheck()
+		return addon.db["enableResourceFrame"] == true and currentClassMode() ~= "SHARED"
+	end
+
+	do
+		local modeVar = "rb_mode_class"
+		specModeSettingVars[modeVar] = true
+		addon.functions.SettingsCreateDropdown(cat, {
+			var = modeVar,
+			text = _G.MODE or "Mode",
+			values = RESOURCE_MODE_OPTIONS,
+			order = RESOURCE_MODE_ORDER,
+			get = function() return currentClassMode() end,
+			set = function(value)
+				local activeSpec = tonumber(getActiveSpecIndex()) or tonumber(addon.variables and addon.variables.unitSpec) or 0
+				local previousMode = currentClassMode()
+				if previousMode == value then return end
+				if activeSpec <= 0 or not setSpecMode(activeSpec, value) then return end
+				if value == "SHARED" and ResourceBars and ResourceBars.EnsureSharedSlotStore then
+					for _, slot in ipairs(ResourceBars.SHARED_SLOT_ORDER or {}) do
+						ResourceBars.EnsureSharedSlotStore(slot)
+					end
+				end
+				notifyResourceBarSettings()
+				refreshSettingsUI()
+				addon.variables.requireReload = true
+				if addon.functions and addon.functions.checkReloadFrame then addon.functions.checkReloadFrame() end
+			end,
+			default = "SHARED",
+			parent = resourceBarsParent,
+			parentSection = expandable,
+			parentCheck = function() return addon.db["enableResourceFrame"] == true end,
+		})
+	end
+
+	addon.functions.SettingsCreateText(cat, "", {
+		parent = resourceBarsParent,
+		parentSection = expandable,
+		parentCheck = sharedModeParentCheck,
+	})
+
+	addon.functions.SettingsCreateText(cat, "|cff99e599" .. (L["ResourceBarsModeShared"] or "Shared") .. "|r", {
+		parent = resourceBarsParent,
+		parentSection = expandable,
+		parentCheck = sharedModeParentCheck,
+	})
+
+	addon.functions.SettingsCreateMultiDropdown(cat, {
+		var = "resourceBarsSharedEnabled",
+		text = L["ResourceBarsModeShared"] or "Shared",
+		options = AUTO_ENABLE_OPTIONS,
+		order = AUTO_ENABLE_ORDER,
+		isSelectedFunc = function(key)
+			return isSharedSlotEnabled(key)
+		end,
+		setSelectedFunc = function(key, shouldSelect)
+			setSharedSlotEnabled(key, shouldSelect)
+		end,
+		parent = resourceBarsParent,
+		parentCheck = sharedModeParentCheck,
+		parentSection = expandable,
+	})
+
+	addon.functions.SettingsCreateButton(cat, {
+		var = "resourceBarsSharedAllClasses",
+		text = L["ResourceBarsEnableSharedAllClasses"] or "Enable Shared for all classes",
+		parent = resourceBarsParent,
+		parentSection = expandable,
+		parentCheck = sharedModeParentCheck,
+		func = function()
+			local popupKey = "EQOL_RESOURCEBARS_ENABLE_SHARED_ALL_CLASSES"
+			StaticPopupDialogs[popupKey] = StaticPopupDialogs[popupKey]
+				or {
+					text = L["ResourceBarsEnableSharedAllClassesConfirm"] or "Enable Shared mode for all specs of all classes?",
+					button1 = OKAY,
+					button2 = CANCEL,
+					timeout = 0,
+					whileDead = true,
+					hideOnEscape = true,
+					preferredIndex = 3,
+				}
+			StaticPopupDialogs[popupKey].OnAccept = function()
+				for classKey, classSpecs in pairs((ResourceBars and ResourceBars.powertypeClasses) or {}) do
+					if type(classSpecs) == "table" then setSpecModeForClass(classKey, next(classSpecs), "SHARED") end
+				end
+				if ResourceBars and ResourceBars.EnsureSharedSlotStore then
+					for _, slot in ipairs(ResourceBars.SHARED_SLOT_ORDER or {}) do
+						ResourceBars.EnsureSharedSlotStore(slot)
+					end
+				end
+				if ReloadUI then
+					ReloadUI()
+					return
+				end
+				local activeSpec = getActiveSpecIndex()
+				if activeSpec then addon.Aura.functions.requestActiveRefresh(activeSpec) end
+				refreshSettingsUI()
+				registerEditModeBars()
+			end
+			StaticPopup_Show(popupKey)
+		end,
+	})
+
+	addon.functions.SettingsCreateMultiDropdown(cat, {
+		var = "resourceBarsAutoEnable",
+		text = L["AutoEnableAllBars"] or "Auto-enable bars for new characters",
+		options = AUTO_ENABLE_OPTIONS,
+		order = AUTO_ENABLE_ORDER,
+		isSelectedFunc = function(key)
+			local selection = autoEnableSelection()
+			return selection and selection[key] == true
+		end,
+		setSelectedFunc = function(key, shouldSelect)
+			local selection = autoEnableSelection()
+			if shouldSelect then
+				selection[key] = true
+			else
+				selection[key] = nil
+			end
+			local spec = addon.variables.unitSpec
+			if spec then
+				local cfg = ensureSpecCfg(spec)
+				if cfg then addon.Aura.functions.requestActiveRefresh(spec) end
+			end
+		end,
+		parent = resourceBarsParent,
+		parentSection = expandable,
+		parentCheck = specModeParentCheck,
+	})
+
+	addon.functions.SettingsCreateText(cat, "", {
+		parent = resourceBarsParent,
+		parentSection = expandable,
+		parentCheck = specModeParentCheck,
+	})
+
+	addon.functions.SettingsCreateText(cat, "|cff99e599" .. (L["ResourceBarsModeSpec"] or "Classic") .. "|r", {
+		parent = resourceBarsParent,
+		parentSection = expandable,
+		parentCheck = specModeParentCheck,
+	})
+
+	addon.functions.SettingsCreateText(cat, "|cff99e599" .. L["ResourceBarsSpecHint"] .. "|r", {
+		parent = resourceBarsParent,
+		parentSection = expandable,
+		parentCheck = specModeParentCheck,
+	})
+
+	for _, row in ipairs(specRows) do
+		local entry = buildSpecToggles(row.index, row.name, row.available or {}, expandable)
+		if entry then
+			entry.parent = resourceBarsParent
+			addon.functions.SettingsCreateMultiDropdown(cat, entry)
+		end
+	end
 
 	registerEditModeBars()
 end

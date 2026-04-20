@@ -179,6 +179,8 @@ L["Spell Icon"] = "法术图标"
 L["Spell ID"] = "法术 ID"
 L["Spellbook Background Transparency"] = "法术书背景透明"
 L["SpellID"] = "法术 ID"
+--[[Translation missing --]]
+L["Stops the overlay from blocking clicks / hover when changing loadouts"] = "Stops the overlay from blocking clicks / hover when changing loadouts"
 L[ [=[Talent Loadout links are improved, to allow you to use modifiers, to copy the link, import it as a loadout, open it in Talent Tree Viewer (if installed) etc.
 Optionally, it can also scan your chat for any loadout string that was sent as normal regular text.]=] ] = "天赋配置链接已得到改进，允许您使用修饰键来复制链接、将其导入为装备或在天赋树查看器（如果已安装）中打开它等。此外，它还可以扫描您的聊天记录以查找以普通常规文本形式发送的任何配置字符串。"
 L["Talent Loadout String"] = "天赋配置字符串"

@@ -14,6 +14,22 @@ local PROFILE_DEBUG_KEYS = {
 	"_focusInterruptTrackerTrace",
 }
 
+local TRANSIENT_PROFILE_KEYS = {
+	["_eqolFixedLayoutCache"] = true,
+	["_eqolDynamicTargetIndices"] = true,
+	["_eqolIsStatic"] = true,
+	["_eqolCapacity"] = true,
+	["_eqolAbsoluteThresholdColorCache"] = true,
+	["_eqolAbsoluteThresholdCurveCache"] = true,
+	["_eqolRuntimePrepareStamp"] = true,
+	["_rbType"] = true,
+	["_rbSourceMode"] = true,
+	["_rbSourceSlot"] = true,
+	["_resolvedDefaultPowerColor"] = true,
+	["_autoEnabledRuntime"] = true,
+	["_autoEnableInProgress"] = true,
+}
+
 local function cleanupDebugArtifactsProfile(profile)
 	if type(profile) ~= "table" then return end
 
@@ -63,6 +79,21 @@ local function cleanupBuffTrackerProfile(profile)
 	end
 end
 
+local function cleanupTransientProfileCaches(root, seen)
+	if type(root) ~= "table" then return end
+	seen = seen or {}
+	if seen[root] then return end
+	seen[root] = true
+
+	for key, value in pairs(root) do
+		if TRANSIENT_PROFILE_KEYS[key] then
+			root[key] = nil
+		elseif type(value) == "table" then
+			cleanupTransientProfileCaches(value, seen)
+		end
+	end
+end
+
 function addon.functions.CleanupCombatMeterSettings()
 	local db = _G.EnhanceQoLDB
 	if type(db) == "table" and type(db.profiles) == "table" then
@@ -99,8 +130,24 @@ function addon.functions.CleanupDebugArtifacts()
 	if addon.db and addon.db ~= db then cleanupDebugArtifactsProfile(addon.db) end
 end
 
+function addon.functions.CleanupTransientProfileCaches()
+	local db = _G.EnhanceQoLDB
+	local seen = {}
+	if type(db) == "table" then cleanupTransientProfileCaches(db, seen) end
+	if addon.db and addon.db ~= db then cleanupTransientProfileCaches(addon.db, seen) end
+end
+
 function addon.functions.CleanupOldStuff()
 	addon.functions.CleanupCombatMeterSettings()
 	addon.functions.CleanupBuffTrackerSettings()
 	addon.functions.CleanupDebugArtifacts()
+	addon.functions.CleanupTransientProfileCaches()
+end
+
+local cleanupFrame = CreateFrame and CreateFrame("Frame", nil, UIParent or nil)
+if cleanupFrame then
+	cleanupFrame:RegisterEvent("PLAYER_LOGOUT")
+	cleanupFrame:SetScript("OnEvent", function()
+		if addon.functions and addon.functions.CleanupTransientProfileCaches then addon.functions.CleanupTransientProfileCaches() end
+	end)
 end

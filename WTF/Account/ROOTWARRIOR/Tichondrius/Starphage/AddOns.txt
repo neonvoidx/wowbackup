@@ -118,7 +118,7 @@ TrueStatValues: enabled
 tullaRange: enabled
 tullaRange_Config: enabled
 WagoAppCompanion: enabled
-WeakAuras: enabled
+WeakAuras: disabled
 WeakAurasArchive: enabled
 WeakAurasCompanion: enabled
 WeakAurasModelPaths: enabled
@@ -178,3 +178,6 @@ ProcGlows: enabled
 Myslot: enabled
 NemPetAlerts: enabled
 TextureAtlasViewer: enabled
+M33kAurasCompanion: enabled
+M33kAurasArchive: enabled
+M33Auras: disabled

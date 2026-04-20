@@ -1,7 +1,7 @@
 ---@type string, Addon
 local _, addon = ...
 
-addon.Modules.FriendlyCooldowns = addon.Modules.FriendlyCooldowns or {}
+addon.Modules.Cooldowns = addon.Modules.Cooldowns or {}
 
 -- Rules keyed first by spec ID (more precise), then by class token (fallback).
 -- Each rule carries flags for which aura type(s) it can match:
@@ -26,7 +26,7 @@ addon.Modules.FriendlyCooldowns = addon.Modules.FriendlyCooldowns or {}
 
 -- SpellId maps a rule to the canonical spell ID used for talent CDR lookups.
 
----@class FriendlyCooldownRules
+---@class CooldownRules
 local rules = {
 	BySpec = {
 		[65] = { -- Holy Paladin
@@ -455,6 +455,8 @@ local rules = {
 				ExternalDefensive = false,
 				BigDefensive = false,
 				RequiresEvidence = "Cast",
+				-- Archon Sustainted Potency can increase the duration
+				MinDuration = true,
 				SpellId = 228260,
 			}, -- Voidform
 		},
@@ -713,6 +715,7 @@ local rules = {
 				RequiresEvidence = "Cast",
 				SpellId = 378441,
 				RequiresTalent = { 5463, 5464, 5619 },
+				ExcludeFromEnemyTracking = true,
 			}, -- Time Stop (PvP talent)
 		}, -- Augmentation Evoker: Obsidian Scales
 		[264] = { -- Restoration Shaman
@@ -1064,6 +1067,7 @@ local rules = {
 				RequiresEvidence = "Cast",
 				SpellId = 378441,
 				RequiresTalent = { 5463, 5464, 5619 },
+				ExcludeFromEnemyTracking = true,
 			}, -- Time Stop (PvP talent)
 		},
 	},
@@ -1132,4 +1136,4 @@ function rules.GetSpellType(spellId)
 	return "Important"
 end
 
-addon.Modules.FriendlyCooldowns.Rules = rules
+addon.Modules.Cooldowns.Rules = rules

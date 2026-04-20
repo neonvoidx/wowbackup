@@ -5,14 +5,11 @@
 -- FULLY SELF-CONTAINED. Zero dependencies on other spec modules.
 --
 -- Alerts:
---   1. (unused)               — no reliable Ghoul death detection
---   2. (unused)               — no fake death for DK
---   3. Raise Ghoul            — no pet out
---   4. (unused)               — no taunt for DK
---   5. Ghoul In CC            — pet has crowd control aura
---   6. Heal Ghoul             — pet health below threshold (ColorCurve)
---   7. Ghoul On Passive       — passive stance while in combat
---   8. Ghoul Not Attacking    — pet idle in combat after grace period
+--   1. Raise Ghoul            — no pet out
+--   2. Ghoul In CC            — pet has crowd control aura
+--   3. Heal Ghoul             — pet health below threshold (ColorCurve)
+--   4. Ghoul On Passive       — passive stance while in combat
+--   5. Ghoul Not Attacking    — pet idle in combat after grace period
 -- =============================================================
 
 local NPA = _G.NemPetAlerts
@@ -43,37 +40,30 @@ local state = {
 -- Alert Definitions
 -- =============================================================
 -- Row layout (Y offsets):
---   Row 1 (+52):  [1] (unused)
---   Row 2 (+25):  [6] Heal Ghoul
---   Row 3 ( -2):  [3] Raise Ghoul
---   Row 4 (-29):  [2] (unused)  /  [7] Ghoul On Passive
---   Row 5 (-56):  [4] (unused)  /  [8] Ghoul Not Attacking
---   Row 6 (-83):  [5] Ghoul In CC
+--   Row 1 ( -2):  [1] Raise Ghoul
+--   Row 2 (+25):  [3] Heal Ghoul
+--   Row 3 (-83):  [2] Ghoul In CC
+--   Row 4 (-29):  [4] Ghoul On Passive
+--   Row 5 (-56):  [5] Ghoul Not Attacking
 
 local ALERTS = {
-    { key = "petDead",         label = "Pet Died  (no Ghoul detection)",  text = "* PET DIED *",              defaultColor = { r=1.0,    g=0.2039, b=0.1569 }, yOffset =  52 },
-    { key = "fakeDeath",       label = "Wake Up Pet  (Hunter only)",      text = "* WAKE UP PET *",           defaultColor = { r=0.6980, g=0.3333, b=1.0    }, yOffset = -29 },
-    { key = "noPet",           label = "Raise Ghoul",                     text = "* RAISE GHOUL *",           defaultColor = { r=0.9098, g=0.4118, b=0.0    }, yOffset =  -2 },
-    { key = "tauntAuto",       label = "Taunt  (Hunter/Warlock only)",    text = "* TURN OFF AUTOCAST TAUNT *",defaultColor = { r=0.9059, g=0.2667, b=1.0   }, yOffset = -56 },
-    { key = "notAttacking",    label = "Ghoul In CC",                     text = "* GHOUL IN CC *",           defaultColor = { r=0.2824, g=0.6549, b=1.0    }, yOffset = -83, defaultSound = "Sonarr", soundLabel = "Pet CC"  },
-    { key = "healPet",         label = "Heal Ghoul",                      text = "* HEAL GHOUL *",            defaultColor = { r=0.1882, g=1.0,    b=0.3098 }, yOffset =  25 },
-    { key = "petPassive",      label = "Ghoul On Passive",                text = "* GHOUL ON PASSIVE *",      defaultColor = { r=1.0,    g=0.5843, b=0.1333 }, yOffset = -29 },
-    { key = "petNotAttacking", label = "Ghoul Not Attacking",             text = "* GHOUL NOT ATTACKING *",   defaultColor = { r=1.0,    g=0.8588, b=0.0    }, yOffset = -56 },
+    { key = "noPet",           label = "Raise Ghoul",         text = "* RAISE GHOUL *",          defaultColor = { r=0.9098, g=0.4118, b=0.0    }, yOffset =  -2 },
+    { key = "notAttacking",    label = "Ghoul In CC",          text = "* GHOUL IN CC *",           defaultColor = { r=0.2824, g=0.6549, b=1.0    }, yOffset = -83, defaultSound = "Sonarr", soundLabel = "Pet CC" },
+    { key = "healPet",         label = "Heal Ghoul",           text = "* HEAL GHOUL *",            defaultColor = { r=0.1882, g=1.0,    b=0.3098 }, yOffset =  25 },
+    { key = "petPassive",      label = "Ghoul On Passive",     text = "* GHOUL ON PASSIVE *",      defaultColor = { r=1.0,    g=0.5843, b=0.1333 }, yOffset = -29 },
+    { key = "petNotAttacking", label = "Ghoul Not Attacking",  text = "* GHOUL NOT ATTACKING *",   defaultColor = { r=1.0,    g=0.8588, b=0.0    }, yOffset = -56 },
 }
 
 -- =============================================================
--- Test Slots (DK: no petDead, fakeDeath, or taunt)
+-- Test Slots (DK: all 5 alerts)
 -- =============================================================
-local TEST_SLOTS = { [3]=true, [5]=true, [6]=true, [7]=true, [8]=true }
+local TEST_SLOTS = { [1]=true, [2]=true, [3]=true, [4]=true, [5]=true }
 
 -- =============================================================
 -- Defaults
 -- =============================================================
 local DEFAULTS = {
-    petDeadEnabled           = false,  -- no reliable Ghoul death detection
-    fakeDeathEnabled         = false,  -- not applicable to DK
     noPetEnabled             = true,
-    tauntAutoEnabled         = false,  -- not applicable to DK
     notAttackingEnabled      = true,
     notAttackingSoundEnabled = true,
     notAttackingSoundName    = "Sonarr",
@@ -94,7 +84,7 @@ local DeathKnightUnholy = {
     defaults          = DEFAULTS,
     state             = state,
     hasHealPet        = true,
-    healPetAlertIndex = 6,
+    healPetAlertIndex = 3,
 
     extraEvents = {
         "UNIT_PET",
@@ -168,14 +158,14 @@ end
 -- =============================================================
 function DeathKnightUnholy:GetHighestPriorityAlert(db)
     if NPA.PetExists() then
-        if db.notAttackingEnabled    and NPA.PetIsCC() then return 5 end
-        if db.petPassiveEnabled      and NPA.PetIsPassive() then return 7 end
-        if db.petNotAttackingEnabled and NPA.PetNotAttacking() then return 8 end
-        if db.healPetEnabled         and NPA.PetNeedsHealing() then return 6 end
+        if db.notAttackingEnabled    and NPA.PetIsCC() then return 2 end
+        if db.petPassiveEnabled      and NPA.PetIsPassive() then return 4 end
+        if db.petNotAttackingEnabled and NPA.PetNotAttacking() then return 5 end
+        if db.healPetEnabled         and NPA.PetNeedsHealing() then return 3 end
         return nil
     else
         if db.noPetEnabled and not NPA.ShouldSuppressNoPet() then
-            return 3  -- RAISE GHOUL
+            return 1  -- RAISE GHOUL
         end
         return nil
     end

@@ -352,7 +352,11 @@ local provider = {
 		ensureDB()
 		local tip = GameTooltip
 		tip:ClearLines()
-		tip:SetOwner(b, "ANCHOR_TOPLEFT")
+		if addon.DataPanel and addon.DataPanel.SetTooltipOwner then
+			addon.DataPanel.SetTooltipOwner(b, tip)
+		else
+			tip:SetOwner(b, "ANCHOR_TOPLEFT")
+		end
 		tip:AddLine(DURABILITY)
 		local iconSize = db and db.fontSize or 13
 		for _, v in ipairs(lines) do

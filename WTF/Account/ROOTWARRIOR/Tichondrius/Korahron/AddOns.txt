@@ -70,3 +70,7 @@ MythicDungeonTools: enabled
 NemPetAlerts: enabled
 Platynator: enabled
 TextureAtlasViewer: enabled
+M33kAurasCompanion: enabled
+M33kAurasArchive: enabled
+M33Auras: disabled
+WeakAuras: disabled

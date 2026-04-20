@@ -19,113 +19,41 @@ MythicDungeonToolsDB = {
 ["Praisesun - Tichondrius"] = "Praisesun - Tichondrius",
 ["Auteist - Mal'Ganis"] = "Auteist - Mal'Ganis",
 ["Ofpuss - Mal'Ganis"] = "Ofpuss - Mal'Ganis",
+["Choppiez - Mal'Ganis"] = "Choppiez - Mal'Ganis",
 ["Reedingo - Tichondrius"] = "Reedingo - Tichondrius",
-["Smaugchamp - Mal'Ganis"] = "Smaugchamp - Mal'Ganis",
 ["Manyfaced - Tichondrius"] = "Manyfaced - Tichondrius",
 ["Smaugchamp - Tichondrius"] = "Smaugchamp - Tichondrius",
 ["Gehyo - Mal'Ganis"] = "Gehyo - Mal'Ganis",
-["Hellowalls - Mal'Ganis"] = "Hellowalls - Mal'Ganis",
-["Starstypeshi - Tichondrius"] = "Starstypeshi - Tichondrius",
+["Neonvoid - Tichondrius"] = "Neonvoid - Tichondrius",
+["Gehyo - Tichondrius"] = "Gehyo - Tichondrius",
 ["Mäñýfäçëð - Mal'Ganis"] = "Mäñýfäçëð - Mal'Ganis",
 ["Hellavator - Mal'Ganis"] = "Hellavator - Mal'Ganis",
 ["Charizhard - Mal'Ganis"] = "Charizhard - Mal'Ganis",
 ["Hellavator - Tichondrius"] = "Hellavator - Tichondrius",
 ["Crillessana - Mal'Ganis"] = "Crillessana - Mal'Ganis",
-["Tampacks - Mal'Ganis"] = "Tampacks - Mal'Ganis",
+["Strathmoan - Tichondrius"] = "Strathmoan - Tichondrius",
 ["Stormclout - Tichondrius"] = "Stormclout - Tichondrius",
 ["Reedingo - Mal'Ganis"] = "Reedingo - Mal'Ganis",
-["Auteist - Tichondrius"] = "Auteist - Tichondrius",
 ["Thickshape - Mal'Ganis"] = "Thickshape - Mal'Ganis",
-["Strathmoan - Tichondrius"] = "Strathmoan - Tichondrius",
+["Auteist - Tichondrius"] = "Auteist - Tichondrius",
+["Tampacks - Mal'Ganis"] = "Tampacks - Mal'Ganis",
 ["Korahron - Tichondrius"] = "Korahron - Tichondrius",
-["Gehyo - Tichondrius"] = "Gehyo - Tichondrius",
-["Neonvoid - Tichondrius"] = "Neonvoid - Tichondrius",
-["Choppiez - Mal'Ganis"] = "Choppiez - Mal'Ganis",
+["Starstypeshi - Tichondrius"] = "Starstypeshi - Tichondrius",
+["Hellowalls - Mal'Ganis"] = "Hellowalls - Mal'Ganis",
+["Smaugchamp - Mal'Ganis"] = "Smaugchamp - Mal'Ganis",
 ["Clevagirl - Mal'Ganis"] = "Clevagirl - Mal'Ganis",
 },
 ["global"] = {
-["colorPaletteInfo"] = {
-["colorPaletteIdx"] = 1,
-["customPaletteValues"] = {
-{
-1,
-1,
-1,
-},
-{
-1,
-1,
-1,
-},
-{
-1,
-1,
-1,
-},
-{
-1,
-1,
-1,
-},
-{
-1,
-1,
-1,
-},
-{
-1,
-1,
-1,
-},
-{
-1,
-1,
-1,
-},
-{
-1,
-1,
-1,
-},
-{
-1,
-1,
-1,
-},
-{
-1,
-1,
-1,
-},
-{
-1,
-1,
-1,
-},
-{
-1,
-1,
-1,
-},
-},
-},
+["currentDungeonIdx"] = 155,
 ["hasSeenAssignmentWarning"] = true,
 ["currentDifficulty"] = 2,
-["latestDungeonSeen"] = 150,
-["currentPreset"] = {
-[19] = 2,
-[30] = 2,
-[37] = 2,
-[38] = 2,
-[111] = 2,
-[113] = 2,
-[114] = 2,
-[115] = 2,
-[119] = 2,
-[123] = 2,
-[150] = 2,
+["minimap"] = {
+["minimapPos"] = 113.4399240989313,
+["lock"] = true,
+["showInCompartment"] = true,
 },
-["latestSeenDungeonList"] = 8,
+["nonFullscreenScale"] = 1.288893581081081,
+["maximized"] = false,
 ["presets"] = {
 [11] = {
 {
@@ -177,15 +105,6 @@ MythicDungeonToolsDB = {
 ["value"] = {
 ["currentPull"] = 17,
 ["currentSublevel"] = 1,
-["riftOffsets"] = {
-{
-},
-},
-["currentDungeonIdx"] = 19,
-["teeming"] = false,
-["selection"] = {
-17,
-},
 ["pulls"] = {
 {
 {
@@ -410,6 +329,7 @@ nil,
 [14] = {
 1,
 },
+["color"] = "3eff9e",
 [25] = {
 36,
 32,
@@ -417,7 +337,6 @@ nil,
 35,
 33,
 },
-["color"] = "3eff9e",
 },
 {
 ["color"] = "ff3e3e",
@@ -451,15 +370,15 @@ nil,
 },
 {
 ["color"] = "fffb3e",
-[18] = {
+[17] = {
+2,
 3,
 },
 [15] = {
 4,
 3,
 },
-[17] = {
-2,
+[18] = {
 3,
 },
 },
@@ -517,14 +436,14 @@ nil,
 [5] = {
 11,
 },
-["color"] = "3e3eff",
-[20] = {
-2,
-},
 [24] = {
 6,
 5,
 },
+[20] = {
+2,
+},
+["color"] = "3e3eff",
 },
 {
 [20] = {
@@ -561,9 +480,18 @@ nil,
 },
 },
 },
+["currentDungeonIdx"] = 19,
+["teeming"] = false,
+["selection"] = {
+17,
 },
-["difficulty"] = 10,
+["riftOffsets"] = {
+{
+},
+},
+},
 ["uid"] = "oQTBF0Y)5Hf",
+["difficulty"] = 10,
 },
 {
 ["value"] = 0,
@@ -577,8 +505,9 @@ nil,
 ["value"] = {
 ["currentPull"] = 1,
 ["currentSublevel"] = 1,
-["riftOffsets"] = {
+["pulls"] = {
 {
+["color"] = "ff3eff",
 },
 },
 ["currentDungeonIdx"] = 30,
@@ -586,9 +515,8 @@ nil,
 ["selection"] = {
 1,
 },
-["pulls"] = {
+["riftOffsets"] = {
 {
-["color"] = "ff3eff",
 },
 },
 },
@@ -597,28 +525,7 @@ nil,
 ["difficulty"] = 10,
 ["uid"] = "i8o4G59N2zg",
 ["addonVersion"] = 554,
-["week"] = 1,
-["colorPaletteInfo"] = {
-["autoColoring"] = true,
-["colorPaletteIdx"] = 4,
-},
-["text"] = "Halls || Simple",
-["objects"] = {
-},
 ["value"] = {
-["riftOffsets"] = {
-{
-},
-},
-["selection"] = {
-7,
-},
-["currentSublevel"] = 1,
-["enemyAssignments"] = {
-},
-["currentDungeonIdx"] = 30,
-["teeming"] = false,
-["currentPull"] = 7,
 ["pulls"] = {
 {
 {
@@ -970,16 +877,46 @@ nil,
 },
 },
 },
+["selection"] = {
+7,
 },
+["currentSublevel"] = 1,
+["enemyAssignments"] = {
+},
+["currentDungeonIdx"] = 30,
+["teeming"] = false,
+["currentPull"] = 7,
+["riftOffsets"] = {
+{
+},
+},
+},
+["colorPaletteInfo"] = {
+["autoColoring"] = true,
+["colorPaletteIdx"] = 4,
+},
+["text"] = "Halls || Simple",
+["objects"] = {
+},
+["week"] = 1,
 },
 {
 ["objects"] = {
 },
 ["uid"] = "9qvrfspGzC6",
-["week"] = 1,
+["difficulty"] = 1,
 ["value"] = {
 ["currentPull"] = 1,
 ["currentSublevel"] = 1,
+["riftOffsets"] = {
+{
+},
+},
+["currentDungeonIdx"] = 30,
+["teeming"] = false,
+["selection"] = {
+1,
+},
 ["pulls"] = {
 {
 {
@@ -1295,22 +1232,13 @@ nil,
 },
 },
 },
-["currentDungeonIdx"] = 30,
-["teeming"] = false,
-["selection"] = {
-1,
-},
-["riftOffsets"] = {
-{
-},
-},
 },
 ["text"] = "Gamer Route",
 ["colorPaletteInfo"] = {
 ["autoColoring"] = true,
 ["colorPaletteIdx"] = 4,
 },
-["difficulty"] = 1,
+["week"] = 1,
 },
 {
 ["value"] = 0,
@@ -1324,8 +1252,9 @@ nil,
 ["value"] = {
 ["currentPull"] = 1,
 ["currentSublevel"] = 1,
-["riftOffsets"] = {
+["pulls"] = {
 {
+["color"] = "ff3eff",
 },
 },
 ["currentDungeonIdx"] = 31,
@@ -1333,9 +1262,8 @@ nil,
 ["selection"] = {
 1,
 },
-["pulls"] = {
+["riftOffsets"] = {
 {
-["color"] = "ff3eff",
 },
 },
 },
@@ -1348,9 +1276,8 @@ nil,
 ["value"] = {
 ["currentPull"] = 1,
 ["currentSublevel"] = 1,
-["pulls"] = {
+["riftOffsets"] = {
 {
-["color"] = "ff3eff",
 },
 },
 ["currentDungeonIdx"] = 37,
@@ -1358,8 +1285,9 @@ nil,
 ["selection"] = {
 1,
 },
-["riftOffsets"] = {
+["pulls"] = {
 {
+["color"] = "ff3eff",
 },
 },
 },
@@ -1369,21 +1297,11 @@ nil,
 },
 ["uid"] = "gN6Nv)StbSh",
 ["addonVersion"] = 550,
-["week"] = 1,
+["colorPaletteInfo"] = {
+["autoColoring"] = true,
+["colorPaletteIdx"] = 4,
+},
 ["value"] = {
-["riftOffsets"] = {
-{
-},
-},
-["currentPull"] = 13,
-["currentSublevel"] = 1,
-["enemyAssignments"] = {
-},
-["currentDungeonIdx"] = 37,
-["teeming"] = false,
-["selection"] = {
-13,
-},
 ["pulls"] = {
 {
 {
@@ -1491,11 +1409,11 @@ nil,
 [26] = {
 1,
 },
-[12] = {
-8,
-},
 [13] = {
 6,
+},
+[12] = {
+8,
 },
 },
 {
@@ -1534,12 +1452,12 @@ nil,
 [12] = {
 13,
 },
+["color"] = "ff3eff",
 [29] = {
 1,
 2,
 3,
 },
-["color"] = "ff3eff",
 },
 {
 [13] = {
@@ -1557,7 +1475,11 @@ nil,
 [37] = {
 2,
 },
-["color"] = "ff3e3e",
+[34] = {
+1,
+2,
+3,
+},
 [35] = {
 7,
 8,
@@ -1573,11 +1495,7 @@ nil,
 12,
 11,
 },
-[34] = {
-1,
-2,
-3,
-},
+["color"] = "ff3e3e",
 },
 {
 [20] = {
@@ -1591,14 +1509,14 @@ nil,
 },
 [12] = {
 },
+["color"] = "3e9eff",
+[23] = {
+1,
+},
 [22] = {
 1,
 2,
 },
-[23] = {
-1,
-},
-["color"] = "3e9eff",
 },
 {
 ["color"] = "fffb3e",
@@ -1607,13 +1525,23 @@ nil,
 },
 },
 },
+["currentPull"] = 13,
+["currentSublevel"] = 1,
+["enemyAssignments"] = {
+},
+["currentDungeonIdx"] = 37,
+["teeming"] = false,
+["selection"] = {
+13,
+},
+["riftOffsets"] = {
+{
+},
+},
 },
 ["text"] = "Streets || Simple",
 ["difficulty"] = 10,
-["colorPaletteInfo"] = {
-["autoColoring"] = true,
-["colorPaletteIdx"] = 4,
-},
+["week"] = 1,
 },
 {
 ["value"] = 0,
@@ -1627,9 +1555,8 @@ nil,
 ["value"] = {
 ["currentPull"] = 1,
 ["currentSublevel"] = 1,
-["pulls"] = {
+["riftOffsets"] = {
 {
-["color"] = "ff3eff",
 },
 },
 ["currentDungeonIdx"] = 38,
@@ -1637,8 +1564,9 @@ nil,
 ["selection"] = {
 1,
 },
-["riftOffsets"] = {
+["pulls"] = {
 {
+["color"] = "ff3eff",
 },
 },
 },
@@ -1648,21 +1576,11 @@ nil,
 },
 ["uid"] = "0)m5sk60lH)",
 ["addonVersion"] = 550,
-["week"] = 1,
+["colorPaletteInfo"] = {
+["autoColoring"] = true,
+["colorPaletteIdx"] = 4,
+},
 ["value"] = {
-["riftOffsets"] = {
-{
-},
-},
-["currentPull"] = 18,
-["currentSublevel"] = 1,
-["enemyAssignments"] = {
-},
-["currentDungeonIdx"] = 38,
-["teeming"] = false,
-["selection"] = {
-18,
-},
 ["pulls"] = {
 {
 {
@@ -1847,27 +1765,27 @@ nil,
 [8] = {
 5,
 },
-[11] = {
-1,
-},
+["color"] = "3e3eff",
 [9] = {
 3,
 4,
 },
-["color"] = "3e3eff",
+[11] = {
+1,
+},
 },
 {
 [11] = {
 2,
 },
-["color"] = "a1ff3e",
-[9] = {
-5,
-},
 [8] = {
 6,
 7,
 },
+[9] = {
+5,
+},
+["color"] = "a1ff3e",
 },
 {
 [11] = {
@@ -1882,15 +1800,15 @@ nil,
 },
 {
 ["color"] = "3eff9e",
+[18] = {
+1,
+},
 [12] = {
 1,
 },
 [20] = {
 1,
 2,
-},
-[18] = {
-1,
 },
 },
 {
@@ -1955,22 +1873,32 @@ nil,
 [16] = {
 1,
 },
-[22] = {
-1,
-},
 [21] = {
 1,
 2,
 },
+[22] = {
+1,
+},
+},
+},
+["currentPull"] = 18,
+["currentSublevel"] = 1,
+["enemyAssignments"] = {
+},
+["currentDungeonIdx"] = 38,
+["teeming"] = false,
+["selection"] = {
+18,
+},
+["riftOffsets"] = {
+{
 },
 },
 },
 ["text"] = "Gambit || Simple",
 ["difficulty"] = 10,
-["colorPaletteInfo"] = {
-["autoColoring"] = true,
-["colorPaletteIdx"] = 4,
-},
+["week"] = 1,
 },
 {
 ["value"] = 0,
@@ -1984,9 +1912,8 @@ nil,
 ["value"] = {
 ["currentPull"] = 1,
 ["currentSublevel"] = 1,
-["pulls"] = {
+["riftOffsets"] = {
 {
-["color"] = "ff3eff",
 },
 },
 ["currentDungeonIdx"] = 42,
@@ -1994,8 +1921,9 @@ nil,
 ["selection"] = {
 1,
 },
-["riftOffsets"] = {
+["pulls"] = {
 {
+["color"] = "ff3eff",
 },
 },
 },
@@ -2027,9 +1955,8 @@ nil,
 ["value"] = {
 ["currentPull"] = 1,
 ["currentSublevel"] = 1,
-["pulls"] = {
+["riftOffsets"] = {
 {
-["color"] = "ff3eff",
 },
 },
 ["currentDungeonIdx"] = 111,
@@ -2037,8 +1964,9 @@ nil,
 ["selection"] = {
 1,
 },
-["riftOffsets"] = {
+["pulls"] = {
 {
+["color"] = "ff3eff",
 },
 },
 },
@@ -2047,26 +1975,11 @@ nil,
 ["difficulty"] = 20,
 ["uid"] = "00Zt0fk1b9Z",
 ["addonVersion"] = 550,
-["week"] = 1,
-["colorPaletteInfo"] = {
-["autoColoring"] = true,
-["colorPaletteIdx"] = 4,
-},
-["text"] = "Dawnbreaker || Simple",
-["objects"] = {
-},
 ["value"] = {
 ["selection"] = {
 10,
 },
 ["currentSublevel"] = 1,
-["riftOffsets"] = {
-{
-},
-},
-["currentDungeonIdx"] = 111,
-["teeming"] = false,
-["currentPull"] = 10,
 ["pulls"] = {
 {
 {
@@ -2279,7 +2192,22 @@ nil,
 },
 },
 },
+["currentDungeonIdx"] = 111,
+["teeming"] = false,
+["currentPull"] = 10,
+["riftOffsets"] = {
+{
 },
+},
+},
+["colorPaletteInfo"] = {
+["autoColoring"] = true,
+["colorPaletteIdx"] = 4,
+},
+["text"] = "Dawnbreaker || Simple",
+["objects"] = {
+},
+["week"] = 1,
 },
 {
 ["value"] = 0,
@@ -2293,9 +2221,8 @@ nil,
 ["value"] = {
 ["currentPull"] = 1,
 ["currentSublevel"] = 1,
-["pulls"] = {
+["riftOffsets"] = {
 {
-["color"] = "ff3eff",
 },
 },
 ["currentDungeonIdx"] = 112,
@@ -2303,8 +2230,9 @@ nil,
 ["selection"] = {
 1,
 },
-["riftOffsets"] = {
+["pulls"] = {
 {
+["color"] = "ff3eff",
 },
 },
 },
@@ -2317,9 +2245,8 @@ nil,
 ["value"] = {
 ["currentPull"] = 1,
 ["currentSublevel"] = 1,
-["pulls"] = {
+["riftOffsets"] = {
 {
-["color"] = "ff3eff",
 },
 },
 ["currentDungeonIdx"] = 113,
@@ -2327,8 +2254,9 @@ nil,
 ["selection"] = {
 1,
 },
-["riftOffsets"] = {
+["pulls"] = {
 {
+["color"] = "ff3eff",
 },
 },
 },
@@ -2337,26 +2265,11 @@ nil,
 ["difficulty"] = 10,
 ["uid"] = "EKGsA5cA8dl",
 ["addonVersion"] = 550,
-["week"] = 1,
-["colorPaletteInfo"] = {
-["autoColoring"] = true,
-["colorPaletteIdx"] = 4,
-},
-["text"] = "Ara'kara, City of Echoes || Simple",
-["objects"] = {
-},
 ["value"] = {
 ["selection"] = {
 1,
 },
 ["currentSublevel"] = 1,
-["riftOffsets"] = {
-{
-},
-},
-["currentDungeonIdx"] = 113,
-["teeming"] = false,
-["currentPull"] = 1,
 ["pulls"] = {
 {
 {
@@ -2507,14 +2420,14 @@ nil,
 12,
 13,
 },
+[16] = {
+1,
+},
 [22] = {
 1,
 2,
 4,
 3,
-},
-[16] = {
-1,
 },
 },
 {
@@ -2614,10 +2527,10 @@ nil,
 26,
 23,
 },
+["color"] = "3eff9e",
 [11] = {
 5,
 },
-["color"] = "3eff9e",
 },
 {
 ["color"] = "ff3e3e",
@@ -2699,7 +2612,22 @@ nil,
 },
 },
 },
+["currentDungeonIdx"] = 113,
+["teeming"] = false,
+["currentPull"] = 1,
+["riftOffsets"] = {
+{
 },
+},
+},
+["colorPaletteInfo"] = {
+["autoColoring"] = true,
+["colorPaletteIdx"] = 4,
+},
+["text"] = "Ara'kara, City of Echoes || Simple",
+["objects"] = {
+},
+["week"] = 1,
 },
 {
 ["value"] = 0,
@@ -2713,6 +2641,240 @@ nil,
 ["value"] = {
 ["currentPull"] = 1,
 ["currentSublevel"] = 1,
+["pulls"] = {
+{
+["color"] = "ff3eff",
+},
+},
+["currentDungeonIdx"] = 114,
+["teeming"] = false,
+["selection"] = {
+1,
+},
+["riftOffsets"] = {
+{
+},
+},
+},
+},
+{
+["objects"] = {
+{
+["n"] = true,
+["d"] = {
+"591.8",
+"-314.2",
+1,
+true,
+"Attack the Eye of the Queen with anything to get it to pop faster. No need to use the special action button.",
+},
+},
+{
+["n"] = true,
+["d"] = {
+"593.5",
+"-251.3",
+1,
+true,
+"Eye #2 potential spawn point",
+},
+},
+{
+["n"] = true,
+["d"] = {
+"642.4",
+"-216.3",
+1,
+true,
+"Eye #2 potential spawn point",
+},
+},
+{
+["n"] = true,
+["d"] = {
+"644.1",
+"-261",
+1,
+true,
+"Eye #2 potential spawn point (inside the building)",
+},
+},
+{
+["n"] = true,
+["d"] = {
+"711.9",
+"-312.2",
+1,
+true,
+"Eye #3 potential spawn point",
+},
+},
+{
+["n"] = true,
+["d"] = {
+"725.2",
+"-378",
+1,
+true,
+"Eye #3 potential spawn point",
+},
+},
+{
+["n"] = true,
+["d"] = {
+"703",
+"-420.3",
+1,
+true,
+"Eye #3 potential spawn point",
+},
+},
+{
+["n"] = true,
+["d"] = {
+"559.9",
+"-365.7",
+1,
+true,
+"Eye #4 potential spawn point (inside the building)",
+},
+},
+{
+["n"] = true,
+["d"] = {
+"592.9",
+"-408.4",
+1,
+true,
+"Eye #4 potential spawn point",
+},
+},
+{
+["n"] = true,
+["d"] = {
+"495.9",
+"-374.8",
+1,
+true,
+"Eye #4 potential spawn point",
+},
+},
+{
+["n"] = true,
+["d"] = {
+"521",
+"-385.1",
+1,
+true,
+"Nizrek's location",
+},
+},
+{
+["n"] = true,
+["d"] = {
+"126.9",
+"-423.9",
+1,
+true,
+"Fight boss in a corner, kite around the room in one direction to manage pool placement.",
+},
+},
+{
+["n"] = true,
+["d"] = {
+"162.2",
+"-489.4",
+1,
+true,
+"You can pull these 2 minibosses separately!",
+},
+},
+{
+["n"] = true,
+["d"] = {
+"294.2",
+"-88.5",
+1,
+true,
+"Hello, I'm Karrath, a demon hunter tank from OCE-Frostmourne. Thanks for checking out my route, GLHF with the season!",
+},
+},
+{
+["n"] = true,
+["d"] = {
+"643.7",
+"-416",
+1,
+true,
+"Remember to stack on tank for Rime Dagger (white swirly centered on tank).\nThe second cast of Rime Dagger will overlap with the purple circles, so move together as a group.",
+},
+},
+{
+["n"] = true,
+["d"] = {
+"503.4",
+"-548.6",
+1,
+true,
+"This miniboss can hurt during Fortified while it's casting the green swirlys. Help your healer out by popping a defensive.",
+},
+},
+{
+["n"] = true,
+["d"] = {
+"657.4",
+"-412",
+1,
+true,
+"BDKs and prot warriors: You can AMS/spell reflect the second cast of Rime Dagger to not get the white circle on you at all.\n\nSince the second cast of Rime Dagger usually overlaps with the purple circles, this negates the need for your party to stack into you while also moving with you out of the purple circle.",
+},
+},
+{
+["n"] = true,
+["d"] = {
+"130.5",
+"-537.8",
+1,
+true,
+"AMS/spell reflect will prevent the Umbral Weave root from being applied to you.",
+},
+},
+{
+["n"] = true,
+["d"] = {
+"194.3",
+"-398.4",
+1,
+true,
+"Unstable Test Subjects look scary but they're actually one of the most harmless mobs in this section.\n\nThe dark purple swirlys they cast (Dark Barrage) need line of sight to target players, so for instance, when pulling this one, you can line of sight it inside the boss room and it'll just stand there channeling the Barrage cast with no swirlys going off. \n\nDitto for Fierce Stomping, the AOE damage it pulses also has a really short range of 20yds.",
+},
+},
+{
+["n"] = true,
+["d"] = {
+"150.3",
+"-458.6",
+1,
+true,
+"Abusing the Unstable Test Subject's behavior again, you can aggro it and then line of sight it around the corner here, into this little alcove, and it'll stomp and cast harmlessly while you deal with the first miniboss.",
+},
+},
+},
+["week"] = 1,
+["difficulty"] = 2,
+["mdi"] = {
+["freehold"] = 1,
+["freeholdJoined"] = false,
+["beguiling"] = 1,
+},
+["colorPaletteInfo"] = {
+["autoColoring"] = true,
+["colorPaletteIdx"] = 4,
+},
+["text"] = "TWW S1 City of Threads",
+["value"] = {
+["currentPull"] = 1,
+["currentSublevel"] = 1,
 ["riftOffsets"] = {
 {
 },
@@ -2722,225 +2884,6 @@ nil,
 ["selection"] = {
 1,
 },
-["pulls"] = {
-{
-["color"] = "ff3eff",
-},
-},
-},
-},
-{
-["objects"] = {
-{
-["d"] = {
-"591.8",
-"-314.2",
-1,
-true,
-"Attack the Eye of the Queen with anything to get it to pop faster. No need to use the special action button.",
-},
-["n"] = true,
-},
-{
-["d"] = {
-"593.5",
-"-251.3",
-1,
-true,
-"Eye #2 potential spawn point",
-},
-["n"] = true,
-},
-{
-["d"] = {
-"642.4",
-"-216.3",
-1,
-true,
-"Eye #2 potential spawn point",
-},
-["n"] = true,
-},
-{
-["d"] = {
-"644.1",
-"-261",
-1,
-true,
-"Eye #2 potential spawn point (inside the building)",
-},
-["n"] = true,
-},
-{
-["d"] = {
-"711.9",
-"-312.2",
-1,
-true,
-"Eye #3 potential spawn point",
-},
-["n"] = true,
-},
-{
-["d"] = {
-"725.2",
-"-378",
-1,
-true,
-"Eye #3 potential spawn point",
-},
-["n"] = true,
-},
-{
-["d"] = {
-"703",
-"-420.3",
-1,
-true,
-"Eye #3 potential spawn point",
-},
-["n"] = true,
-},
-{
-["d"] = {
-"559.9",
-"-365.7",
-1,
-true,
-"Eye #4 potential spawn point (inside the building)",
-},
-["n"] = true,
-},
-{
-["d"] = {
-"592.9",
-"-408.4",
-1,
-true,
-"Eye #4 potential spawn point",
-},
-["n"] = true,
-},
-{
-["d"] = {
-"495.9",
-"-374.8",
-1,
-true,
-"Eye #4 potential spawn point",
-},
-["n"] = true,
-},
-{
-["d"] = {
-"521",
-"-385.1",
-1,
-true,
-"Nizrek's location",
-},
-["n"] = true,
-},
-{
-["d"] = {
-"126.9",
-"-423.9",
-1,
-true,
-"Fight boss in a corner, kite around the room in one direction to manage pool placement.",
-},
-["n"] = true,
-},
-{
-["d"] = {
-"162.2",
-"-489.4",
-1,
-true,
-"You can pull these 2 minibosses separately!",
-},
-["n"] = true,
-},
-{
-["d"] = {
-"294.2",
-"-88.5",
-1,
-true,
-"Hello, I'm Karrath, a demon hunter tank from OCE-Frostmourne. Thanks for checking out my route, GLHF with the season!",
-},
-["n"] = true,
-},
-{
-["d"] = {
-"643.7",
-"-416",
-1,
-true,
-"Remember to stack on tank for Rime Dagger (white swirly centered on tank).\nThe second cast of Rime Dagger will overlap with the purple circles, so move together as a group.",
-},
-["n"] = true,
-},
-{
-["d"] = {
-"503.4",
-"-548.6",
-1,
-true,
-"This miniboss can hurt during Fortified while it's casting the green swirlys. Help your healer out by popping a defensive.",
-},
-["n"] = true,
-},
-{
-["d"] = {
-"657.4",
-"-412",
-1,
-true,
-"BDKs and prot warriors: You can AMS/spell reflect the second cast of Rime Dagger to not get the white circle on you at all.\n\nSince the second cast of Rime Dagger usually overlaps with the purple circles, this negates the need for your party to stack into you while also moving with you out of the purple circle.",
-},
-["n"] = true,
-},
-{
-["d"] = {
-"130.5",
-"-537.8",
-1,
-true,
-"AMS/spell reflect will prevent the Umbral Weave root from being applied to you.",
-},
-["n"] = true,
-},
-{
-["d"] = {
-"194.3",
-"-398.4",
-1,
-true,
-"Unstable Test Subjects look scary but they're actually one of the most harmless mobs in this section.\n\nThe dark purple swirlys they cast (Dark Barrage) need line of sight to target players, so for instance, when pulling this one, you can line of sight it inside the boss room and it'll just stand there channeling the Barrage cast with no swirlys going off. \n\nDitto for Fierce Stomping, the AOE damage it pulses also has a really short range of 20yds.",
-},
-["n"] = true,
-},
-{
-["d"] = {
-"150.3",
-"-458.6",
-1,
-true,
-"Abusing the Unstable Test Subject's behavior again, you can aggro it and then line of sight it around the corner here, into this little alcove, and it'll stomp and cast harmlessly while you deal with the first miniboss.",
-},
-["n"] = true,
-},
-},
-["week"] = 1,
-["uid"] = "2)joMBoG5)z",
-["colorPaletteInfo"] = {
-["autoColoring"] = true,
-["colorPaletteIdx"] = 4,
-},
-["value"] = {
-["currentPull"] = 1,
-["currentSublevel"] = 1,
 ["pulls"] = {
 {
 {
@@ -3178,13 +3121,13 @@ true,
 7,
 8,
 },
-["color"] = "ff3e9e",
-[15] = {
-3,
-},
 [17] = {
 1,
 },
+[15] = {
+3,
+},
+["color"] = "ff3e9e",
 },
 {
 [18] = {
@@ -3206,23 +3149,8 @@ true,
 ["color"] = "ff9b3e",
 },
 },
-["currentDungeonIdx"] = 114,
-["teeming"] = false,
-["selection"] = {
-1,
 },
-["riftOffsets"] = {
-{
-},
-},
-},
-["text"] = "TWW S1 City of Threads",
-["mdi"] = {
-["freehold"] = 1,
-["beguiling"] = 1,
-["freeholdJoined"] = false,
-},
-["difficulty"] = 2,
+["uid"] = "2)joMBoG5)z",
 },
 {
 ["value"] = 0,
@@ -3236,8 +3164,9 @@ true,
 ["value"] = {
 ["currentPull"] = 1,
 ["currentSublevel"] = 1,
-["riftOffsets"] = {
+["pulls"] = {
 {
+["color"] = "ff3eff",
 },
 },
 ["currentDungeonIdx"] = 115,
@@ -3245,9 +3174,8 @@ true,
 ["selection"] = {
 1,
 },
-["pulls"] = {
+["riftOffsets"] = {
 {
-["color"] = "ff3eff",
 },
 },
 },
@@ -3256,26 +3184,11 @@ true,
 ["difficulty"] = 20,
 ["uid"] = "NJMxWsWo1uG",
 ["addonVersion"] = 550,
-["week"] = 1,
-["colorPaletteInfo"] = {
-["autoColoring"] = true,
-["colorPaletteIdx"] = 4,
-},
-["text"] = "Priory of the Sacred Flame || Simple",
-["objects"] = {
-},
 ["value"] = {
 ["selection"] = {
 10,
 },
 ["currentSublevel"] = 1,
-["riftOffsets"] = {
-{
-},
-},
-["currentDungeonIdx"] = 115,
-["teeming"] = false,
-["currentPull"] = 10,
 ["pulls"] = {
 {
 {
@@ -3319,11 +3232,11 @@ true,
 [6] = {
 6,
 },
-[8] = {
-2,
-},
 [11] = {
 1,
+},
+[8] = {
+2,
 },
 },
 {
@@ -3415,16 +3328,17 @@ true,
 {
 [18] = {
 },
+["color"] = "3e3eff",
 [21] = {
 1,
 },
-["color"] = "3e3eff",
 },
 {
 [5] = {
 1,
 2,
 },
+["color"] = "a1ff3e",
 [20] = {
 2,
 1,
@@ -3439,7 +3353,6 @@ true,
 5,
 7,
 },
-["color"] = "a1ff3e",
 },
 {
 [5] = {
@@ -3481,10 +3394,10 @@ true,
 [6] = {
 20,
 },
+["color"] = "ff3e3e",
 [8] = {
 19,
 },
-["color"] = "ff3e3e",
 },
 {
 ["color"] = "3e9eff",
@@ -3583,41 +3496,41 @@ true,
 [6] = {
 29,
 },
+[8] = {
+},
 [14] = {
 9,
 7,
 8,
 },
-[8] = {
+},
+},
+["currentDungeonIdx"] = 115,
+["teeming"] = false,
+["currentPull"] = 10,
+["riftOffsets"] = {
+{
 },
 },
 },
+["colorPaletteInfo"] = {
+["autoColoring"] = true,
+["colorPaletteIdx"] = 4,
 },
+["text"] = "Priory of the Sacred Flame || Simple",
+["objects"] = {
+},
+["week"] = 1,
 },
 {
 ["difficulty"] = 20,
 ["uid"] = "xhDZJSWi6jA",
 ["addonVersion"] = 550,
-["week"] = 1,
-["colorPaletteInfo"] = {
-["autoColoring"] = true,
-["colorPaletteIdx"] = 4,
-},
-["text"] = "Priory || Simple Left",
-["objects"] = {
-},
 ["value"] = {
 ["selection"] = {
 19,
 },
 ["currentSublevel"] = 1,
-["riftOffsets"] = {
-{
-},
-},
-["currentDungeonIdx"] = 115,
-["teeming"] = false,
-["currentPull"] = 19,
 ["pulls"] = {
 {
 {
@@ -3669,11 +3582,11 @@ true,
 [16] = {
 1,
 },
-[6] = {
-6,
-},
 [8] = {
 2,
+},
+[6] = {
+6,
 },
 },
 {
@@ -3708,13 +3621,13 @@ true,
 6,
 5,
 },
-[6] = {
-16,
-},
 [8] = {
 16,
 17,
 15,
+},
+[6] = {
+16,
 },
 },
 {
@@ -3726,13 +3639,13 @@ true,
 15,
 13,
 },
-[18] = {
-1,
-},
 [8] = {
 14,
 12,
 11,
+},
+[18] = {
+1,
 },
 },
 {
@@ -3746,6 +3659,7 @@ true,
 1,
 2,
 },
+["color"] = "ff9b3e",
 [20] = {
 2,
 1,
@@ -3760,7 +3674,6 @@ true,
 4,
 7,
 },
-["color"] = "ff9b3e",
 },
 {
 ["color"] = "3e3eff",
@@ -3787,10 +3700,10 @@ true,
 [6] = {
 20,
 },
+["color"] = "a1ff3e",
 [8] = {
 19,
 },
-["color"] = "a1ff3e",
 },
 {
 [20] = {
@@ -3914,7 +3827,22 @@ true,
 },
 },
 },
+["currentDungeonIdx"] = 115,
+["teeming"] = false,
+["currentPull"] = 19,
+["riftOffsets"] = {
+{
 },
+},
+},
+["colorPaletteInfo"] = {
+["autoColoring"] = true,
+["colorPaletteIdx"] = 4,
+},
+["text"] = "Priory || Simple Left",
+["objects"] = {
+},
+["week"] = 1,
 },
 {
 ["value"] = 0,
@@ -3928,8 +3856,9 @@ true,
 ["value"] = {
 ["currentPull"] = 1,
 ["currentSublevel"] = 1,
-["riftOffsets"] = {
+["pulls"] = {
 {
+["color"] = "ff3eff",
 },
 },
 ["currentDungeonIdx"] = 116,
@@ -3937,9 +3866,8 @@ true,
 ["selection"] = {
 1,
 },
-["pulls"] = {
+["riftOffsets"] = {
 {
-["color"] = "ff3eff",
 },
 },
 },
@@ -3952,9 +3880,8 @@ true,
 ["value"] = {
 ["currentPull"] = 1,
 ["currentSublevel"] = 1,
-["pulls"] = {
+["riftOffsets"] = {
 {
-["color"] = "ff3eff",
 },
 },
 ["currentDungeonIdx"] = 119,
@@ -3962,8 +3889,9 @@ true,
 ["selection"] = {
 1,
 },
-["riftOffsets"] = {
+["pulls"] = {
 {
+["color"] = "ff3eff",
 },
 },
 },
@@ -3972,64 +3900,11 @@ true,
 ["difficulty"] = 10,
 ["uid"] = "Mh1leZ32YFM",
 ["addonVersion"] = 550,
-["week"] = 1,
-["colorPaletteInfo"] = {
-["autoColoring"] = true,
-["colorPaletteIdx"] = 4,
-},
-["text"] = "Floodgate || Simple",
-["objects"] = {
-{
-["d"] = {
-11,
-1,
-1,
-true,
-"fffcec",
--8,
-},
-["l"] = {
-"241.6",
-"-60.8",
-"318.3",
-"-93.7",
-},
-["t"] = {
-2.736032160920938,
-},
-},
-{
-["d"] = {
-11,
-1,
-1,
-false,
-"fffcec",
--8,
-},
-["l"] = {
-"423.4",
-"-139.0",
-"404.9",
-"-45.3",
-},
-["t"] = {
--1.376018721736849,
-},
-},
-},
 ["value"] = {
 ["selection"] = {
 6,
 },
 ["currentSublevel"] = 1,
-["riftOffsets"] = {
-{
-},
-},
-["currentDungeonIdx"] = 119,
-["teeming"] = false,
-["currentPull"] = 6,
 ["pulls"] = {
 {
 {
@@ -4077,15 +3952,14 @@ false,
 ["color"] = "3eff9e",
 },
 {
-["color"] = "ff3e3e",
+[25] = {
+4,
+},
 [10] = {
 6,
 5,
 },
-[12] = {
-8,
-12,
-},
+["color"] = "ff3e3e",
 [14] = {
 6,
 },
@@ -4093,8 +3967,9 @@ false,
 24,
 23,
 },
-[25] = {
-4,
+[12] = {
+8,
+12,
 },
 },
 {
@@ -4128,11 +4003,11 @@ false,
 [19] = {
 1,
 },
+["color"] = "3eff3e",
 [27] = {
 1,
 2,
 },
-["color"] = "3eff3e",
 },
 {
 [6] = {
@@ -4210,11 +4085,11 @@ false,
 21,
 22,
 },
+["color"] = "a1ff3e",
 [6] = {
 16,
 15,
 },
-["color"] = "a1ff3e",
 },
 {
 [2] = {
@@ -4317,6 +4192,7 @@ false,
 [21] = {
 1,
 },
+["color"] = "3effff",
 [26] = {
 1,
 2,
@@ -4324,10 +4200,62 @@ false,
 },
 [12] = {
 },
-["color"] = "3effff",
+},
+},
+["currentDungeonIdx"] = 119,
+["teeming"] = false,
+["currentPull"] = 6,
+["riftOffsets"] = {
+{
 },
 },
 },
+["colorPaletteInfo"] = {
+["autoColoring"] = true,
+["colorPaletteIdx"] = 4,
+},
+["text"] = "Floodgate || Simple",
+["objects"] = {
+{
+["d"] = {
+11,
+1,
+1,
+true,
+"fffcec",
+-8,
+},
+["t"] = {
+2.736032160920938,
+},
+["l"] = {
+"241.6",
+"-60.8",
+"318.3",
+"-93.7",
+},
+},
+{
+["d"] = {
+11,
+1,
+1,
+false,
+"fffcec",
+-8,
+},
+["t"] = {
+-1.376018721736849,
+},
+["l"] = {
+"423.4",
+"-139.0",
+"404.9",
+"-45.3",
+},
+},
+},
+["week"] = 1,
 },
 {
 ["value"] = 0,
@@ -4341,9 +4269,8 @@ false,
 ["value"] = {
 ["currentPull"] = 1,
 ["currentSublevel"] = 1,
-["pulls"] = {
+["riftOffsets"] = {
 {
-["color"] = "ff3eff",
 },
 },
 ["currentDungeonIdx"] = 123,
@@ -4351,8 +4278,9 @@ false,
 ["selection"] = {
 1,
 },
-["riftOffsets"] = {
+["pulls"] = {
 {
+["color"] = "ff3eff",
 },
 },
 },
@@ -4362,19 +4290,15 @@ false,
 },
 ["uid"] = "grVA8DFual4",
 ["addonVersion"] = 550,
-["week"] = 1,
+["colorPaletteInfo"] = {
+["autoColoring"] = true,
+["colorPaletteIdx"] = 4,
+},
 ["value"] = {
 ["selection"] = {
 4,
 },
 ["currentSublevel"] = 1,
-["riftOffsets"] = {
-{
-},
-},
-["currentDungeonIdx"] = 123,
-["teeming"] = false,
-["currentPull"] = 4,
 ["pulls"] = {
 {
 {
@@ -4613,12 +4537,12 @@ false,
 [12] = {
 5,
 },
-["color"] = "ff3e3e",
+[3] = {
+},
 [13] = {
 2,
 },
-[3] = {
-},
+["color"] = "ff3e3e",
 },
 {
 [11] = {
@@ -4673,13 +4597,17 @@ false,
 },
 },
 },
+["currentDungeonIdx"] = 123,
+["teeming"] = false,
+["currentPull"] = 4,
+["riftOffsets"] = {
+{
+},
+},
 },
 ["text"] = "Eco-Dome || Simple",
 ["difficulty"] = 10,
-["colorPaletteInfo"] = {
-["autoColoring"] = true,
-["colorPaletteIdx"] = 4,
-},
+["week"] = 1,
 },
 {
 ["value"] = 0,
@@ -4707,6 +4635,7 @@ false,
 {
 ["objects"] = {
 {
+["n"] = true,
 ["d"] = {
 "401.3",
 "-527",
@@ -4714,18 +4643,30 @@ false,
 true,
 "Bloodlust pull 1, Forgemaster Garfrost, and Scourgelord Tyrannus",
 },
-["n"] = true,
 },
 },
 ["week"] = 1,
-["uid"] = "ZVXlr5CetIJ",
+["difficulty"] = 2,
+["mdi"] = {
+["freehold"] = 1,
+["freeholdJoined"] = false,
+["beguiling"] = 1,
+},
 ["colorPaletteInfo"] = {
 ["autoColoring"] = true,
 ["colorPaletteIdx"] = 1,
 },
+["text"] = "Tactyks PUG Friendly",
 ["value"] = {
 ["currentPull"] = 1,
 ["currentSublevel"] = 1,
+["riftOffsets"] = {
+},
+["currentDungeonIdx"] = 150,
+["teeming"] = 0,
+["selection"] = {
+1,
+},
 ["pulls"] = {
 {
 {
@@ -4766,16 +4707,16 @@ true,
 7,
 },
 ["color"] = "3eff9e",
-[13] = {
-14,
-15,
+[5] = {
+21,
+22,
 },
 [9] = {
 22,
 },
-[5] = {
-21,
-22,
+[13] = {
+14,
+15,
 },
 },
 {
@@ -5023,10 +4964,10 @@ nil,
 [13] = {
 19,
 },
-["color"] = "3eff9e",
 [8] = {
 9,
 },
+["color"] = "3eff9e",
 },
 {
 ["color"] = "3effff",
@@ -5051,7 +4992,9 @@ nil,
 [14] = {
 5,
 },
-["color"] = "3e3eff",
+[15] = {
+1,
+},
 [9] = {
 27,
 28,
@@ -5061,9 +5004,7 @@ nil,
 32,
 33,
 },
-[15] = {
-1,
-},
+["color"] = "3e3eff",
 },
 {
 [20] = {
@@ -5084,21 +5025,8 @@ nil,
 ["color"] = "9e9eff",
 },
 },
-["currentDungeonIdx"] = 150,
-["teeming"] = 0,
-["selection"] = {
-1,
 },
-["riftOffsets"] = {
-},
-},
-["text"] = "Tactyks PUG Friendly",
-["mdi"] = {
-["freehold"] = 1,
-["beguiling"] = 1,
-["freeholdJoined"] = false,
-},
-["difficulty"] = 2,
+["uid"] = "ZVXlr5CetIJ",
 },
 {
 ["value"] = 0,
@@ -5144,18 +5072,90 @@ nil,
 },
 },
 },
-["scale"] = 1.288893581081081,
+["colorPaletteInfo"] = {
+["colorPaletteIdx"] = 1,
+["customPaletteValues"] = {
+{
+1,
+1,
+1,
+},
+{
+1,
+1,
+1,
+},
+{
+1,
+1,
+1,
+},
+{
+1,
+1,
+1,
+},
+{
+1,
+1,
+1,
+},
+{
+1,
+1,
+1,
+},
+{
+1,
+1,
+1,
+},
+{
+1,
+1,
+1,
+},
+{
+1,
+1,
+1,
+},
+{
+1,
+1,
+1,
+},
+{
+1,
+1,
+1,
+},
+{
+1,
+1,
+1,
+},
+},
+},
 ["toolbarExpanded"] = false,
-["maximized"] = false,
-["nonFullscreenScale"] = 1.288893581081081,
+["latestSeenDungeonList"] = 8,
+["currentPreset"] = {
+[19] = 2,
+[30] = 2,
+[37] = 2,
+[38] = 2,
+[111] = 2,
+[113] = 2,
+[114] = 2,
+[115] = 2,
+[119] = 2,
+[123] = 2,
+[150] = 2,
+},
 ["version"] = 6011,
 ["xoffset"] = -81.0216293334961,
-["currentDungeonIdx"] = 155,
-["minimap"] = {
-["minimapPos"] = 113.4399240989313,
-["lock"] = true,
-["showInCompartment"] = true,
-},
+["scale"] = 1.288893581081081,
+["latestDungeonSeen"] = 150,
 ["yoffset"] = -116.6889266967773,
 },
 }

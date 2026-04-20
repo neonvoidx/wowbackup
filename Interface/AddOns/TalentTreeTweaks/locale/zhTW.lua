@@ -179,6 +179,8 @@ L["Spell Icon"] = "法術圖示"
 L["Spell ID"] = "法術 ID"
 L["Spellbook Background Transparency"] = "法術書背景透明度"
 L["SpellID"] = "法術ID"
+--[[Translation missing --]]
+L["Stops the overlay from blocking clicks / hover when changing loadouts"] = "Stops the overlay from blocking clicks / hover when changing loadouts"
 L[ [=[Talent Loadout links are improved, to allow you to use modifiers, to copy the link, import it as a loadout, open it in Talent Tree Viewer (if installed) etc.
 Optionally, it can also scan your chat for any loadout string that was sent as normal regular text.]=] ] = "天賦配置連結得到增強，允許您使用快捷鍵、來複製連結、將其導入為配置、在天賦樹查看器（如果已安裝）中打開它等。或者，它還可以掃描您的聊天中是否有任何配置字串作為正常的常規文字發送。"
 L["Talent Loadout String"] = "配置字串"

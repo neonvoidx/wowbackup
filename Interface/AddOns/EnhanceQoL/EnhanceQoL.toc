@@ -1,7 +1,7 @@
 ## Interface: 120000, 120001, 120005
 ## Title: Enhance QoL Core
 ## Author: R41Z0R
-## Version: 10.2.0
+## Version: 10.3.1
 ## IconTexture: Interface\AddOns\EnhanceQoL\Icons\Icon.tga
 ## Category: Quality of Life
 ## X-Category: Quality of Life
@@ -103,7 +103,6 @@ Modules\Sound\Sound.xml
 
 # Tooltip
 Modules\Tooltip\Tooltip.xml
-
 
 # MythicPlus
 Modules\MythicPlus\MythicPlus.xml

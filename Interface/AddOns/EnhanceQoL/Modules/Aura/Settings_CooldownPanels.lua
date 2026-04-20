@@ -14,6 +14,7 @@ if not (cat and addon.functions and addon.functions.SettingsCreateExpandableSect
 
 local expandable = addon.functions.SettingsCreateExpandableSection(cat, {
 	name = L["Cooldown Panels"] or "Cooldown Panels",
+	newTagID = "CooldownPanels",
 	expanded = false,
 	colorizeTitle = false,
 })

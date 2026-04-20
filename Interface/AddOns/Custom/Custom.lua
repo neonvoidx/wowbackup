@@ -104,7 +104,7 @@ local function OnEvent(self, event, ...)
 		SetCVar("UnitNamePlayerPVPTitle", 1) -- Show character title
 
 		-- Personal Resource Display
-		local personalResource = 0
+		local personalResource = 1
 		SetCVar("nameplateShowSelf", personalResource)
 		SetCVar("NameplatePersonalShowAlways", 0)
 		SetCVar("NameplatePersonalShowInCombat", personalResource)

@@ -218,7 +218,11 @@ end
 local function showTooltip(btn)
 	local tip = GameTooltip
 	tip:ClearLines()
-	tip:SetOwner(btn, "ANCHOR_TOPLEFT")
+	if addon.DataPanel and addon.DataPanel.SetTooltipOwner then
+		addon.DataPanel.SetTooltipOwner(btn, tip)
+	else
+		tip:SetOwner(btn, "ANCHOR_TOPLEFT")
+	end
 	tip:AddLine(L["Equipment Sets"] or "Equipment Sets")
 
 	if #sets == 0 then

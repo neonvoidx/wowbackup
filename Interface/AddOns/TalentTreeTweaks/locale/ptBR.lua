@@ -353,6 +353,8 @@ L["Spellbook Background Transparency"] = "Spellbook Background Transparency"
 --[[Translation missing --]]
 L["SpellID"] = "SpellID"
 --[[Translation missing --]]
+L["Stops the overlay from blocking clicks / hover when changing loadouts"] = "Stops the overlay from blocking clicks / hover when changing loadouts"
+--[[Translation missing --]]
 L[ [=[Talent Loadout links are improved, to allow you to use modifiers, to copy the link, import it as a loadout, open it in Talent Tree Viewer (if installed) etc.
 Optionally, it can also scan your chat for any loadout string that was sent as normal regular text.]=] ] = [=[Talent Loadout links are improved, to allow you to use modifiers, to copy the link, import it as a loadout, open it in Talent Tree Viewer (if installed) etc.
 Optionally, it can also scan your chat for any loadout string that was sent as normal regular text.]=]

@@ -7,14 +7,12 @@
 -- Frost Mage requires Summon Water Elemental to be known.
 --
 -- Alerts:
---   1. Water Ele Died         — Water Elemental dies
---   2. (unused)               — slot reserved for layout consistency
---   3. Summon Water Ele       — no pet out
---   4. (unused)               — no taunt for Mage
---   5. Water Ele In CC        — pet has crowd control aura
---   6. Water Ele Health Low   — pet health below threshold (ColorCurve)
---   7. Water Ele On Passive   — passive stance while in combat
---   8. Water Ele Not Attacking — pet idle in combat after grace period
+--   1. Water Ele Died          — Water Elemental dies
+--   2. Summon Water Ele        — no pet out
+--   3. Water Ele In CC         — pet has crowd control aura
+--   4. Water Ele Health Low    — pet health below threshold (ColorCurve)
+--   5. Water Ele On Passive    — passive stance while in combat
+--   6. Water Ele Not Attacking — pet idle in combat after grace period
 -- =============================================================
 
 local NPA = _G.NemPetAlerts
@@ -48,27 +46,25 @@ local state = {
 -- =============================================================
 -- Row layout (Y offsets):
 --   Row 1 (+52):  [1] Water Ele Died
---   Row 2 (+25):  [6] Water Ele Health Low
---   Row 3 ( -2):  [3] Summon Water Ele
---   Row 4 (-29):  [2] (unused)  /  [7] Water Ele On Passive
---   Row 5 (-56):  [4] (unused)  /  [8] Water Ele Not Attacking
---   Row 6 (-83):  [5] Water Ele In CC
+--   Row 2 (+25):  [4] Water Ele Health Low
+--   Row 3 ( -2):  [2] Summon Water Ele
+--   Row 4 (-29):  [5] Water Ele On Passive
+--   Row 5 (-56):  [6] Water Ele Not Attacking
+--   Row 6 (-83):  [3] Water Ele In CC
 
 local ALERTS = {
-    { key = "petDead",         label = "Water Ele Died",                      text = "* WATER ELE DIED *",            defaultColor = { r=1.0,    g=0.2039, b=0.1569 }, yOffset =  52, defaultSound = "OhNo",   soundLabel = "Pet Died" },
-    { key = "fakeDeath",       label = "Wake Up Pet  (Hunter only)",          text = "* WAKE UP PET *",               defaultColor = { r=0.6980, g=0.3333, b=1.0    }, yOffset = -29 },
-    { key = "noPet",           label = "Summon Water Ele",                    text = "* SUMMON WATER ELE *",           defaultColor = { r=0.9098, g=0.4118, b=0.0    }, yOffset =  -2 },
-    { key = "tauntAuto",       label = "Taunt  (Hunter/Warlock only)",        text = "* TURN OFF AUTOCAST TAUNT *",    defaultColor = { r=0.9059, g=0.2667, b=1.0    }, yOffset = -56 },
-    { key = "notAttacking",    label = "Water Ele In CC",                     text = "* WATER ELE IN CC *",            defaultColor = { r=0.2824, g=0.6549, b=1.0    }, yOffset = -83, defaultSound = "Sonarr", soundLabel = "Pet CC"  },
-    { key = "healPet",         label = "Water Ele Health Low",                text = "* WATER ELE HEALTH LOW *",       defaultColor = { r=0.1882, g=1.0,    b=0.3098 }, yOffset =  25 },
-    { key = "petPassive",      label = "Water Ele On Passive",                text = "* WATER ELE ON PASSIVE *",       defaultColor = { r=1.0,    g=0.5843, b=0.1333 }, yOffset = -29 },
-    { key = "petNotAttacking", label = "Water Ele Not Attacking",             text = "* WATER ELE NOT ATTACKING *",    defaultColor = { r=1.0,    g=0.8588, b=0.0    }, yOffset = -56 },
+    { key = "petDead",         label = "Water Ele Died",        text = "* WATER ELE DIED *",         defaultColor = { r=1.0,    g=0.2039, b=0.1569 }, yOffset =  52, defaultSound = "OhNo",   soundLabel = "Pet Died" },
+    { key = "noPet",           label = "Summon Water Ele",      text = "* SUMMON WATER ELE *",        defaultColor = { r=0.9098, g=0.4118, b=0.0    }, yOffset =  -2 },
+    { key = "notAttacking",    label = "Water Ele In CC",       text = "* WATER ELE IN CC *",         defaultColor = { r=0.2824, g=0.6549, b=1.0    }, yOffset = -83, defaultSound = "Sonarr", soundLabel = "Pet CC"  },
+    { key = "healPet",         label = "Water Ele Health Low",  text = "* WATER ELE HEALTH LOW *",    defaultColor = { r=0.1882, g=1.0,    b=0.3098 }, yOffset =  25 },
+    { key = "petPassive",      label = "Water Ele On Passive",  text = "* WATER ELE ON PASSIVE *",    defaultColor = { r=1.0,    g=0.5843, b=0.1333 }, yOffset = -29 },
+    { key = "petNotAttacking", label = "Water Ele Not Attacking", text = "* WATER ELE NOT ATTACKING *", defaultColor = { r=1.0,    g=0.8588, b=0.0    }, yOffset = -56 },
 }
 
 -- =============================================================
--- Test Slots (Mage: no fakeDeath or taunt)
+-- Test Slots (Mage: all 6 alerts)
 -- =============================================================
-local TEST_SLOTS = { [1]=true, [3]=true, [5]=true, [6]=true, [7]=true, [8]=true }
+local TEST_SLOTS = { [1]=true, [2]=true, [3]=true, [4]=true, [5]=true, [6]=true }
 
 -- =============================================================
 -- Defaults
@@ -77,9 +73,7 @@ local DEFAULTS = {
     petDeadEnabled           = true,
     petDeadSoundEnabled      = true,
     petDeadSoundName         = "OhNo",
-    fakeDeathEnabled         = false,  -- not applicable to Mage
     noPetEnabled             = true,
-    tauntAutoEnabled         = false,  -- not applicable to Mage
     notAttackingEnabled      = true,
     notAttackingSoundEnabled = true,
     notAttackingSoundName    = "Sonarr",
@@ -100,7 +94,7 @@ local MageFrost = {
     defaults          = DEFAULTS,
     state             = state,
     hasHealPet        = true,
-    healPetAlertIndex = 6,
+    healPetAlertIndex = 4,
 
     extraEvents = {
         "UNIT_PET",
@@ -192,15 +186,15 @@ function MageFrost:GetHighestPriorityAlert(db)
             state.petResurrecting = true
             return 1  -- WATER ELE DIED
         end
-        if db.notAttackingEnabled    and NPA.PetIsCC() then return 5 end
-        if db.petPassiveEnabled      and NPA.PetIsPassive() then return 7 end
-        if db.petNotAttackingEnabled and NPA.PetNotAttacking() then return 8 end
-        if db.healPetEnabled         and NPA.PetNeedsHealing() then return 6 end
+        if db.notAttackingEnabled    and NPA.PetIsCC() then return 3 end
+        if db.petPassiveEnabled      and NPA.PetIsPassive() then return 5 end
+        if db.petNotAttackingEnabled and NPA.PetNotAttacking() then return 6 end
+        if db.healPetEnabled         and NPA.PetNeedsHealing() then return 4 end
         return nil
     else
         if state.petResurrecting then return 1 end  -- hold WATER ELE DIED
         if db.noPetEnabled and not NPA.ShouldSuppressNoPet() then
-            return 3  -- SUMMON WATER ELE
+            return 2  -- SUMMON WATER ELE
         end
         return nil
     end

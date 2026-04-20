@@ -25,7 +25,9 @@ local ensureDestroyButton
 local ensureBaganatorIntegration
 local applySellDestroyOverlayToItemButton
 local applySellDestroyOverlaysToBaganatorButtons
+local AltClickHook
 local getTooltipInfo
+local frameLoad
 local tooltipCache = {}
 local slotAnalysisCache = {}
 local slotAnalysisScratch = {}
@@ -39,6 +41,7 @@ local destroyState = {
 }
 local baganatorRegionRegistered = false
 local baganatorSkinsListenerRegistered = false
+local baganatorCallbacksRegistered = false
 local baganatorTrackedItemButtons = setmetatable({}, { __mode = "k" })
 local baganatorVisibleItemButtons = setmetatable({}, { __mode = "k" })
 local baganatorVisibleBackpackButtonCount = 0
@@ -54,6 +57,7 @@ local ICON_TEXTURE_UPGRADE = "Interface\\AddOns\\EnhanceQoL\\Icons\\upgradeilvl.
 local baganatorCornerWidgetRegistered = false
 local baganatorUpgradeCornerWidgetRegistered = false
 local pendingBaganatorWidgetRefresh = false
+local baganatorInitialFrameScanCompleted = false
 
 local function ensureDestroyListFrame()
 	if destroyState.list and destroyState.list:IsObjectType("Frame") then return destroyState.list end
@@ -151,6 +155,16 @@ local function isBaganatorBackpackItemButton(itemButton)
 	return type(bag) == "number" and bag >= 0 and bag <= NUM_TOTAL_EQUIPPED_BAG_SLOTS
 end
 
+local function isBaganatorBackpackShown()
+	local api = _G.Baganator and _G.Baganator.API
+	local skin = api and api.Skins and api.Skins.GetCurrentSkin and api.Skins.GetCurrentSkin()
+	if not skin then return false end
+	local singleView = _G["Baganator_SingleViewBackpackViewFrame" .. skin]
+	if singleView and singleView.IsShown and singleView:IsShown() then return true end
+	local categoryView = _G["Baganator_CategoryViewBackpackViewFrame" .. skin]
+	return categoryView and categoryView.IsShown and categoryView:IsShown() or false
+end
+
 local function refreshBaganatorVisibleButtonState(itemButton)
 	local shouldCount = itemButton and itemButton.IsShown and itemButton:IsShown() and isBaganatorBackpackItemButton(itemButton)
 	local counted = baganatorVisibleItemButtons[itemButton] == true
@@ -236,6 +250,7 @@ local function inventoryOpen()
 	for _, frame in ipairs(frames) do
 		if frame and frame:IsShown() then return true end
 	end
+	if isBaganatorBackpackShown() then return true end
 	if baganatorVisibleBackpackButtonCount > 0 then
 		for itemButton in pairs(baganatorVisibleItemButtons) do
 			if itemButton and itemButton.IsShown and itemButton:IsShown() and isBaganatorBackpackItemButton(itemButton) then return true end
@@ -531,7 +546,7 @@ applySellDestroyOverlayToItemButton = function(itemButton, overlaySell, overlayD
 	overlayDestroy = overlayDestroy == nil and (addon.db["vendorDestroyEnable"] and addon.db["vendorShowDestroyOverlay"]) or overlayDestroy
 
 	local bag, slot = getBagSlotFromItemButton(itemButton)
-	if bag == nil or slot == nil then
+	if type(bag) ~= "number" or slot == nil or bag < 0 or bag > NUM_TOTAL_EQUIPPED_BAG_SLOTS then
 		hideSellDestroyOverlays(itemButton)
 		return
 	end
@@ -672,17 +687,15 @@ local function hookBaganatorItemButton(itemButton)
 		end
 		if itemButton.SetItemFiltered then hooksecurefunc(itemButton, "SetItemFiltered", function(self) applySellDestroyOverlayToItemButton(self) end) end
 		if itemButton.HookScript then
+			if not itemButton.GetSlotAndBagID then itemButton:HookScript("OnClick", AltClickHook) end
 			itemButton:HookScript("OnShow", function(self)
 				refreshBaganatorVisibleButtonState(self)
 				applySellDestroyOverlayToItemButton(self)
-				updateSellMarks()
-				if addon.db and addon.db["vendorDestroyEnable"] then scheduleDestroyButtonUpdate() end
 			end)
 			itemButton:HookScript("OnHide", function(self)
 				refreshBaganatorVisibleButtonState(self)
 				hideSellDestroyOverlays(self)
 				if baganatorVisibleBackpackButtonCount == 0 then destroyHideList() end
-				if addon.db and addon.db["vendorDestroyEnable"] then scheduleDestroyButtonUpdate() end
 			end)
 		end
 	end
@@ -751,13 +764,39 @@ ensureBaganatorIntegration = function(existingButton)
 		baganatorSkinsListenerRegistered = true
 	end
 
-	if api.Skins and api.Skins.GetAllFrames then
+	if not baganatorCallbacksRegistered and _G.Baganator and _G.Baganator.CallbackRegistry and _G.Baganator.CallbackRegistry.RegisterCallback then
+		local callbackRegistry = _G.Baganator.CallbackRegistry
+		callbackRegistry:RegisterCallback("BagShow", function()
+			C_Timer.After(0, function()
+				updateSellMarks(nil, true)
+				if addon.db and addon.db["vendorDestroyEnable"] then scheduleDestroyButtonUpdate() end
+			end)
+		end)
+		callbackRegistry:RegisterCallback("BackpackFrameChanged", function()
+			C_Timer.After(0, function()
+				updateSellMarks(nil, true)
+				if addon.db and addon.db["vendorDestroyEnable"] then scheduleDestroyButtonUpdate() end
+			end)
+		end)
+		callbackRegistry:RegisterCallback("ViewComplete", function()
+			applySellDestroyOverlaysToBaganatorButtons()
+			if destroyState.button and (not InCombatLockdown or not InCombatLockdown()) then anchorDestroyButton(destroyState.button) end
+		end)
+		callbackRegistry:RegisterCallback("BagHide", function()
+			destroyHideList()
+			if addon.db and addon.db["vendorDestroyEnable"] then scheduleDestroyButtonUpdate() end
+		end)
+		baganatorCallbacksRegistered = true
+	end
+
+	if not baganatorInitialFrameScanCompleted and api.Skins and api.Skins.GetAllFrames then
 		local allFrames = api.Skins.GetAllFrames()
 		if type(allFrames) == "table" then
 			for _, details in ipairs(allFrames) do
 				if details and details.regionType == "ItemButton" and details.region then hookBaganatorItemButton(details.region) end
 			end
 		end
+		baganatorInitialFrameScanCompleted = true
 	end
 
 	local button = existingButton or destroyState.button
@@ -777,8 +816,7 @@ ensureDestroyButton = function()
 		return nil
 	end
 
-	local parent = _G.BagItemSearchBox and _G.BagItemSearchBox:GetParent() or ContainerFrameCombinedBags or UIParent
-	local button = CreateFrame("Button", addonName .. "_DestroyButton", parent, "InsecureActionButtonTemplate")
+	local button = CreateFrame("Button", addonName .. "_DestroyButton", UIParent, "InsecureActionButtonTemplate")
 	button:SetSize(28, 28)
 	button:RegisterForClicks("LeftButtonUp")
 	button:SetNormalTexture(ICON_TEXTURE_DESTROY)
@@ -994,7 +1032,7 @@ local function updateSellMoreButton()
 	end
 end
 
-local frameLoad = CreateFrame("Frame")
+frameLoad = CreateFrame("Frame")
 
 local function updateLegend(value, value2)
 	if not addon.aceFrame or not addon.aceFrame:IsShown() or nil == addon.Vendor.variables["labelExplained" .. value .. "line"] then return end
@@ -1953,11 +1991,16 @@ function updateSellMarks(_, resetCache)
 	end)
 end
 
-local function AltClickHook(self, button)
+AltClickHook = function(self, button)
 	if not addon.db["vendorAltClickInclude"] then return end
 	if not IsAltKeyDown() or not (button == "LeftButton" or button == "RightButton") then return end
-	local slot, bag = self:GetSlotAndBagID()
-	if slot and bag then
+	local bag, slot
+	if self and self.GetSlotAndBagID then
+		slot, bag = self:GetSlotAndBagID()
+	else
+		bag, slot = getBagSlotFromItemButton(self)
+	end
+	if type(bag) == "number" and slot and bag >= 0 and bag <= NUM_TOTAL_EQUIPPED_BAG_SLOTS then
 		local eItem = Item:CreateFromBagAndSlot(bag, slot)
 		if eItem and not eItem:IsItemEmpty() then
 			eItem:ContinueOnItemLoad(function()

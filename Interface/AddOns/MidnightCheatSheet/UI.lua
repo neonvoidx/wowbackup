@@ -568,6 +568,49 @@ function MCS:InitUI()
     MakeScaleBtn("+", -22, 0.05)
     MakeScaleBtn("\226\136\146", -40, -0.05)  -- minus sign (−)
 
+    -- Minimap button toggle (bottom-right, left of scale buttons)
+    local mb = CreateFrame("Button", nil, f, "BackdropTemplate")
+    mb:SetSize(18, 18); mb:SetPoint("BOTTOMRIGHT", -58, 4)
+    mb:SetFrameLevel(f:GetFrameLevel() + 20)
+    mb:SetBackdrop({bgFile="Interface\\Buttons\\WHITE8x8",
+        edgeFile="Interface\\Buttons\\WHITE8x8", edgeSize=1})
+    local mbIcon = mb:CreateTexture(nil,"ARTWORK")
+    mbIcon:SetSize(14,14); mbIcon:SetPoint("CENTER")
+    mbIcon:SetTexture("Interface\\Minimap\\Tracking\\None")
+    local function UpdateMBtnVisual()
+        local hidden = false
+        if MCS.LDBIcon then
+            hidden = MCS.db and MCS.db.minimapIcon and MCS.db.minimapIcon.hide
+        else
+            hidden = MCS.db and MCS.db.hideMinimapButton
+        end
+        if hidden then
+            mb:SetBackdropColor(.3,.1,.1,.9); mb:SetBackdropBorderColor(.6,.3,.3,.8)
+            mbIcon:SetDesaturated(true); mbIcon:SetAlpha(0.4)
+        else
+            mb:SetBackdropColor(.15,.12,.25,.9); mb:SetBackdropBorderColor(.4,.4,.6,.8)
+            mbIcon:SetDesaturated(false); mbIcon:SetAlpha(1)
+        end
+    end
+    UpdateMBtnVisual()
+    mb:SetScript("OnEnter", function(b)
+        b:SetBackdropColor(.25,.2,.35,1); b:SetBackdropBorderColor(.6,.6,.8,.9)
+        GameTooltip:SetOwner(b, "ANCHOR_TOP")
+        GameTooltip:AddLine("Toggle minimap button")
+        GameTooltip:AddLine("|cffccccccAlso: /mcs minimap|r", 1,1,1)
+        GameTooltip:Show()
+    end)
+    mb:SetScript("OnLeave", function(b)
+        UpdateMBtnVisual()
+        GameTooltip:Hide()
+    end)
+    mb:SetScript("OnClick", function()
+        MCS:ToggleMinimapButton()
+        UpdateMBtnVisual()
+    end)
+    self.minimapToggleBtn = mb
+    self.UpdateMinimapToggleVisual = UpdateMBtnVisual
+
     -- Apply saved scale
     if MCS.db and MCS.db.uiScale then f:SetScale(MCS.db.uiScale) end
 
@@ -2202,6 +2245,7 @@ function MCS:CreateMinimapButton()
         if not MCS.db.minimapIcon then MCS.db.minimapIcon = {} end
         LDBIcon:Register("MidnightCheatSheet", dataObj, MCS.db.minimapIcon)
         self.minimapBtn = LDBIcon:GetMinimapButton("MidnightCheatSheet")
+        self.LDBIcon = LDBIcon
         return
     end
 
@@ -2286,7 +2330,36 @@ function MCS:CreateMinimapButton()
     end)
     btn:SetScript("OnLeave", function() GameTooltip:Hide() end)
 
+    if db.hideMinimapButton then btn:Hide() end
     self.minimapBtn = btn
+end
+
+function MCS:ToggleMinimapButton()
+    if self.LDBIcon then
+        -- LibDBIcon path
+        local db = self.db.minimapIcon
+        if db.hide then
+            self.LDBIcon:Show("MidnightCheatSheet")
+            db.hide = false
+            print("|cff00ccff[MCS]|r Minimap button shown. Type |cffffffff/mcs minimap|r to hide.")
+        else
+            self.LDBIcon:Hide("MidnightCheatSheet")
+            db.hide = true
+            print("|cff00ccff[MCS]|r Minimap button hidden. Type |cffffffff/mcs minimap|r to show.")
+        end
+    elseif self.minimapBtn then
+        -- Manual fallback path
+        if self.minimapBtn:IsShown() then
+            self.minimapBtn:Hide()
+            if self.db then self.db.hideMinimapButton = true end
+            print("|cff00ccff[MCS]|r Minimap button hidden. Type |cffffffff/mcs minimap|r to show.")
+        else
+            self.minimapBtn:Show()
+            if self.db then self.db.hideMinimapButton = false end
+            print("|cff00ccff[MCS]|r Minimap button shown. Type |cffffffff/mcs minimap|r to hide.")
+        end
+    end
+    if self.UpdateMinimapToggleVisual then self.UpdateMinimapToggleVisual() end
 end
 
 tinsert(UISpecialFrames, "MCSFrame")

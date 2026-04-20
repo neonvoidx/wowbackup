@@ -63,3 +63,7 @@ Blizzard_CompactRaidFrames: enabled
 !Swatter: disabled
 !ImprovedErrorFrame: disabled
 OPie_Classic: disabled
+M33kAurasCompanion: enabled
+M33kAurasArchive: enabled
+M33Auras: disabled
+WeakAuras: disabled

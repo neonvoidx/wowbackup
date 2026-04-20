@@ -424,7 +424,7 @@ local function getTrailColor()
 		return 1, 1, 1, 1
 	end
 	local c = addon.db["mouseTrailColor"]
-	if c then return c.r, c.g, c.b, c.a or 1 end
+	if c then return c.r, c.g, c.b, 1 end
 	return 1, 1, 1, 1
 end
 
@@ -433,8 +433,16 @@ local function refreshTrailColorCache()
 	trailColorDirty = false
 end
 
+local function refreshTrailStyle()
+	trailColorDirty = true
+end
+addon.Mouse.functions.refreshTrailStyle = refreshTrailStyle
+
 local function getRingColor()
 	if addon.db["mouseRingUseClassColor"] then
+		local alpha = 1
+		local storedColor = addon.db["mouseRingColor"]
+		if storedColor and storedColor.a ~= nil then alpha = storedColor.a end
 		if not classR then
 			local class = playerClass or (UnitClass and select(2, UnitClass("player")))
 			if class then playerClass = class end
@@ -442,8 +450,8 @@ local function getRingColor()
 				classR, classG, classB = GetClassColor(class)
 			end
 		end
-		if classR then return classR, classG, classB, 1 end
-		return 1, 1, 1, 1
+		if classR then return classR, classG, classB, alpha end
+		return 1, 1, 1, alpha
 	end
 	local c = addon.db["mouseRingColor"]
 	if c then return c.r, c.g, c.b, c.a or 1 end

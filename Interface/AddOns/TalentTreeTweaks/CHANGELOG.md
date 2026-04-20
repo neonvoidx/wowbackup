@@ -1,7 +1,6 @@
 # Talent Tree Tweaks
 
-## [v1.13.22](https://github.com/NumyAddon/TalentTreeTweaks/tree/v1.13.22) (2026-04-03)
-[Full Changelog](https://github.com/NumyAddon/TalentTreeTweaks/compare/v1.13.21...v1.13.22) [Previous Releases](https://github.com/NumyAddon/TalentTreeTweaks/releases)
+## [v1.13.23](https://github.com/NumyAddon/TalentTreeTweaks/tree/v1.13.23) (2026-04-19)
+[Full Changelog](https://github.com/NumyAddon/TalentTreeTweaks/compare/v1.13.22...v1.13.23) [Previous Releases](https://github.com/NumyAddon/TalentTreeTweaks/releases)
 
-- PTR TOC Bump  
-- Implement a workaround for blizzard's continued incompetence (closes #103)  
+- Stop blizzard making it impossible to see tooltips for talents while you're changing/applying talents  

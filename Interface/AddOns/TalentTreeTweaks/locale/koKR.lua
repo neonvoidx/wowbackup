@@ -207,6 +207,8 @@ L["Spell Icon"] = "주문 아이콘"
 L["Spell ID"] = "주문 ID"
 L["Spellbook Background Transparency"] = "마법책 배경 투명도"
 L["SpellID"] = "SpellID"
+--[[Translation missing --]]
+L["Stops the overlay from blocking clicks / hover when changing loadouts"] = "Stops the overlay from blocking clicks / hover when changing loadouts"
 L[ [=[Talent Loadout links are improved, to allow you to use modifiers, to copy the link, import it as a loadout, open it in Talent Tree Viewer (if installed) etc.
 Optionally, it can also scan your chat for any loadout string that was sent as normal regular text.]=] ] = "특성 빌드 링크가 개선되어 수정자를 사용하고, 링크를 복사하고, 빌드로 가져오고, 특성 트리 뷰어(설치된 경우)에서 여는 등의 작업이 가능해졌습니다. 선택적으로, 일반 텍스트로 전송된 빌드 문자열을 채팅에서 검색할 수도 있습니다."
 L["Talent Loadout String"] = "특성 빌드 문자열"

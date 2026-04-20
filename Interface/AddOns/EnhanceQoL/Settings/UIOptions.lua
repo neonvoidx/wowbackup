@@ -230,6 +230,40 @@ local function getNormalizedFocusInterruptSoundValue()
 	return ""
 end
 
+local function suppressEventToastFrame(frame)
+	if not frame then return end
+	if frame.currentDisplayingToast and C_EventToastManager and C_EventToastManager.RemoveCurrentToast then pcall(C_EventToastManager.RemoveCurrentToast) end
+	if frame.ReleaseToasts then pcall(frame.ReleaseToasts, frame) end
+	frame.currentDisplayingToast = nil
+	if frame.StopToasting then
+		pcall(frame.StopToasting, frame)
+	elseif frame.Hide then
+		pcall(frame.Hide, frame)
+	end
+end
+
+local function ensureEventToastVisibilityHooks()
+	local frame = _G.EventToastManagerFrame
+	if not frame or frame._eqolEventToastVisibilityHooked then return frame end
+	frame._eqolEventToastVisibilityHooked = true
+	hooksecurefunc(frame, "DisplayToast", function(self)
+		if addon.db and addon.db.hideEventToasts == true then suppressEventToastFrame(self) end
+	end)
+	return frame
+end
+
+function addon.functions.ApplyEventToastVisibility()
+	local frame = ensureEventToastVisibilityHooks()
+	if not frame then return end
+
+	if addon.db and addon.db.hideEventToasts == true then
+		if frame.IsEventRegistered and frame:IsEventRegistered("DISPLAY_EVENT_TOASTS") then frame:UnregisterEvent("DISPLAY_EVENT_TOASTS") end
+		suppressEventToastFrame(frame)
+	else
+		if frame.RegisterEvent and frame.IsEventRegistered and not frame:IsEventRegistered("DISPLAY_EVENT_TOASTS") then frame:RegisterEvent("DISPLAY_EVENT_TOASTS") end
+	end
+end
+
 local function createActionBarVisibility(category, expandable)
 	if #ACTIONBAR_RULE_OPTIONS == 0 then return end
 
@@ -560,14 +594,18 @@ end
 local function createLabelControls(category, expandable)
 	addon.functions.SettingsCreateHeadline(category, L["actionBarLabelGroupTitle"] or "Button text", { parentSection = expandable })
 	local globalFontKey = getGlobalFontConfigKey()
-
-	local outlineOrder = { "NONE", "OUTLINE", "THICKOUTLINE", "MONOCHROMEOUTLINE" }
-	local outlineOptions = {
+	local globalFontStyleKey = addon.functions.GetGlobalFontStyleConfigKey and addon.functions.GetGlobalFontStyleConfigKey() or "__EQOL_GLOBAL_FONT_STYLE__"
+	local globalFontStyleOptions, globalFontStyleOrder = addon.functions.GetFontStyleOptions and addon.functions.GetFontStyleOptions(true) or {
 		NONE = NONE,
 		OUTLINE = L["Outline"] or "Outline",
-		THICKOUTLINE = L["Thick Outline"] or "Thick Outline",
-		MONOCHROMEOUTLINE = L["Monochrome Outline"] or "Monochrome Outline",
-	}
+	}, { "NONE", "OUTLINE" }
+	local function normalizeFontStyleChoice(value, fallback)
+		if addon.functions and addon.functions.NormalizeFontStyleChoice then
+			return addon.functions.NormalizeFontStyleChoice(value, fallback, true)
+		end
+		if value ~= nil then return value end
+		return fallback or "OUTLINE"
+	end
 	local textAnchorOrder = { "TOPLEFT", "TOP", "TOPRIGHT", "LEFT", "CENTER", "RIGHT", "BOTTOMLEFT", "BOTTOM", "BOTTOMRIGHT" }
 	local textAnchorOptions = {
 		TOPLEFT = L["Top Left"] or "Top Left",
@@ -640,12 +678,12 @@ local function createLabelControls(category, expandable)
 	addon.functions.SettingsCreateDropdown(category, {
 		var = "actionBarMacroFontOutline",
 		text = L["Font outline"] or "Font outline",
-		list = outlineOptions,
-		order = outlineOrder,
-		default = "OUTLINE",
-		get = function() return addon.db.actionBarMacroFontOutline or "OUTLINE" end,
+		list = globalFontStyleOptions,
+		order = globalFontStyleOrder,
+		default = globalFontStyleKey,
+		get = function() return normalizeFontStyleChoice(addon.db.actionBarMacroFontOutline, globalFontStyleKey) end,
 		set = function(key)
-			addon.db.actionBarMacroFontOutline = key
+			addon.db.actionBarMacroFontOutline = normalizeFontStyleChoice(key, globalFontStyleKey)
 			if ActionBarLabels and ActionBarLabels.RefreshAllMacroNameVisibility then ActionBarLabels.RefreshAllMacroNameVisibility() end
 			if ActionBarLabels and ActionBarLabels.RefreshAllHotkeyStyles then ActionBarLabels.RefreshAllHotkeyStyles() end
 		end,
@@ -734,12 +772,12 @@ local function createLabelControls(category, expandable)
 	addon.functions.SettingsCreateDropdown(category, {
 		var = "actionBarHotkeyFontOutline",
 		text = L["Font outline"] or "Font outline",
-		list = outlineOptions,
-		order = outlineOrder,
-		default = "OUTLINE",
-		get = function() return addon.db.actionBarHotkeyFontOutline or "OUTLINE" end,
+		list = globalFontStyleOptions,
+		order = globalFontStyleOrder,
+		default = globalFontStyleKey,
+		get = function() return normalizeFontStyleChoice(addon.db.actionBarHotkeyFontOutline, globalFontStyleKey) end,
 		set = function(key)
-			addon.db.actionBarHotkeyFontOutline = key
+			addon.db.actionBarHotkeyFontOutline = normalizeFontStyleChoice(key, globalFontStyleKey)
 			if ActionBarLabels and ActionBarLabels.RefreshAllHotkeyVisibility then ActionBarLabels.RefreshAllHotkeyVisibility() end
 			if ActionBarLabels and ActionBarLabels.RefreshAllHotkeyStyles then ActionBarLabels.RefreshAllHotkeyStyles() end
 		end,
@@ -879,12 +917,12 @@ local function createLabelControls(category, expandable)
 	addon.functions.SettingsCreateDropdown(category, {
 		var = "actionBarCountFontOutline",
 		text = L["Font outline"] or "Font outline",
-		list = outlineOptions,
-		order = outlineOrder,
-		default = "OUTLINE",
-		get = function() return addon.db.actionBarCountFontOutline or "OUTLINE" end,
+		list = globalFontStyleOptions,
+		order = globalFontStyleOrder,
+		default = globalFontStyleKey,
+		get = function() return normalizeFontStyleChoice(addon.db.actionBarCountFontOutline, globalFontStyleKey) end,
 		set = function(key)
-			addon.db.actionBarCountFontOutline = key
+			addon.db.actionBarCountFontOutline = normalizeFontStyleChoice(key, globalFontStyleKey)
 			if ActionBarLabels and ActionBarLabels.RefreshAllCountStyles then ActionBarLabels.RefreshAllCountStyles() end
 		end,
 		parent = true,
@@ -1156,7 +1194,7 @@ local function createCooldownViewerDropdowns(category, expandable)
 		{ value = COOLDOWN_VIEWER_VISIBILITY_MODES.MOUSEOVER, text = L["cooldownManagerShowMouseover"] or "On mouseover" },
 		{
 			value = COOLDOWN_VIEWER_VISIBILITY_MODES.PLAYER_HAS_TARGET,
-				text = L["When I have a target"] or "When I have a target",
+			text = L["When I have a target"] or "When I have a target",
 		},
 		{
 			value = COOLDOWN_VIEWER_VISIBILITY_MODES.ALWAYS_HIDDEN,
@@ -1253,7 +1291,7 @@ local function createSpellActivationOverlayDropdown(category, expandable)
 		{ value = COOLDOWN_VIEWER_VISIBILITY_MODES.PLAYER_CASTING, text = L["Player is casting"] or "Player is casting" },
 		{
 			value = COOLDOWN_VIEWER_VISIBILITY_MODES.PLAYER_HAS_TARGET,
-				text = L["When I have a target"] or "When I have a target",
+			text = L["When I have a target"] or "When I have a target",
 		},
 	}
 
@@ -1413,11 +1451,27 @@ local function createFrameCategory()
 		end,
 		parentSection = expandable,
 	})
+
+	addon.functions.SettingsCreateHeadline(category, L["Event Toasts"] or "Event Toasts", {
+		parentSection = expandable,
+	})
+	addon.functions.SettingsCreateCheckbox(category, {
+		var = "hideEventToasts",
+		text = L["hideEventToasts"] or "Hide Event Toasts",
+		desc = L["hideEventToastsDesc"] or "Suppresses Blizzard event toasts such as scenario and activity banners.",
+		func = function(value)
+			addon.db["hideEventToasts"] = value and true or false
+			if addon.functions.ApplyEventToastVisibility then addon.functions.ApplyEventToastVisibility() end
+		end,
+		parentSection = expandable,
+	})
 end
 
 function addon.functions.initUIOptions()
 	local defaults = (addon.GCDBar and addon.GCDBar.defaults) or {}
 	local xpDefaults = (addon.Aura and addon.Aura.ExperienceBar and addon.Aura.ExperienceBar.defaults) or {}
+	addon.functions.InitDBValue("hideEventToasts", false)
+	if addon.functions.ApplyEventToastVisibility then addon.functions.ApplyEventToastVisibility() end
 	addon.functions.InitDBValue("gcdBarEnabled", false)
 	addon.functions.InitDBValue("gcdBarWidth", defaults.width or 200)
 	addon.functions.InitDBValue("gcdBarHeight", defaults.height or 18)
@@ -1473,7 +1527,7 @@ function addon.functions.initUIOptions()
 	addon.functions.InitDBValue("xpBarTextRightMode", xpDefaults.textRightMode or "PERCENT_RESTED")
 	addon.functions.InitDBValue("xpBarTextSize", xpDefaults.textSize or 11)
 	addon.functions.InitDBValue("xpBarTextFont", xpDefaults.textFont or (addon.functions.GetGlobalFontConfigKey and addon.functions.GetGlobalFontConfigKey() or "__EQOL_GLOBAL_FONT__"))
-	addon.functions.InitDBValue("xpBarTextOutline", xpDefaults.textOutline or "OUTLINE")
+	addon.functions.InitDBValue("xpBarTextOutline", addon.functions.GetGlobalFontStyleConfigKey and addon.functions.GetGlobalFontStyleConfigKey() or "__EQOL_GLOBAL_FONT_STYLE__")
 	addon.functions.InitDBValue("xpBarTextColor", xpDefaults.textColor or { r = 1, g = 1, b = 1, a = 1 })
 	addon.functions.InitDBValue("xpBarTextAbbreviateNumbers", xpDefaults.abbreviateNumbers == true)
 	addon.functions.InitDBValue("xpBarHideInPetBattle", xpDefaults.hideInPetBattle == true)
@@ -1655,6 +1709,9 @@ local function createNameplatesCategory()
 	createNameplateMobColorPicker(DEFAULT_NAMEPLATE_FEATURE_KEYS.mobColorMiniboss, L["nameplateMobColorMiniboss"] or "Mini-boss color")
 	createNameplateMobColorPicker(DEFAULT_NAMEPLATE_FEATURE_KEYS.mobColorCaster, L["nameplateMobColorCaster"] or "Caster color")
 	createNameplateMobColorPicker(DEFAULT_NAMEPLATE_FEATURE_KEYS.mobColorMelee, L["nameplateMobColorMelee"] or "Melee color")
+	createNameplateMobColorPicker(DEFAULT_NAMEPLATE_FEATURE_KEYS.mobColorNeutral, L["nameplateMobColorNeutral"] or "Neutral color")
+	createNameplateMobColorPicker(DEFAULT_NAMEPLATE_FEATURE_KEYS.mobColorThreatWarning, L["nameplateMobColorThreatWarning"] or "Threat warning color")
+	createNameplateMobColorPicker(DEFAULT_NAMEPLATE_FEATURE_KEYS.mobColorThreatLost, L["nameplateMobColorThreatLost"] or "Threat lost color")
 	createNameplateMobColorPicker(DEFAULT_NAMEPLATE_FEATURE_KEYS.mobColorTrivial, L["nameplateMobColorTrivial"] or "Trivial color")
 end
 
@@ -1753,8 +1810,7 @@ local function createCastbarCategory()
 	local focusInterruptSound = addon.functions.SettingsCreateCheckbox(category, {
 		var = "focusInterruptTrackerSoundEnabled",
 		text = L["focusInterruptTrackerSoundEnabled"] or "Play sound on focus cast",
-		desc = L["focusInterruptTrackerSoundEnabledDesc"]
-			or "Plays a sound when your focus starts casting while your interrupt is ready.",
+		desc = L["focusInterruptTrackerSoundEnabledDesc"] or "Plays a sound when your focus starts casting while your interrupt is ready.",
 		get = function()
 			local cfg = addon.db and addon.db.focusInterruptTracker
 			local sound = cfg and cfg.sound
@@ -1780,17 +1836,13 @@ local function createCastbarCategory()
 		listFunc = buildFocusInterruptSoundDropdown,
 		order = focusInterruptSoundOrder,
 		default = "",
-		get = function()
-			return getNormalizedFocusInterruptSoundValue()
-		end,
+		get = function() return getNormalizedFocusInterruptSoundValue() end,
 		set = function(value)
 			addon.db.focusInterruptTracker = type(addon.db.focusInterruptTracker) == "table" and addon.db.focusInterruptTracker or {}
 			addon.db.focusInterruptTracker.sound = type(addon.db.focusInterruptTracker.sound) == "table" and addon.db.focusInterruptTracker.sound or {}
 			addon.db.focusInterruptTracker.sound.file = type(value) == "string" and value or ""
 		end,
-		callback = function(value)
-			previewFocusInterruptSound(value)
-		end,
+		callback = function(value) previewFocusInterruptSound(value) end,
 		parent = true,
 		element = focusInterruptSound and focusInterruptSound.element,
 		parentCheck = function()
@@ -1805,9 +1857,13 @@ local function createCastbarCategory()
 	addon.functions.SettingsCreateText(category, "|cffffd700" .. (L["focusInterruptTrackerEditModeHint"] or "Configure display mode, icon, font, anchor, and border in Edit Mode.") .. "|r", {
 		parentSection = expandable,
 	})
-	addon.functions.SettingsCreateText(category, "|cffffd700" .. (L["focusInterruptTrackerSoundWarning"] or "Sound also plays for non-interruptible casts because the interruptibility flag is secret.") .. "|r", {
-		parentSection = expandable,
-	})
+	addon.functions.SettingsCreateText(
+		category,
+		"|cffffd700" .. (L["focusInterruptTrackerSoundWarning"] or "Sound also plays for non-interruptible casts because the interruptibility flag is secret.") .. "|r",
+		{
+			parentSection = expandable,
+		}
+	)
 
 	addon.functions.SettingsCreateHeadline(category, L["CombatText"] or "Combat text", {
 		parentSection = expandable,
@@ -1925,14 +1981,6 @@ local function createCastbarCategory()
 			castCfg.enabled = value and true or false
 			refreshCastbar()
 		end,
-		default = false,
-		parentSection = expandable,
-	})
-	addon.functions.SettingsCreateCheckbox(category, {
-		var = "ShowTargetCastbar",
-		text = L["ShowTargetCastbar"],
-		get = function() return getCVarOptionState("ShowTargetCastbar") end,
-		func = function(value) setCVarOptionState("ShowTargetCastbar", value) end,
 		default = false,
 		parentSection = expandable,
 	})

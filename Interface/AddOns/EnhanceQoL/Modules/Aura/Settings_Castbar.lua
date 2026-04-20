@@ -795,7 +795,8 @@ function CastbarSettings.BuildStandaloneCastbarSettings(ctx)
 	list[#list + 1] = { name = L["Colors"] or "Colors", kind = settingType.Collapsible, id = section.colors, defaultCollapsed = true }
 
 	local function isCastClassColorEnabled() return getCast({ "cast", "useClassColor" }, castDef.useClassColor == true) == true end
-	local function isCastColorEnabled() return isCastEnabled() and not isCastClassColorEnabled() end
+	local function isCastGradientEnabled() return isCastEnabled() and not isCastClassColorEnabled() and getCast({ "cast", "useGradient" }, castDef.useGradient == true) == true end
+	local function isCastColorEnabled() return isCastEnabled() and not isCastClassColorEnabled() and not isCastGradientEnabled() end
 	list[#list + 1] = {
 		name = L["Cast color"] or "Cast color",
 		kind = settingType.Color,
@@ -828,7 +829,6 @@ function CastbarSettings.BuildStandaloneCastbarSettings(ctx)
 		refreshSettingsUI()
 	end, castDef.useClassColor == true, section.colors, isCastEnabled)
 
-	local function isCastGradientEnabled() return isCastEnabled() and not isCastClassColorEnabled() and getCast({ "cast", "useGradient" }, castDef.useGradient == true) == true end
 	list[#list + 1] = checkbox(L["Use gradient"] or "Use gradient", isCastGradientEnabled, function(val)
 		local useGradient = val and true or false
 		setCast({ "cast", "useGradient" }, useGradient)
@@ -909,7 +909,7 @@ function CastbarSettings.BuildStandaloneCastbarSettings(ctx)
 		name = L["Not interruptible color"] or "Not interruptible color",
 		kind = settingType.Color,
 		parentId = section.colors,
-		isEnabled = isCastEnabled,
+		isEnabled = function() return isCastEnabled() and not isCastGradientEnabled() end,
 		get = function() return getCast({ "cast", "notInterruptibleColor" }, castDef.notInterruptibleColor or { 204 / 255, 204 / 255, 204 / 255, 1 }) end,
 		set = function(_, color)
 			setCastColor({ "cast", "notInterruptibleColor" }, color.r, color.g, color.b, color.a)

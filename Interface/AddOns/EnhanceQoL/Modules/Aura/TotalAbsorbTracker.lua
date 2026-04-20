@@ -44,11 +44,9 @@ local ANCHOR_POINTS = {
 	"BOTTOM",
 	"BOTTOMRIGHT",
 }
-local OUTLINE_OPTIONS = {
-	"NONE",
-	"OUTLINE",
-	"THICKOUTLINE",
-	"MONOCHROMEOUTLINE",
+local OUTLINE_OPTIONS = addon.functions and addon.functions.GetFontStyleOptionList and addon.functions.GetFontStyleOptionList(true) or {
+	{ value = "NONE", label = NONE },
+	{ value = "OUTLINE", label = L["Outline"] or "Outline" },
 }
 local DEFAULT_ICON_IDS = {
 	135940,
@@ -114,6 +112,14 @@ local DB_ABBREVIATE = "totalAbsorbTrackerAbbreviateNumbers"
 local frame
 local eventFrame
 local editModeRegistered = false
+
+local function normalizeFontStyleChoice(value, fallback)
+	if addon.functions and addon.functions.NormalizeFontStyleChoice then
+		return addon.functions.NormalizeFontStyleChoice(value, fallback or defaults.textOutline or "OUTLINE", true)
+	end
+	if value ~= nil then return value end
+	return fallback or "OUTLINE"
+end
 
 local function getDBValue(key, fallback)
 	if addon.db and addon.db[key] ~= nil then return addon.db[key] end
@@ -252,7 +258,7 @@ function Tracker:GetTextFontKey() return getDBValue(DB_TEXT_FONT, defaults.textF
 
 function Tracker:GetTextSize() return getDBValue(DB_TEXT_SIZE, defaults.textSize) end
 
-function Tracker:GetTextOutline() return getDBValue(DB_TEXT_OUTLINE, defaults.textOutline) end
+function Tracker:GetTextOutline() return normalizeFontStyleChoice(getDBValue(DB_TEXT_OUTLINE, defaults.textOutline), defaults.textOutline) end
 
 function Tracker:GetTextColor() return copyColor(getDBValue(DB_TEXT_COLOR, defaults.textColor), defaults.textColor) end
 
@@ -302,6 +308,7 @@ function Tracker:EvaluateAbsorbAmount()
 		if calculator.ResetPredictedValues then calculator:ResetPredictedValues() end
 		if calculator.SetDamageAbsorbClampMode and Enum and Enum.UnitDamageAbsorbClampMode then calculator:SetDamageAbsorbClampMode(Enum.UnitDamageAbsorbClampMode.MaximumHealth) end
 		UnitGetDetailedHealPrediction("player", "player", calculator)
+		if calculator.GetTotalDamageAbsorbs then return calculator:GetTotalDamageAbsorbs() end
 		if calculator.GetDamageAbsorbs then return calculator:GetDamageAbsorbs() end
 	end
 
@@ -386,6 +393,7 @@ function Tracker:ApplyLayoutData(data)
 	if textSize == nil then textSize = self:GetTextSize() end
 	local textOutline = record.textOutline
 	if textOutline == nil then textOutline = self:GetTextOutline() end
+	textOutline = normalizeFontStyleChoice(textOutline, defaults.textOutline)
 	local textColor = record.textColor
 	if textColor == nil then textColor = self:GetTextColor() end
 	local textAnchor = record.textAnchor
@@ -456,11 +464,16 @@ function Tracker:ApplyLayoutData(data)
 	end
 
 	local fontPath = self:ResolveTextFont()
-	local fontOutline = textOutline == "NONE" and "" or textOutline
+	local fontStyleChoice = normalizeFontStyleChoice(textOutline, defaults.textOutline)
+	local fontOutline = addon.functions and addon.functions.GetFontFlagsForStyle and addon.functions.GetFontFlagsForStyle(fontStyleChoice, defaults.textOutline)
+		or (fontStyleChoice == "NONE" and "" or fontStyleChoice)
 	local ok = frame.text:SetFont(fontPath, textSize, fontOutline)
 	if ok == false then
 		local fallback = addon.variables.defaultFont or STANDARD_TEXT_FONT
 		frame.text:SetFont(fallback, textSize, fontOutline)
+	end
+	if addon.functions and addon.functions.ApplyFontStyleShadow then
+		addon.functions.ApplyFontStyleShadow(frame.text, fontStyleChoice, defaults.textOutline)
 	end
 	local color = copyColor(textColor, defaults.textColor)
 	frame.text:SetTextColor(color[1], color[2], color[3], color[4])
@@ -930,8 +943,9 @@ function Tracker:RegisterEditMode()
 				set = function(_, value) Tracker:ApplyLayoutData({ textOutline = value }) end,
 				generator = function(_, root)
 					for i = 1, #OUTLINE_OPTIONS do
-						local value = OUTLINE_OPTIONS[i]
-						local label = value == "NONE" and NONE or value
+						local option = OUTLINE_OPTIONS[i]
+						local value = option.value
+						local label = option.label or value
 						root:CreateRadio(label, function() return Tracker:GetTextOutline() == value end, function() Tracker:ApplyLayoutData({ textOutline = value }) end)
 					end
 				end,

@@ -15,6 +15,7 @@ local ceil = math.ceil
 local floor = math.floor
 local max = math.max
 local pairs = pairs
+local issecretvalue = _G.issecretvalue
 local tonumber = tonumber
 local tostring = tostring
 local type = type
@@ -35,6 +36,7 @@ local MARCHING_ANTS_ATLAS = "VisualAlert_Ants_Flipbook"
 local FLASH_GLOW_ATLAS = "UI-CooldownManager-VisualAlert-Glow"
 local BLIZZ_CONTAINER_RATIO = 66 / 45
 local FLASH_LEVEL_OFFSET = -2
+local DEFAULT_GLOW_SIZE = 36
 
 local VALID_STRATA = {
 	BACKGROUND = true,
@@ -93,6 +95,86 @@ local function normalizeScalar(opts, key, fallback)
 	return value
 end
 
+local function normalizePositiveNumber(value, fallback)
+	if issecretvalue and issecretvalue(value) then return fallback end
+	value = tonumber(value)
+	if value and value > 0 then return value end
+	return fallback
+end
+
+local function getCachedGlowDimension(frame, key)
+	if type(frame) ~= "table" then return nil end
+	local cache = frame._eqolGlowSizeCache
+	if type(cache) ~= "table" then return nil end
+	local value = cache[key]
+	if type(value) == "number" and value > 0 then return value end
+	return nil
+end
+
+local function rememberGlowSize(frame, width, height)
+	if type(frame) ~= "table" then return end
+	local cache = frame._eqolGlowSizeCache
+	if type(cache) ~= "table" then
+		cache = {}
+		frame._eqolGlowSizeCache = cache
+	end
+	if type(width) == "number" and width > 0 then cache.width = width end
+	if type(height) == "number" and height > 0 then cache.height = height end
+end
+
+local function getGlowFallbackDimension(frame, key)
+	local cached = getCachedGlowDimension(frame, key)
+	if cached then return cached end
+	if type(frame) ~= "table" then return DEFAULT_GLOW_SIZE end
+
+	local target = frame._eqolGlowTarget
+	if target and target ~= frame then
+		local targetCached = getCachedGlowDimension(target, key)
+		if targetCached then return targetCached end
+	end
+
+	local visualSize = normalizePositiveNumber(frame._eqolVisualSize, nil)
+	if visualSize then return visualSize end
+
+	local baseSlotSize = normalizePositiveNumber(frame._eqolBaseSlotSize, nil)
+	if baseSlotSize then return baseSlotSize end
+
+	if target and target ~= frame then
+		local targetVisualSize = normalizePositiveNumber(target._eqolVisualSize, nil)
+		if targetVisualSize then return targetVisualSize end
+
+		local targetBaseSlotSize = normalizePositiveNumber(target._eqolBaseSlotSize, nil)
+		if targetBaseSlotSize then return targetBaseSlotSize end
+	end
+
+	return DEFAULT_GLOW_SIZE
+end
+
+local function getSafeFrameDimension(frame, key)
+	if not (frame and type(frame) == "table") then return DEFAULT_GLOW_SIZE end
+	local getter = key == "width" and frame.GetWidth or frame.GetHeight
+	local fallback = getGlowFallbackDimension(frame, key)
+	if not getter then return fallback end
+
+	local ok, value = pcall(getter, frame)
+	if not ok then return fallback end
+
+	value = normalizePositiveNumber(value, nil)
+	if value then return value end
+	return fallback
+end
+
+local function getSafeFrameSize(frame)
+	local width = getSafeFrameDimension(frame, "width")
+	local height = getSafeFrameDimension(frame, "height")
+	rememberGlowSize(frame, width, height)
+
+	local target = type(frame) == "table" and frame._eqolGlowTarget or nil
+	if target and target ~= frame then rememberGlowSize(target, width, height) end
+
+	return width, height
+end
+
 local function normalizeGlowThrottle(opts)
 	local frequency = normalizeScalar(opts, "frequency", nil)
 	if frequency and frequency > 0 then
@@ -105,11 +187,7 @@ local function getGlowAnchorRegion(host)
 	local target = host and (host._eqolGlowTarget or host) or nil
 	if not target then return host end
 	local region = target.Icon or target.icon or target.texture
-	if region and region.GetWidth and region.GetHeight then
-		local width = region:GetWidth() or 0
-		local height = region:GetHeight() or 0
-		if width > 0 and height > 0 then return region end
-	end
+	if region then return region end
 	return target
 end
 
@@ -404,8 +482,7 @@ end
 local function updateFlashOverlay(host, opts)
 	local overlay = ensureFlashOverlay(host)
 	local anchor = getGlowAnchorRegion(host)
-	local width = max(1, anchor:GetWidth() or 0)
-	local height = max(1, anchor:GetHeight() or 0)
+	local width, height = getSafeFrameSize(anchor)
 	local scale = normalizeScalar(opts, "scale", 1) or 1
 	local inset = normalizeInset(opts)
 	local xOffset = normalizeScalar(opts, "xOffset", 0)
@@ -624,8 +701,7 @@ end
 
 local function updateBlizzardOverlay(host, opts)
 	local overlay = ensureBlizzardOverlay(host)
-	local width = max(1, host:GetWidth() or 0)
-	local height = max(1, host:GetHeight() or 0)
+	local width, height = getSafeFrameSize(host)
 	local inset = normalizeInset(opts)
 	local xOffset = normalizeScalar(opts, "xOffset", 0)
 	local yOffset = normalizeScalar(opts, "yOffset", 0)

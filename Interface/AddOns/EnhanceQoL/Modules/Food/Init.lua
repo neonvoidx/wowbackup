@@ -174,6 +174,7 @@ function addon.functions.newItem(id, name, isSpell)
 
 	function self.getCount()
 		if self.isSpell then return 1 end
+		if addon.functions and addon.functions.getFoodBagItemCount then return addon.functions.getFoodBagItemCount(self.id) end
 		return C_Item.GetItemCount(self.id, false, false)
 	end
 

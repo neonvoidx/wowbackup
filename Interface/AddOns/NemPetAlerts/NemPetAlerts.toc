@@ -1,8 +1,8 @@
 ## Interface: 120005, 120001
 ## Title: Nem: Pet Alerts
-## Notes: Pet status warnings for Hunter, Warlock, Frost Mage, and Unholy Death Knight. Type /npa to open options.
+## Notes: Pet status warnings for all pet classes. Type /npa to open options.
 ## Author: Nemreaper
-## Version: 12.0.17
+## Version: 12.0.20
 ## SavedVariables: NemPetAlertsSV
 ## X-License: MIT
 

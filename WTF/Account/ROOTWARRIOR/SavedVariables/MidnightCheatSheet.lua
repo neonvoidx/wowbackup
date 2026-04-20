@@ -22,7 +22,7 @@ MCSdb = {
 },
 ["DEMONHUNTER_HAVOC"] = {
 },
-["WARLOCK_AFFLICTION"] = {
+["DEMONHUNTER_VENGEANCE"] = {
 },
 ["DEMONHUNTER_DEVOURER"] = {
 },
@@ -30,7 +30,7 @@ MCSdb = {
 },
 ["MAGE_FROST"] = {
 },
-["DEMONHUNTER_VENGEANCE"] = {
+["WARLOCK_AFFLICTION"] = {
 },
 },
 }

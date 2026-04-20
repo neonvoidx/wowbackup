@@ -17,7 +17,7 @@ local Item = Item
 local ReloadUI = ReloadUI
 local DEFAULT_CHAT_FRAME = DEFAULT_CHAT_FRAME
 
-MCS.VERSION = "0.10.0"
+MCS.VERSION = "0.14.0"
 
 MCS.ALL_SPECS = {
     DEATHKNIGHT  = { "Blood", "Frost", "Unholy" },
@@ -158,6 +158,7 @@ SlashCmdList["MCS"] = function(msg)
     msg = strtrim(msg):lower()
     if msg == "reset" then MCSdb = nil; ReloadUI()
     elseif msg == "wishlist" then MCS:PrintWishlist()
+    elseif msg == "minimap" then MCS:ToggleMinimapButton()
     else MCS:Toggle() end
 end
 

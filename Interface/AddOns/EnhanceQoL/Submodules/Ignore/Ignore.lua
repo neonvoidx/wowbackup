@@ -106,6 +106,29 @@ local INTERACTION_EVENTS = {
 
 Ignore.filtered = {}
 
+local ignoreDaysFromTodayCache = setmetatable({}, { __mode = "k" })
+local ignoreDaysFromTodayCacheStamp
+
+local function getIgnoreDaysFromTodayCacheStamp()
+	local stamp = date("%Y-%m-%d")
+	if ignoreDaysFromTodayCacheStamp ~= stamp then ignoreDaysFromTodayCacheStamp = stamp end
+	return ignoreDaysFromTodayCacheStamp
+end
+
+local function getDaysFromTodayCached(entry)
+	if not (entry and entry.date) then return 0 end
+	local cacheStamp = getIgnoreDaysFromTodayCacheStamp()
+	local cached = ignoreDaysFromTodayCache[entry]
+	if cached and cached.stamp == cacheStamp and cached.date == entry.date then return cached.days end
+	local days = Ignore.daysFromToday(entry.date)
+	ignoreDaysFromTodayCache[entry] = {
+		date = entry.date,
+		days = days,
+		stamp = cacheStamp,
+	}
+	return days
+end
+
 function Ignore:NormalizeName(name)
 	if issecretvalue and issecretvalue(name) then return end
 	if not name or name == "" then return nil end
@@ -150,11 +173,11 @@ function Ignore.daysFromToday(dateStr)
 	return math.floor((time() - t) / 86400)
 end
 
-function Ignore:GetExpireText(entry)
+function Ignore:GetExpireText(entry, daysListed)
 	if not entry or not entry.expires or entry.expires == NEVER then return NEVER end
 	local exp = tonumber(entry.expires)
 	if not exp then return tostring(entry.expires) end
-	local left = exp - self.daysFromToday(entry.date)
+	local left = exp - (daysListed or getDaysFromTodayCached(entry))
 	if left <= 0 then return "TODAY" end
 	return left .. "d"
 end
@@ -173,7 +196,8 @@ function Ignore:Expire()
 			removed = true
 		else
 			local exp = tonumber(e.expires)
-			if exp and exp > 0 and self.daysFromToday(e.date) >= exp then
+			local daysListed = getDaysFromTodayCached(e)
+			if exp and exp > 0 and daysListed >= exp then
 				local name = e.player
 				if e.server and e.server ~= "" then name = name .. "-" .. e.server end
 				if self.origDelIgnore and IsIgnored and IsIgnored(name) then self.origDelIgnore(name) end
@@ -321,7 +345,7 @@ local function expireSortValue(entry)
 	if not entry or not entry.expires or entry.expires == NEVER then return 99999 end
 	local exp = tonumber(entry.expires)
 	if not exp then return 99999 end
-	local left = exp - Ignore.daysFromToday(entry.date)
+	local left = exp - getDaysFromTodayCached(entry)
 	if left <= 0 then return 0 end
 	return left
 end
@@ -329,14 +353,25 @@ end
 local function SortFiltered()
 	if not Ignore.currentSort then return end
 	local key = Ignore.currentSort
+	local sortValues
+	if key == "listed" or key == "expire" then
+		sortValues = {}
+		for _, entry in ipairs(Ignore.filtered) do
+			if key == "listed" then
+				sortValues[entry] = getDaysFromTodayCached(entry)
+			else
+				sortValues[entry] = expireSortValue(entry)
+			end
+		end
+	end
 	table.sort(Ignore.filtered, function(a, b)
 		local av, bv
 		if key == "listed" then
-			av = Ignore.daysFromToday(a.date or "")
-			bv = Ignore.daysFromToday(b.date or "")
+			av = sortValues and sortValues[a] or 0
+			bv = sortValues and sortValues[b] or 0
 		elseif key == "expire" then
-			av = expireSortValue(a)
-			bv = expireSortValue(b)
+			av = sortValues and sortValues[a] or expireSortValue(a)
+			bv = sortValues and sortValues[b] or expireSortValue(b)
 		else
 			av = tostring(a[key] or "")
 			bv = tostring(b[key] or "")
@@ -367,12 +402,13 @@ function Ignore:UpdateRows()
 		local idx = i + offset
 		local e = self.filtered[idx]
 		if e then
+			local daysListed = getDaysFromTodayCached(e)
 			row:Init({
 				index = idx,
 				player = e.player,
 				server = e.server,
-				listed = e.date and (self.daysFromToday(e.date) .. "d") or "",
-				expire = self:GetExpireText(e),
+				listed = e.date and (daysListed .. "d") or "",
+				expire = self:GetExpireText(e, daysListed),
 				note = e.note,
 			})
 			row:Show()
@@ -897,7 +933,11 @@ local function updateRegistration()
 			Ignore.interactionBlocker:RegisterEvent(evt)
 		end
 		Ignore.groupCheckFrame:RegisterEvent("GROUP_ROSTER_UPDATE")
-		_G["SLASH_" .. SLASH_NAME .. "1"] = SLASH_CMD
+		if addon.functions and addon.functions.SetSlashCommandAlias then
+			addon.functions.SetSlashCommandAlias(SLASH_NAME, 1, SLASH_CMD)
+		else
+			_G["SLASH_" .. SLASH_NAME .. "1"] = SLASH_CMD
+		end
 		SlashCmdList[SLASH_NAME] = function() Ignore:Toggle() end
 	else
 		for _, e in ipairs(CHAT_EVENTS) do
@@ -912,7 +952,11 @@ local function updateRegistration()
 		Ignore.groupCheckFrame:UnregisterEvent("GROUP_ROSTER_UPDATE")
 		if EQOLIgnoreFrame then EQOLIgnoreFrame:Hide() end
 		SlashCmdList[SLASH_NAME] = nil
-		_G["SLASH_" .. SLASH_NAME .. "1"] = nil
+		if addon.functions and addon.functions.SetSlashCommandAlias then
+			addon.functions.SetSlashCommandAlias(SLASH_NAME, 1, nil)
+		else
+			_G["SLASH_" .. SLASH_NAME .. "1"] = nil
+		end
 		unhookIgnoreApi()
 	end
 end

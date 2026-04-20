@@ -227,7 +227,11 @@ function ChatIM:SetEnabled(val)
 	end
 	updateRegistration()
 end
-SLASH_EQOLIM1 = "/eim"
+if addon.functions and addon.functions.SetSlashCommandAlias then
+	addon.functions.SetSlashCommandAlias("EQOLIM", 1, "/eim")
+else
+	SLASH_EQOLIM1 = "/eim"
+end
 SlashCmdList["EQOLIM"] = function()
 	if ChatIM.enabled then ChatIM:Toggle() end
 end

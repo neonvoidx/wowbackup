@@ -104,9 +104,11 @@ addon.constants.SPELL_ACTIVATION_OVERLAY_VISIBILITY_KEYS = SPELL_ACTIVATION_OVER
 
 local DEFAULT_BUTTON_SINK_COLUMNS = 4
 
-local DEFAULT_ACTION_BUTTON_COUNT = _G.NUM_ACTIONBAR_BUTTONS or 12
-local PET_ACTION_BUTTON_COUNT = _G.NUM_PET_ACTION_SLOTS or 10
-local STANCE_ACTION_BUTTON_COUNT = _G.NUM_STANCE_SLOTS or _G.NUM_SHAPESHIFT_SLOTS or 10
+local ACTION_BUTTON_COUNTS = {
+	default = _G.NUM_ACTIONBAR_BUTTONS or 12,
+	pet = _G.NUM_PET_ACTION_SLOTS or 10,
+	stance = _G.NUM_STANCE_SLOTS or _G.NUM_SHAPESHIFT_SLOTS or 10,
+}
 
 local ACTION_BAR_FRAME_ALIASES = {
 	PetActionBar = { "PetActionBarFrame" },
@@ -128,10 +130,10 @@ end
 
 local function GetActionBarButtonPrefix(barName)
 	if not barName then return nil, 0 end
-	if barName == "MainMenuBar" or barName == "MainActionBar" then return "ActionButton", DEFAULT_ACTION_BUTTON_COUNT end
-	if barName == "PetActionBar" or barName == "PetActionBarFrame" then return "PetActionButton", PET_ACTION_BUTTON_COUNT end
-	if barName == "StanceBar" or barName == "StanceBarFrame" then return "StanceButton", STANCE_ACTION_BUTTON_COUNT end
-	return barName .. "Button", DEFAULT_ACTION_BUTTON_COUNT
+	if barName == "MainMenuBar" or barName == "MainActionBar" then return "ActionButton", ACTION_BUTTON_COUNTS.default end
+	if barName == "PetActionBar" or barName == "PetActionBarFrame" then return "PetActionButton", ACTION_BUTTON_COUNTS.pet end
+	if barName == "StanceBar" or barName == "StanceBarFrame" then return "StanceButton", ACTION_BUTTON_COUNTS.stance end
+	return barName .. "Button", ACTION_BUTTON_COUNTS.default
 end
 
 local function ForEachActionButton(callback)
@@ -298,9 +300,11 @@ LFGListApplicationDialog:HookScript("OnShow", function(self)
 	if self.SignUpButton:IsEnabled() and not IsShiftKeyDown() then self.SignUpButton:Click() end
 end)
 
-local didApplyPatch = false
-local originalFunc = LFGListApplicationDialog_Show
-local patchedFunc = function(self, resultID)
+local lfgListPatchState = {
+	applied = false,
+	original = LFGListApplicationDialog_Show,
+}
+function lfgListPatchState.patched(self, resultID)
 	if resultID then
 		local searchResultInfo = C_LFGList.GetSearchResultInfo(resultID)
 
@@ -314,11 +318,11 @@ end
 function EQOL.PersistSignUpNote()
 	if addon.db.persistSignUpNote then
 		-- overwrite function with patched func missing the call to ClearApplicationTextFields
-		LFGListApplicationDialog_Show = patchedFunc
-		didApplyPatch = true
-	elseif didApplyPatch then
+		LFGListApplicationDialog_Show = lfgListPatchState.patched
+		lfgListPatchState.applied = true
+	elseif lfgListPatchState.applied then
 		-- restore previously overwritten function
-		LFGListApplicationDialog_Show = originalFunc
+		LFGListApplicationDialog_Show = lfgListPatchState.original
 	end
 end
 
@@ -648,6 +652,10 @@ local function ApplyAlphaToRegion(target, alpha, _useFade)
 	if not target or not target.SetAlpha then return end
 	-- Keep visibility alpha behavior, but apply immediately (no animated fade).
 	StopFrameFade(target)
+	if target.GetAlpha then
+		local currentAlpha = target:GetAlpha()
+		if not (issecretvalue and issecretvalue(currentAlpha)) and currentAlpha and math.abs(currentAlpha - alpha) <= 0.001 then return end
+	end
 	target:SetAlpha(alpha)
 end
 
@@ -2900,14 +2908,8 @@ EnsureSkyridingStateDriver = function()
 	addon.variables.skyridingDriver = driver
 end
 
-local ACTIONBAR_VISIBILITY_EVENTS = {
-	"PLAYER_REGEN_DISABLED",
-	"PLAYER_REGEN_ENABLED",
+local ACTIONBAR_VISIBILITY_BASE_EVENTS = {
 	"PLAYER_ENTERING_WORLD",
-	"PLAYER_MOUNT_DISPLAY_CHANGED",
-	"UPDATE_SHAPESHIFT_FORM",
-	"GROUP_ROSTER_UPDATE",
-	"PLAYER_TARGET_CHANGED",
 	"ACTIONBAR_SHOWGRID",
 	"ACTIONBAR_HIDEGRID",
 }
@@ -2915,21 +2917,72 @@ local ACTIONBAR_VISIBILITY_EVENTS = {
 local function setActionBarVisibilityWatcherEnabled(watcher, enabled)
 	if not watcher then return end
 	if enabled then
-		if watcher._eqolEventsRegistered then return end
-		for _, event in ipairs(ACTIONBAR_VISIBILITY_EVENTS) do
+		local flags = {
+			combat = false,
+			target = false,
+			group = false,
+			casting = false,
+			mountState = false,
+			skyriding = false,
+		}
+		local list = addon.variables and addon.variables.actionBarNames
+		if list then
+			for _, info in ipairs(list) do
+				local cfg = info.var and GetActionBarVisibilityConfig(info.var)
+				if cfg then
+					if cfg.ALWAYS_IN_COMBAT or cfg.ALWAYS_OUT_OF_COMBAT then flags.combat = true end
+					if cfg.PLAYER_HAS_TARGET then flags.target = true end
+					if cfg.PLAYER_IN_GROUP then flags.group = true end
+					if cfg.PLAYER_CASTING then flags.casting = true end
+					if cfg.PLAYER_MOUNTED or cfg.PLAYER_NOT_MOUNTED or cfg.FLYING_ACTIVE or cfg.FLYING_INACTIVE or cfg.SKYRIDING_ACTIVE or cfg.SKYRIDING_INACTIVE then
+						flags.mountState = true
+					end
+					if cfg.SKYRIDING_ACTIVE or cfg.SKYRIDING_INACTIVE then flags.skyriding = true end
+					if flags.combat and flags.target and flags.group and flags.casting and flags.mountState and flags.skyriding then break end
+				end
+			end
+		end
+		local signature = table.concat({
+			flags.combat and "1" or "0",
+			flags.target and "1" or "0",
+			flags.group and "1" or "0",
+			flags.casting and "1" or "0",
+			flags.mountState and "1" or "0",
+			flags.skyriding and "1" or "0",
+		}, ":")
+		if watcher._eqolEventsRegistered and watcher._eqolEventSignature == signature then return end
+		watcher._eqolWantsSkyriding = flags.skyriding == true
+		if watcher._eqolWantsSkyriding then EnsureSkyridingStateDriver() end
+		watcher:UnregisterAllEvents()
+		for _, event in ipairs(ACTIONBAR_VISIBILITY_BASE_EVENTS) do
 			watcher:RegisterEvent(event)
 		end
-		SafeRegisterUnitEvent(watcher, "UNIT_SPELLCAST_START", "player")
-		SafeRegisterUnitEvent(watcher, "UNIT_SPELLCAST_STOP", "player")
-		SafeRegisterUnitEvent(watcher, "UNIT_SPELLCAST_FAILED", "player")
-		SafeRegisterUnitEvent(watcher, "UNIT_SPELLCAST_INTERRUPTED", "player")
-		SafeRegisterUnitEvent(watcher, "UNIT_SPELLCAST_CHANNEL_START", "player")
-		SafeRegisterUnitEvent(watcher, "UNIT_SPELLCAST_CHANNEL_STOP", "player")
+		if flags.combat then
+			watcher:RegisterEvent("PLAYER_REGEN_DISABLED")
+			watcher:RegisterEvent("PLAYER_REGEN_ENABLED")
+		end
+		if flags.mountState then
+			watcher:RegisterEvent("PLAYER_MOUNT_DISPLAY_CHANGED")
+			watcher:RegisterEvent("UPDATE_SHAPESHIFT_FORM")
+		end
+		if flags.group then watcher:RegisterEvent("GROUP_ROSTER_UPDATE") end
+		if flags.target then watcher:RegisterEvent("PLAYER_TARGET_CHANGED") end
+		if flags.casting then
+			SafeRegisterUnitEvent(watcher, "UNIT_SPELLCAST_START", "player")
+			SafeRegisterUnitEvent(watcher, "UNIT_SPELLCAST_STOP", "player")
+			SafeRegisterUnitEvent(watcher, "UNIT_SPELLCAST_FAILED", "player")
+			SafeRegisterUnitEvent(watcher, "UNIT_SPELLCAST_INTERRUPTED", "player")
+			SafeRegisterUnitEvent(watcher, "UNIT_SPELLCAST_CHANNEL_START", "player")
+			SafeRegisterUnitEvent(watcher, "UNIT_SPELLCAST_CHANNEL_STOP", "player")
+		end
 		watcher._eqolEventsRegistered = true
+		watcher._eqolEventSignature = signature
 	else
 		if not watcher._eqolEventsRegistered then return end
 		watcher:UnregisterAllEvents()
 		watcher._eqolEventsRegistered = false
+		watcher._eqolEventSignature = nil
+		watcher._eqolWantsSkyriding = nil
 	end
 end
 
@@ -2945,7 +2998,6 @@ EnsureActionBarVisibilityWatcher = function()
 			addon.variables._eqolActionBarHoverUpdatePending = nil
 			return false
 		end
-		EnsureSkyridingStateDriver()
 		watcher = CreateFrame("Frame")
 		watcher:SetScript("OnEvent", function(_, event)
 			if event == "ACTIONBAR_SHOWGRID" then
@@ -2973,20 +3025,21 @@ EnsureActionBarVisibilityWatcher = function()
 		return false
 	end
 
-	EnsureSkyridingStateDriver()
 	setActionBarVisibilityWatcherEnabled(watcher, true)
 	return true
 end
 addon.functions.UpdateActionBarVisibilityWatcher = EnsureActionBarVisibilityWatcher
 
-local DEFAULT_CHAT_BUBBLE_FONT_SIZE = 13
-local CHAT_BUBBLE_FONT_MIN = 1
-local CHAT_BUBBLE_FONT_MAX = 36
+local CHAT_BUBBLE_FONT = {
+	defaultSize = 13,
+	min = 1,
+	max = 36,
+}
 
 function addon.functions.ApplyChatBubbleFontSize(size)
-	local desired = tonumber(size) or (addon.db and addon.db["chatBubbleFontSize"]) or DEFAULT_CHAT_BUBBLE_FONT_SIZE
-	if desired < CHAT_BUBBLE_FONT_MIN then desired = CHAT_BUBBLE_FONT_MIN end
-	if desired > CHAT_BUBBLE_FONT_MAX then desired = CHAT_BUBBLE_FONT_MAX end
+	local desired = tonumber(size) or (addon.db and addon.db["chatBubbleFontSize"]) or CHAT_BUBBLE_FONT.defaultSize
+	if desired < CHAT_BUBBLE_FONT.min then desired = CHAT_BUBBLE_FONT.min end
+	if desired > CHAT_BUBBLE_FONT.max then desired = CHAT_BUBBLE_FONT.max end
 
 	if ChatBubbleFont then
 		addon.variables = addon.variables or {}
@@ -2994,7 +3047,7 @@ function addon.functions.ApplyChatBubbleFontSize(size)
 			local defaultFont, defaultSize, defaultFlags = ChatBubbleFont:GetFont()
 			addon.variables.defaultChatBubbleFont = {
 				font = defaultFont or STANDARD_TEXT_FONT,
-				size = defaultSize or DEFAULT_CHAT_BUBBLE_FONT_SIZE,
+				size = defaultSize or CHAT_BUBBLE_FONT.defaultSize,
 				flags = defaultFlags or "",
 			}
 		end
@@ -3007,13 +3060,13 @@ function addon.functions.ApplyChatBubbleFontSize(size)
 			ChatBubbleFont:SetFont(font, desired, flags)
 		else
 			local defaults = addon.variables.defaultChatBubbleFont
-			if defaults and defaults.font then
-				ChatBubbleFont:SetFont(defaults.font, defaults.size, defaults.flags)
-			elseif STANDARD_TEXT_FONT then
-				ChatBubbleFont:SetFont(STANDARD_TEXT_FONT, DEFAULT_CHAT_BUBBLE_FONT_SIZE, "")
+				if defaults and defaults.font then
+					ChatBubbleFont:SetFont(defaults.font, defaults.size, defaults.flags)
+				elseif STANDARD_TEXT_FONT then
+					ChatBubbleFont:SetFont(STANDARD_TEXT_FONT, CHAT_BUBBLE_FONT.defaultSize, "")
+				end
 			end
 		end
-	end
 
 	return desired
 end
@@ -3098,7 +3151,9 @@ addon.functions.initializePersistentCVars = initializePersistentCVars
 
 local function initActionBars()
 	local globalFontKey = addon.functions.GetGlobalFontConfigKey and addon.functions.GetGlobalFontConfigKey() or addon.variables.defaultFont
+	local globalFontStyleKey = addon.functions.GetGlobalFontStyleConfigKey and addon.functions.GetGlobalFontStyleConfigKey() or "__EQOL_GLOBAL_FONT_STYLE__"
 	addon.functions.InitDBValue("globalFontFace", addon.variables.defaultFont)
+	addon.functions.InitDBValue("globalFontStyle", "OUTLINE")
 	addon.functions.InitDBValue("actionBarAnchorEnabled", false)
 	addon.functions.InitDBValue("actionBarFadeStrength", 1)
 	addon.functions.InitDBValue("actionBarFullRangeColoring", false)
@@ -3118,11 +3173,11 @@ local function initActionBars()
 	addon.functions.InitDBValue("actionBarHotkeyFontOverride", false)
 	addon.functions.InitDBValue("actionBarMacroFontFace", globalFontKey)
 	addon.functions.InitDBValue("actionBarMacroFontSize", 12)
-	addon.functions.InitDBValue("actionBarMacroFontOutline", "OUTLINE")
+	addon.functions.InitDBValue("actionBarMacroFontOutline", globalFontStyleKey)
 	addon.functions.InitDBValue("actionBarMacroFontColor", { r = 1, g = 1, b = 1, a = 1 })
 	addon.functions.InitDBValue("actionBarHotkeyFontFace", globalFontKey)
 	addon.functions.InitDBValue("actionBarHotkeyFontSize", 12)
-	addon.functions.InitDBValue("actionBarHotkeyFontOutline", "OUTLINE")
+	addon.functions.InitDBValue("actionBarHotkeyFontOutline", globalFontStyleKey)
 	addon.functions.InitDBValue("actionBarHotkeyFontColor", { r = 1, g = 1, b = 1, a = 1 })
 	addon.functions.InitDBValue("actionBarHotkeyAnchor", "TOPRIGHT")
 	addon.functions.InitDBValue("actionBarHotkeyOffsetX", -2)
@@ -3130,7 +3185,7 @@ local function initActionBars()
 	addon.functions.InitDBValue("actionBarCountFontOverride", false)
 	addon.functions.InitDBValue("actionBarCountFontFace", globalFontKey)
 	addon.functions.InitDBValue("actionBarCountFontSize", 12)
-	addon.functions.InitDBValue("actionBarCountFontOutline", "OUTLINE")
+	addon.functions.InitDBValue("actionBarCountFontOutline", globalFontStyleKey)
 	addon.functions.InitDBValue("actionBarCountFontColor", { r = 1, g = 1, b = 1, a = 1 })
 	addon.functions.InitDBValue("actionBarCountAnchor", "BOTTOMRIGHT")
 	addon.functions.InitDBValue("actionBarCountOffsetX", -2)
@@ -4219,7 +4274,7 @@ local function initChatFrame()
 	addon.functions.InitDBValue("chatUnclampFrame", false)
 	addon.functions.InitDBValue("chatHideCombatLogTab", false)
 	addon.functions.InitDBValue("chatBubbleFontOverride", false)
-	addon.functions.InitDBValue("chatBubbleFontSize", DEFAULT_CHAT_BUBBLE_FONT_SIZE)
+	addon.functions.InitDBValue("chatBubbleFontSize", CHAT_BUBBLE_FONT.defaultSize)
 	addon.functions.ApplyChatBubbleFontSize(addon.db["chatBubbleFontSize"])
 	-- Apply learn/unlearn message filter based on saved setting
 	addon.functions.ApplyChatLearnFilter(addon.db["chatHideLearnUnlearn"])
@@ -4329,7 +4384,7 @@ local function initUI()
 	addon.functions.InitDBValue("squareMinimapBorderColor", { r = 0, g = 0, b = 0 })
 	addon.functions.InitDBValue("enableSquareMinimapStats", false)
 	addon.functions.InitDBValue("squareMinimapStatsFont", addon.functions.GetGlobalFontConfigKey and addon.functions.GetGlobalFontConfigKey() or "__EQOL_GLOBAL_FONT__")
-	addon.functions.InitDBValue("squareMinimapStatsOutline", "OUTLINE")
+	addon.functions.InitDBValue("squareMinimapStatsOutline", addon.functions.GetGlobalFontStyleConfigKey and addon.functions.GetGlobalFontStyleConfigKey() or "__EQOL_GLOBAL_FONT_STYLE__")
 	addon.functions.InitDBValue("squareMinimapStatsTime", true)
 	addon.functions.InitDBValue("squareMinimapStatsTimeAnchor", "BOTTOMLEFT")
 	addon.functions.InitDBValue("squareMinimapStatsTimeOffsetX", 3)
@@ -6122,11 +6177,6 @@ local function CreateUI()
 		root:CreateButton(L["CooldownPanelEditor"] or "Cooldown Panel Editor", function()
 			if addon.Aura and addon.Aura.CooldownPanels and addon.Aura.CooldownPanels.OpenEditor then addon.Aura.CooldownPanels:OpenEditor() end
 		end)
-		--[==[@debug@
-		root:CreateButton(L["VisibilityEditor"] or "Visibility Configurator", function()
-			if addon.Visibility and addon.Visibility.OpenEditor then addon.Visibility:OpenEditor() end
-		end)
-		--@end-debug@]==]
 	end
 
 	-- Datenobjekt fr den Minimap-Button
@@ -6474,7 +6524,16 @@ local function setAllHooks()
 		addon.functions.applySquareMinimapBorder()
 	end
 
+	local function refreshCooldownPanelsForMedia(mediaType)
+		if mediaType ~= "statusbar" and mediaType ~= "border" then return end
+		local panels = addon.Aura and addon.Aura.CooldownPanels
+		if not (panels and panels.RefreshAllPanels) then return end
+		panels:RefreshAllPanels()
+		if panels.IsEditorOpen and panels:IsEditorOpen() and panels.RefreshEditor then panels:RefreshEditor() end
+	end
+
 	local function refreshGlobalFontConsumers()
+		if addon.functions and addon.functions.BumpGlobalFontStateVersion then addon.functions.BumpGlobalFontStateVersion() end
 		if ActionBarLabels then
 			if ActionBarLabels.RefreshAllMacroNameVisibility then ActionBarLabels.RefreshAllMacroNameVisibility() end
 			if ActionBarLabels.RefreshAllHotkeyStyles then ActionBarLabels.RefreshAllHotkeyStyles() end
@@ -6499,6 +6558,8 @@ local function setAllHooks()
 				xpBar:ApplyAppearance()
 				if xpBar.UpdateSoon then xpBar:UpdateSoon() end
 			end
+			local focusTracker = addon.Aura.FocusInterruptTracker
+			if focusTracker and focusTracker.Refresh then focusTracker:Refresh() end
 			local tracker = addon.Aura.TotalAbsorbTracker
 			if tracker and tracker.IsEnabled and tracker:IsEnabled() and tracker.RefreshAppearance then
 				tracker:RefreshAppearance()
@@ -6510,6 +6571,10 @@ local function setAllHooks()
 			if addon.Aura.UF and addon.Aura.UF.GroupFrames and addon.Aura.UF.GroupFrames.RefreshTextStyles then addon.Aura.UF.GroupFrames:RefreshTextStyles() end
 		end
 		if addon.functions and addon.functions.applySquareMinimapStats then addon.functions.applySquareMinimapStats(true) end
+		if addon.MythicPlus and addon.MythicPlus.functions then
+			if addon.MythicPlus.functions.refreshBRMedia then addon.MythicPlus.functions.refreshBRMedia("font") end
+			if addon.MythicPlus.functions.refreshBloodlustMedia then addon.MythicPlus.functions.refreshBloodlustMedia("font") end
+		end
 	end
 
 	addon.functions.RefreshGlobalFontConsumers = refreshGlobalFontConsumers
@@ -6548,6 +6613,7 @@ local function setAllHooks()
 			if addon.Aura and addon.Aura.ResourceBars and addon.Aura.ResourceBars.RefreshTextureDropdown then addon.Aura.ResourceBars.RefreshTextureDropdown() end
 			refreshExperienceBarForMedia(mediaType, mediaKey)
 			refreshGCDBarForMedia(mediaType, mediaKey)
+			refreshCooldownPanelsForMedia(mediaType)
 		elseif mediaType == "border" then
 			if ActionBarLabels and ActionBarLabels.ResetBorderCache then ActionBarLabels.ResetBorderCache() end
 			refreshExperienceBarForMedia(mediaType, mediaKey)
@@ -6557,6 +6623,7 @@ local function setAllHooks()
 			refreshBRTrackerForMedia(mediaType)
 			refreshClassBuffReminderForMedia(mediaType, mediaKey)
 			refreshSquareMinimapBorderForMedia(mediaType, mediaKey)
+			refreshCooldownPanelsForMedia(mediaType)
 			if addon.MythicPlus and addon.MythicPlus.functions and addon.MythicPlus.functions.refreshBloodlustMedia then addon.MythicPlus.functions.refreshBloodlustMedia(mediaType, mediaKey) end
 		elseif mediaType == "font" then
 			refreshExperienceBarForMedia(mediaType, mediaKey)
@@ -6604,10 +6671,6 @@ local function setAllHooks()
 	if addon.Tooltip and addon.Tooltip.functions then
 		if addon.Tooltip.functions.InitDB then addon.Tooltip.functions.InitDB() end
 		if addon.Tooltip.functions.InitState then addon.Tooltip.functions.InitState() end
-	end
-	if addon.Visibility and addon.Visibility.functions then
-		if addon.Visibility.functions.InitDB then addon.Visibility.functions.InitDB() end
-		if addon.Visibility.functions.InitState then addon.Visibility.functions.InitState() end
 	end
 	if addon.Vendor and addon.Vendor.functions then
 		if addon.Vendor.functions.InitDB then addon.Vendor.functions.InitDB() end
@@ -6657,7 +6720,11 @@ function loadMain()
 	setAllHooks()
 
 	-- Slash-Command hinzufügen
-	SLASH_ENHANCEQOL1 = "/eqol"
+	if addon.functions and addon.functions.SetSlashCommandAlias then
+		addon.functions.SetSlashCommandAlias("ENHANCEQOL", 1, "/eqol")
+	else
+		SLASH_ENHANCEQOL1 = "/eqol"
+	end
 	SlashCmdList["ENHANCEQOL"] = function(msg)
 		msg = tostring(msg or "")
 		if msg:match("^aag%s*(%d+)$") then

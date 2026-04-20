@@ -1926,14 +1926,15 @@ H.delimiterOptions = {
 	{ value = "|", label = "|", text = "|" },
 }
 
-H.outlineOptions = {
-	{ value = "NONE", label = "None", text = "None" },
-	{ value = "OUTLINE", label = "Outline", text = "Outline" },
-	{ value = "THICKOUTLINE", label = "Thick Outline", text = "Thick Outline" },
-	{ value = "MONOCHROMEOUTLINE", label = "Monochrome Outline", text = "Monochrome Outline" },
-	{ value = "DROPSHADOW", label = "Drop shadow", text = "Drop shadow" },
-	{ value = "STRONGDROPSHADOW", label = "Strong drop shadow", text = "Strong drop shadow" },
-}
+H.outlineOptions = addon.functions and addon.functions.GetFontStyleOptionList and addon.functions.GetFontStyleOptionList(true)
+	or {
+		{ value = "NONE", label = "None", text = "None" },
+		{ value = "OUTLINE", label = "Outline", text = "Outline" },
+	}
+for i = 1, #H.outlineOptions do
+	local option = H.outlineOptions[i]
+	if option and option.text == nil then option.text = option.label end
+end
 
 H.auraGrowthXOptions = {
 	{ value = "LEFT", label = "Left", text = "Left" },

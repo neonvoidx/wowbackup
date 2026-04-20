@@ -117,6 +117,37 @@ local textOptions = {
 	{ value = "NONE", label = NONE },
 }
 
+function UF.ui.formatHealthAbsorbTextLabel(style)
+	local currentLabel = L["Current"] or "Current"
+	local absorbLabel = L["Absorb"] or "Absorb"
+	if style == "PAREN" then return string.format("%s (%s)", currentLabel, absorbLabel) end
+	if style == "PIPE" then return string.format("%s | %s", currentLabel, absorbLabel) end
+	if style == "PLUS" then return string.format("%s + %s", currentLabel, absorbLabel) end
+	return absorbLabel
+end
+
+UF.ui.healthTextOptions = {
+	{ value = "PERCENT", label = L["Percent"] or "Percent" },
+	{ value = "CURMAX", label = L["Current/Max"] or "Current/Max" },
+	{ value = "CURRENT", label = L["Current"] or "Current" },
+	{ value = "CURABSORB", label = UF.ui.formatHealthAbsorbTextLabel("PAREN") },
+	{ value = "CURABSORBPIPE", label = UF.ui.formatHealthAbsorbTextLabel("PIPE") },
+	{ value = "CURABSORBPLUS", label = UF.ui.formatHealthAbsorbTextLabel("PLUS") },
+	{ value = "ABSORB", label = UF.ui.formatHealthAbsorbTextLabel("ABSORB") },
+	{ value = "MAX", label = L["Max"] or "Max" },
+	{ value = "CURPERCENT", label = L["Current / Percent"] or "Current / Percent" },
+	{ value = "CURMAXPERCENT", label = L["Current/Max Percent"] or "Current/Max Percent" },
+	{ value = "MAXPERCENT", label = L["Max / Percent"] or "Max / Percent" },
+	{ value = "PERCENTMAX", label = L["Percent / Max"] or "Percent / Max" },
+	{ value = "PERCENTCUR", label = L["Percent / Current"] or "Percent / Current" },
+	{ value = "PERCENTCURMAX", label = L["Percent / Current / Max"] or "Percent / Current / Max" },
+	{ value = "LEVELPERCENT", label = L["Level / Percent"] or "Level / Percent" },
+	{ value = "LEVELPERCENTMAX", label = L["Level / Percent / Max"] or "Level / Percent / Max" },
+	{ value = "LEVELPERCENTCUR", label = L["Level / Percent / Current"] or "Level / Percent / Current" },
+	{ value = "LEVELPERCENTCURMAX", label = L["Level / Percent / Current / Max"] or "Level / Percent / Current / Max" },
+	{ value = "NONE", label = NONE },
+}
+
 local delimiterOptions = {
 	{ value = " ", label = L["Space"] or "Space" },
 	{ value = "  ", label = L["Double Space"] or "Double space" },
@@ -164,14 +195,11 @@ local function maxDelimiterCount(leftMode, centerMode, rightMode)
 	return count
 end
 
-local outlineOptions = {
-	{ value = "NONE", label = _G.NONE },
-	{ value = "OUTLINE", label = L["Outline"] or "Outline" },
-	{ value = "THICKOUTLINE", label = L["Thick Outline"] or "Thick Outline" },
-	{ value = "MONOCHROMEOUTLINE", label = L["Monochrome Outline"] or "Monochrome Outline" },
-	{ value = "DROPSHADOW", label = L["Drop shadow"] or "Drop shadow" },
-	{ value = "STRONGDROPSHADOW", label = L["Strong drop shadow"] or "Strong drop shadow" },
-}
+local outlineOptions = addon.functions and addon.functions.GetFontStyleOptionList and addon.functions.GetFontStyleOptionList(true)
+	or {
+		{ value = "NONE", label = _G.NONE },
+		{ value = "OUTLINE", label = L["Outline"] or "Outline" },
+	}
 
 local anchorOptions = {
 	{ value = "LEFT", label = "LEFT" },
@@ -256,6 +284,19 @@ local function globalFontConfigLabel()
 	if addon.functions and addon.functions.GetGlobalFontConfigLabel then return addon.functions.GetGlobalFontConfigLabel() end
 	return "Use global font config"
 end
+
+local function normalizeFontStyleChoice(value, fallback)
+	if addon.functions and addon.functions.NormalizeFontStyleChoice then
+		return addon.functions.NormalizeFontStyleChoice(value, fallback, true)
+	end
+	if value ~= nil then return value end
+	return fallback or "OUTLINE"
+end
+UF.ui.defaultFontPath = defaultFontPath
+UF.ui.globalFontConfigKey = globalFontConfigKey
+UF.ui.globalFontConfigLabel = globalFontConfigLabel
+UF.ui.normalizeFontStyleChoice = normalizeFontStyleChoice
+UF.ui.defaultLevel = defaultLevel
 
 local pendingDebounce = {}
 local pendingTimers = {}
@@ -586,12 +627,11 @@ local function appendUnitAuraSettings(list, unit, def, refreshSelf)
 		{ value = "EDGE", label = L["Edge"] or "Edge" },
 		{ value = "OVERLAY", label = L["Overlay"] or "Overlay" },
 	}
-	local stackOutlineOptions = {
-		{ value = "NONE", label = _G.NONE },
-		{ value = "OUTLINE", label = L["Outline"] or "Outline" },
-		{ value = "THICKOUTLINE", label = L["Thick outline"] or "Thick outline" },
-		{ value = "MONOCHROMEOUTLINE", label = L["Monochrome outline"] or "Monochrome outline" },
-	}
+	local stackOutlineOptions = addon.functions and addon.functions.GetFontStyleOptionList and addon.functions.GetFontStyleOptionList(true)
+		or {
+			{ value = "NONE", label = _G.NONE },
+			{ value = "OUTLINE", label = L["Outline"] or "Outline" },
+		}
 	local stackAnchorOptions = {
 		{ value = "TOPLEFT", label = L["Top left"] or "Top left" },
 		{ value = "TOPRIGHT", label = L["Top right"] or "Top right" },
@@ -780,8 +820,8 @@ local function appendUnitAuraSettings(list, unit, def, refreshSelf)
 			list[#list].isEnabled = isSectionEnabled
 		end
 
-		list[#list + 1] = slider(labelPrefix .. " " .. (L["Size"] or "size"), 12, 48, 1, function() return getAuraSectionValue(sectionKey, { "size" }, auraDef.size or 24) end, function(val)
-			setAuraSectionValue(sectionKey, { "size" }, val or auraDef.size or 24)
+		list[#list + 1] = slider(labelPrefix .. " " .. (L["Size"] or "size"), 12, 120, 1, function() return getAuraSectionValue(sectionKey, { "size" }, auraDef.size or 24) end, function(val)
+			setAuraSectionValue(sectionKey, { "size" }, clampNumber(val, 12, 120, auraDef.size or 24))
 			refreshSelf()
 		end, auraDef.size or 24, parentId, true)
 		list[#list].isEnabled = isSectionEnabled
@@ -960,9 +1000,14 @@ local function appendUnitAuraSettings(list, unit, def, refreshSelf)
 		list[#list + 1] = checkboxDropdown(
 			L["Cooldown text outline"] or "Cooldown text outline",
 			outlineOptions,
-			function() return getAuraSectionValue(sectionKey, { "cooldownFontOutline" }, auraDef.cooldownFontOutline or "OUTLINE") end,
+			function()
+				return normalizeFontStyleChoice(
+					getAuraSectionValue(sectionKey, { "cooldownFontOutline" }, auraDef.cooldownFontOutline or "OUTLINE"),
+					auraDef.cooldownFontOutline or "OUTLINE"
+				)
+			end,
 			function(val)
-				setAuraSectionValue(sectionKey, { "cooldownFontOutline" }, val or nil)
+				setAuraSectionValue(sectionKey, { "cooldownFontOutline" }, normalizeFontStyleChoice(val, auraDef.cooldownFontOutline or "OUTLINE") or nil)
 				refreshSelf()
 			end,
 			auraDef.cooldownFontOutline or "OUTLINE",
@@ -1036,9 +1081,14 @@ local function appendUnitAuraSettings(list, unit, def, refreshSelf)
 		list[#list + 1] = checkboxDropdown(
 			L["Aura stack outline"] or "Aura stack outline",
 			stackOutlineOptions,
-			function() return getAuraSectionValue(sectionKey, { "countFontOutline" }, auraDef.countFontOutline or "OUTLINE") end,
+			function()
+				return normalizeFontStyleChoice(
+					getAuraSectionValue(sectionKey, { "countFontOutline" }, auraDef.countFontOutline or "OUTLINE"),
+					auraDef.countFontOutline or "OUTLINE"
+				)
+			end,
 			function(val)
-				setAuraSectionValue(sectionKey, { "countFontOutline" }, val or nil)
+				setAuraSectionValue(sectionKey, { "countFontOutline" }, normalizeFontStyleChoice(val, auraDef.countFontOutline or "OUTLINE") or nil)
 				refreshSelf()
 			end,
 			auraDef.countFontOutline or "OUTLINE",
@@ -2208,8 +2258,8 @@ local function appendSecondaryPowerSettings(list, unit, def, textureOpts, addDiv
 		return isSecondaryPowerDetachedEnabled() and border.detachedSecondaryPower == true
 	end
 	local detachedStrataOptions = { { value = "", label = DEFAULT } }
-	for i = 1, #strataOptions do
-		detachedStrataOptions[#detachedStrataOptions + 1] = strataOptions[i]
+	for i = 1, #UF.ui.strataOptions do
+		detachedStrataOptions[#detachedStrataOptions + 1] = UF.ui.strataOptions[i]
 	end
 
 	list[#list + 1] = checkbox(L["Show power bar"] or "Show power bar", isSecondaryPowerEnabled, function(val)
@@ -2572,9 +2622,11 @@ local function appendSecondaryPowerSettings(list, unit, def, textureOpts, addDiv
 	local secondaryFontOutline = checkboxDropdown(
 		L["Font outline"] or "Font outline",
 		outlineOptions,
-		function() return getValue(unit, { "secondaryPower", "fontOutline" }, secondaryDef.fontOutline or "OUTLINE") end,
+		function()
+			return normalizeFontStyleChoice(getValue(unit, { "secondaryPower", "fontOutline" }, secondaryDef.fontOutline or "OUTLINE"), secondaryDef.fontOutline or "OUTLINE")
+		end,
 		function(val)
-			setValue(unit, { "secondaryPower", "fontOutline" }, val)
+			setValue(unit, { "secondaryPower", "fontOutline" }, normalizeFontStyleChoice(val, secondaryDef.fontOutline or "OUTLINE"))
 			refresh()
 		end,
 		secondaryDef.fontOutline or "OUTLINE",
@@ -2961,6 +3013,235 @@ local function appendIncomingHealSettings(list, unit, healthDef, textureOpts, re
 	}
 end
 
+local function appendUnitCombatFeedbackSettings(list, unit, def, refreshSelf)
+	list[#list + 1] = { name = L["UFCombatFeedback"] or "Combat feedback", kind = UF.ui.settingType.Collapsible, id = "combatFeedback", defaultCollapsed = true }
+	local combatDef = def.combatFeedback or {}
+	local function isCombatFeedbackEnabled() return getValue(unit, { "combatFeedback", "enabled" }, combatDef.enabled == true) == true end
+
+	list[#list + 1] = checkbox(L["UFCombatFeedbackEnable"] or "Enable combat feedback", isCombatFeedbackEnabled, function(val)
+		setValue(unit, { "combatFeedback", "enabled" }, val and true or false)
+		refresh()
+		refreshSettingsUI()
+	end, combatDef.enabled == true, "combatFeedback")
+
+	local function isCombatEventSelected(key)
+		local events = getValue(unit, { "combatFeedback", "events" })
+		if type(events) ~= "table" then events = combatDef.events end
+		if type(events) ~= "table" then return true end
+		local val = events[key]
+		if val == nil and type(combatDef.events) == "table" then val = combatDef.events[key] end
+		if val == nil then return true end
+		return val == true
+	end
+
+	local function setCombatEventSelected(key, selected)
+		local events = getValue(unit, { "combatFeedback", "events" })
+		if type(events) ~= "table" then
+			events = combatDef.events and CopyTable(combatDef.events) or {}
+		else
+			events = CopyTable(events)
+		end
+		events[key] = selected and true or false
+		setValue(unit, { "combatFeedback", "events" }, events)
+		refresh()
+	end
+
+	local combatFeedbackLocationOptions = {
+		{ value = "FRAME", label = L["Frame"] or "Frame" },
+		{ value = "STATUS", label = L["Status text"] or "Status text" },
+		{ value = "HEALTH", label = L["Health"] or HEALTH or "Health" },
+		{ value = "POWER", label = L["Power"] or _G.POWER or "Power" },
+	}
+
+	local combatFeedbackAnchorOptions = {
+		{ value = "TOPLEFT", label = L["Top left"] or "Top left" },
+		{ value = "TOP", label = DIRECTION_TOP_LABEL },
+		{ value = "TOPRIGHT", label = L["Top right"] or "Top right" },
+		{ value = "LEFT", label = DIRECTION_LEFT_LABEL },
+		{ value = "CENTER", label = L["Center"] or "Center" },
+		{ value = "RIGHT", label = DIRECTION_RIGHT_LABEL },
+		{ value = "BOTTOMLEFT", label = L["Bottom left"] or "Bottom left" },
+		{ value = "BOTTOM", label = DIRECTION_BOTTOM_LABEL },
+		{ value = "BOTTOMRIGHT", label = L["Bottom right"] or "Bottom right" },
+	}
+
+	local combatFeedbackEventOptions = {
+		{ value = "WOUND", label = L["Combat feedback damage"] or "Damage" },
+		{ value = "HEAL", label = L["Combat feedback heal"] or "Heal" },
+		{ value = "ENERGIZE", label = L["Combat feedback energize"] or "Energize" },
+		{ value = "MISS", label = MISS or "Miss" },
+		{ value = "DODGE", label = DODGE or "Dodge" },
+		{ value = "PARRY", label = PARRY or "Parry" },
+		{ value = "BLOCK", label = BLOCK or "Block" },
+		{ value = "RESIST", label = RESIST or "Resist" },
+		{ value = "ABSORB", label = ABSORB or "Absorb" },
+		{ value = "IMMUNE", label = IMMUNE or "Immune" },
+		{ value = "DEFLECT", label = DEFLECT or "Deflect" },
+		{ value = "REFLECT", label = REFLECT or "Reflect" },
+		{ value = "EVADE", label = EVADE or "Evade" },
+		{ value = "INTERRUPT", label = INTERRUPT or "Interrupt" },
+	}
+
+	local combatFeedbackSampleOptions = {
+		{ value = "WOUND", label = L["Combat feedback damage"] or "Damage" },
+		{ value = "HEAL", label = L["Combat feedback heal"] or "Heal" },
+		{ value = "ENERGIZE", label = L["Combat feedback energize"] or "Energize" },
+	}
+
+	list[#list + 1] = multiDropdown(
+		L["Events"] or "Combat feedback events",
+		combatFeedbackEventOptions,
+		isCombatEventSelected,
+		setCombatEventSelected,
+		combatDef.events,
+		"combatFeedback",
+		isCombatFeedbackEnabled
+	)
+
+	if #fontOptions() > 0 then
+		local combatFontSetting = checkboxDropdown(
+			L["Font"] or "Combat feedback font",
+			fontOptions,
+			function() return getValue(unit, { "combatFeedback", "font" }, combatDef.font or UF.ui.globalFontConfigKey()) end,
+			function(val)
+				setValue(unit, { "combatFeedback", "font" }, val)
+				refreshSelf()
+			end,
+			combatDef.font or UF.ui.globalFontConfigKey(),
+			"combatFeedback"
+		)
+		combatFontSetting.isEnabled = isCombatFeedbackEnabled
+		list[#list + 1] = combatFontSetting
+	end
+
+	local combatFontSizeSetting = slider(
+		L["Size"] or "Combat feedback size",
+		8,
+		64,
+		1,
+		function() return getValue(unit, { "combatFeedback", "fontSize" }, combatDef.fontSize or 30) end,
+		function(val)
+			debounced(unit .. "_combatFeedbackSize", function()
+				setValue(unit, { "combatFeedback", "fontSize" }, val or 30)
+				refreshSelf()
+			end)
+		end,
+		combatDef.fontSize or 30,
+		"combatFeedback",
+		true
+	)
+	combatFontSizeSetting.isEnabled = isCombatFeedbackEnabled
+	list[#list + 1] = combatFontSizeSetting
+
+	local combatLocationSetting = radioDropdown(
+		L["Location"] or "Combat feedback location",
+		combatFeedbackLocationOptions,
+		function() return getValue(unit, { "combatFeedback", "location" }, combatDef.location or "STATUS") end,
+		function(val)
+			setValue(unit, { "combatFeedback", "location" }, val or "STATUS")
+			refreshSelf()
+		end,
+		combatDef.location or "STATUS",
+		"combatFeedback"
+	)
+	combatLocationSetting.isEnabled = isCombatFeedbackEnabled
+	list[#list + 1] = combatLocationSetting
+
+	local combatAnchorSetting = radioDropdown(
+		L["Anchor"] or "Combat feedback anchor",
+		combatFeedbackAnchorOptions,
+		function() return getValue(unit, { "combatFeedback", "anchor" }, combatDef.anchor or "CENTER") end,
+		function(val)
+			setValue(unit, { "combatFeedback", "anchor" }, val or "CENTER")
+			refreshSelf()
+		end,
+		combatDef.anchor or "CENTER",
+		"combatFeedback"
+	)
+	combatAnchorSetting.isEnabled = isCombatFeedbackEnabled
+	list[#list + 1] = combatAnchorSetting
+
+	local combatOffsetX = slider(
+		L["Offset X"] or "Combat feedback offset X",
+		-UF.ui.offsetRange,
+		UF.ui.offsetRange,
+		1,
+		function() return getValue(unit, { "combatFeedback", "offset", "x" }, (combatDef.offset and combatDef.offset.x) or 0) end,
+		function(val)
+			local off = getValue(unit, { "combatFeedback", "offset" }, { x = 0, y = 0 }) or {}
+			off.x = val or 0
+			setValue(unit, { "combatFeedback", "offset" }, off)
+			refreshSelf()
+		end,
+		(combatDef.offset and combatDef.offset.x) or 0,
+		"combatFeedback",
+		true
+	)
+	combatOffsetX.isEnabled = isCombatFeedbackEnabled
+	list[#list + 1] = combatOffsetX
+
+	local combatOffsetY = slider(
+		L["Offset Y"] or "Combat feedback offset Y",
+		-UF.ui.offsetRange,
+		UF.ui.offsetRange,
+		1,
+		function() return getValue(unit, { "combatFeedback", "offset", "y" }, (combatDef.offset and combatDef.offset.y) or 0) end,
+		function(val)
+			local off = getValue(unit, { "combatFeedback", "offset" }, { x = 0, y = 0 }) or {}
+			off.y = val or 0
+			setValue(unit, { "combatFeedback", "offset" }, off)
+			refreshSelf()
+		end,
+		(combatDef.offset and combatDef.offset.y) or 0,
+		"combatFeedback",
+		true
+	)
+	combatOffsetY.isEnabled = isCombatFeedbackEnabled
+	list[#list + 1] = combatOffsetY
+	list[#list + 1] = { name = "", kind = UF.ui.settingType.Divider, parentId = "combatFeedback" }
+
+	local function isCombatFeedbackSampleEnabled() return isCombatFeedbackEnabled() and getValue(unit, { "combatFeedback", "sample" }, combatDef.sample == true) == true end
+
+	list[#list + 1] = checkbox(L["Show sample"] or "Show sample", function() return getValue(unit, { "combatFeedback", "sample" }, combatDef.sample == true) == true end, function(val)
+		setValue(unit, { "combatFeedback", "sample" }, val and true or false)
+		refreshSelf()
+	end, combatDef.sample == true, "combatFeedback")
+	list[#list].isEnabled = isCombatFeedbackEnabled
+
+	local sampleTypeSetting = radioDropdown(
+		L["UFCombatFeedbackSampleType"] or "Sample type",
+		combatFeedbackSampleOptions,
+		function() return getValue(unit, { "combatFeedback", "sampleEvent" }, combatDef.sampleEvent or "WOUND") end,
+		function(val)
+			setValue(unit, { "combatFeedback", "sampleEvent" }, val or "WOUND")
+			refreshSelf()
+		end,
+		combatDef.sampleEvent or "WOUND",
+		"combatFeedback"
+	)
+	sampleTypeSetting.isEnabled = isCombatFeedbackSampleEnabled
+	list[#list + 1] = sampleTypeSetting
+
+	local sampleAmountSetting = slider(
+		L["UFCombatFeedbackSampleAmount"] or "Sample amount",
+		0,
+		200000,
+		1,
+		function() return getValue(unit, { "combatFeedback", "sampleAmount" }, combatDef.sampleAmount or 12345) end,
+		function(val)
+			local amt = tonumber(val) or 0
+			if amt < 0 then amt = 0 end
+			setValue(unit, { "combatFeedback", "sampleAmount" }, amt)
+			refreshSelf()
+		end,
+		combatDef.sampleAmount or 12345,
+		"combatFeedback",
+		true
+	)
+	sampleAmountSetting.isEnabled = isCombatFeedbackSampleEnabled
+	list[#list + 1] = sampleAmountSetting
+end
+
 local function buildUnitSettings(unit)
 	local MIN_WIDTH = UF.ui.minWidth
 	local OFFSET_RANGE = UF.ui.offsetRange
@@ -3116,7 +3397,7 @@ local function buildUnitSettings(unit)
 		isTooltipEnabled
 	)
 	list[#list + 1] = checkbox(L["Hide in vehicles"] or "Hide in vehicles", isHideInVehicleEnabled, setHideInVehicleEnabled, def.hideInVehicle == true, "frame")
-	if not isPlayer then list[#list + 1] = checkbox(L["Hide in pet battles"] or "Hide in pet battles", isHideInPetBattleEnabled, setHideInPetBattleEnabled, def.hideInPetBattle == true, "frame") end
+	list[#list + 1] = checkbox(L["Hide in pet battles"] or "Hide in pet battles", isHideInPetBattleEnabled, setHideInPetBattleEnabled, def.hideInPetBattle == true, "frame")
 	list[#list + 1] = checkbox(L["Hide in client scenes"] or "Hide in client scenes", isHideInClientSceneEnabled, setHideInClientSceneEnabled, hideInClientSceneDefault(), "frame")
 
 	if #visibilityOptions > 0 then
@@ -3157,7 +3438,7 @@ local function buildUnitSettings(unit)
 		refreshSettingsUI()
 	end, (def.anchor and (def.anchor.relativeTo or def.anchor.relativeFrame)) or "UIParent", "frame")
 
-	list[#list + 1] = radioDropdown(L["Anchor point"] or "Anchor point", anchorOptions9, function()
+	list[#list + 1] = radioDropdown(L["Anchor point"] or "Anchor point", UF.ui.anchorOptions9, function()
 		local fallback = (def.anchor and def.anchor.point) or "CENTER"
 		return getValue(unit, { "anchor", "point" }, fallback)
 	end, function(val)
@@ -3168,7 +3449,7 @@ local function buildUnitSettings(unit)
 		refreshSettingsUI()
 	end, (def.anchor and def.anchor.point) or "CENTER", "frame")
 
-	list[#list + 1] = radioDropdown(L["Relative point"] or "Relative point", anchorOptions9, function()
+	list[#list + 1] = radioDropdown(L["Relative point"] or "Relative point", UF.ui.anchorOptions9, function()
 		local fallback = (def.anchor and def.anchor.relativePoint) or (def.anchor and def.anchor.point) or "CENTER"
 		return getValue(unit, { "anchor", "relativePoint" }, fallback)
 	end, function(val)
@@ -3198,17 +3479,21 @@ local function buildUnitSettings(unit)
 	if isBoss then UF.ui.appendBossLayoutSettings(list, unit, def, refreshSelf) end
 	addDivider("frame")
 
-	list[#list + 1] = radioDropdown(L["Frame strata"] or "Frame strata", strataOptions, function() return getValue(unit, { "strata" }, def.strata or defaultStrata or "") end, function(val)
+	list[#list + 1] = radioDropdown(L["Frame strata"] or "Frame strata", UF.ui.strataOptions, function()
+		return getValue(unit, { "strata" }, def.strata or UF.ui.defaultStrata or "")
+	end, function(val)
 		setValue(unit, { "strata" }, val ~= "" and val or nil)
 		refreshSelf()
-	end, def.strata or defaultStrata or "", "frame")
+	end, def.strata or UF.ui.defaultStrata or "", "frame")
 
-	list[#list + 1] = slider(L["UFFrameLevel"] or "Frame level", 0, 50, 1, function() return getValue(unit, { "frameLevel" }, def.frameLevel or defaultLevel) end, function(val)
+	list[#list + 1] = slider(L["UFFrameLevel"] or "Frame level", 0, 50, 1, function()
+		return getValue(unit, { "frameLevel" }, def.frameLevel or UF.ui.defaultLevel)
+	end, function(val)
 		debounced(unit .. "_frameLevel", function()
-			setValue(unit, { "frameLevel" }, val or defaultLevel)
+			setValue(unit, { "frameLevel" }, val or UF.ui.defaultLevel)
 			refreshSelf()
 		end)
-	end, def.frameLevel or defaultLevel, "frame", true)
+	end, def.frameLevel or UF.ui.defaultLevel, "frame", true)
 
 	list[#list + 1] = checkbox(L["Smooth fill"] or "Smooth fill", function() return getValue(unit, { "smoothFill" }, def.smoothFill == true) == true end, function(val)
 		setValue(unit, { "smoothFill" }, val and true or false)
@@ -3870,7 +4155,7 @@ local function buildUnitSettings(unit)
 
 	list[#list + 1] = radioDropdown(
 		L["Left text"] or "Left text",
-		textOptions,
+		UF.ui.healthTextOptions,
 		function() return normalizeTextMode(getValue(unit, { "health", "textLeft" }, healthDef.textLeft or "PERCENT")) end,
 		function(val)
 			setValue(unit, { "health", "textLeft" }, val)
@@ -3883,7 +4168,7 @@ local function buildUnitSettings(unit)
 
 	list[#list + 1] = radioDropdown(
 		L["Center text"] or "Center text",
-		textOptions,
+		UF.ui.healthTextOptions,
 		function() return normalizeTextMode(getValue(unit, { "health", "textCenter" }, healthDef.textCenter or "NONE")) end,
 		function(val)
 			setValue(unit, { "health", "textCenter" }, val)
@@ -3896,7 +4181,7 @@ local function buildUnitSettings(unit)
 
 	list[#list + 1] = radioDropdown(
 		L["Right text"] or "Right text",
-		textOptions,
+		UF.ui.healthTextOptions,
 		function() return normalizeTextMode(getValue(unit, { "health", "textRight" }, healthDef.textRight or "CURMAX")) end,
 		function(val)
 			setValue(unit, { "health", "textRight" }, val)
@@ -3979,18 +4264,25 @@ local function buildUnitSettings(unit)
 	end, healthDef.fontSize or 14, "health", true)
 
 	if #fontOptions() > 0 then
-		list[#list + 1] = checkboxDropdown(L["Font"] or "Font", fontOptions, function() return getValue(unit, { "health", "font" }, healthDef.font or globalFontConfigKey()) end, function(val)
+		list[#list + 1] = checkboxDropdown(L["Font"] or "Font", fontOptions, function()
+			return getValue(unit, { "health", "font" }, healthDef.font or UF.ui.globalFontConfigKey())
+		end, function(val)
 			setValue(unit, { "health", "font" }, val)
 			refresh()
-		end, healthDef.font or globalFontConfigKey(), "health")
+		end, healthDef.font or UF.ui.globalFontConfigKey(), "health")
 	end
 
 	list[#list + 1] = checkboxDropdown(
 		L["Font outline"] or "Font outline",
-		outlineOptions,
-		function() return getValue(unit, { "health", "fontOutline" }, healthDef.fontOutline or "OUTLINE") end,
+		UF.ui.outlineOptions,
+		function()
+			return UF.ui.normalizeFontStyleChoice(
+				getValue(unit, { "health", "fontOutline" }, healthDef.fontOutline or "OUTLINE"),
+				healthDef.fontOutline or "OUTLINE"
+			)
+		end,
 		function(val)
-			setValue(unit, { "health", "fontOutline" }, val)
+			setValue(unit, { "health", "fontOutline" }, UF.ui.normalizeFontStyleChoice(val, healthDef.fontOutline or "OUTLINE"))
 			refresh()
 		end,
 		healthDef.fontOutline or "OUTLINE",
@@ -4387,8 +4679,8 @@ local function buildUnitSettings(unit)
 	local function isPowerDetachedEnabled() return isPowerEnabled() and isPowerDetached() end
 	local function isDetachedPowerWidthMatched() return getValue(unit, { "power", "detachedMatchHealthWidth" }, powerDef.detachedMatchHealthWidth == true) == true end
 	local detachedStrataOptions = { { value = "", label = DEFAULT } }
-	for i = 1, #strataOptions do
-		detachedStrataOptions[#detachedStrataOptions + 1] = strataOptions[i]
+	for i = 1, #UF.ui.strataOptions do
+		detachedStrataOptions[#detachedStrataOptions + 1] = UF.ui.strataOptions[i]
 	end
 	local function isDetachedPowerBorderEnabled()
 		local border = getValue(unit, { "border" }, def.border or {})
@@ -4767,20 +5059,27 @@ local function buildUnitSettings(unit)
 	list[#list + 1] = powerFontSize
 
 	if #fontOptions() > 0 then
-		local powerFont = checkboxDropdown(L["Font"] or "Font", fontOptions, function() return getValue(unit, { "power", "font" }, powerDef.font or globalFontConfigKey()) end, function(val)
+		local powerFont = checkboxDropdown(L["Font"] or "Font", fontOptions, function()
+			return getValue(unit, { "power", "font" }, powerDef.font or UF.ui.globalFontConfigKey())
+		end, function(val)
 			setValue(unit, { "power", "font" }, val)
 			refreshSelf()
-		end, powerDef.font or globalFontConfigKey(), "power")
+		end, powerDef.font or UF.ui.globalFontConfigKey(), "power")
 		powerFont.isEnabled = isPowerEnabled
 		list[#list + 1] = powerFont
 	end
 
 	local powerFontOutline = checkboxDropdown(
 		L["Font outline"] or "Font outline",
-		outlineOptions,
-		function() return getValue(unit, { "power", "fontOutline" }, powerDef.fontOutline or "OUTLINE") end,
+		UF.ui.outlineOptions,
+		function()
+			return UF.ui.normalizeFontStyleChoice(
+				getValue(unit, { "power", "fontOutline" }, powerDef.fontOutline or "OUTLINE"),
+				powerDef.fontOutline or "OUTLINE"
+			)
+		end,
 		function(val)
-			setValue(unit, { "power", "fontOutline" }, val)
+			setValue(unit, { "power", "fontOutline" }, UF.ui.normalizeFontStyleChoice(val, powerDef.fontOutline or "OUTLINE"))
 			refresh()
 		end,
 		powerDef.fontOutline or "OUTLINE",
@@ -5119,6 +5418,16 @@ local function buildUnitSettings(unit)
 			end
 			return false
 		end
+		local function getClassResourceConfigIDs(resourceID)
+			local util = UF and UF.ClassResourceUtil
+			if util and util.getClassResourceConfigIDs then
+				local classToken = addon.variables and addon.variables.unitClass
+				local ids = util.getClassResourceConfigIDs(classToken, resourceID)
+				if type(ids) == "table" and #ids > 0 then return ids end
+			end
+			if type(resourceID) == "string" and resourceID ~= "" then return { resourceID } end
+			return {}
+		end
 		local function buildClassResourcePath(resourceID, suffix)
 			local path = { "classResource" }
 			if type(resourceID) == "string" and resourceID ~= "" then
@@ -5132,14 +5441,22 @@ local function buildUnitSettings(unit)
 		end
 		local function getClassResourceValueFor(resourceID, suffix, fallback)
 			if type(resourceID) == "string" and resourceID ~= "" then
-				local scopedValue = getValue(unit, buildClassResourcePath(resourceID, suffix), nil)
-				if scopedValue ~= nil then return scopedValue end
+				local configIDs = getClassResourceConfigIDs(resourceID)
+				for i = 1, #configIDs do
+					local scopedValue = getValue(unit, buildClassResourcePath(configIDs[i], suffix), nil)
+					if scopedValue ~= nil then return scopedValue end
+				end
 			end
 			local globalValue = getValue(unit, buildClassResourcePath(nil, suffix), nil)
 			if globalValue ~= nil then return globalValue end
-			local resourceDef = type(crDef.resources) == "table" and type(resourceID) == "string" and crDef.resources[resourceID] or nil
-			local resourceDefault = getPathValue(resourceDef, suffix)
-			if resourceDefault ~= nil then return resourceDefault end
+			if type(resourceID) == "string" and resourceID ~= "" and type(crDef.resources) == "table" then
+				local configIDs = getClassResourceConfigIDs(resourceID)
+				for i = 1, #configIDs do
+					local resourceDef = crDef.resources[configIDs[i]]
+					local resourceDefault = getPathValue(resourceDef, suffix)
+					if resourceDefault ~= nil then return resourceDefault end
+				end
+			end
 			local globalDefault = getPathValue(crDef, suffix)
 			if globalDefault ~= nil then return globalDefault end
 			return fallback
@@ -5690,7 +6007,7 @@ local function buildUnitSettings(unit)
 			)
 		end
 
-		local castNameAnchor = radioDropdown(L["UFCastNameAnchor"] or "Cast name anchor", anchorOptions, function()
+		local castNameAnchor = radioDropdown(L["UFCastNameAnchor"] or "Cast name anchor", UF.ui.anchorOptions, function()
 			local fallback = castDef.nameAnchor or "LEFT"
 			if fallback ~= "LEFT" and fallback ~= "CENTER" and fallback ~= "RIGHT" then fallback = "LEFT" end
 			local value = getValue(unit, { "cast", "nameAnchor" }, fallback)
@@ -5739,14 +6056,14 @@ local function buildUnitSettings(unit)
 		castNameY.isEnabled = isCastNameEnabled
 		list[#list + 1] = castNameY
 
-		local function getCastFont() return getValue(unit, { "cast", "font" }, castDef.font or globalFontConfigKey()) end
+		local function getCastFont() return getValue(unit, { "cast", "font" }, castDef.font or UF.ui.globalFontConfigKey()) end
 
 		local castNameFont = {
 			name = L["Font"] or "Font",
 			kind = UF.ui.settingType.DropdownColor,
 			height = 180,
 			parentId = "cast",
-			default = castDef.font or globalFontConfigKey(),
+			default = castDef.font or UF.ui.globalFontConfigKey(),
 			generator = function(_, root)
 				local opts = fontOptions()
 				if type(opts) ~= "table" then return end
@@ -5778,10 +6095,15 @@ local function buildUnitSettings(unit)
 
 		local castNameFontOutline = checkboxDropdown(
 			L["Font outline"] or "Font outline",
-			outlineOptions,
-			function() return getValue(unit, { "cast", "fontOutline" }, castDef.fontOutline or "OUTLINE") end,
+			UF.ui.outlineOptions,
+			function()
+				return UF.ui.normalizeFontStyleChoice(
+					getValue(unit, { "cast", "fontOutline" }, castDef.fontOutline or "OUTLINE"),
+					castDef.fontOutline or "OUTLINE"
+				)
+			end,
 			function(val)
-				setValue(unit, { "cast", "fontOutline" }, val)
+				setValue(unit, { "cast", "fontOutline" }, UF.ui.normalizeFontStyleChoice(val, castDef.fontOutline or "OUTLINE"))
 				refresh()
 			end,
 			castDef.fontOutline or "OUTLINE",
@@ -6001,7 +6323,11 @@ local function buildUnitSettings(unit)
 		list[#list + 1] = { name = "", kind = UF.ui.settingType.Divider, parentId = "cast" }
 
 		local function isCastClassColorEnabled() return getValue(unit, { "cast", "useClassColor" }, castDef.useClassColor == true) == true end
-		local function isCastColorEnabled() return isCastEnabled() and not isCastClassColorEnabled() end
+		local function isCastGradientEnabled()
+			if unit ~= "player" then return false end
+			return isCastEnabled() and not isCastClassColorEnabled() and getValue(unit, { "cast", "useGradient" }, castDef.useGradient == true) == true
+		end
+		local function isCastColorEnabled() return isCastEnabled() and not isCastClassColorEnabled() and not isCastGradientEnabled() end
 
 		list[#list + 1] = {
 			name = L["Cast color"] or "Cast color",
@@ -6036,7 +6362,6 @@ local function buildUnitSettings(unit)
 		end, castDef.useClassColor == true, "cast", isCastEnabled)
 
 		if unit == "player" then
-			local function isCastGradientEnabled() return isCastEnabled() and not isCastClassColorEnabled() and getValue(unit, { "cast", "useGradient" }, castDef.useGradient == true) == true end
 			list[#list + 1] = checkbox(L["Use gradient"] or "Use gradient", isCastGradientEnabled, function(val)
 				local useGradient = val and true or false
 				setValue(unit, { "cast", "useGradient" }, useGradient)
@@ -6118,7 +6443,7 @@ local function buildUnitSettings(unit)
 			name = L["Not interruptible color"] or "Not interruptible color",
 			kind = UF.ui.settingType.Color,
 			parentId = "cast",
-			isEnabled = isCastEnabled,
+			isEnabled = function() return isCastEnabled() and not isCastGradientEnabled() end,
 			get = function() return getValue(unit, { "cast", "notInterruptibleColor" }, castDef.notInterruptibleColor or { 204 / 255, 204 / 255, 204 / 255, 1 }) end,
 			set = function(_, color)
 				setColor(unit, { "cast", "notInterruptibleColor" }, color.r, color.g, color.b, color.a)
@@ -6266,7 +6591,7 @@ local function buildUnitSettings(unit)
 
 	local nameAnchorSetting = radioDropdown(
 		L["Name anchor"] or "Name anchor",
-		anchorOptions,
+		UF.ui.anchorOptions,
 		function() return getValue(unit, { "status", "nameAnchor" }, statusDef.nameAnchor or "LEFT") end,
 		function(val)
 			setValue(unit, { "status", "nameAnchor" }, val)
@@ -6407,7 +6732,7 @@ local function buildUnitSettings(unit)
 
 	local levelAnchorSetting = radioDropdown(
 		L["Level anchor"] or "Level anchor",
-		anchorOptions,
+		UF.ui.anchorOptions,
 		function() return getValue(unit, { "status", "levelAnchor" }, statusDef.levelAnchor or "RIGHT") end,
 		function(val)
 			setValue(unit, { "status", "levelAnchor" }, val)
@@ -6563,20 +6888,27 @@ local function buildUnitSettings(unit)
 	end
 
 	if #fontOptions() > 0 then
-		local statusFont = checkboxDropdown(L["Font"] or "Font", fontOptions, function() return getValue(unit, { "status", "font" }, statusDef.font or globalFontConfigKey()) end, function(val)
+		local statusFont = checkboxDropdown(L["Font"] or "Font", fontOptions, function()
+			return getValue(unit, { "status", "font" }, statusDef.font or UF.ui.globalFontConfigKey())
+		end, function(val)
 			setValue(unit, { "status", "font" }, val)
 			refreshSelf()
-		end, statusDef.font or globalFontConfigKey(), "name")
+		end, statusDef.font or UF.ui.globalFontConfigKey(), "name")
 		statusFont.isEnabled = isNameOrLevelEnabled
 		list[#list + 1] = statusFont
 	end
 
 	local statusFontOutline = checkboxDropdown(
 		L["Font outline"] or "Font outline",
-		outlineOptions,
-		function() return getValue(unit, { "status", "fontOutline" }, statusDef.fontOutline or "OUTLINE") end,
+		UF.ui.outlineOptions,
+		function()
+			return UF.ui.normalizeFontStyleChoice(
+				getValue(unit, { "status", "fontOutline" }, statusDef.fontOutline or "OUTLINE"),
+				statusDef.fontOutline or "OUTLINE"
+			)
+		end,
 		function(val)
-			setValue(unit, { "status", "fontOutline" }, val)
+			setValue(unit, { "status", "fontOutline" }, UF.ui.normalizeFontStyleChoice(val, statusDef.fontOutline or "OUTLINE"))
 			refreshSelf()
 		end,
 		statusDef.fontOutline or "OUTLINE",
@@ -7040,12 +7372,12 @@ local function buildUnitSettings(unit)
 		local unitStatusFontSetting = checkboxDropdown(
 			L["Font"] or "Font",
 			fontOptions,
-			function() return getValue(unit, { "status", "unitStatus", "font" }, usDef.font or statusDef.font or globalFontConfigKey()) end,
+			function() return getValue(unit, { "status", "unitStatus", "font" }, usDef.font or statusDef.font or UF.ui.globalFontConfigKey()) end,
 			function(val)
 				setValue(unit, { "status", "unitStatus", "font" }, val)
 				refreshSelf()
 			end,
-			usDef.font or statusDef.font or globalFontConfigKey(),
+			usDef.font or statusDef.font or UF.ui.globalFontConfigKey(),
 			"statusText"
 		)
 		unitStatusFontSetting.isEnabled = isUnitStatusEnabled
@@ -7054,10 +7386,19 @@ local function buildUnitSettings(unit)
 
 	local unitStatusFontOutlineSetting = checkboxDropdown(
 		L["Font outline"] or "Font outline",
-		outlineOptions,
-		function() return getValue(unit, { "status", "unitStatus", "fontOutline" }, usDef.fontOutline or statusDef.fontOutline or "OUTLINE") end,
+		UF.ui.outlineOptions,
+		function()
+			return UF.ui.normalizeFontStyleChoice(
+				getValue(unit, { "status", "unitStatus", "fontOutline" }, usDef.fontOutline or statusDef.fontOutline or "OUTLINE"),
+				usDef.fontOutline or statusDef.fontOutline or "OUTLINE"
+			)
+		end,
 		function(val)
-			setValue(unit, { "status", "unitStatus", "fontOutline" }, val)
+			setValue(
+				unit,
+				{ "status", "unitStatus", "fontOutline" },
+				UF.ui.normalizeFontStyleChoice(val, usDef.fontOutline or statusDef.fontOutline or "OUTLINE")
+			)
 			refreshSelf()
 		end,
 		usDef.fontOutline or statusDef.fontOutline or "OUTLINE",
@@ -7110,7 +7451,7 @@ local function buildUnitSettings(unit)
 
 		list[#list + 1] = radioDropdown(
 			L["UFUnitStatusGroupAnchor"] or "Group number anchor",
-			anchorOptions9,
+			UF.ui.anchorOptions9,
 			function() return getValue(unit, { "status", "unitStatus", "groupAnchor" }, usDef.groupAnchor or "TOP") end,
 			function(val)
 				setValue(unit, { "status", "unitStatus", "groupAnchor" }, val or "TOP")
@@ -7141,12 +7482,12 @@ local function buildUnitSettings(unit)
 			local groupFontSetting = checkboxDropdown(
 				L["UFUnitStatusGroupFont"] or "Group number font",
 				fontOptions,
-				function() return getValue(unit, { "status", "unitStatus", "groupFont" }, usDef.groupFont or usDef.font or statusDef.font or globalFontConfigKey()) end,
+				function() return getValue(unit, { "status", "unitStatus", "groupFont" }, usDef.groupFont or usDef.font or statusDef.font or UF.ui.globalFontConfigKey()) end,
 				function(val)
 					setValue(unit, { "status", "unitStatus", "groupFont" }, val)
 					refreshSelf()
 				end,
-				usDef.groupFont or usDef.font or statusDef.font or globalFontConfigKey(),
+				usDef.groupFont or usDef.font or statusDef.font or UF.ui.globalFontConfigKey(),
 				"statusText"
 			)
 			groupFontSetting.isEnabled = isGroupEnabled
@@ -7155,10 +7496,19 @@ local function buildUnitSettings(unit)
 
 		local groupFontOutlineSetting = checkboxDropdown(
 			L["UFUnitStatusGroupFontOutline"] or "Group number font outline",
-			outlineOptions,
-			function() return getValue(unit, { "status", "unitStatus", "groupFontOutline" }, usDef.groupFontOutline or usDef.fontOutline or statusDef.fontOutline or "OUTLINE") end,
+			UF.ui.outlineOptions,
+			function()
+				return UF.ui.normalizeFontStyleChoice(
+					getValue(unit, { "status", "unitStatus", "groupFontOutline" }, usDef.groupFontOutline or usDef.fontOutline or statusDef.fontOutline or "OUTLINE"),
+					usDef.groupFontOutline or usDef.fontOutline or statusDef.fontOutline or "OUTLINE"
+				)
+			end,
 			function(val)
-				setValue(unit, { "status", "unitStatus", "groupFontOutline" }, val)
+				setValue(
+					unit,
+					{ "status", "unitStatus", "groupFontOutline" },
+					UF.ui.normalizeFontStyleChoice(val, usDef.groupFontOutline or usDef.fontOutline or statusDef.fontOutline or "OUTLINE")
+				)
 				refreshSelf()
 			end,
 			usDef.groupFontOutline or usDef.fontOutline or statusDef.fontOutline or "OUTLINE",
@@ -7330,232 +7680,7 @@ local function buildUnitSettings(unit)
 		list[#list + 1] = combatIndicatorOffsetY
 	end
 
-	list[#list + 1] = { name = L["UFCombatFeedback"] or "Combat feedback", kind = UF.ui.settingType.Collapsible, id = "combatFeedback", defaultCollapsed = true }
-	local combatDef = def.combatFeedback or {}
-	local function isCombatFeedbackEnabled() return getValue(unit, { "combatFeedback", "enabled" }, combatDef.enabled == true) == true end
-
-	list[#list + 1] = checkbox(L["UFCombatFeedbackEnable"] or "Enable combat feedback", isCombatFeedbackEnabled, function(val)
-		setValue(unit, { "combatFeedback", "enabled" }, val and true or false)
-		refresh()
-		refreshSettingsUI()
-	end, combatDef.enabled == true, "combatFeedback")
-
-	local function isCombatEventSelected(key)
-		local events = getValue(unit, { "combatFeedback", "events" })
-		if type(events) ~= "table" then events = combatDef.events end
-		if type(events) ~= "table" then return true end
-		local val = events[key]
-		if val == nil and type(combatDef.events) == "table" then val = combatDef.events[key] end
-		if val == nil then return true end
-		return val == true
-	end
-
-	local function setCombatEventSelected(key, selected)
-		local events = getValue(unit, { "combatFeedback", "events" })
-		if type(events) ~= "table" then
-			events = combatDef.events and CopyTable(combatDef.events) or {}
-		else
-			events = CopyTable(events)
-		end
-		events[key] = selected and true or false
-		setValue(unit, { "combatFeedback", "events" }, events)
-		refresh()
-	end
-
-	local combatFeedbackLocationOptions = {
-		{ value = "FRAME", label = L["Frame"] or "Frame" },
-		{ value = "STATUS", label = L["Status text"] or "Status text" },
-		{ value = "HEALTH", label = L["Health"] or HEALTH or "Health" },
-		{ value = "POWER", label = L["Power"] or _G.POWER or "Power" },
-	}
-
-	local combatFeedbackAnchorOptions = {
-		{ value = "TOPLEFT", label = L["Top left"] or "Top left" },
-		{ value = "TOP", label = DIRECTION_TOP_LABEL },
-		{ value = "TOPRIGHT", label = L["Top right"] or "Top right" },
-		{ value = "LEFT", label = DIRECTION_LEFT_LABEL },
-		{ value = "CENTER", label = L["Center"] or "Center" },
-		{ value = "RIGHT", label = DIRECTION_RIGHT_LABEL },
-		{ value = "BOTTOMLEFT", label = L["Bottom left"] or "Bottom left" },
-		{ value = "BOTTOM", label = DIRECTION_BOTTOM_LABEL },
-		{ value = "BOTTOMRIGHT", label = L["Bottom right"] or "Bottom right" },
-	}
-
-	local combatFeedbackEventOptions = {
-		{ value = "WOUND", label = L["Combat feedback damage"] or "Damage" },
-		{ value = "HEAL", label = L["Combat feedback heal"] or "Heal" },
-		{ value = "ENERGIZE", label = L["Combat feedback energize"] or "Energize" },
-		{ value = "MISS", label = MISS or "Miss" },
-		{ value = "DODGE", label = DODGE or "Dodge" },
-		{ value = "PARRY", label = PARRY or "Parry" },
-		{ value = "BLOCK", label = BLOCK or "Block" },
-		{ value = "RESIST", label = RESIST or "Resist" },
-		{ value = "ABSORB", label = ABSORB or "Absorb" },
-		{ value = "IMMUNE", label = IMMUNE or "Immune" },
-		{ value = "DEFLECT", label = DEFLECT or "Deflect" },
-		{ value = "REFLECT", label = REFLECT or "Reflect" },
-		{ value = "EVADE", label = EVADE or "Evade" },
-		{ value = "INTERRUPT", label = INTERRUPT or "Interrupt" },
-	}
-
-	local combatFeedbackSampleOptions = {
-		{ value = "WOUND", label = L["Combat feedback damage"] or "Damage" },
-		{ value = "HEAL", label = L["Combat feedback heal"] or "Heal" },
-		{ value = "ENERGIZE", label = L["Combat feedback energize"] or "Energize" },
-	}
-
-	list[#list + 1] = multiDropdown(
-		L["Events"] or "Combat feedback events",
-		combatFeedbackEventOptions,
-		isCombatEventSelected,
-		setCombatEventSelected,
-		combatDef.events,
-		"combatFeedback",
-		isCombatFeedbackEnabled
-	)
-
-	if #fontOptions() > 0 then
-		local combatFontSetting = checkboxDropdown(
-			L["Font"] or "Combat feedback font",
-			fontOptions,
-			function() return getValue(unit, { "combatFeedback", "font" }, combatDef.font or globalFontConfigKey()) end,
-			function(val)
-				setValue(unit, { "combatFeedback", "font" }, val)
-				refreshSelf()
-			end,
-			combatDef.font or globalFontConfigKey(),
-			"combatFeedback"
-		)
-		combatFontSetting.isEnabled = isCombatFeedbackEnabled
-		list[#list + 1] = combatFontSetting
-	end
-
-	local combatFontSizeSetting = slider(
-		L["Size"] or "Combat feedback size",
-		8,
-		64,
-		1,
-		function() return getValue(unit, { "combatFeedback", "fontSize" }, combatDef.fontSize or 30) end,
-		function(val)
-			debounced(unit .. "_combatFeedbackSize", function()
-				setValue(unit, { "combatFeedback", "fontSize" }, val or 30)
-				refreshSelf()
-			end)
-		end,
-		combatDef.fontSize or 30,
-		"combatFeedback",
-		true
-	)
-	combatFontSizeSetting.isEnabled = isCombatFeedbackEnabled
-	list[#list + 1] = combatFontSizeSetting
-
-	local combatLocationSetting = radioDropdown(
-		L["Location"] or "Combat feedback location",
-		combatFeedbackLocationOptions,
-		function() return getValue(unit, { "combatFeedback", "location" }, combatDef.location or "STATUS") end,
-		function(val)
-			setValue(unit, { "combatFeedback", "location" }, val or "STATUS")
-			refreshSelf()
-		end,
-		combatDef.location or "STATUS",
-		"combatFeedback"
-	)
-	combatLocationSetting.isEnabled = isCombatFeedbackEnabled
-	list[#list + 1] = combatLocationSetting
-
-	local combatAnchorSetting = radioDropdown(
-		L["Anchor"] or "Combat feedback anchor",
-		combatFeedbackAnchorOptions,
-		function() return getValue(unit, { "combatFeedback", "anchor" }, combatDef.anchor or "CENTER") end,
-		function(val)
-			setValue(unit, { "combatFeedback", "anchor" }, val or "CENTER")
-			refreshSelf()
-		end,
-		combatDef.anchor or "CENTER",
-		"combatFeedback"
-	)
-	combatAnchorSetting.isEnabled = isCombatFeedbackEnabled
-	list[#list + 1] = combatAnchorSetting
-
-	local combatOffsetX = slider(
-		L["Offset X"] or "Combat feedback offset X",
-		-OFFSET_RANGE,
-		OFFSET_RANGE,
-		1,
-		function() return getValue(unit, { "combatFeedback", "offset", "x" }, (combatDef.offset and combatDef.offset.x) or 0) end,
-		function(val)
-			local off = getValue(unit, { "combatFeedback", "offset" }, { x = 0, y = 0 }) or {}
-			off.x = val or 0
-			setValue(unit, { "combatFeedback", "offset" }, off)
-			refreshSelf()
-		end,
-		(combatDef.offset and combatDef.offset.x) or 0,
-		"combatFeedback",
-		true
-	)
-	combatOffsetX.isEnabled = isCombatFeedbackEnabled
-	list[#list + 1] = combatOffsetX
-
-	local combatOffsetY = slider(
-		L["Offset Y"] or "Combat feedback offset Y",
-		-OFFSET_RANGE,
-		OFFSET_RANGE,
-		1,
-		function() return getValue(unit, { "combatFeedback", "offset", "y" }, (combatDef.offset and combatDef.offset.y) or 0) end,
-		function(val)
-			local off = getValue(unit, { "combatFeedback", "offset" }, { x = 0, y = 0 }) or {}
-			off.y = val or 0
-			setValue(unit, { "combatFeedback", "offset" }, off)
-			refreshSelf()
-		end,
-		(combatDef.offset and combatDef.offset.y) or 0,
-		"combatFeedback",
-		true
-	)
-	combatOffsetY.isEnabled = isCombatFeedbackEnabled
-	list[#list + 1] = combatOffsetY
-	list[#list + 1] = { name = "", kind = UF.ui.settingType.Divider, parentId = "combatFeedback" }
-
-	local function isCombatFeedbackSampleEnabled() return isCombatFeedbackEnabled() and getValue(unit, { "combatFeedback", "sample" }, combatDef.sample == true) == true end
-
-	list[#list + 1] = checkbox(L["Show sample"] or "Show sample", function() return getValue(unit, { "combatFeedback", "sample" }, combatDef.sample == true) == true end, function(val)
-		setValue(unit, { "combatFeedback", "sample" }, val and true or false)
-		refreshSelf()
-	end, combatDef.sample == true, "combatFeedback")
-	list[#list].isEnabled = isCombatFeedbackEnabled
-
-	local sampleTypeSetting = radioDropdown(
-		L["UFCombatFeedbackSampleType"] or "Sample type",
-		combatFeedbackSampleOptions,
-		function() return getValue(unit, { "combatFeedback", "sampleEvent" }, combatDef.sampleEvent or "WOUND") end,
-		function(val)
-			setValue(unit, { "combatFeedback", "sampleEvent" }, val or "WOUND")
-			refreshSelf()
-		end,
-		combatDef.sampleEvent or "WOUND",
-		"combatFeedback"
-	)
-	sampleTypeSetting.isEnabled = isCombatFeedbackSampleEnabled
-	list[#list + 1] = sampleTypeSetting
-
-	local sampleAmountSetting = slider(
-		L["UFCombatFeedbackSampleAmount"] or "Sample amount",
-		0,
-		200000,
-		1,
-		function() return getValue(unit, { "combatFeedback", "sampleAmount" }, combatDef.sampleAmount or 12345) end,
-		function(val)
-			local amt = tonumber(val) or 0
-			if amt < 0 then amt = 0 end
-			setValue(unit, { "combatFeedback", "sampleAmount" }, amt)
-			refreshSelf()
-		end,
-		combatDef.sampleAmount or 12345,
-		"combatFeedback",
-		true
-	)
-	sampleAmountSetting.isEnabled = isCombatFeedbackSampleEnabled
-	list[#list + 1] = sampleAmountSetting
+	appendUnitCombatFeedbackSettings(list, unit, def, refreshSelf)
 
 	appendUnitAuraSettings(list, unit, def, refreshSelf)
 
@@ -7601,11 +7726,11 @@ local function buildUnitSettings(unit)
 		list[#list + 1] = slider(
 			L["UFPrivateAurasSize"] or "Private aura size",
 			8,
-			100,
+			120,
 			1,
 			function() return getValue(unit, { "privateAuras", "icon", "size" }, (paDef.icon and paDef.icon.size) or 24) end,
 			function(val)
-				setValue(unit, { "privateAuras", "icon", "size" }, clampNumber(val or 24, 8, 100, 24))
+				setValue(unit, { "privateAuras", "icon", "size" }, clampNumber(val or 24, 8, 120, 24))
 				refresh()
 			end,
 			(paDef.icon and paDef.icon.size) or 24,
@@ -7643,7 +7768,7 @@ local function buildUnitSettings(unit)
 
 		list[#list + 1] = radioDropdown(
 			L["Anchor point"] or "Anchor point",
-			anchorOptions9,
+			UF.ui.anchorOptions9,
 			function() return getValue(unit, { "privateAuras", "parent", "point" }, (paDef.parent and paDef.parent.point) or "BOTTOM") end,
 			function(val)
 				setValue(unit, { "privateAuras", "parent", "point" }, val or "BOTTOM")
@@ -7736,7 +7861,7 @@ local function buildUnitSettings(unit)
 
 		list[#list + 1] = radioDropdown(
 			L["Duration anchor"] or "Duration anchor",
-			anchorOptions9,
+			UF.ui.anchorOptions9,
 			function() return getValue(unit, { "privateAuras", "duration", "point" }, (paDef.duration and paDef.duration.point) or "BOTTOM") end,
 			function(val)
 				setValue(unit, { "privateAuras", "duration", "point" }, val or "BOTTOM")
@@ -8111,6 +8236,7 @@ local function registerSettingsUI()
 	if not expandable then
 		expandable = addon.functions.SettingsCreateExpandableSection(cUF, {
 			name = L["CustomUnitFrames"] or "EQoL Unit Frames",
+			newTagID = "CustomUnitFrames",
 			expanded = false,
 			colorizeTitle = false,
 		})

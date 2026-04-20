@@ -323,6 +323,7 @@ local function applyMissingEnchantOverlayStyle(texture)
 end
 
 local function normalizeItemDetailOutline(outline)
+	if addon.functions and addon.functions.GetFontFlagsForStyle then return addon.functions.GetFontFlagsForStyle(outline, "OUTLINE") end
 	if outline == nil then return "OUTLINE" end
 	if outline == "" or outline == "NONE" then return nil end
 	return outline
@@ -340,9 +341,11 @@ local function applyEnchantTextStyle(fontString)
 	elseif type(configuredFace) == "string" and configuredFace ~= "" then
 		face = configuredFace
 	end
-	local outline = normalizeItemDetailOutline(addon.db and addon.db["ilvlFontOutline"])
+	local style = addon.db and addon.db["ilvlFontOutline"]
+	local outline = normalizeItemDetailOutline(style)
 	local ok = fontString:SetFont(face, 12, outline)
 	if ok == false then fontString:SetFont(defaultFace, 12, outline) end
+	if addon.functions and addon.functions.ApplyFontStyleShadow then addon.functions.ApplyFontStyleShadow(fontString, style, "OUTLINE") end
 end
 
 local function applyCharacterFrameElementTextStyle(fontString, size)
@@ -351,8 +354,11 @@ local function applyCharacterFrameElementTextStyle(fontString, size)
 		or (addon.variables and addon.variables.defaultFont)
 		or STANDARD_TEXT_FONT
 	local fallbackFace = (addon.variables and addon.variables.defaultFont) or STANDARD_TEXT_FONT
-	local ok = fontString:SetFont(globalFace, size, "OUTLINE")
-	if ok == false then fontString:SetFont(fallbackFace, size, "OUTLINE") end
+	local style = addon.db and addon.db["globalFontStyle"] or "OUTLINE"
+	local outline = addon.functions and addon.functions.GetFontFlagsForStyle and addon.functions.GetFontFlagsForStyle(style, "OUTLINE") or "OUTLINE"
+	local ok = fontString:SetFont(globalFace, size, outline)
+	if ok == false then fontString:SetFont(fallbackFace, size, outline) end
+	if addon.functions and addon.functions.ApplyFontStyleShadow then addon.functions.ApplyFontStyleShadow(fontString, style, "OUTLINE") end
 end
 
 local function refreshCharacterFrameElementFonts()
@@ -1923,7 +1929,7 @@ function addon.functions.initItemInventory()
 	addon.functions.InitDBValue("ilvlTextColor", { r = 1, g = 1, b = 1, a = 1 })
 	addon.functions.InitDBValue("ilvlFontFace", addon.functions.GetGlobalFontConfigKey and addon.functions.GetGlobalFontConfigKey() or "__EQOL_GLOBAL_FONT__")
 	addon.functions.InitDBValue("ilvlFontSize", 14)
-	addon.functions.InitDBValue("ilvlFontOutline", "OUTLINE")
+	addon.functions.InitDBValue("ilvlFontOutline", addon.functions.GetGlobalFontStyleConfigKey and addon.functions.GetGlobalFontStyleConfigKey() or "__EQOL_GLOBAL_FONT_STYLE__")
 	addon.functions.InitDBValue("fadeBagQualityIcons", false)
 	addon.functions.InitDBValue("enhancedRarityGlow", false)
 	addon.functions.InitDBValue("showGemsOnCharframe", false)

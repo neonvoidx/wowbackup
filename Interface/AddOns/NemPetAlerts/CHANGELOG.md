@@ -1,3 +1,81 @@
+# v12.0.20 (2026-04-19)
+
+## Options Panel — Layout and Spec Cleanup
+
+### Dynamic Section Sizing
+
+The Sounds, Alerts, and Alert Options sections now resize and reposition themselves dynamically based on the active spec's alert count. Sections no longer have hardcoded heights or positions — each section measures its content and the sections below it flow accordingly. The total scroll content height is also recalculated each time, so the scrollbar always reflects the true panel size.
+
+### Frost Mage — Alert Cleanup
+
+Removed two inapplicable alerts from the Frost Mage module:
+
+- **Wake Up Pet** (Hunter only)
+- **Taunt** (Hunter/Warlock only)
+
+These were placeholder entries carried over from the shared layout. The Mage module now has 6 clean alerts with updated indices, test slots, defaults, and `healPetAlertIndex`.
+
+### Unholy Death Knight — Alert Cleanup
+
+Removed three inapplicable alerts from the Unholy Death Knight module (`DeathKnightUnholy.lua`):
+
+- **Pet Died** (no reliable Ghoul death detection)
+- **Wake Up Pet** (Hunter only)
+- **Taunt** (Hunter/Warlock only)
+
+The DK module now has 5 clean alerts with updated indices, test slots, defaults, and `healPetAlertIndex`.
+
+### Subtitle
+
+Updated the options panel subtitle from the explicit class list to: *"Pet status warnings for all pet classes. Type /npa to open this panel."*
+
+---
+
+# v12.0.19 (2026-04-18)
+
+## Options Panel — Alert Options Section (new)
+
+A dedicated fourth section, **Alert Options**, now appears below the Alerts section. The panel is fully scrollable with a slim class-colored scrollbar on the right margin.
+
+### Scrollbar
+
+The options panel now scrolls instead of overflowing the WoW Settings UI boundary. A 4px scrollbar with drag, click-to-jump, and mousewheel support sits in the right margin and only appears when content exceeds the visible area.
+
+### Alert Options Section
+
+- **Font picker** moved here from the Display section
+- **Heal Pet Threshold** moved here from sitting inline next to the alert checkbox. The edit box is now class-colored and registered to update with the panel theme
+- **Alert text editors** — every alert for the active spec gets a labeled two-column edit box. Edits apply live on focus-lost. Clearing a box resets it to the built-in default. Values are saved per character
+- **Restore Defaults button** added as a fourth button alongside Test, Unlock Frame, and Center Position. Resets alert colors, alert texts, font, scale, font size, heal pet threshold, and frame position back to built-in defaults
+
+### Display Section
+
+- Checkboxes (Enable Addon, Flash Animation) shifted to x=8 with 40px row spacing, matching the Sounds section layout
+- Display section height tightened to remove excess empty space
+- Font picker removed from this section
+- Min/max labels removed from both sliders
+
+### Sounds Section
+
+- Dropdowns shifted right to align their left edge with the slider tracks above
+
+### Buttons
+
+- **Reset Position** renamed to **Center Position**
+- Four buttons now: Test, Unlock Frame, Center Position, Restore Defaults
+
+---
+
+## v12.0.18 (2026-04-16)
+
+### Changes
+
+- All alerts are now suppressed while the player is resting (in a city or inn)
+- Alerts resume immediately upon leaving the resting area
+- Registers `PLAYER_UPDATE_RESTING` so the display clears/restores instantly on zone change
+
+---
+
 ## v12.0.17 (2026-04-12)
 
 ## Options Panel Improvements

@@ -1,78 +1,26 @@
 
 MiniCCDB = {
-["WhatsNew"] = {
-},
 ["ConfigureBlizzardNameplates"] = true,
-["FontScale"] = 1,
-["NotifiedChanges"] = true,
-["IconSpacing"] = 2,
-["PvPTalentCache"] = {
-["Stratify"] = {
-["Time"] = 1776303616,
-["Ids"] = {
-611,
-3751,
-3053,
-},
-},
-["Stormclout"] = {
-["Time"] = 1776367712,
-["Ids"] = {
-3745,
-3737,
-3052,
-},
-},
-["Totemism"] = {
-["Time"] = 1776309007,
-["Ids"] = {
-715,
-708,
-},
-},
-["Theeohgee"] = {
-["Time"] = 1776309007,
-["Ids"] = {
-5535,
-81,
-},
-},
-["Mufflan"] = {
-["Time"] = 1776366080,
-["Ids"] = {
-632,
-5708,
-5622,
-},
-},
-["Starphage"] = {
-["Time"] = 1776367639,
-["Ids"] = {
-5728,
-5735,
-5734,
-},
-},
-},
+["GlowType"] = "Proc Glow",
 ["Modules"] = {
 ["FriendlyIndicatorModule"] = {
 ["Enabled"] = {
 ["BattleGrounds"] = false,
-["World"] = true,
+["Dungeons"] = true,
 ["Raid"] = true,
 ["Arena"] = true,
-["Dungeons"] = true,
+["World"] = true,
 },
 ["Raid"] = {
 ["ExcludePlayer"] = false,
 ["ShowTooltips"] = false,
 ["Grow"] = "CENTER",
 ["ShowImportant"] = false,
+["ShowDefensives"] = false,
 ["Offset"] = {
 ["Y"] = 0,
 ["X"] = 0,
 },
-["ShowDefensives"] = false,
 ["Icons"] = {
 ["MaxIcons"] = 1,
 ["Glow"] = false,
@@ -87,11 +35,11 @@ MiniCCDB = {
 ["ShowTooltips"] = false,
 ["ShowDefensives"] = true,
 ["ShowImportant"] = true,
+["Grow"] = "CENTER",
 ["Offset"] = {
-["Y"] = 11,
+["Y"] = 8,
 ["X"] = 0,
 },
-["Grow"] = "CENTER",
 ["Icons"] = {
 ["MaxIcons"] = 2,
 ["Glow"] = true,
@@ -105,10 +53,10 @@ MiniCCDB = {
 ["NameplatesModule"] = {
 ["Enabled"] = {
 ["BattleGrounds"] = true,
-["World"] = true,
+["Dungeons"] = true,
 ["Raid"] = true,
 ["Arena"] = true,
-["Dungeons"] = true,
+["World"] = true,
 },
 ["ScaleWithNameplate"] = false,
 ["Friendly"] = {
@@ -117,7 +65,7 @@ MiniCCDB = {
 ["Y"] = 0,
 ["X"] = 2,
 },
-["Enabled"] = false,
+["ShowTooltips"] = false,
 ["Grow"] = "RIGHT",
 ["Icons"] = {
 ["MaxIcons"] = 5,
@@ -126,14 +74,14 @@ MiniCCDB = {
 ["ReverseCooldown"] = true,
 ["Size"] = 50,
 },
-["ShowTooltips"] = false,
+["Enabled"] = false,
 },
 ["Important"] = {
 ["Offset"] = {
 ["Y"] = 0,
 ["X"] = -2,
 },
-["Grow"] = "LEFT",
+["ShowTooltips"] = false,
 ["Enabled"] = false,
 ["Icons"] = {
 ["MaxIcons"] = 5,
@@ -142,23 +90,24 @@ MiniCCDB = {
 ["ReverseCooldown"] = true,
 ["Size"] = 50,
 },
-["ShowTooltips"] = false,
+["Grow"] = "LEFT",
 },
 ["CC"] = {
 ["Offset"] = {
-["Y"] = 49,
+["Y"] = 18,
 ["X"] = 0,
 },
-["Grow"] = "CENTER",
+["ShowTooltips"] = false,
 ["Enabled"] = true,
 ["Icons"] = {
-["MaxIcons"] = 5,
+["MaxIcons"] = 1,
 ["Glow"] = false,
 ["ColorByCategory"] = true,
 ["ReverseCooldown"] = true,
-["Size"] = 30,
+["ShowMilliseconds"] = false,
+["Size"] = 28,
 },
-["ShowTooltips"] = false,
+["Grow"] = "CENTER",
 },
 ["IgnorePets"] = true,
 },
@@ -168,64 +117,62 @@ MiniCCDB = {
 ["Y"] = 0,
 ["X"] = 2,
 },
-["Enabled"] = false,
+["ShowTooltips"] = false,
 ["Grow"] = "RIGHT",
 ["Icons"] = {
 ["MaxIcons"] = 5,
 ["Glow"] = true,
 ["ColorByCategory"] = true,
 ["ReverseCooldown"] = true,
-["Size"] = 50,
+["Size"] = 46,
 },
-["ShowTooltips"] = false,
+["Enabled"] = false,
 },
 ["Important"] = {
 ["Offset"] = {
-["Y"] = -6,
-["X"] = 10,
+["Y"] = -9,
+["X"] = 9,
 },
-["Grow"] = "LEFT",
+["ShowTooltips"] = false,
 ["Enabled"] = true,
 ["Icons"] = {
 ["MaxIcons"] = 5,
 ["Glow"] = true,
 ["ColorByCategory"] = true,
 ["ReverseCooldown"] = true,
-["Size"] = 30,
+["Size"] = 28,
 },
-["ShowTooltips"] = false,
+["Grow"] = "LEFT",
 },
 ["CC"] = {
 ["Offset"] = {
-["Y"] = -5,
-["X"] = -10,
+["Y"] = -10,
+["X"] = -8,
 },
-["Grow"] = "RIGHT",
+["ShowTooltips"] = false,
 ["Enabled"] = true,
 ["Icons"] = {
 ["MaxIcons"] = 5,
 ["Glow"] = false,
 ["ColorByCategory"] = true,
 ["ReverseCooldown"] = true,
-["Size"] = 37,
+["ShowMilliseconds"] = false,
+["Size"] = 29,
 },
-["ShowTooltips"] = false,
+["Grow"] = "RIGHT",
 },
 ["IgnorePets"] = true,
 },
 },
 ["PetCCModule"] = {
 ["Grow"] = "CENTER",
-["Offset"] = {
-["Y"] = 0,
-["X"] = 0,
-},
+["ShowTooltips"] = false,
 ["Enabled"] = {
 ["BattleGrounds"] = false,
-["World"] = false,
+["Dungeons"] = false,
 ["Raid"] = false,
 ["Arena"] = false,
-["Dungeons"] = false,
+["World"] = false,
 },
 ["Icons"] = {
 ["Glow"] = false,
@@ -234,62 +181,117 @@ MiniCCDB = {
 ["ColorByDispelType"] = false,
 ["Size"] = 19,
 },
-["ShowTooltips"] = false,
-},
-["PortraitModule"] = {
-["Enabled"] = {
-["Always"] = false,
-},
-["ReverseCooldown"] = true,
-},
-["CCModule"] = {
-["Enabled"] = {
-["BattleGrounds"] = false,
-["World"] = true,
-["Raid"] = true,
-["Arena"] = true,
-["Dungeons"] = true,
-},
-["Raid"] = {
-["ExcludePlayer"] = false,
-["Offset"] = {
-["Y"] = 0,
-["X"] = 2,
-},
-["Grow"] = "CENTER",
-["Icons"] = {
-["Glow"] = true,
-["ColorByDispelType"] = true,
-["ReverseCooldown"] = false,
-["Count"] = 3,
-["Size"] = 26,
-},
-["ShowTooltips"] = false,
-},
-["Default"] = {
-["ExcludePlayer"] = false,
 ["Offset"] = {
 ["Y"] = 0,
 ["X"] = 0,
 },
-["Grow"] = "RIGHT",
+},
+["HealerCCModule"] = {
+["Enabled"] = {
+["BattleGrounds"] = false,
+["Dungeons"] = false,
+["Raid"] = false,
+["Arena"] = true,
+["World"] = false,
+},
+["RelativeTo"] = "UIParent",
+["Point"] = "TOP",
 ["Icons"] = {
+["Enabled"] = true,
 ["Glow"] = true,
 ["ColorByDispelType"] = true,
 ["ReverseCooldown"] = true,
-["Count"] = 2,
-["Size"] = 44,
+["Size"] = 50,
 },
+["ShowWarningText"] = true,
 ["ShowTooltips"] = false,
+["Font"] = {
+["Flags"] = "OUTLINE",
+["File"] = "Fonts\\FRIZQT__.TTF",
+["Size"] = 32,
+},
+["RelativePoint"] = "TOP",
+["Sound"] = {
+["Enabled"] = true,
+["File"] = "Sonar.ogg",
+["Channel"] = "Master",
+},
+["Offset"] = {
+["Y"] = -111.1333084106445,
+["X"] = -1.600118041038513,
+},
+},
+["TrinketsModule"] = {
+["Enabled"] = {
+["Always"] = true,
+},
+["Font"] = {
+["File"] = "GameFontHighlightSmall",
+},
+["Point"] = "RIGHT",
+["RelativePoint"] = "LEFT",
+["ExcludePlayer"] = false,
+["Icons"] = {
+["Glow"] = false,
+["ReverseCooldown"] = false,
+["ShowText"] = true,
+["Size"] = 37,
+},
+["Offset"] = {
+["Y"] = 0,
+["X"] = 0,
+},
+},
+["CCModule"] = {
+["Enabled"] = {
+["BattleGrounds"] = false,
+["Dungeons"] = true,
+["Raid"] = true,
+["Arena"] = true,
+["World"] = true,
+},
+["Raid"] = {
+["ExcludePlayer"] = false,
+["ShowTooltips"] = false,
+["Grow"] = "CENTER",
+["Icons"] = {
+["Glow"] = true,
+["ColorByDispelType"] = true,
+["ShowMilliseconds"] = false,
+["ReverseCooldown"] = false,
+["Count"] = 3,
+["Size"] = 26,
+},
+["Offset"] = {
+["Y"] = 0,
+["X"] = 2,
+},
+},
+["Default"] = {
+["ExcludePlayer"] = false,
+["ShowTooltips"] = false,
+["Grow"] = "LEFT",
+["Icons"] = {
+["Glow"] = true,
+["ColorByDispelType"] = true,
+["ShowMilliseconds"] = false,
+["ReverseCooldown"] = true,
+["Count"] = 2,
+["Size"] = 37,
+},
+["Offset"] = {
+["Y"] = 0,
+["X"] = -77,
+},
 },
 },
 ["FriendlyCooldownTrackerModule"] = {
 ["Enabled"] = {
 ["BattleGrounds"] = false,
-["World"] = true,
+["Dungeons"] = true,
 ["Raid"] = false,
 ["Arena"] = true,
-["Dungeons"] = true,
+["World"] = true,
 },
 ["Raid"] = {
 ["Offset"] = {
@@ -297,7 +299,7 @@ MiniCCDB = {
 ["X"] = -2,
 },
 ["ShowTrinket"] = true,
-["ExcludeSelf"] = false,
+["ShowTooltips"] = true,
 ["Grow"] = "CENTER",
 ["IconSpacing"] = 2,
 ["Predictive"] = true,
@@ -309,7 +311,7 @@ MiniCCDB = {
 ["ReverseCooldown"] = true,
 ["Size"] = 20,
 },
-["ShowTooltips"] = true,
+["ExcludeSelf"] = false,
 },
 ["Default"] = {
 ["Offset"] = {
@@ -317,7 +319,7 @@ MiniCCDB = {
 ["X"] = -2,
 },
 ["ShowTrinket"] = true,
-["ExcludeSelf"] = false,
+["ShowTooltips"] = true,
 ["Grow"] = "LEFT",
 ["IconSpacing"] = 2,
 ["Predictive"] = true,
@@ -329,9 +331,28 @@ MiniCCDB = {
 ["ReverseCooldown"] = true,
 ["Size"] = 23,
 },
-["ShowTooltips"] = true,
+["ExcludeSelf"] = false,
 },
 ["DisabledSpells"] = {
+},
+},
+["KickTimerModule"] = {
+["Offset"] = {
+["Y"] = -79.73223876953125,
+["X"] = 1.066646575927734,
+},
+["RelativeTo"] = "UIParent",
+["Point"] = "CENTER",
+["RelativePoint"] = "CENTER",
+["Icons"] = {
+["Glow"] = false,
+["ReverseCooldown"] = true,
+["Size"] = 30,
+},
+["Enabled"] = {
+["Always"] = false,
+["Healer"] = false,
+["Caster"] = false,
 },
 },
 ["AlertsModule"] = {
@@ -350,13 +371,7 @@ MiniCCDB = {
 ["Size"] = 48,
 },
 ["ShowTooltips"] = false,
-["Enabled"] = {
-["BattleGrounds"] = false,
-["World"] = false,
-["Raid"] = false,
-["Arena"] = true,
-["Dungeons"] = false,
-},
+["TargetFocusOnly"] = false,
 ["RelativePoint"] = "TOP",
 ["TTS"] = {
 ["VoiceID"] = 2,
@@ -382,7 +397,46 @@ MiniCCDB = {
 ["Channel"] = "Master",
 },
 },
-["TargetFocusOnly"] = false,
+["Enabled"] = {
+["BattleGrounds"] = false,
+["Dungeons"] = false,
+["Raid"] = false,
+["Arena"] = true,
+["World"] = false,
+},
+},
+["EnemyCooldownTrackerModule"] = {
+["Enabled"] = {
+["BattleGrounds"] = false,
+["Dungeons"] = false,
+["Arena"] = false,
+["Raid"] = false,
+["World"] = false,
+},
+["IconSpacing"] = 2,
+["Icons"] = {
+["ReverseCooldown"] = true,
+["Size"] = 40,
+},
+["ShowTooltips"] = false,
+["EntrySpacing"] = 4,
+["Linear"] = {
+["Y"] = -152,
+["RelativeTo"] = "UIParent",
+["Point"] = "TOP",
+["RelativePoint"] = "TOP",
+["X"] = -8.53341007232666,
+},
+["ArenaFrames"] = {
+["Grow"] = "RIGHT",
+["Offset"] = {
+["Y"] = 0,
+["X"] = 58,
+},
+},
+["DisplayMode"] = "Linear",
+["DisabledSpells"] = {
+},
 },
 ["PrecogGuesserModule"] = {
 ["Enabled"] = {
@@ -401,52 +455,31 @@ MiniCCDB = {
 ["X"] = 0,
 },
 },
-["KickTimerModule"] = {
-["Offset"] = {
-["Y"] = -79.73223876953125,
-["X"] = 1.066646575927734,
-},
-["RelativeTo"] = "UIParent",
-["Point"] = "CENTER",
-["RelativePoint"] = "CENTER",
-["Icons"] = {
-["Glow"] = false,
-["ReverseCooldown"] = true,
-["Size"] = 30,
-},
+["PortraitModule"] = {
 ["Enabled"] = {
 ["Always"] = false,
-["Caster"] = false,
-["Healer"] = false,
+},
+["ReverseCooldown"] = true,
 },
 },
-["TrinketsModule"] = {
-["Enabled"] = {
-["Always"] = true,
+["DisableSwipe"] = false,
+["AutoSwitch"] = {
 },
-["Font"] = {
-["File"] = "GameFontHighlightSmall",
+["MillisecondsThreshold"] = 5,
+["FontScale"] = 1,
+["NotifiedChanges"] = true,
+["IconSpacing"] = 2,
+["WhatsNew"] = {
 },
-["Point"] = "RIGHT",
-["RelativePoint"] = "LEFT",
-["Offset"] = {
-["Y"] = 0,
-["X"] = 0,
-},
-["Icons"] = {
-["ReverseCooldown"] = false,
-["Glow"] = false,
-["ShowText"] = true,
-["Size"] = 37,
-},
-["ExcludePlayer"] = false,
-},
+["Profiles"] = {
+["Default"] = {
+["Modules"] = {
 ["HealerCCModule"] = {
 ["Enabled"] = {
 ["BattleGrounds"] = false,
 ["World"] = false,
-["Raid"] = false,
 ["Arena"] = true,
+["Raid"] = false,
 ["Dungeons"] = false,
 },
 ["RelativeTo"] = "UIParent",
@@ -476,69 +509,21 @@ MiniCCDB = {
 ["X"] = -1.600118041038513,
 },
 },
-},
-["Profiles"] = {
-["Default"] = {
-["Modules"] = {
-["FriendlyIndicatorModule"] = {
-["Enabled"] = {
-["BattleGrounds"] = false,
-["World"] = true,
-["Raid"] = true,
-["Arena"] = true,
-["Dungeons"] = true,
-},
-["Raid"] = {
-["Grow"] = "CENTER",
-["ExcludePlayer"] = false,
-["ShowTooltips"] = false,
-["ShowImportant"] = false,
-["Offset"] = {
-["Y"] = 0,
-["X"] = 0,
-},
-["ShowDefensives"] = false,
-["Icons"] = {
-["MaxIcons"] = 1,
-["Glow"] = false,
-["ColorByDispelType"] = false,
-["ReverseCooldown"] = false,
-["Size"] = 40,
-},
-["ShowCC"] = false,
-},
-["Default"] = {
-["ShowDefensives"] = true,
-["ExcludePlayer"] = false,
-["ShowTooltips"] = false,
-["ShowImportant"] = true,
-["Offset"] = {
-["Y"] = 0,
-["X"] = 0,
-},
-["Grow"] = "CENTER",
-["Icons"] = {
-["MaxIcons"] = 2,
-["Glow"] = true,
-["ColorByDispelType"] = true,
-["ReverseCooldown"] = true,
-["Size"] = 30,
-},
-["ShowCC"] = false,
-},
-},
 ["NameplatesModule"] = {
 ["Enabled"] = {
 ["BattleGrounds"] = true,
 ["World"] = true,
-["Raid"] = true,
 ["Arena"] = true,
+["Raid"] = true,
 ["Dungeons"] = true,
 },
 ["ScaleWithNameplate"] = false,
 ["Friendly"] = {
 ["Combined"] = {
-["Enabled"] = false,
+["Offset"] = {
+["Y"] = 0,
+["X"] = 2,
+},
 ["Grow"] = "RIGHT",
 ["Icons"] = {
 ["MaxIcons"] = 5,
@@ -547,13 +532,13 @@ MiniCCDB = {
 ["ReverseCooldown"] = true,
 ["Size"] = 50,
 },
-["Offset"] = {
-["Y"] = 0,
-["X"] = 2,
-},
+["Enabled"] = false,
 },
 ["Important"] = {
-["Grow"] = "LEFT",
+["Offset"] = {
+["Y"] = 0,
+["X"] = -2,
+},
 ["Enabled"] = false,
 ["Icons"] = {
 ["MaxIcons"] = 5,
@@ -562,13 +547,13 @@ MiniCCDB = {
 ["ReverseCooldown"] = true,
 ["Size"] = 50,
 },
-["Offset"] = {
-["Y"] = 0,
-["X"] = -2,
-},
+["Grow"] = "LEFT",
 },
 ["CC"] = {
-["Grow"] = "CENTER",
+["Offset"] = {
+["Y"] = 49,
+["X"] = 0,
+},
 ["Enabled"] = true,
 ["Icons"] = {
 ["MaxIcons"] = 5,
@@ -577,16 +562,16 @@ MiniCCDB = {
 ["ReverseCooldown"] = true,
 ["Size"] = 30,
 },
-["Offset"] = {
-["Y"] = 49,
-["X"] = 0,
-},
+["Grow"] = "CENTER",
 },
 ["IgnorePets"] = true,
 },
 ["Enemy"] = {
 ["Combined"] = {
-["Enabled"] = false,
+["Offset"] = {
+["Y"] = 0,
+["X"] = 2,
+},
 ["Grow"] = "RIGHT",
 ["Icons"] = {
 ["MaxIcons"] = 5,
@@ -595,13 +580,13 @@ MiniCCDB = {
 ["ReverseCooldown"] = true,
 ["Size"] = 50,
 },
-["Offset"] = {
-["Y"] = 0,
-["X"] = 2,
-},
+["Enabled"] = false,
 },
 ["Important"] = {
-["Grow"] = "LEFT",
+["Offset"] = {
+["Y"] = -6,
+["X"] = 10,
+},
 ["Enabled"] = true,
 ["Icons"] = {
 ["MaxIcons"] = 5,
@@ -610,13 +595,13 @@ MiniCCDB = {
 ["ReverseCooldown"] = true,
 ["Size"] = 30,
 },
-["Offset"] = {
-["Y"] = -6,
-["X"] = 10,
-},
+["Grow"] = "LEFT",
 },
 ["CC"] = {
-["Grow"] = "RIGHT",
+["Offset"] = {
+["Y"] = -5,
+["X"] = -10,
+},
 ["Enabled"] = true,
 ["Icons"] = {
 ["MaxIcons"] = 5,
@@ -625,10 +610,7 @@ MiniCCDB = {
 ["ReverseCooldown"] = true,
 ["Size"] = 37,
 },
-["Offset"] = {
-["Y"] = -5,
-["X"] = -10,
-},
+["Grow"] = "RIGHT",
 },
 ["IgnorePets"] = true,
 },
@@ -638,11 +620,14 @@ MiniCCDB = {
 ["Enabled"] = {
 ["BattleGrounds"] = false,
 ["World"] = false,
-["Raid"] = false,
 ["Arena"] = false,
+["Raid"] = false,
 ["Dungeons"] = false,
 },
-["ShowTooltips"] = false,
+["Offset"] = {
+["Y"] = 0,
+["X"] = 0,
+},
 ["Icons"] = {
 ["Glow"] = false,
 ["Count"] = 3,
@@ -650,9 +635,94 @@ MiniCCDB = {
 ["ColorByDispelType"] = false,
 ["Size"] = 19,
 },
+["ShowTooltips"] = false,
+},
+["FriendlyCooldownTrackerModule"] = {
+["Enabled"] = {
+["BattleGrounds"] = false,
+["World"] = false,
+["Arena"] = true,
+["Raid"] = false,
+["Dungeons"] = true,
+},
+["Raid"] = {
+["Grow"] = "CENTER",
+["ShowTrinket"] = true,
+["Offset"] = {
+["Y"] = 0,
+["X"] = -2,
+},
+["IconSpacing"] = 2,
+["ExcludeSelf"] = false,
+["Icons"] = {
+["MaxIcons"] = 5,
+["Columns"] = 1,
+["ReverseCooldown"] = true,
+["Rows"] = 1,
+["Size"] = 20,
+},
+["ShowTooltips"] = true,
+},
+["Default"] = {
+["Grow"] = "LEFT",
+["ShowTrinket"] = true,
+["Offset"] = {
+["Y"] = 13,
+["X"] = -2,
+},
+["IconSpacing"] = 2,
+["ExcludeSelf"] = false,
+["Icons"] = {
+["MaxIcons"] = 10,
+["Columns"] = 1,
+["ReverseCooldown"] = true,
+["Rows"] = 2,
+["Size"] = 24,
+},
+["ShowTooltips"] = true,
+},
+["DisabledSpells"] = {
+},
+},
+["CCModule"] = {
+["Enabled"] = {
+["BattleGrounds"] = false,
+["World"] = false,
+["Arena"] = true,
+["Raid"] = true,
+["Dungeons"] = true,
+},
+["Raid"] = {
+["ExcludePlayer"] = false,
+["Grow"] = "CENTER",
+["Offset"] = {
+["Y"] = 0,
+["X"] = 2,
+},
+["Icons"] = {
+["Glow"] = true,
+["ColorByDispelType"] = true,
+["ReverseCooldown"] = false,
+["Count"] = 3,
+["Size"] = 26,
+},
+["ShowTooltips"] = false,
+},
+["Default"] = {
+["ExcludePlayer"] = false,
+["Grow"] = "RIGHT",
 ["Offset"] = {
 ["Y"] = 0,
 ["X"] = 0,
+},
+["Icons"] = {
+["Glow"] = true,
+["ColorByDispelType"] = true,
+["ReverseCooldown"] = true,
+["Count"] = 2,
+["Size"] = 40,
+},
+["ShowTooltips"] = false,
 },
 },
 ["TrinketsModule"] = {
@@ -676,122 +746,20 @@ MiniCCDB = {
 },
 ["ExcludePlayer"] = false,
 },
-["CCModule"] = {
-["Enabled"] = {
-["BattleGrounds"] = false,
-["World"] = false,
-["Raid"] = true,
-["Arena"] = true,
-["Dungeons"] = true,
-},
-["Raid"] = {
-["ExcludePlayer"] = false,
-["Grow"] = "CENTER",
-["ShowTooltips"] = false,
-["Icons"] = {
-["Glow"] = true,
-["ColorByDispelType"] = true,
-["ReverseCooldown"] = false,
-["Count"] = 3,
-["Size"] = 26,
-},
-["Offset"] = {
-["Y"] = 0,
-["X"] = 2,
-},
-},
-["Default"] = {
-["ExcludePlayer"] = false,
-["Grow"] = "RIGHT",
-["ShowTooltips"] = false,
-["Icons"] = {
-["Glow"] = true,
-["ColorByDispelType"] = true,
-["ReverseCooldown"] = true,
-["Count"] = 2,
-["Size"] = 40,
-},
-["Offset"] = {
-["Y"] = 0,
-["X"] = 0,
-},
-},
-},
-["FriendlyCooldownTrackerModule"] = {
-["Enabled"] = {
-["BattleGrounds"] = false,
-["World"] = false,
-["Raid"] = false,
-["Arena"] = true,
-["Dungeons"] = true,
-},
-["Raid"] = {
-["ShowTooltips"] = true,
-["ShowTrinket"] = true,
-["Offset"] = {
-["Y"] = 0,
-["X"] = -2,
-},
-["IconSpacing"] = 2,
-["ExcludeSelf"] = false,
-["Icons"] = {
-["MaxIcons"] = 5,
-["Columns"] = 1,
-["Rows"] = 1,
-["ReverseCooldown"] = true,
-["Size"] = 20,
-},
-["Grow"] = "CENTER",
-},
-["Default"] = {
-["ShowTooltips"] = true,
-["ShowTrinket"] = true,
-["Offset"] = {
-["Y"] = 13,
-["X"] = -2,
-},
-["IconSpacing"] = 2,
-["ExcludeSelf"] = false,
-["Icons"] = {
-["MaxIcons"] = 10,
-["Columns"] = 1,
-["Rows"] = 2,
-["ReverseCooldown"] = true,
-["Size"] = 24,
-},
-["Grow"] = "LEFT",
-},
-["DisabledSpells"] = {
-},
-},
-["PrecogGuesserModule"] = {
-["Enabled"] = {
-["Always"] = true,
-},
-["RelativeTo"] = "UIParent",
-["Point"] = "CENTER",
-["RelativePoint"] = "CENTER",
-["Icons"] = {
-["Glow"] = true,
-["ReverseCooldown"] = true,
-["Size"] = 55,
-},
-["Offset"] = {
-["Y"] = 70,
-["X"] = 0,
-},
-},
 ["AlertsModule"] = {
-["Offset"] = {
-["Y"] = -50.19978332519531,
-["X"] = -2.132878303527832,
+["Enabled"] = {
+["BattleGrounds"] = false,
+["World"] = false,
+["Arena"] = true,
+["Raid"] = false,
+["Dungeons"] = false,
 },
 ["RelativeTo"] = "UIParent",
 ["Point"] = "TOP",
 ["Icons"] = {
-["Enabled"] = true,
-["Glow"] = true,
 ["MaxIcons"] = 8,
+["Glow"] = true,
+["Enabled"] = true,
 ["ReverseCooldown"] = true,
 ["ColorByClass"] = true,
 ["Size"] = 48,
@@ -809,12 +777,9 @@ MiniCCDB = {
 },
 },
 ["TargetFocusOnly"] = false,
-["Enabled"] = {
-["BattleGrounds"] = false,
-["World"] = false,
-["Raid"] = false,
-["Arena"] = true,
-["Dungeons"] = false,
+["Offset"] = {
+["Y"] = -50.19978332519531,
+["X"] = -2.132878303527832,
 },
 ["IncludeDefensives"] = true,
 ["Sound"] = {
@@ -830,6 +795,23 @@ MiniCCDB = {
 },
 },
 ["RelativePoint"] = "TOP",
+},
+["PrecogGuesserModule"] = {
+["Enabled"] = {
+["Always"] = true,
+},
+["RelativeTo"] = "UIParent",
+["Point"] = "CENTER",
+["RelativePoint"] = "CENTER",
+["Icons"] = {
+["Glow"] = true,
+["ReverseCooldown"] = true,
+["Size"] = 55,
+},
+["Offset"] = {
+["Y"] = 70,
+["X"] = 0,
+},
 },
 ["KickTimerModule"] = {
 ["Offset"] = {
@@ -850,39 +832,51 @@ MiniCCDB = {
 ["Healer"] = true,
 },
 },
-["HealerCCModule"] = {
+["FriendlyIndicatorModule"] = {
 ["Enabled"] = {
 ["BattleGrounds"] = false,
-["World"] = false,
-["Raid"] = false,
+["World"] = true,
 ["Arena"] = true,
-["Dungeons"] = false,
+["Raid"] = true,
+["Dungeons"] = true,
 },
-["RelativeTo"] = "UIParent",
-["Point"] = "TOP",
+["Raid"] = {
+["Grow"] = "CENTER",
+["ExcludePlayer"] = false,
+["ShowTooltips"] = false,
+["ShowImportant"] = false,
+["Offset"] = {
+["Y"] = 0,
+["X"] = 0,
+},
+["ShowDefensives"] = false,
 ["Icons"] = {
-["Enabled"] = true,
+["MaxIcons"] = 1,
+["Glow"] = false,
+["ColorByDispelType"] = false,
+["ReverseCooldown"] = false,
+["Size"] = 40,
+},
+["ShowCC"] = false,
+},
+["Default"] = {
+["ShowDefensives"] = true,
+["ExcludePlayer"] = false,
+["ShowTooltips"] = false,
+["ShowImportant"] = true,
+["Offset"] = {
+["Y"] = 0,
+["X"] = 0,
+},
+["Grow"] = "CENTER",
+["Icons"] = {
+["MaxIcons"] = 2,
 ["Glow"] = true,
 ["ColorByDispelType"] = true,
 ["ReverseCooldown"] = true,
-["Size"] = 50,
+["Size"] = 30,
 },
-["ShowWarningText"] = true,
-["ShowTooltips"] = false,
-["Font"] = {
-["Flags"] = "OUTLINE",
-["File"] = "Fonts\\FRIZQT__.TTF",
-["Size"] = 32,
-},
-["RelativePoint"] = "TOP",
-["Sound"] = {
-["Enabled"] = true,
-["File"] = "Sonar.ogg",
-["Channel"] = "Master",
-},
-["Offset"] = {
-["Y"] = -111.1333084106445,
-["X"] = -1.600118041038513,
+["ShowCC"] = false,
 },
 },
 ["PortraitModule"] = {
@@ -903,13 +897,22 @@ MiniCCDB = {
 ["TalentCache"] = {
 ["Stormclout"] = {
 ["SpecId"] = 269,
-["Time"] = 1776367663,
+["Time"] = 1776699795,
 ["TalentString"] = "C0QAi6cZM+HWADeySjzG9Lwx8PzYMghZZmZ2mxAAAAAAAAAAAALDzEmhhBMjhZmZGmthZYWmJAgNzsNGGzMDEAbAoZbWamZmFghBmZAglxAGwA",
 },
 },
-["AutoSwitch"] = {
+["Version"] = 43,
+["PvPTalentCache"] = {
+["Stormclout"] = {
+["Time"] = 1776699795,
+["Ids"] = {
+3745,
+3737,
+3052,
 },
-["Version"] = 40,
+},
+},
+["CCNativeOrder"] = false,
 ["SpecCache"] = {
 ["Player-57-0D8C8F3B"] = {
 ["SpecId"] = 65,
@@ -935,17 +938,18 @@ MiniCCDB = {
 ["LastSeen"] = 46680.19586180001,
 ["SpecId"] = 70,
 },
-["Player-11-0EB0B07C"] = {
-["LastSeen"] = 10325.1507497,
-["SpecId"] = 64,
+["Player-60-0F5C6F8F"] = {
+["LastSeen"] = 26079.3325747,
+["SpecId"] = 264,
 },
 ["Player-11-0E9C6F53"] = {
 ["LastSeen"] = 7845.1623834,
 ["SpecId"] = 267,
 },
-["Player-11-0E766041"] = {
-["LastSeen"] = 56273.85101660001,
-["SpecId"] = 254,
+["Player-1171-0A701619"] = {
+["SpecId"] = 577,
+["LastSeen"] = 14127.1534322,
+["LastAttempt"] = 14126.9771859,
 },
 ["Player-1184-0EA73795"] = {
 ["SpecId"] = 102,
@@ -957,9 +961,10 @@ MiniCCDB = {
 ["LastSeen"] = 55467.3752948,
 ["LastAttempt"] = 44210.7905512,
 },
-["Player-3678-0DFD5616"] = {
-["LastSeen"] = 56786.11214490001,
-["SpecId"] = 252,
+["Player-61-0F6F540D"] = {
+["SpecId"] = 577,
+["LastSeen"] = 24612.8186871,
+["LastAttempt"] = 24612.5601413,
 },
 ["Player-11-0E9B8E06"] = {
 ["SpecId"] = 254,
@@ -990,14 +995,13 @@ MiniCCDB = {
 ["LastSeen"] = 17981.3166591,
 ["LastAttempt"] = 17981.1276834,
 },
-["Player-11-0DC05999"] = {
-["LastSeen"] = 17194.7330772,
-["SpecId"] = 261,
+["Player-11-0E5C80D0"] = {
+["LastSeen"] = 26701.0771617,
+["SpecId"] = 268,
 },
-["Player-71-0FD93B5F"] = {
-["SpecId"] = 257,
-["LastSeen"] = 10772.3646041,
-["LastAttempt"] = 10772.0270003,
+["Player-11-0EB13AF8"] = {
+["LastSeen"] = 22554.7587627,
+["SpecId"] = 1467,
 },
 ["Player-11-0112F723"] = {
 ["LastSeen"] = 9119.3231345,
@@ -1052,9 +1056,10 @@ MiniCCDB = {
 ["LastSeen"] = 752.1602153,
 ["LastAttempt"] = 746.9087255000001,
 },
-["Player-11-0E6BEF97"] = {
-["LastSeen"] = 40524.481454,
+["Player-104-0ED89305"] = {
 ["SpecId"] = 261,
+["LastSeen"] = 21173.3277787,
+["LastAttempt"] = 21172.9680515,
 },
 ["Player-11-0EAEA4A5"] = {
 ["LastSeen"] = 39310.2482891,
@@ -1088,10 +1093,9 @@ MiniCCDB = {
 ["LastSeen"] = 13137.7488153,
 ["LastAttempt"] = 13137.2402125,
 },
-["Player-1428-0E952E3E"] = {
-["SpecId"] = 251,
-["LastSeen"] = 12056.3487346,
-["LastAttempt"] = 11827.338684,
+["Player-11-0DEC9F0C"] = {
+["LastSeen"] = 9587.214038,
+["SpecId"] = 72,
 },
 ["Player-11-0E45BF1D"] = {
 ["LastSeen"] = 6575.009522900001,
@@ -1107,18 +1111,18 @@ MiniCCDB = {
 ["LastSeen"] = 17242.7864183,
 ["LastAttempt"] = 17242.3586747,
 },
-["Player-60-0FEA25C6"] = {
-["LastSeen"] = 824.0475313000001,
-["SpecId"] = 66,
+["Player-154-05FF90D9"] = {
+["LastSeen"] = 26079.333001,
+["SpecId"] = 266,
 },
 ["Player-11-0EB3405B"] = {
 ["LastSeen"] = 22132.7997257,
 ["SpecId"] = 104,
 },
-["Player-3683-0E0552E2"] = {
-["SpecId"] = 267,
-["LastSeen"] = 303.1582726,
-["LastAttempt"] = 303.0583381,
+["Player-3723-0C41A46E"] = {
+["SpecId"] = 64,
+["LastSeen"] = 6728.039633500001,
+["LastAttempt"] = 6727.606830000001,
 },
 ["Player-11-0E6E4939"] = {
 ["LastSeen"] = 9176.471669800001,
@@ -1137,10 +1141,9 @@ MiniCCDB = {
 ["LastSeen"] = 14588.3178656,
 ["LastAttempt"] = 14587.8464286,
 },
-["Player-121-09CB6E0B"] = {
-["SpecId"] = 72,
-["LastSeen"] = 27533.7893964,
-["LastAttempt"] = 27533.5961442,
+["Player-11-0E9D18F6"] = {
+["LastSeen"] = 34098.0704972,
+["SpecId"] = 102,
 },
 ["Player-86-0AC9F246"] = {
 ["SpecId"] = 261,
@@ -1155,9 +1158,10 @@ MiniCCDB = {
 ["LastSeen"] = 5369.743420000001,
 ["SpecId"] = 266,
 },
-["Player-11-0E80263C"] = {
-["LastSeen"] = 8109.730482200001,
-["SpecId"] = 261,
+["Player-60-0FE41944"] = {
+["SpecId"] = 104,
+["LastSeen"] = 15001.0368052,
+["LastAttempt"] = 15000.7972574,
 },
 ["Player-11-0E846EEB"] = {
 ["SpecId"] = 257,
@@ -1181,10 +1185,10 @@ MiniCCDB = {
 ["LastSeen"] = 43569.124166,
 ["SpecId"] = 105,
 },
-["Player-3684-0DC42AE3"] = {
-["SpecId"] = 269,
-["LastSeen"] = 55641.99584810001,
-["LastAttempt"] = 46872.9606646,
+["Player-3685-0714FFE6"] = {
+["SpecId"] = 266,
+["LastSeen"] = 815.8293645,
+["LastAttempt"] = 422.9559466,
 },
 ["Player-1427-0A956C9D"] = {
 ["SpecId"] = 266,
@@ -1196,18 +1200,19 @@ MiniCCDB = {
 ["LastSeen"] = 13117.7523625,
 ["LastAttempt"] = 13117.4109714,
 },
-["Player-1136-098CC2DD"] = {
-["LastSeen"] = 39105.83617230001,
-["SpecId"] = 270,
+["Player-76-0BF356BB"] = {
+["SpecId"] = 62,
+["LastSeen"] = 13441.5525993,
+["LastAttempt"] = 13441.1864138,
 },
 ["Player-11-0A737F39"] = {
 ["SpecId"] = 256,
 ["LastSeen"] = 13516.7066457,
 ["LastAttempt"] = 13001.6668172,
 },
-["Player-11-0EB04F01"] = {
-["LastSeen"] = 60504.3002435,
-["SpecId"] = 581,
+["Player-1168-0B03C661"] = {
+["LastSeen"] = 44061.9903329,
+["SpecId"] = 1467,
 },
 ["Player-11-0EB40346"] = {
 ["LastSeen"] = 18123.5686798,
@@ -1241,10 +1246,10 @@ MiniCCDB = {
 ["LastSeen"] = 15950.8908026,
 ["LastAttempt"] = 15950.7433247,
 },
-["Player-57-0E1BD357"] = {
-["SpecId"] = 264,
-["LastSeen"] = 7005.251487400001,
-["LastAttempt"] = 5381.4753667,
+["Player-1185-02104471"] = {
+["SpecId"] = 102,
+["LastSeen"] = 3153.1036728,
+["LastAttempt"] = 2147.1175328,
 },
 ["Player-3683-0BB8BAA9"] = {
 ["SpecId"] = 64,
@@ -1294,9 +1299,10 @@ MiniCCDB = {
 ["LastSeen"] = 3488.8793361,
 ["SpecId"] = 265,
 },
-["Player-11-0E317E56"] = {
-["LastSeen"] = 20039.3715881,
-["SpecId"] = 266,
+["Player-58-0A3803F5"] = {
+["SpecId"] = 1480,
+["LastSeen"] = 24718.8071753,
+["LastAttempt"] = 24718.4391892,
 },
 ["Player-3209-0C189CB0"] = {
 ["LastSeen"] = 2578.8890602,
@@ -1310,31 +1316,34 @@ MiniCCDB = {
 ["LastSeen"] = 7309.0041742,
 ["SpecId"] = 258,
 },
-["Player-76-0B8779EB"] = {
-["SpecId"] = 102,
-["LastSeen"] = 13125.5419051,
-["LastAttempt"] = 13125.0801035,
+["Player-1136-0966655A"] = {
+["SpecId"] = 63,
+["LastSeen"] = 25640.0337434,
+["LastAttempt"] = 25639.7756081,
 },
 ["Player-11-0E42261E"] = {
 ["LastSeen"] = 16174.9395029,
 ["SpecId"] = 262,
 },
-["Player-160-0835D761"] = {
-["LastSeen"] = 770.407271,
-["SpecId"] = 262,
+["Player-52-0CAEFAD6"] = {
+["SpecId"] = 577,
+["LastSeen"] = 24622.5738075,
+["LastAttempt"] = 24622.17653,
 },
 ["Player-162-083012AF"] = {
 ["SpecId"] = 252,
 ["LastSeen"] = 769.9884617,
 ["LastAttempt"] = 304.0607309,
 },
-["Player-11-0EB1ADFE"] = {
-["LastSeen"] = 24530.4814628,
+["Player-3661-094683C7"] = {
 ["SpecId"] = 70,
+["LastSeen"] = 43878.26682390001,
+["LastAttempt"] = 43878.11606250001,
 },
-["Player-11-0EB56B7C"] = {
-["LastSeen"] = 5227.1091327,
-["SpecId"] = 71,
+["Player-3694-069F8F0B"] = {
+["SpecId"] = 70,
+["LastSeen"] = 944.1139816000001,
+["LastAttempt"] = 943.8241075000001,
 },
 ["Player-11-0EB55679"] = {
 ["LastSeen"] = 21866.059956,
@@ -1386,10 +1395,10 @@ MiniCCDB = {
 ["LastSeen"] = 43863.108965,
 ["LastAttempt"] = 43862.89590600001,
 },
-["Player-1175-0D8120AA"] = {
-["SpecId"] = 70,
-["LastAttempt"] = 17637.3151123,
-["LastSeen"] = 17937.8436972,
+["Player-64-0F450BB7"] = {
+["SpecId"] = 62,
+["LastSeen"] = 533.6252112000001,
+["LastAttempt"] = 533.3914321000001,
 },
 ["Player-121-0AE508AE"] = {
 ["SpecId"] = 256,
@@ -1410,10 +1419,9 @@ MiniCCDB = {
 ["LastSeen"] = 14273.6837947,
 ["SpecId"] = 102,
 },
-["Player-5-0E01F16F"] = {
-["SpecId"] = 64,
-["LastSeen"] = 16896.7866668,
-["LastAttempt"] = 16896.2313145,
+["Player-1136-098C7F68"] = {
+["LastSeen"] = 5728.9474446,
+["SpecId"] = 254,
 },
 ["Player-5-063F2B5B"] = {
 ["SpecId"] = 255,
@@ -1474,20 +1482,19 @@ MiniCCDB = {
 ["LastSeen"] = 4478.985649400001,
 ["LastAttempt"] = 4478.5207675,
 },
-["Player-71-0C85BCB7"] = {
-["SpecId"] = 105,
-["LastSeen"] = 3279.6078544,
-["LastAttempt"] = 2513.5201197,
+["Player-11-0DFCF7C8"] = {
+["LastSeen"] = 11200.7474597,
+["SpecId"] = 257,
 },
 ["Player-76-08323ED9"] = {
 ["SpecId"] = 70,
 ["LastSeen"] = 13337.0388213,
 ["LastAttempt"] = 13336.7589591,
 },
-["Player-76-0BFA5122"] = {
-["SpecId"] = 64,
-["LastSeen"] = 3184.9594309,
-["LastAttempt"] = 2146.1009126,
+["Player-77-0EE4098E"] = {
+["SpecId"] = 73,
+["LastSeen"] = 13206.246782,
+["LastAttempt"] = 13205.8984253,
 },
 ["Player-58-0E039518"] = {
 ["SpecId"] = 62,
@@ -1509,9 +1516,10 @@ MiniCCDB = {
 ["LastSeen"] = 546.3571391,
 ["LastAttempt"] = 546.1133387,
 },
-["Player-11-0EB2A538"] = {
-["LastSeen"] = 21329.2027797,
-["SpecId"] = 104,
+["Player-1428-08CDDA0E"] = {
+["SpecId"] = 1480,
+["LastSeen"] = 17254.7454914,
+["LastAttempt"] = 17254.5361703,
 },
 ["Player-57-0D958478"] = {
 ["LastSeen"] = 24703.3875116,
@@ -1547,9 +1555,9 @@ MiniCCDB = {
 ["LastAttempt"] = 3449.1298191,
 ["LastSeen"] = 61120.46932500001,
 },
-["Player-11-0A985E83"] = {
-["LastSeen"] = 6134.658602500001,
-["SpecId"] = 65,
+["Player-71-0D62B278"] = {
+["LastSeen"] = 23445.1990356,
+["SpecId"] = 270,
 },
 ["Player-11-0EB56FB7"] = {
 ["LastSeen"] = 44642.5600596,
@@ -1563,17 +1571,19 @@ MiniCCDB = {
 ["LastSeen"] = 22817.6426966,
 ["SpecId"] = 270,
 },
-["Player-151-098C0351"] = {
-["LastSeen"] = 5973.2332591,
-["SpecId"] = 577,
+["Player-3678-08AABD1D"] = {
+["SpecId"] = 253,
+["LastSeen"] = 861.9348738000001,
+["LastAttempt"] = 861.6764706,
 },
 ["Player-121-0ACD1979"] = {
 ["LastSeen"] = 60508.763928,
 ["SpecId"] = 64,
 },
-["Player-11-0EA729E1"] = {
-["LastSeen"] = 10571.504065,
-["SpecId"] = 70,
+["Player-3676-0D07CFCF"] = {
+["SpecId"] = 252,
+["LastSeen"] = 13306.0402551,
+["LastAttempt"] = 13305.8541608,
 },
 ["Player-60-0E465833"] = {
 ["LastSeen"] = 35106.2094597,
@@ -1598,10 +1608,9 @@ MiniCCDB = {
 ["LastSeen"] = 13112.6694442,
 ["LastAttempt"] = 13112.2622933,
 },
-["Player-5-0E6747DE"] = {
-["SpecId"] = 104,
-["LastSeen"] = 15356.2968418,
-["LastAttempt"] = 15356.0854058,
+["Player-3675-0B000665"] = {
+["LastSeen"] = 40686.6180168,
+["SpecId"] = 72,
 },
 ["Player-113-0AA232A6"] = {
 ["LastSeen"] = 9301.647039000001,
@@ -1612,10 +1621,9 @@ MiniCCDB = {
 ["LastSeen"] = 55745.8157532,
 ["LastAttempt"] = 44209.7667347,
 },
-["Player-11-0EB24A8B"] = {
-["SpecId"] = 63,
-["LastSeen"] = 4491.413366000001,
-["LastAttempt"] = 4491.114649,
+["Player-127-0A9FF023"] = {
+["LastSeen"] = 40606.9436063,
+["SpecId"] = 577,
 },
 ["Player-121-0A31DB30"] = {
 ["SpecId"] = 251,
@@ -1650,9 +1658,10 @@ MiniCCDB = {
 ["LastSeen"] = 22006.5753707,
 ["SpecId"] = 64,
 },
-["Player-3725-0C5D7107"] = {
-["LastSeen"] = 4478.075812800001,
-["SpecId"] = 254,
+["Player-3676-0EA362F8"] = {
+["SpecId"] = 70,
+["LastSeen"] = 44870.3688225,
+["LastAttempt"] = 44869.97159070001,
 },
 ["Player-11-0E695049"] = {
 ["LastSeen"] = 22078.9833108,
@@ -1695,9 +1704,9 @@ MiniCCDB = {
 ["LastSeen"] = 22171.2352941,
 ["SpecId"] = 269,
 },
-["Player-11-0E9AE955"] = {
-["LastSeen"] = 34916.0455797,
-["SpecId"] = 254,
+["Player-11-0A3D5D22"] = {
+["LastSeen"] = 1937.5094226,
+["SpecId"] = 264,
 },
 ["Player-11-0E87DDD8"] = {
 ["LastSeen"] = 56446.51938790001,
@@ -1727,9 +1736,10 @@ MiniCCDB = {
 ["LastSeen"] = 4190.4902444,
 ["LastAttempt"] = 4190.0384108,
 },
-["Player-1168-0AEC10D7"] = {
-["LastSeen"] = 28019.1812153,
-["SpecId"] = 65,
+["Player-11-0EB50BF6"] = {
+["SpecId"] = 269,
+["LastSeen"] = 13968.681234,
+["LastAttempt"] = 13968.378635,
 },
 ["Player-3725-0C1938C6"] = {
 ["LastSeen"] = 23334.9890919,
@@ -1795,9 +1805,10 @@ MiniCCDB = {
 ["LastSeen"] = 13205.1727871,
 ["LastAttempt"] = 13204.6311278,
 },
-["Player-76-0BE6885B"] = {
-["LastSeen"] = 16552.349398,
-["SpecId"] = 261,
+["Player-1427-043A0B85"] = {
+["SpecId"] = 72,
+["LastSeen"] = 13206.5822495,
+["LastAttempt"] = 13206.3979294,
 },
 ["Player-11-0EB3C18A"] = {
 ["LastSeen"] = 20568.8206332,
@@ -1834,10 +1845,9 @@ MiniCCDB = {
 ["LastSeen"] = 21173.7993614,
 ["LastAttempt"] = 21173.468081,
 },
-["Player-3209-06F7CF31"] = {
-["SpecId"] = 72,
-["LastSeen"] = 7614.3350667,
-["LastAttempt"] = 7613.9094936,
+["Player-11-0E8A1E04"] = {
+["LastSeen"] = 7444.689468500001,
+["SpecId"] = 62,
 },
 ["Player-5-07E54074"] = {
 ["SpecId"] = 70,
@@ -1848,9 +1858,10 @@ MiniCCDB = {
 ["LastSeen"] = 15872.5016876,
 ["SpecId"] = 261,
 },
-["Player-162-0BBFDF63"] = {
-["LastSeen"] = 2646.8980248,
-["SpecId"] = 256,
+["Player-11-0EAE207A"] = {
+["SpecId"] = 70,
+["LastSeen"] = 15951.1312679,
+["LastAttempt"] = 15950.8994331,
 },
 ["Player-11-0E7F3CE2"] = {
 ["LastSeen"] = 10309.0840031,
@@ -1865,10 +1876,10 @@ MiniCCDB = {
 ["LastSeen"] = 39514.4277501,
 ["LastAttempt"] = 39514.0885217,
 },
-["Player-12-0EAE9298"] = {
-["SpecId"] = 64,
-["LastSeen"] = 43836.05196020001,
-["LastAttempt"] = 43835.7164751,
+["Player-3676-0EDF040F"] = {
+["SpecId"] = 70,
+["LastSeen"] = 13175.4588503,
+["LastAttempt"] = 13175.073967,
 },
 ["Player-76-0C0F57D1"] = {
 ["SpecId"] = 71,
@@ -1879,10 +1890,9 @@ MiniCCDB = {
 ["LastSeen"] = 14121.0141015,
 ["SpecId"] = 269,
 },
-["Player-3723-0BE15B64"] = {
-["SpecId"] = 71,
-["LastAttempt"] = 2019.1497656,
-["LastSeen"] = 2078.937673,
+["Player-3684-0ED7CECC"] = {
+["LastSeen"] = 3186.9786915,
+["SpecId"] = 255,
 },
 ["Player-11-0E65EEAE"] = {
 ["LastSeen"] = 17602.9295294,
@@ -1955,23 +1965,21 @@ MiniCCDB = {
 ["LastSeen"] = 47066.79345190001,
 ["SpecId"] = 256,
 },
-["Player-3721-0AEE0732"] = {
-["SpecId"] = 261,
-["LastSeen"] = 13338.7395655,
-["LastAttempt"] = 13338.2724009,
+["Player-1129-0BE2C12A"] = {
+["LastSeen"] = 46256.11130780001,
+["SpecId"] = 1468,
 },
-["Player-9-0E4457B4"] = {
-["SpecId"] = 267,
-["LastSeen"] = 39411.8533607,
-["LastAttempt"] = 39411.60103480001,
+["Player-3684-0EDEB76E"] = {
+["LastSeen"] = 2811.9855753,
+["SpecId"] = 256,
 },
 ["Player-11-0B323DDD"] = {
 ["LastSeen"] = 4690.5053778,
 ["SpecId"] = 65,
 },
-["Player-3678-0D7E0C12"] = {
-["LastSeen"] = 3330.4492773,
-["SpecId"] = 70,
+["Player-11-0E8B874A"] = {
+["LastSeen"] = 4874.2172084,
+["SpecId"] = 254,
 },
 ["Player-3675-0A960323"] = {
 ["LastSeen"] = 5792.4101013,
@@ -2071,10 +2079,10 @@ MiniCCDB = {
 ["LastSeen"] = 9714.2473658,
 ["SpecId"] = 256,
 },
-["Player-120-08876552"] = {
-["SpecId"] = 270,
-["LastSeen"] = 25641.1606604,
-["LastAttempt"] = 25641.0449064,
+["Player-3683-0E0AC3F6"] = {
+["SpecId"] = 252,
+["LastSeen"] = 13228.9619501,
+["LastAttempt"] = 13228.5871623,
 },
 ["Player-3676-0EDA20B2"] = {
 ["LastSeen"] = 547.7581629,
@@ -2084,10 +2092,10 @@ MiniCCDB = {
 ["LastSeen"] = 5938.8568763,
 ["SpecId"] = 256,
 },
-["Player-3676-0ADB78A0"] = {
-["SpecId"] = 1480,
-["LastSeen"] = 10771.3625596,
-["LastAttempt"] = 10771.0267259,
+["Player-3675-06E472F2"] = {
+["SpecId"] = 72,
+["LastSeen"] = 17240.6159925,
+["LastAttempt"] = 17240.3504473,
 },
 ["Player-77-0CD9BDA1"] = {
 ["SpecId"] = 255,
@@ -2108,10 +2116,10 @@ MiniCCDB = {
 ["LastAttempt"] = 25350.9859523,
 ["LastSeen"] = 25351.3211799,
 },
-["Player-60-0EA30833"] = {
-["SpecId"] = 1480,
-["LastSeen"] = 17981.1056891,
-["LastAttempt"] = 17980.8821958,
+["Player-11-0E96DBF8"] = {
+["SpecId"] = 72,
+["LastSeen"] = 9199.881515300001,
+["LastAttempt"] = 9090.3320146,
 },
 ["Player-11-0E9D2462"] = {
 ["LastSeen"] = 32130.8057058,
@@ -2127,28 +2135,27 @@ MiniCCDB = {
 ["LastSeen"] = 16992.1568801,
 ["LastAttempt"] = 16991.4118901,
 },
-["Player-3676-0DB17138"] = {
+["Player-11-0E7998B8"] = {
+["LastSeen"] = 34816.7457108,
 ["SpecId"] = 250,
-["LastSeen"] = 557.9167836,
-["LastAttempt"] = 557.7681624,
 },
 ["Player-1185-0D6A6950"] = {
 ["SpecId"] = 255,
 ["LastSeen"] = 622.9407282000001,
 ["LastAttempt"] = 622.7024488000001,
 },
-["Player-77-0F641A1E"] = {
-["SpecId"] = 577,
-["LastSeen"] = 24549.1858083,
-["LastAttempt"] = 24548.9090967,
+["Player-1136-0608CE62"] = {
+["SpecId"] = 64,
+["LastSeen"] = 8363.8389885,
+["LastAttempt"] = 8236.2956864,
 },
 ["Player-3676-0EDBC5B4"] = {
 ["LastSeen"] = 40223.51845020001,
 ["SpecId"] = 1480,
 },
-["Player-57-0E159807"] = {
-["LastSeen"] = 46934.74428090001,
-["SpecId"] = 1473,
+["Player-11-0EB33F75"] = {
+["LastSeen"] = 5101.3754582,
+["SpecId"] = 261,
 },
 ["Player-11-0E88A19E"] = {
 ["LastSeen"] = 6585.5094485,
@@ -2168,10 +2175,10 @@ MiniCCDB = {
 ["LastSeen"] = 17983.3801025,
 ["LastAttempt"] = 17983.1335509,
 },
-["Player-76-05B64301"] = {
-["SpecId"] = 73,
-["LastSeen"] = 13124.9386301,
-["LastAttempt"] = 13124.5794739,
+["Player-57-0E0FF3C6"] = {
+["SpecId"] = 65,
+["LastAttempt"] = 9106.5197767,
+["LastSeen"] = 9106.6485195,
 },
 ["Player-76-0B3A4849"] = {
 ["SpecId"] = 258,
@@ -2210,9 +2217,9 @@ MiniCCDB = {
 ["LastSeen"] = 55570.6516454,
 ["LastAttempt"] = 53140.4656141,
 },
-["Player-127-08687827"] = {
-["LastSeen"] = 45408.76641880001,
-["SpecId"] = 102,
+["Player-11-0E65F363"] = {
+["LastSeen"] = 4986.7884511,
+["SpecId"] = 266,
 },
 ["Player-3675-0A6241D2"] = {
 ["LastSeen"] = 8290.4172084,
@@ -2275,18 +2282,18 @@ MiniCCDB = {
 ["LastSeen"] = 7350.3538979,
 ["SpecId"] = 72,
 },
-["Player-3684-09C1DFE6"] = {
-["LastSeen"] = 59964.29682900001,
-["SpecId"] = 269,
+["Player-11-0E796982"] = {
+["LastSeen"] = 6296.810520100001,
+["SpecId"] = 70,
 },
 ["Player-3725-0C1507C2"] = {
 ["SpecId"] = 256,
 ["LastSeen"] = 638.6247218000001,
 ["LastAttempt"] = 638.2381399000001,
 },
-["Player-11-0E8CED7D"] = {
-["LastSeen"] = 11297.9474299,
-["SpecId"] = 267,
+["Player-52-0E1E56F1"] = {
+["LastSeen"] = 57823.5399149,
+["SpecId"] = 252,
 },
 ["Player-3675-081CDFAB"] = {
 ["SpecId"] = 65,
@@ -2347,9 +2354,9 @@ MiniCCDB = {
 ["LastSeen"] = 21340.7441207,
 ["SpecId"] = 102,
 },
-["Player-11-0E455B49"] = {
-["LastSeen"] = 7835.981504200001,
-["SpecId"] = 1468,
+["Player-11-0E6BE242"] = {
+["LastSeen"] = 7415.588581200001,
+["SpecId"] = 71,
 },
 ["Player-84-09716BAB"] = {
 ["SpecId"] = 71,
@@ -2425,15 +2432,15 @@ MiniCCDB = {
 ["LastSeen"] = 571.3060406000001,
 ["LastAttempt"] = 570.9230991000001,
 },
-["Player-3675-0A64FA49"] = {
-["SpecId"] = 261,
-["LastSeen"] = 12102.683886,
-["LastAttempt"] = 11825.3286961,
+["Player-3209-05DA74FF"] = {
+["SpecId"] = 105,
+["LastSeen"] = 13159.2181356,
+["LastAttempt"] = 13158.7505822,
 },
-["Player-57-0B7D4419"] = {
-["SpecId"] = 256,
-["LastSeen"] = 24621.9488968,
-["LastAttempt"] = 24621.6713887,
+["Player-5-090A8FBD"] = {
+["SpecId"] = 104,
+["LastSeen"] = 17254.2284077,
+["LastAttempt"] = 17254.0346972,
 },
 ["Player-3676-0E423FEC"] = {
 ["LastSeen"] = 18604.3724696,
@@ -2447,9 +2454,9 @@ MiniCCDB = {
 ["LastSeen"] = 60682.48671310001,
 ["SpecId"] = 66,
 },
-["Player-11-0EAA9B8C"] = {
-["LastSeen"] = 7485.856941200001,
-["SpecId"] = 256,
+["Player-3693-0ECE9954"] = {
+["LastSeen"] = 9666.4883788,
+["SpecId"] = 267,
 },
 ["Player-3675-0A8BBD91"] = {
 ["LastSeen"] = 4081.2219109,
@@ -2844,10 +2851,9 @@ MiniCCDB = {
 ["LastSeen"] = 13159.7504889,
 ["LastAttempt"] = 13159.2740058,
 },
-["Player-11-09DBEC84"] = {
-["SpecId"] = 103,
-["LastSeen"] = 27596.0256036,
-["LastAttempt"] = 27595.8250306,
+["Player-57-0DF914EA"] = {
+["LastSeen"] = 3155.0947354,
+["SpecId"] = 71,
 },
 ["Player-60-0FCE3A82"] = {
 ["SpecId"] = 269,
@@ -2868,13 +2874,15 @@ MiniCCDB = {
 ["LastSeen"] = 28019.4713853,
 ["SpecId"] = 64,
 },
-["Player-3725-0B3801A3"] = {
-["LastSeen"] = 5800.596673100001,
-["SpecId"] = 261,
+["Player-121-00835EA3"] = {
+["SpecId"] = 72,
+["LastSeen"] = 25651.3480843,
+["LastAttempt"] = 25651.0643178,
 },
-["Player-3693-0D7DA94B"] = {
-["LastSeen"] = 46256.10997880001,
-["SpecId"] = 102,
+["Player-57-0D7E8028"] = {
+["SpecId"] = 66,
+["LastSeen"] = 45548.360457,
+["LastAttempt"] = 39245.6218201,
 },
 ["Player-3678-0E1FF9A6"] = {
 ["SpecId"] = 70,
@@ -2914,9 +2922,9 @@ MiniCCDB = {
 ["LastSeen"] = 792.1520902000001,
 ["LastAttempt"] = 330.2120478,
 },
-["Player-60-0FE45019"] = {
-["LastSeen"] = 26644.3238057,
-["SpecId"] = 268,
+["Player-3693-0E5870AD"] = {
+["LastSeen"] = 34752.11654800001,
+["SpecId"] = 258,
 },
 ["Player-57-0D8574D4"] = {
 ["LastSeen"] = 26914.9135624,
@@ -2951,9 +2959,10 @@ MiniCCDB = {
 ["LastSeen"] = 16864.9904861,
 ["LastAttempt"] = 16864.3424929,
 },
-["Player-11-0B75DCA6"] = {
-["LastSeen"] = 10019.714375,
-["SpecId"] = 267,
+["Player-57-0DCFF25A"] = {
+["SpecId"] = 70,
+["LastSeen"] = 16519.4697307,
+["LastAttempt"] = 16518.4382589,
 },
 ["Player-1136-067D893C"] = {
 ["LastSeen"] = 13112.1178996,
@@ -2973,10 +2982,10 @@ MiniCCDB = {
 ["LastSeen"] = 25454.7104701,
 ["SpecId"] = 70,
 },
-["Player-1428-0EAB5968"] = {
+["Player-57-0D808CC8"] = {
 ["SpecId"] = 270,
-["LastSeen"] = 13195.9367414,
-["LastAttempt"] = 13195.5918206,
+["LastSeen"] = 13204.3380959,
+["LastAttempt"] = 13203.5983293,
 },
 ["Player-100-0044641B"] = {
 ["SpecId"] = 104,
@@ -2997,10 +3006,9 @@ MiniCCDB = {
 ["LastSeen"] = 43823.1614864,
 ["LastAttempt"] = 43822.9734133,
 },
-["Player-127-085C2C88"] = {
-["SpecId"] = 102,
-["LastSeen"] = 534.2748476,
-["LastAttempt"] = 533.8886631,
+["Player-11-0EA17E99"] = {
+["LastSeen"] = 46883.9972016,
+["SpecId"] = 266,
 },
 ["Player-60-0F8A65B5"] = {
 ["SpecId"] = 66,
@@ -3012,10 +3020,9 @@ MiniCCDB = {
 ["LastSeen"] = 13116.5265411,
 ["LastAttempt"] = 13116.1118625,
 },
-["Player-3208-054AFA51"] = {
-["SpecId"] = 253,
-["LastSeen"] = 16849.7326296,
-["LastAttempt"] = 16849.5451235,
+["Player-61-0F82568A"] = {
+["LastSeen"] = 5576.937336,
+["SpecId"] = 267,
 },
 ["Player-11-0E86C4DA"] = {
 ["LastSeen"] = 8939.9756667,
@@ -3085,10 +3092,10 @@ MiniCCDB = {
 ["LastSeen"] = 55568.62400430001,
 ["LastAttempt"] = 44452.0951915,
 },
-["Player-1171-0686B7FE"] = {
-["SpecId"] = 66,
-["LastSeen"] = 13137.2705863,
-["LastAttempt"] = 13137.1029194,
+["Player-11-0E4E4695"] = {
+["SpecId"] = 253,
+["LastSeen"] = 26391.4529591,
+["LastAttempt"] = 26391.1379348,
 },
 ["Player-11-0E841717"] = {
 ["LastSeen"] = 35089.02868510001,
@@ -3179,9 +3186,10 @@ MiniCCDB = {
 ["LastSeen"] = 24600.6076053,
 ["LastAttempt"] = 24600.4405492,
 },
-["Player-11-0E7557FB"] = {
-["LastSeen"] = 21398.6092277,
-["SpecId"] = 268,
+["Player-11-0EA8624B"] = {
+["SpecId"] = 254,
+["LastSeen"] = 7302.3179043,
+["LastAttempt"] = 13118.4114461,
 },
 ["Player-55-0671FB4A"] = {
 ["SpecId"] = 262,
@@ -3264,13 +3272,13 @@ MiniCCDB = {
 ["LastSeen"] = 20838.6438804,
 ["LastAttempt"] = 20838.3144505,
 },
-["Player-11-0EB4DC88"] = {
-["LastSeen"] = 1345.7268743,
-["SpecId"] = 72,
+["Player-3693-0DEC0C09"] = {
+["LastSeen"] = 32160.6056793,
+["SpecId"] = 70,
 },
-["Player-1426-0DFC86D7"] = {
-["LastSeen"] = 12428.8106017,
-["SpecId"] = 261,
+["Player-11-0EA5D82E"] = {
+["LastSeen"] = 3568.4715497,
+["SpecId"] = 252,
 },
 ["Player-86-0A5C008C"] = {
 ["SpecId"] = 270,
@@ -3286,9 +3294,10 @@ MiniCCDB = {
 ["LastSeen"] = 24496.8608381,
 ["SpecId"] = 252,
 },
-["Player-11-0E9750E5"] = {
-["LastSeen"] = 9413.5329091,
-["SpecId"] = 256,
+["Player-60-06DB085C"] = {
+["SpecId"] = 73,
+["LastSeen"] = 385.1026229,
+["LastAttempt"] = 315.1355992,
 },
 ["Player-1428-093433BC"] = {
 ["SpecId"] = 105,
@@ -3382,14 +3391,13 @@ MiniCCDB = {
 ["LastSeen"] = 20666.9191515,
 ["SpecId"] = 261,
 },
-["Player-11-0E95A5A6"] = {
-["LastSeen"] = 46245.4162245,
-["SpecId"] = 265,
+["Player-3684-0D1DE041"] = {
+["LastSeen"] = 37541.9552663,
+["SpecId"] = 66,
 },
-["Player-57-0D7B72C2"] = {
-["SpecId"] = 581,
-["LastSeen"] = 704.9107015000001,
-["LastAttempt"] = 704.3936511,
+["Player-60-0F64B5EB"] = {
+["LastSeen"] = 45535.0672104,
+["SpecId"] = 269,
 },
 ["Player-11-0DD0A629"] = {
 ["LastSeen"] = 3359.3436245,
@@ -3405,9 +3413,10 @@ MiniCCDB = {
 ["LastSeen"] = 7008.1296227,
 ["LastAttempt"] = 5281.3493181,
 },
-["Player-11-0E483D9F"] = {
-["LastSeen"] = 1505.4537927,
-["SpecId"] = 102,
+["Player-3675-0AFEA923"] = {
+["SpecId"] = 1480,
+["LastSeen"] = 7215.039950300001,
+["LastAttempt"] = 7214.8481594,
 },
 ["Player-60-0EE9946C"] = {
 ["SpecId"] = 270,
@@ -3500,9 +3509,10 @@ MiniCCDB = {
 ["LastSeen"] = 7218.7162249,
 ["LastAttempt"] = 7218.363839600001,
 },
-["Player-3209-0BE8E1BD"] = {
-["LastSeen"] = 7171.1674829,
-["SpecId"] = 263,
+["Player-1136-07F378B0"] = {
+["SpecId"] = 253,
+["LastSeen"] = 13364.8217733,
+["LastAttempt"] = 13364.5033975,
 },
 ["Player-3661-09891CC3"] = {
 ["SpecId"] = 102,
@@ -3586,9 +3596,9 @@ MiniCCDB = {
 ["LastSeen"] = 39452.7766438,
 ["SpecId"] = 270,
 },
-["Player-11-0EB31EDE"] = {
-["LastSeen"] = 46247.44962760001,
-["SpecId"] = 262,
+["Player-11-0E966068"] = {
+["LastSeen"] = 2375.7892243,
+["SpecId"] = 266,
 },
 ["Player-104-0EC2B1F1"] = {
 ["LastSeen"] = 12075.6504246,
@@ -3603,9 +3613,10 @@ MiniCCDB = {
 ["LastSeen"] = 19625.4000935,
 ["LastAttempt"] = 19206.0187253,
 },
-["Player-3209-06463BE3"] = {
-["LastSeen"] = 37263.1179255,
-["SpecId"] = 262,
+["Player-104-0E142157"] = {
+["SpecId"] = 253,
+["LastSeen"] = 43876.8487882,
+["LastAttempt"] = 43876.5832313,
 },
 ["Player-1185-0D613FF0"] = {
 ["SpecId"] = 253,
@@ -3649,15 +3660,14 @@ MiniCCDB = {
 ["LastAttempt"] = 2098.2924043,
 ["LastSeen"] = 2181.5949472,
 },
-["Player-106-0E6DE8FC"] = {
-["SpecId"] = 269,
-["LastSeen"] = 13684.5978237,
-["LastAttempt"] = 13684.1274269,
+["Player-11-0EB24D17"] = {
+["LastSeen"] = 7115.108556800001,
+["SpecId"] = 266,
 },
-["Player-57-0E1D74BA"] = {
-["SpecId"] = 1467,
-["LastSeen"] = 604.6714963000001,
-["LastAttempt"] = 604.5482773,
+["Player-3725-0BF6028D"] = {
+["SpecId"] = 261,
+["LastSeen"] = 14198.6177938,
+["LastAttempt"] = 14198.176607,
 },
 ["Player-1136-095D5953"] = {
 ["SpecId"] = 258,
@@ -3677,10 +3687,9 @@ MiniCCDB = {
 ["LastSeen"] = 43790.8113782,
 ["SpecId"] = 71,
 },
-["Player-1168-0918A49C"] = {
-["SpecId"] = 64,
-["LastSeen"] = 13138.5971845,
-["LastAttempt"] = 13138.2550186,
+["Player-11-0EB3B54A"] = {
+["LastSeen"] = 9108.733762400001,
+["SpecId"] = 253,
 },
 ["Player-11-0E3BD98F"] = {
 ["SpecId"] = 72,
@@ -3737,9 +3746,9 @@ MiniCCDB = {
 ["LastSeen"] = 7612.440339600001,
 ["SpecId"] = 65,
 },
-["Player-11-0EAC785D"] = {
-["LastSeen"] = 7940.731798500001,
-["SpecId"] = 581,
+["Player-11-0E582B5F"] = {
+["LastSeen"] = 22593.3796258,
+["SpecId"] = 72,
 },
 ["Player-11-0E82B67E"] = {
 ["SpecId"] = 265,
@@ -3784,9 +3793,10 @@ MiniCCDB = {
 ["LastSeen"] = 43865.2011193,
 ["LastAttempt"] = 43864.9260336,
 },
-["Player-3683-0E2121EE"] = {
-["LastSeen"] = 391.1329477000001,
-["SpecId"] = 66,
+["Player-60-0E87ED74"] = {
+["SpecId"] = 253,
+["LastSeen"] = 16882.8723256,
+["LastAttempt"] = 16882.1695737,
 },
 ["Player-3694-0AFAEAF0"] = {
 ["SpecId"] = 105,
@@ -3841,18 +3851,19 @@ MiniCCDB = {
 ["LastAttempt"] = 39390.1491684,
 ["LastSeen"] = 39567.86720060001,
 },
-["Player-11-0E39AEF2"] = {
-["LastSeen"] = 3331.4221202,
-["SpecId"] = 105,
+["Player-3676-0EDE5FE9"] = {
+["SpecId"] = 266,
+["LastSeen"] = 3417.3006276,
+["LastAttempt"] = 2465.8756913,
 },
 ["Player-57-0DCC4C8A"] = {
 ["LastSeen"] = 12124.2043923,
 ["SpecId"] = 105,
 },
-["Player-61-0F41419A"] = {
-["SpecId"] = 102,
-["LastAttempt"] = 24203.6797386,
-["LastSeen"] = 24204.4458721,
+["Player-61-0A999173"] = {
+["SpecId"] = 1480,
+["LastSeen"] = 544.7436456,
+["LastAttempt"] = 544.604138,
 },
 ["Player-58-0DE5636C"] = {
 ["LastSeen"] = 5576.3454631,
@@ -3941,10 +3952,10 @@ MiniCCDB = {
 ["LastSeen"] = 13136.9462382,
 ["LastAttempt"] = 13136.737657,
 },
-["Player-3675-0AB38235"] = {
-["SpecId"] = 261,
-["LastSeen"] = 16866.1469944,
-["LastAttempt"] = 16865.3730472,
+["Player-1428-0E8DDBBF"] = {
+["SpecId"] = 269,
+["LastSeen"] = 24601.1395484,
+["LastAttempt"] = 24600.9402086,
 },
 ["Player-5-0EB2FE27"] = {
 ["SpecId"] = 70,
@@ -3960,14 +3971,14 @@ MiniCCDB = {
 ["LastSeen"] = 8145.863759600001,
 ["SpecId"] = 64,
 },
-["Player-11-0EAA5692"] = {
-["LastSeen"] = 22564.2749961,
-["SpecId"] = 1467,
+["Player-3675-0A64FA49"] = {
+["SpecId"] = 261,
+["LastSeen"] = 12102.683886,
+["LastAttempt"] = 11825.3286961,
 },
-["Player-11-0EAAADCA"] = {
+["Player-11-0EADF5B1"] = {
+["LastSeen"] = 1831.9018643,
 ["SpecId"] = 258,
-["LastSeen"] = 15951.6994511,
-["LastAttempt"] = 15951.4027368,
 },
 ["Player-11-0E7EF93C"] = {
 ["SpecId"] = 269,
@@ -3988,62 +3999,60 @@ MiniCCDB = {
 ["LastSeen"] = 55780.8513437,
 ["SpecId"] = 1468,
 },
-["Player-76-0C14C28A"] = {
-["LastSeen"] = 4668.678864,
-["SpecId"] = 1480,
+["Player-3726-0ADFF2C0"] = {
+["LastSeen"] = 14722.0592966,
+["SpecId"] = 577,
 },
-["Player-118-00B22326"] = {
-["SpecId"] = 70,
-["LastSeen"] = 43889.8109448,
-["LastAttempt"] = 43889.3986615,
+["Player-1426-0DDB54F2"] = {
+["LastSeen"] = 46034.4294994,
+["SpecId"] = 266,
 },
 ["Player-11-0DD3A416"] = {
 ["LastSeen"] = 19868.4358637,
 ["SpecId"] = 252,
 },
-["Player-11-0E25E626"] = {
-["LastSeen"] = 24426.1270449,
-["SpecId"] = 70,
+["Player-11-0DF696D9"] = {
+["LastSeen"] = 21482.2675481,
+["SpecId"] = 105,
 },
 ["Player-3725-023E610B"] = {
 ["SpecId"] = 72,
 ["LastSeen"] = 13124.4244818,
 ["LastAttempt"] = 13124.0754689,
 },
-["Player-3693-0ECE9954"] = {
-["LastSeen"] = 9666.4883788,
-["SpecId"] = 267,
+["Player-11-0EB50C40"] = {
+["LastSeen"] = 32390.7245512,
+["SpecId"] = 256,
 },
-["Player-3678-0B7166EC"] = {
-["SpecId"] = 64,
-["LastSeen"] = 13352.2591582,
-["LastAttempt"] = 13351.8915282,
+["Player-11-0E86FE6E"] = {
+["LastSeen"] = 22123.0427486,
+["SpecId"] = 256,
 },
-["Player-11-0E2DFED2"] = {
-["LastSeen"] = 13791.7582687,
-["SpecId"] = 64,
+["Player-76-0C14C28A"] = {
+["LastSeen"] = 4668.678864,
+["SpecId"] = 1480,
 },
 ["Player-11-0DD9B49B"] = {
 ["LastSeen"] = 45398.84307520001,
 ["SpecId"] = 256,
 },
-["Player-57-0E0FF3C6"] = {
-["SpecId"] = 65,
-["LastAttempt"] = 9106.5197767,
-["LastSeen"] = 9106.6485195,
+["Player-11-0E455B49"] = {
+["LastSeen"] = 7835.981504200001,
+["SpecId"] = 1468,
 },
-["Player-11-0E6BE242"] = {
-["LastSeen"] = 7415.588581200001,
+["Player-67-0DBC3DF8"] = {
 ["SpecId"] = 71,
+["LastSeen"] = 13125.9323182,
+["LastAttempt"] = 13125.4381947,
 },
-["Player-3721-0C5BFE5D"] = {
+["Player-3723-0BE15B64"] = {
 ["SpecId"] = 71,
-["LastSeen"] = 20810.3190977,
-["LastAttempt"] = 20631.9050661,
+["LastAttempt"] = 2019.1497656,
+["LastSeen"] = 2078.937673,
 },
-["Player-1171-0AB9E8FD"] = {
-["LastSeen"] = 18520.4394601,
-["SpecId"] = 270,
+["Player-11-0EAFAF3C"] = {
+["LastSeen"] = 18443.3950198,
+["SpecId"] = 70,
 },
 ["Player-3725-0BE4D831"] = {
 ["SpecId"] = 268,
@@ -4059,40 +4068,40 @@ MiniCCDB = {
 ["LastSeen"] = 7679.417717,
 ["SpecId"] = 253,
 },
-["Player-11-0EB50D37"] = {
-["SpecId"] = 253,
-["LastSeen"] = 21634.1389829,
-["LastAttempt"] = 21633.8078354,
+["Player-1171-0AB9E8FD"] = {
+["LastSeen"] = 18520.4394601,
+["SpecId"] = 270,
 },
 ["Player-60-0F401184"] = {
 ["SpecId"] = 1480,
 ["LastSeen"] = 24623.4737149,
 ["LastAttempt"] = 24623.1750723,
 },
-["Player-11-0EB33F75"] = {
-["LastSeen"] = 5101.3754582,
-["SpecId"] = 261,
+["Player-77-0F641A1E"] = {
+["SpecId"] = 577,
+["LastSeen"] = 24549.1858083,
+["LastAttempt"] = 24548.9090967,
 },
-["Player-1185-0D26D099"] = {
-["SpecId"] = 70,
-["LastSeen"] = 680.4796434,
-["LastAttempt"] = 422.4562426000001,
+["Player-127-08687827"] = {
+["LastSeen"] = 45408.76641880001,
+["SpecId"] = 102,
 },
-["Player-11-0DF696D9"] = {
-["LastSeen"] = 21482.2675481,
-["SpecId"] = 105,
+["Player-1426-07596F27"] = {
+["LastSeen"] = 3401.1115891,
+["SpecId"] = 252,
 },
-["Player-11-0E9054BC"] = {
-["LastSeen"] = 21425.6349376,
-["SpecId"] = 267,
+["Player-11-0DCC0704"] = {
+["LastSeen"] = 43886.37219,
+["SpecId"] = 268,
 },
 ["Player-1136-0973F0DB"] = {
 ["LastSeen"] = 3329.0181654,
 ["SpecId"] = 73,
 },
-["Player-11-0E7998B8"] = {
-["LastSeen"] = 34816.7457108,
-["SpecId"] = 250,
+["Player-76-05B64301"] = {
+["SpecId"] = 73,
+["LastSeen"] = 13124.9386301,
+["LastAttempt"] = 13124.5794739,
 },
 ["Player-3678-0E1A5CA6"] = {
 ["SpecId"] = 264,
@@ -4103,41 +4112,41 @@ MiniCCDB = {
 ["LastSeen"] = 23009.9461929,
 ["SpecId"] = 103,
 },
-["Player-1175-0FC247D4"] = {
-["SpecId"] = 262,
-["LastSeen"] = 2298.7052396,
-["LastAttempt"] = 2297.6950093,
+["Player-3676-0DB17138"] = {
+["SpecId"] = 250,
+["LastSeen"] = 557.9167836,
+["LastAttempt"] = 557.7681624,
 },
-["Player-3675-06E472F2"] = {
-["SpecId"] = 72,
-["LastSeen"] = 17240.6159925,
-["LastAttempt"] = 17240.3504473,
+["Player-11-0BCF0AF7"] = {
+["SpecId"] = 257,
+["LastSeen"] = 13954.7720071,
+["LastAttempt"] = 13954.568115,
+},
+["Player-86-0AA49679"] = {
+["LastSeen"] = 9195.851767400001,
+["SpecId"] = 270,
+},
+["Player-11-0E9A5AF6"] = {
+["LastSeen"] = 6997.6602067,
+["SpecId"] = 251,
 },
 ["Player-1427-01DAC185"] = {
 ["SpecId"] = 71,
 ["LastSeen"] = 14730.4569682,
 ["LastAttempt"] = 14344.0605794,
 },
-["Player-11-0E9A5AF6"] = {
-["LastSeen"] = 6997.6602067,
-["SpecId"] = 251,
-},
-["Player-86-0AA49679"] = {
-["LastSeen"] = 9195.851767400001,
-["SpecId"] = 270,
-},
 ["Player-3209-0BFB56D1"] = {
 ["LastSeen"] = 24605.0635252,
 ["SpecId"] = 1468,
 },
-["Player-5-090A8FBD"] = {
-["SpecId"] = 104,
-["LastSeen"] = 17254.2284077,
-["LastAttempt"] = 17254.0346972,
+["Player-11-0EB0AC75"] = {
+["LastSeen"] = 3247.3855015,
+["SpecId"] = 71,
 },
-["Player-11-0EA33BD7"] = {
-["LastSeen"] = 23100.8950525,
-["SpecId"] = 254,
+["Player-63-003C34B4"] = {
+["SpecId"] = 64,
+["LastSeen"] = 9148.8572127,
+["LastAttempt"] = 9145.511713,
 },
 ["Player-1168-0B0229C1"] = {
 ["SpecId"] = 254,
@@ -4148,26 +4157,27 @@ MiniCCDB = {
 ["LastSeen"] = 37196.912437,
 ["SpecId"] = 257,
 },
-["Player-11-0E8F5A15"] = {
-["LastSeen"] = 43980.68135380001,
-["SpecId"] = 1467,
-},
-["Player-84-0B00A947"] = {
-["LastSeen"] = 5330.3768122,
-["SpecId"] = 255,
-},
-["Player-12-0EA5D077"] = {
-["LastSeen"] = 24257.6424675,
-["SpecId"] = 251,
-},
-["Player-1185-0EB51854"] = {
-["SpecId"] = 265,
-["LastSeen"] = 646.5193376000001,
-["LastAttempt"] = 646.2540471000001,
-},
-["Player-11-0EAFAF3C"] = {
-["LastSeen"] = 18443.3950198,
+["Player-11-0E5927D9"] = {
 ["SpecId"] = 70,
+["LastSeen"] = 7222.1722766,
+["LastAttempt"] = 7221.8773987,
+},
+["Player-60-0F3D0C6E"] = {
+["LastSeen"] = 22097.0508077,
+["SpecId"] = 577,
+},
+["Player-1426-07592992"] = {
+["LastSeen"] = 9212.6731999,
+["SpecId"] = 102,
+},
+["Player-11-0E9054BC"] = {
+["LastSeen"] = 21425.6349376,
+["SpecId"] = 267,
+},
+["Player-61-0F41419A"] = {
+["SpecId"] = 102,
+["LastAttempt"] = 24203.6797386,
+["LastSeen"] = 24204.4458721,
 },
 ["Player-1427-0DE37B33"] = {
 ["LastSeen"] = 61827.08376530001,
@@ -4191,9 +4201,9 @@ MiniCCDB = {
 ["LastSeen"] = 19839.286327,
 ["LastAttempt"] = 19838.9823885,
 },
-["Player-11-0EB0AC75"] = {
-["LastSeen"] = 3247.3855015,
-["SpecId"] = 71,
+["Player-11-0EA91479"] = {
+["LastSeen"] = 44048.0092133,
+["SpecId"] = 267,
 },
 ["Player-3661-091E6465"] = {
 ["SpecId"] = 65,
@@ -4209,123 +4219,123 @@ MiniCCDB = {
 ["LastSeen"] = 17241.1856821,
 ["LastAttempt"] = 17240.8556206,
 },
-["Player-3683-0E0AC3F6"] = {
-["SpecId"] = 252,
-["LastSeen"] = 13228.9619501,
-["LastAttempt"] = 13228.5871623,
+["Player-84-0B00A947"] = {
+["LastSeen"] = 5330.3768122,
+["SpecId"] = 255,
 },
-["Player-3683-0AAF82A4"] = {
-["LastSeen"] = 366.0942061,
-["SpecId"] = 70,
+["Player-121-09C8A943"] = {
+["SpecId"] = 105,
+["LastSeen"] = 39461.6337836,
+["LastAttempt"] = 39461.33777090001,
 },
-["Player-11-0E0287FE"] = {
-["LastSeen"] = 4094.8729706,
-["SpecId"] = 261,
+["Player-76-0C0FE524"] = {
+["LastSeen"] = 23649.0885013,
+["SpecId"] = 65,
 },
-["Player-11-0E12645F"] = {
-["LastSeen"] = 3778.7141658,
-["SpecId"] = 263,
+["Player-1428-0A581DC4"] = {
+["SpecId"] = 577,
+["LastSeen"] = 43836.6145947,
+["LastAttempt"] = 43836.2408718,
 },
 ["Player-3676-0E3D6AF9"] = {
 ["SpecId"] = 254,
 ["LastSeen"] = 547.0733630000001,
 ["LastAttempt"] = 546.6168217000001,
 },
-["Player-1136-0608CE62"] = {
-["SpecId"] = 64,
-["LastSeen"] = 8363.8389885,
-["LastAttempt"] = 8236.2956864,
+["Player-3676-0ADB78A0"] = {
+["SpecId"] = 1480,
+["LastSeen"] = 10771.3625596,
+["LastAttempt"] = 10771.0267259,
 },
-["Player-1175-0E801CAC"] = {
-["LastSeen"] = 9162.4592668,
-["SpecId"] = 70,
+["Player-1175-0FC247D4"] = {
+["SpecId"] = 262,
+["LastSeen"] = 2298.7052396,
+["LastAttempt"] = 2297.6950093,
 },
-["Player-1426-0DDB54F2"] = {
-["LastSeen"] = 46034.4294994,
-["SpecId"] = 266,
+["Player-11-0A7A11DB"] = {
+["LastSeen"] = 20800.3133008,
+["SpecId"] = 1480,
 },
-["Player-11-0E9E1D57"] = {
-["LastSeen"] = 18542.9869966,
-["SpecId"] = 255,
+["Player-11-0E0287FE"] = {
+["LastSeen"] = 4094.8729706,
+["SpecId"] = 261,
 },
 ["Player-3678-0B36A159"] = {
 ["SpecId"] = 70,
 ["LastSeen"] = 545.3547737,
 ["LastAttempt"] = 545.1033729000001,
 },
-["Player-1428-0DFF98CC"] = {
-["SpecId"] = 1480,
-["LastSeen"] = 13324.9893573,
-["LastAttempt"] = 13324.6694469,
+["Player-3684-0EBA89BC"] = {
+["SpecId"] = 264,
+["LastSeen"] = 16848.0954553,
+["LastAttempt"] = 16847.5614574,
 },
-["Player-60-0FDD5BAC"] = {
-["SpecId"] = 1480,
-["LastSeen"] = 43864.7742932,
-["LastAttempt"] = 43864.4133125,
-},
-["Player-3684-0EDEB76E"] = {
-["LastSeen"] = 2811.9855753,
-["SpecId"] = 256,
-},
-["Player-11-0E709B92"] = {
-["LastSeen"] = 18945.7659423,
-["SpecId"] = 268,
-},
-["Player-117-0472BE61"] = {
-["SpecId"] = 254,
-["LastSeen"] = 15965.3298348,
-["LastAttempt"] = 15964.9976327,
-},
-["Player-11-0EB09ED6"] = {
-["LastSeen"] = 20349.1712962,
+["Player-1070-039B4E5B"] = {
 ["SpecId"] = 70,
-},
-["Player-1138-08B727A3"] = {
-["SpecId"] = 70,
-["LastSeen"] = 6590.5195098,
-["LastAttempt"] = 6590.0891804,
-},
-["Player-11-0E27CA2E"] = {
-["LastSeen"] = 10293.3841292,
-["SpecId"] = 252,
-},
-["Player-11-0E86FE6E"] = {
-["LastSeen"] = 22123.0427486,
-["SpecId"] = 256,
-},
-["Player-61-0A999173"] = {
-["SpecId"] = 1480,
-["LastSeen"] = 544.7436456,
-["LastAttempt"] = 544.604138,
+["LastSeen"] = 17274.0304454,
+["LastAttempt"] = 17273.7108036,
 },
 ["Player-3684-0EA9EC5F"] = {
 ["SpecId"] = 73,
 ["LastSeen"] = 5398.4696221,
 ["LastAttempt"] = 5398.095722200001,
 },
-["Player-3209-0513BC28"] = {
-["SpecId"] = 71,
-["LastSeen"] = 40622.6201797,
-["LastAttempt"] = 40609.4110758,
+["Player-11-0E709B92"] = {
+["LastSeen"] = 18945.7659423,
+["SpecId"] = 268,
 },
-["Player-84-0966150C"] = {
-["SpecId"] = 577,
-["LastSeen"] = 25642.3584885,
-["LastAttempt"] = 25642.0481781,
+["Player-118-00B22326"] = {
+["SpecId"] = 70,
+["LastSeen"] = 43889.8109448,
+["LastAttempt"] = 43889.3986615,
+},
+["Player-11-0E358F03"] = {
+["SpecId"] = 70,
+["LastSeen"] = 47067.5006451,
+["LastAttempt"] = 47067.2149377,
+},
+["Player-3684-0E1EDEC4"] = {
+["LastSeen"] = 812.7377213000001,
+["SpecId"] = 65,
+},
+["Player-11-0E27CA2E"] = {
+["LastSeen"] = 10293.3841292,
+["SpecId"] = 252,
+},
+["Player-60-0FDD5BAC"] = {
+["SpecId"] = 1480,
+["LastSeen"] = 43864.7742932,
+["LastAttempt"] = 43864.4133125,
+},
+["Player-11-0E9AE955"] = {
+["LastSeen"] = 34916.0455797,
+["SpecId"] = 254,
+},
+["Player-11-0E1F67F5"] = {
+["LastSeen"] = 21616.1203515,
+["SpecId"] = 257,
+},
+["Player-3209-0B73ED09"] = {
+["LastSeen"] = 12325.3538561,
+["SpecId"] = 261,
+},
+["Player-1175-0F87BD7E"] = {
+["LastSeen"] = 24110.1630031,
+["SpecId"] = 262,
 },
 ["Player-1138-061F9F2C"] = {
 ["SpecId"] = 63,
 ["LastSeen"] = 18656.4478481,
 ["LastAttempt"] = 18656.3039295,
 },
-["Player-11-0E9C1F1D"] = {
-["LastSeen"] = 4904.4862314,
-["SpecId"] = 70,
+["Player-11-0E39AEF2"] = {
+["LastSeen"] = 3331.4221202,
+["SpecId"] = 105,
 },
-["Player-160-0BA36DE1"] = {
-["SpecId"] = 268,
-["LastSeen"] = 16867.1067776,
-["LastAttempt"] = 16866.396783,
+["Player-3675-0AA1F0C3"] = {
+["SpecId"] = 72,
+["LastAttempt"] = 3100.9767415,
+["LastSeen"] = 3369.4060068,
 },
 ["Player-11-0E7D8539"] = {
 ["SpecId"] = 254,
@@ -4337,18 +4347,18 @@ MiniCCDB = {
 ["LastSeen"] = 21603.0271994,
 ["LastAttempt"] = 21602.7303801,
 },
-["Player-11-0E5F3096"] = {
-["LastSeen"] = 19828.5677665,
-["SpecId"] = 265,
+["Player-113-0A21F8D6"] = {
+["SpecId"] = 104,
+["LastSeen"] = 43940.8802729,
+["LastAttempt"] = 43888.8868961,
 },
-["Player-52-0E1E56F1"] = {
-["LastSeen"] = 57823.5399149,
-["SpecId"] = 252,
+["Player-3675-0AFFB224"] = {
+["LastSeen"] = 19880.4615393,
+["SpecId"] = 102,
 },
-["Player-11-0E656D12"] = {
-["SpecId"] = 269,
-["LastSeen"] = 18668.2369944,
-["LastAttempt"] = 18667.9409866,
+["Player-76-0BE4F401"] = {
+["LastSeen"] = 47066.7933267,
+["SpecId"] = 261,
 },
 ["Player-120-0B038BBA"] = {
 ["SpecId"] = 270,
@@ -4360,40 +4370,41 @@ MiniCCDB = {
 ["LastSeen"] = 17449.0497371,
 ["LastAttempt"] = 17448.6855935,
 },
-["Player-11-0EB50BF6"] = {
-["SpecId"] = 269,
-["LastSeen"] = 13968.681234,
-["LastAttempt"] = 13968.378635,
+["Player-11-0EB56B7C"] = {
+["LastSeen"] = 5227.1091327,
+["SpecId"] = 71,
 },
 ["Player-3684-0ED6F537"] = {
 ["LastSeen"] = 41816.8006369,
 ["SpecId"] = 268,
 },
-["Player-3694-069F8F0B"] = {
-["SpecId"] = 70,
-["LastSeen"] = 944.1139816000001,
-["LastAttempt"] = 943.8241075000001,
+["Player-11-0E656D12"] = {
+["SpecId"] = 269,
+["LastSeen"] = 18668.2369944,
+["LastAttempt"] = 18667.9409866,
 },
 ["Player-11-0EA3D359"] = {
 ["LastSeen"] = 20514.9879489,
 ["SpecId"] = 105,
 },
-["Player-11-0E8A1E04"] = {
-["LastSeen"] = 7444.689468500001,
-["SpecId"] = 62,
+["Player-84-0966150C"] = {
+["SpecId"] = 577,
+["LastSeen"] = 25642.3584885,
+["LastAttempt"] = 25642.0481781,
 },
-["Player-3684-0E1EDEC4"] = {
-["LastSeen"] = 812.7377213000001,
-["SpecId"] = 65,
+["Player-3675-0AD0C8EE"] = {
+["LastSeen"] = 21434.5603449,
+["SpecId"] = 270,
 },
 ["Player-3209-0BE9411D"] = {
 ["SpecId"] = 258,
 ["LastSeen"] = 13138.083528,
 ["LastAttempt"] = 13137.7507033,
 },
-["Player-1175-0F87BD7E"] = {
-["LastSeen"] = 24110.1630031,
-["SpecId"] = 262,
+["Player-11-0EB58DB2"] = {
+["SpecId"] = 261,
+["LastSeen"] = 21616.8665461,
+["LastAttempt"] = 21616.7701555,
 },
 ["Player-11-0BD53DF7"] = {
 ["LastSeen"] = 24458.8679684,
@@ -4408,75 +4419,73 @@ MiniCCDB = {
 ["LastSeen"] = 8802.157252300001,
 ["LastAttempt"] = 8235.793796900001,
 },
-["Player-11-0EA2035C"] = {
-["LastSeen"] = 4123.6184024,
-["SpecId"] = 577,
+["Player-3209-0BE8E1BD"] = {
+["LastSeen"] = 7171.1674829,
+["SpecId"] = 263,
 },
-["Player-3675-0AA1F0C3"] = {
-["SpecId"] = 72,
-["LastAttempt"] = 3100.9767415,
-["LastSeen"] = 3369.4060068,
+["Player-11-0E344746"] = {
+["LastSeen"] = 22216.6301375,
+["SpecId"] = 105,
 },
 ["Player-96-0CB286E3"] = {
 ["LastSeen"] = 4950.313799600001,
 ["SpecId"] = 64,
 },
-["Player-11-0EB56AC6"] = {
-["LastSeen"] = 3564.3862845,
-["SpecId"] = 1473,
+["Player-162-0BBFDF63"] = {
+["LastSeen"] = 2646.8980248,
+["SpecId"] = 256,
 },
-["Player-60-0EFB023F"] = {
-["SpecId"] = 265,
-["LastSeen"] = 17240.3383223,
-["LastAttempt"] = 17238.84422,
+["Player-3661-06DA5D7B"] = {
+["SpecId"] = 268,
+["LastSeen"] = 13177.5869691,
+["LastAttempt"] = 13177.0929694,
 },
-["Player-11-0EB3B54A"] = {
-["LastSeen"] = 9108.733762400001,
-["SpecId"] = 253,
+["Player-11-0EAC785D"] = {
+["LastSeen"] = 7940.731798500001,
+["SpecId"] = 581,
 },
-["Player-60-0E87ED74"] = {
-["SpecId"] = 253,
-["LastSeen"] = 16882.8723256,
-["LastAttempt"] = 16882.1695737,
+["Player-3209-06F7CF31"] = {
+["SpecId"] = 72,
+["LastSeen"] = 7614.3350667,
+["LastAttempt"] = 7613.9094936,
 },
 ["Player-60-0FEC5791"] = {
 ["SpecId"] = 269,
 ["LastSeen"] = 9088.8213919,
 ["LastAttempt"] = 9086.2981467,
 },
-["Player-11-0E2003EF"] = {
-["LastSeen"] = 8608.3187058,
-["SpecId"] = 253,
+["Player-11-0E8F5A15"] = {
+["LastSeen"] = 43980.68135380001,
+["SpecId"] = 1467,
 },
-["Player-11-0E75671A"] = {
-["LastSeen"] = 6342.0003796,
-["SpecId"] = 266,
+["Player-11-0EB48D94"] = {
+["LastSeen"] = 24421.780905,
+["SpecId"] = 72,
 },
 ["Player-11-0EB4F2B0"] = {
 ["LastSeen"] = 4921.6736342,
 ["SpecId"] = 253,
 },
-["Player-11-0E881FE8"] = {
-["LastSeen"] = 8069.590985100001,
-["SpecId"] = 105,
+["Player-75-0FAE37F7"] = {
+["SpecId"] = 65,
+["LastSeen"] = 16883.7383098,
+["LastAttempt"] = 16883.1786509,
 },
-["Player-5-0EAC12C6"] = {
-["SpecId"] = 253,
-["LastSeen"] = 19838.8125105,
-["LastAttempt"] = 19838.4831908,
+["Player-1168-0AEC10D7"] = {
+["LastSeen"] = 28019.1812153,
+["SpecId"] = 65,
 },
-["Player-11-0EB2FF9A"] = {
-["LastSeen"] = 33980.8062605,
-["SpecId"] = 268,
+["Player-11-0E75671A"] = {
+["LastSeen"] = 6342.0003796,
+["SpecId"] = 266,
 },
-["Player-11-0E344746"] = {
-["LastSeen"] = 22216.6301375,
-["SpecId"] = 105,
-},
-["Player-3725-0BF6028D"] = {
+["Player-76-0BE6885B"] = {
+["LastSeen"] = 16552.349398,
 ["SpecId"] = 261,
-["LastSeen"] = 14198.6177938,
-["LastAttempt"] = 14198.176607,
+},
+["Player-11-0E2DFED2"] = {
+["LastSeen"] = 13791.7582687,
+["SpecId"] = 64,
 },
 ["Player-11-0EB54762"] = {
 ["LastSeen"] = 7511.349785300001,
@@ -4487,63 +4496,65 @@ MiniCCDB = {
 ["LastSeen"] = 17241.4758612,
 ["LastAttempt"] = 17241.3557921,
 },
-["Player-11-0EA1CC14"] = {
-["LastSeen"] = 21834.8055793,
-["SpecId"] = 64,
+["Player-11-0E8CED7D"] = {
+["LastSeen"] = 11297.9474299,
+["SpecId"] = 267,
 },
-["Player-1136-09615EFC"] = {
+["Player-3693-0A03E61E"] = {
 ["SpecId"] = 102,
-["LastSeen"] = 43862.7914105,
-["LastAttempt"] = 43862.38546380001,
+["LastSeen"] = 20014.0879892,
+["LastAttempt"] = 19882.1863396,
 },
-["Player-1070-039B4E5B"] = {
-["SpecId"] = 70,
-["LastSeen"] = 17274.0304454,
-["LastAttempt"] = 17273.7108036,
+["Player-11-0EB2FF9A"] = {
+["LastSeen"] = 33980.8062605,
+["SpecId"] = 268,
 },
-["Player-11-0A3D5D22"] = {
-["LastSeen"] = 1937.5094226,
-["SpecId"] = 264,
+["Player-11-0E12645F"] = {
+["LastSeen"] = 3778.7141658,
+["SpecId"] = 263,
 },
-["Player-57-0DFF7F98"] = {
-["SpecId"] = 258,
-["LastSeen"] = 26397.1370439,
-["LastAttempt"] = 26396.9590499,
+["Player-57-0E1D74BA"] = {
+["SpecId"] = 1467,
+["LastSeen"] = 604.6714963000001,
+["LastAttempt"] = 604.5482773,
 },
-["Player-3684-0EBA89BC"] = {
-["SpecId"] = 264,
-["LastSeen"] = 16848.0954553,
-["LastAttempt"] = 16847.5614574,
+["Player-11-0EA33BD7"] = {
+["LastSeen"] = 23100.8950525,
+["SpecId"] = 254,
 },
 ["Player-11-0E70B0DB"] = {
 ["LastSeen"] = 14322.8834121,
 ["SpecId"] = 105,
 },
-["Player-71-0F028E5A"] = {
-["SpecId"] = 253,
-["LastSeen"] = 13443.0935264,
-["LastAttempt"] = 13442.6861047,
+["Player-96-0EDA950F"] = {
+["SpecId"] = 1480,
+["LastSeen"] = 16849.4638163,
+["LastAttempt"] = 16848.5379873,
 },
-["Player-11-0E565C87"] = {
-["LastSeen"] = 7978.590744800001,
-["SpecId"] = 268,
+["Player-1427-0DC5DD6C"] = {
+["SpecId"] = 105,
+["LastSeen"] = 26823.0911033,
+["LastAttempt"] = 22788.9192129,
 },
-["Player-11-0EAD1B31"] = {
-["LastSeen"] = 24233.0221231,
-["SpecId"] = 64,
+["Player-3676-0EAAB520"] = {
+["SpecId"] = 269,
+["LastSeen"] = 14734.0317659,
+["LastAttempt"] = 14344.5628022,
 },
-["Player-76-0C0FE524"] = {
-["LastSeen"] = 23649.0885013,
-["SpecId"] = 65,
-},
-["Player-121-0AD9EA25"] = {
-["SpecId"] = 253,
-["LastSeen"] = 13957.1882504,
-["LastAttempt"] = 13956.8500165,
-},
-["Player-3675-0AD0C8EE"] = {
-["LastSeen"] = 21434.5603449,
+["Player-120-08876552"] = {
 ["SpecId"] = 270,
+["LastSeen"] = 25641.1606604,
+["LastAttempt"] = 25641.0449064,
+},
+["Player-3684-0EABBAE2"] = {
+["SpecId"] = 105,
+["LastSeen"] = 11424.2130242,
+["LastAttempt"] = 11423.7639366,
+},
+["Player-106-0E6DE8FC"] = {
+["SpecId"] = 269,
+["LastSeen"] = 13684.5978237,
+["LastAttempt"] = 13684.1274269,
 },
 ["Player-11-0E2FC4B0"] = {
 ["LastSeen"] = 8956.3165972,
@@ -4568,15 +4579,15 @@ MiniCCDB = {
 ["LastSeen"] = 9125.3060382,
 ["LastAttempt"] = 9125.1081572,
 },
-["Player-1427-0EDBCD08"] = {
-["SpecId"] = 265,
-["LastSeen"] = 9304.067847600001,
-["LastAttempt"] = 9303.6674107,
+["Player-121-0AD9EA25"] = {
+["SpecId"] = 253,
+["LastSeen"] = 13957.1882504,
+["LastAttempt"] = 13956.8500165,
 },
-["Player-96-0EDA950F"] = {
-["SpecId"] = 1480,
-["LastSeen"] = 16849.4638163,
-["LastAttempt"] = 16848.5379873,
+["Player-71-0F028E5A"] = {
+["SpecId"] = 253,
+["LastSeen"] = 13443.0935264,
+["LastAttempt"] = 13442.6861047,
 },
 ["Player-11-0DF24DA6"] = {
 ["LastSeen"] = 41201.9660314,
@@ -4605,29 +4616,27 @@ MiniCCDB = {
 ["LastSeen"] = 41223.2026987,
 ["SpecId"] = 71,
 },
-["Player-3676-0EA362F8"] = {
-["SpecId"] = 70,
-["LastSeen"] = 44870.3688225,
-["LastAttempt"] = 44869.97159070001,
+["Player-11-0EB31EDE"] = {
+["LastSeen"] = 46247.44962760001,
+["SpecId"] = 262,
 },
-["Player-3676-0D07CFCF"] = {
-["SpecId"] = 252,
-["LastSeen"] = 13306.0402551,
-["LastAttempt"] = 13305.8541608,
+["Player-57-0B7D4419"] = {
+["SpecId"] = 256,
+["LastSeen"] = 24621.9488968,
+["LastAttempt"] = 24621.6713887,
 },
-["Player-11-0E966068"] = {
-["LastSeen"] = 2375.7892243,
-["SpecId"] = 266,
+["Player-3209-06463BE3"] = {
+["LastSeen"] = 37263.1179255,
+["SpecId"] = 262,
 },
-["Player-127-06B7E3BD"] = {
-["SpecId"] = 258,
-["LastSeen"] = 4004.3776578,
-["LastAttempt"] = 4004.047111200001,
+["Player-53-0C62EB57"] = {
+["SpecId"] = 103,
+["LastSeen"] = 27706.3776093,
+["LastAttempt"] = 27705.9917503,
 },
-["Player-3661-06DA5D7B"] = {
-["SpecId"] = 268,
-["LastSeen"] = 13177.5869691,
-["LastAttempt"] = 13177.0929694,
+["Player-11-0E283542"] = {
+["LastSeen"] = 9083.198628600001,
+["SpecId"] = 71,
 },
 ["Player-5-0EA57A83"] = {
 ["SpecId"] = 266,
@@ -4663,17 +4672,18 @@ MiniCCDB = {
 ["LastSeen"] = 27534.3969576,
 ["LastAttempt"] = 27534.0975273,
 },
-["Player-11-0E42637D"] = {
-["LastSeen"] = 13729.5068001,
+["Player-1175-0E801CAC"] = {
+["LastSeen"] = 9162.4592668,
 ["SpecId"] = 70,
 },
 ["Player-11-0EB49FE7"] = {
 ["LastSeen"] = 44067.1694025,
 ["SpecId"] = 263,
 },
-["Player-106-0DCEE6BE"] = {
-["LastSeen"] = 8980.393203200001,
-["SpecId"] = 261,
+["Player-75-0FCF7FED"] = {
+["SpecId"] = 257,
+["LastSeen"] = 26392.8008682,
+["LastAttempt"] = 26392.4510591,
 },
 ["Player-61-0FE83B9E"] = {
 ["LastSeen"] = 16021.5937076,
@@ -4683,51 +4693,50 @@ MiniCCDB = {
 ["LastSeen"] = 1337.89095,
 ["SpecId"] = 264,
 },
-["Player-3675-0B000665"] = {
-["LastSeen"] = 40686.6180168,
-["SpecId"] = 72,
+["Player-11-0EB24A8B"] = {
+["SpecId"] = 63,
+["LastSeen"] = 4491.413366000001,
+["LastAttempt"] = 4491.114649,
 },
-["Player-3676-0EAAB520"] = {
-["SpecId"] = 269,
-["LastSeen"] = 14734.0317659,
-["LastAttempt"] = 14344.5628022,
+["Player-5-0E6747DE"] = {
+["SpecId"] = 104,
+["LastSeen"] = 15356.2968418,
+["LastAttempt"] = 15356.0854058,
 },
 ["Player-3678-0D7B3B84"] = {
 ["SpecId"] = 265,
 ["LastSeen"] = 16993.0292423,
 ["LastAttempt"] = 16992.4078076,
 },
-["Player-11-0E79CE72"] = {
-["LastSeen"] = 871.1960484000001,
-["SpecId"] = 104,
+["Player-3683-0AAF82A4"] = {
+["LastSeen"] = 366.0942061,
+["SpecId"] = 70,
 },
 ["Player-11-0E9D9EF9"] = {
 ["LastSeen"] = 56456.61886910001,
 ["SpecId"] = 70,
 },
-["Player-1428-0A581DC4"] = {
+["Player-57-0A144DD3"] = {
+["SpecId"] = 258,
+["LastSeen"] = 3195.0112064,
+["LastAttempt"] = 2216.3669294,
+},
+["Player-11-0E483D9F"] = {
+["LastSeen"] = 1505.4537927,
+["SpecId"] = 102,
+},
+["Player-11-0E565C87"] = {
+["LastSeen"] = 7978.590744800001,
+["SpecId"] = 268,
+},
+["Player-151-098C0351"] = {
+["LastSeen"] = 5973.2332591,
 ["SpecId"] = 577,
-["LastSeen"] = 43836.6145947,
-["LastAttempt"] = 43836.2408718,
 },
-["Player-11-0E99FACE"] = {
-["SpecId"] = 270,
-["LastSeen"] = 8646.1446309,
-["LastAttempt"] = 9302.666268300001,
-},
-["Player-3721-0AF54699"] = {
-["LastSeen"] = 13121.5438673,
-["SpecId"] = 72,
-},
-["Player-1428-08CDDA0E"] = {
+["Player-3675-0AF9770D"] = {
 ["SpecId"] = 1480,
-["LastSeen"] = 17254.7454914,
-["LastAttempt"] = 17254.5361703,
-},
-["Player-3678-08AABD1D"] = {
-["SpecId"] = 253,
-["LastSeen"] = 861.9348738000001,
-["LastAttempt"] = 861.6764706,
+["LastSeen"] = 6587.187800600001,
+["LastAttempt"] = 6586.9877832,
 },
 ["Player-61-0F64DC74"] = {
 ["SpecId"] = 105,
@@ -4739,18 +4748,19 @@ MiniCCDB = {
 ["LastSeen"] = 55574.66796490001,
 ["LastAttempt"] = 44231.1593249,
 },
-["Player-11-0DCC0704"] = {
-["LastSeen"] = 43886.37219,
-["SpecId"] = 268,
+["Player-106-0DCEE6BE"] = {
+["LastSeen"] = 8980.393203200001,
+["SpecId"] = 261,
 },
-["Player-11-0EA91479"] = {
-["LastSeen"] = 44048.0092133,
-["SpecId"] = 267,
-},
-["Player-11-0EA8624B"] = {
+["Player-117-0472BE61"] = {
 ["SpecId"] = 254,
-["LastSeen"] = 7302.3179043,
-["LastAttempt"] = 13118.4114461,
+["LastSeen"] = 15965.3298348,
+["LastAttempt"] = 15964.9976327,
+},
+["Player-11-0EAAADCA"] = {
+["SpecId"] = 258,
+["LastSeen"] = 15951.6994511,
+["LastAttempt"] = 15951.4027368,
 },
 ["Player-104-0C741348"] = {
 ["SpecId"] = 102,
@@ -4761,9 +4771,9 @@ MiniCCDB = {
 ["LastSeen"] = 5290.7006192,
 ["SpecId"] = 105,
 },
-["Player-71-0D62B278"] = {
-["LastSeen"] = 23445.1990356,
-["SpecId"] = 270,
+["Player-11-0EA40F81"] = {
+["LastSeen"] = 45495.4023689,
+["SpecId"] = 252,
 },
 ["Player-121-0A019F6E"] = {
 ["SpecId"] = 263,
@@ -4784,29 +4794,29 @@ MiniCCDB = {
 ["LastSeen"] = 13507.6903459,
 ["LastAttempt"] = 13507.2576722,
 },
-["Player-76-0C046D27"] = {
-["SpecId"] = 72,
-["LastSeen"] = 14810.5586491,
-["LastAttempt"] = 14343.0591055,
+["Player-57-0E159807"] = {
+["LastSeen"] = 46934.74428090001,
+["SpecId"] = 1473,
 },
-["Player-3675-0AFEA923"] = {
-["SpecId"] = 1480,
-["LastSeen"] = 7215.039950300001,
-["LastAttempt"] = 7214.8481594,
-},
-["Player-3725-0C393ECA"] = {
-["SpecId"] = 577,
-["LastSeen"] = 3925.836958,
-["LastAttempt"] = 3925.3910189,
-},
-["Player-60-0F64B5EB"] = {
-["LastSeen"] = 45535.0672104,
-["SpecId"] = 269,
-},
-["Player-163-0BA57A60"] = {
+["Player-76-0BFA5122"] = {
 ["SpecId"] = 64,
-["LastSeen"] = 13336.6060769,
-["LastAttempt"] = 13336.2535992,
+["LastSeen"] = 3184.9594309,
+["LastAttempt"] = 2146.1009126,
+},
+["Player-71-0C85BCB7"] = {
+["SpecId"] = 105,
+["LastSeen"] = 3279.6078544,
+["LastAttempt"] = 2513.5201197,
+},
+["Player-1138-08B727A3"] = {
+["SpecId"] = 70,
+["LastSeen"] = 6590.5195098,
+["LastAttempt"] = 6590.0891804,
+},
+["Player-57-0D7B72C2"] = {
+["SpecId"] = 581,
+["LastSeen"] = 704.9107015000001,
+["LastAttempt"] = 704.3936511,
 },
 ["Player-11-0E227301"] = {
 ["LastSeen"] = 7828.094118900001,
@@ -4816,10 +4826,10 @@ MiniCCDB = {
 ["LastSeen"] = 2383.1777219,
 ["SpecId"] = 70,
 },
-["Player-3209-05DA74FF"] = {
-["SpecId"] = 105,
-["LastSeen"] = 13159.2181356,
-["LastAttempt"] = 13158.7505822,
+["Player-163-0BA57A60"] = {
+["SpecId"] = 64,
+["LastSeen"] = 13336.6060769,
+["LastAttempt"] = 13336.2535992,
 },
 ["Player-3693-0EDF9E79"] = {
 ["LastSeen"] = 21356.8810583,
@@ -4830,22 +4840,23 @@ MiniCCDB = {
 ["LastSeen"] = 4490.8970582,
 ["LastAttempt"] = 4490.592434400001,
 },
-["Player-3676-0EC760D3"] = {
-["SpecId"] = 577,
-["LastSeen"] = 26919.3565663,
-["LastAttempt"] = 22744.6231327,
-},
-["Player-11-0EACE945"] = {
-["LastSeen"] = 3945.8817056,
-["SpecId"] = 1467,
-},
-["Player-1136-098C7F68"] = {
-["LastSeen"] = 5728.9474446,
-["SpecId"] = 254,
-},
 ["Player-11-0EB245A6"] = {
 ["LastSeen"] = 14498.7919154,
 ["SpecId"] = 72,
+},
+["Player-11-0E99FACE"] = {
+["SpecId"] = 270,
+["LastSeen"] = 8646.1446309,
+["LastAttempt"] = 9302.666268300001,
+},
+["Player-5-0E01F16F"] = {
+["SpecId"] = 64,
+["LastSeen"] = 16896.7866668,
+["LastAttempt"] = 16896.2313145,
+},
+["Player-11-0E7DBD86"] = {
+["LastSeen"] = 34354.44015,
+["SpecId"] = 1480,
 },
 ["Player-57-0E0C7062"] = {
 ["SpecId"] = 266,
@@ -4860,31 +4871,30 @@ MiniCCDB = {
 ["LastSeen"] = 46381.9477236,
 ["SpecId"] = 64,
 },
-["Player-11-0EA799F3"] = {
-["LastSeen"] = 3371.7538471,
-["SpecId"] = 256,
+["Player-11-0EB4DC88"] = {
+["LastSeen"] = 1345.7268743,
+["SpecId"] = 72,
 },
-["Player-60-06DB085C"] = {
-["SpecId"] = 73,
-["LastSeen"] = 385.1026229,
-["LastAttempt"] = 315.1355992,
-},
-["Player-76-0BF94D3B"] = {
-["LastSeen"] = 5575.5961618,
+["Player-76-0B39C938"] = {
+["LastSeen"] = 18700.2943535,
 ["SpecId"] = 256,
 },
 ["Player-11-0E9AE5FB"] = {
 ["LastSeen"] = 45928.4777934,
 ["SpecId"] = 253,
 },
-["Player-76-0B39C938"] = {
-["LastSeen"] = 18700.2943535,
+["Player-11-0E9750E5"] = {
+["LastSeen"] = 9413.5329091,
 ["SpecId"] = 256,
 },
-["Player-3661-094683C7"] = {
-["SpecId"] = 70,
-["LastSeen"] = 43878.26682390001,
-["LastAttempt"] = 43878.11606250001,
+["Player-11-0EA799F3"] = {
+["LastSeen"] = 3371.7538471,
+["SpecId"] = 256,
+},
+["Player-3725-0BF0AAA7"] = {
+["SpecId"] = 264,
+["LastAttempt"] = 3877.4083641,
+["LastSeen"] = 3876.8644915,
 },
 ["Player-11-0EAD2976"] = {
 ["LastSeen"] = 7399.020384,
@@ -4895,14 +4905,14 @@ MiniCCDB = {
 ["LastSeen"] = 10771.8593162,
 ["LastAttempt"] = 10771.5267263,
 },
-["Player-3676-0EDD8561"] = {
-["SpecId"] = 262,
-["LastSeen"] = 45546.4908558,
-["LastAttempt"] = 39246.12382060001,
+["Player-1426-0DFC86D7"] = {
+["LastSeen"] = 12428.8106017,
+["SpecId"] = 261,
 },
-["Player-11-0EA5D82E"] = {
-["LastSeen"] = 3568.4715497,
-["SpecId"] = 252,
+["Player-57-0D6DDBAC"] = {
+["SpecId"] = 260,
+["LastSeen"] = 636.4630491,
+["LastAttempt"] = 302.5567774,
 },
 ["Player-61-09E26F17"] = {
 ["SpecId"] = 254,
@@ -4923,13 +4933,41 @@ MiniCCDB = {
 ["LastSeen"] = 17242.1944184,
 ["LastAttempt"] = 17241.8578829,
 },
+["Player-114-05AD6DE9"] = {
+["SpecId"] = 256,
+["LastSeen"] = 4347.4449898,
+["LastAttempt"] = 4002.5455967,
+},
+["Player-11-0E25E626"] = {
+["LastSeen"] = 24426.1270449,
+["SpecId"] = 70,
+},
 ["Player-11-0E864E06"] = {
 ["LastSeen"] = 22717.1785892,
 ["SpecId"] = 105,
 },
-["Player-3693-0DEC0C09"] = {
-["LastSeen"] = 32160.6056793,
-["SpecId"] = 70,
+["Player-76-0BF94D3B"] = {
+["LastSeen"] = 5575.5961618,
+["SpecId"] = 256,
+},
+["Player-11-0EAF8800"] = {
+["LastSeen"] = 60951.30379950001,
+["SpecId"] = 253,
+},
+["Player-1136-09615EFC"] = {
+["SpecId"] = 102,
+["LastSeen"] = 43862.7914105,
+["LastAttempt"] = 43862.38546380001,
+},
+["Player-3675-0A722B6A"] = {
+["SpecId"] = 266,
+["LastSeen"] = 8763.0348051,
+["LastAttempt"] = 8233.967139800001,
+},
+["Player-3675-0AD6167D"] = {
+["SpecId"] = 256,
+["LastAttempt"] = 46428.0677315,
+["LastSeen"] = 46428.39977210001,
 },
 ["Player-3676-0DF9785E"] = {
 ["LastSeen"] = 14106.3335678,
@@ -4940,42 +4978,15 @@ MiniCCDB = {
 ["LastSeen"] = 13119.1621944,
 ["LastAttempt"] = 13118.9116684,
 },
-["Player-11-0EAF8800"] = {
-["LastSeen"] = 60951.30379950001,
-["SpecId"] = 253,
-},
-["Player-121-00835EA3"] = {
-["SpecId"] = 72,
-["LastSeen"] = 25651.3480843,
-["LastAttempt"] = 25651.0643178,
-},
-["Player-3675-0A722B6A"] = {
-["SpecId"] = 266,
-["LastSeen"] = 8763.0348051,
-["LastAttempt"] = 8233.967139800001,
-},
-["Player-114-05AD6DE9"] = {
-["SpecId"] = 256,
-["LastSeen"] = 4347.4449898,
-["LastAttempt"] = 4002.5455967,
-},
-["Player-11-0EB50C40"] = {
-["LastSeen"] = 32390.7245512,
-["SpecId"] = 256,
-},
-["Player-3725-0AAB19CE"] = {
-["SpecId"] = 577,
-["LastSeen"] = 9613.991427500001,
-["LastAttempt"] = 9127.130800500001,
-},
 ["Player-3676-06E0BFD8"] = {
 ["SpecId"] = 64,
 ["LastSeen"] = 532.7194093,
 ["LastAttempt"] = 532.3517679,
 },
-["Player-11-0EAA5A37"] = {
-["LastSeen"] = 10042.6145395,
-["SpecId"] = 65,
+["Player-61-0E3D2811"] = {
+["SpecId"] = 64,
+["LastSeen"] = 37062.5945842,
+["LastAttempt"] = 35565.04274680001,
 },
 ["Player-3723-079C3AA9"] = {
 ["SpecId"] = 261,
@@ -4987,13 +4998,15 @@ MiniCCDB = {
 ["LastSeen"] = 17426.6014364,
 ["LastAttempt"] = 17255.0450065,
 },
-["Player-57-0DF914EA"] = {
-["LastSeen"] = 3155.0947354,
-["SpecId"] = 71,
+["Player-76-0B8779EB"] = {
+["SpecId"] = 102,
+["LastSeen"] = 13125.5419051,
+["LastAttempt"] = 13125.0801035,
 },
-["Player-3721-0BD577F3"] = {
-["LastSeen"] = 16831.6055071,
-["SpecId"] = 577,
+["Player-11-09DBEC84"] = {
+["SpecId"] = 103,
+["LastSeen"] = 27596.0256036,
+["LastAttempt"] = 27595.8250306,
 },
 ["Player-162-068CA833"] = {
 ["SpecId"] = 258,
@@ -5009,10 +5022,9 @@ MiniCCDB = {
 ["LastSeen"] = 16550.3439329,
 ["SpecId"] = 253,
 },
-["Player-1136-0966655A"] = {
-["SpecId"] = 63,
-["LastSeen"] = 25640.0337434,
-["LastAttempt"] = 25639.7756081,
+["Player-11-0EB0B07C"] = {
+["LastSeen"] = 10325.1507497,
+["SpecId"] = 64,
 },
 ["Player-1136-097C31FB"] = {
 ["SpecId"] = 103,
@@ -5023,9 +5035,9 @@ MiniCCDB = {
 ["LastSeen"] = 61833.0911511,
 ["SpecId"] = 64,
 },
-["Player-60-0F5C6F8F"] = {
-["LastSeen"] = 26079.3325747,
-["SpecId"] = 264,
+["Player-11-0E317E56"] = {
+["LastSeen"] = 20039.3715881,
+["SpecId"] = 266,
 },
 ["Player-86-0AD2050F"] = {
 ["SpecId"] = 267,
@@ -5036,171 +5048,166 @@ MiniCCDB = {
 ["LastSeen"] = 5792.071851100001,
 ["SpecId"] = 70,
 },
-["Player-57-0D7E8028"] = {
-["SpecId"] = 66,
-["LastSeen"] = 45548.360457,
-["LastAttempt"] = 39245.6218201,
+["Player-3725-0B3801A3"] = {
+["LastSeen"] = 5800.596673100001,
+["SpecId"] = 261,
 },
-["Player-3693-0EDBEDEE"] = {
-["SpecId"] = 254,
-["LastSeen"] = 13143.8116803,
-["LastAttempt"] = 13003.9196819,
+["Player-3693-0D7DA94B"] = {
+["LastSeen"] = 46256.10997880001,
+["SpecId"] = 102,
 },
-["Player-1171-0A701619"] = {
-["SpecId"] = 577,
-["LastSeen"] = 14127.1534322,
-["LastAttempt"] = 14126.9771859,
+["Player-3678-0DFD5616"] = {
+["LastSeen"] = 56786.11214490001,
+["SpecId"] = 252,
 },
 ["Player-3678-0DBD2419"] = {
 ["SpecId"] = 261,
 ["LastSeen"] = 16834.1640738,
 ["LastAttempt"] = 16833.5691682,
 },
-["Player-60-0039B3D3"] = {
-["SpecId"] = 259,
-["LastSeen"] = 17273.0583778,
-["LastAttempt"] = 17272.7090968,
+["Player-11-0E766041"] = {
+["LastSeen"] = 56273.85101660001,
+["SpecId"] = 254,
 },
-["Player-61-0F6F540D"] = {
+["Player-3721-0BD577F3"] = {
+["LastSeen"] = 16831.6055071,
 ["SpecId"] = 577,
-["LastSeen"] = 24612.8186871,
-["LastAttempt"] = 24612.5601413,
 },
 ["Player-11-0E305240"] = {
 ["LastSeen"] = 3228.0399523,
 ["SpecId"] = 259,
 },
-["Player-11-0E5C80D0"] = {
-["LastSeen"] = 26701.0771617,
-["SpecId"] = 268,
+["Player-60-0039B3D3"] = {
+["SpecId"] = 259,
+["LastSeen"] = 17273.0583778,
+["LastAttempt"] = 17272.7090968,
+},
+["Player-3693-0EDBEDEE"] = {
+["SpecId"] = 254,
+["LastSeen"] = 13143.8116803,
+["LastAttempt"] = 13003.9196819,
 },
 ["Player-11-0E80B907"] = {
 ["LastSeen"] = 60997.84522900001,
 ["SpecId"] = 264,
-},
-["Player-11-0E53214E"] = {
-["LastSeen"] = 3262.3395597,
-["SpecId"] = 102,
 },
 ["Player-3676-0A1F879D"] = {
 ["SpecId"] = 258,
 ["LastSeen"] = 2081.5304904,
 ["LastAttempt"] = 2081.2814551,
 },
+["Player-11-0DC05999"] = {
+["LastSeen"] = 17194.7330772,
+["SpecId"] = 261,
+},
 ["Player-11-0EAB249C"] = {
 ["SpecId"] = 70,
 ["LastSeen"] = 18694.7895325,
 ["LastAttempt"] = 18694.6789902,
 },
-["Player-11-0EB13AF8"] = {
-["LastSeen"] = 22554.7587627,
-["SpecId"] = 1467,
+["Player-71-0FD93B5F"] = {
+["SpecId"] = 257,
+["LastSeen"] = 10772.3646041,
+["LastAttempt"] = 10772.0270003,
 },
-["Player-3693-0E5870AD"] = {
-["LastSeen"] = 34752.11654800001,
-["SpecId"] = 258,
+["Player-60-0FE45019"] = {
+["LastSeen"] = 26644.3238057,
+["SpecId"] = 268,
 },
 ["Player-11-0EB10B45"] = {
 ["LastSeen"] = 18496.2058446,
 ["SpecId"] = 256,
-},
-["Player-3661-092FA280"] = {
-["SpecId"] = 270,
-["LastSeen"] = 55751.7948771,
-["LastAttempt"] = 44457.1156921,
 },
 ["Player-1136-092EEAA7"] = {
 ["SpecId"] = 577,
 ["LastSeen"] = 17420.7071816,
 ["LastAttempt"] = 17272.1983635,
 },
-["Player-11-09D55048"] = {
-["LastSeen"] = 33150.78186030001,
-["SpecId"] = 261,
+["Player-11-0EB31800"] = {
+["LastSeen"] = 17163.0470921,
+["SpecId"] = 72,
 },
 ["Player-11-0E529844"] = {
 ["LastSeen"] = 10203.9828408,
 ["SpecId"] = 70,
 },
-["Player-104-0ED89305"] = {
+["Player-11-09D55048"] = {
+["LastSeen"] = 33150.78186030001,
 ["SpecId"] = 261,
-["LastSeen"] = 21173.3277787,
-["LastAttempt"] = 21172.9680515,
 },
 ["Player-5-0EB3824E"] = {
 ["SpecId"] = 64,
 ["LastSeen"] = 18659.9195617,
 ["LastAttempt"] = 18659.7438468,
 },
-["Player-57-0DCFF25A"] = {
-["SpecId"] = 70,
-["LastSeen"] = 16519.4697307,
-["LastAttempt"] = 16518.4382589,
+["Player-11-0E6BEF97"] = {
+["LastSeen"] = 40524.481454,
+["SpecId"] = 261,
+},
+["Player-11-0B75DCA6"] = {
+["LastSeen"] = 10019.714375,
+["SpecId"] = 267,
 },
 ["Player-3675-0AFC587A"] = {
 ["SpecId"] = 70,
 ["LastSeen"] = 39413.2085688,
 ["LastAttempt"] = 39413.10496580001,
 },
+["Player-3693-0744AEE4"] = {
+["LastSeen"] = 4083.2523517,
+["SpecId"] = 257,
+},
+["Player-11-0EA93DC6"] = {
+["SpecId"] = 71,
+["LastSeen"] = 25640.2906533,
+["LastAttempt"] = 25640.0410952,
+},
 ["Player-11-0EB4E206"] = {
 ["SpecId"] = 1468,
 ["LastSeen"] = 19695.8388307,
 ["LastAttempt"] = 19205.015515,
-},
-["Player-3693-0744AEE4"] = {
-["LastSeen"] = 4083.2523517,
-["SpecId"] = 257,
 },
 ["Player-57-0D0FD28C"] = {
 ["SpecId"] = 270,
 ["LastSeen"] = 676.4233709,
 ["LastAttempt"] = 376.5678985,
 },
-["Player-11-0E4C1143"] = {
-["SpecId"] = 64,
-["LastSeen"] = 16051.6722903,
-["LastAttempt"] = 16051.3584827,
+["Player-1184-080D1FEE"] = {
+["SpecId"] = 252,
+["LastSeen"] = 3271.4297068,
+["LastAttempt"] = 2170.345493,
 },
-["Player-3725-0BF0AAA7"] = {
-["SpecId"] = 264,
-["LastAttempt"] = 3877.4083641,
-["LastSeen"] = 3876.8644915,
+["Player-64-0EBFB570"] = {
+["LastSeen"] = 6475.268851000001,
+["SpecId"] = 267,
 },
-["Player-57-0D808CC8"] = {
-["SpecId"] = 270,
-["LastSeen"] = 13204.3380959,
-["LastAttempt"] = 13203.5983293,
-},
-["Player-1168-0B03C661"] = {
-["LastSeen"] = 44061.9903329,
-["SpecId"] = 1467,
-},
-["Player-11-0EB31800"] = {
-["LastSeen"] = 17163.0470921,
-["SpecId"] = 72,
+["Player-11-0E10CAEA"] = {
+["LastSeen"] = 6201.014697500001,
+["SpecId"] = 257,
 },
 ["Player-53-0C57FABA"] = {
 ["SpecId"] = 261,
 ["LastSeen"] = 20234.8515968,
 ["LastAttempt"] = 19882.6856472,
 },
-["Player-3676-09239477"] = {
-["SpecId"] = 251,
-["LastSeen"] = 16833.4169217,
-["LastAttempt"] = 16833.0676336,
-},
-["Player-3693-0EDC48E2"] = {
+["Player-11-0E4C1143"] = {
 ["SpecId"] = 64,
-["LastSeen"] = 17982.9821953,
-["LastAttempt"] = 17982.6338629,
+["LastSeen"] = 16051.6722903,
+["LastAttempt"] = 16051.3584827,
 },
-["Player-11-0DEC9F0C"] = {
-["LastSeen"] = 9587.214038,
-["SpecId"] = 72,
+["Player-1428-097CC69D"] = {
+["SpecId"] = 252,
+["LastSeen"] = 6180.7073723,
+["LastAttempt"] = 6180.299230500001,
 },
-["Player-11-0E10CAEA"] = {
-["LastSeen"] = 6201.014697500001,
-["SpecId"] = 257,
+["Player-11-0EB04F01"] = {
+["LastSeen"] = 60504.3002435,
+["SpecId"] = 581,
+},
+["Player-5-0EAC12C6"] = {
+["SpecId"] = 253,
+["LastSeen"] = 19838.8125105,
+["LastAttempt"] = 19838.4831908,
 },
 ["Player-154-0C077686"] = {
 ["SpecId"] = 266,
@@ -5217,45 +5224,46 @@ MiniCCDB = {
 ["LastSeen"] = 19021.8335958,
 ["LastAttempt"] = 19021.5421579,
 },
-["Player-11-0E5FD2D1"] = {
-["SpecId"] = 254,
-["LastSeen"] = 21609.4377579,
-["LastAttempt"] = 21609.2528675,
+["Player-1428-0E952E3E"] = {
+["SpecId"] = 251,
+["LastSeen"] = 12056.3487346,
+["LastAttempt"] = 11827.338684,
 },
 ["Player-3676-0E6A1FA0"] = {
 ["LastSeen"] = 46976.00847740001,
 ["SpecId"] = 265,
 },
-["Player-11-0E25A95A"] = {
-["LastSeen"] = 7202.404421200001,
-["SpecId"] = 70,
+["Player-11-0E771C2D"] = {
+["LastSeen"] = 1193.5614464,
+["SpecId"] = 256,
 },
-["Player-11-0EA17E99"] = {
-["LastSeen"] = 46883.9972016,
-["SpecId"] = 266,
+["Player-11-0E9EB8F5"] = {
+["LastSeen"] = 39350.9474124,
+["SpecId"] = 104,
 },
 ["Player-52-0CB3B048"] = {
 ["SpecId"] = 270,
 ["LastSeen"] = 43837.1527995,
 ["LastAttempt"] = 43836.73980500001,
 },
-["Player-154-05FF90D9"] = {
-["LastSeen"] = 26079.333001,
-["SpecId"] = 266,
+["Player-11-0E5FD2D1"] = {
+["SpecId"] = 254,
+["LastSeen"] = 21609.4377579,
+["LastAttempt"] = 21609.2528675,
 },
-["Player-64-0EBFB570"] = {
-["LastSeen"] = 6475.268851000001,
-["SpecId"] = 267,
+["Player-127-085C2C88"] = {
+["SpecId"] = 102,
+["LastSeen"] = 534.2748476,
+["LastAttempt"] = 533.8886631,
 },
-["Player-3723-0C41A46E"] = {
-["SpecId"] = 64,
-["LastSeen"] = 6728.039633500001,
-["LastAttempt"] = 6727.606830000001,
+["Player-60-0FEA25C6"] = {
+["LastSeen"] = 824.0475313000001,
+["SpecId"] = 66,
 },
-["Player-104-0E5429E3"] = {
+["Player-3675-0AB38235"] = {
 ["SpecId"] = 261,
-["LastSeen"] = 13176.222965,
-["LastAttempt"] = 13175.574913,
+["LastSeen"] = 16866.1469944,
+["LastAttempt"] = 16865.3730472,
 },
 ["Player-113-0B03A169"] = {
 ["SpecId"] = 252,
@@ -5271,85 +5279,86 @@ MiniCCDB = {
 ["LastSeen"] = 33756.1887862,
 ["SpecId"] = 66,
 },
-["Player-5-0B101664"] = {
-["LastSeen"] = 941.2296469,
-["SpecId"] = 71,
+["Player-1171-0890907B"] = {
+["SpecId"] = 267,
+["LastSeen"] = 13349.7382214,
+["LastAttempt"] = 13349.3661115,
 },
 ["Player-1428-0EB52DB9"] = {
 ["SpecId"] = 105,
 ["LastSeen"] = 24600.3068509,
 ["LastAttempt"] = 24599.940308,
 },
-["Player-3676-0EDF871E"] = {
-["LastSeen"] = 18702.2950532,
-["SpecId"] = 1468,
+["Player-11-0B61632D"] = {
+["LastSeen"] = 4947.4805889,
+["SpecId"] = 105,
 },
 ["Player-5-0EB4CAB2"] = {
 ["SpecId"] = 262,
 ["LastSeen"] = 19779.9828142,
 ["LastAttempt"] = 19516.7030543,
 },
-["Player-5-0E717BDE"] = {
-["SpecId"] = 64,
-["LastSeen"] = 43838.0399035,
-["LastAttempt"] = 43837.74367690001,
-},
-["Player-11-0E9D18F6"] = {
-["LastSeen"] = 34098.0704972,
-["SpecId"] = 102,
-},
-["Player-61-0F82568A"] = {
-["LastSeen"] = 5576.937336,
+["Player-3683-0E0552E2"] = {
 ["SpecId"] = 267,
+["LastSeen"] = 303.1582726,
+["LastAttempt"] = 303.0583381,
 },
-["Player-3675-0AF9770D"] = {
-["SpecId"] = 1480,
-["LastSeen"] = 6587.187800600001,
-["LastAttempt"] = 6586.9877832,
+["Player-104-0E5429E3"] = {
+["SpecId"] = 261,
+["LastSeen"] = 13176.222965,
+["LastAttempt"] = 13175.574913,
+},
+["Player-5-0B101664"] = {
+["LastSeen"] = 941.2296469,
+["SpecId"] = 71,
+},
+["Player-121-09CB6E0B"] = {
+["SpecId"] = 72,
+["LastSeen"] = 27533.7893964,
+["LastAttempt"] = 27533.5961442,
 },
 ["Player-1427-04FDC766"] = {
 ["SpecId"] = 262,
 ["LastSeen"] = 43864.2516368,
 ["LastAttempt"] = 43863.9114694,
 },
-["Player-60-0FE41944"] = {
-["SpecId"] = 104,
-["LastSeen"] = 15001.0368052,
-["LastAttempt"] = 15000.7972574,
+["Player-3676-0EDD8561"] = {
+["SpecId"] = 262,
+["LastSeen"] = 45546.4908558,
+["LastAttempt"] = 39246.12382060001,
 },
-["Player-1426-07596F27"] = {
-["LastSeen"] = 3401.1115891,
-["SpecId"] = 252,
+["Player-11-0EB0E1E3"] = {
+["LastSeen"] = 44018.42575130001,
+["SpecId"] = 256,
 },
-["Player-5-0E9FF3EB"] = {
-["LastSeen"] = 1840.6428069,
-["SpecId"] = 253,
+["Player-11-0E80263C"] = {
+["LastSeen"] = 8109.730482200001,
+["SpecId"] = 261,
 },
-["Player-11-0E4E4695"] = {
-["SpecId"] = 253,
-["LastSeen"] = 26391.4529591,
-["LastAttempt"] = 26391.1379348,
+["Player-11-0EA1CC14"] = {
+["LastSeen"] = 21834.8055793,
+["SpecId"] = 64,
 },
 ["Player-11-0EB3F6D9"] = {
 ["LastSeen"] = 12530.5371766,
 ["SpecId"] = 103,
 },
+["Player-5-0E9FF3EB"] = {
+["LastSeen"] = 1840.6428069,
+["SpecId"] = 253,
+},
 ["Player-11-0E88E5A0"] = {
 ["LastSeen"] = 10439.8492304,
 ["SpecId"] = 70,
 },
-["Player-11-0EADF5B1"] = {
-["LastSeen"] = 1831.9018643,
-["SpecId"] = 258,
+["Player-1171-0686B7FE"] = {
+["SpecId"] = 66,
+["LastSeen"] = 13137.2705863,
+["LastAttempt"] = 13137.1029194,
 },
-["Player-53-0E1DE760"] = {
+["Player-3723-0C42BDB2"] = {
+["LastSeen"] = 61842.07280350001,
 ["SpecId"] = 256,
-["LastAttempt"] = 2993.7448237,
-["LastSeen"] = 2994.0652721,
-},
-["Player-11-0B61632D"] = {
-["LastSeen"] = 4947.4805889,
-["SpecId"] = 105,
 },
 ["Player-11-0EA2C500"] = {
 ["LastSeen"] = 8065.597187500001,
@@ -5364,10 +5373,9 @@ MiniCCDB = {
 ["LastSeen"] = 8104.8973431,
 ["SpecId"] = 102,
 },
-["Player-76-0BF356BB"] = {
-["SpecId"] = 62,
-["LastSeen"] = 13441.5525993,
-["LastAttempt"] = 13441.1864138,
+["Player-1136-098CC2DD"] = {
+["LastSeen"] = 39105.83617230001,
+["SpecId"] = 270,
 },
 ["Player-76-0A4CDFE4"] = {
 ["LastSeen"] = 9109.3702354,
@@ -5385,9 +5393,10 @@ MiniCCDB = {
 ["LastSeen"] = 5099.4969603,
 ["SpecId"] = 270,
 },
-["Player-11-0E9EB8F5"] = {
-["LastSeen"] = 39350.9474124,
-["SpecId"] = 104,
+["Player-3208-054AFA51"] = {
+["SpecId"] = 253,
+["LastSeen"] = 16849.7326296,
+["LastAttempt"] = 16849.5451235,
 },
 ["Player-57-0E1434B1"] = {
 ["SpecId"] = 1480,
@@ -5404,14 +5413,15 @@ MiniCCDB = {
 ["LastSeen"] = 11265.7215215,
 ["LastAttempt"] = 11264.1248008,
 },
-["Player-1185-02104471"] = {
-["SpecId"] = 102,
-["LastSeen"] = 3153.1036728,
-["LastAttempt"] = 2147.1175328,
+["Player-5-0E717BDE"] = {
+["SpecId"] = 64,
+["LastSeen"] = 43838.0399035,
+["LastAttempt"] = 43837.74367690001,
 },
-["Player-11-0EB0E1E3"] = {
-["LastSeen"] = 44018.42575130001,
-["SpecId"] = 256,
+["Player-3676-09239477"] = {
+["SpecId"] = 251,
+["LastSeen"] = 16833.4169217,
+["LastAttempt"] = 16833.0676336,
 },
 ["Player-106-053D39C5"] = {
 ["SpecId"] = 254,
@@ -5422,24 +5432,23 @@ MiniCCDB = {
 ["LastSeen"] = 3151.0937335,
 ["SpecId"] = 257,
 },
-["Player-11-0EB58DB2"] = {
-["SpecId"] = 261,
-["LastSeen"] = 21616.8665461,
-["LastAttempt"] = 21616.7701555,
+["Player-57-0E1BD357"] = {
+["SpecId"] = 264,
+["LastSeen"] = 7005.251487400001,
+["LastAttempt"] = 5381.4753667,
 },
 ["Player-1168-087E6AFD"] = {
 ["LastSeen"] = 18144.0218932,
 ["SpecId"] = 254,
 },
-["Player-5-0B2778A7"] = {
-["SpecId"] = 264,
-["LastSeen"] = 560.5530054000001,
-["LastAttempt"] = 560.2995633,
+["Player-3676-0EDF871E"] = {
+["LastSeen"] = 18702.2950532,
+["SpecId"] = 1468,
 },
-["Player-1171-0890907B"] = {
-["SpecId"] = 267,
-["LastSeen"] = 13349.7382214,
-["LastAttempt"] = 13349.3661115,
+["Player-3661-092FA280"] = {
+["SpecId"] = 270,
+["LastSeen"] = 55751.7948771,
+["LastAttempt"] = 44457.1156921,
 },
 ["Player-11-0E2BF572"] = {
 ["LastSeen"] = 39161.5205447,
@@ -5449,20 +5458,18 @@ MiniCCDB = {
 ["LastSeen"] = 24811.0598732,
 ["SpecId"] = 258,
 },
-["Player-11-0EA93DC6"] = {
-["SpecId"] = 71,
-["LastSeen"] = 25640.2906533,
-["LastAttempt"] = 25640.0410952,
+["Player-11-0EA2035C"] = {
+["LastSeen"] = 4123.6184024,
+["SpecId"] = 577,
+},
+["Player-11-0E7557FB"] = {
+["LastSeen"] = 21398.6092277,
+["SpecId"] = 268,
 },
 ["Player-3675-0AEAF5FF"] = {
 ["SpecId"] = 103,
 ["LastSeen"] = 20809.9695406,
 ["LastAttempt"] = 20809.755122,
-},
-["Player-58-0A3803F5"] = {
-["SpecId"] = 1480,
-["LastSeen"] = 24718.8071753,
-["LastAttempt"] = 24718.4391892,
 },
 ["Player-11-0E9A01F8"] = {
 ["SpecId"] = 267,
@@ -5478,18 +5485,18 @@ MiniCCDB = {
 ["LastSeen"] = 3403.1472674,
 ["SpecId"] = 270,
 },
-["Player-3684-0D679A7E"] = {
-["LastSeen"] = 56080.74265830001,
-["SpecId"] = 72,
+["Player-3725-0AAB19CE"] = {
+["SpecId"] = 577,
+["LastSeen"] = 9613.991427500001,
+["LastAttempt"] = 9127.130800500001,
 },
 ["Player-11-0E43DD99"] = {
 ["LastSeen"] = 17145.2357311,
 ["SpecId"] = 70,
 },
-["Player-52-0CAEFAD6"] = {
-["SpecId"] = 577,
-["LastSeen"] = 24622.5738075,
-["LastAttempt"] = 24622.17653,
+["Player-3684-0D679A7E"] = {
+["LastSeen"] = 56080.74265830001,
+["SpecId"] = 72,
 },
 ["Player-77-0D35BBD7"] = {
 ["SpecId"] = 70,
@@ -5505,27 +5512,26 @@ MiniCCDB = {
 ["LastAttempt"] = 24204.6373741,
 ["LastSeen"] = 24203.5692212,
 },
-["Player-76-0BE4F401"] = {
-["LastSeen"] = 47066.7933267,
-["SpecId"] = 261,
+["Player-11-0EAA5A37"] = {
+["LastSeen"] = 10042.6145395,
+["SpecId"] = 65,
 },
-["Player-3676-0EDE5FE9"] = {
-["SpecId"] = 266,
-["LastSeen"] = 3417.3006276,
-["LastAttempt"] = 2465.8756913,
+["Player-11-0EAA9B8C"] = {
+["LastSeen"] = 7485.856941200001,
+["SpecId"] = 256,
 },
-["Player-1428-0E8DDBBF"] = {
-["SpecId"] = 269,
-["LastSeen"] = 24601.1395484,
-["LastAttempt"] = 24600.9402086,
+["Player-11-0EB1ADFE"] = {
+["LastSeen"] = 24530.4814628,
+["SpecId"] = 70,
 },
 ["Player-3725-0BFBB4D3"] = {
 ["LastSeen"] = 4777.8020152,
 ["SpecId"] = 103,
 },
-["Player-11-0E771C2D"] = {
-["LastSeen"] = 1193.5614464,
-["SpecId"] = 256,
+["Player-3684-0DC42AE3"] = {
+["SpecId"] = 269,
+["LastSeen"] = 55641.99584810001,
+["LastAttempt"] = 46872.9606646,
 },
 ["Player-99-083B097D"] = {
 ["SpecId"] = 66,
@@ -5541,24 +5547,23 @@ MiniCCDB = {
 ["LastAttempt"] = 20638.7450006,
 ["LastSeen"] = 20641.7921573,
 },
-["Player-3209-0B73ED09"] = {
-["LastSeen"] = 12325.3538561,
-["SpecId"] = 261,
+["Player-3678-0D7E0C12"] = {
+["LastSeen"] = 3330.4492773,
+["SpecId"] = 70,
 },
-["Player-1428-097CC69D"] = {
-["SpecId"] = 252,
-["LastSeen"] = 6180.7073723,
-["LastAttempt"] = 6180.299230500001,
+["Player-11-0E25A95A"] = {
+["LastSeen"] = 7202.404421200001,
+["SpecId"] = 70,
 },
-["Player-64-0F450BB7"] = {
-["SpecId"] = 62,
-["LastSeen"] = 533.6252112000001,
-["LastAttempt"] = 533.3914321000001,
+["Player-3693-0EDC48E2"] = {
+["SpecId"] = 64,
+["LastSeen"] = 17982.9821953,
+["LastAttempt"] = 17982.6338629,
 },
-["Player-57-0D6DDBAC"] = {
-["SpecId"] = 260,
-["LastSeen"] = 636.4630491,
-["LastAttempt"] = 302.5567774,
+["Player-1175-0D8120AA"] = {
+["SpecId"] = 70,
+["LastAttempt"] = 17637.3151123,
+["LastSeen"] = 17937.8436972,
 },
 ["Player-3675-0B004500"] = {
 ["SpecId"] = 581,
@@ -5579,19 +5584,18 @@ MiniCCDB = {
 ["LastSeen"] = 665.6270685000001,
 ["LastAttempt"] = 665.3026707,
 },
-["Player-3675-0AD6167D"] = {
-["SpecId"] = 256,
-["LastAttempt"] = 46428.0677315,
-["LastSeen"] = 46428.39977210001,
+["Player-11-0EACE945"] = {
+["LastSeen"] = 3945.8817056,
+["SpecId"] = 1467,
 },
-["Player-3209-0BFBD00D"] = {
-["SpecId"] = 258,
-["LastAttempt"] = 23262.6174002,
-["LastSeen"] = 23262.9652007,
+["Player-1428-0EAB5968"] = {
+["SpecId"] = 270,
+["LastSeen"] = 13195.9367414,
+["LastAttempt"] = 13195.5918206,
 },
-["Player-3684-0D1DE041"] = {
-["LastSeen"] = 37541.9552663,
-["SpecId"] = 66,
+["Player-11-0E95A5A6"] = {
+["LastSeen"] = 46245.4162245,
+["SpecId"] = 265,
 },
 ["Player-5-0EB03076"] = {
 ["LastSeen"] = 41847.16488780001,
@@ -5607,27 +5611,27 @@ MiniCCDB = {
 ["LastSeen"] = 13260.1098424,
 ["LastAttempt"] = 13259.791102,
 },
-["Player-11-0DFCF7C8"] = {
-["LastSeen"] = 11200.7474597,
-["SpecId"] = 257,
+["Player-3676-0EC760D3"] = {
+["SpecId"] = 577,
+["LastSeen"] = 26919.3565663,
+["LastAttempt"] = 22744.6231327,
 },
-["Player-77-0EE4098E"] = {
-["SpecId"] = 73,
-["LastSeen"] = 13206.246782,
-["LastAttempt"] = 13205.8984253,
+["Player-11-0EB2A538"] = {
+["LastSeen"] = 21329.2027797,
+["SpecId"] = 104,
 },
-["Player-53-0C62EB57"] = {
-["SpecId"] = 103,
-["LastSeen"] = 27706.3776093,
-["LastAttempt"] = 27705.9917503,
+["Player-76-0C046D27"] = {
+["SpecId"] = 72,
+["LastSeen"] = 14810.5586491,
+["LastAttempt"] = 14343.0591055,
 },
 ["Player-11-0E21BD19"] = {
 ["LastSeen"] = 2359.8557201,
 ["SpecId"] = 266,
 },
-["Player-11-0EB48D94"] = {
-["LastSeen"] = 24421.780905,
-["SpecId"] = 72,
+["Player-11-0A985E83"] = {
+["LastSeen"] = 6134.658602500001,
+["SpecId"] = 65,
 },
 ["Player-11-0EB334F6"] = {
 ["SpecId"] = 268,
@@ -5638,25 +5642,23 @@ MiniCCDB = {
 ["LastSeen"] = 9245.3129002,
 ["SpecId"] = 64,
 },
-["Player-1427-0DC5DD6C"] = {
-["SpecId"] = 105,
-["LastSeen"] = 26823.0911033,
-["LastAttempt"] = 22788.9192129,
+["Player-11-0E53214E"] = {
+["LastSeen"] = 3262.3395597,
+["SpecId"] = 102,
 },
-["Player-75-0FCF7FED"] = {
-["SpecId"] = 257,
-["LastSeen"] = 26392.8008682,
-["LastAttempt"] = 26392.4510591,
+["Player-11-0EA729E1"] = {
+["LastSeen"] = 10571.504065,
+["SpecId"] = 70,
 },
 ["Player-1175-0FE5F5CE"] = {
 ["SpecId"] = 253,
 ["LastSeen"] = 600.2809889,
 ["LastAttempt"] = 286.545307,
 },
-["Player-1136-07F378B0"] = {
-["SpecId"] = 253,
-["LastSeen"] = 13364.8217733,
-["LastAttempt"] = 13364.5033975,
+["Player-1185-0D26D099"] = {
+["SpecId"] = 70,
+["LastSeen"] = 680.4796434,
+["LastAttempt"] = 422.4562426000001,
 },
 ["Player-11-0E67F392"] = {
 ["LastSeen"] = 16344.9089432,
@@ -5667,82 +5669,82 @@ MiniCCDB = {
 ["LastSeen"] = 9560.8608722,
 ["LastAttempt"] = 9088.825654,
 },
-["Player-1427-0966ED4A"] = {
-["LastSeen"] = 18072.8592684,
-["SpecId"] = 71,
+["Player-3725-0C5E5F39"] = {
+["SpecId"] = 264,
+["LastSeen"] = 36704.0980728,
+["LastAttempt"] = 35555.0346876,
 },
-["Player-127-0A9FF023"] = {
-["LastSeen"] = 40606.9436063,
-["SpecId"] = 577,
+["Player-11-0E42637D"] = {
+["LastSeen"] = 13729.5068001,
+["SpecId"] = 70,
 },
 ["Player-77-0FA7AB69"] = {
 ["LastSeen"] = 3344.8195937,
 ["SpecId"] = 66,
 },
-["Player-11-0E283542"] = {
-["LastSeen"] = 9083.198628600001,
-["SpecId"] = 71,
+["Player-127-06B7E3BD"] = {
+["SpecId"] = 258,
+["LastSeen"] = 4004.3776578,
+["LastAttempt"] = 4004.047111200001,
 },
-["Player-11-0E5927D9"] = {
-["SpecId"] = 70,
-["LastSeen"] = 7222.1722766,
-["LastAttempt"] = 7221.8773987,
+["Player-3725-0C5D7107"] = {
+["LastSeen"] = 4478.075812800001,
+["SpecId"] = 254,
 },
 ["Player-11-0EA586CE"] = {
 ["SpecId"] = 70,
 ["LastSeen"] = 18659.4158278,
 ["LastAttempt"] = 18659.2409748,
 },
-["Player-104-0E142157"] = {
-["SpecId"] = 253,
-["LastSeen"] = 43876.8487882,
-["LastAttempt"] = 43876.5832313,
+["Player-3684-0ED9608A"] = {
+["SpecId"] = 65,
+["LastSeen"] = 44869.2434681,
+["LastAttempt"] = 44868.9675752,
 },
-["Player-3684-0EABBAE2"] = {
-["SpecId"] = 105,
-["LastSeen"] = 11424.2130242,
-["LastAttempt"] = 11423.7639366,
+["Player-11-09F84AF0"] = {
+["LastSeen"] = 33880.6134612,
+["SpecId"] = 265,
 },
 ["Player-57-0D46E203"] = {
 ["SpecId"] = 64,
 ["LastSeen"] = 3327.7972772,
 ["LastAttempt"] = 2413.5481825,
 },
-["Player-11-09F84AF0"] = {
-["LastSeen"] = 33880.6134612,
-["SpecId"] = 265,
+["Player-5-0B2778A7"] = {
+["SpecId"] = 264,
+["LastSeen"] = 560.5530054000001,
+["LastAttempt"] = 560.2995633,
 },
 ["Player-3661-073CB670"] = {
 ["LastSeen"] = 17799.6484383,
 ["SpecId"] = 70,
 },
-["Player-11-0EB24D17"] = {
-["LastSeen"] = 7115.108556800001,
-["SpecId"] = 266,
-},
-["Player-11-0E96DBF8"] = {
-["SpecId"] = 72,
-["LastSeen"] = 9199.881515300001,
-["LastAttempt"] = 9090.3320146,
+["Player-1428-0DFF98CC"] = {
+["SpecId"] = 1480,
+["LastSeen"] = 13324.9893573,
+["LastAttempt"] = 13324.6694469,
 },
 ["Player-11-0E3462B0"] = {
 ["LastSeen"] = 17659.0112579,
 ["SpecId"] = 268,
 },
-["Player-3684-0ED9608A"] = {
-["SpecId"] = 65,
-["LastSeen"] = 44869.2434681,
-["LastAttempt"] = 44868.9675752,
+["Player-160-0835D761"] = {
+["LastSeen"] = 770.407271,
+["SpecId"] = 262,
 },
 ["Player-160-0B11BC91"] = {
 ["SpecId"] = 70,
 ["LastSeen"] = 16881.6979376,
 ["LastAttempt"] = 16881.3700313,
 },
-["Player-3685-0714FFE6"] = {
-["SpecId"] = 266,
-["LastSeen"] = 815.8293645,
-["LastAttempt"] = 422.9559466,
+["Player-76-0922DF34"] = {
+["LastSeen"] = 47066.7939169,
+["SpecId"] = 270,
+},
+["Player-1168-0918A49C"] = {
+["SpecId"] = 64,
+["LastSeen"] = 13138.5971845,
+["LastAttempt"] = 13138.2550186,
 },
 ["Player-3676-0EB0850B"] = {
 ["LastSeen"] = 6991.396535100001,
@@ -5762,37 +5764,36 @@ MiniCCDB = {
 ["LastSeen"] = 13325.5543472,
 ["LastAttempt"] = 13325.1755069,
 },
-["Player-11-0A7A11DB"] = {
-["LastSeen"] = 20800.3133008,
-["SpecId"] = 1480,
+["Player-11-0E2003EF"] = {
+["LastSeen"] = 8608.3187058,
+["SpecId"] = 253,
 },
 ["Player-61-0F01C966"] = {
 ["SpecId"] = 250,
 ["LastSeen"] = 3275.6075572,
 ["LastAttempt"] = 2280.965155,
 },
-["Player-11-0E582B5F"] = {
-["LastSeen"] = 22593.3796258,
-["SpecId"] = 72,
+["Player-11-0E881FE8"] = {
+["LastSeen"] = 8069.590985100001,
+["SpecId"] = 105,
 },
-["Player-1427-043A0B85"] = {
-["SpecId"] = 72,
-["LastSeen"] = 13206.5822495,
-["LastAttempt"] = 13206.3979294,
+["Player-3684-09C1DFE6"] = {
+["LastSeen"] = 59964.29682900001,
+["SpecId"] = 269,
 },
 ["Player-60-0F8ED2A7"] = {
 ["SpecId"] = 270,
 ["LastSeen"] = 17285.6784819,
 ["LastAttempt"] = 17285.4048742,
 },
-["Player-3723-0C42BDB2"] = {
-["LastSeen"] = 61842.07280350001,
-["SpecId"] = 256,
+["Player-3683-0E2121EE"] = {
+["LastSeen"] = 391.1329477000001,
+["SpecId"] = 66,
 },
-["Player-75-0FAE37F7"] = {
-["SpecId"] = 65,
-["LastSeen"] = 16883.7383098,
-["LastAttempt"] = 16883.1786509,
+["Player-67-034E2289"] = {
+["SpecId"] = 262,
+["LastSeen"] = 41733.8096634,
+["LastAttempt"] = 40608.4090813,
 },
 ["Player-60-0FDE722E"] = {
 ["SpecId"] = 1480,
@@ -5804,24 +5805,24 @@ MiniCCDB = {
 ["LastSeen"] = 13612.1087886,
 ["LastAttempt"] = 13002.4158029,
 },
-["Player-67-034E2289"] = {
-["SpecId"] = 262,
-["LastSeen"] = 41733.8096634,
-["LastAttempt"] = 40608.4090813,
+["Player-3676-06DA9DFB"] = {
+["SpecId"] = 64,
+["LastSeen"] = 787.9790615000001,
+["LastAttempt"] = 316.6413793,
 },
-["Player-3684-0ED7CECC"] = {
-["LastSeen"] = 3186.9786915,
-["SpecId"] = 255,
+["Player-11-0EB56AC6"] = {
+["LastSeen"] = 3564.3862845,
+["SpecId"] = 1473,
 },
 ["Player-57-0DFACC5F"] = {
 ["SpecId"] = 252,
 ["LastSeen"] = 24602.2422815,
 ["LastAttempt"] = 24601.9395877,
 },
-["Player-11-0EAE207A"] = {
-["SpecId"] = 70,
-["LastSeen"] = 15951.1312679,
-["LastAttempt"] = 15950.8994331,
+["Player-53-0E1DE760"] = {
+["SpecId"] = 256,
+["LastAttempt"] = 2993.7448237,
+["LastSeen"] = 2994.0652721,
 },
 ["Player-3678-0E1B2C2E"] = {
 ["LastSeen"] = 56768.0978833,
@@ -5832,34 +5833,35 @@ MiniCCDB = {
 ["LastSeen"] = 11267.1122348,
 ["LastAttempt"] = 11266.6970411,
 },
-["Player-1184-080D1FEE"] = {
-["SpecId"] = 252,
-["LastSeen"] = 3271.4297068,
-["LastAttempt"] = 2170.345493,
+["Player-3209-0513BC28"] = {
+["SpecId"] = 71,
+["LastSeen"] = 40622.6201797,
+["LastAttempt"] = 40609.4110758,
 },
-["Player-113-09FD85CB"] = {
-["SpecId"] = 70,
-["LastSeen"] = 802.5593427,
-["LastAttempt"] = 328.1847878,
-},
-["Player-3676-0EDF040F"] = {
-["SpecId"] = 70,
-["LastSeen"] = 13175.4588503,
-["LastAttempt"] = 13175.073967,
-},
-["Player-5-0E42B10F"] = {
-["SpecId"] = 65,
-["LastSeen"] = 25349.8099078,
-["LastAttempt"] = 25349.4789385,
+["Player-160-0BA36DE1"] = {
+["SpecId"] = 268,
+["LastSeen"] = 16867.1067776,
+["LastAttempt"] = 16866.396783,
 },
 ["Player-1168-0A93B29D"] = {
 ["SpecId"] = 258,
 ["LastSeen"] = 13117.1505517,
 ["LastAttempt"] = 13116.9099439,
 },
-["Player-11-0E7DBD86"] = {
-["LastSeen"] = 34354.44015,
-["SpecId"] = 1480,
+["Player-12-0EAE9298"] = {
+["SpecId"] = 64,
+["LastSeen"] = 43836.05196020001,
+["LastAttempt"] = 43835.7164751,
+},
+["Player-11-0EB50D37"] = {
+["SpecId"] = 253,
+["LastSeen"] = 21634.1389829,
+["LastAttempt"] = 21633.8078354,
+},
+["Player-5-0E42B10F"] = {
+["SpecId"] = 65,
+["LastSeen"] = 25349.8099078,
+["LastAttempt"] = 25349.4789385,
 },
 ["Player-11-0EB44402"] = {
 ["LastSeen"] = 22993.6732799,
@@ -5869,15 +5871,14 @@ MiniCCDB = {
 ["LastSeen"] = 16071.9628793,
 ["SpecId"] = 66,
 },
-["Player-113-0A21F8D6"] = {
-["SpecId"] = 104,
-["LastSeen"] = 43940.8802729,
-["LastAttempt"] = 43888.8868961,
-},
-["Player-3676-06DA9DFB"] = {
+["Player-3678-0B7166EC"] = {
 ["SpecId"] = 64,
-["LastSeen"] = 787.9790615000001,
-["LastAttempt"] = 316.6413793,
+["LastSeen"] = 13352.2591582,
+["LastAttempt"] = 13351.8915282,
+},
+["Player-11-0E9C1F1D"] = {
+["LastSeen"] = 4904.4862314,
+["SpecId"] = 70,
 },
 ["Player-1184-08099B71"] = {
 ["SpecId"] = 256,
@@ -5894,13 +5895,15 @@ MiniCCDB = {
 ["LastSeen"] = 43877.29168520001,
 ["LastAttempt"] = 43877.0869524,
 },
-["Player-76-0922DF34"] = {
-["LastSeen"] = 47066.7939169,
-["SpecId"] = 270,
+["Player-9-0E4457B4"] = {
+["SpecId"] = 267,
+["LastSeen"] = 39411.8533607,
+["LastAttempt"] = 39411.60103480001,
 },
-["Player-1129-0BE2C12A"] = {
-["LastSeen"] = 46256.11130780001,
-["SpecId"] = 1468,
+["Player-1185-0EB51854"] = {
+["SpecId"] = 265,
+["LastSeen"] = 646.5193376000001,
+["LastAttempt"] = 646.2540471000001,
 },
 ["Player-5-0E9A5FD1"] = {
 ["LastSeen"] = 9302.0676614,
@@ -5910,22 +5913,22 @@ MiniCCDB = {
 ["LastSeen"] = 4236.1908734,
 ["SpecId"] = 255,
 },
-["Player-11-0E8B874A"] = {
-["LastSeen"] = 4874.2172084,
-["SpecId"] = 254,
-},
-["Player-1426-07592992"] = {
-["LastSeen"] = 9212.6731999,
-["SpecId"] = 102,
-},
-["Player-3683-098AAE5F"] = {
-["LastSeen"] = 449.5049044,
-["SpecId"] = 577,
+["Player-12-0EA5D077"] = {
+["LastSeen"] = 24257.6424675,
+["SpecId"] = 251,
 },
 ["Player-11-0EABB7AB"] = {
 ["SpecId"] = 65,
 ["LastSeen"] = 13118.2047127,
 ["LastAttempt"] = 13117.9114837,
+},
+["Player-3683-098AAE5F"] = {
+["LastSeen"] = 449.5049044,
+["SpecId"] = 577,
+},
+["Player-3721-0AF54699"] = {
+["LastSeen"] = 13121.5438673,
+["SpecId"] = 72,
 },
 ["Player-78-0EECAD8F"] = {
 ["SpecId"] = 270,
@@ -5941,50 +5944,46 @@ MiniCCDB = {
 ["LastSeen"] = 10262.6492344,
 ["SpecId"] = 577,
 },
-["Player-57-0A144DD3"] = {
-["SpecId"] = 258,
-["LastSeen"] = 3195.0112064,
-["LastAttempt"] = 2216.3669294,
+["Player-11-0E79CE72"] = {
+["LastSeen"] = 871.1960484000001,
+["SpecId"] = 104,
 },
 ["Player-1151-077F77CE"] = {
 ["SpecId"] = 102,
 ["LastSeen"] = 13363.2823008,
 ["LastAttempt"] = 13362.9853653,
 },
-["Player-121-09C8A943"] = {
-["SpecId"] = 105,
-["LastSeen"] = 39461.6337836,
-["LastAttempt"] = 39461.33777090001,
+["Player-1427-0966ED4A"] = {
+["LastSeen"] = 18072.8592684,
+["SpecId"] = 71,
 },
-["Player-3725-0C5E5F39"] = {
-["SpecId"] = 264,
-["LastSeen"] = 36704.0980728,
-["LastAttempt"] = 35555.0346876,
+["Player-60-0EA30833"] = {
+["SpecId"] = 1480,
+["LastSeen"] = 17981.1056891,
+["LastAttempt"] = 17980.8821958,
 },
 ["Player-61-0F6F6CCD"] = {
 ["SpecId"] = 1467,
 ["LastSeen"] = 24677.7312268,
 ["LastAttempt"] = 24677.6276907,
 },
-["Player-3209-0BEA32ED"] = {
-["SpecId"] = 1480,
-["LastSeen"] = 13125.1651472,
-["LastAttempt"] = 13124.9287973,
+["Player-11-0E9FDE39"] = {
+["LastSeen"] = 13746.0663777,
+["SpecId"] = 269,
 },
 ["Player-3684-0EBECEA1"] = {
 ["SpecId"] = 102,
 ["LastSeen"] = 9191.791309400001,
 ["LastAttempt"] = 9145.009926800001,
 },
-["Player-63-003C34B4"] = {
-["SpecId"] = 64,
-["LastSeen"] = 9148.8572127,
-["LastAttempt"] = 9145.511713,
+["Player-1427-0EDBCD08"] = {
+["SpecId"] = 265,
+["LastSeen"] = 9304.067847600001,
+["LastAttempt"] = 9303.6674107,
 },
-["Player-11-0BCF0AF7"] = {
-["SpecId"] = 257,
-["LastSeen"] = 13954.7720071,
-["LastAttempt"] = 13954.568115,
+["Player-11-0EAD1B31"] = {
+["LastSeen"] = 24233.0221231,
+["SpecId"] = 64,
 },
 ["Player-3676-09337985"] = {
 ["LastSeen"] = 744.1620225,
@@ -5994,14 +5993,15 @@ MiniCCDB = {
 ["LastSeen"] = 56853.38499850001,
 ["SpecId"] = 73,
 },
+["Player-57-0DFF7F98"] = {
+["SpecId"] = 258,
+["LastSeen"] = 26397.1370439,
+["LastAttempt"] = 26396.9590499,
+},
 ["Player-3725-05D5E952"] = {
 ["SpecId"] = 66,
 ["LastSeen"] = 43849.42809910001,
 ["LastAttempt"] = 43849.0050471,
-},
-["Player-11-0E65F363"] = {
-["LastSeen"] = 4986.7884511,
-["SpecId"] = 266,
 },
 ["Player-3661-06D71F45"] = {
 ["SpecId"] = 267,
@@ -6013,25 +6013,25 @@ MiniCCDB = {
 ["LastSeen"] = 13176.8776531,
 ["LastAttempt"] = 13176.5938335,
 },
-["Player-11-0238ABAD"] = {
-["LastSeen"] = 32667.9101664,
-["SpecId"] = 70,
+["Player-3721-0C5BFE5D"] = {
+["SpecId"] = 71,
+["LastSeen"] = 20810.3190977,
+["LastAttempt"] = 20631.9050661,
 },
 ["Player-11-0E256413"] = {
 ["LastSeen"] = 10365.983934,
 ["SpecId"] = 71,
 },
-["Player-61-0E3D2811"] = {
-["SpecId"] = 64,
-["LastSeen"] = 37062.5945842,
-["LastAttempt"] = 35565.04274680001,
+["Player-11-0238ABAD"] = {
+["LastSeen"] = 32667.9101664,
+["SpecId"] = 70,
 },
-["Player-60-0F3D0C6E"] = {
-["LastSeen"] = 22097.0508077,
-["SpecId"] = 577,
+["Player-11-0E9E1D57"] = {
+["LastSeen"] = 18542.9869966,
+["SpecId"] = 255,
 },
-["Player-11-0E796982"] = {
-["LastSeen"] = 6296.810520100001,
+["Player-11-0EB09ED6"] = {
+["LastSeen"] = 20349.1712962,
 ["SpecId"] = 70,
 },
 ["Player-11-0B88C3B8"] = {
@@ -6042,74 +6042,77 @@ MiniCCDB = {
 ["LastSeen"] = 1311.1689729,
 ["SpecId"] = 103,
 },
-["Player-11-0E1F67F5"] = {
-["LastSeen"] = 21616.1203515,
-["SpecId"] = 257,
+["Player-60-0EFB023F"] = {
+["SpecId"] = 265,
+["LastSeen"] = 17240.3383223,
+["LastAttempt"] = 17238.84422,
 },
-["Player-3675-0AFFB224"] = {
-["LastSeen"] = 19880.4615393,
-["SpecId"] = 102,
+["Player-113-09FD85CB"] = {
+["SpecId"] = 70,
+["LastSeen"] = 802.5593427,
+["LastAttempt"] = 328.1847878,
 },
-["Player-3693-0A03E61E"] = {
-["SpecId"] = 102,
-["LastSeen"] = 20014.0879892,
-["LastAttempt"] = 19882.1863396,
+["Player-3209-0BFBD00D"] = {
+["SpecId"] = 258,
+["LastAttempt"] = 23262.6174002,
+["LastSeen"] = 23262.9652007,
 },
 ["Player-3209-0B6293AA"] = {
 ["SpecId"] = 268,
 ["LastSeen"] = 13136.6203729,
 ["LastAttempt"] = 13136.2271606,
 },
-["Player-11-0E9FDE39"] = {
-["LastSeen"] = 13746.0663777,
-["SpecId"] = 269,
+["Player-3209-0BEA32ED"] = {
+["SpecId"] = 1480,
+["LastSeen"] = 13125.1651472,
+["LastAttempt"] = 13124.9287973,
 },
 ["Player-53-0E1D6185"] = {
 ["SpecId"] = 1467,
 ["LastSeen"] = 42761.1202722,
 ["LastAttempt"] = 42562.5353697,
 },
-["Player-3726-0ADFF2C0"] = {
-["LastSeen"] = 14722.0592966,
-["SpecId"] = 577,
+["Player-11-0E5F3096"] = {
+["LastSeen"] = 19828.5677665,
+["SpecId"] = 265,
 },
 ["Player-162-0C151FE5"] = {
 ["LastSeen"] = 46204.8313786,
 ["SpecId"] = 65,
 },
-["Player-11-0E358F03"] = {
-["SpecId"] = 70,
-["LastSeen"] = 47067.5006451,
-["LastAttempt"] = 47067.2149377,
+["Player-11-0EAA5692"] = {
+["LastSeen"] = 22564.2749961,
+["SpecId"] = 1467,
 },
 ["Player-11-0EA8D025"] = {
 ["SpecId"] = 105,
 ["LastSeen"] = 9627.7800595,
 ["LastAttempt"] = 9089.8282985,
 },
-["Player-67-0DBC3DF8"] = {
-["SpecId"] = 71,
-["LastSeen"] = 13125.9323182,
-["LastAttempt"] = 13125.4381947,
+["Player-3721-0AEE0732"] = {
+["SpecId"] = 261,
+["LastSeen"] = 13338.7395655,
+["LastAttempt"] = 13338.2724009,
 },
 ["Player-5-0E458F8D"] = {
 ["SpecId"] = 263,
 ["LastSeen"] = 14689.0644117,
 ["LastAttempt"] = 13304.4366866,
 },
-["Player-11-0EA40F81"] = {
-["LastSeen"] = 45495.4023689,
-["SpecId"] = 252,
+["Player-1136-098C7B45"] = {
+["SpecId"] = 104,
+["LastSeen"] = 43942.9122787,
+["LastAttempt"] = 43876.0757755,
 },
 ["Player-121-09CF074A"] = {
 ["SpecId"] = 253,
 ["LastSeen"] = 13324.1574967,
 ["LastAttempt"] = 13323.818635,
 },
-["Player-1136-098C7B45"] = {
-["SpecId"] = 104,
-["LastSeen"] = 43942.9122787,
-["LastAttempt"] = 43876.0757755,
+["Player-3725-0C393ECA"] = {
+["SpecId"] = 577,
+["LastSeen"] = 3925.836958,
+["LastAttempt"] = 3925.3910189,
 },
 ["Player-1427-0975AC6C"] = {
 ["LastSeen"] = 61831.1190883,
@@ -6132,7 +6135,4 @@ MiniCCDB = {
 },
 },
 ["ActiveProfile"] = "Default",
-["CCNativeOrder"] = false,
-["DisableSwipe"] = false,
-["GlowType"] = "Proc Glow",
 }

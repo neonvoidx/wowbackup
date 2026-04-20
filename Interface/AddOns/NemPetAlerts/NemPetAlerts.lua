@@ -1,5 +1,5 @@
 -- =============================================================
--- NemPetAlerts.lua  v12.0.16
+-- NemPetAlerts.lua  v12.0.20
 -- Nem: Pet Alerts — Pet status warnings for Hunter, Warlock,
 -- Frost Mage, and Unholy Death Knight.
 -- Part of the Nem addon suite.  Per-spec modular architecture.
@@ -54,6 +54,7 @@ _G.NemPetAlerts = NPA
 local pairs, ipairs           = pairs, ipairs
 local math_floor, math_max    = math.floor, math.max
 local math_min, math_sin      = math.min, math.sin
+local math_abs                = math.abs
 local math_pi                 = math.pi
 local string_format           = string.format
 local CreateFrame             = CreateFrame
@@ -67,7 +68,7 @@ local C_UnitAuras             = C_UnitAuras
 local CopyTable               = CopyTable
 local issecretvalue           = issecretvalue or function() return false end
 
-local NPA_VERSION = "v12.0.17"
+local NPA_VERSION = "v12.0.20"
 
 -- =============================================================
 -- Asset Paths  (all self-contained under NemPetAlerts\)
@@ -761,7 +762,8 @@ local function BuildAlertRows()
         local textFS = parent:CreateFontString(nil, "OVERLAY", "GameFontNormalHuge")
         textFS:SetFont(fp, fs, "OUTLINE")
         textFS:SetTextColor(col.r, col.g, col.b)
-        textFS:SetText(alert.text)
+        local customText = db[alert.key .. "AlertText"]
+        textFS:SetText((customText and customText ~= "") and customText or alert.text)
         textFS:SetScale(sc)
         textFS:SetJustifyH("CENTER")
         textFS:SetShadowOffset(2, -2)
@@ -808,7 +810,8 @@ local function BuildAlertRows()
         local testFS = f:CreateFontString(nil, "OVERLAY", "GameFontNormalHuge")
         testFS:SetFont(fp, fs, "OUTLINE")
         testFS:SetTextColor(col.r, col.g, col.b)
-        testFS:SetText(def.text)
+        local testCustomText = db[def.key .. "AlertText"]
+        testFS:SetText((testCustomText and testCustomText ~= "") and testCustomText or def.text)
         testFS:SetScale(sc)
         testFS:SetJustifyH("CENTER")
         testFS:SetShadowOffset(2, -2)
@@ -843,6 +846,8 @@ local function ApplyDisplaySettings()
         row.textFS:SetFont(fontPath, fs, "OUTLINE")
         row.textFS:SetScale(sc)
         row.textFS:SetTextColor(col.r, col.g, col.b)
+        local customText = db[row.key .. "AlertText"]
+        row.textFS:SetText((customText and customText ~= "") and customText or row.alert.text)
     end
 
     if f.testHealFS then
@@ -855,6 +860,8 @@ local function ApplyDisplaySettings()
                 local col = db.alertColors and db.alertColors[def.key]
                             or def.defaultColor or { r=1, g=1, b=1 }
                 f.testHealFS:SetTextColor(col.r, col.g, col.b)
+                local ct = db[def.key .. "AlertText"]
+                f.testHealFS:SetText((ct and ct ~= "") and ct or def.text)
             end
         end
     end
@@ -993,6 +1000,9 @@ Evaluate = function()
     if mod.ShouldRun and not mod:ShouldRun(db) then
         SetDisplaySlot(nil); return
     end
+
+    -- Suppress all alerts while resting (in a city or inn)
+    if IsResting() then SetDisplaySlot(nil); return end
 
     -- Pre-evaluate (module updates state, fires rising-edge sounds)
     if mod.PreEvaluate then mod:PreEvaluate(db) end
@@ -1396,7 +1406,136 @@ function NPA:BuildOptionsPanel()
 
     local panel = CreateFrame("Frame", "NemPetAlertsOptionsPanel", UIParent)
     panel.name = "Nem: Pet Alerts"
-    panel:SetSize(PW, 648)
+    panel:SetSize(PW, 580)
+
+    -- ================================================================
+    -- SCROLL SYSTEM — pure Lua, ultra-slim scrollbar overlapping right margin
+    -- ================================================================
+    local SCROLL_TOP = -62
+    local SCROLL_BTM =  56
+    local SB_W       =  4
+    local SB_MARGIN  = 10
+
+    local VIEWPORT_L = 8
+    local VIEWPORT_R = SB_MARGIN
+    local BOX_INSET  = 2
+    local CW = PW - VIEWPORT_L - VIEWPORT_R - (BOX_INSET * 2)
+
+    local viewport = CreateFrame("Frame", nil, panel)
+    viewport:SetPoint("TOPLEFT",     panel, "TOPLEFT",      VIEWPORT_L,  SCROLL_TOP)
+    viewport:SetPoint("BOTTOMRIGHT", panel, "BOTTOMRIGHT", -VIEWPORT_R,  SCROLL_BTM)
+    viewport:SetClipsChildren(true)
+
+    local scrollContent = CreateFrame("Frame", nil, viewport)
+    scrollContent:SetWidth(CW)
+    scrollContent:SetHeight(1)
+    scrollContent:SetPoint("TOPLEFT", viewport, "TOPLEFT", BOX_INSET, 0)
+
+    local scrollOffset = 0
+
+    local function ApplyScroll(offset)
+        local maxScroll = math_max(0, scrollContent:GetHeight() - viewport:GetHeight())
+        if offset < 0         then offset = 0         end
+        if offset > maxScroll then offset = maxScroll end
+        scrollOffset = offset
+        scrollContent:SetPoint("TOPLEFT", viewport, "TOPLEFT", BOX_INSET, scrollOffset)
+        return scrollOffset, maxScroll
+    end
+
+    local sbBar = CreateFrame("Frame", nil, panel)
+    sbBar:SetWidth(SB_W)
+    sbBar:SetPoint("TOP",    panel, "TOPRIGHT",    -(SB_MARGIN - 2), SCROLL_TOP)
+    sbBar:SetPoint("BOTTOM", panel, "BOTTOMRIGHT", -(SB_MARGIN - 2), SCROLL_BTM)
+    sbBar:SetFrameLevel(panel:GetFrameLevel() + 10)
+
+    local railTex = sbBar:CreateTexture(nil, "BACKGROUND")
+    railTex:SetAllPoints(true)
+    railTex:SetColorTexture(0.22, 0.22, 0.22, 0.85)
+
+    local sbThumb = CreateFrame("Button", nil, sbBar)
+    sbThumb:SetWidth(SB_W)
+    sbThumb:SetHeight(40)
+    sbThumb:SetPoint("TOP", sbBar, "TOP", 0, 0)
+
+    local thumbTex = sbThumb:CreateTexture(nil, "ARTWORK")
+    thumbTex:SetAllPoints(true)
+    do local tr, tg, tb = GetClassTheme(); thumbTex:SetColorTexture(tr, tg, tb, 0.85) end
+
+    local thumbHL = sbThumb:CreateTexture(nil, "HIGHLIGHT")
+    thumbHL:SetAllPoints(true)
+    thumbHL:SetColorTexture(1, 1, 1, 0.2)
+
+    sbBar:EnableMouse(true)
+    sbBar:SetScript("OnMouseDown", function(self, button)
+        if button ~= "LeftButton" then return end
+        local _, cursorY = GetCursorPosition()
+        cursorY = cursorY / UIParent:GetEffectiveScale()
+        local trackTop    = sbBar:GetTop()
+        local trackBottom = sbBar:GetBottom()
+        if not trackTop or trackTop == trackBottom then return end
+        local ratio = (trackTop - cursorY) / (trackTop - trackBottom)
+        ratio = math_max(0, math_min(1, ratio))
+        local maxScroll = math_max(0, scrollContent:GetHeight() - viewport:GetHeight())
+        ApplyScroll(ratio * maxScroll)
+        sbBar:UpdateScrollbar()
+    end)
+
+    function sbBar:UpdateScrollbar()
+        local viewH     = viewport:GetHeight()
+        local childH    = scrollContent:GetHeight()
+        local maxScroll = math_max(0, childH - viewH)
+        if viewH <= 0 then
+            C_Timer.After(0.05, function() sbBar:UpdateScrollbar() end)
+            return
+        end
+        if maxScroll <= 0 then sbBar:Hide(); return end
+        sbBar:Show()
+        local trackH = sbBar:GetHeight()
+        local thumbH = math_floor(math_max(20, trackH * (viewH / childH)) + 0.5)
+        sbThumb:SetHeight(thumbH)
+        local travel = trackH - thumbH
+        local pos    = travel > 0 and (scrollOffset / maxScroll) * travel or 0
+        sbThumb:ClearAllPoints()
+        sbThumb:SetPoint("TOP", sbBar, "TOP", 0, -math_floor(pos + 0.5))
+    end
+
+    local dragStartY, dragStartOffset
+    sbThumb:RegisterForDrag("LeftButton")
+    sbThumb:SetScript("OnDragStart", function(self)
+        dragStartY      = select(2, GetCursorPosition()) / UIParent:GetEffectiveScale()
+        dragStartOffset = scrollOffset
+        self:SetScript("OnUpdate", function()
+            local curY      = select(2, GetCursorPosition()) / UIParent:GetEffectiveScale()
+            local delta     = dragStartY - curY
+            local trackH    = sbBar:GetHeight()
+            local thumbH    = sbThumb:GetHeight()
+            local viewH     = viewport:GetHeight()
+            local childH    = scrollContent:GetHeight()
+            local maxScroll = math_max(0, childH - viewH)
+            local travel    = trackH - thumbH
+            if travel > 0 then
+                ApplyScroll(dragStartOffset + delta * (maxScroll / travel))
+                sbBar:UpdateScrollbar()
+            end
+        end)
+    end)
+    sbThumb:SetScript("OnDragStop", function(self)
+        self:SetScript("OnUpdate", nil)
+    end)
+
+    viewport:EnableMouseWheel(true)
+    viewport:SetScript("OnMouseWheel", function(self, delta)
+        ApplyScroll(scrollOffset - delta * 40)
+        sbBar:UpdateScrollbar()
+    end)
+
+    local function SetContentHeight(h)
+        scrollContent:SetHeight(h)
+        ApplyScroll(0)
+        C_Timer.After(0.05, function() sbBar:UpdateScrollbar() end)
+    end
+
+    local CPW = CW - 4  -- content panel width (4px inset so right border is visible)
 
     local function SetUIFont(fs, size, flags)
         fs:SetFont(UI_FONT, size or 12, flags or "")
@@ -1438,7 +1577,7 @@ function NPA:BuildOptionsPanel()
 
     -- ---- UI Helpers ----
     local function SectionBox(x, y, w, h)
-        local box = CreateFrame("Frame", nil, panel,
+        local box = CreateFrame("Frame", nil, scrollContent,
             BackdropTemplateMixin and "BackdropTemplate" or nil)
         box:SetPoint("TOPLEFT", x, y)
         box:SetSize(w, h)
@@ -1467,7 +1606,7 @@ function NPA:BuildOptionsPanel()
 
     local checkboxes = {}
     local function MakeCheckbox(labelText, x, y, getter, setter)
-        local cb = CreateFrame("CheckButton", nil, panel, "UICheckButtonTemplate")
+        local cb = CreateFrame("CheckButton", nil, scrollContent, "UICheckButtonTemplate")
         cb:SetPoint("TOPLEFT", x, y)
         cb:SetChecked(getter())
         cb:SetScript("OnClick", function(self)
@@ -1601,8 +1740,8 @@ function NPA:BuildOptionsPanel()
         slider:SetValueStep(step)
         slider:SetObeyStepOnDrag(true)
         slider:SetValue(getter())
-        slider.Low:SetText(tostring(minVal))
-        slider.High:SetText(tostring(maxVal))
+        slider.Low:SetText("")
+        slider.High:SetText("")
         local function DisplayVal(v)
             if formatFunc then return formatFunc(v) end
             return tostring(v)
@@ -1675,7 +1814,7 @@ function NPA:BuildOptionsPanel()
         cb.Refresh = function() cb:SetChecked(getEnabled()) end
 
         local dd = CreateFrame("DropdownButton", nil, parent, "WowStyle1DropdownTemplate")
-        dd:SetPoint("LEFT", cb, "RIGHT", 160, 0)
+        dd:SetPoint("LEFT", cb, "RIGHT", 324, 0)
         dd:SetWidth(160)
         local function SetupMenu()
             dd:SetupMenu(function(_, root)
@@ -1720,16 +1859,16 @@ function NPA:BuildOptionsPanel()
     subtitle:SetWidth(PW - 32)
     subtitle:SetJustifyH("CENTER")
     SetUIFont(subtitle, 11)
-    subtitle:SetText("Pet status warnings for Hunter, Warlock, Frost Mage, and Unholy Death Knight. Type /npa to open this panel.")
+    subtitle:SetText("Pet status warnings for all pet classes. Type /npa to open this panel.")
     subtitle:SetTextColor(0.75, 0.75, 0.75)
 
     -- ================================================================
     -- DISPLAY
     -- ================================================================
-    local displayBox = SectionBox(12, -62, PW - 24, 175)
+    local displayBox = SectionBox(0, 0, CPW, 155)
     SectionHeader(displayBox, "Display", 8, -6)
 
-    checkboxes.enabled = MakeCheckbox("Enable Addon", 20, -90,
+    checkboxes.enabled = MakeCheckbox("Enable Addon", 8, -28,
         function() return db.enabled end,
         function(v)
             db.enabled = v and true or false
@@ -1742,7 +1881,7 @@ function NPA:BuildOptionsPanel()
             end
         end)
 
-    checkboxes.flash = MakeCheckbox("Flash Animation", 20, -114,
+    checkboxes.flash = MakeCheckbox("Flash Animation", 8, -68,
         function() return db.flash end,
         function(v)
             db.flash = v and true or false
@@ -1756,91 +1895,18 @@ function NPA:BuildOptionsPanel()
             end
         end)
 
-    -- Font picker
-    do
-        local fontLabel = displayBox:CreateFontString(nil, "OVERLAY")
-        fontLabel:SetPoint("TOPLEFT", 8, -94)
-        SetUIFont(fontLabel, 13, "OUTLINE")
-        fontLabel:SetText("Alert Font")
-        fontLabel:SetTextColor(THEME_R, THEME_G, THEME_B)
-        themeFS[#themeFS + 1] = { fs=fontLabel, alpha=1 }
-
-        local fontPool = {}
-        local dropdown = CreateFrame("DropdownButton", "NemPetAlertsFontDrop",
-                                     displayBox, "WowStyle1DropdownTemplate")
-        dropdown:SetPoint("TOPLEFT", fontLabel, "BOTTOMLEFT", 0, -6)
-        dropdown:SetWidth(220)
-        dropdown:SetDefaultText(db.fontName or "Gotham Narrow Ultra")
-
-        local function SetupMenu()
-            local fonts = {}
-            for name, path in pairs(BUNDLED_FONTS) do fonts[name] = path end
-            if LSM then
-                local lsmFonts = LSM:HashTable(LSM.MediaType and LSM.MediaType.FONT or "font")
-                if lsmFonts then
-                    for fontName, fontPath in pairs(lsmFonts) do
-                        if not fonts[fontName] then
-                            fonts[fontName] = fontPath:gsub("/", "\\")
-                        end
-                    end
-                end
-            end
-            local sortedNames = {}
-            for name in pairs(fonts) do sortedNames[#sortedNames + 1] = name end
-            table.sort(sortedNames)
-
-            dropdown:SetupMenu(function(_, rootDescription)
-                local itemHeight = 16
-                local maxVisible = 12
-                rootDescription:SetScrollMode(maxVisible * itemHeight)
-                for index, fontName in ipairs(sortedNames) do
-                    local fontPath = fonts[fontName]
-                    local n = fontName
-                    local button = rootDescription:CreateButton("                                        ", function()
-                        db.fontName = n
-                        dropdown:SetDefaultText(n)
-                        ApplyDisplaySettings()
-                    end)
-                    button:AddInitializer(function(btn)
-                        local fontDisplay = fontPool[index]
-                        if not fontDisplay then
-                            fontDisplay = dropdown:CreateFontString(nil, "BACKGROUND")
-                            fontPool[index] = fontDisplay
-                        end
-                        fontDisplay:SetParent(btn)
-                        fontDisplay:ClearAllPoints()
-                        fontDisplay:SetPoint("LEFT", btn, "LEFT", 5, 0)
-                        fontDisplay:SetFont(fontPath, 12)
-                        fontDisplay:SetText(n)
-                        fontDisplay:Show()
-                    end)
-                end
-            end)
-        end
-
-        hooksecurefunc(dropdown, "OnMenuClosed", function()
-            for _, fs in pairs(fontPool) do fs:Hide() end
-        end)
-        C_Timer.After(0, SetupMenu)
-
-        dropdown.Refresh = function()
-            dropdown:SetDefaultText(db.fontName or "Gotham Narrow Ultra")
-        end
-        NPA.fontDropdown = dropdown
-    end
-
-    -- Sliders
-    sliders.scale = MakeSlider(panel, "Alert Text Scale", 50, 200, 10, 370, -86, 270,
+    -- Sliders (right column of Display, no font dropdown here)
+    sliders.scale = MakeSlider(scrollContent, "Alert Text Scale", 50, 200, 10, 358, -24, 270,
         function() return math_floor((db.scale or 1.0) * 100 + 0.5) end,
         function(v) db.scale = v / 100; ApplyDisplaySettings() end,
         function(v) return string_format("%.1f", v / 100) end)
     if sliders.scale then
         for _, child in next, { sliders.scale:GetChildren() } do
-            if child.Low then child.Low:SetText("0.5x"); child.High:SetText("2.0x") end
+            if child.Low then child.Low:SetText(""); child.High:SetText("") end
         end
     end
 
-    sliders.fontSize = MakeSlider(panel, "Font Size", 1, 100, 1, 370, -146, 270,
+    sliders.fontSize = MakeSlider(scrollContent, "Font Size", 1, 100, 1, 358, -84, 270,
         function() return db.fontSize or 25 end,
         function(v) db.fontSize = v; ApplyDisplaySettings() end,
         nil)
@@ -1848,16 +1914,24 @@ function NPA:BuildOptionsPanel()
     -- ================================================================
     -- SOUNDS (built dynamically from active module)
     -- ================================================================
-    local soundBox = SectionBox(12, -245, PW - 24, 130)
+    local soundBox = SectionBox(0, -163, CPW, 130)
     SectionHeader(soundBox, "Sounds", 8, -6)
 
     -- ================================================================
     -- ALERTS (built dynamically from active module)
     -- ================================================================
-    local alertBox = SectionBox(12, -383, PW - 24, 161)
+    local alertBox = SectionBox(0, -301, CPW, 161)
     SectionHeader(alertBox, "Alerts", 8, -6)
 
     local alertCheckboxes = {}
+
+    -- ================================================================
+    -- ALERT OPTIONS (4th section — font, heal threshold, alert texts)
+    -- ================================================================
+    local alertOptionsBox = SectionBox(0, -470, CPW, 100)  -- height set dynamically in OnShow
+    SectionHeader(alertOptionsBox, "Alert Options", 8, -6)
+
+    local alertOptionsWidgets = {}  -- tracked for hide/show/wipe on rebuild
 
     -- ================================================================
     -- BUTTONS
@@ -1872,7 +1946,7 @@ function NPA:BuildOptionsPanel()
     NPA.testBtn = testBtn
 
     local lockBtn = CreateFrame("Button", nil, panel, "UIPanelButtonTemplate")
-    lockBtn:SetSize(140, 26)
+    lockBtn:SetSize(120, 26)
     lockBtn:SetText("Unlock Frame")
     lockBtn:SetScript("OnClick", function()
         SetLockState(not coreState.unlocked)
@@ -1880,8 +1954,8 @@ function NPA:BuildOptionsPanel()
     NPA.lockBtn = lockBtn
 
     local resetBtn = CreateFrame("Button", nil, panel, "UIPanelButtonTemplate")
-    resetBtn:SetSize(140, 26)
-    resetBtn:SetText("Reset Position")
+    resetBtn:SetSize(120, 26)
+    resetBtn:SetText("Center Position")
     resetBtn:SetScript("OnClick", function()
         db.x             = CORE_DEFAULTS.x
         db.y             = CORE_DEFAULTS.y
@@ -1889,23 +1963,61 @@ function NPA:BuildOptionsPanel()
         db.relativePoint = CORE_DEFAULTS.relativePoint
         db.relativeTo    = CORE_DEFAULTS.relativeTo
         ApplyDisplaySettings()
-        Msg("Position reset.")
+        Msg("Position centered.")
     end)
 
-    local btnSpacing = 12
-    local totalBtnW = 110 + 140 + 140 + (btnSpacing * 2)
-    local btnStartX = math_floor((PW - totalBtnW) / 2)
-    testBtn:SetPoint("TOPLEFT", btnStartX, -552)
-    lockBtn:SetPoint("LEFT", testBtn, "RIGHT", btnSpacing, 0)
-    resetBtn:SetPoint("LEFT", lockBtn, "RIGHT", btnSpacing, 0)
+    local restoreBtn = CreateFrame("Button", nil, panel, "UIPanelButtonTemplate")
+    restoreBtn:SetSize(130, 26)
+    restoreBtn:SetText("Restore Defaults")
+    restoreBtn:SetScript("OnClick", function()
+        local mod = NPA.activeModule
+        -- Reset core display settings
+        db.scale    = CORE_DEFAULTS.scale
+        db.fontSize = CORE_DEFAULTS.fontSize
+        db.fontName = CORE_DEFAULTS.fontName
+        db.x        = CORE_DEFAULTS.x
+        db.y        = CORE_DEFAULTS.y
+        db.point         = CORE_DEFAULTS.point
+        db.relativePoint = CORE_DEFAULTS.relativePoint
+        db.relativeTo    = CORE_DEFAULTS.relativeTo
+        db.healPetThreshold = CORE_DEFAULTS.healPetThreshold
+        -- Reset alert colors and texts for active module
+        if mod then
+            for _, alert in ipairs(mod.alerts) do
+                local k = alert.key
+                if alert.defaultColor and db.alertColors then
+                    db.alertColors[k] = {
+                        r = alert.defaultColor.r,
+                        g = alert.defaultColor.g,
+                        b = alert.defaultColor.b,
+                    }
+                end
+                db[k .. "AlertText"] = nil
+            end
+        end
+        NPA.ResetHealthCurve()
+        ApplyDisplaySettings()
+        -- Refresh the panel
+        if panel:IsShown() then panel:Hide(); panel:Show() end
+        Msg("Defaults restored.")
+    end)
+    NPA.restoreBtn = restoreBtn
+
+    local btnSpacing = 10
+    local totalBtnW = 110 + 120 + 120 + 130 + (btnSpacing * 3)
+    local btnStartX = math_floor((PW - totalBtnW) / 2) - 8
+    testBtn:SetPoint("TOPLEFT",  btnStartX, -552)
+    lockBtn:SetPoint("LEFT",    testBtn,    "RIGHT", btnSpacing, 0)
+    resetBtn:SetPoint("LEFT",   lockBtn,    "RIGHT", btnSpacing, 0)
+    restoreBtn:SetPoint("LEFT", resetBtn,   "RIGHT", btnSpacing, 0)
 
     -- ================================================================
     -- CONTENT AREA BACKGROUND (solid black behind unsupported text)
     -- ================================================================
     local contentBG = CreateFrame("Frame", nil, panel,
         BackdropTemplateMixin and "BackdropTemplate" or nil)
-    contentBG:SetPoint("TOPLEFT",     panel, "TOPLEFT",     0, -42)
-    contentBG:SetPoint("BOTTOMRIGHT", panel, "BOTTOMRIGHT", 0,  22)
+    contentBG:SetPoint("TOPLEFT",     panel, "TOPLEFT",     0, SCROLL_TOP)
+    contentBG:SetPoint("BOTTOMRIGHT", panel, "BOTTOMRIGHT", 0, SCROLL_BTM)
     contentBG:SetFrameLevel(panel:GetFrameLevel() + 1)
     if contentBG.SetBackdrop then
         contentBG:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8" })
@@ -1917,15 +2029,17 @@ function NPA:BuildOptionsPanel()
     -- OnShow will show them if a supported spec is active.
     -- ================================================================
     subtitle:Hide()
+    viewport:Hide(); sbBar:Hide()
     displayBox:Hide()
     soundBox:Hide()
     alertBox:Hide()
+    alertOptionsBox:Hide()
     testBtn:Hide()
     lockBtn:Hide()
     resetBtn:Hide()
+    restoreBtn:Hide()
     for _, cb in pairs(checkboxes) do cb:Hide() end
     for _, sl in pairs(sliders) do sl:Hide() end
-    if NPA.fontDropdown then NPA.fontDropdown:Hide() end
 
     -- ================================================================
     -- UNSUPPORTED SPEC TEXT (parented to contentBG, auto-shows/hides)
@@ -1962,18 +2076,21 @@ function NPA:BuildOptionsPanel()
     -- Helper: hide all content sections and buttons (unsupported state)
     local function HideAllContent()
         subtitle:Hide()
+        viewport:Hide(); sbBar:Hide()
         displayBox:Hide()
         soundBox:Hide()
         alertBox:Hide()
+        alertOptionsBox:Hide()
         testBtn:Hide()
         lockBtn:Hide()
         resetBtn:Hide()
+        restoreBtn:Hide()
         for _, cb in pairs(checkboxes) do cb:Hide() end
         for _, sl in pairs(sliders) do sl:Hide() end
         for _, cb in pairs(soundCheckboxes) do cb:Hide() end
         for _, dd in pairs(soundDDs) do dd:Hide() end
         for _, cb in pairs(alertCheckboxes) do cb:Hide() end
-        if NPA.fontDropdown then NPA.fontDropdown:Hide() end
+        for _, w in ipairs(alertOptionsWidgets) do if w.Hide then w:Hide() end end
         if NPA.healPetThreshBox then NPA.healPetThreshBox:Hide() end
         contentBG:Show()
     end
@@ -1981,15 +2098,18 @@ function NPA:BuildOptionsPanel()
     -- Helper: show all content sections and buttons (supported state)
     local function ShowAllContent()
         subtitle:Show()
+        viewport:Show()
+        sbBar:Show()
         displayBox:Show()
         soundBox:Show()
         alertBox:Show()
+        alertOptionsBox:Show()
         testBtn:Show()
         lockBtn:Show()
         resetBtn:Show()
+        restoreBtn:Show()
         for _, cb in pairs(checkboxes) do cb:Show() end
         for _, sl in pairs(sliders) do sl:Show() end
-        if NPA.fontDropdown then NPA.fontDropdown:Show() end
         contentBG:Hide()
     end
 
@@ -1997,12 +2117,10 @@ function NPA:BuildOptionsPanel()
         UpdatePanelTheme()
 
         if not IsFullyImplemented() then
-            -- ── Unsupported spec: default state, nothing to do ───
             HideAllContent()
             return
         end
 
-        -- ── Supported spec: show full UI ─────────────────────────
         ShowAllContent()
 
         local mod = NPA.activeModule
@@ -2031,11 +2149,19 @@ function NPA:BuildOptionsPanel()
             end
         end
 
+        -- Resize soundBox and reposition alertBox below it
+        local soundBoxH = 30 + math_max(soundRowCount, 1) * 40 + 8
+        soundBox:SetHeight(soundBoxH)
+
+        local soundBoxY = -163
+        local alertBoxY = soundBoxY - soundBoxH - 8
+        alertBox:ClearAllPoints()
+        alertBox:SetPoint("TOPLEFT", 0, alertBoxY)
+
         -- ── Rebuild Alert Rows ─────────────────────────────
         for _, cb in pairs(alertCheckboxes) do cb:Hide() end
         wipe(alertCheckboxes)
 
-        -- Layout: 2 columns
         local alertCount = 0
         for _, alert in ipairs(mod.alerts) do
             alertCount = alertCount + 1
@@ -2043,21 +2169,106 @@ function NPA:BuildOptionsPanel()
             local col   = (alertCount - 1) % 2
             local row   = math_floor((alertCount - 1) / 2)
             local xPos  = col == 0 and 20 or 330
-            local yPos  = -413 - row * 24
-            alertCheckboxes[k] = MakeAlertRow(panel,
+            local yPos  = alertBoxY - 30 - row * 24
+            alertCheckboxes[k] = MakeAlertRow(scrollContent,
                 alert.label, xPos, yPos,
                 function() return db[k .. "Enabled"] end,
                 function(v) db[k .. "Enabled"] = v end,
                 k)
         end
 
-        -- ── Heal Pet Threshold ─────────────────────────────
+        -- Resize alertBox and reposition alertOptionsBox below it
+        local alertRows  = math_floor((#mod.alerts + 1) / 2)
+        local alertBoxH  = 30 + alertRows * 24 + 12
+        alertBox:SetHeight(alertBoxH)
+
+        local alertOptionsY = alertBoxY - alertBoxH - 8
+        alertOptionsBox:ClearAllPoints()
+        alertOptionsBox:SetPoint("TOPLEFT", 0, alertOptionsY)
+
+        -- ── Rebuild Alert Options Section ──────────────────
+        for _, w in ipairs(alertOptionsWidgets) do if w.Hide then w:Hide() end end
+        wipe(alertOptionsWidgets)
+        if NPA.healPetThreshBox then NPA.healPetThreshBox:Hide() end
+
+        local aoCursor = -30  -- Y cursor inside alertOptionsBox
+
+        -- Font dropdown
+        local fontPool = {}
+        local fontDD = CreateFrame("DropdownButton", "NemPetAlertsFontDrop",
+                                   alertOptionsBox, "WowStyle1DropdownTemplate")
+        fontDD:SetPoint("TOPLEFT", 10, aoCursor)
+        fontDD:SetWidth(220)
+        fontDD:SetDefaultText(db.fontName or "Gotham Narrow Ultra")
+        alertOptionsWidgets[#alertOptionsWidgets + 1] = fontDD
+        NPA.fontDropdown = fontDD
+
+        local function BuildFontMenu()
+            local fonts = {}
+            for name, path in pairs(BUNDLED_FONTS) do fonts[name] = path end
+            if LSM then
+                local lsmFonts = LSM:HashTable(LSM.MediaType and LSM.MediaType.FONT or "font")
+                if lsmFonts then
+                    for fontName, fontPath in pairs(lsmFonts) do
+                        if not fonts[fontName] then fonts[fontName] = fontPath:gsub("/", "\\") end
+                    end
+                end
+            end
+            local sortedNames = {}
+            for name in pairs(fonts) do sortedNames[#sortedNames + 1] = name end
+            table.sort(sortedNames)
+            fontDD:SetupMenu(function(_, rootDescription)
+                rootDescription:SetScrollMode(12 * 16)
+                for index, fontName in ipairs(sortedNames) do
+                    local fontPath = fonts[fontName]
+                    local n = fontName
+                    local button = rootDescription:CreateButton(
+                        "                                        ",
+                        function()
+                            db.fontName = n
+                            fontDD:SetDefaultText(n)
+                            ApplyDisplaySettings()
+                        end)
+                    button:AddInitializer(function(btn)
+                        local fd = fontPool[index]
+                        if not fd then
+                            fd = fontDD:CreateFontString(nil, "BACKGROUND")
+                            fontPool[index] = fd
+                        end
+                        fd:SetParent(btn)
+                        fd:ClearAllPoints()
+                        fd:SetPoint("LEFT", btn, "LEFT", 5, 0)
+                        fd:SetFont(fontPath, 12)
+                        fd:SetText(n)
+                        fd:Show()
+                    end)
+                end
+            end)
+        end
+        hooksecurefunc(fontDD, "OnMenuClosed", function()
+            for _, fs2 in pairs(fontPool) do fs2:Hide() end
+        end)
+        C_Timer.After(0, BuildFontMenu)
+        fontDD.Refresh = function()
+            fontDD:SetDefaultText(db.fontName or "Gotham Narrow Ultra")
+            BuildFontMenu()
+        end
+
+        aoCursor = aoCursor - 36  -- dd + gap
+
+        -- Heal Pet threshold (if this spec has it)
         if mod.hasHealPet and mod.healPetAlertIndex then
             local hpAlert = mod.alerts[mod.healPetAlertIndex]
-            if hpAlert and alertCheckboxes[hpAlert.key] then
-                local acb = alertCheckboxes[hpAlert.key]
+            if hpAlert then
+                local hpLbl = alertOptionsBox:CreateFontString(nil, "OVERLAY")
+                hpLbl:SetPoint("TOPLEFT", 10, aoCursor - 4)
+                SetUIFont(hpLbl, 12)
+                hpLbl:SetText("Heal Pet Threshold")
+                hpLbl:SetTextColor(1, 1, 1)
+                alertOptionsWidgets[#alertOptionsWidgets + 1] = hpLbl
+
                 if not NPA.healPetThreshBox then
-                    local threshBox = CreateFrame("EditBox", nil, panel, "InputBoxTemplate")
+                    local threshBox = CreateFrame("EditBox", nil, alertOptionsBox, "InputBoxTemplate")
                     threshBox:SetSize(36, 18)
                     threshBox:SetAutoFocus(false)
                     threshBox:SetMaxLetters(3)
@@ -2065,11 +2276,12 @@ function NPA:BuildOptionsPanel()
                     threshBox:SetJustifyH("CENTER")
                     NPA.healPetThreshBox = threshBox
 
-                    local pctLabel = panel:CreateFontString(nil, "OVERLAY")
+                    local pctLabel = alertOptionsBox:CreateFontString(nil, "OVERLAY")
                     pctLabel:SetPoint("LEFT", threshBox, "RIGHT", 2, 0)
                     SetUIFont(pctLabel, 11)
                     pctLabel:SetText("%")
                     pctLabel:SetTextColor(1, 1, 1)
+                    alertOptionsWidgets[#alertOptionsWidgets + 1] = pctLabel
 
                     local function CommitThreshold()
                         local val = tonumber(threshBox:GetText())
@@ -2082,7 +2294,6 @@ function NPA:BuildOptionsPanel()
                         threshBox:SetCursorPosition(0)
                         threshBox:ClearFocus()
                     end
-
                     threshBox:SetScript("OnEnterPressed", CommitThreshold)
                     threshBox:SetScript("OnEditFocusLost", CommitThreshold)
                     threshBox:SetScript("OnEscapePressed", function(self)
@@ -2094,24 +2305,89 @@ function NPA:BuildOptionsPanel()
 
                 local threshBox = NPA.healPetThreshBox
                 threshBox:ClearAllPoints()
-                threshBox:SetPoint("LEFT", acb.label, "RIGHT", 10, 0)
+                threshBox:SetPoint("LEFT", hpLbl, "RIGHT", 8, 4)
                 threshBox:SetText(tostring(db.healPetThreshold or 30))
                 threshBox:SetCursorPosition(0)
                 threshBox:Show()
+                alertOptionsWidgets[#alertOptionsWidgets + 1] = threshBox
 
                 local hpc = db.alertColors and db.alertColors[hpAlert.key]
-                if hpc then threshBox:SetTextColor(hpc.r, hpc.g, hpc.b) end
+                threshBox:SetTextColor(THEME_R, THEME_G, THEME_B)
+                themeFS[#themeFS + 1] = { setColor = function(r, g, b) threshBox:SetTextColor(r, g, b) end }
+
+                aoCursor = aoCursor - 48  -- threshold row + gap
             end
-        elseif NPA.healPetThreshBox then
-            NPA.healPetThreshBox:Hide()
         end
 
-        -- Refresh core checkboxes
+        -- Alert text editors — two-column, one per alert
+        local halfW = math_floor(CPW / 2) - 14
+        local colR  = math_floor(CPW / 2) + 4
+        local rowH  = 44
+
+        for i, alert in ipairs(mod.alerts) do
+            local k      = alert.key
+            local colIdx = (i - 1) % 2
+            local rowIdx = math_floor((i - 1) / 2)
+            local xPos   = colIdx == 0 and 10 or colR
+            local yPos   = aoCursor - rowIdx * rowH
+
+            local lbl = alertOptionsBox:CreateFontString(nil, "OVERLAY")
+            lbl:SetPoint("TOPLEFT", xPos, yPos)
+            SetUIFont(lbl, 11)
+            lbl:SetText(alert.label)
+            lbl:SetTextColor(0.8, 0.8, 0.8)
+            alertOptionsWidgets[#alertOptionsWidgets + 1] = lbl
+
+            local editBox = CreateFrame("EditBox", nil, alertOptionsBox, "InputBoxTemplate")
+            editBox:SetPoint("TOPLEFT", xPos, yPos - 16)
+            editBox:SetSize(halfW, 20)
+            editBox:SetAutoFocus(false)
+            editBox:SetMaxLetters(80)
+            editBox:SetFontObject("GameFontWhite")
+            local saved = db[k .. "AlertText"]
+            editBox:SetText((saved and saved ~= "") and saved or alert.text)
+            editBox:SetCursorPosition(0)
+            editBox:SetScript("OnEnterPressed", function(self) self:ClearFocus() end)
+            editBox:SetScript("OnEditFocusLost", function(self)
+                local t = self:GetText()
+                if t == "" or t == alert.text then
+                    db[k .. "AlertText"] = nil
+                    self:SetText(alert.text)
+                else
+                    db[k .. "AlertText"] = t
+                end
+                self:SetCursorPosition(0)
+                ApplyDisplaySettings()
+            end)
+            editBox.Refresh = function()
+                local st = db[k .. "AlertText"]
+                editBox:SetText((st and st ~= "") and st or alert.text)
+                editBox:SetCursorPosition(0)
+            end
+            alertOptionsWidgets[#alertOptionsWidgets + 1] = editBox
+        end
+
+        -- Size alertOptionsBox and set total scroll content height
+        local textEditorRows = math_floor((#mod.alerts + 1) / 2)
+        local specOptionsH   = 36  -- font dd
+        if mod.hasHealPet and mod.healPetAlertIndex then specOptionsH = specOptionsH + 48 end
+        local aoH = 30 + specOptionsH + textEditorRows * rowH + 12
+        alertOptionsBox:SetHeight(aoH)
+
+        local contentH = (-alertOptionsY) + aoH + 16
+        SetContentHeight(contentH)
+
+        -- Refresh core widgets
         for _, cb in pairs(checkboxes) do cb:Refresh() end
         for _, sl in pairs(sliders) do sl.Refresh() end
         if NPA.fontDropdown then NPA.fontDropdown.Refresh() end
         lockBtn:SetText(coreState.unlocked and "Lock Frame" or "Unlock Frame")
         testBtn:SetText(coreState.testMode and "Stop Test" or "Test")
+    end)
+
+    -- Re-run UpdateScrollbar when panel size is finalized by the Settings system
+    panel:SetScript("OnSizeChanged", function()
+        C_Timer.After(0, function() sbBar:UpdateScrollbar() end)
     end)
 
     -- ================================================================
@@ -2233,3 +2509,4 @@ NPA:RegisterEvent("PLAYER_ENTERING_WORLD")
 NPA:RegisterEvent("PLAYER_SPECIALIZATION_CHANGED")
 NPA:RegisterEvent("PLAYER_TALENT_UPDATE")
 NPA:RegisterEvent("TRAIT_CONFIG_UPDATED")
+NPA:RegisterEvent("PLAYER_UPDATE_RESTING")

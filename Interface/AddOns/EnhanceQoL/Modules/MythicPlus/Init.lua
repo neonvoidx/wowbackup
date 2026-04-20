@@ -1073,6 +1073,7 @@ local RANDOM_HS_ID = 999999
 local hearthstoneID = {
 	-- Midnight
 	{ isToy = true, id = 263933, spellID = 1270814 }, -- Preyseeker's Hearthstone
+	{ isToy = true, id = 265100, spellID = 1273401 }, -- Corewarden's Hearthstone
 
 	-- 11.2
 	{ isToy = true, icon = 133469, id = 245970, spellID = 1240219 }, -- P.O.S.T. Master's Express Hearthstone

@@ -35,6 +35,19 @@ local function globalFontConfigLabel()
 	return "Use global font config"
 end
 
+local function globalFontStyleConfigKey()
+	if addon.functions and addon.functions.GetGlobalFontStyleConfigKey then return addon.functions.GetGlobalFontStyleConfigKey() end
+	return "__EQOL_GLOBAL_FONT_STYLE__"
+end
+
+local function normalizeFontStyleChoice(value, fallback)
+	if addon.functions and addon.functions.NormalizeFontStyleChoice then
+		return addon.functions.NormalizeFontStyleChoice(value, fallback, true)
+	end
+	if type(value) == "string" and value ~= "" then return value end
+	return fallback or "OUTLINE"
+end
+
 CombatText.defaults = CombatText.defaults
 	or {
 		duration = 3,
@@ -42,6 +55,7 @@ CombatText.defaults = CombatText.defaults
 		alwaysVisibleMode = "STATUS",
 		fontSize = 32,
 		fontFace = globalFontConfigKey(),
+		fontOutline = globalFontStyleConfigKey(),
 		color = { r = 1, g = 1, b = 1, a = 1 },
 		enterColor = { r = 1, g = 1, b = 1, a = 1 },
 		leaveColor = { r = 1, g = 1, b = 1, a = 1 },
@@ -51,6 +65,7 @@ local defaults = CombatText.defaults
 defaults.enterColor = defaults.enterColor or defaults.color or { r = 1, g = 1, b = 1, a = 1 }
 defaults.leaveColor = defaults.leaveColor or defaults.color or defaults.enterColor or { r = 1, g = 1, b = 1, a = 1 }
 defaults.color = defaults.color or defaults.enterColor
+defaults.fontOutline = defaults.fontOutline or globalFontStyleConfigKey()
 
 CombatText.ALWAYS_VISIBLE_MODE_COMBAT_ONLY = CombatText.ALWAYS_VISIBLE_MODE_COMBAT_ONLY or "COMBAT_ONLY"
 CombatText.ALWAYS_VISIBLE_MODE_STATUS = CombatText.ALWAYS_VISIBLE_MODE_STATUS or "STATUS"
@@ -64,6 +79,7 @@ local DB_ALWAYS_VISIBLE = "combatTextAlwaysVisible"
 local DB_ALWAYS_VISIBLE_MODE = "combatTextAlwaysVisibleMode"
 local DB_FONT = "combatTextFont"
 local DB_FONT_SIZE = "combatTextFontSize"
+local DB_FONT_OUTLINE = "combatTextFontOutline"
 local DB_COLOR = "combatTextColor"
 local DB_ENTER_COLOR = "combatTextEnterColor"
 local DB_LEAVE_COLOR = "combatTextLeaveColor"
@@ -204,6 +220,15 @@ local function fontFaceOptions()
 	return list
 end
 
+local function fontStyleOptions()
+	if addon.functions and addon.functions.GetFontStyleOptionList then return addon.functions.GetFontStyleOptionList(true) end
+	return {
+		{ value = globalFontStyleConfigKey(), label = L["useGlobalFontStyleConfig"] or "Use global font styling" },
+		{ value = "NONE", label = _G.NONE or "None" },
+		{ value = "OUTLINE", label = L["Outline"] or "Outline" },
+	}
+end
+
 local function combatLabel() return _G.COMBAT or "Combat" end
 
 local function getCombatText(inCombat)
@@ -250,6 +275,11 @@ function CombatText:GetFontFace()
 	return face or defaultFontFace()
 end
 
+function CombatText:GetFontStyleSetting()
+	local style = getValue(DB_FONT_OUTLINE, defaults.fontOutline)
+	return normalizeFontStyleChoice(style, defaults.fontOutline or "OUTLINE")
+end
+
 function CombatText:GetEnterColor()
 	local fallback = defaults.enterColor or defaults.color
 	local value = getValue(DB_ENTER_COLOR, getValue(DB_COLOR, fallback))
@@ -266,16 +296,22 @@ function CombatText:GetColor() return self:GetEnterColor() end
 
 function CombatText:ApplyStyle(r, g, b, a)
 	if not self.frame or not self.frame.text then return end
-	local font = self:GetFontFace()
+	local font = self:GetFontFaceSetting()
 	local size = self:GetFontSize()
-	local ok = self.frame.text:SetFont(font, size, "OUTLINE")
-	local appliedFont = font
-	local fallbackUsed = false
-	if not ok then
-		appliedFont = defaultFontFace()
-		self.frame.text:SetFont(appliedFont, size, "OUTLINE")
-		fallbackUsed = true
+	local style = self:GetFontStyleSetting()
+	local fallbackFont = defaultFontFace()
+	local fallbackStyle = defaults.fontOutline or "OUTLINE"
+	local ok
+	if addon.functions and addon.functions.ApplyFontString then
+		ok = addon.functions.ApplyFontString(self.frame.text, font, size, style, fallbackFont, fallbackStyle)
+	else
+		local resolvedFont = self:GetFontFace()
+		local flags = addon.functions and addon.functions.GetFontFlagsForStyle and addon.functions.GetFontFlagsForStyle(style, fallbackStyle) or "OUTLINE"
+		ok = self.frame.text:SetFont(resolvedFont, size, flags)
+		if ok == false then self.frame.text:SetFont(fallbackFont, size, flags) end
+		if addon.functions and addon.functions.ApplyFontStyleShadow then addon.functions.ApplyFontStyleShadow(self.frame.text, style, fallbackStyle) end
 	end
+	local appliedFont, appliedSize, appliedFlags = self.frame.text:GetFont()
 	if r == nil or g == nil or b == nil then
 		local inCombat = type(InCombatLockdown) == "function" and InCombatLockdown() == true
 		if inCombat then
@@ -287,10 +323,12 @@ function CombatText:ApplyStyle(r, g, b, a)
 	self.frame.text:SetTextColor(r, g, b, a or 1)
 	self:_debugTrace("ApplyStyle", {
 		requestedFont = tostring(font),
+		requestedStyle = tostring(style),
 		appliedFont = tostring(appliedFont),
-		fontSize = size,
+		appliedStyle = tostring(appliedFlags),
+		fontSize = appliedSize or size,
 		setFontOk = ok == true,
-		fallbackUsed = fallbackUsed == true,
+		fallbackUsed = ok == false,
 	})
 	self:_debugCheckVisual("ApplyStyle")
 end
@@ -495,6 +533,7 @@ function CombatText:ApplyLayoutData(data)
 	local alwaysVisibleMode = normalizeAlwaysVisibleMode(data.alwaysVisibleMode ~= nil and data.alwaysVisibleMode or self:GetAlwaysVisibleMode())
 	local fontSize = clamp(data.fontSize ~= nil and data.fontSize or self:GetFontSize(), 8, 96)
 	local fontFace = normalizeFontFace(data.fontFace) or self:GetFontFaceSetting() or defaults.fontFace
+	local fontOutline = normalizeFontStyleChoice(data.fontOutline, self:GetFontStyleSetting() or defaults.fontOutline or "OUTLINE")
 	local enterR, enterG, enterB, enterA = normalizeColor(
 		data.enterColor or data.color or getValue(DB_ENTER_COLOR, getValue(DB_COLOR, defaults.enterColor)),
 		defaults.enterColor
@@ -510,6 +549,7 @@ function CombatText:ApplyLayoutData(data)
 	addon.db[DB_ALWAYS_VISIBLE_MODE] = alwaysVisibleMode
 	addon.db[DB_FONT_SIZE] = fontSize
 	addon.db[DB_FONT] = fontFace
+	addon.db[DB_FONT_OUTLINE] = fontOutline
 	addon.db[DB_ENTER_COLOR] = { r = enterR, g = enterG, b = enterB, a = enterA }
 	addon.db[DB_LEAVE_COLOR] = { r = leaveR, g = leaveG, b = leaveB, a = leaveA }
 	addon.db[DB_COLOR] = { r = enterR, g = enterG, b = enterB, a = enterA }
@@ -545,6 +585,10 @@ local function applySetting(field, value)
 		local fontFace = normalizeFontFace(value) or defaults.fontFace
 		addon.db[DB_FONT] = fontFace
 		value = fontFace
+	elseif field == "fontOutline" then
+		local fontOutline = normalizeFontStyleChoice(value, defaults.fontOutline or "OUTLINE")
+		addon.db[DB_FONT_OUTLINE] = fontOutline
+		value = fontOutline
 	elseif field == "enterColor" then
 		local r, g, b, a = normalizeColor(value, defaults.enterColor)
 		addon.db[DB_ENTER_COLOR] = { r = r, g = g, b = b, a = a }
@@ -788,6 +832,23 @@ function CombatText:RegisterEditMode()
 				generator = function(_, root)
 					for _, option in ipairs(fontFaceOptions()) do
 						root:CreateRadio(option.label, function() return CombatText:GetFontFaceSetting() == option.value end, function() applySetting("fontFace", option.value) end)
+					end
+				end,
+			},
+			{
+				name = L["Font outline"] or "Font outline",
+				kind = SettingType.Dropdown,
+				field = "fontOutline",
+				height = 220,
+				get = function() return CombatText:GetFontStyleSetting() end,
+				set = function(_, value) applySetting("fontOutline", value) end,
+				generator = function(_, root)
+					for _, option in ipairs(fontStyleOptions()) do
+						root:CreateRadio(
+							option.label,
+							function() return CombatText:GetFontStyleSetting() == option.value end,
+							function() applySetting("fontOutline", option.value) end
+						)
 					end
 				end,
 			},

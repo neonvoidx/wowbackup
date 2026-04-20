@@ -110,7 +110,7 @@ TipTacOptions: enabled
 TipTacTalents: enabled
 TwitchEmotes: enabled
 WarpDeplete: enabled
-WeakAuras: enabled
+WeakAuras: disabled
 WeakAurasModelPaths: enabled
 WeakAurasOptions: enabled
 WeakAurasTemplates: enabled
@@ -435,3 +435,6 @@ ProcGlows: enabled
 NemPetAlerts: enabled
 CDMx: enabled
 FrameSort: enabled
+M33kAurasCompanion: enabled
+M33kAurasArchive: enabled
+M33Auras: disabled

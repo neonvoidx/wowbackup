@@ -432,7 +432,11 @@ local provider = {
 		ensureDB()
 		local tip = GameTooltip
 		tip:ClearLines()
-		tip:SetOwner(btn, "ANCHOR_TOPLEFT")
+		if addon.DataPanel and addon.DataPanel.SetTooltipOwner then
+			addon.DataPanel.SetTooltipOwner(btn, tip)
+		else
+			tip:SetOwner(btn, "ANCHOR_TOPLEFT")
+		end
 
 		local displayMode = db.displayMode or "both"
 		local showFps = displayMode ~= "ping"

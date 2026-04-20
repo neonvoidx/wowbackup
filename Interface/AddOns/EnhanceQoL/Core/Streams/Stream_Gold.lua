@@ -188,19 +188,43 @@ local function collectCharacterMoneyFromTracker()
 	local list, total, currentMoney = {}, 0, nil
 	local playerGUID = UnitGUID("player")
 	local privateDB = getPrivateDB()
+	local dedupedByCharacter = {}
+
+	local function buildCharacterKey(info, guid)
+		if type(info) ~= "table" then return guid end
+		local name = type(info.name) == "string" and info.name or ""
+		local realm = type(info.realm) == "string" and info.realm or ""
+		if name ~= "" then return string.lower(name) .. "|" .. string.lower(realm) end
+		return guid
+	end
+
+	local function shouldReplaceCharacter(existing, candidate)
+		if not existing then return true end
+		if candidate.isPlayer and not existing.isPlayer then return true end
+		if existing.isPlayer and not candidate.isPlayer then return false end
+		return (candidate.money or 0) > (existing.money or 0)
+	end
+
 	if type(privateDB.moneyTracker) == "table" then
 		for guid, info in pairs(privateDB.moneyTracker) do
 			if type(info) == "table" and type(info.money) == "number" then
-				total = total + info.money
-				if guid == playerGUID then currentMoney = info.money end
-				list[#list + 1] = {
+				local candidate = {
 					name = info.name,
 					realm = info.realm,
 					class = info.class,
 					money = info.money,
+					isPlayer = guid == playerGUID,
 				}
+				local key = buildCharacterKey(info, guid)
+				if shouldReplaceCharacter(dedupedByCharacter[key], candidate) then dedupedByCharacter[key] = candidate end
 			end
 		end
+	end
+	for _, info in pairs(dedupedByCharacter) do
+		total = total + info.money
+		if info.isPlayer then currentMoney = info.money end
+		info.isPlayer = nil
+		list[#list + 1] = info
 	end
 	table.sort(list, function(a, b)
 		local am = a.money or 0
@@ -309,7 +333,11 @@ local provider = {
 		ensureDB()
 		local tip = GameTooltip
 		tip:ClearLines()
-		tip:SetOwner(btn, "ANCHOR_TOPLEFT")
+		if addon.DataPanel and addon.DataPanel.SetTooltipOwner then
+			addon.DataPanel.SetTooltipOwner(btn, tip)
+		else
+			tip:SetOwner(btn, "ANCHOR_TOPLEFT")
+		end
 
 		local warband = getPrivateDB().warbandGold
 		if warband ~= nil then tip:AddDoubleLine(L["warbandGold"] or "Warband gold", formatMoney(warband)) end

@@ -40,6 +40,7 @@ local UnitPowerMax = UnitPowerMax
 local UnitStagger = UnitStagger
 local C_UnitAuras = C_UnitAuras
 local UIParent = UIParent
+local DispelOverlayOrientation = EnumUtil and EnumUtil.MakeEnum("VerticalTopToBottom", "VerticalBottomToTop", "HorizontalLeftToRight")
 
 local atlasByPower = {
 	LUNAR_POWER = "Unit_Druid_AstralPower_Fill",
@@ -88,6 +89,79 @@ local function getDebuffColorFromName(name)
 end
 
 H.getDebuffColorFromName = getDebuffColorFromName
+
+local function getDispelOverlayOrientationToken(value)
+	if DispelOverlayOrientation then
+		if value == DispelOverlayOrientation.VerticalBottomToTop then return "VerticalBottomToTop" end
+		if value == DispelOverlayOrientation.HorizontalLeftToRight then return "HorizontalLeftToRight" end
+		if value == DispelOverlayOrientation.VerticalTopToBottom then return "VerticalTopToBottom" end
+	end
+	if type(value) == "string" then
+		local token = value:gsub("[%s_]", ""):lower()
+		if token == "verticalbottomtotop" then return "VerticalBottomToTop" end
+		if token == "horizontallefttoright" then return "HorizontalLeftToRight" end
+	end
+	return "VerticalTopToBottom"
+end
+
+local function setDispelOverlayAtlas(texture, atlas)
+	if not (texture and texture.SetAtlas and atlas) then return end
+	local currentAtlas = texture.GetAtlas and texture:GetAtlas()
+	if currentAtlas ~= atlas then texture:SetAtlas(atlas, false) end
+end
+
+function H.CreateDispelOverlay(parent)
+	if not parent then return nil end
+
+	local overlay = CreateFrame("Frame", nil, parent)
+	overlay:EnableMouse(false)
+
+	local background = overlay:CreateTexture(nil, "ARTWORK", nil, -6)
+	background:SetAllPoints(overlay)
+	setDispelOverlayAtlas(background, "RaidFrame-Dispel-Fill")
+	overlay.Background = background
+
+	local gradient = overlay:CreateTexture(nil, "ARTWORK", nil, -5)
+	gradient:SetAllPoints(overlay)
+	overlay.Gradient = gradient
+
+	local border = overlay:CreateTexture(nil, "ARTWORK", nil, -5)
+	border:SetAllPoints(overlay)
+	setDispelOverlayAtlas(border, "RaidFrame-DispelHighlight")
+	overlay.Border = border
+
+	function overlay:SetOrientation(orientationOrOwner, orientation, xOffset, yOffset)
+		local resolvedOrientation = orientationOrOwner
+		local resolvedX = orientation
+		local resolvedY = xOffset
+		if type(orientationOrOwner) == "table" and orientation ~= nil then
+			resolvedOrientation = orientation
+			resolvedX = xOffset
+			resolvedY = yOffset
+		end
+
+		local orientationToken = getDispelOverlayOrientationToken(resolvedOrientation)
+		if orientationToken == "HorizontalLeftToRight" then
+			setDispelOverlayAtlas(self.Gradient, "!RaidFrame-Dispel-Vertical")
+			self.Gradient:SetTexCoord(0, 1, 0, 1)
+		else
+			setDispelOverlayAtlas(self.Gradient, "_RaidFrame-Dispel-Highlight-Horizontal")
+			if orientationToken == "VerticalBottomToTop" then
+				self.Gradient:SetTexCoord(0, 1, 1, 0)
+			else
+				self.Gradient:SetTexCoord(0, 1, 0, 1)
+			end
+		end
+
+		self.Border:ClearAllPoints()
+		self.Border:SetPoint("TOPLEFT")
+		self.Border:SetPoint("BOTTOMRIGHT", self, "BOTTOMRIGHT", resolvedX or 0, resolvedY or 0)
+	end
+
+	overlay:SetOrientation(DispelOverlayOrientation and DispelOverlayOrientation.VerticalTopToBottom or "VerticalTopToBottom", 0, 0)
+	overlay:Hide()
+	return overlay
+end
 
 local debuffColorCurve = C_CurveUtil and C_CurveUtil.CreateColorCurve() or nil
 if debuffColorCurve and Enum.LuaCurveType and Enum.LuaCurveType.Step then
@@ -181,8 +255,6 @@ function H.getNPCHealthColor(unit)
 end
 
 local nameWidthCache = {}
-local DROP_SHADOW_FLAG = "DROPSHADOW"
-local STRONG_DROP_SHADOW_FLAG = "STRONGDROPSHADOW"
 
 local function utf8Iter(str) return (str or ""):gmatch("[%z\1-\127\194-\244][\128-\191]*") end
 
@@ -220,15 +292,10 @@ local function utf8Sub(str, i, j)
 end
 
 local function normalizeFontOutline(outline)
+	if addon.functions and addon.functions.GetFontFlagsForStyle then return addon.functions.GetFontFlagsForStyle(outline, "OUTLINE") end
 	if outline == nil then return "OUTLINE" end
-	if outline == "" or outline == "NONE" or outline == DROP_SHADOW_FLAG or outline == STRONG_DROP_SHADOW_FLAG then return nil end
+	if outline == "" or outline == "NONE" then return nil end
 	return outline
-end
-
-local function getDropShadowStrength(outline)
-	if outline == STRONG_DROP_SHADOW_FLAG then return "strong" end
-	if outline == DROP_SHADOW_FLAG then return "normal" end
-	return nil
 end
 
 function H._looksLikeFontFile(path)
@@ -490,17 +557,7 @@ function H.applyFont(fs, fontPath, size, outline)
 	if size == nil or size <= 0 then size = 1 end
 	local ok = H.setFontWithFallback(fs, fontFile, size or 14, flags)
 	if not ok and fontPath and fontPath ~= "" then H.setFontWithFallback(fs, H.getFont(nil), size or 14, flags) end
-	local shadowStrength = getDropShadowStrength(outline)
-	if shadowStrength == "strong" then
-		fs:SetShadowColor(0, 0, 0, 0.85)
-		fs:SetShadowOffset(1, -1)
-	elseif shadowStrength == "normal" then
-		fs:SetShadowColor(0, 0, 0, 0.5)
-		fs:SetShadowOffset(0.5, -0.5)
-	else
-		fs:SetShadowColor(0, 0, 0, 0)
-		fs:SetShadowOffset(0, 0)
-	end
+	if addon.functions and addon.functions.ApplyFontStyleShadow then addon.functions.ApplyFontStyleShadow(fs, outline, "OUTLINE") end
 end
 
 local function ensureCooldownFontDefault(cooldown, fontString)
@@ -559,18 +616,34 @@ function H.ensureAuraBorderFrame(btn)
 	if not btn then return nil end
 	local border = btn._eqolAuraBorder
 	if not border then
-		border = CreateFrame("Frame", nil, btn.overlay or btn, "BackdropTemplate")
+		border = CreateFrame("Frame", nil, btn, "BackdropTemplate")
 		border:EnableMouse(false)
 		btn._eqolAuraBorder = border
 	end
-	local parent = btn.overlay or btn
-	border:SetParent(parent)
-	border:SetFrameStrata(parent:GetFrameStrata() or btn:GetFrameStrata())
-	local baseLevel = parent:GetFrameLevel() or btn:GetFrameLevel() or 0
-	border:SetFrameLevel(baseLevel + 1)
+	H.syncAuraBorderFrameLayer(btn)
 	border:ClearAllPoints()
 	border:SetPoint("TOPLEFT", btn, "TOPLEFT", 0, 0)
 	border:SetPoint("BOTTOMRIGHT", btn, "BOTTOMRIGHT", 0, 0)
+	return border
+end
+
+function H.syncAuraBorderFrameLayer(btn)
+	if not btn then return nil end
+	local border = btn._eqolAuraBorder
+	if not border then return nil end
+
+	local layerParent = btn.overlay or btn
+	if border.GetParent and border:GetParent() ~= layerParent then border:SetParent(layerParent) end
+
+	local strata = (layerParent.GetFrameStrata and layerParent:GetFrameStrata()) or (btn.GetFrameStrata and btn:GetFrameStrata())
+	if strata and border.SetFrameStrata and border:GetFrameStrata() ~= strata then border:SetFrameStrata(strata) end
+
+	local targetLevel = (layerParent.GetFrameLevel and layerParent:GetFrameLevel()) or (btn.GetFrameLevel and btn:GetFrameLevel()) or 0
+	local foregroundLevel = btn.foreground and btn.foreground.GetFrameLevel and btn.foreground:GetFrameLevel()
+	if foregroundLevel and foregroundLevel > targetLevel then targetLevel = foregroundLevel - 1 end
+	if targetLevel < 0 then targetLevel = 0 end
+	if border.SetFrameLevel and border:GetFrameLevel() ~= targetLevel then border:SetFrameLevel(targetLevel) end
+
 	return border
 end
 
@@ -673,6 +746,7 @@ local privateAuraArgs = {
 	auraIndex = 1,
 	showCountdownFrame = true,
 	showCountdownNumbers = true,
+	isContainer = false,
 	iconInfo = {
 		iconWidth = 32,
 		iconHeight = 32,
@@ -776,6 +850,7 @@ local function buildPrivateAuraAnchor(anchor, unit, index, size, borderScale, sh
 	privateAuraArgs.auraIndex = index
 	privateAuraArgs.showCountdownFrame = showFrame == true
 	privateAuraArgs.showCountdownNumbers = showNumbers == true
+	privateAuraArgs.isContainer = false
 
 	local icon = privateAuraArgs.iconInfo
 	icon.iconWidth = size
@@ -1929,16 +2004,13 @@ local function resolveCastbarGradientProgress(bar, progressOverride)
 	return H.clamp(progress, 0, 1)
 end
 
-local function applyCastbarGradient(bar, ccfg, baseR, baseG, baseB, baseA, progressOverride)
+local function applyCastbarGradient(bar, ccfg, _baseR, _baseG, _baseB, _baseA, progressOverride)
 	if not bar or not ccfg or ccfg.useGradient ~= true then return false end
 	local tex = bar.GetStatusBarTexture and bar:GetStatusBarTexture()
 	if not tex or not tex.SetGradient then return false end
 
 	local sr, sg, sb, sa = normalizeGradientColor(ccfg.gradientStartColor)
 	local er, eg, eb, ea = normalizeGradientColor(ccfg.gradientEndColor)
-	local br, bg, bb, ba = baseR or 1, baseG or 1, baseB or 1, baseA or 1
-	sr, sg, sb, sa = br * sr, bg * sg, bb * sb, ba * sa
-	er, eg, eb, ea = br * er, bg * eg, bb * eb, ba * ea
 
 	if normalizeCastbarGradientMode(ccfg.gradientMode) == "BAR_END" then
 		local progress = resolveCastbarGradientProgress(bar, progressOverride)
@@ -1982,11 +2054,26 @@ end
 function H.SetCastbarColorWithGradient(bar, ccfg, r, g, b, a, progressOverride)
 	if not bar then return end
 	local br, bg, bb, ba = r or 1, g or 1, b or 1, a or 1
+	local renderR, renderG, renderB, renderA = br, bg, bb, ba
+	if ccfg and ccfg.useGradient == true then
+		-- Keep the status bar neutral so the configured gradient colors render without a base tint.
+		renderR, renderG, renderB, renderA = 1, 1, 1, 1
+	end
 	local lastColor = bar._eqolLastColor
-	if not lastColor or lastColor[1] ~= br or lastColor[2] ~= bg or lastColor[3] ~= bb or lastColor[4] ~= ba then
-		bar:SetStatusBarColor(br, bg, bb, ba)
+	if
+		not lastColor
+		or lastColor[1] ~= renderR
+		or lastColor[2] ~= renderG
+		or lastColor[3] ~= renderB
+		or lastColor[4] ~= renderA
+	then
+		bar:SetStatusBarColor(renderR, renderG, renderB, renderA)
 		bar._eqolLastColor = bar._eqolLastColor or {}
-		bar._eqolLastColor[1], bar._eqolLastColor[2], bar._eqolLastColor[3], bar._eqolLastColor[4] = br, bg, bb, ba
+		bar._eqolLastColor[1], bar._eqolLastColor[2], bar._eqolLastColor[3], bar._eqolLastColor[4] =
+			renderR,
+			renderG,
+			renderB,
+			renderA
 	end
 	if ccfg and ccfg.useGradient == true then
 		if not applyCastbarGradient(bar, ccfg, br, bg, bb, ba, progressOverride) then clearCastbarGradientState(bar) end
@@ -2770,6 +2857,34 @@ local function join3(a, b, c, sep1, sep2) return a .. sep1 .. b .. sep2 .. c end
 
 local function join4(a, b, c, d, sep1, sep2, sep3) return a .. sep1 .. b .. sep2 .. c .. sep3 .. d end
 
+function H.formatDisplayValue(value, useShort)
+	if addon.variables and addon.variables.isMidnight and issecretvalue and value ~= nil and issecretvalue(value) then
+		if useShort == false then return BreakUpLargeNumbers(value) end
+		return AbbreviateNumbers and AbbreviateNumbers(value) or H.shortValue(value)
+	end
+	if useShort == false then return tostring(value or 0) end
+	return H.shortValue(value or 0)
+end
+
+function H.formatOptionalDisplayValue(value, useShort)
+	if value == nil then return "" end
+	return H.formatDisplayValue(value, useShort)
+end
+
+function H.formatAbsorbModeText(mode, curText, absorbText, absorbValue)
+	if mode == "ABSORB" then return absorbText end
+	if WrapString then
+		if mode == "CURABSORB" then return curText .. (WrapString(absorbText, " (", ")") or "") end
+		if mode == "CURABSORBPIPE" then return curText .. (WrapString(absorbText, " | ", "") or "") end
+		if mode == "CURABSORBPLUS" then return curText .. (WrapString(absorbText, " + ", "") or "") end
+	end
+	if absorbText == nil or absorbText == "" then return curText end
+	if mode == "CURABSORB" then return string.format("%s (%s)", curText, absorbText) end
+	if mode == "CURABSORBPIPE" then return join2(curText, absorbText, " | ") end
+	if mode == "CURABSORBPLUS" then return join2(curText, absorbText, " + ") end
+	return curText
+end
+
 local function formatPercentModeText(mode, curText, maxText, percentText, levelText, joinPrimary, joinSecondary, joinTertiary)
 	if not percentText then return "" end
 	if mode == "PERCENT" then return percentText end
@@ -2792,6 +2907,7 @@ function H.shortValue(val)
 end
 
 function H.textModeUsesLevel(mode) return type(mode) == "string" and mode:find("LEVEL", 1, true) ~= nil end
+function H.textModeUsesAbsorb(mode) return mode == "ABSORB" or mode == "CURABSORB" or mode == "CURABSORBPIPE" or mode == "CURABSORBPLUS" end
 function H.textModeUsesDeficit(mode) return mode == "DEFICIT" end
 
 function H.getUnitLevelText(unit, levelOverride, hideClassificationText)
@@ -2813,7 +2929,7 @@ function H.getUnitLevelText(unit, levelOverride, hideClassificationText)
 	return levelText
 end
 
-function H.formatText(mode, cur, maxv, useShort, percentValue, delimiter, delimiter2, delimiter3, hidePercentSymbol, levelText, missingValue, roundPercent, delimitersResolved)
+function H.formatText(mode, cur, maxv, useShort, percentValue, delimiter, delimiter2, delimiter3, hidePercentSymbol, levelText, missingValue, roundPercent, delimitersResolved, absorbValue)
 	if mode == "NONE" then return "" end
 	local joinPrimary, joinSecondary, joinTertiary
 	if delimitersResolved then
@@ -2829,6 +2945,11 @@ function H.formatText(mode, cur, maxv, useShort, percentValue, delimiter, delimi
 	local percentSuffix = hidePercentSymbol and "" or "%"
 	if levelText == nil or levelText == "" then levelText = "??" end
 	local isPercentMode = type(mode) == "string" and mode:find("PERCENT", 1, true) ~= nil
+	if H.textModeUsesAbsorb(mode) then
+		local curText = H.formatDisplayValue(cur, useShort)
+		local absorbText = H.formatOptionalDisplayValue(absorbValue, useShort)
+		return H.formatAbsorbModeText(mode, curText, absorbText, absorbValue)
+	end
 	if mode == "DEFICIT" then
 		if issecretvalue and issecretvalue(missingValue) then
 			local infix = useShort and H.shortValue(missingValue) or BreakUpLargeNumbers(missingValue)

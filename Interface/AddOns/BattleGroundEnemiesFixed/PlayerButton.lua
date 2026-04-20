@@ -283,14 +283,18 @@ function BattleGroundEnemies:CreatePlayerButton(mainframe, num)
 
     --this further checks dont seem necessary since they dont seem to rule out any other unitiDs (all unit ids that exist also are a button and are also this frame)
 
-    --[[ BattleGroundEnemies:Debug("UpdateAll", 2)
+    -- BattleGroundEnemies:Debug("UpdateAll", 2)
 
-		local playerButton = BattleGroundEnemies:GetPlayerbuttonByUnitID(unitID)
+    -- local playerButton = BattleGroundEnemies:GetPlayerbuttonByUnitID(unitID)
 
-		if not playerButton then return end
-		BattleGroundEnemies:Debug("UpdateAll", 3)
-		if playerButton ~= self then return	end
-		BattleGroundEnemies:Debug("UpdateAll", 4) ]]
+    -- if not playerButton then
+    --   return
+    -- end
+    -- BattleGroundEnemies:Debug("UpdateAll", 3)
+    -- if playerButton ~= self then
+    --   return
+    -- end
+    -- BattleGroundEnemies:Debug("UpdateAll", 4)
 
     if updateStuffWithEvents then
       self:UNIT_POWER_FREQUENT(unitID)
@@ -1013,17 +1017,17 @@ function BattleGroundEnemies:CreatePlayerButton(mainframe, num)
     end
 
     local isAlly = not self.PlayerIsEnemy
-
     if not isAlly and not self.isShown then
       return
     end
 
-    -- For enemies: always query health from the button's primary unitID (self.unitID)
-    -- rather than whatever unitID triggered the event. Different tokens ("target",
-    -- "nameplate3", "raid5target") can return different display-health values for the
-    -- same enemy, causing jitter. The event is just a notification; read from one source.
+    -- Always query health from the button's primary unitID (self.unitID) rather
+    -- than whatever unitID triggered the event. Different tokens ("target",
+    -- "nameplate3", "arena2target") can return different display-health values
+    -- for the same player, causing jitter. Compound tokens like "arena2target"
+    -- are also rejected by UnitHealth in 12.0+.
     local queryID = unitID
-    if not isAlly and self.unitID then
+    if self.unitID then
       queryID = self.unitID
     end
 
@@ -1034,26 +1038,25 @@ function BattleGroundEnemies:CreatePlayerButton(mainframe, num)
       healthPercent = self:FakeUnitHealthPercent()
       maxHealth = self:FakeUnitHealthMax()
     elseif isAlly then
-      health = UnitHealth(queryID)
-      healthMissing = UnitHealthMissing(queryID)
-      maxHealth = UnitHealthMax(queryID)
-      healthPercent = UnitHealthPercent(queryID, true, CurveConstants.ScaleTo100)
-    else
-      local ok, h = pcall(UnitHealth, queryID, true)
-      if not ok then
-        return
-      end
-      local ok2, hMissing = pcall(UnitHealthMissing, queryID, true)
+      local ok, h = pcall(UnitHealth, queryID)
+      local ok2, hMissing = pcall(UnitHealthMissing, queryID)
       local ok3, hMax = pcall(UnitHealthMax, queryID)
-      if not ok3 then
-        return
-      end
       local ok4, hPct = pcall(UnitHealthPercent, queryID, true, CurveConstants.ScaleTo100)
 
-      health = h
+      health = (ok and h) or nil
       healthMissing = (ok2 and hMissing) or nil
       healthPercent = (ok4 and hPct) or nil
-      maxHealth = hMax
+      maxHealth = (ok3 and hMax) or nil
+    else
+      local ok, h = pcall(UnitHealth, queryID, true)
+      local ok2, hMissing = pcall(UnitHealthMissing, queryID, true)
+      local ok3, hMax = pcall(UnitHealthMax, queryID)
+      local ok4, hPct = pcall(UnitHealthPercent, queryID, true, CurveConstants.ScaleTo100)
+
+      health = (ok and h) or nil
+      healthMissing = (ok2 and hMissing) or nil
+      healthPercent = (ok4 and hPct) or nil
+      maxHealth = (ok3 and hMax) or nil
     end
 
     self:UpdateHealth(queryID, health, healthMissing, healthPercent, maxHealth)
@@ -1087,6 +1090,7 @@ function BattleGroundEnemies:CreatePlayerButton(mainframe, num)
   -- Shows/Hides targeting indicators for a button
   function playerButton:UpdateTargetIndicators()
     self:DispatchEvent("UpdateTargetIndicators")
+
     local isAlly = false
     local isPlayer = false
 
@@ -1107,31 +1111,28 @@ function BattleGroundEnemies:CreatePlayerButton(mainframe, num)
 
     local enemyTargets = i
 
-    --[[
-		if BattleGroundEnemies:GetActiveStates().isRatedBG then
-			if isAlly then
-				if BattleGroundEnemies.db.profile.RBG.EnemiesTargetingAllies_Enabled then
-					if enemyTargets >= (BattleGroundEnemies.db.profile.RBG.EnemiesTargetingAllies_Amount or 1) then
-						local path = LSM:Fetch("sound", BattleGroundEnemies.db.profile.RBG.EnemiesTargetingAllies_Sound,
-							true)
-						if path then
-							PlaySoundFile(path, "Master")
-						end
-					end
-				end
-			end
-			if isPlayer then
-				if BattleGroundEnemies.db.profile.RBG.EnemiesTargetingMe_Enabled then
-					if enemyTargets >= BattleGroundEnemies.db.profile.RBG.EnemiesTargetingMe_Amount then
-						local path = LSM:Fetch("sound", BattleGroundEnemies.db.profile.RBG.EnemiesTargetingMe_Sound, true)
-						if path then
-							PlaySoundFile(path, "Master")
-						end
-					end
-				end
-			end
-		end
-]]
+    -- if BattleGroundEnemies:GetActiveStates().isRatedBG then
+    --   if isAlly then
+    --     if BattleGroundEnemies.db.profile.RBG.EnemiesTargetingAllies_Enabled then
+    --       if enemyTargets >= (BattleGroundEnemies.db.profile.RBG.EnemiesTargetingAllies_Amount or 1) then
+    --         local path = LSM:Fetch("sound", BattleGroundEnemies.db.profile.RBG.EnemiesTargetingAllies_Sound, true)
+    --         if path then
+    --           PlaySoundFile(path, "Master")
+    --         end
+    --       end
+    --     end
+    --   end
+    --   if isPlayer then
+    --     if BattleGroundEnemies.db.profile.RBG.EnemiesTargetingMe_Enabled then
+    --       if enemyTargets >= BattleGroundEnemies.db.profile.RBG.EnemiesTargetingMe_Amount then
+    --         local path = LSM:Fetch("sound", BattleGroundEnemies.db.profile.RBG.EnemiesTargetingMe_Sound, true)
+    --         if path then
+    --           PlaySoundFile(path, "Master")
+    --         end
+    --       end
+    --     end
+    --   end
+    -- end
   end
 
   function playerButton:UpdateRange(inRange, forceUpdate)
@@ -1207,7 +1208,6 @@ function BattleGroundEnemies:CreatePlayerButton(mainframe, num)
     end
 
     local myInRange = false
-
     -- Range helpers: shortest distance to longest distance.
     -- checkInteractDist (11-28y) -> isItemInRange (38-50y) -> isSpellInRange (15-40y class)
     if UnitExists(unitID) then
@@ -1274,8 +1274,9 @@ function BattleGroundEnemies:CreatePlayerButton(mainframe, num)
     if not self.isShown then
       return
     end
-    -- Use primary unitID for consistency (same reason as UNIT_HEALTH)
-    local queryID = (self.PlayerIsEnemy and self.unitID) or unitID
+    -- Use primary unitID for consistency (same reason as UNIT_HEALTH).
+    -- Avoids compound tokens like "arena2target" which are rejected in 12.0+.
+    local queryID = self.unitID or unitID
     self:DispatchEvent("UpdatePower", queryID, powerToken)
   end
 
@@ -1520,6 +1521,7 @@ function BattleGroundEnemies:CreatePlayerButton(mainframe, num)
       playerButton[moduleName].moduleName = moduleName
     end
   end
+
   playerButton:SetScript("OnAttributeChanged", function(self, name, value)
     if name == "unit" then
       if value then

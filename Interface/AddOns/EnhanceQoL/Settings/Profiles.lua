@@ -54,6 +54,218 @@ local function refreshGlobalFonts()
 	if actionBarLabels and actionBarLabels.RefreshAllCountStyles then actionBarLabels.RefreshAllCountStyles() end
 end
 
+local SUPPORTED_GLOBAL_FONT_ROOT_KEYS = {
+	cooldownPanels = true,
+	dataPanels = true,
+	focusInterruptTracker = true,
+	globalResourceBarSettings = true,
+	personalResourceBarSettings = true,
+	ufFrames = true,
+	ufGroupFrames = true,
+}
+
+local SUPPORTED_FLAT_FONT_KEYS = {
+	actionBarCountFontFace = true,
+	actionBarHotkeyFontFace = true,
+	actionBarMacroFontFace = true,
+	combatTextFont = true,
+	ilvlFontFace = true,
+	mythicPlusBloodlustTrackerCooldownFontFace = true,
+	mythicPlusBRTrackerChargesFontFace = true,
+	mythicPlusBRTrackerCooldownFontFace = true,
+	squareMinimapStatsFont = true,
+	totalAbsorbTrackerTextFont = true,
+	xpBarTextFont = true,
+}
+
+local SUPPORTED_FLAT_FONT_STYLE_KEYS = {
+	actionBarCountFontOutline = true,
+	actionBarHotkeyFontOutline = true,
+	actionBarMacroFontOutline = true,
+	combatTextFontOutline = true,
+	ilvlFontOutline = true,
+	mythicPlusBloodlustTrackerCooldownTextOutline = true,
+	mythicPlusBRTrackerChargesTextOutline = true,
+	mythicPlusBRTrackerCooldownTextOutline = true,
+	squareMinimapStatsOutline = true,
+	totalAbsorbTrackerTextOutline = true,
+	xpBarTextOutline = true,
+}
+
+local function isRecursiveFontFaceKey(key)
+	if type(key) ~= "string" then return false end
+	local lowered = string.lower(key)
+	if lowered:find("outline", 1, true) or lowered:find("fontstyle", 1, true) or lowered:find("fontsize", 1, true) then return false end
+	return lowered:find("font", 1, true) ~= nil
+end
+
+local function isRecursiveFontStyleKey(key)
+	if type(key) ~= "string" then return false end
+	local lowered = string.lower(key)
+	if lowered:find("outline", 1, true) or lowered:find("fontstyle", 1, true) then return true end
+	return lowered == "cooldowntextstyle" or lowered == "statictextstyle"
+end
+
+local function overwriteNestedFontSettings(node, mode, replacement, visited)
+	if type(node) ~= "table" then return 0 end
+	visited = visited or {}
+	if visited[node] then return 0 end
+	visited[node] = true
+
+	local changed = 0
+	if mode == "style" and node.fontStyle == nil and (type(node.fontOutline) == "boolean" or type(node.fontShadow) == "boolean") then
+		node.fontStyle = replacement
+		changed = changed + 1
+	end
+
+	for key, value in pairs(node) do
+		if type(value) == "table" then
+			changed = changed + overwriteNestedFontSettings(value, mode, replacement, visited)
+		elseif type(value) == "string" then
+			if mode == "font" then
+				if isRecursiveFontFaceKey(key) and value ~= replacement then
+					node[key] = replacement
+					changed = changed + 1
+				end
+			elseif isRecursiveFontStyleKey(key) and value ~= replacement then
+				node[key] = replacement
+				changed = changed + 1
+			end
+		end
+	end
+
+	return changed
+end
+
+local function overwriteProfileFontSettings(mode)
+	if type(addon.db) ~= "table" then return end
+
+	local replacement
+	if mode == "font" then
+		replacement = addon.functions and addon.functions.GetGlobalFontConfigKey and addon.functions.GetGlobalFontConfigKey() or "__EQOL_GLOBAL_FONT__"
+	else
+		replacement = addon.functions and addon.functions.GetGlobalFontStyleConfigKey and addon.functions.GetGlobalFontStyleConfigKey() or "__EQOL_GLOBAL_FONT_STYLE__"
+	end
+
+	local changed = 0
+	for key, value in pairs(addon.db) do
+		if mode == "font" then
+			if SUPPORTED_FLAT_FONT_KEYS[key] and addon.db[key] ~= replacement then
+				addon.db[key] = replacement
+				changed = changed + 1
+			end
+		elseif SUPPORTED_FLAT_FONT_STYLE_KEYS[key] and addon.db[key] ~= replacement then
+			addon.db[key] = replacement
+			changed = changed + 1
+		end
+
+		if SUPPORTED_GLOBAL_FONT_ROOT_KEYS[key] and type(value) == "table" then
+			changed = changed + overwriteNestedFontSettings(value, mode, replacement)
+		end
+	end
+
+	if changed > 0 then refreshGlobalFonts() end
+end
+
+local function markReloadRequired()
+	addon.variables.requireReload = true
+	if addon.functions and addon.functions.checkReloadFrame then addon.functions.checkReloadFrame() end
+end
+
+local function showOverwriteProfileFontSettingsPopup(mode)
+	local popupKey = "EQOL_OVERWRITE_GLOBAL_FONT_SETTINGS"
+	local text
+	if mode == "style" then
+		text = L["OverwriteAllFontStylingToGlobalConfirm"]
+			or "Use global font styling for all supported settings in the active profile? Reload required."
+	else
+		text = L["OverwriteAllFontsToGlobalConfirm"]
+			or "Use global font for all supported settings in the active profile? Reload required."
+	end
+
+	StaticPopupDialogs[popupKey] = StaticPopupDialogs[popupKey]
+		or {
+			text = "",
+			button1 = YES,
+			button2 = CANCEL,
+			timeout = 0,
+			whileDead = true,
+			hideOnEscape = true,
+			preferredIndex = 3,
+			OnAccept = function(self)
+				local selectedMode = self.data
+				if selectedMode ~= "font" and selectedMode ~= "style" then return end
+				overwriteProfileFontSettings(selectedMode)
+				markReloadRequired()
+			end,
+		}
+	StaticPopupDialogs[popupKey].text = text
+	StaticPopup_Show(popupKey, nil, nil, mode)
+end
+
+local function createGlobalFontSettings(section)
+	addon.functions.SettingsCreateScrollDropdown(cProfiles, {
+		var = "globalFontFace",
+		text = L["globalFontConfigLabel"] or "Global font",
+		listFunc = buildGlobalFontDropdown,
+		order = globalFontOrder,
+		default = (addon.variables and addon.variables.defaultFont) or STANDARD_TEXT_FONT,
+		get = function()
+			local current = addon.db and addon.db.globalFontFace or ((addon.variables and addon.variables.defaultFont) or STANDARD_TEXT_FONT)
+			local list = buildGlobalFontDropdown()
+			if not list[current] then current = (addon.variables and addon.variables.defaultFont) or STANDARD_TEXT_FONT end
+			return current
+		end,
+		set = function(value)
+			addon.db.globalFontFace = value
+			refreshGlobalFonts()
+		end,
+		parentSection = section,
+	})
+
+	do
+		local globalStyleOptions, globalStyleOrder = addon.functions.GetFontStyleOptions and addon.functions.GetFontStyleOptions(false) or {
+			NONE = _G.NONE or "None",
+			OUTLINE = L["Outline"] or "Outline",
+		}, { "NONE", "OUTLINE" }
+		addon.functions.SettingsCreateScrollDropdown(cProfiles, {
+			var = "globalFontStyle",
+			text = L["globalFontStyleConfigLabel"] or "Global font style",
+			list = globalStyleOptions,
+			order = globalStyleOrder,
+			height = 220,
+			default = "OUTLINE",
+			get = function()
+				if addon.functions and addon.functions.GetGlobalDefaultFontStyle then return addon.functions.GetGlobalDefaultFontStyle() end
+				return addon.db and addon.db.globalFontStyle or "OUTLINE"
+			end,
+			set = function(value)
+				if addon.functions and addon.functions.NormalizeFontStyleChoice then
+					addon.db.globalFontStyle = addon.functions.NormalizeFontStyleChoice(value, "OUTLINE", false)
+				else
+					addon.db.globalFontStyle = value
+				end
+				refreshGlobalFonts()
+			end,
+			parentSection = section,
+		})
+	end
+
+	addon.functions.SettingsCreateButton(cProfiles, {
+		var = "overwriteAllFontsToGlobal",
+		text = L["OverwriteAllFontsToGlobal"] or "Fonts global",
+		func = function() showOverwriteProfileFontSettingsPopup("font") end,
+		parentSection = section,
+	})
+
+	addon.functions.SettingsCreateButton(cProfiles, {
+		var = "overwriteAllFontStylingToGlobal",
+		text = L["OverwriteAllFontStylingToGlobal"] or "Styles global",
+		func = function() showOverwriteProfileFontSettingsPopup("style") end,
+		parentSection = section,
+	})
+end
+
 -- Build a sorted dropdown list, optionally keeping an empty entry pinned to the top
 local function buildSortedProfileList(orderTarget, excludeFunc, includeEmpty)
 	local list = {}
@@ -90,6 +302,259 @@ local function getActiveProfileName()
 	if profile and profile ~= "" then return profile end
 	if EnhanceQoLDB.profileGlobal and EnhanceQoLDB.profileGlobal ~= "" then return EnhanceQoLDB.profileGlobal end
 	return nil
+end
+
+local function getCurrentPlayerGUID()
+	local guid = UnitGUID and UnitGUID("player")
+	if issecretvalue and issecretvalue(guid) then guid = nil end
+	if type(guid) == "string" and guid ~= "" then return guid end
+	local fallback = addon and addon.variables and addon.variables.unitPlayerGUID
+	if type(fallback) == "string" and fallback ~= "" then return fallback end
+	return nil
+end
+
+local function trimUFProfileName(name)
+	if type(name) ~= "string" then return nil end
+	local trimmed = name:gsub("^%s+", ""):gsub("%s+$", "")
+	if trimmed == "" then return nil end
+	return trimmed
+end
+
+local function getUFProfilesRoot(profileData)
+	local ufProfiles = type(profileData) == "table" and profileData.ufProfiles or nil
+	if type(ufProfiles) ~= "table" then return nil end
+	return ufProfiles
+end
+
+local function normalizeUFProfileReference(profileData, profileName)
+	profileName = trimUFProfileName(profileName)
+	if not profileName then return nil end
+	local ufProfiles = getUFProfilesRoot(profileData)
+	if ufProfiles and type(ufProfiles[profileName]) ~= "table" then return nil end
+	return profileName
+end
+
+local function normalizeUFSpecMappings(profileData, sourceMappings)
+	if type(sourceMappings) ~= "table" then return nil end
+	local normalized = {}
+	for specKey, mappedProfile in pairs(sourceMappings) do
+		local specID = tonumber(specKey)
+		local profileName = normalizeUFProfileReference(profileData, mappedProfile)
+		if specID and specID > 0 and profileName then normalized[specID] = profileName end
+	end
+	if not next(normalized) then return nil end
+	return normalized
+end
+
+local function getCurrentUFSpecContext()
+	local currentSpecID
+	if PlayerUtil and PlayerUtil.GetCurrentSpecID then
+		currentSpecID = PlayerUtil.GetCurrentSpecID()
+	end
+	if (not currentSpecID or currentSpecID <= 0) and GetSpecialization and GetSpecializationInfo then
+		local specIndex = GetSpecialization()
+		if specIndex then currentSpecID = select(1, GetSpecializationInfo(specIndex)) end
+	end
+	if type(currentSpecID) ~= "number" or currentSpecID <= 0 then currentSpecID = nil end
+
+	local classSpecIDs
+	local classID = UnitClass and select(3, UnitClass("player")) or nil
+	if issecretvalue and issecretvalue(classID) then classID = nil end
+	if type(classID) == "number" and classID > 0 and GetNumSpecializationsForClassID and GetSpecializationInfoForClassID then
+		local numSpecs = GetNumSpecializationsForClassID(classID)
+		if type(numSpecs) == "number" and numSpecs > 0 then
+			for index = 1, numSpecs do
+				local specID = select(1, GetSpecializationInfoForClassID(classID, index))
+				if type(specID) == "number" and specID > 0 then
+					classSpecIDs = classSpecIDs or {}
+					classSpecIDs[specID] = true
+				end
+			end
+		end
+	end
+	if not classSpecIDs and currentSpecID then classSpecIDs = { [currentSpecID] = true } end
+	return {
+		currentSpecID = currentSpecID,
+		classSpecIDs = classSpecIDs,
+	}
+end
+
+local function getMappedUFProfileForSpec(profileData, specMappings, specID)
+	if type(specMappings) ~= "table" or type(specID) ~= "number" or specID <= 0 then return nil end
+	return normalizeUFProfileReference(profileData, specMappings[specID] or specMappings[tostring(specID)])
+end
+
+local function scoreUFSpecMappings(specMappings, specContext)
+	if type(specMappings) ~= "table" then return nil end
+	specContext = specContext or getCurrentUFSpecContext()
+	local classSpecIDs = specContext.classSpecIDs
+	local currentSpecID = specContext.currentSpecID
+	local overlap = 0
+	local foreign = 0
+	local score = 0
+
+	for specID in pairs(specMappings) do
+		if classSpecIDs and classSpecIDs[specID] then
+			overlap = overlap + 1
+			score = score + 10
+			if currentSpecID and specID == currentSpecID then score = score + 100 end
+		elseif classSpecIDs then
+			foreign = foreign + 1
+			score = score - 5
+		end
+	end
+
+	if classSpecIDs and overlap == 0 then return nil end
+	return score, overlap, foreign
+end
+
+local function resolveLegacyUFCharacterState(profileData, currentGuid)
+	local ufProfileKeys = type(profileData.ufProfileKeys) == "table" and profileData.ufProfileKeys or nil
+	local ufProfileSpecKeys = type(profileData.ufProfileSpecKeys) == "table" and profileData.ufProfileSpecKeys or nil
+	local specContext = getCurrentUFSpecContext()
+	local currentSpecID = specContext.currentSpecID
+	local selectedGuid
+	local selectedMappings
+
+	if ufProfileSpecKeys and currentGuid then
+		selectedMappings = normalizeUFSpecMappings(profileData, ufProfileSpecKeys[currentGuid])
+		if selectedMappings then selectedGuid = currentGuid end
+	end
+
+	if not selectedMappings and ufProfileSpecKeys then
+		local bestScore, bestOverlap, bestForeign
+		local fallbackGuid, fallbackMappings
+		for guid, sourceMappings in pairs(ufProfileSpecKeys) do
+			if guid ~= currentGuid then
+				local normalized = normalizeUFSpecMappings(profileData, sourceMappings)
+				if normalized then
+					fallbackGuid = fallbackGuid or guid
+					fallbackMappings = fallbackMappings or normalized
+					local score, overlap, foreign = scoreUFSpecMappings(normalized, specContext)
+					if score ~= nil then
+						local isBetter = bestScore == nil
+							or score > bestScore
+							or (score == bestScore and (overlap or 0) > (bestOverlap or 0))
+							or (score == bestScore and (overlap or 0) == (bestOverlap or 0) and (foreign or math.huge) < (bestForeign or math.huge))
+						if isBetter then
+							bestScore = score
+							bestOverlap = overlap
+							bestForeign = foreign
+							selectedGuid = guid
+							selectedMappings = normalized
+						end
+					end
+				end
+			end
+		end
+		if not selectedMappings then
+			selectedGuid = fallbackGuid
+			selectedMappings = fallbackMappings
+		end
+	end
+
+	local activeProfile
+	if ufProfileKeys and currentGuid then activeProfile = normalizeUFProfileReference(profileData, ufProfileKeys[currentGuid]) end
+	if not activeProfile and selectedMappings and currentSpecID then
+		activeProfile = getMappedUFProfileForSpec(profileData, selectedMappings, currentSpecID)
+	end
+	if not activeProfile and ufProfileKeys and selectedGuid then
+		activeProfile = normalizeUFProfileReference(profileData, ufProfileKeys[selectedGuid])
+	end
+	if not activeProfile then activeProfile = normalizeUFProfileReference(profileData, profileData.ufProfileGlobal) end
+
+	return {
+		activeProfile = activeProfile,
+		sourceGuid = selectedGuid,
+		specMappings = selectedMappings,
+		specScore = scoreUFSpecMappings(selectedMappings, specContext),
+		specContext = specContext,
+	}
+end
+
+local function captureUFCharacterImportState(profileData)
+	if type(profileData) ~= "table" then return nil end
+	local guid = getCurrentPlayerGUID()
+	if not guid then return nil end
+
+	local state = {
+		hasActiveProfile = true,
+		hasSpecMappings = true,
+	}
+
+	local resolved = resolveLegacyUFCharacterState(profileData, guid)
+	local activeProfile = resolved and resolved.activeProfile or nil
+	if activeProfile then state.activeProfile = activeProfile end
+
+	local specMappings = resolved and resolved.specMappings or nil
+	state.specMappings = specMappings or {}
+
+	if not activeProfile and not next(state.specMappings) then return nil end
+	return state
+end
+
+local function findLegacyUFCharacterActiveProfile(profileData, currentGuid)
+	local resolved = resolveLegacyUFCharacterState(profileData, currentGuid)
+	return resolved and resolved.activeProfile or nil
+end
+
+local function findLegacyUFCharacterSpecMappings(profileData, currentGuid)
+	local resolved = resolveLegacyUFCharacterState(profileData, currentGuid)
+	return resolved and resolved.specMappings or nil
+end
+
+local function remapImportedUFCharacterState(profileData, meta)
+	if type(profileData) ~= "table" then return end
+	if not getUFProfilesRoot(profileData) then return end
+
+	local guid = getCurrentPlayerGUID()
+	if not guid then return end
+
+	local explicitState = type(meta) == "table" and type(meta.ufCharacter) == "table" and meta.ufCharacter or nil
+	local legacyState = resolveLegacyUFCharacterState(profileData, guid)
+	local legacySpecScore = legacyState and legacyState.specScore or nil
+	local specContext = legacyState and legacyState.specContext or getCurrentUFSpecContext()
+	local activeProfile
+	local specMappings
+
+	if explicitState then
+		if explicitState.hasActiveProfile == true then
+			activeProfile = normalizeUFProfileReference(profileData, explicitState.activeProfile)
+		end
+		if explicitState.hasSpecMappings == true then
+			specMappings = normalizeUFSpecMappings(profileData, explicitState.specMappings)
+		end
+	end
+
+	local explicitSpecScore = scoreUFSpecMappings(specMappings, specContext)
+	if legacySpecScore and (not explicitSpecScore or legacySpecScore > explicitSpecScore) then
+		specMappings = legacyState.specMappings
+	end
+
+	if specMappings and specContext.currentSpecID then
+		activeProfile = getMappedUFProfileForSpec(profileData, specMappings, specContext.currentSpecID) or activeProfile
+	end
+	if not activeProfile and explicitState and explicitState.hasActiveProfile == true then
+		activeProfile = normalizeUFProfileReference(profileData, explicitState.activeProfile)
+	end
+	if not activeProfile and legacyState then activeProfile = legacyState.activeProfile end
+
+	if explicitState and explicitState.hasActiveProfile == true then
+		profileData.ufProfileKeys = type(profileData.ufProfileKeys) == "table" and profileData.ufProfileKeys or {}
+		profileData.ufProfileKeys[guid] = activeProfile
+	elseif activeProfile then
+		profileData.ufProfileKeys = type(profileData.ufProfileKeys) == "table" and profileData.ufProfileKeys or {}
+		profileData.ufProfileKeys[guid] = activeProfile
+	end
+
+	if explicitState and explicitState.hasSpecMappings == true then
+		profileData.ufProfileSpecKeys = type(profileData.ufProfileSpecKeys) == "table" and profileData.ufProfileSpecKeys or {}
+		profileData.ufProfileSpecKeys[guid] = specMappings
+		if not specMappings then profileData.ufProfileSpecKeys[guid] = nil end
+	elseif specMappings then
+		profileData.ufProfileSpecKeys = type(profileData.ufProfileSpecKeys) == "table" and profileData.ufProfileSpecKeys or {}
+		profileData.ufProfileSpecKeys[guid] = specMappings
+	end
 end
 
 local EXPORT_BLACKLIST = {
@@ -153,10 +618,11 @@ local function sanitizeProfileData(source)
 	return filtered
 end
 
-local function normalizeProfileStorage(profileData)
+local function normalizeProfileStorage(profileData, meta)
 	if type(profileData) ~= "table" then return end
 	if addon and addon.EditMode and addon.EditMode.MigrateProfileData then addon.EditMode:MigrateProfileData(profileData) end
 	if addon and addon.ContainerActions and addon.ContainerActions.MigrateProfileData then addon.ContainerActions:MigrateProfileData(profileData) end
+	if type(meta) == "table" then remapImportedUFCharacterState(profileData, meta) end
 end
 
 local function resolveExportProfileName(profileName)
@@ -184,8 +650,9 @@ local function exportActiveProfile(profileName)
 			addon = addonName,
 			kind = PROFILE_EXPORT_KIND,
 			version = tostring(C_AddOns.GetAddOnMetadata(addonName, "Version") or ""),
-			profileVersion = 2,
+			profileVersion = 3,
 			profile = profileName,
+			ufCharacter = captureUFCharacterImportState(source),
 		},
 		data = sanitizeProfileData(source),
 	}
@@ -225,7 +692,7 @@ local function importProfile(encoded, options)
 	if not EnhanceQoLDB or type(EnhanceQoLDB.profiles) ~= "table" then return false, "NO_DB" end
 
 	local sanitized = sanitizeProfileData(data)
-	normalizeProfileStorage(sanitized)
+	normalizeProfileStorage(sanitized, meta)
 	EnhanceQoLDB.profiles[target] = sanitized
 
 	if useImportedTarget then
@@ -299,25 +766,6 @@ data = {
 
 addon.functions.SettingsCreateDropdown(cProfiles, data)
 addon.functions.SettingsCreateText(cProfiles, L["ProfileUseGlobalDesc"], { parentSection = expandable })
-
-addon.functions.SettingsCreateScrollDropdown(cProfiles, {
-	var = "globalFontFace",
-	text = L["globalFontConfigLabel"] or "Global font",
-	listFunc = buildGlobalFontDropdown,
-	order = globalFontOrder,
-	default = (addon.variables and addon.variables.defaultFont) or STANDARD_TEXT_FONT,
-	get = function()
-		local current = addon.db and addon.db.globalFontFace or ((addon.variables and addon.variables.defaultFont) or STANDARD_TEXT_FONT)
-		local list = buildGlobalFontDropdown()
-		if not list[current] then current = (addon.variables and addon.variables.defaultFont) or STANDARD_TEXT_FONT end
-		return current
-	end,
-	set = function(value)
-		addon.db.globalFontFace = value
-		refreshGlobalFonts()
-	end,
-	parentSection = expandable,
-})
 
 data = {
 	listFunc = function()
@@ -481,6 +929,9 @@ addon.functions.SettingsCreateButton(cProfiles, {
 	end,
 	parentSection = expandable,
 })
+
+addon.functions.SettingsCreateHeadline(cProfiles, L["Font"] or "Font", { parentSection = expandable })
+createGlobalFontSettings(expandable)
 
 ----- REGION END
 function addon.functions.initProfile()
