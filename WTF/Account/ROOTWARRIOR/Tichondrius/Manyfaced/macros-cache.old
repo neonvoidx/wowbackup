@@ -1,6 +1,6 @@
 VER 3 010000000000002B " " "INV_MISC_QUESTIONMARK"
-#showtooltip [combat] Vanish; Stealth
-/cast [combat] Vanish; [nostealth] Stealth
+#showtooltip
+/cast [nocombat] Stealth; [combat] Vanish
 END
 VER 3 0100000000000014 " " "INV_MISC_QUESTIONMARK"
 #showtooltip Cheap Shot
@@ -14,9 +14,10 @@ VER 3 0100000000000016 " " "INV_MISC_QUESTIONMARK"
 /cast [mod:shift, @focus,exists,harm,nodead][] Kick
 END
 VER 3 0100000000000024 " " "INV_MISC_QUESTIONMARK"
+ #showtooltip shadowmeld
 /stopattack
-/cast Shadowmeld
-/cast !Stealth 
+/use [combat] Shadowmeld
+/use [nocombat] !stealth 
 END
 VER 3 010000000000002C " " "INV_MISC_QUESTIONMARK"
 #showtooltip Shadow Dance

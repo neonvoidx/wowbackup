@@ -178,7 +178,7 @@ function LM.MountList:RarityWeights()
         if m:GetPriority() == LM.Options.DISABLED_PRIORITY then
             weights[i] = 0
         else
-            local rarity = m:GetRarity() or 50
+            local rarity = m.rarity or 50
             -- The weight is the mount's inverted rarity (rarer mounts are more likely)
             -- Math fudge to guard against 0% rarity.
             weights[i] = 101 / ( rarity + 1) - 1
@@ -294,6 +294,10 @@ function LM.MountList:Limit(limits)
     return mounts
 end
 
+-- Anything called here needs to be blazingly fast because it is called many
+-- thousands of times each time the sorting is done. There can't be some hidden
+-- API call under a function, everything needs to be a direct table lookup.
+
 local SortFunctions = {
     -- Show all the collected mounts before the uncollected mounts, then by name
     ['default'] =
@@ -326,8 +330,8 @@ local SortFunctions = {
         end,
     ['rarity'] =
         function (a, b)
-            local aR = a:GetRarity() or 101
-            local bR = b:GetRarity() or 101
+            local aR = a.rarity or 101
+            local bR = b.rarity or 101
             if aR ~= bR then
                 return aR < bR
             else
@@ -346,7 +350,13 @@ local SortFunctions = {
         end,
     ['expansion'] =
         function (a, b)
-            return (a.expansion or -1) < (b.expansion or -1)
+            local aExpansion = (a.expansion or -1)
+            local bExpansion = (b.expansion or -1)
+            if aExpansion ~= bExpansion then
+                return aExpansion < bExpansion
+            else
+                return a.name < b.name
+            end
         end,
     ['mountid'] =
         function (a, b)

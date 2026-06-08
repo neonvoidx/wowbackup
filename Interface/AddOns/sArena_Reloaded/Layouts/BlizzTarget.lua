@@ -57,6 +57,11 @@ layout.defaultSettings = {
             posY = 0,
             scale = 1,
         },
+        healerIndicator = {
+            posX = 0,
+            posY = 0,
+            scale = 1,
+        },
         targetIndicator = {
             posX = 0,
             posY = 0,
@@ -87,6 +92,22 @@ layout.defaultSettings = {
                 scale = 1,
                 direction = "LEFT",
                 spacing = 0,
+            },
+        },
+        partyTargetText = {
+            partyOnArena = {
+                enabled = true,
+                anchor = "RIGHT",
+                fontSize = 10,
+                posX = 0,
+                posY = 0,
+            },
+            arenaOnParty = {
+                enabled = true,
+                anchor = "RIGHT",
+                fontSize = 10,
+                posX = 0,
+                posY = 0,
             },
         },
     },
@@ -363,6 +384,15 @@ function layout:UpdateOrientation(frame)
                 (w.combatIndicator.posX or 0), (w.combatIndicator.posY or 0) - 20)
         end
 
+        -- Healer Indicator
+        if w.healerIndicator then
+            frame.WidgetOverlay.healerIndicator:ClearAllPoints()
+            frame.WidgetOverlay.healerIndicator:SetSize(18, 18)
+            frame.WidgetOverlay.healerIndicator:SetScale(w.healerIndicator.scale or 1)
+            frame.WidgetOverlay.healerIndicator:SetPoint("CENTER", frame.HealthBar, "CENTER",
+                (w.healerIndicator.posX or 0), (w.healerIndicator.posY or 0) - 20)
+        end
+
         -- Target Indicator
         if w.targetIndicator then
             frame.WidgetOverlay.targetIndicator:ClearAllPoints()
@@ -433,7 +463,7 @@ function layout:UpdateOrientation(frame)
         end
 
         if txt.forceCastbarTextWidth then
-            castbarText:SetWidth(self.db.castBar.width or frame.CastBar:GetWidth())
+            castbarText:SetWidth((self.db.castBar.width or frame.CastBar:GetWidth()) / (txt.castbarSize or 1))
         else
             castbarText:SetWidth(0)
         end
@@ -455,5 +485,30 @@ function layout:UpdateOrientation(frame)
     self:UpdateHealthbarOrientation(frame)
 end
 
+layout.defaultSettings.petFrames = {
+    posX          = 0,
+    posY          = 0,
+    width         = 70,
+    height        = 19,
+    scale         = 0.9,
+    textSettings  = {
+        nameAnchor    = "LEFT",
+        nameOffsetX   = 0,
+        nameOffsetY   = 0,
+        nameSize      = 1.1,
+        healthAnchor  = "CENTER",
+        healthOffsetX = 0,
+        healthOffsetY = 0,
+        healthSize    = 1.1,
+    },
+    widgets = {
+        targetIndicator       = { enabled = true,  scale = 1.15, posX = -2, posY = 0 },
+        focusIndicator        = { enabled = true,  scale = 1.15, posX = -2, posY = 0 },
+        combatIndicator       = { enabled = false, scale = 1, posX = 0, posY = 0 },
+        partyTargetIndicators = { enabled = false, scale = 1, posX = 0, posY = 0, direction = "LEFT", spacing = 0 },
+    },
+}
+
+layout.petFrameBaseOffsets = { posX = 89, posY = -14 }
 sArenaMixin.layouts[layoutName] = layout
 sArenaMixin.defaultSettings.profile.layoutSettings[layoutName] = layout.defaultSettings

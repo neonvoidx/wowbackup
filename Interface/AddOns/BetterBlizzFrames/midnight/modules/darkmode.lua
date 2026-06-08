@@ -9,7 +9,7 @@ local hookedTotemBar
 local hookedAuras
 
 local function applySettings(frame, desaturate, colorValue, hook, hookShow)
-    if frame then
+    if frame and not issecretvalue(frame) and not frame:IsForbidden() then
         if desaturate ~= nil and frame.SetDesaturated then
             frame:SetDesaturated(desaturate)
         end
@@ -22,7 +22,7 @@ local function applySettings(frame, desaturate, colorValue, hook, hookShow)
 
                     hooksecurefunc(frame, "SetVertexColor", function(self)
                         if not self then return end
-                        if self.changing or self:IsProtected() then return end
+                        if self.changing or self:IsForbidden() or issecretvalue(self) then return end
                         self.changing = true
                         if self.SetDesaturated then
                             self:SetDesaturated(desaturate)
@@ -52,7 +52,7 @@ local hooked = {}
 
 local function ApplyBorder(auraFrame, r, g, b)
     if not auraFrame.bbfBorder then
-        local border = auraFrame:CreateTexture(nil, "OVERLAY", nil, 7)
+        local border = auraFrame:CreateTexture(nil, "OVERLAY", nil, -1)
         local icon = auraFrame.Icon or auraFrame.icon
         if pixelBorderAuras then
             border:SetAtlas("communities-create-avatar-border-hover")
@@ -377,7 +377,8 @@ function BBF.DarkmodeFrames(bypass)
                 if tip and tip.NineSlice then
                     tip:HookScript("OnShow", function()
                         for key, region in pairs(tip.NineSlice) do
-                            if key == "Center" then
+                            if key == "Center" and region then
+                                if region:IsForbidden() then return end
                                 applySettings(region, tooltipSat, 0)
                                 region:SetDrawLayer("BACKGROUND", -8)
                             end

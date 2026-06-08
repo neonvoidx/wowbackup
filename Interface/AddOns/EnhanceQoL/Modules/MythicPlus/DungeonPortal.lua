@@ -18,8 +18,9 @@ local cModeIDs
 local portalSpells = {}
 local allSpells = {} --  for Cooldown checking
 local mapInfo = {}
-local mapIDInfo = {} -- TODO 11.2: remove mapIDInfo after new mapID from GetMapUIInfo
+local mapIDInfo = {}
 local selectedMapId
+local currentSeasonPortalCacheBuilt = false
 local faction = select(2, UnitFactionGroup("player"))
 local checkCooldown
 local issecretvalue = _G.issecretvalue
@@ -142,6 +143,20 @@ local function ApplyCooldownToButton(button)
 	end
 end
 
+local function AddMapIDAlias(target, mapID, cId)
+	if type(mapID) == "number" and mapID > 0 then
+		target[mapID] = cId
+	elseif type(mapID) == "table" then
+		if type(mapID.mapID) == "number" and mapID.mapID > 0 then
+			target[mapID.mapID] = cId
+		else
+			for _, value in pairs(mapID) do
+				AddMapIDAlias(target, value, cId)
+			end
+		end
+	end
+end
+
 local function getCurrentSeasonPortal()
 	-- Timerunners have no current-season portals; skip population
 	local timerunnerID = _G.PlayerGetTimerunningSeasonID and _G.PlayerGetTimerunningSeasonID() or nil
@@ -156,6 +171,19 @@ local function getCurrentSeasonPortal()
 	local filteredMapInfo = {}
 	local filteredMapID = {}
 
+	for _, cId in ipairs(cModeIDs) do
+		local mapName, _, _, texture, backgroundTexture, liveMapID = C_ChallengeMode.GetMapUIInfo(cId)
+		if mapName then
+			filteredMapInfo[cId] = {
+				text = addon.MythicPlus.variables.challengeMapID and addon.MythicPlus.variables.challengeMapID[cId],
+				mapName = mapName,
+				texture = texture,
+				background = backgroundTexture,
+			}
+			AddMapIDAlias(filteredMapID, liveMapID, cId)
+		end
+	end
+
 	for _, section in pairs(addon.MythicPlus.variables.portalCompendium) do
 		if (timerunnerID ~= nil and timerunnerID == section.timerunner) or (timerunnerID == nil) then
 			for spellID, data in pairs(section.spells) do
@@ -163,7 +191,7 @@ local function getCurrentSeasonPortal()
 					for cId in pairs(data.cId) do
 						local mapInfoText = data.textID and data.textID[cId] or data.text
 						if cModeIDLookup[cId] then
-							local mapName, _, _, texture, backgroundTexture = C_ChallengeMode.GetMapUIInfo(cId)
+							local mapName, _, _, texture, backgroundTexture, liveMapID = C_ChallengeMode.GetMapUIInfo(cId)
 							filteredPortalSpells[spellID] = {
 								text = data.text,
 								iconID = data.iconID,
@@ -192,14 +220,9 @@ local function getCurrentSeasonPortal()
 									background = backgroundTexture,
 								}
 							end
+							AddMapIDAlias(filteredMapID, liveMapID, cId)
 							if data.mapID then
-								if type(data.mapID) == "table" then
-									for _, mID in pairs(data.mapID) do
-										filteredMapID[mID] = cId
-									end
-								else
-									filteredMapID[data.mapID] = cId
-								end
+								AddMapIDAlias(filteredMapID, data.mapID, cId)
 							end
 						end
 					end
@@ -216,7 +239,12 @@ local function getCurrentSeasonPortal()
 	end
 	portalSpells = filteredPortalSpells
 	mapInfo = filteredMapInfo
-	mapIDInfo = filteredMapID -- TODO 11.2: remove mapIDInfo once mapID param is used
+	mapIDInfo = filteredMapID
+	currentSeasonPortalCacheBuilt = true
+end
+
+local function ensureCurrentSeasonPortalCache()
+	if not currentSeasonPortalCacheBuilt then getCurrentSeasonPortal() end
 end
 
 local isKnown = {}
@@ -566,9 +594,7 @@ end
 -- Each section: { title = string, items = { {spellID, text, iconID, isToy, toyID, isItem, itemID, isKnown, isFavorite, isClassTP, isMagePortal, equipSlot} } }
 function addon.MythicPlus.functions.BuildTeleportCompendiumSections()
 	-- ensure seasonal portal cache is present for hideActualSeason filter
-	if not portalSpells or next(portalSpells) == nil then
-		if getCurrentSeasonPortal then getCurrentSeasonPortal() end
-	end
+	ensureCurrentSeasonPortalCache()
 
 	-- Resolve the display text for an entry, preferring "modern" or zone name
 	local function resolveDisplayText(spellID, data)
@@ -1323,7 +1349,6 @@ local function updateRioScoreFrame()
 	textListUsed = 0
 
 	local ratingInfo = {}
-	local _, _, timeLimit
 	local rating = C_PlayerInfo.GetPlayerMythicPlusRatingSummary("player")
 	if rating then
 		for _, key in pairs(rating.runs) do
@@ -1340,7 +1365,7 @@ local function updateRioScoreFrame()
 		local dungeonList = {}
 
 		for _, key in pairs(C_ChallengeMode.GetMapTable()) do
-			_, _, timeLimit = C_ChallengeMode.GetMapUIInfo(key)
+			local mapName, _, timeLimit = C_ChallengeMode.GetMapUIInfo(key)
 			r, g, b = 0.5, 0.5, 0.5
 
 			local data = key
@@ -1383,7 +1408,7 @@ local function updateRioScoreFrame()
 			local selected = false
 			if key == selectedMapId then selected = true end
 			table.insert(dungeonList, {
-				text = addon.MythicPlus.variables.challengeMapID[mId] or "UNKNOWN",
+				text = addon.MythicPlus.variables.challengeMapID[mId] or mapName or "UNKNOWN",
 				stars = stars,
 				score = score,
 				r = r,
@@ -1485,7 +1510,7 @@ local function updateKeystoneInfo()
 		end
 		if IsInRaid() then return end
 		keyStoneFrame:SetPoint("TOPRIGHT", parentFrame, "BOTTOMRIGHT", 0, minHightOffset)
-		if #portalSpells == 0 then getCurrentSeasonPortal() end
+		ensureCurrentSeasonPortalCache()
 		local keystoneData = openRaidLib.GetAllKeystonesInfo()
 
 		if keystoneData then
@@ -1533,7 +1558,7 @@ local function updateKeystoneInfo()
 					-- Dungeonname (zum Beispiel rechtsbündig)
 					local dungeonText = button:CreateFontString(nil, "OVERLAY", "GameFontNormal")
 					dungeonText:SetPoint("TOPLEFT", button, "TOPRIGHT", 5, 0)
-					dungeonText:SetText(mapData.mapName or "Unknown Dungeon")
+						dungeonText:SetText(mapData.mapName or L["unknownDungeon"])
 
 					-- Hintergrund
 					local bg = button:CreateTexture(nil, "BACKGROUND")
@@ -1663,7 +1688,7 @@ function addon.MythicPlus.functions.toggleFrame()
 			CreateRioScore()
 		end
 		if addon.db["teleportFrame"] then
-			if #portalSpells == 0 then getCurrentSeasonPortal() end
+			ensureCurrentSeasonPortalCache()
 			checkCooldown()
 
 			-- Based on RaiderIO Client place the Frame
@@ -1780,6 +1805,7 @@ function addon.MythicPlus.functions.InitDungeonPortal()
 	if GameTooltip and not addon.MythicPlus.variables.dungeonPortalTooltipHooked then
 		GameTooltip:HookScript("OnShow", function(self)
 			if PVEFrame:IsVisible() then
+				ensureCurrentSeasonPortalCache()
 				selectedMapId = nil
 				local owner = self:GetOwner()
 				if
@@ -1794,7 +1820,7 @@ function addon.MythicPlus.functions.InitDungeonPortal()
 					local resultID = owner.resultID
 					if resultID then
 						local searchResultInfo = C_LFGList.GetSearchResultInfo(resultID)
-						if searchResultInfo then
+						if searchResultInfo and not issecretvalue(searchResultInfo.activityIDs) then
 							local mapData = C_LFGList.GetActivityInfoTable(searchResultInfo.activityIDs[1])
 							if mapData then
 								if mapIDInfo[mapData.mapID] then selectedMapId = mapIDInfo[mapData.mapID] end

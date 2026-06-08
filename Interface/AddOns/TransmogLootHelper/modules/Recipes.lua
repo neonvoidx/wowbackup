@@ -20,7 +20,7 @@ end)
 -- RECIPE (AND SPELL) TRACKING --
 ---------------------------------
 
-function app:CacheRecipe(spellID, isSpell)
+function app:CacheRecipe(spellID, isSpell, isLearned)
 	app.CharacterName = app.CharacterName or UnitName("player") .. "-" .. GetNormalizedRealmName()
 
 	if not TransmogLootHelper_Cache.Recipes[spellID] or type(TransmogLootHelper_Cache.Recipes[spellID]) == "boolean" then
@@ -28,7 +28,7 @@ function app:CacheRecipe(spellID, isSpell)
 	end
 
 	local categoryID = C_TradeSkillUI.GetRecipeInfo(spellID).categoryID
-	if (isSpell and categoryID == 0 and C_SpellBook.IsSpellKnown(spellID)) or (categoryID ~= 0 and C_TradeSkillUI.GetRecipeInfo(spellID).learned) then
+	if isLearned or (isSpell and categoryID == 0 and C_SpellBook.IsSpellKnown(spellID)) or (categoryID ~= 0 and C_TradeSkillUI.GetRecipeInfo(spellID).learned) then
 		TransmogLootHelper_Cache.Recipes[spellID].learned = true
 
 		local exists = false

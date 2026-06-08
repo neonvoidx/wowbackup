@@ -69,3 +69,12 @@ M33kAurasCompanion: enabled
 M33kAurasArchive: enabled
 M33Auras: disabled
 WeakAuras: disabled
+AutoCollapseBuffs: enabled
+BetterUpgradeTooltip: enabled
+eAlignUpdated: enabled
+ls_Toasts: enabled
+TipTac: enabled
+TipTacItemRef: enabled
+TipTacOptions: enabled
+TipTacTalents: enabled
+FrameSort: enabled

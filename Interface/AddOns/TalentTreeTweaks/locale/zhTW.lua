@@ -10,6 +10,12 @@ L[ [=[%d points spent past the gate.
 %d extra points above the gate are free to be moved away.]=] ] = "%d 點花費跨過門檻。 在門檻上方的 %d 點額外點數可自由移動。"
 L["%s Switch to %s"] = "%s 切換為 %s"
 L["(was %s)"] = "(之前為 %s)"
+--[[Translation missing --]]
+L["|cffeda55fClick|r to spend a point on this path."] = "|cffeda55fClick|r to spend a point on this path."
+--[[Translation missing --]]
+L["|cffeda55fCTRL-Click|r to spend up to the next 5 point breakpoint."] = "|cffeda55fCTRL-Click|r to spend up to the next 5 point breakpoint."
+--[[Translation missing --]]
+L["|cffeda55fShift-Click|r to spend all points on this path."] = "|cffeda55fShift-Click|r to spend all points on this path."
 L["A workaround for one of the ways that Talent Tree taint can block action buttons from working."] = "嘗試修復天賦樹介面引發的污染會使快捷鍵被禁用的問題。"
 L["Addon development takes a large amount of time and effort. If you enjoy using %s, please consider supporting its development by donating. Your support helps ensure the continued improvement and maintenance of the addon. Thank you for your generosity!"] = "插件開發需要大量時間和精力。如果你喜歡使用 %s，請考慮透過捐款支持其開發。您的支持有助於確保插件的持續改進與維護。感謝您的慷慨！"
 L["Adds a button to link the currently shown build in chat."] = "在下拉選單旁邊添加一個按鈕，點擊即可將目前啟用的配置發送至聊天。"
@@ -18,6 +24,8 @@ L["Adds a mini tree in various tooltips for Talent Tree Builds"] = "在天賦相
 L["Adds a more obvious highlight when you can relearn talents in bulk by shift-clicking them."] = "在點天賦的過程中，高亮你點過又取消的天賦，使你可以用 Shift  + 左鍵點擊批量重點。當你更改某個淺層天賦節點時，這可以省去往後天賦都要重新再點一次的麻煩。"
 L["Adds a right-click menu option to directly inspect a player's talents."] = "添加了一個右鍵點擊選單選項，以直接觀察玩家的天賦。"
 L["Adds a right-click option to the loadout dropdown to export your build."] = "在天賦配置下拉選單中，右鍵點擊即可導出該配置。"
+--[[Translation missing --]]
+L["Adds bulk spending to the profession specialization Spend Points button."] = "Adds bulk spending to the profession specialization Spend Points button."
 L["Adds options to adjust the background of the talent tree UI."] = "添加調整透明度的選項，使你可以調整天賦樹介面的背景透明度。"
 L["Adds respec buttons to the talent tree UI."] = "在天賦介面添加專精按鈕，用以快速切換專精。"
 L["Adds spell id and more to the various talent tree tooltips."] = "為天賦介面中的滑鼠提示顯示各種 ID。"
@@ -48,6 +56,10 @@ L["Automatically upgrade the final Limits Unbound talent when you have enough cu
 L["Background Transparency"] = "背景透明度"
 L["Basic Modules"] = "基本模組"
 L["blocked in combat"] = "戰鬥中禁用"
+--[[Translation missing --]]
+L["Bulk Apply Knowledge"] = "Bulk Apply Knowledge"
+--[[Translation missing --]]
+L["Bulk Profession Upgrade"] = "Bulk Profession Upgrade"
 L["Change Background"] = "更改背景"
 L["Change Scale"] = "調整縮放"
 L["Changes the loadout to be ordered based on when a loadout was created."] = "根據建立構建的時間更改要排序的構建。"

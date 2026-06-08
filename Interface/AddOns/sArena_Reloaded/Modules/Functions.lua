@@ -8,11 +8,92 @@ local isMidnight = sArenaMixin.isMidnight
 local isTBC = sArenaMixin.isTBC
 local L = sArenaMixin.L
 local LSM = LibStub("LibSharedMedia-3.0")
+local LCG = LibStub("LibCustomGlow-1.0", true)
 local noEarlyFrames = sArenaMixin.isTBC or sArenaMixin.isWrath
 
+local function GetDefaultPartyFrame(i)
+    local EM = EditModeManagerFrame
+    if EM and EM.UseRaidStylePartyFrames and EM:UseRaidStylePartyFrames() then
+        return _G["CompactPartyFrameMember" .. i] or _G["CompactRaidFrame" .. i]
+    else
+        if C_CVar.GetCVarBool("useCompactPartyFrames") then
+            return _G["CompactPartyFrameMember" .. i] or _G["CompactRaidFrame" .. i]
+        else
+            return _G["PartyMemberFrame" .. i] or _G["PartyFrame"]["MemberFrame" .. i]
+        end
+    end
+end
+
+function sArenaMixin:FindPartyFrame(i)
+    if self.db and self.db.profile.useDefaultPartyFrames then
+        return GetDefaultPartyFrame(i)
+    elseif C_AddOns.IsAddOnLoaded("DandersFrames") then
+        if self.isInArena then
+            local arenaPartyFrame = _G["DandersArenaHeaderUnitButton" .. i]
+            if arenaPartyFrame then
+                return arenaPartyFrame
+            end
+        end
+        local partyFrame = _G["DandersPartyHeaderUnitButton" .. i]
+        if partyFrame then
+            return partyFrame
+        end
+    elseif C_AddOns.IsAddOnLoaded("ElvUI") and ElvUI[1].private.unitframe.disabledBlizzardFrames.party then
+        return _G["ElvUF_PartyGroup1UnitButton" .. i]
+    elseif C_AddOns.IsAddOnLoaded("Cell") then
+        return _G["CellPartyFrameHeaderUnitButton" .. i]
+    elseif C_AddOns.IsAddOnLoaded("Grid2") then
+        for h = 1, 8 do
+            local header = _G["Grid2LayoutHeader" .. h]
+            if not header then break end
+            if header:IsShown() then
+                return _G["Grid2LayoutHeader" .. h .. "UnitButton" .. i]
+            end
+        end
+    elseif C_AddOns.IsAddOnLoaded("VuhDo") then
+        return _G["Vd1H" .. i]
+	elseif (C_AddOns.IsAddOnLoaded("ShadowedUnitFrames") and ShadowUF.db) then
+		-- Checking if player is shown in party group by selecting the "Show Player in party" option
+		local showPlayerInParty = ShadowUF.db.profile.units.party.showPlayer
+		-- If player is shown in party, just return default SUF PartyFrames
+		if showPlayerInParty then
+			return _G["SUFHeaderpartyUnitButton" .. i]
+		end
+		-- Otherwise, there's no player frame in the SUF Partyframes group
+		-- Still need to verify that playerframe exists, users can disable playerframe for party and use some other playerframe addon
+		-- In which case we wouldn't be able to support it (since we don't know what they use for playerframe), but at least it wouldnt throw errors
+		if (_G["SUFUnitplayer"] and i == 1) then
+			return _G["SUFUnitplayer"]
+		end
+		-- Every other partymember will be shifted upwards by 1, SUF would basically start at frame2
+        -- From testing, the sorting order doesnt matter, SUF still calls them sequentially from 1 to 4
+		return _G["SUFHeaderpartyUnitButton" .. i - 1]
+    else
+        local defaultFrame = GetDefaultPartyFrame(i)
+        return defaultFrame
+    end
+end
+
+function sArenaMixin:UpdatePartyFrameReferences(delay)
+    local function UpdatePartyFrameReferences()
+        for i = 1, 4 do
+            self["partyFrame" .. i] = self:FindPartyFrame(i)
+        end
+        if self.db then
+            C_Timer.After(0.1, function()
+                self:PositionArenaTargetTextOnPartyFrames()
+            end)
+        end
+    end
+    if delay then
+        C_Timer.After(0.1, UpdatePartyFrameReferences)
+    else
+        UpdatePartyFrameReferences()
+    end
+end
+
 function sArenaMixin:GetPartyFrame(i)
-    --EditModeManagerFrame:UseRaidStylePartyFrames()
-    return _G["CompactPartyFrameMember" .. i] or _G["CompactRaidFrame" .. i]
+    return self["partyFrame" .. i] or self:FindPartyFrame(i)
 end
 
 function sArenaMixin:GetSpecNameByID(specId)
@@ -26,7 +107,12 @@ end
 
 function sArenaFrameMixin:SetUnitAuraRegistration()
     local db = self.parent and self.parent.db
-    if db and (db.profile.disableAurasOnClassIcon or db.profile.hideClassIcon) then
+    if not db then return end
+
+    local classIconWantsAuras = not (db.profile.disableAurasOnClassIcon or db.profile.hideClassIcon)
+    local highlightWantsAuras = db.profile.auraHighlight and db.profile.auraHighlight.enabled
+
+    if not classIconWantsAuras and not highlightWantsAuras then
         self.disabledAuras = true
         self:UnregisterEvent("UNIT_AURA")
     else
@@ -396,16 +482,14 @@ function sArenaFrameMixin:ClassColorFrameTexture()
         if pixelBorders.dispel then
             pixelBorders.dispel:SetVertexColor(finalColor.r, finalColor.g, finalColor.b)
         end
-        if self.SpecIcon and self.SpecIcon.specIcon then
-            self.SpecIcon.specIcon:SetVertexColor(finalColor.r, finalColor.g, finalColor.b)
+        if self.SpecIcon and self.SpecIcon.specPixelBorder then
+            self.SpecIcon.specPixelBorder:SetVertexColor(finalColor.r, finalColor.g, finalColor.b)
         end
-        if self.CastBar then
-            if self.CastBar.castBar then
-                self.CastBar.castBar:SetVertexColor(finalColor.r, finalColor.g, finalColor.b)
-            end
-            if self.CastBar.castBarIcon then
-                self.CastBar.castBarIcon:SetVertexColor(finalColor.r, finalColor.g, finalColor.b)
-            end
+        if self.CastBar.barPixelBorder then
+            self.CastBar.barPixelBorder:SetVertexColor(finalColor.r, finalColor.g, finalColor.b)
+        end
+        if self.CastBar.iconPixelBorder then
+            self.CastBar.iconPixelBorder:SetVertexColor(finalColor.r, finalColor.g, finalColor.b)
         end
     end
 end
@@ -429,16 +513,14 @@ function sArenaFrameMixin:ResetPixelBorders()
         if pixelBorders.dispel then
             pixelBorders.dispel:SetVertexColor(0, 0, 0)
         end
-        if self.SpecIcon and self.SpecIcon.specIcon then
-            self.SpecIcon.specIcon:SetVertexColor(0, 0, 0)
+        if self.SpecIcon and self.SpecIcon.specPixelBorder then
+            self.SpecIcon.specPixelBorder:SetVertexColor(0, 0, 0)
         end
-        if self.CastBar then
-            if self.CastBar.castBar then
-                self.CastBar.castBar:SetVertexColor(0, 0, 0)
-            end
-            if self.CastBar.castBarIcon then
-                self.CastBar.castBarIcon:SetVertexColor(0, 0, 0)
-            end
+        if self.CastBar.barPixelBorder then
+            self.CastBar.barPixelBorder:SetVertexColor(0, 0, 0)
+        end
+        if self.CastBar.iconPixelBorder then
+            self.CastBar.iconPixelBorder:SetVertexColor(0, 0, 0)
         end
     end
 end
@@ -481,6 +563,7 @@ function sArenaFrameMixin:UpdateFrameColors()
         end
         self:ResetPixelBorders()
     end
+    self.PetFrame:UpdateTextureBorderColor()
 end
 
 function sArenaFrameMixin:RegisterFrameEvents()
@@ -497,11 +580,11 @@ function sArenaFrameMixin:RegisterFrameEvents()
     self:RegisterUnitEvent("UNIT_POWER_UPDATE", unit)
     self:RegisterUnitEvent("UNIT_MAXPOWER", unit)
     self:RegisterUnitEvent("UNIT_DISPLAYPOWER", unit)
+    self:RegisterUnitEvent("UNIT_ABSORB_AMOUNT_CHANGED", unit)
+    self:RegisterUnitEvent("UNIT_HEAL_ABSORB_AMOUNT_CHANGED", unit)
     self:SetUnitAuraRegistration()
 
     if not isMidnight then
-        self:RegisterUnitEvent("UNIT_ABSORB_AMOUNT_CHANGED", unit)
-        self:RegisterUnitEvent("UNIT_HEAL_ABSORB_AMOUNT_CHANGED", unit)
         self:RegisterEvent("ARENA_CROWD_CONTROL_SPELL_UPDATE")
     end
 end
@@ -510,7 +593,7 @@ function sArenaMixin:UpdateStealthAlpha()
     self.stealthAlpha = self.db and self.db.profile.stealthAlpha or 0.4
 end
 
-function sArenaMixin:UpdateBlizzArenaFrameVisibility(instanceType)
+function sArenaMixin:UpdateBlizzArenaFrameVisibility()
     if isRetail and not noEarlyFrames then
         -- Hide Blizzard Arena Frames while in Arena
         if CompactArenaFrame.isHidden then return end
@@ -566,7 +649,7 @@ function sArenaMixin:UpdateBlizzArenaFrameVisibility(instanceType)
             self.blizzFrame:Hide()
         end
 
-        if instanceType == "arena" then
+        if self.isInArena then
             if prepFrame then
                 prepFrame:SetParent(self.blizzFrame)
                 self.changedDefaultFrameParent = true
@@ -629,7 +712,6 @@ function sArenaMixin:UpdateCDTextVisibility()
 
     for i = 1, self.maxArenaOpponents do
         local frame = self["arena" .. i]
-        if not frame then break end
 
         -- Class Icon
         local classIconCD = frame.ClassIcon and frame.ClassIcon.Cooldown
@@ -855,6 +937,22 @@ function sArenaMixin:DatabaseCleanup(db)
         end
         db.profile.dbClean2 = true
     end
+
+    -- Migrate Survival Hunter range spell from Tame Beast (1515) to Hatchet Toss (193265) for Midnight
+    if isMidnight and db.profile.rangeCheckSpellsPerSpec and db.profile.rangeCheckSpellsPerSpec[255] == 1515 then
+        db.profile.rangeCheckSpellsPerSpec[255] = 193265
+    end
+
+    -- formatNumbers was accidentally set to false as default for arena frames. Also some pet frame issues.
+    if not db.profile.formatNumbersFix then
+        if not db.profile.statusText.usePercentage then
+            db.profile.statusText.formatNumbers = true
+        end
+        db.profile.petFrames.statusText.formatNumbers = false
+        db.profile.petFrames.statusText.usePercentage = true
+
+        db.profile.formatNumbersFix = true
+    end
 end
 
 -- function sArenaMixin:ToggleObjectivesFrame(instanceType)
@@ -928,7 +1026,7 @@ function sArenaFrameMixin:SetupTrinketCooldownDone()
     end)
 end
 
-function sArenaFrameMixin:CreatePixelTextureBorder(parent, target, key, size, offset, setFrameLevel)
+function sArenaMixin:CreatePixelTextureBorder(parent, target, key, size, offset, setFrameLevel)
     offset = offset or 0
     size = size or 1
     if setFrameLevel == nil then setFrameLevel = true end
@@ -1017,29 +1115,34 @@ function sArenaFrameMixin:AddPixelBorderToFrame()
         wrapper:ClearAllPoints()
         wrapper:SetPoint("TOPLEFT", self.HealthBar, "TOPLEFT")
         wrapper:SetPoint("BOTTOMRIGHT", self.PowerBar, "BOTTOMRIGHT")
-        self:CreatePixelTextureBorder(borders, wrapper, "main", size, offset)
+        self.parent:CreatePixelTextureBorder(borders, wrapper, "main", size, offset)
     end
 
-    self:CreatePixelTextureBorder(borders, self.ClassIcon, "classIcon", size, offset)
-    self:CreatePixelTextureBorder(borders, self.Trinket, "trinket", size, offset)
-    self:CreatePixelTextureBorder(borders, self.Racial, "racial", size, offset)
-    self:CreatePixelTextureBorder(borders, self.Dispel, "dispel", size, offset)
+    self.parent:CreatePixelTextureBorder(borders, self.ClassIcon, "classIcon", size, offset)
+    self.parent:CreatePixelTextureBorder(borders, self.Trinket, "trinket", size, offset)
+    self.parent:CreatePixelTextureBorder(borders, self.Racial, "racial", size, offset)
+    self.parent:CreatePixelTextureBorder(borders, self.Dispel, "dispel", size, offset)
 
     if not self.parent.db.profile.showDispels then
         borders.dispel:Hide()
     end
 
-    self:CreatePixelTextureBorder(self.SpecIcon, self.SpecIcon, "specIcon", size, offset)
-    self:CreatePixelTextureBorder(self.CastBar, self.CastBar, "castBar", size, offset)
-    self:CreatePixelTextureBorder(self.CastBar, self.CastBar.Icon, "castBarIcon", size, offset)
+    self.parent:CreatePixelTextureBorder(self.SpecIcon, self.SpecIcon, "specPixelBorder", size, offset)
+    self.parent:CreatePixelTextureBorder(self.CastBar, self.CastBar, "barPixelBorder", size, offset)
+    self.parent:CreatePixelTextureBorder(self.CastBar, self.CastBar.Icon, "iconPixelBorder", size, offset)
     self:SetTextureCrop(self.CastBar.Icon, true)
+    if self.CastBar.HighlightFrame and self.CastBar.barPixelBorder then
+        self.CastBar.HighlightFrame:SetFrameLevel(self.CastBar.barPixelBorder:GetFrameLevel() + 1)
+    end
+
+    self.parent:CreatePixelTextureBorder(self.PetFrame, self.PetFrame, "pixelBorder", size, offset)
 
     if size == 0 then
         borders:Hide()
         self.PixelBorders.hide = true
-        if self.CastBar.castBar then self.CastBar.castBar:Hide() end
-        if self.CastBar.castBarIcon then self.CastBar.castBarIcon:Hide() end
-        if self.SpecIcon.specIcon then self.SpecIcon.specIcon:Hide() end
+        if self.CastBar.barPixelBorder then self.CastBar.barPixelBorder:Hide() end
+        if self.CastBar.iconPixelBorder then self.CastBar.iconPixelBorder:Hide() end
+        if self.SpecIcon.specPixelBorder then self.SpecIcon.specPixelBorder:Hide() end
         return
     end
 
@@ -1073,9 +1176,10 @@ function sArenaMixin:RemovePixelBorders()
         hideBorder(borders, "trinket")
         hideBorder(borders, "dispel")
         hideBorder(borders, "racial")
-        hideBorder(frame.SpecIcon, "specIcon")
-        hideBorder(frame.CastBar, "castBar")
-        hideBorder(frame.CastBar, "castBarIcon")
+        hideBorder(frame.PetFrame, "pixelBorder")
+        hideBorder(frame.SpecIcon, "specPixelBorder")
+        hideBorder(frame.CastBar, "barPixelBorder")
+        hideBorder(frame.CastBar, "iconPixelBorder")
 
         frame.ClassIcon:SetScale(1)
         frame.CastBar.Icon:ClearAllPoints()
@@ -1106,24 +1210,45 @@ function sArenaMixin:UpdateCastbarVisibility()
     if hide then
         self.hiddenCastbars = true
         for i = 1, self.maxArenaOpponents do
-            local frame = isMidnight and _G["sArenaEnemyFrame" .. i] or self["arena" .. i]
-            if frame and frame.CastBar then
-                frame.CastBar:SetParent(self.hiddenFrame)
-                if isMidnight and frame.midnightCastBarMoveFrame then
-                    frame.midnightCastBarMoveFrame:Hide()
-                end
+            local frame = self["arena" .. i]
+            frame.CastBar:SetParent(self.hiddenFrame)
+            if frame.midnightCastBarMoveFrame then
+                frame.midnightCastBarMoveFrame:Hide()
             end
         end
     else
         if not self.hiddenCastbars then return end
         self.hiddenCastbars = nil
         for i = 1, self.maxArenaOpponents do
-            local frame = isMidnight and _G["sArenaEnemyFrame" .. i] or self["arena" .. i]
-            if frame and frame.CastBar then
-                frame.CastBar:SetParent(frame)
-                if isMidnight and frame.midnightCastBarMoveFrame then
-                    frame.midnightCastBarMoveFrame:Show()
-                end
+            local frame = self["arena" .. i]
+            frame.CastBar:SetParent(frame)
+            if frame.midnightCastBarMoveFrame then
+                frame.midnightCastBarMoveFrame:Show()
+            end
+        end
+    end
+end
+
+function sArenaMixin:UpdateCooldownSwipeColor()
+    local color = self.db.profile.cooldownSwipeColor or { 0, 0, 0, 0.55 }
+    local r, g, b, a = color[1] or 0, color[2] or 0, color[3] or 0, color[4] or 0.55
+
+    for i = 1, self.maxArenaOpponents do
+        local frame = self["arena" .. i]
+        frame.ClassIcon.Cooldown:SetSwipeColor(r, g, b, a)
+        frame.Trinket.Cooldown:SetSwipeColor(r, g, b, a)
+        frame.Racial.Cooldown:SetSwipeColor(r, g, b, a)
+        if frame.Dispel and frame.Dispel.Cooldown then
+            frame.Dispel.Cooldown:SetSwipeColor(r, g, b, a)
+        end
+
+        local useDrFrames = frame.drFrames ~= nil
+        local drList = frame.drFrames or self.drCategories
+        local drCount = drList and #drList or 0
+        for n = 1, drCount do
+            local dr = useDrFrames and drList[n] or frame[drList[n]]
+            if dr and dr.Cooldown then
+                dr.Cooldown:SetSwipeColor(r, g, b, a)
             end
         end
     end
@@ -1131,6 +1256,15 @@ end
 
 -- Midnight only
 if not isMidnight then return end
+
+function sArenaFrameMixin:HookPlayerConnectionStatus()
+    -- UNIT_CONNECT doesnt trigger for arena frames. Update on status text update instead.
+    local blizzArenaFrame = _G["CompactArenaFrameMember" .. self:GetID()]
+    hooksecurefunc(blizzArenaFrame.statusText, "SetText", function()
+        self.DisconnectedIcon:SetShown(not UnitIsConnected(self.unit))
+    end)
+end
+
 
 function sArenaMixin:RegisterCVarListener()
     if self.cvarListenerRegistered then return end
@@ -1145,21 +1279,46 @@ function sArenaMixin:RegisterCVarListener()
     end)
 end
 
-function sArenaMixin:InitializeMidnightDRFrames()
-    if self.drFramesInitialized then return end
-    if self.db and self.db.profile.hideMidnightDRs then return end
+function sArenaMixin:ReparentBlizzardDRFrames()
+    for i = 1, self.maxArenaOpponents do
+        local blizzArenaFrame = _G["CompactArenaFrameMember" .. i]
+        local arenaFrame = self["arena" .. i]
 
-    if not sArena_ReloadedDB.skipEMDR then
-        if EditModeManagerFrame and EditModeManagerFrame.AccountSettings then
-            ShowUIPanel(EditModeManagerFrame)
+        if not blizzArenaFrame then return end
+
+        local drTray = blizzArenaFrame.SpellDiminishStatusTray
+        if drTray then
+            drTray:SetParent(arenaFrame)
+            drTray:SetAlpha(0)
+            drTray:EnableMouse(false)
         end
     end
+end
+
+function sArenaMixin:ToggleEditMode(show)
+    if (not (EditModeManagerFrame and EditModeManagerFrame.AccountSettings)) or sArena_ReloadedDB.skipEMDR then return end
+    if show then
+        ShowUIPanel(EditModeManagerFrame)
+    else
+        HideUIPanel(EditModeManagerFrame)
+    end
+end
+
+function sArenaMixin:InitializeMidnightDRFrames()
+    if self.drFramesInitialized then return end
+    self:ReparentBlizzardDRFrames()
+
+    if self.db and self.db.profile.hideMidnightDRs then
+        return
+    end
+
+    self:ToggleEditMode(true)
 
     for i = 1, self.maxArenaOpponents do
         local blizzArenaFrame = _G["CompactArenaFrameMember" .. i]
         local arenaFrame = self["arena" .. i]
 
-        if not blizzArenaFrame or not arenaFrame then return end
+        if not blizzArenaFrame then return end
 
         local drTray = blizzArenaFrame.SpellDiminishStatusTray
         if not drTray then return end
@@ -1168,9 +1327,6 @@ function sArenaMixin:InitializeMidnightDRFrames()
         local NUM_DR_FRAMES = #blizzDRFrames
 
         if not arenaFrame.drFrames then
-            drTray:SetParent(arenaFrame)
-            drTray:SetAlpha(0)
-            drTray:EnableMouse(false)
             arenaFrame.drFrames = {}
 
             for drIndex = 1, NUM_DR_FRAMES do
@@ -1195,8 +1351,6 @@ function sArenaMixin:InitializeMidnightDRFrames()
                 drTextImmune:SetAlpha(0)
                 drTextFrame.DRTextImmune = drTextImmune
 
-                sArenaDRFrame.DRSeverity = 1
-
                 local blizzDRFrame = blizzDRFrames[drIndex]
                 if blizzDRFrame and blizzDRFrame.Icon then
                     sArenaDRFrame.blizzFrame = blizzDRFrame
@@ -1208,22 +1362,31 @@ function sArenaMixin:InitializeMidnightDRFrames()
                     hooksecurefunc(blizzDRFrame, "Show", function()
                         sArenaDRFrame:Show()
                         arenaFrame:UpdateDRPositions()
-                        sArenaDRFrame.DRSeverity = sArenaDRFrame.DRSeverity + 1
+                        sArenaDRFrame.DRSeverity = 1
                     end)
 
                     hooksecurefunc(blizzDRFrame, "Hide", function()
+                        if sArenaDRFrame.Cooldown:IsShown() then return end
                         sArenaDRFrame.Icon:SetTexture(nil)
                         sArenaDRFrame.Cooldown:Clear()
                         sArenaDRFrame:Hide()
-                        sArenaDRFrame.DRSeverity = 1
+                        sArenaDRFrame.DRSeverity = 0
+                        arenaFrame:UpdateDRPositions()
+                    end)
+
+                    sArenaDRFrame.Cooldown:HookScript("OnCooldownDone", function()
+                        sArenaDRFrame.Icon:SetTexture(nil)
+                        sArenaDRFrame.Cooldown:Clear()
+                        sArenaDRFrame:Hide()
+                        sArenaDRFrame.DRSeverity = 0
                         arenaFrame:UpdateDRPositions()
                     end)
 
                     hooksecurefunc(blizzDRFrame.Cooldown, "SetCooldown", function(_, start, duration)
                         sArenaDRFrame:Show()
-                        sArenaDRFrame.Cooldown:SetCooldown(GetTime(), 16.1)
+                        sArenaDRFrame.Cooldown:SetCooldown(GetTime(), self.db.profile.drResetTime or 16.1)
                         sArenaDRFrame.Cooldown.durationObj = C_DurationUtil.CreateDuration()
-                        sArenaDRFrame.Cooldown.durationObj:SetTimeFromStart(GetTime(), 16.1)
+                        sArenaDRFrame.Cooldown.durationObj:SetTimeFromStart(GetTime(), self.db.profile.drResetTime or 16.1)
                     end)
 
                     local green = CreateColor(0, 1, 0, 1)
@@ -1238,14 +1401,24 @@ function sArenaMixin:InitializeMidnightDRFrames()
                         sArenaDRFrame:Show()
 
                         if not self.db.profile.disableInstantDRCooldown then
+                            local drBugFixMidnight = self.db.profile.drBugFixMidnight
+                            local drBugFixLonger = drBugFixMidnight and self.db.profile.drBugFixLonger
                             if sArenaDRFrame.DRSeverity == 1 then
-                                sArenaDRFrame.Cooldown:SetCooldown(GetTime(), 20)
+                                -- drResetTime + longest CC (6) + 20% roar duration extender + 0.5 leeway
+                                local duration = (drBugFixLonger and (self.db.profile.drResetTime + (6 * 1.2) + 0.5))
+                                    or (drBugFixMidnight and (self.db.profile.drResetTime + 6 + 0.5))
+                                    or (self.db.profile.drResetTime + 4)
+                                sArenaDRFrame.Cooldown:SetCooldown(GetTime(), duration)
                                 sArenaDRFrame.Cooldown.durationObj = C_DurationUtil.CreateDuration()
-                                sArenaDRFrame.Cooldown.durationObj:SetTimeFromStart(GetTime(), 20)
+                                sArenaDRFrame.Cooldown.durationObj:SetTimeFromStart(GetTime(), duration)
+                                sArenaDRFrame.DRSeverity = 2
                             else
-                                sArenaDRFrame.Cooldown:SetCooldown(GetTime(), 18)
+                                local duration = (drBugFixLonger and (self.db.profile.drResetTime + (3 * 1.2) + 0.5))
+                                    or (drBugFixMidnight and (self.db.profile.drResetTime + 3 + 0.5))
+                                    or (self.db.profile.drResetTime + 2)
+                                sArenaDRFrame.Cooldown:SetCooldown(GetTime(), duration)
                                 sArenaDRFrame.Cooldown.durationObj = C_DurationUtil.CreateDuration()
-                                sArenaDRFrame.Cooldown.durationObj:SetTimeFromStart(GetTime(), 18)
+                                sArenaDRFrame.Cooldown.durationObj:SetTimeFromStart(GetTime(), duration)
                             end
                         end
 
@@ -1281,17 +1454,11 @@ function sArenaMixin:InitializeMidnightDRFrames()
         end
     end
 
-    -- Apply DR settings after all frames are initialized
     if self.layoutdb and self.layoutdb.dr then
         self:UpdateDRSettings(self.layoutdb.dr)
     end
 
-
-    if not sArena_ReloadedDB.skipEMDR then
-        if EditModeManagerFrame and EditModeManagerFrame.AccountSettings then
-            HideUIPanel(EditModeManagerFrame)
-        end
-    end
+    self:ToggleEditMode(false)
 
     self.drFramesInitialized = true
 end
@@ -1325,6 +1492,16 @@ function sArenaFrameMixin:HookMidnightTrinket()
                             PlaySoundFile(soundPath, channel)
                         end
                     end
+                end
+
+                if db and db.profile.trinketUseGlow and (not db.profile.trinketUseGlowHealerOnly or self.isHealer) then
+                    local glowColor = db.profile.trinketUseGlowColorEnabled and db.profile.trinketUseGlowColor or nil
+                    LCG.ButtonGlow_Start(self.Trinket, glowColor)
+                    if self.trinketGlowTimer then self.trinketGlowTimer:Cancel() end
+                    self.trinketGlowTimer = C_Timer.NewTimer(1, function()
+                        LCG.ButtonGlow_Stop(self.Trinket)
+                        self.trinketGlowTimer = nil
+                    end)
                 end
 
                 -- Update shared Racial CD
@@ -1543,4 +1720,104 @@ function sArenaFrameMixin:NormalEmpoweredCastbar()
     end)
 
     castBar.empoweredFix = true
+end
+
+function sArenaMixin:GladTracker()
+    if not (self.isMidnight and self.db and self.db.profile.gladTracker) or (self.gladTrackerOn or (BBF and BBF.GladTrackerOn)) then return end
+
+    local function SetupGladTracker()
+        local function GetAchievementProgress(achievementID)
+            local num = GetAchievementNumCriteria(achievementID)
+            for i = 1, num do
+                local _, _, _, qty, req = GetAchievementCriteriaInfo(achievementID, i)
+                if req and req > 0 then
+                    return qty or 0, req
+                end
+            end
+            return 0, 0
+        end
+
+        -- map rows -> {id, name}
+        local tracked = {
+            [ConquestFrame.Arena3v3]         = { id = 61188, name = "Gladiator" },
+            [ConquestFrame.RatedSoloShuffle] = { id = 61190, name = "Legend" },
+            [ConquestFrame.RatedBGBlitz]     = { id = 61194, name = "Strategist" },
+        }
+
+        local function BuildTooltip(holder)
+            GameTooltip:SetOwner(holder, "ANCHOR_RIGHT")
+            GameTooltip:ClearLines()
+
+            local qty = holder._qty or 0
+            local req = holder._req or 0
+
+            if req > 0 and qty >= req then
+                local playerName = UnitName("player")
+                GameTooltip:AddLine(("%s %s!"):format(holder._name or "?", playerName), 1, 0.82, 0, true)
+                GameTooltip:AddLine("Has a nice ring to it, doesn't it?", 1, 1, 1, true)
+            else
+                GameTooltip:AddLine(("%d/%d %s Wins"):format(qty, req, holder._name or "?"), 1, 0.82, 0, true)
+            end
+
+            GameTooltip:AddLine("|cff777777By sArena Reloaded|r", 1, 1, 1, true)
+            GameTooltip:Show()
+        end
+
+        local function EnsureHolder(frame)
+            if frame.bbfGladWinTracker then return frame.bbfGladWinTracker end
+            local holder = CreateFrame("Button", nil, frame)
+            holder:SetPoint("LEFT", frame.CurrentRating, "RIGHT", 8, 0)
+            holder:SetAlpha(0.7)
+            holder:EnableMouse(true)
+            holder.text = holder:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+            holder.text:SetPoint("LEFT")
+            holder:SetScript("OnEnter", function(self) BuildTooltip(self) end)
+            holder:SetScript("OnLeave", function() GameTooltip:Hide() end)
+            frame.bbfGladWinTracker = holder
+            return holder
+        end
+
+        local function UpdateTrackedProgress()
+            for frame, data in pairs(tracked) do
+                if frame then
+                    local holder = EnsureHolder(frame)
+                    local qty, req = GetAchievementProgress(data.id)
+
+                    if req > 0 and qty > 0 then
+                        holder._qty, holder._req, holder._name = qty, req, data.name
+                        holder.text:SetText(qty .. "/" .. req)
+                        holder:SetSize(holder.text:GetStringWidth(), holder.text:GetStringHeight())
+                        holder:Show()
+                        if holder:IsMouseOver() then
+                            BuildTooltip(holder)
+                        end
+                    else
+                        holder.text:SetText("")
+                        holder._qty, holder._req, holder._name = 0, req or 0, data.name
+                        holder:SetSize(1, 1)
+                        if holder:IsMouseOver() then GameTooltip:Hide() end
+                        holder:Hide()
+                    end
+                end
+            end
+        end
+
+        ConquestFrame:HookScript("OnShow", UpdateTrackedProgress)
+        UpdateTrackedProgress()
+    end
+
+    if C_AddOns.IsAddOnLoaded("Blizzard_PVPUI") then
+        SetupGladTracker()
+    else
+        local loader = CreateFrame("Frame")
+        loader:RegisterEvent("ADDON_LOADED")
+        loader:SetScript("OnEvent", function(self, _, addon)
+            if addon == "Blizzard_PVPUI" then
+                self:UnregisterEvent("ADDON_LOADED")
+                SetupGladTracker()
+            end
+        end)
+    end
+
+    self.gladTrackerOn = true
 end

@@ -11,6 +11,47 @@ addon.LTooltip = addon.LTooltip or {} -- Locales for MythicPlus
 addon.Tooltip.functions = addon.Tooltip.functions or {}
 addon.Tooltip.variables = addon.Tooltip.variables or {}
 
+local L = LibStub("AceLocale-3.0"):GetLocale("EnhanceQoL")
+
+local function normalizeNumericDropdownValue(key, labels, fallback)
+	if not addon.db then return end
+	local value = addon.db[key]
+	if type(value) == "number" and labels[value] ~= nil then return end
+	if type(value) == "string" then
+		local numeric = tonumber(value)
+		if numeric and labels[numeric] ~= nil then
+			addon.db[key] = numeric
+			return
+		end
+		local trimmed = value:gsub("^%s+", ""):gsub("%s+$", "")
+		for index, label in pairs(labels) do
+			if trimmed == tostring(label) then
+				addon.db[key] = index
+				return
+			end
+		end
+	end
+	addon.db[key] = fallback
+end
+
+local function migrateNumericTooltipDropdowns()
+	normalizeNumericDropdownValue("TooltipBuffHideType", { [1] = L["TooltipOFF"] or "OFF", [2] = L["TooltipON"] or "ON" }, 1)
+	normalizeNumericDropdownValue("TooltipItemHideType", { [1] = L["TooltipOFF"] or "OFF", [2] = L["TooltipON"] or "ON" }, 1)
+	normalizeNumericDropdownValue("TooltipSpellHideType", { [1] = L["TooltipOFF"] or "OFF", [2] = L["TooltipON"] or "ON" }, 1)
+	normalizeNumericDropdownValue("TooltipUnitHideType", {
+		[1] = _G.NONE or "None",
+		[2] = L["Enemies"] or "Enemies",
+		[3] = L["Friendly"] or "Friendly",
+		[4] = _G.STATUS_TEXT_BOTH or "Both",
+	}, 1)
+	normalizeNumericDropdownValue("TooltipAnchorType", {
+		[1] = _G.DEFAULT or "Default",
+		[2] = L["CursorCenter"] or "Centered on Cursor",
+		[3] = L["CursorLeft"] or "Left of Cursor",
+		[4] = L["CursorRight"] or "Right of Cursor",
+	}, 1)
+end
+
 function addon.Tooltip.functions.InitDB()
 	if not addon.db or not addon.functions or not addon.functions.InitDBValue then return end
 	local init = addon.functions.InitDBValue
@@ -19,6 +60,8 @@ function addon.Tooltip.functions.InitDB()
 	init("TooltipAnchorOffsetY", 0)
 	init("TooltipHideOverrideEnabled", false)
 	init("TooltipHideOverrideModifier", "CTRL")
+	init("TooltipIDRequireModifier", false)
+	init("TooltipIDModifier", "ALT")
 
 	init("TooltipUnitHideType", 1)
 	init("TooltipUnitHideInCombat", false)
@@ -41,6 +84,13 @@ function addon.Tooltip.functions.InitDB()
 	init("TooltipUnitHideRightClickInstruction", false)
 	init("TooltipUnitShowTargetOfTarget", false)
 	init("TooltipUnitShowMount", false)
+	init("TooltipShowRealmInfo", false)
+	init("TooltipRealmShowLanguage", true)
+	init("TooltipRealmShowType", true)
+	init("TooltipRealmShowTimezone", false)
+	init("TooltipRealmShowConnected", true)
+	init("TooltipRealmInfoFields", { language = true, type = true, connected = true })
+	init("TooltipRealmLFGDisplay", { tooltip = true, listingFlag = true })
 
 	-- Spell
 	init("TooltipSpellHideType", 1)
@@ -72,14 +122,11 @@ function addon.Tooltip.functions.InitDB()
 	init("TooltipBuffHideInCombat", false)
 	init("TooltipBuffHideInDungeon", false)
 
-	-- Debuff
-	init("TooltipDebuffHideType", 1)
-	init("TooltipDebuffHideInCombat", false)
-	init("TooltipDebuffHideInDungeon", false)
-
 	-- Currency
 	init("TooltipShowCurrencyAccountWide", false)
 	init("TooltipShowCurrencyID", false)
+
+	migrateNumericTooltipDropdowns()
 end
 
 addon.Tooltip.variables.maxLevel = GetMaxLevelForPlayerExpansion()

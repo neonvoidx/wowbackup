@@ -1,3 +1,145 @@
+# sArena Reloaded 2.5.5b
+## Tweak
+- Update MoP toc version number.
+
+# sArena Reloaded 2.5.5
+## Tweak
+- Update MoP version to support new WoW patch 5.5.4
+- Add missing "Blizz Raid" layout to MoP and Wrath (oops).
+- Add support for cast target & cast highlights for MoP (now that 5.5.4 implemented the API)
+
+# sArena Reloaded 2.5.4g
+## Bugfix
+- Fix issue with Grid2 (and potentially others) and Widgets not anchoring correctly to the PartyFrames without a reload/setting toggle.
+
+# sArena Reloaded 2.5.4f
+## Tweak
+- Update Dissonance profile (www.twitch.tv/dissonancewow)
+## Bugfix
+- Fix issue with Danders Frames and Widgets not anchoring correctly to the PartyFrames without a reload/setting toggle.
+
+# sArena Reloaded 2.5.4e
+## New
+- Add a new "Always On" option for Party Member Target Text Widget so it works outside of Arena as well.
+## Bugfix
+- Fix lua error on test mode exit if Arena Target Indicators were not enabled
+- Fix Arena Target Text Widget forgetting set font size on reload.
+- Fix icon border for Dispel Icon showing on Midnight where dispels should be deactivated due to restrictions.
+
+# sArena Reloaded 2.5.4d
+## New
+- Add Simplified and Traditional Chinese localization by vitocichen @ GitHub. Thank you for your contribution!
+
+# sArena Reloaded 2.5.4c
+## Bugfix
+- Fix "Format Numbers" being turned off accidentally. You may need to double check this value in settings (Global -> Arena Frames: Status Text)
+- Fix secret error related to castbar casts on Midnight resulting in various issues like castbar color/highlights/etc being off.
+
+# sArena Reloaded 2.5.4
+## New
+- Pet Frames. You can now enable Pet Frames for pet classes
+- Midnight: Castbar Highlight has its own group now in the Castbar layout settings with a new color setting, icon glow setting, and a "Highlight CC" option. Note that you can only chose either "Cast on me" or "CC" due to restrictions.
+## Tweak
+- Midnight version has the un-interruptible texture setting working again, but needs a better solution still as this isnt perfect but better than nothing.
+- Castbar quick hiding should properly work again for channeled casts again (without hiding it when its been interrupted).
+- Update default spell used for range check for survival hunter to hatchet toss (40yard).
+## Bugfix
+- Fix first time introduction screen reverting layout choice to default Gladiuish layout even after picking a different one.
+- Fix an issue of castbar not changing color on gained aura mastery effects like Precog etc.
+- Fix click issues in test mode preventing click and drag for widgets etc for things going over the arena frames.
+- Fix ctrl+shift drag for Arena/Party Target Text.
+- Fix font issue on the Party Target Text not picking up selected font.
+- Fix an issue causing aura highlight glows to appear after a shuffle round if unit was stealthed when gates opened.
+- Fix an error related to spec updates while in combat on TBC
+- 2.5.4b: Fix secret error in castbar highlight code
+## Note
+- Big patch with a lot of changes to things behind the scenes to accomodate Pet Frames. Please if you run into any issues report it (especially TBC cuz very limited testing has been done there).
+
+# sArena Reloaded 2.5.3
+## New
+- New aura sorting settings (Global - Class Icon) and updated the default aura sorting method for sArena to show last aura added by default (same as MiniCC by Verz).
+- New Vanguards profile (www.twitch.tv/VanguardsTV). Thank you for sharing!
+- New "Use Default Party Frames (for Widgets)" setting that forces default party frames over detected party frames addon for Widgets placements (like Arena Target Indicator)
+## Tweak
+- Re-organize gui categories a bit and make them alphabetical (for the most part).
+
+# sArena Reloaded 2.5.2b
+## Tweak
+- Update Dissonance profile (www.twitch.tv/dissonancewow)
+- Midnight: Tweak how the "Hide DRs" setting works so other DR addons relying on the Blizzard DR frames should still function correctly.
+
+# sArena Reloaded 2.5.2
+## New
+- New intro screen for first time sArena Reloaded users where you can preview and pick a layout/profile.
+- All profiles in "Streamer Profiles" section can now be previewed by mousing over the buttons.
+## Tweak
+- Fix "Force Castbar Text Width" setting to account for text size setting so it doesnt truncate for no reason or go outside.
+- Interrupt logic: Replace IsSpellKnown with IsPlayerSpell because IsSpellKnown returns false on known spells on some clients. #Blizzard
+## Bugfix
+- Fix issues with Arena/Party Target Indicators not showing up on other types of non-default party frames (Danders, ElvUI, etc). Also consider if ElvUI doesnt disable default party frames and use default party frames instead.
+
+# sArena Reloaded 2.5.1
+## New
+- Midnight: Absorbs and Overshields are back! (And again huge thanks to Verz (MiniCC, FrameSort, etc) for being the goat and helping me a bit here)
+## Bugfix
+- Fix potential nil error on login.
+
+# sArena Reloaded 2.5.0
+## New
+- Trinket Glow: Adds a glow animation around the Trinket icon when it gets used. Settings in Global -> Trinket,
+## Tweak
+- Tweak lingo about Glad Tracker requirement being 2400 when its supposed to be 2300.
+
+# sArena Reloaded 2.4.9b
+## New
+- Midnight: Glad Tracker (same as in BetterBlizzFrames). This will add tracking of your Arena/Shuffle/BG elite achievements to your honor panel and display number of wins and required for the achievement. One win above elite rating is required for it to display. It is enabled by default but can be turned off at the very bottom of Global -> Arena Frames -> Misc.
+## Bugfix
+- Fix new Cooldown Swipe Color setting on Classic versions of WoW causing a lua error due to the function accidentally being left out on Classic versions.
+- Fix potential errors caused from old custom code tweaking sArena's aura priority.
+
+# sArena Reloaded 2.4.9
+## New
+- Midnight: Added back DR leeway adjustments (due to Blizzard bug). Tldr is Blizzards DR frames can sometimes be inaccurate by around 0.3sec. This lets you set a safer value than the original intended 16 seconds. By default its set to 16.1 but 16.3 might be safer. (Global -> Diminishing Returns)
+## Tweak
+- Tweak frame strata & levels of stuff.
+- Make sure statusbar text is hidden between shuffle rounds on all frames.
+## Bugfix
+- Fix Aura Highlights potentially getting stuck on between shuffle rounds in spawn room if class icon was set to hidden.
+
+# sArena Reloaded 2.4.8
+### New
+- Cooldown Swipe Color setting (Global -> Cooldown Swipe Color)
+### Tweak
+- Support for ShadowedUnitFrames partyframes for Party/Arena Targets by void-ow@GitHub. Thank you!
+- Update Dissonance profle (www.twitch.tv/dissonancewow)
+- Tweak Spec Icon Button and Widgets FrameStrata & Levels (to avoid it showing on top of talent frame for example)
+- Midnight: Tweak handling of Party/Arena Targets so icons properly stack in one direction (no gaps or starting in wrong end)
+
+# sArena Reloaded 2.4.7c
+## Tweak
+- Added Arena Target Indicator support for ElvUI, Cell, Grid2, DandersFrames, VuhDo and default Blizzard non-raidstyle PartyFrames. If theres an addon you miss let me know.
+- Aura logic reworked a little bit so Aura Highlights can now work alone on its own if Class Icon is hidden or Auras on Class Icon is disabled.
+- Aura Highlight around Class Icon disabled while "Hide Class Icon" is enabled.
+
+# sArena Reloaded 2.4.7b
+## Tweak
+- Add back Masque support for Frame & Castbar (the bar itself) as a subsetting in Global -> Misc at the bottom (off by default).
+- Fix test mode title text being anchored to the wrong frame when growth direction of arena frames was set to up.
+
+# sArena Reloaded 2.4.7
+## New
+- Aura Highlight: Shows a glow/pixel highlight on arena frames during CC/Defensives/Important auras. (Global -> Aura Highlights). Classics: For classics this offers much more customizeability but I want to keep it similar to Midnight so whats expected from it is the same. If you have feedback on the spells on TBC/Wrath/MoP please let me hear it!
+- Healer Indicator: New Widget that just shows a cross on the healer frame (Layout -> Widgets -> Healer Indicator)
+- New "Arena/Party Target Text" setting in Widgets section. Show target name of arena/party unit.
+- Midnight: Workaround setting for Blizzard DR Bug (Global -> Diminishing Returns). This setting will to a crude workaround so you wont get fooled by a bug related to Mass Invis and DR frames not updating properly because of it. Thank Blizzard for this, I wish I could fix it properly. This is now enabled by default but can be turned off or tweaked more.
+- Added "Minimalist" texture as option due to demand.
+## Tweak
+- Midnight: New workaround for Party/Arena Target Indicators (the icons from before, not the new target text).
+- Remove Masque categories for "Castbar" (not the Icon, but the bar itself) and "Frame". I don't think these are needed or wanted but if you were using them let me know.
+## Bugfix
+- Fix mistake in Masque support code after earlier refactor causing a lua error now.
+- Fix Masque support showing Masque border on Dispel Icons in Midnight (which shouldve been hidden since dispels are not supported on Midnight)
+
 # sArena Reloaded 2.4.6
 ## New
 - Hide Class Icon setting. Hide it entirely, no class or aura.

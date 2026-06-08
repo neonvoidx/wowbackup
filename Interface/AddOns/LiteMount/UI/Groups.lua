@@ -20,6 +20,7 @@ local L = LM.L
 
 local function IsValidGroupName(text)
     if not text or text == "" then return false end
+    if text:match("^%s+") or text:match("%s+$") then return false end
     if LM.Options:IsFlag(text) then return false end
     if LM.Options:IsGroup(text) then return false end
     if tonumber(text) then return false end
@@ -40,18 +41,18 @@ StaticPopupDialogs["LM_OPTIONS_NEW_GROUP"] = {
     whileDead = 1,
     hideOnEscape = 1,
     OnAccept = function (self)
-            LiteMountGroupsPanel.GroupScrollBox.isDirty = true
+            LiteMountGroupsPanel:MarkDirty()
             local editBox = self.editBox or self:GetEditBox()
             local text = editBox:GetText()
-            LiteMountGroupsPanel.GroupScrollBox.selectedGroup = text
+            LiteMountGroupsPanel.selectedGroup = text
             LM.Options:CreateGroup(text)
         end,
     -- This is not "Cancel", it's "Global" == button2
     OnCancel = function (self)
-            LiteMountGroupsPanel.GroupScrollBox.isDirty = true
+            LiteMountGroupsPanel:MarkDirty()
             local editBox = self.editBox or self:GetEditBox()
             local text = editBox:GetText()
-            LiteMountGroupsPanel.GroupScrollBox.selectedGroup = text
+            LiteMountGroupsPanel.selectedGroup = text
             LM.Options:CreateGroup(text, true)
         end,
     -- This is cancel (button3)
@@ -95,10 +96,10 @@ StaticPopupDialogs["LM_OPTIONS_RENAME_GROUP"] = {
     whileDead = 1,
     hideOnEscape = 1,
     OnAccept = function (self)
-            LiteMountGroupsPanel.GroupScrollBox.isDirty = true
+            LiteMountGroupsPanel:MarkDirty()
             local editBox = self.editBox or self:GetEditBox()
             local text = editBox:GetText()
-            LiteMountGroupsPanel.GroupScrollBox.selectedGroup = text
+            LiteMountGroupsPanel.selectedGroup = text
             LM.Options:RenameGroup(self.data, text)
         end,
     EditBoxOnEnterPressed = function (self)
@@ -119,7 +120,10 @@ StaticPopupDialogs["LM_OPTIONS_RENAME_GROUP"] = {
             button1:SetEnabled(valid)
         end,
     OnShow = function (self)
+            local fs = self.text or self:GetTextFontString()
+            fs:SetText(format("LiteMount : %s : %s", L.LM_RENAME_GROUP, self.data))
             local editBox = self.editBox or self:GetEditBox()
+            editBox:SetText(self.data)
             editBox:SetFocus()
         end,
 }
@@ -133,7 +137,7 @@ StaticPopupDialogs["LM_OPTIONS_DELETE_GROUP"] = {
     whileDead = 1,
     hideOnEscape = 1,
     OnAccept = function (self)
-            LiteMountGroupsPanel.GroupScrollBox.isDirty = true
+            LiteMountGroupsPanel:MarkDirty()
             LM.Options:DeleteGroup(self.data)
         end,
     OnShow = function (self)
@@ -147,8 +151,108 @@ StaticPopupDialogs["LM_OPTIONS_DELETE_GROUP"] = {
 
 LiteMountGroupsPanelMixin = {}
 
+function LiteMountGroupsPanelMixin:SelectGroup(group)
+    self.selectedGroup = group
+    self:RefreshDisplay()
+end
+
+function LiteMountGroupsPanelMixin:RefreshGroupList()
+    local allGroups = LM.Options:GetGroupNames()
+
+    if not tContains(allGroups, self.selectedGroup) then
+        self.selectedGroup = allGroups[1]
+    end
+
+    self.AddGroupButton:SetParent(nil)
+    self.AddGroupButton:ClearAllPoints()
+    self.AddGroupButton:Hide()
+
+    local dp = CreateDataProvider()
+    for _, group in ipairs(allGroups) do
+        dp:Insert(group)
+    end
+    dp:Insert(self.AddGroupButton)
+    self.GroupScrollBox:SetDataProvider(dp, ScrollBoxConstants.RetainScrollPosition)
+end
+
+function LiteMountGroupsPanelMixin:SaveSettings()
+    local profile, global = LM.Options:GetRawGroups()
+    return { profile=CopyTable(profile), global=CopyTable(global) }
+end
+
+function LiteMountGroupsPanelMixin:LoadSettings(v)
+    local dontFire = true
+    LM.Options:SetRawGroups(CopyTable(v.profile), CopyTable(v.global), dontFire)
+end
+
+--[[ this doesnt' seem like a good idea
+function LiteMountGroupsPanelMixin:LoadDefaultSettings()
+    local dontFire = true
+    LM.Options:SetRawGroups({}, {}, dontFire)
+end
+]]
+
+function LiteMountGroupsPanelMixin:RefreshDisplay()
+    self:RefreshGroupList()
+    self:RefreshMountList()
+    self.ShowAllButton:SetChecked(self.showAll)
+    LiteMountSettingsPanelMixin.RefreshDisplay(self)
+end
+
+function LiteMountGroupsPanelMixin:GetDisplayedMountList(group)
+    if not group then
+        return LM.MountList:New()
+    end
+
+    local mounts = LM.UIFilter.GetFilteredMountList()
+
+    if not self.showAll then
+        return mounts:Search(function (m) return LM.Options:IsMountInGroup(m, group) end)
+    else
+        return mounts
+    end
+end
+
+function LiteMountGroupsPanelMixin:RefreshMountList()
+    local selectedGroup = LiteMountGroupsPanel.selectedGroup
+    local mounts = self:GetDisplayedMountList(selectedGroup)
+
+    local dp = CreateDataProvider()
+
+    for i = 1, #mounts, 2 do
+        dp:Insert({ mounts[i], mounts[i+1], selectedGroup=selectedGroup })
+    end
+
+    self.MountScrollBox:SetDataProvider(dp, ScrollBoxConstants.RetainScrollPosition)
+end
+
 function LiteMountGroupsPanelMixin:OnLoad()
     self.showAll = true
+
+    self.AddGroupButton:SetScript('OnClick',
+        function ()
+            self:StaticPopupShow('LM_OPTIONS_NEW_GROUP')
+        end)
+
+    self.DeleteButton:SetScript('OnClick',
+        function ()
+            local f = self.selectedGroup
+            if f then
+                self:StaticPopupShow("LM_OPTIONS_DELETE_GROUP", f, nil, f)
+            end
+        end)
+
+    self.RenameButton:SetScript('OnClick',
+        function ()
+            local f = self.selectedGroup
+            if f then self:StaticPopupShow("LM_OPTIONS_RENAME_GROUP", f, nil, f) end
+        end)
+
+    self.ShowAllButton:SetScript('OnClick',
+        function (b)
+            self.showAll = b:GetChecked() or nil
+            self:RefreshDisplay()
+        end)
 
     local view = CreateScrollBoxListLinearView(0, 0, 0, 0, 2)
     view:SetElementFactory(
@@ -163,34 +267,26 @@ function LiteMountGroupsPanelMixin:OnLoad()
     -- view:SetElementInitializer("LiteMountGroupsPanelGroupTemplate", function (button, elementData) button:Initialize(elementData) end)
     view:SetPadding(0, 0, 0, 0, 0)
     ScrollUtil.InitScrollBoxListWithScrollBar(self.GroupScrollBox, self.GroupScrollBar, view)
-    self.GroupScrollBox.update = self.GroupScrollBox.RefreshGroupList
 
     view = CreateScrollBoxListLinearView()
     view:SetElementInitializer("LiteMountGroupsPanelButtonTemplate", function (button, elementData) button:Initialize(elementData) end)
     view:SetPadding(0, 0, 0, 0, 0)
     ScrollUtil.InitScrollBoxListWithScrollBar(self.MountScrollBox, self.MountScrollBar, view)
-    self.MountScrollBox.update = self.MountScrollBox.RefreshMountList
 
-    LiteMountOptionsPanel_RegisterControl(self.GroupScrollBox)
-    LiteMountOptionsPanel_RegisterControl(self.MountScrollBox)
+    LiteMountSettingsPanelMixin.OnLoad(self)
 end
 
 function LiteMountGroupsPanelMixin:OnShow()
     LiteMountFilter:Attach(self, 'BOTTOMLEFT', self.MountScrollBox, 'TOPLEFT', 0, 15)
-    LM.UIFilter.RegisterCallback(self, "OnFilterChanged", "OnRefresh")
-    self:Update()
-    LiteMountOptionsPanel_OnShow(self)
+    LM.UIFilter.RegisterCallback(self, "OnFilterChanged", "RefreshDisplay")
+    LM.MountRegistry:RefreshMounts(true)
+    self:RefreshDisplay()
+    LiteMountSettingsPanelMixin.OnShow(self)
 end
 
 function LiteMountGroupsPanelMixin:OnHide()
     LM.UIFilter.UnregisterAllCallbacks(self)
-    LiteMountOptionsPanel_OnHide(self)
-end
-
-function LiteMountGroupsPanelMixin:Update()
-    self.GroupScrollBox:RefreshGroupList()
-    self.MountScrollBox:RefreshMountList()
-    self.ShowAll:SetChecked(self.showAll)
+    LiteMountSettingsPanelMixin.OnHide(self)
 end
 
 
@@ -212,8 +308,7 @@ LiteMountGroupsPanelGroupMixin = {}
 
 function LiteMountGroupsPanelGroupMixin:OnClick()
     if self.group then
-        LiteMountGroupsPanel.GroupScrollBox.selectedGroup = self.group
-        LiteMountGroupsPanel:Update()
+        LiteMountGroupsPanel:SelectGroup(self.group)
     end
 end
 
@@ -226,45 +321,8 @@ function LiteMountGroupsPanelGroupMixin:Initialize(elementData)
     self.Text:Show()
     self.group = elementData
 
-    local selected = self.group and self.group == LiteMountGroupsPanel.GroupScrollBox.selectedGroup
+    local selected = self.group and self.group == LiteMountGroupsPanel.selectedGroup
     self.SelectedTexture:SetShown(selected)
-end
-
-
---[[------------------------------------------------------------------------]]--
-
-LiteMountGroupsPanelGroupScrollBoxMixin = {}
-
-function LiteMountGroupsPanelGroupScrollBoxMixin:RefreshGroupList()
-    local allGroups = LM.Options:GetGroupNames()
-
-    if not tContains(allGroups, self.selectedGroup) then
-        self.selectedGroup = allGroups[1]
-    end
-
-    self.AddGroupButton:SetParent(nil)
-    self.AddGroupButton:ClearAllPoints()
-    self.AddGroupButton:Hide()
-
-    local dp = CreateDataProvider()
-    for _, group in ipairs(allGroups) do
-        dp:Insert(group)
-    end
-    dp:Insert(self.AddGroupButton)
-    self:SetDataProvider(dp, ScrollBoxConstants.RetainScrollPosition)
-end
-
-function LiteMountGroupsPanelGroupScrollBoxMixin:GetOption()
-    local profile, global = LM.Options:GetRawGroups()
-    return { CopyTable(profile), CopyTable(global) }
-end
-
-function LiteMountGroupsPanelGroupScrollBoxMixin:SetOption(v)
-    LM.Options:SetRawGroups(unpack(v))
-end
-
-function LiteMountGroupsPanelGroupScrollBoxMixin:SetControl(v)
-    self:RefreshGroupList()
 end
 
 
@@ -273,8 +331,8 @@ end
 LiteMountGroupsPanelMountMixin = {}
 
 function LiteMountGroupsPanelMountMixin:OnClick()
-    LiteMountGroupsPanel.GroupScrollBox.isDirty = true
-    local group = LiteMountGroupsPanel.GroupScrollBox.selectedGroup
+    LiteMountGroupsPanel:MarkDirty()
+    local group = LiteMountGroupsPanel.selectedGroup
     if LM.Options:IsMountInGroup(self.mount, group) then
         LM.Options:ClearMountGroup(self.mount, group)
     else
@@ -284,7 +342,6 @@ end
 
 function LiteMountGroupsPanelMountMixin:OnEnter()
     if self.mount then
-        -- GameTooltip_SetDefaultAnchor(LiteMountTooltip, UIParent)
         LiteMountTooltip:SetOwner(self, "ANCHOR_RIGHT", -16, 0)
         LiteMountTooltip:SetMount(self.mount)
     end
@@ -314,6 +371,8 @@ end
 
 --[[------------------------------------------------------------------------]]--
 
+-- This is the doublewide button with 2 mounts
+
 LiteMountGroupsPanelButtonMixin = {}
 
 function LiteMountGroupsPanelButtonMixin:Initialize(elementData)
@@ -324,40 +383,4 @@ function LiteMountGroupsPanelButtonMixin:Initialize(elementData)
     else
         self.mount2:Hide()
     end
-end
-
-
---[[------------------------------------------------------------------------]]--
-
-LiteMountGroupsPanelMountScrollBoxMixin = {}
-
-function LiteMountGroupsPanelMountScrollBoxMixin:GetDisplayedMountList(group)
-    if not group then
-        return LM.MountList:New()
-    end
-
-    local mounts = LM.UIFilter.GetFilteredMountList()
-
-    if not LiteMountGroupsPanel.showAll then
-        return mounts:Search(function (m) return LM.Options:IsMountInGroup(m, group) end)
-    else
-        return mounts
-    end
-end
-
-function LiteMountGroupsPanelMountScrollBoxMixin:RefreshMountList()
-    local selectedGroup = LiteMountGroupsPanel.GroupScrollBox.selectedGroup
-    local mounts = self:GetDisplayedMountList(selectedGroup)
-
-    local dp = CreateDataProvider()
-
-    for i = 1, #mounts, 2 do
-        dp:Insert({ mounts[i], mounts[i+1], selectedGroup=selectedGroup })
-    end
-
-    self:SetDataProvider(dp, ScrollBoxConstants.RetainScrollPosition)
-end
-
-function LiteMountGroupsPanelMountScrollBoxMixin:SetControl(v)
-    self:RefreshMountList()
 end

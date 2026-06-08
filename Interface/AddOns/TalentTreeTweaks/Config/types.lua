@@ -85,7 +85,7 @@
 --- @return NumyConfig_SliderOptions
 function Settings.CreateSliderOptions(minValue, maxValue, rate) end
 
---- @alias NumyConfig_DropDownOptions table<number, string|{ text: string, label: string?, tooltip: string?, value: any }>
+--- @alias NumyConfig_DropDownOptions table<number, string|{ text: string, label: string?, tooltip: string?, value: any, _actualValue: any? }>
 
 -------------------------------------------------------------
 --- @class NumyConfig_AceAddon: AceAddon

@@ -18,6 +18,9 @@ local isOurInspect        = false
 local needUpdate          = true
 local inspectStarted      = nil
 local callbacks           = {}
+-- Lazily built map of "Spec Name Class Name" -> specId for tooltip matching.
+-- e.g. "Discipline Priest" -> 256, "Holy Paladin" -> 65, etc.
+local tooltipSpecMap = nil
 
 ---@class Inspector
 local M = {}
@@ -47,10 +50,6 @@ local function OnSpecInformationChanged()
 		pcall(callback)
 	end
 end
-
--- Lazily built map of "Spec Name Class Name" → specId for tooltip matching.
--- e.g. "Discipline Priest" → 256, "Holy Paladin" → 65, etc.
-local tooltipSpecMap = nil
 
 local function GetTooltipSpecMap()
 	if tooltipSpecMap then
@@ -108,6 +107,14 @@ local function SpecFromTooltip(unit)
 	return nil
 end
 
+-- UnitGUID throws "Player/pet name are not valid arguments for this call" when called
+-- on an enemy unit by name. The error message is misleading since UnitGUID does accept
+-- unit names in general -- pcall is the only way to handle this gracefully.
+local function SafeUnitGUID(unit)
+	local ok, guid = pcall(UnitGUID, unit)
+	return ok and guid or nil
+end
+
 local function PurgeOldEntries()
 	local now = Now()
 	for guid, entry in pairs(unitGuidToSpec) do
@@ -118,7 +125,7 @@ local function PurgeOldEntries()
 end
 
 local function EnsureCacheEntry(unit)
-	local guid = UnitGUID(unit)
+	local guid = SafeUnitGUID(unit)
 	if not guid or issecretvalue(guid) then
 		return nil
 	end
@@ -151,7 +158,7 @@ local function Inspect(unit)
 end
 
 local function InvalidateEntry(unit)
-	local guid = UnitGUID(unit)
+	local guid = SafeUnitGUID(unit)
 	if not guid or issecretvalue(guid) then
 		return
 	end
@@ -164,6 +171,10 @@ local function OnClearInspect()
 end
 
 local function OnNotifyInspect(unit)
+	local guid = SafeUnitGUID(unit)
+	if not guid or issecretvalue(guid) then
+		return
+	end
 	-- Ignore inspects of non-friendly units (e.g. enemy players inspected by other addons).
 	if not UnitIsFriend(unit, "player") then
 		return
@@ -331,7 +342,7 @@ function M:Init()
 		return
 	end
 
-	-- Persist the GUID→spec cache in saved variables so it survives reloads.
+	-- Persist the GUID->spec cache in saved variables so it survives reloads.
 	local db = addon.Core.Framework:GetSavedVars()
 	db.SpecCache = db.SpecCache or {}
 	unitGuidToSpec = db.SpecCache

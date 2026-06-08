@@ -10,6 +10,7 @@ addon.SharedMedia = addon.SharedMedia or {}
 
 local effectPath = "Interface\\AddOns\\" .. addonName .. "\\Sounds\\Effects\\"
 local voiceoverPath = "Interface\\AddOns\\" .. addonName .. "\\Sounds\\Voiceovers\\"
+local deepVoicePath = voiceoverPath .. "Neutral\\"
 
 addon.SharedMedia.sounds = {
 	-- Soundeffects
@@ -302,8 +303,11 @@ addon.SharedMedia.sounds = {
 	{ key = "Puddles", label = "EQOL: Puddles", path = voiceoverPath .. "Puddles.ogg" },
 	{ key = "Lines", label = "EQOL: Lines", path = voiceoverPath .. "Lines.ogg" },
 	{ key = "Healers", label = "EQOL: Healers", path = voiceoverPath .. "Healers.ogg" },
+	{ key = "Healer dead", label = "EQOL: Healer dead", path = voiceoverPath .. "Healer dead.ogg" },
 	{ key = "Tanks", label = "EQOL: Tanks", path = voiceoverPath .. "Tanks.ogg" },
+	{ key = "Tank dead", label = "EQOL: Tank dead", path = voiceoverPath .. "Tank dead.ogg" },
 	{ key = "DPS", label = "EQOL: DPS", path = voiceoverPath .. "DPS.ogg" },
+	{ key = "DPS dead", label = "EQOL: DPS dead", path = voiceoverPath .. "DPS dead.ogg" },
 	{ key = "Taunt swap", label = "EQOL: Taunt swap", path = voiceoverPath .. "Taunt swap.ogg" },
 	{ key = "Pull in five", label = "EQOL: Pull in five", path = voiceoverPath .. "Pull in five.ogg" },
 	{ key = "Pull in ten", label = "EQOL: Pull in ten", path = voiceoverPath .. "Pull in ten.ogg" },
@@ -326,3 +330,35 @@ addon.SharedMedia.sounds = {
 local function labelKey(lbl) return (lbl:gsub("^EQOL:%s*", "")):lower() end
 
 table.sort(addon.SharedMedia.sounds, function(a, b) return labelKey(a.label) < labelKey(b.label) end)
+
+local soundsWithoutDeepVoiceVariant = {
+	["AMZ.ogg"] = true,
+	["Ancestral Call.ogg"] = true,
+	["AoE.ogg"] = true,
+	["Blood Fury.ogg"] = true,
+	["Cheat Death.ogg"] = true,
+	["Enter Follower Dungeon.ogg"] = true,
+	["LoS.ogg"] = true,
+	["Mana Potion.ogg"] = true,
+	["PI.ogg"] = true,
+	["PS.ogg"] = true,
+	["SLT.ogg"] = true,
+	["SS.ogg"] = true,
+	["Stop DPS.ogg"] = true,
+	["Will of the Forsaken.ogg"] = true,
+	["Will to Survive.ogg"] = true,
+}
+
+addon.SharedMedia.deepVoiceSounds = {}
+for _, sound in ipairs(addon.SharedMedia.sounds) do
+	local fileName = sound.path:match("([^\\]+)$")
+	if fileName and not soundsWithoutDeepVoiceVariant[fileName] and sound.path:find(voiceoverPath, 1, true) == 1 then
+		table.insert(addon.SharedMedia.deepVoiceSounds, {
+			key = "DeepVoice:" .. sound.key,
+			label = sound.label .. " (deep voice)",
+			path = deepVoicePath .. fileName,
+		})
+	end
+end
+
+table.sort(addon.SharedMedia.deepVoiceSounds, function(a, b) return labelKey(a.label) < labelKey(b.label) end)

@@ -1178,7 +1178,7 @@ if not Ignore.tooltipHookInstalled then
 		realm = realm and realm ~= "" and realm or (GetRealmName()):gsub("%s", "")
 		local entry = Ignore:CheckIgnore(name .. "-" .. realm)
 		if entry and entry.note and entry.note ~= "" then
-			C_Timer.After(0, function()
+			RunNextFrame(function()
 				local maxChars = (addon and addon.db and addon.db.ignoreTooltipMaxChars) or 100
 				local wordsPerLine = (addon and addon.db and addon.db.ignoreTooltipWordsPerLine) or 5
 				local text = EQOL_FormatNote(entry.note, maxChars, wordsPerLine)

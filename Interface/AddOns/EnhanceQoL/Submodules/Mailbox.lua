@@ -295,7 +295,7 @@ local function ensureHooks()
 
 	local function onMailboxEvent(_, event)
 		if event == "MAIL_SHOW" then
-			C_Timer.After(0, updateMailboxVisibilityDeferred)
+			RunNextFrame(updateMailboxVisibilityDeferred)
 		elseif event == "MAIL_SEND_INFO_UPDATE" then
 			if addon.Mailbox then addon.Mailbox:RefreshList() end
 		else -- MAIL_CLOSED
@@ -580,7 +580,7 @@ function EQOLMailboxFrame_OnLoad(frame)
 	-- Initial build
 	BuildFiltered()
 	-- Ensure rows even if OnLoad sizing was 0
-	if not Mailbox.rows or #Mailbox.rows == 0 then C_Timer.After(0, mailboxEnsureRowsAndRefresh) end
+	if not Mailbox.rows or #Mailbox.rows == 0 then RunNextFrame(mailboxEnsureRowsAndRefresh) end
 	Mailbox:UpdateRows()
 	Mailbox:UpdateVisibility()
 end

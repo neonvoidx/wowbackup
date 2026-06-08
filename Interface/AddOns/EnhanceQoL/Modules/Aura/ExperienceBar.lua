@@ -67,6 +67,7 @@ ExperienceBar.defaults = ExperienceBar.defaults
 		fillDirection = "LEFT",
 		anchorRelativeFrame = ANCHOR_TARGET_UI,
 		anchorMatchRelativeWidth = false,
+		anchorMatchRelativeWidthOffset = 0,
 		anchorPoint = "CENTER",
 		anchorRelativePoint = "CENTER",
 		anchorOffsetX = 0,
@@ -105,6 +106,7 @@ local DB_BORDER_OFFSET = "xpBarBorderOffset"
 local DB_FILL_DIRECTION = "xpBarFillDirection"
 local DB_ANCHOR_RELATIVE_FRAME = "xpBarAnchorTarget"
 local DB_ANCHOR_MATCH_WIDTH = "xpBarAnchorMatchWidth"
+local DB_ANCHOR_MATCH_WIDTH_OFFSET = "xpBarAnchorMatchWidthOffset"
 local DB_ANCHOR_POINT = "xpBarAnchorPoint"
 local DB_ANCHOR_RELATIVE_POINT = "xpBarAnchorRelativePoint"
 local DB_ANCHOR_OFFSET_X = "xpBarAnchorOffsetX"
@@ -296,12 +298,29 @@ end
 local function resolveFontPath(key)
 	local defaultFont = defaultFontFace()
 	if not key or key == "" or key == "DEFAULT" or key == globalFontConfigKey() then return defaultFont end
+	if addon.functions and addon.functions.ResolveFontFace then return addon.functions.ResolveFontFace(key, defaultFont) or defaultFont end
 	if LSM and LSM.Fetch then
 		local font = LSM:Fetch("font", key, true)
 		if font then return font end
 	end
-	if isLikelyFilePath(key) then return key end
+	if LSM and LSM.HashTable then
+		local hash = LSM:HashTable("font") or {}
+		for _, fontPath in pairs(hash) do
+			if fontPath == key then return key end
+		end
+	end
 	return defaultFont
+end
+
+local function setFontWithFallback(fontString, fontPath, size, outline)
+	if not (fontString and fontString.SetFont and fontPath) then return false end
+	if addon.functions and addon.functions.SetFontWithFallback then return addon.functions.SetFontWithFallback(fontString, fontPath, size, outline, defaultFontFace()) end
+	local ok, applied = pcall(fontString.SetFont, fontString, fontPath, size, outline)
+	if ok and applied ~= false then return true end
+	local fallback = defaultFontFace()
+	if not fallback or fallback == fontPath then return false end
+	ok, applied = pcall(fontString.SetFont, fontString, fallback, size, outline)
+	return ok and applied ~= false
 end
 
 local function normalizeTextOutline(value)
@@ -312,6 +331,22 @@ local function normalizeTextOutline(value)
 	if value == "THICKOUTLINE" then return "THICKOUTLINE" end
 	if value == "MONOCHROME" then return "MONOCHROME" end
 	return "NONE"
+end
+
+local function resolveTextOutlineFlags(value, fallback)
+	if addon.functions and addon.functions.ResolveFontStyle then
+		local _, flags = addon.functions.ResolveFontStyle(value, fallback or defaults.textOutline or "OUTLINE")
+		return flags
+	end
+	if addon.functions and addon.functions.GetFontFlagsForStyle then
+		local flags = addon.functions.GetFontFlagsForStyle(value, fallback or defaults.textOutline or "OUTLINE")
+		if type(flags) == "string" then return flags end
+	end
+	local outline = normalizeTextOutline(value)
+	if outline == "__EQOL_GLOBAL_FONT_STYLE__" then outline = normalizeTextOutline(fallback or defaults.textOutline or "OUTLINE") end
+	if outline == "__EQOL_GLOBAL_FONT_STYLE__" then outline = "OUTLINE" end
+	if outline == "NONE" then return "" end
+	return outline
 end
 
 local function normalizeFillDirection(value)
@@ -752,6 +787,8 @@ end
 
 function ExperienceBar:GetAnchorMatchWidth() return getValue(DB_ANCHOR_MATCH_WIDTH, defaults.anchorMatchRelativeWidth == true) == true end
 
+function ExperienceBar:GetAnchorMatchWidthOffset() return clamp(getValue(DB_ANCHOR_MATCH_WIDTH_OFFSET, defaults.anchorMatchRelativeWidthOffset or 0), -200, 200) end
+
 function ExperienceBar:GetAnchorPoint() return normalizeAnchorPoint(getValue(DB_ANCHOR_POINT, defaults.anchorPoint), defaults.anchorPoint) end
 
 function ExperienceBar:GetAnchorRelativePoint()
@@ -915,12 +952,8 @@ local widthSyncQueued = false
 
 function ExperienceBar:ScheduleMatchedWidthSync()
 	if widthSyncQueued then return end
-	if not (C_Timer and C_Timer.After) then
-		self:ApplySize()
-		return
-	end
 	widthSyncQueued = true
-	C_Timer.After(0, function()
+	RunNextFrame(function()
 		widthSyncQueued = false
 		if not (addon and addon.db and addon.db[DB_ENABLED] == true) then return end
 		ExperienceBar:ApplySize()
@@ -972,7 +1005,7 @@ function ExperienceBar:GetResolvedWidth()
 	if not (relativeFrame and relativeFrame.GetWidth) then return width end
 	local relativeWidth = tonumber(relativeFrame:GetWidth()) or 0
 	if relativeWidth <= 0 then return width end
-	return math.max(BAR_SIZE_MIN, relativeWidth)
+	return math.max(BAR_SIZE_MIN, relativeWidth + self:GetAnchorMatchWidthOffset())
 end
 
 function ExperienceBar:ApplyCurrentFillColor(hasRested)
@@ -1091,20 +1124,19 @@ function ExperienceBar:ApplyAppearance()
 
 	local font = resolveFontPath(self:GetTextFont())
 	local outlineChoice = self:GetTextOutline()
-	local outline = addon.functions and addon.functions.GetFontFlagsForStyle and addon.functions.GetFontFlagsForStyle(outlineChoice, defaults.textOutline or "OUTLINE")
-		or (outlineChoice == "NONE" and "" or outlineChoice)
+	local outline = resolveTextOutlineFlags(outlineChoice, defaults.textOutline or "OUTLINE")
 	local size = self:GetTextSize()
 	local tr, tg, tb, ta = self:GetTextColor()
 	for _, key in ipairs({ "textLeft", "textCenter", "textRight" }) do
 		local fs = self.frame[key]
 		if fs then
-			fs:SetFont(font, size, outline)
+			setFontWithFallback(fs, font, size, outline)
 			if addon.functions and addon.functions.ApplyFontStyleShadow then addon.functions.ApplyFontStyleShadow(fs, outlineChoice, defaults.textOutline or "OUTLINE") end
 			fs:SetTextColor(tr or 1, tg or 1, tb or 1, ta or 1)
 		end
 	end
 	if self.frame.editLabel then
-		self.frame.editLabel:SetFont(font, math.max(size, 11), outline)
+		setFontWithFallback(self.frame.editLabel, font, math.max(size, 11), outline)
 		if addon.functions and addon.functions.ApplyFontStyleShadow then
 			addon.functions.ApplyFontStyleShadow(self.frame.editLabel, outlineChoice, defaults.textOutline or "OUTLINE")
 		end
@@ -1392,13 +1424,10 @@ end
 function ExperienceBar:UpdateSoon()
 	if not self:IsEnabled() then return end
 	self:StartBootstrapRefresh()
-	if not (C_Timer and C_Timer.After) then
-		self:UpdateXP()
-		return
-	end
-	C_Timer.After(0, function()
+	RunNextFrame(function()
 		if ExperienceBar and ExperienceBar.IsEnabled and ExperienceBar:IsEnabled() then ExperienceBar:UpdateXP() end
 	end)
+	if not (C_Timer and C_Timer.After) then return end
 	C_Timer.After(0.2, function()
 		if ExperienceBar and ExperienceBar.IsEnabled and ExperienceBar:IsEnabled() then ExperienceBar:UpdateXP() end
 	end)
@@ -1493,6 +1522,7 @@ function ExperienceBar:BuildLayoutRecordFromProfile()
 	record.fillDirection = self:GetFillDirection()
 	record.anchorRelativeFrame = self:GetAnchorRelativeFrame()
 	record.anchorMatchWidth = self:GetAnchorMatchWidth()
+	record.anchorMatchWidthOffset = self:GetAnchorMatchWidthOffset()
 	record.textEnabled = self:GetTextEnabled()
 	record.textLeftMode = self:GetTextLeftMode()
 	record.textCenterMode = self:GetTextCenterMode()
@@ -1564,6 +1594,7 @@ function ExperienceBar:ApplyLayoutData(data)
 	elseif data.anchorMatchRelativeWidth ~= nil then
 		anchorMatchWidth = data.anchorMatchRelativeWidth == true
 	end
+	local anchorMatchWidthOffset = clamp(data.anchorMatchWidthOffset or data.anchorMatchRelativeWidthOffset or addon.db[DB_ANCHOR_MATCH_WIDTH_OFFSET] or defaults.anchorMatchRelativeWidthOffset or 0, -200, 200)
 	local anchorPoint = normalizeAnchorPoint(data.point or addon.db[DB_ANCHOR_POINT], defaults.anchorPoint)
 	local anchorRelativePoint = normalizeAnchorPoint(data.relativePoint or addon.db[DB_ANCHOR_RELATIVE_POINT], anchorPoint)
 	local anchorOffsetX = normalizeAnchorOffset(data.x ~= nil and data.x or addon.db[DB_ANCHOR_OFFSET_X], defaults.anchorOffsetX)
@@ -1603,6 +1634,7 @@ function ExperienceBar:ApplyLayoutData(data)
 	local prevAnchorRelativeFrame = addon.db[DB_ANCHOR_RELATIVE_FRAME]
 	addon.db[DB_ANCHOR_RELATIVE_FRAME] = anchorRelativeFrame
 	addon.db[DB_ANCHOR_MATCH_WIDTH] = anchorMatchWidth and true or false
+	addon.db[DB_ANCHOR_MATCH_WIDTH_OFFSET] = anchorMatchWidthOffset
 	addon.db[DB_ANCHOR_POINT] = anchorPoint
 	addon.db[DB_ANCHOR_RELATIVE_POINT] = anchorRelativePoint
 	addon.db[DB_ANCHOR_OFFSET_X] = anchorOffsetX
@@ -1723,6 +1755,10 @@ local function applySetting(field, value)
 		addon.db[DB_ANCHOR_MATCH_WIDTH] = enabled and true or false
 		value = enabled
 		refreshSettingsUI()
+	elseif field == "anchorMatchWidthOffset" then
+		local offset = clamp(value, -200, 200)
+		addon.db[DB_ANCHOR_MATCH_WIDTH_OFFSET] = offset
+		value = offset
 	elseif field == "anchorPoint" then
 		local point = normalizeAnchorPoint(value, defaults.anchorPoint)
 		addon.db[DB_ANCHOR_POINT] = point
@@ -1846,7 +1882,7 @@ function ExperienceBar:RegisterEditMode(frame)
 					local order = root.order or {}
 					local function addPanelEntry(panelId, panel)
 						if not panel or panel.enabled == false then return end
-						local label = string.format("Panel %s: %s", tostring(panelId), panel.name or "Cooldown Panel")
+							local label = (L["cooldownPanelReferenceLabel"]):format(tostring(panelId), panel.name or L["cooldownPanelDefaultName"])
 						add("EQOL_CooldownPanel" .. tostring(panelId), label)
 					end
 					if #order > 0 then
@@ -1967,6 +2003,20 @@ function ExperienceBar:RegisterEditMode(frame)
 				get = function() return ExperienceBar:GetAnchorMatchWidth() end,
 				set = function(_, value) applySetting("anchorMatchWidth", value) end,
 				isEnabled = function() return not ExperienceBar:AnchorUsesUIParent() end,
+			},
+			{
+				name = L["Offset"] or "Offset",
+				kind = SettingType.Slider,
+				field = "anchorMatchWidthOffset",
+				parentId = "xpBarAnchor",
+				minValue = -200,
+				maxValue = 200,
+				valueStep = 1,
+				allowInput = true,
+				default = defaults.anchorMatchRelativeWidthOffset or 0,
+				get = function() return ExperienceBar:GetAnchorMatchWidthOffset() end,
+				set = function(_, value) applySetting("anchorMatchWidthOffset", value) end,
+				isEnabled = function() return ExperienceBar:AnchorUsesMatchedWidth() end,
 			},
 			{
 				name = L["Visibility"] or "Visibility",
@@ -2378,6 +2428,7 @@ function ExperienceBar:RegisterEditMode(frame)
 			fillDirection = self:GetFillDirection(),
 			anchorRelativeFrame = self:GetAnchorRelativeFrame(),
 			anchorMatchWidth = self:GetAnchorMatchWidth(),
+			anchorMatchWidthOffset = self:GetAnchorMatchWidthOffset(),
 			textEnabled = self:GetTextEnabled(),
 			textLeftMode = self:GetTextLeftMode(),
 			textCenterMode = self:GetTextCenterMode(),

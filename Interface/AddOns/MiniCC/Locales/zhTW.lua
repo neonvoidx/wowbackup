@@ -2,11 +2,7 @@
 local _, addon = ...
 local L = addon.L
 
-if GetLocale() ~= "zhTW" then
-	return
-end
-
-L:SetStrings({
+L:RegisterLocale("zhTW", {
 
 	-- Shared strings
 	["Any"] = "任何",
@@ -35,9 +31,10 @@ L:SetStrings({
 	["Grow"] = "增長",
 	["Icon Padding"] = "圖示間距",
 	["Icon Size"] = "圖示大小",
+	["Icon Size (%)"] = "圖示大小 (%)",
+	["Relative size"] = "相對大小",
+	["Sizes the icon as a percentage of the unit frame's height instead of in pixels."] = "依單位框架高度的百分比調整圖示大小，而非使用像素。",
 	["Important"] = "重要",
-	["Important Notes"] = "重要說明",
-	["Limitations:"] = "限制：",
 	["Max Icons"] = "最大圖示",
 	["Notification"] = "通知",
 	["Offset X"] = "X偏移",
@@ -117,15 +114,17 @@ L:SetStrings({
 	["Announce spell names using text-to-speech when they are cast."] = "施放法術時使用語音合成播報法術名稱。",
 	["Defensive Spells"] = "防禦法術",
 	["Important Spells"] = "重要法術",
-	["Include Defensives"] = "包括防禦技能",
+	["Include defensives"] = "包括防禦技能",
 	["Includes defensives in the alerts."] = "在警報中包括防禦技能。",
 	["Only show alerts for your target and focus in battlegrounds and the open world."] = "在戰場和開放世界中僅顯示目標和焦點的提示。",
 	["Play a sound when a defensive spell is pressed."] = "使用防禦法術時播放聲音。",
 	["Play a sound when an important spell is pressed."] = "使用重要法術時播放聲音。",
 	["Show alert icons in the alerts region."] = "在警報區域顯示警報圖示.",
 	["Show CC icons when healer is CC'd."] = "治療者被控制時顯示CC圖示。",
+	["Show defensive alerts on a separate, movable bar."] = "在獨立的可移動條上顯示防禦警報。",
 	["Show icons"] = "顯示圖示",
 	["Shows CC and other important spell alerts."] = "顯示控制和其他重要法術警報。",
+	["Split bars"] = "分割條",
 	["Sound"] = "聲音",
 	["Plays a sound when an enemy presses an important or defensive spell."] = "當敵人使用重要或防禦法術時播放聲音。",
 	["Sound Alerts"] = "聲音提醒",
@@ -169,10 +168,12 @@ L:SetStrings({
 	["Exclude yourself from showing trinket icons."] = "將自己從顯示飾品圖示中排除。",
 	["Show CC"] = "顯示CC",
 	["Show CC icons."] = "顯示控制圖示。",
-	["Show Defensives"] = "顯示防禦技能",
+	["Show defensives"] = "顯示防禦技能",
 	["Show defensive spell icons."] = "顯示防禦法術圖示。",
-	["Show Important"] = "顯示重要技能",
+	["Show important"] = "顯示重要技能",
 	["Show important spell icons."] = "顯示重要法術圖示。",
+	["Show interrupts"] = "顯示打斷",
+	["Show an icon when a friendly unit gets interrupted."] = "當友方單位被打斷時顯示圖示。",
 	["Shows CC, defensives, and important auras as one set of icons on party/raid frames."] = "在隊伍/團隊框架上將CC、防禦技能和重要光環顯示為一組圖示。",
 	["Tip: Disable the CC module for BGs and enable CC within this module."] = "提示：在戰場中停用CC模組，並在此模組中啟用CC。",
 
@@ -185,15 +186,8 @@ L:SetStrings({
 	["Text Size"] = "文字大小",
 
 	-- Kick Timer tab
-	[" - Currently only works inside arena (doesn't work in duels/world, will add this later)."] = " - 目前僅在競技場內工作（在決鬥/世界中無效，將來會添加）。",
-	[" - Doesn't work if the enemy misses kick (still investigating potential workaround/solution)."] = " - 如果敵人打斷未命中則無效（仍在研究潛在的解決方案）。",
-	["As you can tell it's not guaranteed to be accurate, but so far from our testing it's pretty damn good with ancedotally a 95%+ success rate."] = "如你所見，它不能保證準確，但到目前為止我們的測試顯示它非常好，軼事性成功率95%+。",
-	["For example you are facing 3 enemies who are all pressing buttons."] = "例如，你面對的3個敵人都在按按鈕。",
-	["How does it work? It guesses who kicked you by correlating enemy action events against interrupt events."] = "它如何工作？它透過關聯敵人行動事件和打斷事件來猜測是誰打斷了你。",
 	["Kick timer"] = "斷法計時器",
 	["Kick timer_Short"] = "打斷",
-	["Still working on improving this, so stay tuned for updates."] = "仍在努力改進這一功能，請關注更新。",
-	["You just got kicked and the last enemy who successfully landed a spell was enemy A, therefore we deduce it was enemy A who kicked you."] = "你剛剛被打斷，最後一個成功釋放法術的敵人是敵人A，因此我們推斷是敵人A打斷了你。",
 
 	-- Nameplates tab
 	["Change the colour of the glow/border based on dispel type (e.g., blue for magic, red for physical)."] = "根據驅散類型更改發光/邊框的顏色（例如，魔法為藍色，物理為紅色）。",
@@ -235,7 +229,7 @@ L:SetStrings({
 	["Friendly Cooldowns_Short"] = "友方冷卻",
 	["Icon Spacing"] = "圖示間隔",
 	["Spells"] = "法術",
-	["Shows PvP trinket and friendly defensive cooldowns on party/raid frames after a defensive expires."] = "防禦技能到期後，在小隊/團隊框架上顯示PvP飾品和友方防禦技能的冷卻時間。",
+	["Shows PvP trinket and friendly defensive cooldowns on party/raid frames."] = "防禦技能到期後，在小隊/團隊框架上顯示PvP飾品和友方防禦技能的冷卻時間。",
 ["Excludes yourself from being tracked."] = "將自己排除在追蹤之外。",
 	["Milliseconds"] = "毫秒",
 	["Milliseconds Threshold"] = "毫秒閾值",
@@ -257,6 +251,8 @@ L:SetStrings({
 	["When Grow is Down, sets how many icons appear per row before wrapping. Useful for horizontal party frames."] = "當增長方向為向下時，設定每行顯示的圖示數量。適用於水平隊伍框架。",
 
 	-- Enemy Cooldown Tracker tab
+	["Enemy Cooldowns"] = "敵方冷卻",
+	["Enemy Cooldowns_Short"] = "敵方冷卻",
 	["Shows enemy arena opponent defensive and offensive cooldowns after their buffs expire."] = "在敵方競技場對手的增益效果消失後，顯示其防禦性和進攻性冷卻時間。",
 	["Display"] = "顯示",
 	["Layout Mode"] = "版面模式",
@@ -265,12 +261,15 @@ L:SetStrings({
 	["Linear Bar Position"] = "線性條位置",
 	["Entry Spacing"] = "項目間距",
 	["Vertical spacing between each enemy's icon row in Linear mode."] = "線性模式中各敵人圖示列之間的垂直間距。",
+	["Always show cooldowns"] = "始終顯示冷卻",
+	["Always display every cooldown for the enemy's specialization, faded when not on cooldown and fully opaque while active."] = "始終顯示敵人專精的所有冷卻，未在冷卻時變暗，啟用時完全不透明。",
+	[" - Enemy cooldowns can now always be shown (faded when off cooldown) via the 'Always show cooldowns' option, plus a new Split layout mode (offensive cooldowns on the linear bar, defensive cooldowns on the arena frames)."] = " - 現在可透過「始終顯示冷卻」選項始終顯示敵方冷卻（未冷卻時變暗），並新增分離版面模式（進攻冷卻顯示在線性條上，防禦冷卻顯示在競技場框架上）。",
 	["Enable enemy cooldown tracking in arena."] = "在競技場中啟用敵人冷卻追蹤。",
 	["Show spell tooltips when hovering over cooldown icons."] = "將滑鼠懸停在冷卻圖示上時顯示法術提示。",
 	["Reverse the cooldown swipe animation direction on icons."] = "反轉圖示上冷卻掃描動畫的方向。",
 	["The display size of each cooldown icon in pixels."] = "每個冷卻圖示的顯示尺寸（像素）。",
 	["The spacing in pixels between each cooldown icon."] = "每個冷卻圖示之間的間距（像素）。",
-	["Arena Frames: anchors icons next to each enemy's arena frame. Linear Bar: displays all cooldowns in a single combined bar."] = "競技場框架：將圖示固定在每個敵人的競技場框架旁邊。線性條：在單個組合條中顯示所有冷卻。",
+	["Arena Frames: anchors icons next to each enemy's arena frame. Linear Bar: displays all cooldowns in a single combined bar. Split: shows offensive cooldowns on the linear bar and defensive cooldowns on the arena frames."] = "競技場框架：將圖示固定在每個敵人的競技場框架旁邊。線性條：在單個組合條中顯示所有冷卻。分離：在線性條上顯示進攻冷卻，在競技場框架上顯示防禦冷卻。",
 	["The direction cooldown icons grow from the arena frame anchor point."] = "冷卻圖示從競技場框架錨點增長的方向。",
 	["Horizontal pixel offset from the arena frame anchor point."] = "距競技場框架錨點的水平像素偏移。",
 	["Vertical pixel offset from the arena frame anchor point."] = "距競技場框架錨點的垂直像素偏移。",
@@ -283,6 +282,7 @@ L:SetStrings({
 	["Precognition"] = "預知",
 	["So if by chance you happen to have some other 4 second important self buff then it would also show that icon sorry."] = "如果你恰好有其他4秒的重要自身增益效果，該圖示也會顯示，敬請見諒。",
 	["This isn't precision perfect but it should be close enough."] = "這並非完全精確，但應該足夠接近。",
+	["Also tracks Preservation Evoker's Nullifying Shroud (3 second important self buff)."] = "同時追蹤保護系喚能師的「廢除之幕」（3秒重要自身增益效果）。",
 
 	-- Other Addons tab
 	["Other Mini Addons"] = "其他Mini插件",
@@ -301,7 +301,14 @@ L:SetStrings({
 	[" - Added precognition guesser module that shows when you get precog."] = " - 新增了預知猜測模組，當你獲得預知效果時顯示。",
 	[" - Added profile import/export feature."] = " - 新增了設定檔匯入/匯出功能。",
 	[" - Added friendly cooldown guessing module. You can now somewhat track your team mates cooldowns!"] = " - 新增了友方冷卻時間猜測模組。現在你可以大致追蹤隊友的冷卻時間！",
-	["HEADS UP: Blizzard is making changes in patch 12.0.5 (April 21st) that will severely reduce the accuracy of friendly CD tracking, kill cooldown glow on press, and completely remove PvP enemy kick tracking. So please be aware that tracking will lose accuracy soon."] = "注意：暴雪將在12.0.5版本（4月21日）進行更改，這將嚴重降低友方CD追蹤的準確性、取消按鍵時的冷卻發光效果，並完全移除PvP敵方打斷追蹤。因此請注意，追蹤精度即將下降。",
+	["With the new Blizzard restrictions in 12.0.5, this is what has changed in MiniCC.\n\nThe good news:\n* Cooldown tracking still works mostly fine in arena and dungeons.\n* Added support for multiple spell charges (e.g. 2x Pain Suppression, 2x Blur) for both friendly and enemy CDs.\n\nThe bad news:\n* Friendly externals no longer track in Raids and Battlegrounds.\n* Predictive glows are less reliable.\n* PvP kick tracking can no longer identify the kicker. Now just displays a generic icon using the shortest known enemy kick cooldown.\n\nWe've put a lot of work into this update, but there may still be issues. \nPlease report any bugs you find in our Discord so we can address them."] = "隨著 12.0.5 版本的新暴雪限制，MiniCC 發生了以下變化。\n\n好消息：\n* 冷卻時間追蹤在競技場和地下城中仍然基本正常運行。\n* 為友方和敵方 CD 添加了多層法术充能支援（例妋 2x 痛苦壓制、2x 模糊）。\n\n壞消息：\n* 友方外部技能在團隊副本和戰場中不再被追蹤。\n* 預測光效變得不那麼可靠。\n* PvP 打斷追蹤無法再識別打斷者。現在僅顯示使用最短已知敵方打斷冷卻時間的通用圖示。\n\n我們在這次更新上投入了大量工作，但可能仍有問題。 \n請在我們的 Discord 中回報您發現的任何錯誤，以便我們解決。",
 	[" - Added enemy cooldown tracking module."] = " - 新增敵人冷卻追蹤模組。",
 	["MiniCC - What's New?"] = "MiniCC - 有什麼新鮮事？",
+
+	-- Language option
+	["Language"] = "語言",
+	["Language override"] = "語言覆蓋",
+	["Override the addon language. By default, your game client language is used."] = "覆蓋插件語言。預設使用遊戲客戶端語言。",
+	["Auto (client language)"] = "自動（客戶端語言）",
+	["Language changed. Reload UI now?"] = "語言已變更。立即重新載入介面嗎？",
 })

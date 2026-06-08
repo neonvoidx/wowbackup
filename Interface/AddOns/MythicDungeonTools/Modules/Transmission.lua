@@ -290,6 +290,7 @@ local function filterFunc(chatFrame, event, msg, player, l, cs, t, flag, channel
 end
 
 local presetCommPrefix = "MDTPreset"
+MDT.versionCheckPrefix = "MDTVersion"
 
 MDT.liveSessionPrefixes = {
   ["enabled"] = "MDTLiveEnabled",
@@ -308,11 +309,13 @@ MDT.liveSessionPrefixes = {
   ["reqPre"] = "MDTLiveReqPre",
   ["difficulty"] = "MDTLiveLvl",
   ["poiAssignment"] = "MDTPOIAssignment",
+  ["focusMarkerAssignment"] = "MDTFocusMark",
 }
 
 ---@diagnostic disable-next-line: duplicate-set-field
 function MDTcommsObject:OnEnable()
   self:RegisterComm(presetCommPrefix)
+  self:RegisterComm(MDT.versionCheckPrefix)
   for _, prefix in pairs(MDT.liveSessionPrefixes) do
     self:RegisterComm(prefix)
   end
@@ -322,6 +325,12 @@ function MDTcommsObject:OnEnable()
   ChatFrame_AddMessageEventFilter("CHAT_MSG_PARTY_LEADER", filterFunc)
   ChatFrame_AddMessageEventFilter("CHAT_MSG_RAID", filterFunc)
   ChatFrame_AddMessageEventFilter("CHAT_MSG_RAID_LEADER", filterFunc)
+end
+
+local function showMapSectionIfNeeded()
+  if MDT.IsMapSectionActive and MDT.SetCurrentSection and not MDT:IsMapSectionActive() then
+    MDT:SetCurrentSection("maps")
+  end
 end
 
 --handle preset chat link clicks
@@ -334,9 +343,13 @@ hooksecurefunc("SetItemRef", function(link, text)
     local playerName, playerRealm = UnitFullName("player")
     playerName = playerName.."-"..playerRealm
     if sender == playerName then
-      MDT:Async(function() MDT:ShowInterfaceInternal(true) end, "showInterface")
+      MDT:Async(function()
+        showMapSectionIfNeeded()
+        MDT:ShowInterfaceInternal(true)
+      end, "showInterface")
     else
       MDT:Async(function()
+        showMapSectionIfNeeded()
         MDT:ShowInterfaceInternal(true)
         MDT:LiveSession_Enable()
       end, "showInterfaceLive")
@@ -359,6 +372,7 @@ hooksecurefunc("SetItemRef", function(link, text)
     local preset = MDT.transmissionCache[sender] and MDT.transmissionCache[sender][displayName]
     if preset and type(preset) == "table" then
       MDT:Async(function()
+        showMapSectionIfNeeded()
         MDT:ShowInterfaceInternal(true)
         MDT:ImportPreset(CopyTable(preset))
       end, "showInterfaceChatImport")
@@ -391,6 +405,13 @@ function MDTcommsObject:OnCommReceived(prefix, message, distribution, sender)
     realm = r
   end
   local fullName = name.."-"..realm
+
+  if prefix == MDT.versionCheckPrefix then
+    if MDT.VersionCheck_OnCommReceived then
+      MDT:VersionCheck_OnCommReceived(message, distribution, fullName)
+    end
+    return
+  end
 
   --standard preset transmission
   --we cache the preset here already
@@ -499,6 +520,12 @@ function MDTcommsObject:OnCommReceived(prefix, message, distribution, sender)
           if poiFrame then UIFrameFlash(poiFrame, 0.5, 1, 1, true, 1, 0); end
         end
       end
+    end
+  end
+
+  if prefix == MDT.liveSessionPrefixes.focusMarkerAssignment then
+    if MDT.FocusMarker_OnCommReceived then
+      MDT:FocusMarker_OnCommReceived(message, fullName)
     end
   end
 
@@ -762,6 +789,7 @@ function MDT:SendToGroup(distribution, silent, preset)
   preset = preset or MDT:GetCurrentPreset()
   --set unique id
   MDT:SetUniqueID(preset)
+  MDT:EnsurePresetCreatedBy(preset)
   --gotta encode difficulty into preset
   local db = MDT:GetDB()
   preset.difficulty = db.currentDifficulty

@@ -41,72 +41,85 @@ end
 --[[------------------------------------------------------------------------]]--
 
 local function BindingGenerator(owner, rootDescription)
-    local editBox = LiteMountAdvancedPanel.EditScroll.ScrollBox.EditBox
-    local IsSelected = function (v) return editBox.tab == v end
-    local SetSelected = function (v) LiteMountOptionsControl_SetTab(editBox, v) end
-    for i = 1, editBox.ntabs do
+    local self = LiteMountAdvancedPanel
+    local IsSelected = function (v) return self.selectedTab == v end
+    local SetSelected = function (v) self:SetTab(v) end
+    for i = 1, self.ntabs do
         rootDescription:CreateRadio(BindingText(i), IsSelected, SetSelected, i)
     end
 end
 
 --[[------------------------------------------------------------------------]]--
 
-LiteMountAdvancedEditBoxMixin = {}
+LiteMountAdvancedPanelMixin = {}
 
-function LiteMountAdvancedEditBoxMixin:CheckCompileErrors(text)
-    local errorMessage = LiteMountAdvancedPanel.ErrorMessage
+function LiteMountAdvancedPanelMixin:CheckCompileErrors(text)
     local ruleset = LM.RuleSet:Compile(text)
     if ruleset.errors then
         -- It's possible we should just show the first one
         local errs = LM.tMap(ruleset.errors, function (info) return info.err end)
         local msg = table.concat(errs, "\n")
-        errorMessage:SetText(msg)
-        errorMessage:Show()
+        self.ErrorMessage:SetText(msg)
+        self.ErrorMessage:Show()
         return false
     else
-        errorMessage:Hide()
+        self.ErrorMessage:Hide()
         return true
     end
 end
 
-function LiteMountAdvancedEditBoxMixin:SetOption(v, i)
-    if self:CheckCompileErrors(v) then
-        LM.Options:SetButtonRuleSet(i, v)
+function LiteMountAdvancedPanelMixin:LoadSettings(sets)
+    local dontFire = true
+    for i = 1, self.ntabs do
+        LM.Options:SetButtonRuleSet(i, sets[i], dontFire)
     end
 end
 
-function LiteMountAdvancedEditBoxMixin:GetOption(i)
-    return LM.Options:GetButtonRuleSet(i)
+function LiteMountAdvancedPanelMixin:SaveSettings()
+    local sets = {}
+    for i = 1, self.ntabs do
+        sets[i] = LM.Options:GetButtonRuleSet(i)
+    end
+    return sets
 end
 
-function LiteMountAdvancedEditBoxMixin:GetOptionDefault()
-    return LM.Options:GetButtonRuleSet('__default__')
+function LiteMountAdvancedPanelMixin:LoadDefaultSettings()
+    local rules = LM.Options:GetButtonRuleSet('__default__')
+    local dontFire = true
+    for i = 1, self.ntabs or 1 do
+        LM.Options:SetButtonRuleSet(i, rules, dontFire)
+    end
 end
 
-function LiteMountAdvancedEditBoxMixin:SetControl(v)
-    self:SetText(v)
-    self:CheckCompileErrors(v)
+function LiteMountAdvancedPanelMixin:RefreshDisplay()
+    local rulesText = LM.Options:GetButtonRuleSet(self.selectedTab)
+    self.EditScroll.ScrollBox.EditBox:SetText(rulesText)
+    self:CheckCompileErrors(rulesText)
+    LiteMountSettingsPanelMixin.RefreshDisplay(self)
 end
-
---[[------------------------------------------------------------------------]]--
-
-LiteMountAdvancedPanelMixin = {}
 
 function LiteMountAdvancedPanelMixin:OnLoad()
     self.name = ADVANCED_OPTIONS
+    self.ntabs = 4
+    self.selectedTab = 1
 
     local editBox = self.EditScroll.ScrollBox.EditBox
-    Mixin(editBox, LiteMountAdvancedEditBoxMixin)
     editBox:SetFontObject(LiteMountMonoFont)
-    editBox.ntabs = 4
-    editBox:SetScript('OnTextChanged', LiteMountOptionsControl_OnTextChanged)
+    editBox:SetScript('OnTextChanged',
+        function (_, userInput)
+            if userInput == true then
+                self:MarkDirty()
+                LM.Options:SetButtonRuleSet(self.selectedTab, editBox:GetText())
+                -- dontFire isn't set, so no need to RefreshDisplay
+            end
+        end)
     self.BindingDropDown:SetupMenu(BindingGenerator)
 
     ScrollUtil.RegisterScrollBoxWithScrollBar(self.EditScroll.ScrollBox, self.ScrollBar)
-
-    LiteMountOptionsPanel_RegisterControl(editBox, self)
+    LiteMountSettingsPanelMixin.OnLoad(self)
 end
 
 function LiteMountAdvancedPanelMixin:OnShow()
     self.UnlockButton:Show()
+    LiteMountSettingsPanelMixin.OnShow(self)
 end

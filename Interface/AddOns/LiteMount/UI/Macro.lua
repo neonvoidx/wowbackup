@@ -14,7 +14,6 @@ local L = LM.L
 
 --[[------------------------------------------------------------------------]]--
 
-local PanelTemplates_AnchorTabs = PanelTemplates_AnchorTabs or LM.PanelTemplates_AnchorTabs
 local C_ClassColor = C_ClassColor or LM.C_ClassColor
 
 
@@ -62,12 +61,6 @@ local OptionKeysByTab = {
     [2] = { 'combatMacro', 'useCombatMacro', L.LM_COMBAT_MACRO_EXP },
 }
 
-function LiteMountMacroPanelMixin:SetControl()
-    if self:IsVisible() then
-        self:Update()
-    end
-end
-
 function LiteMountMacroPanelMixin:GetSettingsForTab()
     local selectedTab = PanelTemplates_GetSelectedTab(self)
     local macroKey, useKey, helpText = unpack(OptionKeysByTab[selectedTab])
@@ -88,7 +81,7 @@ function LiteMountMacroPanelMixin:WriteSettingsForTab()
         macro = nil
     end
     local use = self.Macro.EnableButton:GetChecked() and true or nil
-    self.isDirty = true
+    self:MarkDirty()
     LM.Options:SetClassOption(self.selectedClass, macroKey, macro)
     LM.Options:SetClassOption(self.selectedClass, useKey, use)
 end
@@ -119,7 +112,7 @@ function LiteMountMacroPanelMixin:GenerateClassMenu()
     return classMenu
 end
 
-function LiteMountMacroPanelMixin:Update()
+function LiteMountMacroPanelMixin:RefreshDisplay()
     local text, isEnabled, helpText = self:GetSettingsForTab()
     self.Macro.EditBox:SetText(text or "")
     self.Macro.EnableButton:SetChecked(isEnabled)
@@ -127,29 +120,27 @@ function LiteMountMacroPanelMixin:Update()
 
     local dp = CreateDataProvider(self:GenerateClassMenu())
     self.Class.ScrollBox:SetDataProvider(dp, ScrollBoxConstants.RetainScrollPosition)
+
+    PanelTemplates_ResizeTabsToFit(self, self.Macro:GetWidth() - 32)
+
+    LiteMountSettingsPanelMixin.RefreshDisplay(self)
 end
 
-function LiteMountMacroPanelMixin:SetOption(t)
-    local classKey = UnitClassBase('player')
-    LM.db.char = t.char
-    LM.db.class = t.class and t.class[classKey] or nil
-    LM.db.sv.class = t.class
-    LM.Options:NotifyChanged()
+function LiteMountMacroPanelMixin:LoadSettings(t)
+    LM.Macro:SetRawSettings(CopyTable(t))
 end
 
-function LiteMountMacroPanelMixin:GetOption()
-    return {
-        char = LM.db.char and CopyTable(LM.db.char),
-        class = LM.db.sv.class and CopyTable(LM.db.sv.class),
-    }
+function LiteMountMacroPanelMixin:LoadDefaultSettings()
+    LM.Macro:SetDefaultSettings()
+end
+function LiteMountMacroPanelMixin:SaveSettings()
+    return CopyTable(LM.Macro:GetRawSettings())
 end
 
 function LiteMountMacroPanelMixin:OnLoad()
     self.name = MACROS
 
     PanelTemplates_SetNumTabs(self, 2)
-    PanelTemplates_AnchorTabs(self)
-    PanelTemplates_ResizeTabsToFit(self)
     PanelTemplates_SetTab(self, 1)
 
     self.selectedClass = 'PLAYER'
@@ -172,19 +163,15 @@ function LiteMountMacroPanelMixin:OnLoad()
         end)
     ScrollUtil.InitScrollBoxListWithScrollBar(self.Class.ScrollBox, self.Class.ScrollBar, view)
 
-    LiteMountOptionsPanel_RegisterControl(self, self)
-end
-
-function LiteMountMacroPanelMixin:OnShow()
-    LiteMountOptionsPanel_OnShow(self)
+    LiteMountSettingsPanelMixin.OnLoad(self)
 end
 
 function LiteMountMacroPanelMixin:SetTab(id)
     PanelTemplates_SetTab(self, id)
-    self:SetControl()
+    self:RefreshDisplay()
 end
 
 function LiteMountMacroPanelMixin:SetClass(c)
     self.selectedClass = c
-    self:SetControl()
+    self:RefreshDisplay()
 end

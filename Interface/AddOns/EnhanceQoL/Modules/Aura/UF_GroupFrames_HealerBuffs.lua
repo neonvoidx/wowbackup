@@ -15,6 +15,7 @@ local L = LibStub("AceLocale-3.0"):GetLocale("EnhanceQoL")
 UF.GroupFramesHealerBuffs = UF.GroupFramesHealerBuffs or {}
 local HB = UF.GroupFramesHealerBuffs
 
+local GF = UF.GroupFrames
 local GFH = UF.GroupFramesHelper
 local AuraUtil = UF.AuraUtil
 local UFHelper = addon.Aura.UFHelper
@@ -84,6 +85,17 @@ local ICON_MODE_SET = {
 local KIND_SET = {
 	[KIND_PARTY] = true,
 	[KIND_RAID] = true,
+}
+
+local FRAME_STRATA_SET = {
+	BACKGROUND = true,
+	LOW = true,
+	MEDIUM = true,
+	HIGH = true,
+	DIALOG = true,
+	FULLSCREEN = true,
+	FULLSCREEN_DIALOG = true,
+	TOOLTIP = true,
 }
 
 local ANCHOR_SET = {
@@ -225,13 +237,12 @@ local FAMILY_DATA = {
 	{ id = "druid_lifebloom", classToken = "DRUID", spec = "Restoration", spellIds = { 33763 }, fallbackName = "Lifebloom" },
 	{ id = "druid_wild_growth", classToken = "DRUID", spec = "Restoration", spellIds = { 48438 }, fallbackName = "Wild Growth" },
 	{ id = "druid_germination", classToken = "DRUID", spec = "Restoration", spellIds = { 155777 }, fallbackName = "Germination" },
-	-- Discipline Priest
-	{ id = "priest_pw_shield", classToken = "PRIEST", spec = "Discipline", spellIds = { 17 }, fallbackName = "Power Word: Shield" },
+	-- Priest
+	{ id = "priest_pw_shield", classToken = "PRIEST", specs = { "Discipline", "Holy" }, spellIds = { 17 }, fallbackName = "Power Word: Shield" },
 	{ id = "priest_atonement", classToken = "PRIEST", spec = "Discipline", spellIds = { 194384 }, fallbackName = "Atonement" },
 	{ id = "priest_void_shield", classToken = "PRIEST", spec = "Discipline", spellIds = { 1253593 }, fallbackName = "Void Shield" },
-	-- Holy Priest
-	{ id = "priest_renew", classToken = "PRIEST", spec = "Holy", spellIds = { 139 }, fallbackName = "Renew" },
-	{ id = "priest_prayer_of_mending", classToken = "PRIEST", spec = "Holy", spellIds = { 41635 }, fallbackName = "Prayer of Mending" },
+	{ id = "priest_renew", classToken = "PRIEST", specs = { "Discipline", "Holy" }, spellIds = { 139 }, fallbackName = "Renew" },
+	{ id = "priest_prayer_of_mending", classToken = "PRIEST", specs = { "Discipline", "Holy" }, spellIds = { 41635 }, fallbackName = "Prayer of Mending" },
 	{ id = "priest_echo_of_light", classToken = "PRIEST", spec = "Holy", spellIds = { 77489 }, fallbackName = "Echo of Light" },
 	-- Mistweaver Monk
 	{ id = "monk_soothing_mist", classToken = "MONK", spec = "Mistweaver", spellIds = { 115175 }, fallbackName = "Soothing Mist" },
@@ -280,6 +291,8 @@ local PROVIDER_SPEC_IDS = {
 	SHAMAN = { Restoration = 264 },
 }
 
+local PROVIDER_CLASS_IGNORES_SPEC = {}
+
 local function getPlayerClassToken()
 	local classToken = addon.variables and addon.variables.unitClass
 	if type(classToken) == "string" and classToken ~= "" then return classToken end
@@ -317,6 +330,26 @@ local function getPlayerSpecId()
 	return nil
 end
 
+local function familyMatchesPlayerSpec(family, classSpecMap, playerSpecId)
+	local familySpec = family and family.spec and tostring(family.spec) or nil
+	if familySpec and familySpec ~= "" then
+		local requiredSpecId = classSpecMap and classSpecMap[familySpec] or nil
+		return requiredSpecId == nil or playerSpecId == requiredSpecId
+	end
+
+	local familySpecs = family and family.specs
+	if type(familySpecs) == "table" then
+		for i = 1, #familySpecs do
+			local requiredSpecName = tostring(familySpecs[i] or "")
+			local requiredSpecId = classSpecMap and classSpecMap[requiredSpecName] or nil
+			if requiredSpecId and playerSpecId == requiredSpecId then return true end
+		end
+		return false
+	end
+
+	return true
+end
+
 local function canPlayerProvideFamily(familyId)
 	local family = familyId and FAMILY_BY_ID[tostring(familyId)] or nil
 	if not family then return false end
@@ -327,14 +360,10 @@ local function canPlayerProvideFamily(familyId)
 		if not playerClass or tostring(playerClass) ~= familyClass then return false end
 	end
 
-	local familySpec = family.spec and tostring(family.spec) or nil
-	if familySpec and familySpec ~= "" then
+	if not PROVIDER_CLASS_IGNORES_SPEC[familyClass] then
 		local classSpecMap = familyClass and PROVIDER_SPEC_IDS[familyClass] or nil
-		local requiredSpecId = classSpecMap and classSpecMap[familySpec] or nil
-		if requiredSpecId then
-			local playerSpecId = getPlayerSpecId()
-			if playerSpecId ~= requiredSpecId then return false end
-		end
+		local playerSpecId = getPlayerSpecId()
+		if not familyMatchesPlayerSpec(family, classSpecMap, playerSpecId) then return false end
 	end
 
 	return true
@@ -367,14 +396,10 @@ local function getPlayerFamilyProvisionMap()
 			local familyIdKey = tostring(familyId)
 			if tostring(family.classToken) ~= classToken then
 				map[familyIdKey] = false
+			elseif PROVIDER_CLASS_IGNORES_SPEC[classToken] then
+				map[familyIdKey] = true
 			else
-				local classSpec = family.spec and tostring(family.spec) or nil
-				if classSpec == nil or classSpec == "" then
-					map[familyIdKey] = true
-				else
-					local requiredSpec = specMap and specMap[classSpec] or nil
-					map[familyIdKey] = requiredSpec ~= nil and requiredSpec == specId or false
-				end
+				map[familyIdKey] = familyMatchesPlayerSpec(family, specMap, specId)
 			end
 		end
 	end
@@ -462,6 +487,15 @@ local function normalizeAnchor(value)
 	local anchor = tostring(value or "CENTER"):upper()
 	if ANCHOR_SET[anchor] then return anchor end
 	return "CENTER"
+end
+
+local function normalizeFrameStrataToken(value)
+	if GF and GF.NormalizeFrameStrataToken then return GF.NormalizeFrameStrataToken(value) end
+	if type(value) ~= "string" or value == "" then return nil end
+	local token = string.upper(value)
+	if token == "DEFAULT" then return nil end
+	if FRAME_STRATA_SET[token] then return token end
+	return nil
 end
 
 local function parseGrowth(growth)
@@ -667,6 +701,7 @@ function HB.CreateDefaultGroup(id)
 		name = getDefaultGroupName(id),
 		style = STYLE_ICON,
 		anchorPoint = "CENTER",
+		anchorOutside = false,
 		x = 0,
 		y = 0,
 		growth = "RIGHTDOWN",
@@ -679,9 +714,13 @@ function HB.CreateDefaultGroup(id)
 		barAlpha = 0.9,
 		barDrainAnimation = false,
 		barFillFrame = false,
+		barStrata = nil,
+		barFrameLevelOffset = 3,
 		barReverseFill = false,
 		inset = 0,
 		borderSize = 2,
+		borderStrata = nil,
+		borderFrameLevelOffset = 4,
 		indicatorBorderEnabled = false,
 		indicatorBorderTexture = "DEFAULT",
 		indicatorBorderSize = 1,
@@ -718,6 +757,7 @@ local function normalizeGroup(group, id)
 	if group.name == nil or group.name == "" then group.name = getDefaultGroupName(group.id) end
 	group.style = normalizeStyle(group.style)
 	group.anchorPoint = normalizeAnchor(group.anchorPoint)
+	group.anchorOutside = group.anchorOutside == true
 	group.x = roundInt(clamp(group.x, -300, 300, 0))
 	group.y = roundInt(clamp(group.y, -300, 300, 0))
 	group.growth = normalizeGrowth(group.growth)
@@ -736,9 +776,13 @@ local function normalizeGroup(group, id)
 	group.barAlpha = clamp(group.barAlpha, 0, 1, nil)
 	group.barDrainAnimation = group.barDrainAnimation == true
 	group.barFillFrame = group.barFillFrame == true
+	group.barStrata = normalizeFrameStrataToken(group.barStrata)
+	group.barFrameLevelOffset = roundInt(clamp(group.barFrameLevelOffset, -20, 1000, 3))
 	group.barReverseFill = normalizeBarReverseFill(group.barReverseFill)
 	group.inset = roundInt(clamp(group.inset, 0, 60, 0))
 	group.borderSize = roundInt(clamp(group.borderSize, 1, 24, 2))
+	group.borderStrata = normalizeFrameStrataToken(group.borderStrata)
+	group.borderFrameLevelOffset = roundInt(clamp(group.borderFrameLevelOffset, -20, 1000, 4))
 	local indicatorBorderEnabled = group.indicatorBorderEnabled
 	if indicatorBorderEnabled == nil then indicatorBorderEnabled = group.iconBorderEnabled end
 	group.indicatorBorderEnabled = indicatorBorderEnabled == true
@@ -1529,27 +1573,19 @@ local function shouldIgnoreFamilyForUnit(familyId, unit)
 	return isNpcUnit(unit)
 end
 
-local PLAYER_HELPFUL_FILTER = "HELPFUL|PLAYER"
-local PLAYER_HARMFUL_FILTER = "HARMFUL|PLAYER"
-local HELPFUL_FILTER = "HELPFUL"
-local HARMFUL_FILTER = "HARMFUL"
-local function isAuraFilteredByInstanceFilter(unit, aura, filter)
-	if unit == nil or unit == "" or aura == nil or aura.auraInstanceID == nil or filter == nil then return false end
-	return not C_UnitAuras.IsAuraFilteredOutByInstanceID(unit, aura.auraInstanceID, filter)
-end
-
 local function isAuraFromPlayer(unit, aura, familyId, compiled)
 	if aura == nil then return false end
-	if not C_UnitAuras or not C_UnitAuras.IsAuraFilteredOutByInstanceID then return false end
+	local isHelpful = aura.isHelpful
+	if issecretvalue and issecretvalue(isHelpful) then return false end
+	if isHelpful ~= true then return false end
 	local familyKey = familyId and tostring(familyId) or nil
 	local family = familyKey and FAMILY_BY_ID[familyKey] or nil
 	if family and family.classToken ~= nil and not canPlayerProvideFamilyCached(familyKey) then return false end
-	local isHarmful = aura.isHarmful
-	if issecretvalue and issecretvalue(isHarmful) then return false end
 	if familyKey and compiled and compiled.familyScanAllCastersById and compiled.familyScanAllCastersById[familyKey] == true then
-		return isAuraFilteredByInstanceFilter(unit, aura, isHarmful and HARMFUL_FILTER or HELPFUL_FILTER)
+		return true
 	end
-	return isAuraFilteredByInstanceFilter(unit, aura, isHarmful and PLAYER_HARMFUL_FILTER or PLAYER_HELPFUL_FILTER)
+	if not (C_UnitAuras and C_UnitAuras.IsAuraFilteredOutByInstanceID and aura.auraInstanceID) then return false end
+	return not C_UnitAuras.IsAuraFilteredOutByInstanceID(unit, aura.auraInstanceID, "HELPFUL|PLAYER")
 end
 
 local function getFamilyForAura(compiled, aura, unit)
@@ -1805,7 +1841,7 @@ local function getAuraStyleForGroup(state, cfg, group)
 	local ac = cfg and cfg.auras and cfg.auras.buff or EMPTY
 	local cooldownOffsetX, cooldownOffsetY = getOffsetXY(ac.cooldownOffset)
 	local countOffsetX, countOffsetY = getOffsetXY(ac.countOffset)
-	local showTooltip = ac.showTooltip ~= false
+	local showTooltip = ac.showTooltip == true
 	local showCooldownSwipe = group.showCooldownSwipe ~= false
 	local showCooldownEdge = group.showCooldownEdge ~= false
 	local showCooldownBling = group.showCooldownBling ~= false
@@ -2072,6 +2108,7 @@ local function didGroupRenderStateChange(cache, compiled, group, activeRules, fa
 		or cache.styleRevision ~= styleRevision
 		or cache.layoutRevision ~= layoutRevision
 		or cache.ruleCount ~= #activeRules
+		or cache.anchorOutside ~= group.anchorOutside
 		or cache.indicatorBorderEnabled ~= group.indicatorBorderEnabled
 		or cache.indicatorBorderTexture ~= group.indicatorBorderTexture
 		or cache.indicatorBorderSize ~= group.indicatorBorderSize
@@ -2119,6 +2156,7 @@ local function didGroupRenderStateChange(cache, compiled, group, activeRules, fa
 	cache.styleRevision = styleRevision
 	cache.layoutRevision = layoutRevision
 	cache.ruleCount = #activeRules
+	cache.anchorOutside = group.anchorOutside
 	cache.indicatorBorderEnabled = group.indicatorBorderEnabled
 	cache.indicatorBorderTexture = group.indicatorBorderTexture
 	cache.indicatorBorderSize = group.indicatorBorderSize
@@ -2151,9 +2189,12 @@ local function didBarRenderStateChange(cache, group, groupId, layoutRevision, tr
 		or cache.barThickness ~= group.barThickness
 		or cache.barDrainAnimation ~= group.barDrainAnimation
 		or cache.barFillFrame ~= group.barFillFrame
+		or cache.barStrata ~= group.barStrata
+		or cache.barFrameLevelOffset ~= group.barFrameLevelOffset
 		or cache.barReverseFill ~= group.barReverseFill
 		or cache.inset ~= group.inset
 		or cache.anchorPoint ~= group.anchorPoint
+		or cache.anchorOutside ~= group.anchorOutside
 		or cache.x ~= group.x
 		or cache.y ~= group.y
 		or cache.colorRuleId ~= colorRuleId
@@ -2171,9 +2212,12 @@ local function didBarRenderStateChange(cache, group, groupId, layoutRevision, tr
 	cache.barThickness = group.barThickness
 	cache.barDrainAnimation = group.barDrainAnimation
 	cache.barFillFrame = group.barFillFrame
+	cache.barStrata = group.barStrata
+	cache.barFrameLevelOffset = group.barFrameLevelOffset
 	cache.barReverseFill = group.barReverseFill
 	cache.inset = group.inset
 	cache.anchorPoint = group.anchorPoint
+	cache.anchorOutside = group.anchorOutside
 	cache.x = group.x
 	cache.y = group.y
 	cache.colorRuleId = colorRuleId
@@ -2215,8 +2259,11 @@ local function didBorderRenderStateChange(cache, group, groupId, layoutRevision,
 		or cache.groupId ~= groupId
 		or cache.layoutRevision ~= layoutRevision
 		or cache.borderSize ~= group.borderSize
+		or cache.borderStrata ~= group.borderStrata
+		or cache.borderFrameLevelOffset ~= group.borderFrameLevelOffset
 		or cache.inset ~= group.inset
 		or cache.anchorPoint ~= group.anchorPoint
+		or cache.anchorOutside ~= group.anchorOutside
 		or cache.x ~= group.x
 		or cache.y ~= group.y
 		or cache.colorRuleId ~= colorRuleId
@@ -2228,8 +2275,11 @@ local function didBorderRenderStateChange(cache, group, groupId, layoutRevision,
 	cache.groupId = groupId
 	cache.layoutRevision = layoutRevision
 	cache.borderSize = group.borderSize
+	cache.borderStrata = group.borderStrata
+	cache.borderFrameLevelOffset = group.borderFrameLevelOffset
 	cache.inset = group.inset
 	cache.anchorPoint = group.anchorPoint
+	cache.anchorOutside = group.anchorOutside
 	cache.x = group.x
 	cache.y = group.y
 	cache.colorRuleId = colorRuleId
@@ -2421,7 +2471,8 @@ local function getStyleAnchoredOffsets(root, group, inset)
 	local rootW = root.GetWidth and root:GetWidth() or 0
 	local rootH = root.GetHeight and root:GetHeight() or 0
 	if rootW <= 0 or rootH <= 0 then return 0, 0 end
-	local x, y = HB.ClampOffsets(group.anchorPoint, group.x, group.y, rootW, rootH, inset or 0)
+	local x, y = group.x or 0, group.y or 0
+	if group.anchorOutside ~= true then x, y = HB.ClampOffsets(group.anchorPoint, x, y, rootW, rootH, inset or 0) end
 	local scale = getEffectiveScale(root)
 	return roundToPixel(x or 0, scale), roundToPixel(y or 0, scale)
 end
@@ -2455,7 +2506,8 @@ local function renderBar(st, group, trackedAura, colorRule)
 	bar:SetStatusBarColor(r, g, b, a)
 	bar:SetMinMaxValues(0, 1)
 	if useSizedPlacement then
-		local ox, oy = HB.ClampOffsetsForRegion(group.anchorPoint, group.x, group.y, rootWidth, rootHeight, barWidth, barHeight, inset)
+		local ox, oy = group.x or 0, group.y or 0
+		if group.anchorOutside ~= true then ox, oy = HB.ClampOffsetsForRegion(group.anchorPoint, ox, oy, rootWidth, rootHeight, barWidth, barHeight, inset) end
 		setSinglePointCached(bar, group.anchorPoint or "CENTER", st.healerBuffRoot, group.anchorPoint or "CENTER", ox, oy)
 		setSizeCached(bar, barWidth, barHeight)
 		bar._hbBarWidth = nil
@@ -2507,6 +2559,15 @@ local function renderBar(st, group, trackedAura, colorRule)
 			bar:SetValue(1)
 		end
 	end
+	if root then
+		local targetStrata = normalizeFrameStrataToken(group.barStrata)
+		if not targetStrata and root.GetFrameStrata then targetStrata = root:GetFrameStrata() end
+		if targetStrata then setFrameStrataCached(bar, targetStrata) end
+		if root.GetFrameLevel then
+			local levelOffset = roundInt(clamp(group.barFrameLevelOffset, -20, 1000, 3))
+			setFrameLevelCached(bar, (root:GetFrameLevel() or 0) + levelOffset)
+		end
+	end
 	bar:Show()
 end
 
@@ -2516,6 +2577,16 @@ local function renderBorder(st, group, colorRule)
 	if not group then
 		border:Hide()
 		return
+	end
+	local root = st.healerBuffRoot
+	if root then
+		local targetStrata = normalizeFrameStrataToken(group.borderStrata)
+		if not targetStrata and root.GetFrameStrata then targetStrata = root:GetFrameStrata() end
+		if targetStrata then setFrameStrataCached(border, targetStrata) end
+		if root.GetFrameLevel then
+			local levelOffset = roundInt(clamp(group.borderFrameLevelOffset, -20, 1000, 4))
+			setFrameLevelCached(border, (root:GetFrameLevel() or 0) + levelOffset)
+		end
 	end
 	local inset = group.inset or 0
 	local size = max(1, group.borderSize or 1)
@@ -2665,6 +2736,7 @@ function HB.UpdateFromAuras(btn, updateInfo, cache, changed, isFullUpdate, compi
 	end
 
 	local changedFamilies = applyDeltaToFamilyState(state, compiled, cache, updateInfo, unit)
+	if not next(changedFamilies) then return end
 	evaluateDeltaRulesAndGroups(state, compiled, changedFamilies, unit)
 	renderAll(btn, st, state, compiled, cfg, changedFamilies)
 end

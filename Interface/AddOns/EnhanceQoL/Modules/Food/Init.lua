@@ -46,6 +46,14 @@ addon.Health = addon.Health or {}
 addon.Health.functions = addon.Health.functions or {}
 addon.Health.filteredHealth = addon.Health.filteredHealth or {}
 
+local FOOD_SLOT_KEY_MULT = 1000
+local foodTrackedItemIDs = {}
+local foodTrackedItemIDsReady = false
+local foodDirtyBags = {}
+local foodSlotCache = {}
+local foodBagSlotCounts = {}
+local foodForceFullRebuild = addon.foodBagItemCountCacheReady ~= true
+
 -- Shared Recuperate spell info (used by Drink and Health macros)
 addon.Recuperate = addon.Recuperate or {
 	id = 1231411, -- Recuperate spell id
@@ -54,10 +62,29 @@ addon.Recuperate = addon.Recuperate or {
 }
 addon.macroWarnings = addon.macroWarnings or {}
 
-local function syncSharedFoodBagItemCountCache(counts)
+local function wipeMap(target)
+	if type(target) ~= "table" then return end
+	if wipe then
+		wipe(target)
+		return
+	end
+	for key in pairs(target) do
+		target[key] = nil
+	end
+end
+
+local function makeFoodSlotKey(bag, slot)
+	return bag * FOOD_SLOT_KEY_MULT + slot
+end
+
+local function getMaxBagID()
+	return tonumber(NUM_TOTAL_EQUIPPED_BAG_SLOTS) or tonumber(NUM_BAG_SLOTS) or 4
+end
+
+local function syncSharedFoodBagItemCountCache(counts, bumpVersion)
 	addon.foodBagItemCountCache = counts
 	addon.foodBagItemCountCacheReady = true
-	addon.foodBagItemCountCacheVersion = (tonumber(addon.foodBagItemCountCacheVersion) or 0) + 1
+	if bumpVersion ~= false then addon.foodBagItemCountCacheVersion = (tonumber(addon.foodBagItemCountCacheVersion) or 0) + 1 end
 	addon.Flasks.bagItemCountCache = counts
 	addon.Flasks.bagItemCountCacheReady = true
 	addon.BuffFoods.bagItemCountCache = counts
@@ -69,12 +96,59 @@ local function syncSharedFoodBagItemCountCache(counts)
 	return counts
 end
 
-local function invalidateSharedFoodBagItemCountCache()
+local function invalidateSharedFoodBagItemCountCache(forceFull)
 	addon.foodBagItemCountCacheReady = false
 	addon.Flasks.bagItemCountCacheReady = false
 	addon.BuffFoods.bagItemCountCacheReady = false
 	addon.Runes.bagItemCountCacheReady = false
 	addon.WeaponBuffs.bagItemCountCacheReady = false
+	if forceFull ~= false then foodForceFullRebuild = true end
+end
+
+local function addTrackedFoodEntry(entry)
+	if type(entry) ~= "table" or entry.isSpell == true then return end
+	local id = tonumber(entry.id)
+	if id and id > 0 then foodTrackedItemIDs[id] = true end
+end
+
+local function addTrackedFoodList(list)
+	if type(list) ~= "table" then return end
+	for index = 1, #list do
+		addTrackedFoodEntry(list[index])
+	end
+end
+
+local function addTrackedFoodMapOfLists(map)
+	if type(map) ~= "table" then return end
+	for _, list in pairs(map) do
+		addTrackedFoodList(list)
+	end
+end
+
+local function rebuildFoodTrackedItemIDs()
+	wipeMap(foodTrackedItemIDs)
+	addTrackedFoodList(addon.Drinks and addon.Drinks.drinkList)
+	addTrackedFoodList(addon.Drinks and addon.Drinks.manaPotions)
+	addTrackedFoodMapOfLists(addon.Flasks and addon.Flasks.typeFlasks)
+	addTrackedFoodMapOfLists(addon.Flasks and addon.Flasks.fleetingTypeFlasks)
+	addTrackedFoodMapOfLists(addon.BuffFoods and addon.BuffFoods.typeFoods)
+	addTrackedFoodList(addon.Runes and addon.Runes.items)
+	addTrackedFoodList(addon.WeaponBuffs and addon.WeaponBuffs.items)
+	addTrackedFoodList(addon.Health and addon.Health.healthList)
+	foodTrackedItemIDsReady = true
+end
+
+local function ensureFoodTrackedItemIDs()
+	if not foodTrackedItemIDsReady then rebuildFoodTrackedItemIDs() end
+end
+
+function addon.functions.invalidateFoodTrackedItemIDs()
+	foodTrackedItemIDsReady = false
+	invalidateSharedFoodBagItemCountCache(true)
+end
+
+function addon.functions.invalidateFoodBagItemCountCache(forceFull)
+	invalidateSharedFoodBagItemCountCache(forceFull ~= false)
 end
 
 function addon.functions.shouldMaintainFoodBagItemCountCache()
@@ -92,36 +166,167 @@ function addon.functions.shouldMaintainFoodBagItemCountCache()
 end
 
 function addon.functions.rebuildFoodBagItemCountCache()
-	local counts = {}
-	local maxBag = tonumber(NUM_TOTAL_EQUIPPED_BAG_SLOTS) or tonumber(NUM_BAG_SLOTS) or 4
+	ensureFoodTrackedItemIDs()
 
-	if C_Container and C_Container.GetContainerNumSlots and C_Container.GetContainerItemInfo then
+	local counts = addon.foodBagItemCountCache
+	if type(counts) ~= "table" then
+		counts = {}
+		addon.foodBagItemCountCache = counts
+	else
+		wipeMap(counts)
+	end
+
+	wipeMap(foodSlotCache)
+	wipeMap(foodBagSlotCounts)
+	wipeMap(foodDirtyBags)
+
+	local maxBag = getMaxBagID()
+
+	if C_Container and C_Container.GetContainerNumSlots and C_Container.GetContainerItemID then
 		for bag = 0, maxBag do
 			local slotCount = C_Container.GetContainerNumSlots(bag) or 0
+			foodBagSlotCounts[bag] = slotCount
 			for slot = 1, slotCount do
-				local info = C_Container.GetContainerItemInfo(bag, slot)
-				local itemId = info and tonumber(info.itemID) or nil
-				if itemId and itemId > 0 then counts[itemId] = (counts[itemId] or 0) + (tonumber(info.stackCount) or 1) end
+				local rawItemId = C_Container.GetContainerItemID(bag, slot)
+				local itemId = rawItemId and tonumber(rawItemId) or nil
+				if itemId and foodTrackedItemIDs[itemId] then
+					local stackCount = 1
+					if C_Container.GetContainerItemInfo then
+						local info = C_Container.GetContainerItemInfo(bag, slot)
+						stackCount = tonumber(info and info.stackCount) or 1
+					end
+					counts[itemId] = (counts[itemId] or 0) + stackCount
+					foodSlotCache[makeFoodSlotKey(bag, slot)] = {
+						itemID = itemId,
+						count = stackCount,
+					}
+				end
 			end
 		end
 	elseif GetContainerNumSlots and GetContainerItemID and GetContainerItemInfo then
 		for bag = 0, maxBag do
 			local slotCount = GetContainerNumSlots(bag) or 0
+			foodBagSlotCounts[bag] = slotCount
 			for slot = 1, slotCount do
-				local itemId = tonumber(GetContainerItemID(bag, slot))
-				if itemId and itemId > 0 then
+				local rawItemId = GetContainerItemID(bag, slot)
+				local itemId = rawItemId and tonumber(rawItemId) or nil
+				if itemId and foodTrackedItemIDs[itemId] then
 					local _, stackCount = GetContainerItemInfo(bag, slot)
-					counts[itemId] = (counts[itemId] or 0) + (tonumber(stackCount) or 1)
+					stackCount = tonumber(stackCount) or 1
+					counts[itemId] = (counts[itemId] or 0) + stackCount
+					foodSlotCache[makeFoodSlotKey(bag, slot)] = {
+						itemID = itemId,
+						count = stackCount,
+					}
 				end
 			end
 		end
 	end
 
+	foodForceFullRebuild = false
 	return syncSharedFoodBagItemCountCache(counts)
+end
+
+local function applyFoodSlotDelta(counts, key, newItemID, newCount)
+	local old = foodSlotCache[key]
+	local changed = false
+
+	if old and (old.itemID ~= newItemID or old.count ~= newCount) then
+		local oldID = old.itemID
+		local oldCount = tonumber(old.count) or 0
+		counts[oldID] = math.max(0, (counts[oldID] or 0) - oldCount)
+		if counts[oldID] == 0 then counts[oldID] = nil end
+		foodSlotCache[key] = nil
+		changed = true
+	end
+
+	if newItemID and newCount > 0 and (not old or old.itemID ~= newItemID or old.count ~= newCount) then
+		counts[newItemID] = (counts[newItemID] or 0) + newCount
+		foodSlotCache[key] = {
+			itemID = newItemID,
+			count = newCount,
+		}
+		changed = true
+	end
+
+	return changed
+end
+
+local function markFoodBagDirty(bag)
+	if type(bag) ~= "number" then return end
+	if bag < 0 or bag > getMaxBagID() then return end
+	foodDirtyBags[bag] = true
+	addon.foodBagItemCountCacheReady = false
+end
+
+local function updateFoodBagItemCountCacheDirty()
+	if foodForceFullRebuild or type(addon.foodBagItemCountCache) ~= "table" then return addon.functions.rebuildFoodBagItemCountCache() end
+	ensureFoodTrackedItemIDs()
+
+	local counts = addon.foodBagItemCountCache
+	if not next(foodDirtyBags) then return syncSharedFoodBagItemCountCache(counts, false) end
+
+	local changed = false
+
+	if C_Container and C_Container.GetContainerNumSlots and C_Container.GetContainerItemID then
+		for bag in pairs(foodDirtyBags) do
+			local oldSlotCount = foodBagSlotCounts[bag] or 0
+			local slotCount = C_Container.GetContainerNumSlots(bag) or 0
+			local maxSlot = math.max(oldSlotCount, slotCount)
+
+			for slot = 1, maxSlot do
+				local key = makeFoodSlotKey(bag, slot)
+				if slot > slotCount then
+					changed = applyFoodSlotDelta(counts, key, nil, 0) or changed
+				else
+					local rawItemId = C_Container.GetContainerItemID(bag, slot)
+					local itemId = rawItemId and tonumber(rawItemId) or nil
+					local trackedID = itemId and foodTrackedItemIDs[itemId] and itemId or nil
+					local stackCount = 0
+					if trackedID then
+						local info = C_Container.GetContainerItemInfo and C_Container.GetContainerItemInfo(bag, slot) or nil
+						stackCount = tonumber(info and info.stackCount) or 1
+					end
+					changed = applyFoodSlotDelta(counts, key, trackedID, stackCount) or changed
+				end
+			end
+
+			foodBagSlotCounts[bag] = slotCount
+		end
+	elseif GetContainerNumSlots and GetContainerItemID and GetContainerItemInfo then
+		for bag in pairs(foodDirtyBags) do
+			local oldSlotCount = foodBagSlotCounts[bag] or 0
+			local slotCount = GetContainerNumSlots(bag) or 0
+			local maxSlot = math.max(oldSlotCount, slotCount)
+
+			for slot = 1, maxSlot do
+				local key = makeFoodSlotKey(bag, slot)
+				if slot > slotCount then
+					changed = applyFoodSlotDelta(counts, key, nil, 0) or changed
+				else
+					local rawItemId = GetContainerItemID(bag, slot)
+					local itemId = rawItemId and tonumber(rawItemId) or nil
+					local trackedID = itemId and foodTrackedItemIDs[itemId] and itemId or nil
+					local stackCount = 0
+					if trackedID then
+						local _, count = GetContainerItemInfo(bag, slot)
+						stackCount = tonumber(count) or 1
+					end
+					changed = applyFoodSlotDelta(counts, key, trackedID, stackCount) or changed
+				end
+			end
+
+			foodBagSlotCounts[bag] = slotCount
+		end
+	end
+
+	wipeMap(foodDirtyBags)
+	return syncSharedFoodBagItemCountCache(counts, changed)
 end
 
 function addon.functions.getFoodBagItemCountCache()
 	if addon.foodBagItemCountCacheReady == true and type(addon.foodBagItemCountCache) == "table" then return addon.foodBagItemCountCache end
+	if not foodForceFullRebuild and type(addon.foodBagItemCountCache) == "table" then return updateFoodBagItemCountCacheDirty() end
 	return addon.functions.rebuildFoodBagItemCountCache()
 end
 
@@ -133,6 +338,12 @@ end
 function addon.functions.getFoodBagItemCount(itemId)
 	local targetId = tonumber(itemId)
 	if not targetId or targetId <= 0 then return 0 end
+	ensureFoodTrackedItemIDs()
+	if not foodTrackedItemIDs[targetId] then
+		foodTrackedItemIDs[targetId] = true
+		foodForceFullRebuild = true
+		addon.foodBagItemCountCacheReady = false
+	end
 	local cache = addon.functions.getFoodBagItemCountCache()
 	return tonumber(cache[targetId]) or 0
 end
@@ -141,10 +352,27 @@ local sharedFoodBagItemCountCacheFrame = addon.sharedFoodBagItemCountCacheFrame 
 addon.sharedFoodBagItemCountCacheFrame = sharedFoodBagItemCountCacheFrame
 sharedFoodBagItemCountCacheFrame:RegisterEvent("PLAYER_LOGIN")
 sharedFoodBagItemCountCacheFrame:RegisterEvent("PLAYER_ENTERING_WORLD")
+sharedFoodBagItemCountCacheFrame:RegisterEvent("BAG_UPDATE")
 sharedFoodBagItemCountCacheFrame:RegisterEvent("BAG_UPDATE_DELAYED")
-sharedFoodBagItemCountCacheFrame:SetScript("OnEvent", function(_, event)
-	if event ~= "PLAYER_LOGIN" and event ~= "PLAYER_ENTERING_WORLD" and event ~= "BAG_UPDATE_DELAYED" then return end
-	invalidateSharedFoodBagItemCountCache()
+sharedFoodBagItemCountCacheFrame:SetScript("OnEvent", function(_, event, bag)
+	if event == "BAG_UPDATE" then
+		markFoodBagDirty(bag)
+		return
+	end
+
+	if event == "PLAYER_LOGIN" or event == "PLAYER_ENTERING_WORLD" then
+		foodTrackedItemIDsReady = false
+		invalidateSharedFoodBagItemCountCache(true)
+		return
+	end
+
+	if event == "BAG_UPDATE_DELAYED" then
+		if addon.functions.shouldMaintainFoodBagItemCountCache and addon.functions.shouldMaintainFoodBagItemCountCache() then
+			updateFoodBagItemCountCacheDirty()
+		else
+			invalidateSharedFoodBagItemCountCache(false)
+		end
+	end
 end)
 
 function addon.Recuperate.Update()

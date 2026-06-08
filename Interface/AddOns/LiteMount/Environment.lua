@@ -133,8 +133,21 @@ local StateUpdateFunctions = {
             return self:IsFlyableArea()
         end,
     isMovingOrFalling =
-        function ()
-            return (GetUnitSpeed("player") > 0 or IsFalling())
+        function (self)
+            if IsFalling() then
+                return true
+            end
+            local currentSpeed = GetUnitSpeed("player")
+            if issecretvalue(currentSpeed) then
+                if self.stoppedMoving == nil then
+                    return true
+                end
+            else
+                if currentSpeed > 0 then
+                    return true
+                end
+            end
+            return false
         end,
     isPhaseDiving =
         function (self)
@@ -268,17 +281,34 @@ function LM.Environment:ADDON_RESTRICTION_STATE_CHANGED(event, secretType, secre
     end
 end
 
-local herbSpellName = C_Spell.GetSpellName(2366)
-local mineSpellName = C_Spell.GetSpellName(2575)
--- local mineSpellName2 = C_Spell.GetSpellName(195122)
+local gatherSpellNames = { }
+
+do
+    -- These are converted to names since most of the spells are just named
+    -- "Mining" and "Herb Gathering" and it saves storing a billion spell IDs.
+    -- For some reason in Midnight they decided to change it. The assumption
+    -- is that if you know the profession this will return a name.
+    local gatherSpellIDs = {
+        [2366]      = "herb",       -- "Herb Gathering"
+        [471022]    = "herb",       -- "Midnight Herbalism"
+        [2575]      = "mine",       -- "Mining"
+        [471013]    = "mine",       -- "Midnight Mining"
+    }
+    for id, gatherType in pairs(gatherSpellIDs) do
+        local name = C_Spell.GetSpellName(id)
+        if name then
+            gatherSpellNames[name] = gatherType
+        end
+    end
+end
 
 function LM.Environment:UNIT_SPELLCAST_SUCCEEDED(ev, unit, guid, spellID)
     -- Strictly speaking this check isn't needed because of RegisterUnitEvent
     if unit == 'player' then
         local spellName = C_Spell.GetSpellName(spellID)
-        if spellName == herbSpellName then
+        if gatherSpellNames[spellName] == "herb" then
             self.lastHerbTime = GetTime()
-        elseif spellName == mineSpellName then
+        elseif gatherSpellNames[spellName] == "mine" then
             self.lastMineTime = GetTime()
         end
     end
@@ -397,6 +427,7 @@ end
 local InstanceFlyableOverride = {
     [1662] = false,     -- Suramar campaign scenario
     [1750] = false,     -- Azuremyst Isle
+    [2005] = false,     -- Battle of Ardenweald (Shadowlands)
     [2275] = false,     -- Lesser Vision Vale of Eternal Twilight
     [2512] = true,      -- The Primalist Future
     [2549] =            -- Amirdrassil Raid
@@ -409,7 +440,7 @@ local InstanceFlyableOverride = {
         end,
     [2597] = false,     -- Zaralek Caverns - Chapter 1 Scenario
                         -- The debuff "Hostile Airways" (406608) but it's always up
-    [2662] = true,      -- The Dawnbreaker (Dungeon) after /reload it goes wrong
+    [2662] = true,      -- The Dawnbreaker (TWW Dungeon) after /reload it goes wrong
 }
 
 function LM.Environment:GetFlyableOverride()
@@ -430,56 +461,19 @@ function LM.Environment:IsFlyableArea()
         return override
     end
 
-    if false and WOW_PROJECT_ID == WOW_PROJECT_MISTS_CLASSIC then
-        -- Northrend requires Cold Weather Flying
-        if self:IsInInstance(571) then
-            if not IsPlayerSpell(54197) then
-                return false
-            end
-        end
-        -- Eastern Kingdoms, Kalimdor and Deepholm require Flight Master's License
-        if self:IsInInstance(0, 1, 646) then
-            if not IsPlayerSpell(90267) then
-                return false
-            end
-        end
-        -- Pandaria requires Wisdom of the Four Winds
-        if self:IsInInstance(870) then
-            if not IsPlayerSpell(115913) then
-                return false
-            end
-        end
-    end
-
-    if self:IsInInstance(2552, 2601, 2738) then
-        -- In Khaz Algar (Surface) (2552), Khaz Algar (2601) and K'aresh (2739)
-        -- before unlocking Steady Flight, IsFlyableArea() is false and I don't
-        -- know of a check to see if Skyriding would work.
-        if select(4, GetAchievementInfo(40231)) == false then
-            return true
-        end
-    elseif self:IsMapInPath(1978) then
-        -- In Dragon Isles (1978) IsFlyableArea() is false until you unlock
-        -- Dragon Isles Pathfinder.
-        if select(4, GetAchievementInfo(19307)) == false then
-            return true
-        end
-    end
-
-    -- Detect Legion: Remix with aura and require unlock for dragonriding.
-    -- This is a massive mess by Blizzard. You can steady fly from the start
-    -- but you can't skyride (opposite of normal). The game says Skyriding
-    -- is unlocked by completing quest A Fixed Point In Time (89418) but it's
-    -- unlocked a handful of quests earlier by Eternal Gratitude (89416). All
-    -- of this might be different if you never unlocked Steady Flight on your
-    -- account.
-
-    if PlayerIsTimerunning and PlayerIsTimerunning() and self.playerBuffIDs[1213439] then
-        local _, flightStyle = self:GetFlightStyle()
-        if flightStyle == 'skyriding' and not C_QuestLog.IsQuestFlaggedCompleted(89416) then
-            return false
-        end
-    end
+    -- This is where various flying unlock checks used to be, and could be
+    -- again if Blizzard bring them back. Old examples for reference:
+    --
+    --  Northrend requires Cold Weather Flying
+    --      self:IsInInstance(571) -> IsPlayerSpell(54197)
+    --  Eastern Kingdoms, Kalimdor and Deepholm require Flight Master's License
+    --      self:IsInInstance(0, 1, 646) -> IsPlayerSpell(90267)
+    --  Pandaria requires Wisdom of the Four Winds
+    --      self:IsInInstance(870) -> IsPlayerSpell(115913)
+    --  TWW Pathfinder
+    --      self:IsInInstance(2552, 2601, 2738) -> select(4, GetAchievementInfo(40231))
+    --  Dragon Isles Pathfinder
+    --      self:IsMapInPath(1978) -> select(4, GetAchievementInfo(19307))
 
     -- Can't fly in Warfronts
     if C_Scenario and C_Scenario.IsInScenario() then

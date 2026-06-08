@@ -23,11 +23,9 @@
     </Scripts>
 </Button>
 
-<Frame name="LiteMountMacroPanel" hidden="true" inherits="LiteMountOptionsPanelTemplate" mixin="LiteMountMacroPanelMixin">
-
+<Frame name="LiteMountMacroPanel" hidden="true" inherits="LiteMountSettingsPanelTemplate" mixin="LiteMountMacroPanelMixin">
     <Scripts>
-        <OnLoad method="OnLoad" inherit="append" />
-        <OnShow method="OnShow" inherit="append" />
+        <OnLoad method="OnLoad" />
     </Scripts>
 
     <Frames>
@@ -38,7 +36,7 @@
                 <Anchor point="BOTTOM" y="16" />
             </Anchors>
             <Frames>
-                <ScrollFrame parentKey="ScrollBox" inherits="WoWScrollBoxList" mixin="LiteMountGroupsPanelGroupScrollBoxMixin">
+                <ScrollFrame parentKey="ScrollBox" inherits="WoWScrollBoxList">
                     <Anchors>
                         <Anchor point="TOPLEFT" x="8" y="-8" />
                         <Anchor point="BOTTOMRIGHT" x="-8" y="8" />

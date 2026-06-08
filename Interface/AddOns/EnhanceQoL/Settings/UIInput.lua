@@ -140,6 +140,10 @@ local framesExpandable = addon.SettingsLayout.uiFramesExpandable
 if not framesExpandable then
 	framesExpandable = addon.functions.SettingsCreateExpandableSection(cUIInput, {
 		name = L["VisibilityAndFadingFrames"] or "Visibility & Fading (Frames)",
+		configPageKey = "VisibilityFrames",
+		iconKey = "visibility",
+		description = L["configCenterPageDescVisibilityFrames"]
+			or "Control when supported Blizzard frames are shown, hidden or faded during combat, targeting and mouseover states.",
 		expanded = false,
 		colorizeTitle = false,
 	})
@@ -149,10 +153,13 @@ end
 local barsResourcesExpandable = addon.SettingsLayout.uiBarsResourcesExpandable
 if not barsResourcesExpandable then
 	barsResourcesExpandable = addon.functions.SettingsCreateExpandableSection(cUIInput, {
-		name = L["BarsAndResources"] or "Bars & Resources",
+		name = L["BarsAndResources"] or "XP & Absorb Bars",
+		configPageKey = "BarsAndResources",
+		description = L["configCenterPageDescBarsResources"]
+			or "Configure the XP and reputation bar plus the standalone absorb tracker.",
 		expanded = false,
 		colorizeTitle = false,
-		newTagID = "ResourceBars",
+		iconKey = "resource",
 	})
 	addon.SettingsLayout.uiBarsResourcesExpandable = barsResourcesExpandable
 end
@@ -238,6 +245,16 @@ local function applyUIScalePreset()
 end
 addon.functions.applyUIScalePreset = applyUIScalePreset
 
+local function isEQoLPlayerFrameEnabled()
+	local uf = addon.Aura and addon.Aura.UF
+	if uf and uf.GetConfig then
+		local cfg = uf.GetConfig("player")
+		return cfg and cfg.enabled == true
+	end
+	local cfg = addon.db and addon.db.ufFrames and addon.db.ufFrames.player
+	return cfg and cfg.enabled == true
+end
+
 local function EQOL_UpdateStatusBars(container, height, width, scale)
 	if not container then return end
 
@@ -279,13 +296,19 @@ function addon.functions.SettingsCreateClassSpecificResourceBars(category, paren
 	if not classTag then return end
 
 	local data = {}
+	local function isBlizzardClassResourceControlEnabled() return not isEQoLPlayerFrameEnabled() end
+	local function isBlizzardClassResourceControlHidden() return isEQoLPlayerFrameEnabled() end
+	local blizzardClassResourceControlDesc = L["visibilityRule_lockedByUF"] or "Visibility is controlled by Enhanced Unit Frames. Disable them to change this setting."
 
 	local function addTotemCheckbox(dbKey)
 		table.insert(data, {
 			var = dbKey,
 			text = L["shaman_HideTotem"],
+			desc = blizzardClassResourceControlDesc,
 			func = function(value) addon.db[dbKey] = value end,
 			get = function() return addon.db[dbKey] end,
+			isEnabled = isBlizzardClassResourceControlEnabled,
+			hiddenWhen = isBlizzardClassResourceControlHidden,
 			parentSection = parentSection,
 		})
 	end
@@ -294,10 +317,13 @@ function addon.functions.SettingsCreateClassSpecificResourceBars(category, paren
 		table.insert(data, {
 			var = "deathknight_HideRuneFrame",
 			text = L["deathknight_HideRuneFrame"],
+			desc = blizzardClassResourceControlDesc,
 			func = function(value)
 				addon.db["deathknight_HideRuneFrame"] = value
 				if addon.functions and addon.functions.UpdateClassResourceVisibility then addon.functions.UpdateClassResourceVisibility() end
 			end,
+			isEnabled = isBlizzardClassResourceControlEnabled,
+			hiddenWhen = isBlizzardClassResourceControlHidden,
 			parentSection = parentSection,
 		})
 		addTotemCheckbox("deathknight_HideTotemBar")
@@ -306,20 +332,26 @@ function addon.functions.SettingsCreateClassSpecificResourceBars(category, paren
 		table.insert(data, {
 			var = "druid_HideComboPoint",
 			text = L["Hide Combopointbar"],
+			desc = blizzardClassResourceControlDesc,
 			func = function(value)
 				addon.db["druid_HideComboPoint"] = value
 				if addon.functions and addon.functions.UpdateClassResourceVisibility then addon.functions.UpdateClassResourceVisibility() end
 			end,
+			isEnabled = isBlizzardClassResourceControlEnabled,
+			hiddenWhen = isBlizzardClassResourceControlHidden,
 			parentSection = parentSection,
 		})
 	elseif classTag == "EVOKER" then
 		table.insert(data, {
 			var = "evoker_HideEssence",
 			text = L["evoker_HideEssence"],
+			desc = blizzardClassResourceControlDesc,
 			func = function(value)
 				addon.db["evoker_HideEssence"] = value
 				if addon.functions and addon.functions.UpdateClassResourceVisibility then addon.functions.UpdateClassResourceVisibility() end
 			end,
+			isEnabled = isBlizzardClassResourceControlEnabled,
+			hiddenWhen = isBlizzardClassResourceControlHidden,
 			parentSection = parentSection,
 		})
 	elseif classTag == "MAGE" then
@@ -328,10 +360,13 @@ function addon.functions.SettingsCreateClassSpecificResourceBars(category, paren
 		table.insert(data, {
 			var = "monk_HideHarmonyBar",
 			text = L["monk_HideHarmonyBar"],
+			desc = blizzardClassResourceControlDesc,
 			func = function(value)
 				addon.db["monk_HideHarmonyBar"] = value
 				if addon.functions and addon.functions.UpdateClassResourceVisibility then addon.functions.UpdateClassResourceVisibility() end
 			end,
+			isEnabled = isBlizzardClassResourceControlEnabled,
+			hiddenWhen = isBlizzardClassResourceControlHidden,
 			parentSection = parentSection,
 		})
 		addTotemCheckbox("monk_HideTotemBar")
@@ -343,10 +378,13 @@ function addon.functions.SettingsCreateClassSpecificResourceBars(category, paren
 		table.insert(data, {
 			var = "rogue_HideComboPoint",
 			text = L["Hide Combopointbar"],
+			desc = blizzardClassResourceControlDesc,
 			func = function(value)
 				addon.db["rogue_HideComboPoint"] = value
 				if addon.functions and addon.functions.UpdateClassResourceVisibility then addon.functions.UpdateClassResourceVisibility() end
 			end,
+			isEnabled = isBlizzardClassResourceControlEnabled,
+			hiddenWhen = isBlizzardClassResourceControlHidden,
 			parentSection = parentSection,
 		})
 	elseif classTag == "PALADIN" then
@@ -354,20 +392,26 @@ function addon.functions.SettingsCreateClassSpecificResourceBars(category, paren
 		table.insert(data, {
 			var = "paladin_HideHolyPower",
 			text = L["paladin_HideHolyPower"],
+			desc = blizzardClassResourceControlDesc,
 			func = function(value)
 				addon.db["paladin_HideHolyPower"] = value
 				if addon.functions and addon.functions.UpdateClassResourceVisibility then addon.functions.UpdateClassResourceVisibility() end
 			end,
+			isEnabled = isBlizzardClassResourceControlEnabled,
+			hiddenWhen = isBlizzardClassResourceControlHidden,
 			parentSection = parentSection,
 		})
 	elseif classTag == "WARLOCK" then
 		table.insert(data, {
 			var = "warlock_HideSoulShardBar",
 			text = L["warlock_HideSoulShardBar"],
+			desc = blizzardClassResourceControlDesc,
 			func = function(value)
 				addon.db["warlock_HideSoulShardBar"] = value
 				if addon.functions and addon.functions.UpdateClassResourceVisibility then addon.functions.UpdateClassResourceVisibility() end
 			end,
+			isEnabled = isBlizzardClassResourceControlEnabled,
+			hiddenWhen = isBlizzardClassResourceControlHidden,
 			parentSection = parentSection,
 		})
 		addTotemCheckbox("warlock_HideTotemBar")
@@ -386,6 +430,7 @@ local data = {
 	{
 		var = "modifyXPRepBar",
 		text = L["modifyXPRepBar"],
+		desc = L["modifyXPRepBarDesc"],
 		func = function(v)
 			addon.db["modifyXPRepBar"] = v
 			local height, width, scale = 17, 571, 1
@@ -402,6 +447,7 @@ local data = {
 			{
 				var = "modifyXPRepBarWidth",
 				text = HUD_EDIT_MODE_SETTING_CHAT_FRAME_WIDTH,
+				desc = L["modifyXPRepBarWidthDesc"],
 				get = function()
 					local w = MainStatusTrackingBarContainer:GetSize()
 					return addon.db and addon.db.modifyXPRepBarWidth or w
@@ -429,6 +475,7 @@ local data = {
 			{
 				var = "modifyXPRepBarHeight",
 				text = HUD_EDIT_MODE_SETTING_CHAT_FRAME_HEIGHT,
+				desc = L["modifyXPRepBarHeightDesc"],
 				get = function()
 					local _, h = MainStatusTrackingBarContainer:GetSize()
 					return addon.db and addon.db.modifyXPRepBarHeight or h
@@ -456,6 +503,7 @@ local data = {
 			{
 				var = "modifyXPRepBarScale",
 				text = RENDER_SCALE,
+				desc = L["modifyXPRepBarScaleDesc"],
 				get = function() return addon.db and addon.db.modifyXPRepBarScale or 1 end,
 				set = function(v)
 					addon.db["modifyXPRepBarScale"] = v
@@ -486,9 +534,12 @@ if addon.Aura and addon.Aura.functions and addon.Aura.functions.AddResourceBarsS
 
 local interfaceExpandable = addon.functions.SettingsCreateExpandableSection(cUIInput, {
 	name = L["PopupsAndUITweaks"] or "Popups & UI Tweaks",
+	description = L["configCenterPageDescPopupsUITweaks"]
+		or "Tune login UI scaling, collection alerts, micro menu notifications and small Blizzard UI conveniences.",
 	expanded = false,
 	colorizeTitle = false,
 	newTagID = "PopupsAndUITweaks",
+	iconKey = "popups",
 })
 
 local uiScaleOptions = {
@@ -548,12 +599,14 @@ data = {
 	{
 		var = "ignoreTalkingHead",
 		text = string.format(L["ignoreTalkingHeadN"], HUD_EDIT_MODE_TALKING_HEAD_FRAME_LABEL),
+		desc = L["ignoreTalkingHeadDesc"],
 		func = function(v) addon.db["ignoreTalkingHead"] = v end,
 		parentSection = interfaceExpandable,
 	},
 	{
 		var = "ffxDeath",
 		text = L["ffxDeath"],
+		desc = L["ffxDeathDesc"],
 		get = function() return getCVarOptionState("ffxDeath") end,
 		func = function(value) setCVarOptionState("ffxDeath", value) end,
 		default = false,
@@ -562,6 +615,7 @@ data = {
 	{
 		var = "hideZoneText",
 		text = L["hideZoneText"],
+		desc = L["hideZoneTextDesc"],
 		func = function(v)
 			addon.db["hideZoneText"] = v
 			addon.functions.toggleZoneText(addon.db["hideZoneText"])
@@ -579,8 +633,19 @@ data = {
 		parentSection = interfaceExpandable,
 	},
 	{
+		var = "hideQuickJoinToast",
+		text = L["hideQuickJoinToast"],
+		desc = L["hideQuickJoinToastDesc"],
+		func = function(v)
+			addon.db["hideQuickJoinToast"] = v and true or false
+			addon.functions.toggleQuickJoinToastButton(addon.db["hideQuickJoinToast"])
+		end,
+		parentSection = interfaceExpandable,
+	},
+	{
 		var = "hideRaidTools",
-		text = L["Hide Raid Tools in Party"],
+		text = L["hideRaidTools"],
+		desc = L["hideRaidToolsDesc"],
 		func = function(v)
 			local wasEnabled = addon.db["hideRaidTools"] == true
 			addon.db["hideRaidTools"] = v and true or false

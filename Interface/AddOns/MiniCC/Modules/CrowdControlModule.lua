@@ -6,6 +6,7 @@ local frames = addon.Core.Frames
 local units = addon.Utils.Units
 local iconSlotContainer = addon.Core.IconSlotContainer
 local unitAuraWatcher = addon.Core.UnitAuraWatcher
+local kickTracker = addon.Core.KickTracker
 local moduleUtil = addon.Utils.ModuleUtil
 local moduleName = addon.Utils.ModuleName
 local wowEx = addon.Utils.WoWEx
@@ -14,14 +15,14 @@ local paused = false
 local testModeActive = false
 ---@type Db
 local db
-
-local function GetOptions()
-	return instanceOptions:IsRaid() and db.Modules.CCModule.Raid or db.Modules.CCModule.Default
-end
 ---@type table<table, CrowdControlWatchEntry>
 local watchers = {}
 ---@type TestSpell[]
 local testSpells = {}
+
+local function GetOptions()
+	return instanceOptions:IsRaid() and db.Modules.CCModule.Raid or db.Modules.CCModule.Default
+end
 
 ---@class CrowdControlModule : IModule
 local M = {}
@@ -67,6 +68,21 @@ local function UpdateWatcherAuras(entry)
 	local ccState = entry.Watcher:GetCcState()
 	local slotIndex = 1
 	local showTooltips = options.ShowTooltips ~= false
+
+	local kickEntry = not isPet and kickTracker:GetKick(entry.Unit) or nil
+	if kickEntry then
+		container:SetSlot(slotIndex, {
+			Texture = kickEntry.Texture,
+			DurationObject = kickEntry.DurationObject,
+			Alpha = true,
+			ReverseCooldown = options.Icons.ReverseCooldown,
+			ShowMilliseconds = options.Icons.ShowMilliseconds,
+			Glow = options.Icons.Glow,
+			Color = options.Icons.ColorByDispelType and kickEntry.Color,
+			FontScale = db.FontScale,
+		})
+		slotIndex = slotIndex + 1
+	end
 
 	for _, aura in ipairs(ccState) do
 		if slotIndex > container.Count then
@@ -120,8 +136,12 @@ local function AnchorContainer(header, anchor, options)
 	elseif options.Grow == "DOWN" then
 		anchorPoint = "TOP"
 		relativeToPoint = "BOTTOM"
+	elseif options.Grow == "UP" then
+		anchorPoint = "BOTTOM"
+		relativeToPoint = "TOP"
 	end
 	header:SetGrowDown(options.Grow == "DOWN")
+	header:SetGrowUp(options.Grow == "UP")
 	header:SetColumns(nil)
 	frame:SetPoint(anchorPoint, anchor, relativeToPoint, options.Offset.X, options.Offset.Y)
 end
@@ -164,7 +184,7 @@ local function EnsureWatcher(anchor, unit)
 
 	if not entry then
 		local count = options.Icons.Count or 5
-		local size = tonumber(options.Icons.Size) or (isPet and 24 or 32)
+		local size = moduleUtil:GetIconSize(options.Icons, anchor, isPet and 24 or 32, isPet and 50 or 80)
 		local spacing = db.IconSpacing or 2
 		local container = iconSlotContainer:New(UIParent, count, size, spacing, "CC", nil, "CC")
 		local watcher = unitAuraWatcher:New(unit, nil, { CC = true })
@@ -174,15 +194,27 @@ local function EnsureWatcher(anchor, unit)
 			Watcher = watcher,
 			Anchor = anchor,
 			Unit = unit,
+			KickKey = 0,
 		}
 		watchers[anchor] = entry
 
 		watcher:RegisterCallback(function()
 			UpdateWatcherAuras(entry)
 		end)
+
+		if not isPet then
+			kickTracker:Watch(unit)
+			entry.KickKey = kickTracker:Subscribe(unit, function()
+				UpdateWatcherAuras(entry)
+			end)
+		end
 	else
 		-- Check if unit has changed
 		if entry.Unit ~= unit then
+			if not units:IsPetOrMinion(entry.Unit) then
+				kickTracker:Unsubscribe(entry.Unit, entry.KickKey)
+			end
+
 			-- Unit changed, recreate the watcher
 			entry.Watcher:Dispose()
 			entry.Watcher = unitAuraWatcher:New(unit, nil, { CC = true })
@@ -193,6 +225,13 @@ local function EnsureWatcher(anchor, unit)
 
 			-- Clear the container since it's a different unit now
 			entry.Container:ResetAllSlots()
+
+			if not isPet then
+				kickTracker:Watch(unit)
+				entry.KickKey = kickTracker:Subscribe(unit, function()
+					UpdateWatcherAuras(entry)
+				end)
+			end
 
 			-- Force immediate refresh for the new unit
 			UpdateWatcherAuras(entry)
@@ -214,7 +253,7 @@ local function EnsureWatchers()
 		EnsureWatcher(anchor)
 	end
 
-	-- Pet frames never appear in GetAll — discover them directly.
+	-- Pet frames never appear in GetAll - discover them directly.
 	if testModeActive or moduleUtil:IsModuleEnabled(moduleName.PetCC) then
 		for i = 1, 6 do
 			local frame = _G["CompactPartyFramePet" .. i]
@@ -262,6 +301,17 @@ local function OnCufSetUnit(frame, unit)
 		return
 	end
 
+	local isPet = units:IsPetOrMinion(unit)
+	if isPet then
+		if not testModeActive and not moduleUtil:IsModuleEnabled(moduleName.PetCC) then
+			return
+		end
+	else
+		if not moduleUtil:IsModuleEnabled(moduleName.CrowdControl) then
+			return
+		end
+	end
+
 	EnsureWatcher(frame, unit)
 end
 
@@ -299,7 +349,7 @@ local function RefreshTestIcons()
 		end
 
 		if not entryEnabled then
-			-- This frame type is disabled — hide and clear it
+			-- This frame type is disabled - hide and clear it
 			entry.Container:ResetAllSlots()
 			entry.Container.Frame:Hide()
 		else
@@ -440,12 +490,12 @@ function M:Refresh()
 		end
 
 		if not entryEnabled or not entryOptions then
-			-- This entry's feature is toggled off — hide and disable it
+			-- This entry's feature is toggled off - hide and disable it
 			entry.Watcher:Disable()
 			entry.Container:ResetAllSlots()
 			entry.Container.Frame:Hide()
 		else
-			local iconSize = tonumber(entryOptions.Icons.Size) or (isPet and 24 or 32)
+			local iconSize = moduleUtil:GetIconSize(entryOptions.Icons, anchor, isPet and 24 or 32, isPet and 50 or 80)
 			local iconCount = entryOptions.Icons.Count or 5
 
 			entry.Container:SetIconSize(iconSize)
@@ -496,6 +546,12 @@ function M:Init()
 	local fs = FrameSortApi and FrameSortApi.v3
 	if fs and fs.Sorting and fs.Sorting.RegisterPostSortCallback then
 		fs.Sorting:RegisterPostSortCallback(OnFrameSortSorted)
+	end
+
+	if DandersFrames and DandersFrames.RegisterCallback then
+		DandersFrames.RegisterCallback(eventsFrame, "OnFramesSorted", function()
+			M:Refresh()
+		end)
 	end
 
 	frames:HookCellSpotlightVisibility(function()

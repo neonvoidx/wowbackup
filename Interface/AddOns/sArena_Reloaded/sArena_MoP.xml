@@ -10,6 +10,7 @@
     <Include file="Ace3\AceConfig-3.0\AceConfig-3.0.xml"/>
     <Script file="Ace3\Libs\LibDeflate\LibDeflate.lua"/>
     <Script file="Ace3\Libs\LibSerialize\LibSerialize.lua"/>
+    <Include file="Ace3\Libs\LibCustomGlow-1.0\LibCustomGlow-1.0.xml"/>
 
     <Script file="sArena_Init.lua"/>
     <Include file="Locales\locales.xml"/>
@@ -23,9 +24,13 @@
     <Script file="Modules\Clicks.lua"/>
     <Script file="Modules\Interrupt.lua"/>
     <Script file="Modules\ConflictCheck.lua"/>
+    <Script file="GUI\IntroPopup.lua"/>
     <Script file="sArena.lua"/>
     <Script file="Modules\TestMode.lua"/>
     <Script file="Modules\Widgets.lua"/>
+    <Script file="Modules\PetFrames.lua"/>
+    <Script file="Modules\AuraHighlight.lua"/>
+    <Script file="Modules\Absorbs.lua"/>
     <Script file="Modules\RangeCheck.lua"/>
     <Script file="Modules\Fonts.lua"/>
     <Script file="Modules\Textures.lua"/>
@@ -33,12 +38,14 @@
     <Script file="Modules\Dispels.lua"/>
     <Script file="Modules\DiminishingReturns.lua"/>
     <Script file="Modules\ImportExport.lua"/>
+    <Script file="GUI\AceGUIExtras.lua"/>
     <Script file="Config.lua"/>
     <Script file="Modules\Auras.lua"/>
     <Script file="Modules\Trinkets.lua"/>
     <Script file="Modules\ModernCastbar.lua"/>
     <Script file="Modules\Masque.lua"/>
     <Script file="Layouts\BlizzArena.lua"/>
+    <Script file="Layouts\BlizzRaid.lua"/>
     <Script file="Layouts\BlizzRetail.lua"/>
     <Script file="Layouts\BlizzCompact.lua"/>
     <Script file="Layouts\BlizzTourney.lua"/>
@@ -111,7 +118,7 @@
         </Scripts>
     </Frame>
 
-    <StatusBar name="sArenaCastBarFrameTemplate" enablemouse="true" movable="true" virtual="true" hidden="true">
+    <StatusBar name="sArenaCastBarFrameTemplate" mixin="CastingBarMixin"  enablemouse="true" movable="true" virtual="true" hidden="true">
         <Layers>
             <Layer level="BACKGROUND">
                 <Texture parentKey="Background" setAllPoints="true">
@@ -137,7 +144,7 @@
 
             <Layer level="OVERLAY">
                 <Texture parentKey="Spark" file="Interface\CastingBar\UI-CastingBar-Spark" alphaMode="ADD">
-                    <Size x="14" y="37"/>
+                    <Size x="12" y="21"/>
                     <Anchors>
                         <Anchor point="CENTER"/>
                     </Anchors>
@@ -151,14 +158,16 @@
                 </Texture>
             </Layer>
         </Layers>
-        <Scripts>
-            <OnLoad function="CastingBarFrame_OnLoad"/>
-            <OnEvent function="CastingBarFrame_OnEvent"/>
-            <OnUpdate function="CastingBarFrame_OnUpdate"/>
-            <OnShow function="CastingBarFrame_OnShow"/>
-        </Scripts>
         <BarTexture file="Interface\TargetingFrame\UI-StatusBar"/>
         <BarColor r="1.0" g="0.7" b="0.0"/>
+        <Scripts>
+            <OnLoad>
+                self:OnLoad(nil, true, false);
+            </OnLoad>
+            <OnEvent method="OnEvent" />
+            <OnUpdate method="OnUpdate" />
+            <OnShow method="OnShow" />
+        </Scripts>
     </StatusBar>
 
     <Frame name="sArenaIconFrameTemplate" enablemouse="true" movable="true" virtual="true">
@@ -184,7 +193,7 @@
         </Frames>
     </Frame>
 
-    <Frame name="sArenaWidgetFrameTemplate" enablemouse="true" movable="true" virtual="true" hidden="true">
+    <Frame name="sArenaWidgetFrameTemplate" frameStrata="MEDIUM" frameLevel="100" enablemouse="true" movable="true" virtual="true" hidden="true">
         <Layers>
             <Layer level="OVERLAY">
                 <Texture parentKey="Texture" setAllPoints="true"/>
@@ -257,7 +266,6 @@
                     </Layer>
                 </Layers>
             </StatusBar>
-            <StatusBar parentKey="CastBar" inherits="sArenaCastBarFrameTemplate"/>
             <Frame parentKey="ClassIcon" frameLevel="7" enablemouse="true" movable="true">
                 <Layers>
                     <Layer level="BORDER" textureSubLevel="1">
@@ -284,7 +292,7 @@
                     </Cooldown>
                 </Frames>
             </Frame>
-            <Frame parentKey="SpecIcon" frameLevel="12" enablemouse="true" movable="true">
+            <Frame parentKey="SpecIcon" frameStrata="MEDIUM" frameLevel="50" enablemouse="true" movable="true">
                 <Layers>
                     <Layer level="ARTWORK" textureSubLevel="2">
                         <Texture parentKey="Texture" setAllPoints="true"/>
@@ -293,7 +301,7 @@
                 </Layers>
             </Frame>
 
-            <Frame parentKey="WidgetOverlay" frameLevel="10" setAllPoints="true">
+            <Frame parentKey="WidgetOverlay" frameStrata="MEDIUM" frameLevel="50" setAllPoints="true">
                 <Frames>
                     <Frame parentKey="targetIndicator" inherits="sArenaWidgetFrameTemplate">
                         <KeyValues>
@@ -308,6 +316,11 @@
                     <Frame parentKey="combatIndicator" inherits="sArenaWidgetFrameTemplate">
                         <KeyValues>
                             <KeyValue key="atlas" value="Food" type="string"/>
+                        </KeyValues>
+                    </Frame>
+                    <Frame parentKey="healerIndicator" inherits="sArenaWidgetFrameTemplate">
+                        <KeyValues>
+                            <KeyValue key="atlas" value="bags-icon-addslots" type="string"/>
                         </KeyValues>
                     </Frame>
                     <Frame parentKey="partyTarget1" inherits="sArenaWidgetFrameTemplate">
@@ -362,19 +375,71 @@
             <Frame parentKey="Racial" inherits="sArenaIconFrameTemplate"/>
             <Frame parentKey="Dispel" inherits="sArenaIconFrameTemplate"/>
 
-            <Frame parentKey="Incapacitate" inherits="sArenaDRFrameTemplate"/>
-            <Frame parentKey="Stun" inherits="sArenaDRFrameTemplate"/>
-            <Frame parentKey="RandomStun" inherits="sArenaDRFrameTemplate"/>
-            <Frame parentKey="RandomRoot" inherits="sArenaDRFrameTemplate"/>
-			<Frame parentKey="Root" inherits="sArenaDRFrameTemplate"/>
-			<Frame parentKey="Disarm" inherits="sArenaDRFrameTemplate"/>
-			<Frame parentKey="Fear" inherits="sArenaDRFrameTemplate"/>
-            <Frame parentKey="Disorient" inherits="sArenaDRFrameTemplate"/>
-			<Frame parentKey="Silence" inherits="sArenaDRFrameTemplate"/>
-			<Frame parentKey="Horror" inherits="sArenaDRFrameTemplate"/>
-			<Frame parentKey="MindControl" inherits="sArenaDRFrameTemplate"/>
-			<Frame parentKey="Cyclone" inherits="sArenaDRFrameTemplate"/>
-			<Frame parentKey="Charge" inherits="sArenaDRFrameTemplate"/>
+            <Button parentKey="PetFrame" frameStrata="MEDIUM" frameLevel="5" mixin="sArenaPetFrameMixin" hidden="true" enableMouse="true" movable="true" inherits="SecureUnitButtonTemplate">
+                <Layers>
+                    <Layer level="BORDER" textureSubLevel="1">
+                        <Texture parentKey="totalAbsorbBar" inherits="TotalAbsorbBarTemplate">
+                            <KeyValues>
+                                <KeyValue key="fillTexture" value="Interface\RaidFrame\Shield-Fill" type="string"/>
+                            </KeyValues>
+                        </Texture>
+                    </Layer>
+                    <Layer level="ARTWORK" textureSubLevel="3">
+                        <FontString parentKey="Name" inherits="GameFontNormalSmall"/>
+                        <FontString parentKey="HealthText" inherits="GameFontNormalSmall"/>
+                        <Texture parentKey="overAbsorbGlow" inherits="OverAbsorbGlowTemplate"/>
+                        <Texture parentKey="totalAbsorbBarOverlay" inherits="TotalAbsorbBarOverlayTemplate"/>
+                    </Layer>
+                </Layers>
+                <Frames>
+                    <StatusBar parentKey="HealthBar" drawLayer="BORDER" useParentLevel="true" setAllPoints="true">
+                        <Layers>
+                            <Layer level="BACKGROUND">
+                                <Texture parentKey="hpUnderlay" setAllPoints="true">
+                                    <Color r="0" g="0" b="0" a="0.6"/>
+                                </Texture>
+                            </Layer>
+                            <Layer level="OVERLAY" textureSubLevel="3">
+                            </Layer>
+                        </Layers>
+                    </StatusBar>
+                    <Frame parentKey="WidgetOverlay" frameStrata="MEDIUM" frameLevel="10" setAllPoints="true">
+                        <Frames>
+                            <Frame parentKey="targetIndicator" inherits="sArenaWidgetFrameTemplate"/>
+                            <Frame parentKey="focusIndicator" inherits="sArenaWidgetFrameTemplate"/>
+                            <Frame parentKey="combatIndicator" inherits="sArenaWidgetFrameTemplate"/>
+                            <Frame parentKey="partyTarget1" inherits="sArenaWidgetFrameTemplate"/>
+                            <Frame parentKey="partyTarget2" inherits="sArenaWidgetFrameTemplate"/>
+                            <Frame parentKey="partyTarget3" inherits="sArenaWidgetFrameTemplate"/>
+                            <Frame parentKey="partyTarget4" inherits="sArenaWidgetFrameTemplate"/>
+                            <Frame parentKey="inRangeIcon" inherits="sArenaWidgetFrameTemplate">
+                                <KeyValues>
+                                    <KeyValue key="ignoreParentAlpha" value="true" type="boolean"/>
+                                </KeyValues>
+                            </Frame>
+                            <Frame parentKey="notInRangeIcon" inherits="sArenaWidgetFrameTemplate">
+                                <KeyValues>
+                                    <KeyValue key="ignoreParentAlpha" value="true" type="boolean"/>
+                                </KeyValues>
+                            </Frame>
+                        </Frames>
+                    </Frame>
+                    <Frame parentKey="TargetFocusBorder" frameStrata="MEDIUM" frameLevel="20" hidden="true">
+                        <Layers>
+                            <Layer level="OVERLAY" textureSubLevel="5">
+                                <Texture parentKey="top"/>
+                                <Texture parentKey="right"/>
+                                <Texture parentKey="bottom"/>
+                                <Texture parentKey="left"/>
+                            </Layer>
+                        </Layers>
+                    </Frame>
+                </Frames>
+                <Scripts>
+                    <OnLoad method="OnLoad"/>
+                    <OnEvent method="OnEvent"/>
+                </Scripts>
+            </Button>
         </Frames>
 
         <Scripts>

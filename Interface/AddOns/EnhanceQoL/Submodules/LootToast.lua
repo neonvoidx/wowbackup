@@ -516,11 +516,14 @@ function LootToast:ApplyGroupLootLayout()
 		GroupLootContainer:SetScale(layout.scale)
 	end
 
+	for i = 1, NUM_GROUP_LOOT_FRAMES or 4 do
+		local frame = _G["GroupLootFrame" .. i]
+		if FrameIsAccessible(frame) then frame:SetScale(layout.scale) end
+	end
+
 	local bonusFrame = _G.BonusRollFrame
 	if FrameIsAccessible(bonusFrame) then
 		bonusFrame.ignoreFramePositionManager = true
-		bonusFrame:ClearAllPoints()
-		bonusFrame:SetPoint("BOTTOM", anchor, "TOP", layout.offsetX, layout.offsetY)
 		bonusFrame:SetScale(layout.scale)
 	end
 

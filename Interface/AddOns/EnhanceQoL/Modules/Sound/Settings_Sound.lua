@@ -99,18 +99,21 @@ local function AllChildrenArePureNumbers(tbl)
 	return hasEntries and true or false
 end
 
-local cSound = addon.SettingsLayout.rootSOUND
-addon.SettingsLayout.soundCategory = cSound
+local soundCategory = nil
 
-local audioDeviceExpandable = addon.functions.SettingsCreateExpandableSection(cSound, {
+local audioDeviceExpandable = addon.functions.SettingsCreateExpandableSection(soundCategory, {
 	name = L["audioDeviceSection"] or "Audio device",
+	configPageKey = "SoundAudioDevice",
+	iconKey = "soundsettings",
 	expanded = false,
 	colorizeTitle = false,
+	modernCategory = "sound",
+	modernOnly = true,
 })
 
 local function CreateAudioCheckbox(data)
 	data.parentSection = audioDeviceExpandable
-	return addon.functions.SettingsCreateCheckbox(cSound, data)
+	return addon.functions.SettingsCreateCheckbox(soundCategory, data)
 end
 
 CreateAudioCheckbox({
@@ -124,17 +127,21 @@ CreateAudioCheckbox({
 	default = false,
 })
 
-local soundExpandable = addon.functions.SettingsCreateExpandableSection(cSound, {
+local soundExpandable = addon.functions.SettingsCreateExpandableSection(soundCategory, {
 	name = L["soundMuteSection"] or "Sounds to mute",
+	configPageKey = "SoundMute",
+	iconKey = "sound",
 	expanded = false,
 	colorizeTitle = false,
+	modernCategory = "sound",
+	modernOnly = true,
 })
 
-local function CreateHeadline(text) addon.functions.SettingsCreateHeadline(cSound, text, { parentSection = soundExpandable }) end
+local function CreateHeadline(text) addon.functions.SettingsCreateHeadline(soundCategory, text, { parentSection = soundExpandable }) end
 
 local function CreateCheckbox(data)
 	data.parentSection = soundExpandable
-	return addon.functions.SettingsCreateCheckbox(cSound, data)
+	return addon.functions.SettingsCreateCheckbox(soundCategory, data)
 end
 
 CreateHeadline(L["soundMuteExplained"])
@@ -263,10 +270,14 @@ for _, treeKey in ipairs(topKeys) do
 	AddSoundOptions({ treeKey }, addon.Sounds.soundFiles[treeKey])
 end
 
-local extraSoundExpandable = addon.functions.SettingsCreateExpandableSection(cSound, {
+local extraSoundExpandable = addon.functions.SettingsCreateExpandableSection(soundCategory, {
 	name = L["soundExtraSection"] or "Additional sounds",
+	configPageKey = "SoundExtra",
+	iconKey = "sound",
 	expanded = false,
 	colorizeTitle = false,
+	modernCategory = "sound",
+	modernOnly = true,
 })
 
 local extraSoundOptionsCache = {}
@@ -277,7 +288,7 @@ local extraSoundOptionsNoneLabel
 local function buildExtraSoundOptions()
 	local noneLabel = NONE
 	local version = (addon.functions and addon.functions.GetLSMMediaVersion and addon.functions.GetLSMMediaVersion("sound")) or 0
-	if extraSoundOptionsCache and extraSoundOptionsVersion == version and extraSoundOptionsNoneLabel == noneLabel then return extraSoundOptionsCache end
+	if extraSoundOptionsCache and extraSoundOptionsVersion == version and extraSoundOptionsNoneLabel == noneLabel then return extraSoundOptionsCache, extraSoundOrder end
 
 	wipeTable(extraSoundOptionsCache)
 	wipeTable(extraSoundOrder)
@@ -295,7 +306,7 @@ local function buildExtraSoundOptions()
 
 	extraSoundOptionsVersion = version
 	extraSoundOptionsNoneLabel = noneLabel
-	return extraSoundOptionsCache
+	return extraSoundOptionsCache, extraSoundOrder
 end
 
 local function getExtraSound(eventName)
@@ -313,7 +324,7 @@ local function setExtraSound(eventName, value)
 	if addon.Sounds and addon.Sounds.functions and addon.Sounds.functions.UpdateExtraSounds then addon.Sounds.functions.UpdateExtraSounds() end
 end
 
-local extraEnable = addon.functions.SettingsCreateCheckbox(cSound, {
+local extraEnable = addon.functions.SettingsCreateCheckbox(soundCategory, {
 	var = "soundExtraEnabled",
 	text = L["soundExtraEnable"] or "Enable extra sounds",
 	desc = L["soundExtraEnableDesc"],
@@ -349,7 +360,7 @@ if type(extraEvents) == "table" then
 		local eventName = entry.event
 		local label = entry.label or eventName
 		local varName = "soundExtraEvent_" .. eventName
-		addon.functions.SettingsCreateSoundDropdown(cSound, {
+		addon.functions.SettingsCreateSoundDropdown(soundCategory, {
 			var = varName,
 			text = label,
 			listFunc = buildExtraSoundOptions,

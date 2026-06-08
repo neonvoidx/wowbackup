@@ -30,6 +30,9 @@ local observersEnabled = false
 local eventsFrame
 ---@type Db
 local db
+-- Set to true by the talent callback when it handles a refresh; cleared by the deferred
+-- PLAYER_SPECIALIZATION_CHANGED handler so the defer is skipped when redundant.
+local talentCallbackFiredForSpecChange = false
 
 -- External API callbacks registered via M:RegisterPredictedCallback / M:RegisterMatchedCallback.
 local predictedCallbacks = {}
@@ -56,10 +59,12 @@ local function GetAnchorOptions()
 	return instanceOptions:IsRaid() and m.Raid or m.Default
 end
 
+local SameUnit = function(unitA, unitB) return units:SameUnit(unitA, unitB) end
+
 local function GetEntryForUnit(unit)
 	local fallback = nil
 	for _, entry in pairs(watchEntries) do
-		if UnitIsUnit(entry.Unit, unit) then
+		if SameUnit(entry.Unit, unit) then
 			if entry.Anchor:IsShown() then
 				return entry
 			end
@@ -83,6 +88,42 @@ local function EnsureEntry(anchor, unit)
 		return nil
 	end
 
+	-- Mind control flips allied unit tokens to the enemy team (UnitIsFriend returns false).
+	-- Don't create or rebuild an entry onto an enemy unit: return the existing entry untouched
+	-- so its icons stay frozen as the ally's, rather than morphing into the enemy's cooldowns.
+	-- Test mode uses fake frames that may not be friends, so skip the guard there.
+	if not testModeActive and not units:IsFriend(unit) then
+		return watchEntries[anchor]
+	end
+
+	-- Skip NPC units (friendly mobs, scenario NPCs, etc.).
+	-- In test mode, party slots may be unoccupied by a real player; skip the check so
+	-- fake test frames are processed normally.
+	if not testModeActive and not UnitIsPlayer(unit) then
+		local existing = watchEntries[anchor]
+		if existing then
+			-- Cancel pending timers so their closures can't re-show the container later.
+			for _, cd in pairs(existing.ActiveCooldowns) do
+				if cd.CleanupTimer then cd.CleanupTimer:Cancel() end
+				if cd.UsedCharges then
+					for _, uc in ipairs(cd.UsedCharges) do
+						if uc.Timer then uc.Timer:Cancel() end
+					end
+				end
+			end
+			-- Replace TrackedAuras so any in-flight C_Timer.After closures from TrackNewAura
+			-- detect the stale table and bail before firing predictiveGlowCallback, which would
+			-- otherwise call ShowHideEntryContainer and re-show the container on this NPC frame.
+			existing.TrackedAuras = {}
+			observer:Forget(existing)
+			existing.Container:ResetAllSlots()
+			existing.Container.Frame:Hide()
+			-- Remove from watchEntries so M:Refresh()'s loop and EnableAll don't re-show it.
+			watchEntries[anchor] = nil
+		end
+		return nil
+	end
+
 	local options = GetOptions()
 	local anchorOptions = GetAnchorOptions()
 	if not options or not anchorOptions then
@@ -93,8 +134,16 @@ local function EnsureEntry(anchor, unit)
 	-- for externals cast by the player onto others. The container is hidden in M:Refresh.
 	local entry = watchEntries[anchor]
 
+	local currentGuid = UnitGUID(unit)
+	local hasGuid = currentGuid ~= nil and not issecretvalue(currentGuid)
+	-- Same token, different player: DK leaves and Druid joins as "raid5". The token
+	-- check below won't fire, but the GUID has changed so all stale data must be cleared.
+	local guidChanged = hasGuid and entry ~= nil
+		and entry.UnitGuid ~= nil
+		and entry.UnitGuid ~= currentGuid
+
 	if not entry then
-		local size = tonumber(anchorOptions.Icons.Size) or 32
+		local size = moduleUtil:GetIconSize(anchorOptions.Icons, anchor, 32, 100)
 		local maxIcons = tonumber(anchorOptions.Icons.MaxIcons) or 3
 		-- noBorder = true: cooldown icons don't need debuff-style borders
 		local container = iconSlotContainer:New(UIParent, maxIcons, size, (anchorOptions.IconSpacing or db.IconSpacing or 2), "Friendly CDs", true, "Friendly CDs")
@@ -102,25 +151,46 @@ local function EnsureEntry(anchor, unit)
 		entry = {
 			Anchor = anchor,
 			Unit = unit,
+			UnitGuid = hasGuid and currentGuid or nil,
 			Container = container,
 			TrackedAuras = {},
 			ActiveCooldowns = {},
 			PredictedGlows = {},
 			PredictedGlowDurations = {},
-			IsExcludedSelf = anchorOptions.ExcludeSelf and UnitIsUnit(unit, "player") or false,
+			IsExcludedSelf = anchorOptions.ExcludeSelf and SameUnit(unit, "player") or false,
 		}
 		watchEntries[anchor] = entry
 		observer:Watch(entry)
-	elseif entry.Unit ~= unit then
-		-- Unit token changed (e.g. frame reassigned after group change)
+	elseif entry.Unit ~= unit or guidChanged then
+		-- Unit token changed, or same token but a different player now occupies the slot.
 		entry.Unit = unit
-		entry.IsExcludedSelf = anchorOptions.ExcludeSelf and UnitIsUnit(unit, "player") or false
+		entry.IsExcludedSelf = anchorOptions.ExcludeSelf and SameUnit(unit, "player") or false
 		entry.TrackedAuras = {}
 		entry.ActiveCooldowns = {}
 		entry.PredictedGlows = {}
 		entry.PredictedGlowDurations = {}
 		entry.Container:ResetAllSlots()
+		-- Stale spec data from the previous occupant (e.g. DK spec still cached in the
+		-- Inspector by unit token) would cause the wrong class's icons to render until the
+		-- Inspector delivers a fresh result. Invalidate now so GetStaticAbilities rebuilds.
+		display:InvalidateStaticAbilitiesCache(unit)
+		-- Update container visibility immediately so that frame-visibility hooks (e.g.
+		-- CompactUnitFrame_UpdateVisible) that fire before the next M:Refresh see the
+		-- correct hidden/shown state rather than whatever was left from the previous unit.
+		if entry.IsExcludedSelf then
+			entry.Container.Frame:Hide()
+		else
+			ShowHideEntryContainer(entry.Container.Frame, anchor)
+			if entry.Container.Frame:IsShown() then
+				display:UpdateDisplay(entry)
+			end
+		end
 		observer:Rewatch(entry)
+	end
+
+	-- Always refresh the cached GUID so the next call can detect a player swap.
+	if hasGuid and entry then
+		entry.UnitGuid = currentGuid
 	end
 
 	return entry
@@ -172,7 +242,7 @@ function M:Refresh()
 	EnableAll()
 
 	for anchor, entry in pairs(watchEntries) do
-		if anchorOptions.ExcludeSelf and UnitIsUnit(entry.Unit, "player") then
+		if anchorOptions.ExcludeSelf and SameUnit(entry.Unit, "player") then
 			-- Hide the container but leave the watcher active: aura detection and cast evidence
 			-- must still run so external defensives cast by the player are tracked correctly.
 			entry.IsExcludedSelf = true
@@ -180,19 +250,19 @@ function M:Refresh()
 			entry.Container.Frame:Hide()
 		else
 			entry.IsExcludedSelf = false
-			local size = tonumber(anchorOptions.Icons.Size) or 32
+			local size = moduleUtil:GetIconSize(anchorOptions.Icons, anchor, 32, 100)
 			local maxIcons = tonumber(anchorOptions.Icons.MaxIcons) or 3
 			local rows = math.max(1, tonumber(anchorOptions.Icons.Rows) or 1)
 			entry.Container:SetIconSize(size)
 			entry.Container:SetCount(maxIcons)
 			entry.Container:SetSpacing(anchorOptions.IconSpacing or db.IconSpacing or 2)
-			local isDown = anchorOptions.Grow == "DOWN"
-			entry.Container:SetRows(isDown and nil or rows, isDown and "CENTER" or anchorOptions.Grow, not isDown and anchorOptions.Grow ~= "RIGHT")
-			entry.Container:SetColumns(isDown and (tonumber(anchorOptions.Icons.Columns) or 1) or nil)
+			-- DOWN and UP are both vertical layouts (single/multi column); LEFT/RIGHT/CENTER are horizontal rows.
+			local isVertical = anchorOptions.Grow == "DOWN" or anchorOptions.Grow == "UP"
+			entry.Container:SetRows(isVertical and nil or rows, isVertical and "CENTER" or anchorOptions.Grow, not isVertical and anchorOptions.Grow ~= "RIGHT")
+			entry.Container:SetColumns(isVertical and (tonumber(anchorOptions.Icons.Columns) or 1) or nil)
 			display:AnchorContainer(entry)
-			local wasHidden = not entry.Container.Frame:IsShown()
 			ShowHideEntryContainer(entry.Container.Frame, anchor)
-			if wasHidden and entry.Container.Frame:IsShown() then
+			if entry.Container.Frame:IsShown() then
 				display:UpdateDisplay(entry)
 			end
 		end
@@ -233,6 +303,103 @@ function M:Init()
 
 	brain:RegisterWithObserver(observer)
 
+	-- Burrow commit: Burrow ended — commit CD with accurate remaining time.
+	brain:RegisterBurrowCallback(function(unit, now, castTime)
+		local casterEntries = {}
+		for _, e in pairs(watchEntries) do
+			if SameUnit(e.Unit, unit) then
+				casterEntries[#casterEntries + 1] = e
+			end
+		end
+		if #casterEntries == 0 then return end
+		local spellId  = 409293
+		local cooldown = 120
+		local remaining = math.max(0, cooldown - (now - castTime))
+		for _, e in ipairs(casterEntries) do
+			local existing = e.ActiveCooldowns[spellId]
+			if existing and existing.CleanupTimer then
+				existing.CleanupTimer:Cancel()
+			end
+			e.ActiveCooldowns[spellId] = nil
+		end
+		local cdData = {
+			StartTime   = castTime,
+			Cooldown    = cooldown,
+			Remaining   = remaining,
+			SpellId     = spellId,
+			IsOffensive = false,
+		}
+		cdData.CleanupTimer = C_Timer.NewTimer(remaining, function()
+			for _, e in ipairs(casterEntries) do
+				if e.ActiveCooldowns[spellId] == cdData then
+					e.ActiveCooldowns[spellId] = nil
+				end
+				if SameUnit(e.Unit, unit) then
+					display:UpdateDisplay(e)
+					ShowHideEntryContainer(e.Container.Frame, e.Anchor)
+				end
+			end
+		end)
+		for _, e in ipairs(casterEntries) do
+			e.ActiveCooldowns[spellId] = cdData
+			display:UpdateDisplay(e)
+			ShowHideEntryContainer(e.Container.Frame, e.Anchor)
+		end
+	end)
+
+	-- Emerald Communion commit: channel ended — clear glow and commit CD with accurate remaining time.
+	brain:RegisterEmeraldCommunionCallback(function(unit, now, castTime)
+		local casterEntries = {}
+		for _, e in pairs(watchEntries) do
+			if SameUnit(e.Unit, unit) then
+				casterEntries[#casterEntries + 1] = e
+			end
+		end
+		if #casterEntries == 0 then return end
+		local spellId  = 370960
+		local cooldown = 180
+		local remaining = math.max(0, cooldown - (now - castTime))
+		for _, e in ipairs(casterEntries) do
+			local count = e.PredictedGlows[spellId]
+			if count then
+				if count <= 1 then
+					e.PredictedGlows[spellId] = nil
+					e.PredictedGlowDurations[spellId] = nil
+				else
+					e.PredictedGlows[spellId] = count - 1
+				end
+			end
+			local existing = e.ActiveCooldowns[spellId]
+			if existing and existing.CleanupTimer then
+				existing.CleanupTimer:Cancel()
+			end
+			e.ActiveCooldowns[spellId] = nil
+		end
+		local cdData = {
+			StartTime   = castTime,
+			Cooldown    = cooldown,
+			Remaining   = remaining,
+			SpellId     = spellId,
+			IsOffensive = false,
+		}
+		cdData.CleanupTimer = C_Timer.NewTimer(remaining, function()
+			for _, e in ipairs(casterEntries) do
+				if e.ActiveCooldowns[spellId] == cdData then
+					e.ActiveCooldowns[spellId] = nil
+				end
+				if SameUnit(e.Unit, unit) then
+					display:UpdateDisplay(e)
+					ShowHideEntryContainer(e.Container.Frame, e.Anchor)
+				end
+			end
+		end)
+		for _, e in ipairs(casterEntries) do
+			e.ActiveCooldowns[spellId] = cdData
+			display:UpdateDisplay(e)
+			ShowHideEntryContainer(e.Container.Frame, e.Anchor)
+		end
+	end)
+
 	-- Provide Brain with a way to look up a unit's active cooldowns so PredictSpellIdForUnit
 	-- can skip rules whose spell is already on cooldown (e.g. BoF on CD when AW is cast).
 	brain:RegisterActiveCooldownsLookup(function(unit)
@@ -248,7 +415,7 @@ function M:Init()
 		-- entry if no caster entry exists.
 		local casterEntries = {}
 		for _, e in pairs(watchEntries) do
-			if UnitIsUnit(e.Unit, ruleUnit) then
+			if SameUnit(e.Unit, ruleUnit) then
 				casterEntries[#casterEntries + 1] = e
 			end
 		end
@@ -256,25 +423,124 @@ function M:Init()
 			casterEntries[1] = detectedFromEntry
 		end
 
-		-- Cancel any existing cleanup timer for this key across all caster entries (e.g. rapid re-cast).
-		for _, e in ipairs(casterEntries) do
-			local existing = e.ActiveCooldowns[cdKey]
-			if existing and existing.CleanupTimer then
-				existing.CleanupTimer:Cancel()
-			end
-			e.ActiveCooldowns[cdKey] = cdData
-		end
-
-		-- Schedule a single cleanup timer shared across all caster entries.
-		cdData.CleanupTimer = C_Timer.NewTimer(math.max(0, cdData.Remaining), function()
+		local maxCharges = cdData.MaxCharges
+		if maxCharges and maxCharges > 1 then
+			-- Multi-charge: check if we can append this use to an existing entry that still
+			-- has room (i.e. a previous charge is already recharging for the same spell).
+			local existingCd = nil
 			for _, e in ipairs(casterEntries) do
-				if e.ActiveCooldowns[cdKey] == cdData then
-					e.ActiveCooldowns[cdKey] = nil
+				local ex = e.ActiveCooldowns[cdKey]
+				if ex and ex.MaxCharges == maxCharges and ex.UsedCharges
+					and #ex.UsedCharges < ex.MaxCharges then
+					existingCd = ex
+					break
 				end
-				display:UpdateDisplay(e)
-				ShowHideEntryContainer(e.Container.Frame, e.Anchor)
 			end
-		end)
+
+			if existingCd then
+				-- Append new charge to existing entry without disturbing earlier charge timers.
+				-- Charges recharge sequentially: the new charge cannot come back until the previous
+				-- one has fully recharged, so its expiry is max(prevExpiry + cooldown, usedAt + cooldown).
+				local prevCharge = existingCd.UsedCharges[#existingCd.UsedCharges]
+				local newExpiry = math.max(
+					prevCharge.Expiry + cdData.Cooldown,
+					cdData.StartTime + cdData.Cooldown
+				)
+				local newCharge = { Expiry = newExpiry }
+				for _, e in ipairs(casterEntries) do
+					local ex = e.ActiveCooldowns[cdKey]
+					if ex and ex.UsedCharges and #ex.UsedCharges < ex.MaxCharges then
+						ex.UsedCharges[#ex.UsedCharges + 1] = newCharge
+					end
+				end
+				newCharge.Timer = C_Timer.NewTimer(math.max(0, newExpiry - GetTime()), function()
+					for _, e in ipairs(casterEntries) do
+						local ex = e.ActiveCooldowns[cdKey]
+						if ex and ex.UsedCharges then
+							for i, uc in ipairs(ex.UsedCharges) do
+								if uc == newCharge then
+									table.remove(ex.UsedCharges, i)
+									break
+								end
+							end
+							if #ex.UsedCharges == 0 and e.ActiveCooldowns[cdKey] == ex then
+								e.ActiveCooldowns[cdKey] = nil
+							end
+						end
+						if SameUnit(e.Unit, ruleUnit) then
+							display:UpdateDisplay(e)
+							ShowHideEntryContainer(e.Container.Frame, e.Anchor)
+						end
+					end
+				end)
+				-- Update CleanupTimer alias on the shared entry so external code sees the latest timer.
+				existingCd.CleanupTimer = newCharge.Timer
+			else
+				-- No existing entry with room: cancel stale timers and create a fresh entry.
+				for _, e in ipairs(casterEntries) do
+					local existing = e.ActiveCooldowns[cdKey]
+					if existing then
+						if existing.CleanupTimer then
+							existing.CleanupTimer:Cancel()
+						end
+						if existing.UsedCharges then
+							for _, uc in ipairs(existing.UsedCharges) do
+								if uc.Timer then
+									uc.Timer:Cancel()
+								end
+							end
+						end
+					end
+					e.ActiveCooldowns[cdKey] = cdData
+				end
+				local firstExpiry = cdData.StartTime + cdData.Cooldown
+				local firstCharge = { Expiry = firstExpiry }
+				cdData.UsedCharges = { firstCharge }
+				firstCharge.Timer = C_Timer.NewTimer(math.max(0, firstExpiry - GetTime()), function()
+					for _, e in ipairs(casterEntries) do
+						local ex = e.ActiveCooldowns[cdKey]
+						if ex and ex.UsedCharges then
+							for i, uc in ipairs(ex.UsedCharges) do
+								if uc == firstCharge then
+									table.remove(ex.UsedCharges, i)
+									break
+								end
+							end
+							if #ex.UsedCharges == 0 and e.ActiveCooldowns[cdKey] == ex then
+								e.ActiveCooldowns[cdKey] = nil
+							end
+						end
+						if SameUnit(e.Unit, ruleUnit) then
+							display:UpdateDisplay(e)
+							ShowHideEntryContainer(e.Container.Frame, e.Anchor)
+						end
+					end
+				end)
+				cdData.CleanupTimer = firstCharge.Timer
+			end
+		else
+			-- Single charge: cancel any existing timer and replace the entry.
+			for _, e in ipairs(casterEntries) do
+				local existing = e.ActiveCooldowns[cdKey]
+				if existing and existing.CleanupTimer then
+					existing.CleanupTimer:Cancel()
+				end
+				e.ActiveCooldowns[cdKey] = cdData
+			end
+
+			-- Schedule a single cleanup timer shared across all caster entries.
+			cdData.CleanupTimer = C_Timer.NewTimer(math.max(0, cdData.Remaining), function()
+				for _, e in ipairs(casterEntries) do
+					if e.ActiveCooldowns[cdKey] == cdData then
+						e.ActiveCooldowns[cdKey] = nil
+					end
+					if SameUnit(e.Unit, ruleUnit) then
+						display:UpdateDisplay(e)
+						ShowHideEntryContainer(e.Container.Frame, e.Anchor)
+					end
+				end
+			end)
+		end
 
 		-- Update all caster entries immediately. The detected entry's display is handled
 		-- by the displayCallback fired at the end of OnWatcherChanged.
@@ -308,7 +574,7 @@ function M:Init()
 		if casterUnit then
 			glowEntries = {}
 			for _, e in pairs(watchEntries) do
-				if UnitIsUnit(e.Unit, casterUnit) then
+				if SameUnit(e.Unit, casterUnit) then
 					glowEntries[#glowEntries + 1] = e
 				end
 			end
@@ -339,7 +605,7 @@ function M:Init()
 		if casterUnit then
 			glowEntries = {}
 			for _, e in pairs(watchEntries) do
-				if UnitIsUnit(e.Unit, casterUnit) then
+				if SameUnit(e.Unit, casterUnit) then
 					glowEntries[#glowEntries + 1] = e
 				end
 			end
@@ -368,7 +634,7 @@ function M:Init()
 		if casterUnit then
 			glowEntries = {}
 			for _, e in pairs(watchEntries) do
-				if UnitIsUnit(e.Unit, casterUnit) then
+				if SameUnit(e.Unit, casterUnit) then
 					glowEntries[#glowEntries + 1] = e
 				end
 			end
@@ -384,15 +650,57 @@ function M:Init()
 		end
 	end)
 
+	-- Cancels all active cooldown timers and wipes per-entry state.
+	-- Called on PLAYER_ENTERING_WORLD (arena exit) and PVP_MATCH_STATE_CHANGED/StartUp (new match).
+	local function ClearAllCooldownState()
+		-- Reset the static abilities cache so the next UpdateDisplay rebuilds it with the
+		-- correct instanceType (e.g. "raid" or "pvp"), applying hideExternalDefensives if needed.
+		display:ResetStaticAbilitiesCache()
+		for _, entry in pairs(watchEntries) do
+			for _, cd in pairs(entry.ActiveCooldowns) do
+				if cd.CleanupTimer then cd.CleanupTimer:Cancel() end
+				if cd.UsedCharges then
+					for _, uc in ipairs(cd.UsedCharges) do
+						if uc.Timer then uc.Timer:Cancel() end
+					end
+				end
+			end
+			entry.ActiveCooldowns        = {}
+			entry.TrackedAuras           = {}
+			entry.PredictedGlows         = {}
+			entry.PredictedGlowDurations = {}
+			display:UpdateDisplay(entry)
+		end
+	end
+
 	eventsFrame = CreateFrame("Frame")
 	eventsFrame:SetScript("OnEvent", function(_, event)
 		if event == "GROUP_ROSTER_UPDATE" then
 			C_Timer.After(0, function()
+				-- Reset cache so the next UpdateDisplay picks up any instanceType change
+				-- (e.g. party -> raid conversion) for hideExternalDefensives.
+				display:ResetStaticAbilitiesCache()
+				-- UNIT_AURA stops firing for party members once you leave the group, so
+				-- glows for auras that expired while out-of-group are never cleared by the
+				-- normal glow-end callback. Clear stale state and Rewatch so the brain
+				-- re-scans current auras and re-establishes any still-active glows.
+				for _, entry in pairs(watchEntries) do
+					entry.TrackedAuras = {}
+					entry.PredictedGlows = {}
+					entry.PredictedGlowDurations = {}
+					observer:Rewatch(entry)
+				end
 				M:Refresh()
 			end)
 		elseif event == "PLAYER_SPECIALIZATION_CHANGED" then
-			-- Defer so Talents updates spec/talent data first.
+			-- Defer so Talents updates spec/talent data first. Skip if the talent callback
+			-- already handled the reset+refresh synchronously during this same event dispatch.
 			C_Timer.After(0, function()
+				local handled = talentCallbackFiredForSpecChange
+				talentCallbackFiredForSpecChange = false
+				if handled then
+					return
+				end
 				display:ResetStaticAbilitiesCache()
 				M:RefreshDisplays()
 			end)
@@ -400,19 +708,26 @@ function M:Init()
 			M:RefreshDisplays()
 		elseif event == "PVP_MATCH_STATE_CHANGED" then
 			if C_PvP.GetActiveMatchState() == Enum.PvPMatchState.StartUp then
-				for _, entry in pairs(watchEntries) do
-					entry.ActiveCooldowns = {}
-					entry.TrackedAuras = {}
-					entry.PredictedGlows = {}
-					entry.PredictedGlowDurations = {}
-					display:UpdateDisplay(entry)
-				end
+				-- Arena match is starting: clear all tracked state so the previous match's
+				-- cooldowns don't bleed into the new one.
+				ClearAllCooldownState()
+				-- Then refresh so the prep-room icons are shown using the now-available
+				-- group/spec data, rather than only once the gates open.
+				C_Timer.After(0, function() M:Refresh() end)
 			end
+		elseif event == "PLAYER_ENTERING_WORLD" then
+			-- Fired after every loading screen, including when leaving an arena.
+			-- Ensures stale cooldowns from the previous match are cleared before
+			-- the next arena begins (PVP_MATCH_STATE_CHANGED/StartUp also fires,
+			-- but PLAYER_ENTERING_WORLD covers the case where a match ends without
+			-- a new StartUp following immediately).
+			ClearAllCooldownState()
 		end
 	end)
 	eventsFrame:RegisterEvent("GROUP_ROSTER_UPDATE")
 	eventsFrame:RegisterEvent("PLAYER_SPECIALIZATION_CHANGED")
 	eventsFrame:RegisterEvent("PVP_MATCH_STATE_CHANGED")
+	eventsFrame:RegisterEvent("PLAYER_ENTERING_WORLD")
 	eventsFrame:RegisterEvent("UNIT_FACTION")
 
 	EventRegistry:RegisterCallback("EditMode.Enter", function()
@@ -446,6 +761,7 @@ function M:Init()
 		-- callbacks are rare events (LibSpec + PvP sync, not per-frame).
 		display:ResetStaticAbilitiesCache()
 		M:RefreshDisplays()
+		talentCallbackFiredForSpecChange = true
 	end)
 
 	observer:Init()
@@ -478,7 +794,11 @@ function M:Init()
 				end
 				local options = GetOptions()
 				if options then
-					ShowHideEntryContainer(entry.Container.Frame, frame)
+					if entry.IsExcludedSelf then
+						entry.Container.Frame:Hide()
+					else
+						ShowHideEntryContainer(entry.Container.Frame, frame)
+					end
 				end
 			end)
 		end
@@ -508,6 +828,12 @@ function M:Init()
 
 	if fs and fs.Sorting and fs.Sorting.RegisterPostSortCallback then
 		fs.Sorting:RegisterPostSortCallback(function()
+			M:Refresh()
+		end)
+	end
+
+	if DandersFrames and DandersFrames.RegisterCallback then
+		DandersFrames.RegisterCallback(eventsFrame, "OnFramesSorted", function()
 			M:Refresh()
 		end)
 	end
@@ -573,6 +899,7 @@ end
 ---@class FcdWatchEntry
 ---@field Anchor          table
 ---@field Unit            string
+---@field UnitGuid        string?
 ---@field Container       IconSlotContainer
 ---@field TrackedAuras    table<number, FcdTrackedAura>              keyed by auraInstanceID
 ---@field ActiveCooldowns table<number|string, FcdCooldownEntry>     keyed by rule.SpellId or primaryAuraType_buffDuration_cooldown

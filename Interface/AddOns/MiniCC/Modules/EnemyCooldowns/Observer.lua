@@ -8,17 +8,17 @@ addon.Modules.EnemyCooldowns = addon.Modules.EnemyCooldowns or {}
 local O = {}
 addon.Modules.EnemyCooldowns.Observer = O
 
--- In patch 12.0.5 (TOC 120005), UNIT_SPELLCAST_SUCCEEDED no longer fires for other players,
--- including enemy arena opponents. When true, the observer skips registering that event.
-local noCastSucceeded = select(4, GetBuildInfo()) >= 120005
-
 -- entry -> { Watcher, UnitEventFrame }
 local watched = {}
 local testModeActive = false
-local auraChangedCallbacks = {}
-local unitFlagsCallbacks = {}
+local auraChangedCallbacks    = {}
+local unitFlagsCallbacks      = {}
 local debuffEvidenceCallbacks = {}
-local castCallbacks = {}
+local castCallbacks           = {}
+local modelChangedCallbacks   = {}
+local portraitUpdateCallbacks = {}
+local channelStartCallbacks = {}
+local channelStopCallbacks  = {}
 
 local function FireAuraChanged(entry, watcher)
 	for _, fn in ipairs(auraChangedCallbacks) do
@@ -44,6 +44,26 @@ local function FireCast(unit)
 	end
 end
 
+local function FireModelChanged(unit)
+	for _, fn in ipairs(modelChangedCallbacks) do
+		fn(unit)
+	end
+end
+
+local function FirePortraitUpdate(unit)
+	for _, fn in ipairs(portraitUpdateCallbacks) do
+		fn(unit)
+	end
+end
+
+local function FireChannelStart(unit)
+	for _, fn in ipairs(channelStartCallbacks) do fn(unit) end
+end
+
+local function FireChannelStop(unit)
+	for _, fn in ipairs(channelStopCallbacks) do fn(unit) end
+end
+
 local function CreateUnitEventFrame(entry)
 	local frame = CreateFrame("Frame")
 	frame:SetScript("OnEvent", function(_, event, ...)
@@ -56,6 +76,14 @@ local function CreateUnitEventFrame(entry)
 		elseif event == "UNIT_SPELLCAST_SUCCEEDED" then
 			-- Enemy spell IDs are always secret values; only record that a cast occurred.
 			FireCast(u)
+		elseif event == "UNIT_MODEL_CHANGED" then
+			FireModelChanged(u)
+		elseif event == "UNIT_PORTRAIT_UPDATE" then
+			FirePortraitUpdate(u)
+		elseif event == "UNIT_SPELLCAST_CHANNEL_START" then
+			FireChannelStart(u)
+		elseif event == "UNIT_SPELLCAST_CHANNEL_STOP" then
+			FireChannelStop(u)
 		end
 	end)
 	return frame
@@ -67,10 +95,10 @@ local function RegisterUnitEvents(frame, unit)
 	-- creating/enabling the watcher to preserve this ordering.
 	frame:RegisterUnitEvent("UNIT_FLAGS", unit)
 	frame:RegisterUnitEvent("UNIT_AURA", unit)
-	-- UNIT_SPELLCAST_SUCCEEDED was removed for other players in 12.0.5 (TOC 120005).
-	if not noCastSucceeded then
-		frame:RegisterUnitEvent("UNIT_SPELLCAST_SUCCEEDED", unit)
-	end
+	frame:RegisterUnitEvent("UNIT_MODEL_CHANGED", unit)
+	frame:RegisterUnitEvent("UNIT_PORTRAIT_UPDATE", unit)
+	frame:RegisterUnitEvent("UNIT_SPELLCAST_CHANNEL_START", unit)
+	frame:RegisterUnitEvent("UNIT_SPELLCAST_CHANNEL_STOP", unit)
 end
 
 local function MakeWatcher(entry)
@@ -170,9 +198,33 @@ function O:RegisterDebuffEvidenceCallback(fn)
 	debuffEvidenceCallbacks[#debuffEvidenceCallbacks + 1] = fn
 end
 
----Registers a callback fired when a watched enemy unit casts a spell (pre-12.0.5 only).
+---Registers a callback fired when a watched enemy unit casts a spell.
 ---Enemy spell IDs are always secret, so only the unit string is passed (no spell ID).
 ---@param fn fun(unit: string)
 function O:RegisterCastCallback(fn)
 	castCallbacks[#castCallbacks + 1] = fn
+end
+
+---Registers a callback fired when a watched enemy unit's model changes (UNIT_MODEL_CHANGED).
+---@param fn fun(unit: string)
+function O:RegisterModelChangedCallback(fn)
+	modelChangedCallbacks[#modelChangedCallbacks + 1] = fn
+end
+
+---Registers a callback fired when a watched enemy unit's portrait updates (UNIT_PORTRAIT_UPDATE).
+---@param fn fun(unit: string)
+function O:RegisterPortraitUpdateCallback(fn)
+	portraitUpdateCallbacks[#portraitUpdateCallbacks + 1] = fn
+end
+
+---Registers a callback fired when a watched enemy unit begins channeling (UNIT_SPELLCAST_CHANNEL_START).
+---@param fn fun(unit: string)
+function O:RegisterChannelStartCallback(fn)
+	channelStartCallbacks[#channelStartCallbacks + 1] = fn
+end
+
+---Registers a callback fired when a watched enemy unit's channel ends or is interrupted (UNIT_SPELLCAST_CHANNEL_STOP).
+---@param fn fun(unit: string)
+function O:RegisterChannelStopCallback(fn)
+	channelStopCallbacks[#channelStopCallbacks + 1] = fn
 end

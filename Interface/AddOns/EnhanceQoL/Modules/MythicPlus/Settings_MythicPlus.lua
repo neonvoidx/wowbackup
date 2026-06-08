@@ -25,6 +25,8 @@ local function buildSettings()
 			expanded = false,
 			colorizeTitle = false,
 			newTagID = "Teleports",
+			iconKey = "teleports",
+			modernOnly = true,
 		})
 		addon.SettingsLayout.gameplayTeleportsSection = sectionTeleports
 	end
@@ -43,16 +45,18 @@ local function buildSettings()
 			var = "teleportsWorldMapEnabled",
 			text = L["teleportsWorldMapEnabled"],
 			desc = L["teleportsWorldMapEnabledDesc"],
+			richNotes = {
+				{ text = L["teleportsWorldMapEnabledDesc"], order = -1000 },
+				{
+					blocks = {
+						{ text = "|cffffd700" .. L["teleportsWorldMapHelp"] .. "|r" },
+					},
+				},
+			},
 			func = function(v)
 				addon.db["teleportsWorldMapEnabled"] = v
 				if addon.MythicPlus and addon.MythicPlus.functions and addon.MythicPlus.functions.RefreshWorldMapTeleportPanel then addon.MythicPlus.functions.RefreshWorldMapTeleportPanel() end
 			end,
-			children = {
-				{
-					text = "|cffffd700" .. L["teleportsWorldMapHelp"] .. "|r",
-					sType = "hint",
-				},
-			},
 		},
 		{
 			var = "teleportsWorldMapShowSeason",
@@ -63,11 +67,13 @@ local function buildSettings()
 		{
 			var = "portalHideMissing",
 			text = L["portalHideMissing"],
+			desc = L["portalHideMissingDesc"],
 			func = function(v) addon.db["portalHideMissing"] = v end,
 		},
 	}
 	table.insert(data, {
 		text = L["portalShowTooltip"],
+		desc = L["portalShowTooltipDesc"],
 		var = "portalShowTooltip",
 		func = function(value) addon.db["portalShowTooltip"] = value end,
 	})
@@ -98,8 +104,8 @@ local function buildSettings()
 		end,
 		customDefaultText = L["teleportsPreferredHearthstoneRandom"] or "All owned Hearthstones",
 		hideSummary = false,
-		summary = function(selection, texts)
-			if type(selection) ~= "table" or next(selection) == nil or not texts or #texts == 0 then return L["teleportsPreferredHearthstoneRandom"] or "All owned Hearthstones" end
+		summary = function(selection)
+			if type(selection) ~= "table" or next(selection) == nil then return L["teleportsPreferredHearthstoneRandom"] or "All owned Hearthstones" end
 			return nil
 		end,
 		set = function(selection)
@@ -126,8 +132,12 @@ local function buildSettings()
 	if not sectionTalent then
 		sectionTalent = addon.functions.SettingsCreateExpandableSection(cGameplay, {
 			name = L["TalentReminder"],
+			configPageKey = "TalentReminder",
+			description = L["TalentReminderDesc"],
+			iconKey = "talentreminder",
 			expanded = false,
 			colorizeTitle = false,
+			modernOnly = true,
 		})
 		addon.SettingsLayout.gameplayTalentReminderSection = sectionTalent
 	end
@@ -171,7 +181,7 @@ local function buildSettings()
 	local talentSoundCacheVersion = -1
 	local function buildTalentSoundOptions()
 		local version = (addon.functions and addon.functions.GetLSMMediaVersion and addon.functions.GetLSMMediaVersion("sound")) or 0
-		if talentSoundCacheVersion == version then return talentSoundOptions end
+		if talentSoundCacheVersion == version then return talentSoundOptions, talentSoundOrder end
 		talentSoundCacheVersion = version
 
 		local list, order
@@ -202,8 +212,10 @@ local function buildSettings()
 		for i = 1, #(order or {}) do
 			talentSoundOrder[i] = order[i]
 		end
-		return talentSoundOptions
+		return talentSoundOptions, talentSoundOrder
 	end
+
+	addon.functions.SettingsCreateHeadline(cGameplay, SETTINGS, { parentSection = sectionTalent })
 
 	local talentEnable = addon.functions.SettingsCreateCheckbox(cGameplay, {
 		var = "talentReminderEnabled",
@@ -221,6 +233,7 @@ local function buildSettings()
 	addon.functions.SettingsCreateCheckbox(cGameplay, {
 		var = "talentReminderLoadOnReadyCheck",
 		text = L["talentReminderLoadOnReadyCheck"]:format(READY_CHECK),
+		desc = L["talentReminderLoadOnReadyCheckDesc"],
 		func = function(v)
 			addon.db["talentReminderLoadOnReadyCheck"] = v
 			addon.MythicPlus.functions.checkLoadout()
@@ -234,6 +247,7 @@ local function buildSettings()
 	local soundDifference = addon.functions.SettingsCreateCheckbox(cGameplay, {
 		var = "talentReminderSoundOnDifference",
 		text = L["talentReminderSoundOnDifference"],
+		desc = L["talentReminderSoundOnDifferenceDesc"],
 		func = function(v)
 			addon.db["talentReminderSoundOnDifference"] = v
 			addon.MythicPlus.functions.checkLoadout()
@@ -248,6 +262,7 @@ local function buildSettings()
 	local customSound = addon.functions.SettingsCreateCheckbox(cGameplay, {
 		var = "talentReminderUseCustomSound",
 		text = L["talentReminderUseCustomSound"],
+		desc = L["talentReminderUseCustomSoundDesc"],
 		func = function(v) addon.db["talentReminderUseCustomSound"] = v end,
 		parent = true,
 		element = soundDifference.element,
@@ -265,6 +280,7 @@ local function buildSettings()
 	addon.functions.SettingsCreateSoundDropdown(cGameplay, {
 		var = "talentReminderCustomSoundFile",
 		text = L["talentReminderCustomSound"],
+		desc = L["talentReminderCustomSoundFileDesc"],
 		listFunc = buildTalentSoundOptions,
 		order = talentSoundOrder,
 		default = "",
@@ -287,6 +303,7 @@ local function buildSettings()
 	local showActiveBuild = addon.functions.SettingsCreateCheckbox(cGameplay, {
 		var = "talentReminderShowActiveBuild",
 		text = L["talentReminderShowActiveBuild"],
+		desc = L["talentReminderShowActiveBuildDesc"],
 		func = function(v)
 			addon.db["talentReminderShowActiveBuild"] = v
 			addon.MythicPlus.functions.updateActiveTalentText()

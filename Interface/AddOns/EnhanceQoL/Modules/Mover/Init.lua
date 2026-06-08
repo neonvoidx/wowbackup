@@ -28,6 +28,9 @@ function addon.Mover.functions.InitDB()
 	initDbValue("scaleModifier", "CTRL")
 	initDbValue("positionPersistence", "reset")
 	initDbValue("frames", {})
+	if type(db.frames) ~= "table" then db.frames = {} end
+	db.frames.LFGDungeonReadyDialog = nil
+	db.frames.LFGListInviteDialog = nil
 end
 
 local function normalizeDbVarFromId(id)
@@ -63,6 +66,7 @@ registry.addonIndex = registry.addonIndex or {}
 registry.noAddonEntries = registry.noAddonEntries or {}
 
 local IsAddonLoaded = (C_AddOns and C_AddOns.IsAddOnLoaded) or IsAddOnLoaded
+local TextureLoadingGroupMixin = _G.TextureLoadingGroupMixin
 
 local function entryAddonList(entry)
 	local list = {}
@@ -129,6 +133,27 @@ local function resolveEntry(entryOrId)
 	return nil
 end
 
+local POSITION_PERSISTENCE_DEFAULT = "reset"
+local POSITION_PERSISTENCE_GLOBAL = "global"
+local positionPersistenceModes = {
+	close = true,
+	lockout = true,
+	reset = true,
+	off = true,
+}
+
+local function normalizePositionPersistence(value)
+	return positionPersistenceModes[value] and value or nil
+end
+
+local function getGlobalPositionPersistence()
+	return normalizePositionPersistence(db and db.positionPersistence) or POSITION_PERSISTENCE_DEFAULT
+end
+
+local function getEntryPositionPersistence(_entry, frameDb)
+	return normalizePositionPersistence(frameDb and frameDb.positionPersistence) or getGlobalPositionPersistence()
+end
+
 local function ensureFrameDb(entry)
 	local resolved = resolveEntry(entry)
 	if not resolved then return nil end
@@ -136,7 +161,13 @@ local function ensureFrameDb(entry)
 	frames[resolved.id] = frames[resolved.id] or {}
 	local frameDb = frames[resolved.id]
 	if frameDb.enabled == nil then frameDb.enabled = resolved.defaultEnabled ~= false end
+	if frameDb.positionPersistence ~= nil and not normalizePositionPersistence(frameDb.positionPersistence) then frameDb.positionPersistence = nil end
 	return frameDb
+end
+
+function addon.Mover.functions.GetFramePositionPersistence(entry)
+	local frameDb = ensureFrameDb(entry)
+	return normalizePositionPersistence(frameDb and frameDb.positionPersistence) or POSITION_PERSISTENCE_GLOBAL
 end
 
 local function modifierPressed()
@@ -266,6 +297,7 @@ function addon.Mover.functions.RegisterFrame(def)
 		scaleTargets = (#scaleTargets > 0) and scaleTargets or nil,
 		addon = def.addon,
 		useRootHandle = def.useRootHandle,
+		handlesOnly = def.handlesOnly,
 		keepTwoPointSize = def.keepTwoPointSize,
 		disableMove = disableMove,
 		ignoreFramePositionManager = def.ignoreFramePositionManager,
@@ -354,12 +386,18 @@ function addon.Mover.functions.MigrateLegacyPosition(entry)
 end
 
 addon.Mover.variables.pendingApply = addon.Mover.variables.pendingApply or {}
+addon.Mover.variables.pendingDefaultReset = addon.Mover.variables.pendingDefaultReset or {}
 addon.Mover.variables.combatQueue = addon.Mover.variables.combatQueue or {}
 addon.Mover.variables.sessionPositions = addon.Mover.variables.sessionPositions or {}
 
 function addon.Mover.functions.deferApply(frame, entry)
 	if not frame then return end
 	addon.Mover.variables.pendingApply[frame] = entry or true
+end
+
+function addon.Mover.functions.deferDefaultReset(frame, entry)
+	if not frame then return end
+	addon.Mover.variables.pendingDefaultReset[frame] = entry or true
 end
 
 local function isEntryActive(entry)
@@ -371,6 +409,47 @@ addon.Mover.variables.scaleTargets = addon.Mover.variables.scaleTargets or {}
 addon.Mover.variables.scaleMouseover = addon.Mover.variables.scaleMouseover or {}
 addon.Mover.variables.moveHandles = addon.Mover.variables.moveHandles or {}
 addon.Mover.variables.scaleCaptureFrame = addon.Mover.variables.scaleCaptureFrame or nil
+
+local validAnchorPoints = {
+	TOPLEFT = true,
+	TOP = true,
+	TOPRIGHT = true,
+	LEFT = true,
+	CENTER = true,
+	RIGHT = true,
+	BOTTOMLEFT = true,
+	BOTTOM = true,
+	BOTTOMRIGHT = true,
+}
+
+local function isFiniteNumber(value)
+	return type(value) == "number" and value == value and value > -100000 and value < 100000
+end
+
+local function isUsablePositionData(posData)
+	return type(posData) == "table" and validAnchorPoints[posData.point] and isFiniteNumber(posData.x) and isFiniteNumber(posData.y)
+end
+
+local function isFrameMostlyOnScreen(frame)
+	if not frame or not frame.GetLeft or not frame.GetRight or not frame.GetTop or not frame.GetBottom then return true end
+	local left, right, top, bottom = frame:GetLeft(), frame:GetRight(), frame:GetTop(), frame:GetBottom()
+	if not (isFiniteNumber(left) and isFiniteNumber(right) and isFiniteNumber(top) and isFiniteNumber(bottom)) then return false end
+	local screenWidth = GetScreenWidth and GetScreenWidth() or UIParent:GetWidth()
+	local screenHeight = GetScreenHeight and GetScreenHeight() or UIParent:GetHeight()
+	if not (isFiniteNumber(screenWidth) and isFiniteNumber(screenHeight) and screenWidth > 0 and screenHeight > 0) then return true end
+	local minVisible = 24
+	return right >= minVisible and left <= (screenWidth - minVisible) and top >= minVisible and bottom <= (screenHeight - minVisible)
+end
+
+local function blockPanelDragCallback() return false end
+
+local function clearPanelDragStartCallback(handle)
+	if TextureLoadingGroupMixin and TextureLoadingGroupMixin.RemoveTexture then
+		TextureLoadingGroupMixin.RemoveTexture({ textures = handle }, "onDragStartCallback")
+	else
+		handle.onDragStartCallback = nil
+	end
+end
 
 -- Determine a valid scale target without stealing wheel from scrollable/clickable frames.
 local function findScaleTargetUnderMouse()
@@ -485,6 +564,7 @@ end
 local function applyDefaultPoints(frame)
 	local points = frame and frame._eqolDefaultPoints
 	if not points or #points == 0 then return false end
+	if InCombatLockdown() and frame.IsProtected and frame:IsProtected() then return false end
 	frame:ClearAllPoints()
 	for _, data in ipairs(points) do
 		local relative = data.relative
@@ -542,7 +622,7 @@ local function applyDragTargetState(frame, active)
 end
 
 local function getPositionData(entry, frameDb)
-	local mode = db.positionPersistence or "reset"
+	local mode = getEntryPositionPersistence(entry, frameDb)
 	if mode == "lockout" then
 		local store = addon.Mover.variables.sessionPositions
 		return store and store[entry.id] or nil
@@ -552,8 +632,8 @@ local function getPositionData(entry, frameDb)
 end
 
 local function setPositionData(entry, frameDb, point, x, y)
-	local mode = db.positionPersistence or "reset"
-	if mode == "close" then return end
+	local mode = getEntryPositionPersistence(entry, frameDb)
+	if mode == "close" or mode == "off" then return end
 	if mode == "lockout" then
 		local store = addon.Mover.variables.sessionPositions
 		store = store or {}
@@ -573,17 +653,24 @@ local function setPositionData(entry, frameDb, point, x, y)
 end
 
 local function clearPositionData(entry, frameDb)
-	local mode = db.positionPersistence or "reset"
-	if mode == "lockout" then
-		local store = addon.Mover.variables.sessionPositions
-		if store then store[entry.id] = nil end
-	elseif mode == "reset" then
-		if frameDb then
-			frameDb.point = nil
-			frameDb.x = nil
-			frameDb.y = nil
-		end
+	local store = addon.Mover.variables.sessionPositions
+	if store then store[entry.id] = nil end
+	if frameDb then
+		frameDb.point = nil
+		frameDb.x = nil
+		frameDb.y = nil
 	end
+end
+
+function addon.Mover.functions.SetFramePositionPersistence(entry, value)
+	local resolved = resolveEntry(entry)
+	if not resolved then return end
+	local frameDb = ensureFrameDb(resolved)
+	if not frameDb then return end
+	local mode = normalizePositionPersistence(value)
+	frameDb.positionPersistence = mode
+	if (mode or getGlobalPositionPersistence()) == "off" then clearPositionData(resolved, frameDb) end
+	addon.Mover.functions.RefreshEntry(resolved)
 end
 
 local function isCollectionsMoveEnabled()
@@ -639,7 +726,7 @@ local function FixPlayerChoiceAnchor()
 		if not self._eqol_needsReapply then return end
 		self._eqol_needsReapply = nil
 
-		C_Timer.After(0, function()
+		RunNextFrame(function()
 			if self and self:IsShown() then
 				local entry = addon.Mover.functions.GetEntryForFrameName("PlayerChoiceFrame")
 				if entry then addon.Mover.functions.applyFrameSettings(self, entry) end
@@ -678,13 +765,7 @@ local function FixHeroTalentsAnchor()
 					if nodeInfo and nodeInfo.subTreeID and talentButton.ClearAllPoints then talentButton:ClearAllPoints() end
 				end
 			end
-			if RunNextFrame then
-				RunNextFrame(function() skipHook = false end)
-			elseif C_Timer and C_Timer.After then
-				C_Timer.After(0, function() skipHook = false end)
-			else
-				skipHook = false
-			end
+			RunNextFrame(function() skipHook = false end)
 		end
 	end)
 	return true
@@ -697,7 +778,7 @@ function addon.Mover.functions.applyFrameSettings(frame, entry)
 	if not isEntryActive(resolved) then return end
 	local frameDb = ensureFrameDb(resolved)
 	local posData = getPositionData(resolved, frameDb)
-	local hasPoint = posData and posData.point and posData.x ~= nil and posData.y ~= nil
+	local hasPoint = isUsablePositionData(posData)
 	local targetScale = resolveScale(frame, frameDb)
 	if not hasPoint and not targetScale then return end
 	if InCombatLockdown() and frame:IsProtected() then
@@ -717,13 +798,39 @@ function addon.Mover.functions.applyFrameSettings(frame, entry)
 	frame._eqol_isApplying = nil
 end
 
+function addon.Mover.functions.ReapplyFrameScaleAfterFit(frame)
+	if not (frame and db and db.enabled and db.scaleEnabled) then return end
+	local name = frame.GetName and frame:GetName() or nil
+	local entry = name and addon.Mover.functions.GetEntryForFrameName(name) or nil
+	if not (entry and isEntryActive(entry)) then return end
+	local frameDb = ensureFrameDb(entry)
+	if not resolveScale(frame, frameDb) then return end
+	addon.Mover.functions.applyFrameSettings(frame, entry)
+end
+
+function addon.Mover.functions.InstallScaleFitHook()
+	if addon.Mover.variables.scaleFitHooked then return end
+	if hooksecurefunc and _G.UIPanelUpdateScaleForFit then
+		hooksecurefunc("UIPanelUpdateScaleForFit", function(frame)
+			addon.Mover.functions.ReapplyFrameScaleAfterFit(frame)
+		end)
+		addon.Mover.variables.scaleFitHooked = true
+	elseif hooksecurefunc and _G.UpdateScaleForFit then
+		hooksecurefunc("UpdateScaleForFit", function(frame)
+			addon.Mover.functions.ReapplyFrameScaleAfterFit(frame)
+		end)
+		addon.Mover.variables.scaleFitHooked = true
+	end
+end
+
 function addon.Mover.functions.StoreFramePosition(frame, entry)
 	local resolved = resolveEntry(entry) or addon.Mover.functions.GetEntryForFrameName(frame:GetName() or "")
 	if not resolved then return end
 	local frameDb = ensureFrameDb(resolved)
 	if not frameDb then return end
 	local point, _, _, xOfs, yOfs = frame:GetPoint()
-	if not point then return end
+	if not isUsablePositionData({ point = point, x = xOfs, y = yOfs }) then return end
+	if not isFrameMostlyOnScreen(frame) then return end
 	setPositionData(resolved, frameDb, point, xOfs, yOfs)
 end
 
@@ -753,16 +860,59 @@ function addon.Mover.functions.createHooks(frame, entry)
 		if not isEntryActive(resolved) then return end
 		if not modifierPressed() then return end
 		if InCombatLockdown() and frame:IsProtected() then return end
+		local userPlaced = frame.IsUserPlaced and frame:IsUserPlaced()
 		frame._eqol_isDragging = true
 		frame:StartMoving()
+		if userPlaced ~= nil and frame.SetUserPlaced then frame:SetUserPlaced(userPlaced) end
 	end
 
 	local function onStopDrag(_, button)
 		if button and button ~= "LeftButton" then return end
-		if not isEntryActive(resolved) then return end
+		if not frame._eqol_isDragging then return end
 		if InCombatLockdown() and frame:IsProtected() then return end
 		frame:StopMovingOrSizing()
 		frame._eqol_isDragging = nil
+		if not isEntryActive(resolved) then return end
+		addon.Mover.functions.StoreFramePosition(frame, resolved)
+		if resolved.keepTwoPointSize then addon.Mover.functions.applyFrameSettings(frame, resolved) end
+	end
+
+	local function restoreHandleUserPlaced()
+		local userPlaced = frame._eqolHandleUserPlaced
+		if userPlaced ~= nil and frame.SetUserPlaced then frame:SetUserPlaced(userPlaced) end
+	end
+
+	local function onHandleMouseDown(handle, button)
+		if button and button ~= "LeftButton" then return end
+		if not isEntryActive(resolved) then return end
+		if not modifierPressed() then return end
+		frame._eqolHandleUserPlaced = frame.IsUserPlaced and frame:IsUserPlaced()
+		frame._eqol_isDragging = true
+		clearPanelDragStartCallback(handle)
+	end
+
+	local function onHandleDragStart()
+		restoreHandleUserPlaced()
+	end
+
+	local function onHandleMouseUp(handle, button)
+		if button and button ~= "LeftButton" then return end
+		handle.onDragStartCallback = blockPanelDragCallback
+		if handle.isMovingTarget then return end
+		frame._eqol_isDragging = nil
+		frame._eqolHandleUserPlaced = nil
+	end
+
+	local function onHandleDragStop(handle)
+		handle.onDragStartCallback = blockPanelDragCallback
+		if not frame._eqol_isDragging then
+			frame._eqolHandleUserPlaced = nil
+			return
+		end
+		restoreHandleUserPlaced()
+		frame._eqol_isDragging = nil
+		frame._eqolHandleUserPlaced = nil
+		if not isEntryActive(resolved) then return end
 		addon.Mover.functions.StoreFramePosition(frame, resolved)
 		if resolved.keepTwoPointSize then addon.Mover.functions.applyFrameSettings(frame, resolved) end
 	end
@@ -796,6 +946,10 @@ function addon.Mover.functions.createHooks(frame, entry)
 		setStoredScale(1)
 		local frameDb = ensureFrameDb(resolved)
 		clearPositionData(resolved, frameDb)
+		if InCombatLockdown() and frame.IsProtected and frame:IsProtected() then
+			addon.Mover.functions.deferDefaultReset(frame, resolved)
+			return
+		end
 		if frame._eqolDefaultPoints then
 			frame._eqol_isApplying = true
 			applyDefaultPoints(frame)
@@ -824,13 +978,7 @@ function addon.Mover.functions.createHooks(frame, entry)
 					addon.Mover.functions.CheckScaleWheelCapture()
 				end
 			end
-			if RunNextFrame then
-				RunNextFrame(markHover)
-			elseif C_Timer and C_Timer.After then
-				C_Timer.After(0, markHover)
-			else
-				markHover()
-			end
+			RunNextFrame(markHover)
 		end
 	end
 
@@ -880,23 +1028,26 @@ function addon.Mover.functions.createHooks(frame, entry)
 	local function attachHandle(anchor)
 		if not anchor then return nil end
 		local handle
-		if pcall(function() handle = CreateFrame("Frame", nil, anchor, "PanelDragBarTemplate") end) and handle then
-			-- Prevent PanelDragBarMixin from calling Start/StopMovingOrSizing directly.
-			handle.onDragStartCallback = function() return false end
-			handle.onDragStopCallback = function() return false end
-			handle.target = frame
+		if pcall(function() handle = CreateFrame("Frame", nil, frame, "PanelDragBarTemplate") end) and handle then
+			handle.onDragStartCallback = blockPanelDragCallback
+			handle:HookScript("OnMouseDown", onHandleMouseDown)
+			handle:HookScript("OnMouseUp", onHandleMouseUp)
+			handle:HookScript("OnDragStart", onHandleDragStart)
+			handle:HookScript("OnDragStop", onHandleDragStop)
 		else
 			handle = CreateFrame("Frame", nil, anchor)
+			if handle.RegisterForDrag then handle:RegisterForDrag("LeftButton") end
+			handle:HookScript("OnDragStart", onStartDrag)
+			handle:HookScript("OnDragStop", onStopDrag)
 		end
 		handle:SetAllPoints(anchor)
+		handle._eqolAnchor = anchor
 		handle:SetFrameLevel(anchor:GetFrameLevel() + 1)
 		if not InCombatLockdown() then
 			if handle.SetPropagateMouseMotion then handle:SetPropagateMouseMotion(true) end
 			if handle.SetPropagateMouseClicks then handle:SetPropagateMouseClicks(true) end
 		end
 		if handle.EnableMouse then handle:EnableMouse(true) end
-		handle:HookScript("OnDragStart", onStartDrag)
-		handle:HookScript("OnDragStop", onStopDrag)
 		registerMoveHandle(handle)
 		return handle
 	end
@@ -918,11 +1069,15 @@ function addon.Mover.functions.createHooks(frame, entry)
 	local useOverlay = false
 	if not moveDisabled then
 		useOverlay = resolved.useRootHandle
-		if useOverlay == nil then useOverlay = frame:IsProtected() end
+		if resolved.handlesOnly and resolved.handles then
+			useOverlay = true
+		elseif useOverlay == nil then
+			useOverlay = frame:IsProtected()
+		end
 	end
 	if not moveDisabled then
 		if useOverlay then
-			if resolved.useRootHandle ~= false then frame._eqolMoveHandle = attachHandle(frame) end
+			if not resolved.handlesOnly and resolved.useRootHandle ~= false then frame._eqolMoveHandle = attachHandle(frame) end
 
 			local createdSubs = frame._eqolMoveSubHandles or {}
 			if resolved.handles then
@@ -970,7 +1125,7 @@ function addon.Mover.functions.createHooks(frame, entry)
 		if self._eqol_isDragging or self._eqol_isApplying then return end
 		local frameDb = ensureFrameDb(resolved)
 		local posData = getPositionData(resolved, frameDb)
-		local hasPoint = posData and posData.point and posData.x ~= nil and posData.y ~= nil
+		local hasPoint = isUsablePositionData(posData)
 		local targetScale = resolveScale(self, frameDb)
 		if not hasPoint and not targetScale then return end
 		if InCombatLockdown() and self:IsProtected() then
@@ -993,10 +1148,14 @@ function addon.Mover.functions.createHooks(frame, entry)
 	frame:HookScript("OnShow", function(self)
 		if not self._eqolDefaultPoints then captureDefaultPoints(self) end
 		addon.Mover.functions.applyFrameSettings(self, resolved)
+		RunNextFrame(function()
+			if self and self.IsShown and self:IsShown() then addon.Mover.functions.applyFrameSettings(self, resolved) end
+		end)
 	end)
 	if not resolved.skipOnHide then
 		frame:HookScript("OnHide", function(self)
-			if db.positionPersistence ~= "close" then return end
+			local frameDb = ensureFrameDb(resolved)
+			if getEntryPositionPersistence(resolved, frameDb) ~= "close" then return end
 			if not isEntryActive(resolved) then return end
 			if self._eqol_isDragging or self._eqol_isApplying then return end
 			if InCombatLockdown() and self:IsProtected() then return end
@@ -1012,8 +1171,11 @@ function addon.Mover.functions.createHooks(frame, entry)
 
 	local function setHandleEnabled(handle, enabled)
 		if not handle then return end
-		if handle.EnableMouse then handle:EnableMouse(enabled) end
-		if handle.SetShown then handle:SetShown(enabled) end
+		local anchor = handle._eqolAnchor
+		local anchorShown = not anchor or not anchor.IsShown or anchor:IsShown()
+		local active = enabled and anchorShown
+		if handle.EnableMouse then handle:EnableMouse(active) end
+		if handle.SetShown then handle:SetShown(active) end
 	end
 
 	local function updateHandleState()
@@ -1138,6 +1300,16 @@ local eventHandlers = {
 		for frame, entry in pairs(pending) do
 			pending[frame] = nil
 			if frame then addon.Mover.functions.applyFrameSettings(frame, entry) end
+		end
+
+		local pendingDefaultReset = addon.Mover.variables.pendingDefaultReset or {}
+		for frame in pairs(pendingDefaultReset) do
+			pendingDefaultReset[frame] = nil
+			if frame and frame._eqolDefaultPoints then
+				frame._eqol_isApplying = true
+				applyDefaultPoints(frame)
+				frame._eqol_isApplying = nil
+			end
 		end
 	end,
 }

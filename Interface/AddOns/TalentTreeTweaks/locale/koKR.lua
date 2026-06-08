@@ -10,6 +10,12 @@ L[ [=[%d points spent past the gate.
 %d extra points above the gate are free to be moved away.]=] ] = "관문을 지나서 소비한 %d 포인트. 관문 위의 추가 포인트는 자유롭게 이동할 수 있습니다."
 L["%s Switch to %s"] = "%s 전환 %s"
 L["(was %s)"] = "(이전 %s)"
+--[[Translation missing --]]
+L["|cffeda55fClick|r to spend a point on this path."] = "|cffeda55fClick|r to spend a point on this path."
+--[[Translation missing --]]
+L["|cffeda55fCTRL-Click|r to spend up to the next 5 point breakpoint."] = "|cffeda55fCTRL-Click|r to spend up to the next 5 point breakpoint."
+--[[Translation missing --]]
+L["|cffeda55fShift-Click|r to spend all points on this path."] = "|cffeda55fShift-Click|r to spend all points on this path."
 L["A workaround for one of the ways that Talent Tree taint can block action buttons from working."] = "특성 트리 오류로 인해 작업 버튼이 작동하지 않는 경우의 해결 방법 중 하나입니다."
 L["Addon development takes a large amount of time and effort. If you enjoy using %s, please consider supporting its development by donating. Your support helps ensure the continued improvement and maintenance of the addon. Thank you for your generosity!"] = "애드온 개발에는 많은 시간과 노력이 필요합니다. %s를 즐겨 사용하신다면, 기부로 개발을 지원해 주시길 부탁드립니다. 여러분의 지원은 애드온의 지속적인 개선과 유지 관리를 보장하는 데 도움이 됩니다. 아낌없는 후원에 감사드립니다!"
 L["Adds a button to link the currently shown build in chat."] = "현재 채팅에 표시된 빌드를 링크하는 버튼 추가"
@@ -18,6 +24,8 @@ L["Adds a mini tree in various tooltips for Talent Tree Builds"] = "특성 트�
 L["Adds a more obvious highlight when you can relearn talents in bulk by shift-clicking them."] = "Shift 클릭으로 특성을 대량으로 다시 배울 수 있게 되면 더욱 뚜렷하게 강조"
 L["Adds a right-click menu option to directly inspect a player's talents."] = "플레이어의 특성을 직접 확인할 수 있는 오른쪽 클릭 메뉴 옵션을 추가합니다."
 L["Adds a right-click option to the loadout dropdown to export your build."] = "특성 빌드를 내보내는 우클릭 옵션 추가"
+--[[Translation missing --]]
+L["Adds bulk spending to the profession specialization Spend Points button."] = "Adds bulk spending to the profession specialization Spend Points button."
 L["Adds options to adjust the background of the talent tree UI."] = "특성 트리 UI의 배경을 조정하는 옵션 추가"
 L["Adds respec buttons to the talent tree UI."] = "특성 트리 UI에 재지정 버튼 추가"
 L["Adds spell id and more to the various talent tree tooltips."] = "다양한 특성 트리 툴팁에 주문 ID 등 추가"
@@ -56,6 +64,10 @@ L["Automatically upgrade the final Limits Unbound talent when you have enough cu
 L["Background Transparency"] = "배경 투명도"
 L["Basic Modules"] = "기본 모듈"
 L["blocked in combat"] = "전투 중 차단됨"
+--[[Translation missing --]]
+L["Bulk Apply Knowledge"] = "Bulk Apply Knowledge"
+--[[Translation missing --]]
+L["Bulk Profession Upgrade"] = "Bulk Profession Upgrade"
 L["Change Background"] = "배경 변경"
 L["Change Scale"] = "스케일 변경"
 --[[Translation missing --]]

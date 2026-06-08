@@ -1,9 +1,9 @@
-## Interface: 120001,120005, 120001,120005
+## Interface: 120005,120007, 120005,120007
 ## Title: Talent Tree Tweaks
 ## Author: Numy
 ## IconTexture: Interface\Addons\TalentTreeTweaks\media\icon
 ## Notes: Various improvements and addition to the Dragonflight talent tree UI
-## Version: v1.13.23
+## Version: v1.13.26
 ## X-Curse-Project-ID: 678792
 ## X-Wago-ID: qKQxm86x
 ## SavedVariables: TalentTreeTweaksDB
@@ -50,6 +50,7 @@ modules\copyTalentButtonInfo.lua
 modules\reduceSpam.lua
 modules\miniTreeInTooltip.lua
 modules\heroTalents.lua
+modules\bulkProfessionUpgrade.lua
 
 modules\autoPurchaseGenericTalents.lua
 modules\autoPurchaseDriveTalents.lua

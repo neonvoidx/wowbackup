@@ -7,6 +7,7 @@ addon.Aura.UF = addon.Aura.UF or {}
 local UF = addon.Aura.UF
 UF.GroupFramesHelper = UF.GroupFramesHelper or {}
 local H = UF.GroupFramesHelper
+local L = LibStub("AceLocale-3.0"):GetLocale(parentAddonName)
 
 H.COLOR_WHITE = { 1, 1, 1, 1 }
 H.COLOR_WHITE_90 = { 1, 1, 1, 0.9 }
@@ -815,8 +816,8 @@ function H.CreateCustomSortEditor(opts)
 	local onReorder = opts.onReorder
 	local getClassLabel = opts.getClassLabel or H.GetLocalizedClassName
 	local getClassColor = opts.getClassColor or H.GetClassColor
-	local titleText = opts.title or "Custom Sort Order"
-	local subtitleText = opts.subtitle or "Drag entries to reorder. Applies to Raid custom sorting."
+	local titleText = opts.title or L["customSortEditorDefaultTitle"]
+	local subtitleText = opts.subtitle or L["customSortEditorDefaultSubtitle"]
 
 	local frame = CreateFrame("Frame", nil, UIParent, "BackdropTemplate")
 	frame:SetSize(size.w or 420, size.h or 520)
@@ -856,7 +857,7 @@ function H.CreateCustomSortEditor(opts)
 
 	local roleHeader = frame:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
 	roleHeader:SetPoint("TOPLEFT", subtitle, "BOTTOMLEFT", 0, -16)
-	roleHeader:SetText("Role Priority")
+	roleHeader:SetText(L["rolePriorityHeader"])
 	frame.RoleHeader = roleHeader
 
 	local roleContainer = CreateFrame("Frame", nil, frame)
@@ -866,7 +867,7 @@ function H.CreateCustomSortEditor(opts)
 
 	local classHeader = frame:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
 	classHeader:SetPoint("TOPLEFT", roleContainer, "BOTTOMLEFT", 0, -16)
-	classHeader:SetText("Class Priority")
+	classHeader:SetText(L["classPriorityHeader"])
 	frame.ClassHeader = classHeader
 
 	local classContainer = CreateFrame("Frame", nil, frame)
@@ -1975,6 +1976,7 @@ function H.TextureOptions(LSM)
 	end
 	add("DEFAULT", "Default (Blizzard)")
 	add("SOLID", "Solid")
+	if addon.Aura and addon.Aura.UFHelper and addon.Aura.UFHelper.BLIZZARD_RAID_FRAME_TEX_KEY then add(addon.Aura.UFHelper.BLIZZARD_RAID_FRAME_TEX_KEY, L["Blizzard Raid Frame"] or "Blizzard Raid Frame") end
 	local names = addon.functions and addon.functions.GetLSMMediaNames and addon.functions.GetLSMMediaNames("statusbar") or {}
 	local hash = addon.functions and addon.functions.GetLSMMediaHash and addon.functions.GetLSMMediaHash("statusbar") or {}
 	for i = 1, #names do

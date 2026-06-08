@@ -15,6 +15,12 @@ L["%s Switch to %s"] = "%s Switch to %s"
 --[[Translation missing --]]
 L["(was %s)"] = "(was %s)"
 --[[Translation missing --]]
+L["|cffeda55fClick|r to spend a point on this path."] = "|cffeda55fClick|r to spend a point on this path."
+--[[Translation missing --]]
+L["|cffeda55fCTRL-Click|r to spend up to the next 5 point breakpoint."] = "|cffeda55fCTRL-Click|r to spend up to the next 5 point breakpoint."
+--[[Translation missing --]]
+L["|cffeda55fShift-Click|r to spend all points on this path."] = "|cffeda55fShift-Click|r to spend all points on this path."
+--[[Translation missing --]]
 L["A workaround for one of the ways that Talent Tree taint can block action buttons from working."] = "A workaround for one of the ways that Talent Tree taint can block action buttons from working."
 --[[Translation missing --]]
 L["Addon development takes a large amount of time and effort. If you enjoy using %s, please consider supporting its development by donating. Your support helps ensure the continued improvement and maintenance of the addon. Thank you for your generosity!"] = "Addon development takes a large amount of time and effort. If you enjoy using %s, please consider supporting its development by donating. Your support helps ensure the continued improvement and maintenance of the addon. Thank you for your generosity!"
@@ -25,6 +31,8 @@ L["Adds a more obvious highlight when you can relearn talents in bulk by shift-c
 --[[Translation missing --]]
 L["Adds a right-click menu option to directly inspect a player's talents."] = "Adds a right-click menu option to directly inspect a player's talents."
 L["Adds a right-click option to the loadout dropdown to export your build."] = "Fügt dem Konfigurations-Dropdown eine Rechtsklick-Option zum Exportieren hinzu."
+--[[Translation missing --]]
+L["Adds bulk spending to the profession specialization Spend Points button."] = "Adds bulk spending to the profession specialization Spend Points button."
 L["Adds options to adjust the background of the talent tree UI."] = "Fügt Optionen hinzu, um den Hintergrund des Talentbaum UI anzupassen."
 L["Adds respec buttons to the talent tree UI."] = "Fügt dem Talentbaum UI Buttons hinzu, um die Spezialisierung zu ändern."
 L["Adds spell id and more to the various talent tree tooltips."] = "Fügt den verschiedenen Talentbaum-Tooltips die Spell ID und mehr hinzu."
@@ -73,6 +81,10 @@ L["Background Transparency"] = "Hintergrundtransparenz"
 --[[Translation missing --]]
 L["Basic Modules"] = "Basic Modules"
 L["blocked in combat"] = "im Kampf blockiert"
+--[[Translation missing --]]
+L["Bulk Apply Knowledge"] = "Bulk Apply Knowledge"
+--[[Translation missing --]]
+L["Bulk Profession Upgrade"] = "Bulk Profession Upgrade"
 L["Change Background"] = "Hintergrund ändern"
 L["Change Scale"] = "Größe ändern"
 --[[Translation missing --]]

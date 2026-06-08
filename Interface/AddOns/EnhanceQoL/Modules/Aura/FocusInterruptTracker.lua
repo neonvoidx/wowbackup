@@ -218,6 +218,22 @@ local function normalizeOutline(value, fallback)
 	return "NONE"
 end
 
+local function resolveFontFlags(style, fallback)
+	if addon.functions and addon.functions.ResolveFontStyle then
+		local _, flags = addon.functions.ResolveFontStyle(style, fallback)
+		return flags
+	end
+	if addon.functions and addon.functions.GetFontFlagsForStyle then
+		local flags = addon.functions.GetFontFlagsForStyle(style, fallback)
+		if type(flags) == "string" then return flags end
+	end
+	local outline = normalizeOutline(style, fallback or defaults.textOutline or "NONE")
+	if outline == "__EQOL_GLOBAL_FONT_STYLE__" then outline = normalizeOutline(fallback or defaults.textOutline or "NONE", "NONE") end
+	if outline == "__EQOL_GLOBAL_FONT_STYLE__" then outline = "NONE" end
+	if outline == "NONE" then return "" end
+	return outline
+end
+
 local function normalizeDisplayMode(value, fallback)
 	local mode = type(value) == "string" and string.upper(value) or nil
 	if mode and DISPLAY_MODES[mode] then return mode end
@@ -749,9 +765,14 @@ function Tracker:ApplyLayoutData(data)
 	if isText then
 		local fontPath = self:ResolveTextFont()
 		local fontStyleChoice = normalizeOutline(cfg.textOutline, defaults.textOutline)
-		local fontOutline = addon.functions and addon.functions.GetFontFlagsForStyle and addon.functions.GetFontFlagsForStyle(fontStyleChoice, defaults.textOutline)
-			or (fontStyleChoice == "NONE" and "" or fontStyleChoice)
-		local ok = frame.text:SetFont(fontPath, cfg.textSize, fontOutline)
+		local fontOutline = resolveFontFlags(fontStyleChoice, defaults.textOutline)
+		local ok = false
+		if addon.functions and addon.functions.ApplyFontString then
+			ok = addon.functions.ApplyFontString(frame.text, fontPath, cfg.textSize, fontStyleChoice, STANDARD_TEXT_FONT, defaults.textOutline)
+		else
+			ok = frame.text:SetFont(fontPath, cfg.textSize, fontOutline)
+			if ok == false then ok = frame.text:SetFont(STANDARD_TEXT_FONT, cfg.textSize, fontOutline) end
+		end
 		if ok == false then frame.text:SetFont(STANDARD_TEXT_FONT, cfg.textSize, fontOutline) end
 		if addon.functions and addon.functions.ApplyFontStyleShadow then
 			addon.functions.ApplyFontStyleShadow(frame.text, fontStyleChoice, defaults.textOutline)

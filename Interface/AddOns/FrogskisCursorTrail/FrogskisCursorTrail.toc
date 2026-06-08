@@ -1,8 +1,8 @@
-## Interface: 120001, 120000
+## Interface: 120005, 120001
 ## Title: Frogski's Cursor Trail
 ## Notes: Cursor Trail 2.0
 ## Author: Frogski
-## Version: 2.0.3
+## Version: 2.0.5
 ## SavedVariables: FrogskisCursorTrailAccountDB
 ## SavedVariablesPerCharacter: FrogskisCursorTrailDB
 ## IconTexture: Interface\Icons\inv_frog2_darkgreen

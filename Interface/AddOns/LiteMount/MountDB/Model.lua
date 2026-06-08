@@ -14,9 +14,17 @@ local Model = {
     [NONE] = {}
 }
 
+--[[
+   [1283837] = true, -- Zothwing Darkseeker (2937)
+   [1283838] = true, -- Zothwing Deepseeker (2938)
+]]
+
 -- There is no locale-independent stuff in this lib, because otherwise we
 -- would need to be either (a) hard-coding the english name for all of the
 -- __AUTO__ mounts or (b) assigning model ID numbers that persist forever.
+
+-- Doesn't support classic, which has different spell IDs. If classic has the
+-- same mount IDs it could be reworked, would need to check.
 
 Model._AUTO_ = {
     [302361] = true, -- Alabaster Stormtalon
@@ -59,11 +67,9 @@ Model._AUTO_ = {
     [366791] = true, -- Jigglesworth Sr.
    [1233925] = true, -- Lana'thel's Crimson Cascade
     [363613] = true, -- Lightforged Ruinstrider
-    [239013] = true, -- Lightforged Warframe
     [472253] = true, -- Lunar Launcher
     [267274] = true, -- Mag'har Direwolf
     [305592] = true, -- Mechagon Mechanostrider
-    [367676] = true, -- Nether-Gorged Greatwyrm
     [308814] = true, -- Ny'alotha Allseer
     [245725] = true, -- Orgrimmar Interceptor
    [1221155] = true, -- Prototype A.S.M.R.
@@ -73,6 +79,7 @@ Model._AUTO_ = {
    [1216430] = true, -- Sha-Warped Riding Tiger
     [279611] = true, -- Skullripper
     [341821] = true, -- Snowstorm
+   [1264184] = true, -- Spawn of Vyranoth (2806)
     [259202] = true, -- Starcursed Voidstrider
    [1255246] = true, -- Starspark Netherdrake
     [454682] = true, -- Startouched Furline
@@ -109,6 +116,7 @@ Model._AUTO_ = {
     [349823] = true, -- Vicious Warstalker (Alliance)
     [349824] = true, -- Vicious Warstalker (Horde)
     [223363] = true, -- Vicious Warstrider
+   [1294648] = true, -- Voidmancer's Starcarver (2988)
     [348162] = true, -- Wandering Ancient
     [163024] = true, -- Warforged Nightmare
     [171845] = true, -- Warlord's Deathwheel
@@ -155,6 +163,7 @@ Model["Amani Eagle"] = {
    [1251433] = true, -- Amani Sunfeather (2693)
    [1261576] = true, -- Hexed Vilefeather Eagle (2786)
    [1251630] = true, -- Amani Windcaller (2694)
+   [1286606] = true, -- Void-Corrupted Hex Eagle (2961)
 }
 
 Model["Amani Pango"] = {
@@ -165,7 +174,9 @@ Model["Amani Pango"] = {
 
 Model["Amani War Bear"] = {
    [1261357] = true, -- Amani Blessed Bear (2776)
+   [1261369] = true, -- Amani Hex Bear (2781)
    [1261360] = true, -- Ancestral War Bear (2778)
+   [1261362] = true, -- Witherbark Warbear Mother (2779)
 }
 
 -- Devourer Animite
@@ -192,6 +203,11 @@ Model["Aquilon"] = {
    [1261671] = true, -- Bronze Aquilon
     [353875] = true, -- Elysian Aquilon
     [353877] = true, -- Foresworn Aquilon
+}
+
+Model["Arboon"] = {
+   [1282453] = true, -- Amberback Arboon (2931)
+   [1282450] = true, -- Blossomback Arboon (2930)
 }
 
 -- Model file is Arcane Golem
@@ -258,6 +274,7 @@ Model["Aurochs"] = {
 }
 
 Model["Bakar"] = {
+    [404018] = true, -- Black-Furred Bakar (1710)
     [424601] = true, -- Brown-Furred Spiky Bakar
     [424607] = true, -- Taivan
 }
@@ -305,6 +322,7 @@ Model["Bear"] = {
 Model["Bee"] = {
     [259741] = true, -- Honeyback Harvester
     [303767] = true, -- Honeyback Hivemother
+   [1282471] = true, -- Magister's Spell Bee (2933)
     [471538] = true, -- Timely Buzzbee
 }
 
@@ -541,6 +559,7 @@ Model["Crow"] = {
 
 -- Unused models are Amethyst and Citrine Mechsuit
 Model["Crystal Mechsuit"] = {
+   [1296734] = true, -- Amethyst Mechsuit (3006)
     [458335] = true, -- Diamond Mechsuit
    [1243003] = true, -- Light-Forged Mechsuit
    [1241263] = true, -- OC91 Chariot
@@ -573,6 +592,7 @@ Model["Deathroc"] = {
 }
 
 Model["Deathwalker"] = {
+   [1296731] = true, -- Cerulean Deathwalker (3005)
     [334482] = true, -- Restoration Deathwalker
     [340068] = true, -- Sintouched Deathwalker
     [358319] = true, -- Soultwisted Deathwalker
@@ -582,6 +602,7 @@ Model["Deathwalker"] = {
 -- Worldbreaker Drake
 Model["Deathwing Drake"] = {
     [420097] = true, -- Azure Worldchiller
+   [1284640] = true, -- Golden Ashened Cataclysm (2948)
     [294197] = true, -- Obsidian Worldbreaker
 }
 
@@ -652,26 +673,16 @@ Model["Dragon Turtle"] = {
     [127290] = true, -- Red Dragon Turtle
 }
 
--- This could be split into two/three
 Model["Dragonhawk"] = {
     [ 96503] = true, -- Amani Dragonhawk
     [142478] = true, -- Armored Blue Dragonhawk
     [142266] = true, -- Armored Red Dragonhawk
     [ 61996] = true, -- Blue Dragonhawk
-   [1253929] = true, -- Cerulean Sporeglider (2710)
-   [1261298] = true, -- Crimson Dragonhawk (2756)
-   [1261302] = true, -- Cobalt Dragonhawk (2758)
     [194464] = true, -- Eclipse Dragonhawk
-   [1261291] = true, -- Fiery Dragonhawk (2753)
     [ 62048] = true, -- Illidari Doomhawk
-   [1234305] = true, -- Lightwing Dragonhawk
     [ 61997] = true, -- Red Dragonhawk
-   [1253938] = true, -- Ruddy Sporeglider (2713)
     [ 66088] = true, -- Sunreaver Dragonhawk
-   [1261296] = true, -- Umbral Dragonhawk (2755)
     [351195] = true, -- Vengeance
-   [1239138] = true, -- Voidlight Surger
-   [1234303] = true, -- Voidwing Dragonhawk
 }
 
 Model["Drake"] = {
@@ -917,6 +928,13 @@ Model["Gearglider"] = {
     [353264] = true, -- Xy Trustee's Gearglider
 }
 
+Model["Gilnean Charger"] = {
+   [1282274] = true, -- Gilnean Copper Charger (2927)
+   [1282268] = true, -- Gilnean Iron Charger (2926)
+   [1282276] = true, -- Gilneas Loyalist's Rouncey (2929)
+   [1282275] = true, -- Pyrewood Rebel's Rouncey (2928)
+}
+
 Model["Gladiator's Cloud Serpent"] = {
     [148619] = true, -- Grievous Gladiator's Cloud Serpent
     [139407] = true, -- Malevolent Gladiator's Cloud Serpent
@@ -989,6 +1007,13 @@ Model["Goblin Rocket"] = {
     [126507] = true, -- Depleted-Kyparium Rocket
 }
 
+Model["Goblin Firework Rocket"] = {
+   [1292342] = true, -- Green Rocket Mount [PH] (2974)
+   [1292102] = true, -- Blackwater X-TREME Firework Rocket (2973)
+   [1292344] = true, -- Bilgewater X-TREME Firework Rocket (2975)
+   [1292345] = true, -- Pink Rocket Mount [PH] (2976)
+}
+
 Model["Goblin Shredder"] = {
     [466023] = true, -- Asset Advocator
     [466019] = true, -- Blackwater Shredder Deluxe Mk 2
@@ -1017,6 +1042,7 @@ Model["Goblin Waveshredder"] = {
 -- Devourer Gorger
 Model["Gorger"] = {
     [333027] = true, -- Loyal Gorger
+   [1297427] = true, -- Tortured Gorger (3033)
    [1241070] = true, -- Translocated Gorger
     [344659] = true, -- Voracious Gorger
 }
@@ -1092,6 +1118,11 @@ Model["Great Kodo"] = {
 Model["Great Raven"] = {
    [1226983] = true, -- Archmage's Great Raven
    [1226760] = true, -- Prophet's Great Raven
+}
+
+Model["Greatwyrm"] = {
+    [367676] = true, -- Nether-Gorged Greatwyrm
+   [1271698] = true, -- Unbound Manawyrm (2915)
 }
 
 -- Harronir Cat
@@ -1177,6 +1208,7 @@ Model["Hawkstrider"] = {
     [230401] = true, -- Ivory Hawkstrider
     [ 35018] = true, -- Purple Hawkstrider
     [ 34795] = true, -- Red Hawkstrider
+   [1282936] = true, -- Void-Touched Hawkstrider (2935)
 }
 
 Model["Headless Horseman's Charger"] = {
@@ -1263,6 +1295,13 @@ Model["Hyena"] = {
     [237286] = true, -- Dune Scavenger
 }
 
+Model["Imperial Lynx"] = {
+    [448979] = true, -- Dauntless Imperial Lynx
+   [1226421] = true, -- Radiant Imperial Lynx
+    [448978] = true, -- Vermillion Imperial Lynx
+   [1228865] = true, -- Void-Scarred Lynx
+}
+
 Model["Infernal"] = {
     [171840] = true, -- Coldflame Infernal
     [213134] = true, -- Felblaze Infernal
@@ -1344,10 +1383,7 @@ Model["Lupine"] = {
 }
 
 Model["Lynx"] = {
-    [448979] = true, -- Dauntless Imperial Lynx
-   [1226421] = true, -- Radiant Imperial Lynx
-    [448978] = true, -- Vermillion Imperial Lynx
-   [1228865] = true, -- Void-Scarred Lynx
+   [1287359] = true, -- Void-Corrupted Lynx (2965)
 }
 
 Model["Magic Broom"] = {
@@ -1458,6 +1494,11 @@ Model["Mechacycle"] = {
     [297157] = true, -- Junkheap Drifter
 }
 
+Model["Mechanical Panther"] = {
+   [1255159] = true, -- Mechanical Prototype Panther MK-0 (2717)
+   [1255179] = true, -- Steel Prototype Panther MK-0 (2718)
+}
+
 Model["Mechanocat"] = {
     [294143] = true, -- X-995 Mechanocat
 }
@@ -1524,6 +1565,7 @@ Model["Mountain Horse"] = {
     [341639] = true, -- Court Sinrunner
     [260172] = true, -- Dapple Gray
     [260175] = true, -- Goldenmane
+   [1294677] = true, -- [PH] Horse with Hat (2992)
     [279456] = true, -- Highland Mustang
     [282682] = true, -- Kul Tiran Charger X2
     [279608] = true, -- Lil' Donkey
@@ -1568,7 +1610,6 @@ Model["Nether Ray"] = {
     [ 39801] = true, -- Purple Riding Nether Ray
     [ 39800] = true, -- Red Riding Nether Ray
     [ 39802] = true, -- Silver Riding Nether Ray
-   [1263635] = true, -- Spectral Hawkstrider (2805)
    [1266702] = true, -- Voidbound Stormray (2828)
 }
 
@@ -1980,17 +2021,34 @@ Model["Shredder"] = {
 }
 
 Model["Shreddertank"] = {
+   [1296756] = true, -- Blue-Chip Shreddertank (3007)
    [1217235] = true, -- Crimson Shreddertank
    [1221694] = true, -- Enterprising Shreddertank
+   [1296759] = true, -- High-Yield Shreddertank (3010)
+   [1296758] = true, -- Profit-Green Shreddertank (3008)
+   [1296760] = true, -- Speculative Shreddertank (3009)
+}
+
+Model["Silvermoon Dragonhawk"] = {
+   [1261302] = true, -- Cobalt Dragonhawk (2758)
+   [1261298] = true, -- Crimson Dragonhawk (2756)
+   [1261291] = true, -- Fiery Dragonhawk (2753)
+   [1234305] = true, -- Lightwing Dragonhawk
+   [1261293] = true, -- Peridot Dragonhawk (2754)
+   [1261296] = true, -- Umbral Dragonhawk (2755)
+   [1239138] = true, -- Voidlight Surger
+   [1234303] = true, -- Voidwing Dragonhawk
 }
 
 -- This is annoying because there is a mount "Silvermoon Hawkstrider" which
 -- is not one of these but a Swift Hawkstrider, but this is clearly the
 -- right name from the flavor text.
-Model["Silvermoon Hawkstrider"]= {
+Model["Silvermoon Hawkstrider"] = {
    [1261323] = true, -- Cerulean Hawkstrider (2762)
    [1261322] = true, -- Crimson Silvermoon Hawkstrider (2761)
+   [1265785] = true, -- Emerald Hawkstrider (2818)
    [1265784] = true, -- Lucent Hawkstrider (2817)
+   [1263635] = true, -- Spectral Hawkstrider (2805)
 }
 
 -- Merged into Mountain Horse
@@ -2052,6 +2110,7 @@ Model["Slitherdrake"] = {
 }
 
 Model["Slug"] = {
+    [350220] = true, -- Liquid Hot Magma Slug (1470)
     [374138] = true, -- Seething Slug
 }
 
@@ -2078,6 +2137,7 @@ Model["Snapdragon"] = {
     [474086] = true, -- Prismatic Snapdragon
     [294038] = true, -- Royal Snapdragon
     [300146] = true, -- Snapdragon Kelpstalker
+   [1287357] = true, -- Void-Touched Snapdragon (2964)
 }
 
 Model["Snaplizard"] = {
@@ -2106,6 +2166,12 @@ Model["Spelltome"] = {
 
 Model["Spider"] = {
     [213115] = true, -- Bloodfang Widow
+}
+
+Model["Sporeglider"] = {
+   [1253929] = true, -- Cerulean Sporeglider (2710)
+   [1284973] = true, -- Luminous Sporeglider (2950)
+   [1253938] = true, -- Ruddy Sporeglider (2713)
 }
 
 Model["Stone Drake"] = {
@@ -2153,6 +2219,14 @@ Model["Stormcrow"] = {
     [171828] = true, -- Solar Spirehawk
     [471562] = true, -- Thrayir, Eyes of the Siren
     [253639] = true, -- Violet Spellwing
+}
+
+Model["Sun Roc"] = {
+   [1283908] = true, -- Dusk-Painted Sun Roc (2940)
+   [1283910] = true, -- Flame-Painted Sun Roc (2941)
+   [1298439] = true, -- Sun Festival's Painted Roc (3036)
+-- [1283906] = true, -- [PH] Giant Eagle Sunwalker Mount Blue (2939)
+-- [1283911] = true, -- [PH] Giant Eagle Sunwalker Mount White (2942)
 }
 
 Model["Sunwalker Kodo"] = {
@@ -2449,6 +2523,7 @@ Model["Vorquin"] = {
 }
 
 Model["Vulture"] = {
+   [1294767] = true, -- Badlands Buzzard (2994)
     [414324] = true, -- Gold-Toed Albatross
     [266925] = true, -- Siltwing Albatross
     [316275] = true, -- Waste Marauder
@@ -2480,9 +2555,10 @@ Model["War Turtle"] = {
    [1227076] = true, -- Tyrannotort
 }
 
--- Deleted
--- Model["Warframe"] = {
--- }
+Model["Warframe"] = {
+   [1294663] = true, -- Arcforged Nullframe (2990)
+    [239013] = true, -- Lightforged Warframe (932)
+}
 
 Model["Warhorse"] = {
     [ 67466] = true, -- Argent Warhorse
@@ -2719,8 +2795,7 @@ function LMDB.AuditModelData()
     for _, mountID in ipairs(C_MountJournal.GetMountIDs()) do
         local name, spellID = C_MountJournal.GetMountInfoByID(mountID)
         local typeID = select(5, C_MountJournal.GetMountInfoExtraByID(mountID))
-        local typeInfo = LM.MOUNT_TYPE_INFO[typeID]
-        if (not typeInfo or not typeInfo.skip) and not ModelBySpellID[spellID] then
+        if not ModelBySpellID[spellID] then
             print('MISSING MOUNT', spellID, name)
         end
        mountSpells[spellID] = name

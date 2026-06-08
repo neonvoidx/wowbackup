@@ -14,6 +14,8 @@ addon.events:RegisterEvent("PLAYER_ENTERING_WORLD")
 addon.events:RegisterEvent("UPDATE_OVERRIDE_ACTIONBAR")
 addon.events:RegisterEvent("UPDATE_BONUS_ACTIONBAR")
 addon.events:RegisterEvent("UPDATE_VEHICLE_ACTIONBAR")
+addon.events:RegisterEvent("BAG_UPDATE_COOLDOWN")
+addon.events:RegisterEvent("ACTIONBAR_UPDATE_COOLDOWN")
 
 local itemSlotCache = {}
 local LCG = addon.LCG
@@ -29,7 +31,89 @@ local actionSlotSnapshot = {}
 local spellCacheDirty = true
 local itemCacheDirty = true
 local stackTexts = {}
+local recentSounds = {}
 local LSM = LibStub("LibSharedMedia-3.0")
+local CUSTOM_BORDER_ATLAS = "ClickCast-Highlight-Spellbook"
+local CUSTOM_BORDER_TEXCOORD = {0.001953125, 0.142578125, 0.451171875, 0.591796875}
+
+local CUSTOM_BORDER_FADE_DURATION = 0.25
+
+local function CustomBorderGlow_Start(button, color)
+    local frame = button._CustomBorderGlow
+    if not frame then
+        frame = CreateFrame("Frame", nil, button)
+        frame:SetPoint("TOPLEFT", button, "TOPLEFT", -16, 16)
+        frame:SetPoint("BOTTOMRIGHT", button, "BOTTOMRIGHT", 16, -16)
+        frame:SetFrameLevel(button:GetFrameLevel() + 8)
+
+        local tex = frame:CreateTexture(nil, "OVERLAY", nil, 7)
+        local info = C_Texture.GetAtlasInfo(CUSTOM_BORDER_ATLAS)
+        if info then
+            tex:SetTexture(info.file or info.filename)
+            tex:SetTexCoord(unpack(CUSTOM_BORDER_TEXCOORD))
+        end
+        tex:SetAllPoints(frame)
+        tex:SetDesaturated(true)
+        -- tex:SetPoint("TOPLEFT", button.NormalTexture, "TOPLEFT", -2.5, 2.5)
+        -- tex:SetPoint("BOTTOMRIGHT", button.NormalTexture, "BOTTOMRIGHT", 1.5, -1.5)
+        tex:SetBlendMode("ADD")
+        frame.tex = tex
+
+        local fadeIn = frame:CreateAnimationGroup()
+        local aIn = fadeIn:CreateAnimation("Alpha")
+        aIn:SetFromAlpha(0)
+        aIn:SetToAlpha(1)
+        aIn:SetDuration(CUSTOM_BORDER_FADE_DURATION)
+        aIn:SetSmoothing("OUT")
+        fadeIn:SetScript("OnFinished", function()
+            frame:SetAlpha(1)
+        end)
+        frame.fadeIn = fadeIn
+
+        local fadeOut = frame:CreateAnimationGroup()
+        local aOut = fadeOut:CreateAnimation("Alpha")
+        aOut:SetFromAlpha(1)
+        aOut:SetToAlpha(0)
+        aOut:SetDuration(CUSTOM_BORDER_FADE_DURATION)
+        aOut:SetSmoothing("OUT")
+        fadeOut:SetScript("OnFinished", function()
+            frame:Hide()
+        end)
+        frame.fadeOut = fadeOut
+
+        button._CustomBorderGlow = frame
+    end
+
+    if color then
+        frame.tex:SetVertexColor(color[1], color[2], color[3], color[4] or 1)
+    else
+        frame.tex:SetVertexColor(1, 0.7, 0, 1)
+    end
+
+    if frame.fadeOut:IsPlaying() then
+        frame.fadeOut:Stop()
+    end
+    if not frame:IsShown() then
+        frame:SetAlpha(0)
+        frame:Show()
+        frame.fadeIn:Play()
+    elseif not frame.fadeIn:IsPlaying() and frame:GetAlpha() < 1 then
+        frame.fadeIn:Play()
+    end
+end
+
+local function CustomBorderGlow_Stop(button)
+    local frame = button._CustomBorderGlow
+    if not frame or not frame:IsShown() then
+        return
+    end
+    if frame.fadeIn:IsPlaying() then
+        frame.fadeIn:Stop()
+    end
+    if not frame.fadeOut:IsPlaying() then
+        frame.fadeOut:Play()
+    end
+end
 local BUTTON_PREFIXES = {"ActionButton", "MultiBarBottomLeftButton", "MultiBarBottomRightButton", "MultiBarRightButton", "MultiBarLeftButton",
                          "MultiBar5Button", "MultiBar6Button", "MultiBar7Button", "MultiBar8Button"}
 local MAX_ACTION_SLOT = 180
@@ -176,14 +260,20 @@ function addon:ShowProcGlow(button, r, g, b, soundKey, entryGlowType)
         if LCG.ButtonGlow_Start then
             LCG.ButtonGlow_Start(button, color)
         end
+    elseif glowType == "Glow Texture" then
+        CustomBorderGlow_Start(button, color)
     end
 
     if not allGlowingButtons[button] then
-        -- Play per-entry proc sound
-        if soundKey and soundKey ~= "None" then
+        -- Play per-entry proc sound (once per sound key per frame)
+        if soundKey and soundKey ~= "None" and not recentSounds[soundKey] then
             local soundFile = LSM:Fetch(LSM.MediaType.SOUND, soundKey, true)
             if soundFile then
                 PlaySoundFile(soundFile, "Master")
+                recentSounds[soundKey] = true
+                C_Timer.After(0, function()
+                    recentSounds[soundKey] = nil
+                end)
             end
         end
     end
@@ -203,6 +293,7 @@ local function StopAllGlowTypes(button)
     if LCG.ButtonGlow_Stop then
         LCG.ButtonGlow_Stop(button)
     end
+    CustomBorderGlow_Stop(button)
 end
 
 function addon:HideProcGlow(button)
@@ -275,8 +366,25 @@ function addon:CleanupOrphanedGlows()
 end
 
 function addon:HasProcGlow(button)
-    return button["_ProcGlow" .. GLOW_KEY] ~= nil or button["_PixelGlow" .. GLOW_KEY] ~= nil or button["_AutoCastGlow" .. GLOW_KEY] ~= nil or
-               button._ButtonGlow ~= nil
+    local pg = button["_ProcGlow" .. GLOW_KEY]
+    if pg and pg:IsShown() then
+        return true
+    end
+    local px = button["_PixelGlow" .. GLOW_KEY]
+    if px and px:IsShown() then
+        return true
+    end
+    local ac = button["_AutoCastGlow" .. GLOW_KEY]
+    if ac and ac:IsShown() then
+        return true
+    end
+    if button._ButtonGlow and button._ButtonGlow:IsShown() then
+        return true
+    end
+    if button._CustomBorderGlow and button._CustomBorderGlow:IsShown() then
+        return true
+    end
+    return false
 end
 
 function addon:FindButtonsForSlot(slot)
@@ -613,17 +721,16 @@ function addon:CheckSpellCooldowns()
 
     local suppressed = addon:IsCombatOnly()
 
-    local onCooldown
-    local shouldGlow
-
     for spellID, spellData in pairs(addon.Spells) do
+        local cdInfo = C_Spell.GetSpellCooldown(spellID)
+        local isOnGCD = cdInfo and cdInfo.isOnGCD
+        local isUsable = C_Spell.IsSpellUsable(spellID)
+
         local buttons = spellAnchorCache[spellID]
         if buttons then
-            local cdInfo = C_Spell.GetSpellCooldown(spellID)
             for _, button in ipairs(buttons) do
-                onCooldown = button.cooldown:IsShown() and not cdInfo.isOnGCD
-                shouldGlow = not suppressed and C_Spell.IsSpellUsable(spellID) and not onCooldown
-
+                local onCooldown = button.cooldown:IsShown() and not isOnGCD
+                local shouldGlow = not suppressed and isUsable and not onCooldown
                 if shouldGlow then
                     if not activeGlows[button] or not addon:HasProcGlow(button) then
                         activeGlows[button] = true
@@ -642,14 +749,15 @@ function addon:CheckSpellCooldowns()
                 end
             end
         end
-    end
 
-    -- Glow spell icons in EssentialCooldownViewer (CooldownManager)
-    for spellID, spellData in pairs(addon.Spells) do
+        -- Glow spell icons in EssentialCooldownViewer (CooldownManager)
         if spellData.glowCooldownManager then
             local cdmFrames = cdmSpellFrameCache[spellID]
             if cdmFrames then
                 for _, frame in ipairs(cdmFrames) do
+                    local cd = frame.Cooldown or frame.cooldown
+                    local onCooldown = cd and cd:IsShown() and not isOnGCD
+                    local shouldGlow = not suppressed and isUsable and not onCooldown
                     if shouldGlow then
                         if not activeGlows[frame] or not addon:HasProcGlow(frame) then
                             activeGlows[frame] = true
@@ -685,6 +793,19 @@ addon.events:HookScript("OnEvent", function(self, event, ...)
             end
         end
         addon:InvalidateAllCaches()
+        addon:CheckAuras()
+        addon:CheckItemCooldowns()
+        addon:CheckSpellCooldowns()
+        -- DB / CDM / third-party frames may not be fully ready at PLAYER_ENTERING_WORLD.
+        -- Wipe any glow shown during the racy initial pass so colors are repainted from the
+        -- (now-valid) DB instead of being frozen by HasProcGlow=true.
+        C_Timer.After(1, function()
+            addon:HideAllGlows()
+            addon:InvalidateAllCaches()
+            addon:CheckAuras()
+            addon:CheckItemCooldowns()
+            addon:CheckSpellCooldowns()
+        end)
         return
     end
     if event == "ACTIONBAR_SLOT_CHANGED" then
@@ -734,3 +855,48 @@ addon.events:HookScript("OnEvent", function(self, event, ...)
 end)
 
 BuffIconCooldownViewer:HookScript("OnEvent", addon.CheckAuras)
+
+-- ─── Replace Blizzard's spell activation alert ───────────────────────────────
+-- Secure-hook ShowAlert / HideAlert. When the toggle is on, immediately hide
+-- the Blizzard alert frame that Show just created and start our own glow.
+if ActionButtonSpellAlertManager and ActionButtonSpellAlertManager.ShowAlert then
+    local replacedButtons = {}
+    addon._replacedBlizzardProcButtons = replacedButtons
+
+    local function GetBlizzardAlertFrame(self, button)
+        local alertType = self.activeAlerts and self.activeAlerts[button]
+        if alertType == self.SpellAlertType.Default then
+            return button.SpellActivationAlert
+        elseif alertType == self.SpellAlertType.AssistedCombatRotation then
+            local acrf = button.AssistedCombatRotationFrame
+            return acrf and acrf.SpellActivationAlert
+        end
+    end
+
+    hooksecurefunc(ActionButtonSpellAlertManager, "ShowAlert", function(self, button)
+        if not button or not addon.db or not addon.db.profile.replaceBlizzardProc then
+            return
+        end
+        local alertFrame = GetBlizzardAlertFrame(self, button)
+        if alertFrame then
+            alertFrame:Hide()
+        end
+        replacedButtons[button] = true
+        addon:ShowProcGlow(button, nil, nil, nil, nil, addon.db.profile.blizzardProcGlowType or "Proc Glow")
+    end)
+
+    hooksecurefunc(ActionButtonSpellAlertManager, "HideAlert", function(_, button)
+        if button and replacedButtons[button] then
+            replacedButtons[button] = nil
+            addon:HideProcGlow(button)
+        end
+    end)
+end
+
+function addon:ClearReplacedBlizzardProcs()
+    if not addon._replacedBlizzardProcButtons then return end
+    for button in pairs(addon._replacedBlizzardProcButtons) do
+        addon:HideProcGlow(button)
+    end
+    wipe(addon._replacedBlizzardProcButtons)
+end

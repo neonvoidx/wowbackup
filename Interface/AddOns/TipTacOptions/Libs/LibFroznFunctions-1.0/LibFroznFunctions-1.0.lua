@@ -9,7 +9,7 @@
 
 -- create new library
 local LIB_NAME = "LibFroznFunctions-1.0";
-local LIB_MINOR = 62; -- bump on changes
+local LIB_MINOR = 64; -- bump on changes
 
 if (not LibStub) then
 	error(LIB_NAME .. " requires LibStub.");
@@ -403,7 +403,16 @@ end
 function LibFroznFunctions:GetUnitFromTooltip(tooltip)
 	-- since df 10.0.2
 	if (TooltipUtil) then
-		return TooltipUtil.GetDisplayedUnit(tooltip);
+		if tooltip:IsTooltipType(Enum.TooltipDataType.Unit) then -- see TooltipUtil.GetDisplayedUnit() in "TooltipUtil.lua"
+			local tooltipData = tooltip:GetPrimaryTooltipData();
+			local guid = tooltipData.guid;
+			local unit = guid and UnitTokenFromGUID(guid);
+			-- local name = unit and UnitName(unit); -- removed
+			local name = (not self:IsSecretValue(unit)) and unit and UnitName(unit); -- added
+			return name, unit, guid;
+		end
+		
+		return;
 	end
 	
 	-- before df 10.0.2
@@ -4602,7 +4611,7 @@ function frameForDelayedInspection:GetUnitCacheRecord(unitID, unitGUID)
 	
 	-- get record in unit cache
 	local unitCacheRecord = unitCache[unitGUID];
-	local isValidUnitID = (unitID) and (UnitIsPlayer(unitID));
+	local isValidUnitID = (not LibFroznFunctions:IsSecretValue(unitID)) and (unitID) and (UnitIsPlayer(unitID));
 	
 	if (unitCacheRecord) then
 		-- update record in unit cache if a valid unit id is available
@@ -5122,7 +5131,7 @@ function LFF_GetAverageItemLevelFromItemData(unitID, callbackForItemData, unitGU
 	if (callbackForItemData) and (unitGUID) then
 		local _unitGUID = UnitGUID(unitID);
 		
-		if (_unitGUID ~= unitGUID) then
+		if (LibFroznFunctions:IsSecretValue(_unitGUID)) or (_unitGUID ~= unitGUID) then
 			return;
 		end
 	end

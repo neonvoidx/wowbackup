@@ -16,9 +16,18 @@ local LSM = LibStub("LibSharedMedia-3.0")
 
 addon.functions.InitDBValue("sharedMediaSounds", {})
 
+local function IterateSoundLists()
+	return ipairs({
+		addon.SharedMedia.sounds or {},
+		addon.SharedMedia.deepVoiceSounds or {},
+	})
+end
+
 local function RegisterEnabledSounds()
-	for _, sound in ipairs(addon.SharedMedia.sounds or {}) do
-		if addon.db.sharedMediaSounds[sound.key] then LSM:Register("sound", sound.label, sound.path) end
+	for _, sounds in IterateSoundLists() do
+		for _, sound in ipairs(sounds) do
+			if addon.db.sharedMediaSounds[sound.key] then LSM:Register("sound", sound.label, sound.path) end
+		end
 	end
 end
 
@@ -32,11 +41,14 @@ end)
 function addon.SharedMedia.functions.UpdateSound(key, enabled)
 	addon.db.sharedMediaSounds[key] = enabled
 	local sound
-	for _, s in ipairs(addon.SharedMedia.sounds or {}) do
-		if s.key == key then
-			sound = s
-			break
+	for _, sounds in IterateSoundLists() do
+		for _, s in ipairs(sounds) do
+			if s.key == key then
+				sound = s
+				break
+			end
 		end
+		if sound then break end
 	end
 	if not sound then return end
 	if enabled then
@@ -66,6 +78,7 @@ LSM:Register("border", "EQOL: Midnight 18px", "Interface\\AddOns\\" .. addonName
 LSM:Register("border", "EQOL: Midnight white", "Interface\\AddOns\\" .. addonName .. "\\Assets\\border-midnight-white.tga")
 LSM:Register("border", "EQOL: Midnight white 12px", "Interface\\AddOns\\" .. addonName .. "\\Assets\\border-midnight-white-12px.tga")
 LSM:Register("border", "EQOL: Midnight white 18px", "Interface\\AddOns\\" .. addonName .. "\\Assets\\border-midnight-white-18px.tga")
+LSM:Register("border", "EQOL: Solid", "Interface\\Buttons\\WHITE8x8")
 
 
 LSM:Register("font", "EQOL: Expressway", "Interface\\AddOns\\" .. addonName .. "\\Fonts\\ExpresswayRegular.ttf")

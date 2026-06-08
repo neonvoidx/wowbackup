@@ -22,6 +22,7 @@
         <Script file="Stream_PetTracker.lua"/>
         <Script file="Stream_Stats.lua"/>
         <Script file="Stream_Talentbuilt.lua"/>
+        <Script file="Stream_UFProfiles.lua"/>
         <Script file="Stream_Volume.lua"/>
         <Script file="Stream_MarkBarCommon.lua"/>
         <Script file="Stream_MarkBarTarget.lua"/>

@@ -8,6 +8,7 @@ local L = KeystoneLoot.L;
 
 -- keystoneloot_frame.lua
 L["%s (%s Season %d)"] = "%s (%s сезон %d)";
+L["Import BIS items from |cnACCOUNT_WIDE_FONT_COLOR:www.keystoneloot.io|r"] = "Импортируйте БиС-предметы с |cnACCOUNT_WIDE_FONT_COLOR:www.keystoneloot.io|r";
 
 -- itemlevel_dropdown.lua
 L["Veteran"] = "Ветеран";
@@ -24,9 +25,11 @@ L["The Catalyst"] = "Катализатор";
 L["Minimap button"] = "Включить кнопку на миникарте";
 L["Item level in keystone tooltip"] = "Показать уровень предметов во всплывающей подсказке ключа";
 L["Favorite in item tooltip"] = "Избранное в подсказке предмета";
+L['Hide "Other" in All Slots'] = "Скрывать \"Прочее\" при показе всех слотов";
 L["Loot reminder (dungeons)"] = "Включить напоминание о добыче";
 L["Highlighting"] = "Подсветка";
 L["No stats"] = "Характеристика отсутствует";
+L["Combination mode"] = "Комбинированный режим";
 L["Export..."] = "Экспорт...";
 L["Import..."] = "Импорт...";
 L["Export favorites of %s"] = "Экспортировать избранное %s";
@@ -43,6 +46,17 @@ L["Delete..."] = "Удалить...";
 L["Delete all data for %s?"] = "Удалить все данные для %s?";
 L["Cannot delete the currently logged in character."] = "Невозможно удалить персонажа, под которым выполнен вход.";
 L["This character is hidden."] = "Этот персонаж скрыт.";
+L["Wide mode"] = "Широкий режим";
+L["Drop alert (favorites)"] = "Уведомление о дропе (избранное)";
+L["Reminds you on dungeon entry if your loot spec doesn't match your favorites, or if switching it could increase your chances of getting them."] = "Напоминает при входе в подземелье, если Ваша специализация добычи не соответствует избранному или смена специализации может повысить шанс получить нужные предметы.";
+L["Shows a notification when another player loots an item you have marked as a favorite."] = "Показывает уведомление, когда другой игрок получает предмет, отмеченный Вами как избранный.";
+L["Whisper message..."] = "Сообщение в шёпот...";
+L["Whisper message\n{item} will be replaced with the item link."] = "Сообщение в шёпот\n{item} будет заменено ссылкой на предмет.";
+L["Multiple slot filtering"] = "Фильтрация нескольких слотов";
+
+-- custom_item_icon.lua
+L["Custom Items"] = "Пользовательские предметы";
+L["Import items from external sources like www.keystoneloot.io"] = "Предметы, импортированные из внешних источников, например www.keystoneloot.io";
 
 -- favorites.lua
 L["No favorites found"] = "Избранное не найдено";
@@ -50,10 +64,24 @@ L["Invalid import string."] = "Неверная строка импорта.";
 L["No character selected."] = "Персонаж не выбран.";
 L["No valid items found."] = "Допустимые предметы не найдены.";
 
+-- icon_button.lua / favorites.lua
+L["Set Favorite"] = "Добавить в избранное";
+L["Nice to have"] = "Желательно";
+L["Must have"] = "Обязательно";
+L["Best in Slot"] = "БиС";
+L["Voidcore used"] = "Использован сердечник Бездны";
+
 -- loot_reminder_frame.lua
 L["Correct loot specialization set?"] = "Правильная установка специализации для добычи?";
 L["+1 item dropping for all specs."] = "+1 предмет выпадает для всех специализаций.";
 L["+%d items dropping for all specs."] = "+%d предметов выпадает для всех специализаций.";
+L["%s has a smaller loot pool than %s"] = "%s имеет меньший набор добычи, чем %s";
 
 -- minimap_button.lua
 L["Left click: Open overview"] = "ЛКМ: Открыть окно KeystoneLoot";
+
+-- drop_notification_frame.lua
+L["Favorite dropped!"] = "Избранный предмет выпал!";
+
+-- whisper_button.lua
+L["Text can be modified in the settings."] = "Текст можно изменить в настройках.";

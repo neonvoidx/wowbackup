@@ -1,10 +1,10 @@
-## Interface: 120005, 120001
+## Interface: 120005
 ## Title: MiniCC
 ## Notes: Shows CC and important spells on frames/nameplates/alerts in PvP.
 ## Author: Verz
-## Version: 3.10.0
+## Version: 3.24.0
 ## SavedVariables: MiniCCDB
-## OptionalDeps: ElvUI, Grid2, DandersFrames, FrameSort, Masque, TPerl, TidyPlates_ThreatPlates, VuhDo, BuzzardFrames, NDui
+## OptionalDeps: ElvUI, Grid2, DandersFrames, FrameSort, Masque, TPerl, TidyPlates_ThreatPlates, VuhDo, BuzzardFrames, NDui, EllesmereUIUnitFrames
 ## IconTexture: Interface\AddOns\MiniCC\Icon.blp
 ## X-Curse-Project-ID: 1439482
 
@@ -40,7 +40,10 @@ Core\MiniFramework.lua
 Core\InstanceOptions.lua
 Core\IconSlotContainer.lua
 Core\UnitAuraWatcher.lua
+Core\KickData.lua
+Core\KickTracker.lua
 Core\Inspector.lua
+Core\InspectorFacade.lua
 Core\Frames.lua
 Core\TrinketsTracker.lua
 Core\ProfileManager.lua
@@ -56,6 +59,7 @@ Modules\PrecogGuesserModule.lua
 Modules\Cooldowns\PvPTalentSync.lua
 Modules\Cooldowns\Talents.lua
 Modules\Cooldowns\Rules.lua
+Modules\Cooldowns\SignatureDetector.lua
 Modules\FriendlyCooldowns\Observer.lua
 Modules\Cooldowns\Brain.lua
 Modules\FriendlyCooldowns\Display.lua

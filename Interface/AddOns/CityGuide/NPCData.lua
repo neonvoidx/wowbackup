@@ -54,6 +54,8 @@ local MINIMAP_ICONS = {
     VENDOR = "Interface\\AddOns\\CityGuide\\Icons\\vendor",
     BMAH = "Interface\\AddOns\\CityGuide\\Icons\\BMAH",
     HARANDAR = "Interface\\AddOns\\CityGuide\\Icons\\harandar",
+    DECORDUEL= "Interface\\AddOns\\CityGuide\\Icons\\decorduel",
+    RITUALSITE= "Interface\\AddOns\\CityGuide\\Icons\\ritualsite",
 }
 
 -- IMPORTANT: Only define CityGuideNPCData ONCE!
@@ -895,7 +897,7 @@ CityGuideNPCData = {
         icon = "Interface\\Icons\\inv_misc_coin_16",
         minimapIcon = MINIMAP_ICONS.BMAH,
         noCluster = true, 
-        textDirection = "top", 
+        textDirection = "right", 
     },
     {
         x = 52.87 / 100, 
@@ -906,6 +908,26 @@ CityGuideNPCData = {
         minimapIcon = MINIMAP_ICONS.TRANSMOGRIFIER,
         noCluster = true, 
         textDirection = "right"
+    },
+    {
+        x = 48.14 / 100, 
+        y = 49.14 / 100,
+        name = "Ritual\nSites", 
+        tooltip = "Ritual Sites", 
+        icon = "Interface\\Icons\\inv_belt_armor_bloodelf_d_01",
+        minimapIcon = MINIMAP_ICONS.RITUALSITE,
+        noCluster = true, 
+        textDirection = "top"
+    },
+    {
+       x = 31.48 / 100, 
+       y = 76.59 / 100,
+        name = "Decor\nDuels",
+        tooltip = "Decor Duels",
+        icon = "Interface\\Icons\\ability_rogue_disguise",
+        minimapIcon = MINIMAP_ICONS.DECORDUEL,
+        noCluster = true, 
+        textDirection = "left"
     },
 
     -- Horde Only

@@ -5,6 +5,7 @@ local Upgrade = KeystoneLoot.Upgrade;
 local Favorites = KeystoneLoot.Favorites;
 local Character = KeystoneLoot.Character;
 local Query = KeystoneLoot.Query;
+local Voidcore = KeystoneLoot.Voidcore;
 
 local STAT_HIGHLIGHT_KEYS = {
     [0] = "crit",
@@ -12,21 +13,6 @@ local STAT_HIGHLIGHT_KEYS = {
     [2] = "mastery",
     [3] = "versatility"
 };
-
-KeystoneLootLootIconButtonMixin = {};
-
-function KeystoneLootLootIconButtonMixin:Init(item)
-    self:SetEnabled(item.itemId ~= 0);
-
-    self.itemId = item.itemId;
-    self.lastRemovedSpecs = nil;
-    self.lastRemovedSourceId = nil;
-    self.isHovered = false;
-
-    self.Content.Icon:SetTexture(item.icon);
-    self:UpdateFavoriteIcon();
-    self:UpdateHighlight();
-end
 
 local function GetFavoritesSpecId()
     local info = Character:ParseKey(Character:GetSelectedKey());
@@ -62,7 +48,11 @@ local function AddSpecLinesToTooltip(itemId)
         return;
     end
 
-    if (DB:Get("filters.classId") == info.classId and DB:Get("filters.specId") ~= 0) then
+    if (DB:Get("filters.classId") ~= info.classId) then
+        return;
+    end
+
+    if (DB:Get("filters.specId") ~= 0) then
         return;
     end
 
@@ -98,6 +88,20 @@ local function AddSpecLinesToTooltip(itemId)
     GameTooltip:AddLine("|A:quest-important-available:16:16:0:0|a " .. line, nil, nil, nil, true);
 end
 
+KeystoneLootLootIconButtonMixin = {};
+
+function KeystoneLootLootIconButtonMixin:Init(item)
+    self:SetEnabled(item.itemId ~= 0);
+
+    self.itemId = item.itemId;
+    self.isHovered = false;
+
+    self.Content.Icon:SetTexture(Query:GetItemIcon(item.itemId));
+    self:UpdateFavoriteIcon();
+    self:UpdateVoidcoreIcon();
+    self:UpdateHighlight();
+end
+
 function KeystoneLootLootIconButtonMixin:UpdateHighlight()
     if (not self:IsEnabled()) then
         return;
@@ -110,14 +114,28 @@ function KeystoneLootLootIconButtonMixin:UpdateHighlight()
 
     local highlighted = false;
 
-    if (not item.stats) then
-        highlighted = DB:Get("settings.highlighting.noStats");
+    if (DB:Get("settings.highlighting.comboMode")) then
+        if (item.stats) then
+            highlighted = true;
+
+            for _, stat in ipairs(item.stats) do
+                local key = STAT_HIGHLIGHT_KEYS[stat];
+                if (key and not DB:Get("settings.highlighting." .. key)) then
+                    highlighted = false;
+                    break;
+                end
+            end
+        end
     else
-        for _, stat in ipairs(item.stats) do
-            local key = STAT_HIGHLIGHT_KEYS[stat];
-            if (key and DB:Get("settings.highlighting." .. key)) then
-                highlighted = true;
-                break;
+        if (not item.stats) then
+            highlighted = DB:Get("settings.highlighting.noStats");
+        else
+            for _, stat in ipairs(item.stats) do
+                local key = STAT_HIGHLIGHT_KEYS[stat];
+                if (key and DB:Get("settings.highlighting." .. key)) then
+                    highlighted = true;
+                    break;
+                end
             end
         end
     end
@@ -137,22 +155,37 @@ function KeystoneLootLootIconButtonMixin:UpdateFavoriteIcon()
     local info = Character:ParseKey(Character:GetSelectedKey());
     local classesMatch = info and DB:Get("filters.classId") == info.classId;
 
-    local isFavorite;
+    local tier;
     if (isFavoritesSlot and not classesMatch) then
-        isFavorite = Favorites:IsAnyFavorite(self.itemId);
+        tier = Favorites:GetAnyTier(self.itemId);
     else
         local specId = isFavoritesSlot and GetFavoritesSpecId() or DB:Get("filters.specId");
-        isFavorite = Favorites:IsFavorite(self.itemId, specId);
+        tier = Favorites:GetTier(self.itemId, specId);
     end
 
-    if (isFavorite) then
+    if (tier > 0) then
+        self.Content.FavoriteIcon:SetTexture(Favorites.TIER_TEXTURE[tier]);
         self.Content.FavoriteIcon:SetDesaturated(false);
         self.Content.FavoriteIcon:Show();
     elseif (self.isHovered and (isFavoritesSlot or classesMatch)) then
+        self.Content.FavoriteIcon:SetTexture(Favorites.TIER_TEXTURE[Favorites.TIER_MUST]);
         self.Content.FavoriteIcon:SetDesaturated(true);
         self.Content.FavoriteIcon:Show();
     else
         self.Content.FavoriteIcon:Hide();
+    end
+end
+
+function KeystoneLootLootIconButtonMixin:UpdateVoidcoreIcon()
+    if (not self:IsEnabled() or not Voidcore:IsEligible(self.itemId)) then
+        self.Content.VoidcoreIcon:Hide();
+        return;
+    end
+
+    if (Voidcore:IsUsed(self.itemId)) then
+        self.Content.VoidcoreIcon:Show();
+    else
+        self.Content.VoidcoreIcon:Hide();
     end
 end
 
@@ -222,37 +255,35 @@ function KeystoneLootLootIconButtonMixin:OnClick()
         return;
     end
 
-    local item = KeystoneLoot.ItemDatabase[self.itemId];
-    local catalystItem = KeystoneLoot.CatalystDatabase[self.itemId];
-    local icon = (catalystItem and catalystItem.icon) or (item and item.icon);
-
     local info = Character:ParseKey(Character:GetSelectedKey());
     local classesMatch = info and DB:Get("filters.classId") == info.classId;
 
-    local isFavorite;
+    local currentTier;
     if (isFavoritesSlot and not classesMatch) then
-        isFavorite = Favorites:IsAnyFavorite(self.itemId);
+        currentTier = Favorites:GetAnyTier(self.itemId);
     else
-        isFavorite = Favorites:IsFavorite(self.itemId, specId);
+        currentTier = Favorites:GetTier(self.itemId, specId);
     end
 
-    if (isFavorite) then
-        self.lastRemovedSpecs = Favorites:GetItemSpecs(self.itemId);
-        self.lastRemovedSourceId = sourceId;
+    if (KeystoneLootContextMenu:IsShown()) then
+        local isOwnMenu = KeystoneLootContextMenu.data and KeystoneLootContextMenu.data.Button == self;
 
-        Favorites:Remove(self.itemId, specId);
-    else
-        if (self.lastRemovedSpecs) then
-            for _, savedSpecId in ipairs(self.lastRemovedSpecs) do
-                Favorites:Add(self.lastRemovedSourceId, savedSpecId, self.itemId, icon);
-            end
+        KeystoneLootContextMenu:Close();
 
-            self.lastRemovedSpecs = nil;
-            self.lastRemovedSourceId = nil;
-        else
-            Favorites:Add(sourceId, specId, self.itemId, icon);
+        if (isOwnMenu) then
+            return;
         end
     end
 
-    self:UpdateFavoriteIcon();
+    KeystoneLootContextMenu:Open(self, {
+        Button      = self,
+        itemId      = self.itemId,
+        specId      = specId,
+        sourceId    = sourceId,
+        currentTier = currentTier,
+    });
+end
+
+function KeystoneLootLootIconButtonMixin:HandlesGlobalMouse(buttonName, event)
+    return KeystoneLootContextMenu:IsShown() and event == "GLOBAL_MOUSE_DOWN" and buttonName == "LeftButton";
 end

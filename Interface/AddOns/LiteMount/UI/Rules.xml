@@ -16,7 +16,7 @@
         </Layer>
     </Layers>
     <Scripts>
-        <OnLoad inherit="prepend">
+        <OnLoad>
             self.SetText = function (self, ...) self.Text:SetText(...) end
             self.GetText = function (self, ...) self.Text:GetText(...) end
         </OnLoad>
@@ -68,14 +68,14 @@
     </Frames>
 </Button>
 
-<Frame name="LiteMountRulesPanel" hidden="true" inherits="LiteMountOptionsPanelTemplate" mixin="LiteMountRulesPanelMixin">
+<Frame name="LiteMountRulesPanel" hidden="true" inherits="LiteMountSettingsPanelTemplate" mixin="LiteMountRulesPanelMixin">
 
     <KeyValues>
         <KeyValue key="name" value="BRAWL_TOOLTIP_RULES" type="global" />
     </KeyValues>
 
     <Frames>
-        <ScrollFrame parentKey="ScrollBox" inherits="WoWScrollBoxList" mixin="LiteMountRulesScrollMixin">
+        <ScrollFrame parentKey="ScrollBox" inherits="WoWScrollBoxList">
             <Anchors>
                 <Anchor point="TOPLEFT" x="16" y="-132" />
                 <Anchor point="BOTTOMRIGHT" x="-34" y="40" />
@@ -146,11 +146,6 @@
         </Layer>
     </Layers>
 
-    <Scripts>
-        <OnLoad method="OnLoad" inherit="append"/>
-        <OnShow method="OnShow" inherit="append" />
-        <OnHide method="OnHide" inherit="append"/>
-    </Scripts>
 </Frame>
 
 </Ui>

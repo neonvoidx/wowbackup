@@ -4,7 +4,20 @@ local L = LibStub("AceLocale-3.0"):GetLocale(addonName)
 local wipe = wipe
 local mailboxContactsOrder = {}
 local moneyTrackerOrder = {}
+local warbandRemoveOrder = {}
 local warbandTargetOrder = {}
+local autoRepairGuildBankContextOptions = {
+	{ value = "world", text = L["World"] or WORLD or "World" },
+	{ value = "party", text = PARTY or "Party" },
+	{ value = "dungeon", text = DUNGEONS or "Dungeons" },
+	{ value = "mythicPlus", text = PLAYER_DIFFICULTY_MYTHIC_PLUS or "Mythic+" },
+	{ value = "raid", text = RAID or "Raid" },
+	{ value = "pvp", text = PVP or "PvP" },
+}
+local autoRepairGuildBankContextKeys = {}
+for _, option in ipairs(autoRepairGuildBankContextOptions) do
+	autoRepairGuildBankContextKeys[option.value] = true
+end
 
 local function getPrivateDB() return addon.functions.GetPrivateDB and addon.functions.GetPrivateDB() or addon.privateDB or {} end
 
@@ -90,11 +103,77 @@ local function getSelectedWarbandTargetCharacter()
 	return playerGuid or ""
 end
 
-local cVendorEconomy = addon.SettingsLayout.rootECONOMY
+local function notifySettingsUpdate(var)
+	if Settings and Settings.NotifyUpdate then Settings.NotifyUpdate("EQOL_" .. var) end
+end
+
+local function clearSettingsSelection(var)
+	local entry = addon.SettingsLayout and addon.SettingsLayout.elements and addon.SettingsLayout.elements[var]
+	if entry and entry.setting and entry.setting.SetValue then entry.setting:SetValue("") end
+end
+
+local function removeWarbandGoldCharacter(guid)
+	if not guid or guid == "" or guid == UnitGUID("player") then return end
+
+	local privateDB = getPrivateDB()
+	if type(privateDB["moneyTracker"]) == "table" then privateDB["moneyTracker"][guid] = nil end
+	if type(privateDB["autoWarbandGoldIgnoredCharacters"]) == "table" then privateDB["autoWarbandGoldIgnoredCharacters"][guid] = nil end
+	if type(privateDB["autoWarbandGoldPerCharacter"]) == "table" then privateDB["autoWarbandGoldPerCharacter"][guid] = nil end
+	if privateDB["autoWarbandGoldTargetCharacter"] == guid then privateDB["autoWarbandGoldTargetCharacter"] = UnitGUID("player") or "" end
+
+	notifySettingsUpdate("autoWarbandGoldRemoveCharacter")
+	notifySettingsUpdate("autoWarbandGoldTargetCharacter")
+	notifySettingsUpdate("autoWarbandGoldTargetGoldPerCharacter")
+	notifySettingsUpdate("autoWarbandGoldIgnoredCharacters")
+	clearSettingsSelection("autoWarbandGoldRemoveCharacter")
+end
+
+local function getAutoRepairGuildBankContexts()
+	if type(addon.db["autoRepairGuildBankContexts"]) ~= "table" then
+		addon.db["autoRepairGuildBankContexts"] = {
+			world = true,
+			party = true,
+			dungeon = true,
+			mythicPlus = true,
+			raid = true,
+			pvp = true,
+		}
+	end
+	return addon.db["autoRepairGuildBankContexts"]
+end
+
+local function setAutoRepairGuildBankContexts(selection)
+	local nextSelection = {}
+	if type(selection) == "table" then
+		for key, enabled in pairs(selection) do
+			if autoRepairGuildBankContextKeys[key] and enabled == true then nextSelection[key] = true end
+		end
+	end
+	addon.db["autoRepairGuildBankContexts"] = nextSelection
+end
+
+local function isAutoRepairEnabled()
+	return addon.SettingsLayout.elements["autoRepair"]
+		and addon.SettingsLayout.elements["autoRepair"].setting
+		and addon.SettingsLayout.elements["autoRepair"].setting:GetValue() == true
+end
+
+local function isAutoRepairGuildBankEnabled()
+	return isAutoRepairEnabled()
+		and addon.SettingsLayout.elements["autoRepairGuildBank"]
+		and addon.SettingsLayout.elements["autoRepairGuildBank"].setting
+		and addon.SettingsLayout.elements["autoRepairGuildBank"].setting:GetValue() == true
+end
+
+local cVendorEconomy = nil
 addon.SettingsLayout.vendorEconomyCategory = cVendorEconomy
 
 local vendorsExpandable = addon.functions.SettingsCreateExpandableSection(cVendorEconomy, {
 	name = L["VendorsServices"],
+	configPageKey = "VendorsServices",
+	modernCategory = "economy",
+	modernOnly = true,
+	iconKey = "vendorsservices",
 	expanded = false,
 	colorizeTitle = false,
 })
@@ -121,6 +200,20 @@ local data = {
 				default = false,
 				type = Settings.VarType.Boolean,
 				sType = "checkbox",
+				children = {
+					{
+						var = "autoRepairGuildBankContexts",
+						text = L["autoRepairGuildBankContexts"],
+						desc = L["autoRepairGuildBankContextsDesc"],
+						options = autoRepairGuildBankContextOptions,
+						getSelection = getAutoRepairGuildBankContexts,
+						setSelection = setAutoRepairGuildBankContexts,
+						customDefaultText = L["All"] or ALL or "All",
+						sType = "multidropdown",
+						parent = true,
+						parentCheck = isAutoRepairGuildBankEnabled,
+					},
+				},
 			},
 		},
 	},
@@ -133,6 +226,9 @@ addon.functions.SettingsCreateCheckboxes(cVendorEconomy, data)
 local bankExpandable = addon.functions.SettingsCreateExpandableSection(cVendorEconomy, {
 	name = BANK,
 	newTagID = "Bank",
+	modernCategory = "economy",
+	modernOnly = true,
+	iconKey = "bank",
 	expanded = false,
 	colorizeTitle = false,
 })
@@ -263,6 +359,60 @@ data = {
 				end,
 			},
 			{
+				var = "autoWarbandGoldRemoveCharacter",
+				text = L["autoWarbandGoldRemoveCharacter"] or ((REMOVE or "Remove") .. " " .. (CHARACTER or "Character")),
+				desc = L["autoWarbandGoldRemoveCharacterDesc"],
+				listFunc = function()
+					local tList = { [""] = "" }
+					local playerGuid = UnitGUID("player")
+					wipe(warbandRemoveOrder)
+					table.insert(warbandRemoveOrder, "")
+
+					for _, entry in ipairs(listTrackedCharacters()) do
+						if entry.key ~= playerGuid then
+							tList[entry.key] = entry.label
+							table.insert(warbandRemoveOrder, entry.key)
+						end
+					end
+
+					return tList
+				end,
+				order = warbandRemoveOrder,
+				get = function() return "" end,
+				set = function(key)
+					if not key or key == "" or key == UnitGUID("player") then return end
+					local privateDB = getPrivateDB()
+					local contact = privateDB["moneyTracker"] and privateDB["moneyTracker"][key]
+					local displayName = getClassColoredCharacterLabel(contact)
+
+					local dialogKey = "EQOL_WARBAND_GOLD_CHARACTER_REMOVE"
+					StaticPopupDialogs[dialogKey] = StaticPopupDialogs[dialogKey]
+						or {
+							text = L["autoWarbandGoldRemoveCharacterConfirm"],
+							button1 = ACCEPT,
+							button2 = CANCEL,
+							timeout = 0,
+							whileDead = true,
+							hideOnEscape = true,
+							preferredIndex = 3,
+						}
+
+					StaticPopupDialogs[dialogKey].OnAccept = function(_, guid) removeWarbandGoldCharacter(guid) end
+
+					StaticPopup_Show(dialogKey, displayName or key, nil, key)
+					clearSettingsSelection("autoWarbandGoldRemoveCharacter")
+				end,
+				default = "",
+				type = Settings.VarType.String,
+				sType = "scrolldropdown",
+				parent = true,
+				parentCheck = function()
+					return addon.SettingsLayout.elements["autoWarbandGold"]
+						and addon.SettingsLayout.elements["autoWarbandGold"].setting
+						and addon.SettingsLayout.elements["autoWarbandGold"].setting:GetValue() == true
+				end,
+			},
+			{
 				var = "autoWarbandGoldWithdraw",
 				text = L["autoWarbandGoldWithdraw"],
 				get = function() return getPrivateDB()["autoWarbandGoldWithdraw"] == true end,
@@ -288,6 +438,10 @@ addon.functions.SettingsCreateCheckboxes(cVendorEconomy, data)
 
 local merchantExpandable = addon.functions.SettingsCreateExpandableSection(cVendorEconomy, {
 	name = L["MerchantUI"],
+	configPageKey = "Merchant",
+	modernCategory = "economy",
+	modernOnly = true,
+	iconKey = "vendor",
 	expanded = false,
 	colorizeTitle = false,
 })
@@ -348,6 +502,10 @@ addon.functions.SettingsCreateCheckboxes(cVendorEconomy, data)
 
 local auctionHouseExpandable = addon.functions.SettingsCreateExpandableSection(cVendorEconomy, {
 	name = BUTTON_LAG_AUCTIONHOUSE,
+	configPageKey = "AuctionHouse",
+	modernCategory = "economy",
+	modernOnly = true,
+	iconKey = "auction",
 	expanded = false,
 	colorizeTitle = false,
 })
@@ -442,6 +600,9 @@ addon.functions.SettingsCreateDropdown(cVendorEconomy, {
 local craftingOrdersExpandable = addon.functions.SettingsCreateExpandableSection(cVendorEconomy, {
 	name = _G["PLACE_CRAFTING_ORDERS"] or "Crafting Orders",
 	newTagID = "EconomyCraftingOrders",
+	modernCategory = "economy",
+	modernOnly = true,
+	iconKey = "crafting",
 	expanded = false,
 	colorizeTitle = false,
 })
@@ -461,9 +622,12 @@ applyParentSection(data, craftingOrdersExpandable)
 table.sort(data, function(a, b) return a.text < b.text end)
 addon.functions.SettingsCreateCheckboxes(cVendorEconomy, data)
 
-local mailboxExpandable = addon.functions.SettingsCreateExpandableSection(addon.SettingsLayout.rootSOCIAL, {
+local mailboxExpandable = addon.functions.SettingsCreateExpandableSection(nil, {
 	name = MINIMAP_TRACKING_MAILBOX,
 	newTagID = "Mailbox",
+	modernCategory = "social",
+	modernOnly = true,
+	iconKey = "mailbox",
 	expanded = false,
 	colorizeTitle = false,
 })
@@ -562,11 +726,14 @@ data = {
 
 applyParentSection(data, mailboxExpandable)
 table.sort(data, function(a, b) return a.text < b.text end)
-addon.functions.SettingsCreateCheckboxes(addon.SettingsLayout.rootSOCIAL, data)
+addon.functions.SettingsCreateCheckboxes(nil, data)
 
 function addon.functions.settingsAddGold()
 	local goldExpandable = addon.functions.SettingsCreateExpandableSection(addon.SettingsLayout.rootGENERAL, {
 		name = L["GoldTracking"],
+		configPageKey = "GoldTracking",
+		iconKey = "goldtracking",
+		modernOnly = true,
 		expanded = false,
 		colorizeTitle = false,
 	})

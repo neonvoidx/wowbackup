@@ -12,6 +12,8 @@ local PROFILE_DEBUG_KEYS = {
 	"classBuffReminderSoundDebugTrace",
 	"_focusInterruptTrackerTraceEnabled",
 	"_focusInterruptTrackerTrace",
+	"resourceBarsDebugTraceEnabled",
+	"resourceBarsDebugTraceMaxEntries",
 }
 
 local TRANSIENT_PROFILE_KEYS = {
@@ -29,6 +31,103 @@ local TRANSIENT_PROFILE_KEYS = {
 	["_autoEnabledRuntime"] = true,
 	["_autoEnableInProgress"] = true,
 }
+
+local STAGGER_HIDDEN_COLOR_OVERRIDE_KEYS = {
+	"useBarColor",
+	"barColor",
+	"useClassColor",
+	"useMaxColor",
+	"maxColor",
+	"useGradient",
+	"gradientStartColor",
+	"gradientEndColor",
+	"gradientDirection",
+}
+
+local LEGACY_RESOURCE_BAR_EDIT_MODE_IDS = {
+	resourceBar_ARCANE_CHARGES = true,
+	resourceBar_CHI = true,
+	resourceBar_COMBO_POINTS = true,
+	resourceBar_EBON_MIGHT = true,
+	resourceBar_ENERGY = true,
+	resourceBar_ESSENCE = true,
+	resourceBar_FOCUS = true,
+	resourceBar_FURY = true,
+	resourceBar_HEALTH = true,
+	resourceBar_HOLY_POWER = true,
+	resourceBar_ICICLES = true,
+	resourceBar_INSANITY = true,
+	resourceBar_LUNAR_POWER = true,
+	resourceBar_MAELSTROM = true,
+	resourceBar_MAELSTROM_WEAPON = true,
+	resourceBar_MANA = true,
+	resourceBar_RAGE = true,
+	resourceBar_RUNES = true,
+	resourceBar_RUNIC_POWER = true,
+	resourceBar_SOUL_SHARDS = true,
+	resourceBar_STAGGER = true,
+	resourceBar_TIP_OF_THE_SPEAR = true,
+	resourceBar_VOID_METAMORPHOSIS = true,
+}
+
+local LEGACY_PROFILE_KEYS = {
+	"TooltipDebuffHideType",
+	"TooltipDebuffHideInCombat",
+	"TooltipDebuffHideInDungeon",
+	"mythicPlusCurrentPull",
+	"mythicPlusCurrentPullLocked",
+	"mythicPlusCurrentPullFontSize",
+	"mythicPlusCurrentPullPoint",
+	"mythicPlusCurrentPullX",
+	"mythicPlusCurrentPullY",
+	"talentReminderActiveBuildLocked",
+	"soundMutedSounds",
+	"unclampDamageMeter",
+	"confirmReplaceEnchant",
+	"optionsFrameScale",
+	"showLeaderIconRaidFrame",
+	"unitFrameMaxNameLength",
+	"unitFrameTruncateNames",
+}
+
+local MULTIDROPDOWN_SCRATCH_PROFILE_KEYS = {
+	"bagDisplayOptions",
+	"bagItemLevelTargets",
+	"lootToastFilters_3",
+	"lootToastFilters_4",
+	"lootToastFilters_5",
+	"resourceBarsSharedEnabled",
+	"rb_spec_1",
+	"rb_spec_2",
+	"rb_spec_3",
+	"rb_spec_4",
+	"TooltipPlayerDetailsLabel",
+	"mouseoverActionBar1_visibility",
+	"mouseoverActionBar2_visibility",
+	"mouseoverActionBar3_visibility",
+	"mouseoverActionBar4_visibility",
+	"mouseoverActionBar5_visibility",
+	"mouseoverActionBar6_visibility",
+	"mouseoverActionBar7_visibility",
+	"mouseoverActionBar8_visibility",
+	"mouseoverActionBarPet_visibility",
+	"mouseoverActionBarStanceBar_visibility",
+	"unitframeSettingBagsBar_visibility",
+	"unitframeSettingBuffFrame_visibility",
+	"unitframeSettingDebuffFrame_visibility",
+	"unitframeSettingFocusFrame_visibility",
+	"unitframeSettingMicroMenu_visibility",
+	"unitframeSettingMinimap_visibility",
+	"unitframeSettingPlayerFrame_visibility",
+	"unitframeSettingTargetFrame_visibility",
+}
+
+local function cleanupListedProfileKeys(profile, keys)
+	if type(profile) ~= "table" then return end
+	for i = 1, #keys do
+		profile[keys[i]] = nil
+	end
+end
 
 local function cleanupDebugArtifactsProfile(profile)
 	if type(profile) ~= "table" then return end
@@ -94,6 +193,74 @@ local function cleanupTransientProfileCaches(root, seen)
 	end
 end
 
+local function cleanupStaggerHiddenColorOverrides(cfg)
+	if type(cfg) ~= "table" then return end
+	for i = 1, #STAGGER_HIDDEN_COLOR_OVERRIDE_KEYS do
+		cfg[STAGGER_HIDDEN_COLOR_OVERRIDE_KEYS[i]] = nil
+	end
+end
+
+local function cleanupResourceBarProfile(profile)
+	if type(profile) ~= "table" then return end
+	profile.personalResourceBarAnchors = nil
+
+	local editData = profile.editModeData
+	if type(editData) == "table" then
+		for id in pairs(LEGACY_RESOURCE_BAR_EDIT_MODE_IDS) do
+			editData[id] = nil
+		end
+	end
+
+	local personal = profile.personalResourceBarSettings
+	if type(personal) == "table" then
+		for _, classCfg in pairs(personal) do
+			if type(classCfg) == "table" then
+				for _, specCfg in pairs(classCfg) do
+					if type(specCfg) == "table" then cleanupStaggerHiddenColorOverrides(specCfg.STAGGER) end
+				end
+			end
+		end
+	end
+
+	local global = profile.globalResourceBarSettings
+	if type(global) == "table" then cleanupStaggerHiddenColorOverrides(global.STAGGER) end
+
+	local shared = profile.sharedResourceBarSettings
+	if type(shared) == "table" then
+		for _, slotCfg in pairs(shared) do
+			local overrides = type(slotCfg) == "table" and slotCfg.powerTypeOverrides or nil
+			if type(overrides) == "table" then cleanupStaggerHiddenColorOverrides(overrides.STAGGER) end
+		end
+	end
+end
+
+local CVAR_PERSISTENCE_REMOVAL_KEYS = {
+	"cvarPersistenceEnabled",
+	"cvarOverrides",
+	"AutoPushSpellToActionBar",
+}
+
+local function cleanupRemovedCVarPersistenceKeys(profile)
+	if type(profile) ~= "table" then return end
+	for i = 1, #CVAR_PERSISTENCE_REMOVAL_KEYS do
+		profile[CVAR_PERSISTENCE_REMOVAL_KEYS[i]] = nil
+	end
+end
+
+local function cleanupLegacyProfileKeys(profile)
+	cleanupListedProfileKeys(profile, LEGACY_PROFILE_KEYS)
+	cleanupListedProfileKeys(profile, MULTIDROPDOWN_SCRATCH_PROFILE_KEYS)
+	cleanupRemovedCVarPersistenceKeys(profile)
+end
+
+local function cleanupCooldownPanelsStorageProfile(profile)
+	if type(profile) ~= "table" then return end
+	local root = profile.cooldownPanels
+	if type(root) ~= "table" then return end
+	local helper = addon.Aura and addon.Aura.CooldownPanels and addon.Aura.CooldownPanels.helper or nil
+	if type(helper) == "table" and type(helper.PruneRootForStorage) == "function" then helper.PruneRootForStorage(root) end
+end
+
 function addon.functions.CleanupCombatMeterSettings()
 	local db = _G.EnhanceQoLDB
 	if type(db) == "table" and type(db.profiles) == "table" then
@@ -137,10 +304,69 @@ function addon.functions.CleanupTransientProfileCaches()
 	if addon.db and addon.db ~= db then cleanupTransientProfileCaches(addon.db, seen) end
 end
 
+function addon.functions.CleanupResourceBarStorage()
+	local db = _G.EnhanceQoLDB
+	local seen = {}
+	local function cleanup(profile)
+		if type(profile) ~= "table" or seen[profile] then return end
+		seen[profile] = true
+		cleanupResourceBarProfile(profile)
+	end
+	if type(db) == "table" then
+		cleanup(db)
+		if type(db.profiles) == "table" then
+			for _, profile in pairs(db.profiles) do
+				cleanup(profile)
+			end
+		end
+	end
+	if addon.db and addon.db ~= db then cleanup(addon.db) end
+end
+
+function addon.functions.CleanupLegacyProfileStorage()
+	local db = _G.EnhanceQoLDB
+	local seen = {}
+	local function cleanup(profile)
+		if type(profile) ~= "table" or seen[profile] then return end
+		seen[profile] = true
+		cleanupLegacyProfileKeys(profile)
+	end
+	if type(db) == "table" then
+		cleanup(db)
+		if type(db.profiles) == "table" then
+			for _, profile in pairs(db.profiles) do
+				cleanup(profile)
+			end
+		end
+	end
+	if addon.db and addon.db ~= db then cleanup(addon.db) end
+end
+
+function addon.functions.CleanupCooldownPanelsStorage()
+	local db = _G.EnhanceQoLDB
+	local seen = {}
+	local function prune(profile)
+		if type(profile) ~= "table" or seen[profile] then return end
+		seen[profile] = true
+		cleanupCooldownPanelsStorageProfile(profile)
+	end
+	if type(db) == "table" then
+		prune(db)
+		if type(db.profiles) == "table" then
+			for _, profile in pairs(db.profiles) do
+				prune(profile)
+			end
+		end
+	end
+	if addon.db and addon.db ~= db then prune(addon.db) end
+end
+
 function addon.functions.CleanupOldStuff()
 	addon.functions.CleanupCombatMeterSettings()
 	addon.functions.CleanupBuffTrackerSettings()
 	addon.functions.CleanupDebugArtifacts()
+	addon.functions.CleanupLegacyProfileStorage()
+	addon.functions.CleanupResourceBarStorage()
 	addon.functions.CleanupTransientProfileCaches()
 end
 
@@ -149,5 +375,6 @@ if cleanupFrame then
 	cleanupFrame:RegisterEvent("PLAYER_LOGOUT")
 	cleanupFrame:SetScript("OnEvent", function()
 		if addon.functions and addon.functions.CleanupTransientProfileCaches then addon.functions.CleanupTransientProfileCaches() end
+		if addon.functions and addon.functions.CleanupCooldownPanelsStorage then addon.functions.CleanupCooldownPanelsStorage() end
 	end)
 end

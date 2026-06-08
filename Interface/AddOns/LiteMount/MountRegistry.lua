@@ -201,10 +201,7 @@ local RefreshEvents = {
     -- for units other than "player" and triggers constantly.
     ["COMPANION_LEARNED"] = true,
     ["COMPANION_UNLEARNED"] = true,
-    -- This fires when something is favorited or unfavorited
-    -- ["MOUNT_JOURNAL_SEARCH_UPDATED"] = true,
-    -- Talents (might have mount abilities). Glyphs that teach spells
-    -- fire PLAYER_TALENT_UPDATE too, don't need to watch GLYPH_ events.
+    -- Talents (might have mount abilities).
     ["ACTIVE_TALENT_GROUP_CHANGED"] = true,
     ["PLAYER_LEVEL_UP"] = true,
     ["PLAYER_TALENT_UPDATE"] = true,
@@ -212,6 +209,11 @@ local RefreshEvents = {
     ["BAG_UPDATE_DELAYED"] = true,
     -- Some flying unlocks are an achievement
     ["ACHIEVEMENT_EARNED"] = true,
+    -- Needed for usability on journal mounts
+    ["MOUNT_JOURNAL_USABILITY_CHANGED"] = true,
+    -- If we refreshed the usability in combat due to another event we need to
+    -- update it once combat ends.
+    ["PLAYER_REGEN_ENABLED"] = true,
 }
 
 function LM.MountRegistry:OnEvent(event, ...)
@@ -388,8 +390,8 @@ function LM.MountRegistry:AddExtraMounts()
     end
 end
 
-function LM.MountRegistry:RefreshMounts()
-    if self.needRefresh then
+function LM.MountRegistry:RefreshMounts(force)
+    if self.needRefresh or force then
         LM.Debug("Refreshing status of all mounts.")
         for _,m in ipairs(self.mounts) do
             m:Refresh()
@@ -441,17 +443,7 @@ end
 -- mounts with one for each faction.
 
 function LM.MountRegistry:GetActiveMount()
-    local buffIDs = { }
-    local i = 1
-    while true do
-        local auraInfo = C_UnitAuras.GetAuraDataByIndex('player', i)
-        if auraInfo == nil then
-            break
-        elseif not issecretvalue(auraInfo.spellId) then
-            buffIDs[auraInfo.spellId] = true
-        end
-        i = i + 1
-    end
+    local buffIDs = LM.Environment.playerBuffIDs
     return self.mounts:Find(function (m) return m:IsActive(buffIDs) end)
 end
 

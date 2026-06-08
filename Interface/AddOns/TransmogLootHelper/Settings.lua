@@ -23,18 +23,6 @@ app.Event:Register("ADDON_LOADED", function(addOnName, containsBindings)
 
 		app:CreateMinimapButton()
 		app:CreateSettings()
-
-		-- Midnight cleanup
-		app.Settings["remixFilter"] = nil
-		app.Settings["remixWindowFilter"] = nil
-		app.Settings["remixWindowLocked"] = nil
-		app.Settings["remixWindowPosition"] = nil
-		if app.Settings["simpleIcon"] then app.Settings["iconStyle"] = 3 end
-		app.Settings["simpleIcon"] = nil
-		if TransmogLootHelper_Cache then
-			TransmogLootHelper_Cache.Lemix = nil
-			TransmogLootHelper_Cache.LemixCharacters = nil
-		end
 	end
 end)
 

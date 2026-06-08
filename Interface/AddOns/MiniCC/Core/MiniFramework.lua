@@ -799,8 +799,13 @@ function M:Slider(options)
 		high:SetText(options.Max)
 	end
 
+	local text = _G[slider:GetName() .. "Text"]
+	if text then
+		text:Hide()
+	end
+
 	local hasFloat = math.floor(options.Step) ~= options.Step
-	local box = CreateFrame("EditBox", nil, options.Parent, "InputBoxTemplate")
+	local box = CreateFrame("EditBox", nil, slider, "InputBoxTemplate")
 
 	if not hasFloat then
 		ConfigureNumbericBox(box, options.Min < 0)
@@ -1609,7 +1614,7 @@ function M:CreateStandaloneWindow(options)
 	end)
 	window:Hide()
 
-	-- Border only — fill is provided by gradient textures below
+	-- Border only - fill is provided by gradient textures below
 	window:SetBackdrop({
 		bgFile = "Interface\\Buttons\\WHITE8X8",
 		edgeFile = "Interface\\Buttons\\WHITE8X8",
@@ -1683,7 +1688,7 @@ function M:CreateStandaloneWindow(options)
 	content:SetPoint("TOPLEFT", accentLine, "BOTTOMLEFT", pad, -(pad + 1))
 	content:SetPoint("BOTTOMRIGHT", window, "BOTTOMRIGHT", -(pad + 1), pad + 1)
 
-	-- ESC key closes this window (via OnKeyDown, not UISpecialFrames — avoids being
+	-- ESC key closes this window (via OnKeyDown, not UISpecialFrames - avoids being
 	-- closed when Blizzard's settings panel closes)
 	window:SetPropagateKeyboardInput(true)
 	window:EnableKeyboard(true)

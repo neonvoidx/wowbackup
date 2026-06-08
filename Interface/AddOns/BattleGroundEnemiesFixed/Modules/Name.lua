@@ -1,7 +1,5 @@
 ---@class BattleGroundEnemies
 local BattleGroundEnemies = BattleGroundEnemies
----@type string
-local AddonName = ...
 ---@class Data
 local Data = select(2, ...)
 
@@ -86,8 +84,9 @@ function name:AttachToPlayerButton(playerButton)
       return
     end
 
-    -- 12.0.0: Arena opponent names are secret values. Can't manipulate them
-    -- but CAN pass directly to :SetText() (InsecureSecretArguments).
+    -- Arena-prep buttons may carry a SecretDisplayName from UnitName("arenaN")
+    -- when the unit identity is still secret. Pass it directly to :SetText()
+    -- (InsecureSecretArguments) and bail — no realm strip / Cyrillic conversion.
     local secretName = playerButton.PlayerDetails.SecretDisplayName
     if type(secretName) ~= "nil" then
       self.fs:SetText(secretName)
@@ -100,32 +99,38 @@ function name:AttachToPlayerButton(playerButton)
       return
     end
 
-    local name, realm = strsplit("-", playerName, 2)
+    -- Ambiguate is Blizzard's official realm-stripping helper.
+    --   "short" → "Name"          (realm stripped)
+    --   "none"  → "Name-Realm"    (realm preserved when present)
+    -- pcall-guarded with a legacy strsplit fallback for older clients.
+    local context = self.config.ShowRealmnames and "none" or "short"
+    local ok, resolvedName
+    if Ambiguate then
+      ok, resolvedName = pcall(Ambiguate, playerName, context)
+    end
+    if not ok or type(resolvedName) ~= "string" then
+      local bareName, realm = strsplit("-", playerName, 2)
+      resolvedName = (realm and self.config.ShowRealmnames) and (bareName .. "-" .. realm) or bareName
+    end
 
     if BattleGroundEnemies.db.profile.ConvertCyrillic then
-      playerName = ""
-      for i = 1, name:utf8len() do
-        local c = name:utf8sub(i, i)
-
+      local converted = ""
+      for i = 1, resolvedName:utf8len() do
+        local c = resolvedName:utf8sub(i, i)
         if Data.CyrillicToRomanian[c] then
-          playerName = playerName .. Data.CyrillicToRomanian[c]
+          converted = converted .. Data.CyrillicToRomanian[c]
           if i == 1 then
-            playerName = playerName:gsub("^.", string.upper) --uppercase the first character
+            converted = converted:gsub("^.", string.upper) --uppercase the first character
           end
         else
-          playerName = playerName .. c
+          converted = converted .. c
         end
       end
-      --self.DisplayedName = self.DisplayedName:gsub("-.",string.upper) --uppercase the realm name
-      name = playerName
+      resolvedName = converted
     end
 
-    if realm and self.config.ShowRealmnames then
-      name = name .. "-" .. realm
-    end
-
-    self.fs:SetText(name)
-    self.fs.DisplayedName = name
+    self.fs:SetText(resolvedName)
+    self.fs.DisplayedName = resolvedName
   end
 
   container.ApplyAllSettings = function(self)

@@ -10,21 +10,21 @@ BattleGroundEnemiesDB = {
 ["Tampacks - Mal'Ganis"] = "Default",
 ["Auteist - Tichondrius"] = "Default",
 ["Hellavator - Tichondrius"] = "Default",
+["Bigxthazug - Tichondrius"] = "Default",
 ["Strathmoan - Tichondrius"] = "Default",
 ["Reedingo - Mal'Ganis"] = "Default",
 ["Gehyo - Tichondrius"] = "Default",
-["Choppiez - Tichondrius"] = "Default",
-["Smaugchamp - Tichondrius"] = "Default",
+["Praisesun - Tichondrius"] = "Default",
+["Stormclout - Tichondrius"] = "Default",
 ["Korahron - Tichondrius"] = "Default",
 ["Neonvoid - Tichondrius"] = "Default",
-["Stormclout - Tichondrius"] = "Default",
-["Praisesun - Tichondrius"] = "Default",
+["Smaugchamp - Tichondrius"] = "Default",
+["Choppiez - Tichondrius"] = "Default",
 ["Tainguk - Tichondrius"] = "Default",
 },
 ["profiles"] = {
 ["Default"] = {
 ["DisableArenaFramesInBattleground"] = true,
-["DisableRaidFramesInBattleground"] = true,
 ["Allies"] = {
 ["playerCountConfigs"] = {
 {
@@ -38,11 +38,6 @@ BattleGroundEnemiesDB = {
 },
 ["Enabled"] = false,
 },
-["dbVersion"] = 2,
-["Text"] = {
-["Font"] = "1",
-},
-["DisableRoleCheckWarning"] = true,
 ["Enemies"] = {
 ["playerCountConfigs"] = {
 {
@@ -70,6 +65,12 @@ BattleGroundEnemiesDB = {
 },
 },
 },
+["dbVersion"] = 2,
+["DisableRaidFramesInBattleground"] = true,
+["Text"] = {
+["Font"] = "1",
+},
+["DisableRoleCheckWarning"] = true,
 },
 },
 }

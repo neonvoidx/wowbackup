@@ -131,6 +131,39 @@ local function FormatCurrencyLink(link, id)
 	return AppendIcon(texture, link)
 end
 
+local function IsTooltipRestricted()
+	return addon.functions and addon.functions.isRestrictedContent and addon.functions.isRestrictedContent(true)
+end
+
+local function ShowChatItemTooltip(chatFrame, link)
+	if not ChatIcons.itemTooltipOnHoverEnabled then return end
+	if type(link) ~= "string" or not link:match("^item:") then return end
+	if not GameTooltip or IsTooltipRestricted() then return end
+	GameTooltip:SetOwner(chatFrame, "ANCHOR_CURSOR")
+	GameTooltip:SetHyperlink(link)
+	GameTooltip.__EnhanceQoLChatItemTooltip = true
+	GameTooltip:Show()
+end
+
+local function HideChatItemTooltip()
+	if GameTooltip and GameTooltip.__EnhanceQoLChatItemTooltip then
+		GameTooltip.__EnhanceQoLChatItemTooltip = nil
+		GameTooltip:Hide()
+	end
+end
+
+local function RegisterChatItemTooltipHooks()
+	if ChatIcons.itemTooltipHooksInitialized then return end
+	ChatIcons.itemTooltipHooksInitialized = true
+	for i = 1, _G.NUM_CHAT_WINDOWS or 10 do
+		local chatFrame = _G["ChatFrame" .. i]
+		if chatFrame and chatFrame.HookScript then
+			chatFrame:HookScript("OnHyperlinkEnter", ShowChatItemTooltip)
+			chatFrame:HookScript("OnHyperlinkLeave", HideChatItemTooltip)
+		end
+	end
+end
+
 local function FilterChatMessage(_, event, message, ...)
 	if issecretvalue and issecretvalue(message) then return end
 	if type(message) ~= "string" or message == "" then return false end
@@ -155,6 +188,7 @@ ChatIcons.Filter = ChatIcons.Filter or FilterChatMessage
 ChatIcons.enabled = ChatIcons.enabled or false
 ChatIcons.itemLevelEnabled = ChatIcons.itemLevelEnabled or false
 ChatIcons.itemLevelShowLocation = ChatIcons.itemLevelShowLocation or false
+ChatIcons.itemTooltipOnHoverEnabled = ChatIcons.itemTooltipOnHoverEnabled or false
 ChatIcons.registeredEvents = ChatIcons.registeredEvents or {}
 
 function ChatIcons:UpdateFilters()
@@ -197,4 +231,10 @@ end
 
 function ChatIcons:SetItemLevelLocation(enabled)
 	self.itemLevelShowLocation = enabled and true or false
+end
+
+function ChatIcons:SetItemTooltipOnHoverEnabled(enabled)
+	self.itemTooltipOnHoverEnabled = enabled and true or false
+	RegisterChatItemTooltipHooks()
+	if not self.itemTooltipOnHoverEnabled then HideChatItemTooltip() end
 end

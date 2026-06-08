@@ -50,8 +50,9 @@ end
 
 do  --MID
 	local ResourceList = {
+		{currencyID = 3418, hasWeeklyCap = true},	--Nebulous Voidcore (Bonus Rolls)
 		{currencyID = 3028},    --Restored Coffer Key
-		{currencyID = 3310, hasWeeklyCap = true},    --Coffer Key Shard
+		{currencyID = 3310, hasWeeklyCap = true},	--Coffer Key Shard
 		{currencyID = 3316},    --Voidlight Marl
 
 		{itemID = 242241, uiMapID = 2395},   --Latent Arcana
@@ -71,8 +72,19 @@ do  --MID
 		{currencyID = 2797, shownIfOwned = true},   --Trophy of Strife
 	};
 
+	if addon.IS_12_0_7 then
+		local crests = addon.ItemUpgradeConstant.Crests;
+		if crests then
+			for _, currencyID in ipairs(crests) do
+				table.insert(ResourceList, 2, {
+					currencyID = currencyID,
+				});
+			end
+		end
+	end
+
 	if addon.ItemUpgradeConstant.CatalystCurrencyID then
-		table.insert(ResourceList, 1, {
+		table.insert(ResourceList, 2, {
 			currencyID = addon.ItemUpgradeConstant.CatalystCurrencyID,
 			shownIfOwned = true,
 		});

@@ -11,62 +11,79 @@ local L = LibStub("AceLocale-3.0"):GetLocale("EnhanceQoL_SharedMedia")
 addon.SharedMedia = addon.SharedMedia or {}
 addon.SharedMedia.functions = addon.SharedMedia.functions or {}
 
-local cSharedMedia = addon.SettingsLayout.rootSOUND
-addon.SettingsLayout.sharedMediaCategory = cSharedMedia
-
-local sharedMediaExpandable = addon.functions.SettingsCreateExpandableSection(cSharedMedia, {
-	name = L["SharedMedia"],
-	expanded = false,
-	colorizeTitle = false,
-})
-
-local function CreateButton(data)
-	data.parentSection = sharedMediaExpandable
-	return addon.functions.SettingsCreateButton(cSharedMedia, data)
-end
-
-local function CreateCheckbox(data)
-	data.parentSection = sharedMediaExpandable
-	return addon.functions.SettingsCreateCheckbox(cSharedMedia, data)
-end
-
-local soundSettings = {}
-local bulkUpdate = false
+local sharedMediaCategory = nil
 
 local function ToggleSound(sound, value)
 	addon.SharedMedia.functions.UpdateSound(sound.key, value and true or false)
-	if value and not bulkUpdate and sound.path then PlaySoundFile(sound.path, "Master") end
+	if value and not sound.bulkUpdate and sound.path then PlaySoundFile(sound.path, "Master") end
 end
-
-local function SetAllSounds(state)
-	bulkUpdate = true
-	for _, setting in pairs(soundSettings) do
-		if setting and setting.SetValue then setting:SetValue(state and true or false) end
-	end
-	bulkUpdate = false
-end
-
-CreateButton({
-	var = "SharedMediaEnableAll",
-	text = L["Enable All"],
-	func = function() SetAllSounds(true) end,
-})
-
-CreateButton({
-	var = "SharedMediaDisableAll",
-	text = L["Disable All"],
-	func = function() SetAllSounds(false) end,
-})
 
 local function SanitizeVar(key) return (tostring(key):gsub("[^%w_]", "_")) end
 
-for _, sound in ipairs(addon.SharedMedia.sounds or {}) do
-	local entry = CreateCheckbox({
-		var = "SharedMediaSound_" .. SanitizeVar(sound.key),
-		text = sound.label,
-		get = function() return addon.db.sharedMediaSounds[sound.key] and true or false end,
-		func = function(value) ToggleSound(sound, value) end,
-		default = false,
+local function CreateSoundSection(title, varPrefix, sounds)
+	if not sounds or #sounds == 0 then return end
+	local pageKey = varPrefix == "SharedMediaDeepVoice" and "SharedMediaDeepVoiceSounds" or "SharedMedia"
+
+	local section = addon.functions.SettingsCreateExpandableSection(sharedMediaCategory, {
+		name = title,
+		configPageKey = pageKey,
+		iconKey = "soundsettings",
+		expanded = false,
+		colorizeTitle = false,
+		modernCategory = "sound",
+		modernOnly = true,
 	})
-	if entry and entry.setting then soundSettings[sound.key] = entry.setting end
+
+	local soundSettings = {}
+	local bulkUpdate = false
+
+	local function CreateButton(data)
+		data.parentSection = section
+		return addon.functions.SettingsCreateButton(sharedMediaCategory, data)
+	end
+
+	local function CreateCheckbox(data)
+		data.parentSection = section
+		return addon.functions.SettingsCreateCheckbox(sharedMediaCategory, data)
+	end
+
+	local function SetAllSounds(state)
+		bulkUpdate = true
+		for _, setting in pairs(soundSettings) do
+			if setting and setting.SetValue then setting:SetValue(state and true or false) end
+		end
+		bulkUpdate = false
+	end
+
+	CreateButton({
+		var = varPrefix .. "EnableAll",
+		text = L["Enable All"],
+		func = function() SetAllSounds(true) end,
+		refreshOnChange = true,
+	})
+
+	CreateButton({
+		var = varPrefix .. "DisableAll",
+		text = L["Disable All"],
+		func = function() SetAllSounds(false) end,
+		refreshOnChange = true,
+	})
+
+	for _, sound in ipairs(sounds) do
+		local entry = CreateCheckbox({
+			var = varPrefix .. "Sound_" .. SanitizeVar(sound.key),
+			text = sound.label,
+			get = function() return addon.db.sharedMediaSounds[sound.key] and true or false end,
+			func = function(value)
+				sound.bulkUpdate = bulkUpdate
+				ToggleSound(sound, value)
+				sound.bulkUpdate = nil
+			end,
+			default = false,
+		})
+		if entry and entry.setting then soundSettings[sound.key] = entry.setting end
+	end
 end
+
+CreateSoundSection(L["SharedMedia"], "SharedMedia", addon.SharedMedia.sounds)
+CreateSoundSection(L["SharedMediaDeepVoiceSounds"], "SharedMediaDeepVoice", addon.SharedMedia.deepVoiceSounds)

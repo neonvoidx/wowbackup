@@ -45,9 +45,8 @@ local COMMANDS = {}
 
 COMMANDS[''] =
     function ()
-        -- Look, please stop doing this, ok? Nothing good can come of it.
         if not InCombatLockdown() then
-            LiteMountOptionsPanel_Open()
+            LM.OpenOptions()
         end
     end
 
@@ -297,6 +296,7 @@ LM.SlashCommandFunc = function (argstr)
     local cmd = table.remove(args, 1)
 
     if COMMANDS[cmd] then
+        LM.Environment:RefreshState()
         COMMANDS[cmd](argstr, unpack(args))
         return true
     else

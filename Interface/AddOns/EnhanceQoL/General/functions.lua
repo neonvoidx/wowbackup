@@ -26,9 +26,18 @@ local FONT_STYLE_THICKOUTLINE = "THICKOUTLINE"
 local FONT_STYLE_MONOCHROME = "MONOCHROME"
 local FONT_STYLE_MONOCHROMEOUTLINE = "MONOCHROMEOUTLINE"
 local FONT_STYLE_MONOCHROMETHICKOUTLINE = "MONOCHROMETHICKOUTLINE"
+local FONT_STYLE_SLUG = "SLUG"
+local FONT_STYLE_SLUGOUTLINE = "SLUGOUTLINE"
+local FONT_STYLE_SLUGTHICKOUTLINE = "SLUGTHICKOUTLINE"
+local FONT_STYLE_SLUGMONOCHROME = "SLUGMONOCHROME"
+local FONT_STYLE_SLUGMONOCHROMEOUTLINE = "SLUGMONOCHROMEOUTLINE"
+local FONT_STYLE_SLUGMONOCHROMETHICKOUTLINE = "SLUGMONOCHROMETHICKOUTLINE"
 local FONT_STYLE_SHADOW = "SHADOW"
 local FONT_STYLE_SHADOWOUTLINE = "SHADOWOUTLINE"
 local FONT_STYLE_SHADOWTHICKOUTLINE = "SHADOWTHICKOUTLINE"
+local FONT_STYLE_SLUGSHADOW = "SLUGSHADOW"
+local FONT_STYLE_SLUGSHADOWOUTLINE = "SLUGSHADOWOUTLINE"
+local FONT_STYLE_SLUGSHADOWTHICKOUTLINE = "SLUGSHADOWTHICKOUTLINE"
 local EMPTY_TABLE = {}
 local GLOBAL_FONT_STATE_VERSION = 0
 local LSM_CACHE = {}
@@ -40,9 +49,18 @@ local FONT_STYLE_ORDER = {
 	FONT_STYLE_MONOCHROME,
 	FONT_STYLE_MONOCHROMEOUTLINE,
 	FONT_STYLE_MONOCHROMETHICKOUTLINE,
+	FONT_STYLE_SLUG,
+	FONT_STYLE_SLUGOUTLINE,
+	FONT_STYLE_SLUGTHICKOUTLINE,
+	FONT_STYLE_SLUGMONOCHROME,
+	FONT_STYLE_SLUGMONOCHROMEOUTLINE,
+	FONT_STYLE_SLUGMONOCHROMETHICKOUTLINE,
 	FONT_STYLE_SHADOW,
 	FONT_STYLE_SHADOWOUTLINE,
 	FONT_STYLE_SHADOWTHICKOUTLINE,
+	FONT_STYLE_SLUGSHADOW,
+	FONT_STYLE_SLUGSHADOWOUTLINE,
+	FONT_STYLE_SLUGSHADOWTHICKOUTLINE,
 }
 local FONT_STYLE_ALIASES = {
 	[""] = FONT_STYLE_NONE,
@@ -52,15 +70,42 @@ local FONT_STYLE_ALIASES = {
 	MONOCHROME = FONT_STYLE_MONOCHROME,
 	MONOCHROMEOUTLINE = FONT_STYLE_MONOCHROMEOUTLINE,
 	MONOCHROMETHICKOUTLINE = FONT_STYLE_MONOCHROMETHICKOUTLINE,
+	SLUG = FONT_STYLE_SLUG,
+	SLUGOUTLINE = FONT_STYLE_SLUGOUTLINE,
+	SLUGTHICKOUTLINE = FONT_STYLE_SLUGTHICKOUTLINE,
+	SLUGMONOCHROME = FONT_STYLE_SLUGMONOCHROME,
+	SLUGMONOCHROMEOUTLINE = FONT_STYLE_SLUGMONOCHROMEOUTLINE,
+	SLUGMONOCHROMETHICKOUTLINE = FONT_STYLE_SLUGMONOCHROMETHICKOUTLINE,
 	["OUTLINE,MONOCHROME"] = FONT_STYLE_MONOCHROMEOUTLINE,
 	["MONOCHROME,OUTLINE"] = FONT_STYLE_MONOCHROMEOUTLINE,
 	["THICKOUTLINE,MONOCHROME"] = FONT_STYLE_MONOCHROMETHICKOUTLINE,
 	["MONOCHROME,THICKOUTLINE"] = FONT_STYLE_MONOCHROMETHICKOUTLINE,
+	["OUTLINE,SLUG"] = FONT_STYLE_SLUGOUTLINE,
+	["SLUG,OUTLINE"] = FONT_STYLE_SLUGOUTLINE,
+	["THICKOUTLINE,SLUG"] = FONT_STYLE_SLUGTHICKOUTLINE,
+	["SLUG,THICKOUTLINE"] = FONT_STYLE_SLUGTHICKOUTLINE,
+	["MONOCHROME,SLUG"] = FONT_STYLE_SLUGMONOCHROME,
+	["SLUG,MONOCHROME"] = FONT_STYLE_SLUGMONOCHROME,
+	["OUTLINE,MONOCHROME,SLUG"] = FONT_STYLE_SLUGMONOCHROMEOUTLINE,
+	["OUTLINE,SLUG,MONOCHROME"] = FONT_STYLE_SLUGMONOCHROMEOUTLINE,
+	["MONOCHROME,OUTLINE,SLUG"] = FONT_STYLE_SLUGMONOCHROMEOUTLINE,
+	["MONOCHROME,SLUG,OUTLINE"] = FONT_STYLE_SLUGMONOCHROMEOUTLINE,
+	["SLUG,OUTLINE,MONOCHROME"] = FONT_STYLE_SLUGMONOCHROMEOUTLINE,
+	["SLUG,MONOCHROME,OUTLINE"] = FONT_STYLE_SLUGMONOCHROMEOUTLINE,
+	["THICKOUTLINE,MONOCHROME,SLUG"] = FONT_STYLE_SLUGMONOCHROMETHICKOUTLINE,
+	["THICKOUTLINE,SLUG,MONOCHROME"] = FONT_STYLE_SLUGMONOCHROMETHICKOUTLINE,
+	["MONOCHROME,THICKOUTLINE,SLUG"] = FONT_STYLE_SLUGMONOCHROMETHICKOUTLINE,
+	["MONOCHROME,SLUG,THICKOUTLINE"] = FONT_STYLE_SLUGMONOCHROMETHICKOUTLINE,
+	["SLUG,THICKOUTLINE,MONOCHROME"] = FONT_STYLE_SLUGMONOCHROMETHICKOUTLINE,
+	["SLUG,MONOCHROME,THICKOUTLINE"] = FONT_STYLE_SLUGMONOCHROMETHICKOUTLINE,
 	DROPSHADOW = FONT_STYLE_SHADOW,
 	STRONGDROPSHADOW = FONT_STYLE_SHADOW,
 	SHADOW = FONT_STYLE_SHADOW,
 	SHADOWOUTLINE = FONT_STYLE_SHADOWOUTLINE,
 	SHADOWTHICKOUTLINE = FONT_STYLE_SHADOWTHICKOUTLINE,
+	SLUGSHADOW = FONT_STYLE_SLUGSHADOW,
+	SLUGSHADOWOUTLINE = FONT_STYLE_SLUGSHADOWOUTLINE,
+	SLUGSHADOWTHICKOUTLINE = FONT_STYLE_SLUGSHADOWTHICKOUTLINE,
 }
 local FONT_STYLE_DESCRIPTORS = {
 	[FONT_STYLE_NONE] = { flags = nil, shadowAlpha = 0, shadowX = 0, shadowY = 0 },
@@ -69,9 +114,18 @@ local FONT_STYLE_DESCRIPTORS = {
 	[FONT_STYLE_MONOCHROME] = { flags = "MONOCHROME", shadowAlpha = 0, shadowX = 0, shadowY = 0 },
 	[FONT_STYLE_MONOCHROMEOUTLINE] = { flags = "OUTLINE,MONOCHROME", shadowAlpha = 0, shadowX = 0, shadowY = 0 },
 	[FONT_STYLE_MONOCHROMETHICKOUTLINE] = { flags = "THICKOUTLINE,MONOCHROME", shadowAlpha = 0, shadowX = 0, shadowY = 0 },
+	[FONT_STYLE_SLUG] = { flags = "SLUG", shadowAlpha = 0, shadowX = 0, shadowY = 0 },
+	[FONT_STYLE_SLUGOUTLINE] = { flags = "OUTLINE,SLUG", shadowAlpha = 0, shadowX = 0, shadowY = 0 },
+	[FONT_STYLE_SLUGTHICKOUTLINE] = { flags = "THICKOUTLINE,SLUG", shadowAlpha = 0, shadowX = 0, shadowY = 0 },
+	[FONT_STYLE_SLUGMONOCHROME] = { flags = "MONOCHROME,SLUG", shadowAlpha = 0, shadowX = 0, shadowY = 0 },
+	[FONT_STYLE_SLUGMONOCHROMEOUTLINE] = { flags = "OUTLINE,MONOCHROME,SLUG", shadowAlpha = 0, shadowX = 0, shadowY = 0 },
+	[FONT_STYLE_SLUGMONOCHROMETHICKOUTLINE] = { flags = "THICKOUTLINE,MONOCHROME,SLUG", shadowAlpha = 0, shadowX = 0, shadowY = 0 },
 	[FONT_STYLE_SHADOW] = { flags = nil, shadowAlpha = 1, shadowX = 1, shadowY = -1 },
 	[FONT_STYLE_SHADOWOUTLINE] = { flags = "OUTLINE", shadowAlpha = 0.6, shadowX = 1, shadowY = -1 },
 	[FONT_STYLE_SHADOWTHICKOUTLINE] = { flags = "THICKOUTLINE", shadowAlpha = 0.6, shadowX = 1, shadowY = -1 },
+	[FONT_STYLE_SLUGSHADOW] = { flags = "SLUG", shadowAlpha = 1, shadowX = 1, shadowY = -1 },
+	[FONT_STYLE_SLUGSHADOWOUTLINE] = { flags = "OUTLINE,SLUG", shadowAlpha = 0.6, shadowX = 1, shadowY = -1 },
+	[FONT_STYLE_SLUGSHADOWTHICKOUTLINE] = { flags = "THICKOUTLINE,SLUG", shadowAlpha = 0.6, shadowX = 1, shadowY = -1 },
 }
 local upgradeTrackMeta = {
 	explorer = { label = "Explorer", quality = Enum.ItemQuality.Poor, aliases = { "explorer" } },
@@ -262,14 +316,15 @@ function addon.functions.GetLSMMediaDropdown(mediaType, includeEmptyOption, empt
 	local key = normalizeMediaType(mediaType)
 	if not key then return EMPTY_TABLE, EMPTY_TABLE end
 
-	local version = addon.functions.GetLSMMediaVersion(key)
+	local cache = getLSMCache(key)
+	local version = cache and cache.version or 0
 	local noneLabel = (type(emptyLabel) == "string" and emptyLabel) or ""
 	local includeEmpty = includeEmptyOption == true
 	local cacheKey = key .. "|" .. (includeEmpty and "1" or "0") .. "|" .. noneLabel
 	local cached = LSM_DROPDOWN_CACHE[cacheKey]
 	if cached and cached.version == version then return cached.list, cached.order end
 
-	local names = addon.functions.GetLSMMediaNames(key)
+	local names = cache and cache.names or EMPTY_TABLE
 	local list = {}
 	local order = {}
 	if includeEmpty then
@@ -295,6 +350,18 @@ local function normalizeMediaValue(value)
 	return value
 end
 
+local function isMediaPath(value)
+	return type(value) == "string" and (value:find("\\", 1, true) or value:find("/", 1, true)) ~= nil
+end
+
+local function isKnownFontAsset(value)
+	if type(value) ~= "string" or value == "" then return false end
+	local fileAssetAPI = _G.C_UIFileAsset
+	if not (fileAssetAPI and fileAssetAPI.IsKnownFile) then return true end
+	local ok, known = pcall(fileAssetAPI.IsKnownFile, value)
+	return ok and known == true
+end
+
 local function isGlobalFontConfigValue(value) return normalizeMediaValue(value) == GLOBAL_FONT_CONFIG_KEY end
 local function isGlobalFontStyleConfigValue(value) return normalizeMediaValue(value) == GLOBAL_FONT_STYLE_CONFIG_KEY end
 local function normalizeFontStyleValue(value)
@@ -313,6 +380,8 @@ end
 
 function addon.functions.IsGlobalFontConfigValue(value) return isGlobalFontConfigValue(value) end
 
+function addon.functions.IsKnownFontAsset(value) return isKnownFontAsset(value) end
+
 function addon.functions.GetLocaleDefaultFontFace() return (addon.variables and addon.variables.defaultFont) or STANDARD_TEXT_FONT end
 
 function addon.functions.GetGlobalDefaultFontFace()
@@ -330,47 +399,67 @@ local function getFontStyleLabel(style)
 	if style == FONT_STYLE_MONOCHROME then return L["Monochrome"] or "Monochrome" end
 	if style == FONT_STYLE_MONOCHROMEOUTLINE then return L["Monochrome Outline"] or "Monochrome Outline" end
 	if style == FONT_STYLE_MONOCHROMETHICKOUTLINE then return L["Monochrome Thick"] or "Monochrome Thick" end
+	if style == FONT_STYLE_SLUG then return L["Slug"] or "Slug" end
+	if style == FONT_STYLE_SLUGOUTLINE then return L["Slug Outline"] or "Slug Outline" end
+	if style == FONT_STYLE_SLUGTHICKOUTLINE then return L["Slug Thick Outline"] or "Slug Thick Outline" end
+	if style == FONT_STYLE_SLUGMONOCHROME then return L["Slug Monochrome"] or "Slug Monochrome" end
+	if style == FONT_STYLE_SLUGMONOCHROMEOUTLINE then return L["Slug Monochrome Outline"] or "Slug Monochrome Outline" end
+	if style == FONT_STYLE_SLUGMONOCHROMETHICKOUTLINE then return L["Slug Monochrome Thick"] or "Slug Monochrome Thick" end
 	if style == FONT_STYLE_SHADOW then return L["Drop shadow"] or "Drop shadow" end
 	if style == FONT_STYLE_SHADOWOUTLINE then return L["Shadow Outline"] or "Shadow Outline" end
 	if style == FONT_STYLE_SHADOWTHICKOUTLINE then return L["Shadow Thick"] or "Shadow Thick" end
+	if style == FONT_STYLE_SLUGSHADOW then return L["Slug Shadow"] or "Slug Shadow" end
+	if style == FONT_STYLE_SLUGSHADOWOUTLINE then return L["Slug Shadow Outline"] or "Slug Shadow Outline" end
+	if style == FONT_STYLE_SLUGSHADOWTHICKOUTLINE then return L["Slug Shadow Thick"] or "Slug Shadow Thick" end
 	return tostring(style or "")
 end
 
 function addon.functions.ResolveLSMMedia(mediaType, configured, fallback, allowPath)
-	local mediaKind = normalizeMediaValue(mediaType)
+	local mediaKind = normalizeMediaType(mediaType)
 	local fallbackValue = normalizeMediaValue(fallback)
 	local configuredValue = normalizeMediaValue(configured)
 	if isGlobalFontConfigValue(configuredValue) then return fallbackValue end
 	if not configuredValue then return fallbackValue end
 	if configuredValue == fallbackValue then return configuredValue end
 	if not mediaKind then
-		if allowPath ~= false and (configuredValue:find("\\", 1, true) or configuredValue:find("/", 1, true)) then return configuredValue end
+		if allowPath ~= false and isMediaPath(configuredValue) then return configuredValue end
 		return fallbackValue
 	end
 	local lsm = getSharedMedia()
 	if lsm then
 		if lsm.IsValid and lsm:IsValid(mediaKind, configuredValue) then
 			local fetched = lsm.Fetch and lsm:Fetch(mediaKind, configuredValue, true)
-			if type(fetched) == "string" and fetched ~= "" then return fetched end
-			return configuredValue
+			if type(fetched) == "string" and fetched ~= "" then
+				if mediaKind ~= "font" or isKnownFontAsset(fetched) then return fetched end
+			end
+			return fallbackValue
 		end
 		if lsm.HashTable then
 			local hash = lsm:HashTable(mediaKind) or {}
 			local byName = hash[configuredValue]
-			if type(byName) == "string" and byName ~= "" then return byName end
+			if type(byName) == "string" and byName ~= "" then
+				if mediaKind ~= "font" or isKnownFontAsset(byName) then return byName end
+				return fallbackValue
+			end
 			for _, path in pairs(hash) do
-				if path == configuredValue then return configuredValue end
+				if path == configuredValue then
+					if mediaKind ~= "font" or isKnownFontAsset(configuredValue) then return configuredValue end
+					return fallbackValue
+				end
 			end
 		end
 	end
-	if allowPath ~= false and (configuredValue:find("\\", 1, true) or configuredValue:find("/", 1, true)) then return configuredValue end
+	if allowPath ~= false and mediaKind ~= "font" and isMediaPath(configuredValue) then return configuredValue end
 	return fallbackValue
 end
 
 function addon.functions.ResolveFontFace(configured, fallback)
-	local fallbackFace = normalizeMediaValue(fallback) or defaultFontFace()
+	local defaultFace = defaultFontFace()
+	local fallbackFace = normalizeMediaValue(fallback)
+	if isGlobalFontConfigValue(fallbackFace) then fallbackFace = nil end
+	fallbackFace = addon.functions.ResolveLSMMedia("font", fallbackFace, defaultFace, false) or defaultFace
 	if isGlobalFontConfigValue(configured) then return fallbackFace end
-	return addon.functions.ResolveLSMMedia("font", configured, fallbackFace, true) or fallbackFace
+	return addon.functions.ResolveLSMMedia("font", configured, fallbackFace, false) or fallbackFace
 end
 
 function addon.functions.GetGlobalFontStyleConfigKey() return GLOBAL_FONT_STYLE_CONFIG_KEY end
@@ -477,16 +566,33 @@ function addon.functions.ApplyFontStyleShadow(fontString, style, fallback)
 	end
 end
 
+local function setFontStringFont(fontString, fontFace, size, flags)
+	if not (fontString and fontString.SetFont and fontFace) then return false end
+	if not isKnownFontAsset(fontFace) then return false end
+	local ok, applied = pcall(fontString.SetFont, fontString, fontFace, size, flags)
+	return ok and applied ~= false
+end
+
+function addon.functions.SetFontWithFallback(fontString, fontFace, size, flags, fallbackFace)
+	if not (fontString and fontString.SetFont) then return false end
+	local resolvedFallback = addon.functions.ResolveFontFace(fallbackFace, defaultFontFace())
+	local resolvedFace = addon.functions.ResolveFontFace(fontFace, resolvedFallback)
+	local fontSize = tonumber(size) or 12
+	local ok = setFontStringFont(fontString, resolvedFace, fontSize, flags)
+	if not ok and resolvedFallback ~= resolvedFace then ok = setFontStringFont(fontString, resolvedFallback, fontSize, flags) end
+	return ok
+end
+
 function addon.functions.ApplyFontString(fontString, fontFace, size, style, fallbackFace, fallbackStyle)
 	if not (fontString and fontString.SetFont) then return false end
 	local resolvedFallback = addon.functions.ResolveFontFace(fallbackFace, defaultFontFace())
 	local resolvedFace = addon.functions.ResolveFontFace(fontFace, resolvedFallback)
 	local fontSize = tonumber(size) or 12
 	local _, flags = addon.functions.ResolveFontStyle(style, fallbackStyle)
-	local ok = fontString:SetFont(resolvedFace, fontSize, flags)
-	if ok == false then fontString:SetFont(resolvedFallback, fontSize, flags) end
+	local ok = setFontStringFont(fontString, resolvedFace, fontSize, flags)
+	if not ok then ok = setFontStringFont(fontString, resolvedFallback, fontSize, flags) end
 	addon.functions.ApplyFontStyleShadow(fontString, style, fallbackStyle)
-	return ok ~= false
+	return ok
 end
 
 local PRIVATE_PROFILE_KEYS = {
@@ -546,7 +652,21 @@ function addon.functions.CleanupPrivateProfileData()
 	end
 end
 
+local function copyDefaultValue(value, depth)
+	depth = (depth or 0) + 1
+	if depth > 8 or type(value) ~= "table" then
+		return value
+	end
+	local copy = {}
+	for childKey, childValue in pairs(value) do
+		copy[childKey] = copyDefaultValue(childValue, depth)
+	end
+	return copy
+end
+
 function addon.functions.InitDBValue(key, defaultValue)
+	addon.dbDefaults = addon.dbDefaults or {}
+	if addon.dbDefaults[key] == nil and defaultValue ~= nil then addon.dbDefaults[key] = copyDefaultValue(defaultValue) end
 	if addon.db[key] == nil then addon.db[key] = defaultValue end
 end
 
@@ -1076,8 +1196,8 @@ local function applyBagUpgradeTrackStyle(fontString)
 	local style = addon.db and addon.db["ilvlFontOutline"]
 	local outline = normalizeItemLevelOutline(style)
 	local size = math.max(8, getItemLevelFontSize() - 4)
-	local ok = fontString:SetFont(face, size, outline)
-	if ok == false then fontString:SetFont(addon.variables.defaultFont, size, outline) end
+	local ok = setFontStringFont(fontString, face, size, outline)
+	if not ok then setFontStringFont(fontString, addon.variables.defaultFont, size, outline) end
 	addon.functions.ApplyFontStyleShadow(fontString, style, FONT_STYLE_OUTLINE)
 end
 
@@ -1103,8 +1223,8 @@ function addon.functions.ApplyItemLevelTextStyle(fontString)
 	local size = getItemLevelFontSize()
 	local style = addon.db and addon.db["ilvlFontOutline"]
 	local outline = normalizeItemLevelOutline(style)
-	local ok = fontString:SetFont(face, size, outline)
-	if ok == false then fontString:SetFont(addon.variables.defaultFont, size, outline) end
+	local ok = setFontStringFont(fontString, face, size, outline)
+	if not ok then setFontStringFont(fontString, addon.variables.defaultFont, size, outline) end
 	addon.functions.ApplyFontStyleShadow(fontString, style, FONT_STYLE_OUTLINE)
 end
 
@@ -1374,6 +1494,7 @@ local function clearBagButtonInfo(itemButton)
 end
 
 local function shouldUpdateBagButtonInfo()
+	if addon.db and addon.db["enableBagsModule"] == true then return false end
 	if addon.filterFrame then return true end
 	if not addon.db then return false end
 	return addon.db["showIlvlOnBagItems"] or addon.db["showBindOnBagItems"] or addon.db["showUpgradeArrowOnBagItems"] or addon.db["showUpgradeTrackOnBagItems"] or addon.db["enhancedRarityGlow"]
@@ -1988,6 +2109,19 @@ local function InitializeFilterUI()
 end
 
 function addon.functions.updateBags(frame)
+	if addon.db and addon.db["enableBagsModule"] == true then
+		if addon.filterFrame then
+			addon.filterFrame:SetParent(nil)
+			addon.filterFrame:Hide()
+			addon.filterFrame = nil
+			addon.itemBagFilters = {}
+			addon.itemBagFiltersQuality = {}
+			addon.itemBagFiltersBound = {}
+			addon.itemBagFiltersUpgrade = {}
+		end
+		return
+	end
+
 	if addon.db["showBagFilterMenu"] then
 		InitializeFilterUI()
 	elseif addon.filterFrame then

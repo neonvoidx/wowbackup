@@ -21,15 +21,15 @@ end
 LiteMountRuleButtonMixin = {}
 
 local function ReorderRulesFromDataProvider(dataProvider)
-    local scroll = LiteMountRulesPanel.ScrollBox
-    local oldRules = LM.Options:GetRules(scroll.tab)
+    local self = LiteMountRulesPanel
+    local oldRules = LM.Options:GetRules(self.selectedTab)
     local newRules = {}
     for i, elementData in dataProvider:EnumerateEntireRange() do
         newRules[i] = oldRules[elementData.index]
         elementData.index = i
     end
-    LM.Options:SetRules(scroll.tab, newRules)
-    scroll.isDirty = true
+    self:MarkDirty()
+    LM.Options:SetRules(self.selectedTab, newRules)
 end
 
 function LiteMountRuleButtonMixin:OnEnter()
@@ -68,19 +68,30 @@ end
 
 function LiteMountRuleButtonMixin:OnClick()
     LiteMountRulesPanel.selectedRule = self.rule
-    LiteMountRulesPanel:OnRefresh()
+    LiteMountRulesPanel:RefreshDisplay()
 end
 
 
 --[[------------------------------------------------------------------------]]--
 
-LiteMountRulesScrollMixin = {}
+local function BindingGenerator(owner, rootDescription)
+    local self = LiteMountRulesPanel
+    local IsSelected = function (v) return self.selectedTab == v end
+    local SetSelected = function (v) self:SetTab(v) end
+    for i = 1, 4 do
+        rootDescription:CreateRadio(BindingText(i), IsSelected, SetSelected, i)
+    end
+end
 
-function LiteMountRulesScrollMixin:RefreshRules()
-    local rules = LM.Options:GetRules(self.tab)
-    local ruleSet = LM.Options:GetCompiledRuleSet(self.tab)
+--[[------------------------------------------------------------------------]]--
 
-    local buttonRuleSet = LM.Options:GetCompiledButtonRuleSet(self.tab)
+LiteMountRulesPanelMixin = {}
+
+function LiteMountRulesPanelMixin:RefreshDisplay()
+    local rules = LM.Options:GetRules(self.selectedTab)
+    local ruleSet = LM.Options:GetCompiledRuleSet(self.selectedTab)
+
+    local buttonRuleSet = LM.Options:GetCompiledButtonRuleSet(self.selectedTab)
     local isEnabled = buttonRuleSet:HasApplyRules()
 
     local dp = CreateDataProvider()
@@ -92,103 +103,93 @@ function LiteMountRulesScrollMixin:RefreshRules()
         end
     end
 
+    self.ScrollBox:SetDataProvider(dp, ScrollBoxConstants.RetainScrollPosition)
+
     if isEnabled then
-        self.Inactive:Hide()
-        LiteMountRulesPanel.AddButton:Enable()
-        LiteMountRulesPanel.DefaultsButton:Enable()
+        self.ScrollBox.Inactive:Hide()
+        self.AddButton:Show()
+        self.DefaultsButton:Enable()
+        self.DeleteButton:Show()
+        self.DeleteButton:SetEnabled(self.selectedRule ~= nil)
+        self.EditButton:Show()
+        self.EditButton:SetEnabled(self.selectedRule ~= nil)
     else
-        LiteMountRulesPanel.selectedRule = nil
-        LiteMountRulesPanel.AddButton:Disable()
-        LiteMountRulesPanel.DefaultsButton:Disable()
-        self.Inactive:SetText(string.format(L.LM_RULES_INACTIVE, self.tab))
-        self.Inactive:Show()
+        self.selectedRule = nil
+        self.AddButton:Hide()
+        self.DefaultsButton:Disable()
+        self.DeleteButton:Hide()
+        self.EditButton:Hide()
+        self.ScrollBox.Inactive:SetText(string.format(L.LM_RULES_INACTIVE, self.selectedTab))
+        self.ScrollBox.Inactive:Show()
     end
 
-    self:SetDataProvider(dp, ScrollBoxConstants.RetainScrollPosition)
+
+    LiteMountSettingsPanelMixin.RefreshDisplay(self)
 end
 
-function LiteMountRulesScrollMixin:SetOption(v, i)
-    self:GetParent().selectedRule = nil
-    return LM.Options:SetRules(i, v)
-end
-
-function LiteMountRulesScrollMixin:GetOption(i)
-    return LM.Options:GetRules(i)
-end
-
-function LiteMountRulesScrollMixin:GetOptionDefault()
-    return nil
-end
-
-
---[[------------------------------------------------------------------------]]--
-
-local function BindingGenerator(owner, rootDescription)
-    local scroll = LiteMountRulesPanel.ScrollBox
-    local IsSelected = function (v) return scroll.tab == v end
-    local SetSelected = function (v) LiteMountOptionsControl_SetTab(scroll, v) end
-    for i = 1, 4 do
-        rootDescription:CreateRadio(BindingText(i), IsSelected, SetSelected, i)
+function LiteMountRulesPanelMixin:LoadSettings(sets)
+    self.selectedRule = nil
+    local dontFire = true
+    for i = 1, self.ntabs do
+        LM.Options:SetRules(i, sets[i], dontFire)
     end
 end
 
---[[------------------------------------------------------------------------]]--
+function LiteMountRulesPanelMixin:SaveSettings()
+    local sets = {}
+    for i = 1, self.ntabs do
+        sets[i] = LM.Options:GetRules(i)
+    end
+    return sets
+end
 
-LiteMountRulesPanelMixin = {}
+function LiteMountRulesPanelMixin:LoadDefaultSettings()
+    local dontFire = true
+    for i = 1, self.ntabs do
+        LM.Options:SetRules(i, nil, dontFire)
+    end
+end
 
 function LiteMountRulesPanelMixin:AddRuleCallback(rule)
-    local binding = self.ScrollBox.tab
-    local rules = LM.Options:GetRules(binding)
+    local rules = LM.Options:GetRules(self.selectedTab)
     local insertPos = tIndexOf(rules, self.selectedRule) or 1
     table.insert(rules, insertPos, rule)
     self.selectedRule = rule
-    self.ScrollBox.isDirty = true
-    LM.Options:SetRules(binding, rules)
+    self:MarkDirty()
+    LM.Options:SetRules(self.selectedTab, rules)
 end
 
 function LiteMountRulesPanelMixin:AddRule()
     LiteMountRuleEdit:Clear()
     LiteMountRuleEdit:SetCallback(self.AddRuleCallback, self)
-    LiteMountOptionsPanel_PopOver(LiteMountRuleEdit, self)
+    self:PopOver(LiteMountRuleEdit)
 end
 
 function LiteMountRulesPanelMixin:DeleteRule()
-    local binding = self.ScrollBox.tab
     if self.selectedRule then
-        self.ScrollBox.isDirty = true
-        local rules = LM.Options:GetRules(binding)
+        local rules = LM.Options:GetRules(self.selectedTab)
         tDeleteItem(rules, self.selectedRule)
         self.selectedRule = nil
-        LM.Options:SetRules(binding, rules)
+        self:MarkDirty()
+        LM.Options:SetRules(self.selectedTab, rules)
     end
 end
 
 function LiteMountRulesPanelMixin:EditRuleCallback(rule)
-    local binding = self.ScrollBox.tab
-    local rules = LM.Options:GetRules(binding)
+    local rules = LM.Options:GetRules(self.selectedTab)
     local index = tIndexOf(rules, self.selectedRule)
     if index then
         rules[index] = rule
         self.selectedRule = rule
-        self.ScrollBox.isDirty = true
-        LM.Options:SetRules(binding, rules)
+        self:MarkDirty()
+        LM.Options:SetRules(self.selectedTab, rules)
     end
 end
 
 function LiteMountRulesPanelMixin:EditRule()
     LiteMountRuleEdit:SetRule(self.selectedRule)
     LiteMountRuleEdit:SetCallback(self.EditRuleCallback, self)
-    LiteMountOptionsPanel_PopOver(LiteMountRuleEdit, self)
-end
-
-function LiteMountRulesPanelMixin:OnRefresh(trigger)
-    self.DeleteButton:SetEnabled(self.selectedRule ~= nil)
-    self.EditButton:SetEnabled(self.selectedRule ~= nil)
-    LiteMountOptionsPanel_OnRefresh(self, trigger)
-end
-
-function LiteMountRulesPanelMixin:OnShow()
-    self.ScrollBox:RefreshRules()
+    self:PopOver(LiteMountRuleEdit)
 end
 
 function LiteMountRulesPanelMixin:OnLoad()
@@ -240,17 +241,17 @@ function LiteMountRulesPanelMixin:OnLoad()
             ReorderRulesFromDataProvider(contextData.dataProvider)
         end)
 
-    self.ScrollBox.ntabs = 4
-    self.ScrollBox.update = self.ScrollBox.RefreshRules
-    self.ScrollBox.SetControl = self.ScrollBox.RefreshRules
+    self.ntabs = 4
+    self.selectedTab = 1
 
     self.AddButton:SetScript('OnClick', function () self:AddRule() end)
     self.DeleteButton:SetScript('OnClick', function () self:DeleteRule() end)
     self.EditButton:SetScript('OnClick', function () self:EditRule() end)
 
-    LiteMountOptionsPanel_RegisterControl(self.ScrollBox)
+    LiteMountSettingsPanelMixin.OnLoad(self)
 end
 
 function LiteMountRulesPanelMixin:OnHide()
     LiteMountRuleEdit:Hide()
+    LiteMountSettingsPanelMixin.OnHide(self)
 end

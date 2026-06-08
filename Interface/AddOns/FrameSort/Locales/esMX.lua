@@ -206,7 +206,7 @@ FrameSort es compatible con lo siguiente:
 \n
   - Blizzard: grupo, banda, arena.
 \n
-  - ElvUI: grupo.
+  - ElvUI: grupo, arena.
 \n
   - sArena: arena.
 \n
@@ -275,6 +275,7 @@ L["No conflicting addons"] = "Sin complementos en conflicto"
 
 -- # Log Screen -- #
 L["Log"] = "Registro"
+L["Enable Logging"] = "Activar registro"
 L["FrameSort log to help with diagnosing issues."] = "Registro de FrameSort para ayudar a diagnosticar problemas."
 L["Copy Log"] = "Copiar registro"
 

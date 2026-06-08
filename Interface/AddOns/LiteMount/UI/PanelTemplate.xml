@@ -53,14 +53,14 @@
                 <Anchor point="TOPLEFT" x="-8" y="8" />
                 <Anchor point="BOTTOMRIGHT" x="8" y="-8" />
             </Anchors>
+            <Scripts>
+                <OnLoad>
+                    local layout = NineSliceUtil.GetLayout("ChatBubble")
+                    NineSliceUtil.ApplyLayout(self, layout)
+                </OnLoad>
+            </Scripts>
         </Frame>
     </Frames>
-    <Scripts>
-        <OnLoad inherit="append">
-            local layout = NineSliceUtil.GetLayout("ChatBubble")
-            NineSliceUtil.ApplyLayout(self.NineSlice, layout)
-        </OnLoad>
-    </Scripts>
 </Frame>
 
 <Button name="LiteMountUIButtonTemplate" virtual="true">
@@ -99,11 +99,11 @@
     </Scripts>
 </Frame>
 
-<Frame name="LiteMountOptionsPanelTemplate" parent="UIParent" hidden="true" virtual="true">
+<Frame name="LiteMountSettingsPanelTemplate" parent="UIParent" mixin="LiteMountSettingsPanelMixin" hidden="true" virtual="true">
     <Scripts>
-        <OnLoad function="LiteMountOptionsPanel_OnLoad" />
-        <OnShow function="LiteMountOptionsPanel_OnShow" />
-        <OnHide function="LiteMountOptionsPanel_OnHide" />
+        <OnLoad method="OnLoad" />
+        <OnShow method="OnShow" />
+        <OnHide method="OnHide" />
     </Scripts>
     <Layers>
         <Layer level="ARTWORK">
@@ -125,22 +125,12 @@
             <Anchors>
                 <Anchor point="TOPRIGHT" x="-36" y="-16"/>
             </Anchors>
-            <Scripts>
-                <OnClick>
-                    LiteMountOptionsPanel_OnDefault(self:GetParent(), true)
-                </OnClick>
-            </Scripts>
         </Button>
         <Button parentKey="RevertButton" inherits="UIPanelButtonTemplate" text="REVERT">
             <Size x="96" y="22" />
             <Anchors>
                 <Anchor point="RIGHT" relativePoint="LEFT" relativeKey="$parent.DefaultsButton" x="-8" />
             </Anchors>
-            <Scripts>
-                <OnClick>
-                    LiteMountOptionsPanel_Revert(self:GetParent())
-                </OnClick>
-            </Scripts>
         </Button>
         <Frame parentKey="Disable" setAllPoints="true" hidden="true" enableMouse="true">
             <Scripts>
@@ -163,9 +153,11 @@
     </Frames>
 </Frame>
 
-<Frame name="LiteMountPopOverPanelTemplate" virtual="true" inherits="LiteMountPopOverStyleTemplate">
+<Frame name="LiteMountPopOverPanelTemplate" virtual="true" mixin="LiteMountPopOverPanelMixin" inherits="LiteMountPopOverStyleTemplate">
     <Scripts>
-        <OnLoad inherit="prepend" function="LiteMountPopOverPanel_OnLoad" />
+        <OnLoad inherit="prepend" method="OnLoad" />
+        <OnHide inherit="prepend" method="OnHide" />
+        <OnShow inherit="prepend" method="OnShow" />
     </Scripts>
     <Layers>
         <Layer level="ARTWORK">

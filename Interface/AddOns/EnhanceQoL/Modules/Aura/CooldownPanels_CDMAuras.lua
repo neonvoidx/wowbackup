@@ -26,6 +26,9 @@ local SOURCE_ICON = "icon"
 local SOURCE_BAR = "bar"
 local IMPORT_SOURCE_ICON = "BUFF_ICON"
 local IMPORT_SOURCE_BAR = "BUFF_BAR"
+local RESHUFFLE_REFRESH_DELAY = 0.05
+local WEAK_KEYS = { __mode = "k" }
+local NO_SCAN_INFO = false
 
 local function isSecretValue(value) return Api.issecretvalue and Api.issecretvalue(value) end
 
@@ -37,6 +40,7 @@ local function createTrackedUnitBuckets()
 	return {
 		player = {},
 		target = {},
+		unknown = {},
 	}
 end
 
@@ -47,7 +51,7 @@ end
 
 function cdm.EnsureWeakKeyTable(value)
 	if type(value) == "table" then return value end
-	return setmetatable({}, { __mode = "k" })
+	return setmetatable({}, WEAK_KEYS)
 end
 
 function cdm.GetFrameEpoch(runtime, frame)
@@ -81,16 +85,24 @@ end
 
 function cdm.ResetPersistentFrameCaches(runtime)
 	if not runtime then return end
-	runtime.frameEpochByFrame = cdm.EnsureWeakKeyTable(nil)
-	runtime.frameAuraSnapshotByFrame = cdm.EnsureWeakKeyTable(nil)
+	if type(runtime.frameEpochByFrame) == "table" then
+		wipe(runtime.frameEpochByFrame)
+	else
+		runtime.frameEpochByFrame = cdm.EnsureWeakKeyTable(nil)
+	end
+	if type(runtime.frameAuraSnapshotByFrame) == "table" then
+		wipe(runtime.frameAuraSnapshotByFrame)
+	else
+		runtime.frameAuraSnapshotByFrame = cdm.EnsureWeakKeyTable(nil)
+	end
 end
 
 local function getRuntime()
 	CooldownPanels.runtime = CooldownPanels.runtime or {}
 	local runtime = CooldownPanels.runtime.cdmAuras
 	if runtime then
-		if not (runtime.auraEntries and runtime.auraEntries.player and runtime.auraEntries.target) then runtime.auraEntries = createTrackedUnitBuckets() end
-		if not (runtime.unitPanels and runtime.unitPanels.player and runtime.unitPanels.target) then runtime.unitPanels = createTrackedUnitBuckets() end
+		if not (runtime.auraEntries and runtime.auraEntries.player and runtime.auraEntries.target and runtime.auraEntries.unknown) then runtime.auraEntries = createTrackedUnitBuckets() end
+		if not (runtime.unitPanels and runtime.unitPanels.player and runtime.unitPanels.target and runtime.unitPanels.unknown) then runtime.unitPanels = createTrackedUnitBuckets() end
 		runtime.frameEntries = runtime.frameEntries or {}
 		runtime.pandemicFrameEntries = runtime.pandemicFrameEntries or {}
 		runtime.cooldownViewerInfoByID = runtime.cooldownViewerInfoByID or {}
@@ -101,6 +113,7 @@ local function getRuntime()
 		runtime.scratchSeenInfo = runtime.scratchSeenInfo or {}
 		runtime.scratchNumericKeys = runtime.scratchNumericKeys or {}
 		runtime.scratchChildren = runtime.scratchChildren or {}
+		runtime.scratchRefreshedPanels = runtime.scratchRefreshedPanels or {}
 		runtime.frameEpochByFrame = cdm.EnsureWeakKeyTable(runtime.frameEpochByFrame)
 		runtime.frameAuraSnapshotByFrame = cdm.EnsureWeakKeyTable(runtime.frameAuraSnapshotByFrame)
 		runtime.unitAuraEpoch = runtime.unitAuraEpoch or { player = 0, target = 0 }
@@ -123,6 +136,7 @@ local function getRuntime()
 		scratchSeenInfo = {},
 		scratchNumericKeys = {},
 		scratchChildren = {},
+		scratchRefreshedPanels = {},
 		frameEpochByFrame = cdm.EnsureWeakKeyTable(nil),
 		frameAuraSnapshotByFrame = cdm.EnsureWeakKeyTable(nil),
 		unitAuraEpoch = { player = 0, target = 0 },
@@ -157,9 +171,12 @@ local function getRuntimePassCacheTable(field)
 	if not pass then return nil, runtime end
 	local passField = field .. "Pass"
 	local cache = runtime[field]
-	if runtime[passField] ~= pass or type(cache) ~= "table" then
-		cache = setmetatable({}, { __mode = "k" })
+	if type(cache) ~= "table" then
+		cache = setmetatable({}, WEAK_KEYS)
 		runtime[field] = cache
+	end
+	if runtime[passField] ~= pass then
+		wipe(cache)
 		runtime[passField] = pass
 	end
 	return cache, runtime
@@ -189,8 +206,10 @@ local function isValidCooldownID(value)
 end
 
 local function getCooldownCacheKey(cooldownID)
-	if not isValidCooldownID(cooldownID) then return nil end
-	return tostring(cooldownID)
+	local valueType = type(cooldownID)
+	if valueType == "number" then return cooldownID > 0 and cooldownID or nil end
+	if valueType == "string" then return cooldownID ~= "" and cooldownID or nil end
+	return nil
 end
 
 local function cooldownIDsEqual(a, b)
@@ -207,7 +226,7 @@ end
 local function normalizeAlwaysShowMode(value, fallback)
 	if CooldownPanels and CooldownPanels.NormalizeCDMAuraAlwaysShowMode then return CooldownPanels:NormalizeCDMAuraAlwaysShowMode(value, fallback) end
 	local mode = type(value) == "string" and string.upper(value) or nil
-	if mode == "SHOW" or mode == "DESATURATE" or mode == "HIDE" then return mode end
+	if mode == "SHOW" or mode == "DESATURATE" or mode == "DESATURATE_ACTIVE" or mode == "HIDE" or mode == "HIDE_DESATURATE_ACTIVE" then return mode end
 	return fallback or "HIDE"
 end
 
@@ -282,6 +301,7 @@ local function getSpellTexture(spellId)
 end
 
 local isUsableSpellID
+local refreshAllTrackedPanels
 
 local function getAuraInstanceID(auraData)
 	local auraInstanceID = auraData and auraData.auraInstanceID
@@ -417,6 +437,14 @@ local function getCooldownViewerInfo(cooldownID)
 	return info
 end
 
+local function getCooldownInfoIsKnown(cooldownID, frame)
+	local frameInfo = frame and frame.cooldownInfo or nil
+	if type(frameInfo) == "table" and type(frameInfo.isKnown) == "boolean" then return frameInfo.isKnown end
+	local apiInfo = getCooldownViewerInfo(cooldownID)
+	if type(apiInfo) == "table" and type(apiInfo.isKnown) == "boolean" then return apiInfo.isKnown end
+	return nil
+end
+
 local function frameTrackedSpellMatchesCandidate(candidateSpellID, source, trackedSpellID, sawAssociatedSpellID, sawSecretLinkedSpellID)
 	if not candidateSpellID then return false, sawAssociatedSpellID, sawSecretLinkedSpellID end
 	sawAssociatedSpellID = true
@@ -526,13 +554,20 @@ local function resolveSpellFromCooldownID(cooldownID, frame)
 	return spellID, buffName, iconTextureID
 end
 
+local ensureScanInfoDerived
+local ensureScanInfoSpellLookup
+local rememberScanInfoSpellLookup
+
 local function resolveEntryScanInfo(entry, byCooldownID, bySpellID, byCooldownKey)
 	if type(entry) ~= "table" then return nil, nil end
 
 	local storedCooldownID = isValidCooldownID(entry.cooldownID) and entry.cooldownID or nil
 	local storedCooldownKey = getCooldownCacheKey(storedCooldownID)
 	local scanInfo = storedCooldownID and byCooldownID and byCooldownID[storedCooldownID] or nil
-	if not scanInfo and storedCooldownKey and byCooldownKey then scanInfo = byCooldownKey[storedCooldownKey] end
+	if not scanInfo and storedCooldownKey and byCooldownKey then
+		scanInfo = byCooldownKey[storedCooldownKey]
+		if not scanInfo and type(storedCooldownKey) == "string" then scanInfo = byCooldownKey[tonumber(storedCooldownKey)] end
+	end
 	if scanInfo then
 		local resolvedCooldownID = isValidCooldownID(scanInfo.cooldownID) and scanInfo.cooldownID or storedCooldownID
 		return scanInfo, resolvedCooldownID
@@ -548,6 +583,60 @@ local function resolveEntryScanInfo(entry, byCooldownID, bySpellID, byCooldownKe
 	end
 
 	return nil, storedCooldownID
+end
+
+local function findRuntimeScanInfoBySpellID(scan, spellID)
+	spellID = tonumber(spellID)
+	if not (scan and isUsableSpellID(spellID)) then return nil, nil end
+	local bySpellID = scan.bySpellID
+	local cached = bySpellID and bySpellID[spellID] or nil
+	if type(cached) == "table" then
+		local resolvedCooldownID = isValidCooldownID(cached.cooldownID) and cached.cooldownID or nil
+		return cached, resolvedCooldownID
+	end
+	local list = scan.list
+	if type(list) ~= "table" then return nil, nil end
+	local startIndex = cached == false and 1 or ((tonumber(scan.spellLookupCursor) or 0) + 1)
+	if scan.spellLookupComplete == true then startIndex = 1 end
+	for i = startIndex, #list do
+		if scan.spellLookupComplete ~= true and cached ~= false then scan.spellLookupCursor = i end
+		local info = list[i]
+		local cooldownID = info and info.cooldownID or nil
+		if isValidCooldownID(cooldownID) then
+			ensureScanInfoSpellLookup(scan, info, cooldownID)
+			local matched = bySpellID and bySpellID[spellID] or nil
+			if type(matched) == "table" then
+				local resolvedCooldownID = isValidCooldownID(matched.cooldownID) and matched.cooldownID or cooldownID
+				return matched, resolvedCooldownID
+			end
+			local frame = info.iconFrame or info.barFrame
+			local sawAssociatedSpellID = false
+			local sawSecretLinkedSpellID = false
+			local directMatched
+			directMatched, sawAssociatedSpellID, sawSecretLinkedSpellID = frameTrackedSpellMatchesCandidate(frame and frame.auraSpellID, "auraSpellID", spellID, sawAssociatedSpellID, sawSecretLinkedSpellID)
+			if not directMatched then directMatched = frameTrackedSpellMatchesCooldownInfo(frame and frame.cooldownInfo, spellID, sawAssociatedSpellID, sawSecretLinkedSpellID) end
+			if not directMatched then directMatched = frameTrackedSpellMatchesCooldownInfo(getCooldownViewerInfo(cooldownID), spellID, sawAssociatedSpellID, sawSecretLinkedSpellID) end
+			if directMatched then
+				if bySpellID then bySpellID[spellID] = info end
+				return info, cooldownID
+			end
+		end
+	end
+	if cached ~= false then scan.spellLookupComplete = true end
+	if bySpellID and bySpellID[spellID] == nil then bySpellID[spellID] = false end
+	return nil, nil
+end
+
+local function resolveRuntimeEntryScanInfo(entry, scan, byCooldownID, byCooldownKey)
+	local scanInfo, resolvedCooldownID = resolveEntryScanInfo(entry, byCooldownID, nil, byCooldownKey)
+	if scanInfo then return scanInfo, resolvedCooldownID end
+	local spellID = tonumber(entry and entry.spellID)
+	local trackedSpellIDs = CooldownPanels.runtime and CooldownPanels.runtime.cdmAuraSpellIds or nil
+	if isUsableSpellID(spellID) and (not trackedSpellIDs or trackedSpellIDs[spellID] == true) then
+		local spellInfo, spellCooldownID = findRuntimeScanInfoBySpellID(scan, spellID)
+		if spellInfo then return spellInfo, spellCooldownID or resolvedCooldownID end
+	end
+	return nil, resolvedCooldownID
 end
 
 local function getScanInfoMatchingFrame(scanInfo, preferredSource, expectedCooldownID)
@@ -576,6 +665,26 @@ local function scanInfoHasOnlyMismatchedFrames(scanInfo, preferredSource, expect
 	return matchingFrame == nil
 end
 
+local function selectScanInfoFrame(scanInfo, preferredSource, expectedCooldownID)
+	preferredSource = normalizeSourceType(preferredSource)
+
+	local preferredFrame = preferredSource == SOURCE_BAR and scanInfo and scanInfo.barFrame or scanInfo and scanInfo.iconFrame or nil
+	local fallbackFrame = preferredSource == SOURCE_BAR and scanInfo and scanInfo.iconFrame or scanInfo and scanInfo.barFrame or nil
+	local chosenFrame = preferredFrame
+	local chosenSource = preferredSource
+
+	if chosenFrame and not cooldownIDsEqual(getCooldownIDFromFrame(chosenFrame, chosenSource), expectedCooldownID) then chosenFrame = nil end
+	if not chosenFrame and fallbackFrame then
+		local fallbackSource = preferredSource == SOURCE_BAR and SOURCE_ICON or SOURCE_BAR
+		if cooldownIDsEqual(getCooldownIDFromFrame(fallbackFrame, fallbackSource), expectedCooldownID) then
+			chosenFrame = fallbackFrame
+			chosenSource = fallbackSource
+		end
+	end
+
+	return chosenFrame, chosenSource, preferredFrame, fallbackFrame
+end
+
 local function ensureScanInfo(scan, cooldownID)
 	local info = scan.byCooldownID[cooldownID]
 	if info then return info end
@@ -596,8 +705,10 @@ local function ensureScanInfo(scan, cooldownID)
 	info.buffName = nil
 	info.iconTextureID = nil
 	info.isActive = false
+	info.isKnown = nil
 	info.auraUnit = nil
 	info.sortName = nil
+	info.derived = nil
 	scan.byCooldownID[cooldownID] = info
 	return info
 end
@@ -610,9 +721,94 @@ end
 
 local function populateScanInfoDerivedFields(info, cooldownID, frame, overwrite)
 	if not (info and isValidCooldownID(cooldownID)) then return end
+	local isKnown = getCooldownInfoIsKnown(cooldownID, frame)
+	if isKnown ~= nil and (overwrite or info.isKnown == nil) then info.isKnown = isKnown end
 	if not overwrite and info.spellID and info.buffName and info.iconTextureID then return end
 	local spellID, buffName, iconTextureID = resolveSpellFromCooldownID(cooldownID, frame)
 	mergeResolvedScanInfo(info, spellID, buffName, iconTextureID, overwrite)
+end
+
+ensureScanInfoDerived = function(info, cooldownID, frame, overwrite, runtimeOnly)
+	if not (info and isValidCooldownID(cooldownID)) then return end
+	if info.derived == true and not overwrite then return end
+	populateScanInfoDerivedFields(info, cooldownID, frame, overwrite)
+	info.spellID = tonumber(info.spellID)
+	info.buffName = info.buffName or getSpellName(info.spellID) or tostring(cooldownID)
+	info.iconTextureID = info.iconTextureID or getSpellTexture(info.spellID) or Helper.PREVIEW_ICON
+	if not runtimeOnly then info.sortName = string.lower(tostring(info.buffName or "")) end
+	info.derived = true
+end
+
+local function resolveSpellIDOnlyFromCooldownID(cooldownID, frame)
+	local frameInfo = frame and frame.cooldownInfo or nil
+	local auraSpellID = frame and frame.auraSpellID or nil
+	if isUsableSpellID(auraSpellID) then return auraSpellID end
+	if type(frameInfo) == "table" then
+		local linkedSpellIDs = frameInfo.linkedSpellIDs
+		local firstLinkedSpellID = type(linkedSpellIDs) == "table" and linkedSpellIDs[1] or nil
+		local spellID = getFirstUsableSpellID(
+			frameInfo.overrideTooltipSpellID,
+			frameInfo.linkedSpellID,
+			firstLinkedSpellID,
+			frameInfo.overrideSpellID,
+			frameInfo.spellID
+		)
+		if isUsableSpellID(spellID) then return spellID end
+	end
+	local apiInfo = getCooldownViewerInfo(cooldownID)
+	if type(apiInfo) == "table" then
+		local linkedSpellIDs = apiInfo.linkedSpellIDs
+		local firstLinkedSpellID = type(linkedSpellIDs) == "table" and linkedSpellIDs[1] or nil
+		return getFirstUsableSpellID(
+			apiInfo.overrideTooltipSpellID,
+			apiInfo.linkedSpellID,
+			firstLinkedSpellID,
+			apiInfo.overrideSpellID,
+			apiInfo.spellID
+		)
+	end
+	return nil
+end
+
+ensureScanInfoSpellLookup = function(scan, info, cooldownID)
+	if not (scan and info and isValidCooldownID(cooldownID)) then return nil end
+	local spellID = tonumber(info.spellID)
+	if not isUsableSpellID(spellID) then
+		spellID = resolveSpellIDOnlyFromCooldownID(cooldownID, info.iconFrame or info.barFrame)
+		if isUsableSpellID(spellID) then info.spellID = spellID end
+	end
+	if isUsableSpellID(spellID) then
+		rememberScanInfoSpellLookup(scan, info)
+		return spellID
+	end
+	return nil
+end
+
+local function frameHasActiveAuraOrTotem(frame)
+	if not frame then return false end
+	return hasAuraInstanceID(frame.auraInstanceID) or frame.totemData ~= nil
+end
+
+local function frameIsShown(frame)
+	if not (frame and frame.IsShown) then return false end
+	local ok, shown = pcall(frame.IsShown, frame)
+	return ok and shown == true
+end
+
+local function shouldPreferCollectedFrame(existingFrame, candidateFrame)
+	if candidateFrame == existingFrame then return false end
+	if not existingFrame then return true end
+	if not candidateFrame then return false end
+
+	local existingActive = frameHasActiveAuraOrTotem(existingFrame)
+	local candidateActive = frameHasActiveAuraOrTotem(candidateFrame)
+	if existingActive ~= candidateActive then return candidateActive end
+
+	local existingShown = frameIsShown(existingFrame)
+	local candidateShown = frameIsShown(candidateFrame)
+	if existingShown ~= candidateShown then return candidateShown end
+
+	return false
 end
 
 local function shouldPreferSpellLookupInfo(primary, candidate)
@@ -632,9 +828,11 @@ local function shouldPreferSpellLookupInfo(primary, candidate)
 	return tostring(candidate.cooldownID or "") < tostring(primary.cooldownID or "")
 end
 
-local function rememberScanInfoSpellLookup(scan, info)
+rememberScanInfoSpellLookup = function(scan, info)
 	local spellID = tonumber(info and info.spellID)
 	if not isUsableSpellID(spellID) then return end
+	local trackedSpellIDs = scan and scan.runtimeMode and CooldownPanels.runtime and CooldownPanels.runtime.cdmAuraSpellIds or nil
+	if trackedSpellIDs and trackedSpellIDs[spellID] ~= true then return end
 	local current = scan.bySpellID[spellID]
 	if current == nil or shouldPreferSpellLookupInfo(current, info) then scan.bySpellID[spellID] = info end
 end
@@ -672,6 +870,7 @@ local function collectFrame(scan, frame, sourceType, viewerName, seenFrames)
 	local cooldownID = getCooldownIDFromFrame(frame, sourceType)
 	if not cooldownID then return end
 	seenFrames[frame] = true
+	frame._eqolLastTrackedCooldownID = cooldownID
 
 	local info = scan.byCooldownID[cooldownID]
 	if not info then
@@ -679,10 +878,13 @@ local function collectFrame(scan, frame, sourceType, viewerName, seenFrames)
 		info = ensureScanInfo(scan, cooldownID)
 	end
 	info.availableSources[sourceType] = true
+	local replaceFrame = false
 	if sourceType == SOURCE_ICON then
-		info.iconFrame = frame
+		replaceFrame = shouldPreferCollectedFrame(info.iconFrame, frame)
+		if replaceFrame then info.iconFrame = frame end
 	else
-		info.barFrame = frame
+		replaceFrame = shouldPreferCollectedFrame(info.barFrame, frame)
+		if replaceFrame then info.barFrame = frame end
 	end
 	if sourceType == SOURCE_ICON or not info.sourceType then
 		info.sourceType = sourceType
@@ -696,9 +898,9 @@ local function collectFrame(scan, frame, sourceType, viewerName, seenFrames)
 	if not auraUnit then auraUnit = normalizeTrackedUnit(frame.auraDataUnit) end
 	if auraUnit and not info.auraUnit then info.auraUnit = auraUnit end
 
-	populateScanInfoDerivedFields(info, cooldownID, frame, true)
-	if hasAuraInstanceID(frame.auraInstanceID) or frame.totemData ~= nil then info.isActive = true end
-end
+		if not scan.runtimeMode then ensureScanInfoDerived(info, cooldownID, frame, replaceFrame) end
+		if frameHasActiveAuraOrTotem(frame) then info.isActive = true end
+	end
 
 local function collectFramesFromContainer(scan, container, sourceType, viewerName, seenFrames)
 	if not container then return end
@@ -732,16 +934,11 @@ end
 local function collectViewer(scan, viewerName, sourceType, seenFrames)
 	local viewer = _G[viewerName]
 	if not viewer then return end
-	local containers = {
-		viewer,
-		viewer.oldGridSettings,
-		viewer.gridSettings,
-		viewer.currentGridSettings,
-		viewer.settings,
-	}
-	for i = 1, #containers do
-		collectFramesFromContainer(scan, containers[i], sourceType, viewerName, seenFrames)
-	end
+	collectFramesFromContainer(scan, viewer, sourceType, viewerName, seenFrames)
+	collectFramesFromContainer(scan, viewer.oldGridSettings, sourceType, viewerName, seenFrames)
+	collectFramesFromContainer(scan, viewer.gridSettings, sourceType, viewerName, seenFrames)
+	collectFramesFromContainer(scan, viewer.currentGridSettings, sourceType, viewerName, seenFrames)
+	collectFramesFromContainer(scan, viewer.settings, sourceType, viewerName, seenFrames)
 end
 
 local function sortTrackedBuffs(a, b)
@@ -751,17 +948,20 @@ local function sortTrackedBuffs(a, b)
 	return tostring(a and a.cooldownID or "") < tostring(b and b.cooldownID or "")
 end
 
-function CDMAuras:InvalidateScan(clearCooldownViewerInfo)
+function CDMAuras:InvalidateScan(clearCooldownViewerInfo, reason)
 	local runtime = getRuntime()
 	runtime.scan = nil
-	runtime.forcedRescanPass = nil
+	runtime.forcedRescanEpoch = nil
 	runtime.scanEpoch = (tonumber(runtime.scanEpoch) or 0) + 1
 	if clearCooldownViewerInfo then wipe(runtime.cooldownViewerInfoByID) end
 end
 
-function CDMAuras:ScanTrackedBuffs(force)
+function CDMAuras:ScanTrackedBuffs(force, mode)
 	local runtime = getRuntime()
-	if not force and runtime.scan and runtime.scan.list and runtime.scan.byCooldownID then return runtime.scan.list, runtime.scan.byCooldownID, runtime.scan.bySpellID, runtime.scan.byCooldownKey end
+	local runtimeMode = mode == "runtime"
+	if not force and runtime.scan and runtime.scan.list and runtime.scan.byCooldownID then
+		if runtimeMode or runtime.scan.fullDerived == true then return runtime.scan.list, runtime.scan.byCooldownID, runtime.scan.bySpellID, runtime.scan.byCooldownKey end
+	end
 
 	local scan = runtime.scan or {}
 	scan.list = scan.list or {}
@@ -773,6 +973,11 @@ function CDMAuras:ScanTrackedBuffs(force)
 	wipe(scan.byCooldownKey)
 	wipe(scan.bySpellID)
 	scan.hasAuthoritativeSeed = false
+	scan.runtimeMode = runtimeMode
+	scan.fullDerived = false
+	scan.sorted = false
+	scan.spellLookupCursor = 0
+	scan.spellLookupComplete = false
 	local seenFrames = runtime.scratchSeenFrames
 	local seenInfo = runtime.scratchSeenInfo
 	wipe(seenFrames)
@@ -789,21 +994,21 @@ function CDMAuras:ScanTrackedBuffs(force)
 	for cooldownID, info in pairs(scan.byCooldownID) do
 		if not seenInfo[info] then
 			seenInfo[info] = true
-			populateScanInfoDerivedFields(info, cooldownID, info.iconFrame or info.barFrame, false)
-			info.spellID = tonumber(info.spellID)
-			info.buffName = info.buffName or getSpellName(info.spellID) or tostring(cooldownID)
-			info.iconTextureID = info.iconTextureID or getSpellTexture(info.spellID) or Helper.PREVIEW_ICON
-			info.sortName = string.lower(tostring(info.buffName or ""))
+			if not runtimeMode then ensureScanInfoDerived(info, cooldownID, info.iconFrame or info.barFrame, false) end
 			info.sourceType = normalizeSourceType(info.sourceType or (info.availableSources[SOURCE_ICON] and SOURCE_ICON or SOURCE_BAR))
 			info.sourceViewer = info.sourceType == SOURCE_BAR and BAR_VIEWER or ICON_VIEWER
 			local cooldownKey = getCooldownCacheKey(info.cooldownID or cooldownID)
 			if cooldownKey then scan.byCooldownKey[cooldownKey] = info end
-			rememberScanInfoSpellLookup(scan, info)
+			if not runtimeMode then rememberScanInfoSpellLookup(scan, info) end
 			scan.list[#scan.list + 1] = info
 		end
 	end
 
-	table.sort(scan.list, sortTrackedBuffs)
+	if not runtimeMode then
+		table.sort(scan.list, sortTrackedBuffs)
+		scan.sorted = true
+		scan.fullDerived = true
+	end
 	runtime.scan = scan
 	return scan.list, scan.byCooldownID, scan.bySpellID, scan.byCooldownKey
 end
@@ -854,7 +1059,10 @@ local function unregisterFrameBinding(runtime, key, frame)
 	local pandemicKeys = runtime.pandemicFrameEntries and runtime.pandemicFrameEntries[frame]
 	if pandemicKeys then
 		pandemicKeys[key] = nil
-		if not next(pandemicKeys) then runtime.pandemicFrameEntries[frame] = nil end
+		if not next(pandemicKeys) then
+			runtime.pandemicFrameEntries[frame] = nil
+			frame._eqolCdmPandemicTracked = nil
+		end
 	end
 end
 
@@ -891,9 +1099,13 @@ local function updatePandemicFrameBinding(runtime, key, frame, wantsPandemic)
 			runtime.pandemicFrameEntries[frame] = pandemicKeys
 		end
 		pandemicKeys[key] = true
+		frame._eqolCdmPandemicTracked = true
 	elseif pandemicKeys then
 		pandemicKeys[key] = nil
-		if not next(pandemicKeys) then runtime.pandemicFrameEntries[frame] = nil end
+		if not next(pandemicKeys) then
+			runtime.pandemicFrameEntries[frame] = nil
+			frame._eqolCdmPandemicTracked = nil
+		end
 	end
 end
 
@@ -922,16 +1134,72 @@ local function clearEntryState(key, state, clearTrackedAura)
 	state.cachedFrameMatchSpellID = nil
 	state.cachedFrameMatchCooldownID = nil
 	state.cachedFrameMatchResult = nil
+	state.frameReacquirePass = nil
 end
 
 function CDMAuras:SweepInvalidStates()
 	local runtime = getRuntime()
-	local valid = {}
+	local valid = runtime.validEntryScratch
+	if not valid then
+		valid = {}
+		runtime.validEntryScratch = valid
+	else
+		wipe(valid)
+	end
 	local root = CooldownPanels.GetRoot and CooldownPanels:GetRoot() or nil
-	if root and root.panels then
+	local sharedRuntime = CooldownPanels.runtime
+	local cdmAuraPanelIds = sharedRuntime and sharedRuntime.cdmAuraPanelIds or nil
+	local cdmAuraEntryIdsByPanel = sharedRuntime and sharedRuntime.cdmAuraEntryIdsByPanel or nil
+	local enabledPanels = sharedRuntime and sharedRuntime.enabledPanels or nil
+	local enabledPanelIds = sharedRuntime and sharedRuntime.enabledPanelIds or nil
+	if cdmAuraPanelIds and cdmAuraEntryIdsByPanel then
+		if root and root.panels then
+			for i = 1, #cdmAuraPanelIds do
+				local panelId = cdmAuraPanelIds[i]
+				local panel = root.panels[panelId]
+				local entries = panel and panel.entries
+				local entryIds = cdmAuraEntryIdsByPanel[panelId]
+				if entries and entryIds then
+					for j = 1, #entryIds do
+						local entryId = entryIds[j]
+						local entry = entries[entryId]
+						if entry and entry.type == ENTRY_TYPE then valid[getEntryKey(panelId, entryId)] = true end
+					end
+				end
+			end
+		end
+	elseif root and root.panels and enabledPanels then
+		if enabledPanelIds and #enabledPanelIds > 0 then
+			for i = 1, #enabledPanelIds do
+				local panelId = enabledPanelIds[i]
+				local panel = enabledPanels[panelId] == true and root.panels[panelId] or nil
+				local entries = panel and panel.entries
+				if entries then
+					for entryId, entry in pairs(entries) do
+						if entry and entry.type == ENTRY_TYPE then valid[getEntryKey(panelId, entryId)] = true end
+					end
+				end
+			end
+		else
+			for panelId in pairs(enabledPanels) do
+				local panel = root.panels[panelId]
+				local entries = panel and panel.entries
+				if entries then
+					for entryId, entry in pairs(entries) do
+						if entry and entry.type == ENTRY_TYPE then valid[getEntryKey(panelId, entryId)] = true end
+					end
+				end
+			end
+		end
+	elseif root and root.panels then
 		for panelId, panel in pairs(root.panels) do
-			for entryId, entry in pairs(panel and panel.entries or {}) do
-				if entry and entry.type == ENTRY_TYPE then valid[getEntryKey(panelId, entryId)] = true end
+			if panel and panel.enabled ~= false then
+				local entries = panel.entries
+				if entries then
+					for entryId, entry in pairs(entries) do
+						if entry and entry.type == ENTRY_TYPE then valid[getEntryKey(panelId, entryId)] = true end
+					end
+				end
 			end
 		end
 	end
@@ -963,11 +1231,22 @@ local function getEntryTrackedUnit(scanInfo, state, frame, expectedCooldownID, p
 	return trackedUnit
 end
 
-local function clearTrackedPanelIndex(runtime) runtime.unitPanels = createTrackedUnitBuckets() end
+local function clearTrackedPanelIndex(runtime)
+	if not runtime then return end
+	runtime.unitPanels = runtime.unitPanels or createTrackedUnitBuckets()
+	runtime.unitPanels.player = runtime.unitPanels.player or {}
+	runtime.unitPanels.target = runtime.unitPanels.target or {}
+	runtime.unitPanels.unknown = runtime.unitPanels.unknown or {}
+	wipe(runtime.unitPanels.player)
+	wipe(runtime.unitPanels.target)
+	wipe(runtime.unitPanels.unknown)
+end
 
 local function registerTrackedPanel(runtime, unit, panelId)
-	unit = normalizeTrackedUnit(unit)
-	if not (unit and panelId) then return end
+	if not (runtime and panelId) then return end
+	unit = normalizeTrackedUnit(unit) or "unknown"
+	runtime.unitPanels = runtime.unitPanels or createTrackedUnitBuckets()
+	runtime.unitPanels[unit] = runtime.unitPanels[unit] or {}
 	runtime.unitPanels[unit][panelId] = true
 end
 
@@ -980,24 +1259,51 @@ local function clearRuntimeTrackingState()
 	clearTrackedPanelIndex(runtime)
 	wipe(runtime.auraEntries.player)
 	wipe(runtime.auraEntries.target)
+	wipe(runtime.auraEntries.unknown)
 end
 
 function CDMAuras:HasActiveTrackedPanels()
+	local cdmAuraPanelIds = CooldownPanels.runtime and CooldownPanels.runtime.cdmAuraPanelIds or nil
+	if cdmAuraPanelIds then return #cdmAuraPanelIds > 0 end
 	local root = CooldownPanels.GetRoot and CooldownPanels:GetRoot() or nil
 	if not (root and root.panels) then return false end
-
 	local enabledPanels = CooldownPanels.runtime and CooldownPanels.runtime.enabledPanels or nil
-	local useEnabledFilter = enabledPanels ~= nil
-
-	for panelId, panel in pairs(root.panels) do
-		local panelEnabled = useEnabledFilter and enabledPanels[panelId] == true or (panel and panel.enabled ~= false)
-		if panelEnabled and panel and panel.entries then
-			for _, entry in pairs(panel.entries) do
-				if entry and entry.type == ENTRY_TYPE then return true end
+	local enabledPanelIds = CooldownPanels.runtime and CooldownPanels.runtime.enabledPanelIds or nil
+	if enabledPanels then
+		if enabledPanelIds and #enabledPanelIds > 0 then
+			for i = 1, #enabledPanelIds do
+				local panelId = enabledPanelIds[i]
+				local panel = enabledPanels[panelId] == true and root.panels[panelId] or nil
+				local entries = panel and panel.entries
+				if entries then
+					for _, entry in pairs(entries) do
+						if entry and entry.type == ENTRY_TYPE then return true end
+					end
+				end
+			end
+		else
+			for panelId in pairs(enabledPanels) do
+				local panel = root.panels[panelId]
+				local entries = panel and panel.entries
+				if entries then
+					for _, entry in pairs(entries) do
+						if entry and entry.type == ENTRY_TYPE then return true end
+					end
+				end
+			end
+		end
+	else
+		for _, panel in pairs(root.panels) do
+			if panel and panel.enabled ~= false then
+				local entries = panel.entries
+				if entries then
+					for _, entry in pairs(entries) do
+						if entry and entry.type == ENTRY_TYPE then return true end
+					end
+				end
 			end
 		end
 	end
-
 	return false
 end
 
@@ -1016,13 +1322,20 @@ function CDMAuras:UpdateEventRegistration()
 
 	self:EnsureEventFrame()
 	frame = self.eventFrame
+	self:EnsureCooldownViewerHooks()
 	if not self.eventsRegistered then
 		frame:RegisterEvent("ADDON_LOADED")
 		frame:RegisterEvent("COOLDOWN_VIEWER_DATA_LOADED")
+		frame:RegisterEvent("COOLDOWN_VIEWER_SPELL_OVERRIDE_UPDATED")
 		frame:RegisterEvent("PLAYER_LOGIN")
 		frame:RegisterEvent("PLAYER_ENTERING_WORLD")
 		frame:RegisterEvent("PLAYER_TARGET_CHANGED")
 		frame:RegisterEvent("PLAYER_TOTEM_UPDATE")
+		frame:RegisterEvent("ACTIVE_PLAYER_SPECIALIZATION_CHANGED")
+		frame:RegisterEvent("ACTIVE_TALENT_GROUP_CHANGED")
+		frame:RegisterEvent("PLAYER_TALENT_UPDATE")
+		frame:RegisterEvent("TRAIT_CONFIG_UPDATED")
+		frame:RegisterEvent("TRAIT_CONFIG_LIST_UPDATED")
 		frame:RegisterUnitEvent("UNIT_AURA", "player", "target")
 		frame:RegisterUnitEvent("PLAYER_SPECIALIZATION_CHANGED", "player")
 		self.eventsRegistered = true
@@ -1038,24 +1351,97 @@ function CDMAuras:RebuildTrackedPanelIndex()
 
 	local root = CooldownPanels.GetRoot and CooldownPanels:GetRoot() or nil
 	if not (root and root.panels) then return end
-
-	local enabledPanels = CooldownPanels.runtime and CooldownPanels.runtime.enabledPanels or nil
-	local useEnabledFilter = enabledPanels ~= nil
+	local sharedRuntime = CooldownPanels.runtime
+	local cdmAuraPanelIds = sharedRuntime and sharedRuntime.cdmAuraPanelIds or nil
+	local cdmAuraEntryIdsByPanel = sharedRuntime and sharedRuntime.cdmAuraEntryIdsByPanel or nil
 	local _, byCooldownID, bySpellID, byCooldownKey = self:ScanTrackedBuffs(false)
 
-	for panelId, panel in pairs(root.panels) do
-		local panelEnabled = useEnabledFilter and enabledPanels[panelId] == true or (panel and panel.enabled ~= false)
-		if panelEnabled and panel and panel.entries then
-			for entryId, entry in pairs(panel.entries) do
-				if entry and entry.type == ENTRY_TYPE then
-					local key = getEntryKey(panelId, entryId)
-					local state = runtime.entryStates[key]
-					local scanInfo, resolvedCooldownID = resolveEntryScanInfo(entry, byCooldownID, bySpellID, byCooldownKey)
-					local expectedCooldownID = isValidCooldownID(resolvedCooldownID) and resolvedCooldownID or entry.cooldownID
-					local matchingFrame = getScanInfoMatchingFrame(scanInfo, entry.sourceType, expectedCooldownID)
-					local trackedUnit = getEntryTrackedUnit(scanInfo, state, matchingFrame, expectedCooldownID, entry.sourceType)
-					if state then state.trackUnit = trackedUnit end
-					registerTrackedPanel(runtime, trackedUnit, panelId)
+	if cdmAuraPanelIds and cdmAuraEntryIdsByPanel then
+		for i = 1, #cdmAuraPanelIds do
+			local panelId = cdmAuraPanelIds[i]
+			local panel = root.panels[panelId]
+			local entries = panel and panel.entries
+			local entryIds = cdmAuraEntryIdsByPanel[panelId]
+			if entries and entryIds then
+				for j = 1, #entryIds do
+					local entryId = entryIds[j]
+					local entry = entries[entryId]
+					if entry and entry.type == ENTRY_TYPE then
+						local key = getEntryKey(panelId, entryId)
+						local state = runtime.entryStates[key]
+						local scanInfo, resolvedCooldownID = resolveEntryScanInfo(entry, byCooldownID, bySpellID, byCooldownKey)
+						local expectedCooldownID = isValidCooldownID(resolvedCooldownID) and resolvedCooldownID or entry.cooldownID
+						local matchingFrame = getScanInfoMatchingFrame(scanInfo, entry.sourceType, expectedCooldownID)
+						local trackedUnit = getEntryTrackedUnit(scanInfo, state, matchingFrame, expectedCooldownID, entry.sourceType)
+						if state then state.trackUnit = trackedUnit end
+						registerTrackedPanel(runtime, trackedUnit, panelId)
+					end
+				end
+			end
+		end
+		return
+	end
+
+	local enabledPanels = sharedRuntime and sharedRuntime.enabledPanels or nil
+	local enabledPanelIds = sharedRuntime and sharedRuntime.enabledPanelIds or nil
+	if enabledPanels then
+		if enabledPanelIds and #enabledPanelIds > 0 then
+			for i = 1, #enabledPanelIds do
+				local panelId = enabledPanelIds[i]
+				local panel = enabledPanels[panelId] == true and root.panels[panelId] or nil
+				local entries = panel and panel.entries
+				if entries then
+					for entryId, entry in pairs(entries) do
+						if entry and entry.type == ENTRY_TYPE then
+							local key = getEntryKey(panelId, entryId)
+							local state = runtime.entryStates[key]
+							local scanInfo, resolvedCooldownID = resolveEntryScanInfo(entry, byCooldownID, bySpellID, byCooldownKey)
+							local expectedCooldownID = isValidCooldownID(resolvedCooldownID) and resolvedCooldownID or entry.cooldownID
+							local matchingFrame = getScanInfoMatchingFrame(scanInfo, entry.sourceType, expectedCooldownID)
+							local trackedUnit = getEntryTrackedUnit(scanInfo, state, matchingFrame, expectedCooldownID, entry.sourceType)
+							if state then state.trackUnit = trackedUnit end
+							registerTrackedPanel(runtime, trackedUnit, panelId)
+						end
+					end
+				end
+			end
+		else
+			for panelId in pairs(enabledPanels) do
+				local panel = root.panels[panelId]
+				local entries = panel and panel.entries
+				if entries then
+					for entryId, entry in pairs(entries) do
+						if entry and entry.type == ENTRY_TYPE then
+							local key = getEntryKey(panelId, entryId)
+							local state = runtime.entryStates[key]
+							local scanInfo, resolvedCooldownID = resolveEntryScanInfo(entry, byCooldownID, bySpellID, byCooldownKey)
+							local expectedCooldownID = isValidCooldownID(resolvedCooldownID) and resolvedCooldownID or entry.cooldownID
+							local matchingFrame = getScanInfoMatchingFrame(scanInfo, entry.sourceType, expectedCooldownID)
+							local trackedUnit = getEntryTrackedUnit(scanInfo, state, matchingFrame, expectedCooldownID, entry.sourceType)
+							if state then state.trackUnit = trackedUnit end
+							registerTrackedPanel(runtime, trackedUnit, panelId)
+						end
+					end
+				end
+			end
+		end
+	else
+		for panelId, panel in pairs(root.panels) do
+			if panel and panel.enabled ~= false then
+				local entries = panel.entries
+				if entries then
+					for entryId, entry in pairs(entries) do
+						if entry and entry.type == ENTRY_TYPE then
+							local key = getEntryKey(panelId, entryId)
+							local state = runtime.entryStates[key]
+							local scanInfo, resolvedCooldownID = resolveEntryScanInfo(entry, byCooldownID, bySpellID, byCooldownKey)
+							local expectedCooldownID = isValidCooldownID(resolvedCooldownID) and resolvedCooldownID or entry.cooldownID
+							local matchingFrame = getScanInfoMatchingFrame(scanInfo, entry.sourceType, expectedCooldownID)
+							local trackedUnit = getEntryTrackedUnit(scanInfo, state, matchingFrame, expectedCooldownID, entry.sourceType)
+							if state then state.trackUnit = trackedUnit end
+							registerTrackedPanel(runtime, trackedUnit, panelId)
+						end
+					end
 				end
 			end
 		end
@@ -1191,13 +1577,16 @@ local function getFrameAuraData(frame)
 	local auraData = nil
 	if auraUnit and auraInstanceID then auraData = getAuraDataByAuraInstanceIDCached(auraUnit, auraInstanceID) end
 	runtime.frameAuraSnapshotByFrame = cdm.EnsureWeakKeyTable(runtime.frameAuraSnapshotByFrame)
-	runtime.frameAuraSnapshotByFrame[frame] = {
-		auraData = auraData,
-		auraUnit = auraUnit,
-		auraInstanceID = auraInstanceID,
-		frameEpoch = frameEpoch,
-		unitAuraEpoch = unitAuraEpoch,
-	}
+	local snapshot = runtime.frameAuraSnapshotByFrame[frame]
+	if not snapshot then
+		snapshot = {}
+		runtime.frameAuraSnapshotByFrame[frame] = snapshot
+	end
+	snapshot.auraData = auraData
+	snapshot.auraUnit = auraUnit
+	snapshot.auraInstanceID = auraInstanceID
+	snapshot.frameEpoch = frameEpoch
+	snapshot.unitAuraEpoch = unitAuraEpoch
 	if passCache then
 		passCache[frame] = passCache[frame] or {}
 		passCache[frame].auraData = auraData
@@ -1235,7 +1624,8 @@ function CDMAuras:HandleFrameAuraMutation(frame, wasCleared)
 	if not keys then return end
 	local auraData, auraUnit, newAuraID = getFrameAuraData(frame)
 	local normalizedAuraUnit = normalizeTrackedUnit(auraUnit)
-	local refreshedPanels = {}
+	local refreshedPanels = runtime.scratchRefreshedPanels
+	wipe(refreshedPanels)
 
 	for key in pairs(keys) do
 		local state = runtime.entryStates[key]
@@ -1284,6 +1674,7 @@ function CDMAuras:HandleFrameAuraMutation(frame, wasCleared)
 
 	for panelId in pairs(refreshedPanels) do
 		requestPanelRefresh(panelId)
+		refreshedPanels[panelId] = nil
 	end
 end
 
@@ -1296,9 +1687,10 @@ function CDMAuras:HandleFrameTotemMutation(frame)
 
 	-- Totem-backed tracked buffs can change state on an existing viewer frame without
 	-- touching aura instance data or cooldownID. Force the next runtime build to rescan.
-	self:InvalidateScan(false)
+	self:InvalidateScan(false, "HandleFrameTotemMutation")
 
-	local refreshedPanels = {}
+	local refreshedPanels = runtime.scratchRefreshedPanels
+	wipe(refreshedPanels)
 	for key in pairs(keys) do
 		local state = runtime.entryStates[key]
 		if state then refreshedPanels[state.panelId] = true end
@@ -1306,18 +1698,23 @@ function CDMAuras:HandleFrameTotemMutation(frame)
 
 	for panelId in pairs(refreshedPanels) do
 		requestPanelRefresh(panelId)
+		refreshedPanels[panelId] = nil
 	end
 end
 
 function CDMAuras:HandleFramePandemicStateChanged(frame, isActive)
-	if not frame then return end
+	if not (frame and frame._eqolCdmPandemicTracked == true) then return end
 	local runtime = getRuntime()
 	local keys = runtime.pandemicFrameEntries[frame]
-	if not keys then return end
+	if not keys then
+		frame._eqolCdmPandemicTracked = nil
+		return
+	end
 
 	local auraUnit = normalizeTrackedUnit(getFrameAuraUnit(frame))
 	local pandemicActive = isActive == true and frameHasPandemicState(frame) and auraUnit == "target"
-	local refreshedPanels = {}
+	local refreshedPanels = runtime.scratchRefreshedPanels
+	wipe(refreshedPanels)
 
 	for key in pairs(keys) do
 		local state = runtime.entryStates[key]
@@ -1333,13 +1730,19 @@ function CDMAuras:HandleFramePandemicStateChanged(frame, isActive)
 
 	for panelId in pairs(refreshedPanels) do
 		requestPanelRefresh(panelId)
+		refreshedPanels[panelId] = nil
 	end
 end
 
 function CDMAuras:NormalizeEntry(entry)
 	if type(entry) ~= "table" then return end
 	entry.type = ENTRY_TYPE
-	if not isValidCooldownID(entry.cooldownID) then entry.cooldownID = tonumber(entry.cooldownID) end
+	local numericCooldownID = tonumber(entry.cooldownID)
+	if numericCooldownID and numericCooldownID > 0 then
+		entry.cooldownID = numericCooldownID
+	elseif not isValidCooldownID(entry.cooldownID) then
+		entry.cooldownID = nil
+	end
 	entry.spellID = tonumber(entry.spellID)
 	entry.buffName = type(entry.buffName) == "string" and entry.buffName or nil
 	entry.iconTextureID = entry.iconTextureID or getSpellTexture(entry.spellID)
@@ -1349,7 +1752,7 @@ function CDMAuras:NormalizeEntry(entry)
 	local hadExplicitMode = entry.cdmAuraAlwaysShowMode ~= nil
 	if type(entry.cdmAuraAlwaysShowUseGlobal) ~= "boolean" then entry.cdmAuraAlwaysShowUseGlobal = not (legacyAlwaysShow or hadExplicitMode) end
 	entry.cdmAuraAlwaysShowMode = normalizeAlwaysShowMode(entry.cdmAuraAlwaysShowMode, legacyAlwaysShow and "SHOW" or "HIDE")
-	entry.alwaysShow = entry.cdmAuraAlwaysShowMode ~= "HIDE"
+	entry.alwaysShow = entry.cdmAuraAlwaysShowMode ~= "HIDE" and entry.cdmAuraAlwaysShowMode ~= "HIDE_DESATURATE_ACTIVE"
 	entry.showCooldown = entry.showCooldown ~= false
 	entry.showCooldownText = entry.showCooldownText ~= false
 	if entry.showStacks == nil then
@@ -1672,9 +2075,21 @@ function CDMAuras:AddEntrySafe(panelId, idValue, overrides)
 end
 
 function CDMAuras:HandleRootRefresh()
+	local runtime = getRuntime()
 	self:SweepInvalidStates()
+	clearTrackedPanelIndex(runtime)
 	if not self:UpdateEventRegistration() then return end
-	self:RebuildTrackedPanelIndex()
+	self:InvalidateScan(false, "HandleRootRefresh")
+	refreshAllTrackedPanels()
+end
+
+function CDMAuras:HandleRuntimeIndexChanged(reason, clearCooldownViewerInfo)
+	local runtime = getRuntime()
+	self:SweepInvalidStates()
+	clearTrackedPanelIndex(runtime)
+	if not self:UpdateEventRegistration() then return end
+	self:InvalidateScan(clearCooldownViewerInfo == true, reason or "RuntimeIndexChanged")
+	refreshAllTrackedPanels()
 end
 
 function CDMAuras:BuildRuntimeData(panelId, entryId, entry, entryLayout, alwaysShowMode)
@@ -1708,56 +2123,48 @@ function CDMAuras:BuildRuntimeData(panelId, entryId, entry, entryLayout, alwaysS
 	local scanInfo
 	local resolvedCooldownID
 	local scanEpoch = runtime.scanEpoch or 0
+	local cachedScanInfo = state.cachedScanInfo
 	if
 		state.cachedScanEpoch == scanEpoch
 		and state.cachedScanCooldownID == entry.cooldownID
 		and state.cachedScanSpellID == entry.spellID
 		and state.cachedScanSourceType == entry.sourceType
-		and state.cachedScanInfo ~= nil
+		and cachedScanInfo ~= nil
 	then
-		scanInfo = state.cachedScanInfo
+		scanInfo = cachedScanInfo ~= NO_SCAN_INFO and cachedScanInfo or nil
 		resolvedCooldownID = state.cachedResolvedCooldownID
 	else
-		local _, byCooldownID, bySpellID, byCooldownKey = self:ScanTrackedBuffs(false)
-		scanInfo, resolvedCooldownID = resolveEntryScanInfo(entry, byCooldownID, bySpellID, byCooldownKey)
+			local scan, byCooldownID, _, byCooldownKey = self:ScanTrackedBuffs(false, "runtime")
+			scanInfo, resolvedCooldownID = resolveRuntimeEntryScanInfo(entry, scan, byCooldownID, byCooldownKey)
 		local expectedCooldownID = isValidCooldownID(resolvedCooldownID) and resolvedCooldownID or entry.cooldownID
 		local staleFrameScanInfo = scanInfoHasOnlyMismatchedFrames(scanInfo, entry.sourceType, expectedCooldownID)
 		if not scanInfo or staleFrameScanInfo then
-			local runtimePass = runtime.runtimePass
-			local rescanned
-			local rescannedBySpellID
-			local rescannedByCooldownKey
-			if runtimePass and runtime.forcedRescanPass == runtimePass then
-				_, rescanned, rescannedBySpellID, rescannedByCooldownKey = self:ScanTrackedBuffs(false)
-			else
-				-- A negative first lookup can happen before Cooldown Viewer data or frames are ready.
-				-- Clear cached viewer info too so the forced rescan can recover once Blizzard finishes initialization.
-				self:InvalidateScan(true)
-				local _, rescannedByCooldownID, rescannedBySpellLookup, rescannedCooldownLookup = self:ScanTrackedBuffs(true)
-				rescanned = rescannedByCooldownID
-				rescannedBySpellID = rescannedBySpellLookup
-				rescannedByCooldownKey = rescannedCooldownLookup
-				if runtimePass then runtime.forcedRescanPass = runtimePass end
-			end
-			scanInfo, resolvedCooldownID = resolveEntryScanInfo(entry, rescanned, rescannedBySpellID, rescannedByCooldownKey)
+			local rescanEpoch = runtime.scanEpoch or scanEpoch
+				local rescanned
+				local rescannedByCooldownKey
+				if runtime.forcedRescanEpoch == rescanEpoch then
+					local _, rescannedByCooldownID, _rescannedBySpellID, rescannedCooldownLookup = self:ScanTrackedBuffs(false, "runtime")
+					rescanned = rescannedByCooldownID
+					rescannedByCooldownKey = rescannedCooldownLookup
+				else
+					-- A negative first lookup can happen before Cooldown Viewer data or frames are ready.
+					-- Clear cached viewer info too so the forced rescan can recover once Blizzard finishes initialization.
+					self:InvalidateScan(true, "BuildRuntimeData:ForcedRescan")
+					local _, rescannedByCooldownID, rescannedBySpellLookup, rescannedCooldownLookup = self:ScanTrackedBuffs(true, "runtime")
+					rescanned = rescannedByCooldownID
+					rescannedByCooldownKey = rescannedCooldownLookup
+					runtime.forcedRescanEpoch = runtime.scanEpoch or rescanEpoch
+				end
+				scanInfo, resolvedCooldownID = resolveRuntimeEntryScanInfo(entry, runtime.scan, rescanned, rescannedByCooldownKey)
 			expectedCooldownID = isValidCooldownID(resolvedCooldownID) and resolvedCooldownID or entry.cooldownID
 			if scanInfoHasOnlyMismatchedFrames(scanInfo, entry.sourceType, expectedCooldownID) then scanInfo = nil end
 		end
-		if scanInfo ~= nil then
-			state.cachedScanEpoch = runtime.scanEpoch or 0
-			state.cachedScanCooldownID = entry.cooldownID
-			state.cachedScanSpellID = entry.spellID
-			state.cachedScanSourceType = entry.sourceType
-			state.cachedScanInfo = scanInfo
-			state.cachedResolvedCooldownID = resolvedCooldownID
-		else
-			state.cachedScanEpoch = nil
-			state.cachedScanCooldownID = nil
-			state.cachedScanSpellID = nil
-			state.cachedScanSourceType = nil
-			state.cachedScanInfo = nil
-			state.cachedResolvedCooldownID = nil
-		end
+		state.cachedScanEpoch = runtime.scanEpoch or 0
+		state.cachedScanCooldownID = entry.cooldownID
+		state.cachedScanSpellID = entry.spellID
+		state.cachedScanSourceType = entry.sourceType
+		state.cachedScanInfo = scanInfo or NO_SCAN_INFO
+		state.cachedResolvedCooldownID = resolvedCooldownID
 	end
 	if not isValidCooldownID(resolvedCooldownID) then resolvedCooldownID = entry.cooldownID end
 
@@ -1784,17 +2191,41 @@ function CDMAuras:BuildRuntimeData(panelId, entryId, entry, entryLayout, alwaysS
 	if not next(availableSources) then availableSources[normalizeSourceType(entry.sourceType)] = true end
 
 	local preferredSource = normalizeSourceType(entry.sourceType)
-	local preferredFrame = scanInfo and ((preferredSource == SOURCE_BAR) and scanInfo.barFrame or scanInfo.iconFrame) or nil
-	local fallbackFrame = scanInfo and ((preferredSource == SOURCE_BAR) and scanInfo.iconFrame or scanInfo.barFrame) or nil
+	local chosenFrame, chosenSource, _, fallbackFrame = selectScanInfoFrame(scanInfo, preferredSource, resolvedCooldownID)
+	if scanInfo then ensureScanInfoDerived(scanInfo, resolvedCooldownID, chosenFrame or fallbackFrame, false, true) end
+	local trackedUnit = getEntryTrackedUnit(scanInfo, state, chosenFrame or fallbackFrame, resolvedCooldownID or entry.cooldownID, preferredSource)
 
-	local chosenFrame = preferredFrame
-	local chosenSource = preferredSource
-	if chosenFrame and not cooldownIDsEqual(getCooldownIDFromFrame(chosenFrame, chosenSource), resolvedCooldownID) then chosenFrame = nil end
-	if not chosenFrame and fallbackFrame then
-		local fallbackSource = preferredSource == SOURCE_BAR and SOURCE_ICON or SOURCE_BAR
-		if cooldownIDsEqual(getCooldownIDFromFrame(fallbackFrame, fallbackSource), resolvedCooldownID) then
-			chosenFrame = fallbackFrame
-			chosenSource = fallbackSource
+	if state.lastActive == true and chosenFrame then
+		local chosenFrameLooksActive = frameHasActiveAuraOrTotem(chosenFrame)
+		local chosenFrameMatchesTrackedSpell = chosenFrameLooksActive and cdm.GetCachedFrameSpellMatch(runtime, state, chosenFrame, trackedUnit)
+		local runtimePass = runtime.runtimePass
+		if not chosenFrameLooksActive or not chosenFrameMatchesTrackedSpell then
+			local rescannedByCooldownID
+				local rescannedByCooldownKey
+				if runtimePass and runtime.reacquireRescanPass == runtimePass then
+					local _, latestByCooldownID, _latestBySpellID, latestByCooldownKey = self:ScanTrackedBuffs(false, "runtime")
+					rescannedByCooldownID = latestByCooldownID
+					rescannedByCooldownKey = latestByCooldownKey
+				else
+					self:InvalidateScan(false, "BuildRuntimeData:Reacquire")
+					local _, latestByCooldownID, _latestBySpellID, latestByCooldownKey = self:ScanTrackedBuffs(true, "runtime")
+					rescannedByCooldownID = latestByCooldownID
+					rescannedByCooldownKey = latestByCooldownKey
+					if runtimePass then runtime.reacquireRescanPass = runtimePass end
+				end
+				scanInfo, resolvedCooldownID = resolveRuntimeEntryScanInfo(entry, runtime.scan, rescannedByCooldownID, rescannedByCooldownKey)
+				if not isValidCooldownID(resolvedCooldownID) then resolvedCooldownID = entry.cooldownID end
+			state.cachedScanEpoch = runtime.scanEpoch or 0
+			state.cachedScanCooldownID = entry.cooldownID
+			state.cachedScanSpellID = entry.spellID
+			state.cachedScanSourceType = entry.sourceType
+			state.cachedScanInfo = scanInfo or NO_SCAN_INFO
+			state.cachedResolvedCooldownID = resolvedCooldownID
+				local reacquiredChosenFrame, reacquiredChosenSource, _, reacquiredFallbackFrame = selectScanInfoFrame(scanInfo, preferredSource, resolvedCooldownID)
+				chosenFrame, chosenSource, fallbackFrame = reacquiredChosenFrame, reacquiredChosenSource, reacquiredFallbackFrame
+				if scanInfo then ensureScanInfoDerived(scanInfo, resolvedCooldownID, chosenFrame or fallbackFrame, false, true) end
+				trackedUnit = getEntryTrackedUnit(scanInfo, state, chosenFrame or fallbackFrame, resolvedCooldownID or entry.cooldownID, preferredSource)
+			if runtimePass then state.frameReacquirePass = runtimePass end
 		end
 	end
 
@@ -1805,7 +2236,7 @@ function CDMAuras:BuildRuntimeData(panelId, entryId, entry, entryLayout, alwaysS
 		if chosenFrame then registerFrameBinding(runtime, key, chosenFrame) end
 	end
 	if state.boundFrame then updatePandemicFrameBinding(runtime, key, state.boundFrame, entry.pandemicGlow == true) end
-	state.trackUnit = getEntryTrackedUnit(scanInfo, state, chosenFrame or fallbackFrame, resolvedCooldownID or entry.cooldownID, preferredSource)
+	state.trackUnit = trackedUnit
 	registerTrackedPanel(runtime, state.trackUnit, panelId)
 
 	local auraData
@@ -1915,10 +2346,15 @@ function CDMAuras:BuildRuntimeData(panelId, entryId, entry, entryLayout, alwaysS
 		alwaysShowMode = CooldownPanels.ResolveEntryCDMAuraAlwaysShowMode and CooldownPanels:ResolveEntryCDMAuraAlwaysShowMode(resolvedLayout, entry) or fallbackAlwaysShowMode
 	end
 	alwaysShowMode = normalizeAlwaysShowMode(alwaysShowMode, fallbackAlwaysShowMode)
-	local show = active or alwaysShowMode ~= "HIDE"
+	local isKnown = scanInfo and scanInfo.isKnown
+	if isKnown == nil then isKnown = getCooldownInfoIsKnown(resolvedCooldownID or entry.cooldownID, chosenFrame or fallbackFrame) end
+	local hideWhenInactive = alwaysShowMode == "HIDE" or alwaysShowMode == "HIDE_DESATURATE_ACTIVE"
+	local show = active or (isKnown ~= false and not hideWhenInactive)
 	data.show = show
 	data.active = active
+	data.isKnown = isKnown ~= false
 	data.inactiveDesaturate = alwaysShowMode == "DESATURATE" and not active
+	data.activeDesaturate = (alwaysShowMode == "DESATURATE_ACTIVE" or alwaysShowMode == "HIDE_DESATURATE_ACTIVE") and active
 	data.durationActive = durationActive
 	data.cooldownStart = cooldownStart
 	data.cooldownDuration = cooldownDuration
@@ -1941,26 +2377,200 @@ function CDMAuras:BuildRuntimeData(panelId, entryId, entry, entryLayout, alwaysS
 	return data
 end
 
-local function refreshAllTrackedPanels(unit)
+function CDMAuras:GetSpellAuraOverlayInfo(spellID)
+	spellID = tonumber(spellID)
+	if not isUsableSpellID(spellID) then return nil end
+	self:ScanTrackedBuffs(false)
+	local scan = getRuntime().scan
+	local info, resolvedCooldownID = findRuntimeScanInfoBySpellID(scan, spellID)
+	if not (info and isValidCooldownID(resolvedCooldownID or info.cooldownID)) then return nil end
+	return info, resolvedCooldownID or info.cooldownID
+end
+
+function CDMAuras:SupportsSpellAuraOverlay(spellID)
+	local info = self:GetSpellAuraOverlayInfo(spellID)
+	return info ~= nil
+end
+
+function CDMAuras:BuildSpellAuraOverlayData(panelId, entryId, sourceEntry, spellID, entryLayout)
+	local info, resolvedCooldownID = self:GetSpellAuraOverlayInfo(spellID)
+	if not (info and isValidCooldownID(resolvedCooldownID or info.cooldownID)) then return nil end
+	local entry = {
+		type = ENTRY_TYPE,
+		cooldownID = resolvedCooldownID or info.cooldownID,
+		spellID = tonumber(info.spellID) or tonumber(spellID),
+		buffName = info.buffName or (sourceEntry and sourceEntry.name) or getSpellName(spellID),
+		iconTextureID = info.iconTextureID or getSpellTexture(spellID),
+		sourceType = normalizeSourceType(info.sourceType),
+		sourceViewer = info.sourceViewer,
+		cdmAuraAlwaysShowMode = "HIDE",
+		cdmAuraAlwaysShowUseGlobal = false,
+		alwaysShow = false,
+		showCooldown = true,
+		showCooldownText = sourceEntry and sourceEntry.showCooldownText ~= false,
+		showStacks = sourceEntry and sourceEntry.showStacks == true,
+		glowReady = false,
+		pandemicGlow = false,
+	}
+	return self:BuildRuntimeData(panelId, entryId, entry, entryLayout, "HIDE")
+end
+
+refreshAllTrackedPanels = function(unit)
 	unit = normalizeTrackedUnit(unit)
 	local runtime = getRuntime()
-	if unit and runtime.unitPanels and runtime.unitPanels[unit] and next(runtime.unitPanels[unit]) then
-		for panelId in pairs(runtime.unitPanels[unit]) do
-			requestPanelRefresh(panelId)
+	local refreshed = false
+	if unit and runtime.unitPanels then
+		local unitPanels = runtime.unitPanels[unit]
+		if unitPanels then
+			for panelId in pairs(unitPanels) do
+				requestPanelRefresh(panelId)
+				refreshed = true
+			end
+		end
+		local unknownPanels = runtime.unitPanels.unknown
+		if unknownPanels then
+			for panelId in pairs(unknownPanels) do
+				requestPanelRefresh(panelId)
+				refreshed = true
+			end
+		end
+	end
+	if refreshed then return end
+
+	local cdmAuraPanelIds = CooldownPanels.runtime and CooldownPanels.runtime.cdmAuraPanelIds or nil
+	if cdmAuraPanelIds then
+		for i = 1, #cdmAuraPanelIds do
+			requestPanelRefresh(cdmAuraPanelIds[i])
 		end
 		return
 	end
 
 	local root = CooldownPanels.GetRoot and CooldownPanels:GetRoot() or nil
 	if not (root and root.panels) then return end
-	for panelId, panel in pairs(root.panels) do
-		for _, entry in pairs(panel and panel.entries or {}) do
-			if entry and entry.type == ENTRY_TYPE then
-				requestPanelRefresh(panelId)
-				break
+	local enabledPanels = CooldownPanels.runtime and CooldownPanels.runtime.enabledPanels or nil
+	local enabledPanelIds = CooldownPanels.runtime and CooldownPanels.runtime.enabledPanelIds or nil
+	if enabledPanels then
+		if enabledPanelIds and #enabledPanelIds > 0 then
+			for i = 1, #enabledPanelIds do
+				local panelId = enabledPanelIds[i]
+				local panel = enabledPanels[panelId] == true and root.panels[panelId] or nil
+				local entries = panel and panel.entries
+				if entries then
+					for _, entry in pairs(entries) do
+						if entry and entry.type == ENTRY_TYPE then
+							requestPanelRefresh(panelId)
+							break
+						end
+					end
+				end
+			end
+		else
+			for panelId in pairs(enabledPanels) do
+				local panel = root.panels[panelId]
+				local entries = panel and panel.entries
+				if entries then
+					for _, entry in pairs(entries) do
+						if entry and entry.type == ENTRY_TYPE then
+							requestPanelRefresh(panelId)
+							break
+						end
+					end
+				end
+			end
+		end
+	else
+		for panelId, panel in pairs(root.panels) do
+			if panel and panel.enabled ~= false then
+				local entries = panel.entries
+				if entries then
+					for _, entry in pairs(entries) do
+						if entry and entry.type == ENTRY_TYPE then
+							requestPanelRefresh(panelId)
+							break
+						end
+					end
+				end
 			end
 		end
 	end
+end
+
+function CDMAuras:ScheduleTrackedPanelsRescan(reason)
+	local runtime = getRuntime()
+	runtime.pendingRescanRefresh = runtime.pendingRescanRefresh or {}
+	local pending = runtime.pendingRescanRefresh
+	pending.reason = pending.reason or reason
+	if pending.queued == true then return end
+	pending.queued = true
+	RunNextFrame(function()
+		local latestRuntime = getRuntime()
+		local latestPending = latestRuntime.pendingRescanRefresh
+		latestRuntime.pendingRescanRefresh = nil
+		if not CDMAuras:HasActiveTrackedPanels() then return end
+		CDMAuras:InvalidateScan(false, latestPending and latestPending.reason or reason or "TrackedPanelsRescan")
+		clearTrackedPanelIndex(latestRuntime)
+		refreshAllTrackedPanels()
+	end)
+end
+
+function CDMAuras:SchedulePostResetSettlement(event, reason)
+	if event ~= "ADDON_LOADED" and event ~= "PLAYER_LOGIN" and event ~= "PLAYER_ENTERING_WORLD" then return end
+	local runtime = getRuntime()
+	runtime.pendingPostResetSettlement = runtime.pendingPostResetSettlement or {}
+	local pending = runtime.pendingPostResetSettlement
+	pending.reason = pending.reason or reason
+	if pending.queued == true then return end
+	pending.queued = true
+	C_Timer.After(0.5, function()
+		local latestRuntime = getRuntime()
+		local latestPending = latestRuntime.pendingPostResetSettlement
+		latestRuntime.pendingPostResetSettlement = nil
+		if not CDMAuras:HasActiveTrackedPanels() then return end
+		CDMAuras:InvalidateScan(true, latestPending and latestPending.reason or reason or "PostResetSettlement")
+		clearTrackedPanelIndex(latestRuntime)
+		refreshAllTrackedPanels()
+	end)
+end
+
+function CDMAuras:EnsureCooldownViewerHooks()
+	local runtime = getRuntime()
+	local installed = false
+	local cooldownViewerItemDataMixin = _G.CooldownViewerItemDataMixin
+	if cooldownViewerItemDataMixin and cooldownViewerItemDataMixin.SetCooldownID and not runtime.cooldownViewerSetHookInstalled then
+		hooksecurefunc(cooldownViewerItemDataMixin, "SetCooldownID", function(itemFrame, cooldownID)
+			local previousCooldownID = itemFrame and itemFrame._eqolLastTrackedCooldownID or nil
+			itemFrame._eqolLastTrackedCooldownID = cooldownID
+			if not self:HasActiveTrackedPanels() then return end
+			if previousCooldownID ~= nil and cooldownIDsEqual(previousCooldownID, cooldownID) then return end
+			self:ScheduleTrackedPanelsRescan("SetCooldownID", itemFrame)
+		end)
+		runtime.cooldownViewerSetHookInstalled = true
+		installed = true
+	end
+	if cooldownViewerItemDataMixin and cooldownViewerItemDataMixin.ClearCooldownID and not runtime.cooldownViewerClearHookInstalled then
+		hooksecurefunc(cooldownViewerItemDataMixin, "ClearCooldownID", function(itemFrame)
+			local previousCooldownID = itemFrame and itemFrame._eqolLastTrackedCooldownID or itemFrame and itemFrame.cooldownID or nil
+			if itemFrame then itemFrame._eqolLastTrackedCooldownID = nil end
+			if not self:HasActiveTrackedPanels() then return end
+			if previousCooldownID == nil then return end
+			self:ScheduleTrackedPanelsRescan("ClearCooldownID", itemFrame)
+		end)
+		runtime.cooldownViewerClearHookInstalled = true
+		installed = true
+	end
+	if EventRegistry and EventRegistry.RegisterCallback and not runtime.cooldownViewerDataChangedHookInstalled then
+		EventRegistry:RegisterCallback("CooldownViewerSettings.OnDataChanged", function()
+			if not self:HasActiveTrackedPanels() then return end
+			self:ScheduleTrackedPanelsRescan("CooldownViewerSettings.OnDataChanged")
+		end, "EnhanceQoL.CDMAuras")
+		runtime.cooldownViewerDataChangedHookInstalled = true
+		installed = true
+	end
+	runtime.cooldownViewerHooksInstalled = installed == true
+		or runtime.cooldownViewerSetHookInstalled == true
+		or runtime.cooldownViewerClearHookInstalled == true
+		or runtime.cooldownViewerDataChangedHookInstalled == true
+	return runtime.cooldownViewerHooksInstalled == true
 end
 
 local function clearTrackedUnitAuraIndex(unit)
@@ -1983,20 +2593,18 @@ function CDMAuras:HandleUnitAura(_, unit, updateInfo)
 		return
 	end
 
-	local panelsToRefresh = {}
-
-	local function collectMapped(auraID)
-		local mapped = auraEntries[auraID]
-		if not mapped then return end
-		for key in pairs(mapped) do
-			local state = runtime.entryStates[key]
-			if state then panelsToRefresh[state.panelId] = true end
-		end
-	end
+	local panelsToRefresh = runtime.scratchRefreshedPanels
+	wipe(panelsToRefresh)
 
 	if updateInfo.updatedAuraInstanceIDs then
 		for _, auraID in ipairs(updateInfo.updatedAuraInstanceIDs) do
-			collectMapped(auraID)
+			local mapped = auraEntries[auraID]
+			if mapped then
+				for key in pairs(mapped) do
+					local state = runtime.entryStates[key]
+					if state then panelsToRefresh[state.panelId] = true end
+				end
+			end
 		end
 	end
 
@@ -2025,6 +2633,7 @@ function CDMAuras:HandleUnitAura(_, unit, updateInfo)
 
 	for panelId in pairs(panelsToRefresh) do
 		requestPanelRefresh(panelId)
+		panelsToRefresh[panelId] = nil
 	end
 end
 
@@ -2045,17 +2654,21 @@ function CDMAuras:HandleResetEvent(event, ...)
 		local unit = ...
 		if unit and unit ~= "player" then return end
 	end
-	self:InvalidateScan(true)
-	self:SweepInvalidStates()
+	if not self:HasActiveTrackedPanels() then return end
 	local runtime = getRuntime()
+	local reason = "HandleResetEvent:" .. tostring(event)
+	self:EnsureCooldownViewerHooks()
+	self:InvalidateScan(true, reason)
+	self:SweepInvalidStates()
 	cdm.BumpUnitAuraEpoch(runtime, "player")
 	cdm.BumpUnitAuraEpoch(runtime, "target")
 	cdm.ResetPersistentFrameCaches(runtime)
 	for key, state in pairs(runtime.entryStates) do
 		clearEntryState(key, state, true)
 	end
-	self:RebuildTrackedPanelIndex()
+	clearTrackedPanelIndex(runtime)
 	refreshAllTrackedPanels()
+	self:SchedulePostResetSettlement(event, reason)
 end
 
 function CDMAuras:HandleTotemUpdate() refreshAllTrackedPanels("player") end

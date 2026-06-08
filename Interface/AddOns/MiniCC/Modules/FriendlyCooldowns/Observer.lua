@@ -11,11 +11,16 @@ addon.Modules.FriendlyCooldowns.Observer = O
 -- entry -> { Watcher, CastEventFrame }
 local watched = {}
 local testModeActive = false
-local auraChangedCallbacks = {}
-local castCallbacks = {}
-local shieldCallbacks = {}
-local unitFlagsCallbacks = {}
+local auraChangedCallbacks    = {}
+local castCallbacks           = {}
+local shieldCallbacks         = {}
+local unitFlagsCallbacks      = {}
+local petAuraCallbacks        = {}
 local debuffEvidenceCallbacks = {}
+local modelChangedCallbacks   = {}
+local portraitUpdateCallbacks = {}
+local channelStartCallbacks   = {}
+local channelStopCallbacks    = {}
 -- Scratch table reused by FireAuraChanged to avoid per-event allocation.
 local candidateUnitsScratch = {}
 -- Scratch set reused by FireAuraChanged to deduplicate unit tokens.
@@ -61,10 +66,64 @@ local function FireUnitFlags(unit)
 	end
 end
 
+local function FirePetAura(ownerUnit)
+	for _, fn in ipairs(petAuraCallbacks) do
+		fn(ownerUnit)
+	end
+end
+
+local function FireModelChanged(unit)
+	for _, fn in ipairs(modelChangedCallbacks) do
+		fn(unit)
+	end
+end
+
+local function FirePortraitUpdate(unit)
+	for _, fn in ipairs(portraitUpdateCallbacks) do
+		fn(unit)
+	end
+end
+
+local function FireChannelStart(unit)
+	for _, fn in ipairs(channelStartCallbacks) do fn(unit) end
+end
+
+local function FireChannelStop(unit)
+	for _, fn in ipairs(channelStopCallbacks) do fn(unit) end
+end
+
 local function FireDebuffEvidence(unit, updateInfo)
 	for _, fn in ipairs(debuffEvidenceCallbacks) do
 		fn(unit, updateInfo)
 	end
+end
+
+local function PetUnitForUnit(unit)
+	return unit == "player" and "pet" or (unit .. "pet")
+end
+
+local function TryRecordPetDefensiveAura(ownerUnit, petUnit, updateInfo)
+	if not updateInfo or updateInfo.isFullUpdate or not updateInfo.addedAuras then return end
+	for _, aura in ipairs(updateInfo.addedAuras) do
+		if aura.auraInstanceID
+		   and not C_UnitAuras.IsAuraFilteredOutByInstanceID(petUnit, aura.auraInstanceID, "HELPFUL|BIG_DEFENSIVE")
+		then
+			FirePetAura(ownerUnit)
+			return
+		end
+	end
+end
+
+local function CreatePetEventFrame(entry)
+	local frame = CreateFrame("Frame")
+	frame:SetScript("OnEvent", function(_, _, petUnit, updateInfo)
+		TryRecordPetDefensiveAura(entry.Unit, petUnit, updateInfo)
+	end)
+	return frame
+end
+
+local function RegisterPetEvents(frame, unit)
+	frame:RegisterUnitEvent("UNIT_AURA", PetUnitForUnit(unit))
 end
 
 local function CreateCastEventFrame(entry)
@@ -81,6 +140,14 @@ local function CreateCastEventFrame(entry)
 		elseif event == "UNIT_AURA" then
 			local _, updateInfo = ...
 			FireDebuffEvidence(u, updateInfo)
+		elseif event == "UNIT_MODEL_CHANGED" then
+			FireModelChanged(u)
+		elseif event == "UNIT_PORTRAIT_UPDATE" then
+			FirePortraitUpdate(u)
+		elseif event == "UNIT_SPELLCAST_CHANNEL_START" then
+			FireChannelStart(u)
+		elseif event == "UNIT_SPELLCAST_CHANNEL_STOP" then
+			FireChannelStop(u)
 		end
 	end)
 	return frame
@@ -93,6 +160,10 @@ local function RegisterCastEvents(frame, unit)
 	frame:RegisterUnitEvent("UNIT_SPELLCAST_SUCCEEDED", unit)
 	frame:RegisterUnitEvent("UNIT_FLAGS", unit)
 	frame:RegisterUnitEvent("UNIT_AURA", unit)
+	frame:RegisterUnitEvent("UNIT_MODEL_CHANGED", unit)
+	frame:RegisterUnitEvent("UNIT_PORTRAIT_UPDATE", unit)
+	frame:RegisterUnitEvent("UNIT_SPELLCAST_CHANNEL_START", unit)
+	frame:RegisterUnitEvent("UNIT_SPELLCAST_CHANNEL_STOP", unit)
 end
 
 local function MakeWatcher(entry)
@@ -114,8 +185,11 @@ function O:Watch(entry)
 	local castEventFrame = CreateCastEventFrame(entry)
 	RegisterCastEvents(castEventFrame, entry.Unit)
 
+	local petEventFrame = CreatePetEventFrame(entry)
+	RegisterPetEvents(petEventFrame, entry.Unit)
+
 	local watcher = MakeWatcher(entry)
-	watched[entry] = { Watcher = watcher, CastEventFrame = castEventFrame }
+	watched[entry] = { Watcher = watcher, CastEventFrame = castEventFrame, PetEventFrame = petEventFrame }
 
 	-- Seed: the watcher primed its state before our callback was registered; process it now.
 	if not testModeActive then
@@ -136,6 +210,9 @@ function O:Rewatch(entry)
 	state.CastEventFrame:UnregisterAllEvents()
 	RegisterCastEvents(state.CastEventFrame, entry.Unit)
 
+	state.PetEventFrame:UnregisterAllEvents()
+	RegisterPetEvents(state.PetEventFrame, entry.Unit)
+
 	state.Watcher:Dispose()
 	state.Watcher = MakeWatcher(entry)
 
@@ -152,7 +229,22 @@ function O:Disable(entry)
 		return
 	end
 	state.CastEventFrame:UnregisterAllEvents()
+	state.PetEventFrame:UnregisterAllEvents()
 	state.Watcher:Disable()
+end
+
+---Fully stops watching an entry and releases its watcher resources.
+---Use instead of Disable when the entry will not be re-enabled.
+---@param entry FcdWatchEntry
+function O:Forget(entry)
+	local state = watched[entry]
+	if not state then
+		return
+	end
+	state.CastEventFrame:UnregisterAllEvents()
+	state.PetEventFrame:UnregisterAllEvents()
+	state.Watcher:Dispose()
+	watched[entry] = nil
 end
 
 ---Re-enables watching for an entry after Disable.
@@ -164,6 +256,7 @@ function O:Enable(entry)
 	end
 	-- Register cast events before Watcher:Enable to preserve handler fire order.
 	RegisterCastEvents(state.CastEventFrame, entry.Unit)
+	RegisterPetEvents(state.PetEventFrame, entry.Unit)
 	state.Watcher:Enable()
 	state.Watcher:ForceFullUpdate()
 end
@@ -199,10 +292,41 @@ function O:RegisterUnitFlagsCallback(fn)
 	unitFlagsCallbacks[#unitFlagsCallbacks + 1] = fn
 end
 
+---Registers a callback fired when a watched unit's pet receives a BIG_DEFENSIVE aura.
+---fn(unit) where unit is the owner (hunter), not the pet.
+---@param fn fun(unit: string)
+function O:RegisterPetAuraCallback(fn)
+	petAuraCallbacks[#petAuraCallbacks + 1] = fn
+end
+
 ---Registers a callback fired when a HARMFUL aura is added to a watched unit.
 ---@param fn fun(unit: string, updateInfo: table?)
 function O:RegisterDebuffEvidenceCallback(fn)
 	debuffEvidenceCallbacks[#debuffEvidenceCallbacks + 1] = fn
+end
+
+---Registers a callback fired when a watched unit's model changes (UNIT_MODEL_CHANGED).
+---@param fn fun(unit: string)
+function O:RegisterModelChangedCallback(fn)
+	modelChangedCallbacks[#modelChangedCallbacks + 1] = fn
+end
+
+---Registers a callback fired when a watched unit's portrait updates (UNIT_PORTRAIT_UPDATE).
+---@param fn fun(unit: string)
+function O:RegisterPortraitUpdateCallback(fn)
+	portraitUpdateCallbacks[#portraitUpdateCallbacks + 1] = fn
+end
+
+---Registers a callback fired when a watched unit begins channeling a spell (UNIT_SPELLCAST_CHANNEL_START).
+---@param fn fun(unit: string)
+function O:RegisterChannelStartCallback(fn)
+	channelStartCallbacks[#channelStartCallbacks + 1] = fn
+end
+
+---Registers a callback fired when a watched unit's channel ends or is interrupted (UNIT_SPELLCAST_CHANNEL_STOP).
+---@param fn fun(unit: string)
+function O:RegisterChannelStopCallback(fn)
+	channelStopCallbacks[#channelStopCallbacks + 1] = fn
 end
 
 ---Creates the global absorb-shield frame. Must be called once from M:Init.

@@ -595,7 +595,7 @@ end
 
 function BBF.PlayerElite(mode)
     local playerElite = PlayerFrameTexture
-    local bigHealthbars = BetterBlizzFramesDB["biggerHealthbars"]
+    local bigHealthbars = BetterBlizzFramesDB["biggerHealthbars"] and not BetterBlizzFramesDB.biggerHealthbarsNoPlayer
     local hideMana = BetterBlizzFramesDB.hidePlayerManabar
 
     -- Set Elite style according to value
@@ -622,6 +622,12 @@ function BBF.PlayerElite(mode)
         else
             return
         end
+    end
+    if BBF.isMoP then
+        --playerElite:SetSize(228, 98)
+        playerElite:SetSize(232, 100)
+        local point, relativeTo, relativePoint, xOfs, yOfs = playerElite:GetPoint()
+        playerElite:SetPoint("CENTER", relativeTo, "CENTER", -17, -3.5)
     end
     if mode == 1 then -- Rare (Silver)
         if bigHealthbars then
@@ -682,9 +688,11 @@ end
 
 function BBF.ScaleUnitFrames()
     local db = BetterBlizzFramesDB
-    PlayerFrame:SetScale(db.playerFrameScale)
-    TargetFrame:SetScale(db.targetFrameScale)
-    FocusFrame:SetScale(db.focusFrameScale)
+    if not BBF.isMoP and not BBF.isTBC then
+        PlayerFrame:SetScale(db.playerFrameScale)
+        TargetFrame:SetScale(db.targetFrameScale)
+        FocusFrame:SetScale(db.focusFrameScale)
+    end
 end
 
 -- Function to toggle test mode on and off
@@ -1926,8 +1934,7 @@ end
 
 
 local LSM = LibStub("LibSharedMedia-3.0")
-BBF.LSM = LSM
-BBF.allLocales = LSM.LOCALE_BIT_western+LSM.LOCALE_BIT_ruRU+LSM.LOCALE_BIT_zhCN+LSM.LOCALE_BIT_zhTW+LSM.LOCALE_BIT_koKR
+
 LSM:Register("statusbar", "Blizzard DF", [[Interface\TargetingFrame\UI-TargetingFrame-BarFill]])
 LSM:Register("statusbar", "Blizzard CF", [[Interface\AddOns\BetterBlizzFrames\media\ui-statusbar-cf]])
 LSM:Register("statusbar", "Blizzard Retail Bar", [[Interface\AddOns\BetterBlizzFrames\media\blizzTex\BlizzardRetailBar]])
@@ -2104,10 +2111,12 @@ local function SetRaidFramePetTextures(frame)
         local originalLayer = originalTexture:GetDrawLayer()
         frame.healthBar:SetStatusBarTexture(raidHpTexture)
         originalTexture:SetDrawLayer(originalLayer)
-        frame.horizTopBorder:Hide()
-        frame.horizBottomBorder:Hide()
-        frame.vertLeftBorder:Hide()
-        frame.vertRightBorder:Hide()
+        if frame.horizTopBorder then
+            frame.horizTopBorder:Hide()
+            frame.horizBottomBorder:Hide()
+            frame.vertLeftBorder:Hide()
+            frame.vertRightBorder:Hide()
+        end
     end
 end
 
@@ -2336,7 +2345,22 @@ local function ChangeHotkeyWidth(width)
     end
 end
 
-if EJMicroButton then
+local function OCDFramesPresent(requiredFrames)
+    local missing
+    for _, name in ipairs(requiredFrames) do
+        if not _G[name] then
+            missing = missing or {}
+            missing[#missing + 1] = name
+        end
+    end
+    if missing then
+        BBF.Print("|cffff0000BetterBlizzFrames|r OCD tweaks skipped, missing frame(s): " .. table.concat(missing, ", "))
+        return false
+    end
+    return true
+end
+
+if BBF.isMoP then
     function BBF.FixStupidBlizzPTRShit()
         if BetterBlizzFramesDB.playerFrameOCD then
             if C_AddOns.IsAddOnLoaded("DragonflightUI") then
@@ -2344,6 +2368,63 @@ if EJMicroButton then
                     BBF.dfuiOcdWarning = true
                     BBF.Print(L["Print_DragonflightUI_Skipping_OCD_Tweaks"])
                 end
+                return
+            end
+
+            BBF.ActionBarIconZoom()
+            BBF.hotkeyCancel = nil
+
+            local a,b,c,d,e = TargetFrameToTPortrait:GetPoint()
+            TargetFrameToTPortrait:SetPoint(a,b,c,5,-5)
+            TargetFrameToTPortrait:SetSize(36,36)
+
+            local a,b,c,d,e = FocusFrameToTPortrait:GetPoint()
+            FocusFrameToTPortrait:SetPoint(a,b,c,5,-5)
+            FocusFrameToTPortrait:SetSize(36,36)
+
+            if not BBF.tfbFix then
+                hooksecurefunc(TargetFrameBackground, "SetSize", function()
+                    TargetFrameBackground:SetHeight(40)
+                end)
+                hooksecurefunc(FocusFrameBackground, "SetSize", function()
+                    FocusFrameBackground:SetHeight(40)
+                end)
+                BBF.tfbFix = true
+            end
+        else
+            -- BBF.hotkeyCancel = true
+            -- ChangeHotkeyWidth(28)
+            BBF.ActionBarIconZoom()
+        end
+    end
+elseif EJMicroButton then
+    function BBF.FixStupidBlizzPTRShit()
+        if BetterBlizzFramesDB.playerFrameOCD then
+            if C_AddOns.IsAddOnLoaded("DragonflightUI") then
+                if not BBF.dfuiOcdWarning then
+                    BBF.dfuiOcdWarning = true
+                    BBF.Print(L["Print_DragonflightUI_Skipping_OCD_Tweaks"])
+                end
+                return
+            end
+
+            if not OCDFramesPresent({
+                "TargetFrameToTPortrait", "FocusFrameToTPortrait",
+                "PetFrameHealthBar", "PetFrameManaBar",
+                "TargetFrameNameBackground", "TargetFrameHealthBar", "TargetFrameManaBar",
+                "FocusFrameNameBackground", "FocusFrameHealthBar", "FocusFrameManaBar",
+                "MainMenuBarTextureExtender", "MainMenuBarTexture3", "MainMenuBarArtFrame",
+                "CharacterMicroButton", "SpellbookMicroButton", "TalentMicroButton",
+                "AchievementMicroButton", "QuestLogMicroButton", "GuildMicroButton",
+                "CollectionsMicroButton", "PVPMicroButton", "LFGMicroButton",
+                "EJMicroButton", "MainMenuMicroButton", "HelpMicroButton",
+                "MainMenuBarBackpackButton", "MainMenuBarBackpackButtonNormalTexture",
+                "CharacterBag0Slot", "CharacterBag1Slot", "CharacterBag2Slot", "CharacterBag3Slot",
+                "MainMenuExpBar", "MainMenuBar", "MainMenuBarRightEndCap",
+                "MainMenuXPBarTexture0", "MainMenuXPBarTexture1", "MainMenuXPBarTexture2", "MainMenuXPBarTexture3",
+                "MainMenuMaxLevelBar0", "MainMenuMaxLevelBar1", "MainMenuMaxLevelBar2", "MainMenuMaxLevelBar3",
+                "ReputationWatchBar",
+            }) then
                 return
             end
 
@@ -2485,6 +2566,12 @@ else
                 return
             end
 
+            if not OCDFramesPresent({
+                "TargetFrameToTPortrait", "FocusFrameToTPortrait", "TargetFrameBackground",
+            }) then
+                return
+            end
+
             BBF.ActionBarIconZoom()
             BBF.hotkeyCancel = nil
 
@@ -2561,18 +2648,24 @@ function BBF.AddBackgroundTextureToUnitFrames(frame, tot)
     frame.bbfBgTexture = bgTex
 
     if not BBF.bgTextureHook then
-        hooksecurefunc("TargetFrame_CheckClassification", function(self)
+        local function OnCheckClassification(self)
             local classification = UnitClassification(self.unit)
             if classification == "minus" then
                 self.bbfBgTexture:SetPoint("TOPLEFT", self.healthbar, "TOPLEFT", 0, 0)
                 self.bbfBgTexture:SetPoint("BOTTOMRIGHT", self.healthbar, "BOTTOMRIGHT", 0, 0)
                 self.bgTextureMinusChange = true
-            elseif frame.bgTextureMinusChange then
+            elseif self.bgTextureMinusChange then
                 self.bbfBgTexture:SetPoint("TOPLEFT", self.healthbar, "TOPLEFT", 0, 0)
                 self.bbfBgTexture:SetPoint("BOTTOMRIGHT", self.manabar, "BOTTOMRIGHT", 0, 0)
                 self.bgTextureMinusChange = nil
             end
-        end)
+        end
+        if TargetFrame_CheckClassification then
+            hooksecurefunc("TargetFrame_CheckClassification", OnCheckClassification)
+        else
+            hooksecurefunc(TargetFrame, "CheckClassification", OnCheckClassification)
+            hooksecurefunc(FocusFrame, "CheckClassification", OnCheckClassification)
+        end
         BBF.bgTextureHook = true
     end
 end
@@ -2827,6 +2920,21 @@ First:SetScript("OnEvent", function(_, event, addonName)
 
             InitializeSavedVariables()
             FetchAndSaveValuesOnFirstLogin()
+            if not BetterBlizzFramesDB.fontOutlineFix then
+                local outlineKeys = {
+                    "unitFrameFontOutline", "unitFrameValueFontOutline",
+                    "partyFrameFontOutline", "actionBarFontOutline", "actionBarKeyFontOutline"
+                }
+                for _, key in ipairs(outlineKeys) do
+                    local val = BetterBlizzFramesDB[key]
+                    if val == "THINOUTLINE" then
+                        BetterBlizzFramesDB[key] = "OUTLINE"
+                    elseif val == "NONE" then
+                        BetterBlizzFramesDB[key] = ""
+                    end
+                end
+                BetterBlizzFramesDB.fontOutlineFix = true
+            end
             TurnTestModesOff()
             BBF.FixLegacyComboPointsLocation()
             BBF.AlwaysShowLegacyComboPoints()
@@ -2835,6 +2943,17 @@ First:SetScript("OnEvent", function(_, event, addonName)
             BBF.ZoomDefaultActionbarIcons()
             --TurnOnEnabledFeaturesOnLogin()
             BBF.RaiseTargetCastbarStratas()
+
+            if not BetterBlizzFramesDB.disableHealAbsorbRecolor then
+                local function SkinUnitFrameHealAbsorbBar(bar)
+                    bar.Fill:SetTexture(texture, true, true)
+                    bar.Fill:SetVertexColor(1, 1, 1, alpha)
+                end
+
+                SkinUnitFrameHealAbsorbBar(TargetFrame.HealthBar.HealAbsorbBar)
+                SkinUnitFrameHealAbsorbBar(FocusFrame.HealthBar.HealAbsorbBar)
+                SkinUnitFrameHealAbsorbBar(PlayerFrame.HealthBar.HealAbsorbBar)
+            end
 
             C_Timer.After(1, function()
                 BBF.HookStatusBarText()
@@ -2920,7 +3039,9 @@ PlayerEnteringWorld:SetScript("OnEvent", function()
     BBF.DarkmodeFrames()
     BBF.ClickthroughFrames()
     BBF.CheckForAuraBorders()
-    BBF.RepositionBuffFrame()
+    if BBF.RepositionBuffFrame then
+        BBF.RepositionBuffFrame()
+    end
     if BetterBlizzFramesDB.playerFrameOCD then
         ChangeHotkeyWidth(32)
     end

@@ -2098,7 +2098,11 @@ function BBF.ArenaOptimizer(disable, noPrint)
                 end
             end
             if changedCVars and not db.arenaOptimizerDisablePrint and not noPrint then
-                BBF.Print(L["Print_Arena_Optimizer_Adjusted_Down"])
+                C_Timer.After(1, function()
+                    print("|cff00c0ff---------------|r")
+                    BBF.Print(L["Print_Arena_Optimizer_Adjusted_Down"])
+                    print("|cff00c0ff---------------|r")
+                end)
             end
         end)
     else
@@ -2111,7 +2115,11 @@ function BBF.ArenaOptimizer(disable, noPrint)
                 end
             end
             if changedCVars and not db.arenaOptimizerDisablePrint and not noPrint then
-                BBF.Print(L["Print_Arena_Optimizer_Adjusted_Up"])
+                C_Timer.After(1, function()
+                    print("|cff00c0ff---------------|r")
+                    BBF.Print(L["Print_Arena_Optimizer_Adjusted_Up"])
+                    print("|cff00c0ff---------------|r")
+                end)
             end
         end)
     end
@@ -2123,7 +2131,7 @@ function BBF.HookAndUpdatePartyFrameRangeAlpha(toggle)
         if issecretvalue(frame) then return end
         if not frame or not frame.displayedUnit then return end
         if frame:IsForbidden() or string.match(frame.displayedUnit, "nameplate") then return end
-        if BBF.SoloPartyFrame then
+        if (not IsInGroup() and not IsInRaid()) and frame.displayedUnit == "player" then
             frame:SetAlpha(1)
             if frame.background and BetterBlizzFramesDB.partyFrameRangeAlphaSolidBackground then
                 frame.background:SetIgnoreParentAlpha(true)
@@ -3025,6 +3033,29 @@ end
 function BBF.ShowCooldownDuringCC()
     if not BetterBlizzFramesDB.fixActionBarCDs then return end
     if BBF.ShowCooldownDuringCCActive then return end
+    BBF.ShowCooldownDuringCCActive = true
+    if C_AddOns.IsAddOnLoaded("Bartender4") then
+        local BARTENDER4_NUM_MAX_BUTTONS = 180
+        for i = 1, BARTENDER4_NUM_MAX_BUTTONS do
+            local button = _G["BT4Button" .. i]
+            if button and button.lossOfControlCooldown then
+                button.lossOfControlCooldown:SetParent(BBF.hiddenFrame)
+                hooksecurefunc(button.lossOfControlCooldown, "SetCooldownFromDurationObject", function()
+                    local inCC = C_LossOfControl.GetActiveLossOfControlDataCount() > 0
+                    if not inCC then return end
+                    button.cooldown:Show()
+                    local actionType, id = GetActionInfo(button.action)
+                    if actionType == "spell" or actionType == "macro" then
+                        local cd = C_Spell.GetSpellCooldownDuration(id)
+                        if cd then
+                            button.cooldown:SetCooldownFromDurationObject(cd)
+                        end
+                    end
+                end)
+            end
+        end
+        return
+    end
     local blizzPrefixes = {
         "ActionButton", "MultiBarBottomLeftButton", "MultiBarBottomRightButton",
         "MultiBarRightButton", "MultiBarLeftButton", "MultiBar5Button",
@@ -3039,7 +3070,19 @@ function BBF.ShowCooldownDuringCC()
             end
         end
     end
-    BBF.ShowCooldownDuringCCActive = true
+
+    hooksecurefunc("ActionButton_UpdateCooldown", function(btn)
+        local inCC = C_LossOfControl.GetActiveLossOfControlDataCount() > 0
+        if not inCC then return end
+
+        local actionType, id, subType = GetActionInfo(btn.action)
+        if actionType == "spell" or actionType == "macro" and subType ~= "item" then
+            local cd = C_Spell.GetSpellCooldownDuration(id)
+            if cd then
+                btn.cooldown:SetCooldownFromDurationObject(cd)
+            end
+        end
+    end)
 end
 
 
@@ -3155,8 +3198,7 @@ end)
 
 
 local LSM = LibStub("LibSharedMedia-3.0")
-BBF.LSM = LSM
-BBF.allLocales = LSM.LOCALE_BIT_western+LSM.LOCALE_BIT_ruRU+LSM.LOCALE_BIT_zhCN+LSM.LOCALE_BIT_zhTW+LSM.LOCALE_BIT_koKR
+
 LSM:Register("statusbar", "Blizzard DF", [[Interface\TargetingFrame\UI-TargetingFrame-BarFill]])
 LSM:Register("statusbar", "Blizzard CF", [[Interface\AddOns\BetterBlizzFrames\media\ui-statusbar-cf]])
 LSM:Register("statusbar", "Blizzard Retail Bar", [[Interface\AddOns\BetterBlizzFrames\media\blizzTex\BlizzardRetailBar]])
@@ -3755,9 +3797,11 @@ function BBF.HookUnitFrameTextures()
                     end)
                 end
 
-                hooksecurefunc(statusBar, "PlayFinishAnim", function(self)
-                    self:SetStatusBarTexture(castbarTexture)
-                end)
+                if statusBar.PlayFinishAnim then
+                    hooksecurefunc(statusBar, "PlayFinishAnim", function(self)
+                        self:SetStatusBarTexture(castbarTexture)
+                    end)
+                end
 
                 statusBar.textureChangedNeedsColor = true
             end
@@ -4968,7 +5012,6 @@ Frame:SetScript("OnEvent", function(...)
             -- add setings updates
             BBF.AllNameChanges()
             BBF.UpdateUserDarkModeSettings()
-            BBF.ChatFilterCaller()
             HookClassComboPoints()
             BBF.FadeMicroMenu()
             BBF.HideTalkingHeads()
@@ -5178,8 +5221,24 @@ First:SetScript("OnEvent", function(_, event, addonName)
         if BetterBlizzFramesDB.noPortraitPixelBorder then
             BetterBlizzFramesDB.noPortraitModes = true
         end
+        if not BetterBlizzFramesDB.fontOutlineFix then
+            local outlineKeys = {
+                "unitFrameFontOutline", "unitFrameValueFontOutline",
+                "partyFrameFontOutline", "actionBarFontOutline", "actionBarKeyFontOutline"
+            }
+            for _, key in ipairs(outlineKeys) do
+                local val = BetterBlizzFramesDB[key]
+                if val == "THINOUTLINE" then
+                    BetterBlizzFramesDB[key] = "OUTLINE"
+                elseif val == "NONE" then
+                    BetterBlizzFramesDB[key] = ""
+                end
+            end
+            BetterBlizzFramesDB.fontOutlineFix = true
+        end
         FetchAndSaveValuesOnFirstLogin()
         TurnTestModesOff()
+        BBF.ChatFilterCaller()
         BBF.FixLegacyComboPointsLocation()
         BBF.AlwaysShowLegacyComboPoints()
         BBF.GenericLegacyComboSupport()
@@ -5200,6 +5259,7 @@ First:SetScript("OnEvent", function(_, event, addonName)
         BBF.ClassicFrames()
         BBF.noPortraitModes()
         BBF.PlayerElite(BetterBlizzFramesDB.playerEliteFrameMode)
+        BBF.HidePlayerFrame()
         BBF.ReduceEditModeAlpha()
         BBF.SymmetricPlayerFrame()
         BBF.HookCastbars()
@@ -5210,6 +5270,7 @@ First:SetScript("OnEvent", function(_, event, addonName)
         --BBF.DruidBlueComboPoints() isMidnight
         BBF.DruidAlwaysShowCombos()
         BBF.RemoveAddonCategories()
+        BBF.ExternalDefensivesClickthrough()
         if BetterBlizzFramesDB.healerIndicator and BetterBlizzFramesDB.healerIndicatorPortrait and BetterBlizzFramesDB.classPortraitsUseSpecIcons then
             BBF.HealerIndicatorCaller()
         else
@@ -5581,4 +5642,21 @@ function BBF.CreateBigDebuffs()
             end
         end
     end)
+end
+
+function BBF.ExternalDefensivesClickthrough()
+    if not ExternalDefensivesFrame and ExternalDefensivesFrame.auraFrames then return end
+    if BetterBlizzFramesDB.externalDefensivesHideTooltip then
+        for _, auraFrame in ipairs(ExternalDefensivesFrame.auraFrames) do
+            auraFrame:EnableMouse(false)
+        end
+        BBF.externalDefensivesHideTooltip = true
+    elseif BBF.externalDefensivesHideTooltip then
+        for _, auraFrame in ipairs(ExternalDefensivesFrame.auraFrames) do
+            auraFrame:EnableMouse(true)
+        end
+    end
+    for _, auraFrame in ipairs(ExternalDefensivesFrame.auraFrames) do
+        auraFrame:SetMouseClickEnabled(false)
+    end
 end

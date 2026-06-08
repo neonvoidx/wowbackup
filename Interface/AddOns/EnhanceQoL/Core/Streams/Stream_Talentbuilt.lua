@@ -1,4 +1,4 @@
--- luacheck: globals EnhanceQoL GAMEMENU_OPTIONS MenuResponse MenuUtil ClassTalentHelper PlayerSpellsMicroButton NORMAL_FONT_COLOR
+-- luacheck: globals EnhanceQoL GAMEMENU_OPTIONS MenuResponse MenuUtil ClassTalentHelper PlayerSpellsMicroButton NORMAL_FONT_COLOR strcmputf8i
 local addonName, addon = ...
 local L = addon.L
 
@@ -9,6 +9,8 @@ local provider
 local TALENTS_PREFIX_DEFAULT = (TALENTS or "Talents") .. ":"
 local floor = math.floor
 local format = string.format
+local sort = table.sort
+local lower = string.lower
 
 local function getOptionsHint()
 	if addon.DataPanel and addon.DataPanel.GetOptionsHintText then
@@ -72,6 +74,21 @@ local function switchToConfig(configID, index)
 	if PlayerSpellsMicroButton then PlayerSpellsMicroButton:Click() end
 end
 
+local function compareLoadoutEntries(a, b)
+	local aName = a.sortName or ""
+	local bName = b.sortName or ""
+	if strcmputf8i then
+		local cmp = strcmputf8i(aName, bName)
+		if cmp ~= 0 then return cmp < 0 end
+	else
+		local aLower = lower(aName)
+		local bLower = lower(bName)
+		if aLower ~= bLower then return aLower < bLower end
+	end
+	if a.originalIndex ~= b.originalIndex then return a.originalIndex < b.originalIndex end
+	return (a.configID or 0) < (b.configID or 0)
+end
+
 local function showLoadoutMenu(owner)
 	if not MenuUtil or not MenuUtil.CreateContextMenu then return end
 	local specId = PlayerUtil.GetCurrentSpecID()
@@ -88,10 +105,22 @@ local function showLoadoutMenu(owner)
 			local row = rootDescription:CreateButton(L["No saved loadouts"] or "No saved loadouts")
 			row:SetEnabled(false)
 		else
+			local entries = {}
 			for index, configID in ipairs(configs) do
 				local name = GetConfigName(configID)
+				entries[#entries + 1] = {
+					configID = configID,
+					name = name,
+					originalIndex = index,
+					sortName = name ~= UNKNOWN and name or "",
+				}
+			end
+			sort(entries, compareLoadoutEntries)
+			for _, entry in ipairs(entries) do
+				local configID = entry.configID
+				local name = entry.name
 				local radio = rootDescription:CreateRadio(name, function() return configID == activeConfig end, function()
-					switchToConfig(configID, index)
+					switchToConfig(configID, entry.originalIndex)
 					return MenuResponse and MenuResponse.Close
 				end, configID)
 				if inCombat then radio:SetEnabled(false) end

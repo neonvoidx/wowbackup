@@ -184,3 +184,7 @@ TextureAtlasViewer: enabled
 M33kAurasCompanion: enabled
 M33kAurasArchive: enabled
 M33Auras: disabled
+AutoCollapseBuffs: enabled
+BetterUpgradeTooltip: enabled
+eAlignUpdated: enabled
+FrameSort: enabled

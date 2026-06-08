@@ -53,6 +53,10 @@ local craftShopperQualityList = {
 
 local function IsCraftShopperEnabled() return addon.db and addon.db["vendorCraftShopperEnable"] end
 
+local function ShouldIncludeWarbandBank()
+	return addon.db and addon.db["vendorCraftShopperIncludeWarbandBank"] == true
+end
+
 local function GetCraftShopperReagentQualityMode()
 	if addon.db and addon.db["vendorCraftShopperReagentQuality"] == CRAFT_SHOPPER_QUALITY_LOWEST then return CRAFT_SHOPPER_QUALITY_LOWEST end
 	return CRAFT_SHOPPER_QUALITY_HIGHEST
@@ -392,7 +396,7 @@ function BuildShoppingList()
 
 	local items = {}
 	for itemID, want in pairs(need) do
-		local owned = C_Item.GetItemCount(itemID, true) -- inkl. Bank
+		local owned = C_Item.GetItemCount(itemID, true, false, false, ShouldIncludeWarbandBank()) -- inkl. Bank, optional Warband Bank
 		if purchasedItems[itemID] and owned >= want.qty then purchasedItems[itemID] = nil end
 		local missing = math.max(want.qty - owned, 0)
 		if missing > 0 and not purchasedItems[itemID] then
@@ -478,6 +482,12 @@ end
 function addon.Vendor.CraftShopper.SetReagentQualityMode(mode)
 	if not addon.db then return end
 	addon.db["vendorCraftShopperReagentQuality"] = mode == CRAFT_SHOPPER_QUALITY_LOWEST and CRAFT_SHOPPER_QUALITY_LOWEST or CRAFT_SHOPPER_QUALITY_HIGHEST
+	addon.Vendor.CraftShopper.RefreshShoppingList()
+end
+
+function addon.Vendor.CraftShopper.SetIncludeWarbandBank(enabled)
+	if not addon.db then return end
+	addon.db["vendorCraftShopperIncludeWarbandBank"] = enabled == true
 	addon.Vendor.CraftShopper.RefreshShoppingList()
 end
 

@@ -1,5 +1,3 @@
----@type string
-local AddonName = ...
 ---@class Data
 local Data = select(2, ...)
 ---@class BattleGroundEnemies
@@ -12,9 +10,9 @@ local GameTooltip = GameTooltip
 local GetTime = GetTime
 
 -- DR-specific debug prints (always on for now)
-local function DRPrint(...)
-  print("|cff00ccff[BGE-DR]|r", ...)
-end
+-- local function DRPrint(...)
+--   print("|cff00ccff[BGE-DR]|r", ...)
+-- end
 
 -- C_SpellDiminish availability (added in Midnight)
 local hasSpellDiminishAPI = C_SpellDiminish and C_SpellDiminish.GetSpellDiminishCategoryInfo
@@ -22,35 +20,35 @@ local hasSpellDiminishEnums = Enum and Enum.SpellDiminishCategory
 
 -- Map Enum.SpellDiminishCategory values to stable string keys for saved variables / filtering
 local categoryEnumToKey = {}
-local categoryKeyToEnum = {}
+-- local categoryKeyToEnum = {}
 local categoryKeyToInfo = {} -- populated at load time
 
 -- Hardcoded fallback data in case API calls fail at load time
 local fallbackCategoryData = {
-  { key = "root", name = "Root", enum = 0 },
-  { key = "taunt", name = "Taunt", enum = 1 },
-  { key = "stun", name = "Stun", enum = 2 },
+  { key = "root",      name = "Root",          enum = 0 },
+  { key = "taunt",     name = "Taunt",         enum = 1 },
+  { key = "stun",      name = "Stun",          enum = 2 },
   { key = "knockback", name = "AoE Knockback", enum = 3 },
-  { key = "incap", name = "Incapacitate", enum = 4 },
-  { key = "disorient", name = "Disorient", enum = 5 },
-  { key = "silence", name = "Silence", enum = 6 },
-  { key = "disarm", name = "Disarm", enum = 7 },
+  { key = "incap",     name = "Incapacitate",  enum = 4 },
+  { key = "disorient", name = "Disorient",     enum = 5 },
+  { key = "silence",   name = "Silence",       enum = 6 },
+  { key = "disarm",    name = "Disarm",        enum = 7 },
 }
 
 if hasSpellDiminishEnums then
   local enumTable = {
-    { enum = Enum.SpellDiminishCategory.Root, key = "root" },
-    { enum = Enum.SpellDiminishCategory.Taunt, key = "taunt" },
-    { enum = Enum.SpellDiminishCategory.Stun, key = "stun" },
+    { enum = Enum.SpellDiminishCategory.Root,         key = "root" },
+    { enum = Enum.SpellDiminishCategory.Taunt,        key = "taunt" },
+    { enum = Enum.SpellDiminishCategory.Stun,         key = "stun" },
     { enum = Enum.SpellDiminishCategory.AoEKnockback, key = "knockback" },
     { enum = Enum.SpellDiminishCategory.Incapacitate, key = "incap" },
-    { enum = Enum.SpellDiminishCategory.Disorient, key = "disorient" },
-    { enum = Enum.SpellDiminishCategory.Silence, key = "silence" },
-    { enum = Enum.SpellDiminishCategory.Disarm, key = "disarm" },
+    { enum = Enum.SpellDiminishCategory.Disorient,    key = "disorient" },
+    { enum = Enum.SpellDiminishCategory.Silence,      key = "silence" },
+    { enum = Enum.SpellDiminishCategory.Disarm,       key = "disarm" },
   }
   for _, entry in ipairs(enumTable) do
     categoryEnumToKey[entry.enum] = entry.key
-    categoryKeyToEnum[entry.key] = entry.enum
+    -- categoryKeyToEnum[entry.key] = entry.enum
     -- Get localized name and icon from Blizzard API
     local info = hasSpellDiminishAPI and C_SpellDiminish.GetSpellDiminishCategoryInfo(entry.enum)
     if info then
@@ -67,7 +65,7 @@ end
 for _, fb in ipairs(fallbackCategoryData) do
   if not categoryKeyToInfo[fb.key] then
     categoryEnumToKey[fb.enum] = fb.key
-    categoryKeyToEnum[fb.key] = fb.enum
+    -- categoryKeyToEnum[fb.key] = fb.enum
     categoryKeyToInfo[fb.key] = {
       name = fb.name,
       icon = nil, -- no icon available without API
@@ -85,13 +83,13 @@ end
 -- PACIFYSILENCE locType = Cyclone (cannot attack or cast) = Disorient DR
 -- CYCLONE is NOT a valid locType — Cyclone returns PACIFYSILENCE
 local locTypeToDRCategory = {
-  STUN = "incap", -- breaks on damage (Sap, Gouge)
-  STUN_MECHANIC = "stun", -- hard stun (Kidney Shot, Cheap Shot)
-  FEAR = "incap", -- horror (Mortal Coil)
+  STUN = "incap",              -- breaks on damage (Sap, Gouge)
+  STUN_MECHANIC = "stun",      -- hard stun (Kidney Shot, Cheap Shot)
+  FEAR = "incap",              -- horror (Mortal Coil)
   FEAR_MECHANIC = "disorient", -- actual fear (Warlock Fear, Psychic Scream)
   CHARM = "disorient",
   PACIFYSILENCE = "disorient", -- Cyclone, Hex
-  CONFUSE = "incap", -- best-guess: Polymorph=incap, Blind=disorient (ambiguous)
+  CONFUSE = "incap",           -- best-guess: Polymorph=incap, Blind=disorient (ambiguous)
   ROOT = "root",
   SILENCE = "silence",
   DISARM = "disarm",
@@ -478,11 +476,11 @@ local function pollLoCForUnit(container, unitToken)
   end
 
   -- Mark categories that ended (were active last poll, not seen this poll)
-  for catKey, _ in pairs(container.locActiveCategories) do
-    if not seenThisPoll[catKey] then
-      -- DRPrint("CC ENDED:", unitToken, catKey)
-    end
-  end
+  -- for catKey, _ in pairs(container.locActiveCategories) do
+  --   if not seenThisPoll[catKey] then
+  --     -- DRPrint("CC ENDED:", unitToken, catKey)
+  --   end
+  -- end
 
   -- Update active categories for next poll
   container.locActiveCategories = seenThisPoll
@@ -579,6 +577,13 @@ function dRTracking:AttachToPlayerButton(playerButton)
     if self.diminishEventReceived then
       return
     end
+    -- BG fallback path produces no usable data (C_LossOfControl returns
+    -- no spellID for enemy units in BGs, same restriction story as
+    -- C_SpellDiminish). Skip the ~300/s poll storm. DR still polls in
+    -- arena / world PvP.
+    if BattleGroundEnemies.states.real.isInBattleground then
+      return
+    end
 
     pollLoCForUnit(self, unitID)
   end
@@ -613,6 +618,12 @@ function dRTracking:AttachToPlayerButton(playerButton)
   end
 
   function container:OnTestmodeTick()
+    if (BattleGroundEnemies.Testmode.PlayerCountTestmode or 5) > 5 then
+      if #self.inputs > 0 then
+        self:Reset()
+      end
+      return
+    end
     if not self.testmodeEnabled then
       self.testmodeEnabled = true
     end

@@ -56,6 +56,8 @@ CombatText.defaults = CombatText.defaults
 		fontSize = 32,
 		fontFace = globalFontConfigKey(),
 		fontOutline = globalFontStyleConfigKey(),
+		enterText = "",
+		leaveText = "",
 		color = { r = 1, g = 1, b = 1, a = 1 },
 		enterColor = { r = 1, g = 1, b = 1, a = 1 },
 		leaveColor = { r = 1, g = 1, b = 1, a = 1 },
@@ -80,6 +82,8 @@ local DB_ALWAYS_VISIBLE_MODE = "combatTextAlwaysVisibleMode"
 local DB_FONT = "combatTextFont"
 local DB_FONT_SIZE = "combatTextFontSize"
 local DB_FONT_OUTLINE = "combatTextFontOutline"
+local DB_ENTER_TEXT = "combatTextEnterText"
+local DB_LEAVE_TEXT = "combatTextLeaveText"
 local DB_COLOR = "combatTextColor"
 local DB_ENTER_COLOR = "combatTextEnterColor"
 local DB_LEAVE_COLOR = "combatTextLeaveColor"
@@ -231,11 +235,23 @@ end
 
 local function combatLabel() return _G.COMBAT or "Combat" end
 
-local function getCombatText(inCombat)
+local function normalizeCombatText(value)
+	if type(value) ~= "string" then return "" end
+	return strtrim and strtrim(value) or value:gsub("^%s+", ""):gsub("%s+$", "")
+end
+
+local function getDefaultCombatText(inCombat)
 	local key = inCombat and "combatTextEnter" or "combatTextLeave"
 	local text = L[key]
 	if type(text) == "string" and text ~= "" and text ~= key then return text end
 	return (inCombat and "+" or "-") .. combatLabel()
+end
+
+local function getCombatText(inCombat)
+	local key = inCombat and DB_ENTER_TEXT or DB_LEAVE_TEXT
+	local text = normalizeCombatText(getValue(key, inCombat and defaults.enterText or defaults.leaveText))
+	if text ~= "" then return text end
+	return getDefaultCombatText(inCombat)
 end
 
 function CombatText:GetDuration() return clamp(getValue(DB_DURATION, defaults.duration), 0.5, 10) end
@@ -243,6 +259,14 @@ function CombatText:GetDuration() return clamp(getValue(DB_DURATION, defaults.du
 function CombatText:IsAlwaysVisible() return getValue(DB_ALWAYS_VISIBLE, defaults.alwaysVisible) == true end
 
 function CombatText:GetAlwaysVisibleMode() return normalizeAlwaysVisibleMode(getValue(DB_ALWAYS_VISIBLE_MODE, defaults.alwaysVisibleMode)) end
+
+function CombatText:GetEnterText() return normalizeCombatText(getValue(DB_ENTER_TEXT, defaults.enterText)) end
+
+function CombatText:GetLeaveText() return normalizeCombatText(getValue(DB_LEAVE_TEXT, defaults.leaveText)) end
+
+function CombatText:GetDefaultEnterText() return getDefaultCombatText(true) end
+
+function CombatText:GetDefaultLeaveText() return getDefaultCombatText(false) end
 
 function CombatText:GetFontSize() return clamp(getValue(DB_FONT_SIZE, defaults.fontSize), 8, 96) end
 
@@ -476,11 +500,7 @@ function CombatText:ShowEditModeHint(show)
 		self.previewing = nil
 		if self.frame.bg then self.frame.bg:Hide() end
 		if addon.db and addon.db[DB_ENABLED] then
-			if C_Timer and C_Timer.After then
-				C_Timer.After(0, refreshCombatTextDisplayState)
-			else
-				self:RefreshDisplayMode()
-			end
+			RunNextFrame(refreshCombatTextDisplayState)
 		else
 			self:HideText()
 		end
@@ -494,11 +514,7 @@ function CombatText:OnEvent(event)
 		self:ShowCombatText(false)
 	elseif event == "PLAYER_ENTERING_WORLD" then
 		-- Delay one frame so the display state is applied after login/loading transitions.
-		if C_Timer and C_Timer.After then
-			C_Timer.After(0, refreshCombatTextDisplayState)
-		elseif addon.db and addon.db[DB_ENABLED] then
-			self:RefreshDisplayMode()
-		end
+		RunNextFrame(refreshCombatTextDisplayState)
 	end
 end
 
@@ -531,6 +547,8 @@ function CombatText:ApplyLayoutData(data)
 	local duration = clamp(data.duration ~= nil and data.duration or self:GetDuration(), 0.5, 10)
 	local alwaysVisible = data.alwaysVisible ~= nil and data.alwaysVisible == true or self:IsAlwaysVisible()
 	local alwaysVisibleMode = normalizeAlwaysVisibleMode(data.alwaysVisibleMode ~= nil and data.alwaysVisibleMode or self:GetAlwaysVisibleMode())
+	local enterText = normalizeCombatText(data.enterText ~= nil and data.enterText or self:GetEnterText())
+	local leaveText = normalizeCombatText(data.leaveText ~= nil and data.leaveText or self:GetLeaveText())
 	local fontSize = clamp(data.fontSize ~= nil and data.fontSize or self:GetFontSize(), 8, 96)
 	local fontFace = normalizeFontFace(data.fontFace) or self:GetFontFaceSetting() or defaults.fontFace
 	local fontOutline = normalizeFontStyleChoice(data.fontOutline, self:GetFontStyleSetting() or defaults.fontOutline or "OUTLINE")
@@ -547,6 +565,8 @@ function CombatText:ApplyLayoutData(data)
 	addon.db[DB_DURATION] = duration
 	addon.db[DB_ALWAYS_VISIBLE] = alwaysVisible
 	addon.db[DB_ALWAYS_VISIBLE_MODE] = alwaysVisibleMode
+	addon.db[DB_ENTER_TEXT] = enterText
+	addon.db[DB_LEAVE_TEXT] = leaveText
 	addon.db[DB_FONT_SIZE] = fontSize
 	addon.db[DB_FONT] = fontFace
 	addon.db[DB_FONT_OUTLINE] = fontOutline
@@ -577,6 +597,14 @@ local function applySetting(field, value)
 		local alwaysVisibleMode = normalizeAlwaysVisibleMode(value)
 		addon.db[DB_ALWAYS_VISIBLE_MODE] = alwaysVisibleMode
 		value = alwaysVisibleMode
+	elseif field == "enterText" then
+		local enterText = normalizeCombatText(value)
+		addon.db[DB_ENTER_TEXT] = enterText
+		value = enterText
+	elseif field == "leaveText" then
+		local leaveText = normalizeCombatText(value)
+		addon.db[DB_LEAVE_TEXT] = leaveText
+		value = leaveText
 	elseif field == "fontSize" then
 		local fontSize = clamp(value, 8, 96)
 		addon.db[DB_FONT_SIZE] = fontSize
@@ -608,7 +636,7 @@ local function applySetting(field, value)
 
 	CombatText:ApplyStyle()
 	CombatText:UpdateFrameSize()
-	if field == "alwaysVisible" or field == "alwaysVisibleMode" then
+	if field == "alwaysVisible" or field == "alwaysVisibleMode" or field == "enterText" or field == "leaveText" then
 		CombatText:RefreshDisplayMode()
 	else
 		CombatText:RefreshHideTimer()
@@ -809,6 +837,28 @@ function CombatText:RegisterEditMode()
 						function() applySetting("alwaysVisibleMode", ALWAYS_VISIBLE_MODE_STATUS) end
 					)
 				end,
+			},
+			{
+				name = L["combatTextEnterText"] or "Entering combat text",
+				kind = SettingType.Input,
+				field = "enterText",
+				default = defaults.enterText or "",
+				maxChars = 64,
+				inputWidth = 180,
+				placeholder = CombatText:GetDefaultEnterText(),
+				get = function() return CombatText:GetEnterText() end,
+				set = function(_, value) applySetting("enterText", value) end,
+			},
+			{
+				name = L["combatTextLeaveText"] or "Leaving combat text",
+				kind = SettingType.Input,
+				field = "leaveText",
+				default = defaults.leaveText or "",
+				maxChars = 64,
+				inputWidth = 180,
+				placeholder = CombatText:GetDefaultLeaveText(),
+				get = function() return CombatText:GetLeaveText() end,
+				set = function(_, value) applySetting("leaveText", value) end,
 			},
 			{
 				name = FONT_SIZE,

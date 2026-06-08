@@ -121,6 +121,22 @@ local function normalizeFontStyleChoice(value, fallback)
 	return fallback or "OUTLINE"
 end
 
+local function resolveFontFlags(style, fallback)
+	if addon.functions and addon.functions.ResolveFontStyle then
+		local _, flags = addon.functions.ResolveFontStyle(style, fallback)
+		return flags
+	end
+	if addon.functions and addon.functions.GetFontFlagsForStyle then
+		local flags = addon.functions.GetFontFlagsForStyle(style, fallback)
+		if type(flags) == "string" then return flags end
+	end
+	local outline = normalizeFontStyleChoice(style, fallback or defaults.textOutline or "OUTLINE")
+	if outline == "__EQOL_GLOBAL_FONT_STYLE__" then outline = normalizeFontStyleChoice(fallback or defaults.textOutline or "OUTLINE", "OUTLINE") end
+	if outline == "__EQOL_GLOBAL_FONT_STYLE__" then outline = "OUTLINE" end
+	if outline == "NONE" then return "" end
+	return outline
+end
+
 local function getDBValue(key, fallback)
 	if addon.db and addon.db[key] ~= nil then return addon.db[key] end
 	return fallback
@@ -277,7 +293,10 @@ function Tracker:GetTextOnly() return getDBValue(DB_TEXT_ONLY, defaults.textOnly
 function Tracker:GetAbbreviateNumbers() return getDBValue(DB_ABBREVIATE, defaults.abbreviateNumbers) == true end
 
 function Tracker:ResolveTextFont()
-	local fallback = (addon.functions and addon.functions.GetLocaleDefaultFontFace and addon.functions.GetLocaleDefaultFontFace()) or addon.variables.defaultFont or STANDARD_TEXT_FONT
+	local fallback = (addon.functions and addon.functions.GetGlobalDefaultFontFace and addon.functions.GetGlobalDefaultFontFace())
+		or (addon.functions and addon.functions.GetLocaleDefaultFontFace and addon.functions.GetLocaleDefaultFontFace())
+		or addon.variables.defaultFont
+		or STANDARD_TEXT_FONT
 	if addon.functions and addon.functions.ResolveFontFace then return addon.functions.ResolveFontFace(self:GetTextFontKey(), fallback) end
 	return fallback
 end
@@ -465,13 +484,16 @@ function Tracker:ApplyLayoutData(data)
 
 	local fontPath = self:ResolveTextFont()
 	local fontStyleChoice = normalizeFontStyleChoice(textOutline, defaults.textOutline)
-	local fontOutline = addon.functions and addon.functions.GetFontFlagsForStyle and addon.functions.GetFontFlagsForStyle(fontStyleChoice, defaults.textOutline)
-		or (fontStyleChoice == "NONE" and "" or fontStyleChoice)
-	local ok = frame.text:SetFont(fontPath, textSize, fontOutline)
-	if ok == false then
-		local fallback = addon.variables.defaultFont or STANDARD_TEXT_FONT
-		frame.text:SetFont(fallback, textSize, fontOutline)
+	local fontOutline = resolveFontFlags(fontStyleChoice, defaults.textOutline)
+	local fallback = addon.variables.defaultFont or STANDARD_TEXT_FONT
+	local ok = false
+	if addon.functions and addon.functions.ApplyFontString then
+		ok = addon.functions.ApplyFontString(frame.text, fontPath, textSize, fontStyleChoice, fallback, defaults.textOutline)
+	else
+		ok = frame.text:SetFont(fontPath, textSize, fontOutline)
+		if ok == false then ok = frame.text:SetFont(fallback, textSize, fontOutline) end
 	end
+	if ok == false then frame.text:SetFont(fallback, textSize, fontOutline) end
 	if addon.functions and addon.functions.ApplyFontStyleShadow then
 		addon.functions.ApplyFontStyleShadow(frame.text, fontStyleChoice, defaults.textOutline)
 	end

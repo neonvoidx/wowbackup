@@ -8,9 +8,13 @@ local maxRaid = MAX_RAID_MEMBERS or 40
 local maxTestFrames = 3
 local testPartyFrames = {}
 local testFramesContainer = nil
+local externalProviders = {}
 ---@type Db
 local db
 local initialised = false
+local strataOrder = { "BACKGROUND", "LOW", "MEDIUM", "HIGH", "DIALOG", "FULLSCREEN", "FULLSCREEN_DIALOG", "TOOLTIP" }
+local strataIndex = {}
+for i, v in ipairs(strataOrder) do strataIndex[v] = i end
 ---@class Frames
 local M = {}
 addon.Core.Frames = M
@@ -596,7 +600,7 @@ function M:GW2UIFrames(visibleOnly)
 			if unit and unit ~= "" then
 				Add(child)
 			else
-				-- sub-group frame — walk one level deeper
+				-- sub-group frame - walk one level deeper
 				for _, grandchild in ipairs({ child:GetChildren() }) do
 					local gcUnit = grandchild.unit or (grandchild.GetAttribute and grandchild:GetAttribute("unit"))
 					if gcUnit and gcUnit ~= "" then
@@ -604,6 +608,33 @@ function M:GW2UIFrames(visibleOnly)
 					end
 				end
 			end
+		end
+	end
+
+	return frames
+end
+
+---Retrieves a list of MidnightSimpleUnitFrames (MSUF) unit frames.
+---MSUF registers all its unit frames (player, target, focus, pet, party1-4,
+---raid1-40, boss1-5, arena1-5, etc.) in _G.MSUF_UnitFrames, keyed by unit
+---@param visibleOnly boolean
+---@return table
+function M:MSUFFrames(visibleOnly)
+	local registry = _G.MSUF_UnitFrames
+	if type(registry) ~= "table" then
+		return {}
+	end
+
+	local frames = {}
+
+	for _, frame in pairs(registry) do
+		if frame
+			and (not frame.IsForbidden or not frame:IsForbidden())
+			and frame.unit
+			and (frame.unit:match("^party%d") or frame.unit:match("^raid%d"))
+			and (not visibleOnly or frame:IsVisible())
+		then
+			frames[#frames + 1] = frame
 		end
 	end
 
@@ -634,6 +665,60 @@ function M:CustomFrames(visibleOnly)
 	return frames
 end
 
+---Registers an external frame provider. Providers contribute frames to GetAll.
+---Expected shape:
+---  Name (string)                          identifier for the provider
+---  GetFrames (fun(): table)               returns the provider's current frames
+---  RegisterRefreshFrames (fun(cb: fun())) optional; called once with a callback
+---                                         the provider invokes when its frames change
+---@param provider table
+function M:RegisterProvider(provider)
+	if type(provider) ~= "table" then return end
+	if type(provider.Name) ~= "string" or provider.Name == "" then return end
+	if type(provider.GetFrames) ~= "function" then return end
+
+	for _, existing in ipairs(externalProviders) do
+		if existing.Name == provider.Name then
+			return
+		end
+	end
+
+	externalProviders[#externalProviders + 1] = provider
+
+	if type(provider.RegisterRefreshFrames) == "function" then
+		local ok, err = pcall(provider.RegisterRefreshFrames, function()
+			addon:Refresh()
+		end)
+		if not ok then
+			mini:Notify("Frame provider '%s' RegisterRefreshFrames failed: %s", provider.Name, tostring(err))
+		end
+	end
+end
+
+---Retrieves frames contributed by external providers registered via RegisterProvider.
+---@param visibleOnly boolean
+---@return table
+function M:ExternalFrames(visibleOnly)
+	local frames = {}
+
+	for _, provider in ipairs(externalProviders) do
+		local ok, providerFrames = pcall(provider.GetFrames)
+
+		if ok and type(providerFrames) == "table" then
+			for _, frame in ipairs(providerFrames) do
+				if frame
+					and (not frame.IsForbidden or not frame:IsForbidden())
+					and (not visibleOnly or (frame.IsVisible and frame:IsVisible()))
+				then
+					frames[#frames + 1] = frame
+				end
+			end
+		end
+	end
+
+	return frames
+end
+
 function M:GetTestFrameContainer()
 	return testFramesContainer
 end
@@ -659,6 +744,8 @@ function M:GetAll(visibleOnly, includeTestFrames)
 	local buzzard = M:BuzzardFrames(visibleOnly)
 	local ndui = M:NDuiFrames(visibleOnly)
 	local gw2ui = M:GW2UIFrames(visibleOnly)
+	local msuf = M:MSUFFrames(visibleOnly)
+	local external = M:ExternalFrames(visibleOnly)
 	local custom = M:CustomFrames(visibleOnly)
 
 	array:Append(blizzard, anchors)
@@ -676,6 +763,8 @@ function M:GetAll(visibleOnly, includeTestFrames)
 	array:Append(buzzard, anchors)
 	array:Append(ndui, anchors)
 	array:Append(gw2ui, anchors)
+	array:Append(msuf, anchors)
+	array:Append(external, anchors)
 	array:Append(custom, anchors)
 
 	if includeTestFrames then
@@ -685,10 +774,6 @@ function M:GetAll(visibleOnly, includeTestFrames)
 
 	return anchors
 end
-
-local strataOrder = { "BACKGROUND", "LOW", "MEDIUM", "HIGH", "DIALOG", "FULLSCREEN", "FULLSCREEN_DIALOG", "TOOLTIP" }
-local strataIndex = {}
-for i, v in ipairs(strataOrder) do strataIndex[v] = i end
 
 ---Returns the frame strata one level above the given strata, clamped at TOOLTIP.
 ---@param strata string

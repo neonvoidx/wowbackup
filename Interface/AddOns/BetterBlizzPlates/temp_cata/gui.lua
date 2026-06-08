@@ -134,6 +134,44 @@ StaticPopupDialogs["BBP_TOTEMLIST_RESET"] = {
     hideOnEscape = true,
 }
 
+StaticPopupDialogs["BBP_NP_AURA_ENABLE"] = {
+    text = titleText.."You've enabled Nameplate Aura filters.\nThis requires a reload.\n\nDo you want to enable PvP filters showing all Important CC and Buffs larger and with a glow on them?",
+    button1 = "Yes",
+    button2 = "No",
+    OnAccept = function()
+        local db = BetterBlizzPlatesDB
+        db.otherNpBuffFilterImportantBuffs = true
+        db.otherNpdeBuffFilterCC = true
+        db.friendlyNpBuffFilterImportantBuffs = true
+        db.friendlyNpdeBuffFilterCC = true
+        if BBP.isMoP then
+            local auraBitfields = {
+                "nameplateEnemyPlayerAuraDisplay",
+                "nameplateEnemyNpcAuraDisplay",
+                "nameplateFriendlyPlayerAuraDisplay",
+            }
+            if not db.bitfields then db.bitfields = {} end
+            for _, cvarName in ipairs(auraBitfields) do
+                if BBP.bitCVarList and BBP.bitCVarList[cvarName] then
+                    if not db.bitfields[cvarName] then db.bitfields[cvarName] = {} end
+                    for _, index in ipairs(BBP.bitCVarList[cvarName]) do
+                        if not InCombatLockdown() then
+                            C_CVar.SetCVarBitfield(cvarName, index, false)
+                        end
+                        db.bitfields[cvarName][tostring(index)] = false
+                    end
+                end
+            end
+        end
+        StaticPopup_Show("BBF_CONFIRM_RELOAD")
+    end,
+    OnCancel = function()
+        StaticPopup_Show("BBF_CONFIRM_RELOAD")
+    end,
+    timeout = 0,
+    whileDead = true,
+}
+
 StaticPopupDialogs["BBP_UPDATE_NOTIF"] = {
     text = "|A:gmchat-icon-blizz:16:16|aBetter|cff00c0ffBlizz|rPlates Cata Beta v0.1.1b:\n\nFixed Retail-look Nameplate Height Slider. You might have to re-adjust/reset it back to 1.",
     button1 = "OK",
@@ -1120,6 +1158,18 @@ local function CreateSlider(parent, label, minValue, maxValue, stepValue, elemen
                         local heightValue
                         heightValue = 45 --BBP.isLargeNameplatesEnabled() and 64.125 or 40
                         C_NamePlate.SetNamePlateSelfSize(value, heightValue)
+                    end
+                elseif element == "smallPetsWidth" then
+                    BetterBlizzPlatesDB.smallPetsWidth = value
+                    for _, np in pairs(C_NamePlate.GetNamePlates()) do
+                        local petFrame = np.UnitFrame
+                        if petFrame then
+                            BBP.SmallPetsInPvP(petFrame)
+                            if BetterBlizzPlatesDB.classicNameplates then
+                                BBP.AdjustClassicBorderWidth(petFrame)
+                                BBP.CreateBetterClassicCastbarBorders(petFrame)
+                            end
+                        end
                     end
                 -- Cast bar emphasis height
                 elseif element == "castBarEmphasisHeightValue" then
@@ -4814,68 +4864,21 @@ local function guiGeneralTab()
     smallPetsInPvP:SetPoint("LEFT", healthNumbers.text, "RIGHT", 0, 0)
     CreateTooltipTwo(smallPetsInPvP, "Small Pets", "Reduce the width of all pet nameplates, and the width of all npc nameplates in PvP.\n\n|cff32f795Right-click to adjust width.|r", "Totem Indicator NPCs will stay full width unless specified otherwise in the Totem Indicator List section.")
 
-    -- Create slider frame when right-clicked
+    local smallPetsWidthSlider = CreateSlider(BetterBlizzPlates, "Small Pets Width", 2, 40, 1, "smallPetsWidth", nil, 120)
+    smallPetsWidthSlider:SetPoint("BOTTOMLEFT", smallPetsInPvP, "TOPLEFT", 5, 5)
+    smallPetsWidthSlider:Hide()
+    CreateTooltipTwo(smallPetsWidthSlider, "Small Pets Width", "Adjust the width used for small pet/npc nameplates.", "Right-click the slider to type a value outside the default range.")
+
     smallPetsInPvP:SetScript("OnMouseDown", function(self, button)
         if button == "RightButton" then
             GameTooltip:Hide()
-            if not self.slider then
-                -- Create slider frame
-                local slider = CreateFrame("Slider", "SmallPetsWidthSlider", self:GetParent(), "OptionsSliderTemplate")
-                slider:SetPoint("BOTTOMLEFT", self, "TOPLEFT", 0, 0)
-                slider:SetWidth(120)
-                slider:SetMinMaxValues(2, 40)
-                slider:SetValue(BetterBlizzPlatesDB.smallPetsWidth or 20)
-                slider:SetValueStep(1)
-                slider:SetObeyStepOnDrag(true)
-
-                -- Customize the slider text
-                slider.Text:SetFontObject(GameFontHighlightSmall)
-                slider.Text:SetTextColor(1, 0.81, 0, 1)
-                slider.Low:SetText("")
-                slider.High:SetText("")
-
-                -- Set initial label
-                local initialValue = BetterBlizzPlatesDB.smallPetsWidth or 50
-                slider.Text:SetText("Small Pets Width: " .. initialValue)
-
-                -- Slider update logic
-                slider:SetScript("OnValueChanged", function(_, value)
-                    local roundedValue = math.floor(value + 0.5)
-                    BetterBlizzPlatesDB.smallPetsWidth = roundedValue
-                    slider.Text:SetText("Small Pets Width: " .. roundedValue)
-                    slider.adjusting = true
-                    for _, nameplate in pairs(C_NamePlate.GetNamePlates()) do
-                        local frame = nameplate.UnitFrame
-                        if frame then
-                            BBP.SmallPetsInPvP(frame)
-                            if BetterBlizzPlatesDB.classicNameplates then
-                                BBP.AdjustClassicBorderWidth(frame)
-                                BBP.CreateBetterClassicCastbarBorders(frame)
-                            end
-                            --BBP.NameplateShadowAndMouseoverHighlight(frame)
-                        end
-                    end
-                end)
-
-                slider:SetScript("OnMouseUp", function(self)
-                    slider.adjusting = nil
-                    C_Timer.After(2, function()
-                        if not self.adjusting then
-                            self:Hide()
-                        end
-                    end)
-                end)
-                self.slider = slider
-            else
-                self.slider:SetShown(not self.slider:IsShown())
-            end
+            smallPetsWidthSlider:SetShown(not smallPetsWidthSlider:IsShown())
         end
     end)
 
-    -- Ensure slider hides if checkbox is unchecked
     smallPetsInPvP:HookScript("OnClick", function(self)
-        if not self:GetChecked() and self.slider then
-            self.slider:Hide()
+        if not self:GetChecked() then
+            smallPetsWidthSlider:Hide()
         end
     end)
 
@@ -7260,7 +7263,7 @@ local function guiPositionAndScale()
     anchorSubPointerIndicator.partyPointerCCAuras:SetPoint("TOPLEFT", partyPointerHideAll, "BOTTOMLEFT", 0, pixelsBetweenBoxes)
     CreateTooltipTwo(anchorSubPointerIndicator.partyPointerCCAuras, "Show CC", "Show CC Overlay on Party Pointer", "This setting requires nameplate aura settings + PvP CC filter enabled.")
 
-    anchorSubPointerIndicator.partyPointerHighlightScale = CreateSlider(contentFrame, "PP: Highlight Size", 0.8, 1.7, 0.01, "partyPointerHighlightScale", "X")
+    anchorSubPointerIndicator.partyPointerHighlightScale = CreateSlider(contentFrame, "PP: Highlight Size", 0.8, 1.7, 0.01, "partyPointerHighlightScale")
     anchorSubPointerIndicator.partyPointerHighlightScale:SetPoint("TOPLEFT", anchorSubPointerIndicator.partyPointerCCAuras, "BOTTOMLEFT", 2, -18)
     CreateTooltipTwo(anchorSubPointerIndicator.partyPointerHighlightScale, "Change the size of the Highlight. Requires Highlight enabled.")
 

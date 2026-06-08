@@ -46,6 +46,7 @@ L["Always On Module"] = "이 모듈은 항상 활성화되어 있습니다.";
 L["Return To Module List"] = "목록으로 돌아가기";
 L["Generic Addon Conflict"] = "이 모듈은 유사한 기능을 가진 다른 애드온과 호환되지 않을 수 있습니다.";
 L["Work In Progress Tag"] = "[작업 진행 중]";
+L["Colon With Space"] = ": ";
 
 
 --Settings Category
@@ -271,6 +272,7 @@ L["ModuleName TooltipTransmogEnsemble"] = "형상변환 세트";
 L["ModuleDescription TooltipTransmogEnsemble"] = "- 세트에서 수집 가능한 외형 수를 표시합니다.\n\n- 툴팁에 \"이미 알고 있음\"이라고 표시되지만 여전히 새로운 외형을 잠금 해제할 수 있는 문제를 수정했습니다.";
 L["Collected Appearances"] = "수집한 외형";
 L["Collected Items"] = "수집한 아이템";
+L["Other Player Classes"] = "다른 플레이어 직업";
 
 
 --Tooltip Housing
@@ -285,6 +287,16 @@ L["ModuleName TooltipRichSoil"] = "빠른 슬롯: 회복력 있는 씨앗";
 L["ModuleDescription TooltipRichSoil"] = "약초 채집가용: 풍요로운 토양을 더블 클릭하면 회복력 있는 씨앗 목록을 표시합니다."..L["Quick Slot Generic Description"];
 L["Instruction Show Resilient Seeds"] = "<더블 클릭하여 회복력 있는 씨앗 표시>";
 L["No Resilient Seed"] = "회복력 있는 씨앗 없음";
+
+
+--Tooltip VendorLocation
+L["ModuleName TooltipVendorLocation"] = "상인 위치"
+L["ModuleDescription TooltipVendorLocation"] = "아이템 툴팁에 특정 토큰을 교환할 수 있는 상인 위치를 표시하고, Ctrl-클릭으로 해당 상인에게 지도 핀을 설정할 수 있습니다."
+L["Instruction Set Waypoint"] = "<Ctrl 클릭으로 지도 핀 설정>"
+L["NPC Name Location Format"] = "%s, %s"
+L["Intruction Swtich Destinations"] = "Alt 키를 눌러 목적지를 전환:"
+L["Location Note Inside Cave"] = "동굴 내부"
+L["Location Note Second Floor"] = "위층"
 
 
 --Plunderstore
@@ -722,6 +734,10 @@ L["Prey No Data"] = "사냥 진행 불가";
 L["Abundance No Data"] = "활성화된 풍요 이벤트 없음";
 L["Defeated Prey"] = "처치된 사냥감 대상";
 L["Item Expire Alert Weekly"] = "이 아이템은 주간 초기화 후 사라집니다.";
+L["Delves Completion Reward Cap"] = "탐험 완료 보상 한도";
+L["Delves Completion Reward Cap Tooltip"] = "이 계정 전체 한도에 도달하면, 풍성한 탐험을 완료해도 탐험가의 여정이나 동료 경험치를 더 이상 얻을 수 없습니다.\n\n풍성한 상자와 네메시스 캐시에서 얻는 보상은 이 한도의 영향을 받지 않습니다.\n\n이 한도는 매주 28씩 증가합니다.";
+L["Near Completion Tooltip"] = "이번 항목은 주간 한도에 곧 도달하기 때문에 표시됩니다.";
+L["Inactive Currencies Tooltip"] = "다음 화폐들은 사용하지 않음으로 설정했기 때문에 숨겨져 있습니다:";
 
 
 --ExpansionSummaryMinimapButton
@@ -758,6 +774,9 @@ L["Instruction Alt Click To Reset Instance"] = "Alt+우클릭: |cffffffff모든 
 L["Instruction Link Progress In Chat"] = "<채팅에 진행 상황을 공유하려면 Shift 키를 누른 상태로 클릭하세요>";
 L["Instance Name"] = "인스턴스 이름";   --Dungeon/Raid Name
 L["EditMode Instruction InstanceDifficulty"] = "프레임 너비는 사용 가능한 옵션의 수에 따라 달라집니다.";
+L["Difficulty Locked To Format"] = "보스를 처치했기 때문에 인스턴스가 |cffffffff%s|r 난이도로 잠겼습니다.";
+L["Difficulty Locked To Current Alert"] = "보스를 처치했기 때문에 인스턴스가 현재 난이도로 잠겼습니다.";
+L["Shared Difficulty Alert"] = "보스를 처치하면 인스턴스가 해당 난이도로 잠깁니다.";
 
 
 --TransmogChatCommand
@@ -779,8 +798,8 @@ L["Quick Access Outfit Button Tooltip"] = "의상을 어디서나 변경할 수 
 
 
 --QuestWatchCycle
-L["ModuleName QuestWatchCycle"] = "단축키: 퀘스트 포커스";
-L["ModuleDescription QuestWatchCycle"] = "단축키로 목표 추적기에서 다음/이전 퀘스트에 포커스를 이동할 수 있습니다.\n\n|cffd4641c단축키 설정: 설정 > 단축키 > Plumber 애드온.|r";
+L["ModuleName QuestWatchCycle"] = "단축키: 퀘스트 추적 대상 지정";
+L["ModuleDescription QuestWatchCycle"] = "단축키를 눌러 목표 추적기에서 다음/이전 퀘스트를 대상으로 지정할 수 있습니다.\n\n|cffd4641c단축키 설정은 단축키 > Plumber 애드온에서 하세요.|r";
 
 
 --CraftSearchExtended
@@ -877,14 +896,24 @@ L["BreakTime Shared Countdown Tooltip Format"] = "|cffffffff%d|r분 후 예정�
 
 
 --CatalystUI
-L["ModuleName CatalystUI"] = "Catalyst: 드레스룸에서 아이템 보기";
+L["ModuleName CatalystUI"] = "촉매: 아이템 미리보기";
 L["ModuleDescription CatalystUI"] = "Ctrl-클릭으로 결과 아이템을 드레스룸에서 확인하거나, Shift-클릭으로 채팅에 링크할 수 있습니다.";
 
 
 --HuntTable
-L["ModuleName HuntTable"] = "Prey: 사냥 테이블";
+L["ModuleName HuntTable"] = "사냥감: 사냥 목록";
 L["ModuleDescription HuntTable"] = "- 일반적인 파란색 퀘스트 아이콘을 난이도 표시로 교체합니다.\n\n- Prey 대상이 아직 획득하지 못한 업적의 조건일 경우 표시기를 보여줍니다.";
-L["Prey Target Has Achievement"] = "이 Prey 대상은 아직 획득하지 못한 업적의 조건입니다.";
+L["Prey Target Has Achievement"] = "이 사냥감 대상은 아직 획득하지 못한 업적의 조건입니다.";
+
+
+--PreyQuestSuperTrack
+L["ModuleName PreyQuestSuperTrack"] = "사냥감: 목표 위치 표시";
+L["ModuleDescription PreyQuestSuperTrack"] = "사냥감 대상의 위치가 드러나면, 사냥 진행 위젯을 클릭할 때 해당 위치로 웨이포인트가 설정됩니다.";
+
+
+--BlizzFixActionBarArt
+L["ModuleName BlizzFixActionBarArt"] = "블리자드 수정: 행동 단축바 아트";
+L["ModuleDescription BlizzFixActionBarArt"] = "UI 숨기기/표시 또는 하우스 에디터 종료 후, 행동 단축바 아트(그리핀과 와이번)가 예상치 못하게 다시 나타나는 문제를 수정했습니다.";
 
 
 --Generic

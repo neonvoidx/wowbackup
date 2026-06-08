@@ -10,6 +10,7 @@ local moduleUtil = addon.Utils.ModuleUtil
 local moduleName = addon.Utils.ModuleName
 local slotDistribution = addon.Utils.SlotDistribution
 local wowEx = addon.Utils.WoWEx
+local kickTracker = addon.Core.KickTracker
 local eventsFrame
 local paused = false
 local testModeActive = false
@@ -42,6 +43,7 @@ addon.Modules.FriendlyIndicatorModule = M
 ---@field Watcher Watcher
 ---@field Anchor table
 ---@field Unit string
+---@field KickKey number
 
 ---@class FriendlyIndicatorModuleOptions
 ---@field ShowDefensives boolean
@@ -86,17 +88,32 @@ local function UpdateWatcherAuras(entry)
 	local ccState = entry.Watcher:GetCcState()
 	local defensiveState = entry.Watcher:GetDefensiveState()
 	local importantState = entry.Watcher:GetImportantState()
+	local kickEntry = options.ShowKicks ~= false and kickTracker:GetKick(entry.Unit) or nil
 
-	-- Count auras per enabled category
 	local ccCount = options.ShowCC and #ccState or 0
 	local defensiveCount = options.ShowDefensives and #defensiveState or 0
 	local importantCount = options.ShowImportant and #importantState or 0
 
-	-- Distribute slots: CC first, then Defensive, then Important
-	local ccSlots, defensiveSlots, importantSlots =
-		slotDistribution.Calculate(maxIcons, ccCount, defensiveCount, importantCount)
-
 	local slotIndex = 1
+
+	-- Kick is highest priority: always occupies slot 1 when active
+	if kickEntry then
+		container:SetSlot(slotIndex, {
+			Texture = kickEntry.Texture,
+			DurationObject = kickEntry.DurationObject,
+			Color = colorByDispelType and kickEntry.Color,
+			Alpha = true,
+			ReverseCooldown = iconsReverse,
+			Glow = iconsGlow,
+			FontScale = db.FontScale,
+		})
+		slotIndex = slotIndex + 1
+	end
+
+	-- Distribute remaining slots: CC first, then Defensive, then Important
+	local remainingSlots = maxIcons - (slotIndex - 1)
+	local ccSlots, defensiveSlots, importantSlots =
+		slotDistribution.Calculate(remainingSlots, ccCount, defensiveCount, importantCount)
 
 	for i = 1, ccSlots do
 		if slotIndex > container.Count then
@@ -182,9 +199,13 @@ local function AnchorContainer(header, anchor, options)
 	elseif options.Grow == "DOWN" then
 		anchorPoint = "TOP"
 		relativeToPoint = "BOTTOM"
+	elseif options.Grow == "UP" then
+		anchorPoint = "BOTTOM"
+		relativeToPoint = "TOP"
 	end
 
 	header:SetGrowDown(options.Grow == "DOWN")
+	header:SetGrowUp(options.Grow == "UP")
 	header:SetColumns(nil)
 	frame:SetPoint(anchorPoint, anchor, relativeToPoint, options.Offset.X, options.Offset.Y)
 end
@@ -215,7 +236,7 @@ local function EnsureWatcher(anchor, unit)
 
 	if not entry then
 		local maxIcons = tonumber(options.Icons.MaxIcons) or 1
-		local size = tonumber(options.Icons.Size) or 32
+		local size = moduleUtil:GetIconSize(options.Icons, anchor, 32, 75)
 		local spacing = db.IconSpacing or 2
 		local container = iconSlotContainer:New(UIParent, maxIcons, size, spacing, "Friendly Indicators", nil, "Friendly Indicators")
 		local watcher = UnitAuraWatcher:New(unit, nil, { Defensives = true, Important = true, CC = true })
@@ -225,10 +246,16 @@ local function EnsureWatcher(anchor, unit)
 			Watcher = watcher,
 			Anchor = anchor,
 			Unit = unit,
+			KickKey = 0,
 		}
 		watchers[anchor] = entry
 
 		watcher:RegisterCallback(function()
+			UpdateWatcherAuras(entry)
+		end)
+
+		kickTracker:Watch(unit)
+		entry.KickKey = kickTracker:Subscribe(unit, function()
 			UpdateWatcherAuras(entry)
 		end)
 	else
@@ -240,6 +267,13 @@ local function EnsureWatcher(anchor, unit)
 			entry.Watcher:RegisterCallback(function()
 				UpdateWatcherAuras(entry)
 			end)
+
+			kickTracker:Unsubscribe(entry.Unit, entry.KickKey)
+			kickTracker:Watch(unit)
+			entry.KickKey = kickTracker:Subscribe(unit, function()
+				UpdateWatcherAuras(entry)
+			end)
+
 			entry.Unit = unit
 
 			-- Clear the container since it's a different unit now
@@ -327,6 +361,7 @@ local function RefreshTestIcons()
 	local ccCount = options.ShowCC and #testCcSpells or 0
 	local defensiveCount = options.ShowDefensives and #testDefensiveSpells or 0
 	local importantCount = options.ShowImportant and #testImportantSpells or 0
+	local showKicks = options.ShowKicks ~= false
 
 	for _, entry in ipairs(orderedEntries) do
 		local container = entry.Container
@@ -337,10 +372,23 @@ local function RefreshTestIcons()
 		local colorByDispelType = options.Icons.ColorByDispelType
 		local showTooltips = options.ShowTooltips ~= false
 
-		local ccSlots, defensiveSlots, importantSlots =
-			slotDistribution.Calculate(maxIcons, ccCount, defensiveCount, importantCount)
-
 		local slotIndex = 1
+
+		if showKicks then
+			container:SetSlot(slotIndex, {
+				Texture = C_Spell.GetSpellTexture(1766),
+				DurationObject = wowEx:CreateDuration(now, 3),
+				Alpha = true,
+				ReverseCooldown = iconsReverse,
+				Glow = iconsGlow,
+				FontScale = db.FontScale,
+			})
+			slotIndex = slotIndex + 1
+		end
+
+		local remainingSlots = maxIcons - (slotIndex - 1)
+		local ccSlots, defensiveSlots, importantSlots =
+			slotDistribution.Calculate(remainingSlots, ccCount, defensiveCount, importantCount)
 
 		for i = 1, ccSlots do
 			if slotIndex > container.Count then
@@ -462,7 +510,7 @@ function M:Refresh()
 
 	for anchor, entry in pairs(watchers) do
 		local container = entry.Container
-		local iconSize = tonumber(options.Icons.Size) or 32
+		local iconSize = moduleUtil:GetIconSize(options.Icons, anchor, 32, 75)
 		local maxIcons = tonumber(options.Icons.MaxIcons) or 1
 		container:SetIconSize(iconSize)
 		container:SetSpacing(db.IconSpacing or 2)
@@ -531,6 +579,12 @@ function M:Init()
 	local fs = FrameSortApi and FrameSortApi.v3
 	if fs and fs.Sorting and fs.Sorting.RegisterPostSortCallback then
 		fs.Sorting:RegisterPostSortCallback(OnFrameSortSorted)
+	end
+
+	if DandersFrames and DandersFrames.RegisterCallback then
+		DandersFrames.RegisterCallback(eventsFrame, "OnFramesSorted", function()
+			M:Refresh()
+		end)
 	end
 
 	frames:HookCellSpotlightVisibility(function()

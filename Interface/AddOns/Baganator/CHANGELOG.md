@@ -1,9 +1,7 @@
 # Baganator
 
-## [796](https://github.com/TheMouseNest/Baganator/tree/796) (2026-04-08)
-[Full Changelog](https://github.com/TheMouseNest/Baganator/compare/795...796) 
+## [806](https://github.com/TheMouseNest/Baganator/tree/806) (2026-06-03)
+[Full Changelog](https://github.com/TheMouseNest/Baganator/compare/805...806) 
 
-- Fix guild bank item auto ungrouping not applying properly on guild bank close  
-- Support spaces in `/bgr search [query]` slash command  
-- Keep analytics gone  
-- Restore Wago to build script  
+- Update toc for MoP 5.5.4  
+- [Fixes #659] Resolve error when viewing cached guild Everything view first time  

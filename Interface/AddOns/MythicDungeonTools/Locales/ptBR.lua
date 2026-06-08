@@ -30,6 +30,8 @@ L["Abyssal Eel"] = "Enguia Abissal"
 L["Achillite"] = "Aquilita"
 L["Acidic Bile"] = "Bile Ácida"
 L["Acolyte"] = "Acólito"
+--[[Translation missing --]]
+L["Action blocked: Restricted environment"] = "Action blocked: Restricted environment"
 L["Adderis"] = "Vipperis"
 L["Addled Arcanomancer"] = "Arcanomante Atordoado"
 L["Addled Thug"] = "Bandido Atrapalhado"
@@ -85,6 +87,8 @@ L["AltarOfShadow"] = "Altar of Shadow"
 L["altKeyDownStatusText"] = "Showing enemy group numbers"
 --[[Translation missing --]]
 L["altKeyGroupsTip"] = "Hold ALT to show enemy group numbers on all enemies"
+--[[Translation missing --]]
+L["Always overwrite matching routes on import"] = "Always overwrite matching routes on import"
 L["Amalgam of Souls"] = "Amálgama de Almas"
 L["Amanitar"] = "Amanitar"
 L["Amarth"] = "Amarth"
@@ -105,6 +109,8 @@ L["Animated Guardian"] = "Guardião Animado"
 L["Animated Shadow"] = "Animated Shadow"
 L["Animated Storm"] = "Tempestade Animada"
 L["Animated Weapon"] = "Arma Animada"
+--[[Translation missing --]]
+L["Announce focus marker on ready check"] = "Announce my Focus Marker on ready check."
 L["Anodized Coilbearer"] = "Porta-bobina Anodizado"
 L["Anomalus"] = "Anômalus"
 L["Anub'ar Champion"] = "Campeão Anub'ar"
@@ -227,6 +233,8 @@ L["Atrium of Sethraliss"] = "Átrio de Sethraliss"
 --[[Translation missing --]]
 L["Attumen the Huntsman"] = "Attumen the Huntsman"
 L["Auriaya"] = "Auriaya"
+--[[Translation missing --]]
+L["Auto Assign"] = "Auto Assign"
 L["Automatic Coloring"] = "Coloração Automática"
 L["Automatically color pulls"] = "Colorir Automaticamente os pulls"
 --[[Translation missing --]]
@@ -433,6 +441,9 @@ after this pull]=] ] = ""
 --[[Translation missing --]]
 L[ [=[Bounty stacks
 after this pull]=] ] = ""
+--[[Translation missing --]]
+L[ [=[Bounty stacks
+after this pull]=] ] = ""
 L["Bracken Warscourge"] = "Flagelo de Guerra das Samambaias"
 L["Brackenhide Shaper"] = "Moldadora de Courambaia"
 --[[Translation missing --]]
@@ -499,6 +510,8 @@ L["Captain Eudora"] = "Capitã Eudora"
 L["Captain Jolly"] = "Capitão Bravata"
 L["Captain Raoul"] = "Capitão Raul"
 --[[Translation missing --]]
+L["Captive"] = "Captive"
+--[[Translation missing --]]
 L["Careless Hopgoblin"] = "Careless Hopgoblin"
 L["Carrion Spinner"] = "Tecelã Putrífaga"
 L["Carrion Worm"] = "Verme Carniceiro"
@@ -528,6 +541,8 @@ L["Champion Druna"] = "Campeã Druna"
 L["Champion of Hodir"] = "Campeão de Hodir"
 --[[Translation missing --]]
 L["Change Language"] = "Change Language"
+--[[Translation missing --]]
+L["Change Log"] = "Change Log"
 L["Channeler Varisz"] = "Canalizadora Varisz"
 L["Chaotic Rift"] = "Fenda Caótica"
 L["Chargath, Bane of Scales"] = "Chargath, Ruína das Escamas"
@@ -588,9 +603,43 @@ L["Coldmist Stalker"] = "Espreitador Frianebula"
 L["Coldmist Widow"] = "Aranhuço Frianebula"
 L["Color Blind Friendly"] = "Amigável à Daltonismo"
 L["Colorpicker"] = "Escolhedor de cores"
+--[[Translation missing --]]
+L["Colors"] = "Colors"
 L["Colossal Tentacle"] = "Tentáculo Colossal"
 --[[Translation missing --]]
+L["Combat Logging"] = "Combat Logging"
+--[[Translation missing --]]
 L["Combat Transparency"] = "Combat Transparency"
+--[[Translation missing --]]
+L["combatLoggingAdvancedNote"] = "Advanced combat logging is enabled automatically while combat logging is enabled."
+--[[Translation missing --]]
+L["combatLoggingDungeons"] = "Dungeons"
+--[[Translation missing --]]
+L["combatLoggingEnable"] = "Enable combat logging"
+--[[Translation missing --]]
+L["combatLoggingHeroic"] = "Heroic"
+--[[Translation missing --]]
+L["combatLoggingLFR"] = "LFR"
+--[[Translation missing --]]
+L["combatLoggingMythic"] = "Mythic"
+--[[Translation missing --]]
+L["combatLoggingMythicDungeon"] = "Mythic Dungeon"
+--[[Translation missing --]]
+L["combatLoggingMythicPlus"] = "Mythic+"
+--[[Translation missing --]]
+L["combatLoggingNormal"] = "Normal"
+--[[Translation missing --]]
+L["combatLoggingOverview"] = "Automatically toggles combat logging in raids and dungeons based on selected difficulties."
+--[[Translation missing --]]
+L["combatLoggingRaid"] = "Raid"
+--[[Translation missing --]]
+L["combatLoggingStarted"] = "Started combat logging."
+--[[Translation missing --]]
+L["combatLoggingStatusActive"] = "Current status: logging."
+--[[Translation missing --]]
+L["combatLoggingStatusInactive"] = "Current status: not logging."
+--[[Translation missing --]]
+L["combatLoggingStopped"] = "Ended combat logging."
 --[[Translation missing --]]
 L["Commander Durand"] = "Commander Durand"
 L["Commander Kolurg"] = "Comandante Kolurg"
@@ -934,6 +983,10 @@ L["Dokigg the Brutalizer"] = "Dokigg, o Brutalizador"
 L["Domatrax"] = "Domatrax"
 L["Domina Venomblade"] = "Dômina Lâmina Venenosa"
 --[[Translation missing --]]
+L["Don't set target marker while in a raid group"] = "Don't set target marker while in a raid group"
+--[[Translation missing --]]
+L["Don't show again"] = "Don't show again"
+--[[Translation missing --]]
 L["dotiLowerSublevel1"] = "Sublevel 1"
 --[[Translation missing --]]
 L["dotiUpperSublevel1"] = "Sublevel 1"
@@ -1123,6 +1176,8 @@ Click to view them.]=]
 --[[Translation missing --]]
 L["Encrypted"] = "Encrypted"
 L["Enemies related to seasonal affixes are currently hidden"] = "Inimigos relacionados ao afixo de temporada estão atualmente escondidos"
+--[[Translation missing --]]
+L["Enemy forces in tooltips"] = "Enemy forces in tooltips"
 L["Enemy Info"] = "Informação de Inimigos"
 L["Enemy Info NPC Creature Type"] = "Informação de Inimigo PNJ Tipo de criatura "
 L["Enemy Info NPC Enemy Forces"] = "Informação de Inimigo PNJ Forças inimigas"
@@ -1280,7 +1335,31 @@ L["Fleshripper Vulture"] = "Urubu Ripa-carne"
 L["Flux Engineer"] = "Flux Engineer"
 --[[Translation missing --]]
 L["Flying Snow"] = "Flying Snow"
+--[[Translation missing --]]
+L["Focus Marker"] = "Focus Marker"
+--[[Translation missing --]]
+L["Focus Marker Assignments"] = "Focus Marker Assignments"
 L["Focused Ritualist"] = "Ritualista Concentrado"
+--[[Translation missing --]]
+L["focusMarkerAssignmentQueuedToast"] = "Focus marker will update to %s after combat from %s."
+--[[Translation missing --]]
+L["focusMarkerAssignmentsTooltip"] = "MDT provides a keybind or macro to set your focus target and mark it with a target marker. You can coordinate marks with your group and make sure everyone has their own personal target marker that they use."
+--[[Translation missing --]]
+L["focusMarkerAssignmentToast"] = "Focus marker set to %s. (Sent by %s)"
+--[[Translation missing --]]
+L["focusMarkerKeybindMissingToast"] = "No key bind is set. Set one now or disable these notifications."
+--[[Translation missing --]]
+L["focusMarkerMacroDragTooltip"] = "Drag this macro to your action bar."
+--[[Translation missing --]]
+L["focusMarkerMacroQueued"] = "Focus marker action will update after combat."
+--[[Translation missing --]]
+L["focusMarkerMacroUpdated"] = "Focus marker action updated."
+--[[Translation missing --]]
+L["focusMarkerMacroUpdateFailed"] = "Could not update focus marker action: %s"
+--[[Translation missing --]]
+L["focusMarkerNoMacroSlotsText"] = "Delete a macro, then try the MDT focus marker macro again."
+--[[Translation missing --]]
+L["focusMarkerNoMacroSlotsTitle"] = "No macro slot available."
 --[[Translation missing --]]
 L["Font of Fealty"] = "Font of Fealty"
 L["Footbomb Hooligan"] = "Badernista de Futebomba"
@@ -1381,6 +1460,8 @@ L["Geezle Gigazap"] = "Geezle Gigazap"
 L["Gekkan"] = "Gekkan"
 --[[Translation missing --]]
 L["Gemellus"] = "Gemellus"
+--[[Translation missing --]]
+L["General"] = "General"
 L["General Bjarngrim"] = "General Bjarngrim"
 L["General Kaal"] = "General Kaal"
 --[[Translation missing --]]
@@ -2041,6 +2122,10 @@ L["Ludwig Von Tortollan"] = "Ludovico Von Tortollano"
 L["Lumbering Plaguehorror"] = "Lumbering Plaguehorror"
 L["L'ura"] = "L'ura"
 L["Lurking Tempest"] = "Tempesto Entocaiado"
+--[[Translation missing --]]
+L["Macro Preview:"] = "Macro Preview:"
+--[[Translation missing --]]
+L["Macros"] = "Macros"
 L["Mad Scientist"] = "Cientista Louco"
 L["Maddened Survivalist"] = "Sobrevivencialista Louco"
 L["Maexxna"] = "Maexxna"
@@ -2056,7 +2141,7 @@ L["Magic"] = "Magic"
 --[[Translation missing --]]
 L["MagistersTerrace"] = "Magister's Terrace"
 --[[Translation missing --]]
-L["MagistersTerraceShortName"] = "MAGI"
+L["MagistersTerraceShortName"] = "MT"
 L["Magma Rager"] = "Furiante de Magma"
 L["Magmatusk"] = "Magmatusco"
 L["Maiden of Grief"] = "Donzela da Mágoa"
@@ -2065,6 +2150,8 @@ L["Maiden of Virtue"] = "Donzela da Virtude"
 L["MaisaraCaverns"] = "Maisara Caverns"
 --[[Translation missing --]]
 L["MaisaraCavernsShortName"] = "CAVNS"
+--[[Translation missing --]]
+L["Make copy"] = "Make copy"
 L["Make this preset the live preset"] = "Tornar essa rota a rota ao vivo"
 --[[Translation missing --]]
 L["Make window transparent in combat"] = "Make window transparent in combat"
@@ -2092,10 +2179,18 @@ L["Manifestation of Envy"] = "Manifestação de Inveja"
 --[[Translation missing --]]
 L["Manifested Shadow"] = "Manifested Shadow"
 L["Manifested Timeways"] = "Percursos Temporais Manifestos"
+--[[Translation missing --]]
+L["Maps"] = "Maps"
 L["Marauding Geist"] = "Geist Saqueador"
 L["Margrave Stradama"] = "Margrave Stradama"
+--[[Translation missing --]]
+L["Mark as my route"] = "Mark as my route"
+--[[Translation missing --]]
+L["Mark Settings"] = "Mark Settings"
 L["Marked Sister"] = "Irmã Marcada"
 L["Market Peacekeeper"] = "Pacificador do Mercado"
+--[[Translation missing --]]
+L["Marks"] = "Marks"
 L["Maruuk"] = "Maruuk"
 --[[Translation missing --]]
 L["Master Archer"] = "Master Archer"
@@ -2117,6 +2212,8 @@ L["MDI Mode"] = "Modo MDI"
 L["MDT Error"] = "MDT Error"
 --[[Translation missing --]]
 L["MDT Legacy maps"] = "MDT Legacy maps"
+--[[Translation missing --]]
+L["MDT Set Focus Macro"] = "MDT Set Focus Macro"
 --[[Translation missing --]]
 L["MDT: Cannot add enemy - you are trying to add too many enemies of the same kind"] = "MDT: Cannot add enemy - you are trying to add too many enemies of the same kind"
 L["MDT: Error importing preset"] = "MDT: Erro importando rota"
@@ -2247,6 +2344,8 @@ L["Muro'jin"] = "Muro'jin"
 L["Mu'Shiba"] = "Mu'Shiba"
 --[[Translation missing --]]
 L["Mutated Hatchling"] = "Mutated Hatchling"
+--[[Translation missing --]]
+L["Mute Xal'atath Voice Lines"] = "Mute Xal'atath Voice Lines"
 L["Mystic Ssa'veh"] = "Místico Ssa'veh"
 L["Mythresh, Sky's Talons"] = "Mythresh, as Garras do Céu"
 L["Naeno Megacrash"] = "Neno Pechadas"
@@ -2297,6 +2396,8 @@ L["neltharusShortName"] = "NELT"
 L["Nerubian Hauler"] = "Nerubian Hauler"
 L["Ner'zhul"] = "Ner'zhul"
 L["Netherspace"] = "Eterespaço"
+--[[Translation missing --]]
+L["Never show MDT focus marker notification."] = "Never show MDT focus marker notification."
 L["New"] = "Novo"
 L["New NPC at Cursor Position"] = [=[Novo NPC na posição do cursor
 ]=]
@@ -2308,7 +2409,7 @@ L["Nexus Adept"] = "Nexus Adept"
 --[[Translation missing --]]
 L["NexusPointXenas"] = "Nexus Point Xenas"
 --[[Translation missing --]]
-L["NexusPointXenasShortName"] = "XENAS"
+L["NexusPointXenasShortName"] = "NEXUS"
 L["Nhallish"] = "Nhallish"
 L["Night Watch Mariner"] = "Fuzileiro da Vigília Noturna"
 L["Nightborne Reclaimer"] = "Recuperador Filho da Noite"
@@ -2333,6 +2434,10 @@ L["Nightmare Dweller"] = "Habitante do Pesadelo"
 L["Nitrogg Thundertower"] = "Nitrogg Grantrovão"
 --[[Translation missing --]]
 L["Njorndir Preparation"] = "Njorndir Preparation"
+--[[Translation missing --]]
+L["No changelog entries available."] = "No changelog entries available."
+--[[Translation missing --]]
+L["No player"] = "No player"
 L["Noble Skirmisher"] = "Escaramuçador Nobre"
 --[[Translation missing --]]
 L["noDungeonData1"] = "It seems that you have no dungeon data yet."
@@ -2398,6 +2503,8 @@ L["Oozing Leftovers"] = "Restos Gosmentos"
 --[[Translation missing --]]
 L["Open an issue on GitHub"] = "Open an issue on GitHub"
 --[[Translation missing --]]
+L["Open changelog / version check"] = "Open changelog / version check"
+--[[Translation missing --]]
 L["Open Enemy Info"] = "Open Enemy Info"
 L["Open MDI override options"] = "Abrir opções de substituição do MDI"
 --[[Translation missing --]]
@@ -2437,6 +2544,8 @@ L["Overseer Korgus"] = "Feitor Korgus"
 L["Overseer Lahar"] = "Feitor Lahar"
 L["Overseer's Redoubt"] = "Reduto do Feitor"
 L["Overseer's Summit"] = " Torre do Feitor"
+--[[Translation missing --]]
+L["Overwrite"] = "Overwrite"
 L["Ozumat"] = "Ozumat"
 L["P.O.S.T. Master"] = "Chefe do C.O.R.R.E.I.O"
 L["P.O.S.T. Worker"] = "Funcionário do C.O.R.R.E.I.O"
@@ -2446,6 +2555,8 @@ L["Pack Mole"] = "Pack Mole"
 L["Paladin of the Silver Hand"] = "Paladino do Punho de Prata"
 L["Pallid Gorger"] = "Devorador Pálido"
 L["Parts Recovery Technician"] = "Técnico de Recuperação de Peças"
+--[[Translation missing --]]
+L["Party Versions"] = "Party Versions"
 L["Patchwerk"] = "Retalhoso"
 L["Patchwerk Soldier"] = "Soldado Retalhoso"
 L["Patchwork Construct"] = "Construto de Retalhos"
@@ -3019,6 +3130,8 @@ L["Select all"] = "Select all"
 --[[Translation missing --]]
 L["Select the dungeon level"] = "Select the dungeon level"
 --[[Translation missing --]]
+L["Send versions to party chat"] = "Send versions to party chat"
+--[[Translation missing --]]
 L["Sending: %.1f"] = "Sending: %.1f"
 L["Seneschal M'bara"] = "Senescal M'bara"
 L["Sentient Oil"] = "Óleo Senciente"
@@ -3033,6 +3146,8 @@ L["Sergeant Bainbridge"] = "Sargento Belponte"
 L["Sergeant Shaynemail"] = "Sergeant Shaynemail"
 L["Serpentrix"] = "Serpentrix"
 L["Servant of Asaad"] = "Serviçal de Asaad"
+--[[Translation missing --]]
+L["Set Keybind"] = "Set Keybind"
 --[[Translation missing --]]
 L["Set Target Marker"] = "Set Target Marker"
 --[[Translation missing --]]
@@ -3474,6 +3589,8 @@ L["Svala Sorrowgrave"] = "Svala Morbecripta"
 L["Swampface"] = "Swampface"
 --[[Translation missing --]]
 L["Swiftshot Archer"] = "Swiftshot Archer"
+--[[Translation missing --]]
+L["Sync Marks"] = "Sync Marks"
 --[[Translation missing --]]
 L["Taah'bat"] = "Taah'bat"
 --[[Translation missing --]]
@@ -3982,6 +4099,8 @@ L["Unyielding Garrison"] = "Unyielding Garrison"
 --[[Translation missing --]]
 L["Update"] = "Update"
 --[[Translation missing --]]
+L["update available"] = "update available"
+--[[Translation missing --]]
 L["updateNote"] = "Please update this AddOn to the latest version or remove it"
 --[[Translation missing --]]
 L["Upper Broken Stair"] = "Upper Broken Stair"
@@ -4003,6 +4122,8 @@ L["Use /mdt reset to restore the default position and scale of MDT."] = "Use '/m
 L["Use as a starting point:"] = "Use as a starting point:"
 --[[Translation missing --]]
 L["Use forces count"] = "Use forces count in Sidebar"
+--[[Translation missing --]]
+L["Use macro instead of keybind"] = "Use macro instead of keybind."
 --[[Translation missing --]]
 L["Utgarde Keep"] = "Utgarde Keep"
 --[[Translation missing --]]
@@ -4066,6 +4187,8 @@ L["Venture Co. Surveyor"] = "Venture Co. Surveyor"
 L["Venture Co. War Machine"] = "Máquina de Guerra da Empreendimentos S.A."
 L["Venza Goldfuse"] = "Vina Fusauro"
 L["Vermin Trapper"] = "Coureador Rateiro"
+--[[Translation missing --]]
+L["Version Check / Change Log"] = "Version Check / Change Log"
 L["Vestige of Doubt"] = "Vestígio de Dúvida"
 --[[Translation missing --]]
 L["Vestige of Hatred"] = "Vestige of Hatred"
@@ -4112,7 +4235,7 @@ L["Void Flayer"] = "Rancapele do Caos"
 --[[Translation missing --]]
 L["Void Fragment"] = "Void Fragment"
 --[[Translation missing --]]
-L["Void Infuser"] = "Void Infuser"
+L["Void Infuser"] = "Void Terror"
 L["Void Spawn"] = "Rebento do Caos"
 --[[Translation missing --]]
 L["Void Speaker Eirich"] = "Void Speaker Eirich"
@@ -4227,7 +4350,7 @@ L["Windrunner Soldier"] = "Windrunner Soldier"
 --[[Translation missing --]]
 L["WindrunnerSpire"] = "Windrunner Spire"
 --[[Translation missing --]]
-L["WindrunnerSpireShortName"] = "WIND"
+L["WindrunnerSpireShortName"] = "SPIRE"
 L["Windspeaker Heldis"] = "Voz dos Ventos Heldis"
 --[[Translation missing --]]
 L["Wing Leader Ner'onok"] = "Wing Leader Ner'onok"
@@ -4240,6 +4363,8 @@ L["Wither Biter"] = "Bico Podre"
 --[[Translation missing --]]
 L["Wither Slasher"] = "Wither Slasher"
 L["Witherbark"] = "Cascasseca"
+--[[Translation missing --]]
+L["Witherbark Prisoner"] = "Witherbark Prisoner"
 L["Withered Fiend"] = "Malévolo Fenecido"
 L["Withered Manawraith"] = "Espectro de Mana Fenecido"
 L["Witherling"] = "Filhote Claudicante"

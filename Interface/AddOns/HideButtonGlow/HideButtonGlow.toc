@@ -1,5 +1,5 @@
-## Interface: 50503, 120001, 120005
-## Version: v56
+## Interface: 50503, 50504, 120005
+## Version: v57
 ## Author: dekallo
 ## Title: Hide Button Glow
 ## Notes: Prevents spells on your action bar from glowing.

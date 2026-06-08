@@ -1,3 +1,134 @@
+# BetterBlizzPlates 2.0.3g
+## Mists of Pandaria
+### Tweak
+- Comment out debug frame (square colored nameplates)
+
+# BetterBlizzPlates 2.0.3f
+## Mists of Pandaria
+### Tweak
+- 2.0.3f: Improve default Click Area for Nameplates (still in shambles but hopefully better)
+### Bugfix
+- Fix nameplate tooltips from BBP.
+
+# BetterBlizzPlates 2.0.3e
+## Midnight
+### New
+- New Class Indicator setting: "Ignore Nameplate Scale". Keep icon same size always. In "More options" button in Advanced Settings section.
+## Mists of Pandaria
+### Bugfix
+- More MoP bugfixes and tweaks.
+
+# BetterBlizzPlates 2.0.3d
+## Mists of Pandaria
+- More fires put out, slighly more working version:
+- Tweak name position values. "CENTER" relative anchor changed to "TOP". You will likely have to tweak things again.
+- Tweak nameplate font handling to be same as Midnight (yet another can of worms)
+- Tweak click areas.
+- Twick healthbar position stuff.
+- Some castbar fixes but a million more to go.
+- Lots more will see tweaks and there will be a stream of changes that will affect your settings.
+
+# BetterBlizzPlates 2.0.3c
+## Mists of Pandaria
+- Fix a few more issues with some settings that would completely brick addon.
+
+# BetterBlizzPlates 2.0.3b
+## Mists of Pandaria
+- Fix multiple issues caused by new patch. Please continue reporting bugs as I navigate this new hell.
+## Midnight
+- Fix nil unit used causing a lua error in targeting logic.
+
+# BetterBlizzPlates 2.0.3
+## Mists of Pandaria
+### Note
+- Quick rushed update for 5.5.4: The new MoP patch from Blizzard is quite big with a lot of changes and I was not prepared. BBP will need a lot more work than just this version. This version is more of a "hopefully things work OK until I can fix things" version but it is not expected to be stable. Please report bugs and be patient for fixes.
+
+# BetterBlizzPlates 2.0.2c
+## Midnight
+### Tweak
+- Update DailyShuffle profile (www.twitch.tv/dailyshuffle / www.youtube.com/@Dailydoseofsoloshuffle)
+### Bugfix
+- Fix Class Indicator CC icons getting stuck (and because of that also appearing on enemy nameplates unintentionally)
+- Fix Pre-Midnight Nameplates Pixel border color getting set to white on focus from a mistake.
+
+# BetterBlizzPlates 2.0.2b
+## Midnight
+### Bugfix
+- Add missing forbidden check causing lua errors in PvE
+
+# BetterBlizzPlates 2.0.2
+## Midnight
+### New
+- Arena Names setting to only show healer spec names and leave others blank.
+### Tweak
+- Fix Class Indicator's "Show CC" setting for Midnight.
+- Fix Class Indicator's "Show Health instead of Name" setting for Midnight.
+- Castbar quick hide tweak for channeled bars now hiding properly (and not hiding when actually interrupted).
+### Bugfix
+- Fix a Blizzard nameplate bug causing nameplate debuffs sometimes hiding after a Mind Control. (They will never ever fix Mind Control bugs will they?)
+- Fix coloring issue with threat color + custom healthbar color settings.
+- Fix potential lua errors on moving nameplate vertical position.
+- Fix potential execute indicator secret lua errors.
+- Fix nameplate debuff icons showing on friendly pet nameplate when healthbar was hidden (also recommend turning off the CVar nameplateShowDebuffsOnFriendly which controls that)
+- Fix some coloring issues with the nameplate selected border by default and also with the border color change setting.
+
+# BetterBlizzPlates 2.0.1f
+## Midnight
+### Tweak
+- Now checks for tullaCTC handling of aura cooldown text and ignores BBP setting if thats the case.
+## TBC
+### Tweak
+- Add some missing spell ids for interrupts for the nameplate aura interrupt icons (Earth Shocks and Pummels).
+
+# BetterBlizzPlates 2.0.1e
+## Midnight
+### New
+- New Vanguards profile (www.twitch.tv/VanguardsTV). Thank you for sharing!
+### Tweak
+- Update Jazggz profile (www.twitch.tv/jazggz). Thank you for sharing!
+
+# BetterBlizzPlates 2.0.1d
+## Midnight
+### Tweak
+- Update to fix specID stuff for mexican clients and missing female pres evoker on russian client.
+
+# BetterBlizzPlates 2.0.1c
+## Midnight
+### Tweak
+- Fixup class indicator pet icons for water elemental, dk ghoul and warlock pets after Blizzard nuked old npc ID method.
+## All versions
+### Tweak
+- Interrupt logic: Replace IsSpellKnown API call with IsPlayerSpell because IsSpellKnown returns false on known spells on some clients causing interrupt logic to not detect an interrupt.
+- Small Pets right-click slider can now be right-clicked as well for value input (and allow values greater than the default).
+
+# BetterBlizzPlates 2.0.1b
+## Midnight
+### Bugfix
+- Fix overshield not updating immediately on the PRD when it was set to shown in combat only.
+- Fix an issue with a mix of settings "Change nameplate texture" + "Overbars" + No actual texture change selected for enemy/friend/self causing the nameplate absorb texture (white) to disappear.
+- Fix some old aura code being called from gui causing a lua error.
+
+# BetterBlizzPlates 2.0.1
+## Midnight
+### New
+- Overshields is fixed and back. If you have used an alternative then either turn off this setting or the alternative so you dont run it twice. (And again huge thanks to Verz (MiniCC, FrameSort, etc) for being the goat and helping me a bit here)
+### Tweak
+- Sort out texture replacement issues with PRD and Overbars. Should hopefully be more consistent and cover more textures now.
+- Tweak the look and size of default absorb texture. This was bleeding out from the healthbar and looked a super weird on the new nameplates (Thanks to Blizzards keen eye to details).
+### Bugfix
+- Fix issues with execute indicator color & texture with certain setting combinations.
+- Fix the scale slider for Simplified Nameplate Scale not being hooked up properly and not actually changing values or setting them on login. Due to this if you have made changes elsewhere this fix might change your scale setting on the update.
+## The Burning Crusade
+### Bugfix
+- Add another detection method for spell interrupt ids so Earth Shock (and maybe others) should hopefully be picked up more consistently now.
+
+# BetterBlizzPlates 2.0.0f
+## Midnight
+### New
+- New JustDiscipline profile (www.youtube.com/@JustDiscipline). Thank you for sharing!
+### Bugfix
+- Fix tooltip check causing secret error for npc titles.
+
 # BetterBlizzPlates 2.0.0e
 ## Midnight
 ### Bugfix

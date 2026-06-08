@@ -1,4 +1,4 @@
--- luacheck: globals GenericTraitUI_LoadUI GenericTraitFrame
+-- luacheck: globals GenericTraitUI_LoadUI GenericTraitFrame SettingsInbound GetInventoryItemDurability GetInventoryItemLink CreateFrame UIParent STANDARD_TEXT_FONT DEFAULT FONT_SIZE NONE
 
 local addonName, addon = ...
 
@@ -19,6 +19,735 @@ local DIRECTION_TOP_LABEL = HUD_EDIT_MODE_SETTING_ENCOUNTER_EVENTS_ICON_DIRECTIO
 local DIRECTION_LEFT_LABEL = HUD_EDIT_MODE_SETTING_ENCOUNTER_EVENTS_ICON_DIRECTION_LEFT
 local DIRECTION_RIGHT_LABEL = HUD_EDIT_MODE_SETTING_ENCOUNTER_EVENTS_ICON_DIRECTION_RIGHT
 local DIRECTION_BOTTOM_LABEL = HUD_EDIT_MODE_SETTING_ENCOUNTER_EVENTS_ICON_DIRECTION_BOTTOM
+
+
+addon.DurabilityWarning = addon.DurabilityWarning or {}
+local DurabilityWarning = addon.DurabilityWarning
+local DurabilityEditMode = addon.EditMode
+local DurabilitySettingType = DurabilityEditMode and DurabilityEditMode.lib and DurabilityEditMode.lib.SettingType
+local DurabilitySharedAnchors = addon.SharedAnchors
+local DURABILITY_WARNING_EDITMODE_ID = "durabilityWarning"
+local DURABILITY_WARNING_DB_ENABLED = "durabilityWarningEnabled"
+local DURABILITY_WARNING_DB_THRESHOLD = "durabilityWarningThreshold"
+local DURABILITY_WARNING_DB_READY_ENABLED = "durabilityWarningReadyCheckEnabled"
+local DURABILITY_WARNING_DB_READY_THRESHOLD = "durabilityWarningReadyCheckThreshold"
+local DURABILITY_WARNING_DB_FONT_SIZE = "durabilityWarningFontSize"
+local DURABILITY_WARNING_DB_FONT_FACE = "durabilityWarningFontFace"
+local DURABILITY_WARNING_DB_FONT_STYLE = "durabilityWarningFontStyle"
+local DURABILITY_WARNING_DB_COLOR = "durabilityWarningColor"
+local DURABILITY_WARNING_DB_BLINK = "durabilityWarningBlinkEnabled"
+local DURABILITY_WARNING_DB_BLINK_RATE = "durabilityWarningBlinkRate"
+local DURABILITY_WARNING_DB_ANCHOR_TARGET = "durabilityWarningAnchorTarget"
+local DURABILITY_WARNING_DB_READY_DURATION = "durabilityWarningReadyCheckDuration"
+local DURABILITY_WARNING_BLINK_TICK = 1 / 30
+local DURABILITY_WARNING_HOLD_FRACTION = 0.1
+local DURABILITY_WARNING_MAX_HOLD = 0.12
+
+DurabilityWarning.defaults = DurabilityWarning.defaults or {
+	enabled = false,
+	threshold = 20,
+	readyCheckEnabled = false,
+	readyCheckThreshold = 40,
+	readyCheckDuration = 12,
+	fontSize = 32,
+	fontFace = addon.functions.GetGlobalFontConfigKey and addon.functions.GetGlobalFontConfigKey() or "__EQOL_GLOBAL_FONT__",
+	fontStyle = addon.functions.GetGlobalFontStyleConfigKey and addon.functions.GetGlobalFontStyleConfigKey() or "__EQOL_GLOBAL_FONT_STYLE__",
+	color = { r = 1, g = 0.1, b = 0.1, a = 1 },
+	blinkEnabled = true,
+	blinkRate = 0.7,
+	anchorTarget = "UIParent",
+}
+
+local durabilityWarningEventFrame
+local durabilityWarningEditModeRegistered
+local durabilityWarningBlinkTicker
+local durabilityWarningBlinkTickInterval
+local durabilityWarningReadyUntil = 0
+local durabilityWarningLastValue = 100
+local durabilityWarningPreviewActive = false
+
+local function durabilityWarningDefaultFontFace()
+	if addon.functions and addon.functions.GetGlobalDefaultFontFace then return addon.functions.GetGlobalDefaultFontFace() end
+	return (addon.variables and addon.variables.defaultFont) or STANDARD_TEXT_FONT
+end
+
+local function durabilityWarningGlobalFontConfigKey()
+	if addon.functions and addon.functions.GetGlobalFontConfigKey then return addon.functions.GetGlobalFontConfigKey() end
+	return "__EQOL_GLOBAL_FONT__"
+end
+
+local function durabilityWarningGlobalFontConfigLabel()
+	if addon.functions and addon.functions.GetGlobalFontConfigLabel then return addon.functions.GetGlobalFontConfigLabel() end
+	return L["useGlobalFontConfig"] or "Use global font config"
+end
+
+local function durabilityWarningGlobalFontStyleConfigKey()
+	if addon.functions and addon.functions.GetGlobalFontStyleConfigKey then return addon.functions.GetGlobalFontStyleConfigKey() end
+	return "__EQOL_GLOBAL_FONT_STYLE__"
+end
+
+local function durabilityWarningNormalizeFontStyle(value, fallback)
+	if addon.functions and addon.functions.NormalizeFontStyleChoice then return addon.functions.NormalizeFontStyleChoice(value, fallback, true) end
+	if type(value) == "string" and value ~= "" then return value end
+	return fallback or "OUTLINE"
+end
+
+local function durabilityWarningMediaNames(mediaType)
+	if addon.functions and addon.functions.GetLSMMediaNames then
+		local names = addon.functions.GetLSMMediaNames(mediaType)
+		if type(names) == "table" then return names end
+	end
+	return {}
+end
+
+local function durabilityWarningMediaHash(mediaType)
+	if addon.functions and addon.functions.GetLSMMediaHash then
+		local hash = addon.functions.GetLSMMediaHash(mediaType)
+		if type(hash) == "table" then return hash end
+	end
+	return {}
+end
+
+local function durabilityWarningFontFaceOptions()
+	local list = {}
+	local defaultPath = durabilityWarningDefaultFontFace()
+	local hasDefault = false
+	local names = durabilityWarningMediaNames("font")
+	local hash = durabilityWarningMediaHash("font")
+	for i = 1, #names do
+		local name = names[i]
+		local path = hash[name]
+		if type(path) == "string" and path ~= "" then
+			list[#list + 1] = { value = path, label = tostring(name) }
+			if path == defaultPath then hasDefault = true end
+		end
+	end
+	if defaultPath and not hasDefault then list[#list + 1] = { value = defaultPath, label = DEFAULT or "Default" } end
+	table.insert(list, 1, { value = durabilityWarningGlobalFontConfigKey(), label = durabilityWarningGlobalFontConfigLabel() })
+	return list
+end
+
+local function durabilityWarningFontStyleOptions()
+	if addon.functions and addon.functions.GetFontStyleOptionList then return addon.functions.GetFontStyleOptionList(true) end
+	return {
+		{ value = durabilityWarningGlobalFontStyleConfigKey(), label = L["useGlobalFontStyleConfig"] or "Use global font styling" },
+		{ value = "NONE", label = NONE or "None" },
+		{ value = "OUTLINE", label = L["Outline"] or "Outline" },
+	}
+end
+
+local durabilityWarningAnchorOptions = {
+	{ value = "TOPLEFT", label = "TOPLEFT" },
+	{ value = "TOP", label = "TOP" },
+	{ value = "TOPRIGHT", label = "TOPRIGHT" },
+	{ value = "LEFT", label = "LEFT" },
+	{ value = "CENTER", label = "CENTER" },
+	{ value = "RIGHT", label = "RIGHT" },
+	{ value = "BOTTOMLEFT", label = "BOTTOMLEFT" },
+	{ value = "BOTTOM", label = "BOTTOM" },
+	{ value = "BOTTOMRIGHT", label = "BOTTOMRIGHT" },
+}
+
+local function durabilityWarningFormatSliderValue(value)
+	return tostring(math.floor((tonumber(value) or 0) + 0.5))
+end
+
+local function durabilityWarningRefreshEditModeSettingValues()
+	if addon.EditModeLib and addon.EditModeLib.internal and addon.EditModeLib.internal.RefreshSettingValues then
+		addon.EditModeLib.internal:RefreshSettingValues()
+	end
+end
+
+local function durabilityWarningNormalizeAnchorTarget(value, fallback)
+	fallback = fallback or DurabilityWarning.defaults.anchorTarget
+	if DurabilitySharedAnchors and DurabilitySharedAnchors.ValidateTarget then return DurabilitySharedAnchors:ValidateTarget(value, fallback, { includeCursor = false }) end
+	if type(value) == "string" and value ~= "" then return value end
+	return fallback
+end
+
+function DurabilityWarning:GetAnchorTarget()
+	return durabilityWarningNormalizeAnchorTarget(addon.db and addon.db[DURABILITY_WARNING_DB_ANCHOR_TARGET], DurabilityWarning.defaults.anchorTarget)
+end
+
+function DurabilityWarning:ResolveAnchorFrame()
+	local target = self:GetAnchorTarget()
+	if DurabilitySharedAnchors and DurabilitySharedAnchors.ResolveFrame then return DurabilitySharedAnchors:ResolveFrame(target) end
+	return UIParent
+end
+
+function DurabilityWarning:AnchorUsesUIParent()
+	local target = self:GetAnchorTarget()
+	if DurabilitySharedAnchors and DurabilitySharedAnchors.IsUIParentTarget then return DurabilitySharedAnchors:IsUIParentTarget(target) end
+	return target == "UIParent"
+end
+
+local function durabilityWarningAnchorEntries(current)
+	if DurabilitySharedAnchors and DurabilitySharedAnchors.GetEntries then return DurabilitySharedAnchors:GetEntries(current, { includeCursor = false }) end
+	return { { key = "UIParent", label = UIParent and UIParent:GetName() or "UIParent" } }
+end
+
+local function durabilityWarningAnchorDefaultData(target)
+	if DurabilitySharedAnchors and DurabilitySharedAnchors.GetDefaultAnchorData then return DurabilitySharedAnchors:GetDefaultAnchorData(target) end
+	return { point = "CENTER", relativePoint = "CENTER", x = 0, y = 180 }
+end
+
+local function durabilityWarningGetLayoutValue(field)
+	if DurabilityEditMode and DurabilityEditMode.GetValue then
+		local value = DurabilityEditMode:GetValue(DURABILITY_WARNING_EDITMODE_ID, field)
+		if value ~= nil then return value end
+	end
+	local defaults = durabilityWarningAnchorDefaultData(DurabilityWarning:GetAnchorTarget())
+	if field == "anchorTarget" then return DurabilityWarning:GetAnchorTarget() end
+	return defaults and defaults[field]
+end
+
+local function durabilityWarningColor()
+	local c = addon.db and addon.db[DURABILITY_WARNING_DB_COLOR] or DurabilityWarning.defaults.color
+	return (c and c.r) or 1, (c and c.g) or 0.1, (c and c.b) or 0.1, (c and c.a) or 1
+end
+
+local function durabilityWarningClamp(value, minValue, maxValue, fallback)
+	value = tonumber(value) or fallback or minValue
+	if value < minValue then return minValue end
+	if value > maxValue then return maxValue end
+	return value
+end
+
+local function getEquippedDurabilityPercent()
+	if addon.functions and addon.functions.IsTimerunner and addon.functions.IsTimerunner() then return 100 end
+	local maxDur = 0
+	local currentDur = 0
+	for slot in pairs(addon.variables.itemSlots or {}) do
+		local link = GetInventoryItemLink and GetInventoryItemLink("player", slot)
+		if link and not (addon.functions and addon.functions.IsIndestructible and addon.functions.IsIndestructible(link)) then
+			local current, maximum = GetInventoryItemDurability(slot)
+			if current and maximum and maximum > 0 then
+				maxDur = maxDur + maximum
+				currentDur = currentDur + current
+			end
+		end
+	end
+	if maxDur <= 0 then return 100 end
+	return math.floor(((currentDur / maxDur) * 100) + 0.5)
+end
+
+local function durabilityWarningText(value)
+	local formatText = L["DurabilityWarningText"] or "%d%% Durability"
+	return string.format(formatText, tonumber(value) or 0)
+end
+
+function DurabilityWarning:EnsureFrame()
+	if self.frame then return self.frame end
+	local frame = CreateFrame("Frame", "EnhanceQoLDurabilityWarningFrame", UIParent, "BackdropTemplate")
+	frame:SetSize(260, 48)
+	frame:SetPoint("CENTER", UIParent, "CENTER", 0, 180)
+	frame:EnableMouse(false)
+	frame:SetFrameStrata("HIGH")
+	frame.text = frame:CreateFontString(nil, "OVERLAY", "GameFontHighlightLarge")
+	frame.text:SetPoint("CENTER", frame, "CENTER", 0, 0)
+	frame.text:SetJustifyH("CENTER")
+	frame.text:SetJustifyV("MIDDLE")
+	frame.text:SetText(durabilityWarningText(0))
+	frame:Hide()
+	self.frame = frame
+	return frame
+end
+
+function DurabilityWarning:ApplyStyle()
+	local frame = self:EnsureFrame()
+	local font = addon.db and addon.db[DURABILITY_WARNING_DB_FONT_FACE] or DurabilityWarning.defaults.fontFace
+	local size = tonumber(addon.db and addon.db[DURABILITY_WARNING_DB_FONT_SIZE]) or DurabilityWarning.defaults.fontSize
+	local style = addon.db and addon.db[DURABILITY_WARNING_DB_FONT_STYLE] or DurabilityWarning.defaults.fontStyle
+	if addon.functions and addon.functions.ApplyFontString then
+		addon.functions.ApplyFontString(frame.text, font, size, style, durabilityWarningDefaultFontFace(), DurabilityWarning.defaults.fontStyle)
+	else
+		local resolvedFont = addon.functions and addon.functions.ResolveFontFace and addon.functions.ResolveFontFace(font, durabilityWarningDefaultFontFace()) or durabilityWarningDefaultFontFace()
+		local flags = addon.functions and addon.functions.GetFontFlagsForStyle and addon.functions.GetFontFlagsForStyle(style, "OUTLINE") or "OUTLINE"
+		frame.text:SetFont(resolvedFont, size, flags)
+	end
+	frame.text:SetTextColor(durabilityWarningColor())
+end
+
+function DurabilityWarning:UpdateFrameSize()
+	local frame = self:EnsureFrame()
+	local width = frame.text:GetStringWidth()
+	local height = frame.text:GetStringHeight()
+	frame:SetSize(math.max(1, width + 24), math.max(1, height + 16))
+end
+
+
+function DurabilityWarning:ApplyAnchorPosition(data)
+	local frame = self:EnsureFrame()
+	if not frame then return end
+	data = data or {}
+	local point = data.point or (DurabilityEditMode and DurabilityEditMode.GetValue and DurabilityEditMode:GetValue(DURABILITY_WARNING_EDITMODE_ID, "point")) or "CENTER"
+	local relativePoint = data.relativePoint or (DurabilityEditMode and DurabilityEditMode.GetValue and DurabilityEditMode:GetValue(DURABILITY_WARNING_EDITMODE_ID, "relativePoint")) or point
+	local x = data.x
+	if x == nil and DurabilityEditMode and DurabilityEditMode.GetValue then x = DurabilityEditMode:GetValue(DURABILITY_WARNING_EDITMODE_ID, "x") end
+	local y = data.y
+	if y == nil and DurabilityEditMode and DurabilityEditMode.GetValue then y = DurabilityEditMode:GetValue(DURABILITY_WARNING_EDITMODE_ID, "y") end
+	if DurabilitySharedAnchors and DurabilitySharedAnchors.NormalizePoint then
+		point = DurabilitySharedAnchors:NormalizePoint(point, "CENTER")
+		relativePoint = DurabilitySharedAnchors:NormalizePoint(relativePoint, point)
+	end
+	frame:ClearAllPoints()
+	frame:SetPoint(point, self:ResolveAnchorFrame(), relativePoint, tonumber(x) or 0, tonumber(y) or 0)
+end
+
+local function durabilityWarningStopBlinkTicker()
+	if durabilityWarningBlinkTicker then
+		durabilityWarningBlinkTicker:Cancel()
+		durabilityWarningBlinkTicker = nil
+		durabilityWarningBlinkTickInterval = nil
+	end
+end
+
+local function durabilityWarningStartBlinkTicker(tick)
+	if durabilityWarningBlinkTicker and durabilityWarningBlinkTickInterval == tick then return end
+	durabilityWarningStopBlinkTicker()
+	durabilityWarningBlinkTickInterval = tick
+	durabilityWarningBlinkTicker = C_Timer.NewTicker(tick, function() DurabilityWarning:Refresh() end)
+end
+
+function DurabilityWarning:IsEnabled() return addon.db and addon.db[DURABILITY_WARNING_DB_ENABLED] == true end
+
+function DurabilityWarning:ShouldShow(value)
+	if not self:IsEnabled() then return false end
+	if addon.functions and addon.functions.IsTimerunner and addon.functions.IsTimerunner() then return false end
+	value = tonumber(value) or 100
+	local threshold = tonumber(addon.db and addon.db[DURABILITY_WARNING_DB_THRESHOLD]) or DurabilityWarning.defaults.threshold
+	if value <= threshold then return true end
+	if addon.db and addon.db[DURABILITY_WARNING_DB_READY_ENABLED] == true and GetTime and GetTime() < durabilityWarningReadyUntil then
+		local readyThreshold = tonumber(addon.db[DURABILITY_WARNING_DB_READY_THRESHOLD]) or DurabilityWarning.defaults.readyCheckThreshold
+		if value <= readyThreshold then return true end
+	end
+	return false
+end
+
+function DurabilityWarning:GetBlinkAlpha()
+	if not (addon.db and addon.db[DURABILITY_WARNING_DB_BLINK] == true) then return 1 end
+	if not GetTime then return 1 end
+	local rate = tonumber(addon.db[DURABILITY_WARNING_DB_BLINK_RATE]) or DurabilityWarning.defaults.blinkRate
+	if rate <= 0 then return 1 end
+	local hold = math.min(DURABILITY_WARNING_MAX_HOLD, rate * DURABILITY_WARNING_HOLD_FRACTION)
+	local t = GetTime() % rate
+	if t <= hold then return 1 end
+	local active = math.max(0.001, rate - hold)
+	local phase = (t - hold) / active
+	return 0.25 + (0.75 * (0.5 + 0.5 * math.cos(phase * math.pi * 2)))
+end
+
+function DurabilityWarning:ShowPreview()
+	local frame = self:EnsureFrame()
+	local wasShown = frame:IsShown()
+	frame.text:SetText(durabilityWarningText(durabilityWarningLastValue or DurabilityWarning.defaults.threshold))
+	self:ApplyStyle()
+	self:UpdateFrameSize()
+	if not wasShown then self:ApplyAnchorPosition() end
+	frame:SetAlpha(self:GetBlinkAlpha())
+	frame:EnableMouse(false)
+	frame:Show()
+	if addon.db and addon.db[DURABILITY_WARNING_DB_BLINK] == true then
+		durabilityWarningStartBlinkTicker(DURABILITY_WARNING_BLINK_TICK)
+	else
+		durabilityWarningStopBlinkTicker()
+	end
+end
+
+function DurabilityWarning:Refresh()
+	if durabilityWarningPreviewActive then
+		self:ShowPreview()
+		return
+	end
+	local frame = self:EnsureFrame()
+	durabilityWarningLastValue = getEquippedDurabilityPercent()
+	if not self:ShouldShow(durabilityWarningLastValue) then
+		frame:Hide()
+		durabilityWarningStopBlinkTicker()
+		return
+	end
+	frame.text:SetText(durabilityWarningText(durabilityWarningLastValue))
+	self:ApplyStyle()
+	self:UpdateFrameSize()
+	self:ApplyAnchorPosition()
+	frame:SetAlpha(self:GetBlinkAlpha())
+	frame:EnableMouse(false)
+	frame:Show()
+	if addon.db and addon.db[DURABILITY_WARNING_DB_BLINK] == true then
+		durabilityWarningStartBlinkTicker(DURABILITY_WARNING_BLINK_TICK)
+	else
+		durabilityWarningStopBlinkTicker()
+	end
+end
+
+function DurabilityWarning:ShowEditModeHint(show)
+	durabilityWarningPreviewActive = show == true
+	if durabilityWarningPreviewActive then
+		self:ShowPreview()
+	else
+		self:Refresh()
+	end
+end
+
+function DurabilityWarning:ApplyLayoutData(data)
+	if not data or not addon.db then return end
+	local anchorTargetChanged
+	if data.anchorTarget ~= nil then
+		local current = self:GetAnchorTarget()
+		local target = durabilityWarningNormalizeAnchorTarget(data.anchorTarget, current)
+		addon.db[DURABILITY_WARNING_DB_ANCHOR_TARGET] = target
+		anchorTargetChanged = target ~= current
+		if anchorTargetChanged and DurabilityEditMode and DurabilityEditMode.SetValue then
+			local defaults = durabilityWarningAnchorDefaultData(target)
+			DurabilityEditMode:SetValue(DURABILITY_WARNING_EDITMODE_ID, "point", defaults.point or "CENTER", nil, true)
+			DurabilityEditMode:SetValue(DURABILITY_WARNING_EDITMODE_ID, "relativePoint", defaults.relativePoint or defaults.point or "CENTER", nil, true)
+			DurabilityEditMode:SetValue(DURABILITY_WARNING_EDITMODE_ID, "x", defaults.x or 0, nil, true)
+			DurabilityEditMode:SetValue(DURABILITY_WARNING_EDITMODE_ID, "y", defaults.y or 0, nil, true)
+		end
+		durabilityWarningRefreshEditModeSettingValues()
+		if DurabilityEditMode and DurabilityEditMode.RefreshFrame then DurabilityEditMode:RefreshFrame(DURABILITY_WARNING_EDITMODE_ID) end
+	end
+	if data.point ~= nil and DurabilityEditMode and DurabilityEditMode.SetValue then
+		local point = data.point
+		if DurabilitySharedAnchors and DurabilitySharedAnchors.NormalizePoint then point = DurabilitySharedAnchors:NormalizePoint(point, durabilityWarningGetLayoutValue("point") or "CENTER") end
+		DurabilityEditMode:SetValue(DURABILITY_WARNING_EDITMODE_ID, "point", point or "CENTER", nil, true)
+	end
+	if data.relativePoint ~= nil and DurabilityEditMode and DurabilityEditMode.SetValue then
+		local relativePoint = data.relativePoint
+		if DurabilitySharedAnchors and DurabilitySharedAnchors.NormalizePoint then relativePoint = DurabilitySharedAnchors:NormalizePoint(relativePoint, durabilityWarningGetLayoutValue("relativePoint") or durabilityWarningGetLayoutValue("point") or "CENTER") end
+		DurabilityEditMode:SetValue(DURABILITY_WARNING_EDITMODE_ID, "relativePoint", relativePoint or durabilityWarningGetLayoutValue("point") or "CENTER", nil, true)
+	end
+	if data.x ~= nil and DurabilityEditMode and DurabilityEditMode.SetValue then DurabilityEditMode:SetValue(DURABILITY_WARNING_EDITMODE_ID, "x", durabilityWarningClamp(data.x, -1000, 1000, 0), nil, true) end
+	if data.y ~= nil and DurabilityEditMode and DurabilityEditMode.SetValue then DurabilityEditMode:SetValue(DURABILITY_WARNING_EDITMODE_ID, "y", durabilityWarningClamp(data.y, -1000, 1000, 0), nil, true) end
+	if data.threshold ~= nil then addon.db[DURABILITY_WARNING_DB_THRESHOLD] = durabilityWarningClamp(data.threshold, 0, 100, DurabilityWarning.defaults.threshold) end
+	if data.readyCheckEnabled ~= nil then addon.db[DURABILITY_WARNING_DB_READY_ENABLED] = data.readyCheckEnabled == true end
+	if data.readyCheckThreshold ~= nil then addon.db[DURABILITY_WARNING_DB_READY_THRESHOLD] = durabilityWarningClamp(data.readyCheckThreshold, 0, 100, DurabilityWarning.defaults.readyCheckThreshold) end
+	if data.readyCheckDuration ~= nil then addon.db[DURABILITY_WARNING_DB_READY_DURATION] = durabilityWarningClamp(data.readyCheckDuration, 1, 60, DurabilityWarning.defaults.readyCheckDuration) end
+	if data.fontSize ~= nil then addon.db[DURABILITY_WARNING_DB_FONT_SIZE] = durabilityWarningClamp(data.fontSize, 8, 96, DurabilityWarning.defaults.fontSize) end
+	if type(data.fontFace) == "string" and data.fontFace ~= "" then addon.db[DURABILITY_WARNING_DB_FONT_FACE] = data.fontFace end
+	if type(data.fontStyle) == "string" and data.fontStyle ~= "" then addon.db[DURABILITY_WARNING_DB_FONT_STYLE] = durabilityWarningNormalizeFontStyle(data.fontStyle, DurabilityWarning.defaults.fontStyle) end
+	if type(data.color) == "table" then addon.db[DURABILITY_WARNING_DB_COLOR] = { r = data.color.r or 1, g = data.color.g or 0.1, b = data.color.b or 0.1, a = data.color.a or 1 } end
+	if data.blinkEnabled ~= nil then addon.db[DURABILITY_WARNING_DB_BLINK] = data.blinkEnabled == true end
+	if data.blinkRate ~= nil then addon.db[DURABILITY_WARNING_DB_BLINK_RATE] = durabilityWarningClamp(data.blinkRate, 0.2, 2, DurabilityWarning.defaults.blinkRate) end
+	self:ApplyAnchorPosition(anchorTargetChanged and durabilityWarningAnchorDefaultData(self:GetAnchorTarget()) or data)
+	if durabilityWarningPreviewActive then
+		self:ShowPreview()
+	else
+		self:Refresh()
+	end
+end
+
+local function durabilityWarningApplySetting(field, value)
+	if not addon.db then return end
+	if field == "anchorTarget" then
+		DurabilityWarning:ApplyLayoutData({ anchorTarget = value })
+		return
+	elseif field == "point" or field == "relativePoint" or field == "x" or field == "y" then
+		DurabilityWarning:ApplyLayoutData({ [field] = value })
+		return
+	elseif field == "threshold" then
+		addon.db[DURABILITY_WARNING_DB_THRESHOLD] = durabilityWarningClamp(value, 0, 100, DurabilityWarning.defaults.threshold)
+	elseif field == "readyCheckEnabled" then
+		addon.db[DURABILITY_WARNING_DB_READY_ENABLED] = value == true
+	elseif field == "readyCheckThreshold" then
+		addon.db[DURABILITY_WARNING_DB_READY_THRESHOLD] = durabilityWarningClamp(value, 0, 100, DurabilityWarning.defaults.readyCheckThreshold)
+	elseif field == "readyCheckDuration" then
+		addon.db[DURABILITY_WARNING_DB_READY_DURATION] = durabilityWarningClamp(value, 1, 60, DurabilityWarning.defaults.readyCheckDuration)
+	elseif field == "fontSize" then
+		addon.db[DURABILITY_WARNING_DB_FONT_SIZE] = durabilityWarningClamp(value, 8, 96, DurabilityWarning.defaults.fontSize)
+	elseif field == "fontFace" then
+		addon.db[DURABILITY_WARNING_DB_FONT_FACE] = type(value) == "string" and value ~= "" and value or DurabilityWarning.defaults.fontFace
+	elseif field == "fontStyle" then
+		addon.db[DURABILITY_WARNING_DB_FONT_STYLE] = durabilityWarningNormalizeFontStyle(value, DurabilityWarning.defaults.fontStyle)
+	elseif field == "color" and type(value) == "table" then
+		addon.db[DURABILITY_WARNING_DB_COLOR] = { r = value.r or 1, g = value.g or 0.1, b = value.b or 0.1, a = value.a or 1 }
+	elseif field == "blinkEnabled" then
+		addon.db[DURABILITY_WARNING_DB_BLINK] = value == true
+	elseif field == "blinkRate" then
+		addon.db[DURABILITY_WARNING_DB_BLINK_RATE] = durabilityWarningClamp(value, 0.2, 2, DurabilityWarning.defaults.blinkRate)
+	end
+	if durabilityWarningPreviewActive then
+		DurabilityWarning:ShowPreview()
+	else
+		DurabilityWarning:Refresh()
+	end
+end
+
+function DurabilityWarning:RegisterEditMode()
+	if durabilityWarningEditModeRegistered then return end
+	if not (DurabilityEditMode and DurabilityEditMode.RegisterFrame and DurabilitySettingType) then return end
+	local settings = {
+		{
+			name = L["Anchor"] or "Anchor",
+			kind = DurabilitySettingType.Collapsible,
+			id = "durabilityWarningAnchor",
+			defaultCollapsed = false,
+		},
+		{
+			name = L["Anchor to"] or "Anchor to",
+			kind = DurabilitySettingType.Dropdown,
+			field = "anchorTarget",
+			parentId = "durabilityWarningAnchor",
+			height = 260,
+			get = function() return DurabilityWarning:GetAnchorTarget() end,
+			set = function(_, value) durabilityWarningApplySetting("anchorTarget", value) end,
+			generator = function(_, root)
+				local current = DurabilityWarning:GetAnchorTarget()
+				for _, option in ipairs(durabilityWarningAnchorEntries(current)) do
+					local key = option.key or option.value
+					local label = option.label or option.text or tostring(key)
+					root:CreateRadio(label, function() return DurabilityWarning:GetAnchorTarget() == key end, function() durabilityWarningApplySetting("anchorTarget", key) end)
+				end
+			end,
+		},
+		{
+			name = L["Anchor point"] or "Anchor point",
+			kind = DurabilitySettingType.Dropdown,
+			field = "point",
+			parentId = "durabilityWarningAnchor",
+			height = 180,
+			get = function() return durabilityWarningGetLayoutValue("point") or "CENTER" end,
+			set = function(_, value) durabilityWarningApplySetting("point", value) end,
+			generator = function(_, root)
+				for _, option in ipairs(durabilityWarningAnchorOptions) do
+					root:CreateRadio(option.label, function() return (durabilityWarningGetLayoutValue("point") or "CENTER") == option.value end, function() durabilityWarningApplySetting("point", option.value) end)
+				end
+			end,
+		},
+		{
+			name = L["Relative point"] or "Relative point",
+			kind = DurabilitySettingType.Dropdown,
+			field = "relativePoint",
+			parentId = "durabilityWarningAnchor",
+			height = 180,
+			get = function() return durabilityWarningGetLayoutValue("relativePoint") or durabilityWarningGetLayoutValue("point") or "CENTER" end,
+			set = function(_, value) durabilityWarningApplySetting("relativePoint", value) end,
+			generator = function(_, root)
+				for _, option in ipairs(durabilityWarningAnchorOptions) do
+					root:CreateRadio(option.label, function() return (durabilityWarningGetLayoutValue("relativePoint") or durabilityWarningGetLayoutValue("point") or "CENTER") == option.value end, function() durabilityWarningApplySetting("relativePoint", option.value) end)
+				end
+			end,
+		},
+		{
+			name = L["X Offset"] or "X Offset",
+			kind = DurabilitySettingType.Slider,
+			field = "x",
+			parentId = "durabilityWarningAnchor",
+			minValue = -1000,
+			maxValue = 1000,
+			valueStep = 1,
+			allowInput = true,
+			get = function() return tonumber(durabilityWarningGetLayoutValue("x")) or 0 end,
+			set = function(_, value) durabilityWarningApplySetting("x", value) end,
+			formatter = durabilityWarningFormatSliderValue,
+		},
+		{
+			name = L["Y Offset"] or "Y Offset",
+			kind = DurabilitySettingType.Slider,
+			field = "y",
+			parentId = "durabilityWarningAnchor",
+			minValue = -1000,
+			maxValue = 1000,
+			valueStep = 1,
+			allowInput = true,
+			get = function() return tonumber(durabilityWarningGetLayoutValue("y")) or 0 end,
+			set = function(_, value) durabilityWarningApplySetting("y", value) end,
+			formatter = durabilityWarningFormatSliderValue,
+		},
+		{
+			name = L["DurabilityWarningThreshold"] or "Show below durability",
+			kind = DurabilitySettingType.Slider,
+			field = "threshold",
+			default = DurabilityWarning.defaults.threshold,
+			minValue = 0,
+			maxValue = 100,
+			valueStep = 1,
+			get = function() return tonumber(addon.db and addon.db[DURABILITY_WARNING_DB_THRESHOLD]) or DurabilityWarning.defaults.threshold end,
+			set = function(_, value) durabilityWarningApplySetting("threshold", value) end,
+			formatter = function(value) return string.format("%d%%", math.floor((tonumber(value) or 0) + 0.5)) end,
+		},
+		{
+			name = L["DurabilityWarningReadyCheckEnabled"] or "Show on ready check",
+			kind = DurabilitySettingType.Checkbox,
+			field = "readyCheckEnabled",
+			default = DurabilityWarning.defaults.readyCheckEnabled,
+			get = function() return addon.db and addon.db[DURABILITY_WARNING_DB_READY_ENABLED] == true end,
+			set = function(_, value) durabilityWarningApplySetting("readyCheckEnabled", value) end,
+		},
+		{
+			name = L["DurabilityWarningReadyCheckThreshold"] or "Ready check threshold",
+			kind = DurabilitySettingType.Slider,
+			field = "readyCheckThreshold",
+			default = DurabilityWarning.defaults.readyCheckThreshold,
+			minValue = 0,
+			maxValue = 100,
+			valueStep = 1,
+			get = function() return tonumber(addon.db and addon.db[DURABILITY_WARNING_DB_READY_THRESHOLD]) or DurabilityWarning.defaults.readyCheckThreshold end,
+			set = function(_, value) durabilityWarningApplySetting("readyCheckThreshold", value) end,
+			formatter = function(value) return string.format("%d%%", math.floor((tonumber(value) or 0) + 0.5)) end,
+			isEnabled = function() return addon.db and addon.db[DURABILITY_WARNING_DB_READY_ENABLED] == true end,
+		},
+		{
+			name = L["DurabilityWarningReadyCheckDuration"] or "Ready check display time",
+			kind = DurabilitySettingType.Slider,
+			field = "readyCheckDuration",
+			default = DurabilityWarning.defaults.readyCheckDuration,
+			minValue = 1,
+			maxValue = 60,
+			valueStep = 1,
+			get = function() return tonumber(addon.db and addon.db[DURABILITY_WARNING_DB_READY_DURATION]) or DurabilityWarning.defaults.readyCheckDuration end,
+			set = function(_, value) durabilityWarningApplySetting("readyCheckDuration", value) end,
+			formatter = function(value) return string.format("%ds", math.floor((tonumber(value) or 0) + 0.5)) end,
+			isEnabled = function() return addon.db and addon.db[DURABILITY_WARNING_DB_READY_ENABLED] == true end,
+		},
+		{
+			name = L["Blink"] or "Blink",
+			kind = DurabilitySettingType.Checkbox,
+			field = "blinkEnabled",
+			default = DurabilityWarning.defaults.blinkEnabled,
+			get = function() return addon.db and addon.db[DURABILITY_WARNING_DB_BLINK] == true end,
+			set = function(_, value) durabilityWarningApplySetting("blinkEnabled", value) end,
+		},
+		{
+			name = L["Blink rate (s)"] or "Blink rate (s)",
+			kind = DurabilitySettingType.Slider,
+			field = "blinkRate",
+			default = DurabilityWarning.defaults.blinkRate,
+			minValue = 0.2,
+			maxValue = 2,
+			valueStep = 0.05,
+			get = function() return tonumber(addon.db and addon.db[DURABILITY_WARNING_DB_BLINK_RATE]) or DurabilityWarning.defaults.blinkRate end,
+			set = function(_, value) durabilityWarningApplySetting("blinkRate", value) end,
+			formatter = function(value) return string.format("%.2fs", tonumber(value) or 0) end,
+			isEnabled = function() return addon.db and addon.db[DURABILITY_WARNING_DB_BLINK] == true end,
+		},
+		{
+			name = FONT_SIZE,
+			kind = DurabilitySettingType.Slider,
+			field = "fontSize",
+			default = DurabilityWarning.defaults.fontSize,
+			minValue = 8,
+			maxValue = 96,
+			valueStep = 1,
+			get = function() return tonumber(addon.db and addon.db[DURABILITY_WARNING_DB_FONT_SIZE]) or DurabilityWarning.defaults.fontSize end,
+			set = function(_, value) durabilityWarningApplySetting("fontSize", value) end,
+			formatter = function(value) return tostring(math.floor((tonumber(value) or 0) + 0.5)) end,
+		},
+		{
+			name = L["Font"] or "Font",
+			kind = DurabilitySettingType.Dropdown,
+			field = "fontFace",
+			height = 200,
+			get = function() return addon.db and addon.db[DURABILITY_WARNING_DB_FONT_FACE] or DurabilityWarning.defaults.fontFace end,
+			set = function(_, value) durabilityWarningApplySetting("fontFace", value) end,
+			generator = function(_, root)
+				for _, option in ipairs(durabilityWarningFontFaceOptions()) do
+					root:CreateRadio(option.label, function() return (addon.db and addon.db[DURABILITY_WARNING_DB_FONT_FACE] or DurabilityWarning.defaults.fontFace) == option.value end, function() durabilityWarningApplySetting("fontFace", option.value) end)
+				end
+			end,
+		},
+		{
+			name = L["Font outline"] or "Font outline",
+			kind = DurabilitySettingType.Dropdown,
+			field = "fontStyle",
+			height = 220,
+			get = function() return addon.db and addon.db[DURABILITY_WARNING_DB_FONT_STYLE] or DurabilityWarning.defaults.fontStyle end,
+			set = function(_, value) durabilityWarningApplySetting("fontStyle", value) end,
+			generator = function(_, root)
+				for _, option in ipairs(durabilityWarningFontStyleOptions()) do
+					root:CreateRadio(option.label, function() return (addon.db and addon.db[DURABILITY_WARNING_DB_FONT_STYLE] or DurabilityWarning.defaults.fontStyle) == option.value end, function() durabilityWarningApplySetting("fontStyle", option.value) end)
+				end
+			end,
+		},
+		{
+			name = L["Text color"] or "Text color",
+			kind = DurabilitySettingType.Color,
+			field = "color",
+			default = DurabilityWarning.defaults.color,
+			hasOpacity = true,
+			get = function()
+				local r, g, b, a = durabilityWarningColor()
+				return { r = r, g = g, b = b, a = a }
+			end,
+			set = function(_, value) durabilityWarningApplySetting("color", value) end,
+		},
+	}
+	DurabilityEditMode:RegisterFrame(DURABILITY_WARNING_EDITMODE_ID, {
+		frame = self:EnsureFrame(),
+		title = L["DurabilityWarning"] or "Durability Warning",
+		layoutDefaults = { point = "CENTER", relativePoint = "CENTER", x = 0, y = 180 },
+		onApply = function(_, _, data)
+			if data then data.anchorTarget = nil end
+			DurabilityWarning:ApplyLayoutData(data)
+		end,
+		onEnter = function() DurabilityWarning:ShowEditModeHint(true) end,
+		onExit = function() DurabilityWarning:ShowEditModeHint(false) end,
+		isEnabled = function() return addon.db and addon.db[DURABILITY_WARNING_DB_ENABLED] == true end,
+		settings = settings,
+		relativeTo = function() return DurabilityWarning:ResolveAnchorFrame() end,
+		allowDrag = function() return DurabilityWarning:AnchorUsesUIParent() end,
+		managePosition = false,
+		showOutsideEditMode = false,
+		showReset = false,
+		showSettingsReset = false,
+		enableOverlayToggle = true,
+	})
+	durabilityWarningEditModeRegistered = true
+end
+
+function DurabilityWarning:RegisterEvents()
+	if durabilityWarningEventFrame then return end
+	durabilityWarningEventFrame = CreateFrame("Frame")
+	durabilityWarningEventFrame:RegisterEvent("PLAYER_LOGIN")
+	durabilityWarningEventFrame:RegisterEvent("UPDATE_INVENTORY_DURABILITY")
+	durabilityWarningEventFrame:RegisterEvent("READY_CHECK")
+	durabilityWarningEventFrame:SetScript("OnEvent", function(_, event)
+		if not DurabilityWarning:IsEnabled() then return end
+		if event == "READY_CHECK" then durabilityWarningReadyUntil = (GetTime and GetTime() or 0) + (tonumber(addon.db and addon.db[DURABILITY_WARNING_DB_READY_DURATION]) or DurabilityWarning.defaults.readyCheckDuration) end
+		DurabilityWarning:Refresh()
+	end)
+end
+
+function DurabilityWarning:UnregisterEvents()
+	if not durabilityWarningEventFrame then return end
+	durabilityWarningEventFrame:UnregisterAllEvents()
+	durabilityWarningEventFrame:SetScript("OnEvent", nil)
+	durabilityWarningEventFrame = nil
+end
+
+function DurabilityWarning:Enable()
+	self:EnsureFrame()
+	self:ApplyStyle()
+	self:RegisterEditMode()
+	self:RegisterEvents()
+	self:Refresh()
+	if DurabilityEditMode and DurabilityEditMode.RefreshFrame then DurabilityEditMode:RefreshFrame(DURABILITY_WARNING_EDITMODE_ID) end
+end
+
+function DurabilityWarning:Disable()
+	durabilityWarningReadyUntil = 0
+	durabilityWarningStopBlinkTicker()
+	self:UnregisterEvents()
+	if self.frame then self.frame:Hide() end
+	if DurabilityEditMode and DurabilityEditMode.RefreshFrame then DurabilityEditMode:RefreshFrame(DURABILITY_WARNING_EDITMODE_ID) end
+end
+
+function DurabilityWarning:Initialize()
+	if not addon.db then return end
+	addon.functions.InitDBValue(DURABILITY_WARNING_DB_ENABLED, DurabilityWarning.defaults.enabled)
+	addon.functions.InitDBValue(DURABILITY_WARNING_DB_THRESHOLD, DurabilityWarning.defaults.threshold)
+	addon.functions.InitDBValue(DURABILITY_WARNING_DB_READY_ENABLED, DurabilityWarning.defaults.readyCheckEnabled)
+	addon.functions.InitDBValue(DURABILITY_WARNING_DB_READY_THRESHOLD, DurabilityWarning.defaults.readyCheckThreshold)
+	addon.functions.InitDBValue(DURABILITY_WARNING_DB_READY_DURATION, DurabilityWarning.defaults.readyCheckDuration)
+	addon.functions.InitDBValue(DURABILITY_WARNING_DB_FONT_SIZE, DurabilityWarning.defaults.fontSize)
+	addon.functions.InitDBValue(DURABILITY_WARNING_DB_FONT_FACE, DurabilityWarning.defaults.fontFace)
+	addon.functions.InitDBValue(DURABILITY_WARNING_DB_FONT_STYLE, DurabilityWarning.defaults.fontStyle)
+	addon.functions.InitDBValue(DURABILITY_WARNING_DB_COLOR, DurabilityWarning.defaults.color)
+	addon.functions.InitDBValue(DURABILITY_WARNING_DB_BLINK, DurabilityWarning.defaults.blinkEnabled)
+	addon.functions.InitDBValue(DURABILITY_WARNING_DB_BLINK_RATE, DurabilityWarning.defaults.blinkRate)
+	addon.functions.InitDBValue(DURABILITY_WARNING_DB_ANCHOR_TARGET, DurabilityWarning.defaults.anchorTarget)
+	if self:IsEnabled() then self:Enable() end
+end
 
 ---- REGION Functions
 
@@ -303,6 +1032,20 @@ local function applyGemLayout(element, slot, displayCount, outsideWithIlvl)
 	end
 end
 
+local function clearGemFrame(gemFrame)
+	if not gemFrame then return end
+	if gemFrame.EnableMouse then gemFrame:EnableMouse(false) end
+	gemFrame:SetScript("OnEnter", nil)
+	gemFrame:SetScript("OnUpdate", nil)
+	gemFrame:UnregisterAllEvents()
+	gemFrame:Hide()
+end
+
+local function setGemFrameTooltip(gemFrame, enabled)
+	if not gemFrame then return end
+	if gemFrame.EnableMouse then gemFrame:EnableMouse(enabled == true) end
+end
+
 local function getMissingEnchantOverlayColor()
 	local c = addon.db and addon.db["missingEnchantOverlayColor"]
 	local r = (c and c.r) or 1
@@ -443,11 +1186,17 @@ local function CheckItemGems(element, itemLink, emptySocketsCount, key, pdElemen
 	for i = 1, emptySocketsCount do
 		local gemName, gemLink = C_Item.GetItemGem(itemLink, i)
 		element.gems[i]:SetScript("OnEnter", nil)
+		setGemFrameTooltip(element.gems[i], false)
 
 		if gemName then
 			local icon = C_Item.GetItemIconByID(gemLink)
 			element.gems[i].icon:SetTexture(icon)
 			element.gems[i].icon:SetVertexColor(1, 1, 1)
+			if pdElement == InspectPaperDollFrame then
+				setGemFrameTooltip(element.gems[i], InspectOpt("gemtip"))
+			else
+				setGemFrameTooltip(element.gems[i], CharOpt("gemtip"))
+			end
 			element.gems[i]:SetScript("OnEnter", function(self)
 				local showTip
 				if pdElement == InspectPaperDollFrame then
@@ -613,9 +1362,7 @@ local function removeInspectElements()
 			if element.borderGradient then element.borderGradient:Hide() end
 			if element.gems and #element.gems > 0 then
 				for i = 1, #element.gems do
-					element.gems[i]:UnregisterAllEvents()
-					element.gems[i]:SetScript("OnUpdate", nil)
-					element.gems[i]:Hide()
+					clearGemFrame(element.gems[i])
 				end
 			end
 		end
@@ -737,9 +1484,7 @@ local function onInspect(arg1)
 								displayCount = math.max(socketCount, neededSockets)
 								if element.gems and #element.gems > displayCount then
 									for i = displayCount + 1, #element.gems do
-										element.gems[i]:UnregisterAllEvents()
-										element.gems[i]:SetScript("OnUpdate", nil)
-										element.gems[i]:Hide()
+										clearGemFrame(element.gems[i])
 									end
 								end
 								if not element.gems then element.gems = {} end
@@ -759,6 +1504,7 @@ local function onInspect(arg1)
 									if i > socketCount then
 										element.gems[i].icon:SetVertexColor(1, 0, 0)
 										element.gems[i]:SetScript("OnEnter", nil)
+										setGemFrameTooltip(element.gems[i], false)
 									else
 										element.gems[i].icon:SetVertexColor(1, 1, 1)
 									end
@@ -767,9 +1513,7 @@ local function onInspect(arg1)
 								if socketCount > 0 then CheckItemGems(element, itemLink, socketCount, key, pdElement) end
 							elseif element.gems and #element.gems > 0 then
 								for i = 1, #element.gems do
-									element.gems[i]:UnregisterAllEvents()
-									element.gems[i]:SetScript("OnUpdate", nil)
-									element.gems[i]:Hide()
+									clearGemFrame(element.gems[i])
 								end
 							end
 
@@ -920,9 +1664,8 @@ local function setIlvlText(element, slot)
 		if element.gems then
 			for i = 1, 3 do
 				if element.gems[i] then
-					element.gems[i]:Hide()
+					clearGemFrame(element.gems[i])
 					element.gems[i].icon:SetTexture("Interface\\ItemSocketingFrame\\UI-EmptySocket-Prismatic")
-					element.gems[i]:SetScript("OnEnter", nil)
 					element.gems[i].icon:SetVertexColor(1, 1, 1)
 				end
 			end
@@ -970,19 +1713,18 @@ local function setIlvlText(element, slot)
 							if i > socketCount then
 								element.gems[i].icon:SetVertexColor(1, 0, 0)
 								element.gems[i]:SetScript("OnEnter", nil)
+								setGemFrameTooltip(element.gems[i], false)
 							else
 								element.gems[i].icon:SetVertexColor(1, 1, 1)
 							end
 						else
-							element.gems[i]:Hide()
-							element.gems[i]:SetScript("OnEnter", nil)
+							clearGemFrame(element.gems[i])
 						end
 					end
 					if socketCount > 0 then CheckItemGems(element, link, socketCount, slot) end
 				else
 					for i = 1, #element.gems do
-						element.gems[i]:Hide()
-						element.gems[i]:SetScript("OnEnter", nil)
+						clearGemFrame(element.gems[i])
 					end
 				end
 
@@ -1156,6 +1898,8 @@ local function UpdateItemLevel()
 end
 hooksecurefunc("PaperDollFrame_SetItemLevel", function(statFrame, unit) UpdateItemLevel() end)
 
+local requestDurabilityUpdate
+
 local function setCharFrame()
 	if addon.functions and addon.functions.refreshCharacterFrameElementFonts then addon.functions.refreshCharacterFrameElementFonts() end
 	if InCombatLockdown and InCombatLockdown() then
@@ -1169,7 +1913,7 @@ local function setCharFrame()
 		local cataclystInfo = C_CurrencyInfo.GetCurrencyInfo(addon.variables.catalystID)
 		addon.general.iconFrame.count:SetText(cataclystInfo.quantity)
 	end
-	if addon.db["showDurabilityOnCharframe"] and not addon.functions.IsTimerunner() then calculateDurability() end
+	requestDurabilityUpdate()
 	for key, value in pairs(addon.variables.itemSlots) do
 		setIlvlText(value, key)
 	end
@@ -1442,7 +2186,16 @@ local function applyKnownTextureTint(texture, state)
 		end
 	end
 end
-local function applyKnownStateToFrame(frame, state, visited)
+local merchantKnownVisited = {}
+local applyKnownStateToFrame
+
+local function applyKnownStateToObjects(state, visited, object, ...)
+	if not object then return end
+	applyKnownStateToFrame(object, state, visited)
+	return applyKnownStateToObjects(state, visited, ...)
+end
+
+applyKnownStateToFrame = function(frame, state, visited)
 	if not frame or visited[frame] then return end
 	visited[frame] = true
 
@@ -1456,21 +2209,23 @@ local function applyKnownStateToFrame(frame, state, visited)
 	end
 
 	if frame.GetRegions then
-		local regions = { frame:GetRegions() }
-		for _, region in ipairs(regions) do
-			applyKnownStateToFrame(region, state, visited)
-		end
+		applyKnownStateToObjects(state, visited, frame:GetRegions())
 	end
 
 	if frame.GetChildren then
-		local children = { frame:GetChildren() }
-		for _, child in ipairs(children) do
-			applyKnownStateToFrame(child, state, visited)
-		end
+		applyKnownStateToObjects(state, visited, frame:GetChildren())
 	end
 end
+
+local function applyKnownStateToRoot(frame, state)
+	wipe(merchantKnownVisited)
+	applyKnownStateToFrame(frame, state, merchantKnownVisited)
+end
+
 local function setMerchantKnownIcon(itemButton, state)
 	if not itemButton then return end
+	if itemButton.__EnhanceQoLMerchantKnownState == state then return end
+	itemButton.__EnhanceQoLMerchantKnownState = state
 
 	if state then
 		if not itemButton.MerchantKnownIcon then
@@ -1501,10 +2256,10 @@ local function setMerchantKnownIcon(itemButton, state)
 			if nameRegion then applyKnownFontTint(nameRegion, true) end
 
 			local moneyFrame = parentFrame.MoneyFrame or (parentName and _G[parentName .. "MoneyFrame"])
-			if moneyFrame then applyKnownStateToFrame(moneyFrame, true, {}) end
+			if moneyFrame then applyKnownStateToRoot(moneyFrame, true) end
 
 			local altCurrencyFrame = parentFrame.AltCurrencyFrame or (parentName and _G[parentName .. "AltCurrencyFrame"])
-			if altCurrencyFrame then applyKnownStateToFrame(altCurrencyFrame, true, {}) end
+			if altCurrencyFrame then applyKnownStateToRoot(altCurrencyFrame, true) end
 		end
 	else
 		if itemButton.MerchantKnownIcon then itemButton.MerchantKnownIcon:Hide() end
@@ -1517,35 +2272,66 @@ local function setMerchantKnownIcon(itemButton, state)
 			if nameRegion then applyKnownFontTint(nameRegion, false) end
 
 			local moneyFrame = parentFrame.MoneyFrame or (parentName and _G[parentName .. "MoneyFrame"])
-			if moneyFrame then applyKnownStateToFrame(moneyFrame, false, {}) end
+			if moneyFrame then applyKnownStateToRoot(moneyFrame, false) end
 
 			local altCurrencyFrame = parentFrame.AltCurrencyFrame or (parentName and _G[parentName .. "AltCurrencyFrame"])
-			if altCurrencyFrame then applyKnownStateToFrame(altCurrencyFrame, false, {}) end
+			if altCurrencyFrame then applyKnownStateToRoot(altCurrencyFrame, false) end
 		end
 	end
+end
+
+local function merchantKnownTextMatches(text)
+	if not text then return false end
+	if ITEM_SPELL_KNOWN and text:find(ITEM_SPELL_KNOWN, 1, true) then return true end
+	local cosmeticKnownText = _G.ERR_COSMETIC_KNOWN
+	if cosmeticKnownText and text:find(cosmeticKnownText, 1, true) then return true end
+	return false
+end
+
+local function merchantHousingOwnedTextMatches(text)
+	local decorOwnedCountFormat = _G.HOUSING_DECOR_OWNED_COUNT_FORMAT
+	if not text or not decorOwnedCountFormat then return false end
+
+	local prefix = decorOwnedCountFormat:match("^(.-)%%[%d%$%.%-]*d")
+	if not prefix or prefix == "" or not text:find(prefix, 1, true) then return false end
+
+	local totalOwned = tonumber(text:match("(%d+)"))
+	return totalOwned ~= nil and totalOwned > 0
+end
+
+local ITEM_CLASS_HOUSING = Enum and Enum.ItemClass and Enum.ItemClass.Housing or 20
+
+local function merchantTooltipHasKnownState(tooltipData, isHousingItem)
+	if not tooltipData then return false end
+	if TooltipUtil and TooltipUtil.SurfaceArgs then TooltipUtil.SurfaceArgs(tooltipData) end
+	if not tooltipData.lines then return false end
+
+	local isOwnedHousingDecor = false
+	for _, line in ipairs(tooltipData.lines) do
+		if TooltipUtil and TooltipUtil.SurfaceArgs then TooltipUtil.SurfaceArgs(line) end
+		local text = line.leftText or line.rightText
+		if merchantKnownTextMatches(text) then return true end
+		if merchantHousingOwnedTextMatches(text) then isOwnedHousingDecor = true end
+	end
+
+	return isHousingItem and isOwnedHousingDecor
 end
 
 local function merchantItemIsKnown(itemIndex)
 	if not itemIndex or itemIndex <= 0 then return false end
 	if not C_TooltipInfo or (not C_TooltipInfo.GetMerchantItem and not C_TooltipInfo.GetHyperlink) then return false end
 
+	local itemLink = GetMerchantItemLink and GetMerchantItemLink(itemIndex) or nil
+	local itemClassID = itemLink and C_Item and C_Item.GetItemInfoInstant and select(6, C_Item.GetItemInfoInstant(itemLink)) or nil
+	local isHousingItem = itemClassID == ITEM_CLASS_HOUSING
 	local tooltipData
 	if C_TooltipInfo.GetMerchantItem then tooltipData = C_TooltipInfo.GetMerchantItem(itemIndex) end
 
 	if not tooltipData and C_TooltipInfo.GetHyperlink and GetMerchantItemLink then
-		local itemLink = GetMerchantItemLink(itemIndex)
 		if itemLink then tooltipData = C_TooltipInfo.GetHyperlink(itemLink) end
 	end
 
-	if not tooltipData then return false end
-	if TooltipUtil and TooltipUtil.SurfaceArgs then TooltipUtil.SurfaceArgs(tooltipData) end
-	if not tooltipData.lines then return false end
-	for _, line in ipairs(tooltipData.lines) do
-		if TooltipUtil and TooltipUtil.SurfaceArgs then TooltipUtil.SurfaceArgs(line) end
-		local text = line.leftText or line.rightText
-		if text and text:find(ITEM_SPELL_KNOWN, 1, true) then return true end
-	end
-	return false
+	return merchantTooltipHasKnownState(tooltipData, isHousingItem)
 end
 
 local petCollectedCache = {}
@@ -1584,11 +2370,18 @@ if C_PetJournal then
 	petJournalWatcher:SetScript("OnEvent", clearPetCollectedCache)
 end
 
+local merchantButtonInfoTouched = false
+
+local function isMerchantButtonInfoEnabled()
+	return addon.db["showIlvlOnMerchantframe"] or addon.db["markKnownOnMerchant"] or addon.db["markCollectedPetsOnMerchant"]
+end
+
 local function applyMerchantButtonInfo()
 	local showIlvl = addon.db["showIlvlOnMerchantframe"]
 	local highlightKnown = addon.db["markKnownOnMerchant"]
 	local highlightCollectedPets = addon.db["markCollectedPetsOnMerchant"]
 	if not showIlvl and not highlightKnown and not highlightCollectedPets then
+		if not merchantButtonInfoTouched then return end
 		local itemsPerPage = MERCHANT_ITEMS_PER_PAGE or 10
 		for i = 1, itemsPerPage do
 			local itemButton = _G["MerchantItem" .. i .. "ItemButton"]
@@ -1601,8 +2394,11 @@ local function applyMerchantButtonInfo()
 				if itemButton.ItemLevelText then itemButton.ItemLevelText:Hide() end
 			end
 		end
+		merchantButtonInfoTouched = false
 		return
 	end
+
+	merchantButtonInfoTouched = true
 
 	local itemsPerPage = MERCHANT_ITEMS_PER_PAGE or 10 -- Anzahl der Items pro Seite (Standard 10)
 	local currentPage = MerchantFrame.page or 1 -- Aktuelle Seite
@@ -1790,19 +2586,56 @@ local function applyMerchantButtonInfo()
 end
 
 local merchantRefreshPending = false
+local merchantRefreshDeferredForAutoSell = false
+local durabilityUpdateDeferredForAutoSell = false
+local flushingDeferredAutoSellUpdates = false
+
+local function isVendorAutoSellInProgress()
+	local vendorFunctions = addon.Vendor and addon.Vendor.functions
+	return vendorFunctions and vendorFunctions.IsAutoSellInProgress and vendorFunctions.IsAutoSellInProgress() == true
+end
+
+local function isPaperDollFrameVisible()
+	return _G.PaperDollFrame and _G.PaperDollFrame:IsVisible()
+end
+
+requestDurabilityUpdate = function()
+	if not addon.db["showDurabilityOnCharframe"] then return end
+	if not isPaperDollFrameVisible() then return end
+	if not flushingDeferredAutoSellUpdates and isVendorAutoSellInProgress() then
+		durabilityUpdateDeferredForAutoSell = true
+		return
+	end
+	calculateDurability()
+end
+
 local function updateMerchantButtonInfo()
+	if not isMerchantButtonInfoEnabled() and not merchantButtonInfoTouched then return end
+	if not flushingDeferredAutoSellUpdates and isVendorAutoSellInProgress() then
+		merchantRefreshDeferredForAutoSell = true
+		return
+	end
 	if merchantRefreshPending then return end
 	merchantRefreshPending = true
 
-	if C_Timer and C_Timer.After then
-		C_Timer.After(0, function()
-			merchantRefreshPending = false
-			applyMerchantButtonInfo()
-		end)
-	else
+	RunNextFrame(function()
 		merchantRefreshPending = false
 		applyMerchantButtonInfo()
-	end
+	end)
+end
+
+function addon.functions.FlushDeferredItemInventoryAutoSellUpdates()
+	if flushingDeferredAutoSellUpdates then return end
+	if not merchantRefreshDeferredForAutoSell and not durabilityUpdateDeferredForAutoSell then return end
+
+	local refreshMerchant = merchantRefreshDeferredForAutoSell
+	local refreshDurability = durabilityUpdateDeferredForAutoSell
+	merchantRefreshDeferredForAutoSell = false
+	durabilityUpdateDeferredForAutoSell = false
+	flushingDeferredAutoSellUpdates = true
+	if refreshMerchant then updateMerchantButtonInfo() end
+	if refreshDurability then requestDurabilityUpdate() end
+	flushingDeferredAutoSellUpdates = false
 end
 
 local function updateBuybackButtonInfo()
@@ -1948,6 +2781,7 @@ function addon.functions.initItemInventory()
 	addon.functions.InitDBValue("bagSortOrderDirection", "DEFAULT")
 	addon.functions.InitDBValue("bagLootOrderEnabled", false)
 	addon.functions.InitDBValue("bagLootOrderDirection", "DEFAULT")
+	if addon.DurabilityWarning and addon.DurabilityWarning.Initialize then addon.DurabilityWarning:Initialize() end
 
 	applyBagSortOrder()
 	applyLootOrder()
@@ -2049,6 +2883,7 @@ function addon.functions.initItemInventory()
 
 			value.gems[i]:SetFrameStrata("DIALOG")
 			value.gems[i]:SetFrameLevel(value:GetFrameLevel() + 20)
+			value.gems[i]:EnableMouse(false)
 
 			value.gems[i]:SetScript("OnLeave", function(self) GameTooltip:Hide() end)
 
@@ -2067,13 +2902,109 @@ end
 
 local cInventory = addon.SettingsLayout.rootGENERAL
 
+local function shouldShowNativeBagSettings()
+	return not (addon.db and addon.db["enableBagsModule"] == true)
+end
+
 local expandable = addon.functions.SettingsCreateExpandableSection(cInventory, {
 	name = L["ItemsInventory"],
+	newTagID = "BagsInventory",
+	iconKey = "bags",
+	isVisible = shouldShowNativeBagSettings,
+	modernOnly = true,
 	expanded = false,
 	colorizeTitle = false,
 })
+addon.SettingsLayout.bagsInventorySection = expandable
 
-addon.functions.SettingsCreateHeadline(cInventory, BAGSLOT, { parentSection = expandable })
+local function refreshSettingsLayout()
+	if SettingsInbound and SettingsInbound.RepairDisplay then
+		SettingsInbound.RepairDisplay()
+	elseif SettingsPanel and SettingsPanel.RepairDisplay then
+		SettingsPanel:RepairDisplay()
+	end
+end
+
+local function gateNativeBagSetting(entry)
+	local initializer = entry
+	if type(entry) == "table" then
+		initializer = entry.initializer or entry.element or entry
+	end
+	if initializer and initializer.AddShownPredicate then
+		initializer:AddShownPredicate(shouldShowNativeBagSettings)
+	end
+	return entry
+end
+gateNativeBagSetting(expandable)
+
+if addon.Bags then
+	addon.Bags.integrated = true
+	local bagsSuiteExpandable = addon.SettingsLayout.suitesBagsSection
+	if not bagsSuiteExpandable then
+		bagsSuiteExpandable = addon.functions.SettingsCreateExpandableSection(cInventory, {
+			name = L["configCenterBags"] or "Bags",
+			configPageKey = "Bags",
+			description = L["bagsModuleEnableDesc"],
+			iconKey = "bags",
+			modernCategory = "suites",
+			modernOnly = true,
+			expanded = false,
+			colorizeTitle = false,
+		})
+		addon.SettingsLayout.suitesBagsSection = bagsSuiteExpandable
+	end
+
+	addon.functions.SettingsCreateCheckbox(cInventory, {
+		var = "enableBagsModule",
+		text = L["bagsModuleEnable"] or "Enable Bags module",
+		desc = L["bagsModuleEnableDesc"] or "Opt-in replacement for the default bag window. Disabling after it was enabled takes full effect after a UI reload.",
+		default = false,
+		parentSection = bagsSuiteExpandable,
+		get = function()
+			return addon.db and addon.db.enableBagsModule == true
+		end,
+		func = function(value)
+			addon.db = addon.db or {}
+			local wasEnabled = addon.db.enableBagsModule == true
+			local isEnabled = value == true
+			addon.db.enableBagsModule = isEnabled
+			if wasEnabled and not isEnabled then
+				addon.variables.requireReload = true
+				if addon.functions and addon.functions.checkReloadFrame then
+					addon.functions.checkReloadFrame()
+				end
+			end
+			if addon.Bags and addon.Bags.functions then
+				if isEnabled and addon.Bags.functions.Enable then
+					addon.Bags.functions.Enable()
+				elseif not isEnabled and addon.Bags.functions.Disable then
+					addon.Bags.functions.Disable()
+				end
+			end
+			refreshSettingsLayout()
+		end,
+		})
+	end
+
+assert(addon.SettingsLayout.gearUpgradeSection, "GearUpgrade section must be registered before durability warning settings")
+addon.functions.SettingsCreateCheckbox(cInventory, {
+	var = DURABILITY_WARNING_DB_ENABLED,
+	text = L["DurabilityWarningEnable"] or "Low durability warning",
+	desc = L["DurabilityWarningEnableDesc"] or "Shows a movable warning text when your equipped gear durability is low.",
+	default = DurabilityWarning.defaults.enabled,
+	func = function(value)
+		addon.db[DURABILITY_WARNING_DB_ENABLED] = value == true
+		if addon.db[DURABILITY_WARNING_DB_ENABLED] then
+			DurabilityWarning:Enable()
+		else
+			DurabilityWarning:Disable()
+		end
+	end,
+	parentSection = addon.SettingsLayout.gearUpgradeSection,
+})
+
+if shouldShowNativeBagSettings() then
+	gateNativeBagSetting(addon.functions.SettingsCreateHeadline(cInventory, BAGSLOT, { parentSection = expandable }))
 
 local function refreshBagFrames(includeBankPanel)
 	for _, frame in ipairs(ContainerFrameContainer.ContainerFrames) do
@@ -2162,9 +3093,11 @@ end
 local bindDesc = L["showBindOnBagItemsDesc"]
 if bindDesc then bindDesc = bindDesc:format(_G.ITEM_BIND_ON_EQUIP, _G.ITEM_ACCOUNTBOUND_UNTIL_EQUIP, _G.ITEM_BNETACCOUNTBOUND) end
 
-local bagDisplayDropdown = addon.functions.SettingsCreateMultiDropdown(cInventory, {
+local bagDisplayDropdown = gateNativeBagSetting(addon.functions.SettingsCreateMultiDropdown(cInventory, {
 	var = "bagDisplayOptions",
+	storage = false,
 	text = L["bagDisplayElements"] or "Bag indicators",
+	desc = L["bagDisplayElementsDesc"],
 	options = {
 		{ value = "ilvl", text = L["showIlvlOnBagItems"], tooltip = L["showIlvlOnBagItemsDesc"] },
 		{ value = "upgrade", text = L["showUpgradeArrowOnBagItems"], tooltip = L["showUpgradeArrowOnBagItemsDesc"] },
@@ -2174,10 +3107,11 @@ local bagDisplayDropdown = addon.functions.SettingsCreateMultiDropdown(cInventor
 	isSelectedFunc = function(key) return isBagDisplaySelected(key) end,
 	setSelectedFunc = function(key, selected) setBagDisplayOption(key, selected) end,
 	setSelection = applyBagDisplaySelection,
+	refreshOnChange = true,
 	parentSection = expandable,
-})
+}))
 
-addon.functions.SettingsCreateDropdown(cInventory, {
+gateNativeBagSetting(addon.functions.SettingsCreateDropdown(cInventory, {
 	list = {
 		TOPLEFT = L["Top Left"],
 		TOP = DIRECTION_TOP_LABEL,
@@ -2191,6 +3125,7 @@ addon.functions.SettingsCreateDropdown(cInventory, {
 		OUTSIDE = L["Outside"] or "Outside",
 	},
 	text = L["Item level position"],
+	desc = L["bagIlvlPositionDesc"],
 	get = function() return addon.db["bagIlvlPosition"] or "TOPLEFT" end,
 	set = function(key)
 		addon.db["bagIlvlPosition"] = key
@@ -2198,13 +3133,14 @@ addon.functions.SettingsCreateDropdown(cInventory, {
 	end,
 	parent = bagDisplayDropdown,
 	parentCheck = function() return isBagDisplaySelected("ilvl") end,
+	hiddenWhen = function() return not isBagDisplaySelected("ilvl") end,
 	default = "BOTTOMLEFT",
 	var = "bagIlvlPosition",
 	type = Settings.VarType.String,
 	parentSection = expandable,
-})
+}))
 
-addon.functions.SettingsCreateDropdown(cInventory, {
+gateNativeBagSetting(addon.functions.SettingsCreateDropdown(cInventory, {
 	list = {
 		LEFT = DIRECTION_LEFT_LABEL,
 		TOP = DIRECTION_TOP_LABEL,
@@ -2213,6 +3149,7 @@ addon.functions.SettingsCreateDropdown(cInventory, {
 		OUTSIDE = L["Outside"] or "Outside",
 	},
 	text = L["Upgrade track position"] or "Upgrade track position",
+	desc = L["bagTrackPositionDesc"],
 	get = function() return addon.db["bagTrackPosition"] or "OUTSIDE" end,
 	set = function(key)
 		addon.db["bagTrackPosition"] = key
@@ -2220,13 +3157,14 @@ addon.functions.SettingsCreateDropdown(cInventory, {
 	end,
 	parent = bagDisplayDropdown,
 	parentCheck = function() return isBagDisplaySelected("track") end,
+	hiddenWhen = function() return not isBagDisplaySelected("track") end,
 	default = "OUTSIDE",
 	var = "bagTrackPosition",
 	type = Settings.VarType.String,
 	parentSection = expandable,
-})
+}))
 
-addon.functions.SettingsCreateDropdown(cInventory, {
+gateNativeBagSetting(addon.functions.SettingsCreateDropdown(cInventory, {
 	list = {
 		TOPLEFT = L["Top Left"],
 		TOPRIGHT = L["Top Right"],
@@ -2234,6 +3172,7 @@ addon.functions.SettingsCreateDropdown(cInventory, {
 		BOTTOMRIGHT = L["Bottom Right"],
 	},
 	text = L["bagUpgradeIconPosition"],
+	desc = L["bagUpgradeIconPositionDesc"],
 	get = function() return addon.db["bagUpgradeIconPosition"] or "TOPLEFT" end,
 	set = function(key)
 		addon.db["bagUpgradeIconPosition"] = key
@@ -2250,11 +3189,12 @@ addon.functions.SettingsCreateDropdown(cInventory, {
 	end,
 	parent = bagDisplayDropdown,
 	parentCheck = function() return isBagDisplaySelected("upgrade") end,
+	hiddenWhen = function() return not isBagDisplaySelected("upgrade") end,
 	default = "TOPRIGHT",
 	var = "bagUpgradeIconPosition",
 	type = Settings.VarType.String,
 	parentSection = expandable,
-})
+}))
 
 local function isBagItemLevelTargetSelected(key)
 	if key == "bank" then return addon.db["showIlvlOnBankFrame"] == true end
@@ -2283,9 +3223,11 @@ local function applyBagItemLevelTargets(selection)
 	refreshMerchantButtons()
 end
 
-addon.functions.SettingsCreateMultiDropdown(cInventory, {
+gateNativeBagSetting(addon.functions.SettingsCreateMultiDropdown(cInventory, {
 	var = "bagItemLevelTargets",
+	storage = false,
 	text = L["bagItemLevelTargets"] or "Item level targets",
+	desc = L["bagItemLevelTargetsDesc"],
 	options = {
 		{ value = "bank", text = BANK, tooltip = L["showIlvlOnBankFrameDesc"] },
 		{ value = "merchant", text = MERCHANT, tooltip = L["showIlvlOnMerchantframeDesc"] },
@@ -2293,10 +3235,13 @@ addon.functions.SettingsCreateMultiDropdown(cInventory, {
 	isSelectedFunc = function(key) return isBagItemLevelTargetSelected(key) end,
 	setSelectedFunc = function(key, selected) setBagItemLevelTarget(key, selected) end,
 	setSelection = applyBagItemLevelTargets,
+	parent = bagDisplayDropdown,
+	parentCheck = function() return isBagDisplaySelected("ilvl") end,
+	hiddenWhen = function() return not isBagDisplaySelected("ilvl") end,
 	parentSection = expandable,
-})
+}))
 
-addon.functions.SettingsCreateCheckbox(cInventory, {
+gateNativeBagSetting(addon.functions.SettingsCreateCheckbox(cInventory, {
 	var = "showBagFilterMenu",
 	text = L["showBagFilterMenu"],
 	desc = (L["showBagFilterMenuDesc"]):format(SHIFT_KEY_TEXT),
@@ -2324,9 +3269,9 @@ addon.functions.SettingsCreateCheckbox(cInventory, {
 		if _G.BankPanel and _G.BankPanel:IsShown() then addon.functions.updateBags(_G.BankPanel) end
 	end,
 	parentSection = expandable,
-})
+}))
 
-addon.functions.SettingsCreateCheckbox(cInventory, {
+gateNativeBagSetting(addon.functions.SettingsCreateCheckbox(cInventory, {
 	var = "fadeBagQualityIcons",
 	text = L["fadeBagQualityIcons"],
 	desc = L["fadeBagQualityIconsDesc"],
@@ -2339,9 +3284,9 @@ addon.functions.SettingsCreateCheckbox(cInventory, {
 		if _G.BankPanel and _G.BankPanel:IsShown() then addon.functions.updateBags(_G.BankPanel) end
 	end,
 	parentSection = expandable,
-})
+}))
 
-addon.functions.SettingsCreateCheckbox(cInventory, {
+gateNativeBagSetting(addon.functions.SettingsCreateCheckbox(cInventory, {
 	var = "enhancedRarityGlow",
 	text = L["enhancedRarityGlow"] or "Greater rarity glow",
 	desc = L["enhancedRarityGlowDesc"] or "Adds a stronger item-quality border to bags and the character panel.",
@@ -2351,14 +3296,14 @@ addon.functions.SettingsCreateCheckbox(cInventory, {
 		if addon.functions and addon.functions.setCharFrame then addon.functions.setCharFrame() end
 	end,
 	parentSection = expandable,
-})
+}))
 
-addon.functions.SettingsCreateHeadline(cInventory, L["bagOrderHeader"] or "Bag sort & loot order", { parentSection = expandable })
-addon.functions.SettingsCreateText(cInventory, L["bagOrderHint"] or "These options only change which bag position sorting/looting starts in. Bags still fill top-left to bottom-right.", {
+gateNativeBagSetting(addon.functions.SettingsCreateHeadline(cInventory, L["bagOrderHeader"] or "Bag sort & loot order", { parentSection = expandable }))
+gateNativeBagSetting(addon.functions.SettingsCreateText(cInventory, L["bagOrderHint"] or "These options only change which bag position sorting/looting starts in. Bags still fill top-left to bottom-right.", {
 	parentSection = expandable,
-})
+}))
 
-addon.functions.SettingsCreateCheckbox(cInventory, {
+gateNativeBagSetting(addon.functions.SettingsCreateCheckbox(cInventory, {
 	var = "bagSortOrderEnabled",
 	text = L["bagSortOrderEnabled"] or "Change sort order",
 	desc = L["bagSortOrderEnabledDesc"] or "Overrides the clean-up bags start position when enabled.",
@@ -2367,15 +3312,16 @@ addon.functions.SettingsCreateCheckbox(cInventory, {
 		if value then applyBagSortOrder() end
 	end,
 	parentSection = expandable,
-})
+}))
 
 local sortOrderParent = addon.SettingsLayout.elements["bagSortOrderEnabled"] and addon.SettingsLayout.elements["bagSortOrderEnabled"].element
-addon.functions.SettingsCreateDropdown(cInventory, {
+gateNativeBagSetting(addon.functions.SettingsCreateDropdown(cInventory, {
 	list = {
 		DEFAULT = L["bagSortOrderDefault"] or "Default (Left-to-Right)",
 		REVERSE = L["bagSortOrderReverse"] or "Reverse (Right-to-Left)",
 	},
 	text = L["bagSortOrderDirection"] or "Sort order direction",
+	desc = L["bagSortOrderDirectionDesc"],
 	get = function() return addon.db["bagSortOrderDirection"] or "DEFAULT" end,
 	set = function(key)
 		addon.db["bagSortOrderDirection"] = key
@@ -2387,9 +3333,9 @@ addon.functions.SettingsCreateDropdown(cInventory, {
 	var = "bagSortOrderDirection",
 	type = Settings.VarType.String,
 	parentSection = expandable,
-})
+}))
 
-addon.functions.SettingsCreateCheckbox(cInventory, {
+gateNativeBagSetting(addon.functions.SettingsCreateCheckbox(cInventory, {
 	var = "bagLootOrderEnabled",
 	text = L["bagLootOrderEnabled"] or "Change loot order",
 	desc = L["bagLootOrderEnabledDesc"] or "Overrides the loot start position when enabled.",
@@ -2398,15 +3344,16 @@ addon.functions.SettingsCreateCheckbox(cInventory, {
 		if value then applyLootOrder() end
 	end,
 	parentSection = expandable,
-})
+}))
 
 local lootOrderParent = addon.SettingsLayout.elements["bagLootOrderEnabled"] and addon.SettingsLayout.elements["bagLootOrderEnabled"].element
-addon.functions.SettingsCreateDropdown(cInventory, {
+gateNativeBagSetting(addon.functions.SettingsCreateDropdown(cInventory, {
 	list = {
 		DEFAULT = L["bagLootOrderDefault"] or "Default (Right-to-Left)",
 		REVERSE = L["bagLootOrderReverse"] or "Reverse (Left-to-Right)",
 	},
 	text = L["bagLootOrderDirection"] or "Loot order direction",
+	desc = L["bagLootOrderDirectionDesc"],
 	get = function() return addon.db["bagLootOrderDirection"] or "DEFAULT" end,
 	set = function(key)
 		addon.db["bagLootOrderDirection"] = key
@@ -2418,7 +3365,8 @@ addon.functions.SettingsCreateDropdown(cInventory, {
 	var = "bagLootOrderDirection",
 	type = Settings.VarType.String,
 	parentSection = expandable,
-})
+}))
+end
 -- moved Money Tracker to Vendors & Economy → Money
 
 ---- REGION END
@@ -2454,12 +3402,9 @@ local eventHandlers = {
 		end
 	end,
 	["ENCHANT_SPELL_COMPLETED"] = function(arg1, arg2)
-		if PaperDollFrame:IsShown() and CharOpt("enchants") and arg1 == true and arg2 and arg2.equipmentSlotIndex then
+		if isPaperDollFrameVisible() and CharOpt("enchants") and arg1 == true and arg2 and arg2.equipmentSlotIndex then
 			C_Timer.After(1, function() setIlvlText(addon.variables.itemSlots[arg2.equipmentSlotIndex], arg2.equipmentSlotIndex) end)
 		end
-	end,
-	["GUILDBANK_UPDATE_MONEY"] = function()
-		if addon.db["showDurabilityOnCharframe"] then calculateDurability() end
 	end,
 	["INSPECT_READY"] = function(arg1)
 		if AnyInspectEnabled() then onInspect(arg1) end
@@ -2470,33 +3415,32 @@ local eventHandlers = {
 		if itemButton then addon.functions.updateBank(itemButton, -1, arg1) end
 	end,
 	["PLAYER_DEAD"] = function()
-		if addon.db["showDurabilityOnCharframe"] then calculateDurability() end
+		requestDurabilityUpdate()
 	end,
 	["PLAYER_EQUIPMENT_CHANGED"] = function(arg1)
-		if addon.variables.itemSlots[arg1] and PaperDollFrame:IsShown() then
+		if addon.variables.itemSlots[arg1] and isPaperDollFrameVisible() then
 			if ItemInteractionFrame and ItemInteractionFrame:IsShown() then
 				C_Timer.After(0.4, function() setIlvlText(addon.variables.itemSlots[arg1], arg1) end)
 			else
 				setIlvlText(addon.variables.itemSlots[arg1], arg1)
 			end
 		end
-		if addon.db["showDurabilityOnCharframe"] then calculateDurability() end
-	end,
-	["PLAYER_MONEY"] = function()
-		if addon.db["showDurabilityOnCharframe"] then calculateDurability() end
+		requestDurabilityUpdate()
 	end,
 	["PLAYER_REGEN_ENABLED"] = function()
-		if addon.db["showDurabilityOnCharframe"] then calculateDurability() end
-		if addon.variables and addon.variables.pendingCharFrameUpdate and _G.PaperDollFrame and _G.PaperDollFrame:IsShown() then
+		if addon.variables and addon.variables.pendingCharFrameUpdate and isPaperDollFrameVisible() then
 			addon.variables.pendingCharFrameUpdate = nil
 			setCharFrame()
 		end
 	end,
 	["PLAYER_UNGHOST"] = function()
-		if addon.db["showDurabilityOnCharframe"] then calculateDurability() end
+		requestDurabilityUpdate()
 	end,
 	["SOCKET_INFO_UPDATE"] = function()
-		if PaperDollFrame:IsShown() and CharOpt("gems") then C_Timer.After(0.5, function() setCharFrame() end) end
+		if isPaperDollFrameVisible() and CharOpt("gems") then C_Timer.After(0.5, function() setCharFrame() end) end
+	end,
+	["UPDATE_INVENTORY_DURABILITY"] = function()
+		requestDurabilityUpdate()
 	end,
 }
 

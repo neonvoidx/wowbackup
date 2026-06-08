@@ -1,7 +1,7 @@
 ## X-Flavor: retail
 ## X-Expansion: TWW
-## Interface: 120001, 120005
-## Version: 1.9.0
+## Interface: 120005, 120007
+## Version: 1.9.2
 
 ## Title: Plumber
 
@@ -76,7 +76,6 @@ Modules\Macros.lua
 Modules\ProfessionsBook.lua
 Modules\ExpansionLandingPage\ExpansionLandingPage_Retail.xml
 Modules\BlizzFix_ModelLoading.lua
-Modules\Timerunning\LegionRemix.xml
 Modules\HolidayDungeon.lua
 Modules\QueueStatus.lua
 Modules\RaidCheck\RaidCheck.xml
@@ -103,3 +102,5 @@ Modules\PreyQuestSuperTrack.lua
 #Modules\AccountStore.lua
 #Modules\MinimapMouseover.lua
 #Modules\ObjectiveTrackerModule.xml
+#Modules\BlizzFix_EndCaps.lua
+#Modules\Timerunning\LegionRemix.xml

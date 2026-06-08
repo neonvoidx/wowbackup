@@ -25,14 +25,15 @@ function LiteMountProfileExportMixin:OnShow()
     self.Scroll:SetText(text)
     self.Scroll.ScrollBox.EditBox:HighlightText()
     self.profileName = nil
+    LiteMountPopOverPanelMixin.OnShow(self)
 end
 
 function LiteMountProfileExportMixin:OnLoad()
-    LiteMountOptionsPanel_AutoLocalize(self)
     self.OkayButton:SetScript('OnClick', function () self:Hide() end)
     self.Scroll.ScrollBox.EditBox:SetScript('OnEscapePressed', function () self:Hide() end)
     self.Scroll.ScrollBox.EditBox:SetAutoFocus(true)
     ScrollUtil.RegisterScrollBoxWithScrollBar(self.Scroll.ScrollBox, self.ScrollBar)
+    LiteMountPopOverPanelMixin.OnLoad(self)
 end
 
 --[[ Import  ---------------------------------------------------------------]]--
@@ -54,14 +55,15 @@ function LiteMountProfileImportMixin:OnShow()
     self.ProfileName:SetScript('OnEscapePressed', function () self:Hide() end)
     self.ProfileData:SetText("")
     self.ProfileData:SetScript('OnEscapePressed', function () self:Hide() end)
+    LiteMountPopOverPanelMixin.OnShow(self)
 end
 
 function LiteMountProfileImportMixin:OnLoad()
-    LiteMountOptionsPanel_AutoLocalize(self)
     self.ImportButton:Disable()
     self.ProfileName:SetMaxLetters(24)
     self.ProfileName.nextEditBox = self.ProfileData
     self.ProfileData.nextEditBox = self.ProfileName
+    LiteMountPopOverPanelMixin.OnLoad(self)
 end
 
 function LiteMountProfileImportMixin:UpdateImportButton()

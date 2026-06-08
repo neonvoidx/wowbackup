@@ -38,6 +38,8 @@ end
 local cLoot = addon.SettingsLayout.rootGENERAL
 local expandable = addon.functions.SettingsCreateExpandableSection(cLoot, {
 	name = L["Loot"],
+	iconKey = "loot",
+	modernOnly = true,
 	expanded = false,
 	colorizeTitle = false,
 	newTagID = "Loot",
@@ -192,6 +194,8 @@ addon.functions.SettingsCreateCheckboxes(cLoot, data)
 
 addon.functions.SettingsCreateHeadline(cLoot, L["lootToastFilterSettings"], { parentSection = expandable })
 
+local isLootToastFilterActive
+
 data = {
 	{
 		var = "enableLootToastFilter",
@@ -202,6 +206,7 @@ data = {
 			addon.functions.initLootToast()
 		end,
 		notify = "enableLootToastCustomSound",
+		refreshOnChange = true,
 		parentSection = expandable,
 		children = {
 			{
@@ -214,6 +219,8 @@ data = {
 						and addon.SettingsLayout.elements["enableLootToastFilter"].setting
 						and addon.SettingsLayout.elements["enableLootToastFilter"].setting:GetValue() == true
 				end,
+				hiddenWhen = function() return not isLootToastFilterActive() end,
+				refreshOnChange = true,
 				parent = true,
 				default = false,
 				type = Settings.VarType.Boolean,
@@ -240,6 +247,12 @@ data = {
 								and addon.SettingsLayout.elements["enableLootToastCustomSound"].setting
 								and addon.SettingsLayout.elements["enableLootToastCustomSound"].setting:GetValue() == true
 						end,
+						hiddenWhen = function()
+							return not isLootToastFilterActive()
+								or not addon.SettingsLayout.elements["enableLootToastCustomSound"]
+								or not addon.SettingsLayout.elements["enableLootToastCustomSound"].setting
+								or addon.SettingsLayout.elements["enableLootToastCustomSound"].setting:GetValue() ~= true
+						end,
 						parent = true,
 						default = "",
 						var = "lootToastCustomSound",
@@ -256,8 +269,15 @@ data = {
 table.sort(data, function(a, b) return a.text < b.text end)
 addon.functions.SettingsCreateCheckboxes(cLoot, data)
 
+function isLootToastFilterActive()
+	local entry = addon.SettingsLayout.elements["enableLootToastFilter"]
+	if entry and entry.setting then return entry.setting:GetValue() == true end
+	return addon.db and addon.db.enableLootToastFilter == true
+end
+
 for i = 3, 5 do
-	addon.functions.SettingsCreateText(cLoot, "|c" .. ITEM_QUALITY_COLORS[i].color:GenerateHexColor() .. _G["ITEM_QUALITY" .. i .. "_DESC"] .. "|r", { parentSection = expandable })
+	local qualityLabel = "|c" .. ITEM_QUALITY_COLORS[i].color:GenerateHexColor() .. _G["ITEM_QUALITY" .. i .. "_DESC"] .. "|r"
+	addon.functions.SettingsCreateHeadline(cLoot, qualityLabel, { parentSection = expandable })
 
 	data = {
 		{
@@ -275,12 +295,16 @@ for i = 3, 5 do
 					var = "lootToastItemLevel_" .. i,
 					text = L["lootToastItemLevel"],
 					parentCheck = function()
-						return addon.SettingsLayout.elements["enableLootToastFilter"]
-							and addon.SettingsLayout.elements["enableLootToastFilter"].setting
-							and addon.SettingsLayout.elements["enableLootToastFilter"].setting:GetValue() == true
+						return isLootToastFilterActive()
 							and addon.SettingsLayout.elements["lootToastCheckIlvl_" .. i]
 							and addon.SettingsLayout.elements["lootToastCheckIlvl_" .. i].setting
 							and addon.SettingsLayout.elements["lootToastCheckIlvl_" .. i].setting:GetValue() == true
+					end,
+					hiddenWhen = function()
+						return not isLootToastFilterActive()
+							or not addon.SettingsLayout.elements["lootToastCheckIlvl_" .. i]
+							or not addon.SettingsLayout.elements["lootToastCheckIlvl_" .. i].setting
+							or addon.SettingsLayout.elements["lootToastCheckIlvl_" .. i].setting:GetValue() ~= true
 					end,
 					get = function() return addon.db and addon.db.lootToastItemLevels and addon.db.lootToastItemLevels[i] or 0 end,
 					set = function(value)
@@ -300,12 +324,10 @@ for i = 3, 5 do
 			},
 			parent = true,
 			element = addon.SettingsLayout.elements["enableLootToastFilter"].element,
-			parentCheck = function()
-				return addon.SettingsLayout.elements["enableLootToastFilter"]
-					and addon.SettingsLayout.elements["enableLootToastFilter"].setting
-					and addon.SettingsLayout.elements["enableLootToastFilter"].setting:GetValue() == true
-			end,
+			parentCheck = isLootToastFilterActive,
+			hiddenWhen = function() return not isLootToastFilterActive() end,
 			notify = "enableLootToastFilter",
+			refreshOnChange = true,
 		},
 	}
 
@@ -314,28 +336,30 @@ for i = 3, 5 do
 
 	addon.functions.SettingsCreateMultiDropdown(cLoot, {
 		var = "lootToastFilters_" .. i,
-		subvar = i,
+		storage = false,
 		text = L["lootToastAlwaysShow"],
 		parentSection = expandable,
 		parent = true,
 		element = addon.SettingsLayout.elements["enableLootToastFilter"].element,
-		parentCheck = function()
-			return addon.SettingsLayout.elements["enableLootToastFilter"]
-				and addon.SettingsLayout.elements["enableLootToastFilter"].setting
-				and addon.SettingsLayout.elements["enableLootToastFilter"].setting:GetValue() == true
-		end,
+		parentCheck = isLootToastFilterActive,
+		hiddenWhen = function() return not isLootToastFilterActive() end,
 		options = {
 			{ value = "mounts", text = L["Mounts"] },
 			{ value = "pets", text = L["lootToastAlwaysShowPets"] },
 			{ value = "upgrade", text = L["lootToastAlwaysShowUpgrades"] },
 		},
+		getSelection = function()
+			return addon.db and addon.db.lootToastFilters and addon.db.lootToastFilters[i] or {}
+		end,
+		setSelection = function(selection)
+			addon.db.lootToastFilters = addon.db.lootToastFilters or {}
+			addon.db.lootToastFilters[i] = type(selection) == "table" and selection or {}
+		end,
 	})
 end
 
 local function isLootToastFilterEnabled()
-	return addon.SettingsLayout.elements["enableLootToastFilter"]
-		and addon.SettingsLayout.elements["enableLootToastFilter"].setting
-		and addon.SettingsLayout.elements["enableLootToastFilter"].setting:GetValue() == true
+	return isLootToastFilterActive()
 end
 
 addon.db.lootToastIncludeIDs = addon.db.lootToastIncludeIDs or {}
@@ -416,11 +440,18 @@ end
 
 addon.functions.SettingsCreateHeadline(cLoot, L["Include"], { parentSection = expandable })
 
-local lootLayout = SettingsPanel:GetLayout(cLoot)
-local includeButton = CreateSettingsButtonInitializer("", L["Include"], function() StaticPopup_Show(includeDialogKey) end, L["includeInfoLoot"], true)
-includeButton:SetParentInitializer(addon.SettingsLayout.elements["enableLootToastFilter"].element, isLootToastFilterEnabled)
-includeButton:AddShownPredicate(function() return expandable:IsExpanded() ~= false end)
-lootLayout:AddInitializer(includeButton)
+addon.functions.SettingsCreateButton(cLoot, {
+	var = "lootToastIncludeAdd",
+	text = ADD,
+	buttonText = L["Include"],
+	desc = L["includeInfoLoot"],
+	func = function() StaticPopup_Show(includeDialogKey) end,
+	parent = true,
+	element = addon.SettingsLayout.elements["enableLootToastFilter"].element,
+	parentCheck = isLootToastFilterEnabled,
+	hiddenWhen = function() return not isLootToastFilterEnabled() end,
+	parentSection = expandable,
+})
 
 local function buildIncludeDropdownList()
 	addon.db.lootToastIncludeIDs = addon.db.lootToastIncludeIDs or {}
@@ -477,6 +508,7 @@ addon.functions.SettingsCreateDropdown(cLoot, {
 	parent = true,
 	element = addon.SettingsLayout.elements["enableLootToastFilter"].element,
 	parentCheck = isLootToastFilterEnabled,
+	hiddenWhen = function() return not isLootToastFilterEnabled() end,
 	default = "",
 	type = Settings.VarType.String,
 	parentSection = expandable,

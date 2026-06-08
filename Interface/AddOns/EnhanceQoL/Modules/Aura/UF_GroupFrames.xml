@@ -11,7 +11,7 @@
 		Defining that template in XML is the simplest and most reliable approach.
 	-->
 
-	<Button name="EQOLUFGroupUnitButtonTemplate" virtual="true" inherits="BackdropTemplate,SecureUnitButtonTemplate,PingableUnitFrameTemplate">
+	<Button name="EQOLUFGroupUnitButtonTemplate" virtual="true" inherits="BackdropTemplate,SecureUnitButtonTemplate,PingableUnitFrameTemplate" registerForClicks="AnyUp">
 		<Scripts>
 			<OnLoad>
 				EnhanceQoL.Aura.UF.GroupFrames.UnitButton_OnLoad(self);

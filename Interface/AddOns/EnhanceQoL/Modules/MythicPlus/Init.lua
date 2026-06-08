@@ -16,6 +16,27 @@ local L = LibStub("AceLocale-3.0"):GetLocale("EnhanceQoL")
 
 _G["BINDING_NAME_CLICK EQOLRandomHearthstoneButton:LeftButton"] = L["teleportsRandomHearthstoneBinding"] or "Random Hearthstone"
 
+local function normalizeNumericDropdownValue(key, labels, fallback)
+	if not addon.db then return end
+	local value = addon.db[key]
+	if type(value) == "number" and labels[value] ~= nil then return end
+	if type(value) == "string" then
+		local numeric = tonumber(value)
+		if numeric and labels[numeric] ~= nil then
+			addon.db[key] = numeric
+			return
+		end
+		local trimmed = value:gsub("^%s+", ""):gsub("%s+$", "")
+		for index, label in pairs(labels) do
+			if trimmed == tostring(label) then
+				addon.db[key] = index
+				return
+			end
+		end
+	end
+	addon.db[key] = fallback
+end
+
 function addon.MythicPlus.functions.InitDB()
 	if addon.MythicPlus.variables.dbInitialized then return end
 	if not addon.db or not addon.functions or not addon.functions.InitDBValue then return end
@@ -30,12 +51,6 @@ function addon.MythicPlus.functions.InitDB()
 	init("closeBagsOnKeyInsert", false)
 	init("noChatOnPullTimer", false)
 	init("autoKeyStart", false)
-	init("mythicPlusCurrentPull", false)
-	init("mythicPlusCurrentPullLocked", false)
-	init("mythicPlusCurrentPullFontSize", 14)
-	init("mythicPlusCurrentPullPoint", "CENTER")
-	init("mythicPlusCurrentPullX", 0)
-	init("mythicPlusCurrentPullY", 0)
 	init("pullTimerShortTime", 5)
 	init("pullTimerLongTime", 10)
 	init("PullTimerType", 4)
@@ -44,6 +59,10 @@ function addon.MythicPlus.functions.InitDB()
 	init("groupfinderAppText", false)
 	init("groupfinderSkipRoleSelect", false)
 	init("groupfinderSkipRoleSelectOption", 1)
+	normalizeNumericDropdownValue("groupfinderSkipRoleSelectOption", {
+		[1] = L["groupfinderSkipRolecheckUseSpec"] or "Use your current spec's role (e.g. Blood Death Knight = Tank)",
+		[2] = L["groupfinderSkipRolecheckUseLFD"] or "Use Blizzard's selected role",
+	}, 1)
 	init("groupfinderShowDungeonScoreFrame", false)
 
 	-- Misc
@@ -59,6 +78,7 @@ function addon.MythicPlus.functions.InitDB()
 	init("mythicPlusBRTrackerRelativeFrame", "UIParent")
 	init("mythicPlusBRTrackerX", 0)
 	init("mythicPlusBRTrackerY", 0)
+	init("mythicPlusBRTrackerIcon", 136080)
 	init("mythicPlusBRTrackerIconZoom", 0)
 	init("mythicPlusBRTrackerBorderEnabled", true)
 	init("mythicPlusBRTrackerBorderTexture", "DEFAULT")
@@ -93,6 +113,7 @@ function addon.MythicPlus.functions.InitDB()
 	init("mythicPlusBloodlustTrackerRelativeFrame", "UIParent")
 	init("mythicPlusBloodlustTrackerX", 0)
 	init("mythicPlusBloodlustTrackerY", 0)
+	init("mythicPlusBloodlustTrackerOnlyInInstances", true)
 	init("mythicPlusBloodlustTrackerIcon", 136090)
 	init("mythicPlusBloodlustTrackerIconZoom", 0)
 	init("mythicPlusBloodlustTrackerBorderEnabled", true)
@@ -113,6 +134,8 @@ function addon.MythicPlus.functions.InitDB()
 	init("mythicPlusBloodlustTrackerUseCustomDebuffSound", false)
 	init("mythicPlusBloodlustTrackerDebuffSoundFile", "")
 	init("mythicPlusBloodlustTrackerSoundOnDebuffFade", false)
+	init("mythicPlusBloodlustTrackerUseCustomFadeSound", false)
+	init("mythicPlusBloodlustTrackerFadeSoundFile", "")
 	init("mythicPlusBloodlustTrackerReadySoundOnEncounterStart", false)
 	init("mythicPlusBloodlustTrackerUseCustomReadySound", false)
 	init("mythicPlusBloodlustTrackerReadySoundFile", "")
@@ -125,7 +148,6 @@ function addon.MythicPlus.functions.InitDB()
 	init("talentReminderActiveBuildX", 0)
 	init("talentReminderActiveBuildY", 0)
 	init("talentReminderActiveBuildSize", 14)
-	init("talentReminderActiveBuildLocked", false)
 	-- switched from single number -> table (multiselect)
 	init("talentReminderActiveBuildShowOnly", {})
 	init("talentReminderLoadOnReadyCheck", false)
@@ -259,7 +281,8 @@ function addon.MythicPlus.functions.addRCButton()
 				return
 			end
 			self.readyCheckRunning = true
-			DoReadyCheck()
+			local doReadyCheck = C_PartyInfo and C_PartyInfo.DoReadyCheck or DoReadyCheck
+			if doReadyCheck then doReadyCheck() end
 		end
 	end)
 	rcButton:RegisterEvent("READY_CHECK")
@@ -375,7 +398,7 @@ function addon.MythicPlus.functions.addPullButton()
 		if addon.db["PullTimerType"] == 3 or addon.db["PullTimerType"] == 4 then
 			C_ChatInfo.SendAddonMessage("D4", ("PT\t%d\t%d"):format(duration, instanceId), IsInGroup(2) and "INSTANCE_CHAT" or "RAID")
 		end
-		if not addon.db["noChatOnPullTimer"] then C_ChatInfo.SendChatMessage(("PULL in %ds"):format(duration), "PARTY") end
+			if not addon.db["noChatOnPullTimer"] then C_ChatInfo.SendChatMessage((L["mpPullInSeconds"]):format(duration), "PARTY") end
 
 		-- ticker updates local countdown (also handles chat, optional)
 		self.ticker = C_Timer.NewTicker(1, function(t)
@@ -398,14 +421,14 @@ function addon.MythicPlus.functions.addPullButton()
 					self.ring:SetRotation(0)
 				end
 
-				if not addon.db["noChatOnPullTimer"] then C_ChatInfo.SendChatMessage(">>PULL NOW<<", "PARTY") end
+					if not addon.db["noChatOnPullTimer"] then C_ChatInfo.SendChatMessage(L["mpPullNow"], "PARTY") end
 				if addon.db["autoKeyStart"] and C_ChallengeMode.GetSlottedKeystoneInfo() then
 					C_ChallengeMode.StartChallengeMode()
 					ChallengesKeystoneFrame:Hide()
 				end
 			else
 				self.timerCountdown:SetText(self.remaining)
-				if not addon.db["noChatOnPullTimer"] then C_ChatInfo.SendChatMessage(("PULL in %d"):format(self.remaining), "PARTY") end
+					if not addon.db["noChatOnPullTimer"] then C_ChatInfo.SendChatMessage((L["mpPullInSecond"]):format(self.remaining), "PARTY") end
 			end
 		end)
 		self.running = true
@@ -423,7 +446,7 @@ function addon.MythicPlus.functions.addPullButton()
 		if not InCombatLockdown or not InCombatLockdown() then
 			C_PartyInfo.DoCountdown(0) -- abort Blizzard countdown
 		end
-		if not addon.db["noChatOnPullTimer"] then C_ChatInfo.SendChatMessage("PULL Canceled", "PARTY") end
+			if not addon.db["noChatOnPullTimer"] then C_ChatInfo.SendChatMessage(L["mpPullCanceled"], "PARTY") end
 	end
 
 	rcButton:RegisterForClicks("RightButtonDown", "LeftButtonDown")
@@ -1068,9 +1091,53 @@ addon.MythicPlus.variables.portalCompendium = {
 	},
 }
 
+local hearthstoneID
+local teleportItemIDs
+
+local function addTeleportItemID(itemID)
+	if type(itemID) == "table" then
+		for _, nestedItemID in ipairs(itemID) do
+			addTeleportItemID(nestedItemID)
+		end
+		return
+	end
+
+	itemID = tonumber(itemID)
+	if itemID and itemID > 0 then
+		teleportItemIDs[itemID] = true
+	end
+end
+
+local function buildTeleportItemIDs()
+	teleportItemIDs = {}
+
+	for _, section in pairs(addon.MythicPlus.variables.portalCompendium or {}) do
+		for _, entry in pairs(section.spells or {}) do
+			if type(entry) == "table" and entry.isItem and entry.itemID then
+				addTeleportItemID(entry.itemID)
+			end
+		end
+	end
+
+	for _, entry in ipairs(hearthstoneID or {}) do
+		if type(entry) == "table" and entry.isItem and entry.id then
+			addTeleportItemID(entry.id)
+		end
+	end
+end
+
+function addon.MythicPlus.functions.IsTeleportItem(itemID)
+	if not teleportItemIDs then
+		buildTeleportItemIDs()
+	end
+
+	itemID = tonumber(itemID)
+	return itemID ~= nil and teleportItemIDs[itemID] == true or false
+end
+
 -- Pre-Stage all icon to have less calls to LUA API
 local RANDOM_HS_ID = 999999
-local hearthstoneID = {
+hearthstoneID = {
 	-- Midnight
 	{ isToy = true, id = 263933, spellID = 1270814 }, -- Preyseeker's Hearthstone
 	{ isToy = true, id = 265100, spellID = 1273401 }, -- Corewarden's Hearthstone

@@ -6,9 +6,30 @@ local Masque = LibStub and LibStub("Masque", true)
 local masqueReskinPending = {}
 local fontUtil = addon.Utils.FontUtil
 local cachedDb = nil
+
 -- Reused across Layout() calls to avoid a table allocation on the hot path
 local layoutScratch = {}
+-- Reused by UpdateGlow() to avoid allocating glow option tables on every call.
+-- LCG functions read these values immediately and do not store references.
+local glowOptionsScratch = { startAnim = false }
+local glowColorScratch = { 0, 0, 0, 0 }
 local frameIdCounter = 0
+
+-- Static texture-based glow types share the same layout pattern: an OVERLAY texture
+-- on a child frame sized proportionally to the icon. The field on the parent is the
+-- cache key so we never build the frame twice per layer.
+local staticGlowFields = {
+	["Rotation Assist"] = "_FlipbookGlow",
+	["Slot Glow"] = "_SlotGlow",
+}
+
+local function UpdateChargeTextFontSize(chargeText, iconSize, fontScale)
+	local font, _, flags = chargeText:GetFont()
+	if font then
+		chargeText:SetFont(font, math.floor(iconSize * 0.35 * (fontScale or 1.0)), flags)
+	end
+end
+
 local function NextFrameName(frameType)
 	frameIdCounter = frameIdCounter + 1
 	return "MiniCC_" .. frameType .. "_" .. frameIdCounter
@@ -148,17 +169,51 @@ local function ApplyAlpha(target, alpha)
 	end
 end
 
+local function ApplyStaticGlowPadding(glowFrame, parent)
+	local width = parent:GetWidth()
+	if not (width and width > 0) then
+		width = 30
+	end
+	local padding = width * glowFrame.PaddingFactor
+	glowFrame:SetPoint("TOPLEFT", parent, "TOPLEFT", -padding, padding)
+	glowFrame:SetPoint("BOTTOMRIGHT", parent, "BOTTOMRIGHT", padding, -padding)
+end
+
+local function CreateStaticGlowFrame(parent, field, name, paddingFactor)
+	local cg = CreateFrame("Frame", NextFrameName(name), parent)
+	cg:SetFrameLevel(parent:GetFrameLevel() + 5)
+	cg.PaddingFactor = paddingFactor
+
+	cg.Texture = cg:CreateTexture(nil, "OVERLAY")
+	cg.Texture:SetAllPoints()
+
+	-- Hook once per parent (idempotent via the marker flag); the hook resizes whichever
+	-- static glow currently lives on this parent so all glow types stay proportional.
+	if not parent._StaticGlowResizeHooked then
+		parent._StaticGlowResizeHooked = true
+		parent:HookScript("OnSizeChanged", function(self)
+			for _, fieldName in pairs(staticGlowFields) do
+				local g = self[fieldName]
+				if g then
+					ApplyStaticGlowPadding(g, self)
+				end
+			end
+		end)
+	end
+
+	ApplyStaticGlowPadding(cg, parent)
+	cg:Hide()
+	parent[field] = cg
+	return cg
+end
+
 local function EnsureFlipbookGlow(parent)
 	if parent._FlipbookGlow then
 		return parent._FlipbookGlow
 	end
 
-	local cg = CreateFrame("Frame", NextFrameName("FlipbookGlow"), parent)
-	cg:SetFrameLevel(parent:GetFrameLevel() + 5)
-
-	cg.Texture = cg:CreateTexture(nil, "OVERLAY")
+	local cg = CreateStaticGlowFrame(parent, "_FlipbookGlow", "FlipbookGlow", 1 / 3)
 	cg.Texture:SetTexture("Interface\\AddOns\\" .. addonName .. "\\Textures\\FlipbookWhite.tga")
-	cg.Texture:SetAllPoints()
 	cg.Texture:SetBlendMode("ADD")
 
 	cg.Anim = cg:CreateAnimationGroup()
@@ -171,24 +226,50 @@ local function EnsureFlipbookGlow(parent)
 	flip:SetDuration(1.0)
 	cg.Anim:Play()
 
-	-- Hook the parent's size. When Nameplates or Alerts change scale, the padding stays proportional!
-	parent:HookScript("OnSizeChanged", function(self, width)
-		if self._FlipbookGlow then
-			local padding = width / 3
-			self._FlipbookGlow:SetPoint("TOPLEFT", self, "TOPLEFT", -padding, padding)
-			self._FlipbookGlow:SetPoint("BOTTOMRIGHT", self, "BOTTOMRIGHT", padding, -padding)
-		end
-	end)
-
-	-- Set initial sizing
-	local width = parent:GetWidth()
-	local initPadding = (width and width > 0) and (width / 3) or 9
-	cg:SetPoint("TOPLEFT", parent, "TOPLEFT", -initPadding, initPadding)
-	cg:SetPoint("BOTTOMRIGHT", parent, "BOTTOMRIGHT", initPadding, -initPadding)
-
-	cg:Hide()
-	parent._FlipbookGlow = cg
 	return cg
+end
+
+local function EnsureSlotGlow(parent)
+	if parent._SlotGlow then
+		return parent._SlotGlow
+	end
+
+	-- atlas needs to extend well past the icon edges for the glow halo to read correctly.
+	local cg = CreateStaticGlowFrame(parent, "_SlotGlow", "SlotGlow", 1.19)
+	cg.Texture:SetTexture("Interface\\AddOns\\" .. addonName .. "\\Textures\\newplayertutorial-drag-slotgreen.tga")
+	cg.Texture:SetDesaturated(true)
+	return cg
+end
+
+local function GetOrCreateStaticGlow(parent, glowType)
+	if glowType == "Rotation Assist" then
+		return EnsureFlipbookGlow(parent)
+	elseif glowType == "Slot Glow" then
+		return EnsureSlotGlow(parent)
+	end
+end
+
+local function HideStaticGlowsExcept(parent, exceptType)
+	for glowType, field in pairs(staticGlowFields) do
+		if glowType ~= exceptType and parent[field] then
+			parent[field]:Hide()
+		end
+	end
+end
+
+local function StopLCGGlowsExcept(parent, exceptType)
+	if not LCG then
+		return
+	end
+	if exceptType ~= "Proc Glow" and parent._ProcGlow and LCG.ProcGlow_Stop then
+		LCG.ProcGlow_Stop(parent)
+	end
+	if exceptType ~= "Pixel Glow" and parent._PixelGlow and LCG.PixelGlow_Stop then
+		LCG.PixelGlow_Stop(parent)
+	end
+	if exceptType ~= "Autocast Shine" and parent._AutoCastGlow and LCG.AutoCastGlow_Stop then
+		LCG.AutoCastGlow_Stop(parent)
+	end
 end
 
 local function ClearLayerData(layer, glowFrame)
@@ -197,19 +278,22 @@ local function ClearLayerData(layer, glowFrame)
 	end
 	layer.Icon:SetTexture(nil)
 	layer.Cooldown:Clear()
-	if LCG then
-		if glowFrame._ProcGlow and LCG.ProcGlow_Stop then
-			LCG.ProcGlow_Stop(glowFrame)
-		end
-		if glowFrame._PixelGlow and LCG.PixelGlow_Stop then
-			LCG.PixelGlow_Stop(glowFrame)
-		end
-		if glowFrame._AutoCastGlow and LCG.AutoCastGlow_Stop then
-			LCG.AutoCastGlow_Stop(glowFrame)
-		end
+	if layer.ChargeText then
+		layer.ChargeText:Hide()
 	end
-	if glowFrame._FlipbookGlow then
-		glowFrame._FlipbookGlow:Hide()
+	StopLCGGlowsExcept(glowFrame, nil)
+	HideStaticGlowsExcept(glowFrame, nil)
+end
+
+local function FillColorScratch(options)
+	if options.Color then
+		glowColorScratch[1] = options.Color.r or 1
+		glowColorScratch[2] = options.Color.g or 1
+		glowColorScratch[3] = options.Color.b or 1
+		glowColorScratch[4] = options.Color.a or 1
+		glowOptionsScratch.color = glowColorScratch
+	else
+		glowOptionsScratch.color = nil
 	end
 end
 
@@ -220,174 +304,103 @@ local function UpdateGlow(layerFrame, options)
 	local db = GetDb()
 	local glowType = (db and db.GlowType) or "Proc Glow"
 
-	if options.Glow then
-		-- Check which glow types currently exist
-		local hasProcGlow = layerFrame._ProcGlow ~= nil
-		local hasPixelGlow = layerFrame._PixelGlow ~= nil
-		local hasAutoCastGlow = layerFrame._AutoCastGlow ~= nil
-		local hasCustomGlow = layerFrame._FlipbookGlow ~= nil
+	if not options.Glow then
+		StopLCGGlowsExcept(layerFrame, nil)
+		HideStaticGlowsExcept(layerFrame, nil)
+		layerFrame._GlowColorKey = nil
+		return
+	end
 
-		-- Check if color has changed
-		local colorChanged = false
-		local newColorKey = nil
-
-		if options.Color then
-			newColorKey = string.format(
-				"%.2f_%.2f_%.2f_%.2f",
-				options.Color.r or 1,
-				options.Color.g or 1,
-				options.Color.b or 1,
-				options.Color.a or 1
-			)
-		end
-
-		if not newColorKey or not issecretvalue(newColorKey) then
-			if layerFrame._GlowColorKey ~= newColorKey then
-				colorChanged = true
-				layerFrame._GlowColorKey = newColorKey
-			end
-		elseif newColorKey and issecretvalue(newColorKey) then
+	-- Check if color has changed
+	local colorChanged = false
+	local newColorKey = nil
+	if options.Color then
+		newColorKey = string.format(
+			"%.2f_%.2f_%.2f_%.2f",
+			options.Color.r or 1,
+			options.Color.g or 1,
+			options.Color.b or 1,
+			options.Color.a or 1
+		)
+	end
+	if not newColorKey or not issecretvalue(newColorKey) then
+		if layerFrame._GlowColorKey ~= newColorKey then
 			colorChanged = true
+			layerFrame._GlowColorKey = newColorKey
 		end
+	elseif newColorKey and issecretvalue(newColorKey) then
+		colorChanged = true
+	end
 
-		-- Determine if we need to start a new glow
-		local needsGlow = false
-		if glowType == "Proc Glow" and (not hasProcGlow or colorChanged) then
-			needsGlow = true
-			if hasPixelGlow and LCG.PixelGlow_Stop then
-				LCG.PixelGlow_Stop(layerFrame)
-			end
-			if hasAutoCastGlow and LCG.AutoCastGlow_Stop then
-				LCG.AutoCastGlow_Stop(layerFrame)
-			end
-			if hasProcGlow and colorChanged and LCG.ProcGlow_Stop then
-				LCG.ProcGlow_Stop(layerFrame)
-			end
-			if hasCustomGlow then
-				layerFrame._FlipbookGlow:Hide()
-			end
-		elseif glowType == "Pixel Glow" and (not hasPixelGlow or colorChanged) then
-			needsGlow = true
-			if hasProcGlow and LCG.ProcGlow_Stop then
-				LCG.ProcGlow_Stop(layerFrame)
-			end
-			if hasAutoCastGlow and LCG.AutoCastGlow_Stop then
-				LCG.AutoCastGlow_Stop(layerFrame)
-			end
-			if hasPixelGlow and colorChanged and LCG.PixelGlow_Stop then
-				LCG.PixelGlow_Stop(layerFrame)
-			end
-			if hasCustomGlow then
-				layerFrame._FlipbookGlow:Hide()
-			end
-		elseif glowType == "Autocast Shine" and (not hasAutoCastGlow or colorChanged) then
-			needsGlow = true
-			if hasProcGlow and LCG.ProcGlow_Stop then
-				LCG.ProcGlow_Stop(layerFrame)
-			end
-			if hasPixelGlow and LCG.PixelGlow_Stop then
-				LCG.PixelGlow_Stop(layerFrame)
-			end
-			if hasAutoCastGlow and colorChanged and LCG.AutoCastGlow_Stop then
-				LCG.AutoCastGlow_Stop(layerFrame)
-			end
-			if hasCustomGlow then
-				layerFrame._FlipbookGlow:Hide()
-			end
-		elseif
-			glowType == "Rotation Assist"
-			and (not hasCustomGlow or colorChanged or not layerFrame._FlipbookGlow:IsShown())
-		then
-			needsGlow = true
-			if hasProcGlow and LCG.ProcGlow_Stop then
-				LCG.ProcGlow_Stop(layerFrame)
-			end
-			if hasPixelGlow and LCG.PixelGlow_Stop then
-				LCG.PixelGlow_Stop(layerFrame)
-			end
-			if hasAutoCastGlow and LCG.AutoCastGlow_Stop then
-				LCG.AutoCastGlow_Stop(layerFrame)
-			end
-		end
+	if staticGlowFields[glowType] then
+		-- Texture-based overlay: stop any LCG glows, hide other static overlays, then
+		-- show/tint the one matching the current glow type. Recolouring is a cheap
+		-- SetVertexColor so colorChanged doesn't need to recreate anything.
+		StopLCGGlowsExcept(layerFrame, nil)
+		HideStaticGlowsExcept(layerFrame, glowType)
 
-		-- Only start glow if needed
-		if needsGlow then
-			local glowOptions = { startAnim = false }
-
+		local cg = GetOrCreateStaticGlow(layerFrame, glowType)
+		if cg then
 			if options.Color then
-				glowOptions.color = { options.Color.r, options.Color.g, options.Color.b, options.Color.a }
-			end
-
-			if glowType == "Pixel Glow" and LCG and LCG.PixelGlow_Start then
-				LCG.PixelGlow_Start(layerFrame, glowOptions.color)
-			elseif glowType == "Autocast Shine" and LCG and LCG.AutoCastGlow_Start then
-				LCG.AutoCastGlow_Start(layerFrame, glowOptions.color)
-			elseif glowType == "Rotation Assist" then
-				local cg = EnsureFlipbookGlow(layerFrame)
-				if options.Color then
-					cg.Texture:SetVertexColor(
-						options.Color.r or 1,
-						options.Color.g or 1,
-						options.Color.b or 1,
-						options.Color.a or 1
-					)
-				else
-					cg.Texture:SetVertexColor(1, 1, 1, 1)
-				end
-				cg:Show()
+				cg.Texture:SetVertexColor(
+					options.Color.r or 1,
+					options.Color.g or 1,
+					options.Color.b or 1,
+					options.Color.a or 1
+				)
 			else
-				if LCG and LCG.ProcGlow_Start then
-					LCG.ProcGlow_Start(layerFrame, glowOptions)
+				cg.Texture:SetVertexColor(1, 1, 1, 1)
+			end
+			cg:Show()
+			ApplyAlpha(cg, options.Alpha)
+		end
+		return
+	end
+
+	-- LCG-based glows
+	HideStaticGlowsExcept(layerFrame, nil)
+	StopLCGGlowsExcept(layerFrame, glowType)
+
+	if glowType == "Pixel Glow" then
+		if LCG and LCG.PixelGlow_Start then
+			local hasPixelGlow = layerFrame._PixelGlow ~= nil
+			if not hasPixelGlow or colorChanged then
+				if hasPixelGlow and colorChanged and LCG.PixelGlow_Stop then
+					LCG.PixelGlow_Stop(layerFrame)
 				end
+				FillColorScratch(options)
+				LCG.PixelGlow_Start(layerFrame, glowOptionsScratch.color)
+			end
+			if layerFrame._PixelGlow then
+				ApplyAlpha(layerFrame._PixelGlow, options.Alpha)
 			end
 		end
-
-		-- Always update alpha for the active glow type
-		local alpha = options.Alpha
-		if glowType == "Proc Glow" then
-			local procGlow = layerFrame._ProcGlow
-			if procGlow then
-				ApplyAlpha(procGlow, alpha)
+	elseif glowType == "Autocast Shine" then
+		if LCG and LCG.AutoCastGlow_Start then
+			local hasAutoCastGlow = layerFrame._AutoCastGlow ~= nil
+			if not hasAutoCastGlow or colorChanged then
+				if hasAutoCastGlow and colorChanged and LCG.AutoCastGlow_Stop then
+					LCG.AutoCastGlow_Stop(layerFrame)
+				end
+				FillColorScratch(options)
+				LCG.AutoCastGlow_Start(layerFrame, glowOptionsScratch.color)
 			end
-		elseif glowType == "Pixel Glow" then
-			local pixelGlow = layerFrame._PixelGlow
-			if pixelGlow then
-				ApplyAlpha(pixelGlow, alpha)
+			if layerFrame._AutoCastGlow then
+				ApplyAlpha(layerFrame._AutoCastGlow, options.Alpha)
 			end
-		elseif glowType == "Autocast Shine" then
-			local autoCastGlow = layerFrame._AutoCastGlow
-			if autoCastGlow then
-				ApplyAlpha(autoCastGlow, alpha)
-			end
-		elseif glowType == "Rotation Assist" then
-			if layerFrame._FlipbookGlow then
-				ApplyAlpha(layerFrame._FlipbookGlow, alpha)
-			end
-		end
-
-		-- calling ProcGlow_Start on an existing glow will reset its size to match the current icon size
-		if glowType == "Proc Glow" and layerFrame._ProcGlow and LCG and LCG.ProcGlow_Start then
-			local glowOptions = { startAnim = false }
-			if options.Color then
-				glowOptions.color = { options.Color.r, options.Color.g, options.Color.b, options.Color.a }
-			end
-			LCG.ProcGlow_Start(layerFrame, glowOptions)
 		end
 	else
-		-- Stop all glow types only if any exist
-		if layerFrame._ProcGlow and LCG and LCG.ProcGlow_Stop then
-			LCG.ProcGlow_Stop(layerFrame)
+		-- Default: Proc Glow. Always call Start so the glow resizes when icon size changes.
+		if LCG and LCG.ProcGlow_Start then
+			if colorChanged and layerFrame._ProcGlow and LCG.ProcGlow_Stop then
+				LCG.ProcGlow_Stop(layerFrame)
+			end
+			FillColorScratch(options)
+			LCG.ProcGlow_Start(layerFrame, glowOptionsScratch)
+			if layerFrame._ProcGlow then
+				ApplyAlpha(layerFrame._ProcGlow, options.Alpha)
+			end
 		end
-		if layerFrame._PixelGlow and LCG and LCG.PixelGlow_Stop then
-			LCG.PixelGlow_Stop(layerFrame)
-		end
-		if layerFrame._AutoCastGlow and LCG and LCG.AutoCastGlow_Stop then
-			LCG.AutoCastGlow_Stop(layerFrame)
-		end
-		if layerFrame._FlipbookGlow then
-			layerFrame._FlipbookGlow:Hide()
-		end
-		layerFrame._GlowColorKey = nil
 	end
 end
 
@@ -418,6 +431,8 @@ function M:New(parent, count, size, spacing, groupName, noBorder, moduleName)
 	instance.RowAlignment = nil
 	instance.InvertLayout = false
 	instance.Columns = nil
+	instance.GrowDown = false
+	instance.GrowUp = false
 	instance.NoBorder = noBorder or false
 	instance.Frame.MiniCCModule = moduleName or nil
 	instance.MasqueGroup = Masque and groupName and Masque:Group("MiniCC", groupName) or nil
@@ -440,9 +455,13 @@ function M:Layout()
 	-- Build a cheap signature from the current size, row settings, and used slot indices.
 	-- If it matches the last run, the visual result would be identical so we
 	-- can skip all the SetPoint/SetSize/Show/Hide calls.
-	local numRows = (not self.GrowDown and self.NumRows and self.NumRows > 1) and self.NumRows or nil
-	local columnsPerRow = (self.GrowDown and self.Columns and self.Columns > 1) and self.Columns or nil
-	local sig = self.Size .. ":" .. (numRows or 1) .. ":" .. (self.RowAlignment or "C") .. ":" .. (self.OverflowRowAlignment or "C") .. ":" .. (self.InvertLayout and "1" or "0") .. ":" .. (self.GrowDown and "D" or "H") .. ":" .. (columnsPerRow or 1) .. ":" .. table.concat(layoutScratch, ",", 1, n)
+	-- Vertical layout covers both grow-down and grow-up; the only difference is icon ordering
+	-- (grow-up reverses the stack so slot 1 sits at the bottom, nearest the anchor).
+	local vertical = self.GrowDown or self.GrowUp
+	local numRows = (not vertical and self.NumRows and self.NumRows > 1) and self.NumRows or nil
+	local columnsPerRow = (vertical and self.Columns and self.Columns > 1) and self.Columns or nil
+	local verticalTag = self.GrowUp and "U" or (self.GrowDown and "D" or "H")
+	local sig = self.Size .. ":" .. (numRows or 1) .. ":" .. (self.RowAlignment or "C") .. ":" .. (self.OverflowRowAlignment or "C") .. ":" .. (self.InvertLayout and "1" or "0") .. ":" .. verticalTag .. ":" .. (columnsPerRow or 1) .. ":" .. table.concat(layoutScratch, ",", 1, n)
 	if self.LayoutSignature == sig then
 		return
 	end
@@ -502,8 +521,9 @@ function M:Layout()
 			slot.Frame:SetSize(self.Size, self.Size)
 			slot.Frame:Show()
 		end
-	elseif self.GrowDown and columnsPerRow then
-		-- Grid grow-down: icons fill left-to-right up to columnsPerRow per row, then wrap down
+	elseif vertical and columnsPerRow then
+		-- Grid vertical: icons fill left-to-right up to columnsPerRow per row, then wrap to the
+		-- next row.  Grow-down wraps downward (row 0 at top); grow-up wraps upward (row 0 at bottom).
 		local cols = columnsPerRow
 		local actualRows = math.ceil(usedCount / cols)
 		local rowWidth = cols * self.Size + (cols - 1) * self.Spacing
@@ -521,21 +541,35 @@ function M:Layout()
 			local thisRowWidth = rowIcons * self.Size + (rowIcons - 1) * self.Spacing
 			local rowOffsetX = (rowWidth - thisRowWidth) / 2
 			local x = rowOffsetX + colIndex * (self.Size + self.Spacing) - (rowWidth / 2) + (self.Size / 2)
-			local y = (totalHeight / 2) - (self.Size / 2) - rowIndex * (self.Size + self.Spacing)
+			local rowStep = rowIndex * (self.Size + self.Spacing)
+			local y
+			if self.GrowUp then
+				y = -(totalHeight / 2) + (self.Size / 2) + rowStep
+			else
+				y = (totalHeight / 2) - (self.Size / 2) - rowStep
+			end
+
 			slot.Frame:ClearAllPoints()
 			slot.Frame:SetPoint("CENTER", self.Frame, "CENTER", x, y)
 			slot.Frame:SetSize(self.Size, self.Size)
 			slot.Frame:Show()
 		end
-	elseif self.GrowDown then
-		-- Vertical single column, growing downward
+	elseif vertical then
+		-- Vertical single column.  Grow-down places slot 1 at the top; grow-up places slot 1 at
+		-- the bottom (nearest the anchor) so the column extends upward.
 		local totalHeight = usedCount * self.Size + (usedCount - 1) * self.Spacing
 		self.Frame:SetSize(self.Size, totalHeight)
 		self.Frame:SetAlpha(1)
 
 		for displayIndex = 1, usedCount do
 			local slot = self.Slots[layoutScratch[displayIndex]]
-			local y = (totalHeight / 2) - (self.Size / 2) - (displayIndex - 1) * (self.Size + self.Spacing)
+			local step = (displayIndex - 1) * (self.Size + self.Spacing)
+			local y
+			if self.GrowUp then
+				y = -(totalHeight / 2) + (self.Size / 2) + step
+			else
+				y = (totalHeight / 2) - (self.Size / 2) - step
+			end
 			slot.Frame:ClearAllPoints()
 			slot.Frame:SetPoint("CENTER", self.Frame, "CENTER", 0, y)
 			slot.Frame:SetSize(self.Size, self.Size)
@@ -626,15 +660,32 @@ function M:SetRows(numRows, alignment, invertLayout)
 	self:Layout()
 end
 
----Switches the container to a vertical single-column layout, growing downward.
----When enabled, multi-row settings are ignored.
+---Switches the container to a vertical layout, growing downward (slot 1 at the top).
+---When enabled, multi-row settings are ignored and grow-up is cleared (mutually exclusive).
 ---@param enabled boolean
 function M:SetGrowDown(enabled)
 	enabled = enabled and true or false
-	if self.GrowDown == enabled then
+	local newGrowUp = enabled and false or self.GrowUp
+	if self.GrowDown == enabled and self.GrowUp == newGrowUp then
 		return
 	end
 	self.GrowDown = enabled
+	self.GrowUp = newGrowUp
+	self.LayoutSignature = nil
+	self:Layout()
+end
+
+---Switches the container to a vertical layout, growing upward (slot 1 at the bottom, nearest
+---the anchor).  When enabled, multi-row settings are ignored and grow-down is cleared.
+---@param enabled boolean
+function M:SetGrowUp(enabled)
+	enabled = enabled and true or false
+	local newGrowDown = enabled and false or self.GrowDown
+	if self.GrowUp == enabled and self.GrowDown == newGrowDown then
+		return
+	end
+	self.GrowUp = enabled
+	self.GrowDown = newGrowDown
 	self.LayoutSignature = nil
 	self:Layout()
 end
@@ -678,6 +729,9 @@ function M:SetIconSize(newSize)
 				local fontScale = layer.Cooldown.FontScale or 1.0
 				fontUtil:UpdateCooldownFontSize(layer.Cooldown, self.Size, nil, fontScale)
 			end
+			if layer and layer.ChargeText then
+				UpdateChargeTextFontSize(layer.ChargeText, self.Size, layer.Cooldown and layer.Cooldown.FontScale)
+			end
 
 			if slot.ExtraLayers then
 				for _, el in ipairs(slot.ExtraLayers) do
@@ -689,6 +743,9 @@ function M:SetIconSize(newSize)
 							el.Cooldown.DesiredIconSize = self.Size
 							local fontScale = el.Cooldown.FontScale or 1.0
 							fontUtil:UpdateCooldownFontSize(el.Cooldown, self.Size, nil, fontScale)
+						end
+						if el.ChargeText then
+							UpdateChargeTextFontSize(el.ChargeText, self.Size, el.Cooldown and el.Cooldown.FontScale)
 						end
 					end
 				end
@@ -812,7 +869,7 @@ function M:SetSlot(slotIndex, options)
 	if layer.Cooldown.SetCountdownMillisecondsThreshold then
 		layer.Cooldown:SetCountdownMillisecondsThreshold(options.ShowMilliseconds and (db and db.MillisecondsThreshold or 5) or 0)
 	end
-	
+
 	if options.DurationObject then
 		layer.Cooldown:SetCooldownFromDurationObject(options.DurationObject)
 		layer.Cooldown:SetDrawSwipe(not (db and db.DisableSwipe))
@@ -820,13 +877,29 @@ function M:SetSlot(slotIndex, options)
 		layer.Cooldown:Clear()
 		layer.Cooldown:SetDrawSwipe(false)
 	end
-	-- Query IsShown() AFTER setting the cooldown — the frame hides itself when the
+	-- Query IsShown() AFTER setting the cooldown - the frame hides itself when the
 	-- duration is zero or expired, so this is the authoritative "on cooldown" check.
 	layer.Icon:SetDesaturated(options.Desaturate and layer.Cooldown:IsShown() or false)
 
+	if options.ChargeText then
+		if not layer.ChargeText then
+			local overlay = CreateFrame("Frame", nil, layer.Frame)
+			overlay:SetAllPoints(layer.Frame)
+			overlay:SetFrameLevel(layer.Cooldown:GetFrameLevel() + 1)
+			layer.ChargeText = overlay:CreateFontString(nil, "OVERLAY", "NumberFontNormal")
+			layer.ChargeText:SetPoint("BOTTOMRIGHT", layer.Frame, "BOTTOMRIGHT", -3, 1)
+		end
+		UpdateChargeTextFontSize(layer.ChargeText, self.Size, options.FontScale or layer.Cooldown.FontScale)
+		layer.ChargeText:SetText(options.ChargeText)
+		layer.ChargeText:Show()
+	elseif layer.ChargeText then
+		layer.ChargeText:Hide()
+	end
+
 	ApplyAlpha(layer.Frame, options.Alpha)
 
-	if options.Color and layer.Border then
+	-- Hide the coloured border when a glow is active so the glow ring and border don't double up.
+	if options.Color and layer.Border and not options.Glow then
 		layer.Border:SetVertexColor(
 			options.Color.r or 1,
 			options.Color.g or 1,
@@ -942,11 +1015,14 @@ end
 ---@field OverflowRowAlignment string?
 ---@field InvertLayout boolean
 ---@field Columns number?
+---@field GrowDown boolean
+---@field GrowUp boolean
 ---@field NoBorder boolean
 ---@field SetCount fun(self: IconSlotContainer, count: number)
 ---@field SetSpacing fun(self: IconSlotContainer, spacing: number)
 ---@field SetRows fun(self: IconSlotContainer, iconsPerRow: number?, alignment: string?, invertLayout: boolean?)
 ---@field SetGrowDown fun(self: IconSlotContainer, enabled: boolean)
+---@field SetGrowUp fun(self: IconSlotContainer, enabled: boolean)
 ---@field SetColumns fun(self: IconSlotContainer, n: number?)
 ---@field SetIconSize fun(self: IconSlotContainer, size: number)
 ---@field SetSlot fun(self: IconSlotContainer, slotIndex: number, options: IconLayerOptions)

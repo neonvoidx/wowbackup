@@ -2,11 +2,7 @@
 local _, addon = ...
 local L = addon.L
 
-if GetLocale() ~= "ruRU" then
-	return
-end
-
-L:SetStrings({
+L:RegisterLocale("ruRU", {
 
 	-- Shared strings
 	["Any"] = "Любой",
@@ -35,9 +31,10 @@ L:SetStrings({
 	["Grow"] = "Рост",
 	["Icon Padding"] = "Отступ иконки",
 	["Icon Size"] = "Размер иконки",
+	["Icon Size (%)"] = "Размер иконки (%)",
+	["Relative size"] = "Относительный размер",
+	["Sizes the icon as a percentage of the unit frame's height instead of in pixels."] = "Задаёт размер иконки в процентах от высоты рамки персонажа вместо пикселей.",
 	["Important"] = "Важное",
-	["Important Notes"] = "Важные заметки",
-	["Limitations:"] = "Ограничения:",
 	["Max Icons"] = "Макс. иконок",
 	["Notification"] = "Уведомление",
 	["Offset X"] = "Смещение X",
@@ -117,15 +114,17 @@ L:SetStrings({
 	["Announce spell names using text-to-speech when they are cast."] = "Объявлять названия заклинаний с помощью синтеза речи при их применении.",
 	["Defensive Spells"] = "Защитные заклинания",
 	["Important Spells"] = "Важные заклинания",
-	["Include Defensives"] = "Включить защитные способности",
+	["Include defensives"] = "Включить защитные способности",
 	["Includes defensives in the alerts."] = "Включает защитные способности в оповещения.",
 	["Only show alerts for your target and focus in battlegrounds and the open world."] = "Показывать оповещения только для цели и фокуса на полях боя и в открытом мире.",
 	["Play a sound when a defensive spell is pressed."] = "Воспроизводить звук при использовании защитного заклинания.",
 	["Play a sound when an important spell is pressed."] = "Воспроизводить звук при использовании важного заклинания.",
 	["Show alert icons in the alerts region."] = "Показывать значки оповещений в области оповещений.",
 	["Show CC icons when healer is CC'd."] = "Показывать иконки контроля, когда целитель под контролем.",
+	["Show defensive alerts on a separate, movable bar."] = "Показывать защитные оповещения на отдельной перемещаемой панели.",
 	["Show icons"] = "Показывать значки",
 	["Shows CC and other important spell alerts."] = "Показывает оповещения о контроле и других важных заклинаниях.",
+	["Split bars"] = "Разделить панели",
 	["Sound"] = "Звук",
 	["Plays a sound when an enemy presses an important or defensive spell."] = "Воспроизводит звук, когда враг использует важное или защитное заклинание.",
 	["Sound Alerts"] = "Звуковые оповещения",
@@ -169,10 +168,12 @@ L:SetStrings({
 	["Exclude yourself from showing trinket icons."] = "Исключить себя из отображения иконок аксессуаров.",
 	["Show CC"] = "Показать контроль",
 	["Show CC icons."] = "Показывать иконки контроля.",
-	["Show Defensives"] = "Показать защитные",
+	["Show defensives"] = "Показать защитные",
 	["Show defensive spell icons."] = "Показывать иконки защитных заклинаний.",
-	["Show Important"] = "Показать важные",
+	["Show important"] = "Показать важные",
 	["Show important spell icons."] = "Показывать иконки важных заклинаний.",
+	["Show interrupts"] = "Показать прерывания",
+	["Show an icon when a friendly unit gets interrupted."] = "Показывает иконку, когда дружественный персонаж прерывается.",
 	["Shows CC, defensives, and important auras as one set of icons on party/raid frames."] = "Показывает CC, защитные способности и важные ауры одним набором иконок на рамках группы/рейда.",
 	["Tip: Disable the CC module for BGs and enable CC within this module."] = "Совет: отключите модуль контроля для полей боя и включите контроль в этом модуле.",
 
@@ -185,15 +186,8 @@ L:SetStrings({
 	["Text Size"] = "Размер текста",
 
 	-- Kick Timer tab
-	[" - Currently only works inside arena (doesn't work in duels/world, will add this later)."] = " - В настоящее время работает только на арене (не работает в дуэлях/мире, добавим позже).",
-	[" - Doesn't work if the enemy misses kick (still investigating potential workaround/solution)."] = " - Не работает, если враг промахнулся прерыванием (исследуем возможные решения).",
-	["As you can tell it's not guaranteed to be accurate, but so far from our testing it's pretty damn good with ancedotally a 95%+ success rate."] = "Как видите, точность не гарантирована, но по нашим тестам система работает очень хорошо с неофициальной точностью 95%+.",
-	["For example you are facing 3 enemies who are all pressing buttons."] = "Например, вы сражаетесь с 3 противниками, которые все нажимают кнопки.",
-	["How does it work? It guesses who kicked you by correlating enemy action events against interrupt events."] = "Как это работает? Система угадывает, кто вас прервал, сопоставляя действия врагов с событиями прерывания.",
 	["Kick timer"] = "Таймер прерывания",
 	["Kick timer_Short"] = "Прерыв.",
-	["Still working on improving this, so stay tuned for updates."] = "Продолжаем улучшать это, следите за обновлениями.",
-	["You just got kicked and the last enemy who successfully landed a spell was enemy A, therefore we deduce it was enemy A who kicked you."] = "Вас только что прервали, и последний враг, успешно применивший заклинание, был противник A, поэтому мы делаем вывод, что именно противник A прервал вас.",
 
 	-- Nameplates tab
 	["Change the colour of the glow/border based on dispel type (e.g., blue for magic, red for physical)."] = "Изменить цвет свечения/границы в зависимости от типа рассеивания (напр. синий для магии, красный для физического).",
@@ -235,7 +229,7 @@ L:SetStrings({
 	["Friendly Cooldowns_Short"] = "Перезар. союзн.",
 	["Icon Spacing"] = "Промежуток между иконками",
 	["Spells"] = "Заклинания",
-	["Shows PvP trinket and friendly defensive cooldowns on party/raid frames after a defensive expires."] = "Показывает перезарядки PvP-украшения и защитных умений союзников на фреймах группы/рейда после окончания защиты.",
+	["Shows PvP trinket and friendly defensive cooldowns on party/raid frames."] = "Показывает перезарядки PvP-украшения и защитных умений союзников на фреймах группы/рейда после окончания защиты.",
 ["Excludes yourself from being tracked."] = "Исключает вас из отслеживания.",
 	["Milliseconds"] = "Миллисекунды",
 	["Milliseconds Threshold"] = "Порог миллисекунд",
@@ -254,9 +248,11 @@ L:SetStrings({
 	["Shows offensive cooldowns such as Combustion, Avatar and Dragonrage."] = "Показывает наступательные откаты, такие как Горение, Аватар и Ярость дракона.",
 	["Rows"] = "Ряды",
 	["Columns"] = "Столбцы",
-	["When Grow is Down, sets how many icons appear per row before wrapping. Useful for horizontal party frames."] = "Когда направление роста — Вниз, определяет количество иконок в одном ряду до переноса. Полезно для горизонтальных рамок группы.",
+	["When Grow is Down, sets how many icons appear per row before wrapping. Useful for horizontal party frames."] = "Когда направление роста - Вниз, определяет количество иконок в одном ряду до переноса. Полезно для горизонтальных рамок группы.",
 
 	-- Enemy Cooldown Tracker tab
+	["Enemy Cooldowns"] = "КД противников",
+	["Enemy Cooldowns_Short"] = "КД противников",
 	["Shows enemy arena opponent defensive and offensive cooldowns after their buffs expire."] = "Отображает откаты защитных и наступательных способностей противников на арене после истечения их баффов.",
 	["Display"] = "Отображение",
 	["Layout Mode"] = "Режим расположения",
@@ -265,12 +261,15 @@ L:SetStrings({
 	["Linear Bar Position"] = "Позиция линейной полосы",
 	["Entry Spacing"] = "Отступ между записями",
 	["Vertical spacing between each enemy's icon row in Linear mode."] = "Вертикальный отступ между рядами иконок каждого противника в линейном режиме.",
+	["Always show cooldowns"] = "Всегда показывать перезарядки",
+	["Always display every cooldown for the enemy's specialization, faded when not on cooldown and fully opaque while active."] = "Всегда отображать все перезарядки специализации противника: затенённые, когда не активны, и полностью непрозрачные во время действия.",
+	[" - Enemy cooldowns can now always be shown (faded when off cooldown) via the 'Always show cooldowns' option, plus a new Split layout mode (offensive cooldowns on the linear bar, defensive cooldowns on the arena frames)."] = " - Перезарядки противников теперь можно отображать постоянно (затенёнными вне перезарядки) с помощью параметра «Всегда показывать перезарядки», а также добавлен новый раздельный режим (атакующие перезарядки на линейной полосе, защитные — на рамках арены).",
 	["Enable enemy cooldown tracking in arena."] = "Включить отслеживание перезарядки врагов на арене.",
 	["Show spell tooltips when hovering over cooldown icons."] = "Показывать подсказки по заклинаниям при наведении на иконки перезарядки.",
 	["Reverse the cooldown swipe animation direction on icons."] = "Изменить направление анимации смахивания перезарядки на иконках.",
 	["The display size of each cooldown icon in pixels."] = "Размер отображения каждой иконки перезарядки в пикселях.",
 	["The spacing in pixels between each cooldown icon."] = "Расстояние в пикселях между каждой иконкой перезарядки.",
-	["Arena Frames: anchors icons next to each enemy's arena frame. Linear Bar: displays all cooldowns in a single combined bar."] = "Рамки арены: привязывает иконки рядом с рамкой арены каждого врага. Линейная полоса: отображает все перезарядки в одной объединённой полосе.",
+	["Arena Frames: anchors icons next to each enemy's arena frame. Linear Bar: displays all cooldowns in a single combined bar. Split: shows offensive cooldowns on the linear bar and defensive cooldowns on the arena frames."] = "Рамки арены: привязывает иконки рядом с рамкой арены каждого врага. Линейная полоса: отображает все перезарядки в одной объединённой полосе. Раздельно: показывает атакующие перезарядки на линейной полосе, а защитные — на рамках арены.",
 	["The direction cooldown icons grow from the arena frame anchor point."] = "Направление роста иконок перезарядки от точки привязки рамки арены.",
 	["Horizontal pixel offset from the arena frame anchor point."] = "Горизонтальное смещение в пикселях от точки привязки рамки арены.",
 	["Vertical pixel offset from the arena frame anchor point."] = "Вертикальное смещение в пикселях от точки привязки рамки арены.",
@@ -283,6 +282,7 @@ L:SetStrings({
 	["Precognition"] = "Предвидение",
 	["So if by chance you happen to have some other 4 second important self buff then it would also show that icon sorry."] = "Если у вас есть другой 4-секундный важный бафф на себя, то его иконка также будет отображаться, приносим извинения.",
 	["This isn't precision perfect but it should be close enough."] = "Это не идеально точно, но должно быть достаточно близко.",
+	["Also tracks Preservation Evoker's Nullifying Shroud (3 second important self buff)."] = "Также отслеживает «Нейтрализующее покрывало» Призывателя Сохранения (3-секундный важный бафф на себя).",
 
 	-- Other Addons tab
 	["Other Mini Addons"] = "Другие Mini аддоны",
@@ -301,7 +301,14 @@ L:SetStrings({
 	[" - Added precognition guesser module that shows when you get precog."] = " - Добавляет модуль угадывания предвидения, который показывает, когда вы получаете предвидение.",
 	[" - Added profile import/export feature."] = " - Добавлена функция импорта/экспорта профиля.",
 	[" - Added friendly cooldown guessing module. You can now somewhat track your team mates cooldowns!"] = " - Добавлен модуль угадывания откатов союзников. Теперь вы можете примерно отслеживать откаты ваших товарищей по команде!",
-	["HEADS UP: Blizzard is making changes in patch 12.0.5 (April 21st) that will severely reduce the accuracy of friendly CD tracking, kill cooldown glow on press, and completely remove PvP enemy kick tracking. So please be aware that tracking will lose accuracy soon."] = "ВНИМАНИЕ: В патче 12.0.5 (21 апреля) Blizzard вносит изменения, которые значительно снизят точность отслеживания КД союзников, отключат подсветку откатов при нажатии и полностью уберут отслеживание вражеских прерываний в PvP. Поэтому имейте в виду, что точность отслеживания скоро снизится.",
+	["With the new Blizzard restrictions in 12.0.5, this is what has changed in MiniCC.\n\nThe good news:\n* Cooldown tracking still works mostly fine in arena and dungeons.\n* Added support for multiple spell charges (e.g. 2x Pain Suppression, 2x Blur) for both friendly and enemy CDs.\n\nThe bad news:\n* Friendly externals no longer track in Raids and Battlegrounds.\n* Predictive glows are less reliable.\n* PvP kick tracking can no longer identify the kicker. Now just displays a generic icon using the shortest known enemy kick cooldown.\n\nWe've put a lot of work into this update, but there may still be issues. \nPlease report any bugs you find in our Discord so we can address them."] = "С новыми ограничениями Blizzard в патче 12.0.5 в MiniCC произошли следующие изменения.\n\nХорошие новости:\n* Отслеживание кулдаунов по-прежнему в основном работает в аренах и подземельях.\n* Добавлена поддержка нескольких зарядов заклинаний (например, 2x Подавление боли, 2x Размытие) для кулдаунов союзников и врагов.\n\nПлохие новости:\n* Внешние заклинания союзников больше не отслеживаются в рейдах и на полях боя.\n* Предсказывающее свечение стало менее надёжным.\n* Отслеживание кика в PvP больше не может определить, кто прервал. Теперь отображается только общая иконка с наименьшим известным кулдауном прерывания врага.\n\nМы вложили много труда в это обновление, но проблемы всё ещё могут возникать. \nПожалуйста, сообщайте о найденных ошибках в нашем Discord, чтобы мы могли их исправить.",
 	[" - Added enemy cooldown tracking module."] = " - Добавлен модуль отслеживания перезарядки врагов.",
 	["MiniCC - What's New?"] = "MiniCC - Что нового?",
+
+	-- Language option
+	["Language"] = "Язык",
+	["Language override"] = "Язык аддона",
+	["Override the addon language. By default, your game client language is used."] = "Изменяет язык аддона. По умолчанию используется язык игрового клиента.",
+	["Auto (client language)"] = "Авто (язык клиента)",
+	["Language changed. Reload UI now?"] = "Язык изменён. Перезагрузить интерфейс сейчас?",
 })

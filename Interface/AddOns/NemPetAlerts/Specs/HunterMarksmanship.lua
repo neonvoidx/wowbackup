@@ -1,114 +1,95 @@
--- =============================================================
--- Specs/HunterMarksmanship.lua
--- Nem: Pet Alerts — Marksmanship Hunter spec module
---
--- FULLY SELF-CONTAINED. Zero dependencies on other spec modules.
---
--- Marksmanship requires the Unbreakable Bond talent to have a
--- permanent pet. Without it (or with Avian Spec), alerts are
--- suppressed via ShouldRun.
---
--- Alerts:
---   1. Pet Died            — pet dies or is resurrecting
---   2. Wake Up Pet         — Play Dead / Feign Death active
---   3. Call Pet            — no pet out (suppressed while mounted)
---   4. Turn Off Pet Taunt  — Growl autocast on in group 5+
---   5. Pet In CC           — pet has crowd control aura
---   6. Heal Pet            — pet health below threshold (ColorCurve)
---   7. Pet On Passive      — passive stance while in combat
---   8. Pet Not Attacking   — pet idle in combat after grace period
--- =============================================================
+-- ============================================================
+-- NemPetAlerts/Specs/HunterMarksmanship.lua
+-- Marksmanship Hunter spec module.
+-- ============================================================
 
 local NPA = _G.NemPetAlerts
 if not NPA then return end
 
 local GetTime        = GetTime
-local UnitExists     = UnitExists
 local UnitIsDead     = UnitIsDead
 local issecretvalue  = NPA.issecretvalue
 local C_UnitAuras    = C_UnitAuras
 
--- =============================================================
+-- ============================================================
 -- Spec Constants
--- =============================================================
-local SPEC_ID = 254  -- Marksmanship
+-- ============================================================
+local SPEC_ID = 254
 
--- =============================================================
+-- ============================================================
 -- Spell IDs
--- =============================================================
-local SPELL_UNBREAKABLE_BOND = 1223323
-local SPELL_AVIAN_SPEC       = 466867
-local SPELL_GROWL            = 2649
-local SPELL_PLAY_DEAD        = 209997
-local SPELL_WAKE_UP          = 210000
+-- ============================================================
+local SPELL_UNBREAKABLE_BOND = 1223323     -- SpellID
+local SPELL_GROWL            = 2649        -- SpellID
+local SPELL_PLAY_DEAD        = 209997      -- SpellID
+local SPELL_WAKE_UP          = 210000      -- SpellID
 
--- =============================================================
+-- ============================================================
 -- State
--- =============================================================
+-- ============================================================
 local state = {
-    petFakeDeathActive   = false,
-    wakeOverrideUntil    = 0,
-    petResurrecting      = false,
-    petCCWasActive       = false,
-    petDeadWasActive     = false,
+    petFakeDeathActive = false,
+    wakeOverrideUntil  = 0,
+    petResurrecting    = false,
 }
 
--- =============================================================
+-- ============================================================
 -- Alert Definitions
--- =============================================================
--- Row layout (Y offsets):
---   Row 1 (+52):  [1] Pet Died
---   Row 2 (+25):  [6] Heal Pet
---   Row 3 ( -2):  [3] Call Pet
---   Row 4 (-29):  [2] Wake Up Pet  /  [7] Pet On Passive
---   Row 5 (-56):  [4] Turn Off Taunt  /  [8] Pet Not Attacking
---   Row 6 (-83):  [5] Pet In CC
-
+-- ============================================================
 local ALERTS = {
-    { key = "petDead",         label = "Pet Died",             text = "* PET DIED *",              defaultColor = { r=1.0,    g=0.2039, b=0.1569 }, yOffset =  52, defaultSound = "OhNo",   soundLabel = "Pet Died" },
-    { key = "fakeDeath",       label = "Wake Up Pet",          text = "* WAKE UP PET *",           defaultColor = { r=0.6980, g=0.3333, b=1.0    }, yOffset = -29 },
-    { key = "noPet",           label = "Call Pet",             text = "* CALL PET *",              defaultColor = { r=0.9098, g=0.4118, b=0.0    }, yOffset =  -2 },
-    { key = "tauntAuto",       label = "Pet Taunt Autocast",   text = "* TURN OFF PET TAUNT *",   defaultColor = { r=0.9059, g=0.2667, b=1.0    }, yOffset = -56 },
-    { key = "notAttacking",    label = "Pet In CC",            text = "* PET IN CC *",             defaultColor = { r=0.2824, g=0.6549, b=1.0    }, yOffset = -83, defaultSound = "Sonarr", soundLabel = "Pet CC"  },
-    { key = "healPet",         label = "Heal Pet",             text = "* HEAL PET *",              defaultColor = { r=0.1882, g=1.0,    b=0.3098 }, yOffset =  25 },
-    { key = "petPassive",      label = "Pet On Passive",       text = "* PET ON PASSIVE *",        defaultColor = { r=1.0,    g=0.5843, b=0.1333 }, yOffset = -29 },
-    { key = "petNotAttacking", label = "Pet Not Attacking",    text = "* PET NOT ATTACKING *",     defaultColor = { r=1.0,    g=0.8588, b=0.0    }, yOffset = -56 },
+    { key = "petDead",         label = "Pet Died",             text = "* PET DIED *",              defaultColor = { r=1.0,    g=0.2039, b=0.1569 }, yOffset =  52, defaultSound = "Hunter: Pet Died",          soundLabel = "Pet Died",            priority = NPA.VOICE_PRIO_CRITICAL },
+    { key = "fakeDeath",       label = "Wake Up Pet",          text = "* WAKE UP PET *",           defaultColor = { r=0.6980, g=0.3333, b=1.0    }, yOffset = -29, defaultSound = "Hunter: Wake Up Pet",       soundLabel = "Wake Up Pet",         priority = NPA.VOICE_PRIO_HIGH },
+    { key = "noPet",           label = "Call Pet",             text = "* CALL PET *",              defaultColor = { r=0.9098, g=0.4118, b=0.0    }, yOffset =  -2, defaultSound = "Hunter: Call Pet",          soundLabel = "Call Pet",            priority = NPA.VOICE_PRIO_CRITICAL },
+    { key = "tauntAuto",       label = "Pet Taunt Autocast",   text = "* TURN OFF PET TAUNT *",    defaultColor = { r=0.9059, g=0.2667, b=1.0    }, yOffset = -56, defaultSound = "Hunter: Toggle Pet Taunt",  soundLabel = "Pet Taunt Autocast",  priority = NPA.VOICE_PRIO_NORMAL },
+    { key = "petInCC",    label = "Pet In CC",            text = "* PET IN CC *",             defaultColor = { r=0.2824, g=0.6549, b=1.0    }, yOffset = -83, defaultSound = "Hunter: Pet in CC",         soundLabel = "Pet CC",              priority = NPA.VOICE_PRIO_HIGH },
+    { key = "healPet",         label = "Heal Pet",             text = "* HEAL PET *",              defaultColor = { r=0.1882, g=1.0,    b=0.3098 }, yOffset =  25, defaultSound = "Hunter: Heal Pet",          soundLabel = "Heal Pet",            noSound = true },
+    { key = "petPassive",      label = "Pet On Passive",       text = "* PET ON PASSIVE *",        defaultColor = { r=1.0,    g=0.5843, b=0.1333 }, yOffset = -29, defaultSound = "Hunter: Pet on Passive",    soundLabel = "Pet On Passive",      priority = NPA.VOICE_PRIO_NORMAL },
+    { key = "petNotAttacking", label = "Pet Not Attacking",    text = "* PET NOT ATTACKING *",     defaultColor = { r=1.0,    g=0.8588, b=0.0    }, yOffset = -56, defaultSound = "Hunter: Pet Not Attacking", soundLabel = "Pet Not Attacking",   priority = NPA.VOICE_PRIO_HIGH },
 }
 
--- =============================================================
--- Test Slots (all 6 screen rows filled)
--- =============================================================
+-- ============================================================
+-- Test Slots
+-- ============================================================
 local TEST_SLOTS = { [1]=true, [2]=true, [3]=true, [4]=true, [5]=true, [6]=true }
 
--- =============================================================
+-- ============================================================
 -- Defaults
--- =============================================================
+-- ============================================================
 local DEFAULTS = {
-    petDeadEnabled           = true,
-    petDeadSoundEnabled      = true,
-    petDeadSoundName         = "OhNo",
-    fakeDeathEnabled         = true,
-    noPetEnabled             = true,
-    tauntAutoEnabled         = true,
-    notAttackingEnabled      = true,
-    notAttackingSoundEnabled = true,
-    notAttackingSoundName    = "Sonarr",
-    healPetEnabled           = true,
-    petPassiveEnabled        = true,
-    petNotAttackingEnabled   = true,
+    petDeadEnabled              = true,
+    petDeadSoundEnabled         = true,
+    petDeadSoundName            = "Hunter: Pet Died",
+    fakeDeathEnabled            = true,
+    fakeDeathSoundEnabled       = true,
+    fakeDeathSoundName          = "Hunter: Wake Up Pet",
+    noPetEnabled                = true,
+    noPetSoundEnabled           = true,
+    noPetSoundName              = "Hunter: Call Pet",
+    tauntAutoEnabled            = true,
+    tauntAutoSoundEnabled       = true,
+    tauntAutoSoundName          = "Hunter: Toggle Pet Taunt",
+    petInCCEnabled         = true,
+    petInCCSoundEnabled    = true,
+    petInCCSoundName       = "Hunter: Pet in CC",
+    healPetEnabled              = true,
+    petPassiveEnabled           = true,
+    petPassiveSoundEnabled      = true,
+    petPassiveSoundName         = "Hunter: Pet on Passive",
+    petNotAttackingEnabled      = true,
+    petNotAttackingSoundEnabled = true,
+    petNotAttackingSoundName    = "Hunter: Pet Not Attacking",
 }
 
--- =============================================================
+-- ============================================================
 -- Talent Helpers
--- =============================================================
+-- ============================================================
 local function MMHasPetTalent()
-    if NPA.IsSpellKnownByPlayer(SPELL_AVIAN_SPEC) then return false end
     return NPA.IsSpellKnownByPlayer(SPELL_UNBREAKABLE_BOND)
 end
 
--- =============================================================
+-- ============================================================
 -- Fake Death Detection
--- =============================================================
+-- ============================================================
 local function DetectPetFakeDeathDirect()
     if not NPA.PetExists() or UnitIsDead("pet") then return false end
     if UnitIsFeignDeath and UnitIsFeignDeath("pet") then return true end
@@ -138,9 +119,9 @@ local function PetHasPlayDead()
     return DetectPetFakeDeathDirect()
 end
 
--- =============================================================
+-- ============================================================
 -- Growl Detection
--- =============================================================
+-- ============================================================
 local function IsGrowlAutocastEnabled()
     if not HasPetUI() or not NPA.PetExists() then return false end
     for i = 1, 20 do
@@ -152,9 +133,9 @@ local function IsGrowlAutocastEnabled()
     return false
 end
 
--- =============================================================
+-- ============================================================
 -- Module Table
--- =============================================================
+-- ============================================================
 local HunterMarksmanship = {
     class             = "HUNTER",
     specID            = SPEC_ID,
@@ -178,79 +159,41 @@ local HunterMarksmanship = {
         "PET_BAR_UPDATE_USABLE",
         "PET_UI_UPDATE",
         "GROUP_ROSTER_UPDATE",
-        "PLAYER_REGEN_DISABLED",
-        "PLAYER_REGEN_ENABLED",
     },
 
     extraUnitEvents = {
         { "UNIT_HEALTH", "pet" },
-        { "UNIT_TARGET", "pet" },
     },
 }
 
--- =============================================================
+-- ============================================================
 -- ShouldRun
--- =============================================================
+-- ============================================================
 function HunterMarksmanship:ShouldRun(db)
     if not db.enabled then return false end
     if NPA.GetSpecID() ~= SPEC_ID then return false end
     return MMHasPetTalent()
 end
 
--- =============================================================
--- OnActivate
--- =============================================================
-function HunterMarksmanship:OnActivate(db)
-    state.petDeadWasActive = (NPA.PetExists() and UnitIsDead("pet")) or false
-    if NPA.PetExists() and not UnitIsDead("pet") then
-        NPA.StartPetHealthTicker()
-    end
-end
-
--- =============================================================
+-- ============================================================
 -- ClearAllState
--- =============================================================
+-- ============================================================
 function HunterMarksmanship:ClearAllState()
     state.petFakeDeathActive = false
     state.wakeOverrideUntil  = 0
     state.petResurrecting    = false
-    state.petCCWasActive     = false
-    state.petDeadWasActive   = false
     NPA.notAttackingState.petNotAttackingStartTime = nil
     NPA.notAttackingState.petLastHadTargetTime     = nil
 end
 
--- =============================================================
--- PreEvaluate  (rising-edge sounds)
--- =============================================================
-function HunterMarksmanship:PreEvaluate(db)
-    -- CC sound
-    if db.notAttackingEnabled then
-        local ccNow = NPA.PetIsCC()
-        if ccNow and not state.petCCWasActive then
-            NPA:PlayAlertSound("notAttacking")
-        end
-        state.petCCWasActive = ccNow
-    end
-
-    -- Pet dead sound
-    if db.petDeadEnabled then
-        local deadNow = (NPA.PetExists() and UnitIsDead("pet")) or state.petResurrecting
-        if deadNow and not state.petDeadWasActive then
-            NPA:PlayAlertSound("petDead")
-        end
-        state.petDeadWasActive = deadNow
-    end
-end
-
--- =============================================================
+-- ============================================================
 -- GetHighestPriorityAlert
--- =============================================================
+-- ============================================================
 function HunterMarksmanship:GetHighestPriorityAlert(db)
     if not NPA.PetExists() then
-        if state.petResurrecting then return 1 end  -- PET DIED
+        if state.petResurrecting then return 1 end
         if db.noPetEnabled and not NPA.ShouldSuppressNoPet() and MMHasPetTalent() then
-            return 3  -- CALL PET
+            return 3
         end
         return nil
     end
@@ -259,12 +202,12 @@ function HunterMarksmanship:GetHighestPriorityAlert(db)
 
     if db.petDeadEnabled     and UnitIsDead("pet") then
         state.petResurrecting = true
-        return 1  -- PET DIED
+        return 1
     end
     if db.fakeDeathEnabled       and PetHasPlayDead() then return 2 end
     if db.tauntAutoEnabled       and NPA.IsTauntGroupConditionMet()
                                  and IsGrowlAutocastEnabled() then return 4 end
-    if db.notAttackingEnabled    and NPA.PetIsCC() then return 5 end
+    if db.petInCCEnabled    and NPA.PetIsCC() then return 5 end
     if db.petPassiveEnabled      and NPA.PetIsPassive() then return 7 end
     if db.petNotAttackingEnabled and NPA.PetNotAttacking() then return 8 end
     if db.healPetEnabled         and NPA.PetNeedsHealing() then return 6 end
@@ -272,9 +215,9 @@ function HunterMarksmanship:GetHighestPriorityAlert(db)
     return nil
 end
 
--- =============================================================
+-- ============================================================
 -- OnEvent
--- =============================================================
+-- ============================================================
 function HunterMarksmanship:OnEvent(db, event, ...)
     if event == "UNIT_PET" then
         local unit = ...
@@ -283,11 +226,8 @@ function HunterMarksmanship:OnEvent(db, event, ...)
             state.wakeOverrideUntil  = 0
             if NPA.PetExists() and not UnitIsDead("pet") then
                 state.petResurrecting = false
-                NPA.StartPetHealthTicker()
-                NPA.SetDisplaySlot(nil)
-            else
-                NPA.StopPetHealthTicker()
             end
+            NPA.Evaluate()
             C_Timer.After(0.1, NPA.Evaluate)
         end
         return true
@@ -295,15 +235,10 @@ function HunterMarksmanship:OnEvent(db, event, ...)
 
     if event == "UNIT_AURA" then
         local unit = ...
-        if unit == "pet" then
-            local direct = DetectPetFakeDeathDirect()
-            if direct then
-                state.petFakeDeathActive = true
-            elseif state.wakeOverrideUntil <= GetTime() then
-                state.petFakeDeathActive = false
-            end
-            C_Timer.After(0.1, NPA.Evaluate)
-        elseif unit == "player" then
+        if unit == "pet" and state.wakeOverrideUntil <= GetTime() then
+            state.petFakeDeathActive = DetectPetFakeDeathDirect()
+        end
+        if unit == "pet" or unit == "player" then
             C_Timer.After(0.1, NPA.Evaluate)
         end
         return true
@@ -375,9 +310,9 @@ function HunterMarksmanship:OnEvent(db, event, ...)
     return false
 end
 
--- =============================================================
+-- ============================================================
 -- Debug
--- =============================================================
+-- ============================================================
 function HunterMarksmanship:Debug(db)
     local ok, err = pcall(function()
         NPA.Msg("spec=Marksmanship"
@@ -389,7 +324,16 @@ function HunterMarksmanship:Debug(db)
     if not ok then NPA.Msg("ERROR(hunter_mm): " .. tostring(err)) end
 end
 
--- =============================================================
+-- ============================================================
+-- Alert Options
+-- ============================================================
+function HunterMarksmanship:BuildAlertOptions(box, db, helpers)
+    helpers:MakeNumericInput("Heal Pet Threshold (%)", 1, 99,
+        function() return db.healPetThreshold or 50 end,
+        function(v) db.healPetThreshold = v; NPA.ResetHealthCurve() end)
+end
+
+-- ============================================================
 -- Register
--- =============================================================
+-- ============================================================
 NPA:RegisterSpec("HunterMarksmanship", HunterMarksmanship)

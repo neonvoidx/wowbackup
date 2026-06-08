@@ -1,7 +1,7 @@
-## Interface: 120000, 120001, 120005
+## Interface: 120005, 120007
 ## Title: Enhance QoL Core
 ## Author: R41Z0R
-## Version: 10.3.1
+## Version: 11.0.2
 ## IconTexture: Interface\AddOns\EnhanceQoL\Icons\Icon.tga
 ## Category: Quality of Life
 ## X-Category: Quality of Life
@@ -16,13 +16,13 @@
 ## Notes-koKR: 사소한 편의 기능으로 게임 품질을 향상합니다
 ## Notes-zhCN: 一些小调整，以改善您的游戏体验
 ## Notes-zhTW: 一些小調整，以改善您的遊戲體驗
-## SavedVariables: EnhanceQoLDB, EnhanceQoLDBPrivate, EnhanceQoL_IMHistory, EnhanceQoL_IgnoreDB, EnhanceQoL_ChannelHistory, EnhanceQoLMoverDB
+## SavedVariables: EnhanceQoLDB, EnhanceQoLDBPrivate, EnhanceQoL_IMHistory, EnhanceQoL_IgnoreDB, EnhanceQoL_ChannelHistory, EnhanceQoLMoverDB, EnhanceQoLBagsDB
 ## X-Wago-ID: aN0Ykv6j
 ## X-Curse-Project-ID: 1076354
 ## Retail: true
 ## X-Compatible-With: retail
 ## X-WoWI-ID: 26888
-## OptionalDeps: MidnightSimpleUnitFrames, UnhaltedUnitFrames, ElvUI, Baganator, DragonRider, FarmHud
+## OptionalDeps: MidnightSimpleUnitFrames, UnhaltedUnitFrames, ElvUI, EllesmereUI, EllesmereUIUnitFrames, EllesmereUICooldownManager, Baganator, DragonRider, FarmHud
 
 libs\LibStub\LibStub.lua
 libs\AceLocale-3.0\AceLocale-3.0.xml
@@ -40,7 +40,8 @@ libs\LibSharedMedia-3.0\lib.xml
 libs\LibOpenKeystone\LibOpenKeystone.lua
 libs\AceSerializer-3.0\AceSerializer-3.0.xml
 libs\AceComm-3.0\AceComm-3.0.xml
-libs\LibEQOL\LibEQOL.xml
+libs\LibSettingsDesigner\LibSettingsDesigner.xml
+libs\EnhanceQoLEditMode\EnhanceQoLEditMode.lua
 Bindings\Slider.xml
 Sounds\sounds.lua
 General\functions.lua
@@ -51,6 +52,7 @@ Core\SharedAnchors.lua
 Modules\ActionBarLabels.lua
 Core\Cleanup.lua
 EnhanceQoL.lua
+GeneratedChangelog.lua
 Core\DataHub.lua
 Core\DataPanel.lua
 Core\ChallengeMapLabels.lua
@@ -64,6 +66,8 @@ Submodules\ActionTracker.lua
 Submodules\ClassBuffReminder.lua
 Submodules\GCDBar.lua
 Submodules\CombatText.lua
+Submodules\DamageMeter.lua
+Submodules\GroupTools.lua
 Submodules\ChatIM\ChannelHistory.lua
 Submodules\ChatIM\UI.lua
 Submodules\ChatIM\Core.lua
@@ -87,6 +91,10 @@ Modules\Aura\ResourceBarsHelpers.lua
 Modules\Aura\ExperienceBar.lua
 Modules\Aura\TotalAbsorbTracker.lua
 Modules\Skinner\Init.lua
+
+# Bags
+Modules\Bags\Bags.xml
+
 Settings\SettingsUI.xml
 
 # Aura

@@ -111,6 +111,12 @@ local function ShowPicker(itemID, source, anchor)
         local isActiveSpec = (specName == MCS.currentSpec)
         local listNames = MCS:GetListNames(specKey)
 
+        -- Determine if this spec has any user (non-preset) lists
+        local hasUserList = false
+        for _, ln in ipairs(listNames) do
+            if not MCS:IsPresetList(specKey, ln) then hasUserList = true; break end
+        end
+
         -- Spec header
         local specHdr = f:CreateFontString(nil, "OVERLAY", "GameFontNormal")
         specHdr:SetFont(STANDARD_TEXT_FONT, 10, "")
@@ -126,10 +132,16 @@ local function ShowPicker(itemID, source, anchor)
         table_insert(f.elements, specHdr)
         y = y + 14
 
-        -- One button per list under this spec
-        -- Show preset lists first (read-only indicator), then user lists (toggleable)
+        -- Render only user lists; preset (BiS) lists are non-interactable clutter here
+        local listsToRender = {}
         for _, ln in ipairs(listNames) do
-            local isPreset = MCS:IsPresetList(specKey, ln)
+            if not MCS:IsPresetList(specKey, ln) then
+                table_insert(listsToRender, ln)
+            end
+        end
+
+        for _, ln in ipairs(listsToRender) do
+            local isPreset = false
             local onList = MCS:IsOnWishlist(itemID, specKey, ln)
             local btn = CreateFrame("Button", nil, f)
             btn:SetSize(maxW - 16, 18); btn:SetPoint("TOPLEFT", 16, -y)
@@ -190,6 +202,56 @@ local function ShowPicker(itemID, source, anchor)
             end
 
             table_insert(f.elements, btn)
+            y = y + 18
+        end
+
+        -- "+ Create new list…" row (inline edit when active)
+        if f._editingSpec == specKey then
+            local eb = CreateFrame("EditBox", nil, f, "InputBoxTemplate")
+            eb:SetSize(maxW - 32, 18); eb:SetPoint("TOPLEFT", 22, -y)
+            eb:SetAutoFocus(true); eb:SetMaxLetters(40)
+            eb:SetFontObject("GameFontHighlightSmall")
+            local function Cancel()
+                f._editingSpec = nil
+                ShowPicker(itemID, source, f._anchor)
+            end
+            local function Commit()
+                local name = strtrim(eb:GetText() or "")
+                if name == "" then Cancel(); return end
+                if MCS:IsPresetList(specKey, name) then
+                    print("|cff00ccff[MCS]|r Cannot use a preset list name.")
+                    Cancel(); return
+                end
+                MCS:CreateList(specKey, name)
+                MCS:ToggleWishlistItem(itemID, specKey, name, source)
+                local link = MCS:GetItemLink(itemID) or tostring(itemID)
+                print(format("|cff00ccff[MCS]|r |cff00ff00+|r %s (%s / %s) — new list",
+                    link, MCS:FormatSpecKey(specKey), name))
+                if MCS.frame and MCS.frame:IsShown() then MCS:UpdateUI() end
+                f._editingSpec = nil
+                ShowPicker(itemID, source, f._anchor)
+            end
+            eb:SetScript("OnEnterPressed", Commit)
+            eb:SetScript("OnEscapePressed", Cancel)
+            table_insert(f.elements, eb)
+            y = y + 20
+        else
+            local createBtn = CreateFrame("Button", nil, f)
+            createBtn:SetSize(maxW - 16, 18); createBtn:SetPoint("TOPLEFT", 16, -y)
+            local cHL = createBtn:CreateTexture(nil, "HIGHLIGHT")
+            cHL:SetAllPoints(); cHL:SetColorTexture(1, 1, 1, .08)
+            local cTxt = createBtn:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+            cTxt:SetFont(STANDARD_TEXT_FONT, 11, ""); cTxt:SetPoint("LEFT", 4, 0)
+            if hasUserList then
+                cTxt:SetText("|cff888888+ new list\226\128\166|r")
+            else
+                cTxt:SetText("|cffaaaaaa+ create personal list\226\128\166|r")
+            end
+            createBtn:SetScript("OnClick", function()
+                f._editingSpec = specKey
+                ShowPicker(itemID, source, f._anchor)
+            end)
+            table_insert(f.elements, createBtn)
             y = y + 18
         end
 

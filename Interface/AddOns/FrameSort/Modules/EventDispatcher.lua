@@ -8,6 +8,7 @@ local fsRunner = addon.Modules
 local fsProviders = addon.Providers
 local fsInspector = addon.Modules.Inspector
 local fsAutoLeader = addon.Modules.AutoLeader
+local fsHidePlayer = addon.Modules.HidePlayer
 local fsScheduler = addon.Scheduling.Scheduler
 local fsLog = addon.Logging.Log
 local eventsFrame = nil
@@ -18,17 +19,19 @@ local M = {}
 addon.Modules.EventDispatcher = M
 
 local function OnEvent(_, event, ...)
-    local args = { ... }
+    if fsLog:IsEnabled() then
+        local args = { ... }
 
-    if #args > 0 then
-        for i = 1, #args do
-            args[i] = tostring(args[i])
+        if #args > 0 then
+            for i = 1, #args do
+                args[i] = tostring(args[i])
+            end
+
+            local argsString = table.concat(args, ", ")
+            fsLog:Debug("Event: %s %s.", event, argsString)
+        else
+            fsLog:Debug("Event: %s.", event)
         end
-
-        local argsString = table.concat(args, ", ")
-        fsLog:Debug("Event: %s %s.", event, argsString)
-    else
-        fsLog:Debug("Event: %s.", event)
     end
 
     -- prioritise the scheduler
@@ -51,6 +54,9 @@ local function OnEvent(_, event, ...)
 
     -- now the auto leader
     fsAutoLeader:ProcessEvent(event)
+
+    -- now the hide player module
+    fsHidePlayer:ProcessEvent(event)
 
     -- lastly pass to runner
     fsRunner:ProcessEvent(event, ...)

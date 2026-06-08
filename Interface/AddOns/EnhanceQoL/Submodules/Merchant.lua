@@ -13,6 +13,12 @@ MerchantMod.enabled = MerchantMod.enabled or false
 MerchantMod.hooked = MerchantMod.hooked or false
 MerchantMod.originalItemsPerPage = MerchantMod.originalItemsPerPage or _G.MERCHANT_ITEMS_PER_PAGE or 10
 
+local function GetMerchantCurrencyIDs()
+	if C_MerchantFrame and C_MerchantFrame.GetMerchantCurrencies then return C_MerchantFrame.GetMerchantCurrencies() or {} end
+	if GetMerchantCurrencies then return { GetMerchantCurrencies() } end
+	return {}
+end
+
 -- local helpers (gated by self.enabled inside each)
 local function RebuildMerchantFrame()
 	if not MerchantMod.enabled or not MerchantFrame then return end
@@ -107,7 +113,7 @@ local function RebuildTokenPositions()
 		MerchantExtraCurrencyBg:SetPoint("BOTTOMRIGHT", MerchantMoneyBg, "BOTTOMLEFT", -3, 0)
 	end
 
-	local currencies = { GetMerchantCurrencies() }
+	local currencies = GetMerchantCurrencyIDs()
 	MerchantFrame.numCurrencies = #currencies
 	for index = 1, MerchantFrame.numCurrencies do
 		local tokenButton = _G["MerchantToken" .. index]

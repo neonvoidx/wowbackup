@@ -66,6 +66,11 @@ layout.defaultSettings = {
             posY = 0,
             scale = 1.1,
         },
+        healerIndicator = {
+            posX = 0,
+            posY = 0,
+            scale = 1,
+        },
         targetIndicator = {
             enabled = true,
             posX = 0,
@@ -97,6 +102,22 @@ layout.defaultSettings = {
                 scale = 1,
                 direction = "LEFT",
                 spacing = 0,
+            },
+        },
+        partyTargetText = {
+            partyOnArena = {
+                enabled = true,
+                anchor = "RIGHT",
+                fontSize = 10,
+                posX = 0,
+                posY = 0,
+            },
+            arenaOnParty = {
+                enabled = true,
+                anchor = "RIGHT",
+                fontSize = 10,
+                posX = 0,
+                posY = 0,
             },
         },
     },
@@ -346,7 +367,7 @@ function layout:Initialize(frame)
     dispelBorder:SetPoint("TOPLEFT", dispel, "TOPLEFT", -7, 7)
     dispelBorder:SetPoint("BOTTOMRIGHT", dispel, "BOTTOMRIGHT", 7, -7)
     dispelBorder:SetDrawLayer("OVERLAY", 3)
-    dispelBorder:Show()
+    dispelBorder:Hide()
     dispel.Border = dispelBorder
     dispel.useModernBorder = true
 
@@ -397,6 +418,13 @@ function layout:Initialize(frame)
     end
     frameTexture:SetDrawLayer("OVERLAY", 5)
     frameTexture:Show()
+
+    -- if not frame.PetFrame.frameTexture then
+    --     frame.PetFrame.frameTexture = frame.PetFrame:CreateTexture(nil, "OVERLAY", nil, 5)
+    --     frame.PetFrame.frameTexture:SetPoint("TOPLEFT", frame.PetFrame, "TOPLEFT", -2, 4)
+    --     frame.PetFrame.frameTexture:SetPoint("BOTTOMRIGHT", frame.PetFrame, "BOTTOMRIGHT", 2, -4)
+    --     frame.PetFrame.frameTexture:SetAtlas("plunderstorm-stormbar-border")
+    -- end
 
     self:UpdateOrientation(frame)
 end
@@ -489,6 +517,15 @@ function layout:UpdateOrientation(frame)
                 (w.combatIndicator.posX or 0) + 0, (w.combatIndicator.posY or 0) + 0)
         end
 
+        -- Healer Indicator
+        if w.healerIndicator then
+            frame.WidgetOverlay.healerIndicator:ClearAllPoints()
+            frame.WidgetOverlay.healerIndicator:SetSize(18, 18)
+            frame.WidgetOverlay.healerIndicator:SetScale(w.healerIndicator.scale or 1)
+            frame.WidgetOverlay.healerIndicator:SetPoint("CENTER", frame.ClassIcon, "BOTTOM",
+                (w.healerIndicator.posX or 0) + 0, (w.healerIndicator.posY or 0) + 0)
+        end
+
         -- Target Indicator
         if w.targetIndicator then
             frame.WidgetOverlay.targetIndicator:ClearAllPoints()
@@ -558,7 +595,7 @@ function layout:UpdateOrientation(frame)
         end
 
         if txt.forceCastbarTextWidth then
-            castbarText:SetWidth(self.db.castBar.width or frame.CastBar:GetWidth())
+            castbarText:SetWidth((self.db.castBar.width or frame.CastBar:GetWidth()) / (txt.castbarSize or 1))
         else
             castbarText:SetWidth(0)
         end
@@ -583,5 +620,31 @@ function layout:UpdateOrientation(frame)
     self:UpdateHealthbarOrientation(frame)
 end
 
+layout.defaultSettings.petFrames = {
+    posX          = 7,
+    posY          = 1,
+    width         = 99,
+    height        = 16,
+    scale         = 1,
+    frameStrata   = "LOW",
+    textSettings  = {
+        nameAnchor    = "LEFT",
+        nameOffsetX   = 0,
+        nameOffsetY   = -1,
+        nameSize      = 0.9,
+        healthAnchor  = "CENTER",
+        healthOffsetX = 0,
+        healthOffsetY = -1,
+        healthSize    = 0.9,
+    },
+    widgets = {
+        targetIndicator       = { enabled = true,  scale = 1, posX = -1, posY = -1 },
+        focusIndicator        = { enabled = true,  scale = 1, posX = -1, posY = -1 },
+        combatIndicator       = { enabled = false, scale = 1, posX = 0, posY = 0 },
+        partyTargetIndicators = { enabled = false, scale = 1, posX = 0, posY = 0, direction = "LEFT", spacing = 0 },
+    },
+}
+
+layout.petFrameBaseOffsets = { posX = -121, posY = -11 }
 sArenaMixin.layouts[layoutName] = layout
 sArenaMixin.defaultSettings.profile.layoutSettings[layoutName] = layout.defaultSettings

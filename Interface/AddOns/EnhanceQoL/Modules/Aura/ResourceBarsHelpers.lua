@@ -10,6 +10,53 @@ end
 local ResourceBars = addon.Aura and addon.Aura.ResourceBars
 if not ResourceBars then return end
 
+local function getPixelHelper()
+	return addon.Aura and addon.Aura.UF and addon.Aura.UF.GroupFramesHelper and addon.Aura.UF.GroupFramesHelper.Pixel
+end
+
+local function roundPixel(value)
+	value = tonumber(value) or 0
+	if value >= 0 then return math.floor(value + 0.5) end
+	return math.ceil(value - 0.5)
+end
+
+local function getPixelScale(region)
+	local pixel = getPixelHelper()
+	local scale
+	if pixel and pixel.GetScale then
+		scale = pixel.GetScale(region)
+	elseif region and region.GetEffectiveScale then
+		scale = region:GetEffectiveScale()
+	elseif UIParent and UIParent.GetEffectiveScale then
+		scale = UIParent:GetEffectiveScale()
+	end
+	scale = tonumber(scale) or 1
+	if scale <= 0 then scale = 1 end
+	local factor = (pixel and pixel.GetPixelToUIUnitFactor and pixel.GetPixelToUIUnitFactor()) or 1
+	factor = tonumber(factor) or 1
+	if factor <= 0 then factor = 1 end
+	return scale, factor
+end
+
+local function uiToPixels(value, region, minPixels)
+	local scale, factor = getPixelScale(region)
+	local pixels = roundPixel(((tonumber(value) or 0) * scale) / factor)
+	minPixels = tonumber(minPixels)
+	if minPixels and minPixels > 0 then
+		if pixels > 0 and pixels < minPixels then pixels = minPixels end
+		if pixels < 0 and pixels > -minPixels then pixels = -minPixels end
+	end
+	return pixels, scale, factor
+end
+
+local function pixelsToUi(pixels, scale, factor)
+	scale = tonumber(scale) or 1
+	factor = tonumber(factor) or 1
+	if scale <= 0 then scale = 1 end
+	if factor <= 0 then factor = 1 end
+	return ((tonumber(pixels) or 0) * factor) / scale
+end
+
 local function resolveVisibilityFlag(cfg, cfgKey, globalKey, defaultValue)
 	if type(cfg) == "table" and cfg[cfgKey] ~= nil then return cfg[cfgKey] == true end
 	local db = addon and addon.db
@@ -66,6 +113,7 @@ local function normalizeGradientColor(value)
 end
 
 local function isSecretGradientComponent(value) return issecretvalue and issecretvalue(value) end
+local USE_ESSENCE_REGEN_API = false -- GetPowerRegenForPowerType is secret-only on current patch; keep disabled until Blizzard fixes it.
 
 local function hasSecretGradientColor(r, g, b, a) return isSecretGradientComponent(r) or isSecretGradientComponent(g) or isSecretGradientComponent(b) or isSecretGradientComponent(a) end
 
@@ -111,7 +159,11 @@ local function resolveDiscreteSegmentBorderStyle(cfg, forceSegmentBorders)
 	if edgeSize <= 0 then return false end
 
 	local borderTexture = bd.borderTexture or "Interface\\Tooltips\\UI-Tooltip-Border"
-	if DISCRETE_LEGACY_BORDER_TEXTURE_IDS[borderTexture] then borderTexture = "Interface\\Tooltips\\UI-Tooltip-Border" end
+	if ResourceBars.ResolveBorderTexture then
+		borderTexture = ResourceBars.ResolveBorderTexture(borderTexture, "Interface\\Tooltips\\UI-Tooltip-Border")
+	elseif DISCRETE_LEGACY_BORDER_TEXTURE_IDS[borderTexture] then
+		borderTexture = "Interface\\Tooltips\\UI-Tooltip-Border"
+	end
 	if not borderTexture or borderTexture == "" then return false end
 
 	local outset = tonumber(bd.outset) or 0
@@ -264,7 +316,11 @@ function ResourceBars.ComputeEssenceFraction(bar, current, maxPower, now, powerE
 		bar._essenceFraction = 0
 		return 0, 0
 	end
-	local regen = GetPowerRegenForPowerType and GetPowerRegenForPowerType(powerEnum)
+	local regen
+	if USE_ESSENCE_REGEN_API and GetPowerRegenForPowerType then
+		regen = GetPowerRegenForPowerType(powerEnum)
+		if issecretvalue and issecretvalue(regen) then regen = nil end
+	end
 	if not regen or regen <= 0 then regen = 0.2 end
 	local tickDuration = 1 / regen
 
@@ -760,22 +816,32 @@ function ResourceBars.LayoutDiscreteSegments(bar, cfg, count, texturePath, separ
 	local separatorSize = resolveDiscreteSeparatorSize(cfg, separatorThickness)
 	local segmentOffset = resolveDiscreteSegmentOffset(cfg)
 	local requestedGap = resolveDiscreteSegmentGap(cfg, separatorThickness)
-	local gap = requestedGap
 	local useSegmentBorders = segmentOffset > 0 or (cfg and cfg.useGradient == true)
 	local borderEnabled, borderTexture, borderEdgeSize, borderOutset, borderR, borderG, borderB, borderA = resolveDiscreteSegmentBorderStyle(cfg, useSegmentBorders)
 	if count < 2 then
 		requestedGap = 0
-		gap = 0
 	end
 
 	local span = vertical and h or w
-	local maxGap = (count > 1) and math.max(0, math.floor((span - count) / (count - 1))) or 0
-	if gap > maxGap then gap = maxGap end
-	local markerThickness = min(separatorSize, gap)
+	local spanPx, scale, factor = uiToPixels(span, inner, count)
+	local crossPx = select(1, uiToPixels(vertical and w or h, inner, 1))
+	local gapPx = count > 1 and select(1, uiToPixels(requestedGap, inner, 0)) or 0
+	local separatorSizePx = select(1, uiToPixels(separatorSize, inner, 0))
+	local maxGapPx = count > 1 and math.max(0, math.floor((spanPx - count) / (count - 1))) or 0
+	if gapPx > maxGapPx then gapPx = maxGapPx end
+	local markerThicknessPx = math.min(separatorSizePx, gapPx)
 
-	local available = span - (gap * (count - 1))
-	if available < count then available = count end
-	local segPrimary = math.max(1, math.floor((available / count) + 0.5))
+	local availablePx = spanPx - (gapPx * (count - 1))
+	if availablePx < count then availablePx = count end
+	local segmentBasePx = math.max(1, math.floor(availablePx / count))
+	local remainderPx = math.max(0, availablePx - (segmentBasePx * count))
+	local segmentOffsetsPx = {}
+	local segmentSizesPx = {}
+	for i = 1, count do
+		local extraPx = i <= remainderPx and 1 or 0
+		segmentSizesPx[i] = segmentBasePx + extraPx
+		segmentOffsetsPx[i] = ((i - 1) * (segmentBasePx + gapPx)) + math.min(i - 1, remainderPx)
+	end
 
 	local sr, sg, sb, sa = normalizeGradientColor(separatorColor or (cfg and cfg.separatorColor))
 	bar._rbDiscreteGapMarks = bar._rbDiscreteGapMarks or {}
@@ -815,29 +881,17 @@ function ResourceBars.LayoutDiscreteSegments(bar, cfg, count, texturePath, separ
 			sb._rbSegmentBgColorKey = nil
 		end
 		sb:ClearAllPoints()
+		local primaryUi = pixelsToUi(segmentSizesPx[i], scale, factor)
+		local offsetUi = pixelsToUi(segmentOffsetsPx[i], scale, factor)
+		local crossUi = pixelsToUi(crossPx, scale, factor)
 		if vertical then
-			sb:SetWidth(w)
-			sb:SetHeight(segPrimary)
+			sb:SetSize(crossUi, primaryUi)
 			sb:SetOrientation("VERTICAL")
-			if i == 1 then
-				sb:SetPoint("BOTTOM", inner, "BOTTOM", 0, 0)
-			else
-				sb:SetPoint("BOTTOM", segments[i - 1], "TOP", 0, gap)
-			end
-			if i == count then sb:SetPoint("TOP", inner, "TOP", 0, 0) end
+			sb:SetPoint("BOTTOMLEFT", inner, "BOTTOMLEFT", 0, offsetUi)
 		else
-			sb:SetHeight(h)
+			sb:SetSize(primaryUi, crossUi)
 			sb:SetOrientation("HORIZONTAL")
-			if i == 1 then
-				sb:SetPoint("LEFT", inner, "LEFT", 0, 0)
-			else
-				sb:SetPoint("LEFT", segments[i - 1], "RIGHT", gap, 0)
-			end
-			if i == count then
-				sb:SetPoint("RIGHT", inner, "RIGHT", 0, 0)
-			else
-				sb:SetWidth(segPrimary)
-			end
+			sb:SetPoint("TOPLEFT", inner, "TOPLEFT", offsetUi, 0)
 		end
 		applyDiscreteSegmentBorder(sb, bar, borderEnabled, borderTexture, borderEdgeSize, borderOutset, borderR, borderG, borderB, borderA)
 		if not sb:IsShown() then sb:Show() end
@@ -851,9 +905,10 @@ function ResourceBars.LayoutDiscreteSegments(bar, cfg, count, texturePath, separ
 	end
 
 	local neededGaps = count - 1
-	local showSeparatorRequested = cfg and cfg.showSeparator == true and separatorSize > 0 and count > 1
-	if showSeparatorRequested and markerThickness > 0 and neededGaps > 0 then
-		local markOffset = floor((gap - markerThickness) * 0.5)
+	local showSeparatorRequested = cfg and cfg.showSeparator == true and separatorSizePx > 0 and count > 1
+	if showSeparatorRequested and markerThicknessPx > 0 and neededGaps > 0 then
+		local markOffsetPx = math.floor((gapPx - markerThicknessPx) * 0.5)
+		local markerThicknessUi = pixelsToUi(markerThicknessPx, scale, factor)
 		local markParent = bar._rbTextOverlay or inner
 		local markLayer = markParent ~= inner and "ARTWORK" or "BACKGROUND"
 		for i = 1, neededGaps do
@@ -867,16 +922,15 @@ function ResourceBars.LayoutDiscreteSegments(bar, cfg, count, texturePath, separ
 			if mark.SetDrawLayer then mark:SetDrawLayer(markLayer, 1) end
 			mark:ClearAllPoints()
 			mark:SetColorTexture(sr, sg, sb, sa)
+			local markPosUi = pixelsToUi(segmentOffsetsPx[i] + segmentSizesPx[i] + markOffsetPx, scale, factor)
 			if vertical then
-				mark:SetPoint("BOTTOM", segments[i], "TOP", 0, markOffset)
-				mark:SetPoint("LEFT", inner, "LEFT", 0, 0)
-				mark:SetPoint("RIGHT", inner, "RIGHT", 0, 0)
-				mark:SetHeight(markerThickness)
+				mark:SetPoint("BOTTOMLEFT", inner, "BOTTOMLEFT", 0, markPosUi)
+				mark:SetPoint("BOTTOMRIGHT", inner, "BOTTOMRIGHT", 0, markPosUi)
+				mark:SetHeight(markerThicknessUi)
 			else
-				mark:SetPoint("LEFT", segments[i], "RIGHT", markOffset, 0)
-				mark:SetPoint("TOP", inner, "TOP", 0, 0)
-				mark:SetPoint("BOTTOM", inner, "BOTTOM", 0, 0)
-				mark:SetWidth(markerThickness)
+				mark:SetPoint("TOPLEFT", inner, "TOPLEFT", markPosUi, 0)
+				mark:SetPoint("BOTTOMLEFT", inner, "BOTTOMLEFT", markPosUi, 0)
+				mark:SetWidth(markerThicknessUi)
 			end
 			if not mark:IsShown() then mark:Show() end
 		end
@@ -892,7 +946,10 @@ function ResourceBars.LayoutDiscreteSegments(bar, cfg, count, texturePath, separ
 	bar._rbDiscreteCount = count
 	bar._rbDiscreteVertical = vertical
 	bar._rbDiscreteGapRequested = requestedGap
-	bar._rbDiscreteGap = gap
+	bar._rbDiscreteGap = pixelsToUi(gapPx, scale, factor)
+	bar._rbDiscreteGapPixels = gapPx
+	bar._rbDiscreteSpanPixels = spanPx
+	bar._rbDiscreteCrossPixels = crossPx
 	bar._rbDiscreteSeparatorSize = separatorSize
 	bar._rbDiscreteShowSeparatorRequested = showSeparatorRequested
 	bar._rbDiscreteReverse = reverse
@@ -1050,7 +1107,12 @@ function ResourceBars.UpdateDiscreteSegments(bar, cfg, count, value, color, text
 			end
 
 			sb:SetMinMaxValues(0, 1)
-			sb:SetValue(segmentValue)
+			local pixel = getPixelHelper()
+			if pixel and pixel.SetStatusBarValue then
+				pixel.SetStatusBarValue(sb, segmentValue, false, true)
+			else
+				sb:SetValue(segmentValue)
+			end
 			if not sb:IsShown() then sb:Show() end
 		end
 	end

@@ -708,11 +708,18 @@ do  -- Tooltip Parser
 		end
 	end
 
-	local function GetCreatureName(creatureID)
+	local function GetCreatureName(creatureID, allowSecret)
 		if not creatureID then return end;
 		local tooltipData = GetInfoByHyperlink("unit:Creature-0-0-0-0-"..creatureID);
 		if tooltipData then
-			return GetLineText(tooltipData.lines, 1);
+			local text = GetLineText(tooltipData.lines, 1);
+			if allowSecret then
+				return text, not canaccessvalue(text);
+			else
+				if canaccessvalue(text) then
+					return text, false;
+				end
+			end
 		end
 	end
 	API.GetCreatureName = GetCreatureName;
@@ -1496,6 +1503,14 @@ do  -- Map
 			return continentMapID
 		end
 	end
+
+	function API.SetUserWaypoint(uiMapID, x, y)
+		local point = {
+			uiMapID = uiMapID,
+			position = CreateVector2D(x, y);
+		};
+		C_Map.SetUserWaypoint(point);
+	end
 end
 
 do  -- Instance -- Map
@@ -1518,13 +1533,10 @@ do  -- Instance -- Map
 
 
 	function API.IsPlayerInInstance()
-		local state = IsInInstance();
-		if state then
-			return true
-		end
-
 		local _, instanceType = GetInstanceInfo();
-		if instanceType == "scenario" then
+		if (not instanceType) or instanceType == "none" then
+			return false
+		else
 			return true
 		end
 	end
@@ -1678,6 +1690,58 @@ do  -- Currency
 				return info.quantityEarnedThisWeek, info.maxWeeklyQuantity;
 			end
 		end
+	end
+
+	-- This API is false
+	-- function API.IsCurrencyUnused(currencyID)
+	-- 	local info = GetCurrencyInfo(currencyID);
+	-- 	if info and not info.isTypeUnused then
+	-- 		return false;
+	-- 	else
+	-- 		return true;
+	-- 	end
+	-- end
+
+	function API.ClearUnusedCurrencyCache()
+		CurrencyDataProvider.unusedCurrency = nil;
+	end
+
+	function API.IsCurrencyUnused(currencyID)
+		if not CurrencyDataProvider.unusedCurrency then
+			CurrencyDataProvider.unusedCurrency = {};
+			local GetCurrencyListInfo = C_CurrencyInfo.GetCurrencyListInfo;
+
+			if GetCurrencyListInfo and C_CurrencyInfo.GetCurrencyListSize then
+				local size = C_CurrencyInfo.GetCurrencyListSize();
+				if size < 1 then return end;
+
+				local index = size;
+				local info = GetCurrencyListInfo(index);
+				local dirtyHeaderIndex;
+
+				if info.isHeader and info.name == UNUSED and not info.isHeaderExpanded then
+					dirtyHeaderIndex = index;
+					C_CurrencyInfo.ExpandCurrencyList(index, true);
+				end
+
+				size = C_CurrencyInfo.GetCurrencyListSize();
+
+				for i = size, 1, -1 do
+					info = GetCurrencyListInfo(i);
+					if info and info.isTypeUnused then
+						CurrencyDataProvider.unusedCurrency[info.currencyID] = true;
+					else
+						break
+					end
+				end
+
+				if dirtyHeaderIndex then
+					C_CurrencyInfo.ExpandCurrencyList(dirtyHeaderIndex, false);
+				end
+			end
+		end
+
+		return CurrencyDataProvider.unusedCurrency[currencyID]
 	end
 
 	if CurrencyDataProvider.PlayerHasMaxWeeklyQuantity then
@@ -2854,6 +2918,9 @@ do  -- Quest
 				end
 			end
 		end
+
+		function API.SuperTrackQuestMapPin(questID)
+		end
 	else
 		--Retail
 		function API.GetQuestProgressPercent(questID, asText)
@@ -3010,6 +3077,14 @@ do  -- Quest
 
 			return tbl
 		end
+
+		function API.SuperTrackQuestMapPin(questID)
+			if C_QuestLog.IsOnQuest(questID) then
+				C_SuperTrack.SetSuperTrackedQuestID(questID);
+			else
+				C_SuperTrack.SetSuperTrackedMapPin(Enum.SuperTrackingMapPinType.QuestOffer, questID);
+			end
+		end
 	end
 
 
@@ -3105,6 +3180,7 @@ do  -- Quest
 			for index, spellID in ipairs(spellRewards) do
 				info = C_QuestInfoSystem.GetQuestRewardSpellInfo(questID, spellID);
 				info.id = spellID;
+				info.isSpellReward = true;
 				tinsert(spells, info);
 			end
 
@@ -3516,6 +3592,19 @@ do  -- Tooltip
 		return true
 	end
 
+	function API.AddCurrencyToTooltip(tooltip, currencyID)
+		local info = C_CurrencyInfo.GetCurrencyInfo(currencyID);
+		if info then
+			local a;
+			if info.quantity > 0 then
+				a = 1;
+			else
+				a = 0.5;
+			end
+			tooltip:AddDoubleLine(info.name, string.format("%s|T%s:0:0|t", BreakUpLargeNumbers(info.quantity), info.iconFileID), a, a, a, a, a, a);
+		end
+	end
+
 
 	local AdditionalTooltip = {};
 
@@ -3703,12 +3792,12 @@ do  -- AsyncCallback
 	end
 
 
-	function API.GetAndCacheCreatureName(creatureID)
+	function API.GetAndCacheCreatureName(creatureID, allowSecret)
 		if CreatureNameCache[creatureID] then
 			return CreatureNameCache[creatureID]
 		end
-		local name = API.GetCreatureName(creatureID);
-		if name and name ~= "" then
+		local name, isSecret = API.GetCreatureName(creatureID, allowSecret);
+		if (not isSecret) and name and name ~= "" then
 			CreatureNameCache[creatureID] = name;
 		else
 			name = nil;

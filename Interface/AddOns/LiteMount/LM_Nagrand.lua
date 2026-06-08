@@ -29,18 +29,22 @@ function LM.Nagrand:Get(data)
     if m then
         m.baseSpellID = LM.SPELL.GARRISON_ABILITY
         m.baseSpellName = C_Spell.GetSpellName(m.baseSpellID)
+
+        local playerFaction = UnitFactionGroup("player")
+        m.isHidden = ( playerFaction ~= self.needsFaction )
     end
 
     return m
 end
 
 function LM.Nagrand:IsHidden()
-    local playerFaction = UnitFactionGroup("player")
-    return playerFaction ~= self.needsFaction
+    return self.isHidden
 end
 
+-- This is slow but there's only two of these so I'll wear it instead of
+-- figuring out what event would make the spell come and go.
 function LM.Nagrand:IsCollected()
-    return not self:IsHidden() and IsPlayerSpell(self.baseSpellID)
+    return not self.isHidden and IsPlayerSpell(self.baseSpellID)
 end
 
 function LM.Nagrand:GetCastAction(context)

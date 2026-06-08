@@ -326,6 +326,7 @@ local function CreateSimpleDropdown(name, parentFrame, labelText, settingKey, op
 
     -- Function to get localized text
     local function GetLocalizedText(text)
+        if text == "" then return "NONE" end
         return L[text] or text
     end
 
@@ -3167,10 +3168,10 @@ local function guiGeneralTab()
     midnightBeta:SetText(L["Msg_Midnight_Available"])
     -- Use locale-aware font system instead of hardcoded font
     if useCustomFonts then
-        midnightBeta:SetFont("Fonts\\FRIZQT__.TTF", 24, "THINOUTLINE")
+        midnightBeta:SetFont("Fonts\\FRIZQT__.TTF", 24, "OUTLINE")
     else
         local gameFont = GameFontNormal:GetFont()
-        midnightBeta:SetFont(gameFont, 24, "THINOUTLINE")
+        midnightBeta:SetFont(gameFont, 24, "OUTLINE")
     end
     midnightBeta:Hide()
     BetterBlizzFrames:HookScript("OnShow",function()
@@ -6932,11 +6933,11 @@ local function guiFrameLook()
     fontEditBox:SetSize(330, 20)
     fontEditBox:SetPoint("TOPLEFT", howStepOne, "BOTTOMLEFT", 5, -5)
     fontEditBox:SetAutoFocus(false)
-    fontEditBox:SetText("BBF.LSM:Register(\"font\", \"My Font Name\", [[Interface\\AddOns\\CustomMedia\\MyFontFile.ttf]], BBF.allLocales)")
+    fontEditBox:SetText("BBF.AddFont(\"MyFontName\")")
     fontEditBox:HighlightText()
     fontEditBox:SetCursorPosition(0)
     fontEditBox:SetScript("OnTextChanged", function(self)
-        fontEditBox:SetText("BBF.LSM:Register(\"font\", \"My Font Name\", [[Interface\\AddOns\\CustomMedia\\MyFontFile.ttf]], BBF.allLocales)")
+        fontEditBox:SetText("BBF.AddFont(\"MyFontName\")")
     end)
     fontEditBox:SetScript("OnMouseUp", function(self)
         self:SetFocus()
@@ -6953,11 +6954,11 @@ local function guiFrameLook()
     textureEditBox:SetSize(330, 20)
     textureEditBox:SetPoint("TOPLEFT", howStepTwo, "BOTTOMLEFT", 5, -5)
     textureEditBox:SetAutoFocus(false)
-    textureEditBox:SetText("BBF.LSM:Register(\"statusbar\", \"My Texture Name\", [[Interface\\AddOns\\CustomMedia\\MyTextureFile.tga]])")
+    textureEditBox:SetText("BBF.AddTexture(\"MyTextureName\")")
     textureEditBox:HighlightText()
     textureEditBox:SetCursorPosition(0)
     textureEditBox:SetScript("OnTextChanged", function(self)
-        textureEditBox:SetText("BBF.LSM:Register(\"statusbar\", \"My Texture Name\", [[Interface\\AddOns\\CustomMedia\\MyTextureFile.tga]])")
+        textureEditBox:SetText("BBF.AddTexture(\"MyTextureName\")")
     end)
     textureEditBox:SetScript("OnMouseUp", function(self)
         self:SetFocus()
@@ -6969,6 +6970,7 @@ local function guiFrameLook()
     howStepThree:SetFont(fontMedium, 12)
     howStepThree:SetPoint("TOPLEFT", textureEditBox, "BOTTOMLEFT", -5, -13)
     howStepThree:SetText(L["How_Custom_Media_3"])
+    howStepThree:SetWidth(330)
 
     local changeUnitFrameFont = CreateCheckbox("changeUnitFrameFont", L["Tooltip_Change_UnitFrame_Font_Desc"], guiFrameLook)
     changeUnitFrameFont:SetPoint("TOPLEFT", settingsText, "BOTTOMLEFT", -4, pixelsOnFirstBox)
@@ -7006,7 +7008,7 @@ local function guiFrameLook()
 
     -- For font outline
     local unitFrameFontOutline = CreateSimpleDropdown("FontOutlineDropdown", guiFrameLook, L["Outline_Label"], "unitFrameFontOutline", {
-        "THICKOUTLINE", "THINOUTLINE", "NONE"
+        "THICKOUTLINE", "OUTLINE", ""
     }, function(selectedSize)
         BBF.SetCustomFonts()
     end, { anchorFrame = unitFrameFont, x = 0, y = -5 }, 155)
@@ -7074,7 +7076,7 @@ local function guiFrameLook()
 
     -- For font outline
     local unitFrameValueFontOutline = CreateSimpleDropdown("FontOutlineDropdown", guiFrameLook, L["Outline_Label"], "unitFrameValueFontOutline", {
-        "THICKOUTLINE", "THINOUTLINE", "NONE"
+        "THICKOUTLINE", "OUTLINE", ""
     }, function(selectedSize)
         BBF.SetCustomFonts()
     end, { anchorFrame = unitFrameValueFont, x = 0, y = -5 }, 155)
@@ -7136,7 +7138,7 @@ local function guiFrameLook()
 
     -- For font outline
     local partyFrameFontOutline = CreateSimpleDropdown("FontOutlineDropdown", guiFrameLook, L["Outline_Label"], "partyFrameFontOutline", {
-        "THICKOUTLINE", "THINOUTLINE", "NONE"
+        "THICKOUTLINE", "OUTLINE", ""
     }, function(selectedSize)
         BBF.SetCustomFonts()
     end, { anchorFrame = partyFrameFont, x = 0, y = -5 }, 155)
@@ -7208,14 +7210,14 @@ local function guiFrameLook()
 
     -- For font outline
     local actionBarFontOutline = CreateSimpleDropdown("FontOutlineDropdown", guiFrameLook, L["Outline_Label"], "actionBarFontOutline", {
-        "THICKOUTLINE", "THINOUTLINE", "NONE"
+        "THICKOUTLINE", "OUTLINE", ""
     }, function(selectedSize)
         BBF.SetCustomFonts()
     end, { anchorFrame = actionBarFont, x = 0, y = -5 }, 77.5)
     CreateTooltipTwo(actionBarFontOutline, L["Tooltip_Macro_Text_Outline"])
 
     local actionBarKeyFontOutline = CreateSimpleDropdown("FontOutlineDropdown", guiFrameLook, "", "actionBarKeyFontOutline", {
-        "THICKOUTLINE", "THINOUTLINE", "NONE"
+        "THICKOUTLINE", "OUTLINE", ""
     }, function(selectedSize)
         BBF.SetCustomFonts()
     end, { anchorFrame = actionBarFontOutline, x = 77.5, y = 25 }, 77.5)

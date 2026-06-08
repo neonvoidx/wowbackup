@@ -120,7 +120,7 @@ f:SetScript("OnEvent", function(_, ev, a1)
         if not MCSdb.windowWidth then MCSdb.windowWidth = 480 end
         if not MCSdb.windowHeight then MCSdb.windowHeight = 560 end
         if not MCSdb.uiScale then MCSdb.uiScale = 1.0 end
-        if not MCSdb.ejSelectorPos then MCSdb.ejSelectorPos = nil end
+        MCSdb.ejSelectorPos = nil
         MCS.db = MCSdb
         -- Migrate old flat wishlists to new {specKey={listName={...}}} format
         for specKey, data in pairs(MCS.db.wishlists) do
@@ -265,8 +265,137 @@ local GUILD_MSGS = {
     "Did you know that Ch\195\187d and Fap once dueled for 3 hours? Ch\195\187d was AFK for the first 2 hours and 59 minutes.",
     "Did you know that Fap's DPS is actually impressive? It's the second highest hunter in the guild. By a large margin.",
     "Did you know that Fap once beat Ch\195\187d on the meters? Just kidding. Did you actually believe that?",
-    "Did you know that Fap named himself Fapandtrap because he couldn't be named Ch\195\187d? That was taken.",
+    "Did you know that Fap named himself Bigboyfap because he couldn't be named Ch\195\187d? That was taken.",
     "Did you know that Fap is the only hunter alive who's made Ch\195\187d proud? Don't tell him though, it'll go to his head.",
+    -- A fresh hundred
+    "Did you know that Ch\195\187d's first word was 'parse'? His second was 'orange'.",
+    "Did you know that Ch\195\187d's keyboard has a dedicated button just for humility? He's never pressed it.",
+    "Did you know that the Loot Council watches replays of Ch\195\187d distributing his own loot, for training purposes?",
+    "Did you know that Ch\195\187d's UI is so clean, addon devs use it as a reference render?",
+    "Did you know that when Ch\195\187d alt-tabs, the boss waits politely?",
+    "Did you know that Ch\195\187d once parsed 100 on a target dummy? The dummy retired.",
+    "Did you know that Ch\195\187d's logs are encrypted? Not for security. For modesty.",
+    "Did you know that Ch\195\187d's screen recordings are studied by speedrunners as motion reference?",
+    "Did you know that the WoW client has a hidden FPS cap that lifts only when Ch\195\187d is playing?",
+    "Did you know that Ch\195\187d's ping is negative? His packets arrive before he sends them.",
+    "Did you know that Ch\195\187d once disconnected mid-pull and the boss waited?",
+    "Did you know that Ch\195\187d's macros don't have errors? Errors have Ch\195\187d.",
+    "Did you know that when Ch\195\187d clears his bags, vendors restock just to be near his items?",
+    "Did you know that Ch\195\187d's mailbox has a velvet rope?",
+    "Did you know that the in-game clock syncs to Ch\195\187d's raid schedule, not the other way around?",
+    "Did you know that Ch\195\187d's mouse has only one button? He doesn't need a second.",
+    "Did you know that Ch\195\187d's APM is so high, his keyboard files complaints with HR?",
+    "Did you know that Ch\195\187d's mouseover macros work on targets he hasn't seen yet?",
+    "Did you know that Ch\195\187d's reaction time is measured in past tense?",
+    "Did you know that Ch\195\187d's WeakAuras predict mechanics one expansion in advance?",
+    "Did you know that Ch\195\187d doesn't queue for content. Content queues for Ch\195\187d.",
+    "Did you know that the LFG tool has a hidden 'Ch\195\187d is in your group' badge that auto-fills the rest in 4 seconds?",
+    "Did you know that Ch\195\187d's group finder listings auto-clear because everyone in queue applies instantly?",
+    "Did you know that when Ch\195\187d ready-checks, the raid is already ready?",
+    "Did you know that Ch\195\187d's pulls have their own anthem? Bards study it.",
+    "Did you know that Ch\195\187d's raid markers persist between expansions?",
+    "Did you know that Ch\195\187d's first wipe is still pending, sometime late next decade?",
+    "Did you know that boss enrage timers were invented just to give Ch\195\187d something to look at?",
+    "Did you know that Ch\195\187d's combat log has its own publisher?",
+    "Did you know that Ch\195\187d's last raid week ended with the raid lead crying tears of pride?",
+    "Did you know that Ch\195\187d's pet has its own pet?",
+    "Did you know that Ch\195\187d's pet has a longer logs page than your main?",
+    "Did you know that Ch\195\187d's exotic pets are exotic because they evolved just to keep up?",
+    "Did you know that Ch\195\187d's stable master sends Christmas cards?",
+    "Did you know that wild beasts approach Ch\195\187d and ask to be tamed? He politely declines most.",
+    "Did you know that Ch\195\187d once tamed a Sha. It became a Spirit Beast out of inspiration.",
+    "Did you know that Ch\195\187d's pet doesn't growl. It hums in approval.",
+    "Did you know that Ch\195\187d's transmog is regulated by the World Heritage Foundation?",
+    "Did you know that Ch\195\187d's mog won an award at a museum gala? He didn't attend; the mog did.",
+    "Did you know that Ch\195\187d's barber refuses payment? It's his honor.",
+    "Did you know that Ch\195\187d's title screen is just his armory page?",
+    "Did you know that Ch\195\187d's enchants glow brighter than the lore says they should?",
+    "Did you know that Ch\195\187d's gems are cut by master jewelers in their dreams?",
+    "Did you know that Ch\195\187d's flasks last all night? Even after the buff drops, his stats remain.",
+    "Did you know that Ch\195\187d's feasts feed the whole server?",
+    "Did you know that Ch\195\187d's runes self-apply on combat start?",
+    "Did you know that Ch\195\187d's consumes are tax deductible in Stormwind?",
+    "Did you know that Ch\195\187d's flight path autocomplete is just 'wherever Ch\195\187d wants to go'?",
+    "Did you know that Ch\195\187d's flight master saves him the window seat?",
+    "Did you know that Ch\195\187d's portal mage doesn't say the cost? She just bows.",
+    "Did you know that Dalaran's portals rotate to wherever Ch\195\187d is heading?",
+    "Did you know that Ch\195\187d's dungeon entrance animations are unique to him?",
+    "Did you know that when Ch\195\187d enters a city, NPCs go on break? They've earned it.",
+    "Did you know that the Cobalt Assembly recognized Ch\195\187d as honorary Arcanist?",
+    "Did you know that the Arcway's puzzles solve themselves when Ch\195\187d arrives?",
+    "Did you know that the Maw spat Ch\195\187d back? It was outclassed.",
+    "Did you know that the Jailer was last seen filing a restraining order against Ch\195\187d?",
+    "Did you know that Ch\195\187d cleared Torghast solo, blindfolded, on the wrong class?",
+    "Did you know that Mage Tower bosses petition Blizzard for nerfs whenever Ch\195\187d signs in?",
+    "Did you know that Ch\195\187d's Brawler's Guild rank is just a permanent VIP pass?",
+    "Did you know that Ch\195\187d's arena MMR was retired and hung from the rafters?",
+    "Did you know that battlegrounds change their objectives when Ch\195\187d joins, just to be interesting?",
+    "Did you know that the Horde and Alliance have a non-aggression clause specifically for Ch\195\187d?",
+    "Did you know that Ch\195\187d once flagged for PvP and three servers begged for mercy?",
+    "Did you know that world bosses respawn on Ch\195\187d's schedule?",
+    "Did you know that the Skyriding races have a category called 'Time After Ch\195\187d'?",
+    "Did you know that Ch\195\187d's dragonriding glyphs collected themselves?",
+    "Did you know that the dragons in the Dragon Isles bow when Ch\195\187d flies over?",
+    "Did you know that Wrathion is technically Ch\195\187d's intern?",
+    "Did you know that Alexstrasza once asked Ch\195\187d for advice on aspect duties?",
+    "Did you know that Ysera's dream is mostly just Ch\195\187d highlights?",
+    "Did you know that Nozdormu doesn't know how long Ch\195\187d's reign will last? The timeline is undefined.",
+    "Did you know that Malygos came back briefly, saw Ch\195\187d, and re-died out of respect?",
+    "Did you know that Deathwing's actual cause of death was reading Ch\195\187d's parse?",
+    "Did you know that Illidan once said 'You are prepared'? He meant Ch\195\187d.",
+    "Did you know that Arthas's last words were 'I see only... Ch\195\187d'?",
+    "Did you know that Bolvar handed the helm of domination to Ch\195\187d, who returned it gift-wrapped?",
+    "Did you know that the Lich King's throne has a small cushion that says 'Reserved for Ch\195\187d'?",
+    "Did you know that the Old Gods whisper Ch\195\187d's name and then go quiet for a respectful moment?",
+    "Did you know that N'Zoth's eye blinked when Ch\195\187d looked back?",
+    "Did you know that the Light and the Void agreed on exactly one thing: Ch\195\187d is great?",
+    "Did you know that Elune has Ch\195\187d on her sticky note board?",
+    "Did you know that the Holy Light intensifies when Ch\195\187d walks into a cathedral?",
+    "Did you know that Tyrande named a glaive after Ch\195\187d, then realized he prefers bows, and renamed it again?",
+    "Did you know that Anduin asks Ch\195\187d for political advice between expansions?",
+    "Did you know that the Stormwind Stockades has a wing named after Ch\195\187d, posthumously, for the rogues he caught?",
+    "Did you know that Orgrimmar's auctioneer turns the volume up when Ch\195\187d posts an item?",
+    "Did you know that the goblins of Bilgewater quote Ch\195\187d on their balance sheets?",
+    "Did you know that the Kirin Tor's library has an 'Ch\195\187d' section? It's the only one with a security guard.",
+    "Did you know that the Explorer's League just follows Ch\195\187d's footprints?",
+    "Did you know that the Argent Crusade renamed their tournament after Ch\195\187d's third undefeated season?",
+    "Did you know that the Earthen Ring once asked Ch\195\187d to officiate a treaty between elements?",
+    "Did you know that the Cenarion Circle plants trees in Ch\195\187d's honor every patch?",
+    "Did you know that Ch\195\187d's herb route is a registered scenic byway?",
+    "Did you know that Ch\195\187d mines ore by asking politely?",
+    "Did you know that Ch\195\187d's cooking trainer has a framed photo above the stove?",
+    "Did you know that Ch\195\187d's fishing line goes wherever the legendary fish are?",
+    "Did you know that Ch\195\187d's archeology digs unearth artifacts that update the lore?",
+    "Did you know that Ch\195\187d's lockpicking is recognized by the Rogue's Guild as 'ceremonial'?",
+    "Did you know that Ch\195\187d's first aid bandages heal faster than priest healing?",
+    "Did you know that Ch\195\187d once linked an item in chat and the chat box gained ilvl?",
+    "Did you know that Ch\195\187d's /played message starts with 'Worth every second'?",
+    "Did you know that the Midnight expansion's hidden zone is just Ch\195\187d's garrison?",
+    "Did you know that Ch\195\187d's reputation grind with future factions is already exalted?",
+    "Did you know that this addon's true purpose is to bring you slightly closer to playing like Ch\195\187d? Slightly.",
+}
+
+local TRIPLE_MSGS = {
+    "Did you know that Bigboytriple's raid frames are so optimized, they hit themselves with a HoT just for fun?",
+    "Did you know that Bigboytriple dispels debuffs before they're applied? Punctuality matters.",
+    "Did you know that Bigboytriple's mana bar regenerates on principle?",
+    "Did you know that Bigboytriple's holy magic is technically just German precision in a robe?",
+    "Did you know that Bigboytriple once tanked a mythic boss with two HoTs and a stern look?",
+    "Did you know that Bigboytriple keeps the raid alive purely out of disappointment in the DPS?",
+    "Did you know that Bigboytriple's healing throughput requires a separate y-axis on the meters?",
+    "Did you know that Bigboytriple's mass dispel is so clean it filed for a German engineering patent?",
+    "Did you know that Bigboytriple's resurrection cast is shorter than the death animation?",
+    "Did you know that Bigboytriple's UI is so organized, it doubles as a tax return?",
+    "Did you know that Bigboytriple measures cooldowns in seconds, milliseconds, and Schadenfreude?",
+    "Did you know that Bigboytriple's healing assignments are issued in three languages and always end with 'ja'?",
+    "Did you know that Bigboytriple's beer steins regenerate his mana between pulls?",
+    "Did you know that Bigboytriple's logs are so consistently green, Wowhead added a darker shade for him?",
+    "Did you know that Bigboytriple's biggest crit was a sigh of resignation that healed the entire raid?",
+    "Did you know that Bigboytriple once let a tank die. He talks about it in therapy.",
+    "Did you know that Bigboytriple's overheal is just preventative maintenance?",
+    "Did you know that Bigboytriple's keybinds are arranged by ergonomic Bundesnorm?",
+    "Did you know that Bigboytriple's keystone is always timed, even on disconnect?",
+    "Did you know that Bigboytriple and Ch\195\187d once shared a raid pull. The raid finished early.",
 }
 
 local FAP_POEMS = {
@@ -308,13 +437,14 @@ function MCS:ScheduleLoginMessage()
         if not guild or guild ~= "The Nine Divines" then return end
         local name = UnitName("player")
         local msg
-        if name == "Fapandtrap" then
+        if name == "Bigboyfap" then
             msg = FAP_POEMS[math.random(#FAP_POEMS)]
-            DEFAULT_CHAT_FRAME:AddMessage("|cffFF8040" .. msg .. "|r")
+        elseif name == "Bigboytriple" then
+            msg = TRIPLE_MSGS[math.random(#TRIPLE_MSGS)]
         else
             msg = GUILD_MSGS[math.random(#GUILD_MSGS)]
-            DEFAULT_CHAT_FRAME:AddMessage("|cffFF8040" .. msg .. "|r")
         end
+        DEFAULT_CHAT_FRAME:AddMessage("|cffFF8040" .. msg .. "|r")
     end)
 end
 

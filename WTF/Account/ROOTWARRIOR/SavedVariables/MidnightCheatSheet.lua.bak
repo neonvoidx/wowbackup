@@ -12,6 +12,8 @@ MCSdb = {
 ["wishlists"] = {
 ["MAGE_ARCANE"] = {
 },
+["ROGUE_OUTLAW"] = {
+},
 ["MONK_WINDWALKER"] = {
 },
 ["MAGE_FIRE"] = {

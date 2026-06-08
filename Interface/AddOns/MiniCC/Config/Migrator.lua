@@ -8,7 +8,7 @@ local L = addon.L
 ---@field TalentCache table<string, {SpecId: number, TalentString: string, Time: number}>
 ---@field PvPTalentCache table<string, {Ids: number[], Time: number}>
 local dbDefaults = {
-	Version = 43,
+	Version = 47,
 	Profiles = {},
 	ActiveProfile = "Default",
 	AutoSwitch = {},
@@ -21,6 +21,7 @@ local dbDefaults = {
 	CCNativeOrder = false,
 	DisableSwipe = false,
 	MillisecondsThreshold = 5,
+	LocaleOverride = false,
 	Modules = {
 		---@class CrowdControlModuleOptions
 		CCModule = {
@@ -43,6 +44,8 @@ local dbDefaults = {
 
 				Icons = {
 					Size = 32,
+					SizeIsPercent = false,
+					SizePercent = 80,
 					Glow = true,
 					ReverseCooldown = true,
 					ColorByDispelType = true,
@@ -64,6 +67,8 @@ local dbDefaults = {
 
 				Icons = {
 					Size = 20,
+					SizeIsPercent = false,
+					SizePercent = 50,
 					Glow = true,
 					ReverseCooldown = true,
 					ColorByDispelType = true,
@@ -93,6 +98,8 @@ local dbDefaults = {
 
 			Icons = {
 				Size = 20,
+				SizeIsPercent = false,
+				SizePercent = 50,
 				Count = 3,
 				Glow = true,
 				ReverseCooldown = true,
@@ -163,6 +170,7 @@ local dbDefaults = {
 
 			IncludeDefensives = true,
 			TargetFocusOnly = false,
+			SplitBars = false,
 			Point = "CENTER",
 			RelativePoint = "TOP",
 			RelativeTo = "UIParent",
@@ -170,6 +178,16 @@ local dbDefaults = {
 			Offset = {
 				X = 0,
 				Y = -100,
+			},
+
+			Defensives = {
+				Point = "CENTER",
+				RelativePoint = "TOP",
+				RelativeTo = "UIParent",
+				Offset = {
+					X = 0,
+					Y = -160,
+				},
 			},
 
 			Sound = {
@@ -404,10 +422,13 @@ local dbDefaults = {
 				ShowDefensives = true,
 				ShowImportant = true,
 				ShowCC = false,
+				ShowKicks = true,
 				Offset = { X = 0, Y = 0 },
 				Grow = "CENTER",
 				Icons = {
 					Size = 30,
+					SizeIsPercent = false,
+					SizePercent = 75,
 					Glow = true,
 					ReverseCooldown = true,
 					MaxIcons = 1,
@@ -422,10 +443,13 @@ local dbDefaults = {
 				ShowDefensives = true,
 				ShowImportant = true,
 				ShowCC = true,
+				ShowKicks = true,
 				Offset = { X = 0, Y = 0 },
 				Grow = "CENTER",
 				Icons = {
 					Size = 25,
+					SizeIsPercent = false,
+					SizePercent = 65,
 					Glow = true,
 					ReverseCooldown = true,
 					MaxIcons = 1,
@@ -435,7 +459,7 @@ local dbDefaults = {
 			},
 		},
 		---@class FriendlyCooldownTrackerModuleOptions
-		---@field DisabledSpells table<number, boolean> SpellIds excluded from the static-ability display; keyed by SpellId, value true. Treated as an opaque user hash — CleanTable must not recurse into it.
+		---@field DisabledSpells table<number, boolean> SpellIds excluded from the static-ability display; keyed by SpellId, value true. Treated as an opaque user hash - CleanTable must not recurse into it.
 		FriendlyCooldownTrackerModule = {
 			Enabled = {
 				World = true,
@@ -459,6 +483,8 @@ local dbDefaults = {
 				IconSpacing = 2,
 				Icons = {
 					Size = 40,
+					SizeIsPercent = false,
+					SizePercent = 100,
 					ReverseCooldown = true,
 					DesaturateOnCooldown = false,
 					MaxIcons = 10,
@@ -478,6 +504,8 @@ local dbDefaults = {
 				IconSpacing = 2,
 				Icons = {
 					Size = 20,
+					SizeIsPercent = false,
+					SizePercent = 50,
 					ReverseCooldown = true,
 					DesaturateOnCooldown = false,
 					MaxIcons = 5,
@@ -488,7 +516,7 @@ local dbDefaults = {
 		},
 
 		---@class EnemyCooldownTrackerModuleOptions
-		---@field DisabledSpells table<number, boolean> SpellIds excluded from the display; keyed by SpellId, value true. Treated as an opaque user hash — CleanTable must not recurse into it.
+		---@field DisabledSpells table<number, boolean> SpellIds excluded from the display; keyed by SpellId, value true. Treated as an opaque user hash - CleanTable must not recurse into it.
 		EnemyCooldownTrackerModule = {
 			Enabled = {
 				World = false,
@@ -504,10 +532,12 @@ local dbDefaults = {
 			ShowTooltips = false,
 			IconSpacing  = 2,
 			EntrySpacing = 4,
+			AlwaysShow   = false,
 
 			Icons = {
-				Size            = 40,
-				ReverseCooldown = true,
+				Size                 = 40,
+				ReverseCooldown      = true,
+				DesaturateOnCooldown = false,
 			},
 
 			---@class EcdArenaFramesOptions
@@ -1851,7 +1881,7 @@ function M:UpgradeToVersion25(vars)
 		return false
 	end
 
-	-- Rename Raids→BattleGrounds and Dungeons→PvE in all module Enabled tables
+	-- Rename Raids->BattleGrounds and Dungeons->PvE in all module Enabled tables
 	if vars.Modules then
 		local modules = {
 			"CCModule",
@@ -1899,7 +1929,7 @@ function M:UpgradeToVersion27(vars)
 		return false
 	end
 
-	-- Rename Always→World in location-based modules.
+	-- Rename Always->World in location-based modules.
 	-- If Always was true, it acted as an override for all contexts, so enable all of them.
 	if vars.Modules then
 		local modules = {
@@ -2188,7 +2218,7 @@ end
 function M:UpgradeToVersion40(vars)
 	if vars.Version ~= 39 then return false end
 
-	-- Rename "夏一可.ogg" → "XiaYike.ogg" in the three known Sound.File locations.
+	-- Rename "夏一可.ogg" -> "XiaYike.ogg" in the three known Sound.File locations.
 	local function RenameSound(modules)
 		if not modules then return end
 
@@ -2249,6 +2279,46 @@ function M:UpgradeToVersion43(vars)
 	vars.NotifiedChanges = false
 
 	vars.Version = 43
+	return true
+end
+
+function M:UpgradeToVersion44(vars)
+	if vars.Version ~= 43 then return false end
+
+	vars.WhatsNew = vars.WhatsNew or {}
+	table.insert(vars.WhatsNew, L["With the new Blizzard restrictions in 12.0.5, this is what has changed in MiniCC.\n\nThe good news:\n* Cooldown tracking still works mostly fine in arena and dungeons.\n* Added support for multiple spell charges (e.g. 2x Pain Suppression, 2x Blur) for both friendly and enemy CDs.\n\nThe bad news:\n* Friendly externals no longer track in Raids and Battlegrounds.\n* Predictive glows are less reliable.\n* PvP kick tracking can no longer identify the kicker. Now just displays a generic icon using the shortest known enemy kick cooldown.\n\nWe've put a lot of work into this update, but there may still be issues. \nPlease report any bugs you find in our Discord so we can address them."])
+	vars.NotifiedChanges = false
+
+	vars.Version = 44
+	return true
+end
+
+function M:UpgradeToVersion45(vars)
+	if vars.Version ~= 44 then return false end
+
+	-- The new AlwaysShow key is filled from dbDefaults by GetAndUpgradeDb; this step exists to
+	-- bump the version and surface the feature in What's New.
+	vars.WhatsNew = vars.WhatsNew or {}
+	table.insert(vars.WhatsNew, L[" - Enemy cooldowns can now always be shown (faded when off cooldown) via the 'Always show cooldowns' option, plus a new Split layout mode (offensive cooldowns on the linear bar, defensive cooldowns on the arena frames)."])
+	vars.NotifiedChanges = false
+
+	vars.Version = 45
+	return true
+end
+
+function M:UpgradeToVersion46(vars)
+	if vars.Version ~= 45 then return false end
+
+	-- New SplitBars + Defensives anchor block is filled from dbDefaults by GetAndUpgradeDb.
+	vars.Version = 46
+	return true
+end
+
+function M:UpgradeToVersion47(vars)
+	if vars.Version ~= 46 then return false end
+
+	-- New Icons.SizeIsPercent + Icons.SizePercent fields are filled from dbDefaults by GetAndUpgradeDb.
+	vars.Version = 47
 	return true
 end
 

@@ -1,10 +1,22 @@
-lightweight tag 2a789725ac135910b9681f07cb80f93ee1cbb88b 12.0.1-04
+lightweight tag e6f9ced06f8f9c81f850163d91e0b17e5efce438 12.0.5-04
 Author:	Dave Hendler <sollaires@gmail.com>
-Date:	Mon Mar 30 16:06:33 2026 -0700
+Date:	Tue May 12 21:02:49 2026 -0700
 
-commit 2a789725ac135910b9681f07cb80f93ee1cbb88b
+commit e6f9ced06f8f9c81f850163d91e0b17e5efce438
 Author: Dave Hendler <sollaires@gmail.com>
-Date:   Mon Mar 30 16:06:33 2026 -0700
+Date:   Tue May 12 21:02:49 2026 -0700
 
-    Set addon category to Other
+    Bump version
+
+commit 56b539479ece25b8a782c5acdd262ed12fc8a77c
+Author: Dave Hendler <sollaires@gmail.com>
+Date:   Tue May 12 21:02:34 2026 -0700
+
+    Ensure pipes are un-doubled to match the checksum to what goes into the clipboard
+
+commit 559422dfe30b49d2464c37fc94645d0a1fab9d3e
+Author: Dave Hendler <sollaires@gmail.com>
+Date:   Tue May 12 20:33:30 2026 -0700
+
+    Bump version
 

@@ -1,11 +1,12 @@
-## Interface: 120001, 120000, 110207, 50503, 40402, 38000, 30405, 30300, 20505, 11508
+## Interface: 120005, 50503, 40402, 38000, 30405, 30300, 20505, 11508
 ## Title: MiniTabTarget
 ## Notes: Swaps your tab key to target nearest player in pvp contexts.
 ## Author: Verz
-## Version: 1.2.1
+## Version: 1.3.0
 ## SavedVariables: MiniTabTargetDB
 ## IconTexture: Interface\AddOns\MiniTabTarget\Icon.blp
 ## X-Curse-Project-ID: 1418962
 
 MiniFramework.lua
+MiniTabTargetConfig.lua
 MiniTabTarget.lua

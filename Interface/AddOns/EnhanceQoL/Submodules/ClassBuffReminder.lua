@@ -19,6 +19,7 @@ local issecretvalue = _G.issecretvalue
 local UnitInPartyIsAI = _G.UnitInPartyIsAI
 local UnitGUID = _G.UnitGUID
 local GetTimePreciseSec = _G.GetTimePreciseSec
+local C_PetBar = _G.C_PetBar
 
 local EDITMODE_ID = "classBuffReminder"
 local ICON_MISSING = "Interface\\Icons\\INV_Misc_QuestionMark"
@@ -39,6 +40,11 @@ local AURA_SLOT_BATCH_SIZE = 32
 local AURA_SLOT_SCAN_GUARD = 16
 local REMINDER_GLOW_KEY = "CLASS_BUFF_REMINDER"
 local SHARED_FOOD_AURA_ICON_ID = 136000
+local CURRENT_EXPANSION_INSTANCE_CACHE = {}
+Reminder.UPDATE_DELAY = 0.25
+Reminder.AURA_UPDATE_DELAY = 0.5
+Reminder.RUNTIME_UPDATE_DELAY = 0.5
+Reminder.ROSTER_UPDATE_DELAY = 0.75
 
 local DB_ENABLED = "classBuffReminderEnabled"
 local DB_SHOW_PARTY = "classBuffReminderShowParty"
@@ -103,9 +109,11 @@ Reminder.runeTracking = Reminder.runeTracking or {
 local TRACKING_CONTENT = {
 	OPEN_WORLD = "openWorld",
 	SCENARIO = "scenario",
+	PARTY_FOLLOWER = "partyFollower",
 	PARTY_NORMAL = "partyNormal",
 	PARTY_HEROIC = "partyHeroic",
 	PARTY_MYTHIC = "partyMythic",
+	PARTY_MYTHIC_PLUS = "partyMythicPlus",
 	RAID_LFR = "raidLfr",
 	RAID_NORMAL = "raidNormal",
 	RAID_HEROIC = "raidHeroic",
@@ -117,14 +125,17 @@ TRACKING_CONTENT.db = {
 	FOOD = "classBuffReminderTrackFoodContent",
 	RUNES = "classBuffReminderTrackRunesContent",
 	WEAPON_BUFFS = "classBuffReminderTrackWeaponBuffsContent",
+	PETS = "classBuffReminderTrackPetsContent",
 }
 
 TRACKING_CONTENT.order = {
 	TRACKING_CONTENT.OPEN_WORLD,
 	TRACKING_CONTENT.SCENARIO,
+	TRACKING_CONTENT.PARTY_FOLLOWER,
 	TRACKING_CONTENT.PARTY_NORMAL,
 	TRACKING_CONTENT.PARTY_HEROIC,
 	TRACKING_CONTENT.PARTY_MYTHIC,
+	TRACKING_CONTENT.PARTY_MYTHIC_PLUS,
 	TRACKING_CONTENT.RAID_LFR,
 	TRACKING_CONTENT.RAID_NORMAL,
 	TRACKING_CONTENT.RAID_HEROIC,
@@ -134,9 +145,11 @@ TRACKING_CONTENT.order = {
 TRACKING_CONTENT.keys = {
 	[TRACKING_CONTENT.OPEN_WORLD] = true,
 	[TRACKING_CONTENT.SCENARIO] = true,
+	[TRACKING_CONTENT.PARTY_FOLLOWER] = true,
 	[TRACKING_CONTENT.PARTY_NORMAL] = true,
 	[TRACKING_CONTENT.PARTY_HEROIC] = true,
 	[TRACKING_CONTENT.PARTY_MYTHIC] = true,
+	[TRACKING_CONTENT.PARTY_MYTHIC_PLUS] = true,
 	[TRACKING_CONTENT.RAID_LFR] = true,
 	[TRACKING_CONTENT.RAID_NORMAL] = true,
 	[TRACKING_CONTENT.RAID_HEROIC] = true,
@@ -145,6 +158,9 @@ TRACKING_CONTENT.keys = {
 
 TRACKING_CONTENT.difficulties = {
 	party = {
+		follower = {
+			[((_G.DifficultyUtil and _G.DifficultyUtil.ID) or {}).FollowerDungeon or 205] = true,
+		},
 		normal = {
 			[((_G.DifficultyUtil and _G.DifficultyUtil.ID) or {}).DungeonNormal or 1] = true,
 			[((_G.DifficultyUtil and _G.DifficultyUtil.ID) or {}).DungeonTimewalker or 24] = true,
@@ -156,6 +172,9 @@ TRACKING_CONTENT.difficulties = {
 		},
 		mythic = {
 			[((_G.DifficultyUtil and _G.DifficultyUtil.ID) or {}).DungeonMythic or 23] = true,
+		},
+		mythicPlus = {
+			[((_G.DifficultyUtil and _G.DifficultyUtil.ID) or {}).DungeonChallenge or 8] = true,
 		},
 	},
 	raid = {
@@ -201,8 +220,15 @@ function Reminder.CreateDefaultTrackingContentSelection()
 	}
 end
 
+function Reminder.CreateDefaultPetTrackingContentSelection()
+	local selection = Reminder.CreateDefaultTrackingContentSelection()
+	selection[TRACKING_CONTENT.PARTY_MYTHIC_PLUS] = true
+	return selection
+end
+
 function Reminder.CreateLegacyInstanceTrackingContentSelection()
 	return {
+		[TRACKING_CONTENT.PARTY_FOLLOWER] = true,
 		[TRACKING_CONTENT.PARTY_NORMAL] = true,
 		[TRACKING_CONTENT.PARTY_HEROIC] = true,
 		[TRACKING_CONTENT.PARTY_MYTHIC] = true,
@@ -276,6 +302,13 @@ Reminder.defaults = Reminder.defaults
 		trackWeaponBuffs = false,
 		trackWeaponBuffsContent = Reminder.CreateDefaultTrackingContentSelection(),
 		trackWeaponBuffsInstanceOnly = false,
+		expirationWarningMinutes = 0,
+		trackPets = false,
+		trackPetsContent = Reminder.CreateDefaultPetTrackingContentSelection(),
+		trackPetsInstanceOnly = false,
+		ignorePetDefensive = false,
+		ignorePetPassive = false,
+		hidePetReminderText = false,
 		scale = 1,
 		iconSize = 64,
 		fontSize = 13,
@@ -316,6 +349,12 @@ if type(defaults.trackRunesContent) ~= "table" then defaults.trackRunesContent =
 if defaults.trackWeaponBuffs == nil then defaults.trackWeaponBuffs = false end
 if defaults.trackWeaponBuffsInstanceOnly == nil then defaults.trackWeaponBuffsInstanceOnly = false end
 if type(defaults.trackWeaponBuffsContent) ~= "table" then defaults.trackWeaponBuffsContent = Reminder.CreateDefaultTrackingContentSelection() end
+if defaults.expirationWarningMinutes == nil then defaults.expirationWarningMinutes = 0 end
+if defaults.trackPets == nil then defaults.trackPets = false end
+if defaults.trackPetsInstanceOnly == nil then defaults.trackPetsInstanceOnly = false end
+if type(defaults.trackPetsContent) ~= "table" then defaults.trackPetsContent = Reminder.CreateDefaultPetTrackingContentSelection() end
+if defaults.ignorePetDefensive == nil then defaults.ignorePetDefensive = false end
+if defaults.ignorePetPassive == nil then defaults.ignorePetPassive = false end
 if defaults.borderEnabled == nil then defaults.borderEnabled = false end
 if defaults.borderTexture == nil or defaults.borderTexture == "" then defaults.borderTexture = "DEFAULT" end
 if defaults.borderSize == nil then defaults.borderSize = 1 end
@@ -333,6 +372,32 @@ local GROUP_CONTEXT_RAID = "RAID"
 local ROLE_FILTER_CONTEXT_ANY_GROUP = "ANY_GROUP"
 local ROLE_FILTER_CONTEXT_PARTY_ONLY = "PARTY_ONLY"
 local ROLE_FILTER_CONTEXT_RAID_ONLY = "RAID_ONLY"
+
+Reminder.petTracking = Reminder.petTracking or {
+	petSpecs = {
+		[252] = true,
+		[253] = true,
+		[255] = true,
+		[265] = true,
+		[266] = true,
+		[267] = true,
+	},
+	specMarksman = 254,
+	marksPetTalent = 1223323,
+	specFrostMage = 64,
+	magePetTalent = 31687,
+	grimoireOfSacrifice = 108503,
+	grimoireOfSacrificeBuff = 196099,
+	callPet = 883,
+	raiseDead = 46584,
+	summonImp = 688,
+	petPassive = 26179,
+	petDefensive = 61679,
+	petAssist = 61680,
+	stanceAssist = 1,
+	stanceDefensive = 2,
+	stancePassive = 3,
+}
 
 local EVOKER_BLESSING_OF_BRONZE_IDS = {
 	381732,
@@ -588,6 +653,28 @@ local function clamp(value, minValue, maxValue, fallback)
 	return n
 end
 
+local function nowSeconds()
+	if GetTimePreciseSec then return tonumber(GetTimePreciseSec()) or 0 end
+	if GetTime then return tonumber(GetTime()) or 0 end
+	return 0
+end
+
+function Reminder.GetAuraExpirationTime(aura)
+	if not aura or (issecretvalue and issecretvalue(aura)) then return nil end
+	local expirationTime = aura.expirationTime
+	if issecretvalue and issecretvalue(expirationTime) then expirationTime = nil end
+	expirationTime = tonumber(expirationTime)
+	if not expirationTime or expirationTime <= 0 then return math.huge end
+	return expirationTime
+end
+
+function Reminder.StoreBestExpiration(map, key, expirationTime)
+	if type(map) ~= "table" or key == nil then return end
+	expirationTime = expirationTime or math.huge
+	local current = map[key]
+	if current == nil or expirationTime > current then map[key] = expirationTime end
+end
+
 local function clamp01(value)
 	local n = tonumber(value) or 1
 	if n < 0 then return 0 end
@@ -610,6 +697,49 @@ local function getValue(key, fallback)
 	return value
 end
 
+function Reminder:NormalizeExpirationWarningMinutes(value)
+	local minutes = clamp(value, 0, 60, defaults.expirationWarningMinutes or 0)
+	minutes = math.floor((tonumber(minutes) or 0) + 0.5)
+	if minutes < 0 then minutes = 0 end
+	if minutes > 60 then minutes = 60 end
+	return minutes
+end
+
+function Reminder:GetExpirationWarningMinutes()
+	return self:NormalizeExpirationWarningMinutes(getValue("classBuffReminderExpirationWarningMinutes", defaults.expirationWarningMinutes))
+end
+
+function Reminder:GetExpirationWarningSeconds()
+	return self:GetExpirationWarningMinutes() * 60
+end
+
+function Reminder:IsExpirationWarningEnabled()
+	return self:GetExpirationWarningSeconds() > 0
+end
+
+function Reminder:SetExpirationWarningMinutes(value)
+	if addon.db then addon.db.classBuffReminderExpirationWarningMinutes = self:NormalizeExpirationWarningMinutes(value) end
+	self:CancelExpirationWarningTimer()
+	self:MarkAuraStatesDirty()
+	self:RequestUpdate(true)
+	if EditMode and EditMode.RefreshFrame then EditMode:RefreshFrame(EDITMODE_ID) end
+end
+
+function Reminder:IsExpirationTimeUsable(expirationTime, thresholdSeconds, now)
+	thresholdSeconds = tonumber(thresholdSeconds) or self:GetExpirationWarningSeconds()
+	if thresholdSeconds <= 0 then return true end
+	if expirationTime == nil or expirationTime == math.huge then return true end
+	now = tonumber(now) or nowSeconds()
+	local remaining = expirationTime - now
+	if remaining <= thresholdSeconds then return false end
+	self:QueueExpirationWarningAt(expirationTime - thresholdSeconds)
+	return true
+end
+
+function Reminder:IsAuraUsableForReminder(aura, thresholdSeconds, now)
+	return self:IsExpirationTimeUsable(Reminder.GetAuraExpirationTime(aura), thresholdSeconds, now)
+end
+
 function Reminder.GetTrackingContentSelection(dbKey, legacyKey, defaultSelection)
 	local stored = addon.db and addon.db[dbKey] or nil
 	local legacy = addon.db and addon.db[legacyKey] or nil
@@ -628,9 +758,11 @@ end
 function Reminder.GetTrackingContentLabel(key)
 	if key == TRACKING_CONTENT.OPEN_WORLD then return _G.WORLD or "World" end
 	if key == TRACKING_CONTENT.SCENARIO then return _G.SCENARIOS or _G.TRACKER_HEADER_SCENARIO or "Scenarios" end
+	if key == TRACKING_CONTENT.PARTY_FOLLOWER then return L["timeoutReleaseGroupDungeonFollower"] or Reminder.BuildContentDifficultyLabel(_G.DUNGEONS or _G.LFG_TYPE_DUNGEON or "Dungeon", _G.FOLLOWER or "Follower") end
 	if key == TRACKING_CONTENT.PARTY_NORMAL then return Reminder.BuildContentDifficultyLabel(_G.PARTY or "Party", _G.PLAYER_DIFFICULTY1 or _G.NORMAL or "Normal") end
 	if key == TRACKING_CONTENT.PARTY_HEROIC then return Reminder.BuildContentDifficultyLabel(_G.PARTY or "Party", _G.PLAYER_DIFFICULTY2 or _G.HEROIC or "Heroic") end
 	if key == TRACKING_CONTENT.PARTY_MYTHIC then return Reminder.BuildContentDifficultyLabel(_G.PARTY or "Party", _G.PLAYER_DIFFICULTY6 or "Mythic") end
+	if key == TRACKING_CONTENT.PARTY_MYTHIC_PLUS then return L["ClassBuffReminderTrackingContentMythicPlus"] or Reminder.BuildContentDifficultyLabel(_G.PARTY or "Party", _G.PLAYER_DIFFICULTY_MYTHIC_PLUS or "Mythic+") end
 	if key == TRACKING_CONTENT.RAID_LFR then return Reminder.BuildContentDifficultyLabel(_G.RAID or "Raid", _G.PLAYER_DIFFICULTY3 or "LFR") end
 	if key == TRACKING_CONTENT.RAID_NORMAL then return Reminder.BuildContentDifficultyLabel(_G.RAID or "Raid", _G.PLAYER_DIFFICULTY1 or _G.NORMAL or "Normal") end
 	if key == TRACKING_CONTENT.RAID_HEROIC then return Reminder.BuildContentDifficultyLabel(_G.RAID or "Raid", _G.PLAYER_DIFFICULTY2 or _G.HEROIC or "Heroic") end
@@ -663,6 +795,14 @@ local function canEvaluateUnit(unit)
 	if not (UnitExists and UnitExists(unit)) then return false end
 	if not (UnitIsConnected and UnitIsConnected(unit)) then return false end
 	if UnitIsDeadOrGhost and UnitIsDeadOrGhost(unit) then return false end
+	return true
+end
+
+function Reminder.CanActOnMissingGroupBuffUnit(unit)
+	if isPlayerUnit(unit) then return true end
+	if UnitIsVisible and UnitIsVisible(unit) == false then return false end
+	local unitPhaseReason = _G.UnitPhaseReason
+	if unitPhaseReason and unitPhaseReason(unit) ~= nil then return false end
 	return true
 end
 
@@ -703,6 +843,35 @@ local function getPlayerEquippedItemEquipLoc(slot)
 	local itemLink = GetInventoryItemLink("player", slot)
 	if type(itemLink) ~= "string" or itemLink == "" then return nil end
 	return select(4, C_Item.GetItemInfoInstant(itemLink))
+end
+
+function Reminder.NormalizeIconTexture(value)
+	if value == nil then return nil end
+	if issecretvalue and issecretvalue(value) then return nil end
+	if type(value) == "number" then return value > 0 and value or nil end
+	if type(value) == "string" and value ~= "" then return value end
+	return nil
+end
+
+function Reminder.GetItemIcon(itemId)
+	itemId = tonumber(itemId)
+	if not itemId or itemId <= 0 then return nil end
+	if C_Item and C_Item.GetItemIconByID then
+		local icon = C_Item.GetItemIconByID(itemId)
+		icon = Reminder.NormalizeIconTexture(icon)
+		if icon then return icon end
+	end
+	if C_Item and C_Item.GetItemInfoInstant then
+		local icon = select(5, C_Item.GetItemInfoInstant(itemId))
+		icon = Reminder.NormalizeIconTexture(icon)
+		if icon then return icon end
+	end
+	if GetItemIcon then
+		local icon = GetItemIcon(itemId)
+		icon = Reminder.NormalizeIconTexture(icon)
+		if icon then return icon end
+	end
+	return nil
 end
 
 local function isEnchantableWeaponEquipLoc(equipLoc)
@@ -772,6 +941,10 @@ local function wipeTable(target)
 	for key in pairs(target) do
 		target[key] = nil
 	end
+end
+
+function Reminder.IsRelevantHelpfulPlayerAura(aura)
+	return aura and aura.isHelpful == true and aura.isFromPlayerOrPlayerPet == true
 end
 
 local function normalizeDisplayMode(value)
@@ -928,7 +1101,10 @@ local function unitHasAuraBySpellId(unit, spellId)
 	if type(unit) ~= "string" or unit == "" then return false end
 
 	if C_UnitAuras and C_UnitAuras.GetUnitAuraBySpellID then
-		if C_UnitAuras.GetUnitAuraBySpellID(unit, spellId) ~= nil then return true end
+		local aura = C_UnitAuras.GetUnitAuraBySpellID(unit, spellId)
+		if aura ~= nil and not (issecretvalue and issecretvalue(aura)) then
+			if type(aura) ~= "table" or Reminder:IsAuraUsableForReminder(aura) then return true end
+		end
 	end
 
 	if C_UnitAuras and C_UnitAuras.GetAuraSlots and C_UnitAuras.GetAuraDataBySlot then
@@ -944,7 +1120,7 @@ local function unitHasAuraBySpellId(unit, spellId)
 						if issecretvalue and issecretvalue(isHelpful) then isHelpful = nil end
 						if isHelpful ~= false then
 							local auraSpellId = normalizeSpellId(aura.spellId)
-							if auraSpellId and auraSpellId == spellId then return true end
+							if auraSpellId and auraSpellId == spellId and Reminder:IsAuraUsableForReminder(aura) then return true end
 						end
 					end
 				end
@@ -1023,13 +1199,15 @@ local function setProviderDisplaySpellId(provider, spellId)
 	provider._presentationAttempted = nil
 end
 
-local function makeSelfMissingEntry(spellId, label, countMissing, countTotal, sourceKind)
+local function makeSelfMissingEntry(spellId, label, countMissing, countTotal, sourceKind, icon, shortText)
 	return {
 		spellId = normalizeSpellId(spellId),
 		label = label,
 		countMissing = tonumber(countMissing),
 		countTotal = tonumber(countTotal),
 		sourceKind = sourceKind,
+		icon = Reminder.NormalizeIconTexture(icon),
+		shortText = shortText,
 	}
 end
 
@@ -1066,7 +1244,9 @@ local function resolveProviderPresentation(provider, force)
 	local resolvedName
 	local resolvedIcon
 	local preferredId = normalizeSpellId(provider.displaySpellId)
+	local preferredIcon = Reminder.NormalizeIconTexture(provider.displayIcon)
 	if preferredId then resolvedId = preferredId end
+	if preferredIcon then resolvedIcon = preferredIcon end
 
 	if preferredId then
 		requestSpellDataLoad(preferredId)
@@ -1113,8 +1293,8 @@ local function resolveProviderPresentation(provider, force)
 
 	provider.displaySpellId = resolvedId or preferredId or normalizeSpellId(provider.spellIds[1]) or provider.displaySpellId or provider.spellIds[1]
 	provider.cachedName = resolvedName or provider.fallbackName or "Buff"
-	provider.cachedIcon = resolvedIcon or ICON_MISSING
-	provider._presentationReady = (resolvedName ~= nil and resolvedIcon ~= nil)
+	provider.cachedIcon = resolvedIcon or Reminder.NormalizeIconTexture(provider.displayIcon) or ICON_MISSING
+	provider._presentationReady = (provider.cachedName ~= nil and provider.cachedIcon ~= ICON_MISSING)
 end
 
 local function refreshProviderSpellNameSet(provider)
@@ -1220,6 +1400,32 @@ function Reminder:SetWeaponBuffTrackingContentSelection(selection)
 	self:RequestUpdate(true)
 end
 
+function Reminder:IsPetTrackingEnabled() return getValue("classBuffReminderTrackPets", defaults.trackPets) == true end
+
+function Reminder:ShouldIgnorePetDefensiveReminder()
+	return getValue("classBuffReminderIgnorePetDefensive", defaults.ignorePetDefensive) == true
+end
+
+function Reminder:ShouldIgnorePetPassiveReminder()
+	return getValue("classBuffReminderIgnorePetPassive", defaults.ignorePetPassive) == true
+end
+
+function Reminder:GetPetTrackingContentSelection()
+	local stored = addon.db and addon.db[TRACKING_CONTENT.db.PETS] or nil
+	if addon.db and addon.db["classBuffReminderPetsMythicPlusContentMigrated"] ~= true then
+		if type(stored) == "table" and stored[TRACKING_CONTENT.PARTY_MYTHIC] == true and stored[TRACKING_CONTENT.PARTY_MYTHIC_PLUS] == nil then
+			stored[TRACKING_CONTENT.PARTY_MYTHIC_PLUS] = true
+		end
+		addon.db["classBuffReminderPetsMythicPlusContentMigrated"] = true
+	end
+	return Reminder.GetTrackingContentSelection(TRACKING_CONTENT.db.PETS, "classBuffReminderTrackPetsInstanceOnly", defaults.trackPetsContent)
+end
+
+function Reminder:SetPetTrackingContentSelection(selection)
+	if addon.db then addon.db[TRACKING_CONTENT.db.PETS] = select(1, Reminder.NormalizeTrackingContentSelection(selection, nil, defaults.trackPetsContent)) end
+	self:RequestUpdate(true)
+end
+
 function Reminder:GetConsumableTrackingContentToken()
 	if not IsInInstance then return TRACKING_CONTENT.OPEN_WORLD end
 
@@ -1230,7 +1436,8 @@ function Reminder:GetConsumableTrackingContentToken()
 	local difficultyID = GetInstanceInfo and tonumber((select(3, GetInstanceInfo()))) or nil
 
 	if instanceType == "party" then
-		if difficultyID == (((_G.DifficultyUtil and _G.DifficultyUtil.ID) or {}).DungeonChallenge or 8) then return nil end
+		if difficultyID and TRACKING_CONTENT.difficulties.party.mythicPlus[difficultyID] then return TRACKING_CONTENT.PARTY_MYTHIC_PLUS end
+		if difficultyID and TRACKING_CONTENT.difficulties.party.follower[difficultyID] then return TRACKING_CONTENT.PARTY_FOLLOWER end
 		if difficultyID and TRACKING_CONTENT.difficulties.party.heroic[difficultyID] then return TRACKING_CONTENT.PARTY_HEROIC end
 		if difficultyID and TRACKING_CONTENT.difficulties.party.mythic[difficultyID] then return TRACKING_CONTENT.PARTY_MYTHIC end
 		return TRACKING_CONTENT.PARTY_NORMAL
@@ -1253,9 +1460,108 @@ function Reminder:IsDungeonOrRaidInstance()
 	return instanceType == "party" or instanceType == "raid"
 end
 
-function Reminder:IsTrackingContentSelected(selection)
+function Reminder:GetCurrentExpansionLevel()
+	local expansionLevel
+	if type(LE_EXPANSION_LEVEL_CURRENT) == "number" then expansionLevel = LE_EXPANSION_LEVEL_CURRENT end
+	if type(expansionLevel) ~= "number" and _G.GetServerExpansionLevel then expansionLevel = _G.GetServerExpansionLevel() end
+	if issecretvalue and issecretvalue(expansionLevel) then expansionLevel = nil end
+	if type(expansionLevel) ~= "number" and _G.GetMaximumExpansionLevel then expansionLevel = _G.GetMaximumExpansionLevel() end
+	if type(expansionLevel) ~= "number" and GetExpansionLevel then expansionLevel = GetExpansionLevel() end
+	if issecretvalue and issecretvalue(expansionLevel) then expansionLevel = nil end
+	return type(expansionLevel) == "number" and expansionLevel or nil
+end
+
+function Reminder:GetCurrentExpansionInstanceCache()
+	local expansionLevel = self:GetCurrentExpansionLevel()
+	if not expansionLevel then return nil end
+	local cache = CURRENT_EXPANSION_INSTANCE_CACHE[expansionLevel]
+	if cache then return cache end
+
+	if not (EJ_SelectTier and EJ_GetInstanceByIndex) then return nil end
+
+	cache = {
+		instances = {},
+		maps = {},
+	}
+	CURRENT_EXPANSION_INSTANCE_CACHE[expansionLevel] = cache
+
+	local previousTier = EJ_GetCurrentTier and EJ_GetCurrentTier() or nil
+	EJ_SelectTier(expansionLevel + 1)
+
+	for _, showRaid in ipairs({ false, true }) do
+		local index = 1
+		while true do
+			local journalInstanceID, _, _, _, _, _, _, _, _, _, mapID = EJ_GetInstanceByIndex(index, showRaid)
+			if not journalInstanceID then break end
+			cache.instances[journalInstanceID] = true
+			if type(mapID) == "number" and mapID > 0 then cache.maps[mapID] = true end
+			index = index + 1
+		end
+	end
+
+	if previousTier then EJ_SelectTier(previousTier) end
+	return cache
+end
+
+function Reminder:IsCurrentExpansionDungeonOrRaidInstance()
+	if self:IsDungeonOrRaidInstance() ~= true then return true end
+	if not GetInstanceInfo then return true end
+
+	local _, _, difficultyID, _, _, _, _, instanceMapID, _, lfgDungeonID = GetInstanceInfo()
+	local currentExpansionLevel = self:GetCurrentExpansionLevel()
+
+	if GetLFGDungeonInfo and lfgDungeonID then
+		local _, _, _, _, _, _, _, _, expansionLevel, _, _, _, _, _, _, _, _, isTimewalker = GetLFGDungeonInfo(lfgDungeonID)
+		if issecretvalue and issecretvalue(expansionLevel) then expansionLevel = nil end
+		if issecretvalue and issecretvalue(isTimewalker) then isTimewalker = nil end
+		if isTimewalker == true then return false end
+		if type(expansionLevel) == "number" and currentExpansionLevel then return expansionLevel >= currentExpansionLevel end
+	end
+
+	local ids = (_G.DifficultyUtil and _G.DifficultyUtil.ID) or {}
+	if difficultyID == (ids.DungeonTimewalker or 24) or difficultyID == (ids.RaidTimewalker or 33) then return false end
+
+	local cache = self:GetCurrentExpansionInstanceCache()
+	if type(cache) ~= "table" then return true end
+
+	if type(instanceMapID) == "number" and cache.maps[instanceMapID] then return true end
+	local journalInstanceID = C_EncounterJournal and C_EncounterJournal.GetInstanceForGameMap and type(instanceMapID) == "number"
+		and C_EncounterJournal.GetInstanceForGameMap(instanceMapID)
+		or nil
+	return journalInstanceID ~= nil and cache.instances[journalInstanceID] == true
+end
+
+function Reminder:IsCurrentSeasonMythicPlusDungeon()
+	if not GetInstanceInfo then return false end
+
+	local _, _, difficultyID, _, _, _, _, instanceMapID = GetInstanceInfo()
+	local ids = (_G.DifficultyUtil and _G.DifficultyUtil.ID) or {}
+	if difficultyID ~= (ids.DungeonMythic or 23) then return false end
+	if issecretvalue and issecretvalue(instanceMapID) then return false end
+	if type(instanceMapID) ~= "number" then return false end
+
+	local mythicPlus = addon.MythicPlus
+	local variables = mythicPlus and mythicPlus.variables or nil
+	if type(variables) ~= "table" then return false end
+
+	if (type(variables.seasonMapHash) ~= "table" or not next(variables.seasonMapHash)) and mythicPlus.functions and type(mythicPlus.functions.createSeasonInfo) == "function" then
+		mythicPlus.functions.createSeasonInfo()
+	end
+
+	local seasonMapHash = variables.seasonMapHash
+	if type(seasonMapHash) ~= "table" then return false end
+	if seasonMapHash[instanceMapID] then return true end
+
+	local zoneID = C_Map and C_Map.GetBestMapForUnit and C_Map.GetBestMapForUnit("player") or nil
+	if issecretvalue and issecretvalue(zoneID) then zoneID = nil end
+	if type(zoneID) == "number" and seasonMapHash[instanceMapID .. "_" .. zoneID] then return true end
+	return false
+end
+
+function Reminder:IsTrackingContentSelected(selection, requireCurrentExpansionInstance)
 	local token = self:GetConsumableTrackingContentToken()
 	if not token or type(selection) ~= "table" then return false end
+	if requireCurrentExpansionInstance == true and self:IsCurrentExpansionDungeonOrRaidInstance() ~= true and self:IsCurrentSeasonMythicPlusDungeon() ~= true then return false end
 	return selection[token] == true
 end
 
@@ -1270,14 +1576,14 @@ function Reminder:IsFlaskEnvironmentRestricted()
 	if self.consumableTrackingBlockedByCombat == true then return true end
 	if InCombatLockdown and InCombatLockdown() then return true end
 	-- Generic addon restrictions can include transient states unrelated to local consumable checks.
-	-- Mythic+ is already excluded via GetConsumableTrackingContentToken returning nil.
+	-- Basic combat restrictions also cover Mythic+, which resolves to its own tracking content token.
 	return false
 end
 
 function Reminder:CanCheckFlaskReminder()
 	if self:IsFlaskEnvironmentRestricted() then return false end
 	if not self:IsFlaskTrackingEnabled() then return false end
-	return self:IsTrackingContentSelected(self:GetFlaskTrackingContentSelection())
+	return self:IsTrackingContentSelected(self:GetFlaskTrackingContentSelection(), true)
 end
 
 function Reminder:IsEarthenPlayer()
@@ -1290,7 +1596,7 @@ function Reminder:CanCheckFoodReminder()
 	if self:IsFlaskEnvironmentRestricted() then return false end
 	if self:IsEarthenPlayer() then return false end
 	if not self:IsFoodTrackingEnabled() then return false end
-	return self:IsTrackingContentSelected(self:GetFoodTrackingContentSelection())
+	return self:IsTrackingContentSelected(self:GetFoodTrackingContentSelection(), true)
 end
 
 function Reminder:CanCheckRuneReminder()
@@ -1317,7 +1623,12 @@ function Reminder:CanCheckWeaponBuffReminder()
 	if self:IsFlaskEnvironmentRestricted() then return false end
 	if self:ShouldSuppressGenericWeaponBuffReminder() then return false end
 	if not self:IsWeaponBuffTrackingEnabled() then return false end
-	return self:IsTrackingContentSelected(self:GetWeaponBuffTrackingContentSelection())
+	return self:IsTrackingContentSelected(self:GetWeaponBuffTrackingContentSelection(), true)
+end
+
+function Reminder:CanCheckPetReminder()
+	if not self:IsPetTrackingEnabled() then return false end
+	return self:IsTrackingContentSelected(self:GetPetTrackingContentSelection(), true)
 end
 
 function Reminder:CanEvaluateFoodReminderNow()
@@ -1337,6 +1648,11 @@ end
 
 function Reminder:CanEvaluateFlaskReminderNow()
 	if not self:CanCheckFlaskReminder() then return false end
+	return true
+end
+
+function Reminder:CanEvaluatePetReminderNow()
+	if not self:CanCheckPetReminder() then return false end
 	return true
 end
 
@@ -1484,6 +1800,7 @@ function Reminder:PrepareConsumableCandidateAuraData(candidates, fallbackLabel)
 		auraNames = {},
 		displaySpellId = nil,
 		displayLabel = nil,
+		displayIcon = nil,
 	}
 	local seenSpellIds = {}
 	local seenAuraNames = {}
@@ -1499,14 +1816,23 @@ function Reminder:PrepareConsumableCandidateAuraData(candidates, fallbackLabel)
 		list[#list + 1] = spellId
 	end
 
+	if type(candidates) ~= "table" then
+		if type(prepared.displayLabel) ~= "string" or prepared.displayLabel == "" then prepared.displayLabel = fallbackLabel end
+		return prepared
+	end
+
 	for i = 1, #candidates do
 		local candidate = candidates[i]
 		local candidateSpellId = normalizeSpellId(candidate and (candidate.displaySpellId or candidate.spellId))
+		local candidateIcon = Reminder.NormalizeIconTexture(candidate and (candidate.displayIcon or candidate.icon or candidate.iconId or candidate.iconID))
 		if not prepared.displaySpellId and candidateSpellId then prepared.displaySpellId = candidateSpellId end
+		if not prepared.displayIcon and candidateIcon then prepared.displayIcon = candidateIcon end
 		appendUniquePreparedSpellId(prepared.spellIds, seenSpellIds, candidateSpellId)
 
 		local itemId = tonumber(candidate and candidate.id)
 		if itemId and itemId > 0 then
+			if not prepared.displayIcon then prepared.displayIcon = Reminder.GetItemIcon(itemId) end
+
 			local spellName, spellId
 			if C_Item and C_Item.GetItemSpell then spellName, spellId = C_Item.GetItemSpell(itemId) end
 
@@ -1565,10 +1891,12 @@ function Reminder:GetPreparedWeaponBuffCandidateData(candidates)
 		source = candidates,
 		displaySpellId = nil,
 		displayLabel = nil,
+		displayIcon = nil,
 	}
 
 	local itemId = tonumber(candidates[1] and candidates[1].id)
 	if itemId and itemId > 0 then
+		prepared.displayIcon = Reminder.GetItemIcon(itemId)
 		local spellName, spellId
 		if C_Item and C_Item.GetItemSpell then spellName, spellId = C_Item.GetItemSpell(itemId) end
 		prepared.displaySpellId = normalizeSpellId(spellId)
@@ -1588,9 +1916,16 @@ function Reminder:GetPlayerAuraPresenceSnapshot()
 
 	snapshot = {
 		supported = false,
+		restricted = false,
 		spellIds = {},
 		names = {},
 		icons = {},
+		spellIdExpirations = {},
+		nameExpirations = {},
+		iconExpirations = {},
+		instanceSpellIds = {},
+		instanceNames = {},
+		instanceIcons = {},
 	}
 
 	if not (C_UnitAuras and C_UnitAuras.GetAuraSlots and C_UnitAuras.GetAuraDataBySlot) then
@@ -1604,23 +1939,38 @@ function Reminder:GetPlayerAuraPresenceSnapshot()
 		local slots, slotCount, nextToken = getHelpfulAuraSlotBuffer("player", continuationToken)
 		for i = 2, slotCount do
 			local slot = slots[i]
-			if not (issecretvalue and issecretvalue(slot)) then
-				local aura = C_UnitAuras.GetAuraDataBySlot("player", slot)
-				if aura and not (issecretvalue and issecretvalue(aura)) then
-					local isHelpful = aura.isHelpful
-					if issecretvalue and issecretvalue(isHelpful) then isHelpful = nil end
-					if isHelpful ~= false then
-						local auraSpellId = normalizeSpellId(aura.spellId)
-						if auraSpellId then snapshot.spellIds[auraSpellId] = true end
+			local aura = C_UnitAuras.GetAuraDataBySlot("player", slot)
+			if aura and Reminder.IsRelevantHelpfulPlayerAura(aura) then
+				local auraName = aura.name
+				if issecretvalue and issecretvalue(auraName) then
+					snapshot.supported = false
+					snapshot.restricted = true
+					self.playerAuraPresenceSnapshot = snapshot
+					return snapshot
+				end
 
-						local auraName = aura.name
-						if not (issecretvalue and issecretvalue(auraName)) and type(auraName) == "string" and auraName ~= "" then snapshot.names[auraName] = true end
+				local auraId = normalizeAuraInstanceId(aura.auraInstanceID)
+				local expirationTime = Reminder.GetAuraExpirationTime(aura)
+				local auraSpellId = normalizeSpellId(aura.spellId)
+				if auraSpellId then
+					snapshot.spellIds[auraSpellId] = true
+					Reminder.StoreBestExpiration(snapshot.spellIdExpirations, auraSpellId, expirationTime)
+					if auraId then snapshot.instanceSpellIds[auraId] = auraSpellId end
+				end
 
-						local auraIcon = aura.icon
-						if issecretvalue and issecretvalue(auraIcon) then auraIcon = nil end
-						auraIcon = tonumber(auraIcon)
-						if auraIcon and auraIcon > 0 then snapshot.icons[auraIcon] = true end
-					end
+				if type(auraName) == "string" and auraName ~= "" then
+					snapshot.names[auraName] = true
+					Reminder.StoreBestExpiration(snapshot.nameExpirations, auraName, expirationTime)
+					if auraId then snapshot.instanceNames[auraId] = auraName end
+				end
+
+				local auraIcon = aura.icon
+				if issecretvalue and issecretvalue(auraIcon) then auraIcon = nil end
+				auraIcon = tonumber(auraIcon)
+				if auraIcon and auraIcon > 0 then
+					snapshot.icons[auraIcon] = true
+					Reminder.StoreBestExpiration(snapshot.iconExpirations, auraIcon, expirationTime)
+					if auraId then snapshot.instanceIcons[auraId] = auraIcon end
 				end
 			end
 		end
@@ -1633,13 +1983,23 @@ function Reminder:GetPlayerAuraPresenceSnapshot()
 	return snapshot
 end
 
+function Reminder:IsPlayerAuraSnapshotRestricted(snapshot)
+	return type(snapshot) == "table" and snapshot.restricted == true
+end
+
 function Reminder:AuraSnapshotHasAnySpellId(snapshot, spellIds)
 	if type(snapshot) ~= "table" or type(spellIds) ~= "table" then return false end
 	local present = snapshot.spellIds
 	if type(present) ~= "table" then return false end
+	local expirations = snapshot.spellIdExpirations
+	local thresholdSeconds = self:GetExpirationWarningSeconds()
+	local now = nowSeconds()
 	for i = 1, #spellIds do
 		local spellId = normalizeSpellId(spellIds[i])
-		if spellId and present[spellId] then return true end
+		if spellId and present[spellId] then
+			local expirationTime = type(expirations) == "table" and expirations[spellId] or math.huge
+			if self:IsExpirationTimeUsable(expirationTime, thresholdSeconds, now) then return true end
+		end
 	end
 	return false
 end
@@ -1648,9 +2008,15 @@ function Reminder:AuraSnapshotHasAnyName(snapshot, auraNames)
 	if type(snapshot) ~= "table" or type(auraNames) ~= "table" then return false end
 	local present = snapshot.names
 	if type(present) ~= "table" then return false end
+	local expirations = snapshot.nameExpirations
+	local thresholdSeconds = self:GetExpirationWarningSeconds()
+	local now = nowSeconds()
 	for i = 1, #auraNames do
 		local auraName = auraNames[i]
-		if type(auraName) == "string" and auraName ~= "" and present[auraName] then return true end
+		if type(auraName) == "string" and auraName ~= "" and present[auraName] then
+			local expirationTime = type(expirations) == "table" and expirations[auraName] or math.huge
+			if self:IsExpirationTimeUsable(expirationTime, thresholdSeconds, now) then return true end
+		end
 	end
 	return false
 end
@@ -1659,13 +2025,10 @@ function Reminder:AuraSnapshotHasIcon(snapshot, iconId)
 	iconId = tonumber(iconId)
 	if not iconId or iconId <= 0 or type(snapshot) ~= "table" then return false end
 	local present = snapshot.icons
-	return type(present) == "table" and present[iconId] == true or false
-end
-
-local function nowSeconds()
-	if GetTimePreciseSec then return tonumber(GetTimePreciseSec()) or 0 end
-	if GetTime then return tonumber(GetTime()) or 0 end
-	return 0
+	if type(present) ~= "table" or present[iconId] ~= true then return false end
+	local expirations = snapshot.iconExpirations
+	local expirationTime = type(expirations) == "table" and expirations[iconId] or math.huge
+	return self:IsExpirationTimeUsable(expirationTime)
 end
 
 function Reminder:GetFoodBagCacheVersion()
@@ -1878,6 +2241,7 @@ function Reminder:GetFlaskMissingEntry(evalContext)
 	if context and not context.flaskPreparedData then context.flaskPreparedData = prepared end
 	local snapshot = context and context.playerAuraSnapshot or self:GetPlayerAuraPresenceSnapshot()
 	if context and not context.playerAuraSnapshot then context.playerAuraSnapshot = snapshot end
+	if self:IsPlayerAuraSnapshotRestricted(snapshot) then return nil end
 
 	local hasFlaskAura
 	if snapshot and snapshot.supported == true then
@@ -1894,7 +2258,7 @@ function Reminder:GetFlaskMissingEntry(evalContext)
 	local displaySpellId = prepared.displaySpellId or normalizeSpellId(SHARED_FLASK_AURA_IDS[1])
 	local displayLabel = prepared.displayLabel
 	if type(displayLabel) ~= "string" or displayLabel == "" then displayLabel = "Flask" end
-	return makeSelfMissingEntry(displaySpellId, displayLabel, nil, nil, "FLASK")
+	return makeSelfMissingEntry(displaySpellId, displayLabel, nil, nil, "FLASK", prepared.displayIcon)
 end
 
 function Reminder:GetFoodMissingEntry(evalContext)
@@ -1908,6 +2272,7 @@ function Reminder:GetFoodMissingEntry(evalContext)
 	if context and not context.foodPreparedData then context.foodPreparedData = prepared end
 	local snapshot = context and context.playerAuraSnapshot or self:GetPlayerAuraPresenceSnapshot()
 	if context and not context.playerAuraSnapshot then context.playerAuraSnapshot = snapshot end
+	if self:IsPlayerAuraSnapshotRestricted(snapshot) then return nil end
 
 	local hasFoodAura
 	if snapshot and snapshot.supported == true then
@@ -1925,7 +2290,7 @@ function Reminder:GetFoodMissingEntry(evalContext)
 	local displayLabel = prepared.displayLabel
 	if not displaySpellId and #prepared.spellIds > 0 then displaySpellId = normalizeSpellId(prepared.spellIds[1]) end
 	if type(displayLabel) ~= "string" or displayLabel == "" then displayLabel = L["Buff Food Macro"] or "Buff food" end
-	return makeSelfMissingEntry(displaySpellId, displayLabel, nil, nil, "FOOD")
+	return makeSelfMissingEntry(displaySpellId, displayLabel, nil, nil, "FOOD", prepared.displayIcon or SHARED_FOOD_AURA_ICON_ID)
 end
 
 function Reminder:GetRuneMissingEntry(evalContext)
@@ -1937,6 +2302,7 @@ function Reminder:GetRuneMissingEntry(evalContext)
 	if context and not context.runePreparedData then context.runePreparedData = prepared end
 	local snapshot = context and context.playerAuraSnapshot or self:GetPlayerAuraPresenceSnapshot()
 	if context and not context.playerAuraSnapshot then context.playerAuraSnapshot = snapshot end
+	if self:IsPlayerAuraSnapshotRestricted(snapshot) then return nil end
 
 	local hasRuneAura
 	if snapshot and snapshot.supported == true then
@@ -1953,7 +2319,18 @@ function Reminder:GetRuneMissingEntry(evalContext)
 	local displaySpellId = prepared.displaySpellId or normalizeSpellId(Reminder.runeTracking.auraIds[1])
 	local displayLabel = prepared.displayLabel
 	if type(displayLabel) ~= "string" or displayLabel == "" then displayLabel = L["ClassBuffReminderAugmentRune"] or "Augment Rune" end
-	return makeSelfMissingEntry(displaySpellId, displayLabel, nil, nil, "RUNES")
+	return makeSelfMissingEntry(displaySpellId, displayLabel, nil, nil, "RUNES", prepared.displayIcon)
+end
+
+function Reminder:IsWeaponEnchantUsable(expirationMS)
+	local thresholdSeconds = self:GetExpirationWarningSeconds()
+	if thresholdSeconds <= 0 then return true end
+	expirationMS = tonumber(expirationMS)
+	if not expirationMS or expirationMS <= 0 then return true end
+	local remainingSeconds = expirationMS / 1000
+	if remainingSeconds <= thresholdSeconds then return false end
+	self:QueueExpirationWarningAt(nowSeconds() + remainingSeconds - thresholdSeconds)
+	return true
 end
 
 function Reminder:GetWeaponBuffMissingEntry(evalContext)
@@ -1965,16 +2342,16 @@ function Reminder:GetWeaponBuffMissingEntry(evalContext)
 	local missingRequirements = 0
 	local hasMainWeapon = isPlayerMainhandEnchantableWeapon()
 	local hasOffhandWeapon = isPlayerOffhandEnchantableWeapon()
-	local hasMainEnchant, _, _, _, hasOffhandEnchant = GetWeaponEnchantInfo()
+	local hasMainEnchant, mainExpirationMS, _, _, hasOffhandEnchant, offhandExpirationMS = GetWeaponEnchantInfo()
 
 	if hasMainWeapon then
 		totalRequirements = totalRequirements + 1
-		if hasMainEnchant ~= true then missingRequirements = missingRequirements + 1 end
+		if hasMainEnchant ~= true or not self:IsWeaponEnchantUsable(mainExpirationMS) then missingRequirements = missingRequirements + 1 end
 	end
 
 	if hasOffhandWeapon then
 		totalRequirements = totalRequirements + 1
-		if hasOffhandEnchant ~= true then missingRequirements = missingRequirements + 1 end
+		if hasOffhandEnchant ~= true or not self:IsWeaponEnchantUsable(offhandExpirationMS) then missingRequirements = missingRequirements + 1 end
 	end
 
 	if totalRequirements <= 0 or missingRequirements <= 0 then return nil end
@@ -1983,7 +2360,186 @@ function Reminder:GetWeaponBuffMissingEntry(evalContext)
 	local prepared = context and context.weaponBuffPreparedData or self:GetPreparedWeaponBuffCandidateData(candidates)
 	if context and not context.weaponBuffPreparedData then context.weaponBuffPreparedData = prepared end
 
-	return makeSelfMissingEntry(prepared.displaySpellId, prepared.displayLabel, nil, nil, "WEAPON_BUFF")
+	return makeSelfMissingEntry(prepared.displaySpellId, prepared.displayLabel, nil, nil, "WEAPON_BUFF", prepared.displayIcon)
+end
+
+function Reminder:IsPetExpectedForPlayer()
+	local pet = Reminder.petTracking
+	local classToken = self:GetClassToken()
+	local specId = self:GetCurrentSpecId()
+
+	if classToken == "MAGE" then return specId == pet.specFrostMage and C_SpellBook and C_SpellBook.IsSpellKnown and C_SpellBook.IsSpellKnown(pet.magePetTalent) == true end
+	if classToken == "HUNTER" then
+		if specId == pet.specMarksman then return C_SpellBook and C_SpellBook.IsSpellKnown and C_SpellBook.IsSpellKnown(pet.marksPetTalent) == true end
+		return pet.petSpecs[specId] == true
+	end
+	if classToken == "DEATHKNIGHT" then return specId == 252 end
+	if classToken == "WARLOCK" then return pet.petSpecs[specId] == true and not self:IsWarlockSacrificePetReminderSuppressed() end
+	return false
+end
+
+function Reminder:IsWarlockSacrificePetReminderSuppressed()
+	if self:GetClassToken() ~= "WARLOCK" then return false end
+	local pet = Reminder.petTracking
+	if C_SpellBook and C_SpellBook.IsSpellKnown and C_SpellBook.IsSpellKnown(pet.grimoireOfSacrifice) == true then return true end
+	if IsPlayerSpell and IsPlayerSpell(pet.grimoireOfSacrifice) == true then return true end
+	if InCombatLockdown and InCombatLockdown() then return false end
+	if UnitAffectingCombat and UnitAffectingCombat("player") then return false end
+	if C_UnitAuras and C_UnitAuras.GetPlayerAuraBySpellID and C_UnitAuras.GetPlayerAuraBySpellID(pet.grimoireOfSacrificeBuff) then return true end
+	if AuraUtil and AuraUtil.FindAuraBySpellID and AuraUtil.FindAuraBySpellID(pet.grimoireOfSacrificeBuff, "player", "HELPFUL") then return true end
+	return false
+end
+
+function Reminder:HasActivePet()
+	if not UnitExists or not UnitExists("pet") then return false end
+	if UnitIsDeadOrGhost and UnitIsDeadOrGhost("pet") then return false end
+	return true
+end
+
+function Reminder:IsPetReminderSuppressed()
+	if UnitIsDeadOrGhost and UnitIsDeadOrGhost("player") then return true end
+	if IsMounted and IsMounted() then return true end
+	if UnitHasVehicleUI and UnitHasVehicleUI("player") then return true end
+	if UnitInVehicle and UnitInVehicle("player") then return true end
+	if UnitOnTaxi and UnitOnTaxi("player") then return true end
+	if IsFlying and IsFlying() then return true end
+	return false
+end
+
+function Reminder:ClassifyPetStanceName(name)
+	if name == "PET_MODE_ASSIST" or name == "PET_ACTION_ASSIST" then return Reminder.petTracking.stanceAssist end
+	if name == "PET_MODE_DEFENSIVEASSIST" or name == "PET_ACTION_DEFENSIVE" then return Reminder.petTracking.stanceDefensive end
+	if name == "PET_MODE_PASSIVE" or name == "PET_ACTION_MODE_PASSIVE" then return Reminder.petTracking.stancePassive end
+	return nil
+end
+
+function Reminder:TryGetPetStanceWith(getInfoFunc)
+	local inactiveStances = {}
+	for i = 1, (_G.NUM_PET_ACTION_SLOTS or 10) do
+		local name, _, _, isActive = getInfoFunc(i)
+		if type(name) == "table" then
+			isActive = name.isActive
+			name = name.name
+		end
+		local stance = self:ClassifyPetStanceName(name)
+		if stance then
+			if isActive then return stance end
+			inactiveStances[stance] = true
+		end
+	end
+
+	local inactiveCount = 0
+	for _ in pairs(inactiveStances) do inactiveCount = inactiveCount + 1 end
+	if inactiveCount == 2 then
+		local pet = Reminder.petTracking
+		if not inactiveStances[pet.stanceAssist] then return pet.stanceAssist end
+		if not inactiveStances[pet.stanceDefensive] then return pet.stanceDefensive end
+		if not inactiveStances[pet.stancePassive] then return pet.stancePassive end
+	end
+	return nil
+end
+
+function Reminder:GetPetStance()
+	local pet = Reminder.petTracking
+	if not self:HasActivePet() then
+		pet.cachedStance = nil
+		return nil
+	end
+	if pet.cachedStance and GetTime and ((GetTime() - (pet.cachedStanceTime or 0)) < 0.5) then return pet.cachedStance end
+
+	local apis = {}
+	if C_PetBar and C_PetBar.GetPetActionInfo then apis[#apis + 1] = C_PetBar.GetPetActionInfo end
+	if C_ActionBar and C_ActionBar.GetPetActionInfo then apis[#apis + 1] = C_ActionBar.GetPetActionInfo end
+	if GetPetActionInfo then apis[#apis + 1] = GetPetActionInfo end
+	for i = 1, #apis do
+		local ok, stance = pcall(function() return Reminder:TryGetPetStanceWith(apis[i]) end)
+		if ok and stance then
+			pet.cachedStance = stance
+			pet.cachedStanceTime = GetTime and GetTime() or 0
+			return stance
+		end
+	end
+	return pet.cachedStance
+end
+
+function Reminder:SetupPetTrackingHooks()
+	local pet = Reminder.petTracking
+	if pet.hooksInstalled then return end
+	pet.hooksInstalled = true
+
+	local function updateCachedStance(stance)
+		pet.cachedStance = stance
+		pet.cachedStanceTime = GetTime and GetTime() or 0
+		if C_Timer and C_Timer.After then
+			C_Timer.After(0, function()
+				if Reminder:IsPetTrackingEnabled() then Reminder:RequestUpdate(false, Reminder.RUNTIME_UPDATE_DELAY, true) end
+			end)
+		elseif Reminder:IsPetTrackingEnabled() then
+			Reminder:RequestUpdate(false, Reminder.RUNTIME_UPDATE_DELAY, true)
+		end
+	end
+
+	local hooks = {
+		{ func = "PetPassiveMode", stance = pet.stancePassive },
+		{ func = "PetDefensiveMode", stance = pet.stanceDefensive },
+		{ func = "PetAssistMode", stance = pet.stanceAssist },
+	}
+	for i = 1, #hooks do
+		if _G[hooks[i].func] then
+			local stance = hooks[i].stance
+			pcall(hooksecurefunc, hooks[i].func, function() updateCachedStance(stance) end)
+		end
+	end
+end
+
+function Reminder:GetPetReminderIcon(state)
+	local pet = Reminder.petTracking
+	local spellId
+	if state == "passive" then
+		return 132311
+	elseif state == "defensive" then
+		return 132110
+	else
+		local classToken = self:GetClassToken()
+		local specId = self:GetCurrentSpecId()
+		if classToken == "MAGE" then
+			spellId = pet.magePetTalent
+		elseif classToken == "DEATHKNIGHT" then
+			spellId = pet.raiseDead
+		elseif classToken == "HUNTER" then
+			spellId = pet.callPet
+		elseif classToken == "WARLOCK" then
+			spellId = pet.summonImp
+		elseif specId == pet.specFrostMage then
+			spellId = pet.magePetTalent
+		end
+	end
+	return spellId and safeGetSpellIcon(spellId) or "Interface\\Icons\\Ability_Hunter_BeastCall"
+end
+
+function Reminder:GetPetReminderShortText(state)
+	if getValue("classBuffReminderHidePetReminderText", defaults.hidePetReminderText) == true then return nil end
+	if state == "passive" then return L["ClassBuffReminderPetPassiveShort"] or "Pet\nPassive" end
+	if state == "defensive" then return L["ClassBuffReminderPetDefensiveShort"] or "Pet\nDefensive" end
+	return nil
+end
+
+function Reminder:GetPetMissingEntry()
+	if not self:IsPetExpectedForPlayer() then return nil end
+	if self:IsPetReminderSuppressed() then return nil end
+
+	if not self:HasActivePet() then
+		return makeSelfMissingEntry(nil, L["ClassBuffReminderPetMissing"] or L["Pet Missing"] or "Pet Missing", nil, nil, "PET", self:GetPetReminderIcon("missing"))
+	end
+
+	local stance = self:GetPetStance()
+	if stance == Reminder.petTracking.stancePassive and not self:ShouldIgnorePetPassiveReminder() then
+		return makeSelfMissingEntry(nil, L["ClassBuffReminderPetPassive"] or "Pet Passive", nil, nil, "PET", self:GetPetReminderIcon("passive"), self:GetPetReminderShortText("passive"))
+	end
+	if stance == Reminder.petTracking.stanceDefensive and not self:ShouldIgnorePetDefensiveReminder() then
+		return makeSelfMissingEntry(nil, L["ClassBuffReminderPetDefensive"] or "Pet Defensive", nil, nil, "PET", self:GetPetReminderIcon("defensive"), self:GetPetReminderShortText("defensive"))
+	end
+	return nil
 end
 
 function Reminder:GetSupplementalMissingEntries(evalContext)
@@ -1991,21 +2547,25 @@ function Reminder:GetSupplementalMissingEntries(evalContext)
 
 	local context = type(evalContext) == "table" and evalContext or nil
 	local entries = {}
-	if self:CanEvaluateFlaskReminderNow() then
+	if not (context and context.onlyPetReminder == true) and self:CanEvaluateFlaskReminderNow() then
 		local flaskEntry = self:GetFlaskMissingEntry(context)
 		if flaskEntry then entries[#entries + 1] = flaskEntry end
 	end
-	if self:CanEvaluateFoodReminderNow() then
+	if not (context and context.onlyPetReminder == true) and self:CanEvaluateFoodReminderNow() then
 		local foodEntry = self:GetFoodMissingEntry(context)
 		if foodEntry then entries[#entries + 1] = foodEntry end
 	end
-	if self:CanEvaluateRuneReminderNow() then
+	if not (context and context.onlyPetReminder == true) and self:CanEvaluateRuneReminderNow() then
 		local runeEntry = self:GetRuneMissingEntry(context)
 		if runeEntry then entries[#entries + 1] = runeEntry end
 	end
-	if self:CanEvaluateWeaponBuffReminderNow() then
+	if not (context and context.onlyPetReminder == true) and self:CanEvaluateWeaponBuffReminderNow() then
 		local weaponBuffEntry = self:GetWeaponBuffMissingEntry(context)
 		if weaponBuffEntry then entries[#entries + 1] = weaponBuffEntry end
+	end
+	if self:CanEvaluatePetReminderNow() then
+		local petEntry = self:GetPetMissingEntry()
+		if petEntry then entries[#entries + 1] = petEntry end
 	end
 	if #entries <= 0 then return nil end
 	return entries
@@ -2044,7 +2604,7 @@ function Reminder:UnitHasAnyAuraName(unit, auraNames)
 					if issecretvalue and issecretvalue(isHelpful) then isHelpful = nil end
 					if isHelpful ~= false then
 						local activeName = aura.name
-						if not (issecretvalue and issecretvalue(activeName)) and type(activeName) == "string" and targetNames[activeName] then return true end
+						if not (issecretvalue and issecretvalue(activeName)) and type(activeName) == "string" and targetNames[activeName] and self:IsAuraUsableForReminder(aura) then return true end
 					end
 				end
 			end
@@ -2095,7 +2655,7 @@ function Reminder:UnitHasAuraIcon(unit, iconId)
 						local auraIcon = aura.icon
 						if issecretvalue and issecretvalue(auraIcon) then auraIcon = nil end
 						auraIcon = tonumber(auraIcon)
-						if auraIcon and auraIcon == iconId then return true end
+						if auraIcon and auraIcon == iconId and self:IsAuraUsableForReminder(aura) then return true end
 					end
 				end
 			end
@@ -2455,7 +3015,7 @@ local function druidRestorationGetSelfStatus(provider, reminder)
 	end
 
 	local trackSymbiotic = hasKnownSpellInList(provider.symbioticKnownSpellIds or provider.symbioticSpellIds)
-	if trackSymbiotic and reminder:GetGroupContext() == GROUP_CONTEXT_PARTY then
+	if trackSymbiotic and reminder:GetGroupContext() ~= GROUP_CONTEXT_SOLO then
 		reminder.runtimeEligibleUnits = reminder.runtimeEligibleUnits or {}
 		local eligibleUnits = reminder:CollectOtherEligibleUnits(reminder.runtimeEligibleUnits, true)
 		if #eligibleUnits > 0 then
@@ -2924,6 +3484,7 @@ function Reminder:GetFlaskOnlyProvider()
 			spellIds = SHARED_FLASK_AURA_IDS,
 			fallbackName = "Flask",
 			displaySpellId = normalizeSpellId(SHARED_FLASK_AURA_IDS[1]),
+			isSupplementalOnly = true,
 		}
 	return self.flaskOnlyProvider
 end
@@ -2934,6 +3495,8 @@ function Reminder:GetFoodOnlyProvider()
 		spellIds = { 1 },
 		fallbackName = L["Buff Food Macro"] or "Buff food",
 		displaySpellId = 1,
+		displayIcon = SHARED_FOOD_AURA_ICON_ID,
+		isSupplementalOnly = true,
 	}
 	return self.foodOnlyProvider
 end
@@ -2944,6 +3507,7 @@ function Reminder:GetRuneOnlyProvider()
 		spellIds = Reminder.runeTracking.auraIds,
 		fallbackName = L["ClassBuffReminderAugmentRune"] or "Augment Rune",
 		displaySpellId = normalizeSpellId(Reminder.runeTracking.auraIds[1]),
+		isSupplementalOnly = true,
 	}
 	return self.runeOnlyProvider
 end
@@ -2954,8 +3518,21 @@ function Reminder:GetWeaponBuffOnlyProvider()
 		spellIds = { 1 },
 		fallbackName = L["ClassBuffReminderWeaponBuff"] or "Weapon buff",
 		displaySpellId = 1,
+		isSupplementalOnly = true,
 	}
 	return self.weaponBuffOnlyProvider
+end
+
+function Reminder:GetPetOnlyProvider()
+	self.petOnlyProvider = self.petOnlyProvider or {
+		scope = PROVIDER_SCOPE_SELF,
+		spellIds = { 1 },
+		fallbackName = L["ClassBuffReminderSectionPets"] or "Pets",
+		displaySpellId = 1,
+		displayIcon = "Interface\\Icons\\Ability_Hunter_BeastCall",
+		isSupplementalOnly = true,
+	}
+	return self.petOnlyProvider
 end
 
 local function finalizeResolvedProvider(provider)
@@ -3030,6 +3607,7 @@ end
 function Reminder.RunPendingUpdateTimer()
 	Reminder.updateTimer = nil
 	Reminder.updatePending = false
+	Reminder.updateDelay = nil
 	Reminder:UpdateDisplay()
 end
 
@@ -3047,7 +3625,7 @@ function Reminder.RunDeferredAuraResyncTimer()
 	if not Reminder:ShouldRegisterRuntimeEvents() then return end
 
 	Reminder:MarkAuraStatesDirty()
-	Reminder:RequestUpdate(false)
+	Reminder:RequestUpdate(false, Reminder.ROSTER_UPDATE_DELAY, true)
 end
 
 function Reminder:RequestProviderPresentationRefresh(provider)
@@ -3220,8 +3798,11 @@ function Reminder:GetUnitAuraState(unit)
 	if not state then
 		state = {
 			trackedByInstance = {},
+			expirationByInstance = {},
 			trackedCount = 0,
 			hasBuff = false,
+			hasUsableBuff = false,
+			nextExpirationWarningAt = nil,
 			initialized = false,
 			unitIdentity = nil,
 			providerRef = nil,
@@ -3230,6 +3811,7 @@ function Reminder:GetUnitAuraState(unit)
 		self.unitAuraStates[unit] = state
 	end
 	if type(state.trackedByInstance) ~= "table" then state.trackedByInstance = {} end
+	if type(state.expirationByInstance) ~= "table" then state.expirationByInstance = {} end
 	if type(state.trackedCount) ~= "number" then state.trackedCount = 0 end
 	return state
 end
@@ -3243,12 +3825,22 @@ end
 function Reminder:ClearTrackedAuraState(state)
 	if type(state) ~= "table" then return end
 	if type(state.trackedByInstance) == "table" then wipeTable(state.trackedByInstance) end
+	if type(state.expirationByInstance) == "table" then wipeTable(state.expirationByInstance) end
 	state.trackedCount = 0
 	state.hasBuff = false
+	state.hasUsableBuff = false
+	state.nextExpirationWarningAt = nil
 	state.initialized = false
 end
 
 function Reminder:ClearPendingAuraUpdates() self.pendingAuraUpdates = nil end
+
+function Reminder.IsFullAuraUpdate(updateInfo)
+	if not updateInfo or (issecretvalue and issecretvalue(updateInfo)) then return true end
+	local isFullUpdate = updateInfo.isFullUpdate
+	if issecretvalue and issecretvalue(isFullUpdate) then return true end
+	return isFullUpdate == true
+end
 
 function Reminder:GetPendingAuraUpdate(unit)
 	if type(unit) ~= "string" or unit == "" then return nil end
@@ -3272,6 +3864,68 @@ function Reminder:QueuePendingAuraReset(unit)
 	entry.reset = true
 	entry.fullRefresh = false
 	entry.updateInfo = nil
+	entry.addedAurasById = nil
+	entry.updatedAuraInstanceIDsById = nil
+	entry.removedAuraInstanceIDsById = nil
+end
+
+function Reminder.GetPendingAuraMap(entry, key)
+	local map = entry[key]
+	if type(map) ~= "table" then
+		map = {}
+		entry[key] = map
+	end
+	return map
+end
+
+function Reminder.ClearPendingAuraDeltaMaps(entry)
+	entry.addedAurasById = nil
+	entry.updatedAuraInstanceIDsById = nil
+	entry.removedAuraInstanceIDsById = nil
+end
+
+function Reminder.BuildPendingAuraUpdateInfo(entry)
+	if type(entry) ~= "table" then return nil end
+	local info = nil
+	local addedMap = entry.addedAurasById
+	if type(addedMap) == "table" then
+		local added
+		for _, aura in pairs(addedMap) do
+			if aura then
+				added = added or {}
+				added[#added + 1] = aura
+			end
+		end
+		if added then
+			info = info or {}
+			info.addedAuras = added
+		end
+	end
+	local updatedMap = entry.updatedAuraInstanceIDsById
+	if type(updatedMap) == "table" then
+		local updated
+		for auraId in pairs(updatedMap) do
+			updated = updated or {}
+			updated[#updated + 1] = auraId
+		end
+		if updated then
+			info = info or {}
+			info.updatedAuraInstanceIDs = updated
+		end
+	end
+	local removedMap = entry.removedAuraInstanceIDsById
+	if type(removedMap) == "table" then
+		local removed
+		for auraId in pairs(removedMap) do
+			removed = removed or {}
+			removed[#removed + 1] = auraId
+		end
+		if removed then
+			info = info or {}
+			info.removedAuraInstanceIDs = removed
+		end
+	end
+	return info
 end
 
 function Reminder:QueuePendingAuraDelta(unit, updateInfo)
@@ -3280,27 +3934,52 @@ function Reminder:QueuePendingAuraDelta(unit, updateInfo)
 
 	entry.reset = false
 	if entry.fullRefresh == true then return end
-	if not updateInfo or (issecretvalue and issecretvalue(updateInfo)) then
+	if Reminder.IsFullAuraUpdate(updateInfo) then
 		entry.fullRefresh = true
 		entry.updateInfo = nil
+		Reminder.ClearPendingAuraDeltaMaps(entry)
 		return
 	end
 
-	local isFullUpdate = updateInfo.isFullUpdate
-	if issecretvalue and issecretvalue(isFullUpdate) then isFullUpdate = true end
-	if isFullUpdate == true then
-		entry.fullRefresh = true
-		entry.updateInfo = nil
-		return
+	local unitStates = self.unitAuraStates
+	local state = type(unitStates) == "table" and unitStates[unit] or nil
+	local trackedByInstance = state and state.trackedByInstance
+	local removed = updateInfo.removedAuraInstanceIDs
+	if type(removed) == "table" then
+		for i = 1, #removed do
+			local auraId = normalizeAuraInstanceId(removed[i])
+			if auraId then
+				local addedMap = entry.addedAurasById
+				local updatedMap = entry.updatedAuraInstanceIDsById
+				if type(addedMap) == "table" then addedMap[auraId] = nil end
+				if type(updatedMap) == "table" then updatedMap[auraId] = nil end
+				if type(trackedByInstance) == "table" and trackedByInstance[auraId] ~= nil then Reminder.GetPendingAuraMap(entry, "removedAuraInstanceIDsById")[auraId] = true end
+			end
+		end
 	end
 
-	if entry.updateInfo then
-		entry.fullRefresh = true
-		entry.updateInfo = nil
-		return
+	local added = updateInfo.addedAuras
+	if type(added) == "table" then
+		for i = 1, #added do
+			local aura = added[i]
+			local auraId = aura and normalizeAuraInstanceId(aura.auraInstanceID)
+			if auraId and Reminder.IsRelevantHelpfulPlayerAura(aura) then
+				local removedMap = entry.removedAuraInstanceIDsById
+				local updatedMap = entry.updatedAuraInstanceIDsById
+				if type(removedMap) == "table" then removedMap[auraId] = nil end
+				if type(updatedMap) == "table" then updatedMap[auraId] = nil end
+				Reminder.GetPendingAuraMap(entry, "addedAurasById")[auraId] = aura
+			end
+		end
 	end
 
-	entry.updateInfo = updateInfo
+	local updated = updateInfo.updatedAuraInstanceIDs
+	if type(updated) == "table" then
+		for i = 1, #updated do
+			local auraId = normalizeAuraInstanceId(updated[i])
+			if auraId and type(trackedByInstance) == "table" and trackedByInstance[auraId] ~= nil and not (type(entry.addedAurasById) == "table" and entry.addedAurasById[auraId]) then Reminder.GetPendingAuraMap(entry, "updatedAuraInstanceIDsById")[auraId] = true end
+		end
+	end
 end
 
 function Reminder:FlushPendingAuraUpdates()
@@ -3331,9 +4010,12 @@ function Reminder:FlushPendingAuraUpdates()
 			elseif entry.fullRefresh == true then
 				self:FullRefreshUnitAuraState(unit, provider)
 				touched = true
-			elseif entry.updateInfo then
-				self:ApplyDeltaToUnitAuraState(unit, entry.updateInfo, provider)
-				touched = true
+			else
+				local mergedUpdateInfo = entry.updateInfo or Reminder.BuildPendingAuraUpdateInfo(entry)
+				if mergedUpdateInfo then
+					self:ApplyDeltaToUnitAuraState(unit, mergedUpdateInfo, provider)
+					touched = true
+				end
 			end
 
 			if touched == true and canRefreshGroupState == true then dirtyUnits = self:CollectGroupStateUnitsForUnit(dirtyUnits, unit) end
@@ -3372,7 +4054,12 @@ end
 
 function Reminder:InvalidateGroupMissingState() self.groupMissingState = nil end
 
-function Reminder:InvalidateGroupBuffStateCaches() self.groupBuffStateCaches = nil end
+function Reminder:InvalidateGroupBuffStateCaches()
+	self.groupBuffStateCaches = nil
+	self.groupBuffAggregateSpellSetSource = nil
+	self.groupBuffAggregateSpellSetDirty = true
+	self.groupBuffAggregateSpellSetHasAny = false
+end
 
 function Reminder:MarkAuraStatesDirty()
 	self:ClearPendingAuraUpdates()
@@ -3397,10 +4084,7 @@ end
 function Reminder:GetTrackableProviderAuraData(aura, provider)
 	if not aura or (issecretvalue and issecretvalue(aura)) then return nil end
 	if not (provider and provider.spellSet) then return nil end
-
-	local isHelpful = aura.isHelpful
-	if issecretvalue and issecretvalue(isHelpful) then isHelpful = nil end
-	if isHelpful == false then return nil end
+	if not Reminder.IsRelevantHelpfulPlayerAura(aura) then return nil end
 
 	local auraId = normalizeAuraInstanceId(aura.auraInstanceID)
 	if not auraId then return nil end
@@ -3416,6 +4100,38 @@ function Reminder:GetTrackableProviderAuraData(aura, provider)
 	return nil
 end
 
+function Reminder:RecomputeUsableAuraState(state)
+	if type(state) ~= "table" then return end
+	state.hasBuff = (tonumber(state.trackedCount) or 0) > 0
+	local thresholdSeconds = self:GetExpirationWarningSeconds()
+	if thresholdSeconds <= 0 then
+		state.hasUsableBuff = state.hasBuff
+		state.nextExpirationWarningAt = nil
+		return
+	end
+	local expirationByInstance = state.expirationByInstance
+	if type(expirationByInstance) ~= "table" then
+		state.hasUsableBuff = state.hasBuff
+		state.nextExpirationWarningAt = nil
+		return
+	end
+	local now = nowSeconds()
+	local usable = false
+	local nextAt
+	for _, expirationTime in pairs(expirationByInstance) do
+		if self:IsExpirationTimeUsable(expirationTime, thresholdSeconds, now) then
+			usable = true
+			if expirationTime and expirationTime ~= math.huge then
+				local warningAt = expirationTime - thresholdSeconds
+				if warningAt > now and (not nextAt or warningAt < nextAt) then nextAt = warningAt end
+			end
+		end
+	end
+	state.hasUsableBuff = usable
+	state.nextExpirationWarningAt = nextAt
+	if nextAt then self:QueueExpirationWarningAt(nextAt) end
+end
+
 function Reminder:AddProviderAuraToState(state, aura, provider)
 	if type(state) ~= "table" then return false end
 	local auraId, spellId = self:GetTrackableProviderAuraData(aura, provider)
@@ -3427,7 +4143,8 @@ function Reminder:AddProviderAuraToState(state, aura, provider)
 	else
 		state.trackedByInstance[auraId] = spellId
 	end
-	state.hasBuff = (state.trackedCount or 0) > 0
+	state.expirationByInstance[auraId] = Reminder.GetAuraExpirationTime(aura)
+	self:RecomputeUsableAuraState(state)
 	return true
 end
 
@@ -3437,9 +4154,10 @@ function Reminder:RemoveProviderAuraFromState(state, auraId)
 	if not auraId or state.trackedByInstance[auraId] == nil then return false end
 
 	state.trackedByInstance[auraId] = nil
+	if type(state.expirationByInstance) == "table" then state.expirationByInstance[auraId] = nil end
 	state.trackedCount = (state.trackedCount or 0) - 1
 	if state.trackedCount < 0 then state.trackedCount = 0 end
-	state.hasBuff = state.trackedCount > 0
+	self:RecomputeUsableAuraState(state)
 	return true
 end
 
@@ -3477,7 +4195,7 @@ function Reminder:FullRefreshUnitAuraState(unit, provider)
 		continuationToken = nextToken
 	end
 
-	state.hasBuff = (state.trackedCount or 0) > 0
+	self:RecomputeUsableAuraState(state)
 	state.initialized = true
 	return state
 end
@@ -3529,7 +4247,12 @@ function Reminder:ApplyDeltaToUnitAuraState(unit, updateInfo, provider)
 				local aura = C_UnitAuras.GetAuraDataByAuraInstanceID(unit, auraId)
 				if aura then
 					local trackedAuraId = self:GetTrackableProviderAuraData(aura, provider)
-					if trackedAuraId ~= auraId then self:RemoveProviderAuraFromState(state, auraId) end
+					if trackedAuraId == auraId then
+						state.expirationByInstance[auraId] = Reminder.GetAuraExpirationTime(aura)
+						self:RecomputeUsableAuraState(state)
+					else
+						self:RemoveProviderAuraFromState(state, auraId)
+					end
 				else
 					self:RemoveProviderAuraFromState(state, auraId)
 				end
@@ -3537,7 +4260,7 @@ function Reminder:ApplyDeltaToUnitAuraState(unit, updateInfo, provider)
 		end
 	end
 
-	state.hasBuff = (state.trackedCount or 0) > 0
+	self:RecomputeUsableAuraState(state)
 	state.initialized = true
 	return state
 end
@@ -3554,6 +4277,7 @@ function Reminder:GetGroupUnitMissingStatus(provider, unit)
 	if isAIFollowerUnit(unit) then return GROUP_UNIT_STATUS_INELIGIBLE end
 	if not (UnitExists and UnitExists(unit) and UnitIsConnected and UnitIsConnected(unit) and not UnitIsDeadOrGhost(unit)) then return GROUP_UNIT_STATUS_INELIGIBLE end
 	if self:UnitHasProviderBuff(unit, provider) then return GROUP_UNIT_STATUS_PRESENT end
+	if not Reminder.CanActOnMissingGroupBuffUnit(unit) then return GROUP_UNIT_STATUS_INELIGIBLE end
 	return GROUP_UNIT_STATUS_MISSING
 end
 
@@ -3644,11 +4368,43 @@ function Reminder:GetGroupBuffStateCache(spellIds, includeAIFollowers)
 			unitStates = {},
 		}
 		self.groupBuffStateCaches[key] = cache
+		self.groupBuffAggregateSpellSetDirty = true
 	else
 		cache.includeAIFollowers = includeAIFollowers == true
 	end
 
 	return cache
+end
+
+function Reminder:GetGroupBuffAggregateSpellSet()
+	local caches = self.groupBuffStateCaches
+	if type(caches) ~= "table" then return nil end
+
+	local aggregate = self.groupBuffAggregateSpellSet
+	if type(aggregate) ~= "table" then
+		aggregate = {}
+		self.groupBuffAggregateSpellSet = aggregate
+	end
+
+	if self.groupBuffAggregateSpellSetSource == caches and self.groupBuffAggregateSpellSetDirty ~= true then
+		return self.groupBuffAggregateSpellSetHasAny == true and aggregate or nil
+	end
+
+	wipeTable(aggregate)
+	local hasAny = false
+	for _, cache in pairs(caches) do
+		if type(cache) == "table" and type(cache.spellSet) == "table" then
+			for spellId in pairs(cache.spellSet) do
+				aggregate[spellId] = true
+				hasAny = true
+			end
+		end
+	end
+
+	self.groupBuffAggregateSpellSetSource = caches
+	self.groupBuffAggregateSpellSetDirty = false
+	self.groupBuffAggregateSpellSetHasAny = hasAny
+	return hasAny and aggregate or nil
 end
 
 function Reminder:GetGroupBuffUnitState(cache, unit)
@@ -3658,14 +4414,18 @@ function Reminder:GetGroupBuffUnitState(cache, unit)
 	if type(state) ~= "table" then
 		state = {
 			trackedByInstance = {},
+			expirationByInstance = {},
 			trackedCount = 0,
 			hasBuff = false,
+			hasUsableBuff = false,
+			nextExpirationWarningAt = nil,
 			initialized = false,
 			unitIdentity = nil,
 		}
 		cache.unitStates[unit] = state
 	end
 	if type(state.trackedByInstance) ~= "table" then state.trackedByInstance = {} end
+	if type(state.expirationByInstance) ~= "table" then state.expirationByInstance = {} end
 	if type(state.trackedCount) ~= "number" then state.trackedCount = 0 end
 	return state
 end
@@ -3673,8 +4433,11 @@ end
 function Reminder:ClearGroupBuffUnitState(state)
 	if type(state) ~= "table" then return end
 	if type(state.trackedByInstance) == "table" then wipeTable(state.trackedByInstance) end
+	if type(state.expirationByInstance) == "table" then wipeTable(state.expirationByInstance) end
 	state.trackedCount = 0
 	state.hasBuff = false
+	state.hasUsableBuff = false
+	state.nextExpirationWarningAt = nil
 	state.initialized = false
 end
 
@@ -3700,10 +4463,7 @@ end
 function Reminder:GetTrackableGroupBuffAuraData(aura, cache)
 	if not aura or (issecretvalue and issecretvalue(aura)) then return nil end
 	if type(cache) ~= "table" or type(cache.spellSet) ~= "table" then return nil end
-
-	local isHelpful = aura.isHelpful
-	if issecretvalue and issecretvalue(isHelpful) then isHelpful = nil end
-	if isHelpful == false then return nil end
+	if not Reminder.IsRelevantHelpfulPlayerAura(aura) then return nil end
 
 	local auraId = normalizeAuraInstanceId(aura.auraInstanceID)
 	if not auraId then return nil end
@@ -3725,7 +4485,8 @@ function Reminder:AddGroupBuffAuraToState(state, aura, cache)
 	else
 		state.trackedByInstance[auraId] = spellId
 	end
-	state.hasBuff = (state.trackedCount or 0) > 0
+	state.expirationByInstance[auraId] = Reminder.GetAuraExpirationTime(aura)
+	self:RecomputeUsableAuraState(state)
 	return true
 end
 
@@ -3735,9 +4496,10 @@ function Reminder:RemoveGroupBuffAuraFromState(state, auraId)
 	if not auraId or state.trackedByInstance[auraId] == nil then return false end
 
 	state.trackedByInstance[auraId] = nil
+	if type(state.expirationByInstance) == "table" then state.expirationByInstance[auraId] = nil end
 	state.trackedCount = (state.trackedCount or 0) - 1
 	if state.trackedCount < 0 then state.trackedCount = 0 end
-	state.hasBuff = state.trackedCount > 0
+	self:RecomputeUsableAuraState(state)
 	return true
 end
 
@@ -3774,7 +4536,7 @@ function Reminder:FullRefreshGroupBuffUnitState(cache, unit)
 		continuationToken = nextToken
 	end
 
-	state.hasBuff = (state.trackedCount or 0) > 0
+	self:RecomputeUsableAuraState(state)
 	state.initialized = true
 	return state
 end
@@ -3784,31 +4546,34 @@ function Reminder:ApplyDeltaToGroupBuffUnitState(cache, unit, updateInfo)
 	if not state then return nil end
 
 	if isAIFollowerUnit(unit) then
+		local changed = state.initialized == true or (tonumber(state.trackedCount) or 0) > 0 or state.hasBuff == true
 		self:ResetGroupBuffUnitState(state)
 		state.initialized = true
-		return state
+		return state, changed
 	end
 	if not UnitExists or not UnitExists(unit) then
+		local changed = state.initialized == true or (tonumber(state.trackedCount) or 0) > 0 or state.hasBuff == true
 		self:ResetGroupBuffUnitState(state)
-		return state
+		return state, changed
 	end
 
-	if not updateInfo or (issecretvalue and issecretvalue(updateInfo)) then return self:FullRefreshGroupBuffUnitState(cache, unit) end
+	if not updateInfo or (issecretvalue and issecretvalue(updateInfo)) then return self:FullRefreshGroupBuffUnitState(cache, unit), true end
 	local isFullUpdate = updateInfo.isFullUpdate
 	if issecretvalue and issecretvalue(isFullUpdate) then isFullUpdate = true end
-	if isFullUpdate == true or state.initialized ~= true then return self:FullRefreshGroupBuffUnitState(cache, unit) end
+	if isFullUpdate == true or state.initialized ~= true then return self:FullRefreshGroupBuffUnitState(cache, unit), true end
 
+	local changed = false
 	local removed = updateInfo.removedAuraInstanceIDs
 	if type(removed) == "table" then
 		for i = 1, #removed do
-			self:RemoveGroupBuffAuraFromState(state, removed[i])
+			if self:RemoveGroupBuffAuraFromState(state, removed[i]) then changed = true end
 		end
 	end
 
 	local added = updateInfo.addedAuras
 	if type(added) == "table" then
 		for i = 1, #added do
-			self:AddGroupBuffAuraToState(state, added[i], cache)
+			if self:AddGroupBuffAuraToState(state, added[i], cache) then changed = true end
 		end
 	end
 
@@ -3820,17 +4585,23 @@ function Reminder:ApplyDeltaToGroupBuffUnitState(cache, unit, updateInfo)
 				local aura = C_UnitAuras.GetAuraDataByAuraInstanceID(unit, auraId)
 				if aura then
 					local trackedAuraId = self:GetTrackableGroupBuffAuraData(aura, cache)
-					if trackedAuraId ~= auraId then self:RemoveGroupBuffAuraFromState(state, auraId) end
+					if trackedAuraId == auraId then
+						state.expirationByInstance[auraId] = Reminder.GetAuraExpirationTime(aura)
+						self:RecomputeUsableAuraState(state)
+						changed = true
+					elseif self:RemoveGroupBuffAuraFromState(state, auraId) then
+						changed = true
+					end
 				else
-					self:RemoveGroupBuffAuraFromState(state, auraId)
+					if self:RemoveGroupBuffAuraFromState(state, auraId) then changed = true end
 				end
 			end
 		end
 	end
 
-	state.hasBuff = (state.trackedCount or 0) > 0
+	self:RecomputeUsableAuraState(state)
 	state.initialized = true
-	return state
+	return state, changed
 end
 
 function Reminder:IsGroupBuffStateCacheValid(cache)
@@ -3846,15 +4617,16 @@ function Reminder:GetGroupBuffUnitMissingStatus(cache, unit)
 	local state = self:PrepareGroupBuffUnitState(cache, unit)
 	if not state then return GROUP_UNIT_STATUS_INELIGIBLE end
 	if state.initialized ~= true then state = self:FullRefreshGroupBuffUnitState(cache, unit) end
-	if state and state.hasBuff == true then return GROUP_UNIT_STATUS_PRESENT end
+	if state and state.hasUsableBuff == true then return GROUP_UNIT_STATUS_PRESENT end
+	if not Reminder.CanActOnMissingGroupBuffUnit(unit) then return GROUP_UNIT_STATUS_INELIGIBLE end
 	return GROUP_UNIT_STATUS_MISSING
 end
 
 function Reminder:ApplyGroupBuffUnitMissingStatus(cache, unit, nextStatus)
-	if type(cache) ~= "table" or type(unit) ~= "string" or unit == "" then return end
+	if type(cache) ~= "table" or type(unit) ~= "string" or unit == "" then return false end
 	cache.unitStatus = cache.unitStatus or {}
 	local previous = cache.unitStatus[unit]
-	if previous == nextStatus then return end
+	if previous == nextStatus then return false end
 
 	if previous == GROUP_UNIT_STATUS_PRESENT or previous == GROUP_UNIT_STATUS_MISSING then cache.total = math.max(0, (tonumber(cache.total) or 0) - 1) end
 	if previous == GROUP_UNIT_STATUS_MISSING then cache.missing = math.max(0, (tonumber(cache.missing) or 0) - 1) end
@@ -3863,12 +4635,14 @@ function Reminder:ApplyGroupBuffUnitMissingStatus(cache, unit, nextStatus)
 	if nextStatus == GROUP_UNIT_STATUS_MISSING then cache.missing = (tonumber(cache.missing) or 0) + 1 end
 
 	cache.unitStatus[unit] = nextStatus
+	return true
 end
 
 function Reminder:RebuildGroupBuffStateCache(cache)
 	if type(cache) ~= "table" then return nil end
 
 	cache.rosterVersion = tonumber(self.rosterUnitsVersion) or 0
+	self.groupBuffAggregateSpellSetDirty = true
 	cache.total = 0
 	cache.missing = 0
 	cache.unitStatus = cache.unitStatus or {}
@@ -3889,26 +4663,179 @@ function Reminder:GetGroupBuffState(cache)
 end
 
 function Reminder:RefreshGroupBuffStateCacheUnit(cache, unit)
-	if type(cache) ~= "table" or type(unit) ~= "string" or unit == "" then return end
-	if self:IsGroupBuffStateCacheValid(cache) ~= true then return end
-	self:ApplyGroupBuffUnitMissingStatus(cache, unit, self:GetGroupBuffUnitMissingStatus(cache, unit))
+	if type(cache) ~= "table" or type(unit) ~= "string" or unit == "" then return false end
+	if self:IsGroupBuffStateCacheValid(cache) ~= true then return false end
+	return self:ApplyGroupBuffUnitMissingStatus(cache, unit, self:GetGroupBuffUnitMissingStatus(cache, unit))
 end
 
 function Reminder:ApplyDeltaToGroupBuffStateCaches(unit, updateInfo)
 	local caches = self.groupBuffStateCaches
-	if type(caches) ~= "table" or type(unit) ~= "string" or unit == "" then return end
+	if type(caches) ~= "table" or type(unit) ~= "string" or unit == "" then return false end
 
 	local touchedUnits = self:CollectGroupStateUnitsForUnit(nil, unit)
-	if type(touchedUnits) ~= "table" then return end
+	if type(touchedUnits) ~= "table" then return false end
 
+	local changed = false
 	for _, cache in pairs(caches) do
 		if type(cache) == "table" and self:IsGroupBuffStateCacheValid(cache) == true then
 			for rosterUnit in pairs(touchedUnits) do
-				self:ApplyDeltaToGroupBuffUnitState(cache, rosterUnit, updateInfo)
-				self:RefreshGroupBuffStateCacheUnit(cache, rosterUnit)
+				local _, stateChanged = self:ApplyDeltaToGroupBuffUnitState(cache, rosterUnit, updateInfo)
+				if stateChanged == true and self:RefreshGroupBuffStateCacheUnit(cache, rosterUnit) == true then changed = true end
 			end
 		end
 	end
+	return changed
+end
+
+function Reminder.AuraUpdateTouchesTrackedInstances(updateInfo, trackedByInstance)
+	if type(trackedByInstance) ~= "table" then return false end
+	local removed = updateInfo and updateInfo.removedAuraInstanceIDs
+	if type(removed) == "table" then
+		for i = 1, #removed do
+			local auraId = normalizeAuraInstanceId(removed[i])
+			if auraId and trackedByInstance[auraId] ~= nil then return true end
+		end
+	end
+	local updated = updateInfo and updateInfo.updatedAuraInstanceIDs
+	if type(updated) == "table" then
+		for i = 1, #updated do
+			local auraId = normalizeAuraInstanceId(updated[i])
+			if auraId and trackedByInstance[auraId] ~= nil then return true end
+		end
+	end
+	return false
+end
+
+function Reminder:ProviderAuraUpdateTouchesUnit(unit, updateInfo, provider)
+	if not (provider and provider.spellSet and type(unit) == "string" and unit ~= "") then return false end
+	if Reminder.IsFullAuraUpdate(updateInfo) then return true end
+
+	local unitStates = self.unitAuraStates
+	local state = type(unitStates) == "table" and unitStates[unit] or nil
+	if Reminder.AuraUpdateTouchesTrackedInstances(updateInfo, state and state.trackedByInstance) then return true end
+
+	local added = updateInfo.addedAuras
+	if type(added) == "table" then
+		for i = 1, #added do
+			if self:GetTrackableProviderAuraData(added[i], provider) then return true end
+		end
+	end
+	return false
+end
+
+function Reminder:GroupBuffCacheAuraUpdateTouchesUnit(unit, updateInfo)
+	local caches = self.groupBuffStateCaches
+	if type(caches) ~= "table" or type(unit) ~= "string" or unit == "" then return false end
+	if Reminder.IsFullAuraUpdate(updateInfo) then return true end
+
+	for _, cache in pairs(caches) do
+		if type(cache) == "table" and self:IsGroupBuffStateCacheValid(cache) == true then
+			local state = cache.unitStates and cache.unitStates[unit]
+			if Reminder.AuraUpdateTouchesTrackedInstances(updateInfo, state and state.trackedByInstance) then return true end
+		end
+	end
+
+	local added = updateInfo.addedAuras
+	local aggregateSpellSet = self:GetGroupBuffAggregateSpellSet()
+	if type(added) == "table" and type(aggregateSpellSet) == "table" then
+		for i = 1, #added do
+			local aura = added[i]
+			if Reminder.IsRelevantHelpfulPlayerAura(aura) then
+				local spellId = normalizeSpellId(aura.spellId)
+				if spellId and aggregateSpellSet[spellId] == true then return true end
+			end
+		end
+	end
+	return false
+end
+
+function Reminder.PreparedAuraDataMatchesValues(prepared, spellId, auraName)
+	if type(prepared) ~= "table" then return false end
+	spellId = normalizeSpellId(spellId)
+	if issecretvalue and issecretvalue(auraName) then auraName = nil end
+	if spellId and type(prepared.spellIds) == "table" then
+		for i = 1, #prepared.spellIds do
+			if normalizeSpellId(prepared.spellIds[i]) == spellId then return true end
+		end
+	end
+	if type(auraName) == "string" and auraName ~= "" and type(prepared.auraNames) == "table" then
+		for i = 1, #prepared.auraNames do
+			if prepared.auraNames[i] == auraName then return true end
+		end
+	end
+	return false
+end
+
+function Reminder:SupplementalAuraMatches(aura)
+	if not Reminder.IsRelevantHelpfulPlayerAura(aura) then return false end
+	local spellId = normalizeSpellId(aura.spellId)
+	local auraName = aura.name
+	if issecretvalue and issecretvalue(auraName) then auraName = nil end
+
+	if self:CanCheckFlaskReminder() then
+		local candidates = self:GetFlaskCandidatesForCurrentSpec()
+		if type(candidates) == "table" and Reminder.PreparedAuraDataMatchesValues(self:GetPreparedFlaskCandidateData(candidates), spellId, auraName) then return true end
+	end
+	if self:CanCheckFoodReminder() then
+		local candidates = self:GetFoodCandidatesForCurrentSpec()
+		if type(candidates) == "table" and Reminder.PreparedAuraDataMatchesValues(self:GetPreparedFoodCandidateData(candidates), spellId, auraName) then return true end
+	end
+	if self:CanCheckRuneReminder() then
+		if spellId and type(Reminder.runeTracking.auraIds) == "table" then
+			for i = 1, #Reminder.runeTracking.auraIds do
+				if normalizeSpellId(Reminder.runeTracking.auraIds[i]) == spellId then return true end
+			end
+		end
+		local candidates = self:GetRuneCandidates()
+		if type(candidates) == "table" and Reminder.PreparedAuraDataMatchesValues(self:GetPreparedRuneCandidateData(candidates), spellId, auraName) then return true end
+	end
+	return false
+end
+
+function Reminder:SupplementalAuraUpdateTouchesPlayer(updateInfo)
+	if not (self:CanCheckFlaskReminder() or self:CanCheckFoodReminder() or self:CanCheckRuneReminder()) then return false end
+	if Reminder.IsFullAuraUpdate(updateInfo) then return true end
+
+	local added = updateInfo.addedAuras
+	if type(added) == "table" then
+		for i = 1, #added do
+			if self:SupplementalAuraMatches(added[i]) then return true end
+		end
+	end
+
+	local snapshot = self.playerAuraPresenceSnapshot
+	if type(snapshot) ~= "table" then return false end
+	local function snapshotAuraIdMatches(auraId)
+		auraId = normalizeAuraInstanceId(auraId)
+		if not auraId then return false end
+		local spellId = snapshot.instanceSpellIds and normalizeSpellId(snapshot.instanceSpellIds[auraId]) or nil
+		local auraName = snapshot.instanceNames and snapshot.instanceNames[auraId] or nil
+		if self:CanCheckFlaskReminder() and Reminder.PreparedAuraDataMatchesValues(self:GetPreparedFlaskCandidateData(self:GetFlaskCandidatesForCurrentSpec()), spellId, auraName) then return true end
+		if self:CanCheckFoodReminder() and Reminder.PreparedAuraDataMatchesValues(self:GetPreparedFoodCandidateData(self:GetFoodCandidatesForCurrentSpec()), spellId, auraName) then return true end
+		if self:CanCheckRuneReminder() then
+			if spellId and type(Reminder.runeTracking.auraIds) == "table" then
+				for i = 1, #Reminder.runeTracking.auraIds do
+					if normalizeSpellId(Reminder.runeTracking.auraIds[i]) == spellId then return true end
+				end
+			end
+			if Reminder.PreparedAuraDataMatchesValues(self:GetPreparedRuneCandidateData(self:GetRuneCandidates()), spellId, auraName) then return true end
+		end
+		return false
+	end
+
+	local removed = updateInfo.removedAuraInstanceIDs
+	if type(removed) == "table" then
+		for i = 1, #removed do
+			if snapshotAuraIdMatches(removed[i]) then return true end
+		end
+	end
+	local updated = updateInfo.updatedAuraInstanceIDs
+	if type(updated) == "table" then
+		for i = 1, #updated do
+			if snapshotAuraIdMatches(updated[i]) then return true end
+		end
+	end
+	return false
 end
 
 function Reminder:CollectGroupStateUnitsForUnit(target, unit)
@@ -4090,6 +5017,7 @@ function Reminder:GetSelfMissingSummaryText(entries)
 		if type(label) ~= "string" or label == "" then label = L["ClassBuffReminderMissing"] or "Missing" end
 		local cm = type(entry) == "table" and tonumber(entry.countMissing) or nil
 		local ct = type(entry) == "table" and tonumber(entry.countTotal) or nil
+			local shortText = type(entry) == "table" and entry.shortText or nil
 		if cm and ct and ct > 0 then
 			cm = math.max(0, math.floor(cm + 0.5))
 			ct = math.max(0, math.floor(ct + 0.5))
@@ -4202,7 +5130,8 @@ function Reminder:RenderSelfMissingIcons(missingEntries)
 		local iconFrame = icons[i]
 		local entry = missingEntries[i]
 		local sid = type(entry) == "table" and normalizeSpellId(entry.spellId) or nil
-		local texture = sid and safeGetSpellIcon(sid) or ICON_MISSING
+		local entryIcon = type(entry) == "table" and Reminder.NormalizeIconTexture(entry.icon) or nil
+		local texture = entryIcon or (sid and safeGetSpellIcon(sid)) or ICON_MISSING
 
 		iconFrame:SetSize(scaledIconSize, scaledIconSize)
 		iconFrame:ClearAllPoints()
@@ -4254,10 +5183,14 @@ function Reminder:RenderSelfMissingIcons(missingEntries)
 			iconFrame.countText:SetPoint("CENTER", iconFrame, "CENTER", scaledXYOffsetX, scaledXYOffsetY)
 			local cm = type(entry) == "table" and tonumber(entry.countMissing) or nil
 			local ct = type(entry) == "table" and tonumber(entry.countTotal) or nil
+			local shortText = type(entry) == "table" and entry.shortText or nil
+			if iconFrame.countText.SetWidth then iconFrame.countText:SetWidth(scaledIconSize + 2) end
 			if cm and ct and ct > 0 then
 				cm = math.max(0, math.floor(cm + 0.5))
 				ct = math.max(0, math.floor(ct + 0.5))
 				iconFrame.countText:SetText(string.format("%d/%d", cm, ct))
+			elseif type(shortText) == "string" and shortText ~= "" then
+				iconFrame.countText:SetText(shortText)
 			else
 				iconFrame.countText:SetText("")
 			end
@@ -4665,7 +5598,7 @@ function Reminder:UnitHasProviderBuff(unit, provider)
 	local state = self:PrepareUnitAuraState(unit, provider)
 	if not state then return false end
 	if not state.initialized then state = self:FullRefreshUnitAuraState(unit, provider) end
-	return state and state.hasBuff == true
+	return state and state.hasUsableBuff == true
 end
 
 function Reminder:ComputeMissing(provider)
@@ -4695,7 +5628,7 @@ function Reminder:ShouldRegisterRuntimeEvents()
 	if getValue(DB_ENABLED, defaults.enabled) ~= true then return false end
 	if self.runtimeProviderValid ~= true then self:RefreshProviderCache(false) end
 	if self.hasProviderCached == true then return true end
-	return self:IsFlaskTrackingEnabled() or self:IsFoodTrackingEnabled() or self:IsWeaponBuffTrackingEnabled()
+	return self:IsFlaskTrackingEnabled() or self:IsFoodTrackingEnabled() or self:IsRuneTrackingEnabled() or self:IsWeaponBuffTrackingEnabled() or self:IsPetTrackingEnabled()
 end
 
 function Reminder:Render(provider, missing, total, supplementalEntries, effectiveMissing)
@@ -4754,7 +5687,8 @@ function Reminder:Render(provider, missing, total, supplementalEntries, effectiv
 	end
 
 	local providerIcon = self:GetProviderIcon(provider)
-	if providerIcon == ICON_MISSING and self.editModeActive ~= true then
+	local canRenderSupplementalIcons = provider and provider.isSupplementalOnly == true and iconEntries and #iconEntries > 0
+	if providerIcon == ICON_MISSING and self.editModeActive ~= true and canRenderSupplementalIcons ~= true then
 		self:SetGlowShown(false)
 		frame:Hide()
 		self:RequestProviderPresentationRefresh(provider)
@@ -4801,16 +5735,68 @@ function Reminder:RenderEditModePreview()
 	end
 end
 
+function Reminder:ResetExpirationWarningCandidate()
+	self.nextExpirationWarningAt = nil
+end
+
+function Reminder:QueueExpirationWarningAt(timestamp)
+	local thresholdSeconds = self:GetExpirationWarningSeconds()
+	if thresholdSeconds <= 0 then return end
+	timestamp = tonumber(timestamp)
+	if not timestamp or timestamp <= 0 then return end
+	local now = nowSeconds()
+	if timestamp <= now then return end
+	if not self.nextExpirationWarningAt or timestamp < self.nextExpirationWarningAt then self.nextExpirationWarningAt = timestamp end
+end
+
+function Reminder:CancelExpirationWarningTimer()
+	if self.expirationWarningTimer then
+		self.expirationWarningTimer:Cancel()
+		self.expirationWarningTimer = nil
+	end
+	self.expirationWarningTimerAt = nil
+end
+
+function Reminder.RunExpirationWarningTimer()
+	Reminder.expirationWarningTimer = nil
+	Reminder.expirationWarningTimerAt = nil
+	Reminder:MarkAuraStatesDirty()
+	Reminder:RequestUpdate(true)
+end
+
+function Reminder:ScheduleExpirationWarningTimer()
+	if self:GetExpirationWarningSeconds() <= 0 then
+		self:CancelExpirationWarningTimer()
+		return
+	end
+	local at = tonumber(self.nextExpirationWarningAt)
+	if not at then
+		self:CancelExpirationWarningTimer()
+		return
+	end
+	local delay = at - nowSeconds()
+	if delay < 0.05 then delay = 0.05 end
+	if self.expirationWarningTimer and self.expirationWarningTimerAt and math.abs(self.expirationWarningTimerAt - at) < 0.05 then return end
+	self:CancelExpirationWarningTimer()
+	if C_Timer and C_Timer.NewTimer then
+		self.expirationWarningTimerAt = at
+		self.expirationWarningTimer = C_Timer.NewTimer(delay, Reminder.RunExpirationWarningTimer)
+	end
+end
+
 function Reminder:UpdateDisplay()
 	self:FlushPendingAuraUpdates()
 	local frame = self:EnsureFrame()
 	if not frame then return end
 
 	if self.editModeActive == true then
+		self:CancelExpirationWarningTimer()
 		self.missingActive = false
 		self:RenderEditModePreview()
 		return
 	end
+
+	self:ResetExpirationWarningCandidate()
 
 	if frame.iconCountText then frame.iconCountText:SetText("") end
 	if frame.countText then frame.countText:SetText("") end
@@ -4818,13 +5804,17 @@ function Reminder:UpdateDisplay()
 	self:HideSelfMissingIcons()
 
 	if getValue(DB_ENABLED, defaults.enabled) ~= true then
+		self:CancelExpirationWarningTimer()
 		self:SetGlowShown(false)
 		self.missingActive = false
 		frame:Hide()
 		return
 	end
 
-	if not self:IsGroupModeAllowed() then
+	local groupModeAllowed = self:IsGroupModeAllowed()
+	local petSoloModeAllowed = groupModeAllowed ~= true and self:GetGroupContext() == GROUP_CONTEXT_SOLO and self:CanCheckPetReminder()
+	if groupModeAllowed ~= true and petSoloModeAllowed ~= true then
+		self:CancelExpirationWarningTimer()
 		self:SetGlowShown(false)
 		self.missingActive = false
 		frame:Hide()
@@ -4832,6 +5822,7 @@ function Reminder:UpdateDisplay()
 	end
 
 	if self:IsHideInRestedAreaEnabled() == true and self:IsPlayerInRestedArea() == true then
+		self:CancelExpirationWarningTimer()
 		self:SetGlowShown(false)
 		self.missingActive = false
 		frame:Hide()
@@ -4839,6 +5830,7 @@ function Reminder:UpdateDisplay()
 	end
 
 	if not canEvaluateUnit("player") then
+		self:CancelExpirationWarningTimer()
 		self:SetGlowShown(false)
 		self.missingActive = false
 		frame:Hide()
@@ -4846,6 +5838,7 @@ function Reminder:UpdateDisplay()
 	end
 
 	if self:IsRuntimeEvaluationBlockedByCombat() then
+		self:CancelExpirationWarningTimer()
 		self:SetGlowShown(false)
 		self.missingActive = false
 		frame:Hide()
@@ -4853,11 +5846,14 @@ function Reminder:UpdateDisplay()
 	end
 
 	local classProvider = self:GetProvider()
+	if groupModeAllowed ~= true then classProvider = nil end
 	if classProvider and classProvider.scope == PROVIDER_SCOPE_GROUP and self:ShouldEvaluateGroupResponsibilities(classProvider) ~= true then classProvider = nil end
 
 	local provider = classProvider
 	if not provider then
-		if self:CanCheckFlaskReminder() then
+		if petSoloModeAllowed == true then
+			provider = self:GetPetOnlyProvider()
+		elseif self:CanCheckFlaskReminder() then
 			provider = self:GetFlaskOnlyProvider()
 		elseif self:CanCheckFoodReminder() then
 			provider = self:GetFoodOnlyProvider()
@@ -4865,7 +5861,10 @@ function Reminder:UpdateDisplay()
 			provider = self:GetRuneOnlyProvider()
 		elseif self:CanCheckWeaponBuffReminder() then
 			provider = self:GetWeaponBuffOnlyProvider()
+		elseif self:CanCheckPetReminder() then
+			provider = self:GetPetOnlyProvider()
 		else
+			self:CancelExpirationWarningTimer()
 			self:SetGlowShown(false)
 			self.missingActive = false
 			frame:Hide()
@@ -4877,11 +5876,11 @@ function Reminder:UpdateDisplay()
 	if classProvider then
 		missing, total = self:ComputeMissing(classProvider)
 	end
-	local supplementalContext = {}
+	local supplementalContext = { onlyPetReminder = petSoloModeAllowed == true }
 	local supplementalEntries = self:GetSupplementalMissingEntries(supplementalContext)
 	local supplementalMissing = type(supplementalEntries) == "table" and #supplementalEntries or 0
 	local primarySupplementalEntry = type(supplementalEntries) == "table" and supplementalEntries[1] or nil
-	if total <= 0 and primarySupplementalEntry and primarySupplementalEntry.spellId then
+	if total <= 0 and primarySupplementalEntry then
 		if primarySupplementalEntry.sourceKind == "FLASK" then
 			provider = self:GetFlaskOnlyProvider() or provider
 		elseif primarySupplementalEntry.sourceKind == "FOOD" then
@@ -4890,15 +5889,22 @@ function Reminder:UpdateDisplay()
 			provider = self:GetRuneOnlyProvider() or provider
 		elseif primarySupplementalEntry.sourceKind == "WEAPON_BUFF" then
 			provider = self:GetWeaponBuffOnlyProvider() or provider
+		elseif primarySupplementalEntry.sourceKind == "PET" then
+			provider = self:GetPetOnlyProvider() or provider
 		end
 		if provider then
-			provider.displaySpellId = normalizeSpellId(primarySupplementalEntry.spellId) or provider.displaySpellId
-			provider.cachedIcon = nil
+			local entrySpellId = normalizeSpellId(primarySupplementalEntry.spellId)
+			local entryIcon = Reminder.NormalizeIconTexture(primarySupplementalEntry.icon)
+			if entrySpellId then provider.displaySpellId = entrySpellId end
+			provider.displayIcon = entryIcon or Reminder.NormalizeIconTexture(provider.displayIcon)
+			provider.cachedIcon = Reminder.NormalizeIconTexture(provider.displayIcon)
 			provider.cachedName = primarySupplementalEntry.label or provider.fallbackName or (L["ClassBuffReminderWeaponBuff"] or "Weapon buff")
-			provider._presentationReady = false
+			provider._presentationReady = provider.cachedIcon ~= nil
+			provider._presentationAttempted = provider.cachedIcon ~= nil
 		end
 	end
 	if total <= 0 and supplementalMissing <= 0 then
+		self:ScheduleExpirationWarningTimer()
 		self:SetGlowShown(false)
 		self.missingActive = false
 		frame:Hide()
@@ -4910,6 +5916,7 @@ function Reminder:UpdateDisplay()
 	if self.suppressNextMissingSound == true and effectiveMissing <= 0 then self.suppressNextMissingSound = false end
 
 	if effectiveMissing <= 0 then
+		self:ScheduleExpirationWarningTimer()
 		self:SetGlowShown(false)
 		self.missingActive = false
 		frame:Hide()
@@ -4919,22 +5926,35 @@ function Reminder:UpdateDisplay()
 	self:UpdateMissingStateAndSound(effectiveMissing)
 
 	self:Render(provider, missing, total, supplementalEntries, effectiveMissing)
+	self:ScheduleExpirationWarningTimer()
 end
 
-function Reminder:RequestUpdate(immediate)
+function Reminder:RequestUpdate(immediate, delay, reschedule)
 	if immediate or not (C_Timer and C_Timer.After) then
 		if self.updateTimer then
 			self.updateTimer:Cancel()
 			self.updateTimer = nil
 		end
 		self.updatePending = false
+		self.updateDelay = nil
 		self:UpdateDisplay()
 		return
 	end
 
-	if self.updatePending then return end
+	local updateDelay = tonumber(delay) or Reminder.UPDATE_DELAY
+	if updateDelay < 0 then updateDelay = Reminder.UPDATE_DELAY end
+
+	if self.updatePending then
+		if reschedule == true and self.updateTimer then
+			self.updateTimer:Cancel()
+			self.updateDelay = updateDelay
+			self.updateTimer = C_Timer.NewTimer(updateDelay, Reminder.RunPendingUpdateTimer)
+		end
+		return
+	end
 	self.updatePending = true
-	self.updateTimer = C_Timer.NewTimer(0.08, Reminder.RunPendingUpdateTimer)
+	self.updateDelay = updateDelay
+	self.updateTimer = C_Timer.NewTimer(updateDelay, Reminder.RunPendingUpdateTimer)
 end
 
 function Reminder:HandleEvent(event, unit, updateInfo)
@@ -4957,8 +5977,14 @@ function Reminder:HandleEvent(event, unit, updateInfo)
 
 	if event == "GROUP_ROSTER_UPDATE" then
 		self:InvalidateRosterCache()
-		self:RequestUpdate(false)
-		self:ScheduleDeferredAuraResync(0.5)
+		self:RequestUpdate(false, Reminder.ROSTER_UPDATE_DELAY, true)
+		self:ScheduleDeferredAuraResync(1.0)
+		return
+	end
+
+	if event == "UNIT_PHASE" then
+		self:MarkAuraStatesDirty()
+		self:RequestUpdate(false, Reminder.RUNTIME_UPDATE_DELAY, true)
 		return
 	end
 
@@ -4968,7 +5994,7 @@ function Reminder:HandleEvent(event, unit, updateInfo)
 		self:InvalidateFoodCache()
 		self:InvalidateRuneCache()
 		self:InvalidateWeaponBuffCache()
-		self:RequestUpdate(true)
+		self:RequestUpdate(false, Reminder.RUNTIME_UPDATE_DELAY, true)
 		return
 	end
 
@@ -4978,7 +6004,7 @@ function Reminder:HandleEvent(event, unit, updateInfo)
 		self:InvalidateFoodCache()
 		self:InvalidateRuneCache()
 		self:InvalidateWeaponBuffCache()
-		self:RequestUpdate(true)
+		self:RequestUpdate(false, Reminder.RUNTIME_UPDATE_DELAY, true)
 		self:ScheduleDeferredAuraResync(0.2)
 		self:ScheduleDeferredAuraResync(1.0)
 		return
@@ -4987,12 +6013,12 @@ function Reminder:HandleEvent(event, unit, updateInfo)
 	if event == "PLAYER_REGEN_DISABLED" or event == "PLAYER_REGEN_ENABLED" then
 		self.consumableTrackingBlockedByCombat = (event == "PLAYER_REGEN_DISABLED")
 		if self:IsOnlyOutOfCombatEnabled() == true then self:MarkAuraStatesDirty() end
-		self:RequestUpdate(true)
+		self:RequestUpdate(false, Reminder.RUNTIME_UPDATE_DELAY, true)
 		return
 	end
 
 	if event == "PLAYER_UPDATE_RESTING" then
-		self:RequestUpdate(true)
+		self:RequestUpdate(false, Reminder.RUNTIME_UPDATE_DELAY, true)
 		return
 	end
 
@@ -5006,7 +6032,11 @@ function Reminder:HandleEvent(event, unit, updateInfo)
 		or event == "ENCOUNTER_START"
 		or event == "ENCOUNTER_END"
 	then
-		self:RequestUpdate(true)
+		self:MarkAuraStatesDirty()
+		self:InvalidateFlaskCache()
+		self:InvalidateFoodCache()
+		self:InvalidateRuneCache()
+		self:RequestUpdate(false, Reminder.RUNTIME_UPDATE_DELAY, true)
 		return
 	end
 
@@ -5017,7 +6047,7 @@ function Reminder:HandleEvent(event, unit, updateInfo)
 		self:InvalidateFoodCache()
 		self:InvalidateRuneCache()
 		self:InvalidateWeaponBuffCache()
-		self:RequestUpdate(true)
+		self:RequestUpdate(false, Reminder.RUNTIME_UPDATE_DELAY, true)
 		return
 	end
 
@@ -5028,7 +6058,7 @@ function Reminder:HandleEvent(event, unit, updateInfo)
 			self:InvalidateFoodCache()
 			self:InvalidateRuneCache()
 			self:InvalidateWeaponBuffCache()
-			self:RequestUpdate(false)
+			self:RequestUpdate(false, Reminder.RUNTIME_UPDATE_DELAY)
 		end
 		return
 	end
@@ -5039,7 +6069,7 @@ function Reminder:HandleEvent(event, unit, updateInfo)
 		self:InvalidateFoodCache()
 		self:InvalidateRuneCache()
 		self:InvalidateWeaponBuffCache()
-		self:RequestUpdate(false)
+		self:RequestUpdate(false, Reminder.RUNTIME_UPDATE_DELAY)
 		return
 	end
 
@@ -5049,7 +6079,7 @@ function Reminder:HandleEvent(event, unit, updateInfo)
 		self:InvalidateFoodCache()
 		self:InvalidateRuneCache()
 		self:InvalidateWeaponBuffCache()
-		self:RequestUpdate(false)
+		self:RequestUpdate(false, Reminder.RUNTIME_UPDATE_DELAY)
 		return
 	end
 
@@ -5060,43 +6090,71 @@ function Reminder:HandleEvent(event, unit, updateInfo)
 		self:InvalidateFoodCache()
 		self:InvalidateRuneCache()
 		self:InvalidateWeaponBuffCache()
-		self:RequestUpdate(true)
+		self:RequestUpdate(false, Reminder.RUNTIME_UPDATE_DELAY, true)
 		return
 	end
 
 	if event == "PLAYER_DEAD" or event == "PLAYER_ALIVE" or event == "PLAYER_UNGHOST" then
 		self:MarkAuraStatesDirty()
-		self:RequestUpdate(true)
+		self:RequestUpdate(false, Reminder.RUNTIME_UPDATE_DELAY, true)
+		return
+	end
+
+	if event == "UNIT_PET" or event == "PET_BAR_UPDATE" or event == "PET_BAR_UPDATE_USABLE" or event == "PLAYER_MOUNT_DISPLAY_CHANGED" or (event == "UNIT_FLAGS" and unit == "pet") then
+		Reminder.petTracking.cachedStance = nil
+		self:RequestUpdate(false, Reminder.RUNTIME_UPDATE_DELAY, true)
 		return
 	end
 
 	if event == "UNIT_AURA" then
 		if not isTrackedUnit(unit) then return end
 		if self:IsRuntimeEvaluationBlockedByCombat() then return end
-		if isPlayerUnit(unit) then self:InvalidatePlayerAuraPresenceSnapshot() end
+		local playerUnit = isPlayerUnit(unit)
+		if playerUnit and self:IsPetTrackingEnabled() then self:RequestUpdate(false, Reminder.AURA_UPDATE_DELAY) end
 		local provider = self:GetProvider()
+		local supplementalTouches = playerUnit and self:SupplementalAuraUpdateTouchesPlayer(updateInfo) or false
 		if provider and provider.scope == PROVIDER_SCOPE_GROUP and self:ShouldEvaluateGroupResponsibilities(provider) ~= true then
-			if isPlayerUnit(unit) and (self:CanCheckFlaskReminder() or self:CanCheckFoodReminder() or self:CanCheckRuneReminder() or self:CanCheckWeaponBuffReminder()) then self:RequestUpdate(false) end
+			if supplementalTouches then
+				self.playerAuraPresenceSnapshot = nil
+				self:RequestUpdate(false, Reminder.AURA_UPDATE_DELAY)
+			end
+			return
+			end
+			if provider and provider.scope == PROVIDER_SCOPE_SELF then
+				local needsUpdate = false
+				local providerTouches = playerUnit and self:ProviderAuraUpdateTouchesUnit(unit, updateInfo, provider) or false
+				local groupCacheTouches = provider.tracksExternalUnitAuras == true and self:GroupBuffCacheAuraUpdateTouchesUnit(unit, updateInfo) or false
+				if groupCacheTouches then
+					if self:ApplyDeltaToGroupBuffStateCaches(unit, updateInfo) == true then
+						self:InvalidateSelfProviderStatus()
+						needsUpdate = true
+					end
+				end
+				if providerTouches then
+					self:InvalidateSelfProviderStatus()
+					needsUpdate = true
+			end
+			if supplementalTouches then
+				self.playerAuraPresenceSnapshot = nil
+				needsUpdate = true
+			end
+			if needsUpdate then self:RequestUpdate(false, Reminder.AURA_UPDATE_DELAY) end
 			return
 		end
-		if provider and provider.scope == PROVIDER_SCOPE_SELF then
-			if isPlayerUnit(unit) or provider.tracksExternalUnitAuras == true then self:ApplyDeltaToGroupBuffStateCaches(unit, updateInfo) end
-			if not isPlayerUnit(unit) and provider.tracksExternalUnitAuras == true then self:InvalidateSelfProviderStatus() end
-			if isPlayerUnit(unit) then self:InvalidateSelfProviderStatus() end
-			if isPlayerUnit(unit) or provider.tracksExternalUnitAuras == true then self:RequestUpdate(false) end
-			return
-		end
-		if isAIFollowerUnit(unit) then
+		if provider and isAIFollowerUnit(unit) then
 			self:QueuePendingAuraReset(unit)
-			self:RequestUpdate(false)
+			self:RequestUpdate(false, Reminder.AURA_UPDATE_DELAY)
 			return
 		end
-		if provider then
+		if provider and self:ProviderAuraUpdateTouchesUnit(unit, updateInfo, provider) then
 			self:QueuePendingAuraDelta(unit, updateInfo)
-		else
-			self:QueuePendingAuraReset(unit)
+			self:RequestUpdate(false, Reminder.AURA_UPDATE_DELAY)
+			return
 		end
-		self:RequestUpdate(false)
+		if supplementalTouches then
+			self.playerAuraPresenceSnapshot = nil
+			self:RequestUpdate(false, Reminder.AURA_UPDATE_DELAY)
+		end
 		return
 	end
 end
@@ -5113,6 +6171,7 @@ function Reminder:RegisterEvents()
 	self.eventFrame:RegisterEvent("PLAYER_LOGIN")
 	self.eventFrame:RegisterEvent("PLAYER_ENTERING_WORLD")
 	self.eventFrame:RegisterEvent("GROUP_ROSTER_UPDATE")
+	self.eventFrame:RegisterEvent("UNIT_PHASE")
 	self.eventFrame:RegisterEvent("PLAYER_ROLES_ASSIGNED")
 	self.eventFrame:RegisterEvent("ROLE_CHANGED_INFORM")
 	self.eventFrame:RegisterEvent("READY_CHECK")
@@ -5140,9 +6199,15 @@ function Reminder:RegisterEvents()
 	self.eventFrame:RegisterEvent("PLAYER_DEAD")
 	self.eventFrame:RegisterEvent("PLAYER_ALIVE")
 	self.eventFrame:RegisterEvent("PLAYER_UNGHOST")
+	self.eventFrame:RegisterEvent("PET_BAR_UPDATE")
+	self.eventFrame:RegisterEvent("PET_BAR_UPDATE_USABLE")
+	self.eventFrame:RegisterEvent("PLAYER_MOUNT_DISPLAY_CHANGED")
+	self.eventFrame:RegisterUnitEvent("UNIT_PET", "player")
+	self.eventFrame:RegisterUnitEvent("UNIT_FLAGS", "pet")
 	self.eventFrame:SetScript("OnEvent", function(_, event, ...) Reminder:HandleEvent(event, ...) end)
 
 	self.eventsRegistered = true
+	self:SetupPetTrackingHooks()
 	self:ScheduleInitialSoundSync()
 end
 
@@ -5201,16 +6266,24 @@ local function editModeSetGrowthFromCenter(value)
 	Reminder:RequestUpdate(true)
 end
 
+function Reminder.EditModeRefreshRuntimeAfterTrackingChange()
+	if Reminder.OnSettingChanged then
+		Reminder:OnSettingChanged()
+	else
+		Reminder:RequestUpdate(true)
+	end
+end
+
 local function editModeSetTrackFlasks(value)
 	if addon.db then addon.db[DB_TRACK_FLASKS] = value == true end
 	Reminder:InvalidateFlaskCache()
-	Reminder:RequestUpdate(true)
+	Reminder.EditModeRefreshRuntimeAfterTrackingChange()
 end
 
 local function editModeSetTrackFood(value)
 	if addon.db then addon.db[DB_TRACK_FOOD] = value == true end
 	Reminder:InvalidateFoodCache()
-	Reminder:RequestUpdate(true)
+	Reminder.EditModeRefreshRuntimeAfterTrackingChange()
 end
 
 local function editModeSetRoleFilterContext(value)
@@ -5281,6 +6354,23 @@ function editModeSettingsBuilders.buildClassBuffs()
 			set = function(_, value) editModeSetBool(DB_SHOW_SOLO, value) end,
 		},
 		{
+			name = L["ClassBuffReminderExpirationWarningMinutes"] or "Show before expiration",
+			kind = SettingType.Slider,
+			parentId = "classBuffs",
+			default = defaults.expirationWarningMinutes or 0,
+			minValue = 0,
+			maxValue = 60,
+			valueStep = 1,
+			get = function() return Reminder:GetExpirationWarningMinutes() end,
+			set = function(_, value) Reminder:SetExpirationWarningMinutes(value) end,
+			formatter = function(value)
+				local minutes = Reminder:NormalizeExpirationWarningMinutes(value)
+				if minutes <= 0 then return L["ClassBuffReminderExpirationWarningOff"] or "Missing only" end
+				return string.format(L["ClassBuffReminderExpirationWarningMinutesFmt"] or "%d min", minutes)
+			end,
+			tooltip = L["ClassBuffReminderExpirationWarningMinutesDesc"] or "0 keeps the current behavior. Higher values show the reminder when a tracked buff has this many minutes or less remaining.",
+		},
+		{
 			name = L["ClassBuffReminderHideInRestedArea"] or "Don't show in rested areas",
 			kind = SettingType.Checkbox,
 			parentId = "classBuffs",
@@ -5346,7 +6436,7 @@ function editModeSettingsBuilders.buildFilters()
 			name = L["ClassBuffReminderSectionFilters"] or "Tracking Filters",
 			kind = SettingType.Collapsible,
 			id = "filters",
-			defaultCollapsed = false,
+			defaultCollapsed = true,
 		},
 		{
 			name = L["ClassBuffReminderOnlyOutOfCombat"] or "Only show out of combat",
@@ -5445,7 +6535,7 @@ function editModeSettingsBuilders.buildConsumables()
 			name = L["ClassBuffReminderSectionFlasks"] or "Flasks",
 			kind = SettingType.Collapsible,
 			id = "flasks",
-			defaultCollapsed = false,
+			defaultCollapsed = true,
 		},
 		{
 			name = L["ClassBuffReminderTrackFlasks"] or "Track missing flask buff",
@@ -5473,7 +6563,7 @@ function editModeSettingsBuilders.buildConsumables()
 			name = L["ClassBuffReminderSectionFood"] or "Food",
 			kind = SettingType.Collapsible,
 			id = "food",
-			defaultCollapsed = false,
+			defaultCollapsed = true,
 		},
 		{
 			name = L["ClassBuffReminderTrackFood"] or "Track missing food buff",
@@ -5501,7 +6591,7 @@ function editModeSettingsBuilders.buildConsumables()
 			name = L["ClassBuffReminderSectionRunes"] or "Augment Runes",
 			kind = SettingType.Collapsible,
 			id = "runes",
-			defaultCollapsed = false,
+			defaultCollapsed = true,
 		},
 		{
 			name = L["ClassBuffReminderTrackRunes"] or "Track missing augment rune",
@@ -5512,7 +6602,7 @@ function editModeSettingsBuilders.buildConsumables()
 			set = function(_, value)
 				if addon.db then addon.db[Reminder.runeTracking.enabledDb] = value == true end
 				Reminder:InvalidateRuneCache()
-				Reminder:RequestUpdate(true)
+				Reminder.EditModeRefreshRuntimeAfterTrackingChange()
 			end,
 		},
 		{
@@ -5533,7 +6623,7 @@ function editModeSettingsBuilders.buildConsumables()
 			name = L["ClassBuffReminderSectionWeaponBuffs"] or "Weapon Buffs",
 			kind = SettingType.Collapsible,
 			id = "weaponBuffs",
-			defaultCollapsed = false,
+			defaultCollapsed = true,
 		},
 		{
 			name = L["ClassBuffReminderTrackWeaponBuffs"] or "Track missing weapon oil/stone",
@@ -5544,7 +6634,7 @@ function editModeSettingsBuilders.buildConsumables()
 			set = function(_, value)
 				if addon.db then addon.db[DB_TRACK_WEAPON_BUFFS] = value == true end
 				Reminder:InvalidateWeaponBuffCache()
-				Reminder:RequestUpdate(true)
+				Reminder.EditModeRefreshRuntimeAfterTrackingChange()
 			end,
 		},
 		{
@@ -5560,6 +6650,73 @@ function editModeSettingsBuilders.buildConsumables()
 			customDefaultText = _G.NONE or "None",
 			hideSummary = true,
 			isShown = function() return getValue(DB_TRACK_WEAPON_BUFFS, defaults.trackWeaponBuffs) == true end,
+		},
+		{
+			name = L["ClassBuffReminderSectionPets"] or "Pets",
+			kind = SettingType.Collapsible,
+			id = "pets",
+			defaultCollapsed = true,
+		},
+		{
+			name = L["ClassBuffReminderTrackPets"] or "Track pet reminders",
+			kind = SettingType.Checkbox,
+			parentId = "pets",
+			default = defaults.trackPets == true,
+			get = function() return getValue("classBuffReminderTrackPets", defaults.trackPets) == true end,
+			set = function(_, value)
+				if addon.db then addon.db["classBuffReminderTrackPets"] = value == true end
+				Reminder.EditModeRefreshRuntimeAfterTrackingChange()
+			end,
+		},
+		{
+			name = L["ClassBuffReminderIgnorePetPassive"] or "Ignore passive pet stance",
+			kind = SettingType.Checkbox,
+			parentId = "pets",
+			default = defaults.ignorePetPassive,
+			get = function() return getValue("classBuffReminderIgnorePetPassive", defaults.ignorePetPassive) == true end,
+			set = function(_, value)
+				if addon.db then addon.db["classBuffReminderIgnorePetPassive"] = value == true end
+				Reminder:RequestUpdate(true, 0, true)
+			end,
+			isShown = function() return getValue("classBuffReminderTrackPets", defaults.trackPets) == true end,
+		},
+		{
+			name = L["ClassBuffReminderIgnorePetDefensive"] or "Ignore defensive pet stance",
+			kind = SettingType.Checkbox,
+			parentId = "pets",
+			default = defaults.ignorePetDefensive,
+			get = function() return getValue("classBuffReminderIgnorePetDefensive", defaults.ignorePetDefensive) == true end,
+			set = function(_, value)
+				if addon.db then addon.db["classBuffReminderIgnorePetDefensive"] = value == true end
+				Reminder:RequestUpdate(true, 0, true)
+			end,
+			isShown = function() return getValue("classBuffReminderTrackPets", defaults.trackPets) == true end,
+		},
+		{
+			name = L["ClassBuffReminderHidePetReminderText"] or "Hide pet reminder text",
+			kind = SettingType.Checkbox,
+			parentId = "pets",
+			default = defaults.hidePetReminderText,
+			get = function() return getValue("classBuffReminderHidePetReminderText", defaults.hidePetReminderText) == true end,
+			set = function(_, value)
+				if addon.db then addon.db["classBuffReminderHidePetReminderText"] = value == true end
+				Reminder:RequestUpdate(true, 0, true)
+			end,
+			isShown = function() return getValue("classBuffReminderTrackPets", defaults.trackPets) == true end,
+		},
+		{
+			name = L["ClassBuffReminderTrackingContent"] or "Active in content",
+			kind = SettingType.MultiDropdown,
+			parentId = "pets",
+			height = 260,
+			default = defaults.trackPetsContent,
+			options = Reminder:GetTrackingContentOptions(),
+			get = function() return Reminder:GetPetTrackingContentSelection() end,
+			set = function(_, value) Reminder:SetPetTrackingContentSelection(value) end,
+			tooltip = L["ClassBuffReminderTrackingContentDesc"] or "Choose where this reminder should be active. Multiple entries can be selected.",
+			customDefaultText = _G.NONE or "None",
+			hideSummary = true,
+			isShown = function() return getValue("classBuffReminderTrackPets", defaults.trackPets) == true end,
 		},
 	}
 end
@@ -5967,10 +7124,11 @@ function Reminder:RegisterEditMode()
 				Reminder.frame:Hide()
 			end
 			Reminder:RequestUpdate(true)
-			if C_Timer and C_Timer.After then C_Timer.After(0, function() Reminder:RequestUpdate(true) end) end
+			RunNextFrame(function() Reminder:RequestUpdate(true) end)
 		end,
 		isEnabled = function() return addon.db and addon.db[DB_ENABLED] == true end,
 		settings = settings,
+		collapseExclusive = true,
 		-- Runtime visibility is controlled by UpdateDisplay/Render.
 		-- Keep this false so EditMode doesn't force-show the frame on login.
 		showOutsideEditMode = false,

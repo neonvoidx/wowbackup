@@ -70,6 +70,11 @@ local queuedFullRefresh = false
 local queuedCooldownRefresh = false
 local queuedInvalidateCache = false
 local COMPENDIUM_CACHE_TTL = 1
+local restrictionStateEnum = Enum and Enum.AddOnRestrictionState
+local RESTRICTION_STATE_INACTIVE = restrictionStateEnum and restrictionStateEnum.Inactive or 0
+local RESTRICTION_STATE_ACTIVATING = restrictionStateEnum and restrictionStateEnum.Activating or 1
+local RESTRICTION_STATE_ACTIVE = restrictionStateEnum and restrictionStateEnum.Active or 2
+local RESTRICTION_TYPE_MAP = Enum and Enum.AddOnRestrictionType and Enum.AddOnRestrictionType.Map or 4
 
 local function isCacheExpired(cachedAt)
 	if not cachedAt or cachedAt <= 0 then return true end
@@ -408,9 +413,16 @@ end
 
 local function IsPanelSuppressed() return isRestrictedContent() end
 
+local function GetQuestMapDisplayMode()
+	if not QuestMapFrame then return nil end
+	if QuestMapFrame.GetDisplayMode then return QuestMapFrame:GetDisplayMode() end
+	return QuestMapFrame.displayMode
+end
+
+local function IsTeleportDisplayModeActive() return GetQuestMapDisplayMode() == DISPLAY_MODE end
+
 local function LeaveDisplayModeIfNeeded()
-	if not QuestMapFrame or not QuestMapFrame.GetDisplayMode then return end
-	if QuestMapFrame:GetDisplayMode() ~= DISPLAY_MODE then return end
+	if not QuestMapFrame or not IsTeleportDisplayModeActive() then return end
 	if InCombatLockdown and InCombatLockdown() then return end
 
 	local questLogDisplayMode = _G.QuestLogDisplayMode
@@ -440,6 +452,25 @@ local function ApplyNormalPanelState()
 	SetBlockerEnabled(false)
 end
 
+local function ApplyUnsuppressedPanelState()
+	ApplyNormalPanelState()
+	if panel and panel._eqolPendingVisible ~= nil then
+		SafeSetVisible(panel, panel._eqolPendingVisible)
+		panel._eqolPendingVisible = nil
+	end
+	if tabButton and tabButton._eqolPendingVisible ~= nil then
+		SafeSetVisible(tabButton, tabButton._eqolPendingVisible)
+		tabButton._eqolPendingVisible = nil
+	end
+
+	local modeActive = IsTeleportDisplayModeActive()
+	if tabButton then SafeSetVisible(tabButton, true) end
+	if tabButton and tabButton.SetChecked then tabButton:SetChecked(modeActive and true or false) end
+	if panel then SafeSetVisible(panel, modeActive and true or false) end
+end
+
+local function IsRelevantRestrictionType(restrictionType) return restrictionType ~= RESTRICTION_TYPE_MAP end
+
 local function EnsurePanel(parent)
 	local targetParent = QuestMapFrame or parent
 	if panel and panel:GetParent() ~= targetParent then panel:SetParent(targetParent) end
@@ -463,7 +494,7 @@ local function EnsurePanel(parent)
 
 	anchorPanel()
 	-- In case layout isn't ready on first tick, re-anchor shortly after
-	C_Timer.After(0, anchorPanel)
+	RunNextFrame(anchorPanel)
 	C_Timer.After(0.1, anchorPanel)
 	-- Ensure our panel is on top of Blizzard content frames
 	if QuestMapFrame then
@@ -1008,7 +1039,7 @@ local function EnsureTab(parent, anchorTo)
 	end
 
 	-- Initialize checked state and icon based on QuestMapFrame displayMode
-	local isActive = QuestMapFrame and QuestMapFrame.displayMode == DISPLAY_MODE
+	local isActive = IsTeleportDisplayModeActive()
 	if tabButton.SetChecked then tabButton:SetChecked(isActive) end
 	-- Keep panel alpha in sync with current mode without Show/Hide
 	if panel then SafeSetVisible(panel, isActive and true or false) end
@@ -1096,7 +1127,7 @@ function f:TryInit()
 
 	-- If WorldQuestTab is enabled but its tab isn't created yet, try re-anchoring shortly after
 	if C_AddOns and C_AddOns.GetAddOnEnableState and pcall(C_AddOns.GetAddOnEnableState, "WorldQuestTab") and C_AddOns.GetAddOnEnableState("WorldQuestTab") == 2 then
-		C_Timer.After(0, function()
+		RunNextFrame(function()
 			local wqt = _G and _G["WQT_QuestMapTab"]
 			if wqt then
 				EnsureTab(parent, wqt)
@@ -1180,16 +1211,16 @@ end
 
 function f:RefreshPanel()
 	if InCombatLockdown and InCombatLockdown() then return end
-	if IsPanelSuppressed() then
-		ApplySuppressedPanelState()
-		return
-	end
-	ApplyNormalPanelState()
 	if not addon.db or not addon.db["teleportsWorldMapEnabled"] then
 		if panel then SafeSetVisible(panel, false) end
 		if tabButton then SafeSetVisible(tabButton, false) end
 		return
 	end
+	if IsPanelSuppressed() then
+		ApplySuppressedPanelState()
+		return
+	end
+	ApplyUnsuppressedPanelState()
 	if not panel then return end
 	PopulatePanel()
 end
@@ -1208,6 +1239,7 @@ local function setWorldMapTeleportEventsEnabled(enabled)
 	if enabled then
 		if f._eqolEventsRegistered then return end
 		f:RegisterEvent("ADDON_LOADED")
+		f:RegisterEvent("ADDON_RESTRICTION_STATE_CHANGED")
 		f:RegisterUnitEvent("UNIT_SPELLCAST_SUCCEEDED", "player")
 		f:RegisterEvent("PLAYER_REGEN_DISABLED")
 		f:RegisterEvent("PLAYER_REGEN_ENABLED")
@@ -1242,32 +1274,40 @@ local function worldMapEventHandler(self, event, arg1, arg2, arg3)
 		if suppressed then
 			ApplySuppressedPanelState()
 		else
-			ApplyNormalPanelState()
-		end
-		-- Apply any deferred visibility changes now that combat ended
-		if panel and panel._eqolPendingVisible ~= nil then
-			SafeSetVisible(panel, panel._eqolPendingVisible)
-			panel._eqolPendingVisible = nil
-		end
-		if tabButton and tabButton._eqolPendingVisible ~= nil then
-			SafeSetVisible(tabButton, tabButton._eqolPendingVisible)
-			tabButton._eqolPendingVisible = nil
-		end
-		if not suppressed then
-			local modeActive = QuestMapFrame and QuestMapFrame.GetDisplayMode and QuestMapFrame:GetDisplayMode() == DISPLAY_MODE
-			if tabButton then SafeSetVisible(tabButton, true) end
-			if tabButton and tabButton.SetChecked then tabButton:SetChecked(modeActive and true or false) end
-			if panel then SafeSetVisible(panel, modeActive and true or false) end
+			ApplyUnsuppressedPanelState()
 		end
 		if f._pendingOpen and not IsPanelSuppressed() then
 			f._pendingOpen = nil
 			if addon.MythicPlus and addon.MythicPlus.functions and addon.MythicPlus.functions.OpenWorldMapTeleportPanel then addon.MythicPlus.functions.OpenWorldMapTeleportPanel(true) end
 		end
-		if hasPendingReequip() then C_Timer.After(0, tryRestorePendingReequip) end
+		if hasPendingReequip() then RunNextFrame(tryRestorePendingReequip) end
 		if WorldMapFrame and WorldMapFrame:IsShown() and addon.db and addon.db["teleportsWorldMapEnabled"] then QueuePanelRefresh({ delay = 0, invalidate = true }) end
 		-- fall through to allow refresh if map is visible
+	elseif event == "ADDON_RESTRICTION_STATE_CHANGED" then
+		if not IsRelevantRestrictionType(arg1) then return end
+		if arg2 == RESTRICTION_STATE_ACTIVATING or arg2 == RESTRICTION_STATE_ACTIVE then
+			ApplySuppressedPanelState()
+			return
+		end
+		if arg2 ~= RESTRICTION_STATE_INACTIVE or not WorldMapFrame or not WorldMapFrame:IsShown() then return end
+
+		RunNextFrame(function()
+			if not addon.db or not addon.db["teleportsWorldMapEnabled"] then return end
+			if not WorldMapFrame or not WorldMapFrame:IsShown() then return end
+			if IsPanelSuppressed() then
+				ApplySuppressedPanelState()
+				return
+			end
+			if not panel or not tabButton then
+				f:TryInit()
+				return
+			end
+			ApplyUnsuppressedPanelState()
+			QueuePanelRefresh({ delay = 0, invalidate = true })
+		end)
+		return
 	elseif event == "UNIT_SPELLCAST_SUCCEEDED" then
-		if arg1 == "player" and hasPendingReequip() and isPendingReequipSpell(arg3) then C_Timer.After(0, tryRestorePendingReequip) end
+		if arg1 == "player" and hasPendingReequip() and isPendingReequipSpell(arg3) then RunNextFrame(tryRestorePendingReequip) end
 	elseif event == "LOADING_SCREEN_DISABLED" or event == "ZONE_CHANGED" or event == "ZONE_CHANGED_NEW_AREA" or event == "ZONE_CHANGED_INDOORS" then
 		if hasPendingReequip() then C_Timer.After(0.1, tryRestorePendingReequip) end
 	end
@@ -1374,7 +1414,7 @@ function addon.MythicPlus.functions.RefreshWorldMapTeleportPanel()
 		if QuestMapFrame and QuestMapFrame.ValidateTabs then QuestMapFrame:ValidateTabs() end
 
 		if not addon.db["teleportsWorldMapEnabled"] then
-			if QuestMapFrame and QuestMapFrame.GetDisplayMode and QuestMapFrame:GetDisplayMode() == DISPLAY_MODE then
+			if IsTeleportDisplayModeActive() then
 				if QuestMapFrame.MapLegendTab and QuestMapFrame.MapLegendTab.Click then
 					QuestMapFrame.MapLegendTab:Click()
 				elseif QuestMapFrame.QuestsTab and QuestMapFrame.QuestsTab.Click then

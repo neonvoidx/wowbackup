@@ -272,6 +272,7 @@ L["ModuleName TooltipTransmogEnsemble"] = "团本外观套装";
 L["ModuleDescription TooltipTransmogEnsemble"] = "- 显示套装内可收集外观的数量。\n\n- 军团再临团本外观商人出售的大多数物品可以解锁所有难度的配色。在这些物品的鼠标提示上显示你的收藏进度。";
 L["Collected Appearances"] = "已收集外观";
 L["Collected Items"] = "已收集物品";
+L["Other Player Classes"] = "其他职业";
 
 
 --Tooltip Housing
@@ -286,6 +287,16 @@ L["ModuleName TooltipRichSoil"] = "快捷按钮：坚韧之种";
 L["ModuleDescription TooltipRichSoil"] = "对采药专业生效：鼠标左键双击肥沃的土壤可显示坚韧之种快捷按钮。"..L["Quick Slot Generic Description"];
 L["Instruction Show Resilient Seeds"] = "<双击左键来显示坚韧之种>";
 L["No Resilient Seed"] = "你身上没有携带坚韧之种";
+
+
+--Tooltip VendorLocation
+L["ModuleName VendorLocation"] = "商人位置";
+L["ModuleDescription VendorLocation"] = "在某些可兑换物品的鼠标提示上显示商人位置，并允许你Ctrl点击此物品来创建地图标记。";
+L["Instruction Set Waypoint"] = "<按住Ctrl点击创建地图标记>";
+L["NPC Name Location Format"] = "%s，%s";
+L["Intruction Swtich Destinations"] = "按Alt键切换终点：";
+L["Location Note Inside Cave"] = "在洞穴内";
+L["Location Note Second Floor"] = "在楼上";
 
 
 --Plunderstore
@@ -695,6 +706,8 @@ L["Item Expire Alert Weekly"] = "这件物品将在每周服务器维护后消�
 L["Delves Completion Reward Cap"] = "通关奖励";
 L["Delves Completion Reward Cap Tooltip"] = "当你达到此战团上限后，完成丰裕地下堡将不再奖励旅程进度和伙伴经验。\n\n丰裕宝匣和宿敌宝箱不受此上限影响。\n\n每周上限为28次，可以累计。";
 L["Near Completion Tooltip"] = "你可以看见此条目是因为你即将达到上限。";
+L["Inactive Currencies Tooltip"] = "以下货币因为被你设为“未使用”而隐藏：";
+L["New Quest"] = "新任务";
 
 
 --ExpansionSummaryMinimapButton
@@ -731,6 +744,9 @@ L["Instruction Alt Click To Reset Instance"] = "按住Alt并右键单击：|cfff
 L["Instruction Link Progress In Chat"] = "<按住Shift点击将副本进度链接到聊天框内>";
 L["Instance Name"] = "副本名称";
 L["EditMode Instruction InstanceDifficulty"] = "此窗口的实际宽度由选项数量决定。";
+L["Difficulty Locked To Format"] = "此副本难度被锁定为|cffffffff%s|r，因为你已击败了一个首领。";
+L["Difficulty Locked To Current Alert"] = "此副本难度被锁定为当前难度，因为你已击败了一个首领。";
+L["Shared Difficulty Alert"] = "击败任何一个首领将会使副本锁定至此难度。";
 
 
 --TransmogChatCommand
@@ -862,6 +878,11 @@ L["Prey Target Has Achievement"] = "某个未完成的成就要求你击败此�
 --PreyQuestSuperTrack
 L["ModuleName PreyQuestSuperTrack"] = "狩猎：目标最终位置追踪";
 L["ModuleDescription PreyQuestSuperTrack"] = "当你知晓狩猎目标的最终位置后，点击狩猎进度指示器会将追踪此位置以便于你导航。";
+
+
+--BlizzFixActionBarArt
+L["ModuleName BlizzFixActionBarArt"] = "动作条装饰修复";
+L["ModuleDescription BlizzFixActionBarArt"] = "修复被你隐藏的动作条装饰在隐藏/显示游戏界面或退出住宅编辑器后重现的问题。";
 
 
 --Generic

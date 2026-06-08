@@ -46,6 +46,7 @@ function addon.Vendor.functions.InitDB()
 	init("vendorShowDestroyOverlay", true)
 	init("vendorDestroyShowMessages", true)
 	init("vendorCraftShopperEnable", false)
+	init("vendorCraftShopperIncludeWarbandBank", false)
 	init("vendorCraftShopperReagentQuality", "highest")
 	local legacyIgnoreEquipmentSets = addon.db["vendorIgnoreEquipmentSets"]
 

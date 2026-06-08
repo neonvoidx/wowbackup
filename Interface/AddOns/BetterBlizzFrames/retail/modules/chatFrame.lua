@@ -32,51 +32,88 @@ local gladiusSpam = {
 }
 
 local talentSpam = {
-    ["You have learned a new"] = true,
-    ["You have unlearned"] = true,
-    ["Soulbound with "] = true,
+    [ERR_ACTIVATE_SOULBIND_S] = true, -- "Soulbound with %s."
+    [ERR_LEARN_PASSIVE_S] = true, -- "You have learned a new passive effect: %s."
+    [ERR_LEARN_ABILITY_S] = true, -- "You have learned a new ability: %s."
+    [ERR_LEARN_SPELL_S] = true, -- "You have learned a new spell: %s."
+    [ERR_SPELL_UNLEARNED_S] = true, -- "You have unlearned %s."
 }
 
 local systemMessages = {
     ["Thirty seconds until the Arena"] = true,
     ["Fifteen seconds until the Arena"] = true,
     ["The Arena battle has begun!"] = true,
-    ["Party converted to Raid"] = true,
-    ["Raid Difficulty set to Normal"] = true,
-    ["Legacy Raid Difficulty set to 10 Player."] = true,
-    ["has joined the battle."] = true,
-    ["has joined the instance group."] = true,
-    ["has left the instance group."] = true,
-    ["You have been removed from the group."] = true,
-    ["Your group has been disbanded."] = true,
+    [ERR_PARTY_CONVERTED_TO_RAID] = true, -- "Party converted to Raid"
+    [ERR_RAID_DIFFICULTY_CHANGED_S] = true, -- "Raid Difficulty set to %s."
+    [ERR_LEGACY_RAID_DIFFICULTY_CHANGED_S] = true, -- "Legacy Raid Difficulty set to %s."
+    [ERR_INSTANCE_GROUP_ADDED_S] = true, -- "%s has joined the instance group."
+    [ERR_INSTANCE_GROUP_REMOVED_S] = true, -- "%s has left the instance group."
+    [ERR_UNINVITE_YOU] = true, -- "You have been removed from the group."
+    [ERR_GROUP_DISBANDED] = true, -- "Your group has been disbanded."
     ["You have joined the queue for Arena Skirmish"] = true,
-    ["A role check has been initiated."] = true,
-    ["You have been awarded"] = true,
-    ["You are in both a party and an instance group."] = true,
-    ["This is now a cross-faction"] = true,
-    ["You aren't in a party"] = true,
-    ["You are now queued in the Dungeon Finder."] = true,
-    ["Dungeon Difficulty set to"] = true,
-    ["Loot Specialization set to"] = true,
+    [ERR_SOLO_JOIN_TRAINING_GROUND] = true, -- "You have joined the queue for %s."
+    [ERR_SOLO_JOIN_BATTLEGROUND_S] = true, -- "You have joined the queue for %s."
+    [ERR_SOLO_JOIN_BATTLEGROUND_SPEC_S] = true, -- "You have joined the queue for %s as %s."
+    [ERR_JOIN_SINGLE_SCENARIO_S] = true, -- "You have joined the queue for %s."
+    [ERR_LFG_ROLE_CHECK_INITIATED] = true, -- "A role check has been initiated. Your group will be queued when all members have selected a role."
+    [COMBATLOG_HONORAWARD] = true, -- "You have been awarded %d Honor."
+    [COMBATLOG_ARENAPOINTSAWARD] = true, -- "You have been awarded %d arena points."
+    [ERR_INSTANCE_GROUP_JOINED_WITH_PARTY] = true, -- "You are in both a party and an instance group. You may communicate with your party with \"/p\" and with your instance group with \"/i\"."
+    [ERR_CROSS_FACTION_GROUP_JOINED] = true, -- "This is now a cross-faction instance group. You can do these activities together: dungeons (premade groups), raids (non-queued), Delves, Unrated and Rated PvP"
+    [ERR_NOT_IN_GROUP] = true, -- "You aren't in a party."
+    [ERR_LFG_JOINED_QUEUE] = true, -- "You are now queued in the Dungeon Finder."
+    [ERR_DUNGEON_DIFFICULTY_CHANGED_S] = true, -- "Dungeon Difficulty set to %s."
+    [ERR_LOOT_SPEC_CHANGED_S] = true, -- "Loot Specialization set to: %s"
     ["SUSPENDED"] = true,
     ["YOU_CHANGED"] = true,
+    [ERR_BG_PLAYER_JOINED_SS] = true, -- "[%s] has joined the battle."
+    [ERR_PLAYERLIST_JOINED_BATTLE] = true, -- "%d players have joined the battle: %s"
+    [ERR_PLAYERS_JOINED_BATTLE_D] = true, -- "%d players have joined the battle."
 }
 
 local miscInfo = {
-    ["Your equipped items suffer a"] = true,
+    [DURABILITYDAMAGE_DEATH] = true, -- "Your equipped items suffer a %d%% durability loss."
 }
 
 local emoteSpam = {
-    ["yells at her team members."] = true,
-    ["yells at his team members."] = true,
-    ["makes some strange gestures."] = true,
-    ["says something unintelligible."] = true,
+    [CHAT_YELL_UNKNOWN_FEMALE] = true, -- "yells at her team members."
+    [CHAT_YELL_UNKNOWN] = true, -- "yells at his team members."
+    [CHAT_EMOTE_UNKNOWN] = true, -- "makes some strange gestures."
+    [CHAT_SAY_UNKNOWN] = true, -- "says something unintelligible."
 }
 
+local function toPattern(formatString)
+    if not formatString or formatString == "" then return end
+
+    local escaped = formatString:gsub("[%^%$%(%)%.%[%]%*%+%-%?]", "%%%0")
+    escaped = escaped:gsub("%%%%", "\0")
+    escaped = escaped:gsub("%%%d*%$?[%-%+ #0]*%d*%.?%d*([sdfgxXiouc])", function(kind)
+        return (kind == "s" or kind == "c") and ".-" or "%-?%d+"
+    end)
+    escaped = escaped:gsub("%z", "%%%%")
+
+    return "^" .. escaped .. "$"
+end
+
+local function compileSpamTable(tbl)
+    local list = {}
+    for str in pairs(tbl) do
+        local p = toPattern(str)
+        if p then list[#list + 1] = p end
+    end
+    return list
+end
+
+local gladiusSpamPatterns = compileSpamTable(gladiusSpam)
+local talentSpamPatterns = compileSpamTable(talentSpam)
+local systemMessagesPatterns = compileSpamTable(systemMessages)
+local miscInfoPatterns = compileSpamTable(miscInfo)
+local emoteSpamPatterns = compileSpamTable(emoteSpam)
+
 -- Function to check if a message is spam based on user settings
-local function isSpam(message, spamTable)
-    for spamString, _ in pairs(spamTable) do
-        if string.find(message, spamString) then
+local function isSpam(message, patternList)
+    for i = 1, #patternList do
+        if string.find(message, patternList[i]) then
             return true
         end
     end
@@ -94,23 +131,23 @@ local function chatFilter(frame, event, message, sender, ...)
     -- Channel-specific filtering
     if (event == "CHAT_MSG_INSTANCE_CHAT" or event == "CHAT_MSG_INSTANCE_CHAT_LEADER" or
         event == "CHAT_MSG_PARTY" or event == "CHAT_MSG_PARTY_LEADER") and
-        filterGladiusSpam and isSpam(message, gladiusSpam) then
+        filterGladiusSpam and isSpam(message, gladiusSpamPatterns) then
         return true
     elseif (event == "CHAT_MSG_SYSTEM" or event == "CHAT_MSG_COMBAT_HONOR_GAIN" or
             event == "CHAT_MSG_BG_SYSTEM_NEUTRAL" or event == "CHAT_MSG_CHANNEL_NOTICE" or
             event == "CHAT_MSG_CURRENCY") then
-        if filterSystemMessages and isSpam(message, systemMessages) then
+        if filterSystemMessages and isSpam(message, systemMessagesPatterns) then
             return true
         end
-        if filterTalentSpam and isSpam(message, talentSpam) then
+        if filterTalentSpam and isSpam(message, talentSpamPatterns) then
             return true
         end
     elseif (event == "CHAT_MSG_EMOTE" or event == "CHAT_MSG_TEXT_EMOTE") and
-           filterEmoteSpam and isSpam(message, emoteSpam) then
+           filterEmoteSpam and isSpam(message, emoteSpamPatterns) then
         return true
     elseif event == "CHAT_MSG_MONSTER_SAY" and filterNpcArenaSpam and IsActiveBattlefieldArena() then
         return true
-    elseif event == "CHAT_MSG_COMBAT_MISC_INFO" and isSpam(message, miscInfo) then
+    elseif event == "CHAT_MSG_COMBAT_MISC_INFO" and isSpam(message, miscInfoPatterns) then
         return true
     end
 
@@ -151,6 +188,17 @@ function BBF.ChatFilterCaller()
         ChatFrame_AddMessageEventFilter("CHAT_MSG_CURRENCY", chatFilter)
         if not filterTalentSpamHooked then
             ChatFrame_AddMessageEventFilter("CHAT_MSG_SYSTEM", chatFilter)
+        end
+        if ONLINE_SAFETY_NOTICE then
+            hooksecurefunc(ChatFrameUtil, "AddSystemMessage", function(message)
+                if message ~= ONLINE_SAFETY_NOTICE then return end
+                for i = 1, NUM_CHAT_WINDOWS do
+                    local cf = _G["ChatFrame" .. i]
+                    if cf and cf.RemoveMessagesByPredicate then
+                        cf:RemoveMessagesByPredicate(function(line) return line == ONLINE_SAFETY_NOTICE end)
+                    end
+                end
+            end)
         end
         filterSystemMessagesHooked = true
     end

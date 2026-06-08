@@ -2142,6 +2142,11 @@ end
 local function CreateSimpleDropdown(name, parentFrame, labelText, settingKey, optionsTable, toggleFunc, point, dropdownWidth)
     dropdownWidth = dropdownWidth or 155  -- Default dropdown width if not provided
 
+    local function GetDisplayText(text)
+        if text == "" then return "NONE" end
+        return text
+    end
+
     -- Create container for label and dropdown
     local container = CreateFrame("Frame", nil, parentFrame)
     container:SetSize(dropdownWidth, 50)
@@ -2150,7 +2155,7 @@ local function CreateSimpleDropdown(name, parentFrame, labelText, settingKey, op
     local dropdown = CreateFrame("DropdownButton", nil, parentFrame, "WowStyle1DropdownTemplate")
     dropdown:SetPoint("BOTTOMLEFT", container, "BOTTOMLEFT", 0, 0)
     dropdown:SetWidth(dropdownWidth)
-    dropdown:SetDefaultText(BetterBlizzFramesDB[settingKey] or (L["Select"]..labelText))
+    dropdown:SetDefaultText(GetDisplayText(BetterBlizzFramesDB[settingKey]) or (L["Select"]..labelText))
     dropdown.Background:SetVertexColor(0.9, 0.9, 0.9)
     dropdown.Arrow:SetVertexColor(0.9, 0.9, 0.9)
 
@@ -2167,10 +2172,11 @@ local function CreateSimpleDropdown(name, parentFrame, labelText, settingKey, op
         rootDescription:SetScrollMode(maxScrollExtent)
 
         for _, option in ipairs(optionsTable) do
+            local displayText = GetDisplayText(option)
             -- Create each item as a button
-            local button = rootDescription:CreateButton(option, function()
+            local button = rootDescription:CreateButton(displayText, function()
                 BetterBlizzFramesDB[settingKey] = option
-                dropdown:SetDefaultText(option)
+                dropdown:SetDefaultText(displayText)
                 if toggleFunc then
                     toggleFunc(option)
                 end
@@ -2179,7 +2185,7 @@ local function CreateSimpleDropdown(name, parentFrame, labelText, settingKey, op
             -- Add the text initializer for the button
             button:AddInitializer(function(button)
                 if button.Text then
-                    button.Text:SetText(option)
+                    button.Text:SetText(displayText)
                 end
             end)
         end
@@ -2187,7 +2193,7 @@ local function CreateSimpleDropdown(name, parentFrame, labelText, settingKey, op
 
     -- Reset dropdown contents when closed
     hooksecurefunc(dropdown, "OnMenuClosed", function()
-        dropdown:SetDefaultText(BetterBlizzFramesDB[settingKey] or (L["Select"]..labelText))
+        dropdown:SetDefaultText(GetDisplayText(BetterBlizzFramesDB[settingKey]) or (L["Select"]..labelText))
     end)
 
     dropdown:SetupMenu(GeneratorFunction)
@@ -2518,7 +2524,7 @@ local function guiGeneralTab()
     local alpha2 = BetterBlizzFrames:CreateFontString(nil, "BACKGROUND", "GameFontNormal")
     alpha2:SetPoint("BOTTOM", SettingsPanel, "TOP", 0, 0)
     alpha2:SetText(L["Label_Betterblizzframes_Era_Alpha_Please_Report"])
-    alpha2:SetFont("Fonts\\FRIZQT__.TTF", 20, "THINOUTLINE")
+    alpha2:SetFont("Fonts\\FRIZQT__.TTF", 20, "OUTLINE")
     alpha2:Hide()
     BetterBlizzFrames:HookScript("OnShow",function()
         alpha2:Show()
@@ -3499,6 +3505,65 @@ local function guiGeneralTab()
         end
     end)
 
+    local biggerHealthbarsOptionsFrame
+    local function OpenBiggerHealthbarsOptionsWindow()
+        if not biggerHealthbarsOptionsFrame then
+            biggerHealthbarsOptionsFrame = CreateFrame("Frame", "BiggerHealthbarsOptionsFrame", UIParent, "BasicFrameTemplateWithInset")
+            biggerHealthbarsOptionsFrame:SetSize(185, 110)
+            biggerHealthbarsOptionsFrame:SetPoint("CENTER")
+            biggerHealthbarsOptionsFrame:SetFrameStrata("DIALOG")
+            biggerHealthbarsOptionsFrame:SetMovable(true)
+            biggerHealthbarsOptionsFrame:EnableMouse(true)
+            biggerHealthbarsOptionsFrame:RegisterForDrag("LeftButton")
+            biggerHealthbarsOptionsFrame:SetScript("OnDragStart", biggerHealthbarsOptionsFrame.StartMoving)
+            biggerHealthbarsOptionsFrame:SetScript("OnDragStop", biggerHealthbarsOptionsFrame.StopMovingOrSizing)
+            biggerHealthbarsOptionsFrame.title = biggerHealthbarsOptionsFrame:CreateFontString(nil, "OVERLAY")
+            biggerHealthbarsOptionsFrame.title:SetFontObject("GameFontHighlight")
+            biggerHealthbarsOptionsFrame.title:SetPoint("LEFT", biggerHealthbarsOptionsFrame.TitleBg, "LEFT", 5, 0)
+            biggerHealthbarsOptionsFrame.title:SetText(L["Frame_Options"])
+
+            local options = {
+                { var = "biggerHealthbarsNoPlayer", label = L["Ignore_On_Player_Frame"] },
+                { var = "biggerHealthbarsNoTarget", label = L["Ignore_On_Target_Frame"] },
+            }
+
+            local previousCheckbox
+            for i, optData in ipairs(options) do
+                local optCheckbox = CreateFrame("CheckButton", nil, biggerHealthbarsOptionsFrame, "UICheckButtonTemplate")
+                optCheckbox:SetSize(24, 24)
+                optCheckbox.Text:SetText(optData.label)
+
+                if i == 1 then
+                    optCheckbox:SetPoint("TOPLEFT", biggerHealthbarsOptionsFrame, "TOPLEFT", 10, -30)
+                else
+                    optCheckbox:SetPoint("TOPLEFT", previousCheckbox, "BOTTOMLEFT", 0, 3)
+                end
+
+                optCheckbox:SetChecked(BetterBlizzFramesDB[optData.var])
+
+                optCheckbox:SetScript("OnClick", function(self)
+                    BetterBlizzFramesDB[optData.var] = self:GetChecked() or nil
+                    StaticPopup_Show("BBF_CONFIRM_RELOAD")
+                end)
+
+                previousCheckbox = optCheckbox
+            end
+            biggerHealthbarsOptionsFrame:Show()
+        else
+            if biggerHealthbarsOptionsFrame:IsShown() then
+                biggerHealthbarsOptionsFrame:Hide()
+            else
+                biggerHealthbarsOptionsFrame:Show()
+            end
+        end
+    end
+
+    biggerHealthbars:SetScript("OnMouseDown", function(self, button)
+        if button == "RightButton" then
+            OpenBiggerHealthbarsOptionsWindow()
+        end
+    end)
+
 
     local classColorTargetNames = CreateCheckbox("classColorTargetNames", L["Class_Color_Names"], BetterBlizzFrames)
     classColorTargetNames:SetPoint("TOPLEFT", biggerHealthbars, "BOTTOMLEFT", 0, pixelsBetweenBoxes)
@@ -3846,6 +3911,10 @@ local function guiCastbars()
     local partyCastbarShowText = CreateCheckbox("partyCastbarShowText", L["Text"], contentFrame, nil, BBF.partyCastBarTestMode)
     partyCastbarShowText:SetPoint("TOPLEFT", showPartyCastBarIcon, "BOTTOMLEFT", 0, pixelsBetweenBoxes)
     CreateTooltipTwo(partyCastbarShowText, L["Tooltip_Show_Castbar_Text_Desc"], L["Tooltip_Show_Castbar_Text_Desc"])
+
+    local partyCastBarForceDefaultPartyFrames = CreateCheckbox("partyCastBarForceDefaultPartyFrames", L["Party_Castbar_Force_Default_Frames"], contentFrame)
+    partyCastBarForceDefaultPartyFrames:SetPoint("TOPLEFT", partyCastbarShowText, "BOTTOMLEFT", 0, pixelsBetweenBoxes)
+    CreateTooltipTwo(partyCastBarForceDefaultPartyFrames, L["Tooltip_Party_Castbar_Force_Default_Frames_Title"], L["Tooltip_Party_Castbar_Force_Default_Frames_Desc"])
 
     local partyCastbarShowBorder = CreateCheckbox("partyCastbarShowBorder", L["Border"], contentFrame, nil, BBF.partyCastBarTestMode)
     partyCastbarShowBorder:SetPoint("TOPLEFT", partyCastbarSelf, "BOTTOMLEFT", 0, pixelsBetweenBoxes)
@@ -5115,11 +5184,11 @@ local function guiFrameLook()
     fontEditBox:SetSize(330, 20)
     fontEditBox:SetPoint("TOPLEFT", howStepOne, "BOTTOMLEFT", 5, -5)
     fontEditBox:SetAutoFocus(false)
-    fontEditBox:SetText("BBF.LSM:Register(\"font\", \"My Font Name\", [[Interface\\AddOns\\CustomMedia\\MyFontFile.ttf]], BBF.allLocales)")
+    fontEditBox:SetText("BBF.AddFont(\"MyFontName\")")
     fontEditBox:HighlightText()
     fontEditBox:SetCursorPosition(0)
     fontEditBox:SetScript("OnTextChanged", function(self)
-        fontEditBox:SetText("BBF.LSM:Register(\"font\", \"My Font Name\", [[Interface\\AddOns\\CustomMedia\\MyFontFile.ttf]], BBF.allLocales)")
+        fontEditBox:SetText("BBF.AddFont(\"MyFontName\")")
     end)
     fontEditBox:SetScript("OnMouseUp", function(self)
         self:SetFocus()
@@ -5136,11 +5205,11 @@ local function guiFrameLook()
     textureEditBox:SetSize(330, 20)
     textureEditBox:SetPoint("TOPLEFT", howStepTwo, "BOTTOMLEFT", 5, -5)
     textureEditBox:SetAutoFocus(false)
-    textureEditBox:SetText("BBF.LSM:Register(\"statusbar\", \"My Texture Name\", [[Interface\\AddOns\\CustomMedia\\MyTextureFile.tga]])")
+    textureEditBox:SetText("BBF.AddTexture(\"MyTextureName\")")
     textureEditBox:HighlightText()
     textureEditBox:SetCursorPosition(0)
     textureEditBox:SetScript("OnTextChanged", function(self)
-        textureEditBox:SetText("BBF.LSM:Register(\"statusbar\", \"My Texture Name\", [[Interface\\AddOns\\CustomMedia\\MyTextureFile.tga]])")
+        textureEditBox:SetText("BBF.AddTexture(\"MyTextureName\")")
     end)
     textureEditBox:SetScript("OnMouseUp", function(self)
         self:SetFocus()
@@ -5152,6 +5221,7 @@ local function guiFrameLook()
     howStepThree:SetFont(fontMedium, 12)
     howStepThree:SetPoint("TOPLEFT", textureEditBox, "BOTTOMLEFT", -5, -13)
     howStepThree:SetText(L["How_Custom_Media_3"])
+    howStepThree:SetWidth(330)
 
     local changeUnitFrameFont = CreateCheckbox("changeUnitFrameFont", L["Tooltip_Change_UnitFrame_Font_Desc"], guiFrameLook)
     changeUnitFrameFont:SetPoint("TOPLEFT", settingsText, "BOTTOMLEFT", -4, pixelsOnFirstBox)
@@ -5190,7 +5260,7 @@ local function guiFrameLook()
 
     -- For font outline
     local unitFrameFontOutline = CreateSimpleDropdown("FontOutlineDropdown", guiFrameLook, "Outline", "unitFrameFontOutline", {
-        "THICKOUTLINE", "THINOUTLINE", "NONE"
+        "THICKOUTLINE", "OUTLINE", ""
     }, function(selectedSize)
         BBF.SetCustomFonts()
     end, { anchorFrame = unitFrameFont, x = 0, y = -5 }, 155)
@@ -5258,7 +5328,7 @@ local function guiFrameLook()
 
     -- For font outline
     local unitFrameValueFontOutline = CreateSimpleDropdown("FontOutlineDropdown", guiFrameLook, "Outline", "unitFrameValueFontOutline", {
-        "THICKOUTLINE", "THINOUTLINE", "NONE"
+        "THICKOUTLINE", "OUTLINE", ""
     }, function(selectedSize)
         BBF.SetCustomFonts()
     end, { anchorFrame = unitFrameValueFont, x = 0, y = -5 }, 155)
@@ -5320,7 +5390,7 @@ local function guiFrameLook()
 
     -- For font outline
     local partyFrameFontOutline = CreateSimpleDropdown("FontOutlineDropdown", guiFrameLook, "Outline", "partyFrameFontOutline", {
-        "THICKOUTLINE", "THINOUTLINE", "NONE"
+        "THICKOUTLINE", "OUTLINE", ""
     }, function(selectedSize)
         BBF.SetCustomFonts()
     end, { anchorFrame = partyFrameFont, x = 0, y = -5 }, 155)
@@ -5397,14 +5467,14 @@ local function guiFrameLook()
 
     -- For font outline
     local actionBarFontOutline = CreateSimpleDropdown("FontOutlineDropdown", guiFrameLook, "Outline", "actionBarFontOutline", {
-        "THICKOUTLINE", "THINOUTLINE", "NONE"
+        "THICKOUTLINE", "OUTLINE", ""
     }, function(selectedSize)
         BBF.SetCustomFonts()
     end, { anchorFrame = actionBarFont, x = 0, y = -5 }, 77.5)
     CreateTooltipTwo(actionBarFontOutline, L["Tooltip_Macro_Text_Outline"])
 
     local actionBarKeyFontOutline = CreateSimpleDropdown("FontOutlineDropdown", guiFrameLook, "", "actionBarKeyFontOutline", {
-        "THICKOUTLINE", "THINOUTLINE", "NONE"
+        "THICKOUTLINE", "OUTLINE", ""
     }, function(selectedSize)
         BBF.SetCustomFonts()
     end, { anchorFrame = actionBarFontOutline, x = 77.5, y = 25 }, 77.5)

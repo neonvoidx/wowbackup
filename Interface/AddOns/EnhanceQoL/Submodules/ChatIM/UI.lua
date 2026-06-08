@@ -13,6 +13,32 @@ local canaccessvalue = _G.canaccessvalue
 
 local function colorWrap(hex, text) return "|cff" .. hex .. text .. "|r" end
 
+local function colorToHex(colorInfo)
+	if not colorInfo then colorInfo = { r = 1, g = 1, b = 1 } end
+	local r = math.floor((colorInfo.r or 1) * 255 + 0.5)
+	local g = math.floor((colorInfo.g or 1) * 255 + 0.5)
+	local b = math.floor((colorInfo.b or 1) * 255 + 0.5)
+	return ("%02x%02x%02x"):format(r, g, b)
+end
+
+local function getDefaultMessageColor(outbound, isBN)
+	if isBN then return outbound and ChatTypeInfo.BN_WHISPER_INFORM or ChatTypeInfo.BN_WHISPER end
+	return outbound and ChatTypeInfo.WHISPER_INFORM or ChatTypeInfo.WHISPER
+end
+
+local function getMessageColorHex(outbound, isBN)
+	local key = outbound and "chatIMOutgoingMessageColor" or "chatIMIncomingMessageColor"
+	local color = addon.db and addon.db[key]
+	if type(color) ~= "table" then color = getDefaultMessageColor(outbound, isBN) end
+	return colorToHex(color)
+end
+
+local function applyMessageColor(text, hex)
+	text = tostring(text or "")
+	if text:find("|r", 1, true) then text = text:gsub("|r", "|r|cff" .. hex) end
+	return "|cff" .. hex .. text .. "|r"
+end
+
 addon.ChatIM = addon.ChatIM or {}
 
 local ChatIM = addon.ChatIM
@@ -23,7 +49,25 @@ local MU = MenuUtil -- global ab 11.0+
 local regionTable = { "US", "KR", "EU", "TW", "CN" }
 local regionKey = regionTable[GetCurrentRegion()] or "EU" -- or EU for PTR because that is region 90+
 
-local function PlayerMenuGenerator(_, root, targetName, isBN, bnetID)
+local function sanitizeRealm(realm)
+	if not realm or realm == "" then realm = GetRealmName() or "Unknown" end
+	return realm:gsub("%s+", "")
+end
+
+local function TagPlayerMenu(root, targetName, unit, isBN, bnetID, lineID, chatType, chatTarget, chatFrame)
+	if not (root and root.SetTag and unit) then return end
+
+	root:SetTag("MENU_UNIT_FRIEND", {
+		name = unit,
+		lineID = tonumber(lineID) or 0,
+		chatType = chatType or (isBN and "BN_WHISPER" or "WHISPER"),
+		chatTarget = chatTarget or unit or targetName,
+		chatFrame = chatFrame,
+		bnetIDAccount = bnetID,
+	})
+end
+
+local function PlayerMenuGenerator(owner, root, targetName, isBN, bnetID, lineID, chatType, chatTarget)
 	root:CreateTitle(targetName)
 
 	local unit, riolink, wclLink
@@ -37,7 +81,7 @@ local function PlayerMenuGenerator(_, root, targetName, isBN, bnetID)
 				and BNET_CLIENT_WOW == info.gameAccountInfo.clientProgram
 				and info.gameAccountInfo.regionID == GetCurrentRegion()
 			then
-				unit = info.gameAccountInfo.characterName .. "-" .. info.gameAccountInfo.realmName
+				unit = info.gameAccountInfo.characterName .. "-" .. sanitizeRealm(info.gameAccountInfo.realmName)
 				riolink = "https://raider.io/characters/"
 					.. string.lower(regionKey)
 					.. "/"
@@ -66,6 +110,7 @@ local function PlayerMenuGenerator(_, root, targetName, isBN, bnetID)
 			end
 		end
 	end
+	TagPlayerMenu(root, targetName, unit, isBN, bnetID, lineID, chatType, chatTarget, owner)
 	if unit then
 		root:CreateDivider()
 		root:CreateTitle(UNIT_FRAME_DROPDOWN_SUBSECTION_TITLE_INTERACT)
@@ -391,9 +436,17 @@ function ChatIM:CreateTab(sender, isBN, bnetID, battleTag)
 
 		if linkType == "player" or linkType == "BNplayer" then
 			if button == "RightButton" then
-				local name = Ambiguate(payload:match("^[^:]+"), "none")
+				local name, lineID, chatType, chatTarget
+				local parsedBnetID
+				if linkType == "BNplayer" then
+					name, parsedBnetID, lineID, chatType, chatTarget = strsplit(":", payload)
+					parsedBnetID = tonumber(parsedBnetID) or bnetID
+				else
+					name, lineID, chatType, chatTarget = strsplit(":", payload)
+				end
+				name = Ambiguate(name, "none")
 				local bn = linkType == "BNplayer"
-				MU.CreateContextMenu(frame, PlayerMenuGenerator, name, bn, bnetID)
+				MU.CreateContextMenu(frame, PlayerMenuGenerator, name, bn, parsedBnetID, lineID, chatType, chatTarget)
 			end
 			return
 		end
@@ -539,29 +592,26 @@ function ChatIM:AddMessage(partner, text, outbound, isBN, bnetID)
 	local prefix = "|cff999999" .. timestamp .. "|r"
 	local formattedText = self:FormatURLs(text)
 	local storeText = formattedText:gsub("%%", "%%%%")
-	local nameLink, colorInfo
+	local nameLink
 	if isBN then
-		nameLink = string.format("|HBNplayer:%s|h[%s]|h", partner, shortName)
-		colorInfo = outbound and ChatTypeInfo.BN_WHISPER_INFORM or ChatTypeInfo.BN_WHISPER
+		nameLink = string.format("|HBNplayer:%s:%s|h[%s]|h", partner, tostring(bnetID or ""), shortName)
 	else
 		nameLink = string.format("|Hplayer:%s|h[%s]|h", partner, shortName)
-		colorInfo = outbound and ChatTypeInfo.WHISPER_INFORM or ChatTypeInfo.WHISPER
 	end
-	local cHex = ("%02x%02x%02x"):format(colorInfo.r * 255, colorInfo.g * 255, colorInfo.b * 255)
+	local cHex = getMessageColorHex(outbound, isBN)
 
-	-- plain line (no |cff…) so embedded hyperlinks keep native colours
-	local line = string.format("%s |cff%s%s|r: |cff%s%s|r", prefix, cHex, nameLink, cHex, formattedText)
+	local line = string.format("%s %s: %s", prefix, applyMessageColor(nameLink, cHex), applyMessageColor(formattedText, cHex))
 	tab.msg:AddMessage(line)
 	local historyKey = isBN and tab.battleTag or partner
 	local storeLine
 	if isBN then
 		local nameLinkFmt
 		if outbound then
-			nameLinkFmt = "|HBNplayer:%s|h[" .. AUCTION_HOUSE_SELLER_YOU .. "]|h"
+			nameLinkFmt = "|HBNplayer:%s:" .. tostring(bnetID or "") .. "|h[" .. AUCTION_HOUSE_SELLER_YOU .. "]|h"
 		else
-			nameLinkFmt = "|HBNplayer:%s|h[%s]|h"
+			nameLinkFmt = "|HBNplayer:%s:" .. tostring(bnetID or "") .. "|h[%s]|h"
 		end
-		storeLine = string.format("%s |cff%s%s|r: |cff%s%s|r", prefix, cHex, nameLinkFmt, cHex, storeText)
+		storeLine = string.format("%s %s: %s", prefix, applyMessageColor(nameLinkFmt, cHex), applyMessageColor(storeText, cHex))
 	else
 		storeLine = line
 	end
@@ -728,7 +778,7 @@ function ChatIM:FocusConversation(sender, focusEdit)
 
 	if self.tabGroup then self.tabGroup:SelectTab(sender) end
 
-	if focusEdit then C_Timer.After(0, function()
+	if focusEdit then RunNextFrame(function()
 		local tab = ChatIM.tabs and ChatIM.tabs[sender]
 		if tab and tab.edit and tab.edit:IsShown() then tab.edit:SetFocus() end
 	end) end

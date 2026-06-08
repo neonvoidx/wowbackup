@@ -1,4 +1,4 @@
--- luacheck: globals EnhanceQoL UnitClass UnitExists UnitIsDeadOrGhost C_SpecializationInfo GetSpecializationInfo NORMAL_FONT_COLOR GAMEMENU_OPTIONS FONT_SIZE UIParent GetTime UnitOnTaxi UnitInVehicle UnitHasVehicleUI IsMounted C_SpellBook C_Timer C_Spell GetSpellTexture IsResting IsFlying
+-- luacheck: globals EnhanceQoL UnitClass UnitExists UnitIsDeadOrGhost C_SpecializationInfo GetSpecializationInfo NORMAL_FONT_COLOR GAMEMENU_OPTIONS FONT_SIZE UIParent GetTime UnitOnTaxi UnitInVehicle UnitHasVehicleUI IsMounted C_SpellBook C_Timer C_Spell GetSpellTexture IsResting IsFlying IsPlayerSpell InCombatLockdown UnitAffectingCombat C_UnitAuras AuraUtil
 local addonName, addon = ...
 local L = addon.L
 
@@ -30,7 +30,11 @@ local MAGE_PET_TALENT_ID = 31687
 local CALL_PET_SPELL_ID = 883
 local RAISE_DEAD_SPELL_ID = 46584
 local SUMMON_IMP_SPELL_ID = 688
+local GRIMOIRE_OF_SACRIFICE_SPELL_ID = 108503
+local GRIMOIRE_OF_SACRIFICE_BUFF_ID = 196099
 local DEFAULT_PET_ICON = "Interface\\Icons\\Ability_Hunter_BeastCall"
+local DB_IGNORE_PET_DEFENSIVE = "classBuffReminderIgnorePetDefensive"
+local DB_IGNORE_PET_PASSIVE = "classBuffReminderIgnorePetPassive"
 
 local PET_CLASSES = {
 	HUNTER = true,
@@ -73,6 +77,33 @@ local function ensureDB()
 	db.blinkRate = db.blinkRate or 0.7
 end
 
+local function shouldIgnorePetDefensiveReminder()
+	local reminder = addon.ClassBuffReminder
+	if reminder and reminder.ShouldIgnorePetDefensiveReminder then return reminder:ShouldIgnorePetDefensiveReminder() end
+	return addon.db and addon.db[DB_IGNORE_PET_DEFENSIVE] == true
+end
+
+local function shouldIgnorePetPassiveReminder()
+	local reminder = addon.ClassBuffReminder
+	if reminder and reminder.ShouldIgnorePetPassiveReminder then return reminder:ShouldIgnorePetPassiveReminder() end
+	return addon.db and addon.db[DB_IGNORE_PET_PASSIVE] == true
+end
+
+local function isWarlockSacrificePetReminderSuppressed()
+	local reminder = addon.ClassBuffReminder
+	if reminder and reminder.IsWarlockSacrificePetReminderSuppressed then return reminder:IsWarlockSacrificePetReminderSuppressed() end
+
+	local class = UnitClass and select(2, UnitClass("player"))
+	if class ~= "WARLOCK" then return false end
+	if C_SpellBook and C_SpellBook.IsSpellKnown and C_SpellBook.IsSpellKnown(GRIMOIRE_OF_SACRIFICE_SPELL_ID) == true then return true end
+	if IsPlayerSpell and IsPlayerSpell(GRIMOIRE_OF_SACRIFICE_SPELL_ID) == true then return true end
+	if InCombatLockdown and InCombatLockdown() then return false end
+	if UnitAffectingCombat and UnitAffectingCombat("player") then return false end
+	if C_UnitAuras and C_UnitAuras.GetPlayerAuraBySpellID and C_UnitAuras.GetPlayerAuraBySpellID(GRIMOIRE_OF_SACRIFICE_BUFF_ID) then return true end
+	if AuraUtil and AuraUtil.FindAuraBySpellID and AuraUtil.FindAuraBySpellID(GRIMOIRE_OF_SACRIFICE_BUFF_ID, "player", "HELPFUL") then return true end
+	return false
+end
+
 local function RestorePosition(frame)
 	if not db then return end
 	if db.point and db.x and db.y then
@@ -92,7 +123,7 @@ local function createAceWindow()
 	aceWindow = frame.frame
 	frame:SetTitle((addon.DataPanel and addon.DataPanel.GetStreamOptionsTitle and addon.DataPanel.GetStreamOptionsTitle(stream and stream.meta and stream.meta.title)) or GAMEMENU_OPTIONS)
 	frame:SetWidth(320)
-	frame:SetHeight(340)
+	frame:SetHeight(370)
 	frame:SetLayout("List")
 
 	frame.frame:SetScript("OnShow", function(self) RestorePosition(self) end)
@@ -147,6 +178,26 @@ local function createAceWindow()
 	end)
 	frame:AddChild(hideWhileRested)
 
+	local ignorePetPassive = AceGUI:Create("CheckBox")
+	ignorePetPassive:SetLabel(L["ClassBuffReminderIgnorePetPassive"] or "Ignore passive pet stance")
+	ignorePetPassive:SetValue(shouldIgnorePetPassiveReminder())
+	ignorePetPassive:SetCallback("OnValueChanged", function(_, _, val)
+		if addon.db then addon.db[DB_IGNORE_PET_PASSIVE] = val and true or false end
+		if addon.ClassBuffReminder and addon.ClassBuffReminder.RequestUpdate then addon.ClassBuffReminder:RequestUpdate(true, 0, true) end
+		addon.DataHub:RequestUpdate(stream)
+	end)
+	frame:AddChild(ignorePetPassive)
+
+	local ignorePetDefensive = AceGUI:Create("CheckBox")
+	ignorePetDefensive:SetLabel(L["ClassBuffReminderIgnorePetDefensive"] or "Ignore defensive pet stance")
+	ignorePetDefensive:SetValue(shouldIgnorePetDefensiveReminder())
+	ignorePetDefensive:SetCallback("OnValueChanged", function(_, _, val)
+		if addon.db then addon.db[DB_IGNORE_PET_DEFENSIVE] = val and true or false end
+		if addon.ClassBuffReminder and addon.ClassBuffReminder.RequestUpdate then addon.ClassBuffReminder:RequestUpdate(true, 0, true) end
+		addon.DataHub:RequestUpdate(stream)
+	end)
+	frame:AddChild(ignorePetDefensive)
+
 	local blinkToggle = AceGUI:Create("CheckBox")
 	blinkToggle:SetLabel(L["Blink"] or "Blink")
 	blinkToggle:SetValue(db.blinkEnabled and true or false)
@@ -181,21 +232,26 @@ local function createAceWindow()
 end
 
 local function isPetExpected()
+	local reminder = addon.ClassBuffReminder
+	if reminder and reminder.IsPetExpectedForPlayer then return reminder:IsPetExpectedForPlayer() end
+
+	local class = UnitClass and select(2, UnitClass("player"))
 	local specIndex = C_SpecializationInfo and C_SpecializationInfo.GetSpecialization and C_SpecializationInfo.GetSpecialization()
 	if specIndex and C_SpecializationInfo and C_SpecializationInfo.GetSpecializationInfo then
 		local specID = C_SpecializationInfo.GetSpecializationInfo(specIndex)
 		if specID == SPEC_FROST_MAGE then return C_SpellBook.IsSpellKnown(MAGE_PET_TALENT_ID) and true or false end
 		if specID == SPEC_MARKSMANSHIP then return C_SpellBook.IsSpellKnown(MARKS_PET_TALENT_ID) and true or false end
-		if PET_SPECS[specID] then return true end
+		if PET_SPECS[specID] then return class ~= "WARLOCK" or not isWarlockSacrificePetReminderSuppressed() end
 		return false
 	end
 
-	local class = UnitClass and select(2, UnitClass("player"))
 	if class == "MAGE" then return C_SpellBook.IsSpellKnown(MAGE_PET_TALENT_ID) and true or false end
 	if class == "HUNTER" then return C_SpellBook.IsSpellKnown(MARKS_PET_TALENT_ID) and true or false end
+	if class == "WARLOCK" then return not isWarlockSacrificePetReminderSuppressed() end
 	if class and PET_CLASSES[class] then return true end
 	return false
 end
+
 
 local function hasActivePet()
 	if not UnitExists or not UnitExists("pet") then return false end
@@ -204,6 +260,9 @@ local function hasActivePet()
 end
 
 local function isPetSuppressed()
+	local reminder = addon.ClassBuffReminder
+	if reminder and reminder.IsPetReminderSuppressed then return reminder:IsPetReminderSuppressed() end
+
 	if UnitIsDeadOrGhost and UnitIsDeadOrGhost("player") then return true end
 	if IsMounted and IsMounted() then return true end
 	if UnitHasVehicleUI and UnitHasVehicleUI("player") then return true end
@@ -211,6 +270,29 @@ local function isPetSuppressed()
 	if UnitOnTaxi and UnitOnTaxi("player") then return true end
 	if IsFlying and IsFlying() then return true end
 	return false
+end
+
+local function getPetReminderState()
+	local reminder = addon.ClassBuffReminder
+	if reminder and reminder.IsPetExpectedForPlayer and not reminder:IsPetExpectedForPlayer() then return nil end
+	if reminder and reminder.IsPetReminderSuppressed and reminder:IsPetReminderSuppressed() then return nil end
+
+
+	if not hasActivePet() then
+		return "missing", L["ClassBuffReminderPetMissing"] or L["Pet Missing"] or "Pet Missing", reminder and reminder.GetPetReminderIcon and reminder:GetPetReminderIcon("missing") or DEFAULT_PET_ICON
+	end
+
+	if reminder and reminder.GetPetStance and reminder.petTracking then
+		local stance = reminder:GetPetStance()
+		if stance == reminder.petTracking.stancePassive and not shouldIgnorePetPassiveReminder() then
+			return "passive", L["ClassBuffReminderPetPassive"] or "Pet Passive", reminder:GetPetReminderIcon("passive")
+		end
+		if stance == reminder.petTracking.stanceDefensive and not shouldIgnorePetDefensiveReminder() then
+			return "defensive", L["ClassBuffReminderPetDefensive"] or "Pet Defensive", reminder:GetPetReminderIcon("defensive")
+		end
+	end
+
+	return nil
 end
 
 local floor = math.floor
@@ -385,7 +467,8 @@ local function update(stream)
 		return
 	end
 
-	if not editModeActive and (hasActivePet() or isPetSuppressed()) then
+	local state, text, icon = getPetReminderState()
+	if not editModeActive and (not state or isPetSuppressed()) then
 		hideSnapshot(stream.snapshot)
 		resetBlink(stream)
 		return
@@ -407,11 +490,11 @@ local function update(stream)
 		resetBlink(stream)
 	end
 
-	local text = L["Pet Missing"] or "Pet Missing"
+	text = text or L["Pet Missing"] or "Pet Missing"
 	local hex = colorToHex(db.textColor)
 	local coloredText = format("|cff%s%s|r", hex, text)
 	if db.showIcon then
-		local partsPayload = buildReminderParts(coloredText, getReminderIconTexture(), db.fontSize or 14)
+		local partsPayload = buildReminderParts(coloredText, icon or DEFAULT_PET_ICON, db.fontSize or 14)
 		stream.snapshot.parts = partsPayload.parts
 		stream.snapshot.partsLayout = partsPayload.partsLayout
 		stream.snapshot.partSpacing = partsPayload.partSpacing

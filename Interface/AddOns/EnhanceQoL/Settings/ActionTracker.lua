@@ -136,6 +136,10 @@ local cUI = addon.SettingsLayout.rootUI
 
 local expandable = addon.functions.SettingsCreateExpandableSection(cUI, {
 	name = L["ActionTracker"] or "Action Tracker",
+	configPageKey = "ActionTracker",
+	iconKey = "actiontracker",
+	description = L["configCenterPageDescActionTracker"]
+		or "Show your recently used spells as a movable icon history with size, direction and fade options in Edit Mode.",
 	expanded = false,
 	colorizeTitle = false,
 })

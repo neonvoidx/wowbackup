@@ -4,6 +4,57 @@ ns.Addon = CooldownManagerCentered
 local L = LibStub("AceLocale-3.0"):GetLocale("CooldownManagerCentered")
 ns.L = L
 
+ns.CONSTANTS = ns.CONSTANTS or {}
+ns.CONSTANTS.DEFAULT_ACTIVE_SWIPE_COLOR = {
+    r = 1,
+    g = 0.95,
+    b = 0.57,
+    a = 0.69,
+}
+ns.CONSTANTS.DEFAULT_COOLDOWN_SWIPE_COLOR = {
+    r = 0,
+    g = 0,
+    b = 0,
+    a = 0.69,
+}
+
+ns.CONSTANTS.ORIGINAL_SIZES_CONFIG = {
+    Essential = { width = 50, height = 50 },
+    Utility = { width = 30, height = 30 },
+    UtilityNormalized = { width = 50, height = 50 },
+    BuffIcons = { width = 40, height = 40 },
+    BuffBarIcons = { width = 30, height = 30 },
+    CustomTracker = { width = 50, height = 50 },
+}
+ns.CONSTANTS.DEFAULT_FONT_PATH = "Fonts\\FRIZQT__.TTF"
+ns.CONSTANTS.DEFAULT_STACK_FONT_PATH = "Fonts\\ARIALN.TTF"
+
+ns.CONSTANTS.FONT = {
+    BUFF_ICON_DEFAULT_COOLDOWN_FONT_PATH = ns.CONSTANTS.DEFAULT_FONT_PATH,
+    BUFF_ICON_DEFAULT_COOLDOWN_FONT_SIZE = 16,
+    BUFF_ICON_DEFAULT_STACK_FONT_PATH = ns.CONSTANTS.DEFAULT_STACK_FONT_PATH,
+    BUFF_ICON_DEFAULT_STACK_FONT_SIZE = 14,
+    BUFF_ICON_DEFAULT_STACK_POINT = "BOTTOMRIGHT",
+    BUFF_ICON_DEFAULT_STACK_OFFSET_X = -2,
+    BUFF_ICON_DEFAULT_STACK_OFFSET_Y = 2,
+
+    ESSENTIAL_ICON_DEFAULT_COOLDOWN_FONT_PATH = ns.CONSTANTS.DEFAULT_FONT_PATH,
+    ESSENTIAL_ICON_DEFAULT_COOLDOWN_FONT_SIZE = 20,
+    ESSENTIAL_ICON_DEFAULT_STACK_FONT_PATH = ns.CONSTANTS.DEFAULT_STACK_FONT_PATH,
+    ESSENTIAL_ICON_DEFAULT_STACK_FONT_SIZE = 14,
+    ESSENTIAL_ICON_DEFAULT_STACK_POINT = "BOTTOMRIGHT",
+    ESSENTIAL_ICON_DEFAULT_STACK_OFFSET_X = -2,
+    ESSENTIAL_ICON_DEFAULT_STACK_OFFSET_Y = 2,
+
+    UTILITY_ICON_DEFAULT_COOLDOWN_FONT_PATH = ns.CONSTANTS.DEFAULT_FONT_PATH,
+    UTILITY_ICON_DEFAULT_COOLDOWN_FONT_SIZE = 12,
+    UTILITY_ICON_DEFAULT_STACK_FONT_PATH = ns.CONSTANTS.DEFAULT_STACK_FONT_PATH,
+    UTILITY_ICON_DEFAULT_STACK_FONT_SIZE = 12,
+    UTILITY_ICON_DEFAULT_STACK_POINT = "BOTTOMRIGHT",
+    UTILITY_ICON_DEFAULT_STACK_OFFSET_X = -2,
+    UTILITY_ICON_DEFAULT_STACK_OFFSET_Y = 2,
+}
+
 -- Default Settings
 ns.DEFAULT_SETTINGS = {
     profile = {
@@ -35,18 +86,18 @@ ns.DEFAULT_SETTINGS = {
 
         cooldownManager_stackAnchorEssential_enabled = false,
         cooldownManager_stackAnchorEssential_point = "BOTTOMRIGHT",
-        cooldownManager_stackAnchorEssential_offsetX = 0,
-        cooldownManager_stackAnchorEssential_offsetY = 0,
+        cooldownManager_stackAnchorEssential_offsetX = -2,
+        cooldownManager_stackAnchorEssential_offsetY = 2,
 
         cooldownManager_stackAnchorUtility_enabled = false,
         cooldownManager_stackAnchorUtility_point = "BOTTOMRIGHT",
-        cooldownManager_stackAnchorUtility_offsetX = 0,
-        cooldownManager_stackAnchorUtility_offsetY = 0,
+        cooldownManager_stackAnchorUtility_offsetX = -2,
+        cooldownManager_stackAnchorUtility_offsetY = 2,
 
         cooldownManager_stackAnchorBuffIcons_enabled = false,
         cooldownManager_stackAnchorBuffIcons_point = "BOTTOMRIGHT",
-        cooldownManager_stackAnchorBuffIcons_offsetX = 0,
-        cooldownManager_stackAnchorBuffIcons_offsetY = 0,
+        cooldownManager_stackAnchorBuffIcons_offsetX = -2,
+        cooldownManager_stackAnchorBuffIcons_offsetY = 2,
 
         -- Square Icons Styling
         cooldownManager_squareIcons_Essential = false,
@@ -98,31 +149,22 @@ ns.DEFAULT_SETTINGS = {
         -- Icon Size Normalization
         cooldownManager_normalizeUtilitySize = false,
 
-        cooldownManager_visibility_enabled_rules = {},
-        cooldownManager_visibility_enabled_viewers = {
-            ["BuffIconCooldownViewer"] = true,
-            ["BuffBarCooldownViewer"] = true,
-            ["EssentialCooldownViewer"] = true,
-            ["UtilityCooldownViewer"] = true,
-            ["CMCTracker1"] = true,
-            ["CMCTracker2"] = true,
-        },
+        -- Per-viewer visibility rules (populated by CMCVisibility:MigrateSettings on first load).
+        -- Intentionally absent from defaults so migration can detect first-run and copy old settings.
+        -- cooldownManager_visibility_perViewer = {},
 
         cooldownManager_customSwipeColor_enabled = false,
-        cooldownManager_customActiveColor_r = 1,
-        cooldownManager_customActiveColor_g = 0.95,
-        cooldownManager_customActiveColor_b = 0.57,
-        cooldownManager_customActiveColor_a = 0.69,
-        cooldownManager_customCDSwipeColor_r = 0,
-        cooldownManager_customCDSwipeColor_g = 0,
-        cooldownManager_customCDSwipeColor_b = 0,
-        cooldownManager_customCDSwipeColor_a = 0.69,
+        cooldownManager_customActiveColor_r = ns.CONSTANTS.DEFAULT_ACTIVE_SWIPE_COLOR.r,
+        cooldownManager_customActiveColor_g = ns.CONSTANTS.DEFAULT_ACTIVE_SWIPE_COLOR.g,
+        cooldownManager_customActiveColor_b = ns.CONSTANTS.DEFAULT_ACTIVE_SWIPE_COLOR.b,
+        cooldownManager_customActiveColor_a = ns.CONSTANTS.DEFAULT_ACTIVE_SWIPE_COLOR.a,
+        cooldownManager_customCDSwipeColor_r = ns.CONSTANTS.DEFAULT_COOLDOWN_SWIPE_COLOR.r,
+        cooldownManager_customCDSwipeColor_g = ns.CONSTANTS.DEFAULT_COOLDOWN_SWIPE_COLOR.g,
+        cooldownManager_customCDSwipeColor_b = ns.CONSTANTS.DEFAULT_COOLDOWN_SWIPE_COLOR.b,
+        cooldownManager_customCDSwipeColor_a = ns.CONSTANTS.DEFAULT_COOLDOWN_SWIPE_COLOR.a,
 
         cooldownManager_desaturate_under_aura = false,
         cooldownManager_hide_gcd = false,
-
-        cooldownManager_experimental_layoutOptimizations = false,
-        cooldownManager_experimental_disablePerSpellSettings = false,
 
         cooldownManager_experimental_glow_style = "DEFAULT",
         cooldownManager_experimental_glow_custom_color = false,
@@ -144,6 +186,8 @@ ns.DEFAULT_SETTINGS = {
         trinketRacialTracker_squareIcons = false,
         trinketRacialTracker_borderThickness = 1,
         trinketRacialTracker_iconZoom = 0.3,
+        trinketRacialTracker_rectangularIcons = false,
+        trinketRacialTracker_rectangularIcons_percent = 0.8,
         trinketRacialTracker_stackAnchor = "BOTTOMRIGHT",
         trinketRacialTracker_stackFontSize = 14,
         trinketRacialTracker_stackOffsetX = -1,

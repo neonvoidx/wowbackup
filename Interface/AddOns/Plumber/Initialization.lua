@@ -1,5 +1,5 @@
-local VERSION_TEXT = "1.9.0 e";
-local VERSION_DATE = 1775800000;
+local VERSION_TEXT = "1.9.2 d";
+local VERSION_DATE = 1780400000;
 
 
 local addonName, addon = ...
@@ -246,6 +246,7 @@ local DefaultValues = {
 	CatalystUI = true,					--Allow Ctrl-Click to preview items in Dressing Room for UIs that don't natively support this action
 	HuntTable = true,					--Replace generic quest icons with difficulties and add achievement indicators.
 	PreyQuestSuperTrack = true,			--During the final stage, clicking the Prey widget also super track the target location.
+	BlizzFixActionBarArt = true,		--Fix Action Bar Art Reappears After Hide/Show UI
 
 
 	--Tooltip
@@ -258,6 +259,7 @@ local DefaultValues = {
 	TooltipItemQuest = true,            --Show the quest of quest starting items in bags
 	TooltipTransmogEnsemble = true,     --A Raid Ensemble now unlocks outfits (tints) from 4 difficulties, but the default UI only gives one
 	TooltipRichSoil = true,             --Show QuickSlot for seeds when double click on Rich Soil (Midnight Herbalism)
+	TooltipVendorLocation = false,		--Show where you can turn in the tokens in exchange for other rewards
 
 
 	--Reduction
@@ -296,7 +298,7 @@ local DefaultValues = {
 		LootUI_UseCustomColor = false,
 		LootUI_GrowUpwards = false,
 		LootUI_WindowHide = false,
-		LootUI_CombineItems = false,
+		LootUI_CombineItem = true,
 		LootUI_LowFrameStrata = false,
 		LootUI_HideTitle = false,
 		LootUI_ShowReputation = false,
@@ -567,6 +569,8 @@ do
 	addon.IS_CLASSIC = C_AddOns.GetAddOnMetadata(addonName, "X-Flavor") ~= "retail";
 
 	addon.IS_MOP = C_AddOns.GetAddOnMetadata(addonName, "X-Expansion") == "MOP";
+
+	addon.IS_12_0_7 = IsToCVersionEqualOrNewerThan(120007);
 
 
 	function addon.GetLastLoginTime()

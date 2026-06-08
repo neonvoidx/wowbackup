@@ -1928,18 +1928,19 @@ end
 
 function BBP.HookNameplatePosition(frame, nameplate)
     if not BetterBlizzPlatesDB.enableNpVerticalPos then return end
-    if frame.verticalPositionTweak then return end
+    if BBP.verticalPositionTweak then return end
     --if UnitIsUnit(frame.unit, "player") then return end
-    frame.verticalPositionTweak = true
-    hooksecurefunc(frame.HealthBarsContainer, "SetHeight", function(self)
+    BBP.verticalPositionTweak = true
+    hooksecurefunc(NamePlateUnitFrameMixin, "UpdateAnchors", function(self)
         if SettingsPanel:IsShown() then return end
         if self:IsForbidden() then return end
-        --if frame.unit and UnitIsUnit(frame.unit, "player") then return end
-        frame:ClearPoint("BOTTOMLEFT")
-        frame:SetPoint("BOTTOMLEFT", nameplate, "BOTTOMLEFT", BetterBlizzPlatesDB.nameplateHorizontalPosition or 0, BetterBlizzPlatesDB.nameplateVerticalPosition or 0)
+        --if self.unit and UnitIsUnit(self.unit, "player") then return end
+        --C_Timer.After(0, function()
+            if not frame or frame:IsForbidden() then return end
+            frame:ClearPoint("BOTTOMLEFT")
+            frame:SetPoint("BOTTOMLEFT", nameplate, "BOTTOMLEFT", BetterBlizzPlatesDB.nameplateHorizontalPosition or 0, BetterBlizzPlatesDB.nameplateVerticalPosition or 0)
+        --end)
     end)
-    -- if not SettingsPanel:IsShown() then
-    -- end
     frame:ClearPoint("BOTTOMLEFT")
     frame:SetPoint("BOTTOMLEFT", nameplate, "BOTTOMLEFT", BetterBlizzPlatesDB.nameplateHorizontalPosition or 0, BetterBlizzPlatesDB.nameplateVerticalPosition or 0)
 end
@@ -2088,30 +2089,39 @@ end
 
 --#################################################################################################
 -- Set custom healthbar texture
+local function applyExtraBarTexture(tex, setting)
+    if not tex then return end
+    if not tex.bbpTextureHooked then
+        tex.bbpTextureHooked = true
+        hooksecurefunc(tex, "SetTexture", function(self)
+            if self.changingTexture then return end
+            if self.bbpTexture then
+                self.changingTexture = true
+                self:SetTexture(self.bbpTexture)
+                self.changingTexture = false
+            end
+        end)
+    end
+    tex.bbpTexture = setting
+    tex.changingTexture = true
+    tex:SetTexture(setting)
+    tex.changingTexture = false
+end
+
 local function textureExtraBars(frame, setting)
     local extraBars = BetterBlizzPlatesDB.useCustomTextureForExtraBars
     if extraBars then
-        if frame.otherHealPrediction then
-            frame.otherHealPrediction:SetTexture(setting)
-        end
-        if frame.myHealPrediction then
-            frame.myHealPrediction:SetTexture(setting)
-        end
-        if frame.totalAbsorb then
-            frame.totalAbsorb:SetTexture(setting)
-        end
-        if frame.ManaCostPredictionBar then
-            frame.ManaCostPredictionBar:SetTexture(setting)
-        end
+        applyExtraBarTexture(frame.otherHealPrediction, setting)
+        applyExtraBarTexture(frame.myHealPrediction, setting)
+        applyExtraBarTexture(frame.totalAbsorb, setting)
+        applyExtraBarTexture(frame.ManaCostPredictionBar, setting)
         if frame.FeedbackFrame then
-            frame.FeedbackFrame.BarTexture:SetTexture(setting)
+            applyExtraBarTexture(frame.FeedbackFrame.BarTexture, setting)
+            applyExtraBarTexture(frame.FeedbackFrame.GainGlowTexture, setting)
+            applyExtraBarTexture(frame.FeedbackFrame.LossGlowTexture, setting)
         end
-        if frame.myHealAbsorb then
-            frame.myHealAbsorb:SetTexture(setting)
-        end
-        -- if frame.totalAbsorbOverlay then
-        --     frame.totalAbsorbOverlay:SetTexture(setting)
-        -- end
+        applyExtraBarTexture(frame.myHealAbsorb, setting)
+        -- applyExtraBarTexture(frame.totalAbsorbOverlay, setting)
     end
 end
 
@@ -2229,7 +2239,7 @@ function BBP.ApplyCustomTextureToNameplate(frame)
             textureExtraBars(frame, config.customTexture)
         elseif BBP.needsUpdate then
             frame.healthBar:SetStatusBarTexture(defaultTex)
-            textureExtraBars(frame, defaultTex)
+            textureExtraBars(frame, "Interface/TargetingFrame/UI-TargetingFrame-BarFill")
         end
     elseif info.isFriend then
         if config.useCustomTextureForFriendly then
@@ -2237,20 +2247,20 @@ function BBP.ApplyCustomTextureToNameplate(frame)
             textureExtraBars(frame, config.customTextureFriendly)
         elseif BBP.needsUpdate then
             frame.healthBar:SetStatusBarTexture(defaultTex)
-            textureExtraBars(frame, defaultTex)
+            textureExtraBars(frame, "Interface/TargetingFrame/UI-TargetingFrame-BarFill")
         else
             frame.healthBar:SetStatusBarTexture(defaultTex)
-            textureExtraBars(frame, defaultTex)
+            textureExtraBars(frame, "Interface/TargetingFrame/UI-TargetingFrame-BarFill")
         end
     elseif BBP.needsUpdate then--or info.wasFocus or info.wasTarget then
         frame.healthBar:SetStatusBarTexture(defaultTex)
-        textureExtraBars(frame, defaultTex)
+        textureExtraBars(frame, "Interface/TargetingFrame/UI-TargetingFrame-BarFill")
         if not config.useCustomTextureForSelfMana then
             ClassNameplateManaBarFrame:SetStatusBarTexture(defaultTex)
         end
     else
         frame.healthBar:SetStatusBarTexture(defaultTex)
-        textureExtraBars(frame, defaultTex)
+        textureExtraBars(frame, "Interface/TargetingFrame/UI-TargetingFrame-BarFill")
     end
 end
 
@@ -2512,6 +2522,10 @@ local function SetCVarsOnLogin()
 
         if BetterBlizzPlatesDB.nameplateDebuffPadding then
             C_CVar.SetCVar("nameplateDebuffPadding", BetterBlizzPlatesDB.nameplateDebuffPadding)
+        end
+
+        if BetterBlizzPlatesDB.nameplateSimplifiedScale then
+            C_CVar.SetCVar("nameplateSimplifiedScale", BetterBlizzPlatesDB.nameplateSimplifiedScale)
         end
 
         if BetterBlizzPlatesDB.fixedNameplateStyle and BetterBlizzPlatesDB.nameplateStyle then
@@ -3691,6 +3705,14 @@ end
 
 --################################################################################################
 -- Color NPCs
+local casters = {
+    ["PRIEST"] = true,
+    ["MAGE"] = true,
+    ["WARLOCK"] = true,
+    ["SHAMAN"] = true,
+    ["PALADIN"] = true,
+    ["DRUID"] = true,
+}
 function BBP.ColorNpcHealthbar(frame)
     if not BBP.isInPvE and not BetterBlizzPlatesDB.colorNPCEverywhere then return end
     if not frame or not frame.unit then return end
@@ -3706,7 +3728,7 @@ function BBP.ColorNpcHealthbar(frame)
     if classification == "elite" then
         if lvl == playerLvl then
             local class = UnitClassBase(frame.unit)
-            if class == "PALADIN" then
+            if casters[class] then
                 config.npcHealthbarColor = db.npcColorCaster
             else
                 config.npcHealthbarColor = db.npcColorMelee
@@ -3720,7 +3742,7 @@ function BBP.ColorNpcHealthbar(frame)
                 config.npcHealthbarColor = db.npcColorBoss
             else
                 local class = UnitClassBase(frame.unit)
-                if class == "PALADIN" then
+                if casters[class] then
                     config.npcHealthbarColor = db.npcColorCaster
                 else
                     config.npcHealthbarColor = nil
@@ -4515,8 +4537,8 @@ function BBP.ChangeRaidmarker()
 end
 
 function BBP.RefUnitAuraTotally(unitFrame)
-    local unit = unitFrame.unit
-    BBP.UpdateBuffs(unitframe.AurasFrame, unit, nil, {}, unitFrame)
+    --local unit = unitFrame.unit
+    --BBP.UpdateBuffs(unitFrame.AurasFrame, unit, nil, {}, unitFrame)
 end
 
 local auraModuleIsOn = false
@@ -5024,6 +5046,7 @@ local function HideFriendlyHealthbar(frame)
                 frame.HealthBarsContainer:SetAlpha(0)
                 frame.HealthBarsContainer.alphaZero = true
                 frame.selectionHighlight:SetAlpha(0)
+                frame.AurasFrame:SetAlpha(0)
             else
                 frame.HealthBarsContainer:SetAlpha(1)
                 frame.HealthBarsContainer.alphaZero = false
@@ -5347,6 +5370,10 @@ function BBP.RepositionName(frame)
         else
             frame.name:SetPoint(db.fakeNameAnchor, frame.healthBar, db.fakeNameAnchorRelative, db.fakeNameXPos, db.fakeNameYPos + 4)
         end
+        if BetterBlizzPlatesDB.fakeNameMaxWidthOn then
+            frame.name:SetWidth(BetterBlizzPlatesDB.fakeNameMaxWidth)
+            frame.name:SetJustifyH(nameJustify[BetterBlizzPlatesDB.fakeNameAnchor] or "CENTER")
+        end
         frame.name.changing = false
     end
     if not frame.nameHooked then
@@ -5357,11 +5384,6 @@ function BBP.RepositionName(frame)
         frame.nameHooked = true
     end
     RepositionName(frame)
-
-    if config.fakeNameMaxWidthOn then
-        frame.name:SetWidth(config.fakeNameMaxWidth)
-        frame.name:SetJustifyH(nameJustify[config.fakeNameAnchor] or "CENTER")
-    end
 
     if config.fakeNameRaiseStrata then
         if not frame.newNameParent then
@@ -5393,7 +5415,7 @@ local function GetNPCTitle(unit)
 
     for i = 2, hiddenTooltip:NumLines() do
         local text = _G["HiddenTooltipTextLeft" .. i]:GetText()
-        if text then
+        if text and not issecretvalue(text) then
             if text:find(levelPattern) then
                 levelFound = true
                 break
@@ -5669,6 +5691,7 @@ local function UpdateLevelFrame(frame)
         frame.bbfLevelFrame.text:SetTextColor(color.r, color.g, color.b)
 
         frame.bbfLevelFrame:Show()
+        frame.bbfLevelFrame:SetScale(BetterBlizzPlatesDB.levelFrameScale or 1)
         frame.bbfLevelFrame.text:Show()
 
         if unitLevel == -1 then
@@ -5890,6 +5913,17 @@ local HEALER_SPEC_IDS = {
 -- Table to store localized specialization names -> spec ID
 local function GetLocalizedSpecs()
     local specs = {}
+    -- esMX uses "Class Spec" order in tooltips, opposite of others
+    local locale = GetLocale()
+    local classFirst = (locale == "esMX")
+
+    local function AddSpec(specName, className, specID)
+        if classFirst then
+            specs[string.format("%s %s", className, specName)] = specID
+        else
+            specs[string.format("%s %s", specName, className)] = specID
+        end
+    end
 
     for classID = 1, GetNumClasses() do
         local _, class = GetClassInfo(classID)
@@ -5900,10 +5934,10 @@ local function GetLocalizedSpecs()
             local specID, specName = GetSpecializationInfoForClassID(classID, specIndex)
 
             if classMale then
-                specs[string.format("%s %s", specName, classMale)] = specID
+                AddSpec(specName, classMale, specID)
             end
             if classFemale and classFemale ~= classMale then
-                specs[string.format("%s %s", specName, classFemale)] = specID
+                AddSpec(specName, classFemale, specID)
             end
         end
     end
@@ -5911,7 +5945,7 @@ local function GetLocalizedSpecs()
     -- Blizzard API poopoo. Not possible to get gendered specNames AFAIK.
     -- And some classes were even missing from LOCALIZED_CLASS_NAMES_MALE and LOCALIZED_CLASS_NAMES_FEMALE
     -- Thanks to Dardo7 @ Discord for helping get all the correct Spanish data.
-    if GetLocale() == "esES" then
+    if locale == "esES" or locale == "esMX" then
         local esES_overrides = {
             ["Armas Guerrero"] = 71,
             ["Armas Guerrera"] = 71,
@@ -5996,7 +6030,44 @@ local function GetLocalizedSpecs()
             ["Aumento Evocador"] = 1473,
             ["Aumento Evocadora"] = 1473,
         }
+
+        local esClassNames = {
+            "Caballero de la Muerte", "Caballera de la Muerte",
+            "Cazador de demonios", "Cazadora de demonios",
+            "Sacerdotisa", "Sacerdote",
+            "Evocadora", "Evocador",
+            "Cazadora", "Cazador",
+            "Guerrera", "Guerrero",
+            "Paladín",
+            "Pícara", "Pícaro",
+            "Chamán",
+            "Maga", "Mago",
+            "Bruja", "Brujo",
+            "Monje",
+            "Druida",
+        }
+
         for k, v in pairs(esES_overrides) do
+            if classFirst then
+                -- Swap "Spec Class" -> "Class Spec" for esMX
+                local swapped
+                for _, className in ipairs(esClassNames) do
+                    local specPart = k:match("^(.-)%s+" .. className .. "$")
+                    if specPart then
+                        swapped = className .. " " .. specPart
+                        break
+                    end
+                end
+                specs[swapped or k] = v
+            else
+                specs[k] = v
+            end
+        end
+    elseif locale == "ruRU" then
+        local ruRU_overrides = {
+            ["Хранительница Пробудительница"] = 1468,
+        }
+        for k, v in pairs(ruRU_overrides) do
             specs[k] = v
         end
     end
@@ -6023,11 +6094,13 @@ local function GetSpecID(frame)
     local guid = UnitGUID(frame.unit)
     if issecretvalue(guid) then
         if BBP.isInArena then
-            local i = BBP.GetArenaIndexByFrame(frame)
-            if i then
-                local specID = GetArenaOpponentSpec(i)
-                if specID then
-                    return specID
+            for i = 1, 3 do
+                local arenaUnit = "arena"..i
+                if BBP.UnitIsProbablyUnit(frame.unit, arenaUnit) then
+                    local specID = GetArenaOpponentSpec(i)
+                    if specID then
+                        return specID
+                    end
                 end
             end
         end
@@ -6075,11 +6148,13 @@ local function IsSpecHealer(frame)
     local guid = UnitGUID(unit)
     if issecretvalue(guid) then
         if BBP.isInArena then
-            local i = BBP.GetArenaIndexByFrame(frame)
-            if i then
-                local specID = GetArenaOpponentSpec(i)
-                if specID then
-                    return HEALER_SPEC_IDS[specID] or false
+            for i = 1, 3 do
+                local arenaUnit = "arena"..i
+                if BBP.UnitIsProbablyUnit(frame.unit, arenaUnit) then
+                    local specID = GetArenaOpponentSpec(i)
+                    if specID then
+                        return HEALER_SPEC_IDS[specID] or false
+                    end
                 end
             end
         end
@@ -6332,7 +6407,6 @@ local function HandleNamePlateAdded(unit)
 
     --print("1: ", frame:GetFrameLevel(), nameplate:GetFrameLevel())
     -- Get settings and unitInfo
-    frame.HealthBarsContainer.healthBar.selectedBorder:SetVertexColor(0.98, 0.98, 0.98, 1)
     local config = InitializeNameplateSettings(frame)
     local info = GetNameplateUnitInfo(frame, unit)
     if not info then return end
@@ -6369,6 +6443,21 @@ local function HandleNamePlateAdded(unit)
         local castTexture = newBar:GetStatusBarTexture()
         if not BetterBlizzPlatesDB.classicNameplates and not BetterBlizzPlatesDB.classicRetailNameplates then
             BBP.ApplyMidnightMask(frame, castTexture)
+        end
+
+        local totalAbsorbOverlay = frame.HealthBarsContainer.healthBar.totalAbsorbOverlay
+        if totalAbsorbOverlay and not totalAbsorbOverlay:IsForbidden() and not totalAbsorbOverlay.bbpRetextured then
+            totalAbsorbOverlay:SetTexture("Interface\\RaidFrame\\Shield-Overlay", "REPEAT", "REPEAT")
+            totalAbsorbOverlay:SetHorizTile(true)
+            totalAbsorbOverlay:SetVertTile(true)
+            totalAbsorbOverlay:SetVertexColor(1, 1, 1, 1)
+            totalAbsorbOverlay.bbpRetextured = true
+        end
+
+        if frame.totalAbsorb and not frame.totalAbsorb:IsForbidden() and not frame.totalAbsorb.bbpMidnightMasked then
+            BBP.ApplyMidnightMask(frame, frame.totalAbsorb)
+            frame.totalAbsorb:SetVertexColor(1, 1, 1, 1)
+            frame.totalAbsorb.bbpMidnightMasked = true
         end
 
         -- BPP.isMidnight temp nameplate tweaks
@@ -6454,6 +6543,17 @@ local function HandleNamePlateAdded(unit)
                 frame.castBar:Hide()
             end
         end
+    end
+
+    SmallPetsInPvP(frame)
+
+    local hpWidth = frame.HealthBarsContainer:GetWidth()
+    local hpHeight = frame.healthBar:GetHeight()
+    if not issecretvalue(hpWidth) then
+        frame.lastKnownHpWidth = hpWidth
+    end
+    if not issecretvalue(hpHeight) then
+        frame.lastKnownHpHeight = hpHeight
     end
 
     if info.isFocus then
@@ -6608,6 +6708,10 @@ local function HandleNamePlateAdded(unit)
     -- Color NPC
     if config.colorNPC then BBP.ColorNpcHealthbar(frame) end
 
+    if ( BetterBlizzPlatesDB.enemyColorThreat and (BBP.isInPvE or (BetterBlizzPlatesDB.threatColorAlwaysOn and not BBP.isInPvP)) ) then
+        BBP.ColorThreat(frame)
+    end
+
     -- Show main hunter/lock pet icon
     if config.petIndicator then BBP.PetIndicator(frame) end
 
@@ -6625,8 +6729,6 @@ local function HandleNamePlateAdded(unit)
 
     -- Show Focus Target Indicator
     if config.focusTargetIndicator then BBP.FocusTargetIndicator(frame) end
-
-    SmallPetsInPvP(frame)
 
     -- Name repositioning
     if config.useFakeName then BBP.RepositionName(frame) end
@@ -7025,64 +7127,6 @@ function BBP.ConsolidatedUpdateName(frame)
 
     --frame.name:SetFontHeight(cachedNameSize)
 
-    if info.isSelf then
-        if config.personalBarTweaks then
-            frame.name:Show()
-            frame.name:SetIgnoreParentScale(true)
-            frame.name:SetScale(BetterBlizzPlatesDB.friendlyNameScale+0.34)
-            local rpDB = TRP3_Configuration
-            if rpDB then
-                if rpDB.NamePlates_CustomizeNames then
-                    local rpNamesFull = rpDB.NamePlates_CustomizeNames == 1
-                    local rpNamesFirst = rpDB.NamePlates_CustomizeNames == 2
-                    local rpNamesLast = rpDB.NamePlates_CustomizeNames == 3
-                    if rpNamesFull then
-                        rpNamesFirst = true
-                        rpNamesLast = true
-                    end
-                    SetRPName(frame.name, "player", rpNamesFirst, rpNamesLast)
-                    -- first name == 2
-                    -- both == 1
-                    -- last == 3?
-                end
-                if rpDB.NamePlates_CustomizeNameColors then
-                    local r,g,b = GetRPNameColor("player")
-                    if r then
-                        frame.name:SetVertexColor(r,g,b)
-                    else
-                        local friendlyColorName = BetterBlizzPlatesDB.friendlyColorName
-                        local friendlyClassColorName = BetterBlizzPlatesDB.friendlyClassColorName
-                        if friendlyClassColorName then
-                            local _, class = UnitClass(frame.unit)
-                            local classColor = RAID_CLASS_COLORS[class]
-                            frame.name:SetVertexColor(classColor.r, classColor.g, classColor.b)
-                        elseif friendlyColorName then
-                            frame.name:SetVertexColor(unpack(BetterBlizzPlatesDB.friendlyColorNameRGB))
-                        else
-                            frame.name:SetVertexColor(1, 1, 0)
-                        end
-                    end
-                end
-                return
-            else
-                frame.name:SetText(UnitName("player"))
-            end
-
-            -- local isEnemy, isFriend, isNeutral = BBP.GetUnitReaction(frame.unit)
-            -- if ((isEnemy or isNeutral) and enemyClassColorName) or (isFriend and friendlyClassColorName) then
-            --     local _, class = UnitClass(frame.unit)
-            --     local classColor = RAID_CLASS_COLORS[class]
-            --     frame.name:SetVertexColor(classColor.r, classColor.g, classColor.b)
-            -- elseif ((isEnemy or isNeutral) and enemyColorName) or (isFriend and friendlyColorName) then
-            --     local color = isEnemy and BetterBlizzPlatesDB.enemyColorNameRGB or BetterBlizzPlatesDB.friendlyColorNameRGB
-            --     frame.name:SetVertexColor(unpack(color))
-            -- end
-
-        else
-            return
-        end
-    end
-
     -- Class color and scale names depending on their reaction
     BBP.ClassColorAndScaleNames(frame)
     -- BBP.isMidnight
@@ -7377,7 +7421,6 @@ local function CheckIfInInstance(self, event, ...)
         if event ~= "ZONE_CHANGED" then
             SpecCache = {}
             SetNameplateBehavior()
-            BBP.fistweaverFound = nil
         end
         if BetterBlizzPlatesDB.factionIndicator then
             for _, nameplate in pairs(C_NamePlate.GetNamePlates()) do
@@ -7858,6 +7901,8 @@ local function TurnOnEnabledFeaturesOnLogin()
     --BBP.DruidBlueComboPoints() isMidnight
     BBP.DruidAlwaysShowCombos()
     EnableMouseoverChecker()
+
+    BBP.SetupClassIndicatorCCAuraListener()
 end
 
 
@@ -8811,10 +8856,10 @@ function BBP.NameplateAuraTweaksTemp()
             auraFrame.bbpPixelBorderApplied = nil
         end
 
-        if auraFrame.Cooldown then
-            local r1 = auraFrame.Cooldown:GetRegions()
-            if r1 and r1.GetObjectType and r1:GetObjectType() == "FontString" then
-                r1:SetScale(cdTextSize)
+        if auraFrame.Cooldown and not auraFrame.Cooldown.tullaCTC then
+            local cdText = auraFrame.Cooldown:GetCountdownFontString()
+            if cdText then
+                cdText:SetScale(cdTextSize)
             end
         end
 
@@ -9064,7 +9109,14 @@ function BBP.NameplateAuraTweaksTemp()
     end)
 end
 
-
+-- Fix Blizzards nameplate auras bugging after MC.
+hooksecurefunc(NamePlateAurasMixin, "UpdateFriendPlayerAuraFrames", function(self)
+    if self:IsForbidden() then return end
+    local unit = self:GetParent().unit
+    if unit and UnitIsPlayer(unit) and not self.DebuffListFrame:IsShown() and UnitCanAttack("player", unit) and C_CVar.GetCVarBitfield("nameplateEnemyPlayerAuraDisplay", Enum.NamePlateEnemyPlayerAuraDisplay.Debuffs) then
+        self.DebuffListFrame:Show()
+    end
+end)
 
 
 

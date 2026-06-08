@@ -1,7 +1,5 @@
 ---@class BattleGroundEnemies
 local BattleGroundEnemies = BattleGroundEnemies
----@type string
-local AddonName = ...
 ---@class Data
 local Data = select(2, ...)
 
@@ -64,5 +62,6 @@ function raidTargetIcon:AttachToPlayerButton(playerButton)
     end
     self:UpdateRaidTargetIcon()
   end
+
   return playerButton.RaidTargetIcon
 end

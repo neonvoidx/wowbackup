@@ -1,9 +1,11 @@
----@type string
-local AddonName = ...
 ---@class Data
 local Data = select(2, ...)
 if not Data.L then
-  Data.L = setmetatable({}, { __index = function(_, k) return k end })
+  Data.L = setmetatable({}, {
+    __index = function(_, k)
+      return k
+    end,
+  })
   print("|cffff0000BattleGroundEnemiesFixed|r: Locales.lua failed to load. Reinstall the addon.")
 end
 local L = Data.L
@@ -18,9 +20,7 @@ local _G = _G
 local math_random = math.random
 local math_min = math.min
 local pairs = pairs
-local print = print
-local table_insert = table.insert
-local table_remove = table.remove
+-- local print = print
 local time = time
 local type = type
 local unpack = unpack
@@ -29,29 +29,18 @@ local C_PvP = C_PvP
 local C_Spell = C_Spell
 local CreateFrame = CreateFrame
 local CTimerNewTicker = C_Timer.NewTicker
-local GetArenaOpponentSpec = GetArenaOpponentSpec
-local GetBattlefieldArenaFaction = GetBattlefieldArenaFaction
-local GetBattlefieldScore = GetBattlefieldScore
 local GetBattlefieldTeamInfo = GetBattlefieldTeamInfo
-local GetBestMapForUnit = C_Map.GetBestMapForUnit
+-- local GetBestMapForUnit = C_Map.GetBestMapForUnit
 local GetNumBattlefieldScores = GetNumBattlefieldScores
 local GetNumGroupMembers = GetNumGroupMembers
-local GetNumSpellTabs = C_SpellBook and C_SpellBook.GetNumSpellBookSkillLines or GetNumSpellTabs
 local GetRaidRosterInfo = GetRaidRosterInfo
-local GetSpecializationInfoByID = GetSpecializationInfoByID
-local GetSpellBookItemName = C_SpellBook and C_SpellBook.GetSpellBookItemName or GetSpellBookItemName
 local GetSpellName = C_Spell and C_Spell.GetSpellName or GetSpellName
-local GetSpellTabInfo = GetSpellTabInfo
-local GetSpellTexture = C_Spell and C_Spell.GetSpellTexture or GetSpellTexture
-local C_SpellBook = C_SpellBook
 local GetTime = GetTime
 local GetUnitName = GetUnitName
 local InCombatLockdown = InCombatLockdown
-local IsInBrawl = C_PvP.IsInBrawl
 local IsInInstance = IsInInstance
 local IsInRaid = IsInRaid
 local RequestBattlefieldScoreData = RequestBattlefieldScoreData
-local RequestCrowdControlSpell = C_PvP.RequestCrowdControlSpell
 local SetBattlefieldScoreFaction = SetBattlefieldScoreFaction
 local UnitExists = UnitExists
 local UnitFactionGroup = UnitFactionGroup
@@ -64,7 +53,6 @@ local UnitRealmRelationship = UnitRealmRelationship
 
 local IsRetail = WOW_PROJECT_ID == WOW_PROJECT_MAINLINE
 local IsClassic = WOW_PROJECT_ID == WOW_PROJECT_CLASSIC
-local IsTBCC = WOW_PROJECT_ID == WOW_PROJECT_BURNING_CRUSADE_CLASSIC
 local IsWrath = WOW_PROJECT_ID == WOW_PROJECT_WRATH_CLASSIC
 
 local HasSpeccs = not not GetSpecialization -- Mists of Pandaria
@@ -80,28 +68,39 @@ _G["BINDING_NAME_CLICK BGEAllies:Button5"] = L.TargetNextAlly
 _G["BINDING_NAME_CLICK BGEEnemies:Button4"] = L.TargetPreviousEnemy
 _G["BINDING_NAME_CLICK BGEEnemies:Button5"] = L.TargetNextEnemy
 
-if not GetUnitName then
-  GetUnitName = function(unit, showServerName)
-    local name, server = UnitName(unit)
-
-    if server and server ~= "" then
-      if showServerName then
-        return name .. "-" .. server
-      else
-        local relationship = UnitRealmRelationship(unit)
-        if relationship == LE_REALM_RELATION_VIRTUAL then
-          return name
-        else
-          return name .. FOREIGN_SERVER_LABEL
-        end
-      end
+-- Secret-safe GetUnitName replacement, used on ALL clients (not just Classic).
+-- In instanced PvP, UnitName returns SECRET name/realm strings for enemies, and
+-- Blizzard's stock GetUnitName does an unguarded `server ~= ""` (plus
+-- name.."-"..server) on them — which EMITS taint and is blocked. Wrapping the
+-- call in pcall does NOT prevent that taint (it only hides the error), so we
+-- must never reach a comparison/concat on a secret. We override it everywhere
+-- with an issecretvalue-guarded version: when name/realm is secret we return the
+-- bare (possibly secret) name, which callers only pass to SetText or to
+-- issecretvalue-guarded table lookups.
+GetUnitName = function(unit, showServerName)
+  local name, server = UnitName(unit)
+  if not name then
+    return nil
+  end
+  if issecretvalue and (issecretvalue(name) or issecretvalue(server)) then
+    return name
+  end
+  if server and server ~= "" then
+    if showServerName then
+      return name .. "-" .. server
     else
-      return name
+      local relationship = UnitRealmRelationship(unit)
+      if relationship == LE_REALM_RELATION_VIRTUAL then
+        return name
+      else
+        return name .. FOREIGN_SERVER_LABEL
+      end
     end
+  else
+    return name
   end
 end
 
-LSM:Register("font", "PT Sans Narrow Bold", [[Interface\AddOns\BattleGroundEnemiesFixed\Fonts\PT Sans Narrow Bold.ttf]])
 LSM:Register("statusbar", "UI-StatusBar", "Interface\\TargetingFrame\\UI-StatusBar")
 
 ---@class BattleGroundEnemies: frame
@@ -109,6 +108,57 @@ BattleGroundEnemies = CreateFrame("Frame", "BattleGroundEnemies", UIParent)
 BattleGroundEnemies.Counter = {}
 BattleGroundEnemies.PlayerGUIDs = {}
 BattleGroundEnemies.DuplicateLog = {}
+
+-- Player-name canonicalization helper.
+-- Players[] dict was historically keyed by whatever the API returned:
+--   PVPScoreInfo.name / GetRaidRosterInfo / UnitName(unit, true) all return
+--   "Name" for same-realm players and "Name-Realm" for cross-realm.
+-- Chat messages (BG system events) ALWAYS emit the full "Name-Realm" form.
+-- That format mismatch caused the chat-bind handler to miss same-realm
+-- carriers (e.g. "Känägäwä-Tichondrius" failing to find Players["Känägäwä"]
+-- — diagnosed in-game 2026-05-01).
+--
+-- Fix: canonicalize ALL Players[] keys + name comparisons to the full
+-- "Name-Realm" form by appending the player's own normalized realm to
+-- short-name inputs. GetNormalizedRealmName is non-secret, takes no unit
+-- token, and returns the same normalized form ("Tichondrius", no spaces)
+-- used by chat messages and the scoreboard.
+--
+-- Safe behavior:
+--   - nil / non-string / secret-tagged → returned as-is (caller deals)
+--   - already contains "-" → returned as-is (already canonical)
+--   - realm not yet available (between LOADING_SCREEN_ENABLED and
+--     LOADING_SCREEN_DISABLED) → returned as-is. Wiki note on
+--     GetNormalizedRealmName: it may be nil during the loading window.
+--     We don't fabricate a partial canonicalization in that window —
+--     would create a third inconsistent key format.
+function BattleGroundEnemies:CanonicalName(name)
+  if not name or type(name) ~= "string" then
+    return name
+  end
+  if issecretvalue and issecretvalue(name) then
+    return name
+  end
+  if name:find("-", 1, true) then
+    return name
+  end
+  local realm = GetNormalizedRealmName and GetNormalizedRealmName()
+  if not realm or realm == "" then
+    return name
+  end
+  return name .. "-" .. realm
+end
+
+-- Track scoreboard faction filter so we can re-assert after the user (or
+-- Blizzard's own PVPMatch UI) clicks a faction tab. factionEnum -1 = both
+-- teams, 0 = Horde, 1 = Alliance. BGEF needs -1 to see both teams' rows.
+-- Server-side sort is no longer tracked: enemies are sorted by class+name
+-- on our end via PlayerSortingByClassName, so the row order from
+-- SortBattlefieldScoreData is irrelevant to the addon.
+BattleGroundEnemies._scoreboardFaction = nil
+hooksecurefunc("SetBattlefieldScoreFaction", function(factionEnum)
+  BattleGroundEnemies._scoreboardFaction = factionEnum
+end)
 
 --move unitID update for allies
 
@@ -166,9 +216,21 @@ local bgMaxPlayerCorrections = {
   [2106] = 10, -- Warsong Gulch
 }
 
--- Helper function to get corrected max players from GetInstanceInfo()
-local function GetCorrectedMaxPlayers()
-  -- Blitz (Solo RBG) is always 8v8 regardless of map
+-- Corrected GetInstanceInfo max-players. GetInstanceInfo mis-reports maxPlayers
+-- for several BGs -- notably epics return the TOTAL (80) instead of the per-team
+-- bracket size (40), which would trip SelectPlayerCountProfile's ">40 -> no
+-- profile" guard and hide all frames. Map known instance IDs to the per-team
+-- count, and pin Solo Blitz (Solo RBG) to 8v8 regardless of map. Returns 0 when
+-- nothing is known yet (instanceID nil during the load transition). The caller
+-- (SelectPlayerCountProfile) treats 0 as "no profile" (no enemies until it
+-- settles) and any >40 total-misreport from an UNLISTED map as an epic ->
+-- defaults to the 16-40 bracket (clamps to 40) rather than guessing a small
+-- bracket from a partial roster. Listing a NEW epic here is still preferred (so
+-- the bracket is exact and custom brackets resolve precisely), but an unlisted
+-- one degrades gracefully to 16-40 instead of blanking. A method on
+-- BattleGroundEnemies (not a file-local) so Mainframe.lua's
+-- SelectPlayerCountProfile can reach the Main.lua-local corrections table.
+function BattleGroundEnemies:GetCorrectedMaxPlayers()
   if C_PvP and C_PvP.IsSoloRBG and C_PvP.IsSoloRBG() then
     return 8
   end
@@ -197,6 +259,64 @@ BattleGroundEnemies.UserFaction = UnitFactionGroup("player")
 BattleGroundEnemies.UserButton = false --the button of the Player himself
 BattleGroundEnemies.specCache = {} -- key = GUID, value = specName (localized)
 
+-- ButtonEventLog: ring buffer of recent button-lifecycle events. Used by the
+-- watchdog to dump a timeline when PlayerList exceeds NumPlayers, so we can
+-- diagnose the duplicate-button bug without users running anything manually.
+-- Captured automatically; only printed when the watchdog fires.
+
+-- BattleGroundEnemies._buttonEventLog = {}
+-- local BUTTON_EVENT_LOG_MAX = 200
+
+-- local function safeStr(v)
+--   if v == nil then return "<nil>" end
+--   if issecretvalue and issecretvalue(v) then return "<secret>" end
+--   if type(v) == "string" then return v end
+--   return tostring(v)
+-- end
+
+-- function BattleGroundEnemies:LogButtonEvent(event, mfType, btn, extra)
+--   local pd = btn and btn.PlayerDetails
+--   local entry = {
+--     t = GetTime(),
+--     event = event,
+--     mfType = mfType,
+--     name = pd and safeStr(pd.PlayerName) or "<no-pd>",
+--     class = pd and safeStr(pd.PlayerClass) or "<no-pd>",
+--     race = pd and safeStr(pd.PlayerRace) or "<no-pd>",
+--     status = btn and btn.status,
+--     extra = extra,
+--   }
+--   local log = self._buttonEventLog
+--   log[#log + 1] = entry
+--   if #log > BUTTON_EVENT_LOG_MAX then
+--     table.remove(log, 1)
+--   end
+-- end
+
+-- function BattleGroundEnemies:DumpButtonEventLog(reason)
+--   local log = self._buttonEventLog
+--   print("BGE Event Log Dump (" .. (reason or "manual") .. ") — last", #log, "events:")
+--   local now = GetTime()
+--   for i = math.max(1, #log - 60), #log do
+--     local e = log[i]
+--     if e then
+--       print(
+--         string.format(
+--           "  [-%05.2fs] %-15s %-8s name=%s class=%s race=%s status=%s%s",
+--           now - e.t,
+--           e.event,
+--           e.mfType or "?",
+--           e.name,
+--           e.class,
+--           e.race,
+--           tostring(e.status),
+--           e.extra and (" " .. tostring(e.extra)) or ""
+--         )
+--       )
+--     end
+--   end
+-- end
+
 local playerSpells
 
 ---@class bgeState
@@ -207,10 +327,7 @@ local playerSpells
 ---@field isRatedBG boolean
 ---@field isSoloRBG boolean
 
-BattleGroundEnemies.scoreboardFrozen = false
-
 BattleGroundEnemies.states = {
-  editmodeActive = false,
   testmodeActive = false,
   userIsAlive = not UnitIsDeadOrGhost("player"),
   ---@type bgeState
@@ -235,7 +352,7 @@ BattleGroundEnemies.states = {
 
 ---@return bgeState
 function BattleGroundEnemies:GetActiveStates()
-  if self:IsTestmodeOrEditmodeActive() then
+  if self:IsTestmodeActive() then
     return self.states.test
   else
     return self.states.real
@@ -247,11 +364,16 @@ function BattleGroundEnemies:GetBattlegroundAuras()
   if not states then
     return
   end
-  return Data.BattlegroundspezificBuffs[states.currentMapId], Data.BattlegroundspezificDebuffs[states.currentMapId]
+  -- Returns only the Buffs table for the current map. Pre-2026-05-02 this
+  -- also returned Data.BattlegroundspezificDebuffs[mapId] as a second value;
+  -- that table is now commented out (orbs migrated into Buffs as the single
+  -- source of truth) and no caller used the second return anymore. Outer
+  -- nil-check guards against the table itself being absent.
+  return Data.BattlegroundspezificBuffs and Data.BattlegroundspezificBuffs[states.currentMapId]
 end
 
-function BattleGroundEnemies:IsTestmodeOrEditmodeActive()
-  return self.states.testmodeActive or self.states.editmodeActive
+function BattleGroundEnemies:IsTestmodeActive()
+  return self.states.testmodeActive
 end
 
 function BattleGroundEnemies:FlipButtonModuleSettingsHorizontally(moduleName, dbLocation)
@@ -473,14 +595,34 @@ function BattleGroundEnemies:GetSpellPriority(spellId)
   return priority
 end
 
-function BattleGroundEnemies:PLAYER_TARGET_CHANGED()
-  if self.UserButton then
-    self.UserButton:UpdateTarget()
-  end
+-- Old synchronous PLAYER_TARGET_CHANGED handler removed — it called
+-- UserButton:UpdateTarget() which ran the matcher with unitID="target"
+-- IMMEDIATELY (same frame as the click), racing the proper deferred
+-- handler defined further down. When the matcher returned the wrong
+-- same-class twin (which it can on first encounter or with poisoned
+-- stored attrs), the wrong button briefly received the target token
+-- and showed the actual unit's health — visible as a 1-2 frame flash
+-- on the wrong frame before the deferred handler corrected it via the
+-- click stash. The deferred handler at PLAYER_TARGET_CHANGED below
+-- does the same work but smarter (stash > arena-token > matcher), so
+-- the sync handler was pure liability with no upside.
+
+-- Hard gate: this addon is strictly PvP-only. A crash report involving raid bosses
+-- (Chimaerus) traced to module-level event handlers that kept processing outside
+-- PvP instances. IsInPvPInstance is the single source of truth consulted by every
+-- OnEvent dispatcher below; PLAYER_LOGIN and PLAYER_ENTERING_WORLD are the only
+-- events that must flow through regardless (they are what *detect* the zone).
+function BattleGroundEnemies:IsInPvPInstance()
+  local _, zone = IsInInstance()
+  return zone == "pvp" or zone == "arena"
 end
-BattleGroundEnemies:RegisterEvent("PLAYER_TARGET_CHANGED")
 
 BattleGroundEnemies:SetScript("OnEvent", function(self, event, ...)
+  if event ~= "PLAYER_LOGIN" and event ~= "PLAYER_ENTERING_WORLD" then
+    if not self:IsInPvPInstance() then
+      return
+    end
+  end
   if self[event] then
     self[event](self, ...)
   end
@@ -524,18 +666,6 @@ local function createFakePlayersTicker(seconds, callback)
   return ticker
 end
 
-Data.FoundAuras = {
-  HELPFUL = {
-    foundPlayerAuras = {},
-    foundNonPlayerAuras = {},
-  },
-  HARMFUL = {
-    foundPlayerAuras = {},
-    foundNonPlayerAuras = {},
-    foundDRAuras = {},
-  },
-}
-
 function BattleGroundEnemies:SetupTestmode()
   if not self.Testmode.RandomTrinkets then
     self.Testmode.RandomTrinkets = {}
@@ -555,9 +685,14 @@ function BattleGroundEnemies:SetupTestmode()
   wipe(self.Testmode.FakePlayerAuras)
   wipe(self.Testmode.FakePlayerDRs)
 
+  -- Iterate Buffs, not Debuffs — Buffs is the single source of truth post
+  -- the 2026-05-02 migration (orbs moved in alongside flags). If the user
+  -- comments out the legacy Debuffs table, iterating it would error.
   local mapIDs = {}
-  for mapID, data in pairs(Data.BattlegroundspezificDebuffs) do
-    table.insert(mapIDs, mapID)
+  if Data.BattlegroundspezificBuffs then
+    for mapID, data in pairs(Data.BattlegroundspezificBuffs) do
+      table.insert(mapIDs, mapID)
+    end
   end
   local mandomm = math_random(1, #mapIDs)
   local randomMapID = mapIDs[mandomm]
@@ -642,12 +777,6 @@ local function fakePlayersTestmodeTicker()
   end
 end
 
-local function fakePlayersEditmodeTicker() end
-
-local function setupFakePlayersEditmodeTicker()
-  createFakePlayersTicker(1, fakePlayersEditmodeTicker)
-end
-
 local function setupFakePlayersTestmodeTicker()
   createFakePlayersTicker(1, fakePlayersTestmodeTicker)
 end
@@ -684,74 +813,10 @@ function BattleGroundEnemies:DisableTestMode()
 end
 
 function BattleGroundEnemies.ToggleTestmode()
-  if BattleGroundEnemies.states.editmodeActive then
-    BattleGroundEnemies:DisableEditmode()
-  end
   if BattleGroundEnemies.states.testmodeActive then --disable testmode
     BattleGroundEnemies:DisableTestMode()
   else --enable Testmode
     BattleGroundEnemies:EnableTestMode()
-  end
-end
-
-function BattleGroundEnemies:EnableEditmode()
-  if InCombatLockdown() then
-    return BattleGroundEnemies:Information(L.ErrorTestmodeInCombat)
-  end
-  self.states.editmodeActive = true
-  self:SetupTestmode()
-  self:OnEditmodeEnabled()
-
-  BattleGroundEnemies.EditMode.EditModeManager:OpenEditmode()
-  self:Information(L.EditmodeEnabled)
-  self:Information(L.EditModeIntroduction)
-end
-
-function BattleGroundEnemies:UpdateAllButtonsModuleSettings()
-  for _, mainFrame in pairs({ self.Allies, self.Enemies }) do
-    if mainFrame and mainFrame.Players then
-      for _, playerButton in pairs(mainFrame.Players) do
-        if playerButton.ApplyModuleSettings then
-          playerButton:ApplyModuleSettings()
-        end
-      end
-    end
-  end
-end
-
-function BattleGroundEnemies:OnEditmodeEnabled()
-  self.Allies:OnEditmodeEnabled()
-  self.Enemies:OnEditmodeEnabled()
-  self:UpdateAllButtonsModuleSettings()
-end
-
-function BattleGroundEnemies:DisableEditmode()
-  self.states.editmodeActive = false
-  self:Information(L.EditmodeDisabled)
-  self.Allies:OnEditmodeDisabled()
-  self.Enemies:OnEditmodeDisabled()
-  self:UpdateAllButtonsModuleSettings()
-  BattleGroundEnemies.EditMode.EditModeManager:CloseEditmode()
-  self:CheckEnableState()
-end
-
-function BattleGroundEnemies.ToggleEditmode()
-  if BattleGroundEnemies.states.testmodeActive then
-    BattleGroundEnemies:DisableTestMode()
-  end
-  if BattleGroundEnemies.states.editmodeActive then --disable testmode
-    BattleGroundEnemies:DisableEditmode()
-  else --enable Testmode
-    BattleGroundEnemies:EnableEditmode()
-  end
-end
-
-function BattleGroundEnemies:DisableTestOrEditmode()
-  if self.states.editmodeActive then
-    return self:DisableEditmode()
-  end
-  if self.states.testmodeActive then
-    return self:DisableTestMode()
   end
 end
 
@@ -770,35 +835,35 @@ do
   RequestFrame:SetScript("OnUpdate", RequestTicker)
 end
 
-function BattleGroundEnemies:GetDebugFrame()
-  if not self.DebugFrame then
-    local f = CreateFrame("ScrollingMessageFrame", "BGE_DebugFrame", UIParent, "BackdropTemplate")
-    f:SetSize(600, 300)
-    f:SetPoint("CENTER", UIParent, "CENTER", 0, 0)
-    f:SetMaxLines(2500)
-    f:SetFontObject(ChatFontNormal)
-    f:SetJustifyH("LEFT")
-    f:SetFading(false)
-    f:EnableMouseWheel(true)
-    f:SetScript("OnMouseWheel", function(self, delta)
-      if delta > 0 then
-        self:ScrollUp()
-      else
-        self:ScrollDown()
-      end
-    end)
-    f:SetMovable(true)
-    f:EnableMouse(true)
-    f:RegisterForDrag("LeftButton")
-    f:SetScript("OnDragStart", f.StartMoving)
-    f:SetScript("OnDragStop", f.StopMovingOrSizing)
-    f:SetBackdrop({ bgFile = "Interface\\Tooltips\\UI-Tooltip-Background" })
-    f:SetBackdropColor(0, 0, 0, 0.8)
-    f:Show()
-    self.DebugFrame = f
-  end
-  return self.DebugFrame
-end
+-- function BattleGroundEnemies:GetDebugFrame()
+--   if not self.DebugFrame then
+--     local f = CreateFrame("ScrollingMessageFrame", "BGE_DebugFrame", UIParent, "BackdropTemplate")
+--     f:SetSize(600, 300)
+--     f:SetPoint("CENTER", UIParent, "CENTER", 0, 0)
+--     f:SetMaxLines(2500)
+--     f:SetFontObject(ChatFontNormal)
+--     f:SetJustifyH("LEFT")
+--     f:SetFading(false)
+--     f:EnableMouseWheel(true)
+--     f:SetScript("OnMouseWheel", function(self, delta)
+--       if delta > 0 then
+--         self:ScrollUp()
+--       else
+--         self:ScrollDown()
+--       end
+--     end)
+--     f:SetMovable(true)
+--     f:EnableMouse(true)
+--     f:RegisterForDrag("LeftButton")
+--     f:SetScript("OnDragStart", f.StartMoving)
+--     f:SetScript("OnDragStop", f.StopMovingOrSizing)
+--     f:SetBackdrop({ bgFile = "Interface\\Tooltips\\UI-Tooltip-Background" })
+--     f:SetBackdropColor(0, 0, 0, 0.8)
+--     f:Show()
+--     self.DebugFrame = f
+--   end
+--   return self.DebugFrame
+-- end
 
 ---@type PlayerButton[]
 BattleGroundEnemies.ArenaIDToPlayerButton = {} --key = arenaID: arenaX, value = playerButton of that unitID
@@ -1025,7 +1090,7 @@ end
 -- Shared button update ticker: single timer updates all active buttons
 -- instead of each button having its own OnUpdate handler.
 local buttonUpdateTicker = nil
-local BUTTON_UPDATE_PERIOD = 0.1
+local BUTTON_UPDATE_PERIOD = 0.2
 
 local function UpdateAllPlayerButtons()
   if not BattleGroundEnemies.enabled or not BattleGroundEnemies.states.userIsAlive then
@@ -1070,39 +1135,76 @@ function BattleGroundEnemies:Disable()
   self.enabled = false
   self:UnregisterEvents()
   RequestFrame:Hide()
-  if self.rosterCheckFrame then
-    self.rosterCheckFrame:Hide()
-  end
   stopFakePlayersTicker()
   StopButtonUpdateTicker()
+  -- Cancel persistent tickers explicitly so they don't keep firing no-op
+  -- wakeups while the user is outside PvP. Re-armed by the corresponding
+  -- Start* calls in Enable() below.
+  self:StopTargetScanTicker()
+  self:StopCombatIndicatorTicker()
+  -- Cancel the ally-roster loading retry ticker if it's mid-run. It is
+  -- otherwise only cancelled inside GROUP_ROSTER_UPDATE, which the IsInInstance
+  -- gate now early-returns out of once we're in the world -- so a ticker still
+  -- armed at leave-time would orphan-wake ~1/s until its 30-tick self-limit.
+  -- Cancelling here also guarantees a fresh retry budget on the next match.
+  if self.allyRosterRetryTimer then
+    self.allyRosterRetryTimer:Cancel()
+    self.allyRosterRetryTimer = nil
+  end
   self.Allies:Disable()
   self.Enemies:Disable()
+
+  -- #5: empty BOTH rosters whenever the addon disables, so no buttons (incl.
+  -- the ally self-button) linger in the world/city. Disable() always runs when
+  -- you leave an instance (PLAYER_ENTERING_WORLD -> CheckEnableState), so this
+  -- is the reliable teardown point — unlike the PEW leavingPvP gate, which can
+  -- be skipped on some leave paths. HarvestPlayerHistory has already run before
+  -- any Disable on match Complete (harvest at the top of the Complete branch,
+  -- Disable at the bottom), so this never races the harvest. The
+  -- GROUP_ROSTER_UPDATE IsInInstance gate prevents any rebuild once we're out of
+  -- the instance; Enable() rebuilds the roster on the next entry.
+  self.Allies:RemoveAllPlayersFromAllSources()
+  self.Enemies:RemoveAllPlayersFromAllSources()
 end
 
 function BattleGroundEnemies:Enable()
   self.enabled = true
 
+  -- Reset the per-match harvest gate on every enable. Normally this is
+  -- cleared by the PVP_MATCH_STATE_CHANGED -> Inactive transition, but
+  -- since Disable() now fires on match Complete (perf: stop the post-match
+  -- UBS allocation storm), we may not be registered when the *next* match's
+  -- Inactive event fires. Clearing here guarantees each fresh BG entry
+  -- starts with a clean gate regardless. The harvest itself is idempotent
+  -- (entries get re-written as honorLevel/spec/role evolve), so an extra
+  -- clear is always safe.
+  self._harvestedThisMatch = nil
+
   self:RegisterEvents()
   StartButtonUpdateTicker()
-  if BattleGroundEnemies:IsTestmodeOrEditmodeActive() then
-    if self.states.editmodeActive then
-      setupFakePlayersEditmodeTicker()
-    else
-      setupFakePlayersTestmodeTicker()
-    end
+  -- Re-arm persistent tickers cancelled by Disable(). Explicit start here
+  -- guarantees they resume without depending on PEW (TargetScanTicker) or
+  -- the ApplyButtonSettings chain (CombatIndicator) firing first.
+  self:StartTargetScanTicker()
+  self:StartCombatIndicatorTicker()
+  if BattleGroundEnemies:IsTestmodeActive() then
+    setupFakePlayersTestmodeTicker()
     RequestFrame:Hide()
   else
     RequestFrame:Show()
     stopFakePlayersTicker()
-    local matchState = C_PvP.GetActiveMatchState and C_PvP.GetActiveMatchState()
-    if not self.states.real.isInArena and matchState and matchState < Enum.PvPMatchState.Engaged then
-      self:ShowRosterCheck()
-    elseif self.rosterCheckFrame then
-      self.rosterCheckFrame:Hide()
-    end
   end
   self.Allies:CheckEnableState()
   self.Enemies:CheckEnableState()
+
+  -- Build the ally roster now that we're enabled. GROUP_ROSTER_UPDATE
+  -- early-returns while disabled (the roster doesn't exist outside an
+  -- instance), so any group-change events that fired before this Enable were
+  -- ignored. Rebuild explicitly here so allies populate on instance entry
+  -- regardless of whether GROUP_ROSTER_UPDATE happened to fire before or after
+  -- Enable(). Idempotent (mark-and-sweep reuses pooled buttons); harmless in
+  -- test mode (AfterPlayerSourceUpdate uses the FakePlayers source there).
+  self:GROUP_ROSTER_UPDATE()
 end
 
 function BattleGroundEnemies:CheckEnableState()
@@ -1138,7 +1240,10 @@ end
 --Triggered immediately before PLAYER_ENTERING_WORLD on login and UI Reload, but NOT when entering/leaving instances.
 function BattleGroundEnemies:PLAYER_LOGIN()
   self.UserDetails = {
-    PlayerName = UnitName("player"),
+    -- Canonicalize so this matches Players[] keys (which are canonical
+    -- since the CanonicalName refactor). UnitName("player") returns the
+    -- short form; CanonicalName appends our own realm.
+    PlayerName = self:CanonicalName(UnitName("player")),
     PlayerClass = select(2, UnitClass("player")),
     isGroupLeader = UnitIsGroupLeader("player"),
     isGroupAssistant = UnitIsGroupAssistant("player"),
@@ -1151,6 +1256,21 @@ function BattleGroundEnemies:PLAYER_LOGIN()
   self.db.RegisterCallback(self, "OnProfileChanged", "ProfileChanged")
   self.db.RegisterCallback(self, "OnProfileCopied", "ProfileChanged")
   self.db.RegisterCallback(self, "OnProfileReset", "ProfileReset")
+
+  -- Prune stale PlayerHistory entries (>6mo unseen). Bounds the SavedVariables
+  -- file from growing forever. 6 months covers ~1 PvP season (TWW seasons run
+  -- ~5-6 months each), so players you face at any point in a season stay
+  -- pre-warmed for the rest of it. Pruned entries get re-harvested if
+  -- encountered again — losing them only costs the next first-encounter
+  -- pre-warm.
+  if self.db.global and self.db.global.PlayerHistory then
+    local cutoff = time() - (180 * 86400)
+    for k, v in pairs(self.db.global.PlayerHistory) do
+      if type(v) ~= "table" or not v.lastSeenAt or v.lastSeenAt < cutoff then
+        self.db.global.PlayerHistory[k] = nil
+      end
+    end
+  end
 
   if self.db.profile then
     if self.db.profile.DebugToSV_ResetOnPlayerLogin then
@@ -1175,12 +1295,13 @@ function BattleGroundEnemies:PLAYER_LOGIN()
   self:RegisterEvent("PLAYER_UNGHOST") --Fired when the player is alive after being a ghost.
   self:RegisterEvent("PLAYER_DEAD") --Fired when the player has died.
   self:RegisterEvent("UPDATE_BATTLEFIELD_SCORE")
+  -- self:RegisterEvent("PVP_MATCH_STATE_CHANGED")
 
   self:SetupOptions()
 
-  AceConfigDialog:SetDefaultSize("BattleGroundEnemies", 800, 700)
+  AceConfigDialog:SetDefaultSize("BattleGroundEnemiesFixed", 800, 700)
 
-  AceConfigDialog:AddToBlizOptions("BattleGroundEnemies", "BattleGroundEnemies")
+  AceConfigDialog:AddToBlizOptions("BattleGroundEnemiesFixed", "BattleGroundEnemiesFixed")
 
   if PVPMatchScoreboard then -- for TBCC, IsTBCC
     PVPMatchScoreboard:HookScript("OnHide", PVPMatchScoreboard_OnHide)
@@ -1207,7 +1328,7 @@ end
 --5. ally targets, UNIT_TARGET fires if the target changes, we need to check for UnitExists() since there is a small time frame after an ally lost that enemy where UnitExists returns false for that unitID
 
 function BattleGroundEnemies:NotifyChange()
-  AceConfigRegistry:NotifyChange("BattleGroundEnemies")
+  AceConfigRegistry:NotifyChange("BattleGroundEnemiesFixed")
   self:ProfileChanged()
 end
 
@@ -1240,12 +1361,8 @@ function BattleGroundEnemies:TestModePlayerCountChanged(value)
   end -- use a timer to apply changes after 0.2 second, this prevents the UI from getting laggy when the user uses a slider option
   self.Testmode.PlayerCountTestmode = value
   playerCountChangedTimer = CTimerNewTicker(0.2, function()
-    if self:IsTestmodeOrEditmodeActive() then
+    if self:IsTestmodeActive() then
       self:CreateFakePlayers()
-    end
-    if self.states.editmodeActive then
-      self:OnEditmodeEnabled()
-      BattleGroundEnemies.EditMode.EditModeManager:OpenEditmode()
     end
     playerCountChangedTimer = nil
   end, 1)
@@ -1253,21 +1370,21 @@ end
 
 -- ApplyAllSettings moved up
 
-local function stringifyMultitArgs(...)
-  local args = { ... }
-  local text = ""
+-- local function stringifyMultitArgs(...)
+--   local args = { ... }
+--   local text = ""
 
-  for i = 1, #args do
-    text = text .. " " .. tostring(args[i])
-  end
-  return text
-end
+--   for i = 1, #args do
+--     text = text .. " " .. tostring(args[i])
+--   end
+--   return text
+-- end
 
-local function getTimestamp()
-  local timestampFormat = "[%I:%M:%S] " --timestamp format
-  local stamp = BetterDate(timestampFormat, time())
-  return stamp
-end
+-- local function getTimestamp()
+--   local timestampFormat = "[%I:%M:%S] " --timestamp format
+--   local stamp = BetterDate(timestampFormat, time())
+--   return stamp
+-- end
 
 local sentDebugMessages = {}
 function BattleGroundEnemies:OnetimeDebug(...)
@@ -1276,51 +1393,12 @@ function BattleGroundEnemies:OnetimeDebug(...)
     return
   end
   sentDebugMessages[message] = true
-  self:Debug(...)
 end
 
-function BattleGroundEnemies:Debug(...)
-  if not self.db then
-    return
-  end
-  if not self.db.profile then
-    return
-  end
-  if not self.db.profile.Debug then
-    return
-  end
-
-  self:OnetimeInformation(
-    "Debugging is enabled. Depending on the amount of messages or debug settings it can cause decrased performance. Please disable it after you are done debugging."
-  )
-
-  if self.db.profile.DebugToChat then
-    if not self.DebugFrame then
-      self.DebugFrame = self:GetDebugFrame()
-    end
-
-    local text
-    if self.db.profile.DebugToChat_AddTimestamp then
-      text = stringifyMultitArgs(getTimestamp(), ...)
-    else
-      text = stringifyMultitArgs(...)
-    end
-
-    self.DebugFrame:AddMessage(text)
-  end
-
-  if self.db.profile.DebugToSV then
-    self.db.profile.log = self.db.profile.log or {}
-    local t = { ... }
-
-    table.insert(self.db.profile.log, { [getTimestamp()] = t })
-  end
-end
-
-function BattleGroundEnemies:EnableDebugging()
-  self.db.profile.Debug = true
-  self:NotifyChange()
-end
+-- function BattleGroundEnemies:EnableDebugging()
+--   self.db.profile.Debug = true
+--   self:NotifyChange()
+-- end
 
 local sentMessages = {}
 function BattleGroundEnemies:OnetimeInformation(...)
@@ -1342,6 +1420,17 @@ function BattleGroundEnemies:ARENA_OPPONENT_UPDATE(unitID, unitEvent)
   if unitEvent == "cleared" then --"unseen", "cleared" or "destroyed"
     local playerButton = self.ArenaIDToPlayerButton[unitID]
     if playerButton then
+      -- Skip the wipe when the local player is dead/ghost AND the bound
+      -- carrier is NOT the local player. Blizzard fires "cleared" for
+      -- arena tokens when the dead user loses visibility — but other
+      -- carriers may still be alive and holding the objective. Wiping
+      -- here makes their icon disappear until you respawn.
+      --
+      -- If the bound carrier IS the local user (user dropped the
+      -- objective by dying), the wipe IS correct and runs.
+      if UnitIsDeadOrGhost("player") and playerButton ~= self.UserButton then
+        return
+      end
       self.ArenaIDToPlayerButton[unitID] = nil
       playerButton:UpdateEnemyUnitID("Arena", false)
       playerButton:DispatchEvent("ArenaOpponentHidden")
@@ -1367,23 +1456,18 @@ function BattleGroundEnemies:SafeGetUnitName(unitID)
     return nil
   end
 
-  local fullName
-  local ok2 = pcall(function()
-    if name then
-      name = tostring(name)
-    end
-    if server then
-      server = tostring(server)
-    end
-
-    if server and server ~= "" then
-      fullName = name .. "-" .. server
-    else
-      fullName = name
-    end
-  end)
-
-  return ok2 and fullName or nil
+  -- name/server can be SECRET in instanced PvP. Comparing (server ~= "") or
+  -- concatenating (name.."-"..server) a secret EMITS taint and is blocked — and
+  -- the old pcall did NOT suppress that taint, it only hid the error. When either
+  -- is secret, return the bare name (callers pass it only to SetText or to
+  -- issecretvalue-guarded lookups).
+  if issecretvalue and (issecretvalue(name) or issecretvalue(server)) then
+    return name
+  end
+  if server and server ~= "" then
+    return name .. "-" .. server
+  end
+  return name
 end
 
 -- New helper to safely access player buttons with potential secret keys
@@ -1436,6 +1520,35 @@ do
     EVOKER = 13,
   }
 
+  -- Public predicate: does an ArenaIDToPlayerButton entry contradict live
+  -- data on `token`? Returns true ONLY when the button's stored class or
+  -- race differs from a non-secret live read. nil/secret/Unknown values
+  -- short-circuit to false ("can't disprove") so we don't invalidate on
+  -- missing data. Used inside the matcher (arena-fast-path / arena-cross-
+  -- identity) and externally by GetOrbCarrierButton/GetFlagCarrierButton
+  -- to decide whether to keep an existing mapping or re-resolve.
+  function BattleGroundEnemies:ArenaMappingContradicted(btn, token)
+    local pd = btn and btn.PlayerDetails
+    if not pd or not token then
+      return false
+    end
+    local okClass, _, liveClassID = pcall(UnitClassBase, token)
+    if okClass and liveClassID then
+      local storedClassID = ClassTokenToID[pd.PlayerClass or ""]
+      if storedClassID and storedClassID ~= liveClassID then
+        return true
+      end
+    end
+    local okRace, liveRace = pcall(UnitRace, token)
+    if okRace and liveRace and not (issecretvalue and issecretvalue(liveRace)) then
+      local storedRace = pd.PlayerRace
+      if storedRace and storedRace ~= "Unknown" and storedRace ~= liveRace then
+        return true
+      end
+    end
+    return false
+  end
+
   -- Race token to numeric ID (built once from C_CreatureInfo at load time)
   local RaceTokenToID = {}
   do
@@ -1447,10 +1560,11 @@ do
         RaceTokenToID[raceInfo.clientFileString] = raceInfo.raceID
       end
     end
-    -- LibRaces:GetRaceToken returns names that may differ from C_CreatureInfo clientFileString.
-    -- Add aliases so lookup works with either format.
-    RaceTokenToID["Undead"] = RaceTokenToID["Scourge"] or 5 -- LibRaces says "Undead", client says "Scourge"
-    RaceTokenToID["Earthen"] = RaceTokenToID["EarthenDwarf"] or 85 -- LibRaces says "Earthen", client may say "EarthenDwarf"
+    -- Some code paths feed in localized race names (e.g. "Undead", "Earthen")
+    -- rather than the C_CreatureInfo clientFileString ("Scourge", "EarthenDwarf").
+    -- Add aliases so the lookup succeeds for both formats.
+    RaceTokenToID["Undead"] = RaceTokenToID["Scourge"] or 5
+    RaceTokenToID["Earthen"] = RaceTokenToID["EarthenDwarf"] or 85
   end
 
   -- Collapse faction-variant race IDs to a single canonical ID
@@ -1461,23 +1575,6 @@ do
     [84] = 85, -- Earthen (Horde)
     [91] = 86, -- Harronir (Alt ID)
   }
-
-  -- Cache for GetPlayerInfoByGUID results (race/gender never change per GUID)
-  local guidInfoCache = {}
-
-  local function GetCachedPlayerInfo(guid)
-    local cached = guidInfoCache[guid]
-    if cached then
-      return cached[1], cached[2]
-    end
-    local _, _, _, englishRaceName, gender = GetPlayerInfoByGUID(guid)
-    -- Only cache successful results; nil means the client hasn't seen this player yet
-    -- and may return valid data on a future call
-    if gender then
-      guidInfoCache[guid] = { englishRaceName, gender }
-    end
-    return englishRaceName, gender
-  end
 
   -- PID = Player ID (unique identifier using bit-shifting)
   -- Gender:     × 2^32 - positions 33+
@@ -1533,8 +1630,8 @@ do
   end
 
   local function EN_ScoreboardPID(p)
-    -- Race: use PlayerRace from scoreboard (LibRaces token, always available)
-    -- This matches C_CreatureInfo.GetRaceInfo().clientFileString format (e.g. "BloodElf")
+    -- Race: use PlayerRace from scoreboard. Format matches
+    -- C_CreatureInfo.GetRaceInfo().clientFileString (e.g. "BloodElf").
     local raceID = RaceTokenToID[p.PlayerRace or ""] or 0
     local classID = ClassTokenToID[p.PlayerClass or ""] or 0
     if raceID == 0 and p.PlayerRace and p.PlayerRace ~= "Unknown" then
@@ -1558,6 +1655,28 @@ do
   -- across ScanTargets iterations. Cleared at the start of each ScanTargets call.
   local scanCycleCache = {}
 
+  -- Dynamic single-word tokens that WoW fires UNIT_HEALTH / UNIT_POWER_FREQUENT
+  -- for and that can reassign to a different player at any time (target click,
+  -- focus change, mouse move, soft-target switch). Caching these in
+  -- scanCycleCache is a correctness hazard: a stale entry from a prior event
+  -- gets reused before the deferred PLAYER_TARGET_CHANGED handler wipes it,
+  -- and the matcher returns the previous owner of the token while
+  -- UnitHealth(token) reads the new owner's value — cross-attaching the new
+  -- player's health onto the previous player's bar. Compound tokens
+  -- (raidNtarget, nameplateNtarget, pettarget, focustarget) are also dynamic
+  -- but are never the unitID of a fired event, so their cache entries can't
+  -- be reached through the event flow — keep caching them.
+  -- Exposed on BattleGroundEnemies so PlayerButton.lua can reuse the same
+  -- list for stale-token validation in UpdateUnitID.
+  BattleGroundEnemies.DYNAMIC_TOKENS = {
+    target = true,
+    focus = true,
+    mouseover = true,
+    softenemy = true,
+    softfriend = true,
+  }
+  local DYNAMIC_TOKENS = BattleGroundEnemies.DYNAMIC_TOKENS
+
   -- Cross-tick sticky cache: prevents PID oscillation between scan cycles.
   -- Once a unitID resolves to a button, it stays pinned until:
   --   1) ClearPIDCaches (roster change)
@@ -1565,8 +1684,19 @@ do
   --   3) Class validation fails (definitely a different player)
   local stickyPIDCache = {}
 
+  -- Per-unitID record of the last (button, path) we logged via _logTierMatch.
+  -- Used to suppress duplicate success-log spam: if a unitID resolves to the
+  -- same button via the same code path as last call, stay silent. Logs only
+  -- fire on transitions (different button OR different path). Never wiped —
+  -- subsequent wrong-button matches still log naturally because they differ.
+  -- local _lastLoggedMatch = {}
+  -- Per-unitID signature of the last mismatch we logged. Suppresses
+  -- duplicate spam when the matcher is called many times per click
+  -- (ScanTargets sweeps, UNIT_TARGET, PLAYER_TARGET_CHANGED_Deferred all
+  -- run the matcher for the same unitID within a few ticks).
+  -- local _lastLoggedMismatch = {}
+
   function BattleGroundEnemies:ClearPIDCaches()
-    wipe(guidInfoCache)
     wipe(scanCycleCache)
     wipe(stickyPIDCache)
     self.DuplicateLog = {}
@@ -1583,98 +1713,341 @@ do
     stickyPIDCache[unitID] = nil
   end
 
-  -- @param playerType: "Enemies" or "Allies" - specifies which player table to search
+  -- Capture live unit attrs onto a button. Authoritative-only: caller must
+  -- be CERTAIN btn = the live unit at unitID. Wrong calls poison the
+  -- button's stored attrs (which feed the matcher's tier comparisons).
+  -- Safe call sites: matcher's tier 5 (sole same-class), tier 6 (race
+  -- uniquely identifies via authoritative scoreboard race), arena fast-path
+  -- (Blizzard ArenaIDToPlayerButton), name lookup (definitive when name
+  -- is non-secret), AND PostClick/focus stash bypass (user clicked that
+  -- exact frame, secure macro targeted that exact name → unit IS that
+  -- player). Captures gender, honorLevel, GuildName (with three-state
+  -- nil/false/string semantics), and lastPowerType.
+  function BattleGroundEnemies:CaptureUnitAttrs(btn, unitID)
+    if not btn or not btn.PlayerDetails or not unitID then
+      return
+    end
+    local pd = btn.PlayerDetails
+    -- gender
+    local g = pd.gender
+    if g == nil or (issecretvalue and issecretvalue(g)) or pd._genderSource == "harvest" then
+      local sex = UnitSexBase(unitID)
+      if sex and (g == nil or (issecretvalue and issecretvalue(g)) or sex ~= g) then
+        pd.gender = sex
+        pd._genderSource = "live"
+      elseif sex and sex == g and pd._genderSource == "harvest" then
+        pd._genderSource = "live"
+      end
+    end
+    -- honorLevel
+    local h = pd.honorLevel
+    if h == nil or (issecretvalue and issecretvalue(h)) or pd._honorLevelSource == "harvest" then
+      local honor = UnitHonorLevel(unitID)
+      if honor and honor > 0 and (h == nil or (issecretvalue and issecretvalue(h)) or honor ~= h) then
+        pd.honorLevel = honor
+        pd._honorLevelSource = "live"
+      elseif honor and honor > 0 and honor == h and pd._honorLevelSource == "harvest" then
+        pd._honorLevelSource = "live"
+      end
+    end
+    -- GuildName: three-state (nil=unknown, false=confirmed guildless, "X"=in guild "X")
+    local currentGuild = pd.GuildName
+    if currentGuild == nil or (issecretvalue and issecretvalue(currentGuild)) or pd._GuildNameSource == "harvest" then
+      local gn = GetGuildInfo(unitID)
+      if gn then
+        if currentGuild == nil or currentGuild == false or (issecretvalue and issecretvalue(currentGuild)) or gn ~= currentGuild then
+          pd.GuildName = gn
+          pd._GuildNameSource = "live"
+        elseif gn == currentGuild and pd._GuildNameSource == "harvest" then
+          pd._GuildNameSource = "live"
+        end
+      else
+        -- gn nil: could be "no guild" or "can't read". UnitSexBase as readability proxy.
+        local sexProbe = UnitSexBase(unitID)
+        if sexProbe then
+          if currentGuild ~= false then
+            pd.GuildName = false
+            pd._GuildNameSource = "live"
+          elseif pd._GuildNameSource == "harvest" then
+            pd._GuildNameSource = "live"
+          end
+        end
+      end
+    end
+    -- lastPowerType: pcall because UnitPowerType errors on compound tokens
+    local okPower, pt = pcall(UnitPowerType, unitID)
+    if okPower and pt and pt ~= pd.lastPowerType then
+      pd.lastPowerType = pt
+      pd._lastPowerTypeSource = "live"
+    elseif okPower and pt and pd._lastPowerTypeSource == "harvest" then
+      pd._lastPowerTypeSource = "live"
+    end
+  end
+
+  -- Enemy-only matcher. Allies are resolved by direct raidN/partyN/player
+  -- token lookup via BattleGroundEnemies.Allies:GetAllyButtonByUnitID — no
+  -- PID, no fingerprinting, no scoreboard. This function must never return
+  -- an ally button under any circumstances.
+  -- @param playerType: legacy parameter; kept for call-site compatibility.
+  --   Always treated as "Enemies" internally.
   -- @param ignoreExistingArena: if true, consider ALL buttons even those with arena tokens
   --   (used for Kotmogu orb detection where arena tokens shift between players)
   function BattleGroundEnemies:GetPlayerbuttonByUnitID(unitID, playerType, ignoreExistingArena)
     if not unitID or not UnitExists(unitID) then
       return nil
     end
+    -- Hard-pin to enemies. Any caller passing "Allies" is a bug — return nil
+    -- rather than silently fall through, so regressions surface immediately.
+    if playerType == "Allies" then
+      return nil
+    end
+    playerType = "Enemies"
 
-    -- Reject units of the wrong side to prevent PID match cross-contamination.
-    -- In BGs (including cross-faction Blitz), use UnitIsFriend/UnitIsEnemy which
-    -- correctly reflect team assignment regardless of actual faction.
-    -- In arena, skip guards entirely — arena tokens use ArenaIDToPlayerButton,
-    -- and target/focus use structural ally checks in the event handlers.
+    -- Reject non-players (pets, NPCs, totems, objects) at the door. Without
+    -- this, the matcher happily processes anything, and stale sticky-PID /
+    -- fallback class-match tiers can attribute a pet's identity to a random
+    -- same-class player button. UnitIsPlayer is NOT in the
+    -- SecretWhenUnitComparisonRestricted family (that tag covers Friend /
+    -- Enemy / UnitIsUnit), but wrap in pcall anyway for compound-token
+    -- safety (raid1target, nameplate1target, etc). Only reject on an
+    -- EXPLICIT false. nil/secret returns fall through — downstream guards
+    -- (GUID/name lookups, class checks) still refuse to match when identity
+    -- data is unknown.
+    local okPlayer, isPlayer = pcall(UnitIsPlayer, unitID)
+    if okPlayer and isPlayer == false then
+      return nil
+    end
+
+    -- Capture non-secret identity from the live token and stash on the matched
+    -- button's PlayerDetails. Future matches against the same button get more
+    -- discriminators (gender + honor) than scoreboard alone provides.
+    -- UnitSex and UnitHonorLevel return non-secret numbers for targetable units;
+    -- overwrites nil OR secret-tagged values (scoreboard honorLevel is secret).
+    --
+    -- NOTE: we deliberately do NOT capture a short-name-only (UnitName first
+    -- return) here anymore. Any time a token produced a wrong-button match
+    -- (stale sticky, fingerprint fallback, etc.), the captured short-name
+    -- permanently polluted the wrong frame — e.g. the flag-carrier rogue's
+    -- name "Luxnocis" would stamp onto an unrelated warlock's frame and
+    -- survive scoreboard refreshes. ShowRealmnames=false is honoured by
+    -- splitting the scoreboard-supplied PlayerName via strsplit.
+    local function captureLiveAttrs(btn)
+      -- Thin wrapper — delegate to the module-level method so other
+      -- code paths (PostClick stash bypass, focus stash bypass) can
+      -- capture from the same authoritative source without going
+      -- through the matcher.
+      return BattleGroundEnemies:CaptureUnitAttrs(btn, unitID)
+    end
+
+    -- Gated write into scanCycleCache. Skips writes for orb/flag carrier
+    -- lookups (need fresh resolves) and for dynamic tokens (target/focus/
+    -- mouseover/softenemy/softfriend — caching those caused cross-attach
+    -- when the token reassigned between events).
+    local function recordCycleMatch(button)
+      if not ignoreExistingArena and not DYNAMIC_TOKENS[unitID] then
+        scanCycleCache[unitID] = button
+      end
+    end
+
+    -- Gated write into stickyPIDCache. Same dynamic-token rule as the cycle
+    -- cache: sticky validates by class match, which is meaningless for same-
+    -- class twins when a dynamic token reassigns between them.
+    local function recordStickyMatch(button, classID)
+      if DYNAMIC_TOKENS[unitID] then
+        return
+      end
+      stickyPIDCache[unitID] = { button = button, classID = classID }
+    end
+
+    -- Reject friendly units entirely — this matcher is enemy-only. In BGs
+    -- (including cross-faction Blitz) UnitIsFriend correctly reflects team
+    -- assignment regardless of actual faction. In arena, skip the guard —
+    -- arena tokens use ArenaIDToPlayerButton and ally-side lookups don't
+    -- call here at all.
     local _, instanceType = IsInInstance()
     if instanceType == "pvp" then
-      if playerType == "Enemies" and UnitIsFriend("player", unitID) then
+      if UnitIsFriend("player", unitID) then
         return nil
       end
-      if playerType == "Allies" and UnitIsEnemy("player", unitID) then
-        return nil
-      end
+    end
+
+    -- Successful-match diag (target clicks + orb/flag-carrier resolves
+    -- only). Tags the path that produced the match so we can see whether
+    -- a wrong button came from sticky cache, name lookup, a specific tier,
+    -- arena peer elimination, or fallback. Call at every return-button
+    -- site below.
+    -- local function _logTierMatch(button, path)
+    --   -- Trigger filter: target click, orb/flag carrier resolves, AND any
+    --   -- arena/compound token (the misroute hunt for Grant/Viejito is most
+    --   -- likely via these — e.g. raidNtarget where an ally targets the
+    --   -- carrier, or a nameplate slot reused).
+    --   local triggerable = unitID == "target"
+    --       or unitID == "playertarget"
+    --       or ignoreExistingArena
+    --       or unitID:match("^arena%d+$")
+    --       or unitID:match("^nameplate%d+$")
+    --       or unitID:match("^raid%d+target$")
+    --       or unitID:match("^party%d+target$")
+    --       or unitID == "pettarget"
+    --       or unitID == "focustarget"
+    --   if not triggerable then
+    --     return
+    --   end
+    --   -- Skip cache-hit paths entirely — they only mean "we kept what
+    --   -- tier-N or arena-X decided earlier", no new diagnostic info.
+    --   -- Without this filter the chat floods with alternating scan-cycle
+    --   -- and sticky-cache lines for any stable target.
+    --   if path == "scan-cycle-cache" or path == "sticky-cache" or path == "sticky-cache(fallback)" then
+    --     return
+    --   end
+    --   -- De-dupe by button only: if the same button is being matched, it
+    --   -- doesn't matter which tier produced it this tick — the diagnostic
+    --   -- value of repeated identical resolves is zero. Logs only fire when
+    --   -- the matched button changes.
+    --   local last = _lastLoggedMatch[unitID]
+    --   if last and last.button == button then
+    --     return
+    --   end
+    --   _lastLoggedMatch[unitID] = { button = button, path = path }
+    --   -- local trigger = unitID
+    --   -- local nm = (button and button.PlayerDetails and button.PlayerDetails.PlayerName) or "<unnamed>"
+    --   -- local _GAM = C_AddOns and C_AddOns.GetAddOnMetadata or _G.GetAddOnMetadata
+    --   -- local _ver = _GAM and _GAM("BattleGroundEnemiesFixed", "Version")
+    --   -- local _verTag = "v?"
+    --   -- if type(_ver) == "string" then
+    --   --   local trailing = _ver:match("(%d+)$")
+    --   --   if trailing then
+    --   --     _verTag = "v" .. trailing
+    --   --   end
+    --   -- end
+    --   -- Diagnostic: re-enable to debug a future matcher misroute. Prints
+    --   -- which tier produced the match for arena/compound/target tokens.
+    --   -- print(
+    --   --   string.format(
+    --   --     "|cff66ccff[BGEF %s - matched - %s]|r %s via %s",
+    --   --     _verTag,
+    --   --     trigger,
+    --   --     nm,
+    --   --     path
+    --   --   )
+    --   -- )
+    -- end
+
+    -- Use BattleGroundEnemies:ArenaMappingContradicted so closures inside
+    -- this function reference the same predicate that's exposed publicly
+    -- (used by GetOrbCarrierButton/GetFlagCarrierButton in ObjectiveAndRespawn
+    -- to gate overwriting an existing chat-set mapping).
+    local function arenaMappingContradicted(btn, token)
+      return BattleGroundEnemies:ArenaMappingContradicted(btn, token)
     end
 
     -- For arena tokens, check the direct ArenaIDToPlayerButton mapping first.
-    -- This is authoritative (set by UpdateArenaPlayers from CreateArenaEnemies data)
-    -- and avoids ambiguity when multiple enemies share the same class.
-    if playerType == "Enemies" and unitID:match("^arena%d+$") and self.ArenaIDToPlayerButton[unitID] then
+    -- This is authoritative for stable assignments. For flag/orb carrier
+    -- lookups (ignoreExistingArena=true) the mapping may point at the
+    -- *previous* carrier — skip this fast-path and resolve fresh.
+    if not ignoreExistingArena and unitID:match("^arena%d+$") and self.ArenaIDToPlayerButton[unitID] then
       local arenaBtn = self.ArenaIDToPlayerButton[unitID]
-      if not ignoreExistingArena then
-        scanCycleCache[unitID] = arenaBtn
+      if arenaMappingContradicted(arenaBtn, unitID) then
+        -- Mapping points at a button whose stored class/race contradicts the
+        -- live unit at this token. Wipe the wrong mapping and fall through
+        -- to the proper tiers so the matcher can re-resolve.
+        self.ArenaIDToPlayerButton[unitID] = nil
+      else
+        recordCycleMatch(arenaBtn)
+        captureLiveAttrs(arenaBtn)
+        -- _logTierMatch(arenaBtn, "arena-fast-path")
+        return arenaBtn
       end
-      return arenaBtn
     end
 
-    -- Check per-cycle cache (same unitID already resolved this scan tick)
-    -- Skip cache when ignoreExistingArena is set (need fresh lookup for orb detection)
-    if not ignoreExistingArena then
+    -- Arena-token cross-identity: if this unit is the same real player as
+    -- a known arena token (flag/orb carrier), return the button mapped to
+    -- that arena token. Strong identity — UnitIsUnit compares underlying
+    -- players across token types. Fixes the "same-class duplicates both
+    -- track the carrier" bug where e.g. nameplate5 for a flag-carrying
+    -- druid fingerprint-matches Curly but arena1 is mapped to Rotagem;
+    -- this resolves nameplate5 to Rotagem too.
+    -- UnitIsUnit is SecretWhenUnitComparisonRestricted — return may be a
+    -- secret bool — so use truthy-check only (no equality compare).
+    if self.ArenaIDToPlayerButton then
+      for i = 1, 5 do
+        local arenaID = "arena" .. i
+        local arenaBtn = self.ArenaIDToPlayerButton[arenaID]
+        if arenaBtn and arenaBtn.PlayerType == "Enemies" then
+          -- UnitIsUnit is SecretWhenUnitComparisonRestricted. In 12.0.5 PvP
+          -- it can return a SECRET BOOLEAN for cross-side token pairs
+          -- (e.g. raid1 ↔ arenaN) — touching a secret value in a boolean
+          -- test would taint the entire call stack. Pre-filter with
+          -- issecretvalue before any truthy check. Only trust EXPLICIT
+          -- booleans; treat nil/secret as "can't determine" and skip.
+          local ok, same = pcall(UnitIsUnit, unitID, arenaID)
+          if ok and not (issecretvalue and issecretvalue(same)) and same then
+            -- Validate the cached mapping isn't contradicted by live data
+            -- on THIS unitID before returning. If stored class/race on
+            -- arenaBtn doesn't match what UnitClassBase/UnitRace report at
+            -- unitID, the mapping was wrong (likely from a misroute at
+            -- carrier-pickup time when data was sparse). Wipe it and let
+            -- the matcher fall through to the proper tiers.
+            if arenaMappingContradicted(arenaBtn, unitID) then
+              self.ArenaIDToPlayerButton[arenaID] = nil
+              -- continue the loop; another arena slot might match cleanly
+            else
+              recordCycleMatch(arenaBtn)
+              -- captureLiveAttrs deliberately omitted: UnitIsUnit can return
+              -- secret booleans in 12.0.5 PvP and we've seen wrong-twin
+              -- positives. Don't poison the matched button's stored attrs.
+              -- _logTierMatch(arenaBtn, "arena-cross-identity")
+              return arenaBtn
+            end
+          end
+        end
+      end
+    end
+
+    -- Check per-cycle cache (same unitID already resolved this scan tick).
+    -- Skip cache when ignoreExistingArena is set (need fresh lookup for orb
+    -- detection) or when the token is dynamic (see DYNAMIC_TOKENS — caching
+    -- target/focus/mouseover causes cross-attach when the token reassigns).
+    if not ignoreExistingArena and not DYNAMIC_TOKENS[unitID] then
       local cached = scanCycleCache[unitID]
       if cached ~= nil then
-        return cached or nil -- cached false means "no match found"
-      end
-    end
-
-    -- Try GUID lookup first (fastest path, works out of combat).
-    -- In combat UnitGUID returns a secret value, so pcall handles the taint.
-    -- 12.0: Compound tokens (e.g. "arena1target") are rejected by UnitGUID.
-    -- GOOD:
-    -- - arena{N}
-    -- - nameplate{N}
-    -- - focus
-    -- - target
-    -- - targettarget
-    -- - focustarget
-    -- - mouseover
-    -- - anyenemy
-    -- - softenemy
-    -- BAD:
-    -- - raid{N}target
-    -- - raidpet{N}target
-    -- - nameplate{N}target
-    -- - party{N}target
-    -- - partypet{N}target
-    -- - arena{N}target
-    -- - arenapet{N}target
-    -- - {N}target
-
-    local okGUID, unitGUID = pcall(UnitGUID, unitID)
-    if okGUID and unitGUID then
-      local okLookup, _guidData = pcall(function()
-        return self.PlayerGUIDs[unitGUID]
-      end)
-      if okLookup and _guidData then
-        local _name = _guidData.name
-        local guidButton = self[playerType].Players[_name]
-        if guidButton and guidButton.PlayerType == playerType then
-          if not ignoreExistingArena then
-            scanCycleCache[unitID] = guidButton
+        if cached then
+          -- Same class+race contradiction guard as sticky/arena tiers. The
+          -- cache is wiped per-ScanTargets tick, but a UNIT_HEALTH/POWER
+          -- event firing between ticks can hit a stale entry when a
+          -- compound token (nameplateN/raidNtarget) has reassigned to a
+          -- same-class twin since the cache was written.
+          if BattleGroundEnemies:ArenaMappingContradicted(cached, unitID) then
+            scanCycleCache[unitID] = nil
+            -- fall through to re-resolve via tiers below
+          else
+            -- _logTierMatch(cached, "scan-cycle-cache")
+            return cached
           end
-          return guidButton
+        else
+          return nil -- cached false means "no match found this tick"
         end
       end
     end
+
+    -- GUID fast-path removed: GUIDs are effectively always secret in
+    -- 12.0.5 PvP. UnitGUID returns a secret value that's unusable as a
+    -- table key, and the PlayerGUIDs table can never be populated with
+    -- a real key (CreateOrUpdatePlayerDetails stopped doing that).
+    -- Fall straight through to name-based lookup.
 
     local okName, unitName = pcall(GetUnitName, unitID, true)
-    if okName and unitName then
-      local okLookup, nameButton = pcall(function()
-        return self[playerType].Players[unitName]
-      end)
-      if okLookup and nameButton then
-        if not ignoreExistingArena then
-          scanCycleCache[unitID] = nameButton
-        end
+    if okName and unitName and not (issecretvalue and issecretvalue(unitName)) then
+      -- Canonicalize: GetUnitName returns "Name" for same-realm units,
+      -- but Players[] stores under "Name-Realm" form (CanonicalName at
+      -- storage). Without this, same-realm enemies fall through this
+      -- name tier and end up matched via the lower PID/fallback tiers,
+      -- which can attribute the token to a wrong same-class twin.
+      local nameButton = self[playerType].Players[BattleGroundEnemies:CanonicalName(unitName)]
+      if nameButton then
+        recordCycleMatch(nameButton)
+        captureLiveAttrs(nameButton)
+        -- _logTierMatch(nameButton, "name-lookup")
         return nameButton
       end
     end
@@ -1682,29 +2055,58 @@ do
     -- Check cross-tick sticky cache (prevents PID oscillation between scan cycles).
     -- Only used when GUID lookup failed (combat taint, compound tokens, etc.).
     -- Validates that the cached button still exists in the roster and class still matches.
-    local sticky = stickyPIDCache[unitID]
+    -- ignoreExistingArena=true → flag/orb carrier lookup; bypass sticky so the
+    -- carrier resolves fresh (arena token identity can change mid-match).
+    -- Dynamic tokens (target/focus/mouseover/softenemy/softfriend) bypass too:
+    -- sticky validates on class match, which is meaningless for same-class
+    -- twins when the token reassigns between them. PLAYER_TARGET_CHANGED
+    -- does invalidate the sticky for "target" but only one frame later, after
+    -- the synchronous UNIT_HEALTH("target") has already cross-attached.
+    local sticky = (not ignoreExistingArena) and not DYNAMIC_TOKENS[unitID] and stickyPIDCache[unitID] or nil
     if sticky then
       local stickyValid = false
-      if
-        sticky.button
-        and self[playerType].Players
-        and self[playerType].Players[sticky.button.PlayerName] == sticky.button
-      then
-        -- Button still in roster — verify class still matches the unit
-        local okClass, _, classToken = pcall(UnitClass, unitID)
-        if okClass and classToken and sticky.classToken == classToken then
-          stickyValid = true
-        elseif not okClass or not classToken then
-          -- Can't verify class (combat taint on compound token) — trust the sticky cache
-          -- This is the exact scenario that causes oscillation: PID re-resolves differently
-          -- each tick because UnitClass/UnitGUID fail intermittently in combat.
+      -- Button still in roster check — look at PlayerList (secret-safe) instead of Players dict
+      local buttonInRoster = false
+      if sticky.button and self[playerType].PlayerList then
+        local roster = self[playerType].PlayerList
+        for i = 1, #roster do
+          if roster[i] == sticky.button then
+            buttonInRoster = true
+            break
+          end
+        end
+      end
+      if buttonInRoster then
+        -- Verify class still matches the unit via numeric classID (no string
+        -- compare). UnitClassBase is non-secret post-12.0.5 — if it returns
+        -- nil/fails, the token isn't pointing at a valid unit right now, so
+        -- the sticky is unverifiable. Invalidate rather than blindly trust:
+        -- compound/nameplate tokens can silently switch to a different
+        -- player, and captureLiveAttrs on a wrong-match button writes that
+        -- player's name onto the wrong frame (seen in-game: warlock's
+        -- frame labelled "Luxnocis" because a stale sticky got captured
+        -- against a rogue-occupied token).
+        --
+        -- ALSO check race (class+race must not contradict). Class-only is
+        -- insufficient for same-class twins — when nameplate1 reassigns
+        -- between two hunters of different races, class still matches but
+        -- the sticky points at the wrong hunter. Use the same contradiction
+        -- predicate that arena tiers use; it short-circuits to "valid" when
+        -- live race is unreadable, so we don't over-invalidate.
+        local okClass, _, classID = pcall(UnitClassBase, unitID)
+        if okClass and classID and sticky.classID == classID
+            and not BattleGroundEnemies:ArenaMappingContradicted(sticky.button, unitID) then
           stickyValid = true
         end
       end
       if stickyValid then
-        if not ignoreExistingArena then
-          scanCycleCache[unitID] = sticky.button
-        end
+        recordCycleMatch(sticky.button)
+        -- captureLiveAttrs deliberately omitted: sticky perpetuates the
+        -- prior tier's decision, which may have been a tier-6+ narrow-down
+        -- rather than a tier-5 unique-class. Capturing here would re-poison
+        -- the button each tick. The original tier match (if it was tier-5)
+        -- already captured authoritatively.
+        -- _logTierMatch(sticky.button, sticky.fallback and "sticky-cache(fallback)" or "sticky-cache")
         return sticky.button
       else
         stickyPIDCache[unitID] = nil
@@ -1713,78 +2115,214 @@ do
 
     -- Unique-class match: if only one button on this side has the unit's class, it's unambiguous.
     -- If multiple share the class, narrow by race (class+race unique match).
+    -- 12.0.5: compare via numeric classID (third return of UnitClass) instead of
+    -- the classToken string — strings may be secret and comparison would taint.
     local hasMultipleCandidates = false
-    local okClass, _, unitClassToken = pcall(UnitClass, unitID)
-    if okClass and unitClassToken and self[playerType].Players then
+    local okClass, _, unitClassID = pcall(UnitClassBase, unitID)
+    local list = self[playerType].PlayerList
+    if okClass and unitClassID and list then
       local match = nil
       local count = 0
-      for _, button in pairs(self[playerType].Players) do
-        if not ignoreExistingArena and button.UnitIDs and button.UnitIDs.Arena then
-        -- Already identified via arena token, skip
-        elseif button.PlayerDetails and button.PlayerDetails.PlayerClass == unitClassToken then
+      for i = 1, #list do
+        local button = list[i]
+        if button.PlayerDetails and ClassTokenToID[button.PlayerDetails.PlayerClass or ""] == unitClassID then
           count = count + 1
           match = button
         end
       end
+      -- arena-skip removed: previous code excluded buttons with
+      -- UnitIDs.Arena set ("already identified via arena token, skip"). That
+      -- was wrong when a compound token (raid5target, nameplate1, etc.)
+      -- points at the arena-claimed carrier — arena cross-identity tier
+      -- above can't always confirm it (UnitIsUnit returns secret in 12.0.5
+      -- PvP for compound tokens), so tiers below MUST be able to resolve
+      -- the carrier as a candidate. Without this fix, a same-class twin
+      -- becomes the "unique" tier-5 match, misrouting compound tokens to
+      -- the wrong button (the cross-attach Grant/Viejito symptom).
       if count == 1 and match then
-        scanCycleCache[unitID] = match
-        stickyPIDCache[unitID] = {
-          button = match,
-          classToken = unitClassToken,
-        }
+        recordCycleMatch(match)
+        recordStickyMatch(match, unitClassID)
+        captureLiveAttrs(match)
+        -- _logTierMatch(match, "tier-5-class-unique")
         return match
       end
       hasMultipleCandidates = count > 1
     end
 
-    -- Class+race unique match: disambiguate same-class candidates by race.
-    -- Uses first return of UnitRace (localized name) which always returns the real race,
-    -- even in mercenary mode (second return / raceID are disguised).
+    -- Helper: numeric classID match without tainting on secret classToken strings
+    local function buttonClassMatches(button)
+      return button.PlayerDetails and ClassTokenToID[button.PlayerDetails.PlayerClass or ""] == unitClassID
+    end
+
+    -- Build the same-class candidate set ONCE for reuse across tiers 7-9.
+    -- Mirrors the per-tier filtering logic (skip arena-claimed when not
+    -- ignoreExistingArena). The strict-rule check (allCandidatesHaveAttr)
+    -- needs this set to know whether all candidates have data for a given
+    -- comparator before the tier fires.
+    local sameClassCandidates
+    if hasMultipleCandidates and list then
+      sameClassCandidates = {}
+      for i = 1, #list do
+        local b = list[i]
+        -- arena-skip removed (see tier-5 comment above): arena-claimed
+        -- buttons must remain candidates so the strict-rule gate has the
+        -- correct count and tiers below can resolve compound tokens that
+        -- point at the carrier.
+        if buttonClassMatches(b) then
+          sameClassCandidates[#sameClassCandidates + 1] = b
+        end
+      end
+    end
+    -- Generic safe-equality: post-12.0.5 both strings AND numbers can be secret.
+    -- Returns false if either side is secret OR either side is nil.
+    local function safeEq(a, b)
+      if a == nil or b == nil then
+        return false
+      end
+      if issecretvalue and (issecretvalue(a) or issecretvalue(b)) then
+        return false
+      end
+      return a == b
+    end
+    -- Soft-equality for the dominated cascade (inner tiebreakers in tiers
+    -- 7/8/8.5/9). Returns true when either side is nil/secret (no opinion)
+    -- OR both sides match. Returns false ONLY when both sides have
+    -- definite non-nil non-secret values that differ.
+    -- Without this, the cascade rejects candidates whose stored attrs
+    -- haven't been populated yet by captureLiveAttrs — e.g., tier 9
+    -- guild-match unique-pick gets blocked because the candidate's
+    -- gender/honor were never captured. Outer key (the tier's primary
+    -- attr) still uses strict safeEq so the tier itself is gated correctly.
+    local function softEq(a, b)
+      if a == nil or b == nil then
+        return true
+      end
+      if issecretvalue and (issecretvalue(a) or issecretvalue(b)) then
+        return true
+      end
+      return a == b
+    end
+    -- Guild equality with three-state semantics:
+    --   nil   = unknown (we haven't established whether the unit is in a guild)
+    --   false = confirmed guildless
+    --   "X"   = in guild "X"
+    -- Returns true when the values match (both string and equal, or both false),
+    -- false when they definitively differ (string vs different string, or string
+    -- vs false, or false vs string), nil when at least one side is unknown.
+    local function guildCmp(a, b)
+      if a == nil or b == nil then
+        return nil -- unknown
+      end
+      if issecretvalue and (issecretvalue(a) or issecretvalue(b)) then
+        return nil -- secret = unknown
+      end
+      return a == b -- handles string==string, false==false, and the cross cases
+    end
+    -- Strict-rule helper: returns true if EVERY candidate has comparable
+    -- (non-nil, non-secret) stored data for the given field. If any
+    -- candidate has nil/secret, the tier shouldn't fire — we'd be picking
+    -- the only candidate WITH data, which is a guess (the others might
+    -- actually be the unit, we just can't compare).
+    -- For GuildName specifically, `false` (confirmed guildless) counts as
+    -- comparable data — Lua's `v == nil` correctly excludes only nil
+    -- without flagging false as missing.
+    local function allCandidatesHaveAttr(candidates, field)
+      for i = 1, #candidates do
+        local pd = candidates[i].PlayerDetails
+        local v = pd and pd[field]
+        if v == nil then
+          return false
+        end
+        if issecretvalue and issecretvalue(v) then
+          return false
+        end
+      end
+      return true
+    end
+    -- Race from scoreboard (raceName, localized) and UnitRace(unit) 1st return
+    -- are both non-secret post-12.0.5 — direct string compare is safe.
+    -- IMPORTANT: `unitRace` MUST be declared as a local BEFORE the function
+    -- so the function captures it as a proper upvalue. If declared after,
+    -- Lua resolves the name to a global (always nil) and every call to
+    -- raceComparableAndEqual returns false — silently breaking the race
+    -- tier (6) AND the race component of every higher tier (7/8/8.5/9).
     local unitRace = nil
+    local function raceComparableAndEqual(button)
+      local pr = button.PlayerDetails and button.PlayerDetails.PlayerRace
+      return pr ~= nil and unitRace ~= nil and pr == unitRace
+    end
+
+    -- Class+race unique match: disambiguate same-class candidates by race.
     if hasMultipleCandidates then
       local okRace, unitRaceLocalized = pcall(UnitRace, unitID)
       if okRace and unitRaceLocalized then
         unitRace = unitRaceLocalized
         local match = nil
         local count = 0
-        for _, button in pairs(self[playerType].Players) do
-          if not ignoreExistingArena and button.UnitIDs and button.UnitIDs.Arena then
-          -- Already identified via arena token, skip
-          elseif button.PlayerDetails and button.PlayerDetails.PlayerClass == unitClassToken then
-            if (button.PlayerDetails.PlayerRace or "") == unitRace then
-              count = count + 1
-              match = button
-            end
+        for i = 1, #list do
+          local button = list[i]
+          if buttonClassMatches(button) and raceComparableAndEqual(button) then
+            count = count + 1
+            match = button
           end
         end
         if count == 1 and match then
-          scanCycleCache[unitID] = match
-          stickyPIDCache[unitID] = {
-            button = match,
-            classToken = unitClassToken,
-          }
+          recordCycleMatch(match)
+          recordStickyMatch(match, unitClassID)
+          captureLiveAttrs(match)
+          -- _logTierMatch(match, "tier-6-race")
           return match
         end
       end
     end
 
+    -- Refine the candidate set after tier 6: same-class candidates whose
+    -- stored race is compatible with the unit's live race. Same-class but
+    -- different-race candidates are already known NOT to be the unit (race
+    -- is NeverSecret on scoreboard, so PlayerRace is authoritative). Strict
+    -- rule checks in tiers 7-9 should use this narrower set so a different-
+    -- race candidate's nil gender/honor/power doesn't block the tier from
+    -- firing for the actual could-be-the-unit subset.
+    -- Falls back to full sameClassCandidates if unit race wasn't readable
+    -- (unitRace is nil — tier 6 couldn't run) or if no candidate matches
+    -- the unit race (shouldn't happen given scoreboard race authority, but
+    -- defensive in case unit race is wrong).
+    -- "Unknown" stored race counts as compatible — we can't rule them out.
+    local refinedCandidates = sameClassCandidates
+    if unitRace and sameClassCandidates then
+      local filtered = {}
+      for _, c in ipairs(sameClassCandidates) do
+        local pr = c.PlayerDetails and c.PlayerDetails.PlayerRace
+        if pr == nil or pr == "Unknown" or pr == unitRace then
+          filtered[#filtered + 1] = c
+        end
+      end
+      if #filtered > 0 then
+        refinedCandidates = filtered
+      end
+    end
+
     -- Gender disambiguation: class+race+gender if race available, class+gender otherwise.
-    if hasMultipleCandidates then
-      local okGender, unitGender = pcall(UnitSex, unitID)
-      if okGender and unitGender and unitGender > 0 then
+    -- STRICT RULE: every same-class+matching-race candidate must have
+    -- non-nil/non-secret stored gender, otherwise we'd be picking the only
+    -- candidate WITH gender data by default — that's a guess (the others
+    -- might be the unit, we just couldn't compare). Skip when data sparse.
+    if hasMultipleCandidates and refinedCandidates and allCandidatesHaveAttr(refinedCandidates, "gender") then
+      local okGender, unitGender = pcall(UnitSexBase, unitID)
+      -- `unitGender ~= nil` (NOT `> 0`): UnitSexBase returns the modern
+      -- UnitSex enum where 0 = Male, 1 = Female, 2 = None, ... A `> 0`
+      -- guard would silently exclude Male players. The legacy UnitSex
+      -- (not Base) used 1 = unknown / 2 = male / 3 = female where `> 0`
+      -- was meaningless and `> 1` was the correct "exclude unknown" check.
+      if okGender and unitGender ~= nil then
         local match = nil
         local count = 0
-        for _, button in pairs(self[playerType].Players) do
-          if not ignoreExistingArena and button.UnitIDs and button.UnitIDs.Arena then
-          -- Already identified via arena token, skip
-          elseif
-            button.PlayerDetails
-            and button.PlayerDetails.PlayerClass == unitClassToken
-            and button.PlayerDetails.gender == unitGender
-          then
+        for i = 1, #list do
+          local button = list[i]
+          if buttonClassMatches(button) and safeEq(button.PlayerDetails.gender, unitGender) then
             local dominated = true
             if unitRace then
-              dominated = ((button.PlayerDetails.PlayerRace or "") == unitRace)
+              dominated = softEq(button.PlayerDetails.PlayerRace, unitRace)
             end
             if dominated then
               count = count + 1
@@ -1796,37 +2334,42 @@ do
           end
         end
         if count == 1 and match then
-          scanCycleCache[unitID] = match
-          stickyPIDCache[unitID] = {
-            button = match,
-            classToken = unitClassToken,
-          }
+          recordCycleMatch(match)
+          recordStickyMatch(match, unitClassID)
+          -- captureLiveAttrs deliberately omitted: tier 7+ relies on
+          -- stored attrs that may have been seeded from an earlier wrong
+          -- match. If the unique-match here is wrong, capturing would
+          -- poison the button with another player's live attrs. Only
+          -- tier 5 (sole same-class candidate), tier 6 (authoritative
+          -- scoreboard race uniquely identifies), and the arena fast-path
+          -- are safe enough to capture from.
+          -- _logTierMatch(match, "tier-7-gender")
           return match
         end
       end
     end
 
     -- Honor level disambiguation: class + race/gender/honor when available.
-    if hasMultipleCandidates then
+    -- unitHonor > 0 guard: UnitHonorLevel can return 0 transiently when the
+    -- unit's data isn't fully ready. 0 is truthy in Lua so the bare check
+    -- lets the tier run with useless input; filter it out so we fall
+    -- through cleanly to the guild tier instead of silently matching nothing.
+    -- STRICT RULE: every same-class candidate must have stored honor.
+    if hasMultipleCandidates and refinedCandidates and allCandidatesHaveAttr(refinedCandidates, "honorLevel") then
       local okHonor, unitHonor = pcall(UnitHonorLevel, unitID)
-      if okHonor and unitHonor then
-        local okGender, unitGender = pcall(UnitSex, unitID)
+      if okHonor and unitHonor and unitHonor > 0 then
+        local okGender, unitGender = pcall(UnitSexBase, unitID)
         local firstMatch = nil
         local count = 0
-        for _, button in pairs(self[playerType].Players) do
-          if not ignoreExistingArena and button.UnitIDs and button.UnitIDs.Arena then
-          -- Already identified via arena token, skip
-          elseif
-            button.PlayerDetails
-            and button.PlayerDetails.PlayerClass == unitClassToken
-            and button.PlayerDetails.honorLevel == unitHonor
-          then
+        for i = 1, #list do
+          local button = list[i]
+          if buttonClassMatches(button) and safeEq(button.PlayerDetails.honorLevel, unitHonor) then
             local dominated = true
             if dominated and unitRace then
-              dominated = ((button.PlayerDetails.PlayerRace or "") == unitRace)
+              dominated = softEq(button.PlayerDetails.PlayerRace, unitRace)
             end
-            if dominated and okGender and unitGender and unitGender > 0 then
-              dominated = (button.PlayerDetails.gender == unitGender)
+            if dominated and okGender and unitGender ~= nil then
+              dominated = softEq(button.PlayerDetails.gender, unitGender)
             end
             if dominated then
               count = count + 1
@@ -1840,41 +2383,47 @@ do
           end
         end
         if count == 1 and firstMatch then
-          scanCycleCache[unitID] = firstMatch
-          stickyPIDCache[unitID] = {
-            button = firstMatch,
-            classToken = unitClassToken,
-          }
+          recordCycleMatch(firstMatch)
+          recordStickyMatch(firstMatch, unitClassID)
+          -- captureLiveAttrs omitted: see tier-7 comment above.
+          -- _logTierMatch(firstMatch, "tier-8-honor")
           return firstMatch
         end
       end
     end
 
-    -- Guild disambiguation: class + race/gender/honor/guild when available.
-    if hasMultipleCandidates then
-      local okGuild, unitGuild = pcall(GetGuildInfo, unitID)
-      if okGuild and unitGuild then
-        local okGender, unitGender = pcall(UnitSex, unitID)
+    -- Power-type disambiguation: class + race/gender/honor/powerType.
+    -- For hybrid classes (DH, Shaman, Priest, Monk, Druid) different specs
+    -- often use different primary power types — UnitPowerType returns are
+    -- non-secret on hostile units, so we can compare live read against
+    -- a stored lastPowerType captured by captureLiveAttrs (or seeded from
+    -- harvest). Caveat: shapeshift forms (Druid) cause the live value to
+    -- drift mid-match. We do NOT gate on class — the tier just won't
+    -- unique-match in that tick and falls through to the guild tier.
+    -- Misroute risk: druid A in caster (Mana) vs druid B (lastPowerType=Mana)
+    -- — captureLiveAttrs refreshes on every successful resolve, so the
+    -- staleness window is bounded.
+    -- STRICT RULE: every same-class candidate must have stored lastPowerType.
+    if hasMultipleCandidates and refinedCandidates and allCandidatesHaveAttr(refinedCandidates, "lastPowerType") then
+      -- pcall: UnitPowerType errors on compound tokens, doesn't return nil.
+      local okPower, unitPowerType = pcall(UnitPowerType, unitID)
+      if okPower and unitPowerType then
+        local okGender, unitGender = pcall(UnitSexBase, unitID)
         local okHonor, unitHonor = pcall(UnitHonorLevel, unitID)
         local match = nil
         local count = 0
-        for _, button in pairs(self[playerType].Players) do
-          if not ignoreExistingArena and button.UnitIDs and button.UnitIDs.Arena then
-          -- Already identified via arena token, skip
-          elseif
-            button.PlayerDetails
-            and button.PlayerDetails.PlayerClass == unitClassToken
-            and button.PlayerDetails.GuildName == unitGuild
-          then
+        for i = 1, #list do
+          local button = list[i]
+          if buttonClassMatches(button) and safeEq(button.PlayerDetails.lastPowerType, unitPowerType) then
             local dominated = true
             if dominated and unitRace then
-              dominated = ((button.PlayerDetails.PlayerRace or "") == unitRace)
+              dominated = softEq(button.PlayerDetails.PlayerRace, unitRace)
             end
-            if dominated and okGender and unitGender and unitGender > 0 then
-              dominated = (button.PlayerDetails.gender == unitGender)
+            if dominated and okGender and unitGender ~= nil then
+              dominated = softEq(button.PlayerDetails.gender, unitGender)
             end
-            if dominated and okHonor and unitHonor then
-              dominated = (button.PlayerDetails.honorLevel == unitHonor)
+            if dominated and okHonor and unitHonor and unitHonor > 0 then
+              dominated = softEq(button.PlayerDetails.honorLevel, unitHonor)
             end
             if dominated then
               count = count + 1
@@ -1886,35 +2435,391 @@ do
           end
         end
         if count == 1 and match then
-          scanCycleCache[unitID] = match
-          stickyPIDCache[unitID] = {
-            button = match,
-            classToken = unitClassToken,
-          }
+          recordCycleMatch(match)
+          recordStickyMatch(match, unitClassID)
+          -- captureLiveAttrs omitted: see tier-7 comment above.
+          -- _logTierMatch(match, "tier-8.5-power")
+          return match
+        end
+      end
+    end
+
+    -- Guild disambiguation: class + race/gender/honor/guild when available.
+    -- STRICT RULE: every same-class candidate must have stored guild data
+    -- (either a real guild name string OR `false` = confirmed guildless).
+    -- nil stored = unknown → tier doesn't fire.
+    --
+    -- Live unit guild also uses the three-state model:
+    --   GetGuildInfo returns string → unit is in that guild
+    --   GetGuildInfo returns nil + UnitSexBase returns a value → unit
+    --     is readable, the nil guild means CONFIRMED guildless → use false
+    --   GetGuildInfo returns nil + UnitSexBase returns nil → can't read
+    --     unit at all, treat as unknown → skip tier
+    if hasMultipleCandidates and refinedCandidates and allCandidatesHaveAttr(refinedCandidates, "GuildName") then
+      local okGuild, unitGuild = pcall(GetGuildInfo, unitID)
+      if not okGuild then
+        unitGuild = nil
+      elseif unitGuild and issecretvalue and issecretvalue(unitGuild) then
+        unitGuild = nil -- secret = unusable
+      end
+      -- Detect "confirmed guildless" on the live unit side (same heuristic
+      -- as captureLiveAttrs): if guild read returned nil but unit IS
+      -- readable per UnitSexBase, the nil is a real "no guild" answer.
+      if unitGuild == nil then
+        local sexProbe = UnitSexBase(unitID)
+        if sexProbe then
+          unitGuild = false
+        end
+      end
+      -- Tier 9 only fires if we have ANY guild signal for the unit
+      -- (string or false). nil = unknown unit guild → skip.
+      if unitGuild ~= nil then
+        local okGender, unitGender = pcall(UnitSexBase, unitID)
+        local okHonor, unitHonor = pcall(UnitHonorLevel, unitID)
+        local match = nil
+        local count = 0
+        for i = 1, #list do
+          local button = list[i]
+          if buttonClassMatches(button) and guildCmp(button.PlayerDetails.GuildName, unitGuild) == true then
+            local dominated = true
+            if dominated and unitRace then
+              dominated = softEq(button.PlayerDetails.PlayerRace, unitRace)
+            end
+            if dominated and okGender and unitGender ~= nil then
+              dominated = softEq(button.PlayerDetails.gender, unitGender)
+            end
+            if dominated and okHonor and unitHonor then
+              dominated = softEq(button.PlayerDetails.honorLevel, unitHonor)
+            end
+            if dominated then
+              count = count + 1
+              match = button
+              if count > 1 then
+                break
+              end
+            end
+          end
+        end
+        if count == 1 and match then
+          recordCycleMatch(match)
+          recordStickyMatch(match, unitClassID)
+          -- captureLiveAttrs omitted: see tier-7 comment above.
+          -- _logTierMatch(match, "tier-9-guild")
           return match
         end
       end
     end
 
     -- Fallback: all disambiguation tiers exhausted, return first class match.
+    -- This may attach to the wrong same-class button, but "sometimes wrong
+    -- button" is better than "nothing gets wired up at all" — without the
+    -- fallback, nameplate/target/etc. linkage fails entirely when no live
+    -- disambiguator (gender/honor/guild) has been captured yet.
+    -- IMPORTANT: do NOT call captureLiveAttrs on a fallback match. Stamping
+    -- gender/honor/unitNameOnly from the live token onto a guessed button
+    -- would permanently pollute that button with another player's data.
+    --
+    -- Ambiguity diag. Fires when:
+    --   1) user clicked a frame (unitID="target"), OR
+    --   2) orb/flag-carrier code is trying to match an arena token
+    --      (ignoreExistingArena=true — set by GetOrbCarrierButton and
+    --      GetFlagCarrierButton in Modules/ObjectiveAndRespawn.lua)
+    -- and we reached fallback because tiers 5-9 + power couldn't unique-match.
+    -- Shows which candidates collide and on which attributes — only attrs
+    -- that ALL candidates share with non-nil equal values are listed;
+    -- missing/nil/secret values are omitted entirely. No throttle, no
+    -- debug-flag gate.
+    -- if (unitID == "target" or ignoreExistingArena) and hasMultipleCandidates then
+    --   -- local candidates = {}
+    --   -- for i = 1, #list do
+    --   --   local b = list[i]
+    --   --   if buttonClassMatches(b) then
+    --   --     candidates[#candidates + 1] = b
+    --   --   end
+    --   -- end
+    --   -- if #candidates >= 2 then
+    --   --   -- local POWER_TYPE_NAMES = {
+    --   --   --   [0] = "Mana",
+    --   --   --   [1] = "Rage",
+    --   --   --   [2] = "Focus",
+    --   --   --   [3] = "Energy",
+    --   --   --   [6] = "Runic Power",
+    --   --   --   [8] = "Lunar Power",
+    --   --   --   [11] = "Maelstrom",
+    --   --   --   [13] = "Insanity",
+    --   --   --   [17] = "Fury",
+    --   --   --   [18] = "Pain",
+    --   --   --   [19] = "Essence",
+    --   --   -- }
+    --   --   -- Returns shared value if all candidates have same non-nil non-secret
+    --   --   -- value for the given PlayerDetails key, else nil.
+    --   --   -- local function sharedAttr(field)
+    --   --   --   local first
+    --   --   --   for i = 1, #candidates do
+    --   --   --     local pd = candidates[i].PlayerDetails
+    --   --   --     local v = pd and pd[field]
+    --   --   --     if v == nil or (issecretvalue and issecretvalue(v)) then
+    --   --   --       return nil
+    --   --   --     end
+    --   --   --     if i == 1 then
+    --   --   --       first = v
+    --   --   --     elseif v ~= first then
+    --   --   --       return nil
+    --   --   --     end
+    --   --   --   end
+    --   --   --   return first
+    --   --   -- end
+    --   --   -- Per-candidate "Name (Race)" — race is non-secret, always show it
+    --   --   -- so the user can see when 2+ candidates share a race vs. when the
+    --   --   -- candidate set is split (which is why the race tier failed to
+    --   --   -- unique-match).
+    --   --   -- local names = {}
+    --   --   -- for i = 1, #candidates do
+    --   --   --   local pd = candidates[i].PlayerDetails
+    --   --   --   local nm = (pd and pd.PlayerName) or "<unnamed>"
+    --   --   --   local race = (pd and pd.PlayerRace) or "<unknown race>"
+    --   --   --   names[i] = string.format("%s (%s)", nm, race)
+    --   --   -- end
+    --   --   -- local firstPd = candidates[1].PlayerDetails
+    --   --   -- local parts = {
+    --   --   --   string.format("class (%s)", tostring(firstPd and firstPd.PlayerClass)),
+    --   --   -- }
+    --   --   -- -- race is shown inline next to each name above, no need to repeat
+    --   --   -- -- it in the "same X" list.
+    --   --   -- local sharedGender = sharedAttr("gender")
+    --   --   -- if sharedGender then
+    --   --   --   parts[#parts + 1] = string.format("gender (%s)", tostring(sharedGender))
+    --   --   -- end
+    --   --   -- local sharedHonor = sharedAttr("honorLevel")
+    --   --   -- if sharedHonor then
+    --   --   --   parts[#parts + 1] = string.format("honor level (%s)", tostring(sharedHonor))
+    --   --   -- end
+    --   --   -- local sharedPower = sharedAttr("lastPowerType")
+    --   --   -- if sharedPower then
+    --   --   --   local pname = POWER_TYPE_NAMES[sharedPower] or tostring(sharedPower)
+    --   --   --   parts[#parts + 1] = string.format("power type (%s)", pname)
+    --   --   -- end
+    --   --   -- local sharedGuild = sharedAttr("GuildName")
+    --   --   -- if sharedGuild then
+    --   --   --   parts[#parts + 1] = string.format("guild (%s)", sharedGuild)
+    --   --   -- end
+    --   --   -- local trigger = ignoreExistingArena and unitID or "target"
+
+    --   --   -- Live unit reads at the moment of mismatch — exposes which live
+    --   --   -- attrs the disambiguation tiers actually had to work with. If a
+    --   --   -- field shows nil here, that tier silently skipped (e.g., race=nil
+    --   --   -- means tier 6 couldn't fire even when candidates have distinct
+    --   --   -- races stored). Power-type token shown as name when known.
+    --   --   -- local POWER_TYPE_NAMES = {
+    --   --   --   [0] = "Mana",
+    --   --   --   [1] = "Rage",
+    --   --   --   [2] = "Focus",
+    --   --   --   [3] = "Energy",
+    --   --   --   [6] = "Runic Power",
+    --   --   --   [8] = "Lunar Power",
+    --   --   --   [11] = "Maelstrom",
+    --   --   --   [13] = "Insanity",
+    --   --   --   [17] = "Fury",
+    --   --   --   [18] = "Pain",
+    --   --   --   [19] = "Essence",
+    --   --   -- }
+    --   --   -- local function fmt(v)
+    --   --   --   if v == nil then
+    --   --   --     return "nil"
+    --   --   --   end
+    --   --   --   if issecretvalue and issecretvalue(v) then
+    --   --   --     return "<secret>"
+    --   --   --   end
+    --   --   --   return tostring(v)
+    --   --   -- end
+    --   --   -- local _, uRace = pcall(UnitRace, unitID)
+    --   --   -- local _, uGender = pcall(UnitSexBase, unitID)
+    --   --   -- local _, uHonor = pcall(UnitHonorLevel, unitID)
+    --   --   -- local okPow, uPower = pcall(UnitPowerType, unitID)
+    --   --   -- local powerStr = "nil"
+    --   --   -- if okPow and uPower then
+    --   --   --   powerStr = POWER_TYPE_NAMES[uPower] or tostring(uPower)
+    --   --   -- end
+    --   --   -- local _, uGuild = pcall(GetGuildInfo, unitID)
+    --   --   -- local unitRead = string.format(
+    --   --   --   "race=%s gender=%s honor=%s power=%s guild=%s",
+    --   --   --   fmt(uRace), fmt(uGender), fmt(uHonor), powerStr, fmt(uGuild)
+    --   --   -- )
+
+    --   --   -- Per-candidate stored attrs — appended after unit read, separated
+    --   --   -- by <<<>>> so the whole diag stays on one line. Lets us tell apart
+    --   --   -- "genuine collision (all candidates have same stored values)"
+    --   --   -- from "candidates not yet populated by captureLiveAttrs".
+    --   --   -- local candidateBlocks = {}
+    --   --   -- for i = 1, #candidates do
+    --   --   --   local pd = candidates[i].PlayerDetails or {}
+    --   --   --   local nm = pd.PlayerName or "<unnamed>"
+    --   --   --   local cgPower = "nil"
+    --   --   --   if pd.lastPowerType then
+    --   --   --     cgPower = POWER_TYPE_NAMES[pd.lastPowerType] or tostring(pd.lastPowerType)
+    --   --   --   end
+    --   --   --   candidateBlocks[i] = string.format(
+    --   --   --     "%s: gender=%s honor=%s power=%s guild=%s",
+    --   --   --     nm,
+    --   --   --     fmt(pd.gender),
+    --   --   --     fmt(pd.honorLevel),
+    --   --   --     cgPower,
+    --   --   --     fmt(pd.GuildName)
+    --   --   --   )
+    --   --   -- end
+
+    --   --   -- De-dupe: skip if this exact same mismatch (same names + same
+    --   --   -- unit reads + same candidate stored attrs) was already logged
+    --   --   -- for this unitID. Without this, every matcher call (ScanTargets,
+    --   --   -- UNIT_TARGET, PLAYER_TARGET_CHANGED_Deferred — multiple per
+    --   --   -- second) re-fires the diag for the same unresolvable case.
+    --   --   -- local mismatchSignature = table.concat(names, ",")
+    --   --   --   .. "|"
+    --   --   --   .. unitRead
+    --   --   --   .. "|"
+    --   --   --   .. table.concat(candidateBlocks, "|")
+    --   --   -- if _lastLoggedMismatch[unitID] == mismatchSignature then
+    --   --   --   return nil
+    --   --   -- end
+    --   --   -- _lastLoggedMismatch[unitID] = mismatchSignature
+
+    --   --   -- Version-tag the prefix so logs are unambiguous about which build
+    --   --   -- emitted them. Extract the trailing segment of the toc Version
+    --   --   -- ("12.0.5.27" → "v27"); falls back to "v?" if the lookup fails.
+    --   --   -- local _GetAddOnMetadata = C_AddOns and C_AddOns.GetAddOnMetadata or _G.GetAddOnMetadata
+    --   --   -- local _ver = _GetAddOnMetadata and _GetAddOnMetadata("BattleGroundEnemiesFixed", "Version")
+    --   --   -- local _verTag = "v?"
+    --   --   -- if type(_ver) == "string" then
+    --   --   --   local trailing = _ver:match("(%d+)$")
+    --   --   --   if trailing then
+    --   --   --     _verTag = "v" .. trailing
+    --   --   --   end
+    --   --   -- end
+    --   --   -- Diagnostic: re-enable to debug a future ambiguous-twin fallback.
+    --   --   -- print(
+    --   --   --   string.format(
+    --   --   --     "|cffff8800[BGEF %s - mismatch - %s]|r %s — all have same %s; unit read: %s <<<>>> %s",
+    --   --   --     _verTag,
+    --   --   --     trigger,
+    --   --   --     table.concat(names, ", "),
+    --   --   --     table.concat(parts, ", "),
+    --   --   --     unitRead,
+    --   --   --     table.concat(candidateBlocks, " <<<>>> ")
+    --   --   --   )
+    --   --   -- )
+    --   -- end
+    -- end
+
+    -- Arena-peer disambiguation: if a same-class candidate has an arena token,
+    -- try UnitIsUnit(unitID, arenaN) to decide. This works for simple tokens
+    -- (target, focus, mouseover, arena↔arena). For nameplate and compound
+    -- tokens (raidNtarget, etc.) UnitIsUnit returns nil even when equal
+    -- (12.0.5 PvP lockdown, diagnosed in-game) — so we can't prove the unit
+    -- ISN'T the arena peer, and fallback-picking the non-arena peer would
+    -- misroute the carrier's health to the duplicate's frame. In that
+    -- unresolvable case, refuse to match.
     if hasMultipleCandidates then
-      for _, button in pairs(self[playerType].Players) do
-        if not ignoreExistingArena and button.UnitIDs and button.UnitIDs.Arena then
-        -- Already identified via arena token, skip
-        elseif button.PlayerDetails and button.PlayerDetails.PlayerClass == unitClassToken then
-          scanCycleCache[unitID] = button
-          stickyPIDCache[unitID] = {
-            button = button,
-            classToken = unitClassToken,
-          }
-          return button
+      local arenaPeers
+      for i = 1, #list do
+        local button = list[i]
+        if buttonClassMatches(button) and button.UnitIDs and button.UnitIDs.Arena then
+          arenaPeers = arenaPeers or {}
+          arenaPeers[#arenaPeers + 1] = button
         end
       end
+
+      if arenaPeers then
+        local disambiguated = false
+        for _, peer in ipairs(arenaPeers) do
+          local arenaToken = peer.UnitIDs.Arena
+          local ok, same = pcall(UnitIsUnit, unitID, arenaToken)
+          -- Same secret-boolean hazard as the cross-identity loop above.
+          -- Pre-filter via issecretvalue before any boolean test on `same`.
+          local sameIsSecret = issecretvalue and issecretvalue(same)
+          if ok and not sameIsSecret and same then
+            -- Positive match — this unit IS the arena peer.
+            recordCycleMatch(peer)
+            -- captureLiveAttrs deliberately omitted: same hazard as
+            -- arena-cross-identity above. UnitIsUnit can return secret
+            -- bools in 12.0.5 PvP. Don't poison stored attrs from a
+            -- match that may itself be wrong.
+            -- _logTierMatch(peer, "arena-peer-elimination")
+            return peer
+          end
+          if ok and not sameIsSecret and same == false then
+            -- Clean negative: UnitIsUnit fired and returned non-secret false.
+            -- The unit is definitively not this arena peer. Safe to eliminate.
+            disambiguated = true
+          end
+          -- ok && same==nil, ok && secret, or !ok → API blocked/restricted for
+          -- this token pair; can't eliminate this peer. Leaves `disambiguated`
+          -- at its current value.
+        end
+
+        if not disambiguated then
+          -- No arena peer could be ruled out via UnitIsUnit, and none matched.
+          -- Can't tell if unit is one of the arena peers or the non-arena peer.
+          -- Refuse rather than misroute.
+          return nil
+        end
+        -- Fall through: all arena peers definitively ruled out, match a
+        -- non-arena same-class candidate.
+      end
+
+      -- Fallback-first-class loop REMOVED — was a low-confidence guess
+      -- that picked the first same-class candidate when no tier could
+      -- uniquely resolve. Per the strict-rule design: if no tier produced
+      -- a unique match, return nil instead of guessing. Trade-off:
+      -- ambiguous twins get empty frames (no health/power updates) until
+      -- one of them ends up on an arena token, dies, or harvest data
+      -- accumulates enough to enable tier 7-9 strict comparisons.
+      -- Better than wrong-frame attaches.
     end
 
     return nil
   end
 end
+
+-- ============================================================================
+-- DIAGNOSTIC: same-class-twin health-misroute hunt (2026-05-01)
+--   Prints ONLY when the matcher attaches a unit token to a button whose
+--   recorded PlayerName differs from the unit's live name. That's the exact
+--   wrong-twin event we're trying to catch. Throttled to once per
+--   (token,button) pair per 2s. Remove this block once the root cause is
+--   identified and fixed.
+-- ============================================================================
+-- do
+--   local _origMatcher = BattleGroundEnemies.GetPlayerbuttonByUnitID
+--   local _seenAt = {}
+--   function BattleGroundEnemies:GetPlayerbuttonByUnitID(unitID, playerType, ignoreExistingArena)
+--     local btn = _origMatcher(self, unitID, playerType, ignoreExistingArena)
+--     if btn and unitID then
+--       local okName, liveName = pcall(GetUnitName, unitID, true)
+--       if okName and liveName and not (issecretvalue and issecretvalue(liveName)) then
+--         local btnName = btn.PlayerDetails and btn.PlayerDetails.PlayerName
+--         -- btnName is canonical "Name-Realm" (post-CanonicalName refactor).
+--         -- liveName from GetUnitName(unit, true) is short for same-realm —
+--         -- canonicalize it before comparing or this fires for every
+--         -- same-realm enemy on a correct match (false positive).
+--         local liveCanonical = self:CanonicalName(liveName)
+--         if btnName and not (issecretvalue and issecretvalue(btnName)) and liveCanonical ~= btnName then
+--           local key = tostring(unitID) .. ">" .. tostring(btnName)
+--           local now = GetTime()
+--           if not _seenAt[key] or now - _seenAt[key] > 2 then
+--             _seenAt[key] = now
+--             -- Diagnostic: re-enable to debug a future wrong-twin matcher
+--             -- mismatch. Only fires when stored name vs live name differ.
+--             -- print(string.format(
+--             --   "|cffff5555[BGE diag]|r matcher mismatch: token=%s -> button[%s] but unit name = %s",
+--             --   tostring(unitID), tostring(btnName), tostring(liveName)
+--             -- ))
+--           end
+--         end
+--       end
+--     end
+--     return btn
+--   end
+-- end
 
 -- Pre-built unit ID tables to avoid string concatenation every scan cycle
 local arenaUnits = {}
@@ -1955,6 +2860,33 @@ end
 local partyPetTargetUnits = {}
 for i = 1, 5 do
   partyPetTargetUnits[i] = "partypet" .. i .. "target"
+end
+
+-- Secret-safe "Name-Realm" builders, lifted out of the per-call
+-- pcall(function() ... end) closures that used to live inline in ScanTargets
+-- (4 sites) and UNIT_TARGET (1 site). Those closures were allocated fresh on
+-- every nameplate-target / raid-target iteration and every UNIT_TARGET event
+-- — a real per-frame allocation source in dense combat (ScanTargets measured
+-- at +500K/fight). Defined here (above ScanTargets) so both call families see
+-- them. Each returns nil when a field is secret (bailing exactly as the old
+-- inline closures did); callers still pcall-wrap in case comparing a secret
+-- value taints. Behaviour is identical to the previous inline closures.
+local function buildTargetNameNonSecret(name, server)
+  if issecretvalue and (issecretvalue(name) or (server and issecretvalue(server))) then
+    return nil
+  end
+  if server and server ~= "" then
+    return name .. "-" .. server
+  else
+    return name
+  end
+end
+
+local function buildTargetNameNonSecretNoRealm(name)
+  if issecretvalue and issecretvalue(name) then
+    return nil
+  end
+  return name
 end
 
 function BattleGroundEnemies:ScanTargets()
@@ -2111,7 +3043,7 @@ function BattleGroundEnemies:ScanTargets()
         self.Enemies.NameplateTargets[sourceUnit] = nil
       end
 
-    -- Track enemy nameplates targeting allies (for ally target indicators)
+      -- Track enemy nameplates targeting allies (for ally target indicators)
     elseif UnitExists(targetUnitID) and UnitIsFriend("player", targetUnitID) then
       -- Get the enemy button for the nameplate doing the targeting
       local enemyBtn = self:GetPlayerbuttonByUnitID(sourceUnit, "Enemies")
@@ -2122,21 +3054,10 @@ function BattleGroundEnemies:ScanTargets()
       local ok, name, server = pcall(GetUnitName, targetUnitID, true)
       local targetName = nil
       if ok and name then
-        local ok2 = pcall(function()
-          name = tostring(name)
-          if server then
-            server = tostring(server)
-          end
-          if issecretvalue and (issecretvalue(name) or (server and issecretvalue(server))) then
-            return
-          end
-          if server and server ~= "" then
-            targetName = name .. "-" .. server
-          else
-            targetName = name
-          end
-        end)
-        if not ok2 then
+        local ok2, computed = pcall(buildTargetNameNonSecret, name, server)
+        if ok2 then
+          targetName = computed
+        else
           targetName = nil
         end
       end
@@ -2147,15 +3068,10 @@ function BattleGroundEnemies:ScanTargets()
         -- If first call failed, try without realm
         ok, name, server = pcall(GetUnitName, targetUnitID, false)
         if ok and name then
-          local ok2 = pcall(function()
-            name = tostring(name)
-            -- Check if value is still secret after tostring
-            if issecretvalue and issecretvalue(name) then
-              return
-            end
-            targetName = name
-          end)
-          if not ok2 then
+          local ok2, computed = pcall(buildTargetNameNonSecretNoRealm, name)
+          if ok2 then
+            targetName = computed
+          else
             targetName = nil
           end
         end
@@ -2292,7 +3208,7 @@ function BattleGroundEnemies:ScanTargets()
         self.Enemies.ArenaTargets[sourceUnit] = nil
       end
 
-    -- Track arena enemies targeting allies (for ally target indicators)
+      -- Track arena enemies targeting allies (for ally target indicators)
     elseif UnitExists(targetUnitID) and UnitIsFriend("player", targetUnitID) then
       -- Get the enemy button for the arena unit doing the targeting
       local enemyBtn = self.ArenaIDToPlayerButton[sourceUnit]
@@ -2306,21 +3222,10 @@ function BattleGroundEnemies:ScanTargets()
       local ok, name, server = pcall(GetUnitName, targetUnitID, true)
       local targetName = nil
       if ok and name then
-        local ok2 = pcall(function()
-          name = tostring(name)
-          if server then
-            server = tostring(server)
-          end
-          if issecretvalue and (issecretvalue(name) or (server and issecretvalue(server))) then
-            return
-          end
-          if server and server ~= "" then
-            targetName = name .. "-" .. server
-          else
-            targetName = name
-          end
-        end)
-        if not ok2 then
+        local ok2, computed = pcall(buildTargetNameNonSecret, name, server)
+        if ok2 then
+          targetName = computed
+        else
           targetName = nil
         end
       end
@@ -2331,15 +3236,10 @@ function BattleGroundEnemies:ScanTargets()
         -- If first call failed, try without realm
         ok, name, server = pcall(GetUnitName, targetUnitID, false)
         if ok and name then
-          local ok2 = pcall(function()
-            name = tostring(name)
-            -- Check if value is still secret after tostring
-            if issecretvalue and issecretvalue(name) then
-              return
-            end
-            targetName = name
-          end)
-          if not ok2 then
+          local ok2, computed = pcall(buildTargetNameNonSecretNoRealm, name)
+          if ok2 then
+            targetName = computed
+          else
             targetName = nil
           end
         end
@@ -2473,12 +3373,19 @@ function BattleGroundEnemies:StartTargetScanTicker()
   if self.TargetScanTicker then
     self.TargetScanTicker:Cancel()
   end
-  self.TargetScanTicker = C_Timer.NewTicker(0.25, function()
+  self.TargetScanTicker = C_Timer.NewTicker(0.3, function()
     if not self.enabled then
       return
     end
     self:ScanTargets()
   end)
+end
+
+function BattleGroundEnemies:StopTargetScanTicker()
+  if self.TargetScanTicker then
+    self.TargetScanTicker:Cancel()
+    self.TargetScanTicker = nil
+  end
 end
 
 function BattleGroundEnemies:PLAYER_SOFT_ENEMY_CHANGED()
@@ -2494,7 +3401,14 @@ function BattleGroundEnemies:PLAYER_SOFT_ENEMY_CHANGED()
 end
 
 function BattleGroundEnemies:GetPlayerbuttonByName(name)
-  return self.Enemies.Players[name] or self.Allies.Players[name]
+  if not name then
+    return
+  end
+  -- Canonicalize input: callers may pass either short "Name" (same-realm)
+  -- or full "Name-Realm" (cross-realm or chat-derived). Players[] is
+  -- keyed canonically — go through CanonicalName so both inputs converge.
+  local key = self:CanonicalName(name)
+  return self.Enemies.Players[key] or self.Allies.Players[key]
 end
 
 function BattleGroundEnemies:GetPlayerbuttonByGUID(GUID)
@@ -2569,17 +3483,31 @@ function BattleGroundEnemies:HandleTargetChanged(newTarget)
     newTarget.MyTarget:Show()
     BattleGroundEnemies.currentTarget = newTarget
 
-  -- if BattleGroundEnemies.states.real.isRatedBG and self.db.profile.RBG.TargetCalling_SetMark and IamTargetcaller() then -- i am the target caller
-  -- 	SetRaidTarget("target", 8)
-  -- end
+    -- if BattleGroundEnemies.states.real.isRatedBG and self.db.profile.RBG.TargetCalling_SetMark and IamTargetcaller() then -- i am the target caller
+    -- 	SetRaidTarget("target", 8)
+    -- end
   else
     BattleGroundEnemies.currentTarget = false
   end
 end
 
 function BattleGroundEnemies:PLAYER_TARGET_CHANGED()
-  -- Defer off the secure execution path to avoid tainting Blizzard UnitFrame
-  C_Timer.After(0, function()
+  -- Defer off the secure execution path to avoid tainting Blizzard UnitFrame.
+  --
+  -- Debounce: a single click on a player button runs "/cleartarget\n
+  -- /targetexact NAME", which fires PLAYER_TARGET_CHANGED TWICE in the
+  -- same frame (once for cleartarget, once for targetexact). Without
+  -- debouncing, two deferred resolutions run back-to-back: the first
+  -- correctly consumes the PostClick stash, but the second sees an
+  -- empty stash and falls through to the PID fingerprint resolver,
+  -- which can overwrite the highlight with the wrong same-class
+  -- button. Cancel any pending resolution so only the LAST event in
+  -- the burst lands.
+  if self._targetChangeTimer then
+    self._targetChangeTimer:Cancel()
+  end
+  self._targetChangeTimer = C_Timer.NewTimer(0, function()
+    self._targetChangeTimer = nil
     self:PLAYER_TARGET_CHANGED_Deferred()
   end)
 end
@@ -2588,6 +3516,10 @@ function BattleGroundEnemies:PLAYER_TARGET_CHANGED_Deferred()
   -- Clear stale scan-cycle cache for "target" so we do a fresh lookup
   -- (the previous ScanTargets tick may have cached a different/nil result)
   self:ClearScanCycleCache()
+  -- Also invalidate sticky cross-tick cache for "target" — without this, an
+  -- earlier (possibly wrong) resolution would be reused and we'd never
+  -- re-run the unique-class matcher.
+  self:InvalidateStickyPID("target")
 
   local btn = nil
   local isAlly = false
@@ -2610,36 +3542,110 @@ function BattleGroundEnemies:PLAYER_TARGET_CHANGED_Deferred()
     -- UnitIsFriend works correctly in BGs (different factions). Only skip it
     -- in arena where solo shuffle puts everyone on the same faction.
     if not isAlly then
-      local _, instanceType = IsInInstance()
-      if instanceType == "pvp" and UnitIsFriend("player", "target") then
+      if self.cachedInstanceType == "pvp" and UnitIsFriend("player", "target") then
         isAlly = true
       end
     end
   end
 
   if isAlly then
-    -- Ally target — look up in Allies.Players by name
+    -- Ally target — look up in Allies.Players by name. Canonicalize each
+    -- lookup so the storage key format ("Name-Realm" canonical) matches
+    -- regardless of whether GetUnitName returned the short or long form.
+    -- Both fallback paths still queried — defensive against any edge case
+    -- where the (true)/(false) returns differ in ways canonicalization
+    -- doesn't paper over (e.g. one returns nil).
     local targetName = GetUnitName("target", true)
-    if targetName and self.Allies and self.Allies.Players then
-      btn = self.Allies.Players[targetName]
+    if
+      type(targetName) == "string"
+      and not (issecretvalue and issecretvalue(targetName))
+      and self.Allies
+      and self.Allies.Players
+    then
+      btn = self.Allies.Players[self:CanonicalName(targetName)]
       if not btn then
         targetName = GetUnitName("target", false)
-        btn = self.Allies.Players[targetName]
+        if type(targetName) == "string" and not (issecretvalue and issecretvalue(targetName)) then
+          btn = self.Allies.Players[self:CanonicalName(targetName)]
+        end
       end
     end
   else
-    -- Enemy target — check arena token mapping first, then PID matching
-    local matchedArena = nil
-    for i = 1, 5 do
-      local arenaID = "arena" .. i
-      if UnitIsUnit("target", arenaID) then
-        matchedArena = arenaID
-        btn = self.ArenaIDToPlayerButton[arenaID]
-        break
+    -- Enemy target. The macrotext for Target bindings is
+    -- "/cleartarget\n/targetexact NAME", which fires PLAYER_TARGET_CHANGED
+    -- TWICE — first with no target (from /cleartarget), then with the
+    -- real target (from /targetexact). Only consume the click stash on
+    -- the second event (UnitExists("target")). If we consumed on the
+    -- first, the second would lose the stash and fall through to PID
+    -- fingerprinting — exactly the bug we're trying to avoid.
+    if UnitExists("target") then
+      local lastClicked = self._lastClickedEnemyTarget
+      local lastClickedTime = self._lastClickedEnemyTargetTime or 0
+      local stashAge = GetTime() - lastClickedTime
+      -- local resolvedVia
+      if lastClicked and lastClicked.PlayerDetails and stashAge < 0.5 then
+        btn = lastClicked
+        -- resolvedVia = string.format("stash (age=%.3fs)", stashAge)
+        -- Stash bypass is as authoritative as tier-5/6/arena/name resolves
+        -- (the user clicked that exact frame, the secure macro targeted
+        -- that exact name, the live "target" unit IS that player). Capture
+        -- live attrs onto the button so future tier-7/8/9 strict-rule
+        -- comparisons have data — without this, click-only encounters
+        -- never populate stored gender/honor/power/guild and same-class
+        -- twins stay forever undisambiguated.
+        self:CaptureUnitAttrs(btn, "target")
       end
-    end
-    if not btn then
-      btn = self:GetPlayerbuttonByUnitID("target", "Enemies")
+      self._lastClickedEnemyTarget = nil
+      self._lastClickedEnemyTargetTime = nil
+
+      -- Arena token mapping next, then PID matching as the last resort.
+      if not btn then
+        for i = 1, 5 do
+          local arenaID = "arena" .. i
+          if UnitIsUnit("target", arenaID) then
+            btn = self.ArenaIDToPlayerButton[arenaID]
+            -- resolvedVia = "arena-token-direct (" .. arenaID .. ")"
+            break
+          end
+        end
+      end
+      if not btn then
+        btn = self:GetPlayerbuttonByUnitID("target", "Enemies")
+        -- if btn then
+        --   resolvedVia = "matcher"
+        -- end
+      end
+
+      -- Click-path log: one line per enemy target change. Tells us how
+      -- the deferred handler decided which button to attach the target
+      -- token to. Pair with the matcher's [BGEF vN - matched] line to
+      -- follow the full chain on misroutes.
+      -- do
+      --   -- local _GAM = C_AddOns and C_AddOns.GetAddOnMetadata or _G.GetAddOnMetadata
+      --   -- local _ver = _GAM and _GAM("BattleGroundEnemiesFixed", "Version")
+      --   -- local _verTag = "v?"
+      --   -- if type(_ver) == "string" then
+      --   --   local trailing = _ver:match("(%d+)$")
+      --   --   if trailing then
+      --   --     _verTag = "v" .. trailing
+      --   --   end
+      --   -- end
+      --   -- local btnName = (btn and btn.PlayerDetails and btn.PlayerDetails.PlayerName) or "<no btn>"
+      --   -- local liveName = self:SafeGetUnitName("target") or "<no name>"
+      --   -- if issecretvalue and issecretvalue(liveName) then
+      --   --   liveName = "<secret>"
+      --   -- end
+      --   -- Commented out for now — re-enable to debug click-path issues.
+      --   -- print(
+      --   --   string.format(
+      --   --     "|cff44ff44[BGEF %s - target-resolve]|r unit=%s, btn=%s, via=%s",
+      --   --     _verTag,
+      --   --     tostring(liveName),
+      --   --     tostring(btnName),
+      --   --     tostring(resolvedVia or "none")
+      --   --   )
+      --   -- )
+      -- end
     end
   end
 
@@ -2658,7 +3664,6 @@ function BattleGroundEnemies:PLAYER_TARGET_CHANGED_Deferred()
 end
 
 function BattleGroundEnemies:HandleFocusChanged(newFocus)
-  --self:Debug("playerButton focus", playerButton, GetUnitName("focus", true))
   if BattleGroundEnemies.currentFocus then
     BattleGroundEnemies.currentFocus:UpdateEnemyUnitID("Focus", false)
 
@@ -2695,34 +3700,60 @@ function BattleGroundEnemies:PLAYER_FOCUS_CHANGED()
     -- UnitIsFriend works correctly in BGs (different factions). Only skip it
     -- in arena where solo shuffle puts everyone on the same faction.
     if not isAlly then
-      local _, instanceType = IsInInstance()
-      if instanceType == "pvp" and UnitIsFriend("player", "focus") then
+      if self.cachedInstanceType == "pvp" and UnitIsFriend("player", "focus") then
         isAlly = true
       end
     end
   end
 
   if isAlly then
-    -- Ally focus — look up in Allies.Players by name
+    -- Ally focus — look up in Allies.Players by name. Canonicalize for the
+    -- same reason as the ally-target lookup above.
     local focusName = GetUnitName("focus", true)
-    if focusName and self.Allies and self.Allies.Players then
-      btn = self.Allies.Players[focusName]
+    if
+      type(focusName) == "string"
+      and not (issecretvalue and issecretvalue(focusName))
+      and self.Allies
+      and self.Allies.Players
+    then
+      btn = self.Allies.Players[self:CanonicalName(focusName)]
       if not btn then
         focusName = GetUnitName("focus", false)
-        btn = self.Allies.Players[focusName]
+        if type(focusName) == "string" and not (issecretvalue and issecretvalue(focusName)) then
+          btn = self.Allies.Players[self:CanonicalName(focusName)]
+        end
       end
     end
   else
-    -- Enemy focus — check arena token mapping first, then PID matching
-    for i = 1, 5 do
-      local arenaID = "arena" .. i
-      if UnitIsUnit("focus", arenaID) then
-        btn = self.ArenaIDToPlayerButton[arenaID]
-        break
+    -- Enemy focus — same logic as the target-change handler. Only consume
+    -- the click stash when there's an actual focus to map (a /clearfocus
+    -- variant would otherwise burn the stash on the no-focus event).
+    if UnitExists("focus") then
+      local lastClicked = self._lastClickedEnemyFocus
+      local lastClickedTime = self._lastClickedEnemyFocusTime or 0
+      if lastClicked and lastClicked.PlayerDetails and (GetTime() - lastClickedTime) < 0.5 then
+        btn = lastClicked
+        -- Same authoritative-capture as the target stash bypass above —
+        -- user clicked that exact frame, secure macro set focus to that
+        -- exact name. Capture live attrs to populate matcher's stored data.
+        self:CaptureUnitAttrs(btn, "focus")
       end
-    end
-    if not btn then
-      btn = self:GetPlayerbuttonByUnitID("focus", "Enemies")
+      self._lastClickedEnemyFocus = nil
+      self._lastClickedEnemyFocusTime = nil
+
+      -- Arena token mapping next, then PID matching as the last resort.
+      if not btn then
+        for i = 1, 5 do
+          local arenaID = "arena" .. i
+          if UnitIsUnit("focus", arenaID) then
+            btn = self.ArenaIDToPlayerButton[arenaID]
+            break
+          end
+        end
+      end
+      if not btn then
+        btn = self:GetPlayerbuttonByUnitID("focus", "Enemies")
+      end
     end
   end
 
@@ -2741,6 +3772,11 @@ function BattleGroundEnemies:PLAYER_FOCUS_CHANGED()
 end
 
 function BattleGroundEnemies:UPDATE_MOUSEOVER_UNIT()
+  -- Snapshot read of health/power/auras using the mouseover token.
+  -- Sibling handler at BattleGroundEnemies.Enemies:UPDATE_MOUSEOVER_UNIT
+  -- in Mainframe.lua handles the persistent Mouseover UnitID attachment.
+  -- Both run on the same event; the second matcher call hits scanCycleCache
+  -- so cost is a table lookup. Don't consolidate — different abstractions.
   local enemyButton = self.Enemies:GetPlayerbuttonByUnitID("mouseover", "Enemies")
   if enemyButton then --unit is a shown enemy
     enemyButton:UpdateAll("mouseover")
@@ -2760,9 +3796,11 @@ function BattleGroundEnemies:RAID_TARGET_UPDATE()
 end
 
 -- Helper to check if current map is an objective BG (flags/orbs)
--- In these BGs, arena tokens are only assigned to objective carriers
+-- In these BGs, arena tokens are only assigned to objective carriers.
+-- IDs below are UI *map* IDs (C_Map.GetBestMapForUnit), NOT instance IDs.
+-- 417=Kotmogu, 1339=Warsong Gulch, 206=Twin Peaks, 112=Eye of the Storm,
+-- 397=Eye of the Storm Rated, 2345=Deephaul Ravine.
 local function IsObjectiveBG(mapId)
-  -- 417=Kotmogu, 2106=WSG, 726=Twin Peaks, 566=EOTS, 968=EOTS Rated, 2656=Deephaul Ravine
   return mapId == 417 or mapId == 206 or mapId == 1339 or mapId == 112 or mapId == 397 or mapId == 2345
 end
 
@@ -2787,9 +3825,10 @@ function BattleGroundEnemies:LOSS_OF_CONTROL_ADDED(unitID, effectIndex)
     end
   end
 
-  -- Also check Allies (e.g. party1, raid2 getting CC'd)
+  -- Also check Allies (e.g. party1, raid2 getting CC'd) via the direct
+  -- token map — no PID matching on the ally side.
   if not playerButton then
-    playerButton = self:GetPlayerbuttonByUnitID(unitID, "Allies")
+    playerButton = self.Allies:GetAllyButtonByUnitID(unitID)
   end
 
   if playerButton and playerButton.SpecClassPriority then
@@ -2812,11 +3851,19 @@ function BattleGroundEnemies:UNIT_AURA(unitID, updateInfo)
   -- Lua so "if UnitIsFriend(...)" would match enemy arena units as allies,
   -- causing enemy CC to appear on ally buttons.
   -- Since we use RegisterUnitEvent for specific tokens we know exactly what each is.
-  local isAlly = (unitID == "player") or (unitID:match("^party%d") ~= nil) or (unitID:match("^raid%d") ~= nil)
-  local isArenaEnemy = (unitID:match("^arena%d") ~= nil)
+  --
+  -- string.find returns integer indices (no allocation), unlike string.match
+  -- which allocates the matched substring on every successful hit. UNIT_AURA
+  -- fires constantly in combat (food buffs, procs, HoTs, CC), so this is a hot
+  -- path. Same anchored-pattern semantics ("party"/"raid"/"arena" + a digit),
+  -- zero per-call garbage. Matches the string.find idiom used in UNIT_TARGET.
+  local isAlly = (unitID == "player") or (unitID:find("^party%d") ~= nil) or (unitID:find("^raid%d") ~= nil)
+  local isArenaEnemy = (unitID:find("^arena%d") ~= nil)
 
   if isAlly then
-    local btn = self:GetPlayerbuttonByUnitID(unitID, "Allies")
+    -- Direct token lookup — unitID is party/raid/player (RegisterUnitEvent
+    -- guarantees it). No PID, no matcher.
+    local btn = self.Allies:GetAllyButtonByUnitID(unitID)
     if btn and btn.SpecClassPriority then
       btn.SpecClassPriority:UpdateLossOfControl(unitID, updateInfo)
     end
@@ -2878,9 +3925,9 @@ function BattleGroundEnemies:ARENA_CROWD_CONTROL_SPELL_UPDATE(unitID, ...)
 
   -- Also check ally buttons — RequestCrowdControlSpell is now called for party members
   -- and "player" so this event fires for allies too, letting us show their trinket icon
-  -- in the lobby just like enemies.
+  -- in the lobby just like enemies. Ally-side lookup uses the direct token map.
   if not playerButton then
-    playerButton = self:GetPlayerbuttonByUnitID(unitID, "Allies")
+    playerButton = self.Allies:GetAllyButtonByUnitID(unitID)
   end
 
   if playerButton and playerButton.Trinket then
@@ -2933,9 +3980,10 @@ function BattleGroundEnemies:ARENA_COOLDOWNS_UPDATE(unitID)
       end
     end
 
-    -- Also check allies (party/raid members using their trinket)
+    -- Also check allies (party/raid members using their trinket) — direct
+    -- token map, no PID fallback.
     if not playerButton then
-      local allyButton = self:GetPlayerbuttonByUnitID(unitID, "Allies")
+      local allyButton = self.Allies:GetAllyButtonByUnitID(unitID)
       if allyButton then
         allyButton:UpdateAllyCrowdControlCooldown(unitID)
       end
@@ -2970,6 +4018,15 @@ end
 -- DR tracking: route C_SpellDiminish events to the correct playerButton's DRTracking container
 function BattleGroundEnemies:UNIT_SPELL_DIMINISH_CATEGORY_STATE_UPDATED(unitToken, stateInfo)
   if not unitToken or not stateInfo then
+    return
+  end
+
+  -- DR data is unusable in BGs: C_SpellDiminish returns a secret-tagged
+  -- category in BG context (the DiminishStateUpdated handler bails on it
+  -- downstream), and the LoC poll fallback gets no usable spellID for
+  -- enemy units. Skip the matcher lookup + per-button DispatchEvent
+  -- fan-out entirely in BGs. DR still works in arena / world PvP.
+  if self.states.real.isInBattleground then
     return
   end
 
@@ -3069,28 +4126,98 @@ function BattleGroundEnemies:PLAYER_REGEN_ENABLED()
       end
     end
   end
+
+  -- Self-heal: Mainframe.lua:491 gates the post-UBS Show() on InCombatLockdown
+  -- but never queues a retry. When UBS populates enemies while the player is in
+  -- combat (common on mid-match reload / late join), the frame stays enabled but
+  -- invisible. Toggling test mode forces a re-Show(), which is the workaround
+  -- users kept hitting. Do it automatically now that combat ended.
+  for _, mf in ipairs({ self.Enemies, self.Allies }) do
+    if mf and mf.enabled and (mf.NumPlayers or 0) > 0 and not mf:IsShown() then
+      mf:Show()
+    end
+  end
+
+  -- Button-count watchdog: if combat-deferred cleanup or some other state
+  -- drift left more buttons in PlayerList than the authoritative NumPlayers,
+  -- force a clean rebuild now that combat is over. This is a safety net for
+  -- the duplicate-frame bug that's been hard to reproduce on demand —
+  -- whatever path leaks extra buttons, we self-correct here.
+  for _, mf in ipairs({ self.Enemies, self.Allies }) do
+    if mf and mf.PlayerList and mf.NumPlayers and #mf.PlayerList > mf.NumPlayers and mf.NumPlayers > 0 then
+      -- DIAGNOSTIC (commented out — re-enable if duplicate-button bug
+      -- returns. Prints + dumps event log when PlayerList exceeds
+      -- NumPlayers post-combat):
+      -- local dictCount = 0
+      -- for _ in pairs(mf.Players or {}) do
+      --   dictCount = dictCount + 1
+      -- end
+      -- print(
+      --   string.format(
+      --     "BGE Watchdog: %s PlayerList=%d > NumPlayers=%d (Dict=%d, Inactive=%d) — forcing rebuild",
+      --     mf.PlayerType,
+      --     #mf.PlayerList,
+      --     mf.NumPlayers,
+      --     dictCount,
+      --     #(mf.InactivePlayerButtons or {})
+      --   )
+      -- )
+      -- if BattleGroundEnemies.DumpButtonEventLog then
+      --   BattleGroundEnemies:DumpButtonEventLog("watchdog:" .. mf.PlayerType)
+      -- end
+      -- Force the next UBS / GROUP_ROSTER_UPDATE to fully process by
+      -- clearing the signature gate and re-running AfterPlayerSourceUpdate.
+      -- AfterPlayerSourceUpdate's CreateOrRemovePlayerButtons will now
+      -- (out of combat) actually remove untouched buttons.
+      if mf.PlayerType == BattleGroundEnemies.consts.PlayerTypes.Enemies then
+        BattleGroundEnemies._lastEnemyCount = nil
+        if BattleGroundEnemies.UPDATE_BATTLEFIELD_SCORE then
+          BattleGroundEnemies:UPDATE_BATTLEFIELD_SCORE()
+        end
+      else
+        if BattleGroundEnemies.GROUP_ROSTER_UPDATE then
+          BattleGroundEnemies:GROUP_ROSTER_UPDATE()
+        end
+      end
+    end
+  end
 end
 
 function BattleGroundEnemies:PLAYER_REGEN_DISABLED()
-  self:DisableTestOrEditmode()
+  if self.states.testmodeActive then
+    self:DisableTestMode()
+  end
 end
 
 function BattleGroundEnemies:PlayerDead()
   self.states.userIsAlive = false
-  -- Force all enemy frames to out-of-range alpha when user is dead
-  if self.Enemies and self.Enemies.Players then
-    for _, playerButton in pairs(self.Enemies.Players) do
-      playerButton:UpdateRange(false, true)
+  -- Force all enemy AND ally frames to out-of-range alpha when user is
+  -- dead — you can't cast on anyone from a corpse, friendly or hostile.
+  -- Iterate PlayerList (source-of-truth ordered list) rather than the
+  -- Players name-keyed dict — secret-named buttons live ONLY in
+  -- PlayerList (see SetupButtonForNewPlayer) and would otherwise stay
+  -- at their pre-death bright alpha forever.
+  local mainframes = { self.Enemies, self.Allies }
+  for _, mf in ipairs(mainframes) do
+    if mf and mf.PlayerList then
+      for i = 1, #mf.PlayerList do
+        mf.PlayerList[i]:UpdateRange(false, true)
+      end
     end
   end
 end
 
 function BattleGroundEnemies:PlayerAlive()
-  -- Force all enemies to out-of-range so nothing appears lit up on resurrect.
-  -- The ticker will naturally update range as we target/focus/see nameplates.
-  if self.Enemies and self.Enemies.Players then
-    for _, playerButton in pairs(self.Enemies.Players) do
-      playerButton:UpdateRange(false, true)
+  -- Force everyone to out-of-range on resurrect so nothing appears lit
+  -- up before the real-range check runs. The ticker will naturally
+  -- update range as we target/focus/see nameplates.
+  -- PlayerList iteration (not Players dict) — same reason as PlayerDead.
+  local mainframes = { self.Enemies, self.Allies }
+  for _, mf in ipairs(mainframes) do
+    if mf and mf.PlayerList then
+      for i = 1, #mf.PlayerList do
+        mf.PlayerList[i]:UpdateRange(false, true)
+      end
     end
   end
   --recheck the targets of groupmembers
@@ -3098,6 +4225,17 @@ function BattleGroundEnemies:PlayerAlive()
     allyButton:UpdateTarget()
   end
   self.states.userIsAlive = true
+
+  -- Re-scan orb/flag carriers on resurrect. While dead, UnitExists(arenaN)
+  -- returns false so CheckAllOrbs/CheckAllFlags skip every slot and the
+  -- icon never gets attached visually — even if the chat handler correctly
+  -- bound the carrier to ArenaIDToPlayerButton during death. PEW doesn't
+  -- fire on resurrect, and UPDATE_BATTLEFIELD_SCORE's signature gate
+  -- skips when player count is unchanged. This is the only reliable hook
+  -- to re-display carrier icons after a graveyard rez.
+  if self.RefreshObjectiveCarriers then
+    self:RefreshObjectiveCarriers()
+  end
 end
 
 function BattleGroundEnemies:PLAYER_ALIVE()
@@ -3160,21 +4298,10 @@ function BattleGroundEnemies:UNIT_TARGET(unitID)
       local ok, name, server = pcall(GetUnitName, targetUnitID, true)
       local targetName = nil
       if ok and name then
-        local ok2 = pcall(function()
-          name = tostring(name)
-          if server then
-            server = tostring(server)
-          end
-          if issecretvalue and (issecretvalue(name) or (server and issecretvalue(server))) then
-            return
-          end
-          if server and server ~= "" then
-            targetName = name .. "-" .. server
-          else
-            targetName = name
-          end
-        end)
-        if not ok2 then
+        local ok2, computed = pcall(buildTargetNameNonSecret, name, server)
+        if ok2 then
+          targetName = computed
+        else
           targetName = nil
         end
       end
@@ -3277,17 +4404,20 @@ function BattleGroundEnemies:UpdateArenaPlayers()
   -- In BGs with objective carriers (flags/orbs), arena tokens are only for carriers.
   -- Skip the normal arena token assignment here - CheckAllOrbs/CheckAllFlags handles it properly
   -- with full PID matching and bidirectional cleanup.
-  -- Map IDs: 417=Kotmogu, 2106=WSG, 726=Twin Peaks, 566=EOTS, 968=EOTS Rated, 2656=Deephaul Ravine
+  -- Previously this site had an inlined list that mixed map IDs and instance
+  -- IDs (e.g. 2106/726/566/968/2656), so the skip only matched for Kotmogu
+  -- (whose map ID is 417) — every other objective BG silently ran the normal
+  -- arena-token assignment in parallel with the carrier path. Routing through
+  -- the IsObjectiveBG helper (correct map IDs) skips all six as intended.
   local states = self:GetActiveStates()
   local mapId = states and states.currentMapId
-  if mapId == 417 or mapId == 2106 or mapId == 726 or mapId == 566 or mapId == 968 or mapId == 2656 then
+  if IsObjectiveBG(mapId) then
     return
   end
 
   if #BattleGroundEnemies.Enemies.CurrentPlayerOrder > 0 or #BattleGroundEnemies.Allies.CurrentPlayerOrder > 0 then --this ensures that we checked for enemies and the flag carrier will be shown (if its an enemy)
     for i = 1, GetNumArenaOpponents() do
       local unitID = "arena" .. i
-      self:Debug(unitID, UnitName(unitID))
       -- Try PID matching first (works when GUID/name aren't secret)
       local playerButton = BattleGroundEnemies:GetPlayerbuttonByUnitID(unitID, "Enemies")
 
@@ -3307,7 +4437,13 @@ function BattleGroundEnemies:UpdateArenaPlayers()
         playerButton:ArenaOpponentShown(unitID)
       end
     end
-  else
+  elseif self.Enemies:ShouldBeEnabled() then
+    -- Both player orders are empty. Only keep retrying while enemy frames are
+    -- ENABLED for this bracket -- i.e. we're genuinely waiting for arena
+    -- opponents to load. If enemies are disabled for the bracket (the
+    -- ghost-frame gate tore the ArenaPlayers source down), both orders are
+    -- empty BY DESIGN, and without this guard the C_Timer.After below would
+    -- self-reschedule every second for the entire match.
     C_Timer.After(1, function()
       self:UpdateArenaPlayers()
     end)
@@ -3318,7 +4454,6 @@ local UpdateArenaPlayersTicker
 
 --too avoid calling UpdateArenaPlayers too many times within a second
 function BattleGroundEnemies:DebounceUpdateArenaPlayers()
-  self:Debug("DebounceUpdateArenaPlayers")
   if UpdateArenaPlayersTicker then
     UpdateArenaPlayersTicker:Cancel()
   end -- use a timer to apply changes after half second, this prevents from too many updates after each player is found
@@ -3333,10 +4468,7 @@ function BattleGroundEnemies:DebounceUpdateArenaPlayers()
 end
 
 function BattleGroundEnemies:CheckForArenaEnemies()
-  self:Debug("CheckForArenaEnemies")
-
   -- returns valid data on PLAYER_ENTERING_WORLD
-  self:Debug(GetNumArenaOpponents())
   if GetNumArenaOpponents() == 0 then
     C_Timer.After(2, function()
       self:DebounceUpdateArenaPlayers()
@@ -3352,7 +4484,11 @@ function BattleGroundEnemies:GetBuffsAndDebuffsForMap(mapId)
   if not mapId then
     return
   end
-  return Data.BattlegroundspezificBuffs[mapId], Data.BattlegroundspezificDebuffs[mapId]
+  -- Returns only the Buffs table for the given map. The second-return
+  -- (Debuffs) was dropped on 2026-05-02 — see GetBattlegroundAuras above
+  -- for the migration rationale. Function name kept for source-history
+  -- continuity even though it now returns just the buffs.
+  return Data.BattlegroundspezificBuffs and Data.BattlegroundspezificBuffs[mapId]
 end
 
 function BattleGroundEnemies:UpdateMapID(retries)
@@ -3379,8 +4515,45 @@ local function parseBattlefieldScore(index)
     return
   end
 
-  -- Helper: Debug Scoreboard Data for Secret/Realm
-  local result = Mixin({}, scoreInfo)
+  -- Explicit field copy instead of Mixin({}, scoreInfo).
+  -- Mixin does `for k, v in pairs(scoreInfo)` — but in 12.0.5 PvP the table
+  -- returned by C_PvP.GetScoreInfo is a protected/secret table that CANNOT
+  -- be iterated while our execution is tainted ("attempted to iterate a
+  -- table that cannot be accessed while tainted (execution tainted by
+  -- BattleGroundEnemiesFixed)"). Field ACCESS is still allowed (the rest of
+  -- this function and UBS already read scoreInfo.guid / row.name directly),
+  -- so copy each documented PVPScoreInfo field by name. Every assignment is a
+  -- pure pass-through, so possibly-secret fields (talentSpec, rating,
+  -- honorGained, damageDone, etc.) carry over EXACTLY as Mixin did — no
+  -- comparison, no arithmetic, no use as a table key. Behaviorally identical
+  -- to the old Mixin, minus the taint crash. Also eliminates the per-row
+  -- Mixin pairs-copy allocation (improvement #10), which in a 40-row epic
+  -- lobby ran for every row on every UBS tick.
+  -- Field list mirrors PVPScoreInfo in
+  -- Blizzard_APIDocumentationGenerated/PvpInfoDocumentation.lua.
+  local result = {
+    name = scoreInfo.name,
+    guid = scoreInfo.guid,
+    killingBlows = scoreInfo.killingBlows,
+    honorableKills = scoreInfo.honorableKills,
+    deaths = scoreInfo.deaths,
+    honorGained = scoreInfo.honorGained,
+    faction = scoreInfo.faction,
+    raceName = scoreInfo.raceName,
+    className = scoreInfo.className,
+    classToken = scoreInfo.classToken,
+    damageDone = scoreInfo.damageDone,
+    healingDone = scoreInfo.healingDone,
+    rating = scoreInfo.rating,
+    ratingChange = scoreInfo.ratingChange,
+    prematchMMR = scoreInfo.prematchMMR,
+    mmrChange = scoreInfo.mmrChange,
+    postmatchMMR = scoreInfo.postmatchMMR,
+    talentSpec = scoreInfo.talentSpec,
+    honorLevel = scoreInfo.honorLevel,
+    roleAssigned = scoreInfo.roleAssigned,
+    stats = scoreInfo.stats,
+  }
 
   if not scoreInfo.guid then
     return result
@@ -3409,198 +4582,636 @@ local function parseBattlefieldScore(index)
   return result
 end
 
-function BattleGroundEnemies:ShowRosterCheck()
-  if self.db.profile.DisableRoleCheckWarning then
-    return
-  end
-  if not self.rosterCheckFrame then
-    local f = CreateFrame("Frame", "BGERosterCheckFrame", UIParent, "BasicFrameTemplateWithInset")
-    f:SetSize(350, 155)
-    f:SetPoint("CENTER")
-    f:SetFrameStrata("DIALOG")
-    f:SetMovable(true)
-    f:EnableMouse(true)
-    f:RegisterForDrag("LeftButton")
-    f:SetScript("OnDragStart", f.StartMoving)
-    f:SetScript("OnDragStop", f.StopMovingOrSizing)
+-- Lobby-only diagnostic watchdog: every few seconds while the match state
+-- is Inactive (gates closed, pre-game), check whether our enemy PlayerList
+-- count matches what GetBattlefieldTeamInfo reports for the enemy team.
+-- If they differ, PRINT a warning and dump the recent button-event log.
+-- DOES NOT auto-fix anything — purely diagnostic until we have a confirmed
+-- root cause for the "enemies disappear in lobby after alt-tab" report.
+-- Stops automatically when state leaves Inactive (gates open) or when the
+-- user leaves the BG/arena.
 
-    f.TitleText:SetText(AddonName)
-    f.TitleText:SetTextColor(1, 1, 1)
+-- local function startLobbyEnemyWatchdog(self)
+--   if self._lobbyEnemyWatchdog then
+--     return -- already running
+--   end
+--   self._lobbyEnemyWatchdog = C_Timer.NewTicker(5, function()
+--     -- Re-check state inside the callback to handle timing overlaps.
+--     local s = C_PvP and C_PvP.GetActiveMatchState and C_PvP.GetActiveMatchState()
+--     if s ~= Enum.PvPMatchState.Inactive then
+--       return
+--     end
+--     local mf = self.Enemies
+--     if not mf or not mf.PlayerList or not self.EnemyFaction then
+--       return
+--     end
+--     local _, _, _, _, expected = GetBattlefieldTeamInfo(self.EnemyFaction)
+--     if not expected or expected <= 0 then
+--       return
+--     end
+--     if #mf.PlayerList < expected then
+--       -- DIAGNOSTIC (commented out — re-enable if "enemies disappear in
+--       -- lobby" returns. Prints + dumps event log when lobby-phase
+--       -- PlayerList undercount detected):
+--       -- print(
+--       --   string.format(
+--       --     "BGE Lobby Watch: PlayerList=%d but scoreboard expects %d enemies (lobby phase) — diagnostic only, NOT auto-fixing",
+--       --     #mf.PlayerList,
+--       --     expected
+--       --   )
+--       -- )
+--       -- if self.DumpButtonEventLog then
+--       --   self:DumpButtonEventLog("lobby-watch")
+--       -- end
+--     end
+--   end)
+-- end
 
-    f.heading = f:CreateFontString(nil, "OVERLAY", "GameFontNormalHuge")
-    f.heading:SetText("Roster Check")
-    f.heading:SetTextColor(1, 1, 1)
+-- local function stopLobbyEnemyWatchdog(self)
+--   if self._lobbyEnemyWatchdog then
+--     self._lobbyEnemyWatchdog:Cancel()
+--     self._lobbyEnemyWatchdog = nil
+--   end
+-- end
 
-    f.message = f:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
-    f.message:SetText("All players must be present before gates open\nfor BGE to track enemies (and be clickable).")
-    f.message:SetJustifyH("CENTER")
-
-    f.progress = f:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-
-    -- Anchor all content relative to the frame itself so it moves when dragged
-    f.message:SetPoint("CENTER", f, "CENTER", 0, -10)
-    f.heading:SetPoint("BOTTOM", f.message, "TOP", 0, 6)
-    f.progress:SetPoint("TOP", f.message, "BOTTOM", -12, -8)
-
-    f.statusIcon = f:CreateTexture(nil, "OVERLAY")
-    f.statusIcon:SetSize(24, 24)
-    f.statusIcon:SetPoint("LEFT", f.progress, "RIGHT", 6, 0)
-    f.statusIcon:SetTexture("Interface\\RaidFrame\\ReadyCheck-NotReady")
-
-    f.ticker = C_Timer.NewTicker(1, function()
-      if f:IsShown() then
-        BattleGroundEnemies:UpdateRosterCheck()
-      end
-    end)
-
-    self.rosterCheckFrame = f
-  else
-    self.rosterCheckFrame:Show()
-  end
-  self:UpdateRosterCheck()
-end
-
-function BattleGroundEnemies:UpdateRosterCheck()
-  local f = self.rosterCheckFrame
-  if not f or not f:IsShown() then
-    return
-  end
-  local matchState = C_PvP.GetActiveMatchState and C_PvP.GetActiveMatchState()
-  if matchState and matchState >= Enum.PvPMatchState.Engaged then
-    f:Hide()
-    return
-  end
-
-  if next(self.Enemies.Players) then
-    f:Hide()
-    return
-  end
-
-  local numGroupMembers = GetNumGroupMembers() or 0
-  local maxPlayers = GetCorrectedMaxPlayers()
-
-  local yellow = "|cFFFFFF00"
-  local white = "|cFFFFFFFF"
-  f.progress:SetText(yellow .. numGroupMembers .. white .. " of " .. yellow .. maxPlayers .. white .. " joined|r")
-
-  if maxPlayers > 0 and numGroupMembers >= maxPlayers then
-    f.statusIcon:SetTexture("Interface\\RaidFrame\\ReadyCheck-Ready")
-  else
-    f.statusIcon:SetTexture("Interface\\RaidFrame\\ReadyCheck-NotReady")
-  end
-end
+-- BattleGroundEnemies._stopLobbyEnemyWatchdog = stopLobbyEnemyWatchdog
 
 function BattleGroundEnemies:PVP_MATCH_STATE_CHANGED()
   local state = C_PvP.GetActiveMatchState()
-
-  -- Hide roster check popup once past lobby (state >= Engaged)
-  if state and state >= Enum.PvPMatchState.Engaged then
-    if self.rosterCheckFrame then
-      self.rosterCheckFrame:Hide()
-    end
-  end
 
   if state == Enum.PvPMatchState.Complete or state == Enum.PvPMatchState.Inactive then
     -- Clear cached trinket spells so stale data doesn't bleed into the next match.
     self._ccSpellCache = nil
   end
 
-  if state == Enum.PvPMatchState.Engaged or state == Enum.PvPMatchState.StartUp then
-    self.scoreboardFrozen = true
+  -- Lobby diagnostic watchdog lifecycle:
+  -- start when state becomes Inactive (in lobby/gates), stop on any other
+  -- state transition. Match-end (Complete) and PostRound also stop it.
+
+  -- if state == Enum.PvPMatchState.Inactive then
+  --   startLobbyEnemyWatchdog(self)
+  -- else
+  --   stopLobbyEnemyWatchdog(self)
+  -- end
+
+  if state == Enum.PvPMatchState.Engaged then
     self.betweenRounds = false
     -- Refresh raid target icons — updates during the lobby were
     -- swallowed by the DispatchEvent block, so icons may be stale
     -- (e.g. a player swapped sides but kept their old marker).
     self:RAID_TARGET_UPDATE()
   elseif state == Enum.PvPMatchState.Complete or state == Enum.PvPMatchState.PostRound then
-    self.scoreboardFrozen = false
-    self:UPDATE_BATTLEFIELD_SCORE() -- Full refresh with readable data
+    self:UPDATE_BATTLEFIELD_SCORE()
 
-    -- Solo shuffle: reset dead states so health bars don't stay empty
-    -- when a previously-dead player respawns for the next round.
-    -- Block health events briefly so stale UNIT_HEALTH (still reporting
-    -- the unit as dead/0-hp) can't immediately undo the reset.
-    -- Use a short timer rather than waiting for Engaged, which may not
-    -- fire again between solo shuffle rounds.
+    -- Harvest non-secret player identity from the now-readable scoreboard.
+    -- SecretInActivePvPMatch only applies to StartUp/Engaged; PostRound
+    -- and Complete return full PVPScoreInfo (talentSpec, roleAssigned,
+    -- honorLevel, guid, ...) non-secret. PostRound runs every solo-shuffle
+    -- round so leavers get captured before they vanish on Complete.
+    --
+    -- On Complete, clear the per-match harvest gate first so every player
+    -- gets re-written with the freshest scoreboard data — and as a safety
+    -- net for anyone PostRound had to skip (e.g. still-secret guid).
+    if state == Enum.PvPMatchState.Complete then
+      self._harvestedThisMatch = nil
+    end
+    self:HarvestPlayerHistory()
+
     if state == Enum.PvPMatchState.PostRound then
       -- Clear cached trinket spells so stale data from the previous round
       -- doesn't get applied to buttons that swap sides in solo shuffle.
       self._ccSpellCache = nil
 
-      -- Push synthetic 100% then freeze all visual updates until
-      -- the next PVP_MATCH_STATE_CHANGED fires (Engaged/Complete).
       self:ResetAllDeadStates()
       self.betweenRounds = true
+    else
+      -- Match Complete (NOT PostRound — solo shuffle continues between
+      -- rounds). Harvest above has already run, so all post-match data
+      -- is captured. Now stop all tickers and unregister combat events:
+      -- the live frames have nothing useful left to show, and continuing
+      -- to run keeps UPDATE_BATTLEFIELD_SCORE firing as the results UI
+      -- churns / players leave, which is the +10-45 MB/s post-match
+      -- allocation storm (and its 50-342ms GC-pause stutters). Disable()
+      -- also makes per-match state eligible for GC, so the heap doesn't
+      -- keep accumulating ~50 MB per BG across a no-/reload session.
+      -- Re-enables automatically on next zone-in via PLAYER_ENTERING_WORLD
+      -- -> CheckEnableState() -> Enable().
+      self:Disable()
     end
   elseif state == Enum.PvPMatchState.Inactive then
-    self.scoreboardFrozen = false
     self.betweenRounds = false
+    -- New match coming. Clear the per-match harvest set so the next
+    -- PostRound/Complete window can re-write entries (honorLevel, lastSpec,
+    -- lastRole all evolve over time — let them refresh).
+    self._harvestedThisMatch = nil
+  end
+end
+
+-- Account-shared player identity harvest. Called from PVP_MATCH_STATE_CHANGED
+-- on PostRound and Complete (non-secret scoreboard window). Idempotent within
+-- a match via _harvestedThisMatch (cleared on Inactive). Reads survive across
+-- sessions in db.global.PlayerHistory; pruned on PLAYER_LOGIN.
+function BattleGroundEnemies:HarvestPlayerHistory()
+  local db = self.db and self.db.global
+  if not db then
+    return
+  end
+  db.PlayerHistory = db.PlayerHistory or {}
+  self._harvestedThisMatch = self._harvestedThisMatch or {}
+
+  -- Force factionEnum -1 so GetNumBattlefieldScores / GetScoreInfo see
+  -- BOTH teams. If the user (or Blizzard's PVPMatch UI) had a single-faction
+  -- tab selected, our iteration would silently miss half the players.
+  -- SetBattlefieldScoreFaction fires UBS synchronously; the existing UBS
+  -- handler honors _reassertingScoreboard to avoid recursion.
+  if self._scoreboardFaction ~= -1 then
+    self._reassertingScoreboard = true
+    self._scoreboardFaction = -1
+    SetBattlefieldScoreFaction(-1)
+    self._reassertingScoreboard = false
+  end
+
+  -- Build a name→button map once so we can pull GuildName captured by
+  -- captureLiveAttrs during the match. PVPScoreInfo has no guild field;
+  -- the only source for an enemy's guild is a unit-token resolve, which
+  -- captureLiveAttrs has already done by the time we're here.
+  local nameToButton = {}
+  for _, mf in ipairs({ self.Enemies, self.Allies }) do
+    if mf and mf.Players then
+      for nm, btn in pairs(mf.Players) do
+        nameToButton[nm] = btn
+      end
+    end
+  end
+
+  local now = time()
+  local numScores = GetNumBattlefieldScores()
+  for i = 1, numScores do
+    local scoreInfo = C_PvP.GetScoreInfo(i)
+    -- Filter to real player characters only. In comp stomp / Brawl /
+    -- training grounds the enemy "team" is bots that ALSO use the
+    -- "Player-" GUID prefix — but with extra segments. Real player GUIDs
+    -- are exactly "Player-{realmID}-{characterHex}" (2 hyphens, 3 parts).
+    -- Bot GUIDs are "Player-3021-2-8402-{hex}" (4 hyphens, 5 parts) where
+    -- the 3021-2-8402 segment identifies the bot server. The strict
+    -- 3-part pattern catches both — let bots pollute PlayerHistory and
+    -- the disambiguation tiers would think bots are known players in
+    -- real BGs (bot names are often reused across matches).
+    -- guid is *usually* non-secret in PostRound/Complete (past
+    -- SecretInActivePvPMatch), but solo shuffle has produced cases where
+    -- it remains secret — calling :match() on a secret string taints
+    -- execution, so gate explicitly.
+    local nameOk = scoreInfo
+      and type(scoreInfo.name) == "string"
+      and not (issecretvalue and issecretvalue(scoreInfo.name))
+      and scoreInfo.classToken
+      and type(scoreInfo.guid) == "string"
+      and not (issecretvalue and issecretvalue(scoreInfo.guid))
+      and scoreInfo.guid:match("^Player%-%d+%-[%dA-Fa-f]+$") ~= nil
+    if nameOk then
+      local key = self:CanonicalName(scoreInfo.name)
+      if key and not self._harvestedThisMatch[key] then
+        local existing = db.PlayerHistory[key] or {}
+
+        -- Pull non-scoreboard fields. Three sources by preference:
+        --   1) Same-name button's PlayerDetails (captureLiveAttrs already
+        --      populated these via UnitSexBase/GetGuildInfo/UnitPowerType
+        --      mid-match, all in the modern enum where applicable).
+        --   2) GetPlayerInfoByGUID for sex/realm if button source missed.
+        --   3) Existing harvest entry as last fallback.
+        -- IMPORTANT: GetPlayerInfoByGUID returns the LEGACY sex enum
+        -- (1=None, 2=Male, 3=Female), NOT the modern UnitSex enum
+        -- (0=Male, 1=Female, 2=None, 3=Both, 4=Neutral). The matcher's
+        -- tier 7 compares against UnitSexBase returns (modern enum), so
+        -- we must convert before storing — otherwise harvest-seeded
+        -- gender never matches live unit reads.
+        local LEGACY_TO_MODERN_SEX = { [1] = 2, [2] = 0, [3] = 1 }
+        local sex, realm, guild, powerType
+        local btn = nameToButton[key]
+        if btn and btn.PlayerDetails then
+          local g = btn.PlayerDetails.gender
+          if g and not (issecretvalue and issecretvalue(g)) then
+            sex = g -- already modern enum
+          end
+          local gn = btn.PlayerDetails.GuildName
+          -- `gn ~= nil` (not `if gn`) so `false` (confirmed guildless)
+          -- is captured as a real value, not skipped as falsy.
+          if gn ~= nil and not (issecretvalue and issecretvalue(gn)) then
+            guild = gn
+          end
+          local pt = btn.PlayerDetails.lastPowerType
+          if pt then
+            powerType = pt
+          end
+        end
+        -- GetPlayerInfoByGUID: realm always; sex only if button source
+        -- didn't have it. Convert legacy → modern.
+        if scoreInfo.guid and not (issecretvalue and issecretvalue(scoreInfo.guid)) then
+          local ok, _lc, _ec, _lr, _er, gpiSex, _nm, rl = pcall(GetPlayerInfoByGUID, scoreInfo.guid)
+          if ok then
+            realm = realm or rl
+            if not sex and gpiSex then
+              sex = LEGACY_TO_MODERN_SEX[gpiSex] or gpiSex
+            end
+          end
+        end
+
+        -- `guild` may be `false` (confirmed guildless). Lua's `a or b`
+        -- short-circuits on falsy values so `guild or existing.GuildName`
+        -- would silently discard a `false` value. Use explicit nil check.
+        local guildToStore
+        if guild ~= nil then
+          guildToStore = guild
+        else
+          guildToStore = existing.GuildName
+        end
+        db.PlayerHistory[key] = {
+          name = key,
+          guid = scoreInfo.guid,
+          classToken = scoreInfo.classToken,
+          raceName = scoreInfo.raceName,
+          gender = sex or existing.gender,
+          GuildName = guildToStore,
+          lastPowerType = powerType or existing.lastPowerType,
+          realmName = realm or existing.realmName,
+          lastSpec = scoreInfo.talentSpec,
+          lastRole = scoreInfo.roleAssigned,
+          honorLevel = scoreInfo.honorLevel,
+          seenCount = (existing.seenCount or 0) + 1,
+          lastSeenAt = now,
+        }
+        self._harvestedThisMatch[key] = true
+      end
+    end
+  end
+end
+
+-- Companion to HarvestPlayerHistory: harvests your party/raid members during
+-- the BG. Complements end-of-match harvest by capturing data even when:
+--   - You DC or leave before PostRound/Complete fires
+--   - A teammate leaves the BG mid-match (may not be in final scoreboard)
+--   - You haven't reached end-of-match yet (data available immediately
+--     for any same-match cross-faction or merc encounter)
+--
+-- All reads are non-secret on raid/party tokens (UnitClassBase, UnitRace,
+-- UnitSexBase, UnitHonorLevel, GetGuildInfo, UnitPowerType, UnitFactionGroup,
+-- UnitGUID, GetPlayerInfoByGUID), so this is safe to run any time we're in
+-- a PvP instance.
+--
+-- IMPORTANT: every value stored here MUST match the type/format that
+-- HarvestPlayerHistory writes from PVPScoreInfo, because the matcher's tier
+-- comparators read PlayerHistory entries assuming scoreboard-shaped data.
+-- Conversions:
+--   GuildName: GetGuildInfo nil → store as `false` (matches scoreboard
+--              "confirmed guildless" three-state semantics).
+-- Skipped (raid source can't reliably match scoreboard format; preserved
+-- from existing entry instead so end-of-match scoreboard refresh fills them):
+--   lastSpec: requires async NotifyInspect.
+--   lastRole: scoreboard `roleAssigned` is a bitmask (1=Leader, 2=Tank,
+--             4=Healer, 8=Damage) including the leader bit; UnitGroupRoles-
+--             Assigned ("TANK"/"HEALER"/"DAMAGER"/"NONE") doesn't expose
+--             leader status, so a converted value would mismatch.
+-- Faction is intentionally NOT stored: it was vestigial in PlayerHistory
+-- (written by both harvests but read by no real code path). Removing the
+-- field saves storage and removes a maintenance liability. If a future
+-- feature needs it, both harvests are trivial to amend.
+-- seenCount is preserved (not incremented). seenCount means "matches I've
+-- completed where this player was on the final scoreboard" — only end-of-
+-- match harvest touches it. Raid harvest can fire many times per match
+-- (every GROUP_ROSTER_UPDATE) and double-counting would skew the value.
+function BattleGroundEnemies:HarvestRaidRoster()
+  local db = self.db and self.db.global
+  if not db then
+    return
+  end
+  if not self:IsInPvPInstance() then
+    return
+  end
+  db.PlayerHistory = db.PlayerHistory or {}
+
+  local now = time()
+
+  local function harvestUnit(unit)
+    if not UnitExists(unit) then
+      return
+    end
+    -- Real player characters only — skip pets, NPCs, vehicles.
+    local okPlayer, isPlayer = pcall(UnitIsPlayer, unit)
+    if not okPlayer or not isPlayer then
+      return
+    end
+    local guid = UnitGUID(unit)
+    -- Real-player GUIDs are exactly "Player-{realmID}-{characterHex}". Bot
+    -- GUIDs in comp stomp / Brawl have extra segments and would pollute
+    -- PlayerHistory if accepted.
+    if type(guid) ~= "string" or guid:match("^Player%-%d+%-[%dA-Fa-f]+$") == nil then
+      return
+    end
+
+    -- Canonical "Name-Realm" key. GetUnitName(unit, true) returns short
+    -- "Name" for same-realm members; CanonicalName appends the user's realm
+    -- so the storage key matches what HarvestPlayerHistory writes.
+    local rawName = GetUnitName(unit, true)
+    if type(rawName) ~= "string" then
+      return
+    end
+    local key = self:CanonicalName(rawName)
+    if not key then
+      return
+    end
+
+    local existing = db.PlayerHistory[key] or {}
+
+    -- UnitClassBase and UnitRace are both flagged MayReturnNothing in the
+    -- API docs — they return nothing (nil) for valid raid tokens whose
+    -- player data hasn't fully loaded yet (mid-zone-in window). If neither
+    -- basic identity field is readable, the unit isn't ready; skip and
+    -- let the existing GROUP_ROSTER_UPDATE retry loop fire again with
+    -- complete data. Without this guard, GetGuildInfo also returns nil
+    -- for an unloaded unit and we'd incorrectly write GuildName=false
+    -- ("confirmed guildless") into PlayerHistory.
+    local _, classToken = UnitClassBase(unit)
+    local raceName = UnitRace(unit) -- 1st return: localized; matches scoreboard.raceName
+    if not classToken and not raceName then
+      return
+    end
+
+    local _, gender = pcall(UnitSexBase, unit) -- modern enum (0=Male, 1=Female, 2=None); Nilable=true
+    local _, honor = pcall(UnitHonorLevel, unit)
+    local _, powerType = pcall(UnitPowerType, unit) -- numeric enum; MayReturnNothing
+
+    local guildName = GetGuildInfo(unit)
+    local guildToStore
+    if guildName then
+      guildToStore = guildName
+    else
+      -- Guildless: scoreboard semantics use `false` to mean "confirmed
+      -- guildless" (three-state nil/false/string). Safe to store false
+      -- here because the loaded-unit guard above already passed — i.e.
+      -- this unit's data IS available, so GetGuildInfo nil means actually
+      -- guildless rather than "unit not ready."
+      guildToStore = false
+    end
+
+    -- Realm via GetPlayerInfoByGUID (same source HarvestPlayerHistory uses).
+    -- Note: GetPlayerInfoByGUID returns LEGACY sex enum, but we already have
+    -- modern-enum gender from UnitSexBase, so we ignore its sex return.
+    local realm
+    local okGpi, _lc, _ec, _lr, _er, _gpiSex, _nm, rl = pcall(GetPlayerInfoByGUID, guid)
+    if okGpi and type(rl) == "string" and rl ~= "" then
+      realm = rl
+    end
+
+    db.PlayerHistory[key] = {
+      name = key,
+      guid = guid,
+      classToken = classToken or existing.classToken,
+      raceName = raceName or existing.raceName,
+      gender = gender or existing.gender,
+      GuildName = guildToStore,
+      lastPowerType = powerType or existing.lastPowerType,
+      realmName = realm or existing.realmName,
+      lastSpec = existing.lastSpec, -- raid source can't provide; preserve
+      lastRole = existing.lastRole, -- bitmask format mismatch; preserve
+      honorLevel = honor or existing.honorLevel,
+      seenCount = existing.seenCount or 0, -- only end-of-match increments
+      lastSeenAt = now,
+    }
+  end
+
+  harvestUnit("player")
+  if IsInRaid() then
+    local n = GetNumGroupMembers() or 0
+    for i = 1, n do
+      harvestUnit("raid" .. i)
+    end
+  elseif IsInGroup() then
+    -- party1..N (excludes self; "player" was already harvested above)
+    local n = (GetNumGroupMembers() or 0) - 1
+    for i = 1, n do
+      harvestUnit("party" .. i)
+    end
   end
 end
 
 function BattleGroundEnemies:SetAllyFaction(allyFaction)
+  local changed = self.AllyFaction ~= allyFaction
   self.EnemyFaction = allyFaction == 0 and 1 or 0
   self.AllyFaction = allyFaction
+  -- Propagate label update on flip. Without this, merc-detection (UBS) or
+  -- the PLAYER_ENTERING_WORLD correction flips state AFTER SetRealPlayerCount
+  -- has already rendered the panel header with the pre-flip value — leaving
+  -- labels stuck in the wrong Horde/Alliance state until a count changes.
+  -- Cross-faction note: this is still just a legacy label; mixed-faction
+  -- teams will always be imprecise here. Team-assignment correctness (which
+  -- is what scoreboard/roster buckets depend on) comes from the user's own
+  -- C_PvP.GetScoreInfoByPlayerGuid lookup in UBS / PEW, not from this.
+  if changed then
+    if self.Enemies and self.Enemies.UpdatePlayerCountText then
+      self.Enemies:UpdatePlayerCountText()
+    end
+    if self.Allies and self.Allies.UpdatePlayerCountText then
+      self.Allies:UpdatePlayerCountText()
+    end
+  end
 end
 
 function BattleGroundEnemies:UPDATE_BATTLEFIELD_SCORE()
-  -- Leaver detection: runs even when scoreboard is frozen, since it only
-  -- removes players and never overwrites the cached enemy list.
-  if self.scoreboardFrozen then
-    local removedAny = false
-    for playerName, playerButton in pairs(self.Enemies.Players) do
-      local guid = playerButton.PlayerDetails and playerButton.PlayerDetails.guid
-      if guid then
-        local info = C_PvP.GetScoreInfoByPlayerGuid(guid)
-        if not info then
-          self.Enemies:RemovePlayer(playerButton)
-          removedAny = true
-        end
-      end
-    end
-    if removedAny then
-      self.Enemies:SortPlayers()
-      -- Update the displayed player count
-      local remainingCount = 0
-      for _ in pairs(self.Enemies.Players) do
-        remainingCount = remainingCount + 1
-      end
-      self.Enemies:SetPlayerCount(remainingCount)
-      self.Enemies:SetRealPlayerCount(remainingCount)
-    end
-  end
-
-  -- Guard 1: If scoreboard is frozen (active match), skip entirely
-  if self.scoreboardFrozen then
+  -- Re-assert factionEnum -1 if the user (or Blizzard's PVPMatch UI) clicked
+  -- a faction tab and filtered the scoreboard to one team — without -1 our
+  -- GetNumBattlefieldScores / GetScoreInfo iteration would only see that
+  -- team's rows. Skip while the user is actively looking at the scoreboard
+  -- so we don't yank their tab view out from under them; the next UBS tick
+  -- after they close it will re-assert.
+  local scoreboardShown = (PVPMatchScoreboard and PVPMatchScoreboard:IsShown())
+    or (PVPMatchResults and PVPMatchResults:IsShown())
+  -- Hard re-entry guard: SetBattlefieldScoreFaction fires UPDATE_BATTLEFIELD_SCORE
+  -- synchronously (plus Blizzard's scoreboard UI updates may also fire UBS
+  -- mid-call). Without this, we recurse infinitely:
+  -- handler → SetFaction → UBS → handler → SetFaction → ... stack overflow.
+  if self._reassertingScoreboard then
     return
   end
-
-  -- Guard 2: Fallback secret detection in case PVP_MATCH_STATE_CHANGED didn't fire
-  local numScoresCheck = GetNumBattlefieldScores()
-  if numScoresCheck and numScoresCheck > 0 then
-    local testInfo = C_PvP.GetScoreInfo(1)
-    if testInfo and issecretvalue and testInfo.name ~= nil and issecretvalue(testInfo.name) then
-      self.scoreboardFrozen = true
+  if not scoreboardShown then
+    if self._scoreboardFaction ~= -1 then
+      self._reassertingScoreboard = true
+      self._scoreboardFaction = -1
+      SetBattlefieldScoreFaction(-1)
+      self._reassertingScoreboard = false
       return
     end
   end
 
-  self:SetAllyFaction(self.AllyFaction or 0) --set fallback value
+  -- Leaver detection: iterate known players, remove any whose GUID
+  -- is no longer present in the scoreboard.
+  -- Old leaver-detection via C_PvP.GetScoreInfoByPlayerGuid removed —
+  -- GUIDs are effectively always secret in 12.0.5 PvP, making the API
+  -- unusable (it errors on secret args). Leaver detection is handled
+  -- entirely by the BeforePlayerSourceUpdate / AfterPlayerSourceUpdate
+  -- mark-and-sweep cycle further down — any button whose scoreboard row
+  -- is missing this tick gets status=2 (untouched) and is removed.
+
+  -- AllyFaction is only used to identify which scoreboard rows belong to
+  -- the enemy team. Ally frames themselves are driven entirely by
+  -- raidN/partyN tokens from GROUP_ROSTER_UPDATE — scoreboard is never
+  -- read for allies.
+  --
+  -- AUTHORITATIVE source: the user's own scoreboard row via
+  -- C_PvP.GetScoreInfoByPlayerGuid(UnitGUID("player")). info.faction =
+  -- team number for THIS match (correct for mercenary mode and
+  -- cross-faction Blitz where the character's home faction differs
+  -- from the assigned team).
+  --
+  -- Cross-validation. A single C_PvP.GetScoreInfoByPlayerGuid call can
+  -- return a wrong team number while the scoreboard is still populating
+  -- (observed in the wild: every real teammate ended up bucketed as
+  -- enemy because the early lookup said the player was on the opposite
+  -- team). To prevent that, we only commit AllyFaction once a known
+  -- raid peer's scoreboard row reports the same team.
+  --
+  -- Validation is name-based, NOT GUID-based. UnitGUID("raidN") is
+  -- documented as SecretWhenUnitIdentityRestricted, which by spec
+  -- shouldn't fire for party/raid members — but the addon's own
+  -- AddGroupMember already has an issecretvalue(GUID) guard for raid
+  -- units, suggesting it has been observed empirically. PVPScoreInfo.name
+  -- is NeverSecret per Blizzard's API docs, and GetRaidRosterInfo names
+  -- are what the addon already trusts as the ally roster source — both
+  -- are reliable here.
+  --
+  -- If we can't confirm yet (own row not populated, no raid peer found
+  -- in the scoreboard yet, or the player is somehow not in a group),
+  -- AllyFaction stays nil — every consumer is gated on AllyFaction being
+  -- set, so an empty enemy panel for a tick or two is the explicit
+  -- trade-off against ever showing real teammates as enemies.
+  if self.AllyFaction == nil then
+    -- Grace period: skip validation entirely until the 3s post-zone-in
+    -- timer has fired. The scoreboard takes time to populate and
+    -- querying it sooner is wasted work. While we're in this window we
+    -- bail out of UBS entirely (consumers below all gate on AllyFaction
+    -- != nil anyway, and an empty enemy panel is correct behavior
+    -- during the grace period). The flag is set true by the C_Timer
+    -- scheduled in PLAYER_ENTERING_WORLD when entering PvP.
+    if not self._pvpGracePeriodElapsed then
+      return
+    end
+
+    local ok, myInfo = pcall(C_PvP.GetScoreInfoByPlayerGuid, UnitGUID("player"))
+    -- myInfo.name is documented as NeverSecret but in practice has been
+    -- observed flagged as secret while the addon's execution is tainted.
+    -- Comparing a secret string to anything taints the entire call stack —
+    -- pre-check and bail out of validation entirely if our own name reads
+    -- back as secret. AllyFaction stays nil, enemy panel stays empty, the
+    -- "never wrong" trade-off holds.
+    if ok and myInfo and myInfo.faction ~= nil and type(myInfo.name) == "string"
+        and not (issecretvalue and issecretvalue(myInfo.name)) then
+      local raidNames = nil
+      if IsInRaid() then
+        raidNames = {}
+        for i = 1, GetNumGroupMembers() or 0 do
+          local memberName = GetRaidRosterInfo(i)
+          if type(memberName) == "string"
+              and not (issecretvalue and issecretvalue(memberName))
+              and memberName ~= myInfo.name then
+            raidNames[memberName] = true
+          end
+        end
+      end
+
+      if raidNames and next(raidNames) then
+        -- Require >= 2 raid peers' scoreboard rows to agree with our team
+        -- number before committing. With one peer it's still possible for
+        -- both rows to be transiently wrong with the same default value;
+        -- requiring two distinct peers makes that essentially impossible.
+        -- ANY disagreement (even one peer reporting a different team)
+        -- means the scoreboard is mid-populate and inconsistent — bail
+        -- and retry on the next UBS tick.
+        local REQUIRED_PEERS = 2
+        local agreed = 0
+        for i = 1, GetNumBattlefieldScores() do
+          local row = C_PvP.GetScoreInfo(i)
+          if row and type(row.name) == "string" and row.faction ~= nil and raidNames[row.name] then
+            if row.faction == myInfo.faction then
+              agreed = agreed + 1
+              if agreed >= REQUIRED_PEERS then
+                self:SetAllyFaction(myInfo.faction)
+                break
+              end
+            else
+              -- Disagreement: at least one peer says different team.
+              -- Don't commit; retry next tick.
+              agreed = 0
+              break
+            end
+          end
+        end
+      end
+    end
+  end
+
+  -- If still unknown (scoreboard not populated, or no peer to validate
+  -- against yet), bail. Empty enemy panel for one or more ticks is the
+  -- explicit, deliberate behavior — never show real teammates as enemies.
+  if self.AllyFaction == nil then
+    return
+  end
 
   local _, _, _, _, numEnemies = GetBattlefieldTeamInfo(self.EnemyFaction)
-  local _, _, _, _, numAllies = GetBattlefieldTeamInfo(self.AllyFaction)
 
   if numEnemies then
     self.Enemies:SetRealPlayerCount(numEnemies)
   end
 
-  if numAllies then
-    self.Allies:SetRealPlayerCount(numAllies)
+  -- #1 ghost-frame gate (enemy side): if the enemy container is disabled for
+  -- the current player-count bracket (user turned enemy frames off for this
+  -- size), don't build enemy buttons. SetRealPlayerCount above recomputed
+  -- self.Enemies.enabled via SelectPlayerCountProfile -> CheckEnableState. Tear
+  -- down any existing enemy buttons (recycled to the pool) and bail before the
+  -- parse / match / create work below. Placed BEFORE the signature gate so the
+  -- teardown happens even when numEnemies is unchanged. Harvesting is
+  -- unaffected: HarvestPlayerHistory reads the scoreboard (GetScoreInfo)
+  -- directly, not these buttons. Reset the signature cache so a re-enable
+  -- (bracket change) rebuilds. Inert when enemy frames are on (the common case).
+  if not self.Enemies:ShouldBeEnabled() then
+    -- Enemy frames off for this bracket: tear down enemy buttons ONCE. UBS fires
+    -- on every combat event and this gate sits BEFORE the signature gate, so
+    -- without a guard RemoveAllPlayersFromAllSources (re-inits all sources +
+    -- runs the full AfterPlayerSourceUpdate -> SetPlayerCount ->
+    -- SelectPlayerCountProfile pipeline) would run every tick -- wasted
+    -- CPU/alloc in a busy epic BG. We CANNOT gate on #PlayerList: in combat the
+    -- button removal (CreateOrRemovePlayerButtons) defers via
+    -- QueueForUpdateAfterCombat, so PlayerList stays non-empty for the whole
+    -- fight and a #PlayerList guard would re-wipe every tick anyway. But
+    -- RemoveAll's InitializeAllPlayerSources runs SYNCHRONOUSLY (sources emptied
+    -- immediately, even in combat) and the deferred button removal flushes on
+    -- PLAYER_REGEN_ENABLED, so issuing the wipe ONCE is sufficient -- a flag
+    -- tracks it. _lastEnemyCount stays nil while disabled (the gate returns
+    -- before the `_lastEnemyCount = numEnemies` line), so a later re-enable
+    -- rebuilds via the signature gate. The flag is cleared on the enabled path
+    -- just below, so a later disable re-tears-down.
+    if not self.Enemies._disabledTeardownDone then
+      self.Enemies:RemoveAllPlayersFromAllSources()
+      self._lastEnemyCount = nil
+      self.Enemies._disabledTeardownDone = true
+    end
+    return
   end
+  self.Enemies._disabledTeardownDone = nil
+
+  -- Signature gate: UBS fires constantly during combat because damage /
+  -- healing / killing blows / bases assaulted / etc. churn — but we don't
+  -- display any of that. The only scoreboard change we care about is the
+  -- roster: how many enemies are on the team. If that hasn't changed, the
+  -- button list is already correct and all the parsing / matching /
+  -- creation below is redundant work. Skip.
+  -- First run has nil cache → proceeds. Nil numEnemies (API hiccup) also
+  -- proceeds so we don't get stuck if the API briefly misbehaves.
+  if numEnemies and self._lastEnemyCount == numEnemies then
+    return
+  end
+  self._lastEnemyCount = numEnemies
 
   local battlefieldScores = {}
   local numScores = GetNumBattlefieldScores()
-  self:Debug("numScores", numScores)
   for i = 1, numScores do
     local score = parseBattlefieldScore(i)
     if score then
@@ -3608,38 +5219,25 @@ function BattleGroundEnemies:UPDATE_BATTLEFIELD_SCORE()
     end
   end
 
-  --see if our faciton in BG changed
-  for i = 1, #battlefieldScores do
-    local score = battlefieldScores[i]
-    local name = score.name
-    local faction = score.faction
+  -- Merc-detection loop removed: AllyFaction is now derived authoritatively
+  -- from the user's own scoreboard row via C_PvP.GetScoreInfoByPlayerGuid
+  -- earlier in this function. info.faction already returns the user's
+  -- TEAM number for this match (merc-safe). Name-based merc-detection was
+  -- both redundant and unreliable (silently skipped for secret names).
 
-    if name == self.UserDetails.PlayerName and faction == self.EnemyFaction then
-      self:SetAllyFaction(self.EnemyFaction)
-    end
-  end
-
-  -- Count new enemies before committing, to avoid losing enemies we already have
-  local newEnemyCount = 0
-  for i = 1, #battlefieldScores do
-    local score = battlefieldScores[i]
-    if score.faction and score.name and score.classToken and score.faction == self.EnemyFaction then
-      newEnemyCount = newEnemyCount + 1
-    end
-  end
-
-  local currentEnemyButtons = 0
-  for _ in pairs(self.Enemies.Players or {}) do
-    currentEnemyButtons = currentEnemyButtons + 1
-  end
-
-  -- Only update enemies if we gained or maintained count (never lose enemies)
-  local updateEnemies = newEnemyCount >= currentEnemyButtons
-
-  if updateEnemies then
-    BattleGroundEnemies.Enemies:BeforePlayerSourceUpdate(self.consts.PlayerSources.Scoreboard)
-  end
-  BattleGroundEnemies.Allies:BeforePlayerSourceUpdate(self.consts.PlayerSources.Scoreboard)
+  -- Wipe the scoreboard source and rebuild from current rows. The
+  -- mark-and-sweep in AfterPlayerSourceUpdate (status 1/2 cycle) handles
+  -- both additions and removals — buttons whose scoreboard row disappeared
+  -- this tick stay at status 2 and get cleaned up by CreateOrRemovePlayerButtons.
+  --
+  -- The old "never-shrink" guard (`newEnemyCount >= currentEnemyButtons`)
+  -- was added to prevent enemies vanishing on transient scoreboard blips
+  -- when names were SecretInActivePvPMatch. Post-12.0.5, PVPScoreInfo.name
+  -- is NeverSecret, so scoreboard rows reliably populate. The signature
+  -- gate above (GetBattlefieldTeamInfo count) already short-circuits
+  -- redundant ticks, making the shrink guard both unnecessary and harmful —
+  -- it permanently prevented removal of leavers.
+  BattleGroundEnemies.Enemies:BeforePlayerSourceUpdate(self.consts.PlayerSources.Scoreboard)
 
   for i = 1, #battlefieldScores do
     local score = battlefieldScores[i]
@@ -3648,34 +5246,44 @@ function BattleGroundEnemies:UPDATE_BATTLEFIELD_SCORE()
     local name = score.name
     local classToken = score.classToken
 
-    if faction and name and classToken then
-      local side = (faction == self.EnemyFaction) and "ENEMY" or "ALLY"
-      if faction == self.EnemyFaction then
-        if updateEnemies then
-          BattleGroundEnemies.Enemies:AddPlayerToSource(self.consts.PlayerSources.Scoreboard, score)
-        end
-      else
-        BattleGroundEnemies.Allies:AddPlayerToSource(self.consts.PlayerSources.Scoreboard, score)
-      end
+    -- Allies are driven exclusively by GROUP_ROSTER_UPDATE (raidN/partyN
+    -- tokens). Scoreboard is enemy-only here.
+    if faction and name and classToken and faction == self.EnemyFaction then
+      BattleGroundEnemies.Enemies:AddPlayerToSource(self.consts.PlayerSources.Scoreboard, score)
     end
   end
 
-  if updateEnemies then
-    BattleGroundEnemies.Enemies:AfterPlayerSourceUpdate()
-  end
-  BattleGroundEnemies.Allies:AfterPlayerSourceUpdate()
+  BattleGroundEnemies.Enemies:AfterPlayerSourceUpdate()
 
-  self:UpdateRosterCheck()
+  -- Re-scan orb/flag carriers after buttons are refreshed. Covers mid-match
+  -- joiners (whose per-button PLAYER_ENTERING_WORLD fired before buttons
+  -- existed) and scoreboard shuffles (button identities may have changed).
+  -- Idempotent: updates ArenaIDToPlayerButton via the matcher.
+  if self.RefreshObjectiveCarriers then
+    self:RefreshObjectiveCarriers()
+  end
 end
 
 function BattleGroundEnemies:GROUP_ROSTER_UPDATE()
+  -- Only maintain the ally roster while actually inside a BG/arena instance.
+  -- We gate on IsInInstance() — GROUND TRUTH — rather than self.enabled, which
+  -- can lag or get stuck true across the leave transition and let the
+  -- unconditional self-add (below) rebuild the hidden self-button in the
+  -- world/city. Outside an instance there is nothing to display, so skip the
+  -- whole build. Test mode runs in the world but drives a fake roster through
+  -- this function, so allow it. Enable() re-fires this on entry so allies
+  -- populate; Disable() tears the roster down on exit. Also no-ops the
+  -- permanently-registered GROUP_ROSTER_UPDATE / PARTY_LEADER_CHANGED events
+  -- while in the world.
+  local _, instanceType = IsInInstance()
+  if instanceType ~= "pvp" and instanceType ~= "arena" and not self:IsTestmodeActive() then
+    return
+  end
   self.Allies:BeforePlayerSourceUpdate(self.consts.PlayerSources.GroupMembers)
   self.Allies.groupLeader = nil
   self.Allies.assistants = {}
 
   --IsInGroup returns true when user is in a Raid and In a 5 man group
-
-  self:RequestEverythingFromGroupmembers()
 
   -- GetRaidRosterInfo also works when in a party (not raid) but i am not 100% sure how the party unitID maps to the index in GetRaidRosterInfo()
 
@@ -3684,40 +5292,79 @@ function BattleGroundEnemies:GROUP_ROSTER_UPDATE()
 
   local addedCount = 0
 
-  if IsInRaid() then
-    for i = 1, numGroupMembers do -- the player itself only shows up here when he is in a raid
-      local name, rank, subgroup, level, localizedClass, classToken, zone, online, isDead, role, isML, combatRole =
-        GetRaidRosterInfo(i)
+  -- Capture the user's own raid role so we can pass it to the explicit
+  -- self-add below (the raid loop skips self, but GetRaidRosterInfo is
+  -- the only source for raid-assigned MAINTANK / MAINASSIST).
+  local selfRaidRole = nil
 
-      if name and name ~= self.UserDetails.PlayerName and rank and classToken then
-        self.Allies:AddGroupMember(name, rank == 2, rank == 1, classToken, "raid" .. i)
-        addedCount = addedCount + 1
+  -- #1 ghost-frame gate: only BUILD ally buttons when the ally container is
+  -- enabled for the current player-count bracket. We use ShouldBeEnabled()
+  -- (config-derived) NOT self.Allies.enabled, because the latter LAGS in combat
+  -- (mainframe:Enable / ApplyPlayerCountProfileSettings defer past
+  -- InCombatLockdown), which would make an in-combat instance entry / reload
+  -- skip the build and leave allies empty. SetRealPlayerCount above already ran
+  -- SelectPlayerCountProfile, which sets playerType/playerCountConfig
+  -- synchronously (not combat-deferred), so ShouldBeEnabled is correct here.
+  -- When friendly frames are off for this size we skip every AddGroupMember
+  -- below. The GroupMembers source then stays
+  -- empty and the AfterPlayerSourceUpdate further down tears any existing ally
+  -- buttons back into the pool -- no "ghost frames", and the central
+  -- UNIT_HEALTH/AURA/POWER dispatch finds an empty ally roster (zero work on
+  -- hidden frames). Everything else still runs: HarvestRaidRoster (reads
+  -- GetRaidRosterInfo, not buttons), the arena trinket refresh (which also
+  -- updates ENEMY cooldowns), and the leader/assist flags below.
+  local buildAllies = self.Allies:ShouldBeEnabled()
+
+  if buildAllies then
+    if IsInRaid() then
+      for i = 1, numGroupMembers do -- the player itself only shows up here when he is in a raid
+        local name, rank, subgroup, level, localizedClass, classToken, zone, online, isDead, role, isML, combatRole =
+          GetRaidRosterInfo(i)
+
+        -- Canonicalize the GetRaidRosterInfo name so it can be compared with
+        -- UserDetails.PlayerName (canonical post-refactor). For same-realm
+        -- members (always true for the user themselves) GetRaidRosterInfo
+        -- returns short "Name"; UserDetails.PlayerName is "Name-Realm". The
+        -- old direct compare would have silently missed self-identification
+        -- after the canonicalization refactor.
+        if type(name) == "string" and self:CanonicalName(name) == self.UserDetails.PlayerName then
+          selfRaidRole = role
+        elseif type(name) == "string" and rank and classToken then
+          -- `role` is the 10th return: "MAINTANK", "MAINASSIST", or "" for
+          -- regular members. Pass it through so the sort comparator can
+          -- put MT/MA tiers before plain TANK.
+          self.Allies:AddGroupMember(name, rank == 2, rank == 1, classToken, "raid" .. i, role)
+          addedCount = addedCount + 1
+        end
       end
-    end
-  else
-    -- we are in a party, 5 man group
-    for i = 1, numGroupMembers do
-      local unitID = "party" .. i
-      local name = GetUnitName(unitID, true)
+    else
+      -- we are in a party, 5 man group — no raid-assigned roles exist here.
+      for i = 1, numGroupMembers do
+        local unitID = "party" .. i
+        local name = GetUnitName(unitID, true)
 
-      local classToken = select(2, UnitClass(unitID))
+        local classToken = select(2, UnitClass(unitID))
 
-      if name and classToken then
-        self.Allies:AddGroupMember(name, UnitIsGroupLeader(unitID), UnitIsGroupAssistant(unitID), classToken, unitID)
-        addedCount = addedCount + 1
+        if type(name) == "string" and classToken then
+          self.Allies:AddGroupMember(name, UnitIsGroupLeader(unitID), UnitIsGroupAssistant(unitID), classToken, unitID)
+          addedCount = addedCount + 1
+        end
       end
     end
   end
 
   self.UserDetails.isGroupLeader = UnitIsGroupLeader("player")
   self.UserDetails.isGroupAssistant = UnitIsGroupAssistant("player")
-  self.Allies:AddGroupMember(
-    self.UserDetails.PlayerName,
-    self.UserDetails.isGroupLeader,
-    self.UserDetails.isGroupAssistant,
-    self.UserDetails.PlayerClass,
-    "player"
-  )
+  if buildAllies then
+    self.Allies:AddGroupMember(
+      self.UserDetails.PlayerName,
+      self.UserDetails.isGroupLeader,
+      self.UserDetails.isGroupAssistant,
+      self.UserDetails.PlayerClass,
+      "player",
+      selfRaidRole
+    )
+  end
   self.Allies:AfterPlayerSourceUpdate()
   self.Allies:UpdateAllUnitIDs()
 
@@ -3735,10 +5382,21 @@ function BattleGroundEnemies:GROUP_ROSTER_UPDATE()
   end
 
   -- Retry if some group members had nil data (still loading into the instance).
-  -- GetRaidRosterInfo / GetUnitName can return nil for members who haven't loaded yet,
-  -- and GROUP_ROSTER_UPDATE does not re-fire when they finish loading.
-  local expectedNonSelf = numGroupMembers - 1
-  if addedCount < expectedNonSelf and not self.betweenRounds then
+  -- GetRaidRosterInfo / GetUnitName / UnitGUID can return nil or secret values
+  -- for members who haven't loaded yet, and GROUP_ROSTER_UPDATE does not re-fire
+  -- when they finish loading.
+  --
+  -- Count ACTUAL buttons in self.Allies.Players (source of truth), not the
+  -- outer-loop addedCount. AddGroupMember has an internal short-circuit on
+  -- nil/secret GUIDs (Mainframe.lua guard in AddGroupMember) that can silently
+  -- drop a member even when the outer name+classToken guard passed — so
+  -- addedCount would claim success while the button is missing. Common in
+  -- arena gate phase where UnitGUID("party1") returns nil before reveal.
+  local actualAllies = 0
+  for _ in pairs(self.Allies.Players or {}) do
+    actualAllies = actualAllies + 1
+  end
+  if buildAllies and actualAllies < numGroupMembers and not self.betweenRounds then
     if not self.allyRosterRetryTimer then
       local retries = 0
       self.allyRosterRetryTimer = C_Timer.NewTicker(1, function()
@@ -3759,30 +5417,98 @@ function BattleGroundEnemies:GROUP_ROSTER_UPDATE()
       self.allyRosterRetryTimer = nil
     end
   end
+
+  -- Harvest non-secret identity attrs from the raid roster into PlayerHistory.
+  -- Self-gates on IsInPvPInstance; cheap no-op when called outside a BG.
+  -- Fires on every GROUP_ROSTER_UPDATE (initial join + every late-joiner /
+  -- leaver) so we capture data before anyone DCs or before end-of-match.
+  if self.HarvestRaidRoster then
+    self:HarvestRaidRoster()
+  end
 end
 
 BattleGroundEnemies.PARTY_LEADER_CHANGED = BattleGroundEnemies.GROUP_ROSTER_UPDATE
 
 --Fires when the player logs in, /reloads the UI or zones between map instances. Basically whenever the loading screen appears.
-function BattleGroundEnemies:PLAYER_ENTERING_WORLD()
-  self:StartTargetScanTicker()
-  self:DisableTestOrEditmode()
+-- function BattleGroundEnemies:PVP_MATCH_STATE_CHANGED()
+--   if C_PvP and C_PvP.GetActiveMatchState and C_PvP.GetActiveMatchState() == (Enum and Enum.PvPMatchState and Enum.PvPMatchState.StartUp or 2) then
+--     print("[BGEF debug] PVP_MATCH_STATE_CHANGED (StartUp) GetBattlefieldArenaFaction()=",
+--       GetBattlefieldArenaFaction and GetBattlefieldArenaFaction())
+--   end
+-- end
 
-  -- Reset scoreboard freeze flag
-  self.scoreboardFrozen = false
+function BattleGroundEnemies:PLAYER_ENTERING_WORLD()
+  -- print("[BGEF debug] PLAYER_ENTERING_WORLD GetBattlefieldArenaFaction()=",
+  --   GetBattlefieldArenaFaction and GetBattlefieldArenaFaction())
+
+  -- TargetScanTicker is now started/stopped by Enable()/Disable(), invoked
+  -- via CheckEnableState below. Don't start it here unconditionally —
+  -- otherwise it would be created on every world load (including non-PvP
+  -- zones) and stay alive until the next BG.
+
+  if self.states.testmodeActive then
+    self:DisableTestMode()
+  end
 
   self:ClearPIDCaches()
   wipe(self.ArenaIDToPlayerButton)
   self.Enemies:RemoveAllPlayersFromAllSources()
-  self.Allies:RemoveAllPlayersFromSource(self.consts.PlayerSources.Scoreboard)
+  -- Allies are roster-driven (GROUP_ROSTER_UPDATE); never sourced from scoreboard.
+  -- Reset UBS signature cache so the first UBS of this match always processes.
+  self._lastEnemyCount = nil
+
+  local prevInstanceType = self.cachedInstanceType
   local _, zone = IsInInstance()
+  self.cachedInstanceType = zone
+
+  -- Detect if we just crossed a BG/arena boundary (entering OR leaving).
+  -- PLAYER_ENTERING_WORLD also fires for mid-match transitions like
+  -- vehicle phases or /reload — those should NOT wipe faction state since
+  -- we're still in the same match and the cached value is valid.
+  local enteringPvP = (zone == "pvp" or zone == "arena") and prevInstanceType ~= zone
+  local leavingPvP = (prevInstanceType == "pvp" or prevInstanceType == "arena") and zone ~= prevInstanceType
+  if enteringPvP or leavingPvP then
+    -- Clear stale faction cache from the previous match. UBS handles
+    -- faction derivation now; AllyFaction stays nil until peer-validated.
+    self.AllyFaction = nil
+    self.EnemyFaction = nil
+    -- Grace period before UBS attempts validation. The scoreboard isn't
+    -- usually populated enough in the first ~3 seconds for the
+    -- peer-cross-check to succeed, so polling earlier is just wasted
+    -- work. A C_Timer.After sets the "elapsed" flag once; UBS gates its
+    -- validation block on that flag. On leave-PvP we cancel any pending
+    -- timer and clear the flag so a subsequent re-entry starts fresh.
+    if self._pvpGraceTimer then
+      self._pvpGraceTimer:Cancel()
+      self._pvpGraceTimer = nil
+    end
+    self._pvpGracePeriodElapsed = false
+    if enteringPvP then
+      self._pvpGraceTimer = C_Timer.NewTimer(3, function()
+        self._pvpGracePeriodElapsed = true
+        self._pvpGraceTimer = nil
+      end)
+      -- Reset the per-side "no custom profile covers this size" warning throttle
+      -- so SelectPlayerCountProfile's gap hint can fire once for this new match.
+      self.Allies._warnedNoCustomProfile = nil
+      self.Enemies._warnedNoCustomProfile = nil
+    end
+
+    -- Stop the lobby diagnostic watchdog if it was running. It will get
+    -- restarted by PVP_MATCH_STATE_CHANGED if we enter a new BG/arena lobby.
+    -- if self._stopLobbyEnemyWatchdog then
+    --   self:_stopLobbyEnemyWatchdog()
+    -- end
+  end
 
   if zone == "pvp" or zone == "arena" then
-    if GetBattlefieldArenaFaction then
-      self:SetAllyFaction(GetBattlefieldArenaFaction()) -- returns the playered faction 0 for horde, 1 for alliance, doesnt exist in TBC)
-    else
-      self:SetAllyFaction(1) -- set a dummy value, we get data later from GetBattlefieldScore()
-    end
+    -- AllyFaction is derived (and cross-validated) in UPDATE_BATTLEFIELD_SCORE.
+    -- Don't pre-set it here — a single C_PvP.GetScoreInfoByPlayerGuid call
+    -- this early in zone-in can return the wrong team number when the
+    -- scoreboard isn't fully populated yet, and a wrong cached value would
+    -- mis-bucket every teammate as an enemy until match end. UBS waits for
+    -- a peer's scoreboard row to confirm; AllyFaction stays nil and the
+    -- enemy panel stays empty until validation succeeds.
 
     if zone == "arena" then
       BattleGroundEnemies.states.real.isInArena = true
@@ -3802,6 +5528,18 @@ function BattleGroundEnemies:PLAYER_ENTERING_WORLD()
         end
 
         self:UPDATE_BATTLEFIELD_SCORE() --trigger the function again because since 10.0.0 UPDATE_BATTLEFIELD_SCORE doesnt fire reguralry anymore and RequestBattlefieldScore doesnt trigger the event
+
+        -- Re-settle the ALLY bracket now that the load screen is done. The enemy
+        -- bracket is recomputed constantly by UBS (above), but the ally bracket
+        -- is only recomputed by GROUP_ROSTER_UPDATE, which does NOT re-fire when
+        -- members finish loading -- so a premature first read on entry
+        -- (GetNumGroupMembers()==0 and/or GetInstanceInfo not ready) could stick
+        -- the ally container at "no profile" with frames missing, with nothing
+        -- to recover it (the retry ticker is gated on the ally being enabled,
+        -- which the stuck "no profile" makes false). By now the raid roster and
+        -- instance info are stable: force the bracket re-eval, then rebuild.
+        self.Allies:SelectPlayerCountProfile(true)
+        self:GROUP_ROSTER_UPDATE()
       end)
     end
   else
@@ -3809,6 +5547,23 @@ function BattleGroundEnemies:PLAYER_ENTERING_WORLD()
     self.states.real.isInBattleground = false
     self.states.real.isSoloRBG = false
     self.states.real.isRatedBG = false
+    -- Roster teardown on leaving an instance is handled in Disable() (reached
+    -- via CheckEnableState below), which always runs here — more reliable than
+    -- gating on leavingPvP.
+    --
+    -- Cosmetic cleanup: force BOTH brackets to re-evaluate now that we're out of
+    -- the instance, so the HUD reads "no profile" out of an instance instead of a
+    -- stale in-match value (e.g. enemy "16-40", ally "6-15"). Counts were already
+    -- zeroed (RemoveAllPlayersFromAllSources at the top of this handler), but
+    -- SetPlayerCount's change-guard no-ops a same-value 0->0, so the brackets
+    -- don't update on their own. BOTH sides need the explicit force:
+    --   * the enemy's normal re-settle (UBS) doesn't fire in the city, and
+    --   * the ally's normal re-settle (GROUP_ROSTER_UPDATE) EARLY-RETURNS out of
+    --     an instance via its IsInInstance gate -- so it never runs here either.
+    -- SelectPlayerCountProfile out of an instance hits the not-in-pvp branch ->
+    -- NoActivePlayercountProfile -> "no profile".
+    self.Enemies:SelectPlayerCountProfile(true)
+    self.Allies:SelectPlayerCountProfile(true)
   end
 
   self:CheckEnableState()

@@ -10,6 +10,8 @@ function BBF.UpdateClassicCastbarTexture(texture)
     classicCastbarTexture = BetterBlizzFramesDB.changeUnitFrameCastbarTexture and texture or 137012
 end
 
+local CastingBarFrame = CastingBarFrame or PlayerCastingBarFrame
+
 local function adjustCastBarBorder(castBar, border, adjust, shield, player, party, playerCb)
     -- Default values for width
     local defaultCastBarWidth = player or 150
@@ -94,31 +96,35 @@ end
 local hiddenFrame = CreateFrame("Frame")
 hiddenFrame:Hide()
 
+local function CastBarSetUnit(spellbar, unitId, showTradeSkill, showShield)
+    if CastingBarFrame_SetUnit then
+        CastingBarFrame_SetUnit(spellbar, unitId, showTradeSkill, showShield)
+    else
+        spellbar:SetUnit(unitId, showTradeSkill, showShield)
+    end
+end
+
 function BBF.UpdateCastbars()
     local numGroupMembers = GetNumGroupMembers()
-    local compactFrame = (_G["PartyMemberFrame1"] and _G["PartyMemberFrame1"]:IsShown() and _G["PartyMemberFrame1"])
-                         or (_G["CompactPartyFrameMember1"] and _G["CompactPartyFrameMember1"]:IsShown() and _G["CompactPartyFrameMember1"])
-                         or (_G["CompactRaidFrame1"] and _G["CompactRaidFrame1"]:IsShown() and _G["CompactRaidFrame1"])
+    local firstPartyFrame, defaultPartyFrame = BBF.FindPartyFrame(1)
 
     if BetterBlizzFramesDB.showPartyCastbar or BetterBlizzFramesDB.partyCastBarTestMode then
         for i = 1, 5 do
             local spellbar = spellBars[i]
             if spellbar then
-                CastingBarFrame_SetUnit(spellbar, nil)
+                CastBarSetUnit(spellbar, nil)
                 spellbar:SetStatusBarTexture(classicCastbarTexture)
             end
         end
-        if compactFrame and compactFrame:IsShown() and numGroupMembers <= 5 then
-            local defaultPartyFrame
-            if string.match(compactFrame:GetName(), "PartyMemberFrame") then
-                defaultPartyFrame = true
+        if firstPartyFrame and firstPartyFrame:IsShown() and numGroupMembers <= 5 then
+            if defaultPartyFrame then
                 numGroupMembers = numGroupMembers - 1
             end
             for i = 1, 5 do
                 local spellbar = spellBars[i]
                 if spellbar then
                     if not BetterBlizzFramesDB.partyCastBarTestMode then
-                        CastingBarFrame_SetUnit(spellbar, nil)
+                        CastBarSetUnit(spellbar, nil)
                     end
                     spellbar:SetStatusBarTexture(classicCastbarTexture)
                     --spellbar:SetParent(UIParent)
@@ -150,15 +156,7 @@ function BBF.UpdateCastbars()
                         spellbar.Icon:SetAlpha(1)
                     end
 
-                    local partyFrame = nil
-
-                    if _G["PartyMemberFrame"..i] and _G["PartyMemberFrame"..i]:IsShown() then
-                        partyFrame = _G["PartyMemberFrame"..i]
-                    elseif _G["CompactPartyFrameMember"..i] and _G["CompactPartyFrameMember"..i]:IsShown() then
-                        partyFrame = _G["CompactPartyFrameMember"..i]
-                    elseif _G["CompactRaidFrame"..i] and _G["CompactRaidFrame"..i]:IsShown() then
-                        partyFrame = _G["CompactRaidFrame"..i]
-                    end
+                    local partyFrame = BBF.FindPartyFrame(i)
 
                     if partyFrame and partyFrame:IsShown() and partyFrame:IsVisible() then
                         local xPos = BetterBlizzFramesDB.partyCastBarXPos + 10
@@ -171,18 +169,17 @@ function BBF.UpdateCastbars()
                         local unitId = partyFrame.displayedUnit or partyFrame.unit
 
                         if (unitId and unitId:match("^partypet%d$")) then
-                            CastingBarFrame_SetUnit(spellbar, nil)
+                            CastBarSetUnit(spellbar, nil)
                         elseif UnitIsUnit(unitId, "player") and (not BetterBlizzFramesDB.partyCastbarSelf and not BetterBlizzFramesDB.partyCastBarTestMode) then
-                            CastingBarFrame_SetUnit(spellbar, nil)
+                            CastBarSetUnit(spellbar, nil)
                         else
-                            CastingBarFrame_SetUnit(spellbar, unitId, true, true)
-                            spellbar:SetFrameStrata("MEDIUM")
+                            CastBarSetUnit(spellbar, unitId, true, true)
                         end
 
                         spellbar:ClearAllPoints()
                         spellbar:SetPoint("CENTER", partyFrame, "CENTER", xPos, yPos + 3)
                     else
-                        CastingBarFrame_SetUnit(spellbar, nil)
+                        CastBarSetUnit(spellbar, nil)
                     end
                 else
                     BBF.CreateCastbars()
@@ -192,7 +189,7 @@ function BBF.UpdateCastbars()
             for i = 1, 5 do
                 local spellbar = spellBars[i]
                 if spellbar then
-                    CastingBarFrame_SetUnit(spellbar, nil)
+                    CastBarSetUnit(spellbar, nil)
                 end
             end
         end
@@ -200,7 +197,7 @@ function BBF.UpdateCastbars()
         for i = 1, 5 do
             local spellbar = spellBars[i]
             if spellbar then
-                CastingBarFrame_SetUnit(spellbar, nil)
+                CastBarSetUnit(spellbar, nil)
             end
         end
     end
@@ -259,10 +256,9 @@ function BBF.UpdatePetCastbar()
             else
                 petSpellBar:SetPoint("CENTER", petFrame, "CENTER", xPos + 4, yPos - 27)
             end
-            petSpellBar:SetFrameStrata("MEDIUM")
-            CastingBarFrame_SetUnit(petSpellBar, "pet", true, true)
+            CastBarSetUnit(petSpellBar, "pet", true, true)
         else
-            CastingBarFrame_SetUnit(petSpellBar, nil)
+            CastBarSetUnit(petSpellBar, nil)
         end
     else
         BBF.CreateCastbars()
@@ -275,8 +271,10 @@ function BBF.CreateCastbars()
         for i = 1, 5 do
             local spellbar = CreateFrame("StatusBar", "Party"..i.."SpellBar", UIParent, "SmallCastingBarFrameTemplate")
             spellbar:SetScale(1)
+            spellbar:SetFrameStrata("MEDIUM")
+            spellbar:SetFrameLevel(9900)
 
-            CastingBarFrame_SetUnit(spellbar, "party"..i, true, true)
+            CastBarSetUnit(spellbar, "party"..i, true, true)
             spellbar:SetStatusBarTexture(classicCastbarTexture)
             spellbar.Text:SetFontObject("SystemFont_Shadow_Med1_Outline")
             spellbar.Icon:ClearAllPoints()
@@ -317,8 +315,10 @@ function BBF.CreateCastbars()
     if not petCastbarCreated and (BetterBlizzFramesDB.petCastbar or BetterBlizzFramesDB.petCastBarTestMode) then
         local petSpellBar = CreateFrame("StatusBar", "PetSpellBar", UIParent, "SmallCastingBarFrameTemplate")
         petSpellBar:SetScale(1)
+        petSpellBar:SetFrameStrata("MEDIUM")
+        petSpellBar:SetFrameLevel(9900)
 
-        CastingBarFrame_SetUnit(petSpellBar, "pet", true, true)
+        CastBarSetUnit(petSpellBar, "pet", true, true)
         petSpellBar:SetStatusBarTexture(classicCastbarTexture)
         petSpellBar.Text:SetFontObject("SystemFont_Shadow_Med1_Outline")
         petSpellBar.Icon:ClearAllPoints()
@@ -348,9 +348,9 @@ function BBF.CreateCastbars()
             end)
         end
 
-                    petSpellBar:HookScript("OnEvent", function()
-                petSpellBar:SetStatusBarTexture(classicCastbarTexture)
-            end)
+        petSpellBar:HookScript("OnEvent", function()
+            petSpellBar:SetStatusBarTexture(classicCastbarTexture)
+        end)
 
         petSpellBar:Hide()
 
@@ -877,12 +877,28 @@ local function CastingBarFrameMiscAdjustments()
     -- end
     --CastingBarFrame.InterruptGlow:SetSize(newInterruptGlowWidth, newInterruptGlowHeight)
 
-        if not CastingBarFrame.sparkHooked then
+    local playerSparkHeight = BetterBlizzFramesDB.playerCastBarHeight + 15
+    local targetSparkHeight = BetterBlizzFramesDB.targetCastBarHeight + 15
+    local focusSparkHeight = BetterBlizzFramesDB.focusCastBarHeight + 15
+
+    if not CastingBarFrame.sparkHooked then
         CastingBarFrame:HookScript("OnUpdate", function(self)
             --self.Spark:SetTexture(130877)
-            self.Spark:SetSize(33,BetterBlizzFramesDB.playerCastBarHeight + 20)
+            self.Spark:SetSize(30, playerSparkHeight)
             UpdateSparkPosition(self)
         end)
+        TargetFrameSpellBar:HookScript("OnUpdate", function(self)
+            --self.Spark:SetTexture(130877)
+            self.Spark:SetSize(30, targetSparkHeight)
+            UpdateSparkPosition(self)
+        end)
+        if FocusFrameSpellBar then
+            FocusFrameSpellBar:HookScript("OnUpdate", function(self)
+                --self.Spark:SetTexture(130877)
+                self.Spark:SetSize(30, focusSparkHeight)
+                UpdateSparkPosition(self)
+            end)
+        end
         CastingBarFrame.sparkHooked = true
     end
     CastingBarFrame:SetStatusBarTexture(classicCastbarTexture)
@@ -912,10 +928,9 @@ function BBF.ChangeCastbarSizes()
     -- CastingBarFrame.BorderShield:SetPoint("RIGHT", CastingBarFrame, "LEFT", -1.5 + BetterBlizzFramesDB.playerCastbarIconXPos, -7 + BetterBlizzFramesDB.playerCastbarIconYPos)
     -- CastingBarFrame.BorderShield:SetScale(BetterBlizzFramesDB.playerCastBarIconScale)
     -- CastingBarFrame.BorderShield:SetDrawLayer("BORDER")
-    CastingBarFrame.Icon:SetDrawLayer("OVERLAY", 7)
+    CastingBarFrame.Icon:SetDrawLayer("ARTWORK")
     CastingBarFrame.Text:SetAlpha(BetterBlizzFramesDB.playerCastBarShowText and 1 or 0)
     CastingBarFrame.Border:SetAlpha(BetterBlizzFramesDB.playerCastBarShowBorder and 1 or 0)
-    CastingBarFrame.Spark:SetDrawLayer("OVERLAY", 7)
 
     adjustCastBarBorder(CastingBarFrame, CastingBarFrame.Border, 15, nil, nil, nil, 11)
     adjustCastBarBorder(CastingBarFrame, CastingBarFrame.Flash, 15, nil, nil, nil, 11)
@@ -924,14 +939,14 @@ function BBF.ChangeCastbarSizes()
     -- CastingBarFrame:ClearAllPoints()
     -- CastingBarFrame:SetPoint("CENTER", UIParent, "BOTTOM", BetterBlizzFramesDB.playerCastBarXPos, BetterBlizzFramesDB.playerCastBarYPos + 157)
 
-    BBF.MoveRegion(CastingBarFrame, "CENTER", UIParent, "BOTTOM", BetterBlizzFramesDB.playerCastBarXPos, BetterBlizzFramesDB.playerCastBarYPos + 166)
+    -- BBF.MoveRegion(CastingBarFrame, "CENTER", UIParent, "BOTTOM", BetterBlizzFramesDB.playerCastBarXPos, BetterBlizzFramesDB.playerCastBarYPos + 166)
 
-    if CastingBarFrame.ignoreFramePositionManager and not bugNotify then
-        bugNotify = true
-        C_Timer.After(3, function() 
-            BBF.Print("\n" .. L["Print_Cast_Bar_Underneath_Warning"])
-        end)
-    end
+    -- if CastingBarFrame.ignoreFramePositionManager and not bugNotify then
+    --     bugNotify = true
+    --     C_Timer.After(3, function() 
+    --         BBF.Print("\n" .. L["Print_Cast_Bar_Underneath_Warning"])
+    --     end)
+    -- end
 
     --
     CastingBarFrameMiscAdjustments()
@@ -1019,7 +1034,7 @@ function BBF.ChangeCastbarSizes()
     if BetterBlizzFramesDB.changeUnitFrameFont then
         local fontName = BetterBlizzFramesDB.unitFrameFont
         local fontPath = BBF.LSM:Fetch(BBF.LSM.MediaType.FONT, fontName)
-        local outline = BetterBlizzFramesDB.unitFrameFontOutline or "THINOUTLINE"
+        local outline = BetterBlizzFramesDB.unitFrameFontOutline or "OUTLINE"
         local _, size, _ = TargetFrameSpellBar.Text:GetFont()
         TargetFrameSpellBar.Text:SetFont(fontPath, size, outline)
         if FocusFrameSpellBar then

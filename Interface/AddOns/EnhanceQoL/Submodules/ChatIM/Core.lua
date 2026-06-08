@@ -215,7 +215,7 @@ function ChatIM:SetEnabled(val)
 						local tab = ChatIM.tabs[name]
 						if tab and tab.edit then
 							ChatIM.tabGroup:SelectTab(name)
-							C_Timer.After(0, function() tab.edit:SetFocus() end)
+							RunNextFrame(function() tab.edit:SetFocus() end)
 							local eb = ChatFrameUtil.ChooseBoxForSend()
 							if eb then ChatEdit_OnEscapePressed(eb) end
 						end

@@ -13,6 +13,7 @@ local _, LM = ...
 local C_Spell = LM.C_Spell or C_Spell
 
 local L = LM.L
+local Env = LM.Environment
 
 local issecretvalue = issecretvalue or function () return false end
 --
@@ -188,7 +189,8 @@ local function SpellArgsToDisplay(args)
     for _, v in ipairs(args:ParseList()) do
         local info = C_Spell.GetSpellInfo(v)
         if info then
-            table.insert(out, string.format("%s (%d)", info.name, info.spellID))
+            local name = type(v) == 'string' and v or info.name
+            table.insert(out, string.format("%s (%d)", name, info.spellID))
         else
             table.insert(out, v)
         end
@@ -229,8 +231,11 @@ ACTIONS['PreCast'] = {
             for _, arg in ipairs(args:ParseList()) do
                 local info = C_Spell.GetSpellInfo(arg)
                 if info and IsPlayerSpell(info.spellID) and info.castTime == 0 then
-                    LM.Debug("  * setting preCast to spell " .. info.name)
-                    context.preCast = info.name
+                    -- Specifically using arg to support !Spell. Incredibly, you can
+                    -- do C_Spell.GetSpellInfo("!Spell") but obviously the ! is not
+                    -- preserved in the return struct.
+                    LM.Debug("  * setting preCast to spell " .. arg)
+                    context.preCast = arg
                     context.preUse = nil
                     return
                 end
@@ -375,7 +380,7 @@ ACTIONS['SwitchFlightStyle'] = {
         function (args, context)
             if IsPlayerSpell(switchSpellID) then
                 local argList = args:ParseList()
-                if #argList == 0 or LM.Environment.flightStyle  ~= argList[1] then
+                if #argList == 0 or Env.flightStyle  ~= argList[1] then
                     LM.Debug("  * setting action to spell " .. switchSpellInfo.name)
                     return LM.SecureAction:Spell(switchSpellID, context.rule.unit)
                 end
@@ -521,7 +526,14 @@ ACTIONS['Mount'] = {
 
             if m then
                 LM.Debug("  * setting action to mount %s", m.name)
-                context.self.persistMount = m
+                -- In some circumstances probably don't want to persist, such
+                -- as ghost wolf due to moving. Not sure how to best handle
+                -- it. Could mark mounts as non-persist (or ok-persist), use
+                -- ifMovingOrFalling, or see if #mounts == 1. Or something that
+                -- I haven't thought of yet.
+                if not Env.isMovingOrFalling then
+                    context.self.persistMount = m
+                end
                 return m:GetCastAction(context), m
             end
         end
@@ -648,12 +660,12 @@ local function CombatHandlerOverride(args, context)
 
     -- Tindral Sageswift, Amirdrassil (DF). 2234 is the parent of all the
     -- relevant maps.
-    if LM.Environment:IsMapInPath(2234) then
+    if Env:IsMapInPath(2234) then
         return GetCombatMountAction(context, 'DRAGONRIDING')
     end
 
     -- Dimensius, Manaforge Omega raid (TWW)
-    if LM.Environment:IsInInstance(2810) then
+    if Env:IsInInstance(2810) then
         local mapID = C_Map.GetBestMapForUnit('player')
         if mapID >= 2467 and mapID <= 2470 then
             return GetCombatMountAction(context, 'DRAGONRIDING')
@@ -661,7 +673,7 @@ local function CombatHandlerOverride(args, context)
     end
 
     -- The Dawnbreaker dungeon (The War Within)
-    if LM.Environment:IsInInstance(2662) then
+    if Env:IsInInstance(2662) then
         return GetCombatMountAction(context, 'DRAGONRIDING')
     end
 end

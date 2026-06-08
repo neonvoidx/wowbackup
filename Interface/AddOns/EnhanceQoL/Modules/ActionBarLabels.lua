@@ -248,6 +248,15 @@ local function GetBorderColor()
 	return r, g, b, a
 end
 
+local function MarkActionButtonBorderStateDirty()
+	Labels._actionButtonBorderStateDirty = true
+	Labels._actionButtonBorderStateVersion = (Labels._actionButtonBorderStateVersion or 0) + 1
+end
+
+function Labels.InvalidateActionButtonBorderState()
+	MarkActionButtonBorderStateDirty()
+end
+
 local function BuildLSMBorderCache()
 	local cache = {}
 	local hash = addon.functions and addon.functions.GetLSMMediaHash and addon.functions.GetLSMMediaHash("border") or {}
@@ -263,18 +272,33 @@ local function IsLSMBorderPath(path)
 	return Labels._lsmBorderCache and Labels._lsmBorderCache[path] == true
 end
 
-function Labels.ResetBorderCache() Labels._lsmBorderCache = nil end
+function Labels.ResetBorderCache()
+	Labels._lsmBorderCache = nil
+	MarkActionButtonBorderStateDirty()
+end
+
+local function IsValidCustomBorderStyle(style)
+	if style == QUICK_SLOT_BORDER then return true end
+	return IsLSMBorderPath(style)
+end
 
 local function GetCustomBorderStyle()
 	if not addon.db then return DEFAULT_BORDER_STYLE end
 	local style = addon.db.actionBarBorderStyle
 	if type(style) ~= "string" or style == "" then return DEFAULT_BORDER_STYLE end
+	if style ~= DEFAULT_BORDER_STYLE and not IsValidCustomBorderStyle(style) then return DEFAULT_BORDER_STYLE end
 	return style
 end
 
 local function IsCustomBorderStyle(style) return type(style) == "string" and style ~= "" and style ~= DEFAULT_BORDER_STYLE end
 
-local function BuildActionButtonBorderState()
+local function IsActionButtonBorderFeatureEnabled()
+	if not addon.db then return false end
+	return addon.db.actionBarHideBorders == true or IsCustomBorderStyle(GetCustomBorderStyle())
+end
+
+local function BuildActionButtonBorderState(state)
+	state = state or {}
 	local style = GetCustomBorderStyle()
 	local hasCustom = IsCustomBorderStyle(style)
 	local hide = addon.db and (addon.db.actionBarHideBorders or hasCustom) or hasCustom
@@ -283,27 +307,27 @@ local function BuildActionButtonBorderState()
 	local edgeSize = usesBackdrop and GetBorderEdgeSize() or DEFAULT_BORDER_EDGE_SIZE
 	local r, g, b, a = 1, 1, 1, 1
 	if hasCustom then r, g, b, a = GetBorderColor() end
-	return {
-		style = style,
-		hasCustom = hasCustom,
-		hide = hide == true,
-		usesBackdrop = usesBackdrop == true,
-		padding = padding,
-		edgeSize = edgeSize,
-		colorR = r,
-		colorG = g,
-		colorB = b,
-		colorA = a,
-		signature = table.concat({
-			hide == true and "1" or "0",
-			hasCustom == true and "1" or "0",
-			usesBackdrop == true and "1" or "0",
-			tostring(style or ""),
-			tostring(padding or ""),
-			tostring(edgeSize or ""),
-			string.format("%.3f,%.3f,%.3f,%.3f", r or 0, g or 0, b or 0, a or 0),
-		}, "|"),
-	}
+	state.style = style
+	state.hasCustom = hasCustom
+	state.hide = hide == true
+	state.usesBackdrop = usesBackdrop == true
+	state.padding = padding
+	state.edgeSize = edgeSize
+	state.colorR = r
+	state.colorG = g
+	state.colorB = b
+	state.colorA = a
+	state.enabled = state.hide or state.hasCustom
+	state.version = Labels._actionButtonBorderStateVersion or 0
+	return state
+end
+
+local function GetCachedActionButtonBorderState()
+	if Labels._actionButtonBorderStateDirty ~= false or not Labels._actionButtonBorderState then
+		Labels._actionButtonBorderState = BuildActionButtonBorderState(Labels._actionButtonBorderState)
+		Labels._actionButtonBorderStateDirty = false
+	end
+	return Labels._actionButtonBorderState
 end
 
 local function EnsureCustomBorderTexture(button)
@@ -436,7 +460,7 @@ end
 
 local function RefreshButtonBorder(button, borderState)
 	if not addon.db then return end
-	borderState = borderState or BuildActionButtonBorderState()
+	borderState = borderState or GetCachedActionButtonBorderState()
 	local isActionButton = DetermineButtonBarName(button) ~= nil
 	if not isActionButton then
 		ApplyBorderVisibility(button, false)
@@ -448,15 +472,25 @@ local function RefreshButtonBorder(button, borderState)
 end
 
 function Labels.RefreshActionButtonBorders(reason)
-	if Labels.EnsureActionButtonArtHook then Labels.EnsureActionButtonArtHook() end
-	if Labels.EnsureZoneAbilityBorderHook then Labels.EnsureZoneAbilityBorderHook() end
-	local borderState = BuildActionButtonBorderState()
-	if reason == "PLAYER_LOGIN" and Labels._actionBarBorderFullRefreshSignature == borderState.signature then return end
+	local wasActive = Labels._actionButtonBorderFeatureActive == true
+	local isActive = IsActionButtonBorderFeatureEnabled()
+	Labels._actionButtonBorderFeatureActive = isActive
+	if not isActive and not wasActive then return end
+	if isActive then
+		if Labels.EnsureActionButtonArtHook then Labels.EnsureActionButtonArtHook() end
+		if Labels.EnsureZoneAbilityBorderHook then Labels.EnsureZoneAbilityBorderHook() end
+	end
+	MarkActionButtonBorderStateDirty()
+	local borderState = GetCachedActionButtonBorderState()
+	if reason == "PLAYER_LOGIN" and Labels._actionBarBorderFullRefreshVersion == borderState.version then return end
 	ForEachActionButtonBorderTarget(function(button) RefreshButtonBorder(button, borderState) end)
-	Labels._actionBarBorderFullRefreshSignature = borderState.signature
+	Labels._actionBarBorderFullRefreshVersion = borderState.version
 end
 
-function Labels.RefreshActionButtonBorder(button) RefreshButtonBorder(button) end
+function Labels.RefreshActionButtonBorder(button)
+	if Labels._actionButtonBorderFeatureActive ~= true then return end
+	RefreshButtonBorder(button)
+end
 
 local function SyncRangeOverlayMask(btn, icon, overlay)
 	if not (btn and icon and overlay) then return end
@@ -686,23 +720,30 @@ local function RestoreRegionAnchorPoints(region, key)
 	region[key] = nil
 end
 
-local function GetActionButtonAnchorTarget(button)
-	if not button then return nil end
-	return button.icon or button.Icon or button
+local function GetActionButtonAnchorTarget(region, button)
+	if region and region.GetParent then
+		local parent = region:GetParent()
+		if parent and parent ~= button and parent.GetParent and parent:GetParent() == button then return parent end
+	end
+	return button
 end
 
-local function ApplyRegionPositionOverride(region, button, enabled, anchor, offsetX, offsetY, stateKey, originalKey)
+local function ApplyRegionPositionOverride(region, button, enabled, anchor, offsetX, offsetY, stateKey, originalKey, collapseWidth, originalWidthKey)
 	if not (region and button) then return end
 	if enabled then
 		if not region[stateKey] then StoreRegionAnchorPoints(region, originalKey) end
-		local target = GetActionButtonAnchorTarget(button)
+		if collapseWidth and originalWidthKey and not region[originalWidthKey] and region.GetWidth then region[originalWidthKey] = region:GetWidth() end
+		local target = GetActionButtonAnchorTarget(region, button)
 		local point = NormalizeTextAnchor(anchor, "CENTER")
 		region:ClearAllPoints()
+		if collapseWidth and region.SetWidth then region:SetWidth(0) end
 		region:SetPoint(point, target, point, NormalizeTextOffset(offsetX, 0), NormalizeTextOffset(offsetY, 0))
 		region[stateKey] = true
 	else
 		if region[stateKey] then
 			RestoreRegionAnchorPoints(region, originalKey)
+			if originalWidthKey and region[originalWidthKey] and region.SetWidth then region:SetWidth(region[originalWidthKey]) end
+			if originalWidthKey then region[originalWidthKey] = nil end
 			region[stateKey] = nil
 		else
 			StoreRegionAnchorPoints(region, originalKey)
@@ -974,7 +1015,9 @@ local function ApplyHotkeyStyling(button, barNameOverride)
 		addon.db.actionBarHotkeyOffsetX,
 		addon.db.actionBarHotkeyOffsetY,
 		"EQOL_UsingHotkeyPositionOverride",
-		"EQOL_OriginalHotkeyPoints"
+		"EQOL_OriginalHotkeyPoints",
+		true,
+		"EQOL_OriginalHotkeyWidth"
 	)
 	local originalText = hotkey:GetText()
 	if hotkey.EQOL_ShortApplied and originalText ~= hotkey.EQOL_ShortValue then
@@ -1133,6 +1176,9 @@ function Labels.GetAdditionalHotkeyBarOptions()
 end
 
 hooksecurefunc("ActionButton_UpdateRangeIndicator", function(self, checksRange, inRange)
+	local db = addon.db
+	local hiddenHotkeys = db and db.actionBarHiddenHotkeys
+	if not db or (not db.actionBarFullRangeColoring and not db.actionBarHotkeyFontOverride and (type(hiddenHotkeys) ~= "table" or not next(hiddenHotkeys))) then return end
 	if not self or not self.action then return end
 	self.EQOL_RangeOutOfRange = checksRange and inRange == false
 	if checksRange and inRange == false then
@@ -1166,7 +1212,7 @@ do
 		if refreshPending then return end
 		if not addon.db or not addon.db.actionBarFullRangeColoring then return end
 		refreshPending = true
-		C_Timer.After(0, function()
+		RunNextFrame(function()
 			refreshPending = false
 			if Labels.RefreshAllRangeOverlays then Labels.RefreshAllRangeOverlays() end
 		end)
@@ -1227,7 +1273,6 @@ end
 
 local function OnPlayerLogin(self, event)
 	if event ~= "PLAYER_LOGIN" then return end
-	if Labels.EnsureActionButtonArtHook then Labels.EnsureActionButtonArtHook() end
 	EnsureRangeUsableHook()
 	if Labels.RefreshAllMacroNameVisibility then Labels.RefreshAllMacroNameVisibility() end
 	if Labels.RefreshAllHotkeyStyles then Labels.RefreshAllHotkeyStyles() end

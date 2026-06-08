@@ -258,7 +258,9 @@ local function updateFrameColorToggleVer(frame, unit)
                 frame:SetStatusBarDesaturated(false)
                 frame:SetStatusBarColor(0, 1, 0, 1)
             else
-                frame:SetStatusBarDesaturated(true)
+                if frame.SetStatusBarDesaturated then
+                    frame:SetStatusBarDesaturated(true)
+                end
                 frame:SetStatusBarColor(color.r, color.g, color.b, 1)
             end
         end
@@ -325,10 +327,10 @@ function BBF.UpdateFrames()
         if UnitExists("focus") then updateFrameColorToggleVer(FocusFrameHealthBar, "focus") end
         if UnitExists("targettarget") then updateFrameColorToggleVer(TargetFrameToTHealthBar, "targettarget") end
         if UnitExists("focustarget") then updateFrameColorToggleVer(FocusFrameToTHealthBar, "focustarget") end
-        if UnitExists("party1") then updateFrameColorToggleVer(PartyMemberFrame1HealthBar, "party1") end
-        if UnitExists("party2") then updateFrameColorToggleVer(PartyMemberFrame2HealthBar, "party2") end
-        if UnitExists("party3") then updateFrameColorToggleVer(PartyMemberFrame3HealthBar, "party3") end
-        if UnitExists("party4") then updateFrameColorToggleVer(PartyMemberFrame4HealthBar, "party4") end
+        if UnitExists("party1") then updateFrameColorToggleVer(PartyMemberFrame1HealthBar or _G["PartyFrame"]["MemberFrame1"].HealthBar, "party1") end
+        if UnitExists("party2") then updateFrameColorToggleVer(PartyMemberFrame2HealthBar or _G["PartyFrame"]["MemberFrame2"].HealthBar, "party2") end
+        if UnitExists("party3") then updateFrameColorToggleVer(PartyMemberFrame3HealthBar or _G["PartyFrame"]["MemberFrame3"].HealthBar, "party3") end
+        if UnitExists("party4") then updateFrameColorToggleVer(PartyMemberFrame4HealthBar or _G["PartyFrame"]["MemberFrame4"].HealthBar, "party4") end
         BBF.HealthColorOn = true
     else
         if BBF.HealthColorOn then
@@ -337,10 +339,10 @@ function BBF.UpdateFrames()
             if UnitExists("focus") then resetFrameColor(FocusFrameHealthBar, "focus") end
             if UnitExists("targettarget") then resetFrameColor(TargetFrameToTHealthBar, "targettarget") end
             if UnitExists("focustarget") then resetFrameColor(FocusFrameToTHealthBar, "focustarget") end
-            if UnitExists("party1") then resetFrameColor(PartyMemberFrame1HealthBar, "party1") end
-            if UnitExists("party2") then resetFrameColor(PartyMemberFrame2HealthBar, "party2") end
-            if UnitExists("party3") then resetFrameColor(PartyMemberFrame3HealthBar, "party3") end
-            if UnitExists("party4") then resetFrameColor(PartyMemberFrame4HealthBar, "party4") end
+            if UnitExists("party1") then resetFrameColor(PartyMemberFrame1HealthBar or _G["PartyFrame"]["MemberFrame1"].HealthBar, "party1") end
+            if UnitExists("party2") then resetFrameColor(PartyMemberFrame2HealthBar or _G["PartyFrame"]["MemberFrame2"].HealthBar, "party2") end
+            if UnitExists("party3") then resetFrameColor(PartyMemberFrame3HealthBar or _G["PartyFrame"]["MemberFrame3"].HealthBar, "party3") end
+            if UnitExists("party4") then resetFrameColor(PartyMemberFrame4HealthBar or _G["PartyFrame"]["MemberFrame4"].HealthBar, "party4") end
             BBF.HealthColorOn = nil
         end
     end
@@ -565,14 +567,29 @@ function BBF.BiggerHealthbars(frame, name)
     -- Healthbar
     local point, relativeTo, relativePoint, xOfs, yOfs
     if frame == "PlayerFrame" then
-        point, relativePoint, xOfs, yOfs = "TOPLEFT", "TOPLEFT", 106, -41
+        if BBF.isMoP then
+            point, relativePoint, xOfs, yOfs = "TOPLEFT", "TOPLEFT", 90, -45
+        else
+            point, relativePoint, xOfs, yOfs = "TOPLEFT", "TOPLEFT", 106, -41
+        end
         relativeTo = healthbar:GetParent()
     else
         point, relativeTo, relativePoint, xOfs, yOfs = healthbar:GetPoint()
+        if BBF.isMoP then
+            xOfs = xOfs + 1
+        end
     end
     local newYOffset = yOfs + 18
     BBF.MoveRegion(healthbar, point, relativeTo, relativePoint, xOfs, newYOffset)
-    healthbar:SetHeight(hideMana and 40 or 29)
+    if BBF.isMoP and frame == "PlayerFrame" then
+        healthbar:SetHeight(hideMana and 39 or 28)
+    else
+        if BBF.isMoP then
+            healthbar:SetHeight(hideMana and 39 or 28)
+        else
+            healthbar:SetHeight(hideMana and 40 or 29)
+        end
+    end
     if not BetterBlizzFramesDB.changeUnitFrameHealthbarTexture then
         healthbar:SetStatusBarTexture(LSM:Fetch(LSM.MediaType.STATUSBAR, "Smooth"))
     end
@@ -629,7 +646,11 @@ function BBF.BiggerHealthbars(frame, name)
 
         -- Name
         if frame == "PlayerFrame" then
-            BBF.MoveRegion(name, "CENTER", name:GetParent(), "CENTER", 50, 20)
+            if BBF.isMoP then
+                BBF.MoveRegion(name, "CENTER", name:GetParent(), "CENTER", 35, 15.5)
+            else
+                BBF.MoveRegion(name, "CENTER", name:GetParent(), "CENTER", 50, 20)
+            end
         else
             local point, relativeTo, relativePoint, xOfs, yOfs = name:GetPoint()
             local newYOffset = yOfs + 1
@@ -644,26 +665,49 @@ function BBF.BiggerHealthbars(frame, name)
             BBF.MoveRegion(leftTextMana, point, relativeTo, relativePoint, newXOffset, yOfs)
         end
         if frame == "PlayerFrame" then
-            BBF.MoveRegion(leftText, "LEFT", leftText:GetParent(), "LEFT", 110, 7)
-            BBF.MoveRegion(rightText, "RIGHT", rightText:GetParent(), "RIGHT", -8, 7)
-            BBF.MoveRegion(centerText, "CENTER", centerText:GetParent(), "CENTER", 50, 7)
-        else
-            local point, relativeTo, relativePoint, xOfs, yOfs = leftText:GetPoint()
-            local newYOffset = yOfs + 4 - (hideMana and 6 or 0)
-            local newXOffset = xOfs + 1
-            if not leftTextMana then
-                BBF.MoveRegion(leftText, point, relativeTo, relativePoint, xOfs, newYOffset)
+            if BBF.isMoP then
+                BBF.MoveRegion(leftText, "LEFT", leftText:GetParent(), "LEFT", 94, 4.5)
+                BBF.MoveRegion(rightText, "RIGHT", rightText:GetParent(), "RIGHT", -24, 4.5)
+                BBF.MoveRegion(centerText, "CENTER", centerText:GetParent(), "CENTER", 34, 4.5)
             else
-                BBF.MoveRegion(leftText, point, relativeTo, relativePoint, newXOffset, newYOffset)
+                BBF.MoveRegion(leftText, "LEFT", leftText:GetParent(), "LEFT", 110, 7)
+                BBF.MoveRegion(rightText, "RIGHT", rightText:GetParent(), "RIGHT", -8, 7)
+                BBF.MoveRegion(centerText, "CENTER", centerText:GetParent(), "CENTER", 50, 7)
             end
+        else
+            if BBF.isMoP then
+                local point, relativeTo, relativePoint, xOfs, yOfs = leftText:GetPoint()
+                local newYOffset = yOfs + 4 - (hideMana and 6 or 0) + 1.5
+                local newXOffset = xOfs + 1
+                if not leftTextMana then
+                    BBF.MoveRegion(leftText, point, relativeTo, relativePoint, xOfs, newYOffset)
+                else
+                    BBF.MoveRegion(leftText, point, relativeTo, relativePoint, newXOffset, newYOffset)
+                end
 
-            local point, relativeTo, relativePoint, xOfs, yOfs = rightText:GetPoint()
-            local newYOffset = yOfs + 4 - (hideMana and 6 or 0)
-            BBF.MoveRegion(rightText, point, relativeTo, relativePoint, xOfs, newYOffset)
+                local point, relativeTo, relativePoint, xOfs, yOfs = rightText:GetPoint()
+                BBF.MoveRegion(rightText, point, relativeTo, relativePoint, xOfs, newYOffset)
 
-            local point, relativeTo, relativePoint, xOfs, yOfs = centerText:GetPoint()
-            local newYOffset = yOfs + 4 - (hideMana and 6 or 0)
-            BBF.MoveRegion(centerText, point, relativeTo, relativePoint, xOfs, newYOffset)
+                local point, relativeTo, relativePoint, xOfs, yOfs = centerText:GetPoint()
+                BBF.MoveRegion(centerText, point, relativeTo, relativePoint, xOfs, newYOffset)
+            else
+                local point, relativeTo, relativePoint, xOfs, yOfs = leftText:GetPoint()
+                local newYOffset = yOfs + 4 - (hideMana and 6 or 0)
+                local newXOffset = xOfs + 1
+                if not leftTextMana then
+                    BBF.MoveRegion(leftText, point, relativeTo, relativePoint, xOfs, newYOffset)
+                else
+                    BBF.MoveRegion(leftText, point, relativeTo, relativePoint, newXOffset, newYOffset)
+                end
+
+                local point, relativeTo, relativePoint, xOfs, yOfs = rightText:GetPoint()
+                local newYOffset = yOfs + 4 - (hideMana and 6 or 0)
+                BBF.MoveRegion(rightText, point, relativeTo, relativePoint, xOfs, newYOffset)
+
+                local point, relativeTo, relativePoint, xOfs, yOfs = centerText:GetPoint()
+                local newYOffset = yOfs + 4 - (hideMana and 6 or 0)
+                BBF.MoveRegion(centerText, point, relativeTo, relativePoint, xOfs, newYOffset)
+            end
         end
     else
         if deadText then
@@ -674,7 +718,11 @@ function BBF.BiggerHealthbars(frame, name)
 
         -- Name
         if frame == "PlayerFrame" then
-            BBF.MoveRegion(name, "CENTER", name:GetParent(), "CENTER", 50, 36)
+            if BBF.isMoP then
+                BBF.MoveRegion(name, "CENTER", name:GetParent(), "CENTER", 36, 31.5)
+            else
+                BBF.MoveRegion(name, "CENTER", name:GetParent(), "CENTER", 50, 36)
+            end
         else
             local point, relativeTo, relativePoint, xOfs, yOfs = name:GetPoint()
             local newYOffset = yOfs + 17
@@ -689,26 +737,49 @@ function BBF.BiggerHealthbars(frame, name)
             BBF.MoveRegion(leftTextMana, point, relativeTo, relativePoint, newXOffset, yOfs)
         end
         if frame == "PlayerFrame" then
-            BBF.MoveRegion(leftText, "LEFT", leftText:GetParent(), "LEFT", 110, 12)
-            BBF.MoveRegion(rightText, "RIGHT", rightText:GetParent(), "RIGHT", -8, 12)
-            BBF.MoveRegion(centerText, "CENTER", centerText:GetParent(), "CENTER", 50, 12)
-        else
-            local point, relativeTo, relativePoint, xOfs, yOfs = leftText:GetPoint()
-            local newYOffset = yOfs + 9 - (hideMana and 6 or 0)
-            local newXOffset = xOfs + 1
-            if not leftTextMana then
-                BBF.MoveRegion(leftText, point, relativeTo, relativePoint, xOfs, newYOffset)
+            if BBF.isMoP then
+                BBF.MoveRegion(leftText, "LEFT", leftText:GetParent(), "LEFT", 94, 9.5)
+                BBF.MoveRegion(rightText, "RIGHT", rightText:GetParent(), "RIGHT", -24, 9.5)
+                BBF.MoveRegion(centerText, "CENTER", centerText:GetParent(), "CENTER", 34, 9.5)
             else
-                BBF.MoveRegion(leftText, point, relativeTo, relativePoint, newXOffset, newYOffset)
+                BBF.MoveRegion(leftText, "LEFT", leftText:GetParent(), "LEFT", 110, 12)
+                BBF.MoveRegion(rightText, "RIGHT", rightText:GetParent(), "RIGHT", -8, 12)
+                BBF.MoveRegion(centerText, "CENTER", centerText:GetParent(), "CENTER", 50, 12)
             end
+        else
+            if BBF.isMoP then
+                local point, relativeTo, relativePoint, xOfs, yOfs = leftText:GetPoint()
+                local newYOffset = yOfs + 9 - (hideMana and 6 or 0) + 1.5
+                local newXOffset = xOfs + 1
+                if not leftTextMana then
+                    BBF.MoveRegion(leftText, point, relativeTo, relativePoint, xOfs, newYOffset)
+                else
+                    BBF.MoveRegion(leftText, point, relativeTo, relativePoint, newXOffset, newYOffset)
+                end
 
-            local point, relativeTo, relativePoint, xOfs, yOfs = rightText:GetPoint()
-            local newYOffset = yOfs + 9 - (hideMana and 6 or 0)
-            BBF.MoveRegion(rightText, point, relativeTo, relativePoint, xOfs, newYOffset)
+                local point, relativeTo, relativePoint, xOfs, yOfs = rightText:GetPoint()
+                BBF.MoveRegion(rightText, point, relativeTo, relativePoint, xOfs, newYOffset)
 
-            local point, relativeTo, relativePoint, xOfs, yOfs = centerText:GetPoint()
-            local newYOffset = yOfs + 9 - (hideMana and 6 or 0)
-            BBF.MoveRegion(centerText, point, relativeTo, relativePoint, xOfs, newYOffset)
+                local point, relativeTo, relativePoint, xOfs, yOfs = centerText:GetPoint()
+                BBF.MoveRegion(centerText, point, relativeTo, relativePoint, xOfs, newYOffset)
+            else
+                local point, relativeTo, relativePoint, xOfs, yOfs = leftText:GetPoint()
+                local newYOffset = yOfs + 9 - (hideMana and 6 or 0)
+                local newXOffset = xOfs + 1
+                if not leftTextMana then
+                    BBF.MoveRegion(leftText, point, relativeTo, relativePoint, xOfs, newYOffset)
+                else
+                    BBF.MoveRegion(leftText, point, relativeTo, relativePoint, newXOffset, newYOffset)
+                end
+    
+                local point, relativeTo, relativePoint, xOfs, yOfs = rightText:GetPoint()
+                local newYOffset = yOfs + 9 - (hideMana and 6 or 0)
+                BBF.MoveRegion(rightText, point, relativeTo, relativePoint, xOfs, newYOffset)
+    
+                local point, relativeTo, relativePoint, xOfs, yOfs = centerText:GetPoint()
+                local newYOffset = yOfs + 9 - (hideMana and 6 or 0)
+                BBF.MoveRegion(centerText, point, relativeTo, relativePoint, xOfs, newYOffset)
+            end
         end
     end
 
@@ -774,21 +845,23 @@ function BBF.BiggerHealthbars(frame, name)
     end
 
     if not frameTextureHooked then
-        hooksecurefunc("TargetFrame_CheckClassification", function(frame)
-            if not frame or not frame.unit then return end
-            local classification = UnitClassification(frame.unit);
-        
+        local function BiggerHBCheckClassification(self)
+            if not self or not self.unit then return end
+            local classification = UnitClassification(self.unit);
+
             if BetterBlizzFramesDB.biggerHealthbars then
-                local frameName = frame:GetName()
+                local frameName = self:GetName()
+                if frameName == "TargetFrame" and BetterBlizzFramesDB.biggerHealthbarsNoTarget then return end
+                if frameName == "FocusFrame" and BetterBlizzFramesDB.biggerHealthbarsNoFocus then return end
                 local hideMana = ShouldHideManabar(frameName)
                 if (classification == "minus") then
-                    frame.borderTexture:SetTexture(hideMana and bigMinusNoManaTexture or "Interface\\Addons\\BetterBlizzFrames\\media\\UI-TargetingFrame-Minus")
+                    self.borderTexture:SetTexture(hideMana and bigMinusNoManaTexture or "Interface\\Addons\\BetterBlizzFrames\\media\\UI-TargetingFrame-Minus")
                 elseif (classification == "worldboss" or classification == "elite") then
-                    frame.borderTexture:SetTexture(hideMana and bigEliteNoManaTexture or "Interface\\Addons\\BetterBlizzFrames\\media\\UI-TargetingFrame-Elite")
+                    self.borderTexture:SetTexture(hideMana and bigEliteNoManaTexture or "Interface\\Addons\\BetterBlizzFrames\\media\\UI-TargetingFrame-Elite")
                 elseif (classification == "rareelite") then
-                    frame.borderTexture:SetTexture(hideMana and bigRareEliteNoManaTexture or "Interface\\Addons\\BetterBlizzFrames\\media\\UI-TargetingFrame-Rare-Elite")
+                    self.borderTexture:SetTexture(hideMana and bigRareEliteNoManaTexture or "Interface\\Addons\\BetterBlizzFrames\\media\\UI-TargetingFrame-Rare-Elite")
                 elseif (classification == "rare") then
-                    frame.borderTexture:SetTexture(hideMana and bigRareNoManaTexture or "Interface\\Addons\\BetterBlizzFrames\\media\\UI-TargetingFrame-Rare")
+                    self.borderTexture:SetTexture(hideMana and bigRareNoManaTexture or "Interface\\Addons\\BetterBlizzFrames\\media\\UI-TargetingFrame-Rare")
                 else
                     local textureToUse
                     if hideMana then
@@ -797,30 +870,19 @@ function BBF.BiggerHealthbars(frame, name)
                         textureToUse = normalTexture
                     end
                     if BetterBlizzFramesDB.hideLevelText then
-                        if BetterBlizzFramesDB.hideLevelTextAlways or UnitLevel(frame.unit) == maxLvl then
+                        if BetterBlizzFramesDB.hideLevelTextAlways or UnitLevel(self.unit) == maxLvl then
                             textureToUse = hideMana and bigNoLevelNoManaTexture or noLevelTexture
                         end
                     end
-                    frame.borderTexture:SetTexture(textureToUse)
+                    self.borderTexture:SetTexture(textureToUse)
                 end
             end
-        end)
-        frameTextureHooked = true
-
-        -- Hide LTP Name background
-        for i = 1, PlayerFrame:GetNumChildren() do
-            local child = select(i, PlayerFrame:GetChildren())
-            if child and child:IsObjectType("Frame") and not child:GetName() then
-                for j = 1, child:GetNumRegions() do
-                    local region = select(j, child:GetRegions())
-                    if region and region:IsObjectType("Texture") then
-                        local texture = region:GetTexture()
-                        if texture == 137017 then
-                        region:SetTexture(nil)
-                        end
-                    end
-                end
-            end
+        end
+        if TargetFrame_CheckClassification then
+            hooksecurefunc(TargetFrame_CheckClassification, BiggerHBCheckClassification)
+        else
+            hooksecurefunc(TargetFrame, "CheckClassification", BiggerHBCheckClassification)
+            hooksecurefunc(FocusFrame, "CheckClassification", BiggerHBCheckClassification)
         end
     end
 end
@@ -837,9 +899,15 @@ function BBF.HookBiggerHealthbars()
         local playerName = PlayerFrame.bbfName or PlayerName
         local targetName = TargetFrame.bbfName or TargetFrameTextureFrameName
         local focusName = FocusFrame.bbfName or FocusFrameTextureFrameName
-        BBF.BiggerHealthbars("PlayerFrame", playerName)
-        BBF.BiggerHealthbars("TargetFrame", targetName)
-        BBF.BiggerHealthbars("FocusFrame",focusName)
+        if not BetterBlizzFramesDB.biggerHealthbarsNoPlayer then
+            BBF.BiggerHealthbars("PlayerFrame", playerName)
+        end
+        if not BetterBlizzFramesDB.biggerHealthbarsNoTarget then
+            BBF.BiggerHealthbars("TargetFrame", targetName)
+        end
+        if not BetterBlizzFramesDB.biggerHealthbarsNoFocus then
+            BBF.BiggerHealthbars("FocusFrame", focusName)
+        end
 
         -- BBF.BiggerHealthbars("PlayerFrame", PlayerName)
         -- BBF.BiggerHealthbars("TargetFrame", TargetFrameTextureFrameName)
@@ -850,7 +918,13 @@ function BBF.HookBiggerHealthbars()
 end
 
 function BBF.HookHideManabars()
-    if BetterBlizzFramesDB.biggerHealthbars then return end
+    local function isHandledByBiggerHB(frameName)
+        if not BetterBlizzFramesDB.biggerHealthbars then return false end
+        if frameName == "PlayerFrame" then return not BetterBlizzFramesDB.biggerHealthbarsNoPlayer end
+        if frameName == "TargetFrame" then return not BetterBlizzFramesDB.biggerHealthbarsNoTarget end
+        if frameName == "FocusFrame" then return not BetterBlizzFramesDB.biggerHealthbarsNoFocus end
+        return false
+    end
 
     local frames = {
         { name = "PlayerFrame", setting = "hidePlayerManabar" },
@@ -859,7 +933,7 @@ function BBF.HookHideManabars()
     }
 
     for _, info in ipairs(frames) do
-        if BetterBlizzFramesDB[info.setting] then
+        if BetterBlizzFramesDB[info.setting] and not isHandledByBiggerHB(info.name) then
             HideManabarElements(info.name)
             local healthbar = _G[info.name.."HealthBar"]
             if healthbar then
@@ -893,30 +967,36 @@ function BBF.HookHideManabars()
     end
 
     if not hideManabarHooked then
-        hooksecurefunc("TargetFrame_CheckClassification", function(frame)
-            if not frame or not frame.unit then return end
-            local frameName = frame:GetName()
+        local function HideManaCheckClassification(self)
+            if not self or not self.unit then return end
+            local frameName = self:GetName()
             if not ShouldHideManabar(frameName) then return end
-            if BetterBlizzFramesDB.biggerHealthbars then return end
-            local classification = UnitClassification(frame.unit)
+            if isHandledByBiggerHB(frameName) then return end
+            local classification = UnitClassification(self.unit)
             if classification == "minus" then
-                frame.borderTexture:SetTexture(minusNoManaTexture)
+                self.borderTexture:SetTexture(minusNoManaTexture)
             elseif classification == "worldboss" or classification == "elite" then
-                frame.borderTexture:SetTexture(eliteNoManaTexture)
+                self.borderTexture:SetTexture(eliteNoManaTexture)
             elseif classification == "rareelite" then
-                frame.borderTexture:SetTexture(rareEliteNoManaTexture)
+                self.borderTexture:SetTexture(rareEliteNoManaTexture)
             elseif classification == "rare" then
-                frame.borderTexture:SetTexture(rareNoManaTexture)
+                self.borderTexture:SetTexture(rareNoManaTexture)
             else
                 local textureToUse = noManaTexture
                 if BetterBlizzFramesDB.hideLevelText then
-                    if BetterBlizzFramesDB.hideLevelTextAlways or UnitLevel(frame.unit) == maxLvl then
+                    if BetterBlizzFramesDB.hideLevelTextAlways or UnitLevel(self.unit) == maxLvl then
                         textureToUse = noLevelNoManaTexture
                     end
                 end
-                frame.borderTexture:SetTexture(textureToUse)
+                self.borderTexture:SetTexture(textureToUse)
             end
-        end)
+        end
+        if TargetFrame_CheckClassification then
+            hooksecurefunc(TargetFrame_CheckClassification, HideManaCheckClassification)
+        else
+            hooksecurefunc(TargetFrame, "CheckClassification", HideManaCheckClassification)
+            hooksecurefunc(FocusFrame, "CheckClassification", HideManaCheckClassification)
+        end
         hideManabarHooked = true
     end
 end

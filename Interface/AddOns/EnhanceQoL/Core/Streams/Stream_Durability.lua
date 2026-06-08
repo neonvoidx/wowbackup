@@ -336,17 +336,15 @@ local provider = {
 	title = DURABILITY,
 	update = calculateDurability,
 	events = {
-		GUILDBANK_UPDATE_MONEY = function(stream) addon.DataHub:RequestUpdate(stream) end,
 		PLAYER_DEAD = function(stream)
 			C_Timer.After(1, function() addon.DataHub:RequestUpdate(stream) end)
 		end,
 		PLAYER_EQUIPMENT_CHANGED = function(stream) addon.DataHub:RequestUpdate(stream) end,
-		PLAYER_MONEY = function(stream) addon.DataHub:RequestUpdate(stream) end,
-		PLAYER_REGEN_ENABLED = function(stream) addon.DataHub:RequestUpdate(stream) end,
 		PLAYER_UNGHOST = function(stream)
 			C_Timer.After(1, function() addon.DataHub:RequestUpdate(stream) end)
 		end,
 		PLAYER_LOGIN = function(stream) addon.DataHub:RequestUpdate(stream) end,
+		UPDATE_INVENTORY_DURABILITY = function(stream) addon.DataHub:RequestUpdate(stream) end,
 	},
 	OnMouseEnter = function(b)
 		ensureDB()

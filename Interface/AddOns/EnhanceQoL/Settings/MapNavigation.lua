@@ -12,7 +12,10 @@ local refreshWorldMapCoordinates
 
 local mapExpandable = addon.functions.SettingsCreateExpandableSection(cMapNav, {
 	name = L["MapNavigation"],
+	description = L["configCenterPageDescMapNavigation"]
+		or "Customize world map coordinates, square minimap layout, minimap stats, loot spec shortcuts and minimap button storage.",
 	newTagID = "MapNavigation",
+	iconKey = "map",
 	expanded = false,
 	colorizeTitle = false,
 })
@@ -1499,12 +1502,12 @@ data = {
 						text = L["Anchor"] or "Anchor",
 						list = squareMinimapStatsAnchorOptions,
 						order = squareMinimapStatsAnchorOrder,
-						get = function() return addon.db and addon.db.squareMinimapStatsTrackingButtonAnchor or "TOPLEFT" end,
+						get = function() return addon.db and addon.db.squareMinimapStatsTrackingButtonAnchor or "TOPRIGHT" end,
 						set = function(value, maybeValue)
-							addon.db["squareMinimapStatsTrackingButtonAnchor"] = normalizeSquareMinimapAnchorSelection(value, maybeValue, "TOPLEFT")
+							addon.db["squareMinimapStatsTrackingButtonAnchor"] = normalizeSquareMinimapAnchorSelection(value, maybeValue, "TOPRIGHT")
 							applySquareMinimapStatsNow(true)
 						end,
-						default = "TOPLEFT",
+						default = "TOPRIGHT",
 						sType = "dropdown",
 						parent = true,
 						parentCheck = isSquareMinimapStatElementEnabled("squareMinimapStatsTrackingButton"),
@@ -1513,7 +1516,7 @@ data = {
 					{
 						var = "squareMinimapStatsTrackingButtonOffsetX",
 						text = L["Horizontal offset"] or "Horizontal offset",
-						get = function() return addon.db and addon.db.squareMinimapStatsTrackingButtonOffsetX or 3 end,
+						get = function() return addon.db and addon.db.squareMinimapStatsTrackingButtonOffsetX or -3 end,
 						set = function(value)
 							addon.db["squareMinimapStatsTrackingButtonOffsetX"] = value
 							applySquareMinimapStatsNow(true)
@@ -1521,7 +1524,7 @@ data = {
 						min = -220,
 						max = 220,
 						step = 1,
-						default = 3,
+						default = -3,
 						sType = "slider",
 						parent = true,
 						parentCheck = isSquareMinimapStatElementEnabled("squareMinimapStatsTrackingButton"),
@@ -1595,14 +1598,6 @@ data = {
 			if addon.functions.applyMinimapButtonMouseover then addon.functions.applyMinimapButtonMouseover() end
 		end,
 		default = false,
-		parentCheck = function()
-			return not (
-				addon.SettingsLayout.elements["enableMinimapButtonBin"]
-				and addon.SettingsLayout.elements["enableMinimapButtonBin"].setting
-				and addon.SettingsLayout.elements["enableMinimapButtonBin"].setting:GetValue() == true
-			)
-		end,
-		notify = "enableMinimapButtonBin",
 		parentSection = mapExpandable,
 	},
 	{
@@ -1898,6 +1893,7 @@ data = {
 				parentSection = mapExpandable,
 			},
 			{
+				id = "instanceDifficultyColorsLFR",
 				var = "instanceDifficultyColors",
 				subvar = "LFR",
 				hasOpacity = true,
@@ -1919,6 +1915,7 @@ data = {
 				parentSection = mapExpandable,
 			},
 			{
+				id = "instanceDifficultyColorsNM",
 				var = "instanceDifficultyColors",
 				subvar = "NM",
 				hasOpacity = true,
@@ -1940,6 +1937,7 @@ data = {
 				parentSection = mapExpandable,
 			},
 			{
+				id = "instanceDifficultyColorsHC",
 				var = "instanceDifficultyColors",
 				subvar = "HC",
 				hasOpacity = true,
@@ -1961,6 +1959,7 @@ data = {
 				parentSection = mapExpandable,
 			},
 			{
+				id = "instanceDifficultyColorsM",
 				var = "instanceDifficultyColors",
 				subvar = "M",
 				hasOpacity = true,
@@ -1982,6 +1981,7 @@ data = {
 				parentSection = mapExpandable,
 			},
 			{
+				id = "instanceDifficultyColorsMPLUS",
 				var = "instanceDifficultyColors",
 				subvar = "MPLUS",
 				hasOpacity = true,
@@ -2003,6 +2003,7 @@ data = {
 				parentSection = mapExpandable,
 			},
 			{
+				id = "instanceDifficultyColorsTW",
 				var = "instanceDifficultyColors",
 				subvar = "TW",
 				hasOpacity = true,
@@ -2642,8 +2643,8 @@ local squareMinimapStatsDefaults = {
 	squareMinimapStatsCoordinatesDecimals = 2,
 	squareMinimapStatsCoordinatesUpdateInterval = 0.2,
 	squareMinimapStatsTrackingButton = false,
-	squareMinimapStatsTrackingButtonAnchor = "TOPLEFT",
-	squareMinimapStatsTrackingButtonOffsetX = 3,
+	squareMinimapStatsTrackingButtonAnchor = "TOPRIGHT",
+	squareMinimapStatsTrackingButtonOffsetX = -3,
 	squareMinimapStatsTrackingButtonOffsetY = -3,
 	squareMinimapStatsTrackingButtonShowBackground = true,
 	squareMinimapStatsTrackingButtonScale = 1.0,
@@ -2887,6 +2888,7 @@ local function getSquareMinimapStatsOutlineFlag()
 		return addon.functions.GetFontFlagsForStyle(outline, "OUTLINE")
 	end
 	if outline == nil or outline == "" or outline == "NONE" then return nil end
+	if outline == getGlobalFontStyleConfigKey() then return "OUTLINE" end
 	return outline
 end
 

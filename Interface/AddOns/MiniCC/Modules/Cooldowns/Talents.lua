@@ -2,19 +2,13 @@
 local _, addon = ...
 local mini = addon.Core.Framework
 local inspector = addon.Core.Inspector
+local inspectorFacade = addon.Core.InspectorFacade
 
 addon.Modules.Cooldowns = addon.Modules.Cooldowns or {}
 
 ---@class CooldownTalents
 local M = {}
 addon.Modules.Cooldowns.Talents = M
-
--- All talent data is keyed by the realm-stripped short name (e.g. "Bob" not "Bob-Realm").
--- UnitNameUnmodified returns the full name for cross-realm players, so strip the realm here
--- before any table lookup to ensure cross-realm players' data is found correctly.
-local function ShortName(name)
-	return name:match("^([^%-]+)") or name
-end
 
 -- playerName -> talentRanks (spellId -> rank purchased)
 local unitTalentRanks = {}
@@ -25,8 +19,23 @@ local unitPvPTalentIds = {}
 -- (classToken .. "_" .. specId) -> merged default talent ranks table
 -- The defaults are static constants so this never needs invalidation.
 local defaultTalentRanksCache = {}
-
 local db
+local talentCallbacks = {}
+-- Cache talentmap by specId: C_Traits.GetNodeInfo/GetEntryInfo/GetDefinitionInfo return new
+-- Lua tables on every call, so rebuilding for the same spec repeatedly is expensive.
+-- The tree structure is stable within a WoW session (no hotfixes mid-session).
+local talentToSpellMapCache = {}
+-- processedTalentStrings[playerName] = last talent export string successfully decoded.
+-- Shared by UpdateLocalPlayer and OnLibSpecUpdate so both can avoid re-processing the same
+-- spec+talent selection that fires via multiple events in a single tick.
+local processedTalentStrings = {}
+
+-- All talent data is keyed by the realm-stripped short name (e.g. "Bob" not "Bob-Realm").
+-- UnitNameUnmodified returns the full name for cross-realm players, so strip the realm here
+-- before any table lookup to ensure cross-realm players' data is found correctly.
+local function ShortName(name)
+	return name:match("^([^%-]+)") or name
+end
 
 -- Cooldown/duration-affecting talent modifiers.
 -- Structure: [talentSpellId] = { {rank1_mods}, {rank2_mods}, ... }
@@ -39,9 +48,7 @@ local ClassCooldownModifiers = {
 		[205727] = { { { SpellId = 48707, Amount = -20 } } },
 		[457574] = { { { SpellId = 48707, Amount = 20 } } },
 	},
-	DEMONHUNTER = {
-		-- Vengeance: Fiery Brand charges live in SpecCooldownModifiers[581]
-	},
+	DEMONHUNTER = {},
 	HUNTER = {
 		[1258485] = { { { SpellId = 186265, Amount = -30 } } },
 		[266921] = {
@@ -70,14 +77,28 @@ local ClassCooldownModifiers = {
 			},
 		},
 	},
-	MONK = {},
-	SHAMAN = { [381647] = { { { SpellId = 108271, Amount = -30 } } } },
+	MONK = {
+		-- Uplifted Spirits: Revival/Restoral -30s
+		[388551] = { { { SpellId = 115310, Amount = -30 }, { SpellId = 388615, Amount = -30 } } },
+	},
+	PRIEST = {
+		-- Improved Fade: Phase Shift -5s / -10s
+		[390670] = {
+			{ { SpellId = 408557, Amount = -5 } },
+			{ { SpellId = 408557, Amount = -10 } },
+		},
+	},
+	SHAMAN = {
+		[381647] = { { { SpellId = 108271, Amount = -30 } } }, -- Planes Traveler: Astral Shift -30s
+		[381867] = { { { SpellId = 204336, Amount = -5 } } },  -- Totemic Surge: Grounding Totem -5s
+	},
 	WARLOCK = { [386659] = { { { SpellId = 104773, Amount = -45 } } } },
 	WARRIOR = {
-		-- Honed Reflexes: Die by the Sword -10% (mult)
+		-- Honed Reflexes: Die by the Sword -10% (mult), Spell Reflect -10% (mult)
 		[391271] = {
 			{
 				{ SpellId = 118038, Amount = -10, Mult = true },
+				{ SpellId = 23920,  Amount = -10, Mult = true },
 			},
 		},
 	},
@@ -126,13 +147,16 @@ local SpecCooldownModifiers = {
 		[388813] = { { { SpellId = 115203, Amount = -120 } } }, -- Expeditious Fortification: Fortifying Brew -120s
 	},
 
-	-- Windwalker Monk: Expeditious Fortification -30s
-	[269] = { [388813] = { { { SpellId = 115203, Amount = -30 } } } },
+	-- Windwalker Monk
+	[269] = {
+		[388813] = { { { SpellId = 115203, Amount = -30 } } }, -- Expeditious Fortification: Fortifying Brew -30s
+		[280197] = { { { SpellId = 1249625, Amount = -20 } } }, -- Spiritual Focus: Zenith -20s
+		[450989] = { { { SpellId = 1249625, Amount = -10 } } }, -- Efficient Training: Zenith -10s
+	},
 
 	-- Mistweaver Monk: Life Cocoon (Chrysalis); Expeditious Fortification -30s
-	-- Chrysalis reduces Life Cocoon by 45s pre-12.0.5, 30s from 12.0.5 onwards.
 	[270] = {
-		[202424] = { { { SpellId = 116849, Amount = select(4, GetBuildInfo()) >= 120005 and -30 or -45 } } }, -- Life Cocoon (Chrysalis)
+		[202424] = { { { SpellId = 116849, Amount = -30 } } }, -- Life Cocoon (Chrysalis)
 		[388813] = { { { SpellId = 115203, Amount = -30 } } }, -- Expeditious Fortification -30s
 	},
 
@@ -190,7 +214,31 @@ local SpecCooldownModifiers = {
 	[264] = { [462440] = { { { SpellId = 114052, Amount = -60 } } } },
 }
 
--- PvP talent cooldown modifiers. No ranks — talent is either active or not.
+-- Charge-affecting talent modifiers.
+-- Structure: [talentSpellId] = { {rank1_mods}, {rank2_mods}, ... }
+-- Each mod:  { SpellId = affectedSpellId, Amount = number }
+local ClassChargeModifiers = {
+	EVOKER = {
+		[375406] = { { { SpellId = 363916, Amount = 1 } } }, -- Obsidian Scales +1 charge
+	},
+	HUNTER = {
+		[459450] = { { { SpellId = 264735, Amount = 1 } } }, -- Survival of the Fittest +1 charge
+	},
+	DEMONHUNTER = {
+		[1266307] = { { { SpellId = 198589, Amount = 1 } } }, -- Demonic Resilience: Blur +1 charge
+	},
+}
+
+local SpecChargeModifiers = {
+	[102] = { [468743]  = { { { SpellId = 102560, Amount = 1 } } } }, -- Balance Druid: Whirling Stars: Incarnation +1 charge
+	[256] = { [373035]  = { { { SpellId = 33206,  Amount = 1 } } } }, -- Disc Priest: Pain Suppression +1 charge
+	[66]  = { [1246481] = { { { SpellId = 86659,  Amount = 1 } } } }, -- Prot Paladin: Guardian of Ancient Kings +1 charge
+	[73]  = { [397103]  = { { { SpellId = 871,    Amount = 1 } } } }, -- Prot Warrior: Shield Wall +1 charge
+	[1468]= { [376204]  = { { { SpellId = 357170, Amount = 1 } } } }, -- Preservation Evoker: Time Dilation +1 charge
+	[64]  = { [1244110] = { { { SpellId = 45438,  Amount = 1 }, { SpellId = 414659, Amount = 1 } } } }, -- Frost Mage: Ice Block/Ice Cold +1 charge
+}
+
+-- PvP talent cooldown modifiers. No ranks - talent is either active or not.
 -- Structure: [pvpTalentId] = { { SpellId = x, Amount = y [, Mult = true] } }
 local ClassPvPCooldownModifiers = {}
 
@@ -198,6 +246,8 @@ local ClassPvPCooldownModifiers = {}
 local SpecPvPCooldownModifiers = {
 	-- Brewmaster Monk: Microbrew (Fortifying Brew -50%)
 	[268] = { [666] = { { SpellId = 115203, Amount = -50, Mult = true } } },
+	-- Mistweaver Monk: Peaceweaver (Revival/Restoral -16%, applied to base before flat mods)
+	[270] = { [5395] = { { SpellId = 115310, Amount = -16, Mult = true, ApplyToBase = true }, { SpellId = 388615, Amount = -16, Mult = true, ApplyToBase = true } } },
 	-- Blood Death Knight: Spellwarden (Anti-Magic Shell -10s)
 	[250] = { [5592] = { { SpellId = 48707, Amount = -10 } } },
 	-- Frost Death Knight: Spellwarden (Anti-Magic Shell -10s)
@@ -208,6 +258,10 @@ local SpecPvPCooldownModifiers = {
 	[261] = { [354825] = { { SpellId = 121471, Amount = -20, Mult = true } } },
 	-- Protection Paladin: Sacred Duty (Blessing of Protection & Blessing of Sacrifice -33%)
 	[66] = { [92] = { { SpellId = 1022, Amount = -33, Mult = true }, { SpellId = 6940, Amount = -33, Mult = true } } },
+	-- Warrior: Rebound (Spell Reflect +10s); talent ID differs per spec
+	[71] = { [5547] = { { SpellId = 23920, Amount = 10 } } },  -- Arms
+	[72] = { [5548] = { { SpellId = 23920, Amount = 10 } } },  -- Fury
+	[73] = { [833]  = { { SpellId = 23920, Amount = 10 } } },  -- Protection
 }
 
 -- Duration-affecting talent modifiers. Supports additive (seconds) and Mult (% of base).
@@ -220,6 +274,9 @@ local ClassDurationModifiers = {
 	},
 	HUNTER = {
 		[388039] = { { { SpellId = 264735, Amount = 2 } } }, -- Survival of the Fittest: +2s
+	},
+	PRIEST = {
+		[458718] = { { { SpellId = 19236, Amount = 10 } } }, -- Desperate Measures: Desperate Prayer +10s
 	},
 }
 
@@ -251,8 +308,23 @@ local SpecDurationModifiers = {
 	[262] = { [462443] = { { { SpellId = 114050, Amount = 3 } } } },
 	-- Holy Priest: Foreseen Circumstances: Guardian Spirit +2s
 	[257] = { [440738] = { { { SpellId = 47788, Amount = 2 } } } },
-	-- Shadow Priest: Heightened Alteration: Dispersion +2s
-	[258] = { [453729] = { { { SpellId = 47585, Amount = 2 } } } },
+	-- Shadow Priest: Heightened Alteration is handled by the dedicated 8s variant rule in
+	-- Rules.lua BySpec[258] (BuffDuration=8, RequiresTalent=453729).  Adding +2s here on top
+	-- of that rule would double-count the bonus and raise expectedDuration to 10s, causing
+	-- Desperate Prayer (9.9s) to be incorrectly committed as Dispersion.
+	-- Windwalker Monk: Drinking Horn Cover: Zenith +5s
+	[269] = { [391370] = { { { SpellId = 1249625, Amount = 5 } } } },
+	-- Preservation Evoker: Timeless Magic: Time Dilation +15% / +30%
+	[1468] = {
+		[376240] = {
+			{ { SpellId = 357170, Amount = 15, Mult = true } }, -- rank 1
+			{ { SpellId = 357170, Amount = 30, Mult = true } }, -- rank 2
+		},
+	},
+	-- Restoration Druid: Regenerative Heartwood: Ironbark +4s
+	[105] = { [392116] = { { { SpellId = 102342, Amount = 4 } } } },
+	-- Guardian Druid: Ursoc's Endurance: Barkskin +2s
+	[104] = { [393611] = { { { SpellId = 22812, Amount = 2 } } } },
 }
 
 -- Assumed talent ranks used when no real talent data is available for a unit.
@@ -264,6 +336,8 @@ local ClassDefaultTalentRanks = {
 	},
 	HUNTER = {
 		[1258485] = 1, -- Improved Aspect of the Turtle: Turtle -30s (nearly universal)
+		[459450] = 1,  -- Survival of the Fittest: +1 charge (nearly universal)
+		[53480] = 1,   -- Roar of Sacrifice (universal)
 	},
 	MAGE = {
 		[382424] = 2, -- Winter's Protection: Ice Block/Ice Cold -60s at rank 2 (nearly universal)
@@ -271,16 +345,24 @@ local ClassDefaultTalentRanks = {
 	},
 	MONK = {
 		[388813] = 1, -- Expeditious Fortification: Fortifying Brew CDR (nearly universal)
+		[388551] = 1, -- Uplifted Spirits: Revival/Restoral -30s, nearly universal
 	},
 	PALADIN = {
 		[114154] = 1, -- Unbreakable Spirit: Bubble/DP/Ardent Defender -30% (nearly universal)
+		[384909] = 1, -- Blessed Protector: BoP/Spellwarding -60s (nearly universal)
+	},
+	PRIEST = {
+		[390670] = 2, -- Improved Fade: assume 2/2 (universal)
 	},
 	SHAMAN = {
 		[381647] = 1, -- Planes Traveler: Astral Shift -30s (nearly universal)
+		[381867] = 1, -- Totemic Surge: Grounding Totem -5s (nearly universal)
 	},
 	WARRIOR = {
 		[107574] = 1, -- Avatar: nearly universal across all specs
 		[184364] = 1, -- Enraged Regeneration: nearly universal for Fury
+		[23920]  = 1, -- Spell Reflect: universal talent
+		[391271] = 1, -- Honed Reflexes: Die by the Sword/Spell Reflect -10%, nearly universal
 	},
 }
 
@@ -300,21 +382,37 @@ local SpecDefaultTalentRanks = {
 	[63] = {
 		[1254194] = 1, -- Kindling (Fire Mage): Combustion -60s, nearly universal
 	},
+	[64] = {
+		[1244110] = 1, -- Glacial Bulwark (Frost Mage): Ice Block/Ice Cold +1 charge, nearly universal
+	},
+	[256] = {
+		[373035] = 1, -- Twins of the Sun Priestess (Disc Priest): Pain Suppression +1 charge, nearly universal
+		[5570]   = 1, -- Phase Shift (PvP, Discipline): universal
+	},
 	[257] = {
 		[419110] = 1, -- Seraphic Crescendo (Holy Priest): nearly universal
 		[440738] = 1, -- Foreseen Circumstances (Holy Priest): Guardian Spirit +2s, nearly universal
+		[5569]   = 1, -- Phase Shift (PvP, Holy): universal
 	},
 	[105] = {
 		[382552] = 1, -- Improved Ironbark (Restoration Druid): Ironbark -20s (nearly universal)
 	},
 	[258] = {
 		[288733] = 1, -- Intangibility (Shadow Priest): Dispersion -30s (nearly universal)
+		[5568]   = 1, -- Phase Shift (PvP, Shadow): universal
+	},
+	[73] = {
+		[397103] = 1, -- Defender's Aegis (Protection Warrior): Shield Wall +1 charge (nearly universal)
+	},
+	[269] = {
+		[280197] = 1, -- Spiritual Focus (Windwalker): Zenith -20s (universal)
 	},
 	[270] = {
 		[202424] = 1, -- Chrysalis (Mistweaver): Life Cocoon -30s/45s (nearly universal)
 	},
 	[1468] = {
 		[376204] = 1, -- Just in Time (Preservation Evoker): Time Dilation -10s (nearly universal)
+		[376240] = 2, -- Timeless Magic (Preservation Evoker): Time Dilation +30% duration (nearly universal)
 	},
 	[65] = {
 		[384820] = 1, -- Sacrifice of the Just (Holy Paladin): BoSac -15s, nearly universal
@@ -343,11 +441,18 @@ local SpecDefaultTalentRanks = {
 		[384352] = 1, -- Doomwinds (Enhancement Shaman): nearly universal
 		[384444] = 1, -- Thorim's Invocation (Enhancement Shaman): nearly universal
 	},
+	[577] = {
+		[1266307] = 1, -- Demonic Resilience (Havoc Demon Hunter): Blur +1 charge, nearly universal
+	},
+	[1480] = {
+		[1266307] = 1, -- Demonic Resilience (Devourer Demon Hunter): Blur +1 charge, nearly universal
+	},
 }
 
-local talentCallbacks = {}
-
 local function BuildTalentToSpellMap(specId)
+	if talentToSpellMapCache[specId] then
+		return talentToSpellMapCache[specId]
+	end
 
 	if not (C_ClassTalents and C_Traits and Constants and Constants.TraitConsts) then
 		return nil
@@ -392,6 +497,7 @@ local function BuildTalentToSpellMap(specId)
 		end
 	end
 
+	talentToSpellMapCache[specId] = talentmap
 	return talentmap
 end
 
@@ -523,9 +629,16 @@ local function OnLibSpecUpdate(specId, playerName, talentString)
 	if not talentString then
 		return
 	end
+	local name = ShortName(playerName)
+	-- Skip if this exact talent string was already decoded for this player. LibSpec fires
+	-- both ACTIVE_COMBAT_CONFIG_CHANGED and TRAIT_CONFIG_UPDATED on a single spec change,
+	-- and UpdateLocalPlayer may also have already decoded the local player's string.
+	if processedTalentStrings[name] == talentString then
+		return
+	end
 	local ranks = GetTalentRanks(specId, talentString)
 	if ranks then
-		local name = ShortName(playerName)
+		processedTalentStrings[name] = talentString
 		unitTalentRanks[name] = ranks
 		unitTalentSpecId[name] = specId
 		if db then
@@ -556,8 +669,15 @@ local function UpdateLocalPlayer()
 		return
 	end
 	local playerName = UnitNameUnmodified("player")
+	-- Skip if this exact spec+talent selection was already decoded. PLAYER_SPECIALIZATION_CHANGED,
+	-- ACTIVE_COMBAT_CONFIG_CHANGED, and TRAIT_CONFIG_UPDATED all fire on a single spec change;
+	-- only the first one should do the expensive BuildTalentToSpellMap+GetTalentRanks work.
+	if unitTalentSpecId[playerName] == specId and processedTalentStrings[playerName] == talentString then
+		return
+	end
 	local ranks = GetTalentRanks(specId, talentString)
 	if ranks then
+		processedTalentStrings[playerName] = talentString
 		unitTalentRanks[playerName] = ranks
 		unitTalentSpecId[playerName] = specId
 		if db then
@@ -630,20 +750,24 @@ function M:GetUnitCooldown(unit, specId, classToken, abilityId, baseCooldown, me
 		return math.max((measuredDuration or 0) + postBuffRemaining, 0)
 	end
 
-	-- Apply regular mods first, then PvP mods on top of that result.
-	local cd = baseCooldown + addAmount + (baseCooldown * multAmount / 100)
-
+	-- PvP mults with ApplyToBase=true are folded into the base calculation alongside
+	-- regular mults so they apply before any flat deductions (e.g. Peaceweaver -16%
+	-- must reduce the base cooldown before Uplifted Spirits -30s is subtracted).
+	-- Other PvP mults (ApplyToBase=false/nil) apply after flat mods, as before.
 	local pvpAddAmount = 0
 	local pvpMultAmount = 0
+	local pvpBaseMultAmount = 0
 	local function applyPvPModTable(modTable)
-		if not modTable or not pvpIds then
+		if not modTable or not pvpIds or not UnitIsPVP(unit) then
 			return
 		end
 		for pvpTalentId, mods in pairs(modTable) do
 			if pvpIds[pvpTalentId] then
 				for _, mod in ipairs(mods) do
 					if mod.SpellId == abilityId then
-						if mod.Mult then
+						if mod.Mult and mod.ApplyToBase then
+							pvpBaseMultAmount = pvpBaseMultAmount + mod.Amount
+						elseif mod.Mult then
 							pvpMultAmount = pvpMultAmount + mod.Amount
 						else
 							pvpAddAmount = pvpAddAmount + mod.Amount
@@ -656,6 +780,7 @@ function M:GetUnitCooldown(unit, specId, classToken, abilityId, baseCooldown, me
 	applyPvPModTable(ClassPvPCooldownModifiers[classToken])
 	applyPvPModTable(resolvedSpec and SpecPvPCooldownModifiers[resolvedSpec])
 
+	local cd = baseCooldown + addAmount + (baseCooldown * (multAmount + pvpBaseMultAmount) / 100)
 	cd = cd + pvpAddAmount + (cd * pvpMultAmount / 100)
 	return math.max(cd, 0)
 end
@@ -711,6 +836,51 @@ function M:GetUnitBuffDuration(unit, specId, classToken, abilityId, baseDuration
 	return math.max(baseDuration + addAmount + (baseDuration * multAmount / 100), 0)
 end
 
+---Returns the effective maximum charge count for abilityId after applying known talent modifiers.
+---Falls back to assumed default talents when no real talent data is available for the unit.
+---If no talent data or defaults exist for the unit's class/spec, returns 1.
+---@param unit string
+---@param specId number|nil
+---@param classToken string
+---@param abilityId number
+---@return number
+function M:GetUnitMaxCharges(unit, specId, classToken, abilityId)
+	local rawName = UnitNameUnmodified(unit)
+	local playerName = (rawName and not issecretvalue(rawName)) and ShortName(rawName) or nil
+	local talentRanks = GetEffectiveTalentRanks(playerName, classToken, specId)
+	if not talentRanks then
+		return 1
+	end
+
+	local addAmount = 0
+	local classMods = ClassChargeModifiers[classToken]
+	local resolvedSpec = (playerName and unitTalentSpecId[playerName]) or specId
+	local specMods = resolvedSpec and SpecChargeModifiers[resolvedSpec]
+
+	local function applyModTable(modTable)
+		if not modTable then
+			return
+		end
+		for talentSpellId, rankList in pairs(modTable) do
+			local rank = talentRanks[talentSpellId]
+			if rank and rank > 0 then
+				local mods = rankList[rank]
+				if mods then
+					for _, mod in ipairs(mods) do
+						if mod.SpellId == abilityId then
+							addAmount = addAmount + mod.Amount
+						end
+					end
+				end
+			end
+		end
+	end
+	applyModTable(classMods)
+	applyModTable(specMods)
+
+	return 1 + addAmount
+end
+
 ---Returns true if the unit has the given talent spell ID ranked (rank > 0), or has it as an active PvP talent.
 ---Falls back to ClassDefaultTalentRanks/SpecDefaultTalentRanks when no real talent data is available.
 ---@param unit string
@@ -729,7 +899,7 @@ function M:UnitHasTalent(unit, talentSpellId, callerSpecId)
 		if pvpIds ~= nil and pvpIds[talentSpellId] == true then
 			return true
 		end
-		-- No real talent data — check class/spec defaults.
+		-- No real talent data - check class/spec defaults.
 		-- Prefer the caller-supplied spec ID (from Inspector) over our stored one,
 		-- since non-MiniCC players won't have an entry in unitTalentSpecId.
 		if talentRanks == nil then
@@ -742,7 +912,7 @@ function M:UnitHasTalent(unit, talentSpellId, callerSpecId)
 		end
 		return false
 	end
-	-- playerName is nil or a secret value — can't look up stored data.
+	-- playerName is nil or a secret value - can't look up stored data.
 	-- Fall back to class/spec defaults using callerSpecId so spec-specific icons
 	-- (e.g. AC vs AW for Holy Paladin) still render correctly.
 	local _, classToken = UnitClass(unit)
@@ -750,32 +920,27 @@ function M:UnitHasTalent(unit, talentSpellId, callerSpecId)
 	return effectiveRanks ~= nil and (effectiveRanks[talentSpellId] or 0) > 0
 end
 
+---Returns true if a talent is a near-universal default for the given class/spec, per the
+---assumed-talent tables.  Unit-less (unlike UnitHasTalent), so callers without a unit - e.g. the
+---enemy always-show static list, which renders from spec/class alone - can assume the default build.
+---@param classToken string?
+---@param specId number?
+---@param talentId number
+---@return boolean
+function M:IsDefaultTalent(classToken, specId, talentId)
+	local ranks = GetEffectiveTalentRanks(nil, classToken, specId)
+	return ranks ~= nil and (ranks[talentId] or 0) > 0
+end
+
 ---Returns the spec ID stored for a unit from talent decode (LibSpec or local player).
 ---@param unit string
 ---@return number|nil
 function M:GetUnitSpecId(unit)
-	-- FrameSort is most authoritative (real-time); inspector is the fallback real-time source;
+	-- InspectorFacade covers FrameSort → Inspector → Arena API.
 	-- unitTalentSpecId covers cross-realm players and situations where the above return nil.
-	local fs = FrameSortApi and FrameSortApi.v3
-	if fs and fs.Inspector then
-		local id = fs.Inspector:GetUnitSpecId(unit)
-		if id then
-			return id
-		end
-		-- FrameSort returned nil; fall through to tooltip check and talent cache.
-	end
-	local specId = inspector:GetUnitSpecId(unit)
+	local specId = inspectorFacade:GetUnitSpecId(unit)
 	if specId then
 		return specId
-	end
-	-- For enemy arena units use GetArenaOpponentSpec, which is authoritative and available
-	-- as soon as ARENA_PREP_OPPONENT_SPECIALIZATIONS fires.
-	local arenaIndex = unit:match("^arena(%d)$")
-	if arenaIndex then
-		local id = GetArenaOpponentSpec and GetArenaOpponentSpec(tonumber(arenaIndex))
-		if id and id > 0 then
-			return id
-		end
 	end
 	local playerName = UnitNameUnmodified(unit)
 	if not playerName or issecretvalue(playerName) then
@@ -872,6 +1037,7 @@ end
 ---@field Refresh fun(self: CooldownTalents)
 ---@field GetUnitCooldown fun(self: CooldownTalents, unit: string, specId: number|nil, classToken: string, abilityId: number, baseCooldown: number, measuredDuration: number?): number
 ---@field GetUnitBuffDuration fun(self: CooldownTalents, unit: string, specId: number|nil, classToken: string, abilityId: number, baseDuration: number): number
+---@field GetUnitMaxCharges fun(self: CooldownTalents, unit: string, specId: number|nil, classToken: string, abilityId: number): number
 ---@field GetUnitSpecId fun(self: CooldownTalents, unit: string): number|nil
 ---@field UnitHasTalent fun(self: CooldownTalents, unit: string, talentSpellId: number): boolean
 ---@field RegisterTalentCallback fun(self: CooldownTalents, fn: fun(playerName: string))

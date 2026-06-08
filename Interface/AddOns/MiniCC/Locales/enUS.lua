@@ -32,9 +32,10 @@ L:SetDefaultStrings({
 	["Grow"] = "Grow",
 	["Icon Padding"] = "Icon Padding",
 	["Icon Size"] = "Icon Size",
+	["Icon Size (%)"] = "Icon Size (%)",
+	["Relative size"] = "Relative size",
+	["Sizes the icon as a percentage of the unit frame's height instead of in pixels."] = "Sizes the icon as a percentage of the unit frame's height instead of in pixels.",
 	["Important"] = "Important",
-	["Important Notes"] = "Important Notes",
-	["Limitations:"] = "Limitations:",
 	["Max Icons"] = "Max Icons",
 	["Notification"] = "Notification",
 	["Offset X"] = "Offset X",
@@ -115,15 +116,17 @@ L:SetDefaultStrings({
 	["Announce spell names using text-to-speech when they are cast."] = "Announce spell names using text-to-speech when they are cast.",
 	["Defensive Spells"] = "Defensive Spells",
 	["Important Spells"] = "Important Spells",
-	["Include Defensives"] = "Include Defensives",
+	["Include defensives"] = "Include defensives",
 	["Includes defensives in the alerts."] = "Includes defensives in the alerts.",
 	["Only show alerts for your target and focus in battlegrounds and the open world."] = "Only show alerts for your target and focus in battlegrounds and the open world.",
 	["Play a sound when a defensive spell is pressed."] = "Play a sound when a defensive spell is pressed.",
 	["Play a sound when an important spell is pressed."] = "Play a sound when an important spell is pressed.",
 	["Show alert icons in the alerts region."] = "Show alert icons in the alerts region.",
 	["Show CC icons when healer is CC'd."] = "Show CC icons when healer is CC'd.",
+	["Show defensive alerts on a separate, movable bar."] = "Show defensive alerts on a separate, movable bar.",
 	["Show icons"] = "Show icons",
 	["Shows CC and other important spell alerts."] = "Shows CC and other important spell alerts.",
+	["Split bars"] = "Split bars",
 	["Sound"] = "Sound",
 	["Plays a sound when an enemy presses an important or defensive spell."] = "Plays a sound when an enemy presses an important or defensive spell.",
 	["Sound Alerts"] = "Sound Alerts",
@@ -167,9 +170,11 @@ L:SetDefaultStrings({
 	["Exclude yourself from showing trinket icons."] = "Exclude yourself from showing trinket icons.",
 	["Show CC"] = "Show CC",
 	["Show CC icons."] = "Show CC icons.",
-	["Show Defensives"] = "Show Defensives",
+	["Show defensives"] = "Show defensives",
 	["Show defensive spell icons."] = "Show defensive spell icons.",
-	["Show Important"] = "Show Important",
+	["Show important"] = "Show important",
+	["Show interrupts"] = "Show interrupts",
+	["Show an icon when a friendly unit gets interrupted."] = "Show an icon when a friendly unit gets interrupted.",
 	["Show important spell icons."] = "Show important spell icons.",
 	["Shows CC, defensives, and important auras as one set of icons on party/raid frames."] = "Shows CC, defensives, and important auras as one set of icons on party/raid frames.",
 	["Tip: Disable the CC module for BGs and enable CC within this module."] = "Tip: Disable the CC module for BGs and enable CC within this module.",
@@ -182,15 +187,9 @@ L:SetDefaultStrings({
 	["Text Size"] = "Text Size",
 
 	-- Kick Timer tab
-	[" - Currently only works inside arena (doesn't work in duels/world, will add this later)."] = " - Currently only works inside arena (doesn't work in duels/world, will add this later).",
-	[" - Doesn't work if the enemy misses kick (still investigating potential workaround/solution)."] = " - Doesn't work if the enemy misses kick (still investigating potential workaround/solution).",
-	["As you can tell it's not guaranteed to be accurate, but so far from our testing it's pretty damn good with ancedotally a 95%+ success rate."] = "As you can tell it's not guaranteed to be accurate, but so far from our testing it's pretty damn good with ancedotally a 95%+ success rate.",
-	["For example you are facing 3 enemies who are all pressing buttons."] = "For example you are facing 3 enemies who are all pressing buttons.",
-	["How does it work? It guesses who kicked you by correlating enemy action events against interrupt events."] = "How does it work? It guesses who kicked you by correlating enemy action events against interrupt events.",
+	["As of 12.0.5, the caster of an interrupt can no longer be identified. This module now just displays a generic icon using the shortest known enemy kick cooldown."] = "As of 12.0.5, the caster of an interrupt can no longer be identified. This module now just displays a generic icon using the shortest known enemy kick cooldown.",
 	["Kick timer"] = "Kick timer",
 	["Kick timer_Short"] = "Kick Timer",
-	["Still working on improving this, so stay tuned for updates."] = "Still working on improving this, so stay tuned for updates.",
-	["You just got kicked and the last enemy who successfully landed a spell was enemy A, therefore we deduce it was enemy A who kicked you."] = "You just got kicked and the last enemy who successfully landed a spell was enemy A, therefore we deduce it was enemy A who kicked you.",
 
 	-- Nameplates tab
 	["Change the colour of the glow/border based on dispel type (e.g., blue for magic, red for physical)."] = "Change the colour of the glow/border based on dispel type (e.g., blue for magic, red for physical).",
@@ -232,7 +231,7 @@ L:SetDefaultStrings({
 	["Friendly Cooldowns_Short"] = "Friendly CDs",
 	["Icon Spacing"] = "Icon Spacing",
 	["Spells"] = "Spells",
-	["Shows PvP trinket and friendly defensive cooldowns on party/raid frames after a defensive expires."] = "Shows PvP trinket and friendly defensive cooldowns on party/raid frames after a defensive expires.",
+	["Shows PvP trinket and friendly defensive cooldowns on party/raid frames."] = "Shows PvP trinket and friendly defensive cooldowns on party/raid frames.",
 ["Excludes yourself from being tracked."] = "Excludes yourself from being tracked.",
 	["Milliseconds"] = "Milliseconds",
 	["Milliseconds Threshold"] = "Milliseconds Threshold",
@@ -255,6 +254,8 @@ L:SetDefaultStrings({
 	["When Grow is Down, sets how many icons appear per row before wrapping. Useful for horizontal party frames."] = "When Grow is Down, sets how many icons appear per row before wrapping. Useful for horizontal party frames.",
 
 	-- Enemy Cooldown Tracker tab
+	["Enemy Cooldowns"] = "Enemy Cooldowns",
+	["Enemy Cooldowns_Short"] = "Enemy CDs",
 	["Shows enemy arena opponent defensive and offensive cooldowns after their buffs expire."] = "Shows enemy arena opponent defensive and offensive cooldowns after their buffs expire.",
 	["Enable enemy cooldown tracking in arena."] = "Enable enemy cooldown tracking in arena.",
 	["Number of icon rows for the Linear Bar. Icons per row is determined by the Max Icons setting."] = "Number of icon rows for the Linear Bar. Icons per row is determined by the Max Icons setting.",
@@ -262,7 +263,7 @@ L:SetDefaultStrings({
 	["Reverse the cooldown swipe animation direction on icons."] = "Reverse the cooldown swipe animation direction on icons.",
 	["The display size of each cooldown icon in pixels."] = "The display size of each cooldown icon in pixels.",
 	["The spacing in pixels between each cooldown icon."] = "The spacing in pixels between each cooldown icon.",
-	["Arena Frames: anchors icons next to each enemy's arena frame. Linear Bar: displays all cooldowns in a single combined bar."] = "Arena Frames: anchors icons next to each enemy's arena frame. Linear Bar: displays all cooldowns in a single combined bar.",
+	["Arena Frames: anchors icons next to each enemy's arena frame. Linear Bar: displays all cooldowns in a single combined bar. Split: shows offensive cooldowns on the linear bar and defensive cooldowns on the arena frames."] = "Arena Frames: anchors icons next to each enemy's arena frame. Linear Bar: displays all cooldowns in a single combined bar. Split: shows offensive cooldowns on the linear bar and defensive cooldowns on the arena frames.",
 	["The direction cooldown icons grow from the arena frame anchor point."] = "The direction cooldown icons grow from the arena frame anchor point.",
 	["Horizontal pixel offset from the arena frame anchor point."] = "Horizontal pixel offset from the arena frame anchor point.",
 	["Vertical pixel offset from the arena frame anchor point."] = "Vertical pixel offset from the arena frame anchor point.",
@@ -274,6 +275,9 @@ L:SetDefaultStrings({
 	["Linear Bar Position"] = "Linear Bar Position",
 	["Entry Spacing"] = "Entry Spacing",
 	["Vertical spacing between each enemy's icon row in Linear mode."] = "Vertical spacing between each enemy's icon row in Linear mode.",
+	["Always show cooldowns"] = "Always show cooldowns",
+	["Always display every cooldown for the enemy's specialization, faded when not on cooldown and fully opaque while active."] = "Always display every cooldown for the enemy's specialization, faded when not on cooldown and fully opaque while active.",
+	[" - Enemy cooldowns can now always be shown (faded when off cooldown) via the 'Always show cooldowns' option, plus a new Split layout mode (offensive cooldowns on the linear bar, defensive cooldowns on the arena frames)."] = " - Enemy cooldowns can now always be shown (faded when off cooldown) via the 'Always show cooldowns' option, plus a new Split layout mode (offensive cooldowns on the linear bar, defensive cooldowns on the arena frames).",
 
 	-- Precognition tab
 	["It works by taking any 4 second 'important' self buff and showing that icon."] = "It works by taking any 4 second 'important' self buff and showing that icon.",
@@ -281,6 +285,7 @@ L:SetDefaultStrings({
 	["Precognition"] = "Precognition",
 	["So if by chance you happen to have some other 4 second important self buff then it would also show that icon sorry."] = "So if by chance you happen to have some other 4 second important self buff then it would also show that icon sorry.",
 	["This isn't precision perfect but it should be close enough."] = "This isn't precision perfect but it should be close enough.",
+	["Also tracks Preservation Evoker's Nullifying Shroud (3 second important self buff)."] = "Also tracks Preservation Evoker's Nullifying Shroud (3 second important self buff).",
 
 	-- Other Addons tab
 	["Other Mini Addons"] = "Other Mini Addons",
@@ -299,16 +304,17 @@ L:SetDefaultStrings({
 	[" - Added precognition guesser module that shows when you get precog."] = " - Added precognition guesser module that shows when you get precog.",
 	[" - Added profile import/export feature."] = " - Added profile import/export feature.",
 	[" - Added friendly cooldown guessing module. You can now somewhat track your team mates cooldowns!"] = " - Added friendly cooldown guessing module. You can now somewhat track your team mates cooldowns!",
-	["HEADS UP: Blizzard is making changes in patch 12.0.5 (April 21st) that will severely reduce the accuracy of friendly CD tracking, kill cooldown glow on press, and completely remove PvP enemy kick tracking. So please be aware that tracking will lose accuracy soon."] = "HEADS UP: Blizzard is making changes in patch 12.0.5 (April 21st) that will severely reduce the accuracy of friendly CD tracking, kill cooldown glow on press, and completely remove PvP enemy kick tracking. So please be aware that tracking will lose accuracy soon.",
+	["With the new Blizzard restrictions in 12.0.5, this is what has changed in MiniCC.\n\nThe good news:\n* Cooldown tracking still works mostly fine in arena and dungeons.\n* Added support for multiple spell charges (e.g. 2x Pain Suppression, 2x Blur) for both friendly and enemy CDs.\n\nThe bad news:\n* Friendly externals no longer track in Raids and Battlegrounds.\n* Predictive glows are less reliable.\n* PvP kick tracking can no longer identify the kicker. Now just displays a generic icon using the shortest known enemy kick cooldown.\n\nWe've put a lot of work into this update, but there may still be issues. \nPlease report any bugs you find in our Discord so we can address them."] = "With the new Blizzard restrictions in 12.0.5, this is what has changed in MiniCC.\n\nThe good news:\n* Cooldown tracking still works mostly fine in arena and dungeons.\n* Added support for multiple spell charges (e.g. 2x Pain Suppression, 2x Blur) for both friendly and enemy CDs.\n\nThe bad news:\n* Friendly externals no longer track in Raids and Battlegrounds.\n* Predictive glows are less reliable.\n* PvP kick tracking can no longer identify the kicker. Now just displays a generic icon using the shortest known enemy kick cooldown.\n\nWe've put a lot of work into this update, but there may still be issues. \nPlease report any bugs you find in our Discord so we can address them.",
 	[" - Added enemy cooldown tracking module."] = " - Added enemy cooldown tracking module.",
 	["MiniCC - What's New?"] = "MiniCC - What's New?",
+
+	-- Language option
+	["Language"] = "Language",
+	["Language override"] = "Language override",
+	["Override the addon language. By default, your game client language is used."] = "Override the addon language. By default, your game client language is used.",
+	["Auto (client language)"] = "Auto (client language)",
+	["Language changed. Reload UI now?"] = "Language changed. Reload UI now?",
 })
 
--- Also set as current locale strings for enUS/enGB
-if GetLocale() == "enUS" or GetLocale() == "enGB" then
-	for key, value in pairs(addon.L) do
-		if type(value) == "string" then
-			L:SetString(key, value)
-		end
-	end
-end
+L:RegisterLocale("enUS", {})
+L:RegisterLocale("enGB", {})

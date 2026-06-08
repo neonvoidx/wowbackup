@@ -131,6 +131,7 @@ VER 3 0100000000000080 " " "INV_Misc_QuestionMark"
 END
 VER 3 0100000000000084 " " "INV_Misc_QuestionMark"
 #showtooltip
+/cancelaura blessing of protection
 /cast Fortifying Brew
 /use Kang's Bindstone
 END

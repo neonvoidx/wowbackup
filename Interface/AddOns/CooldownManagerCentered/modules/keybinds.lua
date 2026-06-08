@@ -346,7 +346,7 @@ local function GetOrCreateKeybindText(icon, viewerSettingName)
     icon.cmcKeybindText:SetFrameLevel(icon:GetFrameLevel() + 4)
     local keybindText = icon.cmcKeybindText:CreateFontString(nil, "OVERLAY", "NumberFontNormalSmall")
     keybindText:SetPoint(settings.anchor, icon, settings.anchor, settings.offsetX, settings.offsetY)
-    keybindText:SetTextColor(1, 1, 1, 1)
+    -- keybindText:SetTextColor(1, 1, 1, 1)
     keybindText:SetShadowColor(0, 0, 0, 1)
     keybindText:SetShadowOffset(1, -1)
     keybindText:SetDrawLayer("OVERLAY", 7)
@@ -376,13 +376,13 @@ local function ApplyKeybindTextSettings(icon, viewerSettingName)
     local fontName = GetKeybindFontName()
     local fontPath = GetFontPath(fontName)
     local fontFlags = ns.db.profile.cooldownManager_keybindFontFlags or {}
-    local fontFlag = ""
+    local fontFlag = {}
     for n, v in pairs(fontFlags) do
         if v == true then
-            fontFlag = fontFlag .. n .. ","
+            table.insert(fontFlag, n)
         end
     end
-    keybindText:SetFont(fontPath, settings.fontSize, fontFlag or "")
+    keybindText:SetFont(fontPath, settings.fontSize, table.concat(fontFlag, ","))
 end
 
 local function ExtractSpellIDFromChild(child)
@@ -407,12 +407,17 @@ local function UpdateIconKeybind(icon, viewerSettingName, keybind)
     if not ns.db.profile[enabledKey] then
         if icon.cmcKeybindText then
             icon.cmcKeybindText:Hide()
+            if icon.cmcKeybindText.text then
+                icon.cmcKeybindText.text:Hide()
+            end
         end
+
         return
     end
 
     local keybindText = GetOrCreateKeybindText(icon, viewerSettingName)
     icon.cmcKeybindText:Show()
+
     keybindText:SetText(keybind)
     keybindText:Show()
     if not keybind or keybind == "" then
@@ -575,14 +580,7 @@ function Keybinds:Disable()
 end
 
 function Keybinds:Initialize()
-    if not IsKeybindEnabledForAnyViewer() then
-        PrintDebug("Not initializing - no viewers enabled")
-        return
-    end
-
-    PrintDebug("Initializing module")
-    self:Enable()
-
+    self:OnSettingChanged()
     -- Cleanup old DB cache if present
     if ns.db and ns.db.profile then
         ns.db.profile.keybindCache = nil
@@ -596,16 +594,13 @@ function Keybinds:OnSettingChanged(viewerSettingName)
         self:Enable()
     elseif not shouldBeEnabled and isModuleEnabled then
         self:Disable()
-    elseif isModuleEnabled then
-        if viewerSettingName then
-            for viewerName, settingName in pairs(viewersSettingKey) do
-                if settingName == viewerSettingName then
-                    UpdateViewerKeybinds(viewerName)
-                    self:ApplyKeybindSettings(viewerName)
-                    return
-                end
-            end
+    end
+
+    -- Module remains enabled; update every viewer matching the changed setting (or all if unspecified)
+    for viewerName, settingName in pairs(viewersSettingKey) do
+        if not viewerSettingName or settingName == viewerSettingName then
+            UpdateViewerKeybinds(viewerName)
+            self:ApplyKeybindSettings(viewerName)
         end
-        self:UpdateAllKeybinds()
     end
 end

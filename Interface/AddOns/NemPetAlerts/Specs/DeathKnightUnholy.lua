@@ -1,80 +1,61 @@
--- =============================================================
--- Specs/DeathKnightUnholy.lua
--- Nem: Pet Alerts — Unholy Death Knight spec module
---
--- FULLY SELF-CONTAINED. Zero dependencies on other spec modules.
---
--- Alerts:
---   1. Raise Ghoul            — no pet out
---   2. Ghoul In CC            — pet has crowd control aura
---   3. Heal Ghoul             — pet health below threshold (ColorCurve)
---   4. Ghoul On Passive       — passive stance while in combat
---   5. Ghoul Not Attacking    — pet idle in combat after grace period
--- =============================================================
+-- ============================================================
+-- NemPetAlerts/Specs/DeathKnightUnholy.lua
+-- Unholy Death Knight spec module.
+-- ============================================================
 
 local NPA = _G.NemPetAlerts
 if not NPA then return end
 
-local GetTime        = GetTime
-local UnitExists     = UnitExists
 local UnitIsDead     = UnitIsDead
 
--- =============================================================
+-- ============================================================
 -- Spec Constants
--- =============================================================
-local SPEC_ID = 252  -- Unholy
+-- ============================================================
+local SPEC_ID = 252
 
--- =============================================================
--- Spell IDs
--- =============================================================
-local SPELL_RAISE_DEAD = 46584
-
--- =============================================================
+-- ============================================================
 -- State
--- =============================================================
-local state = {
-    petCCWasActive = false,
-}
+-- ============================================================
+local state = {}
 
--- =============================================================
+-- ============================================================
 -- Alert Definitions
--- =============================================================
--- Row layout (Y offsets):
---   Row 1 ( -2):  [1] Raise Ghoul
---   Row 2 (+25):  [3] Heal Ghoul
---   Row 3 (-83):  [2] Ghoul In CC
---   Row 4 (-29):  [4] Ghoul On Passive
---   Row 5 (-56):  [5] Ghoul Not Attacking
-
+-- ============================================================
 local ALERTS = {
-    { key = "noPet",           label = "Raise Ghoul",         text = "* RAISE GHOUL *",          defaultColor = { r=0.9098, g=0.4118, b=0.0    }, yOffset =  -2 },
-    { key = "notAttacking",    label = "Ghoul In CC",          text = "* GHOUL IN CC *",           defaultColor = { r=0.2824, g=0.6549, b=1.0    }, yOffset = -83, defaultSound = "Sonarr", soundLabel = "Pet CC" },
-    { key = "healPet",         label = "Heal Ghoul",           text = "* HEAL GHOUL *",            defaultColor = { r=0.1882, g=1.0,    b=0.3098 }, yOffset =  25 },
-    { key = "petPassive",      label = "Ghoul On Passive",     text = "* GHOUL ON PASSIVE *",      defaultColor = { r=1.0,    g=0.5843, b=0.1333 }, yOffset = -29 },
-    { key = "petNotAttacking", label = "Ghoul Not Attacking",  text = "* GHOUL NOT ATTACKING *",   defaultColor = { r=1.0,    g=0.8588, b=0.0    }, yOffset = -56 },
+    { key = "noPet",           label = "Raise Ghoul",         text = "* RAISE GHOUL *",            defaultColor = { r=0.9098, g=0.4118, b=0.0    }, yOffset =  -2, defaultSound = "Death Knight: Raise Ghoul",          soundLabel = "Raise Ghoul",          priority = NPA.VOICE_PRIO_CRITICAL },
+    { key = "petInCC",    label = "Ghoul In CC",          text = "* GHOUL IN CC *",           defaultColor = { r=0.2824, g=0.6549, b=1.0    }, yOffset = -83, defaultSound = "Death Knight: Ghoul in CC",          soundLabel = "Ghoul CC",             priority = NPA.VOICE_PRIO_HIGH },
+    { key = "healPet",         label = "Heal Ghoul",           text = "* HEAL GHOUL *",            defaultColor = { r=0.1882, g=1.0,    b=0.3098 }, yOffset =  25,                                                                                                          noSound = true },
+    { key = "petPassive",      label = "Ghoul On Passive",     text = "* GHOUL ON PASSIVE *",      defaultColor = { r=1.0,    g=0.5843, b=0.1333 }, yOffset = -29, defaultSound = "Death Knight: Ghoul on Passive",     soundLabel = "Ghoul On Passive",     priority = NPA.VOICE_PRIO_NORMAL },
+    { key = "petNotAttacking", label = "Ghoul Not Attacking",  text = "* GHOUL NOT ATTACKING *",   defaultColor = { r=1.0,    g=0.8588, b=0.0    }, yOffset = -56, defaultSound = "Death Knight: Ghoul Not Attacking",  soundLabel = "Ghoul Not Attacking",  priority = NPA.VOICE_PRIO_HIGH },
 }
 
--- =============================================================
--- Test Slots (DK: all 5 alerts)
--- =============================================================
+-- ============================================================
+-- Test Slots
+-- ============================================================
 local TEST_SLOTS = { [1]=true, [2]=true, [3]=true, [4]=true, [5]=true }
 
--- =============================================================
+-- ============================================================
 -- Defaults
--- =============================================================
+-- ============================================================
 local DEFAULTS = {
-    noPetEnabled             = true,
-    notAttackingEnabled      = true,
-    notAttackingSoundEnabled = true,
-    notAttackingSoundName    = "Sonarr",
-    healPetEnabled           = true,
-    petPassiveEnabled        = true,
-    petNotAttackingEnabled   = true,
+    noPetEnabled                = true,
+    noPetSoundEnabled           = true,
+    noPetSoundName              = "Death Knight: Raise Ghoul",
+    petInCCEnabled         = true,
+    petInCCSoundEnabled    = true,
+    petInCCSoundName       = "Death Knight: Ghoul in CC",
+    healPetEnabled              = true,
+    petPassiveEnabled           = true,
+    petPassiveSoundEnabled      = true,
+    petPassiveSoundName         = "Death Knight: Ghoul on Passive",
+    petNotAttackingEnabled      = true,
+    petNotAttackingSoundEnabled = true,
+    petNotAttackingSoundName    = "Death Knight: Ghoul Not Attacking",
 }
 
--- =============================================================
+-- ============================================================
 -- Module Table
--- =============================================================
+-- ============================================================
 local DeathKnightUnholy = {
     class             = "DEATHKNIGHT",
     specID            = SPEC_ID,
@@ -96,101 +77,65 @@ local DeathKnightUnholy = {
         "PET_BAR_UPDATE",
         "PET_BAR_UPDATE_USABLE",
         "PET_UI_UPDATE",
-        "PLAYER_REGEN_DISABLED",
-        "PLAYER_REGEN_ENABLED",
     },
 
     extraUnitEvents = {
         { "UNIT_HEALTH", "pet" },
-        { "UNIT_TARGET", "pet" },
     },
 }
 
--- =============================================================
+-- ============================================================
 -- ShouldRun
--- =============================================================
+-- ============================================================
 function DeathKnightUnholy:ShouldRun(db)
     if not db.enabled then return false end
     return NPA.GetSpecID() == SPEC_ID
 end
 
--- =============================================================
+-- ============================================================
 -- OnActivate
--- =============================================================
+-- ============================================================
 function DeathKnightUnholy:OnActivate(db)
-    if NPA.PetExists() and not UnitIsDead("pet") then
-        NPA.StartPetHealthTicker()
-    else
-        NPA:StartModuleTicker("dk", 0.25, function()
-            if NPA.PetExists() and not UnitIsDead("pet") then
-                NPA:StopModuleTicker("dk")
-            end
-            NPA.Evaluate()
-        end)
+    if not (NPA.PetExists() and not UnitIsDead("pet")) then
+        -- Safety net for UNIT_PET that fired before activation.
+        C_Timer.After(0.5, NPA.Evaluate)
     end
 end
 
--- =============================================================
+-- ============================================================
 -- ClearAllState
--- =============================================================
+-- ============================================================
 function DeathKnightUnholy:ClearAllState()
-    state.petCCWasActive = false
     NPA.notAttackingState.petNotAttackingStartTime = nil
     NPA.notAttackingState.petLastHadTargetTime     = nil
 end
 
--- =============================================================
--- PreEvaluate  (rising-edge sounds)
--- =============================================================
-function DeathKnightUnholy:PreEvaluate(db)
-    -- CC sound
-    if db.notAttackingEnabled then
-        local ccNow = NPA.PetIsCC()
-        if ccNow and not state.petCCWasActive then
-            NPA:PlayAlertSound("notAttacking")
-        end
-        state.petCCWasActive = ccNow
-    end
-end
-
--- =============================================================
+-- ============================================================
 -- GetHighestPriorityAlert
--- =============================================================
+-- ============================================================
 function DeathKnightUnholy:GetHighestPriorityAlert(db)
     if NPA.PetExists() then
-        if db.notAttackingEnabled    and NPA.PetIsCC() then return 2 end
+        if db.petInCCEnabled    and NPA.PetIsCC() then return 2 end
         if db.petPassiveEnabled      and NPA.PetIsPassive() then return 4 end
         if db.petNotAttackingEnabled and NPA.PetNotAttacking() then return 5 end
         if db.healPetEnabled         and NPA.PetNeedsHealing() then return 3 end
         return nil
     else
         if db.noPetEnabled and not NPA.ShouldSuppressNoPet() then
-            return 1  -- RAISE GHOUL
+            return 1
         end
         return nil
     end
 end
 
--- =============================================================
+-- ============================================================
 -- OnEvent
--- =============================================================
+-- ============================================================
 function DeathKnightUnholy:OnEvent(db, event, ...)
     if event == "UNIT_PET" then
         local unit = ...
         if unit == "player" then
-            if NPA.PetExists() and not UnitIsDead("pet") then
-                NPA:StopModuleTicker("dk")
-                NPA.StartPetHealthTicker()
-                NPA.SetDisplaySlot(nil)
-            else
-                NPA.StopPetHealthTicker()
-                NPA:StartModuleTicker("dk", 0.25, function()
-                    if NPA.PetExists() and not UnitIsDead("pet") then
-                        NPA:StopModuleTicker("dk")
-                    end
-                    NPA.Evaluate()
-                end)
-            end
+            NPA.Evaluate()
             C_Timer.After(0.1, NPA.Evaluate)
         end
         return true
@@ -249,9 +194,9 @@ function DeathKnightUnholy:OnEvent(db, event, ...)
     return false
 end
 
--- =============================================================
+-- ============================================================
 -- Debug
--- =============================================================
+-- ============================================================
 function DeathKnightUnholy:Debug(db)
     local ok, err = pcall(function()
         NPA.Msg("spec=Unholy"
@@ -261,7 +206,16 @@ function DeathKnightUnholy:Debug(db)
     if not ok then NPA.Msg("ERROR(dk_unholy): " .. tostring(err)) end
 end
 
--- =============================================================
+-- ============================================================
+-- Alert Options
+-- ============================================================
+function DeathKnightUnholy:BuildAlertOptions(box, db, helpers)
+    helpers:MakeNumericInput("Heal Pet Threshold (%)", 1, 99,
+        function() return db.healPetThreshold or 50 end,
+        function(v) db.healPetThreshold = v; NPA.ResetHealthCurve() end)
+end
+
+-- ============================================================
 -- Register
--- =============================================================
+-- ============================================================
 NPA:RegisterSpec("DeathKnightUnholy", DeathKnightUnholy)

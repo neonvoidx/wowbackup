@@ -131,6 +131,7 @@ end
 
 local function clampGroupOffsetsForFrame(group, frameWidth, frameHeight)
 	if type(group) ~= "table" then return 0, 0 end
+	if group.anchorOutside == true then return roundInt(group.x or 0), roundInt(group.y or 0) end
 	local style = tostring(group.style or ""):upper()
 	if style == "BAR" and HB and HB.GetBarDisplaySize and HB.ClampOffsetsForRegion then
 		local barWidth, barHeight, useSizedPlacement = HB.GetBarDisplaySize(group, frameWidth, frameHeight)
@@ -960,6 +961,47 @@ local function buildBorderOptionsForMenu()
 	return list
 end
 
+local function buildFrameStrataOptionsForMenu()
+	local raw = (GF and GF._FRAME_STRATA_OPTIONS_WITH_DEFAULT)
+		or {
+			{ value = "", label = DEFAULT or "Default" },
+			{ value = "BACKGROUND", label = "BACKGROUND" },
+			{ value = "LOW", label = "LOW" },
+			{ value = "MEDIUM", label = "MEDIUM" },
+			{ value = "HIGH", label = "HIGH" },
+			{ value = "DIALOG", label = "DIALOG" },
+			{ value = "FULLSCREEN", label = "FULLSCREEN" },
+			{ value = "FULLSCREEN_DIALOG", label = "FULLSCREEN_DIALOG" },
+			{ value = "TOOLTIP", label = "TOOLTIP" },
+		}
+	local list = {}
+	for i = 1, #raw do
+		local option = raw[i]
+		list[#list + 1] = { value = option.value or "", label = option.label or tostring(option.value or "") }
+	end
+	return list
+end
+
+local function normalizeFrameStrataToken(value)
+	if GF and GF.NormalizeFrameStrataToken then return GF.NormalizeFrameStrataToken(value) end
+	if type(value) ~= "string" or value == "" then return nil end
+	local token = value:upper()
+	if token == "DEFAULT" then return nil end
+	if
+		token == "BACKGROUND"
+		or token == "LOW"
+		or token == "MEDIUM"
+		or token == "HIGH"
+		or token == "DIALOG"
+		or token == "FULLSCREEN"
+		or token == "FULLSCREEN_DIALOG"
+		or token == "TOOLTIP"
+	then
+		return token
+	end
+	return nil
+end
+
 local function getGroupLabel(placement, groupId)
 	if not placement or not groupId then return tostring(groupId or "") end
 	local group = placement.groupsById and placement.groupsById[groupId]
@@ -1509,6 +1551,8 @@ function Editor:EnsureFrame()
 	controls.GroupAnchorLabel:SetText(tr("Anchor", "Anchor"))
 	controls.GroupAnchor = createDropdown(groupControlParent, 160)
 	controls.GroupAnchor:SetPoint("TOPLEFT", controls.GroupAnchorLabel, "TOPRIGHT", 0, 12)
+	controls.GroupAnchorOutside = createCheck(groupControlParent, tr("Anchor outside frame", "Anchor outside frame"))
+	controls.GroupAnchorOutside:SetPoint("TOPLEFT", controls.GroupAnchorLabel, "BOTTOMLEFT", -4, -8)
 
 	controls.GroupGrowthLabel = groupControlParent:CreateFontString(nil, "OVERLAY", "GameFontNormal")
 	controls.GroupGrowthLabel:SetPoint("TOPLEFT", controls.GroupAnchorLabel, "BOTTOMLEFT", 0, -18)
@@ -1547,10 +1591,24 @@ function Editor:EnsureFrame()
 	controls.BarWidthLabel, controls.BarWidth, controls.BarWidthValue = createSettingSlider(controls.YLabel, tr("Bar width", "Bar width"), 1, BAR_DIMENSION_MAX, 1)
 	controls.BarHeightLabel, controls.BarHeight, controls.BarHeightValue = createSettingSlider(controls.BarWidthLabel, tr("Bar height", "Bar height"), 1, BAR_DIMENSION_MAX, 1)
 	controls.BarAlphaLabel, controls.BarAlpha, controls.BarAlphaValue = createSettingSlider(controls.BarHeightLabel, tr("Alpha", "Alpha"), 0, 1, 0.01)
-	controls.InsetLabel, controls.Inset, controls.InsetValue = createSettingSlider(controls.BarAlphaLabel, tr("UFGroupHealerBuffEditorInset", "Inset"), 0, 40, 1)
+	controls.BarStrataLabel = groupControlParent:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+	controls.BarStrataLabel:SetPoint("TOPLEFT", controls.BarAlphaLabel, "BOTTOMLEFT", 0, -18)
+	controls.BarStrataLabel:SetText(tr("UFGroupHealerBuffEditorBarStrata", "Strata"))
+	controls.BarStrata = createDropdown(groupControlParent, 180)
+	controls.BarStrata:SetPoint("TOPLEFT", controls.BarStrataLabel, "TOPRIGHT", 0, 12)
+	controls.BarFrameLevelLabel, controls.BarFrameLevel, controls.BarFrameLevelValue =
+		createSettingSlider(controls.BarStrataLabel, tr("UFGroupHealerBuffEditorBarLevel", "Level"), -20, 1000, 1)
+	controls.InsetLabel, controls.Inset, controls.InsetValue = createSettingSlider(controls.BarFrameLevelLabel, tr("UFGroupHealerBuffEditorInset", "Inset"), 0, 40, 1)
 	controls.BorderSizeLabel, controls.BorderSize, controls.BorderSizeValue = createSettingSlider(controls.InsetLabel, tr("Border Size", "Border Size"), 1, 16, 1)
+	controls.BorderStrataLabel = groupControlParent:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+	controls.BorderStrataLabel:SetPoint("TOPLEFT", controls.BorderSizeLabel, "BOTTOMLEFT", 0, -18)
+	controls.BorderStrataLabel:SetText(tr("UFGroupHealerBuffEditorBorderStrata", "Strata"))
+	controls.BorderStrata = createDropdown(groupControlParent, 180)
+	controls.BorderStrata:SetPoint("TOPLEFT", controls.BorderStrataLabel, "TOPRIGHT", 0, 12)
+	controls.BorderFrameLevelLabel, controls.BorderFrameLevel, controls.BorderFrameLevelValue =
+		createSettingSlider(controls.BorderStrataLabel, tr("UFGroupHealerBuffEditorBorderLevel", "Level"), -20, 1000, 1)
 	controls.IndicatorBorder = createCheck(groupControlParent, tr("UFGroupHealerBuffEditorIndicatorBorderEnabled", "Indicator Border"))
-	controls.IndicatorBorder:SetPoint("TOPLEFT", controls.BorderSizeLabel, "BOTTOMLEFT", -4, -8)
+	controls.IndicatorBorder:SetPoint("TOPLEFT", controls.BorderFrameLevelLabel, "BOTTOMLEFT", -4, -8)
 	controls.IndicatorBorderTextureLabel = groupControlParent:CreateFontString(nil, "OVERLAY", "GameFontNormal")
 	controls.IndicatorBorderTextureLabel:SetPoint("TOPLEFT", controls.IndicatorBorder, "BOTTOMLEFT", 4, -18)
 	controls.IndicatorBorderTextureLabel:SetText(tr("UFGroupHealerBuffEditorIndicatorBorderTexture", "Border Texture"))
@@ -1667,6 +1725,7 @@ function Editor:EnsureFrame()
 		end
 
 		placeDropdown(controls.GroupAnchorLabel, controls.GroupAnchor)
+		placeCheck(controls.GroupAnchorOutside)
 		placeDropdown(controls.GroupGrowthLabel, controls.GroupGrowth)
 		placeDropdown(controls.GroupBarOrientationLabel, controls.GroupBarOrientation)
 
@@ -1681,8 +1740,12 @@ function Editor:EnsureFrame()
 		placeSlider(controls.BarWidthLabel, controls.BarWidth, controls.BarWidthValue)
 		placeSlider(controls.BarHeightLabel, controls.BarHeight, controls.BarHeightValue)
 		placeSlider(controls.BarAlphaLabel, controls.BarAlpha, controls.BarAlphaValue)
+		placeDropdown(controls.BarStrataLabel, controls.BarStrata)
+		placeSlider(controls.BarFrameLevelLabel, controls.BarFrameLevel, controls.BarFrameLevelValue)
 		placeSlider(controls.InsetLabel, controls.Inset, controls.InsetValue)
 		placeSlider(controls.BorderSizeLabel, controls.BorderSize, controls.BorderSizeValue)
+		placeDropdown(controls.BorderStrataLabel, controls.BorderStrata)
+		placeSlider(controls.BorderFrameLevelLabel, controls.BorderFrameLevel, controls.BorderFrameLevelValue)
 		placeCheck(controls.IndicatorBorder, nil, -4, -8)
 		placeDropdown(controls.IndicatorBorderTextureLabel, controls.IndicatorBorderTexture)
 		placeSlider(controls.IndicatorBorderSizeLabel, controls.IndicatorBorderSize, controls.IndicatorBorderSizeValue)
@@ -2381,8 +2444,10 @@ function Editor:EnsureFrame()
 	updateGroupFromSlider("barWidth", controls.BarWidth, controls.BarWidthValue, 1, BAR_DIMENSION_MAX, 1)
 	updateGroupFromSlider("barHeight", controls.BarHeight, controls.BarHeightValue, 1, BAR_DIMENSION_MAX, 1)
 	updateGroupFromSlider("barAlpha", controls.BarAlpha, controls.BarAlphaValue, 0, 1, 0.01)
+	updateGroupFromSlider("barFrameLevelOffset", controls.BarFrameLevel, controls.BarFrameLevelValue, -20, 1000, 1)
 	updateGroupFromSlider("inset", controls.Inset, controls.InsetValue, 0, 40, 1)
 	updateGroupFromSlider("borderSize", controls.BorderSize, controls.BorderSizeValue, 1, 16, 1)
+	updateGroupFromSlider("borderFrameLevelOffset", controls.BorderFrameLevel, controls.BorderFrameLevelValue, -20, 1000, 1)
 	updateGroupFromSlider("indicatorBorderSize", controls.IndicatorBorderSize, controls.IndicatorBorderSizeValue, 1, 24, 1)
 	updateGroupFromSlider("indicatorBorderOffset", controls.IndicatorBorderOffset, controls.IndicatorBorderOffsetValue, -12, 12, 1)
 
@@ -2420,6 +2485,20 @@ function Editor:EnsureFrame()
 		Editor:RefreshRuntimeNow()
 	end)
 
+	controls.GroupAnchorOutside:SetScript("OnClick", function(self)
+		if Editor._controlUpdateLock then return end
+		local group = groupFromSelection()
+		if not group then
+			self:SetChecked(false)
+			return
+		end
+		group.anchorOutside = self:GetChecked() == true
+		clampSelectedGroupToPreview(group)
+		Editor:RefreshGroupControls()
+		Editor:RefreshPreview()
+		Editor:RefreshRuntimeNow()
+	end)
+
 	setDropdown(controls.GroupGrowth, HB.GROWTH_OPTIONS, nil, function(value)
 		local group = groupFromSelection()
 		if not group then return end
@@ -2438,12 +2517,30 @@ function Editor:EnsureFrame()
 		Editor:RefreshRuntimeNow()
 	end)
 
+	setDropdown(controls.BarStrata, buildFrameStrataOptionsForMenu(), nil, function(value)
+		local group = groupFromSelection()
+		if not group then return end
+		group.barStrata = normalizeFrameStrataToken(value)
+		Editor:RefreshGroupControls()
+		Editor:RefreshPreview()
+		Editor:QueueRuntimeRefresh()
+	end)
+
 	setDropdown(controls.IndicatorBorderTexture, buildBorderOptionsForMenu(), nil, function(value)
 		local group = groupFromSelection()
 		if not group then return end
 		local texture = tostring(value or "DEFAULT")
 		if texture == "" then texture = "DEFAULT" end
 		group.indicatorBorderTexture = texture
+		Editor:RefreshPreview()
+		Editor:QueueRuntimeRefresh()
+	end)
+
+	setDropdown(controls.BorderStrata, buildFrameStrataOptionsForMenu(), nil, function(value)
+		local group = groupFromSelection()
+		if not group then return end
+		group.borderStrata = normalizeFrameStrataToken(value)
+		Editor:RefreshGroupControls()
 		Editor:RefreshPreview()
 		Editor:QueueRuntimeRefresh()
 	end)
@@ -3049,6 +3146,7 @@ function Editor:RefreshGroupControls()
 
 		controls.GroupName:SetText(group.name or "")
 		setDropdown(controls.GroupAnchor, HB.ANCHOR_OPTIONS, group.anchorPoint or "CENTER", controls.GroupAnchor._eqolOnSelect)
+		controls.GroupAnchorOutside:SetChecked(group.anchorOutside == true)
 		setDropdown(controls.GroupGrowth, HB.GROWTH_OPTIONS, group.growth or "RIGHTDOWN", controls.GroupGrowth._eqolOnSelect)
 		setDropdown(controls.GroupBarOrientation, HB.ORIENTATION_OPTIONS, group.barOrientation or "HORIZONTAL", controls.GroupBarOrientation._eqolOnSelect)
 
@@ -3096,10 +3194,26 @@ function Editor:RefreshGroupControls()
 		if barAlpha < 0 then barAlpha = 0 elseif barAlpha > 1 then barAlpha = 1 end
 		controls.BarAlpha:SetValue(barAlpha)
 		controls.BarAlphaValue:SetText(string.format("%.2f", barAlpha))
+		group.barStrata = normalizeFrameStrataToken(group.barStrata)
+		local barFrameLevel = roundInt(tonumber(group.barFrameLevelOffset) or 3)
+		if barFrameLevel < -20 then barFrameLevel = -20 end
+		if barFrameLevel > 1000 then barFrameLevel = 1000 end
+		group.barFrameLevelOffset = barFrameLevel
+		setDropdown(controls.BarStrata, buildFrameStrataOptionsForMenu(), group.barStrata or "", controls.BarStrata._eqolOnSelect)
+		controls.BarFrameLevel:SetValue(barFrameLevel)
+		controls.BarFrameLevelValue:SetText(tostring(barFrameLevel))
 		controls.Inset:SetValue(group.inset or 0)
 		controls.InsetValue:SetText(tostring(group.inset or 0))
 		controls.BorderSize:SetValue(group.borderSize or 2)
 		controls.BorderSizeValue:SetText(tostring(group.borderSize or 2))
+		group.borderStrata = normalizeFrameStrataToken(group.borderStrata)
+		local borderFrameLevel = roundInt(tonumber(group.borderFrameLevelOffset) or 4)
+		if borderFrameLevel < -20 then borderFrameLevel = -20 end
+		if borderFrameLevel > 1000 then borderFrameLevel = 1000 end
+		group.borderFrameLevelOffset = borderFrameLevel
+		setDropdown(controls.BorderStrata, buildFrameStrataOptionsForMenu(), group.borderStrata or "", controls.BorderStrata._eqolOnSelect)
+		controls.BorderFrameLevel:SetValue(borderFrameLevel)
+		controls.BorderFrameLevelValue:SetText(tostring(borderFrameLevel))
 
 		if group.indicatorBorderEnabled == nil then group.indicatorBorderEnabled = false end
 		local borderTexture = tostring(group.indicatorBorderTexture or "DEFAULT")
@@ -3146,6 +3260,7 @@ function Editor:RefreshGroupControls()
 
 		setControlEnabled(controls.GroupName, true)
 		setFieldState(controls.GroupAnchorLabel, controls.GroupAnchor, showAnchor, true)
+		setCheckState(controls.GroupAnchorOutside, showAnchor, true, group.anchorOutside == true)
 		setFieldState(controls.GroupGrowthLabel, controls.GroupGrowth, showGrowth, true)
 		setFieldState(controls.GroupBarOrientationLabel, controls.GroupBarOrientation, showBar, true)
 		setSliderState(controls.PerRowLabel, controls.PerRow, controls.PerRowValue, showGrid, true)
@@ -3159,8 +3274,12 @@ function Editor:RefreshGroupControls()
 		setSliderState(controls.BarWidthLabel, controls.BarWidth, controls.BarWidthValue, showBarDimensions, true)
 		setSliderState(controls.BarHeightLabel, controls.BarHeight, controls.BarHeightValue, showBarDimensions, true)
 		setSliderState(controls.BarAlphaLabel, controls.BarAlpha, controls.BarAlphaValue, showBarAlpha, true)
+		setFieldState(controls.BarStrataLabel, controls.BarStrata, showBar, true)
+		setSliderState(controls.BarFrameLevelLabel, controls.BarFrameLevel, controls.BarFrameLevelValue, showBar, true)
 		setSliderState(controls.InsetLabel, controls.Inset, controls.InsetValue, showInset, true)
 		setSliderState(controls.BorderSizeLabel, controls.BorderSize, controls.BorderSizeValue, showBorder, true)
+		setFieldState(controls.BorderStrataLabel, controls.BorderStrata, showBorder, true)
+		setSliderState(controls.BorderFrameLevelLabel, controls.BorderFrameLevel, controls.BorderFrameLevelValue, showBorder, true)
 		setCheckState(controls.IndicatorBorder, showIndicatorBorder, true, group.indicatorBorderEnabled == true)
 		setFieldState(controls.IndicatorBorderTextureLabel, controls.IndicatorBorderTexture, showIndicatorBorder, group.indicatorBorderEnabled == true)
 		setSliderState(controls.IndicatorBorderSizeLabel, controls.IndicatorBorderSize, controls.IndicatorBorderSizeValue, showIndicatorBorder, group.indicatorBorderEnabled == true)
@@ -3179,6 +3298,7 @@ function Editor:RefreshGroupControls()
 		controls.GroupName:SetText("")
 		setControlEnabled(controls.GroupName, false)
 		setFieldState(controls.GroupAnchorLabel, controls.GroupAnchor, false, false)
+		setCheckState(controls.GroupAnchorOutside, false, false, false)
 		setFieldState(controls.GroupGrowthLabel, controls.GroupGrowth, false, false)
 		setFieldState(controls.GroupBarOrientationLabel, controls.GroupBarOrientation, false, false)
 		setSliderState(controls.PerRowLabel, controls.PerRow, controls.PerRowValue, false, false)
@@ -3192,8 +3312,12 @@ function Editor:RefreshGroupControls()
 		setSliderState(controls.BarWidthLabel, controls.BarWidth, controls.BarWidthValue, false, false)
 		setSliderState(controls.BarHeightLabel, controls.BarHeight, controls.BarHeightValue, false, false)
 		setSliderState(controls.BarAlphaLabel, controls.BarAlpha, controls.BarAlphaValue, false, false)
+		setFieldState(controls.BarStrataLabel, controls.BarStrata, false, false)
+		setSliderState(controls.BarFrameLevelLabel, controls.BarFrameLevel, controls.BarFrameLevelValue, false, false)
 		setSliderState(controls.InsetLabel, controls.Inset, controls.InsetValue, false, false)
 		setSliderState(controls.BorderSizeLabel, controls.BorderSize, controls.BorderSizeValue, false, false)
+		setFieldState(controls.BorderStrataLabel, controls.BorderStrata, false, false)
+		setSliderState(controls.BorderFrameLevelLabel, controls.BorderFrameLevel, controls.BorderFrameLevelValue, false, false)
 		setCheckState(controls.IndicatorBorder, false, false, false)
 		setFieldState(controls.IndicatorBorderTextureLabel, controls.IndicatorBorderTexture, false, false)
 		setSliderState(controls.IndicatorBorderSizeLabel, controls.IndicatorBorderSize, controls.IndicatorBorderSizeValue, false, false)
@@ -3286,10 +3410,33 @@ end
 local function setPreviewFont(fontString, size, outline)
 	if not fontString then return end
 	local fontPath = (addon.variables and addon.variables.defaultFont) or STANDARD_TEXT_FONT
+	local fallbackFont = STANDARD_TEXT_FONT or fontPath
 	size = tonumber(size) or 12
 	if size < 6 then size = 6 end
 	if size > 64 then size = 64 end
-	fontString:SetFont(fontPath, size, outline or "OUTLINE")
+	local styleChoice = outline or "OUTLINE"
+	local resolvedFlags = styleChoice
+	if addon.functions and addon.functions.ResolveFontStyle then
+		local _, flags = addon.functions.ResolveFontStyle(styleChoice, "OUTLINE")
+		resolvedFlags = flags
+	elseif addon.functions and addon.functions.GetFontFlagsForStyle then
+		resolvedFlags = addon.functions.GetFontFlagsForStyle(styleChoice, "OUTLINE")
+		if resolvedFlags == nil and styleChoice == "__EQOL_GLOBAL_FONT_STYLE__" then resolvedFlags = "OUTLINE" end
+	elseif styleChoice == "__EQOL_GLOBAL_FONT_STYLE__" then
+		resolvedFlags = "OUTLINE"
+	elseif styleChoice == "NONE" then
+		resolvedFlags = nil
+	end
+
+	local ok = false
+	if addon.functions and addon.functions.ApplyFontString then
+		ok = addon.functions.ApplyFontString(fontString, fontPath, size, styleChoice, fallbackFont, "OUTLINE")
+	else
+		ok = fontString:SetFont(fontPath, size, resolvedFlags)
+		if ok == false then ok = fontString:SetFont(fallbackFont, size, resolvedFlags) end
+	end
+	if ok == false then fontString:SetFont(fallbackFont, size, resolvedFlags) end
+	if addon.functions and addon.functions.ApplyFontStyleShadow then addon.functions.ApplyFontStyleShadow(fontString, styleChoice, "OUTLINE") end
 end
 
 local function getPreviewCooldownTiming(sampleIndex, now, loopEnabled, loopOrigin)

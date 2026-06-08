@@ -89,6 +89,7 @@ local fallbackCastDefaults = {
 	nameOffset = { x = 6, y = 0 },
 	showDuration = true,
 	durationFormat = "REMAINING",
+	durationAnchor = "RIGHT",
 	durationOffset = { x = -6, y = 0 },
 	font = nil,
 	fontSize = 12,
@@ -152,6 +153,13 @@ local function normalizeTextAnchor(value, fallback)
 	local anchor = tostring(value or fallback or "LEFT"):upper()
 	if VALID_TEXT_ANCHORS[anchor] then return anchor end
 	return fallbackAnchor
+end
+
+local function getTextJustifyH(anchor)
+	anchor = normalizeTextAnchor(anchor, "CENTER")
+	if anchor == "LEFT" or anchor == "TOPLEFT" or anchor == "BOTTOMLEFT" then return "LEFT" end
+	if anchor == "RIGHT" or anchor == "TOPRIGHT" or anchor == "BOTTOMRIGHT" then return "RIGHT" end
+	return "CENTER"
 end
 
 local function legacyAnchorToPoints(anchorValue)
@@ -496,6 +504,7 @@ local function resolveCastbarWidth(castCfg, castDefaults, barHeight)
 	if not relFrame or relFrame == UIParent or not relFrame.GetWidth then return width end
 	local relWidth = relFrame:GetWidth() or 0
 	if relWidth <= 0 then return width end
+	relWidth = math.max(MIN_CASTBAR_WIDTH, relWidth + (tonumber(anchor.matchRelativeWidthOffset) or 0))
 	local relScale = getEffectiveScale(relFrame)
 	local castScale = getEffectiveScale(state.castBar)
 	local visualWidth = relWidth * relScale
@@ -1026,14 +1035,16 @@ local function applyCastLayout(castCfg, castDefaults)
 		state.castName:ClearAllPoints()
 		state.castName:SetPoint(nameAnchor, state.castBar, nameAnchor, nameOff.x or 0, nameOff.y or 0)
 		state.castName:SetShown(castCfg.showName ~= false)
+		if state.castName.SetJustifyH then state.castName:SetJustifyH(getTextJustifyH(nameAnchor)) end
 	end
 	if state.castDuration then
 		local durOff = castCfg.durationOffset or castDefaults.durationOffset or { x = -6, y = 0 }
+		local durationAnchor = normalizeTextAnchor(castCfg.durationAnchor, castDefaults.durationAnchor or "RIGHT")
 		state.castDuration:ClearAllPoints()
-		state.castDuration:SetPoint("RIGHT", state.castBar, "RIGHT", durOff.x or 0, durOff.y or 0)
+		state.castDuration:SetPoint(durationAnchor, state.castBar, durationAnchor, durOff.x or 0, durOff.y or 0)
 		state.castDuration:SetShown(castCfg.showDuration ~= false)
 		if state.castDuration.SetWordWrap then state.castDuration:SetWordWrap(false) end
-		if state.castDuration.SetJustifyH then state.castDuration:SetJustifyH("RIGHT") end
+		if state.castDuration.SetJustifyH then state.castDuration:SetJustifyH(getTextJustifyH(durationAnchor)) end
 	end
 	local showIcon = shouldShowCastIcon(castCfg, castDefaults)
 	if state.castIconHolder then
@@ -1116,7 +1127,7 @@ local function applyCastLayout(castCfg, castDefaults)
 		if state.castName.SetMaxLines then state.castName:SetMaxLines(1) end
 		if state.castName.SetJustifyH then
 			local nameAnchor = normalizeTextAnchor(castCfg.nameAnchor, castDefaults.nameAnchor or "LEFT")
-			state.castName:SetJustifyH(nameAnchor)
+			state.castName:SetJustifyH(getTextJustifyH(nameAnchor))
 		end
 	end
 	if state.castEmpower and state.castEmpower.stagePercents then UFHelper.layoutEmpowerStages(state) end

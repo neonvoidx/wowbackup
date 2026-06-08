@@ -281,21 +281,7 @@ local function AdjustFavoriteAnchorNow(button)
 	end
 
 	favorite:ClearAllPoints()
-	SetPointCompat(favorite, "LEFT", nameFont, "LEFT", offset, 0)
-end
-
-local function AdjustFavoriteAnchor(button)
-	if not button then return end
-	if not C_Timer or not C_Timer.After then
-		AdjustFavoriteAnchorNow(button)
-		return
-	end
-	if button._eqolFavoriteAdjustPending then return end
-	button._eqolFavoriteAdjustPending = true
-	C_Timer.After(0, function()
-		button._eqolFavoriteAdjustPending = nil
-		AdjustFavoriteAnchorNow(button)
-	end)
+	SetPointCompat(favorite, "TOPLEFT", nameFont, "TOPLEFT", offset, 0)
 end
 
 local function RGBToHex(r, g, b)
@@ -521,7 +507,7 @@ local function DecorateWoWFriend(button)
 	if button.gameIcon then button.gameIcon:SetTexCoord(0, 1, 0, 1) end
 
 	-- Favorite star spacing adjusted so text and icons stay readable
-	AdjustFavoriteAnchor(button)
+	AdjustFavoriteAnchorNow(button)
 end
 
 local function DecorateBNetFriend(button)
@@ -634,7 +620,7 @@ local function DecorateBNetFriend(button)
 	end
 
 	-- Favorite star spacing adjusted so text and icons stay readable
-	AdjustFavoriteAnchor(button)
+	AdjustFavoriteAnchorNow(button)
 end
 
 local function UpdateFriendButton(button)

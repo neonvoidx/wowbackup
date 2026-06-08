@@ -1,4 +1,4 @@
--- luacheck: globals EnhanceQoL C_FriendList
+-- luacheck: globals EnhanceQoL C_FriendList NORMAL_FONT_COLOR UnitClass CUSTOM_CLASS_COLORS RAID_CLASS_COLORS
 local addonName, addon = ...
 
 local L = addon.L
@@ -23,8 +23,39 @@ local function ensureDB()
 	addon.db.datapanel.friends = addon.db.datapanel.friends or {}
 	db = addon.db.datapanel.friends
 	db.fontSize = db.fontSize or 13
+	if db.useClassColor == nil then db.useClassColor = false end
+	if db.useTextColor == nil then db.useTextColor = false end
+	if not db.textColor then
+		local r, g, b = 1, 1, 1
+		if NORMAL_FONT_COLOR and NORMAL_FONT_COLOR.GetRGB then
+			r, g, b = NORMAL_FONT_COLOR:GetRGB()
+		end
+		db.textColor = { r = r, g = g, b = b }
+	end
 	if db.splitDisplay == nil then db.splitDisplay = false end
 	if db.splitDisplayInline == nil then db.splitDisplayInline = false end
+end
+
+local function getClassColor()
+	local classToken = UnitClass and select(2, UnitClass("player"))
+	if not classToken then return nil end
+	local colors = CUSTOM_CLASS_COLORS or RAID_CLASS_COLORS
+	if not colors then return nil end
+	return colors[classToken]
+end
+
+local function colorizeStreamText(text)
+	if not text or text == "" then return text end
+	local color
+	if db and db.useClassColor then
+		color = getClassColor()
+	elseif db and db.useTextColor then
+		color = db.textColor
+	end
+	if color and color.r and color.g and color.b then
+		return string.format("|cff%02x%02x%02x%s|r", math.floor((color.r or 1) * 255 + 0.5), math.floor((color.g or 1) * 255 + 0.5), math.floor((color.b or 1) * 255 + 0.5), text)
+	end
+	return text
 end
 
 local function RestorePosition(frame)
@@ -45,7 +76,7 @@ local function createAceWindow()
 	aceWindow = frame.frame
 	frame:SetTitle((addon.DataPanel and addon.DataPanel.GetStreamOptionsTitle and addon.DataPanel.GetStreamOptionsTitle(stream and stream.meta and stream.meta.title)) or GAMEMENU_OPTIONS)
 	frame:SetWidth(300)
-	frame:SetHeight(200)
+	frame:SetHeight(300)
 	frame:SetLayout("List")
 
 	frame.frame:SetScript("OnShow", function(self) RestorePosition(self) end)
@@ -65,6 +96,33 @@ local function createAceWindow()
 		addon.DataHub:RequestUpdate(stream)
 	end)
 	frame:AddChild(fontSize)
+
+	local useClassColor = AceGUI:Create("CheckBox")
+	useClassColor:SetLabel(L["DataPanelUseClassTextColor"] or "Use class text color")
+	useClassColor:SetValue(db.useClassColor == true)
+	useClassColor:SetCallback("OnValueChanged", function(_, _, val)
+		db.useClassColor = val and true or false
+		addon.DataHub:RequestUpdate(stream)
+	end)
+	frame:AddChild(useClassColor)
+
+	local useColor = AceGUI:Create("CheckBox")
+	useColor:SetLabel(L["Use custom text color"] or "Use custom text color")
+	useColor:SetValue(db.useTextColor == true)
+	useColor:SetCallback("OnValueChanged", function(_, _, val)
+		db.useTextColor = val and true or false
+		addon.DataHub:RequestUpdate(stream)
+	end)
+	frame:AddChild(useColor)
+
+	local textColor = AceGUI:Create("ColorPicker")
+	textColor:SetLabel(L["Text color"] or "Text color")
+	textColor:SetColor(db.textColor.r, db.textColor.g, db.textColor.b)
+	textColor:SetCallback("OnValueChanged", function(_, _, r, g, b)
+		db.textColor = { r = r, g = g, b = b }
+		if db.useTextColor and not db.useClassColor then addon.DataHub:RequestUpdate(stream) end
+	end)
+	frame:AddChild(textColor)
 
 	local splitDisplayInline
 	local splitDisplay = AceGUI:Create("CheckBox")
@@ -414,8 +472,9 @@ local function getFriends(stream)
 	wipeTooltipSections()
 
 	stream.snapshot.fontSize = db and db.fontSize or 13
+	stream.snapshot.skipPanelClassColor = db and (db.useClassColor == true or db.useTextColor == true) or nil
 	if isFriendsDataRestricted() then
-		stream.snapshot.text = FRIENDS
+		stream.snapshot.text = colorizeStreamText(FRIENDS)
 		if listWindow and listWindow.frame and listWindow.frame:IsShown() then populateListWindow() end
 		return
 	end
@@ -525,12 +584,12 @@ local function getFriends(stream)
 			guildText = string.format("%s: %d", GUILD, tooltipMeta.guildOnlineCount)
 		end
 		if db.splitDisplayInline then
-			stream.snapshot.text = string.format("%s  %s: %d", guildText, FRIENDS, friendsCount)
+			stream.snapshot.text = colorizeStreamText(string.format("%s  %s: %d", guildText, FRIENDS, friendsCount))
 		else
-			stream.snapshot.text = string.format("%s\n%s: %d", guildText, FRIENDS, friendsCount)
+			stream.snapshot.text = colorizeStreamText(string.format("%s\n%s: %d", guildText, FRIENDS, friendsCount))
 		end
 	else
-		stream.snapshot.text = totalUnique .. " " .. FRIENDS
+		stream.snapshot.text = colorizeStreamText(totalUnique .. " " .. FRIENDS)
 	end
 
 	-- If our extended window is open, refresh its content

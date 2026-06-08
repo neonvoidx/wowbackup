@@ -1,23 +1,6 @@
--- =============================================================
--- NemPetAlerts.lua  v12.0.20
--- Nem: Pet Alerts — Pet status warnings for Hunter, Warlock,
--- Frost Mage, and Unholy Death Knight.
--- Part of the Nem addon suite.  Per-spec modular architecture.
---
--- This file is the CORE ENGINE. It contains:
---   • Spec module registration system
---   • Display construction & layout
---   • Options panel builder (driven by spec module definitions)
---   • Event routing to the active spec module
---   • Spec hot-swap on PLAYER_SPECIALIZATION_CHANGED
---   • Pet health ColorCurve infrastructure
---   • Shared pet utilities (CC, passive, not-attacking, mount suppression)
---   • Sound playback, font/sound asset management
---   • Slash commands, lock/unlock, test mode
---
--- It contains ZERO class-specific spell IDs, aura logic, or
--- priority functions. All spec behavior lives in Specs/*.lua
--- files which register themselves via NPA:RegisterSpec().
+-- ============================================================
+-- NemPetAlerts.lua  v12.0.26
+-- Nem: Pet Alerts — core engine.
 --
 -- MIT License
 -- Copyright (c) 2026 Nemreaper
@@ -42,19 +25,18 @@
 -- WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
 -- FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 -- OTHER DEALINGS IN THE SOFTWARE.
--- =============================================================
+-- ============================================================
 
 local ADDON_NAME = ...
 local NPA = CreateFrame("Frame")
 _G.NemPetAlerts = NPA
 
--- =============================================================
+-- ============================================================
 -- Upvalues
--- =============================================================
+-- ============================================================
 local pairs, ipairs           = pairs, ipairs
 local math_floor, math_max    = math.floor, math.max
 local math_min, math_sin      = math.min, math.sin
-local math_abs                = math.abs
 local math_pi                 = math.pi
 local string_format           = string.format
 local CreateFrame             = CreateFrame
@@ -68,25 +50,37 @@ local C_UnitAuras             = C_UnitAuras
 local CopyTable               = CopyTable
 local issecretvalue           = issecretvalue or function() return false end
 
-local NPA_VERSION = "v12.0.20"
+local NPA_VERSION = "v12.0.26"
 
--- =============================================================
--- Asset Paths  (all self-contained under NemPetAlerts\)
--- =============================================================
+-- ============================================================
+-- Cascade Isolation
+-- ============================================================
+-- All entry points that can be reached during alert evaluation
+-- are wrapped via SafeCall. Errors accumulate in NPA._errors
+-- instead of breaking sibling alerts or the addon.
+NPA._errors = {}
+
+local function SafeCall(label, func, ...)
+    local ok, err = pcall(func, ...)
+    if not ok then
+        NPA._errors[label] = { msg = tostring(err), time = GetTime() }
+    end
+    return ok
+end
+NPA.SafeCall = SafeCall
+
+-- ============================================================
+-- Asset Paths
+-- ============================================================
 local NPA_FONTS  = "Interface\\AddOns\\NemPetAlerts\\Fonts\\"
 local NPA_MEDIA  = "Interface\\AddOns\\NemPetAlerts\\Media\\"
 
 local ALERT_FONT = NPA_FONTS .. "GothamNarrow-Ultra.ttf"
 local UI_FONT    = NPA_FONTS .. "Prototype.ttf"
 
--- Expose to spec modules
-NPA.FONTS_PATH = NPA_FONTS
-NPA.MEDIA_PATH = NPA_MEDIA
-NPA.UI_FONT    = UI_FONT
-
--- =============================================================
--- Class Detection  (cached at PLAYER_LOGIN)
--- =============================================================
+-- ============================================================
+-- Class Detection
+-- ============================================================
 local activeClass = nil
 
 local function GetActiveClass()
@@ -94,124 +88,46 @@ local function GetActiveClass()
     return class
 end
 
--- Spec support is determined entirely by registered spec modules.
--- If no module matches the player's class + specID, the panel
--- shows a "Spec Not Supported" message.
-
-local function IsFullyImplemented()
-    return NPA.activeModule ~= nil
-end
-
--- =============================================================
+-- ============================================================
 -- Spec Module Registry
--- =============================================================
--- Modules register via NPA:RegisterSpec(key, module)
--- key format: "ClassSpec" e.g. "HunterBeastMastery", "WarlockAffliction"
---
--- Module table contract (all functions are optional unless noted):
--- {
---   class        = "CLASS",                    -- REQUIRED: WoW class token
---   specID       = 253,                        -- REQUIRED: WoW specialization ID
---   specName     = "Beast Mastery Hunter",     -- display name
---
---   -- Alert definitions: ordered list of alerts this spec provides.
---   -- Each entry drives display rows, options checkboxes, sound rows,
---   -- color swatches, and test mode — automatically.
---   alerts = {
---     {
---       key          = "petDead",              -- unique key, used in db and state
---       label        = "Pet Died",             -- display name in options
---       text         = "* PET DIED *",         -- alert text shown on screen
---       defaultColor = { r=1, g=0.2, b=0.15 },
---       yOffset      = 52,                     -- Y offset for alert text row
---       defaultSound = "OhNo",                 -- default sound name (nil = no sound row)
---       soundLabel   = "Pet Died",             -- label for sound row (defaults to label)
---     },
---     ...
---   },
---
---   -- Test mode slots: which alert indices to show in test mode.
---   -- e.g. { [1]=true, [2]=true, [3]=true, [5]=true, [6]=true }
---   testSlots = { ... },
---
---   -- Defaults merged into saved variables
---   defaults = { ... },
---
---   -- State table (module owns this entirely)
---   state = { ... },
---
---   -- REQUIRED: Returns the ALERT index (1-based) of the highest
---   -- priority active alert, or nil if none.
---   GetHighestPriorityAlert = function(self, db) end,
---
---   -- Called once at login when this spec is active.
---   OnActivate = function(self, db) end,
---
---   -- Called when switching away from this spec module.
---   OnDeactivate = function(self, db) end,
---
---   -- Event handler: receives (self, db, event, ...).
---   -- Return true to suppress the core's default ScheduleEvaluate.
---   OnEvent = function(self, db, event, ...) end,
---
---   -- Called every Evaluate cycle before GetHighestPriorityAlert.
---   -- Module should update its state here (sound triggers, etc.)
---   PreEvaluate = function(self, db) end,
---
---   -- Called to fully reset all runtime state.
---   ClearAllState = function(self) end,
---
---   -- Additional events this spec needs beyond the core set.
---   extraEvents = { ... },
---
---   -- Additional unit events: { { event, unit1, unit2 }, ... }
---   extraUnitEvents = { ... },
---
---   -- Whether the addon should run (spec/talent checks).
---   -- Core calls this to decide if alerts are active.
---   ShouldRun = function(self, db) end,
---
---   -- Heal Pet threshold: if true, the module uses the health curve system.
---   hasHealPet = true,
---
---   -- The alert index for the heal pet slot (for ColorCurve alpha).
---   healPetAlertIndex = 6,
---
---   -- Slash command extensions: { ["cmd"] = function(self, db) end, ... }
---   slashCommands = {},
--- }
-
-NPA.specModules     = {}       -- key → module table
-NPA.activeModule    = nil      -- currently active module (or nil)
-NPA.activeModuleKey = nil      -- key string of active module
+-- ============================================================
+NPA.specModules     = {}
+NPA.activeModule    = nil
+NPA.activeModuleKey = nil
 
 function NPA:RegisterSpec(key, mod)
     self.specModules[key] = mod
 end
 
--- Find the module for the current specialization.
 local function FindActiveModule()
     if not activeClass then return nil, nil end
     local currentSpecID = NPA.GetSpecID()
     if not currentSpecID then return nil, nil end
     for key, mod in pairs(NPA.specModules) do
-        if mod.class == activeClass and mod.specID == currentSpecID then
-            return key, mod
+        if mod.class == activeClass then
+            local ok, match = pcall(function()
+                return mod.specID == currentSpecID
+            end)
+            if ok and match then
+                return key, mod
+            end
         end
     end
     return nil, nil
 end
 
--- =============================================================
--- Class theme colors (used for panel borders, headers, accents)
--- =============================================================
-local CLASS_THEME_COLORS = {
-    HUNTER      = { r=0.6667, g=0.8275, b=0.4471 },  -- #AAD372
-    WARLOCK     = { r=0.5294, g=0.5333, b=0.9333 },  -- #8788EE
-    MAGE        = { r=0.2471, g=0.7804, b=0.9216 },  -- #3FC7EB
-    DEATHKNIGHT = { r=0.7686, g=0.1176, b=0.2275 },  -- #C41E3A
-}
-local CLASS_THEME_DEFAULT = { r=0, g=0.8, b=1.0 }  -- #00CCFF (unsupported class)
+local function IsFullyImplemented()
+    return NPA.activeModule ~= nil
+end
+
+-- ============================================================
+-- Class Theme Colors
+-- ============================================================
+-- Class theme colors are sourced live from Blizzard's master class-color table
+-- (C_ClassColor.GetClassColor → RAID_CLASS_COLORS) rather than hardcoded, so they
+-- self-correct if Blizzard ever retunes a class color. Verified ✅ in NemWiki's API
+-- ledger (2026-05-27). CLASS_THEME_DEFAULT is the fallback when class is unknown.
+local CLASS_THEME_DEFAULT = { r=0, g=0.8, b=1.0 }    -- #00CCFF
 
 local function GetClassTheme()
     local cls = activeClass
@@ -219,34 +135,87 @@ local function GetClassTheme()
         local _, c = UnitClass("player")
         cls = c
     end
-    local col = CLASS_THEME_COLORS[cls] or CLASS_THEME_DEFAULT
-    return col.r, col.g, col.b
+    if cls and C_ClassColor and C_ClassColor.GetClassColor then
+        local col = C_ClassColor.GetClassColor(cls)
+        if col then return col.r, col.g, col.b end
+    end
+    return CLASS_THEME_DEFAULT.r, CLASS_THEME_DEFAULT.g, CLASS_THEME_DEFAULT.b
 end
 
--- =============================================================
--- LibSharedMedia (optional — enhances font/sound dropdowns)
--- =============================================================
+-- ============================================================
+-- LibSharedMedia
+-- ============================================================
 local LSM = LibStub and LibStub("LibSharedMedia-3.0", true)
 
--- =============================================================
+-- ============================================================
 -- Sounds
--- =============================================================
+-- ============================================================
+local VOICE_CLIPS = {
+    ["Death Knight: Raise Ghoul"]   = NPA_MEDIA .. "deathknight_raise_ghoul.ogg",
+    ["Death Knight: Ghoul in CC"]   = NPA_MEDIA .. "deathknight_ghoul_in_cc.ogg",
+    ["Death Knight: Ghoul on Passive"]= NPA_MEDIA .. "deathknight_ghoul_on_passive.ogg",
+    ["Death Knight: Ghoul Not Attacking"]= NPA_MEDIA .. "deathknight_ghoul_not_attacking.ogg",
+    ["Hunter: Pet Died"]            = NPA_MEDIA .. "hunter_pet_died.ogg",
+    ["Hunter: Call Pet"]            = NPA_MEDIA .. "hunter_call_pet.ogg",
+    ["Hunter: Heal Pet"]            = NPA_MEDIA .. "hunter_heal_pet.ogg",
+    ["Hunter: Pet in CC"]           = NPA_MEDIA .. "hunter_pet_in_cc.ogg",
+    ["Hunter: Pet Not Attacking"]   = NPA_MEDIA .. "hunter_pet_not_attacking.ogg",
+    ["Hunter: Pet on Passive"]      = NPA_MEDIA .. "hunter_pet_on_passive.ogg",
+    ["Hunter: Toggle Pet Taunt"]    = NPA_MEDIA .. "hunter_toggle_pet_taunt.ogg",
+    ["Hunter: Wake Up Pet"]         = NPA_MEDIA .. "hunter_wake_up_pet.ogg",
+    ["Mage: Summon Water Ele"]      = NPA_MEDIA .. "mage_summon_water_ele.ogg",
+    ["Mage: Summon Wele"]           = NPA_MEDIA .. "mage_summon_wele.ogg",
+    ["Mage: Water Ele Died"]        = NPA_MEDIA .. "mage_water_ele_died.ogg",
+    ["Mage: Wele Died"]             = NPA_MEDIA .. "mage_wele_died.ogg",
+    ["Mage: Water Ele Health Low"]  = NPA_MEDIA .. "mage_water_ele_health_low.ogg",
+    ["Mage: Wele Health Low"]       = NPA_MEDIA .. "mage_wele_health_low.ogg",
+    ["Mage: Water Ele in CC"]       = NPA_MEDIA .. "mage_water_ele_in_cc.ogg",
+    ["Mage: Wele in CC"]            = NPA_MEDIA .. "mage_wele_in_cc.ogg",
+    ["Mage: Water Ele Not Attacking"]=NPA_MEDIA .. "mage_water_ele_not_attacking.ogg",
+    ["Mage: Wele Not Attacking"]    = NPA_MEDIA .. "mage_wele_not_attacking.ogg",
+    ["Mage: Water Ele on Passive"]  = NPA_MEDIA .. "mage_water_ele_on_passive.ogg",
+    ["Mage: Wele on Passive"]       = NPA_MEDIA .. "mage_wele_on_passive.ogg",
+    ["Warlock: Demon Died"]         = NPA_MEDIA .. "warlock_demon_died.ogg",
+    ["Warlock: Summon Demon"]       = NPA_MEDIA .. "warlock_summon_demon.ogg",
+    ["Warlock: Sacrifice Demon"]    = NPA_MEDIA .. "warlock_sacrifice_demon.ogg",
+    ["Warlock: Heal Demon"]         = NPA_MEDIA .. "warlock_heal_demon.ogg",
+    ["Warlock: Demon in CC"]        = NPA_MEDIA .. "warlock_demon_in_cc.ogg",
+    ["Warlock: Demon Not Attacking"]= NPA_MEDIA .. "warlock_demon_not_attacking.ogg",
+    ["Warlock: Demon on Passive"]   = NPA_MEDIA .. "warlock_demon_on_passive.ogg",
+    ["Warlock: Toggle Demon Taunt"] = NPA_MEDIA .. "warlock_toggle_demon_taunt.ogg",
+}
+
+-- Maps the active module's class token to the prefix used in VOICE_CLIPS keys.
+-- Drives the per-spec filter that hides other classes' TTS clips in sound dropdowns.
+local CLASS_VOICE_PREFIX = {
+    DEATHKNIGHT = "Death Knight",
+    HUNTER      = "Hunter",
+    MAGE        = "Mage",
+    WARLOCK     = "Warlock",
+}
+
+local function GetActiveClassVoicePrefix()
+    local mod = NPA.activeModule
+    if not mod then return nil end
+    return CLASS_VOICE_PREFIX[mod.class]
+end
+
 local BUNDLED_SOUNDS = {
-    ["Bell"]            = NPA_MEDIA .. "Bell.ogg",
-    ["Bleeper"]         = NPA_MEDIA .. "Bleeper.ogg",
-    ["Drums"]           = NPA_MEDIA .. "Drums.ogg",
-    ["HeartbeatSingle"] = NPA_MEDIA .. "HeartbeatSingle.ogg",
-    ["Lamp"]            = NPA_MEDIA .. "Lamp.ogg",
-    ["MetalGearSpotted"]= NPA_MEDIA .. "MetalGearSpotted.ogg",
-    ["OhNo"]            = NPA_MEDIA .. "OhNo.ogg",
-    ["Ping"]            = NPA_MEDIA .. "Ping.ogg",
-    ["Redfox"]          = NPA_MEDIA .. "Redfox.ogg",
-    ["RobotBlip"]       = NPA_MEDIA .. "RobotBlip.ogg",
-    ["SharpPunch"]      = NPA_MEDIA .. "SharpPunch.ogg",
-    ["Shotgun"]         = NPA_MEDIA .. "Shotgun.ogg",
-    ["Sonar"]           = NPA_MEDIA .. "Sonar.ogg",
-    ["Sonarr"]          = NPA_MEDIA .. "Sonarr.ogg",
-    ["WaterDrop"]       = NPA_MEDIA .. "WaterDrop.ogg",
+    ["Bell"]             = NPA_MEDIA .. "Bell.ogg",
+    ["Bleeper"]          = NPA_MEDIA .. "Bleeper.ogg",
+    ["Drums"]            = NPA_MEDIA .. "Drums.ogg",
+    ["HeartbeatSingle"]  = NPA_MEDIA .. "HeartbeatSingle.ogg",
+    ["Lamp"]             = NPA_MEDIA .. "Lamp.ogg",
+    ["MetalGearSpotted"] = NPA_MEDIA .. "MetalGearSpotted.ogg",
+    ["OhNo"]             = NPA_MEDIA .. "OhNo.ogg",
+    ["Ping"]             = NPA_MEDIA .. "Ping.ogg",
+    ["Redfox"]           = NPA_MEDIA .. "Redfox.ogg",
+    ["RobotBlip"]        = NPA_MEDIA .. "RobotBlip.ogg",
+    ["SharpPunch"]       = NPA_MEDIA .. "SharpPunch.ogg",
+    ["Shotgun"]          = NPA_MEDIA .. "Shotgun.ogg",
+    ["Sonar"]            = NPA_MEDIA .. "Sonar.ogg",
+    ["Sonarr"]           = NPA_MEDIA .. "Sonarr.ogg",
+    ["WaterDrop"]        = NPA_MEDIA .. "WaterDrop.ogg",
 }
 
 if LSM then
@@ -255,30 +224,63 @@ if LSM then
     end
 end
 
+if LSM then
+    for name, path in pairs(VOICE_CLIPS) do
+        LSM:Register("sound", name, path)
+    end
+end
+
 local function GetSoundPath(name)
     if not name then return BUNDLED_SOUNDS["RobotBlip"] end
     if BUNDLED_SOUNDS[name] then return BUNDLED_SOUNDS[name] end
+    if VOICE_CLIPS[name]    then return VOICE_CLIPS[name]    end
     if LSM then
-        local path = LSM:Fetch("sound", name)
-        if path then return path:gsub("/", "\\") end
+        local p = LSM:Fetch("sound", name)
+        if type(p) == "string" then return p:gsub("/", "\\") end
     end
     return BUNDLED_SOUNDS["RobotBlip"]
 end
 
--- Sorted sound list for dropdowns
+local function IsTTSSound(name)
+    return name and name:find("^%w+:") ~= nil
+end
+
+-- Resolves the effective sound name for an alert under the account-global
+-- model. Generic sounds (Bell, Sonar...) match every class and pass through.
+-- A TTS clip whose class prefix ("Hunter:", "Warlock:"...) doesn't match the
+-- active class falls back to that alert's per-spec default sound, so a shared
+-- global choice still plays correctly-flavored audio on each pet class.
+local function ClassAwareSoundName(alertKey)
+    local db = NPA.db
+    local stored = db and db[alertKey .. "SoundName"]
+    if stored and not IsTTSSound(stored) then return stored end
+    local prefix = GetActiveClassVoicePrefix()
+    if stored and prefix and stored:find("^" .. prefix .. ":") then
+        return stored
+    end
+    local mod = NPA.activeModule
+    if mod and mod.alerts then
+        for _, a in ipairs(mod.alerts) do
+            if a.key == alertKey then return a.defaultSound end
+        end
+    end
+    return stored
+end
+
 local SOUND_NAMES = {}
 do
     for k in pairs(BUNDLED_SOUNDS) do SOUND_NAMES[#SOUND_NAMES+1] = k end
-    table.sort(SOUND_NAMES)
+    for k in pairs(VOICE_CLIPS)    do SOUND_NAMES[#SOUND_NAMES+1] = k end
+    table.sort(SOUND_NAMES, function(a, b)
+        local aTTS, bTTS = IsTTSSound(a), IsTTSSound(b)
+        if aTTS ~= bTTS then return aTTS end
+        return a < b
+    end)
 end
 
--- Expose for spec modules
-NPA.GetSoundPath = GetSoundPath
-NPA.SOUND_NAMES  = SOUND_NAMES
-
--- =============================================================
+-- ============================================================
 -- Fonts
--- =============================================================
+-- ============================================================
 local BUNDLED_FONTS = {
     ["Accidental Presidency"]   = NPA_FONTS .. "Accidental Presidency.ttf",
     ["Action Man"]              = NPA_FONTS .. "ActionMan.ttf",
@@ -301,6 +303,7 @@ local BUNDLED_FONTS = {
     ["Disko"]                   = NPA_FONTS .. "Disko.ttf",
     ["Expressway Bold"]         = NPA_FONTS .. "Expressway-Bold.ttf",
     ["Fraks"]                   = NPA_FONTS .. "FRAKS___.ttf",
+    ["Fritz Quadrata"]          = NPA_FONTS .. "FRIZQUAD.TTF",
     ["Gotham Narrow Ultra"]     = NPA_FONTS .. "GothamNarrow-Ultra.ttf",
     ["Homespun"]                = NPA_FONTS .. "Homespun.ttf",
     ["Impact"]                  = NPA_FONTS .. "impact.ttf",
@@ -333,12 +336,17 @@ if LSM then
     end
 end
 
+local EXCLUDED_LSM_FONTS = {
+    ["Friz Quadrata TT"] = true,
+}
+
 local function GetCurrentFontPath()
-    local name = NemPetAlertsSV and NemPetAlertsSV.fontName or "Gotham Narrow Ultra"
+    local db = NPA.db
+    local name = db and db.fontName or "Gotham Narrow Ultra"
     if BUNDLED_FONTS[name] then return BUNDLED_FONTS[name] end
     if LSM then
-        local path = LSM:Fetch("font", name)
-        if path then return path:gsub("/", "\\") end
+        local p = LSM:Fetch("font", name)
+        if type(p) == "string" then return p:gsub("/", "\\") end
     end
     return ALERT_FONT
 end
@@ -349,40 +357,54 @@ do
     table.sort(FONT_NAMES)
 end
 
--- =============================================================
--- Saved-Variable Defaults (core only — module defaults merged in)
--- =============================================================
+-- ============================================================
+-- Saved-Variable Defaults
+-- ============================================================
 local CORE_DEFAULTS = {
-    enabled       = true,
-    flash         = true,
-    scale         = 1.0,
-    fontSize      = 25,
-    fontName      = "Gotham Narrow Ultra",
-    x             = 0,
-    y             = 140,
-    point         = "CENTER",
-    relativePoint = "CENTER",
-    relativeTo    = "UIParent",
-    healPetThreshold = 30,
-    alertColors   = {},
-    ver           = 2,
+    enabled          = true,
+    flash            = true,
+    fontSize         = 25,
+    fontName         = "Gotham Narrow Ultra",
+    x                = 0,
+    y                = 140,
+    point            = "CENTER",
+    relativePoint    = "CENTER",
+    relativeTo       = "UIParent",
+    healPetThreshold = 50,
+    ver              = 7,
 }
 
--- =============================================================
--- Runtime State (core only)
--- =============================================================
 local coreState = {
-    unlocked       = false,
-    testMode       = false,
-    testTicker     = nil,
-    currentMessage = nil,
+    unlocked         = false,
+    testMode         = false,
+    testTicker       = nil,
+    currentMessage   = nil,
+    lastDisplayedIdx = nil,
+    lastCueTime      = 0,
+    suppressCueUntil = 0,
 }
 
--- =============================================================
+local CUE_GRACE             = 0.5
+local ACTIVATION_SUPPRESS   = 1.0
+
+-- ============================================================
+-- Saved-Variable Key Routing
+-- ============================================================
+-- v7+ storage is a single flat table (NPA.db == NemPetAlertsSV). Every
+-- key — display globals and per-alert toggles/sounds/colors/text — lives
+-- at the top level, so all settings are account-global. GLOBAL_KEYS is
+-- retained ONLY for the legacy v3→v4 migration split below.
+local GLOBAL_KEYS = {
+    enabled = true, flash = true, fontSize = true, fontName = true,
+    x = true, y = true, point = true, relativePoint = true,
+    relativeTo = true, ver = true,
+}
+
+-- ============================================================
 -- Utility
--- =============================================================
-local function MergeDefaults(dst, defaults)
-    for k, v in pairs(defaults) do
+-- ============================================================
+local function MergeDefaults(dst, src)
+    for k, v in pairs(src) do
         if type(v) == "table" then
             if type(dst[k]) ~= "table" then dst[k] = {} end
             MergeDefaults(dst[k], v)
@@ -399,27 +421,144 @@ local function Msg(text)
     end
 end
 
--- Expose for spec modules
-NPA.Msg            = Msg
-NPA.MergeDefaults  = MergeDefaults
-NPA.issecretvalue  = issecretvalue
+local function ResolveRelativeFrame(db)
+    if db.relativeTo and db.relativeTo ~= "UIParent" then
+        return _G[db.relativeTo] or UIParent
+    end
+    return UIParent
+end
 
--- =============================================================
--- Sound Playback (generic — modules provide the key)
--- =============================================================
+NPA.Msg           = Msg
+NPA.issecretvalue = issecretvalue
+
+-- ============================================================
+-- Sound Playback
+-- ============================================================
+-- Voice cues (sound name with "^%w+:" prefix) are routed through
+-- a single-slot player with priority preemption, post-cue gap,
+-- combat-start grace window, and per-alert cooldown. Generic
+-- sounds (Bell, Sonar, etc.) bypass the queue entirely.
+
+local VOICE_PRIO_LOW      = 1
+local VOICE_PRIO_NORMAL   = 2
+local VOICE_PRIO_HIGH     = 3
+local VOICE_PRIO_CRITICAL = 4
+NPA.VOICE_PRIO_LOW      = VOICE_PRIO_LOW
+NPA.VOICE_PRIO_NORMAL   = VOICE_PRIO_NORMAL
+NPA.VOICE_PRIO_HIGH     = VOICE_PRIO_HIGH
+NPA.VOICE_PRIO_CRITICAL = VOICE_PRIO_CRITICAL
+
+local VOICE_GAP_SECONDS         = 0.7
+local VOICE_COMBAT_START_WINDOW = 1.5
+local VOICE_COOLDOWN_SECONDS    = 4.0
+local VOICE_CUE_DURATION_GUESS  = 1.5
+
+local voice = {
+    handle          = nil,
+    priority        = 0,
+    expectedEnd     = 0,
+    lastEnd         = 0,
+    combatStart     = 0,
+    combatStartUsed = false,
+    perAlertLast    = {},
+}
+
+local function _voiceStopCurrent()
+    if voice.handle and StopSound then
+        pcall(StopSound, voice.handle)
+    end
+    voice.handle      = nil
+    voice.priority    = 0
+    voice.lastEnd     = GetTime()
+    voice.expectedEnd = GetTime()
+end
+
+local function _voiceTick()
+    if voice.handle and GetTime() >= voice.expectedEnd then
+        voice.lastEnd  = voice.expectedEnd
+        voice.handle   = nil
+        voice.priority = 0
+    end
+end
+
+local function _voiceInCombatGrace()
+    local now = GetTime()
+    return (not voice.combatStartUsed)
+        and (now < voice.combatStart + VOICE_COMBAT_START_WINDOW)
+end
+
+local function _voiceTryPlay(path, alertKey, priority)
+    local now = GetTime()
+    _voiceTick()
+
+    -- Rule 1: per-alert cooldown.
+    local last = voice.perAlertLast[alertKey]
+    if last and now < last + VOICE_COOLDOWN_SECONDS then
+        return
+    end
+
+    -- Rules 2/3/4 (NHA-shaped): preempt path skips the gap entirely;
+    -- non-preempt path enforces the gap, with CRITICAL exempt and the
+    -- combat-start grace exempt.
+    if voice.handle then
+        if priority <= voice.priority then
+            return -- drop, current clip outranks new one
+        end
+        _voiceStopCurrent()
+    else
+        if now < voice.lastEnd + VOICE_GAP_SECONDS
+           and priority < VOICE_PRIO_CRITICAL
+           and not _voiceInCombatGrace() then
+            return
+        end
+    end
+
+    -- Rule 5: play and record state.
+    local willPlay, handle = PlaySoundFile(path, "Master")
+    if willPlay and handle then
+        voice.handle      = handle
+        voice.priority    = priority
+        voice.expectedEnd = now + VOICE_CUE_DURATION_GUESS
+        voice.perAlertLast[alertKey] = now
+        if _voiceInCombatGrace() then
+            voice.combatStartUsed = true
+        end
+    end
+end
+
 function NPA:PlayAlertSound(alertKey)
-    local db = NemPetAlertsSV
+    local db = self.db
     if not db then return end
+    if coreState and coreState.testMode then return end
+
     local enabledKey = alertKey .. "SoundEnabled"
     local nameKey    = alertKey .. "SoundName"
     if not db[enabledKey] then return end
-    local p = GetSoundPath(db[nameKey])
-    if p then PlaySoundFile(p, "Master") end
+
+    local soundName = ClassAwareSoundName(alertKey)
+    local path      = GetSoundPath(soundName)
+
+    local priority = VOICE_PRIO_NORMAL
+    local mod = NPA.activeModule
+    if mod and mod.alerts then
+        for _, alert in ipairs(mod.alerts) do
+            if alert.key == alertKey then
+                priority = alert.priority or VOICE_PRIO_NORMAL
+                break
+            end
+        end
+    end
+
+    if IsTTSSound(soundName) then
+        _voiceTryPlay(path, alertKey, priority)
+    else
+        PlaySoundFile(path, "Master")
+    end
 end
 
--- =============================================================
--- Shared Pet Utilities  (used by all spec modules)
--- =============================================================
+-- ============================================================
+-- Shared Pet Utilities
+-- ============================================================
 function NPA.PetExists()
     return UnitExists("pet")
 end
@@ -430,7 +569,7 @@ function NPA.PetAlive()
 end
 
 function NPA.ShouldSuppressNoPet()
-    local mounted = IsMounted()
+    local mounted = IsMounted and IsMounted()
     if issecretvalue and issecretvalue(mounted) then return true end
     if mounted then return true end
     if UnitOnTaxi("player") then return true end
@@ -444,9 +583,6 @@ function NPA.ShouldSuppressNoPet()
     return false
 end
 
--- =============================================================
--- CC Detection  (shared across all spec modules)
--- =============================================================
 function NPA.PetIsCC()
     if not NPA.PetAlive() then return false end
     if not (C_UnitAuras and C_UnitAuras.GetUnitAuras) then return false end
@@ -458,9 +594,6 @@ function NPA.PetIsCC()
     return false
 end
 
--- =============================================================
--- Passive Detection  (shared across all spec modules)
--- =============================================================
 function NPA.PetIsPassive()
     if not HasPetUI() or not NPA.PetAlive() then return false end
     if not InCombatLockdown() then return false end
@@ -473,10 +606,10 @@ function NPA.PetIsPassive()
     return false
 end
 
--- =============================================================
--- Pet Not Attacking Detection  (shared across all spec modules)
--- =============================================================
-local PET_NOT_ATTACKING_GRACE = 3  -- seconds before warning appears
+-- ============================================================
+-- Pet Not Attacking Detection
+-- ============================================================
+local PET_NOT_ATTACKING_GRACE = 3
 
 local petCombatDetector = nil
 local function GetPetCombatDetector()
@@ -487,6 +620,7 @@ local function GetPetCombatDetector()
         bar:SetStatusBarTexture("Interface\\TargetingFrame\\UI-StatusBar")
         bar:SetStatusBarColor(1, 1, 1, 1)
         bar:SetAlpha(0)
+        bar:EnableMouse(false)
         bar:Show()
         bar:SetMinMaxValues(0, 1)
         bar:SetValue(0)
@@ -507,7 +641,6 @@ local function ResolvePetCombatState(secretBool)
     return det:GetStatusBarTexture():IsShown()
 end
 
--- Shared not-attacking state (owned by core, read/written by modules)
 NPA.notAttackingState = {
     petNotAttackingStartTime = nil,
     petLastHadTargetTime     = nil,
@@ -541,9 +674,9 @@ function NPA.PetNotAttacking()
     return elapsed >= PET_NOT_ATTACKING_GRACE
 end
 
--- =============================================================
--- Taunt Group Condition  (shared by Hunter and Warlock specs)
--- =============================================================
+-- ============================================================
+-- Taunt Group Condition
+-- ============================================================
 function NPA.IsTauntGroupConditionMet()
     if not IsInGroup() or GetNumGroupMembers() < 5 then return false end
     local _, instanceType = IsInInstance()
@@ -564,17 +697,17 @@ function NPA.IsTauntGroupConditionMet()
     return instanceType == "party" or instanceType == "raid"
 end
 
--- =============================================================
--- Pet Health Warning  (ColorCurve pipeline for secret values)
--- =============================================================
-local HEAL_PET_THRESHOLD = 30
+-- ============================================================
+-- Pet Health Warning
+-- ============================================================
+local HEAL_PET_THRESHOLD = 50
 local petHealthCurve
 local petHealthCurveThreshold = nil
 
 function NPA.GetPetHealthWarningAlpha()
     if not NPA.PetExists() or UnitIsDead("pet") then return nil end
     if not UnitHealthPercent or not C_CurveUtil or not C_CurveUtil.CreateColorCurve then return nil end
-    local threshold = (NemPetAlertsSV and NemPetAlertsSV.healPetThreshold) or HEAL_PET_THRESHOLD
+    local threshold = (NPA.db and NPA.db.healPetThreshold) or HEAL_PET_THRESHOLD
     if not petHealthCurve or petHealthCurveThreshold ~= threshold then
         petHealthCurve = C_CurveUtil.CreateColorCurve()
         petHealthCurve:SetType(Enum.LuaCurveType.Step)
@@ -588,18 +721,39 @@ function NPA.GetPetHealthWarningAlpha()
     return a
 end
 
--- Expose curve threshold reset for options panel
 function NPA.ResetHealthCurve()
     petHealthCurveThreshold = nil
 end
 
--- =============================================================
--- Spec / Talent Helpers  (exposed for spec modules)
--- =============================================================
+-- ============================================================
+-- Spec Helpers
+-- ============================================================
 function NPA.GetSpecID()
     local idx = GetSpecialization()
     if not idx then return nil end
-    return GetSpecializationInfo(idx)
+
+    local ok, specID = pcall(GetSpecializationInfo, idx)
+    if ok and specID and not issecretvalue(specID) then
+        return specID
+    end
+
+    for i = 1, 4 do
+        local sOk, sID = pcall(GetSpecializationInfo, i)
+        if sOk and sID and not issecretvalue(sID) then
+            for _, mod in pairs(NPA.specModules) do
+                if mod.class == activeClass and mod.specID == sID then
+                    local checkOk, checkResult = pcall(function()
+                        return GetSpecialization() == i
+                    end)
+                    if checkOk and checkResult then
+                        return sID
+                    end
+                end
+            end
+        end
+    end
+
+    return nil
 end
 
 function NPA.IsSpellKnownByPlayer(spellID)
@@ -611,80 +765,71 @@ function NPA.IsSpellKnownByPlayer(spellID)
     return false
 end
 
--- =============================================================
--- Forward-declare Evaluate
--- =============================================================
 local Evaluate
 
--- =============================================================
--- Tickers
--- =============================================================
--- Pet health ticker: runs while a live pet exists for responsive
--- heal pet detection.
-local petHealthTicker = nil
-
-local function StartPetHealthTicker()
-    if petHealthTicker then return end
-    petHealthTicker = C_Timer.NewTicker(0.25, function()
-        if not NPA.PetExists() or UnitIsDead("pet") then
-            petHealthTicker:Cancel(); petHealthTicker = nil; return
-        end
+local evaluatePending = false
+local function ScheduleEvaluate(delay)
+    if evaluatePending then return end
+    evaluatePending = true
+    C_Timer.After(delay or 0, function()
+        evaluatePending = false
         Evaluate()
     end)
 end
 
-local function StopPetHealthTicker()
-    if petHealthTicker then petHealthTicker:Cancel(); petHealthTicker = nil end
-end
-
--- Expose for spec modules
-NPA.StartPetHealthTicker = StartPetHealthTicker
-NPA.StopPetHealthTicker  = StopPetHealthTicker
-
--- Module-owned tickers: modules can register/unregister their own
--- tickers via NPA.moduleTickers.  Core stops all on deactivation.
-NPA.moduleTickers = {}
-
-function NPA:StartModuleTicker(name, interval, func)
-    if self.moduleTickers[name] then return end
-    self.moduleTickers[name] = C_Timer.NewTicker(interval, func)
-end
-
-function NPA:StopModuleTicker(name)
-    if self.moduleTickers[name] then
-        self.moduleTickers[name]:Cancel()
-        self.moduleTickers[name] = nil
-    end
-end
-
-local function StopAllModuleTickers()
-    for name, ticker in pairs(NPA.moduleTickers) do
-        ticker:Cancel()
-    end
-    wipe(NPA.moduleTickers)
-end
-
--- =============================================================
+-- ============================================================
 -- Display Frame
--- =============================================================
--- Alert rows are built dynamically from the active module's alerts[].
--- alertRows[i] = {
---   textFS  = FontString,
---   key     = "petDead",
---   alert   = { ... },  -- ref to alert def
--- }
--- Special: healPetFrame + healFlashTicker for the health-curve slot.
--- testFS is used during test mode for the healPet slot to bypass
--- the healPetFrame alpha chain.
+-- ============================================================
+local function StopHealPetTicker()
+    local f = NPA.display
+    if not f then return end
+    if f.healPetAlphaTicker then
+        f.healPetAlphaTicker:Cancel()
+        f.healPetAlphaTicker = nil
+    end
+    if f.healPetFrame then
+        f.healPetFrame:SetAlpha(0)
+    end
+end
+
+local function StartHealPetTicker()
+    local f = NPA.display
+    if not f or f.healPetAlphaTicker then return end
+    f.healPetAlphaTicker = C_Timer.NewTicker(0.5, function()
+        SafeCall("HealPetAlphaTicker", function()
+            local db  = NPA.db
+            local mod = NPA.activeModule
+            if not db or not db.enabled then
+                f.healPetFrame:SetAlpha(0)
+                return
+            end
+            if coreState and coreState.testMode then
+                return -- test mode handles its own heal-pet visibility
+            end
+            if not mod or not mod.hasHealPet or not db.healPetEnabled then
+                f.healPetFrame:SetAlpha(0)
+                return
+            end
+            local a = NPA.GetPetHealthWarningAlpha()
+            if a == nil then
+                f.healPetFrame:SetAlpha(0)
+                return
+            end
+            f.healPetFrame:SetAlpha(a)
+            f.healPetFrame:Show()
+        end)
+    end)
+end
 
 local function CreateDisplay()
-    local db = NemPetAlertsSV
+    local db = NPA.db
+
     local f = CreateFrame("Frame", "NemPetAlertsFrame", UIParent,
-                          BackdropTemplateMixin and "BackdropTemplate" or nil)
-    f:SetSize(900, 150)
-    f:SetPoint("CENTER", UIParent, "CENTER", db.x or 0, db.y or 140)
+        BackdropTemplateMixin and "BackdropTemplate" or nil)
+    f:SetSize(900, 160)
+    f:SetPoint(db.point or "CENTER", ResolveRelativeFrame(db),
+               db.relativePoint or "CENTER", db.x or 0, db.y or 140)
     f:SetMovable(true)
-    f:EnableMouse(false)
     f:RegisterForDrag("LeftButton")
 
     f:SetScript("OnDragStart", function(self)
@@ -693,14 +838,13 @@ local function CreateDisplay()
     f:SetScript("OnDragStop", function(self)
         self:StopMovingOrSizing()
         local point, relativeTo, relativePoint, x, y = self:GetPoint()
-        NemPetAlertsSV.point         = point
-        NemPetAlertsSV.relativeTo    = (relativeTo and relativeTo ~= UIParent) and relativeTo:GetName() or "UIParent"
-        NemPetAlertsSV.relativePoint = relativePoint
-        NemPetAlertsSV.x = math_floor(x + 0.5)
-        NemPetAlertsSV.y = math_floor(y + 0.5)
+        NPA.db.point         = point
+        NPA.db.relativeTo    = (relativeTo and relativeTo ~= UIParent) and relativeTo:GetName() or "UIParent"
+        NPA.db.relativePoint = relativePoint
+        NPA.db.x             = math_floor(x + 0.5)
+        NPA.db.y             = math_floor(y + 0.5)
     end)
 
-    -- Flash animation
     local ag = f:CreateAnimationGroup()
     ag:SetLooping("REPEAT")
     local a1 = ag:CreateAnimation("Alpha")
@@ -711,30 +855,44 @@ local function CreateDisplay()
     f.flashGroup = ag
     f.alertRows  = {}
 
+    -- ============================================================
+    -- Heal-Pet Overlay Subframe
+    -- ============================================================
+    -- Created unconditionally so the ColorCurve alpha ticker
+    -- can drive visibility without nil checks. Position is
+    -- updated per-spec inside BuildAlertRows.
+    local hpf = CreateFrame("Frame", "NemPetAlertsHealPetFrame", f)
+    hpf:SetSize(900, 60)
+    hpf:SetPoint("CENTER", f, "CENTER", 0, 0)
+    hpf:SetAlpha(0)
+    hpf:Hide()
+    f.healPetFrame = hpf
+
     NPA.display = f
+
+    if NPA.db and NPA.db.enabled then
+        StartHealPetTicker()
+    end
 end
 
--- Build alert row FontStrings from the active module's alerts[].
 local function BuildAlertRows()
     local f   = NPA.display
-    local db  = NemPetAlertsSV
+    local db  = NPA.db
     local mod = NPA.activeModule
     if not f or not db or not mod then return end
 
-    -- Hide and release existing rows
     for _, row in ipairs(f.alertRows) do
         row.textFS:Hide()
     end
     wipe(f.alertRows)
 
-    -- Clean up healPet special frames
-    if f.healPetFrame then f.healPetFrame:Hide() end
+    if f.healPetFrame    then f.healPetFrame:Hide()    end
     if f.healFlashTicker then f.healFlashTicker:Hide() end
-    if f.testHealFS then f.testHealFS:Hide() end
+    if f.testHealFS      then f.testHealFS:Hide()      end
 
     local fp = GetCurrentFontPath()
     local fs = db.fontSize or 25
-    local sc = db.scale or 1.0
+    local scale = fs / 25
     local healPetIdx = mod.healPetAlertIndex
 
     for i, alert in ipairs(mod.alerts) do
@@ -742,20 +900,10 @@ local function BuildAlertRows()
                     or alert.defaultColor
                     or { r=1, g=1, b=1 }
 
-        -- Heal Pet slot uses a dedicated parent frame for ColorCurve alpha
         local parent = f
         if mod.hasHealPet and i == healPetIdx then
-            if not f.healPetFrame then
-                local hpf = CreateFrame("Frame", nil, f)
-                hpf:SetSize(900, 60)
-                hpf:SetPoint("CENTER", f, "CENTER", 0, alert.yOffset or 0)
-                hpf:SetAlpha(0)
-                hpf:Hide()
-                f.healPetFrame = hpf
-            else
-                f.healPetFrame:ClearAllPoints()
-                f.healPetFrame:SetPoint("CENTER", f, "CENTER", 0, alert.yOffset or 0)
-            end
+            f.healPetFrame:ClearAllPoints()
+            f.healPetFrame:SetPoint("CENTER", f, "CENTER", 0, (alert.yOffset or 0) * scale)
             parent = f.healPetFrame
         end
 
@@ -764,14 +912,13 @@ local function BuildAlertRows()
         textFS:SetTextColor(col.r, col.g, col.b)
         local customText = db[alert.key .. "AlertText"]
         textFS:SetText((customText and customText ~= "") and customText or alert.text)
-        textFS:SetScale(sc)
         textFS:SetJustifyH("CENTER")
         textFS:SetShadowOffset(2, -2)
 
         if mod.hasHealPet and i == healPetIdx then
             textFS:SetPoint("CENTER", f.healPetFrame, "CENTER", 0, 0)
         else
-            textFS:SetPoint("CENTER", f, "CENTER", 0, alert.yOffset or 0)
+            textFS:SetPoint("CENTER", f, "CENTER", 0, (alert.yOffset or 0) * scale)
         end
         textFS:Hide()
 
@@ -782,7 +929,6 @@ local function BuildAlertRows()
         }
     end
 
-    -- HealPet flash ticker (sine wave on alertFS alpha)
     if mod.hasHealPet and healPetIdx then
         local healFlashT = 0
         if not f.healFlashTicker then
@@ -793,7 +939,8 @@ local function BuildAlertRows()
             local row = f.alertRows[healPetIdx]
             if not row then return end
             local ts = row.textFS
-            if NemPetAlertsSV and NemPetAlertsSV.flash then
+            local sv = NPA.db
+            if sv and sv.flash then
                 healFlashT = healFlashT + dt
                 local a = 0.15 + 0.85 * (0.5 + 0.5 * math_sin(healFlashT * (math_pi * 2 / 0.9)))
                 ts:SetAlpha(a)
@@ -803,7 +950,6 @@ local function BuildAlertRows()
             end
         end)
 
-        -- Test mode FontString for heal pet (bypasses healPetFrame alpha chain)
         local def = mod.alerts[healPetIdx]
         local col = db.alertColors and db.alertColors[def.key]
                     or def.defaultColor or { r=1, g=1, b=1 }
@@ -812,48 +958,54 @@ local function BuildAlertRows()
         testFS:SetTextColor(col.r, col.g, col.b)
         local testCustomText = db[def.key .. "AlertText"]
         testFS:SetText((testCustomText and testCustomText ~= "") and testCustomText or def.text)
-        testFS:SetScale(sc)
         testFS:SetJustifyH("CENTER")
         testFS:SetShadowOffset(2, -2)
-        testFS:SetPoint("CENTER", f, "CENTER", 0, def.yOffset or 0)
+        testFS:SetPoint("CENTER", f, "CENTER", 0, (def.yOffset or 0) * scale)
         testFS:Hide()
         f.testHealFS = testFS
     end
+
 end
 
--- =============================================================
+-- ============================================================
 -- ApplyDisplaySettings
--- =============================================================
+-- ============================================================
 local function ApplyDisplaySettings()
-    local db = NemPetAlertsSV
+    local db = NPA.db
     local f  = NPA.display
     if not f or not db then return end
 
     f:ClearAllPoints()
-    local point        = db.point        or "CENTER"
-    local relativePoint = db.relativePoint or "CENTER"
-    local relativeTo   = (db.relativeTo and db.relativeTo ~= "UIParent" and _G[db.relativeTo]) or UIParent
-    f:SetPoint(point, relativeTo, relativePoint, db.x or 0, db.y or 140)
+    f:SetPoint(db.point or "CENTER", ResolveRelativeFrame(db),
+               db.relativePoint or "CENTER", db.x or 0, db.y or 140)
 
-    local fontPath = GetCurrentFontPath()
+    local fp = GetCurrentFontPath()
     local fs = db.fontSize or 25
-    local sc = db.scale or 1.0
+    local scale = fs / 25
+    local mod = NPA.activeModule
+    local healPetIdx = mod and mod.healPetAlertIndex
 
-    for _, row in ipairs(f.alertRows) do
+    for i, row in ipairs(f.alertRows) do
         local col = db.alertColors and db.alertColors[row.key]
                     or row.alert.defaultColor
                     or { r=1, g=1, b=1 }
-        row.textFS:SetFont(fontPath, fs, "OUTLINE")
-        row.textFS:SetScale(sc)
+        row.textFS:SetFont(fp, fs, "OUTLINE")
         row.textFS:SetTextColor(col.r, col.g, col.b)
         local customText = db[row.key .. "AlertText"]
         row.textFS:SetText((customText and customText ~= "") and customText or row.alert.text)
+
+        local y = (row.alert.yOffset or 0) * scale
+        if mod and mod.hasHealPet and i == healPetIdx and f.healPetFrame then
+            f.healPetFrame:ClearAllPoints()
+            f.healPetFrame:SetPoint("CENTER", f, "CENTER", 0, y)
+        else
+            row.textFS:ClearAllPoints()
+            row.textFS:SetPoint("CENTER", f, "CENTER", 0, y)
+        end
     end
 
     if f.testHealFS then
-        f.testHealFS:SetFont(fontPath, fs, "OUTLINE")
-        f.testHealFS:SetScale(sc)
-        local mod = NPA.activeModule
+        f.testHealFS:SetFont(fp, fs, "OUTLINE")
         if mod and mod.healPetAlertIndex then
             local def = mod.alerts[mod.healPetAlertIndex]
             if def then
@@ -862,6 +1014,8 @@ local function ApplyDisplaySettings()
                 f.testHealFS:SetTextColor(col.r, col.g, col.b)
                 local ct = db[def.key .. "AlertText"]
                 f.testHealFS:SetText((ct and ct ~= "") and ct or def.text)
+                f.testHealFS:ClearAllPoints()
+                f.testHealFS:SetPoint("CENTER", f, "CENTER", 0, (def.yOffset or 0) * scale)
             end
         end
     end
@@ -869,12 +1023,43 @@ local function ApplyDisplaySettings()
     f:EnableMouse(coreState.unlocked)
 end
 
--- Expose for spec modules
-NPA.ApplyDisplaySettings = ApplyDisplaySettings
+-- ============================================================
+-- Display-coupled audio cue
+-- ============================================================
+local function MaybeFireDisplayCue(newIdx)
+    if newIdx == coreState.lastDisplayedIdx then return end
+    coreState.lastDisplayedIdx = newIdx
+    if newIdx == nil then return end
+    if coreState.testMode then return end
+    if GetTime() < (coreState.suppressCueUntil or 0) then return end
 
--- =============================================================
--- SetDisplaySlot  (shows exactly one alert or clears all)
--- =============================================================
+    local mod = NPA.activeModule
+    if not mod or not mod.alerts or not mod.alerts[newIdx] then return end
+    local alert = mod.alerts[newIdx]
+    local alertKey = alert.key
+    if not alertKey then return end
+
+    local now      = GetTime()
+    local elapsed  = now - (coreState.lastCueTime or 0)
+    local critical = (alert.priority or VOICE_PRIO_NORMAL) >= VOICE_PRIO_CRITICAL
+
+    if critical or elapsed >= CUE_GRACE then
+        coreState.lastCueTime = now
+        NPA:PlayAlertSound(alertKey)
+    else
+        local targetIdx = newIdx
+        local targetKey = alertKey
+        C_Timer.After(CUE_GRACE - elapsed, function()
+            if coreState.lastDisplayedIdx ~= targetIdx then return end
+            coreState.lastCueTime = GetTime()
+            NPA:PlayAlertSound(targetKey)
+        end)
+    end
+end
+
+-- ============================================================
+-- SetDisplaySlot
+-- ============================================================
 local function SetDisplaySlot(idx)
     local f = NPA.display
     if not f or not f.alertRows then return end
@@ -893,6 +1078,7 @@ local function SetDisplaySlot(idx)
         if f.healFlashTicker then f.healFlashTicker:Hide() end
         if f.testHealFS then f.testHealFS:Hide() end
         coreState.currentMessage = nil
+        MaybeFireDisplayCue(nil)
         return
     end
 
@@ -918,134 +1104,140 @@ local function SetDisplaySlot(idx)
     if mod and mod.hasHealPet and idx == healPetIdx then
         if f.flashGroup:IsPlaying() then f.flashGroup:Stop() end
         f:SetAlpha(1)
-    elseif NemPetAlertsSV.flash then
+    elseif NPA.db.flash then
         if not f.flashGroup:IsPlaying() then f.flashGroup:Play() end
     else
         if f.flashGroup:IsPlaying() then f.flashGroup:Stop() end
         f:SetAlpha(1)
     end
+
+    MaybeFireDisplayCue(idx)
 end
 
--- Expose for spec modules
 NPA.SetDisplaySlot = SetDisplaySlot
 
--- =============================================================
--- PetNeedsHealing  (shared — always returns true if pet is alive;
--- actual threshold enforced by ColorCurve alpha)
--- =============================================================
+-- ============================================================
+-- PetNeedsHealing
+-- ============================================================
 function NPA.PetNeedsHealing()
     if not NPA.PetExists() or UnitIsDead("pet") then return false end
     return true
 end
 
--- =============================================================
--- Evaluate  (core wrapper)
--- =============================================================
+-- ============================================================
+-- Evaluate
+-- ============================================================
 Evaluate = function()
-    local db  = NemPetAlertsSV
-    local mod = NPA.activeModule
-    local f   = NPA.display
-    if not f then return end
+    SafeCall("Evaluate", function()
+        local db  = NPA.db
+        local mod = NPA.activeModule
+        local f   = NPA.display
+        if not f then return end
 
-    -- Disabled check first — even test mode respects the toggle
-    if not db or not db.enabled then
-        SetDisplaySlot(nil)
+        if not db or not db.enabled then
+            SetDisplaySlot(nil)
+            if coreState.testMode then
+                coreState.testMode = false
+                if coreState.testTicker then coreState.testTicker:Cancel(); coreState.testTicker = nil end
+            end
+            return
+        end
+
         if coreState.testMode then
-            coreState.testMode = false
-            if coreState.testTicker then coreState.testTicker:Cancel(); coreState.testTicker = nil end
-        end
-        return
-    end
+            if not mod then return end
+            local testSlots = mod.testSlots or {}
+            local healPetIdx = mod.healPetAlertIndex
 
-    -- Test mode
-    if coreState.testMode then
-        if not mod then return end
-        local testSlots = mod.testSlots or {}
-        local healPetIdx = mod.healPetAlertIndex
+            if f.testHealFS then
+                if healPetIdx and testSlots[healPetIdx] then
+                    f.testHealFS:Show()
+                else
+                    f.testHealFS:Hide()
+                end
+            end
+            if f.healPetFrame then
+                if f.healFlashTicker then f.healFlashTicker:Hide() end
+                f.healPetFrame:SetAlpha(0)
+                f.healPetFrame:Hide()
+            end
 
-        -- Use testHealFS for the heal pet slot (bypass ColorCurve chain)
-        if f.testHealFS then
-            if healPetIdx and testSlots[healPetIdx] then
-                f.testHealFS:Show()
+            for i, row in ipairs(f.alertRows) do
+                if not (mod.hasHealPet and i == healPetIdx) then
+                    if testSlots[i] then row.textFS:Show() else row.textFS:Hide() end
+                end
+            end
+
+            coreState.currentMessage = "TEST"
+            if NPA.db.flash then
+                if not f.flashGroup:IsPlaying() then f.flashGroup:Play() end
             else
-                f.testHealFS:Hide()
+                if f.flashGroup:IsPlaying() then f.flashGroup:Stop() end
+                f:SetAlpha(1)
+            end
+            return
+        end
+
+        if not mod then SetDisplaySlot(nil); return end
+        if mod.ShouldRun and not mod:ShouldRun(db) then
+            SetDisplaySlot(nil); return
+        end
+
+        if IsResting() then SetDisplaySlot(nil); return end
+
+        if mod.PreEvaluate then
+            SafeCall("PreEvaluate:" .. (mod.specName or "?"), function()
+                mod:PreEvaluate(db)
+            end)
+        end
+
+        local alertIdx = mod:GetHighestPriorityAlert(db)
+        SetDisplaySlot(alertIdx)
+
+        local healPetIdx = mod.healPetAlertIndex
+        if mod.hasHealPet and coreState.currentMessage == healPetIdx and f.healPetFrame then
+            local warningAlpha = NPA.GetPetHealthWarningAlpha()
+            if warningAlpha ~= nil then
+                pcall(f.healPetFrame.SetAlpha, f.healPetFrame, warningAlpha)
+            else
+                f.healPetFrame:SetAlpha(0)
             end
         end
-        -- Hide real heal pet system during test
-        if f.healPetFrame then
-            if f.healFlashTicker then f.healFlashTicker:Hide() end
-            f.healPetFrame:SetAlpha(0)
-            f.healPetFrame:Hide()
-        end
-
-        -- Show/hide all other slots
-        for i, row in ipairs(f.alertRows) do
-            if not (mod.hasHealPet and i == healPetIdx) then
-                if testSlots[i] then row.textFS:Show() else row.textFS:Hide() end
-            end
-        end
-
-        coreState.currentMessage = "TEST"
-        if NemPetAlertsSV.flash then
-            if not f.flashGroup:IsPlaying() then f.flashGroup:Play() end
-        else
-            if f.flashGroup:IsPlaying() then f.flashGroup:Stop() end
-            f:SetAlpha(1)
-        end
-        return
-    end
-
-    -- No module or module says don't run
-    if not mod then SetDisplaySlot(nil); return end
-    if mod.ShouldRun and not mod:ShouldRun(db) then
-        SetDisplaySlot(nil); return
-    end
-
-    -- Suppress all alerts while resting (in a city or inn)
-    if IsResting() then SetDisplaySlot(nil); return end
-
-    -- Pre-evaluate (module updates state, fires rising-edge sounds)
-    if mod.PreEvaluate then mod:PreEvaluate(db) end
-
-    -- Get the highest priority alert
-    local alertIdx = mod:GetHighestPriorityAlert(db)
-    SetDisplaySlot(alertIdx)
-
-    -- Heal Pet ColorCurve alpha
-    local healPetIdx = mod.healPetAlertIndex
-    if mod.hasHealPet and coreState.currentMessage == healPetIdx and f.healPetFrame then
-        local warningAlpha = NPA.GetPetHealthWarningAlpha()
-        if warningAlpha ~= nil then
-            pcall(f.healPetFrame.SetAlpha, f.healPetFrame, warningAlpha)
-        else
-            f.healPetFrame:SetAlpha(0)
-        end
-    end
+    end)
 end
 
--- Expose for spec modules
 NPA.Evaluate = function() Evaluate() end
 
--- =============================================================
+-- ============================================================
+-- Lock / Unlock
+-- ============================================================
+local function SetLockState(unlocked)
+    coreState.unlocked = unlocked
+    local f = NPA.display
+    if f then f:EnableMouse(unlocked) end
+    if NPA.lockBtn then
+        NPA.lockBtn:SetText(unlocked and "Lock Frame" or "Unlock Frame")
+    end
+    Msg(unlocked
+        and "Frame |cff00ff00unlocked|r — drag to reposition."
+         or "Frame |cffff4444locked|r.")
+end
+
+-- ============================================================
 -- Module Activation / Deactivation
--- =============================================================
+-- ============================================================
 local registeredExtraEvents = {}
 
 local function DeactivateCurrentModule()
     local mod = NPA.activeModule
     if not mod then return end
 
-    if mod.OnDeactivate then mod:OnDeactivate(NemPetAlertsSV) end
+    if mod.OnDeactivate then mod:OnDeactivate(NPA.db) end
     if mod.ClearAllState then mod:ClearAllState() end
 
-    -- Unregister extra events
     for _, ev in ipairs(registeredExtraEvents) do
         NPA:UnregisterEvent(ev)
     end
     wipe(registeredExtraEvents)
-
-    StopPetHealthTicker()
-    StopAllModuleTickers()
 
     NPA.activeModule    = nil
     NPA.activeModuleKey = nil
@@ -1057,21 +1249,22 @@ local function ActivateModule(key, mod)
     NPA.activeModule    = mod
     NPA.activeModuleKey = key
 
-    -- Merge module defaults into saved variables
     if mod.defaults then
-        MergeDefaults(NemPetAlertsSV, mod.defaults)
+        MergeDefaults(NPA.db, mod.defaults)
     end
 
-    -- Ensure alertColors exist for each alert
-    NemPetAlertsSV.alertColors = NemPetAlertsSV.alertColors or {}
+    -- Heal-pet sound is force-disabled: WoW's restricted-aura API blocks
+    -- reliable pet-health detection, so a heal cue would fire incorrectly.
+    NPA.db.healPetSoundEnabled = false
+
+    NPA.db.alertColors = NPA.db.alertColors or {}
     for _, alert in ipairs(mod.alerts) do
-        if not NemPetAlertsSV.alertColors[alert.key] then
-            NemPetAlertsSV.alertColors[alert.key] = CopyTable(alert.defaultColor
+        if not NPA.db.alertColors[alert.key] then
+            NPA.db.alertColors[alert.key] = CopyTable(alert.defaultColor
                 or { r=1, g=1, b=1 })
         end
     end
 
-    -- Register extra events
     if mod.extraEvents then
         for _, ev in ipairs(mod.extraEvents) do
             NPA:RegisterEvent(ev)
@@ -1085,92 +1278,250 @@ local function ActivateModule(key, mod)
         end
     end
 
-    -- Build display rows from module alerts
+    coreState.lastDisplayedIdx = nil
+    coreState.lastCueTime      = 0
+    coreState.suppressCueUntil = GetTime() + ACTIVATION_SUPPRESS
+
+    local activateOk = true
+    if mod.OnActivate then
+        activateOk = SafeCall("OnActivate:" .. (mod.specName or "?"), function()
+            mod:OnActivate(NPA.db)
+        end)
+    end
+
+    if not activateOk then
+        -- Rollback: tear down the half-activated module so the addon
+        -- ends in a clean "no module" state rather than half-swapped.
+        DeactivateCurrentModule()
+        return
+    end
+
+    -- Build rows only after activation is confirmed: a failed OnActivate then
+    -- rolls back without leaking frames, and rows pick up any alert changes it made.
     BuildAlertRows()
     ApplyDisplaySettings()
 
-    -- Activate module
-    if mod.OnActivate then mod:OnActivate(NemPetAlertsSV) end
     Evaluate()
-end
 
--- =============================================================
--- Init: Database
--- =============================================================
-function NPA:InitDatabase()
-    NemPetAlertsSV = NemPetAlertsSV or CopyTable(CORE_DEFAULTS)
-    local db = NemPetAlertsSV
-    local wasNew = (db.ver or 0) < 2
-    if wasNew then
-        -- v2: modular architecture migration — reset if old monolithic format
-        if db.ver == 1 then
-            -- Preserve position and display settings from v1
-            local saved = {
-                enabled       = db.enabled,
-                flash         = db.flash,
-                scale         = db.scale,
-                fontSize      = db.fontSize,
-                fontName      = db.fontName,
-                x             = db.x,
-                y             = db.y,
-                point         = db.point,
-                relativePoint = db.relativePoint,
-                relativeTo    = db.relativeTo,
-                healPetThreshold = db.healPetThreshold,
-            }
-            -- Preserve per-alert sound settings from v1 using old key names
-            local soundMigration = {
-                sound            = db.sound,
-                ccSoundName      = db.ccSoundName,
-                petDeadSound     = db.petDeadSound,
-                petDeadSoundName = db.petDeadSoundName,
-            }
-            -- Preserve alert enable/disable state
-            local alertsMigration = db.alerts and CopyTable(db.alerts) or nil
-            -- Preserve alert colors
-            local colorsMigration = db.alertColors and CopyTable(db.alertColors) or nil
-
-            NemPetAlertsSV = CopyTable(CORE_DEFAULTS)
-            db = NemPetAlertsSV
-            for k, v in pairs(saved) do
-                if v ~= nil then db[k] = v end
-            end
-            -- Migrate old sound keys to new format
-            if soundMigration.sound ~= nil then
-                db.ccSoundEnabled = soundMigration.sound
-            end
-            if soundMigration.ccSoundName then
-                db.ccSoundName = soundMigration.ccSoundName
-            end
-            if soundMigration.petDeadSound ~= nil then
-                db.petDeadSoundEnabled = soundMigration.petDeadSound
-            end
-            if soundMigration.petDeadSoundName then
-                db.petDeadSoundName = soundMigration.petDeadSoundName
-            end
-            -- Migrate alert toggles from old nested table to flat keys
-            if alertsMigration then
-                for alertKey, enabled in pairs(alertsMigration) do
-                    db[alertKey .. "Enabled"] = enabled
-                end
-            end
-            -- Migrate alert colors
-            if colorsMigration then
-                db.alertColors = colorsMigration
-            end
-        else
-            NemPetAlertsSV = CopyTable(CORE_DEFAULTS)
-            db = NemPetAlertsSV
-        end
-        db.ver = 2
-    else
-        MergeDefaults(db, CORE_DEFAULTS)
+    -- Spec switch with the panel open: rebuild its per-spec rows.
+    if NPA.optionsPanel and NPA.optionsPanel:IsShown() then
+        NPA.optionsPanel:Hide()
+        NPA.optionsPanel:Show()
     end
 end
 
--- =============================================================
+-- ============================================================
+-- Init: Database
+-- ============================================================
+function NPA:InitDatabase()
+    NemPetAlertsSV = NemPetAlertsSV or {}
+    local db = NemPetAlertsSV
+
+    -- Legacy normalization runs only for pre-v7 data. A flat v7 db carries a
+    -- top-level db.ver=7 (and no db.global), so it skips straight to the merge.
+    if (db.ver or 0) < 7 then
+    local isV4 = (type(db.global) == "table" and type(db.specs) == "table")
+
+    if not isV4 then
+        -- ===== Pre-v4 flat migrations: bring existing flat data to v3 first =====
+        if (db.ver or 0) < 2 then
+            if db.ver == 1 then
+                local saved = {
+                    enabled          = db.enabled,
+                    flash            = db.flash,
+                    fontSize         = db.fontSize,
+                    fontName         = db.fontName,
+                    x                = db.x,
+                    y                = db.y,
+                    point            = db.point,
+                    relativePoint    = db.relativePoint,
+                    relativeTo       = db.relativeTo,
+                    healPetThreshold = db.healPetThreshold,
+                }
+                local soundMigration = {
+                    sound            = db.sound,
+                    ccSoundName      = db.ccSoundName,
+                    petDeadSound     = db.petDeadSound,
+                    petDeadSoundName = db.petDeadSoundName,
+                }
+                local alertsMigration = db.alerts and CopyTable(db.alerts) or nil
+                local colorsMigration = db.alertColors and CopyTable(db.alertColors) or nil
+
+                wipe(db)
+                for k, v in pairs(CORE_DEFAULTS) do
+                    if type(v) == "table" then db[k] = CopyTable(v) else db[k] = v end
+                end
+                for k, v in pairs(saved) do
+                    if v ~= nil then db[k] = v end
+                end
+                if soundMigration.sound ~= nil then
+                    db.ccSoundEnabled = soundMigration.sound
+                end
+                if soundMigration.ccSoundName then
+                    db.ccSoundName = soundMigration.ccSoundName
+                end
+                if soundMigration.petDeadSound ~= nil then
+                    db.petDeadSoundEnabled = soundMigration.petDeadSound
+                end
+                if soundMigration.petDeadSoundName then
+                    db.petDeadSoundName = soundMigration.petDeadSoundName
+                end
+                if alertsMigration then
+                    for alertKey, enabled in pairs(alertsMigration) do
+                        db[alertKey .. "Enabled"] = enabled
+                    end
+                end
+                if colorsMigration then
+                    db.alertColors = colorsMigration
+                end
+            elseif (db.ver or 0) == 0 and next(db) == nil then
+                for k, v in pairs(CORE_DEFAULTS) do
+                    if type(v) == "table" then db[k] = CopyTable(v) else db[k] = v end
+                end
+            else
+                wipe(db)
+                for k, v in pairs(CORE_DEFAULTS) do
+                    if type(v) == "table" then db[k] = CopyTable(v) else db[k] = v end
+                end
+            end
+            db.ver = 2
+        end
+        if (db.ver or 0) < 3 then
+            db.scale = nil
+            db.ver   = 3
+        end
+
+        -- ===== v3 → v4: split flat → { global, specs, _pendingSpecMigration } =====
+        local newGlobal = {}
+        local pendingSpecData = {}
+        for k, v in pairs(db) do
+            if GLOBAL_KEYS[k] then
+                newGlobal[k] = v
+            else
+                pendingSpecData[k] = v
+            end
+        end
+        wipe(db)
+        db.global = newGlobal
+        db.specs  = {}
+        if next(pendingSpecData) then
+            db._pendingSpecMigration = pendingSpecData
+        end
+        db.global.ver = 4
+    end
+
+    -- ===== v5 → v6: rename CC alert key "notAttacking" → "petInCC" =====
+    -- The CC alert's key is the stem for all its per-spec saved-variable
+    -- fields. Renaming the key (to disambiguate it from the separate
+    -- "petNotAttacking" alert) renames those fields too; copy each old value
+    -- to its new name so existing users keep their CC toggle, sound, color,
+    -- and custom text.
+    if (db.global.ver or 0) < 6 then
+        local CC_RENAME = {
+            notAttackingEnabled      = "petInCCEnabled",
+            notAttackingSoundEnabled = "petInCCSoundEnabled",
+            notAttackingSoundName    = "petInCCSoundName",
+            notAttackingAlertText    = "petInCCAlertText",
+        }
+        local function migrateCCKeys(t)
+            if type(t) ~= "table" then return end
+            for oldKey, newKey in pairs(CC_RENAME) do
+                if t[oldKey] ~= nil and t[newKey] == nil then
+                    t[newKey] = t[oldKey]
+                end
+                t[oldKey] = nil
+            end
+            if type(t.alertColors) == "table" then
+                local c = t.alertColors
+                if c.notAttacking ~= nil and c.petInCC == nil then
+                    c.petInCC = c.notAttacking
+                end
+                c.notAttacking = nil
+            end
+        end
+        if type(db.specs) == "table" then
+            for _, specData in pairs(db.specs) do
+                migrateCCKeys(specData)
+            end
+        end
+        migrateCCKeys(db._pendingSpecMigration)
+        db.global.ver = 6
+    end
+
+    -- ===== v6 → v7: collapse { global, specs } → flat account-global =====
+    -- db.global, every db.specs[*] bucket, and the ancient
+    -- db._pendingSpecMigration blob fold into one flat table. Conflicts (a key
+    -- the user set differently across specs) resolve current-class-first,
+    -- first-writer-wins. Warlock buckets' fakeDeath* keys remap to
+    -- sacrificeDemon* so they don't collide with Hunter's fakeDeath* (Wake Up
+    -- Pet) in the now-shared flat namespace.
+    if type(db.global) == "table" then
+        local flat = {}
+        for k, v in pairs(db.global) do
+            flat[k] = (type(v) == "table") and CopyTable(v) or v
+        end
+
+        local WARLOCK_RENAME = {
+            fakeDeathEnabled      = "sacrificeDemonEnabled",
+            fakeDeathSoundEnabled = "sacrificeDemonSoundEnabled",
+            fakeDeathSoundName    = "sacrificeDemonSoundName",
+            fakeDeathAlertText    = "sacrificeDemonAlertText",
+        }
+
+        local function FoldBucket(bucket, isWarlock)
+            if type(bucket) ~= "table" then return end
+            for k, v in pairs(bucket) do
+                if k == "alertColors" and type(v) == "table" then
+                    flat.alertColors = flat.alertColors or {}
+                    for ck, cv in pairs(v) do
+                        local nk = (isWarlock and ck == "fakeDeath") and "sacrificeDemon" or ck
+                        if flat.alertColors[nk] == nil then
+                            flat.alertColors[nk] = (type(cv) == "table") and CopyTable(cv) or cv
+                        end
+                    end
+                else
+                    local nk = (isWarlock and WARLOCK_RENAME[k]) or k
+                    if flat[nk] == nil then
+                        flat[nk] = (type(v) == "table") and CopyTable(v) or v
+                    end
+                end
+            end
+        end
+
+        local _, playerClass = UnitClass("player")
+        local ordered = {}
+        if type(db.specs) == "table" then
+            for specKey in pairs(db.specs) do ordered[#ordered + 1] = specKey end
+        end
+        table.sort(ordered, function(a, b)
+            local ca = NPA.specModules[a] and NPA.specModules[a].class
+            local cb = NPA.specModules[b] and NPA.specModules[b].class
+            local pa = (ca == playerClass) and 0 or 1
+            local pb = (cb == playerClass) and 0 or 1
+            if pa ~= pb then return pa < pb end
+            return a < b
+        end)
+        for _, specKey in ipairs(ordered) do
+            local cls = NPA.specModules[specKey] and NPA.specModules[specKey].class
+            FoldBucket(db.specs[specKey], cls == "WARLOCK")
+        end
+
+        FoldBucket(db._pendingSpecMigration, false)
+
+        wipe(db)
+        for k, v in pairs(flat) do db[k] = v end
+    end
+    db.ver = 7
+    end
+
+    MergeDefaults(db, CORE_DEFAULTS)
+    db.ver = 7
+    self.db = db
+end
+
+-- ============================================================
 -- Test Mode
--- =============================================================
+-- ============================================================
 function NPA:ToggleTest()
     if not IsFullyImplemented() then return end
     coreState.testMode = not coreState.testMode
@@ -1182,6 +1533,7 @@ function NPA:ToggleTest()
         if coreState.testTicker then coreState.testTicker:Cancel(); coreState.testTicker = nil end
         coreState.currentMessage = nil
         SetDisplaySlot(nil)
+        coreState.suppressCueUntil = GetTime() + ACTIVATION_SUPPRESS
     end
     if NPA.testBtn then
         NPA.testBtn:SetText(coreState.testMode and "Stop Test" or "Test")
@@ -1189,21 +1541,9 @@ function NPA:ToggleTest()
     Evaluate()
 end
 
--- =============================================================
--- Lock / Unlock
--- =============================================================
-local function SetLockState(unlocked)
-    coreState.unlocked = unlocked
-    ApplyDisplaySettings()
-    if NPA.lockBtn then
-        NPA.lockBtn:SetText(unlocked and "Lock Frame" or "Unlock Frame")
-    end
-    Msg(unlocked and "Frame unlocked. Drag to reposition." or "Frame locked.")
-end
-
--- =============================================================
+-- ============================================================
 -- Init: Slash Commands
--- =============================================================
+-- ============================================================
 function NPA:InitCommands()
     local function HandleNPACommand(input)
         input = (input or ""):lower():match("^%s*(.-)%s*$")
@@ -1217,43 +1557,44 @@ function NPA:InitCommands()
             return
         end
 
-        -- Check for module-specific slash commands
         local mod = self.activeModule
         if mod and mod.slashCommands and mod.slashCommands[input] then
-            mod.slashCommands[input](mod, NemPetAlertsSV)
+            mod.slashCommands[input](mod, self.db)
             return
         end
 
         if input == "on" then
-            NemPetAlertsSV.enabled = true
+            self.db.enabled = true
+            StartHealPetTicker()
             Evaluate()
             Msg("Addon |cff00ff41enabled|r.")
             return
         end
 
         if input == "off" then
-            NemPetAlertsSV.enabled = false
+            self.db.enabled = false
+            StopHealPetTicker()
+            if mod and mod.ClearAllState then mod:ClearAllState() end
             SetDisplaySlot(nil)
             if NPA.display then NPA.display:SetAlpha(1) end
-            coreState.testMode = false
-            if coreState.testTicker then coreState.testTicker:Cancel(); coreState.testTicker = nil end
-            if NPA.testBtn then NPA.testBtn:SetText("Test") end
+            if coreState.testMode then NPA:ToggleTest() end
             Evaluate()
             Msg("Addon |cffff4040disabled|r.")
             return
         end
 
         if input == "toggle" then
-            if NemPetAlertsSV.enabled then
-                NemPetAlertsSV.enabled = false
+            if self.db.enabled then
+                self.db.enabled = false
+                StopHealPetTicker()
+                if mod and mod.ClearAllState then mod:ClearAllState() end
                 SetDisplaySlot(nil)
                 if NPA.display then NPA.display:SetAlpha(1) end
-                coreState.testMode = false
-                if coreState.testTicker then coreState.testTicker:Cancel(); coreState.testTicker = nil end
-                if NPA.testBtn then NPA.testBtn:SetText("Test") end
+                if coreState.testMode then NPA:ToggleTest() end
                 Msg("Addon |cffff4040disabled|r.")
             else
-                NemPetAlertsSV.enabled = true
+                self.db.enabled = true
+                StartHealPetTicker()
                 Msg("Addon |cff00ff41enabled|r.")
             end
             Evaluate()
@@ -1261,7 +1602,7 @@ function NPA:InitCommands()
         end
 
         if input == "test" then
-            if not NemPetAlertsSV.enabled then
+            if not self.db.enabled then
                 Msg("Addon is disabled. Use |cffffd700/npa on|r first.")
                 return
             end
@@ -1271,13 +1612,23 @@ function NPA:InitCommands()
         end
 
         if input == "status" then
-            local enabledStr = NemPetAlertsSV.enabled
+            local enabledStr = self.db.enabled
                 and "|cff00ff41Enabled|r" or "|cffff4040Disabled|r"
             local testStr = coreState.testMode
                 and "|cffffff00On|r" or "Off"
             local classStr = activeClass or "Unknown"
             Msg(string_format("Status: %s  |  Test Mode: %s  |  Class: %s",
                 enabledStr, testStr, classStr))
+
+            local errorCount = 0
+            for _ in pairs(NPA._errors) do errorCount = errorCount + 1 end
+            Msg(string_format("Errors logged: %d", errorCount))
+            if errorCount > 0 then
+                for label, entry in pairs(NPA._errors) do
+                    Msg(string_format("  [%s] %s (at %.1fs)",
+                        label, entry.msg or "?", entry.time or 0))
+                end
+            end
             return
         end
 
@@ -1321,7 +1672,6 @@ function NPA:InitCommands()
             return
         end
 
-        -- Default: open options
         if NPA.optionsCategoryID then
             if InCombatLockdown() then
                 Msg("Can't open options during combat.")
@@ -1355,11 +1705,11 @@ function NPA:InitCommands()
     end
 end
 
--- =============================================================
+-- ============================================================
 -- Debug Command
--- =============================================================
+-- ============================================================
 function NPA:RunDebug()
-    local db = NemPetAlertsSV
+    local db  = self.db
     local mod = self.activeModule
     local ok, err
 
@@ -1368,7 +1718,7 @@ function NPA:RunDebug()
     ok, err = pcall(function()
         Msg("class=" .. tostring(activeClass)
             .. "  module=" .. tostring(self.activeModuleKey)
-            .. "  enabled=" .. tostring(db.enabled))
+            .. "  enabled=" .. tostring(db and db.enabled))
     end)
     if not ok then Msg("ERROR(1): " .. tostring(err)) end
 
@@ -1379,12 +1729,9 @@ function NPA:RunDebug()
     end)
     if not ok then Msg("ERROR(2): " .. tostring(err)) end
 
-    if mod and mod.Debug then
-        mod:Debug(db)
-    end
-
     ok, err = pcall(function()
         Msg("inGroup=" .. tostring(IsInGroup())
+            .. "  inRaid=" .. tostring(IsInRaid())
             .. "  members=" .. tostring(GetNumGroupMembers()))
     end)
     if not ok then Msg("ERROR(3): " .. tostring(err)) end
@@ -1395,22 +1742,27 @@ function NPA:RunDebug()
             .. "  notAttacking=" .. tostring(NPA.PetNotAttacking()))
     end)
     if not ok then Msg("ERROR(4): " .. tostring(err)) end
+
+    if mod and mod.Debug then
+        mod:Debug(db)
+    end
 end
 
--- =============================================================
+-- ============================================================
 -- Options Panel
--- =============================================================
+-- ============================================================
 function NPA:BuildOptionsPanel()
-    local db = NemPetAlertsSV
+    local db = self.db
     local PW = 668
 
     local panel = CreateFrame("Frame", "NemPetAlertsOptionsPanel", UIParent)
     panel.name = "Nem: Pet Alerts"
+    NPA.optionsPanel = panel
     panel:SetSize(PW, 580)
 
-    -- ================================================================
-    -- SCROLL SYSTEM — pure Lua, ultra-slim scrollbar overlapping right margin
-    -- ================================================================
+    -- ============================================================
+    -- Scroll System
+    -- ============================================================
     local SCROLL_TOP = -62
     local SCROLL_BTM =  56
     local SB_W       =  4
@@ -1535,7 +1887,7 @@ function NPA:BuildOptionsPanel()
         C_Timer.After(0.05, function() sbBar:UpdateScrollbar() end)
     end
 
-    local CPW = CW - 4  -- content panel width (4px inset so right border is visible)
+    local CPW = CW - 4
 
     local function SetUIFont(fs, size, flags)
         fs:SetFont(UI_FONT, size or 12, flags or "")
@@ -1573,9 +1925,12 @@ function NPA:BuildOptionsPanel()
                 box:SetBackdropBorderColor(r, g, b, 0.3)
             end
         end
+        thumbTex:SetColorTexture(r, g, b, 0.85)
     end
 
-    -- ---- UI Helpers ----
+    -- ============================================================
+    -- UI Helpers
+    -- ============================================================
     local function SectionBox(x, y, w, h)
         local box = CreateFrame("Frame", nil, scrollContent,
             BackdropTemplateMixin and "BackdropTemplate" or nil)
@@ -1656,7 +2011,6 @@ function NPA:BuildOptionsPanel()
                 local function ApplyColor(nr, ng, nb)
                     swatchTex:SetColorTexture(nr, ng, nb, 1)
                     db.alertColors[colorKey] = { r=nr, g=ng, b=nb }
-                    -- Update display row color
                     local f = NPA.display
                     if f then
                         for _, row in ipairs(f.alertRows) do
@@ -1664,7 +2018,6 @@ function NPA:BuildOptionsPanel()
                                 row.textFS:SetTextColor(nr, ng, nb)
                             end
                         end
-                        -- Keep testHealFS in sync
                         local mod = NPA.activeModule
                         if mod and mod.healPetAlertIndex then
                             local hpAlert = mod.alerts[mod.healPetAlertIndex]
@@ -1673,40 +2026,18 @@ function NPA:BuildOptionsPanel()
                             end
                         end
                     end
-                    -- Keep threshold box in sync with healPet color
-                    if NPA.healPetThreshBox then
-                        local mod = NPA.activeModule
-                        if mod and mod.healPetAlertIndex then
-                            local hpAlert = mod.alerts[mod.healPetAlertIndex]
-                            if hpAlert and hpAlert.key == colorKey then
-                                NPA.healPetThreshBox:SetTextColor(nr, ng, nb)
-                            end
-                        end
-                    end
                 end
 
-                if ColorPickerFrame.SetupColorPickerAndShow then
-                    ColorPickerFrame:SetupColorPickerAndShow({
-                        swatchFunc = function()
-                            local nr, ng, nb = ColorPickerFrame:GetColorRGB()
-                            ApplyColor(nr, ng, nb)
-                        end,
-                        cancelFunc = function(prev)
-                            ApplyColor(prev.r, prev.g, prev.b)
-                        end,
-                        r=cr, g=cg, b=cb2,
-                    })
-                else
-                    ColorPickerFrame:SetColorRGB(cr, cg, cb2)
-                    ColorPickerFrame.func = function()
+                ColorPickerFrame:SetupColorPickerAndShow({
+                    swatchFunc = function()
                         local nr, ng, nb = ColorPickerFrame:GetColorRGB()
                         ApplyColor(nr, ng, nb)
-                    end
-                    ColorPickerFrame.cancelFunc = function()
-                        ApplyColor(cr, cg, cb2)
-                    end
-                    ColorPickerFrame:Show()
-                end
+                    end,
+                    cancelFunc = function(prev)
+                        ApplyColor(prev.r, prev.g, prev.b)
+                    end,
+                    r=cr, g=cg, b=cb2,
+                })
             end)
             swatchBtn:SetScript("OnEnter", function(s) s:SetAlpha(0.65) end)
             swatchBtn:SetScript("OnLeave", function(s) s:SetAlpha(1) end)
@@ -1814,16 +2145,46 @@ function NPA:BuildOptionsPanel()
         cb.Refresh = function() cb:SetChecked(getEnabled()) end
 
         local dd = CreateFrame("DropdownButton", nil, parent, "WowStyle1DropdownTemplate")
-        dd:SetPoint("LEFT", cb, "RIGHT", 324, 0)
-        dd:SetWidth(160)
+        dd:SetPoint("LEFT", cb, "RIGHT", 284, 0)
+        dd:SetWidth(220)
         local function SetupMenu()
             dd:SetupMenu(function(_, root)
+                root:SetScrollMode(12 * 16)
+                local activePrefix = GetActiveClassVoicePrefix()
+                local ttsMatch     = activePrefix and ("^" .. activePrefix .. ":") or nil
+                local function ShowName(name)
+                    if IsTTSSound(name) then
+                        return ttsMatch and name:find(ttsMatch) ~= nil
+                    end
+                    return true
+                end
+                local hasTTS, hasGeneric = false, false
                 for _, name in ipairs(SOUND_NAMES) do
-                    local n = name
-                    root:CreateRadio(n,
-                        function() return getSound() == n end,
-                        function() setSound(n); dd:SetDefaultText(n) end,
-                        n)
+                    if ShowName(name) then
+                        if IsTTSSound(name) then hasTTS = true else hasGeneric = true end
+                    end
+                end
+                local showHeaders = hasTTS and hasGeneric
+                local ttsHeader, genericHeader = false, false
+                for _, name in ipairs(SOUND_NAMES) do
+                    if ShowName(name) then
+                        if IsTTSSound(name) then
+                            if showHeaders and not ttsHeader then
+                                root:CreateTitle("Class TTS")
+                                ttsHeader = true
+                            end
+                        else
+                            if showHeaders and not genericHeader then
+                                root:CreateTitle("Generic")
+                                genericHeader = true
+                            end
+                        end
+                        local n = name
+                        root:CreateRadio(n,
+                            function() return getSound() == n end,
+                            function() setSound(n); dd:SetDefaultText(n) end,
+                            n)
+                    end
                 end
             end)
         end
@@ -1844,9 +2205,9 @@ function NPA:BuildOptionsPanel()
         return cb, dd
     end
 
-    -- ================================================================
-    -- TITLE
-    -- ================================================================
+    -- ============================================================
+    -- Title
+    -- ============================================================
     local title = panel:CreateFontString(nil, "OVERLAY")
     title:SetPoint("TOP", panel, "TOP", 0, -16)
     SetUIFont(title, 20, "OUTLINE")
@@ -1862,9 +2223,9 @@ function NPA:BuildOptionsPanel()
     subtitle:SetText("Pet status warnings for all pet classes. Type /npa to open this panel.")
     subtitle:SetTextColor(0.75, 0.75, 0.75)
 
-    -- ================================================================
-    -- DISPLAY
-    -- ================================================================
+    -- ============================================================
+    -- Display
+    -- ============================================================
     local displayBox = SectionBox(0, 0, CPW, 155)
     SectionHeader(displayBox, "Display", 8, -6)
 
@@ -1873,11 +2234,14 @@ function NPA:BuildOptionsPanel()
         function(v)
             db.enabled = v and true or false
             if not db.enabled then
+                StopHealPetTicker()
                 SetDisplaySlot(nil)
                 if NPA.display then NPA.display:SetAlpha(1) end
                 coreState.testMode = false
                 if coreState.testTicker then coreState.testTicker:Cancel(); coreState.testTicker = nil end
                 if NPA.testBtn then NPA.testBtn:SetText("Test") end
+            else
+                StartHealPetTicker()
             end
         end)
 
@@ -1895,58 +2259,112 @@ function NPA:BuildOptionsPanel()
             end
         end)
 
-    -- Sliders (right column of Display, no font dropdown here)
-    sliders.scale = MakeSlider(scrollContent, "Alert Text Scale", 50, 200, 10, 358, -24, 270,
-        function() return math_floor((db.scale or 1.0) * 100 + 0.5) end,
-        function(v) db.scale = v / 100; ApplyDisplaySettings() end,
-        function(v) return string_format("%.1f", v / 100) end)
-    if sliders.scale then
-        for _, child in next, { sliders.scale:GetChildren() } do
-            if child.Low then child.Low:SetText(""); child.High:SetText("") end
-        end
-    end
 
-    sliders.fontSize = MakeSlider(scrollContent, "Font Size", 1, 100, 1, 358, -84, 270,
+    sliders.fontSize = MakeSlider(scrollContent, "Font Size", 1, 100, 1, 322, -24, 270,
         function() return db.fontSize or 25 end,
         function(v) db.fontSize = v; ApplyDisplaySettings() end,
         nil)
 
-    -- ================================================================
-    -- SOUNDS (built dynamically from active module)
-    -- ================================================================
+    local fontDDLabel = displayBox:CreateFontString(nil, "OVERLAY")
+    fontDDLabel:SetPoint("TOPLEFT", 322, -92)
+    SetUIFont(fontDDLabel, 12)
+    fontDDLabel:SetText("Alert Font")
+    fontDDLabel:SetTextColor(1, 1, 1)
+
+    local fontPool = {}
+    local fontDD = CreateFrame("DropdownButton", "NemPetAlertsFontDrop",
+                               displayBox, "WowStyle1DropdownTemplate")
+    fontDD:SetPoint("TOPLEFT", 322, -108)
+    fontDD:SetWidth(220)
+    fontDD:SetDefaultText(db.fontName or "Gotham Narrow Ultra")
+    NPA.fontDropdown = fontDD
+
+    local function BuildFontMenu()
+        local fonts = {}
+        for name, path in pairs(BUNDLED_FONTS) do fonts[name] = path end
+        if LSM then
+            local lsmFonts = LSM:HashTable(LSM.MediaType and LSM.MediaType.FONT or "font")
+            if lsmFonts then
+                for fontName, fontPath in pairs(lsmFonts) do
+                    if not fonts[fontName] and not EXCLUDED_LSM_FONTS[fontName] then
+                        fonts[fontName] = fontPath:gsub("/", "\\")
+                    end
+                end
+            end
+        end
+        local sortedNames = {}
+        for name in pairs(fonts) do sortedNames[#sortedNames + 1] = name end
+        table.sort(sortedNames)
+        fontDD:SetupMenu(function(_, rootDescription)
+            rootDescription:SetScrollMode(12 * 16)
+            for index, fontName in ipairs(sortedNames) do
+                local fontPath = fonts[fontName]
+                local n = fontName
+                local button = rootDescription:CreateButton(
+                    "                                        ",
+                    function()
+                        db.fontName = n
+                        fontDD:SetDefaultText(n)
+                        ApplyDisplaySettings()
+                    end)
+                button:AddInitializer(function(btn)
+                    local fd = fontPool[index]
+                    if not fd then
+                        fd = fontDD:CreateFontString(nil, "BACKGROUND")
+                        fontPool[index] = fd
+                    end
+                    fd:SetParent(btn)
+                    fd:ClearAllPoints()
+                    fd:SetPoint("LEFT", btn, "LEFT", 5, 0)
+                    fd:SetFont(fontPath, 12)
+                    fd:SetText(n)
+                    fd:Show()
+                end)
+            end
+        end)
+    end
+    hooksecurefunc(fontDD, "OnMenuClosed", function()
+        for _, fs2 in pairs(fontPool) do fs2:Hide() end
+    end)
+    C_Timer.After(0, BuildFontMenu)
+    fontDD.Refresh = function()
+        fontDD:SetDefaultText(db.fontName or "Gotham Narrow Ultra")
+        BuildFontMenu()
+    end
+
+    -- ============================================================
+    -- Sounds
+    -- ============================================================
     local soundBox = SectionBox(0, -163, CPW, 130)
     SectionHeader(soundBox, "Sounds", 8, -6)
 
-    -- ================================================================
-    -- ALERTS (built dynamically from active module)
-    -- ================================================================
+    -- ============================================================
+    -- Alerts
+    -- ============================================================
     local alertBox = SectionBox(0, -301, CPW, 161)
     SectionHeader(alertBox, "Alerts", 8, -6)
 
     local alertCheckboxes = {}
 
-    -- ================================================================
-    -- ALERT OPTIONS (4th section — font, heal threshold, alert texts)
-    -- ================================================================
-    local alertOptionsBox = SectionBox(0, -470, CPW, 100)  -- height set dynamically in OnShow
+    -- ============================================================
+    -- Alert Options
+    -- ============================================================
+    local alertOptionsBox = SectionBox(0, -470, CPW, 100)
     SectionHeader(alertOptionsBox, "Alert Options", 8, -6)
 
-    local alertOptionsWidgets = {}  -- tracked for hide/show/wipe on rebuild
+    local alertOptionsWidgets = {}
 
-    -- ================================================================
-    -- BUTTONS
-    -- ================================================================
+    -- ============================================================
+    -- Buttons
+    -- ============================================================
     local testBtn = CreateFrame("Button", nil, panel, "UIPanelButtonTemplate")
-    testBtn:SetSize(110, 26)
+    testBtn:SetSize(125, 26)
     testBtn:SetText("Test")
-    testBtn:SetScript("OnClick", function()
-        if not IsFullyImplemented() then return end
-        NPA:ToggleTest()
-    end)
+    testBtn:SetScript("OnClick", function() NPA:ToggleTest() end)
     NPA.testBtn = testBtn
 
     local lockBtn = CreateFrame("Button", nil, panel, "UIPanelButtonTemplate")
-    lockBtn:SetSize(120, 26)
+    lockBtn:SetSize(125, 26)
     lockBtn:SetText("Unlock Frame")
     lockBtn:SetScript("OnClick", function()
         SetLockState(not coreState.unlocked)
@@ -1954,7 +2372,7 @@ function NPA:BuildOptionsPanel()
     NPA.lockBtn = lockBtn
 
     local resetBtn = CreateFrame("Button", nil, panel, "UIPanelButtonTemplate")
-    resetBtn:SetSize(120, 26)
+    resetBtn:SetSize(125, 26)
     resetBtn:SetText("Center Position")
     resetBtn:SetScript("OnClick", function()
         db.x             = CORE_DEFAULTS.x
@@ -1967,53 +2385,62 @@ function NPA:BuildOptionsPanel()
     end)
 
     local restoreBtn = CreateFrame("Button", nil, panel, "UIPanelButtonTemplate")
-    restoreBtn:SetSize(130, 26)
+    restoreBtn:SetSize(125, 26)
     restoreBtn:SetText("Restore Defaults")
     restoreBtn:SetScript("OnClick", function()
         local mod = NPA.activeModule
-        -- Reset core display settings
-        db.scale    = CORE_DEFAULTS.scale
-        db.fontSize = CORE_DEFAULTS.fontSize
-        db.fontName = CORE_DEFAULTS.fontName
-        db.x        = CORE_DEFAULTS.x
-        db.y        = CORE_DEFAULTS.y
+
+        -- Globals (display + frame position)
+        db.fontSize      = CORE_DEFAULTS.fontSize
+        db.fontName      = CORE_DEFAULTS.fontName
+        db.x             = CORE_DEFAULTS.x
+        db.y             = CORE_DEFAULTS.y
         db.point         = CORE_DEFAULTS.point
         db.relativePoint = CORE_DEFAULTS.relativePoint
         db.relativeTo    = CORE_DEFAULTS.relativeTo
-        db.healPetThreshold = CORE_DEFAULTS.healPetThreshold
-        -- Reset alert colors and texts for active module
-        if mod then
+
+        -- Factory-reset the active spec's per-alert keys in the flat table:
+        -- toggles, sound enables/names, and custom text for every alert this
+        -- spec defines, then re-seed from mod.defaults + alert defaultColors.
+        if mod and mod.alerts then
             for _, alert in ipairs(mod.alerts) do
                 local k = alert.key
-                if alert.defaultColor and db.alertColors then
-                    db.alertColors[k] = {
-                        r = alert.defaultColor.r,
-                        g = alert.defaultColor.g,
-                        b = alert.defaultColor.b,
-                    }
-                end
-                db[k .. "AlertText"] = nil
+                db[k .. "Enabled"]      = nil
+                db[k .. "SoundEnabled"] = nil
+                db[k .. "SoundName"]    = nil
+                db[k .. "AlertText"]    = nil
+            end
+            if mod.defaults then
+                MergeDefaults(NPA.db, mod.defaults)
+            end
+            NPA.db.healPetSoundEnabled = false
+            NPA.db.healPetThreshold    = CORE_DEFAULTS.healPetThreshold
+            NPA.db.alertColors = NPA.db.alertColors or {}
+            for _, alert in ipairs(mod.alerts) do
+                NPA.db.alertColors[alert.key] = CopyTable(alert.defaultColor
+                    or { r=1, g=1, b=1 })
             end
         end
+
         NPA.ResetHealthCurve()
         ApplyDisplaySettings()
-        -- Refresh the panel
         if panel:IsShown() then panel:Hide(); panel:Show() end
         Msg("Defaults restored.")
     end)
     NPA.restoreBtn = restoreBtn
 
     local btnSpacing = 10
-    local totalBtnW = 110 + 120 + 120 + 130 + (btnSpacing * 3)
-    local btnStartX = math_floor((PW - totalBtnW) / 2) - 8
-    testBtn:SetPoint("TOPLEFT",  btnStartX, -552)
+    local btnW       = 125
+    local totalBtnW  = (btnW * 4) + (btnSpacing * 3)
+    local btnStartX  = math_floor((PW - totalBtnW) / 2) - 8
+    testBtn:SetPoint("TOPLEFT",  btnStartX, -553)
     lockBtn:SetPoint("LEFT",    testBtn,    "RIGHT", btnSpacing, 0)
     resetBtn:SetPoint("LEFT",   lockBtn,    "RIGHT", btnSpacing, 0)
     restoreBtn:SetPoint("LEFT", resetBtn,   "RIGHT", btnSpacing, 0)
 
-    -- ================================================================
-    -- CONTENT AREA BACKGROUND (solid black behind unsupported text)
-    -- ================================================================
+    -- ============================================================
+    -- Content Area Background
+    -- ============================================================
     local contentBG = CreateFrame("Frame", nil, panel,
         BackdropTemplateMixin and "BackdropTemplate" or nil)
     contentBG:SetPoint("TOPLEFT",     panel, "TOPLEFT",     0, SCROLL_TOP)
@@ -2024,10 +2451,9 @@ function NPA:BuildOptionsPanel()
         contentBG:SetBackdropColor(0, 0, 0, 1)
     end
 
-    -- ================================================================
-    -- INITIAL STATE: hide all content sections at build time.
-    -- OnShow will show them if a supported spec is active.
-    -- ================================================================
+    -- ============================================================
+    -- Initial State
+    -- ============================================================
     subtitle:Hide()
     viewport:Hide(); sbBar:Hide()
     displayBox:Hide()
@@ -2041,10 +2467,9 @@ function NPA:BuildOptionsPanel()
     for _, cb in pairs(checkboxes) do cb:Hide() end
     for _, sl in pairs(sliders) do sl:Hide() end
 
-    -- ================================================================
-    -- UNSUPPORTED SPEC TEXT (parented to contentBG, auto-shows/hides)
-    -- Text is set at build time — this IS the default panel state.
-    -- ================================================================
+    -- ============================================================
+    -- Unsupported Spec Text
+    -- ============================================================
     local unsupportedHeader = contentBG:CreateFontString(nil, "OVERLAY")
     unsupportedHeader:SetPoint("CENTER", contentBG, "CENTER", 0, 12)
     SetUIFont(unsupportedHeader, 18, "OUTLINE")
@@ -2059,9 +2484,9 @@ function NPA:BuildOptionsPanel()
     unsupportedSub:SetText("Only Pet Specs Supported")
     unsupportedSub:SetTextColor(0, 0.8, 1.0)
 
-    -- ================================================================
-    -- VERSION FOOTER
-    -- ================================================================
+    -- ============================================================
+    -- Version Footer
+    -- ============================================================
     local version = panel:CreateFontString(nil, "OVERLAY")
     version:SetPoint("BOTTOMRIGHT", panel, "BOTTOMRIGHT", -16, 8)
     SetUIFont(version, 10)
@@ -2069,11 +2494,10 @@ function NPA:BuildOptionsPanel()
     version:SetTextColor(THEME_R, THEME_G, THEME_B, 0.6)
     themeFS[#themeFS + 1] = { fs=version, alpha=0.6 }
 
-    -- ================================================================
-    -- OnShow: rebuild dynamic sections from active module
-    -- ================================================================
+    -- ============================================================
+    -- OnShow
+    -- ============================================================
 
-    -- Helper: hide all content sections and buttons (unsupported state)
     local function HideAllContent()
         subtitle:Hide()
         viewport:Hide(); sbBar:Hide()
@@ -2091,11 +2515,9 @@ function NPA:BuildOptionsPanel()
         for _, dd in pairs(soundDDs) do dd:Hide() end
         for _, cb in pairs(alertCheckboxes) do cb:Hide() end
         for _, w in ipairs(alertOptionsWidgets) do if w.Hide then w:Hide() end end
-        if NPA.healPetThreshBox then NPA.healPetThreshBox:Hide() end
         contentBG:Show()
     end
 
-    -- Helper: show all content sections and buttons (supported state)
     local function ShowAllContent()
         subtitle:Show()
         viewport:Show()
@@ -2126,7 +2548,9 @@ function NPA:BuildOptionsPanel()
         local mod = NPA.activeModule
         if not mod then return end
 
-        -- ── Rebuild Sound Rows ─────────────────────────────
+        -- ============================================================
+        -- Rebuild Sound Rows
+        -- ============================================================
         for _, cb in pairs(soundCheckboxes) do cb:Hide() end
         for _, dd in pairs(soundDDs) do dd:Hide() end
         wipe(soundCheckboxes)
@@ -2134,7 +2558,7 @@ function NPA:BuildOptionsPanel()
 
         local soundRowCount = 0
         for _, alert in ipairs(mod.alerts) do
-            if alert.defaultSound then
+            if alert.defaultSound and not alert.noSound then
                 soundRowCount = soundRowCount + 1
                 local k = alert.key
                 local y = -28 - (soundRowCount - 1) * 40
@@ -2142,15 +2566,14 @@ function NPA:BuildOptionsPanel()
                     alert.soundLabel or alert.label, y,
                     function() return db[k .. "SoundEnabled"] end,
                     function(v) db[k .. "SoundEnabled"] = v end,
-                    function() return db[k .. "SoundName"] end,
+                    function() return ClassAwareSoundName(k) end,
                     function(v) db[k .. "SoundName"] = v end)
                 soundCheckboxes[k] = cbS
                 soundDDs[k]        = ddS
             end
         end
 
-        -- Resize soundBox and reposition alertBox below it
-        local soundBoxH = 30 + math_max(soundRowCount, 1) * 40 + 8
+        local soundBoxH = math_max(soundRowCount, 1) * 40 + 36
         soundBox:SetHeight(soundBoxH)
 
         local soundBoxY = -163
@@ -2158,18 +2581,18 @@ function NPA:BuildOptionsPanel()
         alertBox:ClearAllPoints()
         alertBox:SetPoint("TOPLEFT", 0, alertBoxY)
 
-        -- ── Rebuild Alert Rows ─────────────────────────────
+        -- ============================================================
+        -- Rebuild Alert Rows
+        -- ============================================================
         for _, cb in pairs(alertCheckboxes) do cb:Hide() end
         wipe(alertCheckboxes)
 
-        local alertCount = 0
-        for _, alert in ipairs(mod.alerts) do
-            alertCount = alertCount + 1
-            local k = alert.key
-            local col   = (alertCount - 1) % 2
-            local row   = math_floor((alertCount - 1) / 2)
-            local xPos  = col == 0 and 20 or 330
-            local yPos  = alertBoxY - 30 - row * 24
+        for i, alert in ipairs(mod.alerts) do
+            local k     = alert.key
+            local col   = (i - 1) % 2
+            local row   = math_floor((i - 1) / 2)
+            local xPos  = col == 0 and 8 or 318
+            local yPos  = alertBoxY - 30 - row * 28
             alertCheckboxes[k] = MakeAlertRow(scrollContent,
                 alert.label, xPos, yPos,
                 function() return db[k .. "Enabled"] end,
@@ -2177,159 +2600,170 @@ function NPA:BuildOptionsPanel()
                 k)
         end
 
-        -- Resize alertBox and reposition alertOptionsBox below it
         local alertRows  = math_floor((#mod.alerts + 1) / 2)
-        local alertBoxH  = 30 + alertRows * 24 + 12
+        local alertBoxH  = 30 + alertRows * 28 + 12
         alertBox:SetHeight(alertBoxH)
 
         local alertOptionsY = alertBoxY - alertBoxH - 8
         alertOptionsBox:ClearAllPoints()
         alertOptionsBox:SetPoint("TOPLEFT", 0, alertOptionsY)
 
-        -- ── Rebuild Alert Options Section ──────────────────
+        -- ============================================================
+        -- Rebuild Alert Options Section
+        -- ============================================================
         for _, w in ipairs(alertOptionsWidgets) do if w.Hide then w:Hide() end end
         wipe(alertOptionsWidgets)
-        if NPA.healPetThreshBox then NPA.healPetThreshBox:Hide() end
 
-        local aoCursor = -30  -- Y cursor inside alertOptionsBox
+        local AO_SPEC_TO_TEXT_GAP = 10
+        local specCursorY = -30
 
-        -- Font dropdown
-        local fontPool = {}
-        local fontDD = CreateFrame("DropdownButton", "NemPetAlertsFontDrop",
-                                   alertOptionsBox, "WowStyle1DropdownTemplate")
-        fontDD:SetPoint("TOPLEFT", 10, aoCursor)
-        fontDD:SetWidth(220)
-        fontDD:SetDefaultText(db.fontName or "Gotham Narrow Ultra")
-        alertOptionsWidgets[#alertOptionsWidgets + 1] = fontDD
-        NPA.fontDropdown = fontDD
+        local SPEC_ROW_H = 26
+        local specHelpers = {
+            alertOptionsBox = alertOptionsBox,
+            db              = db,
+        }
 
-        local function BuildFontMenu()
-            local fonts = {}
-            for name, path in pairs(BUNDLED_FONTS) do fonts[name] = path end
-            if LSM then
-                local lsmFonts = LSM:HashTable(LSM.MediaType and LSM.MediaType.FONT or "font")
-                if lsmFonts then
-                    for fontName, fontPath in pairs(lsmFonts) do
-                        if not fonts[fontName] then fonts[fontName] = fontPath:gsub("/", "\\") end
-                    end
+        function specHelpers:MakeCheckbox(label, getter, setter)
+            local cb = CreateFrame("CheckButton", nil, alertOptionsBox, "UICheckButtonTemplate")
+            cb:SetPoint("TOPLEFT", 10, specCursorY)
+            cb:SetChecked(getter())
+            cb:SetScript("OnClick", function(self) setter(self:GetChecked()); Evaluate() end)
+            local lbl = cb:CreateFontString(nil, "OVERLAY")
+            lbl:SetPoint("LEFT", cb, "RIGHT", 2, 0)
+            SetUIFont(lbl, 12)
+            lbl:SetText(label)
+            lbl:SetTextColor(1, 1, 1)
+            alertOptionsWidgets[#alertOptionsWidgets + 1] = cb
+            specCursorY = specCursorY - SPEC_ROW_H
+            return cb
+        end
+
+        function specHelpers:MakeCheckboxAt(label, xOff, getter, setter)
+            local cb = CreateFrame("CheckButton", nil, alertOptionsBox, "UICheckButtonTemplate")
+            cb:SetPoint("TOPLEFT", xOff, specCursorY + SPEC_ROW_H)
+            cb:SetChecked(getter())
+            cb:SetScript("OnClick", function(self) setter(self:GetChecked()); Evaluate() end)
+            local lbl = cb:CreateFontString(nil, "OVERLAY")
+            lbl:SetPoint("LEFT", cb, "RIGHT", 2, 0)
+            SetUIFont(lbl, 12)
+            lbl:SetText(label)
+            lbl:SetTextColor(1, 1, 1)
+            alertOptionsWidgets[#alertOptionsWidgets + 1] = cb
+            return cb
+        end
+
+        function specHelpers:MakeCheckboxRow(label1, get1, set1, label2, get2, set2)
+            self:MakeCheckbox(label1, get1, set1)
+            self:MakeCheckboxAt(label2, 200, get2, set2)
+        end
+
+        function specHelpers:MakeNumericInput(label, minV, maxV, getter, setter)
+            local lbl = alertOptionsBox:CreateFontString(nil, "OVERLAY")
+            lbl:SetPoint("TOPLEFT", 10, specCursorY - 4)
+            SetUIFont(lbl, 12)
+            lbl:SetText(label)
+            lbl:SetTextColor(1, 1, 1)
+            alertOptionsWidgets[#alertOptionsWidgets + 1] = lbl
+
+            local box = CreateFrame("EditBox", nil, alertOptionsBox, "InputBoxTemplate")
+            box:SetPoint("LEFT", lbl, "RIGHT", 8, 0)
+            box:SetSize(40, 18)
+            box:SetAutoFocus(false)
+            box:SetMaxLetters(4)
+            box:SetFontObject("GameFontWhite")
+            box:SetJustifyH("CENTER")
+            box:SetText(tostring(getter()))
+            box:SetCursorPosition(0)
+            box:SetTextColor(THEME_R, THEME_G, THEME_B)
+            themeFS[#themeFS + 1] = { setColor = function(r, g, b) box:SetTextColor(r, g, b) end }
+            local function Commit()
+                local v = tonumber(box:GetText())
+                if v then
+                    v = math_max(minV, math_min(maxV, math_floor(v + 0.5)))
+                    setter(v)
                 end
+                box:SetText(tostring(getter()))
+                box:SetCursorPosition(0)
+                box:ClearFocus()
             end
-            local sortedNames = {}
-            for name in pairs(fonts) do sortedNames[#sortedNames + 1] = name end
-            table.sort(sortedNames)
-            fontDD:SetupMenu(function(_, rootDescription)
-                rootDescription:SetScrollMode(12 * 16)
-                for index, fontName in ipairs(sortedNames) do
-                    local fontPath = fonts[fontName]
-                    local n = fontName
-                    local button = rootDescription:CreateButton(
-                        "                                        ",
-                        function()
-                            db.fontName = n
-                            fontDD:SetDefaultText(n)
-                            ApplyDisplaySettings()
-                        end)
-                    button:AddInitializer(function(btn)
-                        local fd = fontPool[index]
-                        if not fd then
-                            fd = fontDD:CreateFontString(nil, "BACKGROUND")
-                            fontPool[index] = fd
-                        end
-                        fd:SetParent(btn)
-                        fd:ClearAllPoints()
-                        fd:SetPoint("LEFT", btn, "LEFT", 5, 0)
-                        fd:SetFont(fontPath, 12)
-                        fd:SetText(n)
-                        fd:Show()
-                    end)
-                end
+            box:SetScript("OnEnterPressed",  Commit)
+            box:SetScript("OnEditFocusLost", Commit)
+            box:SetScript("OnEscapePressed", function(self)
+                self:SetText(tostring(getter()))
+                self:SetCursorPosition(0)
+                self:ClearFocus()
             end)
-        end
-        hooksecurefunc(fontDD, "OnMenuClosed", function()
-            for _, fs2 in pairs(fontPool) do fs2:Hide() end
-        end)
-        C_Timer.After(0, BuildFontMenu)
-        fontDD.Refresh = function()
-            fontDD:SetDefaultText(db.fontName or "Gotham Narrow Ultra")
-            BuildFontMenu()
+            alertOptionsWidgets[#alertOptionsWidgets + 1] = box
+
+            specCursorY = specCursorY - 28
+            return box
         end
 
-        aoCursor = aoCursor - 36  -- dd + gap
+        function specHelpers:MakeCheckboxWithNumeric(label1, get1, set1, label2, get2, set2,
+                                                     numLabel, numMin, numMax, numGetter, numSetter)
+            local rowY = specCursorY
+            self:MakeCheckbox(label1, get1, set1)
+            self:MakeCheckboxAt(label2, 200, get2, set2)
 
-        -- Heal Pet threshold (if this spec has it)
-        if mod.hasHealPet and mod.healPetAlertIndex then
-            local hpAlert = mod.alerts[mod.healPetAlertIndex]
-            if hpAlert then
-                local hpLbl = alertOptionsBox:CreateFontString(nil, "OVERLAY")
-                hpLbl:SetPoint("TOPLEFT", 10, aoCursor - 4)
-                SetUIFont(hpLbl, 12)
-                hpLbl:SetText("Heal Pet Threshold")
-                hpLbl:SetTextColor(1, 1, 1)
-                alertOptionsWidgets[#alertOptionsWidgets + 1] = hpLbl
+            local numLbl = alertOptionsBox:CreateFontString(nil, "OVERLAY")
+            numLbl:SetPoint("TOPLEFT", 325, rowY - 4)
+            SetUIFont(numLbl, 12)
+            numLbl:SetText(numLabel)
+            numLbl:SetTextColor(1, 1, 1)
+            alertOptionsWidgets[#alertOptionsWidgets + 1] = numLbl
 
-                if not NPA.healPetThreshBox then
-                    local threshBox = CreateFrame("EditBox", nil, alertOptionsBox, "InputBoxTemplate")
-                    threshBox:SetSize(36, 18)
-                    threshBox:SetAutoFocus(false)
-                    threshBox:SetMaxLetters(3)
-                    threshBox:SetFontObject("GameFontWhite")
-                    threshBox:SetJustifyH("CENTER")
-                    NPA.healPetThreshBox = threshBox
-
-                    local pctLabel = alertOptionsBox:CreateFontString(nil, "OVERLAY")
-                    pctLabel:SetPoint("LEFT", threshBox, "RIGHT", 2, 0)
-                    SetUIFont(pctLabel, 11)
-                    pctLabel:SetText("%")
-                    pctLabel:SetTextColor(1, 1, 1)
-                    alertOptionsWidgets[#alertOptionsWidgets + 1] = pctLabel
-
-                    local function CommitThreshold()
-                        local val = tonumber(threshBox:GetText())
-                        if val then
-                            val = math_max(1, math_min(99, math_floor(val + 0.5)))
-                            db.healPetThreshold = val
-                            NPA.ResetHealthCurve()
-                        end
-                        threshBox:SetText(tostring(db.healPetThreshold or 30))
-                        threshBox:SetCursorPosition(0)
-                        threshBox:ClearFocus()
-                    end
-                    threshBox:SetScript("OnEnterPressed", CommitThreshold)
-                    threshBox:SetScript("OnEditFocusLost", CommitThreshold)
-                    threshBox:SetScript("OnEscapePressed", function(self)
-                        self:SetText(tostring(db.healPetThreshold or 30))
-                        self:SetCursorPosition(0)
-                        self:ClearFocus()
-                    end)
+            local box = CreateFrame("EditBox", nil, alertOptionsBox, "InputBoxTemplate")
+            box:SetPoint("LEFT", numLbl, "RIGHT", 8, 0)
+            box:SetSize(40, 18)
+            box:SetAutoFocus(false)
+            box:SetMaxLetters(4)
+            box:SetFontObject("GameFontWhite")
+            box:SetJustifyH("CENTER")
+            box:SetText(tostring(numGetter()))
+            box:SetCursorPosition(0)
+            box:SetTextColor(THEME_R, THEME_G, THEME_B)
+            themeFS[#themeFS + 1] = { setColor = function(r, g, b) box:SetTextColor(r, g, b) end }
+            local function Commit()
+                local v = tonumber(box:GetText())
+                if v then
+                    v = math_max(numMin, math_min(numMax, math_floor(v + 0.5)))
+                    numSetter(v)
                 end
-
-                local threshBox = NPA.healPetThreshBox
-                threshBox:ClearAllPoints()
-                threshBox:SetPoint("LEFT", hpLbl, "RIGHT", 8, 4)
-                threshBox:SetText(tostring(db.healPetThreshold or 30))
-                threshBox:SetCursorPosition(0)
-                threshBox:Show()
-                alertOptionsWidgets[#alertOptionsWidgets + 1] = threshBox
-
-                local hpc = db.alertColors and db.alertColors[hpAlert.key]
-                threshBox:SetTextColor(THEME_R, THEME_G, THEME_B)
-                themeFS[#themeFS + 1] = { setColor = function(r, g, b) threshBox:SetTextColor(r, g, b) end }
-
-                aoCursor = aoCursor - 48  -- threshold row + gap
+                box:SetText(tostring(numGetter()))
+                box:SetCursorPosition(0)
+                box:ClearFocus()
             end
+            box:SetScript("OnEnterPressed",  Commit)
+            box:SetScript("OnEditFocusLost", Commit)
+            box:SetScript("OnEscapePressed", function(self)
+                self:SetText(tostring(numGetter()))
+                self:SetCursorPosition(0)
+                self:ClearFocus()
+            end)
+            alertOptionsWidgets[#alertOptionsWidgets + 1] = box
         end
 
-        -- Alert text editors — two-column, one per alert
-        local halfW = math_floor(CPW / 2) - 14
-        local colR  = math_floor(CPW / 2) + 4
+        function specHelpers:Spacer(px)
+            specCursorY = specCursorY - (px or 8)
+        end
+
+        if mod.BuildAlertOptions then
+            mod:BuildAlertOptions(alertOptionsBox, db, specHelpers)
+        end
+
+        local specOptionsH = (-30) - specCursorY
+
+        local textEditorTopY = specCursorY - AO_SPEC_TO_TEXT_GAP
+        local halfW = math_floor(CPW / 2) - 24
+        local colR  = math_floor(CPW / 2) + 6
         local rowH  = 44
 
         for i, alert in ipairs(mod.alerts) do
             local k      = alert.key
             local colIdx = (i - 1) % 2
             local rowIdx = math_floor((i - 1) / 2)
-            local xPos   = colIdx == 0 and 10 or colR
-            local yPos   = aoCursor - rowIdx * rowH
+            local xPos   = colIdx == 0 and 17 or colR
+            local yPos   = textEditorTopY - rowIdx * rowH
 
             local lbl = alertOptionsBox:CreateFontString(nil, "OVERLAY")
             lbl:SetPoint("TOPLEFT", xPos, yPos)
@@ -2347,6 +2781,8 @@ function NPA:BuildOptionsPanel()
             local saved = db[k .. "AlertText"]
             editBox:SetText((saved and saved ~= "") and saved or alert.text)
             editBox:SetCursorPosition(0)
+            editBox:SetTextColor(THEME_R, THEME_G, THEME_B)
+            themeFS[#themeFS + 1] = { setColor = function(r, g, b) editBox:SetTextColor(r, g, b) end }
             editBox:SetScript("OnEnterPressed", function(self) self:ClearFocus() end)
             editBox:SetScript("OnEditFocusLost", function(self)
                 local t = self:GetText()
@@ -2367,17 +2803,14 @@ function NPA:BuildOptionsPanel()
             alertOptionsWidgets[#alertOptionsWidgets + 1] = editBox
         end
 
-        -- Size alertOptionsBox and set total scroll content height
         local textEditorRows = math_floor((#mod.alerts + 1) / 2)
-        local specOptionsH   = 36  -- font dd
-        if mod.hasHealPet and mod.healPetAlertIndex then specOptionsH = specOptionsH + 48 end
-        local aoH = 30 + specOptionsH + textEditorRows * rowH + 12
+        local textEditorsH   = textEditorRows * rowH
+        local aoH            = 30 + specOptionsH + AO_SPEC_TO_TEXT_GAP + textEditorsH + 12
         alertOptionsBox:SetHeight(aoH)
 
-        local contentH = (-alertOptionsY) + aoH + 16
+        local contentH = (-alertOptionsY) + aoH
         SetContentHeight(contentH)
 
-        -- Refresh core widgets
         for _, cb in pairs(checkboxes) do cb:Refresh() end
         for _, sl in pairs(sliders) do sl.Refresh() end
         if NPA.fontDropdown then NPA.fontDropdown.Refresh() end
@@ -2385,14 +2818,13 @@ function NPA:BuildOptionsPanel()
         testBtn:SetText(coreState.testMode and "Stop Test" or "Test")
     end)
 
-    -- Re-run UpdateScrollbar when panel size is finalized by the Settings system
     panel:SetScript("OnSizeChanged", function()
         C_Timer.After(0, function() sbBar:UpdateScrollbar() end)
     end)
 
-    -- ================================================================
+    -- ============================================================
     -- Register
-    -- ================================================================
+    -- ============================================================
     if Settings and Settings.RegisterCanvasLayoutCategory then
         local category = Settings.RegisterCanvasLayoutCategory(panel, panel.name)
         Settings.RegisterAddOnCategory(category)
@@ -2413,17 +2845,17 @@ function NPA:BuildOptionsPanel()
     end
 end
 
--- =============================================================
+-- ============================================================
 -- PLAYER_LOGIN
--- =============================================================
+-- ============================================================
 function NPA:OnLogin()
+    if not self.db then self:InitDatabase() end
     activeClass = GetActiveClass()
 
     CreateDisplay()
     self:BuildOptionsPanel()
     self:InitCommands()
 
-    -- Find and activate the correct spec module
     local key, mod = FindActiveModule()
     if key and mod then
         ActivateModule(key, mod)
@@ -2431,10 +2863,15 @@ function NPA:OnLogin()
     ApplyDisplaySettings()
 end
 
--- =============================================================
+-- ============================================================
 -- Event Handler
--- =============================================================
+-- ============================================================
 NPA:SetScript("OnEvent", function(self, event, ...)
+    if event == "PLAYER_REGEN_DISABLED" then
+        voice.combatStart     = GetTime()
+        voice.combatStartUsed = false
+    end
+
     if event == "ADDON_LOADED" then
         local addonName = ...
         if addonName == ADDON_NAME then
@@ -2449,60 +2886,52 @@ NPA:SetScript("OnEvent", function(self, event, ...)
     end
 
     local mod = self.activeModule
-    local db  = NemPetAlertsSV
+    local db  = self.db
 
-    -- Spec / talent change: re-evaluate which module should be active
     if event == "PLAYER_SPECIALIZATION_CHANGED"
     or event == "PLAYER_TALENT_UPDATE"
     or event == "TRAIT_CONFIG_UPDATED" then
-        -- With per-spec modules, a spec change may require a full module swap
         local newKey, newMod = FindActiveModule()
         if newKey ~= self.activeModuleKey then
-            -- Different spec → swap modules
             if newKey and newMod then
                 ActivateModule(newKey, newMod)
             else
                 DeactivateCurrentModule()
-                -- Rebuild display to clear stale rows
                 if self.display then
                     SetDisplaySlot(nil)
                 end
             end
         else
-            -- Same module, but talents may have changed
             if mod and mod.OnEvent then
                 mod:OnEvent(db, event, ...)
             end
         end
-        C_Timer.After(0.1, Evaluate)
+        ScheduleEvaluate()
         return
     end
 
-    -- Guard: no active module → ignore gameplay events
     if not mod then return end
-    if not IsFullyImplemented() then return end
 
     if event == "PLAYER_ENTERING_WORLD" then
         ApplyDisplaySettings()
         if mod.OnEvent then mod:OnEvent(db, event, ...) end
-        C_Timer.After(0.1, Evaluate)
+        ScheduleEvaluate()
         return
     end
 
-    -- Delegate to module
     if mod.OnEvent then
         local handled = mod:OnEvent(db, event, ...)
         if not handled then
-            C_Timer.After(0.1, Evaluate)
+            ScheduleEvaluate()
         end
     else
-        C_Timer.After(0.1, Evaluate)
+        ScheduleEvaluate()
     end
 end)
 
--- =============================================================
--- Core Event Registration (always active)
--- =============================================================
+-- ============================================================
+-- Core Event Registration
+-- ============================================================
 NPA:RegisterEvent("ADDON_LOADED")
 NPA:RegisterEvent("PLAYER_LOGIN")
 NPA:RegisterEvent("PLAYER_ENTERING_WORLD")
@@ -2510,3 +2939,7 @@ NPA:RegisterEvent("PLAYER_SPECIALIZATION_CHANGED")
 NPA:RegisterEvent("PLAYER_TALENT_UPDATE")
 NPA:RegisterEvent("TRAIT_CONFIG_UPDATED")
 NPA:RegisterEvent("PLAYER_UPDATE_RESTING")
+NPA:RegisterEvent("PLAYER_REGEN_DISABLED")
+NPA:RegisterEvent("PLAYER_REGEN_ENABLED")
+NPA:RegisterUnitEvent("UNIT_TARGET", "pet")
+

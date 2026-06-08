@@ -375,19 +375,30 @@ function Config:ResolveDefaultValue(settingKey, defaultValue)
     return defaultValue;
 end
 
+--- @param options NumyConfig_DropDownOptions|fun(): NumyConfig_DropDownOptions
+--- @param controlType Settings.ControlType?
+--- @param useProxy boolean?
+--- @return fun(): NumyConfig_DropDownOptions
 --- @private
-function Config:FormatOptions(options)
+function Config:FormatOptions(options, controlType, useProxy)
     return function()
         local opts = options;
         if type(opts) == "function" then
             opts = opts()
         end
         local container = Settings.CreateControlTextContainer();
-        for _, option in pairs(opts) do
+        for i, option in ipairs(opts) do
             if type(option) == "string" then
                 option = { text = option, value = option };
             end
-            local added = container:Add(option.value, option.label or option.text, option.tooltip);
+            local added;
+            if controlType == Settings.ControlType.Checkbox then
+                local value = useProxy and i or option.value;
+                added = container:AddCheckbox(value, option.label or option.text, option.tooltip);
+                added._actualValue = option.value;
+            else
+                added = container:Add(option.value, option.label or option.text, option.tooltip);
+            end
             added.text = option.text;
         end
 
@@ -580,13 +591,15 @@ do
     --- @param callback fun(setting: AddOnSettingMixin, value: any)?
     --- @param defaultValue any?
     --- @param overrideTable table?
+    --- @param controlType Settings.ControlType?
+    --- @param useProxy boolean?
     --- @return SettingsListElementInitializer initializer
     --- @return AddOnSettingMixin setting
-    function ConfigBuilderMixin:MakeDropdown(label, settingKey, tooltip, options, callback, defaultValue, overrideTable)
+    function ConfigBuilderMixin:MakeDropdown(label, settingKey, tooltip, options, callback, defaultValue, overrideTable, controlType, useProxy)
         if defaultValue == nil then
             defaultValue = self.defaults[settingKey];
         end
-        local initializer, setting = Config:MakeDropdown(label, settingKey, tooltip, options, defaultValue, overrideTable or self.db);
+        local initializer, setting = Config:MakeDropdown(label, settingKey, tooltip, options, defaultValue, overrideTable or self.db, controlType, useProxy);
         initializer:AddShownPredicate(self.isExpanded);
         if self.defaultCallback then
             setting:SetValueChangedCallback(self.defaultCallback);
@@ -804,15 +817,52 @@ do
     --- @param options NumyConfig_DropDownOptions|fun(): NumyConfig_DropDownOptions
     --- @param defaultValue any?
     --- @param dbTableOverride table?
+    --- @param controlType Settings.ControlType?
+    --- @param useProxy boolean?
     --- @return SettingsListElementInitializer initializer
     --- @return AddOnSettingMixin setting
-    function Config:MakeDropdown(label, settingKey, tooltip, options, defaultValue, dbTableOverride)
+    function Config:MakeDropdown(label, settingKey, tooltip, options, defaultValue, dbTableOverride, controlType, useProxy)
         local variable = self:GetUniqueVariable();
         defaultValue = self:ResolveDefaultValue(settingKey, defaultValue);
 
-        local setting = Settings.RegisterAddOnSetting(self.category, variable, settingKey, dbTableOverride or self.db, type(defaultValue), label, defaultValue);
+        if type(defaultValue) == 'table' and controlType == Settings.ControlType.Checkbox and not useProxy then
+            error("Default value for checkbox dropdowns must be a number value or useProxy must be true.");
+        end
 
-        return Settings.CreateDropdown(self.category, setting, self:FormatOptions(options), tooltip), setting;
+        local dbTable = dbTableOverride or self.db;
+        local opts = self:FormatOptions(options, controlType, useProxy);
+        if controlType == Settings.ControlType.Checkbox and useProxy then
+            local proxy = {};
+            local valueMap = {};
+            for i, option in ipairs(opts()) do
+                valueMap[i] = option._actualValue;
+            end
+            local orig = dbTable
+            setmetatable(proxy, {
+                __index = function()
+                    local value = orig[settingKey];
+                    local mask = 0;
+                    for i, optionValue in pairs(valueMap) do
+                        if value[optionValue] then
+                            mask = bit.bor(mask, bit.lshift(1, i - 1));
+                        end
+                    end
+
+                    return mask;
+                end,
+                __newindex = function(_, _, v)
+                    for i, optionValue in pairs(valueMap) do
+                        orig[settingKey][optionValue] = bit.band(v, bit.lshift(1, i - 1)) > 0;
+                    end
+                end
+            });
+            dbTable = proxy;
+            defaultValue = proxy[settingKey];
+        end
+
+        local setting = Settings.RegisterAddOnSetting(self.category, variable, settingKey, dbTable, type(defaultValue), label, defaultValue);
+
+        return Settings.CreateDropdown(self.category, setting, opts, tooltip), setting;
     end
 
     --- @param label string

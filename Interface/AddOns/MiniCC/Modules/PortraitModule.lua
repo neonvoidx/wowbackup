@@ -3,14 +3,18 @@ local _, addon = ...
 local mini = addon.Core.Framework
 local wowEx = addon.Utils.WoWEx
 local unitWatcher = addon.Core.UnitAuraWatcher
+local kickTracker = addon.Core.KickTracker
 local iconSlotContainer = addon.Core.IconSlotContainer
 local moduleUtil = addon.Utils.ModuleUtil
 local ModuleName = addon.Utils.ModuleName
 local testModeActive = false
 local paused = false
+local enabled = false
 local containers = {}
 ---@type { string: Watcher }
 local watchers = {}
+-- Callbacks to re-render each container attached to "target"; populated by Attach/Attach* calls.
+local unitUpdateFns = {} -- unit → array of update fns; populated per framework Attach call
 ---@type Db
 local db
 ---@type TestSpell[]
@@ -94,24 +98,38 @@ local function CreateContainer(unitFrame, portrait)
 	-- in case something hides the portrait by setting alpha to 0
 	container.Frame:SetIgnoreParentAlpha(false)
 
-	-- Set initial size to match portrait
-	local width = portrait:GetWidth() - 4
-	local height = portrait:GetHeight() - 4
-	local size = math.min(width, height)
+	-- Skip attachment if the portrait dimensions are secret (tainted frame)
+	-- seems to happen with ElvUI when their portraits are disabled
+	local w = portrait:GetWidth()
+	local h = portrait:GetHeight()
+	if issecretvalue(w) or issecretvalue(h) then return nil end
 
-	if size <= 0 then
-		size = 32
-	end
+	local size = math.min(w - 4, h - 4)
+	if size <= 0 then size = 32 end
 
 	container:SetIconSize(size)
 
 	return container
 end
 
+---@param unit string
 ---@param watcher Watcher
 ---@param container IconSlotContainer
-local function OnAuraInfo(watcher, container)
-	if paused then
+local function OnAuraInfo(unit, watcher, container)
+	if not enabled or paused then
+		return
+	end
+
+	local kickEntry = kickTracker:GetKick(unit)
+	if kickEntry then
+		container:SetSlot(1, {
+			Texture = kickEntry.Texture,
+			DurationObject = kickEntry.DurationObject,
+			Alpha = true,
+			ReverseCooldown = db.Modules.PortraitModule.ReverseCooldown,
+			FontScale = db.FontScale,
+			Color = kickEntry.Color,
+		})
 		return
 	end
 
@@ -228,6 +246,60 @@ local function GetTPerlFrame(unit)
 	return nil
 end
 
+---@param unit string
+---@return table? unitFrame
+---@return table? portrait
+local function GetMSUFFrame(unit)
+	local registry = _G.MSUF_UnitFrames
+	if type(registry) ~= "table" then
+		return nil, nil
+	end
+
+	local frame = registry[unit]
+	if not frame then
+		return nil, nil
+	end
+
+	if frame.IsForbidden and frame:IsForbidden() then
+		return nil, nil
+	end
+
+	-- Prefer 3D model when active, fall back to 2D portrait texture
+	local portrait = rawget(frame, "portraitModel") or frame.portrait
+
+	return frame, portrait
+end
+
+---@param unit string
+---@return table? unitFrame
+---@return table? portrait
+local function GetEllesmereUIFrame(unit)
+	local frame
+	if unit == "player" then
+		frame = _G["EllesmereUIUnitFrames_Player"]
+	elseif unit == "target" then
+		frame = _G["EllesmereUIUnitFrames_Target"]
+	elseif unit == "focus" then
+		frame = _G["EllesmereUIUnitFrames_Focus"]
+	elseif unit == "pet" then
+		frame = _G["EllesmereUIUnitFrames_Pet"]
+	end
+
+	if not frame or (frame.IsForbidden and frame:IsForbidden()) then
+		return nil, nil
+	end
+
+	-- frame.Portrait is the active visual (2D texture / 3D PlayerModel / class icon),
+	-- and frame.Portrait.backdrop is the parent Frame that owns the slot. Anchor to the
+	-- backdrop since it's always a Frame with stable dimensions across portrait modes.
+	local portrait = frame.Portrait and frame.Portrait.backdrop
+	if not portrait then
+		return nil, nil
+	end
+
+	return frame, portrait
+end
+
 ---@return table? unitFrame
 ---@return table? portrait
 local function GetElvUIFrame(unit)
@@ -270,6 +342,7 @@ local function Attach(unit, events)
 	watchers[unit] = watcher
 
 	local container = CreateContainer(unitFrame, portrait)
+	if not container then return end
 
 	if unit == "pet" then
 		container.Frame:SetFrameLevel(math.max(0, (PetFrame:GetFrameLevel() or 0) - 2))
@@ -289,8 +362,14 @@ local function Attach(unit, events)
 	end
 
 	watcher:RegisterCallback(function()
-		OnAuraInfo(watcher, container)
+		OnAuraInfo(unit, watcher, container)
 	end)
+	if unit == "target" or unit == "focus" then
+		unitUpdateFns[unit] = unitUpdateFns[unit] or {}
+		unitUpdateFns[unit][#unitUpdateFns[unit] + 1] = function()
+			OnAuraInfo(unit, watcher, container)
+		end
+	end
 	portrait:SetDrawLayer("BACKGROUND", 0)
 	containers[#containers + 1] = container
 end
@@ -310,6 +389,7 @@ local function AttachElvUIFrame(unit)
 	end
 
 	local container = CreateContainer(elvuiFrame, elvuiPortrait)
+	if not container then return end
 	-- 3d models are a frame, where as 2d portraits are textures which don't have a frame level
 	-- so for 2d textures we get the frame level from the parent frame, for 3d portraits we get it directly from the portrait frame
 	local portraitLevel = elvuiPortrait.GetFrameLevel and elvuiPortrait:GetFrameLevel()
@@ -330,8 +410,14 @@ local function AttachElvUIFrame(unit)
 	end
 
 	watcher:RegisterCallback(function()
-		OnAuraInfo(watcher, container)
+		OnAuraInfo(unit, watcher, container)
 	end)
+	if unit == "target" or unit == "focus" then
+		unitUpdateFns[unit] = unitUpdateFns[unit] or {}
+		unitUpdateFns[unit][#unitUpdateFns[unit] + 1] = function()
+			OnAuraInfo(unit, watcher, container)
+		end
+	end
 	containers[#containers + 1] = container
 end
 
@@ -350,14 +436,21 @@ local function AttachTPerlFrame(unit)
 	end
 
 	local container = CreateContainer(tperlFrame, tperlPortrait)
+	if not container then return end
 	local portraitLevel = tperlPortrait.GetFrameLevel and tperlPortrait:GetFrameLevel()
 		or tperlFrame:GetFrameLevel()
 		or 0
 	container.Frame:SetFrameLevel(portraitLevel)
 
 	watcher:RegisterCallback(function()
-		OnAuraInfo(watcher, container)
+		OnAuraInfo(unit, watcher, container)
 	end)
+	if unit == "target" or unit == "focus" then
+		unitUpdateFns[unit] = unitUpdateFns[unit] or {}
+		unitUpdateFns[unit][#unitUpdateFns[unit] + 1] = function()
+			OnAuraInfo(unit, watcher, container)
+		end
+	end
 	containers[#containers + 1] = container
 end
 
@@ -380,6 +473,7 @@ local function AttachUUFFrame(unit)
 	-- uufFrame directly would leave the container far below in the level hierarchy.
 	local highLevelContainer = uufPortrait:GetParent()
 	local container = CreateContainer(highLevelContainer, uufPortrait)
+	if not container then return end
 	local portraitLevel = uufPortrait.GetFrameLevel and uufPortrait:GetFrameLevel()
 		or highLevelContainer:GetFrameLevel()
 		or 0
@@ -399,8 +493,108 @@ local function AttachUUFFrame(unit)
 	end
 
 	watcher:RegisterCallback(function()
-		OnAuraInfo(watcher, container)
+		OnAuraInfo(unit, watcher, container)
 	end)
+	if unit == "target" or unit == "focus" then
+		unitUpdateFns[unit] = unitUpdateFns[unit] or {}
+		unitUpdateFns[unit][#unitUpdateFns[unit] + 1] = function()
+			OnAuraInfo(unit, watcher, container)
+		end
+	end
+	containers[#containers + 1] = container
+end
+
+---@param unit string
+local function AttachMSUFFrame(unit)
+	local msufFrame, msufPortrait = GetMSUFFrame(unit)
+
+	if not msufFrame or not msufPortrait then
+		return
+	end
+
+	local watcher = watchers[unit]
+
+	if not watcher then
+		return
+	end
+
+	local container = CreateContainer(msufFrame, msufPortrait)
+	if not container then return end
+	local portraitLevel = msufPortrait.GetFrameLevel and msufPortrait:GetFrameLevel()
+		or msufFrame:GetFrameLevel()
+		or 0
+	container.Frame:SetFrameLevel(portraitLevel + 10)
+
+	local originalSetSlot = container.SetSlot
+	container.SetSlot = function(self, slotIndex, options)
+		originalSetSlot(self, slotIndex, options)
+		local slot = self.Slots[slotIndex]
+		if slot and slot.Container and slot.Container.Icon and slot.Container.Cooldown then
+			slot.Frame:SetAllPoints(msufPortrait)
+			slot.Container.Frame:SetAllPoints(msufPortrait)
+			slot.Container.Icon:SetAllPoints(msufPortrait)
+			slot.Container.Icon:SetTexCoord(0.07, 0.93, 0.07, 0.93)
+			slot.Container.Cooldown:SetAllPoints(msufPortrait)
+		end
+	end
+
+	watcher:RegisterCallback(function()
+		OnAuraInfo(unit, watcher, container)
+	end)
+	if unit == "target" or unit == "focus" then
+		unitUpdateFns[unit] = unitUpdateFns[unit] or {}
+		unitUpdateFns[unit][#unitUpdateFns[unit] + 1] = function()
+			OnAuraInfo(unit, watcher, container)
+		end
+	end
+	containers[#containers + 1] = container
+end
+
+---@param unit string
+local function AttachEllesmereUIFrame(unit)
+	local euiFrame, euiPortrait = GetEllesmereUIFrame(unit)
+
+	if not euiFrame or not euiPortrait then
+		return
+	end
+
+	local watcher = watchers[unit]
+
+	if not watcher then
+		return
+	end
+
+	local container = CreateContainer(euiFrame, euiPortrait)
+	if not container then return end
+	local portraitLevel = euiPortrait.GetFrameLevel and euiPortrait:GetFrameLevel()
+		or euiFrame:GetFrameLevel()
+		or 0
+	container.Frame:SetFrameLevel(portraitLevel + 10)
+
+	-- EllesmereUI insets its portrait texture with SetTexCoord(0.15, 0.85). Match that on our
+	-- overlay so the CC icon visually fills the same area as the portrait beneath it.
+	local originalSetSlot = container.SetSlot
+	container.SetSlot = function(self, slotIndex, options)
+		originalSetSlot(self, slotIndex, options)
+		local slot = self.Slots[slotIndex]
+		if slot and slot.Container and slot.Container.Icon and slot.Container.Cooldown then
+			slot.Frame:SetAllPoints(euiPortrait)
+			slot.Container.Frame:SetAllPoints(euiPortrait)
+			slot.Container.Icon:SetAllPoints(euiPortrait)
+			slot.Container.Icon:SetTexCoord(0.15, 0.85, 0.15, 0.85)
+			slot.Container.Cooldown:SetAllPoints(euiPortrait)
+		end
+	end
+
+	watcher:RegisterCallback(function()
+		OnAuraInfo(unit, watcher, container)
+	end)
+	if unit == "target" or unit == "focus" then
+		unitUpdateFns[unit] = unitUpdateFns[unit] or {}
+		unitUpdateFns[unit][#unitUpdateFns[unit] + 1] = function()
+			OnAuraInfo(unit, watcher, container)
+		end
+	end
 	containers[#containers + 1] = container
 end
 
@@ -471,10 +665,10 @@ local function GetCCSortOptions()
 end
 
 function M:Refresh()
-	local moduleEnabled = moduleUtil:IsModuleEnabled(ModuleName.Portrait)
+	enabled = moduleUtil:IsModuleEnabled(ModuleName.Portrait)
 
 	-- If disabled, disable watchers and clear
-	if not moduleEnabled then
+	if not enabled then
 		DisableWatchers()
 		return
 	end
@@ -519,6 +713,29 @@ function M:Init()
 		AttachUUFFrame("target")
 		AttachUUFFrame("focus")
 		AttachUUFFrame("pet")
+		AttachMSUFFrame("player")
+		AttachMSUFFrame("target")
+		AttachMSUFFrame("focus")
+		AttachMSUFFrame("pet")
+		AttachEllesmereUIFrame("player")
+		AttachEllesmereUIFrame("target")
+		AttachEllesmereUIFrame("focus")
+		AttachEllesmereUIFrame("pet")
+	end)
+
+	kickTracker:Watch("target", { "PLAYER_TARGET_CHANGED" })
+	kickTracker:Subscribe("target", function()
+		local fns = unitUpdateFns["target"]
+		if fns then
+			for _, fn in ipairs(fns) do fn() end
+		end
+	end)
+	kickTracker:Watch("focus", { "PLAYER_FOCUS_CHANGED" })
+	kickTracker:Subscribe("focus", function()
+		local fns = unitUpdateFns["focus"]
+		if fns then
+			for _, fn in ipairs(fns) do fn() end
+		end
 	end)
 
 	M:Refresh()

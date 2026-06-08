@@ -101,12 +101,14 @@ VER 3 010000000000007B " " "INV_Misc_QuestionMark"
 END
 VER 3 010000000000007C " " "INV_Misc_QuestionMark"
 #showtooltip Zenith
-/cast Zenith
+/use 14
 /use Saltwater Potion
 /use Potion of recklessness
 /cast Blood Fury
+/cast Zenith
 /use Perpetual Purple Firework
 /use Winning Hand
+/cast Strike of the Windlord
 END
 VER 3 010000000000007D " " "INV_Misc_QuestionMark"
 #showtooltip

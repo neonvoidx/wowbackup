@@ -1111,6 +1111,15 @@ local function CreateSlider(parent, label, minValue, maxValue, stepValue, elemen
                 elseif element == "nameplateSelfWidth" then
                     BetterBlizzPlatesDB.nameplateSelfWidth = value
                     BBP.ResizePRD()
+                elseif element == "smallPetsWidth" then
+                    BetterBlizzPlatesDB.smallPetsWidth = value
+                    for _, np in pairs(C_NamePlate.GetNamePlates()) do
+                        local petFrame = np.UnitFrame
+                        if petFrame then
+                            BBP.SmallPetsInPvP(petFrame)
+                            BBP.NameplateShadowAndMouseoverHighlight(petFrame)
+                        end
+                    end
                 -- Cast bar emphasis height
                 elseif element == "castBarEmphasisHeightValue" then
                     BetterBlizzPlatesDB.castBarEmphasisHeightValue = value
@@ -1254,6 +1263,11 @@ local function CreateSlider(parent, label, minValue, maxValue, stepValue, elemen
                     if not BBP.checkCombatAndWarn() then
                         C_CVar.SetCVar("nameplateMaxAlpha", value)
                         BetterBlizzPlatesDB.nameplateMaxAlpha = value
+                    end
+                elseif element == "nameplateSimplifiedScale" then
+                    if not BBP.checkCombatAndWarn() then
+                        C_CVar.SetCVar("nameplateSimplifiedScale", value)
+                        BetterBlizzPlatesDB.nameplateSimplifiedScale = value
                     end
                 elseif element == "nameplateMaxAlphaDistance" then
                     if not BBP.checkCombatAndWarn() then
@@ -1869,12 +1883,13 @@ local function ShowProfileConfirmation(profileName, class, profileFunction, addi
     StaticPopup_Show("BBP_CONFIRM_PROFILE", nil, nil, { func = profileFunction })
 end
 
-local function CreateClassButton(parent, class, name, twitchName, onClickFunc)
+local function CreateClassButton(parent, class, name, twitchName, onClickFunc, youtubeName)
     local bbpParent = parent == BetterBlizzPlates
     local coreProfile = class == "STARTER" or class == "BLITZ" or class == "MYTHIC" or class == "PREMIDNIGHT" or name == "Bodify"
     local btnWidth, btnHeight = bbpParent and 104 or (coreProfile and 150 or 114), bbpParent and 22 or 30
     local button = CreateFrame("Button", nil, parent, "GameMenuButtonTemplate")
     button:SetSize(btnWidth, btnHeight)
+    button:SetScale(0.94)
 
     local dontIncludeProfileText = (bbpParent or not coreProfile) and "" or " Profile"
     local color = CLASS_COLORS[class] or "|cffffffff"
@@ -1915,7 +1930,15 @@ local function CreateClassButton(parent, class, name, twitchName, onClickFunc)
     elseif name == "Pre-Midnight" then
         CreateTooltipTwo(button, string.format("|A:%s:16:16|a %s%s|r", icon, color, name.." Profile"), "A very basic profile that aims to be similar to how the nameplates looked like before Midnight. A few adjustments that can be tuned later on.", nil, "ANCHOR_TOP")
     else
-        CreateTooltipTwo(button, string.format("|A:%s:16:16|a %s%s|r", icon, color, name.." Profile"), string.format("Enable all of %s's profile settings.", name), string.format("www.twitch.tv/%s", twitchName), "ANCHOR_TOP")
+        local socialText = ""
+        if twitchName then
+            socialText = string.format("www.twitch.tv/%s", twitchName)
+        end
+        if youtubeName then
+            if socialText ~= "" then socialText = socialText .. "\n" end
+            socialText = socialText .. string.format("www.youtube.com/@%s", youtubeName)
+        end
+        CreateTooltipTwo(button, string.format("|A:%s:16:16|a %s%s|r", icon, color, name.." Profile"), string.format("Enable all of %s's profile settings.", name), socialText ~= "" and socialText or nil, "ANCHOR_TOP")
     end
 
     return button
@@ -4874,7 +4897,7 @@ local function guiProfiles()
 
     frame.infoText = frame:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     frame.infoText:SetPoint("BOTTOM", frame, "BOTTOM", 2, 39)
-    frame.infoText:SetText("If you are missing and want to be here let me know :)")
+    frame.infoText:SetText("") --If you are missing and want to be here let me know :)
     frame.infoText:SetWidth(100)
 
     frame:SetSize(130, parent:GetHeight())
@@ -4986,64 +5009,21 @@ local function guiGeneralTab()
     smallPetsInPvP:SetPoint("LEFT", healthNumbers.text, "RIGHT", 0, 0)
     CreateTooltipTwo(smallPetsInPvP, "Small Pets in PvP", "Reduce the width of all pet nameplates, and the width of all npc nameplates in PvP.\n\n|cff32f795Right-click to adjust width.|r", "Totem Indicator NPCs will stay full width unless specified otherwise in the Totem Indicator List section.")
 
-    -- Create slider frame when right-clicked
+    local smallPetsWidthSlider = CreateSlider(BetterBlizzPlates, "Small Pets Width", 2, 40, 1, "smallPetsWidth", nil, 120)
+    smallPetsWidthSlider:SetPoint("BOTTOMLEFT", smallPetsInPvP, "TOPLEFT", 5, 5)
+    smallPetsWidthSlider:Hide()
+    CreateTooltipTwo(smallPetsWidthSlider, "Small Pets Width", "Adjust the width used for small pet/npc nameplates.", "Right-click the slider to type a value outside the default range.")
+
     smallPetsInPvP:SetScript("OnMouseDown", function(self, button)
         if button == "RightButton" then
             GameTooltip:Hide()
-            if not self.slider then
-                -- Create slider frame
-                local slider = CreateFrame("Slider", "SmallPetsWidthSlider", self:GetParent(), "OptionsSliderTemplate")
-                slider:SetPoint("BOTTOMLEFT", self, "TOPLEFT", 0, 0)
-                slider:SetWidth(120)
-                slider:SetMinMaxValues(2, 40)
-                slider:SetValue(BetterBlizzPlatesDB.smallPetsWidth or 20)
-                slider:SetValueStep(1)
-                slider:SetObeyStepOnDrag(true)
-
-                -- Customize the slider text
-                slider.Text:SetFontObject(GameFontHighlightSmall)
-                slider.Text:SetTextColor(1, 0.81, 0, 1)
-                slider.Low:SetText("")
-                slider.High:SetText("")
-
-                -- Set initial label
-                local initialValue = BetterBlizzPlatesDB.smallPetsWidth or 50
-                slider.Text:SetText("Small Pets Width: " .. initialValue)
-
-                -- Slider update logic
-                slider:SetScript("OnValueChanged", function(_, value)
-                    local roundedValue = math.floor(value + 0.5)
-                    BetterBlizzPlatesDB.smallPetsWidth = roundedValue
-                    slider.Text:SetText("Small Pets Width: " .. roundedValue)
-                    slider.adjusting = true
-                    for _, nameplate in pairs(C_NamePlate.GetNamePlates()) do
-                        local frame = nameplate.UnitFrame
-                        if frame then
-                            BBP.SmallPetsInPvP(frame)
-                            BBP.NameplateShadowAndMouseoverHighlight(frame)
-                        end
-                    end
-                end)
-
-                slider:SetScript("OnMouseUp", function(self)
-                    slider.adjusting = nil
-                    C_Timer.After(2, function()
-                        if not self.adjusting then
-                            self:Hide()
-                        end
-                    end)
-                end)
-                self.slider = slider
-            else
-                self.slider:SetShown(not self.slider:IsShown())
-            end
+            smallPetsWidthSlider:SetShown(not smallPetsWidthSlider:IsShown())
         end
     end)
 
-    -- Ensure slider hides if checkbox is unchecked
     smallPetsInPvP:HookScript("OnClick", function(self)
-        if not self:GetChecked() and self.slider then
-            self.slider:Hide()
+        if not self:GetChecked() then
+            smallPetsWidthSlider:Hide()
         end
     end)
 
@@ -6258,8 +6238,12 @@ local function guiGeneralTab()
     shortArenaSpecName:SetPoint("LEFT", arenaSettingsText, "RIGHT", 5, 0)
     CreateTooltipTwo(shortArenaSpecName, "Short Spec Names", "Enable to use abbreviated specialization names. For instance, \"Assassination\" will be displayed as \"Assa\".", nil, "ANCHOR_LEFT")
 
+    local healerSpecNameOnly = CreateCheckbox("healerSpecNameOnly", "Heal", BetterBlizzPlates)
+    healerSpecNameOnly:SetPoint("LEFT", shortArenaSpecName.Text, "RIGHT", 5, 0)
+    CreateTooltipTwo(healerSpecNameOnly, "Healer Spec Only", "Only show the spec name for healers. Other names will be blank.", nil, "ANCHOR_LEFT")
+
     local arenaIndicatorBg = CreateCheckbox("arenaIndicatorBg", "BG", BetterBlizzPlates)
-    arenaIndicatorBg:SetPoint("LEFT", shortArenaSpecName.Text, "RIGHT", 5, 0)
+    arenaIndicatorBg:SetPoint("LEFT", healerSpecNameOnly.Text, "RIGHT", 5, 0)
     CreateTooltipTwo(arenaIndicatorBg, "Battleground Spec Names", "Show spec names on enemy nameplates in Battlegrounds", nil, "ANCHOR_LEFT")
 
     local arenaIndicatorTestMode = CreateCheckbox("arenaIndicatorTestMode", "Test", BetterBlizzPlates)
@@ -6306,7 +6290,7 @@ local function guiGeneralTab()
         local additionalNote = profile.name == "Starter" and "|cff808080(If you want to completely reset BBP there\nis a button in Advanced Settings)|r\n\n" or nil
         local button = CreateClassButton(BetterBlizzPlates, profile.class, profile.name, profile.twitchName, function()
             ShowProfileConfirmation(profile.name, profile.class, function() BBP.ApplyProfile(profile.name) end, additionalNote)
-        end)
+        end, profile.youtubeName)
         if profile.core then
             button:SetPoint("TOP", lastCoreButton, "BOTTOM", 0, lastCoreButton == profilesFrame.coreText and -3 or btnGap)
             lastCoreButton = button
@@ -7527,6 +7511,7 @@ local function guiPositionAndScale()
                 BetterBlizzPlatesDB.friendlyNpdeBuffFilterCC = true
             end
         end
+        BBP.SetupClassIndicatorCCAuraListener()
     end)
 
     anchorSubClassIcon.classIndicatorShowPet = CreateCheckbox("classIndicatorShowPet", "Pet", contentFrame)
@@ -7561,7 +7546,7 @@ local function guiPositionAndScale()
     -- Extended Settings Frame
     anchorSubClassIcon.extendedSettings = CreateFrame("Frame", nil, BetterBlizzPlatesSubPanel, "DefaultPanelFlatTemplate")
     -- anchorSubClassIcon.extendedSettings:SetAllPoints(anchorSubClassIcon.border)
-    anchorSubClassIcon.extendedSettings:SetSize(anchorSubClassIcon.border:GetHeight()+105, 475)
+    anchorSubClassIcon.extendedSettings:SetSize(anchorSubClassIcon.border:GetHeight()+105, 500)
     anchorSubClassIcon.extendedSettings:SetPoint("BOTTOMRIGHT", anchorSubClassIcon.border, "BOTTOMLEFT", 87, -185)
     anchorSubClassIcon.extendedSettings:SetFrameStrata("DIALOG")
     anchorSubClassIcon.extendedSettings:SetIgnoreParentAlpha(true)
@@ -7805,8 +7790,12 @@ local function guiPositionAndScale()
     anchorSubClassIcon.classIndicatorHideName:SetPoint("TOPLEFT", anchorSubClassIcon.classIndicatorFrameStrataHigh, "BOTTOMLEFT", 0, pixelsBetweenBoxes)
     CreateTooltipTwo(anchorSubClassIcon.classIndicatorHideName, "Hide Name (Friend)", "Hides the name on friendly nameplates with Class Indicator on them.")
 
+    anchorSubClassIcon.classIndicatorIgnoreScale = CreateCheckbox("classIndicatorIgnoreScale", "Ignore Nameplate Scale", anchorSubClassIcon.extendedSettings)
+    anchorSubClassIcon.classIndicatorIgnoreScale:SetPoint("TOPLEFT", anchorSubClassIcon.classIndicatorHideName, "BOTTOMLEFT", 0, pixelsBetweenBoxes)
+    CreateTooltipTwo(anchorSubClassIcon.classIndicatorIgnoreScale, "Ignore Nameplate Scale", "Ignore the scale of the Nameplate and keep the Class Indicator the same size always (especially when Targeting)")
+
     anchorSubClassIcon.classIndicatorBackground = CreateCheckbox("classIndicatorBackground", "Show Background Color", anchorSubClassIcon.extendedSettings)
-    anchorSubClassIcon.classIndicatorBackground:SetPoint("TOPLEFT", anchorSubClassIcon.classIndicatorHideName, "BOTTOMLEFT", 0, pixelsBetweenBoxes)
+    anchorSubClassIcon.classIndicatorBackground:SetPoint("TOPLEFT", anchorSubClassIcon.classIndicatorIgnoreScale, "BOTTOMLEFT", 0, pixelsBetweenBoxes)
     CreateTooltipTwo(anchorSubClassIcon.classIndicatorBackground, "Show Background Color","Show a background color on Class Indicator. Adjustable color and size.\n\n|cff32f795Right-click to change Color.|r\n\n|cff32f795Control + Right-click to turn on/off Class Colors.|r")
 
     anchorSubClassIcon.classIndicatorBackground:HookScript("OnMouseDown", function(self, button)
@@ -7943,7 +7932,7 @@ local function guiPositionAndScale()
     anchorSubPointerIndicator.partyPointerOnlyParty:SetPoint("TOPLEFT", anchorSubPointerIndicator.partyPointerHealerOnly, "BOTTOMLEFT", 0, pixelsBetweenBoxes)
     CreateTooltipTwo(anchorSubPointerIndicator.partyPointerOnlyParty, "Party Only", "Only show Party Pointer for Party Members.")
 
-    anchorSubPointerIndicator.partyPointerHighlightScale = CreateSlider(contentFrame, "PP: Highlight Size", 0.8, 1.7, 0.01, "partyPointerHighlightScale", "X")
+    anchorSubPointerIndicator.partyPointerHighlightScale = CreateSlider(contentFrame, "PP: Highlight Size", 0.8, 1.7, 0.01, "partyPointerHighlightScale")
     anchorSubPointerIndicator.partyPointerHighlightScale:SetPoint("TOPLEFT", anchorSubPointerIndicator.partyPointerCCAuras, "BOTTOMLEFT", 2, -18)
     CreateTooltipTwo(anchorSubPointerIndicator.partyPointerHighlightScale, "Change the size of the Highlight. Requires Highlight enabled.")
 
@@ -13192,7 +13181,7 @@ function BBP.CreateIntroMessageWindow()
         if not profile.core then
             local button = CreateClassButton(BBP.IntroMessageWindow, profile.class, profile.name, profile.twitchName, function()
                 ShowProfileConfirmation(profile.name, profile.class, function() BBP.ApplyProfile(profile.name) end)
-            end)
+            end, profile.youtubeName)
 
             if columnFirstRow[colIndex] then
                 button:SetPoint("TOP", columnAnchors[colIndex], "BOTTOM", columnOffsets[colIndex], -10)

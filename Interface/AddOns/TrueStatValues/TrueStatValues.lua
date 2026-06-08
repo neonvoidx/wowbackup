@@ -239,8 +239,14 @@ function addon.tsv:GetStatDiminishBracket(statId,amount)
 
     local rating = addon[stat.rating];
     local conversionFactor = addon[stat.conversionFactor];
-    local amount = amount or 0;
+    amount = amount or 0;
     local bracket = addon.tsv[stat.bracket];
+
+    if rating == nil or conversionFactor == nil or conversionFactor == 0
+        or issecretvalue(rating) or issecretvalue(amount)
+        or type(rating) ~= "number" or type(amount) ~= "number" then
+        return;
+    end
 
     local percent = (rating+amount) / conversionFactor;
     local bracket_rating = 0;
@@ -268,36 +274,56 @@ function addon.tsv:GetStatDiminishBracket(statId,amount)
 end
 
 
-function addon.tsv:RecalculateTrueStatRatings() 
-    addon.BaseCritRating = GetCombatRating(CR_CRIT_SPELL);
-    addon.BaseHasteRating = GetCombatRating(CR_HASTE_SPELL);
-    addon.BaseMasteryRating = GetCombatRating(CR_MASTERY);
-    addon.BaseVersatilityRating = GetCombatRating(CR_VERSATILITY_DAMAGE_DONE);
-	addon.BaseLeechRating = GetCombatRating(CR_LIFESTEAL);
-	addon.BaseAvoidanceRating = GetCombatRating(CR_AVOIDANCE);
-	addon.BaseSpeedRating = GetCombatRating(CR_SPEED);
-    
+function addon.tsv:RecalculateTrueStatRatings()
+    -- C_Secrets API function will return true for all scenarios where player stats are secrets, not just limited to combat lockdown.
+    -- Prevents having to check if any stat is a secret outside of combat situations (M+, PVP, etc.)
+    if C_Secrets.ShouldUnitStatsBeSecret("player") then return end
+
+    local crit    = GetCombatRating(CR_CRIT_SPELL);
+    local haste   = GetCombatRating(CR_HASTE_SPELL);
+    local mastery = GetCombatRating(CR_MASTERY);
+    local vers    = GetCombatRating(CR_VERSATILITY_DAMAGE_DONE);
+    local leech   = GetCombatRating(CR_LIFESTEAL);
+    local avoid   = GetCombatRating(CR_AVOIDANCE);
+    local speed   = GetCombatRating(CR_SPEED);
+
+    addon.BaseCritRating        = crit;
+    addon.BaseHasteRating       = haste;
+    addon.BaseMasteryRating     = mastery;
+    addon.BaseVersatilityRating = vers;
+    addon.BaseLeechRating       = leech;
+    addon.BaseAvoidanceRating   = avoid;
+    addon.BaseSpeedRating       = speed;
+
     addon.TrueStatInfo = addon.TrueStatInfo or {};
-    for statId,stat in pairs(statIdMap) do 
+    for statId,stat in pairs(statIdMap) do
         local true_rating, bracket_penalty, bracket_next_penalty, bracket_rating, bracket_max_rating = self:GetStatDiminishBracket(statId);
-        addon.TrueStatInfo[statId] = {
-            bracketPenalty = bracket_penalty,
-            bracketNextPenalty = bracket_next_penalty,
-            bracketRating = bracket_rating,
-            bracketMaxRating = bracket_max_rating,
-            trueRating = true_rating,
-            baseRating = addon[stat.rating],
-            conversionFactor = addon[stat.conversionFactor]
-        };
+        if true_rating ~= nil then
+            addon.TrueStatInfo[statId] = {
+                bracketPenalty = bracket_penalty,
+                bracketNextPenalty = bracket_next_penalty,
+                bracketRating = bracket_rating,
+                bracketMaxRating = bracket_max_rating,
+                trueRating = true_rating,
+                baseRating = addon[stat.rating],
+                conversionFactor = addon[stat.conversionFactor]
+            };
+        end
     end
 end
 
 function addon.tsv:GetTrueStatRatingAdded(statId,amountStr)
-    local amountStr = amountStr:gsub(",",""); --numbers are big enough to have commas now
+    if not amountStr then return nil; end
+    amountStr = amountStr:gsub(",",""); --numbers are big enough to have commas now
     local amount = tonumber(amountStr);
-    local currentTrueRating = addon.TrueStatInfo[statId].trueRating;
+    if not amount then return nil; end
+
+    local info = addon.TrueStatInfo and addon.TrueStatInfo[statId];
+    if not info or info.trueRating == nil then return nil; end
+
     local addedTrueRating = self:GetStatDiminishBracket(statId,amount);
-    local diff = addedTrueRating - currentTrueRating;
-    diff = math.floor(0.005+100*diff)/100;
-    return diff;
+    if addedTrueRating == nil then return nil; end
+
+    local diff = addedTrueRating - info.trueRating;
+    return math.floor(0.005+100*diff)/100;
 end

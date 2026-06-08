@@ -203,7 +203,7 @@ FrameSort supports the following:
 \n
   - Blizzard: party, raid, arena.
 \n
-  - ElvUI: party.
+  - ElvUI: party, arena.
 \n
   - sArena: arena.
 \n
@@ -270,6 +270,7 @@ L["No conflicting addons"] = nil
 
 -- # Log Screen -- #
 L["Log"] = nil
+L["Enable Logging"] = nil
 L["FrameSort log to help with diagnosing issues."] = nil
 L["Copy Log"] = nil
 

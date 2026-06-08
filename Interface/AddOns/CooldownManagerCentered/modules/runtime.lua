@@ -77,11 +77,10 @@ EventRegistry:RegisterCallback("CooldownViewerSettings.OnDataChanged", function(
         return
     end
     C_Timer.After(0, function()
-        if not ns.db.profile.cooldownManager_experimental_disablePerSpellSettings then
-            if ns.CooldownStyle then
-                ns.CooldownStyle:RefreshHooks()
-            end
+        if ns.CooldownStyle then
+            ns.CooldownStyle:RefreshHooks()
         end
+
         if ns.StyledIcons then
             ns.StyledIcons:RefreshAll()
         end
@@ -93,12 +92,15 @@ end)
 EventRegistry:RegisterCallback("CooldownViewerSettings.OnShow", function(arg1, settingsFrame)
     Runtime.hasSettingsOpened = true
     UpdateRuntime()
-    if ns.MiscPanel then
-        ns.MiscPanel:EnsureMiscSettingsTab(settingsFrame)
-        ns.MiscPanel:RefreshMiscPanel(settingsFrame)
+    if ns.TrackerAssignmentPanel then
+        ns.TrackerAssignmentPanel:EnsureMiscSettingsTab(settingsFrame)
+        ns.TrackerAssignmentPanel:RefreshMiscPanel(settingsFrame)
     end
     if not Runtime:IsAllReady() then
         return
+    end
+    if ns.CMCVisibility then
+        ns.CMCVisibility:UpdateAll()
     end
     C_Timer.After(0, function()
         if ns.StyledIcons then
@@ -108,10 +110,9 @@ EventRegistry:RegisterCallback("CooldownViewerSettings.OnShow", function(arg1, s
         if ns.CooldownManager then
             ns.CooldownManager.ForceRefreshAll()
         end
-        if not ns.db.profile.cooldownManager_experimental_disablePerSpellSettings then
-            if ns.CooldownStyle then
-                ns.CooldownStyle:RefreshHooks()
-            end
+
+        if ns.CooldownStyle then
+            ns.CooldownStyle:RefreshHooks()
         end
     end)
 end)
@@ -120,6 +121,9 @@ EventRegistry:RegisterCallback("CooldownViewerSettings.OnHide", function()
     UpdateRuntime()
     if not Runtime:IsAllReady() then
         return
+    end
+    if ns.CMCVisibility then
+        ns.CMCVisibility:UpdateAll()
     end
     C_Timer.After(0, function()
         if ns.StyledIcons then
@@ -140,6 +144,10 @@ EventRegistry:RegisterCallback("EditMode.Enter", function()
     if ns.CooldownManager then
         ns.CooldownManager.ForceRefreshAll()
     end
+    if ns.CMCVisibility then
+        ns.CMCVisibility:UpdateAll()
+    end
+
     C_Timer.After(0, function()
         if ns.StyledIcons then
             ns.StyledIcons:RefreshAll()
@@ -148,10 +156,9 @@ EventRegistry:RegisterCallback("EditMode.Enter", function()
         if ns.CooldownManager then
             ns.CooldownManager.ForceRefreshAll()
         end
-        if not ns.db.profile.cooldownManager_experimental_disablePerSpellSettings then
-            if ns.CooldownStyle then
-                ns.CooldownStyle:RefreshHooks()
-            end
+
+        if ns.CooldownStyle then
+            ns.CooldownStyle:RefreshHooks()
         end
     end)
 end)
@@ -165,6 +172,9 @@ EventRegistry:RegisterCallback("EditMode.Exit", function()
 
     if ns.CooldownManager then
         ns.CooldownManager.ForceRefreshAll()
+    end
+    if ns.CMCVisibility then
+        ns.CMCVisibility:UpdateAll()
     end
     C_Timer.After(0, function()
         if ns.StyledIcons then
@@ -203,21 +213,20 @@ EventHandler.events["PLAYER_ENTERING_WORLD"] = function(self, event, ...)
     -- end)
 end
 
--- EventHandler.events["EDIT_MODE_LAYOUTS_UPDATED"] = function(self, event, ...)
--- print("Edit Mode Layouts Updated")
--- if not Runtime:IsAllReady() then
---     return
--- end
--- C_Timer.After(0, function()
---     if ns.StyledIcons then
---         ns.StyledIcons:RefreshAll()
---     end
+EventHandler.events["EDIT_MODE_LAYOUTS_UPDATED"] = function(self, event, ...)
+    if not Runtime:IsAllReady() then
+        return
+    end
+    C_Timer.After(0.1, function()
+        if ns.StyledIcons then
+            ns.StyledIcons:RefreshAll()
+        end
 
---     if ns.CooldownManager then
---         ns.CooldownManager.ForceRefreshAll()
---     end
--- end)
--- end
+        if ns.CooldownManager then
+            ns.CooldownManager.ForceRefreshAll()
+        end
+    end)
+end
 
 -- EventHandler.events["TRAIT_CONFIG_UPDATED"] = function(self, event, ...)
 --     print("Trait Config Updated")

@@ -19,9 +19,32 @@ local IsAddOnLoaded = (C_AddOns and C_AddOns.IsAddOnLoaded) or IsAddOnLoaded
 AnchorHelper.providers = AnchorHelper.providers or {}
 AnchorHelper.runtime = AnchorHelper.runtime or {}
 
+local function providerAddonMatches(provider, addonName)
+	if not provider then return false end
+	if provider.addonName == addonName then return true end
+	if provider.addonNames then
+		for _, name in ipairs(provider.addonNames) do
+			if name == addonName then return true end
+		end
+	end
+	return false
+end
+
+local function providerAddonLoaded(provider)
+	if not provider or not IsAddOnLoaded then return true end
+	if provider.addonName and not IsAddOnLoaded(provider.addonName) then return false end
+	if provider.addonNames then
+		for _, name in ipairs(provider.addonNames) do
+			if IsAddOnLoaded(name) then return true end
+		end
+		return false
+	end
+	return true
+end
+
 local function isProviderLoaded(provider)
 	if not provider then return false end
-	if provider.addonName and IsAddOnLoaded and not IsAddOnLoaded(provider.addonName) then return false end
+	if not providerAddonLoaded(provider) then return false end
 	if provider.isLoaded and provider.isLoaded() == false then return false end
 	return true
 end
@@ -197,7 +220,7 @@ end
 function AnchorHelper:HandleAddonLoaded(addonName)
 	if type(addonName) ~= "string" or addonName == "" then return end
 	for _, provider in pairs(self.providers) do
-		if provider.addonName == addonName then
+		if providerAddonMatches(provider, addonName) then
 			self:ScheduleRefresh()
 			return
 		end
@@ -285,6 +308,44 @@ AnchorHelper:RegisterProvider("elvui", {
 		return false
 	end,
 	resolveFrame = function(relativeName) return _G[relativeName] end,
+})
+
+AnchorHelper:RegisterProvider("ellesmereui", {
+	addonNames = { "EllesmereUI", "EllesmereUIUnitFrames", "EllesmereUICooldownManager" },
+	anchors = {
+		{ key = "EllesmereUIUnitFrames_Player", label = "EllesmereUI: Player Frame" },
+		{ key = "EllesmereUIUnitFrames_Target", label = "EllesmereUI: Target Frame" },
+		{ key = "EllesmereUIUnitFrames_TargetTarget", label = "EllesmereUI: Target of Target" },
+		{ key = "EllesmereUIUnitFrames_Focus", label = "EllesmereUI: Focus Frame" },
+		{ key = "EllesmereUIUnitFrames_FocusTarget", label = "EllesmereUI: Focus Target" },
+		{ key = "EllesmereUIUnitFrames_Pet", label = "EllesmereUI: Pet Frame" },
+		{ key = "EllesmereUIUnitFrames_Boss1", label = "EllesmereUI: Boss Frame 1" },
+		{ key = "EllesmereUIUnitFrames_Boss2", label = "EllesmereUI: Boss Frame 2" },
+		{ key = "EllesmereUIUnitFrames_Boss3", label = "EllesmereUI: Boss Frame 3" },
+		{ key = "EllesmereUIUnitFrames_Boss4", label = "EllesmereUI: Boss Frame 4" },
+		{ key = "EllesmereUIUnitFrames_Boss5", label = "EllesmereUI: Boss Frame 5" },
+		{ key = "ECME_CDMBar_cooldowns", label = "EllesmereUI: Cooldowns" },
+		{ key = "ECME_CDMBar_utility", label = "EllesmereUI: Utility" },
+		{ key = "ECME_CDMBar_buffs", label = "EllesmereUI: Buffs" },
+		{ key = "ECME_CDMBar_focuskick", label = "EllesmereUI: Focus Kick" },
+		{ key = "ECME_CDMBar_ghost_cd", label = "EllesmereUI: Ghost Cooldowns" },
+	},
+	framesAvailable = function()
+		local g = _G
+		if not g then return false end
+		if g.EllesmereUIUnitFrames_Player or g.EllesmereUIUnitFrames_Target or g.EllesmereUIUnitFrames_TargetTarget or g.EllesmereUIUnitFrames_Focus or g.EllesmereUIUnitFrames_FocusTarget or g.EllesmereUIUnitFrames_Pet then return true end
+		if g.EllesmereUIUnitFrames_Boss1 or g.ECME_CDMBar_cooldowns or g.ECME_CDMBar_utility or g.ECME_CDMBar_buffs or g.ECME_CDMBar_focuskick or g.ECME_CDMBar_ghost_cd then return true end
+		return g._ECME_GetBarFrame and (g._ECME_GetBarFrame("cooldowns") or g._ECME_GetBarFrame("utility") or g._ECME_GetBarFrame("buffs") or g._ECME_GetBarFrame("focuskick") or g._ECME_GetBarFrame("ghost_cd")) and true or false
+	end,
+	resolveFrame = function(relativeName)
+		local g = _G
+		if not g then return nil end
+		local frame = g[relativeName]
+		if frame then return frame end
+		local barKey = relativeName:match("^ECME_CDMBar_(.+)$")
+		if barKey and g._ECME_GetBarFrame then return g._ECME_GetBarFrame(barKey) end
+		return nil
+	end,
 })
 
 AnchorHelper:RegisterProvider("dragonrider", {

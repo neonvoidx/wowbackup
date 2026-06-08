@@ -3,6 +3,8 @@ local _, addon = ...
 local mini = addon.Core.Framework
 local wowEx = addon.Utils.WoWEx
 local iconSlotContainer = addon.Core.IconSlotContainer
+local inspectorFacade = addon.Core.InspectorFacade
+local kickData = addon.Core.KickData
 local paused = false
 local testModeActive = false
 local enabled = false
@@ -29,119 +31,15 @@ local friendlyUnitsToWatch = {
 	"party2",
 }
 
-local enemyUnitsToWatch = {
-	"arena1",
-	"arena2",
-	"arena3",
-}
-
 ---@type { string: table }
 local partyUnitsEventsFrames = {}
----@type { string: table }
-local enemyUnitsEventsFrames = {}
 local matchEventsFrame
 local worldEventsFrame
 local playerSpecEventsFrame
-
 local minKickCooldown = 15
 
----@type EnemyLastCastState
-local lastEnemyCastState = {
-	Time = nil,
-	Unit = nil,
-}
-
--- mininum delta between enemy cast success and us getting interrupted
--- unsure if it's affected by lag or not, needs testing
-local lastEnemyKickTimeDuration = 0.5
-
--- In patch 12.0.5 (TOC 120005), UNIT_SPELLCAST_SUCCEEDED no longer fires for other players,
--- so enemy cast attribution (lastEnemyCastState) cannot be populated. When true, skip
--- registering UNIT_SPELLCAST_SUCCEEDED for enemy units entirely.
-local noCastSucceeded = select(4, GetBuildInfo()) >= 120005
-
 -- per arena unit computed at arena prep
-local kickDurationsByUnit = {} ---@type table<string, number?>
-local kickIconsByUnit = {} ---@type table<string, any?>
 
-local function KI(spellId)
-	return spellId and C_Spell.GetSpellTexture(spellId) or nil
-end
-
----@class SpecKickInfo
----@field KickCd number?
----@field IsCaster boolean
----@field IsHealer boolean
----@field KickIcon any? -- texture path/id for the kick/interrupt ability
-
----@type table<number, SpecKickInfo>
-local specInfoBySpecId = {
-	-- Rogue — Kick
-	[259] = { KickCd = 15, IsCaster = false, IsHealer = false, KickIcon = KI(1766) }, -- Assassination
-	[260] = { KickCd = 15, IsCaster = false, IsHealer = false, KickIcon = KI(1766) }, -- Outlaw
-	[261] = { KickCd = 15, IsCaster = false, IsHealer = false, KickIcon = KI(1766) }, -- Subtlety
-
-	-- Warrior — Pummel
-	[71] = { KickCd = 15, IsCaster = false, IsHealer = false, KickIcon = KI(6552) }, -- Arms
-	[72] = { KickCd = 15, IsCaster = false, IsHealer = false, KickIcon = KI(6552) }, -- Fury
-	[73] = { KickCd = 15, IsCaster = false, IsHealer = false, KickIcon = KI(6552) }, -- Protection
-
-	-- Death Knight — Mind Freeze
-	[250] = { KickCd = 15, IsCaster = false, IsHealer = false, KickIcon = KI(47528) }, -- Blood
-	[251] = { KickCd = 15, IsCaster = false, IsHealer = false, KickIcon = KI(47528) }, -- Frost
-	[252] = { KickCd = 15, IsCaster = false, IsHealer = false, KickIcon = KI(47528) }, -- Unholy
-
-	-- Demon Hunter — Disrupt
-	[577] = { KickCd = 15, IsCaster = false, IsHealer = false, KickIcon = KI(183752) }, -- Havoc
-	[581] = { KickCd = 15, IsCaster = false, IsHealer = false, KickIcon = KI(183752) }, -- Vengeance
-	[1480] = { KickCd = 15, IsCaster = false, IsHealer = false, KickIcon = KI(183752) }, -- Devourer
-
-	-- Monk — Spear Hand Strike
-	[268] = { KickCd = 15, IsCaster = false, IsHealer = false, KickIcon = KI(116705) }, -- Brewmaster
-	[269] = { KickCd = 15, IsCaster = false, IsHealer = false, KickIcon = KI(116705) }, -- Windwalker
-	[270] = { KickCd = nil, IsCaster = false, IsHealer = true, KickIcon = nil }, -- Mistweaver
-
-	-- Paladin — Rebuke
-	[65] = { KickCd = nil, IsCaster = false, IsHealer = true, KickIcon = nil }, -- Holy
-	[66] = { KickCd = 15, IsCaster = false, IsHealer = false, KickIcon = KI(96231) }, -- Protection
-	[70] = { KickCd = 15, IsCaster = false, IsHealer = false, KickIcon = KI(96231) }, -- Retribution
-
-	-- Druid
-	[102] = { KickCd = 60, IsCaster = true, IsHealer = false, KickIcon = KI(78675) }, -- Balance (Solar Beam)
-	[103] = { KickCd = 15, IsCaster = false, IsHealer = false, KickIcon = KI(106839) }, -- Feral (Skull Bash)
-	[104] = { KickCd = 15, IsCaster = false, IsHealer = false, KickIcon = KI(106839) }, -- Guardian (Skull Bash)
-	[105] = { KickCd = nil, IsCaster = false, IsHealer = true, KickIcon = nil }, -- Restoration
-
-	-- Hunter — Counter Shot
-	[253] = { KickCd = 24, IsCaster = true, IsHealer = false, KickIcon = KI(147362) }, -- Beast Mastery
-	[254] = { KickCd = 24, IsCaster = true, IsHealer = false, KickIcon = KI(147362) }, -- Marksmanship
-	[255] = { KickCd = 15, IsCaster = false, IsHealer = false, KickIcon = KI(147362) }, -- Survival
-
-	-- Mage — Counterspell
-	[62] = { KickCd = 20, IsCaster = true, IsHealer = false, KickIcon = KI(2139) }, -- Arcane
-	[63] = { KickCd = 20, IsCaster = true, IsHealer = false, KickIcon = KI(2139) }, -- Fire
-	[64] = { KickCd = 20, IsCaster = true, IsHealer = false, KickIcon = KI(2139) }, -- Frost
-
-	-- Warlock — Spell Lock (Felhunter)
-	[265] = { KickCd = 24, IsCaster = true, IsHealer = false, KickIcon = KI(19647) }, -- Affliction
-	[266] = { KickCd = 30, IsCaster = true, IsHealer = false, KickIcon = KI(89766) }, -- Demonology
-	[267] = { KickCd = 24, IsCaster = true, IsHealer = false, KickIcon = KI(19647) }, -- Destruction
-
-	-- Shaman — Wind Shear
-	[262] = { KickCd = 12, IsCaster = true, IsHealer = false, KickIcon = KI(57994) }, -- Elemental
-	[263] = { KickCd = 12, IsCaster = false, IsHealer = false, KickIcon = KI(57994) }, -- Enhancement
-	[264] = { KickCd = 30, IsCaster = false, IsHealer = true, KickIcon = KI(57994) }, -- Restoration
-
-	-- Evoker — Quell
-	[1467] = { KickCd = 20, IsCaster = true, IsHealer = false, KickIcon = KI(351338) }, -- Devastation
-	[1468] = { KickCd = nil, IsCaster = false, IsHealer = true, KickIcon = KI(351338) }, -- Preservation
-	[1473] = { KickCd = nil, IsCaster = true, IsHealer = false, KickIcon = nil }, -- Augmentation
-
-	-- Priest
-	[256] = { KickCd = nil, IsCaster = false, IsHealer = true, KickIcon = nil }, -- Discipline
-	[257] = { KickCd = nil, IsCaster = false, IsHealer = true, KickIcon = nil }, -- Holy
-	[258] = { KickCd = 45, IsCaster = true, IsHealer = false, KickIcon = KI(15487) }, -- Shadow (Silence)
-}
 
 ---@class KickTimerModule : IModule
 local M = {}
@@ -306,34 +204,17 @@ local function KickedBySpec(specId)
 		return
 	end
 
-	local specInfo = specInfoBySpecId[specId]
+	local specInfo = kickData.SpecData[specId]
 
-	if not specInfo or not specInfo.KickCd or not specInfo.KickIcon then
+	if not specInfo or not specInfo.KickCd then
 		return
 	end
 
-	local duration = specInfo.KickCd
-	local tex = specInfo.KickIcon
-
-	CreateKickEntry(duration, tex)
+	CreateKickEntry(specInfo.KickCd, kickIcon)
 end
 
----@param kickedBy string?
-local function Kicked(kickedBy)
-	local duration = minKickCooldown
-	local tex = kickIcon
-
-	if kickedBy then
-		if kickDurationsByUnit[kickedBy] then
-			duration = kickDurationsByUnit[kickedBy]
-		end
-
-		if kickIconsByUnit[kickedBy] then
-			tex = kickIconsByUnit[kickedBy]
-		end
-	end
-
-	CreateKickEntry(duration, tex)
+local function Kicked()
+	CreateKickEntry(minKickCooldown, kickIcon)
 end
 
 local function OnFriendlyUnitEvent(unit, _, event, ...)
@@ -341,9 +222,9 @@ local function OnFriendlyUnitEvent(unit, _, event, ...)
 		return
 	end
 
-	if event == "UNIT_SPELLCAST_START" then
+	if event == "UNIT_SPELLCAST_START" or event == "UNIT_SPELLCAST_CHANNEL_START" or event == "UNIT_SPELLCAST_EMPOWER_START" then
 		kickedByUnits[unit] = false
-	elseif event == "UNIT_SPELLCAST_INTERRUPTED" then
+	elseif event == "UNIT_SPELLCAST_INTERRUPTED" or event == "UNIT_SPELLCAST_CHANNEL_STOP" then
 		if kickedByUnits[unit] then
 			return
 		end
@@ -353,25 +234,21 @@ local function OnFriendlyUnitEvent(unit, _, event, ...)
 			return
 		end
 
-		local now = GetTime()
-		local u = nil
+		kickedByUnits[unit] = true
+		Kicked()
+	elseif event == "UNIT_SPELLCAST_EMPOWER_STOP" then
+		if kickedByUnits[unit] then
+			return
+		end
 
-		if lastEnemyCastState.Unit and lastEnemyCastState.Time then
-			local timeSinceLastAction = now - lastEnemyCastState.Time
-			if lastEnemyCastState.Time and timeSinceLastAction < lastEnemyKickTimeDuration then
-				u = lastEnemyCastState.Unit
-			end
+		-- interruptedBy is arg 5 (arg 4 is "complete")
+		local kickedBy = select(5, ...)
+		if not kickedBy then
+			return
 		end
 
 		kickedByUnits[unit] = true
-		Kicked(u)
-	end
-end
-
-local function OnEnemyUnitEvent(unit, _, event)
-	if event == "UNIT_SPELLCAST_SUCCEEDED" then
-		lastEnemyCastState.Unit = unit
-		lastEnemyCastState.Time = GetTime()
+		Kicked()
 	end
 end
 
@@ -382,9 +259,9 @@ local function UpdateMinKickCooldown()
 	local specs = GetNumArenaOpponentSpecs()
 
 	for i = 1, specs do
-		local specId = GetArenaOpponentSpec(i)
+		local specId = inspectorFacade:GetUnitSpecId("arena" .. i)
 		if specId and specId > 0 then
-			local info = specInfoBySpecId[specId]
+			local info = kickData.SpecData[specId]
 			local cd = info and info.KickCd
 			if cd then
 				if not found or cd < minCd then
@@ -398,25 +275,8 @@ local function UpdateMinKickCooldown()
 	minKickCooldown = found and minCd or 15
 end
 
-local function UpdateKickDurations()
-	wipe(kickDurationsByUnit)
-	wipe(kickIconsByUnit)
-
-	local numSpecs = GetNumArenaOpponentSpecs()
-
-	for i = 1, numSpecs do
-		local unit = "arena" .. i
-		local specId = GetArenaOpponentSpec(i)
-		local info = specInfoBySpecId[specId]
-
-		kickDurationsByUnit[unit] = info and info.KickCd or nil
-		kickIconsByUnit[unit] = (info and info.KickIcon) or nil
-	end
-end
-
 local function OnArenaPrep()
 	UpdateMinKickCooldown()
-	UpdateKickDurations()
 	ClearIcons()
 end
 
@@ -430,19 +290,13 @@ local function Disable()
 		if frame then
 			frame:UnregisterEvent("UNIT_SPELLCAST_START")
 			frame:UnregisterEvent("UNIT_SPELLCAST_INTERRUPTED")
+			frame:UnregisterEvent("UNIT_SPELLCAST_CHANNEL_START")
+			frame:UnregisterEvent("UNIT_SPELLCAST_CHANNEL_STOP")
+			frame:UnregisterEvent("UNIT_SPELLCAST_EMPOWER_START")
+			frame:UnregisterEvent("UNIT_SPELLCAST_EMPOWER_STOP")
 			frame:SetScript("OnEvent", nil)
 		end
 		kickedByUnits[unit] = nil
-	end
-
-	if not noCastSucceeded then
-		for _, unit in ipairs(enemyUnitsToWatch) do
-			local frame = enemyUnitsEventsFrames[unit]
-			if frame then
-				frame:UnregisterEvent("UNIT_SPELLCAST_SUCCEEDED")
-				frame:SetScript("OnEvent", nil)
-			end
-		end
 	end
 
 	ClearIcons()
@@ -464,21 +318,13 @@ local function Enable()
 		if frame then
 			frame:RegisterUnitEvent("UNIT_SPELLCAST_START", unit)
 			frame:RegisterUnitEvent("UNIT_SPELLCAST_INTERRUPTED", unit)
+			frame:RegisterUnitEvent("UNIT_SPELLCAST_CHANNEL_START", unit)
+			frame:RegisterUnitEvent("UNIT_SPELLCAST_CHANNEL_STOP", unit)
+			frame:RegisterUnitEvent("UNIT_SPELLCAST_EMPOWER_START", unit)
+			frame:RegisterUnitEvent("UNIT_SPELLCAST_EMPOWER_STOP", unit)
 			frame:SetScript("OnEvent", function(...)
 				OnFriendlyUnitEvent(unit, ...)
 			end)
-		end
-	end
-
-	if not noCastSucceeded then
-		for _, unit in ipairs(enemyUnitsToWatch) do
-			local frame = enemyUnitsEventsFrames[unit]
-			if frame then
-				frame:RegisterUnitEvent("UNIT_SPELLCAST_SUCCEEDED", unit)
-				frame:SetScript("OnEvent", function(...)
-					OnEnemyUnitEvent(unit, ...)
-				end)
-			end
 		end
 	end
 
@@ -560,7 +406,7 @@ function M:IsEnabledForPlayer(options)
 		return true
 	end
 
-	local info = specInfoBySpecId[specId]
+	local info = kickData.SpecData[specId]
 	if not info then
 		return false
 	end
@@ -651,10 +497,6 @@ function M:Init()
 		partyUnitsEventsFrames[unit] = CreateFrame("Frame")
 	end
 
-	for _, unit in ipairs(enemyUnitsToWatch) do
-		enemyUnitsEventsFrames[unit] = CreateFrame("Frame")
-	end
-
 	-- always populate even if disabled, as they might re-enable during arena
 	matchEventsFrame = CreateFrame("Frame")
 	matchEventsFrame:RegisterEvent("ARENA_PREP_OPPONENT_SPECIALIZATIONS")
@@ -683,7 +525,3 @@ end
 ---@field Anchor table?
 ---@field ActiveSlots table<number, {Key: number, Timer: table}>
 ---@field MaxSlots number
-
----@class EnemyLastCastState
----@field Time number?
----@field Unit string?

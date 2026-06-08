@@ -1,10 +1,10 @@
-## Interface: 120001
+## Interface: 120005
 ## Title: |cff9d5db8KeystoneLoot|r
 ## Notes: Shows the items from the mythic plus instances in a compact overview
 ## Notes-ruRU: Компактный аддон, который показывает уровни предметов из подземелий М+
 ## Author: Selina Ruesch
 ## X-Email: selina.ruesch@gmail.com
-## Version: 2.2.1
+## Version: 2.8.0
 ## IconTexture: Interface\Icons\INV_Relics_Hourglass_02
 ## Category-enUS: Dungeons & Raids
 ## Category-deDE: Dungeons & Schlachtzüge
@@ -53,6 +53,7 @@ modules/query.lua
 modules/favorites.lua
 modules/upgrade.lua
 modules/keystone.lua
+modules/voidcore.lua
 
 # UI
 ui/keystone_tooltip.lua
@@ -62,6 +63,9 @@ ui/templates/mixins/icon_button.lua
 ui/templates/mixins/entry_frame.lua
 ui/templates/mixins/teleport_button.lua
 ui/templates/templates.xml
+
+ui/context_menu/mixins/context_menu.lua
+ui/context_menu/context_menu.xml
 
 ui/dungeons_frame/mixins/dungeons_frame.lua
 ui/dungeons_frame/dungeons_frame.xml
@@ -74,11 +78,21 @@ ui/raids_frame/raids_frame.xml
 ui/loot_reminder_frame/mixins/loot_reminder_frame.lua
 ui/loot_reminder_frame/mixins/icon_button.lua
 ui/loot_reminder_frame/mixins/spec_card.lua
+ui/loot_reminder_frame/mixins/efficiency_icon.lua
 ui/loot_reminder_frame/loot_reminder_frame.xml
+
+ui/drop_notification_frame/mixins/row_frame.lua
+ui/drop_notification_frame/mixins/whisper_button.lua
+ui/drop_notification_frame/mixins/drop_notification_frame.lua
+ui/drop_notification_frame/drop_notification_frame.xml
 
 ui/catalyst_frame/mixins/catalyst_frame.lua
 ui/catalyst_frame/mixins/catalyst_icon.lua
 ui/catalyst_frame/catalyst_frame.xml
+
+ui/custom_item_frame/mixins/custom_item_frame.lua
+ui/custom_item_frame/mixins/custom_item_icon.lua
+ui/custom_item_frame/custom_item_frame.xml
 
 ui/minimap_button/mixins/minimap_button.lua
 ui/minimap_button/minimap_button.xml

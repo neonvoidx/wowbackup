@@ -1,4 +1,4 @@
-## Interface: 120000 
+## Interface: 120005
 ## Version: 1.0.0
 ## Title: Custom
 ## Notes: Custom scripts

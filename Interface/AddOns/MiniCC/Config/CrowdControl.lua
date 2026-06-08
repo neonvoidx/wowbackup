@@ -8,8 +8,8 @@ local growOptions = {
 	"RIGHT",
 	"CENTER",
 	"DOWN",
+	"UP",
 }
-local supportsMilliseconds = select(4, GetBuildInfo()) >= 120005
 local verticalSpacing = mini.VerticalSpacing
 local horizontalSpacing = mini.HorizontalSpacing
 local columns = 4
@@ -180,23 +180,39 @@ local function BuildInstance(panel, options)
 
 	showTooltipsChk:SetPoint("TOPLEFT", excludePlayerChk, "BOTTOMLEFT", 0, -verticalSpacing)
 
-	if supportsMilliseconds then
-		local showMillisChk = mini:Checkbox({
-			Parent = parent,
-			LabelText = L["Milliseconds"],
-			Tooltip = L["Show decimal milliseconds on the cooldown timer when below the configured threshold."],
-			GetValue = function()
-				return options.Icons.ShowMilliseconds == true
-			end,
-			SetValue = function(value)
-				options.Icons.ShowMilliseconds = value
-				config:Apply()
-			end,
-		})
+	local showMillisChk = mini:Checkbox({
+		Parent = parent,
+		LabelText = L["Milliseconds"],
+		Tooltip = L["Show decimal milliseconds on the cooldown timer when below the configured threshold."],
+		GetValue = function()
+			return options.Icons.ShowMilliseconds == true
+		end,
+		SetValue = function(value)
+			options.Icons.ShowMilliseconds = value
+			config:Apply()
+		end,
+	})
 
-		showMillisChk:SetPoint("LEFT", parent, "LEFT", columnWidth, 0)
-		showMillisChk:SetPoint("TOP", showTooltipsChk, "TOP", 0, 0)
-	end
+	showMillisChk:SetPoint("LEFT", parent, "LEFT", columnWidth, 0)
+	showMillisChk:SetPoint("TOP", showTooltipsChk, "TOP", 0, 0)
+
+	local refreshSizeMode
+	local relativeSizeChk = mini:Checkbox({
+		Parent = parent,
+		LabelText = L["Relative size"],
+		Tooltip = L["Sizes the icon as a percentage of the unit frame's height instead of in pixels."],
+		GetValue = function()
+			return options.Icons.SizeIsPercent == true
+		end,
+		SetValue = function(value)
+			options.Icons.SizeIsPercent = value
+			refreshSizeMode()
+			config:Apply()
+		end,
+	})
+
+	relativeSizeChk:SetPoint("LEFT", parent, "LEFT", columnWidth * 2, 0)
+	relativeSizeChk:SetPoint("TOP", showTooltipsChk, "TOP", 0, 0)
 
 	local iconSize = mini:Slider({
 		Parent = parent,
@@ -218,6 +234,38 @@ local function BuildInstance(panel, options)
 	})
 
 	iconSize.Slider:SetPoint("TOPLEFT", showTooltipsChk, "BOTTOMLEFT", 4, -verticalSpacing * 3)
+
+	local iconSizePct = mini:Slider({
+		Parent = parent,
+		Min = 25,
+		Max = 100,
+		Width = columnWidth * 2 - horizontalSpacing,
+		Step = 1,
+		LabelText = L["Icon Size (%)"],
+		GetValue = function()
+			return options.Icons.SizePercent or 80
+		end,
+		SetValue = function(v)
+			local newValue = mini:ClampInt(v, 25, 100, 80)
+			if options.Icons.SizePercent ~= newValue then
+				options.Icons.SizePercent = newValue
+				config:Apply()
+			end
+		end,
+	})
+
+	iconSizePct.Slider:SetPoint("TOPLEFT", iconSize.Slider, "TOPLEFT", 0, 0)
+
+	refreshSizeMode = function()
+		local isPercent = options.Icons.SizeIsPercent == true
+		iconSize.Slider:SetShown(not isPercent)
+		iconSize.Label:SetShown(not isPercent)
+		iconSize.EditBox:SetShown(not isPercent)
+		iconSizePct.Slider:SetShown(isPercent)
+		iconSizePct.Label:SetShown(isPercent)
+		iconSizePct.EditBox:SetShown(isPercent)
+	end
+	refreshSizeMode()
 
 	local maxIcons = mini:Slider({
 		Parent = parent,
@@ -398,6 +446,24 @@ local function BuildPetInstance(panel, options)
 	showTooltipsChk:SetPoint("LEFT", parent, "LEFT", enabledColumnWidth * 3, 0)
 	showTooltipsChk:SetPoint("TOP", glowChk, "TOP", 0, 0)
 
+	local refreshSizeMode
+	local relativeSizeChk = mini:Checkbox({
+		Parent = parent,
+		LabelText = L["Relative size"],
+		Tooltip = L["Sizes the icon as a percentage of the unit frame's height instead of in pixels."],
+		GetValue = function()
+			return options.Icons.SizeIsPercent == true
+		end,
+		SetValue = function(value)
+			options.Icons.SizeIsPercent = value
+			refreshSizeMode()
+			config:Apply()
+		end,
+	})
+
+	relativeSizeChk:SetPoint("LEFT", parent, "LEFT", enabledColumnWidth * 4, 0)
+	relativeSizeChk:SetPoint("TOP", glowChk, "TOP", 0, 0)
+
 	local iconSize = mini:Slider({
 		Parent = parent,
 		Min = 10,
@@ -418,6 +484,38 @@ local function BuildPetInstance(panel, options)
 	})
 
 	iconSize.Slider:SetPoint("TOPLEFT", glowChk, "BOTTOMLEFT", 4, -verticalSpacing * 3)
+
+	local iconSizePct = mini:Slider({
+		Parent = parent,
+		Min = 25,
+		Max = 100,
+		Width = columnWidth * 2 - horizontalSpacing,
+		Step = 1,
+		LabelText = L["Icon Size (%)"],
+		GetValue = function()
+			return options.Icons.SizePercent or 50
+		end,
+		SetValue = function(v)
+			local newValue = mini:ClampInt(v, 25, 100, 50)
+			if options.Icons.SizePercent ~= newValue then
+				options.Icons.SizePercent = newValue
+				config:Apply()
+			end
+		end,
+	})
+
+	iconSizePct.Slider:SetPoint("TOPLEFT", iconSize.Slider, "TOPLEFT", 0, 0)
+
+	refreshSizeMode = function()
+		local isPercent = options.Icons.SizeIsPercent == true
+		iconSize.Slider:SetShown(not isPercent)
+		iconSize.Label:SetShown(not isPercent)
+		iconSize.EditBox:SetShown(not isPercent)
+		iconSizePct.Slider:SetShown(isPercent)
+		iconSizePct.Label:SetShown(isPercent)
+		iconSizePct.EditBox:SetShown(isPercent)
+	end
+	refreshSizeMode()
 
 	local maxIcons = mini:Slider({
 		Parent = parent,

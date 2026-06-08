@@ -33,6 +33,12 @@ local isOurInspect
 -- true if we need to run and update spec information
 local needUpdate = true
 
+-- true if the loop is already scheduled to prevent double-scheduling
+local loopRunning = false
+
+-- true once Init() has successfully run
+local initialized = false
+
 -- when we started out last inspect
 local inspectStarted
 
@@ -58,9 +64,9 @@ local function OnSpecInformationChanged()
 end
 
 local function EnsureCacheEntry(unit)
-    local guid = wow.UnitGUID(unit)
+    local guid = wowEx.UnitGUIDSafe(unit)
 
-    -- this can happen sometimes if the unit is "mouseover"
+    -- this can happen sometimes if the unit is "mouseover", or a player name
     if not guid then
         return
     end
@@ -117,7 +123,7 @@ local function GetNextTarget()
         -- these will mostly be nameplate units from minimarkers
         -- which are temporal units, so don't log if they no longer exist
         if wow.UnitExists(unit) then
-            local guid = wow.UnitGUID(unit)
+            local guid = wowEx.UnitGUIDSafe(unit)
 
             if guid and not wow.issecretvalue(guid) then
                 return unit
@@ -130,7 +136,7 @@ local function GetNextTarget()
     -- first attempt to find someone we don't have any information for
     for _, unit in ipairs(units) do
         if not fsUnit:IsRaidTarget(unit) and not fsUnit:IsPet(unit) then
-            local guid = wow.UnitGUID(unit)
+            local guid = wowEx.UnitGUIDSafe(unit)
 
             if not guid then
                 fsLog:Warning("Unable to request spec information for unit '%s' because their GUID is nil.", unit)
@@ -150,7 +156,7 @@ local function GetNextTarget()
     -- now attempt to find someone we have stale information for
     for _, unit in ipairs(units) do
         if not fsUnit:IsRaidTarget(unit) and not fsUnit:IsPet(unit) then
-            local guid = wow.UnitGUID(unit)
+            local guid = wowEx.UnitGUIDSafe(unit)
 
             if not guid then
                 fsLog:Warning("Unable to request spec information for unit '%s' because their GUID is nil.", unit)
@@ -209,9 +215,17 @@ local function InspectNext()
     return true
 end
 
+local RunLoop
+
+local function ScheduleLoop()
+    if not initialized or loopRunning then return end
+    loopRunning = true
+    fsScheduler:RunAfter(inspectInterval, RunLoop)
+end
+
 local function InvalidateEntry(unit)
     -- could flag it as stale, but might as well just remove it entirely
-    local guid = wow.UnitGUID(unit)
+    local guid = wowEx.UnitGUIDSafe(unit)
 
     if not guid then
         return
@@ -224,6 +238,10 @@ local function InvalidateEntry(unit)
     unitGuidToSpec[guid] = nil
 
     needUpdate = true
+
+    if M:IsNeeded() then
+        ScheduleLoop()
+    end
 end
 
 local function OnClearInspect()
@@ -302,7 +320,7 @@ local function BgSpecFromGuid(unit, guid)
 end
 
 local function BgSpec(unit)
-    local guid = wow.UnitGUID(unit)
+    local guid = wowEx.UnitGUIDSafe(unit)
 
     if guid then
         if wow.issecretvalue(guid) then
@@ -350,18 +368,18 @@ local function SpecFromTooltip(unit)
     end
 end
 
-local function RunLoop()
-    -- schedule the next run
-    fsScheduler:RunAfter(inspectInterval, RunLoop)
+RunLoop = function()
+    loopRunning = false
 
     local timeSinceLastInspect = inspectStarted and (wow.GetTimePreciseSec() - inspectStarted)
 
-    -- if we've requested an inspection and we're still within the timeout period
+    -- if we've requested an inspection and we're still within the timeout period, keep waiting
     if requestedUnit ~= nil and timeSinceLastInspect < inspectTimeout then
+        ScheduleLoop()
         return
     end
 
-    -- Timeout occurred - reset state
+    -- timeout occurred - reset state
     if requestedUnit ~= nil and timeSinceLastInspect >= inspectTimeout then
         if isOurInspect then
             fsLog:Debug("Inspect timeout for unit '%s'.", requestedUnit)
@@ -378,6 +396,10 @@ local function RunLoop()
     end
 
     needUpdate = InspectNext()
+
+    if needUpdate or requestedUnit ~= nil then
+        ScheduleLoop()
+    end
 end
 
 function M:ProcessEvent(event, ...)
@@ -387,6 +409,9 @@ function M:ProcessEvent(event, ...)
         end
     elseif event == events.GROUP_ROSTER_UPDATE then
         needUpdate = true
+        if M:IsNeeded() then
+            ScheduleLoop()
+        end
     elseif event == events.PLAYER_SPECIALIZATION_CHANGED then
         local unit = select(1, ...)
         InvalidateEntry(unit)
@@ -419,7 +444,7 @@ function M:FriendlyUnitSpec(unit)
         return nil
     end
 
-    local guid = wow.UnitGUID(unit)
+    local guid = wowEx.UnitGUIDSafe(unit)
 
     if not guid then
         fsLog:Warning("Encountered nil guid for unit '%s'.", unit)
@@ -457,6 +482,7 @@ function M:FriendlyUnitSpec(unit)
         -- queue this unit for inspection
         priorityStack[#priorityStack + 1] = unit
         needUpdate = true
+        ScheduleLoop()
         return nil
     end
 
@@ -543,6 +569,28 @@ function M:CanRun()
     return (wow.CanInspect and wow.NotifyInspect and wow.ClearInspectPlayer and wow.GetInspectSpecialization) ~= nil and capabilities.HasSpecializations()
 end
 
+---Returns true if any active configuration requires friendly spec data from the inspection loop.
+---Enemy specs are obtained synchronously via game APIs and do not need the loop.
+function M:IsNeeded()
+    local sorting = addon.DB.Options.Sorting
+    local role = addon.Configuration.GroupSortMode.Role
+
+    if sorting.Arena.Twos.GroupSortMode == role
+    or sorting.Arena.Default.GroupSortMode == role
+    or sorting.Dungeon.GroupSortMode == role
+    or sorting.World.GroupSortMode == role
+    or sorting.Raid.GroupSortMode == role then
+        return true
+    end
+
+    local nameplates = addon.DB.Options.Nameplates
+    if nameplates.FriendlyEnabled and nameplates.FriendlyFormat and nameplates.FriendlyFormat:find("$spec", 1, true) then
+        return true
+    end
+
+    return false
+end
+
 function M:Init()
     if not M:CanRun() then
         fsLog:Debug("Inspector module not loading because this wow client doesn't have specializations.")
@@ -560,7 +608,11 @@ function M:Init()
     wow.hooksecurefunc("NotifyInspect", OnNotifyInspect)
     wow.hooksecurefunc("ClearInspectPlayer", OnClearInspect)
 
-    RunLoop()
+    initialized = true
+
+    if M:IsNeeded() then
+        RunLoop()
+    end
 
     fsLog:Debug("Initialised the spec inspector module.")
 end

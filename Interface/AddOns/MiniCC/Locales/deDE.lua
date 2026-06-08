@@ -2,11 +2,7 @@
 local _, addon = ...
 local L = addon.L
 
-if GetLocale() ~= "deDE" then
-	return
-end
-
-L:SetStrings({
+L:RegisterLocale("deDE", {
 
 	-- Shared strings
 	["Any"] = "Beliebig",
@@ -35,9 +31,10 @@ L:SetStrings({
 	["Grow"] = "Wachsen",
 	["Icon Padding"] = "Symbol-Abstand",
 	["Icon Size"] = "Symbolgröße",
+	["Icon Size (%)"] = "Symbolgröße (%)",
+	["Relative size"] = "Relative Größe",
+	["Sizes the icon as a percentage of the unit frame's height instead of in pixels."] = "Skaliert das Symbol als Prozentsatz der Höhe des Einheitenrahmens anstatt in Pixeln.",
 	["Important"] = "Wichtig",
-	["Important Notes"] = "Wichtige Hinweise",
-	["Limitations:"] = "Einschränkungen:",
 	["Max Icons"] = "Max. Symbole",
 	["Notification"] = "Benachrichtigung",
 	["Offset X"] = "Versatz X",
@@ -117,15 +114,17 @@ L:SetStrings({
 	["Announce spell names using text-to-speech when they are cast."] = "Sage Zaubernamen mittels Sprachausgabe an, wenn sie gewirkt werden.",
 	["Defensive Spells"] = "Defensive Zauber",
 	["Important Spells"] = "Wichtige Zauber",
-	["Include Defensives"] = "Defensive einschließen",
+	["Include defensives"] = "Defensive einschließen",
 	["Includes defensives in the alerts."] = "Schließt defensive Fähigkeiten in den Warnungen ein.",
 	["Only show alerts for your target and focus in battlegrounds and the open world."] = "Warnungen nur für dein Ziel und deinen Fokus auf Schlachtfeldern und in der offenen Welt anzeigen.",
 	["Play a sound when a defensive spell is pressed."] = "Spiele einen Sound ab, wenn ein defensiver Zauber gewirkt wird.",
 	["Play a sound when an important spell is pressed."] = "Spiele einen Sound ab, wenn ein wichtiger Zauber gewirkt wird.",
 	["Show alert icons in the alerts region."] = "Warnsymbole im Warnbereich anzeigen.",
 	["Show CC icons when healer is CC'd."] = "CC-Symbole anzeigen, wenn der Heiler unter Kontrolle ist.",
+	["Show defensive alerts on a separate, movable bar."] = "Defensive Warnungen auf einer separaten, beweglichen Leiste anzeigen.",
 	["Show icons"] = "Symbole anzeigen",
 	["Shows CC and other important spell alerts."] = "Zeigt Massenkontrolle und andere wichtige Zauberalarme an.",
+	["Split bars"] = "Leisten aufteilen",
 	["Sound"] = "Sound",
 	["Plays a sound when an enemy presses an important or defensive spell."] = "Spielt einen Sound ab, wenn ein Gegner einen wichtigen oder defensiven Zauber wirkt.",
 	["Sound Alerts"] = "Sound-Warnungen",
@@ -169,10 +168,12 @@ L:SetStrings({
 	["Exclude yourself from showing trinket icons."] = "Schließe dich selbst vom Anzeigen von Schmuckstück-Symbolen aus.",
 	["Show CC"] = "CC anzeigen",
 	["Show CC icons."] = "CC-Symbole anzeigen.",
-	["Show Defensives"] = "Defensive anzeigen",
+	["Show defensives"] = "Defensive anzeigen",
 	["Show defensive spell icons."] = "Symbole für defensive Zauber anzeigen.",
-	["Show Important"] = "Wichtiges anzeigen",
+	["Show important"] = "Wichtiges anzeigen",
 	["Show important spell icons."] = "Symbole für wichtige Zauber anzeigen.",
+	["Show interrupts"] = "Unterbrechungen anzeigen",
+	["Show an icon when a friendly unit gets interrupted."] = "Zeigt ein Symbol an, wenn eine befreundete Einheit unterbrochen wird.",
 	["Shows CC, defensives, and important auras as one set of icons on party/raid frames."] = "Zeigt CC, Defensives und wichtige Auren als einen Satz Symbole auf Gruppen-/Schlachtzugs-Rahmen.",
 	["Tip: Disable the CC module for BGs and enable CC within this module."] = "Tipp: Deaktiviere das CC-Modul für Schlachtfelder und aktiviere CC in diesem Modul.",
 
@@ -184,15 +185,8 @@ L:SetStrings({
 	["Text Size"] = "Textgröße",
 
 	-- Kick Timer tab
-	[" - Currently only works inside arena (doesn't work in duels/world, will add this later)."] = " - Funktioniert derzeit nur in der Arena (funktioniert nicht in Duellen/Welt, wird später hinzugefügt).",
-	[" - Doesn't work if the enemy misses kick (still investigating potential workaround/solution)."] = " - Funktioniert nicht, wenn der Gegner die Unterbrechung verfehlt (untersuchen noch mögliche Lösungen).",
-	["As you can tell it's not guaranteed to be accurate, but so far from our testing it's pretty damn good with ancedotally a 95%+ success rate."] = "Wie du sehen kannst, ist es nicht garantiert genau, aber nach unseren Tests ist es ziemlich gut mit anekdotisch über 95% Erfolgsrate.",
-	["For example you are facing 3 enemies who are all pressing buttons."] = "Zum Beispiel stehst du 3 Gegnern gegenüber, die alle Tasten drücken.",
-	["How does it work? It guesses who kicked you by correlating enemy action events against interrupt events."] = "Wie funktioniert es? Es errät, wer dich unterbrochen hat, indem es Gegneraktionsereignisse mit Unterbrechungsereignissen korreliert.",
 	["Kick timer"] = "Unterbrechungs-Timer",
 	["Kick timer_Short"] = "Unterbr.",
-	["Still working on improving this, so stay tuned for updates."] = "Wir arbeiten noch an Verbesserungen, bleib also auf dem Laufenden für Updates.",
-	["You just got kicked and the last enemy who successfully landed a spell was enemy A, therefore we deduce it was enemy A who kicked you."] = "Du wurdest gerade unterbrochen und der letzte Gegner, der erfolgreich einen Zauber gewirkt hat, war Gegner A, daher schließen wir, dass es Gegner A war, der dich unterbrochen hat.",
 
 	-- Nameplates tab
 	["Change the colour of the glow/border based on dispel type (e.g., blue for magic, red for physical)."] = "Ändere die Farbe des Leuchtens/Rahmens basierend auf dem Banntyp (z.B. blau für Magie, rot für physisch).",
@@ -234,7 +228,7 @@ L:SetStrings({
 	["Friendly Cooldowns_Short"] = "Verbünd. AZ",
 	["Icon Spacing"] = "Symbol-Zwischenraum",
 	["Spells"] = "Zauber",
-	["Shows PvP trinket and friendly defensive cooldowns on party/raid frames after a defensive expires."] = "Zeigt PvP-Schmuckstück- und verbündete Defensiv-Abklingzeiten auf Gruppen-/Schlachtzugsrahmen an, nachdem ein Defensivzauber endet.",
+	["Shows PvP trinket and friendly defensive cooldowns on party/raid frames."] = "Zeigt PvP-Schmuckstück- und verbündete Defensiv-Abklingzeiten auf Gruppen-/Schlachtzugsrahmen an, nachdem ein Defensivzauber endet.",
 ["Excludes yourself from being tracked."] = "Schließt dich selbst vom Tracking aus.",
 	["Milliseconds"] = "Millisekunden",
 	["Milliseconds Threshold"] = "Millisekunden-Schwellenwert",
@@ -256,6 +250,8 @@ L:SetStrings({
 	["When Grow is Down, sets how many icons appear per row before wrapping. Useful for horizontal party frames."] = "Wenn Wachsen auf Unten gesetzt ist, legt fest, wie viele Symbole pro Reihe angezeigt werden. Nützlich für horizontale Gruppenrahmen.",
 
 	-- Enemy Cooldown Tracker tab
+	["Enemy Cooldowns"] = "Gegner-Abklingzeiten",
+	["Enemy Cooldowns_Short"] = "Gegner-CDs",
 	["Shows enemy arena opponent defensive and offensive cooldowns after their buffs expire."] = "Zeigt defensive und offensive Abklingzeiten der Arena-Gegner an, nachdem deren Buffs ablaufen.",
 	["Display"] = "Anzeige",
 	["Layout Mode"] = "Layout-Modus",
@@ -264,12 +260,15 @@ L:SetStrings({
 	["Linear Bar Position"] = "Lineare Leisten-Position",
 	["Entry Spacing"] = "Eintragsabstand",
 	["Vertical spacing between each enemy's icon row in Linear mode."] = "Vertikaler Abstand zwischen den Symbol-Reihen jedes Gegners im linearen Modus.",
+	["Always show cooldowns"] = "Abklingzeiten immer anzeigen",
+	["Always display every cooldown for the enemy's specialization, faded when not on cooldown and fully opaque while active."] = "Immer alle Abklingzeiten der Spezialisierung des Gegners anzeigen – abgeblendet, wenn nicht aktiv, und voll sichtbar während der Abklingzeit.",
+	[" - Enemy cooldowns can now always be shown (faded when off cooldown) via the 'Always show cooldowns' option, plus a new Split layout mode (offensive cooldowns on the linear bar, defensive cooldowns on the arena frames)."] = " - Gegnerische Abklingzeiten können jetzt dauerhaft angezeigt werden (abgeblendet, wenn nicht aktiv) über die Option „Abklingzeiten immer anzeigen“, sowie ein neuer Split-Layoutmodus (offensive Abklingzeiten auf der linearen Leiste, defensive an den Arena-Rahmen).",
 	["Enable enemy cooldown tracking in arena."] = "Feindliche Abklingzeit-Verfolgung in der Arena aktivieren.",
 	["Show spell tooltips when hovering over cooldown icons."] = "Zauber-Tooltips beim Überfahren von Abklingzeit-Symbolen anzeigen.",
 	["Reverse the cooldown swipe animation direction on icons."] = "Richtung der Abklingzeit-Wischanimation auf Symbolen umkehren.",
 	["The display size of each cooldown icon in pixels."] = "Die Anzeigestärke jedes Abklingzeit-Symbols in Pixeln.",
 	["The spacing in pixels between each cooldown icon."] = "Der Abstand in Pixeln zwischen jedem Abklingzeit-Symbol.",
-	["Arena Frames: anchors icons next to each enemy's arena frame. Linear Bar: displays all cooldowns in a single combined bar."] = "Arena-Rahmen: Symbole neben jedem Gegner-Arena-Rahmen verankern. Lineare Leiste: Alle Abklingzeiten in einer kombinierten Leiste anzeigen.",
+	["Arena Frames: anchors icons next to each enemy's arena frame. Linear Bar: displays all cooldowns in a single combined bar. Split: shows offensive cooldowns on the linear bar and defensive cooldowns on the arena frames."] = "Arena-Rahmen: Symbole neben jedem Gegner-Arena-Rahmen verankern. Lineare Leiste: Alle Abklingzeiten in einer kombinierten Leiste anzeigen. Geteilt: Zeigt offensive Abklingzeiten auf der linearen Leiste und defensive Abklingzeiten an den Arena-Rahmen.",
 	["The direction cooldown icons grow from the arena frame anchor point."] = "Die Richtung, in die Abklingzeit-Symbole vom Arena-Rahmen-Ankerpunkt wachsen.",
 	["Horizontal pixel offset from the arena frame anchor point."] = "Horizontaler Pixel-Versatz vom Arena-Rahmen-Ankerpunkt.",
 	["Vertical pixel offset from the arena frame anchor point."] = "Vertikaler Pixel-Versatz vom Arena-Rahmen-Ankerpunkt.",
@@ -282,6 +281,7 @@ L:SetStrings({
 	["Precognition"] = "Präkognition",
 	["So if by chance you happen to have some other 4 second important self buff then it would also show that icon sorry."] = "Falls du zufällig einen anderen 4-sekündigen wichtigen Selbst-Buff hast, würde dieses Symbol ebenfalls angezeigt, tut uns leid.",
 	["This isn't precision perfect but it should be close enough."] = "Das ist nicht präzise perfekt, aber es sollte nah genug sein.",
+	["Also tracks Preservation Evoker's Nullifying Shroud (3 second important self buff)."] = "Verfolgt auch die Aufhebende Hülle des Bewahrungs-Rufers (3-sekündiger wichtiger Selbst-Buff).",
 
 	-- Other Addons tab
 	["Other Mini Addons"] = "Andere Mini-Addons",
@@ -300,7 +300,14 @@ L:SetStrings({
 	[" - Added precognition guesser module that shows when you get precog."] = " - Fügt ein Vorausahnungs-Ratemodul hinzu, das anzeigt, wenn du Vorausahnung erhältst.",
 	[" - Added profile import/export feature."] = " - Profil-Import-/Exportfunktion hinzugefügt.",
 	[" - Added friendly cooldown guessing module. You can now somewhat track your team mates cooldowns!"] = " - Freundliches Abklingzeit-Schätzmodul hinzugefügt. Du kannst jetzt die Abklingzeiten deiner Teammitglieder einigermaßen verfolgen!",
-	["HEADS UP: Blizzard is making changes in patch 12.0.5 (April 21st) that will severely reduce the accuracy of friendly CD tracking, kill cooldown glow on press, and completely remove PvP enemy kick tracking. So please be aware that tracking will lose accuracy soon."] = "ACHTUNG: Blizzard nimmt in Patch 12.0.5 (21. April) Änderungen vor, die die Genauigkeit der Freund-CD-Verfolgung stark reduzieren, das Cooldown-Leuchten beim Drücken deaktivieren und das feindliche Kick-Tracking im PvP vollständig entfernen werden. Bitte sei dir also bewusst, dass die Verfolgungsgenauigkeit bald nachlassen wird.",
+	["With the new Blizzard restrictions in 12.0.5, this is what has changed in MiniCC.\n\nThe good news:\n* Cooldown tracking still works mostly fine in arena and dungeons.\n* Added support for multiple spell charges (e.g. 2x Pain Suppression, 2x Blur) for both friendly and enemy CDs.\n\nThe bad news:\n* Friendly externals no longer track in Raids and Battlegrounds.\n* Predictive glows are less reliable.\n* PvP kick tracking can no longer identify the kicker. Now just displays a generic icon using the shortest known enemy kick cooldown.\n\nWe've put a lot of work into this update, but there may still be issues. \nPlease report any bugs you find in our Discord so we can address them."] = "Mit den neuen Blizzard-Einschränkungen in 12.0.5 hat sich in MiniCC Folgendes geändert.\n\nDie guten Neuigkeiten:\n* Cooldown-Tracking funktioniert in Arenen und Dungeons weiterhin größtenteils einwandfrei.\n* Unterstützung für mehrere Zauberladungen (z.B. 2x Schmerzunterdückung, 2x Unschärfe) für freundliche und feindliche CDs hinzugefügt.\n\nDie schlechten Neuigkeiten:\n* Externe freundliche Fähigkeiten werden in Schlachtzügen und Schlachtfeldern nicht mehr verfolgt.\n* Vorhersage-Glows sind weniger zuverlässig.\n* PvP-Kick-Tracking kann den Kicker nicht mehr identifizieren. Zeigt jetzt nur noch ein generisches Symbol mit dem kürzesten bekannten feindlichen Kick-Cooldown an.\n\nWir haben viel Arbeit in dieses Update gesteckt, aber es können noch Probleme auftreten. \nBitte meldet Fehler in unserem Discord, damit wir sie beheben können.",
 	[" - Added enemy cooldown tracking module."] = " - Feindliches Abklingzeit-Verfolgungsmodul hinzugefügt.",
 	["MiniCC - What's New?"] = "MiniCC - Was gibt es Neues?",
+
+	-- Language option
+	["Language"] = "Sprache",
+	["Language override"] = "Sprache überschreiben",
+	["Override the addon language. By default, your game client language is used."] = "Überschreibt die Addon-Sprache. Standardmäßig wird die Sprache deines Spielclients verwendet.",
+	["Auto (client language)"] = "Auto (Client-Sprache)",
+	["Language changed. Reload UI now?"] = "Sprache geändert. Benutzeroberfläche jetzt neu laden?",
 })

@@ -22,4 +22,5 @@
 	<Script file='DataPanel.lua'/>
 	<Script file='Profiles.lua'/>
 	<Script file='UnitFrames.lua'/>
+	<Script file='GroupTools.lua'/>
 </Ui>

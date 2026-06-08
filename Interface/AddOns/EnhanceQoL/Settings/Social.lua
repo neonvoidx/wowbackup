@@ -9,12 +9,16 @@ local function applyParentSection(entries, section)
 	end
 end
 
-local cSocial = addon.SettingsLayout.rootSOCIAL
+local cSocial = nil
 addon.SettingsLayout.socialCategory = cSocial
 
 local privacyExpandable = addon.functions.SettingsCreateExpandableSection(cSocial, {
 	name = L["PrivacyBlockingIgnore"] or "Privacy, Blocking & Ignore",
 	newTagID = "SocialGeneral",
+	configPageKey = "PrivacyBlockingIgnore",
+	modernCategory = "social",
+	modernOnly = true,
+	iconKey = "privacy",
 	expanded = false,
 	colorizeTitle = false,
 })
@@ -23,29 +27,36 @@ local privacyData = {
 	{
 		var = "blockDuelRequests",
 		text = L["blockDuelRequests"],
+		desc = L["blockDuelRequestsDesc"],
 		type = "CheckBox",
 		func = function(value) addon.db["blockDuelRequests"] = value end,
 	},
 	{
 		var = "blockPetBattleRequests",
 		text = L["blockPetBattleRequests"],
+		desc = L["blockPetBattleRequestsDesc"],
 		type = "CheckBox",
 		func = function(value) addon.db["blockPetBattleRequests"] = value end,
 	},
 	{
 		var = "blockPartyInvites",
 		text = L["blockPartyInvites"],
+		desc = L["blockPartyInvitesDesc"],
 		type = "CheckBox",
 		func = function(value) addon.db["blockPartyInvites"] = value end,
 	},
 	{
 		var = "enableIgnore",
 		text = L["Enable advanced ignore list"],
+		desc = L["enableIgnoreDesc"],
 		type = "CheckBox",
 		func = function(value)
 			addon.db["enableIgnore"] = value
 			if addon.Ignore and addon.Ignore.SetEnabled then addon.Ignore:SetEnabled(value) end
 		end,
+		richNote = {
+			text = L["IgnoreDesc2"],
+		},
 		children = {
 			{
 
@@ -86,6 +97,7 @@ local privacyData = {
 
 				var = "ignoreTooltipNote",
 				text = L["Show ignore note in tooltip"],
+				desc = L["ignoreTooltipNoteDesc"],
 				func = function(v) addon.db["ignoreTooltipNote"] = v end,
 				parentCheck = function()
 					return addon.SettingsLayout.elements["enableIgnore"]
@@ -100,6 +112,7 @@ local privacyData = {
 			{
 				var = "ignoreTooltipMaxChars",
 				text = L["IgnoreTooltipMaxChars"],
+				desc = L["IgnoreTooltipMaxCharsDesc"],
 				parentCheck = function()
 					return addon.SettingsLayout.elements["enableIgnore"]
 						and addon.SettingsLayout.elements["enableIgnore"].setting
@@ -117,13 +130,14 @@ local privacyData = {
 			{
 				var = "IgnoreTooltipWordsPerLine",
 				text = L["IgnoreTooltipWordsPerLine"],
+				desc = L["IgnoreTooltipWordsPerLineDesc"],
 				parentCheck = function()
 					return addon.SettingsLayout.elements["enableIgnore"]
 						and addon.SettingsLayout.elements["enableIgnore"].setting
 						and addon.SettingsLayout.elements["enableIgnore"].setting:GetValue() == true
 				end,
 				get = function() return addon.db and addon.db.ignoreTooltipWordsPerLine or 10 end,
-				set = function(value) addon.db["IgnoreTooltipWordsPerLine"] = value end,
+				set = function(value) addon.db["ignoreTooltipWordsPerLine"] = value end,
 				min = 1,
 				max = 20,
 				step = 1,
@@ -131,19 +145,12 @@ local privacyData = {
 				default = 10,
 				sType = "slider",
 			},
-			{
-				text = "|cffffd700" .. L["IgnoreDesc2"] .. "|r",
-				sType = "hint",
-			},
-			{
-				text = "",
-				sType = "hint",
-			},
 		},
 	},
 	{
 		var = "autoAcceptGroupInvite",
 		text = L["autoAcceptGroupInvite"],
+		desc = L["autoAcceptGroupInviteDesc"],
 		type = "CheckBox",
 		func = function(value) addon.db["autoAcceptGroupInvite"] = value end,
 		children = {
@@ -151,6 +158,7 @@ local privacyData = {
 
 				var = "autoAcceptGroupInviteGuildOnly",
 				text = L["autoAcceptGroupInviteGuildOnly"],
+				desc = L["autoAcceptGroupInviteGuildOnlyDesc"],
 				func = function(v) addon.db["autoAcceptGroupInviteGuildOnly"] = v end,
 				parentCheck = function()
 					return addon.SettingsLayout.elements["autoAcceptGroupInvite"]
@@ -166,6 +174,7 @@ local privacyData = {
 
 				var = "autoAcceptGroupInviteFriendOnly",
 				text = L["Friends"],
+				desc = L["autoAcceptGroupInviteFriendOnlyDesc"],
 				func = function(v) addon.db["autoAcceptGroupInviteFriendOnly"] = v end,
 				parentCheck = function()
 					return addon.SettingsLayout.elements["autoAcceptGroupInvite"]
@@ -193,6 +202,10 @@ addon.functions.SettingsCreateCheckboxes(cSocial, privacyData)
 
 local friendsExpandable = addon.functions.SettingsCreateExpandableSection(cSocial, {
 	name = L["FriendsAndCommunities"] or "Friends & Communities",
+	configPageKey = "FriendsCommunities",
+	modernCategory = "social",
+	modernOnly = true,
+	iconKey = "community",
 	expanded = false,
 	colorizeTitle = false,
 })
@@ -201,19 +214,20 @@ local friendsData = {
 	{
 		var = "friendsListDecorEnabled",
 		text = L["friendsListDecorEnabledLabel"],
+		desc = L["friendsListDecorEnabledDesc"],
 		type = "CheckBox",
 		func = function(value)
 			addon.db["friendsListDecorEnabled"] = value
 			if addon.FriendsListDecor and addon.FriendsListDecor.SetEnabled then addon.FriendsListDecor:SetEnabled(addon.db["friendsListDecorEnabled"]) end
 		end,
+		richNote = {
+			text = L["friendsListDecorEnabledDesc"],
+		},
 		children = {
-			{
-				text = "|cffffd700" .. L["friendsListDecorEnabledDesc"] .. "|r",
-				sType = "hint",
-			},
 			{
 				var = "friendsListDecorShowLocation",
 				text = L["friendsListDecorShowLocation"],
+				desc = L["friendsListDecorShowLocationDesc"],
 				func = function(v)
 					addon.db["friendsListDecorShowLocation"] = v
 					if addon.FriendsListDecor and addon.FriendsListDecor.Refresh then addon.FriendsListDecor:Refresh() end
@@ -231,6 +245,7 @@ local friendsData = {
 			{
 				var = "friendsListDecorHideOwnRealm",
 				text = L["friendsListDecorHideOwnRealm"],
+				desc = L["friendsListDecorHideOwnRealmDesc"],
 				func = function(v)
 					addon.db["friendsListDecorHideOwnRealm"] = v
 					if addon.FriendsListDecor and addon.FriendsListDecor.Refresh then addon.FriendsListDecor:Refresh() end
@@ -248,6 +263,7 @@ local friendsData = {
 			{
 				var = "friendsListDecorNameFontSize",
 				text = L["friendsListDecorNameFontSize"],
+				desc = L["friendsListDecorNameFontSizeDesc"],
 				parentCheck = function()
 					return addon.SettingsLayout.elements["friendsListDecorEnabled"]
 						and addon.SettingsLayout.elements["friendsListDecorEnabled"].setting
@@ -283,6 +299,7 @@ local friendsData = {
 			{
 				var = "communityChatPrivacyMode",
 				text = L["Behavior"],
+				desc = L["communityChatPrivacyModeDesc"],
 				list = {
 					[1] = {
 						label = L["Always"],

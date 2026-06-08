@@ -22,7 +22,6 @@ local CreateFrame = CreateFrame
 local CreateTexturePool = CreateTexturePool
 local hooksecurefunc = hooksecurefunc
 local UnitClass = UnitClass
-local C_Timer_After = C_Timer and C_Timer.After
 
 local GetNumClasses = GetNumClasses
 local GetNumSpecializationsForClassIDFn = C_SpecializationInfo and C_SpecializationInfo.GetNumSpecializationsForClassID
@@ -694,15 +693,10 @@ function Module:RequestLootUpdate(button, forceAll)
 	if self.updateScheduled then return end
 	self.updateScheduled = true
 
-	if C_Timer_After then
-		C_Timer_After(0, function()
-			Module.updateScheduled = false
-			Module:UpdateLoot()
-		end)
-	else
+	RunNextFrame(function()
 		Module.updateScheduled = false
 		Module:UpdateLoot()
-	end
+	end)
 end
 
 function Module:OnEncounterJournalLootUpdate()

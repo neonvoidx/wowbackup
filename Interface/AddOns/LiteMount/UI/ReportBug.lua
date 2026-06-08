@@ -26,6 +26,7 @@ LiteMountReportBugMixin = {}
 function LiteMountReportBugMixin:OnLoad()
     self.name = L.LM_REPORT_BUG
     ScrollUtil.RegisterScrollBoxWithScrollBar(self.Scroll.ScrollBox, self.ScrollBar)
+    LiteMountSettingsPanelMixin.OnLoad(self)
 end
 
 local function GetAnyLiteMountMacros()
@@ -69,16 +70,23 @@ function LiteMountReportBugMixin:OnShow()
     local macros = GetAnyLiteMountMacros()
 
     self.Scroll:SetText([[
-|cff00ff00What happens?|r
+|cff00ff00Have you checked https://github.com/xod-wow/LiteMount/releases and have the latest version.|r
+
+No (you should change this to yes when you have checked).
 
 
-|cff00ff00What did you expect to happen instead?|r
+|cff00ff00What is the issue?|r
+
+
+|cff00ff00Describe how to trigger the issue (if applicable).|r
 
 
 |cff00ff00Did it work in a previous version of LiteMount? If so, what was the last version that worked?|r
 
 
-|cffffaa00Please do not modify anything below this line.|r
+|cff00ff00Please trigger the error before capturing and reporting this issue.
+
+Do not modify anything below this line.|r
 |cff777777
 ]] ..
         "--- General ---\n" ..
@@ -116,4 +124,6 @@ function LiteMountReportBugMixin:OnShow()
          linefold(data, 80)
     )
     self.Scroll:SetCursorPosition(0)
+
+    LiteMountSettingsPanelMixin.OnShow(self)
 end

@@ -1,15 +1,20 @@
 local addonName, addon = ...
 
 addon.variables.NewVersionTableEQOL = {
-	EQOL_PROFILES = true,
-	EQOL_UI = true,
-	EQOL_VisibilityFrames = true,
-	EQOL_ProfilesAddOn = true,
-	EQOL_ResourceBars = true,
-	EQOL_globalFontFace = true,
-	EQOL_globalFontStyle = true,
-	EQOL_hideEventToasts = true,
-	EQOL_rb_mode_class = true,
-	EQOL_resourceBarsSharedAllClasses = true,
-	EQOL_resourceBarsSharedEnabled = true,
+	-- 10.21.0 Damage Meter
+	EQOL_GAMEPLAY = true,
+	EQOL_damageMeterAutomaticClear = true,
+	EQOL_damageMeterEditModeSample = true,
+	EQOL_damageMeterEnabled = true,
+	EQOL_damageMeterLinkSegments = true,
+	EQOL_damageMeterUpdateRate = true,
+
+	-- 11.0.0-alpha4 Guild bank repair contexts
+	EQOL_autoRepairGuildBankContexts = true,
+
+	-- 10.21.0 Profile import protection
+	EQOL_importProtection = true,
+
+	-- 10.21.0 Sound mute
+	EQOL_sounds_interface_general_RAID_WARNING = true,
 }

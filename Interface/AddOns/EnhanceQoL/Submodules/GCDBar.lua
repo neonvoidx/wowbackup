@@ -45,6 +45,7 @@ GCDBar.defaults = GCDBar.defaults
 		fillDirection = "LEFT",
 		anchorRelativeFrame = ANCHOR_TARGET_UI,
 		anchorMatchRelativeWidth = false,
+		anchorMatchRelativeWidthOffset = 0,
 		anchorPoint = "CENTER",
 		anchorRelativePoint = "CENTER",
 		anchorOffsetX = 0,
@@ -73,6 +74,7 @@ local DB_PROGRESS_MODE = "gcdBarProgressMode"
 local DB_FILL_DIRECTION = "gcdBarFillDirection"
 local DB_ANCHOR_RELATIVE_FRAME = "gcdBarAnchorTarget"
 local DB_ANCHOR_MATCH_WIDTH = "gcdBarAnchorMatchWidth"
+local DB_ANCHOR_MATCH_WIDTH_OFFSET = "gcdBarAnchorMatchWidthOffset"
 local DB_ANCHOR_POINT = "gcdBarAnchorPoint"
 local DB_ANCHOR_RELATIVE_POINT = "gcdBarAnchorRelativePoint"
 local DB_ANCHOR_OFFSET_X = "gcdBarAnchorOffsetX"
@@ -343,6 +345,8 @@ end
 
 function GCDBar:GetAnchorMatchWidth() return getValue(DB_ANCHOR_MATCH_WIDTH, defaults.anchorMatchRelativeWidth == true) == true end
 
+function GCDBar:GetAnchorMatchWidthOffset() return clamp(getValue(DB_ANCHOR_MATCH_WIDTH_OFFSET, defaults.anchorMatchRelativeWidthOffset or 0), -200, 200) end
+
 function GCDBar:GetAnchorPoint() return normalizeAnchorPoint(getValue(DB_ANCHOR_POINT, defaults.anchorPoint), defaults.anchorPoint) end
 
 function GCDBar:GetAnchorRelativePoint()
@@ -503,12 +507,8 @@ local function onGCDBarEvent(_, event, ...) GCDBar:OnEvent(event, ...) end
 
 function GCDBar:ScheduleMatchedWidthSync()
 	if widthSyncQueued then return end
-	if not (C_Timer and C_Timer.After) then
-		self:ApplySize()
-		return
-	end
 	widthSyncQueued = true
-	C_Timer.After(0, runDelayedMatchedWidthSync)
+	RunNextFrame(runDelayedMatchedWidthSync)
 end
 
 function GCDBar:EnsureWidthSyncHook(frameName)
@@ -548,7 +548,7 @@ function GCDBar:GetResolvedWidth()
 	if not (relativeFrame and relativeFrame.GetWidth) then return width end
 	local relativeWidth = tonumber(relativeFrame:GetWidth()) or 0
 	if relativeWidth <= 0 then return width end
-	return math.max(BAR_WIDTH_MIN, relativeWidth)
+	return math.max(BAR_WIDTH_MIN, relativeWidth + self:GetAnchorMatchWidthOffset())
 end
 
 function GCDBar:HideSpark()
@@ -905,6 +905,7 @@ function GCDBar:ApplyLayoutData(data)
 	elseif data.anchorMatchRelativeWidth ~= nil then
 		anchorMatchWidth = data.anchorMatchRelativeWidth == true
 	end
+	local anchorMatchWidthOffset = clamp(data.anchorMatchWidthOffset or data.anchorMatchRelativeWidthOffset or addon.db[DB_ANCHOR_MATCH_WIDTH_OFFSET] or defaults.anchorMatchRelativeWidthOffset or 0, -200, 200)
 	local anchorPoint = normalizeAnchorPoint(data.point or addon.db[DB_ANCHOR_POINT], defaults.anchorPoint)
 	local anchorRelativePoint = normalizeAnchorPoint(data.relativePoint or addon.db[DB_ANCHOR_RELATIVE_POINT], anchorPoint)
 	local anchorOffsetX = normalizeAnchorOffset(data.x ~= nil and data.x or addon.db[DB_ANCHOR_OFFSET_X], defaults.anchorOffsetX)
@@ -931,6 +932,7 @@ function GCDBar:ApplyLayoutData(data)
 	local prevAnchorRelativeFrame = addon.db[DB_ANCHOR_RELATIVE_FRAME]
 	addon.db[DB_ANCHOR_RELATIVE_FRAME] = anchorRelativeFrame
 	addon.db[DB_ANCHOR_MATCH_WIDTH] = anchorMatchWidth and true or false
+	addon.db[DB_ANCHOR_MATCH_WIDTH_OFFSET] = anchorMatchWidthOffset
 	addon.db[DB_ANCHOR_POINT] = anchorPoint
 	addon.db[DB_ANCHOR_RELATIVE_POINT] = anchorRelativePoint
 	addon.db[DB_ANCHOR_OFFSET_X] = anchorOffsetX
@@ -1036,6 +1038,10 @@ local function applySetting(field, value)
 		addon.db[DB_ANCHOR_MATCH_WIDTH] = enabled and true or false
 		value = enabled
 		refreshSettingsUI()
+	elseif field == "anchorMatchWidthOffset" then
+		local offset = clamp(value, -200, 200)
+		addon.db[DB_ANCHOR_MATCH_WIDTH_OFFSET] = offset
+		value = offset
 	elseif field == "anchorPoint" then
 		local point = normalizeAnchorPoint(value, defaults.anchorPoint)
 		addon.db[DB_ANCHOR_POINT] = point
@@ -1115,7 +1121,7 @@ function GCDBar:RegisterEditMode()
 					local order = root.order or {}
 					local function addPanelEntry(panelId, panel)
 						if not panel or panel.enabled == false then return end
-						local label = string.format("Panel %s: %s", tostring(panelId), panel.name or "Cooldown Panel")
+							local label = (L["cooldownPanelReferenceLabel"]):format(tostring(panelId), panel.name or L["cooldownPanelDefaultName"])
 						add("EQOL_CooldownPanel" .. tostring(panelId), label)
 					end
 					if #order > 0 then
@@ -1216,6 +1222,19 @@ function GCDBar:RegisterEditMode()
 				get = function() return GCDBar:GetAnchorMatchWidth() end,
 				set = function(_, value) applySetting("anchorMatchWidth", value) end,
 				isEnabled = function() return not GCDBar:AnchorUsesUIParent() end,
+			},
+			{
+				name = L["Offset"] or "Offset",
+				kind = SettingType.Slider,
+				field = "anchorMatchWidthOffset",
+				minValue = -200,
+				maxValue = 200,
+				valueStep = 1,
+				allowInput = true,
+				default = defaults.anchorMatchRelativeWidthOffset or 0,
+				get = function() return GCDBar:GetAnchorMatchWidthOffset() end,
+				set = function(_, value) applySetting("anchorMatchWidthOffset", value) end,
+				isEnabled = function() return GCDBar:AnchorUsesMatchedWidth() end,
 			},
 			{
 				name = L["Hide in pet battles"] or "Hide in pet battles",
@@ -1462,6 +1481,7 @@ function GCDBar:RegisterEditMode()
 		record.fillDirection = self:GetFillDirection()
 		record.anchorRelativeFrame = self:GetAnchorRelativeFrame()
 		record.anchorMatchWidth = self:GetAnchorMatchWidth()
+		record.anchorMatchWidthOffset = self:GetAnchorMatchWidthOffset()
 		record.hideInPetBattle = self:GetHideInPetBattle()
 		record.strata = self:GetStrata() or ""
 		do
@@ -1500,6 +1520,7 @@ function GCDBar:RegisterEditMode()
 			fillDirection = self:GetFillDirection(),
 			anchorRelativeFrame = self:GetAnchorRelativeFrame(),
 			anchorMatchWidth = self:GetAnchorMatchWidth(),
+			anchorMatchWidthOffset = self:GetAnchorMatchWidthOffset(),
 			hideInPetBattle = self:GetHideInPetBattle(),
 			strata = self:GetStrata() or "",
 			color = (function()

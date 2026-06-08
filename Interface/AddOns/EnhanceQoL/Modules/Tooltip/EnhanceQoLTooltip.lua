@@ -9,6 +9,9 @@ end
 
 local L = LibStub("AceLocale-3.0"):GetLocale("EnhanceQoL")
 local WHITE_FONT_COLOR = _G.WHITE_FONT_COLOR
+local TOOLTIP_LABEL_COLOR = "|cffffd200"
+local TOOLTIP_WHITE_COLOR = "|cffffffff"
+local TOOLTIP_COLOR_CLOSE = "|r"
 
 local frameLoad = CreateFrame("Frame")
 
@@ -62,6 +65,40 @@ local function IsTooltipMutable(tooltip)
 	return true
 end
 
+local function IsUnitIdentitySecret(unit)
+	if not unit or isSecret(unit) then return true end
+	if not (C_Secrets and C_Secrets.ShouldUnitIdentityBeSecret) then return false end
+	local secret = C_Secrets.ShouldUnitIdentityBeSecret(unit)
+	return secret == true or isSecret(secret)
+end
+
+local function IsSafeUnitToken(unit)
+	return type(unit) == "string" and unit ~= "" and not IsUnitIdentitySecret(unit)
+end
+
+local function SafeUnitExists(unit)
+	return IsSafeUnitToken(unit) and UnitExists(unit) and true or false
+end
+
+local function SafeUnitPlayerControlled(unit)
+	if not IsSafeUnitToken(unit) or not UnitPlayerControlled then return nil end
+	return UnitPlayerControlled(unit)
+end
+
+local function SafeUnitIsUnit(unit, otherUnit)
+	if not UnitIsUnit or not IsSafeUnitToken(unit) or not IsSafeUnitToken(otherUnit) then return nil end
+	local same = UnitIsUnit(unit, otherUnit)
+	if isSecret(same) then return nil end
+	return same == true
+end
+
+local function SafeUnitName(unit)
+	if IsUnitIdentitySecret(unit) or not UnitName then return nil end
+	local name, realm = UnitName(unit)
+	if isSecret(name) or isSecret(realm) then return nil end
+	return name, realm
+end
+
 local function GetUnitTokenFromTooltip(tt)
 	local hadTooltipUnit = false
 	if not tt then return nil, hadTooltipUnit end
@@ -80,19 +117,59 @@ local function GetUnitTokenFromTooltip(tt)
 			end
 		end
 	end
-	if not tt.GetUnit then return nil, hadTooltipUnit end
-	local _, unit = tt:GetUnit()
-	if unit ~= nil then
-		hadTooltipUnit = true
-		if isSecret(unit) then return nil, hadTooltipUnit end
-	end
-	return unit, hadTooltipUnit
+	return nil, hadTooltipUnit
 end
 
--- no compact score formatting needed anymore
+local function ColorText(text, color)
+	if text == nil then return nil end
+	return (color or TOOLTIP_WHITE_COLOR) .. tostring(text) .. TOOLTIP_COLOR_CLOSE
+end
+
+local function ColorTextRGB(text, r, g, b)
+	if text == nil then return nil end
+	return ("|cff%02x%02x%02x%s|r"):format((r or 1) * 255, (g or 1) * 255, (b or 1) * 255, tostring(text))
+end
+
+local function EnsureItemLevelColorFunc()
+	if GetItemLevelColor then return end
+	if C_AddOns and C_AddOns.IsAddOnLoaded and C_AddOns.LoadAddOn then
+		if not C_AddOns.IsAddOnLoaded("Blizzard_UIPanels_Game") then C_AddOns.LoadAddOn("Blizzard_UIPanels_Game") end
+	elseif UIParentLoadAddOn then
+		UIParentLoadAddOn("Blizzard_UIPanels_Game")
+	end
+end
+
+local function GetTooltipItemLevelColor()
+	EnsureItemLevelColorFunc()
+	if GetItemLevelColor then
+		local r, g, b = GetItemLevelColor()
+		if r then return r, g, b end
+	end
+	return 1, 1, 1
+end
+
+local function FormatDungeonRunLevel(run)
+	if not run or not run.bestRunLevel or run.bestRunLevel <= 0 then return nil end
+	local stars = ""
+	if run.finishedSuccess then
+		local timeLimit = select(3, C_ChallengeMode.GetMapUIInfo(run.challengeModeID))
+		if timeLimit and run.bestRunDurationMS then
+			local bestRunDuration = run.bestRunDurationMS / 1000
+			if bestRunDuration <= timeLimit * 0.6 then
+				stars = "+++"
+			elseif bestRunDuration <= timeLimit * 0.8 then
+				stars = "++"
+			elseif bestRunDuration <= timeLimit then
+				stars = "+"
+			end
+		end
+	end
+	return stars .. tostring(run.bestRunLevel)
+end
 
 local pendingGUID, pendingUnit, pendingRequestedAt
 local EnsureUnitData -- forward declaration
+local ResolveTooltipUnit -- forward declaration
 local fInspect = CreateFrame("Frame")
 
 local function IsInspectUIBusy()
@@ -107,8 +184,8 @@ end
 
 local function FinishTooltipInspectRequest()
 	ClearTooltipInspectState()
-	if C_Timer and C_Timer.After and ClearInspectPlayer and not IsInspectUIBusy() then
-		C_Timer.After(0, function()
+	if ClearInspectPlayer and not IsInspectUIBusy() then
+		RunNextFrame(function()
 			if ClearInspectPlayer and not IsInspectUIBusy() then ClearInspectPlayer() end
 		end)
 	end
@@ -120,6 +197,16 @@ local function ShouldUseInspectFeature() return (addon.db and (addon.db["Tooltip
 local function IsConfiguredModifierDown()
 	local mod = addon.db and addon.db["TooltipMythicScoreModifier"] or "SHIFT"
 	return (mod == "SHIFT" and IsShiftKeyDown()) or (mod == "ALT" and IsAltKeyDown()) or (mod == "CTRL" and IsControlKeyDown())
+end
+
+local function IsTooltipIDModifierDown()
+	local mod = addon.db and addon.db["TooltipIDModifier"] or "ALT"
+	return (mod == "SHIFT" and IsShiftKeyDown()) or (mod == "ALT" and IsAltKeyDown()) or (mod == "CTRL" and IsControlKeyDown())
+end
+
+local function ShouldShowTooltipIDDetails()
+	if not addon.db or not addon.db["TooltipIDRequireModifier"] then return true end
+	return IsTooltipIDModifierDown() == true
 end
 
 local function IsTooltipHideOverrideActive()
@@ -140,6 +227,19 @@ local function DoesKeyMatchConfiguredModifier(key)
 	return false
 end
 
+local function HasTooltipIDOptions()
+	local db = addon.db
+	if not db then return false end
+	return db["TooltipShowSpellID"]
+		or db["TooltipShowSpellIcon"]
+		or db["TooltipShowItemID"]
+		or db["TooltipShowTempEnchant"]
+		or db["TooltipShowCurrencyID"]
+		or db["TooltipShowNPCID"]
+		or db["TooltipShowQuestID"]
+		or db["TooltipShowQuestIDInQuestLog"]
+end
+
 local function UpdateInspectEventRegistration()
 	if not addon.db then return end
 	if not fInspect then return end
@@ -156,6 +256,7 @@ end
 addon.functions.UpdateInspectEventRegistration = UpdateInspectEventRegistration
 
 local function IsValidSpellIdentifier(id)
+	if isSecret(id) then return false end
 	local idType = type(id)
 	return idType == "number" or idType == "string"
 end
@@ -173,7 +274,7 @@ end
 local function RefreshTooltipForGUID(guid)
 	if not GameTooltip or not GameTooltip:IsShown() then return end
 	local tt = GameTooltip
-	local unit = GetUnitTokenFromTooltip(tt)
+	local unit = ResolveTooltipUnit and ResolveTooltipUnit(tt) or GetUnitTokenFromTooltip(tt)
 	if not unit then return end
 	local uGuid = UnitGUID(unit)
 	if not safeEquals(uGuid, guid) then return end
@@ -198,20 +299,22 @@ local function RefreshTooltipForGUID(guid)
 	if showSpec then
 		if haveSpecLine then
 			local right = _G[tt:GetName() .. "TextRight" .. haveSpecLine]
-			if right then right:SetText(c.specName) end
+			if right then right:SetText(ColorText(c.specName)) end
 		else
-			if not (haveSpecLine or haveIlvlLine) then tt:AddLine(" ") end
-			tt:AddDoubleLine("|cffffd200" .. labelSpec .. "|r", c.specName)
+			tt:AddDoubleLine(TOOLTIP_LABEL_COLOR .. labelSpec .. TOOLTIP_COLOR_CLOSE, ColorText(c.specName))
 			addedAny = true
 		end
 	end
 	if showIlvl then
+		local r, g, b = GetTooltipItemLevelColor()
 		if haveIlvlLine then
 			local right = _G[tt:GetName() .. "TextRight" .. haveIlvlLine]
-			if right then right:SetText(tostring(c.ilvl)) end
+			if right then
+				right:SetText(tostring(c.ilvl))
+				right:SetTextColor(r, g, b)
+			end
 		else
-			if not (haveSpecLine or haveIlvlLine) and not addedAny and not showSpec then tt:AddLine(" ") end
-			tt:AddDoubleLine("|cffffd200" .. labelIlvl .. "|r", tostring(c.ilvl))
+			tt:AddDoubleLine(TOOLTIP_LABEL_COLOR .. labelIlvl .. TOOLTIP_COLOR_CLOSE, tostring(c.ilvl), 1, 1, 0, r, g, b)
 			addedAny = true
 		end
 	end
@@ -230,7 +333,7 @@ fInspect:SetScript("OnEvent", function(_, ev, arg1, arg2)
 		end
 		local unit = (unitGuid == guid) and pendingUnit or nil
 		FinishTooltipInspectRequest()
-		if not unit or not UnitExists(unit) then return end
+		if not SafeUnitExists(unit) then return end
 
 		local ilvl
 		if C_PaperDollInfo and C_PaperDollInfo.GetInspectItemLevel then
@@ -266,7 +369,7 @@ fInspect:SetScript("OnEvent", function(_, ev, arg1, arg2)
 		if not DoesKeyMatchConfiguredModifier(key) then return end
 		if not IsConfiguredModifierDown() then return end
 		if not GameTooltip or not GameTooltip:IsShown() then return end
-		local unit = GetUnitTokenFromTooltip(GameTooltip)
+		local unit = ResolveTooltipUnit and ResolveTooltipUnit(GameTooltip) or GetUnitTokenFromTooltip(GameTooltip)
 		if not unit or not UnitIsPlayer(unit) then return end
 		EnsureUnitData(unit)
 		local guid = UnitGUID(unit)
@@ -290,7 +393,7 @@ EnsureUnitData = function(unit)
 	end
 
 	-- Self: no inspect needed
-	if UnitIsUnit(unit, "player") then
+	if SafeUnitIsUnit(unit, "player") then
 		local ilvl
 		if GetAverageItemLevel then
 			local _, eq = GetAverageItemLevel()
@@ -346,15 +449,10 @@ local function GetNPCIDFromGUID(guid)
 end
 
 local function FormatUnitName(unit)
-	if not unit or (issecretvalue and issecretvalue(unit)) then return nil end
-	if UnitIsUnit then
-		local same = UnitIsUnit(unit, "player")
-		if issecretvalue and issecretvalue(same) then return nil end
-		if same then return "<YOU>" end
-	end
-	local name, realm = UnitName(unit)
+	if IsUnitIdentitySecret(unit) then return nil end
+	if SafeUnitIsUnit(unit, "player") then return "<YOU>" end
+	local name, realm = SafeUnitName(unit)
 	if not name then return nil end
-	if issecretvalue and issecretvalue(name) then return nil end
 	if realm and realm ~= "" then name = name .. "-" .. realm end
 	return name
 end
@@ -388,6 +486,241 @@ local function GetUnitMountInfo(unit)
 	return nil
 end
 
+local function GetRealmLanguageLabel(locale)
+	if type(locale) ~= "string" or locale == "" then return nil end
+	local localeKey = locale:upper()
+	return _G["LFG_LIST_LANGUAGE_" .. localeKey] or _G[localeKey] or locale
+end
+
+local function GetRealmDataProvider()
+	local realmData = addon.Tooltip and addon.Tooltip.variables and addon.Tooltip.variables.realmInfo
+	if not realmData or not realmData.GetRealmInfo then return nil end
+	return realmData
+end
+
+local realmLocaleFlagAssets = {
+	deDE = "flag_de.tga",
+	enGB = "flag_enGB.tga",
+	enUS = "flag_enUS.tga",
+	esES = "flag_esES.tga",
+	esMX = "flag_esMX.tga",
+	frFR = "flag_frFR.tga",
+	itIT = "flag_itIT.tga",
+	koKR = "flag_koKR.tga",
+	ptBR = "flag_ptBR.tga",
+	ptPT = "flag_ptPT.tga",
+	ruRU = "flag_ruRU.tga",
+	zhCN = "flag_zhCN.tga",
+	zhTW = "flag_zhTW.tga",
+}
+
+local function FormatRealmFlagTexture(fileName, variant)
+	if variant == "lfg" then
+		return ("|TInterface\\AddOns\\EnhanceQoL\\Assets\\%s:13:20:0:-1|t"):format(fileName)
+	end
+	return ("|TInterface\\AddOns\\EnhanceQoL\\Assets\\%s:14:22:0:0|t"):format(fileName)
+end
+
+local function GetRealmFlagPlaceholder(info, allowTextures, variant)
+	if type(info) ~= "table" then return nil end
+	local locale = info.locale
+	if info.region == "US" and type(info.timezone) == "string" and safeFind(info.timezone, "Australia/", true) then
+		return allowTextures and FormatRealmFlagTexture("flag_oce.tga", variant) or "[enAU]"
+	end
+	local fileName = realmLocaleFlagAssets[info.locale]
+	if fileName and allowTextures then return FormatRealmFlagTexture(fileName, variant) end
+	if type(locale) == "string" and locale ~= "" then return "[" .. locale .. "]" end
+	return nil
+end
+
+local function IsRealmInfoFieldEnabled(field, legacyKey)
+	local fields = addon.db and addon.db["TooltipRealmInfoFields"]
+	if type(fields) == "table" then return fields[field] == true end
+	return addon.db and addon.db[legacyKey] == true
+end
+
+local function IsLFGRealmDisplayEnabled(field)
+	local displays = addon.db and addon.db["TooltipRealmLFGDisplay"]
+	if type(displays) == "table" then return displays[field] == true end
+	return true
+end
+
+local function NormalizeRealmFromNameString(value)
+	local realmData = GetRealmDataProvider()
+	local realm = realmData and realmData.GetRealmFromNameString and realmData.GetRealmFromNameString(value) or nil
+	if type(realm) ~= "string" or realm == "" then return nil end
+	realm = realm:gsub("%s+%b()", "")
+	realm = realm:gsub("^%s+", ""):gsub("%s+$", "")
+	return realm ~= "" and realm or nil
+end
+
+local function AddRealmInfo(tooltip, realm)
+	if not addon.db["TooltipShowRealmInfo"] then return false end
+	if not IsTooltipMutable(tooltip) then return false end
+	if not realm or realm == "" then return end
+
+	local realmData = GetRealmDataProvider()
+	if not realmData then return false end
+
+	local info = realmData.GetRealmInfo(realm)
+	if not info then return false end
+
+	local printedHeader = false
+	local function ensureHeader()
+		if printedHeader then return end
+		tooltip:AddLine(" ")
+		printedHeader = true
+	end
+
+	if IsRealmInfoFieldEnabled("language", "TooltipRealmShowLanguage") then
+		local language = GetRealmLanguageLabel(info.locale)
+		if language then
+			local flag = GetRealmFlagPlaceholder(info, true)
+			if flag then language = flag .. " " .. language end
+			ensureHeader()
+			tooltip:AddDoubleLine(L["TooltipRealmLanguage"], ColorText(language))
+		end
+	end
+
+	if IsRealmInfoFieldEnabled("type", "TooltipRealmShowType") and realmData.FormatRealmType then
+		local realmType = realmData.FormatRealmType(info)
+		if realmType then
+			ensureHeader()
+			tooltip:AddDoubleLine(L["TooltipRealmType"], ColorText(realmType))
+		end
+	end
+
+	if IsRealmInfoFieldEnabled("timezone", "TooltipRealmShowTimezone") and realmData.FormatRealmTimezone then
+		local timezone = realmData.FormatRealmTimezone(info)
+		if timezone then
+			ensureHeader()
+			tooltip:AddDoubleLine(L["TooltipRealmTimezone"], ColorText(timezone))
+		end
+	end
+
+	if IsRealmInfoFieldEnabled("connected", "TooltipRealmShowConnected") and realmData.GetConnectionNames then
+		local names = realmData.GetConnectionNames(info)
+		if names and #names > 1 then
+			ensureHeader()
+			if #names <= 4 then
+				tooltip:AddDoubleLine(L["TooltipRealmConnected"], ColorText(table.concat(names, ", ")))
+			else
+				tooltip:AddLine(L["TooltipRealmConnected"] .. ":")
+				tooltip:AddLine(table.concat(names, ", "), 1, 1, 1, true)
+			end
+		end
+	end
+
+	if printedHeader then tooltip:Show() end
+	return printedHeader
+end
+
+local function AddUnitRealmInfo(tooltip, unit)
+	if not unit or not UnitIsPlayer(unit) then return end
+	if IsUnitIdentitySecret(unit) then return end
+
+	local _, realm = SafeUnitName(unit)
+	if not realm or realm == "" then realm = GetRealmName and GetRealmName() or nil end
+	AddRealmInfo(tooltip, realm)
+end
+
+local function GetLFGSearchResultInfo(resultID)
+	if not resultID or not C_LFGList or not C_LFGList.GetSearchResultInfo then return nil end
+	if C_LFGList.HasSearchResultInfo and not C_LFGList.HasSearchResultInfo(resultID) then return nil end
+	local searchResultInfo = C_LFGList.GetSearchResultInfo(resultID)
+	if type(searchResultInfo) ~= "table" then return nil end
+	return searchResultInfo
+end
+
+local function GetRealmInfoForLFGResult(resultID)
+	local searchResultInfo = GetLFGSearchResultInfo(resultID)
+	local leaderName = searchResultInfo and searchResultInfo.leaderName
+	if isSecret(leaderName) then return nil end
+	if type(leaderName) ~= "string" or leaderName == "" then return nil end
+	local realm = NormalizeRealmFromNameString(leaderName)
+	if not realm then return nil end
+
+	local realmData = GetRealmDataProvider()
+	local info = realmData and realmData.GetRealmInfo(realm) or nil
+	return info, realm
+end
+
+local function StripPreviousRealmFlagPrefix(entry, text)
+	local prefix = entry and entry.__EnhanceQoLRealmFlagPrefix
+	if type(prefix) ~= "string" or prefix == "" then return text end
+	if type(text) ~= "string" or text == "" then return text end
+	if text:sub(1, #prefix + 1) == prefix .. " " then return text:sub(#prefix + 2) end
+	local indent, rest = text:match("^(%s+)(.*)$")
+	if indent and rest and rest:sub(1, #prefix + 1) == prefix .. " " then return indent .. rest:sub(#prefix + 2) end
+	return text
+end
+
+local function UpdateLFGSearchEntryRealmFlag(entry)
+	if not addon.db or not addon.db["TooltipShowRealmInfo"] then return end
+	if not IsLFGRealmDisplayEnabled("listingFlag") then return end
+	if not entry or not entry.Name or not entry.Name.GetText or not entry.Name.SetText then return end
+	local text = entry.Name:GetText()
+	if isSecret(text) then return end
+	text = StripPreviousRealmFlagPrefix(entry, text)
+
+	local info = GetRealmInfoForLFGResult(entry.resultID)
+	local prefix = GetRealmFlagPlaceholder(info, not isTooltipRestricted(), "lfg")
+	if not prefix then
+		entry.__EnhanceQoLRealmFlagPrefix = nil
+		entry.Name:SetText(text)
+		return
+	end
+
+	entry.__EnhanceQoLRealmFlagPrefix = prefix
+	entry.Name:SetText(prefix .. " " .. (text or ""))
+end
+
+local function AddLFGSearchEntryRealmInfo(tooltip, resultID)
+	if not addon.db or not addon.db["TooltipShowRealmInfo"] then return end
+	if not IsLFGRealmDisplayEnabled("tooltip") then return end
+	if isTooltipRestricted() then return end
+	local _, realm = GetRealmInfoForLFGResult(resultID)
+	if not realm then return end
+	AddRealmInfo(tooltip, realm)
+end
+
+local function GetRealmInfoForLFGApplicant(appID, memberIdx)
+	if isTooltipRestricted() then return nil end
+	if isSecret(appID) or isSecret(memberIdx) then return nil end
+	if not C_LFGList or not C_LFGList.GetApplicantMemberInfo then return nil end
+	local name = C_LFGList.GetApplicantMemberInfo(appID, memberIdx or 1)
+	if isSecret(name) then return nil end
+	if type(name) ~= "string" or name == "" then return nil end
+	local realm = NormalizeRealmFromNameString(name)
+	if not realm then return nil end
+
+	local realmData = GetRealmDataProvider()
+	local info = realmData and realmData.GetRealmInfo(realm) or nil
+	return info, realm
+end
+
+local function UpdateLFGApplicantMemberRealmFlag(memberFrame, appID, memberIdx)
+	if not addon.db or not addon.db["TooltipShowRealmInfo"] then return end
+	if not IsLFGRealmDisplayEnabled("listingFlag") then return end
+	if isTooltipRestricted() then return end
+	if not memberFrame or not memberFrame.Name or not memberFrame.Name.GetText or not memberFrame.Name.SetText then return end
+	local text = memberFrame.Name:GetText()
+	if isSecret(text) then return end
+	text = StripPreviousRealmFlagPrefix(memberFrame, text)
+
+	local info = GetRealmInfoForLFGApplicant(appID, memberIdx)
+	local prefix = GetRealmFlagPlaceholder(info, not isTooltipRestricted(), "lfg")
+	if not prefix then
+		memberFrame.__EnhanceQoLRealmFlagPrefix = nil
+		memberFrame.Name:SetText(text)
+		return
+	end
+
+	local rest = text:match("^%s*(.*)$")
+	memberFrame.__EnhanceQoLRealmFlagPrefix = prefix
+	memberFrame.Name:SetText(prefix .. " " .. (rest or text or ""))
+end
+
 local function fmtNum(n)
 	if BreakUpLargeNumbers then
 		return BreakUpLargeNumbers(n or 0)
@@ -400,7 +733,7 @@ local function checkCurrency(tooltip, id)
 	if not IsTooltipMutable(tooltip) then return end
 	if not id then return end
 
-	if addon.db["TooltipShowCurrencyID"] then
+	if addon.db["TooltipShowCurrencyID"] and ShouldShowTooltipIDDetails() then
 		tooltip:AddLine(" ")
 		tooltip:AddDoubleLine(L["CurrencyID"], id)
 	end
@@ -493,10 +826,11 @@ local function checkSpell(tooltip, id, name, isSpell)
 	if not db then return end
 
 	local first = true
-	local showSpellID = db["TooltipShowSpellID"]
+	local showIDDetails = ShouldShowTooltipIDDetails()
+	local showSpellID = showIDDetails and db["TooltipShowSpellID"] and not isSecret(id)
 	local canResolveSpellIcon = isSpell and IsValidSpellIdentifier(id)
 	local showSpellIconInline = canResolveSpellIcon and db["TooltipShowSpellIconInline"]
-	local showSpellIcon = canResolveSpellIcon and db["TooltipShowSpellIcon"]
+	local showSpellIcon = showIDDetails and canResolveSpellIcon and db["TooltipShowSpellIcon"]
 	local spellIconID
 	if showSpellIconInline or showSpellIcon then spellIconID = GetTooltipSpellIconID(id) end
 
@@ -542,33 +876,48 @@ local function checkSpell(tooltip, id, name, isSpell)
 	tooltip:Hide()
 end
 
-local function ResolveTooltipUnit(tooltip)
+ResolveTooltipUnit = function(tooltip)
 	local unit, hadTooltipUnit = GetUnitTokenFromTooltip(tooltip)
-	if unit and UnitExists(unit) then return unit end
+	if SafeUnitExists(unit) then return unit end
 	if hadTooltipUnit then return nil end
-	if UnitExists("mouseover") then return "mouseover" end
+	if SafeUnitExists("mouseover") then return "mouseover" end
 	return nil
+end
+
+local function GetTooltipDataKind(tooltip)
+	if not (tooltip and tooltip.GetPrimaryTooltipInfo) then return nil end
+	local info = tooltip:GetPrimaryTooltipInfo()
+	if not info or isSecret(info.type) then return nil end
+	return addon.Tooltip and addon.Tooltip.variables and addon.Tooltip.variables.kindsByID and addon.Tooltip.variables.kindsByID[tonumber(info.type)]
 end
 
 local function IsModifierTooltipRefreshNeeded()
 	local db = addon.db
 	if not db then return false end
 	if db["TooltipHideOverrideEnabled"] then return true end
-	if db["TooltipShowMythicScore"] and db["TooltipMythicScoreRequireModifier"] then return true end
+	if db["TooltipShowMythicScore"] then return true end
 	if db["TooltipUnitInspectRequireModifier"] and (db["TooltipUnitShowSpec"] or db["TooltipUnitShowItemLevel"]) then return true end
+	if db["TooltipIDRequireModifier"] and HasTooltipIDOptions() then return true end
 	return false
 end
 
-local function RefreshVisibleUnitTooltipForModifier()
+local function RefreshVisibleTooltipForModifier()
 	if not IsModifierTooltipRefreshNeeded() then return end
 	if isTooltipRestricted() then return end
 	if not GameTooltip or not GameTooltip.IsShown or not GameTooltip:IsShown() then return end
 	if GameTooltip.IsForbidden and GameTooltip:IsForbidden() then return end
+
 	local unit, hadTooltipUnit = GetUnitTokenFromTooltip(GameTooltip)
-	if not hadTooltipUnit or not unit or isSecret(unit) or not UnitExists(unit) then return end
+	local kind = GetTooltipDataKind(GameTooltip)
+	if kind == "unit" or hadTooltipUnit then
+		if not SafeUnitExists(unit) then return end
+		if GameTooltip.SetUnit and safeSecureCall(GameTooltip.SetUnit, GameTooltip, unit) then GameTooltip:Show() end
+		return
+	end
 
+	if not kind then return end
 	if GameTooltip.RefreshData and safeSecureCall(GameTooltip.RefreshData, GameTooltip) then return end
-
+	if not SafeUnitExists(unit) then return end
 	if GameTooltip.SetUnit and safeSecureCall(GameTooltip.SetUnit, GameTooltip, unit) then GameTooltip:Show() end
 end
 
@@ -576,7 +925,10 @@ local fModifierTooltipRefresh = CreateFrame("Frame")
 fModifierTooltipRefresh:RegisterEvent("MODIFIER_STATE_CHANGED")
 fModifierTooltipRefresh:SetScript("OnEvent", function(_, _, key)
 	if key ~= "LSHIFT" and key ~= "RSHIFT" and key ~= "LCTRL" and key ~= "RCTRL" and key ~= "LALT" and key ~= "RALT" then return end
-	RefreshVisibleUnitTooltipForModifier()
+	RefreshVisibleTooltipForModifier()
+	if addon.db and addon.db["TooltipIDRequireModifier"] and addon.Tooltip and addon.Tooltip.functions and addon.Tooltip.functions.UpdateQuestIDInQuestLog then
+		addon.Tooltip.functions.UpdateQuestIDInQuestLog()
+	end
 end)
 
 local function HasUnitTooltipOptions()
@@ -592,6 +944,7 @@ local function HasUnitTooltipOptions()
 	if db["TooltipShowGuildRank"] or db["TooltipColorGuildName"] then return true end
 	if db["TooltipUnitShowTargetOfTarget"] then return true end
 	if db["TooltipUnitShowMount"] then return true end
+	if db["TooltipShowRealmInfo"] then return true end
 	if db["TooltipUnitShowSpec"] or db["TooltipUnitShowItemLevel"] then return true end
 	return false
 end
@@ -607,6 +960,7 @@ local function ShouldRunAdditionalTooltip()
 		or db["TooltipColorGuildName"]
 		or db["TooltipUnitShowTargetOfTarget"]
 		or db["TooltipUnitShowMount"]
+		or db["TooltipShowRealmInfo"]
 		or db["TooltipShowMythicScore"]
 end
 
@@ -622,7 +976,7 @@ local function checkAdditionalTooltip(tooltip)
 		if mapId then return "ID " .. tostring(mapId) end
 		return "UNKNOWN"
 	end
-	if addon.db["TooltipShowNPCID"] and unit and UnitExists(unit) and not UnitPlayerControlled(unit) then
+	if addon.db["TooltipShowNPCID"] and ShouldShowTooltipIDDetails() and SafeUnitExists(unit) and not SafeUnitPlayerControlled(unit) then
 		local uGuid = UnitGUID(unit)
 		local id = GetNPCIDFromGUID(uGuid)
 		if id then
@@ -711,7 +1065,7 @@ local function checkAdditionalTooltip(tooltip)
 		local targetUnit = unit .. "target"
 		if UnitExists(targetUnit) then
 			local targetName = FormatUnitName(targetUnit)
-			if targetName then tooltip:AddDoubleLine(L["TooltipTargeting"] or "Targeting", targetName) end
+			if targetName then tooltip:AddDoubleLine(L["TooltipTargeting"] or "Targeting", ColorText(targetName)) end
 		end
 	end
 
@@ -720,14 +1074,15 @@ local function checkAdditionalTooltip(tooltip)
 		if mountName then
 			if mountIcon then mountName = ("|T%d:16:16:0:0|t %s"):format(mountIcon, mountName) end
 			if mountCollected then mountName = ("|TInterface\\RaidFrame\\ReadyCheck-Ready:14:14:0:0|t %s"):format(mountName) end
-			tooltip:AddDoubleLine(L["TooltipMount"] or "Mount", mountName)
+			tooltip:AddDoubleLine(L["TooltipMount"] or "Mount", ColorText(mountName))
 		end
 	end
 
-	local showMythic = addon.db["TooltipShowMythicScore"] and unit and UnitExists(unit) and UnitCanAttack("player", unit) == false and addon.Tooltip.variables.maxLevel == UnitLevel(unit)
-	if showMythic and addon.db["TooltipMythicScoreRequireModifier"] and not IsConfiguredModifierDown() then showMythic = false end
+	if unit then AddUnitRealmInfo(tooltip, unit) end
+
+	local showMythic = addon.db["TooltipShowMythicScore"] and SafeUnitExists(unit) and UnitCanAttack("player", unit) == false and addon.Tooltip.variables.maxLevel == UnitLevel(unit)
 	if showMythic then
-		local _, _, timeLimit
+		local timeLimit
 		local rating = C_PlayerInfo.GetPlayerMythicPlusRatingSummary(unit)
 		if rating then
 			local r, g, b
@@ -739,15 +1094,9 @@ local function checkAdditionalTooltip(tooltip)
 			local parts = addon.db["TooltipMythicScoreParts"]
 			local wantScore = type(parts) ~= "table" and true or parts.score == true
 			local wantBest = type(parts) ~= "table" and true or parts.best == true
+			local detailsRequireModifier = addon.db["TooltipMythicScoreRequireModifier"] == true
 			local wantDungeons = type(parts) ~= "table" and true or parts.dungeons == true
-
-			local printedAny = false
-			if wantScore then
-				r, g, b = C_ChallengeMode.GetDungeonScoreRarityColor(rating.currentSeasonScore):GetRGB()
-				tooltip:AddLine(" ")
-				tooltip:AddDoubleLine(DUNGEON_SCORE, rating.currentSeasonScore, 1, 1, 0, r, g, b)
-				printedAny = true
-			end
+			if detailsRequireModifier and not IsConfiguredModifierDown() then wantDungeons = false end
 
 			if rating.currentSeasonScore > 0 and (wantBest or wantDungeons) then
 				for _, key in pairs(rating.runs) do
@@ -755,7 +1104,7 @@ local function checkAdditionalTooltip(tooltip)
 				end
 
 				for _, key in pairs(C_ChallengeMode.GetMapTable()) do
-					_, _, timeLimit = C_ChallengeMode.GetMapUIInfo(key)
+					timeLimit = select(3, C_ChallengeMode.GetMapUIInfo(key))
 					r, g, b = 0.5, 0.5, 0.5
 
 					local data = key
@@ -809,41 +1158,26 @@ local function checkAdditionalTooltip(tooltip)
 						b = b,
 					})
 				end
-				if wantBest and bestDungeon and bestDungeon.mapScore > 0 then
-					_, _, timeLimit = C_ChallengeMode.GetMapUIInfo(bestDungeon.challengeModeID)
-					r, g, b = 1, 1, 1
-					local stars = ""
-					local hexColor = string.format("|cff%02x%02x%02x", r * 255, g * 255, b * 255)
-					local bestName = challengeLabel(bestDungeon.challengeModeID)
-					if bestDungeon.finishedSuccess then
-						local bestRunDuration = bestDungeon.bestRunDurationMS / 1000
-						local timeForPlus3 = timeLimit * 0.6
-						local timeForPlus2 = timeLimit * 0.8
-						local timeForPlus1 = timeLimit
-						if bestRunDuration <= timeForPlus3 then
-							stars = "+++"
-						elseif bestRunDuration <= timeForPlus2 then
-							stars = "++"
-						elseif bestRunDuration <= timeForPlus1 then
-							stars = "+"
-						end
-						stars = stars .. bestDungeon.bestRunLevel
-					else
-						stars = bestDungeon.bestRunLevel
-						r, g, b = 0.5, 0.5, 0.5
-					end
-					if not printedAny then tooltip:AddLine(" ") end
-					tooltip:AddDoubleLine(L["BestMythic+run"], hexColor .. stars .. "|r " .. bestName, 1, 1, 0, r, g, b)
-					printedAny = true
-				end
+			end
 
-				if wantDungeons and #dungeonList > 0 then
-					table.sort(dungeonList, function(a, b) return a.score > b.score end)
-					-- Add a spacer before the dungeon list (always one blank line)
-					tooltip:AddLine(" ")
-					for _, dungeon in ipairs(dungeonList) do
-						tooltip:AddDoubleLine(dungeon.text, dungeon.level, 1, 1, 1, dungeon.r, dungeon.g, dungeon.b)
-					end
+			if wantScore then
+				r, g, b = C_ChallengeMode.GetDungeonScoreRarityColor(rating.currentSeasonScore):GetRGB()
+				local scoreText = ColorTextRGB(rating.currentSeasonScore or 0, r, g, b)
+				local bestLevel = wantBest and bestDungeon and bestDungeon.mapScore > 0 and FormatDungeonRunLevel(bestDungeon) or nil
+				if bestLevel then scoreText = ("%s %s"):format(scoreText, ColorText("(" .. bestLevel .. ")")) end
+				tooltip:AddDoubleLine(TOOLTIP_LABEL_COLOR .. DUNGEON_SCORE .. TOOLTIP_COLOR_CLOSE, scoreText, 1, 1, 1, 1, 1, 1)
+			elseif wantBest and bestDungeon and bestDungeon.mapScore > 0 then
+				local stars = FormatDungeonRunLevel(bestDungeon)
+				local bestName = challengeLabel(bestDungeon.challengeModeID)
+				if stars then
+					tooltip:AddDoubleLine(TOOLTIP_LABEL_COLOR .. L["BestMythic+run"] .. TOOLTIP_COLOR_CLOSE, ("%s %s"):format(stars, bestName), 1, 1, 1, 1, 1, 1)
+				end
+			end
+
+			if wantDungeons and #dungeonList > 0 then
+				table.sort(dungeonList, function(a, b) return a.score > b.score end)
+				for _, dungeon in ipairs(dungeonList) do
+					tooltip:AddDoubleLine(dungeon.text, dungeon.level, 1, 1, 1, dungeon.r, dungeon.g, dungeon.b)
 				end
 			end
 		end
@@ -854,7 +1188,7 @@ local function ShowCopyURL(url)
 	if type(url) ~= "string" or url == "" then return end
 	if not StaticPopupDialogs["ENHANCEQOL_COPY_URL"] then
 		StaticPopupDialogs["ENHANCEQOL_COPY_URL"] = {
-			text = "Copy URL:",
+			text = L["copyUrlPopupText"],
 			button1 = OKAY,
 			hasEditBox = true,
 			timeout = 0,
@@ -1017,7 +1351,7 @@ local function checkItem(tooltip, id, name, guid)
 		end
 	end
 
-	local showItemID = addon.db["TooltipShowItemID"]
+	local showItemID = addon.db["TooltipShowItemID"] and ShouldShowTooltipIDDetails()
 
 	if showItemID and id then
 		if first then
@@ -1047,7 +1381,7 @@ local function checkItem(tooltip, id, name, guid)
 		end
 	end
 
-	if addon.db["TooltipShowTempEnchant"] and guid then
+	if addon.db["TooltipShowTempEnchant"] and ShouldShowTooltipIDDetails() and guid then
 		local mhHas, mhExp, _, mhID, ohHas, ohExp, _, ohID, rhHas, rhExp = GetWeaponEnchantInfo()
 		if mhHas and guid == Item:CreateFromEquipmentSlot(16):GetItemGUID() then
 			if mhID then
@@ -1113,7 +1447,8 @@ end
 local function checkAura(tooltip, id, name)
 	if not IsTooltipMutable(tooltip) then return end
 	local first = true
-	if addon.db["TooltipShowSpellID"] then
+	local showIDDetails = ShouldShowTooltipIDDetails()
+	if addon.db["TooltipShowSpellID"] and showIDDetails then
 		if id then
 			if first then
 				tooltip:AddLine(" ")
@@ -1143,7 +1478,7 @@ local function checkAura(tooltip, id, name)
 		end
 	end
 
-	if addon.db["TooltipShowSpellIcon"] and IsValidSpellIdentifier(id) then
+	if addon.db["TooltipShowSpellIcon"] and showIDDetails and IsValidSpellIdentifier(id) then
 		local spellInfo = C_Spell.GetSpellInfo(id)
 		if spellInfo and spellInfo.iconID then
 			if first then
@@ -1166,7 +1501,7 @@ local function checkAdditionalUnit(tt)
 	if not (addon.db["TooltipUnitShowSpec"] or addon.db["TooltipUnitShowItemLevel"]) then return end
 	if isTooltipRestricted() then return end
 
-	local unit = GetUnitTokenFromTooltip(tt)
+	local unit = ResolveTooltipUnit(tt)
 	if not unit or not UnitIsPlayer(unit) then return end
 
 	EnsureUnitData(unit)
@@ -1181,23 +1516,53 @@ local function checkAdditionalUnit(tt)
 		showSpec = false
 		showIlvl = false
 	end
-	if showSpec or showIlvl then tt:AddLine(" ") end
-	if showSpec then tt:AddDoubleLine("|cffffd200" .. SPECIALIZATION .. "|r", c.specName) end
+	if showSpec then tt:AddDoubleLine(TOOLTIP_LABEL_COLOR .. SPECIALIZATION .. TOOLTIP_COLOR_CLOSE, ColorText(c.specName)) end
 	if showIlvl then
 		local label = STAT_AVERAGE_ITEM_LEVEL or ITEM_LEVEL or "Item Level"
-		tt:AddDoubleLine("|cffffd200" .. label .. "|r", tostring(c.ilvl))
+		local r, g, b = GetTooltipItemLevelColor()
+		tt:AddDoubleLine(TOOLTIP_LABEL_COLOR .. label .. TOOLTIP_COLOR_CLOSE, tostring(c.ilvl), 1, 1, 0, r, g, b)
 	end
 	if showSpec or showIlvl then tt:Show() end
 end
 
+local function ShouldRunTooltipPostCall()
+	local db = addon.db
+	if not db then return false end
+	return db["TooltipShowSpellID"]
+		or db["TooltipShowSpellIcon"]
+		or db["TooltipShowSpellIconInline"]
+		or db["TooltipShowItemID"]
+		or db["TooltipShowItemIcon"]
+		or db["TooltipShowTempEnchant"]
+		or db["TooltipShowItemCount"]
+		or (db["TooltipItemHideType"] and db["TooltipItemHideType"] ~= 1)
+		or db["TooltipItemHideInDungeon"]
+		or db["TooltipShowCurrencyID"]
+		or db["TooltipShowCurrencyAccountWide"]
+		or (db["TooltipUnitHideType"] and db["TooltipUnitHideType"] ~= 1)
+		or db["TooltipUnitHideInCombat"]
+		or db["TooltipUnitHideInDungeon"]
+		or db["TooltipUnitHideHealthBar"]
+		or db["TooltipUnitShowTargetOfTarget"]
+		or db["TooltipUnitShowMount"]
+		or db["TooltipShowRealmInfo"]
+		or db["TooltipUnitShowSpec"]
+		or db["TooltipUnitShowItemLevel"]
+		or db["TooltipShowMythicScore"]
+		or (db["TooltipBuffHideType"] and db["TooltipBuffHideType"] ~= 1)
+		or db["TooltipBuffHideInDungeon"]
+		or db["TooltipBuffHideInCombat"]
+end
+
 if TooltipDataProcessor then
 	TooltipDataProcessor.AddLinePreCall(Enum.TooltipDataLineType.SellPrice, function(tooltip, lineData)
+		if not ShouldRunTooltipPostCall() then return end
 		tooltip:AddLine(SELL_PRICE .. ": " .. GetMoneyString(lineData.price), WHITE_FONT_COLOR:GetRGB())
 		return true
 	end)
 
 	TooltipDataProcessor.AddTooltipPostCall(TooltipDataProcessor.AllTypes, function(tooltip, data)
-		if not addon.db then return end
+		if not ShouldRunTooltipPostCall() then return end
 		if not data or not data.type then return end
 		if not IsTooltipMutable(tooltip) then return end
 
@@ -1278,7 +1643,7 @@ end
 local function UpdateQuestIDInQuestLogLabel(questID)
 	local fs = EnsureQuestIDInQuestLogLabel()
 	if not fs then return end
-	if not addon.db or not addon.db["TooltipShowQuestIDInQuestLog"] or not questID or questID == 0 then
+	if not addon.db or not addon.db["TooltipShowQuestIDInQuestLog"] or not ShouldShowTooltipIDDetails() or not questID or questID == 0 then
 		fs:SetText("")
 		fs:Hide()
 		return
@@ -1287,6 +1652,25 @@ local function UpdateQuestIDInQuestLogLabel(questID)
 	local label = ID or "ID"
 	fs:SetText(("%s: %s"):format(label, tostring(questID)))
 	fs:Show()
+end
+
+local function RegisterLFGTooltipHooks()
+	if addon.Tooltip.variables.lfgHooksInitialized then return end
+	if not _G.LFGListUtil_SetSearchEntryTooltip or not _G.LFGListSearchEntry_Update or not _G.LFGListApplicationViewer_UpdateApplicantMember then return end
+	addon.Tooltip.variables.lfgHooksInitialized = true
+
+	hooksecurefunc("LFGListUtil_SetSearchEntryTooltip", function(tooltip, resultID)
+		if not IsTooltipMutable(tooltip) then return end
+		AddLFGSearchEntryRealmInfo(tooltip, resultID)
+	end)
+
+	hooksecurefunc("LFGListSearchEntry_Update", function(entry)
+		UpdateLFGSearchEntryRealmFlag(entry)
+	end)
+
+	hooksecurefunc("LFGListApplicationViewer_UpdateApplicantMember", function(memberFrame, appID, memberIdx)
+		UpdateLFGApplicantMemberRealmFlag(memberFrame, appID, memberIdx)
+	end)
 end
 
 function addon.Tooltip.functions.UpdateQuestIDInQuestLog(questID)
@@ -1304,7 +1688,7 @@ local function registerTooltipHooks()
 	addon.Tooltip.variables.hooksInitialized = true
 
 	-- Apply initial tooltip scale once the UI is ready
-	C_Timer.After(0, function()
+	RunNextFrame(function()
 		if addon.Tooltip and addon.Tooltip.ApplyScale then addon.Tooltip.ApplyScale() end
 	end)
 
@@ -1333,7 +1717,7 @@ local function registerTooltipHooks()
 	if Menu and Menu.ModifyMenu then
 		local function AddTargetWowheadEntry(owner, root)
 			if not addon.db or not addon.db["TooltipShowNPCWowheadLink"] then return end
-			if not UnitExists("target") or UnitPlayerControlled("target") then return end
+			if not SafeUnitExists("target") or SafeUnitPlayerControlled("target") then return end
 			local guid = UnitGUID("target")
 			if issecretvalue and issecretvalue(guid) then return end
 			local npcID = GetNPCIDFromGUID()
@@ -1344,7 +1728,7 @@ local function registerTooltipHooks()
 			if not btn then return end
 			btn:AddInitializer(function()
 				btn:SetTooltip(function(tt)
-					GameTooltip_SetTitle(tt, "Wowhead")
+					GameTooltip_SetTitle(tt, L["wowhead"])
 					GameTooltip_AddNormalLine(tt, ("npc=%d"):format(npcID))
 				end)
 			end)
@@ -1354,7 +1738,7 @@ local function registerTooltipHooks()
 	end
 
 	hooksecurefunc("QuestMapLogTitleButton_OnEnter", function(self)
-		if not addon.db or not addon.db["TooltipShowQuestID"] then return end
+		if not addon.db or not addon.db["TooltipShowQuestID"] or not ShouldShowTooltipIDDetails() then return end
 		if self then
 			if self.questID and GameTooltip:IsShown() then
 				GameTooltip:AddDoubleLine(ID, self.questID)
@@ -1369,6 +1753,12 @@ local function registerTooltipHooks()
 
 	hooksecurefunc("QuestMapFrame_CloseQuestDetails", function()
 		if addon.Tooltip and addon.Tooltip.functions and addon.Tooltip.functions.UpdateQuestIDInQuestLog then addon.Tooltip.functions.UpdateQuestIDInQuestLog() end
+	end)
+
+	RegisterLFGTooltipHooks()
+	frameLoad:RegisterEvent("ADDON_LOADED")
+	frameLoad:SetScript("OnEvent", function(_, _, loadedAddonName)
+		if loadedAddonName == "Blizzard_GroupFinder" then RegisterLFGTooltipHooks() end
 	end)
 
 	-- Optionally hide the default "Right-click for options" instruction on unit tooltips

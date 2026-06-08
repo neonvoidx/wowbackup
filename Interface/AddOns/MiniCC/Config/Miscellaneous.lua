@@ -2,7 +2,6 @@
 local _, addon = ...
 local mini = addon.Core.Framework
 local L = addon.L
-local supportsMilliseconds = select(4, GetBuildInfo()) >= 120005
 local verticalSpacing = mini.VerticalSpacing
 local horizontalSpacing = mini.HorizontalSpacing
 ---@class MiscellaneousConfig
@@ -14,13 +13,66 @@ function M:Build(panel)
 	local columns = 2
 	local columnWidth = mini:ColumnWidth(columns, 0, 0)
 
+	-- Language override
+	local languageLabel = panel:CreateFontString(nil, "ARTWORK", "GameFontNormal")
+	languageLabel:SetText(L["Language override"])
+	languageLabel:SetPoint("TOPLEFT", panel, "TOPLEFT", 0, 0)
+
+	local availableLocales = L:GetAvailableLocales()
+	local autoLabel = L["Auto (client language)"] .. " (" .. L:GetDisplayName(GetLocale()) .. ")"
+	local dropdownItems = { autoLabel }
+	local localeKeyMap = { [autoLabel] = false }
+
+	for _, loc in ipairs(availableLocales) do
+		local label = loc.Name .. " (" .. loc.Key .. ")"
+		table.insert(dropdownItems, label)
+		localeKeyMap[label] = loc.Key
+	end
+
+	local function GetCurrentLabel()
+		local override = db.LocaleOverride
+		if not override or override == false then
+			return autoLabel
+		end
+		for _, item in ipairs(dropdownItems) do
+			if localeKeyMap[item] == override then
+				return item
+			end
+		end
+		return autoLabel
+	end
+
+	local languageDropdown = mini:Dropdown({
+		Parent = panel,
+		Items = dropdownItems,
+		GetValue = GetCurrentLabel,
+		SetValue = function(value)
+			local newKey = localeKeyMap[value]
+			if newKey == db.LocaleOverride then
+				return
+			end
+			db.LocaleOverride = newKey
+			StaticPopup_Show("MINICC_RELOAD_CONFIRM")
+		end,
+	})
+
+	languageDropdown:SetPoint("TOPLEFT", languageLabel, "BOTTOMLEFT", 0, -4)
+	languageDropdown:SetWidth(columnWidth)
+
+	-- Glow Type
 	local glowTypeLabel = panel:CreateFontString(nil, "ARTWORK", "GameFontNormal")
 	glowTypeLabel:SetText(L["Glow Type"])
-	glowTypeLabel:SetPoint("TOPLEFT", panel, "TOPLEFT", 0, 0)
+	glowTypeLabel:SetPoint("TOPLEFT", languageDropdown, "BOTTOMLEFT", 0, -verticalSpacing * 2)
 
 	local glowTypeDropdown = mini:Dropdown({
 		Parent = panel,
-		Items = { "Proc Glow", "Rotation Assist", "Pixel Glow", "Autocast Shine" },
+		Items = {
+			"Proc Glow",
+			"Rotation Assist",
+			"Pixel Glow",
+			"Autocast Shine",
+			"Slot Glow",
+		},
 		GetValue = function()
 			return db.GlowType or "Proc Glow"
 		end,
@@ -134,7 +186,6 @@ function M:Build(panel)
 
 	disableSwipeChk:SetPoint("TOPLEFT", ccNativeOrderChk, "BOTTOMLEFT", 0, -verticalSpacing)
 
-	if supportsMilliseconds then
 	local millisThresholdSlider = mini:Slider({
 		Parent = panel,
 		LabelText = L["Milliseconds Threshold"],
@@ -155,5 +206,4 @@ function M:Build(panel)
 	})
 
 	millisThresholdSlider.Slider:SetPoint("TOPLEFT", disableSwipeChk, "BOTTOMLEFT", 4, -verticalSpacing * 3)
-	end
 end

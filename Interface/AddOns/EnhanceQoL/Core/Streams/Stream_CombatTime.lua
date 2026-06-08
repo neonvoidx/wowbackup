@@ -29,6 +29,7 @@ local function ensureDB()
 	if db.showBoss == nil then db.showBoss = true end
 	if db.showLabels == nil then db.showLabels = true end
 	if db.stack == nil then db.stack = false end
+	if db.bossOnTop == nil then db.bossOnTop = false end
 end
 
 local function RestorePosition(frame)
@@ -50,7 +51,7 @@ local function createAceWindow()
 	aceWindow = frame.frame
 	frame:SetTitle((addon.DataPanel and addon.DataPanel.GetStreamOptionsTitle and addon.DataPanel.GetStreamOptionsTitle(stream and stream.meta and stream.meta.title)) or GAMEMENU_OPTIONS)
 	frame:SetWidth(300)
-	frame:SetHeight(220)
+	frame:SetHeight(250)
 	frame:SetLayout("List")
 
 	frame.frame:SetScript("OnShow", function(self) RestorePosition(self) end)
@@ -98,14 +99,26 @@ local function createAceWindow()
 	end)
 	frame:AddChild(showLabels)
 
+	local bossOnTop
 	local stacked = AceGUI:Create("CheckBox")
 	stacked:SetLabel(L["combatTimeStacked"] or "Stack timers")
 	stacked:SetValue(db.stack and true or false)
 	stacked:SetCallback("OnValueChanged", function(_, _, val)
 		db.stack = val and true or false
+		if bossOnTop then bossOnTop:SetDisabled(not db.stack) end
 		scheduleUpdate()
 	end)
 	frame:AddChild(stacked)
+
+	bossOnTop = AceGUI:Create("CheckBox")
+	bossOnTop:SetLabel(L["combatTimeBossOnTop"] or "Boss timer on top")
+	bossOnTop:SetValue(db.bossOnTop and true or false)
+	bossOnTop:SetDisabled(not db.stack)
+	bossOnTop:SetCallback("OnValueChanged", function(_, _, val)
+		db.bossOnTop = val and true or false
+		scheduleUpdate()
+	end)
+	frame:AddChild(bossOnTop)
 
 	frame.frame:Show()
 end
@@ -207,21 +220,28 @@ local function updateCombatTime(s)
 	local combatLabel = L["Combat time"] or "Combat time"
 	local bossLabel = L["Boss time"] or "Boss time"
 
+	local function stackLines(first, second)
+		if db.bossOnTop then return second .. "\n" .. first end
+		return first .. "\n" .. second
+	end
+
 	local text
 	if db.showLabels then
-		text = combatLabel .. ": " .. combatText
+		local combatLine = combatLabel .. ": " .. combatText
+		local bossLine = bossLabel .. ": " .. bossText
+		text = combatLine
 		if showBossLine then
 			if db.stack then
-				text = text .. "\n" .. bossLabel .. ": " .. bossText
+				text = stackLines(combatLine, bossLine)
 			else
-				text = text .. " / " .. bossLabel .. ": " .. bossText
+				text = text .. " / " .. bossLine
 			end
 		end
 	else
 		text = combatText
 		if showBossLine then
 			if db.stack then
-				text = text .. "\n" .. bossText
+				text = stackLines(combatText, bossText)
 			else
 				text = text .. " / " .. bossText
 			end

@@ -383,7 +383,7 @@ WaypointUI: enabled
 KeystonePercentageHelper: enabled
 TitleSearch: enabled
 Alignment_Grids: enabled
-TrueStatValues: enabled
+TrueStatValues: disabled
 Chattynator: enabled
 ExtraQuestButton: enabled
 FrameColorAddOnSkins: enabled
@@ -438,3 +438,6 @@ FrameSort: enabled
 M33kAurasCompanion: enabled
 M33kAurasArchive: enabled
 M33Auras: disabled
+AutoCollapseBuffs: disabled
+BetterUpgradeTooltip: enabled
+eAlignUpdated: enabled

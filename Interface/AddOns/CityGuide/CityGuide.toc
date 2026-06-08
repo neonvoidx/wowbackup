@@ -1,8 +1,8 @@
-## Interface: 120001
+## Interface: 120005
 ## Title: City Guide
 ## Notes: Displays important NPCs on capital city maps
 ## Author: Valash
-## Version: 1.7.5
+## Version: 1.7.6
 ## SavedVariables: CityGuideConfig
 ## IconTexture: Interface\Icons\INV_Misc_Map02
 

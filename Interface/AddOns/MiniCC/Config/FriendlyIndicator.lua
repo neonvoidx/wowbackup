@@ -8,6 +8,7 @@ local growOptions = {
 	"RIGHT",
 	"CENTER",
 	"DOWN",
+	"UP",
 }
 local verticalSpacing = mini.VerticalSpacing
 local horizontalSpacing = mini.HorizontalSpacing
@@ -166,7 +167,7 @@ local function BuildInstance(panel, options)
 
 	local showDefensivesChk = mini:Checkbox({
 		Parent = parent,
-		LabelText = L["Show Defensives"],
+		LabelText = L["Show defensives"],
 		Tooltip = L["Show defensive spell icons."],
 		GetValue = function()
 			return options.ShowDefensives
@@ -181,7 +182,7 @@ local function BuildInstance(panel, options)
 
 	local showImportantChk = mini:Checkbox({
 		Parent = parent,
-		LabelText = L["Show Important"],
+		LabelText = L["Show important"],
 		Tooltip = L["Show important spell icons."],
 		GetValue = function()
 			return options.ShowImportant
@@ -211,6 +212,22 @@ local function BuildInstance(panel, options)
 	showCCChk:SetPoint("LEFT", parent, "LEFT", columnWidth * 2, 0)
 	showCCChk:SetPoint("TOP", showDefensivesChk, "TOP", 0, 0)
 
+	local showKicksChk = mini:Checkbox({
+		Parent = parent,
+		LabelText = L["Show interrupts"],
+		Tooltip = L["Show an icon when a friendly unit gets interrupted."],
+		GetValue = function()
+			return options.ShowKicks ~= false
+		end,
+		SetValue = function(value)
+			options.ShowKicks = value
+			config:Apply()
+		end,
+	})
+
+	showKicksChk:SetPoint("LEFT", parent, "LEFT", columnWidth * 3, 0)
+	showKicksChk:SetPoint("TOP", showDefensivesChk, "TOP", 0, 0)
+
 	local showTooltipsChk = mini:Checkbox({
 		Parent = parent,
 		LabelText = L["Show tooltips"],
@@ -224,8 +241,25 @@ local function BuildInstance(panel, options)
 		end,
 	})
 
-	showTooltipsChk:SetPoint("LEFT", parent, "LEFT", columnWidth * 3, 0)
-	showTooltipsChk:SetPoint("TOP", showDefensivesChk, "TOP", 0, 0)
+	showTooltipsChk:SetPoint("TOPLEFT", showDefensivesChk, "BOTTOMLEFT", 0, -verticalSpacing)
+
+	local refreshSizeMode
+	local relativeSizeChk = mini:Checkbox({
+		Parent = parent,
+		LabelText = L["Relative size"],
+		Tooltip = L["Sizes the icon as a percentage of the unit frame's height instead of in pixels."],
+		GetValue = function()
+			return options.Icons.SizeIsPercent == true
+		end,
+		SetValue = function(value)
+			options.Icons.SizeIsPercent = value
+			refreshSizeMode()
+			config:Apply()
+		end,
+	})
+
+	relativeSizeChk:SetPoint("LEFT", parent, "LEFT", columnWidth, 0)
+	relativeSizeChk:SetPoint("TOP", showTooltipsChk, "TOP", 0, 0)
 
 	local iconSize = mini:Slider({
 		Parent = parent,
@@ -246,7 +280,39 @@ local function BuildInstance(panel, options)
 		end,
 	})
 
-	iconSize.Slider:SetPoint("TOPLEFT", showDefensivesChk, "BOTTOMLEFT", 4, -verticalSpacing * 3)
+	iconSize.Slider:SetPoint("TOPLEFT", showTooltipsChk, "BOTTOMLEFT", 4, -verticalSpacing * 3)
+
+	local iconSizePct = mini:Slider({
+		Parent = parent,
+		Min = 25,
+		Max = 100,
+		Width = columnWidth * 2 - horizontalSpacing,
+		Step = 1,
+		LabelText = L["Icon Size (%)"],
+		GetValue = function()
+			return options.Icons.SizePercent or 75
+		end,
+		SetValue = function(v)
+			local newValue = mini:ClampInt(v, 25, 100, 75)
+			if options.Icons.SizePercent ~= newValue then
+				options.Icons.SizePercent = newValue
+				config:Apply()
+			end
+		end,
+	})
+
+	iconSizePct.Slider:SetPoint("TOPLEFT", iconSize.Slider, "TOPLEFT", 0, 0)
+
+	refreshSizeMode = function()
+		local isPercent = options.Icons.SizeIsPercent == true
+		iconSize.Slider:SetShown(not isPercent)
+		iconSize.Label:SetShown(not isPercent)
+		iconSize.EditBox:SetShown(not isPercent)
+		iconSizePct.Slider:SetShown(isPercent)
+		iconSizePct.Label:SetShown(isPercent)
+		iconSizePct.EditBox:SetShown(isPercent)
+	end
+	refreshSizeMode()
 
 	local maxIcons = mini:Slider({
 		Parent = parent,
@@ -291,8 +357,6 @@ function M:Build(panel, default, raid)
 		Parent = panel,
 		Lines = {
 			L["Shows CC, defensives, and important auras as one set of icons on party/raid frames."],
-			L["Tip: Disable the CC module for BGs and enable CC within this module."],
-			L["Don't forget to disable the Blizzard 'center big defensives' option when using this."],
 		},
 	})
 

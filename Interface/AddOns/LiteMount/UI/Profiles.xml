@@ -4,18 +4,12 @@
 
 <Script file="Profiles.lua" />
 
-<Frame name="LiteMountProfilesPanel" hidden="true" inherits="LiteMountOptionsPanelTemplate" mixin="LiteMountProfilesPanelMixin">
+<Frame name="LiteMountProfilesPanel" hidden="true" inherits="LiteMountSettingsPanelTemplate" mixin="LiteMountProfilesPanelMixin">
 
     <KeyValues>
         <KeyValue key="hideRevertButton" value="true" type="boolean" />
         <KeyValue key="hideDefaultsButton" value="true" type="boolean" />
     </KeyValues>
-
-    <Scripts>
-        <OnLoad method="OnLoad" inherit="append" />
-        <OnShow method="OnShow" inherit="append" />
-        <OnHide method="OnHide" inherit="append" />
-    </Scripts>
 
     <Layers>
         <Layer level="ARTWORK">

@@ -25,7 +25,6 @@ function addon.Aura.functions.InitDB()
 
 	-- spec specific settings for personal resource bars
 	init("personalResourceBarSettings", {})
-	init("personalResourceBarAnchors", {})
 
 	init("cooldownPanels", {
 		version = 1,

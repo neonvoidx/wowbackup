@@ -5,6 +5,8 @@ local wowEx = addon.Utils.WoWEx
 local trinketsTracker = addon.Core.TrinketsTracker
 local instanceOptions = addon.Core.InstanceOptions
 local frames = addon.Core.Frames
+local units = addon.Utils.Units
+local moduleUtil = addon.Utils.ModuleUtil
 
 -- Loaded before this file in TOC order.
 local fcdTalents = addon.Modules.Cooldowns.Talents
@@ -19,6 +21,13 @@ addon.Modules.FriendlyCooldowns.Display = D
 ---@type Db
 local db
 local testModeActive = false
+-- Scratch table reused by UpdateDisplay to avoid per-call allocation.
+local slotsScratch = {}
+-- Pool of reusable slot descriptor tables indexed by slot position.
+-- SetSlot reads these synchronously and does not store references, so pooling is safe.
+local slotTablePool = {}
+-- Cache: unit -> { specId, hideExternalDefensives, result } - invalidated by the talent callback.
+local staticAbilitiesCache = {}
 
 -- C_Spell.GetSpellTexture follows spell overrides: if the local player has a
 -- talent that replaces spell X with spell Y, then GetSpellTexture(X) returns Y's
@@ -43,13 +52,11 @@ local function GetAnchorOptions()
 	return instanceOptions:IsRaid() and m.Raid or m.Default
 end
 
--- Scratch table reused by UpdateDisplay to avoid per-call allocation.
-local slotsScratch = {}
-
--- Cache: unit -> { specId, hideExternalDefensives, result } — invalidated by the talent callback.
-local staticAbilitiesCache = {}
-
-local noCastSucceeded = select(4, GetBuildInfo()) >= 120005
+local function GetSlotTable(idx)
+	local t = slotTablePool[idx]
+	if not t then t = {}; slotTablePool[idx] = t else wipe(t) end
+	return t
+end
 
 local function IsInArena()
 	local inInstance, instanceType = IsInInstance()
@@ -59,6 +66,7 @@ end
 ---@class FcdStaticAbility
 ---@field SpellId number
 ---@field IsOffensive boolean
+---@field MaxCharges number? Effective max charges (nil = single charge)
 
 ---Returns ordered list of abilities for a unit's known spells (spec rules first, then class fallback).
 ---Used to populate static icon slots that are always visible regardless of cooldown state.
@@ -73,11 +81,11 @@ local function GetStaticAbilities(unit)
 	local specId = fcdTalents:GetUnitSpecId(unit)
 
 	local _, instanceType = IsInInstance()
-	local hideExternalDefensives = noCastSucceeded
-		and (instanceType == "raid" or instanceType == "pvp")
+	local hideExternalDefensives = instanceOptions:IsRaid() or instanceType == "pvp"
+	local inPvpContext = instanceType == "arena" or instanceType == "pvp" or UnitIsPVP(unit)
 
 	local cached = staticAbilitiesCache[unit]
-	if cached and cached.specId == specId and cached.hideExternalDefensives == hideExternalDefensives then
+	if cached and cached.specId == specId and cached.hideExternalDefensives == hideExternalDefensives and cached.inPvpContext == inPvpContext then
 		return cached.result
 	end
 
@@ -93,6 +101,7 @@ local function GetStaticAbilities(unit)
 		for _, rule in ipairs(ruleList) do
 			if rule.SpellId and not seen[rule.SpellId] and not disabledSpells[rule.SpellId]
 				and not (hideExternalDefensives and rule.ExternalDefensive)
+				and not (rule.PvPOnly and not inPvpContext)
 			then
 				local excluded = false
 				if rule.ExcludeIfTalent then
@@ -117,8 +126,17 @@ local function GetStaticAbilities(unit)
 				end
 				if not excluded and not required then
 					seen[rule.SpellId] = true
-					result[#result + 1] =
-						{ SpellId = rule.SpellId, IsOffensive = rules.OffensiveSpellIds[rule.SpellId] == true }
+					local maxCharges = nil
+					local ruleBaseCharges = rule.BaseCharges or 1
+					if (rule.MaxCharges or ruleBaseCharges) > 1 then
+						local mc = fcdTalents:GetUnitMaxCharges(unit, specId, classToken, rule.SpellId)
+						maxCharges = math.max(ruleBaseCharges, mc)
+					end
+					result[#result + 1] = {
+						SpellId = rule.SpellId,
+						IsOffensive = rules.OffensiveSpellIds[rule.SpellId] == true,
+						MaxCharges = maxCharges,
+					}
 				end
 			end
 		end
@@ -128,7 +146,7 @@ local function GetStaticAbilities(unit)
 	addRules(rules.ByClass[classToken])
 
 	if specId then
-		staticAbilitiesCache[unit] = { specId = specId, hideExternalDefensives = hideExternalDefensives, result = result }
+		staticAbilitiesCache[unit] = { specId = specId, hideExternalDefensives = hideExternalDefensives, inPvpContext = inPvpContext, result = result }
 	end
 	return result
 end
@@ -201,26 +219,51 @@ local function AppendStaticSlots(slots, entry, now, showTooltips, iconOptions, p
 			local durationObject = nil
 			local glow = nil
 			local onCooldown = false
-			if cd and now < cd.StartTime + cd.Cooldown then
-				-- Confirmed cooldown running: show the CD swipe.
-				durationObject = wowEx:CreateDuration(cd.StartTime, cd.Cooldown)
-				onCooldown = true
-			elseif predictiveGlow and entry.PredictedGlows[ability.SpellId] then
-				-- Buff still active (no CD committed yet): count down the aura duration so
-				-- the icon shows how long the buff has left rather than being empty.
-				durationObject = entry.PredictedGlowDurations[ability.SpellId]
-				glow = true
+			local chargeText = nil
+			if cd then
+				-- For multi-charge abilities, derive the effective start from the earliest charge's
+				-- stored expiry so the timer reflects sequential recharge (not raw use time).
+				local startTime = cd.UsedCharges and cd.UsedCharges[1]
+					and (cd.UsedCharges[1].Expiry - cd.Cooldown)
+					or cd.StartTime
+				if now < startTime + cd.Cooldown then
+					-- Confirmed cooldown running: show the CD swipe from the earliest charge.
+					durationObject = wowEx:CreateDuration(startTime, cd.Cooldown)
+					if cd.MaxCharges and cd.MaxCharges > 1 then
+						local usedCount = cd.UsedCharges and #cd.UsedCharges or 1
+						local available = cd.MaxCharges - usedCount
+						onCooldown = available == 0
+						chargeText = tostring(available)
+					else
+						onCooldown = true
+					end
+				end
 			end
-			slots[#slots + 1] = {
-				Texture = texture,
-				SpellId = showTooltips and ability.SpellId or nil,
-				DurationObject = durationObject,
-				Alpha = 1,
-				ReverseCooldown = iconOptions.ReverseCooldown,
-				Desaturate = iconOptions.DesaturateOnCooldown and onCooldown,
-				Glow = glow,
-				FontScale = db.FontScale,
-			}
+			if predictiveGlow and entry.PredictedGlows[ability.SpellId] then
+				-- Buff is active: always glow, regardless of whether a charge is also recharging.
+				-- When no CD is running yet, also show the aura duration countdown.
+				glow = true
+				if not durationObject then
+					durationObject = entry.PredictedGlowDurations[ability.SpellId]
+				end
+			elseif not durationObject then
+				if ability.MaxCharges and ability.MaxCharges > 1 then
+					-- All charges available: show the max charge count.
+					chargeText = tostring(ability.MaxCharges)
+				end
+			end
+			local idx = #slots + 1
+			local s = GetSlotTable(idx)
+			s.Texture = texture
+			s.SpellId = showTooltips and ability.SpellId or nil
+			s.DurationObject = durationObject
+			s.Alpha = 1
+			s.ReverseCooldown = iconOptions.ReverseCooldown
+			s.Desaturate = iconOptions.DesaturateOnCooldown and onCooldown
+			s.Glow = glow
+			s.FontScale = db.FontScale
+			s.ChargeText = chargeText
+			slots[idx] = s
 		end
 	end
 end
@@ -234,15 +277,16 @@ local function AppendDynamicSlots(slots, entry, now, showTooltips, iconOptions)
 			else
 				local texture = GetSpellIcon(cd.SpellId)
 				if texture then
-					slots[#slots + 1] = {
-						Texture = texture,
-						SpellId = showTooltips and cd.SpellId or nil,
-						DurationObject = wowEx:CreateDuration(cd.StartTime, cd.Cooldown),
-						Alpha = 1,
-						ReverseCooldown = iconOptions.ReverseCooldown,
-						Desaturate = iconOptions.DesaturateOnCooldown,
-						FontScale = db.FontScale,
-					}
+					local idx = #slots + 1
+					local s = GetSlotTable(idx)
+					s.Texture = texture
+					s.SpellId = showTooltips and cd.SpellId or nil
+					s.DurationObject = wowEx:CreateDuration(cd.StartTime, cd.Cooldown)
+					s.Alpha = 1
+					s.ReverseCooldown = iconOptions.ReverseCooldown
+					s.Desaturate = iconOptions.DesaturateOnCooldown
+					s.FontScale = db.FontScale
+					slots[idx] = s
 				end
 			end
 		end
@@ -259,6 +303,14 @@ local function UpdateDisplay(entry)
 
 	-- ExcludeSelf: container is intentionally hidden; don't populate it.
 	if anchorOptions.ExcludeSelf and UnitIsUnit(entry.Unit, "player") then
+		return
+	end
+
+	-- Freeze the display while the tracked unit isn't a friend: mind control flips allied unit
+	-- tokens to the enemy team, and repainting now would replace the ally's cooldowns with the
+	-- enemy's. Leave the last friendly slots in place until the unit is an ally again. Test mode
+	-- uses fake frames that may not be friends, so skip the guard there.
+	if not testModeActive and not units:IsFriend(entry.Unit) then
 		return
 	end
 
@@ -291,15 +343,15 @@ local function UpdateDisplay(entry)
 	-- Trinket: always slot 1 in arena so it lands at the priority position determined by InvertLayout.
 	if showTrinket and IsInArena() then
 		local durationData = trinketsTracker:GetUnitDuration(entry.Unit)
-		slots[1] = {
-			Texture = trinketsTracker:GetDefaultIcon(),
-			DurationObject = durationData,
-			Alpha = true,
-			ReverseCooldown = false,
-			Glow = false,
-			Desaturate = iconOptions.DesaturateOnCooldown,
-			FontScale = db.FontScale,
-		}
+		local s = GetSlotTable(1)
+		s.Texture = trinketsTracker:GetDefaultIcon()
+		s.DurationObject = durationData
+		s.Alpha = true
+		s.ReverseCooldown = false
+		s.Glow = false
+		s.Desaturate = iconOptions.DesaturateOnCooldown
+		s.FontScale = db.FontScale
+		slots[1] = s
 	end
 
 	AppendStaticSlots(slots, entry, now, showTooltips, iconOptions, predictiveGlow)
@@ -336,37 +388,40 @@ local function AnchorContainer(entry)
 
 	local rowsEnabled = options.Icons.Rows and options.Icons.Rows > 1
 
+	local grow = options.Grow
+
 	if rowsEnabled then
-		-- For multi-row, anchor the container's top edge so that the first row appears at
-		-- the same position as the single-row icon (vertically centred on the party frame).
-		-- Adding half an icon height to the Y offset achieves this because the top of the
-		-- container sits half an icon above the first row's centre.
-		local size = tonumber(options.Icons.Size) or 32
+		local size = moduleUtil:GetIconSize(options.Icons, anchor, 32, 100)
 		local yOffset = options.Offset.Y + size / 2
 
-		if options.Grow == "LEFT" then
+		if grow == "LEFT" then
 			frame:SetPoint("TOPRIGHT", anchor, "LEFT", options.Offset.X, yOffset)
-		elseif options.Grow == "RIGHT" then
+		elseif grow == "RIGHT" then
 			frame:SetPoint("TOPLEFT", anchor, "RIGHT", options.Offset.X, yOffset)
-		elseif options.Grow == "DOWN" then
+		elseif grow == "DOWN" then
 			frame:SetPoint("TOP", anchor, "BOTTOM", options.Offset.X, options.Offset.Y)
+		elseif grow == "UP" then
+			frame:SetPoint("BOTTOM", anchor, "TOP", options.Offset.X, options.Offset.Y)
 		else
 			frame:SetPoint("TOP", anchor, "CENTER", options.Offset.X, yOffset)
 		end
 	else
-		if options.Grow == "LEFT" then
+		if grow == "LEFT" then
 			frame:SetPoint("RIGHT", anchor, "LEFT", options.Offset.X, options.Offset.Y)
-		elseif options.Grow == "RIGHT" then
+		elseif grow == "RIGHT" then
 			frame:SetPoint("LEFT", anchor, "RIGHT", options.Offset.X, options.Offset.Y)
-		elseif options.Grow == "DOWN" then
+		elseif grow == "DOWN" then
 			frame:SetPoint("TOP", anchor, "BOTTOM", options.Offset.X, options.Offset.Y)
+		elseif grow == "UP" then
+			frame:SetPoint("BOTTOM", anchor, "TOP", options.Offset.X, options.Offset.Y)
 		else
 			frame:SetPoint("CENTER", anchor, "CENTER", options.Offset.X, options.Offset.Y)
 		end
 	end
 
-	entry.Container:SetGrowDown(options.Grow == "DOWN")
-	entry.Container:SetColumns(options.Grow == "DOWN" and options.Icons.Columns or nil)
+	entry.Container:SetGrowDown(grow == "DOWN")
+	entry.Container:SetGrowUp(grow == "UP")
+	entry.Container:SetColumns(options.Icons.Columns)
 end
 
 ---Must be called once from M:Init before any display functions are used.

@@ -10,12 +10,38 @@ end
 local L = LibStub("AceLocale-3.0"):GetLocale("EnhanceQoL")
 local db
 
+local perFramePositionPersistenceList = {
+	global = {
+		text = L["Position Persistence Global"] or "Use global setting",
+		tooltip = L["Position Persistence Global Tooltip"] or "Uses the global position persistence setting.",
+	},
+	close = {
+		text = L["Position Persistence Close"] or "Until close of the frame",
+		tooltip = L["Position Persistence Close Tooltip"] or "Does not save the position and resets when the frame closes.",
+	},
+	lockout = {
+		text = L["Position Persistence Lockout"] or "Until logout",
+		tooltip = L["Position Persistence Lockout Tooltip"] or "Saves the position only until you log out.",
+	},
+	reset = {
+		text = L["Position Persistence Reset"] or "Until reset",
+		tooltip = L["Position Persistence Reset Tooltip"] or "Saves the position until you reset it.",
+	},
+	off = {
+		text = L["Position Persistence Disabled"] or "Disabled",
+		tooltip = L["Position Persistence Disabled Tooltip"] or "Does not save or restore a custom position for this frame.",
+	},
+}
+
+local perFramePositionPersistenceOrder = { "global", "close", "lockout", "reset", "off" }
+
 local function buildSettings()
 	local categoryLabel = L["Move"] or "Mover"
 	local cLayout = addon.SettingsLayout.rootUI
 
 	local expandable = addon.functions.SettingsCreateExpandableSection(cLayout, {
 		name = categoryLabel,
+		iconKey = "mover",
 		expanded = false,
 		colorizeTitle = false,
 		newTagID = "Mover",
@@ -67,7 +93,7 @@ local function buildSettings()
 
 		for _, entry in ipairs(addon.Mover.functions.GetEntriesForGroup(group.id)) do
 			local e = entry
-			addon.functions.SettingsCreateCheckbox(cLayout, {
+			addon.functions.SettingsCreateCheckboxDropdown(cLayout, {
 				var = e.settingKey or e.id,
 				text = e.label or e.id,
 				default = e.defaultEnabled ~= false,
@@ -80,6 +106,13 @@ local function buildSettings()
 				parent = true,
 				parentSection = parentSection,
 				parentCheck = function() return db.enabled end,
+				dropdownVar = (e.settingKey or e.id) .. "_positionPersistence",
+				dropdownText = L["Position Persistence"] or "Position persistence",
+				dropdownList = perFramePositionPersistenceList,
+				dropdownOrder = perFramePositionPersistenceOrder,
+				dropdownDefault = "global",
+				dropdownGet = function() return addon.Mover.functions.GetFramePositionPersistence(e) end,
+				dropdownSet = function(value) addon.Mover.functions.SetFramePositionPersistence(e, value) end,
 			})
 		end
 	end

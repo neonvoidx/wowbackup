@@ -1,21 +1,22 @@
 
 muleyoProcGlowDB = {
 ["profileKeys"] = {
+["Neonvoid - Tichondrius"] = "Default",
 ["Auteist - Tichondrius"] = "Default",
-["Hellavator - Tichondrius"] = "Default",
-["Mäñýfäçëð - Tichondrius"] = "Default",
 ["Strathmoan - Tichondrius"] = "Default",
+["Hellavator - Tichondrius"] = "Default",
 ["Smaugchamp - Tichondrius"] = "Default",
+["Bigxthazug - Tichondrius"] = "Default",
 ["Stormclout - Tichondrius"] = "Default",
 ["Choppiez - Tichondrius"] = "Default",
 ["Starphage - Tichondrius"] = "Default",
 ["Korahron - Tichondrius"] = "Default",
 ["Reedingo - Tichondrius"] = "Default",
 ["Manyfaced - Tichondrius"] = "Default",
-["Praisesun - Tichondrius"] = "Default",
-["Gehyo - Tichondrius"] = "Default",
 ["Starstypeshi - Tichondrius"] = "Default",
-["Neonvoid - Tichondrius"] = "Default",
+["Gehyo - Tichondrius"] = "Default",
+["Praisesun - Tichondrius"] = "Default",
+["Mäñýfäçëð - Tichondrius"] = "Default",
 },
 ["profiles"] = {
 ["Default"] = {
@@ -113,17 +114,6 @@ muleyoProcGlowDB = {
 },
 },
 ["ROGUE"] = {
-["271877"] = {
-["useDefaultColor"] = true,
-["glowType"] = "Default",
-["color"] = {
-["r"] = 0,
-["g"] = 1,
-["b"] = 0,
-},
-["procSound"] = "None",
-["glowCooldownManager"] = false,
-},
 ["13750"] = {
 ["useDefaultColor"] = true,
 ["glowType"] = "Default",
@@ -135,7 +125,7 @@ muleyoProcGlowDB = {
 ["procSound"] = "None",
 ["glowCooldownManager"] = false,
 },
-["315341"] = {
+["271877"] = {
 ["useDefaultColor"] = true,
 ["glowType"] = "Default",
 ["color"] = {

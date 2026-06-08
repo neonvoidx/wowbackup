@@ -33,7 +33,7 @@ function LiteMountMountCommonButtonMixin:SetDirtyCallback(func)
     self.callbackFunc = func
 end
 
-function LiteMountMountCommonButtonMixin:SetDirty()
+function LiteMountMountCommonButtonMixin:MarkDirty()
     if self.callbackFunc then
         self.callbackFunc()
     end
@@ -48,10 +48,9 @@ function LiteMountMountCommonButtonMixin:Initialize(mount, hasMenu)
 --@end-debug@]==]
     self.Types:SetText(mount:GetTypeString())
 
-    local rarity = mount:GetRarity()
-    if WOW_PROJECT_ID == WOW_PROJECT_MAINLINE and rarity then
-        self.Rarity:SetFormattedText(L.LM_RARITY_FORMAT, rarity)
-        self.Rarity.toolTip = format(L.LM_RARITY_FORMAT_LONG, rarity)
+    if WOW_PROJECT_ID == WOW_PROJECT_MAINLINE and mount.rarity then
+        self.Rarity:SetFormattedText(L.LM_RARITY_FORMAT, mount.rarity)
+        self.Rarity.toolTip = format(L.LM_RARITY_FORMAT_LONG, mount.rarity)
     else
         self.Rarity:SetText('')
         self.Rarity.toolTip = nil
@@ -79,7 +78,7 @@ end
 LiteMountMountListButtonMixin = CreateFromMixins(LiteMountMountCommonButtonMixin)
 
 function LiteMountMountListButtonMixin:OnLoad()
-    local dirtyFunc = function () self:SetDirty() end
+    local dirtyFunc = function () self:MarkDirty() end
 
     local i = 1
     while self["Bit"..i] do
@@ -96,11 +95,11 @@ function LiteMountMountListButtonMixin:Initialize(mount)
 
     local i = 1
     while self["Bit"..i] do
-        self["Bit"..i]:Update(mount, allTypeFlags[i])
+        self["Bit"..i]:Initialize(mount, allTypeFlags[i])
         i = i + 1
     end
 
-    self.Priority:Update(mount)
+    self.Priority:Initialize(mount)
 end
 
 

@@ -2,8 +2,9 @@
 DamageMeterPerCharacterSettings = {
 ["windowDataList"] = {
 {
-["sessionType"] = 1,
+["minimized"] = false,
 ["shown"] = true,
+["sessionType"] = 1,
 ["damageMeterType"] = 0,
 },
 },

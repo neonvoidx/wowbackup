@@ -17,6 +17,8 @@ addon.variables = addon.variables or {}
 local LSM = LibStub("LibSharedMedia-3.0")
 local EnumPowerType = Enum and Enum.PowerType
 local BLIZZARD_TEX = "Interface\\TargetingFrame\\UI-StatusBar"
+H.BLIZZARD_RAID_FRAME_TEX_KEY = "EQOL_BLIZZARD_RAID_FRAME_HP_FILL"
+H.BLIZZARD_RAID_FRAME_TEX = "RaidFrame-Hp-Fill"
 local BLIZZARD_CAST_STANDARD_TEX = "ui-castingbar-full-standard"
 local BLIZZARD_CAST_INTERRUPTED_TEX = "ui-castingbar-interrupted"
 local BLIZZARD_CAST_ICON_FALLBACK_TEX = 134400 -- Interface\\Icons\\INV_Misc_QuestionMark
@@ -41,6 +43,90 @@ local UnitStagger = UnitStagger
 local C_UnitAuras = C_UnitAuras
 local UIParent = UIParent
 local DispelOverlayOrientation = EnumUtil and EnumUtil.MakeEnum("VerticalTopToBottom", "VerticalBottomToTop", "HorizontalLeftToRight")
+
+function H.UnsecretBool(value)
+	if issecretvalue and issecretvalue(value) then return nil end
+	return value
+end
+
+do
+local FILTER_HELPFUL = "HELPFUL|INCLUDE_NAME_PLATE_ONLY"
+local FILTER_HELPFUL_GROUP_RAID = "HELPFUL|INCLUDE_NAME_PLATE_ONLY|RAID|PLAYER"
+local FILTER_HELPFUL_GROUP_RAID_IN_COMBAT = "HELPFUL|INCLUDE_NAME_PLATE_ONLY|RAID_IN_COMBAT|PLAYER"
+local FILTER_HARMFUL = "HARMFUL|INCLUDE_NAME_PLATE_ONLY"
+local FILTER_HARMFUL_PLAYER = "HARMFUL|PLAYER|INCLUDE_NAME_PLATE_ONLY"
+local FILTER_HARMFUL_RAID = "HARMFUL|INCLUDE_NAME_PLATE_ONLY|RAID"
+local FILTER_HARMFUL_RAID_IN_COMBAT = "HARMFUL|INCLUDE_NAME_PLATE_ONLY|RAID_IN_COMBAT"
+local FILTER_HARMFUL_DISPELLABLE = "HARMFUL|INCLUDE_NAME_PLATE_ONLY|RAID_PLAYER_DISPELLABLE"
+local FILTER_HARMFUL_IMPORTANT = "HARMFUL|INCLUDE_NAME_PLATE_ONLY|IMPORTANT"
+local FILTER_HARMFUL_CROWD_CONTROL = "HARMFUL|INCLUDE_NAME_PLATE_ONLY|CROWD_CONTROL"
+local FILTER_BIG_DEFENSIVE = "HELPFUL|BIG_DEFENSIVE"
+
+local function allowNameplateOnly(aura, includeNameplateOnly)
+	return includeNameplateOnly == true or aura.isNameplateOnly ~= true
+end
+
+function H.IsHelpfulAura(aura, includeNameplateOnly)
+	return aura and aura.isHelpful == true and allowNameplateOnly(aura, includeNameplateOnly) or false
+end
+
+function H.IsHarmfulAura(aura, includeNameplateOnly)
+	return aura and aura.isHarmful == true and allowNameplateOnly(aura, includeNameplateOnly) or false
+end
+
+function H.IsRaidAura(aura)
+	return aura and aura.isRaid == true or false
+end
+
+function H.IsFromPlayerOrPlayerPetAura(aura)
+	return aura and aura.isFromPlayerOrPlayerPet == true or false
+end
+
+local function isApiMatch(unit, aura, specialFilter)
+	return unit
+		and aura
+		and aura.auraInstanceID
+		and C_UnitAuras
+		and C_UnitAuras.IsAuraFilteredOutByInstanceID
+		and not C_UnitAuras.IsAuraFilteredOutByInstanceID(unit, aura.auraInstanceID, specialFilter)
+		or false
+end
+
+local function isGroupHelpfulAura(unit, aura, filter)
+	if not H.IsHelpfulAura(aura, true) then return false end
+	if aura.isRaid ~= true and aura.isFromPlayerOrPlayerPet ~= true then return false end
+	return isApiMatch(unit, aura, filter)
+end
+
+function H.IsAuraFilteredIn(unit, aura, filter)
+	if not (aura and aura.auraInstanceID) then return false end
+	if type(filter) == "table" then
+		if #filter > 0 then
+			for _, auraFilter in ipairs(filter) do
+				if type(auraFilter) == "string" and H.IsAuraFilteredIn(unit, aura, auraFilter) then return true end
+			end
+			return false
+		end
+		for _, auraFilter in pairs(filter) do
+			if type(auraFilter) == "string" and H.IsAuraFilteredIn(unit, aura, auraFilter) then return true end
+		end
+		return false
+	end
+	if type(filter) ~= "string" then return false end
+
+	if filter == FILTER_HELPFUL then return H.IsHelpfulAura(aura, true) end
+	if filter == FILTER_HARMFUL then return H.IsHarmfulAura(aura, true) end
+	if filter == FILTER_HARMFUL_PLAYER then return H.IsHarmfulAura(aura, true) and H.IsFromPlayerOrPlayerPetAura(aura) and isApiMatch(unit, aura, filter) end
+	if filter == FILTER_HELPFUL_GROUP_RAID or filter == FILTER_HELPFUL_GROUP_RAID_IN_COMBAT then return isGroupHelpfulAura(unit, aura, filter) end
+	if filter == FILTER_HARMFUL_RAID or filter == FILTER_HARMFUL_RAID_IN_COMBAT then return H.IsHarmfulAura(aura, true) and H.IsRaidAura(aura) and isApiMatch(unit, aura, filter) end
+	if filter == FILTER_HARMFUL_DISPELLABLE then return H.IsHarmfulAura(aura, true) and isApiMatch(unit, aura, filter) end
+	if filter == FILTER_HARMFUL_IMPORTANT then return H.IsHarmfulAura(aura, true) and isApiMatch(unit, aura, filter) end
+	if filter == FILTER_HARMFUL_CROWD_CONTROL then return H.IsHarmfulAura(aura, true) and isApiMatch(unit, aura, filter) end
+	if filter == FILTER_BIG_DEFENSIVE then return H.IsHelpfulAura(aura, false) and isApiMatch(unit, aura, filter) end
+
+	return isApiMatch(unit, aura, filter)
+end
+end
 
 local atlasByPower = {
 	LUNAR_POWER = "Unit_Druid_AstralPower_Fill",
@@ -209,7 +295,7 @@ local selectionKeyByType = {
 
 function H.getNPCSelectionKey(unit)
 	if not npcColorUnits[unit] then return nil end
-	if UnitIsPlayer and UnitIsPlayer(unit) then return nil end
+	if UnitIsPlayer and H.UnsecretBool(UnitIsPlayer(unit)) == true then return nil end
 	local t = UnitSelectionType and UnitSelectionType(unit)
 	if issecretvalue and issecretvalue(t) then t = nil end
 	local key = selectionKeyByType[t]
@@ -295,6 +381,7 @@ local function normalizeFontOutline(outline)
 	if addon.functions and addon.functions.GetFontFlagsForStyle then return addon.functions.GetFontFlagsForStyle(outline, "OUTLINE") end
 	if outline == nil then return "OUTLINE" end
 	if outline == "" or outline == "NONE" then return nil end
+	if outline == "__EQOL_GLOBAL_FONT_STYLE__" then return "OUTLINE" end
 	return outline
 end
 
@@ -306,8 +393,18 @@ function H._looksLikeFontFile(path)
 	return false
 end
 
+function H.isKnownFontAsset(fontFile)
+	if addon.functions and addon.functions.IsKnownFontAsset then return addon.functions.IsKnownFontAsset(fontFile) end
+	if not H._looksLikeFontFile(fontFile) then return true end
+	local fileAssetAPI = _G.C_UIFileAsset
+	if not (fileAssetAPI and fileAssetAPI.IsKnownFile) then return true end
+	local ok, known = pcall(fileAssetAPI.IsKnownFile, fontFile)
+	return ok and known == true
+end
+
 function H.getAlphabetAwareFontFamily(fontFile, size, flags)
 	if not (_G.Font and _G.Font.CreateFontFamily and H._looksLikeFontFile(fontFile)) then return nil end
+	if not H.isKnownFontAsset(fontFile) then return nil end
 	size = tonumber(size) or 14
 	if size <= 0 then size = 1 end
 	flags = flags or ""
@@ -337,12 +434,17 @@ end
 
 function H.setFontWithFallback(target, fontFile, size, flags)
 	if not target then return nil end
+	if not H.isKnownFontAsset(fontFile) then return false end
 	local family = H.getAlphabetAwareFontFamily(fontFile, size, flags)
 	if family and target.SetFontObject then
 		target:SetFontObject(family)
 		return true
 	end
-	if target.SetFont then return target:SetFont(fontFile, size, flags) end
+	if target.SetFont then
+		if addon.functions and addon.functions.SetFontWithFallback then return addon.functions.SetFontWithFallback(target, fontFile, size, flags, H.getFont(nil)) end
+		local ok, applied = pcall(target.SetFont, target, fontFile, size, flags)
+		return ok and applied ~= false
+	end
 	return nil
 end
 
@@ -445,7 +547,7 @@ function H.setupAbsorbClampReverseAware(health, absorb)
 	absorb:SetHeight(health:GetHeight())
 end
 
-function H.setupAbsorbOverShift(healthBar, overAbsorbBar, height, maxHeight)
+function H.setupAbsorbOverShift(healthBar, overAbsorbBar, height, maxHeight, anchorTop)
 	if not (healthBar and overAbsorbBar) then return end
 
 	local htex = healthBar:GetStatusBarTexture()
@@ -496,8 +598,13 @@ function H.setupAbsorbOverShift(healthBar, overAbsorbBar, height, maxHeight)
 		overAbsorbBar:SetPoint("BOTTOMRIGHT", healthBar, "BOTTOMRIGHT", 0, 0)
 	else
 		if limit and limit > 0 and desired > limit then desired = limit end
-		overAbsorbBar:SetPoint("BOTTOMLEFT", healthBar, "BOTTOMLEFT", 0, 0)
-		overAbsorbBar:SetPoint("BOTTOMRIGHT", healthBar, "BOTTOMRIGHT", 0, 0)
+		if anchorTop then
+			overAbsorbBar:SetPoint("TOPLEFT", healthBar, "TOPLEFT", 0, 0)
+			overAbsorbBar:SetPoint("TOPRIGHT", healthBar, "TOPRIGHT", 0, 0)
+		else
+			overAbsorbBar:SetPoint("BOTTOMLEFT", healthBar, "BOTTOMLEFT", 0, 0)
+			overAbsorbBar:SetPoint("BOTTOMRIGHT", healthBar, "BOTTOMRIGHT", 0, 0)
+		end
 		overAbsorbBar:SetHeight(desired)
 	end
 
@@ -506,7 +613,7 @@ function H.setupAbsorbOverShift(healthBar, overAbsorbBar, height, maxHeight)
 	overAbsorbBar:SetReverseFill(not healthBar:GetReverseFill())
 end
 
-function H.applyAbsorbClampLayout(bar, healthBar, height, maxHeight, reverseHealth)
+function H.applyAbsorbClampLayout(bar, healthBar, height, maxHeight, reverseHealth, anchorTop, fallbackWidth)
 	if not bar or not healthBar then return end
 	bar:ClearAllPoints()
 	local anchor = (healthBar.GetStatusBarTexture and healthBar:GetStatusBarTexture()) or healthBar
@@ -514,17 +621,27 @@ function H.applyAbsorbClampLayout(bar, healthBar, height, maxHeight, reverseHeal
 	local bottomAnchor = reverseHealth and "BOTTOMLEFT" or "BOTTOMRIGHT"
 	local topPoint = reverseHealth and "TOPRIGHT" or "TOPLEFT"
 	local topAnchor = reverseHealth and "TOPLEFT" or "TOPRIGHT"
-	bar:SetPoint(bottomPoint, anchor, bottomAnchor, 0, 0)
 	local desired = tonumber(height)
 	local limit = tonumber(maxHeight)
 	if not limit or limit <= 0 then limit = healthBar.GetHeight and healthBar:GetHeight() or 0 end
 	if not desired or desired <= 0 then
+		bar:SetPoint(bottomPoint, anchor, bottomAnchor, 0, 0)
 		bar:SetPoint(topPoint, anchor, topAnchor, 0, 0)
 	else
 		if limit and limit > 0 and desired > limit then desired = limit end
+		if anchorTop then
+			bar:SetPoint(topPoint, anchor, topAnchor, 0, 0)
+		else
+			bar:SetPoint(bottomPoint, anchor, bottomAnchor, 0, 0)
+		end
 		bar:SetHeight(desired)
 	end
-	if healthBar.GetWidth then bar:SetWidth(healthBar:GetWidth() or 0) end
+	local width = healthBar.GetWidth and healthBar:GetWidth() or 0
+	if not width or width <= 0 then
+		local fallback = tonumber(fallbackWidth)
+		if fallback and fallback > 0 then width = fallback end
+	end
+	bar:SetWidth(width or 0)
 end
 
 function H.trim(str)
@@ -537,15 +654,19 @@ function H.getFont(path)
 		or (addon.variables and addon.variables.defaultFont)
 		or (LSM and LSM:Fetch("font", LSM.DefaultMedia.font))
 		or STANDARD_TEXT_FONT
+	if addon.functions and addon.functions.ResolveFontFace then return addon.functions.ResolveFontFace(path, fallbackFont) or fallbackFont end
 	if addon.functions and addon.functions.IsGlobalFontConfigValue and addon.functions.IsGlobalFontConfigValue(path) then return fallbackFont end
 	if type(path) == "string" and path ~= "" then
-		local lower = path:lower()
-		if path:find("\\") or path:find("/") or lower:find(".ttf", 1, true) or lower:find(".otf", 1, true) or lower:find(".ttc", 1, true) then return path end
 		if LSM and LSM.Fetch then
 			local fetched = LSM:Fetch("font", path, true)
 			if type(fetched) == "string" and fetched ~= "" then return fetched end
 		end
-		return path
+		if LSM and LSM.HashTable then
+			local hash = LSM:HashTable("font") or {}
+			for _, fontPath in pairs(hash) do
+				if fontPath == path then return path end
+			end
+		end
 	end
 	return fallbackFont
 end
@@ -594,6 +715,7 @@ function H.applyCooldownTextStyle(cooldown, size)
 end
 
 function H.resolveBorderTexture(key)
+	if type(key) == "string" and key:upper() == "SOLID" then return "Interface\\Buttons\\WHITE8x8" end
 	if not key or key == "" or key == "DEFAULT" then return "Interface\\Buttons\\WHITE8x8" end
 	if LSM then
 		local tex = LSM:Fetch("border", key)
@@ -720,7 +842,7 @@ local function resolvePrivateAuraUnitToken(unit)
 	if type(unit) ~= "string" then return unit end
 	if unit ~= "player" and UnitIsUnit then
 		local ok, isPlayer = pcall(UnitIsUnit, unit, "player")
-		if ok and isPlayer then return "player" end
+		if ok and H.UnsecretBool(isPlayer) == true then return "player" end
 	end
 	return unit
 end
@@ -770,6 +892,35 @@ local privateAuraShowDispelType = false
 local privateAuraShowDispelCount = 0
 H._privateAuraDeferred = H._privateAuraDeferred or { containers = {} }
 
+-- TODO: Remove this temporary 12.0.5 workaround once Blizzard fixes private aura anchors ignoring frame levels after reattaching.
+-- Original behavior matched the parent strata and used levelFrame + 10. The workaround bumps strata and uses levelFrame + 100.
+H._privateAuraStrataFix = H._privateAuraStrataFix or {
+	BACKGROUND = "LOW",
+	LOW = "MEDIUM",
+	MEDIUM = "HIGH",
+	HIGH = "DIALOG",
+	DIALOG = "FULLSCREEN",
+	FULLSCREEN = "FULLSCREEN_DIALOG",
+	FULLSCREEN_DIALOG = "TOOLTIP",
+}
+
+function H.ApplyPrivateAuraContainerFrameLevel(container, parent, levelFrame, usePrivateAuraWorkaround)
+	if not container then return end
+	local strataSource = (levelFrame and levelFrame.GetFrameStrata and levelFrame) or (parent and parent.GetFrameStrata and parent)
+	if container.SetFrameStrata and strataSource then
+		local strata = strataSource:GetFrameStrata()
+		if usePrivateAuraWorkaround ~= false then
+			container:SetFrameStrata(H._privateAuraStrataFix[strata] or "DIALOG")
+		else
+			container:SetFrameStrata(strata or "MEDIUM")
+		end
+	end
+	if levelFrame and container.SetFrameLevel and levelFrame.GetFrameLevel then
+		local offset = (usePrivateAuraWorkaround ~= false) and 100 or 10
+		container:SetFrameLevel((levelFrame:GetFrameLevel() or 0) + offset)
+	end
+end
+
 function H.UpdatePrivateAuraDeferredEvent()
 	local frame = H._privateAuraDeferred and H._privateAuraDeferred.frame
 	if not frame then return end
@@ -801,6 +952,8 @@ function H.FlushDeferredPrivateAuraMutations()
 				H.RemovePrivateAuras(container)
 			elseif pending.action == "apply" then
 				H.ApplyPrivateAuras(container, pending.unit, pending.cfg, pending.parent, pending.levelFrame, pending.showSample, pending.inverseAnchor)
+			elseif pending.action == "applyBlizzard" then
+				H.ApplyBlizzardAuraContainer(container, pending.unit, pending.cfg, pending.parent, pending.levelFrame, pending.showSample)
 			end
 		end
 	end
@@ -823,6 +976,13 @@ function H.QueueDeferredPrivateAuraMutation(container, action, payload)
 		pending.levelFrame = payload.levelFrame
 		pending.showSample = payload.showSample
 		pending.inverseAnchor = payload.inverseAnchor
+	elseif action == "applyBlizzard" and payload then
+		pending.unit = payload.unit
+		pending.cfg = payload.cfg
+		pending.parent = payload.parent
+		pending.levelFrame = payload.levelFrame
+		pending.showSample = payload.showSample
+		pending.inverseAnchor = nil
 	else
 		pending.unit = nil
 		pending.cfg = nil
@@ -841,6 +1001,92 @@ local function removePrivateAuraAnchor(anchor)
 		pcall(C_UnitAuras.RemovePrivateAuraAnchor, anchor.anchorID)
 		anchor.anchorID = nil
 	end
+end
+
+function H.RemoveBlizzardAuraContainer(container)
+	if not container then return true end
+	if container._eqolBlizzardAuraAnchorID then
+		if not (C_UnitAuras and C_UnitAuras.RemovePrivateAuraAnchor) then return false end
+		local ok = pcall(C_UnitAuras.RemovePrivateAuraAnchor, container._eqolBlizzardAuraAnchorID)
+		if not ok then return false end
+		container._eqolBlizzardAuraAnchorID = nil
+	end
+	container._eqolBlizzardAuraSignature = nil
+	return true
+end
+
+function H.NormalizeAuraRenderer(value)
+	local renderer = tostring(value or "CUSTOM"):upper()
+	if renderer == "BLIZZARD" or renderer == "BLIZZARD_CONTAINER" then return "BLIZZARD" end
+	return "CUSTOM"
+end
+
+function H.IsBlizzardAuraRenderer(value)
+	return H.NormalizeAuraRenderer(value) == "BLIZZARD"
+end
+
+function H.ResolveBlizzardAuraOrganization(value)
+	if type(value) == "number" then return value end
+	local token = tostring(value or ""):upper()
+	local org = Enum and Enum.RaidAuraOrganizationType
+	if token == "BUFFS_TOP_DEBUFFS_BOTTOM" or token == "TOP_BOTTOM" then
+		return (org and org.BuffsTopDebuffsBottom) or 1
+	elseif token == "BUFFS_RIGHT_DEBUFFS_LEFT" or token == "RIGHT_LEFT" then
+		return (org and org.BuffsRightDebuffsLeft) or 2
+	end
+	return (org and org.Legacy) or 0
+end
+
+function H.SetBlizzardAuraContainerAttributes(container, cfg)
+	local showBuffs = cfg.showBuffs == true
+	local showDebuffs = cfg.showDebuffs == true
+	local showDispels = cfg.showDispels == true
+	local showBigDefensive = cfg.showBigDefensive == true
+
+	container:SetAttribute("max-buffs", showBuffs and (cfg.maxBuffs or 0) or 0)
+	container:SetAttribute("max-debuffs", showDebuffs and (cfg.maxDebuffs or 0) or 0)
+	container:SetAttribute("max-dispel-debuffs", showDispels and (cfg.maxDispelDebuffs or 0) or 0)
+	container:SetAttribute("aura-organization-type", H.ResolveBlizzardAuraOrganization(cfg.organizationType))
+	container:SetAttribute("display-only-dispellable-debuffs", cfg.displayOnlyDispellableDebuffs == true)
+	container:SetAttribute("ignore-buffs", not showBuffs)
+	container:SetAttribute("ignore-debuffs", not showDebuffs)
+	container:SetAttribute("ignore-dispel-debuffs", not showDispels)
+	container:SetAttribute("dispel-indicator-option", cfg.dispelIndicatorOption or 2)
+	container:SetAttribute("display-larger-role-specific-debuffs", cfg.displayLargerRoleSpecificDebuffs == true)
+	container:SetAttribute("show-dispel-indicator-overlay", cfg.showDispelOverlay == true)
+	container:SetAttribute("show-big-defensive", showBigDefensive)
+	container:SetAttribute("big-defensive-size", cfg.bigDefensiveSize or cfg.iconSize or 16)
+	container:SetAttribute("icon-size", cfg.iconSize or 16)
+	container:SetAttribute("always-hide-duration", cfg.alwaysHideDuration ~= false)
+	container:SetAttribute("set-aura-size-to-icon-size", true)
+	container:SetAttribute("power-bar-used-height", cfg.powerBarUsedHeight or 0)
+	container:SetAttribute("group-type", cfg.groupType)
+	container:SetAttribute("suppress-dispel-border-icons", cfg.suppressDispelBorderIcons ~= false)
+end
+
+function H.BuildBlizzardAuraSignature(unit, cfg)
+	return table.concat({
+		tostring(unit or ""),
+		tostring(cfg.showBuffs == true),
+		tostring(cfg.showDebuffs == true),
+		tostring(cfg.showDispels == true),
+		tostring(cfg.showBigDefensive == true),
+		tostring(cfg.maxBuffs or 0),
+		tostring(cfg.maxDebuffs or 0),
+		tostring(cfg.maxDispelDebuffs or 0),
+		tostring(H.ResolveBlizzardAuraOrganization(cfg.organizationType)),
+		tostring(cfg.displayOnlyDispellableDebuffs == true),
+		tostring(cfg.displayLargerRoleSpecificDebuffs == true),
+		tostring(cfg.dispelIndicatorOption or 2),
+		tostring(cfg.showDispelOverlay == true),
+		tostring(cfg.iconSize or 16),
+		tostring(cfg.bigDefensiveSize or cfg.iconSize or 16),
+		tostring(cfg.powerBarUsedHeight or 0),
+		tostring(cfg.groupType or ""),
+		tostring(cfg.showCountdownFrame ~= false),
+		tostring(cfg.showCountdownNumbers == true),
+		tostring(cfg.borderScale or ""),
+	}, ":")
 end
 
 local function buildPrivateAuraAnchor(anchor, unit, index, size, borderScale, showFrame, showNumbers, durationEnabled, durationPoint, durationOffsetX, durationOffsetY, durationRelativeTo)
@@ -943,6 +1189,7 @@ function H.RemovePrivateAuras(container)
 	end
 	H.ClearDeferredPrivateAuraMutation(container)
 	updatePrivateAuraShowDispelType(container, false)
+	if not H.RemoveBlizzardAuraContainer(container) then return false end
 	if container._eqolPrivateAuraFrames then
 		for _, anchor in ipairs(container._eqolPrivateAuraFrames) do
 			removePrivateAuraAnchor(anchor)
@@ -960,6 +1207,91 @@ function H.RemovePrivateAuras(container)
 		end
 	end
 	container._eqolPrivateAuraState = nil
+	return true
+end
+
+function H.ApplyBlizzardAuraContainer(container, unit, cfg, parent, levelFrame, showSample)
+	if not container then return end
+	if not (C_UnitAuras and C_UnitAuras.AddPrivateAuraAnchor) then return end
+	cfg = cfg or {}
+	if not unit then
+		H.RemovePrivateAuras(container)
+		if container.Hide then container:Hide() end
+		return
+	end
+	if UnitExists and not showSample and not UnitExists(unit) then
+		H.RemovePrivateAuras(container)
+		if container.Hide then container:Hide() end
+		return
+	end
+	if InCombatLockdown and InCombatLockdown() then
+		H.QueueDeferredPrivateAuraMutation(container, "applyBlizzard", {
+			unit = unit,
+			cfg = cfg,
+			parent = parent,
+			levelFrame = levelFrame,
+			showSample = showSample,
+		})
+		return
+	end
+	H.ClearDeferredPrivateAuraMutation(container)
+	updatePrivateAuraShowDispelType(container, false)
+
+	if container._eqolPrivateAuraFrames then
+		for _, anchor in ipairs(container._eqolPrivateAuraFrames) do
+			removePrivateAuraAnchor(anchor)
+			if anchor.Hide then anchor:Hide() end
+			if anchor._eqolPrivateAuraLayout and anchor._eqolPrivateAuraLayout.Hide then anchor._eqolPrivateAuraLayout:Hide() end
+		end
+	end
+	container._eqolPrivateAuraState = nil
+
+	local effectiveUnit = resolvePrivateAuraUnitToken(unit)
+	if parent and container.GetParent and container:GetParent() ~= parent then container:SetParent(parent) end
+	H.ApplyPrivateAuraContainerFrameLevel(container, parent, levelFrame, cfg.privateAuraFrameLevelWorkaround)
+	container:ClearAllPoints()
+	if parent then
+		container:SetAllPoints(parent)
+	else
+		container:SetPoint("CENTER", UIParent, "CENTER", 0, 0)
+		container:SetSize(1, 1)
+	end
+	container:EnableMouse(false)
+	container:Show()
+
+	local signature = H.BuildBlizzardAuraSignature(effectiveUnit, cfg)
+	if container._eqolBlizzardAuraAnchorID and container._eqolBlizzardAuraSignature == signature then return end
+
+	H.SetBlizzardAuraContainerAttributes(container, cfg)
+	if not H.RemoveBlizzardAuraContainer(container) then return end
+	local iconSize = tonumber(cfg.iconSize) or 16
+	local borderScale = tonumber(cfg.borderScale) or (iconSize / 11)
+	local ok, anchorID = pcall(C_UnitAuras.AddPrivateAuraAnchor, {
+		unitToken = effectiveUnit,
+		auraIndex = 1,
+		parent = container,
+		showCountdownFrame = cfg.showCountdownFrame ~= false,
+		showCountdownNumbers = cfg.showCountdownNumbers == true,
+		isContainer = true,
+		iconInfo = {
+			iconWidth = iconSize,
+			iconHeight = iconSize,
+			borderScale = borderScale,
+			iconAnchor = {
+				point = "CENTER",
+				relativePoint = "CENTER",
+				relativeTo = container,
+				offsetX = 0,
+				offsetY = 0,
+			},
+		},
+	})
+	if ok and anchorID then
+		container._eqolBlizzardAuraAnchorID = anchorID
+		container._eqolBlizzardAuraSignature = signature
+	else
+		container:Hide()
+	end
 end
 
 function H.ApplyPrivateAuras(container, unit, cfg, parent, levelFrame, showSample, inverseAnchor)
@@ -994,6 +1326,7 @@ function H.ApplyPrivateAuras(container, unit, cfg, parent, levelFrame, showSampl
 		return
 	end
 	H.ClearDeferredPrivateAuraMutation(container)
+	if not H.RemoveBlizzardAuraContainer(container) then return end
 
 	local effectiveUnit = resolvePrivateAuraUnitToken(unit)
 	local cacheState = unit == "player" or unit == "focus"
@@ -1040,6 +1373,7 @@ function H.ApplyPrivateAuras(container, unit, cfg, parent, levelFrame, showSampl
 
 	local showFrame = cfg.countdownFrame ~= false
 	local showNumbers = cfg.countdownNumbers ~= false
+	local showTooltip = cfg.showTooltip == true
 	local durationEnabled = durationCfg.enable == true
 	local durationPoint = tostring(durationCfg.point or "CENTER"):upper()
 	local durationOffsetX = tonumber(durationCfg.offsetX) or 0
@@ -1052,8 +1386,7 @@ function H.ApplyPrivateAuras(container, unit, cfg, parent, levelFrame, showSampl
 	local anchorPoint = useInverse and inversePoint(parentPoint) or parentPoint
 
 	if parent and container.GetParent and container:GetParent() ~= parent then container:SetParent(parent) end
-	if container.SetFrameStrata and parent and parent.GetFrameStrata then container:SetFrameStrata(parent:GetFrameStrata()) end
-	if levelFrame and container.SetFrameLevel and levelFrame.GetFrameLevel then container:SetFrameLevel((levelFrame:GetFrameLevel() or 0) + 5) end
+	H.ApplyPrivateAuraContainerFrameLevel(container, parent, levelFrame)
 	container:ClearAllPoints()
 	container:SetPoint(anchorPoint, parent or container:GetParent() or UIParent, parentPoint, parentOffsetX, parentOffsetY)
 	container:SetSize(size, size)
@@ -1067,6 +1400,7 @@ function H.ApplyPrivateAuras(container, unit, cfg, parent, levelFrame, showSampl
 		or state.size ~= size
 		or state.countdownFrame ~= showFrame
 		or state.countdownNumbers ~= showNumbers
+		or state.showTooltip ~= showTooltip
 		or state.borderScale ~= borderScale
 		or state.textScale ~= textScale
 		or state.durationEnabled ~= durationEnabled
@@ -1081,6 +1415,7 @@ function H.ApplyPrivateAuras(container, unit, cfg, parent, levelFrame, showSampl
 		state.size = size
 		state.countdownFrame = showFrame
 		state.countdownNumbers = showNumbers
+		state.showTooltip = showTooltip
 		state.borderScale = borderScale
 		state.textScale = textScale
 		state.durationEnabled = durationEnabled
@@ -1164,7 +1499,11 @@ function H.ApplyPrivateAuras(container, unit, cfg, parent, levelFrame, showSampl
 		layout:Show()
 		anchor:ClearAllPoints()
 		anchor:SetPoint("CENTER", layout, "CENTER", 0, 0)
-		anchor:SetSize(0.001, 0.001)
+		if showTooltip then
+			anchor:SetSize(logicalSize, logicalSize)
+		else
+			anchor:SetSize(0.001, 0.001)
+		end
 		anchor:Show()
 		if anchor._eqolPrivateAuraBlocker and anchor._eqolPrivateAuraBlocker.Hide then anchor._eqolPrivateAuraBlocker:Hide() end
 		if showSample then
@@ -1224,17 +1563,35 @@ function H.ApplyPrivateAuras(container, unit, cfg, parent, levelFrame, showSampl
 	end
 end
 
-local function ensureHighlightFrame(frame)
+function H.NormalizeFrameStrata(value)
+	if type(value) ~= "string" or value == "" then return nil end
+	local token = string.upper(value)
+	if token == "BACKGROUND" or token == "LOW" or token == "MEDIUM" or token == "HIGH" or token == "DIALOG" or token == "FULLSCREEN" or token == "FULLSCREEN_DIALOG" or token == "TOOLTIP" then
+		return token
+	end
+	return nil
+end
+
+local function ensureHighlightFrame(frame, highlightCfg)
 	if not frame then return nil end
 	local highlight = frame._ufHighlight
 	if not highlight then
 		highlight = CreateFrame("Frame", nil, frame, "BackdropTemplate")
 		highlight:EnableMouse(false)
 		frame._ufHighlight = highlight
+	elseif highlight.GetParent and highlight:GetParent() ~= frame and highlight.SetParent then
+		highlight:SetParent(frame)
 	end
-	highlight:SetFrameStrata(frame:GetFrameStrata())
+	local strata = H.NormalizeFrameStrata(highlightCfg and highlightCfg.strata) or (frame.GetFrameStrata and frame:GetFrameStrata())
+	if strata and highlight.SetFrameStrata and highlight:GetFrameStrata() ~= strata then highlight:SetFrameStrata(strata) end
 	local baseLevel = frame:GetFrameLevel() or 0
-	highlight:SetFrameLevel(baseLevel + 4)
+	local targetLevel = baseLevel + 4
+	local border = frame._ufBorder
+	if border and border.GetFrameLevel and border.GetFrameStrata and highlight.GetFrameStrata and border:GetFrameStrata() == highlight:GetFrameStrata() then
+		local borderLevel = border:GetFrameLevel()
+		if borderLevel and targetLevel <= borderLevel then targetLevel = borderLevel + 1 end
+	end
+	highlight:SetFrameLevel(targetLevel)
 	highlight:ClearAllPoints()
 	highlight:SetPoint("TOPLEFT", frame, "TOPLEFT", 0, 0)
 	highlight:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", 0, 0)
@@ -1279,12 +1636,15 @@ function H.buildHighlightConfig(cfg, def)
 	local combatColor = hcfg.combatColor
 	if type(combatColor) ~= "table" then combatColor = hdef.combatColor end
 	if type(combatColor) ~= "table" then combatColor = color end
+	local strata = H.NormalizeFrameStrata(hcfg.strata)
+	if strata == nil then strata = H.NormalizeFrameStrata(hdef.strata) end
 	return {
 		enabled = true,
 		mouseover = mouseover == true,
 		target = target == true,
 		aggro = aggro == true,
 		combat = combat == true,
+		strata = strata,
 		texture = texture,
 		size = size,
 		color = color,
@@ -1314,7 +1674,8 @@ function H.applyHighlightStyle(st, highlightCfg)
 		return
 	end
 	if st._highlightFrame and st._highlightFrame.GetParent and st._highlightFrame:GetParent() ~= host then st._highlightFrame:Hide() end
-	highlight = ensureHighlightFrame(host)
+	if highlight and host._ufHighlight ~= highlight then host._ufHighlight = highlight end
+	highlight = ensureHighlightFrame(host, highlightCfg)
 	if not highlight then return end
 	st._highlightFrame = highlight
 	local size = highlightCfg.size or 1
@@ -1360,13 +1721,23 @@ function H.updateHighlight(st, unit, playerUnit)
 		H.applyHighlightStyle(st, cfg)
 		highlight = host._ufHighlight or st._highlightFrame
 		if not highlight then return end
+	else
+		if host._ufHighlight ~= highlight then host._ufHighlight = highlight end
+		highlight = ensureHighlightFrame(host, cfg) or highlight
+		st._highlightFrame = highlight
 	end
 	local show = false
 	local color = cfg.color or { 1, 0, 0, 1 }
 	if cfg.mouseover and st._hovered then
 		show = true
 		color = cfg.mouseoverColor or color
-	elseif cfg.target and UnitIsUnit and UnitExists and UnitExists("target") and UnitExists(unit) and UnitIsUnit(unit, "target") then
+	elseif cfg.target
+		and UnitIsUnit
+		and UnitExists
+		and H.UnsecretBool(UnitExists("target")) == true
+		and H.UnsecretBool(UnitExists(unit)) == true
+		and H.UnsecretBool(UnitIsUnit(unit, "target")) == true
+	then
 		show = true
 	elseif cfg.aggro and (unit == (playerUnit or "player") or unit == "pet") and hasAggro(unit) then
 		show = true
@@ -1400,6 +1771,7 @@ end
 function H.resolveTexture(key)
 	if key == "SOLID" then return "Interface\\Buttons\\WHITE8x8" end
 	if not key or key == "DEFAULT" then return BLIZZARD_TEX end
+	if key == H.BLIZZARD_RAID_FRAME_TEX_KEY then return H.BLIZZARD_RAID_FRAME_TEX end
 	if LSM then
 		local tex = LSM:Fetch("statusbar", key)
 		if tex then return tex end
@@ -1410,6 +1782,7 @@ end
 function H.resolveSeparatorTexture(key)
 	if not key or key == "" or key == "SOLID" then return "Interface\\Buttons\\WHITE8x8" end
 	if key == "DEFAULT" then return BLIZZARD_TEX end
+	if key == H.BLIZZARD_RAID_FRAME_TEX_KEY then return H.BLIZZARD_RAID_FRAME_TEX end
 	if LSM then
 		local tex = LSM:Fetch("statusbar", key)
 		if tex then return tex end
@@ -1420,6 +1793,7 @@ end
 function H.resolveCastTexture(key)
 	if key == "SOLID" then return "Interface\\Buttons\\WHITE8x8" end
 	if not key or key == "DEFAULT" then return BLIZZARD_CAST_STANDARD_TEX or BLIZZARD_TEX end
+	if key == H.BLIZZARD_RAID_FRAME_TEX_KEY then return H.BLIZZARD_RAID_FRAME_TEX end
 	if LSM then
 		local tex = LSM:Fetch("statusbar", key)
 		if tex then return tex end
@@ -1428,6 +1802,8 @@ function H.resolveCastTexture(key)
 end
 
 function H.resolveCastInterruptTexture() return BLIZZARD_CAST_INTERRUPTED_TEX end
+
+function H.resolveCastUninterruptibleTexture() return "ui-castingbar-uninterruptable" end
 
 function H.resolveCastIconTexture(texture)
 	if issecretvalue and issecretvalue(texture) then return texture end
@@ -2060,20 +2436,10 @@ function H.SetCastbarColorWithGradient(bar, ccfg, r, g, b, a, progressOverride)
 		renderR, renderG, renderB, renderA = 1, 1, 1, 1
 	end
 	local lastColor = bar._eqolLastColor
-	if
-		not lastColor
-		or lastColor[1] ~= renderR
-		or lastColor[2] ~= renderG
-		or lastColor[3] ~= renderB
-		or lastColor[4] ~= renderA
-	then
+	if not lastColor or lastColor[1] ~= renderR or lastColor[2] ~= renderG or lastColor[3] ~= renderB or lastColor[4] ~= renderA then
 		bar:SetStatusBarColor(renderR, renderG, renderB, renderA)
 		bar._eqolLastColor = bar._eqolLastColor or {}
-		bar._eqolLastColor[1], bar._eqolLastColor[2], bar._eqolLastColor[3], bar._eqolLastColor[4] =
-			renderR,
-			renderG,
-			renderB,
-			renderA
+		bar._eqolLastColor[1], bar._eqolLastColor[2], bar._eqolLastColor[3], bar._eqolLastColor[4] = renderR, renderG, renderB, renderA
 	end
 	if ccfg and ccfg.useGradient == true then
 		if not applyCastbarGradient(bar, ccfg, br, bg, bb, ba, progressOverride) then clearCastbarGradientState(bar) end
@@ -2659,15 +3025,13 @@ function H.layoutEmpowerStages(st)
 	local barLeft = st.castBar:GetLeft()
 	local barRight = st.castBar:GetRight()
 	if not barLeft or not barRight then
-		if After then
-			emp.layoutToken = (emp.layoutToken or 0) + 1
-			local token = emp.layoutToken
-			After(0, function()
-				local st2 = st
-				local emp2 = st2 and st2.castEmpower
-				if emp2 and emp2.layoutToken == token then H.layoutEmpowerStages(st2) end
-			end)
-		end
+		emp.layoutToken = (emp.layoutToken or 0) + 1
+		local token = emp.layoutToken
+		RunNextFrame(function()
+			local st2 = st
+			local emp2 = st2 and st2.castEmpower
+			if emp2 and emp2.layoutToken == token then H.layoutEmpowerStages(st2) end
+		end)
 		return
 	end
 	local barWidth = barRight - barLeft
@@ -2907,6 +3271,7 @@ function H.shortValue(val)
 end
 
 function H.textModeUsesLevel(mode) return type(mode) == "string" and mode:find("LEVEL", 1, true) ~= nil end
+function H.textModeUsesPercent(mode) return type(mode) == "string" and mode:find("PERCENT", 1, true) ~= nil end
 function H.textModeUsesAbsorb(mode) return mode == "ABSORB" or mode == "CURABSORB" or mode == "CURABSORBPIPE" or mode == "CURABSORBPLUS" end
 function H.textModeUsesDeficit(mode) return mode == "DEFICIT" end
 
@@ -3272,7 +3637,13 @@ function H.updateLeaderIndicator(st, unit, cfg, def, skipDisabled)
 		st.leaderIcon:SetAtlas("UI-HUD-UnitFrame-Player-Group-LeaderIcon", false)
 		st.leaderIcon:Show()
 	else
-		st.leaderIcon:Hide()
+		local showAssist = UnitIsGroupAssistant and UnitIsGroupAssistant(unit)
+		if showAssist then
+			st.leaderIcon:SetTexture("Interface\\GroupFrame\\UI-Group-AssistantIcon")
+			st.leaderIcon:Show()
+		else
+			st.leaderIcon:Hide()
+		end
 	end
 end
 

@@ -149,14 +149,18 @@ do  --Weekly Caches (Meta quest rewards)
 			243,
 			246,
 
-			253,
+			250,
 			256,
 			259,    --Tier 8 Max
 			259,
 			259,
 
 			259,
+			263,
+			269,
 		},
+
+		GreatVaultWorldActivityMaxLevel = 13,
 	};
 
 

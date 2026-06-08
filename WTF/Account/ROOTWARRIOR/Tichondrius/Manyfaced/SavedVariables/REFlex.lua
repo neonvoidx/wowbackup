@@ -26,7 +26,6 @@ REFlexSettings = {
 REFlexDatabase = {
 {
 ["Map"] = 1552,
-["PlayerNum"] = 4,
 ["Players"] = {
 {
 "Sïck",
@@ -105,10 +104,11 @@ nil,
 230,
 },
 },
+["Hidden"] = false,
 ["isSoloShuffle"] = false,
 ["PlayersNum"] = 4,
 ["Duration"] = 45,
-["Hidden"] = false,
+["Season"] = 41,
 ["isRatedSoloShuffle"] = false,
 ["Version"] = 3500,
 ["isBrawl"] = false,
@@ -117,11 +117,10 @@ nil,
 ["isArena"] = true,
 ["Winner"] = 0,
 ["Time"] = 1776053881,
-["Season"] = 41,
+["PlayerNum"] = 4,
 },
 {
 ["Map"] = 617,
-["PlayerNum"] = 3,
 ["Players"] = {
 {
 "Baltusrol-Hydraxis",
@@ -200,10 +199,11 @@ nil,
 34,
 },
 },
+["Hidden"] = false,
 ["isSoloShuffle"] = false,
 ["PlayersNum"] = 4,
 ["Duration"] = 32,
-["Hidden"] = false,
+["Season"] = 41,
 ["isRatedSoloShuffle"] = false,
 ["Version"] = 3500,
 ["isBrawl"] = false,
@@ -212,7 +212,7 @@ nil,
 ["isArena"] = true,
 ["Winner"] = 0,
 ["Time"] = 1776054135,
-["Season"] = 41,
+["PlayerNum"] = 3,
 },
 {
 ["PlayerStats"] = {
@@ -384,4 +384,5 @@ nil,
 }
 REFlexHonorDatabase = {
 [1776052800] = 15734,
+[1776830400] = 8,
 }

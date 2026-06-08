@@ -21,7 +21,52 @@ local TotemFrameUtil = UF.TotemFrameUtil
 addon.variables = addon.variables or {}
 addon.variables.ufSampleAbsorb = addon.variables.ufSampleAbsorb or {}
 addon.variables.ufSampleHealAbsorb = addon.variables.ufSampleHealAbsorb or {}
+UF._editModeSample = UF._editModeSample or {}
+
+function UF.GetEditModeSampleKey(unit)
+	if type(unit) ~= "string" then return nil end
+	if unit == "boss" or unit:match("^boss%d+$") then return "boss" end
+	return unit
+end
+
+function UF.IsEditModeSampleEnabled(unit)
+	if not (addon.EditModeLib and addon.EditModeLib.IsInEditMode and addon.EditModeLib:IsInEditMode()) then return false end
+	unit = UF.GetEditModeSampleKey(unit)
+	return unit and UF._editModeSample and UF._editModeSample[unit] == true or false
+end
+
+function UF.SetEditModeSampleEnabled(unit, enabled)
+	unit = UF.GetEditModeSampleKey(unit)
+	if not unit then return end
+	UF._editModeSample = UF._editModeSample or {}
+	enabled = enabled == true
+	if (UF._editModeSample[unit] == true) == enabled then return end
+	if enabled then
+		UF._editModeSample[unit] = true
+	else
+		UF._editModeSample[unit] = nil
+	end
+	if unit == "boss" then
+		if UF.UpdateBossFrames then
+			UF.UpdateBossFrames(true)
+		elseif UF.Refresh then
+			UF.Refresh()
+		end
+	elseif UF.RefreshUnit then
+		UF.RefreshUnit(unit)
+	elseif UF.Refresh then
+		UF.Refresh()
+	end
+end
+
+function UF.ToggleEditModeSample(unit)
+	unit = UF.GetEditModeSampleKey(unit)
+	if not unit then return end
+	UF.SetEditModeSampleEnabled(unit, not (UF._editModeSample and UF._editModeSample[unit] == true))
+end
 local maxBossFrames = 8
+UF.BOSS_SPACING_MIN = -50
+local BOSS_SPACING_MIN = UF.BOSS_SPACING_MIN
 local UF_PROFILE_SHARE_KIND = "EQOL_UF_PROFILE"
 local smoothFill = Enum.StatusBarInterpolation.ExponentialEaseOut
 local TEXT_UPDATE_INTERVAL = 0.1
@@ -54,6 +99,57 @@ local function getSmoothInterpolation(cfg, def)
 	if flag == nil and def then flag = def.smoothFill end
 	if flag == true then return smoothFill end
 	return nil
+end
+
+function UF.SetStatusBarValue(bar, value, smooth, forceImmediate)
+	if not bar or value == nil then return end
+	local helper = UF.GroupFramesHelper
+	local pixelHelper = helper and helper.Pixel
+	if pixelHelper and pixelHelper.SetStatusBarValue then
+		pixelHelper.SetStatusBarValue(bar, value, smooth, forceImmediate)
+		return
+	end
+	if smooth and Enum and Enum.StatusBarInterpolation and Enum.StatusBarInterpolation.ExponentialEaseOut then
+		bar:SetValue(value, Enum.StatusBarInterpolation.ExponentialEaseOut)
+	else
+		bar:SetValue(value)
+	end
+end
+
+function UF.EnsureOverlayClipFrame(anchor, key)
+	if not anchor then return nil end
+	key = key or "_eqolOverlayClip"
+	local clip = anchor[key]
+	if not clip then
+		clip = CreateFrame("Frame", nil, anchor)
+		clip:SetClipsChildren(true)
+		anchor[key] = clip
+	end
+	clip:ClearAllPoints()
+	clip:SetAllPoints(anchor)
+	if clip.SetFrameStrata and anchor.GetFrameStrata then
+		local anchorStrata = anchor:GetFrameStrata()
+		if anchorStrata and clip:GetFrameStrata() ~= anchorStrata then clip:SetFrameStrata(anchorStrata) end
+	end
+	if clip.SetFrameLevel and anchor.GetFrameLevel then
+		local desiredLevel = (anchor:GetFrameLevel() or 0) + 1
+		if clip:GetFrameLevel() ~= desiredLevel then clip:SetFrameLevel(desiredLevel) end
+	end
+	return clip
+end
+
+function UF.StabilizeStatusBarTexture(bar)
+	if not bar then return end
+	local helper = UF.GroupFramesHelper
+	local pixel = helper and helper.Pixel
+	if pixel and pixel.DisableSnap then pixel.DisableSnap(bar) end
+	if not bar.GetStatusBarTexture then return end
+	local tex = bar:GetStatusBarTexture()
+	if not tex then return end
+	if tex.SetHorizTile then tex:SetHorizTile(false) end
+	if tex.SetVertTile then tex:SetVertTile(false) end
+	if tex.SetTexCoord then tex:SetTexCoord(0, 1, 0, 1) end
+	if pixel and pixel.DisableSnap then pixel.DisableSnap(tex) end
 end
 
 local function resetBlizzBossParent(self, parent)
@@ -139,6 +235,7 @@ local AceGUI = addon.AceGUI or LibStub("AceGUI-3.0")
 local DEFAULT_NOT_INTERRUPTIBLE_COLOR = { 204 / 255, 204 / 255, 204 / 255, 1 }
 local UnitGetTotalAbsorbs = UnitGetTotalAbsorbs or function() return 0 end
 local UnitGetTotalHealAbsorbs = UnitGetTotalHealAbsorbs or function() return 0 end
+local GetUnitTotalModifiedMaxHealthPercent = _G.GetUnitTotalModifiedMaxHealthPercent or function() return 0 end
 local RegisterStateDriver = _G.RegisterStateDriver
 local UnregisterStateDriver = _G.UnregisterStateDriver
 local IsResting = _G.IsResting
@@ -155,6 +252,37 @@ local SetFrameVisibilityOverride = addon.functions and addon.functions.SetFrameV
 local HasFrameVisibilityOverride = addon.functions and addon.functions.HasFrameVisibilityOverride
 local NormalizeUnitFrameVisibilityConfig = addon.functions and addon.functions.NormalizeUnitFrameVisibilityConfig
 local ApplyFrameVisibilityConfig = addon.functions and addon.functions.ApplyFrameVisibilityConfig
+UF.COMBAT_INDICATOR_DEFAULT_ICON = "DEFAULT"
+UF.COMBAT_INDICATOR_DEFAULT_TEXTURE = "Interface\\Addons\\EnhanceQoL\\Assets\\CombatIndicator.tga"
+UF.COMBAT_INDICATOR_ICONS = {
+	{ value = UF.COMBAT_INDICATOR_DEFAULT_ICON, texture = UF.COMBAT_INDICATOR_DEFAULT_TEXTURE },
+	{ value = "ShipMissionIcon-Combat-Mission", atlas = "ShipMissionIcon-Combat-Mission" },
+	{ value = "GarrMission_MissionIcon-Combat", atlas = "GarrMission_MissionIcon-Combat" },
+	{ value = "Mobile-MechanicIcon-Powerful", atlas = "Mobile-MechanicIcon-Powerful" },
+	{ value = "Mobile-CombatIcon-Desaturated", atlas = "Mobile-CombatIcon-Desaturated" },
+	{ value = "Mobile-CombatBadgeIcon", atlas = "Mobile-CombatBadgeIcon" },
+	{ value = "plunderstorm-pvpqueue-catergory-icon", atlas = "plunderstorm-pvpqueue-catergory-icon" },
+	{ value = "combat_swords-icon", atlas = "combat_swords-icon" },
+}
+
+function UF.GetCombatIndicatorIconDefinition(value)
+	local key = type(value) == "string" and value ~= "" and value or UF.COMBAT_INDICATOR_DEFAULT_ICON
+	local fallback
+	for _, option in ipairs(UF.COMBAT_INDICATOR_ICONS) do
+		if option.value == UF.COMBAT_INDICATOR_DEFAULT_ICON then fallback = option end
+		if option.value == key then return option end
+	end
+	if key ~= UF.COMBAT_INDICATOR_DEFAULT_ICON then return { value = key, atlas = key } end
+	return fallback or UF.COMBAT_INDICATOR_ICONS[1]
+end
+
+function UF.GetCombatIndicatorIconMarkup(value, size)
+	local option = UF.GetCombatIndicatorIconDefinition(value)
+	size = tonumber(size) or 18
+	if option and option.atlas then return ("|A:%s:%d:%d:0:0|a"):format(option.atlas, size, size) end
+	if option and option.texture then return ("|T%s:%d:%d|t"):format(option.texture, size, size) end
+	return tostring(value or "")
+end
 
 local UNIT = {
 	PLAYER = "player",
@@ -163,6 +291,111 @@ local UNIT = {
 	FOCUS = "focus",
 	PET = "pet",
 }
+
+UF._runtimeConsumers = UF._runtimeConsumers or {
+	unit = {},
+	group = {},
+	unitTotal = 0,
+	groupTotal = 0,
+	total = 0,
+	initialized = false,
+}
+
+local function notifyRuntimeConsumerActivityChanged()
+	local profiles = UF.Profiles
+	if not profiles then return end
+	if UF.HasRuntimeConsumers and UF.HasRuntimeConsumers() and profiles._ensureUFProfileEvents then
+		profiles._ensureUFProfileEvents()
+	elseif profiles.UpdateEventRegistration then
+		profiles.UpdateEventRegistration()
+	end
+end
+
+local function setRuntimeConsumerActive(kind, key, enabled, silent)
+	local runtime = UF._runtimeConsumers
+	runtime[kind] = runtime[kind] or {}
+	local bucket = runtime[kind]
+	enabled = enabled == true
+	local previous = bucket[key] == true
+	if previous == enabled then return false end
+	if enabled then
+		bucket[key] = true
+		runtime.total = (runtime.total or 0) + 1
+		runtime[kind .. "Total"] = (runtime[kind .. "Total"] or 0) + 1
+	else
+		bucket[key] = nil
+		runtime.total = math.max((runtime.total or 0) - 1, 0)
+		runtime[kind .. "Total"] = math.max((runtime[kind .. "Total"] or 0) - 1, 0)
+	end
+	runtime.initialized = true
+	if not silent then notifyRuntimeConsumerActivityChanged() end
+	return true
+end
+
+local function canonicalUFConsumerUnit(unit)
+	if type(unit) ~= "string" then return nil end
+	if unit == "boss" or unit:match("^boss%d+$") then return "boss" end
+	return unit
+end
+
+function UF.SetRuntimeConsumerActive(kind, key, enabled)
+	if kind ~= "unit" and kind ~= "group" then return false end
+	key = kind == "unit" and canonicalUFConsumerUnit(key) or tostring(key or "")
+	if not key or key == "" then return false end
+	return setRuntimeConsumerActive(kind, key, enabled)
+end
+
+function UF.RecomputeRuntimeConsumerActivity()
+	local runtime = UF._runtimeConsumers
+	runtime.unit = runtime.unit or {}
+	runtime.group = runtime.group or {}
+	for key in pairs(runtime.unit) do
+		runtime.unit[key] = nil
+	end
+	for key in pairs(runtime.group) do
+		runtime.group[key] = nil
+	end
+	runtime.total = 0
+	runtime.unitTotal = 0
+	runtime.groupTotal = 0
+
+	local db = addon.db
+	local frames = db and db.ufFrames
+	if type(frames) == "table" then
+		for _, key in ipairs({ UNIT.PLAYER, UNIT.TARGET, UNIT.TARGET_TARGET, UNIT.FOCUS, UNIT.PET, "boss" }) do
+			local cfg = frames[key]
+			if type(cfg) == "table" and cfg.enabled == true then setRuntimeConsumerActive("unit", key, true, true) end
+		end
+		for key, cfg in pairs(frames) do
+			if type(key) == "string" and key:match("^boss%d+$") and type(cfg) == "table" and cfg.enabled == true then
+				setRuntimeConsumerActive("unit", "boss", true, true)
+				break
+			end
+		end
+	end
+
+	local groupFrames = db and db.ufGroupFrames
+	if type(groupFrames) == "table" then
+		for key, cfg in pairs(groupFrames) do
+			if type(cfg) == "table" and cfg.enabled == true then setRuntimeConsumerActive("group", tostring(key), true, true) end
+		end
+	end
+	runtime.initialized = true
+	notifyRuntimeConsumerActivityChanged()
+	return runtime.total > 0
+end
+
+function UF.HasRuntimeConsumers()
+	local runtime = UF._runtimeConsumers
+	if not runtime.initialized then return UF.RecomputeRuntimeConsumerActivity() end
+	return (runtime.total or 0) > 0
+end
+
+function UF.HasUnitRuntimeConsumers()
+	local runtime = UF._runtimeConsumers
+	if not runtime.initialized then UF.RecomputeRuntimeConsumerActivity() end
+	return (runtime.unitTotal or 0) > 0
+end
 local ENEMY_DEBUFF_FILTER_MODE_PLAYER = "PLAYER"
 local ENEMY_DEBUFF_FILTER_MODE_ALL = "ALL"
 
@@ -405,6 +638,7 @@ local classResourceFramesByClass = {
 local totemFrameClasses = {
 	DEATHKNIGHT = true,
 	DRUID = true,
+	EVOKER = true,
 	MAGE = true,
 	MONK = true,
 	PALADIN = true,
@@ -470,6 +704,28 @@ function UFProfileManager._getCurrentPlayerGUID()
 end
 
 function UFProfileManager._getCurrentSpecID()
+	if C_ClassTalents and C_ClassTalents.GetActiveConfigID and C_ClassTalents.GetConfigIDsBySpecID then
+		local activeConfigID = C_ClassTalents.GetActiveConfigID()
+		local classID = UnitClass and select(3, UnitClass("player")) or nil
+		if issecretvalue and issecretvalue(classID) then classID = nil end
+		if type(activeConfigID) == "number" and activeConfigID > 0 and type(classID) == "number" and classID > 0 and GetNumSpecializationsForClassID and GetSpecializationInfoForClassID then
+			local numSpecs = GetNumSpecializationsForClassID(classID)
+			if type(numSpecs) == "number" and numSpecs > 0 then
+				for index = 1, numSpecs do
+					local specID = select(1, GetSpecializationInfoForClassID(classID, index))
+					if type(specID) == "number" and specID > 0 then
+						local configIDs = C_ClassTalents.GetConfigIDsBySpecID(specID)
+						if type(configIDs) == "table" then
+							for _, configID in ipairs(configIDs) do
+								if configID == activeConfigID then return specID end
+							end
+						end
+					end
+				end
+			end
+		end
+	end
+
 	if not (C_SpecializationInfo and C_SpecializationInfo.GetSpecialization and C_SpecializationInfo.GetSpecializationInfo) then return nil end
 	local specIndex = C_SpecializationInfo.GetSpecialization()
 	if type(specIndex) ~= "number" or specIndex <= 0 then return nil end
@@ -625,18 +881,41 @@ function UFProfileManager._getSortedUFProfileNames(profiles)
 	return names
 end
 
+function UFProfileManager._markUFProfilesDirty()
+	UFProfileManager._profileDedupeVersion = (UFProfileManager._profileDedupeVersion or 0) + 1
+end
+
+function UFProfileManager._isUFProfilePayloadNormalized(profile)
+	return type(profile) == "table"
+		and type(profile.ufFrames) == "table"
+		and type(profile.ufGroupFrames) == "table"
+		and (profile.ufUseCustomClassColors == true or profile.ufUseCustomClassColors == false)
+		and type(profile.ufClassColors) == "table"
+		and type(profile.ufPowerColorOverrides) == "table"
+		and type(profile.ufNPCColorOverrides) == "table"
+end
+
 function UFProfileManager._ensureUFProfilesRoot()
 	if type(addon.db) ~= "table" then return nil end
-	if type(addon.db.ufProfiles) ~= "table" then addon.db.ufProfiles = {} end
+	if type(addon.db.ufProfiles) ~= "table" then
+		addon.db.ufProfiles = {}
+		UFProfileManager._markUFProfilesDirty()
+	end
 	local profiles = addon.db.ufProfiles
 	for name, profile in pairs(profiles) do
 		if type(name) ~= "string" or name == "" then
 			profiles[name] = nil
+			UFProfileManager._markUFProfilesDirty()
 		else
+			local normalized = UFProfileManager._isUFProfilePayloadNormalized(profile)
 			profiles[name] = UFProfileManager._ensureUFProfilePayload(profile)
+			if not normalized then UFProfileManager._markUFProfilesDirty() end
 		end
 	end
-	if not next(profiles) then profiles[UFProfileManager.DEFAULT_NAME] = UFProfileManager._buildLegacyUFProfile() end
+	if not next(profiles) then
+		profiles[UFProfileManager.DEFAULT_NAME] = UFProfileManager._buildLegacyUFProfile()
+		UFProfileManager._markUFProfilesDirty()
+	end
 	return profiles
 end
 
@@ -688,6 +967,16 @@ function UFProfileManager._dedupeUFProfileTables(profiles)
 		UFProfileManager.Debug("deduped shared UF profile tables (deep): %d", dedupCount)
 		UFProfileManager.Trace("DEDUPE_SHARED", tostring(dedupCount))
 	end
+end
+
+function UFProfileManager._ensureUFProfileTablesDeduped(profiles)
+	if type(profiles) ~= "table" then return end
+	local version = UFProfileManager._profileDedupeVersion or 0
+	if UFProfileManager._dedupeDBRef == addon.db and UFProfileManager._dedupeProfilesRef == profiles and UFProfileManager._dedupeProfilesVersion == version then return end
+	UFProfileManager._dedupeUFProfileTables(profiles)
+	UFProfileManager._dedupeDBRef = addon.db
+	UFProfileManager._dedupeProfilesRef = profiles
+	UFProfileManager._dedupeProfilesVersion = version
 end
 
 function UFProfileManager._cleanUFProfileReferences(profiles)
@@ -831,6 +1120,7 @@ function UFProfileManager._seedProfileFromRuntime(profileName)
 
 	if not seeded then return false end
 	profiles[profileName] = UFProfileManager._ensureUFProfilePayload(profile)
+	UFProfileManager._markUFProfilesDirty()
 	UFProfileManager.Debug("seed runtime into UF profile %s (first guid mapping)", tostring(profileName))
 	UFProfileManager.Trace("SEED_RUNTIME", profileName)
 	return true
@@ -857,6 +1147,7 @@ function UFProfileManager._bindUFProfileToRuntime(profileName)
 	local raidEnabled = profile.ufGroupFrames and profile.ufGroupFrames.raid and profile.ufGroupFrames.raid.enabled == true
 	UFProfileManager.Debug("bind runtime -> %s (ufGroupFrames=%s, party=%s, raid=%s)", tostring(profileName), tostring(profile.ufGroupFrames), tostring(partyEnabled), tostring(raidEnabled))
 	UFProfileManager.Trace("BIND_RUNTIME", profileName)
+	if UF.RecomputeRuntimeConsumerActivity then UF.RecomputeRuntimeConsumerActivity() end
 	return profile
 end
 
@@ -874,19 +1165,37 @@ function UFProfileManager._isUFProfileBound(profileName)
 	return true
 end
 
-function UFProfileManager._ensureUFProfileEvents()
-	if UFProfileManager._eventFrame then return end
-	local frame = CreateFrame("Frame")
-	frame:RegisterEvent("PLAYER_LOGIN")
-	frame:RegisterEvent("ACTIVE_PLAYER_SPECIALIZATION_CHANGED")
-	frame:RegisterEvent("ACTIVE_TALENT_GROUP_CHANGED")
-	frame:RegisterEvent("PLAYER_REGEN_ENABLED")
-	if frame.RegisterUnitEvent then
-		frame:RegisterUnitEvent("PLAYER_SPECIALIZATION_CHANGED", "player")
-	else
-		frame:RegisterEvent("PLAYER_SPECIALIZATION_CHANGED")
+function UFProfileManager.ScheduleSpecMappingRetry(source, immediate, initializedProfiles)
+	if UF.HasRuntimeConsumers and not UF.HasRuntimeConsumers() then return false, "INACTIVE" end
+	local retrySource = tostring(source or "UNKNOWN")
+	UFProfileManager._specMappingRetrySource = retrySource
+	if immediate ~= false then
+		local immediateKey = retrySource .. "|" .. tostring(UFProfileManager._getCurrentSpecID() or "")
+		if not UFProfileManager._specMappingRetryPending or UFProfileManager._specMappingRetryImmediateKey ~= immediateKey then
+			UFProfileManager._specMappingRetryImmediateKey = immediateKey
+			UFProfileManager.ApplySpecMapping(retrySource .. ":Immediate", initializedProfiles)
+		end
 	end
+	if UFProfileManager._specMappingRetryPending or not After then return end
+	UFProfileManager._specMappingRetryPending = true
+	After(1, function()
+		UFProfileManager._specMappingRetryPending = nil
+		UFProfileManager._specMappingRetryImmediateKey = nil
+		local delayedSource = UFProfileManager._specMappingRetrySource or retrySource
+		UFProfileManager._specMappingRetrySource = nil
+		UFProfileManager.ApplySpecMapping(delayedSource .. ":Delayed")
+	end)
+end
+
+function UFProfileManager._ensureUFProfileEvents()
+	if UFProfileManager._eventFrame then
+		UFProfileManager.UpdateEventRegistration()
+		return
+	end
+	local frame = CreateFrame("Frame")
+
 	frame:SetScript("OnEvent", function(_, event, unit)
+		if UF.HasRuntimeConsumers and not UF.HasRuntimeConsumers() then return end
 		if event == "PLAYER_REGEN_ENABLED" then
 			if UF._pendingProfileApply then UFProfileManager.ApplyCurrent("PLAYER_REGEN_ENABLED") end
 			return
@@ -894,11 +1203,42 @@ function UFProfileManager._ensureUFProfileEvents()
 		if event == "PLAYER_SPECIALIZATION_CHANGED" and unit and unit ~= "player" then return end
 		local ok = UFProfileManager.Initialize()
 		if not ok then return end
-		if event == "PLAYER_LOGIN" or event == "PLAYER_SPECIALIZATION_CHANGED" or event == "ACTIVE_PLAYER_SPECIALIZATION_CHANGED" or event == "ACTIVE_TALENT_GROUP_CHANGED" then
-			UFProfileManager.ApplySpecMapping(event)
+		if
+			event == "PLAYER_LOGIN"
+			or event == "PLAYER_SPECIALIZATION_CHANGED"
+			or event == "ACTIVE_PLAYER_SPECIALIZATION_CHANGED"
+			or event == "ACTIVE_TALENT_GROUP_CHANGED"
+			or event == "PLAYER_ROLES_ASSIGNED"
+		then
+			UFProfileManager.ScheduleSpecMappingRetry(event, true, addon.db and addon.db.ufProfiles)
 		end
 	end)
 	UFProfileManager._eventFrame = frame
+	UFProfileManager.UpdateEventRegistration()
+end
+
+function UFProfileManager.UpdateEventRegistration()
+	local frame = UFProfileManager._eventFrame
+	if not frame then return end
+	local enabled = UF.HasRuntimeConsumers and UF.HasRuntimeConsumers() or false
+	if enabled then
+		if frame._eqolUFProfileEventsRegistered then return end
+		frame:RegisterEvent("PLAYER_LOGIN")
+		frame:RegisterEvent("ACTIVE_PLAYER_SPECIALIZATION_CHANGED")
+		frame:RegisterEvent("ACTIVE_TALENT_GROUP_CHANGED")
+		frame:RegisterEvent("PLAYER_ROLES_ASSIGNED")
+		frame:RegisterEvent("PLAYER_REGEN_ENABLED")
+		frame:RegisterUnitEvent("PLAYER_SPECIALIZATION_CHANGED", "player")
+		frame._eqolUFProfileEventsRegistered = true
+		return
+	end
+	if frame._eqolUFProfileEventsRegistered then
+		frame:UnregisterAllEvents()
+		frame._eqolUFProfileEventsRegistered = nil
+	end
+	UFProfileManager._specMappingRetryPending = nil
+	UFProfileManager._specMappingRetryImmediateKey = nil
+	UFProfileManager._specMappingRetrySource = nil
 end
 
 function UFProfileManager.Initialize()
@@ -906,7 +1246,7 @@ function UFProfileManager.Initialize()
 	if type(addon.db) ~= "table" then return false, "NO_DB" end
 	local profiles = UFProfileManager._ensureUFProfilesRoot()
 	if type(profiles) ~= "table" then return false, "NO_DB" end
-	UFProfileManager._dedupeUFProfileTables(profiles)
+	UFProfileManager._ensureUFProfileTablesDeduped(profiles)
 	UFProfileManager._cleanUFProfileReferences(profiles)
 	local activeName, shouldSeedFromRuntime = UFProfileManager._resolveUFActiveProfileName(profiles)
 	if not activeName or not profiles[activeName] then return false, "NO_PROFILE" end
@@ -916,6 +1256,7 @@ function UFProfileManager.Initialize()
 	UFProfileManager.Debug("initialize guid=%s key=%s global=%s resolved=%s", tostring(guid), tostring(keyProfile), tostring(addon.db.ufProfileGlobal), tostring(activeName))
 	if not (UFProfileManager._activeProfileName == activeName and UFProfileManager._isUFProfileBound(activeName)) then UFProfileManager._bindUFProfileToRuntime(activeName) end
 	UFProfileManager._ensureUFProfileEvents()
+	UFProfileManager.UpdateEventRegistration()
 	UFProfileManager._dbRef = addon.db
 	UFProfileManager.Trace("INIT_DONE", activeName)
 	return true
@@ -1039,15 +1380,20 @@ function UFProfileManager.SetActiveName(name, source)
 	return UFProfileManager.ApplyCurrent(source or "SET_ACTIVE")
 end
 
-function UFProfileManager.GetSpecMapping(specID)
-	if not UFProfileManager.Initialize() then return nil end
+function UFProfileManager._getSpecMappingFromProfiles(profiles, specID)
+	if type(profiles) ~= "table" then return nil end
 	local guid = UFProfileManager._getCurrentPlayerGUID()
 	if not guid then return nil end
-	local byGuid = UFProfileManager._resolveUFSpecMappingsForGUID(addon.db.ufProfiles, guid, true)
+	local byGuid = UFProfileManager._resolveUFSpecMappingsForGUID(profiles, guid, true)
 	if type(byGuid) ~= "table" then return nil end
 	local key = tonumber(specID)
 	if not key then return nil end
-	return UFProfileManager._resolveUFSpecMappedProfileFromMappings(addon.db.ufProfiles, byGuid, key)
+	return UFProfileManager._resolveUFSpecMappedProfileFromMappings(profiles, byGuid, key)
+end
+
+function UFProfileManager.GetSpecMapping(specID)
+	if not UFProfileManager.Initialize() then return nil end
+	return UFProfileManager._getSpecMappingFromProfiles(addon.db.ufProfiles, specID)
 end
 
 function UFProfileManager.SetSpecMapping(specID, profileName)
@@ -1084,6 +1430,7 @@ function UFProfileManager.Create(name)
 	if not name then return false, "INVALID_NAME" end
 	if addon.db.ufProfiles[name] then return false, "EXISTS" end
 	addon.db.ufProfiles[name] = UFProfileManager._ensureUFProfilePayload({})
+	UFProfileManager._markUFProfilesDirty()
 	UFProfileManager.Trace("CREATE_PROFILE", name)
 	return true
 end
@@ -1094,9 +1441,10 @@ function UFProfileManager.CopyToActive(sourceName)
 	if not sourceName then return false, "INVALID_NAME" end
 	local source = addon.db.ufProfiles[sourceName]
 	if type(source) ~= "table" then return false, "NOT_FOUND" end
-	local activeName = UFProfileManager.GetActiveName()
+	local activeName = UFProfileManager._activeProfileName
 	if not activeName then return false, "NO_ACTIVE" end
 	addon.db.ufProfiles[activeName] = UFProfileManager._ensureUFProfilePayload(UFProfileManager._copyProfileValue(source))
+	UFProfileManager._markUFProfilesDirty()
 	UFProfileManager.Trace("COPY_TO_ACTIVE", string.format("%s->%s", tostring(sourceName), tostring(activeName)))
 	return UFProfileManager.ApplyCurrent("COPY_ACTIVE")
 end
@@ -1131,6 +1479,7 @@ function UFProfileManager.Delete(name)
 	if activeName == name then return false, "PROTECTED" end
 
 	addon.db.ufProfiles[name] = nil
+	UFProfileManager._markUFProfilesDirty()
 	UFProfileManager._removeUFProfileMappings(name)
 	UFProfileManager.Trace("DELETE_PROFILE", name)
 
@@ -1147,7 +1496,7 @@ function UFProfileManager.ApplyCurrent(reason)
 	local ok, initReason = UFProfileManager.Initialize()
 	if not ok then return false, initReason end
 
-	local activeName = UFProfileManager.GetActiveName()
+	local activeName = UFProfileManager._activeProfileName
 	if not activeName then return false, "NO_ACTIVE" end
 
 	if InCombatLockdown and InCombatLockdown() then
@@ -1170,28 +1519,34 @@ function UFProfileManager.ApplyCurrent(reason)
 	return true
 end
 
-function UFProfileManager.ApplySpecMapping(source)
-	local ok = UFProfileManager.Initialize()
-	if not ok then return false, "NO_DB" end
+function UFProfileManager.ApplySpecMapping(source, initializedProfiles)
+	if UF.HasRuntimeConsumers and not UF.HasRuntimeConsumers() then return false, "INACTIVE" end
+	local profiles = type(initializedProfiles) == "table" and initializedProfiles or nil
+	if not profiles then
+		local ok = UFProfileManager.Initialize()
+		if not ok then return false, "NO_DB" end
+		profiles = addon.db and addon.db.ufProfiles
+	end
+	if type(profiles) ~= "table" then return false, "NO_DB" end
 	local specID = UFProfileManager._getCurrentSpecID()
 	if not specID then return false, "NO_SPEC" end
-	local mappedProfile = UFProfileManager.GetSpecMapping(specID)
+	local mappedProfile = UFProfileManager._getSpecMappingFromProfiles(profiles, specID)
 	if not mappedProfile then
 		UFProfileManager.Trace("SPEC_MAP_SKIP", string.format("%s|NO_MAPPING", tostring(specID)))
 		return false, "NO_MAPPING"
 	end
-	if mappedProfile == UFProfileManager.GetActiveName() then return true, "UNCHANGED" end
+	if mappedProfile == UFProfileManager._activeProfileName then return true, "UNCHANGED" end
 	UFProfileManager.Debug("apply spec mapping spec=%s -> %s (source=%s)", tostring(specID), tostring(mappedProfile), tostring(source))
 	UFProfileManager.Trace("SPEC_MAP_APPLY", string.format("%s->%s|%s", tostring(specID), tostring(mappedProfile), tostring(source)))
 	return UFProfileManager.SetActiveName(mappedProfile, source or "SPEC_MAPPING")
 end
 
-local bossUnitLookup = { boss = true }
+UF._bossUnitLookup = UF._bossUnitLookup or { boss = true }
 for i = 1, maxBossFrames do
-	bossUnitLookup["boss" .. i] = true
+	UF._bossUnitLookup["boss" .. i] = true
 end
 
-local function isBossUnit(unit) return type(unit) == "string" and bossUnitLookup[unit] == true end
+local function isBossUnit(unit) return type(unit) == "string" and UF._bossUnitLookup[unit] == true end
 
 local UNITS = {
 	player = {
@@ -1248,6 +1603,8 @@ for i = 1, maxBossFrames do
 	}
 end
 
+function UF.SupportsCombatIndicator(unit) return unit == UNIT.PLAYER or unit == UNIT.TARGET or unit == UNIT.FOCUS end
+
 local defaults = {
 	player = {
 		enabled = false,
@@ -1256,6 +1613,7 @@ local defaults = {
 		showTooltip = false,
 		tooltipUseEditMode = false,
 		smoothFill = false,
+		visibilityFadeStrength = 1,
 		width = 220,
 		healthHeight = 24,
 		powerHeight = 16,
@@ -1285,6 +1643,7 @@ local defaults = {
 			target = false,
 			aggro = true,
 			combat = false,
+			strata = nil,
 			texture = "DEFAULT",
 			size = 2,
 			color = { 1, 0, 0, 1 },
@@ -1311,6 +1670,7 @@ local defaults = {
 			showSampleAbsorb = false,
 			absorbTexture = "SOLID",
 			absorbReverseFill = false,
+			absorbOverlayAnchorTop = false,
 			incomingHealEnabled = false,
 			incomingHealColor = { 0.2, 0.85, 0.35, 0.45 },
 			showSampleIncomingHeal = false,
@@ -1321,6 +1681,8 @@ local defaults = {
 			showSampleHealAbsorb = false,
 			healAbsorbTexture = "SOLID",
 			healAbsorbReverseFill = true,
+			healAbsorbOverlayAnchorTop = false,
+			tempMaxHealthLossEnabled = true,
 			backdrop = { enabled = true, color = { 0, 0, 0, 0.6 }, texture = "DEFAULT", useClassColor = false, clampToFill = false },
 			textLeft = "PERCENT",
 			textCenter = "NONE",
@@ -1337,6 +1699,29 @@ local defaults = {
 			roundPercent = false,
 			texture = "DEFAULT",
 			reverseFill = false,
+		},
+		dataBar = {
+			enabled = false,
+			position = "BELOW",
+			height = 16,
+			gap = 0,
+			color = { 0.18, 0.18, 0.22, 1 },
+			useClassColor = false,
+			textLeft = "NAME",
+			textCenter = "CURMAX",
+			textRight = "PERCENT",
+			textDelimiter = " ",
+			fontSize = 12,
+			font = nil,
+			fontOutline = "OUTLINE",
+			textColor = { 1, 1, 1, 1 },
+			offsetLeft = { x = 6, y = 0 },
+			offsetCenter = { x = 0, y = 0 },
+			offsetRight = { x = -6, y = 0 },
+			useShortNumbers = true,
+			hidePercentSymbol = false,
+			roundPercent = false,
+			texture = "SOLID",
 		},
 		power = {
 			enabled = true,
@@ -1410,6 +1795,12 @@ local defaults = {
 			nameStrata = nil,
 			nameFrameLevelOffset = 5,
 			nameUseReactionColor = false,
+			targetTargetName = {
+				enabled = false,
+				anchor = "RIGHT",
+				offset = { x = 0, y = 0 },
+				fontSize = nil,
+			},
 			levelColor = { 1, 0.85, 0, 1 },
 			levelStrata = nil,
 			levelFrameLevelOffset = 5,
@@ -1439,8 +1830,9 @@ local defaults = {
 				enabled = false,
 				size = 18,
 				offset = { x = -8, y = 0 },
-				texture = "Interface\\CharacterFrame\\UI-StateIcon",
-				texCoords = { 0.5, 1, 0, 0.5 }, -- combat icon region
+				icon = UF.COMBAT_INDICATOR_DEFAULT_ICON,
+				texture = UF.COMBAT_INDICATOR_DEFAULT_TEXTURE,
+				texCoords = { 0, 1, 0, 1 },
 			},
 			dispelTint = {
 				enabled = true,
@@ -1543,7 +1935,7 @@ local defaults = {
 			offset = { x = 0, y = 0 },
 		},
 		classResource = {
-			enabled = true,
+			enabled = false,
 			anchor = "BOTTOM",
 			offset = { x = 0, y = -28 },
 			scale = 1,
@@ -1589,6 +1981,7 @@ local defaults = {
 			enabled = false,
 			countdownFrame = true,
 			countdownNumbers = false,
+			showTooltip = false,
 			showDispelType = false,
 			icon = {
 				amount = 2,
@@ -1643,7 +2036,6 @@ local defaults = {
 			hidePermanentAuras = false,
 			anchor = "BOTTOM",
 			offset = { x = 0, y = -24 },
-			separateDebuffAnchor = false,
 			debuffAnchor = nil, -- falls back to anchor
 			debuffOffset = nil, -- falls back to offset
 			countAnchor = "BOTTOMRIGHT",
@@ -1660,6 +2052,7 @@ local defaults = {
 			enabled = false,
 			countdownFrame = true,
 			countdownNumbers = false,
+			showTooltip = false,
 			showDispelType = false,
 			icon = {
 				amount = 2,
@@ -1767,15 +2160,16 @@ local issecretvalue = _G.issecretvalue
 local mainPowerEnum
 local mainPowerToken
 local states = {}
-local targetAuras = {}
-local targetAuraOrder = {}
-local targetAuraIndexById = {}
-local focusAuras = {}
-local focusAuraOrder = {}
-local focusAuraIndexById = {}
-local playerAuras = {}
-local playerAuraOrder = {}
-local playerAuraIndexById = {}
+local function createAuraCacheState() return { auras = {}, order = {}, indexById = {} } end
+local function createAuraKindState()
+	return {
+		buff = createAuraCacheState(),
+		debuff = createAuraCacheState(),
+	}
+end
+local targetAuraKinds = createAuraKindState()
+local focusAuraKinds = createAuraKindState()
+local playerAuraKinds = createAuraKindState()
 local bossAuraStates = {}
 local AURA_FILTER_HELPFUL = "HELPFUL|INCLUDE_NAME_PLATE_ONLY"
 local AURA_FILTER_HARMFUL = "HARMFUL|PLAYER|INCLUDE_NAME_PLATE_ONLY"
@@ -1783,6 +2177,7 @@ local AURA_FILTER_HARMFUL_ALL = "HARMFUL|INCLUDE_NAME_PLATE_ONLY"
 local SAMPLE_BUFF_ICONS = { 136243, 135940, 136085, 136097, 136116, 136048, 135932, 136108 }
 local SAMPLE_DEBUFF_ICONS = { 136207, 136160, 136128, 135804, 136168, 132104, 136118, 136214 }
 local SAMPLE_DISPEL_TYPES = { "Magic", "Curse", "Disease", "Poison" }
+AuraUtil.isAuraFilteredIn = UFHelper.IsAuraFilteredIn
 local blizzardPlayerHooked = false
 local blizzardTargetHooked = false
 local castOnUpdateHandlers = {}
@@ -1811,7 +2206,6 @@ function AuraUtil.buildSingleAuraRuntimeConfig(ac, defAc)
 	local resolved = {
 		buff = AuraUtil.resolveSingleAuraSection(ac, defAc, "buff"),
 		debuff = AuraUtil.resolveSingleAuraSection(ac, defAc, "debuff"),
-		combineLayout = AuraUtil.resolveSingleAuraCombineLayout(ac, defAc),
 	}
 	if resolved.buff.enabled == nil then resolved.buff.enabled = true end
 	if resolved.debuff.enabled == nil then resolved.debuff.enabled = true end
@@ -1825,22 +2219,9 @@ function AuraUtil.buildSingleAuraRuntimeConfig(ac, defAc)
 	local helpfulLimit
 	local harmfulLimit
 
-	if resolved.combineLayout == true then
-		local combinedMax = math.max(buff.max or 0, debuff.max or 0)
-		if showBuffs and not showDebuffs then
-			combinedMax = buff.max or 0
-		elseif showDebuffs and not showBuffs then
-			combinedMax = debuff.max or 0
-		end
-		relayoutThreshold = (combinedMax or 0) + 1
-		local cap = AuraUtil.normalizeAuraQueryLimit((combinedMax or 0) + 1)
-		helpfulLimit = showBuffs and cap or nil
-		harmfulLimit = showDebuffs and cap or nil
-	else
-		relayoutThreshold = (buff.max or 0) + (debuff.max or 0) + 1
-		helpfulLimit = showBuffs and AuraUtil.normalizeAuraQueryLimit((buff.max or 0) + 1) or nil
-		harmfulLimit = showDebuffs and AuraUtil.normalizeAuraQueryLimit((debuff.max or 0) + 1) or nil
-	end
+	relayoutThreshold = math.max(buff.max or 0, debuff.max or 0) + 1
+	helpfulLimit = showBuffs and AuraUtil.normalizeAuraQueryLimit((buff.max or 0) + 1) or nil
+	harmfulLimit = showDebuffs and AuraUtil.normalizeAuraQueryLimit((debuff.max or 0) + 1) or nil
 
 	local enemyHarmfulFilter = AURA_FILTER_HARMFUL
 	if AuraUtil.normalizeEnemyDebuffFilterMode(debuff.enemyDebuffFilterMode) == ENEMY_DEBUFF_FILTER_MODE_ALL then enemyHarmfulFilter = AURA_FILTER_HARMFUL_ALL end
@@ -1878,12 +2259,14 @@ end
 
 function AuraUtil.getUnitAuraFilters(unit, auraRuntime)
 	if unit == UNIT.PLAYER or unit == "player" then return AURA_FILTER_HELPFUL, AURA_FILTER_HARMFUL_ALL end
+	if isBossUnit(unit) and UnitIsFriend and unit and UnitIsFriend("player", unit) then return "HELPFUL|PLAYER|INCLUDE_NAME_PLATE_ONLY", AURA_FILTER_HARMFUL_ALL end
 	if UnitIsFriend and unit and UnitIsFriend("player", unit) then return AURA_FILTER_HELPFUL, AURA_FILTER_HARMFUL_ALL end
 	return AURA_FILTER_HELPFUL, auraRuntime and auraRuntime.enemyHarmfulFilter or AURA_FILTER_HARMFUL
 end
 
 function AuraUtil.getAuraFilters(unit, ac, defAc)
 	if unit == UNIT.PLAYER or unit == "player" then return AURA_FILTER_HELPFUL, AURA_FILTER_HARMFUL_ALL end
+	if isBossUnit(unit) and UnitIsFriend and unit and UnitIsFriend("player", unit) then return "HELPFUL|PLAYER|INCLUDE_NAME_PLATE_ONLY", AURA_FILTER_HARMFUL_ALL end
 	if UnitIsFriend and unit and UnitIsFriend("player", unit) then return AURA_FILTER_HELPFUL, AURA_FILTER_HARMFUL_ALL end
 
 	local harmfulFilter = AURA_FILTER_HARMFUL
@@ -1997,7 +2380,7 @@ function AuraUtil.buildLegacyAuraSection(src, isDebuff)
 	local anchor = src.anchor
 	local growth = src.growth
 	local offset = src.offset
-	if isDebuff and src.separateDebuffAnchor == true then
+	if isDebuff then
 		if src.debuffAnchor ~= nil then anchor = src.debuffAnchor end
 		if src.debuffGrowth ~= nil then growth = src.debuffGrowth end
 		if type(src.debuffOffset) == "table" then offset = src.debuffOffset end
@@ -2029,23 +2412,10 @@ function AuraUtil.resolveSingleAuraSection(src, defAc, sectionKey)
 	return section
 end
 
-function AuraUtil.resolveSingleAuraCombineLayout(src, defAc)
-	if type(src) == "table" then
-		if src.combineLayout ~= nil then return src.combineLayout == true end
-		if src.separateDebuffAnchor ~= nil then return src.separateDebuffAnchor ~= true end
-	end
-	if type(defAc) == "table" then
-		if defAc.combineLayout ~= nil then return defAc.combineLayout == true end
-		if defAc.separateDebuffAnchor ~= nil then return defAc.separateDebuffAnchor ~= true end
-	end
-	return true
-end
-
 function AuraUtil.resolveSingleAuraConfig(ac, defAc)
 	local resolved = {
 		buff = AuraUtil.resolveSingleAuraSection(ac, defAc, "buff"),
 		debuff = AuraUtil.resolveSingleAuraSection(ac, defAc, "debuff"),
-		combineLayout = AuraUtil.resolveSingleAuraCombineLayout(ac, defAc),
 	}
 	if resolved.buff.enabled == nil then resolved.buff.enabled = true end
 	if resolved.debuff.enabled == nil then resolved.debuff.enabled = true end
@@ -2058,11 +2428,9 @@ function AuraUtil.ensureSingleAuraConfig(ac, defAc)
 	local resolved = AuraUtil.resolveSingleAuraConfig(ac, defAc)
 	ac.buff = resolved.buff
 	ac.debuff = resolved.debuff
-	ac.combineLayout = resolved.combineLayout == true
 	ac.enabled = resolved.enabled
 	ac.showBuffs = resolved.buff.enabled ~= false
 	ac.showDebuffs = resolved.debuff.enabled ~= false
-	ac.separateDebuffAnchor = ac.combineLayout ~= true
 	return ac
 end
 
@@ -2081,32 +2449,47 @@ function AuraUtil.isAuraIconsEnabled(ac, def)
 	return true
 end
 
-function AuraUtil.getAuraTables(unit)
+function AuraUtil.getAuraKindCache(unit, kind)
 	unit = unit or "target"
-	if unit == UNIT.PLAYER or unit == "player" then return playerAuras, playerAuraOrder, playerAuraIndexById end
-	if unit == UNIT.TARGET or unit == "target" then return targetAuras, targetAuraOrder, targetAuraIndexById end
-	if unit == UNIT.FOCUS or unit == "focus" then return focusAuras, focusAuraOrder, focusAuraIndexById end
+	kind = kind == "debuff" and "debuff" or "buff"
+	if unit == UNIT.PLAYER or unit == "player" then return playerAuraKinds[kind] end
+	if unit == UNIT.TARGET or unit == "target" then return targetAuraKinds[kind] end
+	if unit == UNIT.FOCUS or unit == "focus" then return focusAuraKinds[kind] end
 	if not isBossUnit(unit) or unit == "boss" then return nil end
 	local state = bossAuraStates[unit]
 	if not state then
-		state = { auras = {}, order = {}, indexById = {} }
+		state = { kinds = createAuraKindState() }
 		bossAuraStates[unit] = state
+	elseif not state.kinds then
+		state.kinds = createAuraKindState()
 	end
-	return state.auras, state.order, state.indexById
+	return state.kinds[kind]
+end
+
+function AuraUtil.clearAuraCache(cache)
+	if not cache then return end
+	local auras, order, indexById = cache.auras, cache.order, cache.indexById
+	if auras then
+		for k in pairs(auras) do
+			auras[k] = nil
+		end
+	end
+	if order then
+		for i = #order, 1, -1 do
+			order[i] = nil
+		end
+	end
+	if indexById then
+		for k in pairs(indexById) do
+			indexById[k] = nil
+		end
+	end
+	cache._orderDirty = nil
 end
 
 function AuraUtil.resetTargetAuras(unit)
-	local auras, order, indexById = AuraUtil.getAuraTables(unit)
-	if not auras then return end
-	for k in pairs(auras) do
-		auras[k] = nil
-	end
-	for i = #order, 1, -1 do
-		order[i] = nil
-	end
-	for k in pairs(indexById) do
-		indexById[k] = nil
-	end
+	AuraUtil.clearAuraCache(AuraUtil.getAuraKindCache(unit, "buff"))
+	AuraUtil.clearAuraCache(AuraUtil.getAuraKindCache(unit, "debuff"))
 end
 
 local function ensureDB(unit)
@@ -2282,11 +2665,7 @@ function UF.ScheduleRangeFadeRefresh(rebuildSpellList)
 		UF._rangeFadeRefreshNeedsSpellList = nil
 		UF.RefreshRangeFadeSpellsNow(wantsSpellListRefresh)
 	end
-	if After then
-		After(0, run)
-	else
-		run()
-	end
+	RunNextFrame(run)
 end
 
 local function copySettings(fromUnit, toUnit, opts)
@@ -2371,6 +2750,7 @@ local function copySettings(fromUnit, toUnit, opts)
 			{ "hideInPetBattle" },
 			{ "hideInClientScene" },
 			{ "visibility" },
+			{ "visibilityFadeStrength" },
 			{ "width" },
 			{ "anchor" },
 			{ "strata" },
@@ -2414,6 +2794,7 @@ local function copySettings(fromUnit, toUnit, opts)
 			{ "health", "absorbReverseFill" },
 			{ "health", "absorbDontOverflowHealthBar" },
 			{ "health", "absorbOverlayHeight" },
+			{ "health", "absorbOverlayAnchorTop" },
 			{ "health", "absorbTexture" },
 		},
 		healAbsorb = {
@@ -2421,6 +2802,7 @@ local function copySettings(fromUnit, toUnit, opts)
 			{ "health", "healAbsorbUseCustomColor" },
 			{ "health", "healAbsorbReverseFill" },
 			{ "health", "healAbsorbOverlayHeight" },
+			{ "health", "healAbsorbOverlayAnchorTop" },
 			{ "health", "healAbsorbTexture" },
 		},
 		power = {
@@ -2454,6 +2836,7 @@ local function copySettings(fromUnit, toUnit, opts)
 			{ "status", "nameStrata" },
 			{ "status", "nameFrameLevelOffset" },
 			{ "status", "nameUseReactionColor" },
+			{ "status", "targetTargetName" },
 			{ "status", "nameAnchor" },
 			{ "status", "nameOffset" },
 			{ "status", "nameMaxChars" },
@@ -2543,9 +2926,63 @@ local function applyRaidIconLayout(unit, cfg)
 	if not enabled then st.raidIcon:Hide() end
 end
 
+function UF.HardHideBlizzFrameObject(frame)
+	if not frame or frame._eqolUFHidden then return end
+
+	local function enforceHidden(target)
+		if not target then return end
+		local canHide = true
+		if InCombatLockdown and InCombatLockdown() then
+			if target.IsProtected and target:IsProtected() then canHide = false end
+		end
+		if canHide and target.Hide then
+			pcall(target.Hide, target)
+		elseif target.SetAlpha then
+			target:SetAlpha(0)
+			target._eqolAlphaHidden = true
+		end
+	end
+
+	local related = {
+		(frame.HealthBarsContainer and frame.HealthBarsContainer.healthBar) or nil,
+		frame.healthBar or frame.healthbar or frame.HealthBar or nil,
+		frame.manabar or frame.ManaBar or nil,
+		frame.castBar or frame.spellbar or nil,
+		frame.petFrame or frame.PetFrame or nil,
+		frame.powerBarAlt or frame.PowerBarAlt or nil,
+		frame.CastingBarFrame or nil,
+		frame.CcRemoverFrame or nil,
+		frame.DebuffFrame or nil,
+		frame.BuffFrame or frame.AurasFrame or nil,
+		frame.totFrame or nil,
+	}
+
+	if frame.UnregisterAllEvents then pcall(frame.UnregisterAllEvents, frame) end
+	for i = 1, #related do
+		local element = related[i]
+		if element and element.UnregisterAllEvents then pcall(element.UnregisterAllEvents, element) end
+	end
+	enforceHidden(frame)
+	frame._eqolUFHidden = true
+	if not UF._blizzHiddenParent then
+		UF._blizzHiddenParent = CreateFrame("Frame")
+		UF._blizzHiddenParent:Hide()
+	end
+	if frame.SetParent then pcall(frame.SetParent, frame, UF._blizzHiddenParent) end
+	if not frame._eqolUFHiddenHooks then
+		frame._eqolUFHiddenHooks = true
+		if frame.Show then hooksecurefunc(frame, "Show", function(f) enforceHidden(f) end) end
+		if frame.SetShown then hooksecurefunc(frame, "SetShown", function(f, shown)
+			if shown then enforceHidden(f) end
+		end) end
+	end
+end
+
 local function hardHideBlizzFrame(frameName)
 	local frame = frameName and _G[frameName]
-	if frame and frame.SetAlpha then frame:SetAlpha(0) end
+	UF.HardHideBlizzFrameObject(frame)
+	if frameName == BLIZZ_FRAME_NAMES.target then UF.HardHideBlizzFrameObject(_G.ComboFrame) end
+	if frameName == BLIZZ_FRAME_NAMES.focus then UF.HardHideBlizzFrameObject(_G.TargetofFocusFrame) end
 end
 
 local function checkRaidTargetIcon(unitToken, st)
@@ -3306,6 +3743,7 @@ function UF.ImportProfile(encoded, scopeKey)
 	end
 
 	table.sort(applied, function(a, b) return tostring(a) < tostring(b) end)
+	if UFProfileManager and UFProfileManager._markUFProfilesDirty then UFProfileManager._markUFProfilesDirty() end
 	UF.SyncEditModeLayoutAnchors(applied)
 	addon.variables.requireReload = true
 	return true, applied
@@ -3356,11 +3794,12 @@ local function ensureBossContainer()
 	return bossContainer
 end
 
-function AuraUtil.cacheTargetAura(aura, unit)
+function AuraUtil.cacheTargetAura(aura, unit, kind)
 	if not aura or not aura.auraInstanceID then return end
 	local id = aura.auraInstanceID
-	local auras = AuraUtil.getAuraTables(unit)
-	if not auras then return end
+	local cache = AuraUtil.getAuraKindCache(unit, kind)
+	local auras = cache and cache.auras
+	if not (cache and auras) then return end
 	local t = auras[id]
 	if not t then
 		t = {}
@@ -3372,6 +3811,7 @@ function AuraUtil.cacheTargetAura(aura, unit)
 	t.icon = aura.icon
 	t.isHelpful = aura.isHelpful
 	t.isHarmful = aura.isHarmful
+	t.isSample = aura.isSample == true
 	t.applications = aura.applications
 	t.duration = aura.duration
 	t.expirationTime = aura.expirationTime
@@ -3382,44 +3822,8 @@ function AuraUtil.cacheTargetAura(aura, unit)
 	if issecretvalue and issecretvalue(canActivePlayerDispel) then canActivePlayerDispel = nil end
 	t.dispelName = dispelName
 	t.canActivePlayerDispel = canActivePlayerDispel
-end
-
-function AuraUtil.cacheAura(cache, aura)
-	if not (cache and aura and aura.auraInstanceID) then return end
-	local id = aura.auraInstanceID
-	local auras = cache.auras
-	if not auras then return end
-	local t = auras[id]
-	if not t then
-		t = {}
-		auras[id] = t
-	end
-	t.auraInstanceID = id
-	t.spellId = aura.spellId
-	t.name = aura.name
-	t.icon = aura.icon
-	t.isHelpful = aura.isHelpful
-	t.isHarmful = aura.isHarmful
-	t.applications = aura.applications
-	t.duration = aura.duration
-	t.expirationTime = aura.expirationTime
-	t.sourceUnit = aura.sourceUnit
-	local dispelName = aura.dispelName
-	local canActivePlayerDispel = aura.canActivePlayerDispel
-	if issecretvalue and issecretvalue(dispelName) then dispelName = nil end
-	if issecretvalue and issecretvalue(canActivePlayerDispel) then canActivePlayerDispel = nil end
-	t.dispelName = dispelName
-	t.canActivePlayerDispel = canActivePlayerDispel
-end
-
-function AuraUtil.addTargetAuraToOrder(auraInstanceID, unit)
-	local _, order, indexById = AuraUtil.getAuraTables(unit)
-	if not order or not indexById then return end
-	if not auraInstanceID or indexById[auraInstanceID] then return end
-	local idx = #order + 1
-	order[idx] = auraInstanceID
-	indexById[auraInstanceID] = idx
-	return idx
+	local idx = AuraUtil.addAuraToOrder(cache, id)
+	return t, idx
 end
 
 function AuraUtil.addAuraToOrder(cache, auraInstanceID)
@@ -3434,46 +3838,32 @@ function AuraUtil.addAuraToOrder(cache, auraInstanceID)
 	return idx
 end
 
-function AuraUtil.reindexTargetAuraOrder(startIndex, unit)
-	local _, order, indexById = AuraUtil.getAuraTables(unit)
-	if not order or not indexById then return end
-	for i = startIndex or 1, #order do
-		indexById[order[i]] = i
-	end
-end
-
-function AuraUtil.reindexAuraOrder(cache, startIndex)
-	if not cache then return end
-	local order = cache.order
-	local indexById = cache.indexById
-	if not (order and indexById) then return end
-	for i = startIndex or 1, #order do
-		indexById[order[i]] = i
-	end
-end
-
-function AuraUtil.removeTargetAuraFromOrder(auraInstanceID, unit)
-	local _, order, indexById = AuraUtil.getAuraTables(unit)
-	if not order or not indexById then return nil end
-	local idx = indexById[auraInstanceID]
-	if not idx then return nil end
-	table.remove(order, idx)
-	indexById[auraInstanceID] = nil
-	AuraUtil.reindexTargetAuraOrder(idx, unit)
-	return idx
-end
-
-function AuraUtil.removeAuraFromOrder(cache, auraInstanceID)
+function AuraUtil.markAuraRemovedFromOrder(cache, auraInstanceID)
 	if not (cache and auraInstanceID) then return nil end
 	local order = cache.order
 	local indexById = cache.indexById
 	if not (order and indexById) then return nil end
 	local idx = indexById[auraInstanceID]
 	if not idx then return nil end
-	table.remove(order, idx)
+	order[idx] = false
 	indexById[auraInstanceID] = nil
-	AuraUtil.reindexAuraOrder(cache, idx)
 	return idx
+end
+
+function AuraUtil.removeTargetAuraFromKindCache(unit, kind, auraInstanceID)
+	local cache = AuraUtil.getAuraKindCache(unit, kind)
+	if not (cache and auraInstanceID and cache.auras and cache.auras[auraInstanceID]) then return nil end
+	cache.auras[auraInstanceID] = nil
+	local idx = AuraUtil.markAuraRemovedFromOrder(cache, auraInstanceID)
+	if idx then cache._orderDirty = true end
+	return idx
+end
+
+function AuraUtil.removeTargetAuraFromCaches(unit, auraInstanceID)
+	if not auraInstanceID then return nil, nil end
+	local buffIdx = AuraUtil.removeTargetAuraFromKindCache(unit, "buff", auraInstanceID)
+	local debuffIdx = AuraUtil.removeTargetAuraFromKindCache(unit, "debuff", auraInstanceID)
+	return buffIdx, debuffIdx
 end
 
 function AuraUtil.compactAuraOrderInPlace(order, indexById, auras)
@@ -3500,75 +3890,11 @@ function AuraUtil.compactAuraOrderInPlace(order, indexById, auras)
 	return changed
 end
 
-function AuraUtil.updateAuraCacheFromEvent(cache, unit, updateInfo, opts)
-	if not (cache and unit and updateInfo) then return nil end
-	local auras = cache.auras
-	local order = cache.order
-	local indexById = cache.indexById
-	if not (auras and order and indexById) then return nil end
-	local showHelpful = opts and opts.showHelpful
-	local showHarmful = opts and opts.showHarmful
-	local helpfulFilter = opts and opts.helpfulFilter
-	local harmfulFilter = opts and opts.harmfulFilter
-	local hidePermanent = opts and opts.hidePermanent
-	local trackFirst = opts and opts.trackFirstChanged
-	local maxCount = opts and opts.maxCount
-	local firstChanged
-
-	if updateInfo.addedAuras then
-		for _, aura in ipairs(updateInfo.addedAuras) do
-			if aura and aura.auraInstanceID then
-				if hidePermanent and not C_Secrets.ShouldAurasBeSecret() and AuraUtil.isPermanentAura(aura, unit) then
-					if auras[aura.auraInstanceID] then
-						auras[aura.auraInstanceID] = nil
-						local idx = AuraUtil.removeAuraFromOrder(cache, aura.auraInstanceID)
-						if trackFirst and idx and maxCount and idx <= (maxCount + 1) then
-							if not firstChanged or idx < firstChanged then firstChanged = idx end
-						end
-					end
-				elseif showHarmful and harmfulFilter and not C_UnitAuras.IsAuraFilteredOutByInstanceID(unit, aura.auraInstanceID, harmfulFilter) then
-					AuraUtil.cacheAura(cache, aura)
-					local idx = AuraUtil.addAuraToOrder(cache, aura.auraInstanceID)
-					if trackFirst and idx and maxCount and idx <= maxCount then
-						if not firstChanged or idx < firstChanged then firstChanged = idx end
-					end
-				elseif showHelpful and helpfulFilter and not C_UnitAuras.IsAuraFilteredOutByInstanceID(unit, aura.auraInstanceID, helpfulFilter) then
-					AuraUtil.cacheAura(cache, aura)
-					local idx = AuraUtil.addAuraToOrder(cache, aura.auraInstanceID)
-					if trackFirst and idx and maxCount and idx <= maxCount then
-						if not firstChanged or idx < firstChanged then firstChanged = idx end
-					end
-				end
-			end
-		end
-	end
-
-	if updateInfo.updatedAuraInstanceIDs and C_UnitAuras and C_UnitAuras.GetAuraDataByAuraInstanceID then
-		for _, inst in ipairs(updateInfo.updatedAuraInstanceIDs) do
-			if auras[inst] then
-				local data = C_UnitAuras.GetAuraDataByAuraInstanceID(unit, inst)
-				if data then AuraUtil.cacheAura(cache, data) end
-			end
-			if trackFirst then
-				local idx = indexById[inst]
-				if idx and maxCount and idx <= maxCount then
-					if not firstChanged or idx < firstChanged then firstChanged = idx end
-				end
-			end
-		end
-	end
-
-	if updateInfo.removedAuraInstanceIDs then
-		for _, inst in ipairs(updateInfo.removedAuraInstanceIDs) do
-			auras[inst] = nil
-			local idx = AuraUtil.removeAuraFromOrder(cache, inst)
-			if trackFirst and idx and maxCount and idx <= (maxCount + 1) then
-				if not firstChanged or idx < firstChanged then firstChanged = idx end
-			end
-		end
-	end
-
-	return firstChanged
+function AuraUtil.compactAuraCache(cache)
+	if not (cache and cache._orderDirty and cache.order and cache.indexById and cache.auras) then return false end
+	local changed = AuraUtil.compactAuraOrderInPlace(cache.order, cache.indexById, cache.auras)
+	cache._orderDirty = nil
+	return changed
 end
 
 function AuraUtil.isPermanentAura(aura, unitToken)
@@ -3728,6 +4054,7 @@ function AuraUtil.styleAuraCount(btn, ac, countFontSizeOverride)
 	if size == nil then size = ac.countFontSize end
 	local flags = ac.countFontOutline
 	local fontKey = ac.countFont or (addon.variables and addon.variables.defaultFont) or (LSM and LSM.DefaultMedia and LSM.DefaultMedia.font) or STANDARD_TEXT_FONT
+	local globalFontStateVersion = addon.functions and addon.functions.GetGlobalFontStateVersion and addon.functions.GetGlobalFontStateVersion() or 0
 	if
 		btn._countStyleAnchor == anchor
 		and btn._countStyleOx == ox
@@ -3735,6 +4062,7 @@ function AuraUtil.styleAuraCount(btn, ac, countFontSizeOverride)
 		and btn._countStyleFontKey == fontKey
 		and btn._countStyleSize == size
 		and btn._countStyleFlags == flags
+		and btn._countStyleFontStateVersion == globalFontStateVersion
 	then
 		return
 	end
@@ -3744,6 +4072,7 @@ function AuraUtil.styleAuraCount(btn, ac, countFontSizeOverride)
 	btn._countStyleFontKey = fontKey
 	btn._countStyleSize = size
 	btn._countStyleFlags = flags
+	btn._countStyleFontStateVersion = globalFontStateVersion
 	btn.count:ClearAllPoints()
 	btn.count:SetPoint(anchor, btn.foreground or btn.overlay or btn, anchor, ox, oy)
 	if size == nil or flags == nil then
@@ -3754,7 +4083,8 @@ function AuraUtil.styleAuraCount(btn, ac, countFontSizeOverride)
 	if UFHelper and UFHelper.applyFont then
 		UFHelper.applyFont(btn.count, ac.countFont, size, flags)
 	else
-		btn.count:SetFont(UFHelper.getFont(ac.countFont), size, flags)
+		local fallbackFlags = flags == "__EQOL_GLOBAL_FONT_STYLE__" and "OUTLINE" or flags
+		btn.count:SetFont(UFHelper.getFont(ac.countFont), size, fallbackFlags)
 	end
 end
 
@@ -3772,6 +4102,7 @@ function AuraUtil.styleAuraCooldownText(btn, ac, cooldownFontSizeOverride)
 	if size == nil then size = ac.cooldownFontSize end
 	local fontKey = ac.cooldownFont
 	local outline = ac.cooldownFontOutline
+	local globalFontStateVersion = addon.functions and addon.functions.GetGlobalFontStateVersion and addon.functions.GetGlobalFontStateVersion() or 0
 	local curFont, curSize, curFlags = fs:GetFont()
 	if size == nil then size = curSize or 12 end
 	if outline == nil then outline = curFlags end
@@ -3783,6 +4114,7 @@ function AuraUtil.styleAuraCooldownText(btn, ac, cooldownFontSizeOverride)
 		and btn._cooldownStyleFontKey == fontKey
 		and btn._cooldownStyleSize == size
 		and btn._cooldownStyleOutline == outline
+		and btn._cooldownStyleFontStateVersion == globalFontStateVersion
 	then
 		return
 	end
@@ -3792,6 +4124,7 @@ function AuraUtil.styleAuraCooldownText(btn, ac, cooldownFontSizeOverride)
 	btn._cooldownStyleFontKey = fontKey
 	btn._cooldownStyleSize = size
 	btn._cooldownStyleOutline = outline
+	btn._cooldownStyleFontStateVersion = globalFontStateVersion
 	fs:ClearAllPoints()
 	fs:SetPoint(anchor, btn.overlay or btn, anchor, ox, oy)
 	if UFHelper and UFHelper.applyFont then
@@ -3829,7 +4162,8 @@ function AuraUtil.styleAuraDRText(btn, ac, drFontSizeOverride)
 	if UFHelper and UFHelper.applyFont then
 		UFHelper.applyFont(btn.drText, ac.drFont, size, flags)
 	else
-		btn.drText:SetFont(UFHelper.getFont(ac.drFont), size, flags)
+		local fallbackFlags = flags == "__EQOL_GLOBAL_FONT_STYLE__" and "OUTLINE" or flags
+		btn.drText:SetFont(UFHelper.getFont(ac.drFont), size, fallbackFlags)
 	end
 end
 
@@ -3838,7 +4172,7 @@ function AuraUtil.applyAuraToButton(btn, aura, ac, isDebuff, unitToken, harmfulF
 	unitToken = unitToken or "target"
 	if issecretvalue and issecretvalue(isDebuff) then
 		harmfulFilter = harmfulFilter or select(2, AuraUtil.getAuraFilters(unitToken, ac))
-		isDebuff = not C_UnitAuras.IsAuraFilteredOutByInstanceID(unitToken, aura.auraInstanceID, harmfulFilter)
+		isDebuff = AuraUtil.isAuraFilteredIn(unitToken, aura, harmfulFilter)
 	end
 	btn.spellId = aura.spellId
 	btn.auraInstanceID = aura.auraInstanceID
@@ -3850,21 +4184,44 @@ function AuraUtil.applyAuraToButton(btn, aura, ac, isDebuff, unitToken, harmfulF
 	local showCooldown = ac.showCooldown ~= false
 	local showCooldownText = ac.showCooldownText
 	if showCooldownText == nil then showCooldownText = showCooldown end
-	if aura.auraInstanceID and aura.auraInstanceID > 0 then
+	local needsCooldown = showCooldown or showCooldownText == true
+	local drawCooldownEdge = ac.showCooldownEdge ~= false
+	local drawCooldownSwipe = ac.showCooldownSwipe ~= false
+	local drawCooldownBling = ac.showCooldownBling ~= false
+	local hasCooldown = false
+	if btn.cd.SetDrawEdge then btn.cd:SetDrawEdge(false) end
+	if btn.cd.SetDrawSwipe then btn.cd:SetDrawSwipe(false) end
+	if btn.cd.SetDrawBling then btn.cd:SetDrawBling(false) end
+	if needsCooldown and aura.auraInstanceID and aura.auraInstanceID > 0 then
 		local durObj = C_UnitAuras.GetAuraDuration(unitToken, aura.auraInstanceID)
-		if durObj then btn.cd:SetCooldownFromDurationObject(durObj) end
+		if durObj then
+			btn.cd:SetCooldownFromDurationObject(durObj)
+			hasCooldown = true
+		end
+	elseif needsCooldown and aura.isSample and aura.duration and aura.expirationTime and aura.duration > 0 and aura.expirationTime > 0 then
+		local startTime = aura.expirationTime - aura.duration
+		if btn.cd.SetCooldown then
+			btn.cd:SetCooldown(startTime, aura.duration)
+			hasCooldown = true
+		elseif CooldownFrame_Set then
+			CooldownFrame_Set(btn.cd, startTime, aura.duration, true)
+			hasCooldown = true
+		end
 	end
+	if btn.cd.SetDrawEdge then btn.cd:SetDrawEdge(hasCooldown and showCooldown and drawCooldownEdge) end
+	if btn.cd.SetDrawSwipe then btn.cd:SetDrawSwipe(hasCooldown and showCooldown and drawCooldownSwipe) end
+	if btn.cd.SetDrawBling then btn.cd:SetDrawBling(hasCooldown and showCooldown and drawCooldownBling) end
 	local cooldownFontSize = ac.cooldownFontSize
 	if cooldownFontSize ~= nil and cooldownFontSize < 1 then cooldownFontSize = nil end
 	local countFontSize = ac.countFontSize
-	btn.cd:SetHideCountdownNumbers(showCooldownText == false)
+	btn.cd:SetHideCountdownNumbers(not hasCooldown or showCooldownText == false)
 	AuraUtil.styleAuraCount(btn, ac, countFontSize)
 	AuraUtil.styleAuraCooldownText(btn, ac, cooldownFontSize)
 	local showStacks = ac.showStacks
 	if showStacks == nil then showStacks = true end
 	if showStacks and (issecretvalue and issecretvalue(aura.applications) or aura.applications and aura.applications > 1) then
 		local appStacks = aura.applications
-		if not aura.isSample and C_UnitAuras.GetAuraApplicationDisplayCount then
+		if not aura.isSample and aura.auraInstanceID and aura.auraInstanceID > 0 and C_UnitAuras.GetAuraApplicationDisplayCount then
 			appStacks = C_UnitAuras.GetAuraApplicationDisplayCount(unitToken, aura.auraInstanceID, 2, 1000) -- TODO actual 4th param is required because otherwise it's always "*" this always get's the right stack shown
 		end
 
@@ -4206,6 +4563,55 @@ function AuraUtil.hideAuraContainers(st)
 	end
 end
 
+function AuraUtil.GetAuraRenderer(value)
+	if UFHelper and UFHelper.NormalizeAuraRenderer then return UFHelper.NormalizeAuraRenderer(value) end
+	local renderer = tostring(value or "CUSTOM"):upper()
+	return (renderer == "BLIZZARD" or renderer == "BLIZZARD_CONTAINER") and "BLIZZARD" or "CUSTOM"
+end
+
+function AuraUtil.isBlizzardAuraRenderer(ac, defAc) return false end
+
+function AuraUtil.ApplyBlizzardAuraRenderer(unit, st, cfg, def, allowSample)
+	if not (st and st.privateAuras and UFHelper and UFHelper.ApplyBlizzardAuraContainer) then return end
+	cfg = cfg or {}
+	def = def or defaultsFor(unit)
+	local ac = cfg.auraIcons or (def and def.auraIcons) or defaults.target.auraIcons or {}
+	local defAc = def and def.auraIcons
+	local pcfg = cfg.privateAuras or (def and def.privateAuras) or {}
+	local auraRuntime = AuraUtil.getUnitSingleAuraRuntimeConfig(unit, ac, defAc)
+	local showBuffs = auraRuntime.enabled and auraRuntime.showBuffs == true
+	local privateEnabled = pcfg and pcfg.enabled == true
+	local showDebuffs = (auraRuntime.enabled and auraRuntime.showDebuffs == true) or privateEnabled
+	local buffStyle = auraRuntime.buff or {}
+	local debuffStyle = auraRuntime.debuff or {}
+	local privateIcon = (pcfg and pcfg.icon) or {}
+	local iconSize = (showBuffs and buffStyle.size) or (showDebuffs and debuffStyle.size) or privateIcon.size or 24
+	local maxDebuffs = showDebuffs and (debuffStyle.max or privateIcon.amount or 0) or 0
+	if privateEnabled and maxDebuffs < (privateIcon.amount or 0) then maxDebuffs = privateIcon.amount or maxDebuffs end
+	local containerCfg = {
+		showBuffs = showBuffs,
+		showDebuffs = showDebuffs,
+		showDispels = showDebuffs and debuffStyle.blizzardDispelBorder == true,
+		showDispelOverlay = showDebuffs and debuffStyle.blizzardDispelBorder == true,
+		showBigDefensive = showBuffs,
+		maxBuffs = showBuffs and (buffStyle.max or 0) or 0,
+		maxDebuffs = maxDebuffs,
+		maxDispelDebuffs = 3,
+		iconSize = iconSize,
+		bigDefensiveSize = iconSize,
+		organizationType = ac.blizzardOrganizationType,
+		dispelIndicatorOption = 2,
+		powerBarUsedHeight = 0,
+		groupType = nil,
+	}
+	if not (containerCfg.showBuffs or containerCfg.showDebuffs or containerCfg.showDispels or containerCfg.showBigDefensive) then
+		UFHelper.RemovePrivateAuras(st.privateAuras)
+		if st.privateAuras.Hide then st.privateAuras:Hide() end
+		return
+	end
+	UFHelper.ApplyBlizzardAuraContainer(st.privateAuras, unit, containerCfg, st.frame, st.statusTextLayer or st.frame, allowSample)
+end
+
 function AuraUtil.prepareSingleAuraSectionStyle(section)
 	local style = CopyTable(section or {})
 	style.size = tonumber(style.size) or 24
@@ -4222,13 +4628,10 @@ function AuraUtil.getSingleAuraRelayoutThreshold(ac, defAc)
 	local resolved = AuraUtil.resolveSingleAuraConfig(ac, defAc)
 	local buff = AuraUtil.prepareSingleAuraSectionStyle(resolved.buff)
 	local debuff = AuraUtil.prepareSingleAuraSectionStyle(resolved.debuff)
-	if resolved.combineLayout == true then return math.max(buff.max or 0, debuff.max or 0) + 1 end
-	return (buff.max or 0) + (debuff.max or 0) + 1
+	return math.max(buff.max or 0, debuff.max or 0) + 1
 end
 
 function AuraUtil.fillSampleAuras(unit, ac, hidePermanent)
-	local auras, order, indexById = AuraUtil.getAuraTables(unit)
-	if not auras or not order or not indexById then return end
 	local resolved = AuraUtil.resolveSingleAuraConfig(ac)
 	local buffCfg = AuraUtil.prepareSingleAuraSectionStyle(resolved.buff)
 	local debuffCfg = AuraUtil.prepareSingleAuraSectionStyle(resolved.debuff)
@@ -4237,28 +4640,6 @@ function AuraUtil.fillSampleAuras(unit, ac, hidePermanent)
 	if not showBuffs and not showDebuffs then return end
 	local buffCount = showBuffs and (buffCfg.max or 0) or 0
 	local debuffCount = showDebuffs and (debuffCfg.max or 0) or 0
-	if resolved.combineLayout == true then
-		local maxCount = math.max(buffCfg.max or 0, debuffCfg.max or 0)
-		if showBuffs and not showDebuffs then
-			maxCount = buffCfg.max or 0
-		elseif showDebuffs and not showBuffs then
-			maxCount = debuffCfg.max or 0
-		end
-		if maxCount < 1 then maxCount = 1 end
-		if showBuffs and showDebuffs then
-			debuffCount = math.floor(maxCount * 0.3)
-			if maxCount > 1 and debuffCount < 1 then debuffCount = 1 end
-			if debuffCount >= maxCount then debuffCount = maxCount - 1 end
-			if debuffCount < 0 then debuffCount = 0 end
-			buffCount = maxCount - debuffCount
-		elseif showDebuffs then
-			debuffCount = maxCount
-			buffCount = 0
-		else
-			debuffCount = 0
-			buffCount = maxCount
-		end
-	end
 	local now = GetTime and GetTime() or 0
 	local base = unit == UNIT.PLAYER and -100000 or (unit == UNIT.TARGET or unit == "target") and -200000 or -300000
 
@@ -4292,7 +4673,7 @@ function AuraUtil.fillSampleAuras(unit, ac, hidePermanent)
 		local dispelName = isDebuff and SAMPLE_DISPEL_TYPES[((idx - 1) % #SAMPLE_DISPEL_TYPES) + 1] or nil
 		local canActivePlayerDispel = dispelName == "Magic"
 		local auraId = base - idx
-		auras[auraId] = {
+		AuraUtil.cacheTargetAura({
 			auraInstanceID = auraId,
 			icon = icon,
 			isHelpful = not isDebuff,
@@ -4303,9 +4684,7 @@ function AuraUtil.fillSampleAuras(unit, ac, hidePermanent)
 			dispelName = dispelName,
 			canActivePlayerDispel = canActivePlayerDispel,
 			isSample = true,
-		}
-		order[#order + 1] = auraId
-		indexById[auraId] = #order
+		}, unit, isDebuff and "debuff" or "buff")
 	end
 
 	local idx = 0
@@ -4319,21 +4698,25 @@ function AuraUtil.fillSampleAuras(unit, ac, hidePermanent)
 	end
 end
 
-function AuraUtil.updateTargetAuraIcons(startIndex, unit)
+function AuraUtil.updateTargetAuraIcons(startIndex, unit, refreshBuffs, refreshDebuffs)
 	unit = unit or "target"
 	local st = states[unit]
 	if not st or not st.auraContainer or not st.frame then return end
-	local allowSample = addon.EditModeLib and addon.EditModeLib:IsInEditMode()
+	local allowSample = UF.IsEditModeSampleEnabled and UF.IsEditModeSampleEnabled(unit)
 	local cfg = st.cfg or ensureDB(unit)
 	local def = defaultsFor(unit)
 	local ac = cfg.auraIcons or (def and def.auraIcons) or defaults.target.auraIcons or { size = 24, padding = 2, max = 16, showCooldown = true }
+	if AuraUtil.isBlizzardAuraRenderer(ac, def and def.auraIcons) then
+		AuraUtil.hideAuraContainers(st)
+		AuraUtil.HideSingleDispelIndicator(unit)
+		return
+	end
 	local auraRuntime = AuraUtil.getUnitSingleAuraRuntimeConfig(unit, ac, def and def.auraIcons)
 	if not auraRuntime.enabled then
 		AuraUtil.hideAuraContainers(st)
 		AuraUtil.UpdateSingleDispelIndicator(unit, allowSample)
 		return
 	end
-	local resolved = auraRuntime.resolved
 	local buffStyle = auraRuntime.buff
 	local debuffStyle = auraRuntime.debuff
 	local showBuffs = auraRuntime.showBuffs
@@ -4343,176 +4726,79 @@ function AuraUtil.updateTargetAuraIcons(startIndex, unit)
 		AuraUtil.UpdateSingleDispelIndicator(unit, allowSample)
 		return
 	end
-	local auras, order, indexById = AuraUtil.getAuraTables(unit)
-	if not auras or not order or not indexById then return end
 	local _, harmfulFilter = AuraUtil.getUnitAuraFilters(unit, auraRuntime)
-	local function isAuraDebuff(aura)
-		if issecretvalue and issecretvalue(aura.isHarmful) and C_UnitAuras and C_UnitAuras.IsAuraFilteredOutByInstanceID then
-			return not C_UnitAuras.IsAuraFilteredOutByInstanceID(unit, aura.auraInstanceID, harmfulFilter)
-		end
-		return aura.isHarmful == true
+	if refreshBuffs == nil and refreshDebuffs == nil then
+		refreshBuffs = true
+		refreshDebuffs = true
 	end
-	AuraUtil.compactAuraOrderInPlace(order, indexById, auras)
-	local visibleIds = st._auraVisibleIds
-	if not visibleIds then
-		visibleIds = {}
-		st._auraVisibleIds = visibleIds
-	end
-	local visibleIsDebuff = st._auraVisibleIsDebuff
-	if not visibleIsDebuff then
-		visibleIsDebuff = {}
-		st._auraVisibleIsDebuff = visibleIsDebuff
-	end
-	local visibleCount = 0
-	local buffVisible = 0
-	local debuffVisible = 0
-	local combinedMax = math.max(buffStyle.max or 0, debuffStyle.max or 0)
-	if showBuffs and not showDebuffs then
-		combinedMax = buffStyle.max or 0
-	elseif showDebuffs and not showBuffs then
-		combinedMax = debuffStyle.max or 0
-	end
-	local useSeparateDebuffs = resolved.combineLayout ~= true
-	if useSeparateDebuffs and not st.debuffContainer then useSeparateDebuffs = false end
-	for i = 1, #order do
-		local auraId = order[i]
-		local aura = auras[auraId]
-		if aura then
-			local isDebuff = isAuraDebuff(aura)
-			if isDebuff and showDebuffs then
-				if useSeparateDebuffs then
-					if debuffVisible < (debuffStyle.max or 0) then
-						debuffVisible = debuffVisible + 1
-						visibleCount = visibleCount + 1
-						visibleIds[visibleCount] = auraId
-						visibleIsDebuff[visibleCount] = true
-					end
-				elseif visibleCount < combinedMax then
-					debuffVisible = debuffVisible + 1
-					visibleCount = visibleCount + 1
-					visibleIds[visibleCount] = auraId
-					visibleIsDebuff[visibleCount] = true
-				end
-			elseif not isDebuff and showBuffs then
-				if useSeparateDebuffs then
-					if buffVisible < (buffStyle.max or 0) then
-						buffVisible = buffVisible + 1
-						visibleCount = visibleCount + 1
-						visibleIds[visibleCount] = auraId
-						visibleIsDebuff[visibleCount] = false
-					end
-				elseif visibleCount < combinedMax then
-					buffVisible = buffVisible + 1
-					visibleCount = visibleCount + 1
-					visibleIds[visibleCount] = auraId
-					visibleIsDebuff[visibleCount] = false
-				end
-			end
-			if useSeparateDebuffs then
-				if buffVisible >= (buffStyle.max or 0) and debuffVisible >= (debuffStyle.max or 0) then break end
-			elseif visibleCount >= combinedMax then
-				break
-			end
-		end
-	end
-	local oldVisibleCount = st._auraVisibleCount or 0
-	if oldVisibleCount > visibleCount then
-		for i = visibleCount + 1, oldVisibleCount do
-			visibleIds[i] = nil
-			visibleIsDebuff[i] = nil
-		end
-	end
-	st._auraVisibleCount = visibleCount
 
 	local width = (st.auraContainer and st.auraContainer:GetWidth()) or (st.barGroup and st.barGroup:GetWidth()) or (st.frame and st.frame:GetWidth()) or 0
 	local auraLayout = UF._auraLayout
 	local buffAnchor = buffStyle.anchor or "BOTTOM"
 	local buffPrimary, buffSecondary = auraLayout.resolveGrowth(buffStyle, buffAnchor, buffStyle.growth)
 	local perRow = auraLayout.calcPerRow(st, buffStyle, width, buffPrimary)
-	local combinedAnchorStyle = showBuffs and buffStyle or debuffStyle
-	local combinedLayout = combinedAnchorStyle
-	if showBuffs and showDebuffs and (debuffStyle.size or 0) > (buffStyle.size or 0) then combinedLayout = debuffStyle end
-	local combinedAnchor = combinedAnchorStyle.anchor or "BOTTOM"
-	local combinedPrimary, combinedSecondary = auraLayout.resolveGrowth(combinedAnchorStyle, combinedAnchor, combinedAnchorStyle.growth)
-	local perRowCombined = auraLayout.calcPerRow(st, combinedLayout, width, combinedPrimary)
-
-	-- Combined layout (default, backward compatible)
-	if not useSeparateDebuffs then
-		local icons = st.auraButtons or {}
-		st.auraButtons = icons
-		local shown = visibleCount
-		startIndex = startIndex or 1
-		if startIndex < 1 then startIndex = 1 end
-
-		for i = startIndex, shown do
-			local auraId = visibleIds[i]
-			local aura = auraId and auras[auraId]
-			if aura then
-				local isDebuff = visibleIsDebuff[i] == true
-				local layout = isDebuff and debuffStyle or buffStyle
-				local btn
-				btn, st.auraButtons = AuraUtil.ensureAuraButton(st.auraContainer, st.auraButtons, i, layout)
-				AuraUtil.applyAuraToButton(btn, aura, layout, isDebuff, unit, harmfulFilter)
-				AuraUtil.anchorAuraButton(btn, st.auraContainer, i, combinedLayout, perRowCombined, combinedPrimary, combinedSecondary)
-			end
-		end
-		for idx = shown + 1, #(st.auraButtons or {}) do
-			if st.auraButtons[idx] then st.auraButtons[idx]:Hide() end
-		end
-		if st.debuffButtons then
-			for idx = 1, #st.debuffButtons do
-				if st.debuffButtons[idx] then st.debuffButtons[idx]:Hide() end
-			end
-		end
-		if st.debuffContainer then
-			st.debuffContainer:SetHeight(0.001)
-			st.debuffContainer:SetShown(false)
-		end
-		AuraUtil.updateAuraContainerSize(st.auraContainer, shown, combinedLayout, perRowCombined, combinedPrimary)
-		AuraUtil.UpdateSingleDispelIndicator(unit, allowSample)
-		return
-	end
-
-	-- Separate buff/debuff anchors
-	local buffButtons = st.auraButtons or {}
-	local debuffButtons = st.debuffButtons or {}
-	local buffCount = 0
-	local debuffCount = 0
 	local debAnchor = debuffStyle.anchor or "BOTTOM"
 	local debPrimary, debSecondary = auraLayout.resolveGrowth(debuffStyle, debAnchor, debuffStyle.growth)
 	local perRowDebuff = auraLayout.calcPerRow(st, debuffStyle, width, debPrimary)
-	for i = 1, visibleCount do
-		local auraId = visibleIds[i]
-		local aura = auraId and auras[auraId]
-		if aura then
-			if visibleIsDebuff[i] == true then
-				debuffCount = debuffCount + 1
-				local btn
-				btn, debuffButtons = AuraUtil.ensureAuraButton(st.debuffContainer, debuffButtons, debuffCount, debuffStyle)
-				AuraUtil.applyAuraToButton(btn, aura, debuffStyle, true, unit, harmfulFilter)
-				AuraUtil.anchorAuraButton(btn, st.debuffContainer, debuffCount, debuffStyle, perRowDebuff, debPrimary, debSecondary)
-			else
-				buffCount = buffCount + 1
-				local btn
-				btn, buffButtons = AuraUtil.ensureAuraButton(st.auraContainer, buffButtons, buffCount, buffStyle)
-				AuraUtil.applyAuraToButton(btn, aura, buffStyle, false, unit, harmfulFilter)
-				AuraUtil.anchorAuraButton(btn, st.auraContainer, buffCount, buffStyle, perRow, buffPrimary, buffSecondary)
+
+	local function hideAuraList(container, buttons)
+		if buttons then
+			for idx = 1, #buttons do
+				if buttons[idx] then buttons[idx]:Hide() end
 			end
+		end
+		if container then
+			container:SetHeight(0.001)
+			container:SetShown(false)
 		end
 	end
 
-	st.auraButtons = buffButtons
-	st.debuffButtons = debuffButtons
-
-	for idx = buffCount + 1, #buffButtons do
-		if buffButtons[idx] then buffButtons[idx]:Hide() end
+	local function renderAuraList(kind, container, buttons, style, isDebuff, primary, secondary, perRow)
+		local cache = AuraUtil.getAuraKindCache(unit, kind)
+		if not (cache and container) then
+			hideAuraList(container, buttons)
+			return buttons or {}, 0
+		end
+		AuraUtil.compactAuraCache(cache)
+		local auras, order = cache.auras, cache.order
+		if not (auras and order) then
+			hideAuraList(container, buttons)
+			return buttons or {}, 0
+		end
+		buttons = buttons or {}
+		local shown = 0
+		local maxCount = style.max or 0
+		for i = 1, #order do
+			if shown >= maxCount then break end
+			local auraId = order[i]
+			local aura = auraId and auras[auraId]
+			if aura then
+				shown = shown + 1
+				local btn
+				btn, buttons = AuraUtil.ensureAuraButton(container, buttons, shown, style)
+				AuraUtil.applyAuraToButton(btn, aura, style, isDebuff, unit, harmfulFilter)
+				AuraUtil.anchorAuraButton(btn, container, shown, style, perRow, primary, secondary)
+			end
+		end
+		for idx = shown + 1, #buttons do
+			if buttons[idx] then buttons[idx]:Hide() end
+		end
+		AuraUtil.updateAuraContainerSize(container, shown, style, perRow, primary)
+		return buttons, shown
 	end
-	for idx = debuffCount + 1, #debuffButtons do
-		if debuffButtons[idx] then debuffButtons[idx]:Hide() end
+
+	if showBuffs then
+		if refreshBuffs then st.auraButtons = renderAuraList("buff", st.auraContainer, st.auraButtons, buffStyle, false, buffPrimary, buffSecondary, perRow) end
+	else
+		hideAuraList(st.auraContainer, st.auraButtons)
 	end
 
-	AuraUtil.updateAuraContainerSize(st.auraContainer, buffCount, buffStyle, perRow, buffPrimary)
-	AuraUtil.updateAuraContainerSize(st.debuffContainer, debuffCount, debuffStyle, perRowDebuff, debPrimary)
+	if showDebuffs and st.debuffContainer then
+		if refreshDebuffs then st.debuffButtons = renderAuraList("debuff", st.debuffContainer, st.debuffButtons, debuffStyle, true, debPrimary, debSecondary, perRowDebuff) end
+	else
+		hideAuraList(st.debuffContainer, st.debuffButtons)
+	end
+
 	AuraUtil.UpdateSingleDispelIndicator(unit, allowSample)
 end
 
@@ -4528,28 +4814,11 @@ function AuraUtil.getTargetAuraQueryLimits(ac, defAc)
 	local debuff = AuraUtil.prepareSingleAuraSectionStyle(resolved.debuff)
 	local showBuffs = buff.enabled ~= false
 	local showDebuffs = debuff.enabled ~= false
-	local buffLimit
-	local debuffLimit
 
-	if resolved.combineLayout == true then
-		local combinedMax = math.max(buff.max or 0, debuff.max or 0)
-		if showBuffs and not showDebuffs then
-			combinedMax = buff.max or 0
-		elseif showDebuffs and not showBuffs then
-			combinedMax = debuff.max or 0
-		end
-		local cap = AuraUtil.normalizeAuraQueryLimit((combinedMax or 0) + 1)
-		buffLimit = showBuffs and cap or nil
-		debuffLimit = showDebuffs and cap or nil
-	else
-		buffLimit = showBuffs and AuraUtil.normalizeAuraQueryLimit((buff.max or 0) + 1) or nil
-		debuffLimit = showDebuffs and AuraUtil.normalizeAuraQueryLimit((debuff.max or 0) + 1) or nil
-	end
-
-	return buffLimit, debuffLimit
+	return showBuffs and AuraUtil.normalizeAuraQueryLimit((buff.max or 0) + 1) or nil, showDebuffs and AuraUtil.normalizeAuraQueryLimit((debuff.max or 0) + 1) or nil
 end
 
-function AuraUtil.scanTargetAuraSlots(unit, filter, queryLimit, hidePermanent)
+function AuraUtil.scanTargetAuraSlots(unit, filter, queryLimit, hidePermanent, kind)
 	if not (unit and filter and C_UnitAuras and C_UnitAuras.GetAuraSlots and C_UnitAuras.GetAuraDataBySlot) then return end
 	local slots
 	if queryLimit then
@@ -4564,8 +4833,7 @@ function AuraUtil.scanTargetAuraSlots(unit, filter, queryLimit, hidePermanent)
 			and (not hidePermanent or not AuraUtil.isPermanentAura(aura, unit))
 			and not (UF.GlobalAuraIgnore and UF.GlobalAuraIgnore.ShouldIgnoreAura and UF.GlobalAuraIgnore.ShouldIgnoreAura(unit, aura))
 		then
-			AuraUtil.cacheTargetAura(aura, unit)
-			AuraUtil.addTargetAuraToOrder(aura.auraInstanceID, unit)
+			AuraUtil.cacheTargetAura(aura, unit, kind)
 		end
 	end
 end
@@ -4577,6 +4845,11 @@ function AuraUtil.fullScanTargetAuras(unit)
 	local cfg = (st and st.cfg) or ensureDB(unit)
 	local def = defaultsFor(unit)
 	local ac = cfg.auraIcons or (def and def.auraIcons) or defaults.target.auraIcons or {}
+	if AuraUtil.isBlizzardAuraRenderer(ac, def and def.auraIcons) then
+		if st then st._sampleAurasActive = nil end
+		AuraUtil.updateTargetAuraIcons(nil, unit)
+		return
+	end
 	local auraRuntime = AuraUtil.getUnitSingleAuraRuntimeConfig(unit, ac, def and def.auraIcons)
 	if not auraRuntime.enabled then
 		if st then st._sampleAurasActive = nil end
@@ -4591,7 +4864,7 @@ function AuraUtil.fullScanTargetAuras(unit)
 		AuraUtil.updateTargetAuraIcons(nil, unit)
 		return
 	end
-	if addon.EditModeLib and addon.EditModeLib:IsInEditMode() then
+	if UF.IsEditModeSampleEnabled and UF.IsEditModeSampleEnabled(unit) then
 		if st then st._sampleAurasActive = true end
 		AuraUtil.fillSampleAuras(unit, ac)
 		AuraUtil.updateTargetAuraIcons(nil, unit)
@@ -4605,8 +4878,8 @@ function AuraUtil.fullScanTargetAuras(unit)
 	local helpfulFilter, harmfulFilter = AuraUtil.getUnitAuraFilters(unit, auraRuntime)
 	local helpfulLimit = auraRuntime.helpfulLimit
 	local harmfulLimit = auraRuntime.harmfulLimit
-	if showBuffs then AuraUtil.scanTargetAuraSlots(unit, helpfulFilter, helpfulLimit, buff.hidePermanentAuras == true) end
-	if showDebuffs then AuraUtil.scanTargetAuraSlots(unit, harmfulFilter, harmfulLimit, debuff.hidePermanentAuras == true) end
+	if showBuffs then AuraUtil.scanTargetAuraSlots(unit, helpfulFilter, helpfulLimit, buff.hidePermanentAuras == true, "buff") end
+	if showDebuffs then AuraUtil.scanTargetAuraSlots(unit, harmfulFilter, harmfulLimit, debuff.hidePermanentAuras == true, "debuff") end
 	AuraUtil.updateTargetAuraIcons(nil, unit)
 end
 
@@ -4643,6 +4916,131 @@ local function shouldHideInPetBattle(cfg, def)
 	return value == true
 end
 
+UF._eqolVisibilityHandler = [[
+local target = self:GetFrameRef("target")
+if not target then return end
+if newstate == "show" then
+	target:Show()
+	target:SetAlpha(1)
+elseif newstate == "fade" then
+	target:Show()
+	target:SetAlpha(self:GetAttribute("eqol-fade-alpha") or 0)
+elseif newstate == "hide" then
+	target:SetAlpha(0)
+	target:Hide()
+end
+]]
+
+function UF.GetFrameVisibilityInactiveAlpha(unit)
+	local cfg = unit and ensureDB(unit) or nil
+	local strength = cfg and cfg.visibilityFadeStrength
+	strength = tonumber(strength) or 1
+	if strength < 0 then strength = 0 end
+	if strength > 1 then strength = 1 end
+	return 1 - strength
+end
+
+function UF.GetFrameVisibilityInactiveState(unit)
+	local alpha = UF.GetFrameVisibilityInactiveAlpha(unit)
+	if alpha <= 0 then return "hide", alpha end
+	if alpha >= 1 then return "show", alpha end
+	return "fade", alpha
+end
+
+function UF.EnsureEqolVisibilityController(st)
+	if not st or not st.frame then return nil end
+	local controller = st._eqolVisibilityController
+	if not controller then
+		controller = CreateFrame("Frame", nil, st.frame, "SecureHandlerStateTemplate")
+		controller:SetFrameRef("target", st.frame)
+		controller:SetAttribute("_onstate-eqolvisibility", UF._eqolVisibilityHandler)
+		st._eqolVisibilityController = controller
+	else
+		controller:SetFrameRef("target", st.frame)
+	end
+	return controller
+end
+
+function UF.ClearEqolVisibilityDriver(st, showWhenCleared)
+	if not st then return end
+	local controller = st._eqolVisibilityController
+	if controller then
+		if _G.UnregisterAttributeDriver then pcall(_G.UnregisterAttributeDriver, controller, "state-eqolvisibility") end
+		if controller.SetAttribute then controller:SetAttribute("state-eqolvisibility", nil) end
+	end
+	st._eqolVisibilityCond = nil
+	if st.frame then
+		if st.frame.SetAlpha then st.frame:SetAlpha(1) end
+		if showWhenCleared and st.frame.Show then st.frame:Show() end
+	end
+end
+
+function UF.ApplyEqolVisibilityDriver(st, cond, inactiveAlpha)
+	if not st or not st.frame or not cond or not _G.RegisterAttributeDriver then return false end
+	local controller = UF.EnsureEqolVisibilityController(st)
+	if not controller then return false end
+	controller:SetAttribute("eqol-fade-alpha", inactiveAlpha or 0)
+	if st._eqolVisibilityCond == cond then
+		local currentState = controller.GetAttribute and controller:GetAttribute("state-eqolvisibility")
+		if currentState then
+			controller:SetAttribute("state-eqolvisibility", nil)
+			controller:SetAttribute("state-eqolvisibility", currentState)
+		end
+		return true
+	end
+	if _G.UnregisterAttributeDriver then pcall(_G.UnregisterAttributeDriver, controller, "state-eqolvisibility") end
+	local ok = pcall(_G.RegisterAttributeDriver, controller, "state-eqolvisibility", cond)
+	if ok then st._eqolVisibilityCond = cond end
+	return ok
+end
+
+function UF.RefreshEqolVisibilityDriverAlphas()
+	if InCombatLockdown and InCombatLockdown() then
+		UF.ScheduleEqolVisibilityDriverAlphaRefresh()
+		return
+	end
+	for unit, st in pairs(states) do
+		local controller = st and st._eqolVisibilityController
+		if controller and st._eqolVisibilityCond then
+			local alpha = UF.GetFrameVisibilityInactiveAlpha(unit)
+			controller:SetAttribute("eqol-fade-alpha", alpha)
+			local currentState = controller.GetAttribute and controller:GetAttribute("state-eqolvisibility")
+			if currentState then
+				controller:SetAttribute("state-eqolvisibility", nil)
+				controller:SetAttribute("state-eqolvisibility", currentState)
+			end
+		end
+	end
+end
+
+function UF.ScheduleEqolVisibilityDriverAlphaRefresh()
+	if InCombatLockdown and InCombatLockdown() then
+		UF._eqolVisibilityAlphaRefreshPending = true
+		if not UF._eqolVisibilityAlphaRefreshWatcher then
+			UF._eqolVisibilityAlphaRefreshWatcher = CreateFrame("Frame")
+			UF._eqolVisibilityAlphaRefreshWatcher:SetScript("OnEvent", function(self)
+				if InCombatLockdown and InCombatLockdown() then return end
+				self:UnregisterEvent("PLAYER_REGEN_ENABLED")
+				UF._eqolVisibilityAlphaRefreshWatcher = nil
+				UF._eqolVisibilityAlphaRefreshPending = nil
+				UF.ScheduleEqolVisibilityDriverAlphaRefresh()
+			end)
+			UF._eqolVisibilityAlphaRefreshWatcher:RegisterEvent("PLAYER_REGEN_ENABLED")
+		end
+		return
+	end
+	if UF._eqolVisibilityAlphaRefreshPending then return end
+	UF._eqolVisibilityAlphaRefreshPending = true
+	RunNextFrame(function()
+		UF._eqolVisibilityAlphaRefreshPending = nil
+		if UF.RefreshEqolVisibilityDrivers then
+			UF.RefreshEqolVisibilityDrivers()
+		else
+			UF.RefreshEqolVisibilityDriverAlphas()
+		end
+	end)
+end
+
 local function applyVisibilityDriver(unit, enabled)
 	local st = states[unit]
 	if not st or not st.frame then return end
@@ -4658,7 +5056,10 @@ local function applyVisibilityDriver(unit, enabled)
 		local hideInClientScene = UFHelper and UFHelper.shouldHideInClientScene and UFHelper.shouldHideInClientScene(cfg, def)
 		local forceClientSceneHide = enabled and not inEdit and hideInClientScene and UF._clientSceneActive == true
 		if UFHelper and UFHelper.applyClientSceneAlphaOverride then UFHelper.applyClientSceneAlphaOverride(st, forceClientSceneHide) end
-		if InCombatLockdown() then return end
+		if InCombatLockdown and InCombatLockdown() then
+			if UF.ScheduleEqolVisibilityDriverAlphaRefresh then UF.ScheduleEqolVisibilityDriverAlphaRefresh() end
+			return
+		end
 		local frame = st.frame
 		if frame.EQOL_VisibilityStateDriver or st._visibilityCond or (frame.GetAttribute and frame:GetAttribute("state-visibility") ~= nil) then
 			if UnregisterStateDriver then UnregisterStateDriver(frame, "visibility") end
@@ -4682,28 +5083,27 @@ local function applyVisibilityDriver(unit, enabled)
 	local hideInClientScene = UFHelper and UFHelper.shouldHideInClientScene and UFHelper.shouldHideInClientScene(cfg, def)
 	local forceClientSceneHide = enabled and not inEdit and hideInClientScene and UF._clientSceneActive == true
 	if UFHelper and UFHelper.applyClientSceneAlphaOverride then UFHelper.applyClientSceneAlphaOverride(st, forceClientSceneHide) end
-	if InCombatLockdown() then return end
+	if InCombatLockdown and InCombatLockdown() then
+		if UF.ScheduleEqolVisibilityDriverAlphaRefresh then UF.ScheduleEqolVisibilityDriverAlphaRefresh() end
+		return
+	end
 	if unit == UNIT.PET and _G.RegisterUnitWatch and _G.UnregisterUnitWatch then
 		local frame = st.frame
 		local registered = (_G.UnitWatchRegistered and _G.UnitWatchRegistered(frame)) or frame.EQOL_PetUnitWatchRegistered == true
-		local shouldWatch = enabled and not inEdit
-		if shouldWatch then
-			if not registered then
-				local ok = pcall(_G.RegisterUnitWatch, frame)
-				if ok then frame.EQOL_PetUnitWatchRegistered = true end
-			end
-		elseif registered then
+		if registered then
 			pcall(_G.UnregisterUnitWatch, frame)
 			frame.EQOL_PetUnitWatchRegistered = nil
 		end
 	end
-	if not RegisterStateDriver then return end
+	if not RegisterStateDriver and not _G.RegisterAttributeDriver then return end
 	local hideInVehicle = enabled and shouldHideInVehicle(cfg, def)
 	local hideInPetBattle = enabled and shouldHideInPetBattle(cfg, def)
 	local cond
 	local baseCond
 	local showPrefix
 	local prependHideClauses = nil
+	local inactiveState, inactiveAlpha = UF.GetFrameVisibilityInactiveState(unit)
+	local supportsEqolFadeDriver = true
 	if not enabled then
 		cond = "hide"
 	elseif unit == UNIT.TARGET then
@@ -4718,7 +5118,10 @@ local function applyVisibilityDriver(unit, enabled)
 	elseif unit == UNIT.PET then
 		-- Keep pet frame configurable in Edit Mode even when no pet exists.
 		baseCond = inEdit and "show" or "[@pet,exists] show; hide"
-		if not inEdit then showPrefix = "@pet,exists" end
+		if not inEdit then
+			showPrefix = "@pet,exists"
+			prependHideClauses = { "@pet,noexists" }
+		end
 	elseif isBossUnit(unit) then
 		baseCond = ("[@%s,exists] show; hide"):format(unit)
 	end
@@ -4732,16 +5135,30 @@ local function applyVisibilityDriver(unit, enabled)
 				prependHideClauses = prependHideClauses or {}
 				prependHideClauses[#prependHideClauses + 1] = "vehicleui"
 			end
-			cond = BuildVisibilityDriverExpression(visibilityConfig, { prependHideClauses = prependHideClauses, showPrefix = showPrefix })
+			cond = BuildVisibilityDriverExpression(visibilityConfig, { prependHideClauses = prependHideClauses, showPrefix = showPrefix, inactiveState = supportsEqolFadeDriver and inactiveState or nil })
 		end
 		if not cond and (hideInPetBattle or hideInVehicle or baseCond) then
 			local clauses = {}
+			if prependHideClauses then
+				for _, clause in ipairs(prependHideClauses) do
+					clauses[#clauses + 1] = ("[%s] hide"):format(clause)
+				end
+			end
 			if hideInPetBattle then clauses[#clauses + 1] = "[petbattle] hide" end
 			if hideInVehicle then clauses[#clauses + 1] = "[vehicleui] hide" end
 			clauses[#clauses + 1] = baseCond or "show"
 			cond = table.concat(clauses, "; ")
 		end
 	end
+	local useEqolVisibilityDriver = supportsEqolFadeDriver and cond and cond:find("fade", 1, true) ~= nil
+	if useEqolVisibilityDriver then
+		if UnregisterStateDriver then UnregisterStateDriver(st.frame, "visibility") end
+		if st.frame.SetAttribute then st.frame:SetAttribute("state-visibility", nil) end
+		st._visibilityCond = nil
+		UF.ApplyEqolVisibilityDriver(st, cond, inactiveAlpha)
+		return
+	end
+	UF.ClearEqolVisibilityDriver(st, false)
 	if cond == st._visibilityCond then return end
 	if not cond then
 		if UnregisterStateDriver then UnregisterStateDriver(st.frame, "visibility") end
@@ -4823,16 +5240,7 @@ local function applyVisibilityRules(unit)
 	local manualConfig = useConfig
 	local hideInClientScene = UFHelper and UFHelper.shouldHideInClientScene and UFHelper.shouldHideInClientScene(cfg, def)
 	local forceClientSceneHide = not inEdit and cfg and cfg.enabled and hideInClientScene and UF._clientSceneActive == true
-	if
-		unit ~= "boss"
-		and manualConfig
-		and not manualConfig.MOUSEOVER
-		and not manualConfig.PLAYER_CASTING
-		and not manualConfig.SKYRIDING_ACTIVE
-		and not manualConfig.SKYRIDING_INACTIVE
-		and not manualConfig.FLYING_ACTIVE
-		and not manualConfig.FLYING_INACTIVE
-	then
+	if unit ~= "boss" and manualConfig and not manualConfig.MOUSEOVER and not manualConfig.PLAYER_CASTING then
 		manualConfig = nil
 	end
 	local opts = { noStateDriver = true }
@@ -4841,13 +5249,21 @@ local function applyVisibilityRules(unit)
 		for i = 1, maxBossFrames do
 			local info = UNITS["boss" .. i]
 			local frameConfig = i <= bossCount and manualConfig or nil
-			if info and info.frameName then ApplyFrameVisibilityConfig(info.frameName, { unitToken = "boss" }, frameConfig, opts) end
+			local st = states["boss" .. i]
+			if info and info.frameName and (frameConfig or (st and st._eqolManualVisibilityActive)) then
+				ApplyFrameVisibilityConfig(info.frameName, { unitToken = "boss" }, frameConfig, opts)
+			end
+			if st then st._eqolManualVisibilityActive = frameConfig ~= nil or nil end
 			if UFHelper and UFHelper.applyClientSceneAlphaOverride then UFHelper.applyClientSceneAlphaOverride(states["boss" .. i], forceClientSceneHide) end
 		end
 		return
 	end
 	local info = UNITS[unit]
-	if info and info.frameName then ApplyFrameVisibilityConfig(info.frameName, { unitToken = info.unit }, manualConfig, opts) end
+	local st = states[unit]
+	if info and info.frameName and (manualConfig or (st and st._eqolManualVisibilityActive)) then
+		ApplyFrameVisibilityConfig(info.frameName, { unitToken = info.unit }, manualConfig, opts)
+	end
+	if st then st._eqolManualVisibilityActive = manualConfig ~= nil or nil end
 	if UFHelper and UFHelper.applyClientSceneAlphaOverride then UFHelper.applyClientSceneAlphaOverride(states[unit], forceClientSceneHide) end
 end
 
@@ -4872,6 +5288,15 @@ function UF.RefreshClientSceneVisibility()
 		applyVisibilityDriver("boss" .. i, bossEnabled and i <= bossCount)
 	end
 	applyVisibilityRulesAll()
+end
+
+function UF.RefreshEqolVisibilityDrivers()
+	if InCombatLockdown and InCombatLockdown() then
+		UF.ScheduleEqolVisibilityDriverAlphaRefresh()
+		return
+	end
+	UF.RefreshClientSceneVisibility()
+	UF.RefreshEqolVisibilityDriverAlphas()
 end
 
 local function hideBlizzardPlayerFrame()
@@ -4948,7 +5373,6 @@ do
 		anchor = "BOTTOM",
 		offset = { x = 0, y = -5 },
 		growth = nil,
-		separateDebuffAnchor = false,
 		debuffAnchor = nil,
 		debuffOffset = nil,
 		debuffGrowth = nil,
@@ -5186,6 +5610,11 @@ function AuraUtil.UpdateSingleDispelIndicator(unit, allowSample)
 	local scfg = cfg.status or {}
 	local dcfg = scfg.dispelTint or {}
 	local defDispel = (def.status and def.status.dispelTint) or {}
+	if not allowSample and addon.EditModeLib and addon.EditModeLib.IsInEditMode and addon.EditModeLib:IsInEditMode() then
+		local showSample = dcfg.showSample
+		if showSample == nil then showSample = defDispel.showSample == true end
+		allowSample = showSample == true
+	end
 
 	local overlayEnabled = dcfg.enabled
 	if overlayEnabled == nil then overlayEnabled = defDispel.enabled ~= false end
@@ -5660,7 +6089,7 @@ function UF._applyCastIconBorder(st, ccfg, defc)
 	end
 end
 
-local function applyOverlayHeight(bar, anchor, height, maxHeight)
+local function applyOverlayHeight(bar, anchor, height, maxHeight, anchorTop)
 	if not bar or not anchor then return end
 	bar:ClearAllPoints()
 	local desired = tonumber(height)
@@ -5671,8 +6100,13 @@ local function applyOverlayHeight(bar, anchor, height, maxHeight)
 	local limit = tonumber(maxHeight)
 	if not limit or limit <= 0 then limit = anchor.GetHeight and anchor:GetHeight() or 0 end
 	if limit and limit > 0 and desired > limit then desired = limit end
-	bar:SetPoint("BOTTOMLEFT", anchor, "BOTTOMLEFT", 0, 0)
-	bar:SetPoint("BOTTOMRIGHT", anchor, "BOTTOMRIGHT", 0, 0)
+	if anchorTop then
+		bar:SetPoint("TOPLEFT", anchor, "TOPLEFT", 0, 0)
+		bar:SetPoint("TOPRIGHT", anchor, "TOPRIGHT", 0, 0)
+	else
+		bar:SetPoint("BOTTOMLEFT", anchor, "BOTTOMLEFT", 0, 0)
+		bar:SetPoint("BOTTOMRIGHT", anchor, "BOTTOMRIGHT", 0, 0)
+	end
 	bar:SetHeight(desired)
 end
 
@@ -5742,15 +6176,18 @@ end
 local function applyIncomingHealBar(st, hc, healthHeight, reverseHealth, interpolation)
 	if not (st and st.health and st.incomingHeal) then return end
 	local incomingHealTextureKey = hc.incomingHealTexture or hc.texture
+	local overlayClip = UF.EnsureOverlayClipFrame and UF.EnsureOverlayClipFrame(st.health, "_eqolDirectOverlayClip")
 	st.incomingHeal:SetStatusBarTexture(UFHelper.resolveTexture(incomingHealTextureKey))
 	if st.incomingHeal.SetStatusBarDesaturated then st.incomingHeal:SetStatusBarDesaturated(false) end
 	UFHelper.configureSpecialTexture(st.incomingHeal, "HEALTH", incomingHealTextureKey, hc)
+	UF.StabilizeStatusBarTexture(st.incomingHeal)
 	if UFHelper and UFHelper.setupAbsorbClampReverseAware then
 		UFHelper.setupAbsorbClampReverseAware(st.health, st.incomingHeal)
 	elseif UFHelper and UFHelper.setupAbsorbClamp then
 		UFHelper.setupAbsorbClamp(st.health, st.incomingHeal)
 		if UFHelper.applyStatusBarReverseFill then UFHelper.applyStatusBarReverseFill(st.incomingHeal, reverseHealth) end
 	end
+	if overlayClip and st.incomingHeal.GetParent and st.incomingHeal:GetParent() ~= overlayClip then st.incomingHeal:SetParent(overlayClip) end
 	if UFHelper and UFHelper.applyAbsorbClampLayout then
 		UFHelper.applyAbsorbClampLayout(st.incomingHeal, st.health, healthHeight, healthHeight, reverseHealth)
 	else
@@ -5758,7 +6195,7 @@ local function applyIncomingHealBar(st, hc, healthHeight, reverseHealth, interpo
 	end
 	setFrameLevelAbove(st.incomingHeal, st.health, 1)
 	st.incomingHeal:SetMinMaxValues(0, 1)
-	st.incomingHeal:SetValue(0, interpolation)
+	UF.SetStatusBarValue(st.incomingHeal, 0, false, true)
 	st.incomingHeal:Hide()
 end
 
@@ -5813,7 +6250,7 @@ local function updateIncomingHeal(st, unit, hc, defH, cur, maxv, interpolation, 
 	end
 
 	bar:SetMinMaxValues(0, maxForValue or 1)
-	bar:SetValue(incomingHealValue or 0, interpolation)
+	UF.SetStatusBarValue(bar, incomingHealValue or 0, false, true)
 
 	local color = hc.incomingHealColor or defH.incomingHealColor or { 0.2, 0.85, 0.35, 0.45 }
 	bar:SetStatusBarColor(color.r or color[1] or 0.2, color.g or color[2] or 0.85, color.b or color[3] or 0.35, color.a or color[4] or 0.45)
@@ -5844,12 +6281,82 @@ function UF.ClearCastInterruptState(st)
 	st.castInterruptToken = (st.castInterruptToken or 0) + 1
 end
 
+function UF._setAlphaFromBoolean(region, value, alphaOn, alphaOff)
+	if not region then return end
+	if value == nil then
+		region:SetAlpha(alphaOff)
+	elseif region.SetAlphaFromBoolean then
+		region:SetAlphaFromBoolean(value, alphaOn, alphaOff)
+	elseif type(value) == "boolean" then
+		region:SetAlpha(value and alphaOn or alphaOff)
+	else
+		region:SetAlpha(alphaOff)
+	end
+end
+
+function UF._hideDefaultCastUninterruptibleBar(st)
+	if st and st.castDefaultUninterruptibleBar then st.castDefaultUninterruptibleBar:Hide() end
+	local normalTexture = st and st.castBar and st.castBar.GetStatusBarTexture and st.castBar:GetStatusBarTexture()
+	if normalTexture then normalTexture:SetAlpha(1) end
+end
+
+function UF._ensureDefaultCastUninterruptibleBar(st)
+	if not st or not st.castBar then return nil end
+	local overlay = st.castDefaultUninterruptibleBar
+	if not overlay then
+		overlay = st.castBar:CreateTexture(nil, "ARTWORK", nil, 0)
+		st.castDefaultUninterruptibleBar = overlay
+	end
+	local normalTexture = st.castBar.GetStatusBarTexture and st.castBar:GetStatusBarTexture()
+	overlay:ClearAllPoints()
+	if normalTexture then
+		overlay:SetAllPoints(normalTexture)
+	else
+		overlay:SetAllPoints(st.castBar)
+	end
+	local tex = (UFHelper.resolveCastUninterruptibleTexture and UFHelper.resolveCastUninterruptibleTexture()) or "ui-castingbar-uninterruptable"
+	if overlay.SetAtlas then
+		overlay:SetAtlas(tex, false)
+	else
+		overlay:SetTexture(tex)
+	end
+	if overlay.SetHorizTile then overlay:SetHorizTile(false) end
+	if overlay.SetVertTile then overlay:SetVertTile(false) end
+	if overlay.SetVertexColor then overlay:SetVertexColor(1, 1, 1, 1) end
+	return overlay
+end
+
+function UF._syncDefaultCastUninterruptibleBar(st, notInterruptible)
+	if not st or not st.castBar then return end
+	if st.castUseDefaultArt ~= true then
+		UF._hideDefaultCastUninterruptibleBar(st)
+		return
+	end
+	local overlay = UF._ensureDefaultCastUninterruptibleBar(st)
+	if not overlay then return end
+	local normalTexture = st.castBar:GetStatusBarTexture()
+	UF._setAlphaFromBoolean(normalTexture, notInterruptible, 0, 1)
+	UF._setAlphaFromBoolean(overlay, notInterruptible, 1, 0)
+	overlay:Show()
+end
+
+function UF._setCastBarMinMaxValues(st, minValue, maxValue)
+	if not st or not st.castBar then return end
+	st.castBar:SetMinMaxValues(minValue, maxValue)
+end
+
+function UF._setCastBarValue(st, value)
+	if not st or not st.castBar then return end
+	st.castBar:SetValue(value)
+end
+
 local function stopCast(unit)
 	local st = states[unit]
 	if not st or not st.castBar then return end
 	UF.ClearCastInterruptState(st)
 	UFHelper.clearEmpowerStages(st)
 	UFHelper.hideCastSpark(st)
+	UF._hideDefaultCastUninterruptibleBar(st)
 	st.castBar:Hide()
 	if st.castName then st.castName:SetText("") end
 	if st.castDuration then st.castDuration:SetText("") end
@@ -5945,6 +6452,7 @@ local function applyCastLayout(cfg, unit)
 	local castTexture = UFHelper.resolveCastTexture(texKey)
 	st.castBar:SetStatusBarTexture(castTexture)
 	st.castUseDefaultArt = useDefaultArt
+	UF._syncDefaultCastUninterruptibleBar(st, st.castInfo and st.castInfo.notInterruptible)
 	do -- Cast backdrop
 		local bd = (ccfg and ccfg.backdrop) or (defc and defc.backdrop) or { enabled = true, color = { 0, 0, 0, 0.6 } }
 		local backdropTexKey = bd.texture
@@ -6020,6 +6528,40 @@ local function getClassColor(class)
 	return nil
 end
 
+function UF.ApplyHealthBackdrop(st, unit, hc, defH, reverseHealth)
+	if not (st and st.health) then return end
+	hc = hc or {}
+	defH = defH or {}
+	local backdropCfg = hc.backdrop or {}
+	local useBackdropClassColor = backdropCfg.useClassColor
+	if useBackdropClassColor == nil and defH.backdrop then useBackdropClassColor = defH.backdrop.useClassColor end
+	local healthBackdropClampToFill = backdropCfg.clampToFill
+	if healthBackdropClampToFill == nil and defH.backdrop then healthBackdropClampToFill = defH.backdrop.clampToFill end
+	if healthBackdropClampToFill == nil then healthBackdropClampToFill = false end
+
+	local healthBackdropR, healthBackdropG, healthBackdropB, healthBackdropA
+	if useBackdropClassColor == true then
+		local class
+		if UnitIsPlayer and UnitIsPlayer(unit) then
+			class = select(2, UnitClass(unit))
+		elseif unit == UNIT.PET then
+			class = (addon.variables and addon.variables.unitClass) or select(2, UnitClass(UNIT.PLAYER))
+		end
+		local cr, cg, cb = getClassColor(class)
+		if cr then
+			local backdropColor = backdropCfg.color or (defH.backdrop and defH.backdrop.color) or { 0, 0, 0, 0.6 }
+			healthBackdropR, healthBackdropG, healthBackdropB = cr, cg, cb
+			healthBackdropA = backdropColor[4]
+			if healthBackdropA == nil then healthBackdropA = 0.6 end
+		end
+	end
+
+	applyBarBackdrop(st.health, hc, healthBackdropR, healthBackdropG, healthBackdropB, healthBackdropA, {
+		clampToFill = healthBackdropClampToFill == true,
+		reverseFill = reverseHealth == true,
+	})
+end
+
 local function configureCastStatic(unit, ccfg, defc)
 	local st = states[unit]
 	if not st or not st.castBar or not st.castInfo then return end
@@ -6059,6 +6601,7 @@ local function configureCastStatic(unit, ccfg, defc)
 
 	local gradientCfg = unit == UNIT.PLAYER and ccfg or nil
 	local isEmpoweredDefault = st.castInfo.isEmpowered and st.castUseDefaultArt == true
+	local useDefaultArt = st.castUseDefaultArt == true
 	local clr = ccfg.color or defc.color or { 0.9, 0.7, 0.2, 1 }
 	local useClassColor = ccfg.useClassColor
 	if useClassColor == nil then useClassColor = defc.useClassColor end
@@ -6070,20 +6613,30 @@ local function configureCastStatic(unit, ccfg, defc)
 	if isEmpoweredDefault then
 		st.castBar:SetStatusBarDesaturated(false)
 		UFHelper.SetCastbarColorWithGradient(st.castBar, nil, 0, 0, 0, 0)
-	elseif st.castInfo.notInterruptible then
-		clr = ccfg.notInterruptibleColor or defc.notInterruptibleColor or clr
-		st.castBar:SetStatusBarDesaturated(true)
-		UFHelper.SetCastbarColorWithGradient(st.castBar, gradientCfg, clr[1] or 0.9, clr[2] or 0.7, clr[3] or 0.2, clr[4] or 1)
+	elseif useDefaultArt then
+		st.castBar:SetStatusBarDesaturated(false)
+		UFHelper.SetCastbarColorWithGradient(st.castBar, nil, 1, 1, 1, 1)
 	else
+		local nclr = ccfg.notInterruptibleColor or defc.notInterruptibleColor or clr
 		st.castBar:SetStatusBarDesaturated(false)
 		UFHelper.SetCastbarColorWithGradient(st.castBar, gradientCfg, clr[1] or 0.9, clr[2] or 0.7, clr[3] or 0.2, clr[4] or 1)
+		local tex = st.castBar:GetStatusBarTexture()
+		if tex and tex.SetVertexColorFromBoolean then
+			tex:SetVertexColorFromBoolean(
+				st.castInfo.notInterruptible,
+				CreateColor(nclr[1] or 0.9, nclr[2] or 0.7, nclr[3] or 0.2, nclr[4] or 1),
+				CreateColor(clr[1] or 0.9, clr[2] or 0.7, clr[3] or 0.2, clr[4] or 1)
+			)
+		end
 	end
+	UF._syncDefaultCastUninterruptibleBar(st, st.castInfo.notInterruptible)
 	local duration = (st.castInfo.endTime or 0) - (st.castInfo.startTime or 0)
 	local maxValue = duration and duration > 0 and duration / 1000 or 1
 	st.castInfo.maxValue = maxValue
 	-- UFHelper.applyStatusBarReverseFill(st.castBar, st.castInfo.isChannel == true and not st.castInfo.isEmpowered)
-	st.castBar:SetMinMaxValues(0, maxValue)
-	UFHelper.RefreshCastbarGradient(st.castBar, isEmpoweredDefault and nil or gradientCfg)
+	UF._setCastBarMinMaxValues(st, 0, maxValue)
+	UFHelper.RefreshCastbarGradient(st.castBar, useDefaultArt and nil or gradientCfg)
+	UF._syncDefaultCastUninterruptibleBar(st, st.castInfo.notInterruptible)
 	if st.castName then
 		local showName = ccfg.showName ~= false
 		st.castName:SetShown(showName)
@@ -6162,7 +6715,7 @@ local function updateCastBar(unit)
 	end
 	if elapsedMs < 0 then elapsedMs = 0 end
 	local value = elapsedMs / 1000
-	st.castBar:SetValue(value)
+	UF._setCastBarValue(st, value)
 	if
 		unit == UNIT.PLAYER
 		and not (st.castInfo.isEmpowered and st.castUseDefaultArt == true)
@@ -6277,7 +6830,7 @@ function UF.OnCastInterruptAnimFinished(self)
 	if UF.ShouldShowSampleCast(unit) then UF.SetSampleCast(unit) end
 end
 
-function UF.ShouldShowSampleCast(unit) return addon.EditModeLib and addon.EditModeLib:IsInEditMode() end
+function UF.ShouldShowSampleCast(unit) return UF.IsEditModeSampleEnabled and UF.IsEditModeSampleEnabled(unit) end
 
 function UF.SetSampleCast(unit)
 	local key = isBossUnit(unit) and "boss" or unit
@@ -6296,6 +6849,17 @@ function UF.SetSampleCast(unit)
 	local resolvedCfg = ccfg or defc or {}
 	st.castCfg = resolvedCfg
 	local nowMs = GetTime() * 1000
+	if st.castInfo and st.castInfo.isSample == true and type(st.castInfo.endTime) == "number" and st.castInfo.endTime > nowMs then
+		applyCastLayout(cfg, unit)
+		configureCastStatic(unit, resolvedCfg, defc)
+		if not castOnUpdateHandlers[unit] then
+			st.castBar._eqolUFUnit = unit
+			st.castBar:SetScript("OnUpdate", UF.OnCastBarUpdate)
+			castOnUpdateHandlers[unit] = true
+		end
+		updateCastBar(unit)
+		return
+	end
 	st.castInfo = {
 		name = L["Sample Cast"] or "Sample Cast",
 		texture = 136235, -- lightning icon as placeholder
@@ -6303,6 +6867,7 @@ function UF.SetSampleCast(unit)
 		endTime = nowMs + 3000,
 		notInterruptible = false,
 		isChannel = false,
+		isSample = true,
 	}
 	applyCastLayout(cfg, unit)
 	configureCastStatic(unit, resolvedCfg, defc)
@@ -6376,6 +6941,7 @@ function UF.ShowCastInterrupt(unit, event)
 		interruptTex = UFHelper.resolveCastTexture(texKey)
 	end
 	if interruptTex then st.castBar:SetStatusBarTexture(interruptTex) end
+	UF._hideDefaultCastUninterruptibleBar(st)
 	if st.castBar.SetStatusBarDesaturated then st.castBar:SetStatusBarDesaturated(false) end
 	local ir = st.castInterruptFeedbackR
 	local ig = st.castInterruptFeedbackG
@@ -6400,8 +6966,8 @@ function UF.ShowCastInterrupt(unit, event)
 		st.castInterruptFeedbackA = ia
 	end
 	UFHelper.SetCastbarColorWithGradient(st.castBar, nil, ir, ig, ib, ia)
-	st.castBar:SetMinMaxValues(0, 1)
-	st.castBar:SetValue(1)
+	UF._setCastBarMinMaxValues(st, 0, 1)
+	UF._setCastBarValue(st, 1)
 	if st.castDuration then
 		st.castDuration:SetText("")
 		st.castDuration:Hide()
@@ -6613,12 +7179,20 @@ local function setCastInfoFromUnit(unit)
 				local cr, cg, cb, ca = getClassColor(class)
 				if cr then clr = { cr, cg, cb, ca or 1 } end
 			end
-			local nclr = ccfg.notInterruptibleColor or defc.notInterruptibleColor or { 204 / 255, 204 / 255, 204 / 255, 1 }
-			st.castBar:GetStatusBarTexture():SetVertexColorFromBoolean(
-				notInterruptible,
-				CreateColor(nclr[1] or 0.9, nclr[2] or 0.7, nclr[3] or 0.2, nclr[4] or 1),
-				CreateColor(clr[1] or 0.9, clr[2] or 0.7, clr[3] or 0.2, clr[4] or 1)
-			)
+			local tex = st.castBar:GetStatusBarTexture()
+			if st.castUseDefaultArt == true then
+				if tex and tex.SetVertexColor then tex:SetVertexColor(1, 1, 1, 1) end
+			else
+				local nclr = ccfg.notInterruptibleColor or defc.notInterruptibleColor or { 204 / 255, 204 / 255, 204 / 255, 1 }
+				if tex and tex.SetVertexColorFromBoolean then
+					tex:SetVertexColorFromBoolean(
+						notInterruptible,
+						CreateColor(nclr[1] or 0.9, nclr[2] or 0.7, nclr[3] or 0.2, nclr[4] or 1),
+						CreateColor(clr[1] or 0.9, clr[2] or 0.7, clr[3] or 0.2, clr[4] or 1)
+					)
+				end
+			end
+			UF._syncDefaultCastUninterruptibleBar(st, notInterruptible)
 			st.castBar:SetStatusBarDesaturated(false)
 			local showDuration = ccfg.showDuration ~= false and st.castDuration ~= nil
 			local needsOnUpdate = showDuration
@@ -6685,9 +7259,8 @@ local function setCastInfoFromUnit(unit)
 	updateCastBar(unit)
 end
 
-local function getHealthPercent(unit, cur, maxv)
-	if addon.functions and addon.functions.GetHealthPercent then return addon.functions.GetHealthPercent(unit, cur, maxv, true) end
-	if maxv and maxv > 0 then return (cur or 0) / maxv * 100 end
+local function getHealthPercent(unit, cur, maxv, calc)
+	if calc and calc.EvaluateCurrentHealthPercent and CurveConstants and CurveConstants.ScaleTo100 then return calc:EvaluateCurrentHealthPercent(CurveConstants.ScaleTo100) end
 	return nil
 end
 
@@ -6903,6 +7476,115 @@ function UF.getHealthPercentCurveColor(st, unit, hc, defH, maxR, maxG, maxB, max
 	return extractCurveColorRGBA(color)
 end
 
+UF.DataBar = UF.DataBar or {}
+
+function UF.DataBar.IsEnabled(cfg, def)
+	local dcfg = (cfg and cfg.dataBar) or {}
+	local ddef = (def and def.dataBar) or {}
+	local enabled = dcfg.enabled
+	if enabled == nil then enabled = ddef.enabled == true end
+	return enabled == true
+end
+
+function UF.DataBar.GetPosition(cfg, def)
+	local dcfg = (cfg and cfg.dataBar) or {}
+	local ddef = (def and def.dataBar) or {}
+	local position = tostring(dcfg.position or ddef.position or "BELOW"):upper()
+	if position ~= "ABOVE" then position = "BELOW" end
+	return position
+end
+
+function UF.DataBar.ClearTexts(st)
+	if not st then return end
+	if st.dataBarTextLeft then st.dataBarTextLeft:SetText("") end
+	if st.dataBarTextCenter then st.dataBarTextCenter:SetText("") end
+	if st.dataBarTextRight then st.dataBarTextRight:SetText("") end
+end
+
+function UF.DataBar.Hide(st)
+	if not st then return end
+	if st.dataBar then
+		st.dataBar:SetValue(0)
+		st.dataBar:Hide()
+	end
+	UF.DataBar.ClearTexts(st)
+	st._dataBarTextDirty = nil
+end
+
+function UF.DataBar.GetFallbackName(unit)
+	if unit == UNIT.PLAYER then return PLAYER or "Player" end
+	if unit == UNIT.TARGET then return TARGET or "Target" end
+	if unit == UNIT.TARGET_TARGET then return L["Target of Target"] or "Target of Target" end
+	if unit == UNIT.FOCUS then return L["Focus"] or "Focus" end
+	if unit == UNIT.PET then return PET or "Pet" end
+	if isBossUnit(unit) then return L["UFBossFrame"] or "Boss Frame" end
+	return tostring(unit or "")
+end
+
+function UF.DataBar.GetText(mode, unit, cfg, def, cur, maxv, percentVal)
+	mode = tostring(mode or "NONE"):upper()
+	if mode == "NONE" then return "" end
+	if mode == "NAME" then return (UnitName and UnitName(unit)) or UF.DataBar.GetFallbackName(unit) end
+	if mode == "LEVEL" then return (UFHelper and UFHelper.getUnitLevelText and UFHelper.getUnitLevelText(unit, nil, UF.ShouldHideClassificationText(cfg, unit))) or "" end
+	local dcfg = (cfg and cfg.dataBar) or {}
+	local ddef = (def and def.dataBar) or {}
+	local delimiter, delimiter2, delimiter3 = UFHelper.getTextDelimiter(dcfg, ddef), UFHelper.getTextDelimiterSecondary(dcfg, ddef), UFHelper.getTextDelimiterTertiary(dcfg, ddef)
+	if UFHelper.resolveTextDelimiters then delimiter, delimiter2, delimiter3 = UFHelper.resolveTextDelimiters(delimiter, delimiter2, delimiter3) end
+	local levelText
+	if UFHelper.textModeUsesLevel and UFHelper.textModeUsesLevel(mode) then levelText = UFHelper.getUnitLevelText(unit, nil, UF.ShouldHideClassificationText(cfg, unit)) end
+	return UFHelper.formatText(
+		mode,
+		cur or 0,
+		maxv or 0,
+		dcfg.useShortNumbers ~= false,
+		percentVal,
+		delimiter,
+		delimiter2,
+		delimiter3,
+		dcfg.hidePercentSymbol == true,
+		levelText,
+		nil,
+		dcfg.roundPercent == true,
+		true
+	)
+end
+
+function UF.DataBar.Update(cfg, unit)
+	cfg = cfg or (states[unit] and states[unit].cfg) or ensureDB(unit)
+	local st = states[unit]
+	if not st or not st.dataBar then return end
+	local def = defaultsFor(unit) or {}
+	if not cfg or cfg.enabled == false or not UF.DataBar.IsEnabled(cfg, def) then
+		UF.DataBar.Hide(st)
+		return
+	end
+	local inEdit = addon.EditModeLib and addon.EditModeLib.IsInEditMode and addon.EditModeLib:IsInEditMode()
+	local exists = UnitExists and UnitExists(unit)
+	if not exists and not inEdit then
+		UF.DataBar.Hide(st)
+		return
+	end
+	local dcfg = cfg.dataBar or {}
+	local ddef = def.dataBar or {}
+	st.dataBar:SetMinMaxValues(0, 1)
+	UF.SetStatusBarValue(st.dataBar, 1, false, true)
+	local color = dcfg.color or ddef.color or { 0.18, 0.18, 0.22, 1 }
+	local r, g, b, a = color[1] or 0.18, color[2] or 0.18, color[3] or 0.22, color[4] or 1
+	if dcfg.useClassColor == true then
+		local class
+		if UnitIsPlayer and UnitIsPlayer(unit) then
+			class = select(2, UnitClass(unit))
+		elseif unit == UNIT.PET then
+			class = (addon.variables and addon.variables.unitClass) or select(2, UnitClass(UNIT.PLAYER))
+		end
+		local cr, cg, cb, ca = getClassColor(class)
+		if cr then r, g, b, a = cr, cg, cb, ca or a end
+	end
+	st.dataBar:SetStatusBarColor(r, g, b, a)
+	st.dataBar:Show()
+	st._dataBarTextDirty = true
+end
+
 local applyBossEditSample
 
 local function updateHealth(cfg, unit)
@@ -6933,6 +7615,24 @@ local function updateHealth(cfg, unit)
 	end
 	st.health:SetValue(cur or 0, interpolation)
 	local hc = cfg.health or {}
+	local reverseHealth = hc.reverseFill
+	if reverseHealth == nil then reverseHealth = defH.reverseFill == true end
+	UF.ApplyHealthBackdrop(st, unit, hc, defH, reverseHealth)
+	if st.tempMaxHealthLoss then
+		local showTempLoss = hc.tempMaxHealthLossEnabled
+		if showTempLoss == nil then showTempLoss = defH.tempMaxHealthLossEnabled ~= false end
+		if showTempLoss then
+			local loss = GetUnitTotalModifiedMaxHealthPercent(unit) or 0
+			st.tempMaxHealthLoss:SetMinMaxValues(0, 1)
+			st.tempMaxHealthLoss:SetValue(loss, interpolation)
+			if st.tempMaxHealthLoss.SetAlpha then st.tempMaxHealthLoss:SetAlpha(loss > 0 and 1 or 0) end
+			st.tempMaxHealthLoss:Show()
+		else
+			st.tempMaxHealthLoss:SetValue(0, interpolation)
+			if st.tempMaxHealthLoss.SetAlpha then st.tempMaxHealthLoss:SetAlpha(0) end
+			st.tempMaxHealthLoss:Hide()
+		end
+	end
 	local cacheGuid = UnitGUID and UnitGUID(unit) or nil
 	local guidComparable = cacheGuid ~= nil and not (issecretvalue and issecretvalue(cacheGuid))
 	if not guidComparable then
@@ -7091,6 +7791,7 @@ local function updateHealth(cfg, unit)
 		local har, hag, hab, haa = UFHelper.getHealAbsorbColor(hc, defH)
 		st.healAbsorb:SetStatusBarColor(har or 1, hag or 0.3, hab or 0.3, haa or 0.7)
 	end
+	UF.DataBar.Update(cfg, unit)
 	st._healthTextDirty = true
 end
 
@@ -7166,6 +7867,7 @@ local function updatePower(cfg, unit, allowVisibilityChanges)
 				if st.powerGroup and st.powerGroup.SetAlpha then st.powerGroup:SetAlpha(1) end
 			end
 			st._powerTextDirty = true
+			UF.DataBar.Update(cfg, unit)
 		end
 	end
 	if secondaryBar then
@@ -7230,6 +7932,7 @@ local function updatePower(cfg, unit, allowVisibilityChanges)
 			st._secondaryPowerTextDirty = true
 		end
 	end
+	if not (bar and powerEnabled) then UF.DataBar.Update(cfg, unit) end
 end
 
 local function layoutTexts(bar, leftFS, centerFS, rightFS, cfg, width)
@@ -7266,30 +7969,32 @@ function UF.syncAbsorbFrameLevels(st)
 	if not st or not st.health then return end
 	local health = st.health
 	local healthLevel = (health.GetFrameLevel and health:GetFrameLevel()) or 0
-	local overlayLevel = max(0, healthLevel + 1)
+	local tempLossLevel = max(0, healthLevel)
+	local overlayClipLevel = max(0, healthLevel + 1)
+	local absorbLevel = max(0, healthLevel + 1)
+	local incomingHealLevel = max(0, healthLevel + 2)
+	local healAbsorbLevel = max(0, healthLevel + 3)
 	local healthStrata = health.GetFrameStrata and health:GetFrameStrata()
 	local borderFrame = st.barGroup and st.barGroup._ufBorder
-	if borderFrame and borderFrame.GetFrameLevel then
-		local borderLevel = borderFrame:GetFrameLevel() or (overlayLevel + 1)
-		if overlayLevel >= borderLevel then overlayLevel = max(0, borderLevel - 1) end
-	end
-	local function apply(frame)
+	local function apply(frame, level)
 		if not frame then return end
 		if healthStrata and frame.SetFrameStrata and frame:GetFrameStrata() ~= healthStrata then frame:SetFrameStrata(healthStrata) end
-		if frame.SetFrameLevel and frame:GetFrameLevel() ~= overlayLevel then frame:SetFrameLevel(overlayLevel) end
+		if frame.SetFrameLevel and frame:GetFrameLevel() ~= level then frame:SetFrameLevel(level) end
 	end
-	apply(health.absorbClip)
-	apply(health._healthFillClip)
-	apply(st.incomingHeal)
-	apply(st.absorb)
-	apply(st.absorb2)
-	apply(st.healAbsorb)
+	apply(health.absorbClip, overlayClipLevel)
+	apply(health._healthFillClip, overlayClipLevel)
+	apply(health._eqolDirectOverlayClip, overlayClipLevel)
+	apply(st.tempMaxHealthLoss, tempLossLevel)
+	apply(st.absorb, absorbLevel)
+	apply(st.absorb2, absorbLevel)
+	apply(st.incomingHeal, incomingHealLevel)
+	apply(st.healAbsorb, healAbsorbLevel)
 	if borderFrame and st.barGroup and borderFrame.SetFrameStrata and st.barGroup.GetFrameStrata then
 		local borderStrata = st.barGroup:GetFrameStrata()
 		if borderStrata and borderFrame:GetFrameStrata() ~= borderStrata then borderFrame:SetFrameStrata(borderStrata) end
 	end
 	if borderFrame and borderFrame.SetFrameLevel then
-		local desiredBorderLevel = overlayLevel + 1
+		local desiredBorderLevel = max(tempLossLevel, absorbLevel, incomingHealLevel, healAbsorbLevel) + 1
 		if borderFrame:GetFrameLevel() < desiredBorderLevel then borderFrame:SetFrameLevel(desiredBorderLevel) end
 	end
 end
@@ -7323,6 +8028,12 @@ normalizeStrataToken = function(value)
 	local token = string.upper(value)
 	if STRATA_INDEX[token] then return token end
 	return nil
+end
+
+function AuraUtil.getRaisedStrataToken(baseStrata)
+	local token = normalizeStrataToken(baseStrata) or "LOW"
+	local index = STRATA_INDEX[token] or STRATA_INDEX.LOW
+	return STRATA_ORDER[index + 1] or STRATA_ORDER[index] or "MEDIUM"
 end
 
 function AuraUtil.syncAuraContainerLayer(container, parent)
@@ -7372,34 +8083,62 @@ function AuraUtil.syncAuraButtonLayer(btn, container, ac)
 	if UFHelper and UFHelper.syncAuraBorderFrameLayer then UFHelper.syncAuraBorderFrameLayer(btn) end
 end
 
+function AuraUtil.getFrameZOrder(frame)
+	if not frame then return 0, 0 end
+	local strataToken = frame.GetFrameStrata and frame:GetFrameStrata() or "MEDIUM"
+	local strata = STRATA_INDEX[strataToken] or STRATA_INDEX.MEDIUM or 3
+	local level = frame.GetFrameLevel and frame:GetFrameLevel() or 0
+	return strata, level
+end
+
+function AuraUtil.getTopTextAnchor(...)
+	local topFrame
+	local topStrata = -1
+	local topLevel = -1
+	for i = 1, select("#", ...) do
+		local frame = select(i, ...)
+		if frame and (not frame.IsShown or frame:IsShown()) then
+			local strata, level = AuraUtil.getFrameZOrder(frame)
+			if strata > topStrata or (strata == topStrata and level > topLevel) then
+				topFrame = frame
+				topStrata = strata
+				topLevel = level
+			end
+		end
+	end
+	return topFrame
+end
+
 local function syncTextFrameLevels(st)
 	if not st then return end
 	local scfg = (st.cfg and st.cfg.status) or {}
 	local healthAnchor = getHealthTextAnchor(st) or st.health
 	local statusAnchor = getHealthTextAnchor(st, true) or st.status or healthAnchor
-	setFrameLevelAbove(st.healthTextLayer, healthAnchor, 5)
+	local textAnchor = AuraUtil.getTopTextAnchor(healthAnchor, statusAnchor, st.power, st.powerGroup, st.secondaryPower, st.secondaryPowerGroup, st.dataBar) or statusAnchor or healthAnchor
+	setFrameLevelAbove(st.healthTextLayer, textAnchor, 5)
 	setFrameLevelAbove(st.powerTextLayer, st.power, 5)
 	if st.secondaryPowerTextLayer and st.secondaryPower then setFrameLevelAbove(st.secondaryPowerTextLayer, st.secondaryPower, 5) end
-	setFrameLevelAbove(st.statusTextLayer, statusAnchor, 5)
+	if st.dataBarTextLayer and st.dataBar then setFrameLevelAbove(st.dataBarTextLayer, st.dataBar, 5) end
+	setFrameLevelAbove(st.statusTextLayer, textAnchor, 5)
 	local nameLayer = st.nameTextLayer or st.statusTextLayer
 	local nameLevelOffset = tonumber(scfg.nameFrameLevelOffset)
 	if nameLevelOffset == nil then nameLevelOffset = 5 end
-	setFrameLevelAbove(nameLayer, statusAnchor, nameLevelOffset)
+	setFrameLevelAbove(nameLayer, textAnchor, nameLevelOffset)
 	if nameLayer and nameLayer.SetFrameStrata then
 		local nameStrata = normalizeStrataToken(scfg.nameStrata)
 		local fallbackStrata
-		if statusAnchor and statusAnchor.GetFrameStrata then fallbackStrata = statusAnchor:GetFrameStrata() end
+		if textAnchor and textAnchor.GetFrameStrata then fallbackStrata = textAnchor:GetFrameStrata() end
 		if not fallbackStrata and st.status and st.status.GetFrameStrata then fallbackStrata = st.status:GetFrameStrata() end
 		if nameStrata or fallbackStrata then nameLayer:SetFrameStrata(nameStrata or fallbackStrata) end
 	end
 	local levelLayer = st.levelTextLayer or st.statusTextLayer
 	local levelOffset = tonumber(scfg.levelFrameLevelOffset)
 	if levelOffset == nil then levelOffset = 5 end
-	setFrameLevelAbove(levelLayer, statusAnchor, levelOffset)
+	setFrameLevelAbove(levelLayer, textAnchor, levelOffset)
 	if levelLayer and levelLayer.SetFrameStrata then
 		local levelStrata = normalizeStrataToken(scfg.levelStrata)
 		local fallbackStrata
-		if statusAnchor and statusAnchor.GetFrameStrata then fallbackStrata = statusAnchor:GetFrameStrata() end
+		if textAnchor and textAnchor.GetFrameStrata then fallbackStrata = textAnchor:GetFrameStrata() end
 		if not fallbackStrata and st.status and st.status.GetFrameStrata then fallbackStrata = st.status:GetFrameStrata() end
 		if levelStrata or fallbackStrata then levelLayer:SetFrameStrata(levelStrata or fallbackStrata) end
 	end
@@ -7431,6 +8170,7 @@ local function hookTextFrameLevels(st)
 	hookFrame(st.barGroup)
 	hookFrame(st.health)
 	hookFrame(st.power)
+	hookFrame(st.dataBar)
 	hookFrame(st.secondaryPower)
 	hookFrame(st.status)
 	hookFrame(st.castBar)
@@ -7599,11 +8339,18 @@ local function updateStatus(cfg, unit)
 	local showName = scfg.enabled ~= false
 	local showLevel = shouldShowLevel(scfg, unit)
 	local showUnitStatus = usCfg.enabled == true
-	local showStatus = showName or showLevel or showUnitStatus or (unit == UNIT.PLAYER and ciCfg.enabled ~= false)
+	local showCombatIndicator = UF.SupportsCombatIndicator(unit) and ciCfg.enabled ~= false
+	local ttDef = defStatus.targetTargetName or {}
+	local ttCfg = scfg.targetTargetName or ttDef
+	local showTargetTargetName = unit == UNIT.TARGET and (ttCfg.enabled == true or scfg.showTargetTargetName == true)
+	local showStatus = showName or showLevel or showUnitStatus or showCombatIndicator or showTargetTargetName
+	local leaderCfg = cfg.leaderIcon or (def and def.leaderIcon) or {}
+	local showLeaderIndicator = (unit == UNIT.PLAYER or unit == UNIT.TARGET or unit == UNIT.FOCUS) and leaderCfg.enabled == true
+	local showStatusFrame = showStatus or showLeaderIndicator
 	local statusHeight = UF.ResolveStatusHeight(cfg, def, showStatus)
 	if statusHeight <= 0 then statusHeight = 0.001 end
 	st.status:SetHeight(statusHeight)
-	st.status:SetShown(showStatus)
+	st.status:SetShown(showStatusFrame)
 	local nameFontSize = scfg.nameFontSize or scfg.fontSize or 14
 	local levelFontSize = scfg.levelFontSize or scfg.fontSize or 14
 	local statusFontSize = scfg.fontSize or nameFontSize or levelFontSize or 14
@@ -7614,7 +8361,30 @@ local function updateStatus(cfg, unit)
 		st.nameText:SetPoint(nameAnchor, st.status, nameAnchor, (scfg.nameOffset and scfg.nameOffset.x) or 0, (scfg.nameOffset and scfg.nameOffset.y) or 0)
 		if st.nameText.SetJustifyH then st.nameText:SetJustifyH(nameAnchor) end
 		st.nameText:SetShown(showName)
-		UFHelper.applyNameCharLimit(st, scfg, defStatus)
+		local maxChars = scfg.nameMaxChars
+		if maxChars == nil then maxChars = defStatus.nameMaxChars end
+		maxChars = tonumber(maxChars) or 0
+		if maxChars > 0 then
+			UFHelper.applyNameCharLimit(st, scfg, defStatus)
+		else
+			if st.nameText.SetMaxLines then st.nameText:SetMaxLines(1) end
+			if st.nameText.SetWordWrap then st.nameText:SetWordWrap(false) end
+			if st.nameText.SetNonSpaceWrap then st.nameText:SetNonSpaceWrap(false) end
+
+			local nameWidth = (st.status and st.status.GetWidth and st.status:GetWidth()) or 0
+			if not nameWidth or nameWidth <= 1 then nameWidth = (st.frame and st.frame.GetWidth and st.frame:GetWidth()) or 0 end
+			if not nameWidth or nameWidth <= 1 then nameWidth = max(MIN_WIDTH, tonumber(cfg.width or def.width) or 220) end
+			st.nameText:SetWidth(max(1, nameWidth))
+			st._eqolNameTextWidth = nil
+		end
+	end
+	if st.targetTargetText then
+		UFHelper.applyFont(st.targetTargetText, scfg.font, ttCfg.fontSize or nameFontSize, scfg.fontOutline)
+		local ttAnchor = ttCfg.anchor or "RIGHT"
+		st.targetTargetText:ClearAllPoints()
+		st.targetTargetText:SetPoint(ttAnchor, st.status, ttAnchor, (ttCfg.offset and ttCfg.offset.x) or 0, (ttCfg.offset and ttCfg.offset.y) or 0)
+		if st.targetTargetText.SetJustifyH then st.targetTargetText:SetJustifyH(ttAnchor) end
+		st.targetTargetText:SetShown(showTargetTargetName)
 	end
 	if st.levelText then
 		UFHelper.applyFont(st.levelText, scfg.font, levelFontSize, scfg.fontOutline)
@@ -7649,20 +8419,41 @@ local function updateStatus(cfg, unit)
 	updateUnitStatusIndicator(cfg, unit)
 end
 
-local function updateCombatIndicator(cfg)
-	local st = states[UNIT.PLAYER]
+local function updateCombatIndicator(cfg, unit)
+	unit = unit or UNIT.PLAYER
+	if not UF.SupportsCombatIndicator(unit) then return end
+	local st = states[unit]
 	if not st or not st.combatIcon or not st.status then return end
-	local scfg = (cfg and cfg.status) or (defaultsFor(UNIT.PLAYER) and defaultsFor(UNIT.PLAYER).status) or {}
-	local ccfg = scfg.combatIndicator or {}
+	local def = defaultsFor(unit)
+	local defStatus = (def and def.status) or {}
+	local scfg = (cfg and cfg.status) or defStatus
+	local ccfg = scfg.combatIndicator or defStatus.combatIndicator or {}
 	if ccfg.enabled == false then
 		st.combatIcon:Hide()
 		return
 	end
-	st.combatIcon:SetTexture("Interface\\Addons\\EnhanceQoL\\Assets\\CombatIndicator.tga")
+	local option = UF.GetCombatIndicatorIconDefinition((ccfg and ccfg.icon) or UF.COMBAT_INDICATOR_DEFAULT_ICON)
+	local atlas = option and option.atlas
+	local appliedAtlas = false
+	if atlas and st.combatIcon.SetAtlas then
+		if C_Texture and C_Texture.GetAtlasInfo and not C_Texture.GetAtlasInfo(atlas) then
+			appliedAtlas = false
+		else
+			st.combatIcon:SetTexture(nil)
+			local ok, result = pcall(st.combatIcon.SetAtlas, st.combatIcon, atlas, false)
+			appliedAtlas = ok and result ~= false
+		end
+	end
+	if not appliedAtlas then
+		if st.combatIcon.SetAtlas then pcall(st.combatIcon.SetAtlas, st.combatIcon, nil) end
+		st.combatIcon:SetTexture((option and option.texture) or UF.COMBAT_INDICATOR_DEFAULT_TEXTURE)
+		st.combatIcon:SetTexCoord(0, 1, 0, 1)
+	end
 	st.combatIcon:SetSize(ccfg.size or 18, ccfg.size or 18)
 	st.combatIcon:ClearAllPoints()
 	st.combatIcon:SetPoint("TOP", st.status, "TOP", (ccfg.offset and ccfg.offset.x) or -8, (ccfg.offset and ccfg.offset.y) or 0)
-	if (UnitAffectingCombat and UnitAffectingCombat(UNIT.PLAYER)) or addon.EditModeLib:IsInEditMode() then
+	local inEditMode = addon.EditModeLib and addon.EditModeLib.IsInEditMode and addon.EditModeLib:IsInEditMode()
+	if inEditMode or (UnitExists and UnitExists(unit) and UnitAffectingCombat and UnitAffectingCombat(unit)) then
 		st.combatIcon:Show()
 	else
 		st.combatIcon:Hide()
@@ -7858,8 +8649,11 @@ local function layoutFrame(cfg, unit)
 	local showName = scfg.enabled ~= false
 	local showLevel = shouldShowLevel(scfg, unit)
 	local showUnitStatus = usCfg.enabled == true
-	local showStatus = showName or showLevel or showUnitStatus or (unit == UNIT.PLAYER and ciCfg.enabled ~= false)
+	local showCombatIndicator = UF.SupportsCombatIndicator(unit) and ciCfg.enabled ~= false
+	local showStatus = showName or showLevel or showUnitStatus or showCombatIndicator
 	local pcfg = cfg.power or {}
+	local hcfg = cfg.health or {}
+	local hdef = def.health or {}
 	local powerDef = def.power or {}
 	local secondaryCfg = cfg.secondaryPower or {}
 	local secondaryDef = def.secondaryPower or {}
@@ -7882,6 +8676,17 @@ local function layoutFrame(cfg, unit)
 	local powerHeight = powerEnabled and (cfg.powerHeight or def.powerHeight) or 0
 	local secondaryPowerHeight = secondaryPowerEnabled and (cfg.secondaryPowerHeight or def.secondaryPowerHeight or cfg.powerHeight or def.powerHeight) or 0
 	local stackHeight = healthHeight + (powerDetached and 0 or powerHeight) + (secondaryPowerDetached and 0 or secondaryPowerHeight)
+	local dataBarEnabled = UF.DataBar.IsEnabled(cfg, def)
+	local dataBarCfg = cfg.dataBar or {}
+	local dataBarDef = def.dataBar or {}
+	local dataBarHeight = dataBarEnabled and max(1, tonumber(dataBarCfg.height or dataBarDef.height or 16) or 16) or 0
+	local dataBarGap = dataBarEnabled and (tonumber(dataBarCfg.gap or dataBarDef.gap or 0) or 0) or 0
+	if dataBarEnabled then
+		if dataBarGap < -dataBarHeight then dataBarGap = -dataBarHeight end
+		if dataBarGap > 40 then dataBarGap = 40 end
+	end
+	local dataBarPosition = UF.DataBar.GetPosition(cfg, def)
+	local dataBarOuterHeight = dataBarEnabled and (dataBarHeight + dataBarGap) or 0
 	local borderCfg = cfg.border or {}
 	local borderDef = def.border or {}
 	local borderEnabled = UF._isFrameBorderEnabled(borderCfg, borderDef, true)
@@ -7921,7 +8726,8 @@ local function layoutFrame(cfg, unit)
 	local statusOffsetRight = -barAreaOffsetRight
 	st._portraitSpace = portraitSpace
 	st._portraitCenterOffset = barCenterOffset
-	st.frame:SetWidth(width + borderOffset * 2 + portraitSpace)
+	local frameWidth = width + borderOffset * 2 + portraitSpace
+	st.frame:SetWidth(frameWidth)
 	local frameStrata = normalizeStrataToken(cfg.strata) or normalizeStrataToken(def.strata) or "LOW"
 	if st.frame.GetFrameStrata and st.frame:GetFrameStrata() ~= frameStrata then st.frame:SetFrameStrata(frameStrata) end
 	local selection = st.frame.Selection
@@ -7945,11 +8751,16 @@ local function layoutFrame(cfg, unit)
 	local frameLevel = (st.frame and st.frame.GetFrameLevel and st.frame:GetFrameLevel()) or 0
 	if st.status.SetFrameStrata and st.status:GetFrameStrata() ~= frameStrata then st.status:SetFrameStrata(frameStrata) end
 	if st.barGroup and st.barGroup.SetFrameStrata and st.barGroup:GetFrameStrata() ~= frameStrata then st.barGroup:SetFrameStrata(frameStrata) end
+	if st.healthContainer and st.healthContainer.SetFrameStrata and st.healthContainer:GetFrameStrata() ~= frameStrata then st.healthContainer:SetFrameStrata(frameStrata) end
 	if st.health.SetFrameStrata and st.health:GetFrameStrata() ~= frameStrata then st.health:SetFrameStrata(frameStrata) end
+	if st.dataBar and st.dataBar.SetFrameStrata and st.dataBar:GetFrameStrata() ~= frameStrata then st.dataBar:SetFrameStrata(frameStrata) end
 	if st.status.SetFrameLevel then st.status:SetFrameLevel(frameLevel + 1) end
 	if st.barGroup and st.barGroup.SetFrameLevel then st.barGroup:SetFrameLevel(frameLevel + 1) end
+	if st.healthContainer and st.healthContainer.SetFrameLevel then st.healthContainer:SetFrameLevel(frameLevel + 2) end
 	if st.health.SetFrameLevel then st.health:SetFrameLevel(frameLevel + 2) end
+	if st.dataBar and st.dataBar.SetFrameLevel then st.dataBar:SetFrameLevel(frameLevel + 1) end
 	st.status:SetHeight(statusHeight)
+	if st.healthContainer then st.healthContainer:SetSize(width, healthHeight) end
 	st.health:SetSize(width, healthHeight)
 	local detachedGrowFromCenter = powerDetached and pcfg.detachedGrowFromCenter == true
 	local detachedMatchHealthWidth = powerDetached and pcfg.detachedMatchHealthWidth == true
@@ -7968,11 +8779,13 @@ local function layoutFrame(cfg, unit)
 
 	st.status:ClearAllPoints()
 	if st.barGroup then st.barGroup:ClearAllPoints() end
+	if st.healthContainer then st.healthContainer:ClearAllPoints() end
 	st.health:ClearAllPoints()
 	st.power:ClearAllPoints()
 	if st.powerGroup then st.powerGroup:ClearAllPoints() end
 	if st.secondaryPower then st.secondaryPower:ClearAllPoints() end
 	if st.secondaryPowerGroup then st.secondaryPowerGroup:ClearAllPoints() end
+	if st.dataBar then st.dataBar:ClearAllPoints() end
 
 	local anchor = cfg.anchor or def.anchor or defaults.player.anchor
 	if isBossUnit(unit) then
@@ -7986,13 +8799,25 @@ local function layoutFrame(cfg, unit)
 	end
 
 	local y = 0
+	if st.dataBar then
+		if dataBarEnabled then
+			st.dataBar:SetHeight(dataBarHeight)
+			st.dataBar:SetPoint("TOPLEFT", st.frame, "TOPLEFT", 0, dataBarPosition == "ABOVE" and 0 or -(statusHeight + stackHeight + borderOffset * 2 + dataBarGap))
+			st.dataBar:SetPoint("TOPRIGHT", st.frame, "TOPRIGHT", 0, dataBarPosition == "ABOVE" and 0 or -(statusHeight + stackHeight + borderOffset * 2 + dataBarGap))
+			st.dataBar:Show()
+			if dataBarPosition == "ABOVE" then y = -dataBarOuterHeight end
+		else
+			UF.DataBar.Hide(st)
+		end
+	end
+	local contentTopY = y
 	if statusHeight > 0 then
-		st.status:SetPoint("TOPLEFT", st.frame, "TOPLEFT", statusOffsetLeft, 0)
-		st.status:SetPoint("TOPRIGHT", st.frame, "TOPRIGHT", statusOffsetRight, 0)
-		y = -statusHeight
+		st.status:SetPoint("TOPLEFT", st.frame, "TOPLEFT", statusOffsetLeft, contentTopY)
+		st.status:SetPoint("TOPRIGHT", st.frame, "TOPRIGHT", statusOffsetRight, contentTopY)
+		y = contentTopY - statusHeight
 	else
-		st.status:SetPoint("TOPLEFT", st.frame, "TOPLEFT", statusOffsetLeft, 0)
-		st.status:SetPoint("TOPRIGHT", st.frame, "TOPRIGHT", statusOffsetRight, 0)
+		st.status:SetPoint("TOPLEFT", st.frame, "TOPLEFT", statusOffsetLeft, contentTopY)
+		st.status:SetPoint("TOPRIGHT", st.frame, "TOPRIGHT", statusOffsetRight, contentTopY)
 	end
 	-- Bars container sits below status; border applied here, not on status
 	local barsHeight = stackHeight + borderOffset * 2
@@ -8005,8 +8830,38 @@ local function layoutFrame(cfg, unit)
 
 	local barInsetLeft = borderOffset + barAreaOffsetLeft
 	local barInsetRight = borderOffset + barAreaOffsetRight
-	st.health:SetPoint("TOPLEFT", st.barGroup or st.frame, "TOPLEFT", barInsetLeft, -borderOffset)
-	st.health:SetPoint("TOPRIGHT", st.barGroup or st.frame, "TOPRIGHT", -barInsetRight, -borderOffset)
+	local healthSlot = st.healthContainer or st.health
+	healthSlot:SetPoint("TOPLEFT", st.barGroup or st.frame, "TOPLEFT", barInsetLeft, -borderOffset)
+	healthSlot:SetPoint("TOPRIGHT", st.barGroup or st.frame, "TOPRIGHT", -barInsetRight, -borderOffset)
+	if st.healthTextLayer then
+		if st.healthTextLayer.GetParent and st.healthTextLayer:GetParent() ~= healthSlot then st.healthTextLayer:SetParent(healthSlot) end
+		st.healthTextLayer:ClearAllPoints()
+		st.healthTextLayer:SetAllPoints(healthSlot)
+	end
+	st.health:ClearAllPoints()
+	if st.tempMaxHealthLoss then
+		st.tempMaxHealthLoss:ClearAllPoints()
+		st.tempMaxHealthLoss:SetAllPoints(healthSlot)
+	end
+	local showTempLoss = hcfg.tempMaxHealthLossEnabled
+	if showTempLoss == nil then showTempLoss = hdef.tempMaxHealthLossEnabled ~= false end
+	if showTempLoss and st.tempMaxHealthLoss and st.tempMaxHealthLoss.GetStatusBarTexture then
+		local reverseHealth = hcfg.reverseFill
+		if reverseHealth == nil then reverseHealth = hdef.reverseFill == true end
+		if reverseHealth then
+			st.health:SetPoint("TOPLEFT", st.tempMaxHealthLoss:GetStatusBarTexture(), "TOPRIGHT")
+			st.health:SetPoint("BOTTOMLEFT", st.tempMaxHealthLoss:GetStatusBarTexture(), "BOTTOMRIGHT")
+			st.health:SetPoint("TOPRIGHT", healthSlot, "TOPRIGHT")
+			st.health:SetPoint("BOTTOMRIGHT", healthSlot, "BOTTOMRIGHT")
+		else
+			st.health:SetPoint("TOPLEFT", healthSlot, "TOPLEFT")
+			st.health:SetPoint("BOTTOMLEFT", healthSlot, "BOTTOMLEFT")
+			st.health:SetPoint("TOPRIGHT", st.tempMaxHealthLoss:GetStatusBarTexture(), "TOPLEFT")
+			st.health:SetPoint("BOTTOMRIGHT", st.tempMaxHealthLoss:GetStatusBarTexture(), "BOTTOMLEFT")
+		end
+	else
+		st.health:SetAllPoints(healthSlot)
+	end
 	if powerDetached then
 		local off = pcfg.offset or {}
 		local ox = off.x or 0
@@ -8017,26 +8872,26 @@ local function layoutFrame(cfg, unit)
 			st.powerGroup:Show()
 			st.powerGroup:SetSize(powerWidth + detachedPowerOffset * 2, powerHeight + detachedPowerOffset * 2)
 			if detachedGrowFromCenter then
-				st.powerGroup:SetPoint("TOP", st.health, "BOTTOM", centerOx, oy + detachedPowerOffset)
+				st.powerGroup:SetPoint("TOP", healthSlot, "BOTTOM", centerOx, oy + detachedPowerOffset)
 				st.power:SetPoint("TOP", st.powerGroup, "TOP", 0, -detachedPowerOffset)
 			else
-				st.powerGroup:SetPoint("TOPLEFT", st.health, "BOTTOMLEFT", ox - detachedPowerOffset, oy + detachedPowerOffset)
+				st.powerGroup:SetPoint("TOPLEFT", healthSlot, "BOTTOMLEFT", ox - detachedPowerOffset, oy + detachedPowerOffset)
 				st.power:SetPoint("TOPLEFT", st.powerGroup, "TOPLEFT", detachedPowerOffset, -detachedPowerOffset)
 			end
 		else
 			if st.powerGroup then st.powerGroup:Hide() end
 			if st.power.GetParent and st.power:GetParent() ~= st.barGroup then st.power:SetParent(st.barGroup) end
 			if detachedGrowFromCenter then
-				st.power:SetPoint("TOP", st.health, "BOTTOM", centerOx, oy)
+				st.power:SetPoint("TOP", healthSlot, "BOTTOM", centerOx, oy)
 			else
-				st.power:SetPoint("TOPLEFT", st.health, "BOTTOMLEFT", ox, oy)
+				st.power:SetPoint("TOPLEFT", healthSlot, "BOTTOMLEFT", ox, oy)
 			end
 		end
 	else
 		if st.powerGroup then st.powerGroup:Hide() end
 		if st.power.GetParent and st.power:GetParent() ~= st.barGroup then st.power:SetParent(st.barGroup) end
-		st.power:SetPoint("TOPLEFT", st.health, "BOTTOMLEFT", 0, 0)
-		st.power:SetPoint("TOPRIGHT", st.health, "BOTTOMRIGHT", 0, 0)
+		st.power:SetPoint("TOPLEFT", healthSlot, "BOTTOMLEFT", 0, 0)
+		st.power:SetPoint("TOPRIGHT", healthSlot, "BOTTOMRIGHT", 0, 0)
 	end
 	if st.secondaryPower then
 		if secondaryPowerDetached then
@@ -8049,25 +8904,25 @@ local function layoutFrame(cfg, unit)
 				st.secondaryPowerGroup:Show()
 				st.secondaryPowerGroup:SetSize(secondaryPowerWidth + detachedSecondaryPowerOffset * 2, secondaryPowerHeight + detachedSecondaryPowerOffset * 2)
 				if secondaryDetachedGrowFromCenter then
-					st.secondaryPowerGroup:SetPoint("TOP", st.health, "BOTTOM", secondaryCenterOx, soy + detachedSecondaryPowerOffset)
+					st.secondaryPowerGroup:SetPoint("TOP", healthSlot, "BOTTOM", secondaryCenterOx, soy + detachedSecondaryPowerOffset)
 					st.secondaryPower:SetPoint("TOP", st.secondaryPowerGroup, "TOP", 0, -detachedSecondaryPowerOffset)
 				else
-					st.secondaryPowerGroup:SetPoint("TOPLEFT", st.health, "BOTTOMLEFT", sox - detachedSecondaryPowerOffset, soy + detachedSecondaryPowerOffset)
+					st.secondaryPowerGroup:SetPoint("TOPLEFT", healthSlot, "BOTTOMLEFT", sox - detachedSecondaryPowerOffset, soy + detachedSecondaryPowerOffset)
 					st.secondaryPower:SetPoint("TOPLEFT", st.secondaryPowerGroup, "TOPLEFT", detachedSecondaryPowerOffset, -detachedSecondaryPowerOffset)
 				end
 			else
 				if st.secondaryPowerGroup then st.secondaryPowerGroup:Hide() end
 				if st.secondaryPower.GetParent and st.secondaryPower:GetParent() ~= st.barGroup then st.secondaryPower:SetParent(st.barGroup) end
 				if secondaryDetachedGrowFromCenter then
-					st.secondaryPower:SetPoint("TOP", st.health, "BOTTOM", secondaryCenterOx, soy)
+					st.secondaryPower:SetPoint("TOP", healthSlot, "BOTTOM", secondaryCenterOx, soy)
 				else
-					st.secondaryPower:SetPoint("TOPLEFT", st.health, "BOTTOMLEFT", sox, soy)
+					st.secondaryPower:SetPoint("TOPLEFT", healthSlot, "BOTTOMLEFT", sox, soy)
 				end
 			end
 		else
 			if st.secondaryPowerGroup then st.secondaryPowerGroup:Hide() end
 			if st.secondaryPower.GetParent and st.secondaryPower:GetParent() ~= st.barGroup then st.secondaryPower:SetParent(st.barGroup) end
-			local secondaryAnchor = st.health
+			local secondaryAnchor = healthSlot
 			if powerEnabled and not powerDetached then secondaryAnchor = st.power end
 			st.secondaryPower:SetPoint("TOPLEFT", secondaryAnchor, "BOTTOMLEFT", 0, 0)
 			st.secondaryPower:SetPoint("TOPRIGHT", secondaryAnchor, "BOTTOMRIGHT", 0, 0)
@@ -8078,7 +8933,7 @@ local function layoutFrame(cfg, unit)
 		local detachedStrata = pcfg.detachedStrata
 		if detachedStrata == nil then detachedStrata = powerDef.detachedStrata end
 		detachedStrata = normalizeStrataToken(detachedStrata)
-		if detachedStrata then powerStrata = detachedStrata end
+		powerStrata = detachedStrata or AuraUtil.getRaisedStrataToken(frameStrata)
 	end
 	if st.power.SetFrameStrata and st.power:GetFrameStrata() ~= powerStrata then st.power:SetFrameStrata(powerStrata) end
 	if st.powerGroup and st.powerGroup.SetFrameStrata and st.powerGroup:GetFrameStrata() ~= powerStrata then st.powerGroup:SetFrameStrata(powerStrata) end
@@ -8087,7 +8942,7 @@ local function layoutFrame(cfg, unit)
 		local detachedStrata = secondaryCfg.detachedStrata
 		if detachedStrata == nil then detachedStrata = secondaryDef.detachedStrata end
 		detachedStrata = normalizeStrataToken(detachedStrata)
-		if detachedStrata then secondaryPowerStrata = detachedStrata end
+		secondaryPowerStrata = detachedStrata or AuraUtil.getRaisedStrataToken(frameStrata)
 	end
 	if st.secondaryPower and st.secondaryPower.SetFrameStrata and st.secondaryPower:GetFrameStrata() ~= secondaryPowerStrata then st.secondaryPower:SetFrameStrata(secondaryPowerStrata) end
 	if st.secondaryPowerGroup and st.secondaryPowerGroup.SetFrameStrata and st.secondaryPowerGroup:GetFrameStrata() ~= secondaryPowerStrata then
@@ -8171,16 +9026,17 @@ local function layoutFrame(cfg, unit)
 		if st.dispelTint.SetOrientation and dispelOrientation then st.dispelTint:SetOrientation(dispelOrientation.VerticalTopToBottom, 0, 0) end
 	end
 
-	local totalHeight = statusHeight + barsHeight
+	local totalHeight = statusHeight + barsHeight + dataBarOuterHeight
 	st.frame:SetHeight(totalHeight)
 	if st.raidIcon then
 		st.raidIcon:ClearAllPoints()
 		st.raidIcon:SetPoint("TOP", st.barGroup or st.frame, "TOP", barCenterOffset or 0, -2)
 	end
 
-	layoutTexts(st.health, st.healthTextLeft, st.healthTextCenter, st.healthTextRight, cfg.health, width)
+	layoutTexts(healthSlot, st.healthTextLeft, st.healthTextCenter, st.healthTextRight, cfg.health, width)
 	layoutTexts(st.power, st.powerTextLeft, st.powerTextCenter, st.powerTextRight, cfg.power, width)
 	if st.secondaryPower then layoutTexts(st.secondaryPower, st.secondaryPowerTextLeft, st.secondaryPowerTextCenter, st.secondaryPowerTextRight, cfg.secondaryPower, width) end
+	if st.dataBar then layoutTexts(st.dataBar, st.dataBarTextLeft, st.dataBarTextCenter, st.dataBarTextRight, cfg.dataBar, frameWidth) end
 	if st.castBar and unit == UNIT.TARGET then applyCastLayout(cfg, unit) end
 
 	-- Apply border only around the bar region wrapper
@@ -8226,7 +9082,6 @@ local function layoutFrame(cfg, unit)
 		st.auraContainer:ClearAllPoints()
 		local acfg = cfg.auraIcons or def.auraIcons or defaults.target.auraIcons or {}
 		local auraRuntime = AuraUtil.getUnitSingleAuraRuntimeConfig(unit, acfg, def and def.auraIcons)
-		local resolvedAuras = auraRuntime.resolved
 		local buffAura = auraRuntime.buff
 		local debuffAura = auraRuntime.debuff
 		local anchor = buffAura.anchor or "BOTTOM"
@@ -8241,35 +9096,21 @@ local function layoutFrame(cfg, unit)
 
 		if st.debuffContainer then
 			st.debuffContainer:ClearAllPoints()
-			local useSeparateDebuffs = resolvedAuras.combineLayout ~= true
 			local danchor = debuffAura.anchor or anchor
 			local defDax, defDay = UF._auraLayout.defaultOffset(danchor)
 			local baseDax = (debuffAura.offset and debuffAura.offset.x)
 			if baseDax == nil then baseDax = defDax end
-			if baseDax == nil then baseDax = defDax end
 			local baseDay = (debuffAura.offset and debuffAura.offset.y)
 			if baseDay == nil then baseDay = defDay end
-			if useSeparateDebuffs then
-				UF._auraLayout.positionContainer(st.debuffContainer, danchor, st.barGroup, baseDax, baseDay, barAreaOffsetLeft, barAreaOffsetRight)
-				st.debuffContainer:SetWidth(width + borderOffset * 2)
-				AuraUtil.syncAuraContainerLayer(st.debuffContainer, st.frame)
-			else
-				-- If not separating, keep the debuff container collapsed
-				st.debuffContainer:SetPoint("TOPLEFT", st.auraContainer, "TOPLEFT", 0, 0)
-				st.debuffContainer:SetWidth(0.001)
-				st.debuffContainer:SetHeight(0.001)
-				AuraUtil.syncAuraContainerLayer(st.debuffContainer, st.frame)
-				st.debuffContainer:Hide()
-			end
+			UF._auraLayout.positionContainer(st.debuffContainer, danchor, st.barGroup, baseDax, baseDay, barAreaOffsetLeft, barAreaOffsetRight)
+			st.debuffContainer:SetWidth(width + borderOffset * 2)
+			AuraUtil.syncAuraContainerLayer(st.debuffContainer, st.frame)
 		end
 
 		if st.auraButtons then
 			for i = 1, #st.auraButtons do
 				local btn = st.auraButtons[i]
-				if btn then
-					local buttonStyle = (resolvedAuras.combineLayout == true and btn.isDebuff) and debuffAura or buffAura
-					AuraUtil.syncAuraButtonLayer(btn, st.auraContainer, buttonStyle)
-				end
+				if btn then AuraUtil.syncAuraButtonLayer(btn, st.auraContainer, buffAura) end
 			end
 		end
 		if st.debuffButtons and st.debuffContainer then
@@ -8283,6 +9124,12 @@ local function layoutFrame(cfg, unit)
 end
 
 local refreshNameAndLevelSoon
+
+function UF.ShouldDesaturateHealthTexture(hc)
+	hc = hc or {}
+	local textureKey = hc.texture
+	return hc.useClassColor == true or textureKey == nil or textureKey == "" or textureKey == "DEFAULT"
+end
 
 local function ensureFrames(unit)
 	local info = UNITS[unit]
@@ -8343,11 +9190,22 @@ local function ensureFrames(unit)
 	st.frame:SetClampedToScreen(true)
 	st.status = _G[info.statusName] or CreateFrame("Frame", info.statusName, st.frame)
 	st.barGroup = st.barGroup or CreateFrame("Frame", nil, st.frame, "BackdropTemplate")
+	st.healthContainer = st.healthContainer or CreateFrame("Frame", nil, st.barGroup, "BackdropTemplate")
 	st.health = _G[info.healthName] or CreateFrame("StatusBar", info.healthName, st.barGroup, "BackdropTemplate")
-	if st.health.SetStatusBarDesaturated then st.health:SetStatusBarDesaturated(true) end
+	if st.health.GetParent and st.health:GetParent() ~= st.healthContainer then st.health:SetParent(st.healthContainer) end
+	local initialCfg = ensureDB(unit)
+	if st.health.SetStatusBarDesaturated then st.health:SetStatusBarDesaturated(UF.ShouldDesaturateHealthTexture(initialCfg and initialCfg.health)) end
+	st.tempMaxHealthLoss = st.tempMaxHealthLoss or CreateFrame("StatusBar", info.healthName .. "TempMaxHealthLoss", st.healthContainer, "BackdropTemplate")
+	if st.tempMaxHealthLoss.SetStatusBarDesaturated then st.tempMaxHealthLoss:SetStatusBarDesaturated(false) end
 	st.power = _G[info.powerName] or CreateFrame("StatusBar", info.powerName, st.barGroup, "BackdropTemplate")
 	st.powerGroup = st.powerGroup or CreateFrame("Frame", nil, st.frame, "BackdropTemplate")
 	st.powerGroup:Hide()
+	st.dataBar = st.dataBar or CreateFrame("StatusBar", info.healthName .. "DataBar", st.frame, "BackdropTemplate")
+	if st.dataBar.GetParent and st.dataBar:GetParent() ~= st.frame then st.dataBar:SetParent(st.frame) end
+	st.dataBar:EnableMouse(false)
+	st.dataBar:SetMinMaxValues(0, 1)
+	st.dataBar:SetValue(0)
+	st.dataBar:Hide()
 	if info.secondaryPowerName then
 		st.secondaryPower = _G[info.secondaryPowerName] or CreateFrame("StatusBar", info.secondaryPowerName, st.barGroup, "BackdropTemplate")
 		st.secondaryPowerGroup = st.secondaryPowerGroup or CreateFrame("Frame", nil, st.frame, "BackdropTemplate")
@@ -8385,6 +9243,10 @@ local function ensureFrames(unit)
 	if st.portraitBg and st.portraitBg:GetParent() ~= st.portraitHolder then st.portraitBg:SetParent(st.portraitHolder) end
 	if st.portraitHolder and st.barGroup and st.portraitHolder:GetParent() ~= st.barGroup then st.portraitHolder:SetParent(st.barGroup) end
 	if st.portraitSeparator and st.barGroup and st.portraitSeparator:GetParent() ~= st.barGroup then st.portraitSeparator:SetParent(st.barGroup) end
+	if st.portrait and st.portraitHolder then
+		st.frame.portrait = st.portrait
+		st.frame.portraitHolder = st.portraitHolder
+	end
 
 	local allowAbsorb = not (info and info.disableAbsorb)
 	if allowAbsorb then
@@ -8431,15 +9293,20 @@ local function ensureFrames(unit)
 		st.castIcon = st.castIconHolder:CreateTexture(nil, "ARTWORK")
 		st.castIcon:SetAllPoints(st.castIconHolder)
 		st.castIcon:SetTexCoord(0.08, 0.92, 0.08, 0.92)
-		st.castBar:SetMinMaxValues(0, 1)
-		st.castBar:SetValue(0)
+		UF._setCastBarMinMaxValues(st, 0, 1)
+		UF._setCastBarValue(st, 0)
 		st.castBar:Hide()
 	end
 
-	st.healthTextLayer = st.healthTextLayer or CreateFrame("Frame", nil, st.health)
-	st.healthTextLayer:SetAllPoints(st.health)
+	local healthTextParent = st.healthContainer or st.health
+	st.healthTextLayer = st.healthTextLayer or CreateFrame("Frame", nil, healthTextParent)
+	if st.healthTextLayer.GetParent and st.healthTextLayer:GetParent() ~= healthTextParent then st.healthTextLayer:SetParent(healthTextParent) end
+	st.healthTextLayer:SetAllPoints(healthTextParent)
 	st.powerTextLayer = st.powerTextLayer or CreateFrame("Frame", nil, st.power)
 	st.powerTextLayer:SetAllPoints(st.power)
+	st.dataBarTextLayer = st.dataBarTextLayer or CreateFrame("Frame", nil, st.dataBar)
+	st.dataBarTextLayer:SetAllPoints(st.dataBar)
+	st.dataBarTextLayer:EnableMouse(false)
 	if st.secondaryPower then
 		st.secondaryPowerTextLayer = st.secondaryPowerTextLayer or CreateFrame("Frame", nil, st.secondaryPower)
 		st.secondaryPowerTextLayer:SetAllPoints(st.secondaryPower)
@@ -8469,6 +9336,9 @@ local function ensureFrames(unit)
 	st.powerTextLeft = st.powerTextLayer:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
 	st.powerTextCenter = st.powerTextLayer:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
 	st.powerTextRight = st.powerTextLayer:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+	st.dataBarTextLeft = st.dataBarTextLayer:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+	st.dataBarTextCenter = st.dataBarTextLayer:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+	st.dataBarTextRight = st.dataBarTextLayer:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
 	if st.secondaryPowerTextLayer then
 		st.secondaryPowerTextLeft = st.secondaryPowerTextLayer:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
 		st.secondaryPowerTextCenter = st.secondaryPowerTextLayer:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
@@ -8476,6 +9346,10 @@ local function ensureFrames(unit)
 	end
 	st.nameText = st.nameText or st.nameTextLayer:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
 	if st.nameText.GetParent and st.nameText:GetParent() ~= st.nameTextLayer then st.nameText:SetParent(st.nameTextLayer) end
+	if unit == UNIT.TARGET then
+		st.targetTargetText = st.targetTargetText or st.nameTextLayer:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+		if st.targetTargetText.GetParent and st.targetTargetText:GetParent() ~= st.nameTextLayer then st.targetTargetText:SetParent(st.nameTextLayer) end
+	end
 	st.levelText = st.levelText or st.levelTextLayer:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
 	if st.levelText.GetParent and st.levelText:GetParent() ~= st.levelTextLayer then st.levelText:SetParent(st.levelTextLayer) end
 	st.unitStatusText = st.statusTextLayer:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
@@ -8504,10 +9378,11 @@ local function ensureFrames(unit)
 		st.classificationIcon:SetSize(16, 16)
 		st.classificationIcon:Hide()
 	end
-	if unit == UNIT.PLAYER then
-		st.combatIcon = st.statusTextLayer:CreateTexture("EQOLUFPlayerCombatIcon", "OVERLAY")
-		ensureRestLoop(st)
+	if UF.SupportsCombatIndicator(unit) then
+		st.combatIcon = st.combatIcon or st.statusTextLayer:CreateTexture(nil, "OVERLAY")
+		if st.combatIcon.GetParent and st.combatIcon:GetParent() ~= st.statusTextLayer then st.combatIcon:SetParent(st.statusTextLayer) end
 	end
+	if unit == UNIT.PLAYER then ensureRestLoop(st) end
 
 	if unit == UNIT.PLAYER or unit == "target" or unit == UNIT.FOCUS or isBossUnit(unit) then
 		st.auraContainer = CreateFrame("Frame", nil, st.frame)
@@ -8543,41 +9418,24 @@ local function applyBars(cfg, unit)
 		if unit == UNIT.PLAYER and UFHelper and UFHelper.IsPrimaryPowerAllowed then powerEnabled = UFHelper.IsPrimaryPowerAllowed(pcfg, defP, powerToken, powerEnum, unit) ~= false end
 	end
 	local healthHeight = cfg.healthHeight or def.healthHeight or (st.health.GetHeight and st.health:GetHeight()) or 0
+	local healthLayoutWidth = max(MIN_WIDTH, cfg.width or def.width or (st.health.GetWidth and st.health:GetWidth()) or 0)
 	st.health:SetStatusBarTexture(UFHelper.resolveTexture(hc.texture))
-	if st.health.SetStatusBarDesaturated then st.health:SetStatusBarDesaturated(true) end
+	if st.health.SetStatusBarDesaturated then st.health:SetStatusBarDesaturated(UF.ShouldDesaturateHealthTexture(hc)) end
 	UFHelper.configureSpecialTexture(st.health, "HEALTH", hc.texture, hc)
+	UF.StabilizeStatusBarTexture(st.health)
 	local reverseHealth = hc.reverseFill
 	if reverseHealth == nil then reverseHealth = defH.reverseFill == true end
 	UFHelper.applyStatusBarReverseFill(st.health, reverseHealth)
-	local healthBackdropR, healthBackdropG, healthBackdropB, healthBackdropA
-	local healthBackdropClampToFill
-	do
-		local backdropCfg = hc.backdrop or {}
-		local useBackdropClassColor = backdropCfg.useClassColor
-		if useBackdropClassColor == nil and defH.backdrop then useBackdropClassColor = defH.backdrop.useClassColor end
-		healthBackdropClampToFill = backdropCfg.clampToFill
-		if healthBackdropClampToFill == nil and defH.backdrop then healthBackdropClampToFill = defH.backdrop.clampToFill end
-		if healthBackdropClampToFill == nil then healthBackdropClampToFill = false end
-		if useBackdropClassColor == true then
-			local class
-			if UnitIsPlayer and UnitIsPlayer(unit) then
-				class = select(2, UnitClass(unit))
-			elseif unit == UNIT.PET then
-				class = (addon.variables and addon.variables.unitClass) or select(2, UnitClass(UNIT.PLAYER))
-			end
-			local cr, cg, cb = getClassColor(class)
-			if cr then
-				local backdropColor = backdropCfg.color or (defH.backdrop and defH.backdrop.color) or { 0, 0, 0, 0.6 }
-				healthBackdropR, healthBackdropG, healthBackdropB = cr, cg, cb
-				healthBackdropA = backdropColor[4]
-				if healthBackdropA == nil then healthBackdropA = 0.6 end
-			end
-		end
+	if st.tempMaxHealthLoss then
+		st.tempMaxHealthLoss:SetStatusBarTexture("UI-HUD-UnitFrame-Target-PortraitOn-Bar-TempHPLoss")
+		if st.tempMaxHealthLoss.SetStatusBarDesaturated then st.tempMaxHealthLoss:SetStatusBarDesaturated(false) end
+		UFHelper.applyStatusBarReverseFill(st.tempMaxHealthLoss, not reverseHealth)
+		st.tempMaxHealthLoss:SetMinMaxValues(0, 1)
+		st.tempMaxHealthLoss:SetValue(0, interpolation)
+		if st.tempMaxHealthLoss.SetAlpha then st.tempMaxHealthLoss:SetAlpha(0) end
+		st.tempMaxHealthLoss:SetShown(hc.tempMaxHealthLossEnabled ~= false)
 	end
-	applyBarBackdrop(st.health, hc, healthBackdropR, healthBackdropG, healthBackdropB, healthBackdropA, {
-		clampToFill = healthBackdropClampToFill == true,
-		reverseFill = reverseHealth,
-	})
+	UF.ApplyHealthBackdrop(st, unit, hc, defH, reverseHealth)
 	if allowAbsorb and st.incomingHeal then applyIncomingHealBar(st, hc, healthHeight, reverseHealth, interpolation) end
 	if powerEnabled then
 		st.power:SetStatusBarTexture(UFHelper.resolveTexture(pcfg.texture))
@@ -8631,10 +9489,12 @@ local function applyBars(cfg, unit)
 		end
 	end
 	if allowAbsorb and st.absorb then
+		local overlayClip = UF.EnsureOverlayClipFrame and UF.EnsureOverlayClipFrame(st.health, "_eqolDirectOverlayClip")
 		local absorbTextureKey = hc.absorbTexture or hc.texture
 		st.absorb:SetStatusBarTexture(UFHelper.resolveTexture(absorbTextureKey))
 		if st.absorb.SetStatusBarDesaturated then st.absorb:SetStatusBarDesaturated(false) end
 		UFHelper.configureSpecialTexture(st.absorb, "HEALTH", absorbTextureKey, hc)
+		UF.StabilizeStatusBarTexture(st.absorb)
 		local reverseAbsorb = hc.absorbReverseFill
 		if reverseAbsorb == nil then reverseAbsorb = defH.absorbReverseFill == true end
 		local absorbDontOverflow = hc.absorbDontOverflowHealthBar
@@ -8647,22 +9507,27 @@ local function applyBars(cfg, unit)
 		elseif st.absorb2 then
 			st.absorb2:Hide()
 		end
+		if overlayClip and st.absorb.GetParent and st.absorb:GetParent() ~= overlayClip then st.absorb:SetParent(overlayClip) end
 		local absorbHeight = hc.absorbOverlayHeight
 		if absorbHeight == nil then absorbHeight = defH.absorbOverlayHeight end
-		applyOverlayHeight(st.absorb, st.health, absorbHeight, healthHeight)
+		local absorbAnchorTop = hc.absorbOverlayAnchorTop
+		if absorbAnchorTop == nil then absorbAnchorTop = defH.absorbOverlayAnchorTop == true end
+		applyOverlayHeight(st.absorb, overlayClip or st.health, absorbHeight, healthHeight, absorbAnchorTop == true)
 		if reverseAbsorb and st.absorb2 then
 			st.absorb2:SetStatusBarTexture(UFHelper.resolveTexture(absorbTextureKey))
 			if st.absorb2.SetStatusBarDesaturated then st.absorb2:SetStatusBarDesaturated(false) end
 			UFHelper.configureSpecialTexture(st.absorb2, "HEALTH", absorbTextureKey, hc)
+			UF.StabilizeStatusBarTexture(st.absorb2)
 			if st.absorb2.SetOrientation then st.absorb2:SetOrientation("HORIZONTAL") end
 			if UFHelper and UFHelper.applyAbsorbClampLayout then
 				if reverseHealth then
 					if UFHelper.setupAbsorbClampReverseAware then UFHelper.setupAbsorbClampReverseAware(st.health, st.absorb2) end
 				else
 					if UFHelper.setupAbsorbClamp then UFHelper.setupAbsorbClamp(st.health, st.absorb2) end
-					if not absorbDontOverflow and UFHelper.setupAbsorbOverShift then UFHelper.setupAbsorbOverShift(st.health, st.absorb, absorbHeight, healthHeight) end
+					if not absorbDontOverflow and UFHelper.setupAbsorbOverShift then UFHelper.setupAbsorbOverShift(st.health, st.absorb, absorbHeight, healthHeight, absorbAnchorTop == true) end
 				end
-				UFHelper.applyAbsorbClampLayout(st.absorb2, st.health, absorbHeight, healthHeight, reverseHealth)
+				if overlayClip and st.absorb2.GetParent and st.absorb2:GetParent() ~= overlayClip then st.absorb2:SetParent(overlayClip) end
+				UFHelper.applyAbsorbClampLayout(st.absorb2, st.health, absorbHeight, healthHeight, reverseHealth, absorbAnchorTop == true, healthLayoutWidth)
 				syncTextFrameLevels(st)
 			end
 			setFrameLevelAbove(st.absorb2, st.health, 1)
@@ -8670,13 +9535,12 @@ local function applyBars(cfg, unit)
 			st.absorb2:SetValue(0, interpolation)
 			st.absorb2:Hide()
 		end
-		local borderFrame = st.barGroup and st.barGroup._ufBorder
-		setFrameLevelAbove(st.absorb, st.incomingHeal or st.health, 1)
+		setFrameLevelAbove(st.absorb, st.health, 1)
 		st.absorb:SetMinMaxValues(0, 1)
 		st.absorb:SetValue(0, interpolation)
 		if st.overAbsorbGlow then
 			st.overAbsorbGlow:ClearAllPoints()
-			local glowParent = (st.health and st.health.absorbClip) or st.health
+			local glowParent = overlayClip or st.health
 			if glowParent and st.overAbsorbGlow.GetParent and st.overAbsorbGlow:GetParent() ~= glowParent then st.overAbsorbGlow:SetParent(glowParent) end
 			if reverseHealth then
 				st.overAbsorbGlow:SetPoint("TOPRIGHT", st.health, "TOPLEFT", 7, 0)
@@ -8690,18 +9554,24 @@ local function applyBars(cfg, unit)
 	elseif st.overAbsorbGlow then
 		st.overAbsorbGlow:Hide()
 	end
+	if st.incomingHeal then setFrameLevelAbove(st.incomingHeal, st.absorb2 or st.absorb or st.health, 1) end
 	if allowAbsorb and st.healAbsorb then
+		local overlayClip = UF.EnsureOverlayClipFrame and UF.EnsureOverlayClipFrame(st.health, "_eqolDirectOverlayClip")
 		local healAbsorbTextureKey = hc.healAbsorbTexture or hc.texture
 		st.healAbsorb:SetStatusBarTexture(UFHelper.resolveTexture(healAbsorbTextureKey))
 		if st.healAbsorb.SetStatusBarDesaturated then st.healAbsorb:SetStatusBarDesaturated(false) end
 		UFHelper.configureSpecialTexture(st.healAbsorb, "HEALTH", healAbsorbTextureKey, hc)
+		UF.StabilizeStatusBarTexture(st.healAbsorb)
 		local reverseHealAbsorb = hc.healAbsorbReverseFill
 		if reverseHealAbsorb == nil then reverseHealAbsorb = defH.healAbsorbReverseFill == true end
 		UFHelper.applyStatusBarReverseFill(st.healAbsorb, reverseHealAbsorb)
+		if overlayClip and st.healAbsorb.GetParent and st.healAbsorb:GetParent() ~= overlayClip then st.healAbsorb:SetParent(overlayClip) end
 		local healAbsorbHeight = hc.healAbsorbOverlayHeight
 		if healAbsorbHeight == nil then healAbsorbHeight = defH.healAbsorbOverlayHeight end
-		applyOverlayHeight(st.healAbsorb, st.health, healAbsorbHeight, healthHeight)
-		local anchorBar = st.absorb or st.incomingHeal or st.health
+		local healAbsorbAnchorTop = hc.healAbsorbOverlayAnchorTop
+		if healAbsorbAnchorTop == nil then healAbsorbAnchorTop = defH.healAbsorbOverlayAnchorTop == true end
+		applyOverlayHeight(st.healAbsorb, overlayClip or st.health, healAbsorbHeight, healthHeight, healAbsorbAnchorTop == true)
+		local anchorBar = st.incomingHeal or st.absorb2 or st.absorb or st.health
 		setFrameLevelAbove(st.healAbsorb, anchorBar, 1)
 		st.healAbsorb:SetMinMaxValues(0, 1)
 		st.healAbsorb:SetValue(0, interpolation)
@@ -8712,8 +9582,8 @@ local function applyBars(cfg, unit)
 		local defc = (defaultsFor(unit) and defaultsFor(unit).cast) or {}
 		local ccfg = cfg.cast or defc
 		st.castBar:SetStatusBarTexture(UFHelper.resolveCastTexture((ccfg.texture or defc.texture or "DEFAULT")))
-		st.castBar:SetMinMaxValues(0, 1)
-		st.castBar:SetValue(0)
+		UF._setCastBarMinMaxValues(st, 0, 1)
+		UF._setCastBarValue(st, 0)
 		applyCastLayout(cfg, unit)
 		local castFont = ccfg.font or defc.font or hc.font
 		local castFontSize = ccfg.fontSize or defc.fontSize or hc.fontSize or 12
@@ -8731,6 +9601,35 @@ local function applyBars(cfg, unit)
 		end
 	end
 
+	if st.dataBar then
+		local dcfg = cfg.dataBar or {}
+		local ddef = def.dataBar or {}
+		if UF.DataBar.IsEnabled(cfg, def) then
+			local textureKey = dcfg.texture or ddef.texture or "SOLID"
+			st.dataBar:SetStatusBarTexture(UFHelper.resolveTexture(textureKey))
+			if st.dataBar.SetStatusBarDesaturated then st.dataBar:SetStatusBarDesaturated(false) end
+			local tex = st.dataBar.GetStatusBarTexture and st.dataBar:GetStatusBarTexture()
+			if tex then
+				if tex.SetTexCoord then tex:SetTexCoord(0, 1, 0, 1) end
+				if tex.SetHorizTile then tex:SetHorizTile(false) end
+				if tex.SetVertTile then tex:SetVertTile(false) end
+			end
+			UFHelper.applyStatusBarReverseFill(st.dataBar, false)
+			applyBarBackdrop(st.dataBar, { backdrop = { enabled = false } })
+			UFHelper.applyFont(st.dataBarTextLeft, dcfg.font, dcfg.fontSize or ddef.fontSize or 12, dcfg.fontOutline or ddef.fontOutline)
+			UFHelper.applyFont(st.dataBarTextCenter, dcfg.font, dcfg.fontSize or ddef.fontSize or 12, dcfg.fontOutline or ddef.fontOutline)
+			UFHelper.applyFont(st.dataBarTextRight, dcfg.font, dcfg.fontSize or ddef.fontSize or 12, dcfg.fontOutline or ddef.fontOutline)
+			local textColor = dcfg.textColor or ddef.textColor or { 1, 1, 1, 1 }
+			local tr, tg, tb, ta = textColor[1] or 1, textColor[2] or 1, textColor[3] or 1, textColor[4] or 1
+			if st.dataBarTextLeft then st.dataBarTextLeft:SetTextColor(tr, tg, tb, ta) end
+			if st.dataBarTextCenter then st.dataBarTextCenter:SetTextColor(tr, tg, tb, ta) end
+			if st.dataBarTextRight then st.dataBarTextRight:SetTextColor(tr, tg, tb, ta) end
+			UF.DataBar.Update(cfg, unit)
+		else
+			UF.DataBar.Hide(st)
+		end
+	end
+
 	UFHelper.applyFont(st.healthTextLeft, hc.font, hc.fontSize or 14, hc.fontOutline)
 	UFHelper.applyFont(st.healthTextCenter, hc.font, hc.fontSize or 14, hc.fontOutline)
 	UFHelper.applyFont(st.healthTextRight, hc.font, hc.fontSize or 14, hc.fontOutline)
@@ -8743,6 +9642,41 @@ local function applyBars(cfg, unit)
 		UFHelper.applyFont(st.secondaryPowerTextRight, secondaryCfg.font, secondaryCfg.fontSize or 14, secondaryCfg.fontOutline)
 	end
 	syncTextFrameLevels(st)
+end
+
+function UF.ResolveNameTextColor(unit, scfg, defStatus)
+	local nc
+	local nr, ng, nb, na
+	local isPlayerUnit = UnitIsPlayer and UnitIsPlayer(unit)
+	if scfg.nameColorMode == "CUSTOM" then
+		nc = scfg.nameColor or { 1, 1, 1, 1 }
+		nr, ng, nb, na = nc[1] or 1, nc[2] or 1, nc[3] or 1, nc[4] or 1
+	else
+		if isPlayerUnit then
+			local class = select(2, UnitClass(unit))
+			local cr, cg, cb, ca = getClassColor(class)
+			if cr then
+				nr, ng, nb, na = cr, cg, cb, ca
+			end
+		else
+			local useReactionColor = scfg.nameUseReactionColor
+			if useReactionColor == nil then useReactionColor = defStatus.nameUseReactionColor == true end
+			if useReactionColor == true and UFHelper and UFHelper.getNPCHealthColor then
+				nr, ng, nb, na = UFHelper.getNPCHealthColor(unit)
+			end
+			if not nr and UFHelper and UFHelper.getNPCSelectionKey and UFHelper.getNPCSelectionKey(unit) then
+				local fallback = NORMAL_FONT_COLOR
+				nr = (fallback and (fallback.r or fallback[1])) or 1
+				ng = (fallback and (fallback.g or fallback[2])) or 0.82
+				nb = (fallback and (fallback.b or fallback[3])) or 0
+				na = (fallback and (fallback.a or fallback[4])) or 1
+			end
+		end
+	end
+	if not nr then
+		nr, ng, nb, na = 1, 1, 1, 1
+	end
+	return nr, ng, nb, na
 end
 
 local function updateNameAndLevel(cfg, unit, levelOverride)
@@ -8760,39 +9694,21 @@ local function updateNameAndLevel(cfg, unit, levelOverride)
 	if st.nameText then
 		local scfg = cfg.status or {}
 		local defStatus = (defaultsFor(unit) and defaultsFor(unit).status) or {}
-		local nc
-		local nr, ng, nb, na
-		local isPlayerUnit = UnitIsPlayer and UnitIsPlayer(unit)
-		if scfg.nameColorMode == "CUSTOM" then
-			nc = scfg.nameColor or { 1, 1, 1, 1 }
-			nr, ng, nb, na = nc[1] or 1, nc[2] or 1, nc[3] or 1, nc[4] or 1
-		else
-			if isPlayerUnit then
-				local class = select(2, UnitClass(unit))
-				local cr, cg, cb, ca = getClassColor(class)
-				if cr then
-					nr, ng, nb, na = cr, cg, cb, ca
-				end
-			else
-				local useReactionColor = scfg.nameUseReactionColor
-				if useReactionColor == nil then useReactionColor = defStatus.nameUseReactionColor == true end
-				if useReactionColor == true and UFHelper and UFHelper.getNPCHealthColor then
-					nr, ng, nb, na = UFHelper.getNPCHealthColor(unit)
-				end
-				if not nr and UFHelper and UFHelper.getNPCSelectionKey and UFHelper.getNPCSelectionKey(unit) then
-					local fallback = NORMAL_FONT_COLOR
-					nr = (fallback and (fallback.r or fallback[1])) or 1
-					ng = (fallback and (fallback.g or fallback[2])) or 0.82
-					nb = (fallback and (fallback.b or fallback[3])) or 0
-					na = (fallback and (fallback.a or fallback[4])) or 1
-				end
-			end
-		end
-		if not nr then
-			nr, ng, nb, na = 1, 1, 1, 1
-		end
+		local nr, ng, nb, na = UF.ResolveNameTextColor(unit, scfg, defStatus)
 		st.nameText:SetText(UnitName(unit) or "")
 		st.nameText:SetTextColor(nr, ng, nb, na)
+	end
+	if st.targetTargetText then
+		local scfg = cfg.status or {}
+		local ttCfg = scfg.targetTargetName or {}
+		local enabled = ttCfg.enabled == true or scfg.showTargetTargetName == true
+		if unit == UNIT.TARGET and enabled and UnitExists and UnitExists(UNIT.TARGET_TARGET) then
+			local nr, ng, nb, na = UF.ResolveNameTextColor(UNIT.TARGET_TARGET, scfg, (defaultsFor(unit) and defaultsFor(unit).status) or {})
+			st.targetTargetText:SetTextColor(nr, ng, nb, na)
+			st.targetTargetText:SetText((UnitName and UnitName(UNIT.TARGET_TARGET)) or "")
+		else
+			st.targetTargetText:SetText("")
+		end
 	end
 	if st.levelText then
 		local scfg = cfg.status or {}
@@ -8818,28 +9734,38 @@ local function updateNameAndLevel(cfg, unit, levelOverride)
 		end
 	end
 	if UFHelper and UFHelper.updateClassificationIndicator then UFHelper.updateClassificationIndicator(st, unit, cfg, defaultsFor(unit), false) end
+	if st.dataBarTextLeft or st.dataBarTextCenter or st.dataBarTextRight then st._dataBarTextDirty = true end
 end
 
 refreshNameAndLevelSoon = function(unit)
+	if not unit then return end
+	UF._pendingNameLevelRefresh = UF._pendingNameLevelRefresh or {}
+	if UF._pendingNameLevelRefresh[unit] then return end
+	UF._pendingNameLevelRefresh[unit] = true
+
 	local function refresh()
 		local st = states[unit]
 		if not st then return end
 		local cfg = st.cfg or ensureDB(unit)
 		if not cfg or cfg.enabled == false then return end
+		updateStatus(cfg, unit)
+		syncTextFrameLevels(st)
 		updateNameAndLevel(cfg, unit)
 	end
 
-	local st = states[unit]
-	if st and st._nameLevelRefreshPending then return end
 	refresh()
-	if After then
-		st = states[unit]
-		if not st then return end
-		st._nameLevelRefreshPending = true
-		After(0, function()
-			local delayedState = states[unit]
-			if delayedState then delayedState._nameLevelRefreshPending = nil end
+	if not After then
+		UF._pendingNameLevelRefresh[unit] = nil
+		return
+	end
+
+	local delays = { 0, 0.05, 0.25, 0.75, 1.5 }
+	local remaining = #delays
+	for _, delay in ipairs(delays) do
+		After(delay, function()
 			refresh()
+			remaining = remaining - 1
+			if remaining <= 0 then UF._pendingNameLevelRefresh[unit] = nil end
 		end)
 	end
 end
@@ -8858,11 +9784,13 @@ local function applyConfig(unit)
 	st._healthTextDirty = true
 	st._powerTextDirty = true
 	st._secondaryPowerTextDirty = true
+	st._dataBarTextDirty = true
 	if unit == UNIT.TARGET then syncTargetRangeFadeConfig(cfg, def) end
 	if not cfg.enabled then
 		if st and st.frame then
 			if st.barGroup then st.barGroup:Hide() end
 			if st.status then st.status:Hide() end
+			UF.DataBar.Hide(st)
 			if st.portrait then st.portrait:Hide() end
 			if st.portraitHolder then st.portraitHolder:Hide() end
 			if st.portraitSeparator then st.portraitSeparator:Hide() end
@@ -8959,24 +9887,29 @@ local function applyConfig(unit)
 		st._displayPowerStructureKey = sig and sig.key or nil
 	end
 	updatePortrait(cfg, unit)
-	AuraUtil.UpdateSingleDispelIndicator(unit, addon.EditModeLib and addon.EditModeLib:IsInEditMode())
+	local auraRendererIsBlizzard = AuraUtil.isBlizzardAuraRenderer(cfg.auraIcons, def and def.auraIcons)
+	if auraRendererIsBlizzard then
+		AuraUtil.HideSingleDispelIndicator(unit)
+	else
+		AuraUtil.UpdateSingleDispelIndicator(unit, UF.IsEditModeSampleEnabled and UF.IsEditModeSampleEnabled(unit))
+	end
 	checkRaidTargetIcon(unit, st)
 	UFHelper.updateLeaderIndicator(st, unit, cfg, defaultsFor(unit), false)
 	UFHelper.updatePvPIndicator(st, unit, cfg, defaultsFor(unit), false)
 	UFHelper.updateRoleIndicator(st, unit, cfg, defaultsFor(unit), false)
-	if st.privateAuras and UFHelper and UFHelper.ApplyPrivateAuras then
+	if st.privateAuras and auraRendererIsBlizzard and UFHelper and UFHelper.ApplyBlizzardAuraContainer then
+		AuraUtil.ApplyBlizzardAuraRenderer(unit, st, cfg, def, UF.IsEditModeSampleEnabled and UF.IsEditModeSampleEnabled(unit))
+	elseif st.privateAuras and UFHelper and UFHelper.ApplyPrivateAuras then
 		local pcfg = cfg.privateAuras or (def and def.privateAuras)
-		local inEditMode = addon.EditModeLib and addon.EditModeLib.IsInEditMode and addon.EditModeLib:IsInEditMode()
-		UFHelper.ApplyPrivateAuras(st.privateAuras, unit, pcfg, st.frame, st.statusTextLayer or st.frame, inEditMode == true, true)
+		UFHelper.ApplyPrivateAuras(st.privateAuras, unit, pcfg, st.frame, st.statusTextLayer or st.frame, UF.IsEditModeSampleEnabled and UF.IsEditModeSampleEnabled(unit), true)
 	end
-	if unit == UNIT.PLAYER then
-		updateCombatIndicator(cfg)
-		updateRestingIndicator(cfg)
-	end
+	if UF.SupportsCombatIndicator(unit) then updateCombatIndicator(cfg, unit) end
+	if unit == UNIT.PLAYER then updateRestingIndicator(cfg) end
 	-- if unit == "target" then hideBlizzardTargetFrame() end
 	if st and st.frame then
 		if st.barGroup then st.barGroup:Show() end
 		if st.status then st.status:Show() end
+		UF.DataBar.Update(cfg, unit)
 	end
 	UFHelper.updateHighlight(st, unit, UNIT.PLAYER)
 	if unit == UNIT.PLAYER and st.castBar then
@@ -9034,6 +9967,8 @@ local function layoutBossFrames(cfg)
 	local spacing = cfg.spacing
 	if spacing == nil and def then spacing = def.spacing end
 	if spacing == nil then spacing = 4 end
+	spacing = tonumber(spacing) or 4
+	if spacing < BOSS_SPACING_MIN then spacing = BOSS_SPACING_MIN end
 	local growth = (cfg.growth or (def and def.growth) or "DOWN"):upper()
 	local last
 	local shown = 0
@@ -9066,6 +10001,7 @@ local function layoutBossFrames(cfg)
 	end
 	if shown > 0 then
 		local totalHeight = frameHeight * shown + spacing * (shown - 1)
+		if totalHeight < frameHeight then totalHeight = frameHeight end
 		bossContainer:SetHeight(totalHeight)
 		bossContainer:SetWidth(maxWidth)
 	end
@@ -9208,8 +10144,23 @@ applyBossEditSample = function(idx, cfg)
 	end
 
 	local powerEnabled = pcfg.enabled ~= false
+	local powerDetached = pcfg.detached == true
+	local borderCfg = cfg.border or {}
+	local borderDef = def.border or {}
+	local detachedPowerBorder = powerDetached and ((borderCfg.detachedPower ~= nil and borderCfg.detachedPower == true) or (borderCfg.detachedPower == nil and borderDef.detachedPower == true))
 	if st.power then
 		if powerEnabled then
+			if st.power.SetAlpha then st.power:SetAlpha(1) end
+			if st.powerGroup and st.powerGroup.SetAlpha then st.powerGroup:SetAlpha(1) end
+			if st.barGroup then st.barGroup:Show() end
+			if st.powerGroup then
+				local powerParent = st.power.GetParent and st.power:GetParent() or nil
+				if detachedPowerBorder or powerParent == st.powerGroup then
+					st.powerGroup:Show()
+				else
+					st.powerGroup:Hide()
+				end
+			end
 			st.power:SetMinMaxValues(0, samplePowerMax)
 			st.power:SetValue(samplePowerCur, interpolation)
 			local pr, pg, pb, pa = UFHelper.getPowerColor(0, "MANA")
@@ -9292,6 +10243,7 @@ applyBossEditSample = function(idx, cfg)
 			end
 			st.power:Show()
 		else
+			if st.powerGroup then st.powerGroup:Hide() end
 			st.power:SetValue(0, interpolation)
 			if st.powerTextLeft then st.powerTextLeft:SetText("") end
 			if st.powerTextCenter then st.powerTextCenter:SetText("") end
@@ -9304,7 +10256,14 @@ applyBossEditSample = function(idx, cfg)
 		st.levelText:SetText(sampleLevelText ~= "" and sampleLevelText or "??")
 		st.levelText:Show()
 	end
-	if st.castBar and cdef.enabled ~= false then UF.SetSampleCast(unit) end
+	if st.castBar then
+		if cdef.enabled ~= false then
+			UF.SetSampleCast(unit)
+		else
+			stopCast(unit)
+			st.castBar:Hide()
+		end
+	end
 end
 
 function UF._setBossFrameInactive(unit)
@@ -9313,6 +10272,7 @@ function UF._setBossFrameInactive(unit)
 	applyVisibilityDriver(unit, false)
 	if st.barGroup then st.barGroup:Hide() end
 	if st.status then st.status:Hide() end
+	UF.DataBar.Hide(st)
 	if st.auraContainer then AuraUtil.hideAuraContainers(st) end
 	AuraUtil.resetTargetAuras(unit)
 	AuraUtil.HideSingleDispelIndicator(unit)
@@ -9350,6 +10310,7 @@ local function updateBossFrames(force)
 			if st and st.frame then
 				if inEdit then
 					if not InCombatLockdown() then
+						UF.ClearEqolVisibilityDriver(st, true)
 						if UnregisterStateDriver then UnregisterStateDriver(st.frame, "visibility") end
 						if st.frame.SetAttribute then st.frame:SetAttribute("state-visibility", nil) end
 						if st.frame.SetAttribute then st.frame:SetAttribute("unit", "player") end
@@ -9359,6 +10320,7 @@ local function updateBossFrames(force)
 					end
 					if st.barGroup then st.barGroup:Show() end
 					if st.status then st.status:Show() end
+					UF.DataBar.Update(cfg, unit)
 					applyBossEditSample(i, cfg)
 					if st.auraContainer then AuraUtil.fullScanTargetAuras(unit) end
 				else
@@ -9378,6 +10340,7 @@ local function updateBossFrames(force)
 					if exists then
 						if st.barGroup then st.barGroup:Show() end
 						if st.status then st.status:Show() end
+						UF.DataBar.Update(cfg, unit)
 						updateNameAndLevel(cfg, unit)
 						updateHealth(cfg, unit)
 						updatePower(cfg, unit)
@@ -9393,6 +10356,7 @@ local function updateBossFrames(force)
 					else
 						if st.barGroup then st.barGroup:Hide() end
 						if st.status then st.status:Hide() end
+						UF.DataBar.Hide(st)
 						if st.auraContainer then AuraUtil.hideAuraContainers(st) end
 						AuraUtil.resetTargetAuras(unit)
 						if st.castBar then
@@ -9421,6 +10385,7 @@ end
 local unitEvents = {
 	"UNIT_HEALTH",
 	"UNIT_MAXHEALTH",
+	"UNIT_MAX_HEALTH_MODIFIERS_CHANGED",
 	"UNIT_HEAL_PREDICTION",
 	"UNIT_ABSORB_AMOUNT_CHANGED",
 	"UNIT_HEAL_ABSORB_AMOUNT_CHANGED",
@@ -9499,24 +10464,18 @@ UF._unitEventFrames = UF._unitEventFrames or {}
 local onEvent
 
 function UF.RecomputeAnyUFEnabled()
-	local p = ensureDB("player").enabled
-	local t = ensureDB("target").enabled
-	local tt = ensureDB(UNIT.TARGET_TARGET).enabled
-	local pet = ensureDB(UNIT.PET).enabled
-	local focus = ensureDB(UNIT.FOCUS).enabled
-	local boss = ensureDB("boss").enabled
-	UF._anyUFEnabledCached = (p or t or tt or pet or focus or boss) and true or false
+	if UF.RecomputeRuntimeConsumerActivity then UF.RecomputeRuntimeConsumerActivity() end
+	UF._anyUFEnabledCached = UF.HasUnitRuntimeConsumers and UF.HasUnitRuntimeConsumers() or false
 	return UF._anyUFEnabledCached
 end
 
 local function anyUFEnabled()
-	if UF._anyUFEnabledCached == nil then return UF.RecomputeAnyUFEnabled() end
-	return UF._anyUFEnabledCached == true
+	return UF.HasUnitRuntimeConsumers and UF.HasUnitRuntimeConsumers() or false
 end
 
 function UF.UnitHasDirtyTexts(unit)
 	local st = states[unit]
-	return st and (st._healthTextDirty or st._powerTextDirty or st._secondaryPowerTextDirty) and true or false
+	return st and (st._healthTextDirty or st._powerTextDirty or st._secondaryPowerTextDirty or st._dataBarTextDirty) and true or false
 end
 
 function UF.UpdateTextUnits(force, dirtyOnly)
@@ -9678,6 +10637,7 @@ local function ensureBossFramesReady(cfg)
 			if addon.EditModeLib and addon.EditModeLib:IsInEditMode() then
 				local st = states[unit]
 				if st and st.frame then
+					UF.ClearEqolVisibilityDriver(st, true)
 					if UnregisterStateDriver then UnregisterStateDriver(st.frame, "visibility") end
 					st.frame:SetAttribute("state-visibility", nil)
 					st.frame:Show()
@@ -9879,11 +10839,7 @@ function UF.SchedulePlayerDisplayPowerFlush(reason, wantFullRebuild)
 		end
 		UF.FlushPlayerDisplayPower(reason)
 	end
-	if After then
-		After(0, runner)
-	else
-		runner()
-	end
+	RunNextFrame(runner)
 end
 
 function UF.FlushPlayerDisplayPower(reason)
@@ -9984,6 +10940,7 @@ local function updateTargetTargetFrame(cfg, forceApply)
 		if st then
 			if st.barGroup then st.barGroup:Hide() end
 			if st.status then st.status:Hide() end
+			UF.DataBar.Hide(st)
 		end
 		updatePortrait(cfg, UNIT.TARGET_TARGET)
 		applyVisibilityRules(UNIT.TARGET_TARGET)
@@ -9999,6 +10956,7 @@ local function updateTargetTargetFrame(cfg, forceApply)
 		if st then
 			if st.barGroup then st.barGroup:Show() end
 			if st.status then st.status:Show() end
+			UF.DataBar.Update(cfg, UNIT.TARGET_TARGET)
 			local pcfg = cfg.power or {}
 			local powerEnabled = pcfg.enabled ~= false
 			updateNameAndLevel(cfg, UNIT.TARGET_TARGET)
@@ -10018,6 +10976,7 @@ local function updateTargetTargetFrame(cfg, forceApply)
 		if st then
 			if st.barGroup then st.barGroup:Hide() end
 			if st.status then st.status:Hide() end
+			UF.DataBar.Hide(st)
 		end
 	end
 	checkRaidTargetIcon(UNIT.TARGET_TARGET, st)
@@ -10037,6 +10996,7 @@ local function updateFocusFrame(cfg, forceApply)
 		if st then
 			if st.barGroup then st.barGroup:Hide() end
 			if st.status then st.status:Hide() end
+			UF.DataBar.Hide(st)
 			if st.auraContainer then AuraUtil.hideAuraContainers(st) end
 		end
 		AuraUtil.resetTargetAuras(UNIT.FOCUS)
@@ -10055,6 +11015,7 @@ local function updateFocusFrame(cfg, forceApply)
 		if st then
 			if st.barGroup then st.barGroup:Show() end
 			if st.status then st.status:Show() end
+			UF.DataBar.Update(cfg, UNIT.FOCUS)
 			local pcfg = cfg.power or {}
 			local powerEnabled = pcfg.enabled ~= false
 			updateNameAndLevel(cfg, UNIT.FOCUS)
@@ -10076,6 +11037,7 @@ local function updateFocusFrame(cfg, forceApply)
 		if st then
 			if st.barGroup then st.barGroup:Hide() end
 			if st.status then st.status:Hide() end
+			UF.DataBar.Hide(st)
 			if st.castBar then stopCast(UNIT.FOCUS) end
 			if st.auraContainer then AuraUtil.hideAuraContainers(st) end
 		end
@@ -10087,6 +11049,7 @@ local function updateFocusFrame(cfg, forceApply)
 	UFHelper.updatePvPIndicator(st, UNIT.FOCUS, cfg, defaultsFor(UNIT.FOCUS), not forceApply)
 	UFHelper.updateRoleIndicator(st, UNIT.FOCUS, cfg, defaultsFor(UNIT.FOCUS), not forceApply)
 	updateUnitStatusIndicator(cfg, UNIT.FOCUS)
+	updateCombatIndicator(cfg, UNIT.FOCUS)
 	updatePortrait(cfg, UNIT.FOCUS)
 	UFHelper.updateHighlight(st, UNIT.FOCUS, UNIT.PLAYER)
 	applyVisibilityRules(UNIT.FOCUS)
@@ -10101,13 +11064,15 @@ end
 function UF.UpdateUnitTexts(unit, force)
 	local st = states[unit]
 	if not st then return end
-	if not force and not (st._healthTextDirty or st._powerTextDirty or st._secondaryPowerTextDirty) then return end
+	if not force and not (st._healthTextDirty or st._powerTextDirty or st._secondaryPowerTextDirty or st._dataBarTextDirty) then return end
 
 	local cfg = st.cfg or ensureDB(unit)
 	if not cfg or cfg.enabled == false then
 		st._healthTextDirty = nil
 		st._powerTextDirty = nil
 		st._secondaryPowerTextDirty = nil
+		st._dataBarTextDirty = nil
+		UF.DataBar.ClearTexts(st)
 		return
 	end
 
@@ -10119,6 +11084,7 @@ function UF.UpdateUnitTexts(unit, force)
 			st._healthTextDirty = nil
 			st._powerTextDirty = nil
 			st._secondaryPowerTextDirty = nil
+			st._dataBarTextDirty = nil
 			return
 		end
 	end
@@ -10133,13 +11099,38 @@ function UF.UpdateUnitTexts(unit, force)
 		if st.secondaryPowerTextLeft then st.secondaryPowerTextLeft:SetText("") end
 		if st.secondaryPowerTextCenter then st.secondaryPowerTextCenter:SetText("") end
 		if st.secondaryPowerTextRight then st.secondaryPowerTextRight:SetText("") end
+		UF.DataBar.ClearTexts(st)
 		st._healthTextDirty = nil
 		st._powerTextDirty = nil
 		st._secondaryPowerTextDirty = nil
+		st._dataBarTextDirty = nil
 		return
 	end
 
 	local def = defaultsFor(unit) or {}
+
+	if st._dataBarTextDirty and (st.dataBarTextLeft or st.dataBarTextCenter or st.dataBarTextRight) then
+		if not UF.DataBar.IsEnabled(cfg, def) then
+			UF.DataBar.ClearTexts(st)
+		else
+			local dcfg = cfg.dataBar or {}
+			local ddef = def.dataBar or {}
+			local cur = (UnitHealth and UnitHealth(unit)) or 0
+			local maxv = (UnitHealthMax and UnitHealthMax(unit)) or 0
+			local percentVal
+			if UFHelper.textModeUsesPercent(dcfg.textLeft or ddef.textLeft or "NAME")
+				or UFHelper.textModeUsesPercent(dcfg.textCenter or ddef.textCenter or "CURMAX")
+				or UFHelper.textModeUsesPercent(dcfg.textRight or ddef.textRight or "PERCENT")
+			then
+				local calc = UF.RefreshHealPredictionCalculator(st, unit)
+				percentVal = getHealthPercent(unit, cur, maxv, calc)
+			end
+			if st.dataBarTextLeft then st.dataBarTextLeft:SetText(UF.DataBar.GetText(dcfg.textLeft or ddef.textLeft or "NAME", unit, cfg, def, cur, maxv, percentVal)) end
+			if st.dataBarTextCenter then st.dataBarTextCenter:SetText(UF.DataBar.GetText(dcfg.textCenter or ddef.textCenter or "CURMAX", unit, cfg, def, cur, maxv, percentVal)) end
+			if st.dataBarTextRight then st.dataBarTextRight:SetText(UF.DataBar.GetText(dcfg.textRight or ddef.textRight or "PERCENT", unit, cfg, def, cur, maxv, percentVal)) end
+		end
+		st._dataBarTextDirty = nil
+	end
 
 	if st._healthTextDirty and (st.healthTextLeft or st.healthTextCenter or st.healthTextRight) then
 		local hc = cfg.health or {}
@@ -10185,10 +11176,10 @@ function UF.UpdateUnitTexts(unit, force)
 			if st.healthTextRight then st.healthTextRight:SetText("") end
 		else
 			local percentVal
-			if addon.variables and addon.variables.isMidnight then
-				percentVal = getHealthPercent(unit, cur, maxv)
-			elseif not issecretvalue or (not issecretvalue(cur) and not issecretvalue(maxv)) then
-				percentVal = getHealthPercent(unit, cur, maxv)
+			local usesHealthPercent = UFHelper.textModeUsesPercent(leftMode) or UFHelper.textModeUsesPercent(centerMode) or UFHelper.textModeUsesPercent(rightMode)
+			if usesHealthPercent then
+				local calc = UF.RefreshHealPredictionCalculator(st, unit)
+				percentVal = getHealthPercent(unit, cur, maxv, calc)
 			end
 
 			local delimiter, delimiter2, delimiter3 = st._healthTextDelimiter1, st._healthTextDelimiter2, st._healthTextDelimiter3
@@ -10587,7 +11578,7 @@ onEvent = function(self, event, unit, ...)
 			or event == "TRAIT_CONFIG_UPDATED"
 		then
 			reapplyPlayerFrameAfterSpecChange()
-			if After then After(0, reapplyPlayerFrameAfterSpecChange) end
+			RunNextFrame(reapplyPlayerFrameAfterSpecChange)
 		end
 		return
 	end
@@ -10608,7 +11599,7 @@ onEvent = function(self, event, unit, ...)
 		updateTargetTargetFrame(totCfg, true)
 		if focusCfg.enabled then updateFocusFrame(focusCfg, true) end
 		if petCfg.enabled then applyConfig(UNIT.PET) end
-		updateCombatIndicator(playerCfg)
+		updateCombatIndicator(playerCfg, UNIT.PLAYER)
 		updateRestingIndicator(playerCfg)
 		updateUnitStatusIndicator(playerCfg, UNIT.PLAYER)
 		updateUnitStatusIndicator(targetCfg, UNIT.TARGET)
@@ -10636,7 +11627,7 @@ onEvent = function(self, event, unit, ...)
 		refreshMainPower(UNIT.PLAYER)
 		updateHealth(playerCfg, UNIT.PLAYER)
 		updatePower(playerCfg, UNIT.PLAYER)
-		updateCombatIndicator(playerCfg)
+		updateCombatIndicator(playerCfg, UNIT.PLAYER)
 		updateRestingIndicator(playerCfg)
 		updateUnitStatusIndicator(playerCfg, UNIT.PLAYER)
 		applyVisibilityRulesAll()
@@ -10654,7 +11645,7 @@ onEvent = function(self, event, unit, ...)
 		applyVisibilityRulesAll()
 	elseif event == "PLAYER_REGEN_DISABLED" or event == "PLAYER_REGEN_ENABLED" then
 		local playerCfg = getCfg(UNIT.PLAYER)
-		updateCombatIndicator(playerCfg)
+		updateCombatIndicator(playerCfg, UNIT.PLAYER)
 		if UFHelper and UFHelper.updateAllHighlights then UFHelper.updateAllHighlights(states, UNIT, UF.GetBossFrameCount()) end
 		if event == "PLAYER_REGEN_ENABLED" then
 			if bossLayoutDirty then layoutBossFrames() end
@@ -10713,6 +11704,7 @@ onEvent = function(self, event, unit, ...)
 			updatePower(targetCfg, unitToken)
 			st.barGroup:Show()
 			st.status:Show()
+			UF.DataBar.Update(targetCfg, unitToken)
 			setCastInfoFromUnit(unitToken)
 			if st.privateAuras and UFHelper and UFHelper.RemovePrivateAuras and UFHelper.ApplyPrivateAuras then
 				UFHelper.RemovePrivateAuras(st.privateAuras)
@@ -10721,13 +11713,9 @@ onEvent = function(self, event, unit, ...)
 				local function applyPrivate()
 					if not states[unitToken] or states[unitToken] ~= st then return end
 					if not UnitExists(unitToken) then return end
-					UFHelper.ApplyPrivateAuras(st.privateAuras, unitToken, pcfg, st.frame, st.statusTextLayer or st.frame, addon.EditModeLib and addon.EditModeLib:IsInEditMode(), true)
+					UFHelper.ApplyPrivateAuras(st.privateAuras, unitToken, pcfg, st.frame, st.statusTextLayer or st.frame, UF.IsEditModeSampleEnabled and UF.IsEditModeSampleEnabled(unitToken), true)
 				end
-				if After then
-					After(0, applyPrivate)
-				else
-					applyPrivate()
-				end
+				RunNextFrame(applyPrivate)
 			end
 		else
 			AuraUtil.resetTargetAuras()
@@ -10735,6 +11723,7 @@ onEvent = function(self, event, unit, ...)
 			AuraUtil.HideSingleDispelIndicator(unitToken)
 			st.barGroup:Hide()
 			st.status:Hide()
+			UF.DataBar.Hide(st)
 			stopCast(unitToken)
 			if st.privateAuras and UFHelper and UFHelper.RemovePrivateAuras then
 				UFHelper.RemovePrivateAuras(st.privateAuras)
@@ -10747,6 +11736,7 @@ onEvent = function(self, event, unit, ...)
 		if totCfg.enabled then updateTargetTargetFrame(totCfg) end
 		if focusCfg.enabled then updateFocusFrame(focusCfg) end
 		updateUnitStatusIndicator(targetCfg, UNIT.TARGET)
+		updateCombatIndicator(targetCfg, UNIT.TARGET)
 		UFHelper.updateLeaderIndicator(states[UNIT.TARGET], UNIT.TARGET, targetCfg, defaultsFor(UNIT.TARGET), true)
 		UFHelper.updatePvPIndicator(states[UNIT.TARGET], UNIT.TARGET, targetCfg, defaultsFor(UNIT.TARGET), true)
 		UFHelper.updateRoleIndicator(states[UNIT.TARGET], UNIT.TARGET, targetCfg, defaultsFor(UNIT.TARGET), true)
@@ -10755,7 +11745,7 @@ onEvent = function(self, event, unit, ...)
 	elseif event == "UNIT_AURA" and (unit == "target" or unit == UNIT.PLAYER or unit == UNIT.FOCUS or isBossUnit(unit)) then
 		local cfg = getCfg(unit)
 		if not cfg or cfg.enabled == false then return end
-		local allowSample = addon.EditModeLib and addon.EditModeLib:IsInEditMode()
+		local allowSample = UF.IsEditModeSampleEnabled and UF.IsEditModeSampleEnabled(unit)
 		local def = defaultsFor(unit)
 		if unit == UNIT.PLAYER then
 			local secondaryCfg = cfg.secondaryPower or {}
@@ -10799,89 +11789,81 @@ onEvent = function(self, event, unit, ...)
 		end
 		local st = states[unit]
 		if not st or not st.auraContainer then return end
-		local auras, order, indexById = AuraUtil.getAuraTables(unit)
-		if not auras or not order or not indexById then return end
-		local relayoutThreshold = auraRuntime.relayoutThreshold
-		local firstChanged
+		local buffCache = AuraUtil.getAuraKindCache(unit, "buff")
+		local debuffCache = AuraUtil.getAuraKindCache(unit, "debuff")
+		if not buffCache or not debuffCache then return end
+		local buffLimit = (buffAuras.max or 0) + 1
+		local debuffLimit = (debuffAuras.max or 0) + 1
+		local touchBuff
+		local touchDebuff
 		if eventInfo.addedAuras then
 			for _, aura in ipairs(eventInfo.addedAuras) do
-				local isDebuffAura = aura and not C_UnitAuras.IsAuraFilteredOutByInstanceID(unit, aura.auraInstanceID, harmfulFilter)
+				local isDebuffAura = aura and showDebuffs and AuraUtil.isAuraFilteredIn(unit, aura, harmfulFilter)
+				local isBuffAura = aura and showBuffs and not isDebuffAura and AuraUtil.isAuraFilteredIn(unit, aura, helpfulFilter)
 				local shouldHide = false
 				if aura then
-					local hidePermanent = isDebuffAura and (debuffAuras.hidePermanentAuras == true) or (buffAuras.hidePermanentAuras == true)
+					local hidePermanent = (isDebuffAura and debuffAuras.hidePermanentAuras == true) or (isBuffAura and buffAuras.hidePermanentAuras == true)
 					shouldHide = (hidePermanent and AuraUtil.isPermanentAura(aura, unit))
 						or (UF.GlobalAuraIgnore and UF.GlobalAuraIgnore.ShouldIgnoreAura and UF.GlobalAuraIgnore.ShouldIgnoreAura(unit, aura))
 				end
 				if aura and shouldHide then
-					if auras[aura.auraInstanceID] then
-						auras[aura.auraInstanceID] = nil
-						local idx = AuraUtil.removeTargetAuraFromOrder(aura.auraInstanceID, unit)
-						if idx and idx <= relayoutThreshold then
-							if not firstChanged or idx < firstChanged then firstChanged = idx end
-						end
-					end
+					local buffIdx, debuffIdx = AuraUtil.removeTargetAuraFromCaches(unit, aura.auraInstanceID)
+					if buffIdx and buffIdx <= buffLimit then touchBuff = true end
+					if debuffIdx and debuffIdx <= debuffLimit then touchDebuff = true end
 				elseif aura and showDebuffs and isDebuffAura then
-					AuraUtil.cacheTargetAura(aura, unit)
-					local idx = AuraUtil.addTargetAuraToOrder(aura.auraInstanceID, unit)
-					if idx and idx <= relayoutThreshold then
-						if not firstChanged or idx < firstChanged then firstChanged = idx end
-					end
-				elseif aura and showBuffs and not C_UnitAuras.IsAuraFilteredOutByInstanceID(unit, aura.auraInstanceID, helpfulFilter) then
-					AuraUtil.cacheTargetAura(aura, unit)
-					local idx = AuraUtil.addTargetAuraToOrder(aura.auraInstanceID, unit)
-					if idx and idx <= relayoutThreshold then
-						if not firstChanged or idx < firstChanged then firstChanged = idx end
-					end
+					local oldBuffIdx = AuraUtil.removeTargetAuraFromKindCache(unit, "buff", aura.auraInstanceID)
+					local _, idx = AuraUtil.cacheTargetAura(aura, unit, "debuff")
+					if oldBuffIdx and oldBuffIdx <= buffLimit then touchBuff = true end
+					if idx and idx <= debuffLimit then touchDebuff = true end
+				elseif aura and showBuffs and isBuffAura then
+					local oldDebuffIdx = AuraUtil.removeTargetAuraFromKindCache(unit, "debuff", aura.auraInstanceID)
+					local _, idx = AuraUtil.cacheTargetAura(aura, unit, "buff")
+					if oldDebuffIdx and oldDebuffIdx <= debuffLimit then touchDebuff = true end
+					if idx and idx <= buffLimit then touchBuff = true end
 				end
 			end
 		end
 		if eventInfo.updatedAuraInstanceIDs and C_UnitAuras and C_UnitAuras.GetAuraDataByAuraInstanceID then
 			for _, inst in ipairs(eventInfo.updatedAuraInstanceIDs) do
-				local idx = indexById[inst]
-				local data = C_UnitAuras.GetAuraDataByAuraInstanceID(unit, inst)
-				local keepAura = false
-				if
-					data
-					and not (((not C_UnitAuras.IsAuraFilteredOutByInstanceID(unit, data.auraInstanceID, harmfulFilter) and debuffAuras.hidePermanentAuras == true) or (C_UnitAuras.IsAuraFilteredOutByInstanceID(
-						unit,
-						data.auraInstanceID,
-						harmfulFilter
-					) and buffAuras.hidePermanentAuras == true)) and AuraUtil.isPermanentAura(data, unit))
-					and not (UF.GlobalAuraIgnore and UF.GlobalAuraIgnore.ShouldIgnoreAura and UF.GlobalAuraIgnore.ShouldIgnoreAura(unit, data))
-				then
-					if showDebuffs and not C_UnitAuras.IsAuraFilteredOutByInstanceID(unit, data.auraInstanceID, harmfulFilter) then
-						keepAura = true
-					elseif showBuffs and not C_UnitAuras.IsAuraFilteredOutByInstanceID(unit, data.auraInstanceID, helpfulFilter) then
-						keepAura = true
+				local buffIdx = buffCache.indexById and buffCache.indexById[inst]
+				local debuffIdx = debuffCache.indexById and debuffCache.indexById[inst]
+				if buffIdx or debuffIdx then
+					local data = C_UnitAuras.GetAuraDataByAuraInstanceID(unit, inst)
+					if data then
+						if buffIdx then AuraUtil.cacheTargetAura(data, unit, "buff") end
+						if debuffIdx then AuraUtil.cacheTargetAura(data, unit, "debuff") end
+					else
+						if buffIdx then AuraUtil.removeTargetAuraFromKindCache(unit, "buff", inst) end
+						if debuffIdx then AuraUtil.removeTargetAuraFromKindCache(unit, "debuff", inst) end
 					end
-				end
-				if keepAura then
-					AuraUtil.cacheTargetAura(data, unit)
-					if not idx then idx = AuraUtil.addTargetAuraToOrder(data.auraInstanceID, unit) end
-				else
-					auras[inst] = nil
-					if idx then idx = AuraUtil.removeTargetAuraFromOrder(inst, unit) end
-				end
-				if idx and idx <= relayoutThreshold then
-					if not firstChanged or idx < firstChanged then firstChanged = idx end
+					if buffIdx and buffIdx <= buffLimit then touchBuff = true end
+					if debuffIdx and debuffIdx <= debuffLimit then touchDebuff = true end
 				end
 			end
 		end
 		if eventInfo.removedAuraInstanceIDs then
 			for _, inst in ipairs(eventInfo.removedAuraInstanceIDs) do
-				auras[inst] = nil
-				local idx = AuraUtil.removeTargetAuraFromOrder(inst, unit)
-				if idx and idx <= relayoutThreshold then
-					if not firstChanged or idx < firstChanged then firstChanged = idx end
-				end
+				local buffIdx = AuraUtil.removeTargetAuraFromKindCache(unit, "buff", inst)
+				local debuffIdx = AuraUtil.removeTargetAuraFromKindCache(unit, "debuff", inst)
+				if buffIdx and buffIdx <= buffLimit then touchBuff = true end
+				if debuffIdx and debuffIdx <= debuffLimit then touchDebuff = true end
 			end
 		end
-		if firstChanged then
-			AuraUtil.updateTargetAuraIcons(firstChanged, unit)
+		AuraUtil.compactAuraCache(buffCache)
+		AuraUtil.compactAuraCache(debuffCache)
+		if touchBuff or touchDebuff then
+			AuraUtil.updateTargetAuraIcons(nil, unit, touchBuff, touchDebuff)
 		else
 			AuraUtil.UpdateSingleDispelIndicator(unit, false)
 		end
-	elseif event == "UNIT_HEALTH" or event == "UNIT_MAXHEALTH" or event == "UNIT_HEAL_PREDICTION" or event == "UNIT_ABSORB_AMOUNT_CHANGED" or event == "UNIT_HEAL_ABSORB_AMOUNT_CHANGED" then
+	elseif
+		event == "UNIT_HEALTH"
+		or event == "UNIT_MAXHEALTH"
+		or event == "UNIT_MAX_HEALTH_MODIFIERS_CHANGED"
+		or event == "UNIT_HEAL_PREDICTION"
+		or event == "UNIT_ABSORB_AMOUNT_CHANGED"
+		or event == "UNIT_HEAL_ABSORB_AMOUNT_CHANGED"
+	then
 		if event == "UNIT_ABSORB_AMOUNT_CHANGED" and unit then
 			local st = states[unit]
 			if st then
@@ -11027,6 +12009,7 @@ onEvent = function(self, event, unit, ...)
 		if unit and states[unit] then UFHelper.updateClassificationIndicator(states[unit], unit, getCfg(unit), defaultsFor(unit), true) end
 	elseif event == "UNIT_FLAGS" then
 		updateUnitStatusIndicator(getCfg(unit), unit)
+		if UF.SupportsCombatIndicator(unit) then updateCombatIndicator(getCfg(unit), unit) end
 		UFHelper.updateLeaderIndicator(states[unit], unit, getCfg(unit), defaultsFor(unit), true)
 		UFHelper.updatePvPIndicator(states[unit], unit, getCfg(unit), defaultsFor(unit), true)
 		if states[unit] then states[unit]._healthColorDirty = true end
@@ -11078,6 +12061,12 @@ onEvent = function(self, event, unit, ...)
 	elseif event == "UNIT_TARGET" and unit == UNIT.TARGET then
 		local totCfg = getCfg(UNIT.TARGET_TARGET)
 		if totCfg.enabled then updateTargetTargetFrame(totCfg) end
+		local targetCfg = getCfg(UNIT.TARGET)
+		local targetStatusCfg = targetCfg and targetCfg.status
+		local targetTargetNameCfg = targetStatusCfg and targetStatusCfg.targetTargetName
+		if (targetTargetNameCfg and targetTargetNameCfg.enabled == true) or (targetStatusCfg and targetStatusCfg.showTargetTargetName == true) then
+			updateNameAndLevel(targetCfg, UNIT.TARGET)
+		end
 	elseif event == "UNIT_SPELLCAST_SENT" then
 		if unit == UNIT.PLAYER then
 			local st = states[unit]
@@ -11150,10 +12139,6 @@ onEvent = function(self, event, unit, ...)
 		updateBossFrames(true)
 	elseif event == "UNIT_TARGETABLE_CHANGED" and isBossUnit(unit) then
 		updateBossFrames(true)
-	elseif event == "ENCOUNTER_START" then
-		updateBossFrames(true)
-	elseif event == "ENCOUNTER_END" then
-		hideBossFrames()
 	elseif event == "UNIT_PET" and unit == "player" then
 		local petCfg = getCfg(UNIT.PET)
 		if petCfg.enabled then
@@ -11169,6 +12154,7 @@ onEvent = function(self, event, unit, ...)
 			checkRaidTargetIcon(UNIT.FOCUS, states[UNIT.FOCUS])
 		end
 		updateUnitStatusIndicator(focusCfg, UNIT.FOCUS)
+		updateCombatIndicator(focusCfg, UNIT.FOCUS)
 		UFHelper.updateLeaderIndicator(states[UNIT.FOCUS], UNIT.FOCUS, focusCfg, defaultsFor(UNIT.FOCUS), true)
 		UFHelper.updatePvPIndicator(states[UNIT.FOCUS], UNIT.FOCUS, focusCfg, defaultsFor(UNIT.FOCUS), true)
 		UFHelper.updateRoleIndicator(states[UNIT.FOCUS], UNIT.FOCUS, focusCfg, defaultsFor(UNIT.FOCUS), true)
@@ -11221,7 +12207,9 @@ local function ensureEventHandling()
 			editModeHooked = true
 
 			addon.EditModeLib:RegisterCallback("enter", function()
-				updateCombatIndicator(states[UNIT.PLAYER] and states[UNIT.PLAYER].cfg or ensureDB(UNIT.PLAYER))
+				updateCombatIndicator(states[UNIT.PLAYER] and states[UNIT.PLAYER].cfg or ensureDB(UNIT.PLAYER), UNIT.PLAYER)
+				updateCombatIndicator(states[UNIT.TARGET] and states[UNIT.TARGET].cfg or ensureDB(UNIT.TARGET), UNIT.TARGET)
+				updateCombatIndicator(states[UNIT.FOCUS] and states[UNIT.FOCUS].cfg or ensureDB(UNIT.FOCUS), UNIT.FOCUS)
 				ensureBossFramesReady(ensureDB("boss"))
 				updateBossFrames(true)
 				updateAllRaidTargetIcons()
@@ -11237,7 +12225,9 @@ local function ensureEventHandling()
 			end)
 
 			addon.EditModeLib:RegisterCallback("exit", function()
-				updateCombatIndicator(states[UNIT.PLAYER] and states[UNIT.PLAYER].cfg or ensureDB(UNIT.PLAYER))
+				updateCombatIndicator(states[UNIT.PLAYER] and states[UNIT.PLAYER].cfg or ensureDB(UNIT.PLAYER), UNIT.PLAYER)
+				updateCombatIndicator(states[UNIT.TARGET] and states[UNIT.TARGET].cfg or ensureDB(UNIT.TARGET), UNIT.TARGET)
+				updateCombatIndicator(states[UNIT.FOCUS] and states[UNIT.FOCUS].cfg or ensureDB(UNIT.FOCUS), UNIT.FOCUS)
 				hideBossFrames(true)
 				if ensureDB("boss").enabled then updateBossFrames(true) end
 				updateAllRaidTargetIcons()
@@ -11272,8 +12262,6 @@ local function ensureEventHandling()
 	if ensureDB("boss").enabled then
 		eventFrame:RegisterEvent("INSTANCE_ENCOUNTER_ENGAGE_UNIT")
 		eventFrame:RegisterEvent("UNIT_TARGETABLE_CHANGED")
-		eventFrame:RegisterEvent("ENCOUNTER_START")
-		eventFrame:RegisterEvent("ENCOUNTER_END")
 	end
 	UF._registerUnitScopedEvents(anyPortraitEnabled())
 	syncTargetRangeFadeConfig(ensureDB(UNIT.TARGET), defaultsFor(UNIT.TARGET))
@@ -11290,6 +12278,7 @@ end
 function UF.Enable()
 	local cfg = ensureDB("player")
 	cfg.enabled = true
+	UF.SetRuntimeConsumerActive("unit", UNIT.PLAYER, true)
 	ensureEventHandling()
 	applyConfig("player")
 	if ensureDB("target").enabled then applyConfig("target") end
@@ -11311,6 +12300,7 @@ end
 function UF.Disable()
 	local cfg = ensureDB("player")
 	cfg.enabled = false
+	UF.SetRuntimeConsumerActive("unit", UNIT.PLAYER, false)
 	if states.player and states.player.frame then states.player.frame:Hide() end
 	ClassResourceUtil.restoreClassResourceFrames()
 	TotemFrameUtil.restoreTotemFrame()
@@ -11328,6 +12318,7 @@ function UF.Disable()
 end
 
 function UF.Refresh()
+	if UF.RecomputeRuntimeConsumerActivity then UF.RecomputeRuntimeConsumerActivity() end
 	local bossCfg = ensureDB("boss")
 	if bossCfg.enabled then DisableBossFrames() end
 	ensureEventHandling()
@@ -11410,6 +12401,7 @@ function UF.Initialize()
 	if not addon.db then return end
 	addon.Aura.UFInitialized = true
 	if UF.RegisterSettings then UF.RegisterSettings() end
+	if UF.RecomputeRuntimeConsumerActivity then UF.RecomputeRuntimeConsumerActivity() end
 	local cfg = ensureDB("player")
 	do
 		local def = defaultsFor(UNIT.PLAYER)
@@ -11462,7 +12454,7 @@ addon.Aura.functions.InitUnitFrames = function()
 	if UF and UF.Initialize then UF.Initialize() end
 end
 
-UF.targetAuras = targetAuras
+UF.targetAuraKinds = targetAuraKinds
 UF.defaults = defaults
 UF.GetDefaults = function(unit) return defaultsFor(unit) end
 UF.EnsureDB = ensureDB
@@ -11477,6 +12469,173 @@ UF.FullScanTargetAuras = AuraUtil.fullScanTargetAuras
 UF.ResolveSingleAuraConfig = AuraUtil.resolveSingleAuraConfig
 UF.EnsureSingleAuraConfig = AuraUtil.ensureSingleAuraConfig
 UF.CopySettings = copySettings
+
+-- TODO: Temporary diagnostics for the player-name disappearing report. Remove after root cause is confirmed.
+function UF.ShowDebugCopyBox(text)
+	if not UIParent then
+		print(text)
+		return
+	end
+	local frame = UF._debugCopyFrame
+	if not frame then
+		frame = CreateFrame("Frame", "EQOLUFDebugCopyFrame", UIParent, "BackdropTemplate")
+		frame:SetSize(720, 420)
+		frame:SetPoint("CENTER")
+		frame:SetFrameStrata("TOOLTIP")
+		frame:SetFrameLevel(100)
+		frame:SetMovable(true)
+		frame:EnableMouse(true)
+		frame:RegisterForDrag("LeftButton")
+		frame:SetScript("OnDragStart", frame.StartMoving)
+		frame:SetScript("OnDragStop", frame.StopMovingOrSizing)
+		if frame.SetBackdrop then
+			frame:SetBackdrop({
+				bgFile = "Interface\\DialogFrame\\UI-DialogBox-Background",
+				edgeFile = "Interface\\DialogFrame\\UI-DialogBox-Border",
+				tile = true,
+				tileSize = 32,
+				edgeSize = 32,
+				insets = { left = 8, right = 8, top = 8, bottom = 8 },
+			})
+		end
+
+		local title = frame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+		title:SetPoint("TOPLEFT", 16, -14)
+		title:SetText("EnhanceQoL UF Debug")
+		frame.title = title
+
+		local close = CreateFrame("Button", nil, frame, "UIPanelCloseButton")
+		close:SetPoint("TOPRIGHT", -6, -6)
+		frame.close = close
+
+		local scroll = CreateFrame("ScrollFrame", nil, frame, "UIPanelScrollFrameTemplate")
+		scroll:SetPoint("TOPLEFT", 16, -42)
+		scroll:SetPoint("BOTTOMRIGHT", -34, 16)
+		frame.scroll = scroll
+
+		local edit = CreateFrame("EditBox", nil, scroll)
+		edit:SetMultiLine(true)
+		edit:SetAutoFocus(false)
+		edit:SetFontObject(ChatFontNormal)
+		edit:SetWidth(650)
+		edit:SetScript("OnEscapePressed", function(self)
+			self:ClearFocus()
+			frame:Hide()
+		end)
+		scroll:SetScrollChild(edit)
+		frame.edit = edit
+
+		UF._debugCopyFrame = frame
+	end
+	frame.edit:SetText(text or "")
+	frame.edit:HighlightText()
+	frame.edit:SetFocus()
+	frame:Show()
+end
+
+function UF.DebugPlayerName()
+	local lines = {}
+	local function add(...)
+		local parts = {}
+		for i = 1, select("#", ...) do
+			parts[i] = tostring(select(i, ...))
+		end
+		lines[#lines + 1] = table.concat(parts, "\t")
+	end
+	local unit = UNIT.PLAYER
+	local st = states and states[unit]
+	local cfg = ensureDB(unit)
+	local scfg = cfg and cfg.status or {}
+	local guid = UnitGUID and UnitGUID(unit)
+	local activeProfile = UFProfileManager and UFProfileManager.GetActiveName and UFProfileManager.GetActiveName()
+	local mappedProfile = guid and addon.db and addon.db.ufProfileKeys and addon.db.ufProfileKeys[guid]
+	local resolvedFont = UFHelper and UFHelper.getFont and UFHelper.getFont(scfg.font) or nil
+	local assetKnown = UFHelper and UFHelper.isKnownFontAsset and UFHelper.isKnownFontAsset(resolvedFont)
+	local lsm = LibStub and LibStub("LibSharedMedia-3.0", true)
+	local lsmValid = lsm and lsm.IsValid and scfg.font and lsm:IsValid("font", scfg.font)
+	local lsmFetch = lsm and lsm.Fetch and scfg.font and lsm:Fetch("font", scfg.font, true)
+
+	add("EQOL UFDBG profile", "profile", activeProfile, "guid", guid, "mapped", mappedProfile, "global", addon.db and addon.db.ufProfileGlobal)
+	add("EQOL UFDBG cfg", "font", scfg.font, "resolved", resolvedFont, "outline", scfg.fontOutline, "assetKnown", assetKnown, "lsmValid", lsmValid, "lsmFetch", lsmFetch)
+	add("EQOL UFDBG cfg2", "enabled", scfg.enabled, "nameStrata", scfg.nameStrata, "nameLevelOffset", scfg.nameFrameLevelOffset, "nameMax", scfg.nameMaxChars, "offset", scfg.nameOffset and scfg.nameOffset.x, scfg.nameOffset and scfg.nameOffset.y)
+
+	if not st then
+		add("EQOL UFDBG state nil")
+		UF.ShowDebugCopyBox(table.concat(lines, "\n"))
+		return
+	end
+
+	local function call(frame, method)
+		local fn = frame and frame[method]
+		if type(fn) ~= "function" then return nil end
+		local ok, a, b, c = pcall(fn, frame)
+		if ok then return a, b, c end
+		return nil
+	end
+
+	local fs = st.nameText
+	if fs then
+		local fontFile, fontSize, fontFlags = call(fs, "GetFont")
+		add(
+			"EQOL UFDBG name",
+			"text",
+			call(fs, "GetText"),
+			"shown",
+			call(fs, "IsShown"),
+			"visible",
+			call(fs, "IsVisible"),
+			"alpha",
+			call(fs, "GetAlpha"),
+			"eff",
+			call(fs, "GetEffectiveAlpha"),
+			"font",
+			fontFile,
+			fontSize,
+			fontFlags
+		)
+		add("EQOL UFDBG name2", "width", call(fs, "GetWidth"), "stringWidth", call(fs, "GetStringWidth"), "rect", call(fs, "GetLeft"), call(fs, "GetTop"), call(fs, "GetRight"), call(fs, "GetBottom"))
+	else
+		add("EQOL UFDBG name nil")
+	end
+
+	local function dumpFrame(label, frame)
+		if not frame then
+			add("EQOL UFDBG frame", label, "nil")
+			return
+		end
+		add(
+			"EQOL UFDBG frame",
+			label,
+			"shown",
+			call(frame, "IsShown"),
+			"visible",
+			call(frame, "IsVisible"),
+			"strata",
+			call(frame, "GetFrameStrata"),
+			"level",
+			call(frame, "GetFrameLevel"),
+			"alpha",
+			call(frame, "GetAlpha")
+		)
+	end
+
+	dumpFrame("frame", st.frame)
+	dumpFrame("status", st.status)
+	dumpFrame("nameLayer", st.nameTextLayer)
+	dumpFrame("statusText", st.statusTextLayer)
+	dumpFrame("health", st.health)
+	dumpFrame("healthText", st.healthTextLayer)
+	dumpFrame("power", st.power)
+	dumpFrame("powerGroup", st.powerGroup)
+	dumpFrame("dataBar", st.dataBar)
+	dumpFrame("dispelTint", st.dispelTint)
+	UF.ShowDebugCopyBox(table.concat(lines, "\n"))
+end
+
+if SlashCmdList then
+	_G.SLASH_EQOLUFDEBUG1 = "/eqolufdebug"
+	SlashCmdList.EQOLUFDEBUG = function() UF.DebugPlayerName() end
+end
 addon.Aura.functions = addon.Aura.functions or {}
 addon.Aura.functions.importUFProfile = UF.ImportProfile
 addon.Aura.functions.exportUFProfile = UF.ExportProfile

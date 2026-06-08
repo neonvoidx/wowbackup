@@ -9,8 +9,8 @@ function addon:OpenSettings()
         ns.Addon:Print("Cannot open settings panel while in combat.")
         return
     end
-    if ns.WilduSettings then
-        local id = ns.WilduSettings.SettingsLayout.rootCategory:GetID()
+    if ns.AddonSettings then
+        local id = ns.AddonSettings.SettingsLayout.rootCategory:GetID()
         Settings.OpenToCategory(id)
     end
 end
@@ -26,9 +26,9 @@ function addon:OnInitialize()
     self.db.RegisterCallback(self, "OnNewProfile", "OnNewProfile")
     self.db.RegisterCallback(self, "OnProfileDeleted", "OnProfileDeleted")
 
-    if ns.WilduSettings then
-        ns.WilduSettings:RegisterSettings()
-        ns.WilduSettings:InitializeSettings()
+    if ns.AddonSettings then
+        ns.AddonSettings:RegisterSettings()
+        ns.AddonSettings:InitializeSettings()
     end
 end
 local openCooldownViewerSettings = function()
@@ -95,16 +95,17 @@ function addon:RefreshConfig()
         ns.TrackerDB:InitializeDB()
     end
     if ns.TrackerItemViewer then
-        ns.TrackerItemViewer:Initialize()
-    end
-    if ns.GlowStyle then
-        ns.GlowStyle:Initialize()
-    end
-    if not ns.db.profile.cooldownManager_experimental_disablePerSpellSettings then
-        if ns.CooldownStyle then
-            ns.CooldownStyle:Initialize()
+        if ns.db.profile.tracker_enabled then
+            ns.TrackerItemViewer:Initialize()
+            ns.TrackerItemViewer:ShowAll()
+        else
+            ns.TrackerItemViewer:HideAll()
         end
     end
+    if ns.CooldownStyle then
+        ns.CooldownStyle:Initialize()
+    end
+
     if ns.ButtonPress then
         ns.ButtonPress:Initialize()
     end
@@ -113,7 +114,6 @@ function addon:RefreshConfig()
     end
 
     ns.API:RefreshCooldownManager()
-    ns.API:ShowReloadUIConfirmation()
     self:Print("Profile settings applied.")
 end
 
@@ -177,6 +177,11 @@ local function _cleanup()
 
     ns.db.profile.cooldownManager_visibility_enabled = nil
 
+    -- Migrate legacy "Smart Visibility" global rules → per-viewer rules
+    if ns.CMCVisibility then
+        ns.CMCVisibility:MigrateSettings()
+    end
+
     ns.db.profile.cooldownManager_centerBuffIcons = nil
     ns.db.profile.cooldownManager_alignBuffBars = nil
     ns.db.profile.cooldownManager_centerEssential = nil
@@ -189,11 +194,14 @@ local function _cleanup()
     ns.db.profile.cooldownManager_customActiveColor_enabled = nil
     ns.db.profile.miscTracker_squareIcons = nil
     -- ns.db.profile.cooldownManager_experimental_custom_glows = false,
+
+    ns.db.profile.cooldownManager_experimental_disablePerSpellSettings = nil
 end
 
 function addon:OnEnable()
     _cleanup()
     C_CVar.SetCVar("cooldownViewerEnabled", "1")
+
     if ns.StyledIcons then
         ns.StyledIcons:Initialize()
     end
@@ -216,17 +224,16 @@ function addon:OnEnable()
         ns.TrackerDB:InitializeDB()
     end
     if ns.TrackerItemViewer then
-        ns.TrackerItemViewer:Initialize()
-    end
-    if ns.GlowStyle then
-        ns.GlowStyle:Initialize()
-    end
-    if not ns.db.profile.cooldownManager_experimental_disablePerSpellSettings then
-        if ns.CooldownStyle then
-            ns.CooldownStyle:Initialize()
+        if ns.db.profile.tracker_enabled then
+            ns.TrackerItemViewer:Initialize()
+            ns.TrackerItemViewer:ShowAll()
+        else
+            ns.TrackerItemViewer:HideAll()
         end
     end
-
+    if ns.CooldownStyle then
+        ns.CooldownStyle:Initialize()
+    end
     if ns.ButtonPress then
         ns.ButtonPress:Initialize()
     end
@@ -253,6 +260,26 @@ function addon:OnEnable()
             ns.ButtonPress:RegisterElvUICallbacks()
         end
     end
+
+    AddonCompartmentFrame:RegisterAddon({
+        text = "|cff008945Cool|r|cff1e9a4e|r|cff3faa4fdown Ma|r|cff5fb64anag|r|cff7ac243er Ce|r|cff8ccd00ntered|r",
+        icon = "Interface\\Addons\\CooldownManagerCentered\\Media\\CooldownManagerCenteredIcon",
+        notCheckable = true,
+        func = function()
+            addon:OpenSettings()
+        end,
+        funcOnEnter = function(button)
+            MenuUtil.ShowTooltip(button, function(tt)
+                if tt and tt.AddLine then
+                    tt:AddLine("Cooldown Manager Centered")
+                    tt:AddLine("Left-click: Open settings", 0.6, 0.8, 1)
+                end
+            end)
+        end,
+        funcOnLeave = function(button)
+            MenuUtil.HideTooltip(button)
+        end,
+    })
 end
 local gameVersion = select(1, GetBuildInfo())
 addon.isMidnight = gameVersion:match("^12")

@@ -13,8 +13,56 @@ local cTooltip = addon.SettingsLayout.rootUI
 
 local expandable = addon.functions.SettingsCreateExpandableSection(cTooltip, {
 	name = L["Tooltip"],
+	description = L["configCenterTooltipDesc"] or "Customize tooltip content, IDs, icons, realms and visibility.",
+	configPageID = "interface.tooltips",
+	searchtags = { "tooltip", "item id", "spell id", "npc id", "realm", "guild" },
+	newTagID = "Tooltip",
+	iconKey = "tooltip",
 	expanded = false,
 	colorizeTitle = false,
+})
+
+local modifierList = {
+	SHIFT = SHIFT_KEY_TEXT,
+	ALT = ALT_KEY_TEXT,
+	CTRL = CTRL_KEY_TEXT,
+}
+local modifierListOrder = { "SHIFT", "ALT", "CTRL" }
+
+addon.functions.SettingsCreateHeadline(cTooltip, {
+	name = _G.SETTINGS or "Settings",
+	parentSection = expandable,
+	groupID = "settings",
+	order = 1,
+})
+
+addon.functions.SettingsCreateCheckbox(cTooltip, {
+	var = "TooltipIDRequireModifier",
+	text = L["TooltipIDRequireModifier"],
+	desc = L["TooltipIDRequireModifierDesc"],
+	func = function(value) addon.db["TooltipIDRequireModifier"] = value and true or false end,
+	default = false,
+	order = 1,
+	parentSection = expandable,
+})
+
+addon.functions.SettingsCreateDropdown(cTooltip, {
+	var = "TooltipIDModifier",
+	text = L["TooltipIDModifier"],
+	list = modifierList,
+	order = modifierListOrder,
+	get = function() return addon.db["TooltipIDModifier"] or "ALT" end,
+	set = function(value) addon.db["TooltipIDModifier"] = value end,
+	default = "ALT",
+	order = 2,
+	parent = true,
+	element = addon.SettingsLayout.elements["TooltipIDRequireModifier"] and addon.SettingsLayout.elements["TooltipIDRequireModifier"].element,
+	parentCheck = function()
+		return addon.SettingsLayout.elements["TooltipIDRequireModifier"]
+			and addon.SettingsLayout.elements["TooltipIDRequireModifier"].setting
+			and addon.SettingsLayout.elements["TooltipIDRequireModifier"].setting:GetValue() == true
+	end,
+	parentSection = expandable,
 })
 
 addon.functions.SettingsCreateHeadline(cTooltip, {
@@ -417,6 +465,65 @@ data = {
 		parentSection = expandable,
 	},
 	{
+		var = "TooltipShowRealmInfo",
+		text = L["TooltipShowRealmInfo"],
+		desc = L["TooltipShowRealmInfoDesc"],
+		func = function(v) addon.db["TooltipShowRealmInfo"] = v end,
+		default = false,
+		type = Settings.VarType.Boolean,
+		parentSection = expandable,
+		children = {
+			{
+				var = "TooltipRealmInfoFields",
+				text = L["TooltipRealmFields"],
+				desc = L["TooltipRealmFieldsDesc"],
+				options = {
+					{ value = "connected", text = L["TooltipRealmShowConnected"] },
+					{ value = "language", text = L["TooltipRealmShowLanguage"] },
+					{ value = "timezone", text = L["TooltipRealmShowTimezone"] },
+					{ value = "type", text = L["TooltipRealmShowType"] },
+				},
+				getSelection = function()
+					if type(addon.db["TooltipRealmInfoFields"]) ~= "table" then addon.db["TooltipRealmInfoFields"] = { language = true, type = true, connected = true } end
+					return addon.db["TooltipRealmInfoFields"]
+				end,
+				setSelection = function(selection) addon.db["TooltipRealmInfoFields"] = type(selection) == "table" and selection or {} end,
+				sType = "multidropdown",
+				parent = true,
+				parentCheck = function()
+					return addon.SettingsLayout.elements["TooltipShowRealmInfo"]
+						and addon.SettingsLayout.elements["TooltipShowRealmInfo"].setting
+						and addon.SettingsLayout.elements["TooltipShowRealmInfo"].setting:GetValue() == true
+				end,
+				element = addon.SettingsLayout.elements["TooltipShowRealmInfo"] and addon.SettingsLayout.elements["TooltipShowRealmInfo"].element,
+				parentSection = expandable,
+			},
+			{
+				var = "TooltipRealmLFGDisplay",
+				text = L["TooltipRealmLFGDisplay"],
+				desc = L["TooltipRealmLFGDisplayDesc"],
+				options = {
+					{ value = "tooltip", text = L["TooltipRealmLFGTooltip"] },
+					{ value = "listingFlag", text = L["TooltipRealmLFGListingFlag"] },
+				},
+				getSelection = function()
+					if type(addon.db["TooltipRealmLFGDisplay"]) ~= "table" then addon.db["TooltipRealmLFGDisplay"] = { tooltip = true, listingFlag = true } end
+					return addon.db["TooltipRealmLFGDisplay"]
+				end,
+				setSelection = function(selection) addon.db["TooltipRealmLFGDisplay"] = type(selection) == "table" and selection or {} end,
+				sType = "multidropdown",
+				parent = true,
+				parentCheck = function()
+					return addon.SettingsLayout.elements["TooltipShowRealmInfo"]
+						and addon.SettingsLayout.elements["TooltipShowRealmInfo"].setting
+						and addon.SettingsLayout.elements["TooltipShowRealmInfo"].setting:GetValue() == true
+				end,
+				element = addon.SettingsLayout.elements["TooltipShowRealmInfo"] and addon.SettingsLayout.elements["TooltipShowRealmInfo"].element,
+				parentSection = expandable,
+			},
+		},
+	},
+	{
 		var = "TooltipShowGuildRank",
 		text = L["TooltipShowGuildRank"],
 		func = function(v) addon.db["TooltipShowGuildRank"] = v end,
@@ -542,6 +649,7 @@ end
 
 addon.functions.SettingsCreateMultiDropdown(cTooltip, {
 	var = "TooltipPlayerDetailsLabel",
+	storage = false,
 	text = L["TooltipPlayerDetailsLabel"],
 	options = BuildTooltipPlayerDetailOptions(),
 	optionfunc = BuildTooltipPlayerDetailOptions,
@@ -579,13 +687,6 @@ addon.functions.SettingsCreateCheckbox(cTooltip, {
 	notify = "TooltipPlayerDetailsLabel",
 	parentSection = expandable,
 })
-
-local modifierList = {
-	SHIFT = SHIFT_KEY_TEXT,
-	ALT = ALT_KEY_TEXT,
-	CTRL = CTRL_KEY_TEXT,
-}
-local modifierListOrder = { "SHIFT", "ALT", "CTRL" }
 
 addon.functions.SettingsCreateDropdown(cTooltip, {
 	var = "TooltipMythicScoreModifier",

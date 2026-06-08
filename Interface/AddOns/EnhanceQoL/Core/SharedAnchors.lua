@@ -125,7 +125,7 @@ function SharedAnchors:GetTargetLabel(value)
 	if panelId then
 		local cooldownPanels = getCooldownPanels()
 		local panel = cooldownPanels and cooldownPanels.GetPanel and cooldownPanels:GetPanel(panelId)
-		return string.format("Panel %s: %s", tostring(panelId), panel and panel.name or "Cooldown Panel")
+			return (L["cooldownPanelReferenceLabel"]):format(tostring(panelId), panel and panel.name or L["cooldownPanelDefaultName"])
 	end
 
 	local cooldownPanels = getCooldownPanels()

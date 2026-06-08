@@ -46,7 +46,7 @@ function skin:OnDisable()
 end
 
 function skin:Apply(mainColor, bordersColor, controlsColor, desaturation)
-  local max_session_window_count = DamageMeterMixin:GetMaxSessionWindowCount()
+  local max_session_window_count = DamageMeter:GetMaxSessionWindowCount()
   for i=1, max_session_window_count do
     self:SkinSessionWindow(i, mainColor, bordersColor, controlsColor, desaturation)
   end
@@ -64,13 +64,13 @@ function skin:SkinSessionWindow(index, mainColor, bordersColor, controlsColor, d
   sessionWindow.Header:SetVertexColor(mainColor[1], mainColor[2], mainColor[3], mainColor[4])
 
   -- Border / Source Window Border.
-  sessionWindow.SourceWindow.Background:SetDesaturation(desaturation)
-  sessionWindow.SourceWindow.Background:SetVertexColor(bordersColor[1], bordersColor[2], bordersColor[3], bordersColor[4])
+  sessionWindow.MinimizeContainer.SourceWindow.Background:SetDesaturation(desaturation)
+  sessionWindow.MinimizeContainer.SourceWindow.Background:SetVertexColor(bordersColor[1], bordersColor[2], bordersColor[3], bordersColor[4])
 
   -- Controls.
   for _, frame in pairs({
-    sessionWindow,
-    sessionWindow.SourceWindow,
+    sessionWindow.MinimizeContainer,
+    sessionWindow.MinimizeContainer.SourceWindow,
   }) do
     self:SkinScrollBarOf(frame, controlsColor, desaturation)
   end

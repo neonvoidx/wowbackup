@@ -82,8 +82,9 @@ local AUTO_ENABLE_OPTIONS = {
 	HEALTH = L["Health"] or "Health",
 	MAIN = L["AutoEnableMain"] or "Main resource",
 	SECONDARY = L["AutoEnableSecondary"] or "Secondary resources",
+	TERTIARY = L["ResourceBarsTertiary"] or "Tertiary resource",
 }
-local AUTO_ENABLE_ORDER = { "HEALTH", "MAIN", "SECONDARY" }
+local AUTO_ENABLE_ORDER = { "HEALTH", "MAIN", "SECONDARY", "TERTIARY" }
 local RESOURCE_MODE_OPTIONS = {
 	SPEC = L["ResourceBarsModeSpec"] or "Classic",
 	SHARED = L["ResourceBarsModeShared"] or "Shared",
@@ -97,6 +98,29 @@ local FRAME_STRATA_VALUES = { { value = "", text = DEFAULT or "Default" } }
 for _, strata in ipairs(FRAME_STRATA_ORDER) do
 	VALID_FRAME_STRATA[strata] = true
 	FRAME_STRATA_VALUES[#FRAME_STRATA_VALUES + 1] = { value = strata, text = strata }
+end
+local TEXT_ANCHOR_OPTIONS = {
+	{ value = "TOPLEFT", label = L["settingsAnchorTopLeft"] or "Top left" },
+	{ value = "TOP", label = L["settingsAnchorTop"] or "Top" },
+	{ value = "TOPRIGHT", label = L["settingsAnchorTopRight"] or "Top right" },
+	{ value = "LEFT", label = L["settingsAnchorLeft"] or "Left" },
+	{ value = "CENTER", label = L["settingsAnchorCenter"] or "Center" },
+	{ value = "RIGHT", label = L["settingsAnchorRight"] or "Right" },
+	{ value = "BOTTOMLEFT", label = L["settingsAnchorBottomLeft"] or "Bottom left" },
+	{ value = "BOTTOM", label = L["settingsAnchorBottom"] or "Bottom" },
+	{ value = "BOTTOMRIGHT", label = L["settingsAnchorBottomRight"] or "Bottom right" },
+}
+local VALID_TEXT_ANCHORS = {}
+for _, entry in ipairs(TEXT_ANCHOR_OPTIONS) do
+	VALID_TEXT_ANCHORS[entry.value] = true
+end
+
+local function normalizeTextAnchor(value, fallback)
+	local fallbackAnchor = tostring(fallback or "CENTER"):upper()
+	if not VALID_TEXT_ANCHORS[fallbackAnchor] then fallbackAnchor = "CENTER" end
+	local anchor = tostring(value or fallbackAnchor):upper()
+	if VALID_TEXT_ANCHORS[anchor] then return anchor end
+	return fallbackAnchor
 end
 
 local function getCachedLSMMedia(mediaType)
@@ -119,6 +143,16 @@ local function getSpecMode(specIndex)
 	return "SPEC"
 end
 
+local function classHasSharedTertiary(classTag)
+	local class = classTag or addon.variables and addon.variables.unitClass
+	local assignments = ResourceBars and ResourceBars.SHARED_SLOT_ASSIGNMENTS and ResourceBars.SHARED_SLOT_ASSIGNMENTS[class]
+	if type(assignments) ~= "table" then return false end
+	for _, specAssignments in pairs(assignments) do
+		if type(specAssignments) == "table" and specAssignments.TERTIARY then return true end
+	end
+	return false
+end
+
 local function setSpecMode(specIndex, mode)
 	if not (ResourceBars and ResourceBars.SetSpecMode) then return false end
 	return ResourceBars.SetSpecMode(specIndex, mode)
@@ -137,7 +171,7 @@ local function autoEnableSelection()
 	addon.db.resourceBarsAutoEnable = addon.db.resourceBarsAutoEnable or {}
 	-- Migrate legacy boolean flag into the new selection map
 	if addon.db.resourceBarsAutoEnableAll ~= nil then
-		if addon.db.resourceBarsAutoEnableAll == true and not next(addon.db.resourceBarsAutoEnable) then addon.db.resourceBarsAutoEnable = { HEALTH = true, MAIN = true, SECONDARY = true } end
+			if addon.db.resourceBarsAutoEnableAll == true and not next(addon.db.resourceBarsAutoEnable) then addon.db.resourceBarsAutoEnable = { HEALTH = true, MAIN = true, SECONDARY = true, TERTIARY = true } end
 		addon.db.resourceBarsAutoEnableAll = nil
 	end
 	return addon.db.resourceBarsAutoEnable
@@ -147,7 +181,15 @@ local function shouldAutoEnableBar(pType, specInfo, selection)
 	if not selection then return false end
 	if pType == "HEALTH" then return selection.HEALTH == true end
 	if specInfo and specInfo.MAIN == pType then return selection.MAIN == true end
-	if specInfo and pType ~= specInfo.MAIN and pType ~= "HEALTH" then return specInfo[pType] == true and selection.SECONDARY == true end
+	if specInfo and pType ~= specInfo.MAIN and pType ~= "HEALTH" then
+		local idx = 0
+		for _, classType in ipairs(ResourceBars.classPowerTypes or {}) do
+			if classType ~= specInfo.MAIN and specInfo[classType] then
+				idx = idx + 1
+				if classType == pType then return (idx == 1 and selection.SECONDARY == true) or (idx > 1 and selection.TERTIARY == true) end
+			end
+		end
+	end
 	return false
 end
 
@@ -155,7 +197,7 @@ local function maybeAutoEnableBars(specIndex, specCfg)
 	if not specCfg or specCfg._autoEnabled then return end
 	if getSpecMode(specIndex) == "SHARED" then return end
 	local selection = autoEnableSelection()
-	if not selection or not (selection.HEALTH or selection.MAIN or selection.SECONDARY) then return end
+	if not selection or not (selection.HEALTH or selection.MAIN or selection.SECONDARY or selection.TERTIARY) then return end
 
 	-- Skip if user already touched enable state
 	for _, cfg in pairs(specCfg) do
@@ -171,11 +213,15 @@ local function maybeAutoEnableBars(specIndex, specCfg)
 	local mainType = specInfo.MAIN
 	if selection.HEALTH then bars[#bars + 1] = "HEALTH" end
 	if selection.MAIN and mainType then bars[#bars + 1] = mainType end
-	if selection.SECONDARY then
-		for _, pType in ipairs(ResourceBars.classPowerTypes or {}) do
-			if specInfo[pType] and pType ~= mainType and pType ~= "HEALTH" then bars[#bars + 1] = pType end
+		if selection.SECONDARY or selection.TERTIARY then
+			local idx = 0
+			for _, pType in ipairs(ResourceBars.classPowerTypes or {}) do
+				if specInfo[pType] and pType ~= mainType and pType ~= "HEALTH" then
+					idx = idx + 1
+					if (idx == 1 and selection.SECONDARY) or (idx > 1 and selection.TERTIARY) then bars[#bars + 1] = pType end
+				end
+			end
 		end
-	end
 	if #bars == 0 then return end
 
 	local function frameNameFor(typeId)
@@ -735,24 +781,29 @@ registerEditModeBars = function()
 			local entry = getPowerTypeOverrideEntry(pType)
 			return entry and entry.enabled == true or false
 		end
-			local function currentEditorPowerType()
-				if genericSharedPowerEditor then return selectedSharedPowerTypeTarget() end
-				return currentLiveBarType() or barType
-			end
-			local function currentEditorSupportsSeparators()
-				local pType = currentEditorPowerType()
-				return ResourceBars and ResourceBars.separatorEligible and pType and ResourceBars.separatorEligible[pType] == true
-			end
-			local function currentPowerConfigTarget()
-			if genericSharedPowerEditor and isPowerTypeOverrideEnabled() then
+		local function currentEditorPowerType()
+			if genericSharedPowerEditor then return selectedSharedPowerTypeTarget() end
+			return currentLiveBarType() or barType
+		end
+		local function currentEditorSupportsSeparators()
+			local pType = currentEditorPowerType()
+			return ResourceBars and ResourceBars.separatorEligible and pType and ResourceBars.separatorEligible[pType] == true
+		end
+		local function currentEditorUsesDuration()
+			local pType = currentEditorPowerType()
+			return ResourceBars and ResourceBars.IsDurationPowerType and ResourceBars.IsDurationPowerType(pType) == true
+		end
+		local function currentPowerConfigTarget()
+			if genericSharedPowerEditor then
 				return ensurePowerTypeOverrideEntry(selectedSharedPowerTypeTarget())
 			end
 			return curSpecCfg()
 		end
+		local function isPowerOverrideEditorEnabled() return not genericSharedPowerEditor or isPowerTypeOverrideEnabled() end
 		local function readPowerConfigField(field, fallback)
 			if genericSharedPowerEditor then
 				local entry = getPowerTypeOverrideEntry(selectedSharedPowerTypeTarget())
-				if entry and entry.enabled == true and entry[field] ~= nil then return entry[field] end
+				if entry and entry[field] ~= nil then return entry[field] end
 			end
 			local c = curSpecCfg()
 			if c and c[field] ~= nil then return c[field] end
@@ -935,6 +986,7 @@ registerEditModeBars = function()
 			if not store then return false end
 			if targetKey == "MAIN" then return store.MAIN end
 			if targetKey == "SECONDARY" then return store.SECONDARY end
+			if targetKey == "TERTIARY" then return store.TERTIARY end
 			return store[targetKey or barType]
 		end
 		local function confirmSaveGlobal(targetKey, doSave)
@@ -1012,7 +1064,7 @@ registerEditModeBars = function()
 				for i = 1, #names do
 					local name = names[i]
 					local path = hash[name]
-					if type(path) == "string" and path ~= "" then map[path] = tostring(name) end
+					if type(path) == "string" and path ~= "" then map[name] = tostring(name) end
 				end
 				return addon.functions.prepareListForDropdown(map)
 			end
@@ -1168,6 +1220,38 @@ registerEditModeBars = function()
 					isEnabled = function() return visibilityRuleOptions and #visibilityRuleOptions > 0 end,
 				},
 				{
+					name = L["Fade amount"] or "Fade amount",
+					kind = settingType.Slider,
+					allowInput = true,
+					field = "visibilityFadeStrength",
+					minValue = 0,
+					maxValue = 100,
+					valueStep = 1,
+					default = 100,
+					parentId = "frame",
+					get = function()
+						local c = curSpecCfg()
+						local strength = c and c.visibilityFadeStrength
+						strength = tonumber(strength) or 1
+						if strength < 0 then strength = 0 end
+						if strength > 1 then strength = 1 end
+						return math.floor((strength * 100) + 0.5)
+					end,
+					set = function(_, value)
+						local c = curSpecCfg()
+						if not c then return end
+						local pct = tonumber(value) or 0
+						if pct < 0 then pct = 0 end
+						if pct > 100 then pct = 100 end
+						if not setIfChanged(c, "visibilityFadeStrength", pct / 100) then return end
+						queueRefresh()
+						if ResourceBars.ScheduleVisibilityDriverAlphaRefresh then ResourceBars.ScheduleVisibilityDriverAlphaRefresh() end
+					end,
+					formatter = function(value) return tostring(value) .. "%" end,
+					isShown = function() return visibilityRuleOptions and #visibilityRuleOptions > 0 end,
+					isEnabled = function() return visibilityRuleOptions and #visibilityRuleOptions > 0 end,
+				},
+				{
 					name = L["Hide in vehicles"],
 					kind = settingType.Checkbox,
 					parentId = "frame",
@@ -1223,6 +1307,7 @@ registerEditModeBars = function()
 				local function displayNameForBarType(pType)
 					if pType == "MAIN" then return L["AutoEnableMain"] or "Main resource" end
 					if pType == "SECONDARY" then return L["AutoEnableSecondary"] or "Secondary" end
+					if pType == "TERTIARY" then return L["ResourceBarsTertiary"] or "Tertiary" end
 					if pType == "HEALTH" then return HEALTH or "Health" end
 					local s = (ResourceBars.PowerLabels and ResourceBars.PowerLabels[pType]) or _G["POWER_TYPE_" .. pType] or _G[pType]
 					if type(s) == "string" and s ~= "" then return s end
@@ -1305,6 +1390,15 @@ registerEditModeBars = function()
 					add("BuffBarCooldownViewer", "BuffBarCooldownViewer")
 					add("BuffIconCooldownViewer", "BuffIconCooldownViewer")
 
+					local anchorHelper = ResourceBars.GetAnchorHelper and ResourceBars.GetAnchorHelper()
+					if anchorHelper and anchorHelper.CollectAnchorEntries then
+						local externalEntries = {}
+						anchorHelper:CollectAnchorEntries(externalEntries, {})
+						for _, entry in ipairs(externalEntries) do
+							add(entry.key, entry.label)
+						end
+					end
+
 					local cooldownPanels = addon.Aura and addon.Aura.CooldownPanels
 					if cooldownPanels and cooldownPanels.GetRoot then
 						local root = cooldownPanels:GetRoot()
@@ -1312,7 +1406,7 @@ registerEditModeBars = function()
 							local order = root.order or {}
 							local function addPanelEntry(panelId, panel)
 								if not panel or panel.enabled == false then return end
-								local label = string.format("Panel %s: %s", tostring(panelId), panel.name or "Cooldown Panel")
+									local label = (L["cooldownPanelReferenceLabel"]):format(tostring(panelId), panel.name or L["cooldownPanelDefaultName"])
 								add("EQOL_CooldownPanel" .. tostring(panelId), label)
 							end
 							if #order > 0 then
@@ -1365,6 +1459,10 @@ registerEditModeBars = function()
 							ok = true
 							break
 						end
+					end
+					if not ok then
+						local anchorHelper = ResourceBars.GetAnchorHelper and ResourceBars.GetAnchorHelper()
+						ok = anchorHelper and anchorHelper.IsExternalAnchorKey and anchorHelper:IsExternalAnchorKey(cur)
 					end
 					if not ok then
 						cur = "UIParent"
@@ -1523,6 +1621,33 @@ registerEditModeBars = function()
 					end,
 					isEnabled = function() return not anchorUsesUIParent() end,
 					default = false,
+					parentId = "frame",
+				}
+
+				settingsList[#settingsList + 1] = {
+					name = L["Offset"] or "Offset",
+					kind = settingType.Slider,
+					allowInput = true,
+					field = "matchRelativeWidthOffset",
+					minValue = -200,
+					maxValue = 200,
+					valueStep = 1,
+					get = function()
+						local a = ensureAnchorTable()
+						return a and tonumber(a.matchRelativeWidthOffset) or 0
+					end,
+					set = function(_, value)
+						local a = ensureAnchorTable()
+						if not a then return end
+						local newValue = tonumber(value) or 0
+						a.matchRelativeWidthOffset = newValue ~= 0 and newValue or nil
+						queueRefresh()
+					end,
+					isEnabled = function()
+						local a = ensureAnchorTable()
+						return not anchorUsesUIParent() and a and a.matchRelativeWidth == true
+					end,
+					default = 0,
 					parentId = "frame",
 				}
 
@@ -1867,8 +1992,10 @@ registerEditModeBars = function()
 					},
 					get = function()
 						local c = curSpecCfg()
-						local count = (c and c.thresholdCount) or DEFAULT_THRESHOLD_COUNT
-						return tostring(count)
+						local count = tonumber(c and c.thresholdCount) or DEFAULT_THRESHOLD_COUNT
+						if count < 1 then count = 1 end
+						if count > 4 then count = 4 end
+						return math.floor(count + 0.5)
 					end,
 					set = function(_, value)
 						local c = curSpecCfg()
@@ -1880,7 +2007,7 @@ registerEditModeBars = function()
 						c.thresholdCount = new
 						queueRefresh()
 					end,
-					default = tostring(DEFAULT_THRESHOLD_COUNT),
+					default = DEFAULT_THRESHOLD_COUNT,
 					isEnabled = function()
 						local c = curSpecCfg()
 						return c and c.showThresholds == true
@@ -2201,6 +2328,52 @@ registerEditModeBars = function()
 				}
 
 				settingsList[#settingsList + 1] = {
+					name = L["Don't overflow health bar"] or "Don't overflow health bar",
+					kind = settingType.Checkbox,
+					field = "absorbDontOverflowHealthBar",
+					parentId = "absorb",
+					get = function()
+						local c = curSpecCfg()
+						return c and c.absorbDontOverflowHealthBar == true
+					end,
+					set = function(_, value)
+						local c = curSpecCfg()
+						if not c then return end
+						c.absorbDontOverflowHealthBar = value and true or false
+						if c.absorbDontOverflowHealthBar then c.absorbOverfill = false end
+						queueRefresh()
+						refreshSettingsUI()
+					end,
+					isEnabled = function()
+						local c = curSpecCfg()
+						return not (c and c.absorbOverfill == true)
+					end,
+					default = false,
+				}
+
+				settingsList[#settingsList + 1] = {
+					name = L["Use absorb glow"] or "Use absorb glow",
+					kind = settingType.Checkbox,
+					field = "useAbsorbGlow",
+					parentId = "absorb",
+					get = function()
+						local c = curSpecCfg()
+						return c and c.useAbsorbGlow == true
+					end,
+					set = function(_, value)
+						local c = curSpecCfg()
+						if not c then return end
+						c.useAbsorbGlow = value and true or false
+						queueRefresh()
+					end,
+					isEnabled = function()
+						local c = curSpecCfg()
+						return c and c.absorbEnabled ~= false
+					end,
+					default = false,
+				}
+
+				settingsList[#settingsList + 1] = {
 					name = L["Show sample absorb"] or "Show sample absorb",
 					kind = settingType.Checkbox,
 					field = "absorbSample",
@@ -2213,6 +2386,194 @@ registerEditModeBars = function()
 						local c = curSpecCfg()
 						if not c then return end
 						c.absorbSample = value and true or false
+						queueRefresh()
+					end,
+					default = false,
+				}
+
+				local healAbsorbDefaultColor = { 1, 0.3, 0.3, 0.7 }
+				settingsList[#settingsList + 1] = {
+					name = L["HealAbsorbBar"] or "Heal Absorb Bar",
+					kind = settingType.Collapsible,
+					id = "healabsorb",
+					defaultCollapsed = true,
+				}
+
+				settingsList[#settingsList + 1] = {
+					name = L["Show heal absorb bar"] or "Show heal absorb bar",
+					kind = settingType.Checkbox,
+					field = "healAbsorbEnabled",
+					parentId = "healabsorb",
+					get = function()
+						local c = curSpecCfg()
+						return c and c.healAbsorbEnabled ~= false
+					end,
+					set = function(_, value)
+						local c = curSpecCfg()
+						if not c then return end
+						c.healAbsorbEnabled = value and true or false
+						queueRefresh()
+					end,
+					default = true,
+				}
+
+				settingsList[#settingsList + 1] = {
+					name = L["Use custom heal absorb color"] or "Use custom heal absorb color",
+					kind = settingType.CheckboxColor,
+					field = "healAbsorbUseCustomColor",
+					parentId = "healabsorb",
+					default = false,
+					get = function()
+						local c = curSpecCfg()
+						return c and c.healAbsorbUseCustomColor == true
+					end,
+					set = function(_, value)
+						local c = curSpecCfg()
+						if not c then return end
+						c.healAbsorbUseCustomColor = value and true or false
+						queueRefresh()
+					end,
+					colorDefault = toUIColor(cfg and cfg.healAbsorbColor, healAbsorbDefaultColor),
+					colorGet = function()
+						local c = curSpecCfg()
+						local col = (c and c.healAbsorbColor) or (cfg and cfg.healAbsorbColor) or healAbsorbDefaultColor
+						local r, g, b, a = toColorComponents(col, healAbsorbDefaultColor)
+						return { r = r, g = g, b = b, a = a }
+					end,
+					colorSet = function(_, value)
+						local c = curSpecCfg()
+						if not c then return end
+						c.healAbsorbColor = toColorArray(value, healAbsorbDefaultColor)
+						c.healAbsorbUseCustomColor = true
+						queueRefresh()
+					end,
+					hasOpacity = true,
+				}
+
+				settingsList[#settingsList + 1] = {
+					name = L["Heal absorb texture"] or "Heal absorb texture",
+					kind = settingType.Dropdown,
+					height = 180,
+					field = "healAbsorbTexture",
+					parentId = "healabsorb",
+					generator = function(dropdown, root)
+						local listTex, orderTex = addon.Aura.functions.getStatusbarDropdownLists(true)
+						if not listTex or not orderTex then
+							listTex, orderTex = { DEFAULT = DEFAULT }, { "DEFAULT" }
+						end
+						if not listTex or not orderTex then return end
+						ensureDropdownTexturePreview(dropdown)
+						for index, key in ipairs(orderTex) do
+							local label = listTex[key] or key
+							local previewIndex = index
+							local previewPath = resolveStatusbarPreviewPath(key)
+							local checkbox = root:CreateCheckbox(label, function()
+								local c = curSpecCfg()
+								local cur = c and c.healAbsorbTexture or cfg.healAbsorbTexture or cfg.barTexture or "DEFAULT"
+								return cur == key
+							end, function()
+								local c = curSpecCfg()
+								if not c then return end
+								local cur = c.healAbsorbTexture or cfg.healAbsorbTexture or cfg.barTexture or "DEFAULT"
+								if cur == key then return end
+								c.healAbsorbTexture = key
+								queueRefresh()
+							end)
+							if previewPath then checkbox:AddInitializer(function(button) attachDropdownTexturePreview(dropdown, button, previewIndex, previewPath) end) end
+						end
+					end,
+					get = function()
+						local c = curSpecCfg()
+						return (c and c.healAbsorbTexture) or cfg.healAbsorbTexture or cfg.barTexture or "DEFAULT"
+					end,
+					set = function(_, value)
+						local c = curSpecCfg()
+						if not c then return end
+						c.healAbsorbTexture = value
+						queueRefresh()
+					end,
+					default = cfg and (cfg.healAbsorbTexture or cfg.barTexture) or "DEFAULT",
+				}
+
+				settingsList[#settingsList + 1] = {
+					name = L["Reverse heal absorb fill"] or "Reverse heal absorb fill",
+					kind = settingType.Checkbox,
+					field = "healAbsorbReverseFill",
+					parentId = "healabsorb",
+					get = function()
+						local c = curSpecCfg()
+						return c and c.healAbsorbReverseFill == true
+					end,
+					set = function(_, value)
+						local c = curSpecCfg()
+						if not c then return end
+						c.healAbsorbReverseFill = value and true or false
+						if c.healAbsorbReverseFill then c.healAbsorbDontOverflowHealthBar = false end
+						queueRefresh()
+						refreshSettingsUI()
+					end,
+					default = false,
+				}
+
+				settingsList[#settingsList + 1] = {
+					name = L["Don't overflow health bar"] or "Don't overflow health bar",
+					kind = settingType.Checkbox,
+					field = "healAbsorbDontOverflowHealthBar",
+					parentId = "healabsorb",
+					get = function()
+						local c = curSpecCfg()
+						return c and c.healAbsorbDontOverflowHealthBar == true
+					end,
+					set = function(_, value)
+						local c = curSpecCfg()
+						if not c then return end
+						c.healAbsorbDontOverflowHealthBar = value and true or false
+						if c.healAbsorbDontOverflowHealthBar then c.healAbsorbReverseFill = false end
+						queueRefresh()
+						refreshSettingsUI()
+					end,
+					isEnabled = function()
+						local c = curSpecCfg()
+						return not (c and c.healAbsorbReverseFill == true)
+					end,
+					default = false,
+				}
+
+				settingsList[#settingsList + 1] = {
+					name = L["Heal absorb overlay height"] or "Heal absorb overlay height",
+					kind = settingType.Slider,
+					field = "healAbsorbOverlayHeight",
+					parentId = "healabsorb",
+					allowInput = true,
+					minValue = 1,
+					maxValue = 300,
+					valueStep = 1,
+					default = 100,
+					get = function()
+						local c = curSpecCfg()
+						return (c and c.healAbsorbOverlayHeight) or cfg.healAbsorbOverlayHeight or 100
+					end,
+					set = function(_, value)
+						local c = curSpecCfg()
+						if not c then return end
+						c.healAbsorbOverlayHeight = value
+						queueRefresh()
+					end,
+				}
+
+				settingsList[#settingsList + 1] = {
+					name = L["Show sample heal absorb"] or "Show sample heal absorb",
+					kind = settingType.Checkbox,
+					field = "healAbsorbSample",
+					parentId = "healabsorb",
+					get = function()
+						local c = curSpecCfg()
+						return c and c.healAbsorbSample == true
+					end,
+					set = function(_, value)
+						local c = curSpecCfg()
+						if not c then return end
+						c.healAbsorbSample = value and true or false
 						queueRefresh()
 					end,
 					default = false,
@@ -2524,6 +2885,40 @@ registerEditModeBars = function()
 				}
 
 				settingsList[#settingsList + 1] = {
+					name = (L["Text"] or "Text") .. " " .. (L["Anchor"] or "Anchor"),
+					kind = settingType.Dropdown,
+					field = "textAnchor",
+					parentId = "textsettings",
+					get = function()
+						local c = curSpecCfg()
+						return normalizeTextAnchor(c and c.textAnchor, "CENTER")
+					end,
+					set = function(_, value)
+						local c = curSpecCfg()
+						if not c then return end
+						local anchor = normalizeTextAnchor(value, "CENTER")
+						if c.textAnchor == anchor then return end
+						c.textAnchor = anchor
+						queueRefresh()
+					end,
+					default = "CENTER",
+					generator = function(_, root)
+						for _, entry in ipairs(TEXT_ANCHOR_OPTIONS) do
+							root:CreateRadio(entry.label, function()
+								local c = curSpecCfg()
+								return normalizeTextAnchor(c and c.textAnchor, "CENTER") == entry.value
+							end, function()
+								local c = curSpecCfg()
+								if not c then return end
+								if c.textAnchor == entry.value then return end
+								c.textAnchor = entry.value
+								queueRefresh()
+							end)
+						end
+					end,
+				}
+
+				settingsList[#settingsList + 1] = {
 					name = L["Text X Offset"] or "Text Offset X",
 					kind = settingType.Slider,
 					allowInput = true,
@@ -2789,7 +3184,7 @@ registerEditModeBars = function()
 					powerColorParentId = "powercolorsetting"
 
 					settingsList[#settingsList + 1] = {
-						name = L["ResourceBarsPowerColor"] or "Power color",
+						name = L["ResourceBarsPowerColor"] or "Power overrides",
 						kind = settingType.Collapsible,
 						id = powerColorParentId,
 						defaultCollapsed = true,
@@ -2808,20 +3203,20 @@ registerEditModeBars = function()
 								end, function()
 									if selectedSharedPowerType == pType then return end
 									selectedSharedPowerType = pType
-									if addon.EditModeLib and addon.EditModeLib.internal then addon.EditModeLib.internal:RefreshSettings() end
+									refreshSettingsUI()
 								end)
 							end
 						end,
 						get = function() return selectedSharedPowerTypeTarget() end,
 						set = function(_, value)
 							selectedSharedPowerType = value
-							if addon.EditModeLib and addon.EditModeLib.internal then addon.EditModeLib.internal:RefreshSettings() end
+							refreshSettingsUI()
 						end,
 						default = currentEditorPowerType() or barType,
 					}
 
 					settingsList[#settingsList + 1] = {
-						name = L["ResourceBarsOverridePowerColor"] or "Override power type styling",
+						name = L["ResourceBarsOverridePowerColor"] or "Override selected power type",
 						kind = settingType.Checkbox,
 						field = "powerTypeOverrideEnabled",
 						parentId = powerColorParentId,
@@ -2851,6 +3246,50 @@ registerEditModeBars = function()
 							end
 							queueRefresh()
 							if addon.EditModeLib and addon.EditModeLib.internal then addon.EditModeLib.internal:RefreshSettings() end
+						end,
+					}
+
+					settingsList[#settingsList + 1] = {
+						name = L["Bar Texture"] or "Bar Texture",
+						kind = settingType.Dropdown,
+						height = 180,
+						field = "powerTypeOverrideBarTexture",
+						parentId = powerColorParentId,
+						generator = function(dropdown, root)
+							local listTex, orderTex = addon.Aura.functions.getStatusbarDropdownLists(true)
+							if not listTex or not orderTex then
+								listTex, orderTex = { DEFAULT = DEFAULT }, { "DEFAULT" }
+							end
+							if not listTex or not orderTex then return end
+							ensureDropdownTexturePreview(dropdown)
+							for index, key in ipairs(orderTex) do
+								local label = listTex[key] or key
+								local previewIndex = index
+								local previewPath = resolveStatusbarPreviewPath(key)
+								local checkbox = root:CreateCheckbox(label, function()
+									return readPowerConfigField("barTexture", "DEFAULT") == key
+								end, function()
+									local c = currentPowerConfigTarget()
+									if not c then return end
+									if c.barTexture == key then return end
+									c.barTexture = key
+									queueRefresh()
+								end)
+								if previewPath then checkbox:AddInitializer(function(button) attachDropdownTexturePreview(dropdown, button, previewIndex, previewPath) end) end
+							end
+						end,
+						get = function()
+							return readPowerConfigField("barTexture", "DEFAULT")
+						end,
+						set = function(_, value)
+							local c = currentPowerConfigTarget()
+							if not c then return end
+							c.barTexture = value
+							queueRefresh()
+						end,
+						default = "DEFAULT",
+						isEnabled = function()
+							return isPowerOverrideEditorEnabled()
 						end,
 					}
 
@@ -2933,7 +3372,7 @@ registerEditModeBars = function()
 						queueRefresh()
 					end,
 					isEnabled = function()
-						return readPowerConfigField("useClassColor", false) ~= true
+						return isPowerOverrideEditorEnabled() and readPowerConfigField("useClassColor", false) ~= true
 					end,
 					hasOpacity = true,
 					parentId = powerColorParentId,
@@ -2956,7 +3395,7 @@ registerEditModeBars = function()
 							if addon.EditModeLib and addon.EditModeLib.internal then addon.EditModeLib.internal:RefreshSettings() end
 						end,
 						isEnabled = function()
-							return readPowerConfigField("useBarColor", false) ~= true
+							return isPowerOverrideEditorEnabled() and readPowerConfigField("useBarColor", false) ~= true
 						end,
 						isShown = function()
 							return not genericSharedPowerEditor or currentEditorPowerType() ~= "RUNES"
@@ -2982,6 +3421,9 @@ registerEditModeBars = function()
 						refreshSettingsUI()
 					end,
 					default = false,
+					isEnabled = function()
+						return isPowerOverrideEditorEnabled()
+					end,
 					parentId = powerColorParentId,
 				}
 
@@ -3001,7 +3443,7 @@ registerEditModeBars = function()
 					default = { r = 1, g = 1, b = 1, a = 1 },
 					hasOpacity = true,
 					isEnabled = function()
-						return readPowerConfigField("useGradient", false) == true
+						return isPowerOverrideEditorEnabled() and readPowerConfigField("useGradient", false) == true
 					end,
 				}
 
@@ -3021,7 +3463,7 @@ registerEditModeBars = function()
 					default = { r = 1, g = 1, b = 1, a = 1 },
 					hasOpacity = true,
 					isEnabled = function()
-						return readPowerConfigField("useGradient", false) == true
+						return isPowerOverrideEditorEnabled() and readPowerConfigField("useGradient", false) == true
 					end,
 				}
 
@@ -3060,7 +3502,7 @@ registerEditModeBars = function()
 					end,
 					default = "VERTICAL",
 					isEnabled = function()
-						return readPowerConfigField("useGradient", false) == true
+						return isPowerOverrideEditorEnabled() and readPowerConfigField("useGradient", false) == true
 					end,
 				}
 
@@ -3080,6 +3522,9 @@ registerEditModeBars = function()
 						end,
 						default = { r = 0.35, g = 0.35, b = 0.35, a = 1 },
 						hasOpacity = true,
+						isEnabled = function()
+							return isPowerOverrideEditorEnabled()
+						end,
 						isShown = function()
 							return not genericSharedPowerEditor or currentEditorPowerType() == "RUNES"
 						end,
@@ -3115,8 +3560,142 @@ registerEditModeBars = function()
 						end,
 						hasOpacity = true,
 						parentId = powerColorParentId,
+						isEnabled = function()
+							return isPowerOverrideEditorEnabled()
+						end,
 						isShown = function()
 							return not genericSharedPowerEditor or currentEditorPowerType() == "HOLY_POWER"
+						end,
+					}
+				end
+
+				if genericSharedPowerEditor then
+					local overrideTextOptions = {
+						{ key = "PERCENT", label = STATUS_TEXT_PERCENT },
+						{ key = "CURMAX", label = L["Current/Max"] or "Current/Max" },
+						{ key = "CURRENT", label = L["Current"] or "Current" },
+						{ key = "CURPERCENT", label = L["Current - Percent"] or "Current - Percent" },
+						{ key = "NONE", label = NONE },
+					}
+					local overrideRoundingOptions = {
+						{ key = "ROUND", label = L["Round to nearest"] or "Round to nearest" },
+						{ key = "FLOOR", label = L["Round down"] or "Round down" },
+					}
+					settingsList[#settingsList + 1] = {
+						name = LOCALE_TEXT_LABEL,
+						kind = settingType.Dropdown,
+						height = 220,
+						field = "powerTypeOverrideTextStyle",
+						parentId = powerColorParentId,
+						get = function()
+							return readPowerConfigField("textStyle", "CURMAX")
+						end,
+						set = function(_, value)
+							local c = currentPowerConfigTarget()
+							if not c then return end
+							c.textStyle = value
+							queueRefresh()
+						end,
+						generator = function(_, root)
+							for _, entry in ipairs(overrideTextOptions) do
+								root:CreateRadio(entry.label, function()
+									return readPowerConfigField("textStyle", "CURMAX") == entry.key
+								end, function()
+									local c = currentPowerConfigTarget()
+									if not c then return end
+									c.textStyle = entry.key
+									queueRefresh()
+								end)
+							end
+						end,
+						default = "CURMAX",
+						isEnabled = function()
+							return isPowerOverrideEditorEnabled() and currentEditorPowerType() ~= "RUNES"
+						end,
+						isShown = function()
+							return currentEditorPowerType() ~= "RUNES"
+						end,
+					}
+
+					settingsList[#settingsList + 1] = {
+						name = L["Use short numbers"] or "Use short numbers",
+						kind = settingType.Checkbox,
+						field = "powerTypeOverrideShortNumbers",
+						parentId = powerColorParentId,
+						get = function()
+							return readPowerConfigField("shortNumbers", true) ~= false
+						end,
+						set = function(_, value)
+							local c = currentPowerConfigTarget()
+							if not c then return end
+							c.shortNumbers = value and true or false
+							queueRefresh()
+						end,
+						default = true,
+						isEnabled = function()
+							return isPowerOverrideEditorEnabled() and currentEditorPowerType() ~= "RUNES"
+						end,
+						isShown = function()
+							return currentEditorPowerType() ~= "RUNES"
+						end,
+					}
+
+					settingsList[#settingsList + 1] = {
+						name = L["Percent rounding"] or "Percent rounding",
+						kind = settingType.Dropdown,
+						height = 120,
+						field = "powerTypeOverridePercentRounding",
+						parentId = powerColorParentId,
+						get = function()
+							return readPowerConfigField("percentRounding", "ROUND")
+						end,
+						set = function(_, value)
+							local c = currentPowerConfigTarget()
+							if not c then return end
+							c.percentRounding = value
+							queueRefresh()
+						end,
+						generator = function(_, root)
+							for _, entry in ipairs(overrideRoundingOptions) do
+								root:CreateRadio(entry.label, function()
+									return readPowerConfigField("percentRounding", "ROUND") == entry.key
+								end, function()
+									local c = currentPowerConfigTarget()
+									if not c then return end
+									c.percentRounding = entry.key
+									queueRefresh()
+								end)
+							end
+						end,
+						default = "ROUND",
+						isEnabled = function()
+							return isPowerOverrideEditorEnabled() and currentEditorPowerType() ~= "RUNES"
+						end,
+						isShown = function()
+							return currentEditorPowerType() ~= "RUNES"
+						end,
+					}
+
+					settingsList[#settingsList + 1] = {
+						name = L["Hide percent (%)"] or "Hide percent (%)",
+						kind = settingType.Checkbox,
+						field = "powerTypeOverrideHidePercentSign",
+						parentId = powerColorParentId,
+						get = function()
+							return readPowerConfigField("hidePercentSign", false) == true
+						end,
+						set = function(_, value)
+							local c = currentPowerConfigTarget()
+							if not c then return end
+							c.hidePercentSign = value and true or false
+							queueRefresh()
+						end,
+						default = false,
+						isEnabled = function()
+							return isPowerOverrideEditorEnabled() and currentEditorPowerType() ~= "RUNES"
+						end,
+						isShown = function()
+							return currentEditorPowerType() ~= "RUNES"
 						end,
 					}
 				end
@@ -3531,6 +4110,9 @@ registerEditModeBars = function()
 					end,
 					hasOpacity = true,
 					parentId = powerColorParentId,
+					isShown = function()
+						return not currentEditorUsesDuration()
+					end,
 				}
 			end
 
@@ -4489,6 +5071,7 @@ registerEditModeBars = function()
 		local assignments = ResourceBars.ResolveSharedSlotAssignments and ResourceBars.ResolveSharedSlotAssignments(activeSpec) or {}
 		if ResourceBars and ResourceBars.SyncSharedSlotProxyFrames then ResourceBars.SyncSharedSlotProxyFrames(activeSpec) end
 		local allowed = { HEALTH = true, MAIN = true, SECONDARY = true }
+		if assignments and assignments.TERTIARY then allowed.TERTIARY = true end
 		clearUnusedRegistrations(allowed)
 		registerBar("HEALTH", "EQOLHealthBar", "HEALTH", ResourceBars.DEFAULT_HEALTH_WIDTH, ResourceBars.DEFAULT_HEALTH_HEIGHT, {
 			sharedSlot = "HEALTH",
@@ -4498,6 +5081,7 @@ registerEditModeBars = function()
 			{ slot = "MAIN", label = L["AutoEnableMain"] or "Main resource" },
 			{ slot = "SECONDARY", label = L["AutoEnableSecondary"] or "Secondary" },
 		}
+		if assignments and assignments.TERTIARY then sharedEntries[#sharedEntries + 1] = { slot = "TERTIARY", label = L["ResourceBarsTertiary"] or "Tertiary" } end
 		for _, entry in ipairs(sharedEntries) do
 			local resolvedType = assignments and assignments[entry.slot]
 			registerBar(
@@ -4578,6 +5162,7 @@ local function buildSpecToggles(specIndex, specName, available, expandable)
 	return {
 		sType = "multidropdown",
 		var = varKey,
+		storage = false,
 		text = specName,
 		options = options,
 		isSelectedFunc = function(key)
@@ -4605,13 +5190,32 @@ local function buildSpecToggles(specIndex, specName, available, expandable)
 end
 
 local settingsBuilt = false
+local function ensureResourceBarsSuiteSection(cat)
+	local expandable = addon.SettingsLayout.suitesResourceBarsSection
+	if expandable then return expandable end
+
+	expandable = addon.functions.SettingsCreateExpandableSection(cat, {
+		name = L["Resource Bars"] or "Resource Bars",
+		configPageKey = "ResourceBars",
+		description = L["configCenterPageDescBarsResources"]
+			or "Adjust class resources, resource and status bars, XP, absorb and player resource displays.",
+		expanded = false,
+		colorizeTitle = false,
+		iconKey = "resource",
+		modernCategory = "suites",
+		modernOnly = true,
+	})
+	addon.SettingsLayout.suitesResourceBarsSection = expandable
+	return expandable
+end
+
 local function buildSettings()
 	if settingsBuilt then return end
 	local cat = addon.SettingsLayout.rootUI
 
 	if not cat then return end
 
-	local expandable = addon.SettingsLayout.uiBarsResourcesExpandable
+	local expandable = ensureResourceBarsSuiteSection(cat)
 	if not expandable then return end
 
 	settingsBuilt = true
@@ -4623,7 +5227,7 @@ local function buildSettings()
 		{
 			var = "enableResourceFrame",
 			text = L["Resource Bars"],
-			desc = L["Resource Bars"],
+			desc = L["ResourceBarsEnableDesc"] or "Enable movable resource bars for health, power and class-specific resources.",
 			get = function() return addon.db["enableResourceFrame"] end,
 			func = function(val)
 				addon.db["enableResourceFrame"] = val and true or false
@@ -4677,6 +5281,12 @@ local function buildSettings()
 	local function specModeParentCheck()
 		return addon.db["enableResourceFrame"] == true and currentClassMode() ~= "SHARED"
 	end
+	local function sharedModeHidden()
+		return currentClassMode() ~= "SHARED"
+	end
+	local function specModeHidden()
+		return currentClassMode() == "SHARED"
+	end
 
 	do
 		local modeVar = "rb_mode_class"
@@ -4684,6 +5294,9 @@ local function buildSettings()
 		addon.functions.SettingsCreateDropdown(cat, {
 			var = modeVar,
 			text = _G.MODE or "Mode",
+			desc = L["ResourceBarsModeDesc"] or "Select the layout mode for resource bars.",
+			note = L["ResourceBarsModeNote"]
+				or "Shared uses one set of bars for the current class. Classic lets each specialization choose its own enabled bars.",
 			values = RESOURCE_MODE_OPTIONS,
 			order = RESOURCE_MODE_ORDER,
 			get = function() return currentClassMode() end,
@@ -4706,6 +5319,7 @@ local function buildSettings()
 			parent = resourceBarsParent,
 			parentSection = expandable,
 			parentCheck = function() return addon.db["enableResourceFrame"] == true end,
+			refreshOnChange = true,
 		})
 	end
 
@@ -4713,19 +5327,34 @@ local function buildSettings()
 		parent = resourceBarsParent,
 		parentSection = expandable,
 		parentCheck = sharedModeParentCheck,
+		hiddenWhen = sharedModeHidden,
 	})
 
 	addon.functions.SettingsCreateText(cat, "|cff99e599" .. (L["ResourceBarsModeShared"] or "Shared") .. "|r", {
 		parent = resourceBarsParent,
 		parentSection = expandable,
 		parentCheck = sharedModeParentCheck,
+		hiddenWhen = sharedModeHidden,
 	})
 
+	local sharedEnableOptions = AUTO_ENABLE_OPTIONS
+	local sharedEnableOrder = AUTO_ENABLE_ORDER
+	do
+		local activeSpec = tonumber(getActiveSpecIndex()) or tonumber(addon.variables and addon.variables.unitSpec) or 0
+		local assignments = ResourceBars.ResolveSharedSlotAssignments and ResourceBars.ResolveSharedSlotAssignments(activeSpec) or nil
+		if not ((assignments and assignments.TERTIARY) or classHasSharedTertiary()) then
+			sharedEnableOptions = CopyTable(AUTO_ENABLE_OPTIONS)
+			sharedEnableOptions.TERTIARY = nil
+			sharedEnableOrder = { "HEALTH", "MAIN", "SECONDARY" }
+		end
+	end
 	addon.functions.SettingsCreateMultiDropdown(cat, {
 		var = "resourceBarsSharedEnabled",
+		storage = false,
 		text = L["ResourceBarsModeShared"] or "Shared",
-		options = AUTO_ENABLE_OPTIONS,
-		order = AUTO_ENABLE_ORDER,
+		desc = L["ResourceBarsModeSharedDesc"] or "Choose which shared resource bars are active for this class.",
+		options = sharedEnableOptions,
+		order = sharedEnableOrder,
 		isSelectedFunc = function(key)
 			return isSharedSlotEnabled(key)
 		end,
@@ -4735,14 +5364,17 @@ local function buildSettings()
 		parent = resourceBarsParent,
 		parentCheck = sharedModeParentCheck,
 		parentSection = expandable,
+		hiddenWhen = sharedModeHidden,
 	})
 
 	addon.functions.SettingsCreateButton(cat, {
 		var = "resourceBarsSharedAllClasses",
 		text = L["ResourceBarsEnableSharedAllClasses"] or "Enable Shared for all classes",
+		desc = L["ResourceBarsEnableSharedAllClassesDesc"] or "Switch every class and specialization to Shared mode and create the shared bar slots.",
 		parent = resourceBarsParent,
 		parentSection = expandable,
 		parentCheck = sharedModeParentCheck,
+		hiddenWhen = sharedModeHidden,
 		func = function()
 			local popupKey = "EQOL_RESOURCEBARS_ENABLE_SHARED_ALL_CLASSES"
 			StaticPopupDialogs[popupKey] = StaticPopupDialogs[popupKey]
@@ -4780,6 +5412,7 @@ local function buildSettings()
 	addon.functions.SettingsCreateMultiDropdown(cat, {
 		var = "resourceBarsAutoEnable",
 		text = L["AutoEnableAllBars"] or "Auto-enable bars for new characters",
+		desc = L["ResourceBarsAutoEnableDesc"] or "Choose which resource bars should be enabled automatically when a specialization is initialized.",
 		options = AUTO_ENABLE_OPTIONS,
 		order = AUTO_ENABLE_ORDER,
 		isSelectedFunc = function(key)
@@ -4802,30 +5435,36 @@ local function buildSettings()
 		parent = resourceBarsParent,
 		parentSection = expandable,
 		parentCheck = specModeParentCheck,
+		hiddenWhen = specModeHidden,
 	})
 
 	addon.functions.SettingsCreateText(cat, "", {
 		parent = resourceBarsParent,
 		parentSection = expandable,
 		parentCheck = specModeParentCheck,
+		hiddenWhen = specModeHidden,
 	})
 
 	addon.functions.SettingsCreateText(cat, "|cff99e599" .. (L["ResourceBarsModeSpec"] or "Classic") .. "|r", {
 		parent = resourceBarsParent,
 		parentSection = expandable,
 		parentCheck = specModeParentCheck,
+		hiddenWhen = specModeHidden,
 	})
 
 	addon.functions.SettingsCreateText(cat, "|cff99e599" .. L["ResourceBarsSpecHint"] .. "|r", {
 		parent = resourceBarsParent,
 		parentSection = expandable,
 		parentCheck = specModeParentCheck,
+		hiddenWhen = specModeHidden,
 	})
 
 	for _, row in ipairs(specRows) do
 		local entry = buildSpecToggles(row.index, row.name, row.available or {}, expandable)
 		if entry then
 			entry.parent = resourceBarsParent
+			entry.desc = entry.desc or L["ResourceBarsSpecSelectionDesc"] or "Choose which resource bars are enabled for this specialization."
+			entry.hiddenWhen = entry.hiddenWhen or specModeHidden
 			addon.functions.SettingsCreateMultiDropdown(cat, entry)
 		end
 	end
@@ -4889,25 +5528,32 @@ addon.Aura.functions.AddResourceBarsProfileSettings = function()
 	end
 	scopeOrder[#scopeOrder + 1] = "ALL_CLASSES"
 
-	local cProfiles = addon.SettingsLayout.rootPROFILES
+	local profilesCategory = nil
 
-	local expandableProfile = addon.functions.SettingsCreateExpandableSection(cProfiles, {
+	local expandableProfile = addon.functions.SettingsCreateExpandableSection(profilesCategory, {
 		name = L["Resource Bars"],
+		configPageKey = "ProfilesResourceBars",
+		description = L["configCenterPageCardDescProfilesResourceBars"] or L["configCenterPageCardDescBarsResources"],
+		iconKey = "resource",
 		expanded = false,
 		colorizeTitle = false,
+		newTagID = "ProfilesResourceBars",
+		modernCategory = "profiles",
+		modernOnly = true,
 	})
 
-	addon.functions.SettingsCreateDropdown(cProfiles, {
+	addon.functions.SettingsCreateDropdown(profilesCategory, {
 		var = "resourceBarsProfileScope",
 		text = L["ProfileScope"] or (L["Apply to"] or "Apply to"),
 		list = scopeList,
 		get = getScope,
 		set = setScope,
 		default = "ALL",
+		trackCustomized = false,
 		parentSection = expandableProfile,
 	})
 
-	addon.functions.SettingsCreateButton(cProfiles, {
+	addon.functions.SettingsCreateButton(profilesCategory, {
 		var = "resourceBarsExport",
 		text = L["Export"] or "Export",
 		func = function()
@@ -4945,7 +5591,7 @@ addon.Aura.functions.AddResourceBarsProfileSettings = function()
 		parentSection = expandableProfile,
 	})
 
-	addon.functions.SettingsCreateButton(cProfiles, {
+	addon.functions.SettingsCreateButton(profilesCategory, {
 		var = "resourceBarsImport",
 		text = L["Import"] or "Import",
 		func = function()

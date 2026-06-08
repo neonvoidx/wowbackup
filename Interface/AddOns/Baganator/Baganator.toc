@@ -1,6 +1,6 @@
-## Interface: 120001, 120000, 50503, 38000, 20505, 11508
+## Interface: 120005, 50504, 38001, 20505, 11508
 ## Title: Baganator
-## Version: 796
+## Version: 806
 ## Author: plusmouse
 ## OptionalDeps: Syndicator, Masque
 ## SavedVariables: BAGANATOR_CONFIG, BAGANATOR_DATA
@@ -34,6 +34,7 @@ Core\Initialize.lua
 Skins\Utilities.lua
 Skins\Initialize.lua
 Skins\Blizzard.lua
+Skins\BlizzardBlack.lua
 Skins\Dark.lua
 Skins\ElvUI.lua
 Skins\GW2.lua
@@ -146,7 +147,8 @@ CustomiseDialog\Categories\RecentEditor.lua
 CustomiseDialog\Categories\EmptyEditor.lua
 CustomiseDialog\Categories\Utilities.lua
 CustomiseDialog\Categories\ImportExport.lua
-CustomiseDialog\Categories\ImportDialog.lua
+CustomiseDialog\ImportDialog.lua
+CustomiseDialog\ImportExport.lua
 CustomiseDialog\Main.lua
 CustomiseDialog\Main.xml
 CustomiseDialog\Initialize.lua

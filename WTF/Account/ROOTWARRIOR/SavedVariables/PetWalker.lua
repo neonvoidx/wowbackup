@@ -4,9 +4,9 @@ PetWalkerDB = {
 ["verbosityLevel"] = 1,
 ["recentPets"] = {
 "BattlePet-0-000023621622",
+"BattlePet-0-000018AA804B",
+"BattlePet-0-000022B4B4B8",
 "BattlePet-0-000018AA80B1",
-"BattlePet-0-0000227F123D",
-"BattlePet-0-0000227EF788",
 },
 ["drSummoning"] = true,
 ["dbVersion"] = 2,
@@ -14,6 +14,6 @@ PetWalkerDB = {
 ["favsOnly"] = true,
 ["numRecents"] = 4,
 ["newPetTimer"] = 2700,
-["remainingTimer"] = 2401,
+["remainingTimer"] = 2207,
 ["debugMode"] = false,
 }

@@ -13,12 +13,40 @@ local DIFFICULTY_MAP = {
     mythic = DifficultyUtil.ID.PrimaryRaidMythic
 };
 
-local function SortResult(a, b)
-    local aFav = KeystoneLoot.Favorites:IsFavorite(a.itemId);
-    local bFav = KeystoneLoot.Favorites:IsFavorite(b.itemId);
+-- BiS first, then Must have, then Nice to have, then Transmog last
+local TIER_SORT_ORDER = {
+    [3] = 1,
+    [2] = 2,
+    [1] = 3,
+    [4] = 4,
+};
 
-    if (aFav ~= bFav) then
-        return aFav;
+local function SortResult(a, b)
+    local aTier = KeystoneLoot.Favorites:GetTier(a.itemId);
+    local bTier = KeystoneLoot.Favorites:GetTier(b.itemId);
+
+    if (aTier ~= bTier) then
+        return (TIER_SORT_ORDER[aTier] or 99) < (TIER_SORT_ORDER[bTier] or 99);
+    end
+
+    local aItem = Query:GetItemInfo(a.itemId);
+    local bItem = Query:GetItemInfo(b.itemId);
+    local aSlot = aItem and aItem.slotId or 0;
+    local bSlot = bItem and bItem.slotId or 0;
+
+    if (aSlot ~= bSlot) then
+        return aSlot < bSlot;
+    end
+
+    return a.itemId < b.itemId;
+end
+
+local function SortResultFavorites(a, b)
+    local aTier = KeystoneLoot.Favorites:GetAnyTier(a.itemId);
+    local bTier = KeystoneLoot.Favorites:GetAnyTier(b.itemId);
+
+    if (aTier ~= bTier) then
+        return (TIER_SORT_ORDER[aTier] or 99) < (TIER_SORT_ORDER[bTier] or 99);
     end
 
     local aItem = Query:GetItemInfo(a.itemId);
@@ -71,20 +99,54 @@ local function GetFavoritesListSpecId()
     return 0;
 end
 
+local function GetSlotFilter()
+    local slotId = DB:Get("filters.slotId");
+
+    if (slotId == -1 or slotId == -2) then
+        return slotId;
+    end
+
+    local slotIds = DB:Get("filters.slotIds");
+    if (DB:Get("settings.multiSlotFilter") and type(slotIds) == "table") then
+        for _, selected in pairs(slotIds) do
+            if (selected) then
+                return nil, slotIds;
+            end
+        end
+    end
+
+    return slotId;
+end
+
+local function ItemMatchesSlot(item, slotId, slotIds, hideOtherItems)
+    if (slotId == -2) then
+        return not (hideOtherItems and item.slotId == 14);
+    end
+
+    if (slotIds) then
+        return slotIds[item.slotId] == true;
+    end
+
+    return item.slotId == slotId;
+end
+
 function Query:GetDungeons()
     return KeystoneLoot.DungeonDatabase;
 end
 
 function Query:GetDungeonItems(challengeModeId)
-    local slotId = DB:Get("filters.slotId");
+    local slotId, slotIds = GetSlotFilter();
 
     -- Favorites slot
     if (slotId == -1) then
-        return KeystoneLoot.Favorites:GetList(challengeModeId, GetFavoritesListSpecId());
+        local results = KeystoneLoot.Favorites:GetList(challengeModeId, GetFavoritesListSpecId());
+        table.sort(results, SortResultFavorites);
+        return results;
     end
 
     local specId = DB:Get("filters.specId");
     local classId = DB:Get("filters.classId");
+    local hideOtherItems = DB:Get("settings.hideOtherItems");
     local results = {};
 
     for _, dungeon in ipairs(self:GetDungeons()) do
@@ -92,7 +154,7 @@ function Query:GetDungeonItems(challengeModeId)
             for _, itemId in ipairs(dungeon.lootTable) do
                 local item = self:GetItemInfo(itemId);
 
-                if (item and (slotId == -2 or item.slotId == slotId) and item.classes[classId]) then
+                if (item and ItemMatchesSlot(item, slotId, slotIds, hideOtherItems) and item.classes[classId]) then
                     if (specId == 0) then
                         table.insert(results, { itemId = itemId, icon = item.icon });
                     else
@@ -148,16 +210,19 @@ function Query:GetRaids()
 end
 
 function Query:GetRaidItems(bossId)
-    local slotId = DB:Get("filters.slotId");
+    local slotId, slotIds = GetSlotFilter();
 
     -- Favorites slot
     if (slotId == -1) then
-        return KeystoneLoot.Favorites:GetList(bossId, GetFavoritesListSpecId());
+        local results = KeystoneLoot.Favorites:GetList(bossId, GetFavoritesListSpecId());
+        table.sort(results, SortResultFavorites);
+        return results;
     end
 
     local specId = DB:Get("filters.specId");
     local difficultyId = self:GetRaidDifficultyId();
     local classId = DB:Get("filters.classId");
+    local hideOtherItems = DB:Get("settings.hideOtherItems");
     local results = {};
 
     for _, raid in ipairs(self:GetRaids()) do
@@ -168,7 +233,7 @@ function Query:GetRaidItems(bossId)
                 for _, itemId in ipairs(loot) do
                     local item = self:GetItemInfo(itemId)
 
-                    if (item and (slotId == -2 or item.slotId == slotId) and item.classes[classId]) then
+                    if (item and ItemMatchesSlot(item, slotId, slotIds, hideOtherItems) and item.classes[classId]) then
                         if (specId == 0) then
                             table.insert(results, { itemId = itemId, icon = item.icon });
                         else
@@ -231,17 +296,19 @@ end
 
 function Query:GetCatalystItems()
     local classId = DB:Get("filters.classId");
-    local slotId = DB:Get("filters.slotId");
+    local slotId, slotIds = GetSlotFilter();
 
     -- Favorites slot
     if (slotId == -1) then
-        return KeystoneLoot.Favorites:GetList("catalyst", GetFavoritesListSpecId());
+        local results = KeystoneLoot.Favorites:GetList("catalyst", GetFavoritesListSpecId());
+        table.sort(results, SortResultFavorites);
+        return results;
     end
 
     local results = {};
 
     for itemId, item in pairs(KeystoneLoot.CatalystDatabase) do
-        if (item.classId == classId and (slotId == -2 or item.slotId == slotId)) then
+        if (item.classId == classId and ItemMatchesSlot(item, slotId, slotIds)) then
             table.insert(results, {
                 itemId = itemId,
                 icon = item.icon
@@ -253,8 +320,26 @@ function Query:GetCatalystItems()
     return results;
 end
 
+function Query:GetCustomItems()
+    local slotId, slotIds = GetSlotFilter();
+
+    -- Favorites slot
+    if (slotId == -1) then
+        local results = KeystoneLoot.Favorites:GetList("custom", GetFavoritesListSpecId());
+        table.sort(results, SortResultFavorites);
+        return results;
+    end
+
+    return {};
+end
+
 function Query:GetItemInfo(itemId)
     return KeystoneLoot.ItemDatabase[itemId];
+end
+
+function Query:GetItemIcon(itemId)
+    local _, _, _, _, icon = C_Item.GetItemInfoInstant(itemId);
+    return icon;
 end
 
 function Query:GetItemSource(itemId)
@@ -265,7 +350,7 @@ function Query:GetItemSource(itemId)
 
     -- Check item info
     if (not self:GetItemInfo(itemId)) then
-        return;
+        return "custom";
     end
 
     -- Check dungeons

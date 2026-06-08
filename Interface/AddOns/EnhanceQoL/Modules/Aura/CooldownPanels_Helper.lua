@@ -22,6 +22,9 @@ local DIRECTION_BOTTOM_LABEL = HUD_EDIT_MODE_SETTING_ENCOUNTER_EVENTS_ICON_DIREC
 Helper.Api = Helper.Api or {}
 local Api = Helper.Api
 
+Helper.ACTIVATION_OVERLAY_COLOR_DEFAULT = Helper.ACTIVATION_OVERLAY_COLOR_DEFAULT or { 1, 0.86, 0.25, 0.55 }
+Helper.CDM_AURA_OVERLAY_COLOR_DEFAULT = Helper.CDM_AURA_OVERLAY_COLOR_DEFAULT or Helper.ACTIVATION_OVERLAY_COLOR_DEFAULT
+
 Api.GetItemInfoInstantFn = C_Item and C_Item.GetItemInfoInstant
 Api.GetItemIconByID = C_Item and C_Item.GetItemIconByID
 Api.GetItemCooldownFn = C_Item and C_Item.GetItemCooldown
@@ -61,10 +64,16 @@ Api.GetAtlasInfo = C_Texture and C_Texture.GetAtlasInfo
 Api.GetFilenameFromFileDataID = C_Texture and C_Texture.GetFilenameFromFileDataID
 Api.IsSpellKnown = function(spellId, includeOverrides)
 	if not spellId then return false end
-	if not (C_SpellBook and C_SpellBook.IsSpellInSpellBook) then return true end
+	if not C_SpellBook then return true end
 	local spellBank = Enum and Enum.SpellBookSpellBank
 	local playerBank = (spellBank and spellBank.Player) or 0
 	local petBank = (spellBank and spellBank.Pet) or 1
+	if C_SpellBook.IsSpellKnownOrInSpellBook then
+		if C_SpellBook.IsSpellKnownOrInSpellBook(spellId, playerBank, includeOverrides) then return true end
+		if C_SpellBook.IsSpellKnownOrInSpellBook(spellId, petBank, includeOverrides) then return true end
+		return false
+	end
+	if not C_SpellBook.IsSpellInSpellBook then return true end
 	if C_SpellBook.IsSpellInSpellBook(spellId, playerBank, includeOverrides) then return true end
 	if C_SpellBook.IsSpellInSpellBook(spellId, petBank, includeOverrides) then return true end
 	return false
@@ -155,6 +164,9 @@ end
 
 Helper.PANEL_LAYOUT_DEFAULTS = {
 	iconSize = 36,
+	iconSizeSeparate = false,
+	iconWidth = 36,
+	iconHeight = 36,
 	spacing = 2,
 	layoutMode = "GRID",
 	fixedSlotCount = 0,
@@ -223,6 +235,7 @@ Helper.PANEL_LAYOUT_DEFAULTS = {
 	cooldownGcdDrawEdge = false,
 	cooldownGcdDrawBling = false,
 	cooldownGcdDrawSwipe = false,
+	cdmAuraOverlayEnabled = false,
 	cooldownTextColor = { 1, 1, 1, 1 },
 	cooldownTextStyle = globalFontStyleKey(),
 	staticTextFont = "",
@@ -243,10 +256,14 @@ Helper.ENTRY_DEFAULTS = {
 	hideIcon = false,
 	iconSizeUseGlobal = true,
 	iconSize = 36,
+	iconSizeSeparate = false,
+	iconWidth = 36,
+	iconHeight = 36,
 	iconOffsetX = 0,
 	iconOffsetY = 0,
 	showCooldown = true,
 	showCooldownText = true,
+	trackPassiveSpell = false,
 	cooldownVisibilityUseGlobal = true,
 	hideOnCooldown = false,
 	showOnCooldown = false,
@@ -282,6 +299,16 @@ Helper.ENTRY_DEFAULTS = {
 	cooldownGcdDrawEdge = false,
 	cooldownGcdDrawBling = false,
 	cooldownGcdDrawSwipe = false,
+	cdmAuraOverlayEnabled = false,
+	cdmAuraOverlayReverse = true,
+	cdmAuraOverlayColor = Helper.ACTIVATION_OVERLAY_COLOR_DEFAULT,
+	activationOverlayReverse = true,
+	activationOverlayColor = Helper.ACTIVATION_OVERLAY_COLOR_DEFAULT,
+	activationOverlayOnly = false,
+	activationOverlayGlow = false,
+	autoCooldownDurationEnabled = false,
+	customCooldownDurationEnabled = false,
+	customCooldownDuration = 0,
 	cooldownTextUseGlobal = true,
 	cooldownTextStyle = globalFontStyleKey(),
 	noDesaturationUseGlobal = true,
@@ -332,6 +359,7 @@ Helper.PREVIEW_COUNT_FONT_MIN = 12
 Helper.OFFSET_RANGE = 200
 Helper.SPACING_RANGE = 200
 Helper.STATE_TEXTURE_SPACING_RANGE = 2000
+Helper.CUSTOM_COOLDOWN_DURATION_MAX = 300
 Helper.GLOW_INSET_RANGE = 20
 Helper.RADIAL_RADIUS_RANGE = 600
 Helper.RADIAL_ROTATION_RANGE = 360
@@ -488,6 +516,18 @@ Helper.GENERIC_ANCHORS = {
 		uf = "EQOLUFPetFrame",
 		ufKey = "pet",
 	},
+	EQOL_ANCHOR_PARTY = {
+		label = _G.PARTY or L["Party"] or "Party",
+		blizz = "CompactPartyFrame",
+		uf = "EQOLUFPartyAnchor",
+		ufKey = "party",
+	},
+	EQOL_ANCHOR_RAID = {
+		label = _G.RAID or L["Raid"] or "Raid",
+		blizz = "CompactRaidFrameContainer",
+		uf = "EQOLUFRaidAnchor",
+		ufKey = "raid",
+	},
 	EQOL_ANCHOR_BOSS = {
 		label = L["UFBossFrame"] or _G.HUD_EDIT_MODE_BOSS_FRAMES_LABEL or "Boss Frame",
 		blizz = "BossTargetFrameContainer",
@@ -501,6 +541,8 @@ Helper.GENERIC_ANCHOR_ORDER = {
 	"EQOL_ANCHOR_TARGETTARGET",
 	"EQOL_ANCHOR_FOCUS",
 	"EQOL_ANCHOR_PET",
+	"EQOL_ANCHOR_PARTY",
+	"EQOL_ANCHOR_RAID",
 	"EQOL_ANCHOR_BOSS",
 }
 Helper.GENERIC_ANCHOR_BY_FRAME = {
@@ -514,6 +556,10 @@ Helper.GENERIC_ANCHOR_BY_FRAME = {
 	EQOLUFFocusFrame = "EQOL_ANCHOR_FOCUS",
 	PetFrame = "EQOL_ANCHOR_PET",
 	EQOLUFPetFrame = "EQOL_ANCHOR_PET",
+	CompactPartyFrame = "EQOL_ANCHOR_PARTY",
+	EQOLUFPartyAnchor = "EQOL_ANCHOR_PARTY",
+	CompactRaidFrameContainer = "EQOL_ANCHOR_RAID",
+	EQOLUFRaidAnchor = "EQOL_ANCHOR_RAID",
 	BossTargetFrameContainer = "EQOL_ANCHOR_BOSS",
 	EQOLUFBossContainer = "EQOL_ANCHOR_BOSS",
 }
@@ -634,6 +680,10 @@ function Helper.NormalizeFixedGroupIconSize(value)
 	return size
 end
 
+function Helper.NormalizeFixedGroupIconDimension(value, fallback)
+	return Helper.ClampInt(value, 12, 128, fallback)
+end
+
 function Helper.NormalizeFixedGroupLayoutOverrides(value)
 	if type(value) ~= "table" then return nil end
 	local normalized = {}
@@ -671,16 +721,6 @@ local function getFixedGridDefaultColumns(panel)
 end
 
 local function getFixedCellKey(column, row) return tostring(column) .. ":" .. tostring(row) end
-
-local function fixedLayoutCacheHasMissingDynamicTargets(candidate)
-	local groups = candidate and candidate.groups or nil
-	if type(groups) ~= "table" then return false end
-	for i = 1, #groups do
-		local group = groups[i]
-		if group and Helper.FixedGroupUsesStaticSlots(group) ~= true and type(getFixedGroupDynamicTargetIndices(group)) ~= "table" then return true end
-	end
-	return false
-end
 
 local function isWithinConfiguredFixedGrid(column, row, configuredColumns, configuredRows)
 	if not (column and row) then return false end
@@ -976,6 +1016,9 @@ function Helper.NormalizeFixedGroups(layout)
 				group.dynamicStartPoint = Helper.NormalizeFixedGroupStartPoint(group.dynamicStartPoint, "TOPLEFT")
 				group.dynamicDirection = Helper.NormalizeFixedGroupDynamicDirection(group.dynamicStartPoint, group.dynamicDirection, nil)
 				group.iconSize = Helper.NormalizeFixedGroupIconSize(group.iconSize)
+				group.iconSizeSeparate = group.iconSizeSeparate == true
+				if group.iconSizeSeparate or group.iconWidth ~= nil then group.iconWidth = Helper.NormalizeFixedGroupIconDimension(group.iconWidth, group.iconSize or Helper.PANEL_LAYOUT_DEFAULTS.iconWidth or 36) end
+				if group.iconSizeSeparate or group.iconHeight ~= nil then group.iconHeight = Helper.NormalizeFixedGroupIconDimension(group.iconHeight, group.iconSize or Helper.PANEL_LAYOUT_DEFAULTS.iconHeight or 36) end
 				group.layoutOverrides = Helper.NormalizeFixedGroupLayoutOverrides(group.layoutOverrides)
 				seen[id] = true
 				writeIndex = writeIndex + 1
@@ -1081,13 +1124,22 @@ function Helper.SyncEntryFixedGroupIconState(panelOrLayout, entry, resolvedGroup
 	if type(entry) ~= "table" then return nil end
 	local group = type(resolvedGroup) == "table" and resolvedGroup or Helper.GetFixedGroupById(panelOrLayout, entry.fixedGroupId)
 	local groupIconSize = group and Helper.NormalizeFixedGroupIconSize(group.iconSize) or nil
-	if group and groupIconSize ~= nil then
+	local groupIconSizeSeparate = group and group.iconSizeSeparate == true
+	if group and (groupIconSize ~= nil or groupIconSizeSeparate) then
 		if entry.fixedGroupIconSizeInherited ~= true then
 			entry.fixedGroupIconSizePrevUseGlobal = entry.iconSizeUseGlobal
 			entry.fixedGroupIconSizePrev = entry.iconSize
+			entry.fixedGroupIconSizePrevSeparate = entry.iconSizeSeparate
+			entry.fixedGroupIconSizePrevWidth = entry.iconWidth
+			entry.fixedGroupIconSizePrevHeight = entry.iconHeight
 		end
 		entry.iconSizeUseGlobal = false
-		entry.iconSize = groupIconSize
+		entry.iconSizeSeparate = groupIconSizeSeparate
+		entry.iconSize = groupIconSize or entry.iconSize
+		if groupIconSizeSeparate then
+			entry.iconWidth = Helper.NormalizeFixedGroupIconDimension(group.iconWidth, entry.iconSize or Helper.ENTRY_DEFAULTS.iconSize)
+			entry.iconHeight = Helper.NormalizeFixedGroupIconDimension(group.iconHeight, entry.iconSize or Helper.ENTRY_DEFAULTS.iconSize)
+		end
 		entry.fixedGroupIconSizeInherited = true
 	elseif entry.fixedGroupIconSizeInherited == true then
 		local previousUseGlobal = entry.fixedGroupIconSizePrevUseGlobal
@@ -1097,13 +1149,22 @@ function Helper.SyncEntryFixedGroupIconState(panelOrLayout, entry, resolvedGroup
 			entry.iconSizeUseGlobal = true
 		end
 		entry.iconSize = entry.fixedGroupIconSizePrev
+		entry.iconSizeSeparate = entry.fixedGroupIconSizePrevSeparate
+		entry.iconWidth = entry.fixedGroupIconSizePrevWidth
+		entry.iconHeight = entry.fixedGroupIconSizePrevHeight
 		entry.fixedGroupIconSizeInherited = nil
 		entry.fixedGroupIconSizePrevUseGlobal = nil
 		entry.fixedGroupIconSizePrev = nil
+		entry.fixedGroupIconSizePrevSeparate = nil
+		entry.fixedGroupIconSizePrevWidth = nil
+		entry.fixedGroupIconSizePrevHeight = nil
 	else
 		entry.fixedGroupIconSizeInherited = nil
 		entry.fixedGroupIconSizePrevUseGlobal = nil
 		entry.fixedGroupIconSizePrev = nil
+		entry.fixedGroupIconSizePrevSeparate = nil
+		entry.fixedGroupIconSizePrevWidth = nil
+		entry.fixedGroupIconSizePrevHeight = nil
 	end
 	return group
 end
@@ -1125,7 +1186,7 @@ function Helper.GetFixedLayoutCache(panel)
 		and cache.fixedGridColumns == layout.fixedGridColumns
 		and cache.fixedGridRows == layout.fixedGridRows
 		and cache.wrapCount == layout.wrapCount
-		and not fixedLayoutCacheHasMissingDynamicTargets(cache)
+		and cache.dynamicTargetsReady ~= false
 	then
 		return cache
 	end
@@ -1285,6 +1346,7 @@ function Helper.GetFixedLayoutCache(panel)
 	local slotCount = 0
 	local slotEntryIds = {}
 	local staticTargetIndexByEntryId = {}
+	local dynamicTargetsReady = true
 	if not (boundsColumns <= 0 and boundsRows <= 0) then
 		if boundsColumns <= 0 then boundsColumns = 1 end
 		if boundsRows <= 0 then boundsRows = 1 end
@@ -1337,6 +1399,14 @@ function Helper.GetFixedLayoutCache(panel)
 				end
 			end
 		end
+	else
+		for i = 1, #fixedGroups do
+			local group = fixedGroups[i]
+			if group and Helper.FixedGroupUsesStaticSlots(group) ~= true then
+				dynamicTargetsReady = false
+				break
+			end
+		end
 	end
 
 	cache = {
@@ -1349,6 +1419,7 @@ function Helper.GetFixedLayoutCache(panel)
 		fixedGridColumns = layout.fixedGridColumns,
 		fixedGridRows = layout.fixedGridRows,
 		wrapCount = layout.wrapCount,
+		dynamicTargetsReady = dynamicTargetsReady,
 		groups = fixedGroups,
 		groupById = fixedGroupById,
 		groupIndexById = fixedGroupIndexById,
@@ -1654,14 +1725,41 @@ function Helper.ResolveFontPath(value, fallback)
 		value = nil
 	end
 	if addon.functions and addon.functions.IsGlobalFontConfigValue and addon.functions.IsGlobalFontConfigValue(fallback) then fallback = nil end
-	if type(value) == "string" and value ~= "" then return value end
+	local fallbackPath = fallback
 	if useGlobalConfig and addon.functions and addon.functions.GetGlobalDefaultFontFace then
 		local globalFace = addon.functions.GetGlobalDefaultFontFace()
-		if type(globalFace) == "string" and globalFace ~= "" then return globalFace end
+		if type(globalFace) == "string" and globalFace ~= "" then fallbackPath = globalFace end
 	end
-	if type(fallback) == "string" and fallback ~= "" then return fallback end
-	if addon.functions and addon.functions.GetGlobalDefaultFontFace then return addon.functions.GetGlobalDefaultFontFace() end
-	return STANDARD_TEXT_FONT
+	if type(fallbackPath) ~= "string" or fallbackPath == "" then
+		if addon.functions and addon.functions.GetGlobalDefaultFontFace then fallbackPath = addon.functions.GetGlobalDefaultFontFace() end
+	end
+	if type(fallbackPath) ~= "string" or fallbackPath == "" then fallbackPath = STANDARD_TEXT_FONT end
+	if addon.functions and addon.functions.ResolveFontFace then return addon.functions.ResolveFontFace(value, fallbackPath) or fallbackPath end
+	if type(value) == "string" and value ~= "" and LSM then
+		if LSM.IsValid and LSM:IsValid("font", value) then
+			local fetched = LSM.Fetch and LSM:Fetch("font", value, true)
+			if type(fetched) == "string" and fetched ~= "" then return fetched end
+		end
+		if LSM.HashTable then
+			local hash = LSM:HashTable("font") or {}
+			for _, fontPath in pairs(hash) do
+				if fontPath == value then return value end
+			end
+		end
+	end
+	return fallbackPath
+end
+
+function Helper.SetFont(fontString, fontPath, fontSize, fontStyle, fallbackPath)
+	if not (fontString and fontString.SetFont and fontPath) then return false end
+	if addon.functions and addon.functions.SetFontWithFallback then return addon.functions.SetFontWithFallback(fontString, fontPath, fontSize, fontStyle, fallbackPath) end
+	local ok, applied = pcall(fontString.SetFont, fontString, fontPath, fontSize, fontStyle)
+	if ok and applied ~= false then return true end
+
+	local fallback = Helper.ResolveFontPath(nil, fallbackPath or STANDARD_TEXT_FONT)
+	if not fallback or fallback == fontPath then return false end
+	ok, applied = pcall(fontString.SetFont, fontString, fallback, fontSize, fontStyle)
+	return ok and applied ~= false
 end
 
 function Helper.GetCountFontDefaults(frame)
@@ -1673,7 +1771,7 @@ function Helper.GetCountFontDefaults(frame)
 		or (addon.variables and addon.variables.defaultFont)
 		or (LSM and LSM:Fetch("font", LSM.DefaultMedia.font))
 		or STANDARD_TEXT_FONT
-	return fallback, 12, "OUTLINE"
+	return fallback, 12, globalFontStyleKey()
 end
 
 function Helper.GetChargesFontDefaults(frame)
@@ -1876,6 +1974,178 @@ function Helper.CopyTableDeep(source, seen)
 	return result
 end
 
+local function isStorageEmptyTable(value) return type(value) == "table" and next(value) == nil end
+
+local function isStorageColorLikeTable(value)
+	if type(value) ~= "table" then return false end
+	return value.r ~= nil or value.g ~= nil or value.b ~= nil or value.a ~= nil or value[1] ~= nil or value[2] ~= nil or value[3] ~= nil or value[4] ~= nil
+end
+
+local function storageValuesEqual(left, right, seen)
+	if left == right then return true end
+	local leftType = type(left)
+	local rightType = type(right)
+	if leftType ~= rightType then return false end
+	if leftType ~= "table" then return false end
+	if isStorageColorLikeTable(left) and isStorageColorLikeTable(right) then
+		local leftColor = Helper.NormalizeColor(left, right)
+		local rightColor = Helper.NormalizeColor(right, right)
+		return leftColor[1] == rightColor[1] and leftColor[2] == rightColor[2] and leftColor[3] == rightColor[3] and leftColor[4] == rightColor[4]
+	end
+	seen = seen or {}
+	if seen[left] == right then return true end
+	seen[left] = right
+	for key, value in pairs(left) do
+		if not storageValuesEqual(value, right[key], seen) then return false end
+	end
+	for key in pairs(right) do
+		if left[key] == nil then return false end
+	end
+	return true
+end
+
+local function pruneStorageKeysMatchingDefaults(target, defaultResolver)
+	if type(target) ~= "table" or type(defaultResolver) ~= "function" then return end
+	for key, value in pairs(target) do
+		local defaultValue = defaultResolver(key, value)
+		if defaultValue ~= nil and storageValuesEqual(value, defaultValue) then target[key] = nil end
+	end
+end
+
+local function pruneInternalStorageKeys(root, seen)
+	if type(root) ~= "table" then return end
+	seen = seen or {}
+	if seen[root] then return end
+	seen[root] = true
+	for key, value in pairs(root) do
+		if type(key) == "string" and (key == "_orderDirty" or string.match(key, "^_eqol")) then
+			root[key] = nil
+		elseif type(value) == "table" then
+			pruneInternalStorageKeys(value, seen)
+		end
+	end
+end
+
+local function getStorageBarsDefaults()
+	local bars = CooldownPanels and CooldownPanels.Bars or nil
+	local defaults = type(bars) == "table" and type(bars.DEFAULTS) == "table" and bars.DEFAULTS or nil
+	local colors = type(bars) == "table" and type(bars.COLORS) == "table" and bars.COLORS or nil
+	return defaults, colors
+end
+
+local function getStorageBarColorDefault(mode, barsDefaults, barsColors)
+	local normalizedMode = type(mode) == "string" and string.upper(mode) or nil
+	if normalizedMode == "CHARGES" and type(barsColors) == "table" and type(barsColors.CHARGES) == "table" then return barsColors.CHARGES end
+	if normalizedMode == "STACKS" and type(barsColors) == "table" and type(barsColors.STACKS) == "table" then return barsColors.STACKS end
+	if type(barsColors) == "table" and type(barsColors.COOLDOWN) == "table" then return barsColors.COOLDOWN end
+	return barsDefaults and barsDefaults.barColor or nil
+end
+
+local function getStorageRootEntryDefault(rootEntryDefaults, key, barsDefaults, barsColors)
+	if key == "barColor" then
+		local mode = rootEntryDefaults and rootEntryDefaults.barMode or (barsDefaults and barsDefaults.barMode)
+		return getStorageBarColorDefault(mode, barsDefaults, barsColors)
+	end
+	if Helper.ENTRY_DEFAULTS[key] ~= nil then return Helper.ENTRY_DEFAULTS[key] end
+	if barsDefaults and barsDefaults[key] ~= nil then return barsDefaults[key] end
+	return nil
+end
+
+local function getStorageEntryDefault(entry, entryDefaults, key, barsDefaults, barsColors)
+	if key == "barColor" then
+		if entryDefaults and entryDefaults.barColor ~= nil then return entryDefaults.barColor end
+		local mode = entry and entry.barMode
+		if mode == nil and entryDefaults then mode = entryDefaults.barMode end
+		if mode == nil and barsDefaults then mode = barsDefaults.barMode end
+		return getStorageBarColorDefault(mode, barsDefaults, barsColors)
+	end
+	if entry and entry.type == "SPELL" and (key == "showCharges" or key == "showStacks") then return nil end
+	if entryDefaults and entryDefaults[key] ~= nil then return entryDefaults[key] end
+	if Helper.ENTRY_DEFAULTS[key] ~= nil then return Helper.ENTRY_DEFAULTS[key] end
+	if barsDefaults and barsDefaults[key] ~= nil then return barsDefaults[key] end
+	return nil
+end
+
+function Helper.PruneEntryForStorage(entry, defaults)
+	if type(entry) ~= "table" then return end
+	defaults = defaults or {}
+	local entryDefaults = type(defaults.entry) == "table" and defaults.entry or nil
+	local barsDefaults, barsColors = getStorageBarsDefaults()
+	entry.id = nil
+	entry.customIconID = nil
+	entry.ignoreMasque = nil
+	entry.glowDuration = nil
+	entry.stateTextureType = nil
+	entry.stateTextureAtlas = nil
+	entry.stateTextureFileID = nil
+	entry.fixedGroupIconSizeInherited = nil
+	entry.fixedGroupIconSizePrevUseGlobal = nil
+	entry.fixedGroupIconSizePrev = nil
+	if entry.fixedGroupId ~= nil and entry.slotColumn ~= nil and entry.slotRow ~= nil then entry.slotIndex = nil end
+	pruneStorageKeysMatchingDefaults(entry, function(key)
+		return getStorageEntryDefault(entry, entryDefaults, key, barsDefaults, barsColors)
+	end)
+end
+
+function Helper.PrunePanelForStorage(panel, defaults)
+	if type(panel) ~= "table" then return end
+	defaults = defaults or {}
+	local layoutDefaults = type(defaults.layout) == "table" and defaults.layout or nil
+	panel.id = nil
+	panel.editorGroup = nil
+	if type(panel.anchor) == "table" then
+		local anchor = panel.anchor
+		if anchor.point ~= nil and anchor.relativePoint ~= nil and anchor.x ~= nil and anchor.y ~= nil and type(anchor.relativeFrame) == "string" and anchor.relativeFrame ~= "" then
+			panel.point = nil
+			panel.x = nil
+			panel.y = nil
+		end
+	end
+	if type(panel.layout) == "table" then
+		panel.layout.readyGlowDuration = nil
+		if isStorageEmptyTable(panel.layout.fixedGroups) then panel.layout.fixedGroups = nil end
+		pruneStorageKeysMatchingDefaults(panel.layout, function(key)
+			if layoutDefaults and layoutDefaults[key] ~= nil then return layoutDefaults[key] end
+			return Helper.PANEL_LAYOUT_DEFAULTS[key]
+		end)
+	end
+	if type(panel.entries) == "table" then
+		for _, entry in pairs(panel.entries) do
+			Helper.PruneEntryForStorage(entry, defaults)
+		end
+	end
+end
+
+function Helper.PruneRootForStorage(root)
+	if type(root) ~= "table" then return end
+	pruneInternalStorageKeys(root)
+	local barsDefaults, barsColors = getStorageBarsDefaults()
+	if type(root.defaults) == "table" then
+		if type(root.defaults.layout) == "table" then
+			root.defaults.layout.readyGlowDuration = nil
+			pruneStorageKeysMatchingDefaults(root.defaults.layout, function(key) return Helper.PANEL_LAYOUT_DEFAULTS[key] end)
+			if not next(root.defaults.layout) then root.defaults.layout = nil end
+		end
+		if type(root.defaults.entry) == "table" then
+			root.defaults.entry.glowDuration = nil
+			pruneStorageKeysMatchingDefaults(root.defaults.entry, function(key)
+				return getStorageRootEntryDefault(root.defaults.entry, key, barsDefaults, barsColors)
+			end)
+			if not next(root.defaults.entry) then root.defaults.entry = nil end
+		end
+		if not next(root.defaults) then root.defaults = nil end
+	end
+	local defaults = {
+		layout = type(root.defaults) == "table" and type(root.defaults.layout) == "table" and root.defaults.layout or nil,
+		entry = type(root.defaults) == "table" and type(root.defaults.entry) == "table" and root.defaults.entry or nil,
+	}
+	if type(root.panels) == "table" then
+		for _, panel in pairs(root.panels) do
+			Helper.PrunePanelForStorage(panel, defaults)
+		end
+	end
+end
+
 function Helper.NormalizeBool(value, fallback)
 	if value == nil then return fallback end
 	return value and true or false
@@ -1894,7 +2164,7 @@ end
 
 function Helper.CreateRoot()
 	return {
-		version = 1,
+		version = 2,
 		panels = {},
 		order = {},
 		selectedPanel = nil,
@@ -1972,6 +2242,9 @@ function Helper.NormalizePanel(panel, defaults)
 	panel.layout.fixedGridColumns = Helper.NormalizeFixedGridSize(panel.layout.fixedGridColumns, layoutDefaults.fixedGridColumns or Helper.PANEL_LAYOUT_DEFAULTS.fixedGridColumns or 0)
 	panel.layout.fixedGridRows = Helper.NormalizeFixedGridSize(panel.layout.fixedGridRows, layoutDefaults.fixedGridRows or Helper.PANEL_LAYOUT_DEFAULTS.fixedGridRows or 0)
 	Helper.NormalizeFixedGroups(panel.layout)
+	panel.layout.iconSizeSeparate = panel.layout.iconSizeSeparate == true
+	panel.layout.iconWidth = Helper.ClampInt(panel.layout.iconWidth, 12, 128, panel.layout.iconSize or layoutDefaults.iconWidth or Helper.PANEL_LAYOUT_DEFAULTS.iconWidth or 36)
+	panel.layout.iconHeight = Helper.ClampInt(panel.layout.iconHeight, 12, 128, panel.layout.iconSize or layoutDefaults.iconHeight or Helper.PANEL_LAYOUT_DEFAULTS.iconHeight or 36)
 	panel.layout.spacing = Helper.ClampInt(panel.layout.spacing, 0, Helper.SPACING_RANGE or 200, layoutDefaults.spacing or Helper.PANEL_LAYOUT_DEFAULTS.spacing or 2)
 	panel.layout.radialArcDegrees = Helper.ClampInt(
 		panel.layout.radialArcDegrees,
@@ -2000,6 +2273,7 @@ function Helper.NormalizePanel(panel, defaults)
 	panel.layout.hideWhenNoResource = panel.layout.hideWhenNoResource == true
 	panel.layout.cdmAuraAlwaysShowMode =
 		normalizeCDMAuraAlwaysShowMode(panel.layout.cdmAuraAlwaysShowMode, layoutDefaults.cdmAuraAlwaysShowMode or Helper.PANEL_LAYOUT_DEFAULTS.cdmAuraAlwaysShowMode or "HIDE")
+	panel.layout.cdmAuraOverlayEnabled = panel.layout.cdmAuraOverlayEnabled == true
 	panel.layout.stackColor = Helper.NormalizeColor(panel.layout.stackColor, layoutDefaults.stackColor or Helper.PANEL_LAYOUT_DEFAULTS.stackColor or { 1, 1, 1, 1 })
 	panel.layout.chargesColor = Helper.NormalizeColor(panel.layout.chargesColor, layoutDefaults.chargesColor or Helper.PANEL_LAYOUT_DEFAULTS.chargesColor or { 1, 1, 1, 1 })
 	panel.layout.chargesHideWhenZero = panel.layout.chargesHideWhenZero == true
@@ -2014,17 +2288,20 @@ function Helper.NormalizePanel(panel, defaults)
 	if panel.layout.cooldownTextY ~= nil then panel.layout.cooldownTextY = Helper.ClampInt(panel.layout.cooldownTextY, -Helper.OFFSET_RANGE, Helper.OFFSET_RANGE, 0) end
 	if type(panel.layout.staticTextFont) ~= "string" then panel.layout.staticTextFont = layoutDefaults.staticTextFont or Helper.PANEL_LAYOUT_DEFAULTS.staticTextFont or "" end
 	panel.layout.staticTextSize = Helper.ClampInt(panel.layout.staticTextSize, 6, 64, layoutDefaults.staticTextSize or Helper.PANEL_LAYOUT_DEFAULTS.staticTextSize or 12)
-	panel.layout.staticTextStyle = Helper.NormalizeFontStyleChoice(panel.layout.staticTextStyle, layoutDefaults.staticTextStyle or Helper.PANEL_LAYOUT_DEFAULTS.staticTextStyle or "OUTLINE")
+	panel.layout.staticTextStyle = Helper.NormalizeFontStyleChoice(panel.layout.staticTextStyle, layoutDefaults.staticTextStyle or Helper.PANEL_LAYOUT_DEFAULTS.staticTextStyle or globalFontStyleKey())
 	panel.layout.staticTextColor = Helper.NormalizeColor(panel.layout.staticTextColor, layoutDefaults.staticTextColor or Helper.PANEL_LAYOUT_DEFAULTS.staticTextColor or { 1, 1, 1, 1 })
 	panel.layout.staticTextAnchor = Helper.NormalizeAnchor(panel.layout.staticTextAnchor, layoutDefaults.staticTextAnchor or Helper.PANEL_LAYOUT_DEFAULTS.staticTextAnchor or "CENTER")
 	panel.layout.staticTextX = Helper.ClampInt(panel.layout.staticTextX, -Helper.OFFSET_RANGE, Helper.OFFSET_RANGE, layoutDefaults.staticTextX or Helper.PANEL_LAYOUT_DEFAULTS.staticTextX or 0)
 	panel.layout.staticTextY = Helper.ClampInt(panel.layout.staticTextY, -Helper.OFFSET_RANGE, Helper.OFFSET_RANGE, layoutDefaults.staticTextY or Helper.PANEL_LAYOUT_DEFAULTS.staticTextY or 0)
 	if type(panel.anchor) ~= "table" then panel.anchor = {} end
 	local anchor = panel.anchor
-	if anchor.point == nil then anchor.point = panel.point or "CENTER" end
-	if anchor.relativePoint == nil then anchor.relativePoint = anchor.point end
-	if anchor.x == nil then anchor.x = panel.x or 0 end
-	if anchor.y == nil then anchor.y = panel.y or 0 end
+	local anchorPoint = Helper.NormalizeAnchor(anchor.point, panel.point)
+	anchor.point = Helper.NormalizeAnchor(anchorPoint, "CENTER")
+	anchor.relativePoint = Helper.NormalizeAnchor(anchor.relativePoint, anchor.point)
+	anchor.x = tonumber(anchor.x)
+	if anchor.x == nil then anchor.x = tonumber(panel.x) or 0 end
+	anchor.y = tonumber(anchor.y)
+	if anchor.y == nil then anchor.y = tonumber(panel.y) or 0 end
 	if not anchor.relativeFrame or anchor.relativeFrame == "" then anchor.relativeFrame = "UIParent" end
 	if panel.point == nil then panel.point = "CENTER" end
 	if panel.x == nil then panel.x = 0 end
@@ -2035,7 +2312,7 @@ function Helper.NormalizePanel(panel, defaults)
 	if type(panel.entries) ~= "table" then panel.entries = {} end
 	if type(panel.order) ~= "table" then panel.order = {} end
 	if panel.enabled == nil then panel.enabled = true end
-	if type(panel.name) ~= "string" or panel.name == "" then panel.name = "Cooldown Panel" end
+		if type(panel.name) ~= "string" or panel.name == "" then panel.name = L["cooldownPanelDefaultName"] end
 	if Helper.IsFixedLayout(panel.layout) then
 		local maxColumn, maxRow = Helper.EnsureFixedSlotAssignments(panel)
 		if panel.layout.fixedGridColumns <= 0 and maxColumn > 0 then panel.layout.fixedGridColumns = math.max(panel.layout.fixedGridColumns, maxColumn) end
@@ -2098,6 +2375,9 @@ function Helper.NormalizeEntry(entry, defaults)
 	entry.customIconID = nil
 	if type(entry.iconSizeUseGlobal) ~= "boolean" then entry.iconSizeUseGlobal = true end
 	entry.iconSize = Helper.ClampInt(entry.iconSize, 12, 128, Helper.ENTRY_DEFAULTS.iconSize or Helper.PANEL_LAYOUT_DEFAULTS.iconSize or 36)
+	entry.iconSizeSeparate = entry.iconSizeSeparate == true
+	if entry.iconSizeSeparate or entry.iconWidth ~= nil then entry.iconWidth = Helper.ClampInt(entry.iconWidth, 12, 128, entry.iconSize or Helper.ENTRY_DEFAULTS.iconWidth or Helper.PANEL_LAYOUT_DEFAULTS.iconWidth or 36) end
+	if entry.iconSizeSeparate or entry.iconHeight ~= nil then entry.iconHeight = Helper.ClampInt(entry.iconHeight, 12, 128, entry.iconSize or Helper.ENTRY_DEFAULTS.iconHeight or Helper.PANEL_LAYOUT_DEFAULTS.iconHeight or 36) end
 	entry.iconOffsetX = Helper.ClampInt(entry.iconOffsetX, -Helper.OFFSET_RANGE, Helper.OFFSET_RANGE, Helper.ENTRY_DEFAULTS.iconOffsetX or 0)
 	entry.iconOffsetY = Helper.ClampInt(entry.iconOffsetY, -Helper.OFFSET_RANGE, Helper.OFFSET_RANGE, Helper.ENTRY_DEFAULTS.iconOffsetY or 0)
 	if type(entry.showIconTextureUseGlobal) ~= "boolean" then entry.showIconTextureUseGlobal = true end
@@ -2107,7 +2387,7 @@ function Helper.NormalizeEntry(entry, defaults)
 	entry.stackY = Helper.ClampInt(entry.stackY, -Helper.OFFSET_RANGE, Helper.OFFSET_RANGE, Helper.ENTRY_DEFAULTS.stackY or 0)
 	if type(entry.stackFont) ~= "string" then entry.stackFont = Helper.ENTRY_DEFAULTS.stackFont or "" end
 	entry.stackFontSize = Helper.ClampInt(entry.stackFontSize, 6, 64, Helper.ENTRY_DEFAULTS.stackFontSize or Helper.PANEL_LAYOUT_DEFAULTS.stackFontSize or 12)
-	entry.stackFontStyle = Helper.NormalizeFontStyleChoice(entry.stackFontStyle, Helper.ENTRY_DEFAULTS.stackFontStyle or Helper.PANEL_LAYOUT_DEFAULTS.stackFontStyle or "OUTLINE")
+	entry.stackFontStyle = Helper.NormalizeFontStyleChoice(entry.stackFontStyle, Helper.ENTRY_DEFAULTS.stackFontStyle or Helper.PANEL_LAYOUT_DEFAULTS.stackFontStyle or globalFontStyleKey())
 	entry.stackColor = Helper.NormalizeColor(entry.stackColor, Helper.ENTRY_DEFAULTS.stackColor or Helper.PANEL_LAYOUT_DEFAULTS.stackColor or { 1, 1, 1, 1 })
 	if type(entry.chargesStyleUseGlobal) ~= "boolean" then entry.chargesStyleUseGlobal = true end
 	entry.chargesAnchor = Helper.NormalizeAnchor(entry.chargesAnchor, Helper.ENTRY_DEFAULTS.chargesAnchor or Helper.PANEL_LAYOUT_DEFAULTS.chargesAnchor or "TOP")
@@ -2115,7 +2395,7 @@ function Helper.NormalizeEntry(entry, defaults)
 	entry.chargesY = Helper.ClampInt(entry.chargesY, -Helper.OFFSET_RANGE, Helper.OFFSET_RANGE, Helper.ENTRY_DEFAULTS.chargesY or 0)
 	if type(entry.chargesFont) ~= "string" then entry.chargesFont = Helper.ENTRY_DEFAULTS.chargesFont or "" end
 	entry.chargesFontSize = Helper.ClampInt(entry.chargesFontSize, 6, 64, Helper.ENTRY_DEFAULTS.chargesFontSize or Helper.PANEL_LAYOUT_DEFAULTS.chargesFontSize or 12)
-	entry.chargesFontStyle = Helper.NormalizeFontStyleChoice(entry.chargesFontStyle, Helper.ENTRY_DEFAULTS.chargesFontStyle or Helper.PANEL_LAYOUT_DEFAULTS.chargesFontStyle or "OUTLINE")
+	entry.chargesFontStyle = Helper.NormalizeFontStyleChoice(entry.chargesFontStyle, Helper.ENTRY_DEFAULTS.chargesFontStyle or Helper.PANEL_LAYOUT_DEFAULTS.chargesFontStyle or globalFontStyleKey())
 	entry.chargesColor = Helper.NormalizeColor(entry.chargesColor, Helper.ENTRY_DEFAULTS.chargesColor or Helper.PANEL_LAYOUT_DEFAULTS.chargesColor or { 1, 1, 1, 1 })
 	if type(entry.cooldownVisualsUseGlobal) ~= "boolean" then entry.cooldownVisualsUseGlobal = true end
 	if type(entry.cooldownVisibilityUseGlobal) ~= "boolean" then entry.cooldownVisibilityUseGlobal = Helper.ENTRY_DEFAULTS.cooldownVisibilityUseGlobal end
@@ -2129,6 +2409,33 @@ function Helper.NormalizeEntry(entry, defaults)
 	if type(entry.cooldownGcdDrawEdge) ~= "boolean" then entry.cooldownGcdDrawEdge = Helper.ENTRY_DEFAULTS.cooldownGcdDrawEdge end
 	if type(entry.cooldownGcdDrawBling) ~= "boolean" then entry.cooldownGcdDrawBling = Helper.ENTRY_DEFAULTS.cooldownGcdDrawBling end
 	if type(entry.cooldownGcdDrawSwipe) ~= "boolean" then entry.cooldownGcdDrawSwipe = Helper.ENTRY_DEFAULTS.cooldownGcdDrawSwipe end
+	if entry.type == "CDM_AURA" or entry.type == "STANCE" then
+		entry.cdmAuraOverlayEnabled = false
+		entry.cdmAuraOverlayReverse = Helper.ENTRY_DEFAULTS.cdmAuraOverlayReverse
+		entry.cdmAuraOverlayColor = Helper.NormalizeColor(entry.cdmAuraOverlayColor, Helper.ENTRY_DEFAULTS.cdmAuraOverlayColor)
+		entry.activationOverlayReverse = Helper.ENTRY_DEFAULTS.activationOverlayReverse
+		entry.activationOverlayColor = Helper.NormalizeColor(entry.activationOverlayColor, Helper.ENTRY_DEFAULTS.activationOverlayColor)
+		entry.activationOverlayOnly = false
+		entry.activationOverlayGlow = false
+		entry.autoCooldownDurationEnabled = false
+		entry.customCooldownDurationEnabled = false
+		entry.customCooldownDuration = Helper.ENTRY_DEFAULTS.customCooldownDuration
+	else
+		if type(entry.cdmAuraOverlayEnabled) ~= "boolean" then entry.cdmAuraOverlayEnabled = Helper.ENTRY_DEFAULTS.cdmAuraOverlayEnabled end
+		if type(entry.cdmAuraOverlayReverse) ~= "boolean" then entry.cdmAuraOverlayReverse = Helper.ENTRY_DEFAULTS.cdmAuraOverlayReverse end
+		entry.cdmAuraOverlayColor = Helper.NormalizeColor(entry.cdmAuraOverlayColor, Helper.ENTRY_DEFAULTS.cdmAuraOverlayColor)
+		if type(entry.activationOverlayReverse) ~= "boolean" then entry.activationOverlayReverse = entry.cdmAuraOverlayReverse ~= false end
+		if entry.activationOverlayColor == nil then entry.activationOverlayColor = entry.cdmAuraOverlayColor end
+		entry.activationOverlayColor = Helper.NormalizeColor(entry.activationOverlayColor, Helper.ENTRY_DEFAULTS.activationOverlayColor)
+		if type(entry.activationOverlayOnly) ~= "boolean" then entry.activationOverlayOnly = Helper.ENTRY_DEFAULTS.activationOverlayOnly end
+		if type(entry.activationOverlayGlow) ~= "boolean" then entry.activationOverlayGlow = Helper.ENTRY_DEFAULTS.activationOverlayGlow end
+		if entry.type ~= "SPELL" then entry.cdmAuraOverlayEnabled = false end
+		if type(entry.autoCooldownDurationEnabled) ~= "boolean" then entry.autoCooldownDurationEnabled = Helper.ENTRY_DEFAULTS.autoCooldownDurationEnabled end
+		if entry.type ~= "ITEM" and entry.type ~= "SLOT" then entry.autoCooldownDurationEnabled = false end
+		if type(entry.customCooldownDurationEnabled) ~= "boolean" then entry.customCooldownDurationEnabled = Helper.ENTRY_DEFAULTS.customCooldownDurationEnabled end
+		entry.customCooldownDuration = Helper.ClampNumber(entry.customCooldownDuration, 0, Helper.CUSTOM_COOLDOWN_DURATION_MAX or 300, Helper.ENTRY_DEFAULTS.customCooldownDuration or 0)
+		if not (entry.customCooldownDuration and entry.customCooldownDuration > 0) then entry.customCooldownDurationEnabled = false end
+	end
 	if type(entry.cooldownTextUseGlobal) ~= "boolean" then entry.cooldownTextUseGlobal = true end
 	if type(entry.noDesaturationUseGlobal) ~= "boolean" then entry.noDesaturationUseGlobal = true end
 	if type(entry.noDesaturation) ~= "boolean" then entry.noDesaturation = Helper.ENTRY_DEFAULTS.noDesaturation end
@@ -2162,7 +2469,8 @@ function Helper.NormalizeEntry(entry, defaults)
 		local normalizedDefaultStaticColor = Helper.NormalizeColor(defaultStaticColor, defaultStaticColor)
 		local usesDefaultStaticStyle = (type(entry.staticTextFont) ~= "string" or entry.staticTextFont == "")
 			and Helper.ClampInt(entry.staticTextSize, 6, 64, Helper.ENTRY_DEFAULTS.staticTextSize or 12) == (Helper.ENTRY_DEFAULTS.staticTextSize or 12)
-			and Helper.NormalizeFontStyleChoice(entry.staticTextStyle, Helper.ENTRY_DEFAULTS.staticTextStyle or "OUTLINE") == (Helper.ENTRY_DEFAULTS.staticTextStyle or "OUTLINE")
+			and Helper.NormalizeFontStyleChoice(entry.staticTextStyle, Helper.ENTRY_DEFAULTS.staticTextStyle or globalFontStyleKey())
+				== (Helper.ENTRY_DEFAULTS.staticTextStyle or globalFontStyleKey())
 			and currentStaticColor[1] == normalizedDefaultStaticColor[1]
 			and currentStaticColor[2] == normalizedDefaultStaticColor[2]
 			and currentStaticColor[3] == normalizedDefaultStaticColor[3]
@@ -2272,7 +2580,7 @@ function Helper.CreatePanel(name, defaults)
 	if layout.staticTextStyle == nil or layout.staticTextStyle == "" then layout.staticTextStyle = globalStyle end
 	layout.fixedGroups = {}
 	return {
-		name = (type(name) == "string" and name ~= "" and name) or "Cooldown Panel",
+			name = (type(name) == "string" and name ~= "" and name) or L["cooldownPanelDefaultName"],
 		enabled = true,
 		point = "CENTER",
 		x = 0,
@@ -2379,6 +2687,7 @@ local ELVUI_ACTION_BUTTONS = 12
 
 local GetItemInfoInstantFn = C_Item and C_Item.GetItemInfoInstant
 local GetOverrideSpell = C_Spell and C_Spell.GetOverrideSpell
+local GetBaseSpell = C_Spell and C_Spell.GetBaseSpell
 local GetInventoryItemID = GetInventoryItemID
 local GetActionDisplayCount = C_ActionBar and C_ActionBar.GetActionDisplayCount
 local GetMacroIndexByName = GetMacroIndexByName
@@ -2395,6 +2704,16 @@ local function getEffectiveSpellId(spellId)
 	if GetOverrideSpell then
 		local overrideId = GetOverrideSpell(id)
 		if type(overrideId) == "number" and overrideId > 0 then return overrideId end
+	end
+	return id
+end
+
+local function getBaseSpellId(spellId)
+	local id = tonumber(spellId)
+	if not id then return nil end
+	if GetBaseSpell then
+		local baseId = GetBaseSpell(id)
+		if type(baseId) == "number" and baseId > 0 then return baseId end
 	end
 	return id
 end
@@ -2680,6 +2999,13 @@ local function getLookupSpellBindingText(lookup, spellId)
 	return type(text) == "string" and text or nil
 end
 
+local function getLookupSpellBindingTextIfDistinct(lookup, spellId, previousA, previousB, previousC)
+	local id = tonumber(spellId)
+	if not id then return nil, nil end
+	if id == previousA or id == previousB or id == previousC then return nil, id end
+	return getLookupSpellBindingText(lookup, id), id
+end
+
 local function buildKeybindLookup()
 	local runtime = CooldownPanels.runtime or {}
 	if runtime._eqolKeybindLookup then return runtime._eqolKeybindLookup end
@@ -2718,6 +3044,14 @@ local function buildKeybindLookup()
 				local macroName = GetMacroInfo(actionId)
 				if type(macroName) == "string" and macroName ~= "" and not lookup.macroName[macroName] then lookup.macroName[macroName] = keyText end
 			end
+			if Api.GetMacroSpell then
+				local macroSpell = Api.GetMacroSpell(actionId)
+				local macroSpellId = tonumber(macroSpell)
+				if macroSpellId then
+					addSpellBindingLookup(lookup, macroSpellId, keyText)
+					addSpellBindingLookup(lookup, getEffectiveSpellId(macroSpellId), keyText)
+				end
+			end
 			if getMacroItem then
 				local macroItem = getMacroItem(actionId)
 				if macroItem then
@@ -2743,6 +3077,7 @@ function Keybinds.InvalidateCache()
 	CooldownPanels.runtime._eqolActionButtonSlotMap = nil
 	CooldownPanels.runtime._eqolKeybindLookup = nil
 	CooldownPanels.runtime._eqolKeybindCache = nil
+	CooldownPanels.runtime._eqolKeybindLookupGeneration = (CooldownPanels.runtime._eqolKeybindLookupGeneration or 0) + 1
 end
 
 function Keybinds.InvalidateButtonList()
@@ -2798,8 +3133,19 @@ local function refreshPanelKeybindsOnly(panelId)
 		local keybind = icon and icon.keybind or nil
 		local data = visible[i]
 		if keybind then
-			local show = data and data.layout and data.layout.keybindsEnabled == true and data.entry ~= nil
-			local text = show and Keybinds.GetEntryKeybindText(data.entry, data.layout) or nil
+			local entry = data and data.entry or nil
+			local bars = CooldownPanels and CooldownPanels.Bars or nil
+			local barDisplayMode = type(bars) == "table" and type(bars.DISPLAY_MODE) == "table" and bars.DISPLAY_MODE.BAR or "BAR"
+			local suppressForBarMode = type(entry) == "table" and type(entry.displayMode) == "string" and string.upper(entry.displayMode) == barDisplayMode
+			local show = data and data.layout and data.layout.keybindsEnabled == true and entry ~= nil and not suppressForBarMode
+			local text
+			if show then
+				if entry and entry.type == "SPELL" and data.resolvedType == "SPELL" then
+					text = Keybinds.GetEntryKeybindText(data.entry, data.layout, data.effectiveSpellId, data.resolvedSpellId, nil, true)
+				else
+					text = Keybinds.GetEntryKeybindText(data.entry, data.layout)
+				end
+			end
 			if data then
 				data.showKeybinds = show == true
 				data.keybindText = text
@@ -2836,11 +3182,12 @@ function Keybinds.RefreshPanels()
 	return refreshed
 end
 
-function Keybinds.RequestRefresh(cause)
+function Keybinds.RequestRefresh(cause, invalidateLookup)
 	local runtime = CooldownPanels.runtime
 	if not runtime then return end
 	if not Keybinds.HasPanels() then return end
 	if cause then runtime.keybindRefreshCause = cause end
+	if invalidateLookup ~= false then runtime.keybindRefreshInvalidateLookup = true end
 	if runtime.keybindRefreshPending then return end
 	runtime.keybindRefreshPending = true
 	C_Timer.After(0.1, function()
@@ -2848,40 +3195,90 @@ function Keybinds.RequestRefresh(cause)
 		if not Keybinds.HasPanels() then return end
 		runtime.keybindRefreshCauseActive = runtime.keybindRefreshCause
 		runtime.keybindRefreshCause = nil
-		Keybinds.InvalidateCache()
+		local shouldInvalidateLookup = runtime.keybindRefreshInvalidateLookup == true
+		runtime.keybindRefreshInvalidateLookup = nil
+		if shouldInvalidateLookup then Keybinds.InvalidateCache() end
 		Keybinds.RefreshPanels()
 		runtime.keybindRefreshCauseActive = nil
 	end)
 end
 
-function Keybinds.GetEntryKeybindText(entry, layout)
+function Keybinds.GetEntryKeybindText(entry, layout, preEffectiveSpellId, preResolvedSpellId, preStoredBaseSpellId, preResolvedSpellIdsReady)
 	if not entry then return nil end
-	if layout and layout.keybindsIgnoreItems == true and (entry.type == "ITEM" or entry.type == "SLOT") then return nil end
+	local entryType = entry.type
+	if layout and layout.keybindsIgnoreItems == true and (entryType == "ITEM" or entryType == "SLOT") then return nil end
 	local runtime = CooldownPanels.runtime or {}
 	runtime._eqolKeybindCache = runtime._eqolKeybindCache or {}
+	local generation = runtime._eqolKeybindLookupGeneration or 0
+	local ignoreItems = layout and layout.keybindsIgnoreItems == true or false
 	local slotItemId
-	if entry.type == "SLOT" and entry.slotID then slotItemId = GetInventoryItemID and GetInventoryItemID("player", entry.slotID) end
-	local effectiveSpellId = entry.type == "SPELL" and getEffectiveSpellId(entry.spellID) or nil
-	local cacheValue = effectiveSpellId or entry.spellID or entry.itemID or entry.slotID or entry.macroID or entry.macroName or ""
-	local cacheKey = tostring(entry.type) .. ":" .. tostring(cacheValue) .. ":" .. tostring(slotItemId or "")
+	if entryType == "SLOT" and entry.slotID then slotItemId = GetInventoryItemID and GetInventoryItemID("player", entry.slotID) end
+	local resolvedEffectiveSpellId, resolvedSpellId, storedBaseSpellId
+	if entryType == "SPELL" and entry.spellID then
+		if preResolvedSpellIdsReady == true then
+			resolvedEffectiveSpellId = preEffectiveSpellId
+			resolvedSpellId = preResolvedSpellId
+			storedBaseSpellId = preStoredBaseSpellId or getBaseSpellId(entry.spellID)
+		elseif CooldownPanels and CooldownPanels.ResolveTrackedSpellID then
+			resolvedEffectiveSpellId, resolvedSpellId, storedBaseSpellId = CooldownPanels:ResolveTrackedSpellID(entry.spellID)
+		end
+	end
+	local effectiveSpellId = tonumber(resolvedEffectiveSpellId or (entryType == "SPELL" and getEffectiveSpellId(entry.spellID) or nil))
+	resolvedSpellId = tonumber(resolvedSpellId)
+	storedBaseSpellId = tonumber(storedBaseSpellId)
+	local entrySpellId = tonumber(entry.spellID)
+	if
+		entry._eqolKeybindCacheGeneration == generation
+		and entry._eqolKeybindCacheIgnoreItems == ignoreItems
+		and entry._eqolKeybindCacheType == entryType
+		and entry._eqolKeybindCacheSpellID == entry.spellID
+		and entry._eqolKeybindCacheEffectiveSpellID == effectiveSpellId
+		and entry._eqolKeybindCacheResolvedSpellID == resolvedSpellId
+		and entry._eqolKeybindCacheBaseSpellID == storedBaseSpellId
+		and entry._eqolKeybindCacheItemID == entry.itemID
+		and entry._eqolKeybindCacheSlotID == entry.slotID
+		and entry._eqolKeybindCacheSlotItemID == slotItemId
+		and entry._eqolKeybindCacheMacroID == entry.macroID
+		and entry._eqolKeybindCacheMacroName == entry.macroName
+	then
+		return entry._eqolKeybindCacheText or nil
+	end
+
+	local cacheValue = effectiveSpellId or resolvedSpellId or storedBaseSpellId or entry.spellID or entry.itemID or entry.slotID or entry.macroID or entry.macroName or ""
+	local cacheKey = tostring(entryType) .. ":" .. tostring(cacheValue) .. ":" .. tostring(slotItemId or "")
 	local cached = runtime._eqolKeybindCache[cacheKey]
-	if cached ~= nil then return cached or nil end
+	if cached ~= nil then
+		entry._eqolKeybindCacheGeneration = generation
+		entry._eqolKeybindCacheIgnoreItems = ignoreItems
+		entry._eqolKeybindCacheType = entryType
+		entry._eqolKeybindCacheSpellID = entry.spellID
+		entry._eqolKeybindCacheEffectiveSpellID = effectiveSpellId
+		entry._eqolKeybindCacheResolvedSpellID = resolvedSpellId
+		entry._eqolKeybindCacheBaseSpellID = storedBaseSpellId
+		entry._eqolKeybindCacheItemID = entry.itemID
+		entry._eqolKeybindCacheSlotID = entry.slotID
+		entry._eqolKeybindCacheSlotItemID = slotItemId
+		entry._eqolKeybindCacheMacroID = entry.macroID
+		entry._eqolKeybindCacheMacroName = entry.macroName
+		entry._eqolKeybindCacheText = cached
+		return cached or nil
+	end
 
 	local text = nil
-	if entry.type == "SPELL" and entry.spellID then
+	if entryType == "SPELL" and entry.spellID then
 		local lookup = buildKeybindLookup()
-		local spellId = effectiveSpellId or entry.spellID
-		text = getLookupSpellBindingText(lookup, spellId)
-		if not text and effectiveSpellId and effectiveSpellId ~= entry.spellID then text = getLookupSpellBindingText(lookup, entry.spellID) end
-		if not text then text = getBindingTextForSpell(spellId) end
-		if not text and effectiveSpellId and effectiveSpellId ~= entry.spellID then text = getBindingTextForSpell(entry.spellID) end
-	elseif entry.type == "ITEM" and entry.itemID then
+		local usedA, usedB, usedC
+		text, usedA = getLookupSpellBindingTextIfDistinct(lookup, effectiveSpellId)
+		if not text then text, usedB = getLookupSpellBindingTextIfDistinct(lookup, resolvedSpellId, usedA) end
+		if not text then text, usedC = getLookupSpellBindingTextIfDistinct(lookup, storedBaseSpellId, usedA, usedB) end
+		if not text then text = getLookupSpellBindingTextIfDistinct(lookup, entrySpellId, usedA, usedB, usedC) end
+	elseif entryType == "ITEM" and entry.itemID then
 		local lookup = buildKeybindLookup()
 		text = lookup.item and lookup.item[entry.itemID]
-	elseif entry.type == "SLOT" and slotItemId then
+	elseif entryType == "SLOT" and slotItemId then
 		local lookup = buildKeybindLookup()
 		text = lookup.item and lookup.item[slotItemId]
-	elseif entry.type == "MACRO" then
+	elseif entryType == "MACRO" then
 		local lookup = buildKeybindLookup()
 		local macroId = tonumber(entry.macroID)
 		local macroName = type(entry.macroName) == "string" and entry.macroName or nil
@@ -2895,6 +3292,19 @@ function Keybinds.GetEntryKeybindText(entry, layout)
 
 	text = formatKeybindText(text)
 	runtime._eqolKeybindCache[cacheKey] = text or false
+	entry._eqolKeybindCacheGeneration = generation
+	entry._eqolKeybindCacheIgnoreItems = ignoreItems
+	entry._eqolKeybindCacheType = entryType
+	entry._eqolKeybindCacheSpellID = entry.spellID
+	entry._eqolKeybindCacheEffectiveSpellID = effectiveSpellId
+	entry._eqolKeybindCacheResolvedSpellID = resolvedSpellId
+	entry._eqolKeybindCacheBaseSpellID = storedBaseSpellId
+	entry._eqolKeybindCacheItemID = entry.itemID
+	entry._eqolKeybindCacheSlotID = entry.slotID
+	entry._eqolKeybindCacheSlotItemID = slotItemId
+	entry._eqolKeybindCacheMacroID = entry.macroID
+	entry._eqolKeybindCacheMacroName = entry.macroName
+	entry._eqolKeybindCacheText = text or false
 	CooldownPanels.runtime = runtime
 	return text
 end
@@ -2910,7 +3320,7 @@ function CooldownPanels:RequestPanelRefresh(panelId)
 	if rt._eqolPanelRefreshPending then return end
 	rt._eqolPanelRefreshPending = true
 
-	C_Timer.After(0, function()
+	RunNextFrame(function()
 		local runtime = CooldownPanels.runtime
 		if not runtime then return end
 		runtime._eqolPanelRefreshPending = nil

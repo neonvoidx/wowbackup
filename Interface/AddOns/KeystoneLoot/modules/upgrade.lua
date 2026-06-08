@@ -3,12 +3,13 @@ local AddonName, KeystoneLoot = ...;
 KeystoneLoot.Upgrade = {};
 
 local Upgrade = KeystoneLoot.Upgrade;
-local DB = KeystoneLoot.DB;
+local DB        = KeystoneLoot.DB;
+local Favorites = KeystoneLoot.Favorites;
 
 local SPECIAL_BONUS_IDS = {
     [178708] = 6917, -- Unbändiger Wechselbalg
     [178715] = 6923, -- Okarina der Nebelruferin
-    [243308] = 13503 -- Kettenstiefel des Eindringlings
+    [243308] = 13503,-- Kettenstiefel des Eindringlings
 };
 
 local ITEM_LEVEL_BONUS_IDS = {
@@ -71,16 +72,22 @@ function Upgrade:BuildItemLink(itemId)
     -- Calculate bonus IDs needed
     local bonusIds = {};
 
-    -- 1. Item level adjustment bonus
-    local levelDiff = upgrade.ilvl - baseItemLevel;
-    local levelBonusId = ITEM_LEVEL_BONUS_IDS[levelDiff];
-    if (levelBonusId) then
-        table.insert(bonusIds, levelBonusId);
-    end
+    -- 1+2. Use stored bonus IDs from favorites if available, otherwise compute.
+    local storedBonusIds = Favorites:GetBonusIds(itemId);
+    if (storedBonusIds) then
+        for _, id in ipairs(storedBonusIds) do
+            table.insert(bonusIds, id);
+        end
+    else
+        local levelDiff    = upgrade.ilvl - baseItemLevel;
+        local levelBonusId = ITEM_LEVEL_BONUS_IDS[levelDiff];
+        if (levelBonusId) then
+            table.insert(bonusIds, levelBonusId);
+        end
 
-    -- 2. Upgrade track bonus (champion/hero/myth)
-    if (upgrade.bonusId) then
-        table.insert(bonusIds, upgrade.bonusId);
+        if (upgrade.bonusId) then
+            table.insert(bonusIds, upgrade.bonusId);
+        end
     end
 
     -- 3. Special item bonus
@@ -91,9 +98,18 @@ function Upgrade:BuildItemLink(itemId)
     -- 4. Always add 1674 (epic)
     table.insert(bonusIds, 1674);
 
+    -- 5. Midnight Season 1 bonus rings and amulets
+    local _, _, _, itemEquipLoc = C_Item.GetItemInfoInstant(itemId);
+    if (itemEquipLoc == "INVTYPE_FINGER" or itemEquipLoc == "INVTYPE_NECK") then
+        table.insert(bonusIds, 13534);
+    end
+
     -- Build link
     local playerLevel = UnitLevel("player");
-    local specId = DB:Get("filters.specId");
+    local specId      = DB:Get("filters.specId");
+    if (specId == 0) then
+        specId = C_SpecializationInfo.GetSpecializationInfo(C_SpecializationInfo.GetSpecialization() or 1) or 0;
+    end
     local numBonusIds = #bonusIds;
     local bonusString = table.concat(bonusIds, ":");
 

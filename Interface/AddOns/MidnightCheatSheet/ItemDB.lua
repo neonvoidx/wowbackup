@@ -137,11 +137,8 @@ end
 D["DEATHKNIGHT_BLOOD"] = S(
     { ["Deathbringer"] = {"Crit","Mastery","Vers","Haste"},
       ["San'layn"] = {"Haste","Mastery","Crit","Vers"} },
-    { runeforge={
-        {key="RuneSanguination", label="San'layn / Deathbringer ST"},
-        {key="RuneFallenCrusader", label="Deathbringer AoE"},
-      }, chest="MarkWorld", helm="BlessSpeed", shoulder="AkilSwift", boots="FarHunt", legs="ForestKit" },
-    {"NatureFury"},
+    { wep={}, chest="MarkWorld", helm="BlessSpeed", shoulder="AkilSwift", boots="FarHunt", legs="ForestKit" },
+    {"NatureFury","EyesEagle"},
     { epic="Indecipherable", rare={"QuickGarnet","MastGarnet"} },
     { Flask="FlaskBK", Food="FoodBloom", Potion="PotReck", Healing="HealHP", Rune="AugRune", Oil="OilPhoenix" })
 D["DEATHKNIGHT_FROST"] = S(
@@ -158,10 +155,8 @@ D["DEATHKNIGHT_FROST"] = S(
 D["DEATHKNIGHT_UNHOLY"] = S(
     { ["Rider of the Apocalypse"] = {"Mastery","Crit","Haste","Vers"},
       ["San'layn"] = {"Mastery","Crit","Haste","Vers"} },
-    { runeforge={
-        {key="RuneApocalypse", label="All builds"},
-      }, chest="MarkWorld", helm="BlessSpeed", shoulder="FlightEagle", boots="FarHunt", legs="ForestKit" },
-    {"ZuljinMast"},
+    { wep={}, chest="MarkWorld", helm="BlessSpeed", shoulder="AkilSwift", boots="FarHunt", legs="ForestKit" },
+    {"EyesEagle"},
     { epic="Indecipherable", rare={"MastGarnet","DeadlyAmethyst"} },
     { Flask="FlaskSun", Food="FoodParade", Potion="PotReck", Healing="HealHP", Rune="AugRune", Oil="OilPhoenix" })
 -- DEMON HUNTER
@@ -183,7 +178,7 @@ D["DEMONHUNTER_DEVOURER"] = S(
     { ["Annihilator"] = {"Haste","Mastery","Crit","Vers"},
       ["Void-Scarred"] = {"Mastery","Haste","Crit","Vers"} },
     { wep={"ArcMastery","BerserkRage","AcuityRen"}, chest="MarkWorld", helm="RuneAvoid", shoulder="AmirGrace", boots="LynxDex", legs="SunfireThread" },
-    {"ZuljinMast","SilvermoonAla"},
+    {"EyesEagle"},
     { epic="Indecipherable", rare={"QuickAmethyst"} },
     { Flask="FlaskMag", Food="FoodParade", Potion="PotReck", Healing="HealHP", Rune="AugRune", Oil="OilPhoenix" })
 -- DRUID
@@ -191,14 +186,14 @@ D["DRUID_BALANCE"] = S(
     { ["Keeper of the Grove"] = {"Mastery","Haste","Crit","Vers"},
       ["Elune's Chosen"] = {"Mastery","Haste","Crit","Vers"} },
     { wep={"AcuityRen"}, chest="MarkWorld", helm="RuneAvoid", shoulder="AmirGrace", boots="LynxDex", legs="SunfireThread" },
-    {"ZuljinMast"},
+    {"EyesEagle"},
     { epic="Indecipherable", rare={"QuickAmethyst","MastGarnet","MastPeridot","MastLapis"} },
     { Flask="FlaskMag", Food="FoodBloom", Potion="PotLight", Healing="HealHP", Rune="AugRune", Oil="OilPhoenix" })
 D["DRUID_FERAL"] = S(
     { ["Druid of the Claw"] = {"Mastery","Haste","Crit","Vers"},
       ["Wildstalker"] = {"Mastery","Crit","Haste","Vers"} },
     { wep={"AcuityRen"}, chest="MarkWorld", helm="RuneAvoid", shoulder="AmirGrace", boots="LynxDex", legs="ForestKit" },
-    {"ZuljinMast"},
+    {"EyesEagle"},
     { epic="Powerful", rare={"QuickAmethyst","MastGarnet","MastLapis"} },
     { Flask="FlaskSun", Food="FoodRoyal", Potion="PotRampant", Healing="HealHP", Rune="AugRune", Oil="OilPhoenix" })
 D["DRUID_GUARDIAN"] = S(
@@ -224,8 +219,8 @@ D["EVOKER_DEVASTATION"] = S(
     { epic="Indecipherable", rare={"QuickGarnet","MastGarnet","DeadlyPeridot","DeadlyAmethyst","DeadlyLapis"} },
     { Flask="FlaskSun", Food="FoodQuel", Potion="PotReck", Healing="HealHP", Rune="AugRune", Oil="OilPhoenix" })
 D["EVOKER_PRESERVATION"] = S(
-    { ["Flameshaper"] = {"Mastery","Haste","Crit","Vers"},
-      ["Chronowarden"] = {"Mastery","Haste","Crit","Vers"} },
+    { ["Flameshaper"] = {"Mastery","Crit","Haste","Vers"},
+      ["Chronowarden"] = {"Mastery","Crit","Haste","Vers"} },
     { wep={"AcuityRen"}, chest="MarkWorld", helm="HexLeech", shoulder="SilverMend", boots="ShalRoots", legs="ArcThread" },
     {"ZuljinMast"},
     { epic="Indecipherable", rare={"QuickAmethyst"} },
@@ -242,7 +237,7 @@ D["HUNTER_BEAST_MASTERY"] = S(
     { ["Pack Leader"] = {"Mastery","Haste","Crit","Vers"},
       ["Dark Ranger"] = {"Mastery","Haste","Crit","Vers"} },
     { wep={"AcuityRen"}, chest="MarkWorld", helm="RuneAvoid", shoulder="AmirGrace", boots="LynxDex", legs="ForestKit" },
-    {"ZuljinMast"},
+    {"EyesEagle"},
     { epic="Indecipherable", rare={"QuickAmethyst","DeadlyAmethyst","MastPeridot"} },
     { Flask="FlaskMag", Food="FoodQuel", Potion="PotLight", Healing="HealHP", Rune="AugRune", Oil="OilPhoenix" })
 D["HUNTER_MARKSMANSHIP"] = S(
@@ -256,7 +251,7 @@ D["HUNTER_SURVIVAL"] = S(
     { ["Pack Leader"] = {"Mastery","Crit","Haste","Vers"},
       ["Sentinel"] = {"Mastery","Crit","Haste","Vers"} },
     { wep={"ArcMastery","AcuityRen"}, chest="MarkWorld", helm="RuneAvoid", shoulder="AmirGrace", boots="LynxDex", legs="ForestKit" },
-    {"ZuljinMast"},
+    {"EyesEagle"},
     { epic="Indecipherable", rare={"DeadlyAmethyst"} },
     { Flask="FlaskMagFlee", Food="FoodParade", Potion="PotLight", Healing="HealHP", Rune="AugRune", Oil="OilPhoenix" })
 -- MAGE
@@ -300,7 +295,7 @@ D["MONK_WINDWALKER"] = S(
     { ["Shado-Pan"] = {"Haste","Crit","Mastery","Vers"},
       ["Conduit of the Celestials"] = {"Haste","Mastery","Crit","Vers"} },
     { wep={"AcuityRen"}, chest="MarkWorld", helm="RuneAvoid", shoulder="AmirGrace", boots="LynxDex", legs="ForestKit" },
-    {"SilvermoonAla"},
+    {"EyesEagle"},
     { epic="Indecipherable", rare={"DeadlyPeridot","QuickAmethyst","QuickGarnet"} },
     { Flask="FlaskBK", Food="FoodParade", Potion="PotReck", Healing="HealHP", Rune="AugRune", Oil="OilPhoenix" })
 -- PALADIN
@@ -310,7 +305,7 @@ D["PALADIN_HOLY"] = S(
     { wep={"AcuityRen"}, chest="MarkMagister", helm="HexLeech", shoulder="SilverMend", boots="ShalRoots", legs="ArcThread" },
     {"ZuljinMast"},
     { epic="TelluricCrit", rare={"QuickAmethyst","MastGarnet","MastPeridot","MastLapis"} },
-    { Flask="FlaskMag", Food="FoodRoast", Potion="PotReck", Healing="HealHP", Rune="AugRune", Oil="OilPhoenix", Mana="HealMana" })
+    { Flask="FlaskMag", Food="FoodRoast", Potion="PotLight", Healing="HealHP", Rune="AugRune", Oil="OilPhoenix", Mana="HealMana" })
 D["PALADIN_PROTECTION"] = S(
     { ["Survivability"] = {"Haste","Vers","Mastery","Crit"},
       ["DPS"] = {"Haste","Vers","Crit","Mastery"} },
@@ -344,7 +339,7 @@ D["PRIEST_SHADOW"] = S(
     { ["Archon"] = {"Haste","Mastery","Crit","Vers"},
       ["Voidweaver"] = {"Haste","Mastery","Crit","Vers"} },
     { wep={"ArcMastery"}, chest="MarkWorld", helm="RuneAvoid", shoulder="AkilSwift", boots="LynxDex", legs="SunfireThread" },
-    {"SilvermoonAla"},
+    {"EyesEagle"},
     { epic="Indecipherable", rare={"QuickGarnet","DeadlyAmethyst","MastPeridot"} },
     { Flask="FlaskBK", Food="FoodBloom", Potion="PotLight", Healing="HealHP", Rune="AugRune", Oil="OilPhoenix" })
 -- ROGUE
@@ -352,7 +347,7 @@ D["ROGUE_ASSASSINATION"] = S(
     { ["Deathstalker"] = {"Crit","Haste","Mastery","Vers"},
       ["Fatebound"] = {"Crit","Haste","Mastery","Vers"} },
     { wep={"BerserkRage"}, chest="MarkWorld", helm="HexLeech", shoulder="SilverMend", boots="ShalRoots", legs="ForestKit" },
-    {"SilvermoonAla"},
+    {"EyesEagle"},
     { epic="Indecipherable", rare={"QuickGarnet"} },
     { Flask="FlaskSun", Food="FoodParade", Potion="PotLight", Healing="HealHP", Rune="AugRune", Oil="OilPhoenix" })
 D["ROGUE_OUTLAW"] = S(
@@ -367,7 +362,7 @@ D["ROGUE_SUBTLETY"] = S(
       ["Trickster"] = {"Mastery","Haste","Crit","Vers"} },
     { wep={"AcuityRen","ArcMastery","BerserkRage","JanalaiPrec"}, chest="MarkWorld", helm="RuneAvoid", shoulder="AmirGrace", boots="LynxDex", legs="ForestKit" },
     {"EyesEagle"},
-    { epic="Indecipherable", rare={"QuickAmethyst","DeadlyPeridot","MastGarnet"} },
+    { epic="Indecipherable", rare={"DeadlyAmethyst","QuickAmethyst","DeadlyPeridot","MastGarnet"} },
     { Flask="FlaskMag", Food="FoodParade", Potion="PotLight", Healing="HealHP", Rune="AugRune", Oil="OilPhoenix" })
 -- SHAMAN
 D["SHAMAN_ELEMENTAL"] = S(
@@ -381,7 +376,7 @@ D["SHAMAN_ENHANCEMENT"] = S(
     { ["Stormbringer"] = {"Haste","Mastery","Crit","Vers"},
       ["Totemic"] = {"Mastery","Haste","Crit","Vers"} },
     { wep={"AcuityRen"}, chest="MarkWorld", helm="RuneAvoid", shoulder="AmirGrace", boots="LynxDex", legs="ForestKit" },
-    {"ZuljinMast"},
+    {"EyesEagle"},
     { epic="Indecipherable", rare={"QuickAmethyst","MastPeridot"} },
     { Flask="FlaskMag", Food="FoodParade", Potion="PotLight", Healing="HealHP", Rune="AugRune" })
 D["SHAMAN_RESTORATION"] = S(
@@ -440,15 +435,15 @@ D["WARRIOR_PROTECTION"] = S(
 ----------------------------------------------------------------------
 MCS.TalentDB = {
     ["DEATHKNIGHT_BLOOD"] = {
-        ["M+"] = "CoPAAAAAAAAAAAAAAAAAAAAAAwMzyMzMmxMzMMLzMz0MLGjxMGAAAAwMmZmZmZYGjBAjZmZGAAAjZbgBsEsNMBGWAMjZAAYmBwgB",
-        ["Raid ST"] = "CoPAAAAAAAAAAAAAAAAAAAAAAwYWGzMmxMjhZZmZmmZxYmxMmBAAAAzMzMzMzMDzYMAgZmZGAAAGYgZspxyGILDYDwMMDAAMzADGA",
+        ["M+"] = "CoPAAAAAAAAAAAAAAAAAAAAAAwMzyMzMmxMzMMLzMz0MLGjxMGAAAAwMmZmZmZYGjBAjZmZGAAgxsNwAWCWGmADLAmhZAAMzAYYA",
+        ["Raid ST"] = "CoPAAAAAAAAAAAAAAAAAAAAAAwYWmZmxMmZmhZZmZmmZxYMmxAAAAAzMzMzMzMDzYMAgZmZGAAADMwMW0YZDklBsBYGmBAAmZghB",
     },
     ["DEATHKNIGHT_FROST"] = {
-        ["M+"] = "CsPAAAAAAAAAAAAAAAAAAAAAAMAzMjZmZAz2MzMzMLmZkZMmZmZGYMzwMzMjZAAAAAAAAAwY2GYALglhJkxCmZYmBmBwwMDwMgB",
-        ["Raid ST"] = "CsPAAAAAAAAAAAAAAAAAAAAAAMDwMjZMDY2mZmZmZZmZkZMmZYGGPgZGMzMzMDAAAAAAAAAGz2ADYBsMMhMWwMjZmBmBwwMDwMDM",
+        ["M+"] = "CsPAAAAAAAAAAAAAAAAAAAAAAMAzMjZmZAz2MzMzMLmZkZMmZmZGYMzwMzMjZAAAAAAAAAYMbDMgFwywEyYBzMMzAzAYYmBYGYA",
+        ["Raid ST"] = "CsPAAAAAAAAAAAAAAAAAAAAAAMDwMjZMDY2mZmZmZZmZkZMmZYGGPgZGMzMzMDAAAAAAAAAjZbgBsAWGmQGLYmxMzAzAYYmBYmBD",
     },
     ["DEATHKNIGHT_UNHOLY"] = {
-        ["M+"] = "CwPAAAAAAAAAAAAAAAAAAAAAAAYmZMjZMDz2MzMTDzMmZGDAAAAAAAAz8AMzAglZMzsNzMGGgFzmhhMwsxQjFMgZAYMzMmBYmZYGD",
+        ["M+"] = "CwPAAAAAAAAAAAAAAAAAAAAAAAYmhZMDDz2MzMTzmxMzMjBAAAAAAAgZGzYAwyMmZ2MzYMDYzsZYIDMbM0YBDYGAGzMjZAmZmxYA",
     },
     ["DEMONHUNTER_HAVOC"] = {
         ["M+"] = "CEkAAAAAAAAAAAAAAAAAAAAAAYmZmZmZ2mxMzMGzkxMDAAAAAAYWMmtZYmBmx2sNzMjxALDsNbmxwsopxMzYGbAAAADAAAgZGMAAAAM",
@@ -459,24 +454,24 @@ MCS.TalentDB = {
         ["Raid ST"] = "CUkAAAAAAAAAAAAAAAAAAAAAAAAYMzMjZmZkZmZYYmZGDzYmxMmxMmxMmZsNzMGDAAAAAAAEwMzYDAAAADGzMzMLtNzMDAMAAAAG",
     },
     ["DEMONHUNTER_DEVOURER"] = {
-        ["M+"] = "CgcBAAAAAAAAAAAAAAAAAAAAAAA2mxMzMzMzMGmBAAAAAAgxsNYGAAAAAAAAmxMMmZmZmZmZGzsYGjFtsxMzMzWLzMzAYYAIwMGMmB",
-        ["Raid ST"] = "CgcBAAAAAAAAAAAAAAAAAAAAAAA2MmZmxMzMGzMAAAAAAAegxsNYGAAAAAAAAmxMMmZmZmZmZGzsYGjFtsxMzMzWbzMzAYYAIwMGMmB",
+        ["M+"] = "CgcBAAAAAAAAAAAAAAAAAAAAAAA2mxMzMzMzMGmBAAAAAAgxsNYGAAAAAAAAmxMMzMzMzMzMDzsYGjFZhZmZmt2mZmBwwAQgZMYMD",
+        ["Raid ST"] = "CgcBAAAAAAAAAAAAAAAAAAAAAAA2MmZmZmZmxwMAAAAAAAegxsNYGAAAAAAAAmxMMzMzMzMzMDzsYGjFZhZmZmt2mZmBwwAQgZMYMD",
     },
     ["DRUID_BALANCE"] = {
         ["M+"] = "CYGAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAWoMbNMmZgxsMzMzMLMgZZmlZWMzMWYZmlxMjxGGAMW2mZwY2GBmAAAAswMzMD2MmxYAAYmBGA",
-        ["Raid ST"] = "CYGAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAWoMbNjxMDMmlZmZmBYYWmZbYGzYjlZMzMjZ2wAgBYZbshpZmlRAAAA2MzMzMYzYYMDgZGAYA",
+        ["Raid ST"] = "CYGAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAWoMbNjxMDMmlZmZmBYYWmZZsNjZsxyMGzMzYBDAGgltxGmmZWGBAAAYzMzMzgNjhxMAmZAgB",
     },
     ["DRUID_FERAL"] = {
         ["M+"] = "CcGAAAAAAAAAAAAAAAAAAAAAAAAAAAAAmZYmZmZMzsZsNz2MzMzDMzAAAAwSwsYMMzomxsYmZmZZMzAAAAAAgBAAAAoZWmtZmZABWAzMALMYAAAMzGG",
         ["Raid ST"] = "CcGAAAAAAAAAAAAAAAAAAAAAAAAAAAAAjZwMzMzMmtlxyMbzYGzMDAAAALBzihxMjaGziZmZGjZYAAAAAAMwAAAAIAY2mZpZbmlNwMDwiZwAAYmBAD",
     },
     ["DRUID_GUARDIAN"] = {
-        ["M+"] = "CgGAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAgZmZmlhZMziZZMzMWGY2MMaimZmlZmZmZZMDAAAAAAzYZGwy2MDGzyAYKAAAwmxMPAwiZwAWwAMzAYA",
-        ["Raid ST"] = "CgGAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAgZmxsMPwYM2MLzMPgZZZgZDGNRzMzyMzMzYMjZAAAAAADLzAAAAQNzysMzMDAgFMzAsYGMYwy2AgZWgB",
+        ["M+"] = "CgGAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAgZmZmFzMjZWMLm5BmZZZgZzMGNRmZWmZmZmlxMAAAAAAYsYGYbbmBjZZAMFAAAYDz8ADYxMYgZxyGgZGAA",
+        ["Raid ST"] = "CgGAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAgZmxsMmZMzmZZm5BMWGY2gRT0MzsMzMzMGzYGAAAAAwMWmBAAAgamlZZmZGAALYmBYxMYALYAwMbwA",
     },
     ["DRUID_RESTORATION"] = {
-        ["M+"] = "CkGAAAAAAAAAAAAAAAAAAAAAAMMmZZMjZmxsN8AMzsMjFbzAAAAAAAAAAglBNbGmmhZMmFzMzMLGegZAAAAAAAwAAQAAAz2MbNbzsYjxMDMzCoZAAmZAYA",
-        ["Raid ST"] = "CkGAAAAAAAAAAAAAAAAAAAAAAMjxMbz2MmZGzywDMmxmxCzAAAAAAAAAAgtBNbMmmhxMmlZmZmhhZGAAAAAAAAstNWw0MzyAAAEwCjZGMzA0MAYmBAMA",
+        ["M+"] = "CkGAAAAAAAAAAAAAAAAAAAAAAMMmZZMjZmxsN8AMzsNjFbzAAAAAAAAAAgFDNbzw0MAmFzMzMLGGAAAAAMAAzAAQAAAz2MbNbzsYjZmZGMzGoZAAmZAYA",
+        ["Raid ST"] = "CkGAAAAAAAAAAAAAAAAAAAAAAMjxMbz2MmZGz2wDwMzmxCzAAAAAAAAAAgtBNbMmmZM8AmlZmZmhhZAAAAAAAAAAEAAwsNzSz2Mb2YMzMMzAjmBAYmBgB",
     },
     ["EVOKER_AUGMENTATION"] = {
         ["M+"] = "CEcBAAAAAAAAAAAAAAAAAAAAAMmZmZbmZmxyAzsMjxwMAAAAAAAAYmBmBjHoGzMzAAAAgZmZmxMz2YmBmZzYwCsMGGbDgZiYDzMDmZAM",
@@ -487,23 +482,23 @@ MCS.TalentDB = {
         ["Raid ST"] = "CsbBAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAzMDMDzYmBMYMTzMzMNjx2MmZmZmHYmZGwMmxYmZZmZgBGDWglxox2AyMIYDDMzghB",
     },
     ["EVOKER_PRESERVATION"] = {
-        ["M+"] = "CwbBAAAAAAAAAAAAAAAAAAAAAAAAAAAMzMz2yADzMmFzYM2mxAAAzYmZmZMMTMmBAAA2mZmJjZmZGjZAAYMjNWgBmRDNMsAzMzAwA",
-        ["Raid ST"] = "CwbBAAAAAAAAAAAAAAAAAAAAAAAAAAAYmZ2WmHADzMmFjZmZWmxAAAzYGDmxMyMzAAAAMzMTmxMjZbmZAwAjZsxCMwMaoBsAjZGgxA",
+        ["M+"] = "CwbBAAAAAAAAAAAAAAAAAAAAAAAAAAAegZmZ2WGYYmxsZGjx2wAAAzYmZmZMMTMmBAAA2mZmJjZmZGjZAAYMjNWgBmRDNMsAzMzAwA",
+        ["Raid ST"] = "CwbBAAAAAAAAAAAAAAAAAAAAAAAAAAAYmZ2WmHADzMmNjZmZWmxAAAzYGDmxMyMzAAAAMzMTmxMjZbmZAwAjZsxCMwMaoBsAjZGgxA",
     },
     ["HUNTER_BEAST_MASTERY"] = {
-        ["M+"] = "C0PAAAAAAAAAAAAAAAAAAAAAAYzsNwAGwMsBZsAAgZGLzMDzwMzMYGzMzwMmZGzMzYbmZYMDLDNDAAAAAYGAAAmHYMzwMDQAzCYzA",
-        ["Raid ST"] = "C0PAAAAAAAAAAAAAAAAAAAAAAAMmxwCsAzwQDbAAYG2GzsNzwMmZYYmxYmxMzYGzwMzYGzghmBAAAAAMDAAAzMzMAzshwwsA2MA",
+        ["M+"] = "C0PAAAAAAAAAAAAAAAAAAAAAAYzsNwAGwMsBZsAAgZGLzMDzwMzMYGzMzwMmZGzMzYbmZYMDLDNDAAAAgZAAAYegxMDzMABMLgtBA",
+        ["Raid ST"] = "C0PAAAAAAAAAAAAAAAAAAAAAAAMmxwCsAzwQDbAAYG2GzsNzwMmZYYmxYmxMzYGzwMzYGzghmBAAAAwMAAAMzMzAMzGCDzCYbAA",
     },
     ["HUNTER_MARKSMANSHIP"] = {
-        ["M+"] = "C4PAAAAAAAAAAAAAAAAAAAAAAwCMwMGNWGAzgNAAAAAAAAgZMzMjtZMzMmhlx0MGjZ222MzMDzMsMzsMGzywMDAAgxYAYmpNGGgNM",
-        ["Raid ST"] = "C4PAAAAAAAAAAAAAAAAAAAAAAwCMwMGNWGAzgNAAAAAAAAgZMjZYGzMjZwYaGjZmZbbzMzMMzgZmlxYWGMDAAYMzMDAzMttBDw2wA",
+        ["M+"] = "C4PAAAAAAAAAAAAAAAAAAAAAAYzsMwAmgZYJwsAAAAAAAAAMjZmZsZMzMmhlx0MGMLbmZGmZGzMzCzsMMzAAAMjxMzMDYCYA2YmxA",
+        ["Raid ST"] = "C4PAAAAAAAAAAAAAAAAAAAAAAYzsMwAmgZYLwsAAAAAAAAAMjZMDzYmZMDGTzYmZstxYmlZmZmZmlhZZwAAAMmZmZmZGgwsYA2YGA",
     },
     ["HUNTER_SURVIVAL"] = {
-        ["M+"] = "C8PAAAAAAAAAAAAAAAAAAAAAAMgxMG2ILwMM0gFzMzMzwyAAAAAAgZMzMDzYYMDGTzAAAAAGAALLzMziZmZmZGzMgZ2AgxYmZhB",
-        ["Raid ST"] = "C8PAAAAAAAAAAAAAAAAAAAAAAMgxMG2ILwMM0gFjZmZmxyAAAAAAgZMzMDzYYMDGTzAAAAAAAYZZmZWMzMzMzYMgZ2AMLGjZmNG",
+        ["M+"] = "C8PAAAAAAAAAAAAAAAAAAAAAAMgxMG2ILwMM0gFzMzMzwyAAAAAAgZMzMjlZMmxMYMNDAAAADAMWWmZmFzMzYMmZAzsBAjxMzmBA",
+        ["Raid ST"] = "C8PAAAAAAAAAAAAAAAAAAAAAAMgxMGWIbwMM0gFjZmZmxyAAAAAAgZMzMDz4BMjZwYaGAAAAAAjllZmZxMzMzYmxAmZDwsMjxM2MA",
     },
     ["MAGE_ARCANE"] = {
-        ["M+"] = "C4DAAAAAAAAAAAAAAAAAAAAAAMzwYZmZmFmZGamxAAAwAAgAmZmZZZmJWAAYbYmZMbLWmZmxMjxYmZmxCzMzYGAgBAAwMLAgZAwwA",
+        ["M+"] = "C4DAAAAAAAAAAAAAAAAAAAAAAMzwYZmZmFmZGamxAAAwAAgAmZmZZZmJWAAYbGzMjZzsMzMjZGjhZmZswMzMmBAYAAAMzCAYGAMM",
         ["Raid ST"] = "C4DAAAAAAAAAAAAAAAAAAAAAAYGGLzMzswMzQzMzAAAwAAgAmZmZZZmZYBAgtxMzMmtFLzMzYmxYMzMGLMzMjZAAGAAAzsAAmBADD",
     },
     ["MAGE_FIRE"] = {
@@ -512,19 +507,19 @@ MCS.TalentDB = {
     },
     ["MAGE_FROST"] = {
         ["M+"] = "CAEAAAAAAAAAAAAAAAAAAAAAAMzwYZmZmFmZmYGmZmZmZWMzMMjZAAAgZmZWWmZaDAAWAAAAWAYbbMzMDmthxMjNAAAmZDYmMGwMYA",
-        ["Raid ST"] = "CAEAAAAAAAAAAAAAAAAAAAAAAYGGLzMzsMmZmYmxMjZMziZmZmZMDAAAMzMzyyMTbAAAAAAgNA22GzMzgZZeAjZYBAAgZWAmJjBMDGA",
+        ["Raid ST"] = "CAEAAAAAAAAAAAAAAAAAAAAAAYGGLzMzswMzEzMzMzMzMziZmZMjZAAAgZmZWWmZaDAAAAAAsBw22YmZGMbDjZYDAAgZ2AmJjBMDGA",
     },
     ["MONK_BREWMASTER"] = {
         ["M+"] = "CwQAAAAAAAAAAAAAAAAAAAAAAAAAAwMLbGDzwyM2MmZAAAAAAAYZBmYmBmhBzgZmZGzsNMjZWGW2ssNbzYWAAgNEAAgZbWamZmNG2AYmhpxAGAwA",
         ["Raid ST"] = "CwQAAAAAAAAAAAAAAAAAAAAAAAAAAgZbzYGPwYWM2mxMDAAAAAAALLYEmBmhxmZMmZmZMzywMmZZYZzy2sMMLAAwysMtMbzsMAAQAmhNwMDYaMAAgB",
     },
     ["MONK_MISTWEAVER"] = {
-        ["M+"] = "C4QAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAMWmZZYxmxMjNstsNjZYmttlZGLMjmxMgBDGzyMzMDzGmhZZmAAAAAIAL2mZZ2mZAAAgBYGwYgFZMDA",
+        ["M+"] = "C4QAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAMWmZZML2mxMjNjtllZMzmZ2WWmZswQzYGwgBjZZmZmhZDzwsMTAAAAAEgFbzsMLzMAAwAAMDYMwiMmBA",
         ["Raid ST"] = "C4QAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAghx2MwmFzYmZZGbYmZYmlttZGLMjmxMgBDGzyMzMDz2gBLmAAAAAIALWmZZ2mZAAgBMAzAGDjFZMDA",
     },
     ["MONK_WINDWALKER"] = {
-        ["M+"] = "C0QAAAAAAAAAAAAAAAAAAAAAAMzYMghZZmZ2mxAAAAAAAAAAAALDzEmhhBMjhZmZGmthZYWmJAgNzsNGGzMDAgNAYWmlmZmZBYYgZGAYZMEDYA",
-        ["Raid ST"] = "C0QAAAAAAAAAAAAAAAAAAAAAAMzYw2wwsMzMbzAAAAAAAAAAAAsMMCzYbYAzYYmZmhZZYGmlZCAYzMbzMMmZGAAbAwsMLNzMzCAGYmBAWGDxAG",
+        ["M+"] = "C0QAAAAAAAAAAAAAAAAAAAAAAMzYMYMYbmZ2mxAAAAAAAAAAAALDzEmhhBMjhZmZGmthZYWmJAgFzsNGGzMDAgNAYWmlmZmZBYYgZGAYZMEDYA",
+        ["Raid ST"] = "C0QAAAAAAAAAAAAAAAAAAAAAAMzYw2MGsNzMbzAAAAAAAAAAAAsMMCzYbYAzYYmZmhZZYGmlZCAYzMbjhZmZGAAbAwsMLNzMzCAGYmBAWGDxAG",
     },
     ["PALADIN_HOLY"] = {
         ["M+"] = "CEEAAAAAAAAAAAAAAAAAAAAAAAAAAYBAMDAwglxMzMzYmZWgxwyYbmZxMNxwYmZYY2yAwAwGYjlZmZWmtZmZrBAAAYhNMDbGYGzAAAmZYGjRD",
@@ -539,11 +534,11 @@ MCS.TalentDB = {
         ["Raid ST"] = "CYEAAAAAAAAAAAAAAAAAAAAAAAAAAAAQz22MzsMMzAAAAAAwoMmhZGbDz2wMbzYMmZYGbsNMAAkZm2mZ2mBAsBYAwYGmBzYMbYZGMMmxgB",
     },
     ["PRIEST_DISCIPLINE"] = {
-        ["M+"] = "CAQAAAAAAAAAAAAAAAAAAAAAAADsYY2YMDzMjZbsNzMzMMDAAAAAAAAAgxYZGMzMjNjZGsZamYAmZBDhxsMAjBLAAwYmZGDmBYmZ0MM",
-        ["Raid ST"] = "CAQAAAAAAAAAAAAAAAAAAAAAAADsAzGjZGzMjZbsNzMzMMDAAAAAAAAAgZYZGMzMDmxMgpZiBYmFMEGzyAMGsAAAjZmZMMzAMzMTzwA",
+        ["M+"] = "CAQAAAAAAAAAAAAAAAAAAAAAAADsYwyMjZmZGMbzYmZmZMzAAAAAAAAAAYMWmBzMzYzYmBbmmJGgZ2wQYMLDwYwCAAMmZmxgZAmZGBD",
+        ["Raid ST"] = "CAQAAAAAAAAAAAAAAAAAAAAAAADsAz2MzMYmhZbmtZmZmhZAAAAAAAAAAMDLzgZmZwMmBMNTzMAzshhwYWGgxgFAAYMmZMYGgZmZaGG",
     },
     ["PRIEST_HOLY"] = {
-        ["M+"] = "CEQAAAAAAAAAAAAAAAAAAAAAAwYAAAAAAgZzwYWGMmZmZMzMjlZmZAAAAYMWmBzMzYzYmxAmpAAzsZmMbGAYMYzYsAoZMzYMMzstMADYA",
+        ["M+"] = "CEQAAAAAAAAAAAAAAAAAAAAAAwYAAAAAAgZzwYWGMmZmZMzMjlZmZAAAAYMWmBzMzYzYmxAmpAAzsZmMbGAYMYzYsBoZMzYMMzstMADYA",
         ["Raid ST"] = "CEQAAAAAAAAAAAAAAAAAAAAAAwYAAAAAAAgZmlxYMzMDzMzYZGmBAAAwwsMDzMzMYGzAYmaAgZWMTmFDAMGsZmZWA0MMjxwMz2yAMDMA",
     },
     ["PRIEST_SHADOW"] = {
@@ -551,16 +546,16 @@ MCS.TalentDB = {
         ["Raid ST"] = "CIQAAAAAAAAAAAAAAAAAAAAAAMMjZGAAAAAAAAAAAgxMMjxyMDzsNzwMsNzMmZmxGyMWMTDwMAzsZGmNDAZMWAwMQGzMzY2GzstMAzED",
     },
     ["ROGUE_ASSASSINATION"] = {
-        ["M+"] = "CMQAAAAAAAAAAAAAAAAAAAAAAYmZmZzgBAAAAAmlBbzAAAAAAabbmZmZmZMmZmZ2mZZmBPwMzMzYYmxYAMwCMjRjZDklBsZsBYmhxA",
-        ["Raid ST"] = "CMQAAAAAAAAAAAAAAAAAAAAAAYmZMbzgBAAAAAmlBLzAAAAAAabbmZmZmZMmZmZ2mZZmZGMmZmZMzYYAMwCMjRjZBklBsZAwMzgB",
+        ["M+"] = "CMQAAAAAAAAAAAAAAAAAAAAAAYmlZmNDGAAAAAYWGsNDAAAAAottZmZmZmxYmZmZbmlZG8AzMzMjhZGjBwALwMGNmNQ2GwmxGgZGGD",
+        ["Raid ST"] = "CMQAAAAAAAAAAAAAAAAAAAAAAYmlxsNDGAAAAAYWGsMDAAAAAottZmZmZmxYmZmZbmlZmZwYmZmxMjhBwALwMGNmFQ2GwmBAzMDGA",
     },
     ["ROGUE_OUTLAW"] = {
-        ["M+"] = "CQQAAAAAAAAAAAAAAAAAAAAAAAgx2MGzMzMzsNzMzYmHYmFGmx0ygtZAAAAAAz22MzMMzMzMmZmtBAAAgBwAbwMGNmNAbTYhBAzMDM",
-        ["Raid ST"] = "CQQAAAAAAAAAAAAAAAAAAAAAAAgx2MGjZMzsNzMzMjHwswDMzMLTLD2mBAAAAAMbbzMzwMzMzYmZ2GAAAAGADsBzY0Y2AsNhFGAMzMwA",
+        ["M+"] = "CQQAAAAAAAAAAAAAAAAAAAAAAAgx2MYmZmZmtZmZMzMzsBmZbaZw2MAAAAAgZbbmZGmZmZGzMz2AAAAwYAwYWMMkBmFWoF2YAmZwAD",
+        ["Raid ST"] = "CQQAAAAAAAAAAAAAAAAAAAAAAAgx2MYmZmZmtZmZmZMmNeAmZbaZw2MAAAAAgZbbmZGmZmZGzMz2AAAAwYAwYWMMkBmFWoF2YAmZwAD",
     },
     ["ROGUE_SUBTLETY"] = {
-        ["M+"] = "CUQAAAAAAAAAAAAAAAAAAAAAAAgx2MAAAAAwsMGLTMbbjxMjZMMzMzYMbzYGbbzMzMzMjBjZ2GAAAAGMGwY2MMwAziWoFbYGwMDmxA",
-        ["Raid ST"] = "CUQAAAAAAAAAAAAAAAAAAAAAAAgx2MAAAAAwsMGLTMbbjxMDDmZmZGjZbMzYbbmZmZmZMYMz2AAAAwgxsYWGYALglhJkZBzwMDwMGA",
+        ["M+"] = "CUQAAAAAAAAAAAAAAAAAAAAAAAgx2MAAAAAwsMGLTMbbjxMjZMegZmZGjZbYGbbzMzMzMjBjZWGAAAAGMGwY2MMwAziWoFbYGwMDmxA",
+        ["Raid ST"] = "CUQAAAAAAAAAAAAAAAAAAAAAAAgx2MAAAAAwsMGLTMbbjxMjZwMzMzYMbDzYbbmZmZmZMYMz2AAAAwgxAGzmhBGYW0CtYDzAmZwMGA",
     },
     ["SHAMAN_ELEMENTAL"] = {
         ["M+"] = "CYQAAAAAAAAAAAAAAAAAAAAAAAAAAAzMbLzMzYML2mhZMzAAAAAALmxwGsAzohGbAwsMzMjx2ipNmZMWmZmZMsMLGLmZGzsAAMDwMDMMMA",
@@ -570,24 +565,24 @@ MCS.TalentDB = {
         ["M+"] = "CcQAAAAAAAAAAAAAAAAAAAAAAMzMjZmZmZmZmZmZGzAAAAAAAAAALwGMjFN2GAzEsBwsMjZMWWMwMz2YZmZmZwyYGAAgxYGxMDwgxA",
     },
     ["SHAMAN_RESTORATION"] = {
-        ["M+"] = "CgQAAAAAAAAAAAAAAAAAAAAAAAAAAgBAAAAjZmZZZbMzMzYmZGzYGLwCMjNN2GQmB2YMDmtZGjmtlZGmxswixMjZsMLDAAGgZmBzMAwgB",
-        ["Raid ST"] = "CgQAAAAAAAAAAAAAAAAAAAAAAAAAAgBAAAAzMzMLLbDzwYmZmZGzYBWgZspx2AyMwGjhZsNGz0stMzwMmFWMzMjZYWGAAYAzMDmZAgBD",
+        ["M+"] = "CgQAAAAAAAAAAAAAAAAAAAAAAAAAAgBAAAAjZmZZbZMzMzYmZGzYYB2gZsox2AyMwGzMDmtZGjmtlZGmxswixMjZsMLDAAGAzMYmBAGM",
+        ["Raid ST"] = "CgQAAAAAAAAAAAAAAAAAAAAAAAAAAgBAAAAzMzMLLbDzwYmZmZGzYB2gZsox2AyMwGjhZsNGz0stMzwMmFWMzMjZYWGAAYAzMDmZAgBD",
     },
     ["WARLOCK_AFFLICTION"] = {
-        ["M+"] = "CkQAAAAAAAAAAAAAAAAAAAAAAwMjZGNbmxmZGzyAAAmZmlZzMzyYAgx22ADYCmhtADbDAAAGAAAzMjZMzsNzYGMzMzYYmZmBAMDMA",
-        ["Raid ST"] = "CkQAAAAAAAAAAAAAAAAAAAAAAwMzMzoZhhZmZmlBAAYmZxyMzsMzAAjllBGwEMDbBG2GAAAmBAAwMDzMjBGmZmZGzgZmZGAwMwA",
+        ["M+"] = "CkQAAAAAAAAAAAAAAAAAAAAAAwMjZGNbmx2MzYWGAAwMzsMbmZWGDAM22GYATwMsFYYbAAAYGAAAzMjZMzsNGzYMzMzYYmZGAgBMA",
+        ["Raid ST"] = "CkQAAAAAAAAAAAAAAAAAAAAAAwMzMzoZjhZmZmlBAAYmZxyMzsMzAAjllBGwEMDbBG2GAAAmBAAwMDzMjBGmZmZGzgZmZGAwMwA",
     },
     ["WARLOCK_DEMONOLOGY"] = {
         ["M+"] = "CoQAAAAAAAAAAAAAAAAAAAAAAwMjZGNbmx2MzYWGAAAAAAAwYGDLwAbj2ohFDGLjZmZmZAgZMzYmZGgxMMzGAAYmZmZmZGsNzAMA",
-        ["Raid ST"] = "CoQAy0jxIDofkwJmoH7WhvESoZmZMzoZjhZmxsMAAAAAAAjllZMzMsYYYmtZpNaGbGjZ2mlZmZYAgZYmZmZGMzMzMmZAAAGzMzMDzYZGDYA",
+        ["Raid ST"] = "CoQAAAAAAAAAAAAAAAAAAAAAAYmZMzoZjhZmxsMAAAAAAAjllBGwAmhlQGbGjZ2mlZmZYAgZYmZGgZmZmxMDAAwYmZmZYGLzYAD",
     },
     ["WARLOCK_DESTRUCTION"] = {
-        ["M+"] = "CsQAAAAAAAAAAAAAAAAAAAAAAwMjZGNLmxiZGzysNzYsYmZZZmBAAzgZmZxCMwsY0YGAzWsxAAAjZYAAwMDGzMmZDAAwMzMDAAzwA",
-        ["Raid ST"] = "CsQAAAAAAAAAAAAAAAAAAAAAAwMzMzoZjhZmxsMLjxMLGz2iZAAwMGzMzCYMjhFyAbDb0YhBAAGDwCAmZAmZGjZDAAwMzMAAMzwA",
+        ["M+"] = "CsQAAAAAAAAAAAAAAAAAAAAAAwMjZGNLmxiZGzysNzMjFzYZZmBAAzgZmZxCMwsY0YGAzWsxAAAjZYAAwMDGzMmZDAAwMzMDAAzwA",
+        ["Raid ST"] = "CsQAAAAAAAAAAAAAAAAAAAAAAwMzMzoZjhZmxsMLjZmZxw2iZAAwMGzMzCYMjhFyAbDb0YhBAAGDwCAmZAmZGjZDAAwMzMAAMzwA",
     },
     ["WARRIOR_ARMS"] = {
         ["M+"] = "CcEAAAAAAAAAAAAAAAAAAAAAAgZmxsMzMzYGAAAghphxwMbLzMzMjZGzMAAAAAGbmB2iBsZGDLwAzoNaMYBYGMGMbmtBzMAgZmhB",
-        ["Raid ST"] = "CcEAAAAAAAAAAAAAAAAAAAAAAAzMzsMzYmZAAAAMMNMGzMWmZmZGMmZAAAAAMzyMDslxYZZgFwAmhJkZwGwM2MbjBzsNAzMAMjhB",
+        ["Raid ST"] = "CcEAAAAAAAAAAAAAAAAAAAAAAAzMzsMzYmZAAAAMMNMGzwyMzMzgxMDAAAAgZWmZgtMGLLDsAGwMMhMD2AzM2MbjBzsNAzMAMjhB",
     },
     ["WARRIOR_FURY"] = {
         ["M+"] = "CgEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAgGDjZMz2yMzMjZmxMjZMjZWmZGjZmlxMzAAAhB2glFjGzAysgZsAYGMGAMzAYYmZGMYA",
@@ -595,9 +590,16 @@ MCS.TalentDB = {
     },
     ["WARRIOR_PROTECTION"] = {
         ["M+"] = "CkEAAAAAAAAAAAAAAAAAAAAAAkBAAGzMzMzMmxsZmZZGjxMNmxwyYmZYmxMDAAAAWGAmxAMwGssY0YGAzWMzGMzMzgZZAwMDAADwA",
-        ["Raid ST"] = "CkEAAAAAAAAAAAAAAAAAAAAAA0yAAAzMzYmZGzMzmxsMjxYmGmZYZMzMDzYmBAAAALDAzYAGYDWWMaMDgZLmZDmxMDmtBAzMAAMAD",
+        ["Raid ST"] = "CkEAAAAAAAAAAAAAAAAAAAAAA0yAAAzMzYmZGzY2MzsMjxYmGmZYZMzMDzYmBAAAALDAzYAGYDWWMaMDgZLmZDmxMDmtBAzMAAMAD",
     },
 }
+
+
+
+
+
+
+
 
 
 
@@ -615,7 +617,7 @@ MCS.TalentDB = {
 -- Users cannot edit these. They can copy items to their own (user) lists.
 ----------------------------------------------------------------------
 MCS.PRESET_LISTS = {
-    ["DEATHKNIGHT_BLOOD"] = {  -- updated: 2026/03/10
+    ["DEATHKNIGHT_BLOOD"] = {  -- updated: 2026/05/12
         ["Overall BiS"] = {
             { itemID = 49802, source = "Pit of Saron" },  -- Weapon: Garfrost's Two-Ton Hammer
             { itemID = 249970, source = "Tier Set" },  -- Head: Relentless Rider's Crown
@@ -630,6 +632,7 @@ MCS.PRESET_LISTS = {
             { itemID = 249381, source = "Chimaerus" },  -- Boots: Greaves of the Unformed
             { itemID = 249920, source = "Midnight Falls" },  -- Ring: Eye of Midnight
             { itemID = 251513, source = "Crafting" },  -- Ring: Loa Worshiper's Band
+            { itemID = 251093, source = "Nexus-Point Xenas" },  -- Ring (Alternative Set): Omission of Light
             { itemID = 249343, source = "Chimaerus" },  -- Trinket: Gaze of the Alnseer
             { itemID = 249344, source = "Imperator Averzian" },  -- Trinket: Light Company Guidon
         },
@@ -842,9 +845,9 @@ MCS.PRESET_LISTS = {
             { itemID = 250144, source = "Windrunner Spire" },  -- Trinket #2: Emberwing Feather
         },
     },
-    ["DRUID_BALANCE"] = {  -- updated: 2026/03/21
+    ["DRUID_BALANCE"] = {  -- updated: 2026/04/20
         ["Overall BiS"] = {
-            { itemID = 249283, source = "Belo'ren" },  -- Weapon: Belo'melorn, the Shattered Talon
+            { itemID = 251111, source = "Magister's Terrace" },  -- Weapon: Splitshroud Stinger
             { itemID = 245769, source = "Crafting" },  -- Offhand: Aln'hara Lantern
             { itemID = 250024, source = "Tier Set" },  -- Head: Branches of the Luminous Bloom
             { itemID = 250247, source = "Midnight Falls" },  -- Neck: Amulet of the Abyssal Hymn
@@ -856,10 +859,10 @@ MCS.PRESET_LISTS = {
             { itemID = 251082, source = "Windrunner Spire" },  -- Belt: Snapvine Cinch
             { itemID = 250023, source = "Tier Set" },  -- Legs: Phloemwraps of the Luminous Bloom
             { itemID = 249382, source = "Crown of the Cosmos" },  -- Boots: Canopy Walker's Footwraps
-            { itemID = 193708, source = "Algeth'ar Academy" },  -- Ring: Platinum Star Band
+            { itemID = 251093, source = "Nexus-Point Xenas" },  -- Ring: Omission of Light
             { itemID = 251217, source = "Nexus-Point Xenas" },  -- Ring: Occlusion of Void
             { itemID = 249346, source = "Vaelgor & Ezzorak" },  -- Trinket: Vaelgor's Final Stare
-            { itemID = 249809, source = "Crown of the Cosmos" },  -- Trinket: Locus-Walker's Ribbon
+            { itemID = 249343, source = "The Dreamrift" },  -- Trinket: Gaze of the Alnseer
         },
         ["M+ BiS"] = {
             { itemID = 251201, source = "Nexus-Point Xenas" },  -- Weapon (Two-Hand): Corespark Multitool
@@ -1052,18 +1055,18 @@ MCS.PRESET_LISTS = {
             { itemID = 249995, source = "Matrix Catalyst" },  -- Shoulder: Beacons of the Black Talon
             { itemID = 239656, source = "Crafted by Tailoring" },  -- Cloak: Adherent's Silken Shroud
             { itemID = 250000, source = "Matrix Catalyst" },  -- Chest: Frenzyward of the Black Talon
-            { itemID = 251079, source = "Windrunner Spire" },  -- Wrist: Amberfrond Bracers
+            { itemID = 244584, source = "Crafted by Leatherworking" },  -- Wrist: Farstrider's Plated Bracers
             { itemID = 249998, source = "Matrix Catalyst" },  -- Hands: Enforcer's Grips of the Black Talon
             { itemID = 49810, source = "Pit of Saron" },  -- Waist: Scabrous Zombie Leather Belt
             { itemID = 249996, source = "Matrix Catalyst" },  -- Legs: Greaves of the Black Talon
             { itemID = 251084, source = "Windrunner Spire" },  -- Feet: Whipcoil Sabatons
             { itemID = 251217, source = "Nexus-Point Xenas" },  -- Ring 1: Occlusion of Void
             { itemID = 251093, source = "Nexus-Point Xenas" },  -- Ring 2: Omission of Light
-            { itemID = 250144, source = "Windrunner Spire" },  -- Trinket 1/td>: Emberwing Feather
-            { itemID = 250258, source = "Maisara Caverns" },  -- Trinket 2: Vessel of Tortured Souls
+            { itemID = 250144, source = "Windrunner Spire" },  -- Trinket 1: Emberwing Feather
+            { itemID = 250256, source = "Windrunner Spire" },  -- Trinket 2: Heart of Wind
         },
     },
-    ["EVOKER_PRESERVATION"] = {  -- updated: 2026/02/25
+    ["EVOKER_PRESERVATION"] = {  -- updated: 2026/04/20
         ["Overall BiS"] = {
             { itemID = 249914, source = "Midnight Falls (Raid)" },  -- Helm: Oblivion Guise
             { itemID = 250247, source = "Midnight Falls (Raid)" },  -- Neck: Amulet of the Abyssal Hymn
@@ -1077,7 +1080,7 @@ MCS.PRESET_LISTS = {
             { itemID = 251084, source = "Windrunner Spire" },  -- Boots: Whipcoil Sabatons
             { itemID = 249369, source = "Lightblinded Vanguard (Raid)" },  -- Ring: Bond of Light
             { itemID = 249920, source = "Midnight Falls (Raid)" },  -- Ring: Eye of Midnight
-            { itemID = 249346, source = "Vaelgor & Ezzorak (Raid)" },  -- Trinkets: Vaelgor's Final Stare
+            { itemID = 249343, source = "Chimaerus (Raid)" },  -- Trinkets: Gaze of the Alnseer
             { itemID = 249809, source = "Crown of the Cosmos (Raid)" },  -- Trinkets: Locus-Walker's Ribbon
             { itemID = 258514, source = "Seat of the Triumvirate" },  -- 2h Weapon: Umbral Spire of Zuraal
         },
@@ -1099,7 +1102,7 @@ MCS.PRESET_LISTS = {
             { itemID = 250144, source = "Windrunner Spire" },  -- Trinket #2: Emberwing Feather
         },
     },
-    ["HUNTER_BEAST_MASTERY"] = {  -- updated: 2026/03/22
+    ["HUNTER_BEAST_MASTERY"] = {  -- updated: 2026/04/21
         ["Overall BiS"] = {
             { itemID = 251174, source = "Maisara Caverns" },  -- Weapon: Deceiver's Rotbow
             { itemID = 249988, source = "Tier Set" },  -- Head: Primal Sentry's Maw
@@ -1114,7 +1117,7 @@ MCS.PRESET_LISTS = {
             { itemID = 244610, source = "Leatherworking" },  -- Boots: World Tender's Rootslippers
             { itemID = 249920, source = "Midnight Falls" },  -- Ring: Eye of Midnight
             { itemID = 249369, source = "Lightblinded Vanguard" },  -- Ring: Bond of Light
-            { itemID = 249806, source = "Belo'ren" },  -- Trinket: Radiant Plume
+            { itemID = 249343, source = "Chimaerus" },  -- Trinket: Gaze of the Alnseer
             { itemID = 193701, source = "Algeth'ar Academy" },  -- Trinket: Algeth'ar Puzzle Box
         },
         ["M+ BiS"] = {
@@ -1168,28 +1171,28 @@ MCS.PRESET_LISTS = {
             { itemID = 151308, source = "Seat of the Triumvirate" },  -- Ring #2: Eredath Seal of Nobility
             { itemID = 193701, source = "Algeth'ar Academy" },  -- Trinket #1: Algeth'ar Puzzle Box
             { itemID = 252420, source = "Skyreach" },  -- Trinket #2: Solarflare Prism
-            { itemID = 251095, source = "Windrunner Spire" },  -- Weapon: Hurricane's Heart
+            { itemID = 258412, source = "Skyreach" },  -- Weapon: Stormshaper's Crossbow
         },
     },
-    ["HUNTER_SURVIVAL"] = {  -- updated: 2026/04/02
+    ["HUNTER_SURVIVAL"] = {  -- updated: 2026/04/21
         ["Overall BiS"] = {
             { itemID = 251077, source = "Windrunner Spire" },  -- 2H Weapon: Roostwarden's Bough
             { itemID = 249284, source = "Belo'ren" },  -- Main Hand: Belo'ren's Swift Talon
             { itemID = 237837, source = "Crafting" },  -- Off Hand: Farstrider's Mercy
             { itemID = 249988, source = "Tier Set" },  -- Head: Primal Sentry's Maw
             { itemID = 250247, source = "L'ura (March on Quel'Danas)" },  -- Neck: Amulet of the Abyssal Hymn
-            { itemID = 151323, source = "The Seat of the Triumvirate" },  -- Shoulders: Pauldrons of the Void Hunter
-            { itemID = 249370, source = "Vaelgor" },  -- Cloak: Draconic Nullcape
+            { itemID = 249318, source = "Vaelgor" },  -- Shoulders: Nullwalker's Dread Epaulettes
+            { itemID = 239656, source = "Crafting" },  -- Cloak: Adherent's Silken Shroud
             { itemID = 249991, source = "Tier Set" },  -- Chest: Primal Sentry's Scaleplate
-            { itemID = 249304, source = "Fallen-King Salhadaar" },  -- Wrist: Fallen King's Cuffs
+            { itemID = 249984, source = "Tier Set" },  -- Wrist: Primal Sentry's Wound Stanchers
             { itemID = 249989, source = "Tier Set" },  -- Gloves: Primal Sentry's Talonguards
             { itemID = 249371, source = "Chimaerus" },  -- Belt: Scornbane Waistguard
             { itemID = 249987, source = "Tier Set" },  -- Legs: Primal Sentry's Legguards
-            { itemID = 244577, source = "Crafting" },  -- Boots: Farstrider's Razor Talons
+            { itemID = 251084, source = "Windrunner Spire" },  -- Boots: Whipcoil Sabatons
             { itemID = 251093, source = "Nexus Point Xenas" },  -- Ring: Omission of Light
-            { itemID = 251217, source = "Nexus Point Xenas" },  -- Ring: Occlusion of Void
+            { itemID = 249920, source = "L'ura (March on Quel'Danas)" },  -- Ring: Eye of Midnight
             { itemID = 193701, source = "Algeth'ar Academy" },  -- Trinket: Algeth'ar Puzzle Box
-            { itemID = 249806, source = "Belo'ren" },  -- Trinket: Radiant Plume
+            { itemID = 249343, source = "Chimaerus" },  -- Trinket: Gaze of the Alnseer
         },
         ["M+ BiS"] = {
             { itemID = 249988, source = "Matrix Catalyst" },  -- Helm: Primal Sentry's Maw
@@ -1403,7 +1406,7 @@ MCS.PRESET_LISTS = {
             { itemID = 250144, source = "Windrunner Spire" },  -- Trinket #2: Emberwing Feather
         },
     },
-    ["MONK_WINDWALKER"] = {  -- updated: 2026/03/15
+    ["MONK_WINDWALKER"] = {  -- updated: 2026/04/23
         ["Overall BiS"] = {
             { itemID = 250015, source = "Tier Set" },  -- Head: Fearsome Visage of Ra-den's Chosen
             { itemID = 250247, source = "Midnight Falls" },  -- Neck: Amulet of the Abyssal Hymn
@@ -1418,8 +1421,6 @@ MCS.PRESET_LISTS = {
             { itemID = 251513, source = "Crafting" },  -- Ring: Loa Worshiper's Band
             { itemID = 249920, source = "Midnight Falls" },  -- Ring: Eye of Midnight
             { itemID = 251162, source = "Maisara Caverns" },  -- 2H Weapon: Traitor's Talon
-            { itemID = 260423, source = "Crown of the Cosmos" },  -- 1H Weapon: Arator's Swift Remembrance
-            { itemID = 237845, source = "Crafting" },  -- 1H Weapon: Bloomforged Claw
             { itemID = 249343, source = "Chimaerus" },  -- Trinket 1: Gaze of the Alnseer
             { itemID = 193701, source = "Algeth'ar Academy" },  -- Trinket 2: Algeth'ar Puzzle Box
         },
@@ -1519,7 +1520,7 @@ MCS.PRESET_LISTS = {
             { itemID = 193701, source = "Algeth'ar Academy" },  -- Trinket #2: Algeth'ar Puzzle Box
         },
     },
-    ["PALADIN_RETRIBUTION"] = {  -- updated: 2026/03/17
+    ["PALADIN_RETRIBUTION"] = {  -- updated: 2026/04/21
         ["Overall BiS"] = {
             { itemID = 249277, source = "Lightblinded Vanguard" },  -- Weapon: Bellamy's Final Judgement
             { itemID = 249961, source = "Tier Set" },  -- Head: Luminant Verdict's Unwavering Gaze
@@ -1534,6 +1535,8 @@ MCS.PRESET_LISTS = {
             { itemID = 249381, source = "Chimaerus" },  -- Boots: Greaves of the Unformed
             { itemID = 249919, source = "Belo'ren" },  -- Ring: Sin'dorei Band of Hope
             { itemID = 249920, source = "Midnight Falls" },  -- Ring: Eye of Midnight
+            { itemID = 251093, source = "Nexus-Point Xenas" },  -- Ring (Alternative Set): Omission of Light
+            { itemID = 251217, source = "Nexus-Point Xenas" },  -- Ring (Alternative Set): Occlusion of Void
             { itemID = 260235, source = "Belo'ren" },  -- Trinket: Umbral Plume
             { itemID = 193701, source = "Algeth'ar Academy" },  -- Trinket: Algeth'ar Puzzle Box
         },
@@ -1555,7 +1558,7 @@ MCS.PRESET_LISTS = {
             { itemID = 193701, source = "Algeth'ar Academy" },  -- Trinket #2: Algeth'ar Puzzle Box
         },
     },
-    ["PRIEST_DISCIPLINE"] = {  -- updated: 2026/03/19
+    ["PRIEST_DISCIPLINE"] = {  -- updated: 2026/04/21
         ["Overall BiS"] = {
             { itemID = 250051, source = "Raid | Catalyst | Vault" },  -- Helm: Blind Oath's Winged Crest
             { itemID = 249368, source = "Crown of the Cosmos (Raid)" },  -- Neck: Eternal Voidsong Chain
@@ -1569,22 +1572,22 @@ MCS.PRESET_LISTS = {
             { itemID = 258584, source = "Skyreach" },  -- Boots: Lightbinder Treads
             { itemID = 249920, source = "Midnight Falls (Raid)" },  -- Ring: Eye of Midnight
             { itemID = 251093, source = "Nexus Point Xenas" },  -- Ring: Omission of Light
-            { itemID = 249808, source = "War Chaplain Senn (Raid)" },  -- Trinkets: Litany of Lightblind Wrath
+            { itemID = 249343, source = "Chimaerus (Raid)" },  -- Trinkets: Gaze of the Alnseer
             { itemID = 249346, source = "Vaelgor & Ezzorak (Raid)" },  -- Trinkets: Vaelgor's Final Stare
             { itemID = 249283, source = "Belo'ren (Raid)" },  -- 1h Weapon: Belo'melorn, the Shattered Talon
             { itemID = 245769, source = "Crafting/Misc" },  -- Offhand: Aln'hara Lantern
         },
         ["M+ BiS"] = {
             { itemID = 251178, source = "Maisara Caverns" },  -- Weapon: Ceremonial Hexblade
-            { itemID = 245769, source = "Crafted by Inscription" },  -- Offhand: Aln'hara Lantern
+            { itemID = 193709, source = "Algeth'ar Academy" },  -- Offhand: Vexamus' Expulsion Rod
             { itemID = 250051, source = "Matrix Catalyst" },  -- Helm: Blind Oath's Winged Crest
             { itemID = 151309, source = "Seat of the Triumvirate" },  -- Neck: Necklace of the Twisting Void
             { itemID = 251213, source = "Nexus-Point Xenas" },  -- Shoulder: Nysarra's Mantle
-            { itemID = 260312, source = "Magister's Terrace" },  -- Cloak: Defiant Defender's Drape
+            { itemID = 239656, source = "Crafted by Tailoring" },  -- Cloak: Adherent's Silken Shroud
             { itemID = 250054, source = "Matrix Catalyst" },  -- Chest: Blind Oath's Raiment
-            { itemID = 133493, source = "Pit of Saron" },  -- Bracers: Wristguards of Subterranean Moss
+            { itemID = 239648, source = "Crafted by Tailoring" },  -- Bracers: Martyr's Bindings
             { itemID = 250052, source = "Matrix Catalyst" },  -- Gloves: Blind Oath's Touch
-            { itemID = 239664, source = "Crafted by Tailoring" },  -- Belt: Arcanoweave Cord
+            { itemID = 50263, source = "Pit of Saron" },  -- Belt: Braid of Salt and Fire
             { itemID = 250050, source = "Matrix Catalyst" },  -- Legs: Blind Oath's Leggings
             { itemID = 258584, source = "Skyreach" },  -- Boots: Lightbinder Treads
             { itemID = 251093, source = "Nexus-Point Xenas" },  -- Ring #1: Omission of Light
@@ -1685,7 +1688,7 @@ MCS.PRESET_LISTS = {
             { itemID = 193701, source = "Algeth'ar Academy" },  -- Trinket: Algeth'ar Puzzle Box
         },
         ["M+ BiS"] = {
-            { itemID = 258436, source = "Skyreach" },  -- Mainhand Weapon: Edge of the Burning Sun
+            { itemID = 133491, source = "Pit of Saron" },  -- Mainhand Weapon: Krick's Beetle Stabber
             { itemID = 237837, source = "Crafted by Blacksmithing" },  -- Offhand Weapon: Farstrider's Mercy
             { itemID = 250006, source = "Matrix Catalyst" },  -- Helm: Masquerade of the Grim Jest
             { itemID = 151309, source = "Seat of the Triumvirate" },  -- Neck: Necklace of the Twisting Void
@@ -1694,7 +1697,7 @@ MCS.PRESET_LISTS = {
             { itemID = 250009, source = "Matrix Catalyst" },  -- Chest: Fantastic Finery of the Grim Jest
             { itemID = 244576, source = "Crafted by Leatherworking" },  -- Bracers: Silvermoon Agent's Deflectors
             { itemID = 250007, source = "Matrix Catalyst" },  -- Gloves: Sleight of Hand of the Grim Jest
-            { itemID = 251082, source = "Windrunner Spire" },  -- Belt: Snapvine Cinch
+            { itemID = 49806, source = "Pit of Saron" },  -- Belt: Flayer's Black Belt
             { itemID = 251087, source = "Windrunner Spire" },  -- Legs: Legwraps of Lingering Legacies
             { itemID = 258577, source = "Skyreach" },  -- Boots: Boots of Burning Focus
             { itemID = 251217, source = "Nexus-Point Xenas" },  -- Ring #1: Occlusion of Void
@@ -1741,7 +1744,7 @@ MCS.PRESET_LISTS = {
             { itemID = 252420, source = "Skyreach" },  -- Trinket #2: Solarflare Prism
         },
     },
-    ["ROGUE_SUBTLETY"] = {  -- updated: 2026/03/26
+    ["ROGUE_SUBTLETY"] = {  -- updated: 2026/05/04
         ["Overall BiS"] = {
             { itemID = 250006, source = "Tier Set" },  -- Head: Masquerade of the Grim Jest
             { itemID = 249368, source = "Crown of the Cosmos" },  -- Neck: Eternal Voidsong Chain
@@ -1751,13 +1754,13 @@ MCS.PRESET_LISTS = {
             { itemID = 249327, source = "Vorasius" },  -- Wrist: Void-Skinned Bracers
             { itemID = 250007, source = "Tier Set" },  -- Gloves: Sleight of Hand of the Grim Jest
             { itemID = 244573, source = "Crafting" },  -- Belt: Silvermoon Agent's Utility Belt
-            { itemID = 49817, source = "Pit of Saron" },  -- Legs: Shaggy Wyrmleather Leggings
-            { itemID = 258577, source = "Skyreach" },  -- Boots: Boots of Burning Focus
-            { itemID = 193708, source = "Algeth'ar Academy" },  -- Ring: Platinum Star Band
-            { itemID = 251115, source = "Magister's Terrace" },  -- Ring: Bifurcation Band
+            { itemID = 251087, source = "Windrunner Spire" },  -- Legs: Legwraps of Lingering Legacies
+            { itemID = 249382, source = "Crown of the Cosmos" },  -- Boots: Canopy Walker's Footwraps
+            { itemID = 249369, source = "Lightblinded Vanguard" },  -- Ring: Bond of Light
+            { itemID = 249919, source = "Belo'ren" },  -- Ring: Sin'dorei Band of Hope
             { itemID = 249344, source = "Imperator Averzian" },  -- Trinket: Light Company Guidon
             { itemID = 249343, source = "Chimaerus" },  -- Trinket: Gaze of the Alnseer
-            { itemID = 249925, source = "Vorasius" },  -- Weapon: Hungering Victory
+            { itemID = 249284, source = "Belo'ren" },  -- Weapon: Belo'ren's Swift Talon
             { itemID = 237837, source = "Crafting" },  -- Offhand: Farstrider's Mercy
         },
         ["M+ BiS"] = {
@@ -1772,9 +1775,9 @@ MCS.PRESET_LISTS = {
             { itemID = 49806, source = "Pit of Saron" },  -- Belt: Flayer's Black Belt
             { itemID = 49817, source = "Pit of Saron" },  -- Legs: Shaggy Wyrmleather Leggings
             { itemID = 258577, source = "Skyreach" },  -- Boots: Boots of Burning Focus
-            { itemID = 193708, source = "Algeth'ar Academy" },  -- Ring #1: Platinum Star Band
-            { itemID = 251115, source = "Magister's Terrace" },  -- Ring #2: Bifurcation Band
-            { itemID = 250144, source = "Windrunner Spire" },  -- Trinket #1: Emberwing Feather
+            { itemID = 251217, source = "Nexus-Point Xenas" },  -- Ring #1: Occlusion of Void
+            { itemID = 251093, source = "Nexus-Point Xenas" },  -- Ring #2: Omission of Light
+            { itemID = 193701, source = "Algeth'ar Academy" },  -- Trinket #1: Algeth'ar Puzzle Box
             { itemID = 252420, source = "Skyreach" },  -- Trinket #2: Solarflare Prism
         },
     },
@@ -1856,7 +1859,7 @@ MCS.PRESET_LISTS = {
             { itemID = 252420, source = "Skyreach" },  -- Trinket #2: Solarflare Prism
         },
     },
-    ["SHAMAN_RESTORATION"] = {  -- updated: 2026/03/27
+    ["SHAMAN_RESTORATION"] = {  -- updated: 2026/05/13
         ["Overall BiS"] = {
             { itemID = 249914, source = "Midnight Falls (Raid)" },  -- Helm: Oblivion Guise
             { itemID = 249337, source = "Fallen-King Salhadaar (Raid)" },  -- Neck: Ribbon of Coiled Malice
@@ -1871,7 +1874,7 @@ MCS.PRESET_LISTS = {
             { itemID = 249919, source = "Belo'ren (Raid)" },  -- Ring: Sin'dorei Band of Hope
             { itemID = 193708, source = "Algeth'ar Academy" },  -- Ring: Platinum Star Band
             { itemID = 249343, source = "Chimaerus (Raid)" },  -- Trinkets: Gaze of the Alnseer
-            { itemID = 264507, source = "The Singularity" },  -- Trinkets: Crucible of Erratic Energies
+            { itemID = 249809, source = "Crown of the Cosmos (Raid)" },  -- Trinkets: Locus-Walker's Ribbon
             { itemID = 249293, source = "Imperator Averzian (Raid)" },  -- 1h Weapon: Weight of Command
             { itemID = 251202, source = "Nexus Point Xenas" },  -- Shield: Reflux Reflector
         },

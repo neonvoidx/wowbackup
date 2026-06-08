@@ -17,6 +17,14 @@ local function UpdateBindings()
 
 	local targetKey = db.TargetKey or dbDefaults.TargetKey
 	local targetPreviousKey = db.TargetPreviousKey or dbDefaults.TargetPreviousKey
+
+	-- Auto-detect from current keybindings when the user hasn't changed the addon defaults.
+	-- Check both PvE and PvP action names since the addon may have previously set either one.
+	if targetKey == dbDefaults.TargetKey and targetPreviousKey == dbDefaults.TargetPreviousKey then
+		targetKey = GetBindingKey("TARGETNEARESTENEMY") or GetBindingKey("TARGETNEARESTENEMYPLAYER") or targetKey
+		targetPreviousKey = GetBindingKey("TARGETPREVIOUSENEMY") or GetBindingKey("TARGETPREVIOUSENEMYPLAYER") or targetPreviousKey
+	end
+
 	local _, instanceType = IsInInstance()
 	local isPvp = instanceType == "pvp" or instanceType == "arena"
 

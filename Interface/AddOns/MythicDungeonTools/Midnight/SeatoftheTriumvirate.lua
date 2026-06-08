@@ -10,7 +10,7 @@ MDT.mapInfo[dungeonIndex] = {
   mapID = 239
 };
 
-local zones = { 2097, 2098, 2099 }
+local zones = { 903 }
 for _, zone in ipairs(zones) do
   MDT.zoneIdToDungeonIdx[zone] = dungeonIndex
 end
@@ -1463,6 +1463,11 @@ MDT.dungeonEnemies[dungeonIndex] = {
         ["x"] = 339.29929301576,
         ["y"] = -69.294036554287,
         ["g"] = 45,
+        ["sublevel"] = 1,
+      },
+      [32] = {
+        ["x"] = 217.8815371235,
+        ["y"] = -448.36587055485,
         ["sublevel"] = 1,
       },
     },

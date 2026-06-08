@@ -11,6 +11,7 @@ HandyNotes_MidnightDB = {
 ["Auteist - Tichondrius"] = "Default",
 ["Hellavator - Tichondrius"] = "Default",
 ["Praisesun - Tichondrius"] = "Default",
+["Bigxthazug - Tichondrius"] = "Default",
 ["Strathmoan - Tichondrius"] = "Default",
 ["Reedingo - Mal'Ganis"] = "Default",
 ["Neonvoid - Tichondrius"] = "Default",

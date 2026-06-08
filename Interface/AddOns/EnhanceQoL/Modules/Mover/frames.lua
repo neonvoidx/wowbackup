@@ -77,6 +77,7 @@ local frames = {
 		names = { "GameMenuFrame" },
 		addon = "Blizzard_GameMenu",
 		handlesRelative = { "Header" },
+		handlesOnly = true,
 		skipOnHide = true,
 		defaultEnabled = true,
 	},
@@ -117,6 +118,7 @@ local frames = {
 		names = { "AchievementFrame" },
 		addon = "Blizzard_AchievementUI",
 		handlesRelative = { "Header" },
+		handlesOnly = true,
 		defaultEnabled = true,
 	},
 	{
@@ -126,6 +128,7 @@ local frames = {
 		names = { "HousingControlsFrame" },
 		addon = "Blizzard_HousingControls",
 		handlesRelative = { "OwnerControlFrame" },
+		handlesOnly = true,
 		defaultEnabled = true,
 	},
 	{
@@ -212,7 +215,8 @@ local frames = {
 		label = L["Talents & Spells"] or "Talents & Spells",
 		group = "character",
 		names = { "PlayerSpellsFrame" },
-		handlesRelative = { "TalentsFrame", "TalentsFrame.ButtonsParent", "SpecFrame" },
+		handlesRelative = { "TitleContainer" },
+		handlesOnly = true,
 		addon = "Blizzard_PlayerSpells",
 		defaultEnabled = true,
 	},
@@ -222,6 +226,8 @@ local frames = {
 		group = "character",
 		names = { "HeroTalentsSelectionDialog" },
 		addon = "Blizzard_PlayerSpells",
+		handlesRelative = { "TitleContainer" },
+		handlesOnly = true,
 		defaultEnabled = true,
 	},
 	{
@@ -257,20 +263,6 @@ local frames = {
 		defaultEnabled = true,
 	},
 	{
-		id = "LFGDungeonReadyDialog",
-		label = L["Dungeon Ready Dialog"] or "Dungeon Ready Dialog",
-		group = "activities",
-		names = { "LFGDungeonReadyDialog" },
-		defaultEnabled = true,
-	},
-	{
-		id = "LFGListInviteDialog",
-		label = L["LFG List Invite Dialog"] or "LFG List Invite Dialog",
-		group = "activities",
-		names = { "LFGListInviteDialog" },
-		defaultEnabled = true,
-	},
-	{
 		id = "ReadyCheckFrame",
 		label = L["Ready Check"] or "Ready Check",
 		group = "activities",
@@ -292,6 +284,7 @@ local frames = {
 		names = { "DelvesCompanionConfigurationFrame" },
 		addon = "Blizzard_DelvesDashboardUI",
 		handlesRelative = { "CompanionPortraitFrame" },
+		handlesOnly = true,
 		defaultEnabled = true,
 	},
 	{
@@ -300,6 +293,10 @@ local frames = {
 		group = "system",
 		names = { "TransmogFrame" },
 		addon = "Blizzard_Transmog",
+		handlesRelative = { "TitleContainer" },
+		handlesOnly = true,
+		ignoreFramePositionManager = true,
+		userPlaced = true,
 		defaultEnabled = true,
 	},
 	{
@@ -421,6 +418,7 @@ local frames = {
 		group = "activities",
 		names = { "MajorFactionRenownFrame" },
 		handlesRelative = { "HeaderFrame" },
+		handlesOnly = true,
 		addon = "Blizzard_MajorFactions",
 		defaultEnabled = true,
 	},
@@ -430,6 +428,8 @@ local frames = {
 		group = "professions",
 		names = { "ProfessionsCustomerOrdersFrame" },
 		addon = "Blizzard_ProfessionsCustomerOrders",
+		handlesRelative = { "TitleContainer" },
+		handlesOnly = true,
 		defaultEnabled = true,
 	},
 	{
@@ -649,6 +649,8 @@ local frames = {
 		group = "character",
 		names = { "CollectionsJournal" },
 		addon = "Blizzard_Collections",
+		handlesRelative = { "TitleContainer" },
+		handlesOnly = true,
 		defaultEnabled = true,
 	},
 	{
@@ -657,6 +659,8 @@ local frames = {
 		group = "professions",
 		names = { "ProfessionsFrame" },
 		addon = "Blizzard_Professions",
+		handlesRelative = { "TitleContainer" },
+		handlesOnly = true,
 		defaultEnabled = true,
 	},
 	{
@@ -882,6 +886,7 @@ function addon.Mover.functions.InitRegistry()
 
 	initSettingsDefaults()
 	if addon.Mover.functions.EnsureScaleCaptureFrame then addon.Mover.functions.EnsureScaleCaptureFrame() end
+	if addon.Mover.functions.InstallScaleFitHook then addon.Mover.functions.InstallScaleFitHook() end
 
 	for groupId, group in pairs(groups) do
 		local order = groupOrder[groupId] or group.order

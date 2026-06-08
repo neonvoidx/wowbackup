@@ -2,53 +2,27 @@
 NemPetAlertsSV = {
 ["fontSize"] = 25,
 ["point"] = "CENTER",
-["scale"] = 1,
+["petInCCEnabled"] = true,
 ["petNotAttackingEnabled"] = true,
 ["flash"] = true,
 ["relativePoint"] = "CENTER",
-["notAttackingEnabled"] = true,
 ["enabled"] = true,
 ["relativeTo"] = "UIParent",
-["notAttackingSoundName"] = "Sonarr",
+["petInCCSoundEnabled"] = true,
 ["tauntAutoEnabled"] = false,
 ["petDeadEnabled"] = false,
-["notAttackingSoundEnabled"] = true,
-["fontName"] = "Gotham Narrow Ultra",
+["y"] = 140,
+["petInCCSoundName"] = "Sonarr",
 ["fakeDeathEnabled"] = false,
-["ver"] = 2,
+["ver"] = 7,
 ["x"] = 0,
 ["noPetEnabled"] = true,
 ["healPetThreshold"] = 30,
 ["healPetEnabled"] = true,
 ["alertColors"] = {
-["healPet"] = {
-["r"] = 0.1882,
-["g"] = 1,
-["b"] = 0.3098,
-},
-["petPassive"] = {
-["r"] = 1,
-["g"] = 0.5843,
-["b"] = 0.1333,
-},
-["tauntAuto"] = {
-["r"] = 0.9059,
-["g"] = 0.2667,
-["b"] = 1,
-},
-["petNotAttacking"] = {
-["r"] = 1,
-["g"] = 0.8588,
-["b"] = 0,
-},
-["petDead"] = {
-["r"] = 1,
-["g"] = 0.2039,
-["b"] = 0.1569,
-},
-["fakeDeath"] = {
-["r"] = 0.698,
-["g"] = 0.3333,
+["petInCC"] = {
+["r"] = 0.2824,
+["g"] = 0.6549,
 ["b"] = 1,
 },
 ["noPet"] = {
@@ -56,12 +30,37 @@ NemPetAlertsSV = {
 ["g"] = 0.4118,
 ["b"] = 0,
 },
-["notAttacking"] = {
-["r"] = 0.2824,
-["g"] = 0.6549,
+["tauntAuto"] = {
+["r"] = 0.9059,
+["g"] = 0.2667,
 ["b"] = 1,
 },
+["fakeDeath"] = {
+["r"] = 0.698,
+["g"] = 0.3333,
+["b"] = 1,
 },
-["y"] = 140,
+["petDead"] = {
+["r"] = 1,
+["g"] = 0.2039,
+["b"] = 0.1569,
+},
+["petNotAttacking"] = {
+["r"] = 1,
+["g"] = 0.8588,
+["b"] = 0,
+},
+["petPassive"] = {
+["r"] = 1,
+["g"] = 0.5843,
+["b"] = 0.1333,
+},
+["healPet"] = {
+["r"] = 0.1882,
+["g"] = 1,
+["b"] = 0.3098,
+},
+},
+["fontName"] = "Gotham Narrow Ultra",
 ["petPassiveEnabled"] = true,
 }

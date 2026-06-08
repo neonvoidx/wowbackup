@@ -119,6 +119,67 @@ function BBF.UIFrameIsFading(frame)
 	return frame and BBF.UIFrameFadeContains(frame) or false;
 end
 
+local function GetDefaultPartyFrame(i)
+	local EM = EditModeManagerFrame
+	if EM and EM.UseRaidStylePartyFrames and EM:UseRaidStylePartyFrames() then
+		return _G["CompactPartyFrameMember" .. i] or _G["CompactRaidFrame" .. i]
+	else
+		if C_CVar.GetCVarBool("useCompactPartyFrames") then
+			return _G["CompactPartyFrameMember" .. i] or _G["CompactRaidFrame" .. i]
+		else
+			local defaultPartyFrame = true
+			return _G["PartyMemberFrame" .. i] or (_G["PartyFrame"] and _G["PartyFrame"]["MemberFrame" .. i]), defaultPartyFrame
+		end
+	end
+end
+
+function BBF.FindPartyFrame(i)
+	if BetterBlizzFramesDB.partyCastBarForceDefaultPartyFrames then
+		local defaultPartyFrame, isDefault = GetDefaultPartyFrame(i)
+		return defaultPartyFrame, isDefault
+    elseif C_AddOns.IsAddOnLoaded("DandersFrames") then
+		local _, instanceType = IsInInstance()
+    	local isInArena = instanceType == "arena"
+        if isInArena then
+            local arenaPartyFrame = _G["DandersArenaHeaderUnitButton" .. i]
+            if arenaPartyFrame then
+                return arenaPartyFrame
+            end
+        end
+        local partyFrame = _G["DandersPartyHeaderUnitButton" .. i]
+        if partyFrame then
+            return partyFrame
+        end
+    elseif C_AddOns.IsAddOnLoaded("ElvUI") and ElvUI[1].private.unitframe.disabledBlizzardFrames.party then
+        return _G["ElvUF_PartyGroup1UnitButton" .. i]
+    elseif C_AddOns.IsAddOnLoaded("Cell") then
+        return _G["CellPartyFrameHeaderUnitButton" .. i]
+    elseif C_AddOns.IsAddOnLoaded("Grid2") then
+        return _G["Grid2LayoutHeader1UnitButton" .. i]
+    elseif C_AddOns.IsAddOnLoaded("VuhDo") then
+        return _G["Vd1H" .. i]
+    elseif (C_AddOns.IsAddOnLoaded("ShadowedUnitFrames") and ShadowUF and ShadowUF.db) then
+        -- Checking if player is shown in party group by selecting the "Show Player in party" option
+        local showPlayerInParty = ShadowUF.db.profile.units.party.showPlayer
+        -- If player is shown in party, just return default SUF PartyFrames
+        if showPlayerInParty then
+            return _G["SUFHeaderpartyUnitButton" .. i]
+        end
+        -- Otherwise, there's no player frame in the SUF Partyframes group
+        -- Still need to verify that playerframe exists, users can disable playerframe for party and use some other playerframe addon
+        -- In which case we wouldn't be able to support it (since we don't know what they use for playerframe), but at least it wouldnt throw errors
+        if (_G["SUFUnitplayer"] and i == 1) then
+            return _G["SUFUnitplayer"]
+        end
+        -- Every other partymember will be shifted upwards by 1, SUF would basically start at frame2
+        -- From testing, the sorting order doesnt matter, SUF still calls them sequentially from 1 to 4
+        return _G["SUFHeaderpartyUnitButton" .. i - 1]
+    else
+		local defaultPartyFrame, isDefault = GetDefaultPartyFrame(i)
+		return defaultPartyFrame, isDefault
+    end
+end
+
 function BBF.ActionBarCDNumberSize(reset)
 	if not BetterBlizzFramesDB.actionBarCDNumberSizeChange then
 		if BBF.actionBarCDNumberSizeActive then
@@ -174,4 +235,70 @@ function BBF.ActionBarCDNumberSize(reset)
 	end
 
 	BBF.actionBarCDNumberSizeActive = BetterBlizzFramesDB.actionBarCDNumberSizeChange or nil
+end
+
+local LSM = LibStub("LibSharedMedia-3.0")
+local FontValidatorString = UIParent:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+
+local function IsFontFileValid(path)
+	if type(path) ~= "string" or path == "" then
+		return false
+	end
+
+	local ok = pcall(FontValidatorString.SetFont, FontValidatorString, path, 12, "")
+	if not ok then
+		return false
+	end
+
+	return path
+end
+
+BBF.LSM = setmetatable({}, {
+	__index = function(_, k)
+		if k == "Register" then
+			return function(_, mediaType, key, data, langMask)
+				if mediaType == "font" and not IsFontFileValid(data) then
+					return false
+				end
+				return LSM:Register(mediaType, key, data, langMask)
+			end
+		end
+
+		return LSM[k]
+	end
+})
+
+BBF.allLocales = LSM.LOCALE_BIT_western+LSM.LOCALE_BIT_ruRU+LSM.LOCALE_BIT_zhCN+LSM.LOCALE_BIT_zhTW+LSM.LOCALE_BIT_koKR
+
+function BBF.AddFont(name)
+	if type(name) ~= "string" then
+		C_Timer.After(4, function()
+			BBF.Print(L["Print_AddFont_Name_Not_String"])
+		end)
+		return
+	end
+	if name:sub(-4):lower() == ".ttf" then
+		name = name:sub(1, -5)
+	end
+	BBF.LSM:Register("font", name, "Interface\\AddOns\\CustomMedia\\" .. name .. ".ttf", BBF.allLocales)
+end
+
+function BBF.AddTexture(name)
+	if type(name) ~= "string" then
+		C_Timer.After(4, function()
+			BBF.Print(L["Print_AddTexture_Name_Not_String"])
+		end)
+		return
+	end
+	BBF.LSM:Register("statusbar", name, "Interface\\AddOns\\CustomMedia\\" .. name)
+end
+
+function BBF.HidePlayerFrame()
+	if BetterBlizzFramesDB.playerFrameHidden then
+		PlayerFrame:SetParent(BBF.hiddenFrame)
+		BBF.hiddenPlayerFrame = true
+	elseif BBF.hiddenPlayerFrame then
+		PlayerFrame:SetParent(UIParent)
+		BBF.hiddenPlayerFrame = nil
+	end
 end

@@ -1,68 +1,36 @@
 
 KeystoneLootDB = {
 ["currentSeason"] = 16,
-["version"] = 3,
+["version"] = 8,
 ["settings"] = {
-["keystoneTooltip"] = true,
 ["hiddenCharacters"] = {
-},
-["highlighting"] = {
-["mastery"] = true,
-["versatility"] = true,
-["haste"] = true,
-["crit"] = true,
-["noStats"] = true,
-},
-["favoriteTooltip"] = true,
-["lootReminder"] = {
-["dungeons"] = true,
 },
 ["minimap"] = {
 ["enabled"] = true,
 ["minimapPos"] = 217.1349309867121,
 ["degrees"] = 195,
 },
+["hideOtherItems"] = false,
+["keystoneTooltip"] = true,
+["multiSlotFilter"] = false,
+["wideMode"] = false,
+["highlighting"] = {
+["mastery"] = true,
+["crit"] = true,
+["versatility"] = true,
+["haste"] = true,
+["comboMode"] = false,
+["noStats"] = true,
+},
+["lootReminder"] = {
+["whisperMessage"] = "Can I have {item} please?",
+["dropAlert"] = true,
+["dungeons"] = true,
+},
+["favoriteTooltip"] = true,
 },
 ["favorites"] = {
-["Tichondrius-Strathmoan-6"] = {
-[558] = {
-[252] = {
-[251118] = {
-["icon"] = 7135738,
-},
-},
-},
-[559] = {
-[252] = {
-[251208] = {
-["icon"] = 7135738,
-},
-},
-},
-[161] = {
-[252] = {
-[252420] = {
-["icon"] = 132873,
-},
-[258575] = {
-["icon"] = 1043737,
-},
-},
-},
-[556] = {
-[252] = {
-[50234] = {
-["icon"] = 343669,
-},
-},
-},
-[402] = {
-[252] = {
-[193706] = {
-["icon"] = 4295889,
-},
-},
-},
+["Tichondrius-Tampacks-6"] = {
 },
 ["Tichondrius-Choppiez-1"] = {
 },
@@ -169,27 +137,67 @@ KeystoneLootDB = {
 },
 },
 },
-["Tichondrius-Mäñýfäçëð-4"] = {
-},
-["Tichondrius-Tampacks-6"] = {
-},
-["Tichondrius-Reedingo-7"] = {
-},
-["Tichondrius-Korahron-10"] = {
-},
 ["Tichondrius-Praisesun-2"] = {
 },
 ["Tichondrius-Smaugchamp-13"] = {
 },
-["Tichondrius-Auteist-8"] = {
-},
-["Tichondrius-Neonvoid-5"] = {
-},
-["Tichondrius-Manyfaced-4"] = {
-},
 ["Tichondrius-Starstypeshi-11"] = {
 },
 ["Tichondrius-Hellavator-9"] = {
+},
+["Tichondrius-Strathmoan-6"] = {
+[558] = {
+[252] = {
+[251118] = {
+["icon"] = 7135738,
+},
+},
+},
+[559] = {
+[252] = {
+[251208] = {
+["icon"] = 7135738,
+},
+},
+},
+[161] = {
+[252] = {
+[252420] = {
+["icon"] = 132873,
+},
+[258575] = {
+["icon"] = 1043737,
+},
+},
+},
+[556] = {
+[252] = {
+[50234] = {
+["icon"] = 343669,
+},
+},
+},
+[402] = {
+[252] = {
+[193706] = {
+["icon"] = 4295889,
+},
+},
+},
+},
+["Tichondrius-Mäñýfäçëð-4"] = {
+},
+["Tichondrius-Reedingo-7"] = {
+},
+["Tichondrius-Manyfaced-4"] = {
+},
+["Tichondrius-Bigxthazug-1"] = {
+},
+["Tichondrius-Auteist-8"] = {
+},
+["Tichondrius-Korahron-10"] = {
+},
+["Tichondrius-Neonvoid-5"] = {
 },
 ["Tichondrius-Stormclout-10"] = {
 [161] = {

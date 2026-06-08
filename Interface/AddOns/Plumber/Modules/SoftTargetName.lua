@@ -81,7 +81,7 @@ do  --Display
 	function Display:UpdateFonts()
 		local file, height, flags = _G[Settings.fontObject]:GetFont();
 		if Settings.textOutline then
-			flags = "OUTLINE";
+			flags = "SLUGOUTLINE";
 		else
 			flags = "";
 		end
@@ -116,7 +116,7 @@ do  --Display
 			self.Title = Display:CreateFontString(nil, "OVERLAY", Settings.fontObject);
 			self.Title:SetPoint("TOP", self, "TOP", 0, 0);
 			local file, height, flags = _G[Settings.fontObject]:GetFont();
-			self.Title:SetFont(file, height, "OUTLINE");
+			self.Title:SetFont(file, height, "SLUGOUTLINE");
 			self.Title:SetShadowOffset(0, 0);
 		end
 
@@ -262,7 +262,14 @@ do  --Display
 			if self:ShouldHideIcon() then
 				state = false;
 			end
-			nameplate.UnitFrame.SoftTargetFrame.Icon:SetShown(state);
+
+			local icon = nameplate.UnitFrame.SoftTargetFrame.Icon;
+
+			if state then
+				state = SetUnitCursorTexture(icon, "softinteract");
+			end
+
+			icon:SetShown(state);
 		end
 	end
 
@@ -547,7 +554,7 @@ do  --EL
 				local uiScale = UIParent:GetEffectiveScale() or 1;
 				local fontHeight = Round(Settings.titleHeight*uiScale);
 
-				SetUnitCursorTexture(Display.InteractIcon, unit);
+				local hasCursorTexture = SetUnitCursorTexture(Display.InteractIcon, unit);
 				local textureFile = Display.InteractIcon:GetAtlas();
 
 				--Icon size is determined by SoftTargetFrame
@@ -590,7 +597,7 @@ do  --EL
 					Display:WatchTooltip(false);
 				end
 
-				if Display:ShouldHideIcon() then
+				if Display:ShouldHideIcon() or (not hasCursorTexture) then
 					f.Icon:Hide();
 				else
 					f.Icon:SetAlpha(1);
@@ -873,4 +880,5 @@ do  --SpecialGameObjects
 		return SubtextFunc_Item(242241)
 	end
 	SpecialGameObjects[531478] = SubtextFunc_MisplacedTome;
+	SpecialGameObjects[531479] = SubtextFunc_MisplacedTome;	--Ranger's Cache
 end

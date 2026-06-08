@@ -1,16 +1,14 @@
----@type string
-local AddonName = ...
 ---@class Data
 local Data = select(2, ...)
 
 Data.Helpers = {}
 
 local tAppendAll = tAppendAll
-  or function(table, addedArray)
-    for i, element in ipairs(addedArray) do
-      tinsert(table, element)
+    or function(table, addedArray)
+      for i, element in ipairs(addedArray) do
+        tinsert(table, element)
+      end
     end
-  end
 
 --[[
     Generates all permutations of the given input array.
@@ -69,6 +67,7 @@ function Data.Helpers.AreOverlappingRanges(rangeA, rangeB)
 
   return true
 end
+
 ---comment
 ---@param number number
 ---@param range table

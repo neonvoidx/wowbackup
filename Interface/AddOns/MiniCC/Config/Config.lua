@@ -65,7 +65,7 @@ function M:Init()
 	-- Standalone config window
 	local version = C_AddOns.GetAddOnMetadata(addonName, "Version")
 	local windowWidth = 1000
-	local windowHeight = 620
+	local windowHeight = 650
 
 	local window = mini:CreateStandaloneWindow({
 		Name = addonName .. "ConfigFrame",
@@ -134,7 +134,7 @@ function M:Init()
 		},
 		{
 			Key = "EnemyCooldowns",
-			Title = "Enemy CDs",
+			Title = L["Enemy Cooldowns_Short"] or L["Enemy Cooldowns"],
 			Build = function(content)
 				M.EnemyCooldownTracker:Build(content, db.Modules.EnemyCooldownTrackerModule)
 			end,
@@ -227,6 +227,18 @@ function M:Init()
 
 	M.TabController = tabController
 
+	StaticPopupDialogs["MINICC_RELOAD_CONFIRM"] = {
+		text = L["Language changed. Reload UI now?"],
+		button1 = YES,
+		button2 = NO,
+		OnAccept = function()
+			C_UI.Reload()
+		end,
+		timeout = 0,
+		whileDead = true,
+		hideOnEscape = true,
+	}
+
 	StaticPopupDialogs["MINICC_CONFIRM"] = {
 		text = "%s",
 		button1 = YES,
@@ -255,6 +267,12 @@ function M:Init()
 
 		if msg == "test" then
 			addon:ToggleTest(nil)
+			return
+		end
+
+		if msg == "debug" then
+			local on = addon.Modules.Cooldowns.Brain:ToggleDebug()
+			mini:Notify(on and "Cooldown debug logging ON" or "Cooldown debug logging OFF")
 			return
 		end
 

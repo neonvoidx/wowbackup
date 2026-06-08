@@ -67,3 +67,9 @@ M33kAurasCompanion: enabled
 M33kAurasArchive: enabled
 M33Auras: disabled
 WeakAuras: disabled
+BetterUpgradeTooltip: enabled
+eAlignUpdated: enabled
+TipTac: enabled
+TipTacItemRef: enabled
+TipTacOptions: enabled
+TipTacTalents: enabled
