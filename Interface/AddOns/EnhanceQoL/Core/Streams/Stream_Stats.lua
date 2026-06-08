@@ -1,10 +1,8 @@
--- luacheck: globals EnhanceQoL GAMEMENU_OPTIONS STAT_HASTE STAT_MASTERY STAT_CRITICAL_STRIKE CR_HASTE_MELEE CR_MASTERY CR_CRIT_MELEE CR_LIFESTEAL CR_BLOCK CR_PARRY CR_DODGE CR_AVOIDANCE CR_SPEED STAT_LIFESTEAL STAT_BLOCK STAT_PARRY STAT_DODGE STAT_AVOIDANCE STAT_SPEED GetLifesteal GetBlockChance GetParryChance GetDodgeChance GetAvoidance GetSpeed
+-- luacheck: globals EnhanceQoL STAT_HASTE STAT_MASTERY STAT_CRITICAL_STRIKE CR_HASTE_MELEE CR_MASTERY CR_CRIT_MELEE CR_LIFESTEAL CR_BLOCK CR_PARRY CR_DODGE CR_AVOIDANCE CR_SPEED STAT_LIFESTEAL STAT_BLOCK STAT_PARRY STAT_DODGE STAT_AVOIDANCE STAT_SPEED GetLifesteal GetBlockChance GetParryChance GetDodgeChance GetAvoidance GetSpeed
 local addonName, addon = ...
 local L = addon.L
 
-local AceGUI = addon.AceGUI
 local db
-local stream
 
 local idx
 local primaryResolveToken = 0
@@ -53,14 +51,6 @@ local FALLBACK_ORDER = {
 	speed = 10,
 }
 
-local DISPLAY_MODE_LABELS = {
-	percent = L["StatDisplayModePercent"] or "Percent",
-	rating = L["StatDisplayModeRating"] or "Rating",
-	both = L["StatDisplayModeBoth"] or "Rating + Percent",
-}
-
-local DISPLAY_MODE_ORDER = { "percent", "rating", "both" }
-
 local VALID_DISPLAY_MODE = {
 	percent = true,
 	rating = true,
@@ -83,9 +73,31 @@ local SUPPORTS_SECONDARY_PERCENT = {
 	mastery = true,
 }
 
+local STAT_DEFAULT_COLORS = {
+	primary = { r = 1, g = 0.82, b = 0, a = 1 },
+	haste = { r = 0.31, g = 0.86, b = 0.43, a = 1 },
+	mastery = { r = 0.62, g = 0.56, b = 1, a = 1 },
+	crit = { r = 1, g = 0.36, b = 0.28, a = 1 },
+	lifesteal = { r = 0.35, g = 0.85, b = 0.88, a = 1 },
+	block = { r = 0.95, g = 0.67, b = 0.25, a = 1 },
+	parry = { r = 0.86, g = 0.52, b = 1, a = 1 },
+	dodge = { r = 0.58, g = 0.95, b = 0.42, a = 1 },
+	avoidance = { r = 0.48, g = 0.72, b = 1, a = 1 },
+	speed = { r = 0.38, g = 0.92, b = 1, a = 1 },
+}
+
 local function normalizeMode(mode)
 	if VALID_DISPLAY_MODE[mode] then return mode end
 	return "percent"
+end
+
+local function copyDefaultColor(key)
+	local color = STAT_DEFAULT_COLORS[key] or STAT_DEFAULT_COLORS.primary
+	return { r = color.r, g = color.g, b = color.b, a = color.a or 1 }
+end
+
+local function isDefaultWhite(color)
+	return type(color) == "table" and color.r == 1 and color.g == 1 and color.b == 1 and (color.a == nil or color.a == 1)
 end
 
 local function formatNumber(value)
@@ -250,7 +262,9 @@ local function ensureStatEntry(key, supportsMode, supportsSecondaryPercent)
 		entry.showSecondaryPercent = nil
 	end
 	entry.rating = nil
-	entry.color = entry.color or { r = 1, g = 1, b = 1 }
+	if type(entry.color) ~= "table" or isDefaultWhite(entry.color) then
+		entry.color = copyDefaultColor(key)
+	end
 end
 
 local function ensureDB()
@@ -261,7 +275,6 @@ local function ensureDB()
 	db.vertical = db.vertical or false
 	db.primary = db.primary or {}
 	if db.primary.enabled == nil then db.primary.enabled = true end
-	db.primary.color = db.primary.color or { r = 1, g = 1, b = 1 }
 	ensureStatEntry("primary", false, false)
 
 	for _, key in ipairs(SECONDARY_STATS) do
@@ -269,130 +282,10 @@ local function ensureDB()
 	end
 end
 
-local function RestorePosition(frame)
-	if db.point and db.x and db.y then
-		frame:ClearAllPoints()
-		frame:SetPoint(db.point, UIParent, db.point, db.x, db.y)
+local function openSettings()
+	if addon.functions and addon.functions.OpenConfigCenter then
+		addon.functions.OpenConfigCenter("interface.datapanel", "DataPanel_stats_fontSize")
 	end
-end
-
-local aceWindow
-local function addStatOptions(frame, key, label, supportsMode, supportsSecondaryPercent)
-	local group = AceGUI:Create("InlineGroup")
-	group:SetTitle(label)
-	group:SetFullWidth(true)
-	group:SetLayout("List")
-
-	local show = AceGUI:Create("CheckBox")
-	show:SetLabel(SHOW)
-	show:SetValue(db[key].enabled)
-	show:SetCallback("OnValueChanged", function(_, _, val)
-		db[key].enabled = val and true or false
-		addon.DataHub:RequestUpdate(stream)
-	end)
-	group:AddChild(show)
-
-	if supportsMode ~= false then
-		local mode = AceGUI:Create("Dropdown")
-		mode:SetLabel(DISPLAY_MODE)
-		mode:SetList(DISPLAY_MODE_LABELS, DISPLAY_MODE_ORDER)
-		mode:SetValue(db[key].mode or "percent")
-		mode:SetCallback("OnValueChanged", function(_, _, val)
-			db[key].mode = normalizeMode(val)
-			addon.DataHub:RequestUpdate(stream)
-		end)
-		group:AddChild(mode)
-	end
-
-	if supportsSecondaryPercent then
-		local showSecondaryPercent = AceGUI:Create("CheckBox")
-		showSecondaryPercent:SetLabel(L["StatDisplayShowSecondaryPercent"] or "Show second percent value")
-		showSecondaryPercent:SetValue(db[key].showSecondaryPercent ~= false)
-		showSecondaryPercent:SetCallback("OnValueChanged", function(_, _, val)
-			db[key].showSecondaryPercent = val and true or false
-			addon.DataHub:RequestUpdate(stream)
-		end)
-		group:AddChild(showSecondaryPercent)
-	end
-
-	local color = AceGUI:Create("ColorPicker")
-	color:SetLabel(COLOR)
-	local c = db[key].color
-	color:SetColor(c.r, c.g, c.b)
-	color:SetCallback("OnValueChanged", function(_, _, r, g, b)
-		db[key].color = { r = r, g = g, b = b }
-		addon.DataHub:RequestUpdate(stream)
-	end)
-	group:AddChild(color)
-
-	frame:AddChild(group)
-end
-
-local function createAceWindow()
-	if aceWindow then
-		aceWindow:Show()
-		return
-	end
-	ensureDB()
-	local frame = AceGUI:Create("Window")
-	aceWindow = frame.frame
-	frame:SetTitle((addon.DataPanel and addon.DataPanel.GetStreamOptionsTitle and addon.DataPanel.GetStreamOptionsTitle(stream and stream.meta and stream.meta.title)) or GAMEMENU_OPTIONS)
-	frame:SetWidth(330)
-	frame:SetHeight(500)
-	frame:SetLayout("List")
-
-	frame.frame:SetScript("OnShow", function(self) RestorePosition(self) end)
-	frame.frame:SetScript("OnHide", function(self)
-		local point, _, _, xOfs, yOfs = self:GetPoint()
-		db.point = point
-		db.x = xOfs
-		db.y = yOfs
-	end)
-
-	local scroll = addon.functions.createContainer("ScrollFrame", "Flow")
-	scroll:SetFullWidth(true)
-	scroll:SetFullHeight(true)
-	frame:AddChild(scroll)
-
-	local wrapper = addon.functions.createContainer("SimpleGroup", "Flow")
-	scroll:AddChild(wrapper)
-
-	local groupCore = addon.functions.createContainer("InlineGroup", "List")
-	wrapper:AddChild(groupCore)
-
-	local fontSize = AceGUI:Create("Slider")
-	fontSize:SetLabel(FONT_SIZE)
-	fontSize:SetSliderValues(8, 32, 1)
-	fontSize:SetValue(db.fontSize)
-	fontSize:SetCallback("OnValueChanged", function(_, _, val)
-		db.fontSize = val
-		addon.DataHub:RequestUpdate(stream)
-	end)
-	groupCore:AddChild(fontSize)
-
-	local vertical = AceGUI:Create("CheckBox")
-	vertical:SetLabel(L["Display vertically"] or "Display vertically")
-	vertical:SetValue(db.vertical)
-	vertical:SetCallback("OnValueChanged", function(_, _, val)
-		db.vertical = val and true or false
-		addon.DataHub:RequestUpdate(stream)
-	end)
-	groupCore:AddChild(vertical)
-
-	local primaryLabel = select(3, GetPlayerPrimaryStat())
-	addStatOptions(groupCore, "primary", primaryLabel or "Primary", false)
-	addStatOptions(groupCore, "haste", STAT_HASTE or "Haste")
-	addStatOptions(groupCore, "mastery", STAT_MASTERY or "Mastery", true, true)
-	addStatOptions(groupCore, "crit", STAT_CRITICAL_STRIKE or "Crit")
-	addStatOptions(groupCore, "lifesteal", STAT_LIFESTEAL or "Leech")
-	addStatOptions(groupCore, "block", STAT_BLOCK or "Block")
-	addStatOptions(groupCore, "parry", STAT_PARRY or "Parry")
-	addStatOptions(groupCore, "dodge", STAT_DODGE or "Dodge")
-	addStatOptions(groupCore, "avoidance", STAT_AVOIDANCE or "Avoidance")
-	addStatOptions(groupCore, "speed", STAT_SPEED or "Speed")
-
-	frame.frame:Show()
-	scroll:DoLayout()
 end
 
 local function colorize(text, color)
@@ -517,10 +410,10 @@ local provider = {
 		},
 	},
 	OnClick = function(_, btn)
-		if btn == "RightButton" then createAceWindow() end
+		if btn == "RightButton" then openSettings() end
 	end,
 }
 
-stream = EnhanceQoL.DataHub.RegisterStream(provider)
+EnhanceQoL.DataHub.RegisterStream(provider)
 
 return provider

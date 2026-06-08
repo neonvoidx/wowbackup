@@ -11,7 +11,6 @@ else
 end
 
 local L = LibStub("AceLocale-3.0"):GetLocale("EnhanceQoL")
-local AceGUI = addon.AceGUI
 local f = CreateFrame("Frame")
 
 addon.Vendor = addon.Vendor or {}
@@ -451,9 +450,6 @@ local function SyncCraftShopperQualityControls()
 	local mode = GetCraftShopperReagentQualityMode()
 	local frameDropdown = addon.Vendor.CraftShopper.frame and addon.Vendor.CraftShopper.frame.qualityPreference
 	if frameDropdown and frameDropdown.GetValue and frameDropdown:GetValue() ~= mode then frameDropdown:SetValue(mode) end
-
-	local settingsDropdown = addon.Vendor.CraftShopper.settingsQualityDropdown
-	if settingsDropdown and settingsDropdown.GetValue and settingsDropdown:GetValue() ~= mode then settingsDropdown:SetValue(mode) end
 end
 
 function addon.Vendor.CraftShopper.GetReagentQualityMode()
@@ -635,199 +631,338 @@ local function UpdatePurchasePopup(pricePer, total)
 	end
 end
 
+local function SetCheckButtonValue(button, value)
+	if button and button.SetChecked then button:SetChecked(value == true) end
+end
+
+local function GetCheckButtonValue(button)
+	return button and button.GetChecked and button:GetChecked() == true or false
+end
+
+local function CreateCraftShopperCheckButton(parent, label)
+	local button = CreateFrame("CheckButton", nil, parent, "UICheckButtonTemplate")
+	button.Text:SetText(label or "")
+	button.SetValue = SetCheckButtonValue
+	button.GetValue = GetCheckButtonValue
+	return button
+end
+
+local function SetNativeButtonDisabled(button, disabled)
+	if disabled then
+		button:Disable()
+		if button.icon then button.icon:SetDesaturated(true) end
+		button:SetAlpha(0.45)
+	else
+		button:Enable()
+		if button.icon then button.icon:SetDesaturated(false) end
+		button:SetAlpha(1)
+	end
+end
+
+local function CreateCraftShopperIconButton(parent, texture, tooltipText, onClick)
+	local button = CreateFrame("Button", nil, parent)
+	button:SetSize(20, 20)
+	button.icon = button:CreateTexture(nil, "ARTWORK")
+	button.icon:SetAllPoints()
+	button.icon:SetTexture(texture)
+	button:SetHighlightTexture("Interface\\Buttons\\ButtonHilight-Square", "ADD")
+	button:SetScript("OnEnter", function(self)
+		GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+		GameTooltip:SetText(tooltipText)
+		GameTooltip:Show()
+	end)
+	button:SetScript("OnLeave", function() GameTooltip:Hide() end)
+	button:SetScript("OnClick", onClick)
+	button.SetDisabled = SetNativeButtonDisabled
+	return button
+end
+
+local function SetQualityButtonValue(button, mode)
+	local value = mode == CRAFT_SHOPPER_QUALITY_LOWEST and CRAFT_SHOPPER_QUALITY_LOWEST or CRAFT_SHOPPER_QUALITY_HIGHEST
+	button.value = value
+	button:SetText(craftShopperQualityList[value] or value)
+end
+
+local function GetQualityButtonValue(button)
+	return button.value or GetCraftShopperReagentQualityMode()
+end
+
+local function OpenQualityMenu(button)
+	if MenuUtil and MenuUtil.CreateContextMenu then
+		MenuUtil.CreateContextMenu(button, function(_, rootDescription)
+			for _, mode in ipairs(craftShopperQualityOrder) do
+				rootDescription:CreateRadio(craftShopperQualityList[mode] or mode, function() return GetCraftShopperReagentQualityMode() == mode end, function()
+					if addon.Vendor and addon.Vendor.CraftShopper and addon.Vendor.CraftShopper.SetReagentQualityMode then
+						addon.Vendor.CraftShopper.SetReagentQualityMode(mode)
+					end
+				end)
+			end
+		end)
+	else
+		local nextMode = GetCraftShopperReagentQualityMode() == CRAFT_SHOPPER_QUALITY_LOWEST and CRAFT_SHOPPER_QUALITY_HIGHEST or CRAFT_SHOPPER_QUALITY_LOWEST
+		if addon.Vendor and addon.Vendor.CraftShopper and addon.Vendor.CraftShopper.SetReagentQualityMode then
+			addon.Vendor.CraftShopper.SetReagentQualityMode(nextMode)
+		end
+	end
+end
+
+local function AnchorFrameToCurrentScreenPosition(frame)
+	if not frame or not UIParent or not frame.GetLeft or not frame.GetTop then return end
+	local left = frame:GetLeft()
+	local top = frame:GetTop()
+	if not left or not top then return end
+
+	local frameScale = frame.GetEffectiveScale and frame:GetEffectiveScale() or 1
+	local parentScale = UIParent.GetEffectiveScale and UIParent:GetEffectiveScale() or 1
+	if frameScale <= 0 then frameScale = 1 end
+	if parentScale <= 0 then parentScale = 1 end
+
+	frame:ClearAllPoints()
+	frame:SetPoint("TOPLEFT", UIParent, "BOTTOMLEFT", left * frameScale / parentScale, top * frameScale / parentScale)
+end
+
 local function CreateCraftShopperFrame()
 	if addon.Vendor.CraftShopper.frame then return addon.Vendor.CraftShopper.frame end
-	local frame = AceGUI:Create("Window")
-	frame:SetTitle(L["vendorCraftShopperTitle"])
-	frame:SetWidth(300)
-	frame:SetHeight(400)
-	frame:SetLayout("List")
-	frame.frame:Hide()
-	frame.frame:SetFrameStrata(AuctionHouseFrame:GetFrameStrata())
-
-	local search = AceGUI:Create("EditBox")
-	search:SetLabel(SEARCH)
-	search:SetFullWidth(true)
-	search:SetCallback("OnTextChanged", function() frame:Refresh() end)
-	frame.search = search
-	frame:AddChild(search)
-
-	local filterGroup = AceGUI:Create("SimpleGroup")
-	filterGroup:SetFullWidth(true)
-	filterGroup:SetLayout("Flow")
-	frame:AddChild(filterGroup)
-
-	local missingCheck = AceGUI:Create("CheckBox")
-	missingCheck:SetLabel(L["vendorCraftShopperMissingOnly"])
-	missingCheck:SetCallback("OnValueChanged", function() frame:Refresh() end)
-	missingCheck:SetRelativeWidth(0.5)
-	frame.missingOnly = missingCheck
-	filterGroup:AddChild(missingCheck)
-
-	local ahCheck = AceGUI:Create("CheckBox")
-	ahCheck:SetLabel(L["vendorCraftShopperAHBuyable"])
-	ahCheck:SetRelativeWidth(0.5)
-	ahCheck:SetCallback("OnValueChanged", function() frame:Refresh() end)
-	frame.ahBuyable = ahCheck
-	filterGroup:AddChild(ahCheck)
-
-	local qualityPreference = AceGUI:Create("Dropdown")
-	qualityPreference:SetLabel(L["vendorCraftShopperReagentQuality"])
-	qualityPreference:SetList(craftShopperQualityList, craftShopperQualityOrder)
-	qualityPreference:SetValue(GetCraftShopperReagentQualityMode())
-	qualityPreference:SetFullWidth(true)
-	qualityPreference:SetCallback("OnValueChanged", function(_, _, value)
-		if addon.Vendor and addon.Vendor.CraftShopper and addon.Vendor.CraftShopper.SetReagentQualityMode then
-			addon.Vendor.CraftShopper.SetReagentQualityMode(value)
-		end
+	local frame = CreateFrame("Frame", "EnhanceQoLCraftShopperFrame", UIParent, "BasicFrameTemplateWithInset")
+	frame:SetSize(300, 400)
+	frame:Hide()
+	frame.frame = frame
+	frame.rows = {}
+	frame:SetFrameStrata(AuctionHouseFrame:GetFrameStrata())
+	frame:SetClampedToScreen(true)
+	frame:EnableMouse(true)
+	frame:SetMovable(true)
+	frame:SetResizable(true)
+	if frame.SetResizeBounds then
+		frame:SetResizeBounds(300, 240, nil, nil)
+	elseif frame.SetMinResize then
+		frame:SetMinResize(300, 240)
+	end
+	frame:RegisterForDrag("LeftButton")
+	frame:SetScript("OnDragStart", function(self)
+		AnchorFrameToCurrentScreenPosition(self)
+		self.userMoved = true
+		self:StartMoving()
 	end)
-	frame.qualityPreference = qualityPreference
-	frame:AddChild(qualityPreference)
+	frame:SetScript("OnDragStop", frame.StopMovingOrSizing)
 
-	local scroll = AceGUI:Create("ScrollFrame")
-	scroll:SetFullWidth(true)
-	scroll:SetFullHeight(true)
-	scroll:SetLayout("List")
+	frame.TitleText:SetText(L["vendorCraftShopperTitle"])
+
+	local resizeButton = CreateFrame("Button", nil, frame)
+	resizeButton:SetSize(16, 16)
+	resizeButton:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", -6, 6)
+	resizeButton:SetNormalTexture("Interface\\ChatFrame\\UI-ChatIM-SizeGrabber-Up")
+	resizeButton:SetHighlightTexture("Interface\\ChatFrame\\UI-ChatIM-SizeGrabber-Highlight")
+	resizeButton:SetPushedTexture("Interface\\ChatFrame\\UI-ChatIM-SizeGrabber-Down")
+	resizeButton:SetScript("OnMouseDown", function(self, button)
+		if button ~= "LeftButton" then return end
+		self:SetButtonState("PUSHED", true)
+		if self:GetHighlightTexture() then self:GetHighlightTexture():Hide() end
+		AnchorFrameToCurrentScreenPosition(frame)
+		frame:StartSizing("BOTTOMRIGHT")
+	end)
+	resizeButton:SetScript("OnMouseUp", function(self, button)
+		if button ~= "LeftButton" then return end
+		self:SetButtonState("NORMAL")
+		if self:GetHighlightTexture() then self:GetHighlightTexture():Show() end
+		frame:StopMovingOrSizing()
+		frame.userSized = true
+		frame:Refresh()
+	end)
+	frame.ResizeButton = resizeButton
+
+	local searchLabel = frame:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+	searchLabel:SetPoint("TOPLEFT", 12, -30)
+	searchLabel:SetText(SEARCH)
+
+	local search = CreateFrame("EditBox", nil, frame, "InputBoxTemplate")
+	search:SetAutoFocus(false)
+	search:SetHeight(22)
+	search:SetPoint("TOPLEFT", frame, "TOPLEFT", 16, -46)
+	search:SetPoint("TOPRIGHT", frame, "TOPRIGHT", -18, -46)
+	search:SetScript("OnTextChanged", function() frame:Refresh() end)
+	frame.search = search
+
+	local ahCheck = CreateCraftShopperCheckButton(frame, L["vendorCraftShopperAHBuyable"])
+	ahCheck:SetPoint("TOPLEFT", search, "BOTTOMLEFT", -6, -6)
+	ahCheck:SetScript("OnClick", function() frame:Refresh() end)
+	frame.ahBuyable = ahCheck
+
+	local qualityLabel = frame:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+	qualityLabel:SetPoint("TOPLEFT", ahCheck, "BOTTOMLEFT", 6, -4)
+	qualityLabel:SetText(L["vendorCraftShopperReagentQuality"])
+
+	local qualityPreference = CreateFrame("Button", nil, frame, "UIPanelButtonTemplate")
+	qualityPreference:SetHeight(22)
+	qualityPreference:SetPoint("TOPLEFT", frame, "TOPLEFT", 14, -111)
+	qualityPreference:SetPoint("TOPRIGHT", frame, "TOPRIGHT", -18, -111)
+	qualityPreference:SetScript("OnClick", OpenQualityMenu)
+	qualityPreference.SetValue = SetQualityButtonValue
+	qualityPreference.GetValue = GetQualityButtonValue
+	qualityPreference:SetValue(GetCraftShopperReagentQualityMode())
+	frame.qualityPreference = qualityPreference
+
+	local header = CreateFrame("Frame", nil, frame)
+	header:SetPoint("TOPLEFT", qualityPreference, "BOTTOMLEFT", 0, -8)
+	header:SetPoint("TOPRIGHT", qualityPreference, "BOTTOMRIGHT", 0, -8)
+	header:SetHeight(22)
+	frame.header = header
+
+	header.item = header:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
+	header.item:SetPoint("LEFT")
+	header.item:SetText(AUCTION_HOUSE_HEADER_ITEM)
+	header.item:SetJustifyH("LEFT")
+
+	header.need = header:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
+	header.need:SetText(NEED)
+	header.need:SetJustifyH("LEFT")
+
+	local scroll = CreateFrame("ScrollFrame", nil, frame, "UIPanelScrollFrameTemplate")
+	scroll:SetPoint("TOPLEFT", header, "BOTTOMLEFT", 0, -2)
+	scroll:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", -26, 28)
 	frame.scroll = scroll
-	frame:AddChild(scroll)
+
+	local content = CreateFrame("Frame", nil, scroll)
+	content:SetSize(1, 1)
+	scroll:SetScrollChild(content)
+	frame.content = content
 
 	function frame:Refresh()
-		scroll:ReleaseChildren()
-
 		local normalFont, _, normalFlags = GameFontNormal:GetFont()
-		local headerFont, _, headerFlags = GameFontNormalLarge:GetFont()
-
-		local rowHeader = AceGUI:Create("SimpleGroup")
-		rowHeader:SetFullWidth(true)
-		rowHeader:SetLayout("Flow")
-		local label = AceGUI:Create("Label")
-		label:SetText(AUCTION_HOUSE_HEADER_ITEM)
-		label:SetFont(headerFont, 16, headerFlags)
-		label:SetRelativeWidth(0.45)
-		rowHeader:AddChild(label)
-
-		local label2 = AceGUI:Create("Label")
-		label2:SetText(NEED)
-		label2:SetFont(headerFont, 16, headerFlags)
-		label2:SetRelativeWidth(0.25)
-		rowHeader:AddChild(label2)
-
-		for _ = 1, 3 do
-			local spacer = AceGUI:Create("Label")
-			spacer:SetText(" ")
-			spacer:SetFont(headerFont, 16, headerFlags)
-			spacer:SetRelativeWidth(0.1)
-			rowHeader:AddChild(spacer)
-		end
-		scroll:AddChild(rowHeader)
 		local searchText = (search:GetText() or ""):lower()
+		local rowWidth = math.max(260, scroll:GetWidth() - 4)
+		local itemWidth = math.floor(rowWidth * 0.45)
+		local needWidth = math.floor(rowWidth * 0.25)
+		local iconGap = 10
+		local iconSize = 20
+		local rowHeight = 32
+		local rowIndex = 0
+
+		header.item:SetWidth(itemWidth)
+		header.need:ClearAllPoints()
+		header.need:SetPoint("LEFT", header, "LEFT", itemWidth + 4, 0)
+		header.need:SetWidth(needWidth)
+
+		for _, row in ipairs(frame.rows) do
+			row:Hide()
+		end
+
 		for _, item in ipairs(addon.Vendor.CraftShopper.items) do
-			if not item.hidden and (not missingCheck:GetValue() or item.missing > 0) and (not ahCheck:GetValue() or item.ahBuyable) then
+			if not item.hidden and (not ahCheck:GetValue() or item.ahBuyable) then
 				local name, _, quality = C_Item.GetItemInfo(item.itemID)
 				name = name or ("item:" .. item.itemID)
 				item.name = name
 				if searchText == "" or name:lower():find(searchText, 1, true) then
-					local row = AceGUI:Create("SimpleGroup")
-					row:SetFullWidth(true)
-					row:SetLayout("Flow")
+					rowIndex = rowIndex + 1
+					local row = frame.rows[rowIndex]
+					if not row then
+						row = CreateFrame("Frame", nil, content)
+						row:SetHeight(rowHeight)
 
-					local label = AceGUI:Create("InteractiveLabel")
+						row.itemButton = CreateFrame("Button", nil, row)
+						row.itemButton:SetPoint("LEFT")
+						if row.itemButton.SetClipsChildren then row.itemButton:SetClipsChildren(true) end
+						row.itemButton.text = row.itemButton:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+						row.itemButton.text:SetPoint("LEFT")
+						row.itemButton.text:SetPoint("RIGHT")
+						row.itemButton.text:SetJustifyH("LEFT")
+						row.itemButton.text:SetWordWrap(false)
+						if row.itemButton.text.SetMaxLines then row.itemButton.text:SetMaxLines(1) end
+						row.itemButton:SetScript("OnEnter", function(self)
+							GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+							GameTooltip:SetItemByID(self.item.itemID)
+							GameTooltip:Show()
+						end)
+						row.itemButton:SetScript("OnLeave", function() GameTooltip:Hide() end)
+
+						row.qty = row:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+						row.qty:SetJustifyH("LEFT")
+
+						row.searchBtn = CreateCraftShopperIconButton(row, "Interface\\AddOns\\" .. addonName .. "\\Icons\\search.tga", L["vendorCraftShopperSearchAH"], function(self)
+							local rowItem = self.item
+							local itemName, _, rowQuality, _, _, _, _, _, itemEquipLoc, _, _, classID, subclassID = C_Item.GetItemInfo(rowItem.itemID)
+							local qualityFilter = { Enum.AuctionHouseFilter.ExactMatch }
+							local mappedQuality = mapQuality[rowQuality]
+							if mappedQuality then table.insert(qualityFilter, 1, mappedQuality) end
+							if not itemName then return end
+							local query = {
+								searchString = itemName,
+								sorts = {
+									{ sortOrder = Enum.AuctionHouseSortOrder.Name, reverseSort = false },
+									{ sortOrder = Enum.AuctionHouseSortOrder.Price, reverseSort = false },
+								},
+								filters = qualityFilter,
+								itemClassFilters = {
+									classID = classID,
+									subClassID = subclassID,
+									inventoryType = itemEquipLoc,
+								},
+							}
+							C_AuctionHouse.SendBrowseQuery(query)
+							AuctionHouseFrame:Show()
+							AuctionHouseFrame:Raise()
+						end)
+
+						row.buyBtn = CreateCraftShopperIconButton(row, "Interface\\AddOns\\" .. addonName .. "\\Icons\\buy.tga", L["vendorCraftShopperBuyItems"], function(self)
+							if pendingPurchase then return end
+							f:RegisterEvent("COMMODITY_PRICE_UPDATED")
+							f:RegisterEvent("COMMODITY_PURCHASE_FAILED")
+							f:RegisterEvent("AUCTION_HOUSE_SHOW_ERROR")
+							ShowPurchasePopup(self.item, self)
+							C_AuctionHouse.StartCommoditiesPurchase(self.item.itemID, self.item.missing)
+						end)
+
+						row.removeBtn = CreateCraftShopperIconButton(row, "Interface\\AddOns\\" .. addonName .. "\\Icons\\delete.tga", L["vendorCraftShopperHideFromList"], function(self)
+							self.item.hidden = true
+							frame:Refresh()
+						end)
+
+						frame.rows[rowIndex] = row
+					end
+
+					row:SetParent(content)
+					row:ClearAllPoints()
+					row:SetPoint("TOPLEFT", content, "TOPLEFT", 0, -((rowIndex - 1) * rowHeight))
+					row:SetWidth(rowWidth)
+					row.item = item
+					row.itemButton.item = item
+					row.searchBtn.item = item
+					row.buyBtn.item = item
+					row.removeBtn.item = item
+
+					row.itemButton:SetSize(itemWidth, rowHeight)
+					row.itemButton.text:SetFont(normalFont, 14, normalFlags)
 					local color = select(4, C_Item.GetItemQualityColor(quality or 1))
-					label:SetText(("|c%s%s|r"):format(color, name))
-					label:SetFont(normalFont, 14, normalFlags)
-					label:SetCallback("OnEnter", function(widget)
-						GameTooltip:SetOwner(widget.frame, "ANCHOR_RIGHT")
-						GameTooltip:SetItemByID(item.itemID)
-						GameTooltip:Show()
-					end)
-					label:SetRelativeWidth(0.45)
-					label:SetCallback("OnLeave", function() GameTooltip:Hide() end)
-					row:AddChild(label)
+					row.itemButton.text:SetText(("|c%s%s|r"):format(color, name))
 
-					local qty = AceGUI:Create("Label")
-					qty:SetText(("%d"):format(item.missing))
-					qty:SetFont(normalFont, 14, normalFlags)
-					qty:SetRelativeWidth(0.25)
-					row:AddChild(qty)
+					row.qty:ClearAllPoints()
+					row.qty:SetPoint("LEFT", row, "LEFT", itemWidth + 4, 0)
+					row.qty:SetWidth(needWidth)
+					row.qty:SetFont(normalFont, 14, normalFlags)
+					row.qty:SetText(("%d"):format(item.missing))
 
-					local searchBtn = AceGUI:Create("Icon")
-					searchBtn:SetRelativeWidth(0.1)
-					searchBtn:SetImage("Interface\\AddOns\\" .. addonName .. "\\Icons\\search.tga")
-					searchBtn:SetImageSize(20, 20)
-					searchBtn:SetCallback("OnEnter", function(widget)
-						GameTooltip:SetOwner(widget.frame, "ANCHOR_RIGHT")
-						GameTooltip:SetText(L["vendorCraftShopperSearchAH"])
-						GameTooltip:Show()
-					end)
-					searchBtn:SetCallback("OnLeave", function() GameTooltip:Hide() end)
-					searchBtn:SetCallback("OnClick", function()
-						local itemName, _, quality, _, _, _, _, _, itemEquipLoc, _, _, classID, subclassID = C_Item.GetItemInfo(item.itemID)
-						local qualityFilter = { Enum.AuctionHouseFilter.ExactMatch }
-						local mappedQuality = mapQuality[quality]
-						if mappedQuality then table.insert(qualityFilter, 1, mappedQuality) end
-						if not itemName then return end
-						local query = {
-							searchString = itemName,
-							sorts = {
-								{ sortOrder = Enum.AuctionHouseSortOrder.Name, reverseSort = false },
-								{ sortOrder = Enum.AuctionHouseSortOrder.Price, reverseSort = false },
-							},
-							filters = qualityFilter,
-							itemClassFilters = {
-								classID = classID,
-								subClassID = subclassID,
-								inventoryType = itemEquipLoc,
-							},
-						}
-						C_AuctionHouse.SendBrowseQuery(query)
-						AuctionHouseFrame:Show()
-						AuctionHouseFrame:Raise()
-					end)
-					row:AddChild(searchBtn)
-
-					local buy = AceGUI:Create("Icon")
-					buy:SetRelativeWidth(0.1)
-					buy:SetImage("Interface\\AddOns\\" .. addonName .. "\\Icons\\buy.tga")
-					buy:SetImageSize(20, 20)
-					buy:SetCallback("OnEnter", function(widget)
-						GameTooltip:SetOwner(widget.frame, "ANCHOR_RIGHT")
-						GameTooltip:SetText(L["vendorCraftShopperBuyItems"])
-						GameTooltip:Show()
-					end)
-					buy:SetCallback("OnLeave", function() GameTooltip:Hide() end)
-					buy:SetCallback("OnClick", function()
-						if pendingPurchase then return end
-						f:RegisterEvent("COMMODITY_PRICE_UPDATED")
-						f:RegisterEvent("COMMODITY_PURCHASE_FAILED")
-						f:RegisterEvent("AUCTION_HOUSE_SHOW_ERROR")
-						ShowPurchasePopup(item, buy)
-						C_AuctionHouse.StartCommoditiesPurchase(item.itemID, item.missing)
-					end)
-					row:AddChild(buy)
-
-					local remove = AceGUI:Create("Icon")
-					remove:SetRelativeWidth(0.1)
-					remove:SetImage("Interface\\AddOns\\" .. addonName .. "\\Icons\\delete.tga")
-					remove:SetImageSize(20, 20)
-					remove:SetCallback("OnEnter", function(widget)
-						GameTooltip:SetOwner(widget.frame, "ANCHOR_RIGHT")
-						GameTooltip:SetText(L["vendorCraftShopperHideFromList"])
-						GameTooltip:Show()
-					end)
-					remove:SetCallback("OnLeave", function() GameTooltip:Hide() end)
-					remove:SetCallback("OnClick", function()
-						item.hidden = true
-						frame:Refresh()
-					end)
-					row:AddChild(remove)
-
-					scroll:AddChild(row)
+					local iconStart = itemWidth + needWidth + 8
+					row.searchBtn:ClearAllPoints()
+					row.searchBtn:SetPoint("LEFT", row, "LEFT", iconStart, 0)
+					row.buyBtn:ClearAllPoints()
+					row.buyBtn:SetPoint("LEFT", row.searchBtn, "RIGHT", iconGap, 0)
+					row.removeBtn:ClearAllPoints()
+					row.removeBtn:SetPoint("LEFT", row.buyBtn, "RIGHT", iconGap, 0)
+					row.searchBtn:SetSize(iconSize, iconSize)
+					row.buyBtn:SetSize(iconSize, iconSize)
+					row.removeBtn:SetSize(iconSize, iconSize)
+					row:Show()
 				end
 			end
 		end
+
+		content:SetSize(rowWidth, math.max(1, rowIndex * rowHeight))
 	end
 
 	addon.Vendor.CraftShopper.frame = frame
+	frame:SetScript("OnSizeChanged", function(self)
+		if self:IsShown() then self:Refresh() end
+	end)
 	return frame
 end
 
@@ -845,11 +980,13 @@ function ShowCraftShopperFrameIfNeeded()
 	if hasItems then
 		local ui = CreateCraftShopperFrame()
 		SyncCraftShopperQualityControls()
-		ui.frame:ClearAllPoints()
-		ui.frame:SetPoint("TOPLEFT", AuctionHouseFrame, "TOPRIGHT", 5, 0)
-		ui.frame:SetPoint("BOTTOMLEFT", AuctionHouseFrame, "BOTTOMRIGHT", 5, 0)
-		local width = math.max(300, AuctionHouseFrame:GetWidth() * 0.4)
-		ui.frame:SetWidth(width)
+		if not ui.frame.userMoved and not ui.frame.userSized then
+			ui.frame:ClearAllPoints()
+			ui.frame:SetPoint("TOPLEFT", AuctionHouseFrame, "TOPRIGHT", 5, 0)
+			local width = math.max(300, AuctionHouseFrame:GetWidth() * 0.4)
+			local height = math.max(240, AuctionHouseFrame:GetHeight())
+			ui.frame:SetSize(width, height)
+		end
 		ui.ahBuyable:SetValue(true)
 		ui.frame:Show()
 		ui:Refresh()

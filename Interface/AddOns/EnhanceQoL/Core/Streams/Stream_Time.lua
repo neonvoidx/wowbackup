@@ -1,8 +1,7 @@
--- luacheck: globals EnhanceQoL GetGameTime GAMEMENU_OPTIONS FONT_SIZE UIParent TIMEMANAGER_AM TIMEMANAGER_PM C_Timer NORMAL_FONT_COLOR ToggleTimeManager ToggleCalendar
+-- luacheck: globals EnhanceQoL GetGameTime TIMEMANAGER_AM TIMEMANAGER_PM NORMAL_FONT_COLOR ToggleTimeManager ToggleCalendar
 local addonName, addon = ...
 local L = addon.L
 
-local AceGUI = addon.AceGUI
 local db
 local stream
 local timeColorHex
@@ -36,111 +35,10 @@ local function ensureDB()
 	end
 end
 
-local function RestorePosition(frame)
-	if not db then return end
-	if db.point and db.x and db.y then
-		frame:ClearAllPoints()
-		frame:SetPoint(db.point, UIParent, db.point, db.x, db.y)
+local function openSettings()
+	if addon.functions and addon.functions.OpenConfigCenter then
+		addon.functions.OpenConfigCenter("interface.datapanel", "DataPanel_time_fontSize")
 	end
-end
-
-local aceWindow
-local function createAceWindow()
-	if aceWindow then
-		aceWindow:Show()
-		return
-	end
-	ensureDB()
-	local frame = AceGUI:Create("Window")
-	aceWindow = frame.frame
-	frame:SetTitle((addon.DataPanel and addon.DataPanel.GetStreamOptionsTitle and addon.DataPanel.GetStreamOptionsTitle(stream and stream.meta and stream.meta.title)) or GAMEMENU_OPTIONS)
-	frame:SetWidth(320)
-	frame:SetHeight(310)
-	frame:SetLayout("List")
-
-	frame.frame:SetScript("OnShow", function(self) RestorePosition(self) end)
-	frame.frame:SetScript("OnHide", function(self)
-		local point, _, _, xOfs, yOfs = self:GetPoint()
-		db.point = point
-		db.x = xOfs
-		db.y = yOfs
-	end)
-
-	local updateTimer
-	local function scheduleUpdate()
-		if updateTimer then updateTimer:Cancel() end
-		updateTimer = C_Timer.NewTimer(0.05, function()
-			updateTimer = nil
-			if stream then addon.DataHub:RequestUpdate(stream) end
-		end)
-	end
-
-	local fontSize = AceGUI:Create("Slider")
-	fontSize:SetLabel(FONT_SIZE)
-	fontSize:SetSliderValues(8, 32, 1)
-	fontSize:SetValue(db.fontSize)
-	fontSize:SetCallback("OnValueChanged", function(_, _, val)
-		db.fontSize = val
-		scheduleUpdate()
-	end)
-	frame:AddChild(fontSize)
-
-	local display = AceGUI:Create("Dropdown")
-	display:SetLabel(L["Time display"] or "Time display")
-	display:SetList({
-		server = L["Server time"] or "Server time",
-		localTime = L["Local time"] or "Local time",
-		both = L["Server + Local"] or "Server + Local",
-	})
-	display:SetValue(db.displayMode)
-	display:SetCallback("OnValueChanged", function(_, _, key)
-		db.displayMode = key or "server"
-		scheduleUpdate()
-	end)
-	frame:AddChild(display)
-
-	local use24 = AceGUI:Create("CheckBox")
-	use24:SetLabel(L["24-hour format"] or "24-hour format")
-	use24:SetValue(db.use24Hour and true or false)
-	use24:SetCallback("OnValueChanged", function(_, _, val)
-		db.use24Hour = val and true or false
-		scheduleUpdate()
-	end)
-	frame:AddChild(use24)
-
-	local showSeconds = AceGUI:Create("CheckBox")
-	showSeconds:SetLabel(L["Show seconds"] or "Show seconds")
-	showSeconds:SetValue(db.showSeconds and true or false)
-	showSeconds:SetCallback("OnValueChanged", function(_, _, val)
-		db.showSeconds = val and true or false
-		scheduleUpdate()
-	end)
-	frame:AddChild(showSeconds)
-
-	local clickAction = AceGUI:Create("Dropdown")
-	clickAction:SetLabel(L["Left-click action"] or "Left-click action")
-	clickAction:SetList({
-		clock = L["Time left-click opens stopwatch"] or "Open stopwatch",
-		calendar = L["Time left-click opens calendar"] or "Open calendar",
-	})
-	clickAction:SetValue(db.leftClickAction or "clock")
-	clickAction:SetCallback("OnValueChanged", function(_, _, key)
-		db.leftClickAction = (key == "calendar") and "calendar" or "clock"
-		scheduleUpdate()
-	end)
-	frame:AddChild(clickAction)
-
-	local color = AceGUI:Create("ColorPicker")
-	color:SetLabel(L["Time color"] or "Time color")
-	color:SetColor(db.timeColor.r, db.timeColor.g, db.timeColor.b)
-	color:SetCallback("OnValueChanged", function(_, _, r, g, b)
-		db.timeColor = { r = r, g = g, b = b }
-		timeColorHex = nil
-		scheduleUpdate()
-	end)
-	frame:AddChild(color)
-
-	frame.frame:Show()
 end
 
 local function formatTime(h, m, s)
@@ -281,7 +179,7 @@ local provider = {
 	OnClick = function(_, btn)
 		ensureDB()
 		if btn == "RightButton" then
-			createAceWindow()
+			openSettings()
 		elseif btn == "LeftButton" then
 			if getLeftClickAction() == "calendar" then
 				if ToggleCalendar then

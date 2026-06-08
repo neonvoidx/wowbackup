@@ -1,11 +1,9 @@
--- luacheck: globals EnhanceQoL MenuUtil MenuResponse MASTER_VOLUME MUSIC_VOLUME FX_VOLUME AMBIENCE_VOLUME DIALOG_VOLUME AUDIO_OUTPUT_DEVICE GAMEMENU_OPTIONS FONT_SIZE UIParent GameTooltip NORMAL_FONT_COLOR
+-- luacheck: globals EnhanceQoL MenuUtil MenuResponse MASTER_VOLUME MUSIC_VOLUME FX_VOLUME AMBIENCE_VOLUME DIALOG_VOLUME AUDIO_OUTPUT_DEVICE GAMEMENU_OPTIONS GameTooltip NORMAL_FONT_COLOR
 local addonName, addon = ...
 local L = addon.L
 
-local AceGUI = addon.AceGUI
 local db
 local stream
-local aceWindow
 local hoveredButton
 
 local floor = math.floor
@@ -77,72 +75,10 @@ local function ensureDB()
 	end
 end
 
-local function RestorePosition(frame)
-	if db.point and db.x and db.y then
-		frame:ClearAllPoints()
-		frame:SetPoint(db.point, UIParent, db.point, db.x, db.y)
+local function openSettings()
+	if addon.functions and addon.functions.OpenConfigCenter then
+		addon.functions.OpenConfigCenter("interface.datapanel", "DataPanel_volume_fontSize")
 	end
-end
-
-local function createAceWindow()
-	if aceWindow then
-		aceWindow:Show()
-		return
-	end
-	ensureDB()
-	local frame = AceGUI:Create("Window")
-	aceWindow = frame.frame
-	frame:SetTitle((addon.DataPanel and addon.DataPanel.GetStreamOptionsTitle and addon.DataPanel.GetStreamOptionsTitle(stream and stream.meta and stream.meta.title)) or GAMEMENU_OPTIONS)
-	frame:SetWidth(300)
-	frame:SetHeight(200)
-	frame:SetLayout("List")
-
-	frame.frame:SetScript("OnShow", function(self) RestorePosition(self) end)
-	frame.frame:SetScript("OnHide", function(self)
-		local point, _, _, xOfs, yOfs = self:GetPoint()
-		db.point = point
-		db.x = xOfs
-		db.y = yOfs
-	end)
-
-	local fontSize = AceGUI:Create("Slider")
-	fontSize:SetLabel(FONT_SIZE)
-	fontSize:SetSliderValues(8, 32, 1)
-	fontSize:SetValue(db.fontSize)
-	fontSize:SetCallback("OnValueChanged", function(_, _, val)
-		db.fontSize = val
-		addon.DataHub:RequestUpdate(stream)
-	end)
-	frame:AddChild(fontSize)
-
-	local iconOnly = AceGUI:Create("CheckBox")
-	iconOnly:SetLabel(L["volumeIconOnly"] or "Icon only")
-	iconOnly:SetValue(db.iconOnly)
-	iconOnly:SetCallback("OnValueChanged", function(_, _, val)
-		db.iconOnly = val and true or false
-		addon.DataHub:RequestUpdate(stream)
-	end)
-	frame:AddChild(iconOnly)
-
-	local useColor = AceGUI:Create("CheckBox")
-	useColor:SetLabel(L["Use custom text color"] or "Use custom text color")
-	useColor:SetValue(db.useTextColor)
-	useColor:SetCallback("OnValueChanged", function(_, _, val)
-		db.useTextColor = val and true or false
-		addon.DataHub:RequestUpdate(stream)
-	end)
-	frame:AddChild(useColor)
-
-	local textColor = AceGUI:Create("ColorPicker")
-	textColor:SetLabel(L["Text color"] or "Text color")
-	textColor:SetColor(db.textColor.r, db.textColor.g, db.textColor.b)
-	textColor:SetCallback("OnValueChanged", function(_, _, r, g, b)
-		db.textColor = { r = r, g = g, b = b }
-		if db.useTextColor then addon.DataHub:RequestUpdate(stream) end
-	end)
-	frame:AddChild(textColor)
-
-	frame.frame:Show()
 end
 
 local function clampVolume(value)
@@ -307,7 +243,7 @@ local function showMuteMenu(owner)
 		end
 		rootDescription:CreateDivider()
 		rootDescription:CreateButton(GAMEMENU_OPTIONS, function()
-			createAceWindow()
+			openSettings()
 			return MenuResponse and MenuResponse.Close
 		end)
 	end)

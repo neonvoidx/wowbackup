@@ -1,10 +1,8 @@
--- luacheck: globals EnhanceQoL GAMEMENU_OPTIONS MenuResponse MenuUtil ClassTalentHelper PlayerSpellsMicroButton NORMAL_FONT_COLOR strcmputf8i
+-- luacheck: globals EnhanceQoL MenuResponse MenuUtil ClassTalentHelper PlayerSpellsMicroButton NORMAL_FONT_COLOR strcmputf8i
 local addonName, addon = ...
 local L = addon.L
 
-local AceGUI = addon.AceGUI
 local db
-local stream
 local provider
 local TALENTS_PREFIX_DEFAULT = (TALENTS or "Talents") .. ":"
 local floor = math.floor
@@ -39,14 +37,6 @@ local function ensureDB()
 	end
 	if not db.prefixColor then db.prefixColor = { r = 0.75, g = 0.75, b = 0.75 } end
 end
-local function RestorePosition(frame)
-	if db.point and db.x and db.y then
-		frame:ClearAllPoints()
-		frame:SetPoint(db.point, UIParent, db.point, db.x, db.y)
-	end
-end
-
-local aceWindow
 
 local function GetConfigName(configID)
 	if configID then
@@ -134,92 +124,10 @@ local function showLoadoutMenu(owner)
 	end)
 end
 
-local function createAceWindow()
-	if aceWindow then
-		aceWindow:Show()
-		return
+local function openSettings()
+	if addon.functions and addon.functions.OpenConfigCenter then
+		addon.functions.OpenConfigCenter("interface.datapanel", "DataPanel_talent_prefix")
 	end
-	ensureDB()
-	local frame = AceGUI:Create("Window")
-	aceWindow = frame.frame
-	frame:SetTitle((addon.DataPanel and addon.DataPanel.GetStreamOptionsTitle and addon.DataPanel.GetStreamOptionsTitle(stream and stream.meta and stream.meta.title)) or GAMEMENU_OPTIONS)
-	frame:SetWidth(300)
-	frame:SetHeight(340)
-	frame:SetLayout("List")
-
-	frame.frame:SetScript("OnShow", function(self) RestorePosition(self) end)
-	frame.frame:SetScript("OnHide", function(self)
-		local point, _, _, xOfs, yOfs = self:GetPoint()
-		db.point = point
-		db.x = xOfs
-		db.y = yOfs
-	end)
-
-	local prefix = AceGUI:Create("EditBox")
-	prefix:SetLabel(L["Prefix"] or "Prefix")
-	prefix:SetText(db.prefix)
-	prefix:SetCallback("OnEnterPressed", function(_, _, val)
-		db.prefix = val or ""
-		addon.DataHub:RequestUpdate(stream)
-	end)
-	frame:AddChild(prefix)
-
-	local fontSize = AceGUI:Create("Slider")
-	fontSize:SetLabel(FONT_SIZE)
-	fontSize:SetSliderValues(8, 32, 1)
-	fontSize:SetValue(db.fontSize)
-	fontSize:SetCallback("OnValueChanged", function(_, _, val)
-		db.fontSize = val
-		addon.DataHub:RequestUpdate(stream)
-	end)
-	frame:AddChild(fontSize)
-
-	local hide = AceGUI:Create("CheckBox")
-	hide:SetLabel(L["Hide icon"] or "Hide icon")
-	hide:SetValue(db.hideIcon)
-	hide:SetCallback("OnValueChanged", function(_, _, val)
-		db.hideIcon = val and true or false
-		addon.DataHub:RequestUpdate(stream)
-	end)
-	frame:AddChild(hide)
-
-	local useColor = AceGUI:Create("CheckBox")
-	useColor:SetLabel(L["Use custom text color"] or "Use custom text color")
-	useColor:SetValue(db.useTextColor)
-	useColor:SetCallback("OnValueChanged", function(_, _, val)
-		db.useTextColor = val and true or false
-		addon.DataHub:RequestUpdate(stream)
-	end)
-	frame:AddChild(useColor)
-
-	local textColor = AceGUI:Create("ColorPicker")
-	textColor:SetLabel(L["Text color"] or "Text color")
-	textColor:SetColor(db.textColor.r, db.textColor.g, db.textColor.b)
-	textColor:SetCallback("OnValueChanged", function(_, _, r, g, b)
-		db.textColor = { r = r, g = g, b = b }
-		if db.useTextColor then addon.DataHub:RequestUpdate(stream) end
-	end)
-	frame:AddChild(textColor)
-
-	local usePrefixColor = AceGUI:Create("CheckBox")
-	usePrefixColor:SetLabel(L["Talent use prefix color"] or "Use custom prefix color")
-	usePrefixColor:SetValue(db.usePrefixColor)
-	usePrefixColor:SetCallback("OnValueChanged", function(_, _, val)
-		db.usePrefixColor = val and true or false
-		addon.DataHub:RequestUpdate(stream)
-	end)
-	frame:AddChild(usePrefixColor)
-
-	local prefixColor = AceGUI:Create("ColorPicker")
-	prefixColor:SetLabel(L["Talent prefix color"] or "Prefix color")
-	prefixColor:SetColor(db.prefixColor.r, db.prefixColor.g, db.prefixColor.b)
-	prefixColor:SetCallback("OnValueChanged", function(_, _, r, g, b)
-		db.prefixColor = { r = r, g = g, b = b }
-		if db.usePrefixColor then addon.DataHub:RequestUpdate(stream) end
-	end)
-	frame:AddChild(prefixColor)
-
-	frame.frame:Show()
 end
 
 local function colorizeText(text, color)
@@ -279,13 +187,13 @@ provider = {
 	},
 	OnClick = function(button, btn)
 		if btn == "RightButton" then
-			createAceWindow()
+			openSettings()
 		else
 			showLoadoutMenu(button)
 		end
 	end,
 }
 
-stream = EnhanceQoL.DataHub.RegisterStream(provider)
+EnhanceQoL.DataHub.RegisterStream(provider)
 
 return provider

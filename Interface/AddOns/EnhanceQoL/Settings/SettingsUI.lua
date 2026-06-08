@@ -937,7 +937,7 @@ local function registerLegacyControl(category, cbData, controlType, setting)
 		list = cbData.list,
 		optionfunc = cbData.optionfunc,
 		listFunc = cbData.listFunc,
-		orderList = type(cbData.order) == "table" and cbData.order or nil,
+		orderList = cbData.orderList or cbData.listOrder or (type(cbData.order) == "table" and cbData.order or nil),
 		customText = cbData.customText,
 		customDefaultText = cbData.customDefaultText,
 		menuHeight = cbData.menuHeight or cbData.height,
@@ -977,6 +977,17 @@ local function registerLegacyControl(category, cbData, controlType, setting)
 		getDefaultColor = cbData.getDefaultColor,
 		hasOpacity = cbData.hasOpacity,
 		colorizeLabel = cbData.colorizeLabel,
+		addEntry = cbData.addEntry,
+		addButtonText = cbData.addButtonText,
+		addPopupText = cbData.addPopupText,
+		addPopupTitle = cbData.addPopupTitle,
+		emptyText = cbData.emptyText,
+		formatOptions = cbData.formatOptions,
+		formatOrder = cbData.formatOrder,
+		getEntries = cbData.getEntries,
+		moveEntry = cbData.moveEntry,
+		removeEntry = cbData.removeEntry,
+		setEntryFormat = cbData.setEntryFormat,
 		isSelectedFunc = cbData.isSelectedFunc,
 		setSelectedFunc = cbData.setSelectedFunc,
 		getSelection = cbData.getSelection,
@@ -1070,6 +1081,8 @@ local function createChildSetting(cat, parentElement, parentData, childData)
 		addon.functions.SettingsCreateColorPicker(cat, childData)
 	elseif sType == "button" then
 		addon.functions.SettingsCreateButton(cat, childData)
+	elseif sType == "reorderlist" then
+		addon.functions.SettingsCreateReorderList(cat, childData)
 	elseif sType == "sounddropdown" then
 		addon.functions.SettingsCreateSoundDropdown(cat, childData)
 	end
@@ -1355,7 +1368,26 @@ function addon.functions.SettingsCreateButton(cat, cbData)
 	return btn
 end
 
+function addon.functions.SettingsCreateReorderList(cat, cbData)
+	local key = cbData.var or cbData.id or cbData.text
+	addon.SettingsLayout = addon.SettingsLayout or {}
+	addon.SettingsLayout.elements = addon.SettingsLayout.elements or {}
+	addon.SettingsLayout.elements[key] = { initializer = nil, modernOnly = true }
+	registerLegacyControl(cat, cbData, "reorderlist", nil)
+	return nil
+end
+
 function addon.functions.SettingsCreateColorPicker(cat, cbData)
+	if type(cbData.getColor) == "function" and type(cbData.setColor) == "function" then
+		local key = cbData.var or cbData.id or cbData.text
+		cbData.entries = cbData.entries or { { key = key, label = cbData.text, tooltip = cbData.tooltip } }
+		addon.SettingsLayout = addon.SettingsLayout or {}
+		addon.SettingsLayout.elements = addon.SettingsLayout.elements or {}
+		addon.SettingsLayout.elements[key] = { initializer = nil, modernOnly = true }
+		registerLegacyControl(cat, cbData, "colorpicker", nil)
+		return nil
+	end
+
 	local entries = { { key = cbData.var, label = cbData.text, tooltip = cbData.tooltip } }
 	local function getColor(_)
 		local db = addon.db[cbData.var]

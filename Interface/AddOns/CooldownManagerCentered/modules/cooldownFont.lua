@@ -18,7 +18,7 @@ local viewersSettingKey = {
 
 local function GetFontPath(fontName)
     if not fontName or fontName == "" then
-        return ns.CONSTANTS.DEFAULT_FONT_PATH
+        return nil
     end
     if LSM then
         local fontPath = LSM:Fetch("font", fontName)
@@ -26,25 +26,18 @@ local function GetFontPath(fontName)
             return fontPath
         end
     end
-    return ns.CONSTANTS.DEFAULT_FONT_PATH
+    return nil
 end
 
-local function GetDefaultFontPathForViewer(viewerName)
-    if viewerName == "BuffIconCooldownViewer" then
-        return ns.CONSTANTS.FONT.BUFF_ICON_DEFAULT_COOLDOWN_FONT_PATH
-    elseif viewerName == "EssentialCooldownViewer" then
-        return ns.CONSTANTS.FONT.ESSENTIAL_ICON_DEFAULT_COOLDOWN_FONT_PATH
-    elseif viewerName == "UtilityCooldownViewer" then
-        return ns.CONSTANTS.FONT.UTILITY_ICON_DEFAULT_COOLDOWN_FONT_PATH
+local function GetConfiguredFontPath(fontName, viewerName, defaults)
+    local fontPath = GetFontPath(fontName)
+    if fontPath then
+        return fontPath
+    end
+    if defaults and defaults[1] then
+        return defaults[1]
     end
     return ns.CONSTANTS.DEFAULT_FONT_PATH
-end
-
-local function GetConfiguredFontPath(fontName, viewerName)
-    if fontName and fontName ~= "" then
-        return GetFontPath(fontName)
-    end
-    return GetDefaultFontPathForViewer(viewerName)
 end
 
 -- Cooldown number font
@@ -89,7 +82,11 @@ local function SetIconCooldownFont(icon, viewerName)
         end
         local size, enabled, _size = GetViewerCooldownSettings(viewerName)
         if not enabled then
-            fontString:SetFont(GetDefaultFontPathForViewer(viewerName), _size, "OUTLINE")
+            if fontString.defaults then
+                fontString:SetFont(unpack(fontString.defaults))
+            else
+                fontString:SetFont(ns.CONSTANTS.DEFAULT_FONT_PATH, _size, "OUTLINE")
+            end
             return
         end
         if size == "NIL" then
@@ -104,7 +101,11 @@ local function SetIconCooldownFont(icon, viewerName)
         end
 
         local fontName = ns.db.profile.cooldownManager_cooldownFontName
-        local fontPath = GetConfiguredFontPath(fontName, viewerName)
+        if not fontString.defaults then
+            local fp, fsz, ffl = fontString:GetFont()
+            fontString.defaults = { fp, fsz, ffl or "" }
+        end
+        local fontPath = GetConfiguredFontPath(fontName, viewerName, fontString.defaults)
         local fontFlags = ns.db.profile.cooldownManager_cooldownFontFlags or {}
         local fontFlag = {}
         for n, v in pairs(fontFlags) do
@@ -199,15 +200,14 @@ local function ApplyStackFont(fontString, size, viewerName)
     if not fontString then
         return
     end
-    local fontName = ns.db and ns.db.profile and ns.db.profile.cooldownManager_stackFontName
-    local fontPath = GetConfiguredFontPath(fontName, viewerName)
-    if viewerName == "BuffIconCooldownViewer" and (not fontName or fontName == "") then
-        fontPath = ns.CONSTANTS.FONT.BUFF_ICON_DEFAULT_STACK_FONT_PATH
-    elseif viewerName == "EssentialCooldownViewer" and (not fontName or fontName == "") then
-        fontPath = ns.CONSTANTS.FONT.ESSENTIAL_ICON_DEFAULT_STACK_FONT_PATH
-    elseif viewerName == "UtilityCooldownViewer" and (not fontName or fontName == "") then
-        fontPath = ns.CONSTANTS.FONT.UTILITY_ICON_DEFAULT_STACK_FONT_PATH
+    if not fontString.defaults then
+        local fp, fsz, ffl = fontString:GetFont()
+        fontString.defaults = { fp, fsz, ffl or "" }
     end
+
+    local fontName = ns.db and ns.db.profile and ns.db.profile.cooldownManager_stackFontName
+    local fontPath = GetConfiguredFontPath(fontName, viewerName, fontString.defaults)
+
     local fontFlags = ns.db.profile.cooldownManager_stackFontFlags or {}
     local fontFlag = {}
     for n, v in pairs(fontFlags) do
@@ -220,16 +220,9 @@ local function ApplyStackFont(fontString, size, viewerName)
         return
     end
     if not size or size == "NIL" then
-        if viewerName == "BuffIconCooldownViewer" then
-            size = select(2, fontString:GetFont()) or BUFF_ICON_DEFAULT_STACK_FONT_SIZE
-        elseif viewerName == "EssentialCooldownViewer" then
-            size = select(2, fontString:GetFont()) or ESSENTIAL_ICON_DEFAULT_STACK_FONT_SIZE
-        elseif viewerName == "UtilityCooldownViewer" then
-            size = select(2, fontString:GetFont()) or UTILITY_ICON_DEFAULT_STACK_FONT_SIZE
-        else
-            size = select(2, fontString:GetFont()) or BUFF_ICON_DEFAULT_STACK_FONT_SIZE
-        end
+        size = fontString.defaults[2] or 14
     end
+
     fontString:SetFont(fontPath, size, table.concat(fontFlag, ","))
 end
 
@@ -246,7 +239,11 @@ function Stacks:RestoreStackPositions(viewerName)
         if fs and child._cmc_affected and child._cmc_affected.stack then
             fs:ClearAllPoints()
             fs:SetPoint(stackPoint, child, stackPoint, stackX, stackY)
-            fs:SetFont(ns.CONSTANTS.DEFAULT_STACK_FONT_PATH, fontSize, "OUTLINE")
+            if fs.defaults then
+                fs:SetFont(unpack(fs.defaults))
+            else
+                fs:SetFont(ns.CONSTANTS.DEFAULT_STACK_FONT_PATH, fontSize, "OUTLINE")
+            end
         end
     end
 end

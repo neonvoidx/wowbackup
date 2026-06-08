@@ -1334,6 +1334,7 @@ local function getState(btn)
 		renderHashByStyle = {},
 		groupContainers = {},
 		groupButtons = {},
+		groupBars = {},
 		groupStyleCache = {},
 		changedFamilies = {},
 		changedRules = {},
@@ -1425,6 +1426,7 @@ local function ensureVisualLayers(btn, st, forceLayout)
 		barTex:SetHorizTile(false)
 		barTex:SetVertTile(false)
 	end
+	st.healerBuffBar:Hide()
 
 	if not st.healerBuffBorder then
 		st.healerBuffBorder = CreateFrame("Frame", nil, root, "BackdropTemplate")
@@ -1438,6 +1440,42 @@ local function ensureVisualLayers(btn, st, forceLayout)
 	if layoutChanged then st._hbHealerBuffLayoutRevision = (st._hbHealerBuffLayoutRevision or 0) + 1 end
 
 	return root
+end
+
+local function ensureBarForGroup(state, st, groupId)
+	if not (state and st and st.healerBuffRoot and groupId) then return nil end
+	local bars = state.groupBars
+	if not bars then
+		bars = {}
+		state.groupBars = bars
+	end
+	local bar = bars[groupId]
+	if not bar then
+		bar = CreateFrame("StatusBar", nil, st.healerBuffRoot)
+		bar:EnableMouse(false)
+		if Pixel and Pixel.SetStatusBarTexture then
+			Pixel.SetStatusBarTexture(bar, "Interface\\Buttons\\WHITE8x8")
+		else
+			bar:SetStatusBarTexture("Interface\\Buttons\\WHITE8x8")
+		end
+		bar:SetMinMaxValues(0, 1)
+		if Pixel and Pixel.SetStatusBarValue then
+			Pixel.SetStatusBarValue(bar, 1, false, true)
+		else
+			bar:SetValue(1)
+		end
+		bar:Hide()
+		bars[groupId] = bar
+	end
+	setFrameParentCached(bar, st.healerBuffRoot)
+	if bar.SetFrameStrata and st.healerBuffRoot.GetFrameStrata then setFrameStrataCached(bar, st.healerBuffRoot:GetFrameStrata()) end
+	if bar.SetFrameLevel and st.healerBuffRoot.GetFrameLevel then setFrameLevelCached(bar, (st.healerBuffRoot:GetFrameLevel() or 0) + 3) end
+	local barTex = bar.GetStatusBarTexture and bar:GetStatusBarTexture()
+	if barTex then
+		barTex:SetHorizTile(false)
+		barTex:SetVertTile(false)
+	end
+	return bar
 end
 
 local function ensureVisualLayersForUpdate(btn, st)
@@ -1523,6 +1561,14 @@ local function hideAllVisuals(btn, st, state)
 	if st.healerBuffBar then
 		clearAnimatedBarState(st.healerBuffBar)
 		st.healerBuffBar:Hide()
+	end
+	if state and state.groupBars then
+		for _, bar in pairs(state.groupBars) do
+			if bar then
+				clearAnimatedBarState(bar)
+				bar:Hide()
+			end
+		end
 	end
 	if st.healerBuffBorder then st.healerBuffBorder:Hide() end
 	local tintChanged = clearHealthTint(st)
@@ -2477,8 +2523,7 @@ local function getStyleAnchoredOffsets(root, group, inset)
 	return roundToPixel(x or 0, scale), roundToPixel(y or 0, scale)
 end
 
-local function renderBar(st, group, trackedAura, colorRule)
-	local bar = st.healerBuffBar
+local function renderBar(bar, st, group, trackedAura, colorRule)
 	if not bar then return end
 	if not group then
 		clearAnimatedBarState(bar)
@@ -2639,6 +2684,44 @@ local function renderTint(btn, st, group, colorRule)
 	if changed and btn and UF and UF.GroupFrames and UF.GroupFrames.UpdateHealthStyle then UF.GroupFrames:UpdateHealthStyle(btn) end
 end
 
+local function hideUnusedBars(state, activeBars, renderHashes)
+	for groupId, bar in pairs(state.groupBars or EMPTY) do
+		if not activeBars[groupId] then
+			clearAnimatedBarState(bar)
+			bar:Hide()
+			if renderHashes then renderHashes[groupId] = nil end
+		end
+	end
+end
+
+local function renderBarGroups(st, state, compiled, layoutRevision, renderHashes)
+	local activeBars = {}
+	for i = 1, #compiled.groupOrder do
+		local groupId = compiled.groupOrder[i]
+		local group = compiled.groupsById[groupId]
+		if group and group.style == STYLE_BAR and state.groupActive[groupId] then
+			activeBars[groupId] = true
+			local bar = ensureBarForGroup(state, st, groupId)
+			local barTrackedAura, barTrackedRuleId, barTrackedFamilyId
+			local barColorRule, barColorRuleId = getPriorityActiveRuleForGroup(state, compiled, groupId)
+			if group.barDrainAnimation == true then barTrackedAura, barTrackedRuleId, barTrackedFamilyId = getTrackedAuraForBarGroup(state, compiled, groupId) end
+			local renderState = renderHashes[groupId]
+			if not renderState then
+				renderState = {}
+				renderHashes[groupId] = renderState
+			end
+			if didBarRenderStateChange(renderState, group, groupId, layoutRevision, barTrackedAura, barTrackedRuleId, barTrackedFamilyId, barColorRule, barColorRuleId) then
+				renderBar(bar, st, group, barTrackedAura, barColorRule)
+			end
+		end
+	end
+	hideUnusedBars(state, activeBars, renderHashes)
+	if st.healerBuffBar and st.healerBuffBar:IsShown() then
+		clearAnimatedBarState(st.healerBuffBar)
+		st.healerBuffBar:Hide()
+	end
+end
+
 local function renderAll(btn, st, state, compiled, cfg, changedFamilies)
 	local renderHash = state.renderHashByStyle
 	renderHash[STYLE_ICON] = renderHash[STYLE_ICON] or {}
@@ -2666,20 +2749,12 @@ local function renderAll(btn, st, state, compiled, cfg, changedFamilies)
 	end
 	hideUnusedGroupContainers(state, activeContainers)
 
-	local barGroup, barGroupId = winnerForStyle(compiled, state.groupActive, STYLE_BAR)
 	local borderGroup, borderGroupId = winnerForStyle(compiled, state.groupActive, STYLE_BORDER)
 	local tintGroup, tintGroupId = winnerForStyle(compiled, state.groupActive, STYLE_TINT)
-	local barTrackedAura, barTrackedRuleId, barTrackedFamilyId
-	local barColorRule, barColorRuleId = getPriorityActiveRuleForGroup(state, compiled, barGroupId)
 	local borderColorRule, borderColorRuleId = getPriorityActiveRuleForGroup(state, compiled, borderGroupId)
 	local tintColorRule, tintColorRuleId = getPriorityActiveRuleForGroup(state, compiled, tintGroupId)
-	if barGroup and barGroupId and barGroup.barDrainAnimation == true then
-		barTrackedAura, barTrackedRuleId, barTrackedFamilyId = getTrackedAuraForBarGroup(state, compiled, barGroupId)
-	end
 
-	if didBarRenderStateChange(renderHash[STYLE_BAR], barGroup, barGroupId, layoutRevision, barTrackedAura, barTrackedRuleId, barTrackedFamilyId, barColorRule, barColorRuleId) then
-		renderBar(st, barGroup, barTrackedAura, barColorRule)
-	end
+	renderBarGroups(st, state, compiled, layoutRevision, renderHash[STYLE_BAR])
 
 	if didBorderRenderStateChange(renderHash[STYLE_BORDER], borderGroup, borderGroupId, layoutRevision, borderColorRule, borderColorRuleId) then renderBorder(st, borderGroup, borderColorRule) end
 

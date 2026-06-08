@@ -142,6 +142,13 @@ local function buildSettings()
 		addon.SettingsLayout.gameplayTalentReminderSection = sectionTalent
 	end
 
+	function addon.MythicPlus.functions.refreshTalentReminderSettings()
+		local frame = addon.ConfigCenterFrame
+		if not (frame and frame.IsShown and frame:IsShown()) then return end
+		local state = frame._LibEQOLConfigState
+		if state and state.RenderContent then state:RenderContent() end
+	end
+
 	addon.MythicPlus.functions.getAllLoadouts()
 	if #addon.MythicPlus.variables.seasonMapInfo == 0 then addon.MythicPlus.functions.createSeasonInfo() end
 
@@ -328,6 +335,7 @@ local function buildSettings()
 			func = function()
 				addon.MythicPlus.functions.getAllLoadouts()
 				addon.MythicPlus.functions.checkRemovedLoadout()
+				addon.MythicPlus.functions.refreshTalentReminderSettings()
 			end,
 			parent = true,
 			element = talentEnable.element,

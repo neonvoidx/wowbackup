@@ -1528,6 +1528,7 @@ local function applyNameplateMobColor(unitFrame)
 
 	local unit = unitFrame.unit
 	if not isNameplateUnitToken(unit) then return end
+	if isPlayerControlledNameplateUnit(unit) then return end
 
 	updateNameplateMobColorContext()
 	local threatStatus = getNameplateThreatStatus(unitFrame)

@@ -1,12 +1,12 @@
--- luacheck: globals EnhanceQoL GAMEMENU_OPTIONS C_CurrencyInfo ITEM_QUALITY_COLORS HIGHLIGHT_FONT_COLOR_CODE RED_FONT_COLOR_CODE FONT_COLOR_CODE_CLOSE CURRENCY_SEASON_TOTAL_MAXIMUM CURRENCY_SEASON_TOTAL CURRENCY_TOTAL CURRENCY_TOTAL_CAP BreakUpLargeNumbers NORMAL_FONT_COLOR
+-- luacheck: globals EnhanceQoL C_CurrencyInfo ITEM_QUALITY_COLORS HIGHLIGHT_FONT_COLOR_CODE RED_FONT_COLOR_CODE FONT_COLOR_CODE_CLOSE CURRENCY_SEASON_TOTAL_MAXIMUM CURRENCY_SEASON_TOTAL CURRENCY_TOTAL CURRENCY_TOTAL_CAP BreakUpLargeNumbers NORMAL_FONT_COLOR
 local addonName, addon = ...
 local L = addon.L
 
-local AceGUI = addon.AceGUI
 local db
 local stream
 local tracked = {}
 local trackedDirty = true
+local displayIDs = {}
 
 local abs = math.abs
 local floor = math.floor
@@ -15,25 +15,23 @@ local format = string.format
 
 local MAX_DECIMALS = 3
 local SHORT_SUFFIXES = { "K", "M", "B", "T", "P", "E" }
-local FORMAT_RULES = {
-	full = { mode = "full", decimals = 0 },
-	short0 = { mode = "short", decimals = 0 },
-	short1 = { mode = "short", decimals = 1 },
-	short2 = { mode = "short", decimals = 2 },
-	short3 = { mode = "short", decimals = 3 },
-}
-local FORMAT_LABELS = {
-	full = L["CurrencyFormatFull"] or "Full (13,343)",
-	short0 = L["CurrencyFormatShort0"] or "Short (13k)",
-	short1 = L["CurrencyFormatShort1"] or "Short (13.3k)",
-	short2 = L["CurrencyFormatShort2"] or "Short (13.34k)",
-	short3 = L["CurrencyFormatShort3"] or "Short (13.343k)",
-}
-local FORMAT_ORDER = { "full", "short0", "short1", "short2", "short3" }
 local EMPTY_TRACKING_TEXT = L["No currency tracking"] or "No currency tracking"
 
 local checkCurrencies
 local updateCurrency
+local fullUpdate
+
+local function markTrackedDirty()
+	trackedDirty = true
+end
+
+addon.DataPanelCurrency = addon.DataPanelCurrency or {}
+addon.DataPanelCurrency.MarkTrackedDirty = markTrackedDirty
+addon.DataPanelCurrency.RequestFullUpdate = function()
+	markTrackedDirty()
+	fullUpdate(stream)
+end
+
 local function getOptionsHint()
 	if addon.DataPanel and addon.DataPanel.GetOptionsHintText then
 		local text = addon.DataPanel.GetOptionsHintText()
@@ -48,7 +46,7 @@ local function publish(s)
 	if s then addon.DataHub:Publish(s, s.snapshot) end
 end
 
-local function fullUpdate(s)
+fullUpdate = function(s)
 	s = s or stream
 	if not s then return end
 	checkCurrencies(s)
@@ -60,7 +58,7 @@ local function rebuildTracked()
 	for k in pairs(tracked) do
 		tracked[k] = nil
 	end
-	for _, id in ipairs(db.ids) do
+	for _, id in ipairs(displayIDs) do
 		tracked[id] = true
 	end
 	trackedDirty = false
@@ -76,6 +74,7 @@ local function ensureDB()
 	db.tooltipPerCurrency = db.tooltipPerCurrency or false
 	if db.showDescription == nil then db.showDescription = true end
 	if db.useTextColor == nil then db.useTextColor = false end
+	if db.includeBlizzardTracked == nil then db.includeBlizzardTracked = false end
 	if not db.textColor then
 		local r, g, b = 1, 0.82, 0
 		if NORMAL_FONT_COLOR and NORMAL_FONT_COLOR.GetRGB then
@@ -84,6 +83,35 @@ local function ensureDB()
 		db.textColor = { r = r, g = g, b = b }
 	end
 	if trackedDirty then rebuildTracked() end
+end
+
+local function addDisplayID(id, seen)
+	id = tonumber(id)
+	if not id or id <= 0 or seen[id] then return end
+	displayIDs[#displayIDs + 1] = id
+	seen[id] = true
+end
+
+local function addBlizzardTrackedCurrencies(seen)
+	if not (db and db.includeBlizzardTracked and C_CurrencyInfo and C_CurrencyInfo.GetCurrencyListSize and C_CurrencyInfo.GetCurrencyListInfo) then return end
+	local currencyCount = tonumber(C_CurrencyInfo.GetCurrencyListSize()) or 0
+	for index = 1, currencyCount do
+		local info = C_CurrencyInfo.GetCurrencyListInfo(index)
+		local id = info and (info.currencyTypesID or info.currencyID or info.id)
+		if id and info.isShowInBackpack then addDisplayID(id, seen) end
+	end
+end
+
+local function rebuildDisplayIDs()
+	for index = #displayIDs, 1, -1 do
+		displayIDs[index] = nil
+	end
+	local seen = {}
+	for _, id in ipairs(db.ids or {}) do addDisplayID(id, seen) end
+	addBlizzardTrackedCurrencies(seen)
+	markTrackedDirty()
+	rebuildTracked()
+	return displayIDs
 end
 
 local function clampDecimals(value)
@@ -102,26 +130,6 @@ local function getCurrencyOptions(id)
 	opts.mode = opts.mode == "short" and "short" or "full"
 	opts.decimals = clampDecimals(opts.decimals)
 	return opts
-end
-
-local function getFormatKey(opts)
-	if opts.mode == "short" then
-		local dec = clampDecimals(opts.decimals)
-		if dec < 0 then
-			dec = 0
-		elseif dec > MAX_DECIMALS then
-			dec = MAX_DECIMALS
-		end
-		return "short" .. dec
-	end
-	return "full"
-end
-
-local function applyFormatChoice(opts, key)
-	local choice = FORMAT_RULES[key]
-	if not choice then return end
-	opts.mode = choice.mode
-	opts.decimals = clampDecimals(choice.decimals)
 end
 
 local function trimDecimals(text)
@@ -174,187 +182,10 @@ local function formatCurrencyAmount(id, amount)
 	return tostring(amount)
 end
 
-local aceWindowWidget -- AceGUI widget
-local listContainer
-
-local function renderList()
-	if not listContainer then return end
-	listContainer:ReleaseChildren()
-
-	for i, id in ipairs(db.ids) do
-		local idx = i -- wichtig: stabiles Capturing pro Zeile
-		local info = C_CurrencyInfo.GetCurrencyInfo(id)
-		local name = info and info.name or ("ID %d"):format(id)
-		local options = getCurrencyOptions(id)
-
-		local row = addon.functions.createContainer("SimpleGroup", "Flow")
-
-		local label = AceGUI:Create("Label")
-		label:SetText(("%s (%d)"):format(name, id))
-		label:SetWidth(160)
-		row:AddChild(label)
-
-		local formatDropdown = AceGUI:Create("Dropdown")
-		formatDropdown:SetList(FORMAT_LABELS, FORMAT_ORDER)
-		formatDropdown:SetValue(getFormatKey(options))
-		formatDropdown:SetWidth(150)
-		formatDropdown:SetCallback("OnValueChanged", function(_, _, key)
-			applyFormatChoice(options, key)
-			formatDropdown:SetValue(getFormatKey(options))
-			fullUpdate()
-		end)
-		row:AddChild(formatDropdown)
-
-		if idx > 1 then
-			local up = AceGUI:Create("Icon")
-			up:SetImage("Interface\\Buttons\\UI-ScrollBar-ScrollUpButton-Up") -- TODO replace placeholder
-			up:SetImageSize(16, 16)
-			up:SetWidth(30)
-			up:SetCallback("OnClick", function()
-				db.ids[idx], db.ids[idx - 1] = db.ids[idx - 1], db.ids[idx]
-				renderList()
-				fullUpdate()
-			end)
-			row:AddChild(up)
-		else
-			local spacer = AceGUI:Create("Label")
-			spacer:SetWidth(30)
-			row:AddChild(spacer)
-		end
-
-		if idx < #db.ids then
-			local down = AceGUI:Create("Icon")
-			down:SetImage("Interface\\Buttons\\UI-ScrollBar-ScrollDownButton-Up") -- TODO replace placeholder
-			down:SetImageSize(16, 16)
-			down:SetWidth(30)
-			down:SetCallback("OnClick", function()
-				db.ids[idx], db.ids[idx + 1] = db.ids[idx + 1], db.ids[idx]
-				renderList()
-				fullUpdate()
-			end)
-			row:AddChild(down)
-		else
-			local spacer = AceGUI:Create("Label")
-			spacer:SetWidth(30)
-			row:AddChild(spacer)
-		end
-
-		local remove = AceGUI:Create("Icon")
-		remove:SetImage("Interface\\Buttons\\UI-GroupLoot-Pass-Up") -- TODO replace placeholder
-		remove:SetImageSize(16, 16)
-		remove:SetWidth(30)
-		remove:SetCallback("OnClick", function()
-			table.remove(db.ids, idx)
-			db.currencyOptions[id] = nil
-			rebuildTracked()
-			renderList()
-			fullUpdate()
-		end)
-		row:AddChild(remove)
-
-		listContainer:AddChild(row)
+local function openSettings()
+	if addon.functions and addon.functions.OpenConfigCenter then
+		addon.functions.OpenConfigCenter("interface.datapanel", "DataPanel_currency_fontSize")
 	end
-end
-
-local function createAceWindow()
-	if aceWindowWidget then
-		aceWindowWidget:Show()
-		return
-	end
-	ensureDB()
-	local frame = AceGUI:Create("Window")
-	aceWindowWidget = frame
-	frame:SetTitle((addon.DataPanel and addon.DataPanel.GetStreamOptionsTitle and addon.DataPanel.GetStreamOptionsTitle(stream and stream.meta and stream.meta.title)) or GAMEMENU_OPTIONS)
-	frame:SetWidth(280)
-	frame:SetHeight(380)
-	frame:SetLayout("List")
-
-	db._windowStatus = db._windowStatus or {}
-	frame:SetStatusTable(db._windowStatus)
-	frame:SetCallback("OnClose", function(widget)
-		AceGUI:Release(widget)
-		aceWindowWidget = nil
-		listContainer = nil
-	end)
-
-	local fontSize = AceGUI:Create("Slider")
-	fontSize:SetLabel(FONT_SIZE)
-	fontSize:SetSliderValues(8, 32, 1)
-	fontSize:SetValue(db.fontSize)
-	fontSize:SetCallback("OnValueChanged", function(_, _, val)
-		db.fontSize = val
-		fullUpdate()
-	end)
-	frame:AddChild(fontSize)
-
-	local perTip = AceGUI:Create("CheckBox")
-	perTip:SetLabel(L["Per-currency tooltips"] or "Per-currency tooltips")
-	perTip:SetValue(db.tooltipPerCurrency)
-	perTip:SetCallback("OnValueChanged", function(_, _, val)
-		db.tooltipPerCurrency = val and true or false
-		fullUpdate()
-	end)
-	frame:AddChild(perTip)
-
-	local showDesc = AceGUI:Create("CheckBox")
-	showDesc:SetLabel(L["Show description in tooltip"] or "Show description in tooltip")
-	showDesc:SetValue(db.showDescription)
-	showDesc:SetCallback("OnValueChanged", function(_, _, val)
-		db.showDescription = val and true or false
-		fullUpdate()
-	end)
-	frame:AddChild(showDesc)
-
-	local useColor = AceGUI:Create("CheckBox")
-	useColor:SetLabel(L["Use custom text color"] or "Use custom text color")
-	useColor:SetValue(db.useTextColor)
-	useColor:SetCallback("OnValueChanged", function(_, _, val)
-		db.useTextColor = val and true or false
-		fullUpdate()
-	end)
-	frame:AddChild(useColor)
-
-	local textColor = AceGUI:Create("ColorPicker")
-	textColor:SetLabel(L["Text color"] or "Text color")
-	textColor:SetColor(db.textColor.r, db.textColor.g, db.textColor.b)
-	textColor:SetCallback("OnValueChanged", function(_, _, r, g, b)
-		db.textColor = { r = r, g = g, b = b }
-		if db.useTextColor then fullUpdate() end
-	end)
-	frame:AddChild(textColor)
-
-	local addGroup = addon.functions.createContainer("SimpleGroup", "Flow")
-	local addBox = AceGUI:Create("EditBox")
-	addBox:SetLabel(L["Currency ID"] or "Currency ID")
-	addBox:SetWidth(150)
-	addGroup:AddChild(addBox)
-	local addBtn = AceGUI:Create("Button")
-	addBtn:SetText(ADD)
-	addBtn:SetWidth(60)
-	addBtn:SetCallback("OnClick", function()
-		local id = tonumber(addBox:GetText())
-		if id then
-			for _, existing in ipairs(db.ids) do
-				if existing == id then
-					addBox:SetText("")
-					return
-				end
-			end
-			table.insert(db.ids, id)
-			rebuildTracked()
-			addBox:SetText("")
-			renderList()
-			fullUpdate()
-		end
-	end)
-	addGroup:AddChild(addBtn)
-	frame:AddChild(addGroup)
-
-	listContainer = addon.functions.createContainer("SimpleGroup", "List")
-	frame:AddChild(listContainer)
-	renderList()
-
-	frame:Show()
 end
 
 local function colorToCode(color)
@@ -419,6 +250,7 @@ end
 checkCurrencies = function(s)
 	s = s or stream
 	ensureDB()
+	rebuildDisplayIDs()
 	local size = db.fontSize or 14
 	local parts = {}
 	for k in pairs(idToIndex) do
@@ -427,7 +259,7 @@ checkCurrencies = function(s)
 	for k in pairs(tooltipParts) do
 		tooltipParts[k] = nil
 	end
-	for _, id in ipairs(db.ids) do
+	for _, id in ipairs(displayIDs) do
 		local info = C_CurrencyInfo.GetCurrencyInfo(id)
 		if info then
 			if not iconCache[id] and info.iconFileID then iconCache[id] = info.iconFileID end
@@ -532,11 +364,15 @@ local provider = {
 	events = {
 		PLAYER_LOGIN = function(s) fullUpdate(s) end,
 		CURRENCY_DISPLAY_UPDATE = function(s, _, currencyType)
-			if tracked[currencyType] then updateCurrency(s, currencyType) end
+			if db and db.includeBlizzardTracked then
+				fullUpdate(s)
+			elseif tracked[currencyType] then
+				updateCurrency(s, currencyType)
+			end
 		end,
 	},
 	OnClick = function(_, btn)
-		if btn == "RightButton" then createAceWindow() end
+		if btn == "RightButton" then openSettings() end
 	end,
 }
 

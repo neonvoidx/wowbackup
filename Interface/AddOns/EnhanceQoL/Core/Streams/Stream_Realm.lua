@@ -1,12 +1,10 @@
--- luacheck: globals EnhanceQoL GetRealmName GAMEMENU_OPTIONS FONT_SIZE UIParent NORMAL_FONT_COLOR
+-- luacheck: globals EnhanceQoL GetRealmName NORMAL_FONT_COLOR
 local addonName, addon = ...
 local L = addon.L
 
-local AceGUI = addon.AceGUI
 local db
 local cachedRealm
 local stream
-local aceWindow
 
 local function getOptionsHint()
 	if addon.DataPanel and addon.DataPanel.GetOptionsHintText then
@@ -31,54 +29,10 @@ local function ensureDB()
 	end
 end
 
-local function RestorePosition(frame)
-	if db and db.point and db.x and db.y then
-		frame:ClearAllPoints()
-		frame:SetPoint(db.point, UIParent, db.point, db.x, db.y)
+local function openSettings()
+	if addon.functions and addon.functions.OpenConfigCenter then
+		addon.functions.OpenConfigCenter("interface.datapanel", "DataPanel_realm_fontSize")
 	end
-end
-
-local function createAceWindow()
-	if aceWindow then
-		aceWindow:Show()
-		return
-	end
-	ensureDB()
-	local frame = AceGUI:Create("Window")
-	aceWindow = frame.frame
-	frame:SetTitle((addon.DataPanel and addon.DataPanel.GetStreamOptionsTitle and addon.DataPanel.GetStreamOptionsTitle(stream and stream.meta and stream.meta.title)) or GAMEMENU_OPTIONS)
-	frame:SetWidth(300)
-	frame:SetHeight(200)
-	frame:SetLayout("List")
-
-	frame.frame:SetScript("OnShow", function(self) RestorePosition(self) end)
-	frame.frame:SetScript("OnHide", function(self)
-		local point, _, _, xOfs, yOfs = self:GetPoint()
-		db.point = point
-		db.x = xOfs
-		db.y = yOfs
-	end)
-
-	local fontSize = AceGUI:Create("Slider")
-	fontSize:SetLabel(FONT_SIZE)
-	fontSize:SetSliderValues(8, 32, 1)
-	fontSize:SetValue(db.fontSize)
-	fontSize:SetCallback("OnValueChanged", function(_, _, val)
-		db.fontSize = val
-		addon.DataHub:RequestUpdate(stream)
-	end)
-	frame:AddChild(fontSize)
-
-	local textColor = AceGUI:Create("ColorPicker")
-	textColor:SetLabel(L["Text color"] or "Text color")
-	textColor:SetColor(db.textColor.r, db.textColor.g, db.textColor.b)
-	textColor:SetCallback("OnValueChanged", function(_, _, r, g, b)
-		db.textColor = { r = r, g = g, b = b }
-		addon.DataHub:RequestUpdate(stream)
-	end)
-	frame:AddChild(textColor)
-
-	frame.frame:Show()
 end
 
 local function getRealm()
@@ -112,7 +66,7 @@ local provider = {
 		PLAYER_LOGIN = function(s) addon.DataHub:RequestUpdate(s) end,
 	},
 	OnClick = function(_, btn)
-		if btn == "RightButton" then createAceWindow() end
+		if btn == "RightButton" then openSettings() end
 	end,
 }
 

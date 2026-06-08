@@ -5094,12 +5094,28 @@ local function createOverlaysPage(parent)
 	page.ScrollFrame = scrollFrame
 	page.Content = content
 
+	page.ShowCraftedQuality = createInlineCheckbox(
+		content,
+		L["settingsShowCraftedQuality"] or "Show crafted quality",
+		L["settingsShowCraftedQualityTooltip"] or "Shows Blizzard's crafted quality icon on crafted equipment when available.",
+		function(value)
+			if addon.SetShowCraftedQuality then
+				addon.SetShowCraftedQuality(value)
+			else
+				getSettings().showCraftedQuality = value == true
+			end
+			requestBagRefresh(false, true)
+		end
+	)
+	page.ShowCraftedQuality:SetPoint("TOPLEFT", content, "TOPLEFT", 4, 0)
+	page.ShowCraftedQuality:SetChecked(addon.GetShowCraftedQuality and addon.GetShowCraftedQuality() or getSettings().showCraftedQuality == true)
+
 	page.Cards = {}
 	local previousCard
 	for index, definition in ipairs(getOverlayElements()) do
 		local card = createOverlayAnchorCard(content, definition)
 		if index == 1 then
-			card:SetPoint("TOPLEFT", content, "TOPLEFT", 0, 0)
+			card:SetPoint("TOPLEFT", page.ShowCraftedQuality, "BOTTOMLEFT", -4, -12)
 		else
 			card:SetPoint("TOPLEFT", previousCard, "BOTTOMLEFT", 0, -12)
 		end
@@ -5110,7 +5126,7 @@ local function createOverlaysPage(parent)
 
 	local contentHeight = 1
 	if previousCard then
-		contentHeight = 12
+		contentHeight = 46
 		for _, card in ipairs(page.Cards) do
 			updateOverlayCardLayout(card)
 			contentHeight = contentHeight + card:GetHeight() + 12
@@ -5126,9 +5142,13 @@ refreshOverlaysPage = function(page)
 		return
 	end
 
+	if page.ShowCraftedQuality then
+		page.ShowCraftedQuality:SetChecked(addon.GetShowCraftedQuality and addon.GetShowCraftedQuality() or getSettings().showCraftedQuality == true)
+	end
+
 	local contentHeight = 1
 	if #(page.Cards or {}) > 0 then
-		contentHeight = 12
+		contentHeight = 46
 		for _, card in ipairs(page.Cards or {}) do
 			updateOverlayCardLayout(card)
 			refreshOverlayCard(card)

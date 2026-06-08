@@ -1,10 +1,8 @@
--- luacheck: globals EnhanceQoL UnitClass UnitExists UnitIsDeadOrGhost C_SpecializationInfo GetSpecializationInfo NORMAL_FONT_COLOR GAMEMENU_OPTIONS FONT_SIZE UIParent GetTime UnitOnTaxi UnitInVehicle UnitHasVehicleUI IsMounted C_SpellBook C_Timer C_Spell GetSpellTexture IsResting IsFlying IsPlayerSpell InCombatLockdown UnitAffectingCombat C_UnitAuras AuraUtil
+-- luacheck: globals EnhanceQoL UnitClass UnitExists UnitIsDeadOrGhost C_SpecializationInfo GetSpecializationInfo NORMAL_FONT_COLOR GetTime UnitOnTaxi UnitInVehicle UnitHasVehicleUI IsMounted C_SpellBook C_Timer C_Spell GetSpellTexture IsResting IsFlying IsPlayerSpell InCombatLockdown UnitAffectingCombat C_UnitAuras AuraUtil
 local addonName, addon = ...
 local L = addon.L
 
-local AceGUI = addon.AceGUI
 local db
-local stream
 local blinkStartAt
 local blinkTicker
 local blinkTickInterval
@@ -40,14 +38,6 @@ local PET_CLASSES = {
 	HUNTER = true,
 	WARLOCK = true,
 }
-
-local LAYOUT_LABELS = {
-	inline = L["petTrackerLayoutInline"] or "Icon left of text",
-	textAbove = L["petTrackerLayoutTextAbove"] or "Text above icon",
-	textBelow = L["petTrackerLayoutTextBelow"] or "Text below icon",
-}
-
-local LAYOUT_ORDER = { "inline", "textAbove", "textBelow" }
 
 local function getOptionsHint()
 	if addon.DataPanel and addon.DataPanel.GetOptionsHintText then
@@ -104,131 +94,15 @@ local function isWarlockSacrificePetReminderSuppressed()
 	return false
 end
 
-local function RestorePosition(frame)
-	if not db then return end
-	if db.point and db.x and db.y then
-		frame:ClearAllPoints()
-		frame:SetPoint(db.point, UIParent, db.point, db.x, db.y)
+local function openSettings()
+	if addon.functions and addon.functions.OpenConfigCenter then
+		addon.functions.OpenConfigCenter("interface.datapanel", "DataPanel_pettracker_fontSize")
 	end
 end
 
-local aceWindow
-local function createAceWindow()
-	if aceWindow then
-		aceWindow:Show()
-		return
-	end
-	ensureDB()
-	local frame = AceGUI:Create("Window")
-	aceWindow = frame.frame
-	frame:SetTitle((addon.DataPanel and addon.DataPanel.GetStreamOptionsTitle and addon.DataPanel.GetStreamOptionsTitle(stream and stream.meta and stream.meta.title)) or GAMEMENU_OPTIONS)
-	frame:SetWidth(320)
-	frame:SetHeight(370)
-	frame:SetLayout("List")
-
-	frame.frame:SetScript("OnShow", function(self) RestorePosition(self) end)
-	frame.frame:SetScript("OnHide", function(self)
-		local point, _, _, xOfs, yOfs = self:GetPoint()
-		db.point = point
-		db.x = xOfs
-		db.y = yOfs
-	end)
-
-	local fontSize = AceGUI:Create("Slider")
-	fontSize:SetLabel(FONT_SIZE)
-	fontSize:SetSliderValues(8, 120, 1)
-	fontSize:SetValue(db.fontSize)
-	fontSize:SetCallback("OnValueChanged", function(_, _, val)
-		db.fontSize = val
-		addon.DataHub:RequestUpdate(stream)
-	end)
-	frame:AddChild(fontSize)
-
-	local textColor = AceGUI:Create("ColorPicker")
-	textColor:SetLabel(L["Text color"] or "Text color")
-	textColor:SetColor(db.textColor.r, db.textColor.g, db.textColor.b)
-	textColor:SetCallback("OnValueChanged", function(_, _, r, g, b)
-		db.textColor = { r = r, g = g, b = b }
-		addon.DataHub:RequestUpdate(stream)
-	end)
-	frame:AddChild(textColor)
-
-	local showIcon = AceGUI:Create("CheckBox")
-	showIcon:SetLabel(L["Show icon"] or "Show icon")
-	showIcon:SetValue(db.showIcon and true or false)
-	frame:AddChild(showIcon)
-
-	local layout = AceGUI:Create("Dropdown")
-	layout:SetLabel(L["petTrackerLayout"] or "Reminder layout")
-	layout:SetList(LAYOUT_LABELS, LAYOUT_ORDER)
-	layout:SetValue(db.layoutMode or "inline")
-	layout:SetDisabled(not db.showIcon)
-	layout:SetCallback("OnValueChanged", function(_, _, key)
-		db.layoutMode = (key == "textAbove" or key == "textBelow") and key or "inline"
-		addon.DataHub:RequestUpdate(stream)
-	end)
-	frame:AddChild(layout)
-
-	local hideWhileRested = AceGUI:Create("CheckBox")
-	hideWhileRested:SetLabel(L["petTrackerHideWhileRested"] or "Hide while rested")
-	hideWhileRested:SetValue(db.hideWhileRested and true or false)
-	hideWhileRested:SetCallback("OnValueChanged", function(_, _, val)
-		db.hideWhileRested = val and true or false
-		addon.DataHub:RequestUpdate(stream)
-	end)
-	frame:AddChild(hideWhileRested)
-
-	local ignorePetPassive = AceGUI:Create("CheckBox")
-	ignorePetPassive:SetLabel(L["ClassBuffReminderIgnorePetPassive"] or "Ignore passive pet stance")
-	ignorePetPassive:SetValue(shouldIgnorePetPassiveReminder())
-	ignorePetPassive:SetCallback("OnValueChanged", function(_, _, val)
-		if addon.db then addon.db[DB_IGNORE_PET_PASSIVE] = val and true or false end
-		if addon.ClassBuffReminder and addon.ClassBuffReminder.RequestUpdate then addon.ClassBuffReminder:RequestUpdate(true, 0, true) end
-		addon.DataHub:RequestUpdate(stream)
-	end)
-	frame:AddChild(ignorePetPassive)
-
-	local ignorePetDefensive = AceGUI:Create("CheckBox")
-	ignorePetDefensive:SetLabel(L["ClassBuffReminderIgnorePetDefensive"] or "Ignore defensive pet stance")
-	ignorePetDefensive:SetValue(shouldIgnorePetDefensiveReminder())
-	ignorePetDefensive:SetCallback("OnValueChanged", function(_, _, val)
-		if addon.db then addon.db[DB_IGNORE_PET_DEFENSIVE] = val and true or false end
-		if addon.ClassBuffReminder and addon.ClassBuffReminder.RequestUpdate then addon.ClassBuffReminder:RequestUpdate(true, 0, true) end
-		addon.DataHub:RequestUpdate(stream)
-	end)
-	frame:AddChild(ignorePetDefensive)
-
-	local blinkToggle = AceGUI:Create("CheckBox")
-	blinkToggle:SetLabel(L["Blink"] or "Blink")
-	blinkToggle:SetValue(db.blinkEnabled and true or false)
-	frame:AddChild(blinkToggle)
-
-	local blinkRate = AceGUI:Create("Slider")
-	blinkRate:SetLabel(L["Blink rate (s)"] or "Blink rate (s)")
-	blinkRate:SetSliderValues(0.2, 2.0, 0.05)
-	blinkRate:SetValue(db.blinkRate)
-	blinkRate:SetDisabled(not db.blinkEnabled)
-	blinkRate:SetCallback("OnValueChanged", function(_, _, val)
-		db.blinkRate = val
-		blinkStartAt = nil
-		addon.DataHub:RequestUpdate(stream)
-	end)
-	frame:AddChild(blinkRate)
-
-	blinkToggle:SetCallback("OnValueChanged", function(_, _, val)
-		db.blinkEnabled = val and true or false
-		blinkRate:SetDisabled(not db.blinkEnabled)
-		blinkStartAt = nil
-		addon.DataHub:RequestUpdate(stream)
-	end)
-
-	showIcon:SetCallback("OnValueChanged", function(_, _, val)
-		db.showIcon = val and true or false
-		layout:SetDisabled(not db.showIcon)
-		addon.DataHub:RequestUpdate(stream)
-	end)
-
-	frame.frame:Show()
+addon.PetTrackerOptions = addon.PetTrackerOptions or {}
+addon.PetTrackerOptions.ResetBlink = function()
+	blinkStartAt = nil
 end
 
 local function isPetExpected()
@@ -519,7 +393,7 @@ local provider = {
 	poll = 1.0,
 	update = update,
 	OnClick = function(_, btn)
-		if btn == "RightButton" then createAceWindow() end
+		if btn == "RightButton" then openSettings() end
 	end,
 	events = {
 		PLAYER_ENTERING_WORLD = function(s) addon.DataHub:RequestUpdate(s) end,
@@ -543,6 +417,6 @@ local provider = {
 	},
 }
 
-stream = EnhanceQoL.DataHub.RegisterStream(provider)
+EnhanceQoL.DataHub.RegisterStream(provider)
 
 return provider

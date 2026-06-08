@@ -123,6 +123,11 @@ local function createSeasonInfo()
 	table.sort(addon.MythicPlus.variables.seasonMapInfo, function(a, b) return a.name < b.name end)
 end
 
+local function refreshTalentReminderSettings()
+	local refresh = addon.MythicPlus.functions.refreshTalentReminderSettings
+	if type(refresh) == "function" then refresh() end
+end
+
 local function getTalentReminderSetting(specSettings, mapID)
 	if type(specSettings) ~= "table" or mapID == nil then return nil, nil, mapID end
 	if specSettings[mapID] ~= nil then return specSettings[mapID], mapID, mapID end
@@ -659,12 +664,14 @@ local eventHandlers = {
 		checkLoadout()
 		addon.MythicPlus.functions.checkRemovedLoadout()
 		updateActiveTalentText()
+		refreshTalentReminderSettings()
 	end,
 	["TRAIT_CONFIG_DELETED"] = function(arg1)
 		addon.MythicPlus.functions.getAllLoadouts()
 		checkLoadout()
 		addon.MythicPlus.functions.checkRemovedLoadout()
 		updateActiveTalentText()
+		refreshTalentReminderSettings()
 	end,
 	["TRAIT_CONFIG_UPDATED"] = function()
 		C_Timer.After(0.2, function()
@@ -672,6 +679,7 @@ local eventHandlers = {
 			checkLoadout()
 			addon.MythicPlus.functions.checkRemovedLoadout()
 			updateActiveTalentText()
+			refreshTalentReminderSettings()
 		end)
 	end,
 	["READY_CHECK"] = function()
@@ -696,6 +704,7 @@ local eventHandlers = {
 				addon.MythicPlus.functions.checkRemovedLoadout()
 				checkLoadout()
 				updateActiveTalentText()
+				refreshTalentReminderSettings()
 				frameLoad:UnregisterEvent("PLAYER_ENTERING_WORLD")
 			end)
 		end

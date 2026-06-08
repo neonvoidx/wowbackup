@@ -1,7 +1,7 @@
 ## Interface: 120005, 120007
 ## Title: Enhance QoL Core
 ## Author: R41Z0R
-## Version: 11.0.2
+## Version: 11.0.4
 ## IconTexture: Interface\AddOns\EnhanceQoL\Icons\Icon.tga
 ## Category: Quality of Life
 ## X-Category: Quality of Life
@@ -34,7 +34,6 @@ NewSettingsTable.lua
 libs\CallbackHandler-1.0\CallbackHandler-1.0.lua
 libs\LibDataBroker-1.1\LibDataBroker-1.1.lua
 libs\LibDBIcon-1.0\lib.xml
-libs\AceGUI-3.0\AceGUI-3.0.xml
 libs\LibDeflate\lib.xml
 libs\LibSharedMedia-3.0\lib.xml
 libs\LibOpenKeystone\LibOpenKeystone.lua

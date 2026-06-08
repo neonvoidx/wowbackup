@@ -1,8 +1,7 @@
--- luacheck: globals EnhanceQoL UIParent GAMEMENU_OPTIONS FONT_SIZE C_Timer InCombatLockdown UnitExists UnitAffectingCombat
+-- luacheck: globals EnhanceQoL InCombatLockdown UnitExists UnitAffectingCombat
 local addonName, addon = ...
 local L = addon.L
 
-local AceGUI = addon.AceGUI
 local db
 local stream
 
@@ -32,95 +31,10 @@ local function ensureDB()
 	if db.bossOnTop == nil then db.bossOnTop = false end
 end
 
-local function RestorePosition(frame)
-	if not db then return end
-	if db.point and db.x and db.y then
-		frame:ClearAllPoints()
-		frame:SetPoint(db.point, UIParent, db.point, db.x, db.y)
+local function openSettings()
+	if addon.functions and addon.functions.OpenConfigCenter then
+		addon.functions.OpenConfigCenter("interface.datapanel", "DataPanel_combatTime_fontSize")
 	end
-end
-
-local aceWindow
-local function createAceWindow()
-	if aceWindow then
-		aceWindow:Show()
-		return
-	end
-	ensureDB()
-	local frame = AceGUI:Create("Window")
-	aceWindow = frame.frame
-	frame:SetTitle((addon.DataPanel and addon.DataPanel.GetStreamOptionsTitle and addon.DataPanel.GetStreamOptionsTitle(stream and stream.meta and stream.meta.title)) or GAMEMENU_OPTIONS)
-	frame:SetWidth(300)
-	frame:SetHeight(250)
-	frame:SetLayout("List")
-
-	frame.frame:SetScript("OnShow", function(self) RestorePosition(self) end)
-	frame.frame:SetScript("OnHide", function(self)
-		local point, _, _, xOfs, yOfs = self:GetPoint()
-		db.point = point
-		db.x = xOfs
-		db.y = yOfs
-	end)
-
-	local updateTimer
-	local function scheduleUpdate()
-		if updateTimer then updateTimer:Cancel() end
-		updateTimer = C_Timer.NewTimer(0.05, function()
-			updateTimer = nil
-			if stream then addon.DataHub:RequestUpdate(stream) end
-		end)
-	end
-
-	local fontSize = AceGUI:Create("Slider")
-	fontSize:SetLabel(FONT_SIZE)
-	fontSize:SetSliderValues(8, 32, 1)
-	fontSize:SetValue(db.fontSize)
-	fontSize:SetCallback("OnValueChanged", function(_, _, val)
-		db.fontSize = val
-		scheduleUpdate()
-	end)
-	frame:AddChild(fontSize)
-
-	local showBoss = AceGUI:Create("CheckBox")
-	showBoss:SetLabel(L["combatTimeShowBoss"] or "Show boss timer")
-	showBoss:SetValue(db.showBoss and true or false)
-	showBoss:SetCallback("OnValueChanged", function(_, _, val)
-		db.showBoss = val and true or false
-		scheduleUpdate()
-	end)
-	frame:AddChild(showBoss)
-
-	local showLabels = AceGUI:Create("CheckBox")
-	showLabels:SetLabel(L["combatTimeShowLabels"] or "Show labels")
-	showLabels:SetValue(db.showLabels and true or false)
-	showLabels:SetCallback("OnValueChanged", function(_, _, val)
-		db.showLabels = val and true or false
-		scheduleUpdate()
-	end)
-	frame:AddChild(showLabels)
-
-	local bossOnTop
-	local stacked = AceGUI:Create("CheckBox")
-	stacked:SetLabel(L["combatTimeStacked"] or "Stack timers")
-	stacked:SetValue(db.stack and true or false)
-	stacked:SetCallback("OnValueChanged", function(_, _, val)
-		db.stack = val and true or false
-		if bossOnTop then bossOnTop:SetDisabled(not db.stack) end
-		scheduleUpdate()
-	end)
-	frame:AddChild(stacked)
-
-	bossOnTop = AceGUI:Create("CheckBox")
-	bossOnTop:SetLabel(L["combatTimeBossOnTop"] or "Boss timer on top")
-	bossOnTop:SetValue(db.bossOnTop and true or false)
-	bossOnTop:SetDisabled(not db.stack)
-	bossOnTop:SetCallback("OnValueChanged", function(_, _, val)
-		db.bossOnTop = val and true or false
-		scheduleUpdate()
-	end)
-	frame:AddChild(bossOnTop)
-
-	frame.frame:Show()
 end
 
 local floor = math.floor
@@ -208,7 +122,7 @@ local function updateCombatTime(s)
 	local bossElapsedNow = bossElapsed or 0
 	if bossActive and bossStart then bossElapsedNow = GetTime() - bossStart end
 
-	local showBossLine = (db.showBoss and bossActive) or editModeActive
+	local showBossLine = db.showBoss and (bossActive or editModeActive)
 	if editModeActive then
 		if not combatActive then combatElapsed = 123 end
 		if not bossActive then bossElapsedNow = 47 end
@@ -295,7 +209,7 @@ local provider = {
 		end,
 	},
 	OnClick = function(_, btn)
-		if btn == "RightButton" then createAceWindow() end
+		if btn == "RightButton" then openSettings() end
 	end,
 }
 

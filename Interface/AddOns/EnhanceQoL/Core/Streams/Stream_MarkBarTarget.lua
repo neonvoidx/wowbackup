@@ -78,7 +78,7 @@ end
 
 local function openOptions()
 	if options and options.Show then
-		options.Show()
+		options.Show("DataPanel_markbar_showTargets")
 	end
 end
 

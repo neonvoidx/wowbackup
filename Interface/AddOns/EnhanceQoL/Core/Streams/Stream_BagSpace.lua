@@ -1,8 +1,7 @@
--- luacheck: globals EnhanceQoL GAMEMENU_OPTIONS FONT_SIZE UIParent NORMAL_FONT_COLOR C_Timer Enum C_Container GetContainerNumSlots GetContainerNumFreeSlots
+-- luacheck: globals EnhanceQoL NORMAL_FONT_COLOR Enum C_Container GetContainerNumSlots GetContainerNumFreeSlots
 local addonName, addon = ...
 local L = addon.L
 
-local AceGUI = addon.AceGUI
 local db
 local stream
 
@@ -32,97 +31,10 @@ local function ensureDB()
 	end
 end
 
-local function RestorePosition(frame)
-	if not db then return end
-	if db.point and db.x and db.y then
-		frame:ClearAllPoints()
-		frame:SetPoint(db.point, UIParent, db.point, db.x, db.y)
+local function openSettings()
+	if addon.functions and addon.functions.OpenConfigCenter then
+		addon.functions.OpenConfigCenter("interface.datapanel", "DataPanel_bagspace_fontSize")
 	end
-end
-
-local aceWindow
-local function createAceWindow()
-	if aceWindow then
-		aceWindow:Show()
-		return
-	end
-	ensureDB()
-	local frame = AceGUI:Create("Window")
-	aceWindow = frame.frame
-	frame:SetTitle((addon.DataPanel and addon.DataPanel.GetStreamOptionsTitle and addon.DataPanel.GetStreamOptionsTitle(stream and stream.meta and stream.meta.title)) or GAMEMENU_OPTIONS)
-	frame:SetWidth(320)
-	frame:SetHeight(300)
-	frame:SetLayout("List")
-
-	frame.frame:SetScript("OnShow", function(self) RestorePosition(self) end)
-	frame.frame:SetScript("OnHide", function(self)
-		local point, _, _, xOfs, yOfs = self:GetPoint()
-		db.point = point
-		db.x = xOfs
-		db.y = yOfs
-	end)
-
-	local updateTimer
-	local function scheduleUpdate()
-		if updateTimer then updateTimer:Cancel() end
-		updateTimer = C_Timer.NewTimer(0.05, function()
-			updateTimer = nil
-			if stream then addon.DataHub:RequestUpdate(stream) end
-		end)
-	end
-
-	local fontSize = AceGUI:Create("Slider")
-	fontSize:SetLabel(FONT_SIZE)
-	fontSize:SetSliderValues(8, 32, 1)
-	fontSize:SetValue(db.fontSize)
-	fontSize:SetCallback("OnValueChanged", function(_, _, val)
-		db.fontSize = val
-		scheduleUpdate()
-	end)
-	frame:AddChild(fontSize)
-
-	local display = AceGUI:Create("Dropdown")
-	display:SetLabel(L["bagSpaceDisplay"] or "Bag space display")
-	display:SetList({
-		freeMax = L["bagSpaceDisplayFreeMax"] or "Free/Max",
-		currentMax = L["Current/Max"] or "Current/Max",
-		free = L["bagSpaceDisplayFree"] or "Free",
-	})
-	display:SetValue(db.displayMode)
-	display:SetCallback("OnValueChanged", function(_, _, key)
-		db.displayMode = key or "freeMax"
-		scheduleUpdate()
-	end)
-	frame:AddChild(display)
-
-	local ignoreComponentsBag = AceGUI:Create("CheckBox")
-	ignoreComponentsBag:SetLabel(L["bagSpaceIgnoreComponentsBag"] or "Ignore components bag")
-	ignoreComponentsBag:SetValue(db.ignoreComponentsBag)
-	ignoreComponentsBag:SetCallback("OnValueChanged", function(_, _, val)
-		db.ignoreComponentsBag = val and true or false
-		scheduleUpdate()
-	end)
-	frame:AddChild(ignoreComponentsBag)
-
-	local hideIcon = AceGUI:Create("CheckBox")
-	hideIcon:SetLabel(L["Hide icon"] or "Hide icon")
-	hideIcon:SetValue(db.hideIcon)
-	hideIcon:SetCallback("OnValueChanged", function(_, _, val)
-		db.hideIcon = val and true or false
-		scheduleUpdate()
-	end)
-	frame:AddChild(hideIcon)
-
-	local textColor = AceGUI:Create("ColorPicker")
-	textColor:SetLabel(L["Text color"] or "Text color")
-	textColor:SetColor(db.textColor.r, db.textColor.g, db.textColor.b)
-	textColor:SetCallback("OnValueChanged", function(_, _, r, g, b)
-		db.textColor = { r = r, g = g, b = b }
-		scheduleUpdate()
-	end)
-	frame:AddChild(textColor)
-
-	frame.frame:Show()
 end
 
 local floor = math.floor
@@ -198,7 +110,7 @@ local provider = {
 		PLAYER_LOGIN = function(s) addon.DataHub:RequestUpdate(s) end,
 	},
 	OnClick = function(_, btn)
-		if btn == "RightButton" then createAceWindow() end
+		if btn == "RightButton" then openSettings() end
 	end,
 }
 

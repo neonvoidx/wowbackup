@@ -11,9 +11,7 @@ local addonName, addon = ...
 local LDB = LibStub("LibDataBroker-1.1")
 local LDBIcon = LibStub("LibDBIcon-1.0")
 local LSM = LibStub("LibSharedMedia-3.0", true)
-local AceGUI = LibStub("AceGUI-3.0")
 
-addon.AceGUI = AceGUI
 local L = LibStub("AceLocale-3.0"):GetLocale("EnhanceQoL")
 
 addon.functions = addon.functions or {}

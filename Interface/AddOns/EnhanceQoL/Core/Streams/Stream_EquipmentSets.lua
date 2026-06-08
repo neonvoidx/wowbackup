@@ -1,14 +1,11 @@
--- luacheck: globals EnhanceQoL MenuUtil MenuResponse C_EquipmentSet UnitCastingInfo UIErrorsFrame ERR_CLIENT_LOCKED_OUT EQUIPMENT_SETS GameTooltip UNKNOWN GAMEMENU_OPTIONS FONT_SIZE UIParent NORMAL_FONT_COLOR RAID_CLASS_COLORS CUSTOM_CLASS_COLORS UnitClass
+-- luacheck: globals EnhanceQoL MenuUtil MenuResponse C_EquipmentSet UnitCastingInfo UIErrorsFrame ERR_CLIENT_LOCKED_OUT EQUIPMENT_SETS GameTooltip UNKNOWN NORMAL_FONT_COLOR RAID_CLASS_COLORS CUSTOM_CLASS_COLORS UnitClass
 local addonName, addon = ...
 local L = addon.L
 
-local AceGUI = addon.AceGUI
 local format = string.format
 
 local sets = {}
 local db
-local stream
-local aceWindow
 
 local function getOptionsHint()
 	if addon.DataPanel and addon.DataPanel.GetOptionsHintText then
@@ -32,6 +29,12 @@ local function ensureDB()
 			r, g, b = NORMAL_FONT_COLOR:GetRGB()
 		end
 		db.textColor = { r = r, g = g, b = b }
+	end
+end
+
+local function openSettings()
+	if addon.functions and addon.functions.OpenConfigCenter then
+		addon.functions.OpenConfigCenter("interface.datapanel", "DataPanel_equipmentsets_fontSize")
 	end
 end
 
@@ -149,72 +152,6 @@ local function showSetMenu(owner)
 	end)
 end
 
-local function restorePosition(frame)
-	if db and db.point and db.x and db.y then
-		frame:ClearAllPoints()
-		frame:SetPoint(db.point, UIParent, db.point, db.x, db.y)
-	end
-end
-
-local function createAceWindow()
-	if aceWindow then
-		aceWindow:Show()
-		return
-	end
-	ensureDB()
-	local frame = AceGUI:Create("Window")
-	aceWindow = frame.frame
-	frame:SetWidth(320)
-	frame:SetHeight(260)
-	frame:SetLayout("List")
-	frame:SetTitle((addon.DataPanel and addon.DataPanel.GetStreamOptionsTitle and addon.DataPanel.GetStreamOptionsTitle(stream and stream.meta and stream.meta.title)) or GAMEMENU_OPTIONS)
-
-	frame.frame:SetScript("OnShow", function(self) restorePosition(self) end)
-	frame.frame:SetScript("OnHide", function(self)
-		local point, _, _, xOfs, yOfs = self:GetPoint()
-		db.point = point
-		db.x = xOfs
-		db.y = yOfs
-	end)
-
-	local fontSize = AceGUI:Create("Slider")
-	fontSize:SetLabel(FONT_SIZE)
-	fontSize:SetSliderValues(8, 32, 1)
-	fontSize:SetValue(db.fontSize or 14)
-	fontSize:SetCallback("OnValueChanged", function(_, _, val)
-		db.fontSize = val
-		if stream then addon.DataHub:RequestUpdate(stream) end
-	end)
-	frame:AddChild(fontSize)
-
-	local useClassColor = AceGUI:Create("CheckBox")
-	useClassColor:SetLabel(L["DataPanelUseClassTextColor"] or "Use class text color")
-	useClassColor:SetValue(db.useClassColor and true or false)
-	useClassColor:SetCallback("OnValueChanged", function(_, _, val)
-		db.useClassColor = val and true or false
-		if stream then addon.DataHub:RequestUpdate(stream) end
-	end)
-	frame:AddChild(useClassColor)
-
-	local useTextColor = AceGUI:Create("CheckBox")
-	useTextColor:SetLabel(L["Use custom text color"] or "Use custom text color")
-	useTextColor:SetValue(db.useTextColor and true or false)
-	useTextColor:SetCallback("OnValueChanged", function(_, _, val)
-		db.useTextColor = val and true or false
-		if stream then addon.DataHub:RequestUpdate(stream) end
-	end)
-	frame:AddChild(useTextColor)
-
-	local textColor = AceGUI:Create("ColorPicker")
-	textColor:SetLabel(L["Text color"] or "Text color")
-	textColor:SetColor(db.textColor.r, db.textColor.g, db.textColor.b)
-	textColor:SetCallback("OnValueChanged", function(_, _, r, g, b)
-		db.textColor = { r = r, g = g, b = b }
-		if stream and db.useTextColor and not db.useClassColor then addon.DataHub:RequestUpdate(stream) end
-	end)
-	frame:AddChild(textColor)
-end
-
 local function showTooltip(btn)
 	local tip = GameTooltip
 	tip:ClearLines()
@@ -270,12 +207,12 @@ local provider = {
 		if btn == "LeftButton" then
 			showSetMenu(button)
 		elseif btn == "RightButton" then
-			createAceWindow()
+			openSettings()
 		end
 	end,
 	OnMouseEnter = function(btn) showTooltip(btn) end,
 }
 
-stream = EnhanceQoL.DataHub.RegisterStream(provider)
+EnhanceQoL.DataHub.RegisterStream(provider)
 
 return provider

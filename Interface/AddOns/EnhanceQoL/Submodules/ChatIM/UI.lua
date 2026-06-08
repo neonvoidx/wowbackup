@@ -1,4 +1,4 @@
--- luacheck: globals CENSORED_MESSAGE_HIDDEN CENSORED_MESSAGE_REPORT
+-- luacheck: globals CENSORED_MESSAGE_HIDDEN CENSORED_MESSAGE_REPORT PanelTemplates_TabResize FCFTab_UpdateColors
 local parentAddonName = "EnhanceQoL"
 local addonName, addon = ...
 if _G[parentAddonName] then
@@ -7,7 +7,6 @@ else
 	error(parentAddonName .. " is not loaded")
 end
 
-local AceGUI = addon.AceGUI
 local L = LibStub("AceLocale-3.0"):GetLocale("EnhanceQoL")
 local canaccessvalue = _G.canaccessvalue
 
@@ -169,7 +168,6 @@ StaticPopupDialogs["EQOL_LINK_WARNING"] = {
 }
 
 ChatIM.storage = ChatIM.storage or CreateFrame("Frame")
-ChatIM.activeGroup = nil
 ChatIM.activeTab = nil
 ChatIM.insertLinkHooked = ChatIM.insertLinkHooked or false
 ChatIM.hooksSet = ChatIM.hooksSet or false
@@ -274,39 +272,227 @@ local function saveChatIMFrameData(widgetFrame)
 	if left then status.left = left end
 end
 
+local function positionNativeWindow(frame)
+	local status = ensureChatIMFrameData()
+	frame:ClearAllPoints()
+	if type(status.left) == "number" and type(status.top) == "number" then
+		frame:SetPoint("TOPLEFT", UIParent, "BOTTOMLEFT", status.left, status.top)
+	else
+		frame:SetPoint("CENTER", UIParent, "CENTER", 0, 0)
+	end
+	frame:SetSize(status.width or 400, status.height or 300)
+end
+
+local function anchorFrameToCurrentScreenPosition(frame)
+	if not frame or not UIParent or not frame.GetLeft or not frame.GetTop then return end
+	local left = frame:GetLeft()
+	local top = frame:GetTop()
+	if not left or not top then return end
+
+	local frameScale = frame.GetEffectiveScale and frame:GetEffectiveScale() or 1
+	local parentScale = UIParent.GetEffectiveScale and UIParent:GetEffectiveScale() or 1
+	if frameScale <= 0 then frameScale = 1 end
+	if parentScale <= 0 then parentScale = 1 end
+
+	frame:ClearAllPoints()
+	frame:SetPoint("TOPLEFT", UIParent, "BOTTOMLEFT", left * frameScale / parentScale, top * frameScale / parentScale)
+end
+
+local function getButtonTextWidth(button)
+	local fontString = button and button.GetFontString and button:GetFontString()
+	return fontString and fontString:GetStringWidth() or 0
+end
+
+local function setNativeTabWidth(button)
+	local width = math.max(72, math.min(150, getButtonTextWidth(button) + 26))
+	if PanelTemplates_TabResize and button.Left and button.Right and button.Middle then
+		button.textWidth = getButtonTextWidth(button)
+		PanelTemplates_TabResize(button, button.sizePadding or 0, nil, 72, 150, button.textWidth)
+	else
+		button:SetWidth(width)
+	end
+end
+
+local function updateChatIMTabColor(button, selected)
+	if FCFTab_UpdateColors and button.ActiveLeft and button.ActiveMiddle and button.ActiveRight then
+		FCFTab_UpdateColors(button, selected)
+	elseif button.SetButtonState then
+		button:SetButtonState(selected and "PUSHED" or "NORMAL", selected)
+	end
+	button:SetAlpha(selected and 1 or 0.75)
+end
+
+local function createChatIMTabButton(parent)
+	local button = CreateFrame("Button", nil, parent, "ChatTabArtTemplate")
+	button:SetHeight(32)
+	button:RegisterForClicks("LeftButtonUp", "RightButtonUp")
+
+	local text = button:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+	text:SetPoint("CENTER", button, "CENTER", 0, -5)
+	text:SetJustifyH("CENTER")
+	button.Text = text
+	button:SetFontString(text)
+	if button.glow then button.glow:Hide() end
+	updateChatIMTabColor(button, false)
+	return button
+end
+
+local function createNativeWindow()
+	local frame = CreateFrame("Frame", "EnhanceQoLChatIMFrame", UIParent, "BackdropTemplate")
+	frame:SetSize(400, 300)
+	frame:SetClampedToScreen(true)
+	frame:SetMovable(true)
+	frame:SetResizable(true)
+	if frame.SetResizeBounds then
+		frame:SetResizeBounds(280, 180)
+	else
+		frame:SetMinResize(280, 180)
+	end
+	frame:EnableMouse(true)
+	frame:RegisterForDrag("LeftButton")
+	frame:SetFrameStrata("MEDIUM")
+	frame:SetBackdrop({
+		bgFile = "Interface\\DialogFrame\\UI-DialogBox-Background-Dark",
+		edgeFile = "Interface\\DialogFrame\\UI-DialogBox-Border",
+		tile = true,
+		tileSize = 32,
+		edgeSize = 32,
+		insets = { left = 8, right = 8, top = 8, bottom = 8 },
+	})
+	frame:SetScript("OnDragStart", function(self)
+		anchorFrameToCurrentScreenPosition(self)
+		self:StartMoving()
+	end)
+	frame:SetScript("OnDragStop", function(self)
+		self:StopMovingOrSizing()
+		saveChatIMFrameData({ frame = self })
+	end)
+
+	local title = frame:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
+	title:SetPoint("TOP", frame, "TOP", 0, -14)
+	title:SetText(L["Instant Chats"])
+	frame.title = title
+
+	local close = CreateFrame("Button", nil, frame, "UIPanelCloseButton")
+	close:SetPoint("TOPRIGHT", frame, "TOPRIGHT", -6, -6)
+	close:SetScript("OnClick", function() ChatIM:HideWindow() end)
+
+	local tabBar = CreateFrame("Frame", nil, frame)
+	tabBar:SetPoint("TOPLEFT", frame, "TOPLEFT", 16, -28)
+	tabBar:SetPoint("TOPRIGHT", frame, "TOPRIGHT", -16, -28)
+	tabBar:SetHeight(32)
+	frame.tabBar = tabBar
+
+	local content = CreateFrame("Frame", nil, frame)
+	content:SetPoint("TOPLEFT", tabBar, "BOTTOMLEFT", 0, -2)
+	content:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", -16, 18)
+	frame.content = content
+
+	local sizer = CreateFrame("Button", nil, frame)
+	sizer:SetSize(16, 16)
+	sizer:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", -8, 8)
+	sizer:SetNormalTexture("Interface\\ChatFrame\\UI-ChatIM-SizeGrabber-Up")
+	sizer:SetHighlightTexture("Interface\\ChatFrame\\UI-ChatIM-SizeGrabber-Highlight")
+	sizer:SetPushedTexture("Interface\\ChatFrame\\UI-ChatIM-SizeGrabber-Down")
+	sizer:SetScript("OnMouseDown", function(self, button)
+		if button ~= "LeftButton" then return end
+		self:SetButtonState("PUSHED", true)
+		if self:GetHighlightTexture() then self:GetHighlightTexture():Hide() end
+		anchorFrameToCurrentScreenPosition(frame)
+		frame:StartSizing("BOTTOMRIGHT")
+	end)
+	sizer:SetScript("OnMouseUp", function(self, button)
+		if button ~= "LeftButton" then return end
+		self:SetButtonState("NORMAL")
+		if self:GetHighlightTexture() then self:GetHighlightTexture():Show() end
+		frame:StopMovingOrSizing()
+		saveChatIMFrameData({ frame = frame })
+	end)
+
+	frame:HookScript("OnSizeChanged", function(self) saveChatIMFrameData({ frame = self }) end)
+	positionNativeWindow(frame)
+	frame:Hide()
+	return {
+		frame = frame,
+	}
+end
+
+local function createNativeTabGroup(owner, parent)
+	local tabGroup = {
+		frame = parent,
+		tabs = {},
+		tabList = {},
+	}
+
+	function tabGroup:SetTabs(tabList)
+		self.tabList = tabList or {}
+		for index, button in ipairs(self.tabs) do
+			button:Hide()
+			button.value = nil
+		end
+
+		local previous
+		for index, data in ipairs(self.tabList) do
+			local button = self.tabs[index]
+			if not button then
+				button = createChatIMTabButton(self.frame)
+				button:SetScript("OnClick", function(btn, mouseButton)
+					if mouseButton == "RightButton" then
+						owner:RemoveTab(btn.value)
+					else
+						owner:SelectTab(self, btn.value)
+					end
+				end)
+				self.tabs[index] = button
+			end
+			button.value = data.value
+			button:SetText(data.text or data.value or "")
+			button:ClearAllPoints()
+			if previous then
+				button:SetPoint("LEFT", previous, "RIGHT", -8, 0)
+			else
+				button:SetPoint("LEFT", self.frame, "LEFT", -2, 0)
+			end
+			button:SetPoint("BOTTOM", self.frame, "BOTTOM", 0, 0)
+			setNativeTabWidth(button)
+			button:Show()
+			previous = button
+		end
+		self:UpdateSelected()
+	end
+
+	function tabGroup:UpdateSelected()
+		for _, button in ipairs(self.tabs) do
+			if button.value then
+				updateChatIMTabColor(button, button.value == owner.activeTab)
+			end
+		end
+	end
+
+	function tabGroup:SelectTab(value)
+		owner:SelectTab(self, value)
+	end
+
+	return tabGroup
+end
+
 function ChatIM:CreateUI()
 	if self.widget then return end
 	self:HookInsertLink()
-	local frame = AceGUI:Create("Window")
-	frame:SetTitle(L["Instant Chats"])
-	frame:SetWidth(400)
-	frame:SetHeight(300)
-	frame:SetLayout("Fill")
-	frame:SetCallback("OnClose", function() ChatIM:HideWindow() end)
-	frame:SetStatusTable(ensureChatIMFrameData())
-	frame.frame:SetClampedToScreen(true)
+	local frame = createNativeWindow()
 	frame.frame:SetAlpha(0.4)
 	frame.frame:HookScript("OnMouseUp", function() saveChatIMFrameData(frame) end)
-	frame.frame:HookScript("OnSizeChanged", function() saveChatIMFrameData(frame) end)
-	if frame.title then frame.title:HookScript("OnMouseUp", function() saveChatIMFrameData(frame) end) end
-	if frame.sizer_se then frame.sizer_se:HookScript("OnMouseUp", function() saveChatIMFrameData(frame) end) end
-	if frame.sizer_s then frame.sizer_s:HookScript("OnMouseUp", function() saveChatIMFrameData(frame) end) end
-	if frame.sizer_e then frame.sizer_e:HookScript("OnMouseUp", function() saveChatIMFrameData(frame) end) end
 	frame.frame:HookScript("OnEnter", function() ChatIM:UpdateAlpha() end)
 	frame.frame:HookScript("OnLeave", function()
 		C_Timer.After(5, function() ChatIM:UpdateAlpha() end)
 	end)
-	frame.frame:SetFrameStrata("MEDIUM")
-	frame.frame:Hide()
 	saveChatIMFrameData(frame)
 
-	local tabGroup = AceGUI:Create("TabGroup")
-	tabGroup:SetLayout("Fill")
-	tabGroup:SetCallback("OnGroupSelected", function(widget, _, value) ChatIM:SelectTab(widget, value) end)
-	frame:AddChild(tabGroup)
+	local tabGroup = createNativeTabGroup(self, frame.frame.tabBar)
 
 	self.widget = frame
 	self.frame = frame.frame
+	self.contentFrame = frame.frame.content
 	self.tabGroup = tabGroup
 	self.tabs = {}
 	self.tabList = {}
@@ -323,24 +509,28 @@ end
 function ChatIM:RefreshTabCallbacks()
 	if not self.tabGroup or not self.tabGroup.tabs then return end
 	for _, btn in ipairs(self.tabGroup.tabs) do
-		if not btn.hooked then
-			btn:SetScript("OnMouseDown", function(frame, button)
-				if button == "RightButton" then ChatIM:RemoveTab(frame.value) end
-			end)
-			btn.hooked = true
+		if btn.value then
+			local data = ChatIM.tabs[btn.value]
+			if data and data.label then
+				btn:SetText(data.label)
+				setNativeTabWidth(btn)
+			end
 		end
-		-- update text for unread indicator
-		local data = ChatIM.tabs[btn.value]
-		if data and data.label then btn:SetText(data.label) end
 	end
+	if self.tabGroup.UpdateSelected then self.tabGroup:UpdateSelected() end
 end
 
 function ChatIM:SelectTab(widget, value)
-	if self.activeTab == value then return end
-
-	if self.activeGroup then
-		AceGUI:Release(self.activeGroup)
-		self.activeGroup = nil
+	if self.activeTab == value then
+		local current = self.tabs[value]
+		if current and current.unread then
+			current.unread = false
+			self:StopTabFlash(value)
+			self:UpdateTabLabel(value)
+		elseif widget and widget.UpdateSelected then
+			widget:UpdateSelected()
+		end
+		return
 	end
 
 	if self.activeTab then
@@ -352,7 +542,6 @@ function ChatIM:SelectTab(widget, value)
 				old.edit:SetParent(ChatIM.storage)
 				old.edit:Hide()
 			end
-			old.group = nil
 		end
 	end
 
@@ -363,30 +552,28 @@ function ChatIM:SelectTab(widget, value)
 	tab.unread = false
 	self:StopTabFlash(value)
 
-	local group = AceGUI:Create("SimpleGroup")
-	group:SetFullWidth(true)
-	group:SetFullHeight(true)
-	tab.msg:SetParent(group.frame)
+	local content = self.contentFrame
+	if not content then return end
+
+	tab.msg:SetParent(content)
 	tab.msg:Show()
 	-- ensure the message frame fills the new parent
 	tab.msg:ClearAllPoints()
-	tab.msg:SetPoint("TOPLEFT", group.frame, "TOPLEFT", 0, -2)
-	tab.msg:SetPoint("TOPRIGHT", group.frame, "TOPRIGHT", 0, -2)
-	tab.msg:SetPoint("BOTTOMLEFT", group.frame, "BOTTOMLEFT", 0, 28)
+	tab.msg:SetPoint("TOPLEFT", content, "TOPLEFT", 0, -2)
+	tab.msg:SetPoint("TOPRIGHT", content, "TOPRIGHT", 0, -2)
+	tab.msg:SetPoint("BOTTOMLEFT", content, "BOTTOMLEFT", 0, 28)
 
 	if tab.edit then
-		tab.edit:SetParent(group.frame)
+		tab.edit:SetParent(content)
 		tab.edit:ClearAllPoints()
-		tab.edit:SetPoint("LEFT", group.frame, "LEFT", 0, 2)
-		tab.edit:SetPoint("RIGHT", group.frame, "RIGHT", 0, 2)
-		tab.edit:SetPoint("BOTTOM", group.frame, "BOTTOM", 0, 2)
+		tab.edit:SetPoint("LEFT", content, "LEFT", 0, 2)
+		tab.edit:SetPoint("RIGHT", content, "RIGHT", 0, 2)
+		tab.edit:SetPoint("BOTTOM", content, "BOTTOM", 0, 2)
 		tab.edit:Show()
 	end
 
-	widget:AddChild(group)
-	tab.group = group
-	self.activeGroup = group
 	self:UpdateTabLabel(value)
+	if widget and widget.UpdateSelected then widget:UpdateSelected() end
 end
 
 function ChatIM:CreateTab(sender, isBN, bnetID, battleTag)
@@ -652,17 +839,16 @@ function ChatIM:RemoveTab(sender)
 	if not tab then return end
 	self:StopTabFlash(sender)
 	if self.activeTab == sender then
-		-- activeGroup *is* tab.group – release it once
-		if self.activeGroup then AceGUI:Release(self.activeGroup) end
-		self.activeGroup = nil
 		self.activeTab = nil
 	end
-
-	tab.group = nil -- avoid accidental double‑release later
 
 	if tab.msg then
 		tab.msg:SetParent(nil)
 		tab.msg:Hide()
+	end
+	if tab.edit then
+		tab.edit:SetParent(nil)
+		tab.edit:Hide()
 	end
 	for i, t in ipairs(self.tabList) do
 		if t.value == sender then
@@ -708,7 +894,9 @@ function ChatIM:StartTabFlash(sender)
 	if not self.tabGroup or not self.tabGroup.tabs then return end
 	for _, btn in ipairs(self.tabGroup.tabs) do
 		if btn.value == sender then
-			if not UIFrameIsFlashing(btn) then UIFrameFlash(btn, 0.8, 0.8, -1, true, 0.6, 0) end
+			local flashRegion = btn.glow or btn
+			if flashRegion.Show then flashRegion:Show() end
+			if not UIFrameIsFlashing(flashRegion) then UIFrameFlash(flashRegion, 0.8, 0.8, -1, true, 0.6, 0) end
 			break
 		end
 	end
@@ -718,7 +906,9 @@ function ChatIM:StopTabFlash(sender)
 	if not self.tabGroup or not self.tabGroup.tabs then return end
 	for _, btn in ipairs(self.tabGroup.tabs) do
 		if btn.value == sender then
-			UIFrameFlashStop(btn)
+			local flashRegion = btn.glow or btn
+			UIFrameFlashStop(flashRegion)
+			if flashRegion.Hide then flashRegion:Hide() end
 			break
 		end
 	end

@@ -2,8 +2,37 @@
 local _, addon = ...
 
 addon.GeneratedChangelog = {
-	sourceTag = "11.0.2",
+	sourceTag = "11.0.4",
 	releases = {
+		{
+			tag = "11.0.4",
+			date = "2026-06-07",
+			sections = {
+				{
+					title = "Fixed",
+					items = {
+						"Craft Shopper: Removed the obsolete Missing only filter because the shopping list already contains only missing tracked-recipe reagents.",
+						"Settings Center: Fixed disabled dependency controls still counting as changed, and fixed page Defaults restoring some multi-select settings to UI fallback labels instead of their real default selection.",
+					},
+				},
+			},
+		},
+		{
+			tag = "11.0.3",
+			date = "2026-06-06",
+			sections = {
+				{
+					title = "Fixed",
+					items = {
+						"Bags: Fixed the crafted quality overlay feature using a custom overlay path instead of Blizzard's native item quality overlay, which could render profession quality icons too small or inconsistently; also fixed default-skin currency counts using the muted accent color instead of readable white text.",
+						"Craft Shopper: Fixed the missing Include Warband Bank option in the modern Settings Center, so Warband Bank reagents can be counted when calculating missing tracked-recipe materials.",
+						"Talent Reminder: Fixed loadout dropdown options in the modern Settings Center not refreshing after talent loadouts were created, deleted or updated during the same session.",
+						"Unit Frames / Healer Buff Placement: Fixed bar indicators hiding each other when multiple active healer-buff bars were placed on party or raid frames.",
+						"Nameplates: Fixed player-controlled nameplates being recolored by EQOL threat colors in PvP.",
+					},
+				},
+			},
+		},
 		{
 			tag = "11.0.2",
 			date = "2026-06-06",

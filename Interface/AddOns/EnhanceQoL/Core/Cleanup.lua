@@ -122,6 +122,31 @@ local MULTIDROPDOWN_SCRATCH_PROFILE_KEYS = {
 	"unitframeSettingTargetFrame_visibility",
 }
 
+local MIGRATED_DATAPANEL_STREAM_OPTION_POSITION_KEYS = {
+	bagspace = true,
+	combatTime = true,
+	coordinates = true,
+	currency = true,
+	difficulty = true,
+	durability = true,
+	equipmentsets = true,
+	friends = true,
+	gold = true,
+	hearthstone = true,
+	itemlevel = true,
+	latency = true,
+	location = true,
+	lootspec = true,
+	microbar = true,
+	mythickey = true,
+	pettracker = true,
+	realm = true,
+	stats = true,
+	talent = true,
+	time = true,
+	volume = true,
+}
+
 local function cleanupListedProfileKeys(profile, keys)
 	if type(profile) ~= "table" then return end
 	for i = 1, #keys do
@@ -247,10 +272,26 @@ local function cleanupRemovedCVarPersistenceKeys(profile)
 	end
 end
 
+local function cleanupMigratedDataPanelStreamOptionPositions(profile)
+	if type(profile) ~= "table" then return end
+	local dataPanel = profile.datapanel
+	if type(dataPanel) ~= "table" then return end
+	for streamKey in pairs(MIGRATED_DATAPANEL_STREAM_OPTION_POSITION_KEYS) do
+		local streamConfig = dataPanel[streamKey]
+		if type(streamConfig) == "table" then
+			streamConfig.point = nil
+			streamConfig.x = nil
+			streamConfig.y = nil
+			streamConfig._windowStatus = nil
+		end
+	end
+end
+
 local function cleanupLegacyProfileKeys(profile)
 	cleanupListedProfileKeys(profile, LEGACY_PROFILE_KEYS)
 	cleanupListedProfileKeys(profile, MULTIDROPDOWN_SCRATCH_PROFILE_KEYS)
 	cleanupRemovedCVarPersistenceKeys(profile)
+	cleanupMigratedDataPanelStreamOptionPositions(profile)
 end
 
 local function cleanupCooldownPanelsStorageProfile(profile)

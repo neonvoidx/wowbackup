@@ -3,12 +3,7 @@ local addonName, addon = ...
 
 local L = addon.L
 
-local AceGUI = addon.AceGUI
 local db
-local stream
--- Forward declarations used across functions
-local listWindow -- AceGUI window
-local populateListWindow -- function to (re)build the list window
 local function getOptionsHint()
 	if addon.DataPanel and addon.DataPanel.GetOptionsHintText then
 		local text = addon.DataPanel.GetOptionsHintText()
@@ -58,94 +53,10 @@ local function colorizeStreamText(text)
 	return text
 end
 
-local function RestorePosition(frame)
-	if db.point and db.x and db.y then
-		frame:ClearAllPoints()
-		frame:SetPoint(db.point, UIParent, db.point, db.x, db.y)
+local function openSettings()
+	if addon.functions and addon.functions.OpenConfigCenter then
+		addon.functions.OpenConfigCenter("interface.datapanel", "DataPanel_friends_fontSize")
 	end
-end
-
-local aceWindow
-local function createAceWindow()
-	if aceWindow then
-		aceWindow:Show()
-		return
-	end
-	ensureDB()
-	local frame = AceGUI:Create("Window")
-	aceWindow = frame.frame
-	frame:SetTitle((addon.DataPanel and addon.DataPanel.GetStreamOptionsTitle and addon.DataPanel.GetStreamOptionsTitle(stream and stream.meta and stream.meta.title)) or GAMEMENU_OPTIONS)
-	frame:SetWidth(300)
-	frame:SetHeight(300)
-	frame:SetLayout("List")
-
-	frame.frame:SetScript("OnShow", function(self) RestorePosition(self) end)
-	frame.frame:SetScript("OnHide", function(self)
-		local point, _, _, xOfs, yOfs = self:GetPoint()
-		db.point = point
-		db.x = xOfs
-		db.y = yOfs
-	end)
-
-	local fontSize = AceGUI:Create("Slider")
-	fontSize:SetLabel(FONT_SIZE)
-	fontSize:SetSliderValues(8, 32, 1)
-	fontSize:SetValue(db.fontSize)
-	fontSize:SetCallback("OnValueChanged", function(_, _, val)
-		db.fontSize = val
-		addon.DataHub:RequestUpdate(stream)
-	end)
-	frame:AddChild(fontSize)
-
-	local useClassColor = AceGUI:Create("CheckBox")
-	useClassColor:SetLabel(L["DataPanelUseClassTextColor"] or "Use class text color")
-	useClassColor:SetValue(db.useClassColor == true)
-	useClassColor:SetCallback("OnValueChanged", function(_, _, val)
-		db.useClassColor = val and true or false
-		addon.DataHub:RequestUpdate(stream)
-	end)
-	frame:AddChild(useClassColor)
-
-	local useColor = AceGUI:Create("CheckBox")
-	useColor:SetLabel(L["Use custom text color"] or "Use custom text color")
-	useColor:SetValue(db.useTextColor == true)
-	useColor:SetCallback("OnValueChanged", function(_, _, val)
-		db.useTextColor = val and true or false
-		addon.DataHub:RequestUpdate(stream)
-	end)
-	frame:AddChild(useColor)
-
-	local textColor = AceGUI:Create("ColorPicker")
-	textColor:SetLabel(L["Text color"] or "Text color")
-	textColor:SetColor(db.textColor.r, db.textColor.g, db.textColor.b)
-	textColor:SetCallback("OnValueChanged", function(_, _, r, g, b)
-		db.textColor = { r = r, g = g, b = b }
-		if db.useTextColor and not db.useClassColor then addon.DataHub:RequestUpdate(stream) end
-	end)
-	frame:AddChild(textColor)
-
-	local splitDisplayInline
-	local splitDisplay = AceGUI:Create("CheckBox")
-	splitDisplay:SetLabel(L["Friends/Guild display"] or "Show friends + guild")
-	splitDisplay:SetValue(db.splitDisplay == true)
-	splitDisplay:SetCallback("OnValueChanged", function(_, _, val)
-		db.splitDisplay = val and true or false
-		if splitDisplayInline and splitDisplayInline.SetDisabled then splitDisplayInline:SetDisabled(not db.splitDisplay) end
-		addon.DataHub:RequestUpdate(stream)
-	end)
-	frame:AddChild(splitDisplay)
-
-	splitDisplayInline = AceGUI:Create("CheckBox")
-	splitDisplayInline:SetLabel(L["Friends/Guild display single line"] or "Single-line layout")
-	splitDisplayInline:SetValue(db.splitDisplayInline == true)
-	splitDisplayInline:SetDisabled(not db.splitDisplay)
-	splitDisplayInline:SetCallback("OnValueChanged", function(_, _, val)
-		db.splitDisplayInline = val and true or false
-		addon.DataHub:RequestUpdate(stream)
-	end)
-	frame:AddChild(splitDisplayInline)
-
-	frame.frame:Show()
 end
 
 local GetNumFriends = C_FriendList.GetNumFriends
@@ -475,7 +386,6 @@ local function getFriends(stream)
 	stream.snapshot.skipPanelClassColor = db and (db.useClassColor == true or db.useTextColor == true) or nil
 	if isFriendsDataRestricted() then
 		stream.snapshot.text = colorizeStreamText(FRIENDS)
-		if listWindow and listWindow.frame and listWindow.frame:IsShown() then populateListWindow() end
 		return
 	end
 
@@ -591,26 +501,6 @@ local function getFriends(stream)
 	else
 		stream.snapshot.text = colorizeStreamText(totalUnique .. " " .. FRIENDS)
 	end
-
-	-- If our extended window is open, refresh its content
-	if listWindow and listWindow.frame and listWindow.frame:IsShown() then populateListWindow() end
-end
-
-local function ensureListWindow()
-	if listWindow and listWindow.frame and listWindow.frame:IsShown() then return listWindow end
-	local frame = AceGUI:Create("Window")
-	listWindow = frame
-	frame:SetTitle(FRIENDS)
-	frame:SetWidth(720)
-	frame:SetHeight(520)
-	frame:SetLayout("Fill")
-
-	local scroll = AceGUI:Create("ScrollFrame")
-	scroll:SetLayout("Flow")
-	frame:AddChild(scroll)
-
-	frame._scroll = scroll
-	return frame
 end
 
 local function colorizeText(text, r, g, b)
@@ -624,13 +514,6 @@ local function colorizedName(name, color)
 	if not name then return nil end
 	if not color then return name end
 	return colorizeText(name, color.r or 1, color.g or 1, color.b or 1)
-end
-
-local function colorizedLocation(location, sameZone)
-	location = sanitizeString(location)
-	if not location then return nil end
-	if sameZone then return colorizeText(location, 0.25, 1.0, 0.4) end
-	return colorizeText(location, 0.62, 0.62, 0.62)
 end
 
 local function formatEntryName(entry)
@@ -655,12 +538,6 @@ local function buildClassLevelText(entry)
 	return ""
 end
 
-local function getEntryRightText(entry)
-	local rightText = sanitizeString(entry.location) or ""
-	if rightText == "" then rightText = buildClassLevelText(entry) end
-	return colorizedLocation(rightText, rightText ~= "" and entry.locationSameZone == true)
-end
-
 local function getTooltipEntryRight(entry)
 	local rightText = sanitizeString(entry.location) or ""
 	if rightText == "" then return buildClassLevelText(entry), false end
@@ -673,90 +550,6 @@ local function getTooltipRightColor(entry, sameZone)
 	return 0.62, 0.62, 0.62
 end
 
-local function addHeader(scroll, title)
-	local header = AceGUI:Create("Label")
-	header:SetFullWidth(true)
-	header:SetText("|cffffd100" .. title .. "|r")
-	header:SetFont(addon.variables and addon.variables.defaultFont or GameFontNormal:GetFont(), 14, "OUTLINE")
-	scroll:AddChild(header)
-end
-
-local function addTwoColumnRow(scroll, leftText, rightText, leftWidth, rightWidth)
-	local row = AceGUI:Create("SimpleGroup")
-	row:SetFullWidth(true)
-	row:SetLayout("Flow")
-	local left = AceGUI:Create("Label")
-	left:SetRelativeWidth(leftWidth or 0.58)
-	left:SetText(leftText or "")
-	row:AddChild(left)
-
-	local right = AceGUI:Create("Label")
-	right:SetRelativeWidth(rightWidth or 0.42)
-	right:SetText(rightText or "")
-	row:AddChild(right)
-
-	scroll:AddChild(row)
-end
-
-local function addColumnHeader(scroll)
-	local rightHeader = _G.ZONE or _G.PRESENCE or L["Presence"] or "Presence"
-	addTwoColumnRow(scroll, "|cffcccccc" .. NAME .. "|r", "|cffcccccc" .. rightHeader .. "|r")
-end
-
-local function addSectionRows(scroll, title, items)
-	if #items == 0 then return end
-	addHeader(scroll, string.format("%s (%d)", title, #items))
-	addColumnHeader(scroll)
-	for _, entry in ipairs(items) do
-		addTwoColumnRow(scroll, formatEntryName(entry), getEntryRightText(entry))
-	end
-end
-
-local function addSpacer(scroll)
-	local spacer = AceGUI:Create("Label")
-	spacer:SetFullWidth(true)
-	spacer:SetText(" ")
-	scroll:AddChild(spacer)
-end
-
-function populateListWindow()
-	if not (listWindow and listWindow._scroll) then return end
-	local scroll = listWindow._scroll
-	scroll:ReleaseChildren()
-
-	if tooltipMeta.guildName or tooltipMeta.guildTotalCount > 0 or tooltipMeta.guildMotd or #tooltipData.guild > 0 then
-		addHeader(scroll, tooltipMeta.guildName or GUILD)
-		if tooltipMeta.guildTotalCount and tooltipMeta.guildTotalCount > 0 then
-			addTwoColumnRow(scroll, "|cffcccccc" .. GUILD .. "|r", string.format("%d/%d", tooltipMeta.guildOnlineCount, tooltipMeta.guildTotalCount), 0.24, 0.76)
-		elseif tooltipMeta.guildOnlineCount and tooltipMeta.guildOnlineCount > 0 then
-			addTwoColumnRow(scroll, "|cffcccccc" .. GUILD .. "|r", tostring(tooltipMeta.guildOnlineCount), 0.24, 0.76)
-		end
-		if tooltipMeta.guildMotd and tooltipMeta.guildMotd ~= "" then addTwoColumnRow(scroll, "|cffccccccMOTD|r", tooltipMeta.guildMotd, 0.24, 0.76) end
-		if #tooltipData.guild > 0 then
-			addSpacer(scroll)
-			addColumnHeader(scroll)
-			for _, entry in ipairs(tooltipData.guild) do
-				addTwoColumnRow(scroll, formatEntryName(entry), getEntryRightText(entry))
-			end
-		end
-	end
-
-	if (tooltipMeta.guildName or tooltipMeta.guildTotalCount > 0 or tooltipMeta.guildMotd or #tooltipData.guild > 0) and (#tooltipData.friends > 0 or #tooltipData.bnet > 0) then addSpacer(scroll) end
-
-	addSectionRows(scroll, FRIENDS, tooltipData.friends)
-	if #tooltipData.friends > 0 and #tooltipData.bnet > 0 then addSpacer(scroll) end
-	addSectionRows(scroll, BATTLENET_OPTIONS_LABEL or "Battle.net", tooltipData.bnet)
-end
-
-local function toggleListWindow()
-	local frame = ensureListWindow()
-	if frame.frame:IsShown() then
-		frame:Hide()
-	else
-		frame:Show()
-		populateListWindow()
-	end
-end
 
 local provider = {
 	id = "friends",
@@ -790,9 +583,7 @@ local provider = {
 	},
 	OnClick = function(_, btn)
 		if btn == "RightButton" then
-			createAceWindow()
-		else
-			toggleListWindow()
+			openSettings()
 		end
 	end,
 	OnMouseEnter = function(btn)
@@ -857,11 +648,6 @@ local provider = {
 	end,
 }
 
-stream = EnhanceQoL.DataHub.RegisterStream(provider)
-
--- If the list window is open during updates, refresh its contents
-hooksecurefunc(addon.DataHub, "RequestUpdate", function(_)
-	if listWindow and listWindow.frame and listWindow.frame:IsShown() then populateListWindow() end
-end)
+EnhanceQoL.DataHub.RegisterStream(provider)
 
 return provider

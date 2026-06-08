@@ -113,7 +113,7 @@ local function update(stream)
 end
 
 local function openOptions()
-	if options and options.Show then options.Show() end
+	if options and options.Show then options.Show("DataPanel_markbar_showUtility") end
 end
 
 local provider = {

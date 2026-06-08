@@ -8,6 +8,14 @@ local floor = math.floor
 local lastScore
 local lastRuns
 local lastColor
+local db
+
+local function ensureDB()
+	addon.db.datapanel = addon.db.datapanel or {}
+	addon.db.datapanel.mythicrating = addon.db.datapanel.mythicrating or {}
+	db = addon.db.datapanel.mythicrating
+	db.fontSize = db.fontSize or 14
+end
 
 local function getOptionsHint()
 	if addon.DataPanel and addon.DataPanel.GetOptionsHintText then
@@ -30,9 +38,11 @@ end
 local function toHex(r, g, b) return format("%02x%02x%02x", floor(r * 255 + 0.5), floor(g * 255 + 0.5), floor(b * 255 + 0.5)) end
 
 local function updateRating(s)
+	ensureDB()
 	local summary = C_PlayerInfo and C_PlayerInfo.GetPlayerMythicPlusRatingSummary and C_PlayerInfo.GetPlayerMythicPlusRatingSummary("player")
 	if not summary or not summary.currentSeasonScore then
 		s.snapshot.text = L["No Mythic+ rating"] or "No Mythic+ rating"
+		s.snapshot.fontSize = db.fontSize or 14
 		lastScore = nil
 		lastRuns = nil
 		return
@@ -45,7 +55,13 @@ local function updateRating(s)
 	lastColor = { r = r, g = g, b = b }
 
 	s.snapshot.text = format("|cff%s%d|r", toHex(r, g, b), floor(score + 0.5))
-	s.snapshot.fontSize = 14
+	s.snapshot.fontSize = db.fontSize or 14
+end
+
+local function openSettings()
+	if addon.functions and addon.functions.OpenConfigCenter then
+		addon.functions.OpenConfigCenter("interface.datapanel", "DataPanel_mythicrating_fontSize")
+	end
 end
 
 local function addRunLine(tip, run)
@@ -74,6 +90,9 @@ local provider = {
 		CHALLENGE_MODE_MAPS_UPDATE = function(s) addon.DataHub:RequestUpdate(s) end,
 		PLAYER_ENTERING_WORLD = function(s) addon.DataHub:RequestUpdate(s) end,
 	},
+	OnClick = function(_, btn)
+		if btn == "RightButton" then openSettings() end
+	end,
 	OnMouseEnter = function(btn)
 		local tip = GameTooltip
 		tip:ClearLines()

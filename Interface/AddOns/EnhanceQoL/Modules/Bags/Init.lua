@@ -141,6 +141,7 @@ local defaultSettings = {
 	frameBackgroundOpacity = 100,
 	showWatchedCurrencies = true,
 	showTrackedCurrencyCharacterBreakdown = false,
+	showCraftedQuality = false,
 	trackedCurrencyTooltipTotalPosition = "top",
 	trackedCurrencyTooltipNameColorMode = "class",
 	trackedCurrencyTooltipCountColorMode = "default",
@@ -1468,6 +1469,23 @@ function addon.SetUseIntegratedBank(enabled)
 	end
 
 	settings.useIntegratedBank = enabled
+	return true
+end
+
+function addon.GetShowCraftedQuality()
+	local settings = addon.GetSettings()
+	settings.showCraftedQuality = normalizeBooleanSetting(settings.showCraftedQuality, defaultSettings.showCraftedQuality)
+	return settings.showCraftedQuality
+end
+
+function addon.SetShowCraftedQuality(enabled)
+	local settings = addon.GetSettings()
+	enabled = normalizeBooleanSetting(enabled, defaultSettings.showCraftedQuality)
+	if settings.showCraftedQuality == enabled then
+		return false
+	end
+
+	settings.showCraftedQuality = enabled
 	return true
 end
 

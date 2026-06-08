@@ -9,7 +9,6 @@ end
 local L = addon.L
 
 -- luacheck: globals EQOLIgnoreFrame EQOLIgnoreFrame_OnLoad HybridScrollFrame_CreateButtons DeclineGuildInvite MenuUtil
-local AceGUI = addon.AceGUI
 local MU = MenuUtil
 local issecretvalue = _G.issecretvalue
 local Ignore = addon.Ignore or {}
@@ -632,95 +631,146 @@ function Ignore:ShowAddFrame(name, note, expires)
 	if not name then return end
 
 	if self.addFrame then
-		AceGUI:Release(self.addFrame)
-		self.addFrame = nil
+		self.addFrame:Hide()
 	end
 
-	local frame = AceGUI:Create("Window")
-	frame:SetTitle(L["IgnoreWindowTitle"])
-	frame:SetWidth(420)
-	frame:SetHeight(220)
-	frame:SetLayout("List")
-	frame:SetCallback("OnClose", function(widget)
-		AceGUI:Release(widget)
+	local frame = CreateFrame("Frame", nil, UIParent, "BackdropTemplate")
+	frame:SetSize(440, 270)
+	frame:SetPoint("CENTER")
+	frame:SetFrameStrata("DIALOG")
+	frame:SetMovable(true)
+	frame:EnableMouse(true)
+	frame:RegisterForDrag("LeftButton")
+	frame:SetScript("OnDragStart", frame.StartMoving)
+	frame:SetScript("OnDragStop", frame.StopMovingOrSizing)
+	frame:SetBackdrop({
+		bgFile = "Interface\\DialogFrame\\UI-DialogBox-Background-Dark",
+		edgeFile = "Interface\\DialogFrame\\UI-DialogBox-Border",
+		tile = true,
+		tileSize = 32,
+		edgeSize = 32,
+		insets = { left = 8, right = 8, top = 8, bottom = 8 },
+	})
+
+	local title = frame:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
+	title:SetPoint("TOP", frame, "TOP", 0, -14)
+	title:SetText(L["IgnoreWindowTitle"])
+
+	local close = CreateFrame("Button", nil, frame, "UIPanelCloseButton")
+	close:SetPoint("TOPRIGHT", frame, "TOPRIGHT", -6, -6)
+	close:SetScript("OnClick", function()
+		frame:Hide()
 		Ignore.addFrame = nil
 	end)
 
-	local nameLabel = AceGUI:Create("Label")
+	local nameLabel = frame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+	nameLabel:SetPoint("TOPLEFT", frame, "TOPLEFT", 24, -42)
+	nameLabel:SetPoint("RIGHT", frame, "RIGHT", -24, 0)
+	nameLabel:SetJustifyH("LEFT")
 	nameLabel:SetText("|cffffd200" .. name .. "|r")
-	nameLabel:SetFullWidth(true)
-	frame:AddChild(nameLabel)
 
-	local editBox = AceGUI:Create("MultiLineEditBox")
-	editBox:SetFullWidth(true)
-	editBox:SetLabel(L["IgnoreNote"])
-	editBox:SetNumLines(4)
-	editBox:DisableButton(true)
-	if note then editBox:SetText(note) end
-	frame:AddChild(editBox)
+	local noteLabel = frame:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+	noteLabel:SetPoint("TOPLEFT", nameLabel, "BOTTOMLEFT", 0, -8)
+	noteLabel:SetText(L["IgnoreNote"])
 
-	local expGroup = AceGUI:Create("SimpleGroup")
-	expGroup:SetFullWidth(true)
-	expGroup:SetLayout("Flow")
-	frame:AddChild(expGroup)
+	local editField = CreateFrame("Frame", nil, frame, "BackdropTemplate")
+	editField:SetPoint("TOPLEFT", noteLabel, "BOTTOMLEFT", 0, -6)
+	editField:SetPoint("RIGHT", frame, "RIGHT", -28, 0)
+	editField:SetHeight(96)
+	editField:SetBackdrop({
+		bgFile = "Interface\\Buttons\\WHITE8x8",
+		edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
+		tile = false,
+		edgeSize = 12,
+		insets = { left = 3, right = 3, top = 3, bottom = 3 },
+	})
+	editField:SetBackdropColor(0, 0, 0, 0.55)
+	editField:SetBackdropBorderColor(0.45, 0.36, 0.2, 1)
 
-	local check = AceGUI:Create("CheckBox")
-	check:SetLabel(L["IgnoreExpiresDays"])
-	expGroup:AddChild(check)
+	local editScroll = CreateFrame("ScrollFrame", nil, editField, "UIPanelScrollFrameTemplate")
+	editScroll:SetPoint("TOPLEFT", editField, "TOPLEFT", 8, -8)
+	editScroll:SetPoint("BOTTOMRIGHT", editField, "BOTTOMRIGHT", -28, 8)
 
-	local numBox = AceGUI:Create("EditBox")
-	numBox:SetWidth(60)
-	numBox:SetDisabled(true)
-	expGroup:AddChild(numBox)
-
-	check:SetCallback("OnValueChanged", function(_, _, value)
-		numBox:SetDisabled(not value)
-		numBox.frame:SetShown(value)
-		if not value then numBox:SetText("") end
+	local editBox = CreateFrame("EditBox", nil, editScroll)
+	editBox:SetMultiLine(true)
+	editBox:SetAutoFocus(false)
+	editBox:SetFontObject(ChatFontNormal)
+	editBox:SetWidth(360)
+	editBox:SetHeight(82)
+	editBox:SetText(note or "")
+	editBox:SetScript("OnEscapePressed", function(self) self:ClearFocus() end)
+	editScroll:SetScrollChild(editBox)
+	editField:EnableMouse(true)
+	editField:SetScript("OnMouseDown", function()
+		editBox:SetFocus()
+	end)
+	editScroll:EnableMouse(true)
+	editScroll:SetScript("OnMouseDown", function()
+		editBox:SetFocus()
 	end)
 
+	local check = CreateFrame("CheckButton", nil, frame, "UICheckButtonTemplate")
+	check:SetPoint("TOPLEFT", editField, "BOTTOMLEFT", -4, -12)
+	local checkText = check.Text or check:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+	checkText:SetPoint("LEFT", check, "RIGHT", 0, 1)
+	checkText:SetText(L["IgnoreExpiresDays"])
+
+	local numBox = CreateFrame("EditBox", nil, frame, "InputBoxTemplate")
+	numBox:SetPoint("LEFT", checkText, "RIGHT", 14, 0)
+	numBox:SetSize(60, 22)
+	numBox:SetAutoFocus(false)
+	numBox:SetNumeric(true)
+	numBox:SetScript("OnEscapePressed", function(self) self:ClearFocus() end)
+
+	local function updateExpiryState()
+		local enabled = check:GetChecked() == true
+		numBox:SetEnabled(enabled)
+		numBox:SetShown(enabled)
+		if not enabled then numBox:SetText("") end
+	end
+	check:SetScript("OnClick", updateExpiryState)
+
 	if expires and expires ~= NEVER then
-		check:SetValue(true)
-		numBox:SetDisabled(false)
-		numBox.frame:Show()
+		check:SetChecked(true)
 		numBox:SetText(tostring(expires))
 	else
-		check:SetValue(false)
+		check:SetChecked(false)
 		numBox:SetText("")
-		numBox:SetDisabled(true)
-		numBox.frame:Hide()
 	end
+	updateExpiryState()
 
-	local btnGroup = AceGUI:Create("SimpleGroup")
-	btnGroup:SetFullWidth(true)
-	btnGroup:SetLayout("Flow")
-	frame:AddChild(btnGroup)
-
-	local addBtn = AceGUI:Create("Button")
+	local addBtn = CreateFrame("Button", nil, frame, "UIPanelButtonTemplate")
+	addBtn:SetSize(120, 24)
+	addBtn:SetPoint("BOTTOMLEFT", frame, "BOTTOMLEFT", 24, 20)
 	addBtn:SetText(L["IgnoreAddSave"])
-	addBtn:SetWidth(120)
-	addBtn:SetCallback("OnClick", function()
+	addBtn:SetScript("OnClick", function()
 		local n = editBox:GetText()
 		local exp = 0
-		if check:GetValue() then
+		if check:GetChecked() then
 			exp = tonumber(numBox:GetText())
 			if not exp then exp = 0 end
 		end
 		addEntry(name, n, exp)
 		frame:Hide()
+		Ignore.addFrame = nil
 	end)
-	btnGroup:AddChild(addBtn)
 
 	editBox:SetFocus()
-	if editBox.editBox and addBtn.frame then editBox.editBox:SetScript("OnEnterPressed", function() addBtn.frame:Click() end) end
+	editBox:SetScript("OnEnterPressed", function()
+		addBtn:Click()
+	end)
 
-	local cancelBtn = AceGUI:Create("Button")
+	local cancelBtn = CreateFrame("Button", nil, frame, "UIPanelButtonTemplate")
+	cancelBtn:SetSize(120, 24)
+	cancelBtn:SetPoint("LEFT", addBtn, "RIGHT", 12, 0)
 	cancelBtn:SetText(CANCEL)
-	cancelBtn:SetWidth(120)
-	cancelBtn:SetCallback("OnClick", function() frame:Hide() end)
-	btnGroup:AddChild(cancelBtn)
+	cancelBtn:SetScript("OnClick", function()
+		frame:Hide()
+		Ignore.addFrame = nil
+	end)
 
 	self.addFrame = frame
+	frame:Show()
 end
 
 local function hookedAddIgnore(name)

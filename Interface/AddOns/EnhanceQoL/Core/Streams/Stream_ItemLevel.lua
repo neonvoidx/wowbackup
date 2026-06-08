@@ -2,9 +2,7 @@
 local addonName, addon = ...
 local L = addon.L
 
-local AceGUI = addon.AceGUI
 local db
-local stream
 
 local format = string.format
 local floor = math.floor
@@ -22,56 +20,10 @@ local function ensureDB()
 	if db.showAverage == nil then db.showAverage = true end
 end
 
-local function RestorePosition(frame)
-	if not db then return end
-	if db.point and db.x and db.y then
-		frame:ClearAllPoints()
-		frame:SetPoint(db.point, UIParent, db.point, db.x, db.y)
+local function openSettings()
+	if addon.functions and addon.functions.OpenConfigCenter then
+		addon.functions.OpenConfigCenter("interface.datapanel", "DataPanel_itemlevel_fontSize")
 	end
-end
-
-local aceWindow
-local function createAceWindow()
-	if aceWindow then
-		aceWindow:Show()
-		return
-	end
-	ensureDB()
-	local frame = AceGUI:Create("Window")
-	aceWindow = frame.frame
-	frame:SetTitle((addon.DataPanel and addon.DataPanel.GetStreamOptionsTitle and addon.DataPanel.GetStreamOptionsTitle(stream and stream.meta and stream.meta.title)) or GAMEMENU_OPTIONS)
-	frame:SetWidth(300)
-	frame:SetHeight(230)
-	frame:SetLayout("List")
-
-	frame.frame:SetScript("OnShow", function(self) RestorePosition(self) end)
-	frame.frame:SetScript("OnHide", function(self)
-		local point, _, _, xOfs, yOfs = self:GetPoint()
-		db.point = point
-		db.x = xOfs
-		db.y = yOfs
-	end)
-
-	local fontSize = AceGUI:Create("Slider")
-	fontSize:SetLabel(FONT_SIZE)
-	fontSize:SetSliderValues(8, 32, 1)
-	fontSize:SetValue(db.fontSize)
-	fontSize:SetCallback("OnValueChanged", function(_, _, val)
-		db.fontSize = val
-		addon.DataHub:RequestUpdate(stream)
-	end)
-	frame:AddChild(fontSize)
-
-	local showAverage = AceGUI:Create("CheckBox")
-	showAverage:SetLabel(L["itemLevelShowAverage"] or "Show average item level")
-	showAverage:SetValue(db.showAverage ~= false)
-	showAverage:SetCallback("OnValueChanged", function(_, _, val)
-		db.showAverage = val and true or false
-		addon.DataHub:RequestUpdate(stream)
-	end)
-	frame:AddChild(showAverage)
-
-	frame.frame:Show()
 end
 
 local function getOptionsHint()
@@ -170,7 +122,7 @@ local provider = {
 		},
 	},
 	OnClick = function(_, btn)
-		if btn == "RightButton" then createAceWindow() end
+		if btn == "RightButton" then openSettings() end
 	end,
 	OnMouseEnter = function(btn)
 		local tip = GameTooltip
@@ -226,6 +178,6 @@ local provider = {
 	end,
 }
 
-stream = EnhanceQoL.DataHub.RegisterStream(provider)
+EnhanceQoL.DataHub.RegisterStream(provider)
 
 return provider

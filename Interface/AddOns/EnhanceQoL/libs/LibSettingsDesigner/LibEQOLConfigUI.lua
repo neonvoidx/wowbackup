@@ -944,6 +944,9 @@ local function getSettingRowHeight(control, state)
 		if controlType == "coloroverrides" then
 			return lib.GetColorOverridesRowHeight(control)
 		end
+		if controlType == "reorderlist" then
+			return lib.GetReorderListRowHeight(control)
+		end
 		if layoutType == "stacked" then
 			return 62
 		end
@@ -957,6 +960,9 @@ local function getSettingRowHeight(control, state)
 	end
 	if controlType == "coloroverrides" then
 		return lib.GetColorOverridesRowHeight(control)
+	end
+	if controlType == "reorderlist" then
+		return lib.GetReorderListRowHeight(control)
 	end
 	if layoutType == "stacked" then
 		return STACKED_ROW_HEIGHT
@@ -1596,6 +1602,8 @@ local function getControlTypeLabel(app, control)
 		return _G.EDIT or "Input"
 	elseif controlType == "button" then
 		return _G.ACTION or "Action"
+	elseif controlType == "reorderlist" then
+		return _G.LIST_DELIMITER or "List"
 	elseif controlType == "colorpicker" or controlType == "coloroverrides" then
 		return _G.COLOR or "Color"
 	end
@@ -1619,6 +1627,8 @@ function lib.GetFallbackControlDescription(app, control)
 		return L["configCenterColorFallbackDesc"] or "Choose a color for this setting."
 	elseif controlType == "button" then
 		return L["configCenterButtonFallbackDesc"] or "Run this action."
+	elseif controlType == "reorderlist" then
+		return control.description or ""
 	end
 	return ""
 end
@@ -1949,6 +1959,15 @@ function lib.GetColorOverridesRowHeight(control)
 		return COMPLEX_ROW_HEIGHT
 	end
 	return math.max(COMPLEX_ROW_HEIGHT, 78 + (math.ceil(count / 2) * 36))
+end
+
+lib.ReorderList = lib.ReorderList or {}
+
+function lib.GetReorderListRowHeight(control)
+	local explicitHeight = tonumber(control and control.rowHeight)
+	if explicitHeight then return explicitHeight end
+	local entries = lib.ReorderList.GetEntries and lib.ReorderList.GetEntries(control) or {}
+	return math.max(220, 104 + (#entries * 32))
 end
 
 local function makeFlatButton(parent, text, width, height, iconSource, iconIsAtlas)
@@ -3643,6 +3662,241 @@ local function addColorOverridesWidget(row, app, control, opts)
 	row.refreshControls()
 end
 
+function lib.ReorderList.EnsurePopup()
+	if StaticPopupDialogs.EQOL_CONFIG_REORDER_LIST_ADD then return end
+	StaticPopupDialogs.EQOL_CONFIG_REORDER_LIST_ADD = {
+		text = "%s",
+		button1 = _G.ADD or "Add",
+		button2 = _G.CANCEL or "Cancel",
+		hasEditBox = true,
+		editBoxWidth = 180,
+		timeout = 0,
+		whileDead = true,
+		hideOnEscape = true,
+		preferredIndex = 3,
+		OnShow = function(self, data)
+			if data and data.title and self.text then self.text:SetText(data.title) end
+			local editBox = self.editBox or self.EditBox
+			if editBox then
+				editBox:SetText("")
+				editBox:SetNumeric(data and data.numeric == true)
+				editBox:SetMaxLetters(data and data.maxLetters or 12)
+				editBox:SetFocus()
+			end
+		end,
+		OnAccept = function(self, data)
+			local editBox = self.editBox or self.EditBox
+			local text = editBox and editBox:GetText() or ""
+			if data and type(data.onAccept) == "function" then data.onAccept(text) end
+		end,
+	}
+end
+
+function lib.ReorderList.CallControl(control, name, ...)
+	local func = control and control[name]
+	if type(func) ~= "function" then return nil end
+	local ok, result, extra = pcall(func, ...)
+	if ok then return result, extra end
+	return nil
+end
+
+function lib.ReorderList.GetEntries(control)
+	local entries = lib.ReorderList.CallControl(control, "getEntries")
+	if type(entries) == "table" then return entries end
+	return {}
+end
+
+function lib.ReorderList.GetEntryID(entry, index)
+	return entry and (entry.id or entry.key or entry.value or entry.currencyID) or index
+end
+
+function lib.ReorderList.GetEntryLabel(entry, index)
+	if type(entry) ~= "table" then return tostring(entry or index) end
+	local label = entry.label or entry.text or entry.name or entry.title
+	local id = lib.ReorderList.GetEntryID(entry, index)
+	if id ~= nil and label and label ~= "" then return ("%s (%s)"):format(label, tostring(id)) end
+	return label or tostring(id or index)
+end
+
+function lib.ReorderList.GetEntryIcon(entry)
+	if type(entry) ~= "table" then return nil end
+	return entry.icon or entry.iconFileID or entry.texture
+end
+
+function lib.ReorderList.GetEntryFormatKey(entry)
+	if type(entry) ~= "table" then return nil end
+	return entry.formatKey or entry.format or entry.mode
+end
+
+function lib.ReorderList.GetFormatLabel(control, formatKey)
+	local options = type(control.formatOptions) == "table" and control.formatOptions or nil
+	if options and options[formatKey] then return tostring(options[formatKey]) end
+	return tostring(formatKey or "")
+end
+
+function lib.ReorderList.GetFormatOrder(control)
+	if type(control.formatOrder) == "table" then return control.formatOrder end
+	local order = {}
+	if type(control.formatOptions) == "table" then
+		for key in pairs(control.formatOptions) do order[#order + 1] = key end
+		table.sort(order, function(a, b) return tostring(a) < tostring(b) end)
+	end
+	return order
+end
+
+function lib.ReorderList.RefreshRows(row, control)
+	if control and control.refreshOnChange and row and row._state then
+		row._state:RenderContent()
+	else
+		lib.RefreshVisibleRows(row and row._state)
+	end
+end
+
+function lib.AddReorderListWidget(row, app, control, opts)
+	opts = opts or {}
+	local L = getLocale(app)
+	local top = opts.startY or -56
+	local addButton = makeFlatButton(row, control.addButtonText or (_G.ADD or "Add"), 92, 24)
+	addButton:SetPoint("TOPLEFT", row, "TOPLEFT", FIELD_CONTROL_LEFT, top)
+	row.actionButton = addButton
+	addButton:SetScript("OnClick", function()
+		if not app:IsControlEnabled(control) then return end
+		lib.ReorderList.EnsurePopup()
+		StaticPopup_Show("EQOL_CONFIG_REORDER_LIST_ADD", control.addPopupText or control.addPopupTitle or "", nil, {
+			title = control.addPopupTitle or control.addPopupText or control.label,
+			numeric = control.numeric == true,
+			maxLetters = control.maxChars,
+			onAccept = function(text)
+				lib.ReorderList.CallControl(control, "addEntry", text)
+				lib.ReorderList.RefreshRows(row, control)
+			end,
+		})
+	end)
+
+	local status = createText(row, FONT_MUTED, "", TEXT.muted)
+	status:SetPoint("LEFT", addButton, "RIGHT", 10, 0)
+	status:SetPoint("RIGHT", row, "RIGHT", -14, 0)
+	status:SetHeight(24)
+
+	row.reorderRows = row.reorderRows or {}
+	local function refreshRows()
+		local enabled = app:IsControlEnabled(control)
+		local entries = lib.ReorderList.GetEntries(control)
+		status.Text:SetText(#entries == 0 and (control.emptyText or L["configCenterNone"] or _G.NONE or "None") or "")
+		for index, entry in ipairs(entries) do
+			local item = row.reorderRows[index]
+			if not item then
+				item = CreateFrame("Button", nil, row, "BackdropTemplate")
+				item:SetHeight(28)
+				item:RegisterForDrag("LeftButton")
+				item:EnableMouse(true)
+				item.Icon = item:CreateTexture(nil, "ARTWORK")
+				item.Icon:SetSize(18, 18)
+				item.Icon:SetPoint("LEFT", item, "LEFT", 8, 0)
+				item.Text = item:CreateFontString(nil, "OVERLAY", FONT_TEXT)
+				item.Text:SetPoint("LEFT", item.Icon, "RIGHT", 8, 0)
+				item.Text:SetPoint("RIGHT", item, "RIGHT", -296, 0)
+				item.Text:SetJustifyH("LEFT")
+				item.Format = makeFlatButton(item, "", 128, 22)
+				item.Format:SetPoint("RIGHT", item, "RIGHT", -160, 0)
+				item.MoveUp = makeFlatButton(item, "", 24, 22)
+				item.MoveUp:SetPoint("RIGHT", item, "RIGHT", -128, 0)
+				item.MoveUp.Arrow = createAssetArrow(item.MoveUp, app, 12, "dropdown", "up")
+				item.MoveUp.Arrow:SetPoint("CENTER")
+				item.MoveDown = makeFlatButton(item, "", 24, 22)
+				item.MoveDown:SetPoint("RIGHT", item, "RIGHT", -98, 0)
+				item.MoveDown.Arrow = createAssetArrow(item.MoveDown, app, 12, "dropdown", "down")
+				item.MoveDown.Arrow:SetPoint("CENTER")
+				item.Remove = makeFlatButton(item, _G.REMOVE or "Remove", 84, 22)
+				item.Remove:SetPoint("RIGHT", item, "RIGHT", -8, 0)
+				row.reorderRows[index] = item
+			end
+			item:ClearAllPoints()
+			item:SetPoint("TOPLEFT", row, "TOPLEFT", FIELD_CONTROL_LEFT, top - 34 - ((index - 1) * 32))
+			item:SetPoint("RIGHT", row, "RIGHT", -14, 0)
+			applyBackdrop(item, { 0.045, 0.040, 0.032, 0.80 }, { 0.20, 0.16, 0.10, 0.45 })
+			item._eqolIndex = index
+			item._eqolEntryID = lib.ReorderList.GetEntryID(entry, index)
+			item.Icon:SetTexture(lib.ReorderList.GetEntryIcon(entry) or 134400)
+			item.Text:SetText(lib.ReorderList.GetEntryLabel(entry, index))
+			setTextColor(item.Text, enabled and TEXT.main or TEXT.disabled)
+			item:SetAlpha(enabled and 1 or 0.52)
+			item:EnableMouse(enabled)
+			item.Format:SetShown(type(control.formatOptions) == "table")
+			item.Text:ClearAllPoints()
+			item.Text:SetPoint("LEFT", item.Icon, "RIGHT", 8, 0)
+			if type(control.formatOptions) == "table" then
+				item.Text:SetPoint("RIGHT", item, "RIGHT", -296, 0)
+			elseif type(control.moveEntry) == "function" then
+				item.Text:SetPoint("RIGHT", item, "RIGHT", -156, 0)
+			else
+				item.Text:SetPoint("RIGHT", item, "RIGHT", -100, 0)
+			end
+			item.Format.Text:SetText(lib.ReorderList.GetFormatLabel(control, lib.ReorderList.GetEntryFormatKey(entry)))
+			item.MoveUp:SetShown(type(control.moveEntry) == "function")
+			item.MoveDown:SetShown(type(control.moveEntry) == "function")
+			item.MoveUp._eqolDisabled = not enabled or index <= 1
+			item.MoveDown._eqolDisabled = not enabled or index >= #entries
+			if item.MoveUp.SetEnabled then item.MoveUp:SetEnabled(not item.MoveUp._eqolDisabled) end
+			if item.MoveDown.SetEnabled then item.MoveDown:SetEnabled(not item.MoveDown._eqolDisabled) end
+			lib.ApplyFlatButtonVisual(item.MoveUp)
+			lib.ApplyFlatButtonVisual(item.MoveDown)
+			item.Format:SetScript("OnClick", function(owner)
+				if not app:IsControlEnabled(control) then return end
+				if not MenuUtil or not MenuUtil.CreateContextMenu then return end
+				local entryID = item._eqolEntryID
+				MenuUtil.CreateContextMenu(owner, function(_, rootDescription)
+					rootDescription:SetTag("EQOL_CONFIG_REORDER_FORMAT")
+					for _, key in ipairs(lib.ReorderList.GetFormatOrder(control)) do
+						rootDescription:CreateRadio(lib.ReorderList.GetFormatLabel(control, key), function() return lib.ReorderList.GetEntryFormatKey(entry) == key end, function()
+							lib.ReorderList.CallControl(control, "setEntryFormat", entryID, key)
+							lib.RefreshVisibleRows(row._state)
+						end)
+					end
+				end)
+			end)
+			item.MoveUp:SetScript("OnClick", function()
+				if item.MoveUp._eqolDisabled or not app:IsControlEnabled(control) then return end
+				lib.ReorderList.CallControl(control, "moveEntry", item._eqolIndex, item._eqolIndex - 1)
+				lib.ReorderList.RefreshRows(row, control)
+			end)
+			item.MoveDown:SetScript("OnClick", function()
+				if item.MoveDown._eqolDisabled or not app:IsControlEnabled(control) then return end
+				lib.ReorderList.CallControl(control, "moveEntry", item._eqolIndex, item._eqolIndex + 1)
+				lib.ReorderList.RefreshRows(row, control)
+			end)
+			item.Remove:SetScript("OnClick", function()
+				if not app:IsControlEnabled(control) then return end
+				lib.ReorderList.CallControl(control, "removeEntry", item._eqolEntryID)
+				lib.ReorderList.RefreshRows(row, control)
+			end)
+			item:SetScript("OnDragStart", function(self)
+				if not app:IsControlEnabled(control) then return end
+				row._eqolDragIndex = self._eqolIndex
+				setFrameBackdrop(self, SELECTED_BG, CARD_BORDER_HOVER)
+			end)
+			item:SetScript("OnDragStop", function()
+				local fromIndex = row._eqolDragIndex
+				row._eqolDragIndex = nil
+				if not fromIndex then return end
+				for targetIndex, target in ipairs(row.reorderRows or {}) do
+					if target:IsShown() and target.MouseIsOver and target:MouseIsOver() then
+						if targetIndex ~= fromIndex then lib.ReorderList.CallControl(control, "moveEntry", fromIndex, targetIndex) end
+						break
+					end
+				end
+				lib.ReorderList.RefreshRows(row, control)
+			end)
+			item:Show()
+		end
+		for index = #entries + 1, #(row.reorderRows or {}) do
+			row.reorderRows[index]:Hide()
+		end
+	end
+	row.refreshControls = refreshRows
+	refreshRows()
+end
+
 local function addSettingRow(state, control, pathText, parent, yOffset, width)
 	local app = state.app
 	local _ = pathText
@@ -3854,6 +4108,17 @@ local function addSettingRow(state, control, pathText, parent, yOffset, width)
 				width = 150,
 			},
 		})
+	elseif controlType == "reorderlist" then
+		title:SetPoint("RIGHT", row, "RIGHT", hasNewBadge and -154 or -18, 0)
+		if not compact then
+			desc.Text:SetText(control.description or "")
+			desc:SetPoint("TOPLEFT", title, "BOTTOMLEFT", 0, -6)
+			desc:SetPoint("RIGHT", row, "RIGHT", -18, 0)
+			desc:SetHeight(control.description and control.description ~= "" and 24 or 1)
+		end
+		lib.AddReorderListWidget(row, app, control, {
+			startY = control.description and control.description ~= "" and -68 or -48,
+		})
 	elseif controlType == "button" then
 		title:SetPoint("RIGHT", row, "RIGHT", hasNewBadge and -154 or -18, 0)
 		if not compact then
@@ -3917,8 +4182,14 @@ local function resetCurrentPage(state)
 		return
 	end
 	for _, control in ipairs(getVisiblePageControls(state.app, page)) do
-		if control.default ~= nil then
-			state.app:SetControlValue(control, control.default)
+		local default, hasDefault
+		if type(state.app.GetControlDefault) == "function" then
+			default, hasDefault = state.app:GetControlDefault(control)
+		else
+			default, hasDefault = control.default, control.default ~= nil
+		end
+		if hasDefault then
+			state.app:SetControlValue(control, default)
 		end
 	end
 	state:RenderContent()

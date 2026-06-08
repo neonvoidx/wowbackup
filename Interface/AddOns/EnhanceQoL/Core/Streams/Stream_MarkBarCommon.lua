@@ -1,10 +1,8 @@
--- luacheck: globals EnhanceQoL
-local addonName, addon = ...
-local L = addon.L
+-- luacheck: globals EnhanceQoL InCombatLockdown UIErrorsFrame ERR_NOT_IN_COMBAT
+local _, addon = ...
 
 if addon.MarkBarOptions then return end
 
-local AceGUI = addon.AceGUI
 local MARKBAR_RING_SIZE_OFFSET = 8
 local MARKBAR_ICON_SIZE_OFFSET = -4
 
@@ -35,36 +33,14 @@ local function requestUpdates()
 	addon.DataHub:RequestUpdate("markbar_util")
 end
 
-local aceWindow
-local function showOptions()
+local function showOptions(focusControlID)
 	if InCombatLockdown and InCombatLockdown() then
 		if UIErrorsFrame and ERR_NOT_IN_COMBAT then UIErrorsFrame:AddMessage(ERR_NOT_IN_COMBAT) end
 		return
 	end
-	if aceWindow then
-		aceWindow:Show()
-		return
+	if addon.functions and addon.functions.OpenConfigCenter then
+		addon.functions.OpenConfigCenter("interface.datapanel", focusControlID or "DataPanel_markbar_iconSize")
 	end
-
-	local db = ensureDB()
-	local frame = AceGUI:Create("Window")
-	aceWindow = frame.frame
-	frame:SetTitle(L["Mark Bar"] or "Mark Bar")
-	frame:SetWidth(280)
-	frame:SetHeight(160)
-	frame:SetLayout("List")
-
-	local iconSize = AceGUI:Create("Slider")
-	iconSize:SetLabel(L["Icon size"] or "Icon size")
-	iconSize:SetSliderValues(10, 18, 1)
-	iconSize:SetValue(db.iconSize or 14)
-	iconSize:SetCallback("OnValueChanged", function(_, _, val)
-		db.iconSize = math.floor(val + 0.5)
-		requestUpdates()
-	end)
-	frame:AddChild(iconSize)
-
-	frame.frame:Show()
 end
 
 addon.MarkBarOptions = {

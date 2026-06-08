@@ -1,8 +1,7 @@
--- luacheck: globals EnhanceQoL GetZoneText GetSubZoneText GetRealZoneText GAMEMENU_OPTIONS FONT_SIZE UIParent C_Timer C_PvP GetZonePVPInfo
+-- luacheck: globals EnhanceQoL GetZoneText GetSubZoneText GetRealZoneText C_PvP GetZonePVPInfo
 local addonName, addon = ...
 local L = addon.L
 
-local AceGUI = addon.AceGUI
 local db
 local stream
 
@@ -24,74 +23,10 @@ local function ensureDB()
 	if db.useZoneColor == nil then db.useZoneColor = true end
 end
 
-local function RestorePosition(frame)
-	if not db then return end
-	if db.point and db.x and db.y then
-		frame:ClearAllPoints()
-		frame:SetPoint(db.point, UIParent, db.point, db.x, db.y)
+local function openSettings()
+	if addon.functions and addon.functions.OpenConfigCenter then
+		addon.functions.OpenConfigCenter("interface.datapanel", "DataPanel_location_fontSize")
 	end
-end
-
-local aceWindow
-local function createAceWindow()
-	if aceWindow then
-		aceWindow:Show()
-		return
-	end
-	ensureDB()
-	local frame = AceGUI:Create("Window")
-	aceWindow = frame.frame
-	frame:SetTitle((addon.DataPanel and addon.DataPanel.GetStreamOptionsTitle and addon.DataPanel.GetStreamOptionsTitle(stream and stream.meta and stream.meta.title)) or GAMEMENU_OPTIONS)
-	frame:SetWidth(320)
-	frame:SetHeight(220)
-	frame:SetLayout("List")
-
-	frame.frame:SetScript("OnShow", function(self) RestorePosition(self) end)
-	frame.frame:SetScript("OnHide", function(self)
-		local point, _, _, xOfs, yOfs = self:GetPoint()
-		db.point = point
-		db.x = xOfs
-		db.y = yOfs
-	end)
-
-	local updateTimer
-	local function scheduleUpdate()
-		if updateTimer then updateTimer:Cancel() end
-		updateTimer = C_Timer.NewTimer(0.05, function()
-			updateTimer = nil
-			if stream then addon.DataHub:RequestUpdate(stream) end
-		end)
-	end
-
-	local fontSize = AceGUI:Create("Slider")
-	fontSize:SetLabel(FONT_SIZE)
-	fontSize:SetSliderValues(8, 32, 1)
-	fontSize:SetValue(db.fontSize)
-	fontSize:SetCallback("OnValueChanged", function(_, _, val)
-		db.fontSize = val
-		scheduleUpdate()
-	end)
-	frame:AddChild(fontSize)
-
-	local showSubzone = AceGUI:Create("CheckBox")
-	showSubzone:SetLabel(L["Show subzone"] or "Show subzone")
-	showSubzone:SetValue(db.showSubzone and true or false)
-	showSubzone:SetCallback("OnValueChanged", function(_, _, val)
-		db.showSubzone = val and true or false
-		scheduleUpdate()
-	end)
-	frame:AddChild(showSubzone)
-
-	local useZoneColor = AceGUI:Create("CheckBox")
-	useZoneColor:SetLabel(L["Use zone color"] or "Use zone color")
-	useZoneColor:SetValue(db.useZoneColor and true or false)
-	useZoneColor:SetCallback("OnValueChanged", function(_, _, val)
-		db.useZoneColor = val and true or false
-		scheduleUpdate()
-	end)
-	frame:AddChild(useZoneColor)
-
-	frame.frame:Show()
 end
 
 local function getLocationText()
@@ -160,7 +95,7 @@ local provider = {
 		PLAYER_ENTERING_WORLD = function(s) addon.DataHub:RequestUpdate(s) end,
 	},
 	OnClick = function(_, btn)
-		if btn == "RightButton" then createAceWindow() end
+		if btn == "RightButton" then openSettings() end
 	end,
 }
 

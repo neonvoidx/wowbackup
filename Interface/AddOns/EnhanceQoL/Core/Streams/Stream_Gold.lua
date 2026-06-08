@@ -2,7 +2,6 @@
 local addonName, addon = ...
 local L = addon.L
 
-local AceGUI = addon.AceGUI
 local db
 local stream
 
@@ -46,99 +45,11 @@ local function ensureDB()
 		db.textColor = { r = r, g = g, b = b }
 	end
 end
-local function RestorePosition(frame)
-	if db.point and db.x and db.y then
-		frame:ClearAllPoints()
-		frame:SetPoint(db.point, UIParent, db.point, db.x, db.y)
+
+local function openSettings()
+	if addon.functions and addon.functions.OpenConfigCenter then
+		addon.functions.OpenConfigCenter("interface.datapanel", "DataPanel_gold_fontSize")
 	end
-end
-
-local aceWindow
-local function createAceWindow()
-	if aceWindow then
-		aceWindow:Show()
-		return
-	end
-	ensureDB()
-	local frame = AceGUI:Create("Window")
-	aceWindow = frame.frame
-	frame:SetTitle((addon.DataPanel and addon.DataPanel.GetStreamOptionsTitle and addon.DataPanel.GetStreamOptionsTitle(stream and stream.meta and stream.meta.title)) or GAMEMENU_OPTIONS)
-	frame:SetWidth(300)
-	frame:SetHeight(340)
-	frame:SetLayout("List")
-
-	frame.frame:SetScript("OnShow", function(self) RestorePosition(self) end)
-	frame.frame:SetScript("OnHide", function(self)
-		local point, _, _, xOfs, yOfs = self:GetPoint()
-		db.point = point
-		db.x = xOfs
-		db.y = yOfs
-	end)
-
-	local fontSize = AceGUI:Create("Slider")
-	fontSize:SetLabel(FONT_SIZE)
-	fontSize:SetSliderValues(8, 32, 1)
-	fontSize:SetValue(db.fontSize)
-	fontSize:SetCallback("OnValueChanged", function(_, _, val)
-		db.fontSize = val
-		addon.DataHub:RequestUpdate(stream)
-	end)
-	frame:AddChild(fontSize)
-
-	local displayMode = AceGUI:Create("Dropdown")
-	displayMode:SetLabel(L["goldPanelDisplay"] or "Gold display")
-	displayMode:SetList({
-		character = CHARACTER,
-		warband = L["warbandGold"] or "Warband gold",
-	})
-	displayMode:SetValue(db.displayMode or "character")
-	displayMode:SetCallback("OnValueChanged", function(_, _, key)
-		db.displayMode = (key == "warband") and "warband" or "character"
-		addon.DataHub:RequestUpdate(stream)
-	end)
-	frame:AddChild(displayMode)
-
-	local clickAction = AceGUI:Create("Dropdown")
-	clickAction:SetLabel(L["Left-click action"] or "Left-click action")
-	clickAction:SetList({
-		toggleDisplay = L["goldPanelLeftClickToggleDisplay"] or "Toggle gold display",
-		openBags = L["goldPanelLeftClickOpenBags"] or "Open bags",
-	})
-	clickAction:SetValue(db.leftClickAction or "toggleDisplay")
-	clickAction:SetCallback("OnValueChanged", function(_, _, key)
-		db.leftClickAction = (key == "openBags") and "openBags" or "toggleDisplay"
-		addon.DataHub:RequestUpdate(stream)
-	end)
-	frame:AddChild(clickAction)
-
-	local showSilverCopper = AceGUI:Create("CheckBox")
-	showSilverCopper:SetLabel(L["goldPanelShowSilverCopper"] or "Show silver and copper")
-	showSilverCopper:SetValue(db.showSilverCopper)
-	showSilverCopper:SetCallback("OnValueChanged", function(_, _, val)
-		db.showSilverCopper = val and true or false
-		addon.DataHub:RequestUpdate(stream)
-	end)
-	frame:AddChild(showSilverCopper)
-
-	local useColor = AceGUI:Create("CheckBox")
-	useColor:SetLabel(L["Use custom text color"] or "Use custom text color")
-	useColor:SetValue(db.useTextColor)
-	useColor:SetCallback("OnValueChanged", function(_, _, val)
-		db.useTextColor = val and true or false
-		addon.DataHub:RequestUpdate(stream)
-	end)
-	frame:AddChild(useColor)
-
-	local textColor = AceGUI:Create("ColorPicker")
-	textColor:SetLabel(L["Text color"] or "Text color")
-	textColor:SetColor(db.textColor.r, db.textColor.g, db.textColor.b)
-	textColor:SetCallback("OnValueChanged", function(_, _, r, g, b)
-		db.textColor = { r = r, g = g, b = b }
-		if db.useTextColor then addon.DataHub:RequestUpdate(stream) end
-	end)
-	frame:AddChild(textColor)
-
-	frame.frame:Show()
 end
 
 local COPPER_PER_GOLD = 10000
@@ -326,7 +237,7 @@ local provider = {
 				toggleDisplayMode()
 			end
 		elseif btn == "RightButton" then
-			createAceWindow()
+			openSettings()
 		end
 	end,
 	OnMouseEnter = function(btn)

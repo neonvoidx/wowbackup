@@ -1,8 +1,7 @@
--- luacheck: globals EnhanceQoL GetFramerate GetNetStats GAMEMENU_OPTIONS MAINMENUBAR_FPS_LABEL MAINMENUBAR_LATENCY_LABEL NORMAL_FONT_COLOR
+-- luacheck: globals EnhanceQoL GetFramerate GetNetStats MAINMENUBAR_FPS_LABEL MAINMENUBAR_LATENCY_LABEL NORMAL_FONT_COLOR
 local addonName, addon = ...
 local L = addon.L
 
-local AceGUI = addon.AceGUI
 local db
 local stream
 
@@ -88,221 +87,10 @@ local function ensureDB()
 	db.pingColorHigh = db.pingColorHigh or { r = 1, g = 0, b = 0 }
 end
 
-local function RestorePosition(frame)
-	if not db then return end
-	if db.point and db.x and db.y then
-		frame:ClearAllPoints()
-		frame:SetPoint(db.point, UIParent, db.point, db.x, db.y)
+local function openSettings()
+	if addon.functions and addon.functions.OpenConfigCenter then
+		addon.functions.OpenConfigCenter("interface.datapanel", "DataPanel_latency_fontSize")
 	end
-end
-
-local aceWindow
-local function createAceWindow()
-	if aceWindow then
-		aceWindow:Show()
-		return
-	end
-	ensureDB()
-	local frame = AceGUI:Create("Window")
-	aceWindow = frame.frame
-	frame:SetTitle((addon.DataPanel and addon.DataPanel.GetStreamOptionsTitle and addon.DataPanel.GetStreamOptionsTitle(stream and stream.meta and stream.meta.title)) or GAMEMENU_OPTIONS)
-	frame:SetWidth(360)
-	frame:SetHeight(420)
-	frame:SetLayout("Fill")
-
-	frame.frame:SetScript("OnShow", function(self) RestorePosition(self) end)
-	frame.frame:SetScript("OnHide", function(self)
-		local point, _, _, xOfs, yOfs = self:GetPoint()
-		db.point = point
-		db.x = xOfs
-		db.y = yOfs
-	end)
-
-	-- Debounce RequestUpdate calls while dragging sliders
-	local sliderTimer
-	local function scheduleUpdate()
-		if sliderTimer then sliderTimer:Cancel() end
-		sliderTimer = C_Timer.NewTimer(0.05, function()
-			sliderTimer = nil
-			if stream then addon.DataHub:RequestUpdate(stream) end
-		end)
-	end
-
-	local scroll = AceGUI:Create("ScrollFrame")
-	scroll:SetLayout("List")
-	scroll:SetFullWidth(true)
-	scroll:SetFullHeight(true)
-	frame:AddChild(scroll)
-
-	local fontSize = AceGUI:Create("Slider")
-	fontSize:SetLabel(FONT_SIZE)
-	fontSize:SetSliderValues(8, 32, 1)
-	fontSize:SetValue(db.fontSize)
-	fontSize:SetCallback("OnValueChanged", function(_, _, val)
-		db.fontSize = val
-		scheduleUpdate()
-	end)
-	scroll:AddChild(fontSize)
-
-	local textColor = AceGUI:Create("ColorPicker")
-	textColor:SetLabel(L["Text color"] or "Text color")
-	textColor:SetColor(db.textColor.r, db.textColor.g, db.textColor.b)
-	textColor:SetCallback("OnValueChanged", function(_, _, r, g, b)
-		db.textColor = { r = r, g = g, b = b }
-		lastDisplay = nil
-		lastFps = nil
-		lastHome, lastWorld = nil, nil
-		lastPingMode = nil
-		scheduleUpdate()
-	end)
-	scroll:AddChild(textColor)
-
-	local display = AceGUI:Create("Dropdown")
-	display:SetLabel(L["latencyPanelDisplay"] or "Panel display")
-	display:SetList({
-		both = L["latencyPanelDisplayBoth"] or "FPS + Latency",
-		ping = L["latencyPanelDisplayPing"] or "Latency only",
-		fps = L["latencyPanelDisplayFPS"] or "FPS only",
-	})
-	display:SetValue(db.displayMode)
-	display:SetCallback("OnValueChanged", function(_, _, key)
-		db.displayMode = key or "both"
-		lastDisplay = nil
-		lastFps = nil
-		lastHome, lastWorld = nil, nil
-		lastPingMode = nil
-		pingHome, pingWorld = nil, nil
-		emaFPS = nil
-		scheduleUpdate()
-	end)
-	scroll:AddChild(display)
-
-	local fpsRate = AceGUI:Create("Slider")
-	fpsRate:SetLabel(L["FPS update interval (s)"] or "FPS update interval (s)")
-	fpsRate:SetSliderValues(0.10, 1.00, 0.05)
-	fpsRate:SetValue(db.fpsInterval)
-	fpsRate:SetCallback("OnValueChanged", function(_, _, val)
-		db.fpsInterval = val
-		if stream then stream.interval = val end -- driver picks up new cadence
-		-- Reset EMA so the new cadence takes immediate effect visually
-		emaFPS = nil
-		lastFps = nil
-		scheduleUpdate()
-	end)
-	scroll:AddChild(fpsRate)
-
-	local smooth = AceGUI:Create("Slider")
-	smooth:SetLabel(L["FPS smoothing window (s)"] or "FPS smoothing window (s)")
-	smooth:SetSliderValues(0.00, 1.50, 0.05)
-	smooth:SetValue(db.fpsSmoothWindow)
-	smooth:SetCallback("OnValueChanged", function(_, _, val)
-		db.fpsSmoothWindow = val
-		-- Reset EMA for a fresh smoothing window
-		emaFPS = nil
-		lastFps = nil
-		scheduleUpdate()
-	end)
-	scroll:AddChild(smooth)
-
-	local pingRate = AceGUI:Create("Slider")
-	pingRate:SetLabel(L["Ping update interval (s)"] or "Ping update interval (s)")
-	pingRate:SetSliderValues(0.50, 3.00, 0.25)
-	pingRate:SetValue(db.pingInterval)
-	pingRate:SetCallback("OnValueChanged", function(_, _, val)
-		db.pingInterval = val
-		scheduleUpdate()
-	end)
-	scroll:AddChild(pingRate)
-
-	local mode = AceGUI:Create("Dropdown")
-	mode:SetLabel(L["Ping display"] or "Ping display")
-	mode:SetList({
-		max = L["Max(home, world)"] or "Max(home, world)",
-		split = L["Home + World"] or "Home + World",
-		split_vertical = L["Home + World (vertical)"] or "Home + World (vertical)",
-		home = _G["HOME"] or "Home",
-		world = _G["WORLD"] or "World",
-	})
-	mode:SetValue(db.pingMode)
-	mode:SetCallback("OnValueChanged", function(_, _, key)
-		db.pingMode = key or "max"
-		-- Invalidate cache to force re-render even if values are equal
-		lastPingMode = nil
-		lastHome, lastWorld = nil, nil
-		scheduleUpdate()
-	end)
-	scroll:AddChild(mode)
-
-	local pingColors = AceGUI:Create("InlineGroup")
-	pingColors:SetTitle(L["latencyPingColorSection"] or "Ping colors")
-	pingColors:SetFullWidth(true)
-	pingColors:SetLayout("List")
-
-	local midThreshold
-
-	local lowThreshold = AceGUI:Create("Slider")
-	lowThreshold:SetLabel(L["Low threshold (ms)"] or "Low threshold (ms)")
-	lowThreshold:SetSliderValues(0, 1000, 1)
-	lowThreshold:SetValue(db.pingThresholdLow)
-	lowThreshold:SetCallback("OnValueChanged", function(_, _, val)
-		db.pingThresholdLow = floor(val + 0.5)
-		if db.pingThresholdMid < db.pingThresholdLow then
-			db.pingThresholdMid = db.pingThresholdLow
-			if midThreshold then midThreshold:SetValue(db.pingThresholdMid) end
-		end
-		lastHome, lastWorld = nil, nil
-		scheduleUpdate()
-	end)
-	pingColors:AddChild(lowThreshold)
-
-	midThreshold = AceGUI:Create("Slider")
-	midThreshold:SetLabel(L["latencyPingMidThreshold"] or "Mid threshold (ms)")
-	midThreshold:SetSliderValues(0, 1000, 1)
-	midThreshold:SetValue(db.pingThresholdMid)
-	midThreshold:SetCallback("OnValueChanged", function(_, _, val)
-		db.pingThresholdMid = floor(val + 0.5)
-		if db.pingThresholdMid < db.pingThresholdLow then
-			db.pingThresholdLow = db.pingThresholdMid
-			lowThreshold:SetValue(db.pingThresholdLow)
-		end
-		lastHome, lastWorld = nil, nil
-		scheduleUpdate()
-	end)
-	pingColors:AddChild(midThreshold)
-
-	local lowColor = AceGUI:Create("ColorPicker")
-	lowColor:SetLabel(L["latencyPingLowColor"] or "Low ping color")
-	lowColor:SetColor(db.pingColorLow.r, db.pingColorLow.g, db.pingColorLow.b)
-	lowColor:SetCallback("OnValueChanged", function(_, _, r, g, b)
-		db.pingColorLow = { r = r, g = g, b = b }
-		lastHome, lastWorld = nil, nil
-		scheduleUpdate()
-	end)
-	pingColors:AddChild(lowColor)
-
-	local midColor = AceGUI:Create("ColorPicker")
-	midColor:SetLabel(L["latencyPingMidColor"] or "Mid ping color")
-	midColor:SetColor(db.pingColorMid.r, db.pingColorMid.g, db.pingColorMid.b)
-	midColor:SetCallback("OnValueChanged", function(_, _, r, g, b)
-		db.pingColorMid = { r = r, g = g, b = b }
-		lastHome, lastWorld = nil, nil
-		scheduleUpdate()
-	end)
-	pingColors:AddChild(midColor)
-
-	local highColor = AceGUI:Create("ColorPicker")
-	highColor:SetLabel(L["latencyPingHighColor"] or "High ping color")
-	highColor:SetColor(db.pingColorHigh.r, db.pingColorHigh.g, db.pingColorHigh.b)
-	highColor:SetCallback("OnValueChanged", function(_, _, r, g, b)
-		db.pingColorHigh = { r = r, g = g, b = b }
-		lastHome, lastWorld = nil, nil
-		scheduleUpdate()
-	end)
-	pingColors:AddChild(highColor)
-
-	scroll:AddChild(pingColors)
-
-	frame.frame:Show()
 end
 
 -- EMA-based smoothing (no tables, constant work per tick)
@@ -426,7 +214,7 @@ local provider = {
 	poll = 0.25, -- default FPS cadence; kept in sync with db.fpsInterval at runtime
 	update = updateLatency,
 	OnClick = function(_, btn)
-		if btn == "RightButton" then createAceWindow() end
+		if btn == "RightButton" then openSettings() end
 	end,
 	OnMouseEnter = function(btn)
 		ensureDB()

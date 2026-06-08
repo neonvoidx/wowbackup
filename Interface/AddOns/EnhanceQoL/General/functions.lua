@@ -1,6 +1,5 @@
 local addonName, addon = ...
 
-local AceGUI = LibStub("AceGUI-3.0")
 local SharedMedia = LibStub("LibSharedMedia-3.0", true)
 
 local L = LibStub("AceLocale-3.0"):GetLocale("EnhanceQoL")
@@ -810,228 +809,9 @@ function addon.functions.prepareListForDropdown(tList, sortKey)
 	return dropdownList, order
 end
 
-function addon.functions.createContainer(type, layout)
-	local element = AceGUI:Create(type)
-	element:SetFullWidth(true)
-	if layout then element:SetLayout(layout) end
-	return element
-end
-
-function addon.functions.createCheckboxAce(text, value, callBack, description)
-	local checkbox = AceGUI:Create("CheckBox")
-
-	checkbox:SetLabel(text)
-	checkbox:SetValue(value)
-	checkbox:SetCallback("OnValueChanged", callBack)
-	checkbox:SetFullWidth(true)
-	if description then checkbox:SetDescription("|cffffd700" .. tostring(description) .. "|r ") end
-
-	return checkbox
-end
-
-function addon.functions.createEditboxAce(label, text, OnEnterPressed, OnTextChanged)
-	local editbox = AceGUI:Create("EditBox")
-
-	editbox:SetLabel(label)
-	if text then editbox:SetText(text) end
-	if OnEnterPressed then editbox:SetCallback("OnEnterPressed", OnEnterPressed) end
-	if OnTextChanged then editbox:SetCallback("OnTextChanged", OnTextChanged) end
-	return editbox
-end
-
-function addon.functions.createSliderAce(text, value, min, max, step, callBack)
-	local slider = AceGUI:Create("Slider")
-
-	slider:SetLabel(text)
-	slider:SetValue(value)
-	slider:SetSliderValues(min, max, step)
-	if callBack then slider:SetCallback("OnValueChanged", callBack) end
-	slider:SetFullWidth(true)
-
-	return slider
-end
-
-function addon.functions.createSpacerAce()
-	local spacer = addon.functions.createLabelAce(" ")
-	spacer:SetFullWidth(true)
-	return spacer
-end
-
 function addon.functions.getHeightOffset(element)
 	local _, _, _, _, headerY = element:GetPoint()
 	return headerY - element:GetHeight()
-end
-
-function addon.functions.createLabelAce(text, color, font, fontSize)
-	if nil == fontSize then fontSize = 12 end
-	local label = AceGUI:Create("Label")
-
-	label:SetText(text)
-	if color then label:SetColor(color.r, color.g, color.b) end
-
-	label:SetFont(font or addon.variables.defaultFont, fontSize, "OUTLINE")
-	return label
-end
-
-function addon.functions.createButtonAce(text, width, callBack)
-	local button = AceGUI:Create("Button")
-	button:SetText(text)
-	button:SetWidth(width or 100)
-	if callBack then button:SetCallback("OnClick", callBack) end
-	return button
-end
-
-function addon.functions.createDropdownAce(text, list, order, callBack)
-	local dropdown = AceGUI:Create("Dropdown")
-	dropdown:SetLabel(text or "")
-
-	if order then
-		dropdown:SetList(list, order)
-	else
-		dropdown:SetList(list)
-	end
-	dropdown:SetFullWidth(true)
-	if callBack then dropdown:SetCallback("OnValueChanged", callBack) end
-	return dropdown
-end
-
-function addon.functions.createWrapperData(data, container, L)
-	local sortedParents = {}
-	for _, checkbox in ipairs(data) do
-		if not sortedParents[checkbox.parent] then sortedParents[checkbox.parent] = {} end
-		table.insert(sortedParents[checkbox.parent], checkbox)
-	end
-
-	local sortedParentKeys = {}
-	for parent in pairs(sortedParents) do
-		table.insert(sortedParentKeys, parent)
-	end
-	table.sort(sortedParentKeys)
-
-	local wrapper = addon.functions.createContainer("SimpleGroup", "Fill")
-	wrapper:SetFullWidth(true)
-	wrapper:SetFullHeight(true)
-	container:AddChild(wrapper)
-
-	local scroll = AceGUI:Create("ScrollFrame")
-	scroll:SetLayout("Flow")
-	scroll:SetFullWidth(true)
-	scroll:SetFullHeight(true)
-	wrapper:AddChild(scroll)
-
-	local scrollInner = addon.functions.createContainer("SimpleGroup", "Flow")
-	scrollInner:SetFullWidth(true)
-	scrollInner:SetFullHeight(true)
-	scroll:AddChild(scrollInner)
-
-	for _, parent in ipairs(sortedParentKeys) do
-		local groupData = sortedParents[parent]
-
-		table.sort(groupData, function(a, b)
-			local textA = a.text or L[a.var]
-			local textB = b.text or L[b.var]
-			return textA < textB
-		end)
-
-		local group = AceGUI:Create("InlineGroup")
-		group:SetLayout("List")
-		group:SetFullWidth(true)
-		group:SetTitle(parent)
-		scrollInner:AddChild(group)
-
-		-- Stable ordering: prefer displayOrder if provided, else by label text
-		table.sort(groupData, function(a, b)
-			local ao, bo = a.displayOrder, b.displayOrder
-			if ao ~= nil or bo ~= nil then
-				if ao == nil then ao = math.huge end
-				if bo == nil then bo = math.huge end
-				if ao ~= bo then return ao < bo end
-			end
-			local textA = a.text or L[a.var] or ""
-			local textB = b.text or L[b.var] or ""
-			return textA < textB
-		end)
-
-		for _, checkboxData in ipairs(groupData) do
-			local widget = AceGUI:Create(checkboxData.type)
-
-			if checkboxData.type == "CheckBox" then
-				widget:SetLabel(checkboxData.text or L[checkboxData.var])
-				widget:SetValue(checkboxData.value or addon.db[checkboxData.var])
-				widget:SetCallback("OnValueChanged", checkboxData.callback)
-				widget:SetFullWidth(true)
-				group:AddChild(widget)
-
-				if checkboxData.desc then
-					local subtext = AceGUI:Create("Label")
-					subtext:SetText(string.format("|cffffd700" .. checkboxData.desc .. "|r "))
-					subtext:SetFont(addon.variables.defaultFont, 10, "OUTLINE")
-					subtext:SetFullWidth(true)
-					subtext:SetColor(1, 1, 1)
-					group:AddChild(subtext)
-				end
-			elseif checkboxData.type == "Button" then
-				widget:SetText(checkboxData.text)
-				widget:SetWidth(checkboxData.width or 100)
-				if checkboxData.callback then widget:SetCallback("OnClick", checkboxData.callback) end
-				group:AddChild(widget)
-			elseif checkboxData.type == "Label" then
-				widget = AceGUI:Create("Label")
-				widget:SetText(checkboxData.text or (checkboxData.var and L[checkboxData.var]) or "")
-				widget:SetFont(addon.variables.defaultFont, 12, "OUTLINE")
-				widget:SetFullWidth(true)
-				group:AddChild(widget)
-			elseif checkboxData.type == "Dropdown" then
-				widget:SetLabel(checkboxData.text or "")
-				if checkboxData.order then
-					widget:SetList(checkboxData.list, checkboxData.order)
-				else
-					widget:SetList(checkboxData.list)
-				end
-				widget:SetFullWidth(true)
-				if checkboxData.callback then widget:SetCallback("OnValueChanged", checkboxData.callback) end
-				group:AddChild(widget)
-				if checkboxData.value then widget:SetValue(checkboxData.value) end
-				if checkboxData.relWidth then widget:SetRelativeWidth(checkboxData.relWidth) end
-			elseif checkboxData.type == "ColorPicker" then
-				widget = AceGUI:Create("ColorPicker")
-				widget:SetLabel(checkboxData.text or "")
-				local c = checkboxData.value or { r = 1, g = 1, b = 1 }
-				widget:SetColor(c.r or 1, c.g or 1, c.b or 1)
-				widget:SetCallback("OnValueChanged", function(_, _, r, g, b)
-					if checkboxData.callback then checkboxData.callback(r, g, b) end
-				end)
-				group:AddChild(widget)
-			elseif checkboxData.type == "Slider" then
-				widget = AceGUI:Create("Slider")
-				local value = checkboxData.value or 0
-				local labelBase = checkboxData.text or ""
-				local labelFormatter = checkboxData.labelFormatter
-				local function setLabel(val)
-					if checkboxData.showValue == false then
-						widget:SetLabel(labelBase)
-					else
-						local formatted = val
-						if labelFormatter then formatted = labelFormatter(val) end
-						widget:SetLabel(string.format("%s: %s", labelBase, tostring(formatted)))
-					end
-				end
-				setLabel(value)
-				widget:SetValue(value)
-				widget:SetSliderValues(checkboxData.min or 0, checkboxData.max or 100, checkboxData.step or 1)
-				widget:SetFullWidth(true)
-				widget:SetCallback("OnValueChanged", function(self, _, val)
-					setLabel(val)
-					if checkboxData.callback then checkboxData.callback(self, _, val) end
-				end)
-				group:AddChild(widget)
-			end
-			if checkboxData.gv then addon.elements[checkboxData.gv] = widget end
-		end
-	end
-	scroll:DoLayout()
-	scrollInner:DoLayout()
-	return wrapper
 end
 
 local tooltipCache = {}
@@ -1877,17 +1657,14 @@ local function CreateFilterMenu()
 		frame:SetPoint("TOPRIGHT", ContainerFrameCombinedBags, "TOPLEFT", -10, 0)
 	end
 
-	-- Scrollbarer Bereich
-	local scrollContainer = AceGUI:Create("ScrollFrame")
-	scrollContainer:SetLayout("Flow")
-	scrollContainer:SetFullWidth(true)
-	scrollContainer:SetFullHeight(true)
-
-	scrollContainer.frame:SetParent(frame)
-	scrollContainer.frame:ClearAllPoints()
-	scrollContainer.frame:SetPoint("TOPLEFT", frame, "TOPLEFT", 10, -10)
-	scrollContainer.frame:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", -10, 10)
-	scrollContainer.frame:Show()
+	local scrollFrame = CreateFrame("ScrollFrame", "InventoryFilterPanelScrollFrame", frame, "UIPanelScrollFrameTemplate")
+	scrollFrame:SetPoint("TOPLEFT", frame, "TOPLEFT", 10, -10)
+	scrollFrame:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", -28, 10)
+	local scrollContainer = CreateFrame("Frame", nil, scrollFrame)
+	scrollFrame:SetScrollChild(scrollContainer)
+	scrollContainer:SetPoint("TOPLEFT")
+	scrollContainer:SetSize(220, 1)
+	scrollFrame:Show()
 	frame.widgets = {}
 
 	local function AnyFilterActive()
@@ -1914,26 +1691,56 @@ local function CreateFilterMenu()
 
 	local longestWidth = 200
 	local math_max = math.max
+	local yOffset = 0
+	local rowHeight = 24
+	local rowGap = 4
+	local rowInset = 6
+
+	local function refreshBags()
+		addon.functions.updateBags(ContainerFrameCombinedBags)
+		for _, bagFrame in ipairs(ContainerFrameContainer.ContainerFrames) do
+			addon.functions.updateBags(bagFrame)
+		end
+		if _G.BankPanel and _G.BankPanel:IsShown() then addon.functions.updateBags(_G.BankPanel) end
+	end
+
+	local function addRow(widget, height, xOffset)
+		height = height or rowHeight
+		xOffset = xOffset or rowInset
+		widget:SetParent(scrollContainer)
+		widget:ClearAllPoints()
+		widget:SetPoint("TOPLEFT", scrollContainer, "TOPLEFT", xOffset, -yOffset)
+		yOffset = yOffset + height + rowGap
+		scrollContainer:SetHeight(math.max(1, yOffset))
+		return widget
+	end
+
 	-- Dynamisch die UI-Elemente aus `filterData` erstellen
 	for _, section in ipairs(filterData) do
 		-- Überschrift für jede Sektion
-		local label = AceGUI:Create("Label")
+		local label = scrollContainer:CreateFontString(nil, "ARTWORK", "GameFontNormal")
 		label:SetText("|cffffd100" .. section.label .. "|r") -- Goldene Überschrift
 		label:SetFont(addon.variables.defaultFont, 12, "OUTLINE")
-		label:SetFullWidth(true)
-		scrollContainer:AddChild(label)
+		label:SetJustifyH("LEFT")
+		label:SetSize(220, 18)
+		addRow(label, 18)
 
-		longestWidth = math_max(label.label:GetStringWidth(), longestWidth)
+		longestWidth = math_max(label:GetStringWidth(), longestWidth)
 
 		-- Füge die Kind-Elemente hinzu
 		for _, item in ipairs(section.child) do
 			local widget
 
 			if item.type == "CheckBox" then
-				widget = AceGUI:Create("CheckBox")
-				widget:SetLabel(item.label)
-				widget:SetValue(addon.itemBagFilters[item.key])
-				widget:SetCallback("OnValueChanged", function(_, _, value)
+				widget = CreateFrame("CheckButton", nil, scrollContainer, "UICheckButtonTemplate")
+				widget:SetSize(22, 22)
+				widget.text = widget.Text or widget:CreateFontString(nil, "ARTWORK", "GameFontNormal")
+				widget.text:SetPoint("LEFT", widget, "RIGHT", 2, 0)
+				widget.text:SetText(item.label)
+				widget:SetChecked(addon.itemBagFilters[item.key] == true)
+				widget.SetValue = widget.SetChecked
+				widget:SetScript("OnClick", function(self)
+					local value = self:GetChecked() == true
 					addon.itemBagFilters[item.key] = value
 					if item.qFilter then
 						addon.itemBagFiltersQuality[item.qFilter] = value
@@ -1947,75 +1754,58 @@ local function CreateFilterMenu()
 						addon.itemBagFiltersUpgrade[item.uFilter] = value
 						checkActiveUpgradeFilter()
 					end
-					-- Hier könnte man die Filterlogik triggern, z. B.:
-					-- UpdateInventoryDisplay()
-					addon.functions.updateBags(ContainerFrameCombinedBags)
-					for _, frame in ipairs(ContainerFrameContainer.ContainerFrames) do
-						addon.functions.updateBags(frame)
-					end
-
-					if _G.BankPanel and _G.BankPanel:IsShown() then addon.functions.updateBags(_G.BankPanel) end
-
+					refreshBags()
 					UpdateResetButton()
 				end)
 				if item.tooltip then
-					widget:SetCallback("OnEnter", function(self)
-						GameTooltip:SetOwner(self.frame, "ANCHOR_RIGHT")
+					widget:SetScript("OnEnter", function(self)
+						GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
 						GameTooltip:ClearLines()
 						GameTooltip:AddLine(item.tooltip)
 						GameTooltip:Show()
 					end)
-					widget:SetCallback("OnLeave", function(self) GameTooltip:Hide() end)
+					widget:SetScript("OnLeave", function() GameTooltip:Hide() end)
 				end
 			elseif item.type == "EditBox" then
 				-- separate label so it aligns nicely above half‑width boxes
-				local eLabel = AceGUI:Create("Label")
+				local eLabel = scrollContainer:CreateFontString(nil, "ARTWORK", "GameFontNormal")
 				eLabel:SetText(item.label)
-				eLabel:SetRelativeWidth(0.48)
-				scrollContainer:AddChild(eLabel)
-				widget = AceGUI:Create("EditBox")
-				-- widget:SetLabel(item.label) -- REMOVED: label now handled by separate label above
-				widget:SetWidth(50)
+				eLabel:SetJustifyH("LEFT")
+				eLabel:SetSize(220, 16)
+				addRow(eLabel, 16)
+				widget = CreateFrame("EditBox", nil, scrollContainer, "InputBoxTemplate")
+				widget:SetSize(70, 22)
+				widget:SetAutoFocus(false)
 				widget:SetText(addon.itemBagFilters[item.key] or "")
-				-- Show Min/Max boxes side‑by‑side, half width each
-				if item.key == "minLevel" or item.key == "maxLevel" then
-					-- keep some margin, 0.48 looks good in Flow layout
-					widget:SetRelativeWidth(0.48)
-				end
 
-				widget:SetCallback("OnTextChanged", function(self, _, text)
-					local caret = self.editbox:GetCursorPosition()
+				widget:SetScript("OnTextChanged", function(self)
+					local text = self:GetText() or ""
+					local caret = self:GetCursorPosition()
 					local numeric = text:gsub("%D", "")
 					if numeric ~= text then
 						self:SetText(numeric)
 						local newPos = math.max(0, caret - (text:len() - numeric:len()))
-						self.editbox:SetCursorPosition(newPos)
+						self:SetCursorPosition(newPos)
 					end
 				end)
 
-				widget:SetCallback("OnEnterPressed", function(self, _, text)
-					addon.itemBagFilters[item.key] = tonumber(text)
-					addon.functions.updateBags(ContainerFrameCombinedBags)
-					for _, frame in ipairs(ContainerFrameContainer.ContainerFrames) do
-						addon.functions.updateBags(frame)
-					end
-
-					if _G.BankPanel and _G.BankPanel:IsShown() then addon.functions.updateBags(_G.BankPanel) end
-
+				widget:SetScript("OnEnterPressed", function(self)
+					addon.itemBagFilters[item.key] = tonumber(self:GetText())
+					refreshBags()
 					UpdateResetButton()
 					self:ClearFocus()
 				end)
 			end
 
 			if widget then
-				if item.type ~= "EditBox" or (item.key ~= "minLevel" and item.key ~= "maxLevel") then widget:SetFullWidth(true) end
-				scrollContainer:AddChild(widget)
+				addRow(widget, rowHeight, item.type == "EditBox" and 10 or nil)
 				table.insert(frame.widgets, widget)
 				if widget.text and widget.text.GetStringWidth then longestWidth = math_max(widget.text:GetStringWidth(), longestWidth) end
 			end
 		end
 	end
-	frame:SetSize(longestWidth + 60, 280) -- Feste Größe
+	scrollContainer:SetWidth(longestWidth + 30)
+	frame:SetSize(longestWidth + 70, 280) -- Feste Größe
 
 	local btnDock = CreateFrame("Button", "InventoryFilterPanelDock", frame)
 	btnDock:SetPoint("TOPRIGHT", frame, "TOPRIGHT", -30, -5)

@@ -1,8 +1,10 @@
 -- luacheck: globals EnhanceQoL HasNewMail GetLatestThreeSenders HAVE_MAIL HAVE_MAIL_FROM C_GameRules Enum MAIL_LABEL MAIL INBOX
 local addonName, addon = ...
+local L = addon.L
 
 local MAIL_ICON_ATLAS = "ui-hud-minimap-mail-up"
 local DEFAULT_FONT_SIZE = 14
+local db
 
 local function getMailTitle()
 	if MAIL_LABEL then return MAIL_LABEL end
@@ -14,6 +16,22 @@ end
 local function isNotificationDisabled()
 	if C_GameRules and C_GameRules.IsGameRuleActive and Enum and Enum.GameRule then return C_GameRules.IsGameRuleActive(Enum.GameRule.IngameMailNotificationDisabled) end
 	return false
+end
+
+local function ensureDB()
+	addon.db.datapanel = addon.db.datapanel or {}
+	addon.db.datapanel.mail = addon.db.datapanel.mail or {}
+	db = addon.db.datapanel.mail
+	db.fontSize = db.fontSize or DEFAULT_FONT_SIZE
+end
+
+local function getOptionsHint()
+	if addon.DataPanel and addon.DataPanel.GetOptionsHintText then
+		local text = addon.DataPanel.GetOptionsHintText()
+		if text ~= nil then return text end
+		return nil
+	end
+	return L["Right-Click for options"]
 end
 
 local function getMailSenders()
@@ -38,6 +56,7 @@ local function buildTooltip()
 end
 
 local function updateMail(stream)
+	ensureDB()
 	local hasMail = HasNewMail and HasNewMail()
 	if not hasMail or isNotificationDisabled() then
 		stream.snapshot.hidden = true
@@ -47,9 +66,19 @@ local function updateMail(stream)
 	end
 
 	stream.snapshot.hidden = nil
-	stream.snapshot.fontSize = DEFAULT_FONT_SIZE
-	stream.snapshot.text = ("|A:%s:%d:%d|a"):format(MAIL_ICON_ATLAS, DEFAULT_FONT_SIZE, DEFAULT_FONT_SIZE)
-	stream.snapshot.tooltip = buildTooltip()
+	local size = db.fontSize or DEFAULT_FONT_SIZE
+	stream.snapshot.fontSize = size
+	stream.snapshot.text = ("|A:%s:%d:%d|a"):format(MAIL_ICON_ATLAS, size, size)
+	local tooltip = buildTooltip()
+	local hint = getOptionsHint()
+	if hint then tooltip = tooltip .. "\n" .. hint end
+	stream.snapshot.tooltip = tooltip
+end
+
+local function openSettings()
+	if addon.functions and addon.functions.OpenConfigCenter then
+		addon.functions.OpenConfigCenter("interface.datapanel", "DataPanel_mail_fontSize")
+	end
 end
 
 local provider = {
@@ -62,6 +91,9 @@ local provider = {
 		UPDATE_PENDING_MAIL = function(s) addon.DataHub:RequestUpdate(s) end,
 		PLAYER_ENTERING_WORLD = function(s) addon.DataHub:RequestUpdate(s) end,
 	},
+	OnClick = function(_, btn)
+		if btn == "RightButton" then openSettings() end
+	end,
 }
 
 EnhanceQoL.DataHub.RegisterStream(provider)

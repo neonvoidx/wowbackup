@@ -1,8 +1,7 @@
--- luacheck: globals EnhanceQoL MenuUtil MenuResponse C_AddOns UIParentLoadAddOn PlayerSpellsUtil TogglePlayerSpellsFrame C_Garrison C_Covenants Enum ShowGarrisonLandingPage HousingFramesUtil ToggleCharacter ToggleProfessionsBook ToggleAchievementFrame ToggleQuestLog ToggleCalendar ToggleTimeManager ToggleEncounterJournal ToggleGuildFrame PVEFrame_ToggleFrame ToggleCollectionsJournal ToggleGameMenu ToggleHelpFrame ToggleChannelFrame ToggleFriendsFrame UnitClass UIParent GAMEMENU_OPTIONS GameMenuFrame HideUIPanel ShowUIPanel InCombatLockdown UIErrorsFrame ERR_NOT_IN_COMBAT C_Texture PlayerSpellsMicroButton SpellbookMicroButton TalentMicroButton
+-- luacheck: globals EnhanceQoL MenuUtil MenuResponse C_AddOns UIParentLoadAddOn PlayerSpellsUtil TogglePlayerSpellsFrame C_Garrison C_Covenants Enum ShowGarrisonLandingPage HousingFramesUtil ToggleCharacter ToggleProfessionsBook ToggleAchievementFrame ToggleQuestLog ToggleCalendar ToggleTimeManager ToggleEncounterJournal ToggleGuildFrame PVEFrame_ToggleFrame ToggleCollectionsJournal ToggleGameMenu ToggleHelpFrame ToggleChannelFrame ToggleFriendsFrame UnitClass GameMenuFrame HideUIPanel ShowUIPanel InCombatLockdown UIErrorsFrame ERR_NOT_IN_COMBAT C_Texture PlayerSpellsMicroButton SpellbookMicroButton TalentMicroButton
 local addonName, addon = ...
 local L = addon.L
 
-local AceGUI = addon.AceGUI
 local format = string.format
 local lower = string.lower
 local G = _G
@@ -25,9 +24,6 @@ local DEFAULT_TEXTURE_TEX_COORD = { 0.07, 0.93, 0.07, 0.93 }
 local DEFAULT_ATLAS_TEX_COORD = { 0.04, 0.96, 0.04, 0.96 }
 
 local db
-local stream
-local aceWindow
-local aceScroll
 
 local function clampInt(value, minValue, maxValue, fallback)
 	value = tonumber(value)
@@ -675,152 +671,37 @@ end
 
 local function getOptionsEntryLabel(entry) return getEntryLabel(entry) end
 
+addon.MicroBarOptions = addon.MicroBarOptions or {}
+addon.MicroBarOptions.GetVisibleEntryOptions = function()
+	local options = {}
+	for _, entry in ipairs(menuEntries) do
+		if isEntryAvailable(entry) then
+			options[#options + 1] = {
+				value = entry.id,
+				label = getOptionsEntryLabel(entry),
+			}
+		end
+	end
+	return options
+end
+addon.MicroBarOptions.IsEntryVisible = function(entryID)
+	return not isEntryHidden(entryID)
+end
+addon.MicroBarOptions.SetEntryVisible = function(entryID, visible)
+	setEntryHidden(entryID, not (visible and true or false))
+end
+addon.MicroBarOptions.RequestUpdate = requestUpdate
+
 local function isEntryEnabled(entry)
 	if entry.enabled == nil then return true end
 	if type(entry.enabled) == "function" then return entry.enabled() end
 	return entry.enabled and true or false
 end
 
-local function RestorePosition(frame)
-	if not db then return end
-	if db.point and db.x ~= nil and db.y ~= nil then
-		frame:ClearAllPoints()
-		frame:SetPoint(db.point, UIParent, db.point, db.x, db.y)
+local function openSettings()
+	if addon.functions and addon.functions.OpenConfigCenter then
+		addon.functions.OpenConfigCenter("interface.datapanel", "DataPanel_microbar_displayMode")
 	end
-end
-
-local function createAceWindow()
-	if aceWindow then
-		aceWindow:Show()
-		if aceScroll and aceScroll.SetScroll then aceScroll:SetScroll(0) end
-		return
-	end
-
-	ensureDB()
-	local frame = AceGUI:Create("Window")
-	aceWindow = frame.frame
-	frame:SetTitle((addon.DataPanel and addon.DataPanel.GetStreamOptionsTitle and addon.DataPanel.GetStreamOptionsTitle(stream and stream.meta and stream.meta.title)) or GAMEMENU_OPTIONS)
-	frame:SetWidth(360)
-	frame:SetHeight(560)
-	frame:SetLayout("List")
-
-	frame.frame:SetScript("OnShow", function(self) RestorePosition(self) end)
-	frame.frame:SetScript("OnHide", function(self)
-		local point, _, _, xOfs, yOfs = self:GetPoint()
-		db.point = point
-		db.x = xOfs
-		db.y = yOfs
-	end)
-
-	local scroll = addon.functions.createContainer("ScrollFrame", "List")
-	scroll:SetFullWidth(true)
-	scroll:SetFullHeight(true)
-	aceScroll = scroll
-	frame:AddChild(scroll)
-
-	local displayMode = AceGUI:Create("Dropdown")
-	displayMode:SetLabel(DISPLAY_MODE)
-	displayMode:SetList({
-		menu = L["MicroBarDisplayModeMenu"] or "Show as menu",
-		inline = L["MicroBarDisplayModeInline"] or "Show icons in DataPanel",
-	}, { "menu", "inline" })
-	displayMode:SetValue(db.displayMode)
-	displayMode:SetCallback("OnValueChanged", function(_, _, val)
-		if val ~= "menu" and val ~= "inline" then return end
-		setDisplayMode(val)
-	end)
-	scroll:AddChild(displayMode)
-
-	local iconSize = AceGUI:Create("Slider")
-	iconSize:SetLabel(L["Icon size"] or "Icon size")
-	iconSize:SetSliderValues(MIN_ICON_SIZE, MAX_ICON_SIZE, 1)
-	iconSize:SetValue(getIconSize())
-	scroll:AddChild(iconSize)
-
-	local iconGap = AceGUI:Create("Slider")
-	iconGap:SetLabel(L["Icon gap"] or "Icon gap")
-	iconGap:SetSliderValues(MIN_ICON_GAP, MAX_ICON_GAP, 1)
-	iconGap:SetValue(getIconGap())
-	scroll:AddChild(iconGap)
-
-	local equalButtonSize = AceGUI:Create("CheckBox")
-	equalButtonSize:SetLabel(L["MicroBarEqualButtons"] or "Use equal button size")
-	equalButtonSize:SetValue(hasEqualButtonSize())
-	scroll:AddChild(equalButtonSize)
-
-	local buttonBackdrop = AceGUI:Create("CheckBox")
-	buttonBackdrop:SetLabel(L["MicroBarButtonBackdrop"] or "Show button backdrop")
-	buttonBackdrop:SetValue(hasButtonBackdrop())
-	scroll:AddChild(buttonBackdrop)
-
-	local buttonBorder = AceGUI:Create("CheckBox")
-	buttonBorder:SetLabel(L["Show button border"] or "Show button border")
-	buttonBorder:SetValue(hasButtonBorder())
-	scroll:AddChild(buttonBorder)
-
-	local buttonBorderColor = AceGUI:Create("ColorPicker")
-	buttonBorderColor:SetLabel(L["MicroBarButtonBorderColor"] or "Button border color")
-	buttonBorderColor:SetHasAlpha(true)
-	do
-		local color = getButtonBorderColor()
-		buttonBorderColor:SetColor(color.r, color.g, color.b, color.a)
-	end
-	scroll:AddChild(buttonBorderColor)
-
-	local buttonSize = AceGUI:Create("Slider")
-	buttonSize:SetLabel(L["MicroBarButtonSize"] or "Button size")
-	buttonSize:SetSliderValues(MIN_BUTTON_SIZE, MAX_BUTTON_SIZE, 1)
-	buttonSize:SetValue(getButtonSize())
-	scroll:AddChild(buttonSize)
-
-	local header = AceGUI:Create("Label")
-	header:SetText(L["MicroBarVisibleEntries"] or "Visible icons")
-	header:SetFullWidth(true)
-	scroll:AddChild(header)
-
-	for _, entry in ipairs(menuEntries) do
-		if isEntryAvailable(entry) then
-			local check = AceGUI:Create("CheckBox")
-			check:SetLabel(getOptionsEntryLabel(entry))
-			check:SetValue(not isEntryHidden(entry.id))
-			check:SetCallback("OnValueChanged", function(_, _, val) setEntryHidden(entry.id, not (val and true or false)) end)
-			scroll:AddChild(check)
-		end
-	end
-
-	iconSize:SetCallback("OnValueChanged", function(_, _, val) setIconSize(val) end)
-
-	iconGap:SetCallback("OnValueChanged", function(_, _, val) setIconGap(val) end)
-
-	local function refreshButtonVisualState()
-		local useButtonSizing = hasEqualButtonSize() or hasButtonBackdrop() or hasButtonBorder()
-		if buttonSize.SetDisabled then buttonSize:SetDisabled(not useButtonSizing) end
-		if buttonBorderColor.SetDisabled then buttonBorderColor:SetDisabled(not hasButtonBorder()) end
-	end
-
-	equalButtonSize:SetCallback("OnValueChanged", function(_, _, val)
-		setEqualButtonSize(val and true or false)
-		refreshButtonVisualState()
-	end)
-
-	buttonBackdrop:SetCallback("OnValueChanged", function(_, _, val)
-		setButtonBackdrop(val and true or false)
-		refreshButtonVisualState()
-	end)
-
-	buttonBorder:SetCallback("OnValueChanged", function(_, _, val)
-		setButtonBorder(val and true or false)
-		refreshButtonVisualState()
-	end)
-
-	buttonBorderColor:SetCallback("OnValueChanged", function(_, _, r, g, b, a) setButtonBorderColor(r, g, b, a) end)
-
-	buttonSize:SetCallback("OnValueChanged", function(_, _, val) setButtonSize(val) end)
-
-	refreshButtonVisualState()
-
-	frame.frame:Show()
-	scroll:DoLayout()
 end
 
 local function tryActivateEntry(entryID)
@@ -962,7 +843,7 @@ local provider = {
 	},
 	OnClick = function(button, btn)
 		if btn == "RightButton" then
-			createAceWindow()
+			openSettings()
 			return
 		end
 		if btn ~= "LeftButton" then return end
@@ -971,6 +852,6 @@ local provider = {
 	end,
 }
 
-stream = EnhanceQoL.DataHub.RegisterStream(provider)
+EnhanceQoL.DataHub.RegisterStream(provider)
 
 return provider

@@ -182,18 +182,6 @@ local function RestoreDefaultStyle(frame)
     frame._CMC_SquareStyle = nil
 end
 
-local function UpdateOverlayAnchors(frame)
-    if not frame.IconOverlay or not frame.Icon then
-        return
-    end
-    local width, height = frame.Icon:GetSize()
-    local ratio = height / width
-    local base = 12
-    frame.IconOverlay:ClearAllPoints()
-    frame.IconOverlay:SetPoint("TOPLEFT", frame.Icon, "TOPLEFT", -base, (base - 1) * ratio)
-    frame.IconOverlay:SetPoint("BOTTOMRIGHT", frame.Icon, "BOTTOMRIGHT", base, (-base + 1) * ratio)
-end
-
 local function ApplyStyleToFrame(frame)
     local isSquare = ns.db.profile.trinketRacialTracker_squareIcons or false
 
@@ -207,7 +195,6 @@ local function ApplyStyleToFrame(frame)
         if isSquare then
             frame.IconOverlay:Hide()
         else
-            UpdateOverlayAnchors(frame)
             frame.IconOverlay:Show()
         end
     end
@@ -258,14 +245,8 @@ function ItemViewerFrame:Initialize()
     if not frame.IconOverlay and frame.Icon then
         frame.IconOverlay = frame:CreateTexture(nil, "OVERLAY", nil, 1)
         frame.IconOverlay:SetAtlas("UI-HUD-CoolDownManager-IconOverlay")
-
-        local ratio = 1.0
-        if width > 0 and height > 0 then
-            ratio = height / width
-        end
-
-        UpdateOverlayAnchors(frame)
-
+        frame.IconOverlay:SetSize(width * 1.5, height * 1.5)
+        frame.IconOverlay:SetPoint("Center", frame.Icon, "CENTER")
         frame.IconOverlay:Hide()
     end
     if not frame.Cooldown then
@@ -532,7 +513,7 @@ function TrackerInstance:DoRefreshEntries()
         end
         local ivf = self.iconFrames[i]
         ivf.frame:SetSize(iconSize, iconHeight)
-        UpdateOverlayAnchors(ivf.frame)
+        ivf.frame.IconOverlay:SetSize(iconSize * 1.5, iconHeight * 1.5)
         ivf.frame.showGCD = showGCD
 
         local db = DB.GetDB()
@@ -575,7 +556,7 @@ function TrackerInstance:UpdateIconLayout()
     local iconHeight = GetIconHeight(iconSize)
     for _, ivf in ipairs(self.iconFrames) do
         ivf.frame:SetSize(iconSize, iconHeight)
-        UpdateOverlayAnchors(ivf.frame)
+        ivf.frame.IconOverlay:SetSize(iconSize * 1.5, iconHeight * 1.5)
     end
     self:RefreshEntries()
 end

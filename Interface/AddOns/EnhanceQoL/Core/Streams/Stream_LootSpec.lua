@@ -1,10 +1,8 @@
--- luacheck: globals EnhanceQoL GAMEMENU_OPTIONS MenuResponse MenuUtil LOOT_SPECIALIZATION
+-- luacheck: globals EnhanceQoL MenuResponse MenuUtil LOOT_SPECIALIZATION
 local addonName, addon = ...
 local L = addon.L
 
-local AceGUI = addon.AceGUI
 local db
-local stream
 local last = {}
 local LOOTSPEC_TITLE = SELECT_LOOT_SPECIALIZATION or LOOT_SPECIALIZATION or "Loot Specialization"
 
@@ -36,93 +34,10 @@ local function ensureDB()
 	if db.hideIcon and db.truncateSpecName then db.truncateSpecName = false end
 end
 
-local function RestorePosition(frame)
-	if db and db.point and db.x and db.y then
-		frame:ClearAllPoints()
-		frame:SetPoint(db.point, UIParent, db.point, db.x, db.y)
+local function openSettings()
+	if addon.functions and addon.functions.OpenConfigCenter then
+		addon.functions.OpenConfigCenter("interface.datapanel", "DataPanel_lootspec_prefix")
 	end
-end
-
-local aceWindow
-local function createAceWindow()
-	if aceWindow then
-		aceWindow:Show()
-		return
-	end
-	ensureDB()
-	local frame = AceGUI:Create("Window")
-	aceWindow = frame.frame
-	frame:SetTitle((addon.DataPanel and addon.DataPanel.GetStreamOptionsTitle and addon.DataPanel.GetStreamOptionsTitle(stream and stream.meta and stream.meta.title)) or GAMEMENU_OPTIONS)
-	frame:SetWidth(300)
-	frame:SetHeight(200)
-	frame:SetLayout("List")
-
-	frame.frame:SetScript("OnShow", function(self) RestorePosition(self) end)
-	frame.frame:SetScript("OnHide", function(self)
-		local point, _, _, xOfs, yOfs = self:GetPoint()
-		db.point = point
-		db.x = xOfs
-		db.y = yOfs
-	end)
-
-	local prefix = AceGUI:Create("EditBox")
-	prefix:SetLabel(L["Prefix"] or "Prefix")
-	prefix:SetText(db.prefix)
-	prefix:SetCallback("OnEnterPressed", function(_, _, val)
-		db.prefix = val or ""
-		addon.DataHub:RequestUpdate(stream)
-	end)
-	frame:AddChild(prefix)
-
-	local hidePrefix = AceGUI:Create("CheckBox")
-	hidePrefix:SetLabel(L["Hide prefix"] or "Hide prefix")
-	hidePrefix:SetValue(db.hidePrefix)
-	hidePrefix:SetCallback("OnValueChanged", function(_, _, val)
-		db.hidePrefix = val and true or false
-		addon.DataHub:RequestUpdate(stream)
-	end)
-	frame:AddChild(hidePrefix)
-
-	local fontSize = AceGUI:Create("Slider")
-	fontSize:SetLabel(FONT_SIZE)
-	fontSize:SetSliderValues(8, 32, 1)
-	fontSize:SetValue(db.fontSize)
-	fontSize:SetCallback("OnValueChanged", function(_, _, val)
-		db.fontSize = val
-		addon.DataHub:RequestUpdate(stream)
-	end)
-	frame:AddChild(fontSize)
-
-	local hide
-	local truncateName
-
-	hide = AceGUI:Create("CheckBox")
-	hide:SetLabel(L["Hide icon"] or "Hide icon")
-	hide:SetValue(db.hideIcon)
-	hide:SetCallback("OnValueChanged", function(_, _, val)
-		db.hideIcon = val and true or false
-		if db.hideIcon and db.truncateSpecName then
-			db.truncateSpecName = false
-			if truncateName and truncateName.SetValue then truncateName:SetValue(false) end
-		end
-		addon.DataHub:RequestUpdate(stream)
-	end)
-	frame:AddChild(hide)
-
-	truncateName = AceGUI:Create("CheckBox")
-	truncateName:SetLabel(L["Truncate loot spec"] or "Truncate loot spec")
-	truncateName:SetValue(db.truncateSpecName)
-	truncateName:SetCallback("OnValueChanged", function(_, _, val)
-		db.truncateSpecName = val and true or false
-		if db.truncateSpecName and db.hideIcon then
-			db.hideIcon = false
-			if hide and hide.SetValue then hide:SetValue(false) end
-		end
-		addon.DataHub:RequestUpdate(stream)
-	end)
-	frame:AddChild(truncateName)
-
-	frame.frame:Show()
 end
 
 local function getCurrentSpecInfo()
@@ -270,13 +185,13 @@ local provider = {
 	},
 	OnClick = function(button, btn)
 		if btn == "RightButton" then
-			createAceWindow()
+			openSettings()
 		else
 			showLootSpecMenu(button)
 		end
 	end,
 }
 
-stream = EnhanceQoL.DataHub.RegisterStream(provider)
+EnhanceQoL.DataHub.RegisterStream(provider)
 
 return provider

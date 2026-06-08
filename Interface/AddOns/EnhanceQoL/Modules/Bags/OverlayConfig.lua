@@ -176,16 +176,6 @@ local OVERLAY_ELEMENTS = {
 		previewColor = { 0.8, 0.34, 1 },
 	},
 	{
-		id = "professionQuality",
-		frameKey = "EQOLProfessionQualityOverlay",
-		labelKey = "settingsOverlayProfessionQuality",
-		descriptionKey = "settingsOverlayProfessionQualityTooltip",
-		defaultAnchor = "BOTTOMRIGHT",
-		defaultEnabled = true,
-		previewAtlas = "Professions-Icon-Quality-Tier3-Small",
-		previewSize = 14,
-	},
-	{
 		id = "upgradeTrack",
 		frameKey = "ItemUpgradeText",
 		labelKey = "settingsOverlayUpgradeTrack",

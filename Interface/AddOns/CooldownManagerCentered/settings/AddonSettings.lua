@@ -2389,20 +2389,22 @@ local function AddonSettings_BuildCooldown(category, layout)
     })
 
     local VISIBILITY_RULE_VALUES = {
-        ["SHOW_IN_COMBAT"] = "Always show in Combat ",
+        ["SHOW_IN_COMBAT"] = "Always show in Combat",
         ["SHOW_IN_INSTANCE"] = "Always show in Instances",
-        ["HIDE_IN_VEHICLES"] = "Hide in Vehicles & Mini-games ",
-        ["SHOW_WITH_ENEMY_TARGET"] = "Show with Enemy Target ",
-        ["SHOW_WITH_TARGET"] = "Show with any Target ",
-        ["HIDE_WHEN_FLYING"] = "Hide when Flying ",
+        ["HIDE_IN_VEHICLES"] = "Hide in Vehicles & Mini-games",
+        ["ALWAYS_HIDE_WHEN_FLYING"] = "Always hide when Flying",
+        ["SHOW_WITH_ENEMY_TARGET"] = "Show with Enemy Target",
+        ["SHOW_WITH_TARGET"] = "Show with any Target",
+        ["HIDE_WHEN_FLYING"] = "Hide when Flying",
         ["HIDE_WHEN_MOUNTED"] = "Hide when Mounted & Travel Form",
-        ["HIDE_WHEN_RESTING"] = "Hide when Resting ",
-        ["HIDE_OUT_OF_COMBAT"] = "Hide out of Combat ",
+        ["HIDE_WHEN_RESTING"] = "Hide when Resting",
+        ["HIDE_OUT_OF_COMBAT"] = "Hide out of Combat",
     }
     local VISIBILITY_RULE_ORDER = {
         "SHOW_IN_COMBAT",
         "SHOW_IN_INSTANCE",
         "HIDE_IN_VEHICLES",
+        "ALWAYS_HIDE_WHEN_FLYING",
         "SHOW_WITH_ENEMY_TARGET",
         "SHOW_WITH_TARGET",
         "HIDE_WHEN_FLYING",
@@ -2459,6 +2461,7 @@ local function AddonSettings_BuildCooldown(category, layout)
                     HIDE_WHEN_MOUNTED = true,
                     HIDE_WHEN_RESTING = true,
                     HIDE_OUT_OF_COMBAT = true,
+                    ALWAYS_HIDE_WHEN_FLYING = true,
                 }
                 local hasHide = false
                 for rule in pairs(selectionMap) do

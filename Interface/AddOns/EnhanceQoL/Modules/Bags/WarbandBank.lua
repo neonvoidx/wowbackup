@@ -1169,33 +1169,27 @@ local function applyConfiguredOverlayAnchors(button, overlayRuntime)
 
 	button._bagsWarbandOverlayVersion = version
 	for _, entry in ipairs((overlayRuntime and overlayRuntime.entries) or {}) do
-		if entry.id == "professionQuality" then
-			if addon.Bags.Core and addon.Bags.Core.UpdateProfessionQualityOverlay then
-				addon.Bags.Core.UpdateProfessionQualityOverlay(button, overlayRuntime)
+		local region = entry.frameKey and button[entry.frameKey]
+		local anchorInfo = entry.anchorInfo
+		if region and anchorInfo then
+			region:ClearAllPoints()
+			region:SetPoint(anchorInfo.point, button, anchorInfo.relativePoint, anchorInfo.x, anchorInfo.y)
+			if region.SetJustifyH and anchorInfo.justifyH then
+				region:SetJustifyH(anchorInfo.justifyH)
 			end
-		else
-			local region = entry.frameKey and button[entry.frameKey]
-			local anchorInfo = entry.anchorInfo
-			if region and anchorInfo then
-				region:ClearAllPoints()
-				region:SetPoint(anchorInfo.point, button, anchorInfo.relativePoint, anchorInfo.x, anchorInfo.y)
-				if region.SetJustifyH and anchorInfo.justifyH then
-					region:SetJustifyH(anchorInfo.justifyH)
-				end
-				if region.SetJustifyV and anchorInfo.justifyV then
-					region:SetJustifyV(anchorInfo.justifyV)
-				end
+			if region.SetJustifyV and anchorInfo.justifyV then
+				region:SetJustifyV(anchorInfo.justifyV)
 			end
-			region = entry.textFrameKey and button[entry.textFrameKey]
-			if region and anchorInfo then
-				region:ClearAllPoints()
-				region:SetPoint(anchorInfo.point, button, anchorInfo.relativePoint, anchorInfo.x, anchorInfo.y)
-				if region.SetJustifyH and anchorInfo.justifyH then
-					region:SetJustifyH(anchorInfo.justifyH)
-				end
-				if region.SetJustifyV and anchorInfo.justifyV then
-					region:SetJustifyV(anchorInfo.justifyV)
-				end
+		end
+		region = entry.textFrameKey and button[entry.textFrameKey]
+		if region and anchorInfo then
+			region:ClearAllPoints()
+			region:SetPoint(anchorInfo.point, button, anchorInfo.relativePoint, anchorInfo.x, anchorInfo.y)
+			if region.SetJustifyH and anchorInfo.justifyH then
+				region:SetJustifyH(anchorInfo.justifyH)
+			end
+			if region.SetJustifyV and anchorInfo.justifyV then
+				region:SetJustifyV(anchorInfo.justifyV)
 			end
 		end
 	end
@@ -3322,6 +3316,15 @@ state.applyStackCountLayoutIfNeeded = state.applyStackCountLayoutIfNeeded or fun
 	end
 end
 
+state.applyCraftedQualityPreference = state.applyCraftedQualityPreference or function(button, quality, itemLink, isBound, force)
+	local alwaysShow = addon.GetShowCraftedQuality and addon.GetShowCraftedQuality() or false
+	local changed = button.alwaysShowProfessionsQuality ~= alwaysShow
+	button.alwaysShowProfessionsQuality = alwaysShow
+	if (force or changed) and SetItemButtonQuality then
+		SetItemButtonQuality(button, quality, itemLink, false, isBound)
+	end
+end
+
 local function updateButtonData(button, mapping, overlayRuntime, textAppearance, fontSignature, tooltipOwner, forceDynamicUpdate, stackCountLayoutSignature)
 	if not button then
 		return
@@ -3395,10 +3398,8 @@ local function updateButtonData(button, mapping, overlayRuntime, textAppearance,
 		end
 		Bags.functions.ApplyWarbandItemButtonSkinIfNeeded(button, quality)
 		state.applyStackCountLayoutIfNeeded(button, stackCountLayoutSignature)
+		state.applyCraftedQualityPreference(button, quality, itemLink, isBound)
 		applyConfiguredOverlayAnchors(button, overlayRuntime)
-		if addon.Bags.Core and addon.Bags.Core.UpdateProfessionQualityOverlay then
-			addon.Bags.Core.UpdateProfessionQualityOverlay(button, overlayRuntime, itemLink or itemID)
-		end
 		updateEquipmentSetOverlay(button, bagID, slotID, info, overlayRuntime)
 		updateBindStatusOverlay(button, bagID, slotID, info, overlayRuntime)
 		if button._bagsWarbandRenderFiltered ~= isFiltered then
@@ -3425,7 +3426,7 @@ local function updateButtonData(button, mapping, overlayRuntime, textAppearance,
 
 	button:SetHasItem(texture)
 	button:SetItemButtonTexture(texture)
-	SetItemButtonQuality(button, quality, itemLink, false, isBound)
+	state.applyCraftedQualityPreference(button, quality, itemLink, isBound, true)
 	SetItemButtonCount(button, displayCount)
 	SetItemButtonDesaturated(button, desaturated)
 	button:UpdateExtended()
@@ -3437,9 +3438,6 @@ local function updateButtonData(button, mapping, overlayRuntime, textAppearance,
 	button:UpdateCooldown(texture)
 	button:SetReadable(readable)
 	updateButtonSearchState(button, isFiltered)
-	if addon.Bags.Core and addon.Bags.Core.UpdateProfessionQualityOverlay then
-		addon.Bags.Core.UpdateProfessionQualityOverlay(button, overlayRuntime, itemLink or itemID)
-	end
 	button._bagsFreeSlotGroup = freeSlotGroup
 	button._bagsFreeSlotDisplayMode = freeSlotGroup and addon.GetFreeSlotDisplayMode and addon.GetFreeSlotDisplayMode() or nil
 	button._bagsFreeSlotColor = button._bagsFreeSlotDisplayMode == "colors" and addon.GetFreeSlotColor and addon.GetFreeSlotColor(freeSlotGroup) or nil
@@ -3528,9 +3526,6 @@ local function ensureButtonCapacity(requiredCount)
 		if button.BindStatusText then
 			button.BindStatusText:SetText("")
 			button.BindStatusText:Hide()
-		end
-		if button.EQOLProfessionQualityOverlay then
-			button.EQOLProfessionQualityOverlay:Hide()
 		end
 		state.buttons[index] = button
 	end

@@ -2400,7 +2400,7 @@ function ChannelHistory:ToggleWindow()
 	end
 end
 
--- Simple debug frame (no AceGUI) to iterate on layout
+-- Simple debug frame to iterate on layout
 local WINDOW_BACKDROP = {
 	bgFile = nil,
 	edgeFile = "Interface\\DialogFrame\\UI-DialogBox-Border",

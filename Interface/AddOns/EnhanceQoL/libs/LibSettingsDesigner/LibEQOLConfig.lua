@@ -32,6 +32,21 @@ local function copyTable(source, target)
 	return target
 end
 
+local function cloneValue(value, depth)
+	if type(value) ~= "table" then
+		return value
+	end
+	depth = (depth or 0) + 1
+	if depth > 5 then
+		return copyTable(value)
+	end
+	local clone = {}
+	for key, child in pairs(value) do
+		clone[key] = cloneValue(child, depth)
+	end
+	return clone
+end
+
 local function normalizeID(text)
 	text = tostring(text or ""):lower()
 	text = text:gsub("|c%x%x%x%x%x%x%x%x", ""):gsub("|r", "")
@@ -236,6 +251,11 @@ local LEGACY_CONTROL_METADATA_FIELDS = {
 	"colorizeLabel",
 	"customDefaultText",
 	"customText",
+	"addEntry",
+	"addButtonText",
+	"addPopupText",
+	"addPopupTitle",
+	"emptyText",
 	"dropdownDefault",
 	"dropdownDesc",
 	"dropdownFormatter",
@@ -255,12 +275,15 @@ local LEGACY_CONTROL_METADATA_FIELDS = {
 	"dropdownValues",
 	"entries",
 	"formatter",
+	"formatOptions",
+	"formatOrder",
 	"frameHeight",
 	"frameWidth",
 	"generator",
 	"getColor",
 	"getDefaultColor",
 	"getPlaybackChannel",
+	"getEntries",
 	"getSelection",
 	"groupID",
 	"groupTitle",
@@ -298,11 +321,14 @@ local LEGACY_CONTROL_METADATA_FIELDS = {
 	"previewTooltip",
 	"readOnly",
 	"refreshOnChange",
+	"removeEntry",
+	"moveEntry",
 	"orderList",
 	"rowHeight",
 	"richNote",
 	"richNotes",
 	"setColor",
+	"setEntryFormat",
 	"setSelected",
 	"setSelectedFunc",
 	"setSelection",
@@ -725,6 +751,14 @@ function AppMixin:GetControlValue(control)
 	return control.default
 end
 
+function AppMixin:GetControlDefault(control)
+	local default, hasDefault = resolveControlDefault(control)
+	if not hasDefault then
+		return nil, false
+	end
+	return cloneValue(default), true
+end
+
 local function getEffectiveControlValue(app, control, default, hasDefault)
 	local value = app:GetControlValue(control)
 	if value == nil and hasDefault then
@@ -864,6 +898,9 @@ function AppMixin:IsControlCustomized(control)
 		return false
 	end
 	if control.type == "button" or control.type == "keybind" then
+		return false
+	end
+	if not self:IsControlEnabled(control) then
 		return false
 	end
 	local default, hasDefault = resolveControlDefault(control)

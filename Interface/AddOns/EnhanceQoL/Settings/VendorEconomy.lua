@@ -539,6 +539,8 @@ addon.functions.SettingsCreateCheckboxes(cVendorEconomy, data)
 local craftTitle = L["vendorCraftShopperTitle"] or "Craft Shopper"
 local craftEnableText = L["vendorCraftShopperEnable"] or "Enable Craft Shopper"
 local craftEnableDesc = L["vendorCraftShopperEnableDesc"]
+local craftWarbandText = L["vendorCraftShopperIncludeWarbandBank"] or "Include Warband Bank"
+local craftWarbandDesc = L["vendorCraftShopperIncludeWarbandBankDesc"]
 local craftQualityText = L["vendorCraftShopperReagentQuality"] or (_G["PROFESSIONS_QUALITY_DIALOG_TITLE"] or "Reagent Quality")
 local craftQualityDesc = L["vendorCraftShopperReagentQualityDesc"]
 local craftQualityList = {
@@ -581,6 +583,24 @@ local craftEnable = addon.functions.SettingsCreateCheckbox(cVendorEconomy, {
 })
 
 local function craftShopperParentCheck() return craftEnable and craftEnable.setting and craftEnable.setting:GetValue() == true end
+
+addon.functions.SettingsCreateCheckbox(cVendorEconomy, {
+	var = "vendorCraftShopperIncludeWarbandBank",
+	text = craftWarbandText,
+	desc = craftWarbandDesc,
+	func = function(value)
+		if addon.Vendor and addon.Vendor.CraftShopper and addon.Vendor.CraftShopper.SetIncludeWarbandBank then
+			addon.Vendor.CraftShopper.SetIncludeWarbandBank(value)
+		else
+			addon.db["vendorCraftShopperIncludeWarbandBank"] = value and true or false
+		end
+	end,
+	default = false,
+	parent = true,
+	element = craftEnable.element,
+	parentCheck = craftShopperParentCheck,
+	parentSection = auctionHouseExpandable,
+})
 
 addon.functions.SettingsCreateDropdown(cVendorEconomy, {
 	var = "vendorCraftShopperReagentQuality",

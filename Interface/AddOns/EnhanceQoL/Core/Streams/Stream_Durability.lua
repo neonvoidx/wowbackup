@@ -1,11 +1,9 @@
--- luacheck: globals EnhanceQoL INVSLOT_HEAD INVSLOT_SHOULDER INVSLOT_CHEST INVSLOT_WAIST INVSLOT_LEGS INVSLOT_FEET INVSLOT_WRIST INVSLOT_HAND INVSLOT_BACK INVSLOT_MAINHAND INVSLOT_OFFHAND HEADSLOT SHOULDERSLOT CHESTSLOT WAISTSLOT LEGSLOT FEETSLOT WRISTSLOT HANDSSLOT BACKSLOT MAINHANDSLOT SECONDARYHANDSLOT NORMAL_FONT_COLOR
+-- luacheck: globals EnhanceQoL INVSLOT_HEAD INVSLOT_SHOULDER INVSLOT_CHEST INVSLOT_WAIST INVSLOT_LEGS INVSLOT_FEET INVSLOT_WRIST INVSLOT_HAND INVSLOT_BACK INVSLOT_MAINHAND INVSLOT_OFFHAND HEADSLOT SHOULDERSLOT CHESTSLOT WAISTSLOT LEGSLOT FEETSLOT WRISTSLOT HANDSSLOT BACKSLOT MAINHANDSLOT SECONDARYHANDSLOT NORMAL_FONT_COLOR C_Timer
 local addonName, addon = ...
 
 local L = addon.L
 
-local AceGUI = addon.AceGUI
 local db
-local stream
 local function getOptionsHint()
 	if addon.DataPanel and addon.DataPanel.GetOptionsHintText then
 		local text = addon.DataPanel.GetOptionsHintText()
@@ -35,109 +33,10 @@ local function ensureDB()
 	end
 end
 
-local function RestorePosition(frame)
-	if db.point and db.x and db.y then
-		frame:ClearAllPoints()
-		frame:SetPoint(db.point, UIParent, db.point, db.x, db.y)
+local function openSettings()
+	if addon.functions and addon.functions.OpenConfigCenter then
+		addon.functions.OpenConfigCenter("interface.datapanel", "DataPanel_durability_fontSize")
 	end
-end
-
-local aceWindow
-local function createAceWindow()
-	if aceWindow then
-		aceWindow:Show()
-		return
-	end
-	ensureDB()
-	local frame = AceGUI:Create("Window")
-	aceWindow = frame.frame
-	frame:SetTitle((addon.DataPanel and addon.DataPanel.GetStreamOptionsTitle and addon.DataPanel.GetStreamOptionsTitle(stream and stream.meta and stream.meta.title)) or GAMEMENU_OPTIONS)
-	frame:SetWidth(300)
-	frame:SetHeight(400)
-	frame:SetLayout("List")
-
-	frame.frame:SetScript("OnShow", function(self) RestorePosition(self) end)
-	frame.frame:SetScript("OnHide", function(self)
-		local point, _, _, xOfs, yOfs = self:GetPoint()
-		db.point = point
-		db.x = xOfs
-		db.y = yOfs
-	end)
-
-	local fontSize = AceGUI:Create("Slider")
-	fontSize:SetLabel(FONT_SIZE)
-	fontSize:SetSliderValues(8, 32, 1)
-	fontSize:SetValue(db.fontSize)
-	fontSize:SetCallback("OnValueChanged", function(_, _, val)
-		db.fontSize = val
-		addon.DataHub:RequestUpdate(stream)
-	end)
-	frame:AddChild(fontSize)
-
-	local showIcon = AceGUI:Create("CheckBox")
-	showIcon:SetLabel(L["Show icon"] or "Show icon")
-	showIcon:SetValue(db.showIcon)
-	showIcon:SetCallback("OnValueChanged", function(_, _, val)
-		db.showIcon = val and true or false
-		addon.DataHub:RequestUpdate(stream)
-	end)
-	frame:AddChild(showIcon)
-
-	local showCritical = AceGUI:Create("CheckBox")
-	showCritical:SetLabel(L["durabilityShowCritical"] or "Show critical warning")
-	showCritical:SetValue(db.showCritical)
-	showCritical:SetCallback("OnValueChanged", function(_, _, val)
-		db.showCritical = val and true or false
-		addon.DataHub:RequestUpdate(stream)
-	end)
-	frame:AddChild(showCritical)
-
-	local useColor = AceGUI:Create("CheckBox")
-	useColor:SetLabel(L["Use custom text color"] or "Use custom text color")
-	useColor:SetValue(db.useTextColor)
-	useColor:SetCallback("OnValueChanged", function(_, _, val)
-		db.useTextColor = val and true or false
-		addon.DataHub:RequestUpdate(stream)
-	end)
-	frame:AddChild(useColor)
-
-	local textColor = AceGUI:Create("ColorPicker")
-	textColor:SetLabel(L["Text color"] or "Text color")
-	textColor:SetColor(db.textColor.r, db.textColor.g, db.textColor.b)
-	textColor:SetCallback("OnValueChanged", function(_, _, r, g, b)
-		db.textColor = { r = r, g = g, b = b }
-		if db.useTextColor then addon.DataHub:RequestUpdate(stream) end
-	end)
-	frame:AddChild(textColor)
-
-	local highColor = AceGUI:Create("ColorPicker")
-	highColor:SetLabel(L["durabilityHighColor"] or "High durability color")
-	highColor:SetColor(db.highColor.r, db.highColor.g, db.highColor.b)
-	highColor:SetCallback("OnValueChanged", function(_, _, r, g, b)
-		db.highColor = { r = r, g = g, b = b }
-		addon.DataHub:RequestUpdate(stream)
-	end)
-	frame:AddChild(highColor)
-
-	local midColor = AceGUI:Create("ColorPicker")
-	midColor:SetLabel(L["durabilityMidColor"] or "Medium durability color")
-	midColor:SetColor(db.midColor.r, db.midColor.g, db.midColor.b)
-	midColor:SetCallback("OnValueChanged", function(_, _, r, g, b)
-		db.midColor = { r = r, g = g, b = b }
-		addon.DataHub:RequestUpdate(stream)
-	end)
-	frame:AddChild(midColor)
-
-	local lowColor = AceGUI:Create("ColorPicker")
-	lowColor:SetLabel(L["durabilityLowColor"] or "Low durability color")
-	lowColor:SetColor(db.lowColor.r, db.lowColor.g, db.lowColor.b)
-	lowColor:SetCallback("OnValueChanged", function(_, _, r, g, b)
-		db.lowColor = { r = r, g = g, b = b }
-		addon.DataHub:RequestUpdate(stream)
-	end)
-	frame:AddChild(lowColor)
-
-	frame.frame:Show()
 end
 
 local floor = math.floor
@@ -384,10 +283,10 @@ local provider = {
 		if right1 then right1:SetFontObject(GameTooltipText) end
 	end,
 	OnClick = function(_, btn)
-		if btn == "RightButton" then createAceWindow() end
+		if btn == "RightButton" then openSettings() end
 	end,
 }
 
-stream = EnhanceQoL.DataHub.RegisterStream(provider)
+EnhanceQoL.DataHub.RegisterStream(provider)
 
 return provider

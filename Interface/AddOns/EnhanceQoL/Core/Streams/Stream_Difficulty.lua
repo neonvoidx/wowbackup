@@ -2,9 +2,7 @@
 local addonName, addon = ...
 local L = addon.L
 
-local AceGUI = addon.AceGUI
 local db
-local stream
 local function getOptionsHint()
 	if addon.DataPanel and addon.DataPanel.GetOptionsHintText then
 		local text = addon.DataPanel.GetOptionsHintText()
@@ -21,14 +19,6 @@ local function ensureDB()
 	db.fontSize = db.fontSize or 14
 end
 
-local function RestorePosition(frame)
-	if db.point and db.x and db.y then
-		frame:ClearAllPoints()
-		frame:SetPoint(db.point, UIParent, db.point, db.x, db.y)
-	end
-end
-
-local aceWindow
 local function showDifficultyMenu(owner)
 	if not MenuUtil or not MenuUtil.CreateContextMenu then return end
 	local ids = DifficultyUtil and DifficultyUtil.ID or {}
@@ -78,38 +68,10 @@ local function showDifficultyMenu(owner)
 	end)
 end
 
-local function createAceWindow()
-	if aceWindow then
-		aceWindow:Show()
-		return
+local function openSettings()
+	if addon.functions and addon.functions.OpenConfigCenter then
+		addon.functions.OpenConfigCenter("interface.datapanel", "DataPanel_difficulty_fontSize")
 	end
-	ensureDB()
-	local frame = AceGUI:Create("Window")
-	aceWindow = frame.frame
-	frame:SetTitle((addon.DataPanel and addon.DataPanel.GetStreamOptionsTitle and addon.DataPanel.GetStreamOptionsTitle(stream and stream.meta and stream.meta.title)) or GAMEMENU_OPTIONS)
-	frame:SetWidth(300)
-	frame:SetHeight(200)
-	frame:SetLayout("List")
-
-	frame.frame:SetScript("OnShow", function(self) RestorePosition(self) end)
-	frame.frame:SetScript("OnHide", function(self)
-		local point, _, _, xOfs, yOfs = self:GetPoint()
-		db.point = point
-		db.x = xOfs
-		db.y = yOfs
-	end)
-
-	local fontSize = AceGUI:Create("Slider")
-	fontSize:SetLabel(FONT_SIZE)
-	fontSize:SetSliderValues(8, 32, 1)
-	fontSize:SetValue(db.fontSize)
-	fontSize:SetCallback("OnValueChanged", function(_, _, val)
-		db.fontSize = val
-		addon.DataHub:RequestUpdate(stream)
-	end)
-	frame:AddChild(fontSize)
-
-	frame.frame:Show()
 end
 
 local I_DUNGEON = "|TInterface\\Addons\\EnhanceQoL\\Icons\\Dungeon:%d:%d:0:0|t"
@@ -142,7 +104,7 @@ local function checkDifficulty(stream)
 	local iconR = (I_RAID):format(size, size)
 	stream.snapshot.fontSize = size
 
-	stream.snapshot.text = I_DUNGEON .. " " .. dg .. " " .. I_RAID .. " " .. raid
+	stream.snapshot.text = iconD .. " " .. dg .. " " .. iconR .. " " .. raid
 	local hint = getOptionsHint()
 	local clickHint = L["Difficulty menu click hint"] or "Left-click to change difficulty"
 	if hint then
@@ -163,13 +125,13 @@ local provider = {
 	},
 	OnClick = function(button, btn)
 		if btn == "RightButton" then
-			createAceWindow()
+			openSettings()
 		else
 			showDifficultyMenu(button)
 		end
 	end,
 }
 
-stream = EnhanceQoL.DataHub.RegisterStream(provider)
+EnhanceQoL.DataHub.RegisterStream(provider)
 
 return provider
