@@ -136,12 +136,12 @@ CHATTYNATOR_CONFIG = {
 ["isTemporary"] = false,
 ["groups"] = {
 ["COMBAT_FACTION_CHANGE"] = true,
-["SKILL"] = true,
 ["LOOT"] = true,
+["SKILL"] = true,
 ["MONEY"] = true,
-["COMBAT_HONOR_GAIN"] = true,
-["CURRENCY"] = true,
 ["COMBAT_XP_GAIN"] = true,
+["CURRENCY"] = true,
+["COMBAT_HONOR_GAIN"] = true,
 },
 ["addons"] = {
 },
@@ -386,15 +386,15 @@ CHATTYNATOR_CONFIG = {
 ["g"] = 0.7490196228027344,
 ["b"] = 0.7490196228027344,
 },
-["BG_SYSTEM_NEUTRAL"] = {
-["r"] = 1,
-["g"] = 0.4705882668495178,
-["b"] = 0.03921568766236305,
-},
 ["CHANNEL_Trade"] = {
 ["r"] = 1,
 ["g"] = 0.7529412508010864,
 ["b"] = 0.7529412508010864,
+},
+["BG_SYSTEM_NEUTRAL"] = {
+["r"] = 1,
+["g"] = 0.4705882668495178,
+["b"] = 0.03921568766236305,
 },
 ["FILTERED"] = {
 ["r"] = 1,
@@ -411,10 +411,10 @@ CHATTYNATOR_CONFIG = {
 ["g"] = 0.501960813999176,
 ["b"] = 1,
 },
-["CHANNEL9"] = {
-["r"] = 1,
-["g"] = 0.7529412508010864,
-["b"] = 0.7529412508010864,
+["GUILD_ITEM_LOOTED"] = {
+["r"] = 0.250980406999588,
+["g"] = 1,
+["b"] = 0.250980406999588,
 },
 ["CHANNEL16"] = {
 ["r"] = 1,
@@ -471,7 +471,7 @@ CHATTYNATOR_CONFIG = {
 ["g"] = 0.7529412508010864,
 ["b"] = 0.7529412508010864,
 },
-["CHANNEL_Services"] = {
+["CHANNEL18"] = {
 ["r"] = 1,
 ["g"] = 0.7529412508010864,
 ["b"] = 0.7529412508010864,
@@ -491,15 +491,15 @@ CHATTYNATOR_CONFIG = {
 ["g"] = 0.7529412508010864,
 ["b"] = 0.7529412508010864,
 },
-["ARENA_POINTS"] = {
-["r"] = 1,
-["g"] = 1,
-["b"] = 1,
-},
 ["ACHIEVEMENT"] = {
 ["r"] = 1,
 ["g"] = 1,
 ["b"] = -0,
+},
+["ARENA_POINTS"] = {
+["r"] = 1,
+["g"] = 1,
+["b"] = 1,
 },
 ["BN_WHISPER_INFORM"] = {
 ["r"] = 1,
@@ -586,7 +586,7 @@ CHATTYNATOR_CONFIG = {
 ["g"] = 0.7529412508010864,
 ["b"] = 0.7529412508010864,
 },
-["CHANNEL18"] = {
+["CHANNEL_Services"] = {
 ["r"] = 1,
 ["g"] = 0.7529412508010864,
 ["b"] = 0.7529412508010864,
@@ -611,10 +611,10 @@ CHATTYNATOR_CONFIG = {
 ["g"] = 0.7725490927696228,
 ["b"] = 1,
 },
-["GUILD_ITEM_LOOTED"] = {
-["r"] = 0.250980406999588,
-["g"] = 1,
-["b"] = 0.250980406999588,
+["CHANNEL9"] = {
+["r"] = 1,
+["g"] = 0.7529412508010864,
+["b"] = 0.7529412508010864,
 },
 ["BN_INLINE_TOAST_BROADCAST"] = {
 ["r"] = 0.5098039507865906,
@@ -659,7 +659,7 @@ CHATTYNATOR_CONFIG = {
 ["disabled_skins"] = {
 },
 ["force_tab_overflow"] = false,
-["whisper_sounds"] = "all",
+["show_buttons"] = "hover",
 ["line_spacing"] = 2,
 ["show_combat_log"] = true,
 ["skins"] = {
@@ -691,12 +691,12 @@ CHATTYNATOR_CONFIG = {
 ["line_spacing_2"] = -0,
 ["applied_player_table_5"] = true,
 ["keep_edit_box_visible"] = false,
-["show_buttons"] = "hover",
+["whisper_sounds"] = "all",
 },
 },
 }
 CHATTYNATOR_MESSAGE_LOG = {
-["cleanIndex"] = 4106,
+["cleanIndex"] = 4108,
 ["current"] = {
 {
 ["recordedBy"] = "Stormclout-Tichondrius",
@@ -80063,8 +80063,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["player"] = {
 ["name"] = "Silvermoon Guard",
 },
-["type"] = "MONSTER_SAY",
 ["event"] = "CHAT_MSG_MONSTER_SAY",
+["type"] = "MONSTER_SAY",
 },
 ["color"] = {
 ["b"] = 0.6235294342041016,
@@ -80081,8 +80081,8 @@ CHATTYNATOR_MESSAGE_LOG = {
 ["player"] = {
 ["name"] = "Ethereal Warpweaver",
 },
-["type"] = "MONSTER_SAY",
 ["event"] = "CHAT_MSG_MONSTER_SAY",
+["type"] = "MONSTER_SAY",
 },
 ["color"] = {
 ["b"] = 0.6235294342041016,

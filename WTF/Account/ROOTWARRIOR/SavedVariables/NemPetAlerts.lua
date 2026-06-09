@@ -25,12 +25,12 @@ NemPetAlertsSV = {
 ["petInCCSoundEnabled"] = true,
 ["tauntAutoSoundName"] = "Warlock: Toggle Demon Taunt",
 ["tauntAutoEnabled"] = false,
-["tauntAutoSoundEnabled"] = true,
 ["petInCCSoundName"] = "Sonarr",
+["petPassiveSoundEnabled"] = true,
 ["fakeDeathEnabled"] = false,
 ["ver"] = 7,
-["petPassiveSoundEnabled"] = true,
 ["petNotAttackingSoundEnabled"] = true,
+["tauntAutoSoundEnabled"] = true,
 ["healPetThreshold"] = 30,
 ["petInCCEnabled"] = true,
 ["alertColors"] = {
@@ -64,20 +64,20 @@ NemPetAlertsSV = {
 ["g"] = 0.2039,
 ["r"] = 1,
 },
-["fakeDeath"] = {
-["b"] = 1,
-["g"] = 0.3333,
-["r"] = 0.698,
+["petNotAttacking"] = {
+["b"] = 0,
+["g"] = 0.8588,
+["r"] = 1,
 },
 ["petPassive"] = {
 ["b"] = 0.1333,
 ["g"] = 0.5843,
 ["r"] = 1,
 },
-["petNotAttacking"] = {
-["b"] = 0,
-["g"] = 0.8588,
-["r"] = 1,
+["fakeDeath"] = {
+["b"] = 1,
+["g"] = 0.3333,
+["r"] = 0.698,
 },
 },
 ["petNotAttackingSoundName"] = "Warlock: Demon Not Attacking",

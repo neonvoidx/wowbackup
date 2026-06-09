@@ -11,17 +11,17 @@ sArena_ReloadedDB = {
 ["Gehyo - Mal'Ganis"] = "Default",
 ["Smaugchamp - Tichondrius"] = "Default",
 ["Tampacks - Mal'Ganis"] = "Default",
-["Ofpusstwo - Tichondrius"] = "Default",
-["Auteist - Tichondrius"] = "Default",
-["Neonvoid - Tichondrius"] = "Default",
 ["Hellavator - Tichondrius"] = "Default",
+["Auteist - Tichondrius"] = "Default",
+["Ofpusstwo - Tichondrius"] = "Default",
+["Neonvoid - Tichondrius"] = "Default",
 ["Praisesun - Tichondrius"] = "Default",
 ["Bigxthazug - Tichondrius"] = "Default",
-["Strathmoan - Tichondrius"] = "Default",
+["Stormclout - Tichondrius"] = "Default",
 ["Reedingo - Mal'Ganis"] = "Default",
 ["Gehyo - Tichondrius"] = "Default",
 ["Crillessana - Mal'Ganis"] = "Default",
-["Stormclout - Tichondrius"] = "Default",
+["Strathmoan - Tichondrius"] = "Default",
 ["Korahron - Tichondrius"] = "Default",
 ["Ofpuss - Tichondrius"] = "Default",
 ["Heilsatan - Tichondrius"] = "Default",
@@ -70,12 +70,7 @@ sArena_ReloadedDB = {
 ["scale"] = 1.17,
 ["changeFont"] = true,
 ["frameFont"] = "1",
-["textSettings"] = {
-["drTextOffsetY"] = -15,
-["drTextSize"] = 1.12,
-["drTextOffsetX"] = 0,
-["drTextAnchor"] = "CENTER",
-},
+["posX"] = 494.4,
 ["textures"] = {
 ["castbarUninterruptibleTexture"] = "WglassDark",
 ["bgTexture"] = "d1",
@@ -89,21 +84,13 @@ sArena_ReloadedDB = {
 ["posY"] = 1,
 ["posX"] = 60,
 },
-["fontOutline"] = "OUTLINE",
-["widgets"] = {
-["focusIndicator"] = {
-["enabled"] = true,
+["textSettings"] = {
+["drTextOffsetY"] = -15,
+["drTextSize"] = 1.12,
+["drTextOffsetX"] = 0,
+["drTextAnchor"] = "CENTER",
 },
-["combatIndicator"] = {
-["enabled"] = true,
-},
-["partyTargetIndicators"] = {
-["enabled"] = true,
-},
-["targetIndicator"] = {
-["enabled"] = true,
-},
-},
+["replaceClassIcon"] = true,
 ["dr"] = {
 ["blackDRBorder"] = false,
 ["posY"] = 1,
@@ -118,7 +105,20 @@ sArena_ReloadedDB = {
 ["thinPixelBorder"] = false,
 ["size"] = 48,
 },
-["replaceClassIcon"] = true,
+["widgets"] = {
+["focusIndicator"] = {
+["enabled"] = true,
+},
+["combatIndicator"] = {
+["enabled"] = true,
+},
+["partyTargetIndicators"] = {
+["enabled"] = true,
+},
+["targetIndicator"] = {
+["enabled"] = true,
+},
+},
 ["castBar"] = {
 ["iconScale"] = 1.06,
 ["interruptStatusColorOn"] = true,
@@ -130,7 +130,7 @@ sArena_ReloadedDB = {
 ["width"] = 138,
 },
 ["spacing"] = 22,
-["posX"] = 494.4,
+["fontOutline"] = "OUTLINE",
 },
 ["Gladiuish"] = {
 ["cdFont"] = "1",

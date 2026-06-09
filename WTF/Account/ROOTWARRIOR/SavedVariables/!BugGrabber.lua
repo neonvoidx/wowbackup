@@ -1,7 +1,7 @@
 
 BugGrabberDB = {
 ["lastSanitation"] = 3,
-["session"] = 8,
+["session"] = 10,
 ["errors"] = {
 {
 ["message"] = "...AddOns/Blizzard_SharedXML/SharedTooltipTemplates.lua:202: attempt to perform arithmetic on a secret number value (execution tainted by 'FrogskisCursorTrail')",
@@ -50,6 +50,14 @@ BugGrabberDB = {
 ["stack"] = "[Interface/AddOns/Blizzard_UIWidgets/Mainline/Blizzard_UIWidgetTemplateTextWithState.lua]:35: in function 'Setup'\n[Interface/AddOns/Blizzard_UIWidgets/Mainline/Blizzard_UIWidgetManager.lua]:526: in function 'ProcessWidget'\n[Interface/AddOns/Blizzard_UIWidgets/Mainline/Blizzard_UIWidgetManager.lua]:562: in function 'ProcessAllWidgets'\n[Interface/AddOns/Blizzard_UIWidgets/Mainline/Blizzard_UIWidgetManager.lua]:275: in function 'RegisterForWidgetSet'\n[Interface/AddOns/Blizzard_GameTooltip/Mainline/GameTooltip.lua]:588: in function 'GameTooltip_AddWidgetSet'\n[Interface/AddOns/Blizzard_FrameXMLUtil/AreaPoiUtil.lua]:44: in function <...terface/AddOns/Blizzard_FrameXMLUtil/AreaPoiUtil.lua:3>\n[tail call]: ?\n[Interface/AddOns/Blizzard_SharedMapDataProviders/AreaPOIDataProvider.lua]:166: in function <...zzard_SharedMapDataProviders/AreaPOIDataProvider.lua:159>\n[C]: ?\n",
 ["session"] = 1,
 ["counter"] = 18,
+},
+{
+["message"] = "...dOns/Blizzard_MacroUI/Blizzard_MacroIconSelector.lua:130: attempt to perform arithmetic on local 'x' (a nil value)",
+["time"] = 1780931545,
+["locals"] = "self=MacroPopupFrame <Blizzard_MacroIconSelector.xml:5>{\n BG=Texture <SharedUIPanelTemplates.xml:1634>\n _eqolLayoutEntryId=\"MacroPopupFrame\"\n _eqolScaleResetHooked=true\n _eqolDragHooked=true\n iconFilter=1\n _eqolScaleHoverHooked=true\n _eqolMoveDragTargets=<table>\n editBoxHeaderText=\"Enter Macro Name (Max 16 Characters):\"\n _eqolLayoutHooks=true\n _eqolMoverEntry=<table>\n _eqolDefaultPoints=<table>\n mode=1\n iconDataProvider=<table>\n _eqolScaleTargetHooked=true\n IconSelector=Frame <SharedUIPanelTemplates.xml:1796>\n BorderBox=Frame <SharedUIPanelTemplates.xml:1644>\n _eqolMoverDefaults=<table>\n}\nshown=true\nmacroFrame=MacroFrame <Blizzard_MacroUI.xml:23>{\n _eqolScaleResetHooked=true\n Inset=MacroFrameInset <SharedUIPanelTemplates.xml:686>\n TitleContainer=Frame <SharedUIPanelTemplates.xml:576>\n MacroSelector=Frame <Blizzard_MacroUI.xml:96>\n _eqolScaleHoverHooked=true\n Bg=MacroFrameBg <SharedUIPanelTemplates.xml:663>\n macroMax=120\n NineSlice=Frame <SharedUIPanelTemplates.xml:550>\n SelectedMacroButton=MacroFrameSelectedMacroButton <Blizzard_MacroUI.xml:85>\n _eqolMoverDefaults=<table>\n _eqolLayoutEntryId=\"MacroFrame\"\n iconDataProvider=<table>\n maxTabWidth=140\n Tabs=<table>\n macroBase=0\n _eqolMoveDragTargets=<table>\n layoutType=\"PortraitFrameTemplate\"\n _eqolLayoutHooks=true\n PortraitContainer=Frame <SharedUIPanelTemplates.xml:551>\n _eqolDragHooked=true\n _eqolDefaultPoints=<table>\n _eqolScaleTargetHooked=true\n TopTileStreaks=Texture <SharedUIPanelTemplates.xml:671>\n _eqolMoverEntry=<table>\n CloseButton=MacroFrameCloseButton <SharedUIPanelTemplates.xml:680>\n numTabs=2\n selectedTab=1\n}\nwidth=338.000031\np=nil\nr=nil\nrp=nil\nx=nil\ny=nil\n(*temporary)=nil\n(*temporary)=nil\n(*temporary)=nil\n(*temporary)=\"attempt to perform arithmetic on local 'x' (a nil value)\"\n",
+["stack"] = "[Interface/AddOns/Blizzard_MacroUI/Blizzard_MacroIconSelector.lua]:130: in function 'UpdateMacroFramePanelWidth'\n[Interface/AddOns/Blizzard_MacroUI/Blizzard_MacroIconSelector.lua]:36: in function <...dOns/Blizzard_MacroUI/Blizzard_MacroIconSelector.lua:3>\n[C]: ?\n[C]: in function 'Show'\n[Interface/AddOns/Blizzard_MacroUI/Blizzard_MacroUI.lua]:312: in function <...terface/AddOns/Blizzard_MacroUI/Blizzard_MacroUI.lua:309>\n",
+["session"] = 10,
+["counter"] = 2,
 },
 },
 }

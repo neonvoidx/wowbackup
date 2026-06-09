@@ -4,12 +4,12 @@ HideButtonGlowDB = {
 ["filtered"] = {
 [115181] = "Breath of Fire",
 [232893] = "Felblade",
-[124682] = "Enveloping Mist",
-[116670] = "Vivify",
 [100784] = "Blackout Kick",
-[442294] = "Reaver's Glaive",
-[399491] = "Sheilun's Gift",
+[116670] = "Vivify",
+[124682] = "Enveloping Mist",
 [117952] = "Crackling Jade Lightning",
+[399491] = "Sheilun's Gift",
+[442294] = "Reaver's Glaive",
 },
 ["hideOutOfCombat"] = false,
 ["allowed"] = {

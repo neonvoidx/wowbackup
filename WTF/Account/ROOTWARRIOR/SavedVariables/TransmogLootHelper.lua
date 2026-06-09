@@ -14514,11 +14514,9 @@ TransmogLootHelper_Cache = {
 "Stormclout-Tichondrius",
 },
 },
-[56463] = {
-["learned"] = true,
+[12070] = {
+["learned"] = false,
 ["knownBy"] = {
-"Starphage-Tichondrius",
-"Stormclout-Tichondrius",
 },
 },
 [24266] = {
@@ -16795,12 +16793,12 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[377987] = {
+[12585] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
 },
-[12585] = {
+[377987] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
@@ -17064,12 +17062,12 @@ TransmogLootHelper_Cache = {
 "Strathmoan-Tichondrius",
 },
 },
-[185944] = {
+[31440] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
 },
-[31440] = {
+[185944] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
@@ -17408,7 +17406,7 @@ TransmogLootHelper_Cache = {
 "Starphage-Tichondrius",
 },
 },
-[31441] = {
+[185952] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
@@ -17481,9 +17479,10 @@ TransmogLootHelper_Cache = {
 "Choppiez-Tichondrius",
 },
 },
-[24914] = {
-["learned"] = false,
+[3115] = {
+["learned"] = true,
 ["knownBy"] = {
+"Strathmoan-Tichondrius",
 },
 },
 [142951] = {
@@ -17690,10 +17689,9 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[308405] = {
-["learned"] = true,
+[3755] = {
+["learned"] = false,
 ["knownBy"] = {
-"Stormclout-Tichondrius",
 },
 },
 [449573] = {
@@ -17749,7 +17747,7 @@ TransmogLootHelper_Cache = {
 "Neonvoid-Tichondrius",
 },
 },
-[185960] = {
+[31442] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
@@ -17812,15 +17810,15 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
+[16724] = {
+["learned"] = false,
+["knownBy"] = {
+},
+},
 [308411] = {
 ["learned"] = true,
 ["knownBy"] = {
 "Stormclout-Tichondrius",
-},
-},
-[16724] = {
-["learned"] = false,
-["knownBy"] = {
 },
 },
 [185962] = {
@@ -17942,10 +17940,9 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[308417] = {
-["learned"] = true,
+[19796] = {
+["learned"] = false,
 ["knownBy"] = {
-"Stormclout-Tichondrius",
 },
 },
 [19668] = {
@@ -17953,9 +17950,10 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[19796] = {
-["learned"] = false,
+[308417] = {
+["learned"] = true,
 ["knownBy"] = {
+"Stormclout-Tichondrius",
 },
 },
 [425139] = {
@@ -18055,10 +18053,9 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[425143] = {
-["learned"] = true,
+[142964] = {
+["learned"] = false,
 ["knownBy"] = {
-"Neonvoid-Tichondrius",
 },
 },
 [30569] = {
@@ -18096,10 +18093,9 @@ TransmogLootHelper_Cache = {
 "Stormclout-Tichondrius",
 },
 },
-[1225245] = {
-["learned"] = true,
+[22868] = {
+["learned"] = false,
 ["knownBy"] = {
-"Starphage-Tichondrius",
 },
 },
 [17580] = {
@@ -18190,9 +18186,10 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[6518] = {
-["learned"] = false,
+[1225270] = {
+["learned"] = true,
 ["knownBy"] = {
+"Starphage-Tichondrius",
 },
 },
 [12587] = {
@@ -18200,7 +18197,7 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[13931] = {
+[1225284] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
@@ -18220,10 +18217,9 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[1225268] = {
-["learned"] = true,
+[12907] = {
+["learned"] = false,
 ["knownBy"] = {
-"Starphage-Tichondrius",
 },
 },
 [1225269] = {
@@ -18232,10 +18228,9 @@ TransmogLootHelper_Cache = {
 "Starphage-Tichondrius",
 },
 },
-[1225270] = {
-["learned"] = true,
+[6518] = {
+["learned"] = false,
 ["knownBy"] = {
-"Starphage-Tichondrius",
 },
 },
 [1225271] = {
@@ -18265,10 +18260,9 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[1225276] = {
-["learned"] = true,
+[13419] = {
+["learned"] = false,
 ["knownBy"] = {
-"Starphage-Tichondrius",
 },
 },
 [1225277] = {
@@ -18308,7 +18302,7 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[1225284] = {
+[19669] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
@@ -18469,7 +18463,7 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[15915] = {
+[23637] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
@@ -18639,11 +18633,9 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[1225350] = {
-["learned"] = true,
+[9964] = {
+["learned"] = false,
 ["knownBy"] = {
-"Starphage-Tichondrius",
-"Stormclout-Tichondrius",
 },
 },
 [310496] = {
@@ -18675,9 +18667,11 @@ TransmogLootHelper_Cache = {
 "Strathmoan-Tichondrius",
 },
 },
-[9964] = {
-["learned"] = false,
+[1225350] = {
+["learned"] = true,
 ["knownBy"] = {
+"Starphage-Tichondrius",
+"Stormclout-Tichondrius",
 },
 },
 [56486] = {
@@ -18760,10 +18754,11 @@ TransmogLootHelper_Cache = {
 "Starphage-Tichondrius",
 },
 },
-[120644] = {
+[1225366] = {
 ["learned"] = true,
 ["knownBy"] = {
-"Neonvoid-Tichondrius",
+"Starphage-Tichondrius",
+"Stormclout-Tichondrius",
 },
 },
 [1225365] = {
@@ -18773,11 +18768,10 @@ TransmogLootHelper_Cache = {
 "Stormclout-Tichondrius",
 },
 },
-[1225366] = {
+[120644] = {
 ["learned"] = true,
 ["knownBy"] = {
-"Starphage-Tichondrius",
-"Stormclout-Tichondrius",
+"Neonvoid-Tichondrius",
 },
 },
 [1225367] = {
@@ -18865,15 +18859,15 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[12076] = {
-["learned"] = false,
-["knownBy"] = {
-},
-},
 [56487] = {
 ["learned"] = true,
 ["knownBy"] = {
 "Starphage-Tichondrius",
+},
+},
+[12076] = {
+["learned"] = false,
+["knownBy"] = {
 },
 },
 [12758] = {
@@ -18926,11 +18920,9 @@ TransmogLootHelper_Cache = {
 "Strathmoan-Tichondrius",
 },
 },
-[178819] = {
-["learned"] = true,
+[12716] = {
+["learned"] = false,
 ["knownBy"] = {
-"Tampacks-Tichondrius",
-"Strathmoan-Tichondrius",
 },
 },
 [1229912] = {
@@ -18996,12 +18988,12 @@ TransmogLootHelper_Cache = {
 "Stormclout-Tichondrius",
 },
 },
-[13612] = {
+[419042] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
 },
-[419042] = {
+[13612] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
@@ -19016,12 +19008,12 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[419043] = {
+[13868] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
 },
-[13868] = {
+[419043] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
@@ -19271,16 +19263,16 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[359670] = {
-["learned"] = false,
-["knownBy"] = {
-},
-},
 [310524] = {
 ["learned"] = true,
 ["knownBy"] = {
 "Starphage-Tichondrius",
 "Stormclout-Tichondrius",
+},
+},
+[359670] = {
+["learned"] = false,
+["knownBy"] = {
 },
 },
 [16984] = {
@@ -19602,7 +19594,7 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[16985] = {
+[12589] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
@@ -19670,12 +19662,12 @@ TransmogLootHelper_Cache = {
 "Strathmoan-Tichondrius",
 },
 },
-[298256] = {
+[13421] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
 },
-[13421] = {
+[298256] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
@@ -19926,17 +19918,17 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[8238] = {
-["learned"] = false,
-["knownBy"] = {
-},
-},
-[16730] = {
+[288029] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
 },
 [8366] = {
+["learned"] = false,
+["knownBy"] = {
+},
+},
+[16730] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
@@ -19962,7 +19954,7 @@ TransmogLootHelper_Cache = {
 "Starphage-Tichondrius",
 },
 },
-[1266541] = {
+[269601] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
@@ -20037,7 +20029,7 @@ TransmogLootHelper_Cache = {
 "Choppiez-Tichondrius",
 },
 },
-[1266555] = {
+[2396] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
@@ -20069,7 +20061,7 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[9966] = {
+[269606] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
@@ -20114,7 +20106,7 @@ TransmogLootHelper_Cache = {
 "Stormclout-Tichondrius",
 },
 },
-[143011] = {
+[269608] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
@@ -20204,18 +20196,13 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[31449] = {
-["learned"] = false,
-["knownBy"] = {
-},
-},
 [2908] = {
 ["learned"] = true,
 ["knownBy"] = {
 "Starstypeshi-Tichondrius",
 },
 },
-[269613] = {
+[31449] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
@@ -20224,6 +20211,11 @@ TransmogLootHelper_Cache = {
 ["learned"] = true,
 ["knownBy"] = {
 "Choppiez-Tichondrius",
+},
+},
+[269613] = {
+["learned"] = false,
+["knownBy"] = {
 },
 },
 [446926] = {
@@ -20280,7 +20272,7 @@ TransmogLootHelper_Cache = {
 "Stormclout-Tichondrius",
 },
 },
-[16731] = {
+[3116] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
@@ -20290,7 +20282,7 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[16987] = {
+[12590] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
@@ -20560,12 +20552,12 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[12590] = {
+[16987] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
 },
-[3116] = {
+[16731] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
@@ -20667,7 +20659,7 @@ TransmogLootHelper_Cache = {
 "Neonvoid-Tichondrius",
 },
 },
-[269608] = {
+[143011] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
@@ -20692,7 +20684,7 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[269606] = {
+[9966] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
@@ -20709,7 +20701,7 @@ TransmogLootHelper_Cache = {
 "Neonvoid-Tichondrius",
 },
 },
-[2396] = {
+[1266555] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
@@ -20743,7 +20735,7 @@ TransmogLootHelper_Cache = {
 "Stormclout-Tichondrius",
 },
 },
-[269601] = {
+[1266541] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
@@ -20758,7 +20750,7 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[288029] = {
+[8238] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
@@ -20967,7 +20959,7 @@ TransmogLootHelper_Cache = {
 "Neonvoid-Tichondrius",
 },
 },
-[12589] = {
+[16985] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
@@ -21424,9 +21416,11 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[12716] = {
-["learned"] = false,
+[178819] = {
+["learned"] = true,
 ["knownBy"] = {
+"Tampacks-Tichondrius",
+"Strathmoan-Tichondrius",
 },
 },
 [183997] = {
@@ -21611,7 +21605,7 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[23637] = {
+[15915] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
@@ -21712,19 +21706,21 @@ TransmogLootHelper_Cache = {
 "Stormclout-Tichondrius",
 },
 },
-[19669] = {
+[13931] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
 },
-[13419] = {
-["learned"] = false,
+[1225276] = {
+["learned"] = true,
 ["knownBy"] = {
+"Starphage-Tichondrius",
 },
 },
-[12907] = {
-["learned"] = false,
+[1225268] = {
+["learned"] = true,
 ["knownBy"] = {
+"Starphage-Tichondrius",
 },
 },
 [185930] = {
@@ -21769,9 +21765,10 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[22868] = {
-["learned"] = false,
+[1225245] = {
+["learned"] = true,
 ["knownBy"] = {
+"Starphage-Tichondrius",
 },
 },
 [339000] = {
@@ -21794,9 +21791,10 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[142964] = {
-["learned"] = false,
+[425143] = {
+["learned"] = true,
 ["knownBy"] = {
+"Neonvoid-Tichondrius",
 },
 },
 [291090] = {
@@ -21939,7 +21937,7 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[31442] = {
+[185960] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
@@ -21954,9 +21952,10 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[3755] = {
-["learned"] = false,
+[308405] = {
+["learned"] = true,
 ["knownBy"] = {
+"Stormclout-Tichondrius",
 },
 },
 [185705] = {
@@ -21995,10 +21994,9 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[3115] = {
-["learned"] = true,
+[24914] = {
+["learned"] = false,
 ["knownBy"] = {
-"Strathmoan-Tichondrius",
 },
 },
 [360126] = {
@@ -22037,7 +22035,7 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[185952] = {
+[31441] = {
 ["learned"] = false,
 ["knownBy"] = {
 },
@@ -23480,9 +23478,11 @@ TransmogLootHelper_Cache = {
 ["knownBy"] = {
 },
 },
-[12070] = {
-["learned"] = false,
+[56463] = {
+["learned"] = true,
 ["knownBy"] = {
+"Starphage-Tichondrius",
+"Stormclout-Tichondrius",
 },
 },
 [56514] = {
@@ -23938,8 +23938,8 @@ TransmogLootHelper_Cache = {
 ["Decor"] = {
 [383] = {
 ["owned"] = 6,
-["grantsXP"] = false,
 ["xp"] = 0,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [12252] = {
@@ -23949,49 +23949,49 @@ TransmogLootHelper_Cache = {
 },
 [8191] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [18483] = {
-["owned"] = 4,
+["owned"] = 5,
 ["xp"] = 0,
 ["grantsXP"] = false,
 },
 [8238] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [388] = {
 ["owned"] = 2,
-["xp"] = 0,
 ["grantsXP"] = false,
+["xp"] = 0,
 ["placed"] = 1,
 },
 [4161] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [389] = {
 ["owned"] = 9,
 ["placed"] = 7,
-["xp"] = 0,
 ["grantsXP"] = false,
+["xp"] = 0,
 },
 [4177] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [390] = {
 ["owned"] = 26,
-["grantsXP"] = false,
 ["xp"] = 0,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [14555] = {
@@ -24026,8 +24026,8 @@ TransmogLootHelper_Cache = {
 },
 [14811] = {
 ["owned"] = 0,
-["grantsXP"] = false,
 ["xp"] = 0,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [14827] = {
@@ -24042,8 +24042,8 @@ TransmogLootHelper_Cache = {
 },
 [4401] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [14971] = {
@@ -24058,26 +24058,26 @@ TransmogLootHelper_Cache = {
 },
 [8910] = {
 ["owned"] = 2,
-["grantsXP"] = false,
 ["xp"] = 0,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [4465] = {
 ["owned"] = 9,
-["xp"] = 0,
 ["grantsXP"] = false,
+["xp"] = 0,
 ["placed"] = 7,
 },
 [4473] = {
 ["owned"] = 1,
-["grantsXP"] = false,
 ["xp"] = 0,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [4481] = {
 ["owned"] = 1,
-["xp"] = 0,
 ["grantsXP"] = false,
+["xp"] = 0,
 ["placed"] = 1,
 },
 [15147] = {
@@ -24087,50 +24087,50 @@ TransmogLootHelper_Cache = {
 },
 [9038] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [9054] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [11133] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [11165] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [9150] = {
 ["owned"] = 1,
-["xp"] = 0,
 ["grantsXP"] = false,
+["xp"] = 0,
 ["placed"] = 0,
 },
 [9166] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [9182] = {
 ["owned"] = 1,
-["xp"] = 0,
 ["grantsXP"] = false,
+["xp"] = 0,
 ["placed"] = 1,
 },
 [9246] = {
 ["owned"] = 1,
-["xp"] = 0,
 ["grantsXP"] = false,
+["xp"] = 0,
 ["placed"] = 1,
 },
 [15403] = {
@@ -24145,8 +24145,8 @@ TransmogLootHelper_Cache = {
 },
 [11373] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [15483] = {
@@ -24161,14 +24161,14 @@ TransmogLootHelper_Cache = {
 },
 [11437] = {
 ["owned"] = 1,
-["grantsXP"] = false,
 ["xp"] = 0,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [11453] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [9422] = {
@@ -24178,38 +24178,38 @@ TransmogLootHelper_Cache = {
 },
 [1693] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [1695] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [1697] = {
 ["owned"] = 1,
-["xp"] = 0,
 ["grantsXP"] = false,
+["xp"] = 0,
 ["placed"] = 1,
 },
 [1699] = {
 ["owned"] = 1,
-["grantsXP"] = false,
 ["xp"] = 0,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [1701] = {
 ["owned"] = 1,
-["grantsXP"] = false,
 ["xp"] = 0,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [1703] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [15755] = {
@@ -24224,14 +24224,14 @@ TransmogLootHelper_Cache = {
 },
 [4841] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [1725] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [15851] = {
@@ -24241,62 +24241,62 @@ TransmogLootHelper_Cache = {
 },
 [1737] = {
 ["owned"] = 1,
-["grantsXP"] = false,
 ["xp"] = 0,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [1739] = {
 ["owned"] = 1,
-["grantsXP"] = false,
 ["xp"] = 0,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [1741] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [11885] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [1745] = {
 ["owned"] = 2,
-["xp"] = 0,
 ["grantsXP"] = false,
+["xp"] = 0,
 ["placed"] = 0,
 },
 [1747] = {
 ["owned"] = 1,
-["grantsXP"] = false,
 ["xp"] = 0,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [1749] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [1771] = {
 ["owned"] = 10,
-["xp"] = 0,
 ["grantsXP"] = false,
+["xp"] = 0,
 ["placed"] = 0,
 },
 [1773] = {
 ["owned"] = 5,
-["xp"] = 0,
 ["grantsXP"] = false,
+["xp"] = 0,
 ["placed"] = 2,
 },
 [1775] = {
 ["owned"] = 5,
-["grantsXP"] = false,
 ["xp"] = 0,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [14204] = {
@@ -24311,8 +24311,8 @@ TransmogLootHelper_Cache = {
 },
 [12189] = {
 ["owned"] = 1,
-["grantsXP"] = false,
 ["xp"] = 0,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [12205] = {
@@ -24332,20 +24332,20 @@ TransmogLootHelper_Cache = {
 },
 [1791] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [1793] = {
 ["owned"] = 1,
-["grantsXP"] = false,
 ["xp"] = 10,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [1795] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [18485] = {
@@ -24355,14 +24355,14 @@ TransmogLootHelper_Cache = {
 },
 [8239] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [1801] = {
 ["owned"] = 1,
-["xp"] = 0,
 ["grantsXP"] = false,
+["xp"] = 0,
 ["placed"] = 0,
 },
 [10350] = {
@@ -24382,32 +24382,32 @@ TransmogLootHelper_Cache = {
 },
 [1827] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [1829] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [1831] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [1833] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [14812] = {
 ["owned"] = 0,
-["grantsXP"] = false,
 ["xp"] = 0,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [14828] = {
@@ -24417,26 +24417,26 @@ TransmogLootHelper_Cache = {
 },
 [1861] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [1863] = {
 ["owned"] = 1,
-["grantsXP"] = false,
 ["xp"] = 0,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [1865] = {
 ["owned"] = 6,
-["xp"] = 0,
 ["grantsXP"] = false,
+["xp"] = 0,
 ["placed"] = 0,
 },
 [1867] = {
 ["owned"] = 1,
-["grantsXP"] = false,
 ["xp"] = 0,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [14972] = {
@@ -24446,75 +24446,75 @@ TransmogLootHelper_Cache = {
 },
 [1879] = {
 ["owned"] = 1,
-["grantsXP"] = false,
 ["xp"] = 0,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [1881] = {
 ["owned"] = 1,
-["grantsXP"] = false,
 ["xp"] = 0,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [8911] = {
 ["owned"] = 1,
-["grantsXP"] = false,
 ["xp"] = 0,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [1885] = {
 ["owned"] = 1,
-["grantsXP"] = false,
 ["xp"] = 0,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [1887] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [1889] = {
 ["owned"] = 1,
-["xp"] = 0,
 ["grantsXP"] = false,
+["xp"] = 0,
 ["placed"] = 1,
 },
 [1893] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [7576] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [9039] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [9055] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [7608] = {
 ["owned"] = 2,
-["xp"] = 10,
 ["grantsXP"] = false,
+["xp"] = 10,
 ["placed"] = 0,
 },
 [7624] = {
 ["owned"] = 1,
 ["placed"] = 0,
-["xp"] = 0,
 ["grantsXP"] = false,
+["xp"] = 0,
 },
 [15260] = {
 ["owned"] = 1,
@@ -24523,50 +24523,50 @@ TransmogLootHelper_Cache = {
 },
 [478] = {
 ["owned"] = 1,
-["grantsXP"] = false,
 ["xp"] = 0,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [9151] = {
 ["owned"] = 1,
-["xp"] = 0,
 ["grantsXP"] = false,
+["xp"] = 0,
 ["placed"] = 0,
 },
 [479] = {
 ["owned"] = 1,
-["grantsXP"] = false,
 ["xp"] = 0,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [3833] = {
 ["owned"] = 5,
-["grantsXP"] = false,
 ["xp"] = 10,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [1919] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [481] = {
 ["owned"] = 1,
-["grantsXP"] = false,
 ["xp"] = 0,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [9247] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [482] = {
 ["owned"] = 1,
-["grantsXP"] = false,
 ["xp"] = 0,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [11326] = {
@@ -24576,188 +24576,188 @@ TransmogLootHelper_Cache = {
 },
 [483] = {
 ["owned"] = 11,
-["xp"] = 0,
 ["grantsXP"] = false,
+["xp"] = 0,
 ["placed"] = 4,
 },
 [484] = {
 ["owned"] = 1,
-["grantsXP"] = false,
 ["xp"] = 0,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [3873] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [485] = {
 ["owned"] = 1,
-["grantsXP"] = false,
 ["xp"] = 0,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [3881] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [486] = {
 ["owned"] = 1,
-["grantsXP"] = false,
 ["xp"] = 0,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [11454] = {
 ["owned"] = 1,
-["xp"] = 0,
 ["grantsXP"] = false,
+["xp"] = 0,
 ["placed"] = 0,
 },
 [487] = {
 ["owned"] = 2,
-["grantsXP"] = false,
 ["xp"] = 0,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [11486] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [488] = {
 ["owned"] = 1,
-["grantsXP"] = false,
 ["xp"] = 0,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [9471] = {
 ["owned"] = 1,
-["grantsXP"] = false,
 ["xp"] = 0,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [489] = {
 ["owned"] = 1,
-["grantsXP"] = false,
 ["xp"] = 0,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [7824] = {
 ["owned"] = 6,
-["xp"] = 0,
 ["grantsXP"] = false,
+["xp"] = 0,
 ["placed"] = 0,
 },
 [490] = {
 ["owned"] = 1,
-["grantsXP"] = false,
 ["xp"] = 0,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [491] = {
 ["owned"] = 1,
-["grantsXP"] = false,
 ["xp"] = 0,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [492] = {
 ["owned"] = 1,
-["grantsXP"] = false,
 ["xp"] = 0,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [493] = {
 ["owned"] = 1,
-["grantsXP"] = false,
 ["xp"] = 0,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [7896] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [1977] = {
 ["owned"] = 1,
-["grantsXP"] = false,
 ["xp"] = 0,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [1979] = {
 ["owned"] = 1,
-["xp"] = 0,
 ["grantsXP"] = false,
+["xp"] = 0,
 ["placed"] = 0,
 },
 [496] = {
 ["owned"] = 1,
-["grantsXP"] = false,
 ["xp"] = 0,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [5889] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [497] = {
 ["owned"] = 1,
-["grantsXP"] = false,
 ["xp"] = 0,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [1989] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [1991] = {
 ["owned"] = 2,
-["grantsXP"] = false,
 ["xp"] = 0,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [1993] = {
 ["owned"] = 1,
-["grantsXP"] = false,
 ["xp"] = 0,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [1995] = {
 ["owned"] = 1,
-["grantsXP"] = false,
 ["xp"] = 0,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [3993] = {
 ["owned"] = 2,
-["grantsXP"] = false,
 ["xp"] = 0,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [1999] = {
 ["owned"] = 1,
-["grantsXP"] = false,
 ["xp"] = 0,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [2001] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [16012] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [16028] = {
@@ -24767,32 +24767,32 @@ TransmogLootHelper_Cache = {
 },
 [4025] = {
 ["owned"] = 1,
-["xp"] = 0,
 ["grantsXP"] = false,
+["xp"] = 0,
 ["placed"] = 1,
 },
 [4029] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [4033] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [4037] = {
 ["owned"] = 1,
-["grantsXP"] = false,
 ["xp"] = 10,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [4041] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [16220] = {
@@ -24807,8 +24807,8 @@ TransmogLootHelper_Cache = {
 },
 [12190] = {
 ["owned"] = 1,
-["grantsXP"] = false,
 ["xp"] = 0,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [12206] = {
@@ -24818,86 +24818,86 @@ TransmogLootHelper_Cache = {
 },
 [8176] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [8192] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [14381] = {
 ["owned"] = 1,
-["xp"] = 0,
 ["grantsXP"] = false,
+["xp"] = 0,
 ["placed"] = 0,
 },
 [520] = {
 ["owned"] = 8,
-["grantsXP"] = false,
 ["xp"] = 0,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [521] = {
 ["owned"] = 1,
-["xp"] = 0,
 ["grantsXP"] = false,
+["xp"] = 0,
 ["placed"] = 0,
 },
 [4170] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [523] = {
 ["owned"] = 3,
-["grantsXP"] = false,
 ["xp"] = 0,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [524] = {
 ["owned"] = 10,
 ["placed"] = 6,
-["xp"] = 0,
 ["grantsXP"] = false,
+["xp"] = 0,
 },
 [525] = {
 ["owned"] = 10,
-["xp"] = 0,
 ["grantsXP"] = false,
+["xp"] = 0,
 ["placed"] = 0,
 },
 [526] = {
 ["owned"] = 8,
-["grantsXP"] = false,
 ["xp"] = 0,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [2106] = {
 ["owned"] = 1,
-["grantsXP"] = false,
 ["xp"] = 0,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [2110] = {
 ["owned"] = 5,
-["xp"] = 0,
 ["grantsXP"] = false,
+["xp"] = 0,
 ["placed"] = 3,
 },
 [2114] = {
 ["owned"] = 5,
-["xp"] = 0,
 ["grantsXP"] = false,
+["xp"] = 0,
 ["placed"] = 3,
 },
 [2118] = {
 ["owned"] = 6,
-["grantsXP"] = false,
 ["xp"] = 0,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [14621] = {
@@ -24912,32 +24912,32 @@ TransmogLootHelper_Cache = {
 },
 [533] = {
 ["owned"] = 10,
-["xp"] = 0,
 ["grantsXP"] = false,
+["xp"] = 0,
 ["placed"] = 0,
 },
 [534] = {
 ["owned"] = 1,
-["grantsXP"] = false,
 ["xp"] = 0,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [535] = {
 ["owned"] = 1,
-["grantsXP"] = false,
 ["xp"] = 0,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [536] = {
 ["owned"] = 1,
-["grantsXP"] = false,
 ["xp"] = 0,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [14813] = {
 ["owned"] = 0,
-["grantsXP"] = false,
 ["xp"] = 0,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [14829] = {
@@ -24952,92 +24952,92 @@ TransmogLootHelper_Cache = {
 },
 [4386] = {
 ["owned"] = 1,
-["grantsXP"] = false,
 ["xp"] = 0,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [4402] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [2226] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [2230] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [4466] = {
 ["owned"] = 2,
-["xp"] = 0,
 ["grantsXP"] = false,
+["xp"] = 0,
 ["placed"] = 0,
 },
 [4474] = {
 ["owned"] = 1,
-["grantsXP"] = false,
 ["xp"] = 0,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [4482] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [4490] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [2254] = {
 ["owned"] = 11,
-["xp"] = 0,
 ["grantsXP"] = false,
+["xp"] = 0,
 ["placed"] = 1,
 },
 [9040] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [4562] = {
 ["owned"] = 1,
-["grantsXP"] = false,
 ["xp"] = 0,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [9152] = {
 ["owned"] = 1,
-["xp"] = 0,
 ["grantsXP"] = false,
+["xp"] = 0,
 ["placed"] = 0,
 },
 [9168] = {
 ["owned"] = 1,
-["xp"] = 0,
 ["grantsXP"] = false,
+["xp"] = 0,
 ["placed"] = 0,
 },
 [9184] = {
 ["owned"] = 5,
-["xp"] = 10,
 ["grantsXP"] = false,
+["xp"] = 10,
 ["placed"] = 0,
 },
 [11279] = {
 ["owned"] = 1,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [9248] = {
@@ -25052,62 +25052,62 @@ TransmogLootHelper_Cache = {
 },
 [2322] = {
 ["owned"] = 1,
-["grantsXP"] = false,
 ["xp"] = 0,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [2326] = {
 ["owned"] = 1,
-["xp"] = 0,
 ["grantsXP"] = false,
+["xp"] = 0,
 ["placed"] = 0,
 },
 [15453] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [11375] = {
 ["owned"] = 1,
-["xp"] = 10,
 ["grantsXP"] = false,
+["xp"] = 10,
 ["placed"] = 0,
 },
 [2338] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [2342] = {
 ["owned"] = 2,
-["grantsXP"] = false,
 ["xp"] = 0,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [11439] = {
 ["owned"] = 1,
-["grantsXP"] = false,
 ["xp"] = 10,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [11455] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [9424] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [11487] = {
 ["owned"] = 1,
-["grantsXP"] = false,
 ["xp"] = 0,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [11503] = {
@@ -25117,8 +25117,8 @@ TransmogLootHelper_Cache = {
 },
 [9472] = {
 ["owned"] = 1,
-["grantsXP"] = false,
 ["xp"] = 0,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [9488] = {
@@ -25138,74 +25138,74 @@ TransmogLootHelper_Cache = {
 },
 [4818] = {
 ["owned"] = 1,
-["grantsXP"] = false,
 ["xp"] = 0,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [2430] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [2434] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [2438] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [2442] = {
 ["owned"] = 1,
-["grantsXP"] = false,
 ["xp"] = 0,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [2446] = {
 ["owned"] = 1,
-["grantsXP"] = false,
 ["xp"] = 0,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [2454] = {
 ["owned"] = 1,
-["grantsXP"] = false,
 ["xp"] = 0,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [2458] = {
 ["owned"] = 8,
-["grantsXP"] = false,
 ["xp"] = 0,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [11887] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [11903] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [16013] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [11935] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [2510] = {
@@ -25215,26 +25215,26 @@ TransmogLootHelper_Cache = {
 },
 [2514] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [2526] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [2530] = {
 ["owned"] = 1,
-["xp"] = 0,
 ["grantsXP"] = false,
+["xp"] = 0,
 ["placed"] = 1,
 },
 [2534] = {
 ["owned"] = 1,
-["grantsXP"] = false,
 ["xp"] = 0,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [12207] = {
@@ -25244,14 +25244,14 @@ TransmogLootHelper_Cache = {
 },
 [2546] = {
 ["owned"] = 1,
-["grantsXP"] = false,
 ["xp"] = 0,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [2550] = {
 ["owned"] = 1,
-["grantsXP"] = false,
 ["xp"] = 0,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [12255] = {
@@ -25261,8 +25261,8 @@ TransmogLootHelper_Cache = {
 },
 [8193] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [14350] = {
@@ -25272,8 +25272,8 @@ TransmogLootHelper_Cache = {
 },
 [14382] = {
 ["owned"] = 6,
-["xp"] = 0,
 ["grantsXP"] = false,
+["xp"] = 0,
 ["placed"] = 1,
 },
 [20632] = {
@@ -25288,14 +25288,14 @@ TransmogLootHelper_Cache = {
 },
 [2590] = {
 ["owned"] = 13,
-["grantsXP"] = false,
 ["xp"] = 0,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [2594] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [14558] = {
@@ -25320,8 +25320,8 @@ TransmogLootHelper_Cache = {
 },
 [14814] = {
 ["owned"] = 1,
-["grantsXP"] = false,
 ["xp"] = 0,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [14830] = {
@@ -25331,44 +25331,44 @@ TransmogLootHelper_Cache = {
 },
 [673] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [674] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [675] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [676] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [677] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [8785] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [679] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [10944] = {
@@ -25388,50 +25388,50 @@ TransmogLootHelper_Cache = {
 },
 [5530] = {
 ["owned"] = 14,
-["xp"] = 0,
 ["grantsXP"] = false,
+["xp"] = 0,
 ["placed"] = 1,
 },
 [9041] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [7609] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [7625] = {
 ["owned"] = 1,
-["xp"] = 0,
 ["grantsXP"] = false,
+["xp"] = 0,
 ["placed"] = 1,
 },
 [9169] = {
 ["owned"] = 1,
-["grantsXP"] = false,
 ["xp"] = 0,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [9185] = {
 ["owned"] = 1,
-["grantsXP"] = false,
 ["xp"] = 0,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [11280] = {
 ["owned"] = 1,
-["grantsXP"] = false,
 ["xp"] = 10,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [11296] = {
 ["owned"] = 1,
-["xp"] = 0,
 ["grantsXP"] = false,
+["xp"] = 0,
 ["placed"] = 0,
 },
 [15406] = {
@@ -25446,14 +25446,14 @@ TransmogLootHelper_Cache = {
 },
 [15454] = {
 ["owned"] = 1,
-["grantsXP"] = false,
 ["xp"] = 0,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [11376] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [15486] = {
@@ -25468,20 +25468,20 @@ TransmogLootHelper_Cache = {
 },
 [11440] = {
 ["owned"] = 1,
-["grantsXP"] = false,
 ["xp"] = 10,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [717] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [718] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [15582] = {
@@ -25491,50 +25491,50 @@ TransmogLootHelper_Cache = {
 },
 [720] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [721] = {
 ["owned"] = 0,
-["grantsXP"] = false,
 ["xp"] = 0,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [722] = {
 ["owned"] = 0,
-["grantsXP"] = false,
 ["xp"] = 0,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [723] = {
 ["owned"] = 0,
-["grantsXP"] = false,
 ["xp"] = 0,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [724] = {
 ["owned"] = 0,
-["grantsXP"] = false,
 ["xp"] = 0,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [725] = {
 ["owned"] = 0,
-["grantsXP"] = false,
 ["xp"] = 0,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [726] = {
 ["owned"] = 7,
 ["placed"] = 0,
-["xp"] = 0,
 ["grantsXP"] = false,
+["xp"] = 0,
 },
 [7873] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [15758] = {
@@ -25544,20 +25544,20 @@ TransmogLootHelper_Cache = {
 },
 [5882] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [5890] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [5898] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [17467] = {
@@ -25567,26 +25567,26 @@ TransmogLootHelper_Cache = {
 },
 [11872] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [11888] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [11904] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [16014] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [16030] = {
@@ -25596,140 +25596,140 @@ TransmogLootHelper_Cache = {
 },
 [11952] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [749] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [750] = {
 ["owned"] = 2,
-["grantsXP"] = false,
 ["xp"] = 0,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [751] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [752] = {
 ["owned"] = 1,
-["xp"] = 0,
 ["grantsXP"] = false,
+["xp"] = 0,
 ["placed"] = 0,
 },
 [755] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [756] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [759] = {
 ["owned"] = 1,
-["grantsXP"] = false,
 ["xp"] = 10,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [760] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [761] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [762] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [763] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [764] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [765] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [766] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [767] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [768] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [8194] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [770] = {
 ["owned"] = 1,
-["grantsXP"] = false,
 ["xp"] = 0,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [771] = {
 ["owned"] = 1,
-["grantsXP"] = false,
 ["xp"] = 0,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [772] = {
 ["owned"] = 4,
-["xp"] = 0,
 ["grantsXP"] = false,
+["xp"] = 0,
 ["placed"] = 3,
 },
 [773] = {
 ["owned"] = 1,
-["grantsXP"] = false,
 ["xp"] = 0,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [4163] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [14559] = {
@@ -25759,8 +25759,8 @@ TransmogLootHelper_Cache = {
 },
 [14815] = {
 ["owned"] = 6,
-["grantsXP"] = false,
 ["xp"] = 0,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [14831] = {
@@ -25770,20 +25770,20 @@ TransmogLootHelper_Cache = {
 },
 [8770] = {
 ["owned"] = 1,
-["grantsXP"] = false,
 ["xp"] = 0,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [8786] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [4403] = {
 ["owned"] = 1,
-["grantsXP"] = false,
 ["xp"] = 0,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [17628] = {
@@ -25798,44 +25798,44 @@ TransmogLootHelper_Cache = {
 },
 [10913] = {
 ["owned"] = 3,
-["grantsXP"] = false,
 ["xp"] = 10,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [4443] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [4451] = {
 ["owned"] = 1,
-["grantsXP"] = false,
 ["xp"] = 0,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [4459] = {
 ["owned"] = 1,
-["grantsXP"] = false,
 ["xp"] = 0,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [4467] = {
 ["owned"] = 6,
-["xp"] = 0,
 ["grantsXP"] = false,
+["xp"] = 0,
 ["placed"] = 0,
 },
 [4475] = {
 ["owned"] = 1,
-["xp"] = 0,
 ["grantsXP"] = false,
+["xp"] = 0,
 ["placed"] = 1,
 },
 [4483] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [15151] = {
@@ -25845,44 +25845,44 @@ TransmogLootHelper_Cache = {
 },
 [9042] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [825] = {
 ["owned"] = 1,
-["grantsXP"] = false,
 ["xp"] = 0,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [827] = {
 ["owned"] = 1,
-["grantsXP"] = false,
 ["xp"] = 0,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [828] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [829] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [9170] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [9186] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [18396] = {
@@ -25892,8 +25892,8 @@ TransmogLootHelper_Cache = {
 },
 [11281] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [9250] = {
@@ -25903,32 +25903,32 @@ TransmogLootHelper_Cache = {
 },
 [9266] = {
 ["owned"] = 1,
-["grantsXP"] = false,
 ["xp"] = 10,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [837] = {
 ["owned"] = 1,
-["grantsXP"] = false,
 ["xp"] = 0,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [838] = {
 ["owned"] = 1,
-["grantsXP"] = false,
 ["xp"] = 0,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [839] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [11377] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [15487] = {
@@ -25943,8 +25943,8 @@ TransmogLootHelper_Cache = {
 },
 [11457] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [15567] = {
@@ -25954,8 +25954,8 @@ TransmogLootHelper_Cache = {
 },
 [11489] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [15599] = {
@@ -25965,8 +25965,8 @@ TransmogLootHelper_Cache = {
 },
 [9474] = {
 ["owned"] = 1,
-["grantsXP"] = false,
 ["xp"] = 0,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [9490] = {
@@ -25976,62 +25976,62 @@ TransmogLootHelper_Cache = {
 },
 [854] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [855] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [857] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [858] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [859] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [860] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [4843] = {
 ["owned"] = 1,
 ["placed"] = 0,
-["xp"] = 0,
 ["grantsXP"] = false,
+["xp"] = 0,
 },
 [863] = {
 ["owned"] = 1,
-["xp"] = 0,
 ["grantsXP"] = false,
+["xp"] = 0,
 ["placed"] = 1,
 },
 [864] = {
 ["owned"] = 1,
-["xp"] = 0,
 ["grantsXP"] = false,
+["xp"] = 0,
 ["placed"] = 1,
 },
 [865] = {
 ["owned"] = 1,
-["xp"] = 0,
 ["grantsXP"] = false,
+["xp"] = 0,
 ["placed"] = 1,
 },
 [17469] = {
@@ -26041,14 +26041,14 @@ TransmogLootHelper_Cache = {
 },
 [11873] = {
 ["owned"] = 1,
-["grantsXP"] = false,
 ["xp"] = 10,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [11889] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [11905] = {
@@ -26058,8 +26058,8 @@ TransmogLootHelper_Cache = {
 },
 [11921] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [16031] = {
@@ -26069,8 +26069,8 @@ TransmogLootHelper_Cache = {
 },
 [12161] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [12209] = {
@@ -26085,14 +26085,14 @@ TransmogLootHelper_Cache = {
 },
 [5115] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [8195] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [14352] = {
@@ -26132,188 +26132,188 @@ TransmogLootHelper_Cache = {
 },
 [922] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [923] = {
 ["owned"] = 6,
-["xp"] = 0,
 ["grantsXP"] = false,
+["xp"] = 0,
 ["placed"] = 1,
 },
 [924] = {
 ["owned"] = 18,
-["xp"] = 0,
 ["grantsXP"] = false,
+["xp"] = 0,
 ["placed"] = 1,
 },
 [925] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [926] = {
 ["owned"] = 1,
-["grantsXP"] = false,
 ["xp"] = 10,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [927] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [928] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [929] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [930] = {
 ["owned"] = 1,
-["xp"] = 0,
 ["grantsXP"] = false,
+["xp"] = 0,
 ["placed"] = 1,
 },
 [931] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [932] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [8771] = {
 ["owned"] = 1,
-["grantsXP"] = false,
 ["xp"] = 0,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [934] = {
 ["owned"] = 1,
-["xp"] = 0,
 ["grantsXP"] = false,
+["xp"] = 0,
 ["placed"] = 1,
 },
 [935] = {
 ["owned"] = 1,
-["xp"] = 0,
 ["grantsXP"] = false,
+["xp"] = 0,
 ["placed"] = 1,
 },
 [936] = {
 ["owned"] = 1,
-["xp"] = 0,
 ["grantsXP"] = false,
+["xp"] = 0,
 ["placed"] = 1,
 },
 [937] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [938] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [939] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [940] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [941] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [942] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [943] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [944] = {
 ["owned"] = 1,
-["grantsXP"] = false,
 ["xp"] = 0,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [945] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [946] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [947] = {
 ["owned"] = 1,
-["xp"] = 0,
 ["grantsXP"] = false,
+["xp"] = 0,
 ["placed"] = 0,
 },
 [948] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [949] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [9043] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [5555] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [7610] = {
 ["owned"] = 1,
-["xp"] = 0,
 ["grantsXP"] = false,
+["xp"] = 0,
 ["placed"] = 1,
 },
 [11138] = {
@@ -26323,38 +26323,38 @@ TransmogLootHelper_Cache = {
 },
 [9139] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [3826] = {
 ["owned"] = 1,
-["grantsXP"] = false,
 ["xp"] = 0,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [7658] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [9187] = {
 ["owned"] = 1,
-["grantsXP"] = false,
 ["xp"] = 10,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [3838] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [11282] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [9251] = {
@@ -26364,68 +26364,68 @@ TransmogLootHelper_Cache = {
 },
 [9267] = {
 ["owned"] = 1,
-["xp"] = 0,
 ["grantsXP"] = false,
+["xp"] = 0,
 ["placed"] = 1,
 },
 [11378] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [3874] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [3878] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [3886] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [3890] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [3894] = {
 ["owned"] = 1,
-["grantsXP"] = false,
 ["xp"] = 10,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [3898] = {
 ["owned"] = 1,
-["xp"] = 0,
 ["grantsXP"] = false,
+["xp"] = 0,
 ["placed"] = 1,
 },
 [3902] = {
 ["owned"] = 1,
-["grantsXP"] = false,
 ["xp"] = 10,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [3906] = {
 ["owned"] = 1,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [7818] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [7826] = {
@@ -26440,44 +26440,44 @@ TransmogLootHelper_Cache = {
 },
 [7842] = {
 ["owned"] = 5,
-["grantsXP"] = false,
 ["xp"] = 0,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [984] = {
 ["owned"] = 1,
-["grantsXP"] = false,
 ["xp"] = 0,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [7874] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [986] = {
 ["owned"] = 1,
-["grantsXP"] = false,
 ["xp"] = 0,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [987] = {
 ["owned"] = 1,
-["grantsXP"] = false,
 ["xp"] = 0,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [988] = {
 ["owned"] = 1,
-["grantsXP"] = false,
 ["xp"] = 0,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [989] = {
 ["owned"] = 1,
-["grantsXP"] = false,
 ["xp"] = 0,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [990] = {
@@ -26487,38 +26487,38 @@ TransmogLootHelper_Cache = {
 },
 [991] = {
 ["owned"] = 1,
-["grantsXP"] = false,
 ["xp"] = 0,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [5891] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [994] = {
 ["owned"] = 1,
-["grantsXP"] = false,
 ["xp"] = 0,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [3982] = {
 ["owned"] = 1,
-["xp"] = 0,
 ["grantsXP"] = false,
+["xp"] = 0,
 ["placed"] = 1,
 },
 [3994] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [11890] = {
 ["owned"] = 1,
-["grantsXP"] = false,
 ["xp"] = 10,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [11906] = {
@@ -26528,8 +26528,8 @@ TransmogLootHelper_Cache = {
 },
 [11922] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [16032] = {
@@ -26539,68 +26539,68 @@ TransmogLootHelper_Cache = {
 },
 [4022] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [4026] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [4030] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [4034] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [4038] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [4042] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [12162] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [12210] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [8178] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [8186] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [8196] = {
 ["owned"] = 1,
-["grantsXP"] = false,
 ["xp"] = 10,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [14433] = {
@@ -26615,50 +26615,50 @@ TransmogLootHelper_Cache = {
 },
 [4164] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [4172] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [4180] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [2099] = {
 ["owned"] = 5,
-["xp"] = 0,
 ["grantsXP"] = false,
+["xp"] = 0,
 ["placed"] = 2,
 },
 [2103] = {
 ["owned"] = 1,
-["grantsXP"] = false,
 ["xp"] = 0,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [2107] = {
 ["owned"] = 1,
-["grantsXP"] = false,
 ["xp"] = 0,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [2111] = {
 ["owned"] = 1,
-["grantsXP"] = false,
 ["xp"] = 0,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [2115] = {
 ["owned"] = 4,
-["grantsXP"] = false,
 ["xp"] = 0,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [14625] = {
@@ -26703,14 +26703,14 @@ TransmogLootHelper_Cache = {
 },
 [8772] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [4404] = {
 ["owned"] = 1,
-["xp"] = 0,
 ["grantsXP"] = false,
+["xp"] = 0,
 ["placed"] = 1,
 },
 [14977] = {
@@ -26730,38 +26730,38 @@ TransmogLootHelper_Cache = {
 },
 [4444] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [2227] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [2231] = {
 ["owned"] = 1,
-["grantsXP"] = false,
 ["xp"] = 0,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [1118] = {
 ["owned"] = 1,
-["xp"] = 0,
 ["grantsXP"] = false,
+["xp"] = 0,
 ["placed"] = 0,
 },
 [2239] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [1122] = {
 ["owned"] = 1,
-["grantsXP"] = false,
 ["xp"] = 0,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [15153] = {
@@ -26771,14 +26771,14 @@ TransmogLootHelper_Cache = {
 },
 [9044] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [11139] = {
 ["owned"] = 1,
-["grantsXP"] = false,
 ["xp"] = 0,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [1142] = {
@@ -26788,8 +26788,8 @@ TransmogLootHelper_Cache = {
 },
 [9140] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [1148] = {
@@ -26799,14 +26799,14 @@ TransmogLootHelper_Cache = {
 },
 [9188] = {
 ["owned"] = 1,
-["grantsXP"] = false,
 ["xp"] = 0,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [9236] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [9252] = {
@@ -26816,62 +26816,62 @@ TransmogLootHelper_Cache = {
 },
 [11315] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [2323] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [2327] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [2331] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [11379] = {
 ["owned"] = 1,
-["grantsXP"] = false,
 ["xp"] = 10,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [1170] = {
 ["owned"] = 1,
-["grantsXP"] = false,
 ["xp"] = 0,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [2343] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [1178] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [1180] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [11491] = {
 ["owned"] = 1,
-["grantsXP"] = false,
 ["xp"] = 0,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [9476] = {
@@ -26881,26 +26881,26 @@ TransmogLootHelper_Cache = {
 },
 [1188] = {
 ["owned"] = 1,
-["grantsXP"] = false,
 ["xp"] = 0,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [1192] = {
 ["owned"] = 1,
-["xp"] = 0,
 ["grantsXP"] = false,
+["xp"] = 0,
 ["placed"] = 0,
 },
 [1194] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [1196] = {
 ["owned"] = 1,
-["xp"] = 0,
 ["grantsXP"] = false,
+["xp"] = 0,
 ["placed"] = 0,
 },
 [1198] = {
@@ -26910,8 +26910,8 @@ TransmogLootHelper_Cache = {
 },
 [1200] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [15745] = {
@@ -26921,50 +26921,50 @@ TransmogLootHelper_Cache = {
 },
 [4812] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [4844] = {
 ["owned"] = 1,
-["xp"] = 0,
 ["grantsXP"] = false,
+["xp"] = 0,
 ["placed"] = 1,
 },
 [2427] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [2431] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [2435] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [2439] = {
 ["owned"] = 1,
-["grantsXP"] = false,
 ["xp"] = 0,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [2443] = {
 ["owned"] = 1,
-["grantsXP"] = false,
 ["xp"] = 0,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [2447] = {
 ["owned"] = 1,
-["grantsXP"] = false,
 ["xp"] = 0,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [2459] = {
@@ -26974,20 +26974,20 @@ TransmogLootHelper_Cache = {
 },
 [11891] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [2467] = {
 ["owned"] = 1,
-["grantsXP"] = false,
 ["xp"] = 0,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [11923] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [16033] = {
@@ -26997,20 +26997,20 @@ TransmogLootHelper_Cache = {
 },
 [1242] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [1244] = {
 ["owned"] = 1,
-["grantsXP"] = false,
 ["xp"] = 0,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [1246] = {
 ["owned"] = 1,
-["xp"] = 0,
 ["grantsXP"] = false,
+["xp"] = 0,
 ["placed"] = 0,
 },
 [2495] = {
@@ -27020,86 +27020,86 @@ TransmogLootHelper_Cache = {
 },
 [1252] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [2511] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [1258] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [1260] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [1262] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [12163] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [1268] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [12195] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [1272] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [2547] = {
 ["owned"] = 1,
-["grantsXP"] = false,
 ["xp"] = 0,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [1276] = {
 ["owned"] = 1,
-["grantsXP"] = false,
 ["xp"] = 0,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [80] = {
 ["owned"] = 2,
-["xp"] = 0,
 ["grantsXP"] = false,
+["xp"] = 0,
 ["placed"] = 0,
 },
 [1280] = {
 ["owned"] = 5,
-["xp"] = 0,
 ["grantsXP"] = false,
+["xp"] = 0,
 ["placed"] = 0,
 },
 [1282] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [5132] = {
@@ -27109,56 +27109,56 @@ TransmogLootHelper_Cache = {
 },
 [10324] = {
 ["owned"] = 1,
-["grantsXP"] = false,
 ["xp"] = 0,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [81] = {
 ["owned"] = 2,
-["xp"] = 0,
 ["grantsXP"] = false,
+["xp"] = 0,
 ["placed"] = 0,
 },
 [2591] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [2595] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [1308] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [1310] = {
 ["owned"] = 1,
-["xp"] = 0,
 ["grantsXP"] = false,
+["xp"] = 0,
 ["placed"] = 0,
 },
 [1312] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [1314] = {
 ["owned"] = 1,
-["grantsXP"] = false,
 ["xp"] = 10,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [1318] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [14642] = {
@@ -27168,20 +27168,20 @@ TransmogLootHelper_Cache = {
 },
 [1322] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [5292] = {
 ["owned"] = 2,
-["xp"] = 0,
 ["grantsXP"] = false,
+["xp"] = 0,
 ["placed"] = 1,
 },
 [1326] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [1328] = {
@@ -27206,32 +27206,32 @@ TransmogLootHelper_Cache = {
 },
 [1350] = {
 ["owned"] = 8,
-["grantsXP"] = false,
 ["xp"] = 0,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [1352] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [1354] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [1356] = {
 ["owned"] = 1,
-["grantsXP"] = false,
 ["xp"] = 0,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [10852] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [16314] = {
@@ -27266,8 +27266,8 @@ TransmogLootHelper_Cache = {
 },
 [10964] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [15074] = {
@@ -27292,14 +27292,14 @@ TransmogLootHelper_Cache = {
 },
 [7571] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [7579] = {
 ["owned"] = 1,
-["grantsXP"] = false,
 ["xp"] = 10,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [19198] = {
@@ -27309,14 +27309,14 @@ TransmogLootHelper_Cache = {
 },
 [9045] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [5556] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [5564] = {
@@ -27341,14 +27341,14 @@ TransmogLootHelper_Cache = {
 },
 [9141] = {
 ["owned"] = 1,
-["xp"] = 0,
 ["grantsXP"] = false,
+["xp"] = 0,
 ["placed"] = 0,
 },
 [498] = {
 ["owned"] = 3,
-["xp"] = 0,
 ["grantsXP"] = false,
+["xp"] = 0,
 ["placed"] = 1,
 },
 [9443] = {
@@ -27358,50 +27358,50 @@ TransmogLootHelper_Cache = {
 },
 [1406] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [1408] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [1410] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [9237] = {
 ["owned"] = 1,
-["xp"] = 0,
 ["grantsXP"] = false,
+["xp"] = 0,
 ["placed"] = 0,
 },
 [1414] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [9269] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [1418] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [4561] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [15458] = {
@@ -27411,8 +27411,8 @@ TransmogLootHelper_Cache = {
 },
 [11380] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [15490] = {
@@ -27427,38 +27427,38 @@ TransmogLootHelper_Cache = {
 },
 [5563] = {
 ["owned"] = 1,
-["grantsXP"] = false,
 ["xp"] = 0,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [11948] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [1434] = {
 ["owned"] = 1,
-["grantsXP"] = false,
 ["xp"] = 0,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [1436] = {
 ["owned"] = 1,
-["grantsXP"] = false,
 ["xp"] = 0,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [11492] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [1440] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [1442] = {
@@ -27468,8 +27468,8 @@ TransmogLootHelper_Cache = {
 },
 [1444] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [1446] = {
@@ -27479,8 +27479,8 @@ TransmogLootHelper_Cache = {
 },
 [7835] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [9444] = {
@@ -27490,26 +27490,26 @@ TransmogLootHelper_Cache = {
 },
 [1452] = {
 ["owned"] = 1,
-["grantsXP"] = false,
 ["xp"] = 0,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [1454] = {
 ["owned"] = 1,
-["grantsXP"] = false,
 ["xp"] = 0,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [1456] = {
 ["owned"] = 1,
-["grantsXP"] = false,
 ["xp"] = 0,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [7875] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [15762] = {
@@ -27524,14 +27524,14 @@ TransmogLootHelper_Cache = {
 },
 [1464] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [1466] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [1489] = {
@@ -27541,8 +27541,8 @@ TransmogLootHelper_Cache = {
 },
 [11884] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [12223] = {
@@ -27552,8 +27552,8 @@ TransmogLootHelper_Cache = {
 },
 [5892] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [17443] = {
@@ -27563,8 +27563,8 @@ TransmogLootHelper_Cache = {
 },
 [3897] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [17523] = {
@@ -27574,8 +27574,8 @@ TransmogLootHelper_Cache = {
 },
 [1482] = {
 ["owned"] = 2,
-["grantsXP"] = false,
 ["xp"] = 0,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [15501] = {
@@ -27585,14 +27585,14 @@ TransmogLootHelper_Cache = {
 },
 [1486] = {
 ["owned"] = 1,
-["grantsXP"] = false,
 ["xp"] = 0,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [11892] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [11908] = {
@@ -27602,8 +27602,8 @@ TransmogLootHelper_Cache = {
 },
 [11924] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [16034] = {
@@ -27623,8 +27623,8 @@ TransmogLootHelper_Cache = {
 },
 [16082] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [7833] = {
@@ -27634,8 +27634,8 @@ TransmogLootHelper_Cache = {
 },
 [11438] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [15597] = {
@@ -27645,14 +27645,14 @@ TransmogLootHelper_Cache = {
 },
 [4162] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [1465] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [9475] = {
@@ -27662,14 +27662,14 @@ TransmogLootHelper_Cache = {
 },
 [11779] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [4811] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [15072] = {
@@ -27679,14 +27679,14 @@ TransmogLootHelper_Cache = {
 },
 [2086] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [12164] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [15152] = {
@@ -27696,14 +27696,14 @@ TransmogLootHelper_Cache = {
 },
 [12196] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [12212] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [15890] = {
@@ -27723,8 +27723,8 @@ TransmogLootHelper_Cache = {
 },
 [8187] = {
 ["owned"] = 1,
-["grantsXP"] = false,
 ["xp"] = 0,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [15150] = {
@@ -27734,14 +27734,14 @@ TransmogLootHelper_Cache = {
 },
 [1445] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [1443] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [9249] = {
@@ -27751,8 +27751,8 @@ TransmogLootHelper_Cache = {
 },
 [11500] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [16819] = {
@@ -27772,20 +27772,20 @@ TransmogLootHelper_Cache = {
 },
 [4165] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [4173] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [4181] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [16820] = {
@@ -27795,8 +27795,8 @@ TransmogLootHelper_Cache = {
 },
 [11725] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [15073] = {
@@ -27836,8 +27836,8 @@ TransmogLootHelper_Cache = {
 },
 [11490] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [11940] = {
@@ -27867,14 +27867,14 @@ TransmogLootHelper_Cache = {
 },
 [11276] = {
 ["owned"] = 2,
-["xp"] = 0,
 ["grantsXP"] = false,
+["xp"] = 0,
 ["placed"] = 1,
 },
 [527] = {
 ["owned"] = 1,
-["grantsXP"] = false,
 ["xp"] = 0,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [9423] = {
@@ -27884,8 +27884,8 @@ TransmogLootHelper_Cache = {
 },
 [9181] = {
 ["owned"] = 1,
-["grantsXP"] = false,
 ["xp"] = 0,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [12208] = {
@@ -27920,8 +27920,8 @@ TransmogLootHelper_Cache = {
 },
 [8768] = {
 ["owned"] = 0,
-["xp"] = 10,
 ["grantsXP"] = true,
+["xp"] = 10,
 ["placed"] = 0,
 },
 [17629] = {
@@ -27931,14 +27931,14 @@ TransmogLootHelper_Cache = {
 },
 [4405] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [7607] = {
 ["owned"] = 1,
-["xp"] = 10,
 ["grantsXP"] = false,
+["xp"] = 10,
 ["placed"] = 0,
 },
 [14979] = {
@@ -27953,20 +27953,20 @@ TransmogLootHelper_Cache = {
 },
 [10965] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [4445] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [4453] = {
 ["owned"] = 5,
-["xp"] = 0,
 ["grantsXP"] = false,
+["xp"] = 0,
 ["placed"] = 3,
 },
 [15059] = {
@@ -27976,32 +27976,32 @@ TransmogLootHelper_Cache = {
 },
 [4469] = {
 ["owned"] = 8,
-["grantsXP"] = false,
 ["xp"] = 0,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [4477] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [4485] = {
 ["owned"] = 1,
-["xp"] = 0,
 ["grantsXP"] = false,
+["xp"] = 0,
 ["placed"] = 0,
 },
 [8982] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [11283] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [15155] = {
@@ -28016,14 +28016,14 @@ TransmogLootHelper_Cache = {
 },
 [9046] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [7575] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [14594] = {
@@ -28033,8 +28033,8 @@ TransmogLootHelper_Cache = {
 },
 [8240] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [9493] = {
@@ -28044,14 +28044,14 @@ TransmogLootHelper_Cache = {
 },
 [2243] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [9142] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [10349] = {
@@ -28076,31 +28076,32 @@ TransmogLootHelper_Cache = {
 },
 [10962] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [9238] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [9254] = {
 ["owned"] = 1,
 ["placed"] = 0,
-["xp"] = 0,
 ["grantsXP"] = false,
+["xp"] = 0,
 },
 [15411] = {
 ["owned"] = 0,
 ["xp"] = 10,
 ["grantsXP"] = true,
 },
-[11333] = {
-["owned"] = 0,
-["grantsXP"] = true,
-["xp"] = 10,
+[1674] = {
+["owned"] = 1,
+["grantsXP"] = false,
+["xp"] = 0,
+["placed"] = 0,
 },
 [15489] = {
 ["owned"] = 0,
@@ -28114,38 +28115,37 @@ TransmogLootHelper_Cache = {
 },
 [11381] = {
 ["owned"] = 1,
-["grantsXP"] = false,
 ["xp"] = 10,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [4476] = {
 ["owned"] = 1,
-["grantsXP"] = false,
 ["xp"] = 0,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [1692] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
-[1698] = {
+[9478] = {
 ["owned"] = 1,
+["xp"] = 10,
 ["grantsXP"] = false,
-["xp"] = 0,
-["placed"] = 0,
 },
 [1702] = {
 ["owned"] = 1,
-["grantsXP"] = false,
 ["xp"] = 0,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [11461] = {
 ["owned"] = 1,
-["grantsXP"] = false,
 ["xp"] = 0,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [15571] = {
@@ -28155,8 +28155,8 @@ TransmogLootHelper_Cache = {
 },
 [1694] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [17522] = {
@@ -28164,16 +28164,16 @@ TransmogLootHelper_Cache = {
 ["xp"] = 10,
 ["grantsXP"] = false,
 },
-[9478] = {
+[1698] = {
 ["owned"] = 1,
-["xp"] = 10,
-["grantsXP"] = false,
-},
-[1700] = {
-["owned"] = 4,
 ["xp"] = 0,
 ["grantsXP"] = false,
-["placed"] = 1,
+["placed"] = 0,
+},
+[9494] = {
+["owned"] = 0,
+["xp"] = 0,
+["grantsXP"] = false,
 },
 [16965] = {
 ["owned"] = 2,
@@ -28182,8 +28182,8 @@ TransmogLootHelper_Cache = {
 },
 [1704] = {
 ["owned"] = 1,
-["xp"] = 0,
 ["grantsXP"] = false,
+["xp"] = 0,
 ["placed"] = 1,
 },
 [15568] = {
@@ -28198,8 +28198,8 @@ TransmogLootHelper_Cache = {
 },
 [2102] = {
 ["owned"] = 1,
-["grantsXP"] = false,
 ["xp"] = 0,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [15502] = {
@@ -28214,8 +28214,8 @@ TransmogLootHelper_Cache = {
 },
 [4813] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [15578] = {
@@ -28225,8 +28225,8 @@ TransmogLootHelper_Cache = {
 },
 [14379] = {
 ["owned"] = 1,
-["xp"] = 0,
 ["grantsXP"] = false,
+["xp"] = 0,
 ["placed"] = 0,
 },
 [7696] = {
@@ -28236,8 +28236,8 @@ TransmogLootHelper_Cache = {
 },
 [1724] = {
 ["owned"] = 1,
-["grantsXP"] = false,
 ["xp"] = 0,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [1726] = {
@@ -28247,14 +28247,14 @@ TransmogLootHelper_Cache = {
 },
 [1488] = {
 ["owned"] = 2,
-["xp"] = 0,
 ["grantsXP"] = false,
+["xp"] = 0,
 ["placed"] = 0,
 },
 [10367] = {
 ["owned"] = 1,
-["grantsXP"] = false,
 ["xp"] = 0,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [15891] = {
@@ -28262,58 +28262,57 @@ TransmogLootHelper_Cache = {
 ["xp"] = 10,
 ["grantsXP"] = false,
 },
-[11941] = {
-["owned"] = 0,
-["grantsXP"] = true,
-["xp"] = 10,
-["placed"] = 0,
-},
-[1736] = {
-["owned"] = 1,
-["grantsXP"] = false,
-["xp"] = 0,
-["placed"] = 0,
-},
-[1738] = {
-["owned"] = 1,
-["grantsXP"] = false,
-["xp"] = 0,
-["placed"] = 0,
-},
-[1740] = {
-["owned"] = 0,
-["grantsXP"] = true,
-["xp"] = 10,
-["placed"] = 0,
-},
-[1742] = {
-["owned"] = 1,
-["grantsXP"] = false,
-["xp"] = 0,
-["placed"] = 0,
-},
-[1744] = {
-["owned"] = 1,
-["grantsXP"] = false,
-["xp"] = 0,
-["placed"] = 0,
-},
-[1746] = {
-["owned"] = 0,
-["grantsXP"] = true,
-["xp"] = 10,
-["placed"] = 0,
-},
-[1748] = {
-["owned"] = 0,
-["grantsXP"] = true,
-["xp"] = 10,
-["placed"] = 0,
-},
 [16035] = {
 ["owned"] = 0,
 ["xp"] = 0,
 ["grantsXP"] = false,
+},
+[1736] = {
+["owned"] = 1,
+["xp"] = 0,
+["grantsXP"] = false,
+["placed"] = 0,
+},
+[1738] = {
+["owned"] = 1,
+["xp"] = 0,
+["grantsXP"] = false,
+["placed"] = 0,
+},
+[1740] = {
+["owned"] = 0,
+["xp"] = 10,
+["grantsXP"] = true,
+["placed"] = 0,
+},
+[1742] = {
+["owned"] = 1,
+["xp"] = 0,
+["grantsXP"] = false,
+["placed"] = 0,
+},
+[1744] = {
+["owned"] = 1,
+["xp"] = 0,
+["grantsXP"] = false,
+["placed"] = 0,
+},
+[11909] = {
+["owned"] = 0,
+["xp"] = 10,
+["grantsXP"] = true,
+},
+[1748] = {
+["owned"] = 0,
+["xp"] = 10,
+["grantsXP"] = true,
+["placed"] = 0,
+},
+[1750] = {
+["owned"] = 0,
+["xp"] = 10,
+["grantsXP"] = true,
+["placed"] = 0,
 },
 [15598] = {
 ["owned"] = 0,
@@ -28327,15 +28326,15 @@ TransmogLootHelper_Cache = {
 },
 [16083] = {
 ["owned"] = 2,
-["grantsXP"] = false,
 ["xp"] = 0,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [522] = {
 ["owned"] = 5,
 ["placed"] = 2,
-["xp"] = 0,
 ["grantsXP"] = false,
+["xp"] = 0,
 },
 [10542] = {
 ["owned"] = 0,
@@ -28344,20 +28343,20 @@ TransmogLootHelper_Cache = {
 },
 [5689] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [2474] = {
 ["owned"] = 1,
-["grantsXP"] = false,
 ["xp"] = 0,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [15595] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [14618] = {
@@ -28367,32 +28366,32 @@ TransmogLootHelper_Cache = {
 },
 [1770] = {
 ["owned"] = 10,
-["xp"] = 0,
 ["grantsXP"] = false,
+["xp"] = 0,
 ["placed"] = 3,
 },
 [1772] = {
 ["owned"] = 3,
-["xp"] = 0,
 ["grantsXP"] = false,
+["xp"] = 0,
 ["placed"] = 0,
 },
 [1774] = {
 ["owned"] = 10,
-["grantsXP"] = false,
 ["xp"] = 0,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [1776] = {
 ["owned"] = 10,
-["grantsXP"] = false,
 ["xp"] = 0,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [12165] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [14602] = {
@@ -28402,8 +28401,8 @@ TransmogLootHelper_Cache = {
 },
 [12197] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [14586] = {
@@ -28418,8 +28417,8 @@ TransmogLootHelper_Cache = {
 },
 [1309] = {
 ["owned"] = 1,
-["grantsXP"] = false,
 ["xp"] = 0,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [12261] = {
@@ -28429,20 +28428,20 @@ TransmogLootHelper_Cache = {
 },
 [1792] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [1794] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [1796] = {
 ["owned"] = 10,
-["grantsXP"] = false,
 ["xp"] = 0,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [7832] = {
@@ -28452,14 +28451,14 @@ TransmogLootHelper_Cache = {
 },
 [9268] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [1802] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [9477] = {
@@ -28474,20 +28473,20 @@ TransmogLootHelper_Cache = {
 },
 [2471] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [11920] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [1297] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [10348] = {
@@ -28497,8 +28496,8 @@ TransmogLootHelper_Cache = {
 },
 [11137] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [17630] = {
@@ -28506,16 +28505,15 @@ TransmogLootHelper_Cache = {
 ["xp"] = 10,
 ["grantsXP"] = false,
 },
-[1826] = {
-["owned"] = 0,
-["grantsXP"] = true,
+[14596] = {
+["owned"] = 1,
 ["xp"] = 10,
-["placed"] = 0,
+["grantsXP"] = false,
 },
 [8237] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [14580] = {
@@ -28523,50 +28521,52 @@ TransmogLootHelper_Cache = {
 ["xp"] = 10,
 ["grantsXP"] = true,
 },
-[14596] = {
-["owned"] = 1,
+[1826] = {
+["owned"] = 0,
 ["xp"] = 10,
-["grantsXP"] = false,
+["grantsXP"] = true,
+["placed"] = 0,
 },
 [14676] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
-[16966] = {
+[1830] = {
 ["owned"] = 0,
-["xp"] = 0,
-["grantsXP"] = false,
+["xp"] = 10,
+["grantsXP"] = true,
+["placed"] = 0,
 },
 [1832] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [1834] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [1836] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [3877] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [14330] = {
 ["owned"] = 2,
-["grantsXP"] = false,
 ["xp"] = 0,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [15409] = {
@@ -28576,8 +28576,8 @@ TransmogLootHelper_Cache = {
 },
 [1844] = {
 ["owned"] = 3,
-["grantsXP"] = false,
 ["xp"] = 0,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [12251] = {
@@ -28587,14 +28587,14 @@ TransmogLootHelper_Cache = {
 },
 [2549] = {
 ["owned"] = 3,
-["grantsXP"] = false,
 ["xp"] = 0,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [2545] = {
 ["owned"] = 1,
-["grantsXP"] = false,
 ["xp"] = 0,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [12203] = {
@@ -28609,8 +28609,8 @@ TransmogLootHelper_Cache = {
 },
 [10963] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [12171] = {
@@ -28625,26 +28625,26 @@ TransmogLootHelper_Cache = {
 },
 [1862] = {
 ["owned"] = 3,
-["grantsXP"] = false,
 ["xp"] = 0,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [1864] = {
 ["owned"] = 1,
-["grantsXP"] = false,
 ["xp"] = 0,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [1866] = {
 ["owned"] = 1,
-["grantsXP"] = false,
 ["xp"] = 0,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [2529] = {
 ["owned"] = 1,
-["xp"] = 0,
 ["grantsXP"] = false,
+["xp"] = 0,
 ["placed"] = 1,
 },
 [16233] = {
@@ -28654,38 +28654,38 @@ TransmogLootHelper_Cache = {
 },
 [2466] = {
 ["owned"] = 1,
-["grantsXP"] = false,
 ["xp"] = 0,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [2517] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [2513] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [1878] = {
 ["owned"] = 4,
-["grantsXP"] = false,
 ["xp"] = 0,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [1880] = {
 ["owned"] = 1,
-["grantsXP"] = false,
 ["xp"] = 10,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [1882] = {
 ["owned"] = 1,
-["xp"] = 0,
 ["grantsXP"] = false,
+["xp"] = 0,
 ["placed"] = 1,
 },
 [15060] = {
@@ -28695,32 +28695,32 @@ TransmogLootHelper_Cache = {
 },
 [1886] = {
 ["owned"] = 1,
-["xp"] = 0,
 ["grantsXP"] = false,
+["xp"] = 0,
 ["placed"] = 1,
 },
 [1888] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [3870] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [8983] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [7572] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [1896] = {
@@ -28735,8 +28735,8 @@ TransmogLootHelper_Cache = {
 },
 [9047] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [11502] = {
@@ -28744,10 +28744,11 @@ TransmogLootHelper_Cache = {
 ["xp"] = 10,
 ["grantsXP"] = true,
 },
-[7700] = {
-["owned"] = 0,
-["xp"] = 10,
-["grantsXP"] = true,
+[9255] = {
+["owned"] = 1,
+["xp"] = 0,
+["grantsXP"] = false,
+["placed"] = 0,
 },
 [7620] = {
 ["owned"] = 1,
@@ -28766,20 +28767,20 @@ TransmogLootHelper_Cache = {
 },
 [9143] = {
 ["owned"] = 1,
-["grantsXP"] = false,
 ["xp"] = 0,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [3827] = {
 ["owned"] = 1,
-["grantsXP"] = false,
 ["xp"] = 0,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [3831] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [7668] = {
@@ -28789,26 +28790,26 @@ TransmogLootHelper_Cache = {
 },
 [1920] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [16089] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
-[7692] = {
+[9239] = {
+["owned"] = 1,
+["xp"] = 10,
+["grantsXP"] = false,
+["placed"] = 0,
+},
+[7700] = {
 ["owned"] = 0,
 ["xp"] = 10,
 ["grantsXP"] = true,
-},
-[9255] = {
-["owned"] = 1,
-["grantsXP"] = false,
-["xp"] = 0,
-["placed"] = 0,
 },
 [15412] = {
 ["owned"] = 0,
@@ -28822,26 +28823,26 @@ TransmogLootHelper_Cache = {
 },
 [11382] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [3867] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [3871] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [3875] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [7780] = {
@@ -28849,51 +28850,52 @@ TransmogLootHelper_Cache = {
 ["xp"] = 10,
 ["grantsXP"] = true,
 },
+[3907] = {
+["owned"] = 1,
+["xp"] = 10,
+["grantsXP"] = true,
+["placed"] = 0,
+},
+[3887] = {
+["owned"] = 0,
+["xp"] = 10,
+["grantsXP"] = true,
+["placed"] = 0,
+},
+[3891] = {
+["owned"] = 0,
+["xp"] = 10,
+["grantsXP"] = true,
+["placed"] = 0,
+},
+[3895] = {
+["owned"] = 0,
+["xp"] = 10,
+["grantsXP"] = true,
+["placed"] = 0,
+},
+[3899] = {
+["owned"] = 1,
+["grantsXP"] = false,
+["xp"] = 0,
+["placed"] = 0,
+},
+[3903] = {
+["owned"] = 1,
+["xp"] = 10,
+["grantsXP"] = false,
+["placed"] = 0,
+},
 [9479] = {
 ["owned"] = 0,
 ["xp"] = 0,
 ["grantsXP"] = false,
 },
-[3887] = {
-["owned"] = 0,
-["grantsXP"] = true,
-["xp"] = 10,
-["placed"] = 0,
-},
-[3891] = {
-["owned"] = 0,
-["grantsXP"] = true,
-["xp"] = 10,
-["placed"] = 0,
-},
-[3895] = {
-["owned"] = 0,
-["grantsXP"] = true,
-["xp"] = 10,
-["placed"] = 0,
-},
-[3899] = {
-["owned"] = 1,
+[7820] = {
+["owned"] = 2,
 ["xp"] = 0,
 ["grantsXP"] = false,
 ["placed"] = 0,
-},
-[3903] = {
-["owned"] = 1,
-["grantsXP"] = false,
-["xp"] = 10,
-["placed"] = 0,
-},
-[3907] = {
-["owned"] = 1,
-["grantsXP"] = true,
-["xp"] = 10,
-["placed"] = 0,
-},
-[9495] = {
-["owned"] = 0,
-["xp"] = 0,
-["grantsXP"] = false,
 },
 [7828] = {
 ["owned"] = 0,
@@ -28902,8 +28904,8 @@ TransmogLootHelper_Cache = {
 },
 [7836] = {
 ["owned"] = 1,
-["grantsXP"] = false,
 ["xp"] = 0,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [15668] = {
@@ -28913,20 +28915,20 @@ TransmogLootHelper_Cache = {
 },
 [1235] = {
 ["owned"] = 1,
-["grantsXP"] = false,
 ["xp"] = 0,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [11899] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [11883] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [16967] = {
@@ -28946,14 +28948,14 @@ TransmogLootHelper_Cache = {
 },
 [5853] = {
 ["owned"] = 1,
-["grantsXP"] = false,
 ["xp"] = 0,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [1978] = {
 ["owned"] = 1,
-["grantsXP"] = false,
 ["xp"] = 0,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [9253] = {
@@ -28963,20 +28965,20 @@ TransmogLootHelper_Cache = {
 },
 [5877] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [1984] = {
 ["owned"] = 1,
-["grantsXP"] = false,
 ["xp"] = 10,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [5893] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [17447] = {
@@ -28991,44 +28993,44 @@ TransmogLootHelper_Cache = {
 },
 [3983] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [1994] = {
 ["owned"] = 2,
 ["placed"] = 0,
-["xp"] = 0,
 ["grantsXP"] = false,
+["xp"] = 0,
 },
 [1996] = {
 ["owned"] = 4,
-["grantsXP"] = false,
 ["xp"] = 0,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [3995] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [2000] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [11910] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [11926] = {
 ["owned"] = 1,
-["grantsXP"] = false,
 ["xp"] = 10,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [16036] = {
@@ -29038,8 +29040,8 @@ TransmogLootHelper_Cache = {
 },
 [126] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [17457] = {
@@ -29049,50 +29051,50 @@ TransmogLootHelper_Cache = {
 },
 [4023] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [4027] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [4031] = {
 ["owned"] = 1,
-["xp"] = 0,
 ["grantsXP"] = false,
+["xp"] = 0,
 ["placed"] = 1,
 },
 [4035] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [4039] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [2437] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [2433] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [2429] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [22181] = {
@@ -29112,8 +29114,8 @@ TransmogLootHelper_Cache = {
 },
 [11942] = {
 ["owned"] = 1,
-["xp"] = 0,
 ["grantsXP"] = false,
+["xp"] = 0,
 ["placed"] = 1,
 },
 [16227] = {
@@ -29123,14 +29125,14 @@ TransmogLootHelper_Cache = {
 },
 [12198] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [14644] = {
 ["owned"] = 1,
-["grantsXP"] = false,
 ["xp"] = 10,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [9628] = {
@@ -29150,38 +29152,38 @@ TransmogLootHelper_Cache = {
 },
 [8188] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [11278] = {
 ["owned"] = 1,
-["xp"] = 0,
 ["grantsXP"] = false,
+["xp"] = 0,
 ["placed"] = 1,
 },
 [11718] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [2470] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [9183] = {
 ["owned"] = 1,
-["grantsXP"] = false,
 ["xp"] = 0,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [1193] = {
 ["owned"] = 1,
-["grantsXP"] = false,
 ["xp"] = 0,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [10327] = {
@@ -29201,20 +29203,20 @@ TransmogLootHelper_Cache = {
 },
 [4166] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [4174] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [2092] = {
 ["owned"] = 1,
-["grantsXP"] = false,
 ["xp"] = 0,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [15761] = {
@@ -29224,32 +29226,32 @@ TransmogLootHelper_Cache = {
 },
 [2100] = {
 ["owned"] = 4,
-["grantsXP"] = false,
 ["xp"] = 0,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [2104] = {
 ["owned"] = 5,
-["grantsXP"] = false,
 ["xp"] = 0,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [2108] = {
 ["owned"] = 4,
-["grantsXP"] = false,
 ["xp"] = 0,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [2112] = {
 ["owned"] = 1,
-["grantsXP"] = false,
 ["xp"] = 0,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [2116] = {
 ["owned"] = 5,
-["grantsXP"] = false,
 ["xp"] = 0,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [9484] = {
@@ -29289,14 +29291,14 @@ TransmogLootHelper_Cache = {
 },
 [1175] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [16015] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [15497] = {
@@ -29306,26 +29308,26 @@ TransmogLootHelper_Cache = {
 },
 [2337] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [11371] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [1165] = {
 ["owned"] = 3,
-["grantsXP"] = false,
 ["xp"] = 0,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [1163] = {
 ["owned"] = 1,
-["grantsXP"] = false,
 ["xp"] = 0,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [11323] = {
@@ -29345,14 +29347,14 @@ TransmogLootHelper_Cache = {
 },
 [10791] = {
 ["owned"] = 1,
-["grantsXP"] = false,
 ["xp"] = 0,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [1155] = {
 ["owned"] = 1,
-["grantsXP"] = false,
 ["xp"] = 0,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [14581] = {
@@ -29367,8 +29369,8 @@ TransmogLootHelper_Cache = {
 },
 [4406] = {
 ["owned"] = 5,
-["xp"] = 0,
 ["grantsXP"] = false,
+["xp"] = 0,
 ["placed"] = 3,
 },
 [14965] = {
@@ -29378,8 +29380,8 @@ TransmogLootHelper_Cache = {
 },
 [10887] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [5133] = {
@@ -29399,8 +29401,8 @@ TransmogLootHelper_Cache = {
 },
 [4454] = {
 ["owned"] = 1,
-["grantsXP"] = false,
 ["xp"] = 0,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [15061] = {
@@ -29410,26 +29412,26 @@ TransmogLootHelper_Cache = {
 },
 [4470] = {
 ["owned"] = 10,
-["xp"] = 0,
 ["grantsXP"] = false,
+["xp"] = 0,
 ["placed"] = 0,
 },
 [2240] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [4486] = {
 ["owned"] = 1,
-["grantsXP"] = false,
 ["xp"] = 0,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [8984] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [15141] = {
@@ -29439,8 +29441,8 @@ TransmogLootHelper_Cache = {
 },
 [12211] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [17465] = {
@@ -29455,14 +29457,14 @@ TransmogLootHelper_Cache = {
 },
 [9064] = {
 ["owned"] = 1,
-["grantsXP"] = false,
 ["xp"] = 0,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [11127] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [17787] = {
@@ -29472,20 +29474,20 @@ TransmogLootHelper_Cache = {
 },
 [4560] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [11917] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [9144] = {
 ["owned"] = 2,
-["grantsXP"] = false,
 ["xp"] = 0,
+["grantsXP"] = false,
 ["placed"] = 1,
 },
 [1137] = {
@@ -29500,8 +29502,8 @@ TransmogLootHelper_Cache = {
 },
 [4446] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [15455] = {
@@ -29511,14 +29513,14 @@ TransmogLootHelper_Cache = {
 },
 [11886] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [9240] = {
 ["owned"] = 1,
-["xp"] = 0,
 ["grantsXP"] = false,
+["xp"] = 0,
 ["placed"] = 1,
 },
 [1220] = {
@@ -29533,74 +29535,74 @@ TransmogLootHelper_Cache = {
 },
 [2324] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [2328] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [2332] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [15477] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [2340] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [9048] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [11431] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [4488] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [2241] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [11479] = {
 ["owned"] = 1,
-["grantsXP"] = false,
 ["xp"] = 0,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [11495] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [15605] = {
 ["owned"] = 21,
-["xp"] = 0,
 ["grantsXP"] = false,
+["xp"] = 0,
 ["placed"] = 0,
 },
 [9480] = {
@@ -29620,14 +29622,14 @@ TransmogLootHelper_Cache = {
 },
 [2384] = {
 ["owned"] = 1,
-["grantsXP"] = false,
 ["xp"] = 0,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [4472] = {
 ["owned"] = 1,
-["xp"] = 0,
 ["grantsXP"] = false,
+["xp"] = 0,
 ["placed"] = 1,
 },
 [2233] = {
@@ -29637,8 +29639,8 @@ TransmogLootHelper_Cache = {
 },
 [4456] = {
 ["owned"] = 1,
-["grantsXP"] = false,
 ["xp"] = 0,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [2225] = {
@@ -29659,8 +29661,8 @@ TransmogLootHelper_Cache = {
 [4822] = {
 ["owned"] = 2,
 ["placed"] = 2,
-["xp"] = 0,
 ["grantsXP"] = false,
+["xp"] = 0,
 },
 [15573] = {
 ["owned"] = 0,
@@ -29669,8 +29671,8 @@ TransmogLootHelper_Cache = {
 },
 [11719] = {
 ["owned"] = 1,
-["grantsXP"] = false,
 ["xp"] = 0,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [4424] = {
@@ -29680,20 +29682,20 @@ TransmogLootHelper_Cache = {
 },
 [11751] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [2432] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [2436] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [17449] = {
@@ -29703,26 +29705,26 @@ TransmogLootHelper_Cache = {
 },
 [2444] = {
 ["owned"] = 1,
-["grantsXP"] = false,
 ["xp"] = 0,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [2448] = {
 ["owned"] = 1,
-["grantsXP"] = false,
 ["xp"] = 0,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [2452] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [4462] = {
 ["owned"] = 1,
-["grantsXP"] = false,
 ["xp"] = 0,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [2460] = {
@@ -29732,20 +29734,20 @@ TransmogLootHelper_Cache = {
 },
 [11895] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [11911] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [11927] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [16037] = {
@@ -29760,14 +29762,14 @@ TransmogLootHelper_Cache = {
 },
 [5116] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [16085] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [17865] = {
@@ -29777,20 +29779,20 @@ TransmogLootHelper_Cache = {
 },
 [2496] = {
 ["owned"] = 1,
-["grantsXP"] = false,
 ["xp"] = 0,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [4814] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [2090] = {
 ["owned"] = 1,
-["grantsXP"] = false,
 ["xp"] = 0,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [15484] = {
@@ -29800,14 +29802,14 @@ TransmogLootHelper_Cache = {
 },
 [2512] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [2516] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [22183] = {
@@ -29822,38 +29824,38 @@ TransmogLootHelper_Cache = {
 },
 [5532] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [2532] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [5117] = {
 ["owned"] = 2,
-["xp"] = 0,
 ["grantsXP"] = false,
+["xp"] = 0,
 ["placed"] = 1,
 },
 [12199] = {
 ["owned"] = 2,
-["xp"] = 0,
 ["grantsXP"] = false,
+["xp"] = 0,
 ["placed"] = 0,
 },
 [2440] = {
 ["owned"] = 1,
-["grantsXP"] = false,
 ["xp"] = 0,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [2548] = {
 ["owned"] = 1,
-["grantsXP"] = false,
 ["xp"] = 0,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [4429] = {
@@ -29863,26 +29865,26 @@ TransmogLootHelper_Cache = {
 },
 [12263] = {
 ["owned"] = 6,
-["grantsXP"] = false,
 ["xp"] = 10,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [2238] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [5126] = {
 ["owned"] = 1,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [14358] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [14793] = {
@@ -29905,33 +29907,33 @@ TransmogLootHelper_Cache = {
 ["xp"] = 0,
 ["grantsXP"] = false,
 },
-[2588] = {
+[10344] = {
 ["owned"] = 0,
 ["xp"] = 10,
 ["grantsXP"] = true,
 },
 [2592] = {
 ["owned"] = 1,
-["grantsXP"] = false,
 ["xp"] = 0,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [2596] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [4461] = {
 ["owned"] = 1,
-["grantsXP"] = false,
 ["xp"] = 0,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [1324] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [17439] = {
@@ -29941,8 +29943,8 @@ TransmogLootHelper_Cache = {
 },
 [10855] = {
 ["owned"] = 1,
-["grantsXP"] = false,
 ["xp"] = 0,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [15746] = {
@@ -29952,8 +29954,8 @@ TransmogLootHelper_Cache = {
 },
 [1458] = {
 ["owned"] = 1,
-["grantsXP"] = false,
 ["xp"] = 0,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [14582] = {
@@ -29968,8 +29970,8 @@ TransmogLootHelper_Cache = {
 },
 [11901] = {
 ["owned"] = 1,
-["grantsXP"] = false,
 ["xp"] = 10,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [16970] = {
@@ -29979,8 +29981,8 @@ TransmogLootHelper_Cache = {
 },
 [7816] = {
 ["owned"] = 1,
-["grantsXP"] = false,
 ["xp"] = 10,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [14601] = {
@@ -30000,8 +30002,8 @@ TransmogLootHelper_Cache = {
 },
 [495] = {
 ["owned"] = 1,
-["grantsXP"] = false,
 ["xp"] = 0,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [16816] = {
@@ -30011,8 +30013,8 @@ TransmogLootHelper_Cache = {
 },
 [4816] = {
 ["owned"] = 1,
-["xp"] = 0,
 ["grantsXP"] = false,
+["xp"] = 0,
 ["placed"] = 1,
 },
 [15570] = {
@@ -30022,8 +30024,8 @@ TransmogLootHelper_Cache = {
 },
 [5342] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [15481] = {
@@ -30048,8 +30050,8 @@ TransmogLootHelper_Cache = {
 },
 [2089] = {
 ["owned"] = 1,
-["grantsXP"] = false,
 ["xp"] = 0,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [17450] = {
@@ -30059,8 +30061,8 @@ TransmogLootHelper_Cache = {
 },
 [494] = {
 ["owned"] = 2,
-["grantsXP"] = false,
 ["xp"] = 0,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [15410] = {
@@ -30080,26 +30082,26 @@ TransmogLootHelper_Cache = {
 },
 [10856] = {
 ["owned"] = 1,
-["xp"] = 0,
 ["grantsXP"] = false,
+["xp"] = 0,
 ["placed"] = 0,
 },
 [11483] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [10888] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [1270] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [15744] = {
@@ -30114,8 +30116,8 @@ TransmogLootHelper_Cache = {
 },
 [10952] = {
 ["owned"] = 2,
-["grantsXP"] = false,
 ["xp"] = 0,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [15062] = {
@@ -30130,8 +30132,8 @@ TransmogLootHelper_Cache = {
 },
 [9245] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [15401] = {
@@ -30146,8 +30148,8 @@ TransmogLootHelper_Cache = {
 },
 [7573] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [15158] = {
@@ -30162,38 +30164,38 @@ TransmogLootHelper_Cache = {
 },
 [9049] = {
 ["owned"] = 1,
-["xp"] = 0,
 ["grantsXP"] = false,
+["xp"] = 0,
 ["placed"] = 1,
 },
 [5558] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [11128] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [7621] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [11160] = {
 ["owned"] = 1,
-["grantsXP"] = false,
 ["xp"] = 0,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [7819] = {
 ["owned"] = 1,
-["grantsXP"] = false,
 ["xp"] = 10,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [15743] = {
@@ -30203,20 +30205,20 @@ TransmogLootHelper_Cache = {
 },
 [5534] = {
 ["owned"] = 1,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [3905] = {
 ["owned"] = 1,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [1169] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [18397] = {
@@ -30226,8 +30228,8 @@ TransmogLootHelper_Cache = {
 },
 [9241] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [7693] = {
@@ -30247,8 +30249,8 @@ TransmogLootHelper_Cache = {
 },
 [1416] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [15572] = {
@@ -30256,16 +30258,16 @@ TransmogLootHelper_Cache = {
 ["xp"] = 10,
 ["grantsXP"] = false,
 },
+[11384] = {
+["owned"] = 0,
+["xp"] = 10,
+["grantsXP"] = true,
+["placed"] = 0,
+},
 [15478] = {
 ["owned"] = 0,
 ["xp"] = 10,
 ["grantsXP"] = true,
-},
-[11384] = {
-["owned"] = 0,
-["grantsXP"] = true,
-["xp"] = 10,
-["placed"] = 0,
 },
 [15494] = {
 ["owned"] = 0,
@@ -30274,15 +30276,20 @@ TransmogLootHelper_Cache = {
 },
 [1218] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [11432] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
+},
+[15574] = {
+["owned"] = 2,
+["xp"] = 0,
+["grantsXP"] = false,
 },
 [16811] = {
 ["owned"] = 0,
@@ -30291,25 +30298,20 @@ TransmogLootHelper_Cache = {
 },
 [11480] = {
 ["owned"] = 5,
-["xp"] = 0,
 ["grantsXP"] = false,
+["xp"] = 0,
 ["placed"] = 0,
-},
-[15574] = {
-["owned"] = 2,
-["xp"] = 0,
-["grantsXP"] = false,
 },
 [11496] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [7821] = {
 ["owned"] = 10,
-["xp"] = 0,
 ["grantsXP"] = false,
+["xp"] = 0,
 ["placed"] = 0,
 },
 [9481] = {
@@ -30329,8 +30331,8 @@ TransmogLootHelper_Cache = {
 },
 [7837] = {
 ["owned"] = 1,
-["grantsXP"] = false,
 ["xp"] = 10,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [17871] = {
@@ -30340,8 +30342,8 @@ TransmogLootHelper_Cache = {
 },
 [4024] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [8916] = {
@@ -30356,56 +30358,56 @@ TransmogLootHelper_Cache = {
 },
 [11301] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [1044] = {
 ["owned"] = 1,
-["grantsXP"] = false,
 ["xp"] = 0,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [11902] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [5854] = {
 ["owned"] = 1,
-["grantsXP"] = false,
 ["xp"] = 0,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [11720] = {
 ["owned"] = 1,
-["grantsXP"] = false,
 ["xp"] = 0,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [11752] = {
 ["owned"] = 1,
-["xp"] = 0,
 ["grantsXP"] = false,
+["xp"] = 0,
 ["placed"] = 0,
 },
 [5878] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [3869] = {
 ["owned"] = 30,
-["xp"] = 0,
 ["grantsXP"] = false,
+["xp"] = 0,
 ["placed"] = 0,
 },
 [5894] = {
 ["owned"] = 1,
-["grantsXP"] = false,
 ["xp"] = 10,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [15894] = {
@@ -30415,8 +30417,8 @@ TransmogLootHelper_Cache = {
 },
 [2245] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [17515] = {
@@ -30426,8 +30428,8 @@ TransmogLootHelper_Cache = {
 },
 [716] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [17519] = {
@@ -30437,26 +30439,26 @@ TransmogLootHelper_Cache = {
 },
 [11880] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [11896] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [11912] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [11928] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [16038] = {
@@ -30466,8 +30468,8 @@ TransmogLootHelper_Cache = {
 },
 [11944] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [8918] = {
@@ -30477,8 +30479,8 @@ TransmogLootHelper_Cache = {
 },
 [16086] = {
 ["owned"] = 1,
-["grantsXP"] = false,
 ["xp"] = 10,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [17867] = {
@@ -30508,20 +30510,20 @@ TransmogLootHelper_Cache = {
 },
 [11319] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [1292] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [1119] = {
 ["owned"] = 1,
-["grantsXP"] = false,
 ["xp"] = 10,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [16230] = {
@@ -30531,8 +30533,8 @@ TransmogLootHelper_Cache = {
 },
 [2098] = {
 ["owned"] = 1,
-["grantsXP"] = false,
 ["xp"] = 0,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [17864] = {
@@ -30552,20 +30554,20 @@ TransmogLootHelper_Cache = {
 },
 [4457] = {
 ["owned"] = 5,
-["xp"] = 0,
 ["grantsXP"] = false,
+["xp"] = 0,
 ["placed"] = 0,
 },
 [529] = {
 ["owned"] = 10,
-["grantsXP"] = false,
 ["xp"] = 0,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [5562] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [8181] = {
@@ -30575,44 +30577,44 @@ TransmogLootHelper_Cache = {
 },
 [8189] = {
 ["owned"] = 1,
-["xp"] = 0,
 ["grantsXP"] = false,
+["xp"] = 0,
 ["placed"] = 0,
 },
 [8185] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [14359] = {
 ["owned"] = 1,
-["xp"] = 0,
 ["grantsXP"] = false,
+["xp"] = 0,
 ["placed"] = 0,
 },
 [4460] = {
 ["owned"] = 1,
-["grantsXP"] = false,
 ["xp"] = 0,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [7841] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [3985] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [1294] = {
 ["owned"] = 1,
-["grantsXP"] = false,
 ["xp"] = 0,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [10345] = {
@@ -30622,38 +30624,38 @@ TransmogLootHelper_Cache = {
 },
 [4159] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [4167] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [4175] = {
 ["owned"] = 1,
-["grantsXP"] = false,
 ["xp"] = 10,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [3900] = {
 ["owned"] = 1,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [11482] = {
 ["owned"] = 1,
-["grantsXP"] = false,
 ["xp"] = 0,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [3892] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [16812] = {
@@ -30661,9 +30663,9 @@ TransmogLootHelper_Cache = {
 ["xp"] = 0,
 ["grantsXP"] = false,
 },
-[14631] = {
-["owned"] = 1,
-["xp"] = 10,
+[16972] = {
+["owned"] = 0,
+["xp"] = 0,
 ["grantsXP"] = false,
 },
 [14583] = {
@@ -30681,15 +30683,15 @@ TransmogLootHelper_Cache = {
 ["xp"] = 10,
 ["grantsXP"] = true,
 },
-[16972] = {
-["owned"] = 0,
-["xp"] = 0,
+[14631] = {
+["owned"] = 1,
+["xp"] = 10,
 ["grantsXP"] = false,
 },
 [11434] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [14620] = {
@@ -30704,20 +30706,20 @@ TransmogLootHelper_Cache = {
 },
 [1232] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [3872] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [3868] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [16815] = {
@@ -30732,14 +30734,14 @@ TransmogLootHelper_Cache = {
 },
 [2334] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [8241] = {
 ["owned"] = 3,
-["grantsXP"] = false,
 ["xp"] = 10,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [7694] = {
@@ -30759,8 +30761,8 @@ TransmogLootHelper_Cache = {
 },
 [7686] = {
 ["owned"] = 1,
-["xp"] = 0,
 ["grantsXP"] = false,
+["xp"] = 0,
 ["placed"] = 0,
 },
 [17452] = {
@@ -30770,8 +30772,8 @@ TransmogLootHelper_Cache = {
 },
 [8912] = {
 ["owned"] = 4,
-["xp"] = 0,
 ["grantsXP"] = false,
+["xp"] = 0,
 ["placed"] = 1,
 },
 [17516] = {
@@ -30781,18 +30783,18 @@ TransmogLootHelper_Cache = {
 },
 [11494] = {
 ["owned"] = 2,
-["grantsXP"] = false,
 ["xp"] = 0,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [3832] = {
 ["owned"] = 2,
-["grantsXP"] = false,
 ["xp"] = 10,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
-[8810] = {
-["owned"] = 1,
+[4407] = {
+["owned"] = 5,
 ["xp"] = 0,
 ["grantsXP"] = false,
 ["placed"] = 0,
@@ -30804,14 +30806,15 @@ TransmogLootHelper_Cache = {
 },
 [4423] = {
 ["owned"] = 1,
-["xp"] = 0,
 ["grantsXP"] = false,
+["xp"] = 0,
 ["placed"] = 1,
 },
-[17868] = {
-["owned"] = 2,
+[4471] = {
+["owned"] = 1,
 ["xp"] = 0,
 ["grantsXP"] = false,
+["placed"] = 0,
 },
 [8874] = {
 ["owned"] = 0,
@@ -30820,44 +30823,43 @@ TransmogLootHelper_Cache = {
 },
 [4447] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [4455] = {
 ["owned"] = 4,
-["xp"] = 0,
 ["grantsXP"] = false,
+["xp"] = 0,
 ["placed"] = 0,
 },
 [4463] = {
 ["owned"] = 1,
-["grantsXP"] = false,
 ["xp"] = 0,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
-[4471] = {
-["owned"] = 1,
-["grantsXP"] = false,
+[17868] = {
+["owned"] = 2,
 ["xp"] = 0,
-["placed"] = 0,
+["grantsXP"] = false,
 },
 [4479] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [4487] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [5897] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [15143] = {
@@ -30872,68 +30874,68 @@ TransmogLootHelper_Cache = {
 },
 [5531] = {
 ["owned"] = 4,
-["xp"] = 0,
 ["grantsXP"] = false,
+["xp"] = 0,
 ["placed"] = 1,
 },
 [9050] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [7622] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [2531] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [7606] = {
 ["owned"] = 16,
-["xp"] = 0,
 ["grantsXP"] = false,
+["xp"] = 0,
 ["placed"] = 7,
 },
 [2330] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [1894] = {
 ["owned"] = 1,
-["xp"] = 0,
 ["grantsXP"] = false,
+["xp"] = 0,
 ["placed"] = 0,
 },
 [2246] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [7574] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [9178] = {
 ["owned"] = 1,
-["grantsXP"] = false,
 ["xp"] = 0,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [5561] = {
 ["owned"] = 1,
-["grantsXP"] = false,
 ["xp"] = 0,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [3922] = {
@@ -30943,14 +30945,14 @@ TransmogLootHelper_Cache = {
 },
 [4478] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [9242] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [15399] = {
@@ -30965,14 +30967,14 @@ TransmogLootHelper_Cache = {
 },
 [7817] = {
 ["owned"] = 1,
-["grantsXP"] = false,
 ["xp"] = 10,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [3893] = {
 ["owned"] = 1,
-["xp"] = 0,
 ["grantsXP"] = false,
+["xp"] = 0,
 ["placed"] = 1,
 },
 [15463] = {
@@ -30987,29 +30989,24 @@ TransmogLootHelper_Cache = {
 },
 [4845] = {
 ["owned"] = 1,
-["grantsXP"] = false,
 ["xp"] = 0,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [11878] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [11433] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [17919] = {
 ["owned"] = 5,
-["xp"] = 0,
-["grantsXP"] = false,
-},
-[16813] = {
-["owned"] = 0,
 ["xp"] = 0,
 ["grantsXP"] = false,
 },
@@ -31018,16 +31015,22 @@ TransmogLootHelper_Cache = {
 ["xp"] = 10,
 ["grantsXP"] = true,
 },
+[11481] = {
+["owned"] = 4,
+["xp"] = 0,
+["grantsXP"] = false,
+["placed"] = 0,
+},
 [11497] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [10950] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [9482] = {
@@ -31047,8 +31050,8 @@ TransmogLootHelper_Cache = {
 },
 [9167] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [9487] = {
@@ -31063,8 +31066,8 @@ TransmogLootHelper_Cache = {
 },
 [5527] = {
 ["owned"] = 3,
-["xp"] = 0,
 ["grantsXP"] = false,
+["xp"] = 0,
 ["placed"] = 0,
 },
 [10778] = {
@@ -31074,32 +31077,32 @@ TransmogLootHelper_Cache = {
 },
 [11456] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [4815] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [4823] = {
 ["owned"] = 1,
-["grantsXP"] = false,
 ["xp"] = 0,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [1172] = {
 ["owned"] = 1,
-["grantsXP"] = false,
 ["xp"] = 10,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [4839] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [14824] = {
@@ -31109,14 +31112,14 @@ TransmogLootHelper_Cache = {
 },
 [11753] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [11721] = {
 ["owned"] = 1,
-["grantsXP"] = false,
 ["xp"] = 0,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [17453] = {
@@ -31131,74 +31134,74 @@ TransmogLootHelper_Cache = {
 },
 [3885] = {
 ["owned"] = 1,
-["xp"] = 0,
 ["grantsXP"] = false,
+["xp"] = 0,
 ["placed"] = 0,
 },
 [2428] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [4480] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [10853] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [11881] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [11897] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [11913] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [11929] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [11945] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [10857] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [2088] = {
 ["owned"] = 1,
-["grantsXP"] = false,
 ["xp"] = 0,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [16087] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [17869] = {
@@ -31208,44 +31211,44 @@ TransmogLootHelper_Cache = {
 },
 [2087] = {
 ["owned"] = 1,
-["grantsXP"] = false,
 ["xp"] = 0,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [8177] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [11385] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [528] = {
 ["owned"] = 5,
-["grantsXP"] = false,
 ["xp"] = 0,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [1987] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [5113] = {
 ["owned"] = 2,
-["grantsXP"] = false,
 ["xp"] = 0,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [14383] = {
 ["owned"] = 1,
-["grantsXP"] = false,
 ["xp"] = 0,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [16231] = {
@@ -31255,20 +31258,20 @@ TransmogLootHelper_Cache = {
 },
 [11894] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [11305] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [4169] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [12201] = {
@@ -31278,14 +31281,14 @@ TransmogLootHelper_Cache = {
 },
 [12217] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [1998] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [12249] = {
@@ -31295,50 +31298,50 @@ TransmogLootHelper_Cache = {
 },
 [5111] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [5119] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [5127] = {
 ["owned"] = 1,
-["xp"] = 10,
 ["grantsXP"] = false,
+["xp"] = 10,
 ["placed"] = 0,
 },
 [14360] = {
 ["owned"] = 1,
-["xp"] = 0,
 ["grantsXP"] = false,
+["xp"] = 0,
 ["placed"] = 1,
 },
 [8235] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [8917] = {
 ["owned"] = 2,
-["xp"] = 0,
 ["grantsXP"] = false,
+["xp"] = 0,
 ["placed"] = 0,
 },
 [933] = {
 ["owned"] = 1,
-["grantsXP"] = false,
 ["xp"] = 0,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [3839] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [10346] = {
@@ -31348,38 +31351,38 @@ TransmogLootHelper_Cache = {
 },
 [11919] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [2091] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [11893] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [14380] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [1411] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [5529] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [16814] = {
@@ -31389,8 +31392,8 @@ TransmogLootHelper_Cache = {
 },
 [1266] = {
 ["owned"] = 1,
-["grantsXP"] = false,
 ["xp"] = 0,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [14584] = {
@@ -31415,8 +31418,8 @@ TransmogLootHelper_Cache = {
 },
 [4819] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [15576] = {
@@ -31431,14 +31434,14 @@ TransmogLootHelper_Cache = {
 },
 [4458] = {
 ["owned"] = 2,
-["xp"] = 0,
 ["grantsXP"] = false,
+["xp"] = 0,
 ["placed"] = 2,
 },
 [1437] = {
 ["owned"] = 2,
-["xp"] = 0,
 ["grantsXP"] = false,
+["xp"] = 0,
 ["placed"] = 0,
 },
 [9419] = {
@@ -31448,20 +31451,20 @@ TransmogLootHelper_Cache = {
 },
 [4484] = {
 ["owned"] = 1,
-["grantsXP"] = false,
 ["xp"] = 0,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [1120] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [530] = {
 ["owned"] = 3,
-["grantsXP"] = false,
 ["xp"] = 0,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [17294] = {
@@ -31481,14 +31484,14 @@ TransmogLootHelper_Cache = {
 },
 [9473] = {
 ["owned"] = 1,
-["grantsXP"] = false,
 ["xp"] = 0,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [7577] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [17454] = {
@@ -31498,8 +31501,8 @@ TransmogLootHelper_Cache = {
 },
 [862] = {
 ["owned"] = 1,
-["xp"] = 0,
 ["grantsXP"] = false,
+["xp"] = 0,
 ["placed"] = 1,
 },
 [17518] = {
@@ -31509,37 +31512,36 @@ TransmogLootHelper_Cache = {
 },
 [9263] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [1883] = {
 ["owned"] = 1,
-["grantsXP"] = false,
 ["xp"] = 0,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [8811] = {
 ["owned"] = 1,
 ["placed"] = 0,
-["xp"] = 0,
 ["grantsXP"] = false,
+["xp"] = 0,
 },
 [14968] = {
 ["owned"] = 1,
 ["xp"] = 10,
 ["grantsXP"] = false,
 },
-[11481] = {
-["owned"] = 4,
-["grantsXP"] = false,
+[16813] = {
+["owned"] = 0,
 ["xp"] = 0,
-["placed"] = 0,
+["grantsXP"] = false,
 },
 [5525] = {
 ["owned"] = 2,
-["xp"] = 0,
 ["grantsXP"] = false,
+["xp"] = 0,
 ["placed"] = 0,
 },
 [8875] = {
@@ -31549,14 +31551,14 @@ TransmogLootHelper_Cache = {
 },
 [985] = {
 ["owned"] = 1,
-["grantsXP"] = false,
 ["xp"] = 0,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [8907] = {
 ["owned"] = 1,
-["grantsXP"] = false,
 ["xp"] = 0,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [15064] = {
@@ -31571,14 +31573,14 @@ TransmogLootHelper_Cache = {
 },
 [5881] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [1884] = {
 ["owned"] = 1,
-["xp"] = 0,
 ["grantsXP"] = false,
+["xp"] = 0,
 ["placed"] = 1,
 },
 [8987] = {
@@ -31598,86 +31600,86 @@ TransmogLootHelper_Cache = {
 },
 [9035] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [9051] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [5559] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [11130] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [5575] = {
 ["owned"] = 2,
-["xp"] = 0,
 ["grantsXP"] = false,
+["xp"] = 0,
 ["placed"] = 1,
 },
 [11162] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [10889] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [3837] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [1274] = {
 ["owned"] = 1,
-["grantsXP"] = false,
 ["xp"] = 0,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [9179] = {
 ["owned"] = 1,
-["xp"] = 0,
 ["grantsXP"] = false,
+["xp"] = 0,
 ["placed"] = 1,
 },
-[4407] = {
-["owned"] = 5,
+[8810] = {
+["owned"] = 1,
 ["grantsXP"] = false,
 ["xp"] = 0,
 ["placed"] = 0,
 },
 [3840] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [11274] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [9243] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [15400] = {
@@ -31697,44 +31699,44 @@ TransmogLootHelper_Cache = {
 },
 [8787] = {
 ["owned"] = 5,
-["grantsXP"] = false,
 ["xp"] = 0,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [11370] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [11386] = {
 ["owned"] = 3,
-["grantsXP"] = false,
 ["xp"] = 0,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [3876] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [3880] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [3884] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [2105] = {
 ["owned"] = 5,
-["grantsXP"] = false,
 ["xp"] = 0,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [7782] = {
@@ -31744,20 +31746,20 @@ TransmogLootHelper_Cache = {
 },
 [3896] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [11498] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [3904] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [9483] = {
@@ -31767,8 +31769,8 @@ TransmogLootHelper_Cache = {
 },
 [7822] = {
 ["owned"] = 0,
-["xp"] = 10,
 ["grantsXP"] = true,
+["xp"] = 10,
 ["placed"] = 0,
 },
 [7830] = {
@@ -31778,32 +31780,32 @@ TransmogLootHelper_Cache = {
 },
 [7838] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [11874] = {
 ["owned"] = 1,
-["grantsXP"] = false,
 ["xp"] = 0,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [4452] = {
 ["owned"] = 1,
-["grantsXP"] = false,
 ["xp"] = 0,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [11879] = {
 ["owned"] = 2,
-["grantsXP"] = false,
 ["xp"] = 10,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [5879] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [15460] = {
@@ -31818,8 +31820,8 @@ TransmogLootHelper_Cache = {
 },
 [2472] = {
 ["owned"] = 1,
-["grantsXP"] = false,
 ["xp"] = 10,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [12142] = {
@@ -31829,8 +31831,8 @@ TransmogLootHelper_Cache = {
 },
 [11722] = {
 ["owned"] = 3,
-["grantsXP"] = false,
 ["xp"] = 10,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [17863] = {
@@ -31840,20 +31842,20 @@ TransmogLootHelper_Cache = {
 },
 [11754] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [11925] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [5895] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [17455] = {
@@ -31863,38 +31865,38 @@ TransmogLootHelper_Cache = {
 },
 [1900] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [3984] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [1216] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [11493] = {
 ["owned"] = 1,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [11882] = {
 ["owned"] = 1,
-["grantsXP"] = false,
 ["xp"] = 10,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [11898] = {
 ["owned"] = 1,
-["grantsXP"] = false,
 ["xp"] = 10,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [10340] = {
@@ -31909,8 +31911,8 @@ TransmogLootHelper_Cache = {
 },
 [11946] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [15065] = {
@@ -31925,56 +31927,56 @@ TransmogLootHelper_Cache = {
 },
 [16088] = {
 ["owned"] = 1,
-["grantsXP"] = false,
 ["xp"] = 10,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [4028] = {
 ["owned"] = 1,
-["xp"] = 0,
 ["grantsXP"] = false,
+["xp"] = 0,
 ["placed"] = 0,
 },
 [4032] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [4036] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [4040] = {
 ["owned"] = 1,
-["xp"] = 0,
 ["grantsXP"] = false,
+["xp"] = 0,
 ["placed"] = 0,
 },
 [11918] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [1997] = {
 ["owned"] = 1,
-["grantsXP"] = false,
 ["xp"] = 0,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [5526] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [2468] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [16232] = {
@@ -31994,8 +31996,8 @@ TransmogLootHelper_Cache = {
 },
 [5120] = {
 ["owned"] = 1,
-["xp"] = 10,
 ["grantsXP"] = false,
+["xp"] = 10,
 ["placed"] = 0,
 },
 [12202] = {
@@ -32005,14 +32007,14 @@ TransmogLootHelper_Cache = {
 },
 [12218] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [16084] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [12250] = {
@@ -32027,32 +32029,32 @@ TransmogLootHelper_Cache = {
 },
 [8190] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [1177] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [14361] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [8236] = {
 ["owned"] = 1,
-["grantsXP"] = false,
 ["xp"] = 0,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [14461] = {
 ["owned"] = 1,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [16094] = {
@@ -32062,8 +32064,8 @@ TransmogLootHelper_Cache = {
 },
 [2533] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [10347] = {
@@ -32073,26 +32075,26 @@ TransmogLootHelper_Cache = {
 },
 [4160] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [4168] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [4176] = {
 ["owned"] = 1,
-["grantsXP"] = false,
 ["xp"] = 10,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [2093] = {
 ["owned"] = 1,
-["grantsXP"] = false,
 ["xp"] = 0,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [15504] = {
@@ -32102,32 +32104,32 @@ TransmogLootHelper_Cache = {
 },
 [2101] = {
 ["owned"] = 5,
-["grantsXP"] = false,
 ["xp"] = 0,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [14553] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [2109] = {
 ["owned"] = 5,
-["xp"] = 0,
 ["grantsXP"] = false,
+["xp"] = 0,
 ["placed"] = 5,
 },
 [2113] = {
 ["owned"] = 4,
-["xp"] = 0,
 ["grantsXP"] = false,
+["xp"] = 0,
 ["placed"] = 0,
 },
 [2117] = {
 ["owned"] = 1,
-["grantsXP"] = false,
 ["xp"] = 0,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [14617] = {
@@ -32152,20 +32154,20 @@ TransmogLootHelper_Cache = {
 },
 [480] = {
 ["owned"] = 1,
-["grantsXP"] = false,
 ["xp"] = 0,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [8242] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [11374] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [16092] = {
@@ -32173,7 +32175,7 @@ TransmogLootHelper_Cache = {
 ["xp"] = 10,
 ["grantsXP"] = false,
 },
-[10344] = {
+[2588] = {
 ["owned"] = 0,
 ["xp"] = 10,
 ["grantsXP"] = true,
@@ -32190,8 +32192,8 @@ TransmogLootHelper_Cache = {
 },
 [1083] = {
 ["owned"] = 4,
-["xp"] = 0,
 ["grantsXP"] = false,
+["xp"] = 0,
 ["placed"] = 2,
 },
 [14809] = {
@@ -32221,8 +32223,8 @@ TransmogLootHelper_Cache = {
 },
 [1412] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [17520] = {
@@ -32242,14 +32244,14 @@ TransmogLootHelper_Cache = {
 },
 [4408] = {
 ["owned"] = 3,
-["xp"] = 0,
 ["grantsXP"] = false,
+["xp"] = 0,
 ["placed"] = 2,
 },
 [2244] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [14985] = {
@@ -32264,44 +32266,44 @@ TransmogLootHelper_Cache = {
 },
 [11383] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [4448] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [2229] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [4464] = {
 ["owned"] = 4,
-["xp"] = 0,
 ["grantsXP"] = false,
+["xp"] = 0,
 ["placed"] = 0,
 },
 [2237] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [1121] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [1123] = {
 ["owned"] = 2,
-["grantsXP"] = false,
 ["xp"] = 0,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [8988] = {
@@ -32321,14 +32323,14 @@ TransmogLootHelper_Cache = {
 },
 [9036] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [9052] = {
 ["owned"] = 1,
-["grantsXP"] = false,
 ["xp"] = 0,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [1901] = {
@@ -32338,20 +32340,20 @@ TransmogLootHelper_Cache = {
 },
 [11131] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [2228] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [11163] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [2232] = {
@@ -32361,8 +32363,8 @@ TransmogLootHelper_Cache = {
 },
 [2242] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [1147] = {
@@ -32372,8 +32374,8 @@ TransmogLootHelper_Cache = {
 },
 [9180] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [2301] = {
@@ -32383,26 +32385,26 @@ TransmogLootHelper_Cache = {
 },
 [1153] = {
 ["owned"] = 3,
-["grantsXP"] = false,
 ["xp"] = 0,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [11275] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [9244] = {
 ["owned"] = 1,
-["xp"] = 0,
 ["grantsXP"] = false,
+["xp"] = 0,
 ["placed"] = 1,
 },
 [11307] = {
 ["owned"] = 1,
-["xp"] = 10,
 ["grantsXP"] = false,
+["xp"] = 10,
 ["placed"] = 0,
 },
 [1161] = {
@@ -32412,32 +32414,32 @@ TransmogLootHelper_Cache = {
 },
 [2325] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [2329] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [2333] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [11387] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [2341] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [1173] = {
@@ -32447,26 +32449,26 @@ TransmogLootHelper_Cache = {
 },
 [11435] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [11451] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [1179] = {
 ["owned"] = 1,
-["grantsXP"] = false,
 ["xp"] = 0,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [1181] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [11499] = {
@@ -32481,26 +32483,26 @@ TransmogLootHelper_Cache = {
 },
 [1187] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [1189] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [1191] = {
 ["owned"] = 1,
-["grantsXP"] = false,
 ["xp"] = 0,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [2385] = {
 ["owned"] = 1,
-["grantsXP"] = false,
 ["xp"] = 0,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [1195] = {
@@ -32510,20 +32512,20 @@ TransmogLootHelper_Cache = {
 },
 [1197] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [1199] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [1201] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [1160] = {
@@ -32533,14 +32535,14 @@ TransmogLootHelper_Cache = {
 },
 [1205] = {
 ["owned"] = 1,
-["xp"] = 0,
 ["grantsXP"] = false,
+["xp"] = 0,
 ["placed"] = 0,
 },
 [1992] = {
 ["owned"] = 1,
-["grantsXP"] = false,
 ["xp"] = 0,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [14589] = {
@@ -32550,44 +32552,44 @@ TransmogLootHelper_Cache = {
 },
 [11723] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [1990] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [11755] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [1217] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [1219] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [2441] = {
 ["owned"] = 1,
-["grantsXP"] = false,
 ["xp"] = 0,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [2445] = {
 ["owned"] = 1,
-["grantsXP"] = false,
 ["xp"] = 0,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [17521] = {
@@ -32607,20 +32609,20 @@ TransmogLootHelper_Cache = {
 },
 [1231] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [2465] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [2469] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [11931] = {
@@ -32628,28 +32630,27 @@ TransmogLootHelper_Cache = {
 ["xp"] = 10,
 ["grantsXP"] = false,
 },
-[7820] = {
-["owned"] = 2,
-["grantsXP"] = false,
+[9495] = {
+["owned"] = 0,
 ["xp"] = 0,
-["placed"] = 0,
+["grantsXP"] = false,
 },
 [1241] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [1243] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [1245] = {
 ["owned"] = 2,
-["grantsXP"] = false,
 ["xp"] = 0,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [1247] = {
@@ -32657,22 +32658,21 @@ TransmogLootHelper_Cache = {
 ["xp"] = 10,
 ["grantsXP"] = true,
 },
-[9239] = {
-["owned"] = 1,
-["grantsXP"] = false,
+[7692] = {
+["owned"] = 0,
 ["xp"] = 10,
-["placed"] = 0,
+["grantsXP"] = true,
 },
 [1251] = {
 ["owned"] = 1,
-["grantsXP"] = false,
 ["xp"] = 0,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [2339] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [15404] = {
@@ -32682,128 +32682,127 @@ TransmogLootHelper_Cache = {
 },
 [1257] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [1259] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [1261] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [1263] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [1265] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [1267] = {
 ["owned"] = 1,
-["xp"] = 0,
 ["grantsXP"] = false,
+["xp"] = 0,
 ["placed"] = 0,
 },
 [1269] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [1271] = {
 ["owned"] = 1,
-["grantsXP"] = false,
 ["xp"] = 0,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [1273] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [1275] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [1277] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [5112] = {
 ["owned"] = 1,
-["grantsXP"] = false,
 ["xp"] = 10,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [1281] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [5128] = {
 ["owned"] = 2,
-["xp"] = 10,
 ["grantsXP"] = false,
+["xp"] = 10,
 ["placed"] = 0,
 },
 [5136] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [1287] = {
 ["owned"] = 1,
-["grantsXP"] = false,
 ["xp"] = 0,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
-[1830] = {
+[16966] = {
 ["owned"] = 0,
-["grantsXP"] = true,
-["xp"] = 10,
-["placed"] = 0,
+["xp"] = 0,
+["grantsXP"] = false,
 },
 [1291] = {
 ["owned"] = 1,
-["xp"] = 0,
 ["grantsXP"] = false,
+["xp"] = 0,
 ["placed"] = 0,
 },
 [1293] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [1295] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [2593] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [15069] = {
@@ -32828,8 +32827,8 @@ TransmogLootHelper_Cache = {
 },
 [1307] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [14554] = {
@@ -32839,26 +32838,26 @@ TransmogLootHelper_Cache = {
 },
 [1311] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [1313] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [1315] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [1317] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [14634] = {
@@ -32868,20 +32867,20 @@ TransmogLootHelper_Cache = {
 },
 [1321] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [1323] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [1325] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [9486] = {
@@ -32891,8 +32890,8 @@ TransmogLootHelper_Cache = {
 },
 [1329] = {
 ["owned"] = 1,
-["grantsXP"] = false,
 ["xp"] = 0,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [14730] = {
@@ -32900,21 +32899,22 @@ TransmogLootHelper_Cache = {
 ["xp"] = 10,
 ["grantsXP"] = true,
 },
-[1750] = {
+[11941] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
-[11909] = {
+[1746] = {
 ["owned"] = 0,
 ["xp"] = 10,
 ["grantsXP"] = true,
+["placed"] = 0,
 },
 [3981] = {
 ["owned"] = 1,
-["xp"] = 0,
 ["grantsXP"] = false,
+["xp"] = 0,
 ["placed"] = 0,
 },
 [16237] = {
@@ -32924,14 +32924,14 @@ TransmogLootHelper_Cache = {
 },
 [14810] = {
 ["owned"] = 0,
-["grantsXP"] = false,
 ["xp"] = 0,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [840] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [15583] = {
@@ -32951,31 +32951,32 @@ TransmogLootHelper_Cache = {
 },
 [1351] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [1353] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [1355] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
-[9494] = {
-["owned"] = 0,
-["xp"] = 0,
+[1700] = {
+["owned"] = 4,
 ["grantsXP"] = false,
+["xp"] = 0,
+["placed"] = 1,
 },
 [10860] = {
 ["owned"] = 1,
-["grantsXP"] = false,
 ["xp"] = 0,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [14970] = {
@@ -32985,15 +32986,14 @@ TransmogLootHelper_Cache = {
 },
 [10892] = {
 ["owned"] = 1,
-["grantsXP"] = false,
 ["xp"] = 0,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
-[1674] = {
-["owned"] = 1,
-["xp"] = 0,
-["grantsXP"] = false,
-["placed"] = 0,
+[11333] = {
+["owned"] = 0,
+["grantsXP"] = true,
+["xp"] = 10,
 },
 [8877] = {
 ["owned"] = 1,
@@ -33007,14 +33007,14 @@ TransmogLootHelper_Cache = {
 },
 [4468] = {
 ["owned"] = 3,
-["xp"] = 0,
 ["grantsXP"] = false,
+["xp"] = 0,
 ["placed"] = 0,
 },
 [1723] = {
 ["owned"] = 2,
-["grantsXP"] = false,
 ["xp"] = 0,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [17874] = {
@@ -33024,14 +33024,14 @@ TransmogLootHelper_Cache = {
 },
 [2094] = {
 ["owned"] = 1,
-["grantsXP"] = false,
 ["xp"] = 0,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [14816] = {
 ["owned"] = 2,
-["grantsXP"] = false,
 ["xp"] = 0,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [8989] = {
@@ -33041,8 +33041,8 @@ TransmogLootHelper_Cache = {
 },
 [5528] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [9485] = {
@@ -33052,20 +33052,20 @@ TransmogLootHelper_Cache = {
 },
 [9037] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [9053] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [5560] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [17474] = {
@@ -33075,14 +33075,14 @@ TransmogLootHelper_Cache = {
 },
 [7623] = {
 ["owned"] = 1,
-["xp"] = 0,
 ["grantsXP"] = false,
+["xp"] = 0,
 ["placed"] = 1,
 },
 [11164] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [10339] = {
@@ -33092,56 +33092,56 @@ TransmogLootHelper_Cache = {
 },
 [9149] = {
 ["owned"] = 1,
-["xp"] = 0,
 ["grantsXP"] = false,
+["xp"] = 0,
 ["placed"] = 0,
 },
 [9165] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [1405] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [1407] = {
 ["owned"] = 1,
-["grantsXP"] = false,
 ["xp"] = 0,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [1409] = {
 ["owned"] = 1,
-["grantsXP"] = false,
 ["xp"] = 10,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [7687] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [1413] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [1415] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [1417] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [16029] = {
@@ -33156,20 +33156,20 @@ TransmogLootHelper_Cache = {
 },
 [11372] = {
 ["owned"] = 1,
-["grantsXP"] = false,
 ["xp"] = 10,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [11388] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [1438] = {
 ["owned"] = 1,
-["grantsXP"] = false,
 ["xp"] = 0,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [16691] = {
@@ -33179,8 +33179,8 @@ TransmogLootHelper_Cache = {
 },
 [11436] = {
 ["owned"] = 2,
-["grantsXP"] = false,
 ["xp"] = 10,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [5651] = {
@@ -33191,19 +33191,19 @@ TransmogLootHelper_Cache = {
 [1435] = {
 ["owned"] = 2,
 ["placed"] = 1,
-["xp"] = 0,
 ["grantsXP"] = false,
+["xp"] = 0,
 },
 [11484] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [1439] = {
 ["owned"] = 1,
-["grantsXP"] = false,
 ["xp"] = 0,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [15148] = {
@@ -33213,14 +33213,14 @@ TransmogLootHelper_Cache = {
 },
 [7815] = {
 ["owned"] = 1,
-["grantsXP"] = false,
 ["xp"] = 10,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [7823] = {
 ["owned"] = 0,
-["xp"] = 10,
 ["grantsXP"] = true,
+["xp"] = 10,
 ["placed"] = 0,
 },
 [2523] = {
@@ -33230,38 +33230,38 @@ TransmogLootHelper_Cache = {
 },
 [7839] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [1451] = {
 ["owned"] = 1,
-["grantsXP"] = false,
 ["xp"] = 0,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [1453] = {
 ["owned"] = 1,
-["grantsXP"] = false,
 ["xp"] = 0,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [1455] = {
 ["owned"] = 2,
-["grantsXP"] = false,
 ["xp"] = 0,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [1457] = {
 ["owned"] = 2,
-["grantsXP"] = false,
 ["xp"] = 0,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [1162] = {
 ["owned"] = 1,
-["grantsXP"] = false,
 ["xp"] = 0,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [9629] = {
@@ -33276,14 +33276,14 @@ TransmogLootHelper_Cache = {
 },
 [11708] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [11724] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [9441] = {
@@ -33293,20 +33293,20 @@ TransmogLootHelper_Cache = {
 },
 [5880] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [5888] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [5896] = {
 ["owned"] = 1,
-["grantsXP"] = false,
 ["xp"] = 10,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [17459] = {
@@ -33321,8 +33321,8 @@ TransmogLootHelper_Cache = {
 },
 [1481] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [15071] = {
@@ -33337,20 +33337,20 @@ TransmogLootHelper_Cache = {
 },
 [1487] = {
 ["owned"] = 13,
-["xp"] = 0,
 ["grantsXP"] = false,
+["xp"] = 0,
 ["placed"] = 0,
 },
 [11900] = {
 ["owned"] = 1,
-["grantsXP"] = false,
 ["xp"] = 10,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [373] = {
 ["owned"] = 1,
-["grantsXP"] = false,
 ["xp"] = 0,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [11932] = {
@@ -33360,8 +33360,8 @@ TransmogLootHelper_Cache = {
 },
 [374] = {
 ["owned"] = 1,
-["grantsXP"] = false,
 ["xp"] = 0,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [7825] = {
@@ -33371,20 +33371,20 @@ TransmogLootHelper_Cache = {
 },
 [7690] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [16090] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [2535] = {
 ["owned"] = 1,
-["grantsXP"] = false,
 ["xp"] = 0,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [10356] = {
@@ -33394,20 +33394,20 @@ TransmogLootHelper_Cache = {
 },
 [377] = {
 ["owned"] = 1,
-["grantsXP"] = false,
 ["xp"] = 0,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [1168] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [378] = {
 ["owned"] = 6,
-["xp"] = 0,
 ["grantsXP"] = false,
+["xp"] = 0,
 ["placed"] = 1,
 },
 [2299] = {
@@ -33417,8 +33417,8 @@ TransmogLootHelper_Cache = {
 },
 [379] = {
 ["owned"] = 1,
-["grantsXP"] = false,
 ["xp"] = 0,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [11936] = {
@@ -33433,8 +33433,8 @@ TransmogLootHelper_Cache = {
 },
 [8769] = {
 ["owned"] = 1,
-["grantsXP"] = false,
 ["xp"] = 0,
+["grantsXP"] = false,
 ["placed"] = 0,
 },
 [12172] = {
@@ -33454,8 +33454,8 @@ TransmogLootHelper_Cache = {
 },
 [12220] = {
 ["owned"] = 0,
-["grantsXP"] = true,
 ["xp"] = 10,
+["grantsXP"] = true,
 ["placed"] = 0,
 },
 [22388] = {

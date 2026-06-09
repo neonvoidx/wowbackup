@@ -3,6 +3,7 @@ local _, ns = ...
 --- AddonSettings - Settings Management System
 local AddonSettings = {}
 ns.AddonSettings = AddonSettings
+local L = LibStub("AceLocale-3.0"):GetLocale("CooldownManagerCentered")
 
 ns.AddonSettings.settingPreview = {}
 ns.AddonSettings.SettingsLayout = {}
@@ -11,12 +12,6 @@ local SettingsLib = LibStub("LibEQOLSettingsMode-1.0")
 local LSM = LibStub("LibSharedMedia-3.0", true)
 
 local function AddonSettings_BuildCooldown(category, layout)
-    SettingsLib:CreateHeader(category, {
-        name = "Set how it grows and from where",
-    })
-    SettingsLib:CreateText(category, {
-        name = "Dynamic alignment of Icons and Bars is happening within the Viewer container.\nSnap to Grid in |cff87bbcaEdit Mode|r for best results.",
-    })
     SettingsLib:CreateDropdown(category, {
         prefix = "CMC_",
         key = "cooldownManager_alignBuffIcons_growFromDirection",
@@ -160,6 +155,9 @@ local function AddonSettings_BuildCooldown(category, layout)
 
     SettingsLib:CreateText(category, {
         name = "|cffff0000*|rTo change |cfffff100Size, Padding|r or to change between |cfffff100columns / rows|r\n Go to |cff87bbcaEdit Mode|r and change |cfffff100Icon Size, Padding & Orientation|r.",
+    })
+    SettingsLib:CreateText(category, {
+        name = "Dynamic alignment of Icons and Bars is happening within the Viewer container.\nSnap to Grid in |cff87bbcaEdit Mode|r for best results.",
     })
 
     SettingsLib:CreateButton(category, {
@@ -684,9 +682,6 @@ local function AddonSettings_BuildCooldown(category, layout)
                 ns.db.profile.cooldownManager_customActiveColor_r = r
                 ns.db.profile.cooldownManager_customActiveColor_g = g
                 ns.db.profile.cooldownManager_customActiveColor_b = b
-                if a == 0.7 then
-                    a = 0.69
-                end
                 ns.db.profile.cooldownManager_customActiveColor_a = a
             end
         end,
@@ -720,9 +715,6 @@ local function AddonSettings_BuildCooldown(category, layout)
                 ns.db.profile.cooldownManager_customCDSwipeColor_r = r
                 ns.db.profile.cooldownManager_customCDSwipeColor_g = g
                 ns.db.profile.cooldownManager_customCDSwipeColor_b = b
-                if a == 0.7 then
-                    a = 0.69
-                end
                 ns.db.profile.cooldownManager_customCDSwipeColor_a = a
             end
         end,
@@ -764,10 +756,14 @@ local function AddonSettings_BuildCooldown(category, layout)
         key = "cooldownManager_cooldownFontName",
         name = "Cooldown Font",
         searchtags = { "Font", "Text", "Cooldown", "Count", "Number", "Typeface", "Typography", "SharedMedia" },
-        default = "Friz Quadrata TT",
+        default = "NIL",
         height = 220,
         get = function()
-            return ns.db.profile.cooldownManager_cooldownFontName or "Friz Quadrata TT"
+            local v = ns.db.profile.cooldownManager_cooldownFontName
+            if not v or v == "NIL" then
+                return "Default font"
+            end
+            return v
         end,
         set = function(value)
             ns.db.profile.cooldownManager_cooldownFontName = value
@@ -795,6 +791,18 @@ local function AddonSettings_BuildCooldown(category, layout)
                 end
             end
             table.sort(sortedFonts)
+
+            rootDescription:CreateRadio("Default font", function()
+                local v = ns.db.profile.cooldownManager_cooldownFontName
+                return not v or v == "NIL"
+            end, function()
+                ns.db.profile.cooldownManager_cooldownFontName = "NIL"
+                ns.CooldownFont:RefreshAll()
+                if ns.TrackerItemViewer then
+                    ns.TrackerItemViewer:RefreshStyling()
+                end
+                dropdown:SetText("Default font")
+            end)
 
             for index, fontName in ipairs(sortedFonts) do
                 local fontPath = fonts[fontName]
@@ -841,12 +849,14 @@ local function AddonSettings_BuildCooldown(category, layout)
             ["OUTLINE"] = "Outline",
             ["THICKOUTLINE"] = "Thick Outline",
             ["MONOCHROME"] = "Monochrome",
+            ["SLUG"] = "Slug",
         },
+        order = { "MONOCHROME", "OUTLINE", "THICKOUTLINE", "SLUG" },
         getSelection = function()
             return ns.db.profile.cooldownManager_cooldownFontFlags or {}
         end,
         setSelection = function(value)
-            if value["OUTLINE"] or value["THICKOUTLINE"] or value["MONOCHROME"] then
+            if value["OUTLINE"] or value["THICKOUTLINE"] or value["MONOCHROME"] or value["SLUG"] then
                 ns.db.profile.cooldownManager_cooldownFontFlags = value
             else
                 ns.db.profile.cooldownManager_cooldownFontFlags = { OUTLINE = false }
@@ -1310,14 +1320,18 @@ local function AddonSettings_BuildCooldown(category, layout)
         key = "cooldownManager_stackFontName",
         name = "Font",
         searchtags = { "Font", "Text", "Stack", "Count", "Number", "Typeface", "Typography", "SharedMedia" },
-        default = "Friz Quadrata TT",
+        default = "NIL",
         height = 220,
         get = function()
-            return ns.db.profile.cooldownManager_stackFontName or "Friz Quadrata TT"
+            local v = ns.db.profile.cooldownManager_stackFontName
+            if not v or v == "NIL" then
+                return "Default font"
+            end
+            return v
         end,
         set = function(value)
             ns.db.profile.cooldownManager_stackFontName = value
-            ns.Stacks:OnSettingChanged()
+            ns.Stacks:RefreshAll()
         end,
         desc = "Select the font for ability stack numbers. Uses SharedMedia fonts if available.",
         generator = function(dropdown, rootDescription)
@@ -1339,6 +1353,19 @@ local function AddonSettings_BuildCooldown(category, layout)
             end
             table.sort(sortedFonts)
 
+            rootDescription:CreateRadio("Default font", function()
+                local v = ns.db.profile.cooldownManager_stackFontName
+                return not v or v == "NIL"
+            end, function()
+                ns.db.profile.cooldownManager_stackFontName = "NIL"
+                dropdown:SetText("Default font")
+
+                ns.Stacks:RefreshAll()
+                if ns.TrackerItemViewer then
+                    ns.TrackerItemViewer:RefreshStyling()
+                end
+            end)
+
             for index, fontName in ipairs(sortedFonts) do
                 local fontPath = fonts[fontName]
 
@@ -1346,8 +1373,12 @@ local function AddonSettings_BuildCooldown(category, layout)
                     return ns.db.profile.cooldownManager_stackFontName == fontName
                 end, function()
                     ns.db.profile.cooldownManager_stackFontName = fontName
-                    ns.Stacks:OnSettingChanged()
                     dropdown:SetText(fontName)
+
+                    ns.Stacks:RefreshAll()
+                    if ns.TrackerItemViewer then
+                        ns.TrackerItemViewer:RefreshStyling()
+                    end
                 end)
 
                 button:AddInitializer(function(self)
@@ -1381,18 +1412,20 @@ local function AddonSettings_BuildCooldown(category, layout)
             ["OUTLINE"] = "Outline",
             ["THICKOUTLINE"] = "Thick Outline",
             ["MONOCHROME"] = "Monochrome",
+            ["SLUG"] = "Slug",
         },
+        order = { "MONOCHROME", "OUTLINE", "THICKOUTLINE", "SLUG" },
         getSelection = function()
             return ns.db.profile.cooldownManager_stackFontFlags or {}
         end,
         setSelection = function(value)
-            if value["OUTLINE"] or value["THICKOUTLINE"] or value["MONOCHROME"] then
+            if value["OUTLINE"] or value["THICKOUTLINE"] or value["MONOCHROME"] or value["SLUG"] then
                 ns.db.profile.cooldownManager_stackFontFlags = value
             else
                 ns.db.profile.cooldownManager_stackFontFlags = { OUTLINE = false }
             end
 
-            ns.Stacks:OnSettingChanged()
+            ns.Stacks:RefreshAll()
             if ns.TrackerItemViewer then
                 ns.TrackerItemViewer:RefreshStyling()
             end
@@ -1882,10 +1915,14 @@ local function AddonSettings_BuildCooldown(category, layout)
         key = "cooldownManager_keybindFontName",
         name = "Font",
         searchtags = { "Font", "Text", "Keybind", "Hotkey", "Binding", "Typeface", "Typography", "SharedMedia" },
-        default = "Friz Quadrata TT",
+        default = "NIL",
         height = 220,
         get = function()
-            return ns.db.profile.cooldownManager_keybindFontName or "Friz Quadrata TT"
+            local v = ns.db.profile.cooldownManager_keybindFontName
+            if not v or v == "NIL" then
+                return "Default font"
+            end
+            return v
         end,
         set = function(value)
             ns.db.profile.cooldownManager_keybindFontName = value
@@ -1910,6 +1947,15 @@ local function AddonSettings_BuildCooldown(category, layout)
                 end
             end
             table.sort(sortedFonts)
+
+            rootDescription:CreateRadio("Default font", function()
+                local v = ns.db.profile.cooldownManager_keybindFontName
+                return not v or v == "NIL"
+            end, function()
+                ns.db.profile.cooldownManager_keybindFontName = "NIL"
+                ns.Keybinds:OnSettingChanged()
+                dropdown:SetText("Default font")
+            end)
 
             for index, fontName in ipairs(sortedFonts) do
                 local fontPath = fonts[fontName]
@@ -1953,12 +1999,14 @@ local function AddonSettings_BuildCooldown(category, layout)
             ["OUTLINE"] = "Outline",
             ["THICKOUTLINE"] = "Thick Outline",
             ["MONOCHROME"] = "Monochrome",
+            ["SLUG"] = "Slug",
         },
+        order = { "MONOCHROME", "OUTLINE", "THICKOUTLINE", "SLUG" },
         getSelection = function()
             return ns.db.profile.cooldownManager_keybindFontFlags or {}
         end,
         setSelection = function(value)
-            if value["OUTLINE"] or value["THICKOUTLINE"] or value["MONOCHROME"] then
+            if value["OUTLINE"] or value["THICKOUTLINE"] or value["MONOCHROME"] or value["SLUG"] then
                 ns.db.profile.cooldownManager_keybindFontFlags = value
             else
                 ns.db.profile.cooldownManager_keybindFontFlags = { OUTLINE = false }
@@ -2719,3 +2767,17 @@ function AddonSettings:InitializeSettings()
 
     ns.ProfileSettings:BuildSettings(ns.AddonSettings.SettingsLayout.rootCategory)
 end
+
+EventRegistry:RegisterCallback("Settings.CategoryChanged", function(_, category)
+    if category == ns.AddonSettings.SettingsLayout.rootCategory then
+        if
+            SettingsPanel
+            and SettingsPanel.Container
+            and SettingsPanel.Container.SettingsList
+            and SettingsPanel.Container.SettingsList.Header
+            and SettingsPanel.Container.SettingsList.Header.DefaultsButton
+        then
+            SettingsPanel.Container.SettingsList.Header.DefaultsButton:Hide()
+        end
+    end
+end)

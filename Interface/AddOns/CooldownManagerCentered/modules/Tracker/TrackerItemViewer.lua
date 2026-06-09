@@ -15,7 +15,6 @@ local DEFAULT_ICON_SIZE = 50
 local DEFAULT_ICON_PADDING = 2
 local BASE_SQUARE_MASK = "Interface\\AddOns\\CooldownManagerCentered\\Media\\Art\\Square"
 local DEFAULT_MASK_TEXTURE = "Interface\\AddOns\\CooldownManagerCentered\\Media\\Art\\CooldownManager"
-local DEFAULT_FONT_PATH = "Fonts\\FRIZQT__.TTF"
 
 local ORIENTATION_ANCHORS = {
     ["Horizontal Right"] = { primary = "LEFT", offsetX = 1, offsetY = 0 },
@@ -46,19 +45,6 @@ local function GetIconHeight(iconSize)
     return iconSize
 end
 
-local function GetFontPath(fontName)
-    if not fontName or fontName == "" then
-        return DEFAULT_FONT_PATH
-    end
-    if LSM then
-        local fontPath = LSM:Fetch("font", fontName)
-        if fontPath then
-            return fontPath
-        end
-    end
-    return DEFAULT_FONT_PATH
-end
-
 local function ApplyCooldownFontToFrame(frame)
     if not frame or not frame.Cooldown or not frame.Cooldown.GetCountdownFontString then
         return
@@ -82,16 +68,10 @@ local function ApplyCooldownFontToFrame(frame)
         numericSize = numericSize or 16
     end
 
-    local fontName = ns.db.profile.cooldownManager_cooldownFontName or "Friz Quadrata TT"
-    local fontPath = GetFontPath(fontName)
-    local fontFlagTable = ns.db.profile.cooldownManager_cooldownFontFlags or {}
-    local fontFlagParts = {}
-    for n, v in pairs(fontFlagTable) do
-        if v == true then
-            table.insert(fontFlagParts, n)
-        end
-    end
-    fontString:SetFont(fontPath, numericSize, table.concat(fontFlagParts, ","))
+    local fontName = ns.db.profile.cooldownManager_cooldownFontName
+    local fontPath = ns.API:GetFontPath(fontName) or ns.CONSTANTS.DEFAULT_FONT[1]
+    local fontFlagTable = ns.db.profile.cooldownManager_cooldownFontFlags
+    fontString:SetFont(fontPath, numericSize, ns.API:GetFontFlags(fontFlagTable))
 end
 
 local function ApplySquareStyle(frame)
@@ -201,15 +181,10 @@ local function ApplyStyleToFrame(frame)
 end
 
 local function ApplyStackFontToFrame(frame)
-    local fontName = ns.db.profile.cooldownManager_stackFontName or "Friz Quadrata TT"
-    local fontPath = GetFontPath(fontName)
+    local fontName = ns.db.profile.cooldownManager_stackFontName
+    local fontPath = ns.API:GetFontPath(fontName) or ns.CONSTANTS.DEFAULT_NUMBER_FONT[1]
     local fontFlagTable = ns.db.profile.cooldownManager_stackFontFlags or {}
-    local fontFlagStr = ""
-    for n, v in pairs(fontFlagTable) do
-        if v == true then
-            fontFlagStr = fontFlagStr .. n .. ","
-        end
-    end
+    local fontFlagStr = ns.API:GetFontFlags(fontFlagTable)
     local fontSize = (ns.db and ns.db.profile and ns.db.profile.trinketRacialTracker_stackFontSize) or 14
     local anchor = (ns.db and ns.db.profile and ns.db.profile.trinketRacialTracker_stackAnchor) or "BOTTOMRIGHT"
     local offsetX = (ns.db and ns.db.profile and ns.db.profile.trinketRacialTracker_stackOffsetX) or -1

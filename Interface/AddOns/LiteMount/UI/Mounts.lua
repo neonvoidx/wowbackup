@@ -47,11 +47,18 @@ function LiteMountMountsPanelMixin:LoadDefaultSettings()
     LM.Options:SetPriorityList(LM.MountRegistry.mounts, nil, dontFire)
 end
 
+-- ScrollUtil.InitScrollBoxListWithScrollBar resets the scroll position so
+-- this can't be done every time in RefreshDisplay() only when specifically
+-- changing tabs.
+
+function LiteMountMountsPanelMixin:SetTab(n)
+    PanelTemplates_SetTab(self, n)
+    local view = self.viewsByTabs[n]
+    ScrollUtil.InitScrollBoxListWithScrollBar(self.ScrollBox, self.ScrollBar, view)
+end
+
 function LiteMountMountsPanelMixin:RefreshDisplay()
     local currentTab = PanelTemplates_GetSelectedTab(self)
-
-    local view = self.viewsByTabs[currentTab]
-    ScrollUtil.InitScrollBoxListWithScrollBar(self.ScrollBox, self.ScrollBar, view)
 
     self.PriorityLabel:SetShown(currentTab==1)
 
@@ -162,7 +169,7 @@ function LiteMountMountsPanelMixin:OnLoad()
         end)
     self.viewsByTabs[1]:SetElementIndentCalculator(
         function (node)
-            if LM.UIFilter.GetSortKey() ~= 'family' or node:GetData().isHeader then
+            if LM.UIFilter.GetSortKey() ~= 'model' or node:GetData().isHeader then
                 return 0
             else
                 return 8
@@ -181,7 +188,7 @@ function LiteMountMountsPanelMixin:OnLoad()
     self.name = MOUNTS
 
     PanelTemplates_SetNumTabs(self, 2)
-    PanelTemplates_SetTab(self, 1)
+    self:SetTab(1)
 
     self.allFlags = LM.Options:GetFlags()
 
@@ -207,7 +214,7 @@ function LiteMountMountsPanelMixin:OnLoad()
             tabButton:SetText(TabNames[i])
             tabButton:SetScript('OnClick',
                 function ()
-                    PanelTemplates_SetTab(self, i)
+                    self:SetTab(i)
                     self:RefreshDisplay()
                 end)
         end
@@ -222,12 +229,12 @@ function LiteMountMountsPanelMixin:OnLoad()
     self.ActionDropdown:SetText(L.LM_ACTIONS)
 
     --[==[@debug@
-    self.NextFamily = CreateFrame('Button', nil, self, 'UIPanelButtonTemplate')
-    self.NextFamily:SetSize(96, 22)
-    self.NextFamily:SetText("NextFamily")
-    self.NextFamily:SetPoint('TOPRIGHT', self, 'TOPRIGHT', -40, -54)
-    self.NextFamily:SetScript('OnClick', function () LM.SlashCommandFunc('fam') end)
-    self.NextFamily:Show()
+    self.NextModel = CreateFrame('Button', nil, self, 'UIPanelButtonTemplate')
+    self.NextModel:SetSize(96, 22)
+    self.NextModel:SetText("Next Model")
+    self.NextModel:SetPoint('TOPRIGHT', self, 'TOPRIGHT', -40, -54)
+    self.NextModel:SetScript('OnClick', function () LM.SlashCommandFunc('model') end)
+    self.NextModel:Show()
     --@end-debug@]==]
 
     LiteMountSettingsPanelMixin.OnLoad(self)

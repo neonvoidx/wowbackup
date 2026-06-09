@@ -45,17 +45,14 @@ VER 3 000000000000024B "BOW" "5927638"
 /bow
 END
 VER 3 0000000000000273 "EnhanceQoLBuffFoodMacro" "INV_Misc_QuestionMark"
-#showtooltip item:268679
-/use item:268679
+#showtooltip
 END
 VER 3 000000000000024D "EnhanceQoLFlaskMacro" "INV_Misc_QuestionMark"
-#showtooltip item:241325
-/use item:241325
+#showtooltip
 END
 VER 3 000000000000024E "EnhanceQoLHealthMacro" "INV_Misc_QuestionMark"
 #showtooltip
 /cast [nocombat] Recuperate
-/castsequence [combat] reset=combat item:241305
 END
 VER 3 000000000000024F "FOCUS" "132284"
 /focus [@mouseover,nodead,exists]; [@target,exists]

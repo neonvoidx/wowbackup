@@ -3,6 +3,8 @@ local _, ns = ...
 local API = {}
 ns.API = API
 
+local LSM = LibStub("LibSharedMedia-3.0", true)
+
 local SliceFrameMixin = {}
 
 function SliceFrameMixin:CreatePieces(n)
@@ -131,7 +133,6 @@ function API:RefreshCooldownManager()
     C_Timer.After(0.01, function()
         ns.StyledIcons:RefreshAll()
         ns.CooldownManager.Initialize()
-        ns.Stacks:ApplyAllStackFonts()
     end)
 end
 
@@ -340,4 +341,37 @@ function API:AddToTracking(kind, id, state)
     else
         return nil, "Invalid kind. Must be 'spell' or 'item'."
     end
+end
+
+function API:GetFontPath(fontName)
+    if not fontName or fontName == "" or fontName == "NIL" then
+        return nil
+    end
+    if LSM then
+        local fontPath = LSM:Fetch("font", fontName)
+        if fontPath then
+            return fontPath
+        end
+    end
+    return nil
+end
+
+function API:GetFontFlags(flagsTable)
+    if not flagsTable then
+        return ""
+    end
+    local parts = {}
+    if flagsTable["MONOCHROME"] then
+        table.insert(parts, "MONOCHROME")
+    end
+    if flagsTable["OUTLINE"] then
+        table.insert(parts, "OUTLINE")
+    end
+    if flagsTable["THICKOUTLINE"] then
+        table.insert(parts, "THICKOUTLINE")
+    end
+    if flagsTable["SLUG"] then
+        table.insert(parts, "SLUG")
+    end
+    return table.concat(parts, ",")
 end
